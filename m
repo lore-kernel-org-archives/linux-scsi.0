@@ -1,132 +1,159 @@
-Received: from mail-ed1-f51.google.com (mail-ed1-f51.google.com [209.85.208.51])
+Received: from mail-pl1-f169.google.com (mail-pl1-f169.google.com [209.85.214.169])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 89BD332862D
-	for <linux-scsi@vger.kernel.org>; Tue,  9 Dec 2025 21:26:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC0851FCFEF
+	for <linux-scsi@vger.kernel.org>; Wed, 10 Dec 2025 01:42:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.169
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1765315602; cv=none; b=ZzEQ+Eds1liTTqQdO1FQSpue1WZ3aDWGWrNd4W8HJP2a/We18Wc8QsHf20zgKW99cOaGmxUVZeiUDHvDAWt+1f2ZgtQJjKqBIbjOnbs1otGxsgKF324FNb+SA910FvC3d4dX5xDnJfj3Mgav9RU55A8wyrXXhjbXMX6sjhhOtFo=
+	t=1765330955; cv=none; b=UYUZrVIWoNpVNS/DvLNEuU+fhiLxAMrLODYzdgLn6fbNf6Pxxb4Xh9vDkPi8Lo1Lmn14CW4ejp0x9v2MNQv3QRLVSLwI/QMxp/Wul8dUjhMZezmnJ9EU04b51Ahrr1Rpp8p+MD2lq+hiyIyfT1jFcommUMcIhOGwYF0FlqhqXI0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1765315602; c=relaxed/simple;
-	bh=/pHDHDxU6hfgJJT8nqFLrEkunNthwWpW3H6rfoOkJUI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=K1PAq3vxBkPQkA9E/XM3a3hF7vY99GPRcyjuf6SA8Eb41o5ccIdRI0lO0xX09JnjEssIKPB2LxZq2Pl7dcaqElsTEt/CyOscZ9+uhMDkO7O8Iho2UPy/yqAQAg0sBi3zHj5NOm19xo9ggr/G3bKxmGN3Fr77YU+4XV2izgCku48=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=baylibre.com; spf=pass smtp.mailfrom=baylibre.com; dkim=pass (2048-bit key) header.d=baylibre-com.20230601.gappssmtp.com header.i=@baylibre-com.20230601.gappssmtp.com header.b=drejCEDN; arc=none smtp.client-ip=209.85.208.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=baylibre.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=baylibre.com
+	s=arc-20240116; t=1765330955; c=relaxed/simple;
+	bh=T9Cq8aIyNZREDh0tPYDT2Pf4p9IsmY+P8k1Dth1dqkg=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=fUOmw4ZKAo4rgU0lNkrno9mngnT0gGahBepnTr0XRoeTrX8yFmDwzaSx0WM///ES73pR4e/grOnmadA+D10V7P3L9wG2zDfkbeGsj4sJgLI4E5K83Gwko33aYfVyy68eZdJXoly/iulyP1MsaL3VZ29NvX5n+AQBeAQLnzLq8Jk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Jimz5vCr; arc=none smtp.client-ip=209.85.214.169
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=baylibre-com.20230601.gappssmtp.com header.i=@baylibre-com.20230601.gappssmtp.com header.b="drejCEDN"
-Received: by mail-ed1-f51.google.com with SMTP id 4fb4d7f45d1cf-640b06fa959so9920923a12.3
-        for <linux-scsi@vger.kernel.org>; Tue, 09 Dec 2025 13:26:39 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Jimz5vCr"
+Received: by mail-pl1-f169.google.com with SMTP id d9443c01a7336-295548467c7so80823695ad.2
+        for <linux-scsi@vger.kernel.org>; Tue, 09 Dec 2025 17:42:33 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=baylibre-com.20230601.gappssmtp.com; s=20230601; t=1765315598; x=1765920398; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=UwbbyU40SptznEhvch2S64/esv6V/zeeP+0i6BUXRGY=;
-        b=drejCEDNL7UZk4OGxRP7LNH9L9xBRY2fM5NtV77wmqi77k0tb6oqoz6NON4kCqwZhh
-         3UKJZ+CRgrpCPFWRB3Tk+y51isHlC0ALVMpJXKZJ3u3iJtmlxpSlrAPA/oqE5/ZBju+G
-         IvwzqWxr6OOrYtSP2Msk+rQT8PlPAQ/2BNu+wvs9GBkGSATJqj+ebqhjuJxQPs2t4Czm
-         JF2gg30hNZGwI/g171iR7xhjbxFR+kRRC2gExSrqO4oQvPQiYBw2oijcj7Sx8PCuggem
-         XQInaFyOvZEWk/tmpOG8sBxlyz7tu4fY4+H6PvX4SuExgesBwM6YlK3anAjlaPYQrVjN
-         fBrw==
+        d=gmail.com; s=20230601; t=1765330953; x=1765935753; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=ZTOj8mtvz7bMiDNO/pkswPuq5T3Do7BAnSCOIfTK70g=;
+        b=Jimz5vCr3Ds4Iuo/T2OfJV5WAiZqgvGMF42OdIPBlyGQWdVE0TVNv9f53jO0tgCGJg
+         N628glt4P5Muh+8cFpblRGTHszKRQQovrI+hySRg06O55G0Y/qeZWD7WS+yUJBXFsioX
+         tz7hQohPniSH/KtQb8hnZTKgaOcoTOKFx96I2WORgyh596HHa9Ow9IvaLZYSJr/dKkma
+         KPTUFrqwgOhDSxtOxqbIWwr0Ww0lvIKd0GKvMTv70/W3Ew7wi9mDbeltasgYNvofbqKz
+         M93j4Dv7imkbPxrQ5GuN3p1uipr2ImghBTy3m0FeKgS7D/IiMX5j+JpzkL9q22seVEei
+         DWWg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1765315598; x=1765920398;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=UwbbyU40SptznEhvch2S64/esv6V/zeeP+0i6BUXRGY=;
-        b=FRcFBWFflUDPluKcNEn0iKwdxZNQ30IQEOq3/OE5PP9OgYW8TQmmNB0UrlzazP2+g1
-         S5yp0m5YN4RMhLdN+sPL2M0MmdTI+P7vwpeYzZz/rhXvfCuNKCZly7eI9/RyrTfANh62
-         luJBVK2GmGp5QEbJIVgsKn/uQzt0coZ6G3eZlwxRD2/+ghdqFwObJ/Yptx4vsHslRn4H
-         JAooNjd+OzeGHDNPBHuzPXZPO09JjDUMy1dr9vQ5cTRAwrulEyI+ZQjf/yojfVWknTCT
-         sMI1DB+o3gsnklUWl5eoQmlVqnBwTIyhTdCQNnDsoe/ap3BYq6r+uYZEgj0ysUg7szzA
-         b5nw==
-X-Forwarded-Encrypted: i=1; AJvYcCVuDoS7h2/Xrnyw/Brq532xXxh3FL9Zy/Dl5uvvdk22lX9ljEBhfx63YLI30HSX3SN6M2L13GX8YR56@vger.kernel.org
-X-Gm-Message-State: AOJu0YwnStg+ITkMgdoU2zrC79ADM8LZXgJWpjy5xbNmFpDr4xFu2oEy
-	gB6hBID6jr3WEb0GKkpP0LrzmTHhRyeDRPVf6Zaxp9xAircXrUYtHI7JdWWlMA7CykA=
-X-Gm-Gg: ASbGnctkAmMOVZm7cGe1ZsB++pieNBNqQW4Z0sVTXZqzmxPQ7Jj7wWwv6jBgxxXrbDG
-	fP7qLdbgstmQoTuyPzp0q6ehGBqJorz6Hx0a2fJ+fCW+l2UpLnJWuKTWULeW+9PjxHikCBAfwIK
-	+XeH3ZsgMCgzqPFfsEi2f7h6COv8Z4cejgOPjVNGt2kFMJSzIMN9zJ1R/e3fvl+piaL64CD/lQu
-	iU57Td/EYkbN6xMOn+u5FksKRVsCHz1w+rwQSHXitN8xPLjhauAAuNLoNx+M2kX23ID4x/ZPUyF
-	d8DIh4Z1bp6450EB1iuaQQ9B2WtDFIYXhwIKW55HcgTJk1bPcrYzrmDGbofev+X2f1Ft8AUm+sl
-	im6WBO8lmE0q0pilstdMz1KbOXyOEpm8vx4InEBru2Ssq/JrlwZvqPWleTi0dYwXSq+qLsixTM1
-	5cRWhShTfo5pD3e1l+
-X-Google-Smtp-Source: AGHT+IE/704fKY5SFopT+bENRWN8WXApAuAnyJrgtTVjIpKaAOUqjW7UFCte7tioWrFlOpYpgAq4Ww==
-X-Received: by 2002:a17:906:f596:b0:b72:b8a9:78f4 with SMTP id a640c23a62f3a-b7ce8416484mr6240566b.39.1765315597154;
-        Tue, 09 Dec 2025 13:26:37 -0800 (PST)
-Received: from localhost ([2a02:8071:b783:6940:1d24:d58d:2b65:c291])
-        by smtp.gmail.com with UTF8SMTPSA id a640c23a62f3a-b79f4a15660sm1503242866b.63.2025.12.09.13.26.36
+        d=1e100.net; s=20230601; t=1765330953; x=1765935753;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=ZTOj8mtvz7bMiDNO/pkswPuq5T3Do7BAnSCOIfTK70g=;
+        b=iMBHqVO/NVS7PN/hjJAzCdGL3EDlnNABza2NwYn4hS3XczC0Mti5yTdmus+doF8AZd
+         xq/r0F6cvSR0dGlE5yGN4Ju8i6sbG3Z+9qVTbNOMhE2PjWRk8gZ9AaxnLqBQyJg9N0XZ
+         DtDzf7WicqTXhPO0qe9L0V6hmJNF6jxeI7FTKdzqfppLOloklgqlgIXIksltsRgOeGdS
+         AMPIpZTsBrQdgcfforx/ECq6liePrDYKMqVehNXRUFIIcrZIt6hxMFMkFofvevEbRxw2
+         Xud3+hQJryqts4kqPCur9UK0rMPlc8RNQ68bIpg8d9yFYnwfYeKE3uU2OvMQBJU3plB9
+         0RFA==
+X-Forwarded-Encrypted: i=1; AJvYcCWxh7RioDGwQYegb+mAKJCcT+/3/RyC4UJRc7RCrLtdA+8YUH2oT8OZgQsOTJn8Zgi9M7WTVOobQTnR@vger.kernel.org
+X-Gm-Message-State: AOJu0YwY4FfL8Ku1kfIhuxhwhxI3C2bZefLg9B1wjBR+c163zlxi96Xa
+	pUvKtyhViItYfhC9Gz1wK7qDokOXLYHfuRvA6PuxHLv77TZeKE6EHUEo
+X-Gm-Gg: ASbGncvSkIqowKxeB+At6Hhuwpm0USUUuRWT643mYqCpjQ2SF61HuEgTy2Z1sqf9miV
+	YaxFS35ph7rqAUAsHPcgueFNEEDAGMwpXcDyj5cIvluuyIQN8Mvak0UPUZ60uWJZwqTzIrRxGtT
+	yiKaG0564I8d6s8WmJaWeoXUiZAfgOLVTr6DoUEtxRBHP9lg0OEvkwWMGUj64vfr+CkX03LAzcr
+	gSjTQX2KHUpb6EvOoK7Qcc2+xJPXS71XXVOWtT8/WAWWVVwrLaR3fipaOmNrD8u8McEIFTefo0H
+	0U+PIhusaBHHXRq5Z8D4cQSKpydTfpGKDKFjGrXMlkXezWhQ8C6k6eOw+IgJi008JGKijGd7SjV
+	QmUIRxHgmDLkWEmG/WJ8ThHVBDB+AU7HMK7alJqWdzBw99502M0ptW7SRzKaJN2kQblJ7L0KBS/
+	EmSEcSrcJlGEP7ICh6whRxLPuJWHFNxp4=
+X-Google-Smtp-Source: AGHT+IEdUNw2zNQhZ/I2Qr+XBs/n7tKIMF5djW7gIs2sFqNkyOiwmZ90hxdyuKZt0RmU/52skct44A==
+X-Received: by 2002:a05:7022:fc07:b0:11d:f441:6c9b with SMTP id a92af1059eb24-11f2966ff55mr540711c88.22.1765330952646;
+        Tue, 09 Dec 2025 17:42:32 -0800 (PST)
+Received: from deb-101020-bm01.dtc.local ([149.97.161.244])
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-11df76e2eefsm80274777c88.6.2025.12.09.17.42.31
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 09 Dec 2025 13:26:36 -0800 (PST)
-Date: Tue, 9 Dec 2025 22:26:35 +0100
-From: Uwe =?utf-8?Q?Kleine-K=C3=B6nig?= <u.kleine-koenig@baylibre.com>
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
-	"Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
-Subject: Re: [PATCH 2/8] scsi: Make use of bus callbacks
-Message-ID: <zzg7idgonsinuydv3a63cr56627lw2ymfopjiwfycsoshipmjd@mwk3bihumcg3>
-References: <cover.1765312062.git.u.kleine-koenig@baylibre.com>
- <59b408f6d89d402457a23564302afcbb334bc9dd.1765312062.git.u.kleine-koenig@baylibre.com>
- <818c2c48-6962-46bb-8268-d377eaed3083@acm.org>
+        Tue, 09 Dec 2025 17:42:32 -0800 (PST)
+From: sw.prabhu6@gmail.com
+To: James.Bottomley@HansenPartnership.com,
+	martin.petersen@oracle.com,
+	linux-scsi@vger.kernel.org
+Cc: bvanassche@acm.org,
+	linux-kernel@vger.kernel.org,
+	mcgrof@kernel.org,
+	kernel@pankajraghav.com,
+	dlemoal@kernel.org,
+	Swarna Prabhu <sw.prabhu6@gmail.com>
+Subject: [v1 0/2] enable sector size > PAGE_SIZE for scsi
+Date: Wed, 10 Dec 2025 01:41:34 +0000
+Message-ID: <20251210014136.2549405-1-sw.prabhu6@gmail.com>
+X-Mailer: git-send-email 2.51.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-	protocol="application/pgp-signature"; boundary="j765t24o26ukj26l"
-Content-Disposition: inline
-In-Reply-To: <818c2c48-6962-46bb-8268-d377eaed3083@acm.org>
+Content-Transfer-Encoding: 8bit
 
+From: Swarna Prabhu <sw.prabhu6@gmail.com>
 
---j765t24o26ukj26l
-Content-Type: text/plain; protected-headers=v1; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-Subject: Re: [PATCH 2/8] scsi: Make use of bus callbacks
-MIME-Version: 1.0
+Hi All,
 
-Hello Bart,
+This is non RFC v1 series sent based on the feedback received on RFC
+v2 [1] and RFC v1 [2]. This patchset enables sector sizes > PAGE_SIZE for
+sd driver and scsi_debug driver since block layer can support block
+size > PAGE_SIZE. There was one issue with write_same16 and write_same10
+command, which is fixed as a part of the series.
 
-On Tue, Dec 09, 2025 at 01:00:03PM -0800, Bart Van Assche wrote:
-> On 12/9/25 12:45 PM, Uwe Kleine-K=F6nig wrote:
-> > The objective is to get rid of users of struct device_driver callbacks
-> > .probe(), .remove() and .shutdown() to eventually remove these. Until
-> > all scsi drivers are converted this results in a runtime warning about
-> > the drivers needing an update because there is a bus probe function and
-> > a driver probe function. The in-tree drivers are fixed by the following
-> > commits.
-> Which runtime warning? Has that runtime warning perhaps been introduced
-> by a patch series that has not yet been merged?
+Motivation:
+ - While enabling LBS on ZoneFS, zonefs-tools tests were being skipped
+   for conventional zones when tested on nvme block device emulated using
+   QEMU. Hence there was a need to enable scsi with higher sector sizes
+   to run zonefs tests for conventional zones as well.
 
-the warning is in driver_register() (drivers/base/driver.c):
+Changes since RFC v2:
+ - Replaced open coded check for enabling sdebug_sector_size > PAGE_SIZE
+   with blk_validate_block_size() in scsi_debug.
+ - Replaced open coded check for enabling sector_size > PAGE_SIZE
+   with blk_validate_block_size() in sd driver.
+ - Replaced 'struct request *rq' argument in  'sd_set_special_bvec()' to
+   'struct scsi_cmnd *cmnd' and used that to get SCSI device pointer
+   'struct scsi_device *sdp'.
+ - Slightly modified the commit title for scsi sd driver fix patch.
+ - Added "Cc: stable@vger.kernel.org" tag to scsi sd driver fix patch.
 
-        if ((drv->bus->probe && drv->probe) ||
-            (drv->bus->remove && drv->remove) ||
-            (drv->bus->shutdown && drv->shutdown))
-                pr_warn("Driver '%s' needs updating - please use "
-                        "bus_type methods\n", drv->name);
+Changes since RFC v1:
+ - Re organized the patch series into one patch for scsi_debug driver
+   and one patch for sd driver.
+ - Updated commit title and description to accommodate the above
+   re organization on commit titled - scsi: sd: fix write_same(16/10)
+   to enable sector size > PAGE_SIZE.
+ - Updated commit title and description to reflect the re organization
+   on commit titled - scsi: scsi_debug: enable sdebug_sector_size
+   > PAGE_SIZE.
 
-since commit 594c8281f905 ("[PATCH] Add bus_type probe, remove, shutdown
-methods.") which is in v2.6.16-rc1.
+Thanks to Bart for feedback on the RFC v1 and v2 series.
 
-Best regards
-Uwe
+Testing:
+ -Test suite: xfs and generic from fstest + QEMU emulated block
+    device(scsi and nvme)
+  - fstest Config for patched xfs 16k block size [xfs_reflink_16k_scsi]
+    TEST_DEV=/dev/sda
+    SCRATCH_DEV_POOL="/dev/sdb"
+    MKFS_OPTIONS='-f -m reflink=1,rmapbt=1, -i sparse=1, -b size=16384,
+    -s size=16384'
+  - Generic test results
+    Baseline: 6.18.0-rc7 kernel + nvme 16k logical block size
+    Patched: 6.18 kernel + scsi 16k logical block size
+    5 failures seen on generic tests and the same seen on baseline
+    No regressions introduced by the patch.
+  - XFS tests results
+    Baseline: 6.18.0-rc7 kernel + nvme16k logical block size
+    Patched: 6.18 kernel + sci 16k logical block size
+    30 failures seen on patched and baseline
+    No regressions introduced by the patch
+  - Blktests results
+    scis and block layer tests with 16k and 32k logical block size.
+    config used:
+    TEST_DEVS=(/dev/sda)
+    EXCLUDE=(block/010 block/011) # these didn't run on baseline(nvme 16k)
+    All tests passed.
 
---j765t24o26ukj26l
-Content-Type: application/pgp-signature; name="signature.asc"
+Link to RFC v2: https://lore.kernel.org/all/20251203230546.1275683-2-sw.prabhu6@gmail.com/ [1]
+Link to RFC v1: https://lore.kernel.org/all/20251202021522.188419-1-sw.prabhu6@gmail.com/ [2]
 
------BEGIN PGP SIGNATURE-----
+Swarna Prabhu (2):
+  scsi: sd: fix write_same(16/10) to enable sector size > PAGE_SIZE
+  scsi: scsi_debug: enable sdebug_sector_size > PAGE_SIZE
 
-iQEzBAABCgAdFiEEP4GsaTp6HlmJrf7Tj4D7WH0S/k4FAmk4lAkACgkQj4D7WH0S
-/k5B/wgAo5h52rMSKabNpUg5lsH3FM1k9VLHrNvm45qbkYy2cmu6v8Yq9UDqInUV
-HU2+DPUoB2/uBeJIyyZR/4UNnH1Uu7IxCBnAJYZrnhKG1r63j+duKHQ+aBj+M/XR
-F8yYOrMlpbPGMQNr5ms6jQW1fkmgxDr9oE8VH5KHTi8Oq3tRTVtlwVtaVP4G7gM5
-D4L7I1RZird903uM9OgUK27ZyiWkTYxfzde6OLyHCd0fv1SixHKecPbINxoJU9Sw
-nG75SAtMR1NCyKOWMqdaJxie8LNdmJX4ngn2Q5e9dvemEcXhswVrgFqA91ByvkdJ
-jZsmwB0gX1fNPMb8Js38AsnUtgGkag==
-=g0Jn
------END PGP SIGNATURE-----
+ drivers/scsi/scsi_debug.c |  8 +-------
+ drivers/scsi/sd.c         | 27 +++++++++++++++++----------
+ 2 files changed, 18 insertions(+), 17 deletions(-)
 
---j765t24o26ukj26l--
+-- 
+2.51.0
+
