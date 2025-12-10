@@ -1,81 +1,96 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DADCE19F48D
-	for <linux-scsi@vger.kernel.org>; Wed, 10 Dec 2025 07:04:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 93A33302149
+	for <linux-scsi@vger.kernel.org>; Wed, 10 Dec 2025 09:21:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1765350285; cv=none; b=FGRUWVTp08o1RX7XYwhxtKI2TkRt1SLrFDoPmTUDo8Cpre0cJNkm21eaq4sujJsf7Jcl2vvpaYHZqLh1fpJoxdvzNfOZNrwGQfcL8G7SUIhirNo3D0LzDZTEelIDdzEqSrwixYAGo1AZElNkdJE/VnbfcSn/grQAjEigSLxA444=
+	t=1765358470; cv=none; b=N8cDtUeIT0KnwkgLDjTnGTOXnA+zhyiCgr0OtIAL10LK0xbJ6y4ruKPsPFFWKsSGP8sX6zwPqQhOo533qi5FrWdOdWSQ5fN2krb1OYQYjtjEXlPMZDCoFvgZgJL8cp+LtcNLodO8/pPNZBs/8LL+WMPquUsKbQX5uP0kqek94tk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1765350285; c=relaxed/simple;
-	bh=b+ZzAox73kliQIMyiHI+9lAM6aCn17eDDTnqOXxhrfI=;
+	s=arc-20240116; t=1765358470; c=relaxed/simple;
+	bh=LlVy34DVZlnoxK5wDWmUUmCPGryjoJ3ROBm/r4Qr0IY=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=p+0lc5sGSTDHP536D4ynJajXm80tvqhYELFBYZZX+fGcDeMxMATpwtOWe6n0sQuCHXU4TXSVD7TQMkgvcaIMwDNNBFHTu21Nzek0olzgepWMH6f/Qs5cwGjLj7YaqGfnZ1qcqSknXpoifEMHE5de9BxGmW6NirfUbdqUHlhB364=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=0hdDeS+9; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=aLyKBVmGKpOUh/o/XWs4PPUL9hrZyImL+e3+k4R3Dg+o1YvQT9E8/BiC2Ug2CerPwUxGmQvg79hBJSyzpaXRNl8AVy5Xu9dKhIUWp3brM9AABF7j3gJWgOBeMuu+RpC+TerqTEMzGKnT1tDXzdCitJPhpHqkXC2u9V9Y3+oviMQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Z9lED1kw; arc=none smtp.client-ip=192.198.163.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="0hdDeS+9"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Transfer-Encoding
-	:Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:
-	Sender:Reply-To:Content-ID:Content-Description;
-	bh=yk3ZmGCxu6DW0tmK4b/ck3yvAGVxIAQFEAKL0YWONX4=; b=0hdDeS+9D5fV02/DtPnTRMw5Z4
-	FwNbxLgMFj/xX08eK55h1y+HYRI+tcrUERZy47OpSJy2EheDPrF7dJcHI4u/s8Ddrlq6O6gXZAioe
-	dNJPYjj3ML4v+bssSx7oeYiBG/1U2tLmKiKBfIIygOVOZX2bwrt7Ua7Kv+NbYMPUyOn9/R3IGrQI9
-	r6gv2A1xSgQ4s11JFy5hDZl5Bb6HgugHuKkMflGNISGzILv0jAw5kJVRkFTJ8DdlNd9TP/G2Wq0eb
-	wHvXnMLJmRnLrXuV8rBEVeC8KUrpJdXh8pMiKpWvAEmi8PtaZLPwFsZMpCppc4PA+dzuxMQYMol5t
-	XFFU1k6A==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1vTEFc-0000000FBwY-139i;
-	Wed, 10 Dec 2025 07:04:40 +0000
-Date: Tue, 9 Dec 2025 23:04:40 -0800
-From: Christoph Hellwig <hch@infradead.org>
-To: Uwe =?iso-8859-1?Q?Kleine-K=F6nig?= <u.kleine-koenig@baylibre.com>
-Cc: Christoph Hellwig <hch@infradead.org>,
-	Bart Van Assche <bvanassche@acm.org>,
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Z9lED1kw"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1765358468; x=1796894468;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=LlVy34DVZlnoxK5wDWmUUmCPGryjoJ3ROBm/r4Qr0IY=;
+  b=Z9lED1kwN7wuTZw3+aaaT2la0mYpv1bAQDMHgexFtH8dBzwFTreTM6tn
+   ynZyWfjXmNPjN4E0A9qL3cX+ACn5INHt8pObPg/7qSgBEKvCqIeVua2O/
+   scuIMZwyZ3t3BifG5kLM+DfObZATgYeET49v6eAo2fzKZzpHzLGfBuVyx
+   WVbaK6Pp0cSSsOpqH6ftDJPhMGBYBwEtEf4Vl/pRK93pRLdDCmMKDoSk6
+   YO6Q3y3nVObPDNfNYT2yQBHdxtXIHFtJPWXBOeD4CwEjIqrLwWcyf/AX5
+   cttunEUfWcX78McIrBKsyiFQhq/jLhZBWQ1IJPzOjmvU4f6jxz5bsF5GO
+   w==;
+X-CSE-ConnectionGUID: oeInzukOSPqw5qN2mH3y2A==
+X-CSE-MsgGUID: FAy3zC1+QqaFrc7XqXQU1g==
+X-IronPort-AV: E=McAfee;i="6800,10657,11637"; a="71173930"
+X-IronPort-AV: E=Sophos;i="6.20,263,1758610800"; 
+   d="scan'208";a="71173930"
+Received: from orviesa006.jf.intel.com ([10.64.159.146])
+  by fmvoesa106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Dec 2025 01:21:08 -0800
+X-CSE-ConnectionGUID: x1M5MgquT+aH98Fr93DKFw==
+X-CSE-MsgGUID: xjxuHDkuRVGpvC+ZBbzJiw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.20,263,1758610800"; 
+   d="scan'208";a="195534049"
+Received: from lkp-server01.sh.intel.com (HELO d335e3c6db51) ([10.239.97.150])
+  by orviesa006.jf.intel.com with ESMTP; 10 Dec 2025 01:21:06 -0800
+Received: from kbuild by d335e3c6db51 with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1vTGNc-00000000337-0OTu;
+	Wed, 10 Dec 2025 09:21:04 +0000
+Date: Wed, 10 Dec 2025 17:20:24 +0800
+From: kernel test robot <lkp@intel.com>
+To: Uwe =?iso-8859-1?Q?Kleine-K=F6nig?= <u.kleine-koenig@baylibre.com>,
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>
+Cc: oe-kbuild-all@lists.linux.dev,
 	"Martin K. Petersen" <martin.petersen@oracle.com>,
 	linux-scsi@vger.kernel.org
-Subject: Re: [PATCH 2/8] scsi: Make use of bus callbacks
-Message-ID: <aTkbiHE45DDeQhH3@infradead.org>
-References: <cover.1765312062.git.u.kleine-koenig@baylibre.com>
- <59b408f6d89d402457a23564302afcbb334bc9dd.1765312062.git.u.kleine-koenig@baylibre.com>
- <e4924c88-909c-4ba4-8281-184f783539ff@acm.org>
- <akknplwphiv2qllb6s3k5cpyqz76coyvbutmwln4bjtsi5rxqo@twezemfbfiow>
- <aTkEkPEhrcbvGzYo@infradead.org>
- <77keukzmb57v2jyf26ulsystu77f2k5ta5k2vjxk5hygypzb7c@4kvu4hdty3o6>
+Subject: Re: [PATCH 4/8] scsi: sd: Convert to scsi bus methods
+Message-ID: <202512101723.HHskrJpy-lkp@intel.com>
+References: <1931ec5bbe8d0ad82b6fbc77939d43bf5a4f177f.1765312062.git.u.kleine-koenig@baylibre.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <77keukzmb57v2jyf26ulsystu77f2k5ta5k2vjxk5hygypzb7c@4kvu4hdty3o6>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <1931ec5bbe8d0ad82b6fbc77939d43bf5a4f177f.1765312062.git.u.kleine-koenig@baylibre.com>
 
-On Wed, Dec 10, 2025 at 07:56:10AM +0100, Uwe Kleine-König wrote:
-> On Tue, Dec 09, 2025 at 09:26:40PM -0800, Christoph Hellwig wrote:
-> > On Tue, Dec 09, 2025 at 10:22:54PM +0100, Uwe Kleine-König wrote:
-> > > I decided not to do that as part of this patch set. In case I missed a
-> > > driver and for oot drivers I think it's nice and fair to not break them
-> > > immediately and give its users/developers a chance to see the warning
-> > > and act on it.
-> > 
-> > No one should care about out of tree drivers.  On the other hand
-> > unfinished transitions are really annoying and have a tendency to
-> > go stale.  So please go the final steps and finish it.
-> 
-> Given that the whole quest to remove the device_driver callbacks will go
-> on for a few kernel releases and completing the transition for scsi
-> yields to broken drivers without compile time issues if something is
-> missed, I think it's sensible to keep them in the "working with warning"
-> state for a release cycle (or even until the driver callbacks go away).
+Hi Uwe,
 
-You will notice very quickly when they break.  And it's not like there's
-a lot of them to start with.  Please just finish up the conversion
-instead of leaving it lingering.
+kernel test robot noticed the following build warnings:
 
+[auto build test WARNING on 7d0a66e4bb9081d75c82ec4957c50034cb0ea449]
+
+url:    https://github.com/intel-lab-lkp/linux/commits/Uwe-Kleine-K-nig/scsi-Pass-a-struct-scsi_driver-to-scsi_-un-register_driver/20251210-044843
+base:   7d0a66e4bb9081d75c82ec4957c50034cb0ea449
+patch link:    https://lore.kernel.org/r/1931ec5bbe8d0ad82b6fbc77939d43bf5a4f177f.1765312062.git.u.kleine-koenig%40baylibre.com
+patch subject: [PATCH 4/8] scsi: sd: Convert to scsi bus methods
+config: parisc-defconfig (https://download.01.org/0day-ci/archive/20251210/202512101723.HHskrJpy-lkp@intel.com/config)
+compiler: hppa-linux-gcc (GCC) 15.1.0
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20251210/202512101723.HHskrJpy-lkp@intel.com/reproduce)
+
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202512101723.HHskrJpy-lkp@intel.com/
+
+All warnings (new ones prefixed by >>):
+
+>> Warning: drivers/scsi/sd.c:3912 function parameter 'sdp' not described in 'sd_probe'
+>> Warning: drivers/scsi/sd.c:4061 function parameter 'sd' not described in 'sd_remove'
+
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
