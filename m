@@ -1,56 +1,56 @@
-Received: from mx0b-0016f401.pphosted.com (mx0b-0016f401.pphosted.com [67.231.156.173])
+Received: from mx0b-0016f401.pphosted.com (mx0a-0016f401.pphosted.com [67.231.148.174])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF8D8313528
-	for <linux-scsi@vger.kernel.org>; Wed, 10 Dec 2025 10:16:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.156.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C924D313556
+	for <linux-scsi@vger.kernel.org>; Wed, 10 Dec 2025 10:16:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.148.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1765361809; cv=none; b=M48akKZWYOi0jy3+3yPRV2VYXU8tKp4GL6uRXUB8lVdkswtQvboueFxmxY/sNE30Lu5WURTNILrtEuYcUaTXBeQ+/GWS31Rn1rIrfFMntUPQPH34xZU6zeEl4ic9ezxM9QPFLw0k5y+f2Fr2b+0NY4F8P0naKV7rWkcu3lju/mU=
+	t=1765361812; cv=none; b=MrnX2E2EuuKMPVK5askEAuXgVDaDPdluJZR5whAWVHE4Ddy87oel1QT+MubzqdKEx+NrSHxzM95pyxsvJm0gOf/ja/uXK7QCkdczQ6RSAhh0daq4YjbFBWOqAkvvMkNU/ijWSLhC/Mz8Yqf5fgsYI649DABu/g8Roe59KBY/PZQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1765361809; c=relaxed/simple;
-	bh=AjhWCpMJXrDy/pZJla/ngVn985Cc96w2c8y0bv7I1Fs=;
+	s=arc-20240116; t=1765361812; c=relaxed/simple;
+	bh=vHjev7AwbFW1rWAytTf0IYFricDu9aqGfiYVIMiwza8=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=pf2R8CSjUlvT5vNykl9n5Vcn0C//lgxvwmuKP5VlPDMIztiAPS3Ax0MjkCxUtXxOmR0NpqUFFAQ+u5yMKgoxhkpBhouaQd5Sa2ZJOZvaXVKVKZujTysg7MuGEykWcMhUk3koNLxNzC0UMDJYFh60y54pQMm+iz991n2roO/h8ik=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=marvell.com; spf=pass smtp.mailfrom=marvell.com; dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b=Tga0BCOT; arc=none smtp.client-ip=67.231.156.173
+	 MIME-Version:Content-Type; b=aVpAssZ7xLPkFy0mXL+9/qKt8WRx2WQ2HnLBqhgfgTHuboaiD1yzlSrZYNFiCGS7Bb5r1cRo1hJUE3j9+3XZLpWbGu5WTex7tiCRyzlIT2fBoA/Cn0ovT2/FVgpS5IV2RFCfx2WZ8S+d1C1kKmbpuzo0xW06N8OcUFn/eJZmyyQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=marvell.com; spf=pass smtp.mailfrom=marvell.com; dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b=i9b+8Mkg; arc=none smtp.client-ip=67.231.148.174
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=marvell.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=marvell.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="Tga0BCOT"
-Received: from pps.filterd (m0431383.ppops.net [127.0.0.1])
-	by mx0b-0016f401.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 5BA4aLnf3329346;
-	Wed, 10 Dec 2025 02:16:45 -0800
+	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="i9b+8Mkg"
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+	by mx0a-0016f401.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 5BA7Jom62875135;
+	Wed, 10 Dec 2025 02:16:48 -0800
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=
 	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=pfpt0220; bh=G
-	ovduqNt3yTwWEh/g7Cs7vBkC4HBPcsKeNzRPUjbOw8=; b=Tga0BCOT0i/PzgKgx
-	dfsdN7slS4SRbQjnLwVx1zBZ8npzFxmcVIdFL03iuXviscW0aw6KxlwdGB5juTRn
-	2qv+a30FahRvsT2N7TPGGgYmcjlnFahEcJyDjimwJqIVRKS7fVfxkXEBXTESAtXy
-	QJ2vixTNBjZ92fWu7urFlEDzMaUbNOqRr2GJWfRCojQcCFiLnaOBvPaMDUaRozMJ
-	efkJbeoYzs6wjQWJhqAr60bDUsBQ+ftEsY79gNjbHIJ3prTylQKo78l2aywB0Nfq
-	AuZ5EJXFFrzuq5PoSykrexNGi3TxGQsPOmGXhApFbNn52NID6dUdsviYNSkxffIP
-	GhNAA==
+	:message-id:mime-version:references:subject:to; s=pfpt0220; bh=Y
+	YPnS5cN3eeYSesdmK0V03r4527LT7emQIzwqvmephI=; b=i9b+8Mkg4CYHlUu9J
+	ZYtDOZcAK1U/eUWmEHR+D8WCBEma5JgaeOx+7mZ/cIHfXMzZN4aWd8DcBVMbAQLP
+	TB1LWj3G8UccSgeD3pFWkMfQwpdRzhdGaK0saH7VXwqto6N8Ypj5DW41Tb6xWw2G
+	VYx/fPntj62hbhzvkE5aebPsCn2ez809DAXkthm7oz7tGaz+p3S4jGLB8nhsvCBf
+	+9uxoWbB0upITaf93UcX46NHKTC2y4ZJj+8+TKP/eRH7td7INwl9ZyTdzSWRPs/H
+	PlKTbIPkvTxVVn/O0KRiC2Kn7b7OQ102iTbhXwSOiVg0FZolkLeCHcZv3juxBOUp
+	6fCkA==
 Received: from dc5-exch05.marvell.com ([199.233.59.128])
-	by mx0b-0016f401.pphosted.com (PPS) with ESMTPS id 4axuknhj1m-1
+	by mx0a-0016f401.pphosted.com (PPS) with ESMTPS id 4ay4cdgajd-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 10 Dec 2025 02:16:45 -0800 (PST)
+	Wed, 10 Dec 2025 02:16:48 -0800 (PST)
 Received: from DC5-EXCH05.marvell.com (10.69.176.209) by
  DC5-EXCH05.marvell.com (10.69.176.209) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.25; Wed, 10 Dec 2025 02:16:58 -0800
+ 15.2.1544.25; Wed, 10 Dec 2025 02:17:00 -0800
 Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH05.marvell.com
  (10.69.176.209) with Microsoft SMTP Server id 15.2.1544.25 via Frontend
- Transport; Wed, 10 Dec 2025 02:16:58 -0800
+ Transport; Wed, 10 Dec 2025 02:17:00 -0800
 Received: from stgdev-a5u16.punelab.marvell.com (stgdev-a5u16.punelab.marvell.com [10.31.33.164])
-	by maili.marvell.com (Postfix) with ESMTP id 93B033F709D;
-	Wed, 10 Dec 2025 02:16:42 -0800 (PST)
+	by maili.marvell.com (Postfix) with ESMTP id 3D0B73F709D;
+	Wed, 10 Dec 2025 02:16:45 -0800 (PST)
 From: Nilesh Javali <njavali@marvell.com>
 To: <martin.petersen@oracle.com>
 CC: <linux-scsi@vger.kernel.org>, <GR-QLogic-Storage-Upstream@marvell.com>,
         <agurumurthy@marvell.com>, <sdeodhar@marvell.com>, <emilne@redhat.com>,
         <jmeneghi@redhat.com>
-Subject: [PATCH v3 10/12] qla2xxx: Query FW again before proceeding with login
-Date: Wed, 10 Dec 2025 15:46:02 +0530
-Message-ID: <20251210101604.431868-11-njavali@marvell.com>
+Subject: [PATCH v3 11/12] qla2xxx: fix bsg_done causing double free
+Date: Wed, 10 Dec 2025 15:46:03 +0530
+Message-ID: <20251210101604.431868-12-njavali@marvell.com>
 X-Mailer: git-send-email 2.23.1
 In-Reply-To: <20251210101604.431868-1-njavali@marvell.com>
 References: <20251210101604.431868-1-njavali@marvell.com>
@@ -62,111 +62,159 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-Proofpoint-GUID: SogGwI780GjG2RHmo4GEABdW4d_0BmQI
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUxMjEwMDA4NSBTYWx0ZWRfX5mIDChOSSV0E
- KcYlf16i7qdiiomAO0DMX+Z22ZWrLrIFOmdR0DVYyhUhEqv8qLZgLNweNZZo7uqvysUrVG0bloc
- 1B41QUyucZMfqXzNyd0erEPoIsrv/L6f53SjmtbmUYxa0a3ZOWlbm7vDVDGiiD04h5V5coa2JPe
- 0kbUtMePJtRdOMZRpSTEHgGtn4nNSUrwE8zVb5Q1d4h4MF5qrWUm9PbLCqBLkkSxQLnGa89VmPX
- A9u3yM+/9mwppbxJwRN7GRPiCIdbBqCo4yXXj9LyJTykHruhenlKe47JEPkUi8hfj+NMlTdqfUi
- hTtkbXQ9uYLNeBrCnrzMziXTeGMZrq+00Zpxw06aQSZQj7n2aOdx8QdCLkw3j4cQN4YB9PUMrvA
- b7mvhFIHUh6kZt+4rzfEd1nEuAQHXQ==
-X-Proofpoint-ORIG-GUID: SogGwI780GjG2RHmo4GEABdW4d_0BmQI
-X-Authority-Analysis: v=2.4 cv=P483RyAu c=1 sm=1 tr=0 ts=6939488d cx=c_pps
+X-Proofpoint-GUID: iYZi6pirpFtM91avHaBDclkf4akmg-AL
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUxMjEwMDA4NSBTYWx0ZWRfX1Cv3DCihLYf9
+ QHifGpL8XhYrkVziHg9KMk0G7usbHprcg93myhkaS02TTCxqWCUO0qa9rKaRYBA6praqnkar5QN
+ xzbVzbYSRlyyge+XaNe9VRf2K4xbycps8BBH5rHt/pFEt0l/aTDxCiHGVorBYEBkSbwz4UaG6rm
+ DR8NufETlnHC8sTmIS0mHKBsACKfl3WESkNKl5yl8Ia1b3DyGWTkD7cEIhUcjnDUWBwvjI+blR+
+ 7RQE4XHOCsoEyGsstwoEUtzxO/pP0N++p3I9jkLj7qoUTqzglkNfPCbq0KcuN70rfmSz3L0frxP
+ SWX54VxpChkJciaaeodxN2+NMaqsIoSeZ0N//INnc19Gu92H4OZ9oUgOy88Gtrkb8Z8Y6oIQ+3u
+ E9aOec4RZFXQP2hbIG7PB9eeGJDudw==
+X-Proofpoint-ORIG-GUID: iYZi6pirpFtM91avHaBDclkf4akmg-AL
+X-Authority-Analysis: v=2.4 cv=A4dh/qWG c=1 sm=1 tr=0 ts=69394890 cx=c_pps
  a=rEv8fa4AjpPjGxpoe8rlIQ==:117 a=rEv8fa4AjpPjGxpoe8rlIQ==:17
  a=wP3pNCr1ah4A:10 a=VkNPw1HP01LnGYTKEx00:22 a=M5GUcnROAAAA:8 a=VwQbUJbxAAAA:8
- a=pGLkceISAAAA:8 a=iFQdS_rSKdxmbl9riRwA:9 a=OBjm3rFKGHvpk9ecZwUJ:22
+ a=pGLkceISAAAA:8 a=oK_aeN5Z_2LSqHoCI5QA:9 a=OBjm3rFKGHvpk9ecZwUJ:22
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.9,FMLib:17.12.100.49
  definitions=2025-12-09_05,2025-12-09_03,2025-10-01_01
 
 From: Anil Gurumurthy <agurumurthy@marvell.com>
 
-Issue occurred during a continuous reboot test of several
-thousand iterations specific to a fabric topo with dual
-mode target where it sends a PLOGI/PRLI and then sends
-a LOGO. The initiator was also in the process of discovery
-and sent a PLOGI to the switch. It then queried a list of
-ports logged in via mbx 75h and the GPDB response indicated that
-the target was logged in. This caused a mismatch in the states
-between the driver and FW.
-Requery the FW for the state and proceed with the rest of
-discovery process.
+Kernel panic observed on system,
 
-Fixes: a4239945b8ad ("scsi: qla2xxx: Add switch command to simplify fabric discovery")
+[5353358.825191] BUG: unable to handle page fault for address: ff5f5e897b024000
+[5353358.825194] #PF: supervisor write access in kernel mode
+[5353358.825195] #PF: error_code(0x0002) - not-present page
+[5353358.825196] PGD 100006067 P4D 0
+[5353358.825198] Oops: 0002 [#1] PREEMPT SMP NOPTI
+[5353358.825200] CPU: 5 PID: 2132085 Comm: qlafwupdate.sub Kdump: loaded Tainted: G        W    L    -------  ---  5.14.0-503.34.1.el9_5.x86_64 #1
+[5353358.825203] Hardware name: HPE ProLiant DL360 Gen11/ProLiant DL360 Gen11, BIOS 2.44 01/17/2025
+[5353358.825204] RIP: 0010:memcpy_erms+0x6/0x10
+[5353358.825211] RSP: 0018:ff591da8f4f6b710 EFLAGS: 00010246
+[5353358.825212] RAX: ff5f5e897b024000 RBX: 0000000000007090 RCX: 0000000000001000
+[5353358.825213] RDX: 0000000000001000 RSI: ff591da8f4fed090 RDI: ff5f5e897b024000
+[5353358.825214] RBP: 0000000000010000 R08: ff5f5e897b024000 R09: 0000000000000000
+[5353358.825215] R10: ff46cf8c40517000 R11: 0000000000000001 R12: 0000000000008090
+[5353358.825216] R13: ff591da8f4f6b720 R14: 0000000000001000 R15: 0000000000000000
+[5353358.825218] FS:  00007f1e88d47740(0000) GS:ff46cf935f940000(0000) knlGS:0000000000000000
+[5353358.825219] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[5353358.825220] CR2: ff5f5e897b024000 CR3: 0000000231532004 CR4: 0000000000771ef0
+[5353358.825221] PKRU: 55555554
+[5353358.825222] Call Trace:
+[5353358.825223]  <TASK>
+[5353358.825224]  ? show_trace_log_lvl+0x1c4/0x2df
+[5353358.825229]  ? show_trace_log_lvl+0x1c4/0x2df
+[5353358.825232]  ? sg_copy_buffer+0xc8/0x110
+[5353358.825236]  ? __die_body.cold+0x8/0xd
+[5353358.825238]  ? page_fault_oops+0x134/0x170
+[5353358.825242]  ? kernelmode_fixup_or_oops+0x84/0x110
+[5353358.825244]  ? exc_page_fault+0xa8/0x150
+[5353358.825247]  ? asm_exc_page_fault+0x22/0x30
+[5353358.825252]  ? memcpy_erms+0x6/0x10
+[5353358.825253]  sg_copy_buffer+0xc8/0x110
+[5353358.825259]  qla2x00_process_vendor_specific+0x652/0x1320 [qla2xxx]
+[5353358.825317]  qla24xx_bsg_request+0x1b2/0x2d0 [qla2xxx]
+
+Most routines in qla_bsg.c call bsg_done only for
+success cases.
+However a few invoke it for failure case as well
+leading to a double free. Validate before calling bsg_done.
+
 Cc: stable@vger.kernel.org
 Signed-off-by: Anil Gurumurthy <agurumurthy@marvell.com>
 Signed-off-by: Nilesh Javali <njavali@marvell.com>
 Reviewed-by: Himanshu Madhani <hmadhani2024@gmail.com>
 ---
- drivers/scsi/qla2xxx/qla_init.c | 19 +++++++++++++++++--
- drivers/scsi/qla2xxx/qla_isr.c  | 19 +++++++++++++++++--
- 2 files changed, 34 insertions(+), 4 deletions(-)
+ drivers/scsi/qla2xxx/qla_bsg.c | 33 ++++++++++++++++++++-------------
+ 1 file changed, 20 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index fa4abeefc0f3..07a1f681fcca 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -2462,8 +2462,23 @@ qla24xx_handle_plogi_done_event(struct scsi_qla_host *vha, struct event_arg *ea)
- 	    ea->sp->gen1, fcport->rscn_gen,
- 	    ea->data[0], ea->data[1], ea->iop[0], ea->iop[1]);
+diff --git a/drivers/scsi/qla2xxx/qla_bsg.c b/drivers/scsi/qla2xxx/qla_bsg.c
+index 8afa8a4b8ccb..2c44a379cb23 100644
+--- a/drivers/scsi/qla2xxx/qla_bsg.c
++++ b/drivers/scsi/qla2xxx/qla_bsg.c
+@@ -1548,8 +1548,9 @@ qla2x00_update_optrom(struct bsg_job *bsg_job)
+ 	ha->optrom_buffer = NULL;
+ 	ha->optrom_state = QLA_SWAITING;
+ 	mutex_unlock(&ha->optrom_mutex);
+-	bsg_job_done(bsg_job, bsg_reply->result,
+-		       bsg_reply->reply_payload_rcv_len);
++	if (!rval)
++		bsg_job_done(bsg_job, bsg_reply->result,
++			     bsg_reply->reply_payload_rcv_len);
+ 	return rval;
+ }
  
--	if ((fcport->fw_login_state == DSC_LS_PLOGI_PEND) ||
--	    (fcport->fw_login_state == DSC_LS_PRLI_PEND)) {
-+	if (fcport->fw_login_state == DSC_LS_PLOGI_PEND) {
-+		ql_dbg(ql_dbg_disc, vha, 0x20ea,
-+		    "%s %d %8phC Remote is trying to login\n",
-+		    __func__, __LINE__, fcport->port_name);
-+		/*
-+		 * If we get here, there is port thats already logged in,
-+		 * but it's state has not moved ahead. Recheck with FW on
-+		 * what state it is in and proceed ahead
-+		 */
-+		if (!N2N_TOPO(vha->hw)) {
-+			fcport->fw_login_state = DSC_LS_PRLI_COMP;
-+			qla24xx_post_gpdb_work(vha, fcport, 0);
-+		}
-+		return;
-+	}
-+
-+	if (fcport->fw_login_state == DSC_LS_PRLI_PEND) {
- 		ql_dbg(ql_dbg_disc, vha, 0x20ea,
- 		    "%s %d %8phC Remote is trying to login\n",
- 		    __func__, __LINE__, fcport->port_name);
-diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-index c4c6b5c6658c..8786b5fd0966 100644
---- a/drivers/scsi/qla2xxx/qla_isr.c
-+++ b/drivers/scsi/qla2xxx/qla_isr.c
-@@ -1669,13 +1669,28 @@ qla2x00_async_event(scsi_qla_host_t *vha, struct rsp_que *rsp, uint16_t *mb)
+@@ -2638,8 +2639,9 @@ qla2x00_manage_host_stats(struct bsg_job *bsg_job)
+ 				    sizeof(struct ql_vnd_mng_host_stats_resp));
  
- 			/* Port logout */
- 			fcport = qla2x00_find_fcport_by_loopid(vha, mb[1]);
--			if (!fcport)
-+			if (!fcport) {
-+				ql_dbg(ql_dbg_async, vha, 0x5011,
-+					"Could not find fcport:%04x %04x %04x\n",
-+					mb[1], mb[2], mb[3]);
- 				break;
--			if (atomic_read(&fcport->state) != FCS_ONLINE)
-+			}
-+
-+			if (atomic_read(&fcport->state) != FCS_ONLINE) {
-+				ql_dbg(ql_dbg_async, vha, 0x5012,
-+					"Port state is not online State:0x%x \n",
-+					atomic_read(&fcport->state));
-+				ql_dbg(ql_dbg_async, vha, 0x5012,
-+					"Scheduling session for deletion \n");
-+				fcport->logout_on_delete = 0;
-+				qlt_schedule_sess_for_deletion(fcport);
- 				break;
-+			}
-+
- 			ql_dbg(ql_dbg_async, vha, 0x508a,
- 			    "Marking port lost loopid=%04x portid=%06x.\n",
- 			    fcport->loop_id, fcport->d_id.b24);
-+
- 			if (qla_ini_mode_enabled(vha)) {
- 				fcport->logout_on_delete = 0;
- 				qlt_schedule_sess_for_deletion(fcport);
+ 	bsg_reply->result = DID_OK;
+-	bsg_job_done(bsg_job, bsg_reply->result,
+-		     bsg_reply->reply_payload_rcv_len);
++	if (!ret)
++		bsg_job_done(bsg_job, bsg_reply->result,
++			     bsg_reply->reply_payload_rcv_len);
+ 
+ 	return ret;
+ }
+@@ -2728,8 +2730,9 @@ qla2x00_get_host_stats(struct bsg_job *bsg_job)
+ 							       bsg_job->reply_payload.sg_cnt,
+ 							       data, response_len);
+ 	bsg_reply->result = DID_OK;
+-	bsg_job_done(bsg_job, bsg_reply->result,
+-		     bsg_reply->reply_payload_rcv_len);
++	if (!ret)
++		bsg_job_done(bsg_job, bsg_reply->result,
++			     bsg_reply->reply_payload_rcv_len);
+ 
+ 	kfree(data);
+ host_stat_out:
+@@ -2828,8 +2831,9 @@ qla2x00_get_tgt_stats(struct bsg_job *bsg_job)
+ 				    bsg_job->reply_payload.sg_cnt, data,
+ 				    response_len);
+ 	bsg_reply->result = DID_OK;
+-	bsg_job_done(bsg_job, bsg_reply->result,
+-		     bsg_reply->reply_payload_rcv_len);
++	if (!ret)
++		bsg_job_done(bsg_job, bsg_reply->result,
++			     bsg_reply->reply_payload_rcv_len);
+ 
+ tgt_stat_out:
+ 	kfree(data);
+@@ -2890,8 +2894,9 @@ qla2x00_manage_host_port(struct bsg_job *bsg_job)
+ 				    bsg_job->reply_payload.sg_cnt, &rsp_data,
+ 				    sizeof(struct ql_vnd_mng_host_port_resp));
+ 	bsg_reply->result = DID_OK;
+-	bsg_job_done(bsg_job, bsg_reply->result,
+-		     bsg_reply->reply_payload_rcv_len);
++	if (!ret)
++		bsg_job_done(bsg_job, bsg_reply->result,
++			     bsg_reply->reply_payload_rcv_len);
+ 
+ 	return ret;
+ }
+@@ -3272,7 +3277,8 @@ int qla2x00_mailbox_passthru(struct bsg_job *bsg_job)
+ 
+ 	bsg_job->reply_len = sizeof(*bsg_job->reply);
+ 	bsg_reply->result = DID_OK << 16;
+-	bsg_job_done(bsg_job, bsg_reply->result, bsg_reply->reply_payload_rcv_len);
++	if (!ret)
++		bsg_job_done(bsg_job, bsg_reply->result, bsg_reply->reply_payload_rcv_len);
+ 
+ 	kfree(req_data);
+ 
+@@ -3359,8 +3365,9 @@ static int qla28xx_validate_flash_image(struct bsg_job *bsg_job)
+ 	bsg_reply->result = DID_OK << 16;
+ 	bsg_reply->reply_payload_rcv_len = 0;
+ 	bsg_job->reply_len = sizeof(struct fc_bsg_reply);
+-	bsg_job_done(bsg_job, bsg_reply->result,
+-			bsg_reply->reply_payload_rcv_len);
++	if (!rval)
++		bsg_job_done(bsg_job, bsg_reply->result,
++			     bsg_reply->reply_payload_rcv_len);
+ 
+ 	return QLA_SUCCESS;
+ }
 -- 
 2.23.1
 
