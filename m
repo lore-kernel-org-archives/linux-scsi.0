@@ -1,173 +1,132 @@
-Received: from mail-ej1-f44.google.com (mail-ej1-f44.google.com [209.85.218.44])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0b-0016f401.pphosted.com (mx0b-0016f401.pphosted.com [67.231.156.173])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 495522EA171
-	for <linux-scsi@vger.kernel.org>; Wed, 10 Dec 2025 09:50:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.44
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E8C602E62D1
+	for <linux-scsi@vger.kernel.org>; Wed, 10 Dec 2025 10:16:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.156.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1765360225; cv=none; b=d29YXW3hs29qwnOOl8J/J1EDiQqS5bMclYQJ7Vc+P10xjUx5FkxCh2sV0SuxoDk9XxEkYmE5+UebzwVQZF/ZvQebFx0Yh0HdmZIQrQxRtE1yJN8MwBKBh/6gFuyvl4Ri5MakVdaLlhS1acpd/TF8RLd6mHBmWWojsNRISa2NfBE=
+	t=1765361789; cv=none; b=KrQ51HLwD0dDfc0I7RrzveUnCNmZoii2Jmsu2yTzDxu9gJ1Y0xHmky8atqPah9SzWHTTp7Pn5T+2LNdVAV/1E6vaepsukmVIFNZclJiIW937+q6oTeCloRgVtDg7lUfi/1Tqgr9qz5wTkW62MXOuVh7qNedFSSBmafvmkuDoVwk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1765360225; c=relaxed/simple;
-	bh=whCZjUGqv3vrEEtIiN/ZjgJpiaWYSpV1Iq0xItypr1s=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=XbfNQQ3WALSvrflxNtskBCyoZNfLCljPavx+2ecXkTp8Z2UU+T7EZrWQmXFkopidDV4Y16tVF+d/xeitYFdIqZk64es24bnLWnQhTCfjzPiZYZFy9j7pQysV/wzAzGL2vW15wjeEu6GuPdAPN/XR+DlpeBj++6tfaMT16vl0nvw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=baylibre.com; spf=pass smtp.mailfrom=baylibre.com; dkim=pass (2048-bit key) header.d=baylibre-com.20230601.gappssmtp.com header.i=@baylibre-com.20230601.gappssmtp.com header.b=v5/v7gAh; arc=none smtp.client-ip=209.85.218.44
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=baylibre.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=baylibre.com
+	s=arc-20240116; t=1765361789; c=relaxed/simple;
+	bh=Qk1l05sCIeTAbuemGCp1Lt7TDmOlTYLnpsfsY1i3x8w=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=ghHVed/2YCWS4SCjkqJvZQh0QAzwLHWSoKDnIcWvDZei1YRYQBxvRIP++UP3FrGcn3jdC4eLnjvXhNcsBDaBR/5UsyWtFoD2YZDPOe21tnqy8TxNkPGLfODAwFbN5mCUOecMhJ1XSiXxrxzObodpD4V1vpB4RuH60xzQDw5jQRU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=marvell.com; spf=pass smtp.mailfrom=marvell.com; dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b=Anu1+WBS; arc=none smtp.client-ip=67.231.156.173
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=marvell.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=marvell.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=baylibre-com.20230601.gappssmtp.com header.i=@baylibre-com.20230601.gappssmtp.com header.b="v5/v7gAh"
-Received: by mail-ej1-f44.google.com with SMTP id a640c23a62f3a-b735e278fa1so1183525866b.0
-        for <linux-scsi@vger.kernel.org>; Wed, 10 Dec 2025 01:50:22 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=baylibre-com.20230601.gappssmtp.com; s=20230601; t=1765360220; x=1765965020; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=oZE9JfKqeRb0SFtDgmq72mgYbh+yhXmkqKswR12GDlA=;
-        b=v5/v7gAh4j4zVBpbIyH50Qbicn92XTFQ/KU+dz7OBBTXOxfse62sAgDNvoLm75yuzn
-         npRltYfIHoat0XHyOrBH0dtxpsYUJLmyuO1hAMBYqUA1uxerg1lAxXIJtQqBwejriugN
-         vsAqEYYVWCH9NuPU3+J5cZAV6HcR3PixoV+BLoESPbBYmgAjfQ2qJGRvvze1UzL8VLlu
-         THhkBE06FpWgjyO1dOubKDJnsK4RHbl8vdiMFtJhe1XzgSyKf8sfIngtwgVeOmdSwcpE
-         /OCJqHgJUh0370YwKl8PcAKYyjc7JU4n1EKVGBm5OLNqDu3WeI1UVvBetoLUOygeY3wb
-         1A7g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1765360220; x=1765965020;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=oZE9JfKqeRb0SFtDgmq72mgYbh+yhXmkqKswR12GDlA=;
-        b=Xz1okCwElKMKksvo2RzjVjn7eQJ02Zb93bQHwi6gAbO4xKXS1WeaiB1JezSLSQLgpo
-         V/5Dl3OT5YnE89C8kdM1sYvqVmpQEEbjTqalAHxrCIjanUSQn9j0lcP78fzql7/9jwBP
-         ZvTsvsDK+kVTc8t7r0abr3IpFGFs9B5jDRZBkDnH0OFtczm7CwBXEe+z+3CLQFdZpxGZ
-         9ZPi2/kXT/GhJviDKCkMglH0Oy9utrxsBJnlHrtal/P6AmWBXfK/RdsdYL/L+hBmzjds
-         QU6ePYTba4WXQj/l2+7OL8AJC6AoWYNjimXUvZhB6Pfx/J349Mlrqj5OfH0hugfchW6c
-         XqEw==
-X-Forwarded-Encrypted: i=1; AJvYcCXW7xnmswFjQ/rOcBOV5A+sqzyuplqB0a/Z1pvSYBL5plfbJ0Yl3CEoRiD/HeRBLqdBvd4m6aUZMCOM@vger.kernel.org
-X-Gm-Message-State: AOJu0YzVyrIj4m/9ABt+Fcq1qYmK85WcY2sk4Cusoh4SHsvm7zF3t8IR
-	iVoeAf5Z4C4oa3CI6j6Kkgwj+nA0DTmYLmrIdxYmcqnF+7J3C0R+WPS7nuved1VC8wFY81/uqY3
-	vniqB
-X-Gm-Gg: ASbGncs5/2ZDwVvdFZUcbFLJOXyd9zRyu+k/sDKre2adTR8c3OZAJoewYWAxWEctNCu
-	EwrMaZynZ09yVt8kt7RX/APkWFwXGFUPgDIXZyHemkwFzFkt35Ug8EInTcqLlazFodNv3bV+9mT
-	1BS7LJIWyqe/Gv506BUA7iTtxLiC/h/8LrP3rVmbEckmM7N4xpIXsTh+ZGJycoTDp6fYkfh7H65
-	NJ34Kw4GT0XVFyajnjThswoQ+Tc5fTV7cHNcQdEXwu2mLkpfs4PMsI2BCEoj8mw5AQVuRcvTxrv
-	tV9aFl9UffyZg8ozEfsyq6OTWshXQB7kK95N+oeQQpLgjWpIHAdh9Dqxu52VVdgkRrbjHZPc+kq
-	ZaSTJdF4Cv3pyhatGUn2oksYBNEZcKYRCUdDy65ZaXZY8kK57eStR3UmnZldcS5KcyAxdOk/P9y
-	WA5Lu4Sg61DmeeHa127FssL6ZZWTieWpACggpsnqO2PpLZetTvPggmYDVdCrENSPdvi7eXPqaPm
-	Gg=
-X-Google-Smtp-Source: AGHT+IGQqcfjtS5Gd3gksd8VZay5YfyWjZxi9MAt2gHysXctBXrgnWSSGfPVdgIj8+61byLBhCsRJw==
-X-Received: by 2002:a17:907:96ac:b0:b76:bcf5:a388 with SMTP id a640c23a62f3a-b7ce8450d3cmr195956366b.50.1765360220436;
-        Wed, 10 Dec 2025 01:50:20 -0800 (PST)
-Received: from localhost (p200300f65f00660876e6d1cee70127e1.dip0.t-ipconnect.de. [2003:f6:5f00:6608:76e6:d1ce:e701:27e1])
-        by smtp.gmail.com with UTF8SMTPSA id a640c23a62f3a-b7a715226b7sm366718066b.22.2025.12.10.01.50.19
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 10 Dec 2025 01:50:19 -0800 (PST)
-Date: Wed, 10 Dec 2025 10:50:18 +0100
-From: Uwe =?utf-8?Q?Kleine-K=C3=B6nig?= <u.kleine-koenig@baylibre.com>
-To: kernel test robot <lkp@intel.com>
-Cc: "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
-	oe-kbuild-all@lists.linux.dev, "Martin K. Petersen" <martin.petersen@oracle.com>, 
-	linux-scsi@vger.kernel.org
-Subject: Re: [PATCH 4/8] scsi: sd: Convert to scsi bus methods
-Message-ID: <3cxoce4geqes4nfneujjgjscyspktptdthktnqlm2uqivtfvju@kddvyhidg6bh>
-References: <1931ec5bbe8d0ad82b6fbc77939d43bf5a4f177f.1765312062.git.u.kleine-koenig@baylibre.com>
- <202512101723.HHskrJpy-lkp@intel.com>
+	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="Anu1+WBS"
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 5BA4aCml164110;
+	Wed, 10 Dec 2025 02:16:19 -0800
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=
+	cc:content-transfer-encoding:content-type:date:from:message-id
+	:mime-version:subject:to; s=pfpt0220; bh=hfIvEleHBQKrrr7BdSs7Q/J
+	jHSElC5VxkrrJFrZZWh4=; b=Anu1+WBSjVBdtT7AdzJrEvVZO4P5Xij64Jc9Uv8
+	Myx5FeCPlk7ofhfIX+5GSfFgBFKKyOs1XJhE/UlkuOpwT+NwihyNuGvLtZ2/+N+b
+	jrJ9ABLzKVX2AlXRgOfBfLQrNaZZSuNIpm2aOqclNt0+NC0gBrEBPQTbOEHXW6ow
+	vXBIAxkVa5MP7AzR24nOqjFb21V5/MI1MLIwxyHY5A4OQnl6ePzlT+Tyj8kSELwm
+	dPLCjEPeubRKr9Duj9U7SnClQ6YqRwwXLLczb9D7oPR86s3HTXL3ekgYmgHf6j7T
+	6kbhO7EDhIKK2NOZ4zCuGfVawgZwsWFrJIVhZTQbcJFOBtg==
+Received: from dc5-exch05.marvell.com ([199.233.59.128])
+	by mx0b-0016f401.pphosted.com (PPS) with ESMTPS id 4axwgd167q-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 10 Dec 2025 02:16:19 -0800 (PST)
+Received: from DC5-EXCH05.marvell.com (10.69.176.209) by
+ DC5-EXCH05.marvell.com (10.69.176.209) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.25; Wed, 10 Dec 2025 02:16:31 -0800
+Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH05.marvell.com
+ (10.69.176.209) with Microsoft SMTP Server id 15.2.1544.25 via Frontend
+ Transport; Wed, 10 Dec 2025 02:16:31 -0800
+Received: from stgdev-a5u16.punelab.marvell.com (stgdev-a5u16.punelab.marvell.com [10.31.33.164])
+	by maili.marvell.com (Postfix) with ESMTP id 043123F709D;
+	Wed, 10 Dec 2025 02:16:15 -0800 (PST)
+From: Nilesh Javali <njavali@marvell.com>
+To: <martin.petersen@oracle.com>
+CC: <linux-scsi@vger.kernel.org>, <GR-QLogic-Storage-Upstream@marvell.com>,
+        <agurumurthy@marvell.com>, <sdeodhar@marvell.com>, <emilne@redhat.com>,
+        <jmeneghi@redhat.com>
+Subject: [PATCH v3 00/12]  qla2xxx: Misc feature and bug fixes
+Date: Wed, 10 Dec 2025 15:45:52 +0530
+Message-ID: <20251210101604.431868-1-njavali@marvell.com>
+X-Mailer: git-send-email 2.23.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-	protocol="application/pgp-signature"; boundary="fibr6uhimrcvt46t"
-Content-Disposition: inline
-In-Reply-To: <202512101723.HHskrJpy-lkp@intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-ORIG-GUID: 6OSdn9ZgcUopKBLCCIQVurPUNVtSnilB
+X-Proofpoint-GUID: 6OSdn9ZgcUopKBLCCIQVurPUNVtSnilB
+X-Authority-Analysis: v=2.4 cv=OIcqHCaB c=1 sm=1 tr=0 ts=69394873 cx=c_pps
+ a=rEv8fa4AjpPjGxpoe8rlIQ==:117 a=rEv8fa4AjpPjGxpoe8rlIQ==:17
+ a=IkcTkHD0fZMA:10 a=wP3pNCr1ah4A:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=YXPW31DPAwPrC3P8G5QA:9 a=QEXdDO2ut3YA:10
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUxMjEwMDA4NSBTYWx0ZWRfX0Zg+SiXpQinl
+ mGOBy/yTwZDEwqA39sEpjfqYRJJAZNtkGyzg8PG9NejPK04+ZHDok8KkNzquyKMKPR6TJ5XERtS
+ B7SRqEbIqKu5ohJnCkEvBKLa6cmnOdkCCRtDzzHFLPUWtIrVWdCRANLD+c6iwaJ5wOP7Kxssj5T
+ wkr3SLDYvLEDWIZL3kHJegNE3ZwnBkPrOmKooB4nGAf7sWHY+TjWuQZ6rs5xJbTyVmgISz0fC1T
+ 7z6UAY38UKz2STjROAvAm4KRkq4y+8bya4TbDc1jXLkLQJsdLExmMgOLBg73rI+2v3SkY4xI4xf
+ EQInsj9KAqFAVYo7x7PWJyVYYVSRrrgDP2nR69hjfphTnS8/4fU7yda6ZRm5VAmuS8NFPaaaz9d
+ P9sjqj3oVAIFiZQ+G5pW9ErElSzVkQ==
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.9,FMLib:17.12.100.49
+ definitions=2025-12-09_05,2025-12-09_03,2025-10-01_01
+
+Hello Martin,
+
+Please apply the qla2xxx driver load flash FW mailbox support
+along with miscellaneous bug fixes to the scsi tree at your
+earliest convenience.
+
+v3:
+fix warning reported by kernel robot and Dan Carpenter
+v2:
+fix warning reported by kernel robot
+
+Thanks,
+Nilesh
+
+Anil Gurumurthy (5):
+  qla2xxx: Delay module unload while fabric scan in progress
+  qla2xxx: free sp in error path to fix system crash
+  qla2xxx: validate sp before freeing associated memory
+  qla2xxx: Query FW again before proceeding with login
+  qla2xxx: fix bsg_done causing double free
+
+Himanshu Madhani (1):
+  qla2xxx: Add Speed in SFP print information
+
+Manish Rangankar (4):
+  qla2xxx: Add support for 64G SFP speed
+  qla2xxx: Add load flash firmware mailbox support for 28xxx
+  qla2xxx: Validate MCU signature before executing MBC 03h
+  qla2xxx: Add bsg interface to support firmware img validation
+
+Nilesh Javali (1):
+  qla2xxx: Update version to 10.02.10.100-k
+
+Shreyas Deodhar (1):
+  qla2xxx: Allow recovery for tape devices
+
+ drivers/scsi/qla2xxx/qla_bsg.c     | 147 ++++++++++++++++--
+ drivers/scsi/qla2xxx/qla_bsg.h     |  12 ++
+ drivers/scsi/qla2xxx/qla_def.h     |  30 +++-
+ drivers/scsi/qla2xxx/qla_gbl.h     |   5 +
+ drivers/scsi/qla2xxx/qla_gs.c      |  41 +++--
+ drivers/scsi/qla2xxx/qla_init.c    | 232 +++++++++++++++++++++++++++--
+ drivers/scsi/qla2xxx/qla_isr.c     |  19 ++-
+ drivers/scsi/qla2xxx/qla_mbx.c     |  88 +++++++++++
+ drivers/scsi/qla2xxx/qla_nx.h      |   1 +
+ drivers/scsi/qla2xxx/qla_os.c      |   3 +-
+ drivers/scsi/qla2xxx/qla_sup.c     |  29 ++++
+ drivers/scsi/qla2xxx/qla_version.h |   8 +-
+ 12 files changed, 559 insertions(+), 56 deletions(-)
 
 
---fibr6uhimrcvt46t
-Content-Type: text/plain; protected-headers=v1; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-Subject: Re: [PATCH 4/8] scsi: sd: Convert to scsi bus methods
-MIME-Version: 1.0
+base-commit: e6965188f84a7883e6a0d3448e86b0cf29b24dfc
+-- 
+2.23.1
 
-On Wed, Dec 10, 2025 at 05:20:24PM +0800, kernel test robot wrote:
-> Hi Uwe,
->=20
-> kernel test robot noticed the following build warnings:
->=20
-> [auto build test WARNING on 7d0a66e4bb9081d75c82ec4957c50034cb0ea449]
->=20
-> url:    https://github.com/intel-lab-lkp/linux/commits/Uwe-Kleine-K-nig/s=
-csi-Pass-a-struct-scsi_driver-to-scsi_-un-register_driver/20251210-044843
-> base:   7d0a66e4bb9081d75c82ec4957c50034cb0ea449
-> patch link:    https://lore.kernel.org/r/1931ec5bbe8d0ad82b6fbc77939d43bf=
-5a4f177f.1765312062.git.u.kleine-koenig%40baylibre.com
-> patch subject: [PATCH 4/8] scsi: sd: Convert to scsi bus methods
-> config: parisc-defconfig (https://download.01.org/0day-ci/archive/2025121=
-0/202512101723.HHskrJpy-lkp@intel.com/config)
-> compiler: hppa-linux-gcc (GCC) 15.1.0
-> reproduce (this is a W=3D1 build): (https://download.01.org/0day-ci/archi=
-ve/20251210/202512101723.HHskrJpy-lkp@intel.com/reproduce)
->=20
-> If you fix the issue in a separate patch/commit (i.e. not just a new vers=
-ion of
-> the same patch/commit), kindly add following tags
-> | Reported-by: kernel test robot <lkp@intel.com>
-> | Closes: https://lore.kernel.org/oe-kbuild-all/202512101723.HHskrJpy-lkp=
-@intel.com/
->=20
-> All warnings (new ones prefixed by >>):
->=20
-> >> Warning: drivers/scsi/sd.c:3912 function parameter 'sdp' not described=
- in 'sd_probe'
-> >> Warning: drivers/scsi/sd.c:4061 function parameter 'sd' not described =
-in 'sd_remove'
-
-Oh, this needs:
-
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index afed915eb158..99a55bc026b4 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -3895,7 +3895,7 @@ static int sd_format_disk_name(char *prefix, int inde=
-x, char *buf, int buflen)
-  *	sd_probe - called during driver initialization and whenever a
-  *	new scsi device is attached to the system. It is called once
-  *	for each scsi device (not just disks) present.
-- *	@dev: pointer to device object
-+ *	@sdp: pointer to scsi device object
-  *
-  *	Returns 0 if successful (or not interested in this scsi device=20
-  *	(e.g. scanner)); 1 when there is an error.
-@@ -4051,7 +4051,7 @@ static int sd_probe(struct scsi_device *sdp)
-  *	sd_remove - called whenever a scsi disk (previously recognized by
-  *	sd_probe) is detached from the system. It is called (potentially
-  *	multiple times) during sd module unload.
-- *	@dev: pointer to device object
-+ *	@sd: pointer to scsi device object
-  *
-  *	Note: this function is invoked from the scsi mid-level.
-  *	This function potentially frees up a device name (e.g. /dev/sdc)
-
-I added that to my local tree, so if I send out a v2 this will be
-included. But I'm also open for someone picking up this version and
-squashing the above changes into patch #4. :-)
-
-Best regards
-Uwe
-
---fibr6uhimrcvt46t
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQEzBAABCgAdFiEEP4GsaTp6HlmJrf7Tj4D7WH0S/k4FAmk5QlcACgkQj4D7WH0S
-/k7ougf8D2uDMTspGVVqQkC8rbY1Pu7JdYdkanHQpkF9MQ2QoNHWubEpLgub0vDV
-gKnEQK4PinmXjC54YdECeAm5TR4/YBI1UUOqgFiD6ZX/dEUleOfl2t7gg5XIUnld
-x+o1AC4WmU4cIt1ES7Fu7hw9bjyJMCDDmNyah+ZDv/bjXiARI8XuahstslbFSDtV
-OQU9qh8TSfaecS29M7TtSFGwIasFZQ6rWpqTHBgL3TTYHi4FdfxvHFuJx/hDYcW3
-TqR19jjETCMa7+y0m/OVTtzWH2qJhng0eJb8zBkD4NpxtLWudJDWADx6v2WVZ5YC
-Ut9iv7NSyxJZ9vBCEe+d9L14BY41Iw==
-=xqPc
------END PGP SIGNATURE-----
-
---fibr6uhimrcvt46t--
