@@ -1,83 +1,84 @@
 Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3E73D266B6B
-	for <linux-scsi@vger.kernel.org>; Wed, 10 Dec 2025 15:50:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3A7C1248893
+	for <linux-scsi@vger.kernel.org>; Wed, 10 Dec 2025 15:50:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1765381854; cv=none; b=pw32va/PmaIRCXV1OTEaLuSedN3WrXS8ukteBjiSzVvcKh3huVAPASGc8oP27pINifwO2jHIZ/T4wXVILHxl5RyuIsvFf1F0RDo6CilIlV3nYbiUcKWSTpLtPG7c0gYXg4nWdrxkW3HVyJPsnBP0/6jOoq6U45F075tFWsZyolc=
+	t=1765381859; cv=none; b=ODkMHjkctJI19uO9PLbVxfW9BmRfdqt6IjFpPtovpR0JwrrrayE8F9bD7WFFBQ6x7HyK+urvfxWo3fLyhKMN7kFU6rGZeT6E6IMPtsj6W+G1ecOrIXMoUcWd1WGnHvyaX7JqoXZ9AEEsXGmVPqXK/+WDTshocnET8bbIFxUojYU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1765381854; c=relaxed/simple;
-	bh=o7drDZrAUJDSBez9RsLhsFME8yCRZ78zI6P8jv4utCM=;
+	s=arc-20240116; t=1765381859; c=relaxed/simple;
+	bh=qjGkXyff0JOzXHAVjFAg4DNaOzEfBoQYUyu5QmS1S7g=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=URAwQYIMwYUod3W1AYxLrTprIIJlfbwIXzKoww6PhwY5Zw0YcA3QwEuHorclee4200x2E9vpkUIofUEI1dIPhkd7eA1GekWNKTvbb6qIEWyFSrRTnvwMawi3GLvZ4GPlLOjYLyEw2JSFBMtcS/I69XOisHkuPkgMn5ieqSvDaVI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=PHJsWlfZ; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=IQQvuTIp; arc=none smtp.client-ip=205.220.168.131
+	 MIME-Version:Content-Type; b=hb4cW5fHhiXoyIY3FbyFH1f8+AkKWu02YMuHEmtvwBfWM3wITJ61MlmuVs7URgv1NsAKhOVEfIaBsGcnbKKxaycQGxx2f4C7/H0mFy6wxXRAbm9w6QTdOY817Em06F4vv2DGawbm8GeYDD0dDYN54BmmThPD4Jjqb2TjBqJyhJE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=YJcxgI8c; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=NvwvFq/s; arc=none smtp.client-ip=205.220.168.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="PHJsWlfZ";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="IQQvuTIp"
-Received: from pps.filterd (m0279865.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 5BAAPhTP2303335
-	for <linux-scsi@vger.kernel.org>; Wed, 10 Dec 2025 15:50:51 GMT
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="YJcxgI8c";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="NvwvFq/s"
+Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 5BAB6FsG2419757
+	for <linux-scsi@vger.kernel.org>; Wed, 10 Dec 2025 15:50:56 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:date:from:in-reply-to:message-id
-	:mime-version:references:subject:to; s=qcppdkim1; bh=Cpyzssk0iqR
-	6XnHl+tGOj35nKrptmEhANEPfVeOn+jg=; b=PHJsWlfZLB3w+UOQPHTBJyleP0/
-	Hh6GwQT0/Emntv7yn3OrLblGL5Y9iRez4eAKmRH0Dcn87w7fAg6/QfGQ/4EWl5ue
-	zEm9OUJjjq4BVkmzltMhWPlEdAtr+G2niQ2Oqd/zsqa4kVVG/7/LCIGDjPsWV3+T
-	+/T/tVlTsbc29GjLM/YDkGaV9WaMayke2Y6JHC3snLG00pifnYYkIF+pK7EmygJ/
-	f8iUrZHPuNp5lP1NQ4NP7QyLF0O/bK7nxBSUDLKX9yKYo37KVn9gad/4bj2xI9fT
-	bHn6li00ubMyfXmEaD+CFprSskIlTJ0YGUymGTVmJbZceGcrAykD06srOzw==
-Received: from mail-pl1-f199.google.com (mail-pl1-f199.google.com [209.85.214.199])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4ay73rgyvs-1
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	+rUCr121SZ+QerPYflBRYtTCStaRS4LPAaBzx1rPUmQ=; b=YJcxgI8c/0JePLcl
+	Gw2od2t9DwnaVf4yvQGjLt2Jexl5QtiVQqAZREIQjZ7fMDcjkcMTuNkUXLeWivbz
+	02sxMeDB63aiLUX9W2v91LVBTkQQVdAhxQ1FEK5pMAuW+m07TTPjXIy1cG8395+A
+	4y6HSi84gitgPorsuzRiRGtGHr6q+0vtY3sKt7TWu/WgYOVc3BZpCmkA08LtyjN5
+	wr+s4dd6HvgZPsvLBIBMLavU2k/90SUrw1qcfTIPAyy/c1O4Lz8sjWpeVBpAmhwi
+	aZ+zxdtWgoBGKatyAToQ6GyhNLbE6cZWaDk0IDNrIewQ6E7AGDWwS0BNrQyshKj9
+	u0HDOQ==
+Received: from mail-pl1-f197.google.com (mail-pl1-f197.google.com [209.85.214.197])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4ay7pp0v1u-1
 	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Wed, 10 Dec 2025 15:50:51 +0000 (GMT)
-Received: by mail-pl1-f199.google.com with SMTP id d9443c01a7336-297df52c960so89555ad.1
-        for <linux-scsi@vger.kernel.org>; Wed, 10 Dec 2025 07:50:51 -0800 (PST)
+	for <linux-scsi@vger.kernel.org>; Wed, 10 Dec 2025 15:50:55 +0000 (GMT)
+Received: by mail-pl1-f197.google.com with SMTP id d9443c01a7336-297f8a2ba9eso143638115ad.3
+        for <linux-scsi@vger.kernel.org>; Wed, 10 Dec 2025 07:50:55 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1765381851; x=1765986651; darn=vger.kernel.org;
+        d=oss.qualcomm.com; s=google; t=1765381855; x=1765986655; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=Cpyzssk0iqR6XnHl+tGOj35nKrptmEhANEPfVeOn+jg=;
-        b=IQQvuTIpnLAYwZE9KAXP4X5s8B0COAxmI08UIc5oyW5ThRIXDXmmIf9cwQ9etDmZRf
-         bY5A60AMy1WjTJ6dKXSslktoviKLA3xFnEf3bhGtSoK8Fj/y6j2jrY+QTSp0fiGu6KML
-         sBgfORct41cYUG6ArZ5inxUo245/ndzFs1O1d8YdFXQWoc7jcXxXxzVGQkpZohQ6kuSz
-         Y4SgeFJ9Ne3HuwwSsZ+pHToalOavu751awsGPPq/PAQwfKTez38vxUSB3w+DRUxPlh3r
-         QoWZJF1EPDSKDTT92XKNvq8bFRNPdFD6UyxbcZXPQjDqSBXBi8MGKbRAF4bUjJoQ8DMj
-         jN8w==
+        bh=+rUCr121SZ+QerPYflBRYtTCStaRS4LPAaBzx1rPUmQ=;
+        b=NvwvFq/scNTyASHWb1QN+iqrtTs8s6p3dUtqUi9bV5eev8kna+n+FJ6p+n5kiW6Mc+
+         Cu0c/VlmmywBpSfcMu4no1TfJZxjMDSPbvvh2Fv3b1PXnmCQYo5fetsQS1rSc8Mu0yP9
+         Eq2iu85GLFopwnPURRZPWdVLn9asVTnm7ALy392I37tL3vAtUkkHOojgPFac8iCd7CZ4
+         Tp+GrRMmNzgqeFTYtylC1u2VzvveNiwYCGIjWnJvsrt4vpUEUS0D6ucoDhWDY7haHzrs
+         QN1i1az8UvwcvW245EILGNf/U86zn9VvmGzMOvEamTN7zBJ3nQAUr4ZGir1qCZAOMW4i
+         dIuw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1765381851; x=1765986651;
+        d=1e100.net; s=20230601; t=1765381855; x=1765986655;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to;
-        bh=Cpyzssk0iqR6XnHl+tGOj35nKrptmEhANEPfVeOn+jg=;
-        b=oOPSCZBSz+H0kWfrBq6Y6CrhBtrjB3RskwhR1qpsUc/zuNGF+oUv8UhWn9/75hLgWZ
-         PV/4ciph+6iYTTy/ikqtCwr5WEoiRn5aIYw+/1ETpaF3SnlCirSrLtNRo3Ltzphy4dPi
-         NAYxGpF1ICfmhvqgRaLRktqesNAZpocNROafJmuVGITe+++MD5ThnEe2S7bfJ5+8ektE
-         nZGaod1vg8wxnN0LA4wAIKLs7Gh43Fadc9ER3FO2o/SHTlNpIdu/v0GWZ6bDp6Jv+6AE
-         s3KwiXfAFNGrOYVI4gcIeCzUKyOIRbxMM4pBGJCMbDbdaaRMAPQp6q9IHmLW/LzLUGku
-         yeTQ==
-X-Forwarded-Encrypted: i=1; AJvYcCWM0pumwf5AfF4n6jCGHdoLR7AfjCi4AHXF0kCgMtPkAaIxFxYzVc0oRuQvq0ruT0RRAHOaWf+ncdaE@vger.kernel.org
-X-Gm-Message-State: AOJu0YwS2yG+9YDvUEW9qDBa/ux9JhF+ReeZs4+5voXDvRhIWAOF6/Y5
-	jk7Oex2aBTj1R0JaTMS9t25W7RQU0glzHdwau1wf9myMrBclxaRKRwzUMp3KJC7S9wR5A8YANWc
-	gaHthUTRk3QyWW7TAfQjJm8nuqB4b5HkPh5zxgZzAbu4S6WWl4dv0cicUOUFUBHBM
-X-Gm-Gg: AY/fxX5ZPkg5T3v2KVEd6y1m9KrTEWDT9Q01GVMq5Z+votg0lS0PMIp6j7yLwmNRE+a
-	SBrNFzWL0dz84Z6UejHcrsRS7eedWSXyinW/cQcw/ZLctXqhZfbA1BwfWGXrAaize01w3HRLHR5
-	7yC1g5UjVKnYZdS7j8Pa8WhKgjrAHTSksbngzffogWMM//zY5thfUVmZrF+FCRQ8SYmHFyXscak
-	MuEO2TkjFRobVrcVrixl4FR2CpxIBPdsqyzJSatLINXgniYykRH66xwyogOJZPbHI7WmmuprWMz
-	uhB88BNeNw1g512wuDmEVK38F5G6dXFQPNHHH0GN9MppSxLjOPnqoF+QmWZGGMHGR/CBdozxq13
-	Nvd30AAe7VVHGfhxuTbUaWcMRYbWlt8xMpC98RGP+
-X-Received: by 2002:a17:903:b0b:b0:297:e3f5:4a20 with SMTP id d9443c01a7336-29ec231f255mr32467325ad.26.1765381850756;
-        Wed, 10 Dec 2025 07:50:50 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IFLOpg4x7MmvcwigCDDq2GU/0z5pbMiL6qg75gGKsPElpzD1ynSU8r0WI24m3l3tG/tn4igvw==
-X-Received: by 2002:a17:903:b0b:b0:297:e3f5:4a20 with SMTP id d9443c01a7336-29ec231f255mr32467025ad.26.1765381850291;
-        Wed, 10 Dec 2025 07:50:50 -0800 (PST)
+        bh=+rUCr121SZ+QerPYflBRYtTCStaRS4LPAaBzx1rPUmQ=;
+        b=O2L79Irx4r4J4e9LtombYz3287l8PVik0+/ubClPGCjpt+33BeSsobtPef7I591kdU
+         5jLqgqQvKWUEFJFOhFbwgGCivGHH0+baX0FZoXfMRauidszgAYZiSMV92U90Zg31wgKq
+         oQCXoiCfxUuxRyAqiKnHBNEDYst9fEVz8RaXA39WH6etO6qYENgjgNjbAgan0inQrHL5
+         vDkuaz0cnzRFx/9VBNzsIKz1+VmM2ib16DWIuYy+MRALvbHaHUXj6NOxE5Z9VDwHquSZ
+         YP3t6bqqdZCp+e6kB2Xb52CgQ/ryzZ4kQrYsUobA/1r8da6UFCpmCBOAJRcEclltLbUu
+         jqyQ==
+X-Forwarded-Encrypted: i=1; AJvYcCVfsPIkaFE4uq58oRHtBiddDn4qsSWK38HoY4j9AiOjcOECSdLA0k1ySQ7mT+r8ENbZyJLO9QSe7HnS@vger.kernel.org
+X-Gm-Message-State: AOJu0YyEKpIQv62X7xEk0fgvViC79+3YS4aaD9TEW4Zq78eJ9bt/gInw
+	BsbDdUpUP3xtkNnFPUdebpgNbn5wf3s+T2IFSUjc2MRV2yu6KGuOE1vjwSwzR/QIWCtO3HshDaX
+	evQs+pDZZeJFyoFhdnak2RelSOOnTuJlYlr75ZSFL/ovHrrsjzZKp1g5EXIfHO2As
+X-Gm-Gg: AY/fxX5SPdII2PO+TiaqK/YfgRwMRPBvD/tavIHja1ee0RAcTg+8VHnGmADDvVmlxTS
+	riMz8+Qr6chIRHHXX+dtptcTwpPUoBnMrhuCN+84ZkD17DdCjQyencFKKJ/xBQdJFNxAtQjLVyO
+	1In7jd5j+EQzAjCcJJcqEcIB9KQaLr4mFHaUUQaUDjm2YOyosfw8xpFQay2Iu/tWcwgwOX6tvtf
+	8FgWB2nrmamDNglvI/2eXs7QNQv/IoAUg6OI3jA8GNMK8edhv7/zwKIEbwE6En8gCAgsRF7pRQA
+	mJnjqSVFGoE+cfeZagEcxFOeIaBOl/0Llso+PS+jqbQ1zeijrdRzgkLy2Mw349EKTzN3QsXCwR3
+	38VdkfImIF/dXWOofSpMwX5J7hXZlh9uYpToZP1AZ
+X-Received: by 2002:a17:903:178e:b0:295:596f:84ef with SMTP id d9443c01a7336-29ec2d3516cmr30281095ad.31.1765381855063;
+        Wed, 10 Dec 2025 07:50:55 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IFBZg3CDmb5QXrh/vHnqknn5K8usGXHeluV8lbexssAYjUj5YTX6hrPcmb2zIpMYU2GXSoGfg==
+X-Received: by 2002:a17:903:178e:b0:295:596f:84ef with SMTP id d9443c01a7336-29ec2d3516cmr30280815ad.31.1765381854620;
+        Wed, 10 Dec 2025 07:50:54 -0800 (PST)
 Received: from hu-rdwivedi-hyd.qualcomm.com ([202.46.22.19])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-29ed93e470fsm7780175ad.41.2025.12.10.07.50.45
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-29ed93e470fsm7780175ad.41.2025.12.10.07.50.50
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 10 Dec 2025 07:50:49 -0800 (PST)
+        Wed, 10 Dec 2025 07:50:54 -0800 (PST)
 From: Ram Kumar Dwivedi <ram.dwivedi@oss.qualcomm.com>
 To: mani@kernel.org, alim.akhtar@samsung.com, avri.altman@wdc.com,
         bvanassche@acm.org, robh@kernel.org, krzk+dt@kernel.org,
@@ -85,11 +86,10 @@ To: mani@kernel.org, alim.akhtar@samsung.com, avri.altman@wdc.com,
         martin.petersen@oracle.com, ram.dwivedi@oss.qualcomm.com,
         anjana.hari@oss.qualcomm.com
 Cc: linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
-Subject: [PATCH V2 1/3] MAINTAINERS: broaden UFS Qualcomm binding file pattern
-Date: Wed, 10 Dec 2025 21:20:31 +0530
-Message-Id: <20251210155033.229051-2-ram.dwivedi@oss.qualcomm.com>
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH V2 2/3] dt-bindings: ufs: Document bindings for SA8255P UFS Host Controller
+Date: Wed, 10 Dec 2025 21:20:32 +0530
+Message-Id: <20251210155033.229051-3-ram.dwivedi@oss.qualcomm.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20251210155033.229051-1-ram.dwivedi@oss.qualcomm.com>
 References: <20251210155033.229051-1-ram.dwivedi@oss.qualcomm.com>
@@ -99,56 +99,122 @@ List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-Proofpoint-ORIG-GUID: SVk8HH_tZDrZ-Oz-3XmA8ae3KpAgwEtX
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUxMjEwMDEyOSBTYWx0ZWRfX5rJpiGoPhR5o
- SI4DgHbtooaqOM7w1hk+xNHsnKsvJynaoScDHonBHfGMJOCCKm6X0l32fcfJfq4LLhBiFX6Nalf
- YUDXSU7TjjZPBArDsQdfMxRwVt2u9MhXuT+dXiXML1kAqcSUhIdq59MKNLeYUSxgK4mWlAwKRJZ
- IMLxMxw+H5OO3D/uc3UaFNsk839e/fIG+hnUxsyPW13sVfgRKM9vGaoSjhqgCuXwX5CDavl/2Jj
- WevPBq2HHTbngO+38eO8udlnHt3+pXcHitONCQHjzX/Kl+dJxkEpYCGUdsg6R0AbpD2SzIjzB4B
- Ex8h9cxCpQr2k+0dqaJiKuT2OoJlOlM1rwmhmciER8IH+lYSySR4XR3e86KUpbGtshUPswWIDGy
- otCDeTH38z1mPmnAvc0vmXaC5ng9Xw==
-X-Authority-Analysis: v=2.4 cv=McFhep/f c=1 sm=1 tr=0 ts=693996db cx=c_pps
- a=JL+w9abYAAE89/QcEU+0QA==:117 a=fChuTYTh2wq5r3m49p7fHw==:17
- a=wP3pNCr1ah4A:10 a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=EUspDBNiAAAA:8 a=VwQbUJbxAAAA:8 a=52jqHT57hFt4fz_33zkA:9
- a=324X-CrmTo6CU4MGRt3R:22
-X-Proofpoint-GUID: SVk8HH_tZDrZ-Oz-3XmA8ae3KpAgwEtX
+X-Proofpoint-GUID: USyiPRNTBaDCXT-JPSSjU6rUgMBFnd6t
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUxMjEwMDEyOSBTYWx0ZWRfX6HmH0OUt/Nft
+ PlY1jmItafeD7wCSy3pHPRxYhH6glqFHJrL0yu2I+SH10gM5uunCnuJ+/X6oM0vjy09/XPm4HQu
+ IjC9tt+5nmt6eNR+hZhtVIrWTWpgn84Oeh+EU9sGsxQTvFNs2q4Eg+iHU0eHtkwLvjvbVBpMYnr
+ f1xgNL69tD5CVNuz8T3Dv2c3G6j6yfsesU6grfjtVlCu9g3dnCkMpCPGOqtWJ7KRfmPXqs4xQRz
+ wEF4zFOL44cowffHemHLNW2p+E6PURf8bbzcE+k3yVw+77zyBW8cQezXvocDxd+wTfzG7NkqLYJ
+ 74vPTi+ScsU/Bt5lQ5G7GglLMZEmYbNZKXGjWdplKpI2a+vRjl+zuRe6VmCoJyI/KUjlyHZE4tU
+ L5JsIpvZHqqWUTJ1rwlSHN8kjdI9yQ==
+X-Proofpoint-ORIG-GUID: USyiPRNTBaDCXT-JPSSjU6rUgMBFnd6t
+X-Authority-Analysis: v=2.4 cv=WaMBqkhX c=1 sm=1 tr=0 ts=693996df cx=c_pps
+ a=cmESyDAEBpBGqyK7t0alAg==:117 a=fChuTYTh2wq5r3m49p7fHw==:17
+ a=IkcTkHD0fZMA:10 a=wP3pNCr1ah4A:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=gEfo2CItAAAA:8 a=EUspDBNiAAAA:8
+ a=VcM-S10TGioI4za7RKgA:9 a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
+ a=1OuFwYUASf3TG4hYMiVC:22 a=sptkURWiP4Gy88Gu7hUp:22
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.9,FMLib:17.12.100.49
  definitions=2025-12-10_01,2025-12-09_03,2025-10-01_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- suspectscore=0 adultscore=0 phishscore=0 malwarescore=0 bulkscore=0
- spamscore=0 impostorscore=0 lowpriorityscore=0 priorityscore=1501
- clxscore=1015 classifier=typeunknown authscore=0 authtc= authcc=
+ lowpriorityscore=0 clxscore=1015 impostorscore=0 spamscore=0
+ priorityscore=1501 phishscore=0 bulkscore=0 adultscore=0 suspectscore=0
+ malwarescore=0 classifier=typeunknown authscore=0 authtc= authcc=
  route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2510240001
  definitions=main-2512100129
 
-Update the file pattern for UFS Qualcomm devicetree bindings to match
-all files under `Documentation/devicetree/bindings/ufs/qcom*` instead
-of only `qcom,ufs.yaml`. This ensures maintainers are correctly
-notified for any related binding changes.
+Document the device tree bindings for UFS host controller on
+Qualcomm SA8255P platform which integrates firmware-managed
+resources.
 
-Acked-by: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
-Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
+The platform firmware implements the SCMI server and manages
+resources such as the PHY, clocks, regulators and resets via the
+SCMI power protocol. As a result, the OS-visible DT only describes
+the controller’s MMIO, interrupt, IOMMU and power-domain interfaces.
+
+The generic "qcom,ufshc" and "jedec,ufs-2.0" compatible strings are
+removed from the binding, since this firmware managed design won't
+be compatible with the drivers doing full resource management.
+
+Co-developed-by: Anjana Hari <anjana.hari@oss.qualcomm.com>
+Signed-off-by: Anjana Hari <anjana.hari@oss.qualcomm.com>
 Signed-off-by: Ram Kumar Dwivedi <ram.dwivedi@oss.qualcomm.com>
 ---
- MAINTAINERS | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ .../bindings/ufs/qcom,sa8255p-ufshc.yaml      | 62 +++++++++++++++++++
+ 1 file changed, 62 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/ufs/qcom,sa8255p-ufshc.yaml
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index c5a7cda26c60..f4d01ad6462c 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -26812,7 +26812,7 @@ M:	Manivannan Sadhasivam <mani@kernel.org>
- L:	linux-arm-msm@vger.kernel.org
- L:	linux-scsi@vger.kernel.org
- S:	Maintained
--F:	Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
-+F:	Documentation/devicetree/bindings/ufs/qcom*
- F:	drivers/ufs/host/ufs-qcom*
- 
- UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER RENESAS HOOKS
+diff --git a/Documentation/devicetree/bindings/ufs/qcom,sa8255p-ufshc.yaml b/Documentation/devicetree/bindings/ufs/qcom,sa8255p-ufshc.yaml
+new file mode 100644
+index 000000000000..ec006f7de752
+--- /dev/null
++++ b/Documentation/devicetree/bindings/ufs/qcom,sa8255p-ufshc.yaml
+@@ -0,0 +1,62 @@
++# SPDX-License-Identifier: GPL-2.0-only OR BSD-2-Clause
++%YAML 1.2
++---
++$id: http://devicetree.org/schemas/ufs/qcom,sa8255p-ufshc.yaml#
++$schema: http://devicetree.org/meta-schemas/core.yaml#
++
++title: Qualcomm SA8255P UFS Host Controller
++
++maintainers:
++  - Ram Kumar Dwivedi <ram.dwivedi@oss.qualcomm.com>
++  - Anjana Hari <anjana.hari@oss.qualcomm.com>
++
++properties:
++  compatible:
++    const: qcom,sa8255p-ufshc
++
++  reg:
++    maxItems: 1
++
++  interrupts:
++    maxItems: 1
++
++  iommus:
++    maxItems: 1
++
++  dma-coherent: true
++
++  power-domains:
++    maxItems: 1
++
++required:
++  - compatible
++  - reg
++  - interrupts
++  - power-domains
++  - iommus
++  - dma-coherent
++
++allOf:
++  - $ref: ufs-common.yaml
++
++unevaluatedProperties: false
++
++examples:
++  - |
++    #include <dt-bindings/interrupt-controller/arm-gic.h>
++
++    soc {
++        #address-cells = <2>;
++        #size-cells = <2>;
++
++        ufshc@1d84000 {
++            compatible = "qcom,sa8255p-ufshc";
++            reg = <0x0 0x01d84000 0x0 0x3000>;
++            interrupts = <GIC_SPI 265 IRQ_TYPE_LEVEL_HIGH>;
++            lanes-per-direction = <2>;
++
++            iommus = <&apps_smmu 0x100 0x0>;
++            power-domains = <&scmi3_pd 0>;
++            dma-coherent;
++        };
++    };
 -- 
 2.34.1
 
