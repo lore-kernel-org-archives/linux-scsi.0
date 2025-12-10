@@ -1,120 +1,174 @@
-Received: from mail-dy1-f173.google.com (mail-dy1-f173.google.com [74.125.82.173])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3CFD324A049
-	for <linux-scsi@vger.kernel.org>; Wed, 10 Dec 2025 01:45:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D71521C6B4;
+	Wed, 10 Dec 2025 01:52:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1765331101; cv=none; b=K/VV4+uyMRRQl51QZRh/fxjZkHoOW02y4nsGt+WmHIWsb7PdfyX4aMujjWZv5A1aO+tFklyrddvpIwvY7o9+R4AFC95PtfKXYc/qeecsVt714P/rvVUa6y7v69YVejpf+0xoXLewdPkhXTYHB5oTThucQ3OFW6EzLIbTtYSosBQ=
+	t=1765331554; cv=none; b=U+mK6AkHyn5zU178pkslBB7oOMGnlU32M4SyfK1j0hTSjblrNSIp2XGktAG3gggZ1ZGacJKtowL4kIEq9nvNFE9Y2MPNYBTNkcT136I7gRvCEJjz0a5sXhC9GyNLGko7drcFpxR/Nn09d4YFqKcXU6jdueqT3DYS6mOevE0DhgY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1765331101; c=relaxed/simple;
-	bh=AMxxhUkwVWytoBdA0qFSxBu6u5veHcpEDX3IoI9In/Y=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=A2iSbhNykcCC4rjTe9Drv8DKWOXfIYdbwNmN/FWPvB7WifiDi61+kzhYwirJJw8KAzUR/3PYLKCPyJaZa/RKwjEpQxsy3ksp23ByowtojvMnS34scGXAPBjjqbATJP9E6i4+Qcbmvw/Zp1kyXjEPHtM/pbYq0JORGQZBshuOSEY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=HqYfNbLe; arc=none smtp.client-ip=74.125.82.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1765331554; c=relaxed/simple;
+	bh=AgJe5J0QJDmJlbF7iup5O79NcgLId5mfje5CT+C/ZMg=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=VzA5d9Cuav+huNA8045yoSVd0xOuLosSXZsyq7mYjy9BStiFNyCe/rVRfVpeUqzPdgLNnsC3QQ4eM89Dz+jLAKrx8hA2G98zHGkFyuU1W6IoM8CUtOx8HxHf7oZszjpp+mYKfeGBhfeclqhnxIeni9u4VhyILhxwsIZpYHzd4Us=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=msmCws/q; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="HqYfNbLe"
-Received: by mail-dy1-f173.google.com with SMTP id 5a478bee46e88-2a45877bd5eso645824eec.0
-        for <linux-scsi@vger.kernel.org>; Tue, 09 Dec 2025 17:45:00 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1765331099; x=1765935899; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=gbXFpMWOE09JOBukAU22u0Zfr4eCRsqxYTwjQcd8SQQ=;
-        b=HqYfNbLeGJPmcOm9em9ACh0NAn4Ic956TRjjX8kaKtPHTUhUHSJkdTqfrIUt45BgCP
-         HQSS/aNcROVRP6Q+lu81VC5w99wCviXYy/flDkpi8gh2NP5ILjUtEproz13IqMHu6DpY
-         v4Og2MLWAde7u3JHI43ntnEXVTLfyZpIG1aJPMvROvFl1SO0U4uZssrU8zODKsfVBlcB
-         KeUZ91pODQarpSbF1oIiIjd+n1Hp1X0tPqqBohQ0R8xlNpyZTy/hyLVpNVDp8Ar6W5a1
-         0rroLHmxmMWzA5EWhT+nbujeuqB3uNds8v37L6A908+dLROp5/1wVIx9OFVAmDrb6bti
-         K8PQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1765331099; x=1765935899;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=gbXFpMWOE09JOBukAU22u0Zfr4eCRsqxYTwjQcd8SQQ=;
-        b=pYTnc8fuol1ktW0pvF650G4PITw3yAVO3HhozT2BSR4xEi5QnCTPQxI7FLaFuuuxve
-         8ZlyPI7na9OU2zGM0jqepK0L2nP7pmKWPdV6m/By4P9LJazQUMA7GAnGSIyyntiGFfDX
-         Tu7ui2YElXrmuZkLCqWoBfDT/tcL0MLiRixTfBrwEh9+3dFhCgo6UzE1PUTCDT1fXZ7A
-         Q/hS4XNgQZnbHC86azUcgpa/rmvKFPN28cUOgWEY8GUqcu3HdvviwlcWP4DpJqAvv3BL
-         jL7FnaxXajtmp3LbXwReFReetflrZyAvRkTiiuIXkZCiDeT+yOMRRf2o3Gy7X7Arqa50
-         /Z0g==
-X-Forwarded-Encrypted: i=1; AJvYcCXJDmMuUL7GiH4kcNb7ycISVGDtdTpfe7bbOqxrTjIhpji7b05R3On7f6/9F0io3uMsPPe2Y3zVVnar@vger.kernel.org
-X-Gm-Message-State: AOJu0YxtNLG+41Q44wo3ida444CiiDBHvim2g0S85VFsMzRLKdV4rpfe
-	FpLEXcIIene+W3iiCT3Yl5H781gjKrM/50zrKifzO9g5yOJlnyqhHjhK
-X-Gm-Gg: AY/fxX5EC7iIS3fG4NgNXnjalJPry4EqDiYoucjLkYlkzwtGCeHN+sg7hS4qvOAzSaf
-	GUBb4u/icO599CtEe3VkC5bYRIMkHHtBto5Na2dP7KPjymK0sLFewa2trtWuNlSXOUQ3Jxa3YTo
-	dIqE+8fM4BMsNN5eVAYots6gFleTjSOdoyBN18YgsSTcm+hQky3DsLg3ruZ/9ooytUTDONAQJ/n
-	68n7lKnsCCe8dRrqlMAueGRGzT2giq50VC3DkJCrX8KMZJjQlPyY7jgyHdeNnJ9KmcBcY32g5h4
-	8KvUcgp8A0zXcW/hdxYZqU25ONdtvSM3ZOXyA0c2xdUb+T3CUq9kdUf5nIIQRwoBN2ACR4YQWD0
-	O8xxn4U3PevgzPTyXhvlu+V+WNTuH2AgDYwaP7xiZmT9HE9/hakDKBmT2Uf4ac8EdLO1Je6h1Ik
-	n9ibrN3KCLQJgqWd4P6sBsat5KST126ZY=
-X-Google-Smtp-Source: AGHT+IHaxVVCLR4qjhWLLVIaeb2l4lwbtf82b2bHpz7SHAJEdx3SMV20RK7Aeg91G12i3wIJ6R9g9Q==
-X-Received: by 2002:a05:7300:880d:b0:2a9:9837:233b with SMTP id 5a478bee46e88-2abf8dee7a2mr2305952eec.7.1765331098941;
-        Tue, 09 Dec 2025 17:44:58 -0800 (PST)
-Received: from deb-101020-bm01.dtc.local ([149.97.161.244])
-        by smtp.gmail.com with ESMTPSA id a92af1059eb24-11df76e2eefsm80274777c88.6.2025.12.09.17.44.58
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 09 Dec 2025 17:44:58 -0800 (PST)
-From: sw.prabhu6@gmail.com
-To: James.Bottomley@HansenPartnership.com,
-	martin.petersen@oracle.com,
-	linux-scsi@vger.kernel.org
-Cc: bvanassche@acm.org,
-	linux-kernel@vger.kernel.org,
-	mcgrof@kernel.org,
-	kernel@pankajraghav.com,
-	dlemoal@kernel.org,
-	Swarna Prabhu <sw.prabhu6@gmail.com>,
-	Swarna Prabhu <s.prabhu@samsung.com>
-Subject: [PATCH 2/2] scsi: scsi_debug: enable sdebug_sector_size > PAGE_SIZE
-Date: Wed, 10 Dec 2025 01:41:37 +0000
-Message-ID: <20251210014136.2549405-4-sw.prabhu6@gmail.com>
-X-Mailer: git-send-email 2.51.0
-In-Reply-To: <20251210014136.2549405-1-sw.prabhu6@gmail.com>
-References: <20251210014136.2549405-1-sw.prabhu6@gmail.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="msmCws/q"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7B8A8C4CEF5;
+	Wed, 10 Dec 2025 01:52:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1765331553;
+	bh=AgJe5J0QJDmJlbF7iup5O79NcgLId5mfje5CT+C/ZMg=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=msmCws/qdAQneeQA18DN78cwmSX/XedgeZS2BtkRoEOd7Um5sHhuwbuV568HxC6p9
+	 AGiWVc3x1V5wSBWovLgbyKFGrt4p5XJon1aEduZe+8JDCMtuMqyxo4OYZD4ftZsy0l
+	 bRva6upg/pZIVcbDDic9Hgw3GV7brTUnSdjlOEKw5kFkoI13pPQQ3c4kYOV+6U1gkc
+	 hNJzbtLISmsanwf5hmtTImgrz23XpqVOtKXFCcFzNW/mUiAfl8M5d7NlFSSHfYJ9UM
+	 etqM6lAXGBLZaSz2MFz9B2JkdwMVqNNfQ1LcTK/xN9Mkud4Q3vO4dUjFu1IVBV37+/
+	 FtClnkdn49CVw==
+Message-ID: <0b3458ab-e419-4ec2-9cba-eb9fd2cd8de9@kernel.org>
+Date: Tue, 9 Dec 2025 17:52:33 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 1/2] scsi: sd: fix write_same(16/10) to enable sector size
+ > PAGE_SIZE
+To: sw.prabhu6@gmail.com, James.Bottomley@HansenPartnership.com,
+ martin.petersen@oracle.com, linux-scsi@vger.kernel.org
+Cc: bvanassche@acm.org, linux-kernel@vger.kernel.org, mcgrof@kernel.org,
+ kernel@pankajraghav.com, stable@vger.kernel.org,
+ Swarna Prabhu <s.prabhu@samsung.com>, Pankaj Raghav <p.raghav@samsung.com>
+References: <20251210014136.2549405-1-sw.prabhu6@gmail.com>
+ <20251210014136.2549405-3-sw.prabhu6@gmail.com>
+Content-Language: en-US
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <20251210014136.2549405-3-sw.prabhu6@gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-From: Swarna Prabhu <sw.prabhu6@gmail.com>
+On 2025/12/09 17:41, sw.prabhu6@gmail.com wrote:
+> From: Swarna Prabhu <sw.prabhu6@gmail.com>
+> 
+> The WRITE SAME(16) and WRITE SAME(10) scsi commands uses
+> a page from a dedicated mempool('sd_page_pool') for its
+> payload. This pool was initialized to allocate single
+> pages, which was sufficient as long as the device sector
+> size did not exceed the PAGE_SIZE.
+> 
+> Given that block layer now supports block size upto
+> 64K ie beyond PAGE_SIZE, adapt sd_set_special_bvec()
+> to accommodate that.
+> 
+> With the above fix, enable sector sizes > PAGE_SIZE in
+> scsi sd driver.
+> 
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Swarna Prabhu <s.prabhu@samsung.com>
+> Co-developed-by: Pankaj Raghav <p.raghav@samsung.com>
+> Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
+> ---
+> Note: We are allocating pages of order aligned to 
+> BLK_MAX_BLOCK_SIZE for the mempool page allocator
+> 'sd_page_pool' all the time. This is because we only
+> know that a bigger sector size device is attached at
+> sd_probe and it might be too late to reallocate mempool
+> with order >0.
 
-Now that block layer can support block size > PAGE_SIZE
-and the issue with WRITE_SAME(16) and WRITE_SAME(10) are
-fixed for sector sizes > PAGE_SIZE, enable sdebug_sector_size
-> PAGE_SIZE in scsi_debug.
+That is a lot heavier on the memory for the vast majority of devices which are
+512B or 4K block size... It may be better to have the special "large block"
+mempool attached to the scsi disk struct and keep the default single page
+mempool for all other regular devices.
 
-Signed-off-by: Swarna Prabhu <s.prabhu@samsung.com>
----
- drivers/scsi/scsi_debug.c | 8 +-------
- 1 file changed, 1 insertion(+), 7 deletions(-)
+> 
+>  drivers/scsi/sd.c | 27 +++++++++++++++++----------
+>  1 file changed, 17 insertions(+), 10 deletions(-)
+> 
+> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+> index 0252d3f6bed1..17b5c1589eb2 100644
+> --- a/drivers/scsi/sd.c
+> +++ b/drivers/scsi/sd.c
+> @@ -892,14 +892,24 @@ static void sd_config_discard(struct scsi_disk *sdkp, struct queue_limits *lim,
+>  		(logical_block_size >> SECTOR_SHIFT);
+>  }
+>  
+> -static void *sd_set_special_bvec(struct request *rq, unsigned int data_len)
+> +static void *sd_set_special_bvec(struct scsi_cmnd *cmd, unsigned int data_len)
+>  {
+>  	struct page *page;
+> +	struct request *rq = scsi_cmd_to_rq(cmd);
+> +	struct scsi_device *sdp = cmd->device;
+> +	unsigned sector_size = sdp->sector_size;
+> +	unsigned int nr_pages = DIV_ROUND_UP(sector_size, PAGE_SIZE);
+> +	int n = 0;
+>  
+>  	page = mempool_alloc(sd_page_pool, GFP_ATOMIC);
+>  	if (!page)
+>  		return NULL;
+> -	clear_highpage(page);
+> +
+> +	do {
+> +		clear_highpage(page + n);
+> +		n++;
+> +	} while (n < nr_pages);
+> +
+>  	bvec_set_page(&rq->special_vec, page, data_len, 0);
+>  	rq->rq_flags |= RQF_SPECIAL_PAYLOAD;
+>  	return bvec_virt(&rq->special_vec);
+> @@ -915,7 +925,7 @@ static blk_status_t sd_setup_unmap_cmnd(struct scsi_cmnd *cmd)
+>  	unsigned int data_len = 24;
+>  	char *buf;
+>  
+> -	buf = sd_set_special_bvec(rq, data_len);
+> +	buf = sd_set_special_bvec(cmd, data_len);
+>  	if (!buf)
+>  		return BLK_STS_RESOURCE;
+>  
+> @@ -1004,7 +1014,7 @@ static blk_status_t sd_setup_write_same16_cmnd(struct scsi_cmnd *cmd,
+>  	u32 nr_blocks = sectors_to_logical(sdp, blk_rq_sectors(rq));
+>  	u32 data_len = sdp->sector_size;
+>  
+> -	if (!sd_set_special_bvec(rq, data_len))
+> +	if (!sd_set_special_bvec(cmd, data_len))
+>  		return BLK_STS_RESOURCE;
+>  
+>  	cmd->cmd_len = 16;
+> @@ -1031,7 +1041,7 @@ static blk_status_t sd_setup_write_same10_cmnd(struct scsi_cmnd *cmd,
+>  	u32 nr_blocks = sectors_to_logical(sdp, blk_rq_sectors(rq));
+>  	u32 data_len = sdp->sector_size;
+>  
+> -	if (!sd_set_special_bvec(rq, data_len))
+> +	if (!sd_set_special_bvec(cmd, data_len))
+>  		return BLK_STS_RESOURCE;
+>  
+>  	cmd->cmd_len = 10;
+> @@ -2880,10 +2890,7 @@ sd_read_capacity(struct scsi_disk *sdkp, struct queue_limits *lim,
+>  			  "assuming 512.\n");
+>  	}
+>  
+> -	if (sector_size != 512 &&
+> -	    sector_size != 1024 &&
+> -	    sector_size != 2048 &&
+> -	    sector_size != 4096) {
+> +	if (blk_validate_block_size(sector_size)) {
+>  		sd_printk(KERN_NOTICE, sdkp, "Unsupported sector size %d.\n",
+>  			  sector_size);
+>  		/*
+> @@ -4368,7 +4375,7 @@ static int __init init_sd(void)
+>  	if (err)
+>  		goto err_out;
+>  
+> -	sd_page_pool = mempool_create_page_pool(SD_MEMPOOL_SIZE, 0);
+> +	sd_page_pool = mempool_create_page_pool(SD_MEMPOOL_SIZE, get_order(BLK_MAX_BLOCK_SIZE));
+>  	if (!sd_page_pool) {
+>  		printk(KERN_ERR "sd: can't init discard page pool\n");
+>  		err = -ENOMEM;
 
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index b2ab97be5db3..2348976b3f70 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -8459,13 +8459,7 @@ static int __init scsi_debug_init(void)
- 	} else if (sdebug_ndelay > 0)
- 		sdebug_jdelay = JDELAY_OVERRIDDEN;
- 
--	switch (sdebug_sector_size) {
--	case  512:
--	case 1024:
--	case 2048:
--	case 4096:
--		break;
--	default:
-+	if (blk_validate_block_size(sdebug_sector_size)) {
- 		pr_err("invalid sector_size %d\n", sdebug_sector_size);
- 		return -EINVAL;
- 	}
+
 -- 
-2.51.0
-
+Damien Le Moal
+Western Digital Research
