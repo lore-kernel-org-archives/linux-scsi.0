@@ -1,87 +1,111 @@
-Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
+Received: from mout-p-101.mailbox.org (mout-p-101.mailbox.org [80.241.56.151])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E9969219E8
-	for <linux-scsi@vger.kernel.org>; Thu, 11 Dec 2025 19:04:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A6337267729;
+	Thu, 11 Dec 2025 23:53:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.151
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1765479896; cv=none; b=N6RaYBnbmtyCwfjxU7NtVmbOAkna10zeEBFvJBENknBUVX4bstwEvVUuRWRdT1JhPS1Op94tkgYyPsgWjJg4T2RQvilca+u/GmppR8aLm59jUg3A6ayUEWQhTVKZyt6pNgWIBsL/tqlS2ZMl4ZKKYQ07Q7JQrWJXsur9zZ/LSd0=
+	t=1765497222; cv=none; b=lt725TrKHAjXOKwh5C3snZApdL+MTGXHsWLe7LQpweSHI4gqQ/jgMfMWhd24USoTg5CrQQtS56f5MxkBE8bDVYalxrz4gCSeck/3Oqd8L7ggUb59/yUZPH5URUKdjk15N7HIjz5YAVSz/d0jpss3QPO552EqoP1WSJDX1XDhO/I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1765479896; c=relaxed/simple;
-	bh=hNxgfYPlUoJ+5j7YgPHShghjgVaNx48Ecoox9CGVdZs=;
+	s=arc-20240116; t=1765497222; c=relaxed/simple;
+	bh=hOdfs+WEfqci97B3SH/qnpDChq0ECuUBByFcaSbF3t0=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=GEwh3nWGmJ0Due9xvI8BI6hVEfkIFNL022/pLQ9zXE6aANqteGAoTOQkrBVXNcsc930woeKi+JCx3YxAcrcNkhB+o/IwMZbrGogRNClGc0wl4uKENe6zOko2AjJJ3RUTEXnSgHpgYxVlGcpUSLf8FEqHxOJNxaLHfGlvST3lk7U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=4XyAh3IM; arc=none smtp.client-ip=199.89.1.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	 In-Reply-To:Content-Type; b=HpTZwgdrYrI38Yur06H3Y2fObrO88CKU7Wvj4lmd20zySZ1KBKEYhKxfPU0D6oxjHn2yP1ZeT9pxQJ/8QjYUOVNhseaJMioGzl/CBv+PRdboFcrxYmVASdH8zZ4mACa9edpTl4wNDkLllTsKlrPGwfX70flvwXHNrCttw8Hl/MQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com; spf=pass smtp.mailfrom=pankajraghav.com; dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b=kyncJVek; arc=none smtp.client-ip=80.241.56.151
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pankajraghav.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pankajraghav.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="4XyAh3IM"
-Received: from localhost (localhost [127.0.0.1])
-	by 013.lax.mailroute.net (Postfix) with ESMTP id 4dS28Q2dHHzlfftc;
-	Thu, 11 Dec 2025 19:04:54 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1765479893; x=1768071894; bh=LkK1J736d6+FXE+/8WWNQAr2
-	oJLemuKd4W1u9gNff1o=; b=4XyAh3IMwy9CSyCQBKeRwc6Ar96PR1nCjNdkcB/z
-	5mRHOGqxqC6eoThxpV2AyztW3FFjm4hUEmOqB/HyVzQtczb5uSFaCy6tngb2Dsbp
-	Z0PcHxtc4wFuy1nj42mWN1iv7NfKR7O5B8bjWAlLpLhtUySAVo9dS6VZ25ON0KkK
-	6EJPfKyIm7y3/VhkGuZVhTOo0dcG+dFOzWtGKzZ7dnIXpEHfMJfcnFJV2PFVQE94
-	q7g5Dn2OMrv1ocykGeaD7MGInCz0+gpJjhQ8dO+4q8s60ICnrdZzygMcpD9ZmQMO
-	FOJ9nfWgVuwbZmTltbZdi6Empd7ErE45Xrr3rxxCFz56GA==
-X-Virus-Scanned: by MailRoute
-Received: from 013.lax.mailroute.net ([127.0.0.1])
- by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id FgLJcVzK8pJC; Thu, 11 Dec 2025 19:04:53 +0000 (UTC)
-Received: from [100.119.48.131] (unknown [104.135.180.219])
+	dkim=pass (2048-bit key) header.d=pankajraghav.com header.i=@pankajraghav.com header.b="kyncJVek"
+Received: from smtp202.mailbox.org (smtp202.mailbox.org [IPv6:2001:67c:2050:b231:465::202])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4dS28M075yzlfvpL;
-	Thu, 11 Dec 2025 19:04:50 +0000 (UTC)
-Message-ID: <760367f9-1cd4-4059-bbdd-9017823e8751@acm.org>
-Date: Thu, 11 Dec 2025 11:04:49 -0800
+	by mout-p-101.mailbox.org (Postfix) with ESMTPS id 4dS8YX5kXcz9tCQ;
+	Fri, 12 Dec 2025 00:53:36 +0100 (CET)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=pankajraghav.com;
+	s=MBO0001; t=1765497216;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=uXed7TuLkDi/ADOnoI/WKx542ut9oPDV/eIIhHsFN24=;
+	b=kyncJVek5sDxnTuC7zyaJgpMbFLUQY1eXiy1h6PYgfR8ne80886LoY+UiyIQ7Kugftc1h6
+	9ls7cI5hWYAcLHIrMQWkBik4g9tQ12PbhbhjIvlots5kqR8UNj7WOv+ix/EVGIWKiVeHDk
+	hhg7q+c9iDUD0jb68OUVWkaDs4zdJZyPRtQKrrbiFAJVnhh0R7VWUKIPhRtThmQW0XCiLj
+	nTvN2FxXS8O9u8eTCWeqjCM26fmKddAcneJdie143WtDtyO8ScUhIcwfujAlm95G7kqq6C
+	zCr5Ptn9HjjcHIkZ5MJk8sRacTG3uI4DrV1woOA/NKPwQ5o9geH2RNC9sGy7fw==
+Authentication-Results: outgoing_mbo_mout;
+	dkim=none;
+	spf=pass (outgoing_mbo_mout: domain of kernel@pankajraghav.com designates 2001:67c:2050:b231:465::202 as permitted sender) smtp.mailfrom=kernel@pankajraghav.com
+Message-ID: <934c62d1-c800-4b31-9774-1e9dfe661877@pankajraghav.com>
+Date: Fri, 12 Dec 2025 05:23:24 +0530
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi: scsi_debug: Fix atomic write enable module param
- description
-To: John Garry <john.g.garry@oracle.com>, martin.petersen@oracle.com,
- james.bottomley@hansenpartnership.com
-Cc: linux-scsi@vger.kernel.org
-References: <20251211100651.9056-1-john.g.garry@oracle.com>
+Subject: Re: [PATCH 1/2] scsi: sd: fix write_same(16/10) to enable sector size
+ > PAGE_SIZE
+To: Damien Le Moal <dlemoal@kernel.org>, sw.prabhu6@gmail.com,
+ James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com,
+ linux-scsi@vger.kernel.org
+Cc: bvanassche@acm.org, linux-kernel@vger.kernel.org, mcgrof@kernel.org,
+ stable@vger.kernel.org, Swarna Prabhu <s.prabhu@samsung.com>,
+ Pankaj Raghav <p.raghav@samsung.com>
+References: <20251210014136.2549405-1-sw.prabhu6@gmail.com>
+ <20251210014136.2549405-3-sw.prabhu6@gmail.com>
+ <0b3458ab-e419-4ec2-9cba-eb9fd2cd8de9@kernel.org>
 Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20251211100651.9056-1-john.g.garry@oracle.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+From: Pankaj Raghav <kernel@pankajraghav.com>
+In-Reply-To: <0b3458ab-e419-4ec2-9cba-eb9fd2cd8de9@kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
+X-Rspamd-Queue-Id: 4dS8YX5kXcz9tCQ
 
-On 12/11/25 2:06 AM, John Garry wrote:
-> The atomic write enable module param is "atomic_wr", and not
-> "atomic_write", so fix the module param description.
-> 
-> Fixes: 84f3a3c01d70 ("scsi: scsi_debug: Atomic write support")
-> Signed-off-by: John Garry <john.g.garry@oracle.com>
-> 
-> diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-> index b2ab97be5db3d..047d56d23beab 100644
-> --- a/drivers/scsi/scsi_debug.c
-> +++ b/drivers/scsi/scsi_debug.c
-> @@ -7410,7 +7410,7 @@ MODULE_PARM_DESC(lbprz,
->   MODULE_PARM_DESC(lbpu, "enable LBP, support UNMAP command (def=0)");
->   MODULE_PARM_DESC(lbpws, "enable LBP, support WRITE SAME(16) with UNMAP bit (def=0)");
->   MODULE_PARM_DESC(lbpws10, "enable LBP, support WRITE SAME(10) with UNMAP bit (def=0)");
-> -MODULE_PARM_DESC(atomic_write, "enable ATOMIC WRITE support, support WRITE ATOMIC(16) (def=0)");
-> +MODULE_PARM_DESC(atomic_wr, "enable ATOMIC WRITE support, support WRITE ATOMIC(16) (def=0)");
->   MODULE_PARM_DESC(lowest_aligned, "lowest aligned lba (def=0)");
->   MODULE_PARM_DESC(lun_format, "LUN format: 0->peripheral (def); 1 --> flat address method");
->   MODULE_PARM_DESC(max_luns, "number of LUNs per target to simulate(def=1)");
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+On 12/10/25 07:22, Damien Le Moal wrote:
+> On 2025/12/09 17:41, sw.prabhu6@gmail.com wrote:
+>> From: Swarna Prabhu <sw.prabhu6@gmail.com>
+>>
+>> The WRITE SAME(16) and WRITE SAME(10) scsi commands uses
+>> a page from a dedicated mempool('sd_page_pool') for its
+>> payload. This pool was initialized to allocate single
+>> pages, which was sufficient as long as the device sector
+>> size did not exceed the PAGE_SIZE.
+>>
+>> Given that block layer now supports block size upto
+>> 64K ie beyond PAGE_SIZE, adapt sd_set_special_bvec()
+>> to accommodate that.
+>>
+>> With the above fix, enable sector sizes > PAGE_SIZE in
+>> scsi sd driver.
+>>
+>> Cc: stable@vger.kernel.org
+>> Signed-off-by: Swarna Prabhu <s.prabhu@samsung.com>
+>> Co-developed-by: Pankaj Raghav <p.raghav@samsung.com>
+>> Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
+>> ---
+>> Note: We are allocating pages of order aligned to 
+>> BLK_MAX_BLOCK_SIZE for the mempool page allocator
+>> 'sd_page_pool' all the time. This is because we only
+>> know that a bigger sector size device is attached at
+>> sd_probe and it might be too late to reallocate mempool
+>> with order >0.
+> 
+> That is a lot heavier on the memory for the vast majority of devices which are
+> 512B or 4K block size... It may be better to have the special "large block"
+> mempool attached to the scsi disk struct and keep the default single page
+> mempool for all other regular devices.
+> 
+
+We had the same feeling as well and we mentioned it in the 1st RFC.
+
+But when will you initialize the mempool for the large block devices? I don't think it
+makes sense to unconditionally initialize it in init_sd.
+Do we do it during the sd_probe() when we first encounter a large block device? That way
+we may not waste any memory if no large block devices are attached.
+
+--
+Pankaj
 
