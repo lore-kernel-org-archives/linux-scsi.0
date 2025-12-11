@@ -1,69 +1,73 @@
-Received: from mail-pf1-f195.google.com (mail-pf1-f195.google.com [209.85.210.195])
+Received: from mail-pg1-f194.google.com (mail-pg1-f194.google.com [209.85.215.194])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1CD731CDFCA
-	for <linux-scsi@vger.kernel.org>; Thu, 11 Dec 2025 01:43:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.195
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 672361CDFCA
+	for <linux-scsi@vger.kernel.org>; Thu, 11 Dec 2025 01:44:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.194
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1765417406; cv=none; b=uNq2mN7DwQbjaP60EhEdscKADVBBYgUWr9sLyimx0yBG8067hdqE/nfZcX9cSD8y7CpCg7JS8ABo2hx/gsHeTM2OISM8kjXyhLTVhQsDKa9SnyffhBynV9OMZ6HPVsHmG5ltwM0YNYBMVM/lgvCnvw/ozR7G6O1fJY77E3RHVqM=
+	t=1765417444; cv=none; b=jsjodJmOBNb/xOcCI/x6Ca2YpUENUvpYNdVDG2c3IRfdiIOyj2ZK/wwjgCcqWapvmW0xyghsOgo9l8bJDQQSglCDra4Wr1ZRHYTttfR6IzH0V5ErwrVwGzrmr6LN0neNA9gxmKwuBflh3tsD7yfs7vISHjHJVvJRxQBAWqvkfws=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1765417406; c=relaxed/simple;
-	bh=xrWDGO8Bu+TNV0i2MKifgX+FrHrf+hXPL09zGZFhmY4=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=RTxWbCSnhyT2Ve96WnSqIRbYCwvV6qMLYOlkKhkrSovUhJYXYMgWSmDWJ22GTgEWr0Mt+zmRhvRgSwv74qjXOiFXrUORnqCITdRl5PFO0fGEnFv5l/6qSeB9umR3jkqY67MOVzo8M+17r423FolmUoUuvxo9Gxf86Rw3WanNCDQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=hClWqQpU; arc=none smtp.client-ip=209.85.210.195
+	s=arc-20240116; t=1765417444; c=relaxed/simple;
+	bh=EbkDxmaNaoXrRJ6/459Jr8ORMo45np/K5MfFLb+BIrA=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=YxfCbYtychBPjoEewOWvey9HlJ0RheBPGDd8f2R+q+kxuaUlnrp9k6mraZzrWU9mznK81wHOKD4zLuXr+Da/6amBUdQGBOMOaT4g3vNtcyHgktXGzx+QeqJ57weqxoEumB5de9ugmJCTXgVshiMb6VY7pmiKF/TtrRreYzJGwXQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=RZkmwb7D; arc=none smtp.client-ip=209.85.215.194
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="hClWqQpU"
-Received: by mail-pf1-f195.google.com with SMTP id d2e1a72fcca58-7ba55660769so329488b3a.1
-        for <linux-scsi@vger.kernel.org>; Wed, 10 Dec 2025 17:43:25 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="RZkmwb7D"
+Received: by mail-pg1-f194.google.com with SMTP id 41be03b00d2f7-c05d66dbab2so451894a12.0
+        for <linux-scsi@vger.kernel.org>; Wed, 10 Dec 2025 17:44:02 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1765417404; x=1766022204; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=H67pqGEvrZPQpldVYXefn/pIpv1C8G/3O8zvSEm0qzo=;
-        b=hClWqQpU6mw75UYM2B9TqbgrAw8mLmN/JfIF5ywEnbgfXT6kjwkVYdhGm8e9QvVT2R
-         l2NA+PgpvsQEDIhXtwQb9AWiuZhsrzgRy9YFYrcXgtvliFpU9KlgJ72NZutOUF6VuN4A
-         CiihARP6PRqHbzzMFsLoM/C1miwUycG/nXFvIHNzwYEG3i8cDLfVFzgqvXfBgjb/UhIu
-         olKhkhqGPQ9cGdsIUGm5Frb9bisytiidCHPgOtt6Hp7FEUgzcg4WtgZMWXuZEV3ujDRr
-         rJA6qKjqs1AYSI+p94y+/r2QfRIc0yk0sOUhHuWfGQUAX+r1eVTKjSt6rIsui3/25cPh
-         fzYg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1765417404; x=1766022204;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=gmail.com; s=20230601; t=1765417442; x=1766022242; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=H67pqGEvrZPQpldVYXefn/pIpv1C8G/3O8zvSEm0qzo=;
-        b=UbCXkXP+pPDViP0jdt+bkDcri/UUOfwUKcK5Csffagwu9DMWDzPjL8kfWbpRxJPkdW
-         UFLmRm3hTqXjqhcub5QMSQtcOvT1j6MbUeRuikbQm5DBxH7bG8Sh93n0pIwfEfs7GUHm
-         f0dFXo3mbh02XX4ipvDQQkwEkLlZjMhPxTqLGf2ELO9YNpvVeOQJmAksiV37ID/J+g9Z
-         7YPWGbCYzTZSSB5N7tovnxM+wwy+ydL4CxOqlaPv4pw+JXRfKGagYUFNDtho/vpAirBB
-         O4RrnLOEb/aXmpxVJIfa39twX4k4JVy+YsDDLIhgUH5AaIog2vlDUTAj2p98k2WaJrzm
-         6Yxg==
-X-Gm-Message-State: AOJu0Yy88BIvf2nQKBZ25IxwPTQ//EbOh6mKVgYjy69o13EH7gQWP2gG
-	hASofDXMDWOcB6na5HsglOhMu+7KkFYCCxdPrYsVgfRLkJrHTYRun140hYt3N+Xouhs3dQ==
-X-Gm-Gg: ASbGncu8geIOGyr3cfPsHrjsACcrutEusxFhHZtZ1fy3McSbyPEWoHtnQzUJoI2uP08
-	s2c8X33JS2CaIw5MFr4C9/9Hzp4l8GPv5fOV2hdxY+wL4j2WEiocI9mGYhvBfnml+HVhsO0R34l
-	Yf68VVEbTh7X9YFFGTwFOyBk3wpR6hhrbDbrKfGOc2z9fE0DcJkm+ZTP4h0Z3Qh/djib+9JzRUr
-	5qw+LoFVJUz8fQ/ayIVXSblW2lmXAw3YXi/e4PfFbZ11ST/Z0KVRPWvjNTI4kNeqGV5WgKgLaoG
-	f3EnVtRQsZOeNj/YDBUzwWcseh5afyqysPjUPzb9vB5LDS6uWsVvP0hDG60/wlhrCRWeBHe/CjN
-	KP0uofsGCBT7p3RjvCaUcWBegqd3rFMG9QQvzpPEjOo1BS40H+dBW7wCeLVsI+ZOqQL8Y7/tUL3
-	Oho5hiSLjfXABOmw5zEwCrkjunqSVDgNEaelYq6flRZJTPGYctW8tHkGFRs+Pv5uNmDNwhePX8L
-	1PN
-X-Google-Smtp-Source: AGHT+IHKm1B8+dqiSRwtDCu77EUWtjs/Dq+WIel9xHlliXpCPULzDgiEIpwgAeJ52Gced4FhgIjKbA==
-X-Received: by 2002:a05:7022:984:b0:119:e56b:91f6 with SMTP id a92af1059eb24-11f296b3ed0mr3384387c88.39.1765417404301;
-        Wed, 10 Dec 2025 17:43:24 -0800 (PST)
+        bh=8OkEG+h0BNE48eyue62Fmf9aSt6hFaz8y2fZRz/UgB8=;
+        b=RZkmwb7DL0F19syB47CwTBjX5qqiRSUi6PC+qrMBUe3/E+GwIft0KiBHzwJHIzaKwY
+         JNoHtXovHyTFWReiXtBCIAwBmdz77ysVwkGO8D+P1cHP+kRP7SAg+QOuBo3I9aNrelvC
+         ACJybOY9XoZHST1WhCbVJ10um3DfvLxtWcv02MT3CpSHjBb6I9y2M7/EiZfPPYdDa3Ry
+         YDDmEkXnPI2zlbkGuuLqxAcXdzfH5Coe3V9Rprz+S+WEL9gyg7Vt2dnai99eKayHW7iN
+         d1wX4smfCv/p137qChbO74/mm8pYDob2013OSWppeo9xnWnh6DQr2DjtW+BhLL1uUS+f
+         adbw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1765417442; x=1766022242;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=8OkEG+h0BNE48eyue62Fmf9aSt6hFaz8y2fZRz/UgB8=;
+        b=Birx+3HzJEP+7zfbZxh2klF1JUh6IvJIxfTscgI6HqnYiVtliuFrVwq3TMYbeJS582
+         h7M7SYloivtWxVRyOU/nypQP5nst9zri6tR+RKx763lFQIKgdYEwaeUB/oMC330thxZO
+         1B+bYQVBbshCEEsp0iLcbIlzjthUf2hkh7nPqvdXq620G6uBr5iNifWdQzPiiu31MNoT
+         lBNesD1cVqtE0khwv2JFZHKtEQ5iK/qXVuX+F2dZEspRpgaRK/lL+meXwKy2ysQPNGdA
+         rjzTrBxFkEkL/7F9biw0lcUPA6bXvp3V+zZ+VhohS8qmAUsOXFvLra/ClfeYq0ghK+ll
+         57GA==
+X-Gm-Message-State: AOJu0YzVnTLxf5I6RRTFjCRWsqxGqX4v/QcwLu94lg+LFx04uOVY0Wi1
+	Lp6J976U2FmAl+vriNu1qXelEnVdpF0CY8wYmjCMc1BRLSfofnUTfycPt5RvRGC78u3lxw==
+X-Gm-Gg: ASbGncvjhI7v6ANI0hTzRijb+/DTfyox7eXoyBc17M4VyKfC8eRIuHbdmoHIlk7qn+/
+	BeOVG5iJ9H9Q9oMDjP1/wePVIsnYXF8eQhDro9YMxfS0gBaaWFubrw7uylsOmabmWZUdvsV5A6J
+	gVqZ+qKBDhwn1JJU9EEupEUkkI/LmjpY0bV7H50sSGzNC7KoxNyfhF98qKZiYooedhnGpS4cABN
+	M6w1sjbayzGZp7sXHym+J2mzVG2UryRx4kLn1xK9Ts23xPNYkLprNK53+KLjhZXB7+8uLv/yPfj
+	nDvDDCbSlVndeO2oTRJD1IFXZQJP1KXj+dSIHdi3AW6mpTxtCzkHZ0ZLn1xajgB9UbWSe+y6c4m
+	BH27LihN4gz2f1l7fvuoTBE2x2jf+1iJ4iEfkxwIuwQMyKQwV/wql3gFRWFRIi7GNoFSq6Mw/5w
+	qGipN/5CxOkvZNEa/Y5bGFVZe/6hZw6JZvWOLY0WKrCXR/5o+ulGZXAaK6uxobRlvb4zWWrv7No
+	WCv
+X-Google-Smtp-Source: AGHT+IGh2UmJNK/HafReiBRoopAT6WNiGT4VsA/8GeYaj/XpxsTVra75EFN1Hj5QZntl98hYRFqc2g==
+X-Received: by 2002:a05:7022:4284:b0:119:e56b:c74a with SMTP id a92af1059eb24-11f2967d9a5mr3140223c88.15.1765417441398;
+        Wed, 10 Dec 2025 17:44:01 -0800 (PST)
 Received: from ethan-latitude5420.. (host-127-24.cafrjco.fresno.ca.us.clients.pavlovmedia.net. [68.180.127.24])
-        by smtp.gmail.com with ESMTPSA id a92af1059eb24-11f2e1bb3b4sm3273748c88.4.2025.12.10.17.43.23
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-11f2e1bb3b4sm3273748c88.4.2025.12.10.17.44.00
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 10 Dec 2025 17:43:24 -0800 (PST)
+        Wed, 10 Dec 2025 17:44:01 -0800 (PST)
 From: Ethan Nelson-Moore <enelsonmoore@gmail.com>
 To: linux-scsi@vger.kernel.org
 Cc: Ethan Nelson-Moore <enelsonmoore@gmail.com>
-Subject: [PATCH] scsi: remove several unused functions
-Date: Wed, 10 Dec 2025 17:42:44 -0800
-Message-ID: <20251211014246.38423-1-enelsonmoore@gmail.com>
+Subject: [PATCH 1/2] scsi: sym53c8xx_2: remove conditional statements for constant macros
+Date: Wed, 10 Dec 2025 17:42:45 -0800
+Message-ID: <20251211014246.38423-2-enelsonmoore@gmail.com>
 X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20251211014246.38423-1-enelsonmoore@gmail.com>
+References: <20251211014246.38423-1-enelsonmoore@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -72,299 +76,617 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
+This makes the code easier to understand and maintain. There is more
+unused code to remove, but this takes care of some low-hanging fruit.
+The changes were mostly done via unifdef.
+
 Signed-off-by: Ethan Nelson-Moore <enelsonmoore@gmail.com>
 ---
- drivers/scsi/aic7xxx/aic79xx_core.c   | 89 ---------------------------
- drivers/scsi/aic7xxx/aic79xx_inline.h | 10 ---
- drivers/scsi/aic7xxx/aic79xx_osm.c    | 16 -----
- drivers/scsi/aic7xxx/aic7xxx_core.c   | 35 -----------
- drivers/scsi/nsp32.c                  | 14 -----
- drivers/scsi/ses.c                    | 19 ------
- 6 files changed, 183 deletions(-)
+ drivers/scsi/ncr53c8xx.c             | 17 -------
+ drivers/scsi/sym53c8xx_2/sym53c8xx.h | 30 ------------
+ drivers/scsi/sym53c8xx_2/sym_fw.c    | 10 ----
+ drivers/scsi/sym53c8xx_2/sym_glue.c  | 40 ----------------
+ drivers/scsi/sym53c8xx_2/sym_hipd.c  | 72 +---------------------------
+ drivers/scsi/sym53c8xx_2/sym_hipd.h  | 16 +------
+ drivers/scsi/sym53c8xx_2/sym_nvram.h | 16 -------
+ 7 files changed, 3 insertions(+), 198 deletions(-)
 
-diff --git a/drivers/scsi/aic7xxx/aic79xx_core.c b/drivers/scsi/aic7xxx/aic79xx_core.c
-index 6b87ea004e53..a6f1c23f5a38 100644
---- a/drivers/scsi/aic7xxx/aic79xx_core.c
-+++ b/drivers/scsi/aic7xxx/aic79xx_core.c
-@@ -659,28 +659,12 @@ ahd_set_scbptr(struct ahd_softc *ahd, u_int scbptr)
- 	ahd_outb(ahd, SCBPTR+1, (scbptr >> 8) & 0xFF);
- }
- 
--#if 0 /* unused */
--static u_int
--ahd_get_hnscb_qoff(struct ahd_softc *ahd)
--{
--	return (ahd_inw_atomic(ahd, HNSCB_QOFF));
--}
--#endif
--
- static void
- ahd_set_hnscb_qoff(struct ahd_softc *ahd, u_int value)
- {
- 	ahd_outw_atomic(ahd, HNSCB_QOFF, value);
- }
- 
--#if 0 /* unused */
--static u_int
--ahd_get_hescb_qoff(struct ahd_softc *ahd)
--{
--	return (ahd_inb(ahd, HESCB_QOFF));
--}
--#endif
--
- static void
- ahd_set_hescb_qoff(struct ahd_softc *ahd, u_int value)
- {
-@@ -705,15 +689,6 @@ ahd_set_snscb_qoff(struct ahd_softc *ahd, u_int value)
- 	ahd_outw(ahd, SNSCB_QOFF, value);
- }
- 
--#if 0 /* unused */
--static u_int
--ahd_get_sescb_qoff(struct ahd_softc *ahd)
--{
--	AHD_ASSERT_MODES(ahd, AHD_MODE_CCHAN_MSK, AHD_MODE_CCHAN_MSK);
--	return (ahd_inb(ahd, SESCB_QOFF));
--}
--#endif
--
- static void
- ahd_set_sescb_qoff(struct ahd_softc *ahd, u_int value)
- {
-@@ -721,15 +696,6 @@ ahd_set_sescb_qoff(struct ahd_softc *ahd, u_int value)
- 	ahd_outb(ahd, SESCB_QOFF, value);
- }
- 
--#if 0 /* unused */
--static u_int
--ahd_get_sdscb_qoff(struct ahd_softc *ahd)
--{
--	AHD_ASSERT_MODES(ahd, AHD_MODE_CCHAN_MSK, AHD_MODE_CCHAN_MSK);
--	return (ahd_inb(ahd, SDSCB_QOFF) | (ahd_inb(ahd, SDSCB_QOFF + 1) << 8));
--}
--#endif
--
- static void
- ahd_set_sdscb_qoff(struct ahd_softc *ahd, u_int value)
- {
-@@ -3560,33 +3526,6 @@ ahd_clear_intstat(struct ahd_softc *ahd)
- uint32_t ahd_debug = AHD_DEBUG_OPTS;
- #endif
- 
+diff --git a/drivers/scsi/ncr53c8xx.c b/drivers/scsi/ncr53c8xx.c
+index 34ba9b137789..46b8e525e51a 100644
+--- a/drivers/scsi/ncr53c8xx.c
++++ b/drivers/scsi/ncr53c8xx.c
+@@ -7029,14 +7029,6 @@ static struct ccb *ncr_get_ccb(struct ncb *np, struct scsi_cmnd *cmd)
+ 	/*
+ 	**	Wait until available.
+ 	*/
 -#if 0
--void
--ahd_print_scb(struct scb *scb)
--{
--	struct hardware_scb *hscb;
--	int i;
+-	while (cp->magic) {
+-		if (flags & SCSI_NOSLEEP) break;
+-		if (tsleep ((caddr_t)cp, PRIBIO|PCATCH, "ncr", 0))
+-			break;
+-	}
+-#endif
 -
--	hscb = scb->hscb;
--	printk("scb:%p control:0x%x scsiid:0x%x lun:%d cdb_len:%d\n",
--	       (void *)scb,
--	       hscb->control,
--	       hscb->scsiid,
--	       hscb->lun,
--	       hscb->cdb_len);
--	printk("Shared Data: ");
--	for (i = 0; i < sizeof(hscb->shared_data.idata.cdb); i++)
--		printk("%#02x", hscb->shared_data.idata.cdb[i]);
--	printk("        dataptr:%#x%x datacnt:%#x sgptr:%#x tag:%#x\n",
--	       (uint32_t)((ahd_le64toh(hscb->dataptr) >> 32) & 0xFFFFFFFF),
--	       (uint32_t)(ahd_le64toh(hscb->dataptr) & 0xFFFFFFFF),
--	       ahd_le32toh(hscb->datacnt),
--	       ahd_le32toh(hscb->sgptr),
--	       SCB_GET_TAG(scb));
--	ahd_dump_sglist(scb);
--}
--#endif  /*  0  */
--
- /************************* Transfer Negotiation *******************************/
- /*
-  * Allocate per target mode instance (ID we respond to as a target)
-@@ -9889,34 +9828,6 @@ ahd_dump_card_state(struct ahd_softc *ahd)
- 		ahd_unpause(ahd);
- }
+ 	if (cp->magic)
+ 		return NULL;
  
+@@ -7124,11 +7116,6 @@ static void ncr_free_ccb (struct ncb *np, struct ccb *cp)
+ 		--np->queuedccbs;
+ 		cp->queued = 0;
+ 	}
+-
 -#if 0
--void
--ahd_dump_scbs(struct ahd_softc *ahd)
--{
--	ahd_mode_state saved_modes;
--	u_int	       saved_scb_index;
--	int	       i;
--
--	saved_modes = ahd_save_modes(ahd);
--	ahd_set_modes(ahd, AHD_MODE_SCSI, AHD_MODE_SCSI);
--	saved_scb_index = ahd_get_scbptr(ahd);
--	for (i = 0; i < AHD_SCB_MAX; i++) {
--		ahd_set_scbptr(ahd, i);
--		printk("%3d", i);
--		printk("(CTRL 0x%x ID 0x%x N 0x%x N2 0x%x SG 0x%x, RSG 0x%x)\n",
--		       ahd_inb_scbram(ahd, SCB_CONTROL),
--		       ahd_inb_scbram(ahd, SCB_SCSIID),
--		       ahd_inw_scbram(ahd, SCB_NEXT),
--		       ahd_inw_scbram(ahd, SCB_NEXT2),
--		       ahd_inl_scbram(ahd, SCB_SGPTR),
--		       ahd_inl_scbram(ahd, SCB_RESIDUAL_SGPTR));
--	}
--	printk("\n");
--	ahd_set_scbptr(ahd, saved_scb_index);
--	ahd_restore_modes(ahd, saved_modes);
--}
--#endif  /*  0  */
--
- /**************************** Flexport Logic **********************************/
- /*
-  * Read count 16bit words from 16bit word address start_addr from the
-diff --git a/drivers/scsi/aic7xxx/aic79xx_inline.h b/drivers/scsi/aic7xxx/aic79xx_inline.h
-index 09335a3c8691..dca13159b2ce 100644
---- a/drivers/scsi/aic7xxx/aic79xx_inline.h
-+++ b/drivers/scsi/aic7xxx/aic79xx_inline.h
-@@ -144,16 +144,6 @@ static inline uint8_t *ahd_get_sense_buf(struct ahd_softc *ahd,
- static inline uint32_t ahd_get_sense_bufaddr(struct ahd_softc *ahd,
- 					      struct scb *scb);
- 
--#if 0 /* unused */
--
--#define AHD_COPY_COL_IDX(dst, src)				\
--do {								\
--	dst->hscb->scsiid = src->hscb->scsiid;			\
--	dst->hscb->lun = src->hscb->lun;			\
--} while (0)
--
+-	if (cp == np->ccb)
+-		wakeup ((caddr_t) cp);
 -#endif
--
- static inline uint8_t *
- ahd_get_sense_buf(struct ahd_softc *ahd, struct scb *scb)
- {
-diff --git a/drivers/scsi/aic7xxx/aic79xx_osm.c b/drivers/scsi/aic7xxx/aic79xx_osm.c
-index c3d1b9dd24ae..82a5c0d4e3f9 100644
---- a/drivers/scsi/aic7xxx/aic79xx_osm.c
-+++ b/drivers/scsi/aic7xxx/aic79xx_osm.c
-@@ -411,22 +411,6 @@ ahd_inb(struct ahd_softc * ahd, long port)
- 	return (x);
  }
  
--#if 0 /* unused */
--static uint16_t
--ahd_inw_atomic(struct ahd_softc * ahd, long port)
--{
--	uint8_t x;
--
--	if (ahd->tags[0] == BUS_SPACE_MEMIO) {
--		x = readw(ahd->bshs[0].maddr + port);
--	} else {
--		x = inw(ahd->bshs[(port) >> 8].ioport + ((port) & 0xFF));
--	}
--	mb();
--	return (x);
--}
--#endif
--
- void
- ahd_outb(struct ahd_softc * ahd, long port, uint8_t val)
- {
-diff --git a/drivers/scsi/aic7xxx/aic7xxx_core.c b/drivers/scsi/aic7xxx/aic7xxx_core.c
-index a396f048a031..d55e2a321a7c 100644
---- a/drivers/scsi/aic7xxx/aic7xxx_core.c
-+++ b/drivers/scsi/aic7xxx/aic7xxx_core.c
-@@ -2072,41 +2072,6 @@ ahc_clear_intstat(struct ahc_softc *ahc)
- uint32_t ahc_debug = AHC_DEBUG_OPTS;
- #endif
  
--#if 0 /* unused */
--static void
--ahc_print_scb(struct scb *scb)
--{
--	int i;
--
--	struct hardware_scb *hscb = scb->hscb;
--
--	printk("scb:%p control:0x%x scsiid:0x%x lun:%d cdb_len:%d\n",
--	       (void *)scb,
--	       hscb->control,
--	       hscb->scsiid,
--	       hscb->lun,
--	       hscb->cdb_len);
--	printk("Shared Data: ");
--	for (i = 0; i < sizeof(hscb->shared_data.cdb); i++)
--		printk("%#02x", hscb->shared_data.cdb[i]);
--	printk("        dataptr:%#x datacnt:%#x sgptr:%#x tag:%#x\n",
--		ahc_le32toh(hscb->dataptr),
--		ahc_le32toh(hscb->datacnt),
--		ahc_le32toh(hscb->sgptr),
--		hscb->tag);
--	if (scb->sg_count > 0) {
--		for (i = 0; i < scb->sg_count; i++) {
--			printk("sg[%d] - Addr 0x%x%x : Length %d\n",
--			       i,
--			       (ahc_le32toh(scb->sg_list[i].len) >> 24
--				& SG_HIGH_ADDR_BITS),
--			       ahc_le32toh(scb->sg_list[i].addr),
--			       ahc_le32toh(scb->sg_list[i].len));
--		}
--	}
--}
+@@ -7524,11 +7511,7 @@ static int __init ncr_regtest (struct ncb* np)
+ 	data = 0xffffffff;
+ 	OUTL_OFF(offsetof(struct ncr_reg, nc_dstat), data);
+ 	data = INL_OFF(offsetof(struct ncr_reg, nc_dstat));
+-#if 1
+ 	if (data == 0xffffffff) {
+-#else
+-	if ((data & 0xe2f0fffd) != 0x02000080) {
 -#endif
--
- /************************* Transfer Negotiation *******************************/
- /*
-  * Allocate per target mode instance (ID we respond to as a target)
-diff --git a/drivers/scsi/nsp32.c b/drivers/scsi/nsp32.c
-index abc4ce9eae74..fd6dc06e1f20 100644
---- a/drivers/scsi/nsp32.c
-+++ b/drivers/scsi/nsp32.c
-@@ -427,20 +427,6 @@ static void nsp32_build_reject(struct scsi_cmnd *SCpnt)
- /*
-  * timer
+ 		printk ("CACHE TEST FAILED: reg dstat-sstat2 readback %x.\n",
+ 			(unsigned) data);
+ 		return (0x10);
+diff --git a/drivers/scsi/sym53c8xx_2/sym53c8xx.h b/drivers/scsi/sym53c8xx_2/sym53c8xx.h
+index 11f5dc29aa59..fbfda238b703 100644
+--- a/drivers/scsi/sym53c8xx_2/sym53c8xx.h
++++ b/drivers/scsi/sym53c8xx_2/sym53c8xx.h
+@@ -38,28 +38,6 @@
   */
--#if 0
--static void nsp32_start_timer(struct scsi_cmnd *SCpnt, int time)
--{
--	unsigned int base = SCpnt->host->io_port;
--
--	nsp32_dbg(NSP32_DEBUG_INTR, "timer=%d", time);
--
--	if (time & (~TIMER_CNT_MASK)) {
--		nsp32_dbg(NSP32_DEBUG_INTR, "timer set overflow");
--	}
--
--	nsp32_write2(base, TIMER_SET, time & TIMER_CNT_MASK);
--}
--#endif
+ #define	SYM_CONF_DMA_ADDRESSING_MODE CONFIG_SCSI_SYM53C8XX_DMA_ADDRESSING_MODE
  
+-/*
+- *  NVRAM support.
+- */
+-#if 1
+-#define SYM_CONF_NVRAM_SUPPORT		(1)
+-#endif
+-
+-/*
+- *  These options are not tunable from 'make config'
+- */
+-#if 1
+-#define	SYM_LINUX_PROC_INFO_SUPPORT
+-#define SYM_LINUX_USER_COMMAND_SUPPORT
+-#define SYM_LINUX_USER_INFO_SUPPORT
+-#define SYM_LINUX_DEBUG_CONTROL_SUPPORT
+-#endif
+-
+-/*
+- *  Also handle old NCR chips if not (0).
+- */
+-#define SYM_CONF_GENERIC_SUPPORT	(1)
+-
+ /*
+  *  Allow tags from 2 to 256, default 8
+  */
+@@ -191,12 +169,4 @@ extern unsigned int sym_debug_flags;
+ #define SYM_CONF_IARB_MAX 3
+ #define SYM_CONF_SET_IARB_ON_ARB_LOST 1
+ 
+-/*
+- *  Returning wrong residuals may make problems.
+- *  When zero, this define tells the driver to 
+- *  always return 0 as transfer residual.
+- *  Btw, all my testings of residuals have succeeded.
+- */
+-#define SYM_SETUP_RESIDUAL_SUPPORT 1
+-
+ #endif /* SYM53C8XX_H */
+diff --git a/drivers/scsi/sym53c8xx_2/sym_fw.c b/drivers/scsi/sym53c8xx_2/sym_fw.c
+index c536d2a9a657..6fe98f754333 100644
+--- a/drivers/scsi/sym53c8xx_2/sym_fw.c
++++ b/drivers/scsi/sym53c8xx_2/sym_fw.c
+@@ -36,7 +36,6 @@
+ #define	PADDR_B(label)		SYM_GEN_PADDR_B(struct SYM_FWB_SCR, label)
+ 
+ 
+-#if	SYM_CONF_GENERIC_SUPPORT
+ /*
+  *  Allocate firmware #1 script area.
+  */
+@@ -56,7 +55,6 @@ static struct sym_fwz_ofs sym_fw1z_ofs = {
+ #undef	SYM_FWA_SCR
+ #undef	SYM_FWB_SCR
+ #undef	SYM_FWZ_SCR
+-#endif	/* SYM_CONF_GENERIC_SUPPORT */
  
  /*
-diff --git a/drivers/scsi/ses.c b/drivers/scsi/ses.c
-index 2c61624cb4b0..ddc1e6662f3f 100644
---- a/drivers/scsi/ses.c
-+++ b/drivers/scsi/ses.c
-@@ -446,25 +446,6 @@ struct ses_host_edev {
- 	struct enclosure_device *edev;
+  *  Allocate firmware #2 script area.
+@@ -86,7 +84,6 @@ static struct sym_fwz_ofs sym_fw2z_ofs = {
+ #undef	PADDR_A
+ #undef	PADDR_B
+ 
+-#if	SYM_CONF_GENERIC_SUPPORT
+ /*
+  *  Patch routine for firmware #1.
+  */
+@@ -127,7 +124,6 @@ sym_fw1_patch(struct Scsi_Host *shost)
+ 	scriptb0->done_pos[0]	= cpu_to_scr(np->dqueue_ba);
+ 	scriptb0->targtbl[0]	= cpu_to_scr(np->targtbl_ba);
+ }
+-#endif	/* SYM_CONF_GENERIC_SUPPORT */
+ 
+ /*
+  *  Patch routine for firmware #2.
+@@ -274,7 +270,6 @@ sym_fw_setup_bus_addresses(struct sym_hcb *np, struct sym_fw *fw)
+ 		pa[i] = np->scriptz_ba + po[i];
+ }
+ 
+-#if	SYM_CONF_GENERIC_SUPPORT
+ /*
+  *  Setup routine for firmware #1.
+  */
+@@ -295,7 +290,6 @@ sym_fw1_setup(struct sym_hcb *np, struct sym_fw *fw)
+ 	 */
+ 	sym_fw_setup_bus_addresses(np, fw);
+ }
+-#endif	/* SYM_CONF_GENERIC_SUPPORT */
+ 
+ /*
+  *  Setup routine for firmware #2.
+@@ -321,9 +315,7 @@ sym_fw2_setup(struct sym_hcb *np, struct sym_fw *fw)
+ /*
+  *  Allocate firmware descriptors.
+  */
+-#if	SYM_CONF_GENERIC_SUPPORT
+ static struct sym_fw sym_fw1 = SYM_FW_ENTRY(sym_fw1, "NCR-generic");
+-#endif	/* SYM_CONF_GENERIC_SUPPORT */
+ static struct sym_fw sym_fw2 = SYM_FW_ENTRY(sym_fw2, "LOAD/STORE-based");
+ 
+ /*
+@@ -334,10 +326,8 @@ sym_find_firmware(struct sym_chip *chip)
+ {
+ 	if (chip->features & FE_LDSTR)
+ 		return &sym_fw2;
+-#if	SYM_CONF_GENERIC_SUPPORT
+ 	else if (!(chip->features & (FE_PFEN|FE_NOPM|FE_DAC)))
+ 		return &sym_fw1;
+-#endif
+ 	else
+ 		return NULL;
+ }
+diff --git a/drivers/scsi/sym53c8xx_2/sym_glue.c b/drivers/scsi/sym53c8xx_2/sym_glue.c
+index 57637a81776d..9c590211f3fe 100644
+--- a/drivers/scsi/sym53c8xx_2/sym_glue.c
++++ b/drivers/scsi/sym53c8xx_2/sym_glue.c
+@@ -908,7 +908,6 @@ static const char *sym53c8xx_info (struct Scsi_Host *host)
+ }
+ 
+ 
+-#ifdef SYM_LINUX_PROC_INFO_SUPPORT
+ /*
+  *  Proc file system stuff
+  *
+@@ -918,8 +917,6 @@ static const char *sym53c8xx_info (struct Scsi_Host *host)
+  *  to the sym_usercmd() function.
+  */
+ 
+-#ifdef SYM_LINUX_USER_COMMAND_SUPPORT
+-
+ struct	sym_usrcmd {
+ 	u_long	target;
+ 	u_long	lun;
+@@ -944,11 +941,9 @@ static void sym_exec_user_command (struct sym_hcb *np, struct sym_usrcmd *uc)
+ 	switch (uc->cmd) {
+ 	case 0: return;
+ 
+-#ifdef SYM_LINUX_DEBUG_CONTROL_SUPPORT
+ 	case UC_SETDEBUG:
+ 		sym_debug_flags = uc->data;
+ 		break;
+-#endif
+ 	case UC_SETVERBOSE:
+ 		np->verbose = uc->data;
+ 		break;
+@@ -1084,10 +1079,8 @@ static int sym_user_command(struct Scsi_Host *shost, char *buffer, int length)
+ 		uc->cmd = UC_SETVERBOSE;
+ 	else if	((arg_len = is_keyword(ptr, len, "setwide")) != 0)
+ 		uc->cmd = UC_SETWIDE;
+-#ifdef SYM_LINUX_DEBUG_CONTROL_SUPPORT
+ 	else if	((arg_len = is_keyword(ptr, len, "setdebug")) != 0)
+ 		uc->cmd = UC_SETDEBUG;
+-#endif
+ 	else if	((arg_len = is_keyword(ptr, len, "setflag")) != 0)
+ 		uc->cmd = UC_SETFLAG;
+ 	else if	((arg_len = is_keyword(ptr, len, "resetdev")) != 0)
+@@ -1097,10 +1090,6 @@ static int sym_user_command(struct Scsi_Host *shost, char *buffer, int length)
+ 	else
+ 		arg_len = 0;
+ 
+-#ifdef DEBUG_PROC_INFO
+-printk("sym_user_command: arg_len=%d, cmd=%ld\n", arg_len, uc->cmd);
+-#endif
+-
+ 	if (!arg_len)
+ 		return -EINVAL;
+ 	ptr += arg_len; len -= arg_len;
+@@ -1119,9 +1108,6 @@ printk("sym_user_command: arg_len=%d, cmd=%ld\n", arg_len, uc->cmd);
+ 		} else {
+ 			GET_INT_ARG(ptr, len, target);
+ 			uc->target = (1<<target);
+-#ifdef DEBUG_PROC_INFO
+-printk("sym_user_command: target=%ld\n", target);
+-#endif
+ 		}
+ 		break;
+ 	}
+@@ -1133,11 +1119,7 @@ printk("sym_user_command: target=%ld\n", target);
+ 	case UC_SETWIDE:
+ 		SKIP_SPACES(ptr, len);
+ 		GET_INT_ARG(ptr, len, uc->data);
+-#ifdef DEBUG_PROC_INFO
+-printk("sym_user_command: data=%ld\n", uc->data);
+-#endif
+ 		break;
+-#ifdef SYM_LINUX_DEBUG_CONTROL_SUPPORT
+ 	case UC_SETDEBUG:
+ 		while (len > 0) {
+ 			SKIP_SPACES(ptr, len);
+@@ -1167,11 +1149,7 @@ printk("sym_user_command: data=%ld\n", uc->data);
+ 				return -EINVAL;
+ 			ptr += arg_len; len -= arg_len;
+ 		}
+-#ifdef DEBUG_PROC_INFO
+-printk("sym_user_command: data=%ld\n", uc->data);
+-#endif
+ 		break;
+-#endif /* SYM_LINUX_DEBUG_CONTROL_SUPPORT */
+ 	case UC_SETFLAG:
+ 		while (len > 0) {
+ 			SKIP_SPACES(ptr, len);
+@@ -1198,15 +1176,12 @@ printk("sym_user_command: data=%ld\n", uc->data);
+ 	return length;
+ }
+ 
+-#endif	/* SYM_LINUX_USER_COMMAND_SUPPORT */
+-
+ 
+ /*
+  *  Copy formatted information into the input buffer.
+  */
+ static int sym_show_info(struct seq_file *m, struct Scsi_Host *shost)
+ {
+-#ifdef SYM_LINUX_USER_INFO_SUPPORT
+ 	struct sym_data *sym_data = shost_priv(shost);
+ 	struct pci_dev *pdev = sym_data->pdev;
+ 	struct sym_hcb *np = sym_data->ncb;
+@@ -1226,13 +1201,8 @@ static int sym_show_info(struct seq_file *m, struct Scsi_Host *shost)
+ 		 SYM_CONF_MAX_START, SYM_CONF_MAX_TAG);
+ 
+ 	return 0;
+-#else
+-	return -EINVAL;
+-#endif /* SYM_LINUX_USER_INFO_SUPPORT */
+ }
+ 
+-#endif /* SYM_LINUX_PROC_INFO_SUPPORT */
+-
+ /*
+  * Free resources claimed by sym_iomap_device().  Note that
+  * sym_free_resources() should be used instead of this function after calling
+@@ -1431,7 +1401,6 @@ static struct Scsi_Host *sym_attach(const struct scsi_host_template *tpnt, int u
+ /*
+  *    Detect and try to read SYMBIOS and TEKRAM NVRAM.
+  */
+-#if SYM_CONF_NVRAM_SUPPORT
+ static void sym_get_nvram(struct sym_device *devp, struct sym_nvram *nvp)
+ {
+ 	devp->nvram = nvp;
+@@ -1439,11 +1408,6 @@ static void sym_get_nvram(struct sym_device *devp, struct sym_nvram *nvp)
+ 
+ 	sym_read_nvram(devp, nvp);
+ }
+-#else
+-static inline void sym_get_nvram(struct sym_device *devp, struct sym_nvram *nvp)
+-{
+-}
+-#endif	/* SYM_CONF_NVRAM_SUPPORT */
+ 
+ static int sym_check_supported(struct sym_device *device)
+ {
+@@ -1694,13 +1658,9 @@ static const struct scsi_host_template sym2_template = {
+ 	.eh_host_reset_handler	= sym53c8xx_eh_host_reset_handler,
+ 	.this_id		= 7,
+ 	.max_sectors		= 0xFFFF,
+-#ifdef SYM_LINUX_PROC_INFO_SUPPORT
+ 	.show_info		= sym_show_info,
+-#ifdef	SYM_LINUX_USER_COMMAND_SUPPORT
+ 	.write_info		= sym_user_command,
+-#endif
+ 	.proc_name		= NAME53C8XX,
+-#endif
  };
  
+ static int attach_count;
+diff --git a/drivers/scsi/sym53c8xx_2/sym_hipd.c b/drivers/scsi/sym53c8xx_2/sym_hipd.c
+index f0db17e34ea0..38747ece8c94 100644
+--- a/drivers/scsi/sym53c8xx_2/sym_hipd.c
++++ b/drivers/scsi/sym53c8xx_2/sym_hipd.c
+@@ -31,10 +31,6 @@
+ #include "sym_glue.h"
+ #include "sym_nvram.h"
+ 
 -#if 0
--int ses_match_host(struct enclosure_device *edev, void *data)
--{
--	struct ses_host_edev *sed = data;
--	struct scsi_device *sdev;
+-#define SYM_DEBUG_GENERIC_SUPPORT
+-#endif
 -
--	if (!scsi_is_sdev_device(edev->edev.parent))
--		return 0;
--
--	sdev = to_scsi_device(edev->edev.parent);
--
--	if (sdev->host != sed->shost)
--		return 0;
--
--	sed->edev = edev;
--	return 1;
--}
--#endif  /*  0  */
--
- static int ses_process_descriptor(struct enclosure_component *ecomp,
- 				   unsigned char *desc, int max_desc_len)
+ /*
+  *  Needed function prototypes.
+  */
+@@ -438,11 +434,7 @@ static int sym_getpciclock (struct sym_hcb *np)
+ 	 *  For now, we only need to know about the actual 
+ 	 *  PCI BUS clock frequency for C1010-66 chips.
+ 	 */
+-#if 1
+ 	if (np->features & FE_66MHZ) {
+-#else
+-	if (1) {
+-#endif
+ 		OUTB(np, nc_stest1, SCLK); /* Use the PCI clock as SCSI clock */
+ 		f = sym_getfreq(np);
+ 		OUTB(np, nc_stest1, 0);
+@@ -496,7 +488,6 @@ sym_getsync(struct sym_hcb *np, u_char dt, u_char sfac, u_char *divp, u_char *fa
+ 	 *  to 5 Mega-transfers per second and may result in
+ 	 *  using higher clock divisors.
+ 	 */
+-#if 1
+ 	if ((np->features & (FE_C10|FE_U3EN)) == FE_C10) {
+ 		/*
+ 		 *  Look for the lowest clock divisor that allows an 
+@@ -517,7 +508,6 @@ sym_getsync(struct sym_hcb *np, u_char dt, u_char sfac, u_char *divp, u_char *fa
+ 		*fakp = fak;
+ 		return ret;
+ 	}
+-#endif
+ 
+ 	/*
+ 	 *  Look for the greatest clock divisor that allows an 
+@@ -825,11 +815,7 @@ static int sym_prepare_setting(struct Scsi_Host *shost, struct sym_hcb *np, stru
+ 		np->rv_dmode	|= BOF;		/* Burst Opcode Fetch */
+ 	if (np->features & FE_ERMP)
+ 		np->rv_dmode	|= ERMP;	/* Enable Read Multiple */
+-#if 1
+ 	if ((np->features & FE_PFEN) && !np->ram_ba)
+-#else
+-	if (np->features & FE_PFEN)
+-#endif
+ 		np->rv_dcntl	|= PFEN;	/* Prefetch Enable */
+ 	if (np->features & FE_CLSE)
+ 		np->rv_dcntl	|= CLSE;	/* Cache Line Size Enable */
+@@ -1032,7 +1018,7 @@ static int sym_snooptest(struct sym_hcb *np)
+ 	 *  Check for fatal DMA errors.
+ 	 */
+ 	dstat = INB(np, nc_dstat);
+-#if 1	/* Band aiding for broken hardwares that fail PCI parity */
++	/* Band aiding for broken hardware that fails PCI parity */
+ 	if ((dstat & MDPE) && (np->rv_ctest4 & MPEE)) {
+ 		printf ("%s: PCI DATA PARITY ERROR DETECTED - "
+ 			"DISABLING MASTER DATA PARITY CHECKING.\n",
+@@ -1040,7 +1026,6 @@ static int sym_snooptest(struct sym_hcb *np)
+ 		np->rv_ctest4 &= ~MPEE;
+ 		goto restart_test;
+ 	}
+-#endif
+ 	if (dstat & (MDPE|BF|IID)) {
+ 		printf ("CACHE TEST FAILED: DMA error (dstat=0x%02x).", dstat);
+ 		return (0x80);
+@@ -1187,15 +1172,9 @@ static struct sym_chip sym_dev_table[] = {
+  {PCI_DEVICE_ID_NCR_53C810, 0x0f, "810", 4, 8, 4, 64,
+  FE_ERL}
+  ,
+-#ifdef SYM_DEBUG_GENERIC_SUPPORT
+- {PCI_DEVICE_ID_NCR_53C810, 0xff, "810a", 4,  8, 4, 1,
+- FE_BOF}
+- ,
+-#else
+  {PCI_DEVICE_ID_NCR_53C810, 0xff, "810a", 4,  8, 4, 1,
+  FE_CACHE_SET|FE_LDSTR|FE_PFEN|FE_BOF}
+  ,
+-#endif
+  {PCI_DEVICE_ID_NCR_53C815, 0xff, "815", 4,  8, 4, 64,
+  FE_BOF|FE_ERL}
+  ,
+@@ -1224,17 +1203,10 @@ static struct sym_chip sym_dev_table[] = {
+  FE_WIDE|FE_ULTRA|FE_DBLR|FE_CACHE0_SET|FE_BOF|FE_DFS|FE_LDSTR|FE_PFEN|
+  FE_RAM|FE_DIFF|FE_VARCLK}
+  ,
+-#ifdef SYM_DEBUG_GENERIC_SUPPORT
+- {PCI_DEVICE_ID_NCR_53C895, 0xff, "895", 6, 31, 7, 2,
+- FE_WIDE|FE_ULTRA2|FE_QUAD|FE_CACHE_SET|FE_BOF|FE_DFS|
+- FE_RAM|FE_LCKFRQ}
+- ,
+-#else
+  {PCI_DEVICE_ID_NCR_53C895, 0xff, "895", 6, 31, 7, 2,
+  FE_WIDE|FE_ULTRA2|FE_QUAD|FE_CACHE_SET|FE_BOF|FE_DFS|FE_LDSTR|FE_PFEN|
+  FE_RAM|FE_LCKFRQ}
+  ,
+-#endif
+  {PCI_DEVICE_ID_NCR_53C896, 0xff, "896", 6, 31, 7, 4,
+  FE_WIDE|FE_ULTRA2|FE_QUAD|FE_CACHE_SET|FE_BOF|FE_DFS|FE_LDSTR|FE_PFEN|
+  FE_RAM|FE_RAM8K|FE_64BIT|FE_DAC|FE_IO256|FE_NOPM|FE_LEDC|FE_LCKFRQ}
+@@ -1941,10 +1913,6 @@ static void sym_settrans(struct sym_hcb *np, int target, u_char opts, u_char ofs
+ 	wval = tp->head.wval;
+ 	uval = tp->head.uval;
+ 
+-#if 0
+-	printf("XXXX sval=%x wval=%x uval=%x (%x)\n", 
+-		sval, wval, uval, np->rv_scntl3);
+-#endif
+ 	/*
+ 	 *  Set the offset.
+ 	 */
+@@ -2363,11 +2331,8 @@ static void sym_int_par (struct sym_hcb *np, u_short sist)
+ 		}
+ 	}
+ 	else if (phase == 7)	/* We definitely cannot handle parity errors */
+-#if 1				/* in message-in phase due to the relection  */
++				/* in message-in phase due to the relection  */
+ 		goto reset_all; /* path and various message anticipations.   */
+-#else
+-		OUTL_DSP(np, SCRIPTA_BA(np, clrack));
+-#endif
+ 	else
+ 		OUTL_DSP(np, SCRIPTA_BA(np, dispatch));
+ 	return;
+@@ -3219,9 +3184,6 @@ int sym_clear_tasks(struct sym_hcb *np, int cam_status, int target, int lun, int
+ 		if (sym_get_cam_status(cmd) != DID_TIME_OUT)
+ 			sym_set_cam_status(cmd, cam_status);
+ 		++i;
+-#if 0
+-printf("XXXX TASK @%p CLEARED\n", cp);
+-#endif
+ 	}
+ 	return i;
+ }
+@@ -4950,15 +4912,6 @@ static struct sym_ccb *sym_ccb_from_dsa(struct sym_hcb *np, u32 dsa)
+  */
+ static void sym_init_tcb (struct sym_hcb *np, u_char tn)
  {
+-#if 0	/*  Hmmm... this checking looks paranoid. */
+-	/*
+-	 *  Check some alignments required by the chip.
+-	 */	
+-	assert (((offsetof(struct sym_reg, nc_sxfer) ^
+-		offsetof(struct sym_tcb, head.sval)) &3) == 0);
+-	assert (((offsetof(struct sym_reg, nc_scntl3) ^
+-		offsetof(struct sym_tcb, head.wval)) &3) == 0);
+-#endif
+ }
+ 
+ /*
+@@ -5394,15 +5347,6 @@ void sym_complete_error(struct sym_hcb *np, struct sym_ccb *cp)
+ 	 */
+ 	resid = sym_compute_residual(np, cp);
+ 
+-	if (!SYM_SETUP_RESIDUAL_SUPPORT) {/* If user does not want residuals */
+-		resid  = 0;		 /* throw them away. :)		    */
+-		cp->sv_resid = 0;
+-	}
+-#ifdef DEBUG_2_0_X
+-if (resid)
+-	printf("XXXX RESID= %d - 0x%x\n", resid, resid);
+-#endif
+-
+ 	/*
+ 	 *  Dequeue all queued CCBs for that device 
+ 	 *  not yet started by SCRIPTS.
+@@ -5519,18 +5463,6 @@ void sym_complete_ok (struct sym_hcb *np, struct sym_ccb *cp)
+ 	if (cp->phys.head.lastp != cp->goalp)
+ 		resid = sym_compute_residual(np, cp);
+ 
+-	/*
+-	 *  Wrong transfer residuals may be worse than just always 
+-	 *  returning zero. User can disable this feature in 
+-	 *  sym53c8xx.h. Residual support is enabled by default.
+-	 */
+-	if (!SYM_SETUP_RESIDUAL_SUPPORT)
+-		resid  = 0;
+-#ifdef DEBUG_2_0_X
+-if (resid)
+-	printf("XXXX RESID= %d - 0x%x\n", resid, resid);
+-#endif
+-
+ 	/*
+ 	 *  Build result in CAM ccb.
+ 	 */
+diff --git a/drivers/scsi/sym53c8xx_2/sym_hipd.h b/drivers/scsi/sym53c8xx_2/sym_hipd.h
+index 9231a2899064..b51f7130b327 100644
+--- a/drivers/scsi/sym53c8xx_2/sym_hipd.h
++++ b/drivers/scsi/sym53c8xx_2/sym_hipd.h
+@@ -293,12 +293,8 @@
+ #define CCB_HASH_SHIFT		8
+ #define CCB_HASH_SIZE		(1UL << CCB_HASH_SHIFT)
+ #define CCB_HASH_MASK		(CCB_HASH_SIZE-1)
+-#if 1
+ #define CCB_HASH_CODE(dsa)	\
+ 	(((dsa) >> (_LGRU16_(sizeof(struct sym_ccb)))) & CCB_HASH_MASK)
+-#else
+-#define CCB_HASH_CODE(dsa)	(((dsa) >> 9) & CCB_HASH_MASK)
+-#endif
+ 
+ #if	SYM_CONF_DMA_ADDRESSING_MODE == 2
+ /*
+@@ -660,7 +656,6 @@ struct sym_ccbh {
+  *  that use directly the header in the CCB, and the NCR-GENERIC 
+  *  SCRIPTS that use the copy of the header in the HCB.
+  */
+-#if	SYM_CONF_GENERIC_SUPPORT
+ #define sym_set_script_dp(np, cp, dp)				\
+ 	do {							\
+ 		if (np->features & FE_LDSTR)			\
+@@ -671,14 +666,6 @@ struct sym_ccbh {
+ #define sym_get_script_dp(np, cp) 				\
+ 	scr_to_cpu((np->features & FE_LDSTR) ?			\
+ 		cp->phys.head.lastp : np->ccb_head.lastp)
+-#else
+-#define sym_set_script_dp(np, cp, dp)				\
+-	do {							\
+-		cp->phys.head.lastp = cpu_to_scr(dp);		\
+-	} while (0)
+-
+-#define sym_get_script_dp(np, cp) (cp->phys.head.lastp)
+-#endif
+ 
+ /*
+  *  Data Structure Block
+@@ -801,11 +788,10 @@ struct sym_hcb {
+ 	 *  chips (810, 815, 825) copy part of the data structures 
+ 	 *  (CCB, TCB and LCB) in fixed areas.
+ 	 */
+-#if	SYM_CONF_GENERIC_SUPPORT
+ 	struct sym_ccbh	ccb_head;
+ 	struct sym_tcbh	tcb_head;
+ 	struct sym_lcbh	lcb_head;
+-#endif
++
+ 	/*
+ 	 *  Idle task and invalid task actions and 
+ 	 *  their bus addresses.
+diff --git a/drivers/scsi/sym53c8xx_2/sym_nvram.h b/drivers/scsi/sym53c8xx_2/sym_nvram.h
+index d07da39cc240..890d2bda8d88 100644
+--- a/drivers/scsi/sym53c8xx_2/sym_nvram.h
++++ b/drivers/scsi/sym53c8xx_2/sym_nvram.h
+@@ -170,32 +170,16 @@ struct sym_nvram {
+ #define	SYM_SYMBIOS_NVRAM	(1)
+ #define	SYM_TEKRAM_NVRAM	(2)
+ #define SYM_PARISC_PDC		(3)
+-#if SYM_CONF_NVRAM_SUPPORT
+ 	union {
+ 		Symbios_nvram Symbios;
+ 		Tekram_nvram Tekram;
+ 		struct pdc_initiator parisc;
+ 	} data;
+-#endif
+ };
+ 
+-#if SYM_CONF_NVRAM_SUPPORT
+ void sym_nvram_setup_host(struct Scsi_Host *shost, struct sym_hcb *np, struct sym_nvram *nvram);
+ void sym_nvram_setup_target (struct sym_tcb *tp, int target, struct sym_nvram *nvp);
+ int sym_read_nvram (struct sym_device *np, struct sym_nvram *nvp);
+ char *sym_nvram_type(struct sym_nvram *nvp);
+-#else
+-static inline void sym_nvram_setup_host(struct Scsi_Host *shost, struct sym_hcb *np, struct sym_nvram *nvram) { }
+-static inline void sym_nvram_setup_target(struct sym_tcb *tp, struct sym_nvram *nvram) { }
+-static inline int sym_read_nvram(struct sym_device *np, struct sym_nvram *nvp)
+-{
+-	nvp->type = 0;
+-	return 0;
+-}
+-static inline char *sym_nvram_type(struct sym_nvram *nvp)
+-{
+-	return "No NVRAM";
+-}
+-#endif
+ 
+ #endif /* SYM_NVRAM_H */
 -- 
 2.43.0
 
