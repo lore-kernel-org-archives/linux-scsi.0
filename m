@@ -1,113 +1,155 @@
-Received: from mail-pf1-f182.google.com (mail-pf1-f182.google.com [209.85.210.182])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3B74B4C98
-	for <linux-scsi@vger.kernel.org>; Fri, 12 Dec 2025 00:18:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.182
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5DBA226299;
+	Fri, 12 Dec 2025 00:45:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1765498717; cv=none; b=hYmiEwD4mQRznRHU9cfuwIhmywgr6yh9imrbzYHoHd/Yw52kWu82/yxDv1kG0zMEZ9gm+5/t5sO4cAQThjYzWbW4e9qISl67wkjDKABzbcjZVrIULSrm3q19e7nHyiUuexxs4l1kM9axJ6F/xn6YjwCtKvNx/Z4aCf6joZHtpC4=
+	t=1765500325; cv=none; b=BTXuVAUPuvgSOZ8ybmTmwtiIheAAYKH/j6f4mS9HE/S4ggbvFlLkrusuZW2UhLk9w4eFB4nvfWBkZh8xP0PaIymPcNkxOvEkh5qKXaeQtzTzLCHAxkgik/gcNno9gAC6vYXkSOIbQCQqKxQ6xEnR3No3tRtKGwSUXgkrMVutsnE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1765498717; c=relaxed/simple;
-	bh=15plplR1cpoC1A9LV/Rm8Q8427okt8l5fnZ7s1FyvqM=;
+	s=arc-20240116; t=1765500325; c=relaxed/simple;
+	bh=f6cB55aVH6/c0pD1Bfy2lcpivDC0tLdR4mIpekoOwMM=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=oP4qxUpybL1Cz/meNn6bvfig1RAg1lcf91n1Ki5+II3RKl8luPIGqYVzVOpeLPbI7sCkNlR0srAtYf6KLeXoXDtpFysWu/HpZnAwqpIc7xXPzHgkjNXCTZu6xG8ExQhBx3nvIL2XWEG4/HbKm4Dum3f/H/XT9iFpi04TbjuR6f8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=AoPys7vE; arc=none smtp.client-ip=209.85.210.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=SLxSG5dU0u8W0pUXm+5XQMSS6m/OYivsHE3WMw/2HF5aWkq64tln84y6TBnmFnyMSBYEt4C0VRhsQYgF40v7+0vqUdFIJ4+IiKSZWkHP9oO06IUopgd8AswTczWQlfp2jwzj2eUj0gx6t8ChU4/w0MdFb4kSbuhv2iqpF7jQMow=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ozBOwH9J; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="AoPys7vE"
-Received: by mail-pf1-f182.google.com with SMTP id d2e1a72fcca58-7bab7c997eeso797796b3a.0
-        for <linux-scsi@vger.kernel.org>; Thu, 11 Dec 2025 16:18:36 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1765498715; x=1766103515; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=yFOUupdoY2IBfYz7cj82tulz4y4RQmCbBpdYyUmCwTM=;
-        b=AoPys7vEeSoAffjp9/oj9p75d2tyt6/5c3af4WyGguDhFYcpxNV3/b0NTg3l8iDACl
-         QLtsj2sZL27auY3FtjXe1Wp5u3n+tJcpf4V8X4b+p3PSXMBXHNSSA/xrb2+hjrW9jI3A
-         6Ad6+7UcCxHJ8U8HPjNc1ZRY+0kFasOBC+erjBdUziCMgCXPq3cQftIVrPb89v5GlGUZ
-         vZRg1s4naLnw6Hx8VleUdnCTlt0s2Gw2ZeHimoeRtlwQHnd2sdHnfC9tESnj25B+z6z0
-         0GgkisBW5Q7zuI9/Q+4fLiUGOKTfzEVYEiKkINTVADDDF/r/L5hA+tsJBIpngGAtbeGl
-         3n6w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1765498715; x=1766103515;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=yFOUupdoY2IBfYz7cj82tulz4y4RQmCbBpdYyUmCwTM=;
-        b=m9ZBMwgVy/uEqCcsKN1BsRVjA5ySNOezaK5bDwPgeGa7uucXxxpFl3k9NcNzdHEvFm
-         rws8H8Ye27nXvRHPM8ODQEpg5x2uGFFY//1I64S8wjUB6raPC68D4NX7EKv6nwE3eY+L
-         1n6GFWA8SVTuL4cFjtGp/HYwCJ0svpxvuvp9ENxea/E6KO+Riw3vq+RPkG1ydRv/gXtd
-         rbPsGPGiu9k9SfAkAmtbQFpkm3IFSytqJ7QwRnIdKq03tlw6Xdz3jJ9+ZCFm42dqApMA
-         wxieXjLAFsnes3mVXd0+4L32SENM554418cYTuv/6iEVBPVQKw1lhFQJZ6oKlDBKk5zd
-         XzYQ==
-X-Forwarded-Encrypted: i=1; AJvYcCWx6XHJrWMoFeYDGvxnSzIWejy39/V/jeEmupgGoXiIy06/eTFQNHHIZar9nEvhLgJ1mETTYcTz1/gd@vger.kernel.org
-X-Gm-Message-State: AOJu0YwOI/oBBew53QAK2+ebnmZ0kbxxzCzF0qWc2B/XJhYMo/Xlvafo
-	AkNp64fKVVlu2B6hvITJYoveon+9oHC8Pdj9xyZI0VZ3v3jsVsSGalWJ
-X-Gm-Gg: AY/fxX6T6aniCVYVYRMJ+hAdoQdbZlUNHN/pHcHoLWwJoYnf/cpQ9K4j1q1WK2OjnVr
-	PztlpHl2Uq7zUuyLmP7rUrTnuOn2F2B5XhxjWXBWVdXsIMpuzqOr9aekiVAfuWTdqwpJykZ+BJj
-	5xEL6T/jT8pv0yDHX7n9vJgOwwH1/tYBIrVfD9CQMpWHoikMIFUB0NsyWshu+y9Bbq+WszDC7cT
-	ztUoKzEf2nsnXDm1wWxGDXuK7745VA/S2DW/62m45YK0zY39n1OJl46zYZNFhqEz+cTVfyZsuYl
-	y0c9GaRY3jWDmL1Q7iJpkzzbm+ctcDAcL5EQWTAVzzZ4MxEP+hb+xypHcehmagDNT+sU/hpmcVt
-	FCMgyuT3G6ocdGvfLHkg9ZHCSYYbUeEzCdGNNoB+ayLZ/lF2Ao1Hc1bhYcYJf8HZE7/Zm9skEAW
-	qHJHbtbHTe/8tAgfGxclnYnl67t3yu7iq87KWCUg==
-X-Google-Smtp-Source: AGHT+IHG4WpRXnDDRth18q2xYvJnOxY5tkZ71c7eprKcSWvdKv4QOXY/t1xL+XMRFPUhk6/CFbFasw==
-X-Received: by 2002:a05:7022:6707:b0:119:e569:f258 with SMTP id a92af1059eb24-11f349a4809mr289828c88.1.1765498715317;
-        Thu, 11 Dec 2025 16:18:35 -0800 (PST)
-Received: from deb-101020-bm01.eng.stellus.in ([149.97.161.244])
-        by smtp.gmail.com with ESMTPSA id a92af1059eb24-11f2e2b46f5sm12255150c88.5.2025.12.11.16.18.34
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 11 Dec 2025 16:18:34 -0800 (PST)
-Date: Fri, 12 Dec 2025 00:18:33 +0000
-From: Swarna Prabhu <sw.prabhu6@gmail.com>
-To: Damien Le Moal <dlemoal@kernel.org>
-Cc: James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com,
-	linux-scsi@vger.kernel.org, bvanassche@acm.org,
-	linux-kernel@vger.kernel.org, mcgrof@kernel.org,
-	kernel@pankajraghav.com
-Subject: Re: [v1 0/2] enable sector size > PAGE_SIZE for scsi
-Message-ID: <aTtfWdFUARToPhD3@deb-101020-bm01.eng.stellus.in>
-References: <20251210014136.2549405-1-sw.prabhu6@gmail.com>
- <ec5f42bd-a26a-4416-b967-f67090e9a423@kernel.org>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ozBOwH9J"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4E968C4CEF7;
+	Fri, 12 Dec 2025 00:45:15 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1765500325;
+	bh=f6cB55aVH6/c0pD1Bfy2lcpivDC0tLdR4mIpekoOwMM=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=ozBOwH9JktWNiBkOOEGDQcxNLTSIJBAWSmLL0HGPUpKOEaRC5+yF3OJuYYEkx6K1j
+	 dmDIkR1LYX4lgJo6E0JQ/s1+Y1snpoUU28BKeqOoUDqp07vUC3858q/NZGD8MyLlVs
+	 7S4hlZ4+a9ACB2IK1YOpT4eoyWL16vMT/teNmIDi0n65JsW6iHImAV/IAqxluG3fcb
+	 L2uNOmxLUhsZq9OUcppxxpcxOYVBdjU4bxcFvRz/wAMrlmx/Pt3R4M/BKIpXIZMaHU
+	 c22dppDN2cPUzsVxJGiC79ybn6F0ZhdAtK+ohRZSe9ZPNibtLbduoaWcKp+DR6w9bt
+	 ttf4wPdvqEn6w==
+Date: Fri, 12 Dec 2025 09:45:10 +0900
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Ram Kumar Dwivedi <ram.dwivedi@oss.qualcomm.com>
+Cc: alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org, 
+	robh@kernel.org, krzk+dt@kernel.org, conor+dt@kernel.org, 
+	James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com, quic_ahari@quicinc.com, 
+	linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org, devicetree@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, Shazad Hussain <quic_shazhuss@quicinc.com>
+Subject: Re: [PATCH V1 3/3] ufs: ufs-qcom: Add support for firmware-managed
+ resource abstraction
+Message-ID: <64hjdpdc745gazdzz7vuauhl5cohbfz2cgxb2yz2bt6mpezyb7@i2fyze7ozbc4>
+References: <20251114145646.2291324-1-ram.dwivedi@oss.qualcomm.com>
+ <20251114145646.2291324-4-ram.dwivedi@oss.qualcomm.com>
+ <avpwp57yqkljxkld7dsqdsc7m26wvmwwhvph6ljv43yjjdyqof@szlfmik6betd>
+ <fcdeea3b-f20e-4b6c-9c64-5479f75b05b9@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <ec5f42bd-a26a-4416-b967-f67090e9a423@kernel.org>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <fcdeea3b-f20e-4b6c-9c64-5479f75b05b9@oss.qualcomm.com>
 
-On Tue, Dec 09, 2025 at 05:56:05PM -0800, Damien Le Moal wrote:
-> On 2025/12/09 17:41, sw.prabhu6@gmail.com wrote:
-> > From: Swarna Prabhu <sw.prabhu6@gmail.com>
-> > 
-> > Hi All,
-> > 
-> > This is non RFC v1 series sent based on the feedback received on RFC
-> > v2 [1] and RFC v1 [2]. This patchset enables sector sizes > PAGE_SIZE for
-> > sd driver and scsi_debug driver since block layer can support block
-> > size > PAGE_SIZE. There was one issue with write_same16 and write_same10
-> > command, which is fixed as a part of the series.
-> > 
-> > Motivation:
-> >  - While enabling LBS on ZoneFS, zonefs-tools tests were being skipped
-> >    for conventional zones when tested on nvme block device emulated using
-> >    QEMU. Hence there was a need to enable scsi with higher sector sizes
-> >    to run zonefs tests for conventional zones as well.
+On Wed, Dec 10, 2025 at 09:33:08PM +0530, Ram Kumar Dwivedi wrote:
 > 
-> This is super confusing: there are no conventional zones with NVMe. And why
-> would a problem with NVMe require scsi patches ?
 > 
-Agree with you. NVME Zoned Namespace require sequential writes.
+> On 20-Nov-25 11:23 AM, Manivannan Sadhasivam wrote:
+> > On Fri, Nov 14, 2025 at 08:26:46PM +0530, Ram Kumar Dwivedi wrote:
+> >> From: Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>
+> >>
+> >> Add a compatible string for SA8255p platforms where resources such as
+> >> PHY, clocks, regulators, and resets are managed by firmware through an
+> >> SCMI server. Use the SCMI power protocol to abstract these resources and
+> >> invoke power operations via runtime PM APIs (pm_runtime_get/put_sync).
+> >>
+> >> Introduce vendor operations (vops) for SA8255p targets to enable SCMI-
+> >> based resource control. In this model, capabilities like clock scaling
+> >> and gating are not yet supported; these will be added incrementally.
+> >>
+> >> Co-developed-by: Anjana Hari <quic_ahari@quicinc.com>
+> >> Signed-off-by: Anjana Hari <quic_ahari@quicinc.com>
+> >> Co-developed-by: Shazad Hussain <quic_shazhuss@quicinc.com>
+> >> Signed-off-by: Shazad Hussain <quic_shazhuss@quicinc.com>
+> >> Signed-off-by: Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>
+> >> ---
+> >>  drivers/ufs/host/ufs-qcom.c | 161 +++++++++++++++++++++++++++++++++++-
+> >>  drivers/ufs/host/ufs-qcom.h |   1 +
+> >>  2 files changed, 161 insertions(+), 1 deletion(-)
+> >>
+> >> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+> >> index 8d119b3223cb..13ccf1fb2ebf 100644
+> >> --- a/drivers/ufs/host/ufs-qcom.c
+> >> +++ b/drivers/ufs/host/ufs-qcom.c
+> >> @@ -14,6 +14,7 @@
+> >>  #include <linux/of.h>
+> >>  #include <linux/phy/phy.h>
+> >>  #include <linux/platform_device.h>
+> >> +#include <linux/pm_domain.h>
+> >>  #include <linux/reset-controller.h>
+> >>  #include <linux/time.h>
+> >>  #include <linux/unaligned.h>
+> >> @@ -619,6 +620,27 @@ static int ufs_qcom_hce_enable_notify(struct ufs_hba *hba,
+> >>  	return err;
+> >>  }
+> >>  
+> >> +static int ufs_qcom_fw_managed_hce_enable_notify(struct ufs_hba *hba,
+> >> +						 enum ufs_notify_change_status status)
+> >> +{
+> >> +	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+> >> +
+> >> +	switch (status) {
+> >> +	case PRE_CHANGE:
+> >> +		ufs_qcom_select_unipro_mode(host);
+> >> +		break;
+> >> +	case POST_CHANGE:
+> >> +		ufs_qcom_enable_hw_clk_gating(hba);
+> >> +		ufs_qcom_ice_enable(host);
+> >> +		break;
+> >> +	default:
+> >> +		dev_err(hba->dev, "Invalid status %d\n", status);
+> >> +		return -EINVAL;
+> >> +	}
+> >> +
+> >> +	return 0;
+> >> +}
+> >> +
+> >>  /**
+> >>   * ufs_qcom_cfg_timers - Configure ufs qcom cfg timers
+> >>   *
+> >> @@ -789,6 +811,38 @@ static int ufs_qcom_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+> >>  	return ufs_qcom_ice_resume(host);
+> >>  }
+> >>  
+> >> +static int ufs_qcom_fw_managed_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op,
+> >> +				       enum ufs_notify_change_status status)
+> >> +{
+> >> +	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+> >> +
+> >> +	if (status == PRE_CHANGE)
+> >> +		return 0;
+> >> +
+> >> +	if (hba->spm_lvl != UFS_PM_LVL_5) {
+> >> +		dev_err(hba->dev, "Unsupported spm level %d\n", hba->spm_lvl);
+> >> +		return -EINVAL;
+> >> +	}
+> > 
+> > You should consider moving this check to ufs-sysfs.c where the sysfs write is
+> > handled. Failing due to unsupported suspend level at the last moment could be
+> > avoided.
+> 
+> Hi Mani,
+> 
+> We have planned to support other spm levels also in follow up series
+> once the basic UFS SCMI functionality is upstreamed.  This spm_lvl check
+> is intended as a temporary safeguard while we only support SPM level 5. 
+> If you'd still prefer a change, I caupdate this in the next patchset.
+> 
 
-Our initial goal was to enable LBS on Zonefs. Running zonefs tests
-on a scsi device covered both conventional and sequential zone based
-tests. So we had to enable higher sector sizes on scsi device and while
-doing so fix the issue seen with WRITE SAME commands with higher sector
-sizes.
+Please do it now as I don't see it logical to error out in suspend callback.
 
-Thanks
-Swarna
+- Mani
 
+-- 
+மணிவண்ணன் சதாசிவம்
