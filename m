@@ -1,82 +1,110 @@
-Received: from cstnet.cn (smtp81.cstnet.cn [159.226.251.81])
-	(using TLSv1.2 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A6F3D41C72;
-	Sat, 13 Dec 2025 08:36:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.226.251.81
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3D1497E110;
+	Sat, 13 Dec 2025 15:03:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1765615025; cv=none; b=FREN00O3JERugRco39+AwrOyB//BqIrlsbfDNDDwIrJkZQVE+N1F2/6yEOEaCAaTu1WMkL+IuwURvVymQrO9O0Qg9OiqlhmKnnuOR6Wjyd1xQw8wnfVFPFtD2iomTDrP8l6oshxiSlMy70anQWuVD/k8EdPwJqldyk8th9RqbT0=
+	t=1765638189; cv=none; b=du8XkQat0edNiIz8b1lYGoXxzl+kPs2l1Lj7CberZJ5QAcb5Zz5ILf5r9sKiOr4tjBMxjrDrxVib0okVYb23097cbwIny0aI9mmNhIK2U/kNFYjY12zDB9glf6RRwFGUnZ6X6ftM3RsWhU4v/kdPq079G6Gx2yFDtNZLor9f138=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1765615025; c=relaxed/simple;
-	bh=jwy8x0Pv72DV5sOKYODW/uajcNmAczdG5r26stzCySE=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=mzbSVwEx9ddWTdGzkn7TRbM2ESD+gN+nbEGsHx5oCvC0Zuz25u0Hd3DFLuxk9Mubn4LNY7ahlsBgaD0Ro2jixdL9kwP1W6KfVpIyDoGvQGgk0J383aSuBg8OlsaL3N2R3Q9kuY+0sEbJC+8im3Sq2mKSu4vki/iHFOV0wZqvvik=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=isrc.iscas.ac.cn; spf=pass smtp.mailfrom=isrc.iscas.ac.cn; arc=none smtp.client-ip=159.226.251.81
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=isrc.iscas.ac.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=isrc.iscas.ac.cn
-Received: from localhost.localdomain (unknown [36.112.3.239])
-	by APP-03 (Coremail) with SMTP id rQCowABHaN+dJT1pKkCPAA--.46430S2;
-	Sat, 13 Dec 2025 16:36:45 +0800 (CST)
-From: Haoxiang Li <lihaoxiang@isrc.iscas.ac.cn>
-To: ketan.mukadam@broadcom.com,
-	James.Bottomley@HansenPartnership.com,
-	martin.petersen@oracle.com,
-	jitendra.bhivare@broadcom.com,
-	hare@suse.com
-Cc: linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Haoxiang Li <lihaoxiang@isrc.iscas.ac.cn>,
-	stable@vger.kernel.org
-Subject: [PATCH] scsi: be2iscsi: fix a memory leak in beiscsi_boot_get_sinfo()
-Date: Sat, 13 Dec 2025 16:36:43 +0800
-Message-Id: <20251213083643.301240-1-lihaoxiang@isrc.iscas.ac.cn>
-X-Mailer: git-send-email 2.25.1
+	s=arc-20240116; t=1765638189; c=relaxed/simple;
+	bh=AqCmAozaniNHX5GBUBFsaP58Sd82/tS4JqKE9BRjjhQ=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=OBdTk2spHbfQ+NdNxe59NTTU3X0euXwqAoP1XZS0GPn63Y2PJrGy6TprUT9SlD0d5b+eHDVvNLqiI9aMUgC9BIN0OBd7fXRjyQfbQsIe4/YmhLoFggKBYrQn9wWCCPiHA7G0b3cGbQvehnEsFJByiZq7yWPIF/McWwVYmJ0npYo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ExOVUnqy; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ExOVUnqy"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id AD65FC4CEF7;
+	Sat, 13 Dec 2025 15:03:08 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1765638188;
+	bh=AqCmAozaniNHX5GBUBFsaP58Sd82/tS4JqKE9BRjjhQ=;
+	h=From:Date:Subject:To:Cc:Reply-To:From;
+	b=ExOVUnqyqoBpcbGz6TSB3wdYU9CkZzEW6eFdnvXLnRr9EP9qUeMiGWJ5BT2V6KaUq
+	 zMD3pqol7/z+Y7arrL2udJc5pHu2vnRMMGJvN6thCJsMAdnidzXDIt5pMjCCeNula7
+	 opvkqx58N7C+UufP75sTTyyE/Lvd3fQGOImFwm34BuaTAfPW8bXy0vlq0XCDI9CwTv
+	 GQPENPDUYE+H1QBqbLfL6NiBpK48MaN9vGVooYLZPFr0W5pXOu2GibbvdKJncGOvPS
+	 UBfLZzEJkFeKZbTaTKhYnH3K4/bzevnOQLnnooGG4/uCwZttz8/tmqM0lkTfzxuG+y
+	 j5W959eZkBmCw==
+Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C2B9D5B158;
+	Sat, 13 Dec 2025 15:03:08 +0000 (UTC)
+From: Zhaoming Luo via B4 Relay <devnull+zhml.posteo.com@kernel.org>
+Date: Sat, 13 Dec 2025 23:04:11 +0800
+Subject: [PATCH v2] dt-bindings: ufs: Fix a grammar error
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:rQCowABHaN+dJT1pKkCPAA--.46430S2
-X-Coremail-Antispam: 1UD129KBjvdXoWrtF13WF4DZF4xGFWDWF4fuFg_yoW3tFg_uw
-	4YqwnFg3yUGF4fAF4UWF1a9a90kry8Xws7uF1avryfCryfZr98XF10vr1fZw4kAa18uF1D
-	A34UJ34qyw4kJjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUIcSsGvfJTRUUUbckFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k26cxKx2IYs7xG
-	6r1S6rWUM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
-	A2z4x0Y4vE2Ix0cI8IcVAFwI0_Jr0_JF4l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Jr0_
-	Gr1l84ACjcxK6I8E87Iv67AKxVWUJVW8JwA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Jr0_Gr
-	1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E2Ix0
-	cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJVW8Jw
-	ACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lc7CjxVAaw2AFwI0_Jw0_
-	GFyl42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxV
-	WUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI
-	7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r
-	1j6r4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJVW8JwCI
-	42IY6I8E87Iv6xkF7I0E14v26r1j6r4UYxBIdaVFxhVjvjDU0xZFpf9x0JUd-B_UUUUU=
-X-CM-SenderInfo: 5olkt0x0ld0ww6lv2u4olvutnvoduhdfq/1tbiBwkPE2k8yQuQYQAAs0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20251213-fix-minor-grammar-err-v2-1-b32be57caa13@posteo.com>
+X-B4-Tracking: v=1; b=H4sIAGqAPWkC/x2MQQqAMAzAviI9W9gqKvoV8TBcpz1sSgciDP/u8
+ BhIUiCzCmeYmwLKt2Q5UwVqG9gOl3ZG8ZWBDPWWbIdBHoySTsVdXYxOkVVxGL01W6DgJw+1vZS
+ r+H+X9X0/tnyRPWcAAAA=
+X-Change-ID: 20251213-fix-minor-grammar-err-67d10cf2fd9d
+To: Alim Akhtar <alim.akhtar@samsung.com>, 
+ Avri Altman <avri.altman@wdc.com>, Bart Van Assche <bvanassche@acm.org>, 
+ Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+ Conor Dooley <conor+dt@kernel.org>
+Cc: linux-scsi@vger.kernel.org, devicetree@vger.kernel.org, 
+ linux-kernel@vger.kernel.org, Zhaoming Luo <zhml@posteo.com>
+X-Mailer: b4 0.14.3
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1440; i=zhml@posteo.com;
+ h=from:subject:message-id;
+ bh=fori8aM450W7B3/fTbmPAYSMy/U8i5ZeqbO0a1qO7mc=;
+ b=owGbwMvMwCWW8vrrboHTHcGMp9WSGDJtG1o+qz+J/6IurKsm+/8KI3PRDKb3Ka2T9+Y5iee4R
+ 7hHPzzWMZGFQYyLwVJMkcU57kHABd8el8DWY54wc1iZQIZIizQwAAELA19uYl6pkY6Rnqm2oZ6h
+ oQ6QycDFKQBT/bqJkWHj3Nv8HTM7TP65uV5R3PjMnicx65JYDeeyxaac3WsqNv9n+GcyIz4uR0p
+ 63bmJ/+o3LzqQFPR0CpujSvcOqebQa0E/vrMBAA==
+X-Developer-Key: i=zhml@posteo.com; a=openpgp;
+ fpr=435EE050D04D8C445185C64964EBF5BB10CB8853
+X-Endpoint-Received: by B4 Relay for zhml@posteo.com/default with
+ auth_id=576
+X-Original-From: Zhaoming Luo <zhml@posteo.com>
+Reply-To: zhml@posteo.com
 
-If nonemb_cmd->va fails to be allocated, call free_mcc_wrb()
-to restore the impact caused by alloc_mcc_wrb().
+From: Zhaoming Luo <zhml@posteo.com>
 
-Fixes: 50a4b824be9e ("scsi: be2iscsi: Fix to make boot discovery non-blocking")
-Cc: stable@vger.kernel.org
-Signed-off-by: Haoxiang Li <lihaoxiang@isrc.iscas.ac.cn>
+Fix a minor grammar error.
+
+Signed-off-by: Zhaoming Luo <zhml@posteo.com>
 ---
- drivers/scsi/be2iscsi/be_mgmt.c | 1 +
- 1 file changed, 1 insertion(+)
+Changes from v1[0]:
+- The subject prefixes match the subsystem as suggested in the
+  documentation[1].
+- The necessary To/Cc entries are included.
 
-diff --git a/drivers/scsi/be2iscsi/be_mgmt.c b/drivers/scsi/be2iscsi/be_mgmt.c
-index 4e899ec1477d..b1cba986f0fb 100644
---- a/drivers/scsi/be2iscsi/be_mgmt.c
-+++ b/drivers/scsi/be2iscsi/be_mgmt.c
-@@ -1025,6 +1025,7 @@ unsigned int beiscsi_boot_get_sinfo(struct beiscsi_hba *phba)
- 					      &nonemb_cmd->dma,
- 					      GFP_KERNEL);
- 	if (!nonemb_cmd->va) {
-+		free_mcc_wrb(ctrl, tag);
- 		mutex_unlock(&ctrl->mbox_lock);
- 		return 0;
- 	}
+Thanks to Krzysztof Kozlowski for pointing out the errors and providing
+helpful information about how to fix them.
+
+[0]: https://lore.kernel.org/linux-scsi/20251212131112.5516-1-zhml@posteo.com/
+[1]: https://www.kernel.org/doc/html/latest/devicetree/bindings/submitting-patches.html#i-for-patch-submitters
+---
+ Documentation/devicetree/bindings/ufs/ufs-common.yaml | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/Documentation/devicetree/bindings/ufs/ufs-common.yaml b/Documentation/devicetree/bindings/ufs/ufs-common.yaml
+index 9f04f34d8..efeae8f3d 100644
+--- a/Documentation/devicetree/bindings/ufs/ufs-common.yaml
++++ b/Documentation/devicetree/bindings/ufs/ufs-common.yaml
+@@ -48,7 +48,7 @@ properties:
+     enum: [1, 2]
+     default: 2
+     description:
+-      Number of lanes available per direction.  Note that it is assume same
++      Number of lanes available per direction.  Note that it is assumed same
+       number of lanes is used both directions at once.
+ 
+   vdd-hba-supply:
+
+---
+base-commit: 9d9c1cfec01cdbf24bd9322ed555713a20422115
+change-id: 20251213-fix-minor-grammar-err-67d10cf2fd9d
+
+Best regards,
 -- 
-2.25.1
+Zhaoming Luo <zhml@posteo.com>
+
 
