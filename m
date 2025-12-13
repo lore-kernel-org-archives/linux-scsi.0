@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 00850AD24;
-	Sat, 13 Dec 2025 03:04:02 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C6E8C1A5B8B;
+	Sat, 13 Dec 2025 03:04:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1765595043; cv=none; b=jhO8wvUE0jlvRsL4viVes78m2fYY4i1UoC/xUassMK2oFcD2HZgA3rZ9/WflCB0pEMn4XgZlDuYppOxXJbDYqIeCMhWjMX8GFT+e/LBRdjkK0o3ZhkzgjXFj6yOe+cvuWzw2OKvNsWTjC85W3jeLjZi9CwcXZdIgBOdRTBpjkqI=
+	t=1765595061; cv=none; b=pCf8TqD2YDynYdVI34TE7kxrghQE14rVsGhAVxqsq/44cUwjVN67Ji00ifE+s3Clb96Rc7nB+YFYdpq5GANIx2NMTSNcQcN0T2JhrFUkj9A9k98UMUWV/PfpUo2VV7pYOKnl6Pag69xobhwoWbOYcNwdcI3jQrlMfRkQOO3plqM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1765595043; c=relaxed/simple;
-	bh=9xag/Nkh/gnU1ScKmEYF5nDHjZYp9aiUU2Qk18t1mmY=;
+	s=arc-20240116; t=1765595061; c=relaxed/simple;
+	bh=Tdr02lMo/XwErJUACn8hykXPLYXNJAh2gXENTIHPdXw=;
 	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=ffkoG2bFKd5CBpBIUTbtHG7rf5t8XLURU7vDHTGKNuwfM/RI00RkdiJkSSm17qKIQh8rY5Ksb+M37IZHSDSdu0EedIk8rh1ruH6REWI4irUDA43PkWaHjtgykR262mjAPJkZ2RGiB7ckLw3HYXPFPhLpuWrGqI6wZOXeF+2jnk8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=V6D6DvfU; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=f70bFhCJpT4sqpwFa950LAgahu+bpArp+7iVZeBA7NnACG5KB+S5HjPYRRHS+polx3K+YrIdvpoEZcS6+U8CfEynFdedjeWCD62CXNaIz5w0uglm++pRkv9/Y0vQw1vRzkNCq+cNoqgIreGZ1Bt68tvC/zi1NwxlDbKFm0Q4884=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TJYyiTZg; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="V6D6DvfU"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BA07EC4CEF1;
-	Sat, 13 Dec 2025 03:04:00 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TJYyiTZg"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D9315C4CEF1;
+	Sat, 13 Dec 2025 03:04:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1765595042;
-	bh=9xag/Nkh/gnU1ScKmEYF5nDHjZYp9aiUU2Qk18t1mmY=;
+	s=k20201202; t=1765595061;
+	bh=Tdr02lMo/XwErJUACn8hykXPLYXNJAh2gXENTIHPdXw=;
 	h=Date:Subject:To:References:From:In-Reply-To:From;
-	b=V6D6DvfUjjpY7sL4eTU8uQl89Yo1MXJbZMlSdNNRbYcBXd9oRzOt1NkfD9rgY3VPa
-	 yCPupDASidOxnwr5ZvkXcBEckv8amLfnBweJGJ+2bl1c6foVpf+CSnQtgMBbHlITr1
-	 ON1gS7sH1l/4+VWsQ5RIms6PUkrIOx1XAWhm/UssuXbb7HApP+kN0s7UPFU8E/K6pU
-	 8fAcOVZdzo8h2vTouAZD7J/cqzF1zF4BFOGg4z5mO9BHGztuR8+LA/2CUEvhUJBh+S
-	 K+Paa8VmZd7/7r0xFEwz7l4BeGwj3SqpT/QFVto+Va1r1XNs22eczAc1Ws7JDCJyzi
-	 IKE1kNqHAMP4w==
-Message-ID: <e9029e79-9128-489e-80a3-38a8c6e110ee@kernel.org>
-Date: Sat, 13 Dec 2025 04:03:58 +0100
+	b=TJYyiTZgGslVahjYVvqYx/9UbWkOz95cFROu0DiYcKL6+EhpHH6kD+gMUeP0iuFyP
+	 2dMx4Su6i0br69cho5VAp0mWecooP68kdNgz/cBTFB2haM/ykvNG2vpE1+905jVmxi
+	 u7c16hvae9P3SS9GToQwHMXZWO5Fz0S1kNXIKVhl3k9lX+/pAzDxpoY3z/6C5IprRJ
+	 57hfAd3RvgdcvPM5pCDeDkFIjj9fNCL2k6cS/uPoxibY3MUZyT1BZWFAcEc3cclYbH
+	 7W6WQyLP/i3DrAKuVXeRFUlfDSWsK7vvZzYOoZcyg/P4YF3P1+uf7Dzw6mrya3yTJS
+	 sGOSvQL+5ISfA==
+Message-ID: <3a0b7c4b-04bd-490a-8708-684c42ff507c@kernel.org>
+Date: Sat, 13 Dec 2025 04:04:17 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -36,11 +36,10 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
 Subject: Re: [PATCH] scsi: ufs: dt-bindings: common: Fix a grammar error
-To: Bart Van Assche <bvanassche@acm.org>, Zhaoming Luo <zhml@posteo.com>,
- alim.akhtar@samsung.com, avri.altman@wdc.com, linux-scsi@vger.kernel.org,
+To: Zhaoming Luo <zhml@posteo.com>, alim.akhtar@samsung.com,
+ avri.altman@wdc.com, bvanassche@acm.org, linux-scsi@vger.kernel.org,
  linux-kernel@vger.kernel.org
 References: <20251212131112.5516-1-zhml@posteo.com>
- <7893102a-da39-4ac0-a738-410de7a5c078@acm.org>
 From: Krzysztof Kozlowski <krzk@kernel.org>
 Content-Language: en-US
 Autocrypt: addr=krzk@kernel.org; keydata=
@@ -86,31 +85,40 @@ Autocrypt: addr=krzk@kernel.org; keydata=
  jWt87ecuHlpL3uuQ0ZZNWqHgZoQLXoqC2ZV5KrtKWb/jyiFX/sxSrodALf0zf+tfHv0FZWT2
  zHjUqd0t4njD/UOsuIMOQn4Ig0SdivYPfZukb5cdasKJukG1NOpbW7yRNivaCnfZz6dTawXw
  XRIV/KDsHQiyVxKvN73bThKhONkcX2LWuD928tAR6XMM2G5ovxLe09vuOzzfTWQDsm++9UKF a/A=
-In-Reply-To: <7893102a-da39-4ac0-a738-410de7a5c078@acm.org>
+In-Reply-To: <20251212131112.5516-1-zhml@posteo.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 12/12/2025 17:59, Bart Van Assche wrote:
-> On 12/12/25 5:14 AM, Zhaoming Luo wrote:
->> diff --git a/Documentation/devicetree/bindings/ufs/ufs-common.yaml b/Documentation/devicetree/bindings/ufs/ufs-common.yaml
+On 12/12/2025 14:14, Zhaoming Luo wrote:
+> Fix a minor grammar error.
 > 
-> Who is the maintainer for this file? The MAINTAINERS entry for this file
-> does not mention a maintainer:
-> 
-> UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER
-> R:      Alim Akhtar <alim.akhtar@samsung.com>
-> R:      Avri Altman <avri.altman@wdc.com>
-> R:      Bart Van Assche <bvanassche@acm.org>
-> L:      linux-scsi@vger.kernel.org
-> S:      Supported
-> F:      Documentation/devicetree/bindings/ufs/
+> Signed-off-by: Zhaoming Luo <zhml@posteo.com>
+> ---
 
-Here ^^^
 
-Plus maintainer is also written in the file itself.
+Please use subject prefixes matching the subsystem. You can get them for
+example with `git log --oneline -- DIRECTORY_OR_FILE` on the directory
+your patch is touching. For bindings, the preferred subjects are
+explained here:
+https://www.kernel.org/doc/html/latest/devicetree/bindings/submitting-patches.html#i-for-patch-submitters
 
-Anyway, author did not Cc necessary people...
+Please use scripts/get_maintainers.pl to get a list of necessary people
+and lists to CC. It might happen, that command when run on an older
+kernel, gives you outdated entries. Therefore please be sure you base
+your patches on recent Linux kernel.
 
+Tools like b4 or scripts/get_maintainer.pl provide you proper list of
+people, so fix your workflow. Tools might also fail if you work on some
+ancient tree (don't, instead use mainline) or work on fork of kernel
+(don't, instead use mainline). Just use b4 and everything should be
+fine, although remember about `b4 prep --auto-to-cc` if you added new
+patches to the patchset.
+
+You missed at least devicetree list (maybe more), so this won't be
+tested by automated tooling. Performing review on untested code might be
+a waste of time.
+
+Please kindly resend and include all necessary To/Cc entries.
 
 
 Best regards,
