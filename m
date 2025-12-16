@@ -1,119 +1,151 @@
-Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
+Received: from bg5.exmail.qq.com (bg5.exmail.qq.com [43.155.80.173])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 833D6309EF7;
-	Mon, 15 Dec 2025 16:47:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.14
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6689C21773F;
+	Tue, 16 Dec 2025 06:02:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=43.155.80.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1765817256; cv=none; b=Ljco0CIh5TPOtQGnXZw5woaB83H4rCDekcxfYpVn99Q4gH8WbNa7tCjFildt5ReQbU4FH/ArPI7hXzxdlyMZvqiXQxr6uGWC9KGm0RgWG0M8glpY6NhFZbrp2MC8xjyYzIfXEvb+hG3F59FklN6TUUtLi6JTR9O3EWqMg1jT+wI=
+	t=1765864970; cv=none; b=KtXAIQtT1P8vAcgTlydxp1f7rOw2DQ9dkV+6mbo3KT2z2qeahrrma8kJiLhhd7O7/jhbYh0HsUH25kyN7SZAOQMWH6VBnlurq8TjgDXu8YtaUKaWizTuBW407P/toyca1tl0ga1zJO7SmZZhsdoXzygJHPq0hh+7CpVIZQZyZwg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1765817256; c=relaxed/simple;
-	bh=A8/a4u7TzuNfkMN93bTIkVRRbuTknk1QkfYBjexj6MQ=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=hILbEMfWSboA8il6kvpxzBLsp2JdpF5eSLgMX2OebbOr1QmthyZXY+A6JDxWzjzznoyzGI2ti0M1CvSFpMGxw7nEyYbAUrf9fKGD5MHl9PmA8LDngVFSKDQ/q4JP9yopauVGwEpbJSIN6G6RDHNGYvw19bkdWozE1qVQa+yW//8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=laAGiZKS; arc=none smtp.client-ip=199.89.1.14
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1765864970; c=relaxed/simple;
+	bh=N2VQ8Y8Ux1uugXkHDccXpplJB5yQXMPyxj6+3dhf67k=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=mQOJfah66RPKmpd4FyqqHCN3nYW0bXjJngI25h3P9GkYx4d5ePOFw4C5SAliYeIGNfUdTxJmb+MmKVNoTFtH/cGQ5/Cg4Wu7ItCGhjX3V6D30Jb8eRzda44QaAUz6eyTMlDJjVCaKDWsw1gGuSob7/plZs3MLhQA5GQl5nimEg4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=darknavy.com; spf=pass smtp.mailfrom=darknavy.com; dkim=pass (1024-bit key) header.d=darknavy.com header.i=@darknavy.com header.b=pVMi30sS; arc=none smtp.client-ip=43.155.80.173
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=darknavy.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=darknavy.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="laAGiZKS"
-Received: from localhost (localhost [127.0.0.1])
-	by 011.lax.mailroute.net (Postfix) with ESMTP id 4dVQvz0q8kz1XMM2X;
-	Mon, 15 Dec 2025 16:47:27 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1765817245; x=1768409246; bh=nk9TH875DI0tB7LDOR4Zcx1p
-	30Up18YMJO/6J1I24go=; b=laAGiZKSJt/SJWbd43G4foKj3QQhhennBS0KNP72
-	h0/UYlFe1wnGcLaCudolhZuJugKev3kWASefRQTmXNuQNOJJ4RBbaqzmYUN/cf07
-	4kalnz5a2+/+ZP/MCguQoJF9B4Rak3FBcjhoM6QOQ7rIJrh98n8j596LtonTgPFC
-	3rgeNeTTrOQAff/BFEAkjbIbIbnRGrJX5w5czOFEzAMgFfRgE6vIUaTLPEQV9rPH
-	5MMeVQo7JpgNmrJLN3mpi4LPPA4Fsa8cfsPj1M+rbdqlFzc5P4LnBirXil9BbC9f
-	Uz1BrywF0JxA4TzWNcoMu/Ul5WDMEz+csRRiVOfOjicARg==
-X-Virus-Scanned: by MailRoute
-Received: from 011.lax.mailroute.net ([127.0.0.1])
- by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id cOCvOqV3CnPd; Mon, 15 Dec 2025 16:47:25 +0000 (UTC)
-Received: from [100.119.48.131] (unknown [104.135.180.219])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4dVQvw20GVz1XMKfh;
-	Mon, 15 Dec 2025 16:47:23 +0000 (UTC)
-Message-ID: <54d824db-ec39-447c-8eab-6c2ce4ca87a6@acm.org>
-Date: Mon, 15 Dec 2025 08:47:03 -0800
+	dkim=pass (1024-bit key) header.d=darknavy.com header.i=@darknavy.com header.b="pVMi30sS"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=darknavy.com;
+	s=litx2311; t=1765864933;
+	bh=PI+RBkWbT+GPFjFq6ycWvVKAYFCdUYVWezU7LCL0Yzc=;
+	h=From:To:Subject:Date:Message-Id:MIME-Version;
+	b=pVMi30sSWTTbvOEnD2VZG2a+NyAvBhKpPQqHkgFFpCcqSkJkbUrj7ln1/lby0cXfk
+	 9bB399X/NwzeLxyXhHp7H/7wP72HfuuUZIXgBaAjQRJfWVQUodmoArydi2ymhiVJ61
+	 9mYnqc2tDeC+lhctdy59vOk3X2Bh9uSvJaji1ydM=
+X-QQ-mid: esmtpsz20t1765864931tde56b994
+X-QQ-Originating-IP: b3IkCJu3XoBH+qkLJL3GTMoetrZr1qL8ustzfbn+JYw=
+Received: from localhost.localdomain ( [223.166.168.213])
+	by bizesmtp.qq.com (ESMTP) with 
+	id ; Tue, 16 Dec 2025 14:02:07 +0800 (CST)
+X-QQ-SSF: 0000000000000000000000000000000
+X-QQ-GoodBg: 0
+X-BIZMAIL-ID: 8007578203522099435
+EX-QQ-RecipientCnt: 8
+From: Shipei Qu <qu@darknavy.com>
+To: Sathya Prakash <sathya.prakash@broadcom.com>,
+	Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+	Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
+Cc: Shipei Qu <qu@darknavy.com>,
+	MPT-FusionLinux.pdl@broadcom.com,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	DARKNAVY <vr@darknavy.com>
+Subject: [PATCH v2] scsi: mptbase: bounds-check req_idx in reply paths
+Date: Tue, 16 Dec 2025 14:01:55 +0800
+Message-Id: <20251216060156.41320-3-qu@darknavy.com>
+X-Mailer: git-send-email 2.39.5 (Apple Git-154)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 1/1] scsi: ufs: core: Fix error handler encryption support
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Po-Wen Kao <powenkao@google.com>,
- "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- "open list:UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER"
- <linux-scsi@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
-References: <20251208025232.4068621-1-powenkao@google.com>
- <aTkXqslvwMOz2TUG@infradead.org>
- <955ba65e-424b-4968-9541-ab235a7bafd3@acm.org>
- <aT-jjQpp1UfaiZIU@infradead.org>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <aT-jjQpp1UfaiZIU@infradead.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-QQ-SENDSIZE: 520
+Feedback-ID: esmtpsz:darknavy.com:qybglogicsvrsz:qybglogicsvrsz4b-0
+X-QQ-XMAILINFO: NyuCELaSACDheqndvjvXVQNB4/riUI+EDW3ZxU50Sgq79p0Cz+/Xc+Qr
+	9eTTQEbMtPYSn/iINsVvSM9tsNfoaWzswx9EZSGJXMPEHYlVV0jkftYPGYjqMyAp9ZSaxEF
+	niyxZCI92mu86BJIe78mVKnTTSxOPO75kboREv2RKhgzNXsK+sI8isrHMLKtb2SyPyl0eOn
+	qr2grD8vMtaw7PS4OIdwFWUhGGkMNGgPLiwbK0QWJl2KEef/TF3UqzIfF1W2myN8Eycqsji
+	3ywzL/VQsc9RPNQxBaxY4/fAQyC08ejCv2eGwQqcKAzg23V826rgWHhICzMS64itUezLNvK
+	YtV/VgmZGhM4ftIcc0aJI3buOWdtBhQgRi/DAG5eMMb2E53JLyF5z1HNFljPgGSGI+jnBCS
+	nYHT47IXauThmqCM3B7sKLR3fg0eAF0990pRHIhoG/Qd0nsmU+fSFsateJtVoVraXzqS7XJ
+	Td2/fBPHj5J9jKlz0iDRdnjT6orpKRNUIgKSHyF1yX2ZNltQxZCra/SOtJo9DpUTJ6KHeWl
+	zmcn55+HgJ8aFF/r4R551gv/u5K1wdyqdK+pJGa4E/TvvDDhnBxtpvPY91W0BzDfJlNTGO+
+	NQmdt9NGWeCbYOv0RLEki2CTnrJQP7+qWAw7zxR4o+PM6A3UQ++wgH5Q77nzS6l925hVDyl
+	+sJkJPfg6jGGPVByp+TtzeCnJp+W3Fjk5hk15IgrfgSXqNmXBpxSKAWTb9WZsoBK6E/zTpZ
+	wLheKULDmwYx8Xq6S+lLTKEDVqmwzkzUV8Mhcoaf3LwC/SqyRarz4dbrZ+SbKU85CMbbnLL
+	wJBuiJZk3pOFCQU8Sxi9bkFhozEgHgrPrUU+gHw/6xy7n+2RBdGgC7546PY6Aq/rUSIzri6
+	KspQGkbS39k+VzkMLf8shAPTzdHqjDg/H96J9/A5YqanYK3cVsQXJ5DLBVVqZs76HuEHk+N
+	EVsslpibaz8R4tmNWrnnodJNTKDznTUrXCGjAvYbkDwmfXqbOWGd03iJzkVnnDhw3CAdDrz
+	6kuXU9GIoE+QV7X2XjUzUtxbg9MM0=
+X-QQ-XMRINFO: NyFYKkN4Ny6FSmKK/uo/jdU=
+X-QQ-RECHKSPAM: 0
 
-On 12/14/25 9:58 PM, Christoph Hellwig wrote:
-> On Wed, Dec 10, 2025 at 09:44:52AM -0800, Bart Van Assche wrote:
->> On 12/9/25 10:48 PM, Christoph Hellwig wrote:
->>> As mentioned last round, why are you even calling into the crypto
->>> code here?  Calling that for a request without a crypt context,
->>> which includes all of them that do not transfer any data makes no
->>> sense to start with.
->>
->> ufshcd_prepare_lrbp_crypto() only has one caller. Moving the new test
->> from inside ufshcd_prepare_lrbp_crypto() into its caller should be easy.
-> 
-> I don't think callers vs calle is the important part here.  It is to
-> check if any actual data is tranferred instead of special casing EH
-> commands.
+Hi,
 
-Hi Christoph,
+resending with a correctly generated diff (the previous email had a malformed
+patch header). The patch content is unchanged.
 
-Do you agree with the following?
+In the Fusion MPT base driver, both the normal and turbo reply paths trust a
+request index (req_idx) provided by the IOC and use it in MPT_INDEX_2_MFPTR()
+without validating it against ioc->req_depth. A bogus index can cause the
+driver to compute a request frame pointer outside the allocated req_frames pool
+and pass it to protocol callbacks.
 
-(a) There is code in the SCSI error handler that submits SCSI commands
-     with a data buffer. Hence, disabling encryption if and only if the
-     data buffer length is zero can't fix the reported problem. From
-     scsi_eh_prep_cmnd() in drivers/scsi/scsi_error.c:
+In practice, a malicious PCIe or Thunderbolt-attached device that emulates a
+supported controller and returns crafted reply contexts can drive the driver
+out of bounds in this way.
 
-		scmd->sdb.length = min_t(unsigned, SCSI_SENSE_BUFFERSIZE,
-					 sense_bytes);
-		sg_init_one(&ses->sense_sgl, scmd->sense_buffer,
-			    scmd->sdb.length);
-		scmd->sdb.table.sgl = &ses->sense_sgl;
+This affects several devices supported by mpt* drivers and the code is enabled
+in distribution kernels such as Ubuntu. The same pattern is present in current
+mainline kernels.
 
-(b) In general in the Linux kernel it is strongly preferred to fix the
-     root cause of a bug rather than to implement a workaround. This is
-     preferred because it makes kernel code easier to maintain and
-     reduces the chance that new bugs are introduced.
+This issue was first reported through security@kernel.org. The kernel security
+team considered it a normal robustness bug (controllers are assumed to be
+trusted from the host's point of view) and asked us to send fixes to the
+relevant development lists. The patch below adds simple bounds checks before
+converting req_idx into a frame pointer.
 
-(c) Disabling encryption in the UFS driver if a command has been
-     submitted by the SCSI error handler is a workaround. Patch [1] fixes
-     the root cause of the problem, namely the SCSI error handler not
-     setting the encryption fields in struct request correctly. We prefer
-     [1] because UFS devices that support one million IOPS are expected
-     to arrive soon (early 2026). Hence the importance of keeping the hot
-     path in the UFS driver fast.
+Reported-by: DARKNAVY (@DarkNavyOrg) <vr@darknavy.com>
+Signed-off-by: Shipei Qu <qu@darknavy.com>
+---
+ drivers/message/fusion/mptbase.c | 19 +++++++++++++++++++
+ 1 file changed, 19 insertions(+)
 
-Thanks,
-
-Bart.
-
-[1] [PATCH v2 1/1] scsi: core: Fix error handler encryption support
-  
-(https://lore.kernel.org/linux-scsi/20251203073310.2248956-1-powenkao@google.com/)
+diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
+index e60a8d394..58df10fb1 100644
+--- a/drivers/message/fusion/mptbase.c
++++ b/drivers/message/fusion/mptbase.c
+@@ -453,6 +453,12 @@ mpt_turbo_reply(MPT_ADAPTER *ioc, u32 pa)
+ 	switch (pa >> MPI_CONTEXT_REPLY_TYPE_SHIFT) {
+ 	case MPI_CONTEXT_REPLY_TYPE_SCSI_INIT:
+ 		req_idx = pa & 0x0000FFFF;
++		if (req_idx >= ioc->req_depth) {
++			printk(MYIOC_s_WARN_FMT
++			       "TURBO reply: req_idx %u out of range (depth %u)\n",
++			       ioc->name, req_idx, ioc->req_depth);
++			return;
++		}
+ 		cb_idx = (pa & 0x00FF0000) >> 16;
+ 		mf = MPT_INDEX_2_MFPTR(ioc, req_idx);
+ 		break;
+@@ -469,6 +475,12 @@ mpt_turbo_reply(MPT_ADAPTER *ioc, u32 pa)
+ 		 */
+ 		if ((pa & 0x58000000) == 0x58000000) {
+ 			req_idx = pa & 0x0000FFFF;
++			if (req_idx >= ioc->req_depth) {
++				printk(MYIOC_s_WARN_FMT
++				       "LAN TURBO reply: req_idx %u out of range (depth %u)\n",
++				       ioc->name, req_idx, ioc->req_depth);
++				return;
++			}
+ 			mf = MPT_INDEX_2_MFPTR(ioc, req_idx);
+ 			mpt_free_msg_frame(ioc, mf);
+ 			mb();
+@@ -527,6 +539,13 @@ mpt_reply(MPT_ADAPTER *ioc, u32 pa)
+ 
+ 	req_idx = le16_to_cpu(mr->u.frame.hwhdr.msgctxu.fld.req_idx);
+ 	cb_idx = mr->u.frame.hwhdr.msgctxu.fld.cb_idx;
++	if (req_idx >= ioc->req_depth) {
++		printk(MYIOC_s_WARN_FMT
++		       "reply: req_idx %u out of range (depth %u)\n",
++		       ioc->name, req_idx, ioc->req_depth);
++		freeme = 0;
++		goto out;
++	}
+ 	mf = MPT_INDEX_2_MFPTR(ioc, req_idx);
+ 
+ 	dmfprintk(ioc, printk(MYIOC_s_DEBUG_FMT "Got non-TURBO reply=%p req_idx=%x cb_idx=%x Function=%x\n",
+-- 
+2.45.1
