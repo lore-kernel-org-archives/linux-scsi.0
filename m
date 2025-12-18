@@ -1,138 +1,113 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 03DC6279DC2;
-	Thu, 18 Dec 2025 19:38:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A9B902F9D85
+	for <linux-scsi@vger.kernel.org>; Thu, 18 Dec 2025 23:08:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1766086719; cv=none; b=rGiul7GoiB2AhZzBey42CV5KCIgklS4fsxfs2zCYaf54vBYMI8PM8Hfj+fZJi1DZGrPU4umJQxoUb34oF5XJP8L6QEwd3q7ANC0QEhBEBR/YiMKRGAGqp+aUWK5HrTWnDtjWeWCEvVoANKwQe4ivQsEeMY2cZQjK8mvkZO8a0SQ=
+	t=1766099283; cv=none; b=s6kI85CpohfRhXl61z8Tl1yUIQ819+rNWsNwqP87zoLLwWsEn470Q5TDCg9Rp6SfULHMJ5On2AwRfQkJiJyxosNi9dHr3hlqEOKPI20UOKGre0uoTDXscI0crDcas4iAX54qZnPQAwc5hMYJnMs4rOZrWUgYVPmgnGVSc93uAAY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1766086719; c=relaxed/simple;
-	bh=XJjLZdefB3rFjATsz57WhyB21r3EJBYz8JYK0SddZl4=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=NAQDpG7lsnZA+EjKVUMJEKPld2Bwf2EHe52uzoulsVaUpYdtHDesm/6mdRWo3wq+M/6WkI7UONZO2LDz8p7tMWa9WG060UPcDp+7tCXrSVVf3UTxLNRjIsq5NkTym1BFOTmdW7Jr4a0kFEMMKD0VUe47dF2gQFZzX4jjTGZzO7w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aE4uGfGS; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1766099283; c=relaxed/simple;
+	bh=Ruoa9aijKRETcfATnAuXF40KuLZJVzxsmKlatkX4cF8=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=tGHYPJBh2Xos2gKItu0T2ZBVkUD8qMoP+JJxgK4/ml/rLVSMJSzUGse2m/1spwcwJNDeLIl4aiq1OAM2ISBlJKUWGGTeL4J2k3Ow4JEB3Y+4sM58CjXIhNNEOx8uMtGgzZHatHvuUuDE5OODrW3p9u1HJkjIvivWnq5tzAKcZPE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=avt05lru; arc=none smtp.client-ip=199.89.1.14
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aE4uGfGS"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AEC84C116D0;
-	Thu, 18 Dec 2025 19:38:33 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1766086718;
-	bh=XJjLZdefB3rFjATsz57WhyB21r3EJBYz8JYK0SddZl4=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=aE4uGfGSE1RZd+bmVNuLg6Qrcu3P+HfwD3boH2MpXLW/ZLWvns5bEUicKNpGgS9D/
-	 Rnh6be4JCCHnyuq6KKSyDyQIyDnW4UrxRC9fz98lUh8/2LKCPdMzOu/p29S4Cyhrke
-	 1dJGsFbYd8DE6yR9YGV/d1YIxa/fRnw4Apf7xJIo3d3wFQiqv+zem5QqChFg/0aJId
-	 64FXhXwB1WepTSTVT457ZUQfw7tQq6D3qZYJeWkqkUx0M/FE8KHD3NDovVqT+THutA
-	 2stygJ9bNzUFL5tcnPh9nm7DMmjhYlmxCfWR80/RZ7XwQN+IhuwMZ1hNRJDLq19PHN
-	 uek0BBTTyNPCg==
-Date: Thu, 18 Dec 2025 19:38:31 +0000
-From: Conor Dooley <conor@kernel.org>
-To: Nicolas Frattaroli <nicolas.frattaroli@collabora.com>
-Cc: Alim Akhtar <alim.akhtar@samsung.com>,
-	Avri Altman <avri.altman@wdc.com>,
-	Bart Van Assche <bvanassche@acm.org>, Rob Herring <robh@kernel.org>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
-	Chunfeng Yun <chunfeng.yun@mediatek.com>,
-	Vinod Koul <vkoul@kernel.org>,
-	Kishon Vijay Abraham I <kishon@kernel.org>,
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="avt05lru"
+Received: from localhost (localhost [127.0.0.1])
+	by 011.lax.mailroute.net (Postfix) with ESMTP id 4dXRCb46rQz1XM6Jh;
+	Thu, 18 Dec 2025 23:07:55 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:mime-version:x-mailer:message-id:date
+	:date:subject:subject:from:from:received:received; s=mr01; t=
+	1766099273; x=1768691274; bh=AC4CCNzJXLAebWo40a0X6mVTDI16gwkuZGY
+	7aZY0SlA=; b=avt05lruOqWq49GkpL3ieZihjNBE4oFdbs/KuSHsAdGImeFDvi+
+	F6CmQ8L4CXeOrIoRO2OWhSX3QbUqn4nI/6vBq+0zaXra1xOW6rxh9bdxf+QRLSBQ
+	CAnNQAR8qEj3rDyLO+Wzx3/bsZit8h8awBkDr/CNDpmQ7q+LH7nvi2LrUSjphGsg
+	ydAEHQ7kNJoj7n2UVuN8UJR9hwE6VeVrwwYtQd4rS5bbqDR/oEsKhaNy6B42d8ne
+	gJ+0Vcqgl+whAPZr2AqSgC6r282NbZvmCACMDSNYT27sJE29R1Z0toUCle04h5/t
+	YNK5cQfAVMdsA9kAL3WSlkXE/MF/BhqLakw==
+X-Virus-Scanned: by MailRoute
+Received: from 011.lax.mailroute.net ([127.0.0.1])
+ by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id wMZt1qLLUwfM; Thu, 18 Dec 2025 23:07:53 +0000 (UTC)
+Received: from bvanassche.mtv.corp.google.com (unknown [104.135.180.219])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4dXRCW2y4Jz1XM6JR;
+	Thu, 18 Dec 2025 23:07:51 +0000 (UTC)
+From: Bart Van Assche <bvanassche@acm.org>
+To: "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org,
+	Bart Van Assche <bvanassche@acm.org>,
+	Nitin Rawat <nitin.rawat@oss.qualcomm.com>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
 	Peter Wang <peter.wang@mediatek.com>,
-	Stanley Jhu <chu.stanley@gmail.com>,
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Philipp Zabel <p.zabel@pengutronix.de>,
-	Liam Girdwood <lgirdwood@gmail.com>,
-	Mark Brown <broonie@kernel.org>,
-	Chaotian Jing <Chaotian.Jing@mediatek.com>,
-	Neil Armstrong <neil.armstrong@linaro.org>,
-	Louis-Alexis Eyraud <louisalexis.eyraud@collabora.com>,
-	kernel@collabora.com, linux-scsi@vger.kernel.org,
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-mediatek@lists.infradead.org, linux-phy@lists.infradead.org
-Subject: Re: [PATCH v4 02/25] dt-bindings: ufs: mediatek,ufs: Complete the
- binding
-Message-ID: <20251218-vineyard-exalted-08fe7d9bcb55@spud>
-References: <20251218-mt8196-ufs-v4-0-ddec7a369dd2@collabora.com>
- <20251218-mt8196-ufs-v4-2-ddec7a369dd2@collabora.com>
+	Avri Altman <avri.altman@sandisk.com>,
+	Bean Huo <beanhuo@micron.com>,
+	Adrian Hunter <adrian.hunter@intel.com>,
+	"Bao D. Nguyen" <quic_nguyenb@quicinc.com>
+Subject: [PATCH for rc] ufs: core: Configure MCQ after link startup
+Date: Thu, 18 Dec 2025 15:07:37 -0800
+Message-ID: <20251218230741.2661049-1-bvanassche@acm.org>
+X-Mailer: git-send-email 2.52.0.322.g1dd061c0dc-goog
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-	protocol="application/pgp-signature"; boundary="e36ubsezNTceBFN4"
-Content-Disposition: inline
-In-Reply-To: <20251218-mt8196-ufs-v4-2-ddec7a369dd2@collabora.com>
-
-
---e36ubsezNTceBFN4
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, Dec 18, 2025 at 01:54:52PM +0100, Nicolas Frattaroli wrote:
-> As it stands, the mediatek,ufs.yaml binding is startlingly incomplete.
-> Its one example, which is the only real "user" of this binding in
-> mainline, uses the deprecated freq-table-hz property.
->=20
-> The resets, of which there are three optional ones, are completely
-> absent.
->=20
-> The clock description for MT8195 is incomplete, as is the one for
-> MT8192. It's not known if the one clock binding for MT8183 is even
-> correct, but I do not have access to the necessary code and
-> documentation to find this out myself.
->=20
-> The power supply situation is not much better; the binding describes one
-> required power supply, but it's the UFS card supply, not any of the
-> supplies feeding the controller silicon.
->=20
-> No second example is present in the binding, making verification
-> difficult.
->=20
-> Disallow freq-table-hz and move to operating-points-v2. It's fine to
-> break compatibility here, as the binding is currently unused and would
-> be impossible to correctly use in its current state.
->=20
-> Add the three resets and the corresponding reset-names property. These
-> resets appear to be optional, i.e. not required for the functioning of
-> the device.
->=20
-> Move the list of clock names out of the if condition, and expand it for
-> the confirmed clocks I could find by cross-referencing several clock
-> drivers. For MT8195, increase the minimum number of clocks to include
-> the crypt and rx_symbol ones, as they're internal to the SoC and should
-> always be present, and should therefore not be omitted.
->=20
-> MT8192 gets to have at least 3 clocks, as these were the ones I could
-> quickly confirm from a glance at various trees. I can't say this was an
-> exhaustive search though, but it's better than the current situation.
->=20
-> Properly document all supplies, with which pin name on the SoCs they
-> supply. Complete the example with them.
->=20
-> Also add a MT8195 example to the binding, using supply labels that I am
-> pretty sure would be the right ones for e.g. the Radxa NIO 12L.
->=20
-> Signed-off-by: Nicolas Frattaroli <nicolas.frattaroli@collabora.com>
+Commit f46b9a595fa9 ("scsi: ufs: core: Allocate the SCSI host earlier")
+did not only cause scsi_add_host() to be called earlier. It also swapped
+the order of link startup and enabling and configuring MCQ mode. Before
+that commit, the call chains for link startup and enabling MCQ were as
+follows:
 
-Reviewed-by: Conor Dooley <conor.dooley@microchip.com>
-pw-bot: not-applicable
+ufshcd_init()
+  ufshcd_link_startup()
+  ufshcd_add_scsi_host()
+    ufshcd_mcq_enable()
 
---e36ubsezNTceBFN4
-Content-Type: application/pgp-signature; name="signature.asc"
+Apparently this change causes link startup to fail. Fix this by configuri=
+ng
+MCQ after link startup has completed.
 
------BEGIN PGP SIGNATURE-----
+Reported-by: Nitin Rawat <nitin.rawat@oss.qualcomm.com>
+Fixes: f46b9a595fa9 ("scsi: ufs: core: Allocate the SCSI host earlier")
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+---
+ drivers/ufs/core/ufshcd.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-iHUEABYKAB0WIQRh246EGq/8RLhDjO14tDGHoIJi0gUCaURYNwAKCRB4tDGHoIJi
-0q7sAPsEFBYWe7WteUvYRPLscugO7jF/qeqwh5oNpsK5iTFYHgEA4FfIV6OJUU/h
-uy3jGyM2gNo0F1otONhbNZUky5Matgg=
-=JyRf
------END PGP SIGNATURE-----
-
---e36ubsezNTceBFN4--
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 80c0b49f30b0..bc395434c3a2 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -10733,9 +10733,7 @@ static int ufshcd_add_scsi_host(struct ufs_hba *h=
+ba)
+ 	if (is_mcq_supported(hba)) {
+ 		ufshcd_mcq_enable(hba);
+ 		err =3D ufshcd_alloc_mcq(hba);
+-		if (!err) {
+-			ufshcd_config_mcq(hba);
+-		} else {
++		if (err) {
+ 			/* Continue with SDB mode */
+ 			ufshcd_mcq_disable(hba);
+ 			use_mcq_mode =3D false;
+@@ -11008,6 +11006,9 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem=
+ *mmio_base, unsigned int irq)
+ 	if (err)
+ 		goto out_disable;
+=20
++	if (hba->mcq_enabled)
++		ufshcd_config_mcq(hba);
++
+ 	if (hba->quirks & UFSHCD_QUIRK_SKIP_PH_CONFIGURATION)
+ 		goto initialized;
+=20
