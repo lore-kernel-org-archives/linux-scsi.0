@@ -1,164 +1,101 @@
-Received: from mail-wm1-f52.google.com (mail-wm1-f52.google.com [209.85.128.52])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB0942F39B1
-	for <linux-scsi@vger.kernel.org>; Fri, 19 Dec 2025 09:26:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6A18F4A02
+	for <linux-scsi@vger.kernel.org>; Fri, 19 Dec 2025 16:32:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1766136374; cv=none; b=SU80s7pXfTgHN1qmw8dN4RB9D2KUFPGGLXeff68B/X7IbUWVx7O6nGnup4a3iYF+y8y/SF1c9h2dYEu28nnXFs85/lPkwYVJErhjBLN0/L+v0jzjSSNIgxeuEYwNtOCV+lsq+7I6Syq5WnhEQFxBocRCsn3qUhn3M7x5ckDjo0U=
+	t=1766161966; cv=none; b=IZdCGQzhu4gYWmY1iJaB7XUcHs9sb+xjJ+XhbQjqt2KwIGXDKuCSzFSTCl+ICdz7KZapOmeG2wIlYgH1HYmcw2mxL28oS6yWsPAdMXUKihOxDyuIfrRxSdCFNPrgCGiE5M6K1Q0mIIzelQVjhsgE5r3FNFxos/07KrrF+Cm1r6k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1766136374; c=relaxed/simple;
-	bh=JFJvLGnyaHaCV/eJzejgi5pSvHr6D8xakNdWbDoTCoQ=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Hn7+OmGmQ7awMGDwxflEkBTWSiDCg6Nxrn6Pq2hII7VQxSzRcAd2aSvOvOvv4zvBnLsLKwi59Pz1rLFX8PsOzoZA5QrgDKenhgnfIacr5rMJIHW4Scbxbw9pAUf8viI/8wUzHRjfly7RSmyp08rBV1GYp+G8tvvxOnwLCt44Ed8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=baylibre.com; spf=pass smtp.mailfrom=baylibre.com; dkim=pass (2048-bit key) header.d=baylibre-com.20230601.gappssmtp.com header.i=@baylibre-com.20230601.gappssmtp.com header.b=lZvmeuMn; arc=none smtp.client-ip=209.85.128.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=baylibre.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=baylibre.com
+	s=arc-20240116; t=1766161966; c=relaxed/simple;
+	bh=GKdoXsKww3/qcfEeDT3zgg0U5DB6DsBN2E2cJEdynhw=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=t8cV6V1fLAQCQ/RvZhvJge7xpYqT9htpsERHPIsWdpVZFcXe0mFl1Ix/FBFnYMhP0JJrdO/id8WSQOB+CPA/U6a5GNfFrfGXBZ+fxl93Awro/sCjgvCrik4H47/5OBwWmkzrSKwiBdukfMhFHTYhfHLNF/lr9CwpTf80B+/UWQU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=hhC3LHS4; arc=none smtp.client-ip=199.89.1.14
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=baylibre-com.20230601.gappssmtp.com header.i=@baylibre-com.20230601.gappssmtp.com header.b="lZvmeuMn"
-Received: by mail-wm1-f52.google.com with SMTP id 5b1f17b1804b1-47d1d8a49f5so1532045e9.3
-        for <linux-scsi@vger.kernel.org>; Fri, 19 Dec 2025 01:26:11 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=baylibre-com.20230601.gappssmtp.com; s=20230601; t=1766136370; x=1766741170; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=e/mp1cXdFClVmFyKeKpkTnCOC7fFOUEAMCCmxVP0ZFE=;
-        b=lZvmeuMnQYaczecn/DjuKTQGEBWJnqeMBQtggIt5smDGJnAJ7rEzMLZz5jrvp3W3hk
-         OuYHzWsW9MidH1f6CvHPQaM6RV0J+GrE5wGK/FYu86L+uSnZ3Q6Hh0IOo4LMxnlFwLgK
-         0AnbbJcD361ZnFLFMikpANRi2BF9UOivDqAaU29fPJ2npcnxaVgT1wDyWAL+c3FbwDBQ
-         dt3PxPbBiGPdvDvbhjIAPN4WVIQMLSwM9k4jdKclaCeyP5j8BoHkFikHtu7LAPhZyjVF
-         LKvlHHoGg5g9lGTimSdI6DeisCk+c3ihlS70DS9tBMP86TbPrBnQ8iFFXfUL1L/Fk9Rx
-         8BzQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1766136370; x=1766741170;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=e/mp1cXdFClVmFyKeKpkTnCOC7fFOUEAMCCmxVP0ZFE=;
-        b=dMa3zI3NaiMIK8kEjVDFKV8fzfnb1PbJS5IH+5OV2SkCjYg8W7I/pYupNH83UM8LTr
-         vFMfsZ69HFtjD0x132Oj0fyjacR/RrNsoyoajUAEPJY/h9iR2SQInbebEz8e41PBLVuV
-         iQZoxE7hFl6d2jNLokKBpPKfzAcY+d4eYo7gMNRkqFyEw3uG2av7U8l6FBeltjLGhQHx
-         L/RYRAWUJ5Bdpcsl5hKxq9Vu+yffUjUjMWxIGrS9JdWsMdiXNZHN6PAuRAVyslmmElIP
-         R4jqyfjZSHqr0BBWBtXgRZnsGM8vDFVRu9gxzcm1iV/3T/hgSwtDDHRLNhaDWu1knUKG
-         Lx8w==
-X-Forwarded-Encrypted: i=1; AJvYcCX9JOJUma3ipyCQT3XQAOpHU2DJn9C0ju8EoTKzztdObTMdffjiH4pfTO7nf1+BxeyaKArUcfr2OJz0@vger.kernel.org
-X-Gm-Message-State: AOJu0Yxzk144i8uzb1eo8Q8A8+57AY9dhtNcj+zdValIV/iNXGofc24t
-	TO1AcSUjWBmNjgoaSk0fHVXDXTV0VJRe3ahsFcnxKry6yweSMgp9y2GizxPdV6uz4Pg=
-X-Gm-Gg: AY/fxX6tE8+t9UFRkMRZ6BR/B1ESmWTGnfqI9FxvmJAFcEK2JHwaGEja7BhoonqOghI
-	5FYnFhYeszOZueGm53q76DVzyA/ztH09wswvWL918fazlpFL0WHWboG7afkqqcEE5wi+r00PFa4
-	S2vxQCR5PRXqRaYzqvn6VFnBx8sWfy3YRyhVZ2geQ4ssqMSTf0HKkIqn49DWqsVkLeh7CJKaMz+
-	1i7x23vNs541ZT4qlEFevAG3v/xuPWmqxe2BZFPS7P1K/TDIvrS1Ay5a4kgLKMvC4tUJiRDuC5f
-	CeYj4+uQUzSdAWbzUAgeobTOxl05PoOEmEbtE8uF6oZFXOrzy5Gk9WbcQviMwvHF348uYpWvwnW
-	S8DG22t0iZfQvI5AD7ruebJ0/nFJTPC9mg3azwPP/2+Hzlibb0kjQ1JJYhSVc18TVASBDpmViAa
-	7SYFVnSHndGH3DTlFLQJPeP46bsW1CVI9HxBgeHTARYdnb+r5y8xVQrjiPz8QvC8xaKRbD67TWZ
-	z0=
-X-Google-Smtp-Source: AGHT+IFEGjvrlWAs0NpG2elZsaHgNsCZyVGl9rExLbOyNOaoYdDfMM8vBeF0ffSfqRLAATFuQzu3Vg==
-X-Received: by 2002:a05:600c:1d0b:b0:479:2a0b:180d with SMTP id 5b1f17b1804b1-47d1954a5f7mr18629415e9.11.1766136369925;
-        Fri, 19 Dec 2025 01:26:09 -0800 (PST)
-Received: from localhost (p200300f65f0066087cf387e078e1a5dc.dip0.t-ipconnect.de. [2003:f6:5f00:6608:7cf3:87e0:78e1:a5dc])
-        by smtp.gmail.com with UTF8SMTPSA id 5b1f17b1804b1-47be3a2b419sm32705035e9.1.2025.12.19.01.26.09
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 19 Dec 2025 01:26:09 -0800 (PST)
-From: =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= <u.kleine-koenig@baylibre.com>
-To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Alim Akhtar <alim.akhtar@samsung.com>,
-	Avri Altman <avri.altman@wdc.com>,
-	Bart Van Assche <bvanassche@acm.org>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
-	Peter Wang <peter.wang@mediatek.com>,
-	Bean Huo <beanhuo@micron.com>,
-	Adrian Hunter <adrian.hunter@intel.com>,
-	"Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
-	linux-scsi@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-mediatek@lists.infradead.org
-Subject: [PATCH v2 8/8] scsi: ufs: Convert to scsi bus methods
-Date: Fri, 19 Dec 2025 10:25:37 +0100
-Message-ID:  <69f17c7d4f8f587e2a56e3ea268d441d98a6a895.1766133330.git.u.kleine-koenig@baylibre.com>
-X-Mailer: git-send-email 2.47.3
-In-Reply-To: <cover.1766133330.git.u.kleine-koenig@baylibre.com>
-References: <cover.1766133330.git.u.kleine-koenig@baylibre.com>
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="hhC3LHS4"
+Received: from localhost (localhost [127.0.0.1])
+	by 011.lax.mailroute.net (Postfix) with ESMTP id 4dXtP75RVrz1XLyhj;
+	Fri, 19 Dec 2025 16:32:43 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1766161961; x=1768753962; bh=GKdoXsKww3/qcfEeDT3zgg0U
+	5DB6DsBN2E2cJEdynhw=; b=hhC3LHS4Olm1S56tQv34vU/1WdpxC3lTEB4aTxzJ
+	R451sSZyjVdihEwE0JDII11rbSfxlgoYenD8VZw2mSWJ0PddOKdjeCeNTUOq8rCe
+	LoJFym9XNgteTQmskzN7OyP+H37tfBgBQBPZ70eJhQkvKm8qCN34G9RrLm4676jN
+	MUnomQOs/IPqiW8xb65NtxxmJsiDEllzei32nOUxGsz98A2Ie71eypYpqElIg2YM
+	Eyy+kbTJ2uI+7+oieD9UC2Rloc2Cm047XixQax04vEZ8kBhFOe20mlxAAroXaxMk
+	h18+9iV2PG1jTYTFs8PpE7tA/TOv9D/bJoIWWBJiwnoUBw==
+X-Virus-Scanned: by MailRoute
+Received: from 011.lax.mailroute.net ([127.0.0.1])
+ by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id 8dwHQLPgrS6r; Fri, 19 Dec 2025 16:32:41 +0000 (UTC)
+Received: from [100.119.48.131] (unknown [104.135.180.219])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4dXtP31WcJz1XM6Jk;
+	Fri, 19 Dec 2025 16:32:38 +0000 (UTC)
+Message-ID: <6745d2d0-e8c4-407c-a22d-5577997f1ca3@acm.org>
+Date: Fri, 19 Dec 2025 08:32:38 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2170; i=u.kleine-koenig@baylibre.com; h=from:subject:message-id; bh=JFJvLGnyaHaCV/eJzejgi5pSvHr6D8xakNdWbDoTCoQ=; b=kA0DAAoBj4D7WH0S/k4ByyZiAGlFGiGjjk6qc0RvRyJZG5ixc8Wz+NTnF0Cizh6nRvjrn03iE 4kBMwQAAQoAHRYhBD+BrGk6eh5Zia3+04+A+1h9Ev5OBQJpRRohAAoJEI+A+1h9Ev5Ov6MH/jlY GNzBxxjQ/8nlY7aC9rclIr1Lin6LyW5AQ18LOuo0fVz3sG8R3ZFEKxjSgJeIMXKXO8nP9NCVvQr TUPIpYMAUlkYaMsrnD61k+Xqver+dgeMYDw4FC64WIuD2/DQjl/gg5d8OB/KKKCN1Qr1sNhNb/R nKRnwHJkzdfscRfMOPZviEplerBOt/hwrbVwnpSDdokMqZfZDI2OR1gP1+HsVT3JDJrj71gFBLl /LnuX6EB0ADIkKNSzywAiVQqiHSjGZVjCYl7zi+RNSdS/QZ4IHFnMT8nvWK+2GcTo5KX9i8eIxj TopuKY6AKRdIz1k5qDtUXiNO97+TxTahd1eMKyk=
-X-Developer-Key: i=u.kleine-koenig@baylibre.com; a=openpgp; fpr=0D2511F322BFAB1C1580266BE2DCDD9132669BD6
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH for rc] ufs: core: Configure MCQ after link startup
+To: =?UTF-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= <peter.wang@mediatek.com>,
+ "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+ "beanhuo@micron.com" <beanhuo@micron.com>,
+ "nitin.rawat@oss.qualcomm.com" <nitin.rawat@oss.qualcomm.com>,
+ "avri.altman@sandisk.com" <avri.altman@sandisk.com>,
+ "James.Bottomley@HansenPartnership.com"
+ <James.Bottomley@HansenPartnership.com>,
+ "quic_nguyenb@quicinc.com" <quic_nguyenb@quicinc.com>,
+ "adrian.hunter@intel.com" <adrian.hunter@intel.com>
+References: <20251218230741.2661049-1-bvanassche@acm.org>
+ <877f7704215c36bfb15808e3a168767845ce09c4.camel@mediatek.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <877f7704215c36bfb15808e3a168767845ce09c4.camel@mediatek.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: quoted-printable
 
-The scsi subsystem has implemented dedicated callbacks for probe, remove
-and shutdown. Make use of them. This fixes a runtime warning about the
-driver needing to be converted to the bus probe method.
+On 12/18/25 11:32 PM, Peter Wang (=E7=8E=8B=E4=BF=A1=E5=8F=8B) wrote:
+> It seems strange to me that ufshcd_mcq_enable is called before
+> ufshcd_link_startup.
+>=20
+> In driver development, configuration (config) should generally
+> be done before enabling (enable) the hardware.
+> Reason:
+> Configuring first ensures the hardware operates correctly and
+> avoids unexpected behavior or safety issues.
+>=20
+> Typical steps:
+> 1. Set registers/parameters
+> 2. Initialize resources
+> 3. Configure interrupts/DMA
+> 4. Enable the hardware
+>=20
+> So, do you also consider moving ufshcd_mcq_enable after
+> ufshcd_config_mcq?
 
-Reviewed-by: Peter Wang <peter.wang@mediatek.com>
-Signed-off-by: Uwe Kleine-König <u.kleine-koenig@baylibre.com>
----
- drivers/ufs/core/ufshcd.c | 18 +++++++++---------
- 1 file changed, 9 insertions(+), 9 deletions(-)
+This has been considered but unfortunately the UFSHCI register set
+definition makes this impossible. hba->host->can_queue must be set
+before scsi_add_host() is called. hba->host->can_queue is derived
+from the controller capabilities register (CAP). MCQ must be enabled
+before NUTRS is extracted from the CAP register. Otherwise NUTRS is
+reported as 32 - 1 instead of 64 - 1 (assuming that the host
+controller supports 64 outstanding commands in MCQ mode).
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index da1e89e95d07..78669c205568 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -10525,9 +10525,8 @@ int ufshcd_runtime_resume(struct device *dev)
- EXPORT_SYMBOL(ufshcd_runtime_resume);
- #endif /* CONFIG_PM */
- 
--static void ufshcd_wl_shutdown(struct device *dev)
-+static void ufshcd_wl_shutdown(struct scsi_device *sdev)
- {
--	struct scsi_device *sdev = to_scsi_device(dev);
- 	struct ufs_hba *hba = shost_priv(sdev->host);
- 
- 	down(&hba->host_sem);
-@@ -11133,9 +11132,9 @@ static int ufshcd_wl_poweroff(struct device *dev)
- }
- #endif
- 
--static int ufshcd_wl_probe(struct device *dev)
-+static int ufshcd_wl_probe(struct scsi_device *sdev)
- {
--	struct scsi_device *sdev = to_scsi_device(dev);
-+	struct device *dev = &sdev->sdev_gendev;
- 
- 	if (!is_device_wlun(sdev))
- 		return -ENODEV;
-@@ -11147,10 +11146,11 @@ static int ufshcd_wl_probe(struct device *dev)
- 	return  0;
- }
- 
--static int ufshcd_wl_remove(struct device *dev)
-+static void ufshcd_wl_remove(struct scsi_device *sdev)
- {
-+	struct device *dev = &sdev->sdev_gendev;
-+
- 	pm_runtime_forbid(dev);
--	return 0;
- }
- 
- static const struct dev_pm_ops ufshcd_wl_pm_ops = {
-@@ -11223,12 +11223,12 @@ static void ufshcd_check_header_layout(void)
-  * Hence register a scsi driver for ufs wluns only.
-  */
- static struct scsi_driver ufs_dev_wlun_template = {
-+	.probe = ufshcd_wl_probe,
-+	.remove = ufshcd_wl_remove,
-+	.shutdown = ufshcd_wl_shutdown,
- 	.gendrv = {
- 		.name = "ufs_device_wlun",
--		.probe = ufshcd_wl_probe,
--		.remove = ufshcd_wl_remove,
- 		.pm = &ufshcd_wl_pm_ops,
--		.shutdown = ufshcd_wl_shutdown,
- 	},
- };
- 
--- 
-2.47.3
+Thanks,
 
+Bart.
