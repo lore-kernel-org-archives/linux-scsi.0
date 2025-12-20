@@ -1,515 +1,245 @@
-Received: from mail-pl1-f194.google.com (mail-pl1-f194.google.com [209.85.214.194])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.13])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DFC2228641F
-	for <linux-scsi@vger.kernel.org>; Sat, 20 Dec 2025 07:17:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.194
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1FF891A239A;
+	Sat, 20 Dec 2025 14:00:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.13
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1766215061; cv=none; b=GZtOfnaKU7M/uSDAzcH8fNRzFkSih7i4fKycFXU9HuJSzX9ytCd4XsJtACj94K86JfrspMRAQbVhPnfNBws/CEpctMV02Ktn+Nh9l65qRsXKV1oDJP0tQA4BEhWJKct+yrMVPfKLlnQCMTYxwFnR2uoWrJQ1SQR04zDFDeZpWtc=
+	t=1766239260; cv=none; b=KfbIQlDYf1PeldASQhnNawmtzZur5NxEc3UCYzyEivBP6EIXk5ZZi3Fe8wTdNNfiqm3gWnJ4ehi161LawjhJYjkv2Xqq0Y3X/wOSvAOsvlsuShE/6VJ74HlO2uDnG0Fq9GvqkVBQw2J31U6HIkLOTqHvgxY58EsCkUKAdyYCY1g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1766215061; c=relaxed/simple;
-	bh=FPEx8aatAYJqD3pMbICxw5zgrdvC5xkbKZcsuu8t0zs=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=r9E5cn0BNFVqO7ai4GkekN+tjGSZWGVla579tPdyMffClCUyBwE3LpWoaBHUvJ5AlZtA2Jjlekt/Ee9AefIeeuDhHsGk3I3Uo4cN9sPw+zkCPJ2lLYGWsPAvU1hA9sYSU0kRZ5cIIPeRQQKq1QgwjfD4mikaN7MGK7Sh1OJsz7U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=IZW6yrjO; arc=none smtp.client-ip=209.85.214.194
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1766239260; c=relaxed/simple;
+	bh=DTyhpGPCBpzXqa1p10roAW52S9cjZ+ReeOZ3HhOKUBA=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=mi6Q5L4H7YeSKfeYyQA1jQUepoEQyUIhcuVdQacVlF096qk4CMVOO3bt3R4OeqAc/5Rr/DbgbDbL+suKbBt7JUe20wil7Y97XK7oFC6xmWrIMMBydjwNiAE4faa6rmjS5lFpKEzGAcHmTXytuNL+IhisWgv47MV0rN8qKsTEI3o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=JM/LEKFQ; arc=none smtp.client-ip=192.198.163.13
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="IZW6yrjO"
-Received: by mail-pl1-f194.google.com with SMTP id d9443c01a7336-29f30233d8aso31616315ad.0
-        for <linux-scsi@vger.kernel.org>; Fri, 19 Dec 2025 23:17:39 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1766215059; x=1766819859; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=30JKT/r2RLPWbmq7hD8++bT1ipdWcz7FO8dACzJS35s=;
-        b=IZW6yrjOkAJBn7VY3P0g7Dj0AkXKOdRDO/jPJEwa/kM5X7/9KB68n9VVeGU3lB61LF
-         4yoALvoQ3yS5Tb7KYXgaAuodOqVFK0mn7bq/8ByR+WTwnJNsg8L9HEIBM0u8yEKF3zOl
-         o2ap6V/fnZySi/O6i14TdK+AU2uMzQaVkXRi9A2Y4j41fsj33aFtt7fiyiAv1y7OhCvK
-         bshDEDGAkNJy05qds4vYD71QRYdPabNT24Q9Eu6Q5ZEPph4oibUeWvcg5CazAoR9iZju
-         dfIajjdFLYLByz2UrLA8+lFtdTl7B2CqQVjk7mXoUhM4qHZkF95UWIlqbFY1Jor6DFvl
-         isiw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1766215059; x=1766819859;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=30JKT/r2RLPWbmq7hD8++bT1ipdWcz7FO8dACzJS35s=;
-        b=K7rLRgthAUzJbEYnsTH7Td2/HFK+OeMnI0IdLxpiZmOq2umnEHorB7x7cQ+8eD72I0
-         0ftISkTSqXOPlwJNAgXsJjqiqtIHAWVIx8YOW9nqZhSkr0sho48sOFcISqQAIYv2Qp8Q
-         QVKE2nHr+D7nnk4PF2R+zCF5075hmdyjEZuVI/1quRxv7gSlQ6ZAlL3td6/kfVyzBzbb
-         +kkTN/YJmaqOHg5G4B4bFSz0MZQljQt2tQzpLYRgzd2BMbTGj/7p8uRqjZYkoCwcvD2X
-         6GLCp3ptffaphdNxFlkSZtMp2PJ1dKfAH0FZYvMSCFAo2urmYjpxGpZWzjNVXzLY0Uz6
-         8NuQ==
-X-Gm-Message-State: AOJu0Yxqt98PMSX/4qpd1zc9nulUG/amPU2Ao71hwIBifJXlRSixQ2Q9
-	PU5pW9s7IDwIGvQ4z9euwGYwyR7GWai0gJHYnp3lfNPipSVzEB3shgZYpOuE0quDdCI=
-X-Gm-Gg: AY/fxX6sHdY3brj1lApkubhMPMdDPZbpEb4BAMHLmxeP+STPVV4unWE0Q1P//5TOJZX
-	fjHsPRRlYX65Dzm36DNTgNJStzOyDp1bCXfF89otsVSVGoIHW4OzZ8A0sMBfFVT5YR+NAUwKxRa
-	c+TkqNMI+Q2Pno6Pc41QDw+WyJ6cSse1wyE9Uczdm8vZTtJ7wMBiHBdIN2PQmnZZLfHtSDOeIWx
-	QtEzNr2+ChLAGM5oXLAR5HD5OB3omof+VDNuZ5ejWb1zJCQKqv1dMGymUH22Tl1MY0YQn9W46c7
-	s4hND+UTph0woC8+sElPbnIy9QaIQ05NffNjf0BnsXMJJS50QLjAFQCIfIRVqco2u5nQiXojV33
-	dbQWSUnDa9S3P88yfxZ1k3+ho0O+dPigPuJ8vwWFSW2/egkj/RLfr5pf/tECqHxmR7eSaMCu9KM
-	1T5SNnFDMM/5u9rWBmVUDNmUnCjLsN1uylu6oeQuxikt8ixJJi/22rZVDuSV3TYZjeE7PZRn2df
-	e5fkdVOa1gDT8iPndLbYZNqh8WBZfWhIEaZ8Eytmjh0jCy6FvfgRWa1vf74MeBh6iJZlNSTDIxq
-	0HU4
-X-Google-Smtp-Source: AGHT+IFEy9IpABr3XrcKAyfY5KVz4H3S7SygzG4ensrHmKdeDS8PX/esdaKqqH4fuydTtqykxO0Xxg==
-X-Received: by 2002:a05:7022:2217:b0:11b:9386:a3c2 with SMTP id a92af1059eb24-121722ff9fbmr5401418c88.45.1766215059036;
-        Fri, 19 Dec 2025 23:17:39 -0800 (PST)
-Received: from ethan-latitude5420.. (host-127-24.cafrjco.fresno.ca.us.clients.pavlovmedia.net. [68.180.127.24])
-        by smtp.gmail.com with ESMTPSA id a92af1059eb24-1217254d369sm17527115c88.16.2025.12.19.23.17.38
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 19 Dec 2025 23:17:38 -0800 (PST)
-From: Ethan Nelson-Moore <enelsonmoore@gmail.com>
-To: linux-scsi@vger.kernel.org
-Cc: Ethan Nelson-Moore <enelsonmoore@gmail.com>
-Subject: [PATCH v2 5/5] scsi: qla1280: remove function tracing macros
-Date: Fri, 19 Dec 2025 23:17:15 -0800
-Message-ID: <20251220071715.44296-3-enelsonmoore@gmail.com>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20251220071715.44296-1-enelsonmoore@gmail.com>
-References: <20251220071715.44296-1-enelsonmoore@gmail.com>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="JM/LEKFQ"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1766239259; x=1797775259;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=DTyhpGPCBpzXqa1p10roAW52S9cjZ+ReeOZ3HhOKUBA=;
+  b=JM/LEKFQ5MxTcELFfL5iixf5cN1JeQpOURw7Yjt79nioERh/hYFgKYzz
+   js5uAQ6GLhNkozXcT+BQ+AyIJ955HbThp3d4bDqdMv2a6N+dIYm1Av+vQ
+   Spyrbjl1M+RsSNpSxEvnGC8ZiOhQZ9bbsyxQ9aOqi29Oy/tvJmEsVqFmf
+   DyULdFjzZCU98l/gBWi/YA9uukxZk86jXK8dS0diRFZRreqjW6+tCRnAC
+   QIcQAVYCD6++BOx2P2u9yz4G1rASw6jlTAxMYPzVolhTDdADyJkA7um3/
+   LfQbtWccydBwTNYPCPThM7MAxdiJlBAv2DJ4j1GqD4KSsNbBe1t8lg1iK
+   g==;
+X-CSE-ConnectionGUID: bewda4bPTESYgvjUKJx0JA==
+X-CSE-MsgGUID: gnZpUvcqST6Z8nW3LLrZnQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11648"; a="70743731"
+X-IronPort-AV: E=Sophos;i="6.21,164,1763452800"; 
+   d="scan'208";a="70743731"
+Received: from fmviesa007.fm.intel.com ([10.60.135.147])
+  by fmvoesa107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Dec 2025 06:00:58 -0800
+X-CSE-ConnectionGUID: UBZMshNtTYO4VV5jUZbgJw==
+X-CSE-MsgGUID: UqHSjI+oS46kzVnvW5QlIA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.21,164,1763452800"; 
+   d="scan'208";a="198703033"
+Received: from lkp-server01.sh.intel.com (HELO 0d09efa1b85f) ([10.239.97.150])
+  by fmviesa007.fm.intel.com with ESMTP; 20 Dec 2025 06:00:56 -0800
+Received: from kbuild by 0d09efa1b85f with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1vWxVu-000000004bS-1eTf;
+	Sat, 20 Dec 2025 14:00:54 +0000
+Date: Sat, 20 Dec 2025 22:00:02 +0800
+From: kernel test robot <lkp@intel.com>
+To: Shipei Qu <qu@darknavy.com>, Adam Radford <aradford@gmail.com>,
+	"James E.J. Bottomley" <jejb@linux.ibm.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: oe-kbuild-all@lists.linux.dev, Shipei Qu <qu@darknavy.com>,
+	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	DARKNAVY <vr@darknavy.com>
+Subject: Re: [PATCH v2] scsi: 3w-sas: validate request_id reported by
+ controller
+Message-ID: <202512202135.WH2v6r6v-lkp@intel.com>
+References: <20251216060156.41320-1-qu@darknavy.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20251216060156.41320-1-qu@darknavy.com>
 
-These function tracing macros clutter the code and provide
-no value over ftrace. Remove them.
+Hi Shipei,
 
-Signed-off-by: Ethan Nelson-Moore <enelsonmoore@gmail.com>
----
- drivers/scsi/qla1280.c | 90 ++----------------------------------------
- 1 file changed, 3 insertions(+), 87 deletions(-)
+kernel test robot noticed the following build errors:
 
-diff --git a/drivers/scsi/qla1280.c b/drivers/scsi/qla1280.c
-index 26c312a48a19..3fb72449a54e 100644
---- a/drivers/scsi/qla1280.c
-+++ b/drivers/scsi/qla1280.c
-@@ -561,12 +561,6 @@ static int ql_debug_level = 1;
- #define qla1280_print_scsi_cmd(a, b)	do{}while(0)
- #endif
- 
--#define ENTER(x)		dprintk(3, "qla1280 : Entering %s()\n", x);
--#define LEAVE(x)		dprintk(3, "qla1280 : Leaving %s()\n", x);
--#define ENTER_INTR(x)		dprintk(4, "qla1280 : Entering %s()\n", x);
--#define LEAVE_INTR(x)		dprintk(4, "qla1280 : Leaving %s()\n", x);
--
--
- static int qla1280_read_nvram(struct scsi_qla_host *ha)
- {
- 	uint16_t *wptr;
-@@ -574,8 +568,6 @@ static int qla1280_read_nvram(struct scsi_qla_host *ha)
- 	int cnt, i;
- 	struct nvram *nv;
- 
--	ENTER("qla1280_read_nvram");
--
- 	if (driver_setup.no_nvram)
- 		return 1;
- 
-@@ -641,7 +633,6 @@ static int qla1280_read_nvram(struct scsi_qla_host *ha)
- 		nv->bus[i].max_queue_depth = cpu_to_le16(nv->bus[i].max_queue_depth);
- 	}
- 	dprintk(1, "qla1280_read_nvram: Completed Reading NVRAM\n");
--	LEAVE("qla1280_read_nvram");
- 
- 	return chksum;
- }
-@@ -817,8 +808,6 @@ qla1280_error_action(struct scsi_cmnd *cmd, enum action action)
- 	int wait_for_target = -1;
- 	DECLARE_COMPLETION_ONSTACK(wait);
- 
--	ENTER("qla1280_error_action");
--
- 	ha = (struct scsi_qla_host *)(CMD_HOST(cmd)->hostdata);
- 	sp = scsi_cmd_priv(cmd);
- 	bus = SCSI_BUS_32(cmd);
-@@ -938,7 +927,6 @@ qla1280_error_action(struct scsi_cmnd *cmd, enum action action)
- 
- 	dprintk(1, "RESET returning %d\n", result);
- 
--	LEAVE("qla1280_error_action");
- 	return result;
- }
- 
-@@ -1075,7 +1063,6 @@ qla1280_intr_handler(int irq, void *dev_id)
- 	u16 data;
- 	int handled = 0;
- 
--	ENTER_INTR ("qla1280_intr_handler");
- 	ha = (struct scsi_qla_host *)dev_id;
- 
- 	spin_lock(ha->host->host_lock);
-@@ -1098,7 +1085,6 @@ qla1280_intr_handler(int irq, void *dev_id)
- 
- 	qla1280_enable_intrs(ha);
- 
--	LEAVE_INTR("qla1280_intr_handler");
- 	return IRQ_RETVAL(handled);
- }
- 
-@@ -1236,8 +1222,6 @@ qla1280_done(struct scsi_qla_host *ha)
- 	int bus, target;
- 	struct scsi_cmnd *cmd;
- 
--	ENTER("qla1280_done");
--
- 	done_q = &ha->done_q;
- 
- 	while (!list_empty(done_q)) {
-@@ -1274,7 +1258,6 @@ qla1280_done(struct scsi_qla_host *ha)
- 		else
- 			complete(sp->wait);
- 	}
--	LEAVE("qla1280_done");
- }
- 
- /*
-@@ -1303,8 +1286,6 @@ qla1280_return_status(struct response * sts, struct scsi_cmnd *cp)
- 	};
- #endif				/* DEBUG_QLA1280_INTR */
- 
--	ENTER("qla1280_return_status");
--
- #if DEBUG_QLA1280_INTR
- 	/*
- 	  dprintk(1, "qla1280_return_status: compl status = 0x%04x\n",
-@@ -1374,8 +1355,6 @@ qla1280_return_status(struct response * sts, struct scsi_cmnd *cp)
- 		reason[host_status], scsi_status);
- #endif
- 
--	LEAVE("qla1280_return_status");
--
- 	return (scsi_status & 0xff) | (host_status << 16);
- }
- 
-@@ -1401,8 +1380,6 @@ qla1280_initialize_adapter(struct scsi_qla_host *ha)
- 	int bus;
- 	unsigned long flags;
- 
--	ENTER("qla1280_initialize_adapter");
--
- 	/* Clear adapter flags. */
- 	ha->flags.online = 0;
- 	ha->flags.disable_host_adapter = 0;
-@@ -1470,7 +1447,6 @@ qla1280_initialize_adapter(struct scsi_qla_host *ha)
- 	if (status)
- 		dprintk(2, "qla1280_initialize_adapter: **** FAILED ****\n");
- 
--	LEAVE("qla1280_initialize_adapter");
- 	return status;
- }
- 
-@@ -1879,8 +1855,6 @@ qla1280_init_rings(struct scsi_qla_host *ha)
- 	uint16_t mb[MAILBOX_REGISTER_COUNT];
- 	int status = 0;
- 
--	ENTER("qla1280_init_rings");
--
- 	/* Clear outstanding commands array. */
- 	memset(ha->outstanding_cmds, 0,
- 	       sizeof(struct srb *) * MAX_OUTSTANDING_COMMANDS);
-@@ -1919,7 +1893,6 @@ qla1280_init_rings(struct scsi_qla_host *ha)
- 	if (status)
- 		dprintk(2, "qla1280_init_rings: **** FAILED ****\n");
- 
--	LEAVE("qla1280_init_rings");
- 	return status;
- }
- 
-@@ -2156,8 +2129,6 @@ qla1280_nvram_config(struct scsi_qla_host *ha)
- 	int bus, target, status = 0;
- 	uint16_t mb[MAILBOX_REGISTER_COUNT];
- 
--	ENTER("qla1280_nvram_config");
--
- 	if (ha->nvram_valid) {
- 		/* Always force AUTO sense for LINUX SCSI */
- 		for (bus = 0; bus < MAX_BUSES; bus++)
-@@ -2288,7 +2259,6 @@ qla1280_nvram_config(struct scsi_qla_host *ha)
- 	if (status)
- 		dprintk(2, "qla1280_nvram_config: **** FAILED ****\n");
- 
--	LEAVE("qla1280_nvram_config");
- 	return status;
- }
- 
-@@ -2419,8 +2389,6 @@ qla1280_mailbox_command(struct scsi_qla_host *ha, uint8_t mr, uint16_t *mb)
- 	uint16_t __iomem *mptr;
- 	DECLARE_COMPLETION_ONSTACK(wait);
- 
--	ENTER("qla1280_mailbox_command");
--
- 	if (ha->mailbox_wait) {
- 		printk(KERN_ERR "Warning mailbox wait already in use!\n");
- 	}
-@@ -2487,7 +2455,6 @@ qla1280_mailbox_command(struct scsi_qla_host *ha, uint8_t mr, uint16_t *mb)
- 		dprintk(2, "qla1280_mailbox_command: **** FAILED, mailbox0 = "
- 			"0x%x ****\n", mb[0]);
- 
--	LEAVE("qla1280_mailbox_command");
- 	return status;
- }
- 
-@@ -2505,8 +2472,6 @@ qla1280_poll(struct scsi_qla_host *ha)
- 	uint16_t data;
- 	LIST_HEAD(done_q);
- 
--	/* ENTER("qla1280_poll"); */
--
- 	/* Check for pending interrupts. */
- 	data = RD_REG_WORD(&reg->istatus);
- 	if (data & RISC_INT)
-@@ -2519,8 +2484,6 @@ qla1280_poll(struct scsi_qla_host *ha)
- 
- 	if (!list_empty(&done_q))
- 		qla1280_done(ha);
--
--	/* LEAVE("qla1280_poll"); */
- }
- 
- /*
-@@ -2600,8 +2563,6 @@ qla1280_device_reset(struct scsi_qla_host *ha, int bus, int target)
- 	uint16_t mb[MAILBOX_REGISTER_COUNT];
- 	int status;
- 
--	ENTER("qla1280_device_reset");
--
- 	mb[0] = MBC_ABORT_TARGET;
- 	mb[1] = (bus ? (target | BIT_7) : target) << 8;
- 	mb[2] = 1;
-@@ -2613,7 +2574,6 @@ qla1280_device_reset(struct scsi_qla_host *ha, int bus, int target)
- 	if (status)
- 		dprintk(2, "qla1280_device_reset: **** FAILED ****\n");
- 
--	LEAVE("qla1280_device_reset");
- 	return status;
- }
- 
-@@ -2635,8 +2595,6 @@ qla1280_abort_command(struct scsi_qla_host *ha, struct srb * sp, int handle)
- 	unsigned int bus, target, lun;
- 	int status;
- 
--	ENTER("qla1280_abort_command");
--
- 	bus = SCSI_BUS_32(sp->cmd);
- 	target = SCSI_TCN_32(sp->cmd);
- 	lun = SCSI_LUN_32(sp->cmd);
-@@ -2654,8 +2612,6 @@ qla1280_abort_command(struct scsi_qla_host *ha, struct srb * sp, int handle)
- 		sp->flags &= ~SRB_ABORT_PENDING;
- 	}
- 
--
--	LEAVE("qla1280_abort_command");
- 	return status;
- }
- 
-@@ -2671,16 +2627,12 @@ qla1280_reset_adapter(struct scsi_qla_host *ha)
- {
- 	struct device_reg __iomem *reg = ha->iobase;
- 
--	ENTER("qla1280_reset_adapter");
--
- 	/* Disable ISP chip */
- 	ha->flags.online = 0;
- 	WRT_REG_WORD(&reg->ictrl, ISP_RESET);
- 	WRT_REG_WORD(&reg->host_cmd,
- 		     HC_RESET_RISC | HC_RELEASE_RISC | HC_DISABLE_BIOS);
- 	RD_REG_WORD(&reg->id_l);	/* Flush PCI write */
--
--	LEAVE("qla1280_reset_adapter");
- }
- 
- /*
-@@ -2699,8 +2651,6 @@ qla1280_marker(struct scsi_qla_host *ha, int bus, int id, int lun, u8 type)
- {
- 	struct mrk_entry *pkt;
- 
--	ENTER("qla1280_marker");
--
- 	/* Get request packet. */
- 	if ((pkt = (struct mrk_entry *) qla1280_req_pkt(ha))) {
- 		pkt->entry_type = MARKER_TYPE;
-@@ -2712,8 +2662,6 @@ qla1280_marker(struct scsi_qla_host *ha, int bus, int id, int lun, u8 type)
- 		/* Issue command to ISP */
- 		qla1280_isp_cmd(ha);
- 	}
--
--	LEAVE("qla1280_marker");
- }
- 
- 
-@@ -2744,8 +2692,6 @@ qla1280_64bit_start_scsi(struct scsi_qla_host *ha, struct srb * sp)
- 	int seg_cnt;
- 	u8 dir;
- 
--	ENTER("qla1280_64bit_start_scsi:");
--
- 	/* Calculate number of entries and segments required. */
- 	req_cnt = 1;
- 	seg_cnt = scsi_dma_map(cmd);
-@@ -2997,8 +2943,6 @@ qla1280_32bit_start_scsi(struct scsi_qla_host *ha, struct srb * sp)
- 	int seg_cnt;
- 	u8 dir;
- 
--	ENTER("qla1280_32bit_start_scsi");
--
- 	dprintk(1, "32bit_start: cmd=%p sp=%p CDB=%x\n", cmd, sp,
- 		cmd->cmnd[0]);
- 
-@@ -3207,8 +3151,6 @@ qla1280_32bit_start_scsi(struct scsi_qla_host *ha, struct srb * sp)
- 	if (status)
- 		dprintk(2, "qla1280_32bit_start_scsi: **** FAILED ****\n");
- 
--	LEAVE("qla1280_32bit_start_scsi");
--
- 	return status;
- }
- #endif
-@@ -3232,8 +3174,6 @@ qla1280_req_pkt(struct scsi_qla_host *ha)
- 	int cnt;
- 	uint32_t timer;
- 
--	ENTER("qla1280_req_pkt");
--
- 	/*
- 	 * This can be called from interrupt context, damn it!!!
- 	 */
-@@ -3297,8 +3237,6 @@ qla1280_isp_cmd(struct scsi_qla_host *ha)
- {
- 	struct device_reg __iomem *reg = ha->iobase;
- 
--	ENTER("qla1280_isp_cmd");
--
- 	dprintk(5, "qla1280_isp_cmd: IOCB data:\n");
- 	qla1280_dump_buffer(5, (char *)ha->request_ring_ptr,
- 			    REQUEST_ENTRY_SIZE);
-@@ -3315,8 +3253,6 @@ qla1280_isp_cmd(struct scsi_qla_host *ha)
- 	 * Update request index to mailbox4 (Request Queue In).
- 	 */
- 	WRT_REG_WORD(&reg->mailbox4, ha->req_ring_index);
--
--	LEAVE("qla1280_isp_cmd");
- }
- 
- /****************************************************************************/
-@@ -3342,8 +3278,6 @@ qla1280_isr(struct scsi_qla_host *ha, struct list_head *done_q)
- 	uint32_t index;
- 	u16 istatus;
- 
--	ENTER("qla1280_isr");
--
- 	istatus = RD_REG_WORD(&reg->istatus);
- 	if (!(istatus & (RISC_INT | PCI_INT)))
- 		return;
-@@ -3488,11 +3422,11 @@ qla1280_isr(struct scsi_qla_host *ha, struct list_head *done_q)
- 	 */
- 	if (!(ha->flags.online && !ha->mailbox_wait)) {
- 		dprintk(2, "qla1280_isr: Response pointer Error\n");
--		goto out;
-+		return;
- 	}
- 
- 	if (mailbox[5] >= RESPONSE_ENTRY_CNT)
--		goto out;
-+		return;
- 
- 	while (ha->rsp_ring_index != mailbox[5]) {
- 		pkt = ha->response_ring_ptr;
-@@ -3539,9 +3473,6 @@ qla1280_isr(struct scsi_qla_host *ha, struct list_head *done_q)
- 			WRT_REG_WORD(&reg->mailbox5, ha->rsp_ring_index);
- 		}
- 	}
--	
-- out:
--	LEAVE("qla1280_isr");
- }
- 
- /*
-@@ -3556,8 +3487,6 @@ qla1280_rst_aen(struct scsi_qla_host *ha)
- {
- 	uint8_t bus;
- 
--	ENTER("qla1280_rst_aen");
--
- 	if (ha->flags.online && !ha->flags.reset_active &&
- 	    !ha->flags.abort_isp_active) {
- 		ha->flags.reset_active = 1;
-@@ -3574,8 +3503,6 @@ qla1280_rst_aen(struct scsi_qla_host *ha)
- 			}
- 		}
- 	}
--
--	LEAVE("qla1280_rst_aen");
- }
- 
- 
-@@ -3599,8 +3526,6 @@ qla1280_status_entry(struct scsi_qla_host *ha, struct response *pkt,
- 	uint16_t scsi_status = le16_to_cpu(pkt->scsi_status);
- 	uint16_t comp_status = le16_to_cpu(pkt->comp_status);
- 
--	ENTER("qla1280_status_entry");
--
- 	/* Validate handle. */
- 	if (handle < MAX_OUTSTANDING_COMMANDS)
- 		sp = ha->outstanding_cmds[handle];
-@@ -3609,7 +3534,7 @@ qla1280_status_entry(struct scsi_qla_host *ha, struct response *pkt,
- 
- 	if (!sp) {
- 		printk(KERN_WARNING "qla1280: Status Entry invalid handle\n");
--		goto out;
-+		return;
- 	}
- 
- 	/* Free outstanding command slot. */
-@@ -3668,8 +3593,6 @@ qla1280_status_entry(struct scsi_qla_host *ha, struct response *pkt,
- 
- 	/* Place command on done queue. */
- 	list_add_tail(&sp->list, done_q);
-- out:
--	LEAVE("qla1280_status_entry");
- }
- 
- /*
-@@ -3688,8 +3611,6 @@ qla1280_error_entry(struct scsi_qla_host *ha, struct response *pkt,
- 	struct srb *sp;
- 	uint32_t handle = le32_to_cpu(pkt->handle);
- 
--	ENTER("qla1280_error_entry");
--
- 	if (pkt->entry_status & BIT_3)
- 		dprintk(2, "qla1280_error_entry: BAD PAYLOAD flag error\n");
- 	else if (pkt->entry_status & BIT_2)
-@@ -3731,8 +3652,6 @@ qla1280_error_entry(struct scsi_qla_host *ha, struct response *pkt,
- 		printk(KERN_WARNING "!qla1280: Error Entry invalid handle");
- 	}
- #endif
--
--	LEAVE("qla1280_error_entry");
- }
- 
- /*
-@@ -3754,8 +3673,6 @@ qla1280_abort_isp(struct scsi_qla_host *ha)
- 	int cnt;
- 	int bus;
- 
--	ENTER("qla1280_abort_isp");
--
- 	if (ha->flags.abort_isp_active || !ha->flags.online)
- 		goto out;
- 	
-@@ -3807,7 +3724,6 @@ qla1280_abort_isp(struct scsi_qla_host *ha)
- 		dprintk(2, "qla1280_abort_isp: **** FAILED ****\n");
- 	}
- 
--	LEAVE("qla1280_abort_isp");
- 	return status;
- }
- 
+[auto build test ERROR on jejb-scsi/for-next]
+[also build test ERROR on mkp-scsi/for-next linus/master v6.19-rc1 next-20251219]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
+
+url:    https://github.com/intel-lab-lkp/linux/commits/Shipei-Qu/scsi-3w-sas-validate-request_id-reported-by-controller/20251216-140928
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git for-next
+patch link:    https://lore.kernel.org/r/20251216060156.41320-1-qu%40darknavy.com
+patch subject: [PATCH v2] scsi: 3w-sas: validate request_id reported by controller
+config: sparc-randconfig-001-20251217 (https://download.01.org/0day-ci/archive/20251220/202512202135.WH2v6r6v-lkp@intel.com/config)
+compiler: sparc-linux-gcc (GCC) 15.1.0
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20251220/202512202135.WH2v6r6v-lkp@intel.com/reproduce)
+
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202512202135.WH2v6r6v-lkp@intel.com/
+
+All errors (new ones prefixed by >>):
+
+   drivers/scsi/3w-sas.c: In function 'twl_interrupt':
+>> drivers/scsi/3w-sas.c:1190:45: error: macro 'TW_PRINTK' passed 5 arguments, but takes just 4
+    1190 |                                   request_id);
+         |                                             ^
+   In file included from drivers/scsi/3w-sas.c:72:
+   drivers/scsi/3w-sas.h:207:9: note: macro 'TW_PRINTK' defined here
+     207 | #define TW_PRINTK(h,a,b,c) { \
+         |         ^~~~~~~~~
+>> drivers/scsi/3w-sas.c:1188:25: error: 'TW_PRINTK' undeclared (first use in this function); did you mean 'KERN_PRINTK'?
+    1188 |                         TW_PRINTK(tw_dev->host, TW_DRIVER, 0x10,
+         |                         ^~~~~~~~~
+         |                         KERN_PRINTK
+   drivers/scsi/3w-sas.c:1188:25: note: each undeclared identifier is reported only once for each function it appears in
+
+
+vim +/TW_PRINTK +1190 drivers/scsi/3w-sas.c
+
+  1117	
+  1118	/* Interrupt service routine */
+  1119	static irqreturn_t twl_interrupt(int irq, void *dev_instance)
+  1120	{
+  1121		TW_Device_Extension *tw_dev = (TW_Device_Extension *)dev_instance;
+  1122		int i, handled = 0, error = 0;
+  1123		dma_addr_t mfa = 0;
+  1124		u32 reg, regl, regh, response, request_id = 0;
+  1125		struct scsi_cmnd *cmd;
+  1126		TW_Command_Full *full_command_packet;
+  1127	
+  1128		spin_lock(tw_dev->host->host_lock);
+  1129	
+  1130		/* Read host interrupt status */
+  1131		reg = readl(TWL_HISTAT_REG_ADDR(tw_dev));
+  1132	
+  1133		/* Check if this is our interrupt, otherwise bail */
+  1134		if (!(reg & TWL_HISTATUS_VALID_INTERRUPT))
+  1135			goto twl_interrupt_bail;
+  1136	
+  1137		handled = 1;
+  1138	
+  1139		/* If we are resetting, bail */
+  1140		if (test_bit(TW_IN_RESET, &tw_dev->flags))
+  1141			goto twl_interrupt_bail;
+  1142	
+  1143		/* Attention interrupt */
+  1144		if (reg & TWL_HISTATUS_ATTENTION_INTERRUPT) {
+  1145			if (twl_handle_attention_interrupt(tw_dev)) {
+  1146				TWL_MASK_INTERRUPTS(tw_dev);
+  1147				goto twl_interrupt_bail;
+  1148			}
+  1149		}
+  1150	
+  1151		/* Response interrupt */
+  1152		while (reg & TWL_HISTATUS_RESPONSE_INTERRUPT) {
+  1153			if (sizeof(dma_addr_t) > 4) {
+  1154				regh = readl(TWL_HOBQPH_REG_ADDR(tw_dev));
+  1155				regl = readl(TWL_HOBQPL_REG_ADDR(tw_dev));
+  1156				mfa = ((u64)regh << 32) | regl;
+  1157			} else
+  1158				mfa = readl(TWL_HOBQPL_REG_ADDR(tw_dev));
+  1159	
+  1160			error = 0;
+  1161			response = (u32)mfa;
+  1162	
+  1163			/* Check for command packet error */
+  1164			if (!TW_NOTMFA_OUT(response)) {
+  1165				for (i=0;i<TW_Q_LENGTH;i++) {
+  1166					if (tw_dev->sense_buffer_phys[i] == mfa) {
+  1167						request_id = le16_to_cpu(tw_dev->sense_buffer_virt[i]->header_desc.request_id);
+  1168						if (tw_dev->srb[request_id] != NULL)
+  1169							error = twl_fill_sense(tw_dev, i, request_id, 1, 1);
+  1170						else {
+  1171							/* Skip ioctl error prints */
+  1172							if (request_id != tw_dev->chrdev_request_id)
+  1173								error = twl_fill_sense(tw_dev, i, request_id, 0, 1);
+  1174							else
+  1175								memcpy(tw_dev->command_packet_virt[request_id], tw_dev->sense_buffer_virt[i], sizeof(TW_Command_Apache_Header));
+  1176						}
+  1177	
+  1178						/* Now re-post the sense buffer */
+  1179						writel((u32)((u64)tw_dev->sense_buffer_phys[i] >> 32), TWL_HOBQPH_REG_ADDR(tw_dev));
+  1180						writel((u32)tw_dev->sense_buffer_phys[i], TWL_HOBQPL_REG_ADDR(tw_dev));
+  1181						break;
+  1182					}
+  1183				}
+  1184			} else
+  1185				request_id = TW_RESID_OUT(response);
+  1186	
+  1187			if (request_id >= TW_Q_LENGTH) {
+> 1188				TW_PRINTK(tw_dev->host, TW_DRIVER, 0x10,
+  1189					  "Received out-of-range request id %u",
+> 1190					  request_id);
+  1191				TWL_MASK_INTERRUPTS(tw_dev);
+  1192				/* let the reset / error handling path deal with it */
+  1193				goto twl_interrupt_bail;
+  1194			}
+  1195	
+  1196			full_command_packet = tw_dev->command_packet_virt[request_id];
+  1197	
+  1198			/* Check for correct state */
+  1199			if (tw_dev->state[request_id] != TW_S_POSTED) {
+  1200				if (tw_dev->srb[request_id] != NULL) {
+  1201					TW_PRINTK(tw_dev->host, TW_DRIVER, 0xe, "Received a request id that wasn't posted");
+  1202					TWL_MASK_INTERRUPTS(tw_dev);
+  1203					goto twl_interrupt_bail;
+  1204				}
+  1205			}
+  1206	
+  1207			/* Check for internal command completion */
+  1208			if (tw_dev->srb[request_id] == NULL) {
+  1209				if (request_id != tw_dev->chrdev_request_id) {
+  1210					if (twl_aen_complete(tw_dev, request_id))
+  1211						TW_PRINTK(tw_dev->host, TW_DRIVER, 0xf, "Error completing AEN during attention interrupt");
+  1212				} else {
+  1213					tw_dev->chrdev_request_id = TW_IOCTL_CHRDEV_FREE;
+  1214					wake_up(&tw_dev->ioctl_wqueue);
+  1215				}
+  1216			} else {
+  1217				cmd = tw_dev->srb[request_id];
+  1218	
+  1219				if (!error)
+  1220					cmd->result = (DID_OK << 16);
+  1221	
+  1222				/* Report residual bytes for single sgl */
+  1223				if ((scsi_sg_count(cmd) <= 1) && (full_command_packet->command.newcommand.status == 0)) {
+  1224					if (full_command_packet->command.newcommand.sg_list[0].length < scsi_bufflen(tw_dev->srb[request_id]))
+  1225						scsi_set_resid(cmd, scsi_bufflen(cmd) - full_command_packet->command.newcommand.sg_list[0].length);
+  1226				}
+  1227	
+  1228				/* Now complete the io */
+  1229				scsi_dma_unmap(cmd);
+  1230				scsi_done(cmd);
+  1231				tw_dev->state[request_id] = TW_S_COMPLETED;
+  1232				twl_free_request_id(tw_dev, request_id);
+  1233				tw_dev->posted_request_count--;
+  1234			}
+  1235	
+  1236			/* Check for another response interrupt */
+  1237			reg = readl(TWL_HISTAT_REG_ADDR(tw_dev));
+  1238		}
+  1239	
+  1240	twl_interrupt_bail:
+  1241		spin_unlock(tw_dev->host->host_lock);
+  1242		return IRQ_RETVAL(handled);
+  1243	} /* End twl_interrupt() */
+  1244	
+
 -- 
-2.43.0
-
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
