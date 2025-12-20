@@ -1,254 +1,161 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.7])
+Received: from mout.web.de (mout.web.de [212.227.15.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8CD2A29D26E;
-	Sat, 20 Dec 2025 14:35:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.7
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A68126F2B6;
+	Sat, 20 Dec 2025 16:10:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.227.15.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1766241314; cv=none; b=NeV9WlVqQSSsfpN3e7uEz0ee/clDely05z9wMsxM1+BXb3qKDAouAJ2haS+tKkWl/2dSV9nCO+2DsHmY9NviYwpMScRCFUqByz3etkFzLa6HAk3oEAKK8iqZmqU04AkV6Y6UkAaxeAlrRccuR2cw20ACONF/2F0snvRY7nfLNtQ=
+	t=1766247007; cv=none; b=cltqpkPbcKENL+pwmAKSurCa5qctZGysSBi3JDwHz0o7PEImeILcsiYXNhed44ccuU342tTdhqZx2xva/YaKQV32LsC7MIWhlFGcFE5gJwdmcyKrfY2pw74diFxoOy5DiLBhZT495opayWbeWNaYGhSn7xth1rWvNE2Cj8lWBak=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1766241314; c=relaxed/simple;
-	bh=rBqL956gH3K0poiy0iTZqF+U+rad4keWG+Egb5t3fJE=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=KcN/joNxjHRGI9SuuzmlQ+Ff5J+lvDvmy+rrcoLhksgJR2M8JjYANUvgWiyXv1sSvhXQY0Zd7kVZc4erM6bzqkkqkxT/YG4S0afBDUokBVS9GVeBP1grSn+vTPEECpYFENmVI+HXQV15muRl52BhYN2wLXpQbKU0Pwp/d+a8W7w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=AoQWYrnU; arc=none smtp.client-ip=192.198.163.7
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1766247007; c=relaxed/simple;
+	bh=3xsV0oI2wQr121cNCBKzs4dljwqZHphncWQPYAn7Pig=;
+	h=Message-ID:Date:MIME-Version:To:Cc:References:Subject:From:
+	 In-Reply-To:Content-Type; b=g5sWjR44W7xUUnHt7aFUxj5NoFIfE5kTxagHoIiblbYypZqsX75GUjrOTMZwItFHJovp5YQNXcU0lYfkFYEugvzQfV8fzpofbVOgw3ImJyWibNGh7r609TlPUFqWrQiTL8vHqJhPVOq1HqO5uodjrQY4Y9LIZWfS9zllQuPAsyI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de; spf=pass smtp.mailfrom=web.de; dkim=pass (2048-bit key) header.d=web.de header.i=markus.elfring@web.de header.b=kVQ7HwJG; arc=none smtp.client-ip=212.227.15.14
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=web.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="AoQWYrnU"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1766241311; x=1797777311;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=rBqL956gH3K0poiy0iTZqF+U+rad4keWG+Egb5t3fJE=;
-  b=AoQWYrnUyiUEQdlRAb5UEPMQr3xNlHq5lHEfIclSCU/Llk84UGS1LSCW
-   wkLJjf5d72PQvbFUpOdftNna41byKDEtiRzIbB5Q3GurIiRal8MCWafaK
-   978ZdsC+8FsliqYelzNc9SVqgaZNKbeLnh1a7/PpZ/Y3AZpSA82mabRfO
-   Qt4WxEVvGp84PQyKFSmu4k8y6LpKbUslue0yYaAY2Eco/WKEr3aMl/xQK
-   bAgiKHYYXjDBR8z+olcdwZvOxwwnjqcUWIl+SaW4bRzwebotIKvFwoo2L
-   noybLSfX2e9jF9V/9raPO/eS5wHE6r6FqBlr9YLIa4GEt3K1WfiWAqw+Z
-   A==;
-X-CSE-ConnectionGUID: dAf0ypatTg2ei0vNmV9pXQ==
-X-CSE-MsgGUID: PK5y7cydRW6pL4N/KVZ8YA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11648"; a="93650001"
-X-IronPort-AV: E=Sophos;i="6.21,164,1763452800"; 
-   d="scan'208";a="93650001"
-Received: from fmviesa006.fm.intel.com ([10.60.135.146])
-  by fmvoesa101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Dec 2025 06:35:09 -0800
-X-CSE-ConnectionGUID: KyzH7cUZS5+bjqHEtnY7hQ==
-X-CSE-MsgGUID: WzYVUxAhQz+sk8Dk7O42VA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.21,164,1763452800"; 
-   d="scan'208";a="199023545"
-Received: from lkp-server01.sh.intel.com (HELO 0d09efa1b85f) ([10.239.97.150])
-  by fmviesa006.fm.intel.com with ESMTP; 20 Dec 2025 06:35:07 -0800
-Received: from kbuild by 0d09efa1b85f with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1vWy2z-000000004eU-19c7;
-	Sat, 20 Dec 2025 14:35:05 +0000
-Date: Sat, 20 Dec 2025 22:34:13 +0800
-From: kernel test robot <lkp@intel.com>
-To: Shipei Qu <qu@darknavy.com>, Adam Radford <aradford@gmail.com>,
-	"James E.J. Bottomley" <jejb@linux.ibm.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
-	Shipei Qu <qu@darknavy.com>, linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, DARKNAVY <vr@darknavy.com>
-Subject: Re: [PATCH v2] scsi: 3w-sas: validate request_id reported by
- controller
-Message-ID: <202512202253.30DG2Afm-lkp@intel.com>
-References: <20251216060156.41320-1-qu@darknavy.com>
+	dkim=pass (2048-bit key) header.d=web.de header.i=markus.elfring@web.de header.b="kVQ7HwJG"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=web.de;
+	s=s29768273; t=1766246996; x=1766851796; i=markus.elfring@web.de;
+	bh=ClvdF52tyBTj1vQnvRx1egcfnAzuavIbXHLKNDt764Y=;
+	h=X-UI-Sender-Class:Message-ID:Date:MIME-Version:To:Cc:References:
+	 Subject:From:In-Reply-To:Content-Type:Content-Transfer-Encoding:
+	 cc:content-transfer-encoding:content-type:date:from:message-id:
+	 mime-version:reply-to:subject:to;
+	b=kVQ7HwJGw8T3d1NiQOYj0dB6Nv9ZTYkSLlXuUzoSsNyDx9+oiBA1XXmOORlDEJPH
+	 DoRqYElaWkqwxaY1PjIJxU/QAwIb6LMmJjkyTbCGBIxCFKmgo226m3wIqJe3ET/yC
+	 3pTpE1di+n0DkQbNAlvcpmd0W6wHHapN35hKCtRgEHu6tubrO+z+a1+3/kGc0/5x0
+	 65fGZxqwD/ilA3d/QFPIq7DGWUGfx4VOr+nbeNGlGXCT2W58sEZpt1d2gCm6t3awx
+	 WgrFYrAKdz7HF90KbvjIB5iSYpOCMCr9805iekMdz6H1CrGNZR38ZS+ZFeM1/GDhS
+	 3qivAvERAlvubAG+jg==
+X-UI-Sender-Class: 814a7b36-bfc1-4dae-8640-3722d8ec6cd6
+Received: from [192.168.178.29] ([94.31.69.215]) by smtp.web.de (mrweb006
+ [213.165.67.108]) with ESMTPSA (Nemesis) id 1MBS71-1vge310fMt-005yXo; Sat, 20
+ Dec 2025 17:09:56 +0100
+Message-ID: <53c5a56b-81fc-44af-bade-21aea79682f8@web.de>
+Date: Sat, 20 Dec 2025 17:09:50 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20251216060156.41320-1-qu@darknavy.com>
+User-Agent: Mozilla Thunderbird
+To: Haoxiang Li <lihaoxiang@isrc.iscas.ac.cn>, linux-scsi@vger.kernel.org,
+ Hannes Reinecke <hare@suse.com>,
+ James Bottomley <James.Bottomley@HansenPartnership.com>,
+ Jitendra Bhivare <jitendra.bhivare@broadcom.com>,
+ Ketan Mukadam <ketan.mukadam@broadcom.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: stable@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+References: <20251213083643.301240-1-lihaoxiang@isrc.iscas.ac.cn>
+Subject: Re: [PATCH] scsi: be2iscsi: fix a memory leak in
+ beiscsi_boot_get_sinfo()
+Content-Language: en-GB, de-DE
+From: Markus Elfring <Markus.Elfring@web.de>
+In-Reply-To: <20251213083643.301240-1-lihaoxiang@isrc.iscas.ac.cn>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+X-Provags-ID: V03:K1:HWJGfzw82e2VS6ty9ih7yk/E1AYV5vSWbsAX91+CDKeNLFCEAZF
+ PEbtZkcLCzzbe7a972L5cv/XbPTY7HZqRjwvIU5rjZfAq8rZhNiVkFIt5wYqtsbOL9gxQ81
+ B3PyMC6eOJsk1lepGB08sP+pCLEiUoFUJ9gxYb0w0hxFQysBPLaUSgITtOVDaZN+ep+TYJ2
+ daDYqyW/FeOUTrZ24RYbw==
+X-Spam-Flag: NO
+UI-OutboundReport: notjunk:1;M01:P0:rKamhJrhLiA=;MV2aYO6MevRMquWNxBs70LMK9FG
+ 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
+ tD/dcnUumwqMRy0v3QfgcX8gb8t4KSHIzL3nis
 
-Hi Shipei,
+> If nonemb_cmd->va fails to be allocated, call free_mcc_wrb()
+> to restore the impact caused by alloc_mcc_wrb().
 
-kernel test robot noticed the following build errors:
-
-[auto build test ERROR on jejb-scsi/for-next]
-[also build test ERROR on mkp-scsi/for-next linus/master v6.19-rc1 next-20251219]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
-
-url:    https://github.com/intel-lab-lkp/linux/commits/Shipei-Qu/scsi-3w-sas-validate-request_id-reported-by-controller/20251216-140928
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git for-next
-patch link:    https://lore.kernel.org/r/20251216060156.41320-1-qu%40darknavy.com
-patch subject: [PATCH v2] scsi: 3w-sas: validate request_id reported by controller
-config: x86_64-kexec (https://download.01.org/0day-ci/archive/20251220/202512202253.30DG2Afm-lkp@intel.com/config)
-compiler: clang version 20.1.8 (https://github.com/llvm/llvm-project 87f0227cb60147a26a1eeb4fb06e3b505e9c7261)
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20251220/202512202253.30DG2Afm-lkp@intel.com/reproduce)
-
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202512202253.30DG2Afm-lkp@intel.com/
-
-All errors (new ones prefixed by >>):
-
->> drivers/scsi/3w-sas.c:1190:7: error: too many arguments provided to function-like macro invocation
-    1190 |                                   request_id);
-         |                                   ^
-   drivers/scsi/3w-sas.h:207:9: note: macro 'TW_PRINTK' defined here
-     207 | #define TW_PRINTK(h,a,b,c) { \
-         |         ^
->> drivers/scsi/3w-sas.c:1188:4: error: use of undeclared identifier 'TW_PRINTK'
-    1188 |                         TW_PRINTK(tw_dev->host, TW_DRIVER, 0x10,
-         |                         ^
-   drivers/scsi/3w-sas.c:1579:49: warning: shift count >= width of type [-Wshift-count-overflow]
-    1579 |         retval = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(64));
-         |                                                        ^~~~~~~~~~~~~~~~
-   include/linux/dma-mapping.h:93:54: note: expanded from macro 'DMA_BIT_MASK'
-      93 | #define DMA_BIT_MASK(n) (((n) == 64) ? ~0ULL : ((1ULL<<(n))-1))
-         |                                                      ^ ~~~
-   drivers/scsi/3w-sas.c:1796:49: warning: shift count >= width of type [-Wshift-count-overflow]
-    1796 |         retval = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(64));
-         |                                                        ^~~~~~~~~~~~~~~~
-   include/linux/dma-mapping.h:93:54: note: expanded from macro 'DMA_BIT_MASK'
-      93 | #define DMA_BIT_MASK(n) (((n) == 64) ? ~0ULL : ((1ULL<<(n))-1))
-         |                                                      ^ ~~~
-   2 warnings and 2 errors generated.
+     avoid?
 
 
-vim +1190 drivers/scsi/3w-sas.c
+=E2=80=A6
+> +++ b/drivers/scsi/be2iscsi/be_mgmt.c
+> @@ -1025,6 +1025,7 @@ unsigned int beiscsi_boot_get_sinfo(struct beiscsi=
+_hba *phba)
+>  					      &nonemb_cmd->dma,
+>  					      GFP_KERNEL);
+>  	if (!nonemb_cmd->va) {
+> +		free_mcc_wrb(ctrl, tag);
+>  		mutex_unlock(&ctrl->mbox_lock);
+>  		return 0;
+>  	}
 
-  1117	
-  1118	/* Interrupt service routine */
-  1119	static irqreturn_t twl_interrupt(int irq, void *dev_instance)
-  1120	{
-  1121		TW_Device_Extension *tw_dev = (TW_Device_Extension *)dev_instance;
-  1122		int i, handled = 0, error = 0;
-  1123		dma_addr_t mfa = 0;
-  1124		u32 reg, regl, regh, response, request_id = 0;
-  1125		struct scsi_cmnd *cmd;
-  1126		TW_Command_Full *full_command_packet;
-  1127	
-  1128		spin_lock(tw_dev->host->host_lock);
-  1129	
-  1130		/* Read host interrupt status */
-  1131		reg = readl(TWL_HISTAT_REG_ADDR(tw_dev));
-  1132	
-  1133		/* Check if this is our interrupt, otherwise bail */
-  1134		if (!(reg & TWL_HISTATUS_VALID_INTERRUPT))
-  1135			goto twl_interrupt_bail;
-  1136	
-  1137		handled = 1;
-  1138	
-  1139		/* If we are resetting, bail */
-  1140		if (test_bit(TW_IN_RESET, &tw_dev->flags))
-  1141			goto twl_interrupt_bail;
-  1142	
-  1143		/* Attention interrupt */
-  1144		if (reg & TWL_HISTATUS_ATTENTION_INTERRUPT) {
-  1145			if (twl_handle_attention_interrupt(tw_dev)) {
-  1146				TWL_MASK_INTERRUPTS(tw_dev);
-  1147				goto twl_interrupt_bail;
-  1148			}
-  1149		}
-  1150	
-  1151		/* Response interrupt */
-  1152		while (reg & TWL_HISTATUS_RESPONSE_INTERRUPT) {
-  1153			if (sizeof(dma_addr_t) > 4) {
-  1154				regh = readl(TWL_HOBQPH_REG_ADDR(tw_dev));
-  1155				regl = readl(TWL_HOBQPL_REG_ADDR(tw_dev));
-  1156				mfa = ((u64)regh << 32) | regl;
-  1157			} else
-  1158				mfa = readl(TWL_HOBQPL_REG_ADDR(tw_dev));
-  1159	
-  1160			error = 0;
-  1161			response = (u32)mfa;
-  1162	
-  1163			/* Check for command packet error */
-  1164			if (!TW_NOTMFA_OUT(response)) {
-  1165				for (i=0;i<TW_Q_LENGTH;i++) {
-  1166					if (tw_dev->sense_buffer_phys[i] == mfa) {
-  1167						request_id = le16_to_cpu(tw_dev->sense_buffer_virt[i]->header_desc.request_id);
-  1168						if (tw_dev->srb[request_id] != NULL)
-  1169							error = twl_fill_sense(tw_dev, i, request_id, 1, 1);
-  1170						else {
-  1171							/* Skip ioctl error prints */
-  1172							if (request_id != tw_dev->chrdev_request_id)
-  1173								error = twl_fill_sense(tw_dev, i, request_id, 0, 1);
-  1174							else
-  1175								memcpy(tw_dev->command_packet_virt[request_id], tw_dev->sense_buffer_virt[i], sizeof(TW_Command_Apache_Header));
-  1176						}
-  1177	
-  1178						/* Now re-post the sense buffer */
-  1179						writel((u32)((u64)tw_dev->sense_buffer_phys[i] >> 32), TWL_HOBQPH_REG_ADDR(tw_dev));
-  1180						writel((u32)tw_dev->sense_buffer_phys[i], TWL_HOBQPL_REG_ADDR(tw_dev));
-  1181						break;
-  1182					}
-  1183				}
-  1184			} else
-  1185				request_id = TW_RESID_OUT(response);
-  1186	
-  1187			if (request_id >= TW_Q_LENGTH) {
-> 1188				TW_PRINTK(tw_dev->host, TW_DRIVER, 0x10,
-  1189					  "Received out-of-range request id %u",
-> 1190					  request_id);
-  1191				TWL_MASK_INTERRUPTS(tw_dev);
-  1192				/* let the reset / error handling path deal with it */
-  1193				goto twl_interrupt_bail;
-  1194			}
-  1195	
-  1196			full_command_packet = tw_dev->command_packet_virt[request_id];
-  1197	
-  1198			/* Check for correct state */
-  1199			if (tw_dev->state[request_id] != TW_S_POSTED) {
-  1200				if (tw_dev->srb[request_id] != NULL) {
-  1201					TW_PRINTK(tw_dev->host, TW_DRIVER, 0xe, "Received a request id that wasn't posted");
-  1202					TWL_MASK_INTERRUPTS(tw_dev);
-  1203					goto twl_interrupt_bail;
-  1204				}
-  1205			}
-  1206	
-  1207			/* Check for internal command completion */
-  1208			if (tw_dev->srb[request_id] == NULL) {
-  1209				if (request_id != tw_dev->chrdev_request_id) {
-  1210					if (twl_aen_complete(tw_dev, request_id))
-  1211						TW_PRINTK(tw_dev->host, TW_DRIVER, 0xf, "Error completing AEN during attention interrupt");
-  1212				} else {
-  1213					tw_dev->chrdev_request_id = TW_IOCTL_CHRDEV_FREE;
-  1214					wake_up(&tw_dev->ioctl_wqueue);
-  1215				}
-  1216			} else {
-  1217				cmd = tw_dev->srb[request_id];
-  1218	
-  1219				if (!error)
-  1220					cmd->result = (DID_OK << 16);
-  1221	
-  1222				/* Report residual bytes for single sgl */
-  1223				if ((scsi_sg_count(cmd) <= 1) && (full_command_packet->command.newcommand.status == 0)) {
-  1224					if (full_command_packet->command.newcommand.sg_list[0].length < scsi_bufflen(tw_dev->srb[request_id]))
-  1225						scsi_set_resid(cmd, scsi_bufflen(cmd) - full_command_packet->command.newcommand.sg_list[0].length);
-  1226				}
-  1227	
-  1228				/* Now complete the io */
-  1229				scsi_dma_unmap(cmd);
-  1230				scsi_done(cmd);
-  1231				tw_dev->state[request_id] = TW_S_COMPLETED;
-  1232				twl_free_request_id(tw_dev, request_id);
-  1233				tw_dev->posted_request_count--;
-  1234			}
-  1235	
-  1236			/* Check for another response interrupt */
-  1237			reg = readl(TWL_HISTAT_REG_ADDR(tw_dev));
-  1238		}
-  1239	
-  1240	twl_interrupt_bail:
-  1241		spin_unlock(tw_dev->host->host_lock);
-  1242		return IRQ_RETVAL(handled);
-  1243	} /* End twl_interrupt() */
-  1244	
+I suggest to avoid also repeated mutex_unlock() calls in this function imp=
+lementation.
 
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+Regards,
+Markus
