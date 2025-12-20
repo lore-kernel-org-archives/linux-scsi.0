@@ -1,203 +1,85 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from lamorak.hansenpartnership.com (lamorak.hansenpartnership.com [198.37.111.173])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4B92D3A1E8A;
-	Sat, 20 Dec 2025 03:45:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E1B721E098;
+	Sat, 20 Dec 2025 04:27:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.37.111.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1766202347; cv=none; b=M7AO07KE24D1AZhdv8VsCE0zhU6vtkautxd85f2nG6huwVzIR1XimJlRuEujdKeFj/PXML9HOQWYqknqJzsqUY4tLSwK6Jg+paGgBynQo3RxORNE2lFfohQ7PNBTwiLvdO/yXHl6JhwmikS9xGyA26bORHVUXQa/KpSfiG/pvLs=
+	t=1766204854; cv=none; b=A+qlvGzWU0h0wU3T5cN5Ndlo55Ixm8i+HbK93ROZ6TKbKWpKy4bs4GXlGTJFirqh06+0Bpx5uC/G4+7Y2cdkbWnmTKD2hf5Jnw40+cByKcQIJNyQ70JKrA5Ib6sQppF/YOHxq8WNtXQl9haokonrCcq3vbmP5dpAAlyoToViecg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1766202347; c=relaxed/simple;
-	bh=ljS74JXhPZ1LeDdwxkTAIFvssMwAF5gNuyDs6g2Lvkg=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=MzQftxZxbG5htjh2AhLmkxPl6CR3gsw5/5q1GOyGlm9ywdiJbReEvz9a4+ywFUUsGbZeVAdikynSgAKQ6OkpsbpUGgZcS2q/VAYIw6KKWNlxWIsuPzkRdHri9X0gXe3ckIsyR/IvFN+HAreB9kWi7G18VoMAVHQNHG7DOWIl7os=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FGvGo+PD; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1766204854; c=relaxed/simple;
+	bh=GPqQQS0+tuQCPai/9d2h3BVtsFBiwVs3JfY0fwzBYI8=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=F81lZINfVk/bdZj14xx0SUIzHyhB15CEybFL8/DBs1qKJzVb7I7/ET0+4QX4goamq3fvX4UiGHh7c6SJm54Qeg+M4ssWbVQg+01guujSx33wASncgq27qCnwJqI3kFw/VHJtRYPSQjvYzna/ulbo91nhn8ROc++BPnqDfrBLZ+A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com; spf=pass smtp.mailfrom=HansenPartnership.com; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=FmiOpluS; arc=none smtp.client-ip=198.37.111.173
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=HansenPartnership.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FGvGo+PD"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 185FAC4CEF5;
-	Sat, 20 Dec 2025 03:45:42 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1766202345;
-	bh=ljS74JXhPZ1LeDdwxkTAIFvssMwAF5gNuyDs6g2Lvkg=;
-	h=From:Date:Subject:To:Cc:From;
-	b=FGvGo+PD/nNfCOaX8txlV3nLiWO1kQMANyyOZarWkPgzRN1ZzoisIvtHP9im0H0XN
-	 WtM+ZGQiI9o1/OTImi8KpD3I6Qnlnh7rnlxrvZufcFIzsArBLs25KS2Q6Ntld+Fp1J
-	 7M/nt2ZI47QHkQp2FAonYjhlgqJShWFYG4jIAPNlx2V9Ao8RvfVtL5dqlwlud0ELiL
-	 8m7v8YnvCH0aI7vW9rnsd8H9I6zBLle2piEl14Wnkh8q/XcNEgDPLMbYRoaUkBfBdF
-	 APvnoC+uSsLlmw4pl9G4gAzjTiBQ1H+MC/4lRjYfINbjlOjeSu/B8vwUA1FN4bcQZL
-	 CAjLYy8bev6dQ==
-From: Daniel Gomez <da.gomez@kernel.org>
-Date: Sat, 20 Dec 2025 04:45:34 +0100
-Subject: [PATCH] driver core: attribute_container: change return type to
- void
+	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="FmiOpluS"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+	d=hansenpartnership.com; s=20151216; t=1766204851;
+	bh=GPqQQS0+tuQCPai/9d2h3BVtsFBiwVs3JfY0fwzBYI8=;
+	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
+	b=FmiOpluSU1W42S/bbY67YjWgoCpLDRLyXhc0CcNojeChINunFEjEk510OEgvtlDDu
+	 O/MrmhvZCk/hYDfCrC8hKQ9JO1alEBDXro+mpBmcEiKuY/J8luD+Jc8rFpemKiy3UC
+	 Ak8Fn2LMJ1WVXlxCR2YyIduC4Os/l4h8u/LymGBE=
+Received: from lingrow.int.hansenpartnership.com (unknown [IPv6:2601:5c4:4300:d341::a774])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by lamorak.hansenpartnership.com (Postfix) with ESMTPSA id ABEDE1C01CC;
+	Fri, 19 Dec 2025 23:27:30 -0500 (EST)
+Message-ID: <b1e372cacf08a758e06ce7504c6cfaf7778bc6f3.camel@HansenPartnership.com>
+Subject: Re: [PATCH 0/2] scsi: target+fcoe: replace -EEXIST with -EBUSY in
+ module_init() paths
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+To: Daniel Gomez <da.gomez@kernel.org>, "Martin K. Petersen"
+	 <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>
+Cc: Luis Chamberlain <mcgrof@kernel.org>, Petr Pavlu <petr.pavlu@suse.com>, 
+ Sami Tolvanen <samitolvanen@google.com>, Aaron Tomlin
+ <atomlin@atomlin.com>, Lucas De Marchi <demarchi@kernel.org>,
+ linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, 
+ linux-modules@vger.kernel.org, linux-kernel@vger.kernel.org, Daniel Gomez
+ <da.gomez@samsung.com>
+Date: Fri, 19 Dec 2025 23:27:30 -0500
+In-Reply-To: <20251220-dev-module-init-eexists-linux-scsi-v1-0-5379db749d54@samsung.com>
+References: 
+	<20251220-dev-module-init-eexists-linux-scsi-v1-0-5379db749d54@samsung.com>
+Autocrypt: addr=James.Bottomley@HansenPartnership.com;
+ prefer-encrypt=mutual;
+ keydata=mQENBE58FlABCADPM714lRLxGmba4JFjkocqpj1/6/Cx+IXezcS22azZetzCXDpm2MfNElecY3qkFjfnoffQiw5rrOO0/oRSATOh8+2fmJ6el7naRbDuh+i8lVESfdlkoqX57H5R8h/UTIp6gn1mpNlxjQv6QSZbl551zQ1nmkSVRbA5TbEp4br5GZeJ58esmYDCBwxuFTsSsdzbOBNthLcudWpJZHURfMc0ew24By1nldL9F37AktNcCipKpC2U0NtGlJjYPNSVXrCd1izxKmO7te7BLP+7B4DNj1VRnaf8X9+VIApCi/l4Kdx+ZR3aLTqSuNsIMmXUJ3T8JRl+ag7kby/KBp+0OpotABEBAAG0N0phbWVzIEJvdHRvbWxleSA8SmFtZXMuQm90dG9tbGV5QEhhbnNlblBhcnRuZXJzaGlwLmNvbT6JAVgEEwEIAEICGwMGCwkIBwMCBhUIAgkKCwQWAgMBAh4BAheAAhkBFiEE1WBuc8i0YnG+rZrfgUrkfCFIVNYFAmBLmY0FCRs1hL0ACgkQgUrkfCFIVNaEiQgAg18F4G7PGWQ68xqnIrccke7Reh5thjUz6kQIii6Dh64BDW6/UvXn20UxK2uSs/0TBLO81k1mV4c6rNE+H8b7IEjieGR9frBsp/+Q01JpToJfzzMUY7ZTDV1IXQZ+AY9L7vRzyimnJHx0Ba4JTlAyHB+Ly5i4Ab2+uZcnNfBXquWrG3oPWz+qPK88LJLya5Jxse1m1QT6R/isDuPivBzntLOooxPk+Cwf5sFAAJND+idTAzWzslexr9j7rtQ1UW6FjO4CvK9yVNz7dgG6FvEZl6J/HOr1rivtGgpCZTBzKNF8jg034n49zGfKkkzWLuXbPUOp3/oGfsKv8pnEu1c2GbQpSmFtZXMgQm90dG9tbGV5IDxqZWpiQGxpbnV4LnZuZXQuaWJtLmNvbT6JAVYEEwEIAEACGwMHCwkIBwMCAQYVC
+	AIJCgsEFgIDAQIeAQIXgBYhBNVgbnPItGJxvq2a34FK5HwhSFTWBQJgS5mXBQkbNYS9AAoJEIFK5HwhSFTWEYEH/1YZpV+1uCI2MVz0wTRlnO/3OW/xnyigrw+K4cuO7MToo0tHJb/qL9CBJ2ddG6q+GTnF5kqUe87t7M7rSrIcAkIZMbJmtIbKk0j5EstyYqlE1HzvpmssGpg/8uJBBuWbU35af1ubKCjUs1+974mYXkfLmS0a6h+cG7atVLmyClIc2frd3o0zHF9+E7BaB+HQzT4lheQAXv9KI+63ksnbBpcZnS44t6mi1lzUE65+Am1z+1KJurF2Qbj4AkICzJjJa0bXa9DmFunjPhLbCU160LppaG3OksxuNOTkGCo/tEotDOotZNBYejWaXN2nr9WrH5hDfQ5zLayfKMtLSd33T9u0IUphbWVzIEJvdHRvbWxleSA8amVqYkBrZXJuZWwub3JnPokBVQQTAQgAPwIbAwYLCQgHAwIGFQgCCQoLBBYCAwECHgECF4AWIQTVYG5zyLRicb6tmt+BSuR8IUhU1gUCYEuZmAUJGzWEvQAKCRCBSuR8IUhU1gacCAC+QZN+RQd+FOoh5g884HQm8S07ON0/2EMiaXBiL6KQb5yP3w2PKEhug3+uPzugftUfgPEw6emRucrFFpwguhriGhB3pgWJIrTD4JUevrBgjEGOztJpbD73bLLyitSiPQZ6OFVOqIGhdqlc3n0qoNQ45n/w3LMVj6yP43SfBQeQGEdq4yHQxXPs0XQCbmr6Nf2p8mNsIKRYf90fCDmABH1lfZxoGJH/frQOBCJ9bMRNCNy+aFtjd5m8ka5M7gcDvM7TAsKhD5O5qFs4aJHGajF4gCGoWmXZGrISQvrNl9kWUhgsvoPqb2OTTeAQVRuV8C4FQamxzE3MRNH25j6s/qujtCRKYW1lcyBCb3R0b21sZXkgPGplamJAbGludXguaWJtLmNvbT6JAVQEEwEIAD
+	4CGwMFCwkIBwIGFQoJCAsCBBYCAwECHgECF4AWIQTVYG5zyLRicb6tmt+BSuR8IUhU1gUCYEuZmQUJGzWEvQAKCRCBSuR8IUhU1kyHB/9VIOkf8RapONUdZ+7FgEpDgESE/y3coDeeb8jrtJyeefWCA0sWU8GSc9KMcMoSUetUreB+fukeVTe/f2NcJ87Bkq5jUEWff4qsbqf5PPM+wlD873StFc6mP8koy8bb7QcH3asH9fDFXUz7Oz5ubI0sE8+qD+Pdlk5qmLY5IiZ4D98V239nrKIhDymcuL7VztyWfdFSnbVXmumIpi79Ox536P2aMe3/v+1jAsFQOIjThMo/2xmLkQiyacB2veMcBzBkcair5WC7SBgrz2YsMCbC37X7crDWmCI3xEuwRAeDNpmxhVCb7jEvigNfRWQ4TYQADdC4KsilPfuW8Edk/8tPtCVKYW1lcyBCb3R0b21sZXkgPEpCb3R0b21sZXlAT2Rpbi5jb20+iQEfBDABAgAJBQJXI+B0Ah0gAAoJEIFK5HwhSFTWzkwH+gOg1UG/oB2lc0DF3lAJPloSIDBW38D3rezXTUiJtAhenWrH2Cl/ejznjdTukxOcuR1bV8zxR9Zs9jhUin2tgCCxIbrdvFIoYilMMRKcue1q0IYQHaqjd7ko8BHn9UysuX8qltJFar0BOClIlH95gdKWJbK46mw7bsXeD66N9IhAsOMJt6mSJmUdIOMuKy4dD4X3adegKMmoTRvHOndZQClTZHiYt5ECRPO534Lb/gyKAKQkFiwirsgx11ZSx3zGlw28brco6ohSLMBylna/Pbbn5hII86cjrCXWtQ4mE0Y6ofeFjpmMdfSRUxy6LHYd3fxVq9PoAJTv7vQ6bLTDFNa0KkphbWVzIEJvdHRvbWxleSA8SkJvdHRvbWxleUBQYXJhbGxlbHMuY29tPokBHwQwAQIACQUCVyPgjAIdIAAKCRCBSuR8IUhU1tXiB/9D9OOU8qB
+	CZPxkxB6ofp0j0pbZppRe6iCJ+btWBhSURz25DQzQNu5GVBRQt1Us6v3PPGU1cEWi5WL935nw+1hXPIVB3x8hElvdCO2aU61bMcpFd138AFHMHJ+emboKHblnhuY5+L1OlA1QmPw6wQooCor1h113lZiBZGrPFxjRYbWYVQmVaM6zhkiGgIkzQw/g9v57nAzYuBhFjnVHgmmu6/B0N8z6xD5sSPCZSjYSS38UG9w189S8HVr4eg54jReIEvLPRaxqVEnsoKmLisryyaw3EpqZcYAWoX0Am+58CXq3j5OvrCvbyqQIWFElba3Ka/oT7CnTdo/SUL/jPNobtCxKYW1lcyBCb3R0b21sZXkgPGplamJAaGFuc2VucGFydG5lcnNoaXAuY29tPokBVwQTAQgAQRYhBNVgbnPItGJxvq2a34FK5HwhSFTWBQJjg2eQAhsDBQkbNYS9BQsJCAcCAiICBhUKCQgLAgQWAgMBAh4HAheAAAoJEIFK5HwhSFTWbtAH/087y9vzXYAHMPbjd8etB/I3OEFKteFacXBRBRDKXI9ZqK5F/xvd1fuehwQWl2Y/sivD4cSAP0iM/rFOwv9GLyrr82pD/GV/+1iXt9kjlLY36/1U2qoyAczY+jsS72aZjWwcO7Og8IYTaRzlqif9Zpfj7Q0Q1e9SAefMlakI6dcZTSlZWaaXCefdPBCc7BZ0SFY4kIg0iqKaagdgQomwW61nJZ+woljMjgv3HKOkiJ+rcB/n+/moryd8RnDhNmvYASheazYvUwaF/aMj5rIb/0w5p6IbFax+wGF5RmH2U5NeUlhIkTodUF/P7g/cJf4HCL+RA1KU/xS9o8zrAOeut2+4UgRaZ7bmEwgqhkjOPQMBBwIDBH4GsIgL0yQij5S5ISDZmlR7qDQPcWUxMVx6zVPsAoITdjKFjaDmUATkS+l5zmiCrUBcJ6MBavPiYQ4kqn4/xwaJAbMEGAEIACYCGwIWIQTVYG5zyLRi
+	cb6tmt+BSuR8IUhU1gUCZag0LwUJDwLkSQCBdiAEGRMIAB0WIQTnYEDbdso9F2cI+arnQslM7pishQUCWme25gAKCRDnQslM7pishdi9AQDyOvLYOBkylBqiTlJrMnGCCsWgGZwPpKq3e3s7JQ/xBAEAlx29pPY5z0RLyIDUsjf9mtkSNTaeaQ6TIjDrFa+8XH8JEIFK5HwhSFTWkasH/j7LL9WH9dRfwfTwuMMj1/KGzjU/4KFIu4uKxDaevKpGS7sDx4F56mafCdGD8u4+ri6bJr/3mmuzIdyger0vJdRlTrnpX3ONXvR57p1JHgCljehE1ZB0RCzIk0vKhdt8+CDBQWfKbbKBTmzA7wR68raMQb2D7nQ9d0KXXbtr7Hag29yj92aUAZ/sFoe9RhDOcRUptdYyPKU1JHgJyc0Z7HwNjRSJ4lKJSKP+Px0/XxT3gV3LaDLtHuHa2IujLEAKcPzTr5DOV+xsgA3iSwTYI6H5aEe+ZRv/rA4sdjqRiVpo2d044aCUFUNQ3PiIHPAZR3KK5O64m6+BJMDXBvgSsMy4VgRaZ7clEggqhkjOPQMBBwIDBMfuMuE+PECbOoYjkD0Teno7TDbcgxJNgPV7Y2lQbNBnexMLOEY6/xJzRi1Xm/o9mOyZ+VIj8h4G5V/eWSntNkwDAQgHiQE8BBgBCAAmAhsMFiEE1WBuc8i0YnG+rZrfgUrkfCFIVNYFAmWoNBwFCQ8C4/cACgkQgUrkfCFIVNZs4AgAnIjU1QEPLdpotiy3X01sKUO+hvcT3/Cd6g55sJyKJ5/U0o3f8fdSn6MWPhi1m62zbAxcLJFiTZ3OWNCZAMEvwHrXFb684Ey6yImQ9gm2dG2nVuCzr1+9gIaMSBeZ+4kUJqhdWSJjrNLQG38GbnBuYOJUD+x6oJ2AT10/mQfBVZ3qWDQXr/je2TSf0OIXaWyG6meG5yTqOEv0eaTH22yBb1nbodoZkmlMMb56jzRGZuorhFE06
+	N0Eb0kiGz5cCIrHZoH10dHWoa7/Z+AzfL0caOKjcmsnUPcmcrqmWzJTEibLA81z15GBCrldfQVt+dF7Us2kc0hKUgaWeI8Gv4CzwLkCDQRUdhaZARAApeF9gbNSBBudW8xeMQIiB/CZwK4VOEP7nGHZn3UsWemsvE9lvjbFzbqcIkbUp2V6ExM5tyEgzio2BavLe1ZJGHVaKkL3cKLABoYi/yBLEnogPFzzYfK2fdipm2G+GhLaqfDxtAQ7cqXeo1TCsZLSvjD+kLVV1TvKlaHS8tUCh2oUyR7fTbv6WHi5H8DLyR0Pnbt9E9/Gcs1j11JX+MWJ7jset2FVDsB5U1LM70AjhXiDiQCtNJzKaqKdMei8zazWS50iMKKeo4m/adWBjG/8ld3fQ7/Hcj6Opkh8xPaCnmgDZovYGavw4Am2tjRqE6G6rPQpS0we5I6lSsKNBP/2FhLmI9fnsBnZC1l1NrASRSX1BK0xf4LYB2Ww3fYQmbbApAUBbWZ/1aQoc2ECKbSK9iW0gfZ8rDggfMw8nzpmEEExl0hU6wtJLymyDV+QGoPx5KwYK/6qAUNJQInUYz8z2ERM/HOI09Zu3jiauFBDtouSIraX/2DDvTf7Lfe1+ihARFSlp64kEMAsjKutNBK2u5oj4H7hQ7zD+BvWLHxMgysOtYYtwggweOrM/k3RndsZ/z3nsGqF0ggct1VLuH2eznDksI+KkZ3Bg0WihQyJ7Z9omgaQAyRDFct+jnJsv2Iza+xIvPei+fpbGNAyFvj0e+TsZoQGcC34/ipGwze651UAEQEAAYkBHwQoAQIACQUCVT6BaAIdAwAKCRCBSuR8IUhU1p5QCAC7pgjOM17Hxwqz9mlGELilYqjzNPUoZt5xslcTFGxj/QWNzu0K8gEQPePnc5dTfumzWL077nxhdKYtoqwm2C6fOmXiJBZx6khBfRqctUvN2DlOB6dFf5I+1QT9TRBvceGzw01E4Gi0xjWKAB6OII
+	MAdnPcDVFzaXJdlAAJdjfg/lyJtAyxifflG8NnXJ3elwGqoBso84XBNWWzbc5VKmatzhYLOvXtfzDhu4mNPv/z7S1HTtRguI0NlH5RVBzSvfzybin9hysE3/+r3C0HJ2xiOHzucNAmG03aztzZYDMTbKQW4bQqeD5MJxT68vBYu8MtzfIe41lSLpb/qlwq1qg0iQElBBgBAgAPBQJUdhaZAhsMBQkA7U4AAAoJEIFK5HwhSFTW3YgH/AyJL2rlCvGrkLcas94ND9Pmn0cUlVrPl7wVGcIV+6I4nrw6u49TyqNMmsYam2YpjervJGgbvIbMzoHFCREi6R9XyUsw5w7GCRoWegw2blZYi5A52xe500+/RruG//MKfOtVUotu3N+u7FcXaYAg9gbYeGNZCV70vI+cnFgq0AEJRdjidzfCWVKPjafTo7jHeFxX7Q22kUfWOkMzzhoDbFg0jPhVYNiEXpNyXCwirzvKA7bvFwZPlRkbfihaiXDE7QKIUtQ10i5kw4C9rqDKwx8F0PaWDRF9gGaKd7/IJGHJaac/OcSJ36zxgkNgLsVX5GUroJ2GaZcR7W9Vppj5H+C4UgRkuRyTEwgqhkjOPQMBBwIDBOySomnsW2SkApXv1zUBaD38dFEj0LQeDEMdSE7bm1fnrdjAYt0f/CtbUUiDaPodQk2qeHzOP6wA/2K6rrjwNIWJAT0EGAEIACcDGyAEFiEE1WBuc8i0YnG+rZrfgUrkfCFIVNYFAmWoM/gFCQSxfmUACgkQgUrkfCFIVNZhTgf/VQxtQ5rgu2aoXh2KOH6naGzPKDkYDJ/K7XCJAq3nJYEpYN8G+F8mL/ql0hrihAsHfjmoDOlt+INa3AcG3v0jDZIMEzmcjAlu7g5NcXS3kntcMHgw3dCgE9eYDaKGipUCubdXvBaZWU6AUlTldaB8FE6u7It7+UO+IW4/L+KpLYKs8V5POInu2rqahlm7vgxY5iv4Txz4EvCW2e4dAlG
+	8mT2Eh9SkH+YVOmaKsajgZgrBxA7fWmGoxXswEVxJIFj3vW7yNc0C5HaUdYa5iGOMs4kg2ht4s7yy7NRQuh7BifWjo6BQ6k4S1H+6axZucxhSV1L6zN9d+lr3Xo/vy1unzA==
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.50.3 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20251220-dev-attribute-container-linux-scsi-v1-1-d58fcd03bf21@samsung.com>
-X-B4-Tracking: v=1; b=H4sIAN0bRmkC/x3NQQqDMBBG4avIrDtgUgLSq5QuYvxtB8pYZqII4
- t0NXX6b9w5ymMDp0R1k2MRl0YZw66h8sr7BMjVT7GMKMQw8YeNcq8m4VnBZtGZRGH9F1529uDD
- mMKTc3xPGTC30M8yy/yfP13letsSkTnQAAAA=
-X-Change-ID: 20251218-dev-attribute-container-linux-scsi-ef185a035eba
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
- "Rafael J. Wysocki" <rafael@kernel.org>, Danilo Krummrich <dakr@kernel.org>, 
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
- "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Luis Chamberlain <mcgrof@kernel.org>, Petr Pavlu <petr.pavlu@suse.com>, 
- Daniel Gomez <da.gomez@kernel.org>, Sami Tolvanen <samitolvanen@google.com>, 
- Aaron Tomlin <atomlin@atomlin.com>, Lucas De Marchi <demarchi@kernel.org>, 
- linux-scsi@vger.kernel.org, linux-modules@vger.kernel.org, 
- linux-kernel@vger.kernel.org, Daniel Gomez <da.gomez@samsung.com>
-X-Mailer: b4 0.15-dev
-X-Developer-Signature: v=1; a=openpgp-sha256; l=5359; i=da.gomez@samsung.com;
- h=from:subject:message-id; bh=C9R4j2gXxzAQ0FMyEnLzcTXh2qpavqW/CQxI9RtuaTA=;
- b=owEBbQKS/ZANAwAIAUCeo8QfGVH7AcsmYgBpRhvl/TipJts2/zduU3dlzQGOSL7wBvzxHK1Bo
- QtvAGVCBuCJAjMEAAEIAB0WIQTvdRrhHw9z4bnGPFNAnqPEHxlR+wUCaUYb5QAKCRBAnqPEHxlR
- +/fnEACQijbOWjMz4xwTfKB5VFrS+jiCrreEcqLKJOEUcR7NyyDtTWLABQyl/Xab2/0jJRsfvQN
- MsEfjsLdtVU9t5p5u3qfyAPC62OjYZezDbFnfBj3zTcVT1SuWR3B448V76s6E/Rx5aoClyHL2gd
- odzOXp1io4dRnbNtrLWQgV4kUpkIirk9KCQ5gtS8NEnlompR52FJCv31pB7jiU1myeLW7k8bNJz
- HQrPPceOvhhMVJssyx4kB/s1YvUitNHkstSDwAYW9n1aAjlgrOctksAqCVAFGuPcf1gkW+DOzDZ
- i9mHTmtY/aqlQQkqfmQrhLJJPCdQRuQ68SbUR1wdqsizpalCsaZoPePkpQ91s3fAKr7U0GYE+1z
- RWp/9TPiDFfskDq1wLJBBXyVcIIDawc5w18GeWetjzDzjVLc7RSUX3y56cxmpmbEvmujgBRGawo
- buHKIMf/pkRI6pCSOqoHrrvM9jxOwO7Pv7vCiG4ee3QcenNhAhS2h3i4CHL4ZgZxUrmiPl1uCes
- OND+/F1JRqaPSe5y7ru02gmgiqZMOmD5+rGbUvWd+Jq89R9vy0iwxXVeVGljg1vDvSjyjoVbqdB
- 5zR5/WCkw7aprnQcscQrRoOgNpcdBT3UZHVvSBPfcdz6NyZSZfEshZPKxrub1GQmtAczob2IwWp
- Aoj+YA/DGuFx2Bg==
-X-Developer-Key: i=da.gomez@samsung.com; a=openpgp;
- fpr=B2A7A9CFDD03B540FF58B27185F56EA4E9E8138F
 
-From: Daniel Gomez <da.gomez@samsung.com>
+On Sat, 2025-12-20 at 04:37 +0100, Daniel Gomez wrote:
+> The error code -EEXIST is reserved by the kernel module loader to
+> indicate that a module with the same name is already loaded. When a
+> module's init function returns -EEXIST, kmod interprets this as
+> "module already loaded" and reports success instead of failure [1].
 
-attribute_container_register() has always returned 0 since its
-introduction in commit 06ff5a987e ("Add attribute container to generic
-device model") in the historical Linux tree [1]. Convert the return type
-to void and update all callers.
+That reference doesn't sufficiently explain why this error code should
+be unique to modules.  EEXIST is used all over the kernel to indicate
+that something being attempted has already happened or does already
+exist and that seems perfectly logical .... please explain why you're
+trying to push it back to being a single use case for modules alone.
 
-This removes dead code where callers checked for errors that could never
-occur.
+Regards,
 
-Link: https://git.kernel.org/pub/scm/linux/kernel/git/tglx/history.git [1]
+James
 
-Signed-off-by: Daniel Gomez <da.gomez@samsung.com>
----
-Cleanup. Found while reviewing module_init() return values for the
--EEXIST issue [1] on the scsi spi transport module.
 
-Link: https://lore.kernel.org/linux-modules/20251220-dev-module-init-eexists-linux-scsi-v1-0-5379db749d54@samsung.com/T/#t [1]
----
- drivers/base/attribute_container.c  | 4 +---
- drivers/base/transport_class.c      | 8 ++------
- drivers/scsi/scsi_transport_spi.c   | 2 +-
- include/linux/attribute_container.h | 2 +-
- include/linux/transport_class.h     | 6 +++---
- 5 files changed, 8 insertions(+), 14 deletions(-)
-
-diff --git a/drivers/base/attribute_container.c b/drivers/base/attribute_container.c
-index b6f941a6ab69..72adbacc6554 100644
---- a/drivers/base/attribute_container.c
-+++ b/drivers/base/attribute_container.c
-@@ -69,7 +69,7 @@ static DEFINE_MUTEX(attribute_container_mutex);
-  * @cont: The container to register.  This must be allocated by the
-  *        callee and should also be zeroed by it.
-  */
--int
-+void
- attribute_container_register(struct attribute_container *cont)
- {
- 	INIT_LIST_HEAD(&cont->node);
-@@ -79,8 +79,6 @@ attribute_container_register(struct attribute_container *cont)
- 	mutex_lock(&attribute_container_mutex);
- 	list_add_tail(&cont->node, &attribute_container_list);
- 	mutex_unlock(&attribute_container_mutex);
--
--	return 0;
- }
- EXPORT_SYMBOL_GPL(attribute_container_register);
- 
-diff --git a/drivers/base/transport_class.c b/drivers/base/transport_class.c
-index 09ee2a1e35bb..4b1e8820e764 100644
---- a/drivers/base/transport_class.c
-+++ b/drivers/base/transport_class.c
-@@ -88,17 +88,13 @@ static int anon_transport_dummy_function(struct transport_container *tc,
-  * events.  Use prezero and then use DECLARE_ANON_TRANSPORT_CLASS() to
-  * initialise the anon transport class storage.
-  */
--int anon_transport_class_register(struct anon_transport_class *atc)
-+void anon_transport_class_register(struct anon_transport_class *atc)
- {
--	int error;
- 	atc->container.class = &atc->tclass.class;
- 	attribute_container_set_no_classdevs(&atc->container);
--	error = attribute_container_register(&atc->container);
--	if (error)
--		return error;
-+	attribute_container_register(&atc->container);
- 	atc->tclass.setup = anon_transport_dummy_function;
- 	atc->tclass.remove = anon_transport_dummy_function;
--	return 0;
- }
- EXPORT_SYMBOL_GPL(anon_transport_class_register);
- 
-diff --git a/drivers/scsi/scsi_transport_spi.c b/drivers/scsi/scsi_transport_spi.c
-index fe47850a8258..17a4a0918fc4 100644
---- a/drivers/scsi/scsi_transport_spi.c
-+++ b/drivers/scsi/scsi_transport_spi.c
-@@ -1622,7 +1622,7 @@ static __init int spi_transport_init(void)
- 	error = transport_class_register(&spi_transport_class);
- 	if (error)
- 		return error;
--	error = anon_transport_class_register(&spi_device_class);
-+	anon_transport_class_register(&spi_device_class);
- 	return transport_class_register(&spi_host_class);
- }
- 
-diff --git a/include/linux/attribute_container.h b/include/linux/attribute_container.h
-index b3643de9931d..fa6520e192be 100644
---- a/include/linux/attribute_container.h
-+++ b/include/linux/attribute_container.h
-@@ -36,7 +36,7 @@ attribute_container_set_no_classdevs(struct attribute_container *atc)
- 	atc->flags |= ATTRIBUTE_CONTAINER_NO_CLASSDEVS;
- }
- 
--int attribute_container_register(struct attribute_container *cont);
-+void attribute_container_register(struct attribute_container *cont);
- int __must_check attribute_container_unregister(struct attribute_container *cont);
- void attribute_container_create_device(struct device *dev,
- 				       int (*fn)(struct attribute_container *,
-diff --git a/include/linux/transport_class.h b/include/linux/transport_class.h
-index 2efc271a96fa..9c2e03104461 100644
---- a/include/linux/transport_class.h
-+++ b/include/linux/transport_class.h
-@@ -87,9 +87,9 @@ transport_unregister_device(struct device *dev)
- 	transport_destroy_device(dev);
- }
- 
--static inline int transport_container_register(struct transport_container *tc)
-+static inline void transport_container_register(struct transport_container *tc)
- {
--	return attribute_container_register(&tc->ac);
-+	attribute_container_register(&tc->ac);
- }
- 
- static inline void transport_container_unregister(struct transport_container *tc)
-@@ -99,7 +99,7 @@ static inline void transport_container_unregister(struct transport_container *tc
- }
- 
- int transport_class_register(struct transport_class *);
--int anon_transport_class_register(struct anon_transport_class *);
-+void anon_transport_class_register(struct anon_transport_class *);
- void transport_class_unregister(struct transport_class *);
- void anon_transport_class_unregister(struct anon_transport_class *);
- 
-
----
-base-commit: 8f0b4cce4481fb22653697cced8d0d04027cb1e8
-change-id: 20251218-dev-attribute-container-linux-scsi-ef185a035eba
-
-Best regards,
---  
-Daniel Gomez <da.gomez@samsung.com>
 
