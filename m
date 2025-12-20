@@ -1,214 +1,529 @@
-Received: from esa6.hgst.iphmx.com (esa6.hgst.iphmx.com [216.71.154.45])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pg1-f193.google.com (mail-pg1-f193.google.com [209.85.215.193])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 70FE8296BA8;
-	Sat, 20 Dec 2025 05:15:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=216.71.154.45
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1766207704; cv=fail; b=kD7GhAp8geu9HjYvqDS8v9FERFDThIV5lrY/w0JRT9KowQVWdxQAJz3f8piA1Rp6qzcCWdhrt7/O4FWxfNZZROeviLB7/s4776jtrdigs/UyO8zLKbEPEYOIDq6FpRA9jXf0eQ7xA8f2hs6oszjDxuhSTa9fKyV/Eq1ilBKLJv4=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1766207704; c=relaxed/simple;
-	bh=XYaCqjZD5K+gUB2nKH7iBFQ3DZmC7gBlFWZL6mnwhz4=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=C4fxyciJouZvjGuWGDxUoxt1I+VqJQev40asasuuNcqxPN4WsaOsfgjM6mpm82erCyikt8xAufhKNz42mTxns5FWrJjgaZMFyo7wyYyzHgF3EPU7eqz92/AfOEa0j13Q8deCDRO2zfBDaeb8HR0oddFu80PAAvBK410ymdOOfAE=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=kjdv8g8g; dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b=EOlQUVtx; arc=fail smtp.client-ip=216.71.154.45
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E0031F03DE
+	for <linux-scsi@vger.kernel.org>; Sat, 20 Dec 2025 05:16:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.193
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1766207783; cv=none; b=s66Bpv2uLRhntH6xOjrLdcy4RKj3XlbDZDU6dZs94oXPKKQCiGbv5rQaGfd4ipHvc8QEZG6kpJPa7645jW5ZbmwdLHhpDkVORMV9j6hPN9FMetvYUd9XRYCA48xzInoGELZRvDTQigZltGH3mJabvOXyEnxMbAIinF19TzOcVP0=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1766207783; c=relaxed/simple;
+	bh=A8KjwQdKnv/IoXHPTvjLEOHaaYmy9idNzfejmbTGRjU=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=JCQghMkBRo47FMRudxWqTrBsX3qOFMmRPSbgdj0yjLT/BXM7KfI087eYSfdN83417fRvEZC2NCUZCOjztxTh0JoAHwnaVKgXWpKJTKuD8GFrcGHsqrzNc8yNewfnSP4E/pN1rwT6iZJ1TN8qJf6JCqT8W6YzZ2eajlKY5PYHo2o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Jqf5G0Ll; arc=none smtp.client-ip=209.85.215.193
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="kjdv8g8g";
-	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="EOlQUVtx"
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1766207702; x=1797743702;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-id:content-transfer-encoding:
-   mime-version;
-  bh=XYaCqjZD5K+gUB2nKH7iBFQ3DZmC7gBlFWZL6mnwhz4=;
-  b=kjdv8g8g0umkNbjjNtsPt8DNJy8c/84qBDesRDV1fJkz5TvbOALsWdy1
-   ukdI1Ub+elCxdoPTUoUKnGF/UZ8RnAhDjg3oZF1UeEOX45Y+NZKIyZsA1
-   tR6Rz+9JOMn44fbE6g1cZp2uOnHkv/STzrPWCDIzDZLRsmBc8LQju8pqY
-   2WuYkT9xdDPkuDdvsjK9Ne+/gqPcevvb68Y5bRRzWz3Gffv7lAzOyzwJl
-   2CwBgB4vQ2NeWCUUrNNXz+zglzFuVfABFeh8IhQ0ay8NmykXNDoWTuhqU
-   la/REELz4mRJ2V4ydjm394lqoVVNHQz+aM0PcG+JVollnU6EwbXjjfWQ4
-   w==;
-X-CSE-ConnectionGUID: 4r/e1temQrqDeGQBIZK1kg==
-X-CSE-MsgGUID: fby4FrcVQ/uMlAtw82U/vw==
-X-IronPort-AV: E=Sophos;i="6.21,162,1763395200"; 
-   d="scan'208";a="136885587"
-Received: from mail-westus2azon11010037.outbound.protection.outlook.com (HELO CO1PR03CU002.outbound.protection.outlook.com) ([52.101.46.37])
-  by ob1.hgst.iphmx.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 20 Dec 2025 13:14:55 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=G3tovtmOLDRwVxoT6/YL/hpQScbZssyCY6xwvA1ttEVWm4PJ49F/TFpDxlfihybojW43tZkqErU0r7l1F8fcwWH+eLe0oNy/Ocis3J71TD8p4TKPNFIvIT/qCDxvAXK7pwW1dhsG5EdIanimRfqvARGy30C0BE+mXW1mYc7nJ4sGigZJgKPfl7UCTxK/OkdNhxylh/Ki2nkLDxUwyiMUX2ACXQFWFCxHGIvRpy08sglc096YznFQSaCCbSBaNedUp3lDsoJ+JkOPp3/2sXwKb/kX57bRXgvcAfAjorkD/OzhpoUaPkMPpfkpXFwhiSR+Uz62az/VUdgxyksnMlXbwQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=XYaCqjZD5K+gUB2nKH7iBFQ3DZmC7gBlFWZL6mnwhz4=;
- b=j1+ZOPjbM+cERSeowZG2Pv0KlFsQuzisjcpRsvyiSJmpl33Zm2BJaYthC7XHoBo7TWc1c5CrWbn/tNCFsJ4fP/U5Y6TA37FOODX/zZh7dLuMvjbEyMtE9pGL4f2Q45lb5wWmM02la0AS1B8Q43AU2Li7o146e23srtnTYb0p78s8BjFMmzSrsqkA2uO6GUMBZWpbNv8Ied+40FbJ6i1E2Q00wDhwj54IjuViUr87e6Zzwymgw91TRCjFX6MUDAUJgQaBL1XSuoDC5yLQqBaqn98siYK9UmZYh6J+fm+vv7AFH+sjdv6JoFoN7GPYkSOCNnVa2doxEz/h9qZEZU0CLA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Jqf5G0Ll"
+Received: by mail-pg1-f193.google.com with SMTP id 41be03b00d2f7-bf5ac50827dso1523368a12.2
+        for <linux-scsi@vger.kernel.org>; Fri, 19 Dec 2025 21:16:20 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=XYaCqjZD5K+gUB2nKH7iBFQ3DZmC7gBlFWZL6mnwhz4=;
- b=EOlQUVtxq1X9wbHCfltO1jS1S3ZPaNbQU+GWJrvfuAJuOYZbNUKP6GGTdwkXHBLKt5W31g/cu+5UkmntlmcF2gEAZZ03QEMNN76LLg6mMTXc33koo31P2CHGFHwgJT0m5D4MPSQIT0ZruI8S/R8+5e61RxibiyvJZEWQRE7uBPI=
-Received: from SN7PR04MB8532.namprd04.prod.outlook.com (2603:10b6:806:350::6)
- by MN2PR04MB6782.namprd04.prod.outlook.com (2603:10b6:208:1e6::18) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9434.9; Sat, 20 Dec
- 2025 05:14:53 +0000
-Received: from SN7PR04MB8532.namprd04.prod.outlook.com
- ([fe80::4e14:94e7:a9b3:a4d4]) by SN7PR04MB8532.namprd04.prod.outlook.com
- ([fe80::4e14:94e7:a9b3:a4d4%7]) with mapi id 15.20.9434.009; Sat, 20 Dec 2025
- 05:14:53 +0000
-From: Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>
-To: Justin Tee <justintee8345@gmail.com>
-CC: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-	"linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-	"nbd@other.debian.org" <nbd@other.debian.org>, "linux-rdma@vger.kernel.org"
-	<linux-rdma@vger.kernel.org>
-Subject: Re: blktests failures with v6.18 kernel
-Thread-Topic: blktests failures with v6.18 kernel
-Thread-Index: AQHccA1icz2NaPxW5kOnCnvXxnDCZbUnqRiAgAJV8oA=
-Date: Sat, 20 Dec 2025 05:14:53 +0000
-Message-ID: <811c51a1-8e10-45d1-b03d-21c5ff59cb8f@wdc.com>
-References: <5b023828-b03d-4351-b6f0-e13d0df8c446@wdc.com>
- <CABPRKS-2zsAEjhsJX8aPjzud9LeOTCsF8WN=amSKpBzxxzJ-iQ@mail.gmail.com>
-In-Reply-To:
- <CABPRKS-2zsAEjhsJX8aPjzud9LeOTCsF8WN=amSKpBzxxzJ-iQ@mail.gmail.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-user-agent: Mozilla Thunderbird
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=wdc.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: SN7PR04MB8532:EE_|MN2PR04MB6782:EE_
-x-ms-office365-filtering-correlation-id: 3920886b-4f74-417c-09ed-08de3f86b572
-wdcipoutbound: EOP-TRUE
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam:
- BCL:0;ARA:13230040|376014|19092799006|1800799024|366016|38070700021|7053199007;
-x-microsoft-antispam-message-info:
- =?utf-8?B?UkhXdzFsQUN1ODVWVHRCZVVLTit3d25Pa015ZXVZOHB3bjZMTnRmN1VXN25C?=
- =?utf-8?B?bkMxSDE5c0E5Z2p4WTB6SG1OWVBRMWRVUmtLczdUZVVqQ2VYcWR3RG1CQS9m?=
- =?utf-8?B?cDVicm5ZQlI5cVQ2QVZtelNyUklIdmVlWWlUQjdaWU1aZ2J5V3VOTDI4NVlC?=
- =?utf-8?B?bmJrd3RSaVArUE9TOVZUWU8zKzBselpzVUxISUZCSmI4YUZXd3FmQkluTEVL?=
- =?utf-8?B?WlNnVWVJZHByR1RURUhYZmZPeWgzSGJTOWpVVVVjK0liUDAreWxoQ3ZWTGJQ?=
- =?utf-8?B?SmV6NVBhTDh2VkNJRlVQM2xQYnhZNTZaOU1HcWcrZUEvN0dINHFuVXB5bHlo?=
- =?utf-8?B?M3o3MEE3d0t6WlVvTTE2MnV1cC9DcmJJL1kva3IxcDdreU9BMEswenpNakN6?=
- =?utf-8?B?WTFZb2UyOFZJTEVHVUxYcTJsSHhwbWV3UHMxQTRKQXhsOFBQck9xbDNhOTM0?=
- =?utf-8?B?NithWjh6ZWZNV3kwRGZMak8yTEhQYVA4SEo2aUlFUXpaYW51ZGdDRkRVd25h?=
- =?utf-8?B?dHRqZFhNYXJRWUVEWGZlNnJPVTU5Z3Nxa2hSV01QNDFIcC9CRm1kQUxnQjZM?=
- =?utf-8?B?Z3R1ZE90aElDT3ltRjNLM2o2eWMzQmJOZ29pdzU2U0ZZVThZdEowYVRZQ0xz?=
- =?utf-8?B?S1ljZk9SaU9MZVg1dWtBcSthanBxSWdOQURuZFBpT3lhelc2dVZxUm51cUE1?=
- =?utf-8?B?YkZvaTZ2ZjBpM0k3d2dyK1lrVDcybkM5emhsSzArTHJtMWpJcnUxanB1V2Rw?=
- =?utf-8?B?OWZNN1JmLzFSYmRrUUdsRm1nWWxFUGtZVGh4ZlozWCtKeUN6dDNUQVBaU01X?=
- =?utf-8?B?b1A3SGtDcDNHWS9pUjljSDJUZUI5ODJmVGxZQXRlQW5VaFRaNVlaL0tVNUNS?=
- =?utf-8?B?OFlkMEYzQVRMUUFoZmplOWs4UzF0cWNKSzErZEJLZURFM0FNRnN1WmNvaWlr?=
- =?utf-8?B?eE1ycG1vSlhkajRjYU5MWGdlT05nQ3FycGtiY21XcXdIdmNwVkdNQ2w4VEhN?=
- =?utf-8?B?U25reTA0RldoVUNWZlB5dE1ySVZDQWNwVTlzd1ZyM2JkcFpzR2tBNXVmWURO?=
- =?utf-8?B?ekQxeTVMemVpcVpyUW01SFBQSzVGSXp0TU9EakQ3WVpxYjhQSzd4N0lwUXJv?=
- =?utf-8?B?NHpjTW5GVWNsN0w4d3lkaC9wWEp1S094Mkw5djhaM2hUdnEwUHhraENYWSta?=
- =?utf-8?B?L2wzeVlCWW9ZQ1duWHFkN0NVVnFQaEJ6aGVpcFIzNE0vUmRkdUhqWWkyQ1k3?=
- =?utf-8?B?VXlnS3ZuYlFqOEtSUnJGUEU1Q24yR1M5MXJySU1YYUNCQmZwZFN2UHdDemUw?=
- =?utf-8?B?blgxcldEN0szZTY2dHA4SUxGZE5OMzNmSzNwSmNqdlJST3gzSjV0ZmY5MDFS?=
- =?utf-8?B?S3hPelljTGF1Y1UvRTNQRVZtUVJycUdnMDZuYTRHZGV5V0Y4WFJBQkpEeEJz?=
- =?utf-8?B?V0ZnVFZVRVdBMWlZVEV3VEZ4Yllva09RbTRBdVpadkdJdFNobWxTeXdaU0tL?=
- =?utf-8?B?cTdyTnBOQ3B5R3gwV05HVEpkdXR2L2lqREp4SzdmRnp5WklqSkRRT2Ntbjd4?=
- =?utf-8?B?eDNSQkEwWHpya2FoaVZUejZHQlRZNVVQUDdOQkFwaVduMTNtZUxkM3ZOdTEx?=
- =?utf-8?B?SFJGN1MzMUVubDVOOXBaa3lKQ1I2eDJUVmVkMmRQMUNEQ3Y2WDNsTTVESGhy?=
- =?utf-8?B?b3oxbjZGKzBudmJ1VjhPOHBXUmtLRHlJbHRZd0crRDhvMkRNbUpnOG5pQUNr?=
- =?utf-8?B?bmxVeFFvdXJ6UlA4b21ZTVVyZFVRa24wU0ZjZHFFRVBLQkhzdUdzajVHSFVG?=
- =?utf-8?B?QzVndGNOVy9VVTR5eG0xUUxPaWE4M1ozNDcxbmhzQ1RYOHZtV29kbCtlWVRO?=
- =?utf-8?B?TDlsNVJ6ejRoL2o5bUdPb2NsUlVYM1hHWC9ySVliQjV6dFlCc2ZrYXEweEZG?=
- =?utf-8?B?KzlocW5CM29WRkh1YXVZWUNmUEVacDNpQ3Uvcm1aU3dGc28yMDNlejFPb1Ri?=
- =?utf-8?B?djlnYUY5S1pyTTg2UVQ4R2ZvZEZUbXgxQUdtUks3Q21qMmdkbEplTDkzbGx3?=
- =?utf-8?B?NUVocDlCakFUY0E2U0h4ZWttakkxS0JjMmFQZz09?=
-x-forefront-antispam-report:
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN7PR04MB8532.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(19092799006)(1800799024)(366016)(38070700021)(7053199007);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?utf-8?B?cU52blAvUjdWL1MvWGcrOEdZVTdQUkZDTG1DdUpkZXJQY2JXdXR4cEZpRmJa?=
- =?utf-8?B?UVowakVqclFxU1BqWkNkZ3pnREN5elZlVWxTR0NLUUQ1V1RzMzhDbHVVSU14?=
- =?utf-8?B?WlhJc3ZCUGxkWFlRTkM4djVTQkNDWjJMVVIrYmtrenZWdHErRVFQam1qVXB5?=
- =?utf-8?B?cElBV2JrYVpkWTFSOUZlN2FJU0ZGcTlMbDVkTlJvSXp1WnRWYnYyYlViQkc4?=
- =?utf-8?B?TTlDMnlnaUJia2NlTUtBZWhuNWJqWjc3N0Z0cWRiVmdXMU1QTDNiSFA1Tisz?=
- =?utf-8?B?UG5JTmF2OTdkU0VmYTJiWnZMeHNFOUc4bmlzZHoyTFUwYTErTFA3V1RKRUtT?=
- =?utf-8?B?eXRCMGJuN3RXS292MTVoV3FyV045VVhUK1MyZXNobGQ3OFFyR0laNTVwQ2dZ?=
- =?utf-8?B?aUtSWWlwNWc5a0EzaDk3NU9MdzNUY2RYK3dsYm15QkwzVTRjZVJOTGNUL2Ez?=
- =?utf-8?B?MWh0MVBsSkhidlFCR0dYVzVZK1VpWU9OdzdqU29yNFF3cklwbFplbWg5Wk1N?=
- =?utf-8?B?bTZRdzVMQnJ4UGFjdnJUY0VnYVFOclJZNFIvRlJVL2xLN3k2blZCNCtVTWlU?=
- =?utf-8?B?M0FhQnhJYVZUM0NvUTVtQ1FOSFJvR2tjeVNqdVJxYllTRkpBRXh2UlZkZHI1?=
- =?utf-8?B?Rjl1WERwaG0zSGpCQmlsVVBHZnZxMzFRYmNZNGZ2Sm5ISExFeTdKWXBkK2kz?=
- =?utf-8?B?YW1KbTE2RHpkWllSejd1ZU5seTZZUzdla2lsd0YwRW5QQWZUaDNYZHl0d3NK?=
- =?utf-8?B?cHFpejQzQklXa0gwemFTdHA3R0dWSHRueTZMTzVSK0l0dXVKRHZBa0Y1LzJt?=
- =?utf-8?B?ZnVSbS9aZTkwUDdmMzlwZ3lPbkRNWXlHT05qQjFiV3JHeU1TdDUyN2lZanJH?=
- =?utf-8?B?VGZZOEZJTkJpdEtMcDRndHFHdHhxZmwwcWVCcFlDTmhnMy91RkJGb3pIWGIx?=
- =?utf-8?B?T2JqZVRvZ0JGeDRJZzhmb21ZYmpzU1FYdTRENUdzTXo3cStFejJaTmFZb3M0?=
- =?utf-8?B?U1Y3c3VUYkRVSzNxMzg3Z3E2dFoyYTdhekxZZDljdXl6MW0yTUlndFR6blFH?=
- =?utf-8?B?YlZhbHRGckZiVGFReEJOTUJ1NWhvRGhGSVpFYzM5Qyt5bCttRlQvZUIwQ0V0?=
- =?utf-8?B?Z2pLZi8vdlRORzI0aHFyVTA5NTRaYVU5aTRVZkwvV3I4WEdNNEtLb3ZSS1Ex?=
- =?utf-8?B?VEFMVGdXVzJvT3cyVm1RUVd3MTl4clYyWXNTc0E2N1NtWFluRDZvTUw2aXdR?=
- =?utf-8?B?ZEpwWFQ1bGRVaUpqNGd3TEN6TktWdFlSU2hqK3Qxb2NxVFgyNTI2d3Y2K3ZG?=
- =?utf-8?B?OVl6NjlYSVVzTDYza3RLOGdXUlFyWTlhR0dmRStxeEl5RXcxQzdWNnRKSi94?=
- =?utf-8?B?VXdBM2dTdG1jekpaM1hDbnJDU0lRMCtreDFGUXBSSHV2N0pvdzBOWXBlMFVI?=
- =?utf-8?B?V2JwektpSWdtdExDcFU5L1hxMWpaU0hTYWwxSE9hb2NPem5pWE1WcDhmQWU5?=
- =?utf-8?B?TVZEN3Q5ZklUUkRGOFhpM3ZJU0ZKd0pwZ29FYkRFWVh4ZDJUYjBzV3diMkZG?=
- =?utf-8?B?Q3NaWjF2VW91ZndwK01DL0hLOTZTSUdNdlhrUFhoQUdhVTFZN2lSbGRHSXMz?=
- =?utf-8?B?bHgzQ3lYZ1lQSXJIeTRERFNBaGMxU2l1Z0x3UTQvTmdjTHBNdmlienBCek1D?=
- =?utf-8?B?QkE1ZzNBMTdWaitYU0p3K3VzZHhXNVdZNmJFOWt0cUJ3bFo0cG05Z2twN3Q1?=
- =?utf-8?B?VGhkaEN1czVGK3BGME9mSXdEK0cxZWFZQVRBL05IUXRrL1V2cVpBVGl6V2hH?=
- =?utf-8?B?eEJDNVcyd3RhZHkyVVBGcXVWeEZiaUg5YmhOaWtrY3Y3Ti9wUE1vZE1QRkY4?=
- =?utf-8?B?aWFrZUFwaWhBbU1zUWlBblpiRXY4ejBueTBTbkE5a1I1T0daci8zNk5pSkZO?=
- =?utf-8?B?bDFlelU5NjdWL0FRY3MxRW83TGo1cElZN2hGL0dGYi94YUx6T0xDckYwRk52?=
- =?utf-8?B?MTAzeS9vcVpuMlRMRmlJcmVHNTdhQkpNT2NhQjNZd29TNVAxMnJqRTB6bnVZ?=
- =?utf-8?B?WmttaThjSWhZdGhXakc0WDdRa2tNU2lZaVo0NW9scktJOU5vNEFoMC9UU044?=
- =?utf-8?B?RXVCTk9XY1VnYzM4aEExNXBldzJwQ3dOcVNOclNDaE1vRFZCZDg4cTMrOGVW?=
- =?utf-8?B?cnA4ZFRBc2M3dU4xN2x3OVFhUUtIaHhSRHJPaEtTZ0xXNWZVSHFWRmFURUg1?=
- =?utf-8?B?UGNicWlaY2VXd1RlcUdCOHYzWjB5Rnh0RUhoVTRmYXd4Vkpxa0hjRjY4RGFv?=
- =?utf-8?B?eDRsV3QwL3pXVlBpYndodlpGelhDMWd2Rm5pY1BDU0s4WXJGekFlZVh0YUpI?=
- =?utf-8?Q?6FfrfAoQrpG5i0ZE=3D?=
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <D6B649A43D92F54B835474D51ED53502@namprd04.prod.outlook.com>
-Content-Transfer-Encoding: base64
+        d=gmail.com; s=20230601; t=1766207780; x=1766812580; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=MnpKh7tO9yzyKKrKu79t0wXsw26JJ66Nq5NZxmVV6xE=;
+        b=Jqf5G0LlyUQ8ps10P+ySVanSJ316m3nC3h20fz21hnnbEP6nBPssv/GorSXV3s0TdY
+         xIw8g0vyZxNIN3IaQq2ib9a52xwGyOK9DGigbE/NIp67VemP5XmUhWqSJuxrnvsXIMF2
+         1jRSr+NyDIiJtOPDd3EE0LPXJjzxQW4a49SYR+ojM7IaqRgWglMqNICy/utV7w1fBPJX
+         vn0P78dYU9quHkMwRpegNK3UZhYtZkLf4BsjNZE5wqXfQdXu89pHpZ1tqAgZpqVSDCbI
+         /LicAEA2TIwkhgBYZpmm8MQFyP8PbPFf2/9/P+Qunzrw4vZ1EAm0oNtxiZ8qNk3IR8g1
+         7cPg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1766207780; x=1766812580;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=MnpKh7tO9yzyKKrKu79t0wXsw26JJ66Nq5NZxmVV6xE=;
+        b=gACwzInfXFz2HYH8av4UwSohNUEnhnsqDz2i3wXy6O6munOlIjIXBGujOF1wp7sACF
+         FUVos9eW7/Hh1cgjZQN3pssO+ZhtBZGx4HYvU7e5j1sblP41V4/0bJOnT1ZCpaoFqRri
+         AxrXmeGyD3m8PinI57lzFRYCrW0M437YYpUBl/Fp9nHBaCH+BIvjPbbZxDiTExTtyhfS
+         wIb9smfo7rA00QDiP3G0YR9/WwXfb8QUQI3echcwUp5OZz9vnIEE0SwQkv5rx56VODlt
+         S14FKeZCfq2FU1hFV2hLzB1u+9UvB2nLjVOzD7/g0h86d+2CAZLQMK/AUpwCr9927v0e
+         NNjQ==
+X-Gm-Message-State: AOJu0Yyx4I3NLxornMYI712AKkl//E64qordaF/Jc1a2XbEnl+pB0irP
+	XGULDgLlo4pJ4gMRFKAuqfyJL9jjRMTiCYSvK1Cl3mkb0A4lIOPDxaJ/nLEIbxyDCTo=
+X-Gm-Gg: AY/fxX53m1glxTi/92S/NXdrEAuultd35aAigAhCUK44qA0Tn9HhMTzIL5/APmDaz0M
+	1MarLOG90G9sSejPgEecvSjb2GeU5fjpcsp7KEODmUXyIqOjaesKEj9ey6V72IJg9+VrCSMJOlR
+	781jvSqtrowNobHISbk/gujAsAkKqcgLk7BtfjiSft7VmOMTo67+kgmYNqxR0RnH/lsxJ+AR1DI
+	snGQFISDlRgC2B5BSCuz22tz8L5nT4z/BcnYRLwy6vGHKqi0JSdBEvCJ6W2bPZOfXHTjeqHO8Bd
+	ki6MrG5UYwHEfPz+crPSd5VAxYF+CPQuCvExMM2rNHdGZis2ZCbSCBBNcwuZ5nGCMVbmLh4WsUe
+	/hF6WDgnJlKbLGBjUKtTMzEUkM1EHMBlAkbXyvzYLjI5o4crY9MOhVcDk9h0gqJ8RroXiDobJMN
+	XIpVtZlw7kgSFgxYi0b9k11Fb3zYxqWOcGCTZ0lSjVTgKqjcIhvJVE/FnWHDVKNHe3EPHon9uJl
+	ebg6ChIS1vfchlIznBdMVqzMRZaSj2ji6cMgiMnPWm17udD/rYab87kr0sVU3ZOR24qE/NYnx/J
+	7azSbSUJFKvVp44=
+X-Google-Smtp-Source: AGHT+IHRpNjQe84pxKQosbMOTLv64CCzrWUXOWaAtlFgcrlP9ZBfhUdNQG12A0zdd8J9lxgJHk1VMg==
+X-Received: by 2002:a05:7022:f302:b0:11e:3e9:3e9f with SMTP id a92af1059eb24-12172313197mr3111875c88.50.1766207780140;
+        Fri, 19 Dec 2025 21:16:20 -0800 (PST)
+Received: from ethan-latitude5420.. (host-127-24.cafrjco.fresno.ca.us.clients.pavlovmedia.net. [68.180.127.24])
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-121724dd7f5sm16482269c88.5.2025.12.19.21.16.19
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 19 Dec 2025 21:16:19 -0800 (PST)
+From: Ethan Nelson-Moore <enelsonmoore@gmail.com>
+To: linux-scsi@vger.kernel.org
+Cc: Ethan Nelson-Moore <enelsonmoore@gmail.com>
+Subject: [PATCH 2/5] scsi: ibmvfc: remove function tracing macros
+Date: Fri, 19 Dec 2025 21:15:59 -0800
+Message-ID: <20251220051602.28029-2-enelsonmoore@gmail.com>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20251220051602.28029-1-enelsonmoore@gmail.com>
+References: <20251220051602.28029-1-enelsonmoore@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
-	6t7f2H7Viy9WTXpITwu3MrQycVpGpB5cOXvWHkpOcKVWH5V353KOdqmBmrUbu8LCdEnWBjbYkHCB/zH9MHbrkiDUf0LVevGOqJXScUAgohBVXU9zDlYS75NCzpSULWgPDjeSGYWLokLK9hux5Z4c9y/wR94pymVYEYqVchYGBk/kOzh8cICDzVQPWVjDtBzeZtd1HSByu0MeKKQJ2lxjihg3Jo365a1Eo5ZXv8HBdG5kCn+tb5SNR8jZukWfj4T/s+fLMeDzUcTNtT+HypLxRGZbaTwKlsQ83n1YqnzDWRSFuGH5dn7P8ekg00A00edC/RVxx6u4LDdLe08dj6Ydq2w9/A9C2wYhgcIihibuF4q5U8Pcc4XNVqjviqWBTOLcqllu1MYYCh8ZbWRx0+Rd0UolzFCNDTxB+C8mkonRr191282z++6I2fgFvh1aJqU63r8fZoVqshpYg8iI2n49L/mHMZ/R9hU+sLFWNx78kMfTUS+3bEM8+ALlLze/nDu3hD0jULerdTW31bbWWYths0jO/dxbyoUZMDs7vk+XoIFrMaNeGvRDxXhnxM19ZAfJFqkxnYwPWPPDzfsOHXexLXMuPy7ldxUC87lwqleNWfQITuly19ZCsETMAxG+SlJy
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: SN7PR04MB8532.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 3920886b-4f74-417c-09ed-08de3f86b572
-X-MS-Exchange-CrossTenant-originalarrivaltime: 20 Dec 2025 05:14:53.5283
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: cQW+pHTjcG7P0IEoqlEk0gsCz+k8JYLqyTz/iS6fzJ2fnRAB73ZEoI/6lfYuNabBIsH9DJ9VStqCyZblqWA8sKXt4OCKFqN5y7QNjJQbpb4=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN2PR04MB6782
+Content-Transfer-Encoding: 8bit
 
-T24gMTIvMTkvMjUgMjozNiBBTSwgSnVzdGluIFRlZSB3cm90ZToNCj4gSGkgU2hpbmljaGlybywN
-Cj4gDQo+PiBMaXN0IG9mIGZhaWx1cmVzDQo+PiA9PT09PT09PT09PT09PT09DQo+PiAjMjogbnZt
-ZS8wNDEgKGZjIHRyYW5zcG9ydCkNCj4+DQo+PiAgICAgICBUaGUgdGVzdCBjYXNlIG52bWUvMDQx
-IGZhaWxzIGZvciBmYyB0cmFuc3BvcnQuIFJlZmVyIHRvIHRoZSByZXBvcnQgZm9yIHRoZQ0KPj4g
-ICAgICAgdjYuMTIga2VybmVsIFszXS4gRGFuaWVsIHBvc3RlZCB0aGUgZml4IHBhdGNoIHNlcmll
-cyBbNF0uDQo+Pg0KPj4gICAgICAgWzNdIGh0dHBzOi8vbG9yZS5rZXJuZWwub3JnL2xpbnV4LW52
-bWUvNmNyeWRrb2Rzeng1dnE0aWVveDNqanB3a3h0dTdtaGJvaHlweTI0YXdsbzV3N2Y0azZAdG8z
-ZGNuZzI0cmQ0Lw0KPj4gICAgICAgWzRdIGh0dHBzOi8vbG9yZS5rZXJuZWwub3JnL2xpbnV4LW52
-bWUvMjAyNTA4MjktbnZtZS1mYy1zeW5jLXYzLTAtZDY5Yzg3ZTYzYWVlQGtlcm5lbC5vcmcvDQo+
-IA0KPiBUaGlzIGhhcyBiZWVuIGZpeGVkIGluIDYuMTkNCj4gaHR0cHM6Ly9sb3JlLmtlcm5lbC5v
-cmcvbGludXgtbnZtZS8yMDI1MTExNzE4NDM0My45NzYwNS0xLWp1c3RpbnRlZTgzNDVAZ21haWwu
-Y29tLw0KPiANCj4gY29tbWl0IDEzOTg5MjA3ZWUyOSAodGFnOiBudm1lLTYuMTktMjAyNS0xMi0w
-NCkgbnZtZS1mYWJyaWNzOiBhZGQNCj4gRU5PS0VZIHRvIG5vIHJldHJ5IGNyaXRlcmlhIGZvciBh
-dXRoZW50aWNhdGlvbiBmYWlsdXJlcw0KDQpIaSBKdXN0aW4sIHRoYW5rIHlvdSB2ZXJ5IG11Y2gg
-Zm9yIHRoZSBjbGFyaWZpY2F0aW9uIGFuZCB0aGUgZml4ISBJIGNvbmZpcm1lZA0KdGhhdCB0aGUg
-ZmFpbHVyZSBnb2VzIGF3YXkgd2l0aCB2Ni4xOS1yYzEga2VybmVsLg0KDQo=
+These function tracing macros clutter the code and provide
+no value over ftrace. Remove them.
+
+Signed-off-by: Ethan Nelson-Moore <enelsonmoore@gmail.com>
+---
+ drivers/scsi/ibmvscsi/ibmvfc.c | 53 ----------------------------------
+ drivers/scsi/ibmvscsi/ibmvfc.h |  3 --
+ 2 files changed, 56 deletions(-)
+
+diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
+index 228daffb286d..946d15125b43 100644
+--- a/drivers/scsi/ibmvscsi/ibmvfc.c
++++ b/drivers/scsi/ibmvscsi/ibmvfc.c
+@@ -680,7 +680,6 @@ static void ibmvfc_link_down(struct ibmvfc_host *vhost,
+ {
+ 	struct ibmvfc_target *tgt;
+ 
+-	ENTER;
+ 	scsi_block_requests(vhost->host);
+ 	list_for_each_entry(tgt, &vhost->targets, queue)
+ 		ibmvfc_del_tgt(tgt);
+@@ -688,7 +687,6 @@ static void ibmvfc_link_down(struct ibmvfc_host *vhost,
+ 	ibmvfc_set_host_action(vhost, IBMVFC_HOST_ACTION_TGT_DEL);
+ 	vhost->events_to_log |= IBMVFC_AE_LINKDOWN;
+ 	wake_up(&vhost->work_wait_q);
+-	LEAVE;
+ }
+ 
+ /**
+@@ -792,7 +790,6 @@ static int ibmvfc_init_event_pool(struct ibmvfc_host *vhost,
+ 	int i;
+ 	struct ibmvfc_event_pool *pool = &queue->evt_pool;
+ 
+-	ENTER;
+ 	if (!queue->total_depth)
+ 		return 0;
+ 
+@@ -836,7 +833,6 @@ static int ibmvfc_init_event_pool(struct ibmvfc_host *vhost,
+ 		list_add_tail(&evt->queue_list, &queue->free);
+ 	}
+ 
+-	LEAVE;
+ 	return 0;
+ }
+ 
+@@ -852,7 +848,6 @@ static void ibmvfc_free_event_pool(struct ibmvfc_host *vhost,
+ 	int i;
+ 	struct ibmvfc_event_pool *pool = &queue->evt_pool;
+ 
+-	ENTER;
+ 	for (i = 0; i < pool->size; ++i) {
+ 		list_del(&pool->events[i].queue_list);
+ 		BUG_ON(atomic_read(&pool->events[i].free) != 1);
+@@ -866,7 +861,6 @@ static void ibmvfc_free_event_pool(struct ibmvfc_host *vhost,
+ 	dma_free_coherent(vhost->dev,
+ 			  pool->size * sizeof(*pool->iu_storage),
+ 			  pool->iu_storage, pool->iu_token);
+-	LEAVE;
+ }
+ 
+ /**
+@@ -2069,7 +2063,6 @@ static int ibmvfc_bsg_timeout(struct bsg_job *job)
+ 	unsigned long flags;
+ 	int rc;
+ 
+-	ENTER;
+ 	spin_lock_irqsave(vhost->host->host_lock, flags);
+ 	if (vhost->aborting_passthru || vhost->state != IBMVFC_ACTIVE) {
+ 		__ibmvfc_reset_host(vhost);
+@@ -2106,7 +2099,6 @@ static int ibmvfc_bsg_timeout(struct bsg_job *job)
+ 
+ 	spin_unlock_irqrestore(vhost->host->host_lock, flags);
+ 
+-	LEAVE;
+ 	return rc;
+ }
+ 
+@@ -2127,7 +2119,6 @@ static int ibmvfc_bsg_plogi(struct ibmvfc_host *vhost, unsigned int port_id)
+ 	unsigned long flags;
+ 	int rc = 0, issue_login = 1;
+ 
+-	ENTER;
+ 	spin_lock_irqsave(vhost->host->host_lock, flags);
+ 	list_for_each_entry(tgt, &vhost->targets, queue) {
+ 		if (tgt->scsi_id == port_id) {
+@@ -2171,7 +2162,6 @@ static int ibmvfc_bsg_plogi(struct ibmvfc_host *vhost, unsigned int port_id)
+ 	ibmvfc_free_event(evt);
+ unlock_out:
+ 	spin_unlock_irqrestore(vhost->host->host_lock, flags);
+-	LEAVE;
+ 	return rc;
+ }
+ 
+@@ -2196,7 +2186,6 @@ static int ibmvfc_bsg_request(struct bsg_job *job)
+ 	int rc = 0, req_seg, rsp_seg, issue_login = 0;
+ 	u32 fc_flags, rsp_len;
+ 
+-	ENTER;
+ 	bsg_reply->reply_payload_rcv_len = 0;
+ 	if (rport)
+ 		port_id = rport->port_id;
+@@ -2324,7 +2313,6 @@ static int ibmvfc_bsg_request(struct bsg_job *job)
+ 	dma_unmap_sg(vhost->dev, job->reply_payload.sg_list,
+ 		     job->reply_payload.sg_cnt, DMA_FROM_DEVICE);
+ 	mutex_unlock(&vhost->passthru_mutex);
+-	LEAVE;
+ 	return rc;
+ }
+ 
+@@ -2495,7 +2483,6 @@ static int ibmvfc_wait_for_ops(struct ibmvfc_host *vhost, void *device,
+ 	signed long timeout = IBMVFC_ABORT_WAIT_TIMEOUT * HZ;
+ 	struct ibmvfc_queue *queues;
+ 
+-	ENTER;
+ 	if (vhost->mq_enabled && vhost->using_channels) {
+ 		queues = vhost->scsi_scrqs.scrqs;
+ 		q_size = vhost->scsi_scrqs.active_queues;
+@@ -2544,13 +2531,11 @@ static int ibmvfc_wait_for_ops(struct ibmvfc_host *vhost, void *device,
+ 				spin_unlock_irqrestore(vhost->host->host_lock, flags);
+ 				if (wait)
+ 					dev_err(vhost->dev, "Timed out waiting for aborted commands\n");
+-				LEAVE;
+ 				return wait ? FAILED : SUCCESS;
+ 			}
+ 		}
+ 	} while (wait);
+ 
+-	LEAVE;
+ 	return SUCCESS;
+ }
+ 
+@@ -2606,7 +2591,6 @@ static int ibmvfc_cancel_all_mq(struct scsi_device *sdev, int type)
+ 	LIST_HEAD(cancelq);
+ 	u16 status;
+ 
+-	ENTER;
+ 	spin_lock_irqsave(vhost->host->host_lock, flags);
+ 	num_hwq = vhost->scsi_scrqs.active_queues;
+ 	for (i = 0; i < num_hwq; i++) {
+@@ -2671,7 +2655,6 @@ static int ibmvfc_cancel_all_mq(struct scsi_device *sdev, int type)
+ 		return -EIO;
+ 
+ 	sdev_printk(KERN_INFO, sdev, "Successfully cancelled outstanding commands\n");
+-	LEAVE;
+ 	return 0;
+ }
+ 
+@@ -2684,7 +2667,6 @@ static int ibmvfc_cancel_all_sq(struct scsi_device *sdev, int type)
+ 	unsigned long flags;
+ 	u16 status;
+ 
+-	ENTER;
+ 	found_evt = NULL;
+ 	spin_lock_irqsave(vhost->host->host_lock, flags);
+ 	spin_lock(&vhost->crq.l_lock);
+@@ -2937,7 +2919,6 @@ static int ibmvfc_eh_abort_handler(struct scsi_cmnd *cmd)
+ 	int cancel_rc, block_rc;
+ 	int rc = FAILED;
+ 
+-	ENTER;
+ 	block_rc = fc_block_scsi_eh(cmd);
+ 	ibmvfc_wait_while_resetting(vhost);
+ 	if (block_rc != FAST_IO_FAIL) {
+@@ -2952,7 +2933,6 @@ static int ibmvfc_eh_abort_handler(struct scsi_cmnd *cmd)
+ 	if (block_rc == FAST_IO_FAIL && rc != FAILED)
+ 		rc = FAST_IO_FAIL;
+ 
+-	LEAVE;
+ 	return rc;
+ }
+ 
+@@ -2970,7 +2950,6 @@ static int ibmvfc_eh_device_reset_handler(struct scsi_cmnd *cmd)
+ 	int cancel_rc, block_rc, reset_rc = 0;
+ 	int rc = FAILED;
+ 
+-	ENTER;
+ 	block_rc = fc_block_scsi_eh(cmd);
+ 	ibmvfc_wait_while_resetting(vhost);
+ 	if (block_rc != FAST_IO_FAIL) {
+@@ -2985,7 +2964,6 @@ static int ibmvfc_eh_device_reset_handler(struct scsi_cmnd *cmd)
+ 	if (block_rc == FAST_IO_FAIL && rc != FAILED)
+ 		rc = FAST_IO_FAIL;
+ 
+-	LEAVE;
+ 	return rc;
+ }
+ 
+@@ -3020,7 +2998,6 @@ static int ibmvfc_eh_target_reset_handler(struct scsi_cmnd *cmd)
+ 	unsigned long cancel_rc = 0;
+ 	bool tgt_reset = false;
+ 
+-	ENTER;
+ 	block_rc = fc_block_rport(rport);
+ 	ibmvfc_wait_while_resetting(vhost);
+ 	if (block_rc != FAST_IO_FAIL) {
+@@ -3049,7 +3026,6 @@ static int ibmvfc_eh_target_reset_handler(struct scsi_cmnd *cmd)
+ 	if (block_rc == FAST_IO_FAIL && rc != FAILED)
+ 		rc = FAST_IO_FAIL;
+ 
+-	LEAVE;
+ 	return rc;
+ }
+ 
+@@ -3086,7 +3062,6 @@ static void ibmvfc_terminate_rport_io(struct fc_rport *rport)
+ 	unsigned long rc, flags;
+ 	unsigned int found;
+ 
+-	ENTER;
+ 	shost_for_each_device(sdev, shost) {
+ 		dev_rport = starget_to_rport(scsi_target(sdev));
+ 		if (dev_rport != rport)
+@@ -3119,7 +3094,6 @@ static void ibmvfc_terminate_rport_io(struct fc_rport *rport)
+ 	}
+ 
+ 	spin_unlock_irqrestore(shost->host_lock, flags);
+-	LEAVE;
+ }
+ 
+ static const struct ibmvfc_async_desc ae_desc [] = {
+@@ -5800,7 +5774,6 @@ static int ibmvfc_alloc_queue(struct ibmvfc_host *vhost,
+ 	struct device *dev = vhost->dev;
+ 	size_t fmt_size;
+ 
+-	ENTER;
+ 	spin_lock_init(&queue->_lock);
+ 	queue->q_lock = &queue->_lock;
+ 
+@@ -5869,7 +5842,6 @@ static int ibmvfc_init_crq(struct ibmvfc_host *vhost)
+ 	struct vio_dev *vdev = to_vio_dev(dev);
+ 	struct ibmvfc_queue *crq = &vhost->crq;
+ 
+-	ENTER;
+ 	if (ibmvfc_alloc_queue(vhost, crq, IBMVFC_CRQ_FMT))
+ 		return -ENOMEM;
+ 
+@@ -5901,7 +5873,6 @@ static int ibmvfc_init_crq(struct ibmvfc_host *vhost)
+ 		goto req_irq_failed;
+ 	}
+ 
+-	LEAVE;
+ 	return retrc;
+ 
+ req_irq_failed:
+@@ -5923,7 +5894,6 @@ static int ibmvfc_register_channel(struct ibmvfc_host *vhost,
+ 	struct ibmvfc_queue *scrq = &channels->scrqs[index];
+ 	int rc = -ENOMEM;
+ 
+-	ENTER;
+ 
+ 	rc = h_reg_sub_crq(vdev->unit_address, scrq->msg_token, PAGE_SIZE,
+ 			   &scrq->cookie, &scrq->hw_irq);
+@@ -5971,7 +5941,6 @@ static int ibmvfc_register_channel(struct ibmvfc_host *vhost,
+ 
+ 	scrq->hwq_id = index;
+ 
+-	LEAVE;
+ 	return 0;
+ 
+ irq_failed:
+@@ -5979,7 +5948,6 @@ static int ibmvfc_register_channel(struct ibmvfc_host *vhost,
+ 		rc = plpar_hcall_norets(H_FREE_SUB_CRQ, vdev->unit_address, scrq->cookie);
+ 	} while (rc == H_BUSY || H_IS_LONG_BUSY(rc));
+ reg_failed:
+-	LEAVE;
+ 	return rc;
+ }
+ 
+@@ -5992,7 +5960,6 @@ static void ibmvfc_deregister_channel(struct ibmvfc_host *vhost,
+ 	struct ibmvfc_queue *scrq = &channels->scrqs[index];
+ 	long rc;
+ 
+-	ENTER;
+ 
+ 	free_irq(scrq->irq, scrq);
+ 	irq_dispose_mapping(scrq->irq);
+@@ -6010,7 +5977,6 @@ static void ibmvfc_deregister_channel(struct ibmvfc_host *vhost,
+ 	memset(scrq->msgs.crq, 0, PAGE_SIZE);
+ 	scrq->cur = 0;
+ 
+-	LEAVE;
+ }
+ 
+ static void ibmvfc_reg_sub_crqs(struct ibmvfc_host *vhost,
+@@ -6018,7 +5984,6 @@ static void ibmvfc_reg_sub_crqs(struct ibmvfc_host *vhost,
+ {
+ 	int i, j;
+ 
+-	ENTER;
+ 	if (!vhost->mq_enabled || !channels->scrqs)
+ 		return;
+ 
+@@ -6031,7 +5996,6 @@ static void ibmvfc_reg_sub_crqs(struct ibmvfc_host *vhost,
+ 		}
+ 	}
+ 
+-	LEAVE;
+ }
+ 
+ static void ibmvfc_dereg_sub_crqs(struct ibmvfc_host *vhost,
+@@ -6039,14 +6003,12 @@ static void ibmvfc_dereg_sub_crqs(struct ibmvfc_host *vhost,
+ {
+ 	int i;
+ 
+-	ENTER;
+ 	if (!vhost->mq_enabled || !channels->scrqs)
+ 		return;
+ 
+ 	for (i = 0; i < channels->max_queues; i++)
+ 		ibmvfc_deregister_channel(vhost, channels, i);
+ 
+-	LEAVE;
+ }
+ 
+ static int ibmvfc_alloc_channels(struct ibmvfc_host *vhost,
+@@ -6082,7 +6044,6 @@ static int ibmvfc_alloc_channels(struct ibmvfc_host *vhost,
+ 
+ static void ibmvfc_init_sub_crqs(struct ibmvfc_host *vhost)
+ {
+-	ENTER;
+ 	if (!vhost->mq_enabled)
+ 		return;
+ 
+@@ -6094,7 +6055,6 @@ static void ibmvfc_init_sub_crqs(struct ibmvfc_host *vhost)
+ 
+ 	ibmvfc_reg_sub_crqs(vhost, &vhost->scsi_scrqs);
+ 
+-	LEAVE;
+ }
+ 
+ static void ibmvfc_release_channels(struct ibmvfc_host *vhost,
+@@ -6117,14 +6077,12 @@ static void ibmvfc_release_channels(struct ibmvfc_host *vhost,
+ 
+ static void ibmvfc_release_sub_crqs(struct ibmvfc_host *vhost)
+ {
+-	ENTER;
+ 	if (!vhost->scsi_scrqs.scrqs)
+ 		return;
+ 
+ 	ibmvfc_dereg_sub_crqs(vhost, &vhost->scsi_scrqs);
+ 
+ 	ibmvfc_release_channels(vhost, &vhost->scsi_scrqs);
+-	LEAVE;
+ }
+ 
+ static void ibmvfc_free_disc_buf(struct device *dev, struct ibmvfc_channels *channels)
+@@ -6144,7 +6102,6 @@ static void ibmvfc_free_mem(struct ibmvfc_host *vhost)
+ {
+ 	struct ibmvfc_queue *async_q = &vhost->async_crq;
+ 
+-	ENTER;
+ 	mempool_destroy(vhost->tgt_pool);
+ 	kfree(vhost->trace);
+ 	ibmvfc_free_disc_buf(vhost->dev, &vhost->scsi_scrqs);
+@@ -6154,7 +6111,6 @@ static void ibmvfc_free_mem(struct ibmvfc_host *vhost)
+ 			  vhost->channel_setup_buf, vhost->channel_setup_dma);
+ 	dma_pool_destroy(vhost->sg_pool);
+ 	ibmvfc_free_queue(vhost, async_q);
+-	LEAVE;
+ }
+ 
+ static int ibmvfc_alloc_disc_buf(struct device *dev, struct ibmvfc_channels *channels)
+@@ -6184,7 +6140,6 @@ static int ibmvfc_alloc_mem(struct ibmvfc_host *vhost)
+ 	struct ibmvfc_queue *async_q = &vhost->async_crq;
+ 	struct device *dev = vhost->dev;
+ 
+-	ENTER;
+ 	if (ibmvfc_alloc_queue(vhost, async_q, IBMVFC_ASYNC_FMT)) {
+ 		dev_err(dev, "Couldn't allocate/map async queue.\n");
+ 		goto nomem;
+@@ -6234,7 +6189,6 @@ static int ibmvfc_alloc_mem(struct ibmvfc_host *vhost)
+ 		goto free_tgt_pool;
+ 	}
+ 
+-	LEAVE;
+ 	return 0;
+ 
+ free_tgt_pool:
+@@ -6251,7 +6205,6 @@ static int ibmvfc_alloc_mem(struct ibmvfc_host *vhost)
+ unmap_async_crq:
+ 	ibmvfc_free_queue(vhost, async_q);
+ nomem:
+-	LEAVE;
+ 	return -ENOMEM;
+ }
+ 
+@@ -6269,7 +6222,6 @@ static void ibmvfc_rport_add_thread(struct work_struct *work)
+ 	unsigned long flags;
+ 	int did_work;
+ 
+-	ENTER;
+ 	spin_lock_irqsave(vhost->host->host_lock, flags);
+ 	do {
+ 		did_work = 0;
+@@ -6304,7 +6256,6 @@ static void ibmvfc_rport_add_thread(struct work_struct *work)
+ 	if (vhost->state == IBMVFC_ACTIVE)
+ 		vhost->scan_complete = 1;
+ 	spin_unlock_irqrestore(vhost->host->host_lock, flags);
+-	LEAVE;
+ }
+ 
+ /**
+@@ -6324,7 +6275,6 @@ static int ibmvfc_probe(struct vio_dev *vdev, const struct vio_device_id *id)
+ 	unsigned int online_cpus = num_online_cpus();
+ 	unsigned int max_scsi_queues = min((unsigned int)IBMVFC_MAX_SCSI_QUEUES, online_cpus);
+ 
+-	ENTER;
+ 	shost = scsi_host_alloc(&driver_template, sizeof(*vhost));
+ 	if (!shost) {
+ 		dev_err(dev, "Couldn't allocate host data\n");
+@@ -6415,7 +6365,6 @@ static int ibmvfc_probe(struct vio_dev *vdev, const struct vio_device_id *id)
+ free_scsi_host:
+ 	scsi_host_put(shost);
+ out:
+-	LEAVE;
+ 	return rc;
+ }
+ 
+@@ -6432,7 +6381,6 @@ static void ibmvfc_remove(struct vio_dev *vdev)
+ 	LIST_HEAD(purge);
+ 	unsigned long flags;
+ 
+-	ENTER;
+ 	ibmvfc_remove_trace_file(&vhost->host->shost_dev.kobj, &ibmvfc_trace_attr);
+ 
+ 	spin_lock_irqsave(vhost->host->host_lock, flags);
+@@ -6457,7 +6405,6 @@ static void ibmvfc_remove(struct vio_dev *vdev)
+ 	list_del(&vhost->queue);
+ 	spin_unlock(&ibmvfc_driver_lock);
+ 	scsi_host_put(vhost->host);
+-	LEAVE;
+ }
+ 
+ /**
+diff --git a/drivers/scsi/ibmvscsi/ibmvfc.h b/drivers/scsi/ibmvscsi/ibmvfc.h
+index c73ed2314ad0..8cb639c271fb 100644
+--- a/drivers/scsi/ibmvscsi/ibmvfc.h
++++ b/drivers/scsi/ibmvscsi/ibmvfc.h
+@@ -942,9 +942,6 @@ struct ibmvfc_host {
+ 			dev_err((vhost)->dev, ##__VA_ARGS__); \
+ 	} while (0)
+ 
+-#define ENTER DBG_CMD(printk(KERN_INFO IBMVFC_NAME": Entering %s\n", __func__))
+-#define LEAVE DBG_CMD(printk(KERN_INFO IBMVFC_NAME": Leaving %s\n", __func__))
+-
+ #ifdef CONFIG_SCSI_IBMVFC_TRACE
+ #define ibmvfc_create_trace_file(kobj, attr) sysfs_create_bin_file(kobj, attr)
+ #define ibmvfc_remove_trace_file(kobj, attr) sysfs_remove_bin_file(kobj, attr)
+-- 
+2.43.0
+
