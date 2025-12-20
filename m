@@ -1,63 +1,63 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.13])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.7])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1FF891A239A;
-	Sat, 20 Dec 2025 14:00:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.13
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8CD2A29D26E;
+	Sat, 20 Dec 2025 14:35:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1766239260; cv=none; b=KfbIQlDYf1PeldASQhnNawmtzZur5NxEc3UCYzyEivBP6EIXk5ZZi3Fe8wTdNNfiqm3gWnJ4ehi161LawjhJYjkv2Xqq0Y3X/wOSvAOsvlsuShE/6VJ74HlO2uDnG0Fq9GvqkVBQw2J31U6HIkLOTqHvgxY58EsCkUKAdyYCY1g=
+	t=1766241314; cv=none; b=NeV9WlVqQSSsfpN3e7uEz0ee/clDely05z9wMsxM1+BXb3qKDAouAJ2haS+tKkWl/2dSV9nCO+2DsHmY9NviYwpMScRCFUqByz3etkFzLa6HAk3oEAKK8iqZmqU04AkV6Y6UkAaxeAlrRccuR2cw20ACONF/2F0snvRY7nfLNtQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1766239260; c=relaxed/simple;
-	bh=DTyhpGPCBpzXqa1p10roAW52S9cjZ+ReeOZ3HhOKUBA=;
+	s=arc-20240116; t=1766241314; c=relaxed/simple;
+	bh=rBqL956gH3K0poiy0iTZqF+U+rad4keWG+Egb5t3fJE=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=mi6Q5L4H7YeSKfeYyQA1jQUepoEQyUIhcuVdQacVlF096qk4CMVOO3bt3R4OeqAc/5Rr/DbgbDbL+suKbBt7JUe20wil7Y97XK7oFC6xmWrIMMBydjwNiAE4faa6rmjS5lFpKEzGAcHmTXytuNL+IhisWgv47MV0rN8qKsTEI3o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=JM/LEKFQ; arc=none smtp.client-ip=192.198.163.13
+	 Content-Type:Content-Disposition:In-Reply-To; b=KcN/joNxjHRGI9SuuzmlQ+Ff5J+lvDvmy+rrcoLhksgJR2M8JjYANUvgWiyXv1sSvhXQY0Zd7kVZc4erM6bzqkkqkxT/YG4S0afBDUokBVS9GVeBP1grSn+vTPEECpYFENmVI+HXQV15muRl52BhYN2wLXpQbKU0Pwp/d+a8W7w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=AoQWYrnU; arc=none smtp.client-ip=192.198.163.7
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="JM/LEKFQ"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="AoQWYrnU"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1766239259; x=1797775259;
+  t=1766241311; x=1797777311;
   h=date:from:to:cc:subject:message-id:references:
    mime-version:in-reply-to;
-  bh=DTyhpGPCBpzXqa1p10roAW52S9cjZ+ReeOZ3HhOKUBA=;
-  b=JM/LEKFQ5MxTcELFfL5iixf5cN1JeQpOURw7Yjt79nioERh/hYFgKYzz
-   js5uAQ6GLhNkozXcT+BQ+AyIJ955HbThp3d4bDqdMv2a6N+dIYm1Av+vQ
-   Spyrbjl1M+RsSNpSxEvnGC8ZiOhQZ9bbsyxQ9aOqi29Oy/tvJmEsVqFmf
-   DyULdFjzZCU98l/gBWi/YA9uukxZk86jXK8dS0diRFZRreqjW6+tCRnAC
-   QIcQAVYCD6++BOx2P2u9yz4G1rASw6jlTAxMYPzVolhTDdADyJkA7um3/
-   LfQbtWccydBwTNYPCPThM7MAxdiJlBAv2DJ4j1GqD4KSsNbBe1t8lg1iK
-   g==;
-X-CSE-ConnectionGUID: bewda4bPTESYgvjUKJx0JA==
-X-CSE-MsgGUID: gnZpUvcqST6Z8nW3LLrZnQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11648"; a="70743731"
+  bh=rBqL956gH3K0poiy0iTZqF+U+rad4keWG+Egb5t3fJE=;
+  b=AoQWYrnUyiUEQdlRAb5UEPMQr3xNlHq5lHEfIclSCU/Llk84UGS1LSCW
+   wkLJjf5d72PQvbFUpOdftNna41byKDEtiRzIbB5Q3GurIiRal8MCWafaK
+   978ZdsC+8FsliqYelzNc9SVqgaZNKbeLnh1a7/PpZ/Y3AZpSA82mabRfO
+   Qt4WxEVvGp84PQyKFSmu4k8y6LpKbUslue0yYaAY2Eco/WKEr3aMl/xQK
+   bAgiKHYYXjDBR8z+olcdwZvOxwwnjqcUWIl+SaW4bRzwebotIKvFwoo2L
+   noybLSfX2e9jF9V/9raPO/eS5wHE6r6FqBlr9YLIa4GEt3K1WfiWAqw+Z
+   A==;
+X-CSE-ConnectionGUID: dAf0ypatTg2ei0vNmV9pXQ==
+X-CSE-MsgGUID: PK5y7cydRW6pL4N/KVZ8YA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11648"; a="93650001"
 X-IronPort-AV: E=Sophos;i="6.21,164,1763452800"; 
-   d="scan'208";a="70743731"
-Received: from fmviesa007.fm.intel.com ([10.60.135.147])
-  by fmvoesa107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Dec 2025 06:00:58 -0800
-X-CSE-ConnectionGUID: UBZMshNtTYO4VV5jUZbgJw==
-X-CSE-MsgGUID: UqHSjI+oS46kzVnvW5QlIA==
+   d="scan'208";a="93650001"
+Received: from fmviesa006.fm.intel.com ([10.60.135.146])
+  by fmvoesa101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Dec 2025 06:35:09 -0800
+X-CSE-ConnectionGUID: KyzH7cUZS5+bjqHEtnY7hQ==
+X-CSE-MsgGUID: WzYVUxAhQz+sk8Dk7O42VA==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.21,164,1763452800"; 
-   d="scan'208";a="198703033"
+   d="scan'208";a="199023545"
 Received: from lkp-server01.sh.intel.com (HELO 0d09efa1b85f) ([10.239.97.150])
-  by fmviesa007.fm.intel.com with ESMTP; 20 Dec 2025 06:00:56 -0800
+  by fmviesa006.fm.intel.com with ESMTP; 20 Dec 2025 06:35:07 -0800
 Received: from kbuild by 0d09efa1b85f with local (Exim 4.98.2)
 	(envelope-from <lkp@intel.com>)
-	id 1vWxVu-000000004bS-1eTf;
-	Sat, 20 Dec 2025 14:00:54 +0000
-Date: Sat, 20 Dec 2025 22:00:02 +0800
+	id 1vWy2z-000000004eU-19c7;
+	Sat, 20 Dec 2025 14:35:05 +0000
+Date: Sat, 20 Dec 2025 22:34:13 +0800
 From: kernel test robot <lkp@intel.com>
 To: Shipei Qu <qu@darknavy.com>, Adam Radford <aradford@gmail.com>,
 	"James E.J. Bottomley" <jejb@linux.ibm.com>,
 	"Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: oe-kbuild-all@lists.linux.dev, Shipei Qu <qu@darknavy.com>,
-	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	DARKNAVY <vr@darknavy.com>
+Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
+	Shipei Qu <qu@darknavy.com>, linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, DARKNAVY <vr@darknavy.com>
 Subject: Re: [PATCH v2] scsi: 3w-sas: validate request_id reported by
  controller
-Message-ID: <202512202135.WH2v6r6v-lkp@intel.com>
+Message-ID: <202512202253.30DG2Afm-lkp@intel.com>
 References: <20251216060156.41320-1-qu@darknavy.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -83,33 +83,42 @@ url:    https://github.com/intel-lab-lkp/linux/commits/Shipei-Qu/scsi-3w-sas-val
 base:   https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git for-next
 patch link:    https://lore.kernel.org/r/20251216060156.41320-1-qu%40darknavy.com
 patch subject: [PATCH v2] scsi: 3w-sas: validate request_id reported by controller
-config: sparc-randconfig-001-20251217 (https://download.01.org/0day-ci/archive/20251220/202512202135.WH2v6r6v-lkp@intel.com/config)
-compiler: sparc-linux-gcc (GCC) 15.1.0
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20251220/202512202135.WH2v6r6v-lkp@intel.com/reproduce)
+config: x86_64-kexec (https://download.01.org/0day-ci/archive/20251220/202512202253.30DG2Afm-lkp@intel.com/config)
+compiler: clang version 20.1.8 (https://github.com/llvm/llvm-project 87f0227cb60147a26a1eeb4fb06e3b505e9c7261)
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20251220/202512202253.30DG2Afm-lkp@intel.com/reproduce)
 
 If you fix the issue in a separate patch/commit (i.e. not just a new version of
 the same patch/commit), kindly add following tags
 | Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202512202135.WH2v6r6v-lkp@intel.com/
+| Closes: https://lore.kernel.org/oe-kbuild-all/202512202253.30DG2Afm-lkp@intel.com/
 
 All errors (new ones prefixed by >>):
 
-   drivers/scsi/3w-sas.c: In function 'twl_interrupt':
->> drivers/scsi/3w-sas.c:1190:45: error: macro 'TW_PRINTK' passed 5 arguments, but takes just 4
+>> drivers/scsi/3w-sas.c:1190:7: error: too many arguments provided to function-like macro invocation
     1190 |                                   request_id);
-         |                                             ^
-   In file included from drivers/scsi/3w-sas.c:72:
+         |                                   ^
    drivers/scsi/3w-sas.h:207:9: note: macro 'TW_PRINTK' defined here
      207 | #define TW_PRINTK(h,a,b,c) { \
-         |         ^~~~~~~~~
->> drivers/scsi/3w-sas.c:1188:25: error: 'TW_PRINTK' undeclared (first use in this function); did you mean 'KERN_PRINTK'?
+         |         ^
+>> drivers/scsi/3w-sas.c:1188:4: error: use of undeclared identifier 'TW_PRINTK'
     1188 |                         TW_PRINTK(tw_dev->host, TW_DRIVER, 0x10,
-         |                         ^~~~~~~~~
-         |                         KERN_PRINTK
-   drivers/scsi/3w-sas.c:1188:25: note: each undeclared identifier is reported only once for each function it appears in
+         |                         ^
+   drivers/scsi/3w-sas.c:1579:49: warning: shift count >= width of type [-Wshift-count-overflow]
+    1579 |         retval = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(64));
+         |                                                        ^~~~~~~~~~~~~~~~
+   include/linux/dma-mapping.h:93:54: note: expanded from macro 'DMA_BIT_MASK'
+      93 | #define DMA_BIT_MASK(n) (((n) == 64) ? ~0ULL : ((1ULL<<(n))-1))
+         |                                                      ^ ~~~
+   drivers/scsi/3w-sas.c:1796:49: warning: shift count >= width of type [-Wshift-count-overflow]
+    1796 |         retval = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(64));
+         |                                                        ^~~~~~~~~~~~~~~~
+   include/linux/dma-mapping.h:93:54: note: expanded from macro 'DMA_BIT_MASK'
+      93 | #define DMA_BIT_MASK(n) (((n) == 64) ? ~0ULL : ((1ULL<<(n))-1))
+         |                                                      ^ ~~~
+   2 warnings and 2 errors generated.
 
 
-vim +/TW_PRINTK +1190 drivers/scsi/3w-sas.c
+vim +1190 drivers/scsi/3w-sas.c
 
   1117	
   1118	/* Interrupt service routine */
