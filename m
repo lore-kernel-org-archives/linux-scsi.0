@@ -1,34 +1,34 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8472428851E;
-	Sat, 20 Dec 2025 03:37:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4B92D3A1E8A;
+	Sat, 20 Dec 2025 03:45:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1766201872; cv=none; b=bXVaeA9UCKhPztVbVhTfnsS+XRhLADEKV2HtQnlufjEetVBycWjMVtGWkDSOq1BmVflFynX4YH6MPuDjtjZppEem0fYmTrH7ZvcUqKSw2yzbMUW3Nwk/YPgjApI2g6gmdiaUWPqoUJ8C5B3VEPnNhUC1JXrwWVtyL9C9fdGethU=
+	t=1766202347; cv=none; b=M7AO07KE24D1AZhdv8VsCE0zhU6vtkautxd85f2nG6huwVzIR1XimJlRuEujdKeFj/PXML9HOQWYqknqJzsqUY4tLSwK6Jg+paGgBynQo3RxORNE2lFfohQ7PNBTwiLvdO/yXHl6JhwmikS9xGyA26bORHVUXQa/KpSfiG/pvLs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1766201872; c=relaxed/simple;
-	bh=HH/JkDbNtOuD2LUYt73XeTz04R3YloDbVp6N3jCsuLo=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=ealx8yCV62LX7O98pndTN3IFxYnYY3GQULT9HCsXp696COCQc+O7HiMZ7p5o7KrkuuqL8Js0dCnCf5QD82WnW3cvw2+ri8T43HCzIg5FZfWPnm5sKcfR1vPna5dXIPeoZdTzyW0UPIMiww6TVvf8uqdbMceTts7CC4CXpQ1/C5E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=f3/fmvXF; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1766202347; c=relaxed/simple;
+	bh=ljS74JXhPZ1LeDdwxkTAIFvssMwAF5gNuyDs6g2Lvkg=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=MzQftxZxbG5htjh2AhLmkxPl6CR3gsw5/5q1GOyGlm9ywdiJbReEvz9a4+ywFUUsGbZeVAdikynSgAKQ6OkpsbpUGgZcS2q/VAYIw6KKWNlxWIsuPzkRdHri9X0gXe3ckIsyR/IvFN+HAreB9kWi7G18VoMAVHQNHG7DOWIl7os=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FGvGo+PD; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="f3/fmvXF"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A0036C116D0;
-	Sat, 20 Dec 2025 03:37:49 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FGvGo+PD"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 185FAC4CEF5;
+	Sat, 20 Dec 2025 03:45:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1766201872;
-	bh=HH/JkDbNtOuD2LUYt73XeTz04R3YloDbVp6N3jCsuLo=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
-	b=f3/fmvXFHtzt9PtxK9qrxGV1fUBjOhRnv5R8uNJmBBI20i4s5FK6HbLfvhmW8L2cb
-	 ku4VxlqtLDSNX9x6TOYgJXNcJoaZT/4Yo+KXweM6qq5m41bgrN1o9aZSDOg732zMKh
-	 G5t1FBXUsy9eD1ZS4G4AnSBNfmsSCqZcWBDUEbLnlSXZjF5Z8w6f0e8lPxR2yueeOs
-	 +bTf3WULY4ruMdX51OLdGBN8NAihHToZcU9kbDdYGXFmycu0/Nd5IeMImsI8quUUSm
-	 GxZVTxPSxLHrroyotDQKgWTj5933kZOWrH3BZSO+w239oRIfA+y0KWBasxLRaXBaCD
-	 vZD7Y9Drw4x/w==
+	s=k20201202; t=1766202345;
+	bh=ljS74JXhPZ1LeDdwxkTAIFvssMwAF5gNuyDs6g2Lvkg=;
+	h=From:Date:Subject:To:Cc:From;
+	b=FGvGo+PD/nNfCOaX8txlV3nLiWO1kQMANyyOZarWkPgzRN1ZzoisIvtHP9im0H0XN
+	 WtM+ZGQiI9o1/OTImi8KpD3I6Qnlnh7rnlxrvZufcFIzsArBLs25KS2Q6Ntld+Fp1J
+	 7M/nt2ZI47QHkQp2FAonYjhlgqJShWFYG4jIAPNlx2V9Ao8RvfVtL5dqlwlud0ELiL
+	 8m7v8YnvCH0aI7vW9rnsd8H9I6zBLle2piEl14Wnkh8q/XcNEgDPLMbYRoaUkBfBdF
+	 APvnoC+uSsLlmw4pl9G4gAzjTiBQ1H+MC/4lRjYfINbjlOjeSu/B8vwUA1FN4bcQZL
+	 CAjLYy8bev6dQ==
 From: Daniel Gomez <da.gomez@kernel.org>
-Date: Sat, 20 Dec 2025 04:37:33 +0100
-Subject: [PATCH 2/2] scsi: fcoe: replace -EEXIST with -EBUSY
+Date: Sat, 20 Dec 2025 04:45:34 +0100
+Subject: [PATCH] driver core: attribute_container: change return type to
+ void
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -37,70 +37,167 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20251220-dev-module-init-eexists-linux-scsi-v1-2-5379db749d54@samsung.com>
-References: <20251220-dev-module-init-eexists-linux-scsi-v1-0-5379db749d54@samsung.com>
-In-Reply-To: <20251220-dev-module-init-eexists-linux-scsi-v1-0-5379db749d54@samsung.com>
-To: "Martin K. Petersen" <martin.petersen@oracle.com>, 
- Hannes Reinecke <hare@suse.de>, 
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
+Message-Id: <20251220-dev-attribute-container-linux-scsi-v1-1-d58fcd03bf21@samsung.com>
+X-B4-Tracking: v=1; b=H4sIAN0bRmkC/x3NQQqDMBBG4avIrDtgUgLSq5QuYvxtB8pYZqII4
+ t0NXX6b9w5ymMDp0R1k2MRl0YZw66h8sr7BMjVT7GMKMQw8YeNcq8m4VnBZtGZRGH9F1529uDD
+ mMKTc3xPGTC30M8yy/yfP13letsSkTnQAAAA=
+X-Change-ID: 20251218-dev-attribute-container-linux-scsi-ef185a035eba
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
+ "Rafael J. Wysocki" <rafael@kernel.org>, Danilo Krummrich <dakr@kernel.org>, 
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
+ "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: Luis Chamberlain <mcgrof@kernel.org>, Petr Pavlu <petr.pavlu@suse.com>, 
  Daniel Gomez <da.gomez@kernel.org>, Sami Tolvanen <samitolvanen@google.com>, 
  Aaron Tomlin <atomlin@atomlin.com>, Lucas De Marchi <demarchi@kernel.org>, 
- linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, 
- linux-modules@vger.kernel.org, linux-kernel@vger.kernel.org, 
- Daniel Gomez <da.gomez@samsung.com>
+ linux-scsi@vger.kernel.org, linux-modules@vger.kernel.org, 
+ linux-kernel@vger.kernel.org, Daniel Gomez <da.gomez@samsung.com>
 X-Mailer: b4 0.15-dev
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1199; i=da.gomez@samsung.com;
- h=from:subject:message-id; bh=FgSTMAzeVqUCp3js9k2Z85lbAWLiKtgMkleg7Noq7jY=;
- b=owEBbQKS/ZANAwAIAUCeo8QfGVH7AcsmYgBpRhoGuU7bc3awxEAzGNi42WmPFgOXPTCEPZhrD
- TppiRhKBFCJAjMEAAEIAB0WIQTvdRrhHw9z4bnGPFNAnqPEHxlR+wUCaUYaBgAKCRBAnqPEHxlR
- +xf8D/44XWi0lkbuwLb2VzoLqtxPN39O9Eti8wfngbn9bRy5nSbhF3n/RHcvj10qm2y0LZQTGGu
- mjmBK7lGe26JvDZnmzeWg+9KR+aOXXAZWI9jW2vxkQocqgL89HAG7QOfGtZjO9Q+mJZKEN6ejX3
- 4eCYU+JxTitEgD4YRx70GZ9p7tXXT+rmzHu76OA4FhsCc5fnLmJzhHkn3FrK+XUxDZWOrcViBMG
- qT6yWwYneCudTKlIqwRQyJY3okLCN5hWah33S/5dwTHMIwYAT3L7qK2RSHoVU6uexVhs4NUukZc
- M7VG4q4EIKou3dnPpVrYe+bbA+04r+S/3xprv7feOebOuKiqSP6/2tqHgLpYXNhDVNaUVzQgJLX
- 6te4DFuRCyB02lOF1DecMGdCjfxZb3MBBQAr40CrF3eH07P43mZdvqPOMtVitB/9UxPzEztLTQw
- 9zWvjhdelfjjZNADD4u/R8oxaoWlbwQrmnqWHaN5oD2bRecWitgUP2XM2NyC7+V/HJclrIBxF/G
- T9D6N8SXHrrt/hGNI6OCwqGOWVqqJsjhEdlmjrRBAKN/ZxkNk1EcLFkITMngam0iNhzieq4h2Tn
- 1Yr7CrRbBlrJ6DgIv8D3qTnH0yGWrlP0B0+jqFqWbr7regtpzVHGoP3lLFQFG4zrFuZSQp//On3
- El92YFkjfixKH8w==
+X-Developer-Signature: v=1; a=openpgp-sha256; l=5359; i=da.gomez@samsung.com;
+ h=from:subject:message-id; bh=C9R4j2gXxzAQ0FMyEnLzcTXh2qpavqW/CQxI9RtuaTA=;
+ b=owEBbQKS/ZANAwAIAUCeo8QfGVH7AcsmYgBpRhvl/TipJts2/zduU3dlzQGOSL7wBvzxHK1Bo
+ QtvAGVCBuCJAjMEAAEIAB0WIQTvdRrhHw9z4bnGPFNAnqPEHxlR+wUCaUYb5QAKCRBAnqPEHxlR
+ +/fnEACQijbOWjMz4xwTfKB5VFrS+jiCrreEcqLKJOEUcR7NyyDtTWLABQyl/Xab2/0jJRsfvQN
+ MsEfjsLdtVU9t5p5u3qfyAPC62OjYZezDbFnfBj3zTcVT1SuWR3B448V76s6E/Rx5aoClyHL2gd
+ odzOXp1io4dRnbNtrLWQgV4kUpkIirk9KCQ5gtS8NEnlompR52FJCv31pB7jiU1myeLW7k8bNJz
+ HQrPPceOvhhMVJssyx4kB/s1YvUitNHkstSDwAYW9n1aAjlgrOctksAqCVAFGuPcf1gkW+DOzDZ
+ i9mHTmtY/aqlQQkqfmQrhLJJPCdQRuQ68SbUR1wdqsizpalCsaZoPePkpQ91s3fAKr7U0GYE+1z
+ RWp/9TPiDFfskDq1wLJBBXyVcIIDawc5w18GeWetjzDzjVLc7RSUX3y56cxmpmbEvmujgBRGawo
+ buHKIMf/pkRI6pCSOqoHrrvM9jxOwO7Pv7vCiG4ee3QcenNhAhS2h3i4CHL4ZgZxUrmiPl1uCes
+ OND+/F1JRqaPSe5y7ru02gmgiqZMOmD5+rGbUvWd+Jq89R9vy0iwxXVeVGljg1vDvSjyjoVbqdB
+ 5zR5/WCkw7aprnQcscQrRoOgNpcdBT3UZHVvSBPfcdz6NyZSZfEshZPKxrub1GQmtAczob2IwWp
+ Aoj+YA/DGuFx2Bg==
 X-Developer-Key: i=da.gomez@samsung.com; a=openpgp;
  fpr=B2A7A9CFDD03B540FF58B27185F56EA4E9E8138F
 
 From: Daniel Gomez <da.gomez@samsung.com>
 
-The -EEXIST error code is reserved by the module loading infrastructure
-to indicate that a module is already loaded. When a module's init
-function returns -EEXIST, userspace tools like kmod interpret this as
-"module already loaded" and treat the operation as successful, returning
-0 to the user even though the module initialization actually failed.
+attribute_container_register() has always returned 0 since its
+introduction in commit 06ff5a987e ("Add attribute container to generic
+device model") in the historical Linux tree [1]. Convert the return type
+to void and update all callers.
 
-This follows the precedent set by commit 54416fd76770 ("netfilter:
-conntrack: helper: Replace -EEXIST by -EBUSY") which fixed the same
-issue in nf_conntrack_helper_register().
+This removes dead code where callers checked for errors that could never
+occur.
 
-Affected modules:
-  * bnx2fc fcoe
+Link: https://git.kernel.org/pub/scm/linux/kernel/git/tglx/history.git [1]
 
 Signed-off-by: Daniel Gomez <da.gomez@samsung.com>
 ---
- drivers/scsi/fcoe/fcoe_transport.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Cleanup. Found while reviewing module_init() return values for the
+-EEXIST issue [1] on the scsi spi transport module.
 
-diff --git a/drivers/scsi/fcoe/fcoe_transport.c b/drivers/scsi/fcoe/fcoe_transport.c
-index 2f478426f16e..d0f9ff4893e3 100644
---- a/drivers/scsi/fcoe/fcoe_transport.c
-+++ b/drivers/scsi/fcoe/fcoe_transport.c
-@@ -533,7 +533,7 @@ int fcoe_transport_attach(struct fcoe_transport *ft)
- 	if (ft->attached) {
- 		LIBFCOE_TRANSPORT_DBG("transport %s already attached\n",
- 				       ft->name);
--		rc = -EEXIST;
-+		rc = -EBUSY;
- 		goto out_attach;
- 	}
+Link: https://lore.kernel.org/linux-modules/20251220-dev-module-init-eexists-linux-scsi-v1-0-5379db749d54@samsung.com/T/#t [1]
+---
+ drivers/base/attribute_container.c  | 4 +---
+ drivers/base/transport_class.c      | 8 ++------
+ drivers/scsi/scsi_transport_spi.c   | 2 +-
+ include/linux/attribute_container.h | 2 +-
+ include/linux/transport_class.h     | 6 +++---
+ 5 files changed, 8 insertions(+), 14 deletions(-)
+
+diff --git a/drivers/base/attribute_container.c b/drivers/base/attribute_container.c
+index b6f941a6ab69..72adbacc6554 100644
+--- a/drivers/base/attribute_container.c
++++ b/drivers/base/attribute_container.c
+@@ -69,7 +69,7 @@ static DEFINE_MUTEX(attribute_container_mutex);
+  * @cont: The container to register.  This must be allocated by the
+  *        callee and should also be zeroed by it.
+  */
+-int
++void
+ attribute_container_register(struct attribute_container *cont)
+ {
+ 	INIT_LIST_HEAD(&cont->node);
+@@ -79,8 +79,6 @@ attribute_container_register(struct attribute_container *cont)
+ 	mutex_lock(&attribute_container_mutex);
+ 	list_add_tail(&cont->node, &attribute_container_list);
+ 	mutex_unlock(&attribute_container_mutex);
+-
+-	return 0;
+ }
+ EXPORT_SYMBOL_GPL(attribute_container_register);
+ 
+diff --git a/drivers/base/transport_class.c b/drivers/base/transport_class.c
+index 09ee2a1e35bb..4b1e8820e764 100644
+--- a/drivers/base/transport_class.c
++++ b/drivers/base/transport_class.c
+@@ -88,17 +88,13 @@ static int anon_transport_dummy_function(struct transport_container *tc,
+  * events.  Use prezero and then use DECLARE_ANON_TRANSPORT_CLASS() to
+  * initialise the anon transport class storage.
+  */
+-int anon_transport_class_register(struct anon_transport_class *atc)
++void anon_transport_class_register(struct anon_transport_class *atc)
+ {
+-	int error;
+ 	atc->container.class = &atc->tclass.class;
+ 	attribute_container_set_no_classdevs(&atc->container);
+-	error = attribute_container_register(&atc->container);
+-	if (error)
+-		return error;
++	attribute_container_register(&atc->container);
+ 	atc->tclass.setup = anon_transport_dummy_function;
+ 	atc->tclass.remove = anon_transport_dummy_function;
+-	return 0;
+ }
+ EXPORT_SYMBOL_GPL(anon_transport_class_register);
+ 
+diff --git a/drivers/scsi/scsi_transport_spi.c b/drivers/scsi/scsi_transport_spi.c
+index fe47850a8258..17a4a0918fc4 100644
+--- a/drivers/scsi/scsi_transport_spi.c
++++ b/drivers/scsi/scsi_transport_spi.c
+@@ -1622,7 +1622,7 @@ static __init int spi_transport_init(void)
+ 	error = transport_class_register(&spi_transport_class);
+ 	if (error)
+ 		return error;
+-	error = anon_transport_class_register(&spi_device_class);
++	anon_transport_class_register(&spi_device_class);
+ 	return transport_class_register(&spi_host_class);
+ }
+ 
+diff --git a/include/linux/attribute_container.h b/include/linux/attribute_container.h
+index b3643de9931d..fa6520e192be 100644
+--- a/include/linux/attribute_container.h
++++ b/include/linux/attribute_container.h
+@@ -36,7 +36,7 @@ attribute_container_set_no_classdevs(struct attribute_container *atc)
+ 	atc->flags |= ATTRIBUTE_CONTAINER_NO_CLASSDEVS;
+ }
+ 
+-int attribute_container_register(struct attribute_container *cont);
++void attribute_container_register(struct attribute_container *cont);
+ int __must_check attribute_container_unregister(struct attribute_container *cont);
+ void attribute_container_create_device(struct device *dev,
+ 				       int (*fn)(struct attribute_container *,
+diff --git a/include/linux/transport_class.h b/include/linux/transport_class.h
+index 2efc271a96fa..9c2e03104461 100644
+--- a/include/linux/transport_class.h
++++ b/include/linux/transport_class.h
+@@ -87,9 +87,9 @@ transport_unregister_device(struct device *dev)
+ 	transport_destroy_device(dev);
+ }
+ 
+-static inline int transport_container_register(struct transport_container *tc)
++static inline void transport_container_register(struct transport_container *tc)
+ {
+-	return attribute_container_register(&tc->ac);
++	attribute_container_register(&tc->ac);
+ }
+ 
+ static inline void transport_container_unregister(struct transport_container *tc)
+@@ -99,7 +99,7 @@ static inline void transport_container_unregister(struct transport_container *tc
+ }
+ 
+ int transport_class_register(struct transport_class *);
+-int anon_transport_class_register(struct anon_transport_class *);
++void anon_transport_class_register(struct anon_transport_class *);
+ void transport_class_unregister(struct transport_class *);
+ void anon_transport_class_unregister(struct anon_transport_class *);
  
 
--- 
-2.52.0
+---
+base-commit: 8f0b4cce4481fb22653697cced8d0d04027cb1e8
+change-id: 20251218-dev-attribute-container-linux-scsi-ef185a035eba
+
+Best regards,
+--  
+Daniel Gomez <da.gomez@samsung.com>
 
