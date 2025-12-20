@@ -1,34 +1,34 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC6522DC32D;
-	Sat, 20 Dec 2025 03:37:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8472428851E;
+	Sat, 20 Dec 2025 03:37:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1766201870; cv=none; b=U8F4nnAYaMRQA8uFGJMsdPlZicrbSw+B+9959CdKRIcg/18LGVuiv3onORaz9vHp6iS45uWqRecraNJDMIyInhYbP47s8Jn7OHnizOGSsJH7tr8D9NPU0IRxfFAkepXBnG4Eq/gjjl5Kh+W3XZGDrZWyyptfhAHnUbfZFVt0V10=
+	t=1766201872; cv=none; b=bXVaeA9UCKhPztVbVhTfnsS+XRhLADEKV2HtQnlufjEetVBycWjMVtGWkDSOq1BmVflFynX4YH6MPuDjtjZppEem0fYmTrH7ZvcUqKSw2yzbMUW3Nwk/YPgjApI2g6gmdiaUWPqoUJ8C5B3VEPnNhUC1JXrwWVtyL9C9fdGethU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1766201870; c=relaxed/simple;
-	bh=jRSMpF4eLalrhg0Di4dEPlD/g1PB2PIZ9yiXeGSUaPI=;
+	s=arc-20240116; t=1766201872; c=relaxed/simple;
+	bh=HH/JkDbNtOuD2LUYt73XeTz04R3YloDbVp6N3jCsuLo=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=QqwenLDSnyL2mr5cpOqHcytN4rKopu9lNztNMTCNlF9Pg5ofiquDgMIQWXnK06+fYoiQKrvRsuvVxlukRGVTMWySqGWw9DmFZWtHXvIY8eYNm1R3B1CuwsXTVHfdpuH++MtJQA2I0pSIhx901GZzyC+JwmStu7wvRidzrg8a6Ws=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iP+groqK; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:To:Cc; b=ealx8yCV62LX7O98pndTN3IFxYnYY3GQULT9HCsXp696COCQc+O7HiMZ7p5o7KrkuuqL8Js0dCnCf5QD82WnW3cvw2+ri8T43HCzIg5FZfWPnm5sKcfR1vPna5dXIPeoZdTzyW0UPIMiww6TVvf8uqdbMceTts7CC4CXpQ1/C5E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=f3/fmvXF; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iP+groqK"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B89CDC116C6;
-	Sat, 20 Dec 2025 03:37:46 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="f3/fmvXF"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A0036C116D0;
+	Sat, 20 Dec 2025 03:37:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1766201869;
-	bh=jRSMpF4eLalrhg0Di4dEPlD/g1PB2PIZ9yiXeGSUaPI=;
+	s=k20201202; t=1766201872;
+	bh=HH/JkDbNtOuD2LUYt73XeTz04R3YloDbVp6N3jCsuLo=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
-	b=iP+groqK7+T4FUSAmerbnUqWXOx6X40wr8+uDfIa6XmsMpRy92oT6OKOu/JvX2Hkq
-	 BfgayXVcKpthAtQz4FzJhgh3sEpXf+Xx5Ht8ihwLrMuYb/Fn7ppQQch9jwJyhz6aGI
-	 3lRAbygHG+6bgontB1diGWoJwRYOKWv0x/WSZbeDUFl9rflO/aKJqmrg/AW6DHRCSn
-	 5n8jjo3EfEtaBPlbaarwhVnuXEAyegnJgb7j35QnWccqbN3jiHaDCmoGfJHrOKfDPR
-	 3R4gV3vx6lHvLyahBiusV4ysw5JXsBg2EzPBSWbJrDcii5ZOWiNiysmuzkZBhuliNI
-	 XxnLpk5M0eNKA==
+	b=f3/fmvXFHtzt9PtxK9qrxGV1fUBjOhRnv5R8uNJmBBI20i4s5FK6HbLfvhmW8L2cb
+	 ku4VxlqtLDSNX9x6TOYgJXNcJoaZT/4Yo+KXweM6qq5m41bgrN1o9aZSDOg732zMKh
+	 G5t1FBXUsy9eD1ZS4G4AnSBNfmsSCqZcWBDUEbLnlSXZjF5Z8w6f0e8lPxR2yueeOs
+	 +bTf3WULY4ruMdX51OLdGBN8NAihHToZcU9kbDdYGXFmycu0/Nd5IeMImsI8quUUSm
+	 GxZVTxPSxLHrroyotDQKgWTj5933kZOWrH3BZSO+w239oRIfA+y0KWBasxLRaXBaCD
+	 vZD7Y9Drw4x/w==
 From: Daniel Gomez <da.gomez@kernel.org>
-Date: Sat, 20 Dec 2025 04:37:32 +0100
-Subject: [PATCH 1/2] target: replace -EEXIST with -EBUSY
+Date: Sat, 20 Dec 2025 04:37:33 +0100
+Subject: [PATCH 2/2] scsi: fcoe: replace -EEXIST with -EBUSY
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -37,7 +37,7 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20251220-dev-module-init-eexists-linux-scsi-v1-1-5379db749d54@samsung.com>
+Message-Id: <20251220-dev-module-init-eexists-linux-scsi-v1-2-5379db749d54@samsung.com>
 References: <20251220-dev-module-init-eexists-linux-scsi-v1-0-5379db749d54@samsung.com>
 In-Reply-To: <20251220-dev-module-init-eexists-linux-scsi-v1-0-5379db749d54@samsung.com>
 To: "Martin K. Petersen" <martin.petersen@oracle.com>, 
@@ -50,20 +50,20 @@ Cc: Luis Chamberlain <mcgrof@kernel.org>, Petr Pavlu <petr.pavlu@suse.com>,
  linux-modules@vger.kernel.org, linux-kernel@vger.kernel.org, 
  Daniel Gomez <da.gomez@samsung.com>
 X-Mailer: b4 0.15-dev
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1291; i=da.gomez@samsung.com;
- h=from:subject:message-id; bh=VDJDNrBS2vwGPUPZ23vM9lngQG8JKRe7beFXxdcGdZs=;
- b=owEBbQKS/ZANAwAIAUCeo8QfGVH7AcsmYgBpRhoF4mc0A1nMVHErwBgjZFAjaP64bjrrUBFCE
- XjzRXAZNcuJAjMEAAEIAB0WIQTvdRrhHw9z4bnGPFNAnqPEHxlR+wUCaUYaBQAKCRBAnqPEHxlR
- +2ykD/9yHCvTtOaK4pXcD0bFbbJ8NDCmuZVP7ZbTGYnAvlSow/GE77EV3ivvv5e/xKDffvR//ym
- 0WHih04OjmcPLE8o56TLrw2vNkGcRc/E6lY65YxKOiQX8M7+Z6Lo154FQAW8z58CzG4biEHhqae
- tw119d6g6pcHvJurj7mj1NXk0d8yXmSbhXjVjveZAbWbDtRaGe94QrOzROJq0jHtg6qZoX9gTGS
- IKGSAF5nk1Zs227/NAXLwraeDS0X0bog222QoRxxdj8OFswt+jTRpJ78qDzbMT1q7J7weWX6/Ab
- 5S/4dqVmmivHmEd8lvB8uUDNTTrPi+D5a7K30GpD39MnopwpHnRFZUAIKAxr/lSVefAhMp/f03P
- jMJsE2u/283w+ymh+RpC9D1Vw5rPx0R0jW47SINkf4bJDXTZETVhsZYXVP/6Ow0p8BBXrpNQgGy
- 6XYqteAT2FVQdkx9qYt7rpKLUeRDFFAy7QquJ3m5p9Y60C42Y4NnbM+2255CLnyWu0PRvc2HcDm
- xv1jP7HKVGhqyKdhQCK6BCI2qGSHothsCcU28qz0czR5y0hFcB1YV2TX7+ybEaAvgmybyOQMWGP
- kP40YEgn+0PaNEwbTpOMy0HOqDuUTm13mGTMSY/QXCVKaC+6y3jO515QZnNpmz9kPucoS8FgNdj
- zH2klMt3vwYjKEg==
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1199; i=da.gomez@samsung.com;
+ h=from:subject:message-id; bh=FgSTMAzeVqUCp3js9k2Z85lbAWLiKtgMkleg7Noq7jY=;
+ b=owEBbQKS/ZANAwAIAUCeo8QfGVH7AcsmYgBpRhoGuU7bc3awxEAzGNi42WmPFgOXPTCEPZhrD
+ TppiRhKBFCJAjMEAAEIAB0WIQTvdRrhHw9z4bnGPFNAnqPEHxlR+wUCaUYaBgAKCRBAnqPEHxlR
+ +xf8D/44XWi0lkbuwLb2VzoLqtxPN39O9Eti8wfngbn9bRy5nSbhF3n/RHcvj10qm2y0LZQTGGu
+ mjmBK7lGe26JvDZnmzeWg+9KR+aOXXAZWI9jW2vxkQocqgL89HAG7QOfGtZjO9Q+mJZKEN6ejX3
+ 4eCYU+JxTitEgD4YRx70GZ9p7tXXT+rmzHu76OA4FhsCc5fnLmJzhHkn3FrK+XUxDZWOrcViBMG
+ qT6yWwYneCudTKlIqwRQyJY3okLCN5hWah33S/5dwTHMIwYAT3L7qK2RSHoVU6uexVhs4NUukZc
+ M7VG4q4EIKou3dnPpVrYe+bbA+04r+S/3xprv7feOebOuKiqSP6/2tqHgLpYXNhDVNaUVzQgJLX
+ 6te4DFuRCyB02lOF1DecMGdCjfxZb3MBBQAr40CrF3eH07P43mZdvqPOMtVitB/9UxPzEztLTQw
+ 9zWvjhdelfjjZNADD4u/R8oxaoWlbwQrmnqWHaN5oD2bRecWitgUP2XM2NyC7+V/HJclrIBxF/G
+ T9D6N8SXHrrt/hGNI6OCwqGOWVqqJsjhEdlmjrRBAKN/ZxkNk1EcLFkITMngam0iNhzieq4h2Tn
+ 1Yr7CrRbBlrJ6DgIv8D3qTnH0yGWrlP0B0+jqFqWbr7regtpzVHGoP3lLFQFG4zrFuZSQp//On3
+ El92YFkjfixKH8w==
 X-Developer-Key: i=da.gomez@samsung.com; a=openpgp;
  fpr=B2A7A9CFDD03B540FF58B27185F56EA4E9E8138F
 
@@ -77,30 +77,29 @@ function returns -EEXIST, userspace tools like kmod interpret this as
 
 This follows the precedent set by commit 54416fd76770 ("netfilter:
 conntrack: helper: Replace -EEXIST by -EBUSY") which fixed the same
-issue in nf_conntrack_helper_register()
+issue in nf_conntrack_helper_register().
 
 Affected modules:
-  * target_core_file target_core_iblock target_core_pscsi
-  * target_core_user
+  * bnx2fc fcoe
 
 Signed-off-by: Daniel Gomez <da.gomez@samsung.com>
 ---
- drivers/target/target_core_hba.c | 2 +-
+ drivers/scsi/fcoe/fcoe_transport.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/target/target_core_hba.c b/drivers/target/target_core_hba.c
-index d508b343ba7b..dcc11671d919 100644
---- a/drivers/target/target_core_hba.c
-+++ b/drivers/target/target_core_hba.c
-@@ -50,7 +50,7 @@ int transport_backend_register(const struct target_backend_ops *ops)
- 			pr_err("backend %s already registered.\n", ops->name);
- 			mutex_unlock(&backend_mutex);
- 			kfree(tb);
--			return -EEXIST;
-+			return -EBUSY;
- 		}
+diff --git a/drivers/scsi/fcoe/fcoe_transport.c b/drivers/scsi/fcoe/fcoe_transport.c
+index 2f478426f16e..d0f9ff4893e3 100644
+--- a/drivers/scsi/fcoe/fcoe_transport.c
++++ b/drivers/scsi/fcoe/fcoe_transport.c
+@@ -533,7 +533,7 @@ int fcoe_transport_attach(struct fcoe_transport *ft)
+ 	if (ft->attached) {
+ 		LIBFCOE_TRANSPORT_DBG("transport %s already attached\n",
+ 				       ft->name);
+-		rc = -EEXIST;
++		rc = -EBUSY;
+ 		goto out_attach;
  	}
- 	target_setup_backend_cits(tb);
+ 
 
 -- 
 2.52.0
