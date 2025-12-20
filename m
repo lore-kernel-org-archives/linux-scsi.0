@@ -1,123 +1,106 @@
-Received: from mail-dl1-f52.google.com (mail-dl1-f52.google.com [74.125.82.52])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 821411DE8A4
-	for <linux-scsi@vger.kernel.org>; Sat, 20 Dec 2025 00:28:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CAD632D6E62;
+	Sat, 20 Dec 2025 03:37:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1766190532; cv=none; b=Wgg5/n3LczbhHB8FSLe3Qj5lDhUJ20wquvrr6pq74uu++x49G2DQ5lQ22+xQ/iB0PSArq194CvR2BC3vCM8yYSIU9COEpCsiR00+O03f0DSXdZrbdiJZ6jBFBQluYrpL97MqowrgxC2WeQASdQsNG7mWxyJwrjwBWM2NzsAozD0=
+	t=1766201867; cv=none; b=Vs5udk3Z9DxGkYcssn7nTlJrwvgn2pxiw5Pxgejqx/B504eZgqLUDIHPa3UkSJZRX7UmTwT09St1L32/QUsas3RzyCzlp5hmL3wkozmVMvMPJdt42klsp8WQcGLnnRSV3L9nEEJuKsCbUfxfD04DKWehunPdfwN+6oE5D/EQWHc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1766190532; c=relaxed/simple;
-	bh=VvJfzkbY6Pvbp5XiLsETEgRs3mPUoGw8r8VQctBm+WE=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=FQGv6keDb/O3neSs/KhS0siC7VhqkB6ifFiru35TbA38A9MafoZET3V33Fa7xV6ZH8Ca4dbzc+1HyRHLYOS1pC8NyU1/+4ubKp0Ana44IE6j+2F5GX3l76G+EV9Bno4RKU9T6f/trPs4/XibeCRrnjst3nn+WuAklWbKjF5fEPc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=mWgXsnqR; arc=none smtp.client-ip=74.125.82.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1766201867; c=relaxed/simple;
+	bh=/il7K0lofULDy2OZDM3FF6uYpttd7tn+0u7tUhx20m8=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=RPNjVw3sG+a1pTFTdnR8J851zonogv6zkwbwiWdgsUwDiYeLmFnrF6dXJ6oeOJuwzNP/Rnd/v3dX6wjhBWsmPFNDL9RkRKiC82ZtNcXIogkbvvajTVbGKhWdHdi96VqOY1qZIjYva4gvYfhPIveP+KMiVXq4A5GUWXlKMXuaOd8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PgbIjVGC; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="mWgXsnqR"
-Received: by mail-dl1-f52.google.com with SMTP id a92af1059eb24-11b6bc976d6so4984381c88.0
-        for <linux-scsi@vger.kernel.org>; Fri, 19 Dec 2025 16:28:50 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1766190530; x=1766795330; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=wHCkyH+h2SQ3kgDQDVUH0NkMAhmwOMZAgZrPL7+vsvk=;
-        b=mWgXsnqR1AZEWIdQYVRgr/pTZac96wIjtu7s6IAziC+r+WDsvG4O9GPVVYrgQEwIKg
-         tm80YWBj36EiqRiz0z+suCMaydX1yOMB2N8f0BsPcIjx7pRtR/QQ4REKY2nqtXR0PbmJ
-         LrosLWvBIxeVraW8tEY/LwN7mXlryFbYv8llf/yk4lL8bC6rAVsjrP635y1orxwWwt31
-         E9i7pdJ72USSJf/EHECZHOXHIGHTNAuTmAVJ24hhhr9Jf6BajLjQs/wgLhoO7SIbShh8
-         RP0JHm2r6aDcYpPZQHNg+U9+D8GCWafcygRlssJkRV2qQZ1vtlMwzY75qbfXBEqg/3tU
-         eQUg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1766190530; x=1766795330;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=wHCkyH+h2SQ3kgDQDVUH0NkMAhmwOMZAgZrPL7+vsvk=;
-        b=JE60ufH9fn2PGbUz4N1k0Wda+yGFCvPnJeIlcgAcRizisx994TDhMeAsOYaK6o4fps
-         w6mUDayuYpO7DRkat9F8TKkAJ0QyjutVtzThXNEGegrW2QLYBiZwdBv8Kpgst1WOZByO
-         idFJ5OXxxLryDgcb/vsmBAEGwXvOuFgDP2aFFJnEuKECRMhhRR+cy6ErBFQ7FQ/ba88p
-         nud3wwbtcUiJdDxrg5lJYPAWHhKPc50MxyVhBPSpeqNNLNIYoQvEesS0saUS/rv4qEpX
-         Gv5BSe9zR0T2mDaTKpaomRMw5DPSIHu2ucf10OliHD8R0MPUBRYkOEbRTlwQgSedpX8Q
-         EZuA==
-X-Gm-Message-State: AOJu0YyHyvgyAUH9xZch7QkE9B5Bhwyp89U6Y8TEj+tqnAVktujCwWzF
-	efKua5vOSFVAQVEco6f8D1RTLMTfbMzYC04l8l86jMNjjNZll+diNV9+
-X-Gm-Gg: AY/fxX4gewxTKhyvfHy5vk9kYglrSgkjC8ZT184e04vGsLwxCfSHmRo+shyTyQ+5Jbe
-	T33SBueVE9F5UDWkPTmgrPYPVl+25+RwUqajASicXZ+QUKg3vjWmYy6KML3GmXm/rl3I+ZJvZtg
-	xMuLjQ5GXA+9dYgL8ToGijYapuGVUdoyylvsUdnXB4yWspqPb7l1ljc+RjEDs5+Dw3l8frrCjA3
-	myKFGkG7B8Tmkq52qy+ySJcW4MiDx4HBYar4kfSOndTjIf2hSOouLlG8muz06utdT09V85ybLSN
-	5h1Jp4O9UoUXgibvAx6TU64jPuFESRG8ebtOuCKKtqAbZM89OcNPRKfcLfArGH7hIGHbsNPXqAZ
-	7bscZyZXUUClQy6/z5DIqZJgRVeD+G0Z6z16LjU40KcnGYGhhZxOOji1XiyleshCiz31R6/FkXk
-	tk5TsIzNRPeIUP4wKyG3osd7xSdcNkmSdJhu/2DDe+fkAY4Of+JpKcYmBDnwn3/HwIrl7lnxXi9
-	/E7Wnp2G07ODh7am1Jxd83bHB42YfeeVSPlrPJX+TzR
-X-Google-Smtp-Source: AGHT+IEIe82uT3wqmzhkzHDjKZsCjlBDS/hGHFoOpvdoqxzmGNAgG8/YDvFtaipEoWCLmTW22YUSXw==
-X-Received: by 2002:a05:7022:912:b0:11b:9386:a383 with SMTP id a92af1059eb24-12171afd92fmr5438106c88.22.1766190529475;
-        Fri, 19 Dec 2025 16:28:49 -0800 (PST)
-Received: from [192.168.51.14] (c-73-231-117-72.hsd1.ca.comcast.net. [73.231.117.72])
-        by smtp.gmail.com with ESMTPSA id a92af1059eb24-121724cfdd0sm14425651c88.4.2025.12.19.16.28.47
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 19 Dec 2025 16:28:48 -0800 (PST)
-Message-ID: <02a6cf4b-62e7-4361-ac95-533da18f7ffa@gmail.com>
-Date: Fri, 19 Dec 2025 16:28:47 -0800
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PgbIjVGC"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CB51BC4CEF5;
+	Sat, 20 Dec 2025 03:37:43 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1766201866;
+	bh=/il7K0lofULDy2OZDM3FF6uYpttd7tn+0u7tUhx20m8=;
+	h=From:Subject:Date:To:Cc:From;
+	b=PgbIjVGCMcpKzzobahf7bFQUDmsKA46Noa21et4K7XppNwPUbKB8W80vYFqRE9Ci1
+	 Qvo+DLISHlwT8XXuCs6cvAMW/zH8K+y716gNRv0HYtX8OHZ8Y3Z0h/oqsW0NxB5wcA
+	 9f5zLc/t82851QR/HCrfTmd3wK5UORYpqgjrPQ9Kv7vYf2b30PhoqbGIwjTp1leWEA
+	 D/BPZHC/0RFOzaHPK+2mWK+Ef1GkeH4XMvEGeyhu6dHfyfAHGVqSkfoczc9Ih7zxNl
+	 9Lbr26v8UnaJJFMLE1S6p1EyQvOvLJn6D7c9dOkuyDLYukQ1ksGVu6ppaxHHXdgZC/
+	 y2DTP39KzOtig==
+From: Daniel Gomez <da.gomez@kernel.org>
+Subject: [PATCH 0/2] scsi: target+fcoe: replace -EEXIST with -EBUSY in
+ module_init() paths
+Date: Sat, 20 Dec 2025 04:37:31 +0100
+Message-Id: <20251220-dev-module-init-eexists-linux-scsi-v1-0-5379db749d54@samsung.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4 6/6] scsi: core: Improve IOPS in case of host-wide tags
-To: Damien Le Moal <dlemoal@kernel.org>,
- "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
- John Garry <john.g.garry@oracle.com>, Hannes Reinecke <hare@suse.de>,
- Christoph Hellwig <hch@infradead.org>, Jens Axboe <axboe@kernel.dk>,
- Ming Lei <ming.lei@redhat.com>,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-References: <20251216223052.350366-1-bvanassche@acm.org>
- <20251216223052.350366-7-bvanassche@acm.org>
- <ac537693-ec0c-4c50-8ee9-a02975f0e18c@kernel.org>
- <dba8da69-1f14-48a5-a540-01e8659b7d3a@acm.org>
- <074e472e-4320-4d42-b4ac-a1fa7585e2b6@kernel.org>
- <ddf72e7a-a5a0-48d0-8714-9f3caa4345bb@gmail.com>
- <52e2f607-f4a6-49ff-9a52-db382333ea69@kernel.org>
-Content-Language: en-US
-From: Bart Van Assche <bart.vanassche@gmail.com>
-In-Reply-To: <52e2f607-f4a6-49ff-9a52-db382333ea69@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
+X-B4-Tracking: v=1; b=H4sIAPsZRmkC/x2N0QqCQBBFf0XmuQFnyax+JXow51oDtsaOyoL47
+ y0+Hg6cs5EjGZzu1UYJq7lNsYCcKuo/XXyDTQtTqEMjQa6sWPk76TIWE21mIJvPzqPFJbP3bnz
+ GTTq5DO1LlUrolzBYPiaP577/AQQb0O10AAAA
+X-Change-ID: 20251218-dev-module-init-eexists-linux-scsi-4e91a16f7bdd
+To: "Martin K. Petersen" <martin.petersen@oracle.com>, 
+ Hannes Reinecke <hare@suse.de>, 
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
+Cc: Luis Chamberlain <mcgrof@kernel.org>, Petr Pavlu <petr.pavlu@suse.com>, 
+ Daniel Gomez <da.gomez@kernel.org>, Sami Tolvanen <samitolvanen@google.com>, 
+ Aaron Tomlin <atomlin@atomlin.com>, Lucas De Marchi <demarchi@kernel.org>, 
+ linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, 
+ linux-modules@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ Daniel Gomez <da.gomez@samsung.com>
+X-Mailer: b4 0.15-dev
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1492; i=da.gomez@samsung.com;
+ h=from:subject:message-id; bh=/il7K0lofULDy2OZDM3FF6uYpttd7tn+0u7tUhx20m8=;
+ b=owEBbQKS/ZANAwAIAUCeo8QfGVH7AcsmYgBpRhn/GVBkmi7vo+LhiK/E+rpx5MtzHTQ8TWr9f
+ iX9yJl6DyeJAjMEAAEIAB0WIQTvdRrhHw9z4bnGPFNAnqPEHxlR+wUCaUYZ/wAKCRBAnqPEHxlR
+ +9A6D/4sgZgr08LFw0XsLFk+sosvAgOxv0EBiwWYs6N9Cf1Co737yaG7o0R6Wb3y6jGsJFo4+yh
+ Mg3347XDe+NXLL/tWO9nVrgqBPvDMpMx9LxQq2qsACq+g+4sO2bVISeVoz82yjgPQY2TXgtVVVb
+ Vb0BRDROSK+WojKsjVTUXbmUfFpsxUnqr8thNaP3bWkhkh6x0YTOCTkYbaRA6TAPNUTzHkAyxhK
+ KUrVCh+BjInbyzB/WEp2gnbK4+GNpUXNw4v0wiU3tgCqCt0lnenLI+V0HYZ7ipnrK5EkY6zT0oE
+ GbP0VnKA6XTCs2eGOjTGmtak0YnHP8KXWFarOi9JDOClxldzhCJIyLSXqdIE8/inbrc7DcDG02e
+ tuPjGER236oZRNcvV6cpQNWJMDJMn9M/HwMjynv4JmkIlDYoZCeDIk2D2aSfXXko429fnGl+p01
+ R4wfXMhwAs2r/dR3Pf4gNlokF85C4Tp6RBE5zxo3f0G5lq4PMoPVteiodaJMQYmLvDzUkK86ngj
+ Mmi6TRffNG/oiOOypdRmNyooJ4X2QuMgvLYPzIw+hk58JzjqnKaLyUqXQB8Wrx9ao9dJEiqlQTW
+ 9saaaOSc5ioLd26GqTH9AJdBlYuQ96WH7Zgbet4wyfkWb8pk1Qw49gohCLUI+PQFYAz8Hh5ksKW
+ fujNrbcw0CBmJ+w==
+X-Developer-Key: i=da.gomez@samsung.com; a=openpgp;
+ fpr=B2A7A9CFDD03B540FF58B27185F56EA4E9E8138F
 
-On 12/19/25 4:13 PM, Damien Le Moal wrote:
-> E.g.: "host->can_queue is identical to the maximum queue depth per
-> logical unit" -> As I mentioned, SCSI does not define/advertize a maximum queue
-> depth per LU (beside the transport defined maximum of course). So Is this
-> something that UFS defines outside of SCSI/SBC ?
+The error code -EEXIST is reserved by the kernel module loader to
+indicate that a module with the same name is already loaded. When a
+module's init function returns -EEXIST, kmod interprets this as "module
+already loaded" and reports success instead of failure [1].
 
-No, this is something that is supported since a long time by the Linux
-kernel. scsi_alloc_sdev() uses host->cmd_per_lun when allocating the
-SCSI device budget map. Hence, host->cmd_per_lun is the maximum queue
-depth for a SCSI device. This limit is enforced since a very long time.
-Before the budget map was introduced, the number of commands per SCSI
-device was set as follows:
+The kernel module loader will include a safety net that provides -EEXIST
+to -EBUSY with a warning [2], and a documentation patch has been sent to
+prevent future occurrences [3].
 
-        scsi_change_queue_depth(sdev, sdev->host->cmd_per_lun ?: 1);
+These affected code paths were identified using a static analysis tool
+[4] that traces -EEXIST returns to module_init(). The tool was developed
+with AI assistance and all findings were manually validated.
 
-> Also, for UFS, is it always one
-> host per LU ? (that would be odd, the "device" here should be the host and you
-> say it can have multiple LUs).
+Link: https://lore.kernel.org/all/aKEVQhJpRdiZSliu@orbyte.nwl.cc/ [1]
+Link: https://lore.kernel.org/all/20251013-module-warn-ret-v1-0-ab65b41af01f@intel.com/ [2]
+Link: https://lore.kernel.org/all/20251218-dev-module-init-eexists-modules-docs-v1-0-361569aa782a@samsung.com/ [3]
+Link: https://gitlab.com/-/snippets/4913469 [4]
 
-No. There is one SCSI host per UFS device and there can be multiple
-logical units per UFS device.
+Signed-off-by: Daniel Gomez <da.gomez@samsung.com>
+---
+Daniel Gomez (2):
+      target: replace -EEXIST with -EBUSY
+      scsi: fcoe: replace -EEXIST with -EBUSY
 
-> But if I understand this correctly, you are saying that a UFS device is like
-> SATA and can_queue == device max queue depth, so we are always guaranteed that
-> if you can allocate a tag, you will be able to issue the command, right ?
+ drivers/scsi/fcoe/fcoe_transport.c | 2 +-
+ drivers/target/target_core_hba.c   | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+---
+base-commit: 8f0b4cce4481fb22653697cced8d0d04027cb1e8
+change-id: 20251218-dev-module-init-eexists-linux-scsi-4e91a16f7bdd
 
-That's correct.
+Best regards,
+--  
+Daniel Gomez <da.gomez@samsung.com>
 
-Thanks,
-
-Bart.
