@@ -1,40 +1,33 @@
-Received: from mout.web.de (mout.web.de [212.227.15.14])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A68126F2B6;
-	Sat, 20 Dec 2025 16:10:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.227.15.14
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C2A8224FA;
+	Sun, 21 Dec 2025 03:30:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1766247007; cv=none; b=cltqpkPbcKENL+pwmAKSurCa5qctZGysSBi3JDwHz0o7PEImeILcsiYXNhed44ccuU342tTdhqZx2xva/YaKQV32LsC7MIWhlFGcFE5gJwdmcyKrfY2pw74diFxoOy5DiLBhZT495opayWbeWNaYGhSn7xth1rWvNE2Cj8lWBak=
+	t=1766287824; cv=none; b=nG0/izbMiJhPLAwuHPAGgkun+qEb/tXuNY+pSkzr9gLLWP9fWilt63TEW2q+EnDqbaCzLDGkjKjsXusGwR9n7AYT17ZY8kkI7SJRs8ha4LFO+iP8FrqgKApWH1bgx9v3CjhDnaAlBRtjbfwvIcWUbVrDTfZ3pxAMxYXENAbGBkM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1766247007; c=relaxed/simple;
-	bh=3xsV0oI2wQr121cNCBKzs4dljwqZHphncWQPYAn7Pig=;
-	h=Message-ID:Date:MIME-Version:To:Cc:References:Subject:From:
-	 In-Reply-To:Content-Type; b=g5sWjR44W7xUUnHt7aFUxj5NoFIfE5kTxagHoIiblbYypZqsX75GUjrOTMZwItFHJovp5YQNXcU0lYfkFYEugvzQfV8fzpofbVOgw3ImJyWibNGh7r609TlPUFqWrQiTL8vHqJhPVOq1HqO5uodjrQY4Y9LIZWfS9zllQuPAsyI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de; spf=pass smtp.mailfrom=web.de; dkim=pass (2048-bit key) header.d=web.de header.i=markus.elfring@web.de header.b=kVQ7HwJG; arc=none smtp.client-ip=212.227.15.14
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=web.de
+	s=arc-20240116; t=1766287824; c=relaxed/simple;
+	bh=213ARG2iDcjOtUajVDIH2Laug91k64/zHImj8Q3fSYo=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=a9Ij6LaRjeOaZRBahoITcUptisejzrTeGiTNUcuq7yICXaT3jnl4Sq1UCcnkhvBE4feEXX4ID4/7ikv5axvwVcLRQsCNUqFVyw+dpPoUmQ6YyrDxrfB4A9YP8aXg/lRZCPTO7CGs6TheKI0X0u9U2XgWwXZMCjVKEUAocr9RD+s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=U5IsKXTH; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=web.de header.i=markus.elfring@web.de header.b="kVQ7HwJG"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=web.de;
-	s=s29768273; t=1766246996; x=1766851796; i=markus.elfring@web.de;
-	bh=ClvdF52tyBTj1vQnvRx1egcfnAzuavIbXHLKNDt764Y=;
-	h=X-UI-Sender-Class:Message-ID:Date:MIME-Version:To:Cc:References:
-	 Subject:From:In-Reply-To:Content-Type:Content-Transfer-Encoding:
-	 cc:content-transfer-encoding:content-type:date:from:message-id:
-	 mime-version:reply-to:subject:to;
-	b=kVQ7HwJGw8T3d1NiQOYj0dB6Nv9ZTYkSLlXuUzoSsNyDx9+oiBA1XXmOORlDEJPH
-	 DoRqYElaWkqwxaY1PjIJxU/QAwIb6LMmJjkyTbCGBIxCFKmgo226m3wIqJe3ET/yC
-	 3pTpE1di+n0DkQbNAlvcpmd0W6wHHapN35hKCtRgEHu6tubrO+z+a1+3/kGc0/5x0
-	 65fGZxqwD/ilA3d/QFPIq7DGWUGfx4VOr+nbeNGlGXCT2W58sEZpt1d2gCm6t3awx
-	 WgrFYrAKdz7HF90KbvjIB5iSYpOCMCr9805iekMdz6H1CrGNZR38ZS+ZFeM1/GDhS
-	 3qivAvERAlvubAG+jg==
-X-UI-Sender-Class: 814a7b36-bfc1-4dae-8640-3722d8ec6cd6
-Received: from [192.168.178.29] ([94.31.69.215]) by smtp.web.de (mrweb006
- [213.165.67.108]) with ESMTPSA (Nemesis) id 1MBS71-1vge310fMt-005yXo; Sat, 20
- Dec 2025 17:09:56 +0100
-Message-ID: <53c5a56b-81fc-44af-bade-21aea79682f8@web.de>
-Date: Sat, 20 Dec 2025 17:09:50 +0100
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="U5IsKXTH"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2D0ECC113D0;
+	Sun, 21 Dec 2025 03:30:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1766287824;
+	bh=213ARG2iDcjOtUajVDIH2Laug91k64/zHImj8Q3fSYo=;
+	h=Date:Reply-To:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=U5IsKXTHqSsGJi3HgpPiB6AlfQZn0uS6xiSm5SxCZ5NMM6NZBQlTfe9b+IYr4TN+o
+	 8Sn3L+7tZQ6EoR44jWELMP04HZgQtkDDtdNA0gB5Y3Jo5BM45tiQTvaTeJHTJg41Qr
+	 1LLqP2yMC/DZt+OgAzs0SI/Ln5QbCGFnvLlacdqMCL4vRjk17KCvAbndst55x1MpaZ
+	 wnh3eSNNRDmjQvEOnCpeRq7V5jJj3ypQJFvjMyABolRWqrNyqe9GuQlDwlkKId34Th
+	 7IdFGmYiCSFj4fk2oriLgaCWH7cdQEsbFZtIeKbAhC2cNEr80xRMzHOQU62RX0DWAP
+	 h/WxYroDRk6TA==
+Message-ID: <799f5069-36a1-4be7-8ee3-acb3a6cd44a2@kernel.org>
+Date: Sun, 21 Dec 2025 04:30:19 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -42,120 +35,90 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-To: Haoxiang Li <lihaoxiang@isrc.iscas.ac.cn>, linux-scsi@vger.kernel.org,
- Hannes Reinecke <hare@suse.com>,
- James Bottomley <James.Bottomley@HansenPartnership.com>,
- Jitendra Bhivare <jitendra.bhivare@broadcom.com>,
- Ketan Mukadam <ketan.mukadam@broadcom.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: stable@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
-References: <20251213083643.301240-1-lihaoxiang@isrc.iscas.ac.cn>
-Subject: Re: [PATCH] scsi: be2iscsi: fix a memory leak in
- beiscsi_boot_get_sinfo()
-Content-Language: en-GB, de-DE
-From: Markus Elfring <Markus.Elfring@web.de>
-In-Reply-To: <20251213083643.301240-1-lihaoxiang@isrc.iscas.ac.cn>
+Reply-To: Daniel Gomez <da.gomez@kernel.org>
+Subject: Re: [PATCH 0/2] scsi: target+fcoe: replace -EEXIST with -EBUSY in
+ module_init() paths
+To: James Bottomley <James.Bottomley@HansenPartnership.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ Hannes Reinecke <hare@suse.de>
+Cc: Luis Chamberlain <mcgrof@kernel.org>, Petr Pavlu <petr.pavlu@suse.com>,
+ Sami Tolvanen <samitolvanen@google.com>, Aaron Tomlin <atomlin@atomlin.com>,
+ Lucas De Marchi <demarchi@kernel.org>, linux-scsi@vger.kernel.org,
+ target-devel@vger.kernel.org, linux-modules@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Daniel Gomez <da.gomez@samsung.com>
+References: <20251220-dev-module-init-eexists-linux-scsi-v1-0-5379db749d54@samsung.com>
+ <b1e372cacf08a758e06ce7504c6cfaf7778bc6f3.camel@HansenPartnership.com>
+Content-Language: en-US
+From: Daniel Gomez <da.gomez@kernel.org>
+Organization: kernel.org
+In-Reply-To: <b1e372cacf08a758e06ce7504c6cfaf7778bc6f3.camel@HansenPartnership.com>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-X-Provags-ID: V03:K1:HWJGfzw82e2VS6ty9ih7yk/E1AYV5vSWbsAX91+CDKeNLFCEAZF
- PEbtZkcLCzzbe7a972L5cv/XbPTY7HZqRjwvIU5rjZfAq8rZhNiVkFIt5wYqtsbOL9gxQ81
- B3PyMC6eOJsk1lepGB08sP+pCLEiUoFUJ9gxYb0w0hxFQysBPLaUSgITtOVDaZN+ep+TYJ2
- daDYqyW/FeOUTrZ24RYbw==
-X-Spam-Flag: NO
-UI-OutboundReport: notjunk:1;M01:P0:rKamhJrhLiA=;MV2aYO6MevRMquWNxBs70LMK9FG
- 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
- tD/dcnUumwqMRy0v3QfgcX8gb8t4KSHIzL3nis
+Content-Transfer-Encoding: 7bit
 
-> If nonemb_cmd->va fails to be allocated, call free_mcc_wrb()
-> to restore the impact caused by alloc_mcc_wrb().
+On 20/12/2025 05.27, James Bottomley wrote:
+> On Sat, 2025-12-20 at 04:37 +0100, Daniel Gomez wrote:
+>> The error code -EEXIST is reserved by the kernel module loader to
+>> indicate that a module with the same name is already loaded. When a
+>> module's init function returns -EEXIST, kmod interprets this as
+>> "module already loaded" and reports success instead of failure [1].
+> 
+> That reference doesn't sufficiently explain why this error code should
+> be unique to modules.
 
-     avoid?
+It's unique only to the module initialization. You can find how it's used in the
+kernel module code at module_patient_check_exists() in kernel/module/main.c [1].
 
+In addition, init_module(2) man pages indicates this:
 
-=E2=80=A6
-> +++ b/drivers/scsi/be2iscsi/be_mgmt.c
-> @@ -1025,6 +1025,7 @@ unsigned int beiscsi_boot_get_sinfo(struct beiscsi=
-_hba *phba)
->  					      &nonemb_cmd->dma,
->  					      GFP_KERNEL);
->  	if (!nonemb_cmd->va) {
-> +		free_mcc_wrb(ctrl, tag);
->  		mutex_unlock(&ctrl->mbox_lock);
->  		return 0;
->  	}
+man 2 init_module | grep EEXIST
+       EEXIST A module with this name is already loaded.
 
-I suggest to avoid also repeated mutex_unlock() calls in this function imp=
-lementation.
+So, a module that is already loaded will be detected by the kernel module loader
+and the EEXIST error will be returned. This will be detected by kmod as success
+[2]. I think this functionality was added very early on in kmod by commit
+5f35147 "libkmod-module: probe: add flag to stop loading on already loaded" [3].
+Prior to that, module-init-tools had the same behavior [4]. Even in modutils
+[5], we had back then in insmod/insmod.c:2088:
 
-Regards,
-Markus
+		case EEXIST:
+			if (dolock) {
+				/*
+				 * Assume that we were just invoked
+				 * simultaneous with another insmod
+				 * and return success.
+				 */
+				exit_status = 0;
+				goto out;
+			}
+			error("a module named %s already exists", m_name);
+			goto out;
+
+Link: https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/kernel/module/main.c?h=v6.19-rc1#n3206 [1]
+Link: https://github.com/kmod-project/kmod/blob/v34.2/libkmod/libkmod-module.c#L1088 [2]
+Link: https://github.com/kmod-project/kmod/commit/5f3514731ef82084c1a24b15445e0f1352681a19 [3]
+Link: https://git.kernel.org/pub/scm/utils/kernel/module-init-tools/module-init-tools.git/tree/modprobe.c#n1797 [4]
+Link: https://cdn.kernel.org/pub/linux/utils/kernel/modutils/v2.4/modutils-2.4.27.tar.gz [5]
+
+> EEXIST is used all over the kernel to indicate
+> that something being attempted has already happened or does already
+> exist and that seems perfectly logical .... please explain why you're
+
+That is correct but not all are conflicts within the
+module_init()/init_module(2) path. I have detected 40+ cases where this error
+is returned and another 20+ where error is returned but in upper layers of
+the module itself, not propagated back to userspace. So far, I've only sent just
+a few + docs:
+
+https://lore.kernel.org/all/20251220-dev-module-init-eexists-dm-devel-v1-1-90ed00444ea0@samsung.com 
+https://lore.kernel.org/all/20251220-dev-module-init-eexists-keyring-v1-1-a2f23248c300@samsung.com
+https://lore.kernel.org/all/20251220-dev-module-init-eexists-linux-acpi-v1-1-af59b1a0e217@samsung.com
+https://lore.kernel.org/all/20251218-dev-module-init-eexists-modules-docs-v1-0-361569aa782a@samsung.com
+
+> trying to push it back to being a single use case for modules alone.
+> 
+> Regards,
+> 
+> James
+> 
+> 
+> 
