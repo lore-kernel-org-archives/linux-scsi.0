@@ -1,221 +1,330 @@
-Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 21046332EB6
-	for <linux-scsi@vger.kernel.org>; Mon, 22 Dec 2025 08:28:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=210.61.82.184
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1766392132; cv=fail; b=dlABDlI7r3Ib66t2AFa4IqufpHskr7my9B5cX5/OlgEm+2SyE0xdvajA5rWxqgAWXz7aZNrP4bHMci08Bt6hc63mClOXnt8wxnqrKQtf0FGL03W0Y2wk3TZDqrrAp3EQrO4LQyKVAvuOBVSvFLqlFpkWRAYN/GSb/JujQozJTCo=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1766392132; c=relaxed/simple;
-	bh=d6mTZ3KfaYHHDtOF/exusqHByYhcNBQiWItkfF4F+UQ=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=ZcWFSOjJ+4TRqbSNs8vfQ596iUhYMDUHkKyOvsu0Ficu/rC7IrOAgyKLl0a6ZoWBAf0d3aAh7oCL03S9zf88wQGXHyUOgXXFsHbSmLXDNhf/a8QB3Kk9UDfyo/SBU4/hKm86xyKQve1OPat/mEjbvNORCwcOXckX1nUk5ChlXGQ=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=u2Xgm8tH; dkim=pass (1024-bit key) header.d=mediateko365.onmicrosoft.com header.i=@mediateko365.onmicrosoft.com header.b=MkfVC7Hc; arc=fail smtp.client-ip=210.61.82.184
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B117C299A81
+	for <linux-scsi@vger.kernel.org>; Mon, 22 Dec 2025 12:56:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.11
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1766408174; cv=none; b=MP/SnwLATqEoJNZEDO2mzK6mo+vLfq1c7Archw1VJTC8t+cBID8qABRfN9J0++tQBxNZ0EsYEHTVDNvQELvA7vpHjW1pVxi1WIBF92cHJfxRUc0yBNSpzDJF6hlYZ7622qRhfaxgjaBkvDkoIYrq4hNP7T78M2iDMlxqF/lbdi8=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1766408174; c=relaxed/simple;
+	bh=f9/rHqocjeh8OLWiRaOSMgsTVjDVoD3FEm6rv46rYHo=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=LZpARsVa2Xl2xweV8/ou0AaFy213/BhKrte3jOc9hp2XB4fL0sK1XT6G+bTcg/wfgMCxx+wpcjPSlO8M4d9ivKpLBoYV5Wh24jKijrt+bwqLshBmU5/ubfbUrl2TSXftNndJIXjm8N3UtUzoe8pjFrDDHXUed7Yek+VyDr1nBdU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=RYGElxe5; arc=none smtp.client-ip=198.175.65.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="u2Xgm8tH";
-	dkim=pass (1024-bit key) header.d=mediateko365.onmicrosoft.com header.i=@mediateko365.onmicrosoft.com header.b="MkfVC7Hc"
-X-UUID: 394489eedf1011f0b33aeb1e7f16c2b6-20251222
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=MIME-Version:Content-Transfer-Encoding:Content-ID:Content-Type:In-Reply-To:References:Message-ID:Date:Subject:CC:To:From; bh=d6mTZ3KfaYHHDtOF/exusqHByYhcNBQiWItkfF4F+UQ=;
-	b=u2Xgm8tH96XnEIY/xornBZqiNT8IVRYy0g3hrCpIDlDeeEzU+mYtEhtXhrhOWGkfCb7j57m8y+iiW0kdyf09mnDgyR/j+5pn6d53oY2JrauyiEI30fIfUhO4v7BPonY7QyPYHfCC4oHF3IU6DL2iXwfUk60nrc7tCXKnVkIzBUI=;
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.9,REQID:c8474543-8125-4ce6-91ae-10edac68e14b,IP:0,UR
-	L:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:r
-	elease,TS:0
-X-CID-META: VersionHash:5047765,CLOUDID:f499c928-e3a2-4f78-a442-8c73c4eb9e9d,B
-	ulkID:nil,BulkQuantity:0,Recheck:0,SF:80|81|82|83|102|110|111|836|888|898,
-	TC:-5,Content:0|15|50,EDM:-3,IP:nil,URL:0,File:130,RT:0,Bulk:nil,QS:nil,BE
-	C:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
-X-CID-BVR: 2,SSN|SDN
-X-CID-BAS: 2,SSN|SDN,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR
-X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: 394489eedf1011f0b33aeb1e7f16c2b6-20251222
-Received: from mtkmbs13n2.mediatek.inc [(172.21.101.108)] by mailgw02.mediatek.com
-	(envelope-from <peter.wang@mediatek.com>)
-	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 837780849; Mon, 22 Dec 2025 16:28:42 +0800
-Received: from mtkmbs10n2.mediatek.inc (172.21.101.183) by
- MTKMBS14N1.mediatek.inc (172.21.101.75) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1748.26; Mon, 22 Dec 2025 16:28:40 +0800
-Received: from SG2PR04CU009.outbound.protection.outlook.com (172.21.101.237)
- by mtkmbs10n2.mediatek.inc (172.21.101.183) with Microsoft SMTP Server id
- 15.2.2562.29 via Frontend Transport; Mon, 22 Dec 2025 16:28:40 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=O0HjLIOXqWSFhnsOWRpGeQhJ7c4wff8FqJ3gHqjvJI/ih19hss2MzUlp+ekck65BNYOfw7pi7PJg0TBGhg1p4MtjTEHmSUZtCXGwWlVMQtBNKOZ14GnMHQO5rq9m37hJmsBxR3StDdcmN1uEyl/IFJKkCLZg0+ZfCStsKVjf5YdkI4cagylsA6CHxfXfnEgLErJd2iNw//Ef4y2nua2+Cne7bkuyaUiUndZfJvsLjmmE8dHm8VCiYnnBhtwTHFfkOxnW8kLfUOvxIQ1UF6DaxrvO+1vtMUhUlAe7QiabyYvPlQfadC13QHFfC97+gnV39P46ZZ3CYsFcv4cWtIvQAA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=d6mTZ3KfaYHHDtOF/exusqHByYhcNBQiWItkfF4F+UQ=;
- b=PW0kRHjoBkPTIamU6RG5zNsUoZkHNqRddtDh2eJ+F4CmT4JnDsmPOY41A8RzAhW2PYA8ES1iHuTN24b822Z7inAloq9cnjRSP32Im4V8S7+jcYsa0wPFGmm5CRu4xKKtnEceenw16FIWhB32IUmj8MNcXpFAlh63K7k31QgEfty/mTuKnQj1r3oIEcqEyVddWjc/0uDn5fqYcYOC3JFDy2+tsTGFZlCGD978TCapwg58U+e2XE0Wl/TGkj7sgingwYMUD4F9LjAWBpeQFmGCf6SNuI9cNf0HyKBE2HugZ/GBrKXtBx90MlOkX3eFz6dt2wCjxrTeaNLQe0KtRQKU/A==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=mediatek.com; dmarc=pass action=none header.from=mediatek.com;
- dkim=pass header.d=mediatek.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=mediateko365.onmicrosoft.com; s=selector2-mediateko365-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=d6mTZ3KfaYHHDtOF/exusqHByYhcNBQiWItkfF4F+UQ=;
- b=MkfVC7Hctdmg3w6BJNKIfcFhbBbS5XDzLPixAfuidtLfM+qXtRzhiT2vtbMdFP4WlRWycFvLOC1iyJhh0jgBFOlJBjdTXgLC/O4AJOXtB6JwQQVSPi5sQfrbLHnJaZtiT8iP6BYDIUH1lAS6QgBuly4xkVTn/Dm1FC5ZZ5FwkW4=
-Received: from PSAPR03MB5605.apcprd03.prod.outlook.com (2603:1096:301:66::6)
- by TY0PR03MB8200.apcprd03.prod.outlook.com (2603:1096:405:d::7) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9434.11; Mon, 22 Dec
- 2025 08:28:38 +0000
-Received: from PSAPR03MB5605.apcprd03.prod.outlook.com
- ([fe80::165:d36a:3f76:2925]) by PSAPR03MB5605.apcprd03.prod.outlook.com
- ([fe80::165:d36a:3f76:2925%4]) with mapi id 15.20.9434.009; Mon, 22 Dec 2025
- 08:28:38 +0000
-From: =?utf-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= <peter.wang@mediatek.com>
-To: Uwe Kleine <u.kleine-koenig@baylibre.com>,
-	"James.Bottomley@HansenPartnership.com"
-	<James.Bottomley@HansenPartnership.com>, "martin.petersen@oracle.com"
-	<martin.petersen@oracle.com>, "Kai.Makisara@kolumbus.fi"
-	<Kai.Makisara@kolumbus.fi>
-CC: "avri.altman@wdc.com" <avri.altman@wdc.com>, "beanhuo@micron.com"
-	<beanhuo@micron.com>, "quic_nguyenb@quicinc.com" <quic_nguyenb@quicinc.com>,
-	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "AngeloGioacchino
- Del Regno" <angelogioacchino.delregno@collabora.com>, "bvanassche@acm.org"
-	<bvanassche@acm.org>, "adrian.hunter@intel.com" <adrian.hunter@intel.com>,
-	"alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>, "matthias.bgg@gmail.com"
-	<matthias.bgg@gmail.com>, "linux-mediatek@lists.infradead.org"
-	<linux-mediatek@lists.infradead.org>
-Subject: Re: [PATCH v2 2/8] scsi: Make use of bus callbacks
-Thread-Topic: [PATCH v2 2/8] scsi: Make use of bus callbacks
-Thread-Index: AQHccMmTK/May6aVp0qM7Ut1RH2lvbUtWFyA
-Date: Mon, 22 Dec 2025 08:28:37 +0000
-Message-ID: <ba48917452f4bb168a2b76deb64d2edeace2c836.camel@mediatek.com>
-References: <cover.1766133330.git.u.kleine-koenig@baylibre.com>
-	 <a54e363a3fd2054fb924afd7df44bca7f444b5f1.1766133330.git.u.kleine-koenig@baylibre.com>
-In-Reply-To: <a54e363a3fd2054fb924afd7df44bca7f444b5f1.1766133330.git.u.kleine-koenig@baylibre.com>
-Accept-Language: zh-TW, en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=mediatek.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: PSAPR03MB5605:EE_|TY0PR03MB8200:EE_
-x-ms-office365-filtering-correlation-id: ac5d5b28-bd7f-419e-60d0-08de41341aec
-x-ld-processed: a7687ede-7a6b-4ef6-bace-642f677fbe31,ExtAddr
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;ARA:13230040|7416014|1800799024|376014|366016|38070700021;
-x-microsoft-antispam-message-info: =?utf-8?B?OU1PYXVCMFBIS1NPZGxKNXVpb1VnSDYyL3hTOWxqSWVnN0NTOGs2YkZuRUxz?=
- =?utf-8?B?bjJadzluY1BLRTJmRUhYNTlyWStMeG8yb2Q4ZlpaeGdjZnFDMTJ0Q2M2SmdI?=
- =?utf-8?B?RWJubFJURkdnWWh6LzVaM0J5Zld6OTllTmwwTVNhbFpveTBDaHd3WHUzT2hh?=
- =?utf-8?B?MnFxT3dvSDg4NEFTR2RDZW1KeGFFSFJ3WGh6UVdJQ3pqbnErdkZnbVZYNlRz?=
- =?utf-8?B?enNJazloQTlFRjBHeXY1NitNckd2YzhmWW5nN25MeFBIbkVmNGdMaVlBalN5?=
- =?utf-8?B?eTFCMnN3cDN0dHIvL1NzejhMYzBKNWZ1S1N2QVFTcTVjWndWUk8zdGFXcVpK?=
- =?utf-8?B?M1NENkJGY3U5NC91UHIzaUVwdjFhRExZeldFVmhLV2t4RnFSbnBhZER6dW9z?=
- =?utf-8?B?MFVGbVgydlFkblYrbkJMSmhtTHlGbmwzTHRwZm1qaXdRQTA4cWduMmVZTmlD?=
- =?utf-8?B?OHNnU2ZPMDZWRmx6UkdUN0Rwcmtpb3BMRTBHVkdITW5SOFdWMU80YWVYZ3Ar?=
- =?utf-8?B?dUx1QVpLU2NPMnBmVE5sMy8yd2JpUU5yTlVrSWsycERUK1ZybHVOSmkrS1dF?=
- =?utf-8?B?WW1UbXpQS3lJRGdDbkhDdkhPTjViL1ljVHc4aDNDV0xDQnZobWYrbGVWbWZU?=
- =?utf-8?B?YmxGcWlMMGIwY09qZ0QyQVJHTlI5N3YwMEsrS2hCNi9tcE5XVW5Vb2FkdXlp?=
- =?utf-8?B?SUptYTdjemRrRHdtNkVLSWh4dmdnMWFvTldYSlZnNGdYaFVBQmQwcC81M3Ny?=
- =?utf-8?B?SjJKbW5BK2tWdmZUVytZczFhQm1kYjM3OUlPaTVZL21vUEJ0YzJWMXFxeG5W?=
- =?utf-8?B?U2J4QlZCL1ZiTFhhYlZ6ZzYyQXlPQ2xjelpHQ2RJVW5SdnFETjdRMjdVcjFs?=
- =?utf-8?B?M0NGTTV5cjhBN1Z2MUFBa01xOEpBV2VnL0VBUE95MURCYkV0WGFhSWdIMmgv?=
- =?utf-8?B?NFU5MVZ2R2lrQWVKWTM1M05qT1UwQk9PM29Ub1NLRGhPOTNPYXhGcGJBblo4?=
- =?utf-8?B?MHluSmhNVjFhUW1rU1oxN2IzSUI1S1FZclYxNHFaZzg4VUJTRXlMOE9iN2I4?=
- =?utf-8?B?emEzL2VWZ2drK0Nzdit6dEMyeUMvbWNVLzNDREY2MCthWTV5czlJQ0FQRk5P?=
- =?utf-8?B?MHJPVjlxcGNZVWhjeFdmWW1TMEpiUlRUVTZKRGJEVU5SYXN3RHNnbWtLOVky?=
- =?utf-8?B?eUdScWl3ZTNZamswZHRiMWhoV25kM091NFYzZXdLNTYxdEltbzlGWG1hWXZO?=
- =?utf-8?B?ay94cFAzUHA1dlQ0QjUwSFAvTVdrTFFnOVBuTjdoVE00MXhpMktyMWRXck9r?=
- =?utf-8?B?ZzFFeHEzYkpzUmYrMEJlWnJhaEZjTHpqeDcydTJVNTkrUE9LeEZkeGRYbW1k?=
- =?utf-8?B?NnBtL3AzTXM2TWpxVlUvWE4xWjBJcjMxREhueWVyUmJaWkRJTHVqZ0krY2FV?=
- =?utf-8?B?QkFlUlNZb1B2SGZtYVNHQ1RRZWpwOGltVXliYVVSVHZZNjdxb1NRK2w2RGxr?=
- =?utf-8?B?MkR0OTFZQjNodWdKdXpFVFJ3RkdncmZJcXplRG91d2xwaHNnZzltQ2VTdW9s?=
- =?utf-8?B?dDY5VmRZUmltRkE2MUpDY2NYWmtlaFFNTVJLZ2VDaENrWVR1amo4K05peFdF?=
- =?utf-8?B?VnEyaTRsdE1OTUQzTWxMbGVMKzJ3ZlZ3S0dpeVYrVjRNby9FaFdVNENNbE9m?=
- =?utf-8?B?OWsyQzE4U1pRUzB2dDBLMmJPTWw4aFFZU0R5bUVPTWU4Q0U4eUZFOUttT1JB?=
- =?utf-8?B?Si9mRUxZZkcrcE04SVZiNjRVYk5nell1aGxxZHRMVlF0dmNCVGlpTWVZQnRG?=
- =?utf-8?B?NUNmOW50aXh0NmZmblg4eEhDQzRjNE1BcGJGUmFNYUMwV2JzNzBTWDVCWHBV?=
- =?utf-8?B?VjJROStQQmNGNFE4bmwvbUYwY0loMkNZSlRLbmY1WDZEUzhuR2xnekFZV0hO?=
- =?utf-8?B?Nks4NXU5OU93U0hjM0ZKdEJFNzhYOW4vV2xVaXFwUTdOSnlqWDV1TFpnTVVi?=
- =?utf-8?B?b1o3NVRyZmh6Qm1xR3M5OEtSY0llYnBoSmdhMCtZMVVPeVFjT1EwMk5oK2U5?=
- =?utf-8?Q?wp7Qly?=
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PSAPR03MB5605.apcprd03.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(7416014)(1800799024)(376014)(366016)(38070700021);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?utf-8?B?T0xLaXN2TmR5UUV4QWtlL2ZVaVp5UldaZDZkNmFVcmhhVGY2WjJIMW82NnBw?=
- =?utf-8?B?K1lCYWtmZVpoL0FpNzdXdmdCSUQ3aUVHM09ydEVVcC9IeVdPRTZ4c3hrWUhU?=
- =?utf-8?B?OE16UCtVbnMrWEhmNjlLd1ZNOTRHMUZTdUN5QUExbkUycUg4OWhpd05JRHBM?=
- =?utf-8?B?cndhN3o5S0E3TzJkUFRYcmQ1blNGMGtKenU0bWtYR3g0UUlwalJSVDlPSmxM?=
- =?utf-8?B?UkhLb3VUcXU2Q2N5N3VLeG1EZ3ZVRG02YThiN3pZaUtPMUk5MkIwWTBIcWZY?=
- =?utf-8?B?UW9DU0NTZnlGcTc1dVJiRjlQVzZLZGgwbitVMjNXWjZmNW9jMDJOQmF4anRZ?=
- =?utf-8?B?ZFNHREtaazNHSTBpQVBxRzAyOVN3bEM3c3N0dEdGdjVLYlJya2dXWFQvcUpk?=
- =?utf-8?B?SGErWlp4MzJKZVNYQU9ETk53OVlWY3FzazJhTGhUdm9GT1ZRVjZxNzJDYkp6?=
- =?utf-8?B?aENEY3oxSTRJRzk0WTFUY0lsUzZhbFZ2Qzk5QWM1L1AxUElJeGM0a0cwb1kx?=
- =?utf-8?B?Z2JScmNvMG4wTW1TSTZPcTYxTFJpNHNsTklzN3FSTmVqTVRwMHhkVTdrcDdB?=
- =?utf-8?B?YWFQbSt0WnN6aTh3L0VnUk9FUFVqZkp1KzBhMGJpODF4bHgzVTVVWXRFUzdv?=
- =?utf-8?B?UGx3dlN0TldSYlQ4b0kxanBZSHBoYWNpTnYrdGgrVjNVTEZiVkVzTDVqS0d2?=
- =?utf-8?B?eFo0NGdRYzVzd1N4eEZCN0gyRXI4Z1pab0tYV2kwRmZvcWtxYzFzT1lGUFJr?=
- =?utf-8?B?UEE0ZHFMU3NlKzhMWHdNcTNoaDg4VEtna2F4dUFyL25jdzVNN0E2U3dnZVJo?=
- =?utf-8?B?SWZEYVRKOURQTUN6VmpYczRtb3BRK1ZiZTBKL2VJUjBWVFpaVXM3Z0JndCt2?=
- =?utf-8?B?aHhNK0hZM1MwQS9oK2h1TitCMVFZa3NlWVNqeWs5aXdUZGRYdTgvbWZhTFc0?=
- =?utf-8?B?SkhJMHhLUjZnY3pRUytzZHpjcCszM2kyNnZYdnd5bjIxYkNod3QwellBMTl3?=
- =?utf-8?B?N1hIRTh6QzFNbWpYMnZoZjhBekJmZlFHTjVkQnFUcTFObWxsOGhubmIxVktQ?=
- =?utf-8?B?TFpQVFFoWnQvU3hKeE84NGZ1bFdNNHNrS2JvQ3pTZ1A4aWRWcUNMellIeEps?=
- =?utf-8?B?aEtQU0M3aU12U1p1SXlLeENKY1UvVnlKVlFzbnB1NXdWNURJMVV1SndKQXRy?=
- =?utf-8?B?emtHU05ZRGVtZUl4aVpBcXRINlBTRHpBdUFJbmFZd1BCa3lDYWFQVVdzK1M3?=
- =?utf-8?B?RTk0Y3BMZDVIUkZjRlNFMWFxWEtsdzIzOWUxaGRSK1NXN2ZmZWJhcFYyU0h5?=
- =?utf-8?B?N3FIaDRGRjQ1ZXQ1cWVsSjkremxVUGw2RkdVb2d4LzVCVVQwdVFrVzVGWFV1?=
- =?utf-8?B?SFVENVJNeVR1UUhHTEd3U2w2ZzcwWUx6SlErbFVRL0xhajhyYmRBcHlRN0ha?=
- =?utf-8?B?ZXJYTVlnVjBXam90V085Y2owbCtjVjBzT0FtZldqNTBuTUZaNitBMVpyYnJj?=
- =?utf-8?B?Y09ickF3VlpnU0RqMHNrN1pnSzYyUlJQQ05GSFdFdUljeUlxUmJuMXp0Z2h3?=
- =?utf-8?B?aEsrWHgrZU5EOEZaNkxBa0ZibnJXNjVXcUY0bk1TdkwyM20xd2ZCc2lRaDJa?=
- =?utf-8?B?dGNROGRwN0hmV1ZibksxYkR3RHQxVzN5RFFQZ2RTaDBsUTVoOFo4MjZsRVdm?=
- =?utf-8?B?T0prSVp0NGNLc0hoeHVmUFZFd3ByZDNvbnRTNjFtbXNaV280YndhQ0dWaDA5?=
- =?utf-8?B?TGtja0ZYZ3I3U3BMaFhiYm5NZENhRC84bEt4SFMybm9oOS85ZFZNNWRQUTVN?=
- =?utf-8?B?Yk5tME1KLzFHQy85YTM0bC96b1ZzS1dQWFh0V3kreGE0VnNycGJsK3RxY3My?=
- =?utf-8?B?elMvYXNWSmIxaFRmSmFnMjEyR2NSMmpiRy9hZzBlVXpBN1ZXRUN3YW13RU1G?=
- =?utf-8?B?M1hZYU9XanNCRThXRWlrS2FvQWJPRTRXOGt5ODRFckJmV1UyU1Azc2FCa3c1?=
- =?utf-8?B?ektFejdGKzBTdFFRcjRoeCtHZDlqcWwyUmVMTHpPeDF5dnpoK1BPMDRtSXRG?=
- =?utf-8?B?MGJDZ05EM3NiWlVhVXk2RjI3QWVNMnIyRzdyYS9LbCtnMDlBK1ZCQkF1VlRI?=
- =?utf-8?B?TnFXZWtOY0pHWmtJWDBZajA5eTRnUkJ3cWVrUjNZalNsek9waWJXeUFqYzh4?=
- =?utf-8?B?ZUM0RXBnMDllUnBYVzFlenYzMzZYNytFdEFqUDZUUXRvSENycjNUbnorQitZ?=
- =?utf-8?B?Q1VEZzh6NmV5bTVXV0Zib3MrZ2JCSmw5KzFNUk1VRFZDL0IyUzZIS05lRG9K?=
- =?utf-8?B?bkJNK3A5Vy9oUkdmYzIxZXpEcTdYRGFLM25ZTEdZQnYxc3Jobm1aWjZYMURR?=
- =?utf-8?Q?SWPXRg1mYmFtdsoA=3D?=
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <E4DCEA881F01BF40ABF08FDCB6C90805@apcprd03.prod.outlook.com>
-Content-Transfer-Encoding: base64
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="RYGElxe5"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1766408173; x=1797944173;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=f9/rHqocjeh8OLWiRaOSMgsTVjDVoD3FEm6rv46rYHo=;
+  b=RYGElxe5xDgYZ1yRpsgGeYhf/aIqomLjc6P+zDNXld8khwqTDG2sKZ7n
+   gHhgpvDfWWmJdZYbxO+YhApDw3rm3geoxa+rbsQAc6VojOx6ya0G9FdB0
+   Lj312IdWMtVxJuJ+VzC3WJ6sI6QqSEWTCv39Ai/RuHZsBYEQeY8cH/twZ
+   soupQBq1UfN7n4xJFWpbtNJsns/pCvSg3kI/sE5XMhWmq3Br6F6izhUQ/
+   NGaQ6dleoksUZTWvsmY0FDCJ39x6hEoOAKmWOFwX5H7PVkv4KoE/AxStO
+   kjhO+lrdZ9cS3wXtrwDK5cFxraKY7Vz4YCrtMVuz6f9kfWoHNElqcavzU
+   g==;
+X-CSE-ConnectionGUID: yzMHOfv1T9iLW5BXbO+qyw==
+X-CSE-MsgGUID: RtkF72ZzQBmjOfqgCX/Xvw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11649"; a="78581747"
+X-IronPort-AV: E=Sophos;i="6.21,168,1763452800"; 
+   d="scan'208";a="78581747"
+Received: from fmviesa009.fm.intel.com ([10.60.135.149])
+  by orvoesa103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Dec 2025 04:56:13 -0800
+X-CSE-ConnectionGUID: RvRhnf/JSI2BjYBJfqxONA==
+X-CSE-MsgGUID: cTbyVSTRSxiA86NRvXV90w==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.21,168,1763452800"; 
+   d="scan'208";a="200023312"
+Received: from lkp-server02.sh.intel.com (HELO dd3453e2b682) ([10.239.97.151])
+  by fmviesa009.fm.intel.com with ESMTP; 22 Dec 2025 04:56:10 -0800
+Received: from kbuild by dd3453e2b682 with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1vXfRy-000000000af-48Wu;
+	Mon, 22 Dec 2025 12:55:55 +0000
+Date: Mon, 22 Dec 2025 20:55:12 +0800
+From: kernel test robot <lkp@intel.com>
+To: Ethan Nelson-Moore <enelsonmoore@gmail.com>, linux-scsi@vger.kernel.org
+Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
+	Ethan Nelson-Moore <enelsonmoore@gmail.com>
+Subject: Re: [PATCH 5/5] scsi: qla1280: remove function tracing macros
+Message-ID: <202512222058.wa5qcdm2-lkp@intel.com>
+References: <20251220051602.28029-5-enelsonmoore@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: PSAPR03MB5605.apcprd03.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: ac5d5b28-bd7f-419e-60d0-08de41341aec
-X-MS-Exchange-CrossTenant-originalarrivaltime: 22 Dec 2025 08:28:37.8524
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: a7687ede-7a6b-4ef6-bace-642f677fbe31
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: zjTKPw8u+Nhe3LSisLwxJPtDr5JH7j9dGkmuA8WCXqmlQuk2Rdu3ZM2Ch03fVBs85Azvm5FQYQ0uKzX12QYZyA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: TY0PR03MB8200
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20251220051602.28029-5-enelsonmoore@gmail.com>
 
-T24gRnJpLCAyMDI1LTEyLTE5IGF0IDEwOjI1ICswMTAwLCBVd2UgS2xlaW5lLUvDtm5pZyB3cm90
-ZToNCj4gSW50cm9kdWNlIGEgYnVzIHNwZWNpZmljIHByb2JlLCByZW1vdmUgYW5kIHNodXRkb3du
-IGZ1bmN0aW9uLiBGb3Igbm93DQo+IHRoaXMgb25seSBhbGxvd3MgdG8gZ2V0IHJpZCBvZiBhIGNh
-c3Qgb2YgdGhlIGdlbmVyaWMgZGV2aWNlIHRvIGFuDQo+IHNjc2kNCj4gZGV2aWNlIGluIHRoZSBk
-cml2ZXJzIGFuZCBjaGFuZ2VzIHRoZSByZW1vdmUgcHJvdG90eXBlIHRvIHJldHVybg0KPiB2b2lk
-LS0tYSBub24temVybyByZXR1cm4gdmFsdWUgaXMgaWdub3JlZCBhbnlob3cuDQo+IA0KPiBUaGUg
-b2JqZWN0aXZlIGlzIHRvIGdldCByaWQgb2YgdXNlcnMgb2Ygc3RydWN0IGRldmljZV9kcml2ZXIN
-Cj4gY2FsbGJhY2tzDQo+IC5wcm9iZSgpLCAucmVtb3ZlKCkgYW5kIC5zaHV0ZG93bigpIHRvIGV2
-ZW50dWFsbHkgcmVtb3ZlIHRoZXNlLiBVbnRpbA0KPiBhbGwgc2NzaSBkcml2ZXJzIGFyZSBjb252
-ZXJ0ZWQgdGhpcyByZXN1bHRzIGluIGEgcnVudGltZSB3YXJuaW5nDQo+IGFib3V0DQo+IHRoZSBk
-cml2ZXJzIG5lZWRpbmcgYW4gdXBkYXRlIGJlY2F1c2UgdGhlcmUgaXMgYSBidXMgcHJvYmUgZnVu
-Y3Rpb24NCj4gYW5kDQo+IGEgZHJpdmVyIHByb2JlIGZ1bmN0aW9uLiBUaGUgaW4tdHJlZSBkcml2
-ZXJzIGFyZSBmaXhlZCBieSB0aGUNCj4gZm9sbG93aW5nDQo+IGNvbW1pdHMuDQo+IA0KPiBTaWdu
-ZWQtb2ZmLWJ5OiBVd2UgS2xlaW5lLUvDtm5pZyA8dS5rbGVpbmUta29lbmlnQGJheWxpYnJlLmNv
-bT4NCg0KUmV2aWV3ZWQtYnk6IFBldGVyIFdhbmcgPHBldGVyLndhbmdAbWVkaWF0ZWsuY29tPg0K
-DQo=
+Hi Ethan,
+
+kernel test robot noticed the following build warnings:
+
+[auto build test WARNING on mkp-scsi/for-next]
+[also build test WARNING on linus/master v6.19-rc2 next-20251219]
+[cannot apply to jejb-scsi/for-next powerpc/next powerpc/fixes]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
+
+url:    https://github.com/intel-lab-lkp/linux/commits/Ethan-Nelson-Moore/scsi-ibmvfc-remove-function-tracing-macros/20251220-131816
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git for-next
+patch link:    https://lore.kernel.org/r/20251220051602.28029-5-enelsonmoore%40gmail.com
+patch subject: [PATCH 5/5] scsi: qla1280: remove function tracing macros
+config: riscv-allyesconfig (https://download.01.org/0day-ci/archive/20251222/202512222058.wa5qcdm2-lkp@intel.com/config)
+compiler: clang version 16.0.6 (https://github.com/llvm/llvm-project 7cbf1a2591520c2491aa35339f227775f4d3adf6)
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20251222/202512222058.wa5qcdm2-lkp@intel.com/reproduce)
+
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202512222058.wa5qcdm2-lkp@intel.com/
+
+All warnings (new ones prefixed by >>):
+
+   drivers/scsi/qla1280.c:1688:15: warning: variable 'num' set but not used [-Wunused-but-set-variable]
+           int err = 0, num, i;
+                        ^
+>> drivers/scsi/qla1280.c:3482:1: warning: label at end of compound statement is a C2x extension [-Wc2x-extensions]
+   }
+   ^
+   drivers/scsi/qla1280.c:3604:1: warning: label at end of compound statement is a C2x extension [-Wc2x-extensions]
+   }
+   ^
+   3 warnings generated.
+
+
+vim +3482 drivers/scsi/qla1280.c
+
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3265  
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3266  /****************************************************************************
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3267   *  qla1280_isr
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3268   *      Calls I/O done on command completion.
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3269   *
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3270   * Input:
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3271   *      ha           = adapter block pointer.
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3272   *      done_q       = done queue.
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3273   ****************************************************************************/
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3274  static void
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3275  qla1280_isr(struct scsi_qla_host *ha, struct list_head *done_q)
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3276  {
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3277  	struct device_reg __iomem *reg = ha->iobase;
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3278  	struct response *pkt;
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3279  	struct srb *sp = NULL;
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3280  	uint16_t mailbox[MAILBOX_REGISTER_COUNT];
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3281  	uint16_t *wptr;
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3282  	uint32_t index;
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3283  	u16 istatus;
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3284  
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3285  	istatus = RD_REG_WORD(&reg->istatus);
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3286  	if (!(istatus & (RISC_INT | PCI_INT)))
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3287  		return;
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3288  
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3289  	/* Save mailbox register 5 */
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3290  	mailbox[5] = RD_REG_WORD(&reg->mailbox5);
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3291  
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3292  	/* Check for mailbox interrupt. */
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3293  
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3294  	mailbox[0] = RD_REG_WORD_dmasync(&reg->semaphore);
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3295  
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3296  	if (mailbox[0] & BIT_0) {
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3297  		/* Get mailbox data. */
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3298  		/* dprintk(1, "qla1280_isr: In Get mailbox data \n"); */
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3299  
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3300  		wptr = &mailbox[0];
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3301  		*wptr++ = RD_REG_WORD(&reg->mailbox0);
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3302  		*wptr++ = RD_REG_WORD(&reg->mailbox1);
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3303  		*wptr = RD_REG_WORD(&reg->mailbox2);
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3304  		if (mailbox[0] != MBA_SCSI_COMPLETION) {
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3305  			wptr++;
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3306  			*wptr++ = RD_REG_WORD(&reg->mailbox3);
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3307  			*wptr++ = RD_REG_WORD(&reg->mailbox4);
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3308  			wptr++;
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3309  			*wptr++ = RD_REG_WORD(&reg->mailbox6);
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3310  			*wptr = RD_REG_WORD(&reg->mailbox7);
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3311  		}
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3312  
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3313  		/* Release mailbox registers. */
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3314  
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3315  		WRT_REG_WORD(&reg->semaphore, 0);
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3316  		WRT_REG_WORD(&reg->host_cmd, HC_CLR_RISC_INT);
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3317  
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3318  		dprintk(5, "qla1280_isr: mailbox interrupt mailbox[0] = 0x%x",
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3319  			mailbox[0]);
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3320  
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3321  		/* Handle asynchronous event */
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3322  		switch (mailbox[0]) {
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3323  		case MBA_SCSI_COMPLETION:	/* Response completion */
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3324  			dprintk(5, "qla1280_isr: mailbox SCSI response "
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3325  				"completion\n");
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3326  
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3327  			if (ha->flags.online) {
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3328  				/* Get outstanding command index. */
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3329  				index = mailbox[2] << 16 | mailbox[1];
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3330  
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3331  				/* Validate handle. */
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3332  				if (index < MAX_OUTSTANDING_COMMANDS)
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3333  					sp = ha->outstanding_cmds[index];
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3334  				else
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3335  					sp = NULL;
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3336  
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3337  				if (sp) {
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3338  					/* Free outstanding command slot. */
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3339  					ha->outstanding_cmds[index] = NULL;
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3340  
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3341  					/* Save ISP completion status */
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3342  					CMD_RESULT(sp->cmd) = 0;
+413e6e18b483de Michael Reed   2009-04-08  3343  					CMD_HANDLE(sp->cmd) = COMPLETED_HANDLE;
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3344  
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3345  					/* Place block on done queue */
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3346  					list_add_tail(&sp->list, done_q);
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3347  				} else {
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3348  					/*
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3349  					 * If we get here we have a real problem!
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3350  					 */
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3351  					printk(KERN_WARNING
+fd65e5e93cbd9d Michael Reed   2009-04-08  3352  					       "qla1280: ISP invalid handle\n");
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3353  				}
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3354  			}
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3355  			break;
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3356  
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3357  		case MBA_BUS_RESET:	/* SCSI Bus Reset */
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3358  			ha->flags.reset_marker = 1;
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3359  			index = mailbox[6] & BIT_0;
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3360  			ha->bus_settings[index].reset_marker = 1;
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3361  
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3362  			printk(KERN_DEBUG "qla1280_isr(): index %i "
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3363  			       "asynchronous BUS_RESET\n", index);
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3364  			break;
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3365  
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3366  		case MBA_SYSTEM_ERR:	/* System Error */
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3367  			printk(KERN_WARNING
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3368  			       "qla1280: ISP System Error - mbx1=%xh, mbx2="
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3369  			       "%xh, mbx3=%xh\n", mailbox[1], mailbox[2],
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3370  			       mailbox[3]);
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3371  			break;
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3372  
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3373  		case MBA_REQ_TRANSFER_ERR:	/* Request Transfer Error */
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3374  			printk(KERN_WARNING
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3375  			       "qla1280: ISP Request Transfer Error\n");
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3376  			break;
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3377  
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3378  		case MBA_RSP_TRANSFER_ERR:	/* Response Transfer Error */
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3379  			printk(KERN_WARNING
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3380  			       "qla1280: ISP Response Transfer Error\n");
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3381  			break;
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3382  
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3383  		case MBA_WAKEUP_THRES:	/* Request Queue Wake-up */
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3384  			dprintk(2, "qla1280_isr: asynchronous WAKEUP_THRES\n");
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3385  			break;
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3386  
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3387  		case MBA_TIMEOUT_RESET:	/* Execution Timeout Reset */
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3388  			dprintk(2,
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3389  				"qla1280_isr: asynchronous TIMEOUT_RESET\n");
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3390  			break;
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3391  
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3392  		case MBA_DEVICE_RESET:	/* Bus Device Reset */
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3393  			printk(KERN_INFO "qla1280_isr(): asynchronous "
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3394  			       "BUS_DEVICE_RESET\n");
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3395  
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3396  			ha->flags.reset_marker = 1;
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3397  			index = mailbox[6] & BIT_0;
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3398  			ha->bus_settings[index].reset_marker = 1;
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3399  			break;
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3400  
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3401  		case MBA_BUS_MODE_CHANGE:
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3402  			dprintk(2,
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3403  				"qla1280_isr: asynchronous BUS_MODE_CHANGE\n");
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3404  			break;
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3405  
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3406  		default:
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3407  			/* dprintk(1, "qla1280_isr: default case of switch MB \n"); */
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3408  			if (mailbox[0] < MBA_ASYNC_EVENT) {
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3409  				wptr = &mailbox[0];
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3410  				memcpy((uint16_t *) ha->mailbox_out, wptr,
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3411  				       MAILBOX_REGISTER_COUNT *
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3412  				       sizeof(uint16_t));
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3413  
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3414  				if(ha->mailbox_wait != NULL)
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3415  					complete(ha->mailbox_wait);
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3416  			}
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3417  			break;
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3418  		}
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3419  	} else {
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3420  		WRT_REG_WORD(&reg->host_cmd, HC_CLR_RISC_INT);
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3421  	}
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3422  
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3423  	/*
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3424  	 * We will receive interrupts during mailbox testing prior to
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3425  	 * the card being marked online, hence the double check.
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3426  	 */
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3427  	if (!(ha->flags.online && !ha->mailbox_wait)) {
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3428  		dprintk(2, "qla1280_isr: Response pointer Error\n");
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3429  		goto out;
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3430  	}
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3431  
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3432  	if (mailbox[5] >= RESPONSE_ENTRY_CNT)
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3433  		goto out;
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3434  
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3435  	while (ha->rsp_ring_index != mailbox[5]) {
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3436  		pkt = ha->response_ring_ptr;
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3437  
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3438  		dprintk(5, "qla1280_isr: ha->rsp_ring_index = 0x%x, mailbox[5]"
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3439  			" = 0x%x\n", ha->rsp_ring_index, mailbox[5]);
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3440  		dprintk(5,"qla1280_isr: response packet data\n");
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3441  		qla1280_dump_buffer(5, (char *)pkt, RESPONSE_ENTRY_SIZE);
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3442  
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3443  		if (pkt->entry_type == STATUS_TYPE) {
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3444  			if ((le16_to_cpu(pkt->scsi_status) & 0xff)
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3445  			    || pkt->comp_status || pkt->entry_status) {
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3446  				dprintk(2, "qla1280_isr: ha->rsp_ring_index = "
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3447  					"0x%x mailbox[5] = 0x%x, comp_status "
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3448  					"= 0x%x, scsi_status = 0x%x\n",
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3449  					ha->rsp_ring_index, mailbox[5],
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3450  					le16_to_cpu(pkt->comp_status),
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3451  					le16_to_cpu(pkt->scsi_status));
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3452  			}
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3453  		} else {
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3454  			dprintk(2, "qla1280_isr: ha->rsp_ring_index = "
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3455  				"0x%x, mailbox[5] = 0x%x\n",
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3456  				ha->rsp_ring_index, mailbox[5]);
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3457  			dprintk(2, "qla1280_isr: response packet data\n");
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3458  			qla1280_dump_buffer(2, (char *)pkt,
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3459  					    RESPONSE_ENTRY_SIZE);
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3460  		}
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3461  
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3462  		if (pkt->entry_type == STATUS_TYPE || pkt->entry_status) {
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3463  			dprintk(2, "status: Cmd %p, handle %i\n",
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3464  				ha->outstanding_cmds[pkt->handle]->cmd,
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3465  				pkt->handle);
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3466  			if (pkt->entry_type == STATUS_TYPE)
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3467  				qla1280_status_entry(ha, pkt, done_q);
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3468  			else
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3469  				qla1280_error_entry(ha, pkt, done_q);
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3470  			/* Adjust ring index. */
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3471  			ha->rsp_ring_index++;
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3472  			if (ha->rsp_ring_index == RESPONSE_ENTRY_CNT) {
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3473  				ha->rsp_ring_index = 0;
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3474  				ha->response_ring_ptr =	ha->response_ring;
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3475  			} else
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3476  				ha->response_ring_ptr++;
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3477  			WRT_REG_WORD(&reg->mailbox5, ha->rsp_ring_index);
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3478  		}
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3479  	}
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3480  	
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3481   out:
+^1da177e4c3f41 Linus Torvalds 2005-04-16 @3482  }
+^1da177e4c3f41 Linus Torvalds 2005-04-16  3483  
+
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
