@@ -1,97 +1,76 @@
-Received: from cstnet.cn (smtp84.cstnet.cn [159.226.251.84])
-	(using TLSv1.2 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B395E2D4806;
-	Tue, 23 Dec 2025 14:16:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.226.251.84
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D2373502B4;
+	Tue, 23 Dec 2025 15:29:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1766499369; cv=none; b=HSxIdaXbYR0Nv21vQkW80E3cJRhYKPVczLr5QRa6N4mBuAiSfmMe7uaQAJQUdEQyhZ7mAUEt0N/9Gmb4wHHSpX1KkK340EIhAigIUdjOFinko/c8iOsREeCXo4SCKAHvuYVAHWTppFdG5jd3B7dVe6WQUOHmN15MdRbuHCYwvxY=
+	t=1766503797; cv=none; b=K4/keehlhtKqkNlmuNVGqCxx7VyNjVerzTDJ7ikLfd7VPNjgstfUDhOPppCKY20Mbp93RDf+0Qzig479aM/lCZKmAmyIa1qDlpm7tNxtZPd/45Z8uJ7iWV0GTudkW0yqVixRm/Z1f8OD0DlRrMfAC0+2V2Yxztn9JSpT+/rJblc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1766499369; c=relaxed/simple;
-	bh=m5sLTp/UIzs+P3oJR1WEZ9eeBmKmZPWUA6z9v2cpVJQ=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=D14JBA+PnCYyFRUu/jlWQpSpEJicEKoAoTU3NbJchi695MKTqqRJd5LOIGMm6lfOEU7siNwGoYTE1AX7sRs86ybzlnU/lIcxzdSVhfhny2X6WUSLtYfzYba7X8v6mDZtgWKxt7mWwMsv/DczchAMikdOrpcWzas2JCoBq4VQx5U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=isrc.iscas.ac.cn; spf=pass smtp.mailfrom=isrc.iscas.ac.cn; arc=none smtp.client-ip=159.226.251.84
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=isrc.iscas.ac.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=isrc.iscas.ac.cn
-Received: from localhost.localdomain (unknown [36.112.3.209])
-	by APP-05 (Coremail) with SMTP id zQCowAC3SQ0UpEppP9+oAQ--.17880S2;
-	Tue, 23 Dec 2025 22:15:48 +0800 (CST)
-From: Haoxiang Li <lihaoxiang@isrc.iscas.ac.cn>
-To: James.Bottomley@HansenPartnership.com,
-	martin.petersen@oracle.com,
-	JBottomley@Parallels.com
-Cc: linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Haoxiang Li <lihaoxiang@isrc.iscas.ac.cn>,
-	stable@vger.kernel.org
-Subject: [PATCH] scsi: esas2r: fix a resource leak in esas2r_resume()
-Date: Tue, 23 Dec 2025 22:15:47 +0800
-Message-Id: <20251223141547.1506688-1-lihaoxiang@isrc.iscas.ac.cn>
-X-Mailer: git-send-email 2.25.1
+	s=arc-20240116; t=1766503797; c=relaxed/simple;
+	bh=+glxbiWBpZRqAPrD3N7LiX7llCM/ySgT5zAKvFSZoi4=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Hh9IIawnAic8B0QdqDYeZdDSt8eWMpxll2VrnwG3cPQsfhYuTwGhW8qrVmWusrvfqjkzFQbyYJ6QNueSeJFSEnMtbVFC636GhasNCzYFdcV2DRxEsSviokqALbJr75cGOV5iRMySn1g5oODMbqHvyrOXm8GyPJKFQB2M7byFKQg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=4BObmR1z; arc=none smtp.client-ip=199.89.1.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="4BObmR1z"
+Received: from localhost (localhost [127.0.0.1])
+	by 013.lax.mailroute.net (Postfix) with ESMTP id 4dbJpj2DpBzlskkV;
+	Tue, 23 Dec 2025 15:29:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1766503787; x=1769095788; bh=eyHzFGrQcYn1KFN3S/LI+LqU
+	UXYAcKhjjmnMGus/zfI=; b=4BObmR1zt9sVHnVIFuQvoV17ZdcGC1TCxUxH2trG
+	3416ZKIfht7Da4t4D3+s2rEZKOk/hLPskQMHsWYZI98Dx9OsqSHeBu2ty656U+wV
+	EGg0/jdv1/8pcS7zH2pozrv3e/jZppGjDBm6d45jydRTVZPc/qGAxqm0ePHAkJUl
+	ST4hFm14VTduWqr65X09tjt1QR8E7WZ0FYnRv5p+JTVG9DtP8+m4TFTsaE9y2B9Y
+	WlS+Z7+9Z45c6RPsxwLc1cb+F8LXQ//1D4HqJR33J/JiL7q/w9rpGg/VZtv8Ha+/
+	CfTztcOzOvn1B8zveHRanbm6ds2XJ2afxoCZ59Yp3t8lWw==
+X-Virus-Scanned: by MailRoute
+Received: from 013.lax.mailroute.net ([127.0.0.1])
+ by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id tyWs604suY3A; Tue, 23 Dec 2025 15:29:47 +0000 (UTC)
+Received: from [172.16.2.244] (92-71-251-62.biz.kpn.net [92.71.251.62])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4dbJpZ6J4Kzlsb49;
+	Tue, 23 Dec 2025 15:29:42 +0000 (UTC)
+Message-ID: <bade326b-f32b-4e90-aa2f-af7db26c4461@acm.org>
+Date: Tue, 23 Dec 2025 16:29:39 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:zQCowAC3SQ0UpEppP9+oAQ--.17880S2
-X-Coremail-Antispam: 1UD129KBjvJXoW7Kr15ur1rGF1kAry7WF4Uurg_yoW8Gr4DpF
-	4rC3WqkF18AF47C3Z8CF1Yvas5tayUtF93WFWrW3sxuan8ArZ8Jr18XryjvF1kKFy8JF15
-	JFn2q398tFyDJF7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUkG14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWUuVWrJwAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26r1j6r1xM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r1j
-	6r4UM28EF7xvwVC2z280aVAFwI0_Jr0_Gr1l84ACjcxK6I8E87Iv6xkF7I0E14v26r4j6r
-	4UJwAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
-	I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
-	4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwCY1x0262kKe7AKxVWU
-	AVWUtwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14
-	v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_JF0_Jw1lIxkG
-	c2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI
-	0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j6r4U
-	MIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUBVbkUUU
-	UU=
-X-CM-SenderInfo: 5olkt0x0ld0ww6lv2u4olvutnvoduhdfq/1tbiCRAFE2lKc7t2wgAAsQ
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v1 20/23] scsi: ufs: core: Discard pm_runtime_put() return
+ values
+To: "Rafael J. Wysocki" <rafael@kernel.org>,
+ Linux PM <linux-pm@vger.kernel.org>
+Cc: LKML <linux-kernel@vger.kernel.org>, Ulf Hansson
+ <ulf.hansson@linaro.org>, Brian Norris <briannorris@chromium.org>,
+ Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>,
+ "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+References: <6245770.lOV4Wx5bFT@rafael.j.wysocki>
+ <2781685.BddDVKsqQX@rafael.j.wysocki>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <2781685.BddDVKsqQX@rafael.j.wysocki>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Add esas2r_unmap_regions() to release the resources
-allocated by esas2r_map_regions() in some error paths.
+On 12/22/25 9:31 PM, Rafael J. Wysocki wrote:>
+> The ufshcd driver defines ufshcd_rpm_put() to return an int, but that
+> return value is never used.  It also passes the return value of
+> pm_runtime_put() to the caller which is not very useful.
 
-Found by code review and compiled on ubuntu 20.04.
-
-Fixes: 26780d9e12ed ("[SCSI] esas2r: ATTO Technology ExpressSAS 6G SAS/SATA RAID Adapter Driver")
-Cc: stable@vger.kernel.org
-Signed-off-by: Haoxiang Li <lihaoxiang@isrc.iscas.ac.cn>
----
- drivers/scsi/esas2r/esas2r_init.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/esas2r/esas2r_init.c b/drivers/scsi/esas2r/esas2r_init.c
-index 04a07fe57be2..114239373f28 100644
---- a/drivers/scsi/esas2r/esas2r_init.c
-+++ b/drivers/scsi/esas2r/esas2r_init.c
-@@ -684,7 +684,7 @@ static int __maybe_unused esas2r_resume(struct device *dev)
- 	if (!esas2r_power_up(a, true)) {
- 		esas2r_debug("yikes, esas2r_power_up failed");
- 		rez = -ENOMEM;
--		goto error_exit;
-+		goto error_unmap;
- 	}
- 
- 	esas2r_claim_interrupts(a);
-@@ -700,9 +700,11 @@ static int __maybe_unused esas2r_resume(struct device *dev)
- 		esas2r_debug("yikes, unable to claim IRQ");
- 		esas2r_log(ESAS2R_LOG_CRIT, "could not re-claim IRQ!");
- 		rez = -ENOMEM;
--		goto error_exit;
-+		goto error_unmap;
- 	}
- 
-+error_unmap:
-+	esas2r_unmap_regions(a);
- error_exit:
- 	esas2r_log_dev(ESAS2R_LOG_CRIT, dev, "esas2r_resume(): %d",
- 		       rez);
--- 
-2.25.1
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
 
