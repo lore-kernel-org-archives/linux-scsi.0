@@ -1,73 +1,108 @@
-Received: from ms.lwn.net (ms.lwn.net [45.79.88.28])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f174.google.com (mail-pl1-f174.google.com [209.85.214.174])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2E4DA2D191C;
-	Mon, 22 Dec 2025 21:57:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.79.88.28
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0AA2E2AD37
+	for <linux-scsi@vger.kernel.org>; Tue, 23 Dec 2025 06:30:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1766440629; cv=none; b=k9zQR3BoLg5LquK/A0llAPz3NXyzAAZDEkDytSve7bpzx7FHBXVzN8kn9N7JCDV/2samENArBx7flZqbvLaj6UTkzLNFtu69w78WIZiEGuWC+EQOWexww/gaCkT32YLiDQ3yt/DYFXgPW2YQf6dXXUzFeBxrB2n3ncDTOKHgGaQ=
+	t=1766471429; cv=none; b=qEVOrIjTRFfJ/NYgCWTHINJcji+mjGMMPMP3ZAhRMnxczlnrweVl4cX04QIvlb6aDFhVx5cWw5YfHgnUuUU9exPfZQcp0l4z1fFcPetklswaHVCnY08jjXgGZprlgLh+90JcdGOZu8CgNIUgnvVzRYr0l/kgvPRzEWIMcdwXmzU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1766440629; c=relaxed/simple;
-	bh=X5Ip7mYmMvWuOaqB2DPjVfQNu7VYRWI2yaL0nUY6FJw=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=GJ7xpLcIYe5TpBKsXf/rRfVsPO9KpL6QtWkCGQt0GTI8YXEY9+r+RqpNkLUt3lHtSUQg5fLHSSB59RHaMYysMGhU53XXXPFMjEoGCSdf2UdnBcGf8Dksb60VLrGEhyRHEhKErDnLf4c1Kw3sOJPcl0yDm7MYNHW5JAk/7NBm7PM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lwn.net; spf=pass smtp.mailfrom=lwn.net; dkim=pass (2048-bit key) header.d=lwn.net header.i=@lwn.net header.b=VE1JIut7; arc=none smtp.client-ip=45.79.88.28
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lwn.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lwn.net
+	s=arc-20240116; t=1766471429; c=relaxed/simple;
+	bh=UOwytaD1y1ivrxR36EtXG7k6vUSMWBbdELoZYS/80io=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=pdHu7qpPQvcOUcp/qrAQW5CL0cfXbCLuJQ77PHdtaUsp3bJUKiHDXhnzoq9duysBtE9U24SfsHLWJ11FLE1yoL7jhNswB4VovmjyM81i2REGtE+cqI/vdzGkdC8E9k/Ltuzmtj58u17OIFDNOUGiQOywWH7eS3i2GeCR3enmctQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cse.iitm.ac.in; spf=pass smtp.mailfrom=cse.iitm.ac.in; dkim=pass (2048-bit key) header.d=cse-iitm-ac-in.20230601.gappssmtp.com header.i=@cse-iitm-ac-in.20230601.gappssmtp.com header.b=NsQLe06q; arc=none smtp.client-ip=209.85.214.174
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cse.iitm.ac.in
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cse.iitm.ac.in
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=lwn.net header.i=@lwn.net header.b="VE1JIut7"
-DKIM-Filter: OpenDKIM Filter v2.11.0 ms.lwn.net 5127D4040B
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=lwn.net; s=20201203;
-	t=1766440624; bh=X5Ip7mYmMvWuOaqB2DPjVfQNu7VYRWI2yaL0nUY6FJw=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
-	b=VE1JIut7GUbFPMzQpctI3A9FK1QEyp2Ldqfw0B0NieAbMk3CwtrUNCqg6Rsjwt1DP
-	 34FmuAmhgyA9icj6YwpQ1JZ6LuReNA2mZfgfO7NbnNSwlovciw1C0ryi8uijzrqhZm
-	 gbva7e8Vk3om/A8eF7w7UXp5AMcbdfVn1uIZEbPleLoPcUzXcEawE8OKyjjTbj38VQ
-	 qd4HlmSJaKnHAKlurCK4vOukNA03/PUO0OW6KRon+U3A5gARjcSN1kbYgLCizbs1Rq
-	 7dUqEtZ4Nq9QN875HzTdA9viuUXQOTfIbEJl0q4VNFTfBAiZGvedPvgW/bMPMmKrdR
-	 3+w/pry6NPEpA==
-Received: from localhost (unknown [IPv6:2601:280:4600:27b::1fe])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (prime256v1) server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by ms.lwn.net (Postfix) with ESMTPSA id 5127D4040B;
-	Mon, 22 Dec 2025 21:57:04 +0000 (UTC)
-From: Jonathan Corbet <corbet@lwn.net>
-To: Max Nikulin <manikulin@gmail.com>
-Cc: linux-doc@vger.kernel.org, "James E.J. Bottomley"
- <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen"
- <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Bagas Sanjaya
- <bagasdotme@gmail.com>
-Subject: Re: [PATCH v2 1/2] docs: admin: devices: /dev/sr<N> for SCSI CD-ROM
-In-Reply-To: <f0a3e0aa-e4f9-41d3-8931-57837831d136@gmail.com>
-References: <aSuj66nCF4r_5ksh@archie.me>
- <f0a3e0aa-e4f9-41d3-8931-57837831d136@gmail.com>
-Date: Mon, 22 Dec 2025 14:57:03 -0700
-Message-ID: <87o6nq18pc.fsf@trenco.lwn.net>
+	dkim=pass (2048-bit key) header.d=cse-iitm-ac-in.20230601.gappssmtp.com header.i=@cse-iitm-ac-in.20230601.gappssmtp.com header.b="NsQLe06q"
+Received: by mail-pl1-f174.google.com with SMTP id d9443c01a7336-2a0c20ee83dso59136185ad.2
+        for <linux-scsi@vger.kernel.org>; Mon, 22 Dec 2025 22:30:26 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cse-iitm-ac-in.20230601.gappssmtp.com; s=20230601; t=1766471426; x=1767076226; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=txAko9zSpGY/XVp6x32IGp3T6LuAmbYnWNpv6bzw+e0=;
+        b=NsQLe06quPlxn1aj3i75rRZHkx2ViwWIeW0sdVpN03nK1qKQz9h89lmExZNqnEae9H
+         uGrc30SOhPThzEhMdG6GuOY189xRy+K4Va1K8HRTfe7JXPzGuZxYsx8D6S6ZC9wzEMzK
+         oG/HN2iEFjKu+/GmMS0V+e2g+vpzIBoUEz+H0cDzakdh4wWAiEjrrbNNop3DoRbn3qux
+         WrBvswHWG+lQVkDZphdqfd3AktBMuwRi3vJdje6Zv9Y+nP8Pt9wdvRjdqYt05m6Y+cHl
+         T56Y1QN5KO2ZPkhxQXo+I0/XTSg6cEiZKf7lEfDiMBuOKc1BI4z38qgVvrfOpGTUt8dc
+         lBXQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1766471426; x=1767076226;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=txAko9zSpGY/XVp6x32IGp3T6LuAmbYnWNpv6bzw+e0=;
+        b=kLOdtmCKJ8qOQsWT5k5ktsu9YKsLcYqXrQEQ03oFhgAELKv0aVWs44GWE/davEe4al
+         bfr1wXeJ5ukP6JJfuGhsAwCvRzkJoy/LAJyZv84jzgoaErkMZ+Uy3yhWRgKL/TNESPIO
+         aTLO3t9ge7jQDc9+bD6//ww3Xm7acDAkxaZtOCfuvIcR0q0to6BB60uVgemjQ40HeqFZ
+         y2oqOTGMnmcUEUcNnVYPXPXXO2VJmekTH+Shc/ttpd4AIj0aXvamHeWWYD6F9GU9YFRl
+         DCU1Zli7Gwt+f5kXv7uJMjtgxK7YfLKFvwtF03Bc9OF9+hzGpk0AFwZtd0uKaSJZsmFi
+         oEVw==
+X-Forwarded-Encrypted: i=1; AJvYcCX+CiPcQ4ZfVBjiPi2fdCUp6tVE3AItewcvRyNgOmVoWjhhoiYDn+NFDWHLBng1XLTMci7jILtmZpIJ@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw4KLCm8YSv7/Miyce1940Ip58f2X18meCRA05O7fFdcesP5+tI
+	SfL+u0Hj4SVK4X8jrkP1MTJAN942ptXl/NkXbOURjFA8HoG401NxT7E81iNER1m8wT8=
+X-Gm-Gg: AY/fxX7BFWGXCd1Kazbup4KJZW0AQFtG+zFXKBCsMuGGLzoQGaEg+n9ZHUj2iYGdZhN
+	KYgx/75k3qx4iQmZb2zoLm2krfDaNtaShDCaabP63ZfWPwOM+/ueyKa9NA7eFSIxTvZeS+wTPsz
+	xyxPax57EwRXcP/JrS1jQnqOWHw0qn7R8QF95tFsRAiJlnjjnr6llf6Tf/ByfI3yJ33viN6/j9O
+	sPvXjxy/PHpFA0w5hlTLSlbI4OtL33zPBg2Oll7FvvvPPk2MnLqmvs0a9yxrkVITwpDlshSzQ3r
+	OyAIEQmCfDcZmN6aqAqAte19WVHGLEU9FwER2QFqrKmxethy+s+ehbvXPNXNgJsOPsv/p5zFJDn
+	/FcJLq6uNZParar9fM2dhbOchS8NnXks7fmvHEHE1gZeNgxF+kQn2anHW54Oo6XHuCwmtWX9NsW
+	VKxxvDainEbT+7uhIgDaWR4RXQ
+X-Google-Smtp-Source: AGHT+IGgb03I6lSiPUZBtWVnd1QchQMvNYrRHjdG4XZUhFVdzG/yKL5vDYSme6j4qe45ab0hfvjdeQ==
+X-Received: by 2002:a17:903:2a8e:b0:290:ac36:2ed6 with SMTP id d9443c01a7336-2a2f2426c79mr137786605ad.14.1766471426463;
+        Mon, 22 Dec 2025 22:30:26 -0800 (PST)
+Received: from localhost.localdomain ([103.158.43.19])
+        by smtp.googlemail.com with ESMTPSA id d9443c01a7336-2a2f3d5d32dsm116266405ad.70.2025.12.22.22.30.22
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 22 Dec 2025 22:30:26 -0800 (PST)
+From: Abdun Nihaal <nihaal@cse.iitm.ac.in>
+To: jgross@suse.com
+Cc: Abdun Nihaal <nihaal@cse.iitm.ac.in>,
+	sstabellini@kernel.org,
+	oleksandr_tyshchenko@epam.com,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org
+Subject: [PATCH] xen/scsiback: fix potential memory leak in scsiback_remove()
+Date: Tue, 23 Dec 2025 12:00:11 +0530
+Message-ID: <20251223063012.119035-1-nihaal@cse.iitm.ac.in>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Transfer-Encoding: 8bit
 
-Max Nikulin <manikulin@gmail.com> writes:
+Memory allocated for struct vscsiblk_info in scsiback_probe() is not
+freed in scsiback_remove() leading to potential memory leaks on remove,
+as well as in the scsiback_probe() error paths. Fix that by freeing it
+in scsiback_remove().
 
-> Don't claim that /dev/sr<N> device names for SCSI CD-ROM drives are
-> deprecated and don't recommend /dev/scd<N> alternate names for them.
->
-> /dev/scd<N> device names for SCSI CD-ROM drives are not in use for more
-> than a decade, see commit [1] that was a part of udev release 174.
-> Earlier, related rules were volatile, sometimes /dev/scd<N> were syminks
-> to /dev/sr<N>, sometimes vice versa.
->
-> Recognizing of root=/dev/scd<N> kernel command line argument was removed
-> in kernel 2.5.45 [2].
->
-> In the docs /dev/scd<N> became recommended names in 2.6.9 [3].
-> Mention of these names appeared much earlier in 1.3.22 [4].
+Cc: stable@vger.kernel.org
+Fixes: d9d660f6e562 ("xen-scsiback: Add Xen PV SCSI backend driver")
+Signed-off-by: Abdun Nihaal <nihaal@cse.iitm.ac.in>
+---
+Compile tested only. Issue found using static analysis.
 
-I've applied this one, thanks.
+ drivers/xen/xen-scsiback.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-jon
+diff --git a/drivers/xen/xen-scsiback.c b/drivers/xen/xen-scsiback.c
+index 0c51edfd13dc..7d5117e5efe0 100644
+--- a/drivers/xen/xen-scsiback.c
++++ b/drivers/xen/xen-scsiback.c
+@@ -1262,6 +1262,7 @@ static void scsiback_remove(struct xenbus_device *dev)
+ 	gnttab_page_cache_shrink(&info->free_pages, 0);
+ 
+ 	dev_set_drvdata(&dev->dev, NULL);
++	kfree(info);
+ }
+ 
+ static int scsiback_probe(struct xenbus_device *dev,
+-- 
+2.43.0
+
