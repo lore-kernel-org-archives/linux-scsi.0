@@ -1,63 +1,83 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mail-m49197.qiye.163.com (mail-m49197.qiye.163.com [45.254.49.197])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4A4F2168BD;
-	Sat, 27 Dec 2025 03:48:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B64212D594F;
+	Sun, 28 Dec 2025 12:55:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.254.49.197
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1766807296; cv=none; b=JL1VI4MBreg6CBORwkDtLbD+HaitNNeCcJR+5G6RspO5TDsOUhJA7uzmP2Z/waMMGzLG9jPXg6TLuL0zBjSrBEeIrGGJUChuAENlxeMqag4jTaYs+Krw/G2RS8t9nGPt+a6IoKu6WqUcjIwd3UMqtAvS2fmusZ4cWph61rz5EsE=
+	t=1766926528; cv=none; b=FTC6WJEglhN+ZYGig+6yNEvVaPgFMt+/j0apuDDbW9R3+i/YXLm0Xmeb7DXGV9cWp1cEf9X+OBcrnGME34fBEcV6pBXXl8fBDAfUOmD9/vVXH/WVOgo9W8P18q6gu7aIuzu+PbsvehOk+yYB2FBPtSad7FEYiWBVnSv6aMs52cs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1766807296; c=relaxed/simple;
-	bh=lts0BGZBY/5vLZys2pxLXWfaRAJNinfWYMHqn7Ypcjk=;
-	h=Subject:From:In-Reply-To:References:Message-Id:Date:To:Cc; b=UuWX9rJbBVwP9fHAStFtkFFlZJFUjH63gYp05QcvoPgaunnVG1Kmz+dgf2zamFn2MqOc5vbkXL7E09xM2AT2MYymKQF5xl0PdJ24sARL/bOePfSIesZz6Pbf6Ll2HLeoXoJ2wGbuiKPExtxKvaHpkl8igZ2xUl0ToXsKkndmZWs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LK6HquHS; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1766926528; c=relaxed/simple;
+	bh=kn+/6Mh22DUxYCUd8TlIXCIlF8p0PoJjjlwUurmTT2A=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=e1Sx+9y9mEtpnPC3g2vhofwUMpV97+o5QHoCh17GL0RxcQWT5NO1HVkIKTbfGp/Dta+yqXU3QEHI8TrDiuD+KfOdymgjPrPelLaSFG/vcDExtXhi7VGCqgE+UdBMo1IsYFaDlnGTGA44FoNkq30Q3lzHyCPIhcNbHcqhXGclpY0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=seu.edu.cn; spf=pass smtp.mailfrom=seu.edu.cn; dkim=pass (1024-bit key) header.d=seu.edu.cn header.i=@seu.edu.cn header.b=WwU9uv/M; arc=none smtp.client-ip=45.254.49.197
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=seu.edu.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=seu.edu.cn
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LK6HquHS"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 298F1C4CEF1;
-	Sat, 27 Dec 2025 03:48:16 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1766807296;
-	bh=lts0BGZBY/5vLZys2pxLXWfaRAJNinfWYMHqn7Ypcjk=;
-	h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
-	b=LK6HquHSBlWIbew3t1VUwquBzfzEZah/UN0Xs5kJCn3jEUK2E3mvaB7DuASWiH2PX
-	 no8LmVm/bVJI/Y0qp9l73REs5xOgk3uIxnvuWHmTEnOJVjB7kDr0Yyo/QJycij6K48
-	 DdyBClqiNDcQSCEt7uzltrbSzdwBLDZYZMT8TK1x2ExSdKdGpb291LU/cCOZK5J5Mb
-	 I/wLBvHCuuQOh9Xb2njqeBuVLm0RKsF0wvcbvgLg/12YsXwddLvj4qvJ6GwolNymgn
-	 g1IjaGoJB+5wjFnKu1gxz7/uQ753OQTYUnTio1kAQ6eXMaPzv7sCcKGxoOH4tnSjlz
-	 hv/ldfoAA726g==
-Received: from [10.30.226.235] (localhost [IPv6:::1])
-	by aws-us-west-2-korg-oddjob-rhel9-1.codeaurora.org (Postfix) with ESMTP id 833393AAA6EF;
-	Sat, 27 Dec 2025 03:45:01 +0000 (UTC)
-Subject: Re: [GIT PULL] SCSI fixes for 6.19-rc2
-From: pr-tracker-bot@kernel.org
-In-Reply-To: <858baf4dce984fc3ff5c20fb8f8c276957fd44d2.camel@HansenPartnership.com>
-References: <858baf4dce984fc3ff5c20fb8f8c276957fd44d2.camel@HansenPartnership.com>
-X-PR-Tracked-List-Id: <linux-kernel.vger.kernel.org>
-X-PR-Tracked-Message-Id: <858baf4dce984fc3ff5c20fb8f8c276957fd44d2.camel@HansenPartnership.com>
-X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
-X-PR-Tracked-Commit-Id: c9f36f04a8a2725172cdf2b5e32363e4addcb14c
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: c53f467229a78287efa5b9f65bd22de64416660f
-Message-Id: <176680710028.2053714.10764350547374232974.pr-tracker-bot@kernel.org>
-Date: Sat, 27 Dec 2025 03:45:00 +0000
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+	dkim=pass (1024-bit key) header.d=seu.edu.cn header.i=@seu.edu.cn header.b="WwU9uv/M"
+Received: from LAPTOP-N070L597.localdomain (unknown [222.191.246.242])
+	by smtp.qiye.163.com (Hmail) with ESMTP id 2ecacd03a;
+	Sun, 28 Dec 2025 20:55:22 +0800 (GMT+08:00)
+From: Zilin Guan <zilin@seu.edu.cn>
+To: njavali@marvell.com
+Cc: GR-QLogic-Storage-Upstream@marvell.com,
+	James.Bottomley@HansenPartnership.com,
+	martin.petersen@oracle.com,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Zilin Guan <zilin@seu.edu.cn>,
+	Jianhao Xu <jianhao.xu@seu.edu.cn>
+Subject: [PATCH] scsi: qla2xxx: Fix memory leak in qlt_get_port_database()
+Date: Sun, 28 Dec 2025 12:55:19 +0000
+Message-Id: <20251228125519.3687097-1-zilin@seu.edu.cn>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-HM-Tid: 0a9b6507163103a1kunm8f00a120a5b76
+X-HM-MType: 10
+X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
+	tZV1koWUFITzdXWS1ZQUlXWQ8JGhUIEh9ZQVkaGE5OVh0aTx0fTU1DSx4YSFYeHw5VEwETFhoSFy
+	QUDg9ZV1kYEgtZQVlJSUlVSkJKVUlPTVVJT0lZV1kWGg8SFR0UWUFZT0tIVUpLSUhOQ0NVSktLVU
+	tZBg++
+DKIM-Signature: a=rsa-sha256;
+	b=WwU9uv/Ml85GZcb5I8ZPlpDTrBXs1fSELqu/Z5xPVxKtEZYw82Wr3xqRdj84HOvv5Y+Bvuw57HWVbUaY1FHTFiXcI4goXGHAaNb+barNswkOBj0vVj6OwOpurzePIO5c+Ie9Ha53OhlWlVcdYqGpZ5S781n+XDbzrL4KZlHilYI=; s=default; c=relaxed/relaxed; d=seu.edu.cn; v=1;
+	bh=5pdfIvJ0noDps4OwT1Ait7Bd2fmw86HWqfIKi8zYRqc=;
+	h=date:mime-version:subject:message-id:from;
 
-The pull request you sent on Fri, 26 Dec 2025 22:41:40 -0500:
+In qlt_get_port_database(), qla2x00_alloc_fcport() internally calls
+dma_alloc_coherent() to allocate fcport->ct_desc.ct_sns. If
+qla24xx_gpdb_wait() fails, the function only frees fcport but not
+fcport->ct_desc.ct_sns, which leads to a memory leak.
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+Fix this by replacing kfree() with qla2x00_free_fcport() in this error
+case.
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/c53f467229a78287efa5b9f65bd22de64416660f
+Fixes: 2d70c103fd2a ("[SCSI] qla2xxx: Add LLD target-mode infrastructure for >= 24xx series")
+Co-developed-by: Jianhao Xu <jianhao.xu@seu.edu.cn>
+Signed-off-by: Jianhao Xu <jianhao.xu@seu.edu.cn>
+Signed-off-by: Zilin Guan <zilin@seu.edu.cn>
+---
+ drivers/scsi/qla2xxx/qla_target.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Thank you!
-
+diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
+index d772136984c9..bf48a7b0509f 100644
+--- a/drivers/scsi/qla2xxx/qla_target.c
++++ b/drivers/scsi/qla2xxx/qla_target.c
+@@ -7210,7 +7210,7 @@ static fc_port_t *qlt_get_port_database(struct scsi_qla_host *vha,
+ 		    "qla_target(%d): Failed to retrieve fcport "
+ 		    "information -- get_port_database() returned %x "
+ 		    "(loop_id=0x%04x)", vha->vp_idx, rc, loop_id);
+-		kfree(fcport);
++		qla2x00_free_fcport(fcport);
+ 		return NULL;
+ 	}
+ 
 -- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+2.34.1
+
