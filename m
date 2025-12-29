@@ -1,151 +1,308 @@
-Received: from mout.web.de (mout.web.de [212.227.15.3])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp.smtpout.orange.fr (smtp-13.smtpout.orange.fr [80.12.242.13])
+	(using TLSv1.2 with cipher AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F24C01607A4;
-	Mon, 29 Dec 2025 09:09:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.227.15.3
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F0AD92D3EF5;
+	Mon, 29 Dec 2025 11:36:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.12.242.13
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1766999358; cv=none; b=sJP92L2SNrmS/3d38vWgFrlBUwVbovtaJUXAQaDdtIsQY7J3e7tK13A0Ovf47mF9CrNq/lQsLVkImX6teNyWDate0iawl63vvAR9uejgf3bRC7EA7ct5BPyzHrxynwVzOXEiurXujE0eiKOtkUuGhIFzu2fAmZnZseA0zyvmBig=
+	t=1767008203; cv=none; b=ALERvH02Y/rzSjZMMCKpdZ93T1XyDYlrLd91gXsCuGv1QifYF511QIuEZM7WyA6x+YeuWT86KTgjO95cHK0dk+FO1Slx3p3kJ8K/lJTOjqVrjG3s6yLAITSr2d52iYtJKcBr/aBkssG0deSu+T4YkRGUJnkCIpQsx43CL3USqHM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1766999358; c=relaxed/simple;
-	bh=P9EzqLXfB2H0KdcBuTMeM/6pFaXMYjgN89HueHmvS04=;
-	h=Message-ID:Date:MIME-Version:To:Cc:References:Subject:From:
-	 In-Reply-To:Content-Type; b=PbzKHrBXoItkV4hGKlGHPJd99PD+lJP2bKgDCooppLDaRgIaYgYDC33j3GxUHRaInVlJxffNMp9o4+31iV2UR0k4wVJdYhStxC5vk2lc3w6fMDqVp7Kp+zxZwJuqvuAOI+JqSa3zEOz1L8T5z3oiwLQedUcRV1IpJwL4Pv3vs3A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de; spf=pass smtp.mailfrom=web.de; dkim=pass (2048-bit key) header.d=web.de header.i=markus.elfring@web.de header.b=E3Da1FSY; arc=none smtp.client-ip=212.227.15.3
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=web.de
+	s=arc-20240116; t=1767008203; c=relaxed/simple;
+	bh=RBdAZEunp1oPf9yyi0Rv3FJ0TcUGquT/vLX6hnnCTdw=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=BE3cy509vvCRBYEIQgh6+boRPqMzTIgepMlDT95kC6AoS4pSiXyBXUK0A7P2//muNp27UgtkpdJFAOZ+oX1RMkmgzTQX1GuJt5TTG1dP75gUfvwi7VPc/UxPLPbi+MX8NpMGfNIgoyRcSNeXTkwrGqchBdTKZFM6ofl1ekAgtJ4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wanadoo.fr; spf=pass smtp.mailfrom=wanadoo.fr; dkim=pass (2048-bit key) header.d=wanadoo.fr header.i=@wanadoo.fr header.b=XFs0UNkc; arc=none smtp.client-ip=80.12.242.13
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wanadoo.fr
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wanadoo.fr
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=web.de header.i=markus.elfring@web.de header.b="E3Da1FSY"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=web.de;
-	s=s29768273; t=1766999346; x=1767604146; i=markus.elfring@web.de;
-	bh=P9EzqLXfB2H0KdcBuTMeM/6pFaXMYjgN89HueHmvS04=;
-	h=X-UI-Sender-Class:Message-ID:Date:MIME-Version:To:Cc:References:
-	 Subject:From:In-Reply-To:Content-Type:Content-Transfer-Encoding:
-	 cc:content-transfer-encoding:content-type:date:from:message-id:
-	 mime-version:reply-to:subject:to;
-	b=E3Da1FSYfR8o1AhEbFHtnMZPr+/EHb5DII+nNs2calVCa6WneqYkDJirCGp9mIlU
-	 cIVxS66oewkY2wvTlsHztfN24zgG3nCvaE2pz+9VZWKwolClJvatAmo3p7jrWxQwv
-	 w7B+tCHh+lDtMc93qfasvXe9fyxOZDzUAFJJDCdPiqwhga5SWUwSXTCE2TUmGhOW2
-	 B0zGVzd8qub/o4XVUeBggSVsTL3QHx/fnRrpQnJwLOyjQmsZVUiazAt8PNtnMP4ba
-	 SMtbwGZ1/Vi21ecyJqkPGvmIzNDnz/VqYDNevJz58OY2n2bzYoKxFqKLRqK1V+PbD
-	 Eps14pQG4Tz9F/4Lgw==
-X-UI-Sender-Class: 814a7b36-bfc1-4dae-8640-3722d8ec6cd6
-Received: from [192.168.178.29] ([94.31.69.231]) by smtp.web.de (mrweb006
- [213.165.67.108]) with ESMTPSA (Nemesis) id 1M7Nmq-1vZ4Nq3MvE-00AbJT; Mon, 29
- Dec 2025 10:09:06 +0100
-Message-ID: <149a576a-6a21-48c6-b121-b20c6173f7cb@web.de>
-Date: Mon, 29 Dec 2025 10:09:04 +0100
+	dkim=pass (2048-bit key) header.d=wanadoo.fr header.i=@wanadoo.fr header.b="XFs0UNkc"
+Received: from fedora.home ([IPv6:2a01:cb10:785:b00:8347:f260:7456:7662])
+	by smtp.orange.fr with ESMTPA
+	id aBWovvCxRxWB5aBWpvfsQM; Mon, 29 Dec 2025 12:35:11 +0100
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=wanadoo.fr;
+	s=t20230301; t=1767008111;
+	bh=PjNDoZ40U7jR9QIDge77NgufPkianXfBgIHV4I6m4pw=;
+	h=From:To:Subject:Date:Message-ID:MIME-Version;
+	b=XFs0UNkcLmMbBZT+r215Chs2mx8qDx5Ejta8ZMXEbOewJipIOGcG3GqudsgTKXFqe
+	 tHSTeWwfvVcGXsKhl3QozxCjqTUs6c6VZWMfS0WNLlPYiM9pZrdQvjP2ShtIEf3X3/
+	 0w1zsJka//uYpnV3nyr5DYLUH69iKvuTyPBz0I22BnvhoDj0rU3CRjvoLl8K/jIhoW
+	 D5pwpO9ZLBeoLB0j2Ld5ScrHHmq2HK6tazfqoU3lPuqjfavdjtAWWfZECsyKZPKXES
+	 jedRKfdFjVJzqmEYPOQnhKFTLYHIeApdhvb9DCfGpWvbG+slBdVeWCE+/beZF6RHnH
+	 0ols5Pv5mSkqw==
+X-ME-Helo: fedora.home
+X-ME-Auth: Y2hyaXN0b3BoZS5qYWlsbGV0QHdhbmFkb28uZnI=
+X-ME-Date: Mon, 29 Dec 2025 12:35:11 +0100
+X-ME-IP: 2a01:cb10:785:b00:8347:f260:7456:7662
+From: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-kernel@vger.kernel.org,
+	kernel-janitors@vger.kernel.org,
+	Christophe JAILLET <christophe.jaillet@wanadoo.fr>,
+	linux-scsi@vger.kernel.org,
+	target-devel@vger.kernel.org
+Subject: [PATCH v2] scsi: target: Constify struct configfs_item_operations and configfs_group_operations
+Date: Mon, 29 Dec 2025 12:35:01 +0100
+Message-ID: <a0f25237ae86b8c4dd7a3876c4ed2dc3de200173.1767008082.git.christophe.jaillet@wanadoo.fr>
+X-Mailer: git-send-email 2.52.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-To: Jianhao Xu <jianhao.xu@seu.edu.cn>, Zilin Guan <zilin@seu.edu.cn>,
- linux-scsi@vger.kernel.org, Justin Tee <justin.tee@broadcom.com>
-Cc: LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org,
- James Bottomley <James.Bottomley@HansenPartnership.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- Paul Ely <paul.ely@broadcom.com>
-References: <20251229071515.155412-2-zilin@seu.edu.cn>
-Subject: Re: [PATCH 1/3] scsi: lpfc: Fix memory leak in
- lpfc_config_port_post()
-Content-Language: en-GB, de-DE
-From: Markus Elfring <Markus.Elfring@web.de>
-In-Reply-To: <20251229071515.155412-2-zilin@seu.edu.cn>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-X-Provags-ID: V03:K1:pYJUYJru8AnUXWG6KwV8VxBBzAsPuOfg+GANq9kzIrS6jrR7HVz
- A8K2DhI/K/fHBquCkACU70K3OfuJmgtSKaEhV+ih6ybSj7iX2QgNHoK0rsrLBMbo9Z7dM/K
- tF6kdQ1WXtRPnkPgzHjq/vW6AETdeWO6OrL1OqBG+SDutzIWyu5/20pif+HiNA9oby9Hx58
- 7cLgy+f8RQwHhMKOzrrrg==
-X-Spam-Flag: NO
-UI-OutboundReport: notjunk:1;M01:P0:rjjZPfN2t60=;1IgpGk3gfYsk1RDv1im4V8PLywQ
- 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
+Content-Transfer-Encoding: 8bit
 
-=E2=80=A6
-> Fix this by adding mempool_free() in the error path.
+'struct configfs_item_operations' and 'configfs_group_operations' are not
+modified in this driver.
 
-Please avoid duplicate source code here.
-https://elixir.bootlin.com/linux/v6.19-rc2/source/drivers/scsi/lpfc/lpfc_i=
-nit.c#L563-L564
+Constifying these structures moves some data to a read-only section, so
+increases overall security, especially when the structure holds some
+function pointers.
 
+On a x86_64, with allmodconfig:
+Before:
+======
+   text	   data	    bss	    dec	    hex	filename
+ 151831	  80058	   4832	 236721	  39cb1	drivers/target/target_core_configfs.o
+  45200	  16658	      0	  61858	   f1a2	drivers/target/target_core_fabric_configfs.o
 
-See also:
-https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/Do=
-cumentation/process/submitting-patches.rst?h=3Dv6.19-rc3#n262
+After:
+=====
+   text	   data	    bss	    dec	    hex	filename
+ 152599	  79290	   4832	 236721	  39cb1	drivers/target/target_core_configfs.o
+  46352	  15506	      0	  61858	   f1a2	drivers/target/target_core_fabric_configfs.o
 
-Regards,
-Markus
+Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+---
+Compile tested only.
+
+This change is possible since commits f2f36500a63b and f7f78098690d.
+
+Changes in v2:
+   - The patch was not the one related to scsi: target:. Only the subject
+     was right.
+
+v1: https://lore.kernel.org/lkml/f1f05f6c1bc0c6f37cd680f012fe08c525364968.1765705512.git.christophe.jaillet@wanadoo.fr/
+---
+ drivers/target/target_core_configfs.c        | 18 ++++++------
+ drivers/target/target_core_fabric_configfs.c | 30 ++++++++++----------
+ 2 files changed, 24 insertions(+), 24 deletions(-)
+
+diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
+index f7868b41c5e6..c256c7137125 100644
+--- a/drivers/target/target_core_configfs.c
++++ b/drivers/target/target_core_configfs.c
+@@ -288,7 +288,7 @@ static void target_core_deregister_fabric(
+ 	config_item_put(item);
+ }
+ 
+-static struct configfs_group_operations target_core_fabric_group_ops = {
++static const struct configfs_group_operations target_core_fabric_group_ops = {
+ 	.make_group	= &target_core_register_fabric,
+ 	.drop_item	= &target_core_deregister_fabric,
+ };
+@@ -2810,7 +2810,7 @@ static void target_core_alua_lu_gp_release(struct config_item *item)
+ 	core_alua_free_lu_gp(lu_gp);
+ }
+ 
+-static struct configfs_item_operations target_core_alua_lu_gp_ops = {
++static const struct configfs_item_operations target_core_alua_lu_gp_ops = {
+ 	.release		= target_core_alua_lu_gp_release,
+ };
+ 
+@@ -2867,7 +2867,7 @@ static void target_core_alua_drop_lu_gp(
+ 	config_item_put(item);
+ }
+ 
+-static struct configfs_group_operations target_core_alua_lu_gps_group_ops = {
++static const struct configfs_group_operations target_core_alua_lu_gps_group_ops = {
+ 	.make_group		= &target_core_alua_create_lu_gp,
+ 	.drop_item		= &target_core_alua_drop_lu_gp,
+ };
+@@ -3240,7 +3240,7 @@ static void target_core_alua_tg_pt_gp_release(struct config_item *item)
+ 	core_alua_free_tg_pt_gp(tg_pt_gp);
+ }
+ 
+-static struct configfs_item_operations target_core_alua_tg_pt_gp_ops = {
++static const struct configfs_item_operations target_core_alua_tg_pt_gp_ops = {
+ 	.release		= target_core_alua_tg_pt_gp_release,
+ };
+ 
+@@ -3298,7 +3298,7 @@ static void target_core_alua_drop_tg_pt_gp(
+ 	config_item_put(item);
+ }
+ 
+-static struct configfs_group_operations target_core_alua_tg_pt_gps_group_ops = {
++static const struct configfs_group_operations target_core_alua_tg_pt_gps_group_ops = {
+ 	.make_group		= &target_core_alua_create_tg_pt_gp,
+ 	.drop_item		= &target_core_alua_drop_tg_pt_gp,
+ };
+@@ -3339,7 +3339,7 @@ static void target_core_stat_rmdir(
+ 	return;
+ }
+ 
+-static struct configfs_group_operations target_core_stat_group_ops = {
++static const struct configfs_group_operations target_core_stat_group_ops = {
+ 	.make_group		= &target_core_stat_mkdir,
+ 	.drop_item		= &target_core_stat_rmdir,
+ };
+@@ -3466,7 +3466,7 @@ static void target_core_drop_subdev(
+ 	mutex_unlock(&hba->hba_access_mutex);
+ }
+ 
+-static struct configfs_group_operations target_core_hba_group_ops = {
++static const struct configfs_group_operations target_core_hba_group_ops = {
+ 	.make_group		= target_core_make_subdev,
+ 	.drop_item		= target_core_drop_subdev,
+ };
+@@ -3545,7 +3545,7 @@ static struct configfs_attribute *target_core_hba_attrs[] = {
+ 	NULL,
+ };
+ 
+-static struct configfs_item_operations target_core_hba_item_ops = {
++static const struct configfs_item_operations target_core_hba_item_ops = {
+ 	.release		= target_core_hba_release,
+ };
+ 
+@@ -3626,7 +3626,7 @@ static void target_core_call_delhbafromtarget(
+ 	config_item_put(item);
+ }
+ 
+-static struct configfs_group_operations target_core_group_ops = {
++static const struct configfs_group_operations target_core_group_ops = {
+ 	.make_group	= target_core_call_addhbatotarget,
+ 	.drop_item	= target_core_call_delhbafromtarget,
+ };
+diff --git a/drivers/target/target_core_fabric_configfs.c b/drivers/target/target_core_fabric_configfs.c
+index 13159928e365..59713e9be10a 100644
+--- a/drivers/target/target_core_fabric_configfs.c
++++ b/drivers/target/target_core_fabric_configfs.c
+@@ -59,7 +59,7 @@ static void target_fabric_setup_##_name##_cit(struct target_fabric_configfs *tf)
+ 	pr_debug("Setup generic %s\n", __stringify(_name));		\
+ }
+ 
+-static struct configfs_item_operations target_fabric_port_item_ops;
++static const struct configfs_item_operations target_fabric_port_item_ops;
+ 
+ /* Start of tfc_tpg_mappedlun_cit */
+ 
+@@ -219,7 +219,7 @@ static void target_fabric_mappedlun_release(struct config_item *item)
+ 	core_dev_free_initiator_node_lun_acl(se_tpg, lacl);
+ }
+ 
+-static struct configfs_item_operations target_fabric_mappedlun_item_ops = {
++static const struct configfs_item_operations target_fabric_mappedlun_item_ops = {
+ 	.release		= target_fabric_mappedlun_release,
+ 	.allow_link		= target_fabric_mappedlun_link,
+ 	.drop_link		= target_fabric_mappedlun_unlink,
+@@ -246,7 +246,7 @@ static void target_core_mappedlun_stat_rmdir(
+ 	return;
+ }
+ 
+-static struct configfs_group_operations target_fabric_mappedlun_stat_group_ops = {
++static const struct configfs_group_operations target_fabric_mappedlun_stat_group_ops = {
+ 	.make_group		= target_core_mappedlun_stat_mkdir,
+ 	.drop_item		= target_core_mappedlun_stat_rmdir,
+ };
+@@ -345,11 +345,11 @@ static void target_fabric_nacl_base_release(struct config_item *item)
+ 	core_tpg_del_initiator_node_acl(se_nacl);
+ }
+ 
+-static struct configfs_item_operations target_fabric_nacl_base_item_ops = {
++static const struct configfs_item_operations target_fabric_nacl_base_item_ops = {
+ 	.release		= target_fabric_nacl_base_release,
+ };
+ 
+-static struct configfs_group_operations target_fabric_nacl_base_group_ops = {
++static const struct configfs_group_operations target_fabric_nacl_base_group_ops = {
+ 	.make_group		= target_fabric_make_mappedlun,
+ 	.drop_item		= target_fabric_drop_mappedlun,
+ };
+@@ -433,7 +433,7 @@ static void target_fabric_drop_nodeacl(
+ 	config_item_put(item);
+ }
+ 
+-static struct configfs_group_operations target_fabric_nacl_group_ops = {
++static const struct configfs_group_operations target_fabric_nacl_group_ops = {
+ 	.make_group	= target_fabric_make_nodeacl,
+ 	.drop_item	= target_fabric_drop_nodeacl,
+ };
+@@ -454,7 +454,7 @@ static void target_fabric_np_base_release(struct config_item *item)
+ 	tf->tf_ops->fabric_drop_np(se_tpg_np);
+ }
+ 
+-static struct configfs_item_operations target_fabric_np_base_item_ops = {
++static const struct configfs_item_operations target_fabric_np_base_item_ops = {
+ 	.release		= target_fabric_np_base_release,
+ };
+ 
+@@ -499,7 +499,7 @@ static void target_fabric_drop_np(
+ 	config_item_put(item);
+ }
+ 
+-static struct configfs_group_operations target_fabric_np_group_ops = {
++static const struct configfs_group_operations target_fabric_np_group_ops = {
+ 	.make_group	= &target_fabric_make_np,
+ 	.drop_item	= &target_fabric_drop_np,
+ };
+@@ -700,7 +700,7 @@ static void target_fabric_port_release(struct config_item *item)
+ 	call_rcu(&lun->rcu_head, target_tpg_free_lun);
+ }
+ 
+-static struct configfs_item_operations target_fabric_port_item_ops = {
++static const struct configfs_item_operations target_fabric_port_item_ops = {
+ 	.release		= target_fabric_port_release,
+ 	.allow_link		= target_fabric_port_link,
+ 	.drop_link		= target_fabric_port_unlink,
+@@ -726,7 +726,7 @@ static void target_core_port_stat_rmdir(
+ 	return;
+ }
+ 
+-static struct configfs_group_operations target_fabric_port_stat_group_ops = {
++static const struct configfs_group_operations target_fabric_port_stat_group_ops = {
+ 	.make_group		= target_core_port_stat_mkdir,
+ 	.drop_item		= target_core_port_stat_rmdir,
+ };
+@@ -787,7 +787,7 @@ static void target_fabric_drop_lun(
+ 	config_item_put(item);
+ }
+ 
+-static struct configfs_group_operations target_fabric_lun_group_ops = {
++static const struct configfs_group_operations target_fabric_lun_group_ops = {
+ 	.make_group	= &target_fabric_make_lun,
+ 	.drop_item	= &target_fabric_drop_lun,
+ };
+@@ -812,7 +812,7 @@ static void target_fabric_tpg_release(struct config_item *item)
+ 	tf->tf_ops->fabric_drop_tpg(se_tpg);
+ }
+ 
+-static struct configfs_item_operations target_fabric_tpg_base_item_ops = {
++static const struct configfs_item_operations target_fabric_tpg_base_item_ops = {
+ 	.release		= target_fabric_tpg_release,
+ };
+ 
+@@ -998,11 +998,11 @@ static void target_fabric_release_wwn(struct config_item *item)
+ 	tf->tf_ops->fabric_drop_wwn(wwn);
+ }
+ 
+-static struct configfs_item_operations target_fabric_tpg_item_ops = {
++static const struct configfs_item_operations target_fabric_tpg_item_ops = {
+ 	.release	= target_fabric_release_wwn,
+ };
+ 
+-static struct configfs_group_operations target_fabric_tpg_group_ops = {
++static const struct configfs_group_operations target_fabric_tpg_group_ops = {
+ 	.make_group	= target_fabric_make_tpg,
+ 	.drop_item	= target_fabric_drop_tpg,
+ };
+@@ -1144,7 +1144,7 @@ static void target_fabric_drop_wwn(
+ 	config_item_put(item);
+ }
+ 
+-static struct configfs_group_operations target_fabric_wwn_group_ops = {
++static const struct configfs_group_operations target_fabric_wwn_group_ops = {
+ 	.make_group	= target_fabric_make_wwn,
+ 	.drop_item	= target_fabric_drop_wwn,
+ };
+-- 
+2.52.0
+
