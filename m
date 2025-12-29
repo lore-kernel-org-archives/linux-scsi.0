@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D1CAB27FB35;
-	Mon, 29 Dec 2025 07:12:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB4762F28E5;
+	Mon, 29 Dec 2025 07:13:27 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1766992322; cv=none; b=asnjZxGLElCtKeFhMreNsqSgYzLUe6YSJ3zd5c5dnbK2lbfY49L/V3SDHeC61pcRuaR1EVa9PzO9uC1FOvc3IEtW5azlr0DTFZIGH4j8EBUBG7fJfcAypDcuKNo1spJ2pyi6Smud/6WzLVEE/hawnBsddAAy2kA+D1xJDj4O8uw=
+	t=1766992408; cv=none; b=SP2ZaFCk1ld/X1mwX7mTXSPunqvuFnRvBHDOUQ/b9+siTQPi2wb0KPtlSzpI7PGYKw8C86z2LvP6KpWbU5YJePj4SRfgJX5hOROKfXbY8Bs22Puk+UzZ6QlGFQAUYvpDt/Jy0IcVDhaugt60h+95pfYEdXkIhqN8ewZ2bUQf4N0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1766992322; c=relaxed/simple;
-	bh=w+EQN4BKYGz+6m9nwb8toGppiuWQhMP7Gh1a+mXh/PQ=;
+	s=arc-20240116; t=1766992408; c=relaxed/simple;
+	bh=5Vi/GObvU8QN0K2K0AXY6SR8LJZXeeQpllqvML422rQ=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=d5Yd2wMs9pmh1a0lq4GVdj9Cq7Y2a1mTzRP4KXFXuRiEoNYPvkX30SPFPXfgvZSzbS1gRnyHxWdhpKcK/578W/LPlgKMifcHqku8TwOeg2Pwb8JD9Ut9OGFrniw8qqDrsWK8K3Lke/yzunbmWYp/nr8dgxBbboPF93e1blZ2phI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kix3k768; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=cYbRo6BofHfV9XUgRqskjuqEoHj4yh9Ja/vP/I5nH11pa62BUSX6DAgvGyAlVns69G4ldJP5IZANv6zzpfkMxPaVQSv/WaqGMfIj7UuxDs6zqf2t5iPfRup+hXvHdahuIT3jaaVuvejQbh0ztVBJ2qHlRRTFecoUw9AIneHoW24=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OZ4vQFjF; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kix3k768"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 176D0C4CEF7;
-	Mon, 29 Dec 2025 07:11:54 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OZ4vQFjF"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2AC66C4CEF7;
+	Mon, 29 Dec 2025 07:13:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1766992320;
-	bh=w+EQN4BKYGz+6m9nwb8toGppiuWQhMP7Gh1a+mXh/PQ=;
+	s=k20201202; t=1766992407;
+	bh=5Vi/GObvU8QN0K2K0AXY6SR8LJZXeeQpllqvML422rQ=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=kix3k7684uS1EW5mx2CCwazHUnrYbnNnoEO3mRjx3dvqEJTWV+I8Le4Kc5Ji+x5Q4
-	 /1rDwhx40c8BM87SHgZ4guLHcASfWeFJ4g6EttB+qZKQuZRJJMPVUVjnmiaPpe1SEH
-	 qy40msXPt3lFz7AwAuRjzcy7U4VhjbHhzQBaVf3un1nURA/Ztdue6cw1FWrN3hRVaf
-	 5HmfyVsg8EjXutcNgiL9KXeGrcN3B4qOcGYde/1RS2nf55hJciz4AUpiQ9RvsAxHIE
-	 08ARUfbc2pHeuxwVWnEkwTYP7VYD6Olukbqk3iCJcyXlcvfYno/8hB9vgsC/f/r8/3
-	 MyH5Jd++NPhag==
-Message-ID: <f87a8caf-6c65-48b8-a372-1ebff95cb6f8@kernel.org>
-Date: Mon, 29 Dec 2025 08:11:52 +0100
+	b=OZ4vQFjFfNd1GeBy4eSXcR4h5D3HpNLtjcuT9DZSr+qc5dZZ18HwacQofkvBq7aty
+	 McpCDiBV9PNALQgSa0FnWmGP+qxQ1kA2xtw7yzQdK+/1WCAovvK+JR0DIgbVyUlB4Z
+	 8jOfe5vOphGAaTYR0L8uhuAp4l4qIZpiT+WAobhh5Sej89Hv5TCI+PimRavMN4aklI
+	 uOsfsSkJTW5T9zvrQxGj2oJ682v6zbPo/diUrNTTbZdry0A+GpO1CznnWLMI0iY9tr
+	 hUaNXqf87vCey48s+89/e8ssahMl9TqtNUmG1a0h+5TtN+TU7DXjZbccTyfI0ReuDw
+	 LjwDujQz8unoA==
+Message-ID: <9d3c21ad-c265-4e22-b804-ef8c39b7e787@kernel.org>
+Date: Mon, 29 Dec 2025 08:13:20 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,8 +35,8 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH V1 1/4] scsi: ufs: phy: dt-bindings: Add QMP UFS PHY
- compatible for Hamoa
+Subject: Re: [PATCH V1 2/4] scsi: ufs: qcom: dt-bindings: Add UFSHC compatible
+ for Hamoa
 To: Pradeep P V K <pradeep.pragallapati@oss.qualcomm.com>, vkoul@kernel.org,
  neil.armstrong@linaro.org, robh@kernel.org, krzk+dt@kernel.org,
  conor+dt@kernel.org, martin.petersen@oracle.com, andersson@kernel.org,
@@ -46,7 +46,7 @@ Cc: linux-arm-msm@vger.kernel.org, linux-phy@lists.infradead.org,
  devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
  linux-scsi@vger.kernel.org, nitin.rawat@oss.qualcomm.com
 References: <20251229060642.2807165-1-pradeep.pragallapati@oss.qualcomm.com>
- <20251229060642.2807165-2-pradeep.pragallapati@oss.qualcomm.com>
+ <20251229060642.2807165-3-pradeep.pragallapati@oss.qualcomm.com>
 From: Krzysztof Kozlowski <krzk@kernel.org>
 Content-Language: en-US
 Autocrypt: addr=krzk@kernel.org; keydata=
@@ -92,19 +92,29 @@ Autocrypt: addr=krzk@kernel.org; keydata=
  jWt87ecuHlpL3uuQ0ZZNWqHgZoQLXoqC2ZV5KrtKWb/jyiFX/sxSrodALf0zf+tfHv0FZWT2
  zHjUqd0t4njD/UOsuIMOQn4Ig0SdivYPfZukb5cdasKJukG1NOpbW7yRNivaCnfZz6dTawXw
  XRIV/KDsHQiyVxKvN73bThKhONkcX2LWuD928tAR6XMM2G5ovxLe09vuOzzfTWQDsm++9UKF a/A=
-In-Reply-To: <20251229060642.2807165-2-pradeep.pragallapati@oss.qualcomm.com>
+In-Reply-To: <20251229060642.2807165-3-pradeep.pragallapati@oss.qualcomm.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 On 29/12/2025 07:06, Pradeep P V K wrote:
-> Document the QMP UFS PHY compatible for Qualcomm Hamoa to support
-> physical layer functionality for UFS found on the SoC. Use fallback to
-> indicate the compatibility of the QMP UFS PHY on the Hamoa with that
-> on the SM8550.
+> Document the UFSHC compatible for Qualcomm Hamoa SoC. Use fallback
+> to indicate the compatibility of UFSHC on Hamoa with that on the
+> SM8550.
 
-Last sentence is pointless. You keep explaining what you did, but you
-did not say why. Why Hamoa is compatible with SM8550, but not with SM8650?
+Same problem.
 
+> 
+> Signed-off-by: Pradeep P V K <pradeep.pragallapati@oss.qualcomm.com>
+> ---
+>  .../devicetree/bindings/ufs/qcom,sc7180-ufshc.yaml          | 6 +++++-
+>  1 file changed, 5 insertions(+), 1 deletion(-)
+> 
+> diff --git a/Documentation/devicetree/bindings/ufs/qcom,sc7180-ufshc.yaml b/Documentation/devicetree/bindings/ufs/qcom,sc7180-ufshc.yaml
+> index d94ef4e6b85a..3b5a95db7831 100644
+> --- a/Documentation/devicetree/bindings/ufs/qcom,sc7180-ufshc.yaml
+> +++ b/Documentation/devicetree/bindings/ufs/qcom,sc7180-ufshc.yaml
+
+That's older devices binding. Why would Hamoa fit here?
 
 Best regards,
 Krzysztof
