@@ -1,165 +1,192 @@
-Received: from mout.web.de (mout.web.de [217.72.192.78])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F2C32264D5;
-	Tue, 30 Dec 2025 16:01:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.72.192.78
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 89C7D321426
+	for <linux-scsi@vger.kernel.org>; Tue, 30 Dec 2025 16:40:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767110509; cv=none; b=Th6wRr7l1x7frYuPSCeCIZOP9iGhL6fZ5I2gfKnH6ftt6Ari11u6JfyAt9GrzPQEgiORQjgzW14laD36XEJXrhrzrPyZdDTLtmY7VgoGxVwDPg6zjCuDk8onMFb8LNBbX4gVcXHI26TrJ+ZJVKIhsvE+snSISbEQ3h9oKbQbUVA=
+	t=1767112839; cv=none; b=KAfi4ShUwstDoaUw+5eBXVGjw6lbICO7FQjegwPSqz+SYqT8J7dmd331OJu2ENmIW/OaxaMbuC92hemovNYoKaJmzIXYnioPSBG4OUH2HDP9IT75iYTGK9Eskc8BPOVciXKl4rA4GDXq/6lNcFBG6p9He192S+c6LgfDLYB1zdE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767110509; c=relaxed/simple;
-	bh=WapCiDDtQBSmoRDkytpYpWm2Qgf/MnAyGtkkvl3/w98=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=K7nUbPCT1Uut5kE9o65+U/TEnxu3aXr+nF9WHaBDlFzTQ30HxCT3EBj6cScvAXokrQytaFC9pMXh5NlhtSq2euAAmtKnWD2O1EdAPBsjMz/cOSFQ7+p+gxTD0xZRqexoHHgJ/+L+b68dSJMONr94peczK5caMWkH4A/mFmut4BY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de; spf=pass smtp.mailfrom=web.de; dkim=pass (2048-bit key) header.d=web.de header.i=markus.elfring@web.de header.b=ok5Ia5Fb; arc=none smtp.client-ip=217.72.192.78
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=web.de
+	s=arc-20240116; t=1767112839; c=relaxed/simple;
+	bh=R3ssxNR/IfKvvzigNkiBKuIwzZmdFCE30Vek2VE5a/c=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=IMBE9Wexaz9DEiH9YdrB+vmLT1Ex+H0lVkfR8/V65Hp0Wk6HlBeGK2BNyRGlZdhYzuoCuw+igQFwa/e1ASQvxs6mzj5bfFMYf7+6SgU9nEP2cuACmTmvagUhXWT9xmZJzvnzc5+7uZeqqOjX1onF59UgazB4vCglVkJPrIZtb+E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=CDo8618x; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=tGsVd1OR; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=web.de header.i=markus.elfring@web.de header.b="ok5Ia5Fb"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=web.de;
-	s=s29768273; t=1767110495; x=1767715295; i=markus.elfring@web.de;
-	bh=FGjFaFf0HL1j2gePG7USzk85iI8oKvV0t/kLps5KE+c=;
-	h=X-UI-Sender-Class:Message-ID:Date:MIME-Version:Subject:To:Cc:
-	 References:From:In-Reply-To:Content-Type:
-	 Content-Transfer-Encoding:cc:content-transfer-encoding:
-	 content-type:date:from:message-id:mime-version:reply-to:subject:
-	 to;
-	b=ok5Ia5FbRpWGYmvrI0+RMjjimrkMHNtPvZ2qphNhjT+tWFvvFVjEK6XtymJqlJ+/
-	 Hnv7RTmGUox4aTBBgDl3DgUqsD7FPW5PriS3Kz7fwTCtvvxg3LO7PI+O5wUkv1ne0
-	 pX0XmyNZ6fx6RqRWgATJRrBnOIkPt2fjGXQnKR9F8LsyjZTqMFBkARWMsM27wqhHM
-	 cBAEN59YamyHvxtf4A/+4FQovVhdFaiUGiNW3ZEy02RVlAp06yTb8vBPYCvhBf4FS
-	 wNeC10LubnFwUfJRVazkmB8qUgh279bEXQqmYxhtMJOn/MfbyOhrlxl2gRd1n6g1G
-	 RzXs7HCuZJsPfbbVVQ==
-X-UI-Sender-Class: 814a7b36-bfc1-4dae-8640-3722d8ec6cd6
-Received: from [192.168.178.29] ([94.31.93.0]) by smtp.web.de (mrweb105
- [213.165.67.124]) with ESMTPSA (Nemesis) id 1MwR4R-1vspKs0OI9-010KjG; Tue, 30
- Dec 2025 17:01:35 +0100
-Message-ID: <8ab71d11-ef77-4181-a5d5-e785576c85be@web.de>
-Date: Tue, 30 Dec 2025 17:01:32 +0100
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="CDo8618x";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="tGsVd1OR"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1767112836;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=7J8z1fD7DSMGZ6iKBx0OqXIx7XfW+ZYePKweShXuH2A=;
+	b=CDo8618xqajMYlrIganDweT8AiGYtCkoWL2waz6M6UJJ78xULg6Xf2r37MrUCzU18evdkK
+	YPMeCIqdnKCMkyIKoc9m3X1R86c2sn8+7/6qBkCYPvCl68I17EVe+Rpai7To6YzRaVdRAF
+	9xDz/cUdBFkP/auH7HPtWHP0TFdclfw=
+Received: from mail-wr1-f70.google.com (mail-wr1-f70.google.com
+ [209.85.221.70]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-644-zkPY9yHsPli_qlY54tWLXQ-1; Tue, 30 Dec 2025 11:40:34 -0500
+X-MC-Unique: zkPY9yHsPli_qlY54tWLXQ-1
+X-Mimecast-MFC-AGG-ID: zkPY9yHsPli_qlY54tWLXQ_1767112834
+Received: by mail-wr1-f70.google.com with SMTP id ffacd0b85a97d-430fcf10287so7069972f8f.0
+        for <linux-scsi@vger.kernel.org>; Tue, 30 Dec 2025 08:40:34 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=redhat.com; s=google; t=1767112833; x=1767717633; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=7J8z1fD7DSMGZ6iKBx0OqXIx7XfW+ZYePKweShXuH2A=;
+        b=tGsVd1ORU0Eh9v8efXZT1lh+FgCYbl5O7LiFefA28EVmRKhFwjKIK+BkIFPA+HquNW
+         I/iCySQ/Hi/bFw5TujZNT95fbDuwnDGI5r2pHqghiLDrfJvQvWAK2OtX6kVUYKSdDHP5
+         MzILer/dNKCGfsj9rQs5AUI4Y6CUNV8J6pMAB2WE94zrFEkLHx9rWvO9YDwfm5VrO+VR
+         Kl3R35DSLBsN9u6Q9JLMx2Ew0qnQqn4QpfMGN6a9DbosJnFKLKUNTjaoDhXVO+Oh0812
+         dSSgXSlQks9mbZxqnSW/569qUnJLt2nbu1hdPQdOW8Hob/Bsg2dhVoSViq+DAHYiHGpJ
+         1LGg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1767112833; x=1767717633;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=7J8z1fD7DSMGZ6iKBx0OqXIx7XfW+ZYePKweShXuH2A=;
+        b=U3Gq5tYMQfciiMLP0cRZSiS9fonj4MaYAgRwTso22ER8Vq0JJ2KJC+mq+oBmcpWNvt
+         +kHWKIAMxaGqzjaxCPRRIFpmUOA1SeQnpc0mmFEUNn8igWwv+ZdkHxRbpGzg4SHvm96o
+         kJz+ErR8F5LUbIe63B9xhWkaGcJG8KSwD+b69Rh/3FwMBk+RhEVAxogTYkYjoRaYK9gB
+         KT8+ub9h2e7Xn8VqTbjonWAqjFKU3Fw2ijy2/hKsMcSSyBE8QC9NKebXAzYu/HM3CSyq
+         NDDsTGBlgSJciyWD7jzra2ERwGxBijlCcNNzt/9FU2sQpgGyVlB0vKgV/7/zarZk4wAj
+         syqw==
+X-Forwarded-Encrypted: i=1; AJvYcCU48QNMwFrXqu1+STWwxNdlo48/WJPFZm2tPmgw2ScK6oqWC2Q3hLQKeIOt10Jwjq6P3kBDV3stv9sA@vger.kernel.org
+X-Gm-Message-State: AOJu0YxVyOXI3tG6ruvJJ4Q5oBN9lZJ8RPDPGLUdyIeIsHMsQwxM/wi4
+	fentx0xlXVjlkJm0AFY32ZVCFQhrG068KWetOokIOgiwXdeE5Z1QbboElEG8ITqHjGrUkORH4M8
+	p5EOJxjUODgYvfi2HWAtMlNTtSai2uZp/fo0n05oraSGH24N0QcDKE+uNUq2GpVo=
+X-Gm-Gg: AY/fxX7YtP+ElBg0wni2SsIJGrOpckYqmvrm1QEgNSroAvKMMGr0z7cgGX9LidsV5Yt
+	v+JmRWurBrAE4pHic94/qxk50uD4GjH3EYEYNDpFB43XKhigKG6Vqv4HrO90RIpoJ+RANu6nBWo
+	KqB5SbvsLuUsgNA5rzPKwkcggsG1j6IYyUYx9PIAqq8e6fnOT2HRirQI2nzop0V4gJBEQy5H8uP
+	/IYCmR7VY4a057WsDhbeSeJMLvmpTMksFiCesSCGMijmevgLgKVpDYA8H/5/TJPD7oThkzKyNp8
+	VmlCjhzrE14zDur6TcyXZ/yRcZJJywGUghAPieqeXhFn5CBtP7/JXF5hkmrpDcvJGZ4msM8ehso
+	3oN9uIO+raXlEM7qRw1v12FDGRaTJnsgVvA==
+X-Received: by 2002:adf:f144:0:b0:431:855:c791 with SMTP id ffacd0b85a97d-4324e4c1501mr32588452f8f.3.1767112833341;
+        Tue, 30 Dec 2025 08:40:33 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IECVSdNBMTG9k8N96cOa931b+MOajxv263SWbXaTmkKbkTS3ub+IC9yjT+L/YMFbjvC3biqWw==
+X-Received: by 2002:adf:f144:0:b0:431:855:c791 with SMTP id ffacd0b85a97d-4324e4c1501mr32588393f8f.3.1767112832791;
+        Tue, 30 Dec 2025 08:40:32 -0800 (PST)
+Received: from redhat.com (IGLD-80-230-31-118.inter.net.il. [80.230.31.118])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-4324ea1aef7sm69573295f8f.7.2025.12.30.08.40.29
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 30 Dec 2025 08:40:32 -0800 (PST)
+Date: Tue, 30 Dec 2025 11:40:28 -0500
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Cong Wang <xiyou.wangcong@gmail.com>, Jonathan Corbet <corbet@lwn.net>,
+	Olivia Mackall <olivia@selenic.com>,
+	Herbert Xu <herbert@gondor.apana.org.au>,
+	Jason Wang <jasowang@redhat.com>,
+	Paolo Bonzini <pbonzini@redhat.com>,
+	Stefan Hajnoczi <stefanha@redhat.com>,
+	Eugenio =?utf-8?B?UMOpcmV6?= <eperezma@redhat.com>,
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Gerd Hoffmann <kraxel@redhat.com>,
+	Xuan Zhuo <xuanzhuo@linux.alibaba.com>,
+	Marek Szyprowski <m.szyprowski@samsung.com>,
+	Robin Murphy <robin.murphy@arm.com>,
+	Stefano Garzarella <sgarzare@redhat.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Eric Dumazet <edumazet@google.com>,
+	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
+	Simon Horman <horms@kernel.org>, Petr Tesarik <ptesarik@suse.com>,
+	Leon Romanovsky <leon@kernel.org>, Jason Gunthorpe <jgg@ziepe.ca>,
+	linux-doc@vger.kernel.org, linux-crypto@vger.kernel.org,
+	virtualization@lists.linux.dev, linux-scsi@vger.kernel.org,
+	iommu@lists.linux.dev, kvm@vger.kernel.org, netdev@vger.kernel.org,
+	"Enrico Weigelt, metux IT consult" <info@metux.net>,
+	Viresh Kumar <vireshk@kernel.org>,
+	Linus Walleij <linusw@kernel.org>,
+	Bartosz Golaszewski <brgl@kernel.org>, linux-gpio@vger.kernel.org
+Subject: [PATCH RFC 14/13] gpio: virtio: fix DMA alignment
+Message-ID: <6f2f2a7a74141fa3ad92e001ee276c01ffe9ae49.1767112757.git.mst@redhat.com>
+References: <cover.1767089672.git.mst@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 1/3] scsi: lpfc: Fix memory leak in
- lpfc_config_port_post()
-To: Jianhao Xu <jianhao.xu@seu.edu.cn>, Zilin Guan <zilin@seu.edu.cn>,
- linux-scsi@vger.kernel.org
-Cc: LKML <linux-kernel@vger.kernel.org>,
- James Bottomley <James.Bottomley@HansenPartnership.com>,
- Justin Tee <justin.tee@broadcom.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- Paul Ely <paul.ely@broadcom.com>
-References: <20251230145858.1356864-1-zilin@seu.edu.cn>
- <20251230145858.1356864-2-zilin@seu.edu.cn>
-Content-Language: en-GB, de-DE
-From: Markus Elfring <Markus.Elfring@web.de>
-In-Reply-To: <20251230145858.1356864-2-zilin@seu.edu.cn>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-X-Provags-ID: V03:K1:0p8/PbxCPm98KSQcX0JsWR7O/mmtKbydpOg3pCCpjbcvuzuuao1
- hO30undRQmT1hXrRyKpaVOyz0VLfg2gGS2xpt9zXROfU04S5pQ6yRWTJqwZcQGJvT91lMmL
- KieBHumfuGZZPCn4dqdP02vnRnYusym25M/+4WAg4p0CvDflpUSCsMidbooryyA+ziP5N4w
- SqCmb64cwvmEHi+0Q/P/w==
-X-Spam-Flag: NO
-UI-OutboundReport: notjunk:1;M01:P0:36xOvTcHY+o=;SxpIXUSNRIqSS31lb2vWBYJ0DHU
- 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
- vrhJPl9A=
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <cover.1767089672.git.mst@redhat.com>
+X-Mailer: git-send-email 2.27.0.106.g8ac3dc51b1
+X-Mutt-Fcc: =sent
 
-=E2=80=A6
-> +++ b/drivers/scsi/lpfc/lpfc_init.c
-=E2=80=A6
-> @@ -550,8 +549,7 @@ lpfc_config_port_post(struct lpfc_hba *phba)
->  	if (phba->intr_type =3D=3D MSIX) {
->  		rc =3D lpfc_config_msi(phba, pmb);
->  		if (rc) {
-> -			mempool_free(pmb, phba->mbox_mem_pool);
-> -			return -EIO;
-> +			goto out_free;
->  		}
+The res and ires buffers in struct virtio_gpio_line and struct
+vgpio_irq_line respectively are used for DMA_FROM_DEVICE via virtqueue_add_sgs().
+However, within these structs, even though these elements are tagged
+as ____cacheline_aligned, adjacent struct elements
+can share DMA cachelines on platforms where ARCH_DMA_MINALIGN >
+L1_CACHE_BYTES (e.g., arm64 with 128-byte DMA alignment but 64-byte
+cache lines).
 
-You may omit curly brackets here.
-https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/Do=
-cumentation/process/coding-style.rst?h=3Dv6.19-rc3#n197
+The existing ____cacheline_aligned annotation aligns to L1_CACHE_BYTES
+which is now always sufficient for DMA alignment. For example,
+with L1_CACHE_BYTES = 32 and ARCH_DMA_MINALIGN = 128
+  - irq_lines[0].ires at offset 128
+  - irq_lines[1].type at offset 192
+both in same 128-byte DMA cacheline [128-256)
 
+When the device writes to irq_lines[0].ires and the CPU concurrently
+modifies one of irq_lines[1].type/disabled/masked/queued flags,
+corruption can occur on non-cache-coherent platform.
 
->  		rc =3D lpfc_sli_issue_mbox(phba, pmb, MBX_POLL);
->  		if (rc !=3D MBX_SUCCESS) {
-=E2=80=A6
+Fix by using __dma_from_device_aligned_begin/end annotations on the
+DMA buffers. Drop ____cacheline_aligned - it's not required to isolate
+request and response, and keeping them would increase the memory cost.
 
+Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
+---
+ drivers/gpio/gpio-virtio.c | 14 ++++++++++----
+ 1 file changed, 10 insertions(+), 4 deletions(-)
 
-Regards,
-Markus
+diff --git a/drivers/gpio/gpio-virtio.c b/drivers/gpio/gpio-virtio.c
+index 17e040991e46..32b578b46df8 100644
+--- a/drivers/gpio/gpio-virtio.c
++++ b/drivers/gpio/gpio-virtio.c
+@@ -10,6 +10,7 @@
+  */
+ 
+ #include <linux/completion.h>
++#include <linux/dma-mapping.h>
+ #include <linux/err.h>
+ #include <linux/gpio/driver.h>
+ #include <linux/io.h>
+@@ -24,8 +25,12 @@
+ struct virtio_gpio_line {
+ 	struct mutex lock; /* Protects line operation */
+ 	struct completion completion;
+-	struct virtio_gpio_request req ____cacheline_aligned;
+-	struct virtio_gpio_response res ____cacheline_aligned;
++
++	__dma_from_device_aligned_begin
++	struct virtio_gpio_request req;
++	struct virtio_gpio_response res;
++
++	__dma_from_device_aligned_end
+ 	unsigned int rxlen;
+ };
+ 
+@@ -37,8 +42,9 @@ struct vgpio_irq_line {
+ 	bool update_pending;
+ 	bool queue_pending;
+ 
+-	struct virtio_gpio_irq_request ireq ____cacheline_aligned;
+-	struct virtio_gpio_irq_response ires ____cacheline_aligned;
++	__dma_from_device_aligned_begin
++	struct virtio_gpio_irq_request ireq;
++	struct virtio_gpio_irq_response ires;
+ };
+ 
+ struct virtio_gpio {
+-- 
+MST
+
