@@ -1,157 +1,334 @@
-Received: from mout.web.de (mout.web.de [212.227.17.12])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2F1C728726D;
-	Tue, 30 Dec 2025 12:09:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.227.17.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B4B3221DAC;
+	Tue, 30 Dec 2025 13:23:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767096571; cv=none; b=OtG9tCqQ3nmqysviakt1rGe6X/8/Z2mbAh5lxD0Tcppx1YbbkNxL44mhPOXUUUsE8M4LO/Li8G84oPKSRjOLqGYzEpd/TgUPEHS5E0UtR0VDXokKPf3PPgHclzRiwwWs2yNe0jibQNQ8UBT/drmq8cb9YnHFEeM6z7lS8kwk3so=
+	t=1767100996; cv=none; b=Uh70vrMOJJDfAIGF4vH73YvvtRNoTph00d0HYg24TPiYgj/iMp+N72LxkJqckD8o7hgG9+w2ESZkCSxPKPh+kEnu8I+DSBr63oaLBuHcWUhBGeKZnQYyRA65VeSvB38MexAKBIA8Fiu07Z1wob3TkCJUMdXc6yDQKxxICTZ3S8c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767096571; c=relaxed/simple;
-	bh=4NX0puiXN3lUQ92iwv5EIzzYSTZ4PEANi/WpqrB8A3U=;
-	h=Message-ID:Date:MIME-Version:To:Cc:References:Subject:From:
-	 In-Reply-To:Content-Type; b=E+bX+BwAcb7b78x4ZGchIEBjkr1GP2r5Mod4uo1/3bxRx0SJuMKKW+3ezHgz4m95I6mOTLjkwd/1X6yUKQ9c2qLwTZAfkyNMnT91gevM8pFGPAZhmfjI7KIpNzMlWqTeQbypkPYPA7coS2hOmZYxIvlZMhoXgDtHF/HQHNrekf4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de; spf=pass smtp.mailfrom=web.de; dkim=pass (2048-bit key) header.d=web.de header.i=markus.elfring@web.de header.b=r99juCSO; arc=none smtp.client-ip=212.227.17.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=web.de
+	s=arc-20240116; t=1767100996; c=relaxed/simple;
+	bh=n0MxktSwBtNOrmVeS/82OoBx9VViwbfvZ/KkkHjHR7w=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=OZ0udBTtLFuipBz081DtD6T5kS4csREmL0UctIeiQZeMiCtEqxdqX8cIV0xv33eTZ0O5purnZ7VV1fIKpe3HorHnq3MRvPt79Qrc/dlA2CosEv8XVsS1EIMI75afd2JxIkaUG59xULS/ckwOrRnLEVLWccmlYMmrj2EFj2n7Kr0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UNLukpD6; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=web.de header.i=markus.elfring@web.de header.b="r99juCSO"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=web.de;
-	s=s29768273; t=1767096557; x=1767701357; i=markus.elfring@web.de;
-	bh=cSOXOqsh8DbgjiQ2ftskG77MYQueweBE8iGmjVRwwvQ=;
-	h=X-UI-Sender-Class:Message-ID:Date:MIME-Version:To:Cc:References:
-	 Subject:From:In-Reply-To:Content-Type:Content-Transfer-Encoding:
-	 cc:content-transfer-encoding:content-type:date:from:message-id:
-	 mime-version:reply-to:subject:to;
-	b=r99juCSOdMU0g6ZBjA7UPtMKZ9y1/ltsRu+ZZCn/bl2mw50G/v38prIA/MhY2VDE
-	 Sgt3N5uFpNlfKgEJsCSEXLXIrDA9FM3Qth4EZZYjq4mpQQ33Rtnv8rZXA28uxk2Xi
-	 Mc7VAc0Gz11iWVy3FL40V/2foYP8NBjWaW8pdFUJ3k7HnBhuvo+ka95uMcfWnXfxw
-	 rLbLRQcPz7on14RSlqkZnnvmu73v2RKTWJcuge4N8DKU30mcWCHprzyrTWla+oG7L
-	 0eKwwFOjf/8gLFDhehSpYQFlXcOQVsS/1coeED3XGUbiqk5Za2lsa4ervWPNYmP3C
-	 J8skSqpNK+ahUGZiog==
-X-UI-Sender-Class: 814a7b36-bfc1-4dae-8640-3722d8ec6cd6
-Received: from [192.168.178.29] ([94.31.93.0]) by smtp.web.de (mrweb105
- [213.165.67.124]) with ESMTPSA (Nemesis) id 1MovjQ-1wGpdL2jny-00gIf6; Tue, 30
- Dec 2025 13:09:17 +0100
-Message-ID: <667efc45-7970-4064-8357-0c1d9acf3d66@web.de>
-Date: Tue, 30 Dec 2025 13:09:14 +0100
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UNLukpD6"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C8A42C116D0;
+	Tue, 30 Dec 2025 13:23:14 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1767100996;
+	bh=n0MxktSwBtNOrmVeS/82OoBx9VViwbfvZ/KkkHjHR7w=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=UNLukpD6fmJ9bqbAhZsPUmyrcFkTurzxPfFpoihG4DL7LsJ6PqaqwoOpHsP0ZJUN+
+	 5HwzNkQ5kP9xVzFB07XTSx1RLaB9eLWHFdn5F4PDKGeVniy+iDsNAXl8JFkDy4DFjU
+	 cVdvc1A3v1ayicQ9buNbGa6Gfp1L2qv4LGODU1B3n6y38YXKzZjJr1vMTrxy/C+n0e
+	 sSFmxPYdnTQWbyjOv5B6uxgremMWPdo/tY+1rWwtEElZyZ6cncF4ShebC3ojMQP09H
+	 nGCD2hyjCXN/HNhbt9THqyQn15C70e98FSo0a3QgVihmcPdlwjPgWennT/csDmpRZ1
+	 7AmaLPWBfcDrQ==
+From: Sasha Levin <sashal@kernel.org>
+To: patches@lists.linux.dev,
+	stable@vger.kernel.org
+Cc: =?UTF-8?q?Michal=20R=C3=A1bek?= <mrabek@redhat.com>,
+	Tomas Henzl <thenzl@redhat.com>,
+	Changhui Zhong <czhong@redhat.com>,
+	"Ewan D. Milne" <emilne@redhat.com>,
+	John Meneghini <jmeneghi@redhat.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Sasha Levin <sashal@kernel.org>,
+	dgilbert@interlog.com,
+	James.Bottomley@HansenPartnership.com,
+	linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.18-5.10] scsi: sg: Fix occasional bogus elapsed time that exceeds timeout
+Date: Tue, 30 Dec 2025 08:22:59 -0500
+Message-ID: <20251230132303.2194838-6-sashal@kernel.org>
+X-Mailer: git-send-email 2.51.0
+In-Reply-To: <20251230132303.2194838-1-sashal@kernel.org>
+References: <20251230132303.2194838-1-sashal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-To: Jianhao Xu <jianhao.xu@seu.edu.cn>, Zilin Guan <zilin@seu.edu.cn>,
- linux-scsi@vger.kernel.org, storagedev@microchip.com,
- Don Brace <don.brace@microchip.com>
-Cc: LKML <linux-kernel@vger.kernel.org>,
- James Bottomley <James.Bottomley@HansenPartnership.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>
-References: <20251229152938.481054-1-zilin@seu.edu.cn>
-Subject: Re: [PATCH] scsi: hpsa: Fix memory leak in
- hpsa_undo_allocations_after_kdump_soft_reset()
-Content-Language: en-GB, de-DE
-From: Markus Elfring <Markus.Elfring@web.de>
-In-Reply-To: <20251229152938.481054-1-zilin@seu.edu.cn>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-X-Provags-ID: V03:K1:F2N9HJ2/veNVMP+Ch0YLlWMZfFWIOtkL+PK1whcdWc7kG9ZZfo1
- 8o5/EQQYCHaj9KSoMIUPLd0ld+UdqR2JQc8MfQ2g689+rFv70Aw5WvjC7M0ciRUJEnr253s
- edkl424xpab41UVDnM8XqtmUaj/7EJYPAaXIaFoxUMsSFmnKcp02mghumEoP83V+rNZXaHV
- 0FEbCEmfZjXBefL5+23xw==
-X-Spam-Flag: NO
-UI-OutboundReport: notjunk:1;M01:P0:4xh5ZsadA8I=;OB1dKTpAL+SFYE6LmrIn8Uyukti
- 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
- L647rLi0=
+X-stable: review
+X-Patchwork-Hint: Ignore
+X-stable-base: Linux 6.18.2
+Content-Transfer-Encoding: 8bit
 
-=E2=80=A6
-> +++ b/drivers/scsi/hpsa.c
-> @@ -8212,6 +8212,8 @@ static void hpsa_undo_allocations_after_kdump_soft=
-_reset(struct ctlr_info *h)
->  		h->monitor_ctlr_wq =3D NULL;
->  	}
-> =20
-> +	kfree(h->reply_map);		/* init_one 1 */
-> +	h->reply_map =3D NULL;		/* init_one 1 */
+From: Michal Rábek <mrabek@redhat.com>
 
-I find this reset statement redundant here.
+[ Upstream commit 0e1677654259a2f3ccf728de1edde922a3c4ba57 ]
 
+A race condition was found in sg_proc_debug_helper(). It was observed on
+a system using an IBM LTO-9 SAS Tape Drive (ULTRIUM-TD9) and monitoring
+/proc/scsi/sg/debug every second. A very large elapsed time would
+sometimes appear. This is caused by two race conditions.
 
->  	kfree(h);				/* init_one 1 */
->  }
+We reproduced the issue with an IBM ULTRIUM-HH9 tape drive on an x86_64
+architecture. A patched kernel was built, and the race condition could
+not be observed anymore after the application of this patch. A
+reproducer C program utilising the scsi_debug module was also built by
+Changhui Zhong and can be viewed here:
 
+https://github.com/MichaelRabek/linux-tests/blob/master/drivers/scsi/sg/sg_race_trigger.c
 
-Regards,
-Markus
+The first race happens between the reading of hp->duration in
+sg_proc_debug_helper() and request completion in sg_rq_end_io().  The
+hp->duration member variable may hold either of two types of
+information:
+
+ #1 - The start time of the request. This value is present while
+      the request is not yet finished.
+
+ #2 - The total execution time of the request (end_time - start_time).
+
+If sg_proc_debug_helper() executes *after* the value of hp->duration was
+changed from #1 to #2, but *before* srp->done is set to 1 in
+sg_rq_end_io(), a fresh timestamp is taken in the else branch, and the
+elapsed time (value type #2) is subtracted from a timestamp, which
+cannot yield a valid elapsed time (which is a type #2 value as well).
+
+To fix this issue, the value of hp->duration must change under the
+protection of the sfp->rq_list_lock in sg_rq_end_io().  Since
+sg_proc_debug_helper() takes this read lock, the change to srp->done and
+srp->header.duration will happen atomically from the perspective of
+sg_proc_debug_helper() and the race condition is thus eliminated.
+
+The second race condition happens between sg_proc_debug_helper() and
+sg_new_write(). Even though hp->duration is set to the current time
+stamp in sg_add_request() under the write lock's protection, it gets
+overwritten by a call to get_sg_io_hdr(), which calls copy_from_user()
+to copy struct sg_io_hdr from userspace into kernel space. hp->duration
+is set to the start time again in sg_common_write(). If
+sg_proc_debug_helper() is called between these two calls, an arbitrary
+value set by userspace (usually zero) is used to compute the elapsed
+time.
+
+To fix this issue, hp->duration must be set to the current timestamp
+again after get_sg_io_hdr() returns successfully. A small race window
+still exists between get_sg_io_hdr() and setting hp->duration, but this
+window is only a few instructions wide and does not result in observable
+issues in practice, as confirmed by testing.
+
+Additionally, we fix the format specifier from %d to %u for printing
+unsigned int values in sg_proc_debug_helper().
+
+Signed-off-by: Michal Rábek <mrabek@redhat.com>
+Suggested-by: Tomas Henzl <thenzl@redhat.com>
+Tested-by: Changhui Zhong <czhong@redhat.com>
+Reviewed-by: Ewan D. Milne <emilne@redhat.com>
+Reviewed-by: John Meneghini <jmeneghi@redhat.com>
+Reviewed-by: Tomas Henzl <thenzl@redhat.com>
+Link: https://patch.msgid.link/20251212160900.64924-1-mrabek@redhat.com
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+
+LLM Generated explanations, may be completely bogus:
+
+## Analysis of commit: "scsi: sg: Fix occasional bogus elapsed time that
+exceeds timeout"
+
+### 1. COMMIT MESSAGE ANALYSIS
+
+The commit clearly describes two race conditions in the SCSI sg driver:
+- **Race 1:** Between reading `hp->duration` in `sg_proc_debug_helper()`
+  and request completion in `sg_rq_end_io()` - duration gets updated
+  before `srp->done` is set, causing incorrect timestamp subtraction
+- **Race 2:** Between `sg_proc_debug_helper()` and `sg_new_write()` -
+  userspace can set arbitrary values for `hp->duration` via
+  `copy_from_user()` before the kernel resets it
+
+The bug was observed on real hardware (IBM LTO-9 SAS Tape Drive).
+There's a reproducer available and the fix has been tested.
+
+**Quality indicators:**
+- `Tested-by:` tag present
+- `Reviewed-by:` from 3 different reviewers
+- Link to reproducer code on GitHub
+- Detailed technical explanation
+
+### 2. CODE CHANGE ANALYSIS
+
+**Change 1 - `sg_new_write()` (~line 734):**
+Adds `hp->duration = jiffies_to_msecs(jiffies);` immediately after
+`get_sg_io_hdr()` returns. This fixes race #2 by ensuring userspace-
+supplied values are overwritten with the correct timestamp right away.
+
+**Change 2 - `sg_common_write()` (~line 820):**
+Removes the `hp->duration = jiffies_to_msecs(jiffies);` line since it's
+now set earlier in `sg_new_write()`.
+
+**Change 3 - `sg_rq_end_io()` (~lines 1341-1392):**
+Moves the duration calculation **inside** the write lock:
+```c
+write_lock_irqsave(&sfp->rq_list_lock, iflags);
+// ...
+srp->done = done;
+ms = jiffies_to_msecs(jiffies);
+srp->header.duration = (ms > srp->header.duration) ? (ms -
+srp->header.duration) : 0;
+write_unlock_irqrestore(&sfp->rq_list_lock, iflags);
+```
+This makes `srp->done` and `srp->header.duration` updates atomic from
+`sg_proc_debug_helper()`'s perspective.
+
+**Change 4 - `sg_proc_debug_helper()` (~lines 2550-2570):**
+- Uses `READ_ONCE(hp->duration)` for proper memory ordering
+- Fixes format specifier `%d` to `%u` for unsigned int values
+- Adds local `duration` variable to capture the value atomically
+
+### 3. CLASSIFICATION
+
+- **Type:** Bug fix (race condition)
+- **Impact:** Incorrect elapsed time values displayed in
+  `/proc/scsi/sg/debug`
+- **Not a security issue**, not data corruption, not a crash
+
+### 4. SCOPE AND RISK ASSESSMENT
+
+- **Files touched:** 1 (`drivers/scsi/sg.c`)
+- **Lines changed:** Moderate - mostly code movement and reordering
+- **Complexity:** Low - uses existing locking mechanisms, no new logic
+- **Risk:** LOW - the fix applies proper locking discipline; no
+  fundamental behavioral change
+
+### 5. USER IMPACT
+
+- **Affected users:** Enterprise users with SCSI tape drives (backup
+  systems), users of sg interface for direct SCSI access
+- **Severity:** Medium - incorrect diagnostic information can mislead
+  troubleshooting, but not a crash or data loss
+- **Reproducibility:** Confirmed reproducible with reproducer tool
+
+### 6. STABILITY INDICATORS
+
+- 3 `Reviewed-by:` tags (Ewan D. Milne, John Meneghini, Tomas Henzl)
+- 1 `Tested-by:` tag
+- Authors from Red Hat (enterprise relevance)
+- Reproducer publicly available
+
+### 7. DEPENDENCY CHECK
+
+- No dependencies on other commits
+- Uses `READ_ONCE()` - available in all stable kernels
+- `rq_list_lock` and related structures are long-standing
+- The sg driver is mature and present in all stable trees
+
+### STABLE KERNEL CRITERIA EVALUATION
+
+| Criterion | Assessment |
+|-----------|------------|
+| Obviously correct | ✅ Yes - proper locking discipline |
+| Fixes real bug | ✅ Yes - documented race condition with reproducer |
+| Tested | ✅ Yes - Tested-by tag present |
+| Small and contained | ✅ Yes - single file, focused changes |
+| No new features | ✅ Yes - only fixes race |
+| No new APIs | ✅ Yes |
+
+### RISK VS BENEFIT
+
+**Benefits:**
+- Fixes race conditions causing incorrect timing values in /proc
+- Enterprise relevance (tape backup systems)
+- Well-tested and reviewed
+
+**Risks:**
+- Minimal - code movement under existing locks
+- No functional changes to I/O path
+
+**Concerns:**
+- The bug is diagnostic in nature (incorrect display) rather than
+  crash/corruption
+- However, the fix is safe and meets all stable criteria
+
+### CONCLUSION
+
+This commit fixes two real race conditions in the SCSI sg driver that
+have been observed in production environments with tape drives. The fix
+is surgical, well-tested, thoroughly reviewed (3 reviewers), and follows
+proper locking discipline. While the bug manifests as incorrect timing
+information in /proc rather than a crash, it affects enterprise users
+relying on accurate diagnostic information. The fix has low regression
+risk and cleanly applies to the long-standing sg driver code.
+
+**YES**
+
+ drivers/scsi/sg.c | 20 +++++++++++++-------
+ 1 file changed, 13 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+index b3af9b78fa12..57fba34832ad 100644
+--- a/drivers/scsi/sg.c
++++ b/drivers/scsi/sg.c
+@@ -731,6 +731,8 @@ sg_new_write(Sg_fd *sfp, struct file *file, const char __user *buf,
+ 		sg_remove_request(sfp, srp);
+ 		return -EFAULT;
+ 	}
++	hp->duration = jiffies_to_msecs(jiffies);
++
+ 	if (hp->interface_id != 'S') {
+ 		sg_remove_request(sfp, srp);
+ 		return -ENOSYS;
+@@ -815,7 +817,6 @@ sg_common_write(Sg_fd * sfp, Sg_request * srp,
+ 		return -ENODEV;
+ 	}
+ 
+-	hp->duration = jiffies_to_msecs(jiffies);
+ 	if (hp->interface_id != '\0' &&	/* v3 (or later) interface */
+ 	    (SG_FLAG_Q_AT_TAIL & hp->flags))
+ 		at_head = 0;
+@@ -1338,9 +1339,6 @@ sg_rq_end_io(struct request *rq, blk_status_t status)
+ 				      "sg_cmd_done: pack_id=%d, res=0x%x\n",
+ 				      srp->header.pack_id, result));
+ 	srp->header.resid = resid;
+-	ms = jiffies_to_msecs(jiffies);
+-	srp->header.duration = (ms > srp->header.duration) ?
+-				(ms - srp->header.duration) : 0;
+ 	if (0 != result) {
+ 		struct scsi_sense_hdr sshdr;
+ 
+@@ -1389,6 +1387,9 @@ sg_rq_end_io(struct request *rq, blk_status_t status)
+ 			done = 0;
+ 	}
+ 	srp->done = done;
++	ms = jiffies_to_msecs(jiffies);
++	srp->header.duration = (ms > srp->header.duration) ?
++				(ms - srp->header.duration) : 0;
+ 	write_unlock_irqrestore(&sfp->rq_list_lock, iflags);
+ 
+ 	if (likely(done)) {
+@@ -2533,6 +2534,7 @@ static void sg_proc_debug_helper(struct seq_file *s, Sg_device * sdp)
+ 	const sg_io_hdr_t *hp;
+ 	const char * cp;
+ 	unsigned int ms;
++	unsigned int duration;
+ 
+ 	k = 0;
+ 	list_for_each_entry(fp, &sdp->sfds, sfd_siblings) {
+@@ -2570,13 +2572,17 @@ static void sg_proc_debug_helper(struct seq_file *s, Sg_device * sdp)
+ 			seq_printf(s, " id=%d blen=%d",
+ 				   srp->header.pack_id, blen);
+ 			if (srp->done)
+-				seq_printf(s, " dur=%d", hp->duration);
++				seq_printf(s, " dur=%u", hp->duration);
+ 			else {
+ 				ms = jiffies_to_msecs(jiffies);
+-				seq_printf(s, " t_o/elap=%d/%d",
++				duration = READ_ONCE(hp->duration);
++				if (duration)
++					duration = (ms > duration ?
++						    ms - duration : 0);
++				seq_printf(s, " t_o/elap=%u/%u",
+ 					(new_interface ? hp->timeout :
+ 						  jiffies_to_msecs(fp->timeout)),
+-					(ms > hp->duration ? ms - hp->duration : 0));
++					duration);
+ 			}
+ 			seq_printf(s, "ms sgat=%d op=0x%02x\n", usg,
+ 				   (int) srp->data.cmd_opcode);
+-- 
+2.51.0
+
