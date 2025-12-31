@@ -1,87 +1,81 @@
-Received: from mail-m49197.qiye.163.com (mail-m49197.qiye.163.com [45.254.49.197])
+Received: from mail-m155101.qiye.163.com (mail-m155101.qiye.163.com [101.71.155.101])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD69419E992;
-	Wed, 31 Dec 2025 15:00:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.254.49.197
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC0742857F0;
+	Wed, 31 Dec 2025 15:07:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=101.71.155.101
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767193212; cv=none; b=qvi5zwH4IZ8KHxpGJ9wH8jx4Gmlpw9PkRAq+52b9Ww25TEbcGtGyFjE4AWd2HO3PUqYpsVUNPG+vwXdaUfKIirdN7ZB9OyKY4IBXlJJCzfT1P55fSXs1kuaY9xJzkNy2OHBRbSYdevj2jh/gnh/36MiG23MHzlFQtdvGituil/I=
+	t=1767193632; cv=none; b=W7BiEtp2nsjTyHvwIQm+0l0/wFgPTxY7VO9dlcsMK0yRH3Hxv/nUIt3wgp7L7uvIqyRCvBZXGtclSVukBOB4adD0SgBrujhXd2lwzXn8B6FIhrwqRUFPsAk6iqWuSyb52Anvlvuymn2UEK9bAlrp4NYP2Z7ry7YzNYCBbjZGoHM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767193212; c=relaxed/simple;
-	bh=lzr5sEPB8DE3Ax+3+Iw5jogvxjM/QEHK9KRdeNmgMFA=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=MLyoHBR9QsMMOabI9XjngBbe+kA9DI2Zo6MVoFOGrHE8KZlBAmEY2SVPMi3QlO2tT3k80Xm/p5KwcL1QfvtKkH9Bj6oHPVK49Gb9HXTlA2Zliq6Ihe71vREPzw33d4S81sDdSrGqdJ2pLUXjoYr7JQus6zS83qcReR0uHTxEnu4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=seu.edu.cn; spf=pass smtp.mailfrom=seu.edu.cn; dkim=pass (1024-bit key) header.d=seu.edu.cn header.i=@seu.edu.cn header.b=Y+LVlND0; arc=none smtp.client-ip=45.254.49.197
+	s=arc-20240116; t=1767193632; c=relaxed/simple;
+	bh=LeKiLhibiiQEEtdamNHzv7LtPY4KWX88L2UEK2ZMxIo=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=DztW/1Qr7bZvj/aWGJfDW8BLgD10PwqlR4up1eBn9nuAvabx/651BcUm4b0eKtdVyVLYFN6UDT35JufTsFXlLymoASZwlpnRQHnuFe10esC5ZFS/iZxcysu2r7zlXIeXeTQ1eNKN7Z1CBhjiyTsIfWpyI7fcMKCnDE2cePrZFGE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=seu.edu.cn; spf=pass smtp.mailfrom=seu.edu.cn; dkim=pass (1024-bit key) header.d=seu.edu.cn header.i=@seu.edu.cn header.b=HcQafveB; arc=none smtp.client-ip=101.71.155.101
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=seu.edu.cn
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=seu.edu.cn
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=seu.edu.cn header.i=@seu.edu.cn header.b="Y+LVlND0"
-Received: from LAPTOP-N070L597.localdomain (unknown [223.112.146.162])
-	by smtp.qiye.163.com (Hmail) with ESMTP id 2f2b2eb08;
-	Wed, 31 Dec 2025 22:59:56 +0800 (GMT+08:00)
+	dkim=pass (1024-bit key) header.d=seu.edu.cn header.i=@seu.edu.cn header.b="HcQafveB"
+Received: from LAPTOP-N070L597.localdomain (unknown [222.191.246.242])
+	by smtp.qiye.163.com (Hmail) with ESMTP id 2f2b2eba3;
+	Wed, 31 Dec 2025 23:07:03 +0800 (GMT+08:00)
 From: Zilin Guan <zilin@seu.edu.cn>
-To: don.brace@microchip.com
+To: markus.elfring@web.de
 Cc: James.Bottomley@HansenPartnership.com,
-	martin.petersen@oracle.com,
-	storagedev@microchip.com,
-	linux-scsi@vger.kernel.org,
+	jianhao.xu@seu.edu.cn,
+	justin.tee@broadcom.com,
 	linux-kernel@vger.kernel.org,
-	Markus.Elfring@web.de,
-	Zilin Guan <zilin@seu.edu.cn>,
-	Jianhao Xu <jianhao.xu@seu.edu.cn>
-Subject: [PATCH v2] scsi: hpsa: Fix memory leak in hpsa_undo_allocations_after_kdump_soft_reset()
-Date: Wed, 31 Dec 2025 14:59:37 +0000
-Message-Id: <20251231145937.354593-1-zilin@seu.edu.cn>
+	linux-scsi@vger.kernel.org,
+	martin.petersen@oracle.com,
+	paul.ely@broadcom.com,
+	zilin@seu.edu.cn
+Subject: Re: [PATCH v2 1/3] scsi: lpfc: Fix memory leak in lpfc_config_port_post()
+Date: Wed, 31 Dec 2025 15:07:00 +0000
+Message-Id: <20251231150700.359356-1-zilin@seu.edu.cn>
 X-Mailer: git-send-email 2.34.1
+In-Reply-To: <8ab71d11-ef77-4181-a5d5-e785576c85be@web.de>
+References: <8ab71d11-ef77-4181-a5d5-e785576c85be@web.de>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-HM-Tid: 0a9b74ec381803a1kunm69224f141ab109
+X-HM-Tid: 0a9b74f2baa603a1kunm28ec3adb1ab5fa
 X-HM-MType: 10
 X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-	tZV1koWUFITzdXWS1ZQUlXWQ8JGhUIEh9ZQVlCGkkeVhoeTkNMSh1MQkofTFYeHw5VEwETFhoSFy
-	QUDg9ZV1kYEgtZQVlJSUhVSkpJVUpPTVVKTUlZV1kWGg8SFR0UWUFZT0tIVUpLSUJDQ0xVSktLVU
+	tZV1koWUFITzdXWS1ZQUlXWQ8JGhUIEh9ZQVkaHxkZVh8eH0hNQxkeQ0oaTFYeHw5VEwETFhoSFy
+	QUDg9ZV1kYEgtZQVlJSUlVSkJKVUlPTVVJT0lZV1kWGg8SFR0UWUFZT0tIVUpLSUhOQ0NVSktLVU
 	tZBg++
 DKIM-Signature: a=rsa-sha256;
-	b=Y+LVlND0wzcPXZNCqhxi1KIocwF8nUZUivf9fF4wk9AA4QM1SLyYWygmSvVleOJJvi44B3C/8tSy5go/5o9stkIn97oDOKbm613ABFkMhzWlbLH9HD5Pt+8nyFcymYaZxnV65ASc1VxLblMKteLEDTaGczkYgLsOb0MKGXix8mo=; s=default; c=relaxed/relaxed; d=seu.edu.cn; v=1;
-	bh=tx19Q1FhtlIddIO+5SJNaLwCCwIh0vMyDO5iKO2g1r0=;
+	b=HcQafveBUadtPr/7SFr24gq1Isc4Vnj84gUgI5Abm5amHn6wDQ/zsT5P2uty4JVLhxihqbsC8kVc2/6I4IY/lHBufAC038uEgMKbRSB0mv5pIqm88v+/oRalxUt3iPu04zdJGQBiAQRxLyivDaELvfFOSWnB787FtORRhZR7zrE=; s=default; c=relaxed/relaxed; d=seu.edu.cn; v=1;
+	bh=tIw4Ok7mKBl8iHoANVZB8J0r7TBF+yR762PfYNmT1ew=;
 	h=date:mime-version:subject:message-id:from;
 
-The h->reply_map is allocated in hpda_alloc_ctlr_info() via kcalloc().
-If the controller reset fails during initialization in hpsa_init_one(),
-hpsa_undo_allocations_after_kdump_soft_reset() is called to clean up
-resources. However, this function frees the controller structure h but
-fails to free h->reply_map, leading to a memory leak.
+On Tue, Dec 30, 2025 at 05:01:32PM+0100, Markus Elfring wrote:
+> …
+> > +++ b/drivers/scsi/lpfc/lpfc_init.c
+> …
+> > @@ -550,8 +549,7 @@ lpfc_config_port_post(struct lpfc_hba *phba)
+> >  	if (phba->intr_type == MSIX) {
+> >  		rc = lpfc_config_msi(phba, pmb);
+> >  		if (rc) {
+> > -			mempool_free(pmb, phba->mbox_mem_pool);
+> > -			return -EIO;
+> > +			goto out_free;
+> >  		}
+> 
+> You may omit curly brackets here.
+> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/Documentation/process/coding-style.rst?h=v6.19-rc3#n197
 
-Fix this by freeing h->reply_map before freeing h in the cleanup function.
+Hi Markus,
 
-Fixes: 8b834bff1b73 ("scsi: hpsa: fix selection of reply queue")
-Suggested-by: Markus Elfring <Markus.Elfring@web.de>
-Co-developed-by: Jianhao Xu <jianhao.xu@seu.edu.cn>
-Signed-off-by: Jianhao Xu <jianhao.xu@seu.edu.cn>
-Signed-off-by: Zilin Guan <zilin@seu.edu.cn>
----
-Changes in v2:
-- Remove redundant NULL assignment for h->reply_map.
+Thanks for the review.
 
- drivers/scsi/hpsa.c | 1 +
- 1 file changed, 1 insertion(+)
+I missed this one during the refactoring. I will remove the unnecessary 
+braces in v3.
 
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 3654b12c5d5a..ce69cd381e9f 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -8212,6 +8212,7 @@ static void hpsa_undo_allocations_after_kdump_soft_reset(struct ctlr_info *h)
- 		h->monitor_ctlr_wq = NULL;
- 	}
- 
-+	kfree(h->reply_map);		/* init_one 1 */
- 	kfree(h);				/* init_one 1 */
- }
- 
--- 
-2.34.1
-
+Best regards,
+Zilin Guan
