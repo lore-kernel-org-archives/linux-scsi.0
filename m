@@ -1,32 +1,32 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B42792EC0AD;
-	Fri,  2 Jan 2026 11:26:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D8332EDD4D;
+	Fri,  2 Jan 2026 11:26:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767353161; cv=none; b=qgle4tRomS0PTC9gmq0BmLGUDml9HLk6v0+Y79we8pf+cqrx/ebReGmeRJUG0REW8pDtuQWqyRAuJTPciN/E3aV9xk29gAcsJxPWIO38oEciyU7d2rvmFaXQLxDmBhvL5/4D6tCDIurlWKXGy05izoX3H/yS3FQg8e1qrZbpamw=
+	t=1767353194; cv=none; b=WT/ZIgxHb9gzSO80nZi8IjKbuM98FcyDRrnSnFxnzD3A6Y7CKEukACC++mhnF7mvzrGtwzwqOx004oTn6zEBc4qbkkVL3D62O9oXqsON+d3TzG9cHZy0etx5C1Ueh9ksk5q+mhazq9WISwX/AYsuuBfzu8LDhAXARcL4yEGbV+4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767353161; c=relaxed/simple;
-	bh=irxz4kGO/ifwlc6J21n4NxZquijGUgmOe+Gdf3NvF+o=;
+	s=arc-20240116; t=1767353194; c=relaxed/simple;
+	bh=CSBspIjn8I+xud4qQsoEe2yu9mZ/NuQy++qx5UJVMFk=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=FD5SU/OglTVFNXbhoY7wnbneRev0MXDKSLi/+rMbqf4DdkLFgPpgSDQgp7n55mLjIavL2jkgc356XgfukOM8k1aN0AgCaWTnRMThesMcQoCFYljhvY7TUdLEAWWVJFiKDzCQtSBFs5dnTULw+c4SzWfEwGv5nPEG6XFPsSZShmo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=H9xzFqat; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=lSpVIy7s3VIysfjxhWA2Y/mNmjLrK1Ubp1rgLI8NL10rek2K+7gVk4KohSUcFYFIgdSVUXGuU4tTcZFZcl1G5VcazwCiI8alIRdqtHB8rWu51lXfwFup8esbbqNwvc4CQWqm5tQTZazM8C46knN2qIkFWoTfe9YFa9q6X0m8iQg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JecgUqvF; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="H9xzFqat"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BA066C116B1;
-	Fri,  2 Jan 2026 11:26:00 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JecgUqvF"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B9EE1C116B1;
+	Fri,  2 Jan 2026 11:26:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1767353161;
-	bh=irxz4kGO/ifwlc6J21n4NxZquijGUgmOe+Gdf3NvF+o=;
+	s=k20201202; t=1767353194;
+	bh=CSBspIjn8I+xud4qQsoEe2yu9mZ/NuQy++qx5UJVMFk=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=H9xzFqat7t5rznCncJVk7UDgr96JHMk+T2NDAHDY57kVAc2s8UpJOYQunlJIQXy/6
-	 wf4fc6ZDN6CP9UR0B8pVMze2iPj5qsVd8JpDbydyrl8/xZFKAGUe5WuxLs37aw2Ou2
-	 57Ktb5MUdY/PRQ4LYRPoJcxj4rvpL7mw7y4wvsUhipt0TKpJLAheE9hPXsiJUK/Gnp
-	 3F5PaOwU7agtJBjM+v2hrr710CO40kA87LCJ+Tm/+FBiGwoEXVZfnywQ+qwNT4sI5D
-	 T6ByGtbxXLzqh2U1LaCWvAu6Z/piYCd/8gpYb8/WHwAblQMgB3zy/bFgF1ZMGNWlZw
-	 ndPZS9AiDU49g==
-Date: Fri, 2 Jan 2026 12:25:58 +0100
+	b=JecgUqvF0455QsPgXg1sYhnRTw6IlfmpnMhgp62MODggrEOnidNA0CHhLC3TvpM4I
+	 4aP5xbM+FCNsdHfCkMSA3MR9m+N9sLS+af9j3RvO3C5FL0Pr3kSiMyEVLP1Op4F9yK
+	 pI++ElQJwZmXShtxZ+aML1vpUkyMe5pi1NneqiC3WTHluodNe8MM+rvlYeInFbyiGH
+	 PogwMU5YaPdYXHzOmKWqfzq/3vNnBs4QH4iCUnbKrTbjYmmI9f/M2gYUbi7oSQEEkt
+	 Mvp3hZEoGpx96gFi0dGvwKdDM30YZhyQEtomJzYfBMWIpK0H0NrYMfm7gjl8Rl8hD6
+	 liPCCTTcBvIfg==
+Date: Fri, 2 Jan 2026 12:26:31 +0100
 From: Krzysztof Kozlowski <krzk@kernel.org>
 To: Pradeep P V K <pradeep.pragallapati@oss.qualcomm.com>
 Cc: vkoul@kernel.org, neil.armstrong@linaro.org, robh@kernel.org, 
@@ -37,7 +37,7 @@ Cc: vkoul@kernel.org, neil.armstrong@linaro.org, robh@kernel.org,
 	linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, nitin.rawat@oss.qualcomm.com
 Subject: Re: [PATCH V2 2/4] scsi: ufs: qcom: dt-bindings: Document UFSHC
  compatible for x1e80100
-Message-ID: <20260102-rapid-abiding-parakeet-d0735f@quoll>
+Message-ID: <20260102-logical-frigatebird-of-elegance-8abd82@quoll>
 References: <20251231101951.1026163-1-pradeep.pragallapati@oss.qualcomm.com>
  <20251231101951.1026163-3-pradeep.pragallapati@oss.qualcomm.com>
 Precedence: bulk
@@ -54,33 +54,14 @@ On Wed, Dec 31, 2025 at 03:49:49PM +0530, Pradeep P V K wrote:
 > Add the UFS Host Controller (UFSHC) compatible for Qualcomm x1e80100
 > SoC.  Use SM8550 as a fallback since x1e80100 shares compatibility
 > with SM8550 UFSHC, enabling reuse of existing support.
-
-Your last sentence is redundant. "Make devices compatible because they
-are compatible". Why are they compatible? Or just say that you add a new
-device fully compatible with SM8550. Write concise and informative
-statements, not long elaborted paragraphs where only few words are the
-actual information
-
 > 
-> Signed-off-by: Pradeep P V K <pradeep.pragallapati@oss.qualcomm.com>
-> ---
->  .../bindings/ufs/qcom,sc7180-ufshc.yaml       | 38 +++++++++++--------
->  1 file changed, 23 insertions(+), 15 deletions(-)
-> 
-> diff --git a/Documentation/devicetree/bindings/ufs/qcom,sc7180-ufshc.yaml b/Documentation/devicetree/bindings/ufs/qcom,sc7180-ufshc.yaml
-> index d94ef4e6b85a..0f6ea7ca06c8 100644
-> --- a/Documentation/devicetree/bindings/ufs/qcom,sc7180-ufshc.yaml
-> +++ b/Documentation/devicetree/bindings/ufs/qcom,sc7180-ufshc.yaml
-> @@ -26,26 +26,34 @@ select:
->            - qcom,sm8350-ufshc
->            - qcom,sm8450-ufshc
->            - qcom,sm8550-ufshc
-> +          - qcom,x1e80100-ufshc
 
-You don't need this.
+Please use subject prefixes matching the subsystem. You can get them for
+example with 'git log --oneline -- DIRECTORY_OR_FILE' on the directory
+your patch is touching. For bindings, the preferred subjects are
+explained here:
+https://www.kernel.org/doc/html/latest/devicetree/bindings/submitting-patches.html#i-for-patch-submitters
 
->    required:
->      - compatible
 
 Best regards,
 Krzysztof
