@@ -1,167 +1,147 @@
-Received: from mail-wm1-f50.google.com (mail-wm1-f50.google.com [209.85.128.50])
+Received: from mail-wr1-f42.google.com (mail-wr1-f42.google.com [209.85.221.42])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 759742D63E2
-	for <linux-scsi@vger.kernel.org>; Fri,  2 Jan 2026 08:15:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.50
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B10F2D6E59
+	for <linux-scsi@vger.kernel.org>; Fri,  2 Jan 2026 09:15:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767341707; cv=none; b=oZaHLR85DiunPPpZ6sc6X1GMdQxdWD7q6jfMX2jS73p39TfWfqU6drdedZo11oI5Oj+DB4gttDKedkX2exByeAw/2FNHVCIfmSoA2Uqoa8ZAIwXKByZRjrUxeb9JH8iLlj5epe0Xfgf8hMNc/bDAaWpCo+4XM66V1zE1e4T/juw=
+	t=1767345311; cv=none; b=isQufZmoYFLGqJErhZ7K2Gq+BGhLKDOFfI54O17ydXJTAP9IPW99gqS2MiSLY39Htm+R0xz2pAuMWO2ZNVK6bHUU6GJzStKXDVP/fWx4ltHcxwJHD7FrFsFMGVlCZG6eE63wy9wytAmOiR7FtoenGUuveV0Q772EF9DpkCDRvCw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767341707; c=relaxed/simple;
-	bh=pR9J2JcpyuSslYDA7lsLX4ZhILZRZva1Jx7LQCRL2xc=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=bo9VcTY6+fiQVK43tNWQVbJp54c6p/3D6i8gQ16FcTQP4pcOy4J/qkuNbJGYAJl5Q7TM1j/B8YKTB2PPeXpo7Np/Z6HR2Ml8G/LEKb77pDsg1VID6Q5HkOlUzS2Nzf9kTtBBIXvggrFPIQk83FWGRqRGKBXfXtYD3eJZjpcDNJU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=YA76nKi/; arc=none smtp.client-ip=209.85.128.50
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+	s=arc-20240116; t=1767345311; c=relaxed/simple;
+	bh=OQ95NodpicSGUk0iHBGZIIo21gUmLBy6tiMBcM7rbLo=;
+	h=Message-ID:Date:MIME-Version:From:To:Subject:Content-Type; b=N6AIvjZuSRvxrRQj9jxTcBF7BCEC8kGK2NRm6DwEzZiISIJRy9YnowpB62NabsDHPHkqk+feMxa3MKrHfFoko1Z9xveX8DTVC24dPz8sneZE8AaFWVhPnEqiER8nAPQoOTkmIixWxYUYEBDTpmm0mh3rF3wXCUKMcw+eMze2RDw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=bE+QmItb; arc=none smtp.client-ip=209.85.221.42
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="YA76nKi/"
-Received: by mail-wm1-f50.google.com with SMTP id 5b1f17b1804b1-47798f4059fso10442475e9.2
-        for <linux-scsi@vger.kernel.org>; Fri, 02 Jan 2026 00:15:03 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="bE+QmItb"
+Received: by mail-wr1-f42.google.com with SMTP id ffacd0b85a97d-42fb2314f52so6668565f8f.0
+        for <linux-scsi@vger.kernel.org>; Fri, 02 Jan 2026 01:15:07 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1767341702; x=1767946502; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:subject:cc:to:from:date:from:to:cc:subject:date
+        d=gmail.com; s=20230601; t=1767345306; x=1767950106; darn=vger.kernel.org;
+        h=content-transfer-encoding:subject:to:content-language:from
+         :user-agent:mime-version:date:message-id:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=7B5OROvqw/DgiaRfLYZJf4GjF/wj6CLJOtpsQ8Z+Uq0=;
-        b=YA76nKi/w+4r6QrU3u2zf5Le8V9XRZBLFbZgcDqg8nvt9MckDoEaO8By8k5rFaH2zj
-         M6FOWUp+8LwZBjF7Ct+EYIO0kH0S0v+Pr9wSVpl4cXLp1lFB/7/Pb3+7EkRYFZ3ouqef
-         b8TA2l7ZzYNtFHMUb7pVDcW0ZmWyV8GwubCAvrstaOiHAncUBTCHGnjdqJUtd1u693Nf
-         pm12hnFgGAbipqxoZBPGus+ExXjFykcTzIXHpoBAw8wzK/IcFi5XxjN/gsygR6pDcVF0
-         P1iYMU4BuJYFaPN7BknV7Vy3fKB9GXy/u40sq+1UrdlhP1knI9/5NYPkaXLxDyogj33o
-         q9Jw==
+        bh=/TR9B0Za9Df05IKu1No77n0ZHDlhVEm5pY8mJ2UW+3s=;
+        b=bE+QmItbbgr+Vmm/AxTZUgD5iCjpDfjU52EjosC1jtNd7AKAQtgAN/nl/g5UsyIGDT
+         PhVmEM6ZZUOQ/VSqgT23nCOTjHd/mWy2nona7gjXDfCHoaxAO3K+HyRWBYAEJNuLtn+c
+         1RLUxHC6rmRnGOzDBwYxEywq4QFWnCKsZHWBF4pcL63cb+jPCGM49rmL8s5vo3p/N9WI
+         ExJbQp4J4sBlL0Qoj0odaAqWezrOFm5EYpaK4uxTxvKPjQ/6egZIP+FnuxmlZ7a+cF10
+         +MebXOKO5MnZK82NdBffTo9eKoTNL9VO2O8T0mGw4TlwqzPtpRfPKx2jQc36BCr1Y0Ko
+         AhzQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1767341702; x=1767946502;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=7B5OROvqw/DgiaRfLYZJf4GjF/wj6CLJOtpsQ8Z+Uq0=;
-        b=V+GNIi8wUv9w0ssIDiuX5/fYqMiQcCTd9WC2ZNtqUCWIyu/tbepIPdWfv4MzQVCYTi
-         2ij7dSYETHE1NEBqu7/dFUflyCFlhp2Kv+naCt/cvFFxXPs3TjP0UaTw6EU6NxjcsM2e
-         hYpyqeL0FOvy916mdBJoybbIvVvGunmm+NDaOpnSTUCHOad9x0xI/yMttcOuJ8j7okIJ
-         NMUOC+gGz7ZAwyUllWbI7BGek0UQV2hu+2i8K7n6TQewoL0mvH+MGKtQqi72L3JHSVoD
-         PM7rhPF3YKbm7reOr9VJ7NuapQzB8Rh4zqQBPoqG6OV/69k5FVC8Y9LITMU8icuLyzUz
-         hUnQ==
-X-Forwarded-Encrypted: i=1; AJvYcCXgYteJYVFaUqFZkYoO7GrovUpiEwGg6ZRVt9Iejy0lXToARFgf2jfqg6L0HYfRfgHxA1AJhCE6qask@vger.kernel.org
-X-Gm-Message-State: AOJu0YwCoD1UisI+ebQ50pgMto9tF2/cs8PNmofKm/c60YhZXb7AdZ81
-	IKDAXZjkdR4gNnOCdaguvj+iSsD1Zh+AG6eCQoL9mcQlE/9DQL5IKstUk3BiTJRCj7k=
-X-Gm-Gg: AY/fxX6diPiY9/tv0bkxIGgDJEuuNYOBNxsA3dORDZrWBcWryiX4rmPFGQSa5FhaVRP
-	P+nqRCyvGn4LlAmV38blGvY10gtnastkIxhtXwShh5vnDTrHuV62bEA6zyYXgf0IwRvkmvhu68X
-	Yf6Fun7dTflVTuGsrIeyJddixR5SoJPBsX5IQ1+KUK/aWbxlg0jlRWlYQ2zeffYpM4xg+o+GKrw
-	vHaR1FO4LcdND4fdk4/q+fAJMrQuVgSxzGLuVSYTOlTOw3TOKlDUOv3hwaOp9SWWcKVi89AyEAl
-	DpBBlCExaac+DFpNHN7586kHokLoNd9Df4KyZn124mdcstcnZT1soNaOHN2EC3O1iBnuKXe1Yjc
-	DDe2lzlrzUKAgi1RjBPKyLHQu7qmd7liNZDKWHg7SbjS3GMcN/C6u/dsRE7R+9QEtQ1b2wvfyGW
-	D+LURqFC5nAFz6wLl/dRTRNQxPf53ZkhmRyMfmfz4v05ahr/XhbJUHRguAPUBl29PlrX5yWICtU
-	zoi
-X-Google-Smtp-Source: AGHT+IEG7/UqWg/6ELIcyq0mVb3xfMQn4RI8cpiRrR5W4zXnA35xM+TJgjTRoe1XllkShxIti5fDKg==
-X-Received: by 2002:a05:600c:3151:b0:477:a203:66dd with SMTP id 5b1f17b1804b1-47d197f69demr322547935e9.2.1767341702410;
-        Fri, 02 Jan 2026 00:15:02 -0800 (PST)
-Received: from mordecai (dynamic-2a00-1028-83b8-1e7a-3010-3bd6-8521-caf1.ipv6.o2.cz. [2a00:1028:83b8:1e7a:3010:3bd6:8521:caf1])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-47be27b0d5asm792930555e9.13.2026.01.02.00.15.00
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 02 Jan 2026 00:15:01 -0800 (PST)
-Date: Fri, 2 Jan 2026 09:14:59 +0100
-From: Petr Tesarik <ptesarik@suse.com>
-To: "Michael S. Tsirkin" <mst@redhat.com>
-Cc: linux-kernel@vger.kernel.org, Cong Wang <xiyou.wangcong@gmail.com>,
- Jonathan Corbet <corbet@lwn.net>, Olivia Mackall <olivia@selenic.com>,
- Herbert Xu <herbert@gondor.apana.org.au>, Jason Wang <jasowang@redhat.com>,
- Paolo Bonzini <pbonzini@redhat.com>, Stefan Hajnoczi <stefanha@redhat.com>,
- Eugenio =?UTF-8?B?UMOpcmV6?= <eperezma@redhat.com>, "James E.J. Bottomley"
- <James.Bottomley@hansenpartnership.com>, "Martin K. Petersen"
- <martin.petersen@oracle.com>, Gerd Hoffmann <kraxel@redhat.com>, Xuan Zhuo
- <xuanzhuo@linux.alibaba.com>, Marek Szyprowski <m.szyprowski@samsung.com>,
- Robin Murphy <robin.murphy@arm.com>, Stefano Garzarella
- <sgarzare@redhat.com>, "David S. Miller" <davem@davemloft.net>, Eric
- Dumazet <edumazet@google.com>, Jakub Kicinski <kuba@kernel.org>, Paolo
- Abeni <pabeni@redhat.com>, Simon Horman <horms@kernel.org>, Leon Romanovsky
- <leon@kernel.org>, Jason Gunthorpe <jgg@ziepe.ca>,
- linux-doc@vger.kernel.org, linux-crypto@vger.kernel.org,
- virtualization@lists.linux.dev, linux-scsi@vger.kernel.org,
- iommu@lists.linux.dev, kvm@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [PATCH RFC 01/13] dma-mapping: add
- __dma_from_device_align_begin/end
-Message-ID: <20260102091459.6bec60c2@mordecai>
-In-Reply-To: <20251231154722-mutt-send-email-mst@kernel.org>
-References: <cover.1767089672.git.mst@redhat.com>
-	<ca12c790f6dee2ca0e24f16c0ebf3591867ddc4a.1767089672.git.mst@redhat.com>
-	<20251231150159.1779b585@mordecai>
-	<20251231154722-mutt-send-email-mst@kernel.org>
-X-Mailer: Claws Mail 4.3.1 (GTK 3.24.51; x86_64-suse-linux-gnu)
+        d=1e100.net; s=20230601; t=1767345306; x=1767950106;
+        h=content-transfer-encoding:subject:to:content-language:from
+         :user-agent:mime-version:date:message-id:x-gm-gg:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=/TR9B0Za9Df05IKu1No77n0ZHDlhVEm5pY8mJ2UW+3s=;
+        b=tPNSOU22YlMemZ/rBLG5P5R7WnbwyIdSxgNBIJgE636tEd080FE0k0bbgA7rmQtCOl
+         mLwm8KBQiKTSxCo/dtxB66bTi2PdH2bwiaTW0FFi4Ma0rQMqkCVgR3g55h20EFHqh0sH
+         BDAXPfFkKvMYbtB7vc7o62aH31f3mFePwo3qz3L9EhOYlKOxr8Lo4kU2W0HE6uRRaQ8p
+         ErykQJb1bCiTDqg4XGND5hTihdxPHfxEQPB8ETS0Z/gXTJIYD/jlfkEQEMXaUsSlsXT/
+         Dh33fGtXzonKVoET+gX4BFer9e5YZVxucHkxxbaf9mUEFm/WBHfIcJHSxFzqeDfV6nyR
+         bhFg==
+X-Gm-Message-State: AOJu0YzXKTyCe3Rp8shkjs5GLqt3qj/7TiVNgBGHq/h4zHm03UoMwrI/
+	Hdcz4s3AsHEVVHcrHYm8Jq8+HmX4drfHQJTEQ8C86r1Spx70z45quNuy/zjrBE5e
+X-Gm-Gg: AY/fxX6qmf2MD7CQCf6bpbv9d0NtV78hrjznPmMArx0du2sCWYPysXsTJalAhf1+OKq
+	A6/Y5nLbhZymSjOrbpkRiohg2aPlqUo4nUA8tfR6QBSKVAbyuLSI/4pTNIT5NAqxvC5QSrkM/K+
+	RqekfveH86fGvzzsw1ZA4IWpasloN8px+ct5MNO2qB3aLhjs7t6jL2/npv8AeywD26ss1+rd4TX
+	Oag3gw5E371qNfZ9c54igJygWGCyk3L16Iv9Ec9qXrfE1n7lXEknSbEbwRmMXG018F94nuxt/LE
+	olnYfbKJYvzVpcDnwDYh3PIVGZSZ/KhDFxKt+QfyQNXxOhNbUhbq6bpQeTIwWNGEdFVysxj7atG
+	x7Wup14nKnWvfW2UiTf8MQ+UtNhzlVl0d2xW8IPv9HyTUyxTWN7tgDiGasaPA7Wg42oBUjsJF35
+	AV6FnO6GohcsdfVWBMJGYjmEedRtmGryjZE0s6Ip8y35axk1fnOpzRIVsiSQpF0euO11OHAA==
+X-Google-Smtp-Source: AGHT+IFTLdUZji3G6T1tN3ij6Vtn7EPxWr+faNsm/PyW38WnvKirofVD9KjQ+/OuhfBGDy+4BgYkqQ==
+X-Received: by 2002:a05:6000:3104:b0:431:9d7:5c2e with SMTP id ffacd0b85a97d-4324e501694mr50407694f8f.35.1767345306111;
+        Fri, 02 Jan 2026 01:15:06 -0800 (PST)
+Received: from [192.168.10.194] (net-188-216-175-96.cust.vodafonedsl.it. [188.216.175.96])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-4324ea226d1sm85715264f8f.13.2026.01.02.01.15.05
+        for <linux-scsi@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 02 Jan 2026 01:15:05 -0800 (PST)
+Message-ID: <3bb03946-eb11-4e28-a72b-e958833bb5cc@gmail.com>
+Date: Fri, 2 Jan 2026 10:15:04 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+User-Agent: Mozilla Thunderbird
+From: Sergio Callegari <sergio.callegari@gmail.com>
+Content-Language: en-US, it-IT
+To: linux-scsi@vger.kernel.org
+Subject: Sd card race on resume with filesystem errors (possible data loss?)
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
-On Wed, 31 Dec 2025 15:48:26 -0500
-"Michael S. Tsirkin" <mst@redhat.com> wrote:
+Hi and happy new year!
 
-> On Wed, Dec 31, 2025 at 03:01:59PM +0100, Petr Tesarik wrote:
-> > On Tue, 30 Dec 2025 05:15:46 -0500
-> > "Michael S. Tsirkin" <mst@redhat.com> wrote:
-> >   
-> > > When a structure contains a buffer that DMA writes to alongside fields
-> > > that the CPU writes to, cache line sharing between the DMA buffer and
-> > > CPU-written fields can cause data corruption on non-cache-coherent
-> > > platforms.
-> > > 
-> > > Add __dma_from_device_aligned_begin/__dma_from_device_aligned_end
-> > > annotations to ensure proper alignment to prevent this:
-> > > 
-> > > struct my_device {
-> > > 	spinlock_t lock1;
-> > > 	__dma_from_device_aligned_begin char dma_buffer1[16];
-> > > 	char dma_buffer2[16];
-> > > 	__dma_from_device_aligned_end spinlock_t lock2;
-> > > };
-> > > 
-> > > When the DMA buffer is the last field in the structure, just
-> > > __dma_from_device_aligned_begin is enough - the compiler's struct
-> > > padding protects the tail:
-> > > 
-> > > struct my_device {
-> > > 	spinlock_t lock;
-> > > 	struct mutex mlock;
-> > > 	__dma_from_device_aligned_begin char dma_buffer1[16];
-> > > 	char dma_buffer2[16];
-> > > };  
-> > 
-> > This works, but it's a bit hard to read. Can we reuse the
-> > __cacheline_group_{begin, end}() macros from <linux/cache.h>?
-> > Something like this:
-> > 
-> > #define __dma_from_device_group_begin(GROUP)			\
-> > 	__cacheline_group_begin(GROUP)				\
-> > 	____dma_from_device_aligned
-> > #define __dma_from_device_group_end(GROUP)			\
-> > 	__cacheline_group_end(GROUP)				\
-> > 	____dma_from_device_aligned
-> > 
-> > And used like this (the "rxbuf" group id was chosen arbitrarily):
-> > 
-> > struct my_device {
-> > 	spinlock_t lock1;
-> > 	__dma_from_device_group_begin(rxbuf);
-> > 	char dma_buffer1[16];
-> > 	char dma_buffer2[16];
-> > 	__dma_from_device_group_end(rxbuf);
-> > 	spinlock_t lock2;
-> > };
-> > 
-> > Petr T  
-> 
-> Made this change, and pushed out to my tree.
-> 
-> I'll post the new version in a couple of days, if no other issues
-> surface.
+I would like to report a problem that I am encountering with the sdcard 
+storage.
 
-FTR except my (non-critical) suggestions for PATCH 5/13, the updated
-series looks good to me.
+I have received the suggestion to write to the dedicated ml from the 
+linux-stable one.
 
-Thank you!
+In my setup /home is on an sd-card (because system is a 
+laptop/convertible where the internal disk is too small). The card is 
+luks encrypted and has a btrfs filesystem on it.
 
-Petr T
+When the laptop sleeps and then resumes, there is a race. The sdcard 
+gets accessed for read/write but is not yet ready, so there are I/O 
+errors. BTRFS is not happy with them and tends to remount RO.
+
+This issue is well known to purism developers (e.g. see 
+https://source.puri.sm/Librem5/linux/-/issues/484 and 
+https://forums.puri.sm/t/sdcard-becomes-read-only-after-waking-up-from-suspend/20767/2).
+
+My kernel logs are identical to those in 
+https://source.puri.sm/Librem5/linux/-/issues/484 (first comment), apart 
+from the fact that I get the errors from BTRFS, while the reporter there 
+gets the errors from EXT4. This indicates that the race is not specific 
+to BTRFS.
+
+The errors in the kernel logs come right after the PM: suspend exit message.
+
+ From what I understand:
+
+1. The error is more frequent with the SD-LUKS-FILESYSTEM 
+stratification, but not specific to it
+
+2. A phone/tablet set up such as those that purism developers address 
+will generally use sdcard for storage and require suspend, being a good 
+trigger for the problem. However, the problem is in no means specific to 
+phones, ARM devices, etc. I am getting it on an X86-64 laptop.
+
+3. It is unclear to me if there is a real risk of data loss. Possibly 
+with BTRFS that has a more complex data management this can be the case.
+
+4.Even if data loss can be excluded, the issue requires a reboot to get 
+the filesystem back to RW, so it is annoying.
+
+5. Purism developers have a kernel patch for it at 
+https://source.puri.sm/Librem5/linux/-/merge_requests/788. From my 
+understandig, this is not in linux mainline or stable. Would it make 
+sense to consider that patch?
+
+6. For stable kernels, there is a mitigation consisting in a systemd 
+sleep-resume hook as in
+
+#!/bin/sh
+/usr/bin/systemd-cat -p5 /usr/bin/echo ${1} ${2}
+
+case "${1}" in
+         post)
+                 sleep 1.5
+                 systemd-cat -p4 /usr/bin/echo "hack, wait for sdcard"
+         ;;
+esac
+
+see https://source.puri.sm/Librem5/linux/-/issues/484#note_277648
+
+This appears to reduce the occurrence of the problem, but not to 
+eliminate it completely.
+
+Thanks for the attention
+
+Sergio
+
