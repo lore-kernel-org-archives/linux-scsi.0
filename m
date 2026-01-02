@@ -1,68 +1,103 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D8332EDD4D;
-	Fri,  2 Jan 2026 11:26:34 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 142D12F5A22
+	for <linux-scsi@vger.kernel.org>; Fri,  2 Jan 2026 12:46:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767353194; cv=none; b=WT/ZIgxHb9gzSO80nZi8IjKbuM98FcyDRrnSnFxnzD3A6Y7CKEukACC++mhnF7mvzrGtwzwqOx004oTn6zEBc4qbkkVL3D62O9oXqsON+d3TzG9cHZy0etx5C1Ueh9ksk5q+mhazq9WISwX/AYsuuBfzu8LDhAXARcL4yEGbV+4=
+	t=1767358015; cv=none; b=l8oqpgSuK/ND17ewJogESUZLsQjIFOLCpbxdOgKfRvNFIHU3MkujGAjvMy6j8Rk6kis0UY5vsU2Blgubv3JD1gpjnIUh4QU9Wy+1cZg8S52kaA9H5BXmoNiyjUnpJ441V/PFMm5rFAhjLbY6zXxCiIF8ywYmm6TfODYgvPhbN0s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767353194; c=relaxed/simple;
-	bh=CSBspIjn8I+xud4qQsoEe2yu9mZ/NuQy++qx5UJVMFk=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=lSpVIy7s3VIysfjxhWA2Y/mNmjLrK1Ubp1rgLI8NL10rek2K+7gVk4KohSUcFYFIgdSVUXGuU4tTcZFZcl1G5VcazwCiI8alIRdqtHB8rWu51lXfwFup8esbbqNwvc4CQWqm5tQTZazM8C46knN2qIkFWoTfe9YFa9q6X0m8iQg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JecgUqvF; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1767358015; c=relaxed/simple;
+	bh=6KPWXH/kC7jOHkn729my4NVFkh9cBa46BBKTL8WhXtA=;
+	h=From:In-Reply-To:MIME-Version:References:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=QSzHbKGm1tzFTJPr5oC2hzI4t8+uCaRCQrje8CulSd20qoB1WyoiwMl4A7oPiTPN+cvFwP4gZsUghoioLJMBidKtPaVVB5LQl8RLA9HV+gN1qC+tOKG8onl9dRBtOd6ZzPixF51hFn9p8nvKWZunfooeQPSQFhfkcMEKiluVYFQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XkkYYOD0; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JecgUqvF"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B9EE1C116B1;
-	Fri,  2 Jan 2026 11:26:33 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XkkYYOD0"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AE38FC116B1
+	for <linux-scsi@vger.kernel.org>; Fri,  2 Jan 2026 12:46:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1767353194;
-	bh=CSBspIjn8I+xud4qQsoEe2yu9mZ/NuQy++qx5UJVMFk=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=JecgUqvF0455QsPgXg1sYhnRTw6IlfmpnMhgp62MODggrEOnidNA0CHhLC3TvpM4I
-	 4aP5xbM+FCNsdHfCkMSA3MR9m+N9sLS+af9j3RvO3C5FL0Pr3kSiMyEVLP1Op4F9yK
-	 pI++ElQJwZmXShtxZ+aML1vpUkyMe5pi1NneqiC3WTHluodNe8MM+rvlYeInFbyiGH
-	 PogwMU5YaPdYXHzOmKWqfzq/3vNnBs4QH4iCUnbKrTbjYmmI9f/M2gYUbi7oSQEEkt
-	 Mvp3hZEoGpx96gFi0dGvwKdDM30YZhyQEtomJzYfBMWIpK0H0NrYMfm7gjl8Rl8hD6
-	 liPCCTTcBvIfg==
-Date: Fri, 2 Jan 2026 12:26:31 +0100
-From: Krzysztof Kozlowski <krzk@kernel.org>
-To: Pradeep P V K <pradeep.pragallapati@oss.qualcomm.com>
-Cc: vkoul@kernel.org, neil.armstrong@linaro.org, robh@kernel.org, 
-	krzk+dt@kernel.org, conor+dt@kernel.org, martin.petersen@oracle.com, 
-	andersson@kernel.org, konradybcio@kernel.org, taniya.das@oss.qualcomm.com, 
-	dmitry.baryshkov@oss.qualcomm.com, manivannan.sadhasivam@oss.qualcomm.com, 
-	linux-arm-msm@vger.kernel.org, linux-phy@lists.infradead.org, devicetree@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, nitin.rawat@oss.qualcomm.com
-Subject: Re: [PATCH V2 2/4] scsi: ufs: qcom: dt-bindings: Document UFSHC
- compatible for x1e80100
-Message-ID: <20260102-logical-frigatebird-of-elegance-8abd82@quoll>
-References: <20251231101951.1026163-1-pradeep.pragallapati@oss.qualcomm.com>
- <20251231101951.1026163-3-pradeep.pragallapati@oss.qualcomm.com>
+	s=k20201202; t=1767358014;
+	bh=6KPWXH/kC7jOHkn729my4NVFkh9cBa46BBKTL8WhXtA=;
+	h=From:In-Reply-To:References:Date:Subject:To:Cc:From;
+	b=XkkYYOD029cSwNtFsw44JGXYjpb5bS/8KBJAPvTv3cTUVRq/5s7BEwSCqDhUuE5+K
+	 FcNkkgH2j0/fR1zu+tHZPDSQcDoO4E6ZOmpXeYepW29ZEc+8ojQnSJuSTtvQHnyoxZ
+	 Qygs7n1Sb+i+Hm6AKEa4JDQ5ayoyoy+Cy11Swf/+U0Fb5xASo8isMRF78t0xC06Q7M
+	 tpJ5bcdAN9Gp7LLw8WdEB2KoH4Uga8ASFN6Uk6MB31EzoDSCW8EEhE04Zbakhg7Rjr
+	 6YpN93JY0UiuWXkRnUasOcpdQlB5MW1BgFbyCd1Hxc1lohjgVASsgZE+dQsCEhHTDf
+	 EJVCBYXPXj38A==
+Received: by mail-lf1-f46.google.com with SMTP id 2adb3069b0e04-59584301f0cso2903241e87.0
+        for <linux-scsi@vger.kernel.org>; Fri, 02 Jan 2026 04:46:54 -0800 (PST)
+X-Forwarded-Encrypted: i=1; AJvYcCWkhx61nO2713aEyqCMMUsX9x9Bd8xjA+H1JYXz5t8whkHfJSCE3Qy0hVDgStOcQRBFfNq3ya39kVD7@vger.kernel.org
+X-Gm-Message-State: AOJu0YysnbEiIO8YaDkHiKe3loO5RyEwrfvVn1WQqQmELAIEY1gU1dAq
+	cOCqltkSWe0rkBNApBtM/SzV/Ao9PKPe9VScULrIDyECWJ5lp3uE8ARQHaNdXyXaBEJNYQfsIXq
+	quY4w8r2pdJgY00K4ezJeCu+LA4V/3Zdm0nTMNsOcNw==
+X-Google-Smtp-Source: AGHT+IGc2inPJAzzOkCkSBFCoOg9QxkQFVWecr7c4xhZfdJchBGS03PyeQgZEMV/dRlvfiPAbf/AJ8Wav/AAUBMesSQ=
+X-Received: by 2002:a05:6512:33cc:b0:592:f521:188a with SMTP id
+ 2adb3069b0e04-59a17d66a60mr12745131e87.49.1767358012955; Fri, 02 Jan 2026
+ 04:46:52 -0800 (PST)
+Received: from 969154062570 named unknown by gmailapi.google.com with
+ HTTPREST; Fri, 2 Jan 2026 06:46:51 -0600
+Received: from 969154062570 named unknown by gmailapi.google.com with
+ HTTPREST; Fri, 2 Jan 2026 06:46:51 -0600
+From: Bartosz Golaszewski <brgl@kernel.org>
+In-Reply-To: <6f2f2a7a74141fa3ad92e001ee276c01ffe9ae49.1767112757.git.mst@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <20251231101951.1026163-3-pradeep.pragallapati@oss.qualcomm.com>
+References: <cover.1767089672.git.mst@redhat.com> <6f2f2a7a74141fa3ad92e001ee276c01ffe9ae49.1767112757.git.mst@redhat.com>
+Date: Fri, 2 Jan 2026 06:46:51 -0600
+X-Gmail-Original-Message-ID: <CAMRc=MdaHfsJnbB2hOO6EbVMwZaWqO7zMkv8ZVugHnfOuDn=AA@mail.gmail.com>
+X-Gm-Features: AQt7F2oUFrPkMorjc5uJ7mhwaGHd2BKNe3yeZtbMYJ_tunJRlIVF48L1J9wKaic
+Message-ID: <CAMRc=MdaHfsJnbB2hOO6EbVMwZaWqO7zMkv8ZVugHnfOuDn=AA@mail.gmail.com>
+Subject: Re: [PATCH RFC 14/13] gpio: virtio: fix DMA alignment
+To: "Michael S. Tsirkin" <mst@redhat.com>
+Cc: Cong Wang <xiyou.wangcong@gmail.com>, Jonathan Corbet <corbet@lwn.net>, 
+	Olivia Mackall <olivia@selenic.com>, Herbert Xu <herbert@gondor.apana.org.au>, 
+	Jason Wang <jasowang@redhat.com>, Paolo Bonzini <pbonzini@redhat.com>, 
+	Stefan Hajnoczi <stefanha@redhat.com>, =?UTF-8?Q?Eugenio_P=C3=A9rez?= <eperezma@redhat.com>, 
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
+	"Martin K. Petersen" <martin.petersen@oracle.com>, Gerd Hoffmann <kraxel@redhat.com>, 
+	Xuan Zhuo <xuanzhuo@linux.alibaba.com>, Marek Szyprowski <m.szyprowski@samsung.com>, 
+	Robin Murphy <robin.murphy@arm.com>, Stefano Garzarella <sgarzare@redhat.com>, 
+	"David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, 
+	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, Simon Horman <horms@kernel.org>, 
+	Petr Tesarik <ptesarik@suse.com>, Leon Romanovsky <leon@kernel.org>, Jason Gunthorpe <jgg@ziepe.ca>, 
+	linux-doc@vger.kernel.org, linux-crypto@vger.kernel.org, 
+	virtualization@lists.linux.dev, linux-scsi@vger.kernel.org, 
+	iommu@lists.linux.dev, kvm@vger.kernel.org, netdev@vger.kernel.org, 
+	"Enrico Weigelt, metux IT consult" <info@metux.net>, Viresh Kumar <vireshk@kernel.org>, Linus Walleij <linusw@kernel.org>, 
+	Bartosz Golaszewski <brgl@kernel.org>, linux-gpio@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-On Wed, Dec 31, 2025 at 03:49:49PM +0530, Pradeep P V K wrote:
-> Add the UFS Host Controller (UFSHC) compatible for Qualcomm x1e80100
-> SoC.  Use SM8550 as a fallback since x1e80100 shares compatibility
-> with SM8550 UFSHC, enabling reuse of existing support.
-> 
+On Tue, 30 Dec 2025 17:40:28 +0100, "Michael S. Tsirkin" <mst@redhat.com> said:
+> The res and ires buffers in struct virtio_gpio_line and struct
+> vgpio_irq_line respectively are used for DMA_FROM_DEVICE via virtqueue_add_sgs().
+> However, within these structs, even though these elements are tagged
+> as ____cacheline_aligned, adjacent struct elements
+> can share DMA cachelines on platforms where ARCH_DMA_MINALIGN >
+> L1_CACHE_BYTES (e.g., arm64 with 128-byte DMA alignment but 64-byte
+> cache lines).
+>
+> The existing ____cacheline_aligned annotation aligns to L1_CACHE_BYTES
+> which is now always sufficient for DMA alignment. For example,
+> with L1_CACHE_BYTES = 32 and ARCH_DMA_MINALIGN = 128
+>   - irq_lines[0].ires at offset 128
+>   - irq_lines[1].type at offset 192
+> both in same 128-byte DMA cacheline [128-256)
+>
+> When the device writes to irq_lines[0].ires and the CPU concurrently
+> modifies one of irq_lines[1].type/disabled/masked/queued flags,
+> corruption can occur on non-cache-coherent platform.
+>
+> Fix by using __dma_from_device_aligned_begin/end annotations on the
+> DMA buffers. Drop ____cacheline_aligned - it's not required to isolate
+> request and response, and keeping them would increase the memory cost.
+>
+> Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
+> ---
 
-Please use subject prefixes matching the subsystem. You can get them for
-example with 'git log --oneline -- DIRECTORY_OR_FILE' on the directory
-your patch is touching. For bindings, the preferred subjects are
-explained here:
-https://www.kernel.org/doc/html/latest/devicetree/bindings/submitting-patches.html#i-for-patch-submitters
-
-
-Best regards,
-Krzysztof
-
+Acked-by: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
