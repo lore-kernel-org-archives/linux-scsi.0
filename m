@@ -1,109 +1,87 @@
-Received: from zg8tmja2lje4os4yms4ymjma.icoremail.net (zg8tmja2lje4os4yms4ymjma.icoremail.net [206.189.21.223])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 1B17E2E65D;
-	Sat,  3 Jan 2026 02:25:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=206.189.21.223
+Received: from mail-m155101.qiye.163.com (mail-m155101.qiye.163.com [101.71.155.101])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1380A1386C9;
+	Sat,  3 Jan 2026 12:39:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=101.71.155.101
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767407106; cv=none; b=tftm4rFqyaQux3r04p9vuAX4+7IhAksL1C/5/qDCIMBppubWZNRQt3m7RXCh9vR/afUH1Z4EbsKVWmf9HZXj8hdNaj7tj/tmN+9YQWtLlatYwhFlLFFuRXA8iivYJCq657e0wLDaAvZajJRQqVaH+xMRicMgett9Eaq8zOTUdi8=
+	t=1767443956; cv=none; b=VPD9jGc2Le7qQW2zMf6l/EZUWYQTzIVGEFKfeIwFBAxfikFkSZWvZH5IKZ+wmcDLV+FohysnJswaWkXj72F5Ooyw5F6zA+nCVWo55znD6y7Pw/SQ9awH9ueMddIoJU3r9cm2YGOJvCFulOJgclN+6EmBifeX/jG02uezo8MGqlw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767407106; c=relaxed/simple;
-	bh=C1roQ1nb8bmv5V0YlcViN9DHlLxSzqWJySJ3UZLXa/o=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References:Content-Type:
-	 MIME-Version:Message-ID; b=S5HKx9clyxR1HETcLC7dO4ea+iRkdVFk4wVXTok4eSO+NbCR4kfWuPYiuozXeEtijN04biSwZGjH6cdHL4uMvwgSzB6Q/5zujxK9BrwxkLNnx7Zu46j6NsDzP1Crv1tWsKRu9RcqaexygtFOd1seW/M3H2ZvPz3XEHxSG4GC3+s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zju.edu.cn; spf=pass smtp.mailfrom=zju.edu.cn; arc=none smtp.client-ip=206.189.21.223
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zju.edu.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zju.edu.cn
-Received: from zju.edu.cn (unknown [218.12.17.164])
-	by mtasvr (Coremail) with SMTP id _____wCnxFPvfVhp4BJ+AQ--.45074S3;
-	Sat, 03 Jan 2026 10:24:49 +0800 (CST)
-Received: from duoming$zju.edu.cn ( [218.12.17.164] ) by
- ajax-webmail-mail-app3 (Coremail) ; Sat, 3 Jan 2026 10:24:46 +0800
- (GMT+08:00)
-Date: Sat, 3 Jan 2026 10:24:46 +0800 (GMT+08:00)
-X-CM-HeaderCharset: UTF-8
-From: duoming@zju.edu.cn
-To: "James Bottomley" <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	martin.petersen@oracle.com, stable@kernel.org
-Subject: Re: [PATCH RESEND] scsi: ppa: Fix use-after-free caused by
- unfinished delayed work
-X-Priority: 3
-X-Mailer: Coremail Webmail Server Version 2024.3-cmXT6 build
- 20250620(94335109) Copyright (c) 2002-2026 www.mailtech.cn zju.edu.cn
-In-Reply-To: <91a16901ab4cd35fa00011a472c025f55068a4c7.camel@HansenPartnership.com>
-References: <20260101135532.19522-1-duoming@zju.edu.cn>
- <91a16901ab4cd35fa00011a472c025f55068a4c7.camel@HansenPartnership.com>
-Content-Transfer-Encoding: base64
-Content-Type: text/plain; charset=UTF-8
+	s=arc-20240116; t=1767443956; c=relaxed/simple;
+	bh=XzMkQ8prbg4TZ3d/SoS9QkTkNUVaIv4ry0nvDr8YuuM=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=EzlipsxbZzOLbRkkRuc7rYQgO2sokh1myyEcNE8VdNfliATJo4XfX/oJboN5vL3/2on+qcpFaqt//uXvNTMpizf/EzmQAxXgKsp0tQ9uTG6LxukqBk5OwOq8Y1u6XVlKHzv4wLgItBlH8WsJTcaZn2LSfBlfF8YrYz8iAAfWmNs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=seu.edu.cn; spf=pass smtp.mailfrom=seu.edu.cn; dkim=pass (1024-bit key) header.d=seu.edu.cn header.i=@seu.edu.cn header.b=nLQXOaL6; arc=none smtp.client-ip=101.71.155.101
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=seu.edu.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=seu.edu.cn
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=seu.edu.cn header.i=@seu.edu.cn header.b="nLQXOaL6"
+Received: from LAPTOP-N070L597.localdomain (unknown [222.191.246.242])
+	by smtp.qiye.163.com (Hmail) with ESMTP id 2f5c7891c;
+	Sat, 3 Jan 2026 20:39:10 +0800 (GMT+08:00)
+From: Zilin Guan <zilin@seu.edu.cn>
+To: markus.elfring@web.de
+Cc: James.Bottomley@HansenPartnership.com,
+	don.brace@microchip.com,
+	jianhao.xu@seu.edu.cn,
+	linux-kernel@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	martin.petersen@oracle.com,
+	storagedev@microchip.com,
+	zilin@seu.edu.cn
+Subject: Re: [PATCH v2] scsi: hpsa: Fix memory leak in hpsa_undo_allocations_after_kdump_soft_reset()
+Date: Sat,  3 Jan 2026 12:39:10 +0000
+Message-Id: <20260103123910.169563-1-zilin@seu.edu.cn>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <c8571456-7306-4ada-bccb-ba5bd38625eb@web.de>
+References: <c8571456-7306-4ada-bccb-ba5bd38625eb@web.de>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Message-ID: <3a85ddef.523b2.19b81abea97.Coremail.duoming@zju.edu.cn>
-X-Coremail-Locale: zh_CN
-X-CM-TRANSID:zS_KCgC3t2rvfVhpYJ5EBQ--.28791W
-X-CM-SenderInfo: qssqjiasttq6lmxovvfxof0/1tbiAwcAAWlYH4QBYwABsM
-X-CM-DELIVERINFO: =?B?iQGNgwXKKxbFmtjJiESix3B1w3uoVhYI+vyen2ZzBEkOnu5chDpkB+ZdGnv/zQ0PbP
-	CR167HHEYG0L5GecQNkvJAe1fE8kaQKIUmCxSUWL0Ed4KT/eN+rgEWXQClfqF07VSKpbcO
-	ScVW7rkuaVfoibGANoxhpORb8WJ3ej8TEPToLhJngkpnqaGcq9CivvcuJsbq1w==
-X-Coremail-Antispam: 1Uk129KBj93XoW7Aw4fXrykuFy8Xr43KF1DXFc_yoW8Kry8pa
-	95Ka45Cw4DWF40gw43Xw45ZrWSgrs5JFW5K3W8G39xAan8ZrWqyr97KFWUJayUtFWvyw4U
-	XF4Yqa4kWFWDuFXCm3ZEXasCq-sJn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7KY7ZEXa
-	sCq-sGcSsGvfJ3Ic02F40EFcxC0VAKzVAqx4xG6I80ebIjqfuFe4nvWSU5nxnvy29KBjDU
-	0xBIdaVrnRJUUUmlb4IE77IF4wAFF20E14v26r1j6r4UM7CY07I20VC2zVCF04k26cxKx2
-	IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48v
-	e4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI
-	0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26F4UJVW0owA2z4x0Y4vEx4A2jsIEc7CjxVAF
-	wI0_Cr1j6rxdM2AIxVAIcxkEcVAq07x20xvEncxIr21l57IF6xkI12xvs2x26I8E6xACxx
-	1l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv
-	67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr1lF7xvr2IYc2Ij64vIr41lF7xvr2IYc2
-	Ij64vIr40E4x8a64kEw24lFcxC0VAYjxAxZF0Ew4CEw7xC0wACY4xI67k04243AVC20s07
-	M4kE6xkIj40Ew7xC0wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s
-	026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_
-	JF0_Jw1lIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20x
-	vEc7CjxVAFwI0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE
-	14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Jr0_Gr1l6VACY4xI67k04243AbIYCT
-	nIWIevJa73UjIFyTuYvjxUcVWLUUUUU
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-HM-Tid: 0a9b83de697803a1kunm4bddd38e2642f1
+X-HM-MType: 10
+X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
+	tZV1koWUFITzdXWS1ZQUlXWQ8JGhUIEh9ZQVlDGRpDVhlCSx9CGUsYSEMeHlYeHw5VEwETFhoSFy
+	QUDg9ZV1kYEgtZQVlJSUlVSkJKVUlPTVVJT0lZV1kWGg8SFR0UWUFZT0tIVUpLSUhOQ0NVSktLVU
+	tZBg++
+DKIM-Signature: a=rsa-sha256;
+	b=nLQXOaL64nMCrmLGk2ZFMcqkn+lp50qJxhW00lSrD9EP/JKiSQfT0Kfo469yWfJAWqN3omrke+F/IofOd83gacOaOPoaEjQ4zLcvONAbrrE73EOVZLXxJlMSf/54BsiywXILMMLK00D0RPQhU92/ZbvpsNuLdRx/QyCfzWATSLQ=; s=default; c=relaxed/relaxed; d=seu.edu.cn; v=1;
+	bh=eV5girad+tyLghDYC7Wm+e2O+VGvlGknSyIiP4RmVEw=;
+	h=date:mime-version:subject:message-id:from;
 
-T24gVGh1LCAwMSBKYW4gMjAyNiAxMDoyMToyOCAtMDUwMCwgSmFtZXMgQm90dG9tbGV5IHdyb3Rl
-Ogo+ID4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9wcGEuYyBiL2RyaXZlcnMvc2NzaS9wcGEu
-Ywo+ID4gaW5kZXggZWE2ODJmMzA0NGIuLjhkYTJhNzhlYmFjIDEwMDY0NAo+ID4gLS0tIGEvZHJp
-dmVycy9zY3NpL3BwYS5jCj4gPiArKysgYi9kcml2ZXJzL3Njc2kvcHBhLmMKPiA+IEBAIC0xMTM2
-LDYgKzExMzYsNyBAQCBzdGF0aWMgdm9pZCBwcGFfZGV0YWNoKHN0cnVjdCBwYXJwb3J0ICpwYikK
-PiA+IMKgCXBwYV9zdHJ1Y3QgKmRldjsKPiA+IMKgCWxpc3RfZm9yX2VhY2hfZW50cnkoZGV2LCAm
-cHBhX2hvc3RzLCBsaXN0KSB7Cj4gPiDCoAkJaWYgKGRldi0+ZGV2LT5wb3J0ID09IHBiKSB7Cj4g
-PiArCQkJZGlzYWJsZV9kZWxheWVkX3dvcmtfc3luYygmZGV2LT5wcGFfdHEpOwo+ID4gwqAJCQls
-aXN0X2RlbF9pbml0KCZkZXYtPmxpc3QpOwo+ID4gwqAJCQlzY3NpX3JlbW92ZV9ob3N0KGRldi0+
-aG9zdCk7Cj4gPiDCoAkJCXNjc2lfaG9zdF9wdXQoZGV2LT5ob3N0KTsKPiAKPiBUaGlzIGZpeCBs
-b29rcyBib2d1czogaWYgdGhlcmUncyBhbiBhY3RpdmUgd29ya3F1ZXVlIG9uIHBwYSBpdCdzCj4g
-YmVjYXVzZSB0aGVyZSdzIGFuIG91dHN0YW5kaW5nIGNvbW1hbmQgYW5kIGl0J3MgZW11bGF0aW5n
-IHBvbGxpbmcuICBJZgo+IHlvdSBzdG9wIHRoZSBwb2xsaW5nIGJ5IGRpc2FibGluZyB0aGUgd29y
-a3F1ZXVlLCB0aGUgY29tbWFuZCB3aWxsIG5ldmVyCj4gcmV0dXJuIGFuZCB0aGUgaG9zdCB3aWxs
-IG5ldmVyIGdldCBmcmVlZCwgc28gdGhpcyB3aWxsIGxlYWsgcmVzb3VyY2VzLAo+IHdvbid0IGl0
-PwoKSSBiZWxpZXZlIHRoYXQgZGlzYWJsaW5nIHRoZSBwcGFfdHEgZGVsYXllZCB3b3JrIHdpbGwg
-bm90IGFmZmVjdCB0aGUgU2NzaV9Ib3N0CnJlbGVhc2UgcHJvY2Vzcy4gVGhlIGxpZmV0aW1lIG9m
-IHRoZSBTY3NpX0hvc3QgaXMgbWFuYWdlZCBieSB0YWdzZXRfcmVmY250LgpUaGUgdGFnc2V0X3Jl
-ZmNudCBpcyBpbml0aWFsaXplZCB0byAxIGluIHNjc2lfYWRkX2hvc3Rfd2l0aF9kbWEoKSBhbmQg
-ZGVjcmVhc2VkCnRvIDAgaW4gc2NzaV9yZW1vdmVfaG9zdCgpLiBzaW5jZSB0aGUgZGVsYXllZCB3
-b3JrIGNhbGxiYWNrIHBwYV9pbnRlcnJ1cHQoKSAKZG9lcyBub3QgbW9kaWZ5IHRhZ3NldF9yZWZj
-bnQgaW4gYW55IHdheSwgdGhlIGhvc3QgY291bGQgYmUgZnJlZWQgYXMgZXhwZWN0ZWQuCgo+IEFs
-c28gdGhlIHJhY2UgY29uZGl0aW9uIHlvdSBpZGVudGlmeSBpcyBvbmUgb2YgbWFueSB0aWVkIHRv
-IGFuCj4gaW5jb3JyZWN0IHBwYV9zdHJ1Y3QgbGlmZXRpbWU6IGl0IHNob3VsZCBuZXZlciBiZSBm
-cmVlJ2QgYmVmb3JlIHRoZQo+IGhvc3QgaXRzZWxmIGlzIGdvbmUgYmVjYXVzZSBhIGxpdmUgaG9z
-dCBtYXkgZG8gYSBjYWxsYmFjayB3aGljaCB3aWxsCj4gZ2V0IHRoZSBwcGFfc3RydWN0IGZyb20g
-aG9zdGRhdGEsIHNvIGlmIHRoZSBob3N0IGlzIHN0aWxsIGFsaXZlIGZvciBhbnkKPiByZWFzb24g
-d2hlbiBwcGFfZGV0YWNoKCkgaXMgY2FsbGVkLCB3ZSdsbCBnZXQgdGhlIHNhbWUgcHJvYmxlbS4K
-ClRoZSBwcGFfc3RydWN0IGlzIHByb3Blcmx5IGZyZWVkIG9ubHkgYWZ0ZXIgZW5zdXJpbmcgdGhl
-IGNvbXBsZXRlIHJlbW92YWwKb2YgdGhlIGFzc29jaWF0ZWQgU2NzaV9Ib3N0IGluIHBwYV9kZXRh
-Y2goKS4gVGhlIGRldGFpbGVkIHNlcXVlbmNlIGlzIGFzCmZvbGxvd3M6CgouLi4KwqAgwqBzY3Np
-X3JlbW92ZV9ob3N0KGRldi0+aG9zdCk7CsKgIMKgc2NzaV9ob3N0X3B1dChkZXYtPmhvc3QpOyAv
-L3RoZSBob3N0IGlzIGdvbmUKwqAgwqBwYXJwb3J0X3VucmVnaXN0ZXJfZGV2aWNlKGRldi0+ZGV2
-KTsKwqAgwqBrZnJlZShkZXYpOyAvL2ZyZWUgcHBhX3N0cnVjdAouLi4KClRoZSBzY3NpX3JlbW92
-ZV9ob3N0KCkgaW5pdGlhdGVzIHRoZSBob3N0IHJlbW92YWwgcHJvY2VzcywgdHJhbnNpdGlvbmlu
-ZwppdCB0aHJvdWdoIGFwcHJvcHJpYXRlIHN0YXRlcyhTSE9TVF9DQU5DRUwsIFNIT1NUX0RFTCkg
-YW5kIGVuc3VyaW5nIGFsbApwZW5kaW5nIEkvTyBvcGVyYXRpb25zIGFyZSBwcm9wZXJseSBoYW5k
-bGVkLiBUaGlzIHNlcXVlbmNlIGVuc3VyZXMgdGhhdAphbGwgcmVzb3VyY2VzIGFzc29jaWF0ZWQg
-d2l0aCB0aGUgU2NzaV9Ib3N0IGFyZSBwcm9wZXJseSBjbGVhbmVkIHVwIGJlZm9yZQp0aGUgcHBh
-X3N0cnVjdCBpcyBmcmVlZC4KCkJlc3QgcmVnYXJkcywKRHVvbWluZyBaaG91Cg==
+On Wed, Dec 31, 2025 at 05:25:23PM +0100, Markus Elfring wrote:
+> …
+> > +++ b/drivers/scsi/hpsa.c
+> > @@ -8212,6 +8212,7 @@ static void hpsa_undo_allocations_after_kdump_soft_reset(struct ctlr_info *h)
+> >  		h->monitor_ctlr_wq = NULL;
+> >  	}
+> >  
+> > +	kfree(h->reply_map);		/* init_one 1 */
+> >  	kfree(h);				/* init_one 1 */
+> >  }
+> 
+> I wonder about the alignment and relevance for these code comments.
+> 
+> Regards,
+> Markus
 
+Hi Markus,
+
+Thank you for your review.
+
+Regarding the alignment, it was an oversight caused by the inconsistency 
+between my editor configuration and the Linux kernel's style. I will 
+correct this in v3.
+
+As for the code comment, it indicates that the memory being freed here 
+was allocated during the first stage of initialization in 
+hpsa_init_one(). I included it to maintain consistency with the existing 
+kfree(h) line immediately following it.
+
+Best regards,
+Zilin Guan
