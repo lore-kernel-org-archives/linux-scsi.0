@@ -1,139 +1,109 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 111AB30F957
-	for <linux-scsi@vger.kernel.org>; Fri,  2 Jan 2026 13:28:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+Received: from zg8tmja2lje4os4yms4ymjma.icoremail.net (zg8tmja2lje4os4yms4ymjma.icoremail.net [206.189.21.223])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 1B17E2E65D;
+	Sat,  3 Jan 2026 02:25:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=206.189.21.223
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767360498; cv=none; b=anXoX36KgK8sR7q6zng0ZXTy8UFn8vIwHauUqB0UBDrWrPGl3kTe0iCHsH6qxN9Qjt9hlIkVzCSyzZHwevRhECsWu7P/Vn+jtZeOhmwQzUtSdYzdiSfS+7h0iJFZW0liI+WiUA/M72UDABS/mN0iigIdse7yX7zSwSGwsb7/rGg=
+	t=1767407106; cv=none; b=tftm4rFqyaQux3r04p9vuAX4+7IhAksL1C/5/qDCIMBppubWZNRQt3m7RXCh9vR/afUH1Z4EbsKVWmf9HZXj8hdNaj7tj/tmN+9YQWtLlatYwhFlLFFuRXA8iivYJCq657e0wLDaAvZajJRQqVaH+xMRicMgett9Eaq8zOTUdi8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767360498; c=relaxed/simple;
-	bh=caKMln/4An5074vy/0LbmODygrWbyLltEqRTVzyaZyo=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=kvkflUw/xz7EGspGaLJjWOMip8kiWUoHwL3omeZWpjSApfwR5aerdPb0yYaGODTEUwWaygNtimELVY5TTLm/1rrYeXwpME5M6RDxP/Yyar3n55m1skeXVexLb9c3vmUiDQLdd6US9zn2CUfJdY8qgJt+704dnjvckuPpwEQETi4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=j/LYyrVW; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="j/LYyrVW"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B021EC2BCB0
-	for <linux-scsi@vger.kernel.org>; Fri,  2 Jan 2026 13:28:17 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1767360497;
-	bh=caKMln/4An5074vy/0LbmODygrWbyLltEqRTVzyaZyo=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=j/LYyrVWYBX6/xiFBJCYzPt2mAjHPCdML6RZHqYxHB3JLuG+XVa48k+IbFa1/ydYH
-	 yzLWkGX2d/nsNwNLBfGEKgQx/Y31IcJRJytcsUrwFYWxV4I4ndl8HDE1gsWW9D+fsW
-	 tkOdzT6QA4VM80ok+nOp6C16Iy1MKAT95Q/2l9114MivMXUzbox1yPNxO2sfnrqTwX
-	 pm8UKITq5tQDOE65/Qnd0pkfKV9M7ZB31pmItU0vWSV/qe8rZrpUm2qM/b1BHC1YYp
-	 F/QZg0d4SfPs97bZzrucZYLPyO4UX37A651XQnEg9dQ930Z2nK3qcF40HhLqhQRSeU
-	 h/5hZzEbjYRDQ==
-Received: by mail-lf1-f45.google.com with SMTP id 2adb3069b0e04-598efcf3a89so11885600e87.1
-        for <linux-scsi@vger.kernel.org>; Fri, 02 Jan 2026 05:28:17 -0800 (PST)
-X-Forwarded-Encrypted: i=1; AJvYcCWGaNoGbpYNJpUckz1+X7BN32OGMw/cFuh5Zx5FqIPkGNQ4PrjK/xSQ3A0IrZc5IpoBg4C/yiKOIGZH@vger.kernel.org
-X-Gm-Message-State: AOJu0YwqpaAR8Z1mGuRBGlw0Sp+a1C6cMpRva1KqvKpna+fQdzRt7NfQ
-	GXCXws6jK4QHo7/GdNNvvBOkttmzvWo1X+am/AWbG27ETzlt/90OpS+I3t1MB/puk0kVWM497jo
-	oKYIBjGIXoFAU5EojuX90UsW8DjHgtrcSYp1Ry0Q+Jg==
-X-Google-Smtp-Source: AGHT+IHHF6srkWGBj0h2W2m125Q8RRqweGoiS7tVO11k+MLcdE1dgvfbJ2DaGFg9ECUq+/XShJKxHMrRpS3Ip55rUHI=
-X-Received: by 2002:a05:6512:398c:b0:594:522d:68f4 with SMTP id
- 2adb3069b0e04-59a17de2c1amr14462802e87.28.1767360495900; Fri, 02 Jan 2026
- 05:28:15 -0800 (PST)
+	s=arc-20240116; t=1767407106; c=relaxed/simple;
+	bh=C1roQ1nb8bmv5V0YlcViN9DHlLxSzqWJySJ3UZLXa/o=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References:Content-Type:
+	 MIME-Version:Message-ID; b=S5HKx9clyxR1HETcLC7dO4ea+iRkdVFk4wVXTok4eSO+NbCR4kfWuPYiuozXeEtijN04biSwZGjH6cdHL4uMvwgSzB6Q/5zujxK9BrwxkLNnx7Zu46j6NsDzP1Crv1tWsKRu9RcqaexygtFOd1seW/M3H2ZvPz3XEHxSG4GC3+s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zju.edu.cn; spf=pass smtp.mailfrom=zju.edu.cn; arc=none smtp.client-ip=206.189.21.223
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zju.edu.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zju.edu.cn
+Received: from zju.edu.cn (unknown [218.12.17.164])
+	by mtasvr (Coremail) with SMTP id _____wCnxFPvfVhp4BJ+AQ--.45074S3;
+	Sat, 03 Jan 2026 10:24:49 +0800 (CST)
+Received: from duoming$zju.edu.cn ( [218.12.17.164] ) by
+ ajax-webmail-mail-app3 (Coremail) ; Sat, 3 Jan 2026 10:24:46 +0800
+ (GMT+08:00)
+Date: Sat, 3 Jan 2026 10:24:46 +0800 (GMT+08:00)
+X-CM-HeaderCharset: UTF-8
+From: duoming@zju.edu.cn
+To: "James Bottomley" <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	martin.petersen@oracle.com, stable@kernel.org
+Subject: Re: [PATCH RESEND] scsi: ppa: Fix use-after-free caused by
+ unfinished delayed work
+X-Priority: 3
+X-Mailer: Coremail Webmail Server Version 2024.3-cmXT6 build
+ 20250620(94335109) Copyright (c) 2002-2026 www.mailtech.cn zju.edu.cn
+In-Reply-To: <91a16901ab4cd35fa00011a472c025f55068a4c7.camel@HansenPartnership.com>
+References: <20260101135532.19522-1-duoming@zju.edu.cn>
+ <91a16901ab4cd35fa00011a472c025f55068a4c7.camel@HansenPartnership.com>
+Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=UTF-8
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <cover.1767089672.git.mst@redhat.com> <55e9351282f530e2302e11497c6339c4a2e74471.1767112757.git.mst@redhat.com>
- <CAMRc=MfWX5CZ6GL0ph1g-KupBS3gaztk=VxTnfC1QwUvQmuZrg@mail.gmail.com> <20260102080135-mutt-send-email-mst@kernel.org>
-In-Reply-To: <20260102080135-mutt-send-email-mst@kernel.org>
-From: Bartosz Golaszewski <brgl@kernel.org>
-Date: Fri, 2 Jan 2026 14:27:50 +0100
-X-Gmail-Original-Message-ID: <CAMRc=MdWWQihgt8haFYxSh7MgUoBuf3ZkBA6cbErSVNmAtb8Mw@mail.gmail.com>
-X-Gm-Features: AQt7F2qkcWsOmteak3UHSQG8tO-rpcwm3KC2_8dv0RlxH64IzhKa8xcVzXSnZm4
-Message-ID: <CAMRc=MdWWQihgt8haFYxSh7MgUoBuf3ZkBA6cbErSVNmAtb8Mw@mail.gmail.com>
-Subject: Re: [PATCH RFC 15/13] gpio: virtio: reorder fields to reduce struct padding
-To: "Michael S. Tsirkin" <mst@redhat.com>
-Cc: linux-kernel@vger.kernel.org, Cong Wang <xiyou.wangcong@gmail.com>, 
-	Jonathan Corbet <corbet@lwn.net>, Olivia Mackall <olivia@selenic.com>, 
-	Herbert Xu <herbert@gondor.apana.org.au>, Jason Wang <jasowang@redhat.com>, 
-	Paolo Bonzini <pbonzini@redhat.com>, Stefan Hajnoczi <stefanha@redhat.com>, 
-	=?UTF-8?Q?Eugenio_P=C3=A9rez?= <eperezma@redhat.com>, 
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
-	"Martin K. Petersen" <martin.petersen@oracle.com>, Gerd Hoffmann <kraxel@redhat.com>, 
-	Xuan Zhuo <xuanzhuo@linux.alibaba.com>, Marek Szyprowski <m.szyprowski@samsung.com>, 
-	Robin Murphy <robin.murphy@arm.com>, Stefano Garzarella <sgarzare@redhat.com>, 
-	"David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, 
-	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, Simon Horman <horms@kernel.org>, 
-	Petr Tesarik <ptesarik@suse.com>, Leon Romanovsky <leon@kernel.org>, Jason Gunthorpe <jgg@ziepe.ca>, 
-	linux-doc@vger.kernel.org, linux-crypto@vger.kernel.org, 
-	virtualization@lists.linux.dev, linux-scsi@vger.kernel.org, 
-	iommu@lists.linux.dev, kvm@vger.kernel.org, netdev@vger.kernel.org, 
-	"Enrico Weigelt, metux IT consult" <info@metux.net>, Viresh Kumar <vireshk@kernel.org>, Linus Walleij <linusw@kernel.org>, 
-	linux-gpio@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Message-ID: <3a85ddef.523b2.19b81abea97.Coremail.duoming@zju.edu.cn>
+X-Coremail-Locale: zh_CN
+X-CM-TRANSID:zS_KCgC3t2rvfVhpYJ5EBQ--.28791W
+X-CM-SenderInfo: qssqjiasttq6lmxovvfxof0/1tbiAwcAAWlYH4QBYwABsM
+X-CM-DELIVERINFO: =?B?iQGNgwXKKxbFmtjJiESix3B1w3uoVhYI+vyen2ZzBEkOnu5chDpkB+ZdGnv/zQ0PbP
+	CR167HHEYG0L5GecQNkvJAe1fE8kaQKIUmCxSUWL0Ed4KT/eN+rgEWXQClfqF07VSKpbcO
+	ScVW7rkuaVfoibGANoxhpORb8WJ3ej8TEPToLhJngkpnqaGcq9CivvcuJsbq1w==
+X-Coremail-Antispam: 1Uk129KBj93XoW7Aw4fXrykuFy8Xr43KF1DXFc_yoW8Kry8pa
+	95Ka45Cw4DWF40gw43Xw45ZrWSgrs5JFW5K3W8G39xAan8ZrWqyr97KFWUJayUtFWvyw4U
+	XF4Yqa4kWFWDuFXCm3ZEXasCq-sJn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7KY7ZEXa
+	sCq-sGcSsGvfJ3Ic02F40EFcxC0VAKzVAqx4xG6I80ebIjqfuFe4nvWSU5nxnvy29KBjDU
+	0xBIdaVrnRJUUUmlb4IE77IF4wAFF20E14v26r1j6r4UM7CY07I20VC2zVCF04k26cxKx2
+	IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48v
+	e4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI
+	0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26F4UJVW0owA2z4x0Y4vEx4A2jsIEc7CjxVAF
+	wI0_Cr1j6rxdM2AIxVAIcxkEcVAq07x20xvEncxIr21l57IF6xkI12xvs2x26I8E6xACxx
+	1l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv
+	67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr1lF7xvr2IYc2Ij64vIr41lF7xvr2IYc2
+	Ij64vIr40E4x8a64kEw24lFcxC0VAYjxAxZF0Ew4CEw7xC0wACY4xI67k04243AVC20s07
+	M4kE6xkIj40Ew7xC0wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s
+	026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_
+	JF0_Jw1lIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20x
+	vEc7CjxVAFwI0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE
+	14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Jr0_Gr1l6VACY4xI67k04243AbIYCT
+	nIWIevJa73UjIFyTuYvjxUcVWLUUUUU
 
-On Fri, Jan 2, 2026 at 2:02=E2=80=AFPM Michael S. Tsirkin <mst@redhat.com> =
-wrote:
->
-> On Fri, Jan 02, 2026 at 12:47:04PM +0000, Bartosz Golaszewski wrote:
-> > On Tue, 30 Dec 2025 17:40:33 +0100, "Michael S. Tsirkin" <mst@redhat.co=
-m> said:
-> > > Reorder struct virtio_gpio_line fields to place the DMA buffers (req/=
-res)
-> > > last. This eliminates the need for __dma_from_device_aligned_end padd=
-ing
-> > > after the DMA buffer, since struct tail padding naturally protects it=
-,
-> > > making the struct a bit smaller.
-> > >
-> > > Size reduction estimation when ARCH_DMA_MINALIGN=3D128:
-> > > - request is 8 bytes
-> > > - response is 2 bytes
-> > > - removing _end saves up to 128-6=3D122 bytes padding to align rxlen =
-field
-> > >
-> > > Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
-> > > ---
-> > >  drivers/gpio/gpio-virtio.c | 5 ++---
-> > >  1 file changed, 2 insertions(+), 3 deletions(-)
-> > >
-> > > diff --git a/drivers/gpio/gpio-virtio.c b/drivers/gpio/gpio-virtio.c
-> > > index 32b578b46df8..8b30a94e4625 100644
-> > > --- a/drivers/gpio/gpio-virtio.c
-> > > +++ b/drivers/gpio/gpio-virtio.c
-> > > @@ -26,12 +26,11 @@ struct virtio_gpio_line {
-> > >     struct mutex lock; /* Protects line operation */
-> > >     struct completion completion;
-> > >
-> > > +   unsigned int rxlen;
-> > > +
-> > >     __dma_from_device_aligned_begin
-> > >     struct virtio_gpio_request req;
-> > >     struct virtio_gpio_response res;
-> > > -
-> > > -   __dma_from_device_aligned_end
-> > > -   unsigned int rxlen;
-> > >  };
-> > >
-> > >  struct vgpio_irq_line {
-> > > --
-> > > MST
-> > >
-> > >
-> >
-> > Acked-by: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
->
-> Thanks! There's a new API as suggested by Petr so these patches got chang=
-ed,
-> but the same idea. Do you want me to carry your ack or you prefer to
-> re-review?
->
-> --
-> MST
->
+T24gVGh1LCAwMSBKYW4gMjAyNiAxMDoyMToyOCAtMDUwMCwgSmFtZXMgQm90dG9tbGV5IHdyb3Rl
+Ogo+ID4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9wcGEuYyBiL2RyaXZlcnMvc2NzaS9wcGEu
+Ywo+ID4gaW5kZXggZWE2ODJmMzA0NGIuLjhkYTJhNzhlYmFjIDEwMDY0NAo+ID4gLS0tIGEvZHJp
+dmVycy9zY3NpL3BwYS5jCj4gPiArKysgYi9kcml2ZXJzL3Njc2kvcHBhLmMKPiA+IEBAIC0xMTM2
+LDYgKzExMzYsNyBAQCBzdGF0aWMgdm9pZCBwcGFfZGV0YWNoKHN0cnVjdCBwYXJwb3J0ICpwYikK
+PiA+IMKgCXBwYV9zdHJ1Y3QgKmRldjsKPiA+IMKgCWxpc3RfZm9yX2VhY2hfZW50cnkoZGV2LCAm
+cHBhX2hvc3RzLCBsaXN0KSB7Cj4gPiDCoAkJaWYgKGRldi0+ZGV2LT5wb3J0ID09IHBiKSB7Cj4g
+PiArCQkJZGlzYWJsZV9kZWxheWVkX3dvcmtfc3luYygmZGV2LT5wcGFfdHEpOwo+ID4gwqAJCQls
+aXN0X2RlbF9pbml0KCZkZXYtPmxpc3QpOwo+ID4gwqAJCQlzY3NpX3JlbW92ZV9ob3N0KGRldi0+
+aG9zdCk7Cj4gPiDCoAkJCXNjc2lfaG9zdF9wdXQoZGV2LT5ob3N0KTsKPiAKPiBUaGlzIGZpeCBs
+b29rcyBib2d1czogaWYgdGhlcmUncyBhbiBhY3RpdmUgd29ya3F1ZXVlIG9uIHBwYSBpdCdzCj4g
+YmVjYXVzZSB0aGVyZSdzIGFuIG91dHN0YW5kaW5nIGNvbW1hbmQgYW5kIGl0J3MgZW11bGF0aW5n
+IHBvbGxpbmcuICBJZgo+IHlvdSBzdG9wIHRoZSBwb2xsaW5nIGJ5IGRpc2FibGluZyB0aGUgd29y
+a3F1ZXVlLCB0aGUgY29tbWFuZCB3aWxsIG5ldmVyCj4gcmV0dXJuIGFuZCB0aGUgaG9zdCB3aWxs
+IG5ldmVyIGdldCBmcmVlZCwgc28gdGhpcyB3aWxsIGxlYWsgcmVzb3VyY2VzLAo+IHdvbid0IGl0
+PwoKSSBiZWxpZXZlIHRoYXQgZGlzYWJsaW5nIHRoZSBwcGFfdHEgZGVsYXllZCB3b3JrIHdpbGwg
+bm90IGFmZmVjdCB0aGUgU2NzaV9Ib3N0CnJlbGVhc2UgcHJvY2Vzcy4gVGhlIGxpZmV0aW1lIG9m
+IHRoZSBTY3NpX0hvc3QgaXMgbWFuYWdlZCBieSB0YWdzZXRfcmVmY250LgpUaGUgdGFnc2V0X3Jl
+ZmNudCBpcyBpbml0aWFsaXplZCB0byAxIGluIHNjc2lfYWRkX2hvc3Rfd2l0aF9kbWEoKSBhbmQg
+ZGVjcmVhc2VkCnRvIDAgaW4gc2NzaV9yZW1vdmVfaG9zdCgpLiBzaW5jZSB0aGUgZGVsYXllZCB3
+b3JrIGNhbGxiYWNrIHBwYV9pbnRlcnJ1cHQoKSAKZG9lcyBub3QgbW9kaWZ5IHRhZ3NldF9yZWZj
+bnQgaW4gYW55IHdheSwgdGhlIGhvc3QgY291bGQgYmUgZnJlZWQgYXMgZXhwZWN0ZWQuCgo+IEFs
+c28gdGhlIHJhY2UgY29uZGl0aW9uIHlvdSBpZGVudGlmeSBpcyBvbmUgb2YgbWFueSB0aWVkIHRv
+IGFuCj4gaW5jb3JyZWN0IHBwYV9zdHJ1Y3QgbGlmZXRpbWU6IGl0IHNob3VsZCBuZXZlciBiZSBm
+cmVlJ2QgYmVmb3JlIHRoZQo+IGhvc3QgaXRzZWxmIGlzIGdvbmUgYmVjYXVzZSBhIGxpdmUgaG9z
+dCBtYXkgZG8gYSBjYWxsYmFjayB3aGljaCB3aWxsCj4gZ2V0IHRoZSBwcGFfc3RydWN0IGZyb20g
+aG9zdGRhdGEsIHNvIGlmIHRoZSBob3N0IGlzIHN0aWxsIGFsaXZlIGZvciBhbnkKPiByZWFzb24g
+d2hlbiBwcGFfZGV0YWNoKCkgaXMgY2FsbGVkLCB3ZSdsbCBnZXQgdGhlIHNhbWUgcHJvYmxlbS4K
+ClRoZSBwcGFfc3RydWN0IGlzIHByb3Blcmx5IGZyZWVkIG9ubHkgYWZ0ZXIgZW5zdXJpbmcgdGhl
+IGNvbXBsZXRlIHJlbW92YWwKb2YgdGhlIGFzc29jaWF0ZWQgU2NzaV9Ib3N0IGluIHBwYV9kZXRh
+Y2goKS4gVGhlIGRldGFpbGVkIHNlcXVlbmNlIGlzIGFzCmZvbGxvd3M6CgouLi4KwqAgwqBzY3Np
+X3JlbW92ZV9ob3N0KGRldi0+aG9zdCk7CsKgIMKgc2NzaV9ob3N0X3B1dChkZXYtPmhvc3QpOyAv
+L3RoZSBob3N0IGlzIGdvbmUKwqAgwqBwYXJwb3J0X3VucmVnaXN0ZXJfZGV2aWNlKGRldi0+ZGV2
+KTsKwqAgwqBrZnJlZShkZXYpOyAvL2ZyZWUgcHBhX3N0cnVjdAouLi4KClRoZSBzY3NpX3JlbW92
+ZV9ob3N0KCkgaW5pdGlhdGVzIHRoZSBob3N0IHJlbW92YWwgcHJvY2VzcywgdHJhbnNpdGlvbmlu
+ZwppdCB0aHJvdWdoIGFwcHJvcHJpYXRlIHN0YXRlcyhTSE9TVF9DQU5DRUwsIFNIT1NUX0RFTCkg
+YW5kIGVuc3VyaW5nIGFsbApwZW5kaW5nIEkvTyBvcGVyYXRpb25zIGFyZSBwcm9wZXJseSBoYW5k
+bGVkLiBUaGlzIHNlcXVlbmNlIGVuc3VyZXMgdGhhdAphbGwgcmVzb3VyY2VzIGFzc29jaWF0ZWQg
+d2l0aCB0aGUgU2NzaV9Ib3N0IGFyZSBwcm9wZXJseSBjbGVhbmVkIHVwIGJlZm9yZQp0aGUgcHBh
+X3N0cnVjdCBpcyBmcmVlZC4KCkJlc3QgcmVnYXJkcywKRHVvbWluZyBaaG91Cg==
 
-I'll take a second look. Can you Cc me on all the key patches - like
-the ones introducing new APIs? I needed to grab it from lore this
-time.
-
-Bart
