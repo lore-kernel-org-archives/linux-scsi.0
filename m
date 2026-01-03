@@ -1,168 +1,122 @@
-Received: from mout.web.de (mout.web.de [212.227.17.11])
+Received: from lamorak.hansenpartnership.com (lamorak.hansenpartnership.com [198.37.111.173])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E91154C98;
-	Sat,  3 Jan 2026 15:54:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.227.17.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 90CF33A1E72;
+	Sat,  3 Jan 2026 19:55:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.37.111.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767455692; cv=none; b=mPpK1J526bsnCd08Ukvy5VMjaq8Bd9dwQmRIskzszudcqSqEh0l4wQCrBETEvcUELB9r0OgFSUo80axoaZZdMGhszVrXHgqToG2oaQjFuBjz6P00LwnZ7Lcm/YjCuzHMr9sleXCpZNhmzmW3NhxzJvPS0ekbjAihYhLCLzQGnz4=
+	t=1767470159; cv=none; b=pF5qaL4S3ENdV+d5CsT2Q8RgZPCyUq2akEEeWzi8DAcirMGFMAEkMmX5r+xPwsYh+3DiJ7R4YIkvpUlFparUoycLvadiRqTeLoVhiKQZ7q7+kU7ZBOTQjZBZel+iQsa//xXm4rlEnF8EmnU9mw0Xcgk4hKeVj1v/c42D7Y++PzA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767455692; c=relaxed/simple;
-	bh=WqlYf/6ZFoZDof1vuyXzapF6sFsIuMSa3aC5pkiFj6I=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=N7uf4smetRUktl4pfwcny7NUC3Bai8R+1ii6GtoBHPhi7u99tgjWSJ4Adewr3xK9vstY5ME1nLENG/BRuwJsZ1jDvRvnCveTpQIde06UqpRE+SQGiKQhfvPgs2faXusBOrRoeQIAUeB9VmODyN4XH8OBO2JsfxS+LZ9IBEs44Q0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de; spf=pass smtp.mailfrom=web.de; dkim=pass (2048-bit key) header.d=web.de header.i=markus.elfring@web.de header.b=jIJMlCNP; arc=none smtp.client-ip=212.227.17.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=web.de
+	s=arc-20240116; t=1767470159; c=relaxed/simple;
+	bh=TFW0RmhbZ0h4ZWCC5NuC0HE/UfE7fbfvqa2FrwJUeG4=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=JcuVaPi5zej/s0RTXQzmPWmrQ/DhmGHCDyi9tG8A646fB261kBl5gdciylBNwIuQxKZb+nmFWKAETKZTYTJ/SK3uWRagHSck3M8I12dNtkaPzQ9CFy1av4YvPgxd74CrvrmsFqbzRrpDYsetIKvPnrsEqIRe1iagV3QnB83hJbk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com; spf=pass smtp.mailfrom=HansenPartnership.com; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=bzDOw+qK; arc=none smtp.client-ip=198.37.111.173
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=HansenPartnership.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=web.de header.i=markus.elfring@web.de header.b="jIJMlCNP"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=web.de;
-	s=s29768273; t=1767455683; x=1768060483; i=markus.elfring@web.de;
-	bh=gUh+xBUu031SEfp2wN9qBt6ACtuXy88/uodMHeIu/cs=;
-	h=X-UI-Sender-Class:Message-ID:Date:MIME-Version:Subject:To:Cc:
-	 References:From:In-Reply-To:Content-Type:
-	 Content-Transfer-Encoding:cc:content-transfer-encoding:
-	 content-type:date:from:message-id:mime-version:reply-to:subject:
-	 to;
-	b=jIJMlCNPgN/KgUTFycfTIOaYyKHnls3dTYCQVxXNyQrRfsWiLYljU69Uq4HPBEYq
-	 VunNzSb0atNfZ7vjrQvKCBsH0eMAB67QbfhInIqkIBwBJk0saIT7gUNtkrp5p51UP
-	 qNW7UIBe0dlmr/JGakNaTxyF5JMuEp7PzmTK+0lQLlNEoVKnwtqSKRQT8l7EjYsed
-	 ZFNyTLI+wpdUR8HfBj5GeaaNj06R+G6wBGpgzxpwbn3ACSLgYdjOE5/543+4Y/yFc
-	 rVZ2TCUNiAMv0Q69qDGeAuj3xEqCzeeFs++X5Qpgfhf2dCzmHtuimHs6IugzaFNye
-	 ptGqjjrARK6AaKrL+g==
-X-UI-Sender-Class: 814a7b36-bfc1-4dae-8640-3722d8ec6cd6
-Received: from [192.168.178.29] ([94.31.69.243]) by smtp.web.de (mrweb106
- [213.165.67.124]) with ESMTPSA (Nemesis) id 1MrOdp-1wH7ci0IA3-00dnA8; Sat, 03
- Jan 2026 16:54:43 +0100
-Message-ID: <3d1aa2f6-37fb-48f3-936e-95c779a8e7ff@web.de>
-Date: Sat, 3 Jan 2026 16:54:39 +0100
+	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="bzDOw+qK"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+	d=hansenpartnership.com; s=20151216; t=1767470155;
+	bh=TFW0RmhbZ0h4ZWCC5NuC0HE/UfE7fbfvqa2FrwJUeG4=;
+	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
+	b=bzDOw+qKJmF8uoIFHmPAKwEFZmF84vDH4m7vdfq+FxjAjWEALKDuvlZnQt2gJ+gG5
+	 SuXb0njqtLx+ARJ9ZdYpzObulbyMWNDAWiMzZUUCO0l9dL6F97j3PZQNL7ka/UKelP
+	 t/3Vo5ZsX5vUN0d60j4p5nW8fOmSIuqUgnFwJqYU=
+Received: from lingrow.int.hansenpartnership.com (unknown [IPv6:2601:5c4:4300:d341::a774])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by lamorak.hansenpartnership.com (Postfix) with ESMTPSA id 230A81C021A;
+	Sat, 03 Jan 2026 14:55:55 -0500 (EST)
+Message-ID: <389ac2dcc81b38367a26620cd193a45f2f06ce4f.camel@HansenPartnership.com>
+Subject: Re: [PATCH RESEND] scsi: ppa: Fix use-after-free caused by
+ unfinished delayed work
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+To: duoming@zju.edu.cn
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	martin.petersen@oracle.com, stable@kernel.org
+Date: Sat, 03 Jan 2026 14:55:54 -0500
+In-Reply-To: <3a85ddef.523b2.19b81abea97.Coremail.duoming@zju.edu.cn>
+References: <20260101135532.19522-1-duoming@zju.edu.cn>
+	 <91a16901ab4cd35fa00011a472c025f55068a4c7.camel@HansenPartnership.com>
+	 <3a85ddef.523b2.19b81abea97.Coremail.duoming@zju.edu.cn>
+Autocrypt: addr=James.Bottomley@HansenPartnership.com;
+ prefer-encrypt=mutual;
+ keydata=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
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.50.3 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [v3 0/3] scsi: lpfc: Fix multiple memory leaks in error paths
-To: Jianhao Xu <jianhao.xu@seu.edu.cn>, Zilin Guan <zilin@seu.edu.cn>,
- linux-scsi@vger.kernel.org
-Cc: LKML <linux-kernel@vger.kernel.org>,
- James Bottomley <James.Bottomley@HansenPartnership.com>,
- Justin Tee <justin.tee@broadcom.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- Paul Ely <paul.ely@broadcom.com>
-References: <411ef9b1-ff0c-4f68-8af8-f3a478ca0d7d@web.de>
- <20260103152514.304387-1-zilin@seu.edu.cn>
-Content-Language: en-GB, de-DE
-From: Markus Elfring <Markus.Elfring@web.de>
-In-Reply-To: <20260103152514.304387-1-zilin@seu.edu.cn>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-X-Provags-ID: V03:K1:1Bq5WPJ+LyjXLyBk/tri0SlywIzezX30cN3ge/R7BxLgkGlRM7u
- 9ZkoqFdFWDmdCqTbbVpaFWAq8wLDpmOOcVr1hZLpINGaVUV0lTztqik5WdMvG9bFsnd8YCW
- qMN/twYR19HaXv2Au9ng7y0A7MsPNp4KElw5m6i5wQRe5/iF+tjWQEyIVYSEYFvyBiHvHO6
- YSoDykpmqzrSpKBgyVRXg==
-X-Spam-Flag: NO
-UI-OutboundReport: notjunk:1;M01:P0:4wCz/pf2jtY=;0UKp6ecM6cpv6OZQWpZjvocd1ih
- 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
 
->> You presented interesting development ideas.
->> Will any related concerns become relevant here?
->> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree=
-/Documentation/process/researcher-guidelines.rst?h=3Dv6.19-rc3#n5
->>
->> Did your analysis approach get a corresponding name?
-=E2=80=A6
-> We are aware of these ethics requirements and strictly respect them.
-> For example, we responsibly disclose our findings (i.e., bugs, in the=20
-> form of patches),
+On Sat, 2026-01-03 at 10:24 +0800, duoming@zju.edu.cn wrote:
+> On Thu, 01 Jan 2026 10:21:28 -0500, James Bottomley wrote:
+> > > diff --git a/drivers/scsi/ppa.c b/drivers/scsi/ppa.c
+> > > index ea682f3044b..8da2a78ebac 100644
+> > > --- a/drivers/scsi/ppa.c
+> > > +++ b/drivers/scsi/ppa.c
+> > > @@ -1136,6 +1136,7 @@ static void ppa_detach(struct parport *pb)
+> > > =C2=A0	ppa_struct *dev;
+> > > =C2=A0	list_for_each_entry(dev, &ppa_hosts, list) {
+> > > =C2=A0		if (dev->dev->port =3D=3D pb) {
+> > > +			disable_delayed_work_sync(&dev->ppa_tq);
+> > > =C2=A0			list_del_init(&dev->list);
+> > > =C2=A0			scsi_remove_host(dev->host);
+> > > =C2=A0			scsi_host_put(dev->host);
+> >=20
+> > This fix looks bogus: if there's an active workqueue on ppa it's
+> > because there's an outstanding command and it's emulating polling.=C2=
+=A0
+> > If you stop the polling by disabling the workqueue, the command
+> > will never return and the host will never get freed, so this will
+> > leak resources, won't it?
+>=20
+> I believe that disabling the ppa_tq delayed work will not affect the
+> Scsi_Host release process. The lifetime of the Scsi_Host is managed
+> by tagset_refcnt. The tagset_refcnt is initialized to 1 in
+> scsi_add_host_with_dma() and decreased to 0 in scsi_remove_host().
+> since the delayed work callback ppa_interrupt() does not modify
+> tagset_refcnt in any way, the host could be freed as expected.
 
-Thanks for your contributions.
+Not if something else holds a reference to the host, which an
+outstanding command does.  That's the point I was making above: as long
+as the command doesn't return, everything is pinned and never gets
+freed (well, possibly until timeout).  You cause that because the work
+queue is only active if a command is outstanding, so when you disable
+the queue in that situation the command remains outstanding and can
+never complete normally.
 
+> > Also the race condition you identify is one of many tied to an
+> > incorrect ppa_struct lifetime: it should never be free'd before the
+> > host itself is gone because a live host may do a callback which
+> > will get the ppa_struct from hostdata, so if the host is still
+> > alive for any reason when ppa_detach() is called, we'll get the
+> > same problem.
+>=20
+> The ppa_struct is properly freed only after ensuring the complete
+> removal of the associated Scsi_Host in ppa_detach(). The detailed
+> sequence is as follows:
+>=20
+> ...
+> =C2=A0 =C2=A0scsi_remove_host(dev->host);
+> =C2=A0 =C2=A0scsi_host_put(dev->host); //the host is gone
 
->                   and we will make our paper and code public after=20
-> publication. However, we cannot disclose our tool at this moment because=
-=20
-> our research is still ongoing.
-
-Do the researcher guidelines indicate a need to point research activities =
-out
-in more explicit ways?
-
-Does your email address indicate a relationship with the Southeast Univers=
-ity?
-Is the School of Information Science and Engineering involved here?
+The host is not gone if that put is not the final one as it won't be if
+there's an outstanding command pinning the device.
 
 Regards,
-Markus
+
+James
+
