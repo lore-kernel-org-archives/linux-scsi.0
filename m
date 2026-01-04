@@ -1,72 +1,137 @@
-Received: from mail-m49198.qiye.163.com (mail-m49198.qiye.163.com [45.254.49.198])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EE3FB1D54FA;
-	Sun,  4 Jan 2026 05:53:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.254.49.198
+Received: from zg8tmja2lje4os4yms4ymjma.icoremail.net (zg8tmja2lje4os4yms4ymjma.icoremail.net [206.189.21.223])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 1E59E23BF9B;
+	Sun,  4 Jan 2026 14:35:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=206.189.21.223
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767506012; cv=none; b=KeSzus9/kxBC2dwTKMVvMMUKYU12p9pJysKT6oR3axfi6ASiSjnvAhey8i7YI96Ow1gK+XXlqM2kQnjQJC6zcYe94sTAqhTzDGEFCAExpTOjGB7H7asNsCX6LG2CvNL5bVvOHz7bBo1pPIC4fJe0C+Mmnk7dvYjF9xiiqanpc28=
+	t=1767537364; cv=none; b=htL1U+ev9y/OwDZhM0lTIusOwRfjP8J3L9xK6xpsnEowDBqdh0Xmt7GE9zaMb+mY/Jq5IZZGE+K/BE/6tWKhMvRPe5eH2gYz3Fzxj7dLsvzXKUFQCP4tf37czO8xffmk0CYagAUSyMcVNvOzmLITyDNQ1av2uR3Eep0O3o69MR4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767506012; c=relaxed/simple;
-	bh=4LrZ8hQxlRtFCWg8+bUw2t4e0MNPKFq7f0WBm2xAsJw=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=OflNXr2ZXWdBn5fqnZ0o2pGm2/EQcuh44zdmuhW2pW2vwU6xYvj96cvMkbS+2gGhxmod6bTij7pF1Olkci77pZV/iM7/QP1O5b8LjC/rDiVr7Ad/C8HfxVRVrZnMvg5peA15L5SA2lSCtBLalAISY8O9KSD9yNNmOvekhtPOFYI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=seu.edu.cn; spf=pass smtp.mailfrom=seu.edu.cn; dkim=pass (1024-bit key) header.d=seu.edu.cn header.i=@seu.edu.cn header.b=jaLh/5kY; arc=none smtp.client-ip=45.254.49.198
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=seu.edu.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=seu.edu.cn
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=seu.edu.cn header.i=@seu.edu.cn header.b="jaLh/5kY"
-Received: from LAPTOP-N070L597.localdomain (unknown [58.241.16.34])
-	by smtp.qiye.163.com (Hmail) with ESMTP id 2f66d159a;
-	Sun, 4 Jan 2026 12:37:40 +0800 (GMT+08:00)
-From: Zilin Guan <zilin@seu.edu.cn>
-To: markus.elfring@web.de
-Cc: James.Bottomley@HansenPartnership.com,
-	jianhao.xu@seu.edu.cn,
-	justin.tee@broadcom.com,
-	linux-kernel@vger.kernel.org,
-	linux-scsi@vger.kernel.org,
-	martin.petersen@oracle.com,
-	paul.ely@broadcom.com,
-	zilin@seu.edu.cn
-Subject: Re: [v3 0/3] scsi: lpfc: Fix multiple memory leaks in error paths
-Date: Sun,  4 Jan 2026 04:37:39 +0000
-Message-Id: <20260104043739.50700-1-zilin@seu.edu.cn>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <3d1aa2f6-37fb-48f3-936e-95c779a8e7ff@web.de>
-References: <3d1aa2f6-37fb-48f3-936e-95c779a8e7ff@web.de>
+	s=arc-20240116; t=1767537364; c=relaxed/simple;
+	bh=sJw5ndgeBnXGtC0FTCdmvzMG8W625fImBhXvfc8uDb4=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References:Content-Type:
+	 MIME-Version:Message-ID; b=gjR55dWQnTZEu/+CuHiF5cidlwdiDY6R2gV+VabiYfWNRVzvVSuzsyExoH0vlZq9Xebqq3TnNj9g3qlmxlhcCDwJf4fGHLM7BsJF5tmfaAeCuOBN2wptSunAsMMh6+9kZSH2Uqmr2SRPxDr41Qcvcmr5coQfk4Y0MI9bhUra5sI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zju.edu.cn; spf=pass smtp.mailfrom=zju.edu.cn; arc=none smtp.client-ip=206.189.21.223
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zju.edu.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zju.edu.cn
+Received: from zju.edu.cn (unknown [218.12.16.88])
+	by mtasvr (Coremail) with SMTP id _____wDnBFTDelppTsSEAQ--.51509S3;
+	Sun, 04 Jan 2026 22:35:48 +0800 (CST)
+Received: from duoming$zju.edu.cn ( [218.12.16.88] ) by
+ ajax-webmail-mail-app2 (Coremail) ; Sun, 4 Jan 2026 22:35:46 +0800
+ (GMT+08:00)
+Date: Sun, 4 Jan 2026 22:35:46 +0800 (GMT+08:00)
+X-CM-HeaderCharset: UTF-8
+From: duoming@zju.edu.cn
+To: "James Bottomley" <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	martin.petersen@oracle.com, stable@kernel.org
+Subject: Re: [PATCH RESEND] scsi: ppa: Fix use-after-free caused by
+ unfinished delayed work
+X-Priority: 3
+X-Mailer: Coremail Webmail Server Version 2024.3-cmXT6 build
+ 20250620(94335109) Copyright (c) 2002-2026 www.mailtech.cn zju.edu.cn
+In-Reply-To: <389ac2dcc81b38367a26620cd193a45f2f06ce4f.camel@HansenPartnership.com>
+References: <20260101135532.19522-1-duoming@zju.edu.cn>
+ <91a16901ab4cd35fa00011a472c025f55068a4c7.camel@HansenPartnership.com>
+ <3a85ddef.523b2.19b81abea97.Coremail.duoming@zju.edu.cn>
+ <389ac2dcc81b38367a26620cd193a45f2f06ce4f.camel@HansenPartnership.com>
+Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=UTF-8
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-HM-Tid: 0a9b874bf32903a1kunmcc4b27c42caad3
-X-HM-MType: 10
-X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-	tZV1koWUFITzdXWS1ZQUlXWQ8JGhUIEh9ZQVkaSUpPVk9CT0NNGR4dTh5IT1YeHw5VEwETFhoSFy
-	QUDg9ZV1kYEgtZQVlOQ1VJT0pVSk1VSE9ZV1kWGg8SFR0UWUFZT0tIVUpLSUJNS0pVSktLVUtZBg
-	++
-DKIM-Signature: a=rsa-sha256;
-	b=jaLh/5kYMXdrrBJ0WUnZOMcsXrbgVz/9NGzVFhL/Bcjr75r/wB+7OwP++3U3iKlX1mOp2wMcg/2Uh0Ckzj1LzAEY6mfn2Jxond6J/ipLnvNGfSY6FiVwHh1kWoGrMh//A+CINIuASK6N6rBrvxv6aPhbcJJSTT+N2k33VT6C9M4=; s=default; c=relaxed/relaxed; d=seu.edu.cn; v=1;
-	bh=P39iIpwBpfgP5dp0WRJCdzTe3dvhW3yG7O+Cx7juK5s=;
-	h=date:mime-version:subject:message-id:from;
+Message-ID: <4726642f.54ab5.19b896f887d.Coremail.duoming@zju.edu.cn>
+X-Coremail-Locale: zh_CN
+X-CM-TRANSID:zC_KCgBXbkLDelppHAXqBA--.45W
+X-CM-SenderInfo: qssqjiasttq6lmxovvfxof0/1tbiAwYBAWlZcQQLLQAAsm
+X-CM-DELIVERINFO: =?B?LFhqLAXKKxbFmtjJiESix3B1w3uoVhYI+vyen2ZzBEkOnu5chDpkB+ZdGnv/zQ0PbP
+	CR19etGe1uWOZEbObr6uT3QpRVAnzlF4r0gpy0l5/fXHvwNZYxs1+LFnPaCR0t/BurnGSp
+	FbaM79rNS7Jba718F6lISuq+E1EwDtMRRpKsQYI1e0gni7VLOCCzZkkQDsFwyw==
+X-Coremail-Antispam: 1Uk129KBj93XoWxWr4UuFW3GF45KFWftw1UJwc_yoWrJr4kpF
+	Wrta43Cws8Wr10gr12qw15XF1IgrsxCFW5t3WrG3yayrs8JF1vvF47tayUZay7AF4ktw4j
+	vF4vqrZ5WFZ8ZFXCm3ZEXasCq-sJn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7KY7ZEXa
+	sCq-sGcSsGvfJ3Ic02F40EFcxC0VAKzVAqx4xG6I80ebIjqfuFe4nvWSU5nxnvy29KBjDU
+	0xBIdaVrnRJUUUmvb4IE77IF4wAFF20E14v26r1j6r4UM7CY07I20VC2zVCF04k26cxKx2
+	IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48v
+	e4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI
+	0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AK
+	xVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc804VCY07AIYIkI8VC2zVCFFI0UMc
+	02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAF
+	wI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0Y48IcxkI7VAKI48JM4x0Y48IcxkI7V
+	AKI48G6xCjnVAKz4kxM4xvF2IEb7IF0Fy264kE64k0F24lFcxC0VAYjxAxZF0Ex2IqxwAK
+	zVCY07xG64k0F24l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxV
+	Aqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r12
+	6r1DMIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6x
+	kF7I0E14v26r1j6r4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AK
+	xVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r1j6r4UMVCEFcxC0VAYjxAxZFUvcSsGvf
+	C2KfnxnUUI43ZEXa7IU8v_MDUUUUU==
 
-On Sat, Jan 03, 2026 at 04:54:39PM +0100, Markus Elfring wrote:
-> Do the researcher guidelines indicate a need to point research activities out
-> in more explicit ways?
+T24gU2F0LCAwMyBKYW4gMjAyNiAxNDo1NTo1NCAtMDUwMCwgSmFtZXMgQm90dG9tbGV5IHdyb3Rl
+Ogo+ID4gPiA+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvcHBhLmMgYi9kcml2ZXJzL3Njc2kv
+cHBhLmMKPiA+ID4gPiBpbmRleCBlYTY4MmYzMDQ0Yi4uOGRhMmE3OGViYWMgMTAwNjQ0Cj4gPiA+
+ID4gLS0tIGEvZHJpdmVycy9zY3NpL3BwYS5jCj4gPiA+ID4gKysrIGIvZHJpdmVycy9zY3NpL3Bw
+YS5jCj4gPiA+ID4gQEAgLTExMzYsNiArMTEzNiw3IEBAIHN0YXRpYyB2b2lkIHBwYV9kZXRhY2go
+c3RydWN0IHBhcnBvcnQgKnBiKQo+ID4gPiA+IMKgCXBwYV9zdHJ1Y3QgKmRldjsKPiA+ID4gPiDC
+oAlsaXN0X2Zvcl9lYWNoX2VudHJ5KGRldiwgJnBwYV9ob3N0cywgbGlzdCkgewo+ID4gPiA+IMKg
+CQlpZiAoZGV2LT5kZXYtPnBvcnQgPT0gcGIpIHsKPiA+ID4gPiArCQkJZGlzYWJsZV9kZWxheWVk
+X3dvcmtfc3luYygmZGV2LT5wcGFfdHEpOwo+ID4gPiA+IMKgCQkJbGlzdF9kZWxfaW5pdCgmZGV2
+LT5saXN0KTsKPiA+ID4gPiDCoAkJCXNjc2lfcmVtb3ZlX2hvc3QoZGV2LT5ob3N0KTsKPiA+ID4g
+PiDCoAkJCXNjc2lfaG9zdF9wdXQoZGV2LT5ob3N0KTsKPiA+ID4gCj4gPiA+IFRoaXMgZml4IGxv
+b2tzIGJvZ3VzOiBpZiB0aGVyZSdzIGFuIGFjdGl2ZSB3b3JrcXVldWUgb24gcHBhIGl0J3MKPiA+
+ID4gYmVjYXVzZSB0aGVyZSdzIGFuIG91dHN0YW5kaW5nIGNvbW1hbmQgYW5kIGl0J3MgZW11bGF0
+aW5nIHBvbGxpbmcuwqAKPiA+ID4gSWYgeW91IHN0b3AgdGhlIHBvbGxpbmcgYnkgZGlzYWJsaW5n
+IHRoZSB3b3JrcXVldWUsIHRoZSBjb21tYW5kCj4gPiA+IHdpbGwgbmV2ZXIgcmV0dXJuIGFuZCB0
+aGUgaG9zdCB3aWxsIG5ldmVyIGdldCBmcmVlZCwgc28gdGhpcyB3aWxsCj4gPiA+IGxlYWsgcmVz
+b3VyY2VzLCB3b24ndCBpdD8KPiA+IAo+ID4gSSBiZWxpZXZlIHRoYXQgZGlzYWJsaW5nIHRoZSBw
+cGFfdHEgZGVsYXllZCB3b3JrIHdpbGwgbm90IGFmZmVjdCB0aGUKPiA+IFNjc2lfSG9zdCByZWxl
+YXNlIHByb2Nlc3MuIFRoZSBsaWZldGltZSBvZiB0aGUgU2NzaV9Ib3N0IGlzIG1hbmFnZWQKPiA+
+IGJ5IHRhZ3NldF9yZWZjbnQuIFRoZSB0YWdzZXRfcmVmY250IGlzIGluaXRpYWxpemVkIHRvIDEg
+aW4KPiA+IHNjc2lfYWRkX2hvc3Rfd2l0aF9kbWEoKSBhbmQgZGVjcmVhc2VkIHRvIDAgaW4gc2Nz
+aV9yZW1vdmVfaG9zdCgpLgo+ID4gc2luY2UgdGhlIGRlbGF5ZWQgd29yayBjYWxsYmFjayBwcGFf
+aW50ZXJydXB0KCkgZG9lcyBub3QgbW9kaWZ5Cj4gPiB0YWdzZXRfcmVmY250IGluIGFueSB3YXks
+IHRoZSBob3N0IGNvdWxkIGJlIGZyZWVkIGFzIGV4cGVjdGVkLgo+IAo+IE5vdCBpZiBzb21ldGhp
+bmcgZWxzZSBob2xkcyBhIHJlZmVyZW5jZSB0byB0aGUgaG9zdCwgd2hpY2ggYW4KPiBvdXRzdGFu
+ZGluZyBjb21tYW5kIGRvZXMuICBUaGF0J3MgdGhlIHBvaW50IEkgd2FzIG1ha2luZyBhYm92ZTog
+YXMgbG9uZwo+IGFzIHRoZSBjb21tYW5kIGRvZXNuJ3QgcmV0dXJuLCBldmVyeXRoaW5nIGlzIHBp
+bm5lZCBhbmQgbmV2ZXIgZ2V0cwo+IGZyZWVkICh3ZWxsLCBwb3NzaWJseSB1bnRpbCB0aW1lb3V0
+KS4gIFlvdSBjYXVzZSB0aGF0IGJlY2F1c2UgdGhlIHdvcmsKPiBxdWV1ZSBpcyBvbmx5IGFjdGl2
+ZSBpZiBhIGNvbW1hbmQgaXMgb3V0c3RhbmRpbmcsIHNvIHdoZW4geW91IGRpc2FibGUKPiB0aGUg
+cXVldWUgaW4gdGhhdCBzaXR1YXRpb24gdGhlIGNvbW1hbmQgcmVtYWlucyBvdXRzdGFuZGluZyBh
+bmQgY2FuCj4gbmV2ZXIgY29tcGxldGUgbm9ybWFsbHkuCgpXaGVuIGEgcmVxdWVzdCBpcyBzZW50
+IHRvIGEgU0NTSSBkZXZpY2UsIGEgdGltZXIgaXMgc2V0IGZvciB0aGUgcmVxdWVzdC4KSWYgaXQg
+dGltZXMgb3V0LCB0aGUgcmVxdWVzdCBpcyBkaXJlY3RseSB0ZXJtaW5hdGVkIGFuZCByZW1vdmVk
+IGZyb20gdGhlCnF1ZXVlLiBUaGUgc3BlY2lmaWMgZnVuY3Rpb24gY2FsbCBjaGFpbiBpcyBhcyBm
+b2xsb3dzOiAKCnNjc2lfcXVldWVfcnEoKSAtPiBibGtfbXFfc3RhcnRfcmVxdWVzdCgpIC0+IGJs
+a19hZGRfdGltZXIoKSAKLT4gYmxrX21xX3RpbWVvdXRfd29yaygpCgovKioKICogYmxrX2FkZF90
+aW1lciAtIFN0YXJ0IHRpbWVvdXQgdGltZXIgZm9yIGEgc2luZ2xlIHJlcXVlc3QKICogQHJlcToJ
+cmVxdWVzdCB0aGF0IGlzIGFib3V0IHRvIHN0YXJ0IHJ1bm5pbmcuCiAqCiAqIE5vdGVzOgogKiAg
+ICBFYWNoIHJlcXVlc3QgaGFzIGl0cyBvd24gdGltZXIsIGFuZCBhcyBpdCBpcyBhZGRlZCB0byB0
+aGUgcXVldWUsIHdlCiAqICAgIHNldCB1cCB0aGUgdGltZXIuIFdoZW4gdGhlIHJlcXVlc3QgY29t
+cGxldGVzLCB3ZSBjYW5jZWwgdGhlIHRpbWVyLgogKi8Kdm9pZCBibGtfYWRkX3RpbWVyKHN0cnVj
+dCByZXF1ZXN0ICpyZXEpCnsKICAgIC4uLgoJLyoKCSAqIFNvbWUgTExEcywgbGlrZSBzY3NpLCBw
+ZWVrIGF0IHRoZSB0aW1lb3V0IHRvIHByZXZlbnQgYQoJICogY29tbWFuZCBmcm9tIGJlaW5nIHJl
+dHJpZWQgZm9yZXZlci4KCSAqLwogICAgLi4uCn0KCnN0YXRpYyB2b2lkIGJsa19tcV90aW1lb3V0
+X3dvcmsoc3RydWN0IHdvcmtfc3RydWN0ICp3b3JrKQp7CiAgICAuLi4KICAgIGJsa19tcV93YWl0
+X3F1aWVzY2VfZG9uZSgpOwogICAgYmxrX21xX2hhbmRsZV9leHBpcmVkKCk7CiAgICBibGtfcXVl
+dWVfZXhpdCgpOwogICAgLi4uCn0KClRoZXJlZm9yZSwgdGhpcyBwYXRjaCB3aWxsIG5vdCBjYXVz
+ZSBtZW1vcnkgbGVha3Mgb3IgaXNzdWVzIHdoZXJlCmNvbW1hbmRzIG5ldmVyIHJldHVybi4KCj4g
+PiA+IEFsc28gdGhlIHJhY2UgY29uZGl0aW9uIHlvdSBpZGVudGlmeSBpcyBvbmUgb2YgbWFueSB0
+aWVkIHRvIGFuCj4gPiA+IGluY29ycmVjdCBwcGFfc3RydWN0IGxpZmV0aW1lOiBpdCBzaG91bGQg
+bmV2ZXIgYmUgZnJlZSdkIGJlZm9yZSB0aGUKPiA+ID4gaG9zdCBpdHNlbGYgaXMgZ29uZSBiZWNh
+dXNlIGEgbGl2ZSBob3N0IG1heSBkbyBhIGNhbGxiYWNrIHdoaWNoCj4gPiA+IHdpbGwgZ2V0IHRo
+ZSBwcGFfc3RydWN0IGZyb20gaG9zdGRhdGEsIHNvIGlmIHRoZSBob3N0IGlzIHN0aWxsCj4gPiA+
+IGFsaXZlIGZvciBhbnkgcmVhc29uIHdoZW4gcHBhX2RldGFjaCgpIGlzIGNhbGxlZCwgd2UnbGwg
+Z2V0IHRoZQo+ID4gPiBzYW1lIHByb2JsZW0uCj4gPiAKPiA+IFRoZSBwcGFfc3RydWN0IGlzIHBy
+b3Blcmx5IGZyZWVkIG9ubHkgYWZ0ZXIgZW5zdXJpbmcgdGhlIGNvbXBsZXRlCj4gPiByZW1vdmFs
+IG9mIHRoZSBhc3NvY2lhdGVkIFNjc2lfSG9zdCBpbiBwcGFfZGV0YWNoKCkuIFRoZSBkZXRhaWxl
+ZAo+ID4gc2VxdWVuY2UgaXMgYXMgZm9sbG93czoKPiA+IAo+ID4gLi4uCj4gPiDCoCDCoHNjc2lf
+cmVtb3ZlX2hvc3QoZGV2LT5ob3N0KTsKPiA+IMKgIMKgc2NzaV9ob3N0X3B1dChkZXYtPmhvc3Qp
+OyAvL3RoZSBob3N0IGlzIGdvbmUKPiAKPiBUaGUgaG9zdCBpcyBub3QgZ29uZSBpZiB0aGF0IHB1
+dCBpcyBub3QgdGhlIGZpbmFsIG9uZSBhcyBpdCB3b24ndCBiZSBpZgo+IHRoZXJlJ3MgYW4gb3V0
+c3RhbmRpbmcgY29tbWFuZCBwaW5uaW5nIHRoZSBkZXZpY2UuCgpUaGUgY29tbWFuZHMgaGF2ZSBh
+bHJlYWR5IGJlZW4gaGFuZGxlZCBieSB0aGUgdGltZW91dCBoYW5kbGVyLCBzbyBpdCB3aWxsCm5v
+dCBjYXVzZSBpc3N1ZXMgd2l0aCB0aGUgU2NzaV9Ib3N0IGZhaWxpbmcgdG8gcmVsZWFzZSBwcm9w
+ZXJseS4KCkJlc3QgcmVnYXJkcywKRHVvbWluZyBaaG91Cg==
 
-No, as our research does not constitute "active research on developer 
-behavior", but rather consists of "good faith contributions". It is 
-governed by and conducted in full compliance with both the Linux Kernel's 
-Researcher Guidelines and the relevant security conference guidelines for 
-vulnerability disclosure (e.g., IEEE S&P: https://sp2026.ieee-security.org/cfpapers.html).
-
-I appreciate your engagement, but we must stay on point. Your frequent 
-questions unrelated to the technical content of many my patches are 
-causing distractions and creating noise in the discussion. Therefore, 
-I will no longer respond to off-topic inquiries in this public channel.
-
-Regards,
-Zilin Guan
