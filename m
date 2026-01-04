@@ -1,61 +1,62 @@
 Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C40B5315D20
-	for <linux-scsi@vger.kernel.org>; Sun,  4 Jan 2026 21:43:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3EF29316184
+	for <linux-scsi@vger.kernel.org>; Sun,  4 Jan 2026 21:43:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.177.32
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767563013; cv=none; b=gwoNF/dKNPghh+Ufs6nL034dwDuyf8RdlSlLzhy6tR7+fxFPJKwFo9CxkxIvbwESKgIQdizzrW5CEhlUbSv4MXGa5gDVpBmUsTrvLSc3QcsjEsI0V4W1tngSEL00WH5zsB93lTAdsY3P/GBR7NYV5RHI0oBMPDxQxUz80RbAXbg=
+	t=1767563015; cv=none; b=mA1eTJZQc4UKa4zs5UYucjc9ehV71PfXv3vvP3zuO/6y8mKmMbiGIMyG0tJ+UDEEnUxJQP6cQgPMdzW41c3rBz5DFOk5mU541RSap7m3453SjVrAgeSsD8O/g5tJOzD0Eh+rilTaMSZTZLVObx5Skk6dmbmUslhXDrZd0ad9e8U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767563013; c=relaxed/simple;
-	bh=CJyFS8zKZva+KJKMHt744nVMivVGB3qKcOMVe8WccRc=;
+	s=arc-20240116; t=1767563015; c=relaxed/simple;
+	bh=PXQkk7Sul/+yz11K5KkWkmxRzzTXT98sjHQ25hGUt5Y=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=CafwBcs6KdcCjrxQLabBxqqWZeKO8EJ/sL+aAdqUQzhxI6Qgm9/uK4t9DozrWs8jvXcwptNTK40nmUMJ3nI04H9TLXVwcLhpWLum/Xz7VsRN6LuTB82pv2Onl9r5vggcXfgpOhM73NfqPd7yacbOqhKhJkVkjwLBCnwcjGE4d74=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=UazlyIhp; arc=none smtp.client-ip=205.220.177.32
+	 MIME-Version:Content-Type; b=imW+ZIDkFGtvpFW0kqe+k5FE5lLHPbKeaSXOExRc8dxeR94/hBTc0zU5BvTa6IVYBLACmX4rarJ1TboiiQoEjz+W5PHJqnNINRBAnOBRi+RCJ0XHvFeRe+34YTe/Sb8+VAOXpH6vWLI94AjgCCWyN5nIio+HjVuRWZyxdJy8ii4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=WcX0ZAqu; arc=none smtp.client-ip=205.220.177.32
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="UazlyIhp"
-Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 604Lfs4E009110;
-	Sun, 4 Jan 2026 21:43:29 GMT
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="WcX0ZAqu"
+Received: from pps.filterd (m0333520.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 604LPMq8460378;
+	Sun, 4 Jan 2026 21:43:31 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
 	:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=
-	corp-2025-04-25; bh=G3p5arkLYNNCWXgL7uXWyuxwO1XsftbCORftvGsSzys=; b=
-	UazlyIhplpPDJsZXZco5zRqGuUdSgKobkZxKKM6xIOkNnnouWAWfNjEozjRidHKE
-	ePWa2O70M+iijVq+Z7zcZG63nhE8VWs1vXOxHFyha6TYcNDGxrLlUuP/hkLXapAj
-	Cg0EYFxcdJxTMm5J1tD+BhWpEi7WpdpmulP4h9kxEQje4mGZ5IN10lZuMZZASEzY
-	DO/duEWw+DpH1MHT8HV5NXy/9BdKpo1PJ/6Q7AGfevoCKNYaqJbTaH5WuRDTTJKE
-	E07m3YTos4o+W9hG0EQIijDbuFs4u7yR5iyfya6pRqPvaDrQdcaA1Dw3r80JKeUQ
-	mlNLT6nibwj/lmJamBQcQg==
+	corp-2025-04-25; bh=iyK0RJ6g/Ps2wjnAYjAovVoMp7xwnW0VJpFjGqjED2E=; b=
+	WcX0ZAqudC9523XRiHrl29AiKE3tpahupd3Vc5859vq6B4WHb+DMGPn9J4KQXVuK
+	3jmwGMtTUhUrKnAppO4uHUq3GD90EAUt/HFBn9ntQ7BIVvx3Uxq+jpoTWriyN5S0
+	NfPiqJ4qHtQyCp/gApo64gjIEfynHlZtMNUbo24eMoIS5xO9awrgI4s0FKMoo0Xz
+	DdDMriCMO73BO8IvpiVtmLvsDqX5PrbRzdWX8EvShV6OrNHEmYX1tzCKu6RCjEcW
+	sos2MDFaDjh+XaXPZ3ufystShH1XgiQW72FJz8Icf7h5DlFN1l8UUQna+V7K5Mdn
+	fS73gnyJRVLHKp+wToesrg==
 Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4bev6ngxwt-1
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4bev2jgyp5-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Sun, 04 Jan 2026 21:43:29 +0000 (GMT)
+	Sun, 04 Jan 2026 21:43:31 +0000 (GMT)
 Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 604GlorA026603;
-	Sun, 4 Jan 2026 21:43:28 GMT
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 604H58Fw027384;
+	Sun, 4 Jan 2026 21:43:30 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 4besj6gbh0-1
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 4besj6gbhb-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Sun, 04 Jan 2026 21:43:28 +0000
+	Sun, 04 Jan 2026 21:43:30 +0000
 Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 604LhPoT007658;
-	Sun, 4 Jan 2026 21:43:28 GMT
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 604LhPoX007658;
+	Sun, 4 Jan 2026 21:43:29 GMT
 Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 4besj6gbf9-4;
-	Sun, 04 Jan 2026 21:43:27 +0000
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 4besj6gbf9-6;
+	Sun, 04 Jan 2026 21:43:29 +0000
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-To: linux-scsi@vger.kernel.org, Justin Tee <justintee8345@gmail.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, jsmart2021@gmail.com,
-        justin.tee@broadcom.com
-Subject: Re: [PATCH 0/3] Update lpfc to revision 14.4.0.13
-Date: Sun,  4 Jan 2026 16:43:10 -0500
-Message-ID: <176755562242.1327406.14262393628406702589.b4-ty@oracle.com>
+To: linux-scsi@vger.kernel.org, Ranjan Kumar <ranjan.kumar@broadcom.com>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
+        sathya.prakash@broadcom.com, sumit.saxena@broadcom.com,
+        chandrakanth.patil@broadcom.com, prayas.patel@broadcom.com
+Subject: Re: [PATCH v2 0/6] mpt3sas: Improve device readiness handling and event recovery
+Date: Sun,  4 Jan 2026 16:43:12 -0500
+Message-ID: <176755562247.1327406.738583615959202552.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.51.2
-In-Reply-To: <20251211001659.138635-1-justintee8345@gmail.com>
-References: <20251211001659.138635-1-justintee8345@gmail.com>
+In-Reply-To: <20251113153712.31850-1-ranjan.kumar@broadcom.com>
+References: <20251113153712.31850-1-ranjan.kumar@broadcom.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -71,42 +72,48 @@ X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 bulk
  mlxscore=0 spamscore=0 mlxlogscore=999 adultscore=0 malwarescore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2512120000
  definitions=main-2601040200
-X-Proofpoint-ORIG-GUID: eAd5lETyaZvPPas9VgrB6V8OxEWlUVYx
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMTA0MDIwMCBTYWx0ZWRfX/2R+B+B6i+cc
- yyhV+oPFZ7OKoAevrUg5YvLE/+8AlmeAsyZnjziw3M5Nwavdxx42iRXH3osr2D+z1gDFEexBwXe
- jdv2HtiDgPnNrAPCdO3Vd/2W8BXVFgyrWSyjr0Q2NnHYzPGnESZNuQVoaoPYiVfhwHBVHJE3PnK
- P/mLql/+zuT6Q4QXKd+wRNjJrr7XkIhE/ikTsjMYdi0sOikgJiJlpA7vli1XI6iObobfnkQkmlJ
- YM5ogWSqInsdWUkSWgPfCmivX+lQbVGKs0I731vvqtVDZPD6vXeUX4nfGMaJ+uJ9HXzNiPMW95t
- j0b1MVB1LrPcw8vF+txkH4xmtwKzz8o6DOnmzC7G9a2MB9YPfQ5HJ4MN+Y9i0fiVs42atPurvyN
- Pp3zfNPtdzkSnkjXpNT5G7yzLwqJzIwTuEjUm4PdxyQ8W0NsBDoAUW94/PN2IcB6L6cLn6tQ3zv
- EeuTLrHm4c/Yy1doOfA==
-X-Proofpoint-GUID: eAd5lETyaZvPPas9VgrB6V8OxEWlUVYx
-X-Authority-Analysis: v=2.4 cv=QtFTHFyd c=1 sm=1 tr=0 ts=695adf01 cx=c_pps
+X-Proofpoint-ORIG-GUID: bulh5-7RiXMZxv-UxXPVcEbTLYBKlTJ1
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMTA0MDIwMCBTYWx0ZWRfXxy76bLJ9VSgk
+ zqAHhDeSVt7Ek2nNwhrvzm3Xt8j8JHMuuXOT8bcXXcP6hV+qrAz9WGW9BxDyBcNgnyZ8KuxLIDB
+ DyRec8XdSpGpdt0AdaMUPJslXqJmwnTFAlYuQM3JKSMZ+lH3p55kp4DXdEM8QTgpwzQBT0r65dH
+ utVJSQi4rJz9DMsTaRJQhAjuLe+MZMBXRYHyStf0f/7p+jHwYvaqGsTlVk+5IGQNkYNysEhgauw
+ YMY7Pia4v+oN1wjsyd297QuhN4zn+49/bVdPZEBRK763eqtq8LwvICW0sU4SCuj6LrbBscGLNlb
+ JmzpR4KaYvYNFGV+n/tMlBhVAHIBYfUzJXswRJkDf3MbYY4XrtGHrjknhUo9hJqU56PsP94TEzU
+ OoNFHL9LiQP3lrypCuVt8e1hUDGJ+0JHl1xth9BknqQtbW4za3odQv1zXX0xyg3pgOo+V908w8m
+ cpgG8PcbZNKaKluouEA==
+X-Authority-Analysis: v=2.4 cv=A9hh/qWG c=1 sm=1 tr=0 ts=695adf03 cx=c_pps
  a=OOZaFjgC48PWsiFpTAqLcw==:117 a=OOZaFjgC48PWsiFpTAqLcw==:17
  a=IkcTkHD0fZMA:10 a=vUbySO9Y5rIA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=VwQbUJbxAAAA:8 a=ygGwB_NCQbuXTOrIIS4A:9 a=QEXdDO2ut3YA:10
+ a=VwQbUJbxAAAA:8 a=NU0Hyk3IxulSulSHgqEA:9 a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
+X-Proofpoint-GUID: bulh5-7RiXMZxv-UxXPVcEbTLYBKlTJ1
 
-On Wed, 10 Dec 2025 16:16:56 -0800, Justin Tee wrote:
+On Thu, 13 Nov 2025 21:07:04 +0530, Ranjan Kumar wrote:
 
-> Update lpfc to revision 14.4.0.13
+> This patch series enhances the mpt3sas driver’s device bring-up,
+> readiness detection, and event recovery mechanisms to improve
+> robustness in environments with slow-responding or transient
+> SAS/PCIe devices.
 > 
-> This patch set introduces reporting encryption information for fibre
-> channel HBAs.
-> 
-> First, the scsi_transport_fc layer is updated to include a new
-> fc_encryption_info attribute that is added to struct fc_rport.  Supporting
-> sysfs and LLDD templates are provided.
+> The series introduces optional control over issuing TEST UNIT READY
+> (TUR) commands during device unblocking, configurable retry limits,
+> and a mechanism to requeue firmware topology events when devices are
+> temporarily busy. Together, these updates reduce discovery failures
+> and improve recovery reliability following firmware or link events.
 > 
 > [...]
 
 Applied to 6.20/scsi-queue, thanks!
 
-[1/3] scsi_transport_fc: Introduce encryption group in fc_rport attribute
-      https://git.kernel.org/mkp/scsi/c/bd2bc528691e
-[2/3] lpfc: Add support for reporting encryption events
-      https://git.kernel.org/mkp/scsi/c/e2dacf8e5e33
-[3/3] lpfc: Update lpfc version to 14.4.0.13
-      https://git.kernel.org/mkp/scsi/c/621164425315
+[1/6] mpt3sas: Added no_turs flag to device unblock logic
+      https://git.kernel.org/mkp/scsi/c/6b553f2a5c84
+[3/6] mpt3sas: improve device discovery and readiness handling for slow devices part-2
+      https://git.kernel.org/mkp/scsi/c/aee682fad6cd
+[4/6] mpt3sas: Add firmware event requeue support for busy devices
+      https://git.kernel.org/mkp/scsi/c/ad5957193107
+[5/6] mpt3sas: Add configurable command retry limit for slow-to-respond devices
+      https://git.kernel.org/mkp/scsi/c/72340fecd0c8
+[6/6] mpt3sas: Fixed the W=1 compilation warning
+      https://git.kernel.org/mkp/scsi/c/39680c59f10c
 
 -- 
 Martin K. Petersen
