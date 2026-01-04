@@ -1,122 +1,72 @@
-Received: from lamorak.hansenpartnership.com (lamorak.hansenpartnership.com [198.37.111.173])
+Received: from mail-m49198.qiye.163.com (mail-m49198.qiye.163.com [45.254.49.198])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 90CF33A1E72;
-	Sat,  3 Jan 2026 19:55:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.37.111.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EE3FB1D54FA;
+	Sun,  4 Jan 2026 05:53:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.254.49.198
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767470159; cv=none; b=pF5qaL4S3ENdV+d5CsT2Q8RgZPCyUq2akEEeWzi8DAcirMGFMAEkMmX5r+xPwsYh+3DiJ7R4YIkvpUlFparUoycLvadiRqTeLoVhiKQZ7q7+kU7ZBOTQjZBZel+iQsa//xXm4rlEnF8EmnU9mw0Xcgk4hKeVj1v/c42D7Y++PzA=
+	t=1767506012; cv=none; b=KeSzus9/kxBC2dwTKMVvMMUKYU12p9pJysKT6oR3axfi6ASiSjnvAhey8i7YI96Ow1gK+XXlqM2kQnjQJC6zcYe94sTAqhTzDGEFCAExpTOjGB7H7asNsCX6LG2CvNL5bVvOHz7bBo1pPIC4fJe0C+Mmnk7dvYjF9xiiqanpc28=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767470159; c=relaxed/simple;
-	bh=TFW0RmhbZ0h4ZWCC5NuC0HE/UfE7fbfvqa2FrwJUeG4=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=JcuVaPi5zej/s0RTXQzmPWmrQ/DhmGHCDyi9tG8A646fB261kBl5gdciylBNwIuQxKZb+nmFWKAETKZTYTJ/SK3uWRagHSck3M8I12dNtkaPzQ9CFy1av4YvPgxd74CrvrmsFqbzRrpDYsetIKvPnrsEqIRe1iagV3QnB83hJbk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com; spf=pass smtp.mailfrom=HansenPartnership.com; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=bzDOw+qK; arc=none smtp.client-ip=198.37.111.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=HansenPartnership.com
+	s=arc-20240116; t=1767506012; c=relaxed/simple;
+	bh=4LrZ8hQxlRtFCWg8+bUw2t4e0MNPKFq7f0WBm2xAsJw=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=OflNXr2ZXWdBn5fqnZ0o2pGm2/EQcuh44zdmuhW2pW2vwU6xYvj96cvMkbS+2gGhxmod6bTij7pF1Olkci77pZV/iM7/QP1O5b8LjC/rDiVr7Ad/C8HfxVRVrZnMvg5peA15L5SA2lSCtBLalAISY8O9KSD9yNNmOvekhtPOFYI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=seu.edu.cn; spf=pass smtp.mailfrom=seu.edu.cn; dkim=pass (1024-bit key) header.d=seu.edu.cn header.i=@seu.edu.cn header.b=jaLh/5kY; arc=none smtp.client-ip=45.254.49.198
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=seu.edu.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=seu.edu.cn
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="bzDOw+qK"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-	d=hansenpartnership.com; s=20151216; t=1767470155;
-	bh=TFW0RmhbZ0h4ZWCC5NuC0HE/UfE7fbfvqa2FrwJUeG4=;
-	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
-	b=bzDOw+qKJmF8uoIFHmPAKwEFZmF84vDH4m7vdfq+FxjAjWEALKDuvlZnQt2gJ+gG5
-	 SuXb0njqtLx+ARJ9ZdYpzObulbyMWNDAWiMzZUUCO0l9dL6F97j3PZQNL7ka/UKelP
-	 t/3Vo5ZsX5vUN0d60j4p5nW8fOmSIuqUgnFwJqYU=
-Received: from lingrow.int.hansenpartnership.com (unknown [IPv6:2601:5c4:4300:d341::a774])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by lamorak.hansenpartnership.com (Postfix) with ESMTPSA id 230A81C021A;
-	Sat, 03 Jan 2026 14:55:55 -0500 (EST)
-Message-ID: <389ac2dcc81b38367a26620cd193a45f2f06ce4f.camel@HansenPartnership.com>
-Subject: Re: [PATCH RESEND] scsi: ppa: Fix use-after-free caused by
- unfinished delayed work
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-To: duoming@zju.edu.cn
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	martin.petersen@oracle.com, stable@kernel.org
-Date: Sat, 03 Jan 2026 14:55:54 -0500
-In-Reply-To: <3a85ddef.523b2.19b81abea97.Coremail.duoming@zju.edu.cn>
-References: <20260101135532.19522-1-duoming@zju.edu.cn>
-	 <91a16901ab4cd35fa00011a472c025f55068a4c7.camel@HansenPartnership.com>
-	 <3a85ddef.523b2.19b81abea97.Coremail.duoming@zju.edu.cn>
-Autocrypt: addr=James.Bottomley@HansenPartnership.com;
- prefer-encrypt=mutual;
- keydata=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
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.50.3 
+	dkim=pass (1024-bit key) header.d=seu.edu.cn header.i=@seu.edu.cn header.b="jaLh/5kY"
+Received: from LAPTOP-N070L597.localdomain (unknown [58.241.16.34])
+	by smtp.qiye.163.com (Hmail) with ESMTP id 2f66d159a;
+	Sun, 4 Jan 2026 12:37:40 +0800 (GMT+08:00)
+From: Zilin Guan <zilin@seu.edu.cn>
+To: markus.elfring@web.de
+Cc: James.Bottomley@HansenPartnership.com,
+	jianhao.xu@seu.edu.cn,
+	justin.tee@broadcom.com,
+	linux-kernel@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	martin.petersen@oracle.com,
+	paul.ely@broadcom.com,
+	zilin@seu.edu.cn
+Subject: Re: [v3 0/3] scsi: lpfc: Fix multiple memory leaks in error paths
+Date: Sun,  4 Jan 2026 04:37:39 +0000
+Message-Id: <20260104043739.50700-1-zilin@seu.edu.cn>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <3d1aa2f6-37fb-48f3-936e-95c779a8e7ff@web.de>
+References: <3d1aa2f6-37fb-48f3-936e-95c779a8e7ff@web.de>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-HM-Tid: 0a9b874bf32903a1kunmcc4b27c42caad3
+X-HM-MType: 10
+X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
+	tZV1koWUFITzdXWS1ZQUlXWQ8JGhUIEh9ZQVkaSUpPVk9CT0NNGR4dTh5IT1YeHw5VEwETFhoSFy
+	QUDg9ZV1kYEgtZQVlOQ1VJT0pVSk1VSE9ZV1kWGg8SFR0UWUFZT0tIVUpLSUJNS0pVSktLVUtZBg
+	++
+DKIM-Signature: a=rsa-sha256;
+	b=jaLh/5kYMXdrrBJ0WUnZOMcsXrbgVz/9NGzVFhL/Bcjr75r/wB+7OwP++3U3iKlX1mOp2wMcg/2Uh0Ckzj1LzAEY6mfn2Jxond6J/ipLnvNGfSY6FiVwHh1kWoGrMh//A+CINIuASK6N6rBrvxv6aPhbcJJSTT+N2k33VT6C9M4=; s=default; c=relaxed/relaxed; d=seu.edu.cn; v=1;
+	bh=P39iIpwBpfgP5dp0WRJCdzTe3dvhW3yG7O+Cx7juK5s=;
+	h=date:mime-version:subject:message-id:from;
 
-On Sat, 2026-01-03 at 10:24 +0800, duoming@zju.edu.cn wrote:
-> On Thu, 01 Jan 2026 10:21:28 -0500, James Bottomley wrote:
-> > > diff --git a/drivers/scsi/ppa.c b/drivers/scsi/ppa.c
-> > > index ea682f3044b..8da2a78ebac 100644
-> > > --- a/drivers/scsi/ppa.c
-> > > +++ b/drivers/scsi/ppa.c
-> > > @@ -1136,6 +1136,7 @@ static void ppa_detach(struct parport *pb)
-> > > =C2=A0	ppa_struct *dev;
-> > > =C2=A0	list_for_each_entry(dev, &ppa_hosts, list) {
-> > > =C2=A0		if (dev->dev->port =3D=3D pb) {
-> > > +			disable_delayed_work_sync(&dev->ppa_tq);
-> > > =C2=A0			list_del_init(&dev->list);
-> > > =C2=A0			scsi_remove_host(dev->host);
-> > > =C2=A0			scsi_host_put(dev->host);
-> >=20
-> > This fix looks bogus: if there's an active workqueue on ppa it's
-> > because there's an outstanding command and it's emulating polling.=C2=
-=A0
-> > If you stop the polling by disabling the workqueue, the command
-> > will never return and the host will never get freed, so this will
-> > leak resources, won't it?
->=20
-> I believe that disabling the ppa_tq delayed work will not affect the
-> Scsi_Host release process. The lifetime of the Scsi_Host is managed
-> by tagset_refcnt. The tagset_refcnt is initialized to 1 in
-> scsi_add_host_with_dma() and decreased to 0 in scsi_remove_host().
-> since the delayed work callback ppa_interrupt() does not modify
-> tagset_refcnt in any way, the host could be freed as expected.
+On Sat, Jan 03, 2026 at 04:54:39PM +0100, Markus Elfring wrote:
+> Do the researcher guidelines indicate a need to point research activities out
+> in more explicit ways?
 
-Not if something else holds a reference to the host, which an
-outstanding command does.  That's the point I was making above: as long
-as the command doesn't return, everything is pinned and never gets
-freed (well, possibly until timeout).  You cause that because the work
-queue is only active if a command is outstanding, so when you disable
-the queue in that situation the command remains outstanding and can
-never complete normally.
+No, as our research does not constitute "active research on developer 
+behavior", but rather consists of "good faith contributions". It is 
+governed by and conducted in full compliance with both the Linux Kernel's 
+Researcher Guidelines and the relevant security conference guidelines for 
+vulnerability disclosure (e.g., IEEE S&P: https://sp2026.ieee-security.org/cfpapers.html).
 
-> > Also the race condition you identify is one of many tied to an
-> > incorrect ppa_struct lifetime: it should never be free'd before the
-> > host itself is gone because a live host may do a callback which
-> > will get the ppa_struct from hostdata, so if the host is still
-> > alive for any reason when ppa_detach() is called, we'll get the
-> > same problem.
->=20
-> The ppa_struct is properly freed only after ensuring the complete
-> removal of the associated Scsi_Host in ppa_detach(). The detailed
-> sequence is as follows:
->=20
-> ...
-> =C2=A0 =C2=A0scsi_remove_host(dev->host);
-> =C2=A0 =C2=A0scsi_host_put(dev->host); //the host is gone
-
-The host is not gone if that put is not the final one as it won't be if
-there's an outstanding command pinning the device.
+I appreciate your engagement, but we must stay on point. Your frequent 
+questions unrelated to the technical content of many my patches are 
+causing distractions and creating noise in the discussion. Therefore, 
+I will no longer respond to off-topic inquiries in this public channel.
 
 Regards,
-
-James
-
+Zilin Guan
