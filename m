@@ -1,131 +1,117 @@
-Received: from mail-wr1-f67.google.com (mail-wr1-f67.google.com [209.85.221.67])
+Received: from mail-wm1-f67.google.com (mail-wm1-f67.google.com [209.85.128.67])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BCA0718DB1E
-	for <linux-scsi@vger.kernel.org>; Mon,  5 Jan 2026 09:52:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.67
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2557A283FF5
+	for <linux-scsi@vger.kernel.org>; Mon,  5 Jan 2026 09:53:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.67
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767606725; cv=none; b=tr1eqTbE/iKx0iZvCe9dE96CIM3VZJrnUkqXKJfdsCeqjdW2/N5PTU9iuhs35NpxeN6XSONUQo55b6BcavMZ7mVaqLCiwceeFUqLO1jt+PWlfCa4OvXMNCVLeVleWl/Q0UDFjLOe0DSe4VMFLTtVuT/1tf2FmbB/KYcw0f2bZrQ=
+	t=1767606827; cv=none; b=Tp/CuvndZVjHSrN5s/zIp5XcspYotu6/WGwmCCFYjMw1EnIVl4Lk1X1E6D5NzZvjfWWjiaHZQAlXCgyZ+o+GSKV4JwCZg3/JjeyHRKg7SmJXXBgyuufvKxUYOQWQUpJ3gmRV4pakPR/rQcFH69D0aWzUBkc7bVymx4cj1xrYrZs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767606725; c=relaxed/simple;
-	bh=5ejwvdViHGpZahmzeANBNrpoCx269JspGOeia0IssR8=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Fqe3G4rlfwOWccAJn/nSEP1A7opR67hTbV9q9nLiIbV1neMFVQAjh8cXN7mEsQiXSLaQap+h0kQKdLKsSzw8YLqBSo5CJmj/IvARtSK1czUcq66rf1FzvmFFy+AUUV+4mUFjtDX5OqtRohaSs5wMwdVGx1Z10uGNmcb5qoPwwY4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=U6x72nMH; arc=none smtp.client-ip=209.85.221.67
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+	s=arc-20240116; t=1767606827; c=relaxed/simple;
+	bh=JYCjSlwgfps6QXKtpDHggwUF1W61UlyY/X3NFqWnja4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=VWBQ4Eu1swpnA9YiKPdXN/EjtADK36ekF1rea8PztUuWE7HHNTHhmN4McWb5beliTi6ynZ7xcU4oVBSBTQ45hdKQRhcjwPD/SpMd5h7mZSmOGznV70E3a7D4i82yfL+7HW5Pu0BVD5F3S1FKbgElydKGVHMRVpbU3Kt4AZFEQTY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=dZAcJ0Xi; arc=none smtp.client-ip=209.85.128.67
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="U6x72nMH"
-Received: by mail-wr1-f67.google.com with SMTP id ffacd0b85a97d-430f6ab1f67so693119f8f.0
-        for <linux-scsi@vger.kernel.org>; Mon, 05 Jan 2026 01:52:02 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="dZAcJ0Xi"
+Received: by mail-wm1-f67.google.com with SMTP id 5b1f17b1804b1-477bf34f5f5so103536505e9.0
+        for <linux-scsi@vger.kernel.org>; Mon, 05 Jan 2026 01:53:45 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1767606721; x=1768211521; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:subject:cc:to:from:date:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=txMxKLJCIQFzStXgaX6zCY9uCsyn60vWSct+HXcfqZM=;
-        b=U6x72nMHxpmbQRXs1gnsE0GzwU9BM8OMC8fDOUEuszh/7vfjE3AvoxufBx+ZjziY55
-         j9XpiczMVZ2WuGt6gdThIsTQXQ4wJFmMRUuoK1Cd3WyYjsJK/oC6+Z3J4LosaJDZw9L0
-         WK7R9vTUx8GashsEauSiZc27QN3PZPeKtbTjQTejebn2GdPST/MM2eS8CEtjk/VZ0BJe
-         lAC5Q5bGVIZQ8YyAXXcu/d9ChWPDfUSWxCRTGDfGpmkRA9eYFooxD/yM76hPB3pEAzjQ
-         JbSrEg6nhtP08npXldyRH8jEiJwwljOBkglCGAZ+2ihUdiCfnkYpre6UjJl+XUsvU/us
-         a0jQ==
+        d=linaro.org; s=google; t=1767606824; x=1768211624; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=CpKgGSJ+75221h6VW5t4CNe4ZqtY9MVAIQyQca2c7b0=;
+        b=dZAcJ0XijEWhAhHRBc+ptrpKijEbUiG8pQuLzZM0bzQI08MtcWbdx2Q9M0yOf+W/8G
+         0CnQ0bmCsQc1jUjoelEMvIYUzHFatEgZvhM5HqlYDaWNk6mg+E7k2wlPK0S+TL/SPNVf
+         Tj7x/0kUqXbdl6WgO3n1px8Dg9PeJWdXb1f0PyqaF5ROhn1NJeQabB9f/eZnTi15ZHET
+         Y4BP4VnEr/9j3jFZUNdnCFeg2mqs3ifRja8pY8ba3IQXlCLYjtW8oQcJflSuJgzmwMCw
+         owR9N33hZI4f2FjFIsWtYmbw5nqkTrBq2g9KPsYc7G2KkqF1pka4wsmEhopXc0++eLBW
+         T2dA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1767606721; x=1768211521;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=txMxKLJCIQFzStXgaX6zCY9uCsyn60vWSct+HXcfqZM=;
-        b=V592O2GLDpU1kcxz4Jfm4mSmK6pJalNHDlyKZ6Ap8lBsl2iFqbyNZRaHr+vVgA5J9W
-         n6o5hewUhUs3PKA8eaTiJoOy3a/qxzZG45BAj3J5adHY+wxrMOlOVWlugiyFKaWYy1vX
-         cAezheTIeI4VmgBEdfqSBcf/n2JWFdJQPMSOmQf+MelpJ7fCwJHh2DGPjqarTo9czhBj
-         N8DYbYbFFC/q1rxv9h6Antwo2UDTumh2yPSchQT2gEUizGKJiWLHYff4noM+Vcp/kZPi
-         atfXJBDHPXclgZifGk3SlafSnRgbaIwO1RIOI0cnMXfeagJmf/J6YH5gcGPOFwKNQa+5
-         63fQ==
-X-Forwarded-Encrypted: i=1; AJvYcCViBBskL8Rxkw9nXJ8GVg73u8wc9Lyqe8nTrUKu1qoXeZe/MIqIZGXjWWk4DydXwsNAyuQoQoILA08Y@vger.kernel.org
-X-Gm-Message-State: AOJu0YwdDAupzrqFxVhDQ8Yvek/s+6DTWqgtoWlfG5hjKl54X0dpBRba
-	gWs2unxMyvOGvb03Sh0LCU53ROSJvtsnwZAteEZXB1H2qBgKall0geSNkWuC2Phhyao=
-X-Gm-Gg: AY/fxX51PuTlZFo3h4M0pwwVAu0O0/IzkCLSNfDNX/teS74p6mz8fWJRMcOiBjX8YOo
-	uYzxeRkorMKz8gaB/LkEmSRKgWAV7alkYwnl62gyRoTLYtTa7O1a4k6Ih9OIxwHGBzllx2FOxNd
-	jtvWbP8DL6aTT8iIU+Kd2XQYhfwwhZH+0zr6Rk3fo+7AwOufaYFDl7otxSks/fxOB68ZG98ldeG
-	Sw+YkyvPNLJn6sm3SNe/0zptjmqKyG0UaGQKIgIyIozxMsOUyhC+wVIUs+3AnYZXOoPcwdAC35k
-	xxqTGHVdNWPPjlzDppzfVVVUNq5MLvRMNKL+x4COaKZsAlUJ982Bl0nTzV4KgFtznBsVFf/zjBA
-	MJ3a8tlUlRkI/JbnSYSg8eeWKuO1NtNbnb0rd4Ke7phTTze6Epk/4CoJhjza1jzxEdkrXyC5BKL
-	xbnqdKT6AfIFUkfMxNJ/frNgOF2WYa92sMy7oi70Da1+9T/wBjHzKVmThcxcwDsQH/p10OatUij
-	HvY
-X-Google-Smtp-Source: AGHT+IG/wqgOkqwXrB1rsCOv37yZ5+KfBZKuhJz5pDuTeJ4oXS1iaQsQoWFexgrkxGoC7pycuuDd5g==
-X-Received: by 2002:a05:6000:2305:b0:429:cf2b:cb0a with SMTP id ffacd0b85a97d-4324e4bf220mr35541794f8f.2.1767606721058;
-        Mon, 05 Jan 2026 01:52:01 -0800 (PST)
-Received: from mordecai (dynamic-2a00-1028-83b8-1e7a-3010-3bd6-8521-caf1.ipv6.o2.cz. [2a00:1028:83b8:1e7a:3010:3bd6:8521:caf1])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-4327778e27bsm66263511f8f.12.2026.01.05.01.51.59
+        d=1e100.net; s=20230601; t=1767606824; x=1768211624;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=CpKgGSJ+75221h6VW5t4CNe4ZqtY9MVAIQyQca2c7b0=;
+        b=bsH2x2ugomMAcYaNYPIElU5MXh5SasoquoEOcjKR6BMhEQKblO2JnpRvbDiHQCwBAL
+         UJL4lxaR5B42NHZlRE6hRbQ/LiJJGid+BgYufmVfXPXskSi9PctlHHgaw+QlqgWRtenh
+         Z7oqTniLhN1cGfuV33ZVDmRfwOdYXVAsteE0UH1hneoy6TTbPfLf58maQ05MsW1nhDHD
+         v1hdzt00VQqadYjUZPMdsEPVerWHsDQr64hK7cifXdfKvuHkXxAPtWbWX+UGlQ2UI1Kr
+         DxEQobCe9a+pWTAq1Lq0m3Ht2lXH7KqlBkFo3Qak/FW6N97RasP0Vr3UDbHqjo2E4xi1
+         wdrw==
+X-Forwarded-Encrypted: i=1; AJvYcCXw0GWe5AR+GB9boEW3a9cJfYpKFnBtrOcBLUIoTqYEOS4rs9KU7JBVUoB3nhFJKXbKxrgu3uKxGdyK@vger.kernel.org
+X-Gm-Message-State: AOJu0YzwMKPgDRt1BGJZDcRSlzfu2Crp6Ha48RZSGM4a4F/VER7JrupZ
+	rB+tcdil41NZ5tBCAkb/0LrSO+8CGZhx7w/17duzTTHbHC/LN6xDGd7+tqly/kqLQQA=
+X-Gm-Gg: AY/fxX48MTXe4DWCNSi3IrjymvumgfU0JpbAPh96E9AkaYyMyClOW9UOxVFE1XOsl16
+	HbNd1JicrC2tJAKtMEV6Z1ecXVzokW9y269eH6s2NSyPEMM/u/CA7OeVlRaQiSe6H9OSxT2SFHi
+	rJ8C6qQXJou5xo4NcMPl/B5a9qrbFZyvq9ETJmgya7A/5RccEcD8yFnU3pzszyTh5bx4iv6fmxV
+	RhjMbZP2uW3Nk+SgqqDDs8YlYhW8i/Dr667JohcgWXAN3dJ3sp3G6eOjbFlB9g2tktHIdRgUM8r
+	z/A6iL/cl1jmrWmsvewYsMz4GkX5MhbAtHK8Yhc6JoESxnjV6pLf+uPzXK/uTxJpdjKP3nb8Hpf
+	BIgvoE5rsn3Fga4dS6hmrIp/Nmt6XfxNuiJ7I+8u8MyjGki2Pdq0Vtx4R0egkxx8yWbfy3zplRT
+	YK3wlCY/IcaBhLGbMz
+X-Google-Smtp-Source: AGHT+IHXrwODx43asw4XDeLwpdA69n/5YpE0Rwx18F/hMfT02cBwBEbmvIVlCR9Igb4Sdc+Zx1GaSw==
+X-Received: by 2002:a05:600c:3555:b0:47d:649b:5c48 with SMTP id 5b1f17b1804b1-47d649b5d5bmr189572735e9.36.1767606824441;
+        Mon, 05 Jan 2026 01:53:44 -0800 (PST)
+Received: from localhost ([196.207.164.177])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-47d6be5a555sm56806025e9.4.2026.01.05.01.53.43
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 05 Jan 2026 01:52:00 -0800 (PST)
-Date: Mon, 5 Jan 2026 10:51:58 +0100
-From: Petr Tesarik <ptesarik@suse.com>
-To: "Michael S. Tsirkin" <mst@redhat.com>
-Cc: linux-kernel@vger.kernel.org, Cong Wang <xiyou.wangcong@gmail.com>,
- Jonathan Corbet <corbet@lwn.net>, Olivia Mackall <olivia@selenic.com>,
- Herbert Xu <herbert@gondor.apana.org.au>, Jason Wang <jasowang@redhat.com>,
- Paolo Bonzini <pbonzini@redhat.com>, Stefan Hajnoczi <stefanha@redhat.com>,
- Eugenio =?UTF-8?B?UMOpcmV6?= <eperezma@redhat.com>, "James E.J. Bottomley"
- <James.Bottomley@hansenpartnership.com>, "Martin K. Petersen"
- <martin.petersen@oracle.com>, Gerd Hoffmann <kraxel@redhat.com>, Xuan Zhuo
- <xuanzhuo@linux.alibaba.com>, Marek Szyprowski <m.szyprowski@samsung.com>,
- Robin Murphy <robin.murphy@arm.com>, Stefano Garzarella
- <sgarzare@redhat.com>, "David S. Miller" <davem@davemloft.net>, Eric
- Dumazet <edumazet@google.com>, Jakub Kicinski <kuba@kernel.org>, Paolo
- Abeni <pabeni@redhat.com>, Simon Horman <horms@kernel.org>, Leon Romanovsky
- <leon@kernel.org>, Jason Gunthorpe <jgg@ziepe.ca>, Bartosz Golaszewski
- <brgl@kernel.org>, linux-doc@vger.kernel.org, linux-crypto@vger.kernel.org,
- virtualization@lists.linux.dev, linux-scsi@vger.kernel.org,
- iommu@lists.linux.dev, kvm@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [PATCH v2 04/15] docs: dma-api: document
- DMA_ATTR_CPU_CACHE_CLEAN
-Message-ID: <20260105105158.248b4dd2@mordecai>
-In-Reply-To: <0720b4be31c1b7a38edca67fd0c97983d2a56936.1767601130.git.mst@redhat.com>
-References: <cover.1767601130.git.mst@redhat.com>
-	<0720b4be31c1b7a38edca67fd0c97983d2a56936.1767601130.git.mst@redhat.com>
-X-Mailer: Claws Mail 4.3.1 (GTK 3.24.51; x86_64-suse-linux-gnu)
+        Mon, 05 Jan 2026 01:53:44 -0800 (PST)
+Date: Mon, 5 Jan 2026 12:53:40 +0300
+From: Dan Carpenter <dan.carpenter@linaro.org>
+To: Zilin Guan <zilin@seu.edu.cn>
+Cc: markus.elfring@web.de, James.Bottomley@hansenpartnership.com,
+	jianhao.xu@seu.edu.cn, justin.tee@broadcom.com,
+	kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
+	paul.ely@broadcom.com
+Subject: Re: [PATCH 1/3] scsi: lpfc: Fix memory leak in
+ lpfc_config_port_post()
+Message-ID: <aVuKJPNjNyt3_yEV@stanley.mountain>
+References: <149a576a-6a21-48c6-b121-b20c6173f7cb@web.de>
+ <20251230062008.1021449-1-zilin@seu.edu.cn>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20251230062008.1021449-1-zilin@seu.edu.cn>
 
-On Mon, 5 Jan 2026 03:23:05 -0500
-"Michael S. Tsirkin" <mst@redhat.com> wrote:
-
-> Document DMA_ATTR_CPU_CACHE_CLEAN as implemented in the
-> previous patch.
+On Tue, Dec 30, 2025 at 06:20:08AM +0000, Zilin Guan wrote:
+> On Mon, Dec 29, 2025 at 10:09:04AM +0100, Markus Elfring wrote:
+> > …
+> > > Fix this by adding mempool_free() in the error path.
+> > 
+> > Please avoid duplicate source code here.
+> > https://elixir.bootlin.com/linux/v6.19-rc2/source/drivers/scsi/lpfc/lpfc_init.c#L563-L564
 > 
-> Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
-
-LGTM. I'm not formally a reviewer, but FWIW:
-
-Reviewed-by: Petr Tesarik <ptesarik@suse.com>
-
-> ---
->  Documentation/core-api/dma-attributes.rst | 9 +++++++++
->  1 file changed, 9 insertions(+)
+> Thanks for pointing this out. I will use a goto label to unify the error 
+> handling logic and avoid code duplication in v2.
 > 
-> diff --git a/Documentation/core-api/dma-attributes.rst b/Documentation/core-api/dma-attributes.rst
-> index 0bdc2be65e57..1d7bfad73b1c 100644
-> --- a/Documentation/core-api/dma-attributes.rst
-> +++ b/Documentation/core-api/dma-attributes.rst
-> @@ -148,3 +148,12 @@ DMA_ATTR_MMIO is appropriate.
->  For architectures that require cache flushing for DMA coherence
->  DMA_ATTR_MMIO will not perform any cache flushing. The address
->  provided must never be mapped cacheable into the CPU.
-> +
-> +DMA_ATTR_CPU_CACHE_CLEAN
-> +------------------------
-> +
-> +This attribute indicates the CPU will not dirty any cacheline overlapping this
-> +DMA_FROM_DEVICE/DMA_BIDIRECTIONAL buffer while it is mapped. This allows
-> +multiple small buffers to safely share a cacheline without risk of data
-> +corruption, suppressing DMA debug warnings about overlapping mappings.
-> +All mappings sharing a cacheline should have this attribute.
+> > See also:
+> > https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/Documentation/process/submitting-patches.rst?h=v6.19-rc3#n262
+> > 
+> > Regards,
+> > Markus
+> 
+> Regarding the stable kernel rules, do you consider this bug severe enough 
+> to warrant a Cc: stable tag? Since this error path is unlikely to be 
+> triggered during normal operation and the leak is small, I didn't think 
+> it was critical enough to bother the stable maintainers.
+
+I don't agree with either of Markus's review comments.  People have
+asked him to stop reviewing code or at least to stick to pointing out
+bugs or complaining about style and grammar issues but he doesn't
+listen.
+
+https://lore.kernel.org/all/2025121108-armless-earthling-7a6f@gregkh/
+
+regards,
+dan carpenter
 
