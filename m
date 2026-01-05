@@ -1,222 +1,157 @@
-Received: from mail-wm1-f49.google.com (mail-wm1-f49.google.com [209.85.128.49])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 86917341058
-	for <linux-scsi@vger.kernel.org>; Mon,  5 Jan 2026 13:40:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.49
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EEF612C11E2
+	for <linux-scsi@vger.kernel.org>; Mon,  5 Jan 2026 14:46:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767620439; cv=none; b=YqHbziXpDDagfLtgDSSQvALbcGmIh9Ic1L5zvTryJ5L6XJBMJQ2cFqV3ciM00Kw1qeUyibnolB1v4yYy1Mfp5nQuUkcOD0Bvlk4WOQjGxN4Egsngqs5FfTEe+bz7YklteyKvayDJ3YYzs87+srtpDbepANeRP0UkQslA5eeweVU=
+	t=1767624423; cv=none; b=s2yVJKpaulyWVZnyx+L1lmm3YdZrZXIWwhcEcuVv54W8sO2ROeoMZbcy0yVg9jYuK+PbUM9J6Nh/PNUsH+erqOpqIlOm4uxDfjeg5gRI3jeVavuIgcBtoz1IP2pdbrVlcclBUshdc5FWQww9PJEltP8sfvBSyK6tyUP/xUTRJPM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767620439; c=relaxed/simple;
-	bh=x4FbGO9rb3oDBd7srLGxGoyKvyyHdSRpv19OZNd+OHs=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=XWBlQ0xYP3UJ5QY8dMxkUjrGzHsdbmWR0NnRlMkKhU6QMzV+r5a4Tyg1NUiFCMh2xHmGd1LsMOKD6UJYPWIYRaIc8BYtFeQNd2TE3dq1jcaJTlCUWyxKBWOxuZ3Tg2FhBS3y8rUnYwhLhO7DKDW5AuCGK2qDex3oVjix8/L6VuU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=evTaGoQ9; arc=none smtp.client-ip=209.85.128.49
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+	s=arc-20240116; t=1767624423; c=relaxed/simple;
+	bh=Iksxeh+iZKWuqoMSccyLFBjsocyLuKyvC0sw416qK8A=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=uFuAbeaJS+bMEUgS/bZr8RyylUjIZuz7l2JkpKEIyG2YNbWHC29xIEx6q4s1KSIRLoa1HjuqGT2R042knJINQT4jeeuM+7mKMu56WLeYN6itAfPtdfDRpH7lgFXceEFo3vuiW6hVO6kJ9MykVDJgBuRhc2g/GzKcole5h9DuNmE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=B0wUgMuS; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=ito26Krw; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="evTaGoQ9"
-Received: by mail-wm1-f49.google.com with SMTP id 5b1f17b1804b1-4779d8286d8so10634715e9.0
-        for <linux-scsi@vger.kernel.org>; Mon, 05 Jan 2026 05:40:36 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="B0wUgMuS";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="ito26Krw"
+Received: from pps.filterd (m0279865.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6058L3Ap3652262
+	for <linux-scsi@vger.kernel.org>; Mon, 5 Jan 2026 14:46:59 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:date:from:message-id:mime-version
+	:subject:to; s=qcppdkim1; bh=PZ93jr1D4zRH7N9PpSQt+IsQHrrWM2+KK0h
+	qm7sbJpE=; b=B0wUgMuSvwjHM4Cg9T+rd5/SchNztsFXn7K0XNDmJo9pCZXxbmQ
+	tv6vxpH6Mmq2GswfpfLSacUbWBJsV6jWoFE2+oVei6AkmndVsTd0zqHoz7bTjqXZ
+	tqOx1cT58b/ev/NDwHIN+9s0sL5Ns2NBCimNfl6LXFDMPYPSS802I4kaAcLcwjZB
+	6Lh8yUWgcIi6EC3jNcZ2w0yQh0oK2yDYCsomAYqlrY4UkE4tVVUQsWjRkkClpu6M
+	Fis7pXtIkRwGG2xK/Hio0Y52OYVczlhMY/1p9GaKrxHPzbTg+/xNFzNPISUPbf2W
+	bdDbY+GwxZJPYpO3NvNqRxP41tg2ftuEEOg==
+Received: from mail-pj1-f71.google.com (mail-pj1-f71.google.com [209.85.216.71])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4bet2qvyu8-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Mon, 05 Jan 2026 14:46:58 +0000 (GMT)
+Received: by mail-pj1-f71.google.com with SMTP id 98e67ed59e1d1-34ea5074935so41435a91.0
+        for <linux-scsi@vger.kernel.org>; Mon, 05 Jan 2026 06:46:58 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1767620435; x=1768225235; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:subject:cc:to:from:date:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=f1KqtsDg02Q4tg0OrM0LKqtAMxJWRmTEsyj+AQ7lEeQ=;
-        b=evTaGoQ9l965cOyOTnh5VeYas0tCw9526mqa7n8ccT6uk26o1WsIjbUtdKQbDGbx4d
-         G2GkqZOAzx3cG8kDJBRARj1WHAcZp8JBG6V2+xoKtykO4SQSvnFxlQdkrRGYiPmjojNe
-         IdwH0iXrrYMhGOenSzOtBl69bfNzL4tIb/SQ1uszrJUVD4UZBKvBq7VjOkxVT86eauBU
-         fu3Rs0ay8tUh2p57vfgbGKbnK/vsXvASvojK4Kd7UM7Z3+BcDXgn5VILNDkNGCnCHFYk
-         jsL3Dpvs/yOtHsxPsOy2suz8e6pLKLJm8DEMC/vfNW05+rfyc9ywYYRerKXn/pw9sK+K
-         8gjw==
+        d=oss.qualcomm.com; s=google; t=1767624418; x=1768229218; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=PZ93jr1D4zRH7N9PpSQt+IsQHrrWM2+KK0hqm7sbJpE=;
+        b=ito26Krw/sHKBYiHy4YneQKREncDbyetIrIDMWvQUarSWp4akZTHfS7ysyC4t7cL3k
+         KslehBznPRjvuqWBJoatGwfWzUtAmth3PaD3eY/3ohNIvjOwOnWn/r819qxDSlplMXJg
+         dIPKrNJ5u0D4JQRp3ALneWkyyY3rB1LfH7UwjXlwUZC4HofO1HF9TQvg1Md/IEnd4Yff
+         XBItjqK8eNl5cMw/+zT6SKDvFdAZKOd4uxXjirFFAJvXdicBt5YGdSRz/T0rud1HXdd2
+         FJw9xs6uiAtvG/b5uvfcWni0ayjRgQtJ+w4qrV96zh6ardyGo8c+HLkt7c5wms8ycuVn
+         MrpA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1767620435; x=1768225235;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=f1KqtsDg02Q4tg0OrM0LKqtAMxJWRmTEsyj+AQ7lEeQ=;
-        b=MFHH5lw1PrSe0R2wy69zWeA59MfxPrqf/Vy3np8gpB2gMwTFSM6KWkzfSfC6igypfE
-         priRWIqje9HMtseX22L9qhbLHF6s8uSqKxcnBgCpoZHnxtUI7W3FKP2/598o2q4trAmg
-         qDgfR6IhXJCry3pH9xwH0188hC6bvFoZmG/atjkxtCsjo1t0nK/cyH1bUd68kPYIbCAQ
-         qt/+TVfvm3Le3PzczZs9ir531+3AlBWtS2EFdZNVd9itYIU38hur+YASW2hnGRKjVfhy
-         OncAoACA9kbArz5DzNrqzC3k5vYZhQMaB0FBgkb1tQHAFP5+3JMkxsY+OtFikFTxGGsz
-         HMeA==
-X-Forwarded-Encrypted: i=1; AJvYcCVaoQTim2Y3bzqJplMtF4WMOtM7k8HlytJC9BPfXDndjYnYjPBJO/aZxdaijiGzbdfwLsdCzmx/45DB@vger.kernel.org
-X-Gm-Message-State: AOJu0YyE8HAJrULvvEehDD0oQ/hkOW7Vxwk8YnKZfTHskS1yIkYq9fuV
-	qmJ6L2A6PP1Nj9FXPB5NjT94POmOn8KlB5E/bfuO+q7rAbde1T0QrYW4HZet4PEh+mk=
-X-Gm-Gg: AY/fxX4kpzKhuyroHTKWfGAJEqNDUKW3N8B00cFgQV9euGa4C70xpzeM4ncXFMrTGYg
-	hTKizZ0Uiidxz0VZ4QR8dJ9/rGVOUv/39ol9HiuVbzbF2Pml4wfnG4kX83u82z7VrCNR3CDFRGI
-	ejyMSZq/ZoPJL/S52jilntXWj3nQ1DyHrUECrRe1LGN4jIXd/jzPEuFFheZhXkznXKTLU4Q8ssz
-	RDVCwVTZX+Cbi91m/c/Fm0yeHst4vu74gvq9KgpKGrlTCeQo511sc8ngN1LusLl3EOhdGRA/1DS
-	I+n6prTxuvQDBvHP84pWwOcL5S54fRMaABT23QpCtHioRfi4fOnb9Z6QWaUcTkt7ituixLYUHsl
-	jscsfWCrM8LOEv1bgpFHX0tfjt9q5ZKAb1BePNOUNmRBgNJ/ob8MkwyqcOHJPK7FYGZ4j46GjxV
-	cLDEYBxEvI00K5wJFW19zqtkOfYflejRLFb4ztZQO0GifM6yER8HYaTiuT/8gt/WEDED8uARmP4
-	oW3
-X-Google-Smtp-Source: AGHT+IFwXSkFSnAzDpXmvBfpaag5Ig2x/hY7lR/fPaiKG8l/aTMnGjVbJNKYUdmZgkyBxJqwrNsd/A==
-X-Received: by 2002:a05:600c:4ed2:b0:477:9c9e:ec7e with SMTP id 5b1f17b1804b1-47d19597517mr371677315e9.6.1767620434763;
-        Mon, 05 Jan 2026 05:40:34 -0800 (PST)
-Received: from mordecai (dynamic-2a00-1028-83b8-1e7a-3010-3bd6-8521-caf1.ipv6.o2.cz. [2a00:1028:83b8:1e7a:3010:3bd6:8521:caf1])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-47d6be2ce32sm61878015e9.2.2026.01.05.05.40.33
+        d=1e100.net; s=20230601; t=1767624418; x=1768229218;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=PZ93jr1D4zRH7N9PpSQt+IsQHrrWM2+KK0hqm7sbJpE=;
+        b=CCWxfqt9f4ies/SFRld2tU9CdtGoctDKKpSfGoLDnbZMKNPVkaVHHWdllsbowAEB8R
+         2AqgwGNmx9tdvCfj2iaBx03Cu6OILcmIWTbEBzDoRkwGd6QMFXeCJ+BW7c70Ayz6EycY
+         RDQHFhFRraH17Itl0TKzRPSHEwkEMwAVFnBREJ0YV/SHbPCRGKuCWXtiRHIWBdFEIP8S
+         BTI31GteXtrM2cjOacsbU4lzeOj6FElPMhl9Vu/AxKAAAO7S43G8bc6hRoOErcjzSTOy
+         7v6WwEHaiBpiHwoWNUa+k4c1hUIr50ebkOiJjMES7z6lDZU9gNyiWYE8+GcFjk4M1rUP
+         UdKw==
+X-Forwarded-Encrypted: i=1; AJvYcCUhnNUBVKGidG1E3isoQ3UAZDSp3feKq7dq39OJuYCYXG6oMH1udpPqQ8TTdNuHjIqRhMv90lrmkrfB@vger.kernel.org
+X-Gm-Message-State: AOJu0YyqxR+UprxNm5iaZate0VuEqUekuujSzrhuqqRWH8rC9lroxjVg
+	6gTBh40Bicb7CRURma+X7JKVRgo83J2SKchjmaQZWcQuOaUyFNq2hk/COR+bp9Bsjjwd825zYmG
+	RWHbNo94BIEADnjXGC8Q3o8h8JMgsPPU+d1RX/AFxKcZQY+Hfna3q9eDBY2yuF/3n
+X-Gm-Gg: AY/fxX4SVNCgYphl+zX8/aH7HUiXgokyNMPwbRepnwOZcnCN2q7m1ervdyyfjYPFkG0
+	6FDbnLu0ZJOwb3aOYLFWlboeWh4EAW0QYw/uxUHrIcidGlQJbXhWFtrr4jHwBrsx2RH6+zqSPgq
+	uxf8Dd0eKopx83Svk32guwN+R5S1NAUh9bEKGkhI5Rk1X1pisqiNl1Bt113n8R+2f2lcSKneyTE
+	mcjQ399n9FVgXf3qt5skSP7fm6IGqBP+EPiQ6IbrJVIVBaRzkZ77BMFVVIRf6aIu4SmqPbDgZzM
+	/7BWlwPA0HWgBIJKQYJd3RjHOeOWRQL4sf19NM85V3HgP+YU/Z5ONrG2wDMv2ZAhe8dP501EQ37
+	BVshhNwOjNVqvvO0a30mHFKM3TXbWAVtEn8Qho22EXAHhw4f1ji/I
+X-Received: by 2002:a17:90b:580e:b0:34e:5516:6655 with SMTP id 98e67ed59e1d1-34e92143ca1mr39102505a91.9.1767624418163;
+        Mon, 05 Jan 2026 06:46:58 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IEtgxrBJy+KlEiCPbQnnuwqMX4vv2QGV7RNNjtLOl6mRIRz3nWiVPztFg2wB2/6dl+kJEARIw==
+X-Received: by 2002:a17:90b:580e:b0:34e:5516:6655 with SMTP id 98e67ed59e1d1-34e92143ca1mr39102485a91.9.1767624417667;
+        Mon, 05 Jan 2026 06:46:57 -0800 (PST)
+Received: from hu-pragalla-hyd.qualcomm.com ([202.46.23.25])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-34f476ec311sm6634868a91.4.2026.01.05.06.46.51
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 05 Jan 2026 05:40:34 -0800 (PST)
-Date: Mon, 5 Jan 2026 14:40:31 +0100
-From: Petr Tesarik <ptesarik@suse.com>
-To: "Michael S. Tsirkin" <mst@redhat.com>
-Cc: linux-kernel@vger.kernel.org, Cong Wang <xiyou.wangcong@gmail.com>,
- Jonathan Corbet <corbet@lwn.net>, Olivia Mackall <olivia@selenic.com>,
- Herbert Xu <herbert@gondor.apana.org.au>, Jason Wang <jasowang@redhat.com>,
- Paolo Bonzini <pbonzini@redhat.com>, Stefan Hajnoczi <stefanha@redhat.com>,
- Eugenio =?UTF-8?B?UMOpcmV6?= <eperezma@redhat.com>, "James E.J. Bottomley"
- <James.Bottomley@hansenpartnership.com>, "Martin K. Petersen"
- <martin.petersen@oracle.com>, Gerd Hoffmann <kraxel@redhat.com>, Xuan Zhuo
- <xuanzhuo@linux.alibaba.com>, Marek Szyprowski <m.szyprowski@samsung.com>,
- Robin Murphy <robin.murphy@arm.com>, Stefano Garzarella
- <sgarzare@redhat.com>, "David S. Miller" <davem@davemloft.net>, Eric
- Dumazet <edumazet@google.com>, Jakub Kicinski <kuba@kernel.org>, Paolo
- Abeni <pabeni@redhat.com>, Simon Horman <horms@kernel.org>, Leon Romanovsky
- <leon@kernel.org>, Jason Gunthorpe <jgg@ziepe.ca>, Bartosz Golaszewski
- <brgl@kernel.org>, linux-doc@vger.kernel.org, linux-crypto@vger.kernel.org,
- virtualization@lists.linux.dev, linux-scsi@vger.kernel.org,
- iommu@lists.linux.dev, kvm@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [PATCH v2 05/15] dma-debug: track cache clean flag in entries
-Message-ID: <20260105144031.2520c81b@mordecai>
-In-Reply-To: <20260105073621-mutt-send-email-mst@kernel.org>
-References: <cover.1767601130.git.mst@redhat.com>
-	<0ffb3513d18614539c108b4548cdfbc64274a7d1.1767601130.git.mst@redhat.com>
-	<20260105105433.5b875ce3@mordecai>
-	<20260105073621-mutt-send-email-mst@kernel.org>
-X-Mailer: Claws Mail 4.3.1 (GTK 3.24.51; x86_64-suse-linux-gnu)
+        Mon, 05 Jan 2026 06:46:57 -0800 (PST)
+From: Pradeep P V K <pradeep.pragallapati@oss.qualcomm.com>
+To: vkoul@kernel.org, neil.armstrong@linaro.org, robh@kernel.org,
+        krzk+dt@kernel.org, conor+dt@kernel.org, martin.petersen@oracle.com,
+        andersson@kernel.org, konradybcio@kernel.org,
+        taniya.das@oss.qualcomm.com, dmitry.baryshkov@oss.qualcomm.com,
+        manivannan.sadhasivam@oss.qualcomm.com
+Cc: linux-arm-msm@vger.kernel.org, linux-phy@lists.infradead.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, nitin.rawat@oss.qualcomm.com,
+        Pradeep P V K <pradeep.pragallapati@oss.qualcomm.com>
+Subject: [PATCH V3 0/4] Add UFS support for x1e80100 SoC
+Date: Mon,  5 Jan 2026 20:16:39 +0530
+Message-Id: <20260105144643.669344-1-pradeep.pragallapati@oss.qualcomm.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-GUID: MN_HQwoqVnGtLmYqW3u2al1ygq984qw8
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMTA1MDEyOSBTYWx0ZWRfXy73fkkDE6RSr
+ My+8X17I9OI4UkJCkegTWUgYcEmNqggBQGJ9xEbSFk/E/z/a8cqEY6U1lk38dZ989yfuhvttABX
+ g5JDbSB4a7bbzTAg7kZfUZf6LYWhKU1Svx4UbAEZyPhZ9ccimV3K8QyK8zO5ic/t9XFKwmY36t3
+ PVdgOjk06xDdE+dH8rr4x0NyCdu6Y/Zj0X2B5HgZRiXy/Fd01FCfBgtVmEn7eR27EUzctenNf8c
+ 2fpzHNI9LdNJmNcB7WZ0Dx/7M6VSaiFs9tQUyK2cuOWFbvpxpCaZVE34I6SEMRRBJKuGSn2lS2r
+ AxjJzuLy1K/wzVyvWOGELhoIN+kLvP7MfxNMROA77uBlL+eIg0Svf3300WYSzy9o5R5CB66Q6TS
+ Y0RP0AI/ywruLd/64fXGleVs/kNqgWnNJmj881W90MB8cZWhYvV3SjdJHk9/9IbI9qvvKgl2X54
+ Izn1YoNxP/hWEE/6uRQ==
+X-Authority-Analysis: v=2.4 cv=RKK+3oi+ c=1 sm=1 tr=0 ts=695bcee2 cx=c_pps
+ a=UNFcQwm+pnOIJct1K4W+Mw==:117 a=ZePRamnt/+rB5gQjfz0u9A==:17
+ a=vUbySO9Y5rIA:10 a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=VwQbUJbxAAAA:8 a=EUspDBNiAAAA:8 a=g41jKqSBfOdEa1tnm9UA:9
+ a=uKXjsCUrEbL0IQVhDsJ9:22
+X-Proofpoint-ORIG-GUID: MN_HQwoqVnGtLmYqW3u2al1ygq984qw8
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.9,FMLib:17.12.100.49
+ definitions=2026-01-05_01,2026-01-05_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ phishscore=0 impostorscore=0 malwarescore=0 lowpriorityscore=0
+ priorityscore=1501 suspectscore=0 bulkscore=0 adultscore=0 clxscore=1015
+ spamscore=0 classifier=typeunknown authscore=0 authtc= authcc= route=outbound
+ adjust=0 reason=mlx scancount=1 engine=8.22.0-2512120000
+ definitions=main-2601050129
 
-On Mon, 5 Jan 2026 07:37:31 -0500
-"Michael S. Tsirkin" <mst@redhat.com> wrote:
+Add UFSPHY, UFSHC compatible binding names and UFS devicetree
+enablement changes for Qualcomm x1e80100 SoC.
 
-> On Mon, Jan 05, 2026 at 10:54:33AM +0100, Petr Tesarik wrote:
-> > On Mon, 5 Jan 2026 03:23:10 -0500
-> > "Michael S. Tsirkin" <mst@redhat.com> wrote:
-> >   
-> > > If a driver is buggy and has 2 overlapping mappings but only
-> > > sets cache clean flag on the 1st one of them, we warn.
-> > > But if it only does it for the 2nd one, we don't.
-> > > 
-> > > Fix by tracking cache clean flag in the entry.
-> > > 
-> > > Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
-> > > ---
-> > >  kernel/dma/debug.c | 27 ++++++++++++++++++++++-----
-> > >  1 file changed, 22 insertions(+), 5 deletions(-)
-> > > 
-> > > diff --git a/kernel/dma/debug.c b/kernel/dma/debug.c
-> > > index 7e66d863d573..43d6a996d7a7 100644
-> > > --- a/kernel/dma/debug.c
-> > > +++ b/kernel/dma/debug.c
-> > > @@ -63,6 +63,7 @@ enum map_err_types {
-> > >   * @sg_mapped_ents: 'mapped_ents' from dma_map_sg
-> > >   * @paddr: physical start address of the mapping
-> > >   * @map_err_type: track whether dma_mapping_error() was checked
-> > > + * @is_cache_clean: driver promises not to write to buffer while mapped
-> > >   * @stack_len: number of backtrace entries in @stack_entries
-> > >   * @stack_entries: stack of backtrace history
-> > >   */
-> > > @@ -76,7 +77,8 @@ struct dma_debug_entry {
-> > >  	int		 sg_call_ents;
-> > >  	int		 sg_mapped_ents;
-> > >  	phys_addr_t	 paddr;
-> > > -	enum map_err_types  map_err_type;
-> > > +	enum map_err_types map_err_type;  
-> > 
-> > *nitpick* unnecessary change in white space (breaks git-blame).
-> > 
-> > Other than that, LGTM. I'm not formally a reviewer, but FWIW:
-> > 
-> > Reviewed-by: Petr Tesarik <ptesarik@suse.com>
-> > 
-> > Petr T  
-> 
-> 
-> I mean, yes it's not really required here, but the padding we had before
-> was broken (two spaces not aligning to anything).
+Changes in V3:
+- Update all dt-bindings commit messages with concise and informative
+  statements [Krzysztof]
+- keep the QMP UFS PHY order by last compatible in numerical ascending
+  order [Krzysztof]
+- Remove qcom,x1e80100-ufshc from select: enum: list of
+  qcom,sc7180-ufshc.yaml file [Krzysztof]
+- Update subject prefix for all dt-bindings [Krzysztof]
+- Add RB-by for SoC dtsi [Konrad, Abel, Taniya]
+- Add RB-by for board dts [Konrad]
+- Link to V2:
+  https://lore.kernel.org/all/20251231101951.1026163-1-pradeep.pragallapati@oss.qualcomm.com
 
-Oh, you're right! Yes, then let's fix it now, because you touch the
-neighbouring line.
+---
+Pradeep P V K (4):
+  dt-bindings: phy: qcom,sc8280xp-qmp-ufs-phy: Add QMP UFS PHY
+    compatible
+  dt-bindings: ufs: qcom,sc7180-ufshc: Add UFSHC compatible for x1e80100
+  arm64: dts: qcom: hamoa: Add UFS nodes for x1e80100 SoC
+  arm64: dts: qcom: hamoa-iot-evk: Enable UFS
 
-Sorry for the noise.
+ .../phy/qcom,sc8280xp-qmp-ufs-phy.yaml        |   4 +
+ .../bindings/ufs/qcom,sc7180-ufshc.yaml       |  37 +++---
+ arch/arm64/boot/dts/qcom/hamoa-iot-evk.dts    |  18 +++
+ arch/arm64/boot/dts/qcom/hamoa.dtsi           | 123 +++++++++++++++++-
+ 4 files changed, 164 insertions(+), 18 deletions(-)
 
-Petr T
-
-> > > +	bool		 is_cache_clean;
-> > >  #ifdef CONFIG_STACKTRACE
-> > >  	unsigned int	stack_len;
-> > >  	unsigned long	stack_entries[DMA_DEBUG_STACKTRACE_ENTRIES];
-> > > @@ -472,12 +474,15 @@ static int active_cacheline_dec_overlap(phys_addr_t cln)
-> > >  	return active_cacheline_set_overlap(cln, --overlap);
-> > >  }
-> > >  
-> > > -static int active_cacheline_insert(struct dma_debug_entry *entry)
-> > > +static int active_cacheline_insert(struct dma_debug_entry *entry,
-> > > +				   bool *overlap_cache_clean)
-> > >  {
-> > >  	phys_addr_t cln = to_cacheline_number(entry);
-> > >  	unsigned long flags;
-> > >  	int rc;
-> > >  
-> > > +	*overlap_cache_clean = false;
-> > > +
-> > >  	/* If the device is not writing memory then we don't have any
-> > >  	 * concerns about the cpu consuming stale data.  This mitigates
-> > >  	 * legitimate usages of overlapping mappings.
-> > > @@ -487,8 +492,16 @@ static int active_cacheline_insert(struct dma_debug_entry *entry)
-> > >  
-> > >  	spin_lock_irqsave(&radix_lock, flags);
-> > >  	rc = radix_tree_insert(&dma_active_cacheline, cln, entry);
-> > > -	if (rc == -EEXIST)
-> > > +	if (rc == -EEXIST) {
-> > > +		struct dma_debug_entry *existing;
-> > > +
-> > >  		active_cacheline_inc_overlap(cln);
-> > > +		existing = radix_tree_lookup(&dma_active_cacheline, cln);
-> > > +		/* A lookup failure here after we got -EEXIST is unexpected. */
-> > > +		WARN_ON(!existing);
-> > > +		if (existing)
-> > > +			*overlap_cache_clean = existing->is_cache_clean;
-> > > +	}
-> > >  	spin_unlock_irqrestore(&radix_lock, flags);
-> > >  
-> > >  	return rc;
-> > > @@ -583,20 +596,24 @@ DEFINE_SHOW_ATTRIBUTE(dump);
-> > >   */
-> > >  static void add_dma_entry(struct dma_debug_entry *entry, unsigned long attrs)
-> > >  {
-> > > +	bool overlap_cache_clean;
-> > >  	struct hash_bucket *bucket;
-> > >  	unsigned long flags;
-> > >  	int rc;
-> > >  
-> > > +	entry->is_cache_clean = !!(attrs & DMA_ATTR_CPU_CACHE_CLEAN);
-> > > +
-> > >  	bucket = get_hash_bucket(entry, &flags);
-> > >  	hash_bucket_add(bucket, entry);
-> > >  	put_hash_bucket(bucket, flags);
-> > >  
-> > > -	rc = active_cacheline_insert(entry);
-> > > +	rc = active_cacheline_insert(entry, &overlap_cache_clean);
-> > >  	if (rc == -ENOMEM) {
-> > >  		pr_err_once("cacheline tracking ENOMEM, dma-debug disabled\n");
-> > >  		global_disable = true;
-> > >  	} else if (rc == -EEXIST &&
-> > > -		   !(attrs & (DMA_ATTR_SKIP_CPU_SYNC | DMA_ATTR_CPU_CACHE_CLEAN)) &&
-> > > +		   !(attrs & DMA_ATTR_SKIP_CPU_SYNC) &&
-> > > +		   !(entry->is_cache_clean && overlap_cache_clean) &&
-> > >  		   !(IS_ENABLED(CONFIG_DMA_BOUNCE_UNALIGNED_KMALLOC) &&
-> > >  		     is_swiotlb_active(entry->dev))) {
-> > >  		err_printk(entry->dev, entry,  
-> 
+-- 
+2.34.1
 
