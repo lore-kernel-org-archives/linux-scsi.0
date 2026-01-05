@@ -1,115 +1,342 @@
-Received: from mail-pj1-f44.google.com (mail-pj1-f44.google.com [209.85.216.44])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from sender4-pp-f112.zoho.com (sender4-pp-f112.zoho.com [136.143.188.112])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BBB963164C1
-	for <linux-scsi@vger.kernel.org>; Mon,  5 Jan 2026 04:57:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.44
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767589036; cv=none; b=j0L3aeUoO3HbA98VlahAxWWHXXJpprcgpmRPyCu+mUl12+JoBKYEeM0e7xAeqaQ+AVBmwNPSpMdERlRF4k/8WRdRCov/ohfJi3ZyXtrUYeXJov+HxJOkdM084bAnCx1VD6W6xDxAdL4kX2r9eDYgH3COkvOQqmtGn4sOSXNRIdc=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767589036; c=relaxed/simple;
-	bh=wdM/b8hJbUaslNLfaUyaSG8t8yHTFzri8J0kMFatf2M=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=kVsJ/vNnbigmT2d03o67E8nIIT2jYh/TP0UaCI1FslmKGrpHLabVt+PA1qQpqjv9UmK9eez8uUPjuew/MYb0P2Y2UbSsDrLOSJ0GAlZfBzwUb2KBzq7N47a/akdEozEWzEnwWHjNJcjV9t6TtA63EUmOqJ6KlcChHuc7pRrNzxM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=ho85gyha; arc=none smtp.client-ip=209.85.216.44
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A91721C28E;
+	Mon,  5 Jan 2026 08:01:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=136.143.188.112
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1767600073; cv=pass; b=Tz1x36ZUX7dZLZt/5z7VkkGRNLzVBwFNbV8C/4z7qjp073Ot5IIDNow99gcZPLeCqshIsepMk/iLOuxwD9KIfCHFuCaklw1qgN3tCeS6CJc21OJQXllqPwrR0Bbg5g8NCx6rl5zb8jS3RqC2hU32QhNdt+odZdV6jhfXB3vSnm4=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1767600073; c=relaxed/simple;
+	bh=VKjHRJ6ikL6l8KgFYL7+dKX7AnwG8oGhHD5lDxL+NBw=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=oRISNh9ls5R+gba3Rc/p8NxAaI7XlfAr1qMm/gVe+vFQHSKMa3JrPWoFpX961Pt3NGewjFvX8x5XkSkMotsuJ8X/s2Nxo8b5vc7cyL4VqzQnKFuFspP1191Cc6rt+NawHpS8gbcmAHzpHOjMc+bk3AITOkOK9ownmbFqtXLqTYY=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (1024-bit key) header.d=collabora.com header.i=nicolas.frattaroli@collabora.com header.b=GjMQkuLj; arc=pass smtp.client-ip=136.143.188.112
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collabora.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="ho85gyha"
-Received: by mail-pj1-f44.google.com with SMTP id 98e67ed59e1d1-34c2f52585fso12303347a91.1
-        for <linux-scsi@vger.kernel.org>; Sun, 04 Jan 2026 20:57:14 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1767589034; x=1768193834; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=EOEgCzmZP0GTJHcnce/bEe96Bif2a5t1CJ7MWxViYzU=;
-        b=ho85gyhaKzhQd2LkobbDGyUs+P/owvm/KOpiZS4dO+Gf4YuFWvgFamob9qdCJ9r9lk
-         CLr9/RyFtHqQFUBotNoAM7KhHAtZt1Jp5d0KrfTfEbwagr6SxMdsx/4fE0BSAkcxMDYW
-         hBxIWUZzrdi1VxRIajuMMCUWM94J/ABCw0OqR1S9Q7KJQTpTvaIEnHNlkPc5J/4jESGd
-         XTIkIW6zDUqzcVTAuqoCRGwL3BR2rGk9MaM3FmQJSNYeqluqV2cf553LNAaO+Ru5IIr6
-         vpnPaBULT5dfb6ydqqvBTOTjU7RSO1ix7RqULQUiOx2UaSolPasj3CB9WpJAXHp8n2jn
-         ZWag==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1767589034; x=1768193834;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=EOEgCzmZP0GTJHcnce/bEe96Bif2a5t1CJ7MWxViYzU=;
-        b=RISHB2QYbzq91skRyxO0/C7ctQ9wyNLzU7rSoBuLAJWxAQTtgSywCbdSPlXyR5iNZ0
-         tn6rSF1G+NkfeT0b0IAnP50sfK3r3Er+TlHwE9+cfGDcXcLr5arWvZXPf2V0wIFVqyjE
-         3101v2mWO8QHuNmU4LL0iY8Fy9JA0sl3Z626TyWF/+DNyNqtqKepezUy6bqfwD++xdY3
-         mLGD7z72a6DmGwiHsTW5j2PqFyP8An2UKaW4x9xoYu3LRqwRL2/diDRrCZ86ezIRFbLl
-         Xguab0UuSGcQE+SRk/js56qXebHMtiX+4bje3jbs8mWlxIUHEVh3MgerkcEQBEB8Alin
-         ubEQ==
-X-Forwarded-Encrypted: i=1; AJvYcCUe5spgnzaddEuhFf3G/UpND5MvR6ZAxQ3dXQAGYRwC59tvAzH1g67huC+SQhtYJkqjqPBmQQEY7bsY@vger.kernel.org
-X-Gm-Message-State: AOJu0YzhR2Scosb/A4M4O/6Snd7Ddo8x0foT9piD2tIOMlNEjC/zuiUE
-	JAdM28lozWeWErYAOLGdtZ1nVMTPhQK5cgvl6CMy3uVT1gF0+FLyMmPjRbgWsmVXRHc=
-X-Gm-Gg: AY/fxX5+LmoXMrdverPI9gGttXhftRQx75cLwuk5VkMxhZXdiamp2yX7rgCf+cUEEDe
-	Oqzn4OkLhoI9IIz7fjNOXiQH5e3kJQjLZfWehKtGho0EPtqK9nsSzqRGTEydLulBOVkSU1wbihp
-	1LdlPeCbxWyszMHwWmd49msi30ll1bn885zb8/uTtoMHWEciZ5lJt5j0U8Auhf+CrMTTzLalRiX
-	00z6WUkxjbITMj91UExFQ/vq2L2zH5LBi1SX2gvt2NsgrPFq8l0o+XGxXXUkE7lsxu2GLQ7uXlJ
-	E8kqushpvVYJws7HHEawT+hdjOm92b9vIlMxHL7UM4D2lEAZRwv/rZrKg6Tm9CA9uF9X7SnGHfd
-	GtcsHsKyZcV7A/GPegkyDTAC9nUcNlPll50yDjMYM2wo4bCuw9UC6OEP2PJtNeTFKrQjvy3JXm8
-	n25CIvFWUPnXYoTw4h4KXUZA==
-X-Google-Smtp-Source: AGHT+IECK/LcBFPZYYyRh4cCx6nIWU2Vivu4V4Wo0++VXRb6DotO+ATVsJPLekWH+2yfoIoKe3qHow==
-X-Received: by 2002:a17:90b:278d:b0:32e:3c57:8a9e with SMTP id 98e67ed59e1d1-34e921f0439mr39742351a91.35.1767589033897;
-        Sun, 04 Jan 2026 20:57:13 -0800 (PST)
-Received: from localhost ([122.172.80.63])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-34f476ec31dsm4899585a91.3.2026.01.04.20.57.12
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 04 Jan 2026 20:57:13 -0800 (PST)
-Date: Mon, 5 Jan 2026 10:27:11 +0530
-From: Viresh Kumar <viresh.kumar@linaro.org>
-To: "Michael S. Tsirkin" <mst@redhat.com>
-Cc: linux-kernel@vger.kernel.org, Cong Wang <xiyou.wangcong@gmail.com>, 
-	Jonathan Corbet <corbet@lwn.net>, Olivia Mackall <olivia@selenic.com>, 
-	Herbert Xu <herbert@gondor.apana.org.au>, Jason Wang <jasowang@redhat.com>, 
-	Paolo Bonzini <pbonzini@redhat.com>, Stefan Hajnoczi <stefanha@redhat.com>, 
-	Eugenio =?utf-8?B?UMOpcmV6?= <eperezma@redhat.com>, "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
-	"Martin K. Petersen" <martin.petersen@oracle.com>, Gerd Hoffmann <kraxel@redhat.com>, 
-	Xuan Zhuo <xuanzhuo@linux.alibaba.com>, Marek Szyprowski <m.szyprowski@samsung.com>, 
-	Robin Murphy <robin.murphy@arm.com>, Stefano Garzarella <sgarzare@redhat.com>, 
-	"David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, 
-	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, Simon Horman <horms@kernel.org>, 
-	Petr Tesarik <ptesarik@suse.com>, Leon Romanovsky <leon@kernel.org>, 
-	Jason Gunthorpe <jgg@ziepe.ca>, linux-doc@vger.kernel.org, linux-crypto@vger.kernel.org, 
-	virtualization@lists.linux.dev, linux-scsi@vger.kernel.org, iommu@lists.linux.dev, 
-	kvm@vger.kernel.org, netdev@vger.kernel.org, 
-	"Enrico Weigelt, metux IT consult" <info@metux.net>, Viresh Kumar <vireshk@kernel.org>, 
-	Linus Walleij <linusw@kernel.org>, Bartosz Golaszewski <brgl@kernel.org>, 
-	linux-gpio@vger.kernel.org
-Subject: Re: [PATCH RFC 15/13] gpio: virtio: reorder fields to reduce struct
- padding
-Message-ID: <w6to6itartzrxgapaj6dys2q3yqqoz3zetpb5bejnjb4heof2c@jkhmal3chyn2>
-References: <cover.1767089672.git.mst@redhat.com>
- <55e9351282f530e2302e11497c6339c4a2e74471.1767112757.git.mst@redhat.com>
+	dkim=pass (1024-bit key) header.d=collabora.com header.i=nicolas.frattaroli@collabora.com header.b="GjMQkuLj"
+ARC-Seal: i=1; a=rsa-sha256; t=1767600025; cv=none; 
+	d=zohomail.com; s=zohoarc; 
+	b=Ibuz+XI96p0dL6YG9tCRZJijKOMJSmdrqDKmq72IPKCADR6Ia9PTAWWgGDl86nqNrVkpxxxtnvFg3pLa7mOzOv2KWdBVzSfAOolPMO9gDUuKi2FkP5FH/OnjH4XXd4WYACZPCZfLIdqBb80wepPSeSvl0oJuRC0PUVIGO9fYImA=
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.com; s=zohoarc; 
+	t=1767600025; h=Content-Type:Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:Subject:To:To:Message-Id:Reply-To; 
+	bh=R/f+veUt3J3okQzihXETeLooJr7pDBz9djjxauU3Umo=; 
+	b=mmB9CgS4V9ulMDf9jpcLGyhqZElSBPXxCuZfLcqMho4gc/L5p/Ue6+VWgKAsn5yEXs2e0toP5+WJ214wEW3pCBuqIHlbqr8J7djxIN61mUaXg0VasKOS5+8AYxeR4pR370ziQjwmyS0SdzQ5GVvUxrd4xTWWtA2ECfL6iHXwGYY=
+ARC-Authentication-Results: i=1; mx.zohomail.com;
+	dkim=pass  header.i=collabora.com;
+	spf=pass  smtp.mailfrom=nicolas.frattaroli@collabora.com;
+	dmarc=pass header.from=<nicolas.frattaroli@collabora.com>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1767600025;
+	s=zohomail; d=collabora.com; i=nicolas.frattaroli@collabora.com;
+	h=From:From:To:To:Cc:Cc:Subject:Subject:Date:Date:Message-ID:In-Reply-To:References:MIME-Version:Content-Transfer-Encoding:Content-Type:Message-Id:Reply-To;
+	bh=R/f+veUt3J3okQzihXETeLooJr7pDBz9djjxauU3Umo=;
+	b=GjMQkuLjb9RNIKlKPG7YjOLWe31FcLeyCP6HuzwA+sa73zyUH1dO1RnQlivxO6bq
+	adi80Bw1h0UpcFRMI/JTxvG/vC7kLwmD4lHTR9M2Z39gcp/h5ueNaipz71KzlrcC578
+	8XdmjeBK7nB5OH+69xOGibk1NTc5uNWLDT5iiXWk=
+Received: by mx.zohomail.com with SMTPS id 1767600023562551.5910287978659;
+	Mon, 5 Jan 2026 00:00:23 -0800 (PST)
+From: Nicolas Frattaroli <nicolas.frattaroli@collabora.com>
+To: Peter Wang =?UTF-8?B?KOeOi+S/oeWPiyk=?= <peter.wang@mediatek.com>,
+ Chunfeng Yun =?UTF-8?B?KOS6keaYpeWzsCk=?= <Chunfeng.Yun@mediatek.com>,
+ "kishon@kernel.org" <kishon@kernel.org>,
+ "avri.altman@wdc.com" <avri.altman@wdc.com>,
+ "bvanassche@acm.org" <bvanassche@acm.org>,
+ "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+ "broonie@kernel.org" <broonie@kernel.org>,
+ "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
+ "chu.stanley@gmail.com" <chu.stanley@gmail.com>,
+ "conor+dt@kernel.org" <conor+dt@kernel.org>,
+ "p.zabel@pengutronix.de" <p.zabel@pengutronix.de>,
+ "robh@kernel.org" <robh@kernel.org>,
+ "James.Bottomley@HansenPartnership.com"
+ <James.Bottomley@hansenpartnership.com>,
+ "lgirdwood@gmail.com" <lgirdwood@gmail.com>,
+ "vkoul@kernel.org" <vkoul@kernel.org>,
+ "matthias.bgg@gmail.com" <matthias.bgg@gmail.com>,
+ "neil.armstrong@linaro.org" <neil.armstrong@linaro.org>,
+ "krzk+dt@kernel.org" <krzk+dt@kernel.org>,
+ AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
+ Chaotian Jing =?UTF-8?B?KOS6leacneWkqSk=?= <Chaotian.Jing@mediatek.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "linux-mediatek@lists.infradead.org" <linux-mediatek@lists.infradead.org>,
+ "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+ "kernel@collabora.com" <kernel@collabora.com>,
+ Louis-Alexis Eyraud <louisalexis.eyraud@collabora.com>,
+ "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+ "linux-arm-kernel@lists.infradead.org"
+ <linux-arm-kernel@lists.infradead.org>,
+ "linux-phy@lists.infradead.org" <linux-phy@lists.infradead.org>
+Subject:
+ Re: [PATCH v4 02/25] dt-bindings: ufs: mediatek,ufs: Complete the binding
+Date: Mon, 05 Jan 2026 09:00:17 +0100
+Message-ID: <5067251.31r3eYUQgx@workhorse>
+In-Reply-To: <e30abc4cbda3d655d9e0ef2beeac1456b93febb5.camel@mediatek.com>
+References:
+ <20251218-mt8196-ufs-v4-0-ddec7a369dd2@collabora.com>
+ <20251218-mt8196-ufs-v4-2-ddec7a369dd2@collabora.com>
+ <e30abc4cbda3d655d9e0ef2beeac1456b93febb5.camel@mediatek.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <55e9351282f530e2302e11497c6339c4a2e74471.1767112757.git.mst@redhat.com>
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
 
-On 30-12-25, 11:40, Michael S. Tsirkin wrote:
-> Reorder struct virtio_gpio_line fields to place the DMA buffers (req/res)
-> last. This eliminates the need for __dma_from_device_aligned_end padding
-> after the DMA buffer, since struct tail padding naturally protects it,
-> making the struct a bit smaller.
-> 
-> Size reduction estimation when ARCH_DMA_MINALIGN=128:
-> - request is 8 bytes
-> - response is 2 bytes
-> - removing _end saves up to 128-6=122 bytes padding to align rxlen field
-> 
-> Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
-> ---
->  drivers/gpio/gpio-virtio.c | 5 ++---
->  1 file changed, 2 insertions(+), 3 deletions(-)
+On Wednesday, 24 December 2025 06:33:42 Central European Standard Time Chao=
+tian Jing (=E4=BA=95=E6=9C=9D=E5=A4=A9) wrote:
+> On Thu, 2025-12-18 at 13:54 +0100, Nicolas Frattaroli wrote:
+> > External email : Please do not click links or open attachments until
+> > you have verified the sender or the content.
+> >=20
+> >=20
+> > As it stands, the mediatek,ufs.yaml binding is startlingly
+> > incomplete.
+> > Its one example, which is the only real "user" of this binding in
+> > mainline, uses the deprecated freq-table-hz property.
+> >=20
+> > The resets, of which there are three optional ones, are completely
+> > absent.
+> >=20
+> > The clock description for MT8195 is incomplete, as is the one for
+> > MT8192. It's not known if the one clock binding for MT8183 is even
+> > correct, but I do not have access to the necessary code and
+> > documentation to find this out myself.
+> >=20
+> > The power supply situation is not much better; the binding describes
+> > one
+> > required power supply, but it's the UFS card supply, not any of the
+> > supplies feeding the controller silicon.
+> >=20
+> > No second example is present in the binding, making verification
+> > difficult.
+> >=20
+> > Disallow freq-table-hz and move to operating-points-v2. It's fine to
+> > break compatibility here, as the binding is currently unused and
+> > would
+> > be impossible to correctly use in its current state.
+> >=20
+> > Add the three resets and the corresponding reset-names property.
+> > These
+> > resets appear to be optional, i.e. not required for the functioning
+> > of
+> > the device.
+> >=20
+> > Move the list of clock names out of the if condition, and expand it
+> > for
+> > the confirmed clocks I could find by cross-referencing several clock
+> > drivers. For MT8195, increase the minimum number of clocks to include
+> > the crypt and rx_symbol ones, as they're internal to the SoC and
+> > should
+> > always be present, and should therefore not be omitted.
+> >=20
+> > MT8192 gets to have at least 3 clocks, as these were the ones I could
+> > quickly confirm from a glance at various trees. I can't say this was
+> > an
+> > exhaustive search though, but it's better than the current situation.
+> >=20
+> > Properly document all supplies, with which pin name on the SoCs they
+> > supply. Complete the example with them.
+> >=20
+> > Also add a MT8195 example to the binding, using supply labels that I
+> > am
+> > pretty sure would be the right ones for e.g. the Radxa NIO 12L.
+> >=20
+> > Signed-off-by: Nicolas Frattaroli <nicolas.frattaroli@collabora.com>
+> > ---
+> >  .../devicetree/bindings/ufs/mediatek,ufs.yaml      | 117
+> > ++++++++++++++++++---
+> >  1 file changed, 100 insertions(+), 17 deletions(-)
+> >=20
+> > diff --git a/Documentation/devicetree/bindings/ufs/mediatek,ufs.yaml
+> > b/Documentation/devicetree/bindings/ufs/mediatek,ufs.yaml
+> > index 15c347f5e660..e0aef3e5f56b 100644
+> > --- a/Documentation/devicetree/bindings/ufs/mediatek,ufs.yaml
+> > +++ b/Documentation/devicetree/bindings/ufs/mediatek,ufs.yaml
+> > @@ -19,11 +19,28 @@ properties:
+> >=20
+> >    clocks:
+> >      minItems: 1
+> > -    maxItems: 8
+> > +    maxItems: 13
+> >=20
+> >    clock-names:
+> >      minItems: 1
+> > -    maxItems: 8
+> > +    items:
+> > +      - const: ufs
+> > +      - const: ufs_aes
+> > +      - const: ufs_tick
+> > +      - const: unipro_sysclk
+> > +      - const: unipro_tick
+> > +      - const: unipro_mp_bclk
+> > +      - const: ufs_tx_symbol
+> > +      - const: ufs_mem_sub
+> > +      - const: crypt_mux
+> > +      - const: crypt_lp
+> > +      - const: crypt_perf
+> > +      - const: ufs_rx_symbol0
+> > +      - const: ufs_rx_symbol1
+> > +
+> > +  operating-points-v2: true
+> > +
+> > +  freq-table-hz: false
+> >=20
+> >    phys:
+> >      maxItems: 1
+> > @@ -31,8 +48,36 @@ properties:
+> >    reg:
+> >      maxItems: 1
+> >=20
+> > +  resets:
+> > +    items:
+> > +      - description: reset for the UniPro layer
+> > +      - description: reset for the cryptography engine
+> > +      - description: reset for the host controller
+> > +
+> > +  reset-names:
+> > +    items:
+> > +      - const: unipro
+> > +      - const: crypto
+> > +      - const: hci
+> > +
+> > +  avdd09-supply:
+> > +    description: Phandle to the 0.9V supply powering the AVDD09_UFS
+> > pin
+> > +
+> > +  avdd12-supply:
+> > +    description: Phandle to the 1.2V supply powering the AVDD12_UFS
+> > pin
+> > +
+> > +  avdd12-ckbuf-supply:
+> > +    description: Phandle to the 1.2V supply powering the
+> > AVDD12_CKBUF_UFS pin
+> > +
+> > +  avdd18-supply:
+> > +    description: Phandle to the 1.8V supply powering the AVDD18_UFS
+> > pin
+> > +
+> >    vcc-supply: true
+> >=20
+> > +  vccq-supply: true
+> > +
+> > +  vccq2-supply: true
+> > +
+> >    mediatek,ufs-disable-mcq:
+> >      $ref: /schemas/types.yaml#/definitions/flag
+> >      description: The mask to disable MCQ (Multi-Circular Queue) for
+> > UFS host.
+> > @@ -54,29 +99,41 @@ allOf:
+> >        properties:
+> >          compatible:
+> >            contains:
+> > -            enum:
+> > -              - mediatek,mt8195-ufshci
+> > +            const: mediatek,mt8183-ufshci
+> >      then:
+> >        properties:
+> >          clocks:
+> > -          minItems: 8
+> > +          maxItems: 1
+> >          clock-names:
+> >            items:
+> >              - const: ufs
+> > -            - const: ufs_aes
+> > -            - const: ufs_tick
+> > -            - const: unipro_sysclk
+> > -            - const: unipro_tick
+> > -            - const: unipro_mp_bclk
+> > -            - const: ufs_tx_symbol
+> > -            - const: ufs_mem_sub
+> > -    else:
+> > +        avdd12-ckbuf-supply: false
+> > +  - if:
+> > +      properties:
+> > +        compatible:
+> > +          contains:
+> > +            const: mediatek,mt8192-ufshci
+> > +    then:
+> >        properties:
+> >          clocks:
+> > -          maxItems: 1
+> > +          minItems: 3
+> > +          maxItems: 3
+> > +        clocks-names:
+> > +          minItems: 3
+> > +          maxItems: 3
+> > +        avdd09-supply: false
+> > +  - if:
+> > +      properties:
+> > +        compatible:
+> > +          contains:
+> > +            const: mediatek,mt8195-ufshci
+> > +    then:
+> > +      properties:
+> > +        clocks:
+> > +          minItems: 13
+> >          clock-names:
+> > -          items:
+> > -            - const: ufs
+> > +          minItems: 13
+> > +        avdd09-supply: false
+> >=20
+> >  examples:
+> >    - |
+> > @@ -95,8 +152,34 @@ examples:
+> >=20
+> >              clocks =3D <&infracfg_ao CLK_INFRA_UFS>;
+> >              clock-names =3D "ufs";
+> > -            freq-table-hz =3D <0 0>;
+> >=20
+> >              vcc-supply =3D <&mt_pmic_vemc_ldo_reg>;
+> >          };
+> >      };
+> > +  - |
+> > +    ufshci@11270000 {
+> > +        compatible =3D "mediatek,mt8195-ufshci";
+> > +        reg =3D <0x11270000 0x2300>;
+> > +        interrupts =3D <GIC_SPI 137 IRQ_TYPE_LEVEL_HIGH>;
+> > +        phys =3D <&ufsphy>;
+> > +        clocks =3D <&infracfg_ao 63>, <&infracfg_ao 64>, <&infracfg_ao
+> > 65>,
+> > +                 <&infracfg_ao 54>, <&infracfg_ao 55>,
+> > +                 <&infracfg_ao 56>, <&infracfg_ao 90>,
+> > +                 <&infracfg_ao 93>, <&topckgen 60>, <&topckgen 152>,
+> > +                 <&topckgen 125>, <&topckgen 212>, <&topckgen 215>;
+> > +        clock-names =3D "ufs", "ufs_aes", "ufs_tick",
+> > +                      "unipro_sysclk", "unipro_tick",
+> > +                      "unipro_mp_bclk", "ufs_tx_symbol",
+> > +                      "ufs_mem_sub", "crypt_mux", "crypt_lp",
+> > +                      "crypt_perf", "ufs_rx_symbol0",
+> > "ufs_rx_symbol1";
+> > +
+> > +        operating-points-v2 =3D <&ufs_opp_table>;
+> > +
+> > +        avdd12-supply =3D <&mt6359_vrf12_ldo_reg>;
+> > +        avdd12-ckbuf-supply =3D <&mt6359_vbbck_ldo_reg>;
+> > +        avdd18-supply =3D <&mt6359_vio18_ldo_reg>;
+> Do not add the avdd12/avdd12-clkbuf/avdd18! these analog power cannot
+> be power off. even that the system is in suspend state!
 
-Acked-by: Viresh Kumar <viresh.kumar@linaro.org>
+That does not matter. If a supply cannot be powered off, it should
+have the regulator-always-on property in the DTS. The relationship
+still needs to be properly described in the binding. If you want the
+driver to not do those calls, then please comment this on the driver
+series.
 
--- 
-viresh
+> > +        vcc-supply =3D <&mt6359_vemc_1_ldo_reg>;
+> > +        vccq2-supply =3D <&mt6359_vufs_ldo_reg>;
+> > +
+> > +        mediatek,ufs-disable-mcq;
+> > +    };
+> >=20
+> > --
+> > 2.52.0
+> >=20
+>=20
+
+
+
+
