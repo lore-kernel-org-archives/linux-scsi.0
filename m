@@ -1,127 +1,66 @@
-Received: from azure-sdnproxy.icoremail.net (azure-sdnproxy.icoremail.net [13.76.78.106])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 4CDEF14A60C;
-	Tue,  6 Jan 2026 05:35:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.76.78.106
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6556042AA3;
+	Tue,  6 Jan 2026 07:32:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767677760; cv=none; b=a+qqNY6bO0mZv3ZcUsnq5xPwYaXdpbuRRsS5SPCDHlAJr31NE9Pmt1K/xdfwycB/tcCEEV11FYAT2MRn+6QVryN6txFm1tVsNUg3bvgEnYsujVxMsZgq/gVaNwvWDXb4AF2ywcEp/jwThBc4aL0sybZKxpxnvXyj10yG/wqpKy8=
+	t=1767684775; cv=none; b=M7RKtEBBWiAvbw8uCvACg9uR4c9lSsfnRyfTpfMfGD8LlS0lIZIBAQH3Qv7v3SXuCv2xS4YNxlgaSX0CAY31Aib3aA3sqspBw89HGnYnmZGMdp6OaU0i7pfuROcE+qu1gFC21YQTllo7ts9DjlLphqUVglD+bpa9noBeRH/SvG4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767677760; c=relaxed/simple;
-	bh=12shpyTAbn0iJCwkHGmUDn6Gq1wAIHpe+nlG5i5GsoI=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References:Content-Type:
-	 MIME-Version:Message-ID; b=V+t4EqrfRw+cWau1oXdBGGXBe4OjCi9c+iN0xvbI0vKmQxgcG5XpYT2h8yMcmsHOWNNm6DIxDvL9v5zsSWw2SZ6BqFDGDCCj8bhsFvQjaZLJFupCU7akwNKAo0JkPfDspOoRR2To7up9lrTwH53IDPXCIxz31HULOb53mo0HCms=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zju.edu.cn; spf=pass smtp.mailfrom=zju.edu.cn; arc=none smtp.client-ip=13.76.78.106
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zju.edu.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zju.edu.cn
-Received: from zju.edu.cn (unknown [218.12.19.228])
-	by mtasvr (Coremail) with SMTP id _____wBH1ZUsn1xpKvqNAQ--.2486S3;
-	Tue, 06 Jan 2026 13:35:41 +0800 (CST)
-Received: from duoming$zju.edu.cn ( [218.12.19.228] ) by
- ajax-webmail-mail-app3 (Coremail) ; Tue, 6 Jan 2026 13:35:39 +0800
- (GMT+08:00)
-Date: Tue, 6 Jan 2026 13:35:39 +0800 (GMT+08:00)
-X-CM-HeaderCharset: UTF-8
-From: duoming@zju.edu.cn
-To: "James Bottomley" <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	martin.petersen@oracle.com, stable@kernel.org
-Subject: Re: [PATCH RESEND] scsi: ppa: Fix use-after-free caused by
- unfinished delayed work
-X-Priority: 3
-X-Mailer: Coremail Webmail Server Version 2024.3-cmXT6 build
- 20250620(94335109) Copyright (c) 2002-2026 www.mailtech.cn zju.edu.cn
-In-Reply-To: <1bd723858c5f8a0bea1239e837f902432fffd183.camel@HansenPartnership.com>
-References: <20260101135532.19522-1-duoming@zju.edu.cn>
- <91a16901ab4cd35fa00011a472c025f55068a4c7.camel@HansenPartnership.com>
- <3a85ddef.523b2.19b81abea97.Coremail.duoming@zju.edu.cn>
- <389ac2dcc81b38367a26620cd193a45f2f06ce4f.camel@HansenPartnership.com>
- <4726642f.54ab5.19b896f887d.Coremail.duoming@zju.edu.cn>
- <1bd723858c5f8a0bea1239e837f902432fffd183.camel@HansenPartnership.com>
-Content-Transfer-Encoding: base64
-Content-Type: text/plain; charset=UTF-8
+	s=arc-20240116; t=1767684775; c=relaxed/simple;
+	bh=BGcwdH2AZcgbbKhfbfSssEoXRyTGTHTkrAq0xNhjD7w=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=eta2AKfpvua2LSlnnw3LJmsLEfWU3qoite9tqvoeRbkI2/IEO3fe2t9ebHopT+WIRj0ipTCxgREaIlyCUz78ICM8aKPzihpU0JGnGdr7psj4lgbpHw3EiaRgdBT7wv7JoTTfuG0DCKaCRSK+qVvEGqjxYCZpWqWHo0rKRBrCYxI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bur3yb8k; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bur3yb8k"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5D426C116C6;
+	Tue,  6 Jan 2026 07:32:54 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1767684774;
+	bh=BGcwdH2AZcgbbKhfbfSssEoXRyTGTHTkrAq0xNhjD7w=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=bur3yb8kv1ugmxkILUn4SkfX3o/VzevKXIbmTgWm1a4fqlduq6v3plPILSf3gy+iZ
+	 HV/DI4UAlAzKIjkgvobS6xIG39CXWyTD8E/4JTHTxe5p/vrGLwtLmFTbXvTuAc2oeY
+	 ddnywqdqBZKeVZwT7EZjz1bRuzKg/2Vm1j1DxAqjRUGT+lPrnEXnYTl/5zoxWYOIVA
+	 IuB1DAeOrc2fDT9oNxuNFyfmQbU/7GHFgN9RChNz3+8nyAkLypecuwM5bf1KFIJYR9
+	 NS6la/EA8XDKusir1ORjxXhDtjWCjbYtBq0qj6iwGar982fe3VKg7Rq2PivD+amjju
+	 R+MEnH3MoUk1Q==
+Date: Tue, 6 Jan 2026 08:32:52 +0100
+From: Krzysztof Kozlowski <krzk@kernel.org>
+To: Pradeep P V K <pradeep.pragallapati@oss.qualcomm.com>
+Cc: vkoul@kernel.org, neil.armstrong@linaro.org, robh@kernel.org, 
+	krzk+dt@kernel.org, conor+dt@kernel.org, martin.petersen@oracle.com, 
+	andersson@kernel.org, konradybcio@kernel.org, taniya.das@oss.qualcomm.com, 
+	dmitry.baryshkov@oss.qualcomm.com, manivannan.sadhasivam@oss.qualcomm.com, 
+	linux-arm-msm@vger.kernel.org, linux-phy@lists.infradead.org, devicetree@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, nitin.rawat@oss.qualcomm.com
+Subject: Re: [PATCH V3 1/4] dt-bindings: phy: qcom,sc8280xp-qmp-ufs-phy: Add
+ QMP UFS PHY compatible
+Message-ID: <20260106-huge-radical-bear-aeb732@quoll>
+References: <20260105144643.669344-1-pradeep.pragallapati@oss.qualcomm.com>
+ <20260105144643.669344-2-pradeep.pragallapati@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Message-ID: <46574732.55570.19b91cdc1e4.Coremail.duoming@zju.edu.cn>
-X-Coremail-Locale: zh_CN
-X-CM-TRANSID:zS_KCgC3t2osn1xpelBdBQ--.32319W
-X-CM-SenderInfo: qssqjiasttq6lmxovvfxof0/1tbiAwcDAWlcFAQQhgAAs1
-X-CM-DELIVERINFO: =?B?Sb7P5QXKKxbFmtjJiESix3B1w3uoVhYI+vyen2ZzBEkOnu5chDpkB+ZdGnv/zQ0PbP
-	CR1/7kGOpENev1mxAse0sy8IQxBW2+vL5vMol+aS668HBekKbT3yaWK6g6UnDcwLzgLBQm
-	ibD5kcJJ6lyaAqhQqD9fjzm7VW7iNBhFbRzLXqwdsi863sui9371LlzkbpVr7g==
-X-Coremail-Antispam: 1Uk129KBj93XoWxZrW7Kr15Xr43Ary8Gry3GFX_yoW5Aryxpr
-	ZYya43Cw4DXF42vry2qF1rXF12vrsrJFZ0gFy8G3yrAws0vrZ3ArW7tayj9ayUZFn5tw1j
-	qF4qqay7uFZ8ArXCm3ZEXasCq-sJn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7KY7ZEXa
-	sCq-sGcSsGvfJ3Ic02F40EFcxC0VAKzVAqx4xG6I80ebIjqfuFe4nvWSU5nxnvy29KBjDU
-	0xBIdaVrnRJUUUmvb4IE77IF4wAFF20E14v26r1j6r4UM7CY07I20VC2zVCF04k26cxKx2
-	IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48v
-	e4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI
-	0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AK
-	xVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc804VCY07AIYIkI8VC2zVCFFI0UMc
-	02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAF
-	wI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0Y48IcxkI7VAKI48JM4x0Y48IcxkI7V
-	AKI48G6xCjnVAKz4kxM4xvF2IEb7IF0Fy264kE64k0F24lFcxC0VAYjxAxZF0Ex2IqxwAK
-	zVCY07xG64k0F24l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxV
-	Aqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r12
-	6r1DMIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6x
-	kF7I0E14v26r1j6r4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AK
-	xVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r1j6r4UMVCEFcxC0VAYjxAxZFUvcSsGvf
-	C2KfnxnUUI43ZEXa7IU8v_MDUUUUU==
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <20260105144643.669344-2-pradeep.pragallapati@oss.qualcomm.com>
 
-T24gU3VuLCAwNCBKYW4gMjAyNiAxODozMDo0OCAtMDUwMCBKYW1lcyBCb3R0b21sZXkgd3JvdGU6
-Cj4gPiA+ID4gPiA+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvcHBhLmMgYi9kcml2ZXJzL3Nj
-c2kvcHBhLmMKPiA+ID4gPiA+ID4gaW5kZXggZWE2ODJmMzA0NGIuLjhkYTJhNzhlYmFjIDEwMDY0
-NAo+ID4gPiA+ID4gPiAtLS0gYS9kcml2ZXJzL3Njc2kvcHBhLmMKPiA+ID4gPiA+ID4gKysrIGIv
-ZHJpdmVycy9zY3NpL3BwYS5jCj4gPiA+ID4gPiA+IEBAIC0xMTM2LDYgKzExMzYsNyBAQCBzdGF0
-aWMgdm9pZCBwcGFfZGV0YWNoKHN0cnVjdCBwYXJwb3J0Cj4gPiA+ID4gPiA+ICpwYikKPiA+ID4g
-PiA+ID4gwqAJcHBhX3N0cnVjdCAqZGV2Owo+ID4gPiA+ID4gPiDCoAlsaXN0X2Zvcl9lYWNoX2Vu
-dHJ5KGRldiwgJnBwYV9ob3N0cywgbGlzdCkgewo+ID4gPiA+ID4gPiDCoAkJaWYgKGRldi0+ZGV2
-LT5wb3J0ID09IHBiKSB7Cj4gPiA+ID4gPiA+ICsJCQlkaXNhYmxlX2RlbGF5ZWRfd29ya19zeW5j
-KCZkZXYtCj4gPiA+ID4gPiA+ID5wcGFfdHEpOwo+ID4gPiA+ID4gPiDCoAkJCWxpc3RfZGVsX2lu
-aXQoJmRldi0+bGlzdCk7Cj4gPiA+ID4gPiA+IMKgCQkJc2NzaV9yZW1vdmVfaG9zdChkZXYtPmhv
-c3QpOwo+ID4gPiA+ID4gPiDCoAkJCXNjc2lfaG9zdF9wdXQoZGV2LT5ob3N0KTsKPiA+ID4gPiA+
-IAo+ID4gPiA+ID4gVGhpcyBmaXggbG9va3MgYm9ndXM6IGlmIHRoZXJlJ3MgYW4gYWN0aXZlIHdv
-cmtxdWV1ZSBvbiBwcGEKPiA+ID4gPiA+IGl0J3MgYmVjYXVzZSB0aGVyZSdzIGFuIG91dHN0YW5k
-aW5nIGNvbW1hbmQgYW5kIGl0J3MgZW11bGF0aW5nCj4gPiA+ID4gPiBwb2xsaW5nLsKgSWYgeW91
-IHN0b3AgdGhlIHBvbGxpbmcgYnkgZGlzYWJsaW5nIHRoZSB3b3JrcXVldWUsCj4gPiA+ID4gPiB0
-aGUgY29tbWFuZCB3aWxsIG5ldmVyIHJldHVybiBhbmQgdGhlIGhvc3Qgd2lsbCBuZXZlciBnZXQK
-PiA+ID4gPiA+IGZyZWVkLCBzbyB0aGlzIHdpbGwgbGVhayByZXNvdXJjZXMsIHdvbid0IGl0Pwo+
-ID4gPiA+IAo+ID4gPiA+IEkgYmVsaWV2ZSB0aGF0IGRpc2FibGluZyB0aGUgcHBhX3RxIGRlbGF5
-ZWQgd29yayB3aWxsIG5vdCBhZmZlY3QKPiA+ID4gPiB0aGUgU2NzaV9Ib3N0IHJlbGVhc2UgcHJv
-Y2Vzcy4gVGhlIGxpZmV0aW1lIG9mIHRoZSBTY3NpX0hvc3QgaXMKPiA+ID4gPiBtYW5hZ2VkIGJ5
-IHRhZ3NldF9yZWZjbnQuIFRoZSB0YWdzZXRfcmVmY250IGlzIGluaXRpYWxpemVkIHRvIDEKPiA+
-ID4gPiBpbiBzY3NpX2FkZF9ob3N0X3dpdGhfZG1hKCkgYW5kIGRlY3JlYXNlZCB0byAwIGluCj4g
-PiA+ID4gc2NzaV9yZW1vdmVfaG9zdCgpLiBzaW5jZSB0aGUgZGVsYXllZCB3b3JrIGNhbGxiYWNr
-Cj4gPiA+ID4gcHBhX2ludGVycnVwdCgpIGRvZXMgbm90IG1vZGlmeSB0YWdzZXRfcmVmY250IGlu
-IGFueSB3YXksIHRoZQo+ID4gPiA+IGhvc3QgY291bGQgYmUgZnJlZWQgYXMgZXhwZWN0ZWQuCj4g
-PiA+IAo+ID4gPiBOb3QgaWYgc29tZXRoaW5nIGVsc2UgaG9sZHMgYSByZWZlcmVuY2UgdG8gdGhl
-IGhvc3QsIHdoaWNoIGFuCj4gPiA+IG91dHN0YW5kaW5nIGNvbW1hbmQgZG9lcy7CoCBUaGF0J3Mg
-dGhlIHBvaW50IEkgd2FzIG1ha2luZyBhYm92ZTogYXMKPiA+ID4gbG9uZyBhcyB0aGUgY29tbWFu
-ZCBkb2Vzbid0IHJldHVybiwgZXZlcnl0aGluZyBpcyBwaW5uZWQgYW5kIG5ldmVyCj4gPiA+IGdl
-dHMgZnJlZWQgKHdlbGwsIHBvc3NpYmx5IHVudGlsIHRpbWVvdXQpLsKgIFlvdSBjYXVzZSB0aGF0
-IGJlY2F1c2UKPiA+ID4gdGhlIHdvcmsgcXVldWUgaXMgb25seSBhY3RpdmUgaWYgYSBjb21tYW5k
-IGlzIG91dHN0YW5kaW5nLCBzbyB3aGVuCj4gPiA+IHlvdSBkaXNhYmxlIHRoZSBxdWV1ZSBpbiB0
-aGF0IHNpdHVhdGlvbiB0aGUgY29tbWFuZCByZW1haW5zCj4gPiA+IG91dHN0YW5kaW5nIGFuZCBj
-YW4gbmV2ZXIgY29tcGxldGUgbm9ybWFsbHkuCj4gPiAKPiA+IFdoZW4gYSByZXF1ZXN0IGlzIHNl
-bnQgdG8gYSBTQ1NJIGRldmljZSwgYSB0aW1lciBpcyBzZXQgZm9yIHRoZQo+ID4gcmVxdWVzdC4g
-SWYgaXQgdGltZXMgb3V0LCB0aGUgcmVxdWVzdCBpcyBkaXJlY3RseSB0ZXJtaW5hdGVkIGFuZAo+
-ID4gcmVtb3ZlZCBmcm9tIHRoZSBxdWV1ZS4gVGhlIHNwZWNpZmljIGZ1bmN0aW9uIGNhbGwgY2hh
-aW4gaXMgYXMKPiA+IGZvbGxvd3M6IAo+IAo+IEkga25vdyBob3cgdGltZW91dHMgd29yayAuLi4g
-SSBkb24ndCBuZWVkIHRoZSBBSSBzdW1tYXJ5LiAgaWYgdGhlcmUgaXMKPiBhbiBvdXRzdGFuZGlu
-ZyBjb21tYW5kLCB0aGUgdGltZW91dCB3aWxsIGZpcmUgbG9uZyBhZnRlciB5b3UndmUKPiBkaXNh
-YmxlZCB0aGUgcXVldWUgYW5kIHJ1biB0aHJvdWdoIHBwYV9kZXRhY2ggYW5kIHRoZSBuZXh0IHRo
-aW5nIHRoYXQKPiB3aWxsIGhhcHBlbiBpcyB0aGUgZXJyb3IgaGFuZGxlciB3aWxsIHRyeSB0byBh
-Ym9ydCB0aGUgY29tbWFuZCwKPiBldmVudHVhbGx5IGNhdXNpbmcgcHBhX2Fib3J0IHRvIGJlIGNh
-bGxlZCwgd2hpY2ggaXMgZ29pbmcgdG8KPiBkZXJlZmVyZW5jZSB0aGUgcHBhX3N0cnVjdCB0aGF0
-IHBwYV9kZXRhY2ggZnJlZWQuCgpXaGF0IGRvIHlvdSB0aGluayBvZiByZW1vdmluZyB0aGUgcHBh
-X2Fib3J0KCkgY2FsbGJhY2sgZnVuY3Rpb24/IApUaGlzIGNhbGxiYWNrIGZ1bmN0aW9uIGlzIG5v
-dCBuZWNlc3NhcnkuIFRoZSBlaF9hYm9ydF9oYW5kbGVyIApmdW5jdGlvbiBwb2ludGVyIGlzIGNo
-ZWNrZWQgaW4gc2NzaV9hYm9ydF9jb21tYW5kKCkgZnVuY3Rpb24sIAphbmQgaWYgdGhlIGZ1bmN0
-aW9uIHBvaW50ZXIgZG9lcyBub3QgZXhpc3QsIGl0IGRpcmVjdGx5IHJldHVybnMgCkZBSUxFRC4g
-VGhlIHN1YnNlcXVlbnQgcHJvY2VzcyB3aWxsIGJlIGhhbmRsZWQgYnkgU0NTSSBlcnJvciAKaGFu
-ZGxlciB0aHJlYWQgLSBzY3NpX2Vycm9yX2hhbmRsZXIoKS4gVGhlcmVmb3JlIHRoZSBpc3N1ZSB5
-b3UKbWVudGlvbmVkIGNvdWxkIGJlIGF2b2lkZWQuCgpCZXN0IHJlZ2FyZHMsCkR1b21pbmcgWmhv
-dQo=
+On Mon, Jan 05, 2026 at 08:16:40PM +0530, Pradeep P V K wrote:
+> Document QMP UFS PHY compatible for x1e80100 SoC. Use SM8550 as a
+> fallback since x1e80100 is fully compatible with it.
+> 
+> Signed-off-by: Pradeep P V K <pradeep.pragallapati@oss.qualcomm.com>
+> ---
+>  .../devicetree/bindings/phy/qcom,sc8280xp-qmp-ufs-phy.yaml    | 4 ++++
+>  1 file changed, 4 insertions(+)
+
+Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
+
+Best regards,
+Krzysztof
 
