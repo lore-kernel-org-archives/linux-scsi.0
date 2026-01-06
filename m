@@ -1,160 +1,187 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC18A334374
-	for <linux-scsi@vger.kernel.org>; Tue,  6 Jan 2026 14:51:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B6703370F2
+	for <linux-scsi@vger.kernel.org>; Tue,  6 Jan 2026 15:42:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767711117; cv=none; b=Wp8DVAqVjk9MCw7+c4oeFqz+7Xvnwgup4nU71blhI/K9S3BFO/XyqijMl6ugXXdM5S2Q+GU/sjuxQD9lI4AhzqY66g+J+i4/TK/0JdwDFDg42LjCUmmkpMCI/XEhxpRt1Yw/VrqlI1B2rX8mpGmBCFmLRnpHOYi+UCPxi1NO5+I=
+	t=1767714145; cv=none; b=KQdt6U/twtUbVVub/0XD6C1sIH/x4x+u/1NuWsYtaOEuEvCCgzw9a1V0T/ZszeWDEEtPjKJlWUGXNdl/jGSaBtl7i9ZojbIbCT+Zbet9BzX5vF7SRM8etdZp4kbkXL55bj8n0TRuiPzxc+kQ7QH9bbeM4WRKa2lK0qCrcnzgo4w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767711117; c=relaxed/simple;
-	bh=OtGN4S8+ZWGuAfn6+2YZp7eQlkz7c6TNLgozVUvUCR0=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=aKAR4LwwBUKLGYKV6kmc7yf4B7Y8RhV+4se5th9vZKbffzuEpoyz4DiBkIYlutZwhZVfKb6+U+UW0hz6spmjShdn+9zb1MbfyhlYOBK6pkDDGWEH7YXtwrjc+e59uxahlWwrBk3BSzxJyqyXd29V3kkFDXLRelDj3Ah+2oYn2qg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Y84Qqx31; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=FM0Ydb5f; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1767714145; c=relaxed/simple;
+	bh=8iFNGEM6G0SGx+YCWMUDESDVajTlvJZQMG+GznL8tfk=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=iHTbCulvCA+ewlqn7XoPpV0i4fYUP5e3tHYfmbJDg0pfHIvKTT+aDf0VsJB8/8IUCBn/nLO/XiXSURyQDmfX/NWDKNKAq6WKS5SP6fwb2LETLDzeDB/f43TLUIaVaH8ylXwEbSGvn39rWM0p7N+0pZ6lFNpkzeQrcmEKrjUp8K8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=TcxKdOiq; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=HngDIwCD; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Y84Qqx31";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="FM0Ydb5f"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1767711115;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=v8xGpc9e0AHSzqXJdY4dTy2UmvNhNHIufeUOIUm/LzQ=;
-	b=Y84Qqx31I5wMPYwVs5CMOtq8M+c9qrucIU9n78Lo2w7B1rM14bdeV9HFLtzww6UMT+cZAQ
-	Xa+pSSgZVYvA9JqOmVb0NO3ye1HGgHrgVnPVBbjaKLw4jsswsfgAoh++WDRZYDf/XJrx5E
-	0KBNtav4ZrPKrqi8dPU21J4JDgFZdZY=
-Received: from mail-wr1-f71.google.com (mail-wr1-f71.google.com
- [209.85.221.71]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-210-PtSZJOMQNICHdn7B88s0zw-1; Tue, 06 Jan 2026 09:51:53 -0500
-X-MC-Unique: PtSZJOMQNICHdn7B88s0zw-1
-X-Mimecast-MFC-AGG-ID: PtSZJOMQNICHdn7B88s0zw_1767711112
-Received: by mail-wr1-f71.google.com with SMTP id ffacd0b85a97d-430f5dcd4cdso530513f8f.2
-        for <linux-scsi@vger.kernel.org>; Tue, 06 Jan 2026 06:51:53 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="TcxKdOiq";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="HngDIwCD"
+Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 606AtJ6x3214304
+	for <linux-scsi@vger.kernel.org>; Tue, 6 Jan 2026 15:42:20 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:date:from:message-id:mime-version
+	:subject:to; s=qcppdkim1; bh=Xbc3kQ/3J35Ph1RdKmRXDEClfieoAFkWx/T
+	fAmjKN4E=; b=TcxKdOiqsUD7KrTEBMt/IYJ/+v9A10iMXAbrTcewYmlccXvX2yq
+	SKAqMbMka5/lLOjAcVaYlmGxqaDt9edbOFQPleylJ+o9CtgoZsFX1Jo+0MgyWAYk
+	cJE2ZOnPAeBisStXD0KszAbZTao9ApkLjbd7GVFHyJ6m046NWAnxp3+LtLk1gQJQ
+	2LiM20sOFCj3YwXrO/RkVm6YoMuf0NGClgOgdWCqnsfh3jU87G2l9v1lIXjtj69b
+	Qg8RFr7r6CPeSzOKgZQ8S+JjUTRZ2sYMs0fNYI1cgfd7I/iujcueWL9m0XA8GCX7
+	wkvFPJZz6TjJuNvyYys3gXA0RTjj43Afvdw==
+Received: from mail-pl1-f199.google.com (mail-pl1-f199.google.com [209.85.214.199])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4bgpndak17-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Tue, 06 Jan 2026 15:42:20 +0000 (GMT)
+Received: by mail-pl1-f199.google.com with SMTP id d9443c01a7336-29f27176aa7so21356795ad.2
+        for <linux-scsi@vger.kernel.org>; Tue, 06 Jan 2026 07:42:19 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1767711112; x=1768315912; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=v8xGpc9e0AHSzqXJdY4dTy2UmvNhNHIufeUOIUm/LzQ=;
-        b=FM0Ydb5fdan6x+pkR1pJDikE+5rPe3WwNvtNRo0JY14Evid+8FAayK9PXBBE19NE0V
-         6zmoqhY0DFOh8fYaTQ2w8a69KO0ECm6f9yz6/NSy6/VZS/jtDSpgR87LSsEQVtgtQI6C
-         Bm4swC4PpZaaXSSi+1Oswc7hFfYQjX22ZoqFwC51cURGKJrO06ZoOhjZ5eZZRNVMGH/R
-         j7RZUi/wX1uXswo38RIPdWsCg4iwKcSnQ4YDfJ6vEwh4pq+EaWgBUP7DDSaV301bGKCp
-         3WN9O3bTncPfs2vWtO7odr14bTSpvCTRf7UV8cA+BVh7m6Bzvi2UTfoEFMptn9FMl/Kb
-         oPKw==
+        d=oss.qualcomm.com; s=google; t=1767714139; x=1768318939; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=Xbc3kQ/3J35Ph1RdKmRXDEClfieoAFkWx/TfAmjKN4E=;
+        b=HngDIwCDlq0RfwfgEFu1WA63p3lyI11ZChNtrBYYQxO4b2UPFziAdjCN8k1RxrKt+3
+         dWHh/Ykuim5YHtEFEIfWRigMzahen6QxPQDMil2jg/WwyGaxj4S1ReTDLBCeb3BaCaQM
+         WR0OdmMe4y5iwxYYdgQmeVLtrvaoQ5WBQOWoCz9dbmeL8Wv/EgvaXv8lfO7J62nd9FlG
+         adpu32A7i6bj+MaG700cf4BUYXiKTJL3ZI+zf4v+dx8Zj6ycUDtIr6idMufirQszEdTY
+         o3tDklpsMbG6t7a0J1KSNT2nr66avNNqLIBOovxL36SL4AGJAdI3CFo56EKTkK/zlN5T
+         fwBQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1767711112; x=1768315912;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=v8xGpc9e0AHSzqXJdY4dTy2UmvNhNHIufeUOIUm/LzQ=;
-        b=vCeuVuvpb/QPPW1X34Md/3wZeQTwJ+ALtXKEv4VEQmfZgu2CGvax9QxOzdYAo7zrwt
-         oK/9NcT5MmWGinTclhJ+WVlsiKl7xn1EHzcVZ0yuz0JEG4/vhrsscPYfqUgdfud8wuN/
-         rsYQ5J6bbDDMsLoK1NOAC/GOLs0eZfX9yVmHHyBD9iNYVKONqn7T5C3oQLrx88JKQz9P
-         SjAa4zotQzAniMuTy0oqvA69wboOH7juLJVL3nptc/V9VH98Rc4FqEsSODnSDN0pv9cM
-         yTJVQwxElA3bMsqWK3IyHM47tNOr3LOViutLygML9I9m7ji313Sdpv/KlK9ewE+7eomc
-         P6BA==
-X-Forwarded-Encrypted: i=1; AJvYcCV609g+KJmrLF+Z8+d3cHT2obL9agm2tjSYAn6pU1Um/jI0wQ+FJG1jyA5BEbAlVXY3WtC05HP9CW8s@vger.kernel.org
-X-Gm-Message-State: AOJu0YzSENav+WHwJEeys/JPO+byvDaYHXsNxmPUVxPztRwv7eaRh5UO
-	kLBtS+TAsPbzbbRd3Zxo/CNxNQr9/AO/iDwcITNGsIlvkBmqTxznNNAP6BXiq2CL1FSqanwgdy+
-	kRQlh/wEvTF5VrGwHWTMN22T5RcSG7yIwTrv4Ie1ClemKoe77CIywig5f8uQiEnQ=
-X-Gm-Gg: AY/fxX7Hx+aeR6D36gz8VukLiQF4tAcvI4kggnLNDmn1Py9sfHGZgenA+BPOiKxMpDW
-	9FyXqzozbzdWDQlX5snci6Y5FxOI+0qSJ/fUPspJF8WvtcoJVVPD0j0NtOrD9FZTTxBxvanb0+m
-	h9EnJOCTVHfwtCekZ2jW52+j3LXcnPUbyMLmHJ2uyi+z8aRzoGzlYEKqmHcJ2iw00imvyFMXsof
-	wVeIBIcMRcOHBiRWYznJrj230s9HcV7K/Wk5nZr96GN1YkW1Vq7qH78dX/vDqmlwFGbxaQaUSPj
-	rK6JKpistEwNW6QUZBrGXVLkKyMAjaYot0h4cx6lycfHc/TIwEzCdNDoFosabDC5sIYuibqrP9V
-	5bzCTR8ithEYX53oqhBeHJ3+mmX1zS04RpQ==
-X-Received: by 2002:a05:6000:200f:b0:431:b6e:8be3 with SMTP id ffacd0b85a97d-432bc9f6dccmr4753198f8f.38.1767711112117;
-        Tue, 06 Jan 2026 06:51:52 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IGOynDA9QP29UwN/sUhG6OCzOdNXrD0Y6rHdaimQHcJZW2G3EKin+vfxrhBk6BDORYTgSmwkg==
-X-Received: by 2002:a05:6000:200f:b0:431:b6e:8be3 with SMTP id ffacd0b85a97d-432bc9f6dccmr4753140f8f.38.1767711111656;
-        Tue, 06 Jan 2026 06:51:51 -0800 (PST)
-Received: from redhat.com (IGLD-80-230-31-118.inter.net.il. [80.230.31.118])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-432bd5ede7esm4752453f8f.32.2026.01.06.06.51.48
+        d=1e100.net; s=20230601; t=1767714139; x=1768318939;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=Xbc3kQ/3J35Ph1RdKmRXDEClfieoAFkWx/TfAmjKN4E=;
+        b=kTlyDfB9iPgnnhMu0NztcVas4MeuXzTnkSf5DKgQyQQ3OA8+rdDC0qCndiiYL6LUjq
+         T/kGu90rsDBBGQ/fC0dbOQgFMqUpVj3UXsQYW5+txwc1W3YqUYgvddpxFqQ/NrEdtuUB
+         3kl3rQmhqx5MYD8ZyIQWPHVkqL/Yf2a776enI2kRx587yIsWXFA49j6yanTKYQDBoJLa
+         j2jsYNV8DgiciZiKTa/o6FDz4UPETBWVydW+nZlG2kiz73j7lDJoaGHCFDxoDTxdwpA0
+         SYL7klaIYREKYYFkLE1BTZL+3igqylB2EPN0SU8sbRxRhwyoaZ09odNkq/SWaGwGLoaP
+         HvRQ==
+X-Forwarded-Encrypted: i=1; AJvYcCUlgVjTloAh0Bm8zKzPrBfaxb5e4X2Om0syuoG4rF4SgOnSMYkeg5NTWUv1+QUCtwilKtqGLXWff8yb@vger.kernel.org
+X-Gm-Message-State: AOJu0YwF62FXRTKg+LOw+QMMm6EnLWzmwNn2cV8S3S8XpEI+c8xABBkA
+	shKmzQuDDguNQTfY/yKnVM4vnOcOhROQY/BBYeaKVnzwnR1eLqoOcEiKuM1Iqfc/DW43DWwhTXL
+	vaae0LZQj2nOabcb++XRKT1SD2L/ICb7minleJwgN2T7wbgOVFAod7fsYKoLIR6W8
+X-Gm-Gg: AY/fxX6szio8BtstLw1nCwl+paBTssJRcKhaHWwRxZ2lV2Y6m1KgaoTDR6HE4hcBfhc
+	e7DLL+aj4OhoCGyVL4i4xoPwXxN9QrqyDbvmcjGKk3cav+SH0htkLwuCL2WXRXYD0OPk7FRwlIf
+	g82LtYcjOQREEwvJzARXMehsTTGiPEZarcm6AAidrZH+OtrCDAOT433gHDD4xIfTf1yH7KORN3Q
+	ifzNYpfgPQzfdoSBOxq2BRtzhAE2nRcFnDk4Ugd07IEvqxQkBOaexqJutCekC1oyZrR+14+CjB+
+	O3yGaFJYiA36LID6oAY6vOc8cIsgoXajIrQ6B0hHvqNcYz8/VddwsUFe95aGe+/jQaH+8nfv8Bw
+	smk2vO6CwPod/FCV1JEWGpFzrwLbG3JrbiY11v/H1e4WOcIDYtKK+
+X-Received: by 2002:a17:902:d488:b0:295:96bc:8699 with SMTP id d9443c01a7336-2a3e2d8eb8emr34279205ad.20.1767714138915;
+        Tue, 06 Jan 2026 07:42:18 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IFr0lGVIZnh5mEJ0lsPTYQ6WJK/ZNFzz+RbfUFoD1NKhkA3sF5ohpJ8ppkYMwJ7WS3VNv9vpw==
+X-Received: by 2002:a17:902:d488:b0:295:96bc:8699 with SMTP id d9443c01a7336-2a3e2d8eb8emr34278945ad.20.1767714138370;
+        Tue, 06 Jan 2026 07:42:18 -0800 (PST)
+Received: from hu-pragalla-hyd.qualcomm.com ([202.46.23.25])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2a3e3cd492esm26606395ad.98.2026.01.06.07.42.13
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 06 Jan 2026 06:51:51 -0800 (PST)
-Date: Tue, 6 Jan 2026 09:51:46 -0500
-From: "Michael S. Tsirkin" <mst@redhat.com>
-To: Stefan Hajnoczi <stefanha@redhat.com>
-Cc: linux-kernel@vger.kernel.org, Cong Wang <xiyou.wangcong@gmail.com>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Olivia Mackall <olivia@selenic.com>,
-	Herbert Xu <herbert@gondor.apana.org.au>,
-	Jason Wang <jasowang@redhat.com>,
-	Paolo Bonzini <pbonzini@redhat.com>,
-	Eugenio =?iso-8859-1?Q?P=E9rez?= <eperezma@redhat.com>,
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Gerd Hoffmann <kraxel@redhat.com>,
-	Xuan Zhuo <xuanzhuo@linux.alibaba.com>,
-	Marek Szyprowski <m.szyprowski@samsung.com>,
-	Robin Murphy <robin.murphy@arm.com>,
-	Stefano Garzarella <sgarzare@redhat.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Eric Dumazet <edumazet@google.com>,
-	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
-	Simon Horman <horms@kernel.org>, Petr Tesarik <ptesarik@suse.com>,
-	Leon Romanovsky <leon@kernel.org>, Jason Gunthorpe <jgg@ziepe.ca>,
-	Bartosz Golaszewski <brgl@kernel.org>, linux-doc@vger.kernel.org,
-	linux-crypto@vger.kernel.org, virtualization@lists.linux.dev,
-	linux-scsi@vger.kernel.org, iommu@lists.linux.dev,
-	kvm@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [PATCH v2 10/15] virtio_scsi: fix DMA cacheline issues for events
-Message-ID: <20260106095044-mutt-send-email-mst@kernel.org>
-References: <cover.1767601130.git.mst@redhat.com>
- <8801aeef7576a155299f19b6887682dd3a272aba.1767601130.git.mst@redhat.com>
- <20260105181939.GA59391@fedora>
+        Tue, 06 Jan 2026 07:42:17 -0800 (PST)
+From: Pradeep P V K <pradeep.pragallapati@oss.qualcomm.com>
+To: vkoul@kernel.org, neil.armstrong@linaro.org, robh@kernel.org,
+        krzk+dt@kernel.org, conor+dt@kernel.org, martin.petersen@oracle.com,
+        andersson@kernel.org, konradybcio@kernel.org,
+        taniya.das@oss.qualcomm.com, dmitry.baryshkov@oss.qualcomm.com,
+        manivannan.sadhasivam@oss.qualcomm.com
+Cc: linux-arm-msm@vger.kernel.org, linux-phy@lists.infradead.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, nitin.rawat@oss.qualcomm.com,
+        Pradeep P V K <pradeep.pragallapati@oss.qualcomm.com>
+Subject: [PATCH V4 0/4] Add UFS support for x1e80100 SoC
+Date: Tue,  6 Jan 2026 21:12:03 +0530
+Message-Id: <20260106154207.1871487-1-pradeep.pragallapati@oss.qualcomm.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260105181939.GA59391@fedora>
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-ORIG-GUID: p3q8CpcYSnQRB_iG0b196BHdWKakaMj_
+X-Proofpoint-GUID: p3q8CpcYSnQRB_iG0b196BHdWKakaMj_
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMTA2MDEzNiBTYWx0ZWRfXxCJV8dgMp9TN
+ rrU5yPjiU99WlJr4DHA9snsknKhXEshQyb9yHSCWWyjAfjrwWxjAZ3qJDVUbflFi99vFmZz0+6C
+ oaDQt2upofNyId2mycLtcThAdU1OlFkBNOuvNmH8PKnq1ZI5NYpR5iN/Nli8ItsYDx3naoB6FSs
+ /C0LI8LDLIlyiY8byLy8kDLJ8AuU2fDAiJQhkjCyHGniKPk2YU7HLf11zQK2P8NQNSjFXl1+CAp
+ +4fTdVxBzeW8spoaeMUYHk9iaS/x9USryxnJph8PD88kYwmgjKZ55VIRjS82O+icKv0wR8Rr21l
+ SayE6wttTA1MJz1HCTXUGDQGBAQI7oEj22XUl87GlSCNGLUAXVJWSEGjaIZB7fMv14/6bXByyQq
+ B19KoeHYdfsobrf2Fbq+W2P/nTs/6yyFEYjccyBzGCY39p0PggO7Ivs9XHZcXi1dlfs9+ndzJaX
+ DI1XGR7ASWXpB4EGSXw==
+X-Authority-Analysis: v=2.4 cv=Jpz8bc4C c=1 sm=1 tr=0 ts=695d2d5c cx=c_pps
+ a=JL+w9abYAAE89/QcEU+0QA==:117 a=ZePRamnt/+rB5gQjfz0u9A==:17
+ a=vUbySO9Y5rIA:10 a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=VwQbUJbxAAAA:8 a=EUspDBNiAAAA:8 a=pGLkceISAAAA:8 a=l61i-3TWFFmDW3nFSd4A:9
+ a=324X-CrmTo6CU4MGRt3R:22
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.9,FMLib:17.12.100.49
+ definitions=2026-01-06_01,2026-01-06_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ lowpriorityscore=0 malwarescore=0 bulkscore=0 clxscore=1015 adultscore=0
+ phishscore=0 suspectscore=0 impostorscore=0 spamscore=0 priorityscore=1501
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2512120000 definitions=main-2601060136
 
-On Mon, Jan 05, 2026 at 01:19:39PM -0500, Stefan Hajnoczi wrote:
-> On Mon, Jan 05, 2026 at 03:23:29AM -0500, Michael S. Tsirkin wrote:
-> > @@ -61,7 +62,7 @@ struct virtio_scsi_cmd {
-> >  
-> >  struct virtio_scsi_event_node {
-> >  	struct virtio_scsi *vscsi;
-> > -	struct virtio_scsi_event event;
-> > +	struct virtio_scsi_event *event;
-> >  	struct work_struct work;
-> >  };
-> >  
-> > @@ -89,6 +90,11 @@ struct virtio_scsi {
-> >  
-> >  	struct virtio_scsi_vq ctrl_vq;
-> >  	struct virtio_scsi_vq event_vq;
-> > +
-> > +	__dma_from_device_group_begin();
-> > +	struct virtio_scsi_event events[VIRTIO_SCSI_EVENT_LEN];
-> > +	__dma_from_device_group_end();
-> 
-> If the device emits two events in rapid succession, could the CPU see
-> stale data for the second event because it already holds the cache line
-> for reading the first event?
-> 
-> In other words, it's not obvious to me that the DMA warnings are indeed
-> spurious and should be silenced here.
-> 
-> It seems safer and simpler to align and pad the struct virtio_scsi_event
-> field in struct virtio_scsi_event_node rather than packing these structs
-> into a single array here they might share cache lines.
-> 
-> Stefan
+Add UFSPHY, UFSHC compatible binding names and UFS devicetree
+enablement changes for Qualcomm x1e80100 SoC.
 
+Changes in V4:
+- Update ufs@ with ufshc@ in SoC dtsi [Mani]
+- Retain complete change history in cover letter [Dmitry]
+- Remove "jedec,ufs-2.0" compatible from ufshc dt-bindings
+  and SoC dtsi files [Krzysztof, Mani]
+- Remove RB-by tag from Krzysztof and AB-by tag from Mani on
+  UFSHC dt-binding file as it has changes and needs re-review.
+- Add RB-by for QMP UFS PHY dt-binding [Krzysztof]
+- Add RB-by for SoC dtsi [Konrad, Abel, Taniya, Mani]
+- Add RB-by for board dts [Konrad]
+- Link to V3:
+  https://lore.kernel.org/all/0689ae93-0684-4bf8-9bce-f9f32e56fe06@oss.qualcomm.com
+ 
+Changes in V3:
+- Update all dt-bindings commit messages with concise and informative
+  statements [Krzysztof]
+- keep the QMP UFS PHY order by last compatible in numerical ascending
+  order [Krzysztof]
+- Remove qcom,x1e80100-ufshc from select: enum: list of
+  qcom,sc7180-ufshc.yaml file [Krzysztof]
+- Update subject prefix for all dt-bindings [Krzysztof]
+- Add RB-by for SoC dtsi [Konrad, Abel, Taniya]
+- Add RB-by for board dts [Konrad]
+- Link to V2:
+  https://lore.kernel.org/all/20251231101951.1026163-1-pradeep.pragallapati@oss.qualcomm.com
 
+Changes in V2:
+- Update all dt-bindings commit messages to explain fallback
+  to SM8550 [Krzysztof]
+- Pad register addresses to 8-digit hex format [Konrad]
+- Place one compatible string per line [Konrad]
+- Replace chip codenames with numeric identifiers throughout [Konrad]
+- Fix dt_binding_check error in UFSHC dt-bindings [Rob]
 
-To add to what I wrote, that's a lot of overhead: 8 * 128 - about 1K on
-some platforms, and these happen to be low end ones.
+- This series is rebased on GCC bindings and driver changes:
+  https://lore.kernel.org/lkml/20251230-ufs_symbol_clk-v1-0-47d46b24c087@oss.qualcomm.com/
+
+- This series address issues and gaps noticed on:
+  https://lore.kernel.org/linux-devicetree/20250814005904.39173-2-harrison.vanderbyl@gmail.com/
+  https://lore.kernel.org/linux-devicetree/p3mhtj2rp6y2ezuwpd2gu7dwx5cbckfu4s4pazcudi4j2wogtr@4yecb2bkeyms/
+
+- Link to V1:
+  https://lore.kernel.org/linux-phy/20251229060642.2807165-1-pradeep.pragallapati@oss.qualcomm.com/
+
+---
+Pradeep P V K (4):
+  dt-bindings: phy: qcom,sc8280xp-qmp-ufs-phy: Add QMP UFS PHY
+    compatible
+  dt-bindings: ufs: qcom,sc7180-ufshc: Add UFSHC compatible for x1e80100
+  arm64: dts: qcom: hamoa: Add UFS nodes for x1e80100 SoC
+  arm64: dts: qcom: hamoa-iot-evk: Enable UFS
+
+ .../phy/qcom,sc8280xp-qmp-ufs-phy.yaml        |   4 +
+ .../bindings/ufs/qcom,sc7180-ufshc.yaml       |  37 +++---
+ arch/arm64/boot/dts/qcom/hamoa-iot-evk.dts    |  18 +++
+ arch/arm64/boot/dts/qcom/hamoa.dtsi           | 123 +++++++++++++++++-
+ 4 files changed, 164 insertions(+), 18 deletions(-)
 
 -- 
-MST
+2.34.1
 
