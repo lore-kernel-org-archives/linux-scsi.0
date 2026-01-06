@@ -1,57 +1,52 @@
-Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
+Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DA0D21E412A
-	for <linux-scsi@vger.kernel.org>; Tue,  6 Jan 2026 18:57:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.14
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 79A3A3081B8
+	for <linux-scsi@vger.kernel.org>; Tue,  6 Jan 2026 19:00:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767725858; cv=none; b=NfT13ghTI/orN0HfGmXq7H2TpRDM+jukWGCdSmBO1CgxaWuzynIX4CIXtyKKTkmd2OiuqmQUyImz3tQ9qr/X1whdU9BfqM2F9WsXg0/cG5UWSATzhfmNbBVmIQ9Br5Ug6tvQZyPqkUaYYER6cd5Bu9XjD9Nj+WQiA6O3TzZ8Jpc=
+	t=1767726032; cv=none; b=dWnBcRwcBMW/xEhWOzL/fBdPbIGSSoL4JYmOETTuowjRn7P7XwtDyRRAZhW+QFBIQg75GTJj46w8u13X683BJtTHqj6c9Wd5TDxVt1LVBarQ6o35m/Cxcdc7r+H2ARNMBhTzfjAnFcFrTDuNjWYEKHzoU8LM4wdZVg9hoFk/cgo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767725858; c=relaxed/simple;
-	bh=PIt/XOexxWiMe/hwev+yWHeRqeuytSGj2Z3facfYBB0=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Oa27e6fDDQA8Ypx7F67BpXyvfdgGQugq9MfA4BytxMS0YaRV5nnWWH5CDjfz5E5qK7eNyuYWOk7ScDdhywUR0225Rz7sv/xZwuU8p4qZowsf+pKdoCOtXnox/4WZdHRIeGDkHX2rEsBMQjG1I6IFwdh4SUVdv+ivYVhtnNwCkag=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=qsqzCQU/; arc=none smtp.client-ip=199.89.1.14
+	s=arc-20240116; t=1767726032; c=relaxed/simple;
+	bh=ShrMlvVSmBpySujKQRGPdz68bioymZEkWhj8Oi2gRTc=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=NTSKZBk4Rxl6Qiv9HM+pxFc6VMenRTGQ8ofBTg0gOikaoOB6/f0H4tkn1l4ggbo9gmVXPX+3JbBx6p6nr6oxzayR+HLHSQZheTRDgRCQvXBTMQB00SOaabyFOw4MoVgZiji1YcEugA733MNVfj3jN7aLGuYRSVlvPgWtEqlCe7Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=hcOCEWQn; arc=none smtp.client-ip=199.89.1.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="qsqzCQU/"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="hcOCEWQn"
 Received: from localhost (localhost [127.0.0.1])
-	by 011.lax.mailroute.net (Postfix) with ESMTP id 4dm0ly2ZBgz1XScCj;
-	Tue,  6 Jan 2026 18:57:34 +0000 (UTC)
+	by 013.lax.mailroute.net (Postfix) with ESMTP id 4dm0qK6hZVzm3QsT;
+	Tue,  6 Jan 2026 19:00:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:mime-version:x-mailer:message-id:date
 	:date:subject:subject:from:from:received:received; s=mr01; t=
-	1767725852; x=1770317853; bh=Wz3NbiEtx+fif302pZu3eFi2rV9QScVArKv
-	5bBhfx74=; b=qsqzCQU/l1Sx7Q58p1juGCcfao6hXvoGxoTapbIMOIpr3rkvrAl
-	m3RYrj5Rq4oJ7zyH8Q1FlhaD6R0rWbKzLRU7BEpdRXdPeFvaJxqmMecm3PYuo+s4
-	bPE54tOwwJJqeeAkFUkAaUmleZfDXMHxVMRxuzrw6Srn24gvr+gEsrTC7HpTy/jE
-	FMF+zSLJ85wQJ8HkBO0HqHuVvg/cFWbjQOBDjH6i6OkiYcdQq25RA1/XxpeEjF22
-	ax84k9EAU+CIFbFIOCrkhKGddu3faYrCIhWs0CCNCwR9PzZtYoK7R+UIzT7ixji1
-	6q81PMTpwGEuyEvep09c1qmavX4PM/szqFA==
+	1767726028; x=1770318029; bh=QipDuGfe0YRYdc4pqAPbyWxP6kMjYkDHgMH
+	jEXboAd8=; b=hcOCEWQnjE/71/WlwySU8vWpjwWSz5phkJdfFx/CHhFRNTD+jo9
+	puD5apbbzrAm7+iQMg+ZW/fLINOkN04WNH4NdFnJ/TpxhsSR/A58yUS8GVHInCEO
+	iN3bpUDjO/D3PxUwXk5qnQHmENu0BVGEGScDV8Yy76OpGCXz7Agy+sn0+VJAb2Yy
+	LDylDlvd68W+ms1xXObYseR++sBjhZyicq9ETwy4jlskqtUxRTp2IZkyqREcnw3b
+	jPGY+Ifqr0ALGrbUDfbidOkIJQdK89eXnxgjw+G2A8qcBU/ObyvLsmdkmKtQt9Nu
+	fqQUvePXtNymHV7Ke+2xO+AnuH1mR79salw==
 X-Virus-Scanned: by MailRoute
-Received: from 011.lax.mailroute.net ([127.0.0.1])
- by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id XjjNROxu98_K; Tue,  6 Jan 2026 18:57:32 +0000 (UTC)
+Received: from 013.lax.mailroute.net ([127.0.0.1])
+ by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id DaUAD4XArx0i; Tue,  6 Jan 2026 19:00:28 +0000 (UTC)
 Received: from bvanassche.mtv.corp.google.com (unknown [104.135.180.219])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4dm0lt4JYPz1XM6J7;
-	Tue,  6 Jan 2026 18:57:30 +0000 (UTC)
+	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4dm0qH0SL0zlfl5W;
+	Tue,  6 Jan 2026 19:00:26 +0000 (UTC)
 From: Bart Van Assche <bvanassche@acm.org>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org,
 	Bart Van Assche <bvanassche@acm.org>,
-	Chandrakanth Patil <chandrakanth.patil@broadcom.com>,
-	Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>,
-	Kashyap Desai <kashyap.desai@broadcom.com>,
-	Sumit Saxena <sumit.saxena@broadcom.com>,
-	Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
 	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-Subject: [PATCH] scsi: mpi3mr: Simplify the workqueue allocation code
-Date: Tue,  6 Jan 2026 11:57:22 -0700
-Message-ID: <20260106185723.2526901-1-bvanassche@acm.org>
+Subject: [PATCH] ufs: core: Improve the documentation of UFS data frames
+Date: Tue,  6 Jan 2026 12:00:17 -0700
+Message-ID: <20260106190017.2527978-1-bvanassche@acm.org>
 X-Mailer: git-send-email 2.52.0.351.gbe84eed79e-goog
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -61,52 +56,76 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 
-Let alloc_ordered_workqueue() format the workqueue name instead of
-calling scnprintf() explicitly. Compile-tested only.
+In source code comments, use terminology that comes from the JEDEC
+UFS standard. This makes it easier to compare the UFS driver code with th=
+e
+JEDEC UFS standard. Add static_assert() statements that verify the size
+of data structures defined in the UFS standard.
 
-Cc: Chandrakanth Patil <chandrakanth.patil@broadcom.com>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/mpi3mr/mpi3mr.h    | 2 --
- drivers/scsi/mpi3mr/mpi3mr_fw.c | 5 +----
- 2 files changed, 1 insertion(+), 6 deletions(-)
+ include/uapi/scsi/scsi_bsg_ufs.h | 17 ++++++++---------
+ include/ufs/ufs.h                |  5 ++++-
+ 2 files changed, 12 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
-index 31d68c151b20..82f4ae87d6bc 100644
---- a/drivers/scsi/mpi3mr/mpi3mr.h
-+++ b/drivers/scsi/mpi3mr/mpi3mr.h
-@@ -1076,7 +1076,6 @@ struct scmd_priv {
-  * @fwevt_worker_thread: Firmware event worker thread
-  * @fwevt_lock: Firmware event lock
-  * @fwevt_list: Firmware event list
-- * @watchdog_work_q_name: Fault watchdog worker thread name
-  * @watchdog_work_q: Fault watchdog worker thread
-  * @watchdog_work: Fault watchdog work
-  * @watchdog_lock: Fault watchdog lock
-@@ -1265,7 +1264,6 @@ struct mpi3mr_ioc {
- 	spinlock_t fwevt_lock;
- 	struct list_head fwevt_list;
+diff --git a/include/uapi/scsi/scsi_bsg_ufs.h b/include/uapi/scsi/scsi_bs=
+g_ufs.h
+index 8c29e498ef98..06f88d1b1876 100644
+--- a/include/uapi/scsi/scsi_bsg_ufs.h
++++ b/include/uapi/scsi/scsi_bsg_ufs.h
+@@ -94,16 +94,15 @@ struct utp_upiu_header {
+ };
 =20
--	char watchdog_work_q_name[50];
- 	struct workqueue_struct *watchdog_work_q;
- 	struct delayed_work watchdog_work;
- 	spinlock_t watchdog_lock;
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr=
-_fw.c
-index 8fe6e0bf342e..b564fe5980a6 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-@@ -2878,11 +2878,8 @@ void mpi3mr_start_watchdog(struct mpi3mr_ioc *mrio=
-c)
- 		return;
+ /**
+- * struct utp_upiu_query - upiu request buffer structure for
+- * query request.
+- * @opcode: command to perform B-0
+- * @idn: a value that indicates the particular type of data B-1
+- * @index: Index to further identify data B-2
+- * @selector: Index to further identify data B-3
++ * struct utp_upiu_query - QUERY REQUEST UPIU structure.
++ * @opcode: query function to perform B-0
++ * @idn: descriptor or attribute identification number B-1
++ * @index: Index that further identifies which data to access B-2
++ * @selector: Index that further identifies which data to access B-3
+  * @reserved_osf: spec reserved field B-4,5
+- * @length: number of descriptor bytes to read/write B-6,7
+- * @value: Attribute value to be written DW-5
+- * @reserved: spec reserved DW-6,7
++ * @length: number of descriptor bytes to read or write B-6,7
++ * @value: if @opcode =3D=3D UPIU_QUERY_OPCODE_WRITE_ATTR, the value to =
+be written B-6,7
++ * @reserved: reserved for future use DW-6,7
+  */
+ struct utp_upiu_query {
+ 	__u8 opcode;
+diff --git a/include/ufs/ufs.h b/include/ufs/ufs.h
+index ab8f6c07b5a2..602aa34c9822 100644
+--- a/include/ufs/ufs.h
++++ b/include/ufs/ufs.h
+@@ -21,6 +21,7 @@
+  * in this header file of the size of struct utp_upiu_header.
+  */
+ static_assert(sizeof(struct utp_upiu_header) =3D=3D 12);
++static_assert(sizeof(struct utp_upiu_query) =3D=3D 20);
 =20
- 	INIT_DELAYED_WORK(&mrioc->watchdog_work, mpi3mr_watchdog_work);
--	snprintf(mrioc->watchdog_work_q_name,
--	    sizeof(mrioc->watchdog_work_q_name), "watchdog_%s%d", mrioc->name,
--	    mrioc->id);
- 	mrioc->watchdog_work_q =3D alloc_ordered_workqueue(
--		"%s", WQ_MEM_RECLAIM, mrioc->watchdog_work_q_name);
-+		"watchdog_%s%d", WQ_MEM_RECLAIM, mrioc->name, mrioc->id);
- 	if (!mrioc->watchdog_work_q) {
- 		ioc_err(mrioc, "%s: failed (line=3D%d)\n", __func__, __LINE__);
- 		return;
+ #define GENERAL_UPIU_REQUEST_SIZE (sizeof(struct utp_upiu_req))
+ #define QUERY_DESC_MAX_SIZE       255
+@@ -561,7 +562,7 @@ enum ufs_dev_pwr_mode {
+ #define UFS_WB_BUF_REMAIN_PERCENT(val) ((val) / 10)
+=20
+ /**
+- * struct utp_cmd_rsp - Response UPIU structure
++ * struct utp_cmd_rsp - RESPONSE UPIU structure
+  * @residual_transfer_count: Residual transfer count DW-3
+  * @reserved: Reserved double words DW-4 to DW-7
+  * @sense_data_len: Sense data length DW-8 U16
+@@ -574,6 +575,8 @@ struct utp_cmd_rsp {
+ 	u8 sense_data[UFS_SENSE_SIZE];
+ };
+=20
++static_assert(sizeof(struct utp_cmd_rsp) =3D=3D 40);
++
+ /**
+  * struct utp_upiu_rsp - general upiu response structure
+  * @header: UPIU header structure DW-0 to DW-2
