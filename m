@@ -1,118 +1,174 @@
-Received: from lamorak.hansenpartnership.com (lamorak.hansenpartnership.com [198.37.111.173])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f67.google.com (mail-wm1-f67.google.com [209.85.128.67])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B5490229B18
-	for <linux-scsi@vger.kernel.org>; Wed,  7 Jan 2026 12:36:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.37.111.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 75C172EA169
+	for <linux-scsi@vger.kernel.org>; Wed,  7 Jan 2026 12:51:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.67
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767789411; cv=none; b=VnnPige3WwygQzvfK3kOV4IJVXZISmEM7BWa+u3z+6W302mzrlEg306NmUn1FN+iYpECsbU5VOcQKfc/jO+wW4/60SqHsYKn7iZ64vFg8xk5rcxfXlwxM4VV3qqoSTAmCBJNxp4SARcaXJ9FmeNsxKP1FKtoiugPZL6cf2qru5E=
+	t=1767790317; cv=none; b=crG+UeSo5xmpCfi2/kZNXay2E49F6L7vAUwz+GB62yh/Ae10ey4tDVHrryNkG1DcZRwbHz4pSc1SFGBpLAuYd+5Z9tKGFJU6THCZWDaZRlLCr3hdkbW8fToAtBYNP1Wd0C2v2eVX0qJRPNT/g/ionI0x5UmKwk0pRp3aMbV1ZFg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767789411; c=relaxed/simple;
-	bh=vzA3PpKXskqdZhNhgvq0MoYJ9KkiPOvjG0+k0ShcBRQ=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=mHgpA2SBANGuSKuV5tqj51gNwfMaKwSYOwIQY0I/48TY9+rURqa7tFNseoY2NrUxeK8D0KEIZJnSXX+zKUECXyyY4wb0+s7YA6GnJTxgv6ZY8Z33OZCvI11GMtgTaPeGVoFOBJX5ZEqaxuvFv1Q1oWlKLfNDA1vJCpMOcSfuGIQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com; spf=pass smtp.mailfrom=HansenPartnership.com; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=AkoDOYTu; arc=none smtp.client-ip=198.37.111.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=HansenPartnership.com
+	s=arc-20240116; t=1767790317; c=relaxed/simple;
+	bh=b6bGsRp96mSSDNnBG4wke+H2gJj/dTJWhM/CmWnrx8k=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=R2/sarBEk2wIceZqXUuRIZ9D5JTElyRGJk6u1dJfFcEmxwZsaI4s6LDIQKxNtK76SuIt+TTzmIjhiwIaTDDJKQgJ9kYh7ItqnpUd/UtheKUlOw4NCcqJGOcaankheoUmFIUvanBGaNRFTovQH0JbdNXEiJXFOOCJ+kEc2S5HlQg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=pCtHbAt1; arc=none smtp.client-ip=209.85.128.67
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="AkoDOYTu"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-	d=hansenpartnership.com; s=20151216; t=1767789407;
-	bh=vzA3PpKXskqdZhNhgvq0MoYJ9KkiPOvjG0+k0ShcBRQ=;
-	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
-	b=AkoDOYTuZAoSxCu+HVFjFs9TW15Y+uldl2a/gAlWYoduuYSEewnEz1o2FDf6dCT1i
-	 9DU8bqzPETRjc9AELKbtzbX8eIC+2e6K8GYFhzW/sNl+4vI+p9L8WiFbCQyTkEa9nC
-	 yxgmdttwAiN1as3xf+XUfvvPPbYhCrL0yzItpiiM=
-Received: from lingrow.int.hansenpartnership.com (unknown [IPv6:2601:5c4:4300:d341::a774])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by lamorak.hansenpartnership.com (Postfix) with ESMTPSA id 8EF5A1C035D;
-	Wed, 07 Jan 2026 07:36:45 -0500 (EST)
-Message-ID: <f9f4833e9667e9e0a0e94d656fe8138c06705e93.camel@HansenPartnership.com>
-Subject: Re: [PATCH] scsi: Change the return type of the .queuecommand()
- callback
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-To: Bart Van Assche <bvanassche@acm.org>, "Martin K . Petersen"
-	 <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>, John
- Garry <john.g.garry@oracle.com>, Jonathan Corbet <corbet@lwn.net>, Niklas
- Cassel <cassel@kernel.org>, Takashi Sakamoto <o-takashi@sakamocchi.jp>,
- Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>, Sathya
- Prakash <sathya.prakash@broadcom.com>, Sreekanth Reddy
- <sreekanth.reddy@broadcom.com>,  Suganath Prabu Subramani
- <suganath-prabu.subramani@broadcom.com>, Nihar Panda
- <niharp@linux.ibm.com>, Heiko Carstens <hca@linux.ibm.com>, Vasily Gorbik
- <gor@linux.ibm.com>, Alexander Gordeev <agordeev@linux.ibm.com>, Khalid
- Aziz <khalid@gonehiking.org>, Finn Thain <fthain@linux-m68k.org>, Michael
- Schmitz <schmitzmic@gmail.com>, Adaptec OEM Raid Solutions
- <aacraid@microsemi.com>, Russell King <linux@armlinux.org.uk>, Anil
- Gurumurthy <anil.gurumurthy@qlogic.com>, Sudarsana Kalluru
- <sudarsana.kalluru@qlogic.com>,  Saurav Kashyap <skashyap@marvell.com>,
- Javed Hasan <jhasan@marvell.com>, GR-QLogic-Storage-Upstream@marvell.com, 
- Satish Kharat <satishkh@cisco.com>, Sesidhar Baddela <sebaddel@cisco.com>,
- Karan Tilak Kumar <kartilak@cisco.com>, Don Brace
- <don.brace@microchip.com>, Tyrel Datwyler <tyreld@linux.ibm.com>, Madhavan
- Srinivasan <maddy@linux.ibm.com>, Michael Ellerman <mpe@ellerman.id.au>,
- Brian King <brking@us.ibm.com>, Hannes Reinecke <hare@suse.de>, Lee Duncan
- <lduncan@suse.com>, Chris Leech <cleech@redhat.com>, Mike Christie
- <michael.christie@oracle.com>, Justin Tee <justin.tee@broadcom.com>, Paul
- Ely <paul.ely@broadcom.com>, Kashyap Desai <kashyap.desai@broadcom.com>,
- Sumit Saxena <sumit.saxena@broadcom.com>, Shivasharan S
- <shivasharan.srikanteshwara@broadcom.com>,  Chandrakanth patil
- <chandrakanth.patil@broadcom.com>, GOTO Masanori <gotom@debian.or.jp>,
- Nilesh Javali <njavali@marvell.com>, Manish Rangankar
- <mrangankar@marvell.com>, "K. Y. Srinivasan" <kys@microsoft.com>, Haiyang
- Zhang <haiyangz@microsoft.com>, Wei Liu <wei.liu@kernel.org>,  Dexuan Cui
- <decui@microsoft.com>, Long Li <longli@microsoft.com>, "Michael S. Tsirkin"
- <mst@redhat.com>,  Jason Wang <jasowang@redhat.com>, Juergen Gross
- <jgross@suse.com>, Stefano Stabellini <sstabellini@kernel.org>, Oliver
- Neukum <oliver@neukum.org>, Greg Kroah-Hartman
- <gregkh@linuxfoundation.org>, Randy Dunlap <rdunlap@infradead.org>, Jens
- Axboe <axboe@kernel.dk>, Al Viro <viro@zeniv.linux.org.uk>, Ingo Molnar
- <mingo@kernel.org>, Thomas Gleixner <tglx@linutronix.de>, Easwar Hariharan
- <easwar.hariharan@linux.microsoft.com>, Allen Pais
- <apais@linux.microsoft.com>,  Chaitanya Kulkarni <kch@nvidia.com>, Guixin
- Liu <kanie@linux.alibaba.com>, Hamza Mahfooz
- <hamzamahfooz@linux.microsoft.com>, Peter Wang <peter.wang@mediatek.com>, 
- Avri Altman <avri.altman@sandisk.com>, Bean Huo <beanhuo@micron.com>,
- Adrian Hunter <adrian.hunter@intel.com>, "Bao D. Nguyen"
- <quic_nguyenb@quicinc.com>
-Date: Wed, 07 Jan 2026 07:36:44 -0500
-In-Reply-To: <20260106185310.2524290-1-bvanassche@acm.org>
-References: <20260106185310.2524290-1-bvanassche@acm.org>
-Autocrypt: addr=James.Bottomley@HansenPartnership.com;
- prefer-encrypt=mutual;
- keydata=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
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.50.3 
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="pCtHbAt1"
+Received: by mail-wm1-f67.google.com with SMTP id 5b1f17b1804b1-47aa03d3326so17264415e9.3
+        for <linux-scsi@vger.kernel.org>; Wed, 07 Jan 2026 04:51:54 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1767790313; x=1768395113; darn=vger.kernel.org;
+        h=cc:to:message-id:content-transfer-encoding:mime-version:subject
+         :date:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=4Uu1H5BSD/8+NS93eqVir5v4iZ5eZ6Au8D2IPvaCZC4=;
+        b=pCtHbAt1l6/EQdtm595wcnQYJhrK1lsqz+nXwViHg7Rc7imk0YIp6SwBQ3RYXR6SX5
+         yObpg2KXCAsGiJxGHvEo6f7fG5NWA8JTL1hlT2Ovm2lenRfY69EUn2SBF3Czs3iJv+QY
+         tLKoeXKEj06qBYAKaFrVLbCfcYXzz83fNJtsYi3F2ByTEY64dqiBumu5jtBNJRCWdHWv
+         EHT/ifh9RuaNAbTTGY0g/s9Daa4LbHAO9dQeD5cf7GZvxq3KJ6NzlaMC6i/299yWh79x
+         oCWk8rPJi+kRydIcCXyBg0rp6043O0P7BtLCgfXPgy2EkWJqddHFAWuGWouPqPWUbGQ4
+         OgaA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1767790313; x=1768395113;
+        h=cc:to:message-id:content-transfer-encoding:mime-version:subject
+         :date:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=4Uu1H5BSD/8+NS93eqVir5v4iZ5eZ6Au8D2IPvaCZC4=;
+        b=AHE2eq6l+UIS5d0u9+jl6jFd4nmE2SEWaJbAnclJT76Sc9fC18rS2hkS8oMBPlRHpX
+         xTWlHs0o3qfYsXT88n5jj+cTx0yMlXQBs55IoJff8OLU28EQ6Wg2n7roVaP36SGqUffs
+         JDgDQi9hqqFJWLWOG59rVLX6S1IZDQtskO8A7bTSi9U9kDdEQlFXGhdb/MGPDtDdyjMq
+         xG+r3nDhTxJdCjUFZ+ySXHZeaBUngANFcrNPpK7o4+4woBTM/QKVIG777zIpzHszDupt
+         wEwxb2c+cnLX/O7hNDud2Jmr0WCM5fZvoExdrb1T+VH24lVHFMPm69hlop/7FtfNaeW8
+         heWA==
+X-Gm-Message-State: AOJu0YxRu4YXze4riT3vPTPyHyypxxAlc8W2r6V0Anunlzc7UZM6NC0l
+	c5EYhJLFjNo2bbNNzW1+FQTPQXmi7dnNIvxcILv4SXyTmSMLli/B3FGjnij8O0qIXCE=
+X-Gm-Gg: AY/fxX4WY8XxR6r10teraxCHLnl43tl91ztEH0Gb1Lz93LNG1H3ZhktKYiHsfUhWxaq
+	U3mIwXlCzZ0+28xadLNhCdZDfCOPQkAcwoXlTBHCFkKU37Vsk1SnCOsIZ30e6AvcGNei8jgjXhQ
+	U+JXpdpw4UwP7pixfSoNAk4nLD7akJCq2xX32hjDsxK7QBy7ZlJGJaRwy5leovQ/xyY9Sy5KRzT
+	78ZSaw4LBcnR8euR+jXuXxytZ373CCbGqWHRu7m6BpgFfAB7Ul/P4t+NL3aPp7oz0PoENmVewmp
+	7IChlWatV0Ycyhf+o1L76A0YbQ20Jh34hLCKrHet4swMSCBdmke8z6XuAyyRwozzrRq8I8GCwHe
+	F1MySZlZKjEztzKyPTMZi05DiP7NExm6N9Wb1PDmtSTO9OwMrz7h9XYxzLkRK8q8nHMg97p3LY/
+	0uBvj/IWPVNHZh1a+Yb7w02PAfaYD/Ye5Qti/HcLdDGQ==
+X-Google-Smtp-Source: AGHT+IGtmy+rmCPoBaw4OXxfbS0cwSrvVmxx0w5l1Pkf23wV89pinoU5RtfWAgoq0o44R/EZc+4nJg==
+X-Received: by 2002:a05:600c:3483:b0:471:1765:839c with SMTP id 5b1f17b1804b1-47d84b36a60mr25617005e9.20.1767790312777;
+        Wed, 07 Jan 2026 04:51:52 -0800 (PST)
+Received: from gpeter-l.roam.corp.google.com ([145.224.67.249])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-47d7f703a8csm96167505e9.13.2026.01.07.04.51.50
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 07 Jan 2026 04:51:51 -0800 (PST)
+From: Peter Griffin <peter.griffin@linaro.org>
+Date: Wed, 07 Jan 2026 12:51:47 +0000
+Subject: [PATCH v2] scsi: ufs: exynos: call phy_notify_state() from hibern8
+ callbacks
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20260107-ufs-exynos-phy_notify_pmstate-v2-1-2b823a25208b@linaro.org>
+X-B4-Tracking: v=1; b=H4sIAONWXmkC/42Oyw6CMBQFf4V0bU1beYgr/8MQUukFbqJtbQuhI
+ fy7FRduXc4szpyVeHAInlyylTiY0aPRCcQhI90o9QAUVWIimChYxU506j2FJWrjqR1jq03APrb
+ 26YMMQDsGtbrXhezKkqQN66DHZd+/NV928JpSJvzkiD4YF/cPM//Yf3Mzp5zmdZ6XqjoXQvHrA
+ 7V05mjcQJpt297ASvWI4AAAAA==
+X-Change-ID: 20250703-ufs-exynos-phy_notify_pmstate-c0e9db95ac66
+To: Alim Akhtar <alim.akhtar@samsung.com>, 
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
+ "Martin K. Petersen" <martin.petersen@oracle.com>, 
+ Krzysztof Kozlowski <krzk@kernel.org>
+Cc: linux-scsi@vger.kernel.org, linux-samsung-soc@vger.kernel.org, 
+ linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, 
+ kernel-team@android.com, andre.draszik@linaro.org, willmcvicker@google.com, 
+ tudor.ambarus@linaro.org, jyescas@google.com, 
+ Bart Van Assche <bvanassche@acm.org>, 
+ Peter Griffin <peter.griffin@linaro.org>
+X-Mailer: b4 0.14.2
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2453;
+ i=peter.griffin@linaro.org; h=from:subject:message-id;
+ bh=b6bGsRp96mSSDNnBG4wke+H2gJj/dTJWhM/CmWnrx8k=;
+ b=owEBbQKS/ZANAwAKAc7ouNYCNHK6AcsmYgBpXlbmWHrRbxL0hbh/4m7jouBvvAK6X/XuMtcbx
+ KhVs3PMJ+eJAjMEAAEKAB0WIQQO/I5vVXh1DVa1SfzO6LjWAjRyugUCaV5W5gAKCRDO6LjWAjRy
+ ut9JEACG3J2/QCQXtSVwyR1VKL0SK3TpcZ8Z9VM0tjtPjrxGKYt5vTijVq/pHd7GZMQshzuuF4y
+ dXtphkj4YY9plBcc+xKo2NmzefB4icaI2juenadwRc/Jgx1Ihd94fyAizKWoYHjHs7jtWRaKAXZ
+ JR006DGeGdYlIScrn9ObqX2YYd5i1tms0OQP9QIIhEtmWx64MSw1OxqhyziftYKtqCKhv6zxdGV
+ QuMEiMXyIBSKa+vSSPA3mok595CTmPFpCy04co/hkyB6JXW8VKMdkTeC8nCQ/GF98n5wX2UwiRR
+ bcFjicTHDbHV0qhTUOub7vdAw1IsZ0cYBp9zIsdXd91QrBdvQUJoKRmXFepkJHmCXXRgUX5oqn1
+ Va9CtgSk36Y9MG8zyk5YbwT8+XHbI4hxQBIJUsQga217FkCgNuu5P0HWr0hc7sxfLF+4PNGqHbA
+ oDTfOTRJbpXf2sdMc/NzZnjvDa3jf4vtjIv7Ibu//yQnLf0EfdonAaejgGmgoSoMaLDYN6rRHuJ
+ jjVjhENwgsEEH8GrrO4CgE4xc3g52RewQwCG+tsQbAEuW0IUI42Re3MLnYpRRgc4pUQgLBIis61
+ MHGdE8sZ2bsB1jNc2mJdprEtYVGCnYV9yHBCp3A0qzjRB/iFvdg4djG4pPkmf+zamP+hjvVIOiC
+ 4XaqiwfEvXcF3og==
+X-Developer-Key: i=peter.griffin@linaro.org; a=openpgp;
+ fpr=0EFC8E6F5578750D56B549FCCEE8B8D6023472BA
 
-On Tue, 2026-01-06 at 11:52 -0700, Bart Van Assche wrote:
-> Let the compiler verify whether a valid value is returned by the
-> .queuecommand() implementations by changing their return type from
-> 'int' into 'enum scsi_qc_status'.
+Notify the ufs phy of the hibern8 link state so that it can program the
+appropriate values.
 
-What makes you think the C compiler checks enum values?  Traditionally
-the opposite has been true: enum is just a fancy #define, which is how
-we use it in a lot of the kernel code.  Even if the compiler people
-came up with a switch to turn on this behaviour, we'd likely have
-trouble turning it on without eliminating all the fancy #define use.
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Signed-off-by: Peter Griffin <peter.griffin@linaro.org>
+---
+Note 1: The phy_notify_state() API is part of v6.19-rc1 and onwards.
+Note 2: I've added Barts Reviewed-by from v1. The API name and parameter
+changed slightly during the phy subsystem review, but the intent is still
+the same.
+---
+Changes in v2:
+- Collect up tags
+- Rebased onto next-20260106
+- Update phy_notify_pmstate() to phy_notify_state()
+- Link to v1: https://lore.kernel.org/r/20250703-ufs-exynos-phy_notify_pmstate-v1-1-49446d7852d1@linaro.org
+---
+ drivers/ufs/host/ufs-exynos.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
-Regards,
+diff --git a/drivers/ufs/host/ufs-exynos.c b/drivers/ufs/host/ufs-exynos.c
+index 70d195179ebaa01f38331faaee6f8349211c4c3b..6da3d7ee744b92cfe1806fa654eb80a564ae65bb 100644
+--- a/drivers/ufs/host/ufs-exynos.c
++++ b/drivers/ufs/host/ufs-exynos.c
+@@ -1568,12 +1568,17 @@ static void exynos_ufs_pre_hibern8(struct ufs_hba *hba, enum uic_cmd_dme cmd)
+ {
+ 	struct exynos_ufs *ufs = ufshcd_get_variant(hba);
+ 	struct exynos_ufs_uic_attr *attr = ufs->drv_data->uic_attr;
++	union phy_notify phystate = {
++		.ufs_state = PHY_UFS_HIBERN8_EXIT
++	};
+ 
+ 	if (cmd == UIC_CMD_DME_HIBER_EXIT) {
+ 		if (ufs->opts & EXYNOS_UFS_OPT_BROKEN_AUTO_CLK_CTRL)
+ 			exynos_ufs_disable_auto_ctrl_hcc(ufs);
+ 		exynos_ufs_ungate_clks(ufs);
+ 
++		phy_notify_state(ufs->phy, phystate);
++
+ 		if (ufs->opts & EXYNOS_UFS_OPT_USE_SW_HIBERN8_TIMER) {
+ 			static const unsigned int granularity_tbl[] = {
+ 				1, 4, 8, 16, 32, 100
+@@ -1600,12 +1605,17 @@ static void exynos_ufs_pre_hibern8(struct ufs_hba *hba, enum uic_cmd_dme cmd)
+ static void exynos_ufs_post_hibern8(struct ufs_hba *hba, enum uic_cmd_dme cmd)
+ {
+ 	struct exynos_ufs *ufs = ufshcd_get_variant(hba);
++	union phy_notify phystate = {
++		.ufs_state = PHY_UFS_HIBERN8_ENTER
++	};
+ 
+ 	if (cmd == UIC_CMD_DME_HIBER_ENTER) {
+ 		ufs->entry_hibern8_t = ktime_get();
+ 		exynos_ufs_gate_clks(ufs);
+ 		if (ufs->opts & EXYNOS_UFS_OPT_BROKEN_AUTO_CLK_CTRL)
+ 			exynos_ufs_enable_auto_ctrl_hcc(ufs);
++
++		phy_notify_state(ufs->phy, phystate);
+ 	}
+ }
+ 
 
-James
+---
+base-commit: 6cd6c12031130a349a098dbeb19d8c3070d2dfbe
+change-id: 20250703-ufs-exynos-phy_notify_pmstate-c0e9db95ac66
+
+Best regards,
+-- 
+Peter Griffin <peter.griffin@linaro.org>
 
