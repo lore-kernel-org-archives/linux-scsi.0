@@ -1,129 +1,104 @@
-Received: from mail-ot1-f46.google.com (mail-ot1-f46.google.com [209.85.210.46])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from lamorak.hansenpartnership.com (lamorak.hansenpartnership.com [198.37.111.173])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6DC9327C162
-	for <linux-scsi@vger.kernel.org>; Tue,  6 Jan 2026 20:53:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.46
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 72A0929CE9;
+	Wed,  7 Jan 2026 03:35:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.37.111.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767732832; cv=none; b=s7Q8VSS7T7OsG73vWuA5NHv3wj/FdyqWSxytp/2GiKeXO3l8iXHD+dn5CMkq/ABRBTmEQ0S77Ks/celQuBIxGKcfbPGOcuq0KTU+8Ag6TTzEAuxPA4/iV8UbYeMuz7+YJqFVPuIhcbCSEwcbFWf7CS5gwcddp0BvNKFa/377ShY=
+	t=1767756924; cv=none; b=BglP9GO71aW1GGgFY8sErmmxgeTlf+qS/qyUj4K7bCuz36u2ZLZwYssmZhqFHnrjy8T78po1ZlHNoik4/QmMyX8PXqRcq0uJEMe9mhAdJTAzIyIhtUpyTqzsmRjSksiLKpxSGIQos6NqDeCLO9/ljz6HKAuee4TDXSytEPbdjfw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767732832; c=relaxed/simple;
-	bh=dbQZWZ6djGesZyoyGZQ7YrW0hIP7fv2ICVb0g2gVjBo=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=DUiWAZE/LH0Cv5Rbf453f4QTylnPwh1rHEZNCOokSZKe+cvs1Ipw07t6F1T4e2lx35f5dihGUr/EJzUqUZiyjwylApV0U+ydnRTyB95sLB8ZnmihroCJHTsQlhvjF7P4YTu6rW+pCwJxq426ERipgM2qNar+ortNEFu6f76Gd3g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=dRAo7jzR; arc=none smtp.client-ip=209.85.210.46
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1767756924; c=relaxed/simple;
+	bh=MeTlYnp2ckcKq6IfZZcP5jgX9VqqbWa1EPyysjap8sU=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=fBLjgxhoab+YwAAm1zifevySQ6dbtMPfLLPh2nKQmj7TVguWvOOQESuP1u9PSk+WQXFdb0g2j+Q948BRpvsp//6kaCjik6IGIidxvWkGESV1p+k9v/iu2OJPK8jflAxGbI8MJy0t604mi0IN7SkT5n6NNyH/gemCvFfRrMVvIxQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com; spf=pass smtp.mailfrom=HansenPartnership.com; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=nDZwLGIj; arc=none smtp.client-ip=198.37.111.173
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=HansenPartnership.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="dRAo7jzR"
-Received: by mail-ot1-f46.google.com with SMTP id 46e09a7af769-7c75b829eb6so899135a34.1
-        for <linux-scsi@vger.kernel.org>; Tue, 06 Jan 2026 12:53:48 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1767732828; x=1768337628; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=C37GUE4jCe8eFCg/55C2xhu6ydcXSckS06PD0UKDC/A=;
-        b=dRAo7jzRt/hpOzQrdh4Ngn1+WiMMarMskzruXa80kC7pplRcroXw+16VL8crNaKRlu
-         2js1/+h0b/4balTlT/6LCiML3kVLH/ohBbfBLVKZ0Dhf3HyD+DAieyf8/iia/SAGv/UA
-         qknOJTVDfUSbmjLoPP2fiVq4nhAwSyfuR9a84kvFT7v9NVlF+ugLspqpkRrU/VFuigwj
-         aOlQhhQ/mHsF8YTl2UDS27G+8kS8/Bs9h4AW0cctO5C8FvpeKnvo6QenrIYEpuxHc5gV
-         hzg5BMltAHkd0oAmNRO9O0FrI4bPOXRZ0AHv6FCZ8kxMXhNulyiNMQSi820YumQFkzsf
-         hDVQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1767732828; x=1768337628;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=C37GUE4jCe8eFCg/55C2xhu6ydcXSckS06PD0UKDC/A=;
-        b=gr4KCylln4swVKdp+HV4roRipZvES/nV3j2sWpErkTpDp0ewOvCvm7Wix9BN+dX0Dg
-         3CqSj4SM/f5WPwDTdzvlQ2d58aaORrMxPd/L3gZmbOg0U1wgkBT2+oyBafdoparKRVJk
-         HTO6WgJrO7dVvK/gXoMmPE0Y6DCBC3eDeT5IA/MqBkwYX9PJ0qrQrplrsWIVKJZLqeQN
-         HUgJSTuaWBOtMNxD0sOgqi+h7WKEDYAU0bPgqyYMQPfGn31g0wkD++pAujM/9hXg/pc2
-         k6BWspGJCJk2z0+pQ7SG7ZPeAWrbcfETYKAEHPxuUlFRq7jS3nQ+Q4AM33ZOgCOb/5Dt
-         o2hw==
-X-Forwarded-Encrypted: i=1; AJvYcCXiz6TVPq4+YwNPcWbbcBF8QBHP0GLag3NOih8EMxAnV4R9E2WWUuPcVT9Q70yJQw9k9llScUKbzpWj@vger.kernel.org
-X-Gm-Message-State: AOJu0YyUa5yJu85Ym3dT2Sfym/x+FBKiWQSTr0jjnFm1+vG+B/gIRn26
-	PoWw4NF8XkBoxSm2Djw30OdyjinN13Uj1OJWP6wwvEe01/PyvTihOfuq
-X-Gm-Gg: AY/fxX7mhY16xGTaq36mD3PsyhRZpx2/J4xzEvcTIk1g7XkJPRzzQZjRkqOkCml6tky
-	N++weJ6C4rwC7T1fMrvAFlfXBAKmg0/anCg+bQxdYfxvJh7NnvhNcvT/zauuXZpvTbeYJ2TBm+f
-	iSFBGve4kvjCQE+yykRqH8ySSGGfpF/ENskvoh0Sw6xpT9nlMNLzl3/ILhFMknEZTTfMMOnJl7i
-	+lMciMWZAEEQSqwhcv2+RpeKYOZEkCZYOzbGDCPKL39PUDtYClUrI934vSHQoVOcO7cOuUOrbtg
-	O1RHhsAmdmzT7kClgokoilzJqxugOzphWs/5qYv1JQdKboR9JRo/xrvBZb0DV2Q/uwG2QwZnWNh
-	ID4LmeKM/1TK1VWTQfunEdXKA0Fy84eum/OMKac46m0XssPXUdcLtmuTE3li2pXzl3ODhwhhknZ
-	PpM0UNBy5iHEfG3yrCB0fjCONjink7r5zr
-X-Google-Smtp-Source: AGHT+IFBhdEustKWoHi64qrC1V/En3a79yESg/gNp5iJ2nASZtF+k7/swYxDkjmWYtcZnfS1qxM1Jw==
-X-Received: by 2002:a05:6830:718c:b0:743:8af2:1af7 with SMTP id 46e09a7af769-7ce50a02054mr300216a34.23.1767732827757;
-        Tue, 06 Jan 2026 12:53:47 -0800 (PST)
-Received: from newman.cs.purdue.edu ([128.10.127.250])
-        by smtp.gmail.com with ESMTPSA id 46e09a7af769-7ce4781c286sm2182707a34.8.2026.01.06.12.53.46
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 06 Jan 2026 12:53:47 -0800 (PST)
-From: Jiasheng Jiang <jiashengjiangcool@gmail.com>
-To: Nilesh Javali <njavali@marvell.com>,
-	GR-QLogic-Storage-Upstream@marvell.com,
-	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: Himanshu Madhani <himanshu.madhani@oracle.com>,
-	Manish Rangankar <mrangankar@marvell.com>,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Jiasheng Jiang <jiashengjiangcool@gmail.com>
-Subject: [PATCH] scsi: qla2xxx: sanitize payload size to prevent member overflow
-Date: Tue,  6 Jan 2026 20:53:44 +0000
-Message-Id: <20260106205344.18031-1-jiashengjiangcool@gmail.com>
-X-Mailer: git-send-email 2.25.1
+	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="nDZwLGIj"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+	d=hansenpartnership.com; s=20151216; t=1767756921;
+	bh=MeTlYnp2ckcKq6IfZZcP5jgX9VqqbWa1EPyysjap8sU=;
+	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
+	b=nDZwLGIjowZlx9e8QVivu5EqZmRLSsGjmNqRV5F3k7jO6io6A+T3yAcv3ciovDOD4
+	 z8TyX5fFTGnlSx8SQggbBdYp294p08cto996zpR6wdOtcZXpg5ZM1lYiRjhP2bYxns
+	 K72qZ50L00g8rA2n6aydbWDUToRtEx/zLgutcw6U=
+Received: from lingrow.int.hansenpartnership.com (unknown [IPv6:2601:5c4:4300:d341::a774])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519)
+	(No client certificate requested)
+	by lamorak.hansenpartnership.com (Postfix) with ESMTPSA id E89D11C0314;
+	Tue, 06 Jan 2026 22:35:20 -0500 (EST)
+Message-ID: <159a881fd0393cc390a4597a1d0c39b1903fe906.camel@HansenPartnership.com>
+Subject: Re: [PATCH RESEND] scsi: ppa: Fix use-after-free caused by
+ unfinished delayed work
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+To: duoming@zju.edu.cn
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	martin.petersen@oracle.com, stable@kernel.org
+Date: Tue, 06 Jan 2026 22:35:20 -0500
+In-Reply-To: <46574732.55570.19b91cdc1e4.Coremail.duoming@zju.edu.cn>
+References: <20260101135532.19522-1-duoming@zju.edu.cn>
+	 <91a16901ab4cd35fa00011a472c025f55068a4c7.camel@HansenPartnership.com>
+	 <3a85ddef.523b2.19b81abea97.Coremail.duoming@zju.edu.cn>
+	 <389ac2dcc81b38367a26620cd193a45f2f06ce4f.camel@HansenPartnership.com>
+	 <4726642f.54ab5.19b896f887d.Coremail.duoming@zju.edu.cn>
+	 <1bd723858c5f8a0bea1239e837f902432fffd183.camel@HansenPartnership.com>
+	 <46574732.55570.19b91cdc1e4.Coremail.duoming@zju.edu.cn>
+Autocrypt: addr=James.Bottomley@HansenPartnership.com;
+ prefer-encrypt=mutual;
+ keydata=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
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.50.3 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-In qla27xx_copy_fpin_pkt() and qla27xx_copy_multiple_pkt(), the
-frame_size reported by firmware is used to calculate the copy length
-into item->iocb. However, the iocb member is defined as a fixed-size
-64-byte array within struct purex_item.
+On Tue, 2026-01-06 at 13:35 +0800, duoming@zju.edu.cn wrote:
+> On Sun, 04 Jan 2026 18:30:48 -0500 James Bottomley wrote:
+[...]
+> > I know how timeouts work ... I don't need the AI summary.=C2=A0 if ther=
+e
+> > is an outstanding command, the timeout will fire long after you've
+> > disabled the queue and run through ppa_detach and the next thing
+> > that will happen is the error handler will try to abort the
+> > command, eventually causing ppa_abort to be called, which is going
+> > to dereference the ppa_struct that ppa_detach freed.
+>=20
+> What do you think of removing the ppa_abort() callback function?=20
+> This callback function is not necessary. The eh_abort_handler=20
+> function pointer is checked in scsi_abort_command() function,=20
+> and if the function pointer does not exist, it directly returns=20
+> FAILED. The subsequent process will be handled by SCSI error=20
+> handler thread - scsi_error_handler(). Therefore the issue you
+> mentioned could be avoided.
 
-If the reported frame_size exceeds 64 bytes, subsequent memcpy calls
-will overflow the iocb member boundary. While extra memory might be
-allocated, this cross-member write is unsafe and triggers warnings
-under CONFIG_FORTIFY_SOURCE.
+Well, no, because that would lose us runtime error handling which is
+pretty essential for a flakey device like parport.  Also, if you remove
+that callback, it will escalate to the reset handler, which does
+exactly the same thing with ppa_struct.
 
-Fix this by capping total_bytes to the size of the iocb member (64 bytes)
-before allocation and copying. This ensures all copies remain within
-the bounds of the destination structure member.
+I was originally looking at this as a reference counting problem, but
+there is another way of solving it and that's to stop requests and
+drain the queue before freeing the resources.  It turns out that's
+exactly what scsi_remove_host() does (via __scsi_remove_device which
+calls blk_mq_destroy_queue) so, since there can't be any outstanding
+commands, it's actually impossible the delayed work queue is active
+after scsi_remove_host() is called and thus the original race you
+identified can't actually happen.
 
-Fixes: 875386b98857 ("scsi: qla2xxx: Add Unsolicited LS Request and Response Support for NVMe")
-Signed-off-by: Jiasheng Jiang <jiashengjiangcool@gmail.com>
----
- drivers/scsi/qla2xxx/qla_isr.c | 7 +++++++
- 1 file changed, 7 insertions(+)
+Regards,
 
-diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-index a3971afc2dd1..a04a5aa0d005 100644
---- a/drivers/scsi/qla2xxx/qla_isr.c
-+++ b/drivers/scsi/qla2xxx/qla_isr.c
-@@ -878,6 +878,9 @@ qla27xx_copy_multiple_pkt(struct scsi_qla_host *vha, void **pkt,
- 		payload_size = sizeof(purex->els_frame_payload);
- 	}
- 
-+	if (total_bytes > sizeof(item->iocb.iocb))
-+		total_bytes = sizeof(item->iocb.iocb);
-+
- 	pending_bytes = total_bytes;
- 	no_bytes = (pending_bytes > payload_size) ? payload_size :
- 		   pending_bytes;
-@@ -1163,6 +1166,10 @@ qla27xx_copy_fpin_pkt(struct scsi_qla_host *vha, void **pkt,
- 
- 	total_bytes = (le16_to_cpu(purex->frame_size) & 0x0FFF)
- 	    - PURX_ELS_HEADER_SIZE;
-+
-+	if (total_bytes > sizeof(item->iocb.iocb))
-+		total_bytes = sizeof(item->iocb.iocb);
-+
- 	pending_bytes = total_bytes;
- 	entry_count = entry_count_remaining = purex->entry_count;
- 	no_bytes = (pending_bytes > sizeof(purex->els_frame_payload))  ?
--- 
-2.25.1
+James
 
