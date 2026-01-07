@@ -1,44 +1,45 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 393102877F4;
-	Wed,  7 Jan 2026 07:38:24 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 01F0C223339;
+	Wed,  7 Jan 2026 07:41:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767771505; cv=none; b=su5D0wPWXQEz1ATDZ3pS6pdu8lwPzaXIFciQb1O+sIPQibH0LtNX+VycKbG10RowaU3U9DfxgpNwrJbudEnqSKCx6KL4bVUX7MtZFlT5iPvnqk7aJtmZcPP7T3viYUdwJKqiwYOLDMHzbWDcZF4JyjOv0e+zxA1EtjyRtMpAh2M=
+	t=1767771699; cv=none; b=jgGQDlfhSdm6bf1va1rBXUM4XciIjhwDEew0he3mtNg8ItTylN/NNGZoMqLcNaX6S+vuZjnCqPz8/K43e+Ujnz2yYm6CTOwjqcpovzHl1WptHxz6Vq/TOC5lfKEnUxSnBzx0RnOoV36gU8YaDC4RKt9cbG1l1vynGBANF034Ph8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767771505; c=relaxed/simple;
-	bh=zBBSW57kO3abF8Yx3PD+kRbUG1WaWnGVNFtQrxvNE8U=;
+	s=arc-20240116; t=1767771699; c=relaxed/simple;
+	bh=062mbyctiZ/C+iC+h5bxLMpRUbFmO3ltrsYXbgQHMvM=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Gd50M0S4mtqUMajw8aNt4YyTQn28J+qawjtWOnkVxDEL8+Mp06+b7s041RSmenfzN7DVury3DrSu1K9sLp0f6ahbqEofz1Btsf2HmIyXfp6vM+RiycVJviY1DzysdFx4xWbw1urIZJGQ6HKWf8uLrrpWHKqwEFF+3MTrW04OAxQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pYjdyRFC; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=NWw49KC8O2eLvh02FoiWGLqcWbsQyowF7uQvzz7cYyTDIXYNJ6VkR0h100UoHkj8gugbEOKCkeavCDCkW6pT8gl18DiaplVaEWyXLyu1gbigwVxAyBwLawBt7+hfR7nU0CoG9nNxCRTBzKmXz9mFtXm1VDLb+lV4R9eWhMLR0xs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=vI5cX/dX; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pYjdyRFC"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3430FC4CEF7;
-	Wed,  7 Jan 2026 07:38:24 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="vI5cX/dX"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 456D1C4CEF7;
+	Wed,  7 Jan 2026 07:41:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1767771504;
-	bh=zBBSW57kO3abF8Yx3PD+kRbUG1WaWnGVNFtQrxvNE8U=;
+	s=k20201202; t=1767771698;
+	bh=062mbyctiZ/C+iC+h5bxLMpRUbFmO3ltrsYXbgQHMvM=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=pYjdyRFCSl2SmJSVtyBpHu2UPLsW0cEXOQSIqlSmNY4qEP+mcYo6w/Tcwpv57aNiH
-	 qfuZR/gsqcqfbFSsVnquS4NoAT5ENNINaLzpaboi3osLm91UhIgutb1bCWXuvLCMD5
-	 h9kfjSrvCBUK52IPwY9ZvdSHnrhcjBllwHkaMiRGNCH1FysivBS6HLy3LsSOUSYlO1
-	 4si7u+UH5KOVwpTyYxDrXoKMbJEsL8whyXbEO7vM7gPRddvR9wvxP39DXbjVqg25xI
-	 edTlq19ZETrrk6inDPX3w2mCSBTEsLzCRjLLstoV5WqG7Hkpam9M/1NhCQg7QKTh0A
-	 Hex8H+pLPmLhA==
-Date: Wed, 7 Jan 2026 08:38:22 +0100
+	b=vI5cX/dXfRf54Bnk0FFA1CBTY6nhy+X2Rc3N20bIHYV2VPbi2QifDWiJNMbJriHlw
+	 tmd8fCP5wJJtzWV7deXfVxN7gabb+TD9AUO0nsM3h9FQPLoTJ4Bi6J92xo9g683auq
+	 Jb07ghmWLmcz2Lpc/tgGKUMGxhtlj6AAo3Z/cbFI5mo/nRSfrk8J6m5AqUSz5YjdSZ
+	 HQIxGyARwWHuI7/cy1A9HQAoDYl2rgWz3/okq+KdqfFNnaLyKCEETSe/kKxKReF+8i
+	 a43GAAk8lW3a2dmd/KqTCBTGbbA/gnN62GotAxFMo9OJDrrki5Q2K3GHoHKmfm8S3n
+	 8zifQXq9JI/DA==
+Date: Wed, 7 Jan 2026 08:41:36 +0100
 From: Krzysztof Kozlowski <krzk@kernel.org>
-To: Ram Kumar Dwivedi <ram.dwivedi@oss.qualcomm.com>
-Cc: mani@kernel.org, alim.akhtar@samsung.com, avri.altman@wdc.com, 
-	bvanassche@acm.org, robh@kernel.org, krzk+dt@kernel.org, conor+dt@kernel.org, 
-	James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com, linux-arm-msm@vger.kernel.org, 
-	linux-scsi@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	Anjana Hari <anjana.hari@oss.qualcomm.com>
-Subject: Re: [PATCH V4 2/4] dt-bindings: ufs: Document bindings for SA8255P
- UFS Host Controller
-Message-ID: <20260107-deft-mouflon-of-shopping-baaece@quoll>
-References: <20260106134008.1969090-1-ram.dwivedi@oss.qualcomm.com>
- <20260106134008.1969090-3-ram.dwivedi@oss.qualcomm.com>
+To: Pradeep P V K <pradeep.pragallapati@oss.qualcomm.com>
+Cc: vkoul@kernel.org, neil.armstrong@linaro.org, robh@kernel.org, 
+	krzk+dt@kernel.org, conor+dt@kernel.org, martin.petersen@oracle.com, 
+	andersson@kernel.org, konradybcio@kernel.org, taniya.das@oss.qualcomm.com, 
+	dmitry.baryshkov@oss.qualcomm.com, manivannan.sadhasivam@oss.qualcomm.com, 
+	linux-arm-msm@vger.kernel.org, linux-phy@lists.infradead.org, devicetree@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, nitin.rawat@oss.qualcomm.com
+Subject: Re: [PATCH V4 2/4] dt-bindings: ufs: qcom,sc7180-ufshc: Add UFSHC
+ compatible for x1e80100
+Message-ID: <20260107-lush-bison-of-competence-de27dd@quoll>
+References: <20260106154207.1871487-1-pradeep.pragallapati@oss.qualcomm.com>
+ <20260106154207.1871487-3-pradeep.pragallapati@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -47,26 +48,18 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20260106134008.1969090-3-ram.dwivedi@oss.qualcomm.com>
+In-Reply-To: <20260106154207.1871487-3-pradeep.pragallapati@oss.qualcomm.com>
 
-On Tue, Jan 06, 2026 at 07:10:06PM +0530, Ram Kumar Dwivedi wrote:
-> +unevaluatedProperties: false
-> +
-> +examples:
-> +  - |
-> +    #include <dt-bindings/interrupt-controller/arm-gic.h>
-> +
-> +        ufshc@1d84000 {
+On Tue, Jan 06, 2026 at 09:12:05PM +0530, Pradeep P V K wrote:
+> Add UFS Host Controller (UFSHC) compatible for x1e80100 SoC. Use
+> SM8550 as a fallback since x1e80100 is fully compatible with it.
+> 
+> Qualcomm UFSHC is no longer compatible with JEDEC UFS-2.0 binding.
+> Avoid using the "jedec,ufs-2.0" string in the compatible property.
+> 
+> Signed-off-by: Pradeep P V K <pradeep.pragallapati@oss.qualcomm.com>
 
-Completely messed indentation.
-
-Why did we ask to drop the unnecessary soc node? To make it simpler.
-
-Even if you do not believe that code should be simpler, you should
-immediately spot the odd indentation.
-
-For such trivialities you cannot get this patch merged. It's third
-revision which you send carelessly.
+Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
 
 Best regards,
 Krzysztof
