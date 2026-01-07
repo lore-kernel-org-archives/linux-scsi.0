@@ -1,48 +1,48 @@
-Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
+Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4BD273939A7
-	for <linux-scsi@vger.kernel.org>; Wed,  7 Jan 2026 17:09:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.14
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA0AA36A01D
+	for <linux-scsi@vger.kernel.org>; Wed,  7 Jan 2026 17:13:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767805802; cv=none; b=WLgOm8tRCxF3PoD1yLEfdxoALMOc2d7IESw9hzwDJypV4Anj6EtKVN42NvWdf+0pGLL+pDD4I5R9R/Pw/Am3WcpeYfBKEF102EagHcdQlYRTA6fD95WpmbEIfKSgby+RHd3BIMnEtO72Kj5afWzfD7823ukJC19EFo0PuuR2b4Y=
+	t=1767806016; cv=none; b=U/H146fKdwrng1+ByKAAo8N94U7e4A/HDc+mkDiQhE5W7+9Poz9A3DvhCVcDkO51gReqIOXoUTyHATw1N8Q19++g16hzTUomsEa0CajSf0T1T639QPveH8UBZfdrM3SKRRSPc4nDR15XRpg4NaIYexesOkqBgqtpmaLaeS1kELs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767805802; c=relaxed/simple;
-	bh=mSw3I2OICPe89s9P0Q7sMbENj/OTZRRzZkZvQ63Qr2w=;
+	s=arc-20240116; t=1767806016; c=relaxed/simple;
+	bh=Pj7hb0thnVYklU9lcvNe4Aa44oZvaRsdl6ocpXj7HhA=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=gt4gVAFalY7u0IfXZHqdn3FjPINxGMSemt+3aRaAeP3m1e+929szJwj+n2gfY4N4t2cfi/IizL2ouJqsCEtahYpeTZUk5zb/VcPMb/h4I99I01VrDeFZjt4gUewGCdh+QrB+YVZMMP9U//lTLhlC6vtTnNoNY2FBeo02ri2tR/A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=fail smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=SuQwebfH; arc=none smtp.client-ip=199.89.1.14
+	 In-Reply-To:Content-Type; b=t+BYO/QSTBYhD0ZAJhH/E7DoU8hTBZ/JDhk7wm0JxLlZp8jBLVcnhSabOM0zowdKK6YSQNkY/o2EpbFhAzqYBFF95pTlH9SI0YSkvtn6qQLQfTzxFoC/A5hoaEZJXp+g2w2t1h+zOIgCHXrR1RYNJoRBDTJk+SfXIF8e+8ghGlo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=FkXS/Jua; arc=none smtp.client-ip=199.89.1.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="SuQwebfH"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="FkXS/Jua"
 Received: from localhost (localhost [127.0.0.1])
-	by 011.lax.mailroute.net (Postfix) with ESMTP id 4dmZKG0bt8z1XPpVG;
-	Wed,  7 Jan 2026 17:09:54 +0000 (UTC)
+	by 013.lax.mailroute.net (Postfix) with ESMTP id 4dmZPV0rVtzm04kf;
+	Wed,  7 Jan 2026 17:13:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:content-type:content-type:in-reply-to
 	:from:from:content-language:references:subject:subject
 	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1767805792; x=1770397793; bh=jA92ZfuYul+RGVXXc3m9JtZ6
-	l+nWsVJUfTF17k/wdk0=; b=SuQwebfHrg/dXCAUGCIXr9pXQlaB910/5BcprCmj
-	j37XvBAOzPqS8svIwOy1gGvjrnnWpESlP96Vc+jqIKwV9ZH9iBrTi4emJCEqON0J
-	A/N6xJL7Lddd8SQ356e0BcDzW13riZP4LBArXwEl9x8sbQBXp8RyplTr1J1XNuPC
-	2exOVPYzegaC3/r+Hn8RCg6iHgSHRUJLvynN/7VE7fzrRyLK5636s0meKKxJMR0S
-	tbfSuq5Wiq/bJgskeQJnN9/x0GNRw8RQeHhJxamaCMo8W24bczC30Xuov2wPag74
-	ia1Vn6AouHuaQmA+cf+Bc4/ZwxroZwXLvMltRsbMufbUXw==
+	 s=mr01; t=1767806012; x=1770398013; bh=Pj7hb0thnVYklU9lcvNe4Aa4
+	4oZvaRsdl6ocpXj7HhA=; b=FkXS/JuaYw8UQhFFWUl6Md23IUBhd9zWrrpHHinC
+	YJ057dWOTY/mqUxpXylUGS9QMONqQrzBbGNawIOqhL3SMfgOXXgCWFFbff9MbLDT
+	/Tto7UYJxuSloDV0Fu0aeqaLCnETYD/t3AW4UhPNtJnmjiUmxIuS695oQo0fkww0
+	yWhvhe6gqwSyRAnGtbHCTcER6v8OOr9fI5WtHbClEK8JjnN1B+UD5kPxc9rqNaV3
+	jsB7qehUs7i54ydg/qgJSiws0qmxpx/seTPqiC8C/lB5bW2OlZPulMD9BDRv5ha+
+	sZ/zoB96mV6IIICn9KgMS6GqxLv69X9fBxUzz9q+tECGWw==
 X-Virus-Scanned: by MailRoute
-Received: from 011.lax.mailroute.net ([127.0.0.1])
- by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id 6blFYXMS4s4v; Wed,  7 Jan 2026 17:09:52 +0000 (UTC)
+Received: from 013.lax.mailroute.net ([127.0.0.1])
+ by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id TBBlwgiFHFvQ; Wed,  7 Jan 2026 17:13:32 +0000 (UTC)
 Received: from [100.119.48.131] (unknown [104.135.180.219])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4dmZKC5Jqnz1XMFjC;
-	Wed,  7 Jan 2026 17:09:51 +0000 (UTC)
-Message-ID: <0a831985-a52d-4b93-8aa1-ad67b99af88c@acm.org>
-Date: Wed, 7 Jan 2026 09:09:51 -0800
+	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4dmZPR0Lzszlvwpq;
+	Wed,  7 Jan 2026 17:13:30 +0000 (UTC)
+Message-ID: <0c81133a-7f76-4478-bd69-837343298c4d@acm.org>
+Date: Wed, 7 Jan 2026 09:13:30 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,51 +50,33 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi: Change the return type of the .queuecommand()
- callback
-To: James Bottomley <James.Bottomley@HansenPartnership.com>,
- "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>,
- John Garry <john.g.garry@oracle.com>
-References: <20260106185310.2524290-1-bvanassche@acm.org>
- <f9f4833e9667e9e0a0e94d656fe8138c06705e93.camel@HansenPartnership.com>
+Subject: Re: [PATCH] scsi: core: Fix a regression triggered by
+ scsi_host_busy()
+To: John Garry <john.g.garry@oracle.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org,
+ Sebastian Reichel <sebastian.reichel@collabora.com>,
+ Ming Lei <ming.lei@redhat.com>, Jens Axboe <axboe@kernel.dk>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
+References: <20251007214800.1678255-1-bvanassche@acm.org>
+ <yq1h5vr4qov.fsf@ca-mkp.ca.oracle.com>
+ <fe16b110-300c-4b13-bf2b-56e7f2c6f297@oracle.com>
+ <540bad1d-ba01-4044-94e0-4f7b05934779@acm.org>
+ <cee0f307-b875-4578-b7ed-43daef2b238e@oracle.com>
+ <91e387ed-fba0-4622-b357-53356fd7fee3@acm.org>
+ <d2294529-4054-4936-ac76-20c878bc74f5@oracle.com>
 Content-Language: en-US
 From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <f9f4833e9667e9e0a0e94d656fe8138c06705e93.camel@HansenPartnership.com>
+In-Reply-To: <d2294529-4054-4936-ac76-20c878bc74f5@oracle.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
-On 1/7/26 5:36 AM, James Bottomley wrote:
-> On Tue, 2026-01-06 at 11:52 -0700, Bart Van Assche wrote:
->> Let the compiler verify whether a valid value is returned by the
->> .queuecommand() implementations by changing their return type from
->> 'int' into 'enum scsi_qc_status'.
-> 
-> What makes you think the C compiler checks enum values?  Traditionally
-> the opposite has been true: enum is just a fancy #define, which is how
-> we use it in a lot of the kernel code.  Even if the compiler people
-> came up with a switch to turn on this behaviour, we'd likely have
-> trouble turning it on without eliminating all the fancy #define use.
+On 1/7/26 5:25 AM, John Garry wrote:
+> Any update on this?
+Hi John,
 
-If I revert commit e414748b7e83 ("scsi: aacraid: Improve code 
-readability") and build the kernel with the git HEAD of clang with this
-patch applied then following error message appears:
-
-drivers/scsi/aacraid/linit.c:245:29: error: implicit conversion from 
-enumeration
-       type 'enum scsi_disposition' to different enumeration type
-       'enum scsi_qc_status' [-Werror,-Wimplicit-enum-enum-cast]
-   245 |         return aac_scsi_cmd(cmd) ? FAILED : 0;
-       |         ~~~~~~                     ^~~~~~
-
-This patch also helps those who build the kernel with gcc because the
-zero-day infrastructure builds the kernel with both gcc and clang and
-hence will spot it if an incorrect value is returned from a queuecommand
-function.
-
-I will improve the patch description when I repost this patch and will
-change "compiler" into "clang 21.1 or later".
-
-Thanks,
+Thanks for the reminder. I have been OoO during the past two weeks and
+that's why the promised work has not yet resulted in the publication of
+a new patch series. Anyway, I plan to do that this week.
 
 Bart.
