@@ -1,104 +1,189 @@
-Received: from lamorak.hansenpartnership.com (lamorak.hansenpartnership.com [198.37.111.173])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 72A0929CE9;
-	Wed,  7 Jan 2026 03:35:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.37.111.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8AAC33BB5A
+	for <linux-scsi@vger.kernel.org>; Wed,  7 Jan 2026 05:51:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767756924; cv=none; b=BglP9GO71aW1GGgFY8sErmmxgeTlf+qS/qyUj4K7bCuz36u2ZLZwYssmZhqFHnrjy8T78po1ZlHNoik4/QmMyX8PXqRcq0uJEMe9mhAdJTAzIyIhtUpyTqzsmRjSksiLKpxSGIQos6NqDeCLO9/ljz6HKAuee4TDXSytEPbdjfw=
+	t=1767765096; cv=none; b=dZQzbTLaygigF7wpCF2r/tq9yY/9MiWTyGD3mzxZtiyw189up8RKx+gIyNkVH2lVnmJ0UeSvfiiNaq6WNJrqr7ZCCz/8tkZXBac9u100Y3i5akVjKJ76V/do5Jnx40RWIxammETmHGK3/K09UCXjHpgCdj34Tp9keYGQ6t4oOXE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767756924; c=relaxed/simple;
-	bh=MeTlYnp2ckcKq6IfZZcP5jgX9VqqbWa1EPyysjap8sU=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=fBLjgxhoab+YwAAm1zifevySQ6dbtMPfLLPh2nKQmj7TVguWvOOQESuP1u9PSk+WQXFdb0g2j+Q948BRpvsp//6kaCjik6IGIidxvWkGESV1p+k9v/iu2OJPK8jflAxGbI8MJy0t604mi0IN7SkT5n6NNyH/gemCvFfRrMVvIxQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com; spf=pass smtp.mailfrom=HansenPartnership.com; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=nDZwLGIj; arc=none smtp.client-ip=198.37.111.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=HansenPartnership.com
+	s=arc-20240116; t=1767765096; c=relaxed/simple;
+	bh=mGyvejjKrq72F3AM25T+UZZAwTgwXHsCXrkSI1uLPFY=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=irzAdO1rQMX5jDt3qlU7RPo7KpNALQsVcW/Z/a+MF1jv7zsDOPPVyxlbDBEXG5XATTs9ymMeikEadGUKyjQBZZa3jxR8GSr9sTZqccRs2B3EOoXuoJsLjuc1RJx5Q3SYdwOEusTh7rjoCaFgewViYOTsyFVAtDJe8PLkxGp/nfY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=JRs1+M3/; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=HbPXhX5m; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="nDZwLGIj"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-	d=hansenpartnership.com; s=20151216; t=1767756921;
-	bh=MeTlYnp2ckcKq6IfZZcP5jgX9VqqbWa1EPyysjap8sU=;
-	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
-	b=nDZwLGIjowZlx9e8QVivu5EqZmRLSsGjmNqRV5F3k7jO6io6A+T3yAcv3ciovDOD4
-	 z8TyX5fFTGnlSx8SQggbBdYp294p08cto996zpR6wdOtcZXpg5ZM1lYiRjhP2bYxns
-	 K72qZ50L00g8rA2n6aydbWDUToRtEx/zLgutcw6U=
-Received: from lingrow.int.hansenpartnership.com (unknown [IPv6:2601:5c4:4300:d341::a774])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519)
-	(No client certificate requested)
-	by lamorak.hansenpartnership.com (Postfix) with ESMTPSA id E89D11C0314;
-	Tue, 06 Jan 2026 22:35:20 -0500 (EST)
-Message-ID: <159a881fd0393cc390a4597a1d0c39b1903fe906.camel@HansenPartnership.com>
-Subject: Re: [PATCH RESEND] scsi: ppa: Fix use-after-free caused by
- unfinished delayed work
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-To: duoming@zju.edu.cn
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	martin.petersen@oracle.com, stable@kernel.org
-Date: Tue, 06 Jan 2026 22:35:20 -0500
-In-Reply-To: <46574732.55570.19b91cdc1e4.Coremail.duoming@zju.edu.cn>
-References: <20260101135532.19522-1-duoming@zju.edu.cn>
-	 <91a16901ab4cd35fa00011a472c025f55068a4c7.camel@HansenPartnership.com>
-	 <3a85ddef.523b2.19b81abea97.Coremail.duoming@zju.edu.cn>
-	 <389ac2dcc81b38367a26620cd193a45f2f06ce4f.camel@HansenPartnership.com>
-	 <4726642f.54ab5.19b896f887d.Coremail.duoming@zju.edu.cn>
-	 <1bd723858c5f8a0bea1239e837f902432fffd183.camel@HansenPartnership.com>
-	 <46574732.55570.19b91cdc1e4.Coremail.duoming@zju.edu.cn>
-Autocrypt: addr=James.Bottomley@HansenPartnership.com;
- prefer-encrypt=mutual;
- keydata=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
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.50.3 
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="JRs1+M3/";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="HbPXhX5m"
+Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6073ks4H4091254
+	for <linux-scsi@vger.kernel.org>; Wed, 7 Jan 2026 05:51:33 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	nXGAvmSu/51spOzf+pzhcIdBM7PSd+n1sojrUbHh2K4=; b=JRs1+M3/UVWnLr8b
+	WfopmPPbqUBF+Pxv+f0rDN3yQ07ILsmzfb4+QosC5crcjBpjG9i2l5ZP9GxQ1eG8
+	8qoTR/f3AJQt9qiZu2AkmQ0LItlk0qBsD2/vCLXtJAl/1b+LVons6C5GPigB8v5l
+	8cbc0n18Alh2ZBbRj4yX6OoulUTWHO4Y1j+pmwUcU2K4ov0Iu4VqKceO0CnOgg6V
+	kMUNSm6x3CeUzwZTB672RDNiMJOWQSHcpJTclfGjCUla8PGC1js+OJQmDJgZ6LHA
+	g7/bvrApy2NdHStzXU2Y7CFenlXZgRcmegcEuk8RJ91khtrsBDLUAqqg8OYVmlCL
+	bLqP1Q==
+Received: from mail-pj1-f72.google.com (mail-pj1-f72.google.com [209.85.216.72])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4bgyunb86u-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Wed, 07 Jan 2026 05:51:33 +0000 (GMT)
+Received: by mail-pj1-f72.google.com with SMTP id 98e67ed59e1d1-34c7d0c5ed2so1763318a91.0
+        for <linux-scsi@vger.kernel.org>; Tue, 06 Jan 2026 21:51:33 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1767765092; x=1768369892; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=nXGAvmSu/51spOzf+pzhcIdBM7PSd+n1sojrUbHh2K4=;
+        b=HbPXhX5mFpy1iiTtd5VAugYwrKMSC39FV0RC1ro4+lPctGbgJhnMtHM3abBEIG0kHZ
+         A2tpjft0/nJOHRQdbyXJtnwodA/nLPSrbhuYD6cNY3QR1jydV6ofU12ewdDasjESj3r7
+         OKOLpnh2KeleH27kkulua/GnHiP1MZa7FwkHsiOyHlfWBbM6A5j77WIBdeDG/8rEx1r3
+         EfvuJL90ja1BoJ2DOmj9LELARqheGaFUBb4TL66I7ByTmCog2J5kHsEHeLVtIxxgBtKI
+         EpRCKPS8HS2tYzjgtavewdoHp6fA/D5xyLlJiPKVw6ugS/74dmG/ggclKbyBX4qdXgtd
+         sYFw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1767765092; x=1768369892;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=nXGAvmSu/51spOzf+pzhcIdBM7PSd+n1sojrUbHh2K4=;
+        b=tjS6J11z2iWGOwg7Q9sR6N9Jc1yI5rLMbU3VLWUs5LW21XwUujxDzfBwee8lkgIxL1
+         rR9x2NlWXFGsae0B5o28NF+Efqkl5h9s6oiH7u7sC1+YCC0odYqgfsFtyljj6C39/8Vs
+         AVoYkp4uLShG6opVU33Vz0IFZR6OTMbnJyr5bSc4qX+wCp31UYgkuDxCj7M3nBW82GY1
+         L0Lx5WOp5iWmr8xz2/GURpFhtAvepoefUTa9pIYoUeDTrDlcGHOIH2NdOLYfU+7PLXF4
+         qL0nPKtNZMdS6qy3CphS4QaVzVTcu6uUb/K89oGz/A0jW1+PKvZDe8XhZ0EtufYE4AII
+         dQAA==
+X-Forwarded-Encrypted: i=1; AJvYcCW2y+f+BT9ITIEFX7hT57tT4CGH+1DIaacelhgeHKYUAxL6LH7fMHMiIvRya8871jYLy+8l7KkQ+/Yy@vger.kernel.org
+X-Gm-Message-State: AOJu0YwfjuhkPrSbBNnnq3rEauYFQAMc9YVqiKG3SCxwMYeFThoIh4BT
+	bcPeujkqunjsfijy/qPq0Y7YC/fAaX4TU12fbPcsqLKQQmSXMQ44SkFAgZVRsaSQUnzUHAngx4X
+	uMaAhlUY7Y09cukU0fJYa6e6Az/+o3DDBFrjWdfCRYK/mZAglGfLuoCX5Iy9zXW7B
+X-Gm-Gg: AY/fxX6vbDGUZAA9tLS0+LgCL07UVXamqxlivUSwWBbfD9ngm1JlVEyawtiG2sAOsfU
+	l8lwVpCi2UNOq/kyK4+cT48P6k5nT0cnyIUOpHu+Ptd382LLeOX4MMbpRSet2p/xTusyzBjxN/j
+	AeC5oO6tCW/9xHMSryrhJwaqH+0SaBmlBavxTh9ZGzuKXGUl7FKtQbNX6Ctl3fq738gymlT18A+
+	KcHsc9Bk6rX/sQ8vP+xUey8LmfWDOnwKD77JzmUKY1vJ7zNPUqA16QSBL0sFwX7ls2S0FfKEe6+
+	R5pws1+6LJE3OIqvP6lBpuKjKB3eBToJ7qMiz/91RpRDQ+bE8BhlvERB3oRz3DSM8QYR6a/07Mt
+	RO1QHyznXEvLnlN5yOVbyfloX/6rgvBlPuVZjhQMXThT+Y/GQIqw=
+X-Received: by 2002:a17:90b:2251:b0:33e:30e8:81cb with SMTP id 98e67ed59e1d1-34f68b65ff0mr1353229a91.13.1767765092346;
+        Tue, 06 Jan 2026 21:51:32 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IHBvUZCcUtaBqJgxkFmXbuj2o5AZhvWJWylevjOCJsxj9FNVU2+6RvoqCZGDUaUXjdVhEEUNA==
+X-Received: by 2002:a17:90b:2251:b0:33e:30e8:81cb with SMTP id 98e67ed59e1d1-34f68b65ff0mr1353204a91.13.1767765091848;
+        Tue, 06 Jan 2026 21:51:31 -0800 (PST)
+Received: from [10.217.216.105] ([202.46.22.19])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-34f6b7b3e7fsm274007a91.2.2026.01.06.21.51.27
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 06 Jan 2026 21:51:31 -0800 (PST)
+Message-ID: <530af0fc-9574-4d6f-9469-f08300da1f74@oss.qualcomm.com>
+Date: Wed, 7 Jan 2026 11:21:25 +0530
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH V3 0/4] Add UFS support for x1e80100 SoC
+To: Bjorn Andersson <andersson@kernel.org>
+Cc: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>, vkoul@kernel.org,
+        neil.armstrong@linaro.org, robh@kernel.org, krzk+dt@kernel.org,
+        conor+dt@kernel.org, martin.petersen@oracle.com,
+        konradybcio@kernel.org, taniya.das@oss.qualcomm.com,
+        manivannan.sadhasivam@oss.qualcomm.com, linux-arm-msm@vger.kernel.org,
+        linux-phy@lists.infradead.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        nitin.rawat@oss.qualcomm.com
+References: <20260105144643.669344-1-pradeep.pragallapati@oss.qualcomm.com>
+ <y7lm6zqgbhk4243diyotvox75tcmzhgbkypbkaskrtjcjbruwm@ar7kjmiyv2wr>
+ <0689ae93-0684-4bf8-9bce-f9f32e56fe06@oss.qualcomm.com>
+ <l67bnlyrrirb3rnz7izqpe4soqjuvkbi2xawit5w2wrcc74vdo@exo4mbpac244>
+Content-Language: en-US
+From: Pradeep Pragallapati <pradeep.pragallapati@oss.qualcomm.com>
+In-Reply-To: <l67bnlyrrirb3rnz7izqpe4soqjuvkbi2xawit5w2wrcc74vdo@exo4mbpac244>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMTA3MDA0NSBTYWx0ZWRfXxUus8dBz0WUw
+ ug2WhKwKrcWYLf+WWz18HMW3oL5phRmsThJdaht4odNVI4Pg6fmgN6+xuuW35ISnQUIsLv3h9tY
+ AZEugjxD7Hs9Kdn7LOOcMSQsQsghw1g/oLiSnXujyc9Yeyw0now4WUC/cOIbhhfukPk4spcxBNX
+ xpxfTFhNkgMGwi0jIjpULs/92fwZiBg1rDHAGwbtBfpKx2jHsB7R3JQNQDrUag5eEAyYNGnGPkg
+ bykGpfuNbS757wRMDU4+0/SMTh2IWPicJAOQNYKVrh1MH4M1nvcRkdToRoTeC/POWiPHrMNBw/O
+ jHMwz4Lr7Tk4jdPcNBQLoV4SCHN+nSPYgiCFYBTVb96y+wT78rL0vg1CGrr/H1BqYq9KK6sK3wD
+ o5fYd32fiTEH0EllnHlsBo9G8MQMwSl2S0Jsho/ECuys8ckDTCSaMbyAaJoy1tLgWIaTwV91na3
+ gqkzaU/su8a4FLL6c/g==
+X-Authority-Analysis: v=2.4 cv=YqIChoYX c=1 sm=1 tr=0 ts=695df465 cx=c_pps
+ a=RP+M6JBNLl+fLTcSJhASfg==:117 a=fChuTYTh2wq5r3m49p7fHw==:17
+ a=IkcTkHD0fZMA:10 a=vUbySO9Y5rIA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=VwQbUJbxAAAA:8 a=EUspDBNiAAAA:8
+ a=wfhwzJ6r3g_IQgliFxoA:9 a=QEXdDO2ut3YA:10 a=iS9zxrgQBfv6-_F4QbHw:22
+X-Proofpoint-GUID: pzHxwVeo0V_RDWNHSmL-gFke1t8zb-Wo
+X-Proofpoint-ORIG-GUID: pzHxwVeo0V_RDWNHSmL-gFke1t8zb-Wo
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.9,FMLib:17.12.100.49
+ definitions=2026-01-06_03,2026-01-06_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ priorityscore=1501 suspectscore=0 impostorscore=0 bulkscore=0 malwarescore=0
+ phishscore=0 adultscore=0 clxscore=1015 lowpriorityscore=0 spamscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2512120000 definitions=main-2601070045
 
-On Tue, 2026-01-06 at 13:35 +0800, duoming@zju.edu.cn wrote:
-> On Sun, 04 Jan 2026 18:30:48 -0500 James Bottomley wrote:
-[...]
-> > I know how timeouts work ... I don't need the AI summary.=C2=A0 if ther=
-e
-> > is an outstanding command, the timeout will fire long after you've
-> > disabled the queue and run through ppa_detach and the next thing
-> > that will happen is the error handler will try to abort the
-> > command, eventually causing ppa_abort to be called, which is going
-> > to dereference the ppa_struct that ppa_detach freed.
->=20
-> What do you think of removing the ppa_abort() callback function?=20
-> This callback function is not necessary. The eh_abort_handler=20
-> function pointer is checked in scsi_abort_command() function,=20
-> and if the function pointer does not exist, it directly returns=20
-> FAILED. The subsequent process will be handled by SCSI error=20
-> handler thread - scsi_error_handler(). Therefore the issue you
-> mentioned could be avoided.
 
-Well, no, because that would lose us runtime error handling which is
-pretty essential for a flakey device like parport.  Also, if you remove
-that callback, it will escalate to the reset handler, which does
-exactly the same thing with ppa_struct.
 
-I was originally looking at this as a reference counting problem, but
-there is another way of solving it and that's to stop requests and
-drain the queue before freeing the resources.  It turns out that's
-exactly what scsi_remove_host() does (via __scsi_remove_device which
-calls blk_mq_destroy_queue) so, since there can't be any outstanding
-commands, it's actually impossible the delayed work queue is active
-after scsi_remove_host() is called and thus the original race you
-identified can't actually happen.
-
-Regards,
-
-James
+On 1/6/2026 10:11 PM, Bjorn Andersson wrote:
+> On Tue, Jan 06, 2026 at 06:33:19PM +0530, Pradeep Pragallapati wrote:
+>>
+>>
+>> On 1/6/2026 3:50 AM, Dmitry Baryshkov wrote:
+>>> On Mon, Jan 05, 2026 at 08:16:39PM +0530, Pradeep P V K wrote:
+>>>> Add UFSPHY, UFSHC compatible binding names and UFS devicetree
+>>>> enablement changes for Qualcomm x1e80100 SoC.
+>>>>
+>>>> Changes in V3:
+>>>> - Update all dt-bindings commit messages with concise and informative
+>>>>     statements [Krzysztof]
+>>>> - keep the QMP UFS PHY order by last compatible in numerical ascending
+>>>>     order [Krzysztof]
+>>>> - Remove qcom,x1e80100-ufshc from select: enum: list of
+>>>>     qcom,sc7180-ufshc.yaml file [Krzysztof]
+>>>> - Update subject prefix for all dt-bindings [Krzysztof]
+>>>> - Add RB-by for SoC dtsi [Konrad, Abel, Taniya]
+>>>> - Add RB-by for board dts [Konrad]
+>>>> - Link to V2:
+>>>>     https://lore.kernel.org/all/20251231101951.1026163-1-pradeep.pragallapati@oss.qualcomm.com
+>>>
+>>> Where did the previous changelog go?
+>> i missed to amend, i will update all changelog in my next patchset.
+> 
+> Please just adopt b4, go/upstream provides the documentation you need.
+sure, i will adopt to b4 going forward.
+> 
+> Regards,
+> Bjorn
+> 
+>>>
+>>>>
+>>>> ---
+>>>> Pradeep P V K (4):
+>>>>     dt-bindings: phy: qcom,sc8280xp-qmp-ufs-phy: Add QMP UFS PHY
+>>>>       compatible
+>>>>     dt-bindings: ufs: qcom,sc7180-ufshc: Add UFSHC compatible for x1e80100
+>>>>     arm64: dts: qcom: hamoa: Add UFS nodes for x1e80100 SoC
+>>>>     arm64: dts: qcom: hamoa-iot-evk: Enable UFS
+>>>>
+>>>>    .../phy/qcom,sc8280xp-qmp-ufs-phy.yaml        |   4 +
+>>>>    .../bindings/ufs/qcom,sc7180-ufshc.yaml       |  37 +++---
+>>>>    arch/arm64/boot/dts/qcom/hamoa-iot-evk.dts    |  18 +++
+>>>>    arch/arm64/boot/dts/qcom/hamoa.dtsi           | 123 +++++++++++++++++-
+>>>>    4 files changed, 164 insertions(+), 18 deletions(-)
+>>>>
+>>>> -- 
+>>>> 2.34.1
+>>>>
+>>>
+>>
 
