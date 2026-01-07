@@ -1,67 +1,67 @@
-Received: from mail-ed1-f41.google.com (mail-ed1-f41.google.com [209.85.208.41])
+Received: from mail-ed1-f45.google.com (mail-ed1-f45.google.com [209.85.208.45])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1FB201EFFB4
-	for <linux-scsi@vger.kernel.org>; Wed,  7 Jan 2026 08:06:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.41
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 69D2228726A
+	for <linux-scsi@vger.kernel.org>; Wed,  7 Jan 2026 08:06:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767773193; cv=none; b=sBKsnobQQ4a0lEQAyqNdyYzTxOq9CskSNrO5uc1jPDayxE1sgHdhMyCwUL9+rxmtRGBQ/M0R0uTlLoyWGlQhE+kTxHMX80JWmTyGzyfRbmQJwD1YQQ68haLBfVwRixOPwgXdk2lTxFupS5m3Qw2pLoi2X5b1CXsgaYPSAq7sZSQ=
+	t=1767773197; cv=none; b=kG76OhtUGYYsxiA50XLOwGjeUpmQfDPNVgPURjo0nLmngFbMQC7dpxBR/2dRm+g9CINRsOAuUEd7btfewJWPdCm1WnG5Xef0CoTLsdvtWiYknLvgue5xiQx7KqQpDuigB0Q/ch0+fkvfdLxER6HdOwvWo8gP7DNgUSpT/XYBRFY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767773193; c=relaxed/simple;
-	bh=ZqBIugg5K7/ysfpKey8yK6cRDkhGfiVM24dyT/kjpXc=;
+	s=arc-20240116; t=1767773197; c=relaxed/simple;
+	bh=0ExZVYfM/y4rcjDL5laO5mxUp+YApKspdR42MpTi6T0=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=YdnzS1eXWrhggxh24WUwKnHu7Kp6v1vFvOfQLj30nEJd8XOjHfNb61bTwu6x2bJWrm/Y4AmHHhwcgGFSxnSW8WnSgkycy/XTwqly4lyl/A/7ialsarra3i3qS4thjGCvs9dfA6fBHe8jjS0/MfCUcYpl7cnZ+M10Ej28jDv2Lms=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fairphone.com; spf=pass smtp.mailfrom=fairphone.com; dkim=pass (2048-bit key) header.d=fairphone.com header.i=@fairphone.com header.b=A4/y5f6a; arc=none smtp.client-ip=209.85.208.41
+	 In-Reply-To:To:Cc; b=ubvgifPIYWKNHTQiXvLBQjvPsEUmH313MI/D5c3IuZMGlk7Xmjc7+fnuJmHGH3oH2MxEvq7tcSENi7AZxmu3PBiTIlcT2p1QAdTzDWHXy1LWdRmaEi9OH/dHXJp4Ar40YJzgnEWUw9AXcc5xR9QsIsO/2g898MhM/H1Xc0Dw75E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fairphone.com; spf=pass smtp.mailfrom=fairphone.com; dkim=pass (2048-bit key) header.d=fairphone.com header.i=@fairphone.com header.b=JFD6WeeV; arc=none smtp.client-ip=209.85.208.45
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fairphone.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fairphone.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fairphone.com header.i=@fairphone.com header.b="A4/y5f6a"
-Received: by mail-ed1-f41.google.com with SMTP id 4fb4d7f45d1cf-64b560e425eso2392905a12.1
-        for <linux-scsi@vger.kernel.org>; Wed, 07 Jan 2026 00:06:25 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=fairphone.com header.i=@fairphone.com header.b="JFD6WeeV"
+Received: by mail-ed1-f45.google.com with SMTP id 4fb4d7f45d1cf-64b921d9e67so2930459a12.3
+        for <linux-scsi@vger.kernel.org>; Wed, 07 Jan 2026 00:06:35 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fairphone.com; s=fair; t=1767773183; x=1768377983; darn=vger.kernel.org;
+        d=fairphone.com; s=fair; t=1767773193; x=1768377993; darn=vger.kernel.org;
         h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
          :mime-version:subject:date:from:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=O4RvfqlwGsUfw8nkyrkO8zG6AiaNNt3piIyxZCLBKwM=;
-        b=A4/y5f6aH1h3eh7GFKKIOWzPstJw1gJb9OQCynzoTI/m+gGpTwREvSq1pPiS2JF3tp
-         HxXqRjnOyjB880aCuyATS8X3GTrgDd8itY6t2UPhFh9Qx4TL+AtQVjPLrv/tnlBVjOv2
-         6sbXIhXf/5hqOuivBEfpQVmaz0jdk3XmhVEN4OuTQR9/1uLqHXPD6DSg+pfrI2vKcqQU
-         gzuW4jx1QXB/I2bUK27cX/pWuyYbGXiRWVmi+2mMZ17hS8TK3f2tlaBijJjEluLnwIrr
-         MKCMM4bFkg1po/Htoo6lIDmXa0rAcq8w3X4xhs7n0tqTurzRhR31LBHGWPhv2E9U57aq
-         SaiQ==
+        bh=/i8ATthAaWuqmGUIVSIUdUu3CIf2MrTEFPyEW8I+YrY=;
+        b=JFD6WeeVsFMBOGz7dNWZffHEu9YeEdCbhr8+r+9/XMya77+zQxQJPftHbue7TRHe3T
+         2A2UEkbV0aCs76MspJywpM2hmQKRFs4ECoCB/YGTMZ8gd/5GR5+h9vU+blUgnz9ZO+qe
+         /W9zqCTKSnbS4VhMCdePv3kx5tz/den15GnzKfZaCw7dchw8q3GcBAPXGc2BZmyaQ69g
+         cvZuQzR6XNI4ITKLNI9aXjoGj7yFuj1qfb5MH2TYt14z7c5RYTpM0+m7yzwoPvPa+BBa
+         lHuLTYjowkCckedrFJEobiUp9lD9Z7FvMvZlU5KmrH+MxXCdKd5O+JygiwU14kXyIG6M
+         WH2A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1767773183; x=1768377983;
+        d=1e100.net; s=20230601; t=1767773193; x=1768377993;
         h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
          :mime-version:subject:date:from:x-gm-gg:x-gm-message-state:from:to
          :cc:subject:date:message-id:reply-to;
-        bh=O4RvfqlwGsUfw8nkyrkO8zG6AiaNNt3piIyxZCLBKwM=;
-        b=flcupFe5frwe9jF4UOPBdXrNb7D2mGcxYITozh4brg7OEAarTPWF0mKqKWkWBXlNJh
-         UHQBb1l6Xx8A4q+bX8Zrp8CZBlutu2yI6fTVZLaSfIBGGVxY4G/VWdXaNlI6Ir36cxI3
-         LXsX5qIpHWBFsT4LhBZusszrDBOz4OwC5ha4tbMFn5i7vW1eE7hx3o0ve5bUnKr1ucHw
-         ccx04bn3oqiV/0rYE25Y0dqDh476r1LNAUNiTboZboLb2KSaFrW1dw1gB+I3Z27XhJ19
-         vZzYUpWEdwud7Jwi9wC8uIKcE2Zmwo4d60w6RYapLRHfa+vch9bGA6OFHV5hp1bIkTIv
-         rfQQ==
-X-Forwarded-Encrypted: i=1; AJvYcCVttXTXMZEow0abvzln9JkjL7RXK2wmL8zYwPQjeoilyd1BQLUC2o29oOxnN6vhWHJ1N5+FvEYZeSVA@vger.kernel.org
-X-Gm-Message-State: AOJu0Yzv7Fb1uqjcKjAC/7hB1OEpNJIVzwMXTywb/elwqfiYedyDIC01
-	vEU+/3fhxtXHtzPYsVvQZ3ELWDpg8qTlG5zlw4G3+m6MM0UtH3DzadHmwYmvKWfaJ4c=
-X-Gm-Gg: AY/fxX4cXy/IDIgfFb0/AnQCKYup7XsAFj1oEGUJAXumeY3Ym2Opw+wzuIarBWaMm+7
-	E8p+yvQVc0dhU0p+H8hYU+Lw5+nmAfuDfz3a6siGAQiV0cvVMs/LljkPAZwqpcR9vxQCzTPxQ8D
-	zmscK4muTbaS8pcFjExP9on0zh+a854kODg79YcQqdoX9t0VXZb52/FUKfmnj4MMlR8E5DiUdpl
-	07cA+U/JKuVG31XJRoqHT8W6DSz311Qs+GvJp17S6eLBFGmd8CWKgcbPUMGK8FkDX+Qd1vplbKg
-	304TT7fMMS7uvzs4ST9BsegbZRqC+zvJiQQpoUFn1TIS5cK+Uwb7OXip0a6podsRa7t//iKpoXA
-	RUZOZhNGeoVXFTGIjLFjYxPdO/f/Xlqx/Z55itFv4Gk+5xyboxDtnGsPbXShbXtmGKKJ5WB3T25
-	PJovsuV/zUFYxtvGUy8eu+Wj/7sw==
-X-Google-Smtp-Source: AGHT+IFco/AIFD5fqL2upehjsvFAsI3pjosHbxzjhLr008+cfjzyFgmWnzpdlEcgUXZJ8GeoC7fn5g==
-X-Received: by 2002:a05:6402:270a:b0:647:54ba:6c42 with SMTP id 4fb4d7f45d1cf-65097dcd9fdmr1486656a12.4.1767773183403;
-        Wed, 07 Jan 2026 00:06:23 -0800 (PST)
+        bh=/i8ATthAaWuqmGUIVSIUdUu3CIf2MrTEFPyEW8I+YrY=;
+        b=IbONDWakWBJHU4cThrcjPq+XCiw0dRaLeQY5TjpEoM5mSqcsCemALy/oTIVtd+HPbL
+         bTV1qhceJ36TTTWHeX8tJCNFDrgNFlmyQ/22dnwAnIcc3OWzHl998WfcuqwM9m7hAu7W
+         43TCL/WHJtHD1O66I8pk09tuYkEWDY8TJZNEZjDvPStrvpE3VS2M6vpuR3nWmJwH30SW
+         o+BIAmKSrffM6no2yGmhC4JcnMVKQot5Pe24qckksEXaTHSd7sazNW8YYPX9sQHvukfk
+         eINT9lkxa/UsInSV8glgaBQC0KvJ+/AMvZ4LAzLHI8703hiiP0IfEUAN3spudSNAZFrS
+         jdcA==
+X-Forwarded-Encrypted: i=1; AJvYcCWUQYZtH0gJlP/AeuXd2kV02GhpWaz9Xcp+4Uzi0WNMDOrRJzfLwqWNRqJkIqcL9s3Tz0WluYWkdnUH@vger.kernel.org
+X-Gm-Message-State: AOJu0YxU6KKlNWHKoZ1A/WJWaQ4cs9FyFcpir8egCwZXND+WwW4GURLW
+	y/gRBBsMuGf6Y3myZ1E3AOar/Btnvevoojg7NoCEBvMBcXzm35jV+Kx1/8JzrlI02Ok=
+X-Gm-Gg: AY/fxX5W50zz4oNxZiaqr2pQqD0pYqwKPJWDe9QDqKtWu0tTdWpl2pTcYVy2ya/Bcbq
+	8cjQHlcisIo5FcpKbCTk6nwsD8Lr5M36HOWPlnJcN/0g0IAAzHMzq9CLIIODUo8FObe1YglhrLb
+	YWrJ3Yz9Sh/XzZ0EmCnBFnG99abNSunD+03kxCDxlYZZlwFlTR7Rr37QYchEJvxpcgPExcMWa2P
+	8fneRwPUtLlRfXvDS1ln5skmSiXyCuZOnN46wTAu2Xt202toH6Ubu0/Qx9BWH9Z1NYN+PcKqLVR
+	1cQxPl95WHc8TU3cX1G2ev7Qsqa9qjR+XEUdDaohotq/iB9GUshas+55JTk25s7E9VunpHDCnIh
+	8BjIVr7/EkcTIZZiHdanzIj6NqpS1s/e4gqFB12vFY3QA7PCvyYaJ+PtpVI1JJnyhdwtFlp3ywd
+	Nj0fyh8luR2YGu7M0OqoNcKeOmVA==
+X-Google-Smtp-Source: AGHT+IHJ+kf1Owv26cSF28vuEM1MMU6N6BChtOdWOK1Y0tMkxyy7by9CzZtm/qgGX2Td8KERFqr5yw==
+X-Received: by 2002:a05:6402:2554:b0:64b:946a:4a3a with SMTP id 4fb4d7f45d1cf-65097e75079mr1338292a12.31.1767773193114;
+        Wed, 07 Jan 2026 00:06:33 -0800 (PST)
 Received: from [192.168.224.78] ([213.208.157.247])
-        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-6507bf6d5absm3941299a12.33.2026.01.07.00.06.17
+        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-6507bf6d5absm3941299a12.33.2026.01.07.00.06.24
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 07 Jan 2026 00:06:23 -0800 (PST)
+        Wed, 07 Jan 2026 00:06:32 -0800 (PST)
 From: Luca Weiss <luca.weiss@fairphone.com>
-Date: Wed, 07 Jan 2026 09:05:55 +0100
-Subject: [PATCH 5/6] arm64: dts: qcom: milos: Add UFS nodes
+Date: Wed, 07 Jan 2026 09:05:56 +0100
+Subject: [PATCH 6/6] arm64: dts: qcom: milos-fairphone-fp6: Enable UFS
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -70,7 +70,7 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260107-milos-ufs-v1-5-6982ab20d0ac@fairphone.com>
+Message-Id: <20260107-milos-ufs-v1-6-6982ab20d0ac@fairphone.com>
 References: <20260107-milos-ufs-v1-0-6982ab20d0ac@fairphone.com>
 In-Reply-To: <20260107-milos-ufs-v1-0-6982ab20d0ac@fairphone.com>
 To: Herbert Xu <herbert@gondor.apana.org.au>, 
@@ -87,167 +87,51 @@ Cc: ~postmarketos/upstreaming@lists.sr.ht, phone-devel@vger.kernel.org,
  linux-scsi@vger.kernel.org, linux-phy@lists.infradead.org, 
  Luca Weiss <luca.weiss@fairphone.com>
 X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1767773155; l=4338;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1767773155; l=971;
  i=luca.weiss@fairphone.com; s=20250611; h=from:subject:message-id;
- bh=ZqBIugg5K7/ysfpKey8yK6cRDkhGfiVM24dyT/kjpXc=;
- b=4+q92hc4E5FncGMKXsvkFnr2XdU5Xsgch8jTz/DF/1zlb/Wzyqfx0gA19Q1ogrwRzX+vA/MOD
- Yvr2gqnsc1bBsIUyHwoTXp+p5tIBk9+GgMO7OqsLvlXU+7p6sJBpG5N
+ bh=0ExZVYfM/y4rcjDL5laO5mxUp+YApKspdR42MpTi6T0=;
+ b=OuUeeB9WBtMh0NzBeD2CtxzVjBzIAGe/EJcU8G/bdiV/SxKNG4rjbhcWGJctZTKikNOCzM2jj
+ leav4MG9O16CTfjnQYITZkPwM5W6n1oQkcroJQw5KKq7O3xx2gAleXB
 X-Developer-Key: i=luca.weiss@fairphone.com; a=ed25519;
  pk=O1aw+AAust5lEmgrNJ1Bs7PTY0fEsJm+mdkjExA69q8=
 
-Add the nodes for the UFS PHY and UFS host controller, along with the
-ICE used for UFS.
+Configure and enable the nodes for UFS, so that we can access the
+internal storage.
 
 Signed-off-by: Luca Weiss <luca.weiss@fairphone.com>
 ---
- arch/arm64/boot/dts/qcom/milos.dtsi | 127 +++++++++++++++++++++++++++++++++++-
- 1 file changed, 124 insertions(+), 3 deletions(-)
+ arch/arm64/boot/dts/qcom/milos-fairphone-fp6.dts | 18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
 
-diff --git a/arch/arm64/boot/dts/qcom/milos.dtsi b/arch/arm64/boot/dts/qcom/milos.dtsi
-index e1a51d43943f..0f69deabb60c 100644
---- a/arch/arm64/boot/dts/qcom/milos.dtsi
-+++ b/arch/arm64/boot/dts/qcom/milos.dtsi
-@@ -797,9 +797,9 @@ gcc: clock-controller@100000 {
- 				 <&sleep_clk>,
- 				 <0>, /* pcie_0_pipe_clk */
- 				 <0>, /* pcie_1_pipe_clk */
--				 <0>, /* ufs_phy_rx_symbol_0_clk */
--				 <0>, /* ufs_phy_rx_symbol_1_clk */
--				 <0>, /* ufs_phy_tx_symbol_0_clk */
-+				 <&ufs_mem_phy 0>,
-+				 <&ufs_mem_phy 1>,
-+				 <&ufs_mem_phy 2>,
- 				 <0>; /* usb3_phy_wrapper_gcc_usb30_pipe_clk */
+diff --git a/arch/arm64/boot/dts/qcom/milos-fairphone-fp6.dts b/arch/arm64/boot/dts/qcom/milos-fairphone-fp6.dts
+index 3a7f2f2b3a59..7629ceddde2a 100644
+--- a/arch/arm64/boot/dts/qcom/milos-fairphone-fp6.dts
++++ b/arch/arm64/boot/dts/qcom/milos-fairphone-fp6.dts
+@@ -819,6 +819,24 @@ &uart5 {
+ 	status = "okay";
+ };
  
- 			#clock-cells = <1>;
-@@ -1151,6 +1151,127 @@ aggre2_noc: interconnect@1700000 {
- 			qcom,bcm-voters = <&apps_bcm_voter>;
- 		};
++&ufs_mem_hc {
++	reset-gpios = <&tlmm 167 GPIO_ACTIVE_LOW>;
++
++	vcc-supply = <&vreg_l12b>;
++	vcc-max-microamp = <800000>;
++	vccq-supply = <&vreg_l5f>;
++	vccq-max-microamp = <750000>;
++
++	status = "okay";
++};
++
++&ufs_mem_phy {
++	vdda-phy-supply = <&vreg_l2b>;
++	vdda-pll-supply = <&vreg_l4b>;
++
++	status = "okay";
++};
++
+ &usb_1 {
+ 	dr_mode = "otg";
  
-+		ufs_mem_phy: phy@1d80000 {
-+			compatible = "qcom,milos-qmp-ufs-phy";
-+			reg = <0x0 0x01d80000 0x0 0x2000>;
-+
-+			clocks = <&rpmhcc RPMH_CXO_CLK>,
-+				 <&gcc GCC_UFS_PHY_PHY_AUX_CLK>,
-+				 <&tcsr TCSR_UFS_CLKREF_EN>;
-+			clock-names = "ref",
-+				      "ref_aux",
-+				      "qref";
-+
-+			resets = <&ufs_mem_hc 0>;
-+			reset-names = "ufsphy";
-+
-+			power-domains = <&gcc UFS_MEM_PHY_GDSC>;
-+
-+			#clock-cells = <1>;
-+			#phy-cells = <0>;
-+
-+			status = "disabled";
-+		};
-+
-+		ufs_mem_hc: ufshc@1d84000 {
-+			compatible = "qcom,milos-ufshc", "qcom,ufshc", "jedec,ufs-2.0";
-+			reg = <0x0 0x01d84000 0x0 0x3000>;
-+
-+			interrupts = <GIC_SPI 265 IRQ_TYPE_LEVEL_HIGH 0>;
-+
-+			clocks = <&gcc GCC_UFS_PHY_AXI_CLK>,
-+				 <&gcc GCC_AGGRE_UFS_PHY_AXI_CLK>,
-+				 <&gcc GCC_UFS_PHY_AHB_CLK>,
-+				 <&gcc GCC_UFS_PHY_UNIPRO_CORE_CLK>,
-+				 <&tcsr TCSR_UFS_PAD_CLKREF_EN>,
-+				 <&gcc GCC_UFS_PHY_TX_SYMBOL_0_CLK>,
-+				 <&gcc GCC_UFS_PHY_RX_SYMBOL_0_CLK>,
-+				 <&gcc GCC_UFS_PHY_RX_SYMBOL_1_CLK>;
-+			clock-names = "core_clk",
-+				      "bus_aggr_clk",
-+				      "iface_clk",
-+				      "core_clk_unipro",
-+				      "ref_clk",
-+				      "tx_lane0_sync_clk",
-+				      "rx_lane0_sync_clk",
-+				      "rx_lane1_sync_clk";
-+
-+			resets = <&gcc GCC_UFS_PHY_BCR>;
-+			reset-names = "rst";
-+
-+			interconnects = <&aggre1_noc MASTER_UFS_MEM QCOM_ICC_TAG_ALWAYS
-+					 &mc_virt SLAVE_EBI1 QCOM_ICC_TAG_ALWAYS>,
-+					<&gem_noc MASTER_APPSS_PROC QCOM_ICC_TAG_ACTIVE_ONLY
-+					 &cnoc_cfg SLAVE_UFS_MEM_CFG QCOM_ICC_TAG_ACTIVE_ONLY>;
-+			interconnect-names = "ufs-ddr",
-+					     "cpu-ufs";
-+
-+			power-domains = <&gcc UFS_PHY_GDSC>;
-+			required-opps = <&rpmhpd_opp_nom>;
-+
-+			operating-points-v2 = <&ufs_opp_table>;
-+
-+			iommus = <&apps_smmu 0x60 0>;
-+
-+			lanes-per-direction = <2>;
-+			qcom,ice = <&ice>;
-+
-+			phys = <&ufs_mem_phy>;
-+			phy-names = "ufsphy";
-+
-+			#reset-cells = <1>;
-+
-+			status = "disabled";
-+
-+			ufs_opp_table: opp-table {
-+				compatible = "operating-points-v2";
-+
-+				opp-75000000 {
-+					opp-hz = /bits/ 64 <75000000>,
-+						 /bits/ 64 <0>,
-+						 /bits/ 64 <0>,
-+						 /bits/ 64 <75000000>,
-+						 /bits/ 64 <0>,
-+						 /bits/ 64 <0>,
-+						 /bits/ 64 <0>,
-+						 /bits/ 64 <0>;
-+					required-opps = <&rpmhpd_opp_low_svs>;
-+				};
-+
-+				opp-150000000 {
-+					opp-hz = /bits/ 64 <150000000>,
-+						 /bits/ 64 <0>,
-+						 /bits/ 64 <0>,
-+						 /bits/ 64 <150000000>,
-+						 /bits/ 64 <0>,
-+						 /bits/ 64 <0>,
-+						 /bits/ 64 <0>,
-+						 /bits/ 64 <0>;
-+					required-opps = <&rpmhpd_opp_svs>;
-+				};
-+
-+				opp-300000000 {
-+					opp-hz = /bits/ 64 <300000000>,
-+						 /bits/ 64 <0>,
-+						 /bits/ 64 <0>,
-+						 /bits/ 64 <300000000>,
-+						 /bits/ 64 <0>,
-+						 /bits/ 64 <0>,
-+						 /bits/ 64 <0>,
-+						 /bits/ 64 <0>;
-+					required-opps = <&rpmhpd_opp_nom>;
-+				};
-+			};
-+		};
-+
-+		ice: crypto@1d88000 {
-+			compatible = "qcom,milos-inline-crypto-engine",
-+				     "qcom,inline-crypto-engine";
-+			reg = <0x0 0x01d88000 0x0 0x18000>;
-+
-+			clocks = <&gcc GCC_UFS_PHY_ICE_CORE_CLK>;
-+		};
-+
- 		tcsr_mutex: hwlock@1f40000 {
- 			compatible = "qcom,tcsr-mutex";
- 			reg = <0x0 0x01f40000 0x0 0x20000>;
 
 -- 
 2.52.0
