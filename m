@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 72E91428FFF;
-	Thu,  8 Jan 2026 12:19:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9276B4C69E4;
+	Thu,  8 Jan 2026 12:22:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767874758; cv=none; b=AY1ZOMXF/XBoVCuO0chEzeTq897eFrV4ORt8tECDJT7qZ+L3vCG4+OjVg4L2TGoSnhNrTIxqjI8Y5is740stsKbxkxMZCf6kQvdQBxOhYUAZq+o/UgkmsEgU/dvhYnI0xCNNNv2OV3Z1J7th92xXNXQjo1fCkMqN+NaovU5CqeE=
+	t=1767874932; cv=none; b=Z4D9SkW5DdZkjmmhwKjYDZFOkj3sHst6kj8kM8KYaiwecy4etbPV0aeYMXxWqwkG3wT30RhvvMAUJiWAjjFfcrCyoyslnepDlNuMj1ObCJu8G9hIq8wPDl1bLzMCdk55I7XgyT/cYvq1WLgmridgrQzUJ+0q4v4vCqEHVADR2Pw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767874758; c=relaxed/simple;
-	bh=KjsGhf6tGBRyqz1EhCK1fS6iJsnkXaTR6w1ZlTXKRDw=;
+	s=arc-20240116; t=1767874932; c=relaxed/simple;
+	bh=KReDG0ObiRiuDDh5D/U3gEUgH7EEOt+MoyvPkfZEGTE=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=ZqKjGIlnZzmVOXPIdbMNMfeqwRpuFZgcbzIeVbiIsMpE410ilNNjffdDqGqB3/rEoNuuhyJBsdhuCzum64do2FHD0AYgWfiScSRFuV9gKE9RZCMIyYIkMEvhjzarNx3QVpTLHBW7yy63bos8prnVtq5SKx0QDO9WcfUw1QbMnuE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lOKxG2p/; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=V5rnmziNhWJwtWk5PGrn08JPlxrgPzuQ7QgRXa3/BH2FMLPVT/+se76nLgHBG+m13Ir0Fg7KozTkR1UXNA+wN4FJXXMQl8NVxpEeLhc86slhiUIRBeLVSGaA3uMh2DVHOql64Zy9598LCEllqWRDRtsVzQWCjmz90q/9yNjnwHw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iJ4EIuE3; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lOKxG2p/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 62D9FC116C6;
-	Thu,  8 Jan 2026 12:19:12 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iJ4EIuE3"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A2856C116C6;
+	Thu,  8 Jan 2026 12:22:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1767874758;
-	bh=KjsGhf6tGBRyqz1EhCK1fS6iJsnkXaTR6w1ZlTXKRDw=;
+	s=k20201202; t=1767874932;
+	bh=KReDG0ObiRiuDDh5D/U3gEUgH7EEOt+MoyvPkfZEGTE=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=lOKxG2p/FRgp+8OYkLzrCnvz55qNyj0cbW2YWwbQ94LJ1/hC83S5W/bsGtt04ww6j
-	 OQNa0gvzOihQscBfKpdPgpsJek3Kd0XDIzzeyFMu+IxfCfkZUfzQc4RWAcr57Fc6Vp
-	 BdbWBl+gCb7bJTaXG3rxguTciSC/rMZ/e8xN1VSBD/xi26HEjDp3qHHPI7dlh/YExT
-	 /CrFzx1kZuu/0jVn+5iy0r64NaC8zj6as7Kxf8VNEoeee3Uai2IfOwqNjkzGB1O1q1
-	 LryGj12kuCHnZKG/XPysK0cVhxut6TMQ5eAFKE5K1inrUxhOVOYuUtX0SF5quA1BBq
-	 K/UwGXsuYSOWg==
-Message-ID: <1e365223-8e20-4519-b290-d8ecff548d84@kernel.org>
-Date: Thu, 8 Jan 2026 13:19:10 +0100
+	b=iJ4EIuE3PGgXb4m9MMjUwF4obO8M8960KgR/Vw00s0LByGuCndpRgznyV9Upz7eca
+	 O8SnhJWlqI9Otnvrh7zYd9lDuh6CMYvCvPKd3sCn9yANbG/n1bf6Ium8Je+LqpUUno
+	 IMFYWVPCWVVrbhVXmBHB1diagUa0nnfwFL9G3jeq9roN4wLOscgYjXeLBWqcADrciw
+	 DaeSTabhqj2uxV8RIo5hdy9EOzJUHn52A6GJ8SeP5znN1LEOP5eCljYN2xCoidyxz7
+	 dVwncZT05hGTcuIpHuRfeJZJ202pnzYXlw7qxsuxZrScI3uFA9tKmGwlqxxZTP5fT6
+	 6vKGYHhPAgQqA==
+Message-ID: <f3bf5118-eb75-450f-85e2-6d3ee775c8c5@kernel.org>
+Date: Thu, 8 Jan 2026 13:22:04 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,41 +35,29 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4 11/25] scsi: ufs: mediatek: Rework probe function
-To: =?UTF-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= <peter.wang@mediatek.com>,
- "chu.stanley@gmail.com" <chu.stanley@gmail.com>,
- "robh@kernel.org" <robh@kernel.org>,
- =?UTF-8?B?Q2h1bmZlbmcgWXVuICjkupHmmKXls7Ap?= <Chunfeng.Yun@mediatek.com>,
- "kishon@kernel.org" <kishon@kernel.org>,
- "James.Bottomley@HansenPartnership.com"
- <James.Bottomley@HansenPartnership.com>,
- "bvanassche@acm.org" <bvanassche@acm.org>,
+Subject: Re: [PATCH v5 17/24] scsi: ufs: mediatek: Add vendor prefix to
+ clk-scale-up-vcore-min
+To: Nicolas Frattaroli <nicolas.frattaroli@collabora.com>,
+ Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>,
+ Bart Van Assche <bvanassche@acm.org>, Rob Herring <robh@kernel.org>,
+ Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley
+ <conor+dt@kernel.org>, Matthias Brugger <matthias.bgg@gmail.com>,
  AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
- "neil.armstrong@linaro.org" <neil.armstrong@linaro.org>,
- "conor+dt@kernel.org" <conor+dt@kernel.org>,
- =?UTF-8?B?Q2hhb3RpYW4gSmluZyAo5LqV5pyd5aSpKQ==?=
- <Chaotian.Jing@mediatek.com>, "lgirdwood@gmail.com" <lgirdwood@gmail.com>,
- "nicolas.frattaroli@collabora.com" <nicolas.frattaroli@collabora.com>,
- "vkoul@kernel.org" <vkoul@kernel.org>,
- "krzk+dt@kernel.org" <krzk+dt@kernel.org>,
- "p.zabel@pengutronix.de" <p.zabel@pengutronix.de>,
- "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
- "matthias.bgg@gmail.com" <matthias.bgg@gmail.com>,
- "avri.altman@wdc.com" <avri.altman@wdc.com>,
- "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
- "broonie@kernel.org" <broonie@kernel.org>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
- "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- "linux-arm-kernel@lists.infradead.org"
- <linux-arm-kernel@lists.infradead.org>,
- "linux-phy@lists.infradead.org" <linux-phy@lists.infradead.org>,
- "linux-mediatek@lists.infradead.org" <linux-mediatek@lists.infradead.org>,
- Louis-Alexis Eyraud <louisalexis.eyraud@collabora.com>,
- "kernel@collabora.com" <kernel@collabora.com>
-References: <20251218-mt8196-ufs-v4-0-ddec7a369dd2@collabora.com>
- <20251218-mt8196-ufs-v4-11-ddec7a369dd2@collabora.com>
- <213d3077835fc86d15579c0a0a91f64fd84b1059.camel@mediatek.com>
+ Chunfeng Yun <chunfeng.yun@mediatek.com>, Vinod Koul <vkoul@kernel.org>,
+ Kishon Vijay Abraham I <kishon@kernel.org>,
+ Peter Wang <peter.wang@mediatek.com>, Stanley Jhu <chu.stanley@gmail.com>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ Philipp Zabel <p.zabel@pengutronix.de>, Liam Girdwood <lgirdwood@gmail.com>,
+ Mark Brown <broonie@kernel.org>, Chaotian Jing <Chaotian.Jing@mediatek.com>,
+ Neil Armstrong <neil.armstrong@linaro.org>
+Cc: Louis-Alexis Eyraud <louisalexis.eyraud@collabora.com>,
+ kernel@collabora.com, linux-scsi@vger.kernel.org,
+ devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org, linux-mediatek@lists.infradead.org,
+ linux-phy@lists.infradead.org
+References: <20260108-mt8196-ufs-v5-0-49215157ec41@collabora.com>
+ <20260108-mt8196-ufs-v5-17-49215157ec41@collabora.com>
 From: Krzysztof Kozlowski <krzk@kernel.org>
 Content-Language: en-US
 Autocrypt: addr=krzk@kernel.org; keydata=
@@ -115,27 +103,24 @@ Autocrypt: addr=krzk@kernel.org; keydata=
  jWt87ecuHlpL3uuQ0ZZNWqHgZoQLXoqC2ZV5KrtKWb/jyiFX/sxSrodALf0zf+tfHv0FZWT2
  zHjUqd0t4njD/UOsuIMOQn4Ig0SdivYPfZukb5cdasKJukG1NOpbW7yRNivaCnfZz6dTawXw
  XRIV/KDsHQiyVxKvN73bThKhONkcX2LWuD928tAR6XMM2G5ovxLe09vuOzzfTWQDsm++9UKF a/A=
-In-Reply-To: <213d3077835fc86d15579c0a0a91f64fd84b1059.camel@mediatek.com>
+In-Reply-To: <20260108-mt8196-ufs-v5-17-49215157ec41@collabora.com>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 
-On 06/01/2026 14:23, Peter Wang (王信友) wrote:
-> On Thu, 2025-12-18 at 13:55 +0100, Nicolas Frattaroli wrote:
->>
->> Remove the ti,syscon-reset cruft.
->>
+On 08/01/2026 11:49, Nicolas Frattaroli wrote:
+> Device Tree properties other than the standard properties must be
+> prefixed with the vendor's name. The "clk-scale-up-vcore-min" property,
+> which this driver uses, and the binding did not previously document,
+> lacked a vendor prefix.
 > 
-> Hi Nicolas,
-> 
-> Why do we need to remove the reset node? If an error occurs and the
+> Add the missing "mediatek," vendor prefix and clean up the error print.
 
-Commit msg should be improved and provide the reason, e.g. because it is
-undocumented and unused ABI.
+Sorry, but no, because it is still undocumented. You cannot add new
+undocumented API (at least according to git grep and first three patches
+here).
 
-> host 
-> does not perform a reset, it could lead to error recovery failure.
-
-This is not a reason to use undocumented ABI.
+Please instead drop the property completely. Mediatek is not allowed to
+push downstream code here.
 
 Best regards,
 Krzysztof
