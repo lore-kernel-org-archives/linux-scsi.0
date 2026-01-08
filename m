@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9276B4C69E4;
-	Thu,  8 Jan 2026 12:22:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 62C9D4DC533;
+	Thu,  8 Jan 2026 12:26:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767874932; cv=none; b=Z4D9SkW5DdZkjmmhwKjYDZFOkj3sHst6kj8kM8KYaiwecy4etbPV0aeYMXxWqwkG3wT30RhvvMAUJiWAjjFfcrCyoyslnepDlNuMj1ObCJu8G9hIq8wPDl1bLzMCdk55I7XgyT/cYvq1WLgmridgrQzUJ+0q4v4vCqEHVADR2Pw=
+	t=1767875162; cv=none; b=bPhebqDBzTW32aDMLNMeoLgE+NLV8pTYbaovCUXHdClkNkX68zJ2o970+bFFZoKuqtq1arm7AvGjsnBn3QoTEycULc5iquLKz4QXJacHOXNyzFuam9jvRPmuuzGFHv3SF58Mmvgsv01+htB/PpddwkvKiT9f094U2bQ6Trc+n2E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767874932; c=relaxed/simple;
-	bh=KReDG0ObiRiuDDh5D/U3gEUgH7EEOt+MoyvPkfZEGTE=;
+	s=arc-20240116; t=1767875162; c=relaxed/simple;
+	bh=C1Hx9DZE+cLMPMvB83ODtiSQ434Om43RczbKH8nThXY=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=V5rnmziNhWJwtWk5PGrn08JPlxrgPzuQ7QgRXa3/BH2FMLPVT/+se76nLgHBG+m13Ir0Fg7KozTkR1UXNA+wN4FJXXMQl8NVxpEeLhc86slhiUIRBeLVSGaA3uMh2DVHOql64Zy9598LCEllqWRDRtsVzQWCjmz90q/9yNjnwHw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iJ4EIuE3; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=mYyvx1TTyF5KCkWgcfGa/ZDXgq/hj/0bZi39isXTypQqgbwAfLquFkX6uwzKSqyakNv241bsgURI8YUOwj6ASdjrP9g07jOWWSK8l+XdSfQpbC2hh8cpGMdWzmuFqvRy2VWHQb5AXctgS0q7u68ganNFHOi1bfYYd1D+/Mu4qpM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Qj28Hd9V; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iJ4EIuE3"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A2856C116C6;
-	Thu,  8 Jan 2026 12:22:06 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Qj28Hd9V"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 95F90C116C6;
+	Thu,  8 Jan 2026 12:25:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1767874932;
-	bh=KReDG0ObiRiuDDh5D/U3gEUgH7EEOt+MoyvPkfZEGTE=;
+	s=k20201202; t=1767875162;
+	bh=C1Hx9DZE+cLMPMvB83ODtiSQ434Om43RczbKH8nThXY=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=iJ4EIuE3PGgXb4m9MMjUwF4obO8M8960KgR/Vw00s0LByGuCndpRgznyV9Upz7eca
-	 O8SnhJWlqI9Otnvrh7zYd9lDuh6CMYvCvPKd3sCn9yANbG/n1bf6Ium8Je+LqpUUno
-	 IMFYWVPCWVVrbhVXmBHB1diagUa0nnfwFL9G3jeq9roN4wLOscgYjXeLBWqcADrciw
-	 DaeSTabhqj2uxV8RIo5hdy9EOzJUHn52A6GJ8SeP5znN1LEOP5eCljYN2xCoidyxz7
-	 dVwncZT05hGTcuIpHuRfeJZJ202pnzYXlw7qxsuxZrScI3uFA9tKmGwlqxxZTP5fT6
-	 6vKGYHhPAgQqA==
-Message-ID: <f3bf5118-eb75-450f-85e2-6d3ee775c8c5@kernel.org>
-Date: Thu, 8 Jan 2026 13:22:04 +0100
+	b=Qj28Hd9VfukTH9PBfE+A/TLhre/AAPY78mHIWO6VGQb8Ryo99Buvf3a/chE8K7v9r
+	 fK5EaHqlAI6FjIKPHVQE5v4irRvkEVd6jUtgNc0baKqbZIGgoeJRpwtfgP138HgODO
+	 SMLRFE02tdJhnrGtgDr5XSuHwBk1t96mDqjOj169PCF4pgaJTSLFTmjQeNnNv4m3z2
+	 2M4hnmwS5u/cu/vYGZLcaZe5u53Z0ewaZYpUPmMDWNjwSey4DEV84pAmoDKFTfbEIw
+	 65lJAvcO1ePWu/jZY8CkyisS5jenVt5g3pwWZ0JpL6DiNn8vw3VgeijjUOsOAOSpoS
+	 6qbBh3d/3Mv2w==
+Message-ID: <81ed17eb-2170-4e97-b56d-488b5335ff5c@kernel.org>
+Date: Thu, 8 Jan 2026 13:25:54 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,8 +35,7 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5 17/24] scsi: ufs: mediatek: Add vendor prefix to
- clk-scale-up-vcore-min
+Subject: Re: [PATCH v5 11/24] scsi: ufs: mediatek: Rework probe function
 To: Nicolas Frattaroli <nicolas.frattaroli@collabora.com>,
  Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>,
  Bart Van Assche <bvanassche@acm.org>, Rob Herring <robh@kernel.org>,
@@ -57,7 +56,7 @@ Cc: Louis-Alexis Eyraud <louisalexis.eyraud@collabora.com>,
  linux-arm-kernel@lists.infradead.org, linux-mediatek@lists.infradead.org,
  linux-phy@lists.infradead.org
 References: <20260108-mt8196-ufs-v5-0-49215157ec41@collabora.com>
- <20260108-mt8196-ufs-v5-17-49215157ec41@collabora.com>
+ <20260108-mt8196-ufs-v5-11-49215157ec41@collabora.com>
 From: Krzysztof Kozlowski <krzk@kernel.org>
 Content-Language: en-US
 Autocrypt: addr=krzk@kernel.org; keydata=
@@ -103,24 +102,18 @@ Autocrypt: addr=krzk@kernel.org; keydata=
  jWt87ecuHlpL3uuQ0ZZNWqHgZoQLXoqC2ZV5KrtKWb/jyiFX/sxSrodALf0zf+tfHv0FZWT2
  zHjUqd0t4njD/UOsuIMOQn4Ig0SdivYPfZukb5cdasKJukG1NOpbW7yRNivaCnfZz6dTawXw
  XRIV/KDsHQiyVxKvN73bThKhONkcX2LWuD928tAR6XMM2G5ovxLe09vuOzzfTWQDsm++9UKF a/A=
-In-Reply-To: <20260108-mt8196-ufs-v5-17-49215157ec41@collabora.com>
+In-Reply-To: <20260108-mt8196-ufs-v5-11-49215157ec41@collabora.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 On 08/01/2026 11:49, Nicolas Frattaroli wrote:
-> Device Tree properties other than the standard properties must be
-> prefixed with the vendor's name. The "clk-scale-up-vcore-min" property,
-> which this driver uses, and the binding did not previously document,
-> lacked a vendor prefix.
-> 
-> Add the missing "mediatek," vendor prefix and clean up the error print.
+> Remove the ti,syscon-reset cruft.
 
-Sorry, but no, because it is still undocumented. You cannot add new
-undocumented API (at least according to git grep and first three patches
-here).
+Please provide here reason, e.g. undocumented ABI. Normally I would ask
+about ABI impact, but considering this is was just copied from some
+downstream code I would just not care.
 
-Please instead drop the property completely. Mediatek is not allowed to
-push downstream code here.
+Mediatek should really stop and rethink their upstream process.
 
 Best regards,
 Krzysztof
