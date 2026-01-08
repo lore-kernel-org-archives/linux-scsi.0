@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A1544496F40;
-	Thu,  8 Jan 2026 12:16:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5EE9B2DB7B4;
+	Thu,  8 Jan 2026 12:16:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767874571; cv=none; b=UZHofmtn2MC3/29LeD7tVnmqTEUQUIlA2HMjDUpm8eDU8jsqwFKWeVaKOKSl6eg10TR49KUNCZI1aHsKtN6SFmemqC2jpSmGaphIPpaHulK3dNkPBPH5WCc2k3Zk07c76wPOSe2hPowaZIq2HTC3NIOVI4wk7APptcnSA2VHflY=
+	t=1767874610; cv=none; b=st6Ub7P4lpEQ90pQbCiu6BA7kFWDSv03qyPSIzgC0YedKmBjX4b+EaY5+X8/1GMiHgzK5lMTINKyFZUsMGVhmSWCJLjaYKsvW3W9hdB2erf7ClQIR0HHSrFT/3xT/MWs+TrLOrWgdG2YWQ48R1meDhCtqmUDMTL54dBXIaauU3I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767874571; c=relaxed/simple;
-	bh=FcopaEUh/j7G1ACOGZTfkC61bb/blGywpKi5bSo0NTM=;
+	s=arc-20240116; t=1767874610; c=relaxed/simple;
+	bh=gEl+IGUFdOf6I39ZmGq4+GhoNGeNRIouAWMgiu49Weo=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Q69IvTtOe9gK9b4qSAD+4DZigrhPV0uk/ldRsrsgd4q1fhXrdC81YqFnEZOKBOyYagGhLzDT7hYK3jNPC0OVK1btsv0a8At84ACGsyVDV2sPQWqpHgEd4DoLBvbhbUTnPKR6q65IEVpBmG1+witWUqZHR86fUEfFQOOWYStHP+I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=e2agQWWf; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=F2uiMfYB4xPkI9y0TUtISH6giEAhm84Zvfygm7ueVoio09OObfV5HuJab6El/qVVkcrOp+8nzIAUUds/Rg8UviM47W+MsEdRvWM61RQoB552vBQzp/SoCPGRjcFHB0aGvhOxxXXPTtRwKjpg2jR8FEh95lkQxkmMGFYV/WvNqN8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PGhHcJEA; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="e2agQWWf"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9AFD2C116C6;
-	Thu,  8 Jan 2026 12:16:02 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PGhHcJEA"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2A40CC116C6;
+	Thu,  8 Jan 2026 12:16:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1767874568;
-	bh=FcopaEUh/j7G1ACOGZTfkC61bb/blGywpKi5bSo0NTM=;
+	s=k20201202; t=1767874608;
+	bh=gEl+IGUFdOf6I39ZmGq4+GhoNGeNRIouAWMgiu49Weo=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=e2agQWWfAtizhDQSZCJTNXtaNkT5LV2Z0EWCjw8kfVryLzQayfwB0n00mrJBwhgRJ
-	 R9fAYsIhwH0FkYip5EN4CC5954T/VK0LebJMfdgexSmXC4WjFfcE777uh23w9PC0MI
-	 WykVQ2gGkVluNvX00bFbLyUvTYycunGQ3DjCREqG7SVWYb91kpgKye1yEyOZtdZ2X1
-	 AOP/seaVmOf1AjuZv2BGb198x1wGDkliTY9CtP83X3PXIfLkBx58d2VJwg3S7f+LXt
-	 6Frj1gyde74ryyGzp83h0xBn3Albs9k1e/xt60b++YYJMSEzQJ9q1Iils+sMBEeJWB
-	 UnwGDoM88Tt5Q==
-Message-ID: <512d7012-971a-4626-bcf7-cfbd7a9e6296@kernel.org>
-Date: Thu, 8 Jan 2026 13:16:00 +0100
+	b=PGhHcJEAbS/6jLBB7EsrbLkPZX8hpLX39bYjJVL9QCNdp2ehUw3hQnd8TIhOXlfHU
+	 NtgVZAiyoPKtMtgQKyhH4I6fqU8aVfLwfF9PwsKCD+XJtAvcNTyed51WFT30cJ1lx/
+	 X7AWIy3LSOojhFOlrZ/4/08Ie2K/UJoM2ww49dXo2RSYPnCkehQrYiDlWK8oRsFocK
+	 ivv9FGKYZvk/jHf/y5Mnt8LgBty+SUTV602plm3pkhUTGu5Bux7acdBJywp/zkr5s7
+	 z4SlRUnoYanXPLaBvv1ULCzMv3vF+LorjCeZBpC73klvLQbggUNHrh5/6+HJpt6Bv9
+	 UUnTlEOKDI/Pw==
+Message-ID: <b562c545-fabf-4e30-8397-e2d75633e03a@kernel.org>
+Date: Thu, 8 Jan 2026 13:16:41 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,42 +35,29 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4 12/25] scsi: ufs: mediatek: Remove vendor kernel quirks
+Subject: Re: [PATCH v5 12/24] scsi: ufs: mediatek: Remove vendor kernel quirks
  cruft
-To: =?UTF-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= <peter.wang@mediatek.com>,
- "chu.stanley@gmail.com" <chu.stanley@gmail.com>,
- "robh@kernel.org" <robh@kernel.org>,
- =?UTF-8?B?Q2h1bmZlbmcgWXVuICjkupHmmKXls7Ap?= <Chunfeng.Yun@mediatek.com>,
- "kishon@kernel.org" <kishon@kernel.org>,
- "James.Bottomley@HansenPartnership.com"
- <James.Bottomley@HansenPartnership.com>,
- "bvanassche@acm.org" <bvanassche@acm.org>,
+To: Nicolas Frattaroli <nicolas.frattaroli@collabora.com>,
+ Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>,
+ Bart Van Assche <bvanassche@acm.org>, Rob Herring <robh@kernel.org>,
+ Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley
+ <conor+dt@kernel.org>, Matthias Brugger <matthias.bgg@gmail.com>,
  AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
- "neil.armstrong@linaro.org" <neil.armstrong@linaro.org>,
- "conor+dt@kernel.org" <conor+dt@kernel.org>,
- =?UTF-8?B?Q2hhb3RpYW4gSmluZyAo5LqV5pyd5aSpKQ==?=
- <Chaotian.Jing@mediatek.com>, "lgirdwood@gmail.com" <lgirdwood@gmail.com>,
- "nicolas.frattaroli@collabora.com" <nicolas.frattaroli@collabora.com>,
- "vkoul@kernel.org" <vkoul@kernel.org>,
- "krzk+dt@kernel.org" <krzk+dt@kernel.org>,
- "p.zabel@pengutronix.de" <p.zabel@pengutronix.de>,
- "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
- "matthias.bgg@gmail.com" <matthias.bgg@gmail.com>,
- "avri.altman@wdc.com" <avri.altman@wdc.com>,
- "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
- "broonie@kernel.org" <broonie@kernel.org>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
- "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- "linux-arm-kernel@lists.infradead.org"
- <linux-arm-kernel@lists.infradead.org>,
- "linux-phy@lists.infradead.org" <linux-phy@lists.infradead.org>,
- "linux-mediatek@lists.infradead.org" <linux-mediatek@lists.infradead.org>,
- Louis-Alexis Eyraud <louisalexis.eyraud@collabora.com>,
- "kernel@collabora.com" <kernel@collabora.com>
-References: <20251218-mt8196-ufs-v4-0-ddec7a369dd2@collabora.com>
- <20251218-mt8196-ufs-v4-12-ddec7a369dd2@collabora.com>
- <1bbc263bafe14343b2d60a230ae6ce5dadffbf7c.camel@mediatek.com>
+ Chunfeng Yun <chunfeng.yun@mediatek.com>, Vinod Koul <vkoul@kernel.org>,
+ Kishon Vijay Abraham I <kishon@kernel.org>,
+ Peter Wang <peter.wang@mediatek.com>, Stanley Jhu <chu.stanley@gmail.com>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ Philipp Zabel <p.zabel@pengutronix.de>, Liam Girdwood <lgirdwood@gmail.com>,
+ Mark Brown <broonie@kernel.org>, Chaotian Jing <Chaotian.Jing@mediatek.com>,
+ Neil Armstrong <neil.armstrong@linaro.org>
+Cc: Louis-Alexis Eyraud <louisalexis.eyraud@collabora.com>,
+ kernel@collabora.com, linux-scsi@vger.kernel.org,
+ devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org, linux-mediatek@lists.infradead.org,
+ linux-phy@lists.infradead.org
+References: <20260108-mt8196-ufs-v5-0-49215157ec41@collabora.com>
+ <20260108-mt8196-ufs-v5-12-49215157ec41@collabora.com>
 From: Krzysztof Kozlowski <krzk@kernel.org>
 Content-Language: en-US
 Autocrypt: addr=krzk@kernel.org; keydata=
@@ -116,40 +103,23 @@ Autocrypt: addr=krzk@kernel.org; keydata=
  jWt87ecuHlpL3uuQ0ZZNWqHgZoQLXoqC2ZV5KrtKWb/jyiFX/sxSrodALf0zf+tfHv0FZWT2
  zHjUqd0t4njD/UOsuIMOQn4Ig0SdivYPfZukb5cdasKJukG1NOpbW7yRNivaCnfZz6dTawXw
  XRIV/KDsHQiyVxKvN73bThKhONkcX2LWuD928tAR6XMM2G5ovxLe09vuOzzfTWQDsm++9UKF a/A=
-In-Reply-To: <1bbc263bafe14343b2d60a230ae6ce5dadffbf7c.camel@mediatek.com>
+In-Reply-To: <20260108-mt8196-ufs-v5-12-49215157ec41@collabora.com>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 
-On 06/01/2026 14:25, Peter Wang (王信友) wrote:
-> On Thu, 2025-12-18 at 13:55 +0100, Nicolas Frattaroli wrote:
->>
->> Both ufs_mtk_vreg_fix_vcc and ufs_mtk_vreg_fix_vccqx look like they
->> are
->> vendor kernel hacks to work around existing downstream device trees.
->> Mainline does not need or want them, so remove them.
->>
+On 08/01/2026 11:49, Nicolas Frattaroli wrote:
+> Both ufs_mtk_vreg_fix_vcc and ufs_mtk_vreg_fix_vccqx look like they are
+> vendor kernel hacks to work around existing downstream device trees.
+> Mainline does not need or want them, so remove them.
 > 
-> Hi Nicolas,
-> 
-> This is a flexible approach to implement one software supporting
-> multiple
-> hardware configurations. Because you cannot guarantee that your SOC
-> will 
+> Reviewed-by: AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
+> Signed-off-by: Nicolas Frattaroli <nicolas.frattaroli@collabora.com>
 
-We do not store dead code for your vendor, downstream kernel. We already
-discussed it months ago where you were pushing same agenda.
+Just in case Mediatek again promotes their downstream vendor kernel as
+justification for upstream (which is really unacceptable and was told to
+Mediatek more than once):
 
-Stop with this downstream approach and understand that your downstream
-absolutely does not matter and does not exist for us.
-
-> always use UFS 2.0 or UFS 3.0, or that the PMIC you use will only have
-> one set.
-> 
-> Thanks
-> Peter
-> 
-> 
-
+Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
 
 Best regards,
 Krzysztof
