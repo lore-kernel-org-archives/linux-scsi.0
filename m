@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5EE9B2DB7B4;
-	Thu,  8 Jan 2026 12:16:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 72E91428FFF;
+	Thu,  8 Jan 2026 12:19:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767874610; cv=none; b=st6Ub7P4lpEQ90pQbCiu6BA7kFWDSv03qyPSIzgC0YedKmBjX4b+EaY5+X8/1GMiHgzK5lMTINKyFZUsMGVhmSWCJLjaYKsvW3W9hdB2erf7ClQIR0HHSrFT/3xT/MWs+TrLOrWgdG2YWQ48R1meDhCtqmUDMTL54dBXIaauU3I=
+	t=1767874758; cv=none; b=AY1ZOMXF/XBoVCuO0chEzeTq897eFrV4ORt8tECDJT7qZ+L3vCG4+OjVg4L2TGoSnhNrTIxqjI8Y5is740stsKbxkxMZCf6kQvdQBxOhYUAZq+o/UgkmsEgU/dvhYnI0xCNNNv2OV3Z1J7th92xXNXQjo1fCkMqN+NaovU5CqeE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767874610; c=relaxed/simple;
-	bh=gEl+IGUFdOf6I39ZmGq4+GhoNGeNRIouAWMgiu49Weo=;
+	s=arc-20240116; t=1767874758; c=relaxed/simple;
+	bh=KjsGhf6tGBRyqz1EhCK1fS6iJsnkXaTR6w1ZlTXKRDw=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=F2uiMfYB4xPkI9y0TUtISH6giEAhm84Zvfygm7ueVoio09OObfV5HuJab6El/qVVkcrOp+8nzIAUUds/Rg8UviM47W+MsEdRvWM61RQoB552vBQzp/SoCPGRjcFHB0aGvhOxxXXPTtRwKjpg2jR8FEh95lkQxkmMGFYV/WvNqN8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PGhHcJEA; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=ZqKjGIlnZzmVOXPIdbMNMfeqwRpuFZgcbzIeVbiIsMpE410ilNNjffdDqGqB3/rEoNuuhyJBsdhuCzum64do2FHD0AYgWfiScSRFuV9gKE9RZCMIyYIkMEvhjzarNx3QVpTLHBW7yy63bos8prnVtq5SKx0QDO9WcfUw1QbMnuE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lOKxG2p/; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PGhHcJEA"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2A40CC116C6;
-	Thu,  8 Jan 2026 12:16:42 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lOKxG2p/"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 62D9FC116C6;
+	Thu,  8 Jan 2026 12:19:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1767874608;
-	bh=gEl+IGUFdOf6I39ZmGq4+GhoNGeNRIouAWMgiu49Weo=;
+	s=k20201202; t=1767874758;
+	bh=KjsGhf6tGBRyqz1EhCK1fS6iJsnkXaTR6w1ZlTXKRDw=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=PGhHcJEAbS/6jLBB7EsrbLkPZX8hpLX39bYjJVL9QCNdp2ehUw3hQnd8TIhOXlfHU
-	 NtgVZAiyoPKtMtgQKyhH4I6fqU8aVfLwfF9PwsKCD+XJtAvcNTyed51WFT30cJ1lx/
-	 X7AWIy3LSOojhFOlrZ/4/08Ie2K/UJoM2ww49dXo2RSYPnCkehQrYiDlWK8oRsFocK
-	 ivv9FGKYZvk/jHf/y5Mnt8LgBty+SUTV602plm3pkhUTGu5Bux7acdBJywp/zkr5s7
-	 z4SlRUnoYanXPLaBvv1ULCzMv3vF+LorjCeZBpC73klvLQbggUNHrh5/6+HJpt6Bv9
-	 UUnTlEOKDI/Pw==
-Message-ID: <b562c545-fabf-4e30-8397-e2d75633e03a@kernel.org>
-Date: Thu, 8 Jan 2026 13:16:41 +0100
+	b=lOKxG2p/FRgp+8OYkLzrCnvz55qNyj0cbW2YWwbQ94LJ1/hC83S5W/bsGtt04ww6j
+	 OQNa0gvzOihQscBfKpdPgpsJek3Kd0XDIzzeyFMu+IxfCfkZUfzQc4RWAcr57Fc6Vp
+	 BdbWBl+gCb7bJTaXG3rxguTciSC/rMZ/e8xN1VSBD/xi26HEjDp3qHHPI7dlh/YExT
+	 /CrFzx1kZuu/0jVn+5iy0r64NaC8zj6as7Kxf8VNEoeee3Uai2IfOwqNjkzGB1O1q1
+	 LryGj12kuCHnZKG/XPysK0cVhxut6TMQ5eAFKE5K1inrUxhOVOYuUtX0SF5quA1BBq
+	 K/UwGXsuYSOWg==
+Message-ID: <1e365223-8e20-4519-b290-d8ecff548d84@kernel.org>
+Date: Thu, 8 Jan 2026 13:19:10 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,29 +35,41 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5 12/24] scsi: ufs: mediatek: Remove vendor kernel quirks
- cruft
-To: Nicolas Frattaroli <nicolas.frattaroli@collabora.com>,
- Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>,
- Bart Van Assche <bvanassche@acm.org>, Rob Herring <robh@kernel.org>,
- Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley
- <conor+dt@kernel.org>, Matthias Brugger <matthias.bgg@gmail.com>,
+Subject: Re: [PATCH v4 11/25] scsi: ufs: mediatek: Rework probe function
+To: =?UTF-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= <peter.wang@mediatek.com>,
+ "chu.stanley@gmail.com" <chu.stanley@gmail.com>,
+ "robh@kernel.org" <robh@kernel.org>,
+ =?UTF-8?B?Q2h1bmZlbmcgWXVuICjkupHmmKXls7Ap?= <Chunfeng.Yun@mediatek.com>,
+ "kishon@kernel.org" <kishon@kernel.org>,
+ "James.Bottomley@HansenPartnership.com"
+ <James.Bottomley@HansenPartnership.com>,
+ "bvanassche@acm.org" <bvanassche@acm.org>,
  AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
- Chunfeng Yun <chunfeng.yun@mediatek.com>, Vinod Koul <vkoul@kernel.org>,
- Kishon Vijay Abraham I <kishon@kernel.org>,
- Peter Wang <peter.wang@mediatek.com>, Stanley Jhu <chu.stanley@gmail.com>,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- Philipp Zabel <p.zabel@pengutronix.de>, Liam Girdwood <lgirdwood@gmail.com>,
- Mark Brown <broonie@kernel.org>, Chaotian Jing <Chaotian.Jing@mediatek.com>,
- Neil Armstrong <neil.armstrong@linaro.org>
-Cc: Louis-Alexis Eyraud <louisalexis.eyraud@collabora.com>,
- kernel@collabora.com, linux-scsi@vger.kernel.org,
- devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org, linux-mediatek@lists.infradead.org,
- linux-phy@lists.infradead.org
-References: <20260108-mt8196-ufs-v5-0-49215157ec41@collabora.com>
- <20260108-mt8196-ufs-v5-12-49215157ec41@collabora.com>
+ "neil.armstrong@linaro.org" <neil.armstrong@linaro.org>,
+ "conor+dt@kernel.org" <conor+dt@kernel.org>,
+ =?UTF-8?B?Q2hhb3RpYW4gSmluZyAo5LqV5pyd5aSpKQ==?=
+ <Chaotian.Jing@mediatek.com>, "lgirdwood@gmail.com" <lgirdwood@gmail.com>,
+ "nicolas.frattaroli@collabora.com" <nicolas.frattaroli@collabora.com>,
+ "vkoul@kernel.org" <vkoul@kernel.org>,
+ "krzk+dt@kernel.org" <krzk+dt@kernel.org>,
+ "p.zabel@pengutronix.de" <p.zabel@pengutronix.de>,
+ "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
+ "matthias.bgg@gmail.com" <matthias.bgg@gmail.com>,
+ "avri.altman@wdc.com" <avri.altman@wdc.com>,
+ "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+ "broonie@kernel.org" <broonie@kernel.org>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+ "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "linux-arm-kernel@lists.infradead.org"
+ <linux-arm-kernel@lists.infradead.org>,
+ "linux-phy@lists.infradead.org" <linux-phy@lists.infradead.org>,
+ "linux-mediatek@lists.infradead.org" <linux-mediatek@lists.infradead.org>,
+ Louis-Alexis Eyraud <louisalexis.eyraud@collabora.com>,
+ "kernel@collabora.com" <kernel@collabora.com>
+References: <20251218-mt8196-ufs-v4-0-ddec7a369dd2@collabora.com>
+ <20251218-mt8196-ufs-v4-11-ddec7a369dd2@collabora.com>
+ <213d3077835fc86d15579c0a0a91f64fd84b1059.camel@mediatek.com>
 From: Krzysztof Kozlowski <krzk@kernel.org>
 Content-Language: en-US
 Autocrypt: addr=krzk@kernel.org; keydata=
@@ -103,23 +115,27 @@ Autocrypt: addr=krzk@kernel.org; keydata=
  jWt87ecuHlpL3uuQ0ZZNWqHgZoQLXoqC2ZV5KrtKWb/jyiFX/sxSrodALf0zf+tfHv0FZWT2
  zHjUqd0t4njD/UOsuIMOQn4Ig0SdivYPfZukb5cdasKJukG1NOpbW7yRNivaCnfZz6dTawXw
  XRIV/KDsHQiyVxKvN73bThKhONkcX2LWuD928tAR6XMM2G5ovxLe09vuOzzfTWQDsm++9UKF a/A=
-In-Reply-To: <20260108-mt8196-ufs-v5-12-49215157ec41@collabora.com>
+In-Reply-To: <213d3077835fc86d15579c0a0a91f64fd84b1059.camel@mediatek.com>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On 08/01/2026 11:49, Nicolas Frattaroli wrote:
-> Both ufs_mtk_vreg_fix_vcc and ufs_mtk_vreg_fix_vccqx look like they are
-> vendor kernel hacks to work around existing downstream device trees.
-> Mainline does not need or want them, so remove them.
+On 06/01/2026 14:23, Peter Wang (王信友) wrote:
+> On Thu, 2025-12-18 at 13:55 +0100, Nicolas Frattaroli wrote:
+>>
+>> Remove the ti,syscon-reset cruft.
+>>
 > 
-> Reviewed-by: AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
-> Signed-off-by: Nicolas Frattaroli <nicolas.frattaroli@collabora.com>
+> Hi Nicolas,
+> 
+> Why do we need to remove the reset node? If an error occurs and the
 
-Just in case Mediatek again promotes their downstream vendor kernel as
-justification for upstream (which is really unacceptable and was told to
-Mediatek more than once):
+Commit msg should be improved and provide the reason, e.g. because it is
+undocumented and unused ABI.
 
-Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
+> host 
+> does not perform a reset, it could lead to error recovery failure.
+
+This is not a reason to use undocumented ABI.
 
 Best regards,
 Krzysztof
