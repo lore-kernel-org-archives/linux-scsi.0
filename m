@@ -1,141 +1,178 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ot1-f100.google.com (mail-ot1-f100.google.com [209.85.210.100])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B8933590CE
-	for <linux-scsi@vger.kernel.org>; Fri,  9 Jan 2026 09:26:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 709873382E5
+	for <linux-scsi@vger.kernel.org>; Fri,  9 Jan 2026 10:34:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.100
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767950788; cv=none; b=OqchGdGNOkZDWtP2YILHs22fpD3y/Q0jIJzIXxaTsA2/abRr76hWMlqzxsBHX8M6ZaMaLNICd0GLyGKeEg5VQ/ok4uj0zbMvuC7n0xZP9S9+HBe95McBZ+TQj7fjEReIwlqgv1qYljsUSQcMJGtLjU+dY0lqvPWMB++iGGRkxdE=
+	t=1767954849; cv=none; b=SVSfaWBTYyUWYmAqTlrU5sRtod4C9gmHuKbJdn5PKKwNgH7hAg59BHnDbWeHr98m1PVT8UcAODVho6oqw+Q0zhsy7MKbWq6YlxffQGdHCcFmir0hxDFmjXALViVZCO5EM7dvednS0fIUUwOXkQeuduHv5LZXySsBsG6qxxc+k/M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767950788; c=relaxed/simple;
-	bh=n/TG8MO6HyiL8J/XwIVaNqLz0iR+l4eo3PBvnTrhxes=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Ib0iE774i4iWEnkEh34YHgaYHY5sVIbD2OWFE4FEPvNS3A/XORf/MINwYCFosO8x0NXfT1n8YBbDyFbRREetHBsemJCaJJjIySo7XqS10vo41mXHsF4TPN8jBC5DF/7ec7qDjEoXhw2pxOrAthb643OoDnzUmyZJujUhEIFMFiw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=EpsAyHRm; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=IWQfTt9t; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	s=arc-20240116; t=1767954849; c=relaxed/simple;
+	bh=qyAIaazdwIw49PPuAk/0GEIkpgkeLChWeD2e081LVRc=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=ee5KfOAOWi3G8iL61pYUOYk6rAkeHEJb2gpYd1lzsmhKi4Fw6GoHpHbbg06AhokUohFOe+k/GW2BVLPEp1wLlqaMCpa7mEbUX0v5Y020/RPzwDyRt/rOvh49RJbqc/yR3Ovv/AdeTkUZ2NjdYgMXF0C3orFaaCZLlj80AaNpnjk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=YonAn+K/; arc=none smtp.client-ip=209.85.210.100
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="EpsAyHRm";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="IWQfTt9t"
-Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 60982WIO2183972
-	for <linux-scsi@vger.kernel.org>; Fri, 9 Jan 2026 09:26:26 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-type:date:from:in-reply-to:message-id:mime-version
-	:references:subject:to; s=qcppdkim1; bh=GYupHi9hiffcOrLcYrkERu+8
-	TOtiFQWC8OIKZvLgLzU=; b=EpsAyHRml+EeiIqmsgWAs1OxeWytrrAwHkyIGuzN
-	U+Zof37ZEcsxtVOWMxe9ZKs8K7IJ3PrM2u9EB/7DvB+xLXzf0C899TV4+w6nSlc1
-	Iq5ApL4+rMhIfxaaKPA1mkhNtcRWIK2HoZiIBx+DJ1P5316AZ2UH7TumeNXjcSP5
-	LSDyknWvrkNmjR+QP+BGekArlurHYAYOnT8lJi5H3opn1BMhPU4Q6zHrFdLxLtZG
-	xCyVOIopHdgP740bHRyYtm5/yFHZwXup46cDy2OWshKhmc/KGBbBfoKZ0l+DBX1z
-	/4Lo/KkUOCYboSPcpXmFRM8kOMkHOvYxgvcbA3vUUC28KQ==
-Received: from mail-qk1-f200.google.com (mail-qk1-f200.google.com [209.85.222.200])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4bjwtn8972-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Fri, 09 Jan 2026 09:26:26 +0000 (GMT)
-Received: by mail-qk1-f200.google.com with SMTP id af79cd13be357-8bbe16e0a34so862517785a.1
-        for <linux-scsi@vger.kernel.org>; Fri, 09 Jan 2026 01:26:26 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1767950785; x=1768555585; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=GYupHi9hiffcOrLcYrkERu+8TOtiFQWC8OIKZvLgLzU=;
-        b=IWQfTt9thRjXPzU1wuxnzTKhoBOpga1zlOFQ7BOSYhav6n9Y5OVu1OR3O6VI6WAekj
-         Hlkiu7dWgrpIHF6fygrw9Ch4Dl5pLtR75G9IH+0baowb7fY6wp05fQKANf5ubuiNk2MR
-         sy22V1TJ9X2BP7Q+64SGnFtepVAs0Cpv1q51Z2mgizKq52HRctNdiM51W/3GyjQZaPWI
-         Dk3xe0vFSvv785h27ZrzUJHtnDMd4J0sHUWxba4+pWdD4G2rv/rCUoMWFQtWQwK+vAZg
-         spExXdyjWWqT028IrHrx3BGk89DZVjJx4r2BP1oh/+LR5wSoLQGzgH94L3zflvuvt5PF
-         3s4w==
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="YonAn+K/"
+Received: by mail-ot1-f100.google.com with SMTP id 46e09a7af769-7c75a5cb752so3027755a34.2
+        for <linux-scsi@vger.kernel.org>; Fri, 09 Jan 2026 02:34:07 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1767950785; x=1768555585;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+        d=1e100.net; s=20230601; t=1767954846; x=1768559646;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:dkim-signature:x-gm-gg:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=GYupHi9hiffcOrLcYrkERu+8TOtiFQWC8OIKZvLgLzU=;
-        b=EbLMv6kOgMNxYzHonoixWVGxVgdEbt7m2xdskmS7Me3iXnvUBiV6mUB/wFQcjYmMa6
-         cM1FnKoqbebNc7olAEgngAqt1vxwVJK3BttH8t2+kbSotkNW+VHL4Iwzzq/6zL7Cqo14
-         3nKZ125wwAYw3at/bxa9YS3WwnEnajpvhfMl4DEJyb493AYMgfci7gDhdTXH7niQbjZS
-         iwdhDmOb9+cLLbsm7X/bkyzN4NeYz3oWri/Bo4dXy8Jlnbgy/zmheTEhWQVKC1P4NkW6
-         yQmWJstyiNqbLKBzs2ug/Ts/7KW5azfkJ6mAE6xSgYZQmRN/AJNQ30Yn9y4yeLOxFDJz
-         td4w==
-X-Forwarded-Encrypted: i=1; AJvYcCV3+OlC9NqQb8xx8QOW5Muc6HM0u5hhw3pqHHOpYidBBJGol4i1LzJZ1QOiCwihyktR2TFG5g/ah4mK@vger.kernel.org
-X-Gm-Message-State: AOJu0YxUH4SB/Kqn3/VXi+IlhzbyceLWA6HADbdyc9md5bYavn8D6nmF
-	KZoMXrkkHkPH0OJIjpf2evHkQolzDKWKouyevs/OufejhBQ7VZ0bbdFswnvPU57fdVBS4vzSg1V
-	nlUmjvemSt9lsqtPGz0LPu9jLOkfCtxCIYbxeC6pUU5ysauW2PXDgl4n9bAgxHdcw
-X-Gm-Gg: AY/fxX436Xl1KL9eyq/9xUZumPqnVsGuGaUBKG+7FIWe1Py4hld5e0xU+KPDphURL6O
-	/hEcEecyzCky/bqN1jB30GImvS6sDWzF99jDlg295t+IGVrbi/nBeoCDGS8IwH73uxFtU1VbNgL
-	USUeJgGVTYZ90FRSBDgBYRLazi/F77fSf+uAstmlfrEiTxiXuuX57wFFGqFMr2rrwkPIkVBC64C
-	rChW1GuApEkc8CIOsdMX7QUECqmxc+lMXcN+OB1AlgE2NnlaZqeT6clcRp4hS/0BgBVJ6APPxdY
-	tV3XjVv92pT/Glwt130sU1Vx8/xALyaMnIWOkBswtoAHQDlukMFAKkudzfr7VYYamrNXEgXuJKW
-	QccO9IPKd3BRv3Ykn5ziC
-X-Received: by 2002:a05:620a:28cd:b0:8b2:ea3f:2fa4 with SMTP id af79cd13be357-8c37f4c2b5bmr1694840985a.6.1767950785319;
-        Fri, 09 Jan 2026 01:26:25 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IGqk8xaUlwvb+pLU9tqMNDnyTuej2+CgVW+rsndOdKz4BuiVC9qsdOjh+vh+cFbcIpNWeJ2+A==
-X-Received: by 2002:a05:620a:28cd:b0:8b2:ea3f:2fa4 with SMTP id af79cd13be357-8c37f4c2b5bmr1694837185a.6.1767950784625;
-        Fri, 09 Jan 2026 01:26:24 -0800 (PST)
-Received: from oss.qualcomm.com ([86.121.7.10])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-47d8719e695sm56927835e9.17.2026.01.09.01.26.22
+        bh=kCeTL5DyL4OpVceWW2dtJZK2fvnfNct2KD6UucHZ0lo=;
+        b=qpCG8gxOxJUh0QRfDKfMG9vUbCrTJYZ1GWi/CViWWT6ylWTN+QazSV5b7dQuTeCsX8
+         +yiGqMO4XKHwjct7j5hgNgyeF4lQQuY48N6Yvr2CavZANsMlF7QOyPGh1l5Am/bjayZ0
+         tNxTaqobG9O4eVLJWk72HWm1eUSa/L3hmygQHUEDdTdiMgktaefUiHe3En8dl8//eTpO
+         yZjTrs/xeXlG/UMMIJk9yq46HeA0gbMWK+YOQyrxauHqRhwSXfkQyHsCTtICxfFiro2H
+         SwVsZgOre+4xCjCbe9h4kZJ8Y3pJjqWtWewvDRru4u+8P7I/BVsQLedxofmN89SxSwvW
+         4bAw==
+X-Forwarded-Encrypted: i=1; AJvYcCWGkJxa2K+v6329nOCkyayU4N1dJKb+eJinXaqUCKv4ZeoWoB47bTsOkTwGTzJoGxY+l6AFXLOgqST5@vger.kernel.org
+X-Gm-Message-State: AOJu0Yz3zmZ8Mq/AsLfjq90GxmC70NHDcpFByZ1IxfO2SeSJOk44tCZA
+	WW1Ptze58gHEgHtmTHKa5vQRhi9ATw7qJ8VzqjT3waxWJ25KpckqGx3kq4wsvTTXcph2aM6mAra
+	ZnLzafbq3WJWCO3Rr1P8EaUYtYP1gQja5uH4x1UTUhwlQM6HIyC3vn2xrdwd35dhc0byrcTC6Bi
+	KXZ/OTiih+fsTbaP+0dy2iM0RYaRvyvyAzIkewboVh7qjjnFe8V7UbwONOlcXmk8ItL8LiGtjO0
+	Sw3ShhOLiWGjTwcPNNkYoo=
+X-Gm-Gg: AY/fxX5s51CZEB3kC0/MwkN+5x8bTPUjRwXcPfsY6mtg7Tox9JW2Ohnzby/H9f3aVT8
+	tAVPmBRj+3y9CKlanfU9hqhBookalTJCHZi+FBv5fcmctvHWF+gyBsYV7P+zZAA1ma2TVakEETs
+	g3q18kk4nSxxux48FO1ES/OWj7/f/VTKH+POi4L/iHmnfQgBdVj3YqfjXw3jUawEtHy5rsd4Cre
+	wII+pjE1r2UafRYCPGLjyxtJ/brr/7Tv0NvbvlWqPW82gxkFQM+BvzqYfzcCFbZAU6hv29zVyDS
+	Z/lbY6TTfIrobkwk5v5WGtwE1s70Mq59mxfl7wgN4+du7/MI9o/sG+XqmDsx0O0HXLsoVp9vpKm
+	rfcnNaL5jmqknuWQNemcQk67yTIU86qTLI8MFBgaU1UeEhidHBT5pOrXR10ex9j6R4WuxsLtHDm
+	MJvf9uruXp9HFwudiyWi0N7Tu63nsvJ8AGrlT5d/bxlRxLQ/suZ98=
+X-Google-Smtp-Source: AGHT+IGku9PF/tQ4VrWI8YEAaL/1mGoE62dSre0jPrvg8mTb3ev49EmKEMetkS/lqifFrxWcvFYiL7XSCBaW
+X-Received: by 2002:a05:6830:304e:b0:7ca:e8bf:8c4c with SMTP id 46e09a7af769-7ce508ced45mr5864636a34.12.1767954846385;
+        Fri, 09 Jan 2026 02:34:06 -0800 (PST)
+Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-120.dlp.protect.broadcom.com. [144.49.247.120])
+        by smtp-relay.gmail.com with ESMTPS id 46e09a7af769-7ce47803ad5sm1617322a34.1.2026.01.09.02.34.06
+        for <linux-scsi@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Fri, 09 Jan 2026 02:34:06 -0800 (PST)
+X-Relaying-Domain: broadcom.com
+X-CFilter-Loop: Reflected
+Received: by mail-qk1-f198.google.com with SMTP id af79cd13be357-8c38129a433so1019660185a.2
+        for <linux-scsi@vger.kernel.org>; Fri, 09 Jan 2026 02:34:05 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google; t=1767954845; x=1768559645; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=kCeTL5DyL4OpVceWW2dtJZK2fvnfNct2KD6UucHZ0lo=;
+        b=YonAn+K/hNeju/vfUTGrTh4VewE3Le5mRf0/z+xVZYuUcI2+VHhAH4xuI8bGn+rVSx
+         N6zrdIQV/JSoWHX+gq7/EZOSqgzccg3IjtjC6XvULRNQc8/stHqj0ZGHyBPuzTdPB6jH
+         UL/fKQ6SQE2i96pdu/35JNpo98Ebux2mzjh/o=
+X-Forwarded-Encrypted: i=1; AJvYcCWnkcQZMHYwxL4RFYl6aHo8Bw0Fxe/5cATWEhYIBJM7SD4GKxbYb6/aDvVneWprCWuWoGdwbB+Ikvjc@vger.kernel.org
+X-Received: by 2002:a05:620a:7088:b0:8c3:87eb:f with SMTP id af79cd13be357-8c3893ef6d0mr1155257485a.53.1767954845213;
+        Fri, 09 Jan 2026 02:34:05 -0800 (PST)
+X-Received: by 2002:a05:620a:7088:b0:8c3:87eb:f with SMTP id af79cd13be357-8c3893ef6d0mr1155254585a.53.1767954844715;
+        Fri, 09 Jan 2026 02:34:04 -0800 (PST)
+Received: from shivania.lvn.broadcom.net ([192.19.161.250])
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-890770cc73dsm73691156d6.7.2026.01.09.02.34.02
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 09 Jan 2026 01:26:23 -0800 (PST)
-Date: Fri, 9 Jan 2026 11:26:21 +0200
-From: Abel Vesa <abel.vesa@oss.qualcomm.com>
-To: Luca Weiss <luca.weiss@fairphone.com>
-Cc: Herbert Xu <herbert@gondor.apana.org.au>,
-        "David S. Miller" <davem@davemloft.net>, Rob Herring <robh@kernel.org>,
-        Krzysztof Kozlowski <krzk+dt@kernel.org>,
-        Conor Dooley <conor+dt@kernel.org>,
-        Bjorn Andersson <andersson@kernel.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>, Vinod Koul <vkoul@kernel.org>,
-        Neil Armstrong <neil.armstrong@linaro.org>,
-        Konrad Dybcio <konradybcio@kernel.org>,
-        ~postmarketos/upstreaming@lists.sr.ht, phone-devel@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org, linux-crypto@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-phy@lists.infradead.org
-Subject: Re: [PATCH 4/6] phy: qcom-qmp-ufs: Add Milos support
-Message-ID: <5g7g2l4x4ocpw3hx3pkgdwrboicxnih37zxvvbfdrp5hw7jwai@3ybokrxepo5t>
-References: <20260107-milos-ufs-v1-0-6982ab20d0ac@fairphone.com>
- <20260107-milos-ufs-v1-4-6982ab20d0ac@fairphone.com>
+        Fri, 09 Jan 2026 02:34:04 -0800 (PST)
+From: Shivani Agarwal <shivani.agarwal@broadcom.com>
+To: stable@vger.kernel.org,
+	gregkh@linuxfoundation.org
+Cc: James.Bottomley@HansenPartnership.com,
+	martin.petersen@oracle.com,
+	matthias.bgg@gmail.com,
+	angelogioacchino.delregno@collabora.com,
+	sthumma@codeaurora.org,
+	JBottomley@Parallels.com,
+	santoshsy@gmail.com,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-mediatek@lists.infradead.org,
+	ajay.kaher@broadcom.com,
+	alexey.makhalov@broadcom.com,
+	vamsi-krishna.brahmajosyula@broadcom.com,
+	yin.ding@broadcom.com,
+	tapas.kundu@broadcom.com,
+	Sanjeev Yadav <sanjeev.y@mediatek.com>,
+	Bart Van Assche <bvanassche@acm.org>,
+	Peter Wang <peter.wang@mediatek.com>,
+	Sasha Levin <sashal@kernel.org>,
+	Shivani Agarwal <shivani.agarwal@broadcom.com>
+Subject: [PATCH v5.10] scsi: core: ufs: Fix a hang in the error handler
+Date: Fri,  9 Jan 2026 02:13:02 -0800
+Message-Id: <20260109101302.676694-1-shivani.agarwal@broadcom.com>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260107-milos-ufs-v1-4-6982ab20d0ac@fairphone.com>
-X-Proofpoint-GUID: uhE_9Rr5_5cbsul2wVn4qyhrLo_aHSAP
-X-Proofpoint-ORIG-GUID: uhE_9Rr5_5cbsul2wVn4qyhrLo_aHSAP
-X-Authority-Analysis: v=2.4 cv=Uohu9uwB c=1 sm=1 tr=0 ts=6960c9c2 cx=c_pps
- a=hnmNkyzTK/kJ09Xio7VxxA==:117 a=hZ5Vz02otkLiOpJ15TJmsQ==:17
- a=kj9zAlcOel0A:10 a=vUbySO9Y5rIA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=6H0WHjuAAAAA:8 a=EUspDBNiAAAA:8
- a=e_63XvbMukAsnnsCD6UA:9 a=CjuIK1q_8ugA:10 a=AYr37p2UDEkA:10
- a=PEH46H7Ffwr30OY-TuGO:22 a=Soq9LBFxuPC4vsCAQt-j:22
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMTA5MDA2NSBTYWx0ZWRfX4fwBhSHbD626
- ZQ94ZxB9dbtcWwbW+oxU0dN0vWVuBTEdtyS0VdkrlusDC8vbL/j+i+ZBAzfbh4f45mn9ckbKiO9
- Fhub/Km8lOZmTtXCzIEvQZ9mSalhXg1Rs1O1dnCY0JQCACzi+MXSkL+GUE9lnAsVoADdt1r4vR+
- WjCVc+t6Kt9BdfMEkKAMCPW4x2MGxFKjIPke8rrLVQQwcWFpLd2Xdxe5a76z1ooJNd2ZlgzP5P9
- xrDO/anvwgAKf36D1VaNHPZ6rHF2apEtJcv5HS99eKAQUveAXe7+cvnj4e2cwrX2QVVRGDTcUAY
- /yhMi5btKMv9nHODcdIJSrMBdAd42kcDwEmIUwuEKIs+rrKxPyI3IvGa7oCAPEKlqe4VwGTNsh9
- n6Ifltq+t3K0C11jEK9VdUjwro+cBdclpIHvhR6gpyMyY9jx42O0XV0P7Cah2Q+7LXqXqoWt0j3
- JVCDSR2LmQVgPr1Y1Jw==
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.9,FMLib:17.12.100.49
- definitions=2026-01-09_02,2026-01-08_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- priorityscore=1501 spamscore=0 phishscore=0 lowpriorityscore=0 adultscore=0
- bulkscore=0 suspectscore=0 malwarescore=0 clxscore=1015 impostorscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2512120000 definitions=main-2601090065
+Content-Transfer-Encoding: 8bit
+X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
 
-On 26-01-07 09:05:54, Luca Weiss wrote:
-> Add the init sequence tables and config for the UFS QMP phy found in the
-> Milos SoC.
-> 
-> Signed-off-by: Luca Weiss <luca.weiss@fairphone.com>
+From: Sanjeev Yadav <sanjeev.y@mediatek.com>
 
-Reviewed-by: Abel Vesa <abel.vesa@oss.qualcomm.com>
+[ Upstream commit 8a3514d348de87a9d5e2ac00fbac4faae0b97996 ]
+
+ufshcd_err_handling_prepare() calls ufshcd_rpm_get_sync(). The latter
+function can only succeed if UFSHCD_EH_IN_PROGRESS is not set because
+resuming involves submitting a SCSI command and ufshcd_queuecommand()
+returns SCSI_MLQUEUE_HOST_BUSY if UFSHCD_EH_IN_PROGRESS is set. Fix this
+hang by setting UFSHCD_EH_IN_PROGRESS after ufshcd_rpm_get_sync() has
+been called instead of before.
+
+Backtrace:
+__switch_to+0x174/0x338
+__schedule+0x600/0x9e4
+schedule+0x7c/0xe8
+schedule_timeout+0xa4/0x1c8
+io_schedule_timeout+0x48/0x70
+wait_for_common_io+0xa8/0x160 //waiting on START_STOP
+wait_for_completion_io_timeout+0x10/0x20
+blk_execute_rq+0xe4/0x1e4
+scsi_execute_cmd+0x108/0x244
+ufshcd_set_dev_pwr_mode+0xe8/0x250
+__ufshcd_wl_resume+0x94/0x354
+ufshcd_wl_runtime_resume+0x3c/0x174
+scsi_runtime_resume+0x64/0xa4
+rpm_resume+0x15c/0xa1c
+__pm_runtime_resume+0x4c/0x90 // Runtime resume ongoing
+ufshcd_err_handler+0x1a0/0xd08
+process_one_work+0x174/0x808
+worker_thread+0x15c/0x490
+kthread+0xf4/0x1ec
+ret_from_fork+0x10/0x20
+
+Signed-off-by: Sanjeev Yadav <sanjeev.y@mediatek.com>
+[ bvanassche: rewrote patch description ]
+Fixes: 62694735ca95 ("[SCSI] ufs: Add runtime PM support for UFS host controller driver")
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+Link: https://lore.kernel.org/r/20250523201409.1676055-1-bvanassche@acm.org
+Reviewed-by: Peter Wang <peter.wang@mediatek.com>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+[Shivani: Modified to apply on 5.10.y]
+Signed-off-by: Shivani Agarwal <shivani.agarwal@broadcom.com>
+---
+ drivers/scsi/ufs/ufshcd.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 54e7d96bf..c1f232472 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -5766,10 +5766,12 @@ static void ufshcd_err_handler(struct work_struct *work)
+ 		spin_unlock_irqrestore(hba->host->host_lock, flags);
+ 		return;
+ 	}
+-	ufshcd_set_eh_in_progress(hba);
+ 	spin_unlock_irqrestore(hba->host->host_lock, flags);
++
+ 	ufshcd_err_handling_prepare(hba);
++
+ 	spin_lock_irqsave(hba->host->host_lock, flags);
++	ufshcd_set_eh_in_progress(hba);
+ 	ufshcd_scsi_block_requests(hba);
+ 	/*
+ 	 * A full reset and restore might have happened after preparation
+-- 
+2.40.4
+
