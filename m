@@ -1,266 +1,176 @@
-Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+Received: from CO1PR03CU002.outbound.protection.outlook.com (mail-westus2azolkn19010037.outbound.protection.outlook.com [52.103.10.37])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E468286417;
-	Fri,  9 Jan 2026 16:34:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767976452; cv=none; b=E7kk6uTLFU/VaBGa1iLG6LArVqGsqKzKKxGJfBq1U7yLGqwIGWVZUohjCFsGKqwQrRkP/boxpezkXW3oO9HFRwWBbSVRbJquLa+wMxTjCGz6spq6f5KsQJzZbmu3IgFc6oDpdVJC3aK5MHQoyY/7G8aHfRYOrxLKvB7fCh/YMfc=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767976452; c=relaxed/simple;
-	bh=LKzPivLPWiUjD8+xzFrmPi3gb6G1yTT4QfGzgP1BAUk=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=K3C90w/oM/5IVDULhRAvQFp0MmJg0/mN393uSiHGJMM5yJXHFw8JBtoTjpK/PJEBVnGGA/P94HLJMyLl5Q5kPl9Vd2clTCVOkTwM00/0Nz2YAk9o93VYtDnXVlGuiBBk9N9IyXmj2ICFPNs8JOouk8pfJjvrgJl9/m9WRhnAIOs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=GDKut9Jt; arc=none smtp.client-ip=148.163.158.5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 60A7121019C;
+	Fri,  9 Jan 2026 17:48:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.103.10.37
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1767980924; cv=fail; b=WKepKvGe4jkD5I4E4c0N2YemkCDPI1qJL8l35+vb6jejQBl7poVq+uVUnZ0wIOcR+QALAGw7QDDj6JyXGqeD9ccjWy4XUL2kWnxYUfd3/FFWu02mMjBrKdsHMEBtzyYVPtDeEmXI2P2qcKO/C8b9T3Hg7VZnRYkqQl3Oez86xv4=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1767980924; c=relaxed/simple;
+	bh=NSyv4AdIRjmxII0012qDb1oxGCya8avfw8uTTyf/h6Q=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=Dtlxr+0hkWDoWicT7d5C8vL/IxC9bbsidL9AwSRcCgpG7DcgdZTMR+s35o187pLXwreoq/G77pS7tfB7hYyO30pid/UgFr7RYiuPktEU7TVuk4cH6GmiR1440RW62HBfxu3ZlysvncCp02Gd/ruOHorNFf5QMF5AC5x4BI3G77U=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=outlook.com; spf=pass smtp.mailfrom=outlook.com; dkim=pass (2048-bit key) header.d=outlook.com header.i=@outlook.com header.b=ULhyJstk; arc=fail smtp.client-ip=52.103.10.37
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=outlook.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=outlook.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="GDKut9Jt"
-Received: from pps.filterd (m0356516.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 609BY0dt026533;
-	Fri, 9 Jan 2026 16:34:02 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=pp1; bh=HsDjOl
-	7wPBdfxH8FUr/COlkksvGTqfTYTRYHTY5f954=; b=GDKut9Jt7BpUOBEp3yVBsO
-	+x3UH5Z7saY0bt01c0Zq0AAeWKOxEcqyCvCMT3oVw4gIsNjByZm+FE95b5lvm9YA
-	FHWkrF9TZDjihlGVYQkaqTFRiBLulkT5/RXvBibhNiaf0WEBJWWblhBYdvEixlfJ
-	AZtpJ50Qd4qnvFSIV6/SfZgzeB+FxlFaE3zrUzfujo7UOuAbGWi+haDSxgV4BnW2
-	kiWq5UNEKnT/X1jBCXHpRMdpue0MfUCQjX7mspR04YxOf9Qh7F+wYIXcdvWKqisB
-	/egM0D1tKQmeaE9yInHPNmKi20XPKPwCfw45EnIYFiBpTizeoa5lwsG88gOD3O+Q
-	==
-Received: from ppma22.wdc07v.mail.ibm.com (5c.69.3da9.ip4.static.sl-reverse.com [169.61.105.92])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4berhkjxbg-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 09 Jan 2026 16:34:02 +0000 (GMT)
-Received: from pps.filterd (ppma22.wdc07v.mail.ibm.com [127.0.0.1])
-	by ppma22.wdc07v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 609GKvB6023528;
-	Fri, 9 Jan 2026 16:34:01 GMT
-Received: from smtprelay04.wdc07v.mail.ibm.com ([172.16.1.71])
-	by ppma22.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4bg3rmthtt-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 09 Jan 2026 16:34:01 +0000
-Received: from smtpav06.wdc07v.mail.ibm.com (smtpav06.wdc07v.mail.ibm.com [10.39.53.233])
-	by smtprelay04.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 609GY0Xm61669760
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Fri, 9 Jan 2026 16:34:00 GMT
-Received: from smtpav06.wdc07v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 7641C5803F;
-	Fri,  9 Jan 2026 16:34:00 +0000 (GMT)
-Received: from smtpav06.wdc07v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 0D8875804E;
-	Fri,  9 Jan 2026 16:33:56 +0000 (GMT)
-Received: from [9.61.242.45] (unknown [9.61.242.45])
-	by smtpav06.wdc07v.mail.ibm.com (Postfix) with ESMTP;
-	Fri,  9 Jan 2026 16:33:55 +0000 (GMT)
-Message-ID: <bb5f2037-3ecc-4f97-accf-1de96811df39@linux.ibm.com>
-Date: Fri, 9 Jan 2026 22:03:54 +0530
+	dkim=pass (2048-bit key) header.d=outlook.com header.i=@outlook.com header.b="ULhyJstk"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=bjs7CqyB7iF09N7Mn2A49mjcGt/csx9DIIgQJWadxoiLdZVabZVMgUr3KG0mRwBvRmcylM8e5ZfNkuqT3HH17b0R+QvQRy3xfMhYsY6jOe+Ecuy5qbXZWRzdbr8RNAekI3LS5WCHhJRRKtOqLzShZqPCaZwK1X97NR8ctJ9vXx+8/hiugn9nNgiMRDfPiq8R1eFjVIJWAvxUE1Sjvs0uPcRgwy2VpU5M+ASV91rbUC0bRnPC/lZJ9Iouii2JnwVXKgQhRlpQoXzD7xJbKg5mhlMvXGsvKu8l4vgpBjBHT72aZGiIlrkW1oogK5phrBvT6kfKOZQuQEpdMJardy2wwg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=Sm/jC7P74gy5GVng5CZmYJ0hYX/O6ln9jpK/HYkMTeo=;
+ b=iCzHHw4UNIFkPsuVZpA0f7fsA6cwhse5pz0JkJ73pIC7dzMdnMcsWwandfWaz+Tq2+hj2jkfJClwIsZ/7vCKeBe4jXrfyBbqefF3fYeFjYRDpOuBAYOz2ueANz7DHCmZLSwNSXZM8Am0An5FhNjvJ3vyDSs3X26iK6QI2mZCCKm9FlfPZrUHczW/ncQRozlToxEFIOfnwMI+Py9ZsP85aGtDnk9Tdgr98gM2cZErQ2AdBXSZd82eE5JXzK78k7Xg1NSfvjs0QTcZM6LBSsQ9MnZWSC/UQ3YAHzhcY0vbBsDjy2jOAq04fkC+E6E0pchpK7ESFPTldfAaxj+/aceyIA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
+ dkim=none; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=outlook.com;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=Sm/jC7P74gy5GVng5CZmYJ0hYX/O6ln9jpK/HYkMTeo=;
+ b=ULhyJstkM+0F3lgXZJx/55e0EwlH6IrcUPNqMqFa8D+gyKuzuji1O8AJj1MFBD5/yaAkEgP1yE5N1UuneQW+mmLkMn8WsEt1uYHSIL5YDMwbDlcLgDo7m9seCJA+CTZil7xcbIFxTxvHP/NzbYfrJ0AQjVW7OC8YJ99rl/1rRZapDxo0bLIjQUm35d2ACJCnq0sJJ7ALGjl7uIID/jOZBqlVQsMw7xtXLy9cAcv9MdWZW9Oepsq8buvwpAo8GYZPYtvPLwwRzmGVD4k5c2X6aohwuB0f7TB4haXX1qVylQskxhyBPk0eaW7OtTHogSpaMr8Bn5T5nch/4rEN24yAew==
+Received: from SN6PR02MB4157.namprd02.prod.outlook.com (2603:10b6:805:33::23)
+ by CO6PR02MB7553.namprd02.prod.outlook.com (2603:10b6:303:a6::16) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9499.4; Fri, 9 Jan
+ 2026 17:48:38 +0000
+Received: from SN6PR02MB4157.namprd02.prod.outlook.com
+ ([fe80::900:1ccf:2b1e:52b6]) by SN6PR02MB4157.namprd02.prod.outlook.com
+ ([fe80::900:1ccf:2b1e:52b6%6]) with mapi id 15.20.9499.004; Fri, 9 Jan 2026
+ 17:48:38 +0000
+From: Michael Kelley <mhklinux@outlook.com>
+To: "longli@linux.microsoft.com" <longli@linux.microsoft.com>, "K. Y.
+ Srinivasan" <kys@microsoft.com>, Haiyang Zhang <haiyangz@microsoft.com>, Wei
+ Liu <wei.liu@kernel.org>, Dexuan Cui <decui@microsoft.com>, "James E.J.
+ Bottomley" <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen"
+	<martin.petersen@oracle.com>, James Bottomley <JBottomley@Odin.com>,
+	"linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
+	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+CC: Long Li <longli@microsoft.com>, "stable@kernel.org" <stable@kernel.org>
+Subject: RE: [PATCH] scsi: storvsc: Process unsupported MODE_SENSE_10
+Thread-Topic: [PATCH] scsi: storvsc: Process unsupported MODE_SENSE_10
+Thread-Index: AQHcgA/ZdvXNwjcnQUWATOkFvIuG4rVKHsfQ
+Date: Fri, 9 Jan 2026 17:48:38 +0000
+Message-ID:
+ <SN6PR02MB4157232BE7BB9B6B1AA81AEBD482A@SN6PR02MB4157.namprd02.prod.outlook.com>
+References: <1767815803-3747-1-git-send-email-longli@linux.microsoft.com>
+In-Reply-To: <1767815803-3747-1-git-send-email-longli@linux.microsoft.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: SN6PR02MB4157:EE_|CO6PR02MB7553:EE_
+x-ms-office365-filtering-correlation-id: a598e32f-e140-4a80-efde-08de4fa751a6
+x-microsoft-antispam:
+ BCL:0;ARA:14566002|8060799015|8062599012|19110799012|13091999003|12121999013|15080799012|461199028|31061999003|41001999006|40105399003|52005399003|440099028|3412199025|102099032;
+x-microsoft-antispam-message-info:
+ =?us-ascii?Q?1Y3Im0Ta+0GJ+p4zBV9nfptEy8Ja1V0MnchUcIsMNl+UzJSWmMiICei09t+w?=
+ =?us-ascii?Q?ZYlBAMsGTlY11G9CYRjERZ/vfZRuwufBbOlaX4O/jSvk6dJX0oUyKPCRn3X2?=
+ =?us-ascii?Q?xQiZMT5wPslXKd01ilU26wwFuwfZXX4Gj6611oxHphW/a+28iNN+WE5VL/rW?=
+ =?us-ascii?Q?np4VcwCEVyJV8+MN9TiG8UJwBy7LHDawYFwJNeIW/nqZOjhF5GKj+gw3DtSp?=
+ =?us-ascii?Q?XDKDPj+lwd9JXrFrPqHCemythBxn+vnFo8VXqWpi8VuVQY2gjUpfzaiiG5j8?=
+ =?us-ascii?Q?NHvp+ZRmHLKEuleQi5O/UyoR5xbYN5V+pIu46u/NfiIB3IfMndizkqPtye0+?=
+ =?us-ascii?Q?C9vfQvED5GgSokoVNZ2PPv1ZLaVHcP6KMZU6mH28Qd62O/b5VR06RlD99wLD?=
+ =?us-ascii?Q?pUP7We1lc0FuzqSCDQr3BG2q1t7Byd45LPAmhwRam2+ebURRjG3DsX4SELGu?=
+ =?us-ascii?Q?tR86tepMMPX2Mv1CT0Y27sTLYXY6Ba+2JYa/hXNEiZ9MIFGJkn+jHmyBmr+g?=
+ =?us-ascii?Q?tsCSu2lWPQ8hmau0naTjMmU/3CDCKerOg8ibA522if1GLtaDwszXQ34O9nyI?=
+ =?us-ascii?Q?9mupdMoSQu95QyBqroUxK9OGRABzZK8YAStFmte4r45uGHQJVCxDwNtoOF46?=
+ =?us-ascii?Q?1BHqnbtfpF+IXNPbBcT0T5fy76pjZYDatIjswh12IWOEQqjisslAuREGeOKZ?=
+ =?us-ascii?Q?QkX2A/yE53yMeoY6cSUkIO0RXqi3dunuCRb2AAYtG++hpg+auTWZaWD4hkYA?=
+ =?us-ascii?Q?YyxqIIIboSnK5V8XjMCh9ejM4sbCKJ4p3ViJ6fmCe9hsqKFvT5Rrdi3AtHw8?=
+ =?us-ascii?Q?YEkycUTLZ/dplquDGfttFkmDN7srpwy0zA3RevakbNHHRJkFty09LuQWUitR?=
+ =?us-ascii?Q?7+fp39Wu+juWd/MMPH6PDT2loo/XLYgaueerh9DOpiu4ivm9JqEdjDE13Fwx?=
+ =?us-ascii?Q?mUdw+559qcVGZ0VAWmVbLE5VoBLUE9z7t5DE8pwrW50CAFC3uyL/JiwJX/PM?=
+ =?us-ascii?Q?Z0SckXNg2SJO2Af0JccyERqLo0WHWZjHbk3jlkZ9vH8AaedefcMiGzsiTcJy?=
+ =?us-ascii?Q?uhvjTzIkUUw1IgDv08bcvorlgU3EFZUAC1r3jaMfySomDZaguihAIQKiyv78?=
+ =?us-ascii?Q?/CzZ6vloIE5SHIanI+329qE4m6mfqesM+nWdTKXpRBpd5QJGodXawBHl4qMN?=
+ =?us-ascii?Q?Z2wivb3CGJQLEkQ+0sYsdgN1O8S/LSqV5aDksgYImMrmnCMRqxGlzMvCL2bs?=
+ =?us-ascii?Q?876F80I1uflf1ApMOfOb32ZII1BPu39CfZDjY+ujOw=3D=3D?=
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0:
+ =?us-ascii?Q?vahQmim+R/6nvj0tZOPwWcotzMYWZ0FC6AM+fu2HvnBEOE2tDwYSG1tJAN4G?=
+ =?us-ascii?Q?6AajbQdIYsl0b1vMUbD2zXmKnnUzmJ1c0wNBDfTB5I4RqPGTZzfQESNSoDbk?=
+ =?us-ascii?Q?oWvXIRfTnZaAdJa/0EGb0qV5j4hpkoJqrbOZu0BcPC4qMG1IZr+taUK5r5Ih?=
+ =?us-ascii?Q?aSyCPGI0hq5yh23t6FGE0QcqHvRq+5Oi0Tzhq91Uo9lv5MY/+lu0M14C6RD8?=
+ =?us-ascii?Q?3rmEe9EEKXw/N+IBVzVgAgZLulMOvsaAqX17G9DZ74UbLrGlQHr8Ql052IcE?=
+ =?us-ascii?Q?hQuXHfKZHxRRsLtJ3TF1jVumabj6rBaQAR8nGwnW7LIKT5WYlBMaiaVP02t4?=
+ =?us-ascii?Q?fz8dAwrq2gkpX3Vc6UfPtOyC4dMggElncaeXx5QCIAXSfsleujAgcIHN55fv?=
+ =?us-ascii?Q?C5bydPoqNa7afR3PIua27m5STV4XxQMP7mZYjneLZ502vbRBSJLQcg7t21M0?=
+ =?us-ascii?Q?GzW5fz26/Dtx+4LJKszc+zZ3khZXWPrzR3VYDHBY0dK5hs5SGtqdriaJHzFF?=
+ =?us-ascii?Q?qG0DTbJV3GGZxbF4BezKRAIZ1Gqd7j4uBGFoXvcavETeqiCnJG9LBYd8P4w1?=
+ =?us-ascii?Q?JQpyZKqnC8RVNc9q0+jfyfDSn9fZqYbRcK/wBhdMRfBjLWHda3Ovyb1HUDAG?=
+ =?us-ascii?Q?ZDN5uIECkGd8r/zpS8zkT+5AdD8Vp9zg1yzbQGeu7xZinGfLboPM3CFc7EFK?=
+ =?us-ascii?Q?IR7HUL9D88k9IArghbIxQuoX3jrkGlaf4DrE7tr4YACD+Kfr/vVGARgevBoS?=
+ =?us-ascii?Q?1fAZxztE417CwWYKH53I4Q7qdiJsONdJc9cDkBP3vamM1+twvSxNF9mZb4Hm?=
+ =?us-ascii?Q?PCnexPmubDMpAOUIWk5fAZF8ugC9bvn04BfvBf761bPpbJS8520/lddcTu0Q?=
+ =?us-ascii?Q?vFmsdXA+RN7vJvIFqxG0G4ahE5r7dgn4qjgQZaDFUKpfd6uRX6qFVNDjymPx?=
+ =?us-ascii?Q?+zYdPTJBhXGGJ82DDrzqLr77/qSXqLCli5CJxKZxYniGVAtAoog4XFvFA05d?=
+ =?us-ascii?Q?VP8hOY+XZe91d1yxg2RU4CsZ3jnrAd5JKTeqrATKHOutyHI5l2r2N93G0BGG?=
+ =?us-ascii?Q?I7KZ2h+IO+gpj3yTHlUOiZkLYMHJt8D4vh0C32tvCvZpUXRL9Tns+jqbd3eO?=
+ =?us-ascii?Q?1ECmLAEnG99h8DNzLAMfj5b3Ht5enKvB5ZSV/5AvbA+PoIAc7yW/0xnf4Orl?=
+ =?us-ascii?Q?j0AyVsXolsyTR1sI6j03uhQ1ecBlcDzjsDPWn042YEGuBxdoTvZ/ZF2TvYn5?=
+ =?us-ascii?Q?D8Dcetkx0zJLnY1LxN66a2mS4GXROl0xv0oei4YzzehgEJEdD9bSOE8+MT5Q?=
+ =?us-ascii?Q?Ibo+uOmo4vT0wbRdEK/I0gZKh6T7+cEUysGW1HF1RRCj0U3bbnPSL1q037Gd?=
+ =?us-ascii?Q?uTCn4Kk=3D?=
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [next-20260108]kernel BUG at drivers/scsi/scsi_lib.c:1173!
-Content-Language: en-GB
-To: Ming Lei <ming.lei@redhat.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-block@vger.kernel.org,
-        linux-scsi@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
-        James.Bottomley@hansenpartnership.com, leonro@nvidia.com,
-        kch@nvidia.com, LKML <linux-kernel@vger.kernel.org>,
-        Madhavan Srinivasan <maddy@linux.ibm.com>, riteshh@linux.ibm.com,
-        ojaswin@linux.ibm.com
-References: <9687cf2b-1f32-44e1-b58d-2492dc6e7185@linux.ibm.com>
- <aWCYl3I7GtsGXIG3@infradead.org> <aWClEA6KuLP6E1cP@fedora>
- <7382f235-3e42-4b77-b18d-c38661816301@linux.ibm.com>
- <aWDspG-J1a3iyIqG@fedora>
- <b7624213-65e5-41d4-81ba-e95f885018dd@linux.ibm.com>
- <aWD7j3NR_m6EyZv1@fedora>
- <ab7635d7-70e7-4906-bdcf-90006d7edf85@linux.ibm.com>
- <aWELGGBf1Sl3RK6k@fedora>
- <4c85df85-58f7-4e44-8201-2f0562f93439@linux.ibm.com>
- <aWETXSLwAYOVdB9J@fedora>
-From: Venkat Rao Bagalkote <venkat88@linux.ibm.com>
-In-Reply-To: <aWETXSLwAYOVdB9J@fedora>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-TM-AS-GCONF: 00
-X-Authority-Analysis: v=2.4 cv=P4s3RyAu c=1 sm=1 tr=0 ts=69612dfa cx=c_pps
- a=5BHTudwdYE3Te8bg5FgnPg==:117 a=5BHTudwdYE3Te8bg5FgnPg==:17
- a=IkcTkHD0fZMA:10 a=vUbySO9Y5rIA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=VwQbUJbxAAAA:8 a=20KFwNOVAAAA:8 a=VnNF1IyMAAAA:8 a=xuj4pbDJ7MHCKTmK_8IA:9
- a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
-X-Proofpoint-ORIG-GUID: RknvHdCHU8HrINxbokdFmjA9hjN0mgY4
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMTA5MDEyMyBTYWx0ZWRfXzaJq7CtRDkLo
- dh8F6hS+SzwpaUzkspph5GNhnTRUW6cdcl0RFy9hHX0UzlTMG5l58fAg66uuaHjQ9IwQpeMdhPg
- ACaGmUfbdhyl9zEsJcMyzQNGUSViLqgFojqBsPoF4c41Tx+okl50nNoel3cA9hEBvTJ8lK0LhqE
- JsGrtQoDcsyDaxASiUDYWjjf34QNvrVlzbAgRvRSSigevVy6Of2hV3rda9UgblYrwF06VSWPznD
- YkjknT2vy9j9nGNFBbfO+Upu4vhE9fzORhPKxHNW4AzgXvVLZUSH3rLdobhNAFKtTdUWFWAcKD2
- vSJGcb6iZYqFufjzUBpZzeJT5AyCFLHizR/BnLwNXPQAOz6AA1VRFhmLOLQ+TIrpmeQBYXIvZyH
- U61H7NrBziiDSjRybkLuoG2nZyTb6jwx/8VNigfAofhrbRX8kes0HGIGxc+RtF1ebayEsY8ym5b
- cUoHkA/yL1XRmAPsg4w==
-X-Proofpoint-GUID: RknvHdCHU8HrINxbokdFmjA9hjN0mgY4
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.9,FMLib:17.12.100.49
- definitions=2026-01-09_05,2026-01-08_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- malwarescore=0 bulkscore=0 priorityscore=1501 clxscore=1015 suspectscore=0
- phishscore=0 adultscore=0 spamscore=0 impostorscore=0 lowpriorityscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.19.0-2512120000 definitions=main-2601090123
+X-OriginatorOrg: outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: SN6PR02MB4157.namprd02.prod.outlook.com
+X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg: 00000000-0000-0000-0000-000000000000
+X-MS-Exchange-CrossTenant-Network-Message-Id: a598e32f-e140-4a80-efde-08de4fa751a6
+X-MS-Exchange-CrossTenant-originalarrivaltime: 09 Jan 2026 17:48:38.1102
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
+X-MS-Exchange-CrossTenant-rms-persistedconsumerorg: 00000000-0000-0000-0000-000000000000
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CO6PR02MB7553
 
+From: longli@linux.microsoft.com <longli@linux.microsoft.com> Sent: Wednesd=
+ay, January 7, 2026 11:57 AM
+>=20
+> The Hyper-V host does not support MODE_SENSE_10 and MODE_SENSE.
+> The driver handles MODE_SENSE as unsupported command, but not for
+> MODE_SENSE_10. Add MODE_SENSE_10 to the same handling logic and
+> return correct code to SCSI layer.
+>=20
+> Fixes: 89ae7d709357 ("Staging: hv: storvsc: Move the storage driver out o=
+f the staging area")
+> Cc: stable@kernel.org
+> Signed-off-by: Long Li <longli@microsoft.com>
+> ---
+>  drivers/scsi/storvsc_drv.c | 1 +
+>  1 file changed, 1 insertion(+)
+>=20
+> diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+> index 6e4112143c76..9b15784e2d64 100644
+> --- a/drivers/scsi/storvsc_drv.c
+> +++ b/drivers/scsi/storvsc_drv.c
+> @@ -1154,6 +1154,7 @@ static void storvsc_on_io_completion(struct storvsc=
+_device
+> *stor_device,
+>=20
+>  	if ((stor_pkt->vm_srb.cdb[0] =3D=3D INQUIRY) ||
+>  	   (stor_pkt->vm_srb.cdb[0] =3D=3D MODE_SENSE) ||
+> +	   (stor_pkt->vm_srb.cdb[0] =3D=3D MODE_SENSE_10) ||
+>  	   (stor_pkt->vm_srb.cdb[0] =3D=3D MAINTENANCE_IN &&
+>  	   hv_dev_is_fc(device))) {
+>  		vstor_packet->vm_srb.scsi_status =3D 0;
 
-On 09/01/26 8:10 pm, Ming Lei wrote:
-> On Fri, Jan 09, 2026 at 07:53:00PM +0530, Venkat Rao Bagalkote wrote:
->> On 09/01/26 7:35 pm, Ming Lei wrote:
->>> On Fri, Jan 09, 2026 at 07:26:01PM +0530, Venkat Rao Bagalkote wrote:
->>>> On 09/01/26 6:28 pm, Ming Lei wrote:
->>>>> On Fri, Jan 09, 2026 at 05:51:15PM +0530, Venkat Rao Bagalkote wrote:
->>>>>> On 09/01/26 5:25 pm, Ming Lei wrote:
->>>>>>> On Fri, Jan 09, 2026 at 05:14:36PM +0530, Venkat Rao Bagalkote wrote:
->>>>>>>> On 09/01/26 12:19 pm, Ming Lei wrote:
->>>>>>>>> On Thu, Jan 08, 2026 at 09:56:39PM -0800, Christoph Hellwig wrote:
->>>>>>>>>> I've seen the same when running xfstests on xfs, and bisected it to:
->>>>>>>>>>
->>>>>>>>>> commit ee623c892aa59003fca173de0041abc2ccc2c72d
->>>>>>>>>> Author: Ming Lei <ming.lei@redhat.com>
->>>>>>>>>> Date:   Wed Dec 31 11:00:55 2025 +0800
->>>>>>>>>>
->>>>>>>>>>          block: use bvec iterator helper for bio_may_need_split()
->>>>>>>>>>
->>>>>>>>> Hi Christoph and Venkat Rao Bagalkote,
->>>>>>>>>
->>>>>>>>> Unfortunately I can't duplicate the issue in my environment, can you test
->>>>>>>>> the following patch?
->>>>>>>>>
->>>>>>>>> diff --git a/block/blk.h b/block/blk.h
->>>>>>>>> index 98f4dfd4ec75..980eef1f5690 100644
->>>>>>>>> --- a/block/blk.h
->>>>>>>>> +++ b/block/blk.h
->>>>>>>>> @@ -380,7 +380,7 @@ static inline bool bio_may_need_split(struct bio *bio,
->>>>>>>>>                      return true;
->>>>>>>>>              bv = __bvec_iter_bvec(bio->bi_io_vec, bio->bi_iter);
->>>>>>>>> -       if (bio->bi_iter.bi_size > bv->bv_len)
->>>>>>>>> +       if (bio->bi_iter.bi_size > bv->bv_len - bio->bi_iter.bi_bvec_done)
->>>>>>>>>                      return true;
->>>>>>>>>              return bv->bv_len + bv->bv_offset > lim->max_fast_segment_size;
->>>>>>>>>       }
->>>>>>>> Hello Ming,
->>>>>>>>
->>>>>>>>
->>>>>>>> This is not helping. I am hitting this issue, during kernel build itself.
->>>>>>> Can you confirm if it can fix the blktests ext4/056 first?
->>>>>>>
->>>>>>> If kernel building is running over new patched kernel, please provide the
->>>>>>> dmesg log. And if it is reproduciable, can you confirm if it can be fixed
->>>>>>> by reverting ee623c892aa59003 (block: use bvec iterator helper for bio_may_need_split())?
->>>>>> Unfortunately, even with revert, build fails.
->>>>>>
->>>>>>
->>>>>>
->>>>>> commit c64b2ee9cddcb31546c8622ef018d344544a9388 (HEAD)
->>>>>> Author: Super User <root@ltc-zzci-1.ltc.tadn.ibm.com>
->>>>>> Date:   Fri Jan 9 06:51:19 2026 -0600
->>>>>>
->>>>>>        Revert "block: use bvec iterator helper for bio_may_need_split()"
->>>>>>
->>>>>>        This reverts commit ee623c892aa59003fca173de0041abc2ccc2c72d.
->>>>> OK, then your issue isn't related with the above change.
->>>>>
->>>>> Can you reproduce & collect dmesg log with the bad sg/rq/bio/bvec info by
->>>>> applying the attached debug patch?
->>>>>
->>>>> Also if possible, please collect your scsi queue's limit info before
->>>>> reproducing the issue:
->>>>>
->>>>> 	(cd /sys/block/$SD/queue && find . -type f -exec grep -aH . {} \;)
->>>> Hello Ming,
->>>>
->>>> After applying the patch shared via attachment also, I see build failure.
->>>>
->>>> I have attached the kernel config file.
->>>>
->>>>
->>>> git diff
->>>> diff --git a/block/blk-mq-dma.c b/block/blk-mq-dma.c
->>>> index 752060d7261c..33c1b6a0a738 100644
->>>> --- a/block/blk-mq-dma.c
->>>> +++ b/block/blk-mq-dma.c
->>>> @@ -4,8 +4,75 @@
->>>>     */
->>>>    #include <linux/blk-integrity.h>
->>>>    #include <linux/blk-mq-dma.h>
->>>> +#include <linux/scatterlist.h>
->>>>    #include "blk.h"
->>> Hi Venkat,
->>>
->>> Thanks for your test.
->>>
->>> But you didn't apply the whole debug patch in the following link:
->>>
->>> https://lore.kernel.org/linux-block/aWD7j3NR_m6EyZv1@fedora/
->>>
->>> otherwise something like "=== __blk_rq_map_sg DEBUG DUMP ===" will be
->>> dumped in dmesg log.
->>>
->>>> make -j 48 -s && make modules_install && make install
->>>> [ 5625.770436] ------------[ cut here ]------------
->>>> [ 5625.770476] WARNING: block/blk-mq-dma.c:309 at
->>> If the whole debug patch is applied correctly, the above line number should
->>> have become 378 instead of original 309.
->>>
->>> Please re-apply the debug patch & reproduce again.
->>>
->> Hello Ming,
->>
->>
->> Apologies for back and forth. But I did apply the whole patch. Below is the
->> git diff from my machine. Let me know, if I am missing anything.
-> OK, the patch is correct.
->
-> But you need to boot with one good kernel(such as, distribution shipped kernel) first
-> for building new test kernel against -next tree with this patch.
+There's a code comment above this "if" statement that describes the situati=
+on.
+The comment specifically lists INQUIRY, MODE_SENSE, and MAINTENANCE_IN. For
+consistency, it should be updated to include MODE_SENSE_10.
 
+With the comment updated,
 
-Booted to a good kernel and applied your patch, and build is successful 
-and it fixes the reported issue.
-
-
-Also, tried with the below change, which was first suggested, and with 
-this also build is successful and it fixes reported issue.
-
-
-diff --git a/block/blk.h b/block/blk.h
-index 98f4dfd4ec75..980eef1f5690 100644
---- a/block/blk.h
-+++ b/block/blk.h
-@@ -380,7 +380,7 @@ static inline bool bio_may_need_split(struct bio *bio,
-                     return true;
-             bv = __bvec_iter_bvec(bio->bi_io_vec, bio->bi_iter);
--       if (bio->bi_iter.bi_size > bv->bv_len)
-+       if (bio->bi_iter.bi_size > bv->bv_len - bio->bi_iter.bi_bvec_done)
-                     return true;
-             return bv->bv_len + bv->bv_offset > lim->max_fast_segment_size;
-      }
-
-
-Regards,
-
-Venkat.
-
->
-> After this new test kernel is built & installed & reboot, you can start your
-> kernel build workload, then the issue will be triggered, and the log is
-> collected.
->
-> When the issue is triggered, `WARNING: block/blk-mq-dma.c:378 ` should be
-> shown in dmesg log, which signals you are running the test kernel with the
-> debug patch for collecting log.
->
-> Please let me know if anything is clear.
->
-> Thanks,
-> Ming
->
->
+Reviewed-by: Michael Kelley <mhklinux@outlook.com>
