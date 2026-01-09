@@ -1,178 +1,174 @@
-Received: from mail-ot1-f100.google.com (mail-ot1-f100.google.com [209.85.210.100])
+Received: from mail-wr1-f68.google.com (mail-wr1-f68.google.com [209.85.221.68])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 709873382E5
-	for <linux-scsi@vger.kernel.org>; Fri,  9 Jan 2026 10:34:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.100
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6017B2ECEAC
+	for <linux-scsi@vger.kernel.org>; Fri,  9 Jan 2026 11:40:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.68
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767954849; cv=none; b=SVSfaWBTYyUWYmAqTlrU5sRtod4C9gmHuKbJdn5PKKwNgH7hAg59BHnDbWeHr98m1PVT8UcAODVho6oqw+Q0zhsy7MKbWq6YlxffQGdHCcFmir0hxDFmjXALViVZCO5EM7dvednS0fIUUwOXkQeuduHv5LZXySsBsG6qxxc+k/M=
+	t=1767958831; cv=none; b=sg87hMyEkqxTaR15+e6WpiDEg6CSHK9EKPgWjO5KxLTOAv7AIDJin8NYh1aGe1eSV4ivcWhpbWXO7q6dkfUTFkobGOc38DoERIhXfVCZPqmH3LeOdw0dnq3Jeh1mjO/i3nW59RUy/jolaKpWX/UC4wkNYJO63h3oMaU8HaaqMjA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767954849; c=relaxed/simple;
-	bh=qyAIaazdwIw49PPuAk/0GEIkpgkeLChWeD2e081LVRc=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=ee5KfOAOWi3G8iL61pYUOYk6rAkeHEJb2gpYd1lzsmhKi4Fw6GoHpHbbg06AhokUohFOe+k/GW2BVLPEp1wLlqaMCpa7mEbUX0v5Y020/RPzwDyRt/rOvh49RJbqc/yR3Ovv/AdeTkUZ2NjdYgMXF0C3orFaaCZLlj80AaNpnjk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=YonAn+K/; arc=none smtp.client-ip=209.85.210.100
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
+	s=arc-20240116; t=1767958831; c=relaxed/simple;
+	bh=oLaz/UPrpvvVLvgT2gPEOxUMrZw3BlciMhOBrJEZYCc=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=Lyu1Zwa8hvpC86RQYMZxuIWqAtYdsidB65aOem8c3zAooYpYO/7Z7M8wIV1nHJddji8jSrs86ei5qYQlE5s9pt1vwAt7REwivsIhyidiu7Rw3PXI1cforqeFUXt4ptMmc2/zdnc1PSl+hbFIAgGe6Mzsc/bfZlpOa4dnzhSFY7A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=JnfGJXU6; arc=none smtp.client-ip=209.85.221.68
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="YonAn+K/"
-Received: by mail-ot1-f100.google.com with SMTP id 46e09a7af769-7c75a5cb752so3027755a34.2
-        for <linux-scsi@vger.kernel.org>; Fri, 09 Jan 2026 02:34:07 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1767954846; x=1768559646;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:dkim-signature:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=kCeTL5DyL4OpVceWW2dtJZK2fvnfNct2KD6UucHZ0lo=;
-        b=qpCG8gxOxJUh0QRfDKfMG9vUbCrTJYZ1GWi/CViWWT6ylWTN+QazSV5b7dQuTeCsX8
-         +yiGqMO4XKHwjct7j5hgNgyeF4lQQuY48N6Yvr2CavZANsMlF7QOyPGh1l5Am/bjayZ0
-         tNxTaqobG9O4eVLJWk72HWm1eUSa/L3hmygQHUEDdTdiMgktaefUiHe3En8dl8//eTpO
-         yZjTrs/xeXlG/UMMIJk9yq46HeA0gbMWK+YOQyrxauHqRhwSXfkQyHsCTtICxfFiro2H
-         SwVsZgOre+4xCjCbe9h4kZJ8Y3pJjqWtWewvDRru4u+8P7I/BVsQLedxofmN89SxSwvW
-         4bAw==
-X-Forwarded-Encrypted: i=1; AJvYcCWGkJxa2K+v6329nOCkyayU4N1dJKb+eJinXaqUCKv4ZeoWoB47bTsOkTwGTzJoGxY+l6AFXLOgqST5@vger.kernel.org
-X-Gm-Message-State: AOJu0Yz3zmZ8Mq/AsLfjq90GxmC70NHDcpFByZ1IxfO2SeSJOk44tCZA
-	WW1Ptze58gHEgHtmTHKa5vQRhi9ATw7qJ8VzqjT3waxWJ25KpckqGx3kq4wsvTTXcph2aM6mAra
-	ZnLzafbq3WJWCO3Rr1P8EaUYtYP1gQja5uH4x1UTUhwlQM6HIyC3vn2xrdwd35dhc0byrcTC6Bi
-	KXZ/OTiih+fsTbaP+0dy2iM0RYaRvyvyAzIkewboVh7qjjnFe8V7UbwONOlcXmk8ItL8LiGtjO0
-	Sw3ShhOLiWGjTwcPNNkYoo=
-X-Gm-Gg: AY/fxX5s51CZEB3kC0/MwkN+5x8bTPUjRwXcPfsY6mtg7Tox9JW2Ohnzby/H9f3aVT8
-	tAVPmBRj+3y9CKlanfU9hqhBookalTJCHZi+FBv5fcmctvHWF+gyBsYV7P+zZAA1ma2TVakEETs
-	g3q18kk4nSxxux48FO1ES/OWj7/f/VTKH+POi4L/iHmnfQgBdVj3YqfjXw3jUawEtHy5rsd4Cre
-	wII+pjE1r2UafRYCPGLjyxtJ/brr/7Tv0NvbvlWqPW82gxkFQM+BvzqYfzcCFbZAU6hv29zVyDS
-	Z/lbY6TTfIrobkwk5v5WGtwE1s70Mq59mxfl7wgN4+du7/MI9o/sG+XqmDsx0O0HXLsoVp9vpKm
-	rfcnNaL5jmqknuWQNemcQk67yTIU86qTLI8MFBgaU1UeEhidHBT5pOrXR10ex9j6R4WuxsLtHDm
-	MJvf9uruXp9HFwudiyWi0N7Tu63nsvJ8AGrlT5d/bxlRxLQ/suZ98=
-X-Google-Smtp-Source: AGHT+IGku9PF/tQ4VrWI8YEAaL/1mGoE62dSre0jPrvg8mTb3ev49EmKEMetkS/lqifFrxWcvFYiL7XSCBaW
-X-Received: by 2002:a05:6830:304e:b0:7ca:e8bf:8c4c with SMTP id 46e09a7af769-7ce508ced45mr5864636a34.12.1767954846385;
-        Fri, 09 Jan 2026 02:34:06 -0800 (PST)
-Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-120.dlp.protect.broadcom.com. [144.49.247.120])
-        by smtp-relay.gmail.com with ESMTPS id 46e09a7af769-7ce47803ad5sm1617322a34.1.2026.01.09.02.34.06
-        for <linux-scsi@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Fri, 09 Jan 2026 02:34:06 -0800 (PST)
-X-Relaying-Domain: broadcom.com
-X-CFilter-Loop: Reflected
-Received: by mail-qk1-f198.google.com with SMTP id af79cd13be357-8c38129a433so1019660185a.2
-        for <linux-scsi@vger.kernel.org>; Fri, 09 Jan 2026 02:34:05 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="JnfGJXU6"
+Received: by mail-wr1-f68.google.com with SMTP id ffacd0b85a97d-432d256c2e6so1189828f8f.3
+        for <linux-scsi@vger.kernel.org>; Fri, 09 Jan 2026 03:40:30 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1767954845; x=1768559645; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=kCeTL5DyL4OpVceWW2dtJZK2fvnfNct2KD6UucHZ0lo=;
-        b=YonAn+K/hNeju/vfUTGrTh4VewE3Le5mRf0/z+xVZYuUcI2+VHhAH4xuI8bGn+rVSx
-         N6zrdIQV/JSoWHX+gq7/EZOSqgzccg3IjtjC6XvULRNQc8/stHqj0ZGHyBPuzTdPB6jH
-         UL/fKQ6SQE2i96pdu/35JNpo98Ebux2mzjh/o=
-X-Forwarded-Encrypted: i=1; AJvYcCWnkcQZMHYwxL4RFYl6aHo8Bw0Fxe/5cATWEhYIBJM7SD4GKxbYb6/aDvVneWprCWuWoGdwbB+Ikvjc@vger.kernel.org
-X-Received: by 2002:a05:620a:7088:b0:8c3:87eb:f with SMTP id af79cd13be357-8c3893ef6d0mr1155257485a.53.1767954845213;
-        Fri, 09 Jan 2026 02:34:05 -0800 (PST)
-X-Received: by 2002:a05:620a:7088:b0:8c3:87eb:f with SMTP id af79cd13be357-8c3893ef6d0mr1155254585a.53.1767954844715;
-        Fri, 09 Jan 2026 02:34:04 -0800 (PST)
-Received: from shivania.lvn.broadcom.net ([192.19.161.250])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-890770cc73dsm73691156d6.7.2026.01.09.02.34.02
+        d=linaro.org; s=google; t=1767958829; x=1768563629; darn=vger.kernel.org;
+        h=cc:to:message-id:content-transfer-encoding:mime-version:subject
+         :date:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=5J5FE2rV7ygCFlHLBwb5hCWqtsTpEMKY5DEUv0AXHWs=;
+        b=JnfGJXU6i6jStRqSBg5w1tkCWStK66fva4n84d0a+JY6j0usvZunxFonpu8VBlpHYR
+         Ejz1Jl/d8rpRE9HrdP1wUoboJZjejIqa7eldOJk9pjTVlTdNuv6mJYmgfLf/ZTqaQJy2
+         3Z08Ld7Vz4v6AUjHUEVbfdVezPU4OoHp/bGNLWpjsV4AFX/jiIndZB++zid5dpuE6KcW
+         RqZql8WbOmu1xdwLOmfbRHU7j+Mj3auxkinr7tAlZ9eMAkOFhkbrUxzIRGGRaEbCWaNG
+         zTYcNFQOZrw3cJmKorLZ2SgHFc8UD94Wn19bV86UCdH0v0QUY7F7Cg/NdCnULtWkd5Yc
+         fUdg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1767958829; x=1768563629;
+        h=cc:to:message-id:content-transfer-encoding:mime-version:subject
+         :date:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=5J5FE2rV7ygCFlHLBwb5hCWqtsTpEMKY5DEUv0AXHWs=;
+        b=oog/5XCvYi5Q2lfB09dhvXnaYgmlo8N/nWeImEgi5fjXaxpt85HfVtwkTk7k5cfjSG
+         qOxyzMYVlKMtxadjwwxvOnXnCOBxdrY8xvYg4TnrSJyS9QLFwaQf2EVtaAidMBIGEYKF
+         PMPnf6JE740PPmn7TrHHpYKRl3DPbuaplTvGkTKEIPkA5HrrByJUzHyQiyHPm5WW0JSf
+         MaC2Wjkd0O/WjQxLxbRWhlqtJ2ZS7rgpVhNVZbKeUtXKiGYNJm+rFqGE95AxJq/WRkpG
+         g8fleVjBc7TySF1cS+qyIZMM8NSmfsyWpN5zq7YMATpJumdvusAj2bhc2tPax38LK3Bl
+         Jogg==
+X-Gm-Message-State: AOJu0YyNKD2qIqNXzmHwQcT/HA4HDMGFIjzMKOlq0YjuFWzcip1xYyzW
+	MuzO/pSHcDmqbKdI6wl/0aU3Wr2y1Ao2RJce+ChNdmZAFxan157EIaWVj6I8Aqp4nkk=
+X-Gm-Gg: AY/fxX6K51Y8lu4Ve7dyWHfXDj7aYzzMQhU28Ak0pMldWvH1Q/gH4DfU8ljoOyvy0Z6
+	yDdTq7Mu7rnVpweRlojPYDQRUB0m+ceUy/qpk5nNN6JrFaNIq2Zg2vzU3aJxDXZtXI82QZkkIgC
+	e8JwbxJwiGSS72aB8bOWdKgxIKrFfb2ZWotOObm2DUKG5teEYzFCM7nnfdWuyOULsc6b+evUhvW
+	ES3GqpYx8ADwwC9RGXAmHOhURc9LAEKBfYerE2oBrrZZvjDn2QZ98qYG/hCQackD7YldhHN/eNm
+	xDvUPTtS03MJK2eYRMYtChhnob29en/13wp4+VxtZN4fhbPy+ddNS78cWez39NYp6WE2m7I2SV/
+	PdES8Djhw0miEgd9fI1dMiCmNWYgmlCRgx4I/dfOzN2ve12zIhho2P92BfmW11UuYYlYJ9BgbQH
+	T7DxSH4zpnDooeC5v8kAhaggYHuhFV7tTmZCQJlcE6UvI=
+X-Google-Smtp-Source: AGHT+IELE5v41GM1z995DCq/Vq26mXGNxF7McIPtRrpLDzdmNXt9k6T//iVWMpCwb1VhSb6sunaZeQ==
+X-Received: by 2002:a05:6000:310d:b0:431:7a0:dbc3 with SMTP id ffacd0b85a97d-432c37983eamr11401803f8f.29.1767958828730;
+        Fri, 09 Jan 2026 03:40:28 -0800 (PST)
+Received: from gpeter-l.roam.corp.google.com ([2a00:23c7:3122:c601:1e1:d32d:b1c0:70fe])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-432bd0daa78sm22039102f8f.6.2026.01.09.03.40.28
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 09 Jan 2026 02:34:04 -0800 (PST)
-From: Shivani Agarwal <shivani.agarwal@broadcom.com>
-To: stable@vger.kernel.org,
-	gregkh@linuxfoundation.org
-Cc: James.Bottomley@HansenPartnership.com,
-	martin.petersen@oracle.com,
-	matthias.bgg@gmail.com,
-	angelogioacchino.delregno@collabora.com,
-	sthumma@codeaurora.org,
-	JBottomley@Parallels.com,
-	santoshsy@gmail.com,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-mediatek@lists.infradead.org,
-	ajay.kaher@broadcom.com,
-	alexey.makhalov@broadcom.com,
-	vamsi-krishna.brahmajosyula@broadcom.com,
-	yin.ding@broadcom.com,
-	tapas.kundu@broadcom.com,
-	Sanjeev Yadav <sanjeev.y@mediatek.com>,
-	Bart Van Assche <bvanassche@acm.org>,
-	Peter Wang <peter.wang@mediatek.com>,
-	Sasha Levin <sashal@kernel.org>,
-	Shivani Agarwal <shivani.agarwal@broadcom.com>
-Subject: [PATCH v5.10] scsi: core: ufs: Fix a hang in the error handler
-Date: Fri,  9 Jan 2026 02:13:02 -0800
-Message-Id: <20260109101302.676694-1-shivani.agarwal@broadcom.com>
-X-Mailer: git-send-email 2.25.1
+        Fri, 09 Jan 2026 03:40:28 -0800 (PST)
+From: Peter Griffin <peter.griffin@linaro.org>
+Date: Fri, 09 Jan 2026 11:40:14 +0000
+Subject: [PATCH v3] scsi: ufs: exynos: call phy_notify_state() from hibern8
+ callbacks
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20260109-ufs-exynos-phy_notify_pmstate-v3-1-7eb692e271af@linaro.org>
+X-B4-Tracking: v=1; b=H4sIAB3pYGkC/43OTQ6CMBQE4KuQrq1pH/+uvIcxpMADmmiLbSEQw
+ t0tGGNc6XJm8c0sxKKRaMkpWIjBUVqplQ/hISBVJ1SLVNY+E2AQs5SFdGgsxWlW2tK+mwulnWz
+ mor9bJxzSimFel3ksqiQh3ugNNnLa/cv1lQ0+Bj/jPmUnrdNm3j+MfGv/nRs55TTKoyip0yyGm
+ p9vUgmjj9q0ZKNHeHMJ4yz9xYHnoMwgFBADy8ovbl3XJ0YmBW0vAQAA
+X-Change-ID: 20250703-ufs-exynos-phy_notify_pmstate-c0e9db95ac66
+To: Alim Akhtar <alim.akhtar@samsung.com>, 
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
+ "Martin K. Petersen" <martin.petersen@oracle.com>, 
+ Krzysztof Kozlowski <krzk@kernel.org>
+Cc: linux-scsi@vger.kernel.org, linux-samsung-soc@vger.kernel.org, 
+ linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, 
+ kernel-team@android.com, andre.draszik@linaro.org, willmcvicker@google.com, 
+ tudor.ambarus@linaro.org, jyescas@google.com, bvanassche@acm.org, 
+ Peter Griffin <peter.griffin@linaro.org>
+X-Mailer: b4 0.14.2
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2460;
+ i=peter.griffin@linaro.org; h=from:subject:message-id;
+ bh=oLaz/UPrpvvVLvgT2gPEOxUMrZw3BlciMhOBrJEZYCc=;
+ b=owEBbQKS/ZANAwAKAc7ouNYCNHK6AcsmYgBpYOkrHReCSBWEN/TSNB6WKtGTGJD7Ov8Gz4YEB
+ gvVHdsEOMOJAjMEAAEKAB0WIQQO/I5vVXh1DVa1SfzO6LjWAjRyugUCaWDpKwAKCRDO6LjWAjRy
+ upYYEACZnZyKTZmwQfiAtYvOWkCyYxJZ/KNCLdxulf5MEB9TQcdgJPXm2lSC+TVjNbk0mqpwnpN
+ WvTDw1mEeO3y5fYOJJSfDQJ+wywTFR6s9iqY9nK6OYg5hJU36KR7aL831JB5cj0D9EYLGW/Q8p5
+ ylTTPbyfXWqyKkp9CM3+hdEcHHUyF1V0Dr7W1ftouPkX2RmnTa/1/DJaA028s33tfFuOt+NZoxN
+ 3M+Q9Sp+7KtyDJNsDzTciiZzce/R5uu56lfFGoWRS460/wRNMtDLhimdz1u4qY4X4bb/0bYsG5y
+ jLjCNHCLLapTSzmCNtDoEpbL1de+l22NmhZjPJTnD1+rFqE2GjWVlTkRELM3H26PARMI3NGTSaB
+ Gss8PVUjhXnEu4gX4MqgtIlTGC8kt6cjj5o8GC7oSRSPjWP1t6XXfbshv3htiCCbz1mpjAjq+hp
+ QOVHyTbLBRPvEIpDXFJ2XW3AhhzHd7MoMEJNRtwER2JXkwtJKs0TeEwTeMf1WgjBE8TApVU3P3F
+ nMk/93wGYaqnLB0W3pIpLyW3A9VllLKB8iHiaS8zFIcdddWd/GL7FV/zFqXrecSPWg8ZrgW689U
+ ytnksczMBLuvSW23pK3ux7WliK0khF8I/0YL6jLW2AzqMGIBgJ2F0G4NcycVMWOtSPVL8alwBX9
+ VGjzmjsQlsfw8mA==
+X-Developer-Key: i=peter.griffin@linaro.org; a=openpgp;
+ fpr=0EFC8E6F5578750D56B549FCCEE8B8D6023472BA
 
-From: Sanjeev Yadav <sanjeev.y@mediatek.com>
+Notify the ufs phy of the hibern8 link state so that it can program the
+appropriate values.
 
-[ Upstream commit 8a3514d348de87a9d5e2ac00fbac4faae0b97996 ]
-
-ufshcd_err_handling_prepare() calls ufshcd_rpm_get_sync(). The latter
-function can only succeed if UFSHCD_EH_IN_PROGRESS is not set because
-resuming involves submitting a SCSI command and ufshcd_queuecommand()
-returns SCSI_MLQUEUE_HOST_BUSY if UFSHCD_EH_IN_PROGRESS is set. Fix this
-hang by setting UFSHCD_EH_IN_PROGRESS after ufshcd_rpm_get_sync() has
-been called instead of before.
-
-Backtrace:
-__switch_to+0x174/0x338
-__schedule+0x600/0x9e4
-schedule+0x7c/0xe8
-schedule_timeout+0xa4/0x1c8
-io_schedule_timeout+0x48/0x70
-wait_for_common_io+0xa8/0x160 //waiting on START_STOP
-wait_for_completion_io_timeout+0x10/0x20
-blk_execute_rq+0xe4/0x1e4
-scsi_execute_cmd+0x108/0x244
-ufshcd_set_dev_pwr_mode+0xe8/0x250
-__ufshcd_wl_resume+0x94/0x354
-ufshcd_wl_runtime_resume+0x3c/0x174
-scsi_runtime_resume+0x64/0xa4
-rpm_resume+0x15c/0xa1c
-__pm_runtime_resume+0x4c/0x90 // Runtime resume ongoing
-ufshcd_err_handler+0x1a0/0xd08
-process_one_work+0x174/0x808
-worker_thread+0x15c/0x490
-kthread+0xf4/0x1ec
-ret_from_fork+0x10/0x20
-
-Signed-off-by: Sanjeev Yadav <sanjeev.y@mediatek.com>
-[ bvanassche: rewrote patch description ]
-Fixes: 62694735ca95 ("[SCSI] ufs: Add runtime PM support for UFS host controller driver")
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-Link: https://lore.kernel.org/r/20250523201409.1676055-1-bvanassche@acm.org
-Reviewed-by: Peter Wang <peter.wang@mediatek.com>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
-[Shivani: Modified to apply on 5.10.y]
-Signed-off-by: Shivani Agarwal <shivani.agarwal@broadcom.com>
+Signed-off-by: Peter Griffin <peter.griffin@linaro.org>
 ---
- drivers/scsi/ufs/ufshcd.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+Note: The phy_notify_state() API is part of v6.19-rc1 and onwards.
+---
+Changes in v3:
+- Add 'static const' (Bart)
+- Drop Barts reviewed-by tag for now
+- Link to v2: https://lore.kernel.org/r/20260107-ufs-exynos-phy_notify_pmstate-v2-1-2b823a25208b@linaro.org
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 54e7d96bf..c1f232472 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -5766,10 +5766,12 @@ static void ufshcd_err_handler(struct work_struct *work)
- 		spin_unlock_irqrestore(hba->host->host_lock, flags);
- 		return;
+Changes in v2:
+- Collect up tags
+- Rebased onto next-20260106
+- Update phy_notify_pmstate() to phy_notify_state()
+- Link to v1: https://lore.kernel.org/r/20250703-ufs-exynos-phy_notify_pmstate-v1-1-49446d7852d1@linaro.org
+---
+ drivers/ufs/host/ufs-exynos.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+diff --git a/drivers/ufs/host/ufs-exynos.c b/drivers/ufs/host/ufs-exynos.c
+index 70d195179ebaa01f38331faaee6f8349211c4c3b..76fee3a79c77b7117a2c02f380f8c78d702ad173 100644
+--- a/drivers/ufs/host/ufs-exynos.c
++++ b/drivers/ufs/host/ufs-exynos.c
+@@ -1568,12 +1568,17 @@ static void exynos_ufs_pre_hibern8(struct ufs_hba *hba, enum uic_cmd_dme cmd)
+ {
+ 	struct exynos_ufs *ufs = ufshcd_get_variant(hba);
+ 	struct exynos_ufs_uic_attr *attr = ufs->drv_data->uic_attr;
++	static const union phy_notify phystate = {
++		.ufs_state = PHY_UFS_HIBERN8_EXIT
++	};
+ 
+ 	if (cmd == UIC_CMD_DME_HIBER_EXIT) {
+ 		if (ufs->opts & EXYNOS_UFS_OPT_BROKEN_AUTO_CLK_CTRL)
+ 			exynos_ufs_disable_auto_ctrl_hcc(ufs);
+ 		exynos_ufs_ungate_clks(ufs);
+ 
++		phy_notify_state(ufs->phy, phystate);
++
+ 		if (ufs->opts & EXYNOS_UFS_OPT_USE_SW_HIBERN8_TIMER) {
+ 			static const unsigned int granularity_tbl[] = {
+ 				1, 4, 8, 16, 32, 100
+@@ -1600,12 +1605,17 @@ static void exynos_ufs_pre_hibern8(struct ufs_hba *hba, enum uic_cmd_dme cmd)
+ static void exynos_ufs_post_hibern8(struct ufs_hba *hba, enum uic_cmd_dme cmd)
+ {
+ 	struct exynos_ufs *ufs = ufshcd_get_variant(hba);
++	static const union phy_notify phystate = {
++		.ufs_state = PHY_UFS_HIBERN8_ENTER
++	};
+ 
+ 	if (cmd == UIC_CMD_DME_HIBER_ENTER) {
+ 		ufs->entry_hibern8_t = ktime_get();
+ 		exynos_ufs_gate_clks(ufs);
+ 		if (ufs->opts & EXYNOS_UFS_OPT_BROKEN_AUTO_CLK_CTRL)
+ 			exynos_ufs_enable_auto_ctrl_hcc(ufs);
++
++		phy_notify_state(ufs->phy, phystate);
  	}
--	ufshcd_set_eh_in_progress(hba);
- 	spin_unlock_irqrestore(hba->host->host_lock, flags);
-+
- 	ufshcd_err_handling_prepare(hba);
-+
- 	spin_lock_irqsave(hba->host->host_lock, flags);
-+	ufshcd_set_eh_in_progress(hba);
- 	ufshcd_scsi_block_requests(hba);
- 	/*
- 	 * A full reset and restore might have happened after preparation
+ }
+ 
+
+---
+base-commit: 6cd6c12031130a349a098dbeb19d8c3070d2dfbe
+change-id: 20250703-ufs-exynos-phy_notify_pmstate-c0e9db95ac66
+
+Best regards,
 -- 
-2.40.4
+Peter Griffin <peter.griffin@linaro.org>
 
