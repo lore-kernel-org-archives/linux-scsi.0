@@ -1,184 +1,119 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.9])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 611A2302750
-	for <linux-scsi@vger.kernel.org>; Mon, 12 Jan 2026 16:38:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.9
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 53AA92D7DCE
+	for <linux-scsi@vger.kernel.org>; Mon, 12 Jan 2026 16:54:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768235920; cv=none; b=pN/8yHbpzD6eiblW+nOQ/ld1VnHSCK4G2m9mesbCtqflhOZ17iwHw9x5SuLItfEGLDa5HRgrjDl49kX2hVsdtNyw91AYPoG3KVvNXeku/Jp2o+i03RineDrpoVKQeNV606yiqTN2Pbk3m/eR9QJGqSceBWhYuCR8EbfK9kFVA5I=
+	t=1768236848; cv=none; b=ZYKjEuqRFe/SvmRRJby3iWMZCE8pJ0r4/OxZ9ddG0PMTMw24hayLHdJfY5griwbg6JBivksXBwRZy5/I63OixdKwNA4KtfggOIVqrZ31J4I7o9kugBuiAbCfzP8cyZl2DukP9ZUmlcRoJuju3K0LMqvZ5jFgc++2BRnJ3ZLeJO0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768235920; c=relaxed/simple;
-	bh=/Mp3OEvDa4qDhIFub/CNyIJPNOXW9Z8haYqf7nGfMAw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=JRwFePyJIoaUUoQAyJcSeVJ2gJcgy4lEbSkvA6zK5NVdh1z6uQsqBs+pcncQ76ve3fRr62x6hfW5ZWKBUUtk2zXbrD98rUO1wBRE1rLB3qgmNiRnW0Ll/fpGV0XBxz6AnXs+fTQ+avMqr2L4g7nmZp7UKIYQY+/msJYuhS2niho=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=SRbc+g85; arc=none smtp.client-ip=192.198.163.9
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1768236848; c=relaxed/simple;
+	bh=gbjMjD9H0hKzoc/TbAv75RVZA/F/gfKVBRzvgwbuGPk=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=kVmMW9ujGAk+vMQb0sGwr6nrTDyhS8/jP4s6hBKYFAxppfOPD6e/dQFlFQQycFqGdrTkhhpNnYOWScpGPFs2rdeTHSXmcw7Vpv7+5l4V2PYFUDbatrgoYHAd12EKBeU5cU68/r+jI8y6pL261s/mGi4S/vNKFNVYYdlt2Bl/Kg0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=aHF3pH/b; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="SRbc+g85"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1768235919; x=1799771919;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=/Mp3OEvDa4qDhIFub/CNyIJPNOXW9Z8haYqf7nGfMAw=;
-  b=SRbc+g854nAlBgFYHOxsNVzP9nLdZSvfziysLL0Q6sp59bOeJTi2plf5
-   +zqjCQwA/KaIayv/sCXY0ofdt/Ob9T1zoR+Fyrvp/47kpEeLD/roQ2S9K
-   kkGBQt61Poz/9VJReZVJ/jszcJGCuimCzJnvbhXkOR0Uh+w8tulv1RTo/
-   dkOhy5B7l2JCEbZbeULtOjsLzoXo+0A/puvTc+6eJy1lErz+DrCPaamfq
-   nPi0OFfyknKd2WAmlRCz59iblQnKZCH28MY/EE/4P59Fnynvv4cdQdXoh
-   HeQSMireWyKkL03Xfra6WmLYfHIXzkOPdrXXz+B5QaCc1MRQLWovq9TBv
-   A==;
-X-CSE-ConnectionGUID: bzAjFrkEQQiOdGdomzvvqg==
-X-CSE-MsgGUID: Gv6vunWET96vlR/jKPZXFw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11669"; a="80234783"
-X-IronPort-AV: E=Sophos;i="6.21,221,1763452800"; 
-   d="scan'208";a="80234783"
-Received: from fmviesa006.fm.intel.com ([10.60.135.146])
-  by fmvoesa103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Jan 2026 08:38:39 -0800
-X-CSE-ConnectionGUID: AaUi/sy3QtS0tZbvx+6MjQ==
-X-CSE-MsgGUID: mqZMWVqjTGCgTR9Nf6wDYw==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.21,221,1763452800"; 
-   d="scan'208";a="204042157"
-Received: from lkp-server01.sh.intel.com (HELO 765f4a05e27f) ([10.239.97.150])
-  by fmviesa006.fm.intel.com with ESMTP; 12 Jan 2026 08:38:36 -0800
-Received: from kbuild by 765f4a05e27f with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1vfKw5-00000000DaG-3fvh;
-	Mon, 12 Jan 2026 16:38:33 +0000
-Date: Tue, 13 Jan 2026 00:38:19 +0800
-From: kernel test robot <lkp@intel.com>
-To: Ranjan Kumar <ranjan.kumar@broadcom.com>, linux-scsi@vger.kernel.org,
-	martin.petersen@oracle.com
-Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
-	rajsekhar.chundru@broadcom.com, sathya.prakash@broadcom.com,
-	chandrakanth.patil@broadcom.com, prayas.patel@broadcom.com,
-	salomondush@google.com, Ranjan Kumar <ranjan.kumar@broadcom.com>
-Subject: Re: [PATCH v1 4/7] mpi3mr: Use negotiated link rate from DevicePage0
-Message-ID: <202601130005.zkxx1m3u-lkp@intel.com>
-References: <20260112081037.74376-5-ranjan.kumar@broadcom.com>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="aHF3pH/b"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1768236846;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=SrviirN/H2srI1mOFG6xd/TFt3X78J3/k99ooXMwVAg=;
+	b=aHF3pH/b9TR6lPMGjcSo8731+Nx774AJ35oPRj2MrqlPlkXSLtNaIX2zOQR5cIqjnARO+4
+	hcRP4ricm/95BsVeuv/m7250zYqPsJcAY2CXq4dLFsu+EAHMFNJ8oYwO2QAd6GyoGJ64z5
+	kgMwvNQmvqStG8hiQwxS8N995DabRR0=
+Received: from mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-546-6tEj-VfhMcWQg5-4LqXYMw-1; Mon,
+ 12 Jan 2026 11:54:03 -0500
+X-MC-Unique: 6tEj-VfhMcWQg5-4LqXYMw-1
+X-Mimecast-MFC-AGG-ID: 6tEj-VfhMcWQg5-4LqXYMw_1768236841
+Received: from mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.111])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id BB5D319539A0;
+	Mon, 12 Jan 2026 16:53:55 +0000 (UTC)
+Received: from rocky.redhat.com (unknown [10.44.32.113])
+	by mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id A599E1801AF1;
+	Mon, 12 Jan 2026 16:53:53 +0000 (UTC)
+From: Maurizio Lombardi <mlombard@redhat.com>
+To: martin.petersen@oracle.com
+Cc: mlombard@bsdbackstore.eu,
+	linux-scsi@vger.kernel.org,
+	target-devel@vger.kernel.org,
+	michael.christie@oracle.com
+Subject: [PATCH 0/2] Fix a use after free in target driver
+Date: Mon, 12 Jan 2026 17:53:50 +0100
+Message-ID: <20260112165352.138606-1-mlombard@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260112081037.74376-5-ranjan.kumar@broadcom.com>
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.111
 
-Hi Ranjan,
-
-kernel test robot noticed the following build warnings:
-
-[auto build test WARNING on mkp-scsi/for-next]
-[also build test WARNING on jejb-scsi/for-next linus/master v6.19-rc5 next-20260109]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
-
-url:    https://github.com/intel-lab-lkp/linux/commits/Ranjan-Kumar/mpi3mr-Add-module-parameter-to-control-threaded-IRQ-polling/20260112-162241
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git for-next
-patch link:    https://lore.kernel.org/r/20260112081037.74376-5-ranjan.kumar%40broadcom.com
-patch subject: [PATCH v1 4/7] mpi3mr: Use negotiated link rate from DevicePage0
-config: x86_64-rhel-9.4-rust (https://download.01.org/0day-ci/archive/20260113/202601130005.zkxx1m3u-lkp@intel.com/config)
-compiler: clang version 20.1.8 (https://github.com/llvm/llvm-project 87f0227cb60147a26a1eeb4fb06e3b505e9c7261)
-rustc: rustc 1.88.0 (6b00bc388 2025-06-23)
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260113/202601130005.zkxx1m3u-lkp@intel.com/reproduce)
-
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202601130005.zkxx1m3u-lkp@intel.com/
-
-All warnings (new ones prefixed by >>):
-
->> drivers/scsi/mpi3mr/mpi3mr_os.c:1220:2: warning: unannotated fall-through between switch labels [-Wimplicit-fallthrough]
-    1220 |         default:
-         |         ^
-   drivers/scsi/mpi3mr/mpi3mr_os.c:1220:2: note: insert 'break;' to avoid fall-through
-    1220 |         default:
-         |         ^
-         |         break; 
-   1 warning generated.
+The following KASAN report has been reported
+by Zhaojuan Guo <zguo@redhat.com>
 
 
-vim +1220 drivers/scsi/mpi3mr/mpi3mr_os.c
+==================================================================
+ BUG: KASAN: slab-use-after-free in lock_release+0xd4/0x1e8
+ Read of size 8 at addr ffff0000e9b2c778 by task targetctl/21319
 
-  1153	
-  1154		if (!(mrioc->logging_level &
-  1155		    (MPI3_DEBUG_EVENT | MPI3_DEBUG_EVENT_WORK_TASK)))
-  1156			return;
-  1157	
-  1158		ioc_info(mrioc,
-  1159		    "device_pg0: handle(0x%04x), perst_id(%d), wwid(0x%016llx), encl_handle(0x%04x), slot(%d)\n",
-  1160		    le16_to_cpu(dev_pg0->dev_handle),
-  1161		    le16_to_cpu(dev_pg0->persistent_id),
-  1162		    le64_to_cpu(dev_pg0->wwid), le16_to_cpu(dev_pg0->enclosure_handle),
-  1163		    le16_to_cpu(dev_pg0->slot));
-  1164		ioc_info(mrioc, "device_pg0: access_status(0x%02x), flags(0x%04x), device_form(0x%02x), queue_depth(%d)\n",
-  1165		    dev_pg0->access_status, le16_to_cpu(dev_pg0->flags),
-  1166		    dev_pg0->device_form, le16_to_cpu(dev_pg0->queue_depth));
-  1167		ioc_info(mrioc, "device_pg0: parent_handle(0x%04x), iounit_port(%d)\n",
-  1168		    le16_to_cpu(dev_pg0->parent_dev_handle), dev_pg0->io_unit_port);
-  1169	
-  1170		switch (dev_pg0->device_form) {
-  1171		case MPI3_DEVICE_DEVFORM_SAS_SATA:
-  1172		{
-  1173			struct mpi3_device0_sas_sata_format *sasinf =
-  1174			    &dev_pg0->device_specific.sas_sata_format;
-  1175			ioc_info(mrioc,
-  1176			    "device_pg0: sas_sata: sas_address(0x%016llx),flags(0x%04x),\n"
-  1177			    "device_info(0x%04x), phy_num(%d), attached_phy_id(%d),negotiated_link_rate(0x%02x)\n",
-  1178			    le64_to_cpu(sasinf->sas_address),
-  1179			    le16_to_cpu(sasinf->flags),
-  1180			    le16_to_cpu(sasinf->device_info), sasinf->phy_num,
-  1181			    sasinf->attached_phy_identifier, sasinf->negotiated_link_rate);
-  1182			break;
-  1183		}
-  1184		case MPI3_DEVICE_DEVFORM_PCIE:
-  1185		{
-  1186			struct mpi3_device0_pcie_format *pcieinf =
-  1187			    &dev_pg0->device_specific.pcie_format;
-  1188			ioc_info(mrioc,
-  1189			    "device_pg0: pcie: port_num(%d), device_info(0x%04x), mdts(%d), page_sz(0x%02x)\n",
-  1190			    pcieinf->port_num, le16_to_cpu(pcieinf->device_info),
-  1191			    le32_to_cpu(pcieinf->maximum_data_transfer_size),
-  1192			    pcieinf->page_size);
-  1193			ioc_info(mrioc,
-  1194			    "device_pg0: pcie: abort_timeout(%d), reset_timeout(%d) capabilities (0x%08x)\n",
-  1195			    pcieinf->nvme_abort_to, pcieinf->controller_reset_to,
-  1196			    le32_to_cpu(pcieinf->capabilities));
-  1197			break;
-  1198		}
-  1199		case MPI3_DEVICE_DEVFORM_VD:
-  1200		{
-  1201			struct mpi3_device0_vd_format *vdinf =
-  1202			    &dev_pg0->device_specific.vd_format;
-  1203	
-  1204			ioc_info(mrioc,
-  1205			    "device_pg0: vd: state(0x%02x), raid_level(%d), flags(0x%04x),\n"
-  1206			    "device_info(0x%04x) abort_timeout(%d), reset_timeout(%d)\n",
-  1207			    vdinf->vd_state, vdinf->raid_level,
-  1208			    le16_to_cpu(vdinf->flags),
-  1209			    le16_to_cpu(vdinf->device_info),
-  1210			    vdinf->vd_abort_to, vdinf->vd_reset_to);
-  1211			ioc_info(mrioc,
-  1212			    "device_pg0: vd: tg_id(%d), high(%dMiB), low(%dMiB), qd_reduction_factor(%d)\n",
-  1213			    vdinf->io_throttle_group,
-  1214			    le16_to_cpu(vdinf->io_throttle_group_high),
-  1215			    le16_to_cpu(vdinf->io_throttle_group_low),
-  1216			    ((le16_to_cpu(vdinf->flags) &
-  1217			       MPI3_DEVICE0_VD_FLAGS_IO_THROTTLE_GROUP_QD_MASK) >> 12));
-  1218	
-  1219		}
-> 1220		default:
-  1221			break;
-  1222		}
-  1223	}
-  1224	
+ kasan_report+0x90/0xc8
+ __asan_load8+0xb8/0xc0
+ lock_release+0xd4/0x1e8
+ rt_spin_unlock+0x2c/0xb8
+ iscsit_dec_conn_usage_count+0x68/0xa0 [iscsi_target_mod]
+ iscsit_stop_session+0x140/0x220 [iscsi_target_mod]
+ iscsit_release_sessions_for_tpg+0x380/0x480 [iscsi_target_mod]
+ iscsit_tpg_disable_portal_group+0x104/0x260 [iscsi_target_mod]
+ lio_target_tiqn_enabletpg+0x3c/0x80 [iscsi_target_mod]
+ target_tpg_disable+0x6c/0xb0 [target_core_mod]
+ target_fabric_tpg_base_enable_store+0x110/0x128 [target_core_mod]
+ configfs_write_iter+0x154/0x1d0
+ new_sync_write+0x1c8/0x298
+ vfs_write+0x2e8/0x348
+ ksys_write+0xd8/0x198
+
+ Allocated by task 20969:
+  __kasan_kmalloc+0xb8/0xc0
+  __kmalloc_cache_noprof+0x194/0x300
+  iscsit_alloc_conn+0x48/0x4e0 [iscsi_target_mod]
+  __iscsi_target_login_thread+0x108/0x960 [iscsi_target_mod]
+  iscsi_target_login_thread+0x30/0x80 [iscsi_target_mod]
+  kthread+0x190/0x1a8
+  ret_from_fork+0x10/0x20
+
+ Freed by task 21085:
+  __kasan_slab_free+0x4c/0x70
+  kfree+0x108/0x430
+  iscsit_free_conn+0x74/0x90 [iscsi_target_mod]
+  iscsit_close_connection+0x4ec/0xc98 [iscsi_target_mod]
+  iscsit_take_action_for_connection_exit+0x114/0x270 [iscsi_target_mod]
+  iscsi_target_tx_thread+0x268/0x340 [iscsi_target_mod]
+  kthread+0x190/0x1a8
+  ret_from_fork+0x10/0x20
+
+
+I reproduced it by inserting a delay between the call to complete()
+and the call to spin_unlock() inside the iscsit_dec_conn_usage_count().
+
+iscsit_dec_session_usage_count() has the same problem.
+
+Maurizio Lombardi (2):
+  target: iscsi: fix use-after-free in iscsit_dec_conn_usage_count()
+  target: iscsi: fix use-after-free in iscsit_dec_session_usage_count()
+
+ drivers/target/iscsi/iscsi_target_util.c | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
 
 -- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+2.47.3
+
