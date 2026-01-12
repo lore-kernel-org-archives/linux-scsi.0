@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7CE731E22E9
-	for <linux-scsi@vger.kernel.org>; Mon, 12 Jan 2026 14:18:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A619428690
+	for <linux-scsi@vger.kernel.org>; Mon, 12 Jan 2026 14:21:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768227498; cv=none; b=ohqsLqRzq0G0gKxoGkwg8G++E0rCEfIzloWn9Z3QETw/oOZrA8fd68rNkR2iNAh28DUg52g7PxYQ4wFEUdvWRbNOSnJdlo3iUBlWrHDkg3+QkPvSVNSX6mzrpxTejqoFHmTMu+A0u7y+q2Cfp1L0xq7Ts8zleDtnAPZ+dFDClf0=
+	t=1768227684; cv=none; b=rWK/5tP6QJYdtcK/N3j+2Av52PR36Tq1WGAOELH/BbTnWkYYXaJ+AsJzgVPXXMMQcB46NypGkY3JbZXNHsn6vlW6YyTDLl0pfM9KtXp+42swcuo4VeUuTlxJYpuLhGCAJXAnhhmTgzYchoyMV9t2aHEmGj3Ye6I/tf+SeQgRcrc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768227498; c=relaxed/simple;
-	bh=Quy95bEAmUjH9JfCDmhVLpDoWhWMYaj2LY7+OU6X/tQ=;
+	s=arc-20240116; t=1768227684; c=relaxed/simple;
+	bh=KUCdlzCF/NMvbzr/IP2k3UjMzAFFPsk8/UCf0rjb1OM=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Kg9yBpI/1ms3Lj0XJmvud2qqVHNZlGZXJ44hg1gbNCYBK5WFzt/KyV3/pF+Q4vgqToXCSnw5VdNIsp9D2OPzhGcmtmYnbOSuLTmBEBSR0dBMNEQ3txihtnKimIMDNkoKUqWy5JEYTF0fTNDlt8QVwIx8p0er6mRnN31vnkVtY0o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Htg3zuOR; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=HwI90KrH79Vm/iGi4VQDVKF2zs9vbobGmq+hKn4SNUP7fxTDHAnH2AU7Wu3JRK9qe1Clt4g6wQ6zFcNXIr+AdiEmfU4T68amIMg/m71eqzl74a0PT81gZYxd0hB+UWDip/0BF+h90xGhnCiHSSayDLkK+Vm/rSJZ7iiYYBVarv8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=enGq6aR6; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Htg3zuOR"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 354F8C16AAE;
-	Mon, 12 Jan 2026 14:18:15 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="enGq6aR6"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6257BC19425;
+	Mon, 12 Jan 2026 14:21:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1768227498;
-	bh=Quy95bEAmUjH9JfCDmhVLpDoWhWMYaj2LY7+OU6X/tQ=;
+	s=k20201202; t=1768227684;
+	bh=KUCdlzCF/NMvbzr/IP2k3UjMzAFFPsk8/UCf0rjb1OM=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=Htg3zuORb13DWTwX3aJY8/O8tYIJue1lPqSt58/eSrNogjUSVxqTGK5NjMyO5iG3l
-	 xRGk032CRSCn7iNln7XcoTcWiqVgNZEityYlGSs/eFick0ioOIIf22B6wlhhhuYebd
-	 HitGP5sZccDzoD+yHvSFfq04j6H6io/TW1BQfTDZzb52wCLgC1siRKyt1phftulNws
-	 YOcRdAz31uCvMuYSTYj7KToHzErwP4bWd+IfcMjdCl3JQnefuqPI4XaHpRhWlwrIem
-	 ZyJwxpj8ucgdTbyvC6OrFVTQrN0/v9mGnkrZdJVgvFst24+GZY1o+3dQBr62L2e5IH
-	 bQy9AzJQFgm5Q==
-Message-ID: <7075bee5-75ce-4092-93c9-06d162a53362@kernel.org>
-Date: Mon, 12 Jan 2026 15:18:14 +0100
+	b=enGq6aR69GQDcQGb+K5QLD+LNvZg/AY/aE5jg5BTbo6x1JyT3/CBTUJIV/qpchOTn
+	 RjRzegSR2P3UbXTouKKSke01QCPBtn73MYA+HaApOOUdtY/SKLtBaPXUBRYYie0/FZ
+	 3kLXUYG6IsmDAvCg3LJ1XwX+pZe7CCu6vf3XMuiNC5b0HW1sOIyYRxrEryaSZkqFZ2
+	 xojSxLjymzb72Px33nUGUmWTatgZls/FaN5Dq0DB9qVOxhcyhhY7RqgJEN8/rFqOCl
+	 pGkExV5266slWi3dfNpf8qFWGu1BY4dltg9CI+Vqbukz13+YChF7j7KGCiXOHXifkS
+	 qXtT+TjHTKOJw==
+Message-ID: <67011328-cbe5-40b6-8bc2-32b4f2c43592@kernel.org>
+Date: Mon, 12 Jan 2026 15:21:20 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,259 +35,39 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v1 4/7] mpi3mr: Use negotiated link rate from DevicePage0
+Subject: Re: [PATCH v1 5/7] mpi3mr: Update MPI Headers to revision 39
 To: Ranjan Kumar <ranjan.kumar@broadcom.com>, linux-scsi@vger.kernel.org,
  martin.petersen@oracle.com
 Cc: rajsekhar.chundru@broadcom.com, sathya.prakash@broadcom.com,
  chandrakanth.patil@broadcom.com, prayas.patel@broadcom.com,
  salomondush@google.com
 References: <20260112081037.74376-1-ranjan.kumar@broadcom.com>
- <20260112081037.74376-5-ranjan.kumar@broadcom.com>
+ <20260112081037.74376-6-ranjan.kumar@broadcom.com>
 Content-Language: en-US
 From: Damien Le Moal <dlemoal@kernel.org>
 Organization: Western Digital Research
-In-Reply-To: <20260112081037.74376-5-ranjan.kumar@broadcom.com>
+In-Reply-To: <20260112081037.74376-6-ranjan.kumar@broadcom.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 On 1/12/26 09:10, Ranjan Kumar wrote:
-> Firmware populates the negotiated SAS link rate in DevicePage0
-> during device discovery. Update mpi3mr to cache this value while
-> initializing the target device.
-> 
-> When available, the cached link rate is used instead of issuing
-> additional SAS PHY or expander PHY page reads.
-> If the DevicePage0 value is missing or invalid, the driver
-> falls back to the existing PHY-based mechanism.
-> 
-> Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
-> ---
->  drivers/scsi/mpi3mr/mpi/mpi30_cnfg.h   |  2 +
->  drivers/scsi/mpi3mr/mpi3mr.h           |  2 +
->  drivers/scsi/mpi3mr/mpi3mr_os.c        | 88 ++++++++++++++++++++++++++
->  drivers/scsi/mpi3mr/mpi3mr_transport.c | 30 +++++----
->  4 files changed, 110 insertions(+), 12 deletions(-)
-> 
-> diff --git a/drivers/scsi/mpi3mr/mpi/mpi30_cnfg.h b/drivers/scsi/mpi3mr/mpi/mpi30_cnfg.h
-> index 8c8bfbbdd34e..67d72b82cbe0 100644
-> --- a/drivers/scsi/mpi3mr/mpi/mpi30_cnfg.h
-> +++ b/drivers/scsi/mpi3mr/mpi/mpi30_cnfg.h
-> @@ -2314,6 +2314,8 @@ struct mpi3_device0_sas_sata_format {
->  	u8         attached_phy_identifier;
->  	u8         max_port_connections;
->  	u8         zone_group;
-> +	u8         reserved10[3];
-> +	u8         negotiated_link_rate;
->  };
->  
->  #define MPI3_DEVICE0_SASSATA_FLAGS_WRITE_SAME_UNMAP_NCQ (0x0400)
-> diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
-> index 611a51a353c9..590c017acf25 100644
-> --- a/drivers/scsi/mpi3mr/mpi3mr.h
-> +++ b/drivers/scsi/mpi3mr/mpi3mr.h
-> @@ -643,6 +643,7 @@ struct mpi3mr_enclosure_node {
->   * @dev_info: Device information bits
->   * @phy_id: Phy identifier provided in device page 0
->   * @attached_phy_id: Attached phy identifier provided in device page 0
-> + * @negotiated_link_rate: Negotiated link rate from device page 0
->   * @sas_transport_attached: Is this device exposed to transport
->   * @pend_sas_rphy_add: Flag to check device is in process of add
->   * @hba_port: HBA port entry
-> @@ -654,6 +655,7 @@ struct tgt_dev_sas_sata {
->  	u16 dev_info;
->  	u8 phy_id;
->  	u8 attached_phy_id;
-> +	u8 negotiated_link_rate;
->  	u8 sas_transport_attached;
->  	u8 pend_sas_rphy_add;
->  	struct mpi3mr_hba_port *hba_port;
-> diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
-> index 4dbf2f337212..ac94654494ba 100644
-> --- a/drivers/scsi/mpi3mr/mpi3mr_os.c
-> +++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
-> @@ -1138,6 +1138,90 @@ static void mpi3mr_refresh_tgtdevs(struct mpi3mr_ioc *mrioc)
->  	}
->  }
->  
-> +/**
-> + * mpi3mr_debug_dump_devpg0 - Dump device page0
-> + * @mrioc: Adapter instance reference
-> + * @dev_pg0: Device page 0.
-> + *
-> + * Prints pertinent details of the device page 0.
-> + *
-> + * Return: Nothing.
-> + */
-> +static void
-> +mpi3mr_debug_dump_devpg0(struct mpi3mr_ioc *mrioc, struct mpi3_device_page0 *dev_pg0)
-> +{
-> +
+> -#define MPI3_EVENT_DIAG_BUFFER_STATUS_CHANGE_RC_RELEASED             (0x01)
+> -#define MPI3_EVENT_DIAG_BUFFER_STATUS_CHANGE_RC_PAUSED               (0x02)
+> -#define MPI3_EVENT_DIAG_BUFFER_STATUS_CHANGE_RC_RESUMED              (0x03)
+> +#define MPI3_EVENT_DIAG_BUFFER_STATUS_CHANGE_RC_RELEASED	(0x01)
 
-No need for this blank line.
+Why the alignment change ?
 
-> +	if (!(mrioc->logging_level &
-> +	    (MPI3_DEBUG_EVENT | MPI3_DEBUG_EVENT_WORK_TASK)))
-> +		return;
+> +#define MPI3_EVENT_DIAG_BUFFER_STATUS_CHANGE_RC_PAUSED		(0x02)
+> +#define MPI3_EVENT_DIAG_BUFFER_STATUS_CHANGE_RC_RESUMED		(0x03)
+> +#define MPI3_EVENT_DIAG_BUFFER_STATUS_CHANGE_RC_CLEARED		(0x04)
 
-Please move this test in the caller so that we can avoid a function call for
-nothing if debug is not enabled.
+A white line here would be nice to separate things.
 
-> +
-> +	ioc_info(mrioc,
-> +	    "device_pg0: handle(0x%04x), perst_id(%d), wwid(0x%016llx), encl_handle(0x%04x), slot(%d)\n",
-> +	    le16_to_cpu(dev_pg0->dev_handle),
-> +	    le16_to_cpu(dev_pg0->persistent_id),
-> +	    le64_to_cpu(dev_pg0->wwid), le16_to_cpu(dev_pg0->enclosure_handle),
-> +	    le16_to_cpu(dev_pg0->slot));
-> +	ioc_info(mrioc, "device_pg0: access_status(0x%02x), flags(0x%04x), device_form(0x%02x), queue_depth(%d)\n",
-> +	    dev_pg0->access_status, le16_to_cpu(dev_pg0->flags),
-> +	    dev_pg0->device_form, le16_to_cpu(dev_pg0->queue_depth));
-> +	ioc_info(mrioc, "device_pg0: parent_handle(0x%04x), iounit_port(%d)\n",
-> +	    le16_to_cpu(dev_pg0->parent_dev_handle), dev_pg0->io_unit_port);
-> +
-> +	switch (dev_pg0->device_form) {
-> +	case MPI3_DEVICE_DEVFORM_SAS_SATA:
-> +	{
-> +		struct mpi3_device0_sas_sata_format *sasinf =
-> +		    &dev_pg0->device_specific.sas_sata_format;
+>  #define MPI3_PEL_LOCALE_FLAGS_NON_BLOCKING_BOOT_EVENT   (0x0200)
+>  #define MPI3_PEL_LOCALE_FLAGS_BLOCKING_BOOT_EVENT       (0x0100)
+>  #define MPI3_PEL_LOCALE_FLAGS_PCIE                      (0x0080)
 
-Please add a blank line after declarations. Same comment applies to other cases
-below.
-
-> +		ioc_info(mrioc,
-> +		    "device_pg0: sas_sata: sas_address(0x%016llx),flags(0x%04x),\n"
-> +		    "device_info(0x%04x), phy_num(%d), attached_phy_id(%d),negotiated_link_rate(0x%02x)\n",
-> +		    le64_to_cpu(sasinf->sas_address),
-> +		    le16_to_cpu(sasinf->flags),
-> +		    le16_to_cpu(sasinf->device_info), sasinf->phy_num,
-> +		    sasinf->attached_phy_identifier, sasinf->negotiated_link_rate);
-> +		break;
-> +	}
-> +	case MPI3_DEVICE_DEVFORM_PCIE:
-> +	{
-> +		struct mpi3_device0_pcie_format *pcieinf =
-> +		    &dev_pg0->device_specific.pcie_format;
-> +		ioc_info(mrioc,
-> +		    "device_pg0: pcie: port_num(%d), device_info(0x%04x), mdts(%d), page_sz(0x%02x)\n",
-> +		    pcieinf->port_num, le16_to_cpu(pcieinf->device_info),
-> +		    le32_to_cpu(pcieinf->maximum_data_transfer_size),
-> +		    pcieinf->page_size);
-> +		ioc_info(mrioc,
-> +		    "device_pg0: pcie: abort_timeout(%d), reset_timeout(%d) capabilities (0x%08x)\n",
-> +		    pcieinf->nvme_abort_to, pcieinf->controller_reset_to,
-> +		    le32_to_cpu(pcieinf->capabilities));
-> +		break;
-> +	}
-> +	case MPI3_DEVICE_DEVFORM_VD:
-> +	{
-> +		struct mpi3_device0_vd_format *vdinf =
-> +		    &dev_pg0->device_specific.vd_format;
-> +
-> +		ioc_info(mrioc,
-> +		    "device_pg0: vd: state(0x%02x), raid_level(%d), flags(0x%04x),\n"
-> +		    "device_info(0x%04x) abort_timeout(%d), reset_timeout(%d)\n",
-> +		    vdinf->vd_state, vdinf->raid_level,
-> +		    le16_to_cpu(vdinf->flags),
-> +		    le16_to_cpu(vdinf->device_info),
-> +		    vdinf->vd_abort_to, vdinf->vd_reset_to);
-> +		ioc_info(mrioc,
-> +		    "device_pg0: vd: tg_id(%d), high(%dMiB), low(%dMiB), qd_reduction_factor(%d)\n",
-> +		    vdinf->io_throttle_group,
-> +		    le16_to_cpu(vdinf->io_throttle_group_high),
-> +		    le16_to_cpu(vdinf->io_throttle_group_low),
-> +		    ((le16_to_cpu(vdinf->flags) &
-> +		       MPI3_DEVICE0_VD_FLAGS_IO_THROTTLE_GROUP_QD_MASK) >> 12));
-> +
-> +	}
-> +	default:
-> +		break;
-> +	}
-> +}
-> +
->  /**
->   * mpi3mr_update_tgtdev - DevStatusChange evt bottomhalf
->   * @mrioc: Adapter instance reference
-> @@ -1159,6 +1243,8 @@ static void mpi3mr_update_tgtdev(struct mpi3mr_ioc *mrioc,
->  	struct mpi3mr_enclosure_node *enclosure_dev = NULL;
->  	u8 prot_mask = 0;
->  
-> +	mpi3mr_debug_dump_devpg0(mrioc, dev_pg0);
-> +
->  	tgtdev->perst_id = le16_to_cpu(dev_pg0->persistent_id);
->  	tgtdev->dev_handle = le16_to_cpu(dev_pg0->dev_handle);
->  	tgtdev->dev_type = dev_pg0->device_form;
-> @@ -1237,6 +1323,8 @@ static void mpi3mr_update_tgtdev(struct mpi3mr_ioc *mrioc,
->  		tgtdev->dev_spec.sas_sata_inf.phy_id = sasinf->phy_num;
->  		tgtdev->dev_spec.sas_sata_inf.attached_phy_id =
->  		    sasinf->attached_phy_identifier;
-> +		tgtdev->dev_spec.sas_sata_inf.negotiated_link_rate =
-> +			sasinf->negotiated_link_rate;
->  		if ((dev_info & MPI3_SAS_DEVICE_INFO_DEVICE_TYPE_MASK) !=
->  		    MPI3_SAS_DEVICE_INFO_DEVICE_TYPE_END_DEVICE)
->  			tgtdev->is_hidden = 1;
-> diff --git a/drivers/scsi/mpi3mr/mpi3mr_transport.c b/drivers/scsi/mpi3mr/mpi3mr_transport.c
-> index d70f002d6487..101161554ef1 100644
-> --- a/drivers/scsi/mpi3mr/mpi3mr_transport.c
-> +++ b/drivers/scsi/mpi3mr/mpi3mr_transport.c
-> @@ -2284,11 +2284,11 @@ void mpi3mr_expander_remove(struct mpi3mr_ioc *mrioc, u64 sas_address,
->   * @mrioc: Adapter instance reference
->   * @tgtdev: Target device
->   *
-> - * This function identifies whether the target device is
-> - * attached directly or through expander and issues sas phy
-> - * page0 or expander phy page1 and gets the link rate, if there
-> - * is any failure in reading the pages then this returns link
-> - * rate of 1.5.
-> + * This function first tries to use the link rate from DevicePage0
-> + * (populated by firmware during device discovery). If the cached
-> + * value is not available or invalid, it falls back to reading from
-> + * sas phy page0 or expander phy page1.
-> + *
->   *
->   * Return: logical link rate.
->   */
-> @@ -2301,6 +2301,14 @@ static u8 mpi3mr_get_sas_negotiated_logical_linkrate(struct mpi3mr_ioc *mrioc,
->  	u32 phynum_handle;
->  	u16 ioc_status;
->  
-> +	/* First, try to use link rate from DevicePage0 (populated by firmware) */
-> +	if (tgtdev->dev_spec.sas_sata_inf.negotiated_link_rate >=
-> +	    MPI3_SAS_NEG_LINK_RATE_1_5) {
-> +		link_rate = tgtdev->dev_spec.sas_sata_inf.negotiated_link_rate;
-> +		goto out;
-> +	}
-> +
-> +	/* Fallback to reading from phy pages if DevicePage0 value not available */
->  	phy_number = tgtdev->dev_spec.sas_sata_inf.phy_id;
->  	if (!(tgtdev->devpg0_flag & MPI3_DEVICE0_FLAGS_ATT_METHOD_DIR_ATTACHED)) {
->  		phynum_handle = ((phy_number<<MPI3_SAS_EXPAND_PGAD_PHYNUM_SHIFT)
-> @@ -2318,9 +2326,7 @@ static u8 mpi3mr_get_sas_negotiated_logical_linkrate(struct mpi3mr_ioc *mrioc,
->  			    __FILE__, __LINE__, __func__);
->  			goto out;
->  		}
-> -		link_rate = (expander_pg1.negotiated_link_rate &
-> -			     MPI3_SAS_NEG_LINK_RATE_LOGICAL_MASK) >>
-> -			MPI3_SAS_NEG_LINK_RATE_LOGICAL_SHIFT;
-> +		link_rate = expander_pg1.negotiated_link_rate;
->  		goto out;
->  	}
->  	if (mpi3mr_cfg_get_sas_phy_pg0(mrioc, &ioc_status, &phy_pg0,
-> @@ -2335,11 +2341,11 @@ static u8 mpi3mr_get_sas_negotiated_logical_linkrate(struct mpi3mr_ioc *mrioc,
->  		    __FILE__, __LINE__, __func__);
->  		goto out;
->  	}
-> -	link_rate = (phy_pg0.negotiated_link_rate &
-> -		     MPI3_SAS_NEG_LINK_RATE_LOGICAL_MASK) >>
-> -		MPI3_SAS_NEG_LINK_RATE_LOGICAL_SHIFT;
-> +	link_rate = phy_pg0.negotiated_link_rate;
-> +
->  out:
-> -	return link_rate;
-> +	return ((link_rate & MPI3_SAS_NEG_LINK_RATE_LOGICAL_MASK) >>
-> +		MPI3_SAS_NEG_LINK_RATE_LOGICAL_SHIFT);
->  }
->  
->  /**
 
 
 -- 
