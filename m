@@ -1,87 +1,68 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f43.google.com (mail-wm1-f43.google.com [209.85.128.43])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 69C602C21C3
-	for <linux-scsi@vger.kernel.org>; Mon, 12 Jan 2026 10:37:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1CF533587DE
+	for <linux-scsi@vger.kernel.org>; Mon, 12 Jan 2026 13:08:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.43
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768214224; cv=none; b=KZqx5m6JLobm2jrhVhX3XcMx/FkXjcjKNmWyOkoM22tK4B6sXi6rww/SwFXhn1oV977vukHajbzN4dx8o9mOctrRxRqrahP8PtGaSENQbwmeL+q6G66GkW5V/4is1L8QYCA7IkkSpmN+9oPa9EQvScfbUSlIOX8H8fBHZ+KB4SU=
+	t=1768223338; cv=none; b=gHYxguGRfAYcgEdaBnWIZ28eFUOdVNlKONCCmmBvn7y+J7/VMWKaTAk4jNoxZGlq4bY7Za4fakZEeHnMyXKP1EQvNaxRxRprrrFX0RSBhNRt57mCzmfuzLaP2h6I3rmR4WXSCMrYrz3teOCWJZs5J8UivSXsHqtu5+cx4ltU8eA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768214224; c=relaxed/simple;
-	bh=QbgWNSzIoOhG5GoMkMznH/hM2py5f6Wj7h6jS4oFLmE=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=XwkRq8yPmES6u6VGZNr+uu+uPUh4bSj1GdatarEHi4yeWZfDgmtbwCvolIMc4YRsehhzNvrtgSsFuxc2YV7DmMOm7ZSNzZRPZkaig+X+0dneF8IYykwxCHcAsGslop0B9wPG7qOn/TPbkLBnF4lMXb75eQrDW4abNdS8nku0mPw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=TjguIGn3; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=Kdg4QCyn; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	s=arc-20240116; t=1768223338; c=relaxed/simple;
+	bh=YTVkCN24/ARJNxBRMbLG2byyse7jCJp1KD9YVEJe7fg=;
+	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:References:
+	 In-Reply-To:Content-Type; b=UJP93Lp/ORxROZsrS0YsPlTH6dfEs1rp1RwcbGE/ueWIOflup++0gKjDITBc0ekdzTePItbZednt1yRn/CqxrmWiGEOfaqa2aSFKXm0+XUZmuPdMMBqFoDk8A/robdARn++IhHf5POajdXh3BDEfWukZKZLQwyLgr/Kq7qrl8CE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=ONUb602Q; arc=none smtp.client-ip=209.85.128.43
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="TjguIGn3";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="Kdg4QCyn"
-Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 60C7Ofwa555266
-	for <linux-scsi@vger.kernel.org>; Mon, 12 Jan 2026 10:37:02 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	hfVyE9hj389TcKf1IZbtDL33a7k2ZEiOtmVjf86fe6I=; b=TjguIGn3WreHU2Ir
-	o1FE4ShcE8WH3AdB0vNY8q3/Da3DZ6GuPr1nOFhm8YMdTKlE2E90hn1fk1YSezzI
-	dVTl7//NOf3WTiAqqu6VfjLXzUTVkHBtwaR0/d0K+7lTEF4wNs8yuyYAGkLfRVgO
-	9tZaJd6M9Yt3GxRdVJOzP9wyB/O8a5+tByY9n3Nzd3EztbdpHlYrYvDMaQ1XKQAj
-	/PQyk3mMsslhhG7WRzrtbqgVVA/AZfz5EjWWqG0nR/kvMSkR02wV13cjuzDpg0zb
-	Un85vRTU7+GrNfxqxr2FezvAboztz8BzLM8wgZ1+DAZ7wsgH1Bbudec5lgfnAX+a
-	x6Zd6g==
-Received: from mail-qt1-f199.google.com (mail-qt1-f199.google.com [209.85.160.199])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4bmvhw0n9y-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Mon, 12 Jan 2026 10:37:02 +0000 (GMT)
-Received: by mail-qt1-f199.google.com with SMTP id d75a77b69052e-4ee05927208so22970671cf.1
-        for <linux-scsi@vger.kernel.org>; Mon, 12 Jan 2026 02:37:02 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="ONUb602Q"
+Received: by mail-wm1-f43.google.com with SMTP id 5b1f17b1804b1-477632b0621so39772745e9.2
+        for <linux-scsi@vger.kernel.org>; Mon, 12 Jan 2026 05:08:52 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1768214222; x=1768819022; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=hfVyE9hj389TcKf1IZbtDL33a7k2ZEiOtmVjf86fe6I=;
-        b=Kdg4QCynZ1q7an9RD5DOkmlYOnr9zQq8TQZ0ZJyx2v786o41CfzMTy2iTWnx4wEs72
-         RNnd3aWegTd4C4zuHcWyc0JPRf8wSS0r2L4T/e0FhbCn4wHsS7GcYx4MroR9u6sy/luj
-         E0jRWLvEY7IzN0O4GJwSmY26+2eop9obySPLZux7ClVG2fBj9rkLEHoN6wSRVE+ZrtHk
-         T6eTi32UcQ2nQ+jxQN5WLj2NE2swJNHxfkrXR0sEMn0Y1QCimaHTDJeUsj2Npek875sI
-         KYay0cr/kKJOcfQ/Fya5VtG+Lzr/fyR7URAYMkkadUWkoYmBpiyXlZLD9WZOFf+2qRJC
-         CCkA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1768214222; x=1768819022;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+        d=linaro.org; s=google; t=1768223331; x=1768828131; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:organization:autocrypt
+         :content-language:references:cc:to:subject:reply-to:from:user-agent
+         :mime-version:date:message-id:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=hfVyE9hj389TcKf1IZbtDL33a7k2ZEiOtmVjf86fe6I=;
-        b=Q9xTqNgB0EJONEKgWR4Die3pI0YSRzXO4C7w2uWUQbZs4ZO8ZpfyMHO5ZGTHh0U3Sq
-         lb9szdUNlcyARqqdsHthfWb/6q1zkTnDiw5T6salkZKfzity0DX44wat7Qkj85X2rSzU
-         l8tWO7uIfT2GhOCGzJILHePf7RLrK3U1p3Q+t2EUSnl2tCtr5SK0f0GPmTmay019ri/8
-         wteiLEjVSpI3syu0WWsmoSiQvubpk6TBZKw4jUfehLvbe0rfxx1ZRUPUNgvVEP+s3lEV
-         eqbA3hr5G+0tOST4UGoYt6AjSoxZW+xJYN7sBPkd26Lqnuz4yZEhBeULwtUbTYtaZD30
-         bO+g==
-X-Forwarded-Encrypted: i=1; AJvYcCVbxIqgEjrRmh8A2wWWcNlH5H+VtWK6o8TW3m4k/pIMyHkgfRwTM/7lEIalNWNlrArR2l37snf8GeL3@vger.kernel.org
-X-Gm-Message-State: AOJu0YwyozZZhMz8Am8DBL/TxYiUP4OJMNGKpIxBVLxfpz/nWQyZDieP
-	t79hPZA5YYkuenCuBNmWMa0bpIK1jpB2d76FJeZyfWgD0WdzqNQ0OwB5mlkKV/JbpP1LFB1htBo
-	mt0OHOGGD7DD6t8vT1XKGtnOL0ODzhR3ZuFSEESbivkV+VSTJweynJEP6iSaHZvkV
-X-Gm-Gg: AY/fxX4fZkZRLwsT7YreS1qUTFd+CZEYHR2KLmw3CLlMjzBKdMB4V/8xPGEI+dbq9kz
-	P8tRbpzcu31lA3JExim6YRNDr14s+5fNLeDnT4Qv1C1SBgvmIR+W5GEEd4Nq8rM0pqhyvus0YcT
-	HUOC8+yPv0iDs/21FAvtfxZyoRJnalE2F0FjDOzQroKokvGQO3PaqekfqKM84q+sNg1AhlyPeLa
-	gYtCodv8rHAvqao+04qeZenv/s8i11rz512ZLjoWCz6NyzxK6nct9czVg6KRSvc310XD3uiiRib
-	ql8+2fjroFvlwO9KtMqZeJQMy9K9XxHwfl1/VN3Q/xi6f4eIdt5pLj3BIj4UhzLpFDO5ViZE6Ed
-	8QjEaND/jHPXOX3EnDZqLQx69AEjqNhMdfb82FWGDvp7ZXq1NraY63is2ooNt60jx3Qs=
-X-Received: by 2002:a05:622a:408:b0:4e6:eaff:3a4b with SMTP id d75a77b69052e-4ffb487595amr182682911cf.4.1768214221644;
-        Mon, 12 Jan 2026 02:37:01 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IEwPXJrTbjQzQTcAzWAfSbG7+Ps1FzbEAnhMHNBzRiaoZEtHpgn0LcFOeGeJ2lQqXcP7SdxSg==
-X-Received: by 2002:a05:622a:408:b0:4e6:eaff:3a4b with SMTP id d75a77b69052e-4ffb487595amr182682621cf.4.1768214221046;
-        Mon, 12 Jan 2026 02:37:01 -0800 (PST)
-Received: from [192.168.119.254] (078088045245.garwolin.vectranet.pl. [78.88.45.245])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-b86f1e95273sm664311266b.62.2026.01.12.02.36.58
+        bh=BF9HRCZwVM8HohHOVVmaFmMZoI1kBoRSnqS8ZzxwdRQ=;
+        b=ONUb602QVTxB0uTYiPCiU6+kXahVGELlLm3CowLbvvfwCD5mCGdVTasZm5O1ldbT2C
+         VGcxR4itUDFm6VeSBgxaf1gwxRXDJZZOPNgqJVdDeZlW7C2FuPA0mkYYYmhrSrrNLL2e
+         pRKlwPbOSJCgX76N3tQHSjy1+Dcv8453zZp7Y5YxFqeT3T23c3yGhynXocuH3wminpVk
+         PjcmmS2VDK7AFoZCPAUQ76XDNVz+vdz0LL4ME5MRWbHT0q1KZWuAIJkLclzBM/rRVcOX
+         qG8Z6e1sSzpsblBKsVFMJFZM6i7s8AWDfwo0qOLwX3uhplET2h6JPy8BiZxzCMLEmgeq
+         QGzw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1768223331; x=1768828131;
+        h=content-transfer-encoding:in-reply-to:organization:autocrypt
+         :content-language:references:cc:to:subject:reply-to:from:user-agent
+         :mime-version:date:message-id:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=BF9HRCZwVM8HohHOVVmaFmMZoI1kBoRSnqS8ZzxwdRQ=;
+        b=q5jeEitSosK7cC7Yo+sACmZw8SroysgKouCtfmlFSwxb9DdB3+bx0n4kEQSqu+HN9/
+         Zf5A64fZKlVsM0tCYsnYYpyMxSgKdWyIJLe0aUMeT1nZ3348UI6PMa25nCiGKEWH1Spw
+         epPj63gtlvbyrlzf0MoEJc3Iw8wuaaDdDPLR+IeIHwzQ2xDFOuoNKp77n9UtjVoJGH/s
+         hKCzhDknKSr7N4rdAd3sO5oHEZIOux3VziVb5YedMg8x/A/SPS9twrmdmphx0Hf5BElP
+         uXmCOpbpJbYU5Efnc5KJ4twuYWKkqLzfU6bFqfVVeL6VdBPMLRZT5sYjOY9FFd05tSJ7
+         0iOw==
+X-Forwarded-Encrypted: i=1; AJvYcCXxstep+FXKKLy/32IU7okrBW5Kel7nvGAUcxtODWOfalszh59haWSkTZFWb/punMnxpppZhmczbTs6@vger.kernel.org
+X-Gm-Message-State: AOJu0YwzCrzwsYGPgXnwQKLzE2/YK6s8cl9KTpRdzWHCfQaq/xv72Imw
+	pecXbGCkDSKpdI4x9QZ1jpC/UmIpPnsfECPoDJwjJkVe2uGQLmhXlYF+mCd4XxOB4Cg=
+X-Gm-Gg: AY/fxX44ykv0NTi+lcuuKmhhXMiySNkwEm8s1TXMNKxWzrRxIsYEphg95s3g65WggPb
+	PolQxnTnbXwYQZmmw5ORbQ7ZLQI5dFelGx+hlDY8TQSmAO/7lcAis49bSFyhtva9v8nid4/RTY8
+	QvlZRuptd0eiB2dTqqm0HecKS1JcxBMEkVlJSQIjOOgTCqus2KXKa5ZXEHzSfEecK+CXiqJRUxQ
+	DudFIo6GeiM4S5vc6vXZnFXtZ0iWWADafEBJ5l/8TJjhmWEbzhcw7thhHMzThZfkImn2s85IJN0
+	C85stFuFa+soMJj3fiZG7j5ivw0aqxhkaK+yex9womD8ss4iF9C8MFo7RDJDZig0KvJiBvc3r+Q
+	0+FIVxVERpMo1trjxcBaLIq4XxaF8POTSKXBcFki60ACHPkAqmk4BUNxGNeZvsXd5bARPB0d7/R
+	BWSbB1FI9hM5g5ZRg5/3S2nQOLmxsI3Z4BkfhDZAo=
+X-Google-Smtp-Source: AGHT+IEtO2xzsh2F6bjVyeH53ljL8NiwROmn+6MmXlos+dptQWGriTYDZzCaDlYWz//1QpK6zSKEIg==
+X-Received: by 2002:a05:600c:3110:b0:479:3a86:dc1a with SMTP id 5b1f17b1804b1-47d84b41176mr203344865e9.36.1768223331152;
+        Mon, 12 Jan 2026 05:08:51 -0800 (PST)
+Received: from ?IPV6:2a01:e0a:3d9:2080::fa42:7768? ([2a01:e0a:3d9:2080::fa42:7768])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-432bd5fe67csm38528840f8f.40.2026.01.12.05.08.50
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 12 Jan 2026 02:37:00 -0800 (PST)
-Message-ID: <534e88a9-6863-4494-a565-859eeae6fc9c@oss.qualcomm.com>
-Date: Mon, 12 Jan 2026 11:36:57 +0100
+        Mon, 12 Jan 2026 05:08:50 -0800 (PST)
+Message-ID: <99ec09fa-b4e3-4f68-9980-a3dfb81635e8@linaro.org>
+Date: Mon, 12 Jan 2026 14:08:49 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -89,66 +70,187 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH V4 3/4] arm64: dts: qcom: hamoa: Add UFS nodes for
- x1e80100 SoC
-To: "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Pradeep P V K <pradeep.pragallapati@oss.qualcomm.com>
-Cc: vkoul@kernel.org, neil.armstrong@linaro.org, robh@kernel.org,
-        krzk+dt@kernel.org, conor+dt@kernel.org, andersson@kernel.org,
-        konradybcio@kernel.org, taniya.das@oss.qualcomm.com,
-        dmitry.baryshkov@oss.qualcomm.com,
-        manivannan.sadhasivam@oss.qualcomm.com, linux-arm-msm@vger.kernel.org,
-        linux-phy@lists.infradead.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        nitin.rawat@oss.qualcomm.com, Abel Vesa <abel.vesa@oss.qualcomm.com>,
-        Manivannan Sadhasivam <mani@kernel.org>
-References: <20260106154207.1871487-1-pradeep.pragallapati@oss.qualcomm.com>
- <20260106154207.1871487-4-pradeep.pragallapati@oss.qualcomm.com>
- <yq14ior5yey.fsf@ca-mkp.ca.oracle.com>
-Content-Language: en-US
-From: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
-In-Reply-To: <yq14ior5yey.fsf@ca-mkp.ca.oracle.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMTEyMDA4NCBTYWx0ZWRfX3PTCVTNH/zg0
- b++vs0N4MdsKAezCMupS9dcQQ0QhEsRe2hydHbhLkvibGhVFIDt9LfuwxzD1X6yqV9vvfm0ovon
- Qt6ddSi6q70OjgUo7wFiZwijg61ZEHRD7FH2RplqYMotpUG0nVjuGHXyd2EN3em2BQDncbUN+Fn
- /ORB03a9nTGTR+6g9a635/vUgYNQ8kvgrzwlBQA+lNZ9uHHrOr3tn7WCcvNtJUhDoJ5NTHDCt8s
- aYcj3j+5nuBJne4AXgefq/afvkDvealb++cCo2jF0iJigDzP0NxPWcJhQuHr++JcFmfDgyx2Nhi
- xRfXfSZ/Jtohi231i0/gqplbmM2AmwXhQORIkvJMtCWl0hbPrw5nYXgK4uKBwR4CmUggyJHvbAl
- Wug1Otd/o2487K/0CqTVhaVhTQdEzwVBrlTVdu0XW+H+earRphc1kGdWAQEzG9QKmUDTkzr9DMN
- TSS0dLByi6XSC0Hirnw==
-X-Authority-Analysis: v=2.4 cv=JP02csKb c=1 sm=1 tr=0 ts=6964cece cx=c_pps
- a=WeENfcodrlLV9YRTxbY/uA==:117 a=FpWmc02/iXfjRdCD7H54yg==:17
- a=IkcTkHD0fZMA:10 a=vUbySO9Y5rIA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=8jcq0VWYKE_BtxzTVVYA:9 a=QEXdDO2ut3YA:10
- a=kacYvNCVWA4VmyqE58fU:22
-X-Proofpoint-GUID: aEPNrBYc-IF1yB8o61YyVqVRwbSsvIix
-X-Proofpoint-ORIG-GUID: aEPNrBYc-IF1yB8o61YyVqVRwbSsvIix
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.9,FMLib:17.12.100.49
- definitions=2026-01-12_03,2026-01-09_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- lowpriorityscore=0 bulkscore=0 priorityscore=1501 impostorscore=0
- suspectscore=0 clxscore=1015 malwarescore=0 adultscore=0 spamscore=0
- phishscore=0 classifier=typeunknown authscore=0 authtc= authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2512120000
- definitions=main-2601120084
+From: Neil Armstrong <neil.armstrong@linaro.org>
+Reply-To: Neil Armstrong <neil.armstrong@linaro.org>
+Subject: Re: [PATCH 5/6] arm64: dts: qcom: milos: Add UFS nodes
+To: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>,
+ Luca Weiss <luca.weiss@fairphone.com>,
+ Herbert Xu <herbert@gondor.apana.org.au>,
+ "David S. Miller" <davem@davemloft.net>, Rob Herring <robh@kernel.org>,
+ Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley
+ <conor+dt@kernel.org>, Bjorn Andersson <andersson@kernel.org>,
+ Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>,
+ Bart Van Assche <bvanassche@acm.org>, Vinod Koul <vkoul@kernel.org>,
+ Konrad Dybcio <konradybcio@kernel.org>
+Cc: ~postmarketos/upstreaming@lists.sr.ht, phone-devel@vger.kernel.org,
+ linux-arm-msm@vger.kernel.org, linux-crypto@vger.kernel.org,
+ devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-scsi@vger.kernel.org, linux-phy@lists.infradead.org
+References: <20260107-milos-ufs-v1-0-6982ab20d0ac@fairphone.com>
+ <20260107-milos-ufs-v1-5-6982ab20d0ac@fairphone.com>
+ <2486dc4b-71f3-4cd9-8139-b397407d7e4d@linaro.org>
+ <543d9e55-c858-40f9-8785-c9f636850120@linaro.org>
+ <DFMH8W40TCJ0.XCTHNRJFJE4T@fairphone.com>
+ <ccbaff51-d7fa-4b22-8d4e-02bea5d8a529@oss.qualcomm.com>
+Content-Language: en-US, fr
+Autocrypt: addr=neil.armstrong@linaro.org; keydata=
+ xsBNBE1ZBs8BCAD78xVLsXPwV/2qQx2FaO/7mhWL0Qodw8UcQJnkrWmgTFRobtTWxuRx8WWP
+ GTjuhvbleoQ5Cxjr+v+1ARGCH46MxFP5DwauzPekwJUD5QKZlaw/bURTLmS2id5wWi3lqVH4
+ BVF2WzvGyyeV1o4RTCYDnZ9VLLylJ9bneEaIs/7cjCEbipGGFlfIML3sfqnIvMAxIMZrvcl9
+ qPV2k+KQ7q+aXavU5W+yLNn7QtXUB530Zlk/d2ETgzQ5FLYYnUDAaRl+8JUTjc0CNOTpCeik
+ 80TZcE6f8M76Xa6yU8VcNko94Ck7iB4vj70q76P/J7kt98hklrr85/3NU3oti3nrIHmHABEB
+ AAHNKk5laWwgQXJtc3Ryb25nIDxuZWlsLmFybXN0cm9uZ0BsaW5hcm8ub3JnPsLAkQQTAQoA
+ OwIbIwULCQgHAwUVCgkICwUWAgMBAAIeAQIXgBYhBInsPQWERiF0UPIoSBaat7Gkz/iuBQJk
+ Q5wSAhkBAAoJEBaat7Gkz/iuyhMIANiD94qDtUTJRfEW6GwXmtKWwl/mvqQtaTtZID2dos04
+ YqBbshiJbejgVJjy+HODcNUIKBB3PSLaln4ltdsV73SBcwUNdzebfKspAQunCM22Mn6FBIxQ
+ GizsMLcP/0FX4en9NaKGfK6ZdKK6kN1GR9YffMJd2P08EO8mHowmSRe/ExAODhAs9W7XXExw
+ UNCY4pVJyRPpEhv373vvff60bHxc1k/FF9WaPscMt7hlkbFLUs85kHtQAmr8pV5Hy9ezsSRa
+ GzJmiVclkPc2BY592IGBXRDQ38urXeM4nfhhvqA50b/nAEXc6FzqgXqDkEIwR66/Gbp0t3+r
+ yQzpKRyQif3OwE0ETVkGzwEIALyKDN/OGURaHBVzwjgYq+ZtifvekdrSNl8TIDH8g1xicBYp
+ QTbPn6bbSZbdvfeQPNCcD4/EhXZuhQXMcoJsQQQnO4vwVULmPGgtGf8PVc7dxKOeta+qUh6+
+ SRh3vIcAUFHDT3f/Zdspz+e2E0hPV2hiSvICLk11qO6cyJE13zeNFoeY3ggrKY+IzbFomIZY
+ 4yG6xI99NIPEVE9lNBXBKIlewIyVlkOaYvJWSV+p5gdJXOvScNN1epm5YHmf9aE2ZjnqZGoM
+ Mtsyw18YoX9BqMFInxqYQQ3j/HpVgTSvmo5ea5qQDDUaCsaTf8UeDcwYOtgI8iL4oHcsGtUX
+ oUk33HEAEQEAAcLAXwQYAQIACQUCTVkGzwIbDAAKCRAWmrexpM/4rrXiB/sGbkQ6itMrAIfn
+ M7IbRuiSZS1unlySUVYu3SD6YBYnNi3G5EpbwfBNuT3H8//rVvtOFK4OD8cRYkxXRQmTvqa3
+ 3eDIHu/zr1HMKErm+2SD6PO9umRef8V82o2oaCLvf4WeIssFjwB0b6a12opuRP7yo3E3gTCS
+ KmbUuLv1CtxKQF+fUV1cVaTPMyT25Od+RC1K+iOR0F54oUJvJeq7fUzbn/KdlhA8XPGzwGRy
+ 4zcsPWvwnXgfe5tk680fEKZVwOZKIEuJC3v+/yZpQzDvGYJvbyix0lHnrCzq43WefRHI5XTT
+ QbM0WUIBIcGmq38+OgUsMYu4NzLu7uZFAcmp6h8g
+Organization: Linaro
+In-Reply-To: <ccbaff51-d7fa-4b22-8d4e-02bea5d8a529@oss.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-On 1/12/26 3:59 AM, Martin K. Petersen wrote:
+On 1/12/26 11:29, Konrad Dybcio wrote:
+> On 1/12/26 9:45 AM, Luca Weiss wrote:
+>> Hi Neil,
+>>
+>> On Mon Jan 12, 2026 at 9:26 AM CET, Neil Armstrong wrote:
+>>> On 1/7/26 14:53, Neil Armstrong wrote:
+>>>> Hi,
+>>>>
+>>>> On 1/7/26 09:05, Luca Weiss wrote:
+>>>>> Add the nodes for the UFS PHY and UFS host controller, along with the
+>>>>> ICE used for UFS.
+>>>>>
+>>>>> Signed-off-by: Luca Weiss <luca.weiss@fairphone.com>
+>>>>> ---
+>>>>>    arch/arm64/boot/dts/qcom/milos.dtsi | 127 +++++++++++++++++++++++++++++++++++-
+>>>>>    1 file changed, 124 insertions(+), 3 deletions(-)
+>>>>>
+>>>>> diff --git a/arch/arm64/boot/dts/qcom/milos.dtsi b/arch/arm64/boot/dts/qcom/milos.dtsi
+>>>>> index e1a51d43943f..0f69deabb60c 100644
+>>>>> --- a/arch/arm64/boot/dts/qcom/milos.dtsi
+>>>>> +++ b/arch/arm64/boot/dts/qcom/milos.dtsi
+>>>>> @@ -797,9 +797,9 @@ gcc: clock-controller@100000 {
+>>>>>                     <&sleep_clk>,
+>>>>>                     <0>, /* pcie_0_pipe_clk */
+>>>>>                     <0>, /* pcie_1_pipe_clk */
+>>>>> -                 <0>, /* ufs_phy_rx_symbol_0_clk */
+>>>>> -                 <0>, /* ufs_phy_rx_symbol_1_clk */
+>>>>> -                 <0>, /* ufs_phy_tx_symbol_0_clk */
+>>>>> +                 <&ufs_mem_phy 0>,
+>>>>> +                 <&ufs_mem_phy 1>,
+>>>>> +                 <&ufs_mem_phy 2>,
+>>>>>                     <0>; /* usb3_phy_wrapper_gcc_usb30_pipe_clk */
+>>>>>                #clock-cells = <1>;
+>>>>> @@ -1151,6 +1151,127 @@ aggre2_noc: interconnect@1700000 {
+>>>>>                qcom,bcm-voters = <&apps_bcm_voter>;
+>>>>>            };
+>>>>> +        ufs_mem_phy: phy@1d80000 {
+>>>>> +            compatible = "qcom,milos-qmp-ufs-phy";
+>>>>> +            reg = <0x0 0x01d80000 0x0 0x2000>;
+>>>>> +
+>>>>> +            clocks = <&rpmhcc RPMH_CXO_CLK>,
+>>>>> +                 <&gcc GCC_UFS_PHY_PHY_AUX_CLK>,
+>>>>> +                 <&tcsr TCSR_UFS_CLKREF_EN>;
+>>>>> +            clock-names = "ref",
+>>>>> +                      "ref_aux",
+>>>>> +                      "qref";
+>>>>> +
+>>>>> +            resets = <&ufs_mem_hc 0>;
+>>>>> +            reset-names = "ufsphy";
+>>>>> +
+>>>>> +            power-domains = <&gcc UFS_MEM_PHY_GDSC>;
+>>>>> +
+>>>>> +            #clock-cells = <1>;
+>>>>> +            #phy-cells = <0>;
+>>>>> +
+>>>>> +            status = "disabled";
+>>>>> +        };
+>>>>> +
+>>>>> +        ufs_mem_hc: ufshc@1d84000 {
+>>>>> +            compatible = "qcom,milos-ufshc", "qcom,ufshc", "jedec,ufs-2.0";
+>>>>> +            reg = <0x0 0x01d84000 0x0 0x3000>;
+>>>>> +
+>>>>> +            interrupts = <GIC_SPI 265 IRQ_TYPE_LEVEL_HIGH 0>;
+>>>>> +
+>>>>> +            clocks = <&gcc GCC_UFS_PHY_AXI_CLK>,
+>>>>> +                 <&gcc GCC_AGGRE_UFS_PHY_AXI_CLK>,
+>>>>> +                 <&gcc GCC_UFS_PHY_AHB_CLK>,
+>>>>> +                 <&gcc GCC_UFS_PHY_UNIPRO_CORE_CLK>,
+>>>>> +                 <&tcsr TCSR_UFS_PAD_CLKREF_EN>,
+>>>>> +                 <&gcc GCC_UFS_PHY_TX_SYMBOL_0_CLK>,
+>>>>> +                 <&gcc GCC_UFS_PHY_RX_SYMBOL_0_CLK>,
+>>>>> +                 <&gcc GCC_UFS_PHY_RX_SYMBOL_1_CLK>;
+>>>>> +            clock-names = "core_clk",
+>>>>> +                      "bus_aggr_clk",
+>>>>> +                      "iface_clk",
+>>>>> +                      "core_clk_unipro",
+>>>>> +                      "ref_clk",
+>>>>> +                      "tx_lane0_sync_clk",
+>>>>> +                      "rx_lane0_sync_clk",
+>>>>> +                      "rx_lane1_sync_clk";
+>>>>> +
+>>>>> +            resets = <&gcc GCC_UFS_PHY_BCR>;
+>>>>> +            reset-names = "rst";
+>>>>> +
+>>>>> +            interconnects = <&aggre1_noc MASTER_UFS_MEM QCOM_ICC_TAG_ALWAYS
+>>>>> +                     &mc_virt SLAVE_EBI1 QCOM_ICC_TAG_ALWAYS>,
+>>>>> +                    <&gem_noc MASTER_APPSS_PROC QCOM_ICC_TAG_ACTIVE_ONLY
+>>>>> +                     &cnoc_cfg SLAVE_UFS_MEM_CFG QCOM_ICC_TAG_ACTIVE_ONLY>;
+>>>>> +            interconnect-names = "ufs-ddr",
+>>>>> +                         "cpu-ufs";
+>>>>> +
+>>>>> +            power-domains = <&gcc UFS_PHY_GDSC>;
+>>>>> +            required-opps = <&rpmhpd_opp_nom>;
+>>>>> +
+>>>>> +            operating-points-v2 = <&ufs_opp_table>;
+>>>>> +
+>>>>> +            iommus = <&apps_smmu 0x60 0>;
+>>>>
+>>>> dma-coherent ?
+>>
+>>
+>> Given that downstream volcano.dtsi has dma-coherent in the ufshc@1d84000
+>> node, looks like this is missing in my patch.
 > 
-> Hi Pradeep!
+> Seems that way
 > 
->> Add UFS host controller and PHY nodes for x1e80100 SoC.
+>>>>
+>>>> and no MCQ support ?
+>>
+>> Not sure, I could only find one reference to MCQ on createpoint for
+>> milos, but given there's no mcq_sqd/mcq_vs reg defined downstream, and I
+>> couldn't find anything for the same register values in the .FLAT file, I
+>> don't think Milos has MCQ? Feel free to prove me wrong though.
+>>
+>>>
+>>> So, people just ignore my comment ?
+>>>
+>>> Milos is based on SM8550, so it should have dma-coherent, for the MCQ
+>>> I hope they used the fixed added to the SM8650 UFS controller for MCQ.
+>>
+>> Not sure what this should mean regarding MCQ...
 > 
-> This does not apply to 6.20/scsi-queue. Please rebase, thanks!
+> This platform doesn't support MCQ
 
-We're taking the dts patches through the qcom tree, that's always been
-our intention and the default expectation for cross-subsystem merges for
-years (we'll take these ones too)
+Ack, it must be same situation as Kailua then,
 
-Do contributors for other subarchs only send you the relevant bits (or
-do you grab their dt changes too)? Do you have a specific preference
-for any of these settings?
+Thanks
+Neil
 
-Konrad
+> 
+> Konrad
+
