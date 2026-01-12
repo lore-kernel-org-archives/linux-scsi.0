@@ -1,76 +1,76 @@
-Received: from mail-pg1-f225.google.com (mail-pg1-f225.google.com [209.85.215.225])
+Received: from mail-qt1-f226.google.com (mail-qt1-f226.google.com [209.85.160.226])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 014D333AD8D
-	for <linux-scsi@vger.kernel.org>; Mon, 12 Jan 2026 08:17:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.225
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F59719992C
+	for <linux-scsi@vger.kernel.org>; Mon, 12 Jan 2026 08:17:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.226
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768205842; cv=none; b=LSTDoNO3mjWoQQ2J0flRyNo2qQyUOCxma+zwdvaTt9pGtBSmz8mKjfrPp12Fd90dvO+S8lwR39rPhlIlbX+8uslA/xizP72LCffSj3nBTeHuR3kzGYANPRseyKXztjzznYAw92PG41rwlONUJ83RLJ3k3a1IY+PMYYBEpjX6+ZU=
+	t=1768205845; cv=none; b=ee5ynsba0eNjjPqvJo27S1YzywSPL18ratexSWMicmNO0j3d4zvky4pCPWXaeQFC1Lmn9n0nAyBlZlcuujMtbFziBHi4FJ4Bu6y6iunCx46Q3CDuNxeBAGAAbEFuDkKx0eGZlj8/mVhQi8lORXe0biA6easy+1cumkNj6evE3/k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768205842; c=relaxed/simple;
-	bh=GEXh6SBH7BSedbTZ0phySDzx83upZHAggpBR5AFMfMQ=;
+	s=arc-20240116; t=1768205845; c=relaxed/simple;
+	bh=z+xEDtbn9FvJPHFO1czd568v7YLup81vjxBvdizWNtE=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=rMckHwVxQUb71eeTCAowpbmnN3HNk10CoVqzYvOBzI+y5XFtGHGJzJYXnPetmJpQ6NhUvA3SqDhSq2ydnTqMtEk7msj8IXwgwx0/7UPtUXaaOqGGdWdXsJxbcdiYblnzxAhbbQew/i96ovA8hDnQm28JI4ngYEBfdRTCmVzxN8E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=Qredq4CU; arc=none smtp.client-ip=209.85.215.225
+	 MIME-Version; b=G9zkHFKznIPdzpVOFA0zFzOMyQVegln2uTy6ec6ZC+nvOhMWx6bR9ZVJIacYoD5RIb07BqSEn0ZCgP/Osfc/6QIKVGykIRrfwP3BWoOUGqqBo//EJiN4L3uuDF8Eb2drMLAHtNY4yA22OzxDu81IT2qB3AQeFKv/cH1CI0J1dxQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=Ib1crcC1; arc=none smtp.client-ip=209.85.160.226
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="Qredq4CU"
-Received: by mail-pg1-f225.google.com with SMTP id 41be03b00d2f7-c46d68f2b4eso3797968a12.2
-        for <linux-scsi@vger.kernel.org>; Mon, 12 Jan 2026 00:17:20 -0800 (PST)
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="Ib1crcC1"
+Received: by mail-qt1-f226.google.com with SMTP id d75a77b69052e-4ee1939e70bso69417231cf.3
+        for <linux-scsi@vger.kernel.org>; Mon, 12 Jan 2026 00:17:23 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1768205840; x=1768810640;
+        d=1e100.net; s=20230601; t=1768205843; x=1768810643;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:dkim-signature:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=hPecG+yyvCIZeuhLqP+K3LVXpiWYJH6J1JC2h7I7sRM=;
-        b=uh6T1yGeCaiZt894dvy1IkjlCzOEyY1zfyixb38EYNC4grPjYs2Y05RxvHO7htGxqm
-         Z4yYcycN0TErP/8YlxsJ98f3tVNZ1l3KBa6qT/RFOQ4U9kKYDce22tzyI//szB4BIK8/
-         44Ryuijgofkac39YKGpGX9zkY58SfAPEawoTRDW6JsMUJMwmid8IAm3aatLVx7edJcqJ
-         9yz0cgK5xin+E1xAsHlqz8i3FGxVQnhPrHpsRh9Q08fon8l8p/6+FpsgNu4lWrOIJgxc
-         asb/fnkq7x20vMCDmkmpednFO6KqYzw0cyprHZotxcgpXBbDiTA9BoaSGBxqvG9tQA6S
-         rL4g==
-X-Gm-Message-State: AOJu0YwqsUsx4eOeIl1rcoIuhJM1Uj3HlIOZDN9FIBXwshO4xtbX2A/g
-	TuEHx3ha45id9RMw0NT6v/0X9GxZiREl43o6mz7FiaNvE7Hhk2fv8gxI3SFP0UV+Jk2ArHXnsuD
-	DLT3wRaDmpAhEuQRvD8Yw8DisUqgTdPi8izz9HlGiJRx5z6ZmBgjfx88/c2l0ZDrfYyXpgNyw+O
-	1DTIhZvTioshTQcbDJnmz8pi4rLZ4H3MeEoSnMoyDTYfBalv2V9bwrNm9NCIWYGTSG/hkrn6lfw
-	SFjz8MylUwEwaAE
-X-Gm-Gg: AY/fxX4Sr41RFcgb4g7E1vL/oebI93D+Ce16/51/BbRls0afzL9oZyMOEWUnDF/s1k3
-	po9vKq2OZo/605hiq5/hyitLbgyKbzur4BVTa2mzSK8z+OdZYZmfAwx66bLeuYTscH3jUC7oDgu
-	nQEsCjje0j2CQXY8GgXNYOyEV9VouXyEpQqBgmUY3aeja4JkXiGmDS0G40WjGdMkAnWB9no9F6W
-	V57ppa/Xbgj6S7RG+AEaxZLmc8Bl7UnoCBZjgmC8J2x4cc2l7W6ihzils5auSisC+4OsY90SdlG
-	EFkCG35XQ8xZRt8NpJQLag/KCgZAyAT9UKw1S1kWIXNA9B89sEPhVPcNV6mdFu9EwSmv4MAVidg
-	2bzonJxCe9sdzH+c8/o6k/f47Q9wjCq2CWHYmwsnzQWEr9h+F/Sfs+BCIiUXOGAQj7JkY5gFNqY
-	ZzBGRS/Xxukrsx1ITJiCjXqSBDZm7Y/Yv5nTsfpqhrwg==
-X-Google-Smtp-Source: AGHT+IECbp2ci41qPWhjNCuXUJjP2AOoUEVNqmUpTguf+iNQsjpLUHElzRJO7LTyDvmuK161sjcEq4LvUZkL
-X-Received: by 2002:a05:6a20:9194:b0:366:14ac:e1f0 with SMTP id adf61e73a8af0-3898f9db81amr13637143637.66.1768205840364;
-        Mon, 12 Jan 2026 00:17:20 -0800 (PST)
-Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-2.dlp.protect.broadcom.com. [144.49.247.2])
-        by smtp-relay.gmail.com with ESMTPS id d9443c01a7336-2a3e3ccf45fsm20662615ad.56.2026.01.12.00.17.19
+        bh=rITt6EkJ8vRBozq9wQKtCdxoluuvVRihjeN5uaAx+to=;
+        b=Sfpwcx7K7jaTi1SE9zX2sSN/xeszJlqLFRM+f/jHNoh/Rjit3tIaUDvvggbwl7su38
+         xBpD8DCtF6/6JXZg5iqHup0dnKOO7tfiaesr4iJeNgUF0dKuCqndpAXqOqLdxyu0T2gK
+         XA3fKUmw7YhKEbNvKLPEtpWNHfunnjnlEveP9CGpPPdVhb4N5hpPn2hEk2DM2Q2wgZsv
+         AHkh9CWnMZMH7bck3KBWWvBfqhzhixBtuhMjjEix1Nr8im7atNLJkAogAPYtB+nZR7+m
+         oyp0rjWe/XIlIYZstPYeaVbk5wEK1PJvOleprONoHfB16kFYGPalniNDnHE50mshYHxT
+         b5Aw==
+X-Gm-Message-State: AOJu0YzfOpMSRE58qgXmvYBFw/yYU3MVLrULdIb8AeY4oA5znAXSGNAR
+	5a4bZg4ntzN9gTTS2H72hIWezuunzV57M/dievAMICilT9Eg/EhpJzreCnQBizpp7+pbuTE3/Wb
+	3Mme4o02KeP5dyzDQABvLrCk5ylcn9ZPv1JAJg2Rmz4wU3tfylpXVLwNzBTi7ZdGWEMmOkBM80q
+	g58uo3GQWotnveVFKEShH8yKqMxoEgedPibbMj4sUEIGRzFHSHGeDDrsLHPflC4FxrglaeJX14M
+	RC0X2OPJUtSF20c
+X-Gm-Gg: AY/fxX6ntpkRxnl0uf4KMSqupDYnr2vWW535BwnyQucAzD2zuvS2kr6Fwc+ISG1qFgS
+	I+hnzlse50JErjYeQ/mpdrLbGamzd6FuRDyFwSYXeDkZHaFa/8gQQ6poCL47daoc65plN7wZCMF
+	+bCtsJkK6YRAReVDKb0dup8XhRLzEPviNR5WWqHURX8VVb89SU/6kZq2akzHaFNnUWIuDCSX/fY
+	KU3xmkzPvTp7iHRHyDfauzY5qsPww4ikcQJAAo6HbCNk7R0rzZwcPZVm12FgCr++BkAQJDwxL+i
+	6FSskCjw1u9Ura3SUd6mlzodAJC7qUSnvkTgZX7ApTBzxs0vy1ySzvwz9uDc7rOAGFH7zfCN0kw
+	CDjMB3fpVu9pt2fKhCNgBKYzkHlOYaACNTidZf+iD4h/Tet76XBli0k2Uqugm1p94uVtE3pMuot
+	Z8cwOvmBmFgCfyOKpjydcG5WaI80uNqS0yuBuvh+G+YmvWDZo=
+X-Google-Smtp-Source: AGHT+IG6McmzymRa2eB/YZDxMOGPHcORrUR4DUxP6XZMFBcLhKlpHILIMftxh5UrZuhvDWT1iy852+Xnk3/5
+X-Received: by 2002:a05:622a:209:b0:4f1:c698:6e9e with SMTP id d75a77b69052e-4ffb482ffa8mr232261771cf.27.1768205842892;
+        Mon, 12 Jan 2026 00:17:22 -0800 (PST)
+Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-118.dlp.protect.broadcom.com. [144.49.247.118])
+        by smtp-relay.gmail.com with ESMTPS id 6a1803df08f44-890770946f9sm22184386d6.5.2026.01.12.00.17.22
         for <linux-scsi@vger.kernel.org>
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 12 Jan 2026 00:17:20 -0800 (PST)
+        Mon, 12 Jan 2026 00:17:22 -0800 (PST)
 X-Relaying-Domain: broadcom.com
 X-CFilter-Loop: Reflected
-Received: by mail-pj1-f69.google.com with SMTP id 98e67ed59e1d1-34ab459c051so1751031a91.0
-        for <linux-scsi@vger.kernel.org>; Mon, 12 Jan 2026 00:17:19 -0800 (PST)
+Received: by mail-pj1-f72.google.com with SMTP id 98e67ed59e1d1-34c48a76e75so6540410a91.1
+        for <linux-scsi@vger.kernel.org>; Mon, 12 Jan 2026 00:17:22 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1768205838; x=1768810638; darn=vger.kernel.org;
+        d=broadcom.com; s=google; t=1768205841; x=1768810641; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=hPecG+yyvCIZeuhLqP+K3LVXpiWYJH6J1JC2h7I7sRM=;
-        b=Qredq4CUwZ6rFj0/ZKSg5Gnyr2v8JQT0b8MPPdjyCupnGBqKxFpOwRdI06htNeYPd5
-         GVgRMuc/D3oMFDwup6ohbkjHnr9UOZ7VSpROil8u/9R+lqA7oS/8Qju9Yc3iskZepX2N
-         Z6rI9VRFckjbBREoBFbWqv/y1KYtTX0M6zYnw=
-X-Received: by 2002:a17:90b:560b:b0:349:7fc6:18 with SMTP id 98e67ed59e1d1-34f68b9a22fmr15378545a91.13.1768205838383;
-        Mon, 12 Jan 2026 00:17:18 -0800 (PST)
-X-Received: by 2002:a17:90b:560b:b0:349:7fc6:18 with SMTP id 98e67ed59e1d1-34f68b9a22fmr15378522a91.13.1768205837771;
-        Mon, 12 Jan 2026 00:17:17 -0800 (PST)
+        bh=rITt6EkJ8vRBozq9wQKtCdxoluuvVRihjeN5uaAx+to=;
+        b=Ib1crcC1HCe24oiYixXKeHANpAv4a302MyjmueeiU1eTnR8RYAe8IktC34VPPyoE6j
+         jPF3sqkrjiDq94A6NrNuGU0cXFoQF4OvpoLK4STXtKKwXqBPRhC146DJf0sgxdz1gnjA
+         TanSrKYMh2VT7/wYQi2TJn6WtvBuZ7gquNqZs=
+X-Received: by 2002:a17:90b:560f:b0:341:d265:1e82 with SMTP id 98e67ed59e1d1-34f68cb94ffmr15294825a91.29.1768205841282;
+        Mon, 12 Jan 2026 00:17:21 -0800 (PST)
+X-Received: by 2002:a17:90b:560f:b0:341:d265:1e82 with SMTP id 98e67ed59e1d1-34f68cb94ffmr15294801a91.29.1768205840720;
+        Mon, 12 Jan 2026 00:17:20 -0800 (PST)
 Received: from localhost.localdomain ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-34f5f8b1526sm16808659a91.14.2026.01.12.00.17.15
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-34f5f8b1526sm16808659a91.14.2026.01.12.00.17.18
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 12 Jan 2026 00:17:17 -0800 (PST)
+        Mon, 12 Jan 2026 00:17:20 -0800 (PST)
 From: Ranjan Kumar <ranjan.kumar@broadcom.com>
 To: linux-scsi@vger.kernel.org,
 	martin.petersen@oracle.com
@@ -80,9 +80,9 @@ Cc: rajsekhar.chundru@broadcom.com,
 	prayas.patel@broadcom.com,
 	salomondush@google.com,
 	Ranjan Kumar <ranjan.kumar@broadcom.com>
-Subject: [PATCH v1 5/7] mpi3mr: Update MPI Headers to revision 39
-Date: Mon, 12 Jan 2026 13:40:35 +0530
-Message-ID: <20260112081037.74376-6-ranjan.kumar@broadcom.com>
+Subject: [PATCH v1 6/7] mpi3mr: Record and report controller firmware faults
+Date: Mon, 12 Jan 2026 13:40:36 +0530
+Message-ID: <20260112081037.74376-7-ranjan.kumar@broadcom.com>
 X-Mailer: git-send-email 2.47.3
 In-Reply-To: <20260112081037.74376-1-ranjan.kumar@broadcom.com>
 References: <20260112081037.74376-1-ranjan.kumar@broadcom.com>
@@ -95,396 +95,235 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
 
-Update MPI Headers to revision 39
+Capture and retain firmware fault codes and extended fault information
+whenever the controller enters a fault state.
 
+Maintain a persistent firmware fault counter, expose it via sysfs,
+and generate uevents to aid userspace diagnostics and failure analysis.
+
+Signed-off-by: Salomon Dushimirimana <salomondush@google.com>
 Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
 ---
- drivers/scsi/mpi3mr/mpi/mpi30_cnfg.h      |  90 ++++++++++++++++++-
- drivers/scsi/mpi3mr/mpi/mpi30_image.h     | 102 +++++++++++++++++++++-
- drivers/scsi/mpi3mr/mpi/mpi30_init.h      |   2 +-
- drivers/scsi/mpi3mr/mpi/mpi30_ioc.h       |   9 +-
- drivers/scsi/mpi3mr/mpi/mpi30_pci.h       |   2 +-
- drivers/scsi/mpi3mr/mpi/mpi30_sas.h       |   2 +-
- drivers/scsi/mpi3mr/mpi/mpi30_tool.h      |   6 +-
- drivers/scsi/mpi3mr/mpi/mpi30_transport.h |   4 +-
- 8 files changed, 201 insertions(+), 16 deletions(-)
+ drivers/scsi/mpi3mr/mpi3mr.h     |  8 +++
+ drivers/scsi/mpi3mr/mpi3mr_app.c | 24 +++++++++
+ drivers/scsi/mpi3mr/mpi3mr_fw.c  | 87 ++++++++++++++++++++++++++++++++
+ 3 files changed, 119 insertions(+)
 
-diff --git a/drivers/scsi/mpi3mr/mpi/mpi30_cnfg.h b/drivers/scsi/mpi3mr/mpi/mpi30_cnfg.h
-index 67d72b82cbe0..33dd303c97bb 100644
---- a/drivers/scsi/mpi3mr/mpi/mpi30_cnfg.h
-+++ b/drivers/scsi/mpi3mr/mpi/mpi30_cnfg.h
-@@ -1,6 +1,6 @@
- /* SPDX-License-Identifier: GPL-2.0-or-later */
- /*
-- *  Copyright 2017-2023 Broadcom Inc. All rights reserved.
-+ *  Copyright 2017-2026 Broadcom Inc. All rights reserved.
-  */
- #ifndef MPI30_CNFG_H
- #define MPI30_CNFG_H     1
-@@ -1037,6 +1037,7 @@ struct mpi3_io_unit_page5 {
- #define MPI3_IOUNIT5_DEVICE_SHUTDOWN_SATA_SSD_SHIFT        (2)
- #define MPI3_IOUNIT5_DEVICE_SHUTDOWN_SAS_SSD_MASK          (0x0003)
- #define MPI3_IOUNIT5_DEVICE_SHUTDOWN_SAS_SSD_SHIFT         (0)
-+#define MPI3_IOUNIT5_DEVICE_SHUTDOWN_HDD_SPINDOWN_ENABLE    (0x8000)
- #define MPI3_IOUNIT5_FLAGS_SATAPUIS_MASK                   (0x0c)
- #define MPI3_IOUNIT5_FLAGS_SATAPUIS_NOT_SUPPORTED          (0x00)
- #define MPI3_IOUNIT5_FLAGS_SATAPUIS_OS_CONTROLLED          (0x04)
-@@ -1074,7 +1075,8 @@ struct mpi3_io_unit_page8 {
- 	u8                                 current_key_encryption_algo;
- 	u8                                 key_digest_hash_algo;
- 	union mpi3_version_union              current_svn;
--	__le32                             reserved14;
-+	__le16                             pending_svn_time;
-+	__le16                             reserved16;
- 	__le32                             current_key[128];
- 	union mpi3_iounit8_digest             digest[MPI3_IOUNIT8_DIGEST_MAX];
- };
-@@ -1406,6 +1408,7 @@ struct mpi3_driver_page1 {
+diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
+index 590c017acf25..58db60e13c13 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr.h
++++ b/drivers/scsi/mpi3mr/mpi3mr.h
+@@ -1137,6 +1137,10 @@ struct scmd_priv {
+  * @default_qcount: Total Default queues
+  * @active_poll_qcount: Currently active poll queue count
+  * @requested_poll_qcount: User requested poll queue count
++ * @fault_during_init: Indicates a firmware fault occurred during initialization
++ * @saved_fault_code: Firmware fault code captured at the time of failure
++ * @saved_fault_info: Additional firmware-provided fault information
++ * @fwfault_counter: Count of firmware faults detected by the driver
+  * @bsg_dev: BSG device structure
+  * @bsg_queue: Request queue for BSG device
+  * @stop_bsgs: Stop BSG request flag
+@@ -1340,6 +1344,10 @@ struct mpi3mr_ioc {
+ 	u16 default_qcount;
+ 	u16 active_poll_qcount;
+ 	u16 requested_poll_qcount;
++	u8 fault_during_init;
++	u32 saved_fault_code;
++	u32 saved_fault_info[3];
++	u64 fwfault_counter;
+ 
+ 	struct device bsg_dev;
+ 	struct request_queue *bsg_queue;
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_app.c b/drivers/scsi/mpi3mr/mpi3mr_app.c
+index 37cca0573ddc..1353a8ff9c85 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_app.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_app.c
+@@ -3255,6 +3255,29 @@ adp_state_show(struct device *dev, struct device_attribute *attr,
+ 
+ static DEVICE_ATTR_RO(adp_state);
+ 
++/**
++ * fwfault_count_show() - SysFS callback to show firmware fault count
++ * @dev: class device
++ * @attr: Device attribute
++ * @buf: Buffer to copy data into
++ *
++ * Displays the total number of firmware faults detected by the driver
++ * since the controller was initialized.
++ *
++ * Return: Number of bytes written to @buf
++ */
++
++static ssize_t
++fwfault_count_show(struct device *dev, struct device_attribute *attr,
++	char *buf)
++{
++	struct Scsi_Host *shost = class_to_shost(dev);
++	struct mpi3mr_ioc *mrioc = shost_priv(shost);
++
++	return snprintf(buf, PAGE_SIZE, "%llu\n", mrioc->fwfault_counter);
++}
++static DEVICE_ATTR_RO(fwfault_count);
++
+ static struct attribute *mpi3mr_host_attrs[] = {
+ 	&dev_attr_version_fw.attr,
+ 	&dev_attr_fw_queue_depth.attr,
+@@ -3263,6 +3286,7 @@ static struct attribute *mpi3mr_host_attrs[] = {
+ 	&dev_attr_reply_qfull_count.attr,
+ 	&dev_attr_logging_level.attr,
+ 	&dev_attr_adp_state.attr,
++	&dev_attr_fwfault_count.attr,
+ 	NULL,
  };
  
- #define MPI3_DRIVER1_PAGEVERSION               (0x00)
-+#define MPI3_DRIVER1_FLAGS_DEVICE_SHUTDOWN_ON_UNLOAD_DISABLE		(0x0001)
- #ifndef MPI3_DRIVER2_TRIGGER_MAX
- #define MPI3_DRIVER2_TRIGGER_MAX           (1)
- #endif
-@@ -1561,7 +1564,9 @@ struct mpi3_security1_key_record {
- 	u8                                 consumer;
- 	__le16                             key_data_size;
- 	__le32                             additional_key_data;
--	__le32                             reserved08[2];
-+	u8                                 library_version;
-+	u8                                 reserved09[3];
-+	__le32                             reserved0c;
- 	union mpi3_security1_key_data         key_data;
- };
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+index 178738850541..ea951ef4b2d9 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+@@ -1108,6 +1108,31 @@ void mpi3mr_print_fault_info(struct mpi3mr_ioc *mrioc)
+ 	}
+ }
  
-@@ -1614,6 +1619,85 @@ struct mpi3_security_page2 {
- 	u8                                 reserved9d[3];
- 	struct mpi3_security2_trusted_root     trusted_root[MPI3_SECURITY2_TRUSTED_ROOT_MAX];
- };
++/**
++ * mpi3mr_save_fault_info - Save fault information
++ * @mrioc: Adapter instance reference
++ *
++ * Save the controller fault information if there is a
++ * controller fault.
++ *
++ * Return: Nothing.
++ */
++static void mpi3mr_save_fault_info(struct mpi3mr_ioc *mrioc)
++{
++	u32 ioc_status, i;
 +
-+struct mpi3_security_page3 {
-+	struct mpi3_config_page_header         header;
-+	__le16                             key_data_length;
-+	__le16                             reserved0a;
-+	u8                                 key_number;
-+	u8                                 reserved0d[3];
-+	union mpi3_security_mac               mac;
-+	union mpi3_security_nonce             nonce;
-+	__le32                             reserved90[12];
-+	u8                                 flags;
-+	u8                                 consumer;
-+	__le16                             key_data_size;
-+	__le32                             additional_key_data;
-+	u8                                 library_version;
-+	u8                                 reserved_c9[3];
-+	__le32                             reserved_cc;
-+	u8                                 key_data[];
-+};
++	ioc_status = readl(&mrioc->sysif_regs->ioc_status);
 +
-+#define MPI3_SECURITY3_PAGEVERSION               (0x00)
-+#define MPI3_SECURITY3_FLAGS_TYPE_MASK           (0x0f)
-+#define MPI3_SECURITY3_FLAGS_TYPE_SHIFT          (0)
-+#define MPI3_SECURITY3_FLAGS_TYPE_NOT_VALID      (0)
-+#define MPI3_SECURITY3_FLAGS_TYPE_MLDSA_PRIVATE  (1)
-+#define MPI3_SECURITY3_FLAGS_TYPE_MLDSA_PUBLIC   (2)
-+struct mpi3_security_page10 {
-+	struct mpi3_config_page_header         header;
-+	__le32                             reserved08[2];
-+	union mpi3_security_mac               mac;
-+	union mpi3_security_nonce             nonce;
-+	__le64                             current_token_nonce;
-+	__le64                             previous_token_nonce;
-+	__le32                             reserved_a0[8];
-+	u8                                 diagnostic_auth_id[64];
-+};
-+#define MPI3_SECURITY10_PAGEVERSION               (0x00)
++	if (ioc_status & MPI3_SYSIF_IOC_STATUS_FAULT) {
++		mrioc->saved_fault_code = readl(&mrioc->sysif_regs->fault) &
++		    MPI3_SYSIF_FAULT_CODE_MASK;
++		for (i = 0; i < 3; i++) {
++			mrioc->saved_fault_info[i] =
++			readl(&mrioc->sysif_regs->fault_info[i]);
++		}
++	}
++}
 +
-+struct mpi3_security_page11 {
-+	struct mpi3_config_page_header         header;
-+	u8                                 flags;
-+	u8                                 reserved09[3];
-+	__le32                             reserved0c;
-+	__le32                             diagnostic_token_length;
-+	__le32                             reserved14[3];
-+	u8                                 diagnostic_token[];
-+};
-+#define MPI3_SECURITY11_PAGEVERSION               (0x00)
-+#define MPI3_SECURITY11_FLAGS_TOKEN_ENABLED       (0x01)
-+
-+struct mpi3_security12_diag_feature {
-+	__le32                             feature_identifier;
-+	u8                                 feature_size;
-+	u8                                 feature_type;
-+	__le16                             reserved06;
-+	u8                                 status;
-+	u8                                 section;
-+	__le16                             reserved0a;
-+	__le32                             reserved0c;
-+	u8                                 feature_data[64];
-+};
-+#define MPI3_SECURITY12_DIAG_FEATURE_STATUS_MASK                 (0x03)
-+#define MPI3_SECURITY12_DIAG_FEATURE_STATUS_SHIFT                (0)
-+#define MPI3_SECURITY12_DIAG_FEATURE_STATUS_UNKNOWN              (0x00)
-+#define MPI3_SECURITY12_DIAG_FEATURE_STATUS_DISABLED             (0x01)
-+#define MPI3_SECURITY12_DIAG_FEATURE_STATUS_ENABLED              (0x02)
-+#define MPI3_SECURITY12_DIAG_FEATURE_SECTION_PROTECTED           (0x00)
-+#define MPI3_SECURITY12_DIAG_FEATURE_SECTION_UNPROTECTED         (0x01)
-+#define MPI3_SECURITY12_DIAG_FEATURE_SECTION_PAYLOAD             (0x02)
-+#define MPI3_SECURITY12_DIAG_FEATURE_SECTION_SIGNATURE           (0x03)
-+struct mpi3_security_page12 {
-+	struct mpi3_config_page_header         header;
-+	__le32                             reserved08[2];
-+	u8                                 num_diag_features;
-+	u8                                 reserved11[3];
-+	__le32                             reserved14[3];
-+	struct mpi3_security12_diag_feature    diag_feature[];
-+};
-+
- #define MPI3_SECURITY2_PAGEVERSION               (0x00)
- struct mpi3_sas_io_unit0_phy_data {
- 	u8                 io_unit_port;
-diff --git a/drivers/scsi/mpi3mr/mpi/mpi30_image.h b/drivers/scsi/mpi3mr/mpi/mpi30_image.h
-index 8d824107a678..62ddf094d46c 100644
---- a/drivers/scsi/mpi3mr/mpi/mpi30_image.h
-+++ b/drivers/scsi/mpi3mr/mpi/mpi30_image.h
-@@ -1,6 +1,6 @@
- /* SPDX-License-Identifier: GPL-2.0-or-later */
- /*
-- *  Copyright 2018-2023 Broadcom Inc. All rights reserved.
-+ *  Copyright 2018-2026 Broadcom Inc. All rights reserved.
-  */
- #ifndef MPI30_IMAGE_H
- #define MPI30_IMAGE_H     1
-@@ -135,7 +135,7 @@ struct mpi3_ci_manifest_mpi {
- 	__le32                                   package_version_string_offset;
- 	__le32                                   package_build_date_string_offset;
- 	__le32                                   package_build_time_string_offset;
--	__le32                                   reserved4c;
-+	__le32                                   diag_authorization_key_offset;
- 	__le32                                   diag_authorization_identifier[16];
- 	struct mpi3_ci_manifest_mpi_comp_image_ref   component_image_ref[MPI3_CI_MANIFEST_MPI_MAX];
- };
-@@ -148,16 +148,112 @@ struct mpi3_ci_manifest_mpi {
- #define MPI3_CI_MANIFEST_MPI_RELEASE_LEVEL_GCA                        (0x50)
- #define MPI3_CI_MANIFEST_MPI_RELEASE_LEVEL_POINT                      (0x60)
- #define MPI3_CI_MANIFEST_MPI_FLAGS_DIAG_AUTHORIZATION                 (0x01)
-+#define MPI3_CI_MANIFEST_MPI_FLAGS_DIAG_AUTH_ANCHOR_MASK		(0x06)
-+#define MPI3_CI_MANIFEST_MPI_FLAGS_DIAG_AUTH_ANCHOR_SHIFT		(1)
-+#define MPI3_CI_MANIFEST_MPI_FLAGS_DIAG_AUTH_ANCHOR_IDENTIFIER		(0x00)
-+#define MPI3_CI_MANIFEST_MPI_FLAGS_DIAG_AUTH_ANCHOR_KEY_OFFSET		(0x02)
- #define MPI3_CI_MANIFEST_MPI_SUBSYSTEMID_IGNORED                   (0xffff)
- #define MPI3_CI_MANIFEST_MPI_PKG_VER_STR_OFF_UNSPECIFIED           (0x00000000)
- #define MPI3_CI_MANIFEST_MPI_PKG_BUILD_DATE_STR_OFF_UNSPECIFIED    (0x00000000)
- #define MPI3_CI_MANIFEST_MPI_PKG_BUILD_TIME_STR_OFF_UNSPECIFIED    (0x00000000)
-+
-+struct mpi3_sb_manifest_ci_digest {
-+	__le32                      signature1;
-+	__le32                      reserved04[2];
-+	u8                          hash_algorithm;
-+	u8                          reserved09[3];
-+	struct mpi3_comp_image_version  component_image_version;
-+	__le32                      component_image_version_string_offset;
-+	__le32                      digest[16];
-+};
-+
-+struct mpi3_sb_manifest_ci_ref_element {
-+	u8                              num_ci_digests;
-+	u8                              reserved01[3];
-+	struct mpi3_sb_manifest_ci_digest	ci_digest[];
-+};
-+
-+struct mpi3_sb_manifest_embedded_key_element {
-+	__le32                      reserved00[3];
-+	u8                          key_algorithm;
-+	u8                          flags;
-+	__le16                      public_key_size;
-+	__le32                      start_tag;
-+	__le32                      public_key[];
-+};
-+
-+#define MPI3_SB_MANIFEST_EMBEDDED_KEY_FLAGS_KEYINDEX_MASK		(0x03)
-+#define MPI3_SB_MANIFEST_EMBEDDED_KEY_FLAGS_KEYINDEX_STRT		(0x00)
-+#define MPI3_SB_MANIFEST_EMBEDDED_KEY_FLAGS_KEYINDEX_K2GO		(0x01)
-+#define MPI3_SB_MANIFEST_EMBEDDED_KEY_STARTTAG_STRT			(0x54525453)
-+#define MPI3_SB_MANIFEST_EMBEDDED_KEY_STARTTAG_K2GO			(0x4f47324b)
-+#define MPI3_SB_MANIFEST_EMBEDDED_KEY_ENDTAG_STOP			(0x504f5453)
-+#define MPI3_SB_MANIFEST_EMBEDDED_KEY_ENDTAG_K2ST			(0x5453324b)
-+
-+struct mpi3_sb_manifest_diag_key_element {
-+	__le32                      reserved00[3];
-+	u8                          key_algorithm;
-+	u8                          flags;
-+	__le16                      public_key_size;
-+	__le32                      public_key[];
-+};
-+
-+#define MPI3_SB_MANIFEST_DIAG_KEY_FLAGS_KEYINDEX_MASK		(0x03)
-+#define MPI3_SB_MANIFEST_DIAG_KEY_FLAGS_KEYSELECT_FW_KEY	(0x04)
-+union mpi3_sb_manifest_element_data {
-+	struct mpi3_sb_manifest_ci_ref_element           ci_ref;
-+	struct mpi3_sb_manifest_embedded_key_element     embed_key;
-+	struct mpi3_sb_manifest_diag_key_element         diag_key;
-+	__le32                                       dword;
-+};
-+struct mpi3_sb_manifest_element {
-+	u8                                   manifest_element_form;
-+	u8                                   reserved01[3];
-+	union mpi3_sb_manifest_element_data     form_specific[];
-+};
-+#define MPI3_SB_MANIFEST_ELEMENT_FORM_CI_REFS		(0x01)
-+#define MPI3_SB_MANIFEST_ELEMENT_FORM_EMBED_KEY		(0x02)
-+#define MPI3_SB_MANIFEST_ELEMENT_FORM_DIAG_KEY		(0x03)
-+struct mpi3_sb_manifest_mpi {
-+	u8                                       manifest_type;
-+	u8                                       reserved01[3];
-+	__le32                                   reserved04[3];
-+	u8                                       reserved10;
-+	u8                                       release_level;
-+	__le16                                   reserved12;
-+	__le16                                   reserved14;
-+	__le16                                   flags;
-+	__le32                                   reserved18[2];
-+	__le16                                   vendor_id;
-+	__le16                                   device_id;
-+	__le16                                   subsystem_vendor_id;
-+	__le16                                   subsystem_id;
-+	__le32                                   reserved28[2];
-+	union mpi3_version_union                    package_security_version;
-+	__le32                                   reserved34;
-+	struct mpi3_comp_image_version               package_version;
-+	__le32                                   package_version_string_offset;
-+	__le32                                   package_build_date_string_offset;
-+	__le32                                   package_build_time_string_offset;
-+	__le32                                   component_image_references_offset;
-+	__le32                                   embedded_key0offset;
-+	__le32                                   embedded_key1offset;
-+	__le32                                   diag_authorization_key_offset;
-+	__le32                                   reserved5c[9];
-+	struct mpi3_sb_manifest_element              manifest_elements[];
-+};
-+
- union mpi3_ci_manifest {
- 	struct mpi3_ci_manifest_mpi               mpi;
-+	struct mpi3_sb_manifest_mpi               sb_mpi;
- 	__le32                                dword[1];
- };
+ /**
+  * mpi3mr_get_iocstate - Get IOC State
+  * @mrioc: Adapter instance reference
+@@ -1249,6 +1274,44 @@ static void mpi3mr_alloc_ioctl_dma_memory(struct mpi3mr_ioc *mrioc)
+ 	mpi3mr_free_ioctl_dma_memory(mrioc);
+ }
  
--#define MPI3_CI_MANIFEST_TYPE_MPI                                  (0x00)
-+#define MPI3_SB_MANIFEST_APU_IMMEDIATE_DEFER_APU_ENABLE			(0x01)
++/**
++ * mpi3mr_fault_uevent_emit - Emit uevent for any controller
++ * fault
++ * @mrioc: Pointer to the mpi3mr_ioc structure for the controller instance
++ *
++ * This function is invoked when the controller undergoes any
++ * type of fault.
++ */
 +
-+#define MPI3_CI_MANIFEST_TYPE_MPI			(0x00)
-+#define MPI3_CI_MANIFEST_TYPE_SB			(0x01)
++static void mpi3mr_fault_uevent_emit(struct mpi3mr_ioc *mrioc)
++{
++	struct kobj_uevent_env *env;
 +
- struct mpi3_extended_image_header {
- 	u8                                image_type;
- 	u8                                reserved01[3];
-diff --git a/drivers/scsi/mpi3mr/mpi/mpi30_init.h b/drivers/scsi/mpi3mr/mpi/mpi30_init.h
-index bbef5bac92ed..745e1101ebf4 100644
---- a/drivers/scsi/mpi3mr/mpi/mpi30_init.h
-+++ b/drivers/scsi/mpi3mr/mpi/mpi30_init.h
-@@ -1,6 +1,6 @@
- /* SPDX-License-Identifier: GPL-2.0-or-later */
- /*
-- *  Copyright 2016-2023 Broadcom Inc. All rights reserved.
-+ *  Copyright 2016-2026 Broadcom Inc. All rights reserved.
-  */
- #ifndef MPI30_INIT_H
- #define MPI30_INIT_H     1
-diff --git a/drivers/scsi/mpi3mr/mpi/mpi30_ioc.h b/drivers/scsi/mpi3mr/mpi/mpi30_ioc.h
-index b42933fcd423..12b8e0632b88 100644
---- a/drivers/scsi/mpi3mr/mpi/mpi30_ioc.h
-+++ b/drivers/scsi/mpi3mr/mpi/mpi30_ioc.h
-@@ -1,6 +1,6 @@
- /* SPDX-License-Identifier: GPL-2.0-or-later */
- /*
-- *  Copyright 2016-2023 Broadcom Inc. All rights reserved.
-+ *  Copyright 2016-2026 Broadcom Inc. All rights reserved.
-  */
- #ifndef MPI30_IOC_H
- #define MPI30_IOC_H     1
-@@ -658,9 +658,10 @@ struct mpi3_event_data_diag_buffer_status_change {
- 	__le32             reserved04;
- };
- 
--#define MPI3_EVENT_DIAG_BUFFER_STATUS_CHANGE_RC_RELEASED             (0x01)
--#define MPI3_EVENT_DIAG_BUFFER_STATUS_CHANGE_RC_PAUSED               (0x02)
--#define MPI3_EVENT_DIAG_BUFFER_STATUS_CHANGE_RC_RESUMED              (0x03)
-+#define MPI3_EVENT_DIAG_BUFFER_STATUS_CHANGE_RC_RELEASED	(0x01)
-+#define MPI3_EVENT_DIAG_BUFFER_STATUS_CHANGE_RC_PAUSED		(0x02)
-+#define MPI3_EVENT_DIAG_BUFFER_STATUS_CHANGE_RC_RESUMED		(0x03)
-+#define MPI3_EVENT_DIAG_BUFFER_STATUS_CHANGE_RC_CLEARED		(0x04)
- #define MPI3_PEL_LOCALE_FLAGS_NON_BLOCKING_BOOT_EVENT   (0x0200)
- #define MPI3_PEL_LOCALE_FLAGS_BLOCKING_BOOT_EVENT       (0x0100)
- #define MPI3_PEL_LOCALE_FLAGS_PCIE                      (0x0080)
-diff --git a/drivers/scsi/mpi3mr/mpi/mpi30_pci.h b/drivers/scsi/mpi3mr/mpi/mpi30_pci.h
-index 4eeb11c3c73e..3092dfe6d952 100644
---- a/drivers/scsi/mpi3mr/mpi/mpi30_pci.h
-+++ b/drivers/scsi/mpi3mr/mpi/mpi30_pci.h
-@@ -1,6 +1,6 @@
- /* SPDX-License-Identifier: GPL-2.0-or-later */
- /*
-- *  Copyright 2016-2023 Broadcom Inc. All rights reserved.
-+ *  Copyright 2016-2026 Broadcom Inc. All rights reserved.
-  *
-  */
- #ifndef MPI30_PCI_H
-diff --git a/drivers/scsi/mpi3mr/mpi/mpi30_sas.h b/drivers/scsi/mpi3mr/mpi/mpi30_sas.h
-index 190b06508b00..f86da445df1e 100644
---- a/drivers/scsi/mpi3mr/mpi/mpi30_sas.h
-+++ b/drivers/scsi/mpi3mr/mpi/mpi30_sas.h
-@@ -1,6 +1,6 @@
- /* SPDX-License-Identifier: GPL-2.0-or-later */
- /*
-- *  Copyright 2016-2023 Broadcom Inc. All rights reserved.
-+ *  Copyright 2016-2026 Broadcom Inc. All rights reserved.
-  */
- #ifndef MPI30_SAS_H
- #define MPI30_SAS_H     1
-diff --git a/drivers/scsi/mpi3mr/mpi/mpi30_tool.h b/drivers/scsi/mpi3mr/mpi/mpi30_tool.h
-index 50a65b16a818..72d3e6bc52ec 100644
---- a/drivers/scsi/mpi3mr/mpi/mpi30_tool.h
-+++ b/drivers/scsi/mpi3mr/mpi/mpi30_tool.h
-@@ -1,6 +1,6 @@
- /* SPDX-License-Identifier: GPL-2.0-or-later */
- /*
-- *  Copyright 2016-2024 Broadcom Inc. All rights reserved.
-+ *  Copyright 2016-2026 Broadcom Inc. All rights reserved.
-  */
- #ifndef MPI30_TOOL_H
- #define MPI30_TOOL_H     1
-@@ -8,6 +8,10 @@
- #define MPI3_DIAG_BUFFER_TYPE_TRACE	(0x01)
- #define MPI3_DIAG_BUFFER_TYPE_FW	(0x02)
- #define MPI3_DIAG_BUFFER_ACTION_RELEASE	(0x01)
-+#define MPI3_DIAG_BUFFER_ACTION_PAUSE	(0x02)
-+#define MPI3_DIAG_BUFFER_ACTION_RESUME	(0x03)
-+#define MPI3_DIAG_BUFFER_ACTION_CLEAR	(0x04)
++	env = kzalloc(sizeof(*env), GFP_KERNEL);
++	if (!env)
++		return;
 +
++	if (add_uevent_var(env, "DRIVER=%s", mrioc->driver_name))
++		return;
++	if (add_uevent_var(env, "IOC_ID=%u", mrioc->id))
++		return;
++	if (add_uevent_var(env, "FAULT_CODE=0x%08x", mrioc->saved_fault_code))
++		return;
++	if (add_uevent_var(env, "FAULT_INFO0=0x%08x",
++	     mrioc->saved_fault_info[0]))
++		return;
++	if (add_uevent_var(env, "FAULT_INFO1=0x%08x",
++	     mrioc->saved_fault_info[1]))
++		return;
++	if (add_uevent_var(env, "FAULT_INFO2=0x%08x",
++	    mrioc->saved_fault_info[2]))
++		return;
++
++	kobject_uevent_env(&mrioc->shost->shost_gendev.kobj,
++	    KOBJ_CHANGE, env->envp);
++	kfree(env);
++}
++
+ /**
+  * mpi3mr_clear_reset_history - clear reset history
+  * @mrioc: Adapter instance reference
+@@ -1480,6 +1543,10 @@ static int mpi3mr_bring_ioc_ready(struct mpi3mr_ioc *mrioc)
+ 		if (ioc_state == MRIOC_STATE_FAULT) {
+ 			timeout = MPI3_SYSIF_DIAG_SAVE_TIMEOUT * 10;
+ 			mpi3mr_print_fault_info(mrioc);
++			mpi3mr_save_fault_info(mrioc);
++			mrioc->fault_during_init = 1;
++			mrioc->fwfault_counter++;
++
+ 			do {
+ 				host_diagnostic =
+ 					readl(&mrioc->sysif_regs->host_diagnostic);
+@@ -2577,6 +2644,9 @@ void mpi3mr_check_rh_fault_ioc(struct mpi3mr_ioc *mrioc, u32 reason_code)
+ 		mpi3mr_set_trigger_data_in_all_hdb(mrioc,
+ 		    MPI3MR_HDB_TRIGGER_TYPE_FAULT, &trigger_data, 0);
+ 		mpi3mr_print_fault_info(mrioc);
++		mpi3mr_save_fault_info(mrioc);
++		mrioc->fault_during_init = 1;
++		mrioc->fwfault_counter++;
+ 		return;
+ 	}
  
- #define MPI3_DIAG_BUFFER_POST_MSGFLAGS_SEGMENTED	(0x01)
- struct mpi3_diag_buffer_post_request {
-diff --git a/drivers/scsi/mpi3mr/mpi/mpi30_transport.h b/drivers/scsi/mpi3mr/mpi/mpi30_transport.h
-index 28ab2efb3baa..290a1f5c2924 100644
---- a/drivers/scsi/mpi3mr/mpi/mpi30_transport.h
-+++ b/drivers/scsi/mpi3mr/mpi/mpi30_transport.h
-@@ -1,6 +1,6 @@
- /* SPDX-License-Identifier: GPL-2.0-or-later */
- /*
-- *  Copyright 2016-2023 Broadcom Inc. All rights reserved.
-+ *  Copyright 2016-2026 Broadcom Inc. All rights reserved.
-  */
- #ifndef MPI30_TRANSPORT_H
- #define MPI30_TRANSPORT_H     1
-@@ -18,7 +18,7 @@ union mpi3_version_union {
+@@ -2594,6 +2664,10 @@ void mpi3mr_check_rh_fault_ioc(struct mpi3mr_ioc *mrioc, u32 reason_code)
+ 			break;
+ 		msleep(100);
+ 	} while (--timeout);
++
++	mpi3mr_save_fault_info(mrioc);
++	mrioc->fault_during_init = 1;
++	mrioc->fwfault_counter++;
+ }
  
- #define MPI3_VERSION_MAJOR                                              (3)
- #define MPI3_VERSION_MINOR                                              (0)
--#define MPI3_VERSION_UNIT                                               (37)
-+#define MPI3_VERSION_UNIT                                               (39)
- #define MPI3_VERSION_DEV                                                (0)
- #define MPI3_DEVHANDLE_INVALID                                          (0xffff)
- struct mpi3_sysif_oper_queue_indexes {
+ /**
+@@ -2770,6 +2844,11 @@ static void mpi3mr_watchdog_work(struct work_struct *work)
+ 	union mpi3mr_trigger_data trigger_data;
+ 	u16 reset_reason = MPI3MR_RESET_FROM_FAULT_WATCH;
+ 
++	if (mrioc->fault_during_init) {
++		mpi3mr_fault_uevent_emit(mrioc);
++		mrioc->fault_during_init = 0;
++	}
++
+ 	if (mrioc->reset_in_progress || mrioc->pci_err_recovery)
+ 		return;
+ 
+@@ -2842,6 +2921,10 @@ static void mpi3mr_watchdog_work(struct work_struct *work)
+ 		goto schedule_work;
+ 	}
+ 
++	mpi3mr_save_fault_info(mrioc);
++	mpi3mr_fault_uevent_emit(mrioc);
++	mrioc->fwfault_counter++;
++
+ 	switch (trigger_data.fault) {
+ 	case MPI3_SYSIF_FAULT_CODE_COMPLETE_RESET_NEEDED:
+ 	case MPI3_SYSIF_FAULT_CODE_POWER_CYCLE_REQUIRED:
+@@ -5478,6 +5561,10 @@ int mpi3mr_soft_reset_handler(struct mpi3mr_ioc *mrioc,
+ 					break;
+ 				msleep(100);
+ 			} while (--timeout);
++
++			mpi3mr_save_fault_info(mrioc);
++			mpi3mr_fault_uevent_emit(mrioc);
++			mrioc->fwfault_counter++;
+ 			mpi3mr_set_trigger_data_in_all_hdb(mrioc,
+ 			    MPI3MR_HDB_TRIGGER_TYPE_FAULT, &trigger_data, 0);
+ 		}
 -- 
 2.47.3
 
