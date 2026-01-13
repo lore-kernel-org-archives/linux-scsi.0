@@ -1,72 +1,71 @@
-Received: from mail-pl1-f226.google.com (mail-pl1-f226.google.com [209.85.214.226])
+Received: from mail-pl1-f228.google.com (mail-pl1-f228.google.com [209.85.214.228])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5539D389DF4
-	for <linux-scsi@vger.kernel.org>; Tue, 13 Jan 2026 17:39:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.226
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 83AE8392817
+	for <linux-scsi@vger.kernel.org>; Tue, 13 Jan 2026 17:46:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.228
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768325997; cv=none; b=nfR5Hgv7Wzs5oVXmKNpMfZEzMm5z6ZJe+yL3EoCwHdDELAkMmLZS1Nitr9hFpE3u3yfaHgI+rAuL0dFUHg6vAllSIuti49sSB/cRSs7R393hnsvz2lES3cnhN2CTggin2WCTnf63buo+UwovUWjd5t8gSwslAENsXhqBGkHUqY4=
+	t=1768326419; cv=none; b=uNMWxNb6SQ9hpl2tMuBsS/n9lyKr/IrMIm5sBcQdm8AONci/DIhsoerL4R0Wr2UmmvOkvwONOO63Ffa7kOmgs8I0eM49VxX/N7kgpfpkImjJRAoHjzqP3lbf5UZbR0l3B4FzGwuu7p0byI8VBmgki4m1V6GabWKRjElZmz0Qj0w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768325997; c=relaxed/simple;
-	bh=LYUbhOJ+hkVIx031jqOTutwJ+4jEWJBmKF4JnnPf3Yo=;
+	s=arc-20240116; t=1768326419; c=relaxed/simple;
+	bh=0PZNB/Dea+HJCs+wC4Pcy5L34N33Jw+DlZPjjD8dcUw=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=fB+pnK4DTP+bOnuiZ6K38NwjhUc3eLKveB738Y+yrI/e27c+DoJRlfl4AniPSWekrfvIxMdvrzXnUZ2Vs2bxtLv7wvrcXV5GgRt9MlnAYMGgl7ztgyMvL2uyFlCoohWmxjyZMP20nrl5WS/0a4y3EctYPAvrnLNRANh710yh4uI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=MUq47hrb; arc=none smtp.client-ip=209.85.214.226
+	 To:Cc:Content-Type; b=FxYK+MApt0bETRNDyW3swbdBKEX+xyudmRGl5EEnT2yqpElHf5sGJatoUVhro+UxChTbRlZAXWGA19CW7NyniCOREL1QTYVn9ska9jXubR8CBn8S7ZPCI5zFIW/O+jQnbsKV975hO2NEwtq/DrjNFxSTXqALhmOYKsa+1Odk/tE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=WjOSFPsq; arc=none smtp.client-ip=209.85.214.228
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="MUq47hrb"
-Received: by mail-pl1-f226.google.com with SMTP id d9443c01a7336-2a0834769f0so54098135ad.2
-        for <linux-scsi@vger.kernel.org>; Tue, 13 Jan 2026 09:39:56 -0800 (PST)
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="WjOSFPsq"
+Received: by mail-pl1-f228.google.com with SMTP id d9443c01a7336-2a0f3f74587so57875765ad.2
+        for <linux-scsi@vger.kernel.org>; Tue, 13 Jan 2026 09:46:57 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1768325996; x=1768930796;
+        d=1e100.net; s=20230601; t=1768326417; x=1768931217;
         h=cc:to:subject:message-id:date:from:in-reply-to:references
          :mime-version:dkim-signature:x-gm-gg:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=9zKQ5/iZsL0IvKxiuZ5fyncB2bwh8NgG8z1EpLlq0q4=;
-        b=YzpBaUzEiGKz9q4l1uWd9+U3HbsGxIzcKjMq5T247uxkfB7OEkFp7tbkTnrw52AoMY
-         EFs9u6h3mRzGcPhSuxSYJtuk6gojjACpSfZIwIh4kUZzzdxCIeLUNKzLDTC6AS8qFnZt
-         38yfkX5qDYr+zEsSu9REur+X3tSkTVenb/gLV8apODdVejqY4nWszy5SEMUVcCU23UU2
-         QpD7HdeiDZtUXNoy5t515jnpllQiZbcm7dPUywKF4U5OjvSIpYfLgWRN4gAuVnQbIYrE
-         80RySWE3FZIiYbbt8IB5vr4vYv0We3GIN2J3htNb/A+TTcPaGZkJaowmwVE1hIvxyTbW
-         k9xA==
-X-Gm-Message-State: AOJu0YxUR1hHCU4PGTt9trVra+SvTHMkI8RhAFDlYiWSl9hTHCXyMoXk
-	dOCrxlCTVPbzwRcyJqCqwfds0pY2BGrWUb8Nl5iGjalumWOmVmDNn21KKmBWOcpqqJfbFyg1mty
-	InQUhB5vN/K2VkbxeKgczRXwPhldJU9ge7Inyyl/24icwkb7t4CdX/9WZ61be2GaeJ5w1GVMXPe
-	0Nk2EoJ+lon9C0PawvsoLxfgPO2Ec6vR7b9Rvo6N/FkRPpD5/tK5Ryb+oQ2PnmXCwJxcO+9JETE
-	/el/By7LTeZauwN
-X-Gm-Gg: AY/fxX4OX0Pd0rbBHeV76kGgXNtOV68wFIRCPfcmm6S1ICfmG5EMz7L9mewQRSnqW6u
-	UgAXiLIPk4coMqiVSJoV2h4jeBRLYF+9b5eXE+jcFI80LmhqChiHPwc9mWIpZCVJlBUXRhx4wyq
-	o1aI4RKHdc8zpBA/STq7yGiIEoPA/q6CJ29yTAGoeHcU6DGTatCSD1nWnFIpgmja8MJGRn88cPV
-	ib/N19oijsTcJJy73a2yEEVxFYR1J+1PPEFUstQ0eb/rDoCdFgNAE98p6bq31PxOiE8LQV35HaB
-	SrsjGvL66d4cDW3DRcQOjrmwD6tdRBp9Ar7wiX+FlfZiO6QDCN2oaTnf5yVIVcs6q9gQhF2qN2F
-	X3Otv0O72jCoRP8p9tu6xrFq1wY0WKTEPn8+lkd8GQkgw9gJiiwqs6VJWUSyM01vAc7y7KSNlfM
-	+enwkE4RxXyJ0h9fXUsgLUiou8AXNeqhuRErlIRR9+vQ==
-X-Google-Smtp-Source: AGHT+IFgH32Q+xApeGVfPgwTIYdUy725uykyT/EsCrujVVbK4rRMyQgC4QAmM3gI7k3Srf+eA17H4Zel77ww
-X-Received: by 2002:a17:902:e74c:b0:29f:2ec4:83e5 with SMTP id d9443c01a7336-2a3ee41d105mr204227085ad.12.1768325995581;
-        Tue, 13 Jan 2026 09:39:55 -0800 (PST)
-Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-2.dlp.protect.broadcom.com. [144.49.247.2])
-        by smtp-relay.gmail.com with ESMTPS id d9443c01a7336-2a3e3cc4c12sm25033645ad.45.2026.01.13.09.39.55
+        bh=vvcBln30pqDqlGimVz0mQpUNAm7U9lmd/S5c1CG4Q1Y=;
+        b=Z9IkFmiecD3YzMrNdhxvr38L+ZEnZsOu/3LWtknnfpZ6qxw6VacDZIVcQ0Gpw/nS8t
+         b9Zj5uKi7efNBnkfNuuLK9FH10N/yfK4zTHelSaEkzsWzqT7fu09WIo+kEbpbHitNhWp
+         cFQEA5CKNglVyd3+ujte1mOjtbnk4ahlYYGkV7QMMug8iO/0NqHPWolgOod8FFYGgBC6
+         CZmB1pKJCknZM0mE1xw7d/1BvKUTtRMMaddywqM6smOyOdb9zO4xeFxlrCBTpXdKo1MX
+         NNzar0V5KUwnSUqGWMKhcVKFTUe+VjCNWz2HLgYzaGnoDfya74xH8S0AHh9v2kX3YQOy
+         z+oA==
+X-Gm-Message-State: AOJu0YwTK+XNN2PGZARG5NM1q43C7hQ3gGZfdvliyU8pimZLRrKlUCjf
+	uTnsjlFavP/h6aefb/O9OhDBtXEogsGYM+a39kdM0adjAr22GGtzGI6Pl5/lMa9b8iKuIqmb30t
+	cerI1kTTqcnHAhI7Kxd6LTcdiM0i7PIry0ZFHyLdFjsoqwDv8KQHS+qZPVWyY3SYPWjAJmKLLbv
+	x916e0WbFNdNnP2u10P1UD5B4kWpNlR0VVYsn+z/fp9yZaadCExuPEQdM+lkpYHVJ/d1cA+Vmv3
+	vpW1NaL3YRKFJV3
+X-Gm-Gg: AY/fxX7m2m6ApVcn6Isa0COmbaKXoc8moKVYSFeXg4jRdnLgpehCNZh9VHUvM4s7YbN
+	b1bMqOkwhMu5ljncPtlUz2Sght3LuMCQCd/qQYW3IKpL9bPBOlLntmSA4MqSXggQDucGF1iHBOT
+	gfzfos8hoqa5A4oMKx94Sd86QMK/P19AdtDifOR0mTwQb0Br+enMrUVPFkt2c2ypjGIDZoT3C0P
+	KP+GMBiiYfHw2yhUSqfgsRP2l86aT6o03qIqHme6dA5ptIggzF6o6fyZseMIJjyXF6i7LeUMTkx
+	cJFTnzUSgGptbOxXHIecaX6G9fOk07/Mn+Tj28LWv2XCCK2IhZJi5clLx5BVH1I82C5N9+6yknr
+	f2jL3nl9rcimvPzgs7eVkv6RY+VtXL3eW+LslmfiJ/a40my9LcsXxiNR+3fAKH/WY883B
+X-Google-Smtp-Source: AGHT+IGfrlUl7KA71xTi6m7h8QUstb3Wg5tO0tmhXTwOz9BBFg1TiTwgRaus2Xsri5LWBQEdxYIPvY/tCKb9
+X-Received: by 2002:a17:902:fc4b:b0:2a0:9084:3aff with SMTP id d9443c01a7336-2a3ee509c6dmr219753715ad.61.1768326416666;
+        Tue, 13 Jan 2026 09:46:56 -0800 (PST)
+Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com ([144.49.247.127])
+        by smtp-relay.gmail.com with ESMTPS id 41be03b00d2f7-c551057e86fsm1065803a12.10.2026.01.13.09.46.56
         for <linux-scsi@vger.kernel.org>
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 13 Jan 2026 09:39:55 -0800 (PST)
+        Tue, 13 Jan 2026 09:46:56 -0800 (PST)
 X-Relaying-Domain: broadcom.com
 X-CFilter-Loop: Reflected
-Received: by mail-ej1-f70.google.com with SMTP id a640c23a62f3a-b87039c9a43so330686166b.1
-        for <linux-scsi@vger.kernel.org>; Tue, 13 Jan 2026 09:39:54 -0800 (PST)
+Received: by mail-ej1-f69.google.com with SMTP id a640c23a62f3a-b8735332877so112170466b.3
+        for <linux-scsi@vger.kernel.org>; Tue, 13 Jan 2026 09:46:55 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1768325994; x=1768930794; darn=vger.kernel.org;
+        d=broadcom.com; s=google; t=1768326414; x=1768931214; darn=vger.kernel.org;
         h=cc:to:subject:message-id:date:from:in-reply-to:references
          :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=9zKQ5/iZsL0IvKxiuZ5fyncB2bwh8NgG8z1EpLlq0q4=;
-        b=MUq47hrbGWVrHNxKox2V1opGyHvloT1knz1AvojYYVWo/zIZPCygjLfvAFihdhP5WU
-         liKSlPyCnbARAeV+j7htHTJLwswNOm/j5aGK+xzA/KnjYx/8E8LflpIhIkUBB/4WWC/m
-         S4PpJIXpi6Tzy3bzwA5TxNZhlHw6s8g6FWJM8=
-X-Received: by 2002:a17:906:fd84:b0:b83:9751:4334 with SMTP id a640c23a62f3a-b844538b363mr2258041566b.50.1768325993627;
-        Tue, 13 Jan 2026 09:39:53 -0800 (PST)
-X-Received: by 2002:a17:906:fd84:b0:b83:9751:4334 with SMTP id
- a640c23a62f3a-b844538b363mr2258039766b.50.1768325993150; Tue, 13 Jan 2026
- 09:39:53 -0800 (PST)
+        bh=vvcBln30pqDqlGimVz0mQpUNAm7U9lmd/S5c1CG4Q1Y=;
+        b=WjOSFPsqiaalQ5v7SNnFHZ571ty96Tg9jRgu3d7owcOf0tgILJQKmkOnHPOUjp36dl
+         fkrdF7vtnneMqyKGLdCMkYu4Q6243JkPTIp2u5FfYG/OTychJwnVPJ6Azi5Ow+E9HB7K
+         HmwRuGKDlXOwbR+GNJhpjSA1OmguaCEFgwdfs=
+X-Received: by 2002:a17:907:72c6:b0:b87:2630:e67b with SMTP id a640c23a62f3a-b872630fc7cmr671532966b.50.1768326414317;
+        Tue, 13 Jan 2026 09:46:54 -0800 (PST)
+X-Received: by 2002:a17:907:72c6:b0:b87:2630:e67b with SMTP id
+ a640c23a62f3a-b872630fc7cmr671530266b.50.1768326413852; Tue, 13 Jan 2026
+ 09:46:53 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -74,13 +73,13 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 References: <20260112081037.74376-1-ranjan.kumar@broadcom.com>
- <20260112081037.74376-6-ranjan.kumar@broadcom.com> <67011328-cbe5-40b6-8bc2-32b4f2c43592@kernel.org>
-In-Reply-To: <67011328-cbe5-40b6-8bc2-32b4f2c43592@kernel.org>
+ <20260112081037.74376-5-ranjan.kumar@broadcom.com> <7075bee5-75ce-4092-93c9-06d162a53362@kernel.org>
+In-Reply-To: <7075bee5-75ce-4092-93c9-06d162a53362@kernel.org>
 From: Ranjan Kumar <ranjan.kumar@broadcom.com>
-Date: Tue, 13 Jan 2026 23:09:38 +0530
-X-Gm-Features: AZwV_QjDVuMilv4c3y_zHs6uqUBYVXtHe5-uq2WAQkNBBYbe866o-E3GM_PS2J0
-Message-ID: <CAMFBP8Pk-A-i0FLCosFSxSjhaZovgPnKrypnTKsR5QqzSEL4iA@mail.gmail.com>
-Subject: Re: [PATCH v1 5/7] mpi3mr: Update MPI Headers to revision 39
+Date: Tue, 13 Jan 2026 23:16:39 +0530
+X-Gm-Features: AZwV_Qirlrxf5N-VE_Iiwdr4DmqFwI5z9PCRPFMqq6My9TDuue76JfwmiFgt3zQ
+Message-ID: <CAMFBP8MWuNJT-UV75v+uG0sGFG1epyPndgF2+JsGRGHHTe6-TA@mail.gmail.com>
+Subject: Re: [PATCH v1 4/7] mpi3mr: Use negotiated link rate from DevicePage0
 To: Damien Le Moal <dlemoal@kernel.org>
 Cc: linux-scsi@vger.kernel.org, martin.petersen@oracle.com, 
 	rajsekhar.chundru@broadcom.com, sathya.prakash@broadcom.com, 
@@ -88,48 +87,297 @@ Cc: linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
 	salomondush@google.com
 X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-	boundary="000000000000b918060648487aa8"
+	boundary="000000000000cc703006484893da"
 
---000000000000b918060648487aa8
+--000000000000cc703006484893da
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
 Hi Damien,
 
-On Mon, Jan 12, 2026 at 7:51=E2=80=AFPM Damien Le Moal <dlemoal@kernel.org>=
+On Mon, Jan 12, 2026 at 7:48=E2=80=AFPM Damien Le Moal <dlemoal@kernel.org>=
  wrote:
 >
 > On 1/12/26 09:10, Ranjan Kumar wrote:
-> > -#define MPI3_EVENT_DIAG_BUFFER_STATUS_CHANGE_RC_RELEASED             (=
-0x01)
-> > -#define MPI3_EVENT_DIAG_BUFFER_STATUS_CHANGE_RC_PAUSED               (=
-0x02)
-> > -#define MPI3_EVENT_DIAG_BUFFER_STATUS_CHANGE_RC_RESUMED              (=
-0x03)
-> > +#define MPI3_EVENT_DIAG_BUFFER_STATUS_CHANGE_RC_RELEASED     (0x01)
+> > Firmware populates the negotiated SAS link rate in DevicePage0
+> > during device discovery. Update mpi3mr to cache this value while
+> > initializing the target device.
+> >
+> > When available, the cached link rate is used instead of issuing
+> > additional SAS PHY or expander PHY page reads.
+> > If the DevicePage0 value is missing or invalid, the driver
+> > falls back to the existing PHY-based mechanism.
+> >
+> > Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
+> > ---
+> >  drivers/scsi/mpi3mr/mpi/mpi30_cnfg.h   |  2 +
+> >  drivers/scsi/mpi3mr/mpi3mr.h           |  2 +
+> >  drivers/scsi/mpi3mr/mpi3mr_os.c        | 88 ++++++++++++++++++++++++++
+> >  drivers/scsi/mpi3mr/mpi3mr_transport.c | 30 +++++----
+> >  4 files changed, 110 insertions(+), 12 deletions(-)
+> >
+> > diff --git a/drivers/scsi/mpi3mr/mpi/mpi30_cnfg.h b/drivers/scsi/mpi3mr=
+/mpi/mpi30_cnfg.h
+> > index 8c8bfbbdd34e..67d72b82cbe0 100644
+> > --- a/drivers/scsi/mpi3mr/mpi/mpi30_cnfg.h
+> > +++ b/drivers/scsi/mpi3mr/mpi/mpi30_cnfg.h
+> > @@ -2314,6 +2314,8 @@ struct mpi3_device0_sas_sata_format {
+> >       u8         attached_phy_identifier;
+> >       u8         max_port_connections;
+> >       u8         zone_group;
+> > +     u8         reserved10[3];
+> > +     u8         negotiated_link_rate;
+> >  };
+> >
+> >  #define MPI3_DEVICE0_SASSATA_FLAGS_WRITE_SAME_UNMAP_NCQ (0x0400)
+> > diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.=
+h
+> > index 611a51a353c9..590c017acf25 100644
+> > --- a/drivers/scsi/mpi3mr/mpi3mr.h
+> > +++ b/drivers/scsi/mpi3mr/mpi3mr.h
+> > @@ -643,6 +643,7 @@ struct mpi3mr_enclosure_node {
+> >   * @dev_info: Device information bits
+> >   * @phy_id: Phy identifier provided in device page 0
+> >   * @attached_phy_id: Attached phy identifier provided in device page 0
+> > + * @negotiated_link_rate: Negotiated link rate from device page 0
+> >   * @sas_transport_attached: Is this device exposed to transport
+> >   * @pend_sas_rphy_add: Flag to check device is in process of add
+> >   * @hba_port: HBA port entry
+> > @@ -654,6 +655,7 @@ struct tgt_dev_sas_sata {
+> >       u16 dev_info;
+> >       u8 phy_id;
+> >       u8 attached_phy_id;
+> > +     u8 negotiated_link_rate;
+> >       u8 sas_transport_attached;
+> >       u8 pend_sas_rphy_add;
+> >       struct mpi3mr_hba_port *hba_port;
+> > diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3=
+mr_os.c
+> > index 4dbf2f337212..ac94654494ba 100644
+> > --- a/drivers/scsi/mpi3mr/mpi3mr_os.c
+> > +++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
+> > @@ -1138,6 +1138,90 @@ static void mpi3mr_refresh_tgtdevs(struct mpi3mr=
+_ioc *mrioc)
+> >       }
+> >  }
+> >
+> > +/**
+> > + * mpi3mr_debug_dump_devpg0 - Dump device page0
+> > + * @mrioc: Adapter instance reference
+> > + * @dev_pg0: Device page 0.
+> > + *
+> > + * Prints pertinent details of the device page 0.
+> > + *
+> > + * Return: Nothing.
+> > + */
+> > +static void
+> > +mpi3mr_debug_dump_devpg0(struct mpi3mr_ioc *mrioc, struct mpi3_device_=
+page0 *dev_pg0)
+> > +{
+> > +
 >
-> Why the alignment change ?
->[Ranjan]: unintentional, will restore original alignment.
-> > +#define MPI3_EVENT_DIAG_BUFFER_STATUS_CHANGE_RC_PAUSED               (=
-0x02)
-> > +#define MPI3_EVENT_DIAG_BUFFER_STATUS_CHANGE_RC_RESUMED              (=
-0x03)
-> > +#define MPI3_EVENT_DIAG_BUFFER_STATUS_CHANGE_RC_CLEARED              (=
-0x04)
+> No need for this blank line.
 >
-> A white line here would be nice to separate things.
+> > +     if (!(mrioc->logging_level &
+> > +         (MPI3_DEBUG_EVENT | MPI3_DEBUG_EVENT_WORK_TASK)))
+> > +             return;
 >
-> >  #define MPI3_PEL_LOCALE_FLAGS_NON_BLOCKING_BOOT_EVENT   (0x0200)
-> >  #define MPI3_PEL_LOCALE_FLAGS_BLOCKING_BOOT_EVENT       (0x0100)
-> >  #define MPI3_PEL_LOCALE_FLAGS_PCIE                      (0x0080)
+> Please move this test in the caller so that we can avoid a function call =
+for
+> nothing if debug is not enabled.
 >
+> > +
+> > +     ioc_info(mrioc,
+> > +         "device_pg0: handle(0x%04x), perst_id(%d), wwid(0x%016llx), e=
+ncl_handle(0x%04x), slot(%d)\n",
+> > +         le16_to_cpu(dev_pg0->dev_handle),
+> > +         le16_to_cpu(dev_pg0->persistent_id),
+> > +         le64_to_cpu(dev_pg0->wwid), le16_to_cpu(dev_pg0->enclosure_ha=
+ndle),
+> > +         le16_to_cpu(dev_pg0->slot));
+> > +     ioc_info(mrioc, "device_pg0: access_status(0x%02x), flags(0x%04x)=
+, device_form(0x%02x), queue_depth(%d)\n",
+> > +         dev_pg0->access_status, le16_to_cpu(dev_pg0->flags),
+> > +         dev_pg0->device_form, le16_to_cpu(dev_pg0->queue_depth));
+> > +     ioc_info(mrioc, "device_pg0: parent_handle(0x%04x), iounit_port(%=
+d)\n",
+> > +         le16_to_cpu(dev_pg0->parent_dev_handle), dev_pg0->io_unit_por=
+t);
+> > +
+> > +     switch (dev_pg0->device_form) {
+> > +     case MPI3_DEVICE_DEVFORM_SAS_SATA:
+> > +     {
+> > +             struct mpi3_device0_sas_sata_format *sasinf =3D
+> > +                 &dev_pg0->device_specific.sas_sata_format;
 >
+> Please add a blank line after declarations. Same comment applies to other=
+ cases
+> below.
+>
+> > +             ioc_info(mrioc,
+> > +                 "device_pg0: sas_sata: sas_address(0x%016llx),flags(0=
+x%04x),\n"
+> > +                 "device_info(0x%04x), phy_num(%d), attached_phy_id(%d=
+),negotiated_link_rate(0x%02x)\n",
+> > +                 le64_to_cpu(sasinf->sas_address),
+> > +                 le16_to_cpu(sasinf->flags),
+> > +                 le16_to_cpu(sasinf->device_info), sasinf->phy_num,
+> > +                 sasinf->attached_phy_identifier, sasinf->negotiated_l=
+ink_rate);
+> > +             break;
+> > +     }
+> > +     case MPI3_DEVICE_DEVFORM_PCIE:
+> > +     {
+> > +             struct mpi3_device0_pcie_format *pcieinf =3D
+> > +                 &dev_pg0->device_specific.pcie_format;
+> > +             ioc_info(mrioc,
+> > +                 "device_pg0: pcie: port_num(%d), device_info(0x%04x),=
+ mdts(%d), page_sz(0x%02x)\n",
+> > +                 pcieinf->port_num, le16_to_cpu(pcieinf->device_info),
+> > +                 le32_to_cpu(pcieinf->maximum_data_transfer_size),
+> > +                 pcieinf->page_size);
+> > +             ioc_info(mrioc,
+> > +                 "device_pg0: pcie: abort_timeout(%d), reset_timeout(%=
+d) capabilities (0x%08x)\n",
+> > +                 pcieinf->nvme_abort_to, pcieinf->controller_reset_to,
+> > +                 le32_to_cpu(pcieinf->capabilities));
+> > +             break;
+> > +     }
+> > +     case MPI3_DEVICE_DEVFORM_VD:
+> > +     {
+> > +             struct mpi3_device0_vd_format *vdinf =3D
+> > +                 &dev_pg0->device_specific.vd_format;
+> > +
+> > +             ioc_info(mrioc,
+> > +                 "device_pg0: vd: state(0x%02x), raid_level(%d), flags=
+(0x%04x),\n"
+> > +                 "device_info(0x%04x) abort_timeout(%d), reset_timeout=
+(%d)\n",
+> > +                 vdinf->vd_state, vdinf->raid_level,
+> > +                 le16_to_cpu(vdinf->flags),
+> > +                 le16_to_cpu(vdinf->device_info),
+> > +                 vdinf->vd_abort_to, vdinf->vd_reset_to);
+> > +             ioc_info(mrioc,
+> > +                 "device_pg0: vd: tg_id(%d), high(%dMiB), low(%dMiB), =
+qd_reduction_factor(%d)\n",
+> > +                 vdinf->io_throttle_group,
+> > +                 le16_to_cpu(vdinf->io_throttle_group_high),
+> > +                 le16_to_cpu(vdinf->io_throttle_group_low),
+> > +                 ((le16_to_cpu(vdinf->flags) &
+> > +                    MPI3_DEVICE0_VD_FLAGS_IO_THROTTLE_GROUP_QD_MASK) >=
+> 12));
+> > +
+> > +     }
+> > +     default:
+> > +             break;
+> > +     }
+> > +}
+> > +
+> >  /**
+> >   * mpi3mr_update_tgtdev - DevStatusChange evt bottomhalf
+> >   * @mrioc: Adapter instance reference
+> > @@ -1159,6 +1243,8 @@ static void mpi3mr_update_tgtdev(struct mpi3mr_io=
+c *mrioc,
+> >       struct mpi3mr_enclosure_node *enclosure_dev =3D NULL;
+> >       u8 prot_mask =3D 0;
+> >
+> > +     mpi3mr_debug_dump_devpg0(mrioc, dev_pg0);
+> > +
+> >       tgtdev->perst_id =3D le16_to_cpu(dev_pg0->persistent_id);
+> >       tgtdev->dev_handle =3D le16_to_cpu(dev_pg0->dev_handle);
+> >       tgtdev->dev_type =3D dev_pg0->device_form;
+> > @@ -1237,6 +1323,8 @@ static void mpi3mr_update_tgtdev(struct mpi3mr_io=
+c *mrioc,
+> >               tgtdev->dev_spec.sas_sata_inf.phy_id =3D sasinf->phy_num;
+> >               tgtdev->dev_spec.sas_sata_inf.attached_phy_id =3D
+> >                   sasinf->attached_phy_identifier;
+> > +             tgtdev->dev_spec.sas_sata_inf.negotiated_link_rate =3D
+> > +                     sasinf->negotiated_link_rate;
+> >               if ((dev_info & MPI3_SAS_DEVICE_INFO_DEVICE_TYPE_MASK) !=
+=3D
+> >                   MPI3_SAS_DEVICE_INFO_DEVICE_TYPE_END_DEVICE)
+> >                       tgtdev->is_hidden =3D 1;
+> > diff --git a/drivers/scsi/mpi3mr/mpi3mr_transport.c b/drivers/scsi/mpi3=
+mr/mpi3mr_transport.c
+> > index d70f002d6487..101161554ef1 100644
+> > --- a/drivers/scsi/mpi3mr/mpi3mr_transport.c
+> > +++ b/drivers/scsi/mpi3mr/mpi3mr_transport.c
+> > @@ -2284,11 +2284,11 @@ void mpi3mr_expander_remove(struct mpi3mr_ioc *=
+mrioc, u64 sas_address,
+> >   * @mrioc: Adapter instance reference
+> >   * @tgtdev: Target device
+> >   *
+> > - * This function identifies whether the target device is
+> > - * attached directly or through expander and issues sas phy
+> > - * page0 or expander phy page1 and gets the link rate, if there
+> > - * is any failure in reading the pages then this returns link
+> > - * rate of 1.5.
+> > + * This function first tries to use the link rate from DevicePage0
+> > + * (populated by firmware during device discovery). If the cached
+> > + * value is not available or invalid, it falls back to reading from
+> > + * sas phy page0 or expander phy page1.
+> > + *
+> >   *
+> >   * Return: logical link rate.
+> >   */
+> > @@ -2301,6 +2301,14 @@ static u8 mpi3mr_get_sas_negotiated_logical_link=
+rate(struct mpi3mr_ioc *mrioc,
+> >       u32 phynum_handle;
+> >       u16 ioc_status;
+> >
+> > +     /* First, try to use link rate from DevicePage0 (populated by fir=
+mware) */
+> > +     if (tgtdev->dev_spec.sas_sata_inf.negotiated_link_rate >=3D
+> > +         MPI3_SAS_NEG_LINK_RATE_1_5) {
+> > +             link_rate =3D tgtdev->dev_spec.sas_sata_inf.negotiated_li=
+nk_rate;
+> > +             goto out;
+> > +     }
+> > +
+> > +     /* Fallback to reading from phy pages if DevicePage0 value not av=
+ailable */
+> >       phy_number =3D tgtdev->dev_spec.sas_sata_inf.phy_id;
+> >       if (!(tgtdev->devpg0_flag & MPI3_DEVICE0_FLAGS_ATT_METHOD_DIR_ATT=
+ACHED)) {
+> >               phynum_handle =3D ((phy_number<<MPI3_SAS_EXPAND_PGAD_PHYN=
+UM_SHIFT)
+> > @@ -2318,9 +2326,7 @@ static u8 mpi3mr_get_sas_negotiated_logical_linkr=
+ate(struct mpi3mr_ioc *mrioc,
+> >                           __FILE__, __LINE__, __func__);
+> >                       goto out;
+> >               }
+> > -             link_rate =3D (expander_pg1.negotiated_link_rate &
+> > -                          MPI3_SAS_NEG_LINK_RATE_LOGICAL_MASK) >>
+> > -                     MPI3_SAS_NEG_LINK_RATE_LOGICAL_SHIFT;
+> > +             link_rate =3D expander_pg1.negotiated_link_rate;
+> >               goto out;
+> >       }
+> >       if (mpi3mr_cfg_get_sas_phy_pg0(mrioc, &ioc_status, &phy_pg0,
+> > @@ -2335,11 +2341,11 @@ static u8 mpi3mr_get_sas_negotiated_logical_lin=
+krate(struct mpi3mr_ioc *mrioc,
+> >                   __FILE__, __LINE__, __func__);
+> >               goto out;
+> >       }
+> > -     link_rate =3D (phy_pg0.negotiated_link_rate &
+> > -                  MPI3_SAS_NEG_LINK_RATE_LOGICAL_MASK) >>
+> > -             MPI3_SAS_NEG_LINK_RATE_LOGICAL_SHIFT;
+> > +     link_rate =3D phy_pg0.negotiated_link_rate;
+> > +
+> >  out:
+> > -     return link_rate;
+> > +     return ((link_rate & MPI3_SAS_NEG_LINK_RATE_LOGICAL_MASK) >>
+> > +             MPI3_SAS_NEG_LINK_RATE_LOGICAL_SHIFT);
+> >  }
+> >
+> >  /**
+>
+[Ranja]: Thanks for the review. I will do the changes and will resend v2.
 >
 > --
 > Damien Le Moal
 > Western Digital Research
 
---000000000000b918060648487aa8
+--000000000000cc703006484893da
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -222,13 +470,13 @@ ZVJ1ZD+auQDbIUxT+Dn9bI5XkQnWJ9KrlcORtztdYTDafN8VQuweS3JY0X/VCNBNZkiYXd7fzOza
 hvkw/S+v8cIfiakLKBREtiBHqWLdVf5CNDVYpd17yz0LGz0TKARbfuK/EiKflA10pnnnOB33Ru9D
 WPp9aHW3szGYr3+H9AHS6IDwkIxyMYICVzCCAlMCAQEwYjBSMQswCQYDVQQGEwJCRTEZMBcGA1UE
 ChMQR2xvYmFsU2lnbiBudi1zYTEoMCYGA1UEAxMfR2xvYmFsU2lnbiBHQ0MgUjYgU01JTUUgQ0Eg
-MjAyMwIMDcMaKRu9LrbAxERoMA0GCWCGSAFlAwQCAQUAoIHHMC8GCSqGSIb3DQEJBDEiBCC9QR3S
-SvbwkDmqDqXzpFm6g8/NoPfyiUVvvkknVDsfszAYBgkqhkiG9w0BCQMxCwYJKoZIhvcNAQcBMBwG
-CSqGSIb3DQEJBTEPFw0yNjAxMTMxNzM5NTRaMFwGCSqGSIb3DQEJDzFPME0wCwYJYIZIAWUDBAEq
+MjAyMwIMDcMaKRu9LrbAxERoMA0GCWCGSAFlAwQCAQUAoIHHMC8GCSqGSIb3DQEJBDEiBCDb1R45
+5clPz/u8Qqnx+He5zHmSNZ0vU8ivzoRqeUbUCDAYBgkqhkiG9w0BCQMxCwYJKoZIhvcNAQcBMBwG
+CSqGSIb3DQEJBTEPFw0yNjAxMTMxNzQ2NTRaMFwGCSqGSIb3DQEJDzFPME0wCwYJYIZIAWUDBAEq
 MAsGCWCGSAFlAwQBFjALBglghkgBZQMEAQIwCgYIKoZIhvcNAwcwCwYJKoZIhvcNAQEHMAsGCWCG
-SAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQANQz9iCZfUv8B0D4DOYLzC8M6GnDYOvNCQZSVAUg4g
-6uSCYLmKBmNItVGNhm6pSkGP3pSaET0aaBbRv0VdB4FSorAHQCywt42Z/L9dtwr8c1mYlVzyY/aF
-Aic80+Lrp712U6x3N7jLUxtgdMuamR3GCTHT1lZ24GYWXlkhvEdd+nLpq/ajG4zVyAgApYPQLgR/
-p0y4PCD3DRBcgGwdn4hqM2VbgEzC+v7HIQL7eQnX+LFkepbEF2WRsArNXswffNzFP5rTebW3UJpZ
-gfXtB+1nvowyUVP+mBebzkN+Bd7oNSDwPQSyEtELPLJV1W0lPO7C0MgXUCftAvApcpnExC+B
---000000000000b918060648487aa8--
+SAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQA3T/QdGYa7w7Zw0ANzIn9n1XRDlBC1EZCcPt3lmu+S
+a1u4xOISmV3Pqj0KaYwlt0eq5G6rLF/SqMXgwKEqFjgqwRVbk+1o4HOHQ5WvDb5wzaNDLLpUA6BZ
+9xWILT17WiU1E6WKlAg3QStsv74wgoDqrIouHd1wqmGlL5w5dXCbJUrq5xgi0uWIVjsouSG2Eaum
+2WEFKvi/IeUdss1vSqSOVjr+cV4NNxBUml4ML6E8JWtJw80WZFxqy2+CcVGGesobYht+fHaidS0K
+uBBot2j/E7XyPYPTeu983KI8GPpw8Ko1XeBFjTyM1SBXEXmIbEiG2bANPmWoAD6XSrarbhum
+--000000000000cc703006484893da--
