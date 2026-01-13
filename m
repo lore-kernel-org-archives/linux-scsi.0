@@ -1,71 +1,72 @@
-Received: from mail-qk1-f228.google.com (mail-qk1-f228.google.com [209.85.222.228])
+Received: from mail-pl1-f226.google.com (mail-pl1-f226.google.com [209.85.214.226])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BDF0C329C74
-	for <linux-scsi@vger.kernel.org>; Tue, 13 Jan 2026 17:36:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.228
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5539D389DF4
+	for <linux-scsi@vger.kernel.org>; Tue, 13 Jan 2026 17:39:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.226
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768325810; cv=none; b=HiyX8fr2HN3euQlXEeGaBa86b82gVQHxDwLSUy2sxMpVluUdEmjY8dAkzShfrBv/iNYlaLmD+LfOGBsygbcmwLGN8G9rPtWS9tzYsUJaHoFxjbuZWMpnVWh9Kcd9VrWLVKLmbnZR/zRuacpSLthB+dk6h9LEdnPchc4LyjtxWdA=
+	t=1768325997; cv=none; b=nfR5Hgv7Wzs5oVXmKNpMfZEzMm5z6ZJe+yL3EoCwHdDELAkMmLZS1Nitr9hFpE3u3yfaHgI+rAuL0dFUHg6vAllSIuti49sSB/cRSs7R393hnsvz2lES3cnhN2CTggin2WCTnf63buo+UwovUWjd5t8gSwslAENsXhqBGkHUqY4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768325810; c=relaxed/simple;
-	bh=y3JVCu0i9q4GqHC0zxMR3amHic/ht6PmCBNHooabbe8=;
+	s=arc-20240116; t=1768325997; c=relaxed/simple;
+	bh=LYUbhOJ+hkVIx031jqOTutwJ+4jEWJBmKF4JnnPf3Yo=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=ZfaUqBM7CFrigE0m4yt2hhF8RWaICHxiLu7YLfa66FWsVTQsgHnZig8QLviv3BH3bqM8bQrMFbE+N6X0/YKzvQJwmFP8o4tDvhnCfZZBTi+EIBifRs5icEhuPCcG/hG5D+R/YTNLnqC70z3Sfjo+JXPW8zZsi+/ucJ+03aeNO84=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=S4jfwLqa; arc=none smtp.client-ip=209.85.222.228
+	 To:Cc:Content-Type; b=fB+pnK4DTP+bOnuiZ6K38NwjhUc3eLKveB738Y+yrI/e27c+DoJRlfl4AniPSWekrfvIxMdvrzXnUZ2Vs2bxtLv7wvrcXV5GgRt9MlnAYMGgl7ztgyMvL2uyFlCoohWmxjyZMP20nrl5WS/0a4y3EctYPAvrnLNRANh710yh4uI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=MUq47hrb; arc=none smtp.client-ip=209.85.214.226
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="S4jfwLqa"
-Received: by mail-qk1-f228.google.com with SMTP id af79cd13be357-8b29ff9d18cso834819185a.3
-        for <linux-scsi@vger.kernel.org>; Tue, 13 Jan 2026 09:36:48 -0800 (PST)
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="MUq47hrb"
+Received: by mail-pl1-f226.google.com with SMTP id d9443c01a7336-2a0834769f0so54098135ad.2
+        for <linux-scsi@vger.kernel.org>; Tue, 13 Jan 2026 09:39:56 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1768325808; x=1768930608;
+        d=1e100.net; s=20230601; t=1768325996; x=1768930796;
         h=cc:to:subject:message-id:date:from:in-reply-to:references
          :mime-version:dkim-signature:x-gm-gg:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=oOa2o92cw0NXQYHUBKzH2APd6PqAsK6CT9yUvXJq4C0=;
-        b=IQoi5uUvEsF6VInmgynFrJ0KE1OJCHFdu7FzBq1VgxWBSl+RXP1UBUazlkWtQXCv/2
-         9oYWSsQKkPvU2CRMDxXMNFZSI/Ewh+VkJxlbGhgEcLeRJHpYbOoB2LzbaEzm7JMPp+3h
-         d4fMSzqwywuhcOcWMGV4QXHpK4moLlb2KwqAWs+2WO58G6z/LpALMOyTA2rZvT3gnLkw
-         DjN9NcIkSWpN75MF7tb60RbdY7CE8I9X1/QUTrqaYipgTQamlCCNWsBttyuxhkdf0h9i
-         yRkke3TgwYjF/D1NLAn/NX99ElrOiR4y8CQoA3QHr502kR1/4Rneq0Kz7U14f98FbxM9
-         BJ8Q==
-X-Gm-Message-State: AOJu0Yy6ejc/D/oCOtZwdm3Kk9j+hgN/261rDmmyONjey61U2orLNz4D
-	q6PJdAb0RJvMEs8N4hLZ7CIaVpp5Pjbve0wkDtgDzq16Eeo4sU8GeU9NsAy0gwSuar4tF0oGWmz
-	6KXpUNy3KlwBxUryaYIyqus+qkdDB4bSQQH6uNFMz4By5+IsO2as4DdVYl3T821WpiFoUs2VWMu
-	eXlQLtlh2D8I79LffTQWfSWNKGd9Q6zTSwdl9HNPNv7jwqcYL+hQlbGW6EYAK9rniQZNG3RXqkw
-	RYNim37dx8NRzQX
-X-Gm-Gg: AY/fxX73yXb0I/H8xUnZPM43XwaLvnZyeCO5Cux0UlNztIhaUx7L11QycPpXPe0vs7c
-	nFl9kh7Blfk8aPE9Nl9awo825FcXhRp183/109xxXES/96W2CYbAhM+vCxFQRdWn8g3ecCr2fh7
-	MvF8IRl8w3lsU5MuAkirySzSAVzlrkrQjS1bUTzlrrWKqkk1SSL//oxD8AJa+YcszHT9knVDr+Z
-	+SDAlSJrGkdKXRtwm9X+DAbaN6L/DGc0Ak9eksq754hm5e6YCV7GwFdd7BqMm46OpIQvIXOCCt+
-	fy1ilN0COC83k3yssYvVZdG+kQDHrg6yvGY8Uc8ico4Wq7wzCIc7/1kfZBlRSlJA7Wp1nCRpHkT
-	iAKesy+XB4zY8hq3n7lyhe4ZQTleiEOKrvBUYXmB2ZG03+N8cL8DBweR7gbOtZ2HI01gK1bMmMB
-	FMAi4oOTx7tkvk2QA2ejRoY9121ydED4ZN1Hmm9IFYJHoOZcc=
-X-Received: by 2002:a05:620a:4606:b0:8a6:ee41:1b48 with SMTP id af79cd13be357-8c52fb47baamr1383185a.26.1768325807479;
-        Tue, 13 Jan 2026 09:36:47 -0800 (PST)
-Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-118.dlp.protect.broadcom.com. [144.49.247.118])
-        by smtp-relay.gmail.com with ESMTPS id 6a1803df08f44-89076f9f4cbsm25843686d6.0.2026.01.13.09.36.46
+        bh=9zKQ5/iZsL0IvKxiuZ5fyncB2bwh8NgG8z1EpLlq0q4=;
+        b=YzpBaUzEiGKz9q4l1uWd9+U3HbsGxIzcKjMq5T247uxkfB7OEkFp7tbkTnrw52AoMY
+         EFs9u6h3mRzGcPhSuxSYJtuk6gojjACpSfZIwIh4kUZzzdxCIeLUNKzLDTC6AS8qFnZt
+         38yfkX5qDYr+zEsSu9REur+X3tSkTVenb/gLV8apODdVejqY4nWszy5SEMUVcCU23UU2
+         QpD7HdeiDZtUXNoy5t515jnpllQiZbcm7dPUywKF4U5OjvSIpYfLgWRN4gAuVnQbIYrE
+         80RySWE3FZIiYbbt8IB5vr4vYv0We3GIN2J3htNb/A+TTcPaGZkJaowmwVE1hIvxyTbW
+         k9xA==
+X-Gm-Message-State: AOJu0YxUR1hHCU4PGTt9trVra+SvTHMkI8RhAFDlYiWSl9hTHCXyMoXk
+	dOCrxlCTVPbzwRcyJqCqwfds0pY2BGrWUb8Nl5iGjalumWOmVmDNn21KKmBWOcpqqJfbFyg1mty
+	InQUhB5vN/K2VkbxeKgczRXwPhldJU9ge7Inyyl/24icwkb7t4CdX/9WZ61be2GaeJ5w1GVMXPe
+	0Nk2EoJ+lon9C0PawvsoLxfgPO2Ec6vR7b9Rvo6N/FkRPpD5/tK5Ryb+oQ2PnmXCwJxcO+9JETE
+	/el/By7LTeZauwN
+X-Gm-Gg: AY/fxX4OX0Pd0rbBHeV76kGgXNtOV68wFIRCPfcmm6S1ICfmG5EMz7L9mewQRSnqW6u
+	UgAXiLIPk4coMqiVSJoV2h4jeBRLYF+9b5eXE+jcFI80LmhqChiHPwc9mWIpZCVJlBUXRhx4wyq
+	o1aI4RKHdc8zpBA/STq7yGiIEoPA/q6CJ29yTAGoeHcU6DGTatCSD1nWnFIpgmja8MJGRn88cPV
+	ib/N19oijsTcJJy73a2yEEVxFYR1J+1PPEFUstQ0eb/rDoCdFgNAE98p6bq31PxOiE8LQV35HaB
+	SrsjGvL66d4cDW3DRcQOjrmwD6tdRBp9Ar7wiX+FlfZiO6QDCN2oaTnf5yVIVcs6q9gQhF2qN2F
+	X3Otv0O72jCoRP8p9tu6xrFq1wY0WKTEPn8+lkd8GQkgw9gJiiwqs6VJWUSyM01vAc7y7KSNlfM
+	+enwkE4RxXyJ0h9fXUsgLUiou8AXNeqhuRErlIRR9+vQ==
+X-Google-Smtp-Source: AGHT+IFgH32Q+xApeGVfPgwTIYdUy725uykyT/EsCrujVVbK4rRMyQgC4QAmM3gI7k3Srf+eA17H4Zel77ww
+X-Received: by 2002:a17:902:e74c:b0:29f:2ec4:83e5 with SMTP id d9443c01a7336-2a3ee41d105mr204227085ad.12.1768325995581;
+        Tue, 13 Jan 2026 09:39:55 -0800 (PST)
+Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-2.dlp.protect.broadcom.com. [144.49.247.2])
+        by smtp-relay.gmail.com with ESMTPS id d9443c01a7336-2a3e3cc4c12sm25033645ad.45.2026.01.13.09.39.55
         for <linux-scsi@vger.kernel.org>
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 13 Jan 2026 09:36:47 -0800 (PST)
+        Tue, 13 Jan 2026 09:39:55 -0800 (PST)
 X-Relaying-Domain: broadcom.com
 X-CFilter-Loop: Reflected
-Received: by mail-ej1-f71.google.com with SMTP id a640c23a62f3a-b87437a793fso102550866b.1
-        for <linux-scsi@vger.kernel.org>; Tue, 13 Jan 2026 09:36:46 -0800 (PST)
+Received: by mail-ej1-f70.google.com with SMTP id a640c23a62f3a-b87039c9a43so330686166b.1
+        for <linux-scsi@vger.kernel.org>; Tue, 13 Jan 2026 09:39:54 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1768325806; x=1768930606; darn=vger.kernel.org;
+        d=broadcom.com; s=google; t=1768325994; x=1768930794; darn=vger.kernel.org;
         h=cc:to:subject:message-id:date:from:in-reply-to:references
          :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=oOa2o92cw0NXQYHUBKzH2APd6PqAsK6CT9yUvXJq4C0=;
-        b=S4jfwLqaebCfrSIal1ViTrhMY6kc/eXYU+H/lEq+8CONe5Dk+0/HZz23JiOzh8tVaV
-         dGUhUYuS+1+0OqXAkT1OEHhtBpKdQY78kmwzC6dlFvDUEEjVEESyPQ1/boQBT09rCRnO
-         Abns4P09h8yygpjiu8FknFpexhqy2j01mQoSI=
-X-Received: by 2002:a17:907:968c:b0:b87:49e1:2760 with SMTP id a640c23a62f3a-b8749e12f4cmr163431766b.41.1768325805822;
-        Tue, 13 Jan 2026 09:36:45 -0800 (PST)
-X-Received: by 2002:a17:907:968c:b0:b87:49e1:2760 with SMTP id
- a640c23a62f3a-b8749e12f4cmr163430466b.41.1768325805421; Tue, 13 Jan 2026
- 09:36:45 -0800 (PST)
+        bh=9zKQ5/iZsL0IvKxiuZ5fyncB2bwh8NgG8z1EpLlq0q4=;
+        b=MUq47hrbGWVrHNxKox2V1opGyHvloT1knz1AvojYYVWo/zIZPCygjLfvAFihdhP5WU
+         liKSlPyCnbARAeV+j7htHTJLwswNOm/j5aGK+xzA/KnjYx/8E8LflpIhIkUBB/4WWC/m
+         S4PpJIXpi6Tzy3bzwA5TxNZhlHw6s8g6FWJM8=
+X-Received: by 2002:a17:906:fd84:b0:b83:9751:4334 with SMTP id a640c23a62f3a-b844538b363mr2258041566b.50.1768325993627;
+        Tue, 13 Jan 2026 09:39:53 -0800 (PST)
+X-Received: by 2002:a17:906:fd84:b0:b83:9751:4334 with SMTP id
+ a640c23a62f3a-b844538b363mr2258039766b.50.1768325993150; Tue, 13 Jan 2026
+ 09:39:53 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -73,14 +74,13 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 References: <20260112081037.74376-1-ranjan.kumar@broadcom.com>
- <20260112081037.74376-2-ranjan.kumar@broadcom.com> <0179528f-72c1-4d95-a49f-69a2adae9b26@kernel.org>
-In-Reply-To: <0179528f-72c1-4d95-a49f-69a2adae9b26@kernel.org>
+ <20260112081037.74376-6-ranjan.kumar@broadcom.com> <67011328-cbe5-40b6-8bc2-32b4f2c43592@kernel.org>
+In-Reply-To: <67011328-cbe5-40b6-8bc2-32b4f2c43592@kernel.org>
 From: Ranjan Kumar <ranjan.kumar@broadcom.com>
-Date: Tue, 13 Jan 2026 23:06:31 +0530
-X-Gm-Features: AZwV_QiJOpAdb9aWO_C1JKrKpGK3pquoXH64UB5Dm7m7dW4_L5hJuH5_vc3wqn8
-Message-ID: <CAMFBP8OiaOzz80A=AzWggMk_p=bDMn-QYOkFbthhQAPQkMa_5Q@mail.gmail.com>
-Subject: Re: [PATCH v1 1/7] mpi3mr: Add module parameter to control threaded
- IRQ polling
+Date: Tue, 13 Jan 2026 23:09:38 +0530
+X-Gm-Features: AZwV_QjDVuMilv4c3y_zHs6uqUBYVXtHe5-uq2WAQkNBBYbe866o-E3GM_PS2J0
+Message-ID: <CAMFBP8Pk-A-i0FLCosFSxSjhaZovgPnKrypnTKsR5QqzSEL4iA@mail.gmail.com>
+Subject: Re: [PATCH v1 5/7] mpi3mr: Update MPI Headers to revision 39
 To: Damien Le Moal <dlemoal@kernel.org>
 Cc: linux-scsi@vger.kernel.org, martin.petersen@oracle.com, 
 	rajsekhar.chundru@broadcom.com, sathya.prakash@broadcom.com, 
@@ -88,86 +88,48 @@ Cc: linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
 	salomondush@google.com
 X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-	boundary="00000000000085b2a30648486fd9"
+	boundary="000000000000b918060648487aa8"
 
---00000000000085b2a30648486fd9
+--000000000000b918060648487aa8
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
 Hi Damien,
 
-On Mon, Jan 12, 2026 at 7:44=E2=80=AFPM Damien Le Moal <dlemoal@kernel.org>=
+On Mon, Jan 12, 2026 at 7:51=E2=80=AFPM Damien Le Moal <dlemoal@kernel.org>=
  wrote:
 >
 > On 1/12/26 09:10, Ranjan Kumar wrote:
-> > Add a module parameter to enable or disable threaded IRQ polling
-> > in the driver. The default behavior remains unchanged
-> > with polling enabled.
-> >
-> > When disabled, completion processing is kept entirely in the
-> > hard IRQ context, avoiding the threaded polling path.
+> > -#define MPI3_EVENT_DIAG_BUFFER_STATUS_CHANGE_RC_RELEASED             (=
+0x01)
+> > -#define MPI3_EVENT_DIAG_BUFFER_STATUS_CHANGE_RC_PAUSED               (=
+0x02)
+> > -#define MPI3_EVENT_DIAG_BUFFER_STATUS_CHANGE_RC_RESUMED              (=
+0x03)
+> > +#define MPI3_EVENT_DIAG_BUFFER_STATUS_CHANGE_RC_RELEASED     (0x01)
 >
-> What does that bring ? Better throughput ? Lower latency ? please tell us=
- more
-> about the benefits of this change.
+> Why the alignment change ?
+>[Ranjan]: unintentional, will restore original alignment.
+> > +#define MPI3_EVENT_DIAG_BUFFER_STATUS_CHANGE_RC_PAUSED               (=
+0x02)
+> > +#define MPI3_EVENT_DIAG_BUFFER_STATUS_CHANGE_RC_RESUMED              (=
+0x03)
+> > +#define MPI3_EVENT_DIAG_BUFFER_STATUS_CHANGE_RC_CLEARED              (=
+0x04)
 >
-[Ranjan]: SAS/SATA  completes IOs slowly, so IO polling would increase
-CPU utilization, and interrupt-driven
-completions are useful whereas for NVMe devices, IO polling is
-beneficial as the device completes IOs fast.
-> >
-> > Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
-> > ---
-> >  drivers/scsi/mpi3mr/mpi3mr_fw.c | 9 +++++++--
-> >  1 file changed, 7 insertions(+), 2 deletions(-)
-> >
-> > diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3=
-mr_fw.c
-> > index 8fe6e0bf342e..869e525f3e73 100644
-> > --- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
-> > +++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-> > @@ -21,6 +21,10 @@ static int mpi3mr_check_op_admin_proc(struct mpi3mr_=
-ioc *mrioc);
-> >  static int poll_queues;
-> >  module_param(poll_queues, int, 0444);
-> >  MODULE_PARM_DESC(poll_queues, "Number of queues for io_uring poll mode=
-. (Range 1 - 126)");
-> > +static bool threaded_isr_poll =3D true;
-> > +module_param(threaded_isr_poll, bool, 0444);
-> > +MODULE_PARM_DESC(threaded_isr_poll,
-> > +                     "Enablement of IRQ polling thread (default=3Dtrue=
-)");
-> >
-> >  #if defined(writeq) && defined(CONFIG_64BIT)
-> >  static inline void mpi3mr_writeq(__u64 b, void __iomem *addr,
-> > @@ -595,7 +599,8 @@ int mpi3mr_process_op_reply_q(struct mpi3mr_ioc *mr=
-ioc,
-> >                * Exit completion loop to avoid CPU lockup
-> >                * Ensure remaining completion happens from threaded ISR.
-> >                */
-> > -             if (num_op_reply > mrioc->max_host_ios) {
-> > +             if ((num_op_reply > mrioc->max_host_ios) &&
-> > +                     (threaded_isr_poll =3D=3D true)) {
-> >                       op_reply_q->enable_irq_poll =3D true;
-> >                       break;
-> >               }
-> > @@ -692,7 +697,7 @@ static irqreturn_t mpi3mr_isr(int irq, void *privda=
-ta)
-> >        * If more IOs are expected, schedule IRQ polling thread.
-> >        * Otherwise exit from ISR.
-> >        */
-> > -     if (!intr_info->op_reply_q)
-> > +     if ((threaded_isr_poll =3D=3D false) || !intr_info->op_reply_q)
-> >               return ret;
-> >
-> >       if (!intr_info->op_reply_q->enable_irq_poll ||
+> A white line here would be nice to separate things.
+>
+> >  #define MPI3_PEL_LOCALE_FLAGS_NON_BLOCKING_BOOT_EVENT   (0x0200)
+> >  #define MPI3_PEL_LOCALE_FLAGS_BLOCKING_BOOT_EVENT       (0x0100)
+> >  #define MPI3_PEL_LOCALE_FLAGS_PCIE                      (0x0080)
+>
 >
 >
 > --
 > Damien Le Moal
 > Western Digital Research
 
---00000000000085b2a30648486fd9
+--000000000000b918060648487aa8
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -260,13 +222,13 @@ ZVJ1ZD+auQDbIUxT+Dn9bI5XkQnWJ9KrlcORtztdYTDafN8VQuweS3JY0X/VCNBNZkiYXd7fzOza
 hvkw/S+v8cIfiakLKBREtiBHqWLdVf5CNDVYpd17yz0LGz0TKARbfuK/EiKflA10pnnnOB33Ru9D
 WPp9aHW3szGYr3+H9AHS6IDwkIxyMYICVzCCAlMCAQEwYjBSMQswCQYDVQQGEwJCRTEZMBcGA1UE
 ChMQR2xvYmFsU2lnbiBudi1zYTEoMCYGA1UEAxMfR2xvYmFsU2lnbiBHQ0MgUjYgU01JTUUgQ0Eg
-MjAyMwIMDcMaKRu9LrbAxERoMA0GCWCGSAFlAwQCAQUAoIHHMC8GCSqGSIb3DQEJBDEiBCCioVSf
-iu7Ypr/Kh9cBr6GeKYtwg36/fkNhpK8F2VXi+TAYBgkqhkiG9w0BCQMxCwYJKoZIhvcNAQcBMBwG
-CSqGSIb3DQEJBTEPFw0yNjAxMTMxNzM2NDZaMFwGCSqGSIb3DQEJDzFPME0wCwYJYIZIAWUDBAEq
+MjAyMwIMDcMaKRu9LrbAxERoMA0GCWCGSAFlAwQCAQUAoIHHMC8GCSqGSIb3DQEJBDEiBCC9QR3S
+SvbwkDmqDqXzpFm6g8/NoPfyiUVvvkknVDsfszAYBgkqhkiG9w0BCQMxCwYJKoZIhvcNAQcBMBwG
+CSqGSIb3DQEJBTEPFw0yNjAxMTMxNzM5NTRaMFwGCSqGSIb3DQEJDzFPME0wCwYJYIZIAWUDBAEq
 MAsGCWCGSAFlAwQBFjALBglghkgBZQMEAQIwCgYIKoZIhvcNAwcwCwYJKoZIhvcNAQEHMAsGCWCG
-SAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQC1QWKyTQ16DrD0PA1lQNMO95Z4Z45NePxRWxd8dm/Y
-zU+HDua4UHxpE3PrYKpYl1zoM+VwNWCAnE/JJ4BjBSxvAw06pAYRQ2imH5XwirutTBs51EvYhqBW
-+rC3Jn0GKVafoPZ7ttsWeNIKK+Qywc1Z8EHH3ofX+O2+DbKqqvOMo5WuG2yTtpXxulFdMEvJW7j8
-qA3APTcrO1dO4oJnVXaHUxTjOM29K3uSSb+Izx6i53UCgO05B4t8nM50JuoLKL8adanXzh04uW+X
-0eErCduF2FEP4/OsfR7YRB3Li5b5jwybGg3EZJ7te+vL5dr41sE+3mzGGb336Dgq9RkCQ1XK
---00000000000085b2a30648486fd9--
+SAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQANQz9iCZfUv8B0D4DOYLzC8M6GnDYOvNCQZSVAUg4g
+6uSCYLmKBmNItVGNhm6pSkGP3pSaET0aaBbRv0VdB4FSorAHQCywt42Z/L9dtwr8c1mYlVzyY/aF
+Aic80+Lrp712U6x3N7jLUxtgdMuamR3GCTHT1lZ24GYWXlkhvEdd+nLpq/ajG4zVyAgApYPQLgR/
+p0y4PCD3DRBcgGwdn4hqM2VbgEzC+v7HIQL7eQnX+LFkepbEF2WRsArNXswffNzFP5rTebW3UJpZ
+gfXtB+1nvowyUVP+mBebzkN+Bd7oNSDwPQSyEtELPLJV1W0lPO7C0MgXUCftAvApcpnExC+B
+--000000000000b918060648487aa8--
