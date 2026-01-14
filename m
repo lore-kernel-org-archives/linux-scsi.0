@@ -1,52 +1,60 @@
 Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 75C262C11CB
-	for <linux-scsi@vger.kernel.org>; Wed, 14 Jan 2026 17:51:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 289C3322A1D
+	for <linux-scsi@vger.kernel.org>; Wed, 14 Jan 2026 17:51:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768413074; cv=none; b=VCwO7vpRl03bgQZAGZwynokc94FcweAeakwkn1z4Btzhw/QT7P6z4v/2bqBgu/yprE94M7laiEQqZ1M1ew5j4Ob4R1CRf7MxiqI9ySY/BRhcgdfvRqMiX0CUlg8FSWfVkJytl2XVk2FarFcya60axUyEVgZqZuzYz9VPNy0kdGI=
+	t=1768413076; cv=none; b=IJ2BHYhNCY5+1upiCzX3jixEqpCyuY98C9X+18XcAXLVItbd7RqXOHRaVh0miGrPaEBqut7KGaFxECdj2lm9Re+TFixq9/OuYf9lOoEgxxvzWN+7aCceaUtKgW2Cr36TRaGB6MBrwDe5MgShKDh+4Pf7eUlhDNswzenKUmZONAg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768413074; c=relaxed/simple;
-	bh=cUbEl06eszlmmUvns45jQtx+1UVSNph7VLjI/6xrIVk=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=l9sbLQLMc3MmAaUP4sxwvzI5zS8nysU0bTlA/pyOjOZM0Rrfaw49woBlouRTGlA6Xd9u3+zeYSb1W4NNqU9hCgcAeE6/Ce61ERdA0+GSC6+tM7DOHwIGJdgzzuc09c+CFFh4eAYXEIosfeqxXF2j/o/0q23qHHx7Iz15IBNMT24=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=FOwJFlxz; arc=none smtp.client-ip=199.89.1.16
+	s=arc-20240116; t=1768413076; c=relaxed/simple;
+	bh=GVRqjSPehDJErncTcubQKrMFb+T/mkFMQSKQ+YyGa8g=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=h2uNVP4UGtJYfTyFKx1HrYrxEUtN3Oj9RNI8X8D3ldpK6CLwrOXqnSp6ihxzB7ApoNVJXC1vvHMdmPCtC2cGJphOHV9P9g7napfxYnSQcah2R/dZ/fvaBbQqN9jE9z5P1NJw/OYeFR0TbAr0YUYUNQW4SQz1LObzL0JiLriosyU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=c8SslU0Z; arc=none smtp.client-ip=199.89.1.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="FOwJFlxz"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="c8SslU0Z"
 Received: from localhost (localhost [127.0.0.1])
-	by 013.lax.mailroute.net (Postfix) with ESMTP id 4drtvb0J51zllCWt;
-	Wed, 14 Jan 2026 17:51:07 +0000 (UTC)
+	by 013.lax.mailroute.net (Postfix) with ESMTP id 4drtvg5WQczllCWj;
+	Wed, 14 Jan 2026 17:51:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:mime-version:x-mailer:message-id:date
-	:date:subject:subject:from:from:received:received; s=mr01; t=
-	1768413066; x=1771005067; bh=Kbo5wNgoB+yd1RDaWt4T+IkvXBXRmrGK+iH
-	8g4+kzmk=; b=FOwJFlxz1IDznrcbZXHPrDo07a77TWOys7flMm6d/DmP9/U0Key
-	x2vU7+57jESMDzXDIa/eIxfHqKHIohyJa8t2pvQckACb1RKZLgRqUUp/V70dIv/H
-	K7AUuIqMZOB1A3GEQnKSpRUxsqwwsZG3CjqJSAVzcxG0OKqwoY0QWaDjqIKI7Pqv
-	i2OMV4SeVvX+NgVI/758zeuXqvyGLUbEuPFNUM86HFL/bh4JAZzKvTDtOOqJUZJ+
-	jzGwHB+yuEEYCTiP0kqel2i1eU8Dqy5Rl5qhu+Ib774PcxicLKahtVZmkuX4gym7
-	T711zyyYu/kfInjGkuAYzaGusZbsCcK9eAg==
+	content-transfer-encoding:mime-version:references:in-reply-to
+	:x-mailer:message-id:date:date:subject:subject:from:from
+	:received:received; s=mr01; t=1768413070; x=1771005071; bh=viQQ9
+	DvkWA5iUp1RPAPWfAojll+gp+OPS804IFrJO30=; b=c8SslU0ZT4F8IoYZnm1M6
+	SdjszoNB06mf6Avaw00y15NcaV48msLvml2d+fCmCzbOAHYBajnpKL9C0BUHsV5q
+	kjn8hZPWgqGNqSUIiBrfa2F4nG82n5RqCUoESZm+P4YdwUX8KjN4p64YA5RWG6t9
+	mTLIOR1VRT3UxLiOyQUlf6YOgEyRfP3JJGiTpHIl7S+uKQlV2aMPxsdTQ8jT7/Tw
+	i0Jha6ktWxAq7eacZGWElR/t6xbeb9aGabvPdIN9KnW/geeWr1l5Y/9xMf83NbPs
+	wshc1xCwRnQMYYLgKGbAJLm3tQjxudLYa9u0Dp/OTTKoco2hMJFlBzVBAGeu37ay
+	w==
 X-Virus-Scanned: by MailRoute
 Received: from 013.lax.mailroute.net ([127.0.0.1])
  by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id jsU62Z6rpPGT; Wed, 14 Jan 2026 17:51:06 +0000 (UTC)
+ id aDqaXPaY_oaM; Wed, 14 Jan 2026 17:51:10 +0000 (UTC)
 Received: from bvanassche.mtv.corp.google.com (unknown [104.135.180.219])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4drtvY2mXgzllCWj;
-	Wed, 14 Jan 2026 17:51:04 +0000 (UTC)
+	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4drtvc4lknzllCWq;
+	Wed, 14 Jan 2026 17:51:08 +0000 (UTC)
 From: Bart Van Assche <bvanassche@acm.org>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org,
-	Bart Van Assche <bvanassche@acm.org>
-Subject: [PATCH v6 0/5] Clean up the SCSI disk driver source code
-Date: Wed, 14 Jan 2026 09:50:48 -0800
-Message-ID: <20260114175054.4118163-1-bvanassche@acm.org>
+	Bart Van Assche <bvanassche@acm.org>,
+	Damien Le Moal <dlemoal@kernel.org>,
+	Himanshu Madhani <himanshu.madhani@oracle.com>,
+	Johannes Thumshirn <johannes.thumshirn@wdc.com>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
+Subject: [PATCH v6 2/5] scsi: sd: Move the sd_config_discard() function definition
+Date: Wed, 14 Jan 2026 09:50:50 -0800
+Message-ID: <20260114175054.4118163-3-bvanassche@acm.org>
 X-Mailer: git-send-email 2.52.0.457.g6b5491de43-goog
+In-Reply-To: <20260114175054.4118163-1-bvanassche@acm.org>
+References: <20260114175054.4118163-1-bvanassche@acm.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -55,51 +63,158 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 
-Hi Martin,
+Move the sd_config_discard() function definition such that its
+forward declaration can be removed.
 
-This patch series removes multiple forward declarations from the SCSI dis=
-k (sd)
-driver and also makes error messages easier to find with grep. Please con=
-sider
-this patch series for the next merge window.
+Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
+Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+---
+ drivers/scsi/sd.c | 114 +++++++++++++++++++++++-----------------------
+ 1 file changed, 56 insertions(+), 58 deletions(-)
 
-Thanks,
-
-Bart.
-
-Changes compared to v5:
- - Rebased the patch series.
-
-Changes compared to v4:
- - Added Johannes' Reviewed-by tag.
- - See also https://lore.kernel.org/linux-scsi/20260106190749.2549070-1-b=
-vanassche@acm.org/
-
-Changes compared to v3:
- - Rebased the patch series.
- - See also
-   https://lore.kernel.org/linux-scsi/20251121182112.3485615-1-bvanassche=
-@acm.org/.
-
-Changes compared to v2:
- - Rebased the patch series and dropped a patch that is no longer needed.
- - See also
-   https://lore.kernel.org/linux-scsi/20240805234250.271828-1-bvanassche@=
-acm.org/.
-
-Changes compared to v1:
- - Reduced function argument indentation (whitespace only change).
- - See also
-   https://lore.kernel.org/linux-scsi/20240730210042.266504-1-bvanassche@=
-acm.org/.
-
-Bart Van Assche (5):
-  scsi: sd: Move the sd_remove() function definition
-  scsi: sd: Move the sd_config_discard() function definition
-  scsi: sd: Move the scsi_disk_release() function definition
-  scsi: sd: Move the sd_fops definition
-  scsi: sd: Do not split error messages
-
- drivers/scsi/sd.c | 276 ++++++++++++++++++++++------------------------
- 1 file changed, 132 insertions(+), 144 deletions(-)
-
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index b30c50693372..28444c81bf82 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -102,8 +102,6 @@ MODULE_ALIAS_SCSI_DEVICE(TYPE_ZBC);
+=20
+ #define SD_MINORS	16
+=20
+-static void sd_config_discard(struct scsi_disk *sdkp, struct queue_limit=
+s *lim,
+-		unsigned int mode);
+ static void sd_config_write_same(struct scsi_disk *sdkp,
+ 		struct queue_limits *lim);
+ static void  sd_revalidate_disk(struct gendisk *);
+@@ -120,6 +118,62 @@ static const char *sd_cache_types[] =3D {
+ 	"write back, no read (daft)"
+ };
+=20
++static void sd_disable_discard(struct scsi_disk *sdkp)
++{
++	sdkp->provisioning_mode =3D SD_LBP_DISABLE;
++	blk_queue_disable_discard(sdkp->disk->queue);
++}
++
++static void sd_config_discard(struct scsi_disk *sdkp, struct queue_limit=
+s *lim,
++		unsigned int mode)
++{
++	unsigned int logical_block_size =3D sdkp->device->sector_size;
++	unsigned int max_blocks =3D 0;
++
++	lim->discard_alignment =3D sdkp->unmap_alignment * logical_block_size;
++	lim->discard_granularity =3D max(sdkp->physical_block_size,
++			sdkp->unmap_granularity * logical_block_size);
++	sdkp->provisioning_mode =3D mode;
++
++	switch (mode) {
++
++	case SD_LBP_FULL:
++	case SD_LBP_DISABLE:
++		break;
++
++	case SD_LBP_UNMAP:
++		max_blocks =3D min_not_zero(sdkp->max_unmap_blocks,
++					  (u32)SD_MAX_WS16_BLOCKS);
++		break;
++
++	case SD_LBP_WS16:
++		if (sdkp->device->unmap_limit_for_ws)
++			max_blocks =3D sdkp->max_unmap_blocks;
++		else
++			max_blocks =3D sdkp->max_ws_blocks;
++
++		max_blocks =3D min_not_zero(max_blocks, (u32)SD_MAX_WS16_BLOCKS);
++		break;
++
++	case SD_LBP_WS10:
++		if (sdkp->device->unmap_limit_for_ws)
++			max_blocks =3D sdkp->max_unmap_blocks;
++		else
++			max_blocks =3D sdkp->max_ws_blocks;
++
++		max_blocks =3D min_not_zero(max_blocks, (u32)SD_MAX_WS10_BLOCKS);
++		break;
++
++	case SD_LBP_ZERO:
++		max_blocks =3D min_not_zero(sdkp->max_ws_blocks,
++					  (u32)SD_MAX_WS10_BLOCKS);
++		break;
++	}
++
++	lim->max_hw_discard_sectors =3D max_blocks *
++		(logical_block_size >> SECTOR_SHIFT);
++}
++
+ static void sd_set_flush_flag(struct scsi_disk *sdkp,
+ 		struct queue_limits *lim)
+ {
+@@ -865,62 +919,6 @@ static unsigned char sd_setup_protect_cmnd(struct sc=
+si_cmnd *scmd,
+ 	return protect;
+ }
+=20
+-static void sd_disable_discard(struct scsi_disk *sdkp)
+-{
+-	sdkp->provisioning_mode =3D SD_LBP_DISABLE;
+-	blk_queue_disable_discard(sdkp->disk->queue);
+-}
+-
+-static void sd_config_discard(struct scsi_disk *sdkp, struct queue_limit=
+s *lim,
+-		unsigned int mode)
+-{
+-	unsigned int logical_block_size =3D sdkp->device->sector_size;
+-	unsigned int max_blocks =3D 0;
+-
+-	lim->discard_alignment =3D sdkp->unmap_alignment * logical_block_size;
+-	lim->discard_granularity =3D max(sdkp->physical_block_size,
+-			sdkp->unmap_granularity * logical_block_size);
+-	sdkp->provisioning_mode =3D mode;
+-
+-	switch (mode) {
+-
+-	case SD_LBP_FULL:
+-	case SD_LBP_DISABLE:
+-		break;
+-
+-	case SD_LBP_UNMAP:
+-		max_blocks =3D min_not_zero(sdkp->max_unmap_blocks,
+-					  (u32)SD_MAX_WS16_BLOCKS);
+-		break;
+-
+-	case SD_LBP_WS16:
+-		if (sdkp->device->unmap_limit_for_ws)
+-			max_blocks =3D sdkp->max_unmap_blocks;
+-		else
+-			max_blocks =3D sdkp->max_ws_blocks;
+-
+-		max_blocks =3D min_not_zero(max_blocks, (u32)SD_MAX_WS16_BLOCKS);
+-		break;
+-
+-	case SD_LBP_WS10:
+-		if (sdkp->device->unmap_limit_for_ws)
+-			max_blocks =3D sdkp->max_unmap_blocks;
+-		else
+-			max_blocks =3D sdkp->max_ws_blocks;
+-
+-		max_blocks =3D min_not_zero(max_blocks, (u32)SD_MAX_WS10_BLOCKS);
+-		break;
+-
+-	case SD_LBP_ZERO:
+-		max_blocks =3D min_not_zero(sdkp->max_ws_blocks,
+-					  (u32)SD_MAX_WS10_BLOCKS);
+-		break;
+-	}
+-
+-	lim->max_hw_discard_sectors =3D max_blocks *
+-		(logical_block_size >> SECTOR_SHIFT);
+-}
+-
+ static void *sd_set_special_bvec(struct request *rq, unsigned int data_l=
+en)
+ {
+ 	struct page *page;
