@@ -1,63 +1,64 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A1B6335B125;
-	Wed, 14 Jan 2026 21:09:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 443A835E531;
+	Wed, 14 Jan 2026 22:36:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768424982; cv=none; b=tevMn5O4/mi5VFfTGYrf5YDHo81EjbIn24kpHyAf/+ARSPmWk1xvINTGfqKumcXlCx8QvgHHrH8fzsEbPuuJ1miOkfzlNzkSscGukOrkAhfN6oWq3fqcsuCryIrljvNIrtmIag7uYZFJeQRX2xUvtg4NPfqbN+fof9UU5o/A0I8=
+	t=1768430194; cv=none; b=hH5N4dk7M9VtUDM9TuSa4+s4pJbW7OZ3UMN6XV8xC9mfebGAAOTV8YrmjUfNxbwoRi/T6f33R6NmS+d1nG6vAmkhUqztRQWGReF69kB7gUD6b4S0Gr+61IRrKtiLg4P8/Z0x4OWyXMpOSywMKi3h8PZronjIdrBG+h36uJNlRWs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768424982; c=relaxed/simple;
-	bh=ixAsdOPyWPX9Uyiy8uZCVCc/kgvs+zEazglccS06THA=;
-	h=Subject:From:In-Reply-To:References:Message-Id:Date:To:Cc; b=kBjbTQQxklXEYgWmEQ4wFB0iHR8KvekQlXvaw3OIYzBkYrhyddFi/BEjpvgG7WcY8EU5zeMj1ILOy7ozEYL84q1MZJOZrpzhacJDVHOkJHgmyJh+zZuXduqx90PzWcWRBdJqTOAvYgCkogtF8Thjc6HoIlN6anwVyPAP2fWKTLY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mChNYX6O; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1768430194; c=relaxed/simple;
+	bh=tOITCwcNkvuX/Q3/odZsyWjcoRVv7aqf+H54LU9E1pw=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=sAnBPIiX6CFwwHgm10vlD+o9F+zCdJmUTy1rEJpH39XionS56b6YMb8lKdVy8oos1S1ZSt86x67P90sGT05yno8gTT0VTiPDls+D6MOeO/5hLS/vFGHFr7t2nLvl6L5m1DWxdWFpWIoDmF/6dMHjRFH4iX9CkQR5mwkXrN3IhIU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=f6b78jPE; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mChNYX6O"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 52D5BC4CEF7;
-	Wed, 14 Jan 2026 21:09:42 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="f6b78jPE"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6142DC4CEF7;
+	Wed, 14 Jan 2026 22:36:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1768424982;
-	bh=ixAsdOPyWPX9Uyiy8uZCVCc/kgvs+zEazglccS06THA=;
-	h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
-	b=mChNYX6OBOXG1YM/M9qcAe4fffmtWHRMbV2t+9vHvXjXoMWKW1RqxajuOSM3B1NYp
-	 +gKiolkVgGSUWtiehDKNb3igb+pEfLHNXIoyJp0pzC3AQPMxLeVB43+Uuyyg0SPK0c
-	 pem8yHvEOGnJL8lxsETwjkRefm+4eHT7e2xTUlxG/iP+4eG6vhhMKt+UgFWVHUgN2O
-	 DhMQBljggFDVfXU7X81SvkdFhclwMtFToWnBThVR8uJbwHXovzu8a5JjrNi3d4tnBs
-	 ytHn+yuNEihcK1D0lIXvY8WWhZR8aG1E0tNX40Uq7LMIRLpmBgNPCEHTA9+29xXFit
-	 c3VBZF52mX3SA==
-Received: from [10.30.226.235] (localhost [IPv6:::1])
-	by aws-us-west-2-korg-oddjob-rhel9-1.codeaurora.org (Postfix) with ESMTP id 3BC463809A31;
-	Wed, 14 Jan 2026 21:06:16 +0000 (UTC)
-Subject: Re: [GIT PULL] SCSI fixes for 6.19-rc5
-From: pr-tracker-bot@kernel.org
-In-Reply-To: <0843ef58d4bfcd4caa5e99261aeb08de40db2779.camel@HansenPartnership.com>
-References: <0843ef58d4bfcd4caa5e99261aeb08de40db2779.camel@HansenPartnership.com>
-X-PR-Tracked-List-Id: <linux-kernel.vger.kernel.org>
-X-PR-Tracked-Message-Id: <0843ef58d4bfcd4caa5e99261aeb08de40db2779.camel@HansenPartnership.com>
-X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
-X-PR-Tracked-Commit-Id: 309a29b5965a0b2f36b3e245213eb43300a89ac2
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: 944aacb68baf7624ab8d277d0ebf07f025ca137c
-Message-Id: <176842477478.3324996.12691486871638688702.pr-tracker-bot@kernel.org>
-Date: Wed, 14 Jan 2026 21:06:14 +0000
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+	s=k20201202; t=1768430192;
+	bh=tOITCwcNkvuX/Q3/odZsyWjcoRVv7aqf+H54LU9E1pw=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=f6b78jPE0dTDU/gdnUzi+iF1OneQmqH2B3bv5nS6hWooWRBVXoS9rgosUIllfcs6d
+	 +EYQbtoKircuYUAmW2ZFXWNETz4iOohJdUtUsoFL/SUfiRBxYEgDOCA6oLxjZQWUCz
+	 hXQgycybxeg/PHYM58aZBWLdcrOuQuLjIRBKdRlRI4/6ZSksq+3WEm7wKo7MjfuKrJ
+	 ymmcnKtSSzjO7AdEtFg/+fcvB87LjpZ6/0YZhEizfjgTyJ83UOCuIB1HqIoQ8174if
+	 BEBAaehDBfolZ0Li+T9Wk2ihwFkQBYvGgXIcRyhlT4yJ1tK/JB80wvw/Th1EdrSTCh
+	 dHtBXz8eCdwqA==
+Date: Wed, 14 Jan 2026 16:36:31 -0600
+From: "Rob Herring (Arm)" <robh@kernel.org>
+To: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
+Cc: Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	devicetree@vger.kernel.org, linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Conor Dooley <conor+dt@kernel.org>
+Subject: Re: [PATCH] docs: dt: submitting-patches: Document prefixes for SCSI
+ and UFS
+Message-ID: <176843018897.3319721.14136829860575398565.robh@kernel.org>
+References: <20260107132248.47877-2-krzysztof.kozlowski@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260107132248.47877-2-krzysztof.kozlowski@oss.qualcomm.com>
 
-The pull request you sent on Wed, 14 Jan 2026 14:22:21 -0500:
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+On Wed, 07 Jan 2026 14:22:49 +0100, Krzysztof Kozlowski wrote:
+> Devicetree bindings patches going through SCSI/UFS trees also use
+> reversed subject prefix.
+> 
+> Cc: Martin K. Petersen <martin.petersen@oracle.com>
+> Cc: linux-scsi@vger.kernel.org
+> Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
+> ---
+>  Documentation/devicetree/bindings/submitting-patches.rst | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/944aacb68baf7624ab8d277d0ebf07f025ca137c
+Applied, thanks!
 
-Thank you!
-
--- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
