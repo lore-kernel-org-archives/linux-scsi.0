@@ -1,46 +1,46 @@
 Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2E6FA322C99
-	for <linux-scsi@vger.kernel.org>; Wed, 14 Jan 2026 17:51:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D6BED32BF3D
+	for <linux-scsi@vger.kernel.org>; Wed, 14 Jan 2026 17:51:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768413076; cv=none; b=RbIPZvRYXS5pyRBaFDI/sCTbbLnVck2vox3Prx/tcnY8FUkNoKh53KMc5nkYJ6mZbg7TLAV/drabpehNX0y2jghwG17rwGe+GN/sUBgIwMF++ettLZu+gRRxQ2u5jofGyN7JpWEE4ewwXlGCqRKRiaA8hOHhs1RSaYejoMEeXJI=
+	t=1768413078; cv=none; b=WQsuQzcg3kKimTyOp0jYUsWH313TlXFSCbiZZhBk319JVXaqKG5pbE4ozRW8ZiUFDlmJgZNKVbCI+JJSW871ivzP5rvkM2AQBvCAtGLRPpoBxlIIvKxdora73x493cINTz4yNc2z1l5MrtG7pSP6wQE6Sj0n0JaC1QGOxcCd+jM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768413076; c=relaxed/simple;
-	bh=g7WXiX9/bWJbk1BoRIXHNs9eUn7PdsfyxrX8h2Vx6N4=;
+	s=arc-20240116; t=1768413078; c=relaxed/simple;
+	bh=+Aayu9CDP/14NQcsfX9VbfJkg/tWQ9cYWQujBAiR7Qw=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=MbM00zDu8SO0KV70e+OhH3d4sb99axBFI4Gkzo354kAGB1EKWY73YcppNSioJeUcA+jEpG4uoE0wDjfLlkBGQgc6kJPzMFjGAczXWDobha3qsiasrVQnZYuDjUEjqjY8WoYp+3o5u/r56qLQwIe4aM/XHHMAQPmprY8dnjILAdo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=AUjJykJg; arc=none smtp.client-ip=199.89.1.16
+	 MIME-Version; b=hsbZoe5D1G/72QOBUaSqt/hrXtTnJmEGkhIjd5zVGregTXHMOGNygsK8tyoyrcRCJPxYSvxeFun3GEcAIDLJNoixi1pM9B3i1iW0B/pHW+swuX18Q65eNO2esaOXjxEWIpb+FGi5zeziH26EeGEqOfBX2sbZ8Oru5ErCbz04DiU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=QUmn8/ib; arc=none smtp.client-ip=199.89.1.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="AUjJykJg"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="QUmn8/ib"
 Received: from localhost (localhost [127.0.0.1])
-	by 013.lax.mailroute.net (Postfix) with ESMTP id 4drtvd5M1zzllCWV;
-	Wed, 14 Jan 2026 17:51:09 +0000 (UTC)
+	by 013.lax.mailroute.net (Postfix) with ESMTP id 4drtvj6ry8zllCWk;
+	Wed, 14 Jan 2026 17:51:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:mime-version:references:in-reply-to
 	:x-mailer:message-id:date:date:subject:subject:from:from
-	:received:received; s=mr01; t=1768413068; x=1771005069; bh=LRmd6
-	A3h02rahavDAt+JamQy2cVv3Ac1AbVNtNLZnjw=; b=AUjJykJg1jGBrWV8aSsqv
-	99mgukfYPp0tIUfch54xNMUEqCvGZXyJNWNg0G+yuKoqWM/xiafuW7WXV0qburco
-	JwZX8pebt62nWKKHC14/ieidDg7MUiRxOTvFf8EoY+YT2UiG7N+i25+qBudN0btE
-	5MSa1O06QfVtlvpv5NibM56kdIIroSJiBcN2ZvNUE1LllgAghYr+a9UMjteOZD+2
-	au+A0pI4oxg6ovGhexfS0KRlvNvvmWcZr7DAJTsgsEstwQzOvl2kaBUpdwNK4vYP
-	eSQC1z8dLwH0t6IqKUsnThP2b079En8M88U3O5lhO9e5oOYz7HwSY0z1i6gMbJ7H
-	A==
+	:received:received; s=mr01; t=1768413072; x=1771005073; bh=0wjMF
+	vyJjB07v8TY9Ocfnenay5lKF3IaEYyOU4Njn3c=; b=QUmn8/ib6T2NfwUy5HkXN
+	hrKPhjEYFgh7sp/cphd6oAtlC42CY8ZcshBZ7HJyEUw8aJ2pjinOHGC9ERNm7GT1
+	R0n7pFlfQVWevLerKVmGAho88SSO8UGBLenTsNlNhdSSygmQoWC1/wX9w/2eRNuR
+	3JoPr7Zyv+/YSPOqk/A9GmdntlGpaMpUq8/F8XoykupTGFnzJm03Oz8zBlY7l6KF
+	COp43ZqJCziQUW5LCh/JAfnBbnxvByyWOCUmqNEOHSa678aQbBvwpOIxv8ZPnAJp
+	chrBKMl199lnRbqDNxwX4XzJRvXONvOGJ+24uJ48Wbry98V+lTlyLWRdoLCw+O3w
+	Q==
 X-Virus-Scanned: by MailRoute
 Received: from 013.lax.mailroute.net ([127.0.0.1])
  by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id ypgUU5EN599l; Wed, 14 Jan 2026 17:51:08 +0000 (UTC)
+ id U-BvGXI_tpR1; Wed, 14 Jan 2026 17:51:12 +0000 (UTC)
 Received: from bvanassche.mtv.corp.google.com (unknown [104.135.180.219])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4drtvZ49LZzllCWp;
-	Wed, 14 Jan 2026 17:51:06 +0000 (UTC)
+	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4drtvf69SrzllCWy;
+	Wed, 14 Jan 2026 17:51:10 +0000 (UTC)
 From: Bart Van Assche <bvanassche@acm.org>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org,
@@ -49,9 +49,9 @@ Cc: linux-scsi@vger.kernel.org,
 	Himanshu Madhani <himanshu.madhani@oracle.com>,
 	Johannes Thumshirn <johannes.thumshirn@wdc.com>,
 	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-Subject: [PATCH v6 1/5] scsi: sd: Move the sd_remove() function definition
-Date: Wed, 14 Jan 2026 09:50:49 -0800
-Message-ID: <20260114175054.4118163-2-bvanassche@acm.org>
+Subject: [PATCH v6 3/5] scsi: sd: Move the scsi_disk_release() function definition
+Date: Wed, 14 Jan 2026 09:50:51 -0800
+Message-ID: <20260114175054.4118163-4-bvanassche@acm.org>
 X-Mailer: git-send-email 2.52.0.457.g6b5491de43-goog
 In-Reply-To: <20260114175054.4118163-1-bvanassche@acm.org>
 References: <20260114175054.4118163-1-bvanassche@acm.org>
@@ -63,94 +63,63 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 
-Move the sd_remove() function definition such that the sd_shutdown()
-forward declaration can be removed.
+Move the scsi_disk_release() function definition such that its forward
+declaration can be removed.
 
 Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
 Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
 Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/sd.c | 53 +++++++++++++++++++++++------------------------
- 1 file changed, 26 insertions(+), 27 deletions(-)
+ drivers/scsi/sd.c | 23 +++++++++++------------
+ 1 file changed, 11 insertions(+), 12 deletions(-)
 
 diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index dc7eac6211bc..b30c50693372 100644
+index 28444c81bf82..0d07f3734257 100644
 --- a/drivers/scsi/sd.c
 +++ b/drivers/scsi/sd.c
-@@ -108,7 +108,6 @@ static void sd_config_write_same(struct scsi_disk *sd=
+@@ -106,7 +106,6 @@ static void sd_config_write_same(struct scsi_disk *sd=
 kp,
  		struct queue_limits *lim);
  static void  sd_revalidate_disk(struct gendisk *);
  static void sd_unlock_native_capacity(struct gendisk *disk);
--static void sd_shutdown(struct scsi_device *);
- static void scsi_disk_release(struct device *cdev);
+-static void scsi_disk_release(struct device *cdev);
 =20
  static DEFINE_IDA(sd_index_ida);
-@@ -4087,32 +4086,6 @@ static int sd_probe(struct scsi_device *sdp)
+=20
+@@ -751,6 +750,17 @@ static struct attribute *sd_disk_attrs[] =3D {
+ };
+ ATTRIBUTE_GROUPS(sd_disk);
+=20
++static void scsi_disk_release(struct device *dev)
++{
++	struct scsi_disk *sdkp =3D to_scsi_disk(dev);
++
++	ida_free(&sd_index_ida, sdkp->index);
++	put_device(&sdkp->device->sdev_gendev);
++	free_opal_dev(sdkp->opal_dev);
++
++	kfree(sdkp);
++}
++
+ static struct class sd_disk_class =3D {
+ 	.name		=3D "scsi_disk",
+ 	.dev_release	=3D scsi_disk_release,
+@@ -4084,17 +4094,6 @@ static int sd_probe(struct scsi_device *sdp)
  	return error;
  }
 =20
--/**
-- *	sd_remove - called whenever a scsi disk (previously recognized by
-- *	sd_probe) is detached from the system. It is called (potentially
-- *	multiple times) during sd module unload.
-- *	@sdp: pointer to device object
-- *
-- *	Note: this function is invoked from the scsi mid-level.
-- *	This function potentially frees up a device name (e.g. /dev/sdc)
-- *	that could be re-used by a subsequent sd_probe().
-- *	This function is not called when the built-in sd driver is "exit-ed".
-- **/
--static void sd_remove(struct scsi_device *sdp)
+-static void scsi_disk_release(struct device *dev)
 -{
--	struct device *dev =3D &sdp->sdev_gendev;
--	struct scsi_disk *sdkp =3D dev_get_drvdata(dev);
+-	struct scsi_disk *sdkp =3D to_scsi_disk(dev);
 -
--	scsi_autopm_get_device(sdkp->device);
+-	ida_free(&sd_index_ida, sdkp->index);
+-	put_device(&sdkp->device->sdev_gendev);
+-	free_opal_dev(sdkp->opal_dev);
 -
--	device_del(&sdkp->disk_dev);
--	del_gendisk(sdkp->disk);
--	if (!sdkp->suspended)
--		sd_shutdown(sdp);
--
--	put_disk(sdkp->disk);
+-	kfree(sdkp);
 -}
 -
- static void scsi_disk_release(struct device *dev)
+ static int sd_start_stop_device(struct scsi_disk *sdkp, int start)
  {
- 	struct scsi_disk *sdkp =3D to_scsi_disk(dev);
-@@ -4226,6 +4199,32 @@ static void sd_shutdown(struct scsi_device *sdp)
- 	}
- }
-=20
-+/**
-+ *	sd_remove - called whenever a scsi disk (previously recognized by
-+ *	sd_probe) is detached from the system. It is called (potentially
-+ *	multiple times) during sd module unload.
-+ *	@sdp: pointer to device object
-+ *
-+ *	Note: this function is invoked from the scsi mid-level.
-+ *	This function potentially frees up a device name (e.g. /dev/sdc)
-+ *	that could be re-used by a subsequent sd_probe().
-+ *	This function is not called when the built-in sd driver is "exit-ed".
-+ **/
-+static void sd_remove(struct scsi_device *sdp)
-+{
-+	struct device *dev =3D &sdp->sdev_gendev;
-+	struct scsi_disk *sdkp =3D dev_get_drvdata(dev);
-+
-+	scsi_autopm_get_device(sdkp->device);
-+
-+	device_del(&sdkp->disk_dev);
-+	del_gendisk(sdkp->disk);
-+	if (!sdkp->suspended)
-+		sd_shutdown(sdp);
-+
-+	put_disk(sdkp->disk);
-+}
-+
- static inline bool sd_do_start_stop(struct scsi_device *sdev, bool runti=
-me)
- {
- 	return (sdev->manage_system_start_stop && !runtime) ||
+ 	unsigned char cmd[6] =3D { START_STOP };	/* START_VALID */
