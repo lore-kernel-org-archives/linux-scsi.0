@@ -1,54 +1,45 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 44C802BE647;
-	Wed, 14 Jan 2026 14:01:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 536D429E114;
+	Wed, 14 Jan 2026 14:01:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768399303; cv=none; b=NGFCOoLbki0YC9CmVRudHm5QZWrzPNo1JXGuQyEWOn6qg3UQq77dOCZv4BrPBuqkmplo8Q/S4CKUH40AOcAoN8iJSwTqKMITz54EIBYGMnycT0SuVWz56CVJnOpi/kudTt145r8ad5BCLGzUHaBzP9Igrw94k98oGMO6i7Y4eTs=
+	t=1768399318; cv=none; b=mVIwKx2Mv+yMH/iOnn3a5ddfQVyStrxyzVIEhkICJWc+mkh1Y7IIrfbNYY80LdZfhWuPqnB6Y+Uo5zgZsYiwhq41yTZ97SG6+G5w+UyGzCj/g4Ey/uTHpvDVuckUbAb+0/jFA3EU0r/MPPY8EjO+KiaCchIT7m3V8uGVPM0mfb8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768399303; c=relaxed/simple;
-	bh=enCvrz8y/9rxsUlw1ssbCZBDFIf1yBnbNn8Z6/4K4hA=;
+	s=arc-20240116; t=1768399318; c=relaxed/simple;
+	bh=kJhvl3EkrS4B0d2VSCeSVXXCmsFOhMvFP2J20W/nJW4=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=dA0VEJPgE6OGtPdvRNSPKZtG9u6Qtkr39ArtkXvtqAPBGZQ+h+t68HUAAwyIiojzGjS97tJtvQPlzKei1TC6XR2C9O09WHdbfevh4Ol5Totuu54hYqvtkK1KjTOpyPy8xPnN7QeBmBr3jXNQkitu6vLlvc8uKKx5/H00gonqxSc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QTbhI3eY; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=WdqMykARm0Yan+R74TdNQaUkbYb7d7kkPvDi1EeMD/2GMhN/o7noTjVGju4ccUxRPGwPn+CvmLdzbN0XE3CVij3RoaJp/YEBJ94SoOI9HAUAClMjbwjyWKNuWjLmEwJRvO1nh7kuiTDTfqP+B1KVIqMpMkpEj2+X39khpz2CbA0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OOIhG+T8; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QTbhI3eY"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E1AFEC4CEF7;
-	Wed, 14 Jan 2026 14:01:36 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OOIhG+T8"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A7CE2C16AAE;
+	Wed, 14 Jan 2026 14:01:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1768399302;
-	bh=enCvrz8y/9rxsUlw1ssbCZBDFIf1yBnbNn8Z6/4K4hA=;
+	s=k20201202; t=1768399318;
+	bh=kJhvl3EkrS4B0d2VSCeSVXXCmsFOhMvFP2J20W/nJW4=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
-	b=QTbhI3eYuVO9pJXj0FPP9M9Z53GRE4eX9s7MgRSPPMH6LfCa2vPcyrbsf/sJtwCID
-	 BT+gk+12FZyqsoZvMHQHzLHsyrc6Ut2vZOuB2VuMcZFd1rBiAsk9ZIfjahQDGXeh9x
-	 1A8Jrm4lptla50UGAqWVu4gCqX+yO+cGkKAc4k9Py6hN5Qq11GWn1O2/wvLY8XLFwB
-	 2+0MWgPfMi/U/NxKOMSPpoKczXetlS4IcWSv6DqKhVIeL40k8aH9JPcBohB7RjApXJ
-	 Wx1jW3LAPcfdcH4OMkzVsVqjW/KnDuUkbSeP+5rLeHXe9qQ2oM1TSmWSRcIqxojxHf
-	 i4QxvH0jplnTQ==
+	b=OOIhG+T8Lu31VSqPSEo81r4DzfrvCUJ8Iuj5SP8MXGkRkkM2iMy+T2o60MWfSskfR
+	 RTMu8aXCJWxluNabl8JiTX6GRnxHlLnCrHBdtSiTNJL8gR7iTi+t73WbRdAtJX0p4d
+	 x/gHVyGiM7ee8ffelzXQcAqRXnBa7iOXslDhBUMMvtCl+EB6XGMfTkZ48Vgz8IRANN
+	 mqjTKQYHzm4LwkV4xR6y4sMB7Hwpw6Jh5wrfpZa2caA3Vav5zsTmkROQvkyl4+PTfz
+	 G2c32phJuOC01ddzzZDLlgq15+GWGAiOhSoKHaq+1xtJeg+i+dgc/GqDXNL9mrE+nt
+	 Wr5UCYnib6uAw==
 From: Vinod Koul <vkoul@kernel.org>
-To: Herbert Xu <herbert@gondor.apana.org.au>, 
- "David S. Miller" <davem@davemloft.net>, Rob Herring <robh@kernel.org>, 
- Krzysztof Kozlowski <krzk+dt@kernel.org>, 
- Conor Dooley <conor+dt@kernel.org>, Bjorn Andersson <andersson@kernel.org>, 
- Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>, 
- Bart Van Assche <bvanassche@acm.org>, 
- Neil Armstrong <neil.armstrong@linaro.org>, 
- Konrad Dybcio <konradybcio@kernel.org>, 
- Luca Weiss <luca.weiss@fairphone.com>
-Cc: ~postmarketos/upstreaming@lists.sr.ht, phone-devel@vger.kernel.org, 
- linux-arm-msm@vger.kernel.org, linux-crypto@vger.kernel.org, 
+To: neil.armstrong@linaro.org, robh@kernel.org, krzk+dt@kernel.org, 
+ conor+dt@kernel.org, martin.petersen@oracle.com, andersson@kernel.org, 
+ konradybcio@kernel.org, taniya.das@oss.qualcomm.com, 
+ dmitry.baryshkov@oss.qualcomm.com, manivannan.sadhasivam@oss.qualcomm.com, 
+ Pradeep P V K <pradeep.pragallapati@oss.qualcomm.com>
+Cc: linux-arm-msm@vger.kernel.org, linux-phy@lists.infradead.org, 
  devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
- linux-scsi@vger.kernel.org, linux-phy@lists.infradead.org, 
- Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>, 
- Abel Vesa <abel.vesa@oss.qualcomm.com>, 
- Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>, 
- Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
-In-Reply-To: <20260112-milos-ufs-v2-0-d3ce4f61f030@fairphone.com>
-References: <20260112-milos-ufs-v2-0-d3ce4f61f030@fairphone.com>
-Subject: Re: (subset) [PATCH v2 0/6] Enable UFS support on Milos
-Message-Id: <176839929655.937923.9686904791516121188.b4-ty@kernel.org>
-Date: Wed, 14 Jan 2026 19:31:36 +0530
+ linux-scsi@vger.kernel.org, nitin.rawat@oss.qualcomm.com
+In-Reply-To: <20260106154207.1871487-1-pradeep.pragallapati@oss.qualcomm.com>
+References: <20260106154207.1871487-1-pradeep.pragallapati@oss.qualcomm.com>
+Subject: Re: (subset) [PATCH V4 0/4] Add UFS support for x1e80100 SoC
+Message-Id: <176839931330.937923.4419261616983851594.b4-ty@kernel.org>
+Date: Wed, 14 Jan 2026 19:31:53 +0530
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -60,18 +51,29 @@ Content-Transfer-Encoding: 7bit
 X-Mailer: b4 0.13.0
 
 
-On Mon, 12 Jan 2026 14:53:13 +0100, Luca Weiss wrote:
-> Add inline-crypto-engine and UFS bindings & driver parts, then add them
-> to milos dtsi and enable the UFS storage on Fairphone (Gen. 6).
+On Tue, 06 Jan 2026 21:12:03 +0530, Pradeep P V K wrote:
+> Add UFSPHY, UFSHC compatible binding names and UFS devicetree
+> enablement changes for Qualcomm x1e80100 SoC.
 > 
+> Changes in V4:
+> - Update ufs@ with ufshc@ in SoC dtsi [Mani]
+> - Retain complete change history in cover letter [Dmitry]
+> - Remove "jedec,ufs-2.0" compatible from ufshc dt-bindings
+>   and SoC dtsi files [Krzysztof, Mani]
+> - Remove RB-by tag from Krzysztof and AB-by tag from Mani on
+>   UFSHC dt-binding file as it has changes and needs re-review.
+> - Add RB-by for QMP UFS PHY dt-binding [Krzysztof]
+> - Add RB-by for SoC dtsi [Konrad, Abel, Taniya, Mani]
+> - Add RB-by for board dts [Konrad]
+> - Link to V3:
+>   https://lore.kernel.org/all/0689ae93-0684-4bf8-9bce-f9f32e56fe06@oss.qualcomm.com
 > 
+> [...]
 
 Applied, thanks!
 
-[3/6] dt-bindings: phy: qcom,sc8280xp-qmp-ufs-phy: document the Milos QMP UFS PHY
-      commit: ed0a26aa453b6ec7faec32ddb4fb3d4360e1676c
-[4/6] phy: qcom-qmp-ufs: Add Milos support
-      commit: 3554ded4f02aa8e95af66911aa666b2cd192022d
+[1/4] dt-bindings: phy: qcom,sc8280xp-qmp-ufs-phy: Add QMP UFS PHY compatible
+      commit: be9d2cf10b46bc2c177aa9cb27b71d665d1e0e7e
 
 Best regards,
 -- 
