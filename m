@@ -1,64 +1,139 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.5])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 443A835E531;
-	Wed, 14 Jan 2026 22:36:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BCE971C5D77;
+	Thu, 15 Jan 2026 01:25:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768430194; cv=none; b=hH5N4dk7M9VtUDM9TuSa4+s4pJbW7OZ3UMN6XV8xC9mfebGAAOTV8YrmjUfNxbwoRi/T6f33R6NmS+d1nG6vAmkhUqztRQWGReF69kB7gUD6b4S0Gr+61IRrKtiLg4P8/Z0x4OWyXMpOSywMKi3h8PZronjIdrBG+h36uJNlRWs=
+	t=1768440319; cv=none; b=ghqdu/6i3CenIfwXeN2SEdFW818NUsdSwvZhQU4OZM9Vu34lJPVCqrTw5IL/c+KtYyAG+3nHtzpalJ1sNionjjGvwn080H4nUzw0+ZxgVTATZ7M/6kVanSTJe6kyUnmLV8kEyhgQgEB8iqnJa88XoJdtNO+mLXTczCzAFQpDHWA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768430194; c=relaxed/simple;
-	bh=tOITCwcNkvuX/Q3/odZsyWjcoRVv7aqf+H54LU9E1pw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=sAnBPIiX6CFwwHgm10vlD+o9F+zCdJmUTy1rEJpH39XionS56b6YMb8lKdVy8oos1S1ZSt86x67P90sGT05yno8gTT0VTiPDls+D6MOeO/5hLS/vFGHFr7t2nLvl6L5m1DWxdWFpWIoDmF/6dMHjRFH4iX9CkQR5mwkXrN3IhIU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=f6b78jPE; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1768440319; c=relaxed/simple;
+	bh=sPfse5Cc5z9C+okX6nNmVsZ6uUCzWV2DIzBj3kmjSW0=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=q1uqforQfIawqiK5ghx8Nvukq2eGwQFwOZMctVIqBOgV+fWJ5hXEZQHyWmpMSHwOFtNesr81Op27YEp3wI8zMWpf4QkhqxbvfPvLHRc+GRAkFbI1OxmFS5IeArdSm+dtm9bXz4MF+78k488wwMymY0J8LqiAyhD5eKWPYVM2BzY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=f6+0/olL; arc=none smtp.client-ip=220.197.31.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="f6b78jPE"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6142DC4CEF7;
-	Wed, 14 Jan 2026 22:36:32 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1768430192;
-	bh=tOITCwcNkvuX/Q3/odZsyWjcoRVv7aqf+H54LU9E1pw=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=f6b78jPE0dTDU/gdnUzi+iF1OneQmqH2B3bv5nS6hWooWRBVXoS9rgosUIllfcs6d
-	 +EYQbtoKircuYUAmW2ZFXWNETz4iOohJdUtUsoFL/SUfiRBxYEgDOCA6oLxjZQWUCz
-	 hXQgycybxeg/PHYM58aZBWLdcrOuQuLjIRBKdRlRI4/6ZSksq+3WEm7wKo7MjfuKrJ
-	 ymmcnKtSSzjO7AdEtFg/+fcvB87LjpZ6/0YZhEizfjgTyJ83UOCuIB1HqIoQ8174if
-	 BEBAaehDBfolZ0Li+T9Wk2ihwFkQBYvGgXIcRyhlT4yJ1tK/JB80wvw/Th1EdrSTCh
-	 dHtBXz8eCdwqA==
-Date: Wed, 14 Jan 2026 16:36:31 -0600
-From: "Rob Herring (Arm)" <robh@kernel.org>
-To: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
-Cc: Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	devicetree@vger.kernel.org, linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Conor Dooley <conor+dt@kernel.org>
-Subject: Re: [PATCH] docs: dt: submitting-patches: Document prefixes for SCSI
- and UFS
-Message-ID: <176843018897.3319721.14136829860575398565.robh@kernel.org>
-References: <20260107132248.47877-2-krzysztof.kozlowski@oss.qualcomm.com>
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="f6+0/olL"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=Kx
+	pEQ33grYiIYyFVG6/rA3+zwrNTxIpguT9J6DE6a4o=; b=f6+0/olLiTCWyzsHrn
+	QIel86VQi3rYG5ceXPbL9KsGTtTJwB/ry4Pbj0U59oMUGk1Z1FNvUlFIcPEMBCPo
+	ikoX4JAIBnQxhXV1NO2lw2CUJTK2iRQwDZIX2yd2TnzeQU0gES5J2DI9y+sDEiKQ
+	5UZ8eK3a3mwOJfqfL28IxS4OQ=
+Received: from localhost.localdomain (unknown [])
+	by gzga-smtp-mtada-g1-4 (Coremail) with SMTP id _____wAnDqzXQWhp5NZdGA--.64S2;
+	Thu, 15 Jan 2026 09:24:41 +0800 (CST)
+From: Yang Xiuwei <yangxiuwei@kylinos.cn>
+To: linux-scsi@vger.kernel.org,
+	linux-block@vger.kernel.org,
+	io-uring@vger.kernel.org
+Cc: fujita.tomonori@lab.ntt.co.jp,
+	axboe@kernel.dk,
+	James.Bottomley@HansenPartnership.com,
+	martin.petersen@oracle.com,
+	bvanassche@acm.org,
+	Yang Xiuwei <yangxiuwei@kylinos.cn>
+Subject: [RFC PATCH v2 0/3] bsg: add io_uring command support for SCSI passthrough
+Date: Thu, 15 Jan 2026 09:24:34 +0800
+Message-Id: <cover.1768439194.git.yangxiuwei@kylinos.cn>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260107132248.47877-2-krzysztof.kozlowski@oss.qualcomm.com>
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:_____wAnDqzXQWhp5NZdGA--.64S2
+X-Coremail-Antispam: 1Uf129KBjvJXoWxWFyrJr48AF17ZryDJr4kXrb_yoW5ZF47pF
+	WSgr93GayUJr1xuFn3XrZrZFWFqa95G347G343K34vyr909F9FyF1UKF1Fq397Gry2q34j
+	qw4jqrs8Ca1kAa7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07j1v38UUUUU=
+Sender: yangxiuwei2025@163.com
+X-CM-SenderInfo: p1dqw55lxzvxisqskqqrwthudrp/xtbCwRn6i2loQdk0kQAA3V
 
+This RFC series adds io_uring command support to the BSG (Block layer
+SCSI Generic) driver, enabling asynchronous SCSI passthrough operations
+via io_uring.
 
-On Wed, 07 Jan 2026 14:22:49 +0100, Krzysztof Kozlowski wrote:
-> Devicetree bindings patches going through SCSI/UFS trees also use
-> reversed subject prefix.
-> 
-> Cc: Martin K. Petersen <martin.petersen@oracle.com>
-> Cc: linux-scsi@vger.kernel.org
-> Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
-> ---
->  Documentation/devicetree/bindings/submitting-patches.rst | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
+Motivation:
+-----------
+The current BSG interface uses ioctl() for SCSI passthrough, which is
+synchronous and has limitations for high-performance applications. By
+integrating with io_uring, we can provide:
 
-Applied, thanks!
+1. Asynchronous I/O support for better scalability
+2. Zero-copy I/O via io_uring fixed buffers
+3. Better integration with modern async I/O frameworks
+4. Reduced system call overhead
+
+Design:
+-------
+The implementation follows the io_uring uring_cmd pattern used by other
+drivers (e.g., nvme). Key design decisions:
+
+1. UAPI Structure: A new bsg_uring_cmd structure is defined that fits
+   within the 80-byte cmd field of a 128-byte SQE, with 24 bytes reserved
+   for future extensions. The structure uses protocol-agnostic field names
+   to support multiple protocols beyond SCSI.
+
+2. Status Information: SCSI status (device_status, host_status,
+   driver_status, sense_len, resid_len) is returned in the CQE res2 field
+   using a compact 64-bit encoding.
+
+3. Zero-copy Support: The implementation supports both traditional
+   user buffers and io_uring fixed buffers for zero-copy I/O.
+
+4. Async Completion: Command completion is handled via task work to
+   safely access user space and copy sense data.
+
+5. Non-blocking I/O: Support for IO_URING_F_NONBLOCK flag to enable
+   non-blocking command submission.
+
+Limitations:
+-----------
+- Currently only SCSI commands are supported (BSG_PROTOCOL_SCSI)
+- Scatter/gather I/O (iovec arrays) is not currently supported, but
+  the data structure includes fields for future implementation.
+- Bidirectional transfers are not supported (consistent with existing
+  BSG behavior).
+
+Testing:
+--------
+A user-space test program has been developed to validate the
+implementation, including:
+- Basic SCSI commands (INQUIRY, READ CAPACITY (10), READ (10),
+  WRITE (10))
+- Zero-copy mode using fixed buffers
+- Error handling (invalid flags, unsupported features)
+
+The test program is available separately and can be provided upon request.
+
+Changes since v1:
+-----------------
+- Renamed SCSI-specific fields (cdb_addr/cdb_len) to protocol-agnostic
+  names (request/request_len) to support multiple protocols beyond SCSI
+- Removed __packed attribute and optimized field alignment to avoid
+  suboptimal code generation on architectures that don't support unaligned
+  accesses
+- Simplified data transfer structure: unified din_xferp/dout_xferp into a
+  single xfer_addr field with xfer_dir to indicate direction (0=read, 1=write),
+  consistent with existing BSG behavior where bidirectional transfers are not
+  supported
+- Updated implementation to use new protocol-agnostic field names
+
+Yang Xiuwei (3):
+  bsg: add bsg_uring_cmd uapi structure
+  bsg: add uring_cmd support to BSG generic layer
+  bsg: implement SCSI BSG uring_cmd handler
+
+ block/bsg.c              |  28 +++++
+ drivers/scsi/scsi_bsg.c  | 222 +++++++++++++++++++++++++++++++++++++++
+ include/linux/bsg.h      |   4 +
+ include/uapi/linux/bsg.h |  19 ++++
+ 4 files changed, 273 insertions(+)
+
+-- 
+2.25.1
 
