@@ -1,104 +1,208 @@
-Received: from lamorak.hansenpartnership.com (lamorak.hansenpartnership.com [198.37.111.173])
+Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ECC9F3BF2E0;
-	Thu, 15 Jan 2026 18:52:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.37.111.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 607D731AF1E
+	for <linux-scsi@vger.kernel.org>; Thu, 15 Jan 2026 21:04:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768503158; cv=none; b=ZgnXlCKZzJ0cAUCrPqQqzy4o9Kh7NsEIHe2RC49hKuWoW1+5AJaOfK05nhbCjZrTAcmKnP63tvypqc+zAAytZvRJQyCOMvLNoEB8Iibfe7GQYMjmqbfku2803A4UYXzZefbSz38Sat5QvecjWLyBGProqjk0/FykGcI57kte4RI=
+	t=1768511056; cv=none; b=h/ZFNSz1+REKUi/1748SbHRPkrbKVvFTnDP2Ye4xRjrpd8HKx/63mcpPM1keq1EK98xA4u9RiBahfXozfrb/wpnV7YinF+wchPxqCzwh5Fldfvv9gvetfgrYcn7vmmTNRBEnnkdaFKwUYPig95CB2gx6dpyaIC/q54h0/5nQyJg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768503158; c=relaxed/simple;
-	bh=iQE8npT3I5smpRHQPeFuhmmIM6w4SGCF+j4B5VJYS9k=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=PnT4nCGiJ2zd8hptH7zalNwe2N6cdurUqeR363FEZvBX4rucHsB6J7R7JgksK+szAJrmYnyqWuAgh2hnt4KCX6Zoj7qz3806QdvPOGXc6df9UAT1QtKQa7kxxxjvjg0j/edaYsZEEyzgtPx2SUkozjndViEHt6+cOgmYrk4p9aw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com; spf=pass smtp.mailfrom=HansenPartnership.com; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=tfd8+xZd; arc=none smtp.client-ip=198.37.111.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=HansenPartnership.com
+	s=arc-20240116; t=1768511056; c=relaxed/simple;
+	bh=sSO8wCHgy03vVPlJKLtzChLDw1XIEpd5L1SP2g3G96E=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=AbSWp1NVKiAI02MFl8sX1EB6A9eXE+a3aPKqPMZtM1jjEuAg4uSiHOqjYhuX9ZC53EYGVx4thK40k72jeVpTudiTfeWnjUgaAta4/0rcPl8jW6C5yGzn/8OmY9841qkhWAgsuIX+WQDmJvaZhebapE6zSwpiire1mWPYTUUU6DE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=1D18U00M; arc=none smtp.client-ip=199.89.1.14
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="tfd8+xZd"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-	d=hansenpartnership.com; s=20151216; t=1768503154;
-	bh=iQE8npT3I5smpRHQPeFuhmmIM6w4SGCF+j4B5VJYS9k=;
-	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
-	b=tfd8+xZdnKTSOsefD3qRQ+SU5Z0B0JkHBT9Ohkc+tNSdhGgSUk7QYPkD0LvIyX1rD
-	 70XWXQcStOETY99JbxOxFXr1vVECcWiP7CgtfARHRwNNjj3q0llWJ4sVvgpaLntZ6x
-	 F22w9v6NfFvWp6nLCzOMNhjys+oBCUGNzGi4vqug=
-Received: from lingrow.int.hansenpartnership.com (unknown [IPv6:2601:5c4:4300:d341::a774])
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="1D18U00M"
+Received: from localhost (localhost [127.0.0.1])
+	by 011.lax.mailroute.net (Postfix) with ESMTP id 4dsb7x3y9sz1XLwXB;
+	Thu, 15 Jan 2026 21:04:13 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:mime-version:x-mailer:message-id:date
+	:date:subject:subject:from:from:received:received; s=mr01; t=
+	1768511051; x=1771103052; bh=lIEhGV+dPAVsQhPJSkMqG8KXhjOG3wGEIQo
+	ASqZXm68=; b=1D18U00Mx+UtmJRLJtvEJ7jbLYeWXtPt95saXPzYO/kFPuMFp8e
+	4qfWXeNfF7DfCm0Uq8KDdipOg7pzxxCI7/RbXEZIpJaKP2I+Z9hJofKsyKzUOwRr
+	JunothLEUIZgUdWfVbs4OSRHHJ7TJI6QRUTeSiMkcSF3ksPsSxHBPHkxVYDYQd3e
+	FxyWpBHJsW9rxPiGevnDA6YAwdrpGcNmhbT/WS2PhDQol56W6pxpolSW5JX1TJZL
+	9o+LWif4xW9/+gv006DlhKrlEBLn+ODKDEzd2jSEkevfcpyGhoQDUUgw5+WUgp6q
+	TYu80vzG/3M+d0Dj5UHtWuUyD24X6F2it4Q==
+X-Virus-Scanned: by MailRoute
+Received: from 011.lax.mailroute.net ([127.0.0.1])
+ by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id NgC7L5T9iafd; Thu, 15 Jan 2026 21:04:11 +0000 (UTC)
+Received: from bvanassche.mtv.corp.google.com (unknown [104.135.180.219])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by lamorak.hansenpartnership.com (Postfix) with ESMTPSA id 46D581C0231;
-	Thu, 15 Jan 2026 13:52:34 -0500 (EST)
-Message-ID: <8a25c3aca1abd51f41a6041b84410ca393eca04d.camel@HansenPartnership.com>
-Subject: Re: [PATCH] scsi: pm8001: Fix data race in sysfs SAS address read
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-To: Bart Van Assche <bvanassche@acm.org>, Chengfeng Ye
- <dg573847474@gmail.com>,  "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: Jack Wang <jinpu.wang@cloud.ionos.com>, linux-scsi@vger.kernel.org, 
-	linux-kernel@vger.kernel.org
-Date: Thu, 15 Jan 2026 13:52:33 -0500
-In-Reply-To: <2c210e30-e7bd-4b70-ad4e-cc7a1bbb5309@acm.org>
-References: <20260115171140.281969-1-cyeaa@connect.ust.hk>
-	 <2c210e30-e7bd-4b70-ad4e-cc7a1bbb5309@acm.org>
-Autocrypt: addr=James.Bottomley@HansenPartnership.com;
- prefer-encrypt=mutual;
- keydata=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
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.50.3 
+	(Authenticated sender: bvanassche@acm.org)
+	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4dsb7t5MPkz1XLyhS;
+	Thu, 15 Jan 2026 21:04:10 +0000 (UTC)
+From: Bart Van Assche <bvanassche@acm.org>
+To: "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org,
+	John Garry <john.g.garry@oracle.com>,
+	Bart Van Assche <bvanassche@acm.org>
+Subject: [PATCH v2 0/5] Change the return type of the .queuecommand() callback
+Date: Thu, 15 Jan 2026 13:03:36 -0800
+Message-ID: <20260115210357.2501991-1-bvanassche@acm.org>
+X-Mailer: git-send-email 2.52.0.457.g6b5491de43-goog
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
 
-On Thu, 2026-01-15 at 09:24 -0800, Bart Van Assche wrote:
-> On 1/15/26 9:11 AM, Chengfeng Ye wrote:
-> > diff --git a/drivers/scsi/pm8001/pm8001_ctl.c
-> > b/drivers/scsi/pm8001/pm8001_ctl.c
-> > index cbfda8c04e95..e49f11969b3b 100644
-> > --- a/drivers/scsi/pm8001/pm8001_ctl.c
-> > +++ b/drivers/scsi/pm8001/pm8001_ctl.c
-> > @@ -311,8 +311,15 @@ static ssize_t
-> > pm8001_ctl_host_sas_address_show(struct device *cdev,
-> > =C2=A0=C2=A0	struct Scsi_Host *shost =3D class_to_shost(cdev);
-> > =C2=A0=C2=A0	struct sas_ha_struct *sha =3D SHOST_TO_SAS_HA(shost);
-> > =C2=A0=C2=A0	struct pm8001_hba_info *pm8001_ha =3D sha->lldd_ha;
-> > -	return sysfs_emit(buf, "0x%016llx\n",
-> > -			be64_to_cpu(*(__be64 *)pm8001_ha-
-> > >sas_addr));
-> > +	unsigned long flags;
-> > +	ssize_t ret;
-> > +
-> > +	spin_lock_irqsave(&pm8001_ha->lock, flags);
-> > +	ret =3D sysfs_emit(buf, "0x%016llx\n",
-> > +			 be64_to_cpu(*(__be64 *)pm8001_ha-
-> > >sas_addr));
-> > +	spin_unlock_irqrestore(&pm8001_ha->lock, flags);
-> > +
-> > +	return ret;
-> > =C2=A0 }
-> > =C2=A0 static DEVICE_ATTR(host_sas_address, S_IRUGO,
-> > =C2=A0=C2=A0		=C2=A0=C2=A0 pm8001_ctl_host_sas_address_show, NULL);
->=20
-> Why isn't READ_ONCE() sufficient? And why explicit
-> spin_lock_irqsave() and spin_unlock_irqrestore() calls instead of
-> using scoped_guard()?
+Hi Martin,
 
-Do we really care?  The host sas address isn't something that changes
-often, so even if it is being overwritten in an interrupt routine, it's
-likely with the same value.  Whereas taking the internal host lock in a
-sysfs read routine could potentially be a DoS vector.
+Most but not all .queuecommand() implementations return a SCSI_MLQUEUE_*
+constant. This affects code readability: in order to understand what happ=
+ens
+if a .queuecommand() function returns a value that is not a SCSI_MLQUEUE_=
+*
+constant, one has to read the scsi_dispatch_cmd() implementation and chec=
+k
+how other values are handled. Hence this patch series that changes the
+return type of the .queuecommand() callback and also of the implementatio=
+ns of
+this callback.
 
-Regards,
+Please consider this patch series for the next merge window.
 
-James
+Thanks,
+
+Bart.
+
+Changes compared to v1:
+ * Included conversions for the SCSI drivers that use the DEF_SCSI_QCMD()=
+ macro.
+ * enum scsi_qc_status is now used in the DEF_SCSI_QCMD() implementation.
+ * Declarations have been ordered from longest to shortest if a declarati=
+on is
+   modified.
+ * The whitespace in front of "(* queuecommand)(struct Scsi_Host *," has =
+been
+   removed.
+ * The patch description of patch 4/4 has been improved by mentioning tha=
+t (at
+   the time of this writing) only clang supports -Wimplicit-enum-enum-cas=
+t.
+ * Patches have been included that convert the aha152x, megaraid and
+   megaraid_sas drivers.
+
+Bart Van Assche (5):
+  scsi: aha152x: Return SCSI_MLQUEUE_HOST_BUSY instead of 0x2003
+  scsi: megaraid: Return SCSI_MLQUEUE_HOST_BUSY instead of 1
+  scsi: megaraid_sas: Return SCSI_MLQUEUE_HOST_BUSY instead of 1
+  qla2xxx: Declare qla2xxx_mqueuecommand() static
+  scsi: Change the return type of the .queuecommand() callback
+
+ Documentation/scsi/scsi_mid_low_api.rst   |  3 ++-
+ drivers/ata/libata-scsi.c                 |  8 +++++---
+ drivers/ata/libata.h                      |  3 ++-
+ drivers/firewire/sbp2.c                   |  7 ++++---
+ drivers/infiniband/ulp/srp/ib_srp.c       |  3 ++-
+ drivers/message/fusion/mptfc.c            |  7 ++++---
+ drivers/message/fusion/mptsas.c           |  4 ++--
+ drivers/message/fusion/mptscsih.c         |  3 +--
+ drivers/message/fusion/mptscsih.h         |  2 +-
+ drivers/message/fusion/mptspi.c           |  4 ++--
+ drivers/s390/scsi/zfcp_scsi.c             |  4 ++--
+ drivers/scsi/3w-9xxx.c                    |  2 +-
+ drivers/scsi/3w-sas.c                     |  8 +++++---
+ drivers/scsi/3w-xxxx.c                    |  2 +-
+ drivers/scsi/53c700.c                     |  6 +++---
+ drivers/scsi/BusLogic.c                   |  2 +-
+ drivers/scsi/BusLogic.h                   |  2 +-
+ drivers/scsi/NCR5380.c                    |  4 ++--
+ drivers/scsi/a100u2w.c                    |  2 +-
+ drivers/scsi/aacraid/linit.c              |  4 ++--
+ drivers/scsi/advansys.c                   |  5 +++--
+ drivers/scsi/aha152x.c                    |  8 ++++----
+ drivers/scsi/aha1542.c                    |  3 ++-
+ drivers/scsi/aha1740.c                    |  2 +-
+ drivers/scsi/aic7xxx/aic79xx_osm.c        | 12 ++++++------
+ drivers/scsi/aic7xxx/aic7xxx_osm.c        |  4 ++--
+ drivers/scsi/arcmsr/arcmsr_hba.c          |  5 +++--
+ drivers/scsi/arm/acornscsi.c              |  2 +-
+ drivers/scsi/arm/fas216.c                 |  8 ++++----
+ drivers/scsi/arm/fas216.h                 | 11 +++++++----
+ drivers/scsi/atp870u.c                    |  2 +-
+ drivers/scsi/bfa/bfad_im.c                |  5 +++--
+ drivers/scsi/bnx2fc/bnx2fc.h              |  3 ++-
+ drivers/scsi/bnx2fc/bnx2fc_io.c           |  4 ++--
+ drivers/scsi/csiostor/csio_scsi.c         |  4 ++--
+ drivers/scsi/dc395x.c                     |  2 +-
+ drivers/scsi/esas2r/esas2r.h              |  3 ++-
+ drivers/scsi/esas2r/esas2r_main.c         |  3 ++-
+ drivers/scsi/esp_scsi.c                   |  2 +-
+ drivers/scsi/fdomain.c                    |  3 ++-
+ drivers/scsi/fnic/fnic.h                  |  3 ++-
+ drivers/scsi/fnic/fnic_scsi.c             |  3 ++-
+ drivers/scsi/hpsa.c                       |  6 ++++--
+ drivers/scsi/hptiop.c                     |  2 +-
+ drivers/scsi/ibmvscsi/ibmvfc.c            |  3 ++-
+ drivers/scsi/ibmvscsi/ibmvscsi.c          |  9 +++++----
+ drivers/scsi/imm.c                        |  2 +-
+ drivers/scsi/initio.c                     |  2 +-
+ drivers/scsi/ipr.c                        |  4 ++--
+ drivers/scsi/ips.c                        |  4 ++--
+ drivers/scsi/libfc/fc_fcp.c               |  3 ++-
+ drivers/scsi/libiscsi.c                   |  3 ++-
+ drivers/scsi/libsas/sas_scsi_host.c       |  3 ++-
+ drivers/scsi/lpfc/lpfc_scsi.c             |  8 ++++----
+ drivers/scsi/mac53c94.c                   |  2 +-
+ drivers/scsi/megaraid.c                   | 17 +++++++++--------
+ drivers/scsi/megaraid.h                   |  6 ++++--
+ drivers/scsi/megaraid/megaraid_mbox.c     | 22 ++++++++++++----------
+ drivers/scsi/megaraid/megaraid_sas_base.c |  4 ++--
+ drivers/scsi/mesh.c                       |  2 +-
+ drivers/scsi/mpi3mr/mpi3mr_os.c           |  4 ++--
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c      |  4 ++--
+ drivers/scsi/mvumi.c                      |  4 ++--
+ drivers/scsi/myrb.c                       | 12 ++++++------
+ drivers/scsi/myrs.c                       |  4 ++--
+ drivers/scsi/ncr53c8xx.c                  |  2 +-
+ drivers/scsi/nsp32.c                      |  5 +++--
+ drivers/scsi/pcmcia/nsp_cs.c              |  2 +-
+ drivers/scsi/pcmcia/nsp_cs.h              |  3 ++-
+ drivers/scsi/pcmcia/sym53c500_cs.c        |  2 +-
+ drivers/scsi/pmcraid.c                    |  4 ++--
+ drivers/scsi/ppa.c                        |  2 +-
+ drivers/scsi/ps3rom.c                     |  2 +-
+ drivers/scsi/qedf/qedf.h                  |  4 ++--
+ drivers/scsi/qedf/qedf_io.c               |  4 ++--
+ drivers/scsi/qla1280.c                    | 16 ++++++++--------
+ drivers/scsi/qla2xxx/qla_os.c             | 13 +++++++------
+ drivers/scsi/qla4xxx/ql4_os.c             |  6 ++++--
+ drivers/scsi/qlogicfas408.c               |  2 +-
+ drivers/scsi/qlogicfas408.h               |  3 ++-
+ drivers/scsi/qlogicpti.c                  |  2 +-
+ drivers/scsi/scsi_debug.c                 |  9 +++++----
+ drivers/scsi/smartpqi/smartpqi_init.c     |  3 ++-
+ drivers/scsi/snic/snic.h                  |  3 ++-
+ drivers/scsi/snic/snic_scsi.c             |  4 ++--
+ drivers/scsi/stex.c                       |  2 +-
+ drivers/scsi/storvsc_drv.c                |  3 ++-
+ drivers/scsi/sym53c8xx_2/sym_glue.c       |  2 +-
+ drivers/scsi/virtio_scsi.c                |  4 ++--
+ drivers/scsi/vmw_pvscsi.c                 |  2 +-
+ drivers/scsi/wd33c93.c                    |  2 +-
+ drivers/scsi/wd33c93.h                    |  3 ++-
+ drivers/scsi/wd719x.c                     |  3 ++-
+ drivers/scsi/xen-scsifront.c              |  4 ++--
+ drivers/target/loopback/tcm_loop.c        |  3 ++-
+ drivers/ufs/core/ufshcd.c                 |  7 ++++---
+ drivers/usb/image/microtek.c              |  6 +++---
+ drivers/usb/storage/scsiglue.c            |  2 +-
+ drivers/usb/storage/uas.c                 |  2 +-
+ include/linux/libata.h                    |  3 ++-
+ include/scsi/libfc.h                      |  3 ++-
+ include/scsi/libiscsi.h                   |  3 ++-
+ include/scsi/libsas.h                     |  3 ++-
+ include/scsi/scsi_host.h                  | 12 ++++++++----
+ 104 files changed, 261 insertions(+), 206 deletions(-)
 
