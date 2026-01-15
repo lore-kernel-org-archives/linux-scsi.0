@@ -1,111 +1,104 @@
-Received: from mail-ed1-f45.google.com (mail-ed1-f45.google.com [209.85.208.45])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from lamorak.hansenpartnership.com (lamorak.hansenpartnership.com [198.37.111.173])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 08C953D726B
-	for <linux-scsi@vger.kernel.org>; Thu, 15 Jan 2026 17:57:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.45
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768499852; cv=pass; b=iTm6OqhA2Di64LRyLct3tJsW2hcmU1R75gQweNKCzsg7efpoXa1Cesi3/hGMPcrN3aqIlQ3WISXac0t2pVue5QsZiq3cmwbuG0HZLhf0DI88bmnj9K7uvztAw6Ux+zGXD17Bh4COLfPzQ6YAn7ga9ZYNDmPE38nSNTkknl3msXA=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768499852; c=relaxed/simple;
-	bh=oNBpSxYwt8yi0UwGHma4JoLIOAwUXw4sn2ECG6WpxpE=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=aRDCCYk83d7SvP+f5D/HdF3SSnn/E+MU31GQQFk0I+7x69arxBHayEX7wp5s8lqgu6Z32abRdA8POhrhBGI7fPvhDvd9CNWSZ2xd7+ncLxjmB3A8Tn1vl7kaFUpkVtITflAQcGphm/yYJouWNxNdN7BnuA7iGFQKTeD6lT9t+yo=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=GWkaEHnl; arc=pass smtp.client-ip=209.85.208.45
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ECC9F3BF2E0;
+	Thu, 15 Jan 2026 18:52:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.37.111.173
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1768503158; cv=none; b=ZgnXlCKZzJ0cAUCrPqQqzy4o9Kh7NsEIHe2RC49hKuWoW1+5AJaOfK05nhbCjZrTAcmKnP63tvypqc+zAAytZvRJQyCOMvLNoEB8Iibfe7GQYMjmqbfku2803A4UYXzZefbSz38Sat5QvecjWLyBGProqjk0/FykGcI57kte4RI=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1768503158; c=relaxed/simple;
+	bh=iQE8npT3I5smpRHQPeFuhmmIM6w4SGCF+j4B5VJYS9k=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=PnT4nCGiJ2zd8hptH7zalNwe2N6cdurUqeR363FEZvBX4rucHsB6J7R7JgksK+szAJrmYnyqWuAgh2hnt4KCX6Zoj7qz3806QdvPOGXc6df9UAT1QtKQa7kxxxjvjg0j/edaYsZEEyzgtPx2SUkozjndViEHt6+cOgmYrk4p9aw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com; spf=pass smtp.mailfrom=HansenPartnership.com; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=tfd8+xZd; arc=none smtp.client-ip=198.37.111.173
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=HansenPartnership.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="GWkaEHnl"
-Received: by mail-ed1-f45.google.com with SMTP id 4fb4d7f45d1cf-64b5eb14e88so133342a12.2
-        for <linux-scsi@vger.kernel.org>; Thu, 15 Jan 2026 09:57:30 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; t=1768499849; cv=none;
-        d=google.com; s=arc-20240605;
-        b=O+zOkuLAKyYczHbfHD1o4f5P7Tw0usbU2Qyu5LWPAuMo+JL/0zmVnc2rZMVbuj0Jyt
-         mci5GE/6KqenAuYLuyDYzH+K8XuY3D2qvTdLCOhLrukcIB/t0RV0LmO1y3tmB5xhpgkM
-         8PHnoHf9Lm7s+QjGUrv0dwNbHy0+Y9bmJzut699UdMCzTZGbIbNi+33ORLuwxw3BVdk0
-         5OzlmlqIp6ljNcPXlqX/nZ6D03H2MnJLLJoe78b254MKx/FGPpFaBIS8AQ9SUhagtp8Z
-         Rxnlgc9PypYmwEe1bnrxgZRR4CCqUFe8oQAfeCLglS5pN01Fdu24rD9gpXY67kl80IFN
-         ncCQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:dkim-signature;
-        bh=oNBpSxYwt8yi0UwGHma4JoLIOAwUXw4sn2ECG6WpxpE=;
-        fh=rgHrGSt69gqIZF7MmI5FPU8i0Nqvn3MeB0leMQqf1wc=;
-        b=FLJZlGtZCnPVHISTSAo7JSvua3Aq8nzxfK3dyGHdeb0kQWMdHacGcjJnKGHgsa8wUL
-         40wKQLz6PZGSIgb/MDg50RuwAEdFAenUxMAuap6SA/4yC0SCGqVwfTpZz2OXWsv+bH5j
-         WhnwLt2JL+l32UMHlLkFoXd5CL9RhXTOZoShuvgxrKjAKcSAdSfMtpRRdfV4vZVfUBa+
-         BSYzjWutNwAw3E9fVlXny7nw/cVbnUEdQ12/0LpeuZBgnepWCuOCIL1xH6iOSrnV8AuK
-         ZxYEi4DHQdgrfuPgHKPRT5XM++/eiva68lzW4/KEaypqcwFtACTgvG9Cia49pPcU6EQ2
-         JaQA==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1768499849; x=1769104649; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=oNBpSxYwt8yi0UwGHma4JoLIOAwUXw4sn2ECG6WpxpE=;
-        b=GWkaEHnlqpD3DyOntYumxmZ7HpX2bmTaetHuDF8X4eicv5C0fstFtDkLJS3O3G0VPn
-         XTSQJqXGBOUCnYawGuDD4IZcdViF0pPHQMAQqEgSP+deOFfnCc91kmPAYGhNxudpXDPC
-         pZQ8Ni4mnDJO9NkAeEubkzHrd92Ab6CpLSnUktDUg0+NHaoDiuoDe/6Qwqq0Y8jzlEGW
-         Fi9o80IAqqXwKUoCgC8qwU3jS/VqsLtaDn7UIgnin6XhcUZJd8C22WGlOjiBWsXEvBjr
-         1+PR/fOhv50lXASEU/V7VyeAQ9Vh0V92RuRC9LK4T/xyxDl/YCds2CDKjz3Hs6YzENKY
-         U0yA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1768499849; x=1769104649;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=oNBpSxYwt8yi0UwGHma4JoLIOAwUXw4sn2ECG6WpxpE=;
-        b=T7HX7z6WeQhPJHM0EV/uLklqtseb3FRLC393qnFO9kMAyGSdD+qa1+oBfBPDFMIv8L
-         J9dIrRPEO5+bJbPyH0uDPtQbcBBzlUNVCqkln2ptdj7QQiI5Pb1rMeym3/P5chH+ecNm
-         Wpu85bZOiH7JS+FG46ggzvhs3yFaQmJ2QZdt5PSP0r3j/LG5ZWqvUp5dMmSS/go0KzjV
-         1Peyv/FgnteePqz4pOMrwyzwG5Jriiie0ZaL25/yLomDk2y8P2CcI52iDwdpTx+7Pl9j
-         prxXF3gF0XBvB0+r/xYAKy0KZpA+PsKUFpChgTrTaW4p79FU6ptZ2esi2dfTF/XS1wap
-         hB7w==
-X-Forwarded-Encrypted: i=1; AJvYcCXGQ7fjaTMaEd9XFhP6CBRues4ukbfshagY5V7fq0NKl/1mqnkNP9XQPZUDTBiS/OCvha/s+uMtpGIc@vger.kernel.org
-X-Gm-Message-State: AOJu0YyPMvEmShXTvXqZfRCegKKEXVw3gh1Zp9GKbVsnHWuOocMddcrn
-	bzyWmDCfG1t6V/Ity+8dA2b0SxjmCyKio3KJSuordy7Lb2KCDxEB7wAsNxlcHg2bXc1M+hIQF/j
-	o4c8INg6jq1Wtyzi0twzPjQzRNIi4jfA=
-X-Gm-Gg: AY/fxX4OKWu4A/4Edo7tTNP8kD7K8VRoyZZ7GyS7lUlhMDQzGYeiE+HHlZBnWZOuXPu
-	SdNwunds0FDLPgODmH+ma+FhJ/MdlqonbhIK1NTjiKMiur4d1koHSklikxRUWU58dF8hDralATY
-	OcZ8Q/MSCcFBsmOh/NoLMuxyf5r9V4iFhcObLciuBdVOZulKEZNCyHuIjjrKvDxGO0eFduKKfId
-	A5FJNXA1YIbFkqepH9LU0Znywj4dtMCRTQ+Yy+RkLr8yXMg5fyhIGw9BAAw68wZzNE7Zjc=
-X-Received: by 2002:a05:6402:520c:b0:64d:23ac:6ca6 with SMTP id
- 4fb4d7f45d1cf-65452ad0b19mr163841a12.4.1768499849269; Thu, 15 Jan 2026
- 09:57:29 -0800 (PST)
+	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="tfd8+xZd"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+	d=hansenpartnership.com; s=20151216; t=1768503154;
+	bh=iQE8npT3I5smpRHQPeFuhmmIM6w4SGCF+j4B5VJYS9k=;
+	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
+	b=tfd8+xZdnKTSOsefD3qRQ+SU5Z0B0JkHBT9Ohkc+tNSdhGgSUk7QYPkD0LvIyX1rD
+	 70XWXQcStOETY99JbxOxFXr1vVECcWiP7CgtfARHRwNNjj3q0llWJ4sVvgpaLntZ6x
+	 F22w9v6NfFvWp6nLCzOMNhjys+oBCUGNzGi4vqug=
+Received: from lingrow.int.hansenpartnership.com (unknown [IPv6:2601:5c4:4300:d341::a774])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by lamorak.hansenpartnership.com (Postfix) with ESMTPSA id 46D581C0231;
+	Thu, 15 Jan 2026 13:52:34 -0500 (EST)
+Message-ID: <8a25c3aca1abd51f41a6041b84410ca393eca04d.camel@HansenPartnership.com>
+Subject: Re: [PATCH] scsi: pm8001: Fix data race in sysfs SAS address read
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+To: Bart Van Assche <bvanassche@acm.org>, Chengfeng Ye
+ <dg573847474@gmail.com>,  "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: Jack Wang <jinpu.wang@cloud.ionos.com>, linux-scsi@vger.kernel.org, 
+	linux-kernel@vger.kernel.org
+Date: Thu, 15 Jan 2026 13:52:33 -0500
+In-Reply-To: <2c210e30-e7bd-4b70-ad4e-cc7a1bbb5309@acm.org>
+References: <20260115171140.281969-1-cyeaa@connect.ust.hk>
+	 <2c210e30-e7bd-4b70-ad4e-cc7a1bbb5309@acm.org>
+Autocrypt: addr=James.Bottomley@HansenPartnership.com;
+ prefer-encrypt=mutual;
+ keydata=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
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.50.3 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260115171140.281969-1-cyeaa@connect.ust.hk> <2c210e30-e7bd-4b70-ad4e-cc7a1bbb5309@acm.org>
-In-Reply-To: <2c210e30-e7bd-4b70-ad4e-cc7a1bbb5309@acm.org>
-From: Chengfeng Ye <dg573847474@gmail.com>
-Date: Fri, 16 Jan 2026 01:57:18 +0800
-X-Gm-Features: AZwV_QgmzT2TQ0mPzJ_ns69acm1P1KA29sZUdIWR6ngs1iYG-7nKKJWizGGG5u8
-Message-ID: <CAAo+4rXcHCyuJJxJSWyw9tj_psCXi0BO1Wn462tdnDK9X3kvng@mail.gmail.com>
-Subject: Re: [PATCH] scsi: pm8001: Fix data race in sysfs SAS address read
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: "James E . J . Bottomley" <James.Bottomley@hansenpartnership.com>, 
-	"Martin K . Petersen" <martin.petersen@oracle.com>, Jack Wang <jinpu.wang@cloud.ionos.com>, 
-	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
 
-Hi Bart,
+On Thu, 2026-01-15 at 09:24 -0800, Bart Van Assche wrote:
+> On 1/15/26 9:11 AM, Chengfeng Ye wrote:
+> > diff --git a/drivers/scsi/pm8001/pm8001_ctl.c
+> > b/drivers/scsi/pm8001/pm8001_ctl.c
+> > index cbfda8c04e95..e49f11969b3b 100644
+> > --- a/drivers/scsi/pm8001/pm8001_ctl.c
+> > +++ b/drivers/scsi/pm8001/pm8001_ctl.c
+> > @@ -311,8 +311,15 @@ static ssize_t
+> > pm8001_ctl_host_sas_address_show(struct device *cdev,
+> > =C2=A0=C2=A0	struct Scsi_Host *shost =3D class_to_shost(cdev);
+> > =C2=A0=C2=A0	struct sas_ha_struct *sha =3D SHOST_TO_SAS_HA(shost);
+> > =C2=A0=C2=A0	struct pm8001_hba_info *pm8001_ha =3D sha->lldd_ha;
+> > -	return sysfs_emit(buf, "0x%016llx\n",
+> > -			be64_to_cpu(*(__be64 *)pm8001_ha-
+> > >sas_addr));
+> > +	unsigned long flags;
+> > +	ssize_t ret;
+> > +
+> > +	spin_lock_irqsave(&pm8001_ha->lock, flags);
+> > +	ret =3D sysfs_emit(buf, "0x%016llx\n",
+> > +			 be64_to_cpu(*(__be64 *)pm8001_ha-
+> > >sas_addr));
+> > +	spin_unlock_irqrestore(&pm8001_ha->lock, flags);
+> > +
+> > +	return ret;
+> > =C2=A0 }
+> > =C2=A0 static DEVICE_ATTR(host_sas_address, S_IRUGO,
+> > =C2=A0=C2=A0		=C2=A0=C2=A0 pm8001_ctl_host_sas_address_show, NULL);
+>=20
+> Why isn't READ_ONCE() sufficient? And why explicit
+> spin_lock_irqsave() and spin_unlock_irqrestore() calls instead of
+> using scoped_guard()?
 
-Thanks for looking into this.
+Do we really care?  The host sas address isn't something that changes
+often, so even if it is being overwritten in an interrupt routine, it's
+likely with the same value.  Whereas taking the internal host lock in a
+sysfs read routine could potentially be a DoS vector.
 
-> Why isn't READ_ONCE() sufficient?
-READ_ONCE() does not suffice because the write path still uses
-memcpy(), which is not atomic.
-So it is possible that when READ_ONCE() executes and reads all the 8
-bytes at once, the SAS
-address is still partially updated by the ISR.
+Regards,
 
-> And why explicit spin_lock_irqsave()
-> and spin_unlock_irqrestore() calls instead of using scoped_guard()?
-Thanks for the notice. I just sent a v2 patch to address it.
+James
 
-Best,
-Chengfeng
