@@ -1,121 +1,102 @@
-Received: from mail-ed1-f44.google.com (mail-ed1-f44.google.com [209.85.208.44])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5467126ACC
-	for <linux-scsi@vger.kernel.org>; Fri, 16 Jan 2026 13:42:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.44
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768570929; cv=pass; b=Hhh0y5iNcO7vVV2Ux8DIdBdUM7t9DJq8Q/o6pxpBLCYHZQCK8VeeEir0/pPiZ/HKBridWCZCR+LwnFc57PoMFB0pdfP+xDqouHvO3wUBOQhB/wMPoLc/0D+IPHsMQbnHZxeMeAwMPoBl8VAaL5CBhsJCpzwt20RDwpKtEJAQtBs=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768570929; c=relaxed/simple;
-	bh=TbLdI6/nq3E8X1CVvm93X+Ndt4WNaKBNNHTY19nvLzk=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=VAMLFv7Q6CC2ZPeSXaqOaLoK8Fdik6flYl0oG68sP9dWBykMFXWxB21L+eFGUbAHbFxTU6v42/VQj7KeYw/n9Mr6rLwL1d9bnrQS9RC83BDpsoOcHGWu4MWiH/9agNIuXnR5Dz7LqIwYnOcRqyNCnKjFnjKfoeshZrmHFP/fq9Q=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=G7rgQBZG; arc=pass smtp.client-ip=209.85.208.44
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA9BF26E165
+	for <linux-scsi@vger.kernel.org>; Fri, 16 Jan 2026 16:52:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.14
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1768582381; cv=none; b=jr5H4/SIUdT0eeG6CIpY6JixGjm+HSRhdOT5dUjFfE4aZx7rxhxoQwGfik4VWkscWkEQh8Mmp5ztqEMdZPCBA695DTTxyPRiI4avt0ORLlj3bfC0IDet+6RnJd1uqMUwltX+3I0wiC9mDEox08zK0FETZOu7vSMJax+hK4CVz74=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1768582381; c=relaxed/simple;
+	bh=55viOttWmOK4Nl8bK7PFOz7+xuusCZc0GivuTaojjIA=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=WfTlV/b+yQkwrZ20qJIXlOCY3eC5aCF/thEaf/XxWXzYnp5j40RhWE2rHvalra9NODxh3M6oSCGI+UQIx3LtSkr6HF0yOIlYWtZ4xfD+sqPztRgzUCP3vjvDfMK4sw9K/Z7ARIKvJEhmDZF5uJVzAsLtEQx3qDi6c7BJalkSQWU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=21wS6+Zn; arc=none smtp.client-ip=199.89.1.14
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="G7rgQBZG"
-Received: by mail-ed1-f44.google.com with SMTP id 4fb4d7f45d1cf-64b6f22bc77so280854a12.1
-        for <linux-scsi@vger.kernel.org>; Fri, 16 Jan 2026 05:42:08 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; t=1768570927; cv=none;
-        d=google.com; s=arc-20240605;
-        b=j0Poj+BW74dNVVcDFHB026SGvEbeJ8wnfJXCW+zVEwm/75OFzeVvbE88XmkMLJXP+d
-         Q/VmHEt3+Y8lIA74+yxKCDcMTPT4efvox0VeAEY9jYoA+pRCP/lPvCytAJ03bBaBtDRv
-         1vCuQUDwX9D3k4pNw5+bw5H47rBKmtZk9s3kJ33SqPoYQ+pUE6jJyYNrrA5y2N7iJPZ1
-         4eT9fhafxw0fQd2XhXlDE1MMb26ZWSkZ40b63C1qxpXfc+xPlD+F707bba7m7oi/3p9j
-         ijsd+BeU40Q4vimdLTZLlCxZD26D6wvVPqp22OsgAzAL+j+HFzoipvgyC6SXAn09CjP8
-         PtdA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:dkim-signature;
-        bh=TbLdI6/nq3E8X1CVvm93X+Ndt4WNaKBNNHTY19nvLzk=;
-        fh=T7XOA8RDuv+iRSPvz4lE2Evhy2aScQ6VtfPKfPXg5XI=;
-        b=knw0hVuK7XGfRafo/Bh89Uop0/kc2YDTRk9R5XQqHVvgby7PCrlgxaN4oaHHGEUpxv
-         4Hwm9sQDn6Wa0E1z4YuIlYEWPLCOvgDAatuqYVv+NTSPTV7WJcg5KwbuTN5aH8LA+kzk
-         63ST8WwX3Boo1MO9fVXs3JWIC6amnQZekmwsLS6TsNIkY+5OtwTaQB1gkLuxTkq1D0UI
-         7LEIAPtiLEXcMZ4LsrHGI9/C8rGNsTG7S5gs+88HsNc4NodY5LMaA0qLjYWKIeZj8NJk
-         MbUKbVwVdPnu+SuPEmkcCw54I8ta8zBzFOTRWVbdG6svExE1444zEw/Hf0vHn0STjSdc
-         nFnQ==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1768570927; x=1769175727; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=TbLdI6/nq3E8X1CVvm93X+Ndt4WNaKBNNHTY19nvLzk=;
-        b=G7rgQBZGJSkpO1elmfKZaNuPADuBQv3d0i+k9RI4Hl5XzWwt6IWDD+K5ml991/K6VP
-         7FTOHapRHgBiFhCbOSSv3n7pT9ed/LVJF2AAz1kC4hWcn+nVnoBDrulcLAMmXzI7in1C
-         JDhssxBxlGUblxgOSRJrW3vi9u1ZjsnoEA404oIVJLKYfLBxYcgTJw9nCSQPX+o+cIkP
-         6ZlDpy53vzTpjiK/+rAvOeh6iYRoaCYXsZocpO9OXvdQQb+stK/+8gYP/RVfsGcvZS7S
-         9irlKKQR/TJJ3Zy4Ekh5e0JsNhdULPYPr+SbSmM+Gs+NbThdrc7ttXgpwRoOE++0Xde4
-         rx9w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1768570927; x=1769175727;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=TbLdI6/nq3E8X1CVvm93X+Ndt4WNaKBNNHTY19nvLzk=;
-        b=jM/jaSNBW8FjrHyety+7JwBWC9GRgo4XkdEbbtr2MDj5VPuSRwTbjGtkhLvuWgrHRS
-         79O0+upNjNuRSKg+BctCb/hjgO5UB7/Ye34Kp63eg3BlGsACJuA2WT3d8204LhxaG4Em
-         dEnuaWDtw5npBHbXlxMUrxQOGohOwdjZXFZMtddXB7l6JVT4+3pSKbtlIKSh7qjbqfk5
-         soxssxHLckFBQ1lkpS+3anuUt+YAlmo3vneS6QdgatJQamvE9RDnKZZz+3Onjbp9nhgh
-         koAc/wqz+P9T1WGPLxFTrt5m9oubnGGr2MUEFz1iS31UBFQgtxBZX2SwVmc0EfGSoAj4
-         1mxA==
-X-Forwarded-Encrypted: i=1; AJvYcCUVYtmOZXIjKuXiBk1r1adlyybbWfeP2jBezCCxz0cWTrDd+wZZ1BdKhwzBi9MINdqAZy97SP1t6GEG@vger.kernel.org
-X-Gm-Message-State: AOJu0Yz/QqR3FEqpFnDLeNZGS1YWw3h1lm9nJs2Sn8SqJRlwhtyqMips
-	UYgDGHtZY5vlOL+XDwruzoSZ5tJ6j+aG1ApMZqdViG5AuherzVu29Gp31h4WGg2xkJ1um2QCv0s
-	dnvPHSZKeSlVHYLigw1ddjPuJ9+o8Omc=
-X-Gm-Gg: AY/fxX4mmHJHJ6Cw6APjwTOLAi1MJor0sCEl7kIq2z/HEdafQIh8XYgFtPih5u99iKO
-	ik5IjU7HimeKterFHFMWFpvuAKF9cU2+r+39Pvvrt2SgNvcYIh9fSBlzCNG8U/5dk3KmFPIeLA3
-	JTE+A2GDOsdoifFyPGHD2YTWQyR1HwnY9UiykFPdx8wSet7UaX8ZfXRxwfMLsk3a1iEJXECcZjs
-	npx4VMW7tDsjm8t9Hxm27Iph4A1tSxuP6x8/LU/9f6D7PUyZMcucL5V2Q8baOLzg08DE+kD
-X-Received: by 2002:a05:6402:2684:b0:64b:76cb:5521 with SMTP id
- 4fb4d7f45d1cf-654524cf81cmr1297957a12.2.1768570926455; Fri, 16 Jan 2026
- 05:42:06 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="21wS6+Zn"
+Received: from localhost (localhost [127.0.0.1])
+	by 011.lax.mailroute.net (Postfix) with ESMTP id 4dt5Wb1JD2z1XMG4p;
+	Fri, 16 Jan 2026 16:52:59 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1768582377; x=1771174378; bh=55viOttWmOK4Nl8bK7PFOz7+
+	xuusCZc0GivuTaojjIA=; b=21wS6+ZnEHMxizVa1Wq5ViLCzFpC+vgJFbEIDCTH
+	ZLh1sa5dVKSei2s7lDrDG+/YSb3hEqzDB6rd/QZvAeIibDJgwZiL6eN/PPyW/bbb
+	aNHKkfV9uMjlqEAtQCJ5eOx7MV+bDHMinggLA7tN4dR+RY/1UGCZK/gzo8Bp035R
+	iDbf0UeWrFcb6Bh26W60z8oovTjIvMSEOb8L3ZOjXNg7NvzaMtIdP7tz5g2QUtsM
+	p2vulrDjHReP7dq4RJkYolavsurmRXL/uz2UhVoBAPobnvfl3kddTPxPXazFzdMY
+	mMGonwA3q+wbamK1fbwJ4+fcC++XuqFgyFip3eF4ITlxjw==
+X-Virus-Scanned: by MailRoute
+Received: from 011.lax.mailroute.net ([127.0.0.1])
+ by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id OfPhbOtMvMsO; Fri, 16 Jan 2026 16:52:57 +0000 (UTC)
+Received: from [100.119.48.131] (unknown [104.135.180.219])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4dt5WW3PyPz1XMG4m;
+	Fri, 16 Jan 2026 16:52:55 +0000 (UTC)
+Message-ID: <b4d3246f-0c48-43cc-9897-804da65ea546@acm.org>
+Date: Fri, 16 Jan 2026 08:52:54 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260115175427.290819-1-dg573847474@gmail.com>
- <CAMGffEk3cgah3-xTaokDeiM0RGwKQn1OO43dWLJAwoaVDfHWdQ@mail.gmail.com>
- <CAAo+4rXpSK-LzrHgU0g-c3n=q3xB3j+-GtmUZOLqQ7S44yS_2Q@mail.gmail.com> <88b042009eff363d098f8b80238329385837c6f7.camel@HansenPartnership.com>
-In-Reply-To: <88b042009eff363d098f8b80238329385837c6f7.camel@HansenPartnership.com>
-From: Chengfeng Ye <dg573847474@gmail.com>
-Date: Fri, 16 Jan 2026 21:41:55 +0800
-X-Gm-Features: AZwV_Qh2eJSxC5ZH_77uV3RbAR7ekxUzfJH7Cna3mv8L8Pf7UMRAHZ1WGQ7KY18
-Message-ID: <CAAo+4rWk2ZgjSVk9bMSh683drt-bW9EjkYgBsS4q8CcraGDEBQ@mail.gmail.com>
-Subject: Re: [PATCH v2] scsi: pm8001: Fix data race in sysfs SAS address read
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: Jinpu Wang <jinpu.wang@ionos.com>, 
-	"Martin K . Petersen" <martin.petersen@oracle.com>, Bart Van Assche <bvanassche@acm.org>, 
-	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	Chengfeng Ye <cyeaa@connect.ust.hk>
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 2/5] scsi: megaraid: Return SCSI_MLQUEUE_HOST_BUSY
+ instead of 1
+To: John Garry <john.g.garry@oracle.com>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, Kashyap Desai <kashyap.desai@broadcom.com>,
+ Sumit Saxena <sumit.saxena@broadcom.com>,
+ Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
+ Chandrakanth patil <chandrakanth.patil@broadcom.com>,
+ megaraidlinux.pdl@broadcom.com,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
+References: <20260115210357.2501991-1-bvanassche@acm.org>
+ <20260115210357.2501991-3-bvanassche@acm.org>
+ <4247de59-248f-4e77-b3cb-7bb0ee712761@oracle.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <4247de59-248f-4e77-b3cb-7bb0ee712761@oracle.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: quoted-printable
 
-Hi James,
+On 1/16/26 4:39 AM, John Garry wrote:
+> On 15/01/2026 21:03, Bart Van Assche wrote:
+>> diff --git a/drivers/scsi/megaraid.c b/drivers/scsi/megaraid.c
+>> index a00622c0c526..54ed0ba3f48a 100644
+>> --- a/drivers/scsi/megaraid.c
+>> +++ b/drivers/scsi/megaraid.c
+>> @@ -640,7 +640,7 @@ mega_build_cmd(adapter_t *adapter, struct=20
+>> scsi_cmnd *cmd, int *busy)
+>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0 }
+>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0 if(!(scb =3D mega_allocate_scb(adapter, cmd))) {
+>> -=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0 *busy =3D 1;
+>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0 *busy =3D SCSI_MLQUEUE_HOST_BUSY;
+>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 return NULL;
+>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0 }
+>> @@ -688,7 +688,7 @@ mega_build_cmd(adapter_t *adapter, struct=20
+>> scsi_cmnd *cmd, int *busy)
+>=20
+> should @busy still be a pointer to an int?
 
-> I think everyone would agree this can't happen for built in drivers
-> (because user space doesn't start until long after driver init), so
-> your theory above rests on a race between inserting the module and a
-> tool reading the file which can be fixed by waiting a short period ...
-> it just doesn't seem to be an important issue.
+The next patch changes it into a pointer to 'enum scsi_qc_status`. Do
+you perhaps want me to move that change into this patch?
 
-True for the case of built-in driver (most use scenario), the race
-window is short.
+Thanks,
 
-> Whereas taking the internal host lock in a
-> sysfs read routine could potentially be a DoS vector.
-
-Agree that using a spinlock just to fix this hardly triggered output
-issue may not be a good idea.
-I think this theoretical uninitialized/torn-read issue could also be
-fixed by delaying the creation of the sysfs folder until
-initialization finishes. Can help create a new patch if you'd like to
-improve the code, or we can just ignore it if it is not worth
-bothering with a small issue like this.
-
-Best regards,
-Chengfeng
+Bart.
