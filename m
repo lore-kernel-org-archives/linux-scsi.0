@@ -1,30 +1,29 @@
 Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.2])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 39C81346766;
-	Fri, 16 Jan 2026 04:26:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 948E3347FD0;
+	Fri, 16 Jan 2026 04:52:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.2
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768537583; cv=none; b=UkPzfFU0bn99ga004YSzi1X04Y+vQrIBw5ik5kIe5wToRtLNaqqoI5P8CHE2KAxFU8NZyQxLYDg8weJ6V0cRFmdlHV1WolHEMZFN6/rmtgMIJUYTiLQiFmvW1Cy/M0BE626rwFXeTCM8ry6TphB9/VdB66x4Ro5PjVcyNv1PNvA=
+	t=1768539184; cv=none; b=gobvejQWEXHCXC+I2GhYggKJ72wBiXWGcCttLyJjNY9Enjm4oVSaf8m6+N/lnfPpm1K1QRsXHdRTpPkmo/TRwwWVxhxTIAhUWUiQ8sgLvmIKRNUn7cFg16esx7YHztYHi6UtVNkJHBPd/EcC7b5QotYafJLXb2hz7IOMda9XxVk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768537583; c=relaxed/simple;
+	s=arc-20240116; t=1768539184; c=relaxed/simple;
 	bh=Km94l5dOzb9/BKwN9ws3sLMgxzatXl7DyHXFTSOVL1o=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=TxasZ3dvDv8mhpJfP+LsLZuw+uHAy4QTNYVALGIvL6222x3ZMF8PevneBcKUk08qk2nVbewUaTPL07CHBJJq8RHv1vSDWKcl9f+jRA/8FsDlOKvXveOOUZzhN2W0+tGOoUNxcuxEpZK0rphtTfFavwJ8hVGn3V17wwRG45hTPBs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=gAk7E7e3; arc=none smtp.client-ip=220.197.31.2
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=u2H0uzvLak5cEVqEVovn0M0GW8lb2rnTQwd2mcGWqMymt9lUOxucYkMn6+IH2oUVl3bhAiLUPyP7iAYjjBlejsPnfoLeYzCmzNINPanGlVzzefMjekGZC9UdtXAykzsJC07OUSj/Xsv7AfPbVUwJIZpX4dEaVwky/XprbCueVO0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=ND+j4jvA; arc=none smtp.client-ip=220.197.31.2
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="gAk7E7e3"
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="ND+j4jvA"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
 	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=Ma
-	HH9s8Et9nU7Iy0cnZpKfH3AnGQ526YacPtNjoeqwM=; b=gAk7E7e3+YKxGs5ugK
-	/2jFxkzU+YCRuDoyN1dbQkRX+Tege9SQjEw9ASmCl+6ZHomB2V+C7pEs0Y6Fqv5R
-	U6zjSjtMFcGpc1iwx0/ZU2wVdHbAh5m09svzEiWSOUof7NZmYVBUdb1+TqXK8Dko
-	+4peZBp8bMeS4VzQw4IVZ/7UQ=
+	HH9s8Et9nU7Iy0cnZpKfH3AnGQ526YacPtNjoeqwM=; b=ND+j4jvAB0RVA56BBX
+	F+yRw8yBGeF9dRJgIAs65TFAmtOishFH3M7H5uhxW6uTaVwNKtCCiFMA7MWlztx6
+	MX2eLKzEjO2EE3OFLd283zpRI6TTwxzm6xytzMD3VHv2dGQVjp/tvzUzpPHJ1TRO
+	U6GuCFCMEKykXmxFMtHfxERJA=
 Received: from localhost.localdomain (unknown [])
-	by gzga-smtp-mtada-g0-1 (Coremail) with SMTP id _____wAXCLKuvWlpM1mcFw--.2330S2;
-	Fri, 16 Jan 2026 12:25:20 +0800 (CST)
+	by gzsmtp2 (Coremail) with SMTP id PSgvCgA3BNvxw2lpiES4NA--.28497S2;
+	Fri, 16 Jan 2026 12:52:03 +0800 (CST)
 From: Yang Xiuwei <yangxiuwei@kylinos.cn>
 To: linux-scsi@vger.kernel.org,
 	linux-block@vger.kernel.org,
@@ -36,11 +35,9 @@ Cc: fujita.tomonori@lab.ntt.co.jp,
 	bvanassche@acm.org,
 	Yang Xiuwei <yangxiuwei@kylinos.cn>
 Subject: [RFC PATCH v3 0/3] bsg: add io_uring command support for SCSI passthrough
-Date: Fri, 16 Jan 2026 12:25:13 +0800
-Message-Id: <cover.1768536312.git.yangxiuwei@kylinos.cn>
+Date: Fri, 16 Jan 2026 12:52:00 +0800
+Message-ID: <cover.1768536312.git.yangxiuwei@kylinos.cn>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <cover.1768439194.git.yangxiuwei@kylinos.cn>
-References: <cover.1768439194.git.yangxiuwei@kylinos.cn>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -48,13 +45,14 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wAXCLKuvWlpM1mcFw--.2330S2
+X-CM-TRANSID:PSgvCgA3BNvxw2lpiES4NA--.28497S2
 X-Coremail-Antispam: 1Uf129KBjvJXoW7KFy8GF4DKF4ftr4rCFyUWrg_yoW8CF4rpF
 	WakF43Cw4UCr1xCF4fJFWDA34rX395Ga4UG343Kwn2yFZ8uF10qr4YgF1FvrWkGryIqFyj
 	qw1qqr98uw1DArDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07j1v38UUUUU=
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07j86pPUUUUU=
 Sender: yangxiuwei2025@163.com
-X-CM-SenderInfo: p1dqw55lxzvxisqskqqrwthudrp/xtbC6RBQ4GlpvbC16QAA3Y
+X-CM-SenderInfo: p1dqw55lxzvxisqskqqrwthudrp/xtbC6RPhcmlpw-MnNAAA3K
+Message-ID: <20260116045200.NP1GJHVkr-ViHveoOVFC5S9g5pGJZmtxqG3ZyUrTYhY@z>
 
 This RFC series adds io_uring command support to the BSG (Block layer
 SCSI Generic) driver, enabling asynchronous SCSI passthrough operations
