@@ -1,88 +1,205 @@
-Received: from mail-qt1-f179.google.com (mail-qt1-f179.google.com [209.85.160.179])
+Received: from mail-pl1-f201.google.com (mail-pl1-f201.google.com [209.85.214.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A567034677D
-	for <linux-scsi@vger.kernel.org>; Fri, 16 Jan 2026 17:48:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.179
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7BC42339857
+	for <linux-scsi@vger.kernel.org>; Fri, 16 Jan 2026 17:58:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768585721; cv=none; b=UWUOtvGScKA3rLISzBTg5t7XzoQcyyvWudL+wzPv55DQdLQkT3uxmUJhzll5uy566RndbzV7sRCVl3bD7qLv7sV7p7QeeM8XX9UpmxGYZEJ7cLrG6UNlfQUgDGEhdjQRSDZ+wh5tAcDrgVU7rIU50d3LccyKbhE6VTQLCh8hrdk=
+	t=1768586332; cv=none; b=KiAs1K0ek96ybxhLqGGSsKK9VO4mdjknRQqkLXevPdESz+q9eHWIEUA1zOMWGofutCZXih1OZ0xPhrM+Sxc/zMx/5nN6eQK0xfaXVVa6yUn6rvLxFFMNdxYQM0HtivZ6AIsK/35Rm298F36NpEPLyq/u93NAHXrmDDmNnOEcMWo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768585721; c=relaxed/simple;
-	bh=/6u/jxUE09UwI7rUlzQkEsyvBI77MuYC+E7W1082utI=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=nC3O9a+YotwQmc/4d+7PlZvwuWSRQgAJ+LYaswCymvwIpbAwzTGACtvgY0pVNvHDLkoF+R4NP7+yx+ySgJIivBsW0eGh3pRP+Ig8Yuz0Q1V8fn1gQ28UtvM+2hxH5Lgb/b7ug8kjZfAtM2cQNXnj6lChWvHsgHajWGxh9NmcbNk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=RpfS4HQm; arc=none smtp.client-ip=209.85.160.179
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1768586332; c=relaxed/simple;
+	bh=qu/Fz4UEyq1oOpxLbieusUW35tltYWUfD2p/iMP7H2k=;
+	h=Date:Mime-Version:Message-ID:Subject:From:To:Cc:Content-Type; b=pu1NbbW0mCrP0rNItDRk4r2pdQlSvIE2mXC8xnmXx6uAmllxBhqu93YQX5Qjet0W+vXNHYW4SeBD+foX5n6w9HYPHf20qWV46q3FjWCtFMMf/M4XVEJ8oo9/sMHI4jr3Jp2dLLya6GVs0HEZm2ioPQ8N9gf43A037hn1+GO3ZDg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--ipylypiv.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=JgEAEmQj; arc=none smtp.client-ip=209.85.214.201
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--ipylypiv.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="RpfS4HQm"
-Received: by mail-qt1-f179.google.com with SMTP id d75a77b69052e-5029aa94f28so15507871cf.1
-        for <linux-scsi@vger.kernel.org>; Fri, 16 Jan 2026 09:48:26 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="JgEAEmQj"
+Received: by mail-pl1-f201.google.com with SMTP id d9443c01a7336-29f1f69eec6so23262695ad.1
+        for <linux-scsi@vger.kernel.org>; Fri, 16 Jan 2026 09:58:51 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1768585705; x=1769190505; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=/6u/jxUE09UwI7rUlzQkEsyvBI77MuYC+E7W1082utI=;
-        b=RpfS4HQmxQIuLAjWYBLAjkJv0zfU1J9Fu5fKSe1yqAdFMkcidk7fvPjsWXdITeWsjo
-         jNO8t8Z2ADlZFT2JtMIZKlqk3UnjeiOSvrGPb5iUVed/ua4HiiFj9t/fx6cZwzTguw6a
-         R0uAI2wwG3QO1Bq8wpvbJco3NBeDs0jki6eCpLNZXrrM4Gg50IoiFMiYTD1AZxGPNGdQ
-         9ZDFge/46t2oxqafL6cNkTTJwhcrLZfshFMhQ9FHtl0LClZomRJQF/tEWxpboshQRoAH
-         Pk6D0vOEvY0Y63b7pifAXeQAehJpitEYRKMlukOkvAp/TNsTXJ6yndCMDYJMSCPLpoTU
-         N3/w==
+        d=google.com; s=20230601; t=1768586331; x=1769191131; darn=vger.kernel.org;
+        h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=cY5JYqVcIMLD/+VD15f76fWimBZZz3wJhNHYazJcVMk=;
+        b=JgEAEmQjX/HeeUVVj/9DZrFvL0nhOnaBQSpdU8gg4iz/TXcwJcCoZcqUi8NyTc8kQk
+         NB6Wva3slhd6sHlBI5CRZHnTETqi+xADMyIeyagkmQ4obcm7IHZ0p5n8QFYiiPi8gIjy
+         bSCuEMKED08p4LfMWEfkev/Q0F9hdT2gOv3r219rFBZ5f6XBcMEqymB6i1lGYnw9Xz+V
+         lfcBE2lPjrBqANA2inmFDYOqH+D89p/1gZbdAd+xtMc3pYoKO1vxp5Hk4eqMRBX6pj6s
+         hPFWC+ZwLAbN2lErJ5U9+PrnO8yRjoz9RG4w14UsWN/3SZgS5AyMb6ifAGoYyJ2mqcJN
+         yffw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1768585705; x=1769190505;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=/6u/jxUE09UwI7rUlzQkEsyvBI77MuYC+E7W1082utI=;
-        b=vplsl7iczS9WfGhGsmyrfweMtIM/ouLGMhBdZoPedFFKY+zhyTIt1I5HeXf35DFx1G
-         Z0M5S17/xn9nCQ4NOKYcL8yq/UNSU9BFeS8NQTZc3s9dAam/j1VlE7J9ManMSQHoGdGm
-         JhIeeUyqDY50GuFEerLhZb/fdPklwzDc/tQ3Gt7mAzvGGow3oKxwwBKhwbbrduIfmNwD
-         jVDOHawoa9k4Wh/VNxqvOFTw7NrDdlWm5bcWh80KCRqLcyy3zfXeyra70/V/123bTMvF
-         Yy004qA2KdpEj8L5MO29udxXu+y+XORYCqSkuVPe+heXSsHSrk4H0/DYRTsGDG6TLdhq
-         0C7g==
-X-Forwarded-Encrypted: i=1; AJvYcCUDsYsuQYFP4kGsANSUAkqvU/9st8pcwQXUHjkg/iZgD+UYBqEm+dUBEQkoVHC8vypWIHc4pqaEQZG4@vger.kernel.org
-X-Gm-Message-State: AOJu0YyRBjVy0NoWi+MIbqM2U0k0f1IcyIZGl+a1Vjog8apISgi8Dy26
-	M8KVSl5kpn7K1YpExuCMQczl0oGi0wwMenLBbqHG6rCcI4mRGiUUR7iojN9dHBzfmc6g09sfpyx
-	lvDKWXyD2bODd9gq4U4mB/15Kogt+O68=
-X-Gm-Gg: AY/fxX6t5+h6r5mwJJX3zu0fUSaP5hlSzeq45+sDMkFaRsNXMSmjjdPQeMv7aVFN8V1
-	qAf90MBS7SebPFuc9fDd4xbjg7R5fUMaj/R/FIMrBG79xFKiTVp4OLhTsWkAsDYXLyNlGqzBCkA
-	mqHphOeUkrRuxpiCjy8Av6+W1LjYqMIBbbPVBhS5M39aLLHQNkjjrrKAakDOZtOBI4obhi1LKxo
-	mGlXIng9HJtj/udL/ZIr9I7uoOtqiFNEQSZgCGKqSCL6bUjwAw+5AnAZs2/2WyghJvq+qdH
-X-Received: by 2002:a05:622a:1309:b0:4ed:a6b0:5c14 with SMTP id
- d75a77b69052e-5019f8e3937mr98351331cf.23.1768585705410; Fri, 16 Jan 2026
- 09:48:25 -0800 (PST)
+        d=1e100.net; s=20230601; t=1768586331; x=1769191131;
+        h=cc:to:from:subject:message-id:mime-version:date:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=cY5JYqVcIMLD/+VD15f76fWimBZZz3wJhNHYazJcVMk=;
+        b=e4T4CyZEFKr+YIWm/zTIaEq6MRSFkHrwk8joQo1KSzpQN60WEKw1tFfIt7p8HmY3ik
+         JiPbacbDAbt/cGZW9/WCt74IOFJvbE8Np9ULkw+gxwztCfyC31YxA8g+od2+GDDbtybx
+         SzLxIJ/20THk+/RC7+681bef4T4hCVoqLiAreuwK3z/iXfDX6UHWCfAlvaL55Z2b2DBU
+         /OmWVcIOfUMeRUvcS0fBramu4r406PVQD9eFA+fA/gCAgQn7Ko+yaU0R6hP5kW23NmKO
+         O4xJPu4zZoJOqDsGRsSMemuN7aJhIPr/75sFt+zQDlGOEfc0nk9qxoYLWqIy4i/Antlm
+         4POQ==
+X-Forwarded-Encrypted: i=1; AJvYcCXO8nhrqhP9ij0CoNgl/6oNSN0r+Fg312m6sYHJeLMMFBbNsowzVaHp4Qz1umLDhTyprpWeGbXDgbbY@vger.kernel.org
+X-Gm-Message-State: AOJu0YzlLaOlBYm8Y8kkwIC48u1FShTV7AF80xh+zzjAicdbhlbM94p0
+	sotRvWiWX0Abs8qDnxULXT+ywqtBgD71i3mjHkIA2M/GoBmgFe2azOUYggN3mteTmewXYykGl0Y
+	J44qEpV/BGzsFVQ==
+X-Received: from plbv22.prod.google.com ([2002:a17:903:44d6:b0:297:e585:34c1])
+ (user=ipylypiv job=prod-delivery.src-stubby-dispatcher) by
+ 2002:a17:903:380e:b0:2a0:9402:2175 with SMTP id d9443c01a7336-2a717569367mr34654095ad.27.1768586330839;
+ Fri, 16 Jan 2026 09:58:50 -0800 (PST)
+Date: Fri, 16 Jan 2026 09:58:47 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-References: <20260113222716.2454544-1-minipli@grsecurity.net>
-In-Reply-To: <20260113222716.2454544-1-minipli@grsecurity.net>
-From: Justin Tee <justintee8345@gmail.com>
-Date: Fri, 16 Jan 2026 09:46:46 -0800
-X-Gm-Features: AZwV_QjxtgtW5nCVrRxO84eNCps09QeR_9ohNRpvTbe_EpxaEfTiiRgvBkM1Bwo
-Message-ID: <CABPRKS89zwXdUT1Bhj37cQDyOHNupOJ-Ez6kS7Dp_pu06X9Myw@mail.gmail.com>
-Subject: Re: [PATCH] scsi: lpfc: Properly set WC for DPP mapping
-To: Mathias Krause <minipli@grsecurity.net>
-Cc: Justin Tee <justin.tee@broadcom.com>, Paul Ely <paul.ely@broadcom.com>, 
-	linux-scsi@vger.kernel.org, James Smart <jsmart2021@gmail.com>
+Mime-Version: 1.0
+X-Mailer: git-send-email 2.52.0.457.g6b5491de43-goog
+Message-ID: <20260116175847.3131464-1-ipylypiv@google.com>
+Subject: [PATCH v2] scsi: core: Add 'serial' sysfs attribute for SCSI/SATA
+From: Igor Pylypiv <ipylypiv@google.com>
+To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
+	"Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Bart Van Assche <bvanassche@acm.org>, linux-scsi@vger.kernel.org, 
+	linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	Igor Pylypiv <ipylypiv@google.com>
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
 
-Hi Mathias,
+Add a 'serial' sysfs attribute for SCSI and SATA devices. This attribute
+exposes the Unit Serial Number, which is derived from the Device
+Identification Vital Product Data (VPD) page 0x80.
 
-> I don't have any hardware to test this on. I just got the report from a
-> customer of ours regarding the CONFIG_DEBUG_VIRTUAL BUG_ON(). As I don't
-> have any spec for the hardware either, I assumed a few things, like:
-> 1/ DPP regions are only supported on SIL4 devices.
-> 2/ DPP may be shared with other registers (doorbells?) in the same BAR.
+Whitespace is stripped from the retrieved serial number to handle
+the different alignment (right-aligned for SCSI, potentially
+left-aligned for SATA). As noted in SAT-5 10.5.3, "Although SPC-5 defines
+the PRODUCT SERIAL NUMBER field as right-aligned, ACS-5 does not require
+its SERIAL NUMBER field to be right-aligned. Therefore, right-alignment
+of the PRODUCT SERIAL NUMBER field for the translation is not assured."
 
-Sure, we=E2=80=99ll have close look at this patch and test on real hardware=
-.
-Will report back on our findings.
+This attribute is used by tools such as lsblk to display the serial
+number of block devices.
 
-Thanks,
-Justin
+Signed-off-by: Igor Pylypiv <ipylypiv@google.com>
+---
+
+v1->v2 changes:
+- Reordered declarations in scsi_vpd_lun_serial() from longest to shortest.
+- Replaced rcu_read_lock()/rcu_read_unlock() with guard(rcu)().
+
+ drivers/scsi/scsi_lib.c    | 47 ++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/scsi_sysfs.c  | 14 ++++++++++++
+ include/scsi/scsi_device.h |  1 +
+ 3 files changed, 62 insertions(+)
+
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index c7d6b76c86d2..16eed661d657 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -13,6 +13,7 @@
+ #include <linux/bitops.h>
+ #include <linux/blkdev.h>
+ #include <linux/completion.h>
++#include <linux/ctype.h>
+ #include <linux/kernel.h>
+ #include <linux/export.h>
+ #include <linux/init.h>
+@@ -3451,6 +3452,52 @@ int scsi_vpd_lun_id(struct scsi_device *sdev, char *id, size_t id_len)
+ }
+ EXPORT_SYMBOL(scsi_vpd_lun_id);
+ 
++/**
++ * scsi_vpd_lun_serial - return a unique device serial number
++ * @sdev: SCSI device
++ * @sn:   buffer for the serial number
++ * @sn_size: size of the buffer
++ *
++ * Copies the device serial number into @sn based on the information in
++ * the VPD page 0x80 of the device. The string will be null terminated
++ * and have leading and trailing whitespace stripped.
++ *
++ * Returns the length of the serial number or error on failure.
++ */
++int scsi_vpd_lun_serial(struct scsi_device *sdev, char *sn, size_t sn_size)
++{
++	const struct scsi_vpd *vpd_pg80;
++	const unsigned char *d;
++	int len;
++
++	guard(rcu)();
++	vpd_pg80 = rcu_dereference(sdev->vpd_pg80);
++	if (!vpd_pg80)
++		return -ENXIO;
++
++	len = vpd_pg80->len - 4;
++	d = vpd_pg80->data + 4;
++
++	/* Skip leading spaces */
++	while (len > 0 && isspace(*d)) {
++		len--;
++		d++;
++	}
++
++	/* Skip trailing spaces */
++	while (len > 0 && isspace(d[len - 1]))
++		len--;
++
++	if (sn_size < len + 1)
++		return -EINVAL;
++
++	memcpy(sn, d, len);
++	sn[len] = '\0';
++
++	return len;
++}
++EXPORT_SYMBOL(scsi_vpd_lun_serial);
++
+ /**
+  * scsi_vpd_tpg_id - return a target port group identifier
+  * @sdev: SCSI device
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index 99eb0a30df61..d80a546f54c2 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -1013,6 +1013,19 @@ sdev_show_wwid(struct device *dev, struct device_attribute *attr,
+ }
+ static DEVICE_ATTR(wwid, S_IRUGO, sdev_show_wwid, NULL);
+ 
++static ssize_t
++sdev_show_serial(struct device *dev, struct device_attribute *attr, char *buf)
++{
++	struct scsi_device *sdev = to_scsi_device(dev);
++	ssize_t ret;
++
++	ret = scsi_vpd_lun_serial(sdev, buf, PAGE_SIZE);
++	if (ret < 0)
++		return ret;
++	return sysfs_emit(buf, "%s\n", buf);
++}
++static DEVICE_ATTR(serial, S_IRUGO, sdev_show_serial, NULL);
++
+ #define BLIST_FLAG_NAME(name)					\
+ 	[const_ilog2((__force __u64)BLIST_##name)] = #name
+ static const char *const sdev_bflags_name[] = {
+@@ -1257,6 +1270,7 @@ static struct attribute *scsi_sdev_attrs[] = {
+ 	&dev_attr_device_busy.attr,
+ 	&dev_attr_vendor.attr,
+ 	&dev_attr_model.attr,
++	&dev_attr_serial.attr,
+ 	&dev_attr_rev.attr,
+ 	&dev_attr_rescan.attr,
+ 	&dev_attr_delete.attr,
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index d32f5841f4f8..9c2a7bbe5891 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -571,6 +571,7 @@ void scsi_put_internal_cmd(struct scsi_cmnd *scmd);
+ extern void sdev_disable_disk_events(struct scsi_device *sdev);
+ extern void sdev_enable_disk_events(struct scsi_device *sdev);
+ extern int scsi_vpd_lun_id(struct scsi_device *, char *, size_t);
++extern int scsi_vpd_lun_serial(struct scsi_device *, char *, size_t);
+ extern int scsi_vpd_tpg_id(struct scsi_device *, int *);
+ 
+ #ifdef CONFIG_PM
+-- 
+2.52.0.457.g6b5491de43-goog
+
