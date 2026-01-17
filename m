@@ -1,71 +1,41 @@
-Received: from mail-wr1-f53.google.com (mail-wr1-f53.google.com [209.85.221.53])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D491122259A
-	for <linux-scsi@vger.kernel.org>; Sat, 17 Jan 2026 10:20:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.53
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4AF25500941;
+	Sat, 17 Jan 2026 19:32:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768645202; cv=none; b=UkH/2V8pE1wNMBRJOd7gGSyqPP/2p8ijmTGkJYA2JKDtxHcU5MBJy3ZdYoU7dYkUzP18IdRzlvPDNqDo142RB4xTNFfaGCmdpDg43lirRaQWomEndAsX8WBaH12NlxxSwabeOCiG948TUqwzXa6kLtRhaGXWTsuBn3ih25QsmlQ=
+	t=1768678356; cv=none; b=na05YTecnnHavkNRWgzOos03+h2JR4OqYTxgqOcj4nbYMMJMH7tagD5SyQBPDWc71WmIyggKRCWQ6w9Ue1/KilJD0+qIEPJE9y109iKmh1/hV/kOjTFzxA9wh3rxKzLzFIkWS1OWqLqjGhchFQgiQQZuy1NnlTfGIFSbH0+xK1g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768645202; c=relaxed/simple;
-	bh=SgRySSIaJ7uxXomF0kuxxtEg+GQkRKe14Ludft80NUM=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=dQ89eg5IShaeTPnKwEhSvVR4goMoVVFsQpJZ5JIEJDQeH1pRTGAQcRJ4LXAsyc6tUhMGETnn+JTUOq67zsmDKp8zJ3lUeKN5S+VC5L0XIyUPnE59QfnR3AniwIxzkwggA1sTpwZTIDfHRrBFzZzLFH9nZy9uYq8PIDhImyHz3uA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=IPm6tq8G; arc=none smtp.client-ip=209.85.221.53
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1768678356; c=relaxed/simple;
+	bh=xYZ1QLXVBjYMCOd/kLFI3p25B4jljuN964Wp+AlR0jQ=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=ABBS/Zsf1zkfbUngSHz2tqgz3KaWRN9E5/ESZPufzXzseiDIFsplwQRZ1uzbjYzP+itFAHPlX/PLWuUEhLrP7Bm8xKlIJpZscUCbsxlg3CdWK5SdvGY+0oFBoM0w2MJS1Kf9GoB5yEnbVO1DLZMTGKt21/v3qKL+ULnN8kRinmE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DtJ3X2y0; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="IPm6tq8G"
-Received: by mail-wr1-f53.google.com with SMTP id ffacd0b85a97d-430f38c7d4eso135016f8f.3
-        for <linux-scsi@vger.kernel.org>; Sat, 17 Jan 2026 02:20:00 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1768645199; x=1769249999; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=QRSQb7cGrtgfOhLkWk2KQRl7frQVEvtr+QRGRO51K5s=;
-        b=IPm6tq8G2GAgbCmD8RBxmoVD1UcYICaXZO+Xp4KSeUlROrFB2c/TrPkPAVQQGcYTRz
-         oqkcANBwOn+bD8owJjjKehBmftIlL16rbe6S35+4Qf4sY+S52ZflT6+mCTjvuZdXUIul
-         eJDDNPUlvM5K+o865QBy18DAYKQqqkXRv2btBy45wLclRPxnV/I+NxFUJo0foYdVdrqT
-         dax9afMzUh9s2EqxCIoyK1GgSMCBAhVAOZWntcRd86FWB0YfYpigPdjoodLwQ036pWll
-         0eHmp74ilWO2wtQ/xUDHRVixyMHNDWysdPAt2wy17CRWfYWnaGGstln9T3IpSwNE6NhD
-         4p5Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1768645199; x=1769249999;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=QRSQb7cGrtgfOhLkWk2KQRl7frQVEvtr+QRGRO51K5s=;
-        b=Ex3NQOOZvnFlJdgn/rhKkgNmKffQerwNWpAk5nME7u1SEFvA6mOVduq9Ddh3L6ep3Q
-         G5tSBAmeRzhqNE4xw76llwSCdSmK+HVLjNnkkkIco5S+LIMGsVTneWwEFdR6tL0QKoP4
-         YOHK9Jcz/fT/yZe+uEEWu02eKui64vglrTbwyrBSvK1Xv8DFSqJzA5FsOqJRSAXFHLqe
-         X/n6fv2odZ5ovU0no7CNfxkeKimewfmIEKoJnr+GOYDyxR8c6DFd+HVYYm/UEodSYS9z
-         7ZLJrXPGCrx9NGTEhVmhP18+8k+22EtB3YJXvo/2/5ECIAjbR8oCiGo38/Fr9lWCgJbs
-         HSLw==
-X-Gm-Message-State: AOJu0YwUOAJoEPMbOytieCXEsdQep1IXNi9Ga6Y+7LY35To7N8k5BsOE
-	j4kDPC1zpuqTRxDffNFHjoJX3vuMR5zFBSaga8JxuKNW/4jGkwnPvlUZ
-X-Gm-Gg: AY/fxX52dLCN7ygIAOsG8IQMudWetzXAGrfpawCrKz76wjRFNxHvvpGri7MYkV/oUUI
-	ISkrIWgAHqWYCGPWNo9Ln5I5vwIqRjcF/ZvWBVwo2Dw8JuD4JE1TbUqEU2eKGEouut9SoJv+EaX
-	GgHsMhxzi6z/PGlcETX0qNef10o6fE2sTfSCZUzLsoGAMW4ILggtrBz7RDN2UzdANuqkkZOsDaS
-	cwZRi7Xu2i+ea7GPKhVohQL4uy2QtZ/POK3JxdUSajApRjNHQ1VqQ7KGrjTrQylS2RoP6hlr7FZ
-	+o+AZvGviNI6Qd/TV0A392XmmsGw+hOIPhuakZEaIpELL40VovsgLSdRmgep9VdgqsJP9ZKSpJM
-	uQoAAPtFeQD7LW7fH52YJEAGxZLahpSSNuSgg8ssTjCBsD2o74Iku7lO9+uK6+y766vSenWa9/k
-	eOnCuLjHM1ByZgohTa89dVgHDGjpwZ1JKQ9oWAvww7800hxuJ9VxK/A2xWGCw=
-X-Received: by 2002:a05:600c:3483:b0:471:3b6:e24 with SMTP id 5b1f17b1804b1-4801e34fabfmr37473175e9.8.1768645198911;
-        Sat, 17 Jan 2026 02:19:58 -0800 (PST)
-Received: from 3ce1e5d2d1b2.cse.ust.hk (191host009.mobilenet.cse.ust.hk. [143.89.191.9])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-47f429071a2sm140368405e9.11.2026.01.17.02.19.55
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 17 Jan 2026 02:19:58 -0800 (PST)
-From: Chengfeng Ye <dg573847474@gmail.com>
-To: "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	Jack Wang <jinpu.wang@cloud.ionos.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DtJ3X2y0"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4B827C4CEF7;
+	Sat, 17 Jan 2026 19:32:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1768678355;
+	bh=xYZ1QLXVBjYMCOd/kLFI3p25B4jljuN964Wp+AlR0jQ=;
+	h=From:To:Cc:Subject:Date:From;
+	b=DtJ3X2y0GAdHJOOEkTyVRf2fRASq4UlKof2BI14QvxFFzrXLyAZfRn9RNyuTtg9We
+	 +88ydvy9VBhyYCD4+J2W21Go/3vmUnsPo/VAn7Z86C9eN6wA5vViucSNByoKmamIh0
+	 1SFew0Q1b4QebDuOHbj0pEOar4WuIVFQymz9KS74qu9i5AHPyZNbnZ66PJItrv3T6s
+	 VQMhNI+/ky/5VoZsa66U5DmWSJSYofUUo920W9YOpuLlmJ7AyHNHerqLAU600qrAaJ
+	 1TAcn6/eKYz1GnjWeA/9YxDDFz+prI3Ujluwpy9hDxv6uOW14FT7uuWTnwZ9CjmCFX
+	 tvbD5gwSgazfA==
+From: Tzung-Bi Shih <tzungbi@kernel.org>
+To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Greg KH <gregkh@linuxfoundation.org>
 Cc: linux-scsi@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	Chengfeng Ye <dg573847474@gmail.com>
-Subject: [PATCH] scsi: pm8001: Fix potential TOCTOU race in pm8001_find_tag
-Date: Sat, 17 Jan 2026 10:19:48 +0000
-Message-Id: <20260117101948.297411-1-dg573847474@gmail.com>
-X-Mailer: git-send-email 2.25.1
+	tzungbi@kernel.org
+Subject: [PATCH] scsi: core: Don't free dev_name() manually
+Date: Sun, 18 Jan 2026 03:32:21 +0800
+Message-ID: <20260117193221.152540-1-tzungbi@kernel.org>
+X-Mailer: git-send-email 2.48.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -74,71 +44,94 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-A potential time-of-check-time-of-use (TOCTOU) race condition in
-pm8001_find_tag() where task->lldd_task is checked for non-NULL
-and then dereferenced without synchronization to ensure atomicity.
+scsi_host_alloc() is designed to hold initial reference count of
+`&shost->shost_gendev` and `&shost->shost_dev`.  In the error handling
+paths [1], only drop a reference count to `&shost->shost_gendev` is
+sufficient as scsi_host_dev_release() will be called and the reference
+count of `&shost->shost_dev` should be dropped at that time.
 
-Since the check of NULL and dereference in pm8001_find_tag() is not
-executed atomically, a race could occur if the callback is executed in
-response to an error or timeout on a SAS task issued from the SCSI
-midlayer, while the SAS command is completed and calls
-pm8001_ccb_task_free(), which sets task->lldd_task to NULL, resulting
-in a null pointer being dereferenced in pm8001_find_tag().
+Drivers shouldn't need to free the device name and hold a reference
+count to its parent device as the driver core automatically handles
+that.  Remove them.
 
-Possible race scenario:
- CPU0 (Error Handler)           CPU1 (Interrupt Handler)
-  --------------------           ------------------------
-  [SCSI command timeout/error]
-  sas_scsi_recover_host()
-    sas_scsi_find_task()
-      lldd_query_task()
-        pm8001_query_task()
-          pm8001_find_tag()
-            if (task->lldd_task)
-                                   [Hardware interrupt]
-                                     mpi_ssp_completion()
-                                       pm8001_ccb_task_free()
-                                         task->lldd_task = NULL
-            ccb = task->lldd_task
-            *tag = ccb->ccb_tag
-            <- NULL dereference
+[1] Either at "fail" label in scsi_host_alloc() or in SCSI drivers that
+    a subsequent scsi_add_host{,_with_dma}() fails.
 
-Fix this by using READ_ONCE() to read task->lldd_task exactly once,
-eliminating the TOCTOU window. Also use WRITE_ONCE() in
-pm8001_ccb_task_free() for proper memory ordering.
-
-Signed-off-by: Chengfeng Ye <dg573847474@gmail.com>
+Fixes: b49493f99690 ("Fix a memory leak in scsi_host_dev_release()")
+Signed-off-by: Tzung-Bi Shih <tzungbi@kernel.org>
 ---
- drivers/scsi/pm8001/pm8001_sas.c | 9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
+ drivers/scsi/hosts.c | 16 +++++-----------
+ 1 file changed, 5 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
-index 6a8d35aea93a..2d73e65db4c0 100644
---- a/drivers/scsi/pm8001/pm8001_sas.c
-+++ b/drivers/scsi/pm8001/pm8001_sas.c
-@@ -49,9 +49,10 @@
-  */
- static int pm8001_find_tag(struct sas_task *task, u32 *tag)
- {
--	if (task->lldd_task) {
--		struct pm8001_ccb_info *ccb;
--		ccb = task->lldd_task;
-+	struct pm8001_ccb_info *ccb;
-+
-+	ccb = READ_ONCE(task->lldd_task);
-+	if (ccb) {
- 		*tag = ccb->ccb_tag;
- 		return 1;
- 	}
-@@ -617,7 +618,7 @@ void pm8001_ccb_task_free(struct pm8001_hba_info *pm8001_ha,
- 			pm8001_dev ? atomic_read(&pm8001_dev->running_req) : -1);
- 	}
+diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+index 1b3fbd328277..b88d553cdde6 100644
+--- a/drivers/scsi/hosts.c
++++ b/drivers/scsi/hosts.c
+@@ -55,7 +55,6 @@ static DEFINE_IDA(host_index_ida);
  
--	task->lldd_task = NULL;
-+	WRITE_ONCE(task->lldd_task, NULL);
- 	pm8001_ccb_free(pm8001_ha, ccb);
+ static void scsi_host_cls_release(struct device *dev)
+ {
+-	put_device(&class_to_shost(dev)->shost_gendev);
  }
  
+ static struct class shost_class = {
+@@ -279,11 +278,9 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, struct device *dev,
+ 		goto out_disable_runtime_pm;
+ 
+ 	scsi_host_set_state(shost, SHOST_RUNNING);
+-	get_device(shost->shost_gendev.parent);
+ 
+ 	device_enable_async_suspend(&shost->shost_dev);
+ 
+-	get_device(&shost->shost_gendev);
+ 	error = device_add(&shost->shost_dev);
+ 	if (error)
+ 		goto out_del_gendev;
+@@ -352,7 +349,6 @@ EXPORT_SYMBOL(scsi_add_host_with_dma);
+ static void scsi_host_dev_release(struct device *dev)
+ {
+ 	struct Scsi_Host *shost = dev_to_shost(dev);
+-	struct device *parent = dev->parent;
+ 
+ 	/* Wait for functions invoked through call_rcu(&scmd->rcu, ...) */
+ 	rcu_barrier();
+@@ -366,22 +362,20 @@ static void scsi_host_dev_release(struct device *dev)
+ 
+ 	if (shost->shost_state == SHOST_CREATED) {
+ 		/*
+-		 * Free the shost_dev device name and remove the proc host dir
++		 * Drop the reference to shost_dev and remove the proc host dir
+ 		 * here if scsi_host_{alloc,put}() have been called but neither
+-		 * scsi_host_add() nor scsi_remove_host() has been called.
++		 * scsi_add_host() nor scsi_remove_host() has been called.
+ 		 * This avoids that the memory allocated for the shost_dev
+ 		 * name as well as the proc dir structure are leaked.
+ 		 */
+ 		scsi_proc_hostdir_rm(shost->hostt);
+-		kfree(dev_name(&shost->shost_dev));
++		put_device(&shost->shost_dev);
+ 	}
+ 
+ 	kfree(shost->shost_data);
+ 
+ 	ida_free(&host_index_ida, shost->host_no);
+ 
+-	if (shost->shost_state != SHOST_CREATED)
+-		put_device(parent);
+ 	kfree(shost);
+ }
+ 
+@@ -550,8 +544,8 @@ struct Scsi_Host *scsi_host_alloc(const struct scsi_host_template *sht, int priv
+  fail:
+ 	/*
+ 	 * Host state is still SHOST_CREATED and that is enough to release
+-	 * ->shost_gendev. scsi_host_dev_release() will free
+-	 * dev_name(&shost->shost_dev).
++	 * ->shost_gendev. scsi_host_dev_release() will
++	 * put_device(&shost->shost_dev).
+ 	 */
+ 	put_device(&shost->shost_gendev);
+ 
 -- 
-2.25.1
+2.48.1
 
