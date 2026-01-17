@@ -1,171 +1,196 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.14])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qk1-f194.google.com (mail-qk1-f194.google.com [209.85.222.194])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7222530FC0A
-	for <linux-scsi@vger.kernel.org>; Sat, 17 Jan 2026 02:16:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.14
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 631862FE592
+	for <linux-scsi@vger.kernel.org>; Sat, 17 Jan 2026 02:51:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.194
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768616206; cv=none; b=LljXxMjXlc2MEp13r6wspldUWlJg5WzvAdZon50JTwsa11wN96MY3Ii/htAwtgPCGdcb8oeoT+aJ0y/xQtfujWRoNGcpicWcNzIgBLcwbCLbslEeXF6juEhUlpWnKhF8E/WPUH9CnGEDWs3c+3VgCBfGTt8KQqwdRmv3uw0CbCY=
+	t=1768618301; cv=none; b=QOSbnmnzKXlyI9DGmMhzTYmKIETJ7azqOg8YW1kuiJkEjh+VX3D5XLjisA1J6uDZp54OSu4/Rhdg0sMjN86shg8FEVM2hc9zbtoVRnjRXJTC84hsNQhkHqMf90HOEBUKjo75JsRNWEp+tDkQSoOpjwI/xZz7/gD1OYprizGZIys=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768616206; c=relaxed/simple;
-	bh=+rrsvyBHN92mGZ0eJHrXFLbcu2n7Bqkz2nl6s25l2fM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=pCPYHkn6WvwLjvU5HE/PBnj0DFEaLMRzjTKQWpEoocn2oGcS+Z/PtZTNPIxhEtY4xwJc7+sXU6bTrgWvLgIMtTdgIWk2Sx0QjJMF/2dplGkbok67i/HIP3dJOfRXhFyBdTUo6ho2tjjQP+lYI1KOgjW+3DgP/ryf/kPdWiZGhp4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=OemP3jgh; arc=none smtp.client-ip=192.198.163.14
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1768618301; c=relaxed/simple;
+	bh=JR2lB6SpwQyYKrn3A+sb/GAiufPu5j/SZUDtKHTacRg=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=oy6kJcqcGY8nuDN+U4d3vjJHd5pjKBDhT6HwiGUMyAMnbRAftJD1lvMHPpDlCJh5doSk3gpz88vRP0YSSNuri1R7SdHW0vcdpco+1iVwbGDa9PcHir8DqB82lczsvM6x28Nf0eRGRgq5S/wg9lBvWKFlGhk6hCYqnMPTtp44Wcw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Iei1Y9D1; arc=none smtp.client-ip=209.85.222.194
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="OemP3jgh"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1768616204; x=1800152204;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=+rrsvyBHN92mGZ0eJHrXFLbcu2n7Bqkz2nl6s25l2fM=;
-  b=OemP3jghoLv8kjMDnaLAs4n1uMSgB7h+5M5iASO+EoN6U6RWaEhsrXXG
-   wQnpdlh6tabTQqIP9hwBi+EZLNRNcMRysDv395OPjU6/+T2MneUauVY7G
-   yjcwvLN9ZWjZd0uLuYQJrsUQbA1ppOnMiqPIAU+jqcj7vd62iAK1M8kqC
-   6SlVcKECmBVal5bXJ+MLrvcbldyO2JkRZgjVrF1jC9q68qUWzMTYgs00Q
-   p1noTR8Sjqw5sOgiikD4EcCzR18T5NxI7rPRtlR4Qii0tkt8i49Up4wKw
-   RNoCGRXE62SaEEM2i+JLPRDxhg3+9hdNICmDeDXL4Qtg7ufG70/SFQ79T
-   g==;
-X-CSE-ConnectionGUID: K/dJPKQuRZiz4IfBUMxlVw==
-X-CSE-MsgGUID: Y7fZEiHuRA+kO3cXIjzwrg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11673"; a="69980084"
-X-IronPort-AV: E=Sophos;i="6.21,232,1763452800"; 
-   d="scan'208";a="69980084"
-Received: from fmviesa004.fm.intel.com ([10.60.135.144])
-  by fmvoesa108.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Jan 2026 18:16:44 -0800
-X-CSE-ConnectionGUID: J7Bp/+H9QSO0WOmfqju5IA==
-X-CSE-MsgGUID: eLPsMo5PT9q1ccxPKGnROQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.21,232,1763452800"; 
-   d="scan'208";a="210257584"
-Received: from lkp-server01.sh.intel.com (HELO 765f4a05e27f) ([10.239.97.150])
-  by fmviesa004.fm.intel.com with ESMTP; 16 Jan 2026 18:16:33 -0800
-Received: from kbuild by 765f4a05e27f with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1vgvrb-00000000LSs-1X95;
-	Sat, 17 Jan 2026 02:16:31 +0000
-Date: Sat, 17 Jan 2026 10:16:02 +0800
-From: kernel test robot <lkp@intel.com>
-To: Bart Van Assche <bvanassche@acm.org>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: oe-kbuild-all@lists.linux.dev, linux-scsi@vger.kernel.org,
-	Bart Van Assche <bvanassche@acm.org>,
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
-	Peter Wang <peter.wang@mediatek.com>,
-	Avri Altman <avri.altman@sandisk.com>,
-	Bean Huo <beanhuo@micron.com>,
-	Adrian Hunter <adrian.hunter@intel.com>,
-	"Bao D. Nguyen" <quic_nguyenb@quicinc.com>
-Subject: Re: [PATCH 5/7] ufs: core: Remove unused code and data structures
-Message-ID: <202601170952.UMdlSqAD-lkp@intel.com>
-References: <20260116182628.3255116-6-bvanassche@acm.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Iei1Y9D1"
+Received: by mail-qk1-f194.google.com with SMTP id af79cd13be357-8c59bce68a1so179175285a.0
+        for <linux-scsi@vger.kernel.org>; Fri, 16 Jan 2026 18:51:40 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1768618299; x=1769223099; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=g52RCNxKP5yWPLz6Ydp2XilgQT0ikaZD3cfRfzbViX4=;
+        b=Iei1Y9D1hiBbSXQkhJ7pRvzkEU10RXKvJeHPQOp9PPInZ8tvYcE1TdRNaEHwuk6oN8
+         t21rWkSnnNL6I4utjSmlyRM3IisRWFxXHu6yy0OO6rPMLquEgR0Ptv0bK4i6T+gYWdVx
+         LE6d59KAKMpg6P7kXwdzFdoqbMDfWnAGHDIWazEjLatBLkpug4QYmEgVb4Cih1F/XKD5
+         j1TMyQp7i6SO/GUqA+2mCtWpJG2rB+eVOqX1v5cehsD/cbjerRJ0qyZrmgV7VKvdSUAE
+         7Z4nTLQsn5PkFz47fnymQ7qmXZGWyDC8dGSboAN+i1UpENeP5CXTrydvs4KopOR/RKif
+         BPrA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1768618299; x=1769223099;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=g52RCNxKP5yWPLz6Ydp2XilgQT0ikaZD3cfRfzbViX4=;
+        b=lt/CFKO6+ia7t3UqUGP1OcTlz4EQXAxYBnq/YoViFJsBmIP8ljwsZTDHciia3/Af27
+         QXSgSUPdPpBBNOn3zSo5wWemX7Qmzd5URWIdoyznpRSQkIjSked3+jXChsI7ulbFOJgp
+         i6w+XsFvEpTYY9RmzisI4WxmMzGdqdY2ScadscJoGHCJkjeoaJ1Dr3p3/rZoB2KfJZX/
+         DQA9aNMmNIDBuJX705d2AHxxLUxDf3nS86aDIHtdw6oT3t6GsYPcFJIHgwhsG0RlnN0Q
+         oYWsMTjR3EXHicLD1XyfP4wdAbeplaDPP92brs9YxNnoEjpFgy6vh8AlTIDMI3I3UM0E
+         /jcQ==
+X-Forwarded-Encrypted: i=1; AJvYcCXkbmHr/n7H4Emdi2aRYjsflkn5gS+gi3eBEDWjg7PkfN7mFAJc5SURCpCSiTa46hO/8gmPqGn5dcYZ@vger.kernel.org
+X-Gm-Message-State: AOJu0Yzc/pWvs8IBdGpZ6Ir5aW6Dl1cCTHkc3uzR9R1txjdMkZN4mukv
+	+9RCKQKnUrRy17c4++qok8cjE8NO0sdARuVyXlbjUETIo+tcAPOIO1loaAUMb2sHZ7g=
+X-Gm-Gg: AY/fxX5BrELrMEBv8osRD1WhHje9e+RzFx/BFov7XS82WhyDbQPxcqzuPwyBa8Yvvpw
+	1/ZsWkeedbvdq8WrMKEvu/vH8xa5khEtbB2Qkqmfd5ZyP4WZhmU4WDwC6ZaQd/znFC6FEIWSjPl
+	xapYGuFGOaFPgKNgwqjd62+9b4Kjf2RyA5C9vYL/D0AXi2WNbB7G4I2+0puRGS6OtpoHg5PA0vt
+	stVgm+/EJ4RmBsnCQkYEYUlcjO+uXqm4l7K8ebwVZQWq4y5GXk+ErnkcXU37jGWVb1Hwfv6Or2o
+	IBA7dObICn+SInxS7L3pDF+rTICBS2ITKnkMmyI3aNWqlQ2wzNgZ0Qk0lnzisL8stb19dJ6FfRC
+	GBNzde+dqc7IvVm77kiMtnHrT0B4zIoq1/n9LQ4Y0yZsRUsILWOphpTjir+ApDEOqDE03eGQaIq
+	q+4qt5mtv5bDayYl2SfuR3
+X-Received: by 2002:a05:620a:254a:b0:8c3:6f44:46c0 with SMTP id af79cd13be357-8c6a66edbd8mr718053085a.16.1768618299277;
+        Fri, 16 Jan 2026 18:51:39 -0800 (PST)
+Received: from biancapradeep.lan ([2605:a601:a619:8500::8])
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-8942e603a8bsm37163326d6.17.2026.01.16.18.51.38
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 16 Jan 2026 18:51:38 -0800 (PST)
+From: Hithashree Bojanala <bojanalahithashri@gmail.com>
+To: linux-block@vger.kernel.org
+Cc: bojanala hithashri <bojanalahithashri@gmail.com>,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: =?UTF-8?q?=5BREGRESSION=5D=20fio=204k=20randread=3A=20=7E1=E2=80=933=2E5=25=20IOPS=20regression=20on=20linux-next=20=286=2E19=2E0-rc1-next-20251219=29=20vs=20RHEL9=205=2E14=20on=20PERC=20H740P?=
+Date: Fri, 16 Jan 2026 21:44:07 -0500
+Message-ID: <20260117024413.484508-2-bojanalahithashri@gmail.com>
+X-Mailer: git-send-email 2.47.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260116182628.3255116-6-bvanassche@acm.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-Hi Bart,
-
-kernel test robot noticed the following build warnings:
-
-[auto build test WARNING on jejb-scsi/for-next]
-[also build test WARNING on mkp-scsi/for-next linus/master v6.19-rc5 next-20260116]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
-
-url:    https://github.com/intel-lab-lkp/linux/commits/Bart-Van-Assche/ufs-core-Change-the-type-of-an-ufshcd_clkgate_delay_set-argument/20260117-022907
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git for-next
-patch link:    https://lore.kernel.org/r/20260116182628.3255116-6-bvanassche%40acm.org
-patch subject: [PATCH 5/7] ufs: core: Remove unused code and data structures
-config: i386-randconfig-141-20260117 (https://download.01.org/0day-ci/archive/20260117/202601170952.UMdlSqAD-lkp@intel.com/config)
-compiler: gcc-14 (Debian 14.2.0-19) 14.2.0
-smatch version: v0.5.0-8985-g2614ff1a
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260117/202601170952.UMdlSqAD-lkp@intel.com/reproduce)
-
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202601170952.UMdlSqAD-lkp@intel.com/
-
-All warnings (new ones prefixed by >>):
-
-   drivers/ufs/core/ufshcd.c: In function 'ufshcd_setup_clocks':
->> drivers/ufs/core/ufshcd.c:9304:14: warning: variable 'clk_state_changed' set but not used [-Wunused-but-set-variable]
-    9304 |         bool clk_state_changed = false;
-         |              ^~~~~~~~~~~~~~~~~
+From: bojanala hithashri <bojanalahithashri@gmail.com> 
 
 
-vim +/clk_state_changed +9304 drivers/ufs/core/ufshcd.c
+Hello,
 
-6a771a656041f4 drivers/scsi/ufs/ufshcd.c Raviv Shvili       2014-09-25  9298  
-81309c247a4dcd drivers/scsi/ufs/ufshcd.c Can Guo            2020-11-25  9299  static int ufshcd_setup_clocks(struct ufs_hba *hba, bool on)
-c6e79dacd86fd7 drivers/scsi/ufs/ufshcd.c Sujit Reddy Thumma 2014-09-25  9300  {
-c6e79dacd86fd7 drivers/scsi/ufs/ufshcd.c Sujit Reddy Thumma 2014-09-25  9301  	int ret = 0;
-c6e79dacd86fd7 drivers/scsi/ufs/ufshcd.c Sujit Reddy Thumma 2014-09-25  9302  	struct ufs_clk_info *clki;
-c6e79dacd86fd7 drivers/scsi/ufs/ufshcd.c Sujit Reddy Thumma 2014-09-25  9303  	struct list_head *head = &hba->clk_list_head;
-911a0771b6fa7b drivers/scsi/ufs/ufshcd.c Subhash Jadavani   2016-12-22 @9304  	bool clk_state_changed = false;
-c6e79dacd86fd7 drivers/scsi/ufs/ufshcd.c Sujit Reddy Thumma 2014-09-25  9305  
-566ec9ad315b46 drivers/scsi/ufs/ufshcd.c Szymon Mielczarek  2017-06-05  9306  	if (list_empty(head))
-c6e79dacd86fd7 drivers/scsi/ufs/ufshcd.c Sujit Reddy Thumma 2014-09-25  9307  		goto out;
-c6e79dacd86fd7 drivers/scsi/ufs/ufshcd.c Sujit Reddy Thumma 2014-09-25  9308  
-1e879e8fa9f62e drivers/scsi/ufs/ufshcd.c Subhash Jadavani   2016-10-06  9309  	ret = ufshcd_vops_setup_clocks(hba, on, PRE_CHANGE);
-1e879e8fa9f62e drivers/scsi/ufs/ufshcd.c Subhash Jadavani   2016-10-06  9310  	if (ret)
-1e879e8fa9f62e drivers/scsi/ufs/ufshcd.c Subhash Jadavani   2016-10-06  9311  		return ret;
-1e879e8fa9f62e drivers/scsi/ufs/ufshcd.c Subhash Jadavani   2016-10-06  9312  
-c6e79dacd86fd7 drivers/scsi/ufs/ufshcd.c Sujit Reddy Thumma 2014-09-25  9313  	list_for_each_entry(clki, head, list) {
-c6e79dacd86fd7 drivers/scsi/ufs/ufshcd.c Sujit Reddy Thumma 2014-09-25  9314  		if (!IS_ERR_OR_NULL(clki->clk)) {
-81309c247a4dcd drivers/scsi/ufs/ufshcd.c Can Guo            2020-11-25  9315  			/*
-81309c247a4dcd drivers/scsi/ufs/ufshcd.c Can Guo            2020-11-25  9316  			 * Don't disable clocks which are needed
-81309c247a4dcd drivers/scsi/ufs/ufshcd.c Can Guo            2020-11-25  9317  			 * to keep the link active.
-81309c247a4dcd drivers/scsi/ufs/ufshcd.c Can Guo            2020-11-25  9318  			 */
-81309c247a4dcd drivers/scsi/ufs/ufshcd.c Can Guo            2020-11-25  9319  			if (ufshcd_is_link_active(hba) &&
-81309c247a4dcd drivers/scsi/ufs/ufshcd.c Can Guo            2020-11-25  9320  			    clki->keep_link_active)
-57d104c153d3d6 drivers/scsi/ufs/ufshcd.c Subhash Jadavani   2014-09-25  9321  				continue;
-57d104c153d3d6 drivers/scsi/ufs/ufshcd.c Subhash Jadavani   2014-09-25  9322  
-911a0771b6fa7b drivers/scsi/ufs/ufshcd.c Subhash Jadavani   2016-12-22  9323  			clk_state_changed = on ^ clki->enabled;
-c6e79dacd86fd7 drivers/scsi/ufs/ufshcd.c Sujit Reddy Thumma 2014-09-25  9324  			if (on && !clki->enabled) {
-c6e79dacd86fd7 drivers/scsi/ufs/ufshcd.c Sujit Reddy Thumma 2014-09-25  9325  				ret = clk_prepare_enable(clki->clk);
-c6e79dacd86fd7 drivers/scsi/ufs/ufshcd.c Sujit Reddy Thumma 2014-09-25  9326  				if (ret) {
-c6e79dacd86fd7 drivers/scsi/ufs/ufshcd.c Sujit Reddy Thumma 2014-09-25  9327  					dev_err(hba->dev, "%s: %s prepare enable failed, %d\n",
-c6e79dacd86fd7 drivers/scsi/ufs/ufshcd.c Sujit Reddy Thumma 2014-09-25  9328  						__func__, clki->name, ret);
-c6e79dacd86fd7 drivers/scsi/ufs/ufshcd.c Sujit Reddy Thumma 2014-09-25  9329  					goto out;
-c6e79dacd86fd7 drivers/scsi/ufs/ufshcd.c Sujit Reddy Thumma 2014-09-25  9330  				}
-c6e79dacd86fd7 drivers/scsi/ufs/ufshcd.c Sujit Reddy Thumma 2014-09-25  9331  			} else if (!on && clki->enabled) {
-c6e79dacd86fd7 drivers/scsi/ufs/ufshcd.c Sujit Reddy Thumma 2014-09-25  9332  				clk_disable_unprepare(clki->clk);
-c6e79dacd86fd7 drivers/scsi/ufs/ufshcd.c Sujit Reddy Thumma 2014-09-25  9333  			}
-c6e79dacd86fd7 drivers/scsi/ufs/ufshcd.c Sujit Reddy Thumma 2014-09-25  9334  			clki->enabled = on;
-c6e79dacd86fd7 drivers/scsi/ufs/ufshcd.c Sujit Reddy Thumma 2014-09-25  9335  			dev_dbg(hba->dev, "%s: clk: %s %sabled\n", __func__,
-c6e79dacd86fd7 drivers/scsi/ufs/ufshcd.c Sujit Reddy Thumma 2014-09-25  9336  					clki->name, on ? "en" : "dis");
-c6e79dacd86fd7 drivers/scsi/ufs/ufshcd.c Sujit Reddy Thumma 2014-09-25  9337  		}
-c6e79dacd86fd7 drivers/scsi/ufs/ufshcd.c Sujit Reddy Thumma 2014-09-25  9338  	}
-1ab27c9cf8b63d drivers/scsi/ufs/ufshcd.c Sahitya Tummala    2014-09-25  9339  
-1e879e8fa9f62e drivers/scsi/ufs/ufshcd.c Subhash Jadavani   2016-10-06  9340  	ret = ufshcd_vops_setup_clocks(hba, on, POST_CHANGE);
-1e879e8fa9f62e drivers/scsi/ufs/ufshcd.c Subhash Jadavani   2016-10-06  9341  	if (ret)
-1e879e8fa9f62e drivers/scsi/ufs/ufshcd.c Subhash Jadavani   2016-10-06  9342  		return ret;
-1e879e8fa9f62e drivers/scsi/ufs/ufshcd.c Subhash Jadavani   2016-10-06  9343  
-2777e73fc154e2 drivers/ufs/core/ufshcd.c Maramaina Naresh   2023-12-19  9344  	if (!ufshcd_is_clkscaling_supported(hba))
-2777e73fc154e2 drivers/ufs/core/ufshcd.c Maramaina Naresh   2023-12-19  9345  		ufshcd_pm_qos_update(hba, on);
-c6e79dacd86fd7 drivers/scsi/ufs/ufshcd.c Sujit Reddy Thumma 2014-09-25  9346  out:
-c6e79dacd86fd7 drivers/scsi/ufs/ufshcd.c Sujit Reddy Thumma 2014-09-25  9347  	if (ret) {
-c6e79dacd86fd7 drivers/scsi/ufs/ufshcd.c Sujit Reddy Thumma 2014-09-25  9348  		list_for_each_entry(clki, head, list) {
-c6e79dacd86fd7 drivers/scsi/ufs/ufshcd.c Sujit Reddy Thumma 2014-09-25  9349  			if (!IS_ERR_OR_NULL(clki->clk) && clki->enabled)
-c6e79dacd86fd7 drivers/scsi/ufs/ufshcd.c Sujit Reddy Thumma 2014-09-25  9350  				clk_disable_unprepare(clki->clk);
-c6e79dacd86fd7 drivers/scsi/ufs/ufshcd.c Sujit Reddy Thumma 2014-09-25  9351  		}
-c6e79dacd86fd7 drivers/scsi/ufs/ufshcd.c Sujit Reddy Thumma 2014-09-25  9352  	}
-7ff5ab47363334 drivers/scsi/ufs/ufshcd.c Subhash Jadavani   2016-12-22  9353  
-c6e79dacd86fd7 drivers/scsi/ufs/ufshcd.c Sujit Reddy Thumma 2014-09-25  9354  	return ret;
-c6e79dacd86fd7 drivers/scsi/ufs/ufshcd.c Sujit Reddy Thumma 2014-09-25  9355  }
-c6e79dacd86fd7 drivers/scsi/ufs/ufshcd.c Sujit Reddy Thumma 2014-09-25  9356  
+I am reporting a small but consistent block I/O performance regression
+observed when running 4k random reads across queue depths on a hardware
+RAID device.
 
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+The regression appears when comparing a RHEL9 downstream kernel against
+a linux-next snapshot.
+
+System / Hardware
+-----------------
+CPU:   
+      Model: Intel Xeon Gold 6130 @ 2.10GHz
+      Architecture: x86_64
+      Sockets: 2
+      Cores per socket: 16
+      Threads per core: 2
+      NUMA nodes: 2
+Memory: 
+      Total: 187 GB
+      NUMA nodes: 2
+      Node 0: ~94 GB
+      Node 1: ~97 GB
+      Swap: 4 GB (unused during test)
+
+Storage controller:
+  Dell PERC H740P (hardware RAID)
+
+Block device:
+  /dev/sdh
+
+lsblk output:
+  NAME MODEL           SIZE ROTA TRAN SCHED
+  sdh  PERC H740P Adp  1.6T    1      mq-deadline
+
+Active scheduler:
+  /sys/block/sdh/queue/scheduler
+    none [mq-deadline] kyber bfq
+
+Kernels Tested
+--------------
+Baseline (downstream):
+  5.14.0-427.13.1.el9_4.x86_64
+
+Test (upstream integration tree):
+  6.19.0-rc1-next-20251219
+
+Workload / Reproducer
+---------------------
+fio version: 3.35
+Raw block device, direct I/O, libaio, single job, long runtime (300s)
+
+Command used:
+
+for depth in 1 2 4 8 16 32 64 128 256 512 1024 2048; do
+  fio --rw=randread \
+      --bs=4096 \
+      --name=randread-$depth \
+      --filename=/dev/sdh \
+      --ioengine=libaio \
+      --numjobs=1 --thread \
+      --norandommap \
+      --runtime=300 \
+      --direct=1 \
+      --iodepth=$depth \
+      --scramble_buffers=1 \
+      --offset=0 \
+      --size=100g
+done
+
+Observed Behavior
+-----------------
+Across all queue depths tested, the linux-next kernel shows:
+
+- ~1–3.5% lower IOPS
+- Corresponding bandwidth reduction
+- ~1–3.6% higher average completion latency
+- Slightly worse p99 / p99.9 latency
+
+The throughput saturation point remains unchanged
+(around iodepth ≈ 128), suggesting the regression is
+related to service/dispatch efficiency rather than a
+change in device limits.
+
+Example Data Points
+-------------------
+- iodepth=32:
+    old: 554 IOPS → new: 535 IOPS  (~-3.4%)
+    avg clat: 57.7 ms → 59.8 ms
+
+- iodepth=64:
+    old: 608 IOPS → new: 588 IOPS  (~-3.3%)
+    avg clat: 105 ms → 109 ms
+
+- iodepth=128:
+    old: 648 IOPS → new: 640 IOPS (~-1.2%)
+
+This behavior is consistent across multiple runs.
+
+Notes
+-----
+I understand this comparison spans a downstream RHEL kernel
+and a linux-next snapshot. I wanted to report this early
+because the regression is consistent and may relate to recent
+blk-mq or mq-deadline changes affecting rotational / hardware
+RAID devices.
+
+I am happy to:
+- Re-test on a specific mainline release (e.g. v6.18 or v6.19-rc)
+- Compare schedulers (mq-deadline vs none / bfq)
+- Provide additional instrumentation (iostat, perf, bpf)
+- Assist with bisection if a suspect window is identified
+
+Please let me know how you would like me to proceed.
+
+Thanks,
+Hithashree
