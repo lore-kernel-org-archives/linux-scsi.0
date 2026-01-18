@@ -1,132 +1,105 @@
-Received: from mail-wr1-f45.google.com (mail-wr1-f45.google.com [209.85.221.45])
+Received: from mail-ej1-f54.google.com (mail-ej1-f54.google.com [209.85.218.54])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 51DAD225785
-	for <linux-scsi@vger.kernel.org>; Sun, 18 Jan 2026 07:03:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.45
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768719794; cv=none; b=ka84cEs4yeua3WLPea35KPtrwbopyqbUt01bnL3el3NnPbBVDIEsV7GYAyjRKjYlrfEE7AlI5QUm8HMeOkd7Po/X/3P1JSaiXOBkq4b5OJMNWK6/YRYUafk9YV8QHCd12kTEjDkpQE9wNcJcFPRkAvUv5NrGJkvLuAGPboLb4+E=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768719794; c=relaxed/simple;
-	bh=CJ20BdSc3shk+8PeBJbNxX2xUlMTHoO04lnwXOyirwg=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=rApmserRmHfNOkZgLOMHPpua9bDXG9HkMf93o0R5iiM7XgDEr15bjblFgkjyJALIyqo7CXWizcCyVemWmVL/t6tkgZcrkOPvYyBFM1t/dOct9l/Kow8KKwQmrJGmqRyh9WirI59r3udJsI/oMTztawKJECLmqva29U8/nXSohMM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=U0r8H+b3; arc=none smtp.client-ip=209.85.221.45
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED58C246781
+	for <linux-scsi@vger.kernel.org>; Sun, 18 Jan 2026 07:05:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.218.54
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1768719905; cv=pass; b=TyNBW/yTIyyym+Cr2qLtUR5f1lwIB9F7T7aI5BDahRjsXdEenWTyb6KXi4FRHvOwDEyTd8YDPJGAAEKvfLxAl+BKLWPjZ0ZbUa1ct8uNiRbs9IbUWWFp/VnMM8ZR/IEuf6L04yry3G6JrqX0w/aHgY8WlmvQi4F7wNYHq1PKYRY=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1768719905; c=relaxed/simple;
+	bh=LL2Rv7fJjOY73zDYhJrxeavmnW+/YROgMpFc+bHA6wk=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=LBgqSU+4kFrnE74BumqLBv4USRe6uK/bVwvRc8GgmexLXMzeF9UqHVMRFgOvKYc4x28pudyNxbY2JrXDXKmKNUCQxXjrbGOTvSY6Pr695aSSklhV9DSi1+2rzW9imEemdvM/NrDeyyqa3pnn0WzRNgLYbp2braPr5g09hjQ/Fsc=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=OXsZbUPK; arc=pass smtp.client-ip=209.85.218.54
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="U0r8H+b3"
-Received: by mail-wr1-f45.google.com with SMTP id ffacd0b85a97d-42fbb061a08so434645f8f.2
-        for <linux-scsi@vger.kernel.org>; Sat, 17 Jan 2026 23:03:13 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="OXsZbUPK"
+Received: by mail-ej1-f54.google.com with SMTP id a640c23a62f3a-b801ff00294so71217666b.0
+        for <linux-scsi@vger.kernel.org>; Sat, 17 Jan 2026 23:05:03 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; t=1768719902; cv=none;
+        d=google.com; s=arc-20240605;
+        b=VD4Dt5izwajbC2/cmI7aChGPATSpyOpvFxCLlT6TZ9zj6xB1mg/somWiIU6t46o1gv
+         WMZ+b33jDqxahSi3J9qStHPbJn5cU79IYvRB4pyyvqkMjNkRG82gDf0Fo1r8IpZvXENK
+         1YVv2TQ9dRb+PSPtH1PjGBlcfFaWVBozmTlj3UKDePIdsjgVHafKiAsTNzgKT6mITCy5
+         VnWdm9K2tsskWYNkX+6jNb2Ljp3oGKGlNpx50eSbZtG16LgjyU9jfrAHhscxu9xviZwN
+         7CH8FMLHF/zhUfrPftzbMWFY+YRGaLSAr/Ln/Am6Hqm7qAMpKkTDHDjWzGjslrUh9Yxv
+         HFvA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=LL2Rv7fJjOY73zDYhJrxeavmnW+/YROgMpFc+bHA6wk=;
+        fh=foyCPyZ/p7YCL0HodHF3aoivjJJzh2yV0UntYZHNlSQ=;
+        b=fi1Tdi7rXCU1es3fdrV8W5vN2sYqlc3HkwogBIwth04iGhIIULQPcCfPpFTFfYHH0d
+         Vt2EOq0hT+4OuHe9dr8FqLnGxRJuIuUdfeKm9LZ2GAUrtxf5yidkeEDNFA1Tuzc9cpcF
+         RH8K5aeiHbHYqy9OebtKGGaDsTnWfzrdQIxH9a+f2dYERrrK5OQXqKm5uJA/ulLwBwv2
+         1TocpWRfizXx7cmnjkWCSkIf0CgeOt6uR82yXiJItlpOhpQlVh+dM2Yk65sHus1i0FyR
+         HmlMmkD2okj3l//XPkh4U81ZcPwitptJFdKP1MVJ5QeKE7GbAmblDhbolNIUTlNPftMz
+         8wRQ==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1768719792; x=1769324592; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=3hBz9XaEMOL/y+MvlCbl4u+hBnfx10ydis7U4oQtDmY=;
-        b=U0r8H+b3YtUDda+mZyAyY7p1GEPOfcrd15fZ83fXvTcymRX8I4x6+8193HVGXwrKiX
-         pgXSRMW3TnD7snrTLTKXwiT/cWvrCA5cvN6yxFRoP2wa5zWEtgcX3DnL+9T7PX8RMW1F
-         +iX/wKjPdlS+6+B4OYqpuSURR6q+KqSU/svC42UEQxwOFfvD2baIfe0yJhFi4yz1ZV6e
-         XpfIDWTJO27ZytyqzK1XpC9fpIXfqW6rPMimA7OCfSMHFK6E6Ak6EWfVU4DxyMvL+a2y
-         rQ2MlfZ3AMwrB4WNZmYxTJn4mviJ/ZvfaapQLPJmNBltqjjZ+ZsPmTcK+zBaaV9nkFrq
-         rSxw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1768719792; x=1769324592;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=gmail.com; s=20230601; t=1768719902; x=1769324702; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=3hBz9XaEMOL/y+MvlCbl4u+hBnfx10ydis7U4oQtDmY=;
-        b=ig5pnXj1WsMkNrU0DE/LusTyyE2LYI5MJamcTrwajPW3bjcp8PDCIDJ3/GYB6u9C4R
-         NMW0ZO2t9LTraL6SxsVTW4nk/54FvjwbC6pKjSzipyIEDkjO0BFHNZogPOq3t1Pb5pdu
-         2HNGl7dRBGEyu+1IhrCaQCqYrjdhvVJm1oY3QqAtooTq4EV3FtSluc/BGLX7DfhbK2SU
-         wtcpyAZPlfwEmNSiH/mylBD7nh/XIruQXNvuO2Z6NSNahNUVk/gXyfGt5ZcTWN7QRPWX
-         LsP66hUZXV5luiGBCDFu0InxREXhfz0F6hHOMrUJcXQ4HahI9smwrUwcJ34rkGU5KgJC
-         0wWQ==
-X-Forwarded-Encrypted: i=1; AJvYcCWYtHXZDaT8nP67V5dmXZyzwBpxmlTLiYs5Z6H38V1YqPQCw057QkaYm+hAqxYCQgd8vOtpORMBzKFU@vger.kernel.org
-X-Gm-Message-State: AOJu0YzP4K1c5vA7/+ygWugXZfQ0CeX+VbUxOoguXwrgcwK3t4rqqoTc
-	RMgYvo6DQSpQxvk3sfKD/TfWxxtwVA0rbK6POzG37l2ihjWMO8DdM+2c
-X-Gm-Gg: AY/fxX6Xa7KKziYObrfge74y1Z5eycEqaHJqrV7d9ooaMbyyboYbY7abgo6JDh8jogH
-	4D4jb2R2LWeu6Tv9F621pQq/h7mW9bh91F/bb+pLEYvH380AMXCg1bW0Is8LaGcG3/z2A8YG91m
-	y71nPHjhZSfDTFE8LSB9caNqw8z0ahVwm8RkfF4llWD9tRbSMccpNujoB40C73DME5eE1nBrbpw
-	0xkeqqk9j4XHKqeQyOgFkjLLu9DA8gJWDnH/H4T+gqDS7Be3OCbnkawe1gyE2sdtYswLFdxaOBR
-	r2H7hC4m4JP3U4obvNJ7OezCYbJnvcKSn2sTK5+dQhKDjqqiDmZIZ6Tx/QakoG3VCJP24yfnUAR
-	QRaKUHtNQ507zxHjdan7+Jtz9MgGi0cRCQkpCsLCPu6r5IdL3zdEgS0h6+499W183OP3Q1vrl8c
-	yPrRFoS96niN8CN7XSaP27YdvSKOYGxWF0Wx3dpRIDr9Dsiu4xrLehdV4ByfA=
-X-Received: by 2002:a05:600c:3594:b0:47e:e20e:bbbc with SMTP id 5b1f17b1804b1-4801e2f2845mr68388275e9.1.1768719791404;
-        Sat, 17 Jan 2026 23:03:11 -0800 (PST)
-Received: from 3ce1e5d2d1b2.cse.ust.hk (191host009.mobilenet.cse.ust.hk. [143.89.191.9])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4802dc90068sm44687605e9.7.2026.01.17.23.03.07
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 17 Jan 2026 23:03:10 -0800 (PST)
-From: Chengfeng Ye <dg573847474@gmail.com>
-To: sathya.prakash@broadcom.com,
-	sreekanth.reddy@broadcom.com,
-	suganath-prabu.subramani@broadcom.com
-Cc: James.Bottomley@HansenPartnership.com,
-	martin.petersen@oracle.com,
-	MPT-FusionLinux.pdl@broadcom.com,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Chengfeng Ye <dg573847474@gmail.com>
-Subject: [PATCH v2] scsi: mpt3sas: Fix use-after-free race in event log access
-Date: Sun, 18 Jan 2026 07:02:56 +0000
-Message-Id: <20260118070256.321184-1-dg573847474@gmail.com>
-X-Mailer: git-send-email 2.25.1
+        bh=LL2Rv7fJjOY73zDYhJrxeavmnW+/YROgMpFc+bHA6wk=;
+        b=OXsZbUPKWZ4L9tOk5VvS9laWNRvGN1VvNzvdVL+GZ0ki6HqtkXExPZr1DNuDAFGIp+
+         wi3ZsCxsYvmSvXrFgwiUWgjeL6yNbnEQXIaBX7THnlA9lFZUgx0MCt42R75vqc4NbVMK
+         kI5mr7V5nvwL9GMDInboABnykzfqhM8vcjUcsb2L3iHlgZUD5qavhOOgmmRWW1hYtXng
+         YrX/GBfOBvOikf2it7yEJlfMbUWSeT7Sd0Jt7rqRrh3M0hO5Ey0lEZ9GvBPIHp4RqgFN
+         oSGNBoCNgKKQyc6NEBrblTemI0FrJlZhqx1CJUey9e8D6XsztYJ7LjMlw9isKpgBcXlq
+         N/Pg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1768719902; x=1769324702;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=LL2Rv7fJjOY73zDYhJrxeavmnW+/YROgMpFc+bHA6wk=;
+        b=iMrT/mYSd2XkGKenoGI2gPpn809VkJL5ONCncwRRC/Jw5Zgq/+Q50FUMk22UwMx8ik
+         ewq3Ek7Ti/SPdDDPhEeFGcNi/GLuZueztXZnOTp/JPmtJSUzQLwlLJflaZ2qP0cDlZED
+         p+hxqrfEPA3wqvwMCtXW5ZGdxjLeWMKcVQQMa9E7bdeYyVU43M93HGPtWfrlhtM8GxAo
+         CksrhhJwsmc9sa6u146977J+m9ZevoB2WbEQzrky6noDRkMoIe5+4od4+18woE4PRXLt
+         lJA679S3uMGKpcbrj+THjAkRY+Vzl2mLJYHXMhKpNGT0TZOinzHLp8Z6pgM5j/zsj+of
+         632Q==
+X-Gm-Message-State: AOJu0YxuaPod9wTfFbgmtWQkGzcm8bMjrg88YWp9Zxl5HMCXUp4QdxNK
+	CECwIPGqWnfCnbR8VI8hOKb9WjXgGMkeWzQAA+EGiNLYOXtPAOURA6ztWwHb0VRI8selxts0BmM
+	/9xjpFk+t3bkWIu87gOFzNOFqLPai2tGAbecoJBM=
+X-Gm-Gg: AY/fxX4klG+Nnz6VW7kHe1FMN9gHXsKk5COY6hpEwmouTkTpDi9QwnlrKfW8PWNdCjJ
+	y6p6n2ojYqATHgPJUQf3/TNf8lwB3sEJuCG5o0UWlTabGPB9tKko4cDL/hnigbbFcpqJM9eQxfY
+	dHqh0gtuonsnFCociX1jekDiHQLawm2WZmqxnPRSGAmLSjZKoBlXCM6wak6iFy6vl214FbBqw+P
+	MR1uKroTkPJ/KuXwTEOyB4ERQ8AiO7CigXfpsWaMfV0cHlXdIoeaKHr/YaMG2MGd7r+2rgJ
+X-Received: by 2002:a05:6402:518c:b0:64b:5a76:792b with SMTP id
+ 4fb4d7f45d1cf-65452acca72mr3496414a12.3.1768719902191; Sat, 17 Jan 2026
+ 23:05:02 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20260118053050.313222-1-dg573847474@gmail.com> <fba6aaf6-3487-426c-bc57-618c30644c18@web.de>
+In-Reply-To: <fba6aaf6-3487-426c-bc57-618c30644c18@web.de>
+From: Chengfeng Ye <dg573847474@gmail.com>
+Date: Sun, 18 Jan 2026 15:04:50 +0800
+X-Gm-Features: AZwV_QjIGSWXgUPoJh1tQiBRQ0NKkGL6Tli-yn8ERfV2P4gO1PWi5Qp2AKpyvlI
+Message-ID: <CAAo+4rWx=iipRqeSR2FRibWfbRHAR6K3xOyi8wETUubC2ZV+kA@mail.gmail.com>
+Subject: Re: [PATCH] scsi: mpt3sas: Fix use-after-free race in event log access
+To: Markus Elfring <Markus.Elfring@web.de>
+Cc: linux-scsi@vger.kernel.org, MPT-FusionLinux.pdl@broadcom.com, 
+	James Bottomley <James.Bottomley@hansenpartnership.com>, 
+	"Martin K. Petersen" <martin.petersen@oracle.com>, Sathya Prakash <sathya.prakash@broadcom.com>, 
+	Sreekanth Reddy <sreekanth.reddy@broadcom.com>, 
+	Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-A use-after-free race exists between ioctl operations accessing the
-event log and device removal freeing it. The race occurs because
-ioc->remove_host flag is set without synchronization, creating
-a window where an ioctl can pass the removal check but still access
-freed memory.
+> Would it become feasible to apply a scoped_guard() call?
+> How do you think about to add any tags (like =E2=80=9CFixes=E2=80=9D and =
+=E2=80=9CCc=E2=80=9D) accordingly?
 
-Race scenario:
+No problem, addressed the issues in the v2 patch.
 
-  CPU0 (ioctl)                       CPU1 (device removal)
-  ----------------                   ---------------------
-  _ctl_ioctl_main()
-    mutex_lock(&pci_access_mutex)
-    if (!ioc->remove_host)
-      [check passes]
-                                     scsih_remove()
-                                       ioc->remove_host = 1
-                                       mpt3sas_ctl_release()
-                                         kfree(ioc->event_log)
-
-    _ctl_eventreport()
-      copy_to_user(..., ioc->event_log, ...)  <- use-after-free
-  mutex_unlock(&pci_access_mutex)
-
-Fix by setting ioc->remove_host while holding pci_access_mutex. This
-ensures the ioctl path either completes before removal starts, or sees
-the flag and returns -EAGAIN.
-
-Fixes: 6a965ee1892a ("scsi: mpt3sas: Suppress a warning in debug kernel")
-Signed-off-by: Chengfeng Ye <dg573847474@gmail.com>
----
- drivers/scsi/mpt3sas/mpt3sas_scsih.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index 7092d0debef3..973893528747 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -11264,7 +11264,10 @@ static void scsih_remove(struct pci_dev *pdev)
- 	if (_scsih_get_shost_and_ioc(pdev, &shost, &ioc))
- 		return;
- 
--	ioc->remove_host = 1;
-+	/* Set remove_host flag under pci_access_mutex to synchronize with ioctl path */
-+	scoped_guard(mutex, &ioc->pci_access_mutex) {
-+		ioc->remove_host = 1;
-+	}
- 
- 	if (!pci_device_is_present(pdev)) {
- 		mpt3sas_base_pause_mq_polling(ioc);
--- 
-2.25.1
-
+Best regards,
+Chengfeng
