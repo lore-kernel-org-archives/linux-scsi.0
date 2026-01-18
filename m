@@ -1,145 +1,134 @@
-Received: from mout.web.de (mout.web.de [217.72.192.78])
+Received: from lamorak.hansenpartnership.com (lamorak.hansenpartnership.com [198.37.111.173])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D138A280CE0;
-	Sun, 18 Jan 2026 09:42:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.72.192.78
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7CAF950094E;
+	Sun, 18 Jan 2026 14:45:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.37.111.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768729333; cv=none; b=T8V8omjr15rCgrSKGAF0wYSHBkI2H0u5ym4KSDgGEahMQcL3ANWriG5KjOhvFPcj2tu4L29R6SF96RvewAIl87dLXceEpNh9D/suZX4wdSy8yeAjjBcrBYQkAzFovZnjH8t027QTRCl4zq9ohcgxOU5lT7UjpzOaengi3NjOQks=
+	t=1768747530; cv=none; b=LRnIEpk2SsNbdm04FZQMtmhqbJRWMepa5pjmXWgaKw7xs+XGNGBMuMQy+e5/PZ3YxnbhQOuzlkrf7zmZCB82zwjXW94qVY+6oB1JSzoMwCZdBcNkp0OOoqmJxa4DbhsoERD7XMz/AUH4a4+mZjd7b7DIHPUai3HcV0GbfJGkubg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768729333; c=relaxed/simple;
-	bh=IV3n/DQUjXMX45tj5moCz7FWPF86vcVvxDYQihvvSIg=;
-	h=Message-ID:Date:MIME-Version:To:Cc:References:Subject:From:
-	 In-Reply-To:Content-Type; b=ZhEFt67Yts7XuR4n1BrglMG4vxt6KV9ZMoidB59Ns//kzf4Rw9EM0BE76Fh6IQmPQgjHi8sdv4rm3WdryON4h6DAr2ocb6iq6kIsQV/UtwTmLnKOlKB3wAn8Yrc/5ePWETE8Cq8N1ErLuOCuuHqjyoOD9Q+hoFMgKcv4uRp7Fr8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de; spf=pass smtp.mailfrom=web.de; dkim=pass (2048-bit key) header.d=web.de header.i=markus.elfring@web.de header.b=SfW4CwWk; arc=none smtp.client-ip=217.72.192.78
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=web.de
+	s=arc-20240116; t=1768747530; c=relaxed/simple;
+	bh=7gLFp1vTMO6u3BhCFTgTTJQUrAekXidfbRoU6hUtad8=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=DwtE7e8EskDwtotIzfwtChM6IHDlqe/agdGWowcfC6leA4kYl5Z3G+KF+geyphhq3ky1ehZ2MhLZstv+aaqiRd1C/vzHMzCvXxp2BWfsj2SPAVS4MH1d+Em1VB8j/Tm/xmffsWBiqFHZKFvuQetHY2m+u1pqPl0/mSRZm9GLtog=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com; spf=pass smtp.mailfrom=HansenPartnership.com; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=tWsMRnnw; arc=none smtp.client-ip=198.37.111.173
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=HansenPartnership.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=web.de header.i=markus.elfring@web.de header.b="SfW4CwWk"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=web.de;
-	s=s29768273; t=1768729330; x=1769334130; i=markus.elfring@web.de;
-	bh=IV3n/DQUjXMX45tj5moCz7FWPF86vcVvxDYQihvvSIg=;
-	h=X-UI-Sender-Class:Message-ID:Date:MIME-Version:To:Cc:References:
-	 Subject:From:In-Reply-To:Content-Type:Content-Transfer-Encoding:
-	 cc:content-transfer-encoding:content-type:date:from:message-id:
-	 mime-version:reply-to:subject:to;
-	b=SfW4CwWkoL2ZT1xBt7j2PQGTDKFL4h1ILU0w6/xDTdikEPAFcm9xiatYs0Mzw/Q0
-	 y1+8HvB1EIh8vvUenNncelvcZqE3dO1uqURp/n4xVu3zORQ/Uff7JwneIjDcESTga
-	 8FQblyWlL07T56tI2Nn/cd9BHu/cwqOK+iMd0JjIAkX1c0AgskpigklagAkW1cHaD
-	 QcQXE5i9n8cZ6V4RYD1WEEGoJg1NBgvq3q+7lNf1IakBIkqbWZ6nHr2WdcrkcJ+00
-	 Qde2+vM2nfd6NjyUWhSFwL/mj273nB8qVP26odyDsn5DcdCLJ+S50QdOeZcpmjDLh
-	 GQI4SLokFHsF8RkRMA==
-X-UI-Sender-Class: 814a7b36-bfc1-4dae-8640-3722d8ec6cd6
-Received: from [192.168.178.29] ([94.31.93.1]) by smtp.web.de (mrweb106
- [213.165.67.124]) with ESMTPSA (Nemesis) id 1MkVwi-1w4sPP3d0g-00dtOd; Sun, 18
- Jan 2026 10:42:09 +0100
-Message-ID: <10e91bfd-7b8b-414d-9d33-30498f5ca018@web.de>
-Date: Sun, 18 Jan 2026 10:42:07 +0100
+	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="tWsMRnnw"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+	d=hansenpartnership.com; s=20151216; t=1768747527;
+	bh=7gLFp1vTMO6u3BhCFTgTTJQUrAekXidfbRoU6hUtad8=;
+	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
+	b=tWsMRnnwj5Bk0f4akooMP7HkhNcPvTfjyIikTp2cCdMKrH0m2RJo6DvUeWzKDDCpj
+	 oOY7IYTiFLm9+HsAUyKm6xVGtgioYbdgUjHUx3UJ0d/vMxlpJuYTxu9I8Wra/XGa87
+	 ATXjQc1wqDAyT4DFadNEODvY7qkKarAnXuL3PETI=
+Received: from lingrow.int.hansenpartnership.com (unknown [IPv6:2601:5c4:4300:d341::a774])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by lamorak.hansenpartnership.com (Postfix) with ESMTPSA id E8B361C0199;
+	Sun, 18 Jan 2026 09:45:26 -0500 (EST)
+Message-ID: <de7b19fe19ccb117cad8cd32d9c51796ee81b752.camel@HansenPartnership.com>
+Subject: Re: [PATCH] scsi: core: Don't free dev_name() manually
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+To: Tzung-Bi Shih <tzungbi@kernel.org>, "Martin K. Petersen"
+	 <martin.petersen@oracle.com>, Greg KH <gregkh@linuxfoundation.org>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Sun, 18 Jan 2026 09:45:26 -0500
+In-Reply-To: <20260117193221.152540-1-tzungbi@kernel.org>
+References: <20260117193221.152540-1-tzungbi@kernel.org>
+Autocrypt: addr=James.Bottomley@HansenPartnership.com;
+ prefer-encrypt=mutual;
+ keydata=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
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.50.3 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-To: Chengfeng Ye <dg573847474@gmail.com>, linux-scsi@vger.kernel.org
-Cc: LKML <linux-kernel@vger.kernel.org>,
- Jack Wang <jinpu.wang@cloud.ionos.com>,
- James Bottomley <James.Bottomley@HansenPartnership.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>
-References: <20260117101948.297411-1-dg573847474@gmail.com>
-Subject: Re: [PATCH] scsi: pm8001: Fix potential TOCTOU race in
- pm8001_find_tag
-Content-Language: en-GB, de-DE
-From: Markus Elfring <Markus.Elfring@web.de>
-In-Reply-To: <20260117101948.297411-1-dg573847474@gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-X-Provags-ID: V03:K1:cRlFcuoj17TmBhSVR9KoIfdd1WbW+M3Dv+zMAH0eJJ+nJHUxBMM
- Mi0L+aFfeAQJoPn3RsqO+s1xjfXcBclPVMxVci3NbgtD7DcsDoWKW3KA6tY5g81ZrX64Q1b
- bcZD86W/yijWsp57fWmTILYMvBUQSl1DJh0XBlxWyl2nrWlCLvq7OSqtydidzstmBKZwlDU
- IIq2n293hTAZYFGqVQWRA==
-X-Spam-Flag: NO
-UI-OutboundReport: notjunk:1;M01:P0:gUJ17GnSX04=;MlNi65rqxexq9w5G7mxGJlbpHMe
- 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
 
-=E2=80=A6
-> Fix this by using READ_ONCE() to read task->lldd_task exactly once,
-> eliminating the TOCTOU window. Also use WRITE_ONCE() in
-> pm8001_ccb_task_free() for proper memory ordering.
+On Sun, 2026-01-18 at 03:32 +0800, Tzung-Bi Shih wrote:
+> > scsi_host_alloc() is designed to hold initial reference count of
+> > `&shost->shost_gendev` and `&shost->shost_dev`.=C2=A0 In the error
+> > handling paths [1], only drop a reference count to `&shost-
+> > >shost_gendev` is sufficient as scsi_host_dev_release() will be
+> > called and the reference count of `&shost->shost_dev` should be
+> > dropped at that time.
+> >=20
+> > Drivers shouldn't need to free the device name and hold a reference
+> > count to its parent device as the driver core automatically handles
+> > that.=C2=A0 Remove them.
+> >=20
+> > [1] Either at "fail" label in scsi_host_alloc() or in SCSI drivers
+> > that
+> > =C2=A0=C2=A0=C2=A0 a subsequent scsi_add_host{,_with_dma}() fails.
 
-How do you think about to add any tags (like =E2=80=9CFixes=E2=80=9D and =
-=E2=80=9CCc=E2=80=9D) accordingly?
+This commit description seems to bear almost no relation to what's
+going on in the commit ... please describe why you're doing what you're
+doing (like eliminating the class based device get and the parent get
+and, apparently, trying to flatten the device tree in the host).
 
-Regards,
-Markus
+> >=20
+> > Fixes: b49493f99690 ("Fix a memory leak in
+> > scsi_host_dev_release()")
+> > Signed-off-by: Tzung-Bi Shih <tzungbi@kernel.org>
+> > ---
+> > =C2=A0drivers/scsi/hosts.c | 16 +++++-----------
+> > =C2=A01 file changed, 5 insertions(+), 11 deletions(-)
+> >=20
+> > diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+> > index 1b3fbd328277..b88d553cdde6 100644
+> > --- a/drivers/scsi/hosts.c
+> > +++ b/drivers/scsi/hosts.c
+> > @@ -55,7 +55,6 @@ static DEFINE_IDA(host_index_ida);
+> > =C2=A0
+> > =C2=A0static void scsi_host_cls_release(struct device *dev)
+> > =C2=A0{
+> > - put_device(&class_to_shost(dev)->shost_gendev);
+> > =C2=A0}
+
+An empty release function can simply become a NULL pointer.  I assume
+the reason this one doesn't is because the device core will complain if
+a device has no release function ... in which case a comment why we
+don't need one should be here.
+
+But there's a reason for the warning: a bigger problem with this is the
+parenting goes
+
+shost_dev -> shost_gendev -> underlying device
+
+And shost_dev is visible in the sysfs tree so it could possibly by held
+in place by user space.  If that happens, since you've now removed the
+reference it took on shost_gendev, what stops shost_gendev (and the
+rest of the host) being freed?
+
+> > =C2=A0
+> > =C2=A0static struct class shost_class =3D {
+> > @@ -279,11 +278,9 @@ int scsi_add_host_with_dma(struct Scsi_Host
+> > *shost, struct device *dev,
+> > =C2=A0 goto out_disable_runtime_pm;
+> > =C2=A0
+> > =C2=A0 scsi_host_set_state(shost, SHOST_RUNNING);
+> > - get_device(shost->shost_gendev.parent);
+
+We need a reference to the parent to prevent surprise removal ... where
+else is the reference held?
+
+> > =C2=A0
+> > =C2=A0 device_enable_async_suspend(&shost->shost_dev);
+> > =C2=A0
+> > - get_device(&shost->shost_gendev);
+
+I assume this is matched to the class dev_release which is gone?  If
+so, say in the commit message.
+
+
