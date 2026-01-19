@@ -1,134 +1,181 @@
-Received: from lamorak.hansenpartnership.com (lamorak.hansenpartnership.com [198.37.111.173])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7CAF950094E;
-	Sun, 18 Jan 2026 14:45:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.37.111.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 07FB137418B;
+	Mon, 19 Jan 2026 14:23:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768747530; cv=none; b=LRnIEpk2SsNbdm04FZQMtmhqbJRWMepa5pjmXWgaKw7xs+XGNGBMuMQy+e5/PZ3YxnbhQOuzlkrf7zmZCB82zwjXW94qVY+6oB1JSzoMwCZdBcNkp0OOoqmJxa4DbhsoERD7XMz/AUH4a4+mZjd7b7DIHPUai3HcV0GbfJGkubg=
+	t=1768832624; cv=none; b=D31rkbz4pY/G5omxe7G8QfIewvFRmPEjavspoaeZ4020fUWelnquskteKuxehzslcScqdzUdH7z5/uH2GeqvR/BbsCMiC0KBcnP3wSKudXuKTCvkFoM9cdvTe9W11HORedT/3dYeF5FDxTWTdOjq+OlA4YxRVLlzL6/UpMJ/Ino=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768747530; c=relaxed/simple;
-	bh=7gLFp1vTMO6u3BhCFTgTTJQUrAekXidfbRoU6hUtad8=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=DwtE7e8EskDwtotIzfwtChM6IHDlqe/agdGWowcfC6leA4kYl5Z3G+KF+geyphhq3ky1ehZ2MhLZstv+aaqiRd1C/vzHMzCvXxp2BWfsj2SPAVS4MH1d+Em1VB8j/Tm/xmffsWBiqFHZKFvuQetHY2m+u1pqPl0/mSRZm9GLtog=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com; spf=pass smtp.mailfrom=HansenPartnership.com; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=tWsMRnnw; arc=none smtp.client-ip=198.37.111.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=HansenPartnership.com
+	s=arc-20240116; t=1768832624; c=relaxed/simple;
+	bh=dXfQL494/dbnQPycNGjgs1u/V0zIWVam8A0eP+0YM2k=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=bIRQDUmXMNQL0ESd32gKdn2AX7XLmaEPrjrPPqoD+V8V0tN+SXeMjBCtvVUoD3hsLMEsR4vCOSnQSU2iHNyBlOcAA5qjav0ln9GcQs55jopwcDpMf0hx3H6sd0Wy9rJxrBk952cqCj4cyodwZaIaqOAxtLa9rpve/+y6vrWBmgo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tsh7yMqr; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="tWsMRnnw"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-	d=hansenpartnership.com; s=20151216; t=1768747527;
-	bh=7gLFp1vTMO6u3BhCFTgTTJQUrAekXidfbRoU6hUtad8=;
-	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
-	b=tWsMRnnwj5Bk0f4akooMP7HkhNcPvTfjyIikTp2cCdMKrH0m2RJo6DvUeWzKDDCpj
-	 oOY7IYTiFLm9+HsAUyKm6xVGtgioYbdgUjHUx3UJ0d/vMxlpJuYTxu9I8Wra/XGa87
-	 ATXjQc1wqDAyT4DFadNEODvY7qkKarAnXuL3PETI=
-Received: from lingrow.int.hansenpartnership.com (unknown [IPv6:2601:5c4:4300:d341::a774])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by lamorak.hansenpartnership.com (Postfix) with ESMTPSA id E8B361C0199;
-	Sun, 18 Jan 2026 09:45:26 -0500 (EST)
-Message-ID: <de7b19fe19ccb117cad8cd32d9c51796ee81b752.camel@HansenPartnership.com>
-Subject: Re: [PATCH] scsi: core: Don't free dev_name() manually
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-To: Tzung-Bi Shih <tzungbi@kernel.org>, "Martin K. Petersen"
-	 <martin.petersen@oracle.com>, Greg KH <gregkh@linuxfoundation.org>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Sun, 18 Jan 2026 09:45:26 -0500
-In-Reply-To: <20260117193221.152540-1-tzungbi@kernel.org>
-References: <20260117193221.152540-1-tzungbi@kernel.org>
-Autocrypt: addr=James.Bottomley@HansenPartnership.com;
- prefer-encrypt=mutual;
- keydata=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
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.50.3 
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tsh7yMqr"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0C02EC116C6;
+	Mon, 19 Jan 2026 14:23:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1768832623;
+	bh=dXfQL494/dbnQPycNGjgs1u/V0zIWVam8A0eP+0YM2k=;
+	h=From:To:Cc:Subject:Date:From;
+	b=tsh7yMqrpoyp1Bc8xpfh9ifzjxWtFbzyMVL8cK3KeBWjFq0eS+HLR1PSAHLoGpo8Q
+	 977Po1io4kDKXMNs8Ld1Uby8rwES7jIeHwrfZqn10KYpqGK+1flqeTCUoK79Q+01wd
+	 eXOt1XK+tzTK6CTE4/6jUXdJULqM7AjBS9i3LGCE3t7DHosSTO5eJIbezMI16iJud0
+	 jQ/ytzvFlifYkHZ2sqlCkfEDLgFxUnmdHp9n19CYOrcjwYTSqpAZQ/Vcl3UD4pOZyM
+	 8CrwrUihX1cuKaRwK4BnydgrzEYI5majnaGB0FbUqAtFqa/+FYaAhBc0UQtCbD9TXW
+	 lgjuGjgi7twNQ==
+From: Tzung-Bi Shih <tzungbi@kernel.org>
+To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Greg KH <gregkh@linuxfoundation.org>
+Cc: linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	tzungbi@kernel.org
+Subject: [PATCH v2] scsi: core: Don't free dev_name() and hold refcount for parent manually
+Date: Mon, 19 Jan 2026 22:23:06 +0800
+Message-ID: <20260119142306.33676-1-tzungbi@kernel.org>
+X-Mailer: git-send-email 2.51.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-On Sun, 2026-01-18 at 03:32 +0800, Tzung-Bi Shih wrote:
-> > scsi_host_alloc() is designed to hold initial reference count of
-> > `&shost->shost_gendev` and `&shost->shost_dev`.=C2=A0 In the error
-> > handling paths [1], only drop a reference count to `&shost-
-> > >shost_gendev` is sufficient as scsi_host_dev_release() will be
-> > called and the reference count of `&shost->shost_dev` should be
-> > dropped at that time.
-> >=20
-> > Drivers shouldn't need to free the device name and hold a reference
-> > count to its parent device as the driver core automatically handles
-> > that.=C2=A0 Remove them.
-> >=20
-> > [1] Either at "fail" label in scsi_host_alloc() or in SCSI drivers
-> > that
-> > =C2=A0=C2=A0=C2=A0 a subsequent scsi_add_host{,_with_dma}() fails.
+Drivers shouldn't need to free the device name as the driver core
+handles that automatically.  All it needs to do is dropping the
+reference count of the device.
 
-This commit description seems to bear almost no relation to what's
-going on in the commit ... please describe why you're doing what you're
-doing (like eliminating the class based device get and the parent get
-and, apparently, trying to flatten the device tree in the host).
+An intuitive fix is:
+>  @@ -373,7 +373,7 @@ static void scsi_host_dev_release(struct device *dev)
+>   		 * name as well as the proc dir structure are leaked.
+>   		 */
+>   		scsi_proc_hostdir_rm(shost->hostt);
+>  -		kfree(dev_name(&shost->shost_dev));
+>  +		put_device(&shost->shost_dev);
+>   	}
+>
+>   	kfree(shost->shost_data);
 
-> >=20
-> > Fixes: b49493f99690 ("Fix a memory leak in
-> > scsi_host_dev_release()")
-> > Signed-off-by: Tzung-Bi Shih <tzungbi@kernel.org>
-> > ---
-> > =C2=A0drivers/scsi/hosts.c | 16 +++++-----------
-> > =C2=A01 file changed, 5 insertions(+), 11 deletions(-)
-> >=20
-> > diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-> > index 1b3fbd328277..b88d553cdde6 100644
-> > --- a/drivers/scsi/hosts.c
-> > +++ b/drivers/scsi/hosts.c
-> > @@ -55,7 +55,6 @@ static DEFINE_IDA(host_index_ida);
-> > =C2=A0
-> > =C2=A0static void scsi_host_cls_release(struct device *dev)
-> > =C2=A0{
-> > - put_device(&class_to_shost(dev)->shost_gendev);
-> > =C2=A0}
+However, it doesn't work well.  It generates an underflow on the
+refcount of `&shost->shost_gendev` on errors.  This is what happens:
+- The refcount of `shost_gendev` and `shost_dev` are both 1 after
+  device_initialize().
+- On the error handling path (i.e., "fail" label), it drops refcount of
+  `shost_gendev` to 0.
+- The .release() callback of `shost_gendev` (i.e.,
+  scsi_host_dev_release()) is called, and it drops refcount of
+  `shost_dev` to 0 due to the above change.
+- The .release() callback of `shost_dev` (i.e., scsi_host_cls_release())
+  is called, and it drops refcount of `shost_gendev` again.  The
+  underflow happens.
 
-An empty release function can simply become a NULL pointer.  I assume
-the reason this one doesn't is because the device core will complain if
-a device has no release function ... in which case a comment why we
-don't need one should be here.
+A subsequent fix is:
+>  @@ -55,7 +55,6 @@ static DEFINE_IDA(host_index_ida);
+>
+>   static void scsi_host_cls_release(struct device *dev)
+>   {
+>  -	put_device(&class_to_shost(dev)->shost_gendev);
+>   }
+>
+>   static struct class shost_class = {
 
-But there's a reason for the warning: a bigger problem with this is the
-parenting goes
+However, it introduces unbalance refcount of `shost_gendev` as
+scsi_add_host_with_dma() increases it but scsi_host_cls_release()
+doesn't drop it with the above change.
 
-shost_dev -> shost_gendev -> underlying device
+Drivers shouldn't need to hold a reference count to its parent device as
+the driver core automatically holds one in device_add().  Eliminate the
+case for holding refcount of `shost_gendev` to fix the unbalance
+refcount.  Eliminate yet another case for `shost_gendev.parent` as well.
 
-And shost_dev is visible in the sysfs tree so it could possibly by held
-in place by user space.  If that happens, since you've now removed the
-reference it took on shost_gendev, what stops shost_gendev (and the
-rest of the host) being freed?
+Fixes: b49493f99690 ("Fix a memory leak in scsi_host_dev_release()")
+Signed-off-by: Tzung-Bi Shih <tzungbi@kernel.org>
+---
+v2:
+- Provide more context in the commit message.
+- Leave a comment in the empty .release() function.
 
-> > =C2=A0
-> > =C2=A0static struct class shost_class =3D {
-> > @@ -279,11 +278,9 @@ int scsi_add_host_with_dma(struct Scsi_Host
-> > *shost, struct device *dev,
-> > =C2=A0 goto out_disable_runtime_pm;
-> > =C2=A0
-> > =C2=A0 scsi_host_set_state(shost, SHOST_RUNNING);
-> > - get_device(shost->shost_gendev.parent);
+v1: https://lore.kernel.org/r/20260117193221.152540-1-tzungbi@kernel.org
 
-We need a reference to the parent to prevent surprise removal ... where
-else is the reference held?
+ drivers/scsi/hosts.c | 20 +++++++++-----------
+ 1 file changed, 9 insertions(+), 11 deletions(-)
 
-> > =C2=A0
-> > =C2=A0 device_enable_async_suspend(&shost->shost_dev);
-> > =C2=A0
-> > - get_device(&shost->shost_gendev);
-
-I assume this is matched to the class dev_release which is gone?  If
-so, say in the commit message.
-
+diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+index 1b3fbd328277..7c39e228d72b 100644
+--- a/drivers/scsi/hosts.c
++++ b/drivers/scsi/hosts.c
+@@ -55,7 +55,10 @@ static DEFINE_IDA(host_index_ida);
+ 
+ static void scsi_host_cls_release(struct device *dev)
+ {
+-	put_device(&class_to_shost(dev)->shost_gendev);
++	/*
++	 * Keep an empty release() to prevent device_release() from emitting a
++	 * warning.
++	 */
+ }
+ 
+ static struct class shost_class = {
+@@ -279,11 +282,9 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, struct device *dev,
+ 		goto out_disable_runtime_pm;
+ 
+ 	scsi_host_set_state(shost, SHOST_RUNNING);
+-	get_device(shost->shost_gendev.parent);
+ 
+ 	device_enable_async_suspend(&shost->shost_dev);
+ 
+-	get_device(&shost->shost_gendev);
+ 	error = device_add(&shost->shost_dev);
+ 	if (error)
+ 		goto out_del_gendev;
+@@ -352,7 +353,6 @@ EXPORT_SYMBOL(scsi_add_host_with_dma);
+ static void scsi_host_dev_release(struct device *dev)
+ {
+ 	struct Scsi_Host *shost = dev_to_shost(dev);
+-	struct device *parent = dev->parent;
+ 
+ 	/* Wait for functions invoked through call_rcu(&scmd->rcu, ...) */
+ 	rcu_barrier();
+@@ -366,22 +366,20 @@ static void scsi_host_dev_release(struct device *dev)
+ 
+ 	if (shost->shost_state == SHOST_CREATED) {
+ 		/*
+-		 * Free the shost_dev device name and remove the proc host dir
++		 * Drop the reference to shost_dev and remove the proc host dir
+ 		 * here if scsi_host_{alloc,put}() have been called but neither
+-		 * scsi_host_add() nor scsi_remove_host() has been called.
++		 * scsi_add_host() nor scsi_remove_host() has been called.
+ 		 * This avoids that the memory allocated for the shost_dev
+ 		 * name as well as the proc dir structure are leaked.
+ 		 */
+ 		scsi_proc_hostdir_rm(shost->hostt);
+-		kfree(dev_name(&shost->shost_dev));
++		put_device(&shost->shost_dev);
+ 	}
+ 
+ 	kfree(shost->shost_data);
+ 
+ 	ida_free(&host_index_ida, shost->host_no);
+ 
+-	if (shost->shost_state != SHOST_CREATED)
+-		put_device(parent);
+ 	kfree(shost);
+ }
+ 
+@@ -550,8 +548,8 @@ struct Scsi_Host *scsi_host_alloc(const struct scsi_host_template *sht, int priv
+  fail:
+ 	/*
+ 	 * Host state is still SHOST_CREATED and that is enough to release
+-	 * ->shost_gendev. scsi_host_dev_release() will free
+-	 * dev_name(&shost->shost_dev).
++	 * ->shost_gendev. scsi_host_dev_release() will
++	 * put_device(&shost->shost_dev).
+ 	 */
+ 	put_device(&shost->shost_gendev);
+ 
+-- 
+2.51.0
 
