@@ -1,46 +1,44 @@
 Received: from lamorak.hansenpartnership.com (lamorak.hansenpartnership.com [198.37.111.173])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AD52927F171;
-	Mon, 19 Jan 2026 16:02:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BE1362F39D1;
+	Mon, 19 Jan 2026 16:39:35 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.37.111.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768838579; cv=none; b=lFzxtj6PQSutaSndGcoeAhC51mG3fPfD61tqIL6BaMmPnzzQaexZnwOsRtZQEYQjlgyN6YuQ2pmS6Z28RkTfTMcMusS9/RjBXtGwpwWb/4fNErkPq1qVpIGcqW8weI5U688LoafzSiCMRrphUOqjKtMj1jQg3MqweZiY2zryspg=
+	t=1768840777; cv=none; b=qdu1BfJSOn/7TZJyRWiKIHjWX0I2m0Hm4+3458Cg4coqQcfCOONsGmzV52UoQf/0UjeqglhdBVZTCzRY3zTq3ISV3dBOK/p7FuyiDFeCHvYxAZ3arOc4LgNRyj/vZCoUzNrLECKGXXy6NhzqunvBhRvINAoNFLZtTESevboDuyo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768838579; c=relaxed/simple;
-	bh=ktq8vOgwfZf1eYjzxIoYtfzpMgZGFYlyLj+sVg3V9ng=;
+	s=arc-20240116; t=1768840777; c=relaxed/simple;
+	bh=+mcnOIb+dO60vxoYfQEN6bp6fVbl9JRUCQTh/6NLOaA=;
 	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=lesVdTgW3Jqfsg5qmjl/Lp9pKyIlazeg1d0zBrngR3kc6marqVxwAYh3YN4bbNKy0HApI5hA0Afgh+GvXE3BUr/o6lvYV4akMV/R/1IPcP5s+eauwh3KWOFENqID2vjGpUGzROTMB+XiW6a4lI81UPnnByB+PkLW5X6me2oT+xU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com; spf=pass smtp.mailfrom=HansenPartnership.com; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=ktoLmtOc; arc=none smtp.client-ip=198.37.111.173
+	 Content-Type:MIME-Version; b=Qnuj0k8tMSVP5eKEwznT5IRKxk0Hn3K0Dmf7FQfFPEd0oZMTHdM/Nu6VxSzt1ibnO1TN1Z34QLMQ71HyLBLjkCPSezwztgSu33BdmDGdPiBzsgAyIO+tnqoQM3uvpa8oc0gfYrqmgMjQCPkLYDACyAQfyC//kGrLVdgA9IfOias=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com; spf=pass smtp.mailfrom=HansenPartnership.com; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=bl1jKUu9; arc=none smtp.client-ip=198.37.111.173
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=HansenPartnership.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="ktoLmtOc"
+	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="bl1jKUu9"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-	d=hansenpartnership.com; s=20151216; t=1768838576;
-	bh=ktq8vOgwfZf1eYjzxIoYtfzpMgZGFYlyLj+sVg3V9ng=;
+	d=hansenpartnership.com; s=20151216; t=1768840774;
+	bh=+mcnOIb+dO60vxoYfQEN6bp6fVbl9JRUCQTh/6NLOaA=;
 	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
-	b=ktoLmtOci7zIjp04zHstEm+AcFPtcPf8bya1ACnH0f4crKhY9OKDF6/+N9IQaA4wC
-	 v/uJm5ez6tDLRmYTf2HSd4S82Mi6x/iyde/9CmsrwtLLgb/3eGkgs2Et4OCwyMGEVh
-	 QWxo8/4qYbbTP+3MZ7qWxMwQRtVD8fj7ECtqIVhs=
+	b=bl1jKUu9Sl0qACrrb5WsHGE8QDZSVfZh/QsYNYYc6dz8WLVuC+vZEcn/R0DgAusz2
+	 MGSPU/FQJbgzwemxb/dQhEgAWeStharLXtQ6zXxefDjqICCbuI2dYJagx9d5QcmDsk
+	 5s2g4syzehwIyIy/FbWCyIRUKKtd+rhxAyEAwVvo=
 Received: from lingrow.int.hansenpartnership.com (unknown [IPv6:2601:5c4:4300:d341::a774])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by lamorak.hansenpartnership.com (Postfix) with ESMTPSA id 6CAEC1C01CC;
-	Mon, 19 Jan 2026 11:02:56 -0500 (EST)
-Message-ID: <9308e357ecff18971b216c5e037b89b66acf7606.camel@HansenPartnership.com>
-Subject: Re: [PATCH] scsi: core: Don't free dev_name() manually
+	by lamorak.hansenpartnership.com (Postfix) with ESMTPSA id 9415F1C008C;
+	Mon, 19 Jan 2026 11:39:34 -0500 (EST)
+Message-ID: <ae5cae8b3c4e71cf23b6f48453797ac48bea5914.camel@HansenPartnership.com>
+Subject: Re: [PATCH] scsi: pm8001: Fix potential TOCTOU race in
+ pm8001_find_tag
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-To: Tzung-Bi Shih <tzungbi@kernel.org>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Greg KH
-	 <gregkh@linuxfoundation.org>, linux-scsi@vger.kernel.org, 
-	linux-kernel@vger.kernel.org
-Date: Mon, 19 Jan 2026 11:02:55 -0500
-In-Reply-To: <aW4_fbfNUMTDTAN1@tzungbi-laptop>
-References: <20260117193221.152540-1-tzungbi@kernel.org>
-	 <de7b19fe19ccb117cad8cd32d9c51796ee81b752.camel@HansenPartnership.com>
-	 <aW4_fbfNUMTDTAN1@tzungbi-laptop>
+To: Chengfeng Ye <dg573847474@gmail.com>, "Martin K . Petersen"
+	 <martin.petersen@oracle.com>, Jack Wang <jinpu.wang@cloud.ionos.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Mon, 19 Jan 2026 11:39:33 -0500
+In-Reply-To: <20260117101948.297411-1-dg573847474@gmail.com>
+References: <20260117101948.297411-1-dg573847474@gmail.com>
 Autocrypt: addr=James.Bottomley@HansenPartnership.com;
  prefer-encrypt=mutual;
  keydata=mQENBE58FlABCADPM714lRLxGmba4JFjkocqpj1/6/Cx+IXezcS22azZetzCXDpm2MfNElecY3qkFjfnoffQiw5rrOO0/oRSATOh8+2fmJ6el7naRbDuh+i8lVESfdlkoqX57H5R8h/UTIp6gn1mpNlxjQv6QSZbl551zQ1nmkSVRbA5TbEp4br5GZeJ58esmYDCBwxuFTsSsdzbOBNthLcudWpJZHURfMc0ew24By1nldL9F37AktNcCipKpC2U0NtGlJjYPNSVXrCd1izxKmO7te7BLP+7B4DNj1VRnaf8X9+VIApCi/l4Kdx+ZR3aLTqSuNsIMmXUJ3T8JRl+ag7kby/KBp+0OpotABEBAAG0N0phbWVzIEJvdHRvbWxleSA8SmFtZXMuQm90dG9tbGV5QEhhbnNlblBhcnRuZXJzaGlwLmNvbT6JAVgEEwEIAEICGwMGCwkIBwMCBhUIAgkKCwQWAgMBAh4BAheAAhkBFiEE1WBuc8i0YnG+rZrfgUrkfCFIVNYFAmBLmY0FCRs1hL0ACgkQgUrkfCFIVNaEiQgAg18F4G7PGWQ68xqnIrccke7Reh5thjUz6kQIii6Dh64BDW6/UvXn20UxK2uSs/0TBLO81k1mV4c6rNE+H8b7IEjieGR9frBsp/+Q01JpToJfzzMUY7ZTDV1IXQZ+AY9L7vRzyimnJHx0Ba4JTlAyHB+Ly5i4Ab2+uZcnNfBXquWrG3oPWz+qPK88LJLya5Jxse1m1QT6R/isDuPivBzntLOooxPk+Cwf5sFAAJND+idTAzWzslexr9j7rtQ1UW6FjO4CvK9yVNz7dgG6FvEZl6J/HOr1rivtGgpCZTBzKNF8jg034n49zGfKkkzWLuXbPUOp3/oGfsKv8pnEu1c2GbQpSmFtZXMgQm90dG9tbGV5IDxqZWpiQGxpbnV4LnZuZXQuaWJtLmNvbT6JAVYEEwEIAEACGwMHCwkIBwMCAQYVC
@@ -50,7 +48,7 @@ Autocrypt: addr=James.Bottomley@HansenPartnership.com;
 	2qnw8bQEO3Kl3qNUwrGS0r4w/pC1VdU7ypWh0vLVAodqFMke3027+lh4uR/Ay8kdD527fRPfxnLNY9dSV/jFie47HrdhVQ7AeVNSzO9AI4V4g4kArTScymqinTHovM2s1kudIjCinqOJv2nVgYxv/JXd30O/x3I+jqZIfMT2gp5oA2aL2Bmr8OAJtrY0ahOhuqz0KUtMHuSOpUrCjQT/9hYS5iPX57AZ2QtZdTawEkUl9QStMX+C2AdlsN32EJm2wKQFAW1mf9WkKHNhAim0ivYltIH2fKw4IHzMPJ86ZhBBMZdIVOsLSS8psg1fkBqD8eSsGCv+qgFDSUCJ1GM/M9hETPxziNPWbt44mrhQQ7aLkiK2l/9gw703+y33tfooQERUpaeuJBDALIyrrTQStruaI+B+4UO8w/gb1ix8TIMrDrWGLcIIMHjqzP5N0Z3bGf8957BqhdIIHLdVS7h9ns5w5LCPipGdwYNFooUMie2faJoGkAMkQxXLfo5ybL9iM2vsSLz3ovn6WxjQMhb49Hvk7GaEBnAt+P4qRsM3uudVABEBAAGJAR8EKAECAAkFAlU+gWgCHQMACgkQgUrkfCFIVNaeUAgAu6YIzjNex8cKs/ZpRhC4pWKo8zT1KGbecbJXExRsY/0Fjc7tCvIBED3j53OXU37ps1i9O+58YXSmLaKsJtgunzpl4iQWcepIQX0anLVLzdg5TgenRX+SPtUE/U0Qb3Hhs8NNROBotMY1igAejiCDAHZz3A1Rc2lyXZQACXY34P5cibQMsYn35RvDZ1yd3pcBqqAbKPOFwTVls23OVSpmrc4WCzr17X8w4buJjT7/8+0tR07UYLiNDZR+UVQc0r388m4p/YcrBN//q9wtBydsYjh87nDQJhtN2s7c2WAzE2ykFuG0Kng+TCcU+vLwWLvDLc3yHuNZUi6W/6pcKtaoNIkBJQQYAQIADwUCVHYWmQIbDAUJAO1OAAAKCRCBSuR8IUhU1
 	t2IB/wMiS9q5Qrxq5C3GrPeDQ/T5p9HFJVaz5e8FRnCFfuiOJ68OruPU8qjTJrGGptmKY3q7yRoG7yGzM6BxQkRIukfV8lLMOcOxgkaFnoMNm5WWIuQOdsXudNPv0a7hv/zCnzrVVKLbtzfruxXF2mAIPYG2HhjWQle9LyPnJxYKtABCUXY4nc3wllSj42n06O4x3hcV+0NtpFH1jpDM84aA2xYNIz4VWDYhF6TclwsIq87ygO27xcGT5UZG34oWolwxO0CiFLUNdIuZMOAva6gysMfBdD2lg0RfYBmine/yCRhyWmnPznEid+s8YJDYC7FV+RlK6CdhmmXEe1vVaaY+R/g
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: base64
 User-Agent: Evolution 3.50.3 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -59,36 +57,38 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 
-On Mon, 2026-01-19 at 22:28 +0800, Tzung-Bi Shih wrote:
-> On Sun, Jan 18, 2026 at 09:45:26AM -0500, James Bottomley wrote:
-> > On Sun, 2026-01-18 at 03:32 +0800, Tzung-Bi Shih wrote:
-[...]
-> > > > =C2=A0
-> > > > =C2=A0static struct class shost_class =3D {
-> > > > @@ -279,11 +278,9 @@ int scsi_add_host_with_dma(struct
-> > > > Scsi_Host
-> > > > *shost, struct device *dev,
-> > > > =C2=A0 goto out_disable_runtime_pm;
-> > > > =C2=A0
-> > > > =C2=A0 scsi_host_set_state(shost, SHOST_RUNNING);
-> > > > - get_device(shost->shost_gendev.parent);
-> >=20
-> > We need a reference to the parent to prevent surprise removal ...
-> > where else is the reference held?
->=20
-> It looks to me the same question as above.=C2=A0 IIUC, device_add() holds
-> a reference count to its parent[3].=C2=A0 Drivers don't need to do it
-> explicitly.
-
-That's not good enough for SCSI: we have a rather complicated state
-model for hosts.  device_add() doesn't occur until the host moves out
-of the SHOST_CREATED state, which can be quite a time after device
-_initialize() so something has to pin the resources until then, which
-is why these references are taken.   You're certainly free to suggest a
-different way of doing this, but you can't just get rid of the existing
-mechanism without replacing it with something else.
-
-Regards,
-
-Jaems
+T24gU2F0LCAyMDI2LTAxLTE3IGF0IDEwOjE5ICswMDAwLCBDaGVuZ2ZlbmcgWWUgd3JvdGU6Cj4g
+QSBwb3RlbnRpYWwgdGltZS1vZi1jaGVjay10aW1lLW9mLXVzZSAoVE9DVE9VKSByYWNlIGNvbmRp
+dGlvbiBpbgo+IHBtODAwMV9maW5kX3RhZygpIHdoZXJlIHRhc2stPmxsZGRfdGFzayBpcyBjaGVj
+a2VkIGZvciBub24tTlVMTAo+IGFuZCB0aGVuIGRlcmVmZXJlbmNlZCB3aXRob3V0IHN5bmNocm9u
+aXphdGlvbiB0byBlbnN1cmUgYXRvbWljaXR5Lgo+IAo+IFNpbmNlIHRoZSBjaGVjayBvZiBOVUxM
+IGFuZCBkZXJlZmVyZW5jZSBpbiBwbTgwMDFfZmluZF90YWcoKSBpcyBub3QKPiBleGVjdXRlZCBh
+dG9taWNhbGx5LCBhIHJhY2UgY291bGQgb2NjdXIgaWYgdGhlIGNhbGxiYWNrIGlzIGV4ZWN1dGVk
+Cj4gaW4KPiByZXNwb25zZSB0byBhbiBlcnJvciBvciB0aW1lb3V0IG9uIGEgU0FTIHRhc2sgaXNz
+dWVkIGZyb20gdGhlIFNDU0kKPiBtaWRsYXllciwgd2hpbGUgdGhlIFNBUyBjb21tYW5kIGlzIGNv
+bXBsZXRlZCBhbmQgY2FsbHMKPiBwbTgwMDFfY2NiX3Rhc2tfZnJlZSgpLCB3aGljaCBzZXRzIHRh
+c2stPmxsZGRfdGFzayB0byBOVUxMLCByZXN1bHRpbmcKPiBpbiBhIG51bGwgcG9pbnRlciBiZWlu
+ZyBkZXJlZmVyZW5jZWQgaW4gcG04MDAxX2ZpbmRfdGFnKCkuCj4gCj4gUG9zc2libGUgcmFjZSBz
+Y2VuYXJpbzoKPiDCoENQVTAgKEVycm9yIEhhbmRsZXIpwqDCoMKgwqDCoMKgwqDCoMKgwqAgQ1BV
+MSAoSW50ZXJydXB0IEhhbmRsZXIpCj4gwqAgLS0tLS0tLS0tLS0tLS0tLS0tLS3CoMKgwqDCoMKg
+wqDCoMKgwqDCoCAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KPiDCoCBbU0NTSSBjb21tYW5kIHRp
+bWVvdXQvZXJyb3JdCj4gwqAgc2FzX3Njc2lfcmVjb3Zlcl9ob3N0KCkKPiDCoMKgwqAgc2FzX3Nj
+c2lfZmluZF90YXNrKCkKPiDCoMKgwqDCoMKgIGxsZGRfcXVlcnlfdGFzaygpCj4gwqDCoMKgwqDC
+oMKgwqAgcG04MDAxX3F1ZXJ5X3Rhc2soKQo+IMKgwqDCoMKgwqDCoMKgwqDCoCBwbTgwMDFfZmlu
+ZF90YWcoKQo+IMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAgaWYgKHRhc2stPmxsZGRfdGFzaykKPiDC
+oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
+wqDCoMKgwqDCoCBbSGFyZHdhcmUgaW50ZXJydXB0XQo+IMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
+oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoCBtcGlfc3Nw
+X2NvbXBsZXRpb24oKQo+IMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
+oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAgcG04MDAxX2NjYl90YXNrX2ZyZWUo
+KQo+IMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
+oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgIHRhc2stPmxsZGRfdGFzayA9IE5VTEwKPiDCoMKg
+wqDCoMKgwqDCoMKgwqDCoMKgIGNjYiA9IHRhc2stPmxsZGRfdGFzawo+IMKgwqDCoMKgwqDCoMKg
+wqDCoMKgwqAgKnRhZyA9IGNjYi0+Y2NiX3RhZwo+IMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAgPC0g
+TlVMTCBkZXJlZmVyZW5jZQo+IAoKSSBkb24ndCBnZXQgaG93IGEgcmFjZSBpcyBwb3NzaWJsZSBo
+ZXJlLiAgQmVmb3JlIHRoZSBxdWVyeSBmdW5jdGlvbgpiZWdpbnMsIHRoZSBzYXMgbG9naWMgY2Fs
+bHMgYWJvcnQgdGFzayBvbiB0aGUgdGFnLCB3aGljaCBtZWFucyB0aGUKY29udHJvbGxlciBzaG91
+bGQgZW5zdXJlIHRoZXJlIGFyZSBubyBmdXJ0aGVyIGNvbXBsZXRpb24gZnVuY3Rpb25zIGZvcgpp
+dCByZWdhcmRsZXNzIG9mIHdoZXRoZXIgdGhlIGFib3J0IHN1Y2NlZWRzIG9yIG5vdC4KClJlZ2Fy
+ZHMsCgpKYW1lcwoK
 
