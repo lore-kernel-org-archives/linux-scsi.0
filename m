@@ -1,94 +1,180 @@
-Received: from lamorak.hansenpartnership.com (lamorak.hansenpartnership.com [198.37.111.173])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f48.google.com (mail-wm1-f48.google.com [209.85.128.48])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BE1362F39D1;
-	Mon, 19 Jan 2026 16:39:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.37.111.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B65B65B1EB
+	for <linux-scsi@vger.kernel.org>; Mon, 19 Jan 2026 16:45:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.48
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768840777; cv=none; b=qdu1BfJSOn/7TZJyRWiKIHjWX0I2m0Hm4+3458Cg4coqQcfCOONsGmzV52UoQf/0UjeqglhdBVZTCzRY3zTq3ISV3dBOK/p7FuyiDFeCHvYxAZ3arOc4LgNRyj/vZCoUzNrLECKGXXy6NhzqunvBhRvINAoNFLZtTESevboDuyo=
+	t=1768841144; cv=none; b=nQbCnrcc6z9siy6gywfBHCUMjQpU5ngSFFm+TGjC/4T+3KctpV1YmAyBReLaFvGjhN2B0JNgNvVZxzQxrfkq629Q0R36zwTnkHqjxbremqQ4VD1ah+4TMUE2OU70W/nmYoEjMPXqoXqCliEdkUI/bDf7Z4TBycJLcuBxuTH3pwA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768840777; c=relaxed/simple;
-	bh=+mcnOIb+dO60vxoYfQEN6bp6fVbl9JRUCQTh/6NLOaA=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=Qnuj0k8tMSVP5eKEwznT5IRKxk0Hn3K0Dmf7FQfFPEd0oZMTHdM/Nu6VxSzt1ibnO1TN1Z34QLMQ71HyLBLjkCPSezwztgSu33BdmDGdPiBzsgAyIO+tnqoQM3uvpa8oc0gfYrqmgMjQCPkLYDACyAQfyC//kGrLVdgA9IfOias=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com; spf=pass smtp.mailfrom=HansenPartnership.com; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=bl1jKUu9; arc=none smtp.client-ip=198.37.111.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=HansenPartnership.com
+	s=arc-20240116; t=1768841144; c=relaxed/simple;
+	bh=B1eb6IqzBDlJFXQ72gfkaNQqbfxnVfEjWlWpYyR3GrQ=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=nYCshUmHci1hoZALGM92i6w2aT/fBIiNBcogUN/rPKwdtBTYkbfkNQ+71d5ei+AFuzONP4atDBglTmSq1LdugHfCuyaSXcRqTkSrShlUnTUEwECU5A5UkvMmz5fuxE0WDyeVYC1lKgw8Q8GpZTc8+KWqOvmmuHeglvfQbJ6aXWE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=grsecurity.net; spf=pass smtp.mailfrom=opensrcsec.com; dkim=pass (2048-bit key) header.d=grsecurity.net header.i=@grsecurity.net header.b=egro4yRk; arc=none smtp.client-ip=209.85.128.48
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=grsecurity.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=opensrcsec.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="bl1jKUu9"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-	d=hansenpartnership.com; s=20151216; t=1768840774;
-	bh=+mcnOIb+dO60vxoYfQEN6bp6fVbl9JRUCQTh/6NLOaA=;
-	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
-	b=bl1jKUu9Sl0qACrrb5WsHGE8QDZSVfZh/QsYNYYc6dz8WLVuC+vZEcn/R0DgAusz2
-	 MGSPU/FQJbgzwemxb/dQhEgAWeStharLXtQ6zXxefDjqICCbuI2dYJagx9d5QcmDsk
-	 5s2g4syzehwIyIy/FbWCyIRUKKtd+rhxAyEAwVvo=
-Received: from lingrow.int.hansenpartnership.com (unknown [IPv6:2601:5c4:4300:d341::a774])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by lamorak.hansenpartnership.com (Postfix) with ESMTPSA id 9415F1C008C;
-	Mon, 19 Jan 2026 11:39:34 -0500 (EST)
-Message-ID: <ae5cae8b3c4e71cf23b6f48453797ac48bea5914.camel@HansenPartnership.com>
-Subject: Re: [PATCH] scsi: pm8001: Fix potential TOCTOU race in
- pm8001_find_tag
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-To: Chengfeng Ye <dg573847474@gmail.com>, "Martin K . Petersen"
-	 <martin.petersen@oracle.com>, Jack Wang <jinpu.wang@cloud.ionos.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Mon, 19 Jan 2026 11:39:33 -0500
-In-Reply-To: <20260117101948.297411-1-dg573847474@gmail.com>
-References: <20260117101948.297411-1-dg573847474@gmail.com>
-Autocrypt: addr=James.Bottomley@HansenPartnership.com;
- prefer-encrypt=mutual;
- keydata=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
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: base64
-User-Agent: Evolution 3.50.3 
+	dkim=pass (2048-bit key) header.d=grsecurity.net header.i=@grsecurity.net header.b="egro4yRk"
+Received: by mail-wm1-f48.google.com with SMTP id 5b1f17b1804b1-4801c2fae63so26943215e9.2
+        for <linux-scsi@vger.kernel.org>; Mon, 19 Jan 2026 08:45:42 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=grsecurity.net; s=grsec; t=1768841141; x=1769445941; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:autocrypt:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:from:to:cc:subject:date:message-id:reply-to;
+        bh=9XcvfZWr2HkEDGryCefoUZ45L6w6hxLADVHa9gQVDP8=;
+        b=egro4yRkSFBU/aBJzONbn0BtALCEEBQdfoQj/TcnTqQAWI5VDsZHLzRKZM1BAm+/ue
+         sj+xzTqM5SftI5QWn/n6pFn8GrwnSKAtznj3K9yFEeAM3rtZYXfdNoE7aAEhNBaKvNK8
+         wUnTzCsu5HHqN7kNEnPi9aB47vJ7axUyp1zWZmj8CcIjo/KTbn5kLp83WYFiYN57DJOO
+         bQS8kve9jt3c3jrCvo0lpNTETfogqODEe+g8aqqKL7OKCbcDyUDZXN98rtytQEbVxctu
+         5bZe0PuYTLslgk00sKYhF96kbQDt/Oo+xYcEW21XKJbjncqDQbTiTJjrTZ/kYd5OdpcN
+         72EQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1768841141; x=1769445941;
+        h=content-transfer-encoding:in-reply-to:autocrypt:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=9XcvfZWr2HkEDGryCefoUZ45L6w6hxLADVHa9gQVDP8=;
+        b=bXETvyBFR6jMY9VPb3ouTSqKH9UlDrbTzsrPOb12tVJeC9nkOpb9Xmb4HVKMy/YFBE
+         8kBxuKQsG7zf0urKglggKRwHIwZXJOjUHULoUmRUcT7FdwEtaOp41ekE0Im5KJU4kJeg
+         3Pj0JzbJaqzlNkuZlq5AAyDhE0+N0p0vAJx+di6eDWaepFyvAaJNULxx0IOfbmMx/dy2
+         EG7zHtTm6qsrFLdv7uEY8J/7upy1hFBadRKk2vkTKuu5Zb2YPaYc3LIdrgoSQzAJ7UUv
+         WkUknKED1uR2pRpFCiAh9jH7IGDDpjovms4BiDTuBO076+65C6UubdCS+ounSKoWfGSC
+         TnVg==
+X-Forwarded-Encrypted: i=1; AJvYcCV55z4WLWQc2hDBPjxNJ40dIGTKoZbqUkmcUPrKCWJkLt0i6U8iFkRwQk4J+kqsszcqXuWhuHSRTAOf@vger.kernel.org
+X-Gm-Message-State: AOJu0YxW0nKOEwcR8SSa93iuybSAJ3AYFkjk6XIrqfGCGIFBGctqbTca
+	yqEfAMv4OwoEbCsylYkq86ehyg6wLC0ZkqNmaaIOajFmXJwJkJdekli2KYvGNZLo78E=
+X-Gm-Gg: AY/fxX4Cuxf2kNkuCz6xYDoh9aQv1sn/k4MaHntF1+1BqCCagOYycqfNkMJqXa/4ZMf
+	kGbnDp3L6HkGElmt+TKhPGt67mIg0zIdAASdUTbu8YGOYZtpuoA4oAD/86VdPRCYhmBX/kyBHXO
+	3TK4EL2Ma6yWGaTDejMh9HrSBkfxXGrAtKmDUrpMPUx5UyHoqU/M3MJ7y7uvEx8KMyWhht1GprC
+	8W3Or3VfYD6G3NMLZyZLcHxcAO8ULZs+p+/YoqHfztfZfIPa4opLJEqQ0BjqTl/YmqipP70QG3/
+	E2Di7h2lOAJLxejIJWtyl/FH0UbPt4xMoR7Jw4OLrsBkCt7WM02S8SWi2dmus33ToaAMVj+7qKd
+	xe6fOmglOYt0mijLTpjCm3cxnoS4qqG4uSjLB04gCXu3Git+6MpzsusQ7EaZaRPIgQ21eaFnVbH
+	g2XUZ3TD5i4E51BHCyYDsJaZPjQ769d5g/JnPRqYyRhS4EnEOe3VwfN8HE+pWfY+ivclBnlbvBH
+	IYFcN1bq5Mb7MvE6DTvvpj5TdFTWfj69RVZHkfSzHZgmTsJ/w==
+X-Received: by 2002:a05:600c:1d1d:b0:480:39ad:3b7c with SMTP id 5b1f17b1804b1-4803bdb88bcmr7081335e9.16.1768841140926;
+        Mon, 19 Jan 2026 08:45:40 -0800 (PST)
+Received: from ?IPV6:2003:fa:af0a:b900:a560:9f31:ade2:1a74? (p200300faaf0ab900a5609f31ade21a74.dip0.t-ipconnect.de. [2003:fa:af0a:b900:a560:9f31:ade2:1a74])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4801e86c1b2sm197523525e9.3.2026.01.19.08.45.40
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 19 Jan 2026 08:45:40 -0800 (PST)
+Message-ID: <59933d92-eefe-49f6-ad70-79fe7aef0f3c@grsecurity.net>
+Date: Mon, 19 Jan 2026 17:45:39 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] scsi: lpfc: Properly set WC for DPP mapping
+To: Justin Tee <justintee8345@gmail.com>
+Cc: Justin Tee <justin.tee@broadcom.com>, Paul Ely <paul.ely@broadcom.com>,
+ linux-scsi@vger.kernel.org, James Smart <jsmart2021@gmail.com>
+References: <20260113222716.2454544-1-minipli@grsecurity.net>
+ <CABPRKS89zwXdUT1Bhj37cQDyOHNupOJ-Ez6kS7Dp_pu06X9Myw@mail.gmail.com>
+ <CABPRKS-ongXPqWVpNYiKvy_afVKn999bxtSEfsBVQ7z5JVCgeQ@mail.gmail.com>
+Content-Language: en-US, de-DE
+From: Mathias Krause <minipli@grsecurity.net>
+Autocrypt: addr=minipli@grsecurity.net; keydata=
+ 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
+ RzDVkdgPJkL/NFTKZHo5foFXNi89kA==
+In-Reply-To: <CABPRKS-ongXPqWVpNYiKvy_afVKn999bxtSEfsBVQ7z5JVCgeQ@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-T24gU2F0LCAyMDI2LTAxLTE3IGF0IDEwOjE5ICswMDAwLCBDaGVuZ2ZlbmcgWWUgd3JvdGU6Cj4g
-QSBwb3RlbnRpYWwgdGltZS1vZi1jaGVjay10aW1lLW9mLXVzZSAoVE9DVE9VKSByYWNlIGNvbmRp
-dGlvbiBpbgo+IHBtODAwMV9maW5kX3RhZygpIHdoZXJlIHRhc2stPmxsZGRfdGFzayBpcyBjaGVj
-a2VkIGZvciBub24tTlVMTAo+IGFuZCB0aGVuIGRlcmVmZXJlbmNlZCB3aXRob3V0IHN5bmNocm9u
-aXphdGlvbiB0byBlbnN1cmUgYXRvbWljaXR5Lgo+IAo+IFNpbmNlIHRoZSBjaGVjayBvZiBOVUxM
-IGFuZCBkZXJlZmVyZW5jZSBpbiBwbTgwMDFfZmluZF90YWcoKSBpcyBub3QKPiBleGVjdXRlZCBh
-dG9taWNhbGx5LCBhIHJhY2UgY291bGQgb2NjdXIgaWYgdGhlIGNhbGxiYWNrIGlzIGV4ZWN1dGVk
-Cj4gaW4KPiByZXNwb25zZSB0byBhbiBlcnJvciBvciB0aW1lb3V0IG9uIGEgU0FTIHRhc2sgaXNz
-dWVkIGZyb20gdGhlIFNDU0kKPiBtaWRsYXllciwgd2hpbGUgdGhlIFNBUyBjb21tYW5kIGlzIGNv
-bXBsZXRlZCBhbmQgY2FsbHMKPiBwbTgwMDFfY2NiX3Rhc2tfZnJlZSgpLCB3aGljaCBzZXRzIHRh
-c2stPmxsZGRfdGFzayB0byBOVUxMLCByZXN1bHRpbmcKPiBpbiBhIG51bGwgcG9pbnRlciBiZWlu
-ZyBkZXJlZmVyZW5jZWQgaW4gcG04MDAxX2ZpbmRfdGFnKCkuCj4gCj4gUG9zc2libGUgcmFjZSBz
-Y2VuYXJpbzoKPiDCoENQVTAgKEVycm9yIEhhbmRsZXIpwqDCoMKgwqDCoMKgwqDCoMKgwqAgQ1BV
-MSAoSW50ZXJydXB0IEhhbmRsZXIpCj4gwqAgLS0tLS0tLS0tLS0tLS0tLS0tLS3CoMKgwqDCoMKg
-wqDCoMKgwqDCoCAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KPiDCoCBbU0NTSSBjb21tYW5kIHRp
-bWVvdXQvZXJyb3JdCj4gwqAgc2FzX3Njc2lfcmVjb3Zlcl9ob3N0KCkKPiDCoMKgwqAgc2FzX3Nj
-c2lfZmluZF90YXNrKCkKPiDCoMKgwqDCoMKgIGxsZGRfcXVlcnlfdGFzaygpCj4gwqDCoMKgwqDC
-oMKgwqAgcG04MDAxX3F1ZXJ5X3Rhc2soKQo+IMKgwqDCoMKgwqDCoMKgwqDCoCBwbTgwMDFfZmlu
-ZF90YWcoKQo+IMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAgaWYgKHRhc2stPmxsZGRfdGFzaykKPiDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoCBbSGFyZHdhcmUgaW50ZXJydXB0XQo+IMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoCBtcGlfc3Nw
-X2NvbXBsZXRpb24oKQo+IMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAgcG04MDAxX2NjYl90YXNrX2ZyZWUo
-KQo+IMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgIHRhc2stPmxsZGRfdGFzayA9IE5VTEwKPiDCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgIGNjYiA9IHRhc2stPmxsZGRfdGFzawo+IMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqAgKnRhZyA9IGNjYi0+Y2NiX3RhZwo+IMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAgPC0g
-TlVMTCBkZXJlZmVyZW5jZQo+IAoKSSBkb24ndCBnZXQgaG93IGEgcmFjZSBpcyBwb3NzaWJsZSBo
-ZXJlLiAgQmVmb3JlIHRoZSBxdWVyeSBmdW5jdGlvbgpiZWdpbnMsIHRoZSBzYXMgbG9naWMgY2Fs
-bHMgYWJvcnQgdGFzayBvbiB0aGUgdGFnLCB3aGljaCBtZWFucyB0aGUKY29udHJvbGxlciBzaG91
-bGQgZW5zdXJlIHRoZXJlIGFyZSBubyBmdXJ0aGVyIGNvbXBsZXRpb24gZnVuY3Rpb25zIGZvcgpp
-dCByZWdhcmRsZXNzIG9mIHdoZXRoZXIgdGhlIGFib3J0IHN1Y2NlZWRzIG9yIG5vdC4KClJlZ2Fy
-ZHMsCgpKYW1lcwoK
+Hi Justin,
 
+On 16.01.26 23:33, Justin Tee wrote:
+> Hi Mathias,
+> 
+>>> I don't have any hardware to test this on. I just got the report from a
+>>> customer of ours regarding the CONFIG_DEBUG_VIRTUAL BUG_ON(). As I don't
+>>> have any spec for the hardware either, I assumed a few things, like:
+>>> 1/ DPP regions are only supported on SIL4 devices.
+>>> 2/ DPP may be shared with other registers (doorbells?) in the same BAR.
+>>
+>> Sure, we’ll have close look at this patch and test on real hardware.
+>> Will report back on our findings.
+> 
+> This patch has been tested on real hardware and I/O is stalled when
+> using DPP.  We can look for an alternative solution.
+
+Hmm, that's bad. However, that makes me think, making the mapping
+write-combining may had been a bad idea from the very beginning?
+
+The thing is, the call to set_memory_wc() won't really do what commit
+1351e69fc6db ("scsi: lpfc: Add push-to-adapter support to sli4") wanted
+it to do. It does change the PTE flags of the mapping, but it operates
+on invalid physical addresses as __pa($VMALLOC_ADDR) just won't work.
+
+Given the time when it was developed, memcpy_{from,to}io() was really
+slow on modern systems as these would simply be memcpy() and that was
+ASM-alternative'd to a 'rep movsb' if the CPU featured X86_FEATURE_ERMS.
+
+However, the LPFC driver already tries to do "big writes" by making use
+of __raw_writeq() instead of memcpy_toio(). That should have solved most
+of the latency issues back then already which makes me think, simply
+dropping the call to set_memory_wc() is probably the next best option.
+
+> 
+> Do we happen to have a dmesg log with the call trace observed?
+
+Unfortunately, we don't. We just have a truncated screenshot with RIP in
+__phys_addr(), code and register dump. The surrounding symbolization of
+register values we have in grsecurity makes it clear, it's lpfc and, in
+fact, the set_memory_wc() call in lpfc_wq_create().
+
+Specifically, it's the call to __pa(addr), which is __phys_addr() under
+CONFIG_DEBUG_VIRTUAL, triggering the VIRTUAL_BUG_ON(... ||
+!phys_addr_valid(x)) which boils down to BUG_ON() under
+CONFIG_DEBUG_VIRTUAL.
+
+> 
+> I plan on attempting to reproduce what the customer is observing by
+> enabling CONFIG_DEBUG_VIRTUAL, and would be helpful to see context
+> from a dmesg log.
+
+Just loading lpfc.ko with enabled CONFIG_DEBUG_VIRTUAL on a DPP
+supported platform should trigger the bug as the set_memory_wc() is
+unconditionally attempted in this case.
+
+Thanks,
+Mathias
+
+> 
+> Regards,
+> Justin
