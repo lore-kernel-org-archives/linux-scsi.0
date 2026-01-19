@@ -1,181 +1,71 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 07FB137418B;
-	Mon, 19 Jan 2026 14:23:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 72AAC37C0FB;
+	Mon, 19 Jan 2026 14:26:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768832624; cv=none; b=D31rkbz4pY/G5omxe7G8QfIewvFRmPEjavspoaeZ4020fUWelnquskteKuxehzslcScqdzUdH7z5/uH2GeqvR/BbsCMiC0KBcnP3wSKudXuKTCvkFoM9cdvTe9W11HORedT/3dYeF5FDxTWTdOjq+OlA4YxRVLlzL6/UpMJ/Ino=
+	t=1768832804; cv=none; b=gG139AjZQZdCdKnCjbUWumvLEcIrPg5npY5QIMHV/r+XXGz7vnvaS11ohpA5LucxxjZ4XkIeVQmjppyHdireeFwj5n3eBnsNNPtZylRoQy+HemS5M8g9ktFSEhghuZOr/23uo5hCn608FmMZyjM0wlzgyGVVDRhVVFyoIccVcqo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768832624; c=relaxed/simple;
-	bh=dXfQL494/dbnQPycNGjgs1u/V0zIWVam8A0eP+0YM2k=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=bIRQDUmXMNQL0ESd32gKdn2AX7XLmaEPrjrPPqoD+V8V0tN+SXeMjBCtvVUoD3hsLMEsR4vCOSnQSU2iHNyBlOcAA5qjav0ln9GcQs55jopwcDpMf0hx3H6sd0Wy9rJxrBk952cqCj4cyodwZaIaqOAxtLa9rpve/+y6vrWBmgo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tsh7yMqr; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1768832804; c=relaxed/simple;
+	bh=zYgPbUIvOI/eIYcLAUkaAfmyJoWuvHhnUe5EkIKG3qQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=IxOmlO0wc6ZCaVRezLgNN6hrmdfzNQymluKLAb31qk0oTA2W894oYMgToRfvgFeibcAvM40xR4NtVl9Q4FKBuXyTIOzosL+kbY3/t0JCw2VNFxqQukLcNBHLP7hwU0tee6RKtKd4hAiw/LbaKfmvvG8lgx6fpXnhszpNKQaOjZw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DmFJt6Mw; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tsh7yMqr"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0C02EC116C6;
-	Mon, 19 Jan 2026 14:23:41 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DmFJt6Mw"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E4941C19424;
+	Mon, 19 Jan 2026 14:26:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1768832623;
-	bh=dXfQL494/dbnQPycNGjgs1u/V0zIWVam8A0eP+0YM2k=;
-	h=From:To:Cc:Subject:Date:From;
-	b=tsh7yMqrpoyp1Bc8xpfh9ifzjxWtFbzyMVL8cK3KeBWjFq0eS+HLR1PSAHLoGpo8Q
-	 977Po1io4kDKXMNs8Ld1Uby8rwES7jIeHwrfZqn10KYpqGK+1flqeTCUoK79Q+01wd
-	 eXOt1XK+tzTK6CTE4/6jUXdJULqM7AjBS9i3LGCE3t7DHosSTO5eJIbezMI16iJud0
-	 jQ/ytzvFlifYkHZ2sqlCkfEDLgFxUnmdHp9n19CYOrcjwYTSqpAZQ/Vcl3UD4pOZyM
-	 8CrwrUihX1cuKaRwK4BnydgrzEYI5majnaGB0FbUqAtFqa/+FYaAhBc0UQtCbD9TXW
-	 lgjuGjgi7twNQ==
-From: Tzung-Bi Shih <tzungbi@kernel.org>
-To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Greg KH <gregkh@linuxfoundation.org>
-Cc: linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	tzungbi@kernel.org
-Subject: [PATCH v2] scsi: core: Don't free dev_name() and hold refcount for parent manually
-Date: Mon, 19 Jan 2026 22:23:06 +0800
-Message-ID: <20260119142306.33676-1-tzungbi@kernel.org>
-X-Mailer: git-send-email 2.51.0
+	s=k20201202; t=1768832804;
+	bh=zYgPbUIvOI/eIYcLAUkaAfmyJoWuvHhnUe5EkIKG3qQ=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=DmFJt6Mw/5KVucLHrqBHkKImBW4D9anZGrDzR7DQ0z+TfTHQjB/JLG3sij3qK0FDT
+	 N9dTP1ieNYwddPogZcPsYykDCnziU7O/cKnIVud/yiOubFUoQVnYPmQJtItcrcPVZ2
+	 P/NPA9bzvx5f1C5FnYmICbzEMk48qXwuD/JnZBKCqAtaL4Dc6+EE8G12Ghjif00rxL
+	 jXxZBvWZ2LCJCPHmFOqiXxiUTtzP8JNcqMbjfILHZAVkRntiN9fvfNRetSN78bClse
+	 HGsElR3adIdLZlThgAqzTg9R+F7H6RkuzWzJAZjLXe5ooCaCtj3cGfsNTp0zmSikOx
+	 95itlDDyxK4LQ==
+Date: Mon, 19 Jan 2026 15:26:39 +0100
+From: Christian Brauner <brauner@kernel.org>
+To: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, 
+	linux-block@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, 
+	linux-nvme@lists.infradead.org, bpf@vger.kernel.org
+Cc: lsf-pc@lists.linux-foundation.org, linux-kernel@vger.kernel.org, 
+	lwn@lwn.net
+Subject: Re: LSF/MM/BPF: 2026: Call for Proposals
+Message-ID: <20260119-bagger-desaster-e11c27458c49@brauner>
+References: <20260110-lsfmm-2026-cfp-ae970765d60e@brauner>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <20260110-lsfmm-2026-cfp-ae970765d60e@brauner>
 
-Drivers shouldn't need to free the device name as the driver core
-handles that automatically.  All it needs to do is dropping the
-reference count of the device.
+> (1) Fill out the following Google form to request attendance and
+>     suggest any topics for discussion:
+> 
+>           https://forms.gle/hUgiEksr8CA1migCA
+> 
+>     If advance notice is required for visa applications, please point
+>     that out in your proposal or request to attend, and submit the topic
+>     as soon as possible.
 
-An intuitive fix is:
->  @@ -373,7 +373,7 @@ static void scsi_host_dev_release(struct device *dev)
->   		 * name as well as the proc dir structure are leaked.
->   		 */
->   		scsi_proc_hostdir_rm(shost->hostt);
->  -		kfree(dev_name(&shost->shost_dev));
->  +		put_device(&shost->shost_dev);
->   	}
->
->   	kfree(shost->shost_data);
+Hey everyone,
 
-However, it doesn't work well.  It generates an underflow on the
-refcount of `&shost->shost_gendev` on errors.  This is what happens:
-- The refcount of `shost_gendev` and `shost_dev` are both 1 after
-  device_initialize().
-- On the error handling path (i.e., "fail" label), it drops refcount of
-  `shost_gendev` to 0.
-- The .release() callback of `shost_gendev` (i.e.,
-  scsi_host_dev_release()) is called, and it drops refcount of
-  `shost_dev` to 0 due to the above change.
-- The .release() callback of `shost_dev` (i.e., scsi_host_cls_release())
-  is called, and it drops refcount of `shost_gendev` again.  The
-  underflow happens.
+This is a reminder to put in your invitation request for LSF/MM/BPF 2026!
 
-A subsequent fix is:
->  @@ -55,7 +55,6 @@ static DEFINE_IDA(host_index_ida);
->
->   static void scsi_host_cls_release(struct device *dev)
->   {
->  -	put_device(&class_to_shost(dev)->shost_gendev);
->   }
->
->   static struct class shost_class = {
+The sooner you do this the easier it is for us to plan and the less time
+we have to spend hunting down missing attendees just weeks prior to the
+event. Unless you're really hankering for the special-snowflake
+experience please do your part and get in your invitation request.
 
-However, it introduces unbalance refcount of `shost_gendev` as
-scsi_add_host_with_dma() increases it but scsi_host_cls_release()
-doesn't drop it with the above change.
+Please also don't forget to pester^wask^wremind your respective
+organizations to consider sponsoring LSF/MM/BPF 2026.
 
-Drivers shouldn't need to hold a reference count to its parent device as
-the driver core automatically holds one in device_add().  Eliminate the
-case for holding refcount of `shost_gendev` to fix the unbalance
-refcount.  Eliminate yet another case for `shost_gendev.parent` as well.
-
-Fixes: b49493f99690 ("Fix a memory leak in scsi_host_dev_release()")
-Signed-off-by: Tzung-Bi Shih <tzungbi@kernel.org>
----
-v2:
-- Provide more context in the commit message.
-- Leave a comment in the empty .release() function.
-
-v1: https://lore.kernel.org/r/20260117193221.152540-1-tzungbi@kernel.org
-
- drivers/scsi/hosts.c | 20 +++++++++-----------
- 1 file changed, 9 insertions(+), 11 deletions(-)
-
-diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-index 1b3fbd328277..7c39e228d72b 100644
---- a/drivers/scsi/hosts.c
-+++ b/drivers/scsi/hosts.c
-@@ -55,7 +55,10 @@ static DEFINE_IDA(host_index_ida);
- 
- static void scsi_host_cls_release(struct device *dev)
- {
--	put_device(&class_to_shost(dev)->shost_gendev);
-+	/*
-+	 * Keep an empty release() to prevent device_release() from emitting a
-+	 * warning.
-+	 */
- }
- 
- static struct class shost_class = {
-@@ -279,11 +282,9 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, struct device *dev,
- 		goto out_disable_runtime_pm;
- 
- 	scsi_host_set_state(shost, SHOST_RUNNING);
--	get_device(shost->shost_gendev.parent);
- 
- 	device_enable_async_suspend(&shost->shost_dev);
- 
--	get_device(&shost->shost_gendev);
- 	error = device_add(&shost->shost_dev);
- 	if (error)
- 		goto out_del_gendev;
-@@ -352,7 +353,6 @@ EXPORT_SYMBOL(scsi_add_host_with_dma);
- static void scsi_host_dev_release(struct device *dev)
- {
- 	struct Scsi_Host *shost = dev_to_shost(dev);
--	struct device *parent = dev->parent;
- 
- 	/* Wait for functions invoked through call_rcu(&scmd->rcu, ...) */
- 	rcu_barrier();
-@@ -366,22 +366,20 @@ static void scsi_host_dev_release(struct device *dev)
- 
- 	if (shost->shost_state == SHOST_CREATED) {
- 		/*
--		 * Free the shost_dev device name and remove the proc host dir
-+		 * Drop the reference to shost_dev and remove the proc host dir
- 		 * here if scsi_host_{alloc,put}() have been called but neither
--		 * scsi_host_add() nor scsi_remove_host() has been called.
-+		 * scsi_add_host() nor scsi_remove_host() has been called.
- 		 * This avoids that the memory allocated for the shost_dev
- 		 * name as well as the proc dir structure are leaked.
- 		 */
- 		scsi_proc_hostdir_rm(shost->hostt);
--		kfree(dev_name(&shost->shost_dev));
-+		put_device(&shost->shost_dev);
- 	}
- 
- 	kfree(shost->shost_data);
- 
- 	ida_free(&host_index_ida, shost->host_no);
- 
--	if (shost->shost_state != SHOST_CREATED)
--		put_device(parent);
- 	kfree(shost);
- }
- 
-@@ -550,8 +548,8 @@ struct Scsi_Host *scsi_host_alloc(const struct scsi_host_template *sht, int priv
-  fail:
- 	/*
- 	 * Host state is still SHOST_CREATED and that is enough to release
--	 * ->shost_gendev. scsi_host_dev_release() will free
--	 * dev_name(&shost->shost_dev).
-+	 * ->shost_gendev. scsi_host_dev_release() will
-+	 * put_device(&shost->shost_dev).
- 	 */
- 	put_device(&shost->shost_gendev);
- 
--- 
-2.51.0
-
+Thanks!
+Christian
