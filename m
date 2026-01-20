@@ -1,40 +1,66 @@
-Received: from bali.collaboradmins.com (bali.collaboradmins.com [148.251.105.195])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ej1-f46.google.com (mail-ej1-f46.google.com [209.85.218.46])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 80EB33A89A7;
-	Tue, 20 Jan 2026 09:43:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.251.105.195
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 44B5E2BEC30
+	for <linux-scsi@vger.kernel.org>; Tue, 20 Jan 2026 12:19:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.46
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768902215; cv=none; b=UqeEAMpBN11MsrP7bMwN7MtA4Wsje3y9uodxwRnBQyS+kwjLKtnohQLuqcXpsetX07j5Ir8I/uuLmN9oxBpDYPLwCq8N6K6DXZPUI+n2vMY4/k2JS0m0Ujh2GsurBAjrkD0+g4jGCU1M3qR6NqT3u2MKjwrse9A8T93WZTe8Cek=
+	t=1768911564; cv=none; b=LDf+AyHEDxOtR1lKo0C12YmfX6DMQGc8078mUZcQkWGf7euk2eVdAAnqWIGRZibUeKdr4sCGyHnQEI0lJSGiXPzmc3T4e+08QKLwpz0t9HtDr1ATCxoqJL3pxFlcEs/elFtjYkhynj4dLxZL2mwPaeZd7Voax4JTvSy4FVZbhbo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768902215; c=relaxed/simple;
-	bh=cFmtw+W0nIPjyA9JXnCJ34TLkLN51eHKUkL0cw7+gFs=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=VgHRgvIImaR9lwW2OuuOuq8Pyat6x/eIQiWV+sY5+DJnTT6kIGFSY+u97SMlSsp1hYe7x4Bcid9TDIOxVoZSRFl1fqLCKcz5oVqQDN5jsKBjckQMdMcqqMqBpdOE9o7yjs6i98B7cWfxnATDcCtwigjvKlEyZxDEC+SfF2fESzo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b=aJf6ki/5; arc=none smtp.client-ip=148.251.105.195
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collabora.com
+	s=arc-20240116; t=1768911564; c=relaxed/simple;
+	bh=2KvCyCocUvhozP0lgfo4QP6VQ+LksXXCA70hLkKAC+M=;
+	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=UPgFDBaOR1kzKM27EpXp1eRvWrNXTqImpqicPgQakMs3gSoSu5Qil0k6e0rdo4ZYv7aUrw6s2E6Oyb1TG1Bg6nnM4YTtVcODwo1LZM1uq7IXjLMYhE4yyi6ME8SJSpjvqCTR6yz20iC4w6H7VQ7PWqDQYMiGp8EWQ3sLeiJHGa0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=hCXhxA1C; arc=none smtp.client-ip=209.85.218.46
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b="aJf6ki/5"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=collabora.com;
-	s=mail; t=1768902211;
-	bh=cFmtw+W0nIPjyA9JXnCJ34TLkLN51eHKUkL0cw7+gFs=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=aJf6ki/55o9knlTHmfUazfZ+yXtr8Aw7sNER1HrKmXGGtA57yT7kPoc1Sn+kz30iz
-	 mGJoCamBbqY+HYJ0ltn/pgn6zRhCaK2nMrMgqGG4rI30O0xzbtrzPZJpYZnW2sJ/Zy
-	 nC/6gjaBFSUnc0pSjDic7VxOFBXmGZYFT/BaVDriwRu9OdtUlgkG9Qn8drbBqxAfw9
-	 KCsNLvo4KRWqXSHqZLQtfEeGt17ta1ZWgR6NXHLjKD5S2zU2hkCwKNvyaWzHc7JtWb
-	 cFeBc6eKGSBkjd6wpWnPgYGxX2myF//YDwVD4YbO7f1KMXiWJjwR95tsP8ujPxB7Fb
-	 x1A9PUrSKfZ4w==
-Received: from [192.168.1.100] (2-237-20-237.ip236.fastwebnet.it [2.237.20.237])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: kholk11)
-	by bali.collaboradmins.com (Postfix) with ESMTPSA id 49F3F17E0CF3;
-	Tue, 20 Jan 2026 10:43:30 +0100 (CET)
-Message-ID: <c3878cb0-cf37-41a3-a875-cf8f2a604b0c@collabora.com>
-Date: Tue, 20 Jan 2026 10:43:29 +0100
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="hCXhxA1C"
+Received: by mail-ej1-f46.google.com with SMTP id a640c23a62f3a-b876c0d5318so715008466b.0
+        for <linux-scsi@vger.kernel.org>; Tue, 20 Jan 2026 04:19:23 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1768911562; x=1769516362; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:content-language:from
+         :references:to:subject:user-agent:mime-version:date:message-id:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=bTlH6sfXE1zg5nhlIgaNXQfsuF1mmB4Q6IbEq4Q5plo=;
+        b=hCXhxA1C3MO/MGTe9gpm+glp8alCQpzSdH7ovE+HO+kyvOEVjBDQDymhzORRQb/T8g
+         ms8LzfRFjTEtlzd2AFmdztgXiTvwQYNGbo4RLWMhxdNMq3S6fPG2agPGFQGql/L4GLFd
+         yrt8VObRIlVXy4gbIG1N0mzGk3Fba8hNiaSCLDk64rWV4qgZnoJ7goMIoJrZesTFclul
+         6btS1Y4hLNmqLPnLgG68GN9HxT1LlgcPKc535Gyu7AgELvaPQ7JzGqGl265HjC3SSCSR
+         OsQfXnXNGCJuSHOJIpzVNsk07mV/p7VCK3LzRotYi+xavHRyeS0LpVYjsjsPk2QrFh+N
+         NwBQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1768911562; x=1769516362;
+        h=content-transfer-encoding:in-reply-to:content-language:from
+         :references:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=bTlH6sfXE1zg5nhlIgaNXQfsuF1mmB4Q6IbEq4Q5plo=;
+        b=svSdpcGPTX2/tcenXxibVwrqbCQIgWUml/15b2QL+ASAJwtPHapymT8oUJ2ySOqP/s
+         YDQns7LpshAsIUmEQ4zgK99XnZlPDGte1HmWIE+qjyeBNn/U5OsyX3LuL1Kj8mhJGO8q
+         G6m5gbyTdzXpYBV2rGYfr6vortQeYk/qdk4l515Fqqyl5yG2tPwK6RHlPpVW2EAq4VN1
+         Kb/qTvRGDla4tJUFsMYtSVHQh3CwtsuuRV0yv8PFQxNVmQhSw6YtTrSvGQhslE1kToLv
+         rGH1HHVdLS9Qa7lryALrfNZfFA6k/4TvENN3qa9P2q1QE6y+D3JF+udtn6afUg0c3I4T
+         KPUA==
+X-Forwarded-Encrypted: i=1; AJvYcCVqCZmCffvFxqn7ox8S16cxeTt7hb0hv8wtfaSk5ObWQgmFEMcoXkUXIPUQjAWN/jlIYlEFDe33khtj@vger.kernel.org
+X-Gm-Message-State: AOJu0YwO/Ye5Nm7vbZ0c9oblIXsr8z2dC+yVL5Gv67QgHs9GL5wUTILK
+	wrp+VU1bK0+5U/i4sqHRlKcGosC/K75YgL1gA0ukTGGqWmJuFzYzywrp4RMk6A==
+X-Gm-Gg: AZuq6aKMln4x/ichY3yzR9mQG53de9HvLOWmNmfU9APJKT1FrxtAvqv+4CvLVfWvp2o
+	GBpq17pHkBqTdmb8uKGaPM+a3VPTewMJXgzZ5hHchHY7n7vMYkCsevXwHn1jjtUZ6scf7EhZ/Cd
+	7k+FrajwEx+qlwjBVXVopVXqWzdpiHXBHMb96a5+B4JhdyVva0CBsT9JgAFzdDiLj/sot123xZ5
+	tZOwCe98nWq9SqSw933Ii86vREPUVu0/GrJ7xzp1BhsGwQYR89a01fLnuxMdESLxTZFa7LVlALt
+	l7rVfyI8mGDM2hz/Km7O2Ih1WQ59kCBLPBYGN7r4u7osHYatbjc0VT02ciSVNXXk1H7dUfNBjel
+	GY+lOhVr66aUBZZg23OvPzP6GOOCZmZfvYr+mPxZlAE/6SXtjvUS0RdJv2cUzbAD3/1HnV+qdUH
+	b9SxDk7skgfJtbdJU7kqpBmpf+JJW/nWnSOlC29Q==
+X-Received: by 2002:a17:907:94c8:b0:b87:28f7:d3b6 with SMTP id a640c23a62f3a-b8800260af7mr140708966b.19.1768911561198;
+        Tue, 20 Jan 2026 04:19:21 -0800 (PST)
+Received: from [172.16.40.202] ([193.207.183.155])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-b8795168e6asm1466245466b.22.2026.01.20.04.19.19
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 20 Jan 2026 04:19:20 -0800 (PST)
+Message-ID: <04811e0b-efc5-47ff-ac16-a97f49280bb7@gmail.com>
+Date: Tue, 20 Jan 2026 13:19:18 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -42,85 +68,142 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5 11/24] scsi: ufs: mediatek: Rework probe function
-To: =?UTF-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= <peter.wang@mediatek.com>,
- "chu.stanley@gmail.com" <chu.stanley@gmail.com>,
- "robh@kernel.org" <robh@kernel.org>,
- =?UTF-8?B?Q2h1bmZlbmcgWXVuICjkupHmmKXls7Ap?= <Chunfeng.Yun@mediatek.com>,
- "kishon@kernel.org" <kishon@kernel.org>,
- "James.Bottomley@HansenPartnership.com"
- <James.Bottomley@HansenPartnership.com>,
- "bvanassche@acm.org" <bvanassche@acm.org>,
- =?UTF-8?B?Q2hhb3RpYW4gSmluZyAo5LqV5pyd5aSpKQ==?=
- <Chaotian.Jing@mediatek.com>, "conor+dt@kernel.org" <conor+dt@kernel.org>,
- "lgirdwood@gmail.com" <lgirdwood@gmail.com>,
- "nicolas.frattaroli@collabora.com" <nicolas.frattaroli@collabora.com>,
- "vkoul@kernel.org" <vkoul@kernel.org>,
- "krzk+dt@kernel.org" <krzk+dt@kernel.org>,
- "p.zabel@pengutronix.de" <p.zabel@pengutronix.de>,
- "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
- "krzk@kernel.org" <krzk@kernel.org>,
- "neil.armstrong@linaro.org" <neil.armstrong@linaro.org>,
- "matthias.bgg@gmail.com" <matthias.bgg@gmail.com>,
- "avri.altman@wdc.com" <avri.altman@wdc.com>,
- "broonie@kernel.org" <broonie@kernel.org>,
- "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
- "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- "linux-arm-kernel@lists.infradead.org"
- <linux-arm-kernel@lists.infradead.org>,
- "linux-phy@lists.infradead.org" <linux-phy@lists.infradead.org>,
- "linux-mediatek@lists.infradead.org" <linux-mediatek@lists.infradead.org>,
- Louis-Alexis Eyraud <louisalexis.eyraud@collabora.com>,
- "kernel@collabora.com" <kernel@collabora.com>
-References: <20260108-mt8196-ufs-v5-0-49215157ec41@collabora.com>
- <20260108-mt8196-ufs-v5-11-49215157ec41@collabora.com>
- <81ed17eb-2170-4e97-b56d-488b5335ff5c@kernel.org>
- <dd2eba99adaddf7517f06acf7805d32e261fafa4.camel@mediatek.com>
- <87887adf-2c94-48c2-8f83-4e772ab50f60@kernel.org>
- <e9a6da3998195b9dbda5abd26bc6dd5d3aca07ff.camel@mediatek.com>
- <66ca211a-c909-4d0c-a22c-9cbd3489d372@kernel.org>
- <46cb450f92887ceba07614dc85ed495f6af7f602.camel@mediatek.com>
- <26c68bb1-1e63-4b47-babc-21ae27e3205e@collabora.com>
- <74944c55418976375955430d27ac568149d555f1.camel@mediatek.com>
-From: AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
+Subject: Re: Sd card race on resume with filesystem errors (possible data
+ loss?)
+To: Bart Van Assche <bvanassche@acm.org>, linux-scsi@vger.kernel.org
+References: <3bb03946-eb11-4e28-a72b-e958833bb5cc@gmail.com>
+ <fe070d43-f9b2-45b2-95d8-477154b28dea@acm.org>
+From: Sergio Callegari <sergio.callegari@gmail.com>
 Content-Language: en-US
-In-Reply-To: <74944c55418976375955430d27ac568149d555f1.camel@mediatek.com>
+In-Reply-To: <fe070d43-f9b2-45b2-95d8-477154b28dea@acm.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 
-Il 13/01/26 08:26, Peter Wang (王信友) ha scritto:
-> On Mon, 2026-01-12 at 16:02 +0100, AngeloGioacchino Del Regno wrote:
->> No, MediaTek's reset hardware implementation is not the same as Texas
->> Instruments.
->> It was *very similar* to TI in the past (years ago, around the MT6795
->> Helio
->> generation times).
->>
->> MediaTek's reset controller - by hardware - is definitely different
->> from the one
->> found in TI SoCs.
->>
->> Regards,
->> Angelo
+
+
+On 09/01/2026 21:57, Bart Van Assche wrote:
 > 
-> I did not notice this change.
-> Will you be helping to upstream MediaTek's reset controller instead of
-> TI's?
+> Please post the patch on the linux-scsi mailing list if you want it
+> included in the upstream kernel.
 > 
 
-The main reset controllers are already integrated in clock drivers since
-... well, years ago.
+Hi and thanks.
+Before posting the patch, I would like to provide more info about the 
+situation. This is what I am experiencing after resume from sleep (as 
+seen on the system logs):
 
-If there's any additional reset controller that is missing, and special to
-UFS, and that's not in the UFS clock driver, yes we can upstream that.
+These are the lines that follow "PM: suspend exit"
 
-Cheers,
-Angelo
+Jan 19 11:56:43 coccobill kernel: sd 2:0:0:0: [sda] tag#0 device offline 
+or changed
+Jan 19 11:56:43 coccobill kernel: I/O error, dev sda, sector 2470304 op 
+0x1:(WRITE) flags 0x1800 phys_seg 2 prio class 1
+Jan 19 11:56:43 coccobill kernel: BTRFS error (device dm-0): bdev 
+/dev/mapper/luks-7223e129-f73a-4877-98fc-bc00384ce937 errs: wr 1, rd 0, 
+flush 0, corrupt 0, gen 0
+Jan 19 11:56:43 coccobill kernel: BTRFS error (device dm-0): bdev 
+/dev/mapper/luks-7223e129-f73a-4877-98fc-bc00384ce937 errs: wr 2, rd 0, 
+flush 0, corrupt 0, gen 0
+Jan 19 11:56:43 coccobill kernel: sd 2:0:0:0: [sda] tag#0 device offline 
+or changed
+Jan 19 11:56:43 coccobill kernel: I/O error, dev sda, sector 337600 op 
+0x1:(WRITE) flags 0x1800 phys_seg 3 prio class 1
+Jan 19 11:56:43 coccobill kernel: BTRFS error (device dm-0): bdev 
+/dev/mapper/luks-7223e129-f73a-4877-98fc-bc00384ce937 errs: wr 3, rd 0, 
+flush 0, corrupt 0, gen 0
+Jan 19 11:56:43 coccobill kernel: BTRFS error (device dm-0): bdev 
+/dev/mapper/luks-7223e129-f73a-4877-98fc-bc00384ce937 errs: wr 4, rd 0, 
+flush 0, corrupt 0, gen 0
+Jan 19 11:56:43 coccobill kernel: BTRFS error (device dm-0): bdev 
+/dev/mapper/luks-7223e129-f73a-4877-98fc-bc00384ce937 errs: wr 5, rd 0, 
+flush 0, corrupt 0, gen 0
+Jan 19 11:56:43 coccobill kernel: sd 2:0:0:0: [sda] tag#0 device offline 
+or changed
+Jan 19 11:56:43 coccobill kernel: I/O error, dev sda, sector 346752 op 
+0x1:(WRITE) flags 0x1800 phys_seg 3 prio class 1
+Jan 19 11:56:43 coccobill kernel: BTRFS error (device dm-0): bdev 
+/dev/mapper/luks-7223e129-f73a-4877-98fc-bc00384ce937 errs: wr 6, rd 0, 
+flush 0, corrupt 0, gen 0
+Jan 19 11:56:43 coccobill kernel: BTRFS error (device dm-0): bdev 
+/dev/mapper/luks-7223e129-f73a-4877-98fc-bc00384ce937 errs: wr 7, rd 0, 
+flush 0, corrupt 0, gen 0
+Jan 19 11:56:43 coccobill kernel: BTRFS error (device dm-0): bdev 
+/dev/mapper/luks-7223e129-f73a-4877-98fc-bc00384ce937 errs: wr 8, rd 0, 
+flush 0, corrupt 0, gen 0
+Jan 19 11:56:43 coccobill kernel: sd 2:0:0:0: [sda] tag#0 device offline 
+or changed
+Jan 19 11:56:43 coccobill kernel: I/O error, dev sda, sector 373120 op 
+0x1:(WRITE) flags 0x1800 phys_seg 1 prio class 1
+Jan 19 11:56:43 coccobill kernel: BTRFS error (device dm-0): bdev 
+/dev/mapper/luks-7223e129-f73a-4877-98fc-bc00384ce937 errs: wr 9, rd 0, 
+flush 0, corrupt 0, gen 0
+Jan 19 11:56:43 coccobill kernel: sd 2:0:0:0: [sda] tag#0 device offline 
+or changed
+Jan 19 11:56:43 coccobill kernel: I/O error, dev sda, sector 378528 op 
+0x1:(WRITE) flags 0x1800 phys_seg 3 prio class 1
+Jan 19 11:56:43 coccobill kernel: BTRFS error (device dm-0): bdev 
+/dev/mapper/luks-7223e129-f73a-4877-98fc-bc00384ce937 errs: wr 10, rd 0, 
+flush 0, corrupt 0, gen 0
+Jan 19 11:56:43 coccobill kernel: sd 2:0:0:0: [sda] tag#0 device offline 
+or changed
+Jan 19 11:56:43 coccobill kernel: I/O error, dev sda, sector 378848 op 
+0x1:(WRITE) flags 0x1800 phys_seg 4 prio class 1
+Jan 19 11:56:43 coccobill kernel: sd 2:0:0:0: [sda] tag#0 device offline 
+or changed
+Jan 19 11:56:43 coccobill kernel: I/O error, dev sda, sector 389600 op 
+0x1:(WRITE) flags 0x1800 phys_seg 3 prio class 1
+Jan 19 11:56:43 coccobill kernel: sd 2:0:0:0: [sda] tag#0 device offline 
+or changed
+Jan 19 11:56:43 coccobill kernel: I/O error, dev sda, sector 390016 op 
+0x1:(WRITE) flags 0x1800 phys_seg 6 prio class 1
+Jan 19 11:56:43 coccobill kernel: sd 2:0:0:0: [sda] tag#0 device offline 
+or changed
+Jan 19 11:56:43 coccobill kernel: I/O error, dev sda, sector 2434752 op 
+0x1:(WRITE) flags 0x1800 phys_seg 3 prio class 1
+Jan 19 11:56:43 coccobill kernel: sd 2:0:0:0: [sda] tag#0 device offline 
+or changed
+Jan 19 11:56:43 coccobill kernel: I/O error, dev sda, sector 2443904 op 
+0x1:(WRITE) flags 0x1800 phys_seg 3 prio class 1
+Jan 19 11:56:43 coccobill kernel: sd 2:0:0:0: [sda] tag#0 device offline 
+or changed
+Jan 19 11:56:43 coccobill kernel: sd 2:0:0:0: [sda] tag#0 device offline 
+or changed
+Jan 19 11:56:43 coccobill kernel: sd 2:0:0:0: [sda] tag#0 device offline 
+or changed
+Jan 19 11:56:43 coccobill kernel: sd 2:0:0:0: [sda] tag#0 device offline 
+or changed
+Jan 19 11:56:43 coccobill kernel: sd 2:0:0:0: [sda] tag#0 device offline 
+or changed
+Jan 19 11:56:43 coccobill kernel: BTRFS: error (device dm-0) in 
+btrfs_commit_transaction:2535: errno=-5 IO failure (Error while writing 
+out transaction)
+Jan 19 11:56:43 coccobill kernel: BTRFS info (device dm-0 state E): 
+forced readonly
 
-> Thanks
-> Peter
-> 
+In this case the errors are serious enough to cause btrfs to get to RO mode.
 
+Let me recall that sda is my sd-card that works with the usb-storage 
+module, and that I have layered btrfs over luks encryption on it.
+
+The errors are related to the resume from sleep as they come out *only* 
+after "PM: suspend exit". There are no errors for the device in normal 
+operation.
+
+Before getting to the patch, I have also made more experiments:
+
+- Trying to modify the usb-storage delay_use parameter has no effect on 
+the issue.
+
+This looks strange to me since this parameter should specifically 
+control how much time the kernel waits before using the sd-card on my 
+system.
+
+Trying to modify the /sys/block/sda/events_poll_msecs also makes no 
+difference at all (normally it is -1, I have tried to change that from 
+100 ms to 2 s).
+
+Thanks for the attention,
+
+Best
+Sergio
 
