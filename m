@@ -1,214 +1,157 @@
-Received: from mail-pl1-f175.google.com (mail-pl1-f175.google.com [209.85.214.175])
+Received: from mail-wm1-f44.google.com (mail-wm1-f44.google.com [209.85.128.44])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 46F2F3009D4
-	for <linux-scsi@vger.kernel.org>; Mon, 19 Jan 2026 18:51:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.175
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8F401322B6C
+	for <linux-scsi@vger.kernel.org>; Tue, 20 Jan 2026 03:19:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.44
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768848661; cv=none; b=TB5T30+I40FZ1aR598UUBE9qtUk3M41N4HcUF+PHC2hxgjxXRZKgBU9MiKM486yjLI5rLq1FRXmsbupscl4aiLs95LKtuDfdTT8yK0WqDDvcHrIPgepZP2zQox5U90QxfTK4dkFmxsgMmiROaXh4Vz7mfS9qTnW8OtqSe4MJiuQ=
+	t=1768879188; cv=none; b=qZadvhNHFG61xllbQoA7b2TP6Km4c2pM15HhsKpcnF2oMOh+ZwizdWlAY3nt6LVpsMDp0TB6RezOlNIi/bBn18jwYG6OdHEfAd97JVpqtJdroVN6pdleFR12TbOM5SUiLWIHck4HqJemcTqt2CkO5ugYDphrnUuI/5mMRB07VFw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768848661; c=relaxed/simple;
-	bh=GPBh2qWpyCXo1XUshP2C3TdOgUMqV76uDwXWffPXuuQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=XNN8bfvr1UgVdE/0cZ/NaE2azhs5ugD2ZRI0Ohz/+UaYFLd91db4M1s+Z66hqpQeDmxvUpnFdW8i5aDsXegaqespkg9RDiMAaFjDMDV3oZOTMcriQl44Y2PWdglnf9sSusLIqeQ88hRp9wvDdMxEfccPld+qRRy7V0lq5ZzxW6A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=WZjKvKup; arc=none smtp.client-ip=209.85.214.175
+	s=arc-20240116; t=1768879188; c=relaxed/simple;
+	bh=uij0KN5FGYZqSIsR8p7toWwEIkqJUz3ny8m9h26hNWQ=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=WeeqzVS3xCRWhb4TSRYlPcl/H0Kzp15YoPtbpnYlSX5CYRTbhmstQ2Za5ZQr+ZYe0f8VrMf7q8LCI+tgd/PKr/UOdmKwt+9x00r+/VFuDzVhYrk80hdlmmo+xm2PdIAWNxtKynHWjjoDXaZbLuazSB2J83a1WTEu7taa+wcpXYA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=fGL+tema; arc=none smtp.client-ip=209.85.128.44
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="WZjKvKup"
-Received: by mail-pl1-f175.google.com with SMTP id d9443c01a7336-2a09d981507so34833545ad.1
-        for <linux-scsi@vger.kernel.org>; Mon, 19 Jan 2026 10:51:00 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="fGL+tema"
+Received: by mail-wm1-f44.google.com with SMTP id 5b1f17b1804b1-47ee66dab14so3842335e9.3
+        for <linux-scsi@vger.kernel.org>; Mon, 19 Jan 2026 19:19:46 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1768848660; x=1769453460; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=ELu77MSHMdAJE1MG9u8LT8LbmE4aGm6DlWdwArp/Ogc=;
-        b=WZjKvKup1JTHlU0is7A755AnqUDaFJnuJ7BlYKWTAK6s/3B5/VgzpQtbvuMlioFTEL
-         a7VVI2sd3E7Pk+KxSqCVoRbvKPqZO7ATFU7BMk+nFTEYkF1AhyFprLpTfBjLQp2XyLTB
-         y7CnBjFoJejdcSvQXhxoESKBI62eXIYN4zDM6xqV5eDMfJpVJ2fJkVlO09mmx4ylpru0
-         RZ2Lc7B0NiEkVQgSNv/Fg6WCPmgtMFqpdavO7Y1347mL8/thW/fetKhh01WW3FZFjTtj
-         fTIL+aQiEWp+SqCAJtD7sggHhq8iXPT95gMdsSHPO+XxOxfzNtTpwmdZmgzwcIQ+Dg2f
-         UxoQ==
+        d=gmail.com; s=20230601; t=1768879185; x=1769483985; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=kDwHwfelgnuqMlLe+3UV/JtqzPKh28ncR9YWuP7/5MQ=;
+        b=fGL+temaqD7jhjQEaijDWZzDe+oCTTgMW1HcgMdo4viXAElJh+oKiIGiuCvb5ACvzC
+         LCfgVmsFoxm5r7kkgPbZTXwKS99cM7NiiwtSacpoh/XgPPro10vG+N+L9fBUNIlAWn/T
+         H1ZPkb5cntMlEI0+XYoJY+gOaeFyuQUhgmAdtKwu8JFLUg0QjZX8BuDwUQAZJsQbKO4a
+         pdqLA/JHIAmgCFS0QzfOcFp7Pu3T9fr5QpawxYj3ngTXU+lgkctd/4WRUcoafjRtuzAA
+         rrY4GcrEwH382ig5Vq7QDu9S75C73mlHx1niCPaFOcWk0NMHr65iMYxzKXZWKBAQIQL3
+         sUbQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1768848660; x=1769453460;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=ELu77MSHMdAJE1MG9u8LT8LbmE4aGm6DlWdwArp/Ogc=;
-        b=aRKBZpu2h1GIo2ztcOHAMGUSDIlA5qWjlUVixEvJjz0e2RGp1hDBRt6uxSc8htRy4Q
-         TWQBtZ7ELEw2KL1xIFoFcrj50gGCFy+LSLTNoJMwmnQ8xn3HV+31Enl/QmmpTSPqPxEa
-         zqndze+NghjTH7nquTOC5XqF+39x4GnI6OelJ7voTyyTNEgXMgOZ+9tybBXNXbVM63FV
-         wm+767I1d0YIAtKAJPQKqe3WVi0joFIFm28X03zaWWOo4PCiyncBSZKwKR3aGFxh6ZvR
-         tXIt0oCvAzixUeLxwzuTPGrLiMylYLb9H0rOvdMXMfGPQGgfHznAYobcK42AYxA6enYr
-         6YxA==
-X-Forwarded-Encrypted: i=1; AJvYcCWC9PckrXnLodk4ijc8lMAmtRL7I4T0q7ienv02JAw/zzGQo3gxFvLe7fzdrNcdWHjtiphA3Ij/a3Xj@vger.kernel.org
-X-Gm-Message-State: AOJu0YxLyIwHlQwgcUaQKQ2pCjerWZPdoJhiXvksUfT9GGT2GtOIYAY7
-	obZYLqsBy+S2O9j+AosdYMua5W9LegjUr07axtea/IONScdggBIWHWfW
-X-Gm-Gg: AZuq6aL2i3V9or6auxhAik5zM6kc3Py/IlajZRwmaeHamWsM0RCN6j/Tj7/WC5JeBex
-	bYlEXTu6Q2XNDzBPnTi1NOaaAdBhsPzhJEMnAep4Si+0yXgVqCkRp6pboRnz02Ek1hVgUI67lfK
-	WdDDOAK7Kub1TP1gngle8G3eJ/AaVI74Ftgxl60LSxjyP3teIrCYjpz4kPGPlsJPdcAGN2sO0Cj
-	YeCksftauZtK0RuVMOWP82QWkm6Jg8OcbykRGtyBrATq2P0aDaRCCeOIMvOhKPiVBYoMtEvpyXM
-	IX6SFES4Z43ExZcUTapW4UPP4j2TN4LeGpnJhYT8RYq7Ha8+JShnRb/Ck7Aqq0iNlHhgPbPYBk7
-	ybeY2iBvrDkFNKmYdExHgMYePCcbIWi3xI4zQxeZzBLn96XbJY8LCPe/gdWy7MEaVEDP54frvpp
-	6zbCoSws+kMa0=
-X-Received: by 2002:a17:902:ebc8:b0:2a0:9238:881d with SMTP id d9443c01a7336-2a700a1c29fmr150358455ad.15.1768848659415;
-        Mon, 19 Jan 2026 10:50:59 -0800 (PST)
-Received: from inspiron ([111.125.231.221])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2a71941b915sm102107895ad.90.2026.01.19.10.50.54
+        d=1e100.net; s=20230601; t=1768879185; x=1769483985;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=kDwHwfelgnuqMlLe+3UV/JtqzPKh28ncR9YWuP7/5MQ=;
+        b=hA9BpYNSvLLSq1nOgHYgdyUvDR2vTXGbAOcfUhAHQZazBltYgd4nnZoc2d4t/fvMNx
+         RKxqewOVVaqeLqsmwWwg5R//JJ9u2X6+966Nq17VtV8acdSvbREFeE8uEEHvFnJRe3BQ
+         sObNG9vLgH8EN9SnMaSlCmIpqsfFwYav+pQ79Z+VhqZ2OXSEi89GQHc2SZnsmXTphUC4
+         XfLKWENUDdAfb3MH8YZWTt2710xMb44uYbrgQvv8TN9BAK+WZqDH+y2QL1ZzCNtnSS17
+         QKwsKz/WqXF5NCIsjZhk+GcPW0VEtNaLS0V2HrVGkpAa//Tp7VCO9AQJK/CzBFuIZA4b
+         /bbw==
+X-Gm-Message-State: AOJu0YwqMiPNKjDP1OS/tTdJUcNJXT2Rbh27x+9ThgpjiAxm8pdt22og
+	em4RgsVwln5eweBy1cumrHIJ46KrrDnz7vh60Pn2vd5B3dmXIEi/1zgv
+X-Gm-Gg: AY/fxX5wDriDozA+CsoLwBhoCMIbQItR/0/w8Gq6ZuQwhWFMm7GY4RhJsZdD2FUk8MV
+	fhn8s2CKSil9B3WTPYaX8liNOw9gu/Eu8XOB4HjHlighu24bzMhsOWpFcqBZe7QKOFZqshUnA5L
+	EENsK5f6NUcTWG/sMVQGuesYrUFnzYRsMfWsmUUIBXu6ar7cDjh+L5ZLjvhDCXeHq66n6ERviUx
+	izcPlh3gnXFLLaCyTXrrz0ZmV5MFeqZk2+MVcRfbFBLkmklYvzYaHjNUfSe4yQ192QqtGcMfo5y
+	lz3kiOKLQV1gFNZ2XU8w1ALMjlSzM1M2YyuktvVEeURmoC92l5xR+bVk/9oecGEJMs8Kd42sBF3
+	zfcEywnGAJyWp+PPDhg3BZ26RkFgxmxKnrxjsF2iadtOpreT0cy16PQtYjgGzVZLIjjsWlEZAgt
+	LZ/ve0rwOzEtYyX2ezQlpgyxSThs/kKSqFs5VpFypgZoSaIsC+aqXB4W8E5aIrbOmFQjwMUw==
+X-Received: by 2002:a05:600c:3483:b0:471:3b6:e24 with SMTP id 5b1f17b1804b1-4801e34fabfmr89913465e9.8.1768879184596;
+        Mon, 19 Jan 2026 19:19:44 -0800 (PST)
+Received: from 3ce1e5d2d1b2.cse.ust.hk (191host009.mobilenet.cse.ust.hk. [143.89.191.9])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-47f428acae8sm280541095e9.4.2026.01.19.19.19.41
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 19 Jan 2026 10:50:59 -0800 (PST)
-Date: Tue, 20 Jan 2026 00:20:49 +0530
-From: Prithvi <activprithvi@gmail.com>
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-	target-devel@vger.kernel.org, linux-kernel@vger.kernel.org,
-	hch@lst.de, jlbec@evilplan.org, linux-fsdevel@vger.kernel.org,
-	linux-kernel-mentees@lists.linux.dev, skhan@linuxfoundation.org,
-	david.hunter.linux@gmail.com, khalid@kernel.org,
-	syzbot+f6e8174215573a84b797@syzkaller.appspotmail.com,
-	stable@vger.kernel.org
-Subject: Re: [PATCH] scsi: target: Fix recursive locking in
- __configfs_open_file()
-Message-ID: <20260119185049.mvcjjntdkmtdk4je@inspiron>
-References: <20260108191523.303114-1-activprithvi@gmail.com>
- <2f88aa9b-b1c2-4b02-81e8-1c43b982db1b@acm.org>
+        Mon, 19 Jan 2026 19:19:44 -0800 (PST)
+From: Chengfeng Ye <dg573847474@gmail.com>
+To: "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	Jack Wang <jinpu.wang@cloud.ionos.com>
+Cc: linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Chengfeng Ye <dg573847474@gmail.com>
+Subject: [PATCH v2] scsi: pm8001: Fix potential TOCTOU race in pm8001_find_tag
+Date: Tue, 20 Jan 2026 03:17:38 +0000
+Message-Id: <20260120031738.331225-1-dg573847474@gmail.com>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <2f88aa9b-b1c2-4b02-81e8-1c43b982db1b@acm.org>
+Content-Transfer-Encoding: 8bit
 
-On Thu, Jan 15, 2026 at 08:57:28AM -0800, Bart Van Assche wrote:
-> On 1/8/26 12:15 PM, Prithvi Tambewagh wrote:
-> > This poses a possibility of recursive locking,
-> > which triggers the lockdep warning.
-> 
-> Patches that fix a lockdep complaint should include the full lockdep
-> complaint.
-> 
-> Since the fixed lockdep complaint didn't trigger a deadlock it must be
-> a false positive complaint, isn't it? Such complaints should be fixed
-> but without additional information we can't tell what the best way is to
-> fix the complaint.
-> 
-> Thanks,
-> 
-> Bart.
+A potential time-of-check-time-of-use (TOCTOU) race condition in
+pm8001_find_tag() where task->lldd_task is checked for non-NULL
+and then dereferenced without synchronization to ensure atomicity.
 
-Hello Bart,
+Since the check of NULL and dereference in pm8001_find_tag() is not
+executed atomically, a race could occur if the callback is executed in
+response to an error or timeout on a SAS task issued from the SCSI
+midlayer, while the SAS command is completed and calls
+pm8001_ccb_task_free(), which sets task->lldd_task to NULL, resulting
+in a null pointer being dereferenced in pm8001_find_tag().
 
-Here is the full lockdep complaint, as per the syzkaller dashboard report
-for the bug:
+Possible race scenario:
+ CPU0 (Error Handler)           CPU1 (Interrupt Handler)
+  --------------------           ------------------------
+  [SCSI command timeout/error]
+  sas_scsi_recover_host()
+    sas_scsi_find_task()
+      lldd_abort_task()
+        pm8001_abort_task()
+          pm8001_find_tag()
+            if (task->lldd_task)
+                                   [Hardware interrupt]
+                                     mpi_ssp_completion()
+                                       pm8001_ccb_task_free()
+                                         task->lldd_task = NULL
+            ccb = task->lldd_task
+            *tag = ccb->ccb_tag
+            <- NULL dereference
 
-============================================
-WARNING: possible recursive locking detected
-syzkaller #0 Not tainted
---------------------------------------------
-syz.0.17/5999 is trying to acquire lock:
-ffff888140413f78 (&p->frag_sem){.+.+}-{4:4}, at: __configfs_open_file+0xe8/0x9c0 fs/configfs/file.c:304
+Fix this by using READ_ONCE() to read task->lldd_task exactly once,
+eliminating the TOCTOU window. Also use WRITE_ONCE() in
+pm8001_ccb_task_free() for proper memory ordering.
 
-but task is already holding lock:
-ffff888140413f78 (&p->frag_sem){.+.+}-{4:4}, at: flush_write_buffer fs/configfs/file.c:205 [inline]
-ffff888140413f78 (&p->frag_sem){.+.+}-{4:4}, at: configfs_write_iter+0x219/0x4e0 fs/configfs/file.c:229
+Signed-off-by: Chengfeng Ye <dg573847474@gmail.com>
+---
+v2: 
+- Correctify commit message to focus on abort_task() path
+- Check return value of find_tag() to handle race with pm8001_ccb_free()
 
-other info that might help us debug this:
- Possible unsafe locking scenario:
+ drivers/scsi/pm8001/pm8001_sas.c | 11 ++++++-----
+ 1 file changed, 6 insertions(+), 5 deletions(-)
 
-       CPU0
-       ----
-  lock(&p->frag_sem);
-  lock(&p->frag_sem);
+diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
+index 6a8d35aea93a..314945c89977 100644
+--- a/drivers/scsi/pm8001/pm8001_sas.c
++++ b/drivers/scsi/pm8001/pm8001_sas.c
+@@ -49,9 +49,10 @@
+  */
+ static int pm8001_find_tag(struct sas_task *task, u32 *tag)
+ {
+-	if (task->lldd_task) {
+-		struct pm8001_ccb_info *ccb;
+-		ccb = task->lldd_task;
++	struct pm8001_ccb_info *ccb;
++
++	ccb = READ_ONCE(task->lldd_task);
++	if (ccb) {
+ 		*tag = ccb->ccb_tag;
+ 		return 1;
+ 	}
+@@ -617,7 +618,7 @@ void pm8001_ccb_task_free(struct pm8001_hba_info *pm8001_ha,
+ 			pm8001_dev ? atomic_read(&pm8001_dev->running_req) : -1);
+ 	}
+ 
+-	task->lldd_task = NULL;
++	WRITE_ONCE(task->lldd_task, NULL);
+ 	pm8001_ccb_free(pm8001_ha, ccb);
+ }
+ 
+@@ -1083,7 +1084,7 @@ int pm8001_abort_task(struct sas_task *task)
+ 	}
+ 
+ 	ret = pm8001_find_tag(task, &tag);
+-	if (ret == 0) {
++	if (ret == 0 || tag == PM8001_INVALID_TAG) {
+ 		pm8001_info(pm8001_ha, "no tag for task:%p\n", task);
+ 		return TMF_RESP_FUNC_FAILED;
+ 	}
+-- 
+2.25.1
 
- *** DEADLOCK ***
-
- May be due to missing lock nesting notation
-
-4 locks held by syz.0.17/5999:
- #0: ffff888147ab0420 (sb_writers#12){.+.+}-{0:0}, at: ksys_write+0x12a/0x250 fs/read_write.c:738
- #1: ffff888077d2d688 (&buffer->mutex){+.+.}-{4:4}, at: configfs_write_iter+0x75/0x4e0 fs/configfs/file.c:226
- #2: ffff888140413f78 (&p->frag_sem){.+.+}-{4:4}, at: flush_write_buffer fs/configfs/file.c:205 [inline]
- #2: ffff888140413f78 (&p->frag_sem){.+.+}-{4:4}, at: configfs_write_iter+0x219/0x4e0 fs/configfs/file.c:229
- #3: ffffffff8f4097e8 (target_devices_lock){+.+.}-{4:4}, at: target_core_item_dbroot_store+0x21/0x350 drivers/target/target_core_configfs.c:114
-
-stack backtrace:
-CPU: 0 UID: 0 PID: 5999 Comm: syz.0.17 Not tainted syzkaller #0 PREEMPT(full) 
-Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 10/02/2025
-Call Trace:
- <TASK>
- __dump_stack lib/dump_stack.c:94 [inline]
- dump_stack_lvl+0x116/0x1f0 lib/dump_stack.c:120
- print_deadlock_bug+0x1e9/0x240 kernel/locking/lockdep.c:3041
- check_deadlock kernel/locking/lockdep.c:3093 [inline]
- validate_chain kernel/locking/lockdep.c:3895 [inline]
- __lock_acquire+0x1106/0x1c90 kernel/locking/lockdep.c:5237
- lock_acquire kernel/locking/lockdep.c:5868 [inline]
- lock_acquire+0x179/0x350 kernel/locking/lockdep.c:5825
- down_read+0x9b/0x480 kernel/locking/rwsem.c:1537
- __configfs_open_file+0xe8/0x9c0 fs/configfs/file.c:304
- do_dentry_open+0x982/0x1530 fs/open.c:965
- vfs_open+0x82/0x3f0 fs/open.c:1097
- do_open fs/namei.c:3975 [inline]
- path_openat+0x1de4/0x2cb0 fs/namei.c:4134
- do_filp_open+0x20b/0x470 fs/namei.c:4161
- file_open_name+0x2a3/0x450 fs/open.c:1381
- filp_open+0x4b/0x80 fs/open.c:1401
- target_core_item_dbroot_store+0x108/0x350 drivers/target/target_core_configfs.c:134
- flush_write_buffer fs/configfs/file.c:207 [inline]
- configfs_write_iter+0x306/0x4e0 fs/configfs/file.c:229
- new_sync_write fs/read_write.c:593 [inline]
- vfs_write+0x7d3/0x11d0 fs/read_write.c:686
- ksys_write+0x12a/0x250 fs/read_write.c:738
- do_syscall_x64 arch/x86/entry/syscall_64.c:63 [inline]
- do_syscall_64+0xcd/0xfa0 arch/x86/entry/syscall_64.c:94
- entry_SYSCALL_64_after_hwframe+0x77/0x7f
-RIP: 0033:0x7fbf49d8eec9
-Code: ff ff c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 40 00 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 a8 ff ff ff f7 d8 64 89 01 48
-RSP: 002b:00007ffd1d0ac1e8 EFLAGS: 00000246 ORIG_RAX: 0000000000000001
-RAX: ffffffffffffffda RBX: 00007fbf49fe5fa0 RCX: 00007fbf49d8eec9
-RDX: 0000000000000fff RSI: 0000200000000000 RDI: 0000000000000003
-RBP: 00007fbf49e11f91 R08: 0000000000000000 R09: 0000000000000000
-R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
-R13: 00007fbf49fe5fa0 R14: 00007fbf49fe5fa0 R15: 0000000000000003
- </TASK>
-db_root: not a directory: /sys/kernel/config/target/dbroot
-
-
-Sorry, but I didn't get why this might be a false positive lockdep complaint,
-can you please guide? 
-
-From what I understood, in this case, the same rw_semaphore &p->frag_sem is used,
-identified by the same addresses (ffff888140413f78), for both the lock held
-as well as one being tried to be acquired. This occurs since 
-flush_write_buffer() called in configfs_write_iter() first acquires the 
-&p->frag_sem lock and then next flush_write_buffer() calls 
-target_core_item_dbroot_store(), which attempts to open file with path stored
-in db_root_stage using filp_open(). It ultimately calls __configfs_open_file() 
-which again tries to acquire exactly the same lock, &p->frag_sem. 
-
-A deadlock can arise, if a writer tries to acquire this lock after it was first
-acquired by that thread in flush_write_buffer() and before acquiring it again in
-__configfs_open_file(), trying to avoid writer starvation. After checking, I 
-found out that down_write() is called for frag_sem, the rw_semaphore in struct 
-configfs_fragment, at 3 places:
-
-1. configfs_rmdir() - calls down_write_killable(&frag->frag_sem)
-2. configfs_unregister_group() - calls down_write(&frag->frag_sem);
-3. configfs_unregister_subsystem() - calls down_write(&frag->frag_sem);
-
-I think any of these may result in a deadlock due to recursive locking, if
-the lock is acquired by a writer after being acquired by a reader and then
-again being tried to be acquired by a reader.
-
-I attempt to solve this by replaing call to filp_open() in 
-target_core_item_dbroot_store() with kern_path(), which just checks if a file 
-path exists, as required in target_core_item_dbroot_store(), rather than 
-actually opening the file and using the same frag_sem lock, which removes 
-the possiblity of recursive deadlock on this path. What do you think of this 
-approach?
-
-Best Regards,
-Prithvi 
