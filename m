@@ -1,122 +1,80 @@
-Received: from mail-ed1-f46.google.com (mail-ed1-f46.google.com [209.85.208.46])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E57D33123A
-	for <linux-scsi@vger.kernel.org>; Tue, 20 Jan 2026 16:39:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.46
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768927180; cv=pass; b=seJFkoy7Az26N9L8TnbzIOYnUwrlEDAtbv1D+lqli4i5lb80fCZXcG9fN01JPTgcKxyUpl2RKQdzPBBhfmffNK0Bvujd0j8UQr3GXOU1MeWyJ3PU7ckIiPpAcDq/gGyRAMLTtjOpTMMcpEAfDV09SeAUeS4g2M95fq5JuCIqJLw=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768927180; c=relaxed/simple;
-	bh=NaCvwwv+xnOpT1PJncRUH9O5joA2zwi80d6Vd18hunY=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=jZkXwzrlNMGP2VWFS7A9+FsKJpQp3w04ZvbKMg7OwwnX12vR7NRRqlRJRN4TCI6DMmH1Jc8nuGfeW09UvHXZxqqCzj59q6EsaRCIv5lb96spH1O0/XxkjEALW2fxdPjSy7X/Y6laq1dfx9Wk9SOPVmy+APcKi1Bz+je1CUqZxYQ=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=jfoHaV43; arc=pass smtp.client-ip=209.85.208.46
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F3EE42B73F;
+	Tue, 20 Jan 2026 17:44:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.14
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1768931086; cv=none; b=k9eXgppivc7W4kLFEyvmlnxZQ9cKhRfy8Su764v2gP26klhBA2tHv5GpkPmYh6q1spMuIcwm8Lqo8no0SaXmc09W816rhUQcJbrZZbKZiqO0eM2wdiwK21h/p7TWIbnRMYP8laNlv+1kKKpVsuo4f1BP2RlQCrr35q4SAekHeM8=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1768931086; c=relaxed/simple;
+	bh=rAL6Wr3kK2sfuIOQLxh2BNLuJGx6cQHRQ++WrUiVuBA=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=J43gttLBRkiOp0K3/DnwLtfkaWPv7WfTJjnUra/k2VaR3fwiCR2J1vysS5ysjkqc7EwLqdmlnSZPw1dEmOzDxgCzPSoB8s8/fO917w3yvY10dC64E+3RLTOz0Oo9fvKv0AJR5qRdagbzBVfbzZDmuDi392nxr03Sj0u0CunJVdY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=pq6r8SCH; arc=none smtp.client-ip=199.89.1.14
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="jfoHaV43"
-Received: by mail-ed1-f46.google.com with SMTP id 4fb4d7f45d1cf-64b5eb14e88so863517a12.2
-        for <linux-scsi@vger.kernel.org>; Tue, 20 Jan 2026 08:39:39 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; t=1768927178; cv=none;
-        d=google.com; s=arc-20240605;
-        b=eosfZBlPJcbeg3uNfcDriP9V1OJcIYcogoMcXDEUrzX34dvz7ySGXRGFDpHxwqG2kI
-         HBly4PsYYZtkv2nWrhk0F2l+8dxud/aLUyChmNu5BzlPS6ezfaz4f031R3Er21x+dMfp
-         oyoYiLsveETyUDZrbgFtgN4NpGukt7VoyMu93BnZcW46GZVNsY8p9RGu5n6KaR3OamBR
-         NELp9D1qBVW78lk7qw/5GiAT9lVRSRdPgFRzqP+iyj5H4a24A7NfcELOtWI+hQKy1U95
-         4LcoaNFrQOhRAuknI03vAdDeabE8v57g6klRrkXxeiUcokZr9h/psXkhQLZyLdVejO5Z
-         qCrA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:dkim-signature;
-        bh=V/ZdpWXMG+JU47TGO6sM35o1HNuN2rVurUmmqUb6qdk=;
-        fh=JlBXWf3RVpgpda9yy9yCsA3wJ3EtqfoNfXFm3WBAybc=;
-        b=IvInrFKfYkUQ69OGoJpzl33ixE0rK06JBNd63v8NYoqUeHpUHa3A5MAiJwwEwT160+
-         fK+LLovb9yW6PDksbs3PbhqH7DXb7Z0Gz2q5u1NxvHCXg8sd/RAfzlzKi7g41Dik3Ot2
-         4OO2zjSxCttEqey+mO7qaGuvivEdMAWsEzaawlFa1XhR/OsixYcNfjUfXrrzFHFje5Bw
-         /whNjSjWIFPRc1OUy9DUHKAzl9U/lyqIdrpL+UepbriexgL1/maMKv7nexTJsC4bQBuF
-         2MSRJyXKoVegw3etArMiCKWwe9/rSovpdVIK6l+xMSvXmyKdZbPijggj1cIegIbt6YFC
-         5o7Q==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1768927178; x=1769531978; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=V/ZdpWXMG+JU47TGO6sM35o1HNuN2rVurUmmqUb6qdk=;
-        b=jfoHaV43TXgXJ+DI69gsdMzpFggzzcaj900mQJEiHBYzsGApFG4P3xM3F0XNvamvRQ
-         DEgtIQeEE+KsBLIQlPhQ3aXa9k6wtIK//SM9/2G7BD0cFyvUBQNRePlUh4/9OAu/K7gh
-         1LF9yRyy4muLdsMHWch/AH4/YBvrrz6KEMc6QN/DZ7wWtuPkAqscQrXwLINOADFEppGA
-         xVl3txDgwCztuyPjkpZwZnz8ODW9Fs0NCFgWVtLDGYAC1r032HtvxSF5tbbQ4G/FBY93
-         xZH4GyoakK0nHuWfGruYUwgTPOtFkVHhv2WGkEbqeoVuIdF9KUJMKUUimztDLITArY90
-         0LoQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1768927178; x=1769531978;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=V/ZdpWXMG+JU47TGO6sM35o1HNuN2rVurUmmqUb6qdk=;
-        b=SGp1AclbpJXyuu0Q7Zrt7g1dwMXuNHrKc2XkKpP0QW+cN1df92DbFknKOw0T7wARsc
-         RmH5EwsfiuYXswXEHX1uTHeISl0HG99REYEJlekmgGgnYc94j3WBqeFakldl/kdkYqkp
-         mtyBaiUz6u7svB9Zg4LXNkjJgGQajbXiQX7BOeoZ0I/j64vpfNX2/gHmJv93zc0Ukkes
-         OsjY2e2DrJL892Sz42XWVfhD6fI2LWSukpiAewwk+WjiN/sga5GK0oijV68+0NSyYMvF
-         IW3F30VWlvM1s/0gZCReZc9he6M7vuOxB35zOj3GF62lVrHeUVmBCuntBH7fed1iu98f
-         htWQ==
-X-Forwarded-Encrypted: i=1; AJvYcCVEf5h6/kd3aRwWBwOaf0aX8NqtPg3CP12Ju89a/jC7mshG+MhHGl9T+qIarAkSzPHEe9YPHUjoRJMJ@vger.kernel.org
-X-Gm-Message-State: AOJu0YyNddIwX+MaXrAW0M0aNinZZA2denp/WU5c6rd4TleOWuRQL7/y
-	x0yqi2epWuGplgW5s6JJxj57GQngVO81hWXiMSSBnc3iJZmF+2cq3hnVrYCql2SGFo8oCaMsiFh
-	W5ErWOyfe3wleYR9iYrl6i7PfrtgGWjg=
-X-Gm-Gg: AZuq6aINbegHJR+nOW6J3MPTm8m9/ypUEmGE9KYMAc1aV7Jzlw5SrZcpNEQtRj9Ag0R
-	iWuuEshTTSIMt6plAAtunv+k3i96FgkJFEfSpOrgiJ6M+4wnSO/s9WkzCmBXfNqPaNS+2OwTFnt
-	wG2CMeJvH7P6kTnrnYjePaXfM2/QKGD9MeXvUeWf4MZ8Oo+Q3sOMsNBUPt2Y+px1eQNagN/z5BL
-	lfmO3RR6gOSBX27OHNeWmuQUZ3hhQWhrlthDYg2u3siObEbyPbwo5SpTAL6ezPlZKRYUQhg
-X-Received: by 2002:a05:6402:1ec4:b0:64d:23ac:6ca6 with SMTP id
- 4fb4d7f45d1cf-657f947ba43mr1639474a12.4.1768927177433; Tue, 20 Jan 2026
- 08:39:37 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="pq6r8SCH"
+Received: from localhost (localhost [127.0.0.1])
+	by 011.lax.mailroute.net (Postfix) with ESMTP id 4dwZTR5PLfz1XM0nq;
+	Tue, 20 Jan 2026 17:44:43 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1768931081; x=1771523082; bh=jSVp0+GqBqVYbXvWwMsku3Rn
+	5OOybZ+l8MKCb477KGY=; b=pq6r8SCHkeRLsxJulK8m7wdsq7JxNce89K6lyAW6
+	XraVAkzRlbOn0TS04ClnCXVE864VQtGCz9KLlOjkoPQsiWVojM3syjAatBGPd62Z
+	jm/PlEhxJeT50V+F+tkUmdIFmNgG4/uhsRlxVjgZ5PX/oylUYSDKrTLQh3wsYKD7
+	i8t7S5noxJcpsLuXToYJMAbqoAmF4BLoONN014II1clr63GE/o4MftYHrwtRPa1x
+	PPltVGAwlawoBocQrjENozY10A0SLnHnQwCwdUCfmLGWfK97TtrGEKeFucztbOtq
+	rBoTG+DTfBs+uj/dBvy0lSSONZddbvlLSmbydUSB2VKF2Q==
+X-Virus-Scanned: by MailRoute
+Received: from 011.lax.mailroute.net ([127.0.0.1])
+ by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id KYOagl7B8MUb; Tue, 20 Jan 2026 17:44:41 +0000 (UTC)
+Received: from [100.119.48.131] (unknown [104.135.180.219])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4dwZTL27pmz1XM5jn;
+	Tue, 20 Jan 2026 17:44:38 +0000 (UTC)
+Message-ID: <b815dd96-5518-4667-9fde-d23391102717@acm.org>
+Date: Tue, 20 Jan 2026 09:44:37 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260117101948.297411-1-dg573847474@gmail.com>
- <ae5cae8b3c4e71cf23b6f48453797ac48bea5914.camel@HansenPartnership.com>
- <CAAo+4rUkmuOruVVVNYePyfqu5OgxUxWupEBwvJg7Aus3g7WDqA@mail.gmail.com>
- <d7040eecadcc3557c04c27f0c74ce40b2885c311.camel@HansenPartnership.com>
- <CAAo+4rX8HT_3zKEQ3vULN-B8StnwsT-7DQPoFCOedZLrMngASQ@mail.gmail.com> <b03e802fce29c90bbc4342e7254c3adb9f48bbf7.camel@HansenPartnership.com>
-In-Reply-To: <b03e802fce29c90bbc4342e7254c3adb9f48bbf7.camel@HansenPartnership.com>
-From: Chengfeng Ye <dg573847474@gmail.com>
-Date: Wed, 21 Jan 2026 00:39:26 +0800
-X-Gm-Features: AZwV_QgqmPIPzxNJ3zfLmiE-dCtjMNPbA2k8Z4jkwoKs2XtYNrItWfbSCti7HS8
-Message-ID: <CAAo+4rXdBpPTVu0XQvKwUwQUakNgP2ihdfOcz3zO=16wyVnSWw@mail.gmail.com>
-Subject: Re: [PATCH] scsi: pm8001: Fix potential TOCTOU race in pm8001_find_tag
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, Jack Wang <jinpu.wang@cloud.ionos.com>, 
-	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH V5 3/4] scsi: ufs: core Enforce minimum pm level for sysfs
+ configuration
+To: Ram Kumar Dwivedi <ram.dwivedi@oss.qualcomm.com>, mani@kernel.org,
+ alim.akhtar@samsung.com, avri.altman@wdc.com, robh@kernel.org,
+ krzk+dt@kernel.org, conor+dt@kernel.org,
+ James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
+Cc: linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
+ devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20260113080046.284089-1-ram.dwivedi@oss.qualcomm.com>
+ <20260113080046.284089-4-ram.dwivedi@oss.qualcomm.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20260113080046.284089-4-ram.dwivedi@oss.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-> But this too is a problem: fixes aren't free.  In fact a portion of the
-> patches sold as a bug fix eventually turn out to introduce a bug ...
-> and that new bug is one we didn't have before.  This is just a sad
-> consequence of the fact that all code produced by humans contains bugs.
-> The longer code is used, the more chance the bugs are found and the
-> less buggy it becomes (even with the bug fixes introducing bugs).  So
-> for really old drivers we assume most of the significant bugs have been
-> found and we try not to perturb the code base to avoid introducing new
-> bugs that, given the small and decreasing user base, will take ages to
-> find and eliminate.
->
-> On the scale of serious problems in older drivers, theoretical data
-> races that cause a crash don't rank highly simply because if the race
-> window were significant we'd already have seen it (the detection signal
-> is obvious and users aren't shy about reporting driver crashes). That
-> makes the probability of encountering the issue in the field way lower
-> than the probability that any fix will introduce a new bug.  So the
-> balance of risks argues against applying any fix.
+On 1/13/26 12:00 AM, Ram Kumar Dwivedi wrote:
+> Some UFS platforms only support a limited subset of power levels.
+> Currently, the sysfs interface allows users to set any pm level
+> without validating the minimum supported value. If an unsupported
+> level is selected, suspend may fail.
+> 
+> Introduce an pm_lvl_min field in the ufs_hba structure and use it
+> to clamp the pm level requested via sysfs so that only supported
+> levels are accepted. Platforms that require a minimum pm level
+> can set this field during probe.
 
-Thank you indeed for the detailed response. It helps a lot, appreciate
-much of the insightful reply that clarifies my long-standing
-confusion...
-
-Best regards,
-Chengfeng
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
