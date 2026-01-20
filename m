@@ -1,147 +1,83 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0DB22421EFB;
-	Tue, 20 Jan 2026 13:31:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A249543634B;
+	Tue, 20 Jan 2026 13:48:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768915917; cv=none; b=YtJ4bz/b3572WIKFf1LSSobc51Flbh86c6Bru1oTOJgKk7vSKzlIau79jRWAVDvUKVeaAyYbmJ80T3OR2hzKI1oUZuZaQAKUoFUdgbly6XiMvPP6sljUdFUsgjgO6dNyxkmwIWzxe/Bx8okqTd5MwTt0Oo7Y4RRXf382rBVDfao=
+	t=1768916907; cv=none; b=EAhEvJaVCXDqrhSgu2h32lBKtSiLKjGFIyGwPbDaaywYvFIvM9aTSw6jggvO+xN216JLUOYB7XIN/xY2M3K1uUqxdy7ProNy+vHp/wEpeWFk3goRyavSTPCijUrxJ1dvmD87SOgjNK6PEtFkUBe1HdkoxbyN/5BVbzPCEpWfukk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768915917; c=relaxed/simple;
-	bh=YoK1kF0LiYeImQzAqlY+R+SVH8ElhbpU5AjwKHKm7tU=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Bs0+JaJaILRIvjqgIh4O3Fl6Pk8E12Yl7tyd+S8kMCCz2/tX5UEyILTYGowzlWzeCxrAQmf4Qv7qGda1nVRVaN9MA6LtFZTuaY3AQbS27J/5Rb9Uuyjmj1OzgoIWty6Vj2YiPeKDsyUNbLbgHy5wY0wo1r4AoyteghosqsqOzYI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=uVQCzbF+; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1768916907; c=relaxed/simple;
+	bh=DdCeDquolF/w7F6B01lbUF/rIeGCTbJAYlhr8LWHkJ0=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=KNI2YjCQxUYqED0XJSTECT7G4YqRxOszl2iv+IdTAnr86H7tGGK1M+v/mbsh9Yqo1yTW03Efr4h1Jycz4WxKK4oQn1VT719u5NGwJDUPTOopUm8gcsqEiyFWIwg8kiNEnIpNMVykMFCwbAxzT7IOEkDMh3q4wgXWU/7uTGw4WJo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=HTe8UjMP; arc=none smtp.client-ip=199.89.1.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uVQCzbF+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 67314C16AAE;
-	Tue, 20 Jan 2026 13:31:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1768915916;
-	bh=YoK1kF0LiYeImQzAqlY+R+SVH8ElhbpU5AjwKHKm7tU=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=uVQCzbF+fsfwjgSvm0gkJqpESlZ3n2CmOoVZJ9befRAc8lYNLBDkiPbTW3st0MVKQ
-	 ZSIgrRiJ70LtL0Adi9FDJjJjghwcaXLvRUXVAcj2W52MfNTY1P8aoCBwSoGiKSgcVS
-	 LB0ENg8cO8ZMsv7psybBnpORnmZUB/ZbDDWCqZs8pmnVc9Zc0LwQjxprEGWioM9k7v
-	 3GDarBih2nVgeD193ZlOHelEkTNEXyAvBtVaAvop49aAmU+DGQWPOKuwzuX/uaLdGa
-	 98GrnbSqeEOo3Qjt+mrucponuE561H/VlodhHLZ7uBMUe0W83cgumME7TsOK8wpuX5
-	 XwKinHMadGT5A==
-Date: Tue, 20 Jan 2026 19:01:41 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Ram Kumar Dwivedi <ram.dwivedi@oss.qualcomm.com>
-Cc: alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org, 
-	robh@kernel.org, krzk+dt@kernel.org, conor+dt@kernel.org, 
-	James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com, linux-arm-msm@vger.kernel.org, 
-	linux-scsi@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	Anjana Hari <anjana.hari@oss.qualcomm.com>
-Subject: Re: [PATCH V5 2/4] dt-bindings: ufs: Document bindings for SA8255P
- UFS Host Controller
-Message-ID: <jsatarcn3ahtj2gyc3kqjtjydlrxlx2fk4ufxylvujf4nxrvyw@x5gkaeqg34mj>
-References: <20260113080046.284089-1-ram.dwivedi@oss.qualcomm.com>
- <20260113080046.284089-3-ram.dwivedi@oss.qualcomm.com>
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="HTe8UjMP"
+Received: from localhost (localhost [127.0.0.1])
+	by 013.lax.mailroute.net (Postfix) with ESMTP id 4dwTDn1j0Jzlfl8N;
+	Tue, 20 Jan 2026 13:48:25 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1768916902; x=1771508903; bh=SOAdpbDm0eHpipCEaZSPiJYY
+	fuJseVJynyq5vsxpEV0=; b=HTe8UjMPTjFI9fuDL/EbKshTsyDMz8UC31uq9k1O
+	Cfy33tTlYI5lLEnOH0qyyH1qVdEMv+/PgjXJ8bQKvhgP9DNWjIhegnWrnqd6He9q
+	lGjsPcxa63+y29eQGndXn5GOzJ1Fav8lDjmnjcxuSo/j0FlHmMojrSR1Pn0z4WUx
+	OFvKWP7SRWTB4vZ/j2dsu/aujjuu8Mv4+wtauAAGawlQvAmKtOrrGFfqqltPyxSF
+	yzPSkobUXBU0Jrz5rNnsCRI51UVfEXB116vMtHoaqYO2R2g1YzqveQbNHCX1bBd/
+	e7q5iMjhhmSSpyGE9opMZ/+oJhBRldiPMP+4q64iaxhGQg==
+X-Virus-Scanned: by MailRoute
+Received: from 013.lax.mailroute.net ([127.0.0.1])
+ by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id TM8u1GgFmxyU; Tue, 20 Jan 2026 13:48:22 +0000 (UTC)
+Received: from [192.168.50.14] (c-73-231-117-72.hsd1.ca.comcast.net [73.231.117.72])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4dwTDf2ftVzlfpMC;
+	Tue, 20 Jan 2026 13:48:18 +0000 (UTC)
+Message-ID: <ac604919-1620-4fea-9401-869fd15f3533@acm.org>
+Date: Tue, 20 Jan 2026 05:48:16 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260113080046.284089-3-ram.dwivedi@oss.qualcomm.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] scsi: target: Fix recursive locking in
+ __configfs_open_file()
+To: Prithvi <activprithvi@gmail.com>
+Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+ target-devel@vger.kernel.org, linux-kernel@vger.kernel.org, hch@lst.de,
+ jlbec@evilplan.org, linux-fsdevel@vger.kernel.org,
+ linux-kernel-mentees@lists.linux.dev, skhan@linuxfoundation.org,
+ david.hunter.linux@gmail.com, khalid@kernel.org,
+ syzbot+f6e8174215573a84b797@syzkaller.appspotmail.com, stable@vger.kernel.org
+References: <20260108191523.303114-1-activprithvi@gmail.com>
+ <2f88aa9b-b1c2-4b02-81e8-1c43b982db1b@acm.org>
+ <20260119185049.mvcjjntdkmtdk4je@inspiron>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20260119185049.mvcjjntdkmtdk4je@inspiron>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Tue, Jan 13, 2026 at 01:30:44PM +0530, Ram Kumar Dwivedi wrote:
-> Document the device tree bindings for UFS host controller on
-> Qualcomm SA8255P platform which integrates firmware-managed
-> resources.
+On 1/19/26 10:50 AM, Prithvi wrote:
+>   Possible unsafe locking scenario:
 > 
-> The platform firmware implements the SCMI server and manages
-> resources such as the PHY, clocks, regulators and resets via the
-> SCMI power protocol. As a result, the OS-visible DT only describes
-> the controller’s MMIO, interrupt, IOMMU and power-domain interfaces.
-> 
-> The generic "qcom,ufshc" and "jedec,ufs-2.0" compatible strings are
-> removed from the binding, since this firmware managed design won't
-> be compatible with the drivers doing full resource management.
-> 
-> Co-developed-by: Anjana Hari <anjana.hari@oss.qualcomm.com>
-> Signed-off-by: Anjana Hari <anjana.hari@oss.qualcomm.com>
-> Signed-off-by: Ram Kumar Dwivedi <ram.dwivedi@oss.qualcomm.com>
+>         CPU0
+>         ----
+>    lock(&p->frag_sem);
+>    lock(&p->frag_sem);
+The least intrusive way to suppress this type of lockdep complaints is
+by using lockdep_register_key() and lockdep_unregister_key().
 
-Acked-by: Manivannan Sadhasivam <mani@kernel.org>
+Thanks,
 
-- Mani
-
-> ---
->  .../bindings/ufs/qcom,sa8255p-ufshc.yaml      | 56 +++++++++++++++++++
->  1 file changed, 56 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/ufs/qcom,sa8255p-ufshc.yaml
-> 
-> diff --git a/Documentation/devicetree/bindings/ufs/qcom,sa8255p-ufshc.yaml b/Documentation/devicetree/bindings/ufs/qcom,sa8255p-ufshc.yaml
-> new file mode 100644
-> index 000000000000..75fae9f1eba7
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/ufs/qcom,sa8255p-ufshc.yaml
-> @@ -0,0 +1,56 @@
-> +# SPDX-License-Identifier: GPL-2.0-only OR BSD-2-Clause
-> +%YAML 1.2
-> +---
-> +$id: http://devicetree.org/schemas/ufs/qcom,sa8255p-ufshc.yaml#
-> +$schema: http://devicetree.org/meta-schemas/core.yaml#
-> +
-> +title: Qualcomm SA8255P UFS Host Controller
-> +
-> +maintainers:
-> +  - Ram Kumar Dwivedi <ram.dwivedi@oss.qualcomm.com>
-> +
-> +properties:
-> +  compatible:
-> +    const: qcom,sa8255p-ufshc
-> +
-> +  reg:
-> +    maxItems: 1
-> +
-> +  interrupts:
-> +    maxItems: 1
-> +
-> +  iommus:
-> +    maxItems: 1
-> +
-> +  dma-coherent: true
-> +
-> +  power-domains:
-> +    maxItems: 1
-> +
-> +required:
-> +  - compatible
-> +  - reg
-> +  - interrupts
-> +  - power-domains
-> +  - iommus
-> +  - dma-coherent
-> +
-> +allOf:
-> +  - $ref: ufs-common.yaml
-> +
-> +unevaluatedProperties: false
-> +
-> +examples:
-> +  - |
-> +    #include <dt-bindings/interrupt-controller/arm-gic.h>
-> +
-> +    ufshc@1d84000 {
-> +        compatible = "qcom,sa8255p-ufshc";
-> +        reg = <0x01d84000 0x3000>;
-> +        interrupts = <GIC_SPI 265 IRQ_TYPE_LEVEL_HIGH>;
-> +        lanes-per-direction = <2>;
-> +
-> +        iommus = <&apps_smmu 0x100 0x0>;
-> +        power-domains = <&scmi3_pd 0>;
-> +        dma-coherent;
-> +    };
-> -- 
-> 2.34.1
-> 
-
--- 
-மணிவண்ணன் சதாசிவம்
+Bart.
