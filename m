@@ -1,88 +1,112 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1BF4A33F36E;
-	Tue, 20 Jan 2026 13:11:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3900E428487;
+	Tue, 20 Jan 2026 13:29:26 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768914696; cv=none; b=GMAbreVZlLi+JjnbwBP7MX0p7Eau5zFsJdgtWkG0z+++5pzYae3O6Bolt4Q9rXcgZPDEoQoQFxS8oZ20qhMstjduhMx0HbPcX7dqhJd+LbfIgaPnrldWOjVhMDq7zYliKtdqSnXd88Y7XKId7kpBJN4Ier88+9KmNNP5hw9LSLc=
+	t=1768915766; cv=none; b=KnzqMXko4bDwRKVBtsRS8PDrslmy3uly3rXvBFXELaFI9KasSeSM9oRd53zgkfUHdyY6GwMxA2e2LOK+4yqSo2LP2GO9Frpg1RC8wH+bByLmlxS8gBCFNMgjjMN8BnboyXWsVG2eNfTRE3xp09C4h/ywQuL5FYHIkFpNjo06nGI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768914696; c=relaxed/simple;
-	bh=wNUhyMD6goK687xUqdP074iKnGrjkbgmwK13qo7KA+w=;
+	s=arc-20240116; t=1768915766; c=relaxed/simple;
+	bh=SZGjB+tzhMCdedpCDZ6dZPPdv3MC5DnUC70Pro9p9zo=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=pm8TrSuKKVXSJjqHmoi+bl33KqUA9FhymitZ7sdJFTSYhUqq6GeQhSyOwNtyjSSY5vMJP/0RS4/FW3lAIvjgtFnaJrJWU3CMhSWFp2/vnga2YfFp3Chwm2mlytzorI8rr8NdYEBwAYNAbZV4hQlLpXOR5F3eJoPuN9FYRKF1GZw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VfBvL6Z0; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=R0qII4oYXU6CtHrcsqTvFVhlH8GzJoQaiW4oNr46AH+wFFhw4sJKPC6WmZkDRkR5vxANbSGcvwvH02s0DGefQ37EzMp97KJQd/ryQEU0lfOLkhak39dXljsjih/oTtoMCkhRTkjY6SmOPMfqx5c++McbozrpeQ25kwcRUSu9+TY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QCIqhnGo; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VfBvL6Z0"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A0E74C16AAE;
-	Tue, 20 Jan 2026 13:11:34 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QCIqhnGo"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 65CFDC19422;
+	Tue, 20 Jan 2026 13:29:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1768914695;
-	bh=wNUhyMD6goK687xUqdP074iKnGrjkbgmwK13qo7KA+w=;
+	s=k20201202; t=1768915766;
+	bh=SZGjB+tzhMCdedpCDZ6dZPPdv3MC5DnUC70Pro9p9zo=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=VfBvL6Z0qnfuD1GwyQlodp/yIF/YSCI/0yuMKMz2pOAthxJq8AerY9HlFP7LdKO/x
-	 wvPTts4ZFNNezVYg7ipYcY2m3peKBJuAcYp28tTh2zsCacOQJ8OscqW9YgPRzFnXWo
-	 C10v7ySPGJo9mAI4PsIP3OJopmJLdtFnrkrA809ZOfJb2ZcQWxt9OqmVoKod7kV7Lv
-	 FhuTUmncaXSPGb9I5ENVBiSWPySLJkPI7QTjabJjNTldMtR/TYTp64wj/Jmd9EJfIR
-	 8rnAAt+uLy0PkHhlMoX+qaHYgNEFNOFhbSn0wK6q6aLRB36kj7U220Ut9vG36BSPxq
-	 7Ttes8r8RvXVQ==
-Date: Tue, 20 Jan 2026 21:11:31 +0800
-From: Tzung-Bi Shih <tzungbi@kernel.org>
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>,
-	Greg KH <gregkh@linuxfoundation.org>, linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] scsi: core: Don't free dev_name() manually
-Message-ID: <aW9_A22PyeYEgJOv@tzungbi-laptop>
-References: <20260117193221.152540-1-tzungbi@kernel.org>
- <de7b19fe19ccb117cad8cd32d9c51796ee81b752.camel@HansenPartnership.com>
- <aW4_fbfNUMTDTAN1@tzungbi-laptop>
- <9308e357ecff18971b216c5e037b89b66acf7606.camel@HansenPartnership.com>
+	b=QCIqhnGoZQFuktWd7lCUobZWKZc1NdtqdjWuGVj6NeToJV8QuGikwX2QCLAuT6KyC
+	 lPA77993RpjuuHyB9Ka9FD3A7YbLZbJTvEutOVSUCBY6lqTYJxKHzh1YrHg0h8+Crb
+	 9EsF7wuEsE86fyan6Eie+a2HE5OWl5PyXo1+uz5rBtfnsDFxeZ+JBYWOlOlsbccz76
+	 ObQEgfsYtCi63EXj8WcHhXVgslRUQ8OL+LmJ5b43yuG6vRkoa20xRoNKsy5oPTgVem
+	 VDPfb2QLCPfAnoGKy8hWL7Yc4v0+UdOXeqoulRM6F54YfF7J87SzBpJOBLVdenMp9G
+	 8eNGTDxrwfUkQ==
+Date: Tue, 20 Jan 2026 18:59:12 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Ram Kumar Dwivedi <ram.dwivedi@oss.qualcomm.com>
+Cc: alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org, 
+	robh@kernel.org, krzk+dt@kernel.org, conor+dt@kernel.org, 
+	James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com, linux-arm-msm@vger.kernel.org, 
+	linux-scsi@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH V5 3/4] scsi: ufs: core Enforce minimum pm level for
+ sysfs configuration
+Message-ID: <tjkfcmbdjsr5jieqjhxe57w4uhhpzqiwdidlenr3ytaifyijyc@ddocvrk6357q>
+References: <20260113080046.284089-1-ram.dwivedi@oss.qualcomm.com>
+ <20260113080046.284089-4-ram.dwivedi@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <9308e357ecff18971b216c5e037b89b66acf7606.camel@HansenPartnership.com>
+In-Reply-To: <20260113080046.284089-4-ram.dwivedi@oss.qualcomm.com>
 
-On Mon, Jan 19, 2026 at 11:02:55AM -0500, James Bottomley wrote:
-> On Mon, 2026-01-19 at 22:28 +0800, Tzung-Bi Shih wrote:
-> > On Sun, Jan 18, 2026 at 09:45:26AM -0500, James Bottomley wrote:
-> > > On Sun, 2026-01-18 at 03:32 +0800, Tzung-Bi Shih wrote:
-> [...]
-> > > > > �
-> > > > > �static struct class shost_class = {
-> > > > > @@ -279,11 +278,9 @@ int scsi_add_host_with_dma(struct
-> > > > > Scsi_Host
-> > > > > *shost, struct device *dev,
-> > > > > � goto out_disable_runtime_pm;
-> > > > > �
-> > > > > � scsi_host_set_state(shost, SHOST_RUNNING);
-> > > > > - get_device(shost->shost_gendev.parent);
-> > > 
-> > > We need a reference to the parent to prevent surprise removal ...
-> > > where else is the reference held?
-> > 
-> > It looks to me the same question as above.� IIUC, device_add() holds
-> > a reference count to its parent[3].� Drivers don't need to do it
-> > explicitly.
+On Tue, Jan 13, 2026 at 01:30:45PM +0530, Ram Kumar Dwivedi wrote:
+> Some UFS platforms only support a limited subset of power levels.
+> Currently, the sysfs interface allows users to set any pm level
+> without validating the minimum supported value. If an unsupported
+> level is selected, suspend may fail.
 > 
-> That's not good enough for SCSI: we have a rather complicated state
-> model for hosts.  device_add() doesn't occur until the host moves out
-> of the SHOST_CREATED state, which can be quite a time after device
-> _initialize() so something has to pin the resources until then, which
-> is why these references are taken.   You're certainly free to suggest a
-> different way of doing this, but you can't just get rid of the existing
-> mechanism without replacing it with something else.
+> Introduce an pm_lvl_min field in the ufs_hba structure and use it
+> to clamp the pm level requested via sysfs so that only supported
+> levels are accepted. Platforms that require a minimum pm level
+> can set this field during probe.
+> 
+> Signed-off-by: Ram Kumar Dwivedi <ram.dwivedi@oss.qualcomm.com>
 
-I may misunderstand: isn't the initial reference count from
-device_initialize() held for the purpose (i.e., pin the resource)?  The
-driver calls scsi_host_put() to drop the reference count when the underlying
-chip is removing.
+Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
 
-The proposed code to remove the get_device() just right before device_add()
-in scsi_add_host_with_dma().  I don't see what else resources it can pin.
+- Mani
+
+> ---
+>  drivers/ufs/core/ufs-sysfs.c | 2 +-
+>  include/ufs/ufshcd.h         | 2 ++
+>  2 files changed, 3 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/ufs/core/ufs-sysfs.c b/drivers/ufs/core/ufs-sysfs.c
+> index b33f8656edb5..02e5468ad49d 100644
+> --- a/drivers/ufs/core/ufs-sysfs.c
+> +++ b/drivers/ufs/core/ufs-sysfs.c
+> @@ -141,7 +141,7 @@ static inline ssize_t ufs_sysfs_pm_lvl_store(struct device *dev,
+>  	if (kstrtoul(buf, 0, &value))
+>  		return -EINVAL;
+>  
+> -	if (value >= UFS_PM_LVL_MAX)
+> +	if (value >= UFS_PM_LVL_MAX || value < hba->pm_lvl_min)
+>  		return -EINVAL;
+>  
+>  	if (ufs_pm_lvl_states[value].dev_state == UFS_DEEPSLEEP_PWR_MODE &&
+> diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
+> index 19154228780b..a64c19563b03 100644
+> --- a/include/ufs/ufshcd.h
+> +++ b/include/ufs/ufshcd.h
+> @@ -834,6 +834,7 @@ enum ufshcd_mcq_opr {
+>   * @uic_link_state: active state of the link to the UFS device.
+>   * @rpm_lvl: desired UFS power management level during runtime PM.
+>   * @spm_lvl: desired UFS power management level during system PM.
+> + * @pm_lvl_min: minimum supported power management level.
+>   * @pm_op_in_progress: whether or not a PM operation is in progress.
+>   * @ahit: value of Auto-Hibernate Idle Timer register.
+>   * @outstanding_tasks: Bits representing outstanding task requests
+> @@ -972,6 +973,7 @@ struct ufs_hba {
+>  	enum ufs_pm_level rpm_lvl;
+>  	/* Desired UFS power management level during system PM */
+>  	enum ufs_pm_level spm_lvl;
+> +	enum ufs_pm_level pm_lvl_min;
+>  	int pm_op_in_progress;
+>  
+>  	/* Auto-Hibernate Idle Timer register value */
+> -- 
+> 2.34.1
+> 
+
+-- 
+மணிவண்ணன் சதாசிவம்
