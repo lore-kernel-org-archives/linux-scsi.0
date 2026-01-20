@@ -1,138 +1,126 @@
-Received: from mail-ed1-f52.google.com (mail-ed1-f52.google.com [209.85.208.52])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from bali.collaboradmins.com (bali.collaboradmins.com [148.251.105.195])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C79935293E
-	for <linux-scsi@vger.kernel.org>; Tue, 20 Jan 2026 04:39:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.52
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768883964; cv=pass; b=cLIB2h1C+EaBd41WuM8glqu0Nx67phPR53ofH+5elA7JxcmRNN1qoWk3daaOICzSzRD/InuXe0Uz3q6oWqO19EkkTL3LiP3vpXKpf7ejmsUPpJwygx5De7XLMJpPqf7KRQK9c0CWz7Qt+mMrfqIfv0egzG6gvjapZxlcUUjEVDg=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768883964; c=relaxed/simple;
-	bh=zCVFz71yzFQEiUNXAt527QmmS1XgYNzb73rYtTbTHZc=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=n1lPxQhJSdrHxZXMgpcIcYcquq+g8mehBoe4M1AoxPpYKSOhD83VbISV9YQ9rlCaFTJ1EeHxNI9HvHskmv3gfQ9raY+dieL+2OA9IMeCrducjkbI9Eoke8vWbJE6ctOL82gSeRD40deVT4WaNTUR7liIB7HQGLIKWlb5k6+sS7s=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ODbcHH3s; arc=pass smtp.client-ip=209.85.208.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 80EB33A89A7;
+	Tue, 20 Jan 2026 09:43:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.251.105.195
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1768902215; cv=none; b=UqeEAMpBN11MsrP7bMwN7MtA4Wsje3y9uodxwRnBQyS+kwjLKtnohQLuqcXpsetX07j5Ir8I/uuLmN9oxBpDYPLwCq8N6K6DXZPUI+n2vMY4/k2JS0m0Ujh2GsurBAjrkD0+g4jGCU1M3qR6NqT3u2MKjwrse9A8T93WZTe8Cek=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1768902215; c=relaxed/simple;
+	bh=cFmtw+W0nIPjyA9JXnCJ34TLkLN51eHKUkL0cw7+gFs=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=VgHRgvIImaR9lwW2OuuOuq8Pyat6x/eIQiWV+sY5+DJnTT6kIGFSY+u97SMlSsp1hYe7x4Bcid9TDIOxVoZSRFl1fqLCKcz5oVqQDN5jsKBjckQMdMcqqMqBpdOE9o7yjs6i98B7cWfxnATDcCtwigjvKlEyZxDEC+SfF2fESzo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b=aJf6ki/5; arc=none smtp.client-ip=148.251.105.195
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collabora.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ODbcHH3s"
-Received: by mail-ed1-f52.google.com with SMTP id 4fb4d7f45d1cf-64b6f22bc77so869764a12.1
-        for <linux-scsi@vger.kernel.org>; Mon, 19 Jan 2026 20:39:22 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; t=1768883961; cv=none;
-        d=google.com; s=arc-20240605;
-        b=ZnpO5PniusnoB3WSX6J+QHzxWYWU2vvLxgNLFAQVWMs75HLU7x2J6AQeSWqgfMyhOH
-         nJnJSXSc/lcfTp6GPRNHRhjyE9F6mrO5c2Alv7P1PUWU56mtVmz5Dfn4CWE6Q5z7ca7B
-         fNjtPsGsWgy287k9vm59ARVKkOtRyNzXuMD/AnlrZuycr4Du9UBfzDzme7hykcNMOha3
-         GVZShq1jX51ZhBY9wlHtQHqnIf0Nh7CWRbIgc4kamaxE7bEalhhtrGiOwaZiTUg8CVkZ
-         XnYb0fDwCdaX/qb34sIuZRsNAi+dSOGDDbtC+gN/OOJGwv2xmSndR/zTWGJ4CQvtOeJz
-         MERg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:dkim-signature;
-        bh=zCVFz71yzFQEiUNXAt527QmmS1XgYNzb73rYtTbTHZc=;
-        fh=pq1Kft+ITWEz54OAaPjTmwg056oxsHRHYQx3o/vqDjI=;
-        b=hUlVFVdLB2EA4H5va1fV3KVBuA4TLlz4h3jxk2mrRkUiJFMaXkpyb3fEw99JHIJMC6
-         SxuEPk4/9HVWfN+1AOxF+JvdDxWrLN2R6rJrLk3p+wrdq+UBRV8NiJx3Qh083cnY+72k
-         CwOZeY5wVMP+L2MPDIHCS+CeztRB9GdRwr2cPw6ynAo0gbnf+JwOyr2VO29aRgAHXx2V
-         qoRZI5Ar6mfkx7AVqSDDVtmLNlOYquMU1NgTjvUbzlmGgXCks28O+vM9wO2wR0BYWTSs
-         IxCUrlaDDxP030Ab+3or6SiyU+qRTRviWLBTRGjQLIYrvl6Aqm02o8cT3vkq1J4svpfT
-         vq5g==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1768883961; x=1769488761; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=zCVFz71yzFQEiUNXAt527QmmS1XgYNzb73rYtTbTHZc=;
-        b=ODbcHH3sFo9jKGOx5m4RQ4YQ2+11IiRRCKjFT8/PahU/B1f/JJp7U2E0Kk/kr7U0Y0
-         lj3GSK3wrvy2ZOiRtSPHjHS6d5Hd0zM9FLAEXOZCUut0/xcTZCArIG0OOnpmZ6UGW1ET
-         SA8XBIt+3hBeU7J8hQfg4Xbnh+xs3IFQUASOpAIx5z7TnWKOgIqaoi6TRsq8r+NH6vg1
-         ZyJ9NyoMuYAEaSDDw/p8S74vs4oXGvSG/bXiSsdu8ZGGMEhmTbo3Uzd8Fr1J20oAOVII
-         5Py7KW5G1Z+vyiv+7mV23pxdGCnJDkAlhQmfOgo+l4/CmES4qKL9kirWY/BKH9IqJyl/
-         tUPQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1768883961; x=1769488761;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=zCVFz71yzFQEiUNXAt527QmmS1XgYNzb73rYtTbTHZc=;
-        b=qB+ZItkDm4b0HGYMb+95JNswAF1x2TeOKKkOjCucs5bSHeVSRLioA7YbMaKY9noc06
-         A9rhahBlcdkWux0RfvW5dKWJdugdGKkc6mLEDg7QnJbTbIrxQb1ejjdrIlKdhp7vwiJk
-         tjbPSqTDQq2RSRArwj3sgNjYC01XnzNaEjyqCTrHsiJU0gNk3EB03zm7tQJ+xTs6Ur80
-         xn2vFhw6mhPBJ/CGNr9Yy5ip/+NPfHqfk+BsLugFXTzcqzEXBIEpEjfYlmzzRuLFJ9vv
-         l1tizADYJRyClRwKLeDP7V/wpD+e6NNhD7eifupai7OGkWM3Degj0Nr0lwFf2ia1CXxa
-         eahQ==
-X-Forwarded-Encrypted: i=1; AJvYcCUVfA9yTW0aGEjpDgNqb1oQC97ewxgAgnw/nVaTfnWs+ZWwqgvWr1bgn08V3rF0UQH51+7Ih8IRMCjA@vger.kernel.org
-X-Gm-Message-State: AOJu0Yw4I3VN8eOCXBUTsOzQ+DEY57bexw8JsViPb4q6PUSyK7u0FVWC
-	mx8dKULvNXV0yhqIKAVf+c2IDBgHTTmVJvqbrege3on3JA3HFr+Icgox8Jek2/b6qEYXeOydfIg
-	HgzME/3xe+hsRF4rhoDDQ4kThIKhyU7A=
-X-Gm-Gg: AZuq6aLVc/AWimOYR9O4FM5EKYtiNQAZmtRVoUrawahl6V0jAkhRudrzc13sbeV/4XP
-	C3GRk7xH6sO4msTs9uatBVqStg5F4AWN7iEfdMm2tYCFKvVhxEw1aKA7xXnjF3hUpiuF3lH1xdR
-	nBzQWLdhhIBPhq3vbtrg4FB1VKyMDXooybG0n7gorcoKRIl1MjOcCEwr/nNb0sBrwsHiIO4ZXPY
-	YMr28tykhp4njKGEGgBbvUMz/Rsm4qIdaWtCM2n9nNHaWrfC57l8ILJHKH+Hhsqv52QB7M=
-X-Received: by 2002:a05:6402:268a:b0:645:7d1b:e151 with SMTP id
- 4fb4d7f45d1cf-657f93d5ee1mr841596a12.1.1768883961047; Mon, 19 Jan 2026
- 20:39:21 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b="aJf6ki/5"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=collabora.com;
+	s=mail; t=1768902211;
+	bh=cFmtw+W0nIPjyA9JXnCJ34TLkLN51eHKUkL0cw7+gFs=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=aJf6ki/55o9knlTHmfUazfZ+yXtr8Aw7sNER1HrKmXGGtA57yT7kPoc1Sn+kz30iz
+	 mGJoCamBbqY+HYJ0ltn/pgn6zRhCaK2nMrMgqGG4rI30O0xzbtrzPZJpYZnW2sJ/Zy
+	 nC/6gjaBFSUnc0pSjDic7VxOFBXmGZYFT/BaVDriwRu9OdtUlgkG9Qn8drbBqxAfw9
+	 KCsNLvo4KRWqXSHqZLQtfEeGt17ta1ZWgR6NXHLjKD5S2zU2hkCwKNvyaWzHc7JtWb
+	 cFeBc6eKGSBkjd6wpWnPgYGxX2myF//YDwVD4YbO7f1KMXiWJjwR95tsP8ujPxB7Fb
+	 x1A9PUrSKfZ4w==
+Received: from [192.168.1.100] (2-237-20-237.ip236.fastwebnet.it [2.237.20.237])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: kholk11)
+	by bali.collaboradmins.com (Postfix) with ESMTPSA id 49F3F17E0CF3;
+	Tue, 20 Jan 2026 10:43:30 +0100 (CET)
+Message-ID: <c3878cb0-cf37-41a3-a875-cf8f2a604b0c@collabora.com>
+Date: Tue, 20 Jan 2026 10:43:29 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260117101948.297411-1-dg573847474@gmail.com>
- <ae5cae8b3c4e71cf23b6f48453797ac48bea5914.camel@HansenPartnership.com>
- <CAAo+4rUkmuOruVVVNYePyfqu5OgxUxWupEBwvJg7Aus3g7WDqA@mail.gmail.com> <d7040eecadcc3557c04c27f0c74ce40b2885c311.camel@HansenPartnership.com>
-In-Reply-To: <d7040eecadcc3557c04c27f0c74ce40b2885c311.camel@HansenPartnership.com>
-From: Chengfeng Ye <dg573847474@gmail.com>
-Date: Tue, 20 Jan 2026 12:39:10 +0800
-X-Gm-Features: AZwV_QiUSyJw9EUMIr_YILF_U3MJnzVyEtmH7QKaHzOyP8Ch71lde2vGmtKgxHE
-Message-ID: <CAAo+4rX8HT_3zKEQ3vULN-B8StnwsT-7DQPoFCOedZLrMngASQ@mail.gmail.com>
-Subject: Re: [PATCH] scsi: pm8001: Fix potential TOCTOU race in pm8001_find_tag
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, Jack Wang <jinpu.wang@cloud.ionos.com>, 
-	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v5 11/24] scsi: ufs: mediatek: Rework probe function
+To: =?UTF-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= <peter.wang@mediatek.com>,
+ "chu.stanley@gmail.com" <chu.stanley@gmail.com>,
+ "robh@kernel.org" <robh@kernel.org>,
+ =?UTF-8?B?Q2h1bmZlbmcgWXVuICjkupHmmKXls7Ap?= <Chunfeng.Yun@mediatek.com>,
+ "kishon@kernel.org" <kishon@kernel.org>,
+ "James.Bottomley@HansenPartnership.com"
+ <James.Bottomley@HansenPartnership.com>,
+ "bvanassche@acm.org" <bvanassche@acm.org>,
+ =?UTF-8?B?Q2hhb3RpYW4gSmluZyAo5LqV5pyd5aSpKQ==?=
+ <Chaotian.Jing@mediatek.com>, "conor+dt@kernel.org" <conor+dt@kernel.org>,
+ "lgirdwood@gmail.com" <lgirdwood@gmail.com>,
+ "nicolas.frattaroli@collabora.com" <nicolas.frattaroli@collabora.com>,
+ "vkoul@kernel.org" <vkoul@kernel.org>,
+ "krzk+dt@kernel.org" <krzk+dt@kernel.org>,
+ "p.zabel@pengutronix.de" <p.zabel@pengutronix.de>,
+ "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
+ "krzk@kernel.org" <krzk@kernel.org>,
+ "neil.armstrong@linaro.org" <neil.armstrong@linaro.org>,
+ "matthias.bgg@gmail.com" <matthias.bgg@gmail.com>,
+ "avri.altman@wdc.com" <avri.altman@wdc.com>,
+ "broonie@kernel.org" <broonie@kernel.org>,
+ "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+ "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "linux-arm-kernel@lists.infradead.org"
+ <linux-arm-kernel@lists.infradead.org>,
+ "linux-phy@lists.infradead.org" <linux-phy@lists.infradead.org>,
+ "linux-mediatek@lists.infradead.org" <linux-mediatek@lists.infradead.org>,
+ Louis-Alexis Eyraud <louisalexis.eyraud@collabora.com>,
+ "kernel@collabora.com" <kernel@collabora.com>
+References: <20260108-mt8196-ufs-v5-0-49215157ec41@collabora.com>
+ <20260108-mt8196-ufs-v5-11-49215157ec41@collabora.com>
+ <81ed17eb-2170-4e97-b56d-488b5335ff5c@kernel.org>
+ <dd2eba99adaddf7517f06acf7805d32e261fafa4.camel@mediatek.com>
+ <87887adf-2c94-48c2-8f83-4e772ab50f60@kernel.org>
+ <e9a6da3998195b9dbda5abd26bc6dd5d3aca07ff.camel@mediatek.com>
+ <66ca211a-c909-4d0c-a22c-9cbd3489d372@kernel.org>
+ <46cb450f92887ceba07614dc85ed495f6af7f602.camel@mediatek.com>
+ <26c68bb1-1e63-4b47-babc-21ae27e3205e@collabora.com>
+ <74944c55418976375955430d27ac568149d555f1.camel@mediatek.com>
+From: AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
+Content-Language: en-US
+In-Reply-To: <74944c55418976375955430d27ac568149d555f1.camel@mediatek.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-> > Sorry that I might miss something as I am not very familiar with the
-> > code. But I also notice the find_tag() function is also invoked
-> > inside the abort function (and invoked before the completion).
->
-> This is part of the problem, though: you're apparently using some tool
-> looking for data races in an ancient driver but most of what you find
-> isn't significant and costs us review cycles to check.
+Il 13/01/26 08:26, Peter Wang (王信友) ha scritto:
+> On Mon, 2026-01-12 at 16:02 +0100, AngeloGioacchino Del Regno wrote:
+>> No, MediaTek's reset hardware implementation is not the same as Texas
+>> Instruments.
+>> It was *very similar* to TI in the past (years ago, around the MT6795
+>> Helio
+>> generation times).
+>>
+>> MediaTek's reset controller - by hardware - is definitely different
+>> from the one
+>> found in TI SoCs.
+>>
+>> Regards,
+>> Angelo
+> 
+> I did not notice this change.
+> Will you be helping to upstream MediaTek's reset controller instead of
+> TI's?
+> 
 
-Sorry indeed for the extra efforts caused. I am implementing an
-experimental tool to check for concurrency issues. I didn't mean to
-bother you on purpose (but apologize if it did happen), as I just like
-to report some potential issues and improve the security of the
-codebase by fixing them.
+The main reset controllers are already integrated in clock drivers since
+... well, years ago.
 
-> So the theory now is that in the couple of instruction cycles between
-> checking lldd_task and dereferencing it to find the tag, it goes null?
-> That's so astronomically unlikely precisely because abort is only
-> called on a task that timed out anyway and the completion function sets
-> the state done flags, which sas error handling checks, long before it
-> begins to free the lldd_task.
+If there's any additional reset controller that is missing, and special to
+UFS, and that's not in the UFS clock driver, yes we can upstream that.
 
-That is also the point that bothers me: some races like this one can
-only happen under rare scheduling due to the small race windows
-(despite not being totally impossible and might be reported by lockdep
-one day), and could introduce a security impact (like a crash in this
-case) when they happen.
-Also like this one:
-https://lore.kernel.org/linux-scsi/CAAo+4rVWOzkz+HMc99c2D8tf2ZuwYHq39+jejaXWxD-PvUAuOA@mail.gmail.com/T/#t,
-it is a UAF race between device removal and ioctl path (if I did not
-miss anything), if measured by CVSS, it could be scored as a
-low-severity vulnerability.
+Cheers,
+Angelo
 
-Will be more than appreciated if can learn more about the community's
-attitude toward this kind of data race issues: do you prefer to fix
-them as a preventative measure (especially if the fix is harmless), or
-only like to fix them until they are encountered during execution, or
-like to fix them if it is in important code like subsystem core
-instead of an ancient driver?
+> Thanks
+> Peter
+> 
 
-Thanks again for your reply.
 
-Best regards,
-Chengfeng
