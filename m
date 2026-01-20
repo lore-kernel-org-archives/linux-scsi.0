@@ -1,48 +1,49 @@
 Received: from lamorak.hansenpartnership.com (lamorak.hansenpartnership.com [198.37.111.173])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EDD0544A70F;
-	Tue, 20 Jan 2026 14:27:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B444E3F0757;
+	Tue, 20 Jan 2026 14:28:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.37.111.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768919224; cv=none; b=p2BjTPH+/rFhBC+W6zyTODWMGt8WPP8p/zn1a++rl3zw5M/qt1g99WhHkWt5bWxAScGjGxbEjpMD/d71Z+Au71dK/gGcvOjI8ZsuJZcXL7tr6KD2fxO0SUSKzt7uYmnAUcl550fXHF+9tgrt17WyDFVI1S5XhfOTDYrlvkXjiwo=
+	t=1768919291; cv=none; b=G4nuwJpb/T3VmnOfzX7khaYtKxhCKsIKUL4I8QmX/fycyUgAj4KYD2pgeX0JZc9YKnZymVuxf59zmIPpwUtDfrSPnGJT5xw40ZDLb6bMiQ9wo1pwwmuQS9NdpG6ZW+xfYh1tKtzLFTP0ZWEXzi56Bos3LqlPehWb++UDYcd4CWo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768919224; c=relaxed/simple;
-	bh=Nme7mJ1i8sQ3Z/sziUlJN1XIrmzxFdedfGRpJKA8OxM=;
+	s=arc-20240116; t=1768919291; c=relaxed/simple;
+	bh=YKcShu87x9+9YkmTw/b+/cQFVsXiNnyIMJX0xtaRqkQ=;
 	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=ugo22F1Wp7BzwIuD+IvyigCSwFILd6qxj9iVjvlwNaA7n2Yn3MVMOYK7MrlwhcnUS6R7JAQ2IEleWIgvOn4Q1j7G7KWrOW/6hqv6OvWR8YrWXZ3Io32KTbehM3pBXZqCkAwoHHRCbuU1IQETLn7seZLHUu7nnCB+bW9LQkwJI/0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com; spf=pass smtp.mailfrom=HansenPartnership.com; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=Bn+JBmua; arc=none smtp.client-ip=198.37.111.173
+	 Content-Type:MIME-Version; b=gTDEJlaoJLqXx0ybmuQj1OGvbrAWEjKHP0vWxEvByqFc9A7AyNjjXAwYBNwa8jdGXOEES1RAQYHRQNqu1itAfrDeOXzAGAYOJ/zWDJOlFOd2KC9+Bjr1hrMs0utOFE1NKhkTVvWp/B23qgj8BOTzG/kernTsP+UGIGrH2aWjYuE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com; spf=pass smtp.mailfrom=HansenPartnership.com; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=G68vxuO7; arc=none smtp.client-ip=198.37.111.173
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=HansenPartnership.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="Bn+JBmua"
+	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="G68vxuO7"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-	d=hansenpartnership.com; s=20151216; t=1768919220;
-	bh=Nme7mJ1i8sQ3Z/sziUlJN1XIrmzxFdedfGRpJKA8OxM=;
+	d=hansenpartnership.com; s=20151216; t=1768919288;
+	bh=YKcShu87x9+9YkmTw/b+/cQFVsXiNnyIMJX0xtaRqkQ=;
 	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
-	b=Bn+JBmuaKVf/lrljuLOIr1+EZszX+DGlqQ9d/NL8dSO8Je8A2LSf/gFzx5zOKumRM
-	 /S73tTLOG6nE5qQlSJcD4yuUICe9SfuhcOD3YSpICv7gCvTyGC9inqSOso/GCAOAx4
-	 9sD0bK98Polj8Hzzo1zfgJ02JcZnP3JIoMRqXC0Q=
+	b=G68vxuO7TJHWNzU9Enkqd1lf2/F7OFCovKG99WhzBZ3ft1hutHr+6V8jbjCba1KUB
+	 aD1ANiWx3ajuWdHNCZTjwdL2lPNL5NsG58qDzVtUmD2EubwUazq99yBK6iPekeYcN4
+	 T6J+EiOC+UwVhFKypgiEKLtXvWM7dsDO7CsPLCn8=
 Received: from lingrow.int.hansenpartnership.com (unknown [IPv6:2601:5c4:4300:d341::a774])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	 key-exchange x25519)
 	(No client certificate requested)
-	by lamorak.hansenpartnership.com (Postfix) with ESMTPSA id 6AAB61C01F9;
-	Tue, 20 Jan 2026 09:27:00 -0500 (EST)
-Message-ID: <93d503967351b8383937c5ae50e5173fcf9eca53.camel@HansenPartnership.com>
-Subject: Re: [PATCH] scsi: core: Don't free dev_name() manually
+	by lamorak.hansenpartnership.com (Postfix) with ESMTPSA id 7596A1C01F9;
+	Tue, 20 Jan 2026 09:28:08 -0500 (EST)
+Message-ID: <b03e802fce29c90bbc4342e7254c3adb9f48bbf7.camel@HansenPartnership.com>
+Subject: Re: [PATCH] scsi: pm8001: Fix potential TOCTOU race in
+ pm8001_find_tag
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-To: Tzung-Bi Shih <tzungbi@kernel.org>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Greg KH
-	 <gregkh@linuxfoundation.org>, linux-scsi@vger.kernel.org, 
+To: Chengfeng Ye <dg573847474@gmail.com>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, Jack Wang
+	 <jinpu.wang@cloud.ionos.com>, linux-scsi@vger.kernel.org, 
 	linux-kernel@vger.kernel.org
-Date: Tue, 20 Jan 2026 09:26:59 -0500
-In-Reply-To: <aW9_A22PyeYEgJOv@tzungbi-laptop>
-References: <20260117193221.152540-1-tzungbi@kernel.org>
-	 <de7b19fe19ccb117cad8cd32d9c51796ee81b752.camel@HansenPartnership.com>
-	 <aW4_fbfNUMTDTAN1@tzungbi-laptop>
-	 <9308e357ecff18971b216c5e037b89b66acf7606.camel@HansenPartnership.com>
-	 <aW9_A22PyeYEgJOv@tzungbi-laptop>
+Date: Tue, 20 Jan 2026 09:28:07 -0500
+In-Reply-To: <CAAo+4rX8HT_3zKEQ3vULN-B8StnwsT-7DQPoFCOedZLrMngASQ@mail.gmail.com>
+References: <20260117101948.297411-1-dg573847474@gmail.com>
+	 <ae5cae8b3c4e71cf23b6f48453797ac48bea5914.camel@HansenPartnership.com>
+	 <CAAo+4rUkmuOruVVVNYePyfqu5OgxUxWupEBwvJg7Aus3g7WDqA@mail.gmail.com>
+	 <d7040eecadcc3557c04c27f0c74ce40b2885c311.camel@HansenPartnership.com>
+	 <CAAo+4rX8HT_3zKEQ3vULN-B8StnwsT-7DQPoFCOedZLrMngASQ@mail.gmail.com>
 Autocrypt: addr=James.Bottomley@HansenPartnership.com;
  prefer-encrypt=mutual;
  keydata=mQENBE58FlABCADPM714lRLxGmba4JFjkocqpj1/6/Cx+IXezcS22azZetzCXDpm2MfNElecY3qkFjfnoffQiw5rrOO0/oRSATOh8+2fmJ6el7naRbDuh+i8lVESfdlkoqX57H5R8h/UTIp6gn1mpNlxjQv6QSZbl551zQ1nmkSVRbA5TbEp4br5GZeJ58esmYDCBwxuFTsSsdzbOBNthLcudWpJZHURfMc0ew24By1nldL9F37AktNcCipKpC2U0NtGlJjYPNSVXrCd1izxKmO7te7BLP+7B4DNj1VRnaf8X9+VIApCi/l4Kdx+ZR3aLTqSuNsIMmXUJ3T8JRl+ag7kby/KBp+0OpotABEBAAG0N0phbWVzIEJvdHRvbWxleSA8SmFtZXMuQm90dG9tbGV5QEhhbnNlblBhcnRuZXJzaGlwLmNvbT6JAVgEEwEIAEICGwMGCwkIBwMCBhUIAgkKCwQWAgMBAh4BAheAAhkBFiEE1WBuc8i0YnG+rZrfgUrkfCFIVNYFAmBLmY0FCRs1hL0ACgkQgUrkfCFIVNaEiQgAg18F4G7PGWQ68xqnIrccke7Reh5thjUz6kQIii6Dh64BDW6/UvXn20UxK2uSs/0TBLO81k1mV4c6rNE+H8b7IEjieGR9frBsp/+Q01JpToJfzzMUY7ZTDV1IXQZ+AY9L7vRzyimnJHx0Ba4JTlAyHB+Ly5i4Ab2+uZcnNfBXquWrG3oPWz+qPK88LJLya5Jxse1m1QT6R/isDuPivBzntLOooxPk+Cwf5sFAAJND+idTAzWzslexr9j7rtQ1UW6FjO4CvK9yVNz7dgG6FvEZl6J/HOr1rivtGgpCZTBzKNF8jg034n49zGfKkkzWLuXbPUOp3/oGfsKv8pnEu1c2GbQpSmFtZXMgQm90dG9tbGV5IDxqZWpiQGxpbnV4LnZuZXQuaWJtLmNvbT6JAVYEEwEIAEACGwMHCwkIBwMCAQYVC
@@ -61,52 +62,40 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 
-On Tue, 2026-01-20 at 21:11 +0800, Tzung-Bi Shih wrote:
-> On Mon, Jan 19, 2026 at 11:02:55AM -0500, James Bottomley wrote:
-> > On Mon, 2026-01-19 at 22:28 +0800, Tzung-Bi Shih wrote:
-> > > On Sun, Jan 18, 2026 at 09:45:26AM -0500, James Bottomley wrote:
-> > > > On Sun, 2026-01-18 at 03:32 +0800, Tzung-Bi Shih wrote:
-> > [...]
-> > > > > > =C2=A0
-> > > > > > =C2=A0static struct class shost_class =3D {
-> > > > > > @@ -279,11 +278,9 @@ int scsi_add_host_with_dma(struct
-> > > > > > Scsi_Host
-> > > > > > *shost, struct device *dev,
-> > > > > > =C2=A0 goto out_disable_runtime_pm;
-> > > > > > =C2=A0
-> > > > > > =C2=A0 scsi_host_set_state(shost, SHOST_RUNNING);
-> > > > > > - get_device(shost->shost_gendev.parent);
-> > > >=20
-> > > > We need a reference to the parent to prevent surprise removal
-> > > > ...
-> > > > where else is the reference held?
-> > >=20
-> > > It looks to me the same question as above.=C2=A0 IIUC, device_add()
-> > > holds
-> > > a reference count to its parent[3].=C2=A0 Drivers don't need to do it
-> > > explicitly.
+On Tue, 2026-01-20 at 12:39 +0800, Chengfeng Ye wrote:
+> > > Sorry that I might miss something as I am not very familiar with
+> > > the code. But I also notice the find_tag() function is also
+> > > invoked inside the abort function (and invoked before the
+> > > completion).
 > >=20
-> > That's not good enough for SCSI: we have a rather complicated state
-> > model for hosts.=C2=A0 device_add() doesn't occur until the host moves
-> > out of the SHOST_CREATED state, which can be quite a time after
-> > device _initialize() so something has to pin the resources until
-> > then, which is why these references are taken.=C2=A0=C2=A0 You're certa=
-inly
-> > free to suggest a different way of doing this, but you can't just
-> > get rid of the existing mechanism without replacing it with
-> > something else.
+> > This is part of the problem, though: you're apparently using some
+> > tool looking for data races in an ancient driver but most of what
+> > you find isn't significant and costs us review cycles to check.
 >=20
-> I may misunderstand: isn't the initial reference count from
-> device_initialize() held for the purpose (i.e., pin the resource)?=C2=A0
-> The driver calls scsi_host_put() to drop the reference count when the
-> underlying chip is removing.
->=20
-> The proposed code to remove the get_device() just right before
-> device_add() in scsi_add_host_with_dma().=C2=A0 I don't see what else
-> resources it can pin.
+> Sorry indeed for the extra efforts caused. I am implementing an
+> experimental tool to check for concurrency issues. I didn't mean to
+> bother you on purpose (but apologize if it did happen), as I just
+> like to report some potential issues and improve the security of the
+> codebase by fixing them.
 
-And the reverse, when the host is going away and device_del gets called
-but something has the sysfs node open?
+But this too is a problem: fixes aren't free.  In fact a portion of the
+patches sold as a bug fix eventually turn out to introduce a bug ...
+and that new bug is one we didn't have before.  This is just a sad
+consequence of the fact that all code produced by humans contains bugs.
+The longer code is used, the more chance the bugs are found and the
+less buggy it becomes (even with the bug fixes introducing bugs).  So
+for really old drivers we assume most of the significant bugs have been
+found and we try not to perturb the code base to avoid introducing new
+bugs that, given the small and decreasing user base, will take ages to
+find and eliminate.
+
+On the scale of serious problems in older drivers, theoretical data
+races that cause a crash don't rank highly simply because if the race
+window were significant we'd already have seen it (the detection signal
+is obvious and users aren't shy about reporting driver crashes). That
+makes the probability of encountering the issue in the field way lower
+than the probability that any fix will introduce a new bug.  So the
+balance of risks argues against applying any fix.
 
 Regards,
 
