@@ -1,101 +1,105 @@
-Received: from fhigh-a4-smtp.messagingengine.com (fhigh-a4-smtp.messagingengine.com [103.168.172.155])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qt1-f180.google.com (mail-qt1-f180.google.com [209.85.160.180])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BCF5542EEBE;
-	Tue, 20 Jan 2026 23:43:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.155
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768952586; cv=none; b=Sw6Z8foLofBIIjlRjvngyedcyb1cax0Eibtf1PZJ0CUGO0B4S8IIF4ij33uWclIJ61Ri0T9QApQUq67rAWxEY1G0pgn9u6ewp4grmG1vypx48DLSb8CdCxVVielRp0QYF6/SDPmSUl3KTGlI2RLV9P3NrocTbCIelTZf+RnMzdo=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768952586; c=relaxed/simple;
-	bh=GlmGzcHtSZQcUld1gw1PgJqVjGbhFI8NTtkR2ZBQA+U=;
-	h=Date:From:To:cc:Subject:In-Reply-To:Message-ID:References:
-	 MIME-Version:Content-Type; b=bujUlK9PT1/lPaI8ht7LXxB3H0lBFkLJMk0LvtGDvKqdQrb2FfCKcvn3pjwfK5p/0NWS1OmSuU6ftfGUnUE4Wl9xEOPOk+yDFuOrjkr5UaMLHapGmZlDnKFjw38cC7A47/hVdt5XD4HwPJ2glPBed8damseCsBkYQleQFxi7yJ0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org; spf=none smtp.mailfrom=linux-m68k.org; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=Fz+FdU0X; arc=none smtp.client-ip=103.168.172.155
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux-m68k.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0782122D78A
+	for <linux-scsi@vger.kernel.org>; Wed, 21 Jan 2026 00:46:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.160.180
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1768956385; cv=pass; b=PYSv9+ZjSgQ8ftz2gD74/a6HcTaZeXmV970cOePZohi953wAQ1m99cXFcv2UjUg4Blgst5yymhkOm7biflzTM1VtOgC7eCzBhG6JLU39KMcE+qtkPzve4keFN3aPCOY/3DWFpYaBG0vVitkcMSxF5Bzo+oBMS5sR5wU0JJR828I=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1768956385; c=relaxed/simple;
+	bh=L7+YvRlmmsHVmw7jPUevJWwuNB8empKN2tKAQTBU6aE=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=ZxCzG20+QPgelb1izK3WQMEYF9Wl2Ibx/T96CqzHoGvPsxFaSOmzKVtOfvCllo8AsLLKl+sAawF62tkicH7bGc7tnCkVyhvMc7yn1/5YwBgNB/O8/f6ofZG+Gj1O1SCXbA2e/MxPZ/554IAeEP/R72Uf/yUvkm1ArBiKeQS0Z1Q=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=WfAD6gsC; arc=pass smtp.client-ip=209.85.160.180
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="Fz+FdU0X"
-Received: from phl-compute-01.internal (phl-compute-01.internal [10.202.2.41])
-	by mailfhigh.phl.internal (Postfix) with ESMTP id 938141400089;
-	Tue, 20 Jan 2026 18:43:01 -0500 (EST)
-Received: from phl-frontend-04 ([10.202.2.163])
-  by phl-compute-01.internal (MEProxy); Tue, 20 Jan 2026 18:43:01 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-type:content-type:date:date
-	:feedback-id:feedback-id:from:from:in-reply-to:in-reply-to
-	:message-id:mime-version:references:reply-to:subject:subject:to
-	:to:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=fm2; t=
-	1768952581; x=1769038981; bh=tEMTHC1soLZBaO2RIp8cTgHdEtg+JbVI4Go
-	yHb0029M=; b=Fz+FdU0XJXGQmeZQZ/rRHLCizG02GM0oElXKzS21JQIpWKGr2De
-	h1meO10Jo9aT4Yuyj9BjuXKNKklQ63Sdr7LWdIc/ZwinB98X1ZBS2oxl/puB7gXp
-	jODQkXr7CQDNh3nNZkyslMCPjE/mlsCP05dWRzWXCZ4tupyXwrJs+a8Ynx+siqfO
-	dcVDd+aRDsQeiUSo87NE5eJh1uQyM0zDps6DAzBpH8HJopETrP/mUmxSKXNnnaxy
-	7sF8JOQ+n+tNpOo1GB7O8FmEt6XeNF9dXxXjGl3zBlVfhz9MxXjNWpRHfEC6PBP9
-	TzGvBoH1ESPi+p8MpLY77PUjY8ItX47XFuA==
-X-ME-Sender: <xms:BRNwaZqOtjtJdRZrdmerm0meIFeoAKD0cgwveJC21Iuc26NyxIqxXw>
-    <xme:BRNwaWkyAQKNJ7v33P7bZyN7Bmnd04ki1Mz9t01sSsdJAEku5YZeM2_EpZssrZBNv
-    ZKiBKfxqHmq2S5dJLb0IrWEq93zb0biZYMVRzDm2vJRWs-NkpeRwQU>
-X-ME-Received: <xmr:BRNwaVNDoYIztTqXEa-Slg4ikBakMRG4CoLgtNH590OdPDbHLag-tErUGagTh3OtgCfObLjp1iL8C_rdaPny31blN3kqbHjqdbI>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefgedrtddtgddugedujeeiucetufdoteggodetrf
-    dotffvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfurfetoffkrfgpnffqhgenuceu
-    rghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujf
-    gurhepfffhvfevufgjkfhfgggtsehttdertddttddvnecuhfhrohhmpefhihhnnhcuvfhh
-    rghinhcuoehfthhhrghinheslhhinhhugidqmheikehkrdhorhhgqeenucggtffrrghtth
-    gvrhhnpeelueehleehkefgueevtdevteejkefhffekfeffffdtgfejveekgeefvdeuheeu
-    leenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepmhgrihhlfhhrohhmpehfth
-    hhrghinheslhhinhhugidqmheikehkrdhorhhgpdhnsggprhgtphhtthhopeeipdhmohgu
-    vgepshhmthhpohhuthdprhgtphhtthhopehjrghmvghsrdgsohhtthhomhhlvgihsehhrg
-    hnshgvnhhprghrthhnvghrshhhihhprdgtohhmpdhrtghpthhtohepughgheejfeekgeej
-    geejgeesghhmrghilhdrtghomhdprhgtphhtthhopehmrghrthhinhdrphgvthgvrhhsvg
-    hnsehorhgrtghlvgdrtghomhdprhgtphhtthhopehjihhnphhurdifrghnghestghlohhu
-    ugdrihhonhhoshdrtghomhdprhgtphhtthhopehlihhnuhigqdhstghsihesvhhgvghrrd
-    hkvghrnhgvlhdrohhrghdprhgtphhtthhopehlihhnuhigqdhkvghrnhgvlhesvhhgvghr
-    rdhkvghrnhgvlhdrohhrgh
-X-ME-Proxy: <xmx:BRNwaaNAeIql5YYjYU0zWQkPSW98YQGr_ZK1Cc-aigOujyqHg_6AkA>
-    <xmx:BRNwaWjTzdr1vsn5sB1R1JoQLDadzsOdNj3bMxMpUaUTPZzflLKI3A>
-    <xmx:BRNwaXvhIbg6AHp71nyrOZ4W5tz3kZ0IFXabzi1x7BToIwy4HvGCpQ>
-    <xmx:BRNwacRXGqaJ5yV6FI9Cc7HdFZKcAhAT8JU7yIc-8asd9TJz1uVrlg>
-    <xmx:BRNwaRnJq7aZWKRqptoMoI2pGZgN0XszsAJ-0GiW56MNiiraJd3XWOdS>
-Feedback-ID: i58a146ae:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Tue,
- 20 Jan 2026 18:42:58 -0500 (EST)
-Date: Wed, 21 Jan 2026 10:43:12 +1100 (AEDT)
-From: Finn Thain <fthain@linux-m68k.org>
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-cc: Chengfeng Ye <dg573847474@gmail.com>, 
-    "Martin K . Petersen" <martin.petersen@oracle.com>, 
-    Jack Wang <jinpu.wang@cloud.ionos.com>, linux-scsi@vger.kernel.org, 
-    linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] scsi: pm8001: Fix potential TOCTOU race in
- pm8001_find_tag
-In-Reply-To: <b03e802fce29c90bbc4342e7254c3adb9f48bbf7.camel@HansenPartnership.com>
-Message-ID: <2f7c49e3-302c-30d5-63ac-29412f3c6ed5@linux-m68k.org>
-References: <20260117101948.297411-1-dg573847474@gmail.com>  <ae5cae8b3c4e71cf23b6f48453797ac48bea5914.camel@HansenPartnership.com>  <CAAo+4rUkmuOruVVVNYePyfqu5OgxUxWupEBwvJg7Aus3g7WDqA@mail.gmail.com>  <d7040eecadcc3557c04c27f0c74ce40b2885c311.camel@HansenPartnership.com>
-  <CAAo+4rX8HT_3zKEQ3vULN-B8StnwsT-7DQPoFCOedZLrMngASQ@mail.gmail.com> <b03e802fce29c90bbc4342e7254c3adb9f48bbf7.camel@HansenPartnership.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="WfAD6gsC"
+Received: by mail-qt1-f180.google.com with SMTP id d75a77b69052e-502b0aa36feso3979741cf.1
+        for <linux-scsi@vger.kernel.org>; Tue, 20 Jan 2026 16:46:23 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; t=1768956383; cv=none;
+        d=google.com; s=arc-20240605;
+        b=EFNIWZMTCGhewwB1ZXmup4VF79pLtuAOrzqKzUr+Da5DN3agh3cH+I7724ppuq1Cf5
+         8PzfjzDlxYDwy2y+3j5/ge4EeiaTmOfRF1+0Wce5COOLWCUwvmJjeWP3+qSm1U42Xxqi
+         QSUk9+5ZvDNjohqs8dQZto6zcpXDUDubg6oOmI+d/OrD6Z/RSF2iF6tz9dPyQ/Hf7byU
+         QU7dDDs4N9YNwi4uQwQN5nIGA9IKmOgBYQhi/Wi3uLOR1r/gOA7nkGGCntN37rZetr+O
+         Xo6FX9YpfGz754k8vJCRn54ksmsLW71nueRVRivaslShQXZHF2SPOIn6zZRRr5dxtFjj
+         mKFA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=3PaRYhPHX40XwUTo1x+p4NurlWa0F4ct5LwytkdlOUY=;
+        fh=EcLE1CO6SaEF8QKRa9YHq8h68F7PVNuL8z+9rRy4HM4=;
+        b=Au72I2HvVFvV9J7p1u6pt9bLYIebBVGKb2lZ29ktIJKTTiBsVJvTlxII9UAoDh5eYA
+         jWy+ke/goPTi/FuYHYFayCBJ2mY3o2nuiLUNOpiEymoP90gvJw029eOEPDGSli2IqX9T
+         OJTm1kMc2iBkZRO2mNnM5twkBE8eISyRsmLZ8GxYKOYzPV6hQ8e3Yck0loTKEPRDnUi6
+         eGe+T/ppj+9YSY/LfxRJ2zk+3oMCwqMs8fty0wjR62FMTmG2dgY1biVlvEeTYN37Jft0
+         bMKbs4RkGL9+XPmT9OwvOxthv5AhMiG9rmJacTB1wuYY8W5D+jidU2dRd0FxuIUzuILe
+         4ujg==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1768956383; x=1769561183; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=3PaRYhPHX40XwUTo1x+p4NurlWa0F4ct5LwytkdlOUY=;
+        b=WfAD6gsCoWupBz7fTjypcP4sHlt+frw8Bi0mhgnNdgAfW+lsYNE1vPP58aaZ2skU9/
+         VUpu6ejbXaC9qv4/MbrpBPjG0uId2c6aA/qEv+kgULECUkveNUoI3Kno5phy449EOjI7
+         ob23CfUbYo6Kci+q6+Osbjftt2R3uKIcMFzpL3QpaGwyhYE+OSkY1DL79fsdw+43Erkb
+         O5y6hWKkz4JOpQXgqA7JkzYcZPwJHuRfD/YNqDo6qTwodUF04pr5WR5/DbchL8bQ/TJo
+         JcDzQHOesuYhqcqrn13ZgUHajsrU6GNnDncgP/H8I1CSUz6ezS+4Hh90ypCUi3eEiqhT
+         sdnw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1768956383; x=1769561183;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=3PaRYhPHX40XwUTo1x+p4NurlWa0F4ct5LwytkdlOUY=;
+        b=XrrsVlpbiny2/tl0csYXvr/C7ZxRDnrPijQZbxcOC+CNF/tsSJg2jAdSeCFYMvtghf
+         05XoeuMpva/LSpxpv7R2Imta7DzTiuoz33VngB5HeI4NCnB7ngnzMHBV9jQmxctxX6FN
+         qbpdQFJ22fTBX+rzOCEDHh49Fa+pwvWonJfBUo1xoNpvATssbVopsByt/2AzrP5dly+N
+         gC7UbNyJy15mrCaTvzuPSRQNhZ18WcuYwg3qD5daeRDdeqrdrCnDqK3JZZx0owT5aphj
+         GAR7KY3F6wKO3UqCuva2T4K4KKI+FvhkqJ1EdJSG9pX/POsEH8WY6f8IxPg7ySbj2X7J
+         R+PQ==
+X-Forwarded-Encrypted: i=1; AJvYcCWBWcUIZmBi0zcb7lAh2fTTCoEIrdlrWkycEQGJonAlljkj9sHrgdRwQqtAynKCo50SxwA4RRaZqrX1@vger.kernel.org
+X-Gm-Message-State: AOJu0YzsrChRgvrARt5oBKRG6HBZ4+e/CZQcbk/hdkWZrUSBK5ovMjQM
+	2Z3Uh2rj4/TH5KJFCfqlJ2wok2o1RNx5WNLZ2UD4iduy5XxBPVFjC6/lvTVz4T6VXxVxtRssewW
+	fMLAGU+FPPvlXfOp8Be/fBtUFbo/lwiE=
+X-Gm-Gg: AZuq6aKWfGZSKi5GlwxddEEvqMUwuBx907J5R/vqkTrb0LkPo4u6vY28ovcI1b7TEb2
+	7qXbziK7KCmqebNe+ReP0Usx0akfov0RxxMaQO2xcaXYTBIoHDT5f2hOO6M1Uwz2ODv6v0MgalG
+	ifTAGJmm0dLY03mtD+g/kao0NWD88f5UDMrGDjX5L3FZ11rBdB3g2NC2WKK9xQwIyEVI8HUwy6S
+	3TH/sFtnAM4Al8uC+uho9ZkjmIgKBTD2bJl6Rs8rlTR54rTKeXqcy8utLbbZu0phIae2/91
+X-Received: by 2002:a05:622a:3cf:b0:4ed:9264:30fa with SMTP id
+ d75a77b69052e-5019f8fb7b6mr310557491cf.31.1768956382904; Tue, 20 Jan 2026
+ 16:46:22 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+References: <20260113222716.2454544-1-minipli@grsecurity.net>
+ <CABPRKS89zwXdUT1Bhj37cQDyOHNupOJ-Ez6kS7Dp_pu06X9Myw@mail.gmail.com>
+ <CABPRKS-ongXPqWVpNYiKvy_afVKn999bxtSEfsBVQ7z5JVCgeQ@mail.gmail.com> <59933d92-eefe-49f6-ad70-79fe7aef0f3c@grsecurity.net>
+In-Reply-To: <59933d92-eefe-49f6-ad70-79fe7aef0f3c@grsecurity.net>
+From: Justin Tee <justintee8345@gmail.com>
+Date: Tue, 20 Jan 2026 16:44:41 -0800
+X-Gm-Features: AZwV_QjvxVbc9XI5JGpt5b6TxYiJ_ddM2ot66uWhwHDOcKm-B630v_jysuW5rKk
+Message-ID: <CABPRKS8C4WmEYX+jtAOTS_jeFYt_GeTp9uBoWzCMF8cUZxxzUA@mail.gmail.com>
+Subject: Re: [PATCH] scsi: lpfc: Properly set WC for DPP mapping
+To: Mathias Krause <minipli@grsecurity.net>
+Cc: Justin Tee <justin.tee@broadcom.com>, Paul Ely <paul.ely@broadcom.com>, 
+	linux-scsi@vger.kernel.org, James Smart <jsmart2021@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
+Hi Mathias,
 
-On Tue, 20 Jan 2026, James Bottomley wrote:
+Thanks, I think I=E2=80=99m able to reproduce the call trace of concern.  I=
+=E2=80=99ll
+have a closer look at this patch and will report back.
 
-> 
-> But this too is a problem: fixes aren't free.  In fact a portion of the 
-> patches sold as a bug fix eventually turn out to introduce a bug ... and 
-> that new bug is one we didn't have before. This is just a sad 
-> consequence of the fact that all code produced by humans contains bugs.
-
-Yes. And if the shiny new tool has agency inasmuchas it tests patches in 
-emulators, then the code produced by the new tool will also contain bugs.
-
-Perhaps there are cycle-accurate, hardware-bug-compatible emulators for a 
-few hardware designs. But asserting the correctness (hardware-equivalence) 
-of such emulators runs into the very same problem.
-
-So, unless tested on suitable hardware, one might expect driver patch 
-submissions to be rejected with little or no review.
+Regards,
+Justin
