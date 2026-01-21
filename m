@@ -1,121 +1,95 @@
-Received: from mail-pf1-f170.google.com (mail-pf1-f170.google.com [209.85.210.170])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A9E7533D4E1
-	for <linux-scsi@vger.kernel.org>; Wed, 21 Jan 2026 17:51:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.170
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3CDA1337113;
+	Wed, 21 Jan 2026 17:59:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769017910; cv=none; b=pClM6Lu8wK8PilSN/97mSdiLO8A1M4oDWUGhMWshwW6tWObhmW+WXFjKqKE/CefrNhESt5K9T1UzCO/08DVSQIeuwqLnCKJPkLOEoZ876RIjxWZ97JOtyFcM2LHVtWl+2NVBoN0WFVGbCwJc3sIwdIcflvv/9XCGEeolHYoueRc=
+	t=1769018398; cv=none; b=aKRQ2pNHgpiO2q1RWthd9IUcjlkQ/ZukrlIcy3NvepcvU0FqeFZsia35JumzJrveGeyv4SxHrwkts+xdUpHrCQeypNCBSyrUzzzZfNxMuoY0TN/B50Pfj2ANM1oS0cOMHbyEKh0/xu4USGnu86w12Q3uFjpxjShtU98WTMfdtjY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769017910; c=relaxed/simple;
-	bh=1qYGgZ9c1b8r3u+ifdHQSBBS7lpLzGEKtldRnalLi6U=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=pjwdDS082bvzrVAhGm2t05y1wHccNgg9MCz4W4AtK4oi7iSg9wEBMY8L8olmtnoLBVuyojX88OW6aqDbwQ7DAHMAnO858wU8Qj70ccVcvWbTh63/+KOsGxQ6Dgz6+GMCSOz/+Vb7JgG0D6gFqwM7I9pTTIvMFi2nIm54QxuvIUw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=WO/y8HoN; arc=none smtp.client-ip=209.85.210.170
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1769018398; c=relaxed/simple;
+	bh=cB7R//NyyNvgFjDreXZmNdq9+kWv2SQNEu5wQ+LEJsc=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=lF6V+kZRfZ14GrfggaEO+jd2S7sG0oLYnJSA3Go7PcJse+DJCjXZaYt8CjdZaPy7HJBPeZDJbxdVisWJfGtabenm0EHKi5AXKQ86vrJgdnvXumfBTo8YWSrCMaKxI4QP+7Wnak1XpyczBVSdpw2PhUmybuAu46sodlOfUfCdWio=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=xPlMB1r9; arc=none smtp.client-ip=199.89.1.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="WO/y8HoN"
-Received: by mail-pf1-f170.google.com with SMTP id d2e1a72fcca58-81f3fcdb556so102208b3a.2
-        for <linux-scsi@vger.kernel.org>; Wed, 21 Jan 2026 09:51:46 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1769017906; x=1769622706; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=xSB1wkD3tnNMvDpX/kYDMDj0XcHDa2KakGtOpJoZJvw=;
-        b=WO/y8HoN8++LvTXEnlN+3f5gDWDSUm8n+DL3HU2hv1uCQUVaUdkpBB4z1GNQlcQl89
-         xX12P/wt4OkuQrJcLbmZZr5Krf3FNaFOeWBVe8WzXf+88X0Z9D/Qn8Wi/FsUSl+z3t7y
-         UDaLZ7U5BZDTEg6zkRlas4v1eWL+rBltX/WyU5FLSK18ZAhaYG+IKyL7o3N9Eg6PzR9I
-         17Rdkl0uBp20uoqz4j07jCD47tgZU8AwJ1AE2EZOKC8gKSX+P3Vj0Tk7BB70mDF1Tz/o
-         GhWiLfWWwxXI625dlz727yNxEacK+wlu1lQH3NcUfqF6zIlyxgXkUI1e1rbA0MeaQpcw
-         0QFg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1769017906; x=1769622706;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=xSB1wkD3tnNMvDpX/kYDMDj0XcHDa2KakGtOpJoZJvw=;
-        b=w07knnvZRAMO+ywNAd7A/gxOpgS3SdXFkvxWCFTTLgVN2L10nN5K5Oxk9r2nVJCFzN
-         /dVfnAMHpUcbyZ8DLE6xWBaMGUAyaUbJiI0OSZOBEo6wE+TojXb1h9vvnGy+EG3O1IuB
-         O5KX8f4c+NDv0M66ro4+4umhhcabL6rS/anm5mslA/1xDZRacl/RY9sK4rERGsPbEK7J
-         1b3kw+Ha57P1BkRh5eNDx5jaiiFphfEIAWOPv9MegHN5zonnvgXdUD2nSg6VRx2bzjjB
-         +9zVhcb0QuXnBIGZKhRyLZVFu0wIz/ZI9LrwlIzo8dtU5mXQ1Cbug0L5qx/DlzUTh0ys
-         L5QQ==
-X-Forwarded-Encrypted: i=1; AJvYcCWLKz+OJ9OZkfwylyl5rVd4t9lWjUleRdrbs4O4RFsz1pa5Yvs/RHNzH87P6IFpC6zAmZjC/CmE0dol@vger.kernel.org
-X-Gm-Message-State: AOJu0Yzy3IVPiLhoD9MMkh3RFOk1m2ZAsmsr9nPf6Zmbsva2yGPagfgY
-	snH8q642RoM35RjadW9I/IFcj479vwVA0nqh9XLUL+0tuD4iEqEYHOxI
-X-Gm-Gg: AZuq6aK5aUOH9SFd0t3aE7rkOlGmwsiER4D4YKy07H1IYYg9UOv4YHg/SH+WYtByEBJ
-	K1oW4MieV3bxNlAds+ef1tPeTNVJTDT6ZRBdwoFP9IrJZSqlYFSeH1LK3bxHUG6evr9JIOCsiwb
-	H1WURqNf2HwBgVlkFQzFz/5bGNO9KpsGQi4WxmPnU2iaksHFPulE4r0DPBowMSPPoTUw7WlDC8L
-	0/LYPtVnFKIMsi38XXPbojFJ4hR5q9nijd6NmDFkNDHn/dp0DXXba+1NviU0Vj7ELjeeHWMWfa8
-	bUBMM9W5X9xE38V7AXjP38lRJaYLGYfVWzLXDfwd/cRneW541cdtyB8CBdbPMuUQppZTfZh2x91
-	xUM+8A0ztAqeb/nBLx2+17rJuTWBIA5UVLha3Q2ICrGmHwlLzvGU+qx5Qzt5Hm1VC/P9vxfc7Kq
-	rOF+ZYO3w1VaA=
-X-Received: by 2002:a05:6a00:8d2:b0:81e:408e:47c9 with SMTP id d2e1a72fcca58-81f9f69002amr15459101b3a.11.1769017906237;
-        Wed, 21 Jan 2026 09:51:46 -0800 (PST)
-Received: from inspiron ([111.125.231.221])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-81fddd12fcasm7382081b3a.0.2026.01.21.09.51.40
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 21 Jan 2026 09:51:45 -0800 (PST)
-Date: Wed, 21 Jan 2026 23:21:36 +0530
-From: Prithvi <activprithvi@gmail.com>
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-	target-devel@vger.kernel.org, linux-kernel@vger.kernel.org,
-	hch@lst.de, jlbec@evilplan.org, linux-fsdevel@vger.kernel.org,
-	linux-kernel-mentees@lists.linux.dev, skhan@linuxfoundation.org,
-	david.hunter.linux@gmail.com, khalid@kernel.org,
-	syzbot+f6e8174215573a84b797@syzkaller.appspotmail.com,
-	stable@vger.kernel.org
-Subject: Re: [PATCH] scsi: target: Fix recursive locking in
- __configfs_open_file()
-Message-ID: <20260121175136.2ku57xskhwwg7syz@inspiron>
-References: <20260108191523.303114-1-activprithvi@gmail.com>
- <2f88aa9b-b1c2-4b02-81e8-1c43b982db1b@acm.org>
- <20260119185049.mvcjjntdkmtdk4je@inspiron>
- <ac604919-1620-4fea-9401-869fd15f3533@acm.org>
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="xPlMB1r9"
+Received: from localhost (localhost [127.0.0.1])
+	by 013.lax.mailroute.net (Postfix) with ESMTP id 4dxBmX5YtWzlfc9J;
+	Wed, 21 Jan 2026 17:59:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1769018394; x=1771610395; bh=X95i5SKsyEWEDZbyP0xAvaZy
+	AHiPEpx9o5mzJwtQaRI=; b=xPlMB1r9293lwx+nqLmvq3sIWxaQv+DR6irp2zLd
+	Zlua7TSWZ8wMnhaUmn/e8NGQWAgd25zfYZSa2+EAdxPRrIFp/QSNCNTg039YMpSZ
+	KqiVG1YlurwxJ5MjITbfO+z9ycSu4QHlCrlKxcRyVNQsDSqRNwSzAYKfe8TQt6VO
+	jR7zAslx/P9nFEaKybxWySyeQNwzic+l58UsD/YAWL97RocJFnKYw3nqlx8Qp6Gh
+	SzoVFuf1xXaTvZAbnvOnBuOBA8HBS4jvwVIpL4lv7i44YCq32+OPEPIrTkhXjksG
+	Coccv8upOwnfpsqVrwOaPvgRE1gG0L40K8+tQO49JkcAwA==
+X-Virus-Scanned: by MailRoute
+Received: from 013.lax.mailroute.net ([127.0.0.1])
+ by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id CF6OQ5EBPfQt; Wed, 21 Jan 2026 17:59:54 +0000 (UTC)
+Received: from [100.119.48.131] (unknown [104.135.180.219])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4dxBmQ3ps2zlfvq4;
+	Wed, 21 Jan 2026 17:59:50 +0000 (UTC)
+Message-ID: <6927d0f7-5bf5-4035-b1c2-50f3edae4b7f@acm.org>
+Date: Wed, 21 Jan 2026 09:59:49 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ac604919-1620-4fea-9401-869fd15f3533@acm.org>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] scsi: target: Fix recursive locking in
+ __configfs_open_file()
+To: Prithvi <activprithvi@gmail.com>
+Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+ target-devel@vger.kernel.org, linux-kernel@vger.kernel.org, hch@lst.de,
+ jlbec@evilplan.org, linux-fsdevel@vger.kernel.org,
+ linux-kernel-mentees@lists.linux.dev, skhan@linuxfoundation.org,
+ david.hunter.linux@gmail.com, khalid@kernel.org,
+ syzbot+f6e8174215573a84b797@syzkaller.appspotmail.com, stable@vger.kernel.org
+References: <20260108191523.303114-1-activprithvi@gmail.com>
+ <2f88aa9b-b1c2-4b02-81e8-1c43b982db1b@acm.org>
+ <20260119185049.mvcjjntdkmtdk4je@inspiron>
+ <ac604919-1620-4fea-9401-869fd15f3533@acm.org>
+ <20260121175136.2ku57xskhwwg7syz@inspiron>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20260121175136.2ku57xskhwwg7syz@inspiron>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Tue, Jan 20, 2026 at 05:48:16AM -0800, Bart Van Assche wrote:
-> On 1/19/26 10:50 AM, Prithvi wrote:
-> >   Possible unsafe locking scenario:
-> > 
-> >         CPU0
-> >         ----
-> >    lock(&p->frag_sem);
-> >    lock(&p->frag_sem);
-> The least intrusive way to suppress this type of lockdep complaints is
-> by using lockdep_register_key() and lockdep_unregister_key().
+On 1/21/26 9:51 AM, Prithvi wrote:
+> I tried using lockdep_register_key() and lockdep_unregister_key() for the
+> frag_sem lock, however it stil gives the possible recursive locking
+> warning. Here is the patch and the bug report from its test:
 > 
-> Thanks,
+> https://lore.kernel.org/all/6767d8ea.050a0220.226966.0021.GAE@google.com/T/#m3203ceddf3423b7116ba9225d182771608f93a6f
 > 
-> Bart.
+> Would using down_read_nested() and subclasses be a better option here?
+> 
+> I also checked out some documentation regarding it and learnt that to use
+> the _nested() form, the hierarchy among the locks should be mapped
+> accurately; however, IIUC, there isn't any hierarchy between the locks in
+> this case, is this right?
+> 
+> Apologies if I am missing something obvious here, and thanks for your
+> time and guidance.
 
-Hello Bart,
+This is unexpected. Please ask help from someone who is familiar with 
+VFS internals. I'm not familiar with these internals.
 
-I tried using lockdep_register_key() and lockdep_unregister_key() for the
-frag_sem lock, however it stil gives the possible recursive locking
-warning. Here is the patch and the bug report from its test:
+Thanks,
 
-https://lore.kernel.org/all/6767d8ea.050a0220.226966.0021.GAE@google.com/T/#m3203ceddf3423b7116ba9225d182771608f93a6f
-
-Would using down_read_nested() and subclasses be a better option here?
-
-I also checked out some documentation regarding it and learnt that to use
-the _nested() form, the hierarchy among the locks should be mapped
-accurately; however, IIUC, there isn't any hierarchy between the locks in
-this case, is this right?
-
-Apologies if I am missing something obvious here, and thanks for your 
-time and guidance.
-
-Best Regards,
-Prithvi
+Bart.
