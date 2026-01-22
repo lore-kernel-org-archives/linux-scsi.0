@@ -1,161 +1,178 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f169.google.com (mail-pf1-f169.google.com [209.85.210.169])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C89CB34F47C
-	for <linux-scsi@vger.kernel.org>; Thu, 22 Jan 2026 15:11:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 31D8D3A8FF2
+	for <linux-scsi@vger.kernel.org>; Thu, 22 Jan 2026 15:41:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.169
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769094697; cv=none; b=c/WIOTBwYHhQ9LEqC0tQKRJY058YituemLpM0pFdnONSUUNkGsErJ6Khi6rj+iiR2ThFgsxE5Dbolemn2N5dc9kuVpOC2Lc73E+W40DAIvqX090ZCPWtvYzA1bHIVPWKLCBN5n0a9JQk8XpbsP5375iU/CCRY6xsuR1kJEFiQS0=
+	t=1769096465; cv=none; b=DXoc3243opNRzC0TUgcdRBdzNGs8R7f7jdsTVaVYVP3oGzQXBtFy6VagEr3Lr/2NwZmrgL4q3wk9vf27Uii8vPFKdcBb4qVvuWC8VHje716/w+fZLzth6KT72mXdszViZ6oq1sOV18Eq1CLZjL3602SW6l3Q7FdQnjbJ5JTbKa0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769094697; c=relaxed/simple;
-	bh=H5ThibAWvoajrZPKGPBvO69JSuR2rsvAoFuAmH4XUco=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=WN5+aCM+iwUIZG0yX1c4BPCbi7GLqFu+8Cn4cFltAnNQjS6NlhWmdlNY9QT84HbLnEeihqCs9oFz2qOUx1+3i2Ng3Ux1+WgX7y7YBSlRgdS86pOhz4LCPmTbuP++9ZFI7nxYd/9IfwWt8WO81Poh2Tep93zHmbEcbnXySpJTva8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=ecrd/+Og; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=W034MH4a; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	s=arc-20240116; t=1769096465; c=relaxed/simple;
+	bh=uONlpUsG6B+1SJNCDttGGY2DFAbNfSVv6+TjnGPV9Ro=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=rv+Rq81PXTJjO50IV6Xez6XrnF4SB9i1SZgLwUHp2l/Tf1e8ASF4QLWj6I1S2xbAl+9HjVrdRVI/scqbNsnTznNHHtro54WEIzMlmB9pJjYLtlh9R6UD3Hi6LF+p4wvT0DSuTebcFw4oLXb6fzQoXGY+y1QcN1gBmFZmdv9/+E8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=UInVgzqJ; arc=none smtp.client-ip=209.85.210.169
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="ecrd/+Og";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="W034MH4a"
-Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 60M82CV72278771
-	for <linux-scsi@vger.kernel.org>; Thu, 22 Jan 2026 15:11:35 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	E+apXPPkNURrNT1i45k0NbCCo3UvVpz3ZhqjBzyjoTY=; b=ecrd/+OgSZBX7q1n
-	SdzeAj471Tuy2Hd+3FbAQCJnpCFUAMaoFtMohm5SVM5aslmM7jh5ljKmkr4chqw0
-	J7UNIoU2xwVV/rMBFW6tF7zexKMeoxhZ2rBzSHout+er3sQkTwiQ2fEPpc97soRA
-	ugSZ3u0CWTGxWgpQo6k8TALn3H00nBbgfL6THP5wUa8AYF6OhFvi+4eCktJVvGVV
-	oLM6c2cxQFqY6sekNv2JHayyNIKVDuv6rGQ+JcunpOWJkIVEOvECJAu2QKgjwBgl
-	GS0O6EQ2YA9QAFve4BUNqO/YUn0xK33cPn+OV8Dt5l4+yJrhN/7CpxaMxmRcvi/Z
-	yeZrsA==
-Received: from mail-ua1-f70.google.com (mail-ua1-f70.google.com [209.85.222.70])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4bu7fatrxq-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Thu, 22 Jan 2026 15:11:34 +0000 (GMT)
-Received: by mail-ua1-f70.google.com with SMTP id a1e0cc1a2514c-94807fe6f62so95204241.3
-        for <linux-scsi@vger.kernel.org>; Thu, 22 Jan 2026 07:11:34 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="UInVgzqJ"
+Received: by mail-pf1-f169.google.com with SMTP id d2e1a72fcca58-8217f2ad01eso1065239b3a.2
+        for <linux-scsi@vger.kernel.org>; Thu, 22 Jan 2026 07:41:02 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1769094694; x=1769699494; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=E+apXPPkNURrNT1i45k0NbCCo3UvVpz3ZhqjBzyjoTY=;
-        b=W034MH4ai0H9x5LkJyHV5v5kGmT7sWeNc3VrnGbYLhS0KOttlQ6giJqoOKf7Tu41sN
-         lDHRb7U1QEAGIA2isLBHTQsplf+B+X94vXpwLlXZQO01Q/0hCqgfUHUtYxRs9zUBGy+n
-         cwxRYLPlKfKlxttNoC9TsP0gfNZc+EZbmPBSMrviGWtWQkKAL8qZQ9kM0gYhETjhCy56
-         jhV0x6dfyfCuWe3g+TS9n2wLKZaOCiLotknES6IXBTYUh/9wlRydzQdTzAdL9iyKRE9S
-         mQxfdd2Y9dIVdg3LkFvLC8Y2MmKqE3O8Z1sczJSpl83Qn9e0BJCIXDRx1jS2+Wnk19Lx
-         nMZw==
+        d=gmail.com; s=20230601; t=1769096462; x=1769701262; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=iC3BQrsx4m1KIySd6SGYfoOdN/kOmKuZK6JhgQwLLwU=;
+        b=UInVgzqJdiwkrpta0q1byxIFltiwJbGYlfvUihTy1JF0VxZ1EhsDOfpEfaK1nd3awD
+         aoGR4DIcNaGc5hur+fI4/Dfy4NUzWJ6T7sxdXa/K2CDXIngiw9lZZU+NwnyZUVetns9I
+         5bEOzxsZp/MF6zlIFd3hw+f403B5rP6M2o2KK6F506alIzWt23EZ7AP2yabYG7Zw2Z0W
+         kXLMV3IbFrh3fa66hRBG1Xu3xXjcorVd6T0uIX3QuIkOmWqn0x+GjjRt1BCPHy+A45kt
+         RbC39LlbzbC1Dun65yFK840m4+2/1XTmQPWHXzMuJxU6XNhm2b0OZ2wNuV2n+cTT7K4x
+         RG7Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1769094694; x=1769699494;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=E+apXPPkNURrNT1i45k0NbCCo3UvVpz3ZhqjBzyjoTY=;
-        b=bO/qdzm7v7zvXTel4rbdZDO9ASRoBz4WmiUqV+RYJlr9of6iaU+nfYkizYQ58Bn620
-         mtAjjcNOwq3iAvDLH2UUTLbijDB2TB63FfLsrLVzTwVMYMBrkykQ0tieATdhXJJGn5yQ
-         6VUr20T+rKwuXoTENVp2CBpobqNJFd/Zz8X25MbIDq5ZQV1MbDAGdAOo7FOL+sToSUKP
-         QWwAeNK+haQmABe1EW4R0AISD7NrgWW8YZmPdZqX5H5pUGPOvsqAcQuF7IKUYG8wUTBP
-         hmfpk4MbNk4OU205YCdqWT3XzEc3T1NwELFPULCWzNcIxrc3Ayow6WTgvXsfVTvQipfr
-         PjVQ==
-X-Forwarded-Encrypted: i=1; AJvYcCUOcGQhztRhJ+e32EHun03VM++C+PWl4RkyaRxICYCQ7HCbK5696Xpu5gbPxm0QQN6MghImUxj3Kare@vger.kernel.org
-X-Gm-Message-State: AOJu0YwxKlfcqpuffmCWBfU13dnW4eGBuVp3lEhUPVyXG3uaxnhUGg2y
-	FC0ALwrg5LWtmxqb9f1XzUVzfbldHA3N8Yy9DTkWAT3Id6LFKAPseFuWkw7OnhTjCuEC96beGc7
-	RIqEwiXEEgL/GPOfNqRJjOkcKXHfKoUJPOfHsVKt8weydR1nlEqpOi5u2qhJ8CzNf
-X-Gm-Gg: AZuq6aJT1jyLxXXSwZPFveLHKao3JnAZGEYuD8jkN642dEyoGy3dF0vmPITGS0KOQ5P
-	KVVChaLRp9o80tRqh0vGaxkyYvsGfJDfh1lXV48O7CKL6N5z7XNjCSRVQdk57ZnfSP+bCcCVyXF
-	YFNCrzRbFo0G+a/NmB4NAjwMmGk1mwLkVPP80CKFNj5zfxuiYIc7HgKv3p0BMZV2WuAGXo6rHWo
-	aGrWqu4ktaKCD0Aj7cFHPx/gERaw1LGb22LnqeybxMV1q36sRuITC91wITM04/2aMxMCkYMVcIj
-	MZ0/w+BmCZh4K0uFqf+/nu1Gb9v+kd5vgVCwRO3Jhzevdm3HcyMGsgQRF4dUKcaGK9Y/C6vCTdA
-	4Q8eVPiiWdxKkI7mowdzjg7M7iRmgqtJtfYQhIjOOtIjKsNb6o8bZ5lK7do6trlfeFek=
-X-Received: by 2002:ac5:c5d1:0:b0:559:a30f:1d47 with SMTP id 71dfb90a1353d-563b5c689d2mr3193463e0c.3.1769094693730;
-        Thu, 22 Jan 2026 07:11:33 -0800 (PST)
-X-Received: by 2002:ac5:c5d1:0:b0:559:a30f:1d47 with SMTP id 71dfb90a1353d-563b5c689d2mr3193454e0c.3.1769094693292;
-        Thu, 22 Jan 2026 07:11:33 -0800 (PST)
-Received: from [192.168.119.254] (078088045245.garwolin.vectranet.pl. [78.88.45.245])
-        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-654535c49f4sm16293405a12.31.2026.01.22.07.11.31
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 22 Jan 2026 07:11:32 -0800 (PST)
-Message-ID: <4aad22c3-a720-4d88-baa5-aead6854a771@oss.qualcomm.com>
-Date: Thu, 22 Jan 2026 16:11:31 +0100
+        d=1e100.net; s=20230601; t=1769096462; x=1769701262;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=iC3BQrsx4m1KIySd6SGYfoOdN/kOmKuZK6JhgQwLLwU=;
+        b=jhvWwiz1gVo2ppkBYQx6gX0FeUx7+22qOPgojLGJW/BZtup7Ixbh4yQr7mje14r97q
+         zxb/ZSSD9Vk8mMBBydgSfkgiRH3pQE3DUCWbHAdBSp4TyRWU0cox9RQ5LC1nfaGBtagN
+         LeLeAZLoj9/ACEwhvcYBO4UQOA0nS264QV4/cK3spdFJAiQ1D35RbHC7O1hmEJJjueGa
+         YAlKk2jV+so83fARBxPzaJCthgBhLevdC5udE8UqvVkQFy2QICMBxXG+19FIloMR0YHt
+         l+nAB/R9MjkroxOJ5M0vbO9er5OIHxS3/3hVk3CkiQpK8HnoN7Al9Yklc/g4GCEbiOzu
+         uluw==
+X-Gm-Message-State: AOJu0YyWktHYejPLVvLR0hmfENMIzwwzZogQ7uf36OLbvSzwbyb7w2rT
+	Ua8GP9Cd8WcabRvHNf3pWt6gBtPEJByTjJkOZTq9FVxy9WmW6YIikRRD
+X-Gm-Gg: AZuq6aJiT/dy7WUZDy6Woimhj7+MK7n/hnqG7Q8lWNmQoVYYzNyDdbKkwDi4gmNY8jB
+	LjUUUPAS2z55Iguhc9vcVo5XAz5q4P65U1pV84XJ8uc6OQIicLgKW9AXckKCTytsRIZIEbJAzA9
+	ZkHY4eoFldr87loCyBCOqZAC68G8v9liCfBQwcptNdDCZsgFds8l6J2ro0Ck0KsQWJLNCvZoq2b
+	B2RF0h58lxyXd43H6GgHCGhMYfu6lws4WD6VEhvJPWxVQMuwl/v37V5MQGLw6rvDA11+jQa7QcG
+	8gqXKXSq0mdox3TZ1dVQoT24uqCiJ2+fJ3k6knX1rQ+AH4qnDBNqzrWM9qze3RqFsIYoCRL8mSW
+	uSBX1qsBMuI0WPUBZKYI320tY0EXpQR3ZDSRXKr4MuXgnr89Y1fEMJQpWOPxwxuSXRgLWOD9Oog
+	ICky16Q5LoozbW22wdeBnnQ7Tw7c8+
+X-Received: by 2002:a05:6a00:1302:b0:823:1117:39e6 with SMTP id d2e1a72fcca58-82311173ef0mr798121b3a.33.1769096462238;
+        Thu, 22 Jan 2026 07:41:02 -0800 (PST)
+Received: from localhost.localdomain ([111.125.231.221])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-82181d6f7f7sm3474462b3a.50.2026.01.22.07.40.57
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 22 Jan 2026 07:41:01 -0800 (PST)
+From: Prithvi Tambewagh <activprithvi@gmail.com>
+To: martin.petersen@oracle.com,
+	d.bogdanov@yadro.com,
+	bvanassche@acm.org
+Cc: linux-scsi@vger.kernel.org,
+	target-devel@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-kernel-mentees@lists.linux.dev,
+	skhan@linuxfoundation.org,
+	david.hunter.linux@gmail.com,
+	khalid@kernel.org,
+	Prithvi Tambewagh <activprithvi@gmail.com>,
+	syzbot+f6e8174215573a84b797@syzkaller.appspotmail.com,
+	stable@vger.kernel.org
+Subject: [PATCH v2] scsi: target: fix recursive locking in __configfs_open_file()
+Date: Thu, 22 Jan 2026 21:10:51 +0530
+Message-Id: <20260122154051.64132-1-activprithvi@gmail.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH V1 3/3] ufs: ufs-qcom: Fix sequential read variance
-To: Nitin Rawat <nitin.rawat@oss.qualcomm.com>, mani@kernel.org,
-        James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
-Cc: linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org
-References: <20260122141331.239354-1-nitin.rawat@oss.qualcomm.com>
- <20260122141331.239354-4-nitin.rawat@oss.qualcomm.com>
-Content-Language: en-US
-From: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
-In-Reply-To: <20260122141331.239354-4-nitin.rawat@oss.qualcomm.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-Authority-Analysis: v=2.4 cv=Hrx72kTS c=1 sm=1 tr=0 ts=69723e26 cx=c_pps
- a=R6oCqFB+Yf/t2GF8e0/dFg==:117 a=FpWmc02/iXfjRdCD7H54yg==:17
- a=IkcTkHD0fZMA:10 a=vUbySO9Y5rIA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=EUspDBNiAAAA:8 a=qSU9NBqPYLnPsOZMscYA:9
- a=QEXdDO2ut3YA:10 a=TD8TdBvy0hsOASGTdmB-:22
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMTIyMDExNiBTYWx0ZWRfX71RNbpnDd8GJ
- g5hLOtHMalq27K9JcbTzX2MilyX0mPb/R+LqoFm6EvtW62awWEdGj9MQRvxo++rIQWqsg/ruPh8
- ap5m+10qctHACm7fjj89tXhFOTr6iUREqis5b5YZeEL6OwHtHo8PqJpc0kDBstXDvWFyn5Er8WJ
- w+x6os3Du/D1Sgh1Arw/PvT3PcEYaet8uOnkXaEdZbDsyuZqT1XJgyRvDRH21KIK8abEQI5aKOB
- e4r2Vg/0H2dgkDsBLzfKlX3DpsFP/kj4WVJ32z6MjZ8h2nbyF989/4SirN7gkNvx83IiY7v+hhb
- huBHaal3AFOIAgtihvIutao8i8L2ghTO9cMwuklbOQbY4Jp4tVV03qvYFftDm0rN71r3YVHll+C
- /vccOUnSXhtyIN+NB8H/vmY0sqRsxJHR1+x4CMGSW0RHe6ueJ93xu1hr0mMlug1BkrmEEukk9GT
- 873Aw15zSv9fcc4COfA==
-X-Proofpoint-ORIG-GUID: LIgPFazB5ZbGXXWB5Ctn9NGMPdMuQuL4
-X-Proofpoint-GUID: LIgPFazB5ZbGXXWB5Ctn9NGMPdMuQuL4
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.20,FMLib:17.12.100.49
- definitions=2026-01-22_02,2026-01-22_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- priorityscore=1501 spamscore=0 lowpriorityscore=0 clxscore=1015
- impostorscore=0 bulkscore=0 suspectscore=0 adultscore=0 phishscore=0
- malwarescore=0 classifier=typeunknown authscore=0 authtc= authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2601150000
- definitions=main-2601220116
+Content-Transfer-Encoding: 8bit
 
-On 1/22/26 3:13 PM, Nitin Rawat wrote:
-> The current devfreq downdifferential threshold of 5% causes overly
-> aggressive frequency downscaling, leading to performance degradation
-> sometimes during sequential read workloads.
-> 
-> Update the UFS devfreq downdifferential threshold to 65.
-> This widens the hysteresis window and prevents overly aggressive
-> downscaling, ensuring that frequency is maintained for loads above 5%
-> and scaling down occurs only when utilization falls below this level,
-> while scale-up still triggers above the 70% threshold.
-> 
-> Signed-off-by: Nitin Rawat <nitin.rawat@oss.qualcomm.com>
-> ---
->  drivers/ufs/host/ufs-qcom.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-> index ab5aed241913..5ef810b95b72 100644
-> --- a/drivers/ufs/host/ufs-qcom.c
-> +++ b/drivers/ufs/host/ufs-qcom.c
-> @@ -1962,7 +1962,7 @@ static void ufs_qcom_config_scaling_param(struct ufs_hba *hba,
->  	p->polling_ms = 60;
->  	p->timer = DEVFREQ_TIMER_DELAYED;
->  	d->upthreshold = 70;
-> -	d->downdifferential = 5;
-> +	d->downdifferential = 65;
+In flush_write_buffer, &p->frag_sem is acquired and then the loaded store
+function is called, which, here, is target_core_item_dbroot_store().
+This function called filp_open(), following which these functions were
+called (in reverse order), according to the call trace:
 
-FWIW I see this is the value that's been shipping on android for 
-quite a while 
+down_read
+__configfs_open_file
+do_dentry_open
+vfs_open
+do_open
+path_openat
+do_filp_open
+file_open_name
+filp_open
+target_core_item_dbroot_store
+flush_write_buffer
+configfs_write_iter
 
-Reviewed-by: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
+target_core_item_dbroot_store() tries to validate the new file path by
+trying to open the file path provided to it; however, in this case,
+the bug report shows:
 
-Konrad
+db_root: not a directory: /sys/kernel/config/target/dbroot
+
+indicating that the same configfs file was tried to be opened, on which
+it is currently working on. Thus, it is trying to acquire frag_sem
+semaphore of the same file of which it already holds the semaphore obtained
+in flush_write_buffer(), leading to acquiring the semaphore in a nested
+manner and a possibility of recursive locking.
+
+Fix this by modifying target_core_item_dbroot_store() to use kern_path()
+instead of filp_open() to avoid opening the file using filesystem-specific
+function __configfs_open_file(), and further modifying it to make this
+fix compatible.
+
+Reported-by: syzbot+f6e8174215573a84b797@syzkaller.appspotmail.com
+Closes: https://syzkaller.appspot.com/bug?extid=f6e8174215573a84b797
+Tested-by: syzbot+f6e8174215573a84b797@syzkaller.appspotmail.com
+Cc: stable@vger.kernel.org
+Signed-off-by: Prithvi Tambewagh <activprithvi@gmail.com>
+---
+Changes since v1:
+ - Update commit message to reflect the fact that same file, which code was 
+   currently operating on, was tried to be opened again, leading to 
+   acquiring the same semaphore in nested manner & possibility of recursive
+   locking.
+
+v1 link: https://lore.kernel.org/all/20260108191523.303114-1-activprithvi@gmail.com/T/ 
+
+ drivers/target/target_core_configfs.c | 13 +++++++------
+ 1 file changed, 7 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
+index b19acd662726..f29052e6a87d 100644
+--- a/drivers/target/target_core_configfs.c
++++ b/drivers/target/target_core_configfs.c
+@@ -108,8 +108,8 @@ static ssize_t target_core_item_dbroot_store(struct config_item *item,
+ 					const char *page, size_t count)
+ {
+ 	ssize_t read_bytes;
+-	struct file *fp;
+ 	ssize_t r = -EINVAL;
++	struct path path = {};
+ 
+ 	mutex_lock(&target_devices_lock);
+ 	if (target_devices) {
+@@ -131,17 +131,18 @@ static ssize_t target_core_item_dbroot_store(struct config_item *item,
+ 		db_root_stage[read_bytes - 1] = '\0';
+ 
+ 	/* validate new db root before accepting it */
+-	fp = filp_open(db_root_stage, O_RDONLY, 0);
+-	if (IS_ERR(fp)) {
++	r = kern_path(db_root_stage, LOOKUP_FOLLOW, &path);
++	if (r) {
+ 		pr_err("db_root: cannot open: %s\n", db_root_stage);
+ 		goto unlock;
+ 	}
+-	if (!S_ISDIR(file_inode(fp)->i_mode)) {
+-		filp_close(fp, NULL);
++	if (!d_is_dir(path.dentry)) {
++		path_put(&path);
+ 		pr_err("db_root: not a directory: %s\n", db_root_stage);
++		r = -ENOTDIR;
+ 		goto unlock;
+ 	}
+-	filp_close(fp, NULL);
++	path_put(&path);
+ 
+ 	strscpy(db_root, db_root_stage);
+ 	pr_debug("Target_Core_ConfigFS: db_root set to %s\n", db_root);
+
+base-commit: 3a8660878839faadb4f1a6dd72c3179c1df56787
+-- 
+2.34.1
 
