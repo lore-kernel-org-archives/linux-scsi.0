@@ -1,178 +1,117 @@
-Received: from mail-pf1-f173.google.com (mail-pf1-f173.google.com [209.85.210.173])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.2])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 454373A7836
-	for <linux-scsi@vger.kernel.org>; Wed, 21 Jan 2026 18:29:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 484483242B8;
+	Thu, 22 Jan 2026 01:57:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.2
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769020174; cv=none; b=BDDN2DSGfc4UMiIz/shJyE/jrGEQJnM/vruylK+aDYk+Bde6PD+KthstM5na6wX6xMmvLdK/sW6aDEDJNl4mTLKKS77XNBA+a/vwpPBFeIBy8E1P7FljJfV/VBDE9pcAGGP8exUFCl8IYOvoQf7rKcmYWb7X74a2cjb7pGl6mDo=
+	t=1769047062; cv=none; b=aa1b2y9HR91btVdlCDhfAQiq++T9Oakdy24iKC++OZ9Y+wQSAZRk6Nt3mcCX6JB9qejBrAsgLqf7CoZyY55cF9TBxfIQaWN27hKpJX2xhdS4YKVBIcAAxUYvKibjGNz6kwDcg15ObhQTx268LVfexX0E/8eHTZiks51KTDrytzM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769020174; c=relaxed/simple;
-	bh=rXG5ZKvyvWBHHACzLV8wPF9nuPc1igUArEv0FBWhhds=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Dp7xbhkH+7RAzdrZevCFnz+3l5Tpeto6efHeZT3dNxU3lgbl/CrMC4Www18odc5gaFmxxZYL1IYsMF5V6kruKqQW3didFN/4GIqasAAuKM5uQg0Ca3hLVekYiBJvIzSK7HaXsrvDjEwA3ZdPWv3R/TZFkMu0tttkFk0WPVK3Sck=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=EwDqE+KA; arc=none smtp.client-ip=209.85.210.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1769047062; c=relaxed/simple;
+	bh=P2Uv1Q3VuWXwSz+y0wB+XHnFHuSfz8k3ip0WFcxjugs=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=c/sK92Ft8ZbLVX1tF7jhEU1aFHtbjdXesDVk1020zPv4q/FOK6e2Lseu7NIC7DbH0JtH41+bI4J746oYenAeKrfIX5zvDkXd4jsgaFDZjoomGv7jJ95je77mNjGNKtf+ohyfm2QK2MSdnUCAU0DUUDV9SVWkRfNd2k0FaK41Bv8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=SafkkrPM; arc=none smtp.client-ip=117.135.210.2
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="EwDqE+KA"
-Received: by mail-pf1-f173.google.com with SMTP id d2e1a72fcca58-81e9d0cd082so174862b3a.0
-        for <linux-scsi@vger.kernel.org>; Wed, 21 Jan 2026 10:29:31 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1769020170; x=1769624970; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=tc2r2HxnJJlwpaCSqhrItmuiSzit6sO0uRPjBjoXBAU=;
-        b=EwDqE+KA27Jc3Uqnl/XyGQy4encmWk6WZyAQFwLpBnyofdExoWnbyXMjUYoye8Gxu7
-         6q7SABpPMN6AMu3LiMk50qXnpz5Wq/KoroGwU7taimXhY/xtlQ2yLf5O/qxpYGxtCi14
-         7Nn6M855h4vW3GRH9Ii2U4tTX1YuEO3J+tTvb1lP9Mp9rYudL8nZw1aAd7ZgwCwn0qiM
-         STZkZVQ5tHh7C2AV3D7sMze97ajBCwY8RCMRuZkWes8TeYkS8+fQywsVVCoayf7HEEb4
-         FZGmccBnS7Ux0J+N2kABXmcQq+lIZKEeZDsp1hKfWpjTFbPX9BTV/ShqFxrpZ1ske37A
-         fTdw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1769020170; x=1769624970;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=tc2r2HxnJJlwpaCSqhrItmuiSzit6sO0uRPjBjoXBAU=;
-        b=kEpRA5ejhnjrMNOpS9TGM3v+nn+JvAuRGbyBHohisUxgGKnkAehI1zgdsvDDTOzf03
-         jrwe580JowW8OiENcSCLzEB+dBsyjvLEIoy3yQZDc0fzGJ3OpFo8EfVtzNyZRI0YYNXk
-         YQ7XbilwgMAKPxhpm7ZpZRIGFAFV3NpDVjhNtH6UZL0O7woucBJGJlzdt6ifmJSHhXd1
-         EB5o3wR0mjRWvOao/O9/lELKgsOkrnGKPHeg+FvO+f0heh4NutSslLmpVY34r+ZeqnIM
-         eAFjoGYwMQq+WQtG+6yNRW2KyxRqOGNN+ZFhME0MKb17tsbPyen+CNUbX7tBWbsjLvyO
-         S7iQ==
-X-Forwarded-Encrypted: i=1; AJvYcCXomDxS9PNHIzAwHW2jORWf7611KUyC+27Joe4HH800FMHwr3wtYIERBZlarxBylbs1te+NuE7yvqwy@vger.kernel.org
-X-Gm-Message-State: AOJu0Yw27wkcnF680tLi1DdwHutNQp78z7k0Idp59lzJ/WJSmQvYa8bk
-	VXCDr1MczqcGVOvpMe35t+grrVMMPZAg9y9lC7poZAPG0GbkCVZf3pzI
-X-Gm-Gg: AZuq6aJKtODEGOPrGehHw7eJ7F0FnZj6T6kGPkInr3W+62CcIQ1Kw3kdVgIkUZzTDVW
-	w+qzIns3jdm/niaXIPo3YIyOKaXoziX7OSxDZY77URcsOlnF+c6nHXaF9FIudkODFs70GFIreJS
-	gu+lxKGX1SkiDh/23PApiu/efhIApQNgoE8ECWs92ffgWf45NwWmtGRAEyU8oVtGzJ2tTnUIDF8
-	mMalq5vDNI7bJ2m8I5DQHXIc7imfoXTmzMvlJcUsSt2XQMkkwtmPQY7HxdfQ6rDy+sjt5YG5y9m
-	qr3GckOSCFf6OjS7/0LpVGPh5+5YS8lVuZbtMyBr+pFtb2vnAMmzSlYsGSKdgtOf7NCtF/UKKnw
-	N+n1d8pgqm/7ANbpkgPI8ElQISgPmaknEG1uinTpNqX2dPBN2kEp9Uo5QG0WyKMB2va4ml1vou6
-	KZesyJ5elpjfE=
-X-Received: by 2002:a05:6a21:3395:b0:366:19e9:8a3c with SMTP id adf61e73a8af0-38e00bf6c7bmr19050575637.2.1769020170290;
-        Wed, 21 Jan 2026 10:29:30 -0800 (PST)
-Received: from inspiron ([111.125.231.221])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-c5edf37a7b0sm12838994a12.33.2026.01.21.10.29.24
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 21 Jan 2026 10:29:30 -0800 (PST)
-Date: Wed, 21 Jan 2026 23:59:20 +0530
-From: Prithvi <activprithvi@gmail.com>
-To: a.hindborg@kernel.org, leitao@debian.org
-Cc: bvanassche@acm.org, martin.petersen@oracle.com,
-	linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
-	linux-kernel@vger.kernel.org, hch@lst.de, jlbec@evilplan.org,
-	linux-fsdevel@vger.kernel.org, linux-kernel-mentees@lists.linux.dev,
-	skhan@linuxfoundation.org, david.hunter.linux@gmail.com,
-	khalid@kernel.org,
-	syzbot+f6e8174215573a84b797@syzkaller.appspotmail.com,
-	stable@vger.kernel.org
-Subject: Re: [PATCH] scsi: target: Fix recursive locking in
- __configfs_open_file()
-Message-ID: <20260121182920.hfen6vsf5o27wi3z@inspiron>
-References: <20260108191523.303114-1-activprithvi@gmail.com>
- <2f88aa9b-b1c2-4b02-81e8-1c43b982db1b@acm.org>
- <20260119185049.mvcjjntdkmtdk4je@inspiron>
- <ac604919-1620-4fea-9401-869fd15f3533@acm.org>
- <20260121175136.2ku57xskhwwg7syz@inspiron>
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="SafkkrPM"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=N9
+	rjxOL/Tkk8FKgypSTYcYZWzwbPodMr6gRIyaNOkv4=; b=SafkkrPMWGxEgKGccy
+	Lin2yffn0/F8/V7FTGlpbvVqhHfSrakmZlzO9ep4o0dThOz/u7HIQogDXa8xd/x4
+	vwFWCPjOdXaXMqufPW2siNTf+7FXyytA7zZwfslllLHgLg7yxn0V/g/YYC3Fhq3N
+	bDp/pAK9yzSlj4od55AEuZkZ0=
+Received: from localhost.localdomain (unknown [])
+	by gzsmtp2 (Coremail) with SMTP id PSgvCgBHTZvng3Fp059XOA--.28408S2;
+	Thu, 22 Jan 2026 09:56:55 +0800 (CST)
+From: Yang Xiuwei <yangxiuwei@kylinos.cn>
+To: linux-scsi@vger.kernel.org,
+	linux-block@vger.kernel.org,
+	io-uring@vger.kernel.org
+Cc: fujita.tomonori@lab.ntt.co.jp,
+	axboe@kernel.dk,
+	James.Bottomley@HansenPartnership.com,
+	martin.petersen@oracle.com,
+	bvanassche@acm.org,
+	Yang Xiuwei <yangxiuwei@kylinos.cn>
+Subject: [RFC PATCH v4 0/3] bsg: add io_uring command support for SCSI passthrough
+Date: Thu, 22 Jan 2026 09:56:50 +0800
+Message-Id: <20260122015653.703188-1-yangxiuwei@kylinos.cn>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260121175136.2ku57xskhwwg7syz@inspiron>
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:PSgvCgBHTZvng3Fp059XOA--.28408S2
+X-Coremail-Antispam: 1Uf129KBjvJXoW7ArWUJw45Ar45XrW7KrW3Wrg_yoW5JF4fpF
+	WSgr43Kr4UCw1xCF4fJFsrZa45Xws5GayxG343Gw10yFn8uF1ktrn0gr1FvFZrAry7K34j
+	qw4jqrn8uw1UAa7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07j1_M3UUUUU=
+Sender: yangxiuwei2025@163.com
+X-CM-SenderInfo: p1dqw55lxzvxisqskqqrwthudrp/xtbC6QjRYmlxg+hl5wAA3j
 
-On Wed, Jan 21, 2026 at 11:21:46PM +0530, Prithvi wrote:
-> On Tue, Jan 20, 2026 at 05:48:16AM -0800, Bart Van Assche wrote:
-> > On 1/19/26 10:50 AM, Prithvi wrote:
-> > >   Possible unsafe locking scenario:
-> > > 
-> > >         CPU0
-> > >         ----
-> > >    lock(&p->frag_sem);
-> > >    lock(&p->frag_sem);
-> > The least intrusive way to suppress this type of lockdep complaints is
-> > by using lockdep_register_key() and lockdep_unregister_key().
-> > 
-> > Thanks,
-> > 
-> > Bart.
-> 
-> Hello Bart,
-> 
-> I tried using lockdep_register_key() and lockdep_unregister_key() for the
-> frag_sem lock, however it stil gives the possible recursive locking
-> warning. Here is the patch and the bug report from its test:
-> 
-> https://lore.kernel.org/all/6767d8ea.050a0220.226966.0021.GAE@google.com/T/#m3203ceddf3423b7116ba9225d182771608f93a6f
-> 
-> Would using down_read_nested() and subclasses be a better option here?
-> 
-> I also checked out some documentation regarding it and learnt that to use
-> the _nested() form, the hierarchy among the locks should be mapped
-> accurately; however, IIUC, there isn't any hierarchy between the locks in
-> this case, is this right?
-> 
-> Apologies if I am missing something obvious here, and thanks for your 
-> time and guidance.
-> 
-> Best Regards,
-> Prithvi
+Hi all,
 
-Hello Andreas and Breno,
+This RFC series adds io_uring command support to the BSG (Block layer
+SCSI Generic) driver, enabling asynchronous SCSI passthrough operations
+with zero-copy support via fixed buffers.
 
-This thread is regarding a patch for fixing possible deadlock in 
-__configfs_open_file(); here is its dashboard link:
+The implementation follows the io_uring uring_cmd pattern used by other
+drivers (e.g., nvme). A new bsg_uring_cmd structure fits within the 80-byte
+cmd field of a 128-byte SQE, with 8 bytes reserved for future extensions.
+The structure uses protocol-agnostic field names and follows the sg_io_v4
+design with separate din_xferp/dout_xferp fields. SCSI status information
+is returned in the CQE res2 field using a compact 64-bit encoding.
 
-https://syzkaller.appspot.com/bug?extid=f6e8174215573a84b797
+Currently only BSG_SUB_PROTOCOL_SCSI_CMD is implemented. Scatter/gather
+I/O and bidirectional transfers are not yet supported.
 
-Firstly, flush_write_buffer() is called, which acquires frag_sem lock, 
-and then it calls the loaded store function, which, in this case, is
-target_core_item_dbroot_store(). target_core_item_dbroot_store() calls
-filp_open(), which ultimately calls configfs_write_iter() and in it, 
-the thread tries to acquire frag_sem lock again, posing a possibility of
-recursive locking.
+The implementation has been tested with a user-space test program covering
+basic SCSI commands (INQUIRY, READ CAPACITY, READ, WRITE), zero-copy mode,
+and error handling.
 
-In the initial patch, I tried to fix this by replacing the call to 
-filp_open() in target_core_item_dbroot_store() with kern_path(), since 
-it performs the task of checking if the file path exists, rather than 
-opening the file using configfs_write_iter(). This also avoids acquiring 
-frag_sem in nested manner and thus possibiliy of recursive locking is 
-prevented.
+The v4 implementation uses a callback function pointer pattern to maintain
+independence of the generic BSG layer from specific protocol implementations,
+avoiding build-time dependencies on SCSI-specific code.
 
-After checking I found 3 functions where down-write() is used, which, 
-IIUC they might contribute to recursive locking:
+Previous versions:
+- v1: https://lore.kernel.org/all/20260112084606.570887-1-yangxiuwei@kylinos.cn/
+- v3: https://lore.kernel.org/r/cover.1768536312.git.yangxiuwei@kylinos.cn
 
-1. configfs_rmdir() - calls down_write_killable(&frag->frag_sem)
-2. configfs_unregister_group() - calls down_write(&frag->frag_sem);
-3. configfs_unregister_subsystem() - calls down_write(&frag->frag_sem);
+Changes since v1:
+-----------------
+- Protocol-agnostic field names (request/request_len instead of cdb_addr/cdb_len)
+- Removed __packed attribute for better code generation
 
-Bart suggested that this can be a fals positive and can be solved using
-lockdep_register_key() and lockdep_unregister_key(). However, on trying
-this approach, the possibile recursive locking warning persisted, it can 
-be found here:
+Why v2 was superseded:
+----------------------
+v2 unified din_xferp/dout_xferp into a single xfer_addr field, which
+diverged from the established sg_io_v4 interface. v3 reverts to separate
+din_xferp/dout_xferp fields to maintain consistency with the existing
+BSG interface.
 
-https://lore.kernel.org/all/6767d8ea.050a0220.226966.0021.GAE@google.com/T/#m3203ceddf3423b7116ba9225d182771608f93a6f
+Changes since v3:
+- Fixed undefined symbol error by using callback function pointer pattern
+  instead of direct function calls
+- Removed protocol-specific validation from generic layer (moved to
+  scsi_bsg_uring_cmd)
 
-IIUC, we can then use down_read_nested() and lock subclasses here; but,
-according to documentation:
 
-https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/Documentation/locking/lockdep-design.rst#n230
+Yang Xiuwei (3):
+  bsg: add bsg_uring_cmd uapi structure
+  bsg: add uring_cmd support to BSG generic layer
+  bsg: implement SCSI BSG uring_cmd handler
 
-I learnt that to use the _nested() form, the hierarchy among the locks 
-should be mapped accurately; however, from the lockdep documentation, 
-my understanding is that there isn't any hierarchy between the locks 
-in this case.
+ block/bsg-lib.c          |   2 +-
+ block/bsg.c              |  35 ++++++-
+ drivers/scsi/scsi_bsg.c  | 210 ++++++++++++++++++++++++++++++++++++++-
+ include/linux/bsg.h      |   6 +-
+ include/uapi/linux/bsg.h |  21 ++++
+ 5 files changed, 270 insertions(+), 4 deletions(-)
 
-Your guidance on whether the kern_path based fix is the right direction here, 
-or if there is a more appropriate way to handle this from a configfs or VFS 
-point of view would be very valuable.
+-- 
+2.25.1
 
-Thank you for your time and guidance.
-
-Best Regards,
-Prithvi
