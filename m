@@ -1,169 +1,192 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f176.google.com (mail-pf1-f176.google.com [209.85.210.176])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F265A34A78D;
-	Thu, 22 Jan 2026 14:13:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CFD052D8DCF
+	for <linux-scsi@vger.kernel.org>; Thu, 22 Jan 2026 14:29:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.176
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769091227; cv=none; b=UVDuyfS8aFmkDWlr9TxSDrIMsO5hN/KXL2euJ/z93iJtaxvaAVkW+NF9gcftJfzDGJYglybzA3CWOmE6XvM1CfW2l319rPPUt6yo1nIj/RGhrWJO57SuKpxxbH3ob+G5DlL5OsyjeNm2zbM2miPq4Rg8zH0gStH9xkMLxfJwXgA=
+	t=1769092187; cv=none; b=Ykn4fPruyB6UlbLOicungVQSiXIjocLUTsLM6GJLHoUXIboZA5ycMb3q6zRU1xGFvcWPdf8zkcVcH7NdMY28kldhnl1v5vjgkAaf7ghLGp31K7DPLv2m2Q/1gTb8Q8lhDUGTMvx3gj4FR0py+3UIJvYaZIhQ8Iskmtic/5uz70Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769091227; c=relaxed/simple;
-	bh=rvbMOzhV/pqqIVLf0z4e2+FBomHlnIj9UpbG0L3Kih4=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=L2FZ8YkuJSC6E764PqPO1/ZIdLG+UZNHU2hmgCn1jKtNS4VJn7Lxx/mKPa9J+9gf2hkjuYiYMVraX1ChTo0iUMUtDc0eB2fziCJ451YQTOWKWBLsLHbj/wdqR5wZyboVkzYgC4C6EC+unXseqIsTst+ykHJEDfgbF/2Bl6k4h7o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=kDvzDNDE; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qualcomm.com
+	s=arc-20240116; t=1769092187; c=relaxed/simple;
+	bh=cz+JlD34fRs/pROTZrvc12hKh4tyzrxS8BcTZwwO9EI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=udDeam2Lpr1Dv0FBVFcjh1x60Ze5D3g88oC3m90jONJZc3SaAfz5dxS0UQHuXjZqDEzhcKozqNeXKHSANAEx6mdjZoLwCyNkSWi21Bf4YCyro+x+kbPcZF1QD/jGKsNI7y4psWRKP0ZYIPVRrwAKUYCwWcWmYF69IllcwP55X7I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=cZ2GtT73; arc=none smtp.client-ip=209.85.210.176
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="kDvzDNDE"
-Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 60MCTxOw3902080;
-	Thu, 22 Jan 2026 14:13:38 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:date:from:in-reply-to:message-id
-	:mime-version:references:subject:to; s=qcppdkim1; bh=ImuYD66sVwW
-	N+Mt6iFHeG880YkzyHX+kIKXxIJIAedM=; b=kDvzDNDEaDkchNLtC3qnnACLuNX
-	NFQFWLlwdn/wK2V/Jl9Jbo2F9d2zu1rD2hxE2Z5JLF/TXbuWN7qnEab5/CvCrPzV
-	hLRj17cM8482h9BAwC/HuyqRqhNocQMGRIqpykuswp4/e957yVkChh4iI/7IhoUI
-	dro8CCUH95QIq+r0hboK38BJAe2M04TQe2TgC1bAq6GeUSyMcGzzeWzmtQ/a0BMR
-	4DH/8tUHJJDK9wmldGvnI1/Omm0Gc702brALtMaRzWJ7BlmC/oKJVe2gteBMnLYN
-	5MbdkH4/wnmGSFcxr2Uojc8Ie494f22nSQhGc6+AAPcuNJSTZ+7srjWpTGQ==
-Received: from apblrppmta02.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.18.19])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4bu4khk3gg-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 22 Jan 2026 14:13:38 +0000 (GMT)
-Received: from pps.filterd (APBLRPPMTA02.qualcomm.com [127.0.0.1])
-	by APBLRPPMTA02.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTP id 60MEDZFU003667;
-	Thu, 22 Jan 2026 14:13:35 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-	by APBLRPPMTA02.qualcomm.com (PPS) with ESMTPS id 4br3gmypnw-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 22 Jan 2026 14:13:35 +0000
-Received: from APBLRPPMTA02.qualcomm.com (APBLRPPMTA02.qualcomm.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 60MEDX33003636;
-	Thu, 22 Jan 2026 14:13:34 GMT
-Received: from hu-devc-hyd-u22-c.qualcomm.com ([10.213.101.157])
-	by APBLRPPMTA02.qualcomm.com (PPS) with ESMTPS id 60MEDYOK003652
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 22 Jan 2026 14:13:34 +0000
-Received: by hu-devc-hyd-u22-c.qualcomm.com (Postfix, from userid 2342877)
-	id EE09D5EE; Thu, 22 Jan 2026 19:43:33 +0530 (+0530)
-From: Nitin Rawat <nitin.rawat@oss.qualcomm.com>
-To: mani@kernel.org, James.Bottomley@HansenPartnership.com,
-        martin.petersen@oracle.com
-Cc: linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org, Nitin Rawat <nitin.rawat@oss.qualcomm.com>
-Subject: [PATCH V1 2/3] ufs: ufs-qcom: Align programming sequence for UFS controller v6.2
-Date: Thu, 22 Jan 2026 19:43:30 +0530
-Message-Id: <20260122141331.239354-3-nitin.rawat@oss.qualcomm.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20260122141331.239354-1-nitin.rawat@oss.qualcomm.com>
-References: <20260122141331.239354-1-nitin.rawat@oss.qualcomm.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="cZ2GtT73"
+Received: by mail-pf1-f176.google.com with SMTP id d2e1a72fcca58-823081bb15fso447524b3a.3
+        for <linux-scsi@vger.kernel.org>; Thu, 22 Jan 2026 06:29:43 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1769092183; x=1769696983; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=k2bB6UcFN/QmZIeetEeQNfw5hOnI8IdcR9tXmdiu+0M=;
+        b=cZ2GtT73IE/jaGvvMsPsZTLe50F1yM+v7+yIoUXsN499U0soDLin9rr9XOMv4QiU92
+         2nh0ypIcb4Q9s1k7+cod5dMj4VFVE6d0jhV7dgA9D0mE5mEaoLis9txYihldq2nqAv/s
+         kHSjntWak2qaVQXMb4DsV8YTXR76oJs0pylzNKYrzAEDzAm+XfKu6G3uTLN7DO9nQMY0
+         zCpLqTRTKygMEOG1mZhEP2Xmd8jNNbWdh/JWtO2179mxnZ/KHcHaVhAUUBrNWGYIz/fQ
+         oNylTf3b0pIGlPCUFK1OL+TBS4LLPenWFHwmf+oAdMCzNQhGa5FX86DM2eNq+bf9jXTO
+         ooBw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1769092183; x=1769696983;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=k2bB6UcFN/QmZIeetEeQNfw5hOnI8IdcR9tXmdiu+0M=;
+        b=M9Mk88e8FeYVT1nko2vsn1LNlPLnR9oqHiHR/UhKrUbAH8TOkamZmUF4N8owHWFBRT
+         QsmSi1Gw+G17Rvq3CIuLcsjJDjQr8ZMdmJy8NbdYQ1HNui8OyxOb6hY3UnyTU6ZxVCjm
+         9+0BXn7AKq5/m/k9Vxj3UcPKbNbUCf2eSjaJEYMRL4HoZ1lMgtl9alX1UNMfpC5A3Va5
+         KNAx0EcG9CwI6gp3JKns/opUhepEG3RwszwkbnyD8QZm16JKSk0JwTNMDRPP+JSPpkri
+         QGvo+wmi7+JoEi3JIOGpjZaFp4HpGda+eEw1fwyFvgTfUbGG8d45+GYRUzgYbOUSdk7p
+         l6aA==
+X-Forwarded-Encrypted: i=1; AJvYcCWQwML4c0JiBxtBPDNomtSQ8o/W3u4nAheZCJl0Z6BJcsKYpMTp+w3ewuezUrtzHzkmTKsSe1L1a9PA@vger.kernel.org
+X-Gm-Message-State: AOJu0YxzvAYPK0oHYKssq7vuOxbPO9WxEdJ7cgk1aWGNg+WoEylg9M0J
+	okAXJTWv9SSOr3Q1Hh/iKFnP9qWideEdxrJrHhEMBYEPNTIqQ7QQMvCn
+X-Gm-Gg: AZuq6aJuwX2JQtr4cnjPhtADt/PHRjviv6oLcoF34iVhoim59YkK91q6oS48Xvykla4
+	lcQB/yqseZPQqNmG46Do4h0Q85Solle/qE9TmHSXfWZ2uqEAaWe3n9YaSJML7u67GoQB4PUW2Nl
+	NbwovbIF7dwv5POKTXSYwfIzxJnlvAC9fe1TjSPeq7yOMCLRJraotJ/HgpRy87YBlpEnezz6xaY
+	W/MOfavcGyI0n0hF4a6YfD9XFSfyN6P6d/vwwSb86tFO0erbxiSsheqfP3YU4xhFdwhu0WskNnK
+	LyS57DetgUVnAFCcFxuTWr6CdT7kbX8BE3c/isZe36migPO7Hy8em/LxV0NZlbZ09iRCfF8j0oS
+	AsNVjXInORqKlNWQYfrtfE/fjo+ZHAwz4wZdk/ws931VM5+AzbRA2wCD937KTWx69GF8Gy7z8oi
+	wu2D8ZPAQL6ts=
+X-Received: by 2002:a05:6a21:3984:b0:38d:eeca:b330 with SMTP id adf61e73a8af0-38e00d1557amr21189377637.40.1769092183005;
+        Thu, 22 Jan 2026 06:29:43 -0800 (PST)
+Received: from inspiron ([111.125.231.221])
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-c5edf354b3bsm11023239a12.24.2026.01.22.06.29.37
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 22 Jan 2026 06:29:42 -0800 (PST)
+Date: Thu, 22 Jan 2026 19:59:33 +0530
+From: Prithvi <activprithvi@gmail.com>
+To: Dmitry Bogdanov <d.bogdanov@yadro.com>
+Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+	target-devel@vger.kernel.org, linux-kernel@vger.kernel.org,
+	hch@lst.de, jlbec@evilplan.org, linux-fsdevel@vger.kernel.org,
+	linux-kernel-mentees@lists.linux.dev, skhan@linuxfoundation.org,
+	david.hunter.linux@gmail.com, khalid@kernel.org,
+	syzbot+f6e8174215573a84b797@syzkaller.appspotmail.com,
+	stable@vger.kernel.org
+Subject: Re: [PATCH] scsi: target: Fix recursive locking in
+ __configfs_open_file()
+Message-ID: <20260122142933.662srnqeqmx7eqk3@inspiron>
+References: <20260108191523.303114-1-activprithvi@gmail.com>
+ <20260115032012.yb5ylmumcirrmsbr@inspiron>
+ <20260122095634.GA15012@yadro.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-QCInternal: smtphost
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMTIyMDEwNyBTYWx0ZWRfXyPkm0zcpsA/s
- BsghmgSmJf85Y/r70trk+SPuq1lI3vr0czmKQIeP+K+s9w1YbFKvPYkUFINr+pO9fqHiThGeCx9
- denV67OtdT49uRuLyGFcitA2WqB/vp09uraW2KipxqSB9g1TPa//1/9zW0I0+VTn8H+243+bWS/
- lvnoSi/lG0hNiochai63IFdBwAiOPncLF/91TzoWt7SBJW6LhVK3lgfS5YHT/ySK4CNkjLNQ/AC
- ZWp9X6zjjzgImfgx2WhYGXNWQXozBtQ5zFelAIAVxIX2jX4V0JWzGkfN5CPxNK7aecl9GyEnMTm
- dbl+Ml54g2sKIP0tWg7zzCzqsRc9AnbpBq4g4U2udGuH60AvwLqrfyB/nkTmIhQOvDgdUqYylho
- i046zYZtqP4rUJx+SSlicaS8HkQnsutzE+ed/x0Y+tqnd6xZEwELLK6NkNhCIeD40Yuc4Zgk1hE
- ccy1txqZSzecZZ4D2gw==
-X-Proofpoint-ORIG-GUID: DcObYPgQbxIMDDo9NVkkgdFEvajrAsQW
-X-Authority-Analysis: v=2.4 cv=UOjQ3Sfy c=1 sm=1 tr=0 ts=69723092 cx=c_pps
- a=Ou0eQOY4+eZoSc0qltEV5Q==:117 a=Ou0eQOY4+eZoSc0qltEV5Q==:17
- a=vUbySO9Y5rIA:10 a=VkNPw1HP01LnGYTKEx00:22 a=EUspDBNiAAAA:8
- a=HW2gPmhGDcn8-JjtCIgA:9
-X-Proofpoint-GUID: DcObYPgQbxIMDDo9NVkkgdFEvajrAsQW
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.20,FMLib:17.12.100.49
- definitions=2026-01-22_01,2026-01-22_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- malwarescore=0 phishscore=0 suspectscore=0 bulkscore=0 adultscore=0
- clxscore=1015 lowpriorityscore=0 impostorscore=0 priorityscore=1501
- spamscore=0 classifier=typeunknown authscore=0 authtc= authcc= route=outbound
- adjust=0 reason=mlx scancount=1 engine=8.22.0-2601150000
- definitions=main-2601220107
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260122095634.GA15012@yadro.com>
 
-UFS controller v6.2 requires bit 31 in the spare configuration register
-to be set for high-speed link startup mode, as per the Hardware
-Programming Guide (HPG).
+On Thu, Jan 22, 2026 at 12:56:34PM +0300, Dmitry Bogdanov wrote:
+> On Thu, Jan 15, 2026 at 08:50:12AM +0530, Prithvi wrote:
+> > 
+> > On Fri, Jan 09, 2026 at 12:45:23AM +0530, Prithvi Tambewagh wrote:
+> > > In flush_write_buffer, &p->frag_sem is acquired and then the loaded store
+> > > function is called, which, here, is target_core_item_dbroot_store().
+> > > This function called filp_open(), following which these functions were
+> > > called (in reverse order), according to the call trace:
+> > >
+> > > down_read
+> > > __configfs_open_file
+> > > do_dentry_open
+> > > vfs_open
+> > > do_open
+> > > path_openat
+> > > do_filp_open
+> > > file_open_name
+> > > filp_open
+> > > target_core_item_dbroot_store
+> > > flush_write_buffer
+> > > configfs_write_iter
+> > >
+> > > Hence ultimately, __configfs_open_file() was called, indirectly by
+> > > target_core_item_dbroot_store(), and it also attempted to acquire
+> > > &p->frag_sem, which was already held by the same thread, acquired earlier
+> > > in flush_write_buffer. This poses a possibility of recursive locking,
+> > > which triggers the lockdep warning.
+> > >
+> > > Fix this by modifying target_core_item_dbroot_store() to use kern_path()
+> > > instead of filp_open() to avoid opening the file using filesystem-specific
+> > > function __configfs_open_file(), and further modifying it to make this
+> > > fix compatible.
+> > >
+> > > Reported-by: syzbot+f6e8174215573a84b797@syzkaller.appspotmail.com
+> > > Closes: https://syzkaller.appspot.com/bug?extid=f6e8174215573a84b797
+> > > Tested-by: syzbot+f6e8174215573a84b797@syzkaller.appspotmail.com
+> > > Cc: stable@vger.kernel.org
+> > > Signed-off-by: Prithvi Tambewagh <activprithvi@gmail.com>
+> > > ---
+> > >  drivers/target/target_core_configfs.c | 13 +++++++------
+> > >  1 file changed, 7 insertions(+), 6 deletions(-)
+> > >
+> > > diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
+> > > index b19acd662726..f29052e6a87d 100644
+> > > --- a/drivers/target/target_core_configfs.c
+> > > +++ b/drivers/target/target_core_configfs.c
+> > > @@ -108,8 +108,8 @@ static ssize_t target_core_item_dbroot_store(struct config_item *item,
+> > >                                       const char *page, size_t count)
+> > >  {
+> > >       ssize_t read_bytes;
+> > > -     struct file *fp;
+> > >       ssize_t r = -EINVAL;
+> > > +     struct path path = {};
+> > >
+> > >       mutex_lock(&target_devices_lock);
+> > >       if (target_devices) {
+> > > @@ -131,17 +131,18 @@ static ssize_t target_core_item_dbroot_store(struct config_item *item,
+> > >               db_root_stage[read_bytes - 1] = '\0';
+> > >
+> > >       /* validate new db root before accepting it */
+> > > -     fp = filp_open(db_root_stage, O_RDONLY, 0);
+> > > -     if (IS_ERR(fp)) {
+> > > +     r = kern_path(db_root_stage, LOOKUP_FOLLOW, &path);
+> > > +     if (r) {
+> > >               pr_err("db_root: cannot open: %s\n", db_root_stage);
+> > >               goto unlock;
+> > >       }
+> > > -     if (!S_ISDIR(file_inode(fp)->i_mode)) {
+> > > -             filp_close(fp, NULL);
+> > > +     if (!d_is_dir(path.dentry)) {
+> > > +             path_put(&path);
+> > >               pr_err("db_root: not a directory: %s\n", db_root_stage);
+> > > +             r = -ENOTDIR;
+> > >               goto unlock;
+> > >       }
+> > > -     filp_close(fp, NULL);
+> > > +     path_put(&path);
+> > >
+> > >       strscpy(db_root, db_root_stage);
+> > >       pr_debug("Target_Core_ConfigFS: db_root set to %s\n", db_root);
+> > >
+> > > base-commit: 3a8660878839faadb4f1a6dd72c3179c1df56787
+> > > --
+> > > 2.34.1
+> > >
+> 
+> You missed the very significant thing in the commit message - that this
+> lockdep warning is due to try to write its own filename to dbroot file:
+> 
+> 	db_root: not a directory: /sys/kernel/config/target/dbroot
+> 
+> That is why the semaphore is the same - it is of the same file.
+> 
+> Without that explanation nobody understands wheter it is a false positive or not.
+> 
+> The fix itself looks good.
+> 
+> Reviewed-by: Dmitry Bogdanov <d.bogdanov@yadro.com> 
 
-The spare register value is read during host driver initialization but
-gets cleared after UFS reset. To align with the UFS v6.2 programming
-sequence, preserve the spare register value during initialization and
-restore it during link startup to ensure proper high-speed mode
+Hello Dmitry,
 
-Signed-off-by: Nitin Rawat <nitin.rawat@oss.qualcomm.com>
----
- drivers/ufs/host/ufs-qcom.c | 11 ++++++++---
- drivers/ufs/host/ufs-qcom.h |  1 +
- 2 files changed, 9 insertions(+), 3 deletions(-)
+Thanks a lot for the feedback! I missed out this curcial explanation in the
+commit message. I will update the commit message and send a v2 patch for 
+the same.
 
-diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-index c43bb75d208c..ab5aed241913 100644
---- a/drivers/ufs/host/ufs-qcom.c
-+++ b/drivers/ufs/host/ufs-qcom.c
-@@ -686,6 +686,7 @@ static int ufs_qcom_cfg_timers(struct ufs_hba *hba, bool is_pre_scale_up, unsign
- static int ufs_qcom_link_startup_notify(struct ufs_hba *hba,
- 					enum ufs_notify_change_status status)
- {
-+	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
- 	int err = 0;
-
- 	switch (status) {
-@@ -708,6 +709,10 @@ static int ufs_qcom_link_startup_notify(struct ufs_hba *hba,
- 		 */
- 		err = ufshcd_disable_host_tx_lcc(hba);
-
-+		/* Update REG_UFS_DEBUG_SPARE_CFG to set HS-LSS mode in link startup */
-+		if (host->hw_ver.major == 0x6 && host->hw_ver.minor == 0x2)
-+			ufshcd_writel(hba, host->spare_cfg,
-+				      REG_UFS_DEBUG_SPARE_CFG);
- 		break;
- 	default:
- 		break;
-@@ -1084,7 +1089,7 @@ static void ufs_qcom_advertise_quirks(struct ufs_hba *hba)
- static void ufs_qcom_set_phy_gear(struct ufs_qcom_host *host)
- {
- 	struct ufs_host_params *host_params = &host->host_params;
--	u32 val, dev_major;
-+	u32 dev_major;
-
- 	/*
- 	 * Default to powering up the PHY to the max gear possible, which is
-@@ -1103,8 +1108,8 @@ static void ufs_qcom_set_phy_gear(struct ufs_qcom_host *host)
- 		 */
- 		host->phy_gear = UFS_HS_G2;
- 	} else if (host->hw_ver.major >= 0x5) {
--		val = ufshcd_readl(host->hba, REG_UFS_DEBUG_SPARE_CFG);
--		dev_major = FIELD_GET(UFS_DEV_VER_MAJOR_MASK, val);
-+		host->spare_cfg = ufshcd_readl(host->hba, REG_UFS_DEBUG_SPARE_CFG);
-+		dev_major = FIELD_GET(UFS_DEV_VER_MAJOR_MASK, host->spare_cfg);
-
- 		/*
- 		 * Since the UFS device version is populated, let's remove the
-diff --git a/drivers/ufs/host/ufs-qcom.h b/drivers/ufs/host/ufs-qcom.h
-index 380d02333d38..d09ef7f44305 100644
---- a/drivers/ufs/host/ufs-qcom.h
-+++ b/drivers/ufs/host/ufs-qcom.h
-@@ -308,6 +308,7 @@ struct ufs_qcom_host {
- 	u32 phy_gear;
-
- 	bool esi_enabled;
-+	u32 spare_cfg;
- };
-
- struct ufs_qcom_drvdata {
---
-2.34.1
-
+Best Regards,
+Prithvi
