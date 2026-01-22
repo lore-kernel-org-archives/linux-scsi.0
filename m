@@ -1,187 +1,114 @@
-Received: from mta-01.yadro.com (mta-01.yadro.com [195.3.219.148])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3A9CC2D0C9D;
-	Thu, 22 Jan 2026 10:02:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.3.219.148
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 868A630CDA9;
+	Thu, 22 Jan 2026 14:13:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769076159; cv=none; b=o9cIh0Ru4rcJKW2bmn/4doNefb74SpdY4ecyFRyT6t8slXEnM6mbgQEtM0yl7P3pKBrjTWTOybtA7TROgZLkF6Jv2kcXuW2k346ZHBmnOG1jJU4Omq/jt626cXCFHzSpPtcW8YRFtFXx27jQPyhAGJHVS0f0uKItMfXC7461/vQ=
+	t=1769091224; cv=none; b=rlHC75vZ5S2UEppsf9svDkq1l3gkCoFhnJSnPWlT/FMTPVAOvXX8/k3iA2bypMvZcHLImgt9zmgmiDLtpbm4zccXBc3MXy23QLh/ODKg/qUPbG7fqK6kFnbKur/ETDvrto3qxKlRnHnD/+Dxu5eyNcLFZ3R/eiENSatcoEtR1GE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769076159; c=relaxed/simple;
-	bh=U7gZ4KtU9pdT22CPcscPa0l7Fcikaz3hIApZkPxTY3w=;
-	h=Date:From:To:CC:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=T61Wu/Ftu2fEnxF69MCLeYrP0i73ggadcpAmKC0Re3I1SP9mDfAx2YVkkEYkfjJMa8eXaq3owuKxlJ4c1zGq8LWPrgwII2mMsb3qWdncfTSmvFipnkn1pldoYjdiri1eU0oMHSyIptyPZOez1pSBQaCHuBe9i1mGtvTGH6QBsRE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=yadro.com; spf=pass smtp.mailfrom=yadro.com; dkim=pass (2048-bit key) header.d=yadro.com header.i=@yadro.com header.b=GM6cSHwx; dkim=pass (2048-bit key) header.d=yadro.com header.i=@yadro.com header.b=wu1Zz0IP; arc=none smtp.client-ip=195.3.219.148
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=yadro.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=yadro.com
+	s=arc-20240116; t=1769091224; c=relaxed/simple;
+	bh=KlzRzIRogFcrbpL9SufWPfooVu1EDNmT3WCfXg43g4E=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=TuUmbDwVC/IKLKJX5AX3rcNZGVt8x+7mIT5ov+wSXbfQSJ6kmPTa2PtU1O7KodeRqQ4ekAHI5pW+CUdi9/mA7TtSTqHLzogmH1vidFm4YHAlm9O5e71CXvDABWlQcq4jbDpKvSlkq5mQB2XW5t9CCbOwd2pUxgXPAxy23B8zExU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=AVYW5GlM; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=yadro.com header.i=@yadro.com header.b="GM6cSHwx";
-	dkim=pass (2048-bit key) header.d=yadro.com header.i=@yadro.com header.b="wu1Zz0IP"
-Received: from mta-01.yadro.com (localhost [127.0.0.1])
-	by mta-01.yadro.com (Postfix) with ESMTP id 5706220022;
-	Thu, 22 Jan 2026 12:56:25 +0300 (MSK)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mta-01.yadro.com 5706220022
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yadro.com; s=mta-02;
-	t=1769075785; bh=TSfOQSD1nGDR+S9g/1A7cqiXfGLSItDDZxx/gk5oYV4=;
-	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type:From;
-	b=GM6cSHwxWxQIE/Qqnda3N1lU2OY6aRIz2KZQ7Afc+jUt/g6qEUXymwk1wRdjVI4DU
-	 hFwBbdTRxx2AZAQcM15Zm1pyOKvG491T3HhXFZt3bd4VZa2nNNftSZmFHfM5csOzQO
-	 DZfLGCHpzXTcCJfoCE2SKC1nkrU7fwYTaXEcLYzYydx1R3uh6p/f+90/09flm3TmtA
-	 ErsUYgtO8jxm+1vZXA/A762ZUjdzyxFTQ5ZN3jCdpHkWIgy45mbNVmOA5bXpOgtjXu
-	 ry97qMIN1N182hgcFEKgildkjk/d8sUB2LDTi3kVD5+NOaP+4Ld1ie4MqJN7dYAxS1
-	 X6756Slyc5NIQ==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yadro.com; s=mta-03;
-	t=1769075785; bh=TSfOQSD1nGDR+S9g/1A7cqiXfGLSItDDZxx/gk5oYV4=;
-	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type:From;
-	b=wu1Zz0IPBuOhGnzc4XKQscYXl8X2pPQwP1ujmLx54P1RKlIFiZ3EYdlby7K/ipAEm
-	 oHVky1BvXyJ/NtW3FEoeY1XpnAbc/plo6pPRugw2kp8sdm6ux/Sz+RPI/AsobUBb99
-	 sxgOIChJkxR9B2kfLSoSjcmWFn8z5xGzJwdyv+DgzBjKemrOzGM8JL5fNWwJsYfWmB
-	 pAmeFvC0PjsTt7iQXGsOYdL003iyIcAubeKK/REAczBzmjMGk9ihF94K9znthAE1u8
-	 tyBD1yqIw6iloQgYPSNeozfkSm8UeTK8ijxa3pqsrN31uF5MnRWAqwT3T+S8gJY/i/
-	 G9G+8s0RFHR+g==
-Received: from RTM-EXCH-06.corp.yadro.com (unknown [10.34.9.206])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by mta-01.yadro.com (Postfix) with ESMTPS;
-	Thu, 22 Jan 2026 12:56:17 +0300 (MSK)
-Received: from T-EXCH-12.corp.yadro.com (10.34.9.214) by
- RTM-EXCH-06.corp.yadro.com (10.34.9.206) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.35; Thu, 22 Jan 2026 12:56:34 +0300
-Received: from yadro.com (10.34.9.241) by T-EXCH-12.corp.yadro.com
- (10.34.9.214) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1258.12; Thu, 22 Jan
- 2026 12:56:33 +0300
-Date: Thu, 22 Jan 2026 12:56:34 +0300
-From: Dmitry Bogdanov <d.bogdanov@yadro.com>
-To: Prithvi <activprithvi@gmail.com>
-CC: <martin.petersen@oracle.com>, <linux-scsi@vger.kernel.org>,
-	<target-devel@vger.kernel.org>, <linux-kernel@vger.kernel.org>, <hch@lst.de>,
-	<jlbec@evilplan.org>, <linux-fsdevel@vger.kernel.org>,
-	<linux-kernel-mentees@lists.linux.dev>, <skhan@linuxfoundation.org>,
-	<david.hunter.linux@gmail.com>, <khalid@kernel.org>,
-	<syzbot+f6e8174215573a84b797@syzkaller.appspotmail.com>,
-	<stable@vger.kernel.org>
-Subject: Re: [PATCH] scsi: target: Fix recursive locking in
- __configfs_open_file()
-Message-ID: <20260122095634.GA15012@yadro.com>
-References: <20260108191523.303114-1-activprithvi@gmail.com>
- <20260115032012.yb5ylmumcirrmsbr@inspiron>
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="AVYW5GlM"
+Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 60M7te992276572;
+	Thu, 22 Jan 2026 14:13:38 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:date:from:message-id:mime-version
+	:subject:to; s=qcppdkim1; bh=4n3wsN8VCGC2iHYEjXMcWXjisHeF4KVk8CA
+	Q/CSIMU0=; b=AVYW5GlMabHo1VPSOXJFbztT2LPpbww9iFRM8XclbZSu0YctyPb
+	cVT1arFSs3PlBR8MU+8ETuaCLoS+hEYpx4r/EfH2/AF0WmLYE8XQhqUQgrl3pxT4
+	st+8cQaM9T7LPhOhgffkSUD/YH1Wu+v/elsidPDKFjl2i5RgLhKMkd48Y4Og8JWE
+	vVdhzg7EMeTul1gNshCIhxpBS+DCbdqPzcdcmaup8NOEaTqXHHp1RjUJm5RbNdl1
+	2tuTxbR/TaElcvEMgO79agI/wZ+GmbUZtW2AvYNwAVQXQVjomR1UJGANSp15pwFV
+	M+klASbMjmzrFdrelUN2BX9XQN6omRSk4dQ==
+Received: from apblrppmta02.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.18.19])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4bu7fatjvq-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 22 Jan 2026 14:13:37 +0000 (GMT)
+Received: from pps.filterd (APBLRPPMTA02.qualcomm.com [127.0.0.1])
+	by APBLRPPMTA02.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTP id 60MEDYwO003642;
+	Thu, 22 Jan 2026 14:13:34 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+	by APBLRPPMTA02.qualcomm.com (PPS) with ESMTPS id 4br3gmypnk-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 22 Jan 2026 14:13:34 +0000
+Received: from APBLRPPMTA02.qualcomm.com (APBLRPPMTA02.qualcomm.com [127.0.0.1])
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 60MEDX31003636;
+	Thu, 22 Jan 2026 14:13:34 GMT
+Received: from hu-devc-hyd-u22-c.qualcomm.com ([10.213.101.157])
+	by APBLRPPMTA02.qualcomm.com (PPS) with ESMTPS id 60MEDX2H003633
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 22 Jan 2026 14:13:33 +0000
+Received: by hu-devc-hyd-u22-c.qualcomm.com (Postfix, from userid 2342877)
+	id 0839E5E9; Thu, 22 Jan 2026 19:43:33 +0530 (+0530)
+From: Nitin Rawat <nitin.rawat@oss.qualcomm.com>
+To: mani@kernel.org, James.Bottomley@HansenPartnership.com,
+        martin.petersen@oracle.com
+Cc: linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, Nitin Rawat <nitin.rawat@oss.qualcomm.com>
+Subject: [PATCH V1 0/3] ufs: ufs-qcom: Fixes and optimizations for Qualcomm UFS platform
+Date: Thu, 22 Jan 2026 19:43:28 +0530
+Message-Id: <20260122141331.239354-1-nitin.rawat@oss.qualcomm.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Disposition: inline
-In-Reply-To: <20260115032012.yb5ylmumcirrmsbr@inspiron>
-X-ClientProxiedBy: RTM-EXCH-04.corp.yadro.com (10.34.9.204) To
- T-EXCH-12.corp.yadro.com (10.34.9.214)
-X-KSMG-AntiPhishing: NotDetected, bases: 2026/01/22 08:49:00
-X-KSMG-AntiSpam-Interceptor-Info: not scanned
-X-KSMG-AntiSpam-Status: not scanned, disabled by settings
-X-KSMG-AntiVirus: Kaspersky Secure Mail Gateway, version 2.1.1.8310, bases: 2026/01/22 07:14:00 #28140735
-X-KSMG-AntiVirus-Status: NotDetected, skipped
-X-KSMG-KATA-Status: Not Scanned
-X-KSMG-LinksScanning: NotDetected, bases: 2026/01/22 08:49:00
-X-KSMG-Message-Action: skipped
-X-KSMG-Rule-ID: 5
+Content-Transfer-Encoding: 8bit
+X-QCInternal: smtphost
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Authority-Analysis: v=2.4 cv=Hrx72kTS c=1 sm=1 tr=0 ts=69723091 cx=c_pps
+ a=Ou0eQOY4+eZoSc0qltEV5Q==:117 a=Ou0eQOY4+eZoSc0qltEV5Q==:17
+ a=vUbySO9Y5rIA:10 a=VkNPw1HP01LnGYTKEx00:22 a=HV7g6J3JBgeWPb-Ptd4A:9
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMTIyMDEwNyBTYWx0ZWRfX24iqLQcw6rJ6
+ dBXWf58ohAvsTs0D3qjdVV2QIuKkdSRGvjTbIYkUVEqTKGUL5ThsqtkeuM8xXcRR26/sL4Afjx2
+ PY811gFYAyNdcB3AXcK9kcEgdQ87Pb9EVIHORlq2JPdAEAk93GrpHiYkLfNRj2WxQ7zkQJS5M0u
+ fHrtm64kQNLZIVl0eQB9Gv/v02MA8EmY/Yxw3FSRdRUz+xAnnU1SVxHeT/X1boEKBMK3Bc5n+K5
+ AwZlHYrQULdjtzzIiMk83bVswnUB+m/OB0BP+OunAEtHsXp0wUL2RqGYhzLT0+DcMZ7a9Tnln4j
+ m7p4qnGCVFmmFMzTrvkYMaVwrqR+taBr5wE6YClC2Q0SMUw0EWCFF8lecoQCrf6WK4WWXDCWYHE
+ semy50QwfjDRhDyzexsUlPh2z1E8ePvVYpQKWzeXnEd94WBD3jdlf4YF/MfeZgnAgq6wggJYrjc
+ 4oOJ1xsqxd99BrWp8pQ==
+X-Proofpoint-ORIG-GUID: gslQJcrCzS1uTJel8CpF2YM8RIe69tnE
+X-Proofpoint-GUID: gslQJcrCzS1uTJel8CpF2YM8RIe69tnE
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.20,FMLib:17.12.100.49
+ definitions=2026-01-22_01,2026-01-22_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ priorityscore=1501 spamscore=0 lowpriorityscore=0 clxscore=1011
+ impostorscore=0 bulkscore=0 suspectscore=0 adultscore=0 phishscore=0
+ malwarescore=0 classifier=typeunknown authscore=0 authtc= authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2601150000
+ definitions=main-2601220107
 
-On Thu, Jan 15, 2026 at 08:50:12AM +0530, Prithvi wrote:
-> 
-> On Fri, Jan 09, 2026 at 12:45:23AM +0530, Prithvi Tambewagh wrote:
-> > In flush_write_buffer, &p->frag_sem is acquired and then the loaded store
-> > function is called, which, here, is target_core_item_dbroot_store().
-> > This function called filp_open(), following which these functions were
-> > called (in reverse order), according to the call trace:
-> >
-> > down_read
-> > __configfs_open_file
-> > do_dentry_open
-> > vfs_open
-> > do_open
-> > path_openat
-> > do_filp_open
-> > file_open_name
-> > filp_open
-> > target_core_item_dbroot_store
-> > flush_write_buffer
-> > configfs_write_iter
-> >
-> > Hence ultimately, __configfs_open_file() was called, indirectly by
-> > target_core_item_dbroot_store(), and it also attempted to acquire
-> > &p->frag_sem, which was already held by the same thread, acquired earlier
-> > in flush_write_buffer. This poses a possibility of recursive locking,
-> > which triggers the lockdep warning.
-> >
-> > Fix this by modifying target_core_item_dbroot_store() to use kern_path()
-> > instead of filp_open() to avoid opening the file using filesystem-specific
-> > function __configfs_open_file(), and further modifying it to make this
-> > fix compatible.
-> >
-> > Reported-by: syzbot+f6e8174215573a84b797@syzkaller.appspotmail.com
-> > Closes: https://syzkaller.appspot.com/bug?extid=f6e8174215573a84b797
-> > Tested-by: syzbot+f6e8174215573a84b797@syzkaller.appspotmail.com
-> > Cc: stable@vger.kernel.org
-> > Signed-off-by: Prithvi Tambewagh <activprithvi@gmail.com>
-> > ---
-> >  drivers/target/target_core_configfs.c | 13 +++++++------
-> >  1 file changed, 7 insertions(+), 6 deletions(-)
-> >
-> > diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
-> > index b19acd662726..f29052e6a87d 100644
-> > --- a/drivers/target/target_core_configfs.c
-> > +++ b/drivers/target/target_core_configfs.c
-> > @@ -108,8 +108,8 @@ static ssize_t target_core_item_dbroot_store(struct config_item *item,
-> >                                       const char *page, size_t count)
-> >  {
-> >       ssize_t read_bytes;
-> > -     struct file *fp;
-> >       ssize_t r = -EINVAL;
-> > +     struct path path = {};
-> >
-> >       mutex_lock(&target_devices_lock);
-> >       if (target_devices) {
-> > @@ -131,17 +131,18 @@ static ssize_t target_core_item_dbroot_store(struct config_item *item,
-> >               db_root_stage[read_bytes - 1] = '\0';
-> >
-> >       /* validate new db root before accepting it */
-> > -     fp = filp_open(db_root_stage, O_RDONLY, 0);
-> > -     if (IS_ERR(fp)) {
-> > +     r = kern_path(db_root_stage, LOOKUP_FOLLOW, &path);
-> > +     if (r) {
-> >               pr_err("db_root: cannot open: %s\n", db_root_stage);
-> >               goto unlock;
-> >       }
-> > -     if (!S_ISDIR(file_inode(fp)->i_mode)) {
-> > -             filp_close(fp, NULL);
-> > +     if (!d_is_dir(path.dentry)) {
-> > +             path_put(&path);
-> >               pr_err("db_root: not a directory: %s\n", db_root_stage);
-> > +             r = -ENOTDIR;
-> >               goto unlock;
-> >       }
-> > -     filp_close(fp, NULL);
-> > +     path_put(&path);
-> >
-> >       strscpy(db_root, db_root_stage);
-> >       pr_debug("Target_Core_ConfigFS: db_root set to %s\n", db_root);
-> >
-> > base-commit: 3a8660878839faadb4f1a6dd72c3179c1df56787
-> > --
-> > 2.34.1
-> >
+This patch series introduces few fixes and performance optimizations
+for the Qualcomm UFS host controller driver to improve performance
+and to align with Qualcomm UFS hardware programming sequence.
 
-You missed the very significant thing in the commit message - that this
-lockdep warning is due to try to write its own filename to dbroot file:
+The series addresses three key areas:
 
-	db_root: not a directory: /sys/kernel/config/target/dbroot
+1. Enhanced interrupt handling through CPU affinity optimization.
+2. Hardware programming sequence alignment for UFS controller v6.2
+3. Performance tuning for sequential read workloads.
 
-That is why the semaphore is the same - it is of the same file.
+Nitin Rawat (3):
+  ufs: ufs-qcom: Add UFS ESI CPU affinity support
+  ufs: ufs-qcom: Align programming sequence for UFS controller v6.2
+  ufs: ufs-qcom: Fix sequential read variance
 
-Without that explanation nobody understands wheter it is a false positive or not.
+ drivers/ufs/host/ufs-qcom.c | 63 ++++++++++++++++++++++++++++++++++---
+ drivers/ufs/host/ufs-qcom.h |  1 +
+ 2 files changed, 60 insertions(+), 4 deletions(-)
 
-The fix itself looks good.
+--
+2.34.1
 
-Reviewed-by: Dmitry Bogdanov <d.bogdanov@yadro.com> 
