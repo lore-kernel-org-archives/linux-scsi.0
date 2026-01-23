@@ -1,115 +1,106 @@
-Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f202.google.com (mail-pl1-f202.google.com [209.85.214.202])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D6FD630DD21;
-	Fri, 23 Jan 2026 00:57:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DEA3033123D
+	for <linux-scsi@vger.kernel.org>; Fri, 23 Jan 2026 06:42:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.202
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769129872; cv=none; b=FEboBG3tUJVP4vDEQ2TihNeGsWXqu5yr1CD6bTMw3V2INTX7iywX8EI2IZhC7fUAefT6gzM1CV7pjeRaXNvfDtIqnXPGBjO+KBZvN7OoRiDgN91RAbfFHk9Syv+g9pvv+SiLILNGvLBHt7bSIvSoRCBQ/TmWY7EArD0AxzMrk6w=
+	t=1769150563; cv=none; b=Ar4fcFDHgaT/ujIikWi5JXzDDEh+ayalr31Xc7h89pWWxPbbmM+YU51BSU3RODiycRTK8VK0VbvzumqsXlQpzcTapcV/e9dOkhi8DAiMHYdRCY+nlUv0OcHLv15YFuiNaPRjRrAKGBlI5EZxZlfw7hCi4SW8xe/ISU5eF3m5hN4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769129872; c=relaxed/simple;
-	bh=ni5M67U09i0CrIBvR35xQTH78BCukEBhyc4/YiGRdFE=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=QWmT7UgFBrCIPyIU4NBNMa3A2tfZaieZ1TJMHvJ/Zj8ep808haF1q348eeMt7L44k3gvtmD0tWfm/x5SwbjktZ1EGoSD2KlZzeivMMrcqCSEK02eswVz6JHDS1cB+B5oSFtyh1ZvrgMa8APUO6uPGlfY4LSmZhVoAosAB5L2HDM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=pIgklcBZ; arc=none smtp.client-ip=199.89.1.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1769150563; c=relaxed/simple;
+	bh=v8zDSFJswmF+/AGepbHNQWVPx503rLiLvIUD+27gUQ4=;
+	h=Date:Mime-Version:Message-ID:Subject:From:Cc:Content-Type; b=rhLLQMnbf0P4OUaOH9qZ6BBPweqTJhM905PuuA5Ms1XFqeuznjV8nBJh7o8SuntCrDvWRQxnhOWvL1JZRThdDUfAKrA5ZWJYlmKpLY8vL7px1IXcFRk6I+xAlomLtba+vT1DX3zHxQTKAneuJ2PkghnIGAA6t7ZxzsfFCa1Q59o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--powenkao.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=A3Tww0x8; arc=none smtp.client-ip=209.85.214.202
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--powenkao.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="pIgklcBZ"
-Received: from localhost (localhost [127.0.0.1])
-	by 013.lax.mailroute.net (Postfix) with ESMTP id 4dxzzy6BKnzlfddy;
-	Fri, 23 Jan 2026 00:57:34 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1769129853; x=1771721854; bh=vnt1wZikQFT6kvXEg7oTKpeS
-	a/IuHzRqjZFvzpVS8aw=; b=pIgklcBZkYqZGbD44XR9sCWI0MxTKK4r9phXjzad
-	bbGIUp7jlaqsU6qbx9kLhRdKTM43lJ/7u1dLXgMOHNVrhQQjUEpOeisFpGH6MH0P
-	H1SWrWbkd+tk4XdqcHkX0OKAWub8mLhN8iUJKapMNiQs8A/a4bdEOf0Q4RhubYAD
-	PsNf3h4CJsbkTQllpoci7btTgA6x+XA9QE7Pq8yCK15hdGecA0Dz4CxuMPPQ4ozZ
-	HK2OmD/rXZOIg3OKbw9muSHftCIGr1RHdZ2bza16hCn79N3Zug3eRdaiYx7EqJzw
-	IuHybE31dP0sfToLsQwaaJYj/wt8wxtOo6AqaaojaAwOjg==
-X-Virus-Scanned: by MailRoute
-Received: from 013.lax.mailroute.net ([127.0.0.1])
- by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id jMYEciD8RjsC; Fri, 23 Jan 2026 00:57:33 +0000 (UTC)
-Received: from [192.168.50.14] (c-73-231-117-72.hsd1.ca.comcast.net [73.231.117.72])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4dxzzv2GBBzlfddf;
-	Fri, 23 Jan 2026 00:57:30 +0000 (UTC)
-Message-ID: <4097a1d7-5594-44e2-b2f0-1d1877981928@acm.org>
-Date: Thu, 22 Jan 2026 16:57:28 -0800
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="A3Tww0x8"
+Received: by mail-pl1-f202.google.com with SMTP id d9443c01a7336-2a08cbeb87eso19931915ad.3
+        for <linux-scsi@vger.kernel.org>; Thu, 22 Jan 2026 22:42:41 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20230601; t=1769150561; x=1769755361; darn=vger.kernel.org;
+        h=cc:from:subject:message-id:mime-version:date:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=aJum4he8XKCfmJ0Ge6gMPtssceqijPUErFm860v49vU=;
+        b=A3Tww0x8jCQscFVSLWRvdXewasaSpoPgHfhZfZRwykHIjy6CVFliv+F86PLyeJoFuu
+         eeBKZ9QGEpN577L8G2RtJqZalnDiw986jv549lyCNbzi7uLAdKneJ9N0gOk1DjPf/VJj
+         AEXTziyLJrzr/qPgY61dxFLz538lVE4YX+uK4X0eTOlzyLiX3Jx1OR8B2pIqaYh/DCCZ
+         ezPCRwOzZ1NMxkOaTEKd4/bjAtU5ZGd3yWwHcKhLQ7aD9ONIAA6qQNDyVkUVi5+wabSw
+         o9uzsC6v/uGHfXNZV7PU22Dd0ByTYhMCe/mEpSP0oX6blmp7Wb3iSd/04qz8MjoO80UN
+         +e5g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1769150561; x=1769755361;
+        h=cc:from:subject:message-id:mime-version:date:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=aJum4he8XKCfmJ0Ge6gMPtssceqijPUErFm860v49vU=;
+        b=ejeOiKZ3KM27a8nwQVstVu8wfkMZyj9ISDqnWfcfhW+M1nUaafE0mVWBqJOgTB79AV
+         6U3XA1oVmexUJ5tdN2uFsooaiMp/LRp/+SSNgaRS7xuci/vzQSM1XkGcqTEj6QM0NCQD
+         Ul6X86+zYCu912/fqmofePWenKQGtYkKfgLdHw3wfv/yZwTdM5bZBOZ8zS3SsBaCs+sU
+         cov3fmz4DIFKNS6BF79SU54gScNKZbxdpRE12MFQtzvmXRh9T8A2oAgA40sb/+GySeHo
+         WJGOSKo6eGhg3CpyLFT7ZAJp1bcAy4ZPsHEDI5u+JYVebmsJY8TFncxVUg/swpYYH9qx
+         jeaQ==
+X-Forwarded-Encrypted: i=1; AJvYcCXHMa9zyj9mD8Lnx7OE7n/rxPc/y6MSjmlMCxcVy8yTPnwaTW0fs1lDfDsYPmOH0iFmQMwfWWR9AMr9@vger.kernel.org
+X-Gm-Message-State: AOJu0Yx8wimZ7gf99hY/MrCUU4Jn7SKw3aePWs/VA9bNhugLA8Ho0Vyg
+	yZXHsCVL+CgNaLZgsngKj/GobMteUyMkH+Mc9zEklQAfR6YrbBdgs4uaF4nkLSNQxsDxNrYN1XE
+	RcPw0UQAVys4NBg==
+X-Received: from pluo13.prod.google.com ([2002:a17:903:4b0d:b0:2a7:5e40:dcf0])
+ (user=powenkao job=prod-delivery.src-stubby-dispatcher) by
+ 2002:a17:902:f681:b0:2a0:8be7:e3d0 with SMTP id d9443c01a7336-2a7fe44aa95mr15382595ad.10.1769150561197;
+ Thu, 22 Jan 2026 22:42:41 -0800 (PST)
+Date: Fri, 23 Jan 2026 04:54:51 +0000
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH V1 1/3] ufs: ufs-qcom: Add UFS ESI CPU affinity support
-To: Nitin Rawat <nitin.rawat@oss.qualcomm.com>, mani@kernel.org,
- James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
-Cc: linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-scsi@vger.kernel.org
-References: <20260122141331.239354-1-nitin.rawat@oss.qualcomm.com>
- <20260122141331.239354-2-nitin.rawat@oss.qualcomm.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20260122141331.239354-2-nitin.rawat@oss.qualcomm.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Mime-Version: 1.0
+X-Mailer: git-send-email 2.52.0.457.g6b5491de43-goog
+Message-ID: <20260123045504.3507948-1-powenkao@google.com>
+Subject: [PATCH 1/1] scsi: ufs: core: Schedule EH on WLUN resume failure
+From: Po-Wen Kao <powenkao@google.com>
+Cc: Brian Kao <powenkao@google.com>, Alim Akhtar <alim.akhtar@samsung.com>, 
+	Avri Altman <avri.altman@wdc.com>, Bart Van Assche <bvanassche@acm.org>, 
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
+	"Martin K. Petersen" <martin.petersen@oracle.com>, Peter Wang <peter.wang@mediatek.com>, 
+	Bean Huo <beanhuo@micron.com>, Adrian Hunter <adrian.hunter@intel.com>, 
+	"Bao D. Nguyen" <quic_nguyenb@quicinc.com>, 
+	"open list:UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER" <linux-scsi@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 
-On 1/22/26 6:13 AM, Nitin Rawat wrote:
-> +static void ufs_qcom_set_esi_affinity(struct ufs_hba *hba)
-> +{
-> +	struct msi_desc *desc;
-> +	int ret, i = 0, nr_irqs = 0;
-> +	const cpumask_t *mask;
-> +	int cpu;
-> +
-> +	__msi_lock_descs(hba->dev);
-> +	/* Count the number of MSI descriptors */
-> +	msi_for_each_desc(desc, hba->dev, MSI_DESC_ALL) {
-> +		nr_irqs++;
-> +	}
-> +	__msi_unlock_descs(hba->dev);
-> +
-> +	if (nr_irqs == 0)
-> +		return;
-> +
-> +	__msi_lock_descs(hba->dev);
-> +	/* Set affinity hints for each interrupt in round-robin fashion */
-> +	msi_for_each_desc(desc, hba->dev, MSI_DESC_ALL) {
-> +		if (i >= nr_irqs)
-> +			break;
-> +
-> +		/* Distribute interrupts across online CPUs in round-robin */
-> +		cpu = cpumask_nth(i % num_online_cpus(), cpu_online_mask);
-> +		mask = get_cpu_mask(cpu);
-> +		if (!cpumask_subset(mask, cpu_online_mask)) {
-> +			dev_err(hba->dev, "Invalid CPU %d in map, using online CPUs\n",
-> +				cpu);
-> +			mask = cpu_online_mask;
-> +		}
-> +
-> +		ret = irq_set_affinity_hint(desc->irq, mask);
-> +		if (ret < 0)
-> +			dev_err(hba->dev, "Failed to set affinity hint to CPU %d for ESI IRQ %d, err = %d\n",
-> +				cpu, desc->irq, ret);
-> +
-> +		i++;
-> +	}
-> +	__msi_unlock_descs(hba->dev);
-> +}
+From: Brian Kao <powenkao@google.com>
 
-Why an entirely new function for setting interrupt affinity? Why isn't
-irq_create_affinity_masks() good enough? Are you aware that
-devm_platform_get_irqs_affinity() calls irq_create_affinity_masks()?
+On WLUN resume failed, core driver leaves wlun dev in error runtime
+PM state without taking further action. To ensure the driver can recover
+from such errors, this patch schedules the error handler to perform
+a full reset when error occurs during WLUN resume.
 
-Thanks,
+Signed-off-by: Brian Kao <powenkao@google.com>
+---
+ drivers/ufs/core/ufshcd.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-Bart.
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 057678f4c50a..ac4db8484ee5 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -10236,6 +10236,15 @@ static int __ufshcd_wl_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+ 	hba->clk_gating.is_suspended = false;
+ 	ufshcd_release(hba);
+ 	hba->pm_op_in_progress = false;
++
++	if (ret) {
++		/* ufshcd_reset_and_restore() might set host to UFSHCD_STATE_ERROR */
++		scoped_guard(spinlock_irqsave, hba->host->host_lock)
++			hba->ufshcd_state = UFSHCD_STATE_RESET;
++
++		ufshcd_force_error_recovery(hba);
++	}
++
+ 	return ret;
+ }
+ 
+
+base-commit: a9e03ec01ef2633288fd1b506980f54ae41c5a85
+-- 
+2.52.0.457.g6b5491de43-goog
+
