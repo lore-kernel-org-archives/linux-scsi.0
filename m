@@ -1,380 +1,191 @@
-Received: from mout02.posteo.de (mout02.posteo.de [185.67.36.66])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D451271A94
-	for <linux-scsi@vger.kernel.org>; Fri, 23 Jan 2026 19:18:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.67.36.66
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D9A5B27B4E1
+	for <linux-scsi@vger.kernel.org>; Fri, 23 Jan 2026 19:18:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769195887; cv=none; b=uN+IOpc5mdOTqs78BxW0Nwk674qQ/a+VW6ggWodY7kOeZljG/dWdAZkf7OS7JTlR551dqznzFbY/VoIN8ttOKZddWJ/7VZWv4kxM3++ULwKhbnadBLdtFP/RH/bEt8BlOM1JICvmK8lhWe3Rl4n7XXhxu29GKqKhxM8vUhNI9Gg=
+	t=1769195922; cv=none; b=LJ5hL2Nbwkzj/+10/rvPg5I92uMhqtntPxlEubdDI6r+kbwyRqWi0sqIENi1vjAIcP26t7sKGxnFdJ32CMX4OUgOE0tW7TwXL40Agr/u7+r77bxtBKEyUDMHJSooBOJaP6GBgaPM/rBgcQCsLTpoJeiPp+g3KK33NC1W83dTntQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769195887; c=relaxed/simple;
-	bh=KkKlOaZI84FRMwvPHRCgWD174QDeULhQsKbE9MmepDc=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=WXNEPy1vt0G5jsOAo6r16JM98Xak7pGs+I6eoD6uyZPMYKaO13qEoyW00/AC0YH4SsmgdOLjrYteb6Dpp7jS4OHC5fe+6TNc9RDq2Nx6vRORy7OBfrceC6DZl/t2CHR777y8rHHF8cQ/QW/UnZ56/CHijXmH9XTHqdEoYm+Re/s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de; spf=pass smtp.mailfrom=posteo.de; dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b=Px01h+eA; arc=none smtp.client-ip=185.67.36.66
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=posteo.de
+	s=arc-20240116; t=1769195922; c=relaxed/simple;
+	bh=ueOS/CjOndEkDwZzTX9hBzD3FyQPNBUzVSWENVtt+UE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=n7GOKkYMGGxNiakUcxZKPkwwf8AzygGz7d1dhlCYwkxIjF2qGk7U4j+XUGXuZ/+qOPyBQ0HAYzpI9i8PTNdiLZeliTXvxcBlyzWWC8Zae5vqDLYQPwpBGqwKuUVTX4ySiK/SjNPcCnATTyKSgCwjJ7+9i0VVoJvI+m3MId/SS70=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=m7kGgDjp; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=bdwJaidv; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b="Px01h+eA"
-Received: from submission (posteo.de [185.67.36.169]) 
-	by mout02.posteo.de (Postfix) with ESMTPS id F2619240105
-	for <linux-scsi@vger.kernel.org>; Fri, 23 Jan 2026 20:18:03 +0100 (CET)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=posteo.de; s=2017;
-	t=1769195883; bh=EkhUtgoic/y3ldPfdUhjFsRmPv7Pnl1iCuE+wtj3oxc=;
-	h=Message-ID:Subject:From:To:Cc:Date:Autocrypt:Content-Type:
-	 MIME-Version:OpenPGP:From;
-	b=Px01h+eAbFjPcBVAM1p6VLhQGL2LTuhQh4luPYokNqCh/QGkF+C8d420H7wx4ZgfW
-	 Ch75skbxTDaes8Rn1rDb63Ff3ZCKm+5J9x8C+qdNHvG/xoXdk14EocKIxCgSHGrloM
-	 kPHFrf8guOxLlHlLi0UiVNKivhTFSsceRULRLfKIdNF+M8PCmcZZYDbKUeS5a92/A0
-	 c+kK1nyqLBTYIkJcP9JX60exd0NDFfzFBlxcSzHbsCjeZ12UQV2XSM+OM0LkQWzoeN
-	 o1YuKSBz0Hl2pQfZan69spzkm/KZv4KZvYGLpEw1RfJlj5gbYkJWz3S+vod5Zkr1vI
-	 WyFOZ6u7/UASg==
-Received: from customer (localhost [127.0.0.1])
-	by submission (posteo.de) with ESMTPSA id 4dySPh6DKwz6tvd;
-	Fri, 23 Jan 2026 20:18:00 +0100 (CET)
-Message-ID: <9d75b9bcfd18f2e2073f201375458af7bf5f1dc7.camel@posteo.de>
-Subject: Re: [PATCH RFC 3/4] leds: add delay_on, delay_off and invert
- attributes to disk trigger
-From: Markus Probst <markus.probst@posteo.de>
-To: Lee Jones <lee@kernel.org>, Pavel Machek <pavel@kernel.org>, Rob Herring
-	 <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley	
- <conor+dt@kernel.org>, Jacek Anaszewski <jacek.anaszewski@gmail.com>,
- Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>,
- John Garry	 <john.g.garry@oracle.com>, Jason Yan <yanaijie@huawei.com>,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, "Martin K.
- Petersen" <martin.petersen@oracle.com>
-Cc: Pavel Machek <pavel@ucw.cz>, linux-leds@vger.kernel.org, 
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
-Date: Fri, 23 Jan 2026 19:18:03 +0000
-In-Reply-To: <20260123-ledtrig_disk_-v1-3-07004756467b@posteo.de>
-References: <20260123-ledtrig_disk_-v1-0-07004756467b@posteo.de>
-	 <20260123-ledtrig_disk_-v1-3-07004756467b@posteo.de>
-Autocrypt: addr=markus.probst@posteo.de; prefer-encrypt=mutual;
- keydata=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
- jfGillcaQOqFZ3WwVqyzG1BUfTow==
-Content-Type: multipart/signed; micalg="pgp-sha256";
-	protocol="application/pgp-signature"; boundary="=-znz3lQKgoCTyMhe+g0XG"
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="m7kGgDjp";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="bdwJaidv"
+Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 60NH3u6v078356
+	for <linux-scsi@vger.kernel.org>; Fri, 23 Jan 2026 19:18:40 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	+w0KZMnh/DWR/lpOvZ20jorLPPBptXzTStJthYI64T8=; b=m7kGgDjpTokoQDpm
+	DK3+qMBxYn7CmwPyuu5EKW0D4IXpdt/3NnyDSHqKXJpaSPAOhtvmUXRxclAvkjkF
+	/sgNCLzvFMMQfrRuHCsWpikSlABbvneMy+iPUrIzGnxjbk8XejgGBaLJaqoM6Hxb
+	VhAonJBbnfhTZf6odPPzHV+Wo594iWIcIninlcnMh1FUvx4TA5puHDWOSfTtUNvx
+	v8mQKWEi7ef8lygG0s9YXewhspWt6hnR81ip9B9bI9DKg33A71ScPgVRQIrylBh6
+	/vJGX4KmfjYUZHv4F4X+pfeb/sDEusHoOagnR0fsLzEZYaoRtQjrT9xar6aUwkKJ
+	1MjXiA==
+Received: from mail-vs1-f69.google.com (mail-vs1-f69.google.com [209.85.217.69])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4bvd2cgdvw-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Fri, 23 Jan 2026 19:18:40 +0000 (GMT)
+Received: by mail-vs1-f69.google.com with SMTP id ada2fe7eead31-5ee83da1811so9775524137.0
+        for <linux-scsi@vger.kernel.org>; Fri, 23 Jan 2026 11:18:39 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1769195919; x=1769800719; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=+w0KZMnh/DWR/lpOvZ20jorLPPBptXzTStJthYI64T8=;
+        b=bdwJaidv5vX/7Oe56Jv0U7dFtqHkUGeeXyMBStxvKPlatoYYjE8YOMIAGUf2H45FT6
+         6EVRpM9JzLhcU8jD3el+4AIOHZZcGBJKfSN3LNpn2YsXTU/0CShU0Uhbrc8R24VsFCUp
+         Mn37NuhssP2DLOpFtnxB7YZcxKlVLocd36E8klUsjj4c6GPNUK+T7aNplHdmgAY/vMx8
+         uu711sSrlG66qQZUKeEdPREtCGWs0cQ36pDk+X3qpKEBBi0PQhbzjGdLQjA+p06xz8t3
+         J/c6SGs7s2HNsUOOeu6ouz/PKnwuaIAAQM1uDlqC1S3XTP+l20BUFMWoIEj/WG25i9jR
+         5w0g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1769195919; x=1769800719;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=+w0KZMnh/DWR/lpOvZ20jorLPPBptXzTStJthYI64T8=;
+        b=lwvDghdOiEq7n6geRmuiY40op3HA3J1ZG1MQ70HdQTuzjM3ampz0R4HOeI7mDkL23K
+         tSIvdkAywglPPO1kJpdZ95HlfnWWry3c1trdBcEHhqbBaBvmMRGbLgmQAY+OOH4/nUtE
+         O+p+LqgSzM2EYlspDTTVnuljYM55g33108+TsUClVlBEgzgryFdz2cIgrKcQ+tdPbQqf
+         XA1fgwXtaXGRARidANItHzV1RdWSDUUtWmUmFKui2O/9TwLix2wN8XLbsTXOl+P+eVp+
+         rzO41M9asZsP6EZ5vJnAg7hUnNVojlMnSC81oTVSv6zQ71DeLVmWo0kKv9CJ3jFrrMik
+         o4+A==
+X-Forwarded-Encrypted: i=1; AJvYcCUE8HbKooHkyLKppVAF6d39aC0s4e8yB22FE9z7gS07OiAzlKO3KdeGCZUUEkh58KnTXcY0PSnGN/7U@vger.kernel.org
+X-Gm-Message-State: AOJu0Yz0lWZHWJLy5plTjezu0S0dP6Npw3jQIObeZ1jZgVNphzxaAZYT
+	9s2+KZB4QWQzHU2Iwn5vG2d9gDu2duu6Hv7st9dg+v0Lv0oEQ51nHdz024ZUPfjl5Resmi3zkq6
+	NmslcqqJqzLOvpmKmVoDu/MsJ8DmzlWKB4t6KX12I8yLTV9nB+OfqmNy+WzO4Da0g
+X-Gm-Gg: AZuq6aLs2EI2eo7PcnNLBH0krqAGYJyGqnKEPVbOeNVeh/raiqQdDZhEP+NE5F+jhbz
+	JyZzLr9TW8lKdvWkaxQT8sKL+6ePicuLrTvt95G7DkyyN4xD1T4T0k3s+7SEm8IROkC8oIiJsJO
+	rZII7W3Fh/2sEiSx+8Vo2DvsOG5BFOazN0apQ0bdCUMjN/A4OgdDHK1Zr+JLcmj2vrr6emXEbVj
+	XbvYi4MShZpKOOWwBBmCczYTG/Gj0ULeYUfEuzEdN2omJ+ChTzHN1Fxz+Hst/r7NESK91cLjZQq
+	35F3mS38MDlLgKZWpw7WHZ25KKJ3qkaShVnImnvEEmWem+Hv4A0QGmiokXMUQGWY7jFz43iqhMi
+	KOAhCc0qAE74CsGJkvBWMKUBY3lF3QhciEyrCIgtQp2BiLI7WKsKKcIPaXlpSqrWvufv2fKvXuS
+	pe6M9zQP3nhVfDHjLK1caPf/Q=
+X-Received: by 2002:a05:6102:441a:b0:5ee:a083:7935 with SMTP id ada2fe7eead31-5f54b9d0e63mr1422182137.1.1769195919028;
+        Fri, 23 Jan 2026 11:18:39 -0800 (PST)
+X-Received: by 2002:a05:6102:441a:b0:5ee:a083:7935 with SMTP id ada2fe7eead31-5f54b9d0e63mr1422175137.1.1769195918480;
+        Fri, 23 Jan 2026 11:18:38 -0800 (PST)
+Received: from umbar.lan (2001-14ba-a073-af00-264b-feff-fe8b-be8a.rev.dnainternet.fi. [2001:14ba:a073:af00:264b:feff:fe8b:be8a])
+        by smtp.gmail.com with ESMTPSA id 2adb3069b0e04-59de492c2fcsm877399e87.97.2026.01.23.11.18.37
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 23 Jan 2026 11:18:37 -0800 (PST)
+Date: Fri, 23 Jan 2026 21:18:36 +0200
+From: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
+To: Abhinaba Rakshit <abhinaba.rakshit@oss.qualcomm.com>
+Cc: Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio <konradybcio@kernel.org>,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Neeraj Soni <neeraj.soni@oss.qualcomm.com>,
+        linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-scsi@vger.kernel.org
+Subject: Re: [PATCH v3 0/3] Enable ICE clock scaling
+Message-ID: <cb6g64efyoauel34hsckp3kwfprw7etag3fthqlkucz4ue5ytf@t4gejdalvvow>
+References: <20260123-enable-ufs-ice-clock-scaling-v3-0-d0d8532abd98@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-OpenPGP: url=https://posteo.de/keys/markus.probst@posteo.de.asc; preference=encrypt
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260123-enable-ufs-ice-clock-scaling-v3-0-d0d8532abd98@oss.qualcomm.com>
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMTIzMDE0NyBTYWx0ZWRfXzzQMsfad/8m4
+ ZZyrELJZjA4LI9X4s9ozxj1wJE7452Td/nwZIBLeETjLcfRNGfbe4Buipw0iKkqceZFyJN8AKHJ
+ jjHwVz2sxkWwcHfgBgidBMEQe+3qKHKZOXUmy2LNbdqkZ3WFtB0lXbzF2CQmLEDD+NJ+xr1HBPw
+ JgXXR235TCZPoPae1QWOwcKu8q5XmaZ6KU7XH10iKyUiz4FMgMLzvqi1ij04zOFjcdM/J8pgpTb
+ j0zpc0En5/KYLV0kN6y0+4PLFUM4bXCtYZWspFvJgITUWPiQpa118bAx6SG9YyOm6pHCYOVrd1T
+ VYTuO4ZTDmQEoI0zuFiseBYww3Etktgmqax6nTCScvxW1FxK83TS8iWIBhaFTpE8qX2MlK9Q8Fe
+ IR6ad6zHWL7sWgVawPqy0fgP6wHeBGGPV3OMjZoglqcqbGOzIHP8rniTtQ461SJ6HYriTgAlRXE
+ q3VkKFPdYW8K/nIe+KQ==
+X-Proofpoint-GUID: -_T7ZZ2V6M9yy-Af7Cp2DJ46yXzLkTcS
+X-Proofpoint-ORIG-GUID: -_T7ZZ2V6M9yy-Af7Cp2DJ46yXzLkTcS
+X-Authority-Analysis: v=2.4 cv=bapmkePB c=1 sm=1 tr=0 ts=6973c990 cx=c_pps
+ a=5HAIKLe1ejAbszaTRHs9Ug==:117 a=xqWC_Br6kY4A:10 a=IkcTkHD0fZMA:10
+ a=vUbySO9Y5rIA:10 a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=VwQbUJbxAAAA:8 a=EUspDBNiAAAA:8 a=Cmxkgl4FijiPsMXLri4A:9 a=3ZKOabzyN94A:10
+ a=QEXdDO2ut3YA:10 a=gYDTvv6II1OnSo0itH1n:22
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.20,FMLib:17.12.100.49
+ definitions=2026-01-23_03,2026-01-22_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ spamscore=0 priorityscore=1501 malwarescore=0 bulkscore=0 suspectscore=0
+ phishscore=0 lowpriorityscore=0 impostorscore=0 adultscore=0 clxscore=1015
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2601150000 definitions=main-2601230147
 
-
---=-znz3lQKgoCTyMhe+g0XG
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-
-On Fri, 2026-01-23 at 19:05 +0000, Markus Probst wrote:
-> Add delay_on, delay_off and invert device attributes to leds using the
-> disk trigger.
->=20
-> Signed-off-by: Markus Probst <markus.probst@posteo.de>
+On Fri, Jan 23, 2026 at 12:42:11PM +0530, Abhinaba Rakshit wrote:
+> Introduce support for dynamic clock scaling of the ICE (Inline Crypto Engine)
+> using the OPP framework. During ICE device probe, the driver now attempts to
+> parse an optional OPP table from the ICE-specific device tree node to
+> determine minimum and maximum supported frequencies for DVFS-aware operations.
+> API qcom_ice_scale_clk is exposed by ICE driver and is invoked by UFS host
+> controller driver in response to clock scaling requests, ensuring coordination
+> between ICE and host controller.
+> 
+> For MMC controllers that do not support clock scaling, the ICE clock frequency
+> is kept aligned with the MMC controller’s clock rate (TURBO) to ensure
+> consistent operation.
+> 
+> Dynamic clock scaling based on OPP tables enables better power-performance
+> trade-offs. By adjusting ICE clock frequencies according to workload and power
+> constraints, the system can achieve higher throughput when needed and
+> reduce power consumption during idle or low-load conditions.
+> 
+> The OPP table remains optional, absence of the table will not cause
+> probe failure. However, in the absence of an OPP table, ICE clocks will
+> remain at their default rates, which may limit performance under
+> high-load scenarios or prevent performance optimizations during idle periods.
+> 
+> Signed-off-by: Abhinaba Rakshit <abhinaba.rakshit@oss.qualcomm.com>
 > ---
->  drivers/leds/trigger/ledtrig-disk.c | 194 ++++++++++++++++++++++++++++++=
-+++---
->  1 file changed, 182 insertions(+), 12 deletions(-)
->=20
-> diff --git a/drivers/leds/trigger/ledtrig-disk.c b/drivers/leds/trigger/l=
-edtrig-disk.c
-> index e9b87ee944f2..ed5ef83a5b35 100644
-> --- a/drivers/leds/trigger/ledtrig-disk.c
-> +++ b/drivers/leds/trigger/ledtrig-disk.c
-> @@ -9,31 +9,201 @@
-> =20
->  #include <linux/kernel.h>
->  #include <linux/init.h>
-> +#include <linux/list.h>
->  #include <linux/leds.h>
-> +#include "../leds.h"
-> =20
-> -#define BLINK_DELAY 30
-> +#define DEFAULT_BLINK_DELAY 30
-> =20
-> -DEFINE_LED_TRIGGER(ledtrig_disk);
-> -DEFINE_LED_TRIGGER(ledtrig_disk_read);
-> -DEFINE_LED_TRIGGER(ledtrig_disk_write);
-> +struct ledtrig_disk_data {
-> +	unsigned long delay_on;
-> +	unsigned long delay_off;
-> +	unsigned int invert;
-> +};
-> +
-> +static ssize_t led_delay_on_show(struct device *dev,
-> +		struct device_attribute *attr, char *buf)
-> +{
-> +	struct led_classdev *led_cdev =3D led_trigger_get_led(dev);
-> +	struct ledtrig_disk_data *disk_data =3D led_get_trigger_data(led_cdev);
-> +
-> +	return sprintf(buf, "%lu\n", disk_data->delay_on);
-> +}
-> +
-> +static ssize_t led_delay_on_store(struct device *dev,
-> +		struct device_attribute *attr, const char *buf, size_t size)
-> +{
-> +	struct led_classdev *led_cdev =3D led_trigger_get_led(dev);
-> +	struct ledtrig_disk_data *disk_data =3D led_get_trigger_data(led_cdev);
-> +	unsigned long state;
-> +	ssize_t ret;
-> +
-> +	ret =3D kstrtoul(buf, 10, &state);
-> +	if (ret)
-> +		return ret;
-> +
-> +	disk_data->delay_on =3D state;
-> +
-> +	return size;
-> +}
-> +
-> +static ssize_t led_delay_off_show(struct device *dev,
-> +		struct device_attribute *attr, char *buf)
-> +{
-> +	struct led_classdev *led_cdev =3D led_trigger_get_led(dev);
-> +	struct ledtrig_disk_data *disk_data =3D led_get_trigger_data(led_cdev);
-> +
-> +	return sprintf(buf, "%lu\n", disk_data->delay_off);
-> +}
-> +
-> +static ssize_t led_delay_off_store(struct device *dev,
-> +		struct device_attribute *attr, const char *buf, size_t size)
-> +{
-> +	struct led_classdev *led_cdev =3D led_trigger_get_led(dev);
-> +	struct ledtrig_disk_data *disk_data =3D led_get_trigger_data(led_cdev);
-> +	unsigned long state;
-> +	ssize_t ret;
-> +
-> +	ret =3D kstrtoul(buf, 10, &state);
-> +	if (ret)
-> +		return ret;
-> +
-> +	disk_data->delay_off =3D state;
-> +
-> +	return size;
-> +}
-> +
-> +static ssize_t led_invert_show(struct device *dev,
-> +		struct device_attribute *attr, char *buf)
-> +{
-> +	struct ledtrig_disk_data *disk_data =3D
-> +		led_trigger_get_drvdata(dev);
-> +
-> +	return sprintf(buf, "%u\n", disk_data->invert);
-> +}
-> +
-> +static ssize_t led_invert_store(struct device *dev,
-> +		struct device_attribute *attr, const char *buf, size_t size)
-> +{
-> +	struct led_classdev *led_cdev =3D led_trigger_get_led(dev);
-> +	struct ledtrig_disk_data *disk_data =3D led_get_trigger_data(led_cdev);
-> +	unsigned long state;
-> +	int ret;
-> +
-> +	ret =3D kstrtoul(buf, 0, &state);
-> +	if (ret)
-> +		return ret;
-> +
-> +	led_set_brightness_nosleep(led_cdev, state ? LED_FULL : LED_OFF);
-> +	disk_data->invert =3D !!state;
-> +
-> +	return size;
-> +}
-> +
-> +static DEVICE_ATTR(delay_on, 0644, led_delay_on_show, led_delay_on_store=
-);
-> +static DEVICE_ATTR(delay_off, 0644, led_delay_off_show, led_delay_off_st=
-ore);
-> +static DEVICE_ATTR(invert, 0644, led_invert_show, led_invert_store);
-> +
-> +static struct attribute *ledtrig_disk_attrs[] =3D {
-> +	&dev_attr_delay_on.attr,
-> +	&dev_attr_delay_off.attr,
-> +	&dev_attr_invert.attr,
-> +	NULL
-> +};
-> +ATTRIBUTE_GROUPS(ledtrig_disk);
-> +
-> +static void pattern_init(struct led_classdev *led_cdev, struct ledtrig_d=
-isk_data *disk_data)
-> +{
-> +	unsigned int size =3D 0;
-> +
-> +	u32 *pattern __free(kfree) =3D led_get_default_pattern(led_cdev, &size)=
-;
-> +	if (!pattern)
-> +		return;
-> +
-> +	if (size !=3D 3) {
-> +		dev_warn(led_cdev->dev,
-> +			 "Expected 3 but got %u values for delays + invert pattern\n",
-> +			 size);
-> +		return;
-> +	}
-> +
-> +	disk_data->delay_on =3D pattern[0];
-> +	disk_data->delay_off =3D pattern[1];
-> +	disk_data->invert =3D !!pattern[2];
-> +}
-> +
-> +static int ledtrig_disk_activate(struct led_classdev *led_cdev)
-> +{
-> +	struct ledtrig_disk_data *disk_data;
-> +
-> +	disk_data =3D kzalloc(sizeof(*disk_data), GFP_KERNEL);
-> +	if (!disk_data)
-> +		return -ENOMEM;
-> +
-> +	disk_data->delay_on =3D DEFAULT_BLINK_DELAY;
-> +	disk_data->delay_off =3D DEFAULT_BLINK_DELAY;
-> +
-> +	led_set_trigger_data(led_cdev, disk_data);
-> +
-> +	if (led_cdev->flags & LED_INIT_DEFAULT_TRIGGER) {
-> +		pattern_init(led_cdev, disk_data);
-> +		/*
-> +		 * Mark as initialized even on pattern_init() error because
-> +		 * any consecutive call to it would produce the same error.
-> +		 */
-> +		led_cdev->flags &=3D ~LED_INIT_DEFAULT_TRIGGER;
-> +	}
-> +
-> +	led_set_brightness_nosleep(led_cdev, disk_data->invert ? LED_FULL : LED=
-_OFF);
-> +
-> +	return 0;
-> +}
-> +
-> +static struct led_trigger ledtrig_disk =3D {
-> +	.name =3D "disk-activity",
-> +	.activate =3D ledtrig_disk_activate,
-> +	.groups =3D ledtrig_disk_groups,
-> +};
-> +static struct led_trigger ledtrig_disk_read =3D {
-> +	.name =3D "disk-read",
-> +	.activate =3D ledtrig_disk_activate,
-> +	.groups =3D ledtrig_disk_groups,
-> +};
-> +static struct led_trigger ledtrig_disk_write =3D {
-> +	.name =3D "disk-write",
-> +	.activate =3D ledtrig_disk_activate,
-> +	.groups =3D ledtrig_disk_groups,
-> +};
-> +
-> +static void ledtrig_disk_blink_oneshot(struct led_trigger *trig)
-> +{
-> +	struct led_classdev *led_cdev;
-> +	struct ledtrig_disk_data *disk_data;
-> +
-> +	rcu_read_lock();
-> +	list_for_each_entry_rcu(led_cdev, &trig->led_cdevs, trig_list) {
-> +		disk_data =3D led_get_trigger_data(led_cdev);
-Also there is likely a race condition here, as there is a time gap
-between the led being added to trig->led_cdevs and
-ledtrig_disk_activate being run.
+> Changes in v3:
+> - Avoid clock scaling in case of legacy bindings as suggested.
+> - Use of_device_is_compatible to distinguish between legacy and non-legacy bindings.
+> - Link to v2: https://lore.kernel.org/r/20251121-enable-ufs-ice-clock-scaling-v2-0-66cb72998041@oss.qualcomm.com
+> 
+> Changes in v2:
+> - Use OPP-table instead of freq-table-hz for clock scaling.
+> - Enable clock scaling for legacy targets as well, by fetching frequencies from storage opp-table.
+> - Introduce has_opp variable in qcom_ice structure to keep track, if ICE instance has dedicated OPP-table registered.
+> - Combined the changes for patch-series <20251001-set-ice-clock-to-turbo-v1-1-7b802cf61dda@oss.qualcomm.com> as suggested.
+> - Link to v1: https://lore.kernel.org/r/20251001-enable-ufs-ice-clock-scaling-v1-0-ec956160b696@oss.qualcomm.com
+> 
+> ---
+> Abhinaba Rakshit (3):
 
-Is there a better way to avoid the race condition, than defining an own
-list for each trigger?
+DT binding changes should be a part of the same series.
 
-Thanks
-- Markus Probst
+>       soc: qcom: ice: Add OPP-based clock scaling support for ICE
+>       ufs: host: Add ICE clock scaling during UFS clock changes
+>       soc: qcom: ice: Set ICE clk to TURBO on probe
+> 
+>  drivers/soc/qcom/ice.c      | 68 +++++++++++++++++++++++++++++++++++++++++++++
+>  drivers/ufs/host/ufs-qcom.c | 15 ++++++++++
+>  include/soc/qcom/ice.h      |  1 +
+>  3 files changed, 84 insertions(+)
+> ---
+> base-commit: fe4d0dea039f2befb93f27569593ec209843b0f5
+> change-id: 20251120-enable-ufs-ice-clock-scaling-b063caf3e6f9
+> 
+> Best regards,
+> -- 
+> Abhinaba Rakshit <abhinaba.rakshit@oss.qualcomm.com>
+> 
 
-> +		led_blink_set_oneshot(led_cdev, &disk_data->delay_on, &disk_data->dela=
-y_off,
-> +				      disk_data->invert);
-> +	}
-> +	rcu_read_unlock();
-> +}
-> =20
->  void ledtrig_disk_activity(bool write)
->  {
-> -	led_trigger_blink_oneshot(ledtrig_disk, BLINK_DELAY, BLINK_DELAY, 0);
-> +	ledtrig_disk_blink_oneshot(&ledtrig_disk);
->  	if (write)
-> -		led_trigger_blink_oneshot(ledtrig_disk_write,
-> -					  BLINK_DELAY, BLINK_DELAY, 0);
-> +		ledtrig_disk_blink_oneshot(&ledtrig_disk_write);
->  	else
-> -		led_trigger_blink_oneshot(ledtrig_disk_read,
-> -					  BLINK_DELAY, BLINK_DELAY, 0);
-> +		ledtrig_disk_blink_oneshot(&ledtrig_disk_read);
->  }
->  EXPORT_SYMBOL(ledtrig_disk_activity);
-> =20
->  static int __init ledtrig_disk_init(void)
->  {
-> -	led_trigger_register_simple("disk-activity", &ledtrig_disk);
-> -	led_trigger_register_simple("disk-read", &ledtrig_disk_read);
-> -	led_trigger_register_simple("disk-write", &ledtrig_disk_write);
-> +	led_trigger_register(&ledtrig_disk);
-> +	led_trigger_register(&ledtrig_disk_read);
-> +	led_trigger_register(&ledtrig_disk_write);
-> =20
->  	return 0;
->  }
-
---=-znz3lQKgoCTyMhe+g0XG
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQJPBAABCAA5FiEEgnQYxPSsWOdyMMRzNHYf+OetQ9IFAmlzyVwbFIAAAAAABAAO
-bWFudTIsMi41KzEuMTEsMiwyAAoJEDR2H/jnrUPSRzAP/0Xl3Dy9j6tityy4ImxH
-cMCxapiyXSrx3huV58S8jsOkxzwZP4WVh1it6TjAlCDHHhP1qpoF9yGhVUYU8rpR
-s8OTSUH8EovshfJytBinfay8/QJgK7+X8cymQWmUVSRvTb6NckPp7it3H0d/Ld2n
-nIKDRejxZD2eWbqBOKffp9bKRC3LbLykIPjhgFuMaHDSeJKPH9aCyoohri5iGI37
-Vhud8T2DZn3iX/8WcI/XGFC53DT1F0w7NtFTFVlifDnQC4Mm3c2xkr4pQcb/p1Wz
-QDPuWDViCjfEBezb70RPl0s2o2frLZdTn5oEzrpXUr5Ls3O4rocoFYMtWm6usfVn
-1jV7H4EYMw9+iCwgPh1g7uGJv4eL7/oz87ITVovheXaDBOPwFE6qxP45W0SeG5ZH
-/tbpOYVpI+NvAtBmkB3zsM/sqcfcKWGmi7KgG5wMKi0RLJSKpX9ockJkefyI4+OZ
-scNwLaeTUh0CofKacTzXnfG+iU3Xji12iQ3AiciRigeXJkuTLcf9hyYVe3NxhH/i
-e3yfs0foyrdSDaF3uk2YS7rhNv88e72H9kzqgkkUIasIVSv9M5eSWX83tM+WmSgS
-i8LLlR+ewMRdD4io42PusQUh4oqhEgR7WoUtYouIIgsWisGnC8qnjJrtobVNgDTP
-Fz2dLy0XmHfS/+RqfV3J32gn
-=D6ke
------END PGP SIGNATURE-----
-
---=-znz3lQKgoCTyMhe+g0XG--
+-- 
+With best wishes
+Dmitry
