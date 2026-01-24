@@ -1,63 +1,64 @@
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 85C6641C71;
-	Sat, 24 Jan 2026 03:53:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.165.32
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E835F21FF21;
+	Sat, 24 Jan 2026 03:53:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.177.32
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769226818; cv=none; b=dddQa7rKyOz7QnWPNXWbQxvxJzcQuhkJzUooC9mtZCaNb2jvHquRnC6tV41WMsFtf5o+UMr4eRBsBaBEShjozwnNg8Xes/JFTw0ApfXIb2OBUneanDZk76D8ohxFr/kLhTb+oW8GzmdJRD1Zpr0uIJJZrSDrgqDTrwS5oTRJVhM=
+	t=1769226820; cv=none; b=pndPHofWL/VWkuiiwFLnVEHwexiHJIvP8EkzZZjvN5bk/wIi1g4i7vdiKqI2myS4bV227CIKqE8PZSQw17xgpgH8VFZk7LBSIrSsLTmckGQJLhztiuc5DCSK11IgDmldAQuVpKTvcljXwIRs/qxjzr5xSHk1zqbTB/G6JJHb0sg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769226818; c=relaxed/simple;
-	bh=Wcg6+CrRd8tdt6fC5tCHL2fYlARKcDRRqyU1tZYItAY=;
+	s=arc-20240116; t=1769226820; c=relaxed/simple;
+	bh=I+o9BX/d2ctAuwNXNZrEgHT5HARRlzxoitZu+mf1PIg=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=XueuEthxp7oj/H8P06MR7XDEuV0UhRLK4n1VF/6vpfM7KKjpW0+WsWF+hCbv7IP4rfDnVoyIhLPJ7ZQctq+vFZkw/uLNfRtCHxPo4aCZGhhIVZ9j4kX9mfYrYNI9xpEuw4unPM6JYCWLXLrSP7dSXpfsBUbopomJDApXI6ydCnw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=QSNQF9d0; arc=none smtp.client-ip=205.220.165.32
+	 MIME-Version:Content-Type; b=GtUmLCXAr3aBLgsET2ZuEGUluhIdu1ID//zzSt0s7795TjNveDNKHcp7AaA4IdVvFnrPo91WFSfPLU5D1UCxfIvBjL1O7989We7/+dkH1CH3EIvJs43zrV1jXzTzdLqTAkzz9xPjRO0JgIXAHpRHcUrknr9sTbP1pXzJKgfxR1s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=H2i32+nx; arc=none smtp.client-ip=205.220.177.32
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="QSNQF9d0"
-Received: from pps.filterd (m0333521.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 60O3Usur098805;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="H2i32+nx"
+Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 60O30S6p342768;
 	Sat, 24 Jan 2026 03:53:33 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
 	:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=
-	corp-2025-04-25; bh=u2B2d0SVhIFFeaNGJp1VZPe1V5j+DlWEksp7hHGHRA0=; b=
-	QSNQF9d0PE+fh0+h2qqRC/So+/9MO+rMW964NI0r+0Pk/vr2dfkhLOinc/IGKoG7
-	TIUW38LKE0qwunrlaQIuw0SFF8SRymBmkUIKLI6uanD0a4rqMIFpineDxSsVlSDK
-	emMU4kW7S99Zr6frFdB373BVi+1WB5NYLr/ZNei/FOanvQXEmvsZl24VzuHy0zE3
-	anW595UHygEbyxKf3AaxTpfYqSc5XyR5BYR/fr1sYI8jbCIjWXNHURsdIcbWtsXT
-	PWje4o/tTBhSmJbOdWvn/47P5F4u8SCjrLMTQ3wLHFrgLtrfIXzXx/LRSZmRIJpH
-	lgiX127lMJQDjfdyf7QGNw==
+	corp-2025-04-25; bh=UTnRbbhfqB56bWwjF2sO5paDiKonankzp8U6fOUds8c=; b=
+	H2i32+nxG2MUvWoHRTAV0Ejy4lUr7NFyj7LuCmogjhZH2ABD5QJC4TdpIxr1lNmm
+	hJmNHjWx3A8SF4sBteHX2jgf0/UGUOVEFrFyfq1j86ltRRkh8/z+oErZx8Xr8WVx
+	pCTOU7l2z7/51t/6ktAdS6oye3QW9xf38P5wtAGL6wYaizekYCoQF3w6RBfrgTS8
+	AltlEZk1+h9hf4902bZCz4ry2Xg3yweVfTE2KGuim/ghRYneSmwRmcvmu/hfcwH8
+	UzBbM4FqwBWlSA8i9Rt5vNXX7nbAhjRRLlaf+9qiwuR4GZBBpoaaCbAoK0E/0HbQ
+	1rMRMNOxFbhB2wQxOs/buQ==
 Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4bvn09g1gp-1
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4bvmv2r1k2-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
 	Sat, 24 Jan 2026 03:53:33 +0000 (GMT)
 Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 60O1Y3on019761;
-	Sat, 24 Jan 2026 03:53:31 GMT
+	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 60O1Y9vH019829;
+	Sat, 24 Jan 2026 03:53:32 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 4bvmhbak2j-1
+	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 4bvmhbak31-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Sat, 24 Jan 2026 03:53:31 +0000
+	Sat, 24 Jan 2026 03:53:32 +0000
 Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 60O3rViX002545;
-	Sat, 24 Jan 2026 03:53:31 GMT
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 60O3rVib002545;
+	Sat, 24 Jan 2026 03:53:32 GMT
 Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 4bvmhbak2d-1;
-	Sat, 24 Jan 2026 03:53:31 +0000
+	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 4bvmhbak2d-3;
+	Sat, 24 Jan 2026 03:53:32 +0000
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-To: James.Bottomley@HansenPartnership.com, Ajay Neeli <ajay.neeli@amd.com>
+To: ketan.mukadam@broadcom.com, James.Bottomley@HansenPartnership.com,
+        jitendra.bhivare@broadcom.com, hare@suse.com,
+        Haoxiang Li <lihaoxiang@isrc.iscas.ac.cn>
 Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, git@amd.com,
-        sai.krishna.potthuri@amd.com, michal.simek@amd.com,
-        srinivas.goud@amd.com, radhey.shyam.pandey@amd.com
-Subject: Re: [PATCH] scsi: ufs: amd-versal2: Fix PHY initialization in HCE enable notify
-Date: Fri, 23 Jan 2026 22:53:24 -0500
-Message-ID: <176922663899.2974474.7208654333061156840.b4-ty@oracle.com>
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        stable@vger.kernel.org
+Subject: Re: [PATCH] scsi: be2iscsi: fix a memory leak in beiscsi_boot_get_sinfo()
+Date: Fri, 23 Jan 2026 22:53:26 -0500
+Message-ID: <176922663887.2974474.15556943791943692829.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.51.2
-In-Reply-To: <20251224053950.54213-1-ajay.neeli@amd.com>
-References: <20251224053950.54213-1-ajay.neeli@amd.com>
+In-Reply-To: <20251213083643.301240-1-lihaoxiang@isrc.iscas.ac.cn>
+References: <20251213083643.301240-1-lihaoxiang@isrc.iscas.ac.cn>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -70,43 +71,36 @@ X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.20,FMLib:17.12.100.49
  definitions=2026-01-24_01,2026-01-22_02,2025-10-01_01
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 bulkscore=0 phishscore=0
- mlxlogscore=736 mlxscore=0 spamscore=0 suspectscore=0 malwarescore=0
+ mlxlogscore=610 mlxscore=0 spamscore=0 suspectscore=0 malwarescore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2601150000
  definitions=main-2601240028
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMTI0MDAyNyBTYWx0ZWRfX2f0Jwfn+2nAX
- I19A1+rLlCLz6ezX0PiNAv0wRVkR+WdZEGQurqV8/5C9vwaGhO2+AbLyvUSzUdn3pfKzkHesqZu
- QXeQQ1zQpyRus7MrizUr7HipV/g3crPNWDIQeLdVoOHw3ctdRfw6Ej5KL9cOMNb3omvKPvWHpcq
- cjWOrKilPXmcJZJ9JIRV+vCWSPL8pbIpH2QVWnGlo1VuE+9/onVS0Lr+ahQZtbJPgnRh+f7FWvJ
- 5taMnOI4XhbDObuQSl7ZSIIo6lBKy4xbgDZ2eS9P+ClBG1WI9HuqjgbKMWRBZVAF0UlEBwbIpU+
- gKMF+fWt1Y0oGykZ/Zrf7SOfrQv3fBMWXHVM793PblrFlravptSHz5RERiK05frgfCvRngNtaPt
- QBu5OX8AgPETM6UY4NgEMss78ZVRo/TSFramVFZxoeEOCSwjFmVS7hNrkmJt5gV2cq6baH/syyi
- NTLY3cvXWGWgtrkpBvQvRWbLQGIKz4Npyua3jyjg=
-X-Proofpoint-ORIG-GUID: Zv8OJzb0vwdYdE6Nz3qZWSOP4EX1VcXB
-X-Authority-Analysis: v=2.4 cv=Rp7I7SmK c=1 sm=1 tr=0 ts=6974423d b=1 cx=c_pps
+X-Proofpoint-ORIG-GUID: J_k1IJc2aDrWxSZXWoHLZhIGK-ceZ9pX
+X-Proofpoint-GUID: J_k1IJc2aDrWxSZXWoHLZhIGK-ceZ9pX
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMTI0MDAyNyBTYWx0ZWRfXxtcsONdBQWbl
+ j21DtD9xNh2vy96pZ9ntDVTq36jfXHWO5YLkHN0HReqGVGs/rahEcbpzHlArcFKBLuQMtUAXeei
+ zw62gPmfkagWY0kOnzo1dDMjZdXi4xtyaRDAVwCMXhLB/eiTjP9xCtUK50qSWLaF8jQ87QoyWm1
+ GaHOLE/ddplK/yqGX1NhAgr1q9v4/KYW/N7voWkdZVQRxi1RNXfuiXVFaVDfXdfH30Fx8TaL152
+ pQ98/Zrs0iiidCaRvZl5gM0UjR8xLc/rboAtPOxDmS8cbacR147ZnLwOyKkD21iM4sMB3zg5/2h
+ bW/bqALPmoLygsUm7/5Uw7lQMH0Wv7AwHBPrU1liUqSUVp+6oF9eyZGlu++tQzqwhuvjvJ3DSAI
+ 4hdRjieqzk6ocQJNpoNUYFn3Q6JWdUG3tkdxlNiempgLw9fxRwxNkDgwbcMtw5LYxmUfABiNR7V
+ Xj8EQ+RvZW2j7g225YkrmMArCfNV6gh8i2X7Y8lk=
+X-Authority-Analysis: v=2.4 cv=cPLtc1eN c=1 sm=1 tr=0 ts=6974423d b=1 cx=c_pps
  a=zPCbziy225d3KhSqZt3L1A==:117 a=zPCbziy225d3KhSqZt3L1A==:17
  a=IkcTkHD0fZMA:10 a=vUbySO9Y5rIA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=VwQbUJbxAAAA:8 a=2EKg1jf6iU7tsW3Fa7sA:9 a=QEXdDO2ut3YA:10 cc=ntf
+ a=VwQbUJbxAAAA:8 a=K_eg6-KxHybF2RbmVOcA:9 a=QEXdDO2ut3YA:10 cc=ntf
  awl=host:12103
-X-Proofpoint-GUID: Zv8OJzb0vwdYdE6Nz3qZWSOP4EX1VcXB
 
-On Wed, 24 Dec 2025 11:09:50 +0530, Ajay Neeli wrote:
+On Sat, 13 Dec 2025 16:36:43 +0800, Haoxiang Li wrote:
 
-> Move the PHY initialization from PRE_CHANGE to POST_CHANGE in the
-> ufs_versal2_hce_enable_notify() callback. This ensures that the PHY
-> is initialized after the host controller enable sequence is complete,
-> rather than before it starts.
+> If nonemb_cmd->va fails to be allocated, call free_mcc_wrb()
+> to restore the impact caused by alloc_mcc_wrb().
 > 
-> The PHY initialization requires the UFS host controller to be in a
-> stable enabled state to properly configure the MPHY registers. Moving
-> this to POST_CHANGE aligns with the expected initialization order and
-> prevents potential timing issues during controller startup.
 > 
-> [...]
 
 Applied to 6.19/scsi-fixes, thanks!
 
-[1/1] scsi: ufs: amd-versal2: Fix PHY initialization in HCE enable notify
-      https://git.kernel.org/mkp/scsi/c/0444568edbf8
+[1/1] scsi: be2iscsi: fix a memory leak in beiscsi_boot_get_sinfo()
+      https://git.kernel.org/mkp/scsi/c/4747bafaa501
 
 -- 
 Martin K. Petersen
