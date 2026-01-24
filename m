@@ -1,63 +1,44 @@
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+Received: from sender4-pp-f112.zoho.com (sender4-pp-f112.zoho.com [136.143.188.112])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D8C95823DD;
-	Sat, 24 Jan 2026 03:54:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.165.32
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769226893; cv=none; b=m8HRBNQ0W2VPuPA1U7XJ8hKPK0VlTlSu7rLKz2XMHvmlyMfTprWsPs3qogKA4h7l1W/vMfE1I41kj8aejEa2EeYS1DLDDISC3oejxhOADqvHs3GGJCnXCpjcuR7yGN8InJ97cXfwsebUQGnquuAgw87FSvPIAzlVTAlRDWkH5kg=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769226893; c=relaxed/simple;
-	bh=iRv1kyLVp/KZ2mFQ28jx1LuduWTw6iGllcDup/Ohgqw=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=ugHE1XwYyxAr3M3XXzWv9OHG+u/m9/GWNyC+NxFvnD0NojMLhv2ywbMXmDY4XIPs+HaRSsjPQvqhPpNn96UV24xUQkRXGvL6KayPAL4mjFhezF3BG1djmNdfxXTxkhZktNPVyQz24uL5o5+gimD1sfjSuyTkq8AtpScDfXd53sU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=kseXH3vW; arc=none smtp.client-ip=205.220.165.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 89D2633E7;
+	Sat, 24 Jan 2026 12:02:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=136.143.188.112
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1769256124; cv=pass; b=pfSY0gDik7cb7j2xiVxOa1mgZzbfs11TMrds0Vp3D9qS8rXwK/A/eZ/3tlwgtRXfVyIcYqrRF9Sou0wsjfkKCRQWN8m1MWDDnlsJo7d7iOYu5vTqY7r0m1XVoGQkx+nPZX4GwakKJvej/J4J8alTlrp2/SDcHhkdvsJg5vBuGXQ=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1769256124; c=relaxed/simple;
+	bh=eiLNbopoJEmh9XCTe5bjJiVrGw8J+5wndo8sdFTQVcE=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=CwcCrXUb6b1dwil2cw/nUZthyEd7FH8wxhWTHSM5UeTijq6W9QMGfl96payrMwHWbmFFnsr5OAKYZmr0rlhnLz5MaeBHn8yOJz3Pv9N37Qm6/4DnGf0LvGgCjYV4+I54DUJS+Bfc0UyxAqJgnjrIoVMWx9XiUj3QuOxyc9GFJFA=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (1024-bit key) header.d=collabora.com header.i=nicolas.frattaroli@collabora.com header.b=giBb6Rfr; arc=pass smtp.client-ip=136.143.188.112
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collabora.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="kseXH3vW"
-Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 60O3e27c265051;
-	Sat, 24 Jan 2026 03:53:34 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=
-	corp-2025-04-25; bh=1TlSpcHSNhJQvhA9uVtAs1bmubgDQAqajlYLkd4U1Jc=; b=
-	kseXH3vWu6cU4YoDHMgKw3tadtPb03d6oJpvIogyECZdBDt5ZZ+AxDTs54p4Ri6m
-	ob/zDZcj1Jh63XLi7MvgaIXH2aNnpSHnft01KA53PzhDzRewf6HhyR+rtf+EdTTO
-	uTbWgKCa4L4b1GFWLUgiN/hWfUMkvHzlMDyw6lpM5URz0JVRIRPEGwxqO0QaLabz
-	3L+UMUiuCCMnlOsYhbdsE6VQB5jO92Fnu1NeJzPyHhgAlJngGjy8GkXucIjvmdb2
-	1AUi38r0GjdIU0n+RGBV6nWoCAoAsj1Sbt++zMTmCyk7ZoaGfakKjKzR5bTnKgPg
-	c2WQv7hy/WyqDAMOF2/CdQ==
-Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4bvny6r0e7-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Sat, 24 Jan 2026 03:53:34 +0000 (GMT)
-Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 60O1Y1cu019741;
-	Sat, 24 Jan 2026 03:53:33 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 4bvmhbak38-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Sat, 24 Jan 2026 03:53:33 +0000
-Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 60O3rVid002545;
-	Sat, 24 Jan 2026 03:53:32 GMT
-Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 4bvmhbak2d-4;
-	Sat, 24 Jan 2026 03:53:32 +0000
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-To: bootc@bootc.net, Kery Qi <qikeyu2017@gmail.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, nab@linux-iscsi.org,
-        stefanr@s5r6.in-berlin.de, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org, linux1394-devel@lists.sourceforge.net,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] firewire: sbp-target: fix integer type overflow in sbp_make_tpg()
-Date: Fri, 23 Jan 2026 22:53:27 -0500
-Message-ID: <176922663892.2974474.16494984426834537522.b4-ty@oracle.com>
-X-Mailer: git-send-email 2.51.2
-In-Reply-To: <20260121114515.1829-2-qikeyu2017@gmail.com>
-References: <20260121114515.1829-2-qikeyu2017@gmail.com>
+	dkim=pass (1024-bit key) header.d=collabora.com header.i=nicolas.frattaroli@collabora.com header.b="giBb6Rfr"
+ARC-Seal: i=1; a=rsa-sha256; t=1769256070; cv=none; 
+	d=zohomail.com; s=zohoarc; 
+	b=FX7gGRZst3sy3ffSbO3e8SFhJw2osypgvsVj/1eLjEfTeUnHo8/QJAGI5kYsdfJ8VTT7OR+b/ljlOrBxaETMxmdXzYCCVQl7Vz1gjeg0qggNY1XHcqmM1jM8/a8VCCbjSa5dizfoYoXA216BjtcWB1HEzq1PvHYZxzQEWMRFM9c=
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.com; s=zohoarc; 
+	t=1769256070; h=Content-Type:Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:MIME-Version:Message-ID:Subject:Subject:To:To:Message-Id:Reply-To; 
+	bh=sdxxIMUFUwmfHxGTLX4n+Lm5eyYPm9DOpko0DC2946c=; 
+	b=Yw4jyEphg/zqaMVpfGAgdy1ctuo2DAW2y+XKb/HL7tBpKKfTWuGLRlvIDSLQci1tZmRGgLxzs07hlmi0IFHEI0tad4KiXZDkofC+8tPSjUn9p73aFGWh3v4M8LSVcLyvj13VV4AdZkz870D5yu25hy+klQ6JG4sSAFLpepK4fEc=
+ARC-Authentication-Results: i=1; mx.zohomail.com;
+	dkim=pass  header.i=collabora.com;
+	spf=pass  smtp.mailfrom=nicolas.frattaroli@collabora.com;
+	dmarc=pass header.from=<nicolas.frattaroli@collabora.com>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1769256070;
+	s=zohomail; d=collabora.com; i=nicolas.frattaroli@collabora.com;
+	h=From:From:Subject:Subject:Date:Date:Message-Id:Message-Id:MIME-Version:Content-Type:Content-Transfer-Encoding:To:To:Cc:Cc:Reply-To;
+	bh=sdxxIMUFUwmfHxGTLX4n+Lm5eyYPm9DOpko0DC2946c=;
+	b=giBb6Rfrzb9F+jDKb2OLQrr55UEhuZm/U/YFE1jtQ9cAa2cZEJwjSoaoHPIuCGN1
+	VPrMTShn1qy3AO6DFi/Jw4+tS56oja2EGRBoTLWPrik1+GhbIdd1Wpog0OwoSddHaJd
+	jnE5/due9ZxL/UxA5hrXgSKlqkNJ911eGW5pQ3gU=
+Received: by mx.zohomail.com with SMTPS id 1769256068585171.0146936172855;
+	Sat, 24 Jan 2026 04:01:08 -0800 (PST)
+From: Nicolas Frattaroli <nicolas.frattaroli@collabora.com>
+Subject: [PATCH v6 00/24] MediaTek UFS Cleanup and MT8196 Enablement
+Date: Sat, 24 Jan 2026 13:00:46 +0100
+Message-Id: <20260124-mt8196-ufs-v6-0-e7c005b60028@collabora.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -65,45 +46,153 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.20,FMLib:17.12.100.49
- definitions=2026-01-24_01,2026-01-22_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 bulkscore=0 phishscore=0
- mlxlogscore=999 mlxscore=0 spamscore=0 suspectscore=0 malwarescore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2601150000
- definitions=main-2601240028
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMTI0MDAyNyBTYWx0ZWRfXxf7eIeYe2uqf
- Wg69eiochGxLvrCB8lWh7FNdL3/Qe7zncw54HFg0BgCuJrQSJ07oG2WsjDMEgp8OksKI6oCeeS8
- CuDzEjYFCjAt19jv+JbasiaPJzkyccvLckJUI/RzLV5AZY/RTtvFqzymr/ZplYPgwCHhvnySDpy
- vbH+W3+vP5SfqIGoVHP4o6NAqqLuIQSqbBSKtxBq3XG9u+vMhnVjpFYp1ZLfM5cFuldX0B0M9jH
- Gz1CUPWvSLI1iMo9TxdBKhHufQ15sX103hSEVVX+zFv9X/1MVKTAbXDF3kE3yICE1FlivQeq1el
- vnFUTZ36w/m5Vw6Auj6jWMD71Ajk4zVSY7IX9sAWzbCAYNLr+7+z0o//GmXCwoXv3XxxhRjMprE
- aDMlWGhz3bqMjGWVsMCmJ1/+c0KhMMGegMQ1jqWg2YhnR1Sxe84gyT9/cm97uKQBtjKKbmAl+l4
- F2n9Fj4EFOuiCdb8Tn4lL2Z21u8hbgDhhmPCSz5Y=
-X-Authority-Analysis: v=2.4 cv=C+XkCAP+ c=1 sm=1 tr=0 ts=6974423e b=1 cx=c_pps
- a=zPCbziy225d3KhSqZt3L1A==:117 a=zPCbziy225d3KhSqZt3L1A==:17
- a=IkcTkHD0fZMA:10 a=vUbySO9Y5rIA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=VwQbUJbxAAAA:8 a=aJTtfO7giZNyRcO53LoA:9 a=QEXdDO2ut3YA:10 cc=ntf
- awl=host:12103
-X-Proofpoint-GUID: TgLyYpiPhFGBIp3B0n-Rr9x0D7Vj85mK
-X-Proofpoint-ORIG-GUID: TgLyYpiPhFGBIp3B0n-Rr9x0D7Vj85mK
+Content-Transfer-Encoding: 7bit
+X-B4-Tracking: v=1; b=H4sIAAAAAAAC/23Qy07DMBAF0F+JvMbI40ccd8V/IBZ+TKilpgE7j
+ Yqq/DtDKkSDsrwjnTujubGKJWNlh+bGCs655vFMoX1qWDz68zvynCgzKaQBAZoPUweu5Ze+8oh
+ RB+edRaMYgY+Cfb6uZa9v91zw80Kd033Igq/I4zgMeTo0Z7xOnHpbAVKxH3DMdRrL13rMDKvY2
+ zsDFxycSRFDp0LsXuJ4OvkwFv9M5WvVLB95u+GSeFRWdUpHjdbvcfXApdpwRVz0QgftrTN9v8f
+ 1H5fQbbgmnhJG61XrUpJ73Pxy+o3YckNcOwkGjKX/w3++LMs3NEnw89UBAAA=
+X-Change-ID: 20251014-mt8196-ufs-cec4b9a97e53
+To: Alim Akhtar <alim.akhtar@samsung.com>, 
+ Avri Altman <avri.altman@wdc.com>, Bart Van Assche <bvanassche@acm.org>, 
+ Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+ Conor Dooley <conor+dt@kernel.org>, 
+ Matthias Brugger <matthias.bgg@gmail.com>, 
+ AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>, 
+ Chunfeng Yun <chunfeng.yun@mediatek.com>, Vinod Koul <vkoul@kernel.org>, 
+ Kishon Vijay Abraham I <kishon@kernel.org>, 
+ Peter Wang <peter.wang@mediatek.com>, Stanley Jhu <chu.stanley@gmail.com>, 
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
+ "Martin K. Petersen" <martin.petersen@oracle.com>, 
+ Philipp Zabel <p.zabel@pengutronix.de>, Liam Girdwood <lgirdwood@gmail.com>, 
+ Mark Brown <broonie@kernel.org>, Chaotian Jing <Chaotian.Jing@mediatek.com>, 
+ Neil Armstrong <neil.armstrong@linaro.org>
+Cc: Louis-Alexis Eyraud <louisalexis.eyraud@collabora.com>, 
+ kernel@collabora.com, linux-scsi@vger.kernel.org, 
+ devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ linux-arm-kernel@lists.infradead.org, linux-mediatek@lists.infradead.org, 
+ linux-phy@lists.infradead.org, 
+ Nicolas Frattaroli <nicolas.frattaroli@collabora.com>, 
+ Conor Dooley <conor.dooley@microchip.com>, 
+ Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
+X-Mailer: b4 0.14.3
 
-On Wed, 21 Jan 2026 19:45:15 +0800, Kery Qi wrote:
+In this series, the existing MediaTek UFS binding is expanded and
+completed to correctly describe not just the existing compatibles, but
+also to introduce a new compatible in the from of the MT8196 SoC.
 
-> The code in sbp_make_tpg() limits "tpgt" to UINT_MAX but the data type
-> of "tpg->tport_tpgt" is u16. This causes a type truncation issue.
-> 
-> When a user creates a TPG via configfs mkdir, for example:
-> 
->     mkdir /sys/kernel/config/target/sbp/<wwn>/tpgt_70000
-> 
-> [...]
+The resets, which until now were completely absent from both the UFS
+host controller binding and the UFS PHY binding, are introduced to both.
+This also means the driver's undocumented and, in mainline, unused reset
+logic is reworked. In particular, the PHY reset is no longer a reset of
+the host controller node, but of the PHY node.
 
-Applied to 6.19/scsi-fixes, thanks!
+This means the host controller can reset the PHY through the common PHY
+framework.
 
-[1/1] firewire: sbp-target: fix integer type overflow in sbp_make_tpg()
-      https://git.kernel.org/mkp/scsi/c/b2d6b1d44300
+The resets remain optional.
 
+Additionally, a massive number of driver cleanups are introduced. These
+were prompted by me inspecting the driver more closely as I was
+adjusting it to correspond to the binding.
+
+The driver still implements vendor properties that are undocumented in
+the binding. I did not touch most of those, as I neither want to
+convince the bindings maintainers that they are needed without knowing
+precisely what they're for, nor do I want to argue with the driver
+authors when removing them.
+
+Due to the "Marie Kondo with a chainsaw" nature of the driver cleanup
+patches, I humbly request that reviewers do not comment on displeasing
+code they see in the context portion of a patch before they've read the
+whole patch series, as that displeasing code may in fact be reworked in
+a subsequent patch of this series. Please keep comments focused on the
+changed lines of the diff; I know there's more that can be done, but it
+doesn't necessarily need to be part of this series.
+
+Signed-off-by: Nicolas Frattaroli <nicolas.frattaroli@collabora.com>
+---
+Changes in v6:
+- Reword "Rework probe function" commit to better justify the changes
+  being made.
+- Drop "Add vendor prefix to clk-scale-up-vcore-min"
+- Add patch to remove clk-scale-up-vcore-min entirely, describing the
+  process for bringing it back (in a different form) in the commit
+  message.
+- Link to v5: https://lore.kernel.org/r/20260108-mt8196-ufs-v5-0-49215157ec41@collabora.com
+
+Changes in v5:
+- Drop "scsi: ufs: mediatek: Make scale_us in setup_clk_gating const" as
+  someone else already got a patch in for this into next.
+- Make mtk_init_boost_crypt void
+- Don't disable/enable misc regulators during suspend/resume, but enable
+  them once when acquiring with a devm helper.
+- Link to v4: https://lore.kernel.org/r/20251218-mt8196-ufs-v4-0-ddec7a369dd2@collabora.com
+
+Changes in v4:
+- bindings: Redo the supply situation, as the avdd pins don't describe
+  the vcc(q2) card supplies.
+- bindings: format clock in mt8196 example more tersely.
+- phy: use devm_reset_control_get_optional_exclusive directly
+- driver: get and enable/disable the aforementioned avdd supplies.
+- Link to v3: https://lore.kernel.org/r/20251023-mt8196-ufs-v3-0-0f04b4a795ff@collabora.com
+
+Changes in v3:
+- Split mediatek,ufs bindings change into two patches, one for
+  completing the existing binding, one for the MT8196
+- Add over a dozen driver cleanup patches
+- Add explicit support for the MT8196 compatible to the driver
+- Note: next-20251023, on which I based this, currently has a broken
+  build due to an unrelated OPP core change that was merged with no
+  build testing. I can't use next-20251022 either, as that lacks the
+  recent mediatek UFS changes. It is what it is.
+- Link to v2: https://lore.kernel.org/r/20251016-mt8196-ufs-v2-0-c373834c4e7a@collabora.com
+
+Changes in v2:
+- Reorder define in mtk_sip_svc.h
+- Use bulk reset APIs in UFS host driver
+- Link to v1: https://lore.kernel.org/r/20251014-mt8196-ufs-v1-0-195dceb83bc8@collabora.com
+
+---
+Nicolas Frattaroli (24):
+      dt-bindings: phy: Add mediatek,mt8196-ufsphy variant
+      dt-bindings: ufs: mediatek,ufs: Complete the binding
+      dt-bindings: ufs: mediatek,ufs: Add mt8196 variant
+      scsi: ufs: mediatek: Move MTK_SIP_UFS_CONTROL to mtk_sip_svc.h
+      phy: mediatek: ufs: Add support for resets
+      scsi: ufs: mediatek: Rework resets
+      scsi: ufs: mediatek: Rework 0.9V regulator
+      scsi: ufs: mediatek: Rework init function
+      scsi: ufs: mediatek: Rework the crypt-boost stuff
+      scsi: ufs: mediatek: Handle misc host voltage regulators
+      scsi: ufs: mediatek: Rework probe function
+      scsi: ufs: mediatek: Remove vendor kernel quirks cruft
+      scsi: ufs: mediatek: Use the common PHY framework
+      scsi: ufs: mediatek: Switch to newer PM ops helpers
+      scsi: ufs: mediatek: Remove mediatek,ufs-broken-rtc property
+      scsi: ufs: mediatek: Rework _ufs_mtk_clk_scale error paths
+      scsi: ufs: mediatek: Clean up logging prints
+      scsi: ufs: mediatek: Rework ufs_mtk_wait_idle_state
+      scsi: ufs: mediatek: Don't acquire dvfsrc-vcore twice
+      scsi: ufs: mediatek: Rework hardware version reading
+      scsi: ufs: mediatek: Back up idle timer in per-instance struct
+      scsi: ufs: mediatek: Remove ret local from link_startup_notify
+      scsi: ufs: mediatek: Remove undocumented "clk-scale-up-vcore-min"
+      scsi: ufs: mediatek: Add MT8196 compatible, update copyright
+
+ .../devicetree/bindings/phy/mediatek,ufs-phy.yaml  |  16 +
+ .../devicetree/bindings/ufs/mediatek,ufs.yaml      | 173 +++-
+ drivers/phy/mediatek/phy-mtk-ufs.c                 |  71 ++
+ drivers/ufs/host/ufs-mediatek-sip.h                |   9 -
+ drivers/ufs/host/ufs-mediatek.c                    | 973 +++++++++------------
+ drivers/ufs/host/ufs-mediatek.h                    |  17 +-
+ include/linux/soc/mediatek/mtk_sip_svc.h           |   3 +
+ 7 files changed, 655 insertions(+), 607 deletions(-)
+---
+base-commit: 4af4e95edc37ae54f64cbd75b46f16ce15f3a6b8
+change-id: 20251014-mt8196-ufs-cec4b9a97e53
+
+Best regards,
 -- 
-Martin K. Petersen
+Nicolas Frattaroli <nicolas.frattaroli@collabora.com>
+
