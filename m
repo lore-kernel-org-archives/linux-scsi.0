@@ -1,168 +1,214 @@
-Received: from mail-wm1-f45.google.com (mail-wm1-f45.google.com [209.85.128.45])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.9])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9501525F995
-	for <linux-scsi@vger.kernel.org>; Sat, 24 Jan 2026 20:38:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.45
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B678627B327;
+	Sat, 24 Jan 2026 22:41:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.9
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769287124; cv=none; b=VDWF1fu4EDRWfJk96bojQwokDXYdbIrzDP9W1zs7BpxaxRFoc6gq1Oz6QoXqT1cX8uD5QI2x9J2Io0XkoP9Tkh7YO6wa+JkINvYbpLcZGKA+VGyKKWkwoDeslL7Yc54g7nWRSJ8ClFikEZ9m2goqUoVd29GCufbp+qNjrh8ckVs=
+	t=1769294506; cv=none; b=DLvocPyO+cOKhlupH4sFDgy2+imtpcazyiM5ZlySi6XgkaNbnW06GtI+0UAaCd9+G3wAcUlzNy2b9Hb5kmIESJzq8wKfbEhPF4wltaLvmJFt7xkQdffnkiR5RBF0QIDXkAdbFdK6EWD/ATwSluM1bZmLhTXC/8ssSzMWYS6ZCnQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769287124; c=relaxed/simple;
-	bh=25a/E1ieYaYajebMpinnWoCJHPA4xp41mlwl272x/JM=;
-	h=Message-ID:Date:MIME-Version:Subject:From:To:References:
-	 In-Reply-To:Content-Type; b=d8TEuxR8WjoXvSrVNQHNtAui2X2oQwA8+nbtezAKlDGyyoxBaJWBQ/O9nXP48O3+i2xIP1u/7ZJnJAjOAGkTLl2f/ssTOgXZSlqCk5FYOYLdjD5My3SS/sIuuoDbmwKwaRam1fEq9B9rlY3oVf9VWUDeJmx36WoP9lUrOGQUe+g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ZD2wZkgI; arc=none smtp.client-ip=209.85.128.45
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1769294506; c=relaxed/simple;
+	bh=WXKAC/fyF/NXplXJWNiQwBzi6DaoJqGNLNtWfgdhnOw=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Xh1jLiLhaW0CGV1elwzovg4MKsugz4IlhhkXyQqQcYNpX73vhiMTfCa0jDZGtkN3ooqSLB10M9uZTHxnqfag4aXXhQSsiHR8ftt9KqTkhdPrfOCv5OlKQeZoIDH9O3Y82g7h2jqXpqC+kwm/rHAUM7DuFeC+XCZpxZ9LnvEif+o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=laaX7ZAz; arc=none smtp.client-ip=198.175.65.9
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ZD2wZkgI"
-Received: by mail-wm1-f45.google.com with SMTP id 5b1f17b1804b1-47ee301a06aso37707815e9.0
-        for <linux-scsi@vger.kernel.org>; Sat, 24 Jan 2026 12:38:42 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1769287121; x=1769891921; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:content-language:references
-         :to:from:subject:user-agent:mime-version:date:message-id:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=KxVCffFqhNRpRYa3HsmFMXBCyunB2idZw39lfLbIlZs=;
-        b=ZD2wZkgIqVp0G1U2Im7vWQiV577ZFIgBvXYuP10rIqd1d0nBM0ESjj/hU7zUgtRzEH
-         xDq1p69o/zH1aIKYOs9D1BkBpdWhs67FE8Yu78orkq1wi+jSew45+Tw9qSYQMcgu+8Mg
-         sZMxEtM7klbm5/chRrdDEC1/pLFKlgbXSOb4eRmVEien3J2Px0Z30vOqaTVb9o27by0U
-         dNaE1E0wkuWGKpVyzRYSQxe8sB8YTufXNPBWSwzfOm+0z0SDOxced3saVZNeislfwiCf
-         ksYPKb6bdbbbpbfUGjcKCzBR+4E66rHWWY6gbLvojc4UmMCm0r/Yw2XuQBOq/nod1xGw
-         yykw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1769287121; x=1769891921;
-        h=content-transfer-encoding:in-reply-to:content-language:references
-         :to:from:subject:user-agent:mime-version:date:message-id:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=KxVCffFqhNRpRYa3HsmFMXBCyunB2idZw39lfLbIlZs=;
-        b=T3z42k3oxV/8bKmX2PhvoFyOwmiV533ZviQQmn4uJ5GI49TkFIIE7Koyxt1mIR6IU8
-         57JuHJGUe2A5TlJO/bPqQ0bLu1J7KNukRdcv3ixRfDFnd4dSEl8UY6r7CN/w1Trkfz+h
-         qE0RP9ofBQr1Sug6qpxlVMiwDpxb0G7UkIPnHcBiYSHm6YulSam/fY0lPcorx8FkQuPT
-         FKIK/ExhTMDtpMxSLJkQDzEZPn1c+cA9S+T03b0kOwKmUx48p0pBsgEyPCCCmiGZRik9
-         iI9W/cjLTCxAG94wVdABvPN7f6oNnRRpw2BNogVdP01zG7mBFS42yggupPROjYJ3T2Tp
-         yP0A==
-X-Gm-Message-State: AOJu0YwtuWeCRT9MMeGFwOs+GAC6HRw4JDXn9/oYHLacQ7wZVYZUOYR5
-	ElmHWJ3fKMxPGMxfp7jxZNuWi3uUM8KM3ienU+ibP8rRnYiMfF4ikLOaeTt3PtmE
-X-Gm-Gg: AZuq6aJfNDm+hLw/g6cdPwwNEtdvn7e7kJoW3tEtK5VNj11PctMOTrXvVeyg+Yaa6vO
-	c23urU8m7AY/WPv8rqtmJnsw9o76pj3NEcjReEd701TGYf2XbMwnns5QLqmCs1he3sKsZPKXqJJ
-	QVjmtg1x701iUoPy1Y8ZtvCjOUyf/WhYxi8QqzmYq6VNCWvrTMyb6exh8gakmOLPI1UjIf4VOhL
-	BLDzaAsJslnlRHY1eaaPDLa1nlzx5DYBCxwmR449zBNuMcGR+/5HQijsfhEB7KWgMOLcDaFHLuJ
-	gUtHz6YaENyuLy7Tff/Vh9okzfjYBEhs/zGYJrRk/wcqQtlnICVdSU1vV5vdqrjgsV/K3PKENNU
-	IwOdZHZYdqju/1aiBfr9Xjcgrf/7/A/DPBu802FFJ4wVOruYCQr/JhLQGEyf7dgpfhCEi4wCFgi
-	QGYJeDD0NIsdn6HhDSMrwBJMuFDqX/fpGgErphrozRvMz+24bdBTkCcseawDtDy7wj80OIrw==
-X-Received: by 2002:a05:600c:609b:b0:47d:403e:4eaf with SMTP id 5b1f17b1804b1-4804c9596bcmr129506805e9.10.1769287120843;
-        Sat, 24 Jan 2026 12:38:40 -0800 (PST)
-Received: from [192.168.10.194] (net-188-216-175-96.cust.vodafonedsl.it. [188.216.175.96])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4804703b90bsm259845925e9.6.2026.01.24.12.38.40
-        for <linux-scsi@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 24 Jan 2026 12:38:40 -0800 (PST)
-Message-ID: <94ce4f7b-25dc-45d1-8467-f63eb15a3654@gmail.com>
-Date: Sat, 24 Jan 2026 21:38:39 +0100
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="laaX7ZAz"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1769294505; x=1800830505;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=WXKAC/fyF/NXplXJWNiQwBzi6DaoJqGNLNtWfgdhnOw=;
+  b=laaX7ZAz9wBnBhzQRD16+BgWBaXmPp3PfOySzQ/UMaS8QjYE55br2f4J
+   V8zcdf6ACFRob9OycyWO0PCkYCrhmp40qLnlVJMXXID9U5ZvwlCeNDG3+
+   H7eLTCUxMJRkXT5OWOJMMciDIEA+FFtgbuiqKZCXemCM6iYkg4tlfnSUW
+   IueVENnKYfjv8a8ubwc+CcddGOaJBQz/sTgEJh25vrezWtMwzsNDuCXe4
+   cyViw2JZ6wNDh9w3jytILGnfIpzQCuKRWoADRu7W47Q/NHqoQpdP5mdYa
+   SIGPxb+kK6ZaxoO58xKRBPq5zDxnrDsQjg2weZrjvQPfCWTEjaEtPLjHV
+   Q==;
+X-CSE-ConnectionGUID: VhBGJk2OQEKqGr7EXDsaRA==
+X-CSE-MsgGUID: dw+sPdDUToyFcdUaIeqUEg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11681"; a="93174515"
+X-IronPort-AV: E=Sophos;i="6.21,251,1763452800"; 
+   d="scan'208";a="93174515"
+Received: from fmviesa002.fm.intel.com ([10.60.135.142])
+  by orvoesa101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Jan 2026 14:41:45 -0800
+X-CSE-ConnectionGUID: rlROHsk0RwapfHGlgyqhJw==
+X-CSE-MsgGUID: nrGQiIp0QWqPtPE6cH7Zmw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.21,251,1763452800"; 
+   d="scan'208";a="230293682"
+Received: from lkp-server01.sh.intel.com (HELO 765f4a05e27f) ([10.239.97.150])
+  by fmviesa002.fm.intel.com with ESMTP; 24 Jan 2026 14:41:38 -0800
+Received: from kbuild by 765f4a05e27f with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1vjmJz-00000000Vau-3yq4;
+	Sat, 24 Jan 2026 22:41:35 +0000
+Date: Sun, 25 Jan 2026 06:41:04 +0800
+From: kernel test robot <lkp@intel.com>
+To: Nicolas Frattaroli <nicolas.frattaroli@collabora.com>,
+	Alim Akhtar <alim.akhtar@samsung.com>,
+	Avri Altman <avri.altman@wdc.com>,
+	Bart Van Assche <bvanassche@acm.org>, Rob Herring <robh@kernel.org>,
+	Krzysztof Kozlowski <krzk@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
+	Chunfeng Yun <chunfeng.yun@mediatek.com>,
+	Vinod Koul <vkoul@kernel.org>,
+	Kishon Vijay Abraham I <kishon@kernel.org>,
+	Peter Wang <peter.wang@mediatek.com>,
+	Stanley Jhu <chu.stanley@gmail.com>,
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Philipp Zabel <p.zabel@pengutronix.de>,
+	Liam Girdwood <lgirdwood@gmail.com>,
+	Mark Brown <broonie@kernel.org>,
+	Chaotian Jing <Chaotian.Jing@mediatek.com>,
+	Neil Armstrong <neil.armstrong@linaro.org>
+Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
+	Louis-Alexis Eyraud <louisalexis.eyraud@collabora.com>,
+	kernel@collabora.com, linux-scsi@vger.kernel.org,
+	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-mediatek@lists.infradead.org, linux-phy@lists.infradead.org,
+	Nicolas Frattaroli <nicolas.frattaroli@collabora.com>
+Subject: Re: [PATCH v6 14/24] scsi: ufs: mediatek: Switch to newer PM ops
+ helpers
+Message-ID: <202601250638.kCl6evPM-lkp@intel.com>
+References: <20260124-mt8196-ufs-v6-14-e7c005b60028@collabora.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: Sd card race on resume with filesystem errors (possible data
- loss?)
-From: Sergio Callegari <sergio.callegari@gmail.com>
-To: linux-scsi@vger.kernel.org
-References: <3bb03946-eb11-4e28-a72b-e958833bb5cc@gmail.com>
- <fe070d43-f9b2-45b2-95d8-477154b28dea@acm.org>
- <04811e0b-efc5-47ff-ac16-a97f49280bb7@gmail.com>
-Content-Language: en-US, it-IT
-In-Reply-To: <04811e0b-efc5-47ff-ac16-a97f49280bb7@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260124-mt8196-ufs-v6-14-e7c005b60028@collabora.com>
 
-Made some tests with the purism patch:
+Hi Nicolas,
 
-Made some tests with the patch from the purism developers, that is the 
-following one:
+kernel test robot noticed the following build errors:
 
-Signed-off-by: Sebastian Krzyszkowiak <sebastian.krzyszkowiak@puri.sm>
----
-  drivers/scsi/sd.c | 39 +++++++++++++++++----------------------
-  1 file changed, 17 insertions(+), 22 deletions(-)
+[auto build test ERROR on 4af4e95edc37ae54f64cbd75b46f16ce15f3a6b8]
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 2c627deedc1f..c2353a260123 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -3968,11 +3968,28 @@ static int sd_resume(struct device *dev)
-  static int sd_resume_common(struct device *dev, bool runtime)
-  {
-      struct scsi_disk *sdkp = dev_get_drvdata(dev);
-+    struct scsi_device *sdp;
-      int ret;
+url:    https://github.com/intel-lab-lkp/linux/commits/Nicolas-Frattaroli/dt-bindings-phy-Add-mediatek-mt8196-ufsphy-variant/20260124-201226
+base:   4af4e95edc37ae54f64cbd75b46f16ce15f3a6b8
+patch link:    https://lore.kernel.org/r/20260124-mt8196-ufs-v6-14-e7c005b60028%40collabora.com
+patch subject: [PATCH v6 14/24] scsi: ufs: mediatek: Switch to newer PM ops helpers
+config: arm64-randconfig-004-20260125 (https://download.01.org/0day-ci/archive/20260125/202601250638.kCl6evPM-lkp@intel.com/config)
+compiler: clang version 22.0.0git (https://github.com/llvm/llvm-project 9b8addffa70cee5b2acc5454712d9cf78ce45710)
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260125/202601250638.kCl6evPM-lkp@intel.com/reproduce)
 
-      if (!sdkp)    /* E.g.: runtime resume at the start of sd_probe() */
-          return 0;
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202601250638.kCl6evPM-lkp@intel.com/
 
-+    sdp = sdkp->device;
-+
-+    if (sdp->ignore_media_change) {
-+        /* clear the device's sense data */
-+        static const u8 cmd[10] = { REQUEST_SENSE };
-+        const struct scsi_exec_args exec_args = {
-+            .req_flags = BLK_MQ_REQ_PM,
-+        };
-+
-+        if (scsi_execute_cmd(sdp, cmd, REQ_OP_DRV_IN, NULL, 0,
-+                     sdp->request_queue->rq_timeout, 1,
-+                     &exec_args))
-+            sd_printk(KERN_NOTICE, sdkp,
-+                  "Failed to clear sense data\n");
-+    }
-+
-      if (!sd_do_start_stop(sdkp->device, runtime)) {
-          sdkp->suspended = false;
-          return 0;
-@@ -4005,28 +4022,6 @@ static int sd_resume_system(struct device *dev)
+All errors (new ones prefixed by >>):
 
-  static int sd_resume_runtime(struct device *dev)
-  {
--    struct scsi_disk *sdkp = dev_get_drvdata(dev);
--    struct scsi_device *sdp;
--
--    if (!sdkp)    /* E.g.: runtime resume at the start of sd_probe() */
--        return 0;
--
--    sdp = sdkp->device;
--
--    if (sdp->ignore_media_change) {
--        /* clear the device's sense data */
--        static const u8 cmd[10] = { REQUEST_SENSE };
--        const struct scsi_exec_args exec_args = {
--            .req_flags = BLK_MQ_REQ_PM,
--        };
--
--        if (scsi_execute_cmd(sdp, cmd, REQ_OP_DRV_IN, NULL, 0,
--                     sdp->request_queue->rq_timeout, 1,
--                     &exec_args))
--            sd_printk(KERN_NOTICE, sdkp,
--                  "Failed to clear sense data\n");
--    }
--
-      return sd_resume_common(dev, true);
-  }
+>> drivers/ufs/host/ufs-mediatek.c:2339:8: error: call to undeclared function 'ufshcd_system_suspend'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]
+    2339 |         ret = ufshcd_system_suspend(dev);
+         |               ^
+   drivers/ufs/host/ufs-mediatek.c:2339:8: note: did you mean 'ufs_mtk_system_suspend'?
+   drivers/ufs/host/ufs-mediatek.c:2328:12: note: 'ufs_mtk_system_suspend' declared here
+    2328 | static int ufs_mtk_system_suspend(struct device *dev)
+         |            ^
+    2329 | {
+    2330 |         struct ufs_hba *hba = dev_get_drvdata(dev);
+    2331 |         struct arm_smccc_res res;
+    2332 |         int ret;
+    2333 | 
+    2334 |         if (hba->shutting_down) {
+    2335 |                 ret = -EBUSY;
+    2336 |                 goto out;
+    2337 |         }
+    2338 | 
+    2339 |         ret = ufshcd_system_suspend(dev);
+         |               ~~~~~~~~~~~~~~~~~~~~~
+         |               ufs_mtk_system_suspend
+>> drivers/ufs/host/ufs-mediatek.c:2370:8: error: call to undeclared function 'ufshcd_system_resume'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]
+    2370 |         ret = ufshcd_system_resume(dev);
+         |               ^
+   drivers/ufs/host/ufs-mediatek.c:2370:8: note: did you mean 'ufs_mtk_system_resume'?
+   drivers/ufs/host/ufs-mediatek.c:2355:12: note: 'ufs_mtk_system_resume' declared here
+    2355 | static int ufs_mtk_system_resume(struct device *dev)
+         |            ^
+    2356 | {
+    2357 |         int ret = 0;
+    2358 |         struct ufs_hba *hba = dev_get_drvdata(dev);
+    2359 |         struct arm_smccc_res res;
+    2360 | 
+    2361 |         if (pm_runtime_suspended(hba->dev))
+    2362 |                 goto out;
+    2363 | 
+    2364 |         if (ufs_mtk_is_rtff_mtcmos(hba))
+    2365 |                 ufs_mtk_mtcmos_ctrl(true, res);
+    2366 | 
+    2367 |         ufs_mtk_dev_vreg_set_lpm(hba, false);
+    2368 | 
+    2369 | out:
+    2370 |         ret = ufshcd_system_resume(dev);
+         |               ~~~~~~~~~~~~~~~~~~~~
+         |               ufs_mtk_system_resume
+   2 errors generated.
 
---
 
-Unfortunately, this patch does not seem to fix my issue.
+vim +/ufshcd_system_suspend +2339 drivers/ufs/host/ufs-mediatek.c
 
-There seems to be something wrong with the usb-persist mechanism, since 
-there seems to be no way to delay the first access to the usb disk until 
-it can be assumed to be ready.
+ddd90623ce26ea drivers/scsi/ufs/ufs-mediatek.c Stanley Chu 2019-03-16  2327  
+e7bf1d50063ce0 drivers/ufs/host/ufs-mediatek.c Stanley Chu 2022-06-23  2328  static int ufs_mtk_system_suspend(struct device *dev)
+3fd23b8dfb54d9 drivers/ufs/host/ufs-mediatek.c Po-Wen Kao  2022-06-16  2329  {
+3fd23b8dfb54d9 drivers/ufs/host/ufs-mediatek.c Po-Wen Kao  2022-06-16  2330  	struct ufs_hba *hba = dev_get_drvdata(dev);
+a6888d623eae6d drivers/ufs/host/ufs-mediatek.c Alice Chao  2024-03-15  2331  	struct arm_smccc_res res;
+3fd23b8dfb54d9 drivers/ufs/host/ufs-mediatek.c Po-Wen Kao  2022-06-16  2332  	int ret;
+3fd23b8dfb54d9 drivers/ufs/host/ufs-mediatek.c Po-Wen Kao  2022-06-16  2333  
+014de20bb36ba0 drivers/ufs/host/ufs-mediatek.c Peter Wang  2025-09-24  2334  	if (hba->shutting_down) {
+014de20bb36ba0 drivers/ufs/host/ufs-mediatek.c Peter Wang  2025-09-24  2335  		ret = -EBUSY;
+014de20bb36ba0 drivers/ufs/host/ufs-mediatek.c Peter Wang  2025-09-24  2336  		goto out;
+014de20bb36ba0 drivers/ufs/host/ufs-mediatek.c Peter Wang  2025-09-24  2337  	}
+014de20bb36ba0 drivers/ufs/host/ufs-mediatek.c Peter Wang  2025-09-24  2338  
+3fd23b8dfb54d9 drivers/ufs/host/ufs-mediatek.c Po-Wen Kao  2022-06-16 @2339  	ret = ufshcd_system_suspend(dev);
+3fd23b8dfb54d9 drivers/ufs/host/ufs-mediatek.c Po-Wen Kao  2022-06-16  2340  	if (ret)
+77b96ef70b6ba4 drivers/ufs/host/ufs-mediatek.c Peter Wang  2025-09-03  2341  		goto out;
+77b96ef70b6ba4 drivers/ufs/host/ufs-mediatek.c Peter Wang  2025-09-03  2342  
+77b96ef70b6ba4 drivers/ufs/host/ufs-mediatek.c Peter Wang  2025-09-03  2343  	if (pm_runtime_suspended(hba->dev))
+77b96ef70b6ba4 drivers/ufs/host/ufs-mediatek.c Peter Wang  2025-09-03  2344  		goto out;
+3fd23b8dfb54d9 drivers/ufs/host/ufs-mediatek.c Po-Wen Kao  2022-06-16  2345  
+42b1928360a32e drivers/ufs/host/ufs-mediatek.c Stanley Chu 2022-06-16  2346  	ufs_mtk_dev_vreg_set_lpm(hba, true);
+3fd23b8dfb54d9 drivers/ufs/host/ufs-mediatek.c Po-Wen Kao  2022-06-16  2347  
+a6888d623eae6d drivers/ufs/host/ufs-mediatek.c Alice Chao  2024-03-15  2348  	if (ufs_mtk_is_rtff_mtcmos(hba))
+a6888d623eae6d drivers/ufs/host/ufs-mediatek.c Alice Chao  2024-03-15  2349  		ufs_mtk_mtcmos_ctrl(false, res);
+a6888d623eae6d drivers/ufs/host/ufs-mediatek.c Alice Chao  2024-03-15  2350  
+77b96ef70b6ba4 drivers/ufs/host/ufs-mediatek.c Peter Wang  2025-09-03  2351  out:
+77b96ef70b6ba4 drivers/ufs/host/ufs-mediatek.c Peter Wang  2025-09-03  2352  	return ret;
+3fd23b8dfb54d9 drivers/ufs/host/ufs-mediatek.c Po-Wen Kao  2022-06-16  2353  }
+3fd23b8dfb54d9 drivers/ufs/host/ufs-mediatek.c Po-Wen Kao  2022-06-16  2354  
+e7bf1d50063ce0 drivers/ufs/host/ufs-mediatek.c Stanley Chu 2022-06-23  2355  static int ufs_mtk_system_resume(struct device *dev)
+3fd23b8dfb54d9 drivers/ufs/host/ufs-mediatek.c Po-Wen Kao  2022-06-16  2356  {
+77b96ef70b6ba4 drivers/ufs/host/ufs-mediatek.c Peter Wang  2025-09-03  2357  	int ret = 0;
+3fd23b8dfb54d9 drivers/ufs/host/ufs-mediatek.c Po-Wen Kao  2022-06-16  2358  	struct ufs_hba *hba = dev_get_drvdata(dev);
+a6888d623eae6d drivers/ufs/host/ufs-mediatek.c Alice Chao  2024-03-15  2359  	struct arm_smccc_res res;
+3fd23b8dfb54d9 drivers/ufs/host/ufs-mediatek.c Po-Wen Kao  2022-06-16  2360  
+77b96ef70b6ba4 drivers/ufs/host/ufs-mediatek.c Peter Wang  2025-09-03  2361  	if (pm_runtime_suspended(hba->dev))
+77b96ef70b6ba4 drivers/ufs/host/ufs-mediatek.c Peter Wang  2025-09-03  2362  		goto out;
+3fd23b8dfb54d9 drivers/ufs/host/ufs-mediatek.c Po-Wen Kao  2022-06-16  2363  
+a6888d623eae6d drivers/ufs/host/ufs-mediatek.c Alice Chao  2024-03-15  2364  	if (ufs_mtk_is_rtff_mtcmos(hba))
+a6888d623eae6d drivers/ufs/host/ufs-mediatek.c Alice Chao  2024-03-15  2365  		ufs_mtk_mtcmos_ctrl(true, res);
+a6888d623eae6d drivers/ufs/host/ufs-mediatek.c Alice Chao  2024-03-15  2366  
+b2f8abadabea32 drivers/ufs/host/ufs-mediatek.c Alice Chao  2025-09-03  2367  	ufs_mtk_dev_vreg_set_lpm(hba, false);
+b2f8abadabea32 drivers/ufs/host/ufs-mediatek.c Alice Chao  2025-09-03  2368  
+77b96ef70b6ba4 drivers/ufs/host/ufs-mediatek.c Peter Wang  2025-09-03  2369  out:
+77b96ef70b6ba4 drivers/ufs/host/ufs-mediatek.c Peter Wang  2025-09-03 @2370  	ret = ufshcd_system_resume(dev);
+77b96ef70b6ba4 drivers/ufs/host/ufs-mediatek.c Peter Wang  2025-09-03  2371  
+77b96ef70b6ba4 drivers/ufs/host/ufs-mediatek.c Peter Wang  2025-09-03  2372  	return ret;
+3fd23b8dfb54d9 drivers/ufs/host/ufs-mediatek.c Po-Wen Kao  2022-06-16  2373  }
+3fd23b8dfb54d9 drivers/ufs/host/ufs-mediatek.c Po-Wen Kao  2022-06-16  2374  
 
-Incidentally, my sd reader is by Genesys Logic 05e3:0751, in case this 
-information is useful.
-
-Best,
-
-Sergio
-
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
