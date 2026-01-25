@@ -1,63 +1,63 @@
-Received: from mail-pl1-f181.google.com (mail-pl1-f181.google.com [209.85.214.181])
+Received: from mail-pl1-f173.google.com (mail-pl1-f173.google.com [209.85.214.173])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 757C93191AF
-	for <linux-scsi@vger.kernel.org>; Sun, 25 Jan 2026 12:18:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.181
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EAF1331AF25
+	for <linux-scsi@vger.kernel.org>; Sun, 25 Jan 2026 12:19:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769343537; cv=none; b=rN8pTDEfYh3WOESf8grBSVX+PKb/z5lWtu90mnN2/hkLX0HHPTy2eMrphVLDh4/fCw/HLZbCydSa0g0jmybd0Akmh/mWB6E8rzHSsd5/JwjEdR2WYCct1u9k83sMVR8sIGBJGw9r6UnFhY/eDnHPmKNBvPTobvpGpomKcxSeaTM=
+	t=1769343542; cv=none; b=KAo2YvGbw/N1/ySMrn79J3P8BVZCM9ISyXJTyAAqb/KERb9MiZSwck2kg9aoH2sKbTaq/mpmpTLfJmMDzEIXtOxYTEm9gVKg60yvDPS6P46uYGvV+gkwfCzZC1SCM6OaXZfGbBseFJ48Z934P2w9t81UFGKnzWK8BDAiJ0oWN5c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769343537; c=relaxed/simple;
-	bh=cL2WwYEYrOj2TIZHpzBc+McaMibair9DAj52Xdpsq3M=;
+	s=arc-20240116; t=1769343542; c=relaxed/simple;
+	bh=UfZLTG3BY76eQmvrJZoKh2ydo53KYQ7gI/Q5BDw5Gns=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=FyYdgNQkJ9fMqH+dnXTbSmQqADIT3+/Q9XqzIokccj483lz4+g+wj+d6oekPMIObJW1TYNgLv7HBD7w1QhxA4CbE5XOKKcY2gMlbF8NbOMR0f6wlWdhB8GVlNpBVA4fbmTe6H1wPPI9e9YPeZBYxk0x7gi8lGwm4bGm2No0CinE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=gft9xM8d; arc=none smtp.client-ip=209.85.214.181
+	 MIME-Version; b=iYXMF4Jc5YYj4GOW1wWq6tRJJikMbNo5N2myh/RW1HWGcrE93gt1GqihA87bg6UEFS+nf5W6N84MfPBYtNjnJOVCA/zb1sARqd+uERk5rpvUWbzHFvE50zTEroiZm9izLqlQFwJviXtTJBRtTEfH81iQ5LicXI1+xK/gOMXyCIk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=lzlsmVyx; arc=none smtp.client-ip=209.85.214.173
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="gft9xM8d"
-Received: by mail-pl1-f181.google.com with SMTP id d9443c01a7336-2a79998d35aso22984325ad.0
-        for <linux-scsi@vger.kernel.org>; Sun, 25 Jan 2026 04:18:56 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="lzlsmVyx"
+Received: by mail-pl1-f173.google.com with SMTP id d9443c01a7336-2a09d981507so24363565ad.1
+        for <linux-scsi@vger.kernel.org>; Sun, 25 Jan 2026 04:19:00 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1769343536; x=1769948336; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1769343540; x=1769948340; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=nQLEjpoaTZ5WPWDSuakk1TbfMfDUPRk42g1n/YO4vJY=;
-        b=gft9xM8d1utFQDpmnImZ6sRTVC9GMHyFosJ0nSwuOjtQprGg7Dg66S8af4u1b5mwg8
-         4mOWgSsQSNRQQTOtBITICFXgqtNT9g8GEyqHnw2tg0Xz/NUG6uUrXd2G9ZaqRhCEP8tj
-         DVm6Sa8T8CLJyk/hDheSMa9vqfVTyUfLqefIX/te7nU4L+ZVdUvvpHAXAcrF1mVRsqn7
-         ffH+I52hT1SnF8XoGjm5o+dd7VfqtDLE5WLRchngYFZLW5KAXEKDLKJnAeB+39AYS0t8
-         VDW+G8bHO3m+ps1DRMEqpXpvExxovhOXnPMOmPhE4nixVtUz1yjJE5XeTybxHJklCgBV
-         Hm6g==
+        bh=fqrS1FqBluHn0sbWWyJsNAR0qxaXDS+eOYJqNFFyYfA=;
+        b=lzlsmVyxhpx9vgXBNVrmFYsusgOG+Lqmc1mRJne+FFZgo+i69YMXD/U+EVTNvtBZKk
+         aA2ItMqFsiDkr2ZMQTOcSN7TSphrpAzqyGnuTZV+gHDMpmas8lJ5Ptas8D5W6oWg3JUl
+         8ZkqzEmY9EijZ6wqFGudqByWMYsZ6iTu9V9vsHyRLmYZzIBf9D3JMrcPtjfpallqL8WO
+         xkucBu1soJv4WGSXUg38y1ufDbv7rDFdA8eZP/w9NdXzPnXNOFn7zg0LPyi8gK3bPo1H
+         eD8zJUwECDWKSDh8RtHNXvNEKkmmE08BjWz+n8cf25p9C7nVLtaigA72ZrQBzgqEaCYY
+         3kZg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1769343536; x=1769948336;
+        d=1e100.net; s=20230601; t=1769343540; x=1769948340;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to;
-        bh=nQLEjpoaTZ5WPWDSuakk1TbfMfDUPRk42g1n/YO4vJY=;
-        b=uZqLdu5LHujPay9AsfSjssBoxlY9C+lcyGqqQbPhLSWgI7JXNeVn4TNNsT2hJfS0eJ
-         V9N0lJmU3Chh09dP8ZzzR7AM+dDX3YwO1qqIMmhTxTgwcV/CKIwVk0Ik4RzCOwb/Xo3E
-         25QyS0s/bNRVKFOKyLUfx+HtSTQ6UOn5SRiS8nnd6dHys/0F2YXKHz+OxijuiwaPC+yR
-         /sKEp1e0EIVbh9HBhtWv3T/QOJVuwvXGLqvpTEVPArWMDQIn4tM42HEYOQ4eD9Wzc0Ij
-         7tPb2Gtz9Dw7hUmrlc80DA6yglH4CsVKRiAjBb5fm68u7UIrg6wNavuSJcF4OBAtUZwP
-         iRsQ==
-X-Forwarded-Encrypted: i=1; AJvYcCUUjqLuL/zfw5xWAu/CnUWnDaf4bW9MkwPoZ+u88Zq5FGZvWAxwN6LHxXk2OXf7KaP8uGafrJSl/bs+@vger.kernel.org
-X-Gm-Message-State: AOJu0YzFYpaeD7FtiVNrB58gZ/m9iT7zPVj9p3p2zIPlfrnGRnbW7EXJ
-	ZLVtIHiEsw7P6s3C806tEPdsNA05NcjVDOf+QIcnhbVujDk/IYAA6LQ9
-X-Gm-Gg: AZuq6aKOGE3EvCLwzPMi2+MagSAcCTWCjljrrj48qxp2i8M4Xm+YRqzDIjbBWA3DK41
-	9kc0E09rJYC7Fb5HNlD4jMe4NLRsa7yKhnv0m3Fg5vqrsVa+xYRvGbmnQWESvfQJamWSoX3NDQI
-	SPSDENoRecbrEWIgC/ljnI2YI2v3uJyoE5u2pOhv35roA+CyfVjyhiVyD/6ogvzp21j//tzFIG6
-	ZieBvhvG42P3RTrMQ1dqg0C1hGe52rTPDe9E995YipReFkqLirK+3rnW6CozP+6ffFok5QEyrzI
-	B+FUdo/Xa7iSFLpJFJ+LGdolWfnDqvELBEO9exWHtTBrBV4cSFUSDqheF5KPiZCNwjvObTcJ5DN
-	QL3yuXOCGUDCSWxzbQbr6Fy/xvbh1Ucn12gR82NXc+H2Px6orycIvmQm+VajCjNSAC7krk8WzL4
-	eoC09ZanyNi6AVNDL3/+gekulY3IQN4NM4c7Efp96n
-X-Received: by 2002:a17:903:285:b0:2a1:10f6:3c1 with SMTP id d9443c01a7336-2a84524a14emr16781685ad.26.1769343535861;
-        Sun, 25 Jan 2026 04:18:55 -0800 (PST)
+        bh=fqrS1FqBluHn0sbWWyJsNAR0qxaXDS+eOYJqNFFyYfA=;
+        b=ItBvFFBO1hhJvfqvp5OIiCdUltDcl6MJaqGqFvSWI7YDPN9at9GJlZqwLcnlA/Tw5C
+         +XpDPUPqCFRx7/IsH604BvOP4A3tQDTu7Nlh4+tT7NeRT0kbqeKA4ajaK8kZre/NoQFE
+         jbp/seCRecfOSD1LhstxWpYXrq1FZCnDHZYKhR+BYUsRIg9V3EZ0NSz6T5SXIN58twiH
+         SqSIFFnXBKqNy7fJ5SzLk8VvHkM3qVvOOezy0MOkzaGezJMaSKFXEi9Gt3NIWrHhaqnh
+         KMLYtnQhA4cQ6zI4y1RduYc9r/h8GeISJyT7wnnUokA4SMxZw8i0RuTUBY9gyyck5QtQ
+         noFA==
+X-Forwarded-Encrypted: i=1; AJvYcCUfqlo0LfYjpcZcR2BUBsKFk7NXJkNTSiKeUkP00IPKxtMZzt1y/epZFYbs3tVaBUPiHV6A1yxvnDfK@vger.kernel.org
+X-Gm-Message-State: AOJu0YwMBVK9qBxsd/Du6QK4qcs9x2H8yoqkQY3qlvrVCkrkQgjpUWw9
+	ZtWGNGGpgCbeyjDNxIKLLOaMKZcbZkgC9OmA3kMwsdnv9PYNxEQOvGFn
+X-Gm-Gg: AZuq6aJg6qkEO1fl+09rGjRxJFCdkmeeHfKas4mtysoReEZ/XI8lQvDoWWT3mFrdhxD
+	pGXv8xSy0LLNV1IU3MBUaj7f2f44LHBIswDXe1xSMI0cfqsaxnhUTMvd52SmzaVCfPlzYPfE+j5
+	wohWodL7l3MxS3iUXsfMcuSEd21X0MjqY6v+yS1XyvjHxOTecxsPfU7zxvE1jN41Jk52txmyyOS
+	29k+brBTGJBVgBYDj/27Hxqkjiic9tRCRMn94NUHfJkoOjd70gSHb63Tezoyju7TWUj/muRysfT
+	6maVnd68sA1feBDrtYOyrcv3457oiqjXsuxOpIWrWuksCI38FKPRn4fQTky7uoBMpn4UVQFoU1z
+	jn7Oh2OPp9ltPrd/XBPj/c/Q2OYRI0zBIsiLam8KxsIjo9xAjhiEogR9HrdAVEbS9avSYlyyysS
+	57Gwl2A4bJNmOIVNS+OdVrSigH9VY12qOf2F993lv1
+X-Received: by 2002:a17:903:2347:b0:2a0:fb1c:144e with SMTP id d9443c01a7336-2a8454deb18mr14023355ad.7.1769343540309;
+        Sun, 25 Jan 2026 04:19:00 -0800 (PST)
 Received: from localhost.localdomain ([113.218.252.97])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2a802f974d8sm66774625ad.63.2026.01.25.04.18.51
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2a802f974d8sm66774625ad.63.2026.01.25.04.18.56
         (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
-        Sun, 25 Jan 2026 04:18:55 -0800 (PST)
+        Sun, 25 Jan 2026 04:19:00 -0800 (PST)
 From: chengkaitao <pilgrimtao@gmail.com>
 To: kashyap.desai@broadcom.com,
 	sumit.saxena@broadcom.com,
@@ -69,9 +69,9 @@ Cc: megaraidlinux.pdl@broadcom.com,
 	linux-scsi@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Chengkaitao <chengkaitao@kylinos.cn>
-Subject: [RFC 1/2] megaraid: Fix the issue of erroneous reset of Words in reply_desc
-Date: Sun, 25 Jan 2026 20:18:41 +0800
-Message-ID: <20260125121842.79839-2-pilgrimtao@gmail.com>
+Subject: [RFC 2/2] megaraid: replacing fusion->busy_mq_poll[*] with irq_context->in_used in megasas_blk_mq_poll
+Date: Sun, 25 Jan 2026 20:18:42 +0800
+Message-ID: <20260125121842.79839-3-pilgrimtao@gmail.com>
 X-Mailer: git-send-email 2.50.1
 In-Reply-To: <20260125121842.79839-1-pilgrimtao@gmail.com>
 References: <20260125121842.79839-1-pilgrimtao@gmail.com>
@@ -85,65 +85,51 @@ Content-Transfer-Encoding: 8bit
 
 From: Chengkaitao <chengkaitao@kylinos.cn>
 
-The following panic occurred on kernel 6.6 (arch: loongarch):
+The following two types of kernel panics occur on the 4.19 kernel:
 Call Trace:
-complete_cmd_fusion+0x180/0x7c8 [megaraid_sas]
-megasas_isr_fusion+0xd4/0xf0 [megaraid_sas]
-__handle_irq_event_percpu+0x70/0x228
-handle_irq_event+0x44/0xf8
-handle_edge_irq+0xe8/0x328
-avecintc_irq_dispatch+0x68/0x120
-handle_irq_desc+0x5c/0x78
-handle_cpu_irq+0x6c/0xa8
-handle_loongarch_irq+0x2c/0x48
-do_vint+0x7c/0xd0
-sched_update_worker+0x8/0x90
-worker_thread+0x218/0x480
-kthread+0xf0/0xf8
-ret_from_kernel_thread+0x28/0xc8
-ret_from_kernel_thread_asm+0xc/0xa0
+complete_cmd_fusion+0x448/0x6a0 [megaraid_sas]
+megasas_blk_mq_poll+0xa8/0x110 [megaraid_sas]
+scsi_mq_poll+0x38/0x50
+blk_mq_poll+0x198/0x2d8
+blk_poll+0x60/0x70
+swap_readpage+0x1b0/0x260
+read_swap_cache_async+0x5c/0x78
+swap_cluster_readahead+0x1e0/0x2b0
+swapin_readahead+0x100/0x4c0
+do_swap_page+0x244/0xb40
+__handle_mm_fault+0x4b0/0x560
+handle_mm_fault+0x114/0x280
+do_page_fault+0x1f8/0x4c0
+do_translation_fault+0xa8/0xbc
+do_mem_abort+0x50/0xe0
+el1_da+0x20/0x94
 
-Observed symptoms during the issue:
-complete_cmd_fusion(struct megasas_instance *instance, u32 MSIxIndex,
-		    struct megasas_irq_context *irq_context)
-{
-	******
+Call trace:
+complete_cmd_fusion+0x448/0x6a0 [megaraid_sas]
+megasas_isr_fusion+0x98/0xa8 [megaraid_sas]
+__handle_irq_event_percpu+0x64/0x260
+handle_irq_event_percpu+0x28/0x60
+handle_irq_event+0x50/0xf8
+handle_fasteoi_edge_irq+0x190/0x208
+generic_handle_irq+0x3c/0x58
+__handle_domain_irq+0x68/0xc0
+gic_handle_irq+0x78/0x180
+el1_irq+0xb8/0x140
 
-	while (d_val.u.low != cpu_to_le32(UINT_MAX) &&
-	       d_val.u.high != cpu_to_le32(UINT_MAX)) {
+Later, we applied commit 9650b453a3d4 ("block: ignore RWF_HIPRI hint
+for sync dio"), and the issue disappeared. Although most of the mq-poll
+paths have been removed upstream, io-uring related calls still remain.
 
-	/**
-		When the issue occurs:
-		d_val.u.low == 60293120
-		d_val.u.high == 0
-		reply_desc->SMID == 0xffff
- 	 **/
-		smid = le16_to_cpu(reply_desc->SMID);
-		cmd_fusion = fusion->cmd_list[smid - 1];
-		scsi_io_req = (struct MPI2_RAID_SCSI_IO_REQUEST *)
-						cmd_fusion->io_request;
-	/** cmd_fusion becomes an invalid pointer **/
+We cannot completely rule out the possibility of [patch 1/2] causing
+the issue. I still suspect a concurrency/race condition between
+megasas_blk_mq_poll and megasas_isr_fusion. Although historical patch
+commit logs mention that interrupts are disabled when polling is used,
+I haven't found code evidence to confirm it.
 
-	******
-}
-
-In the complete_cmd_fusion function, the following assignment exists:
-	d_val.word = desc->Words;
-Thus, reply_desc->SMID == 0xffff may be caused by a concurrency-related
-corruption.
-
-Reproduction probability is very low. After code review, I suspect the
-following race condition scenario:
-
-interrupt(complete_cmd_fusion)           cpu1(megasas_reset_reply_desc)
-while (d_val.u.low != *****) {
-        scsi_io_req =
-            cmd_fusion->io_request;
-
-        d_val.word = desc->Words;
-                                        reply_desc->Words =
-                                          cpu_to_le64(ULLONG_MAX);
-}
+Replacing fusion->busy_mq_poll[*] with irq_context->in_used serves two
+purposes:
+To handle synchronization issues between mq-poll and megasas_isr_fusion
+To handle synchronization between mq-poll and megasas_reset_reply_desc
 
 Note: This is a proposed patch for discussion only. It has not been
 verified to resolve the issue. If you have alternative suggestions,
@@ -151,37 +137,59 @@ please join the discussion.
 
 Signed-off-by: Chengkaitao <chengkaitao@kylinos.cn>
 ---
- drivers/scsi/megaraid/megaraid_sas_fusion.c | 7 +++++++
- 1 file changed, 7 insertions(+)
+ drivers/scsi/megaraid/megaraid_sas_fusion.c | 11 +++--------
+ drivers/scsi/megaraid/megaraid_sas_fusion.h |  2 --
+ 2 files changed, 3 insertions(+), 10 deletions(-)
 
 diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-index a6794f49e9fa..3d3480b19734 100644
+index 3d3480b19734..b647bec7115b 100644
 --- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
 +++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-@@ -4282,16 +4282,23 @@ void  megasas_reset_reply_desc(struct megasas_instance *instance)
- 	int i, j, count;
+@@ -1871,9 +1871,6 @@ megasas_init_adapter_fusion(struct megasas_instance *instance)
+ 				MEGASAS_FUSION_IOCTL_CMDS);
+ 	sema_init(&instance->ioctl_sem, MEGASAS_FUSION_IOCTL_CMDS);
+ 
+-	for (i = 0; i < MAX_MSIX_QUEUES_FUSION; i++)
+-		atomic_set(&fusion->busy_mq_poll[i], 0);
+-
+ 	if (megasas_alloc_ioc_init_frame(instance))
+ 		return 1;
+ 
+@@ -3731,6 +3728,7 @@ int megasas_blk_mq_poll(struct Scsi_Host *shost, unsigned int queue_num)
+ 	struct megasas_instance *instance;
+ 	int num_entries = 0;
  	struct fusion_context *fusion;
- 	union MPI2_REPLY_DESCRIPTORS_UNION *reply_desc;
 +	struct megasas_irq_context *irq_context;
  
- 	fusion = instance->ctrl_context;
- 	count = instance->msix_vectors > 0 ? instance->msix_vectors : 1;
- 	count += instance->iopoll_q_count;
+ 	instance = (struct megasas_instance *)shost->hostdata;
  
- 	for (i = 0 ; i < count ; i++) {
-+		irq_context = &instance->irq_context[i];
-+		while (!access_irq_context(irq_context))
-+			cpu_relax();
-+
- 		fusion->last_reply_idx[i] = 0;
- 		reply_desc = fusion->reply_frames_desc[i];
- 		for (j = 0 ; j < fusion->reply_q_depth; j++, reply_desc++)
- 			reply_desc->Words = cpu_to_le64(ULLONG_MAX);
-+
-+		release_irq_context(irq_context);
- 	}
+@@ -3738,11 +3736,8 @@ int megasas_blk_mq_poll(struct Scsi_Host *shost, unsigned int queue_num)
+ 
+ 	queue_num = queue_num + instance->low_latency_index_start;
+ 
+-	if (!atomic_add_unless(&fusion->busy_mq_poll[queue_num], 1, 1))
+-		return 0;
+-
+-	num_entries = complete_cmd_fusion(instance, queue_num, NULL);
+-	atomic_dec(&fusion->busy_mq_poll[queue_num]);
++	irq_context = &instance->irq_context[queue_num];
++	num_entries = complete_cmd_fusion(instance, queue_num, irq_context);
+ 
+ 	return num_entries;
  }
+diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.h b/drivers/scsi/megaraid/megaraid_sas_fusion.h
+index ddeea0ee2834..70679f53bf9d 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_fusion.h
++++ b/drivers/scsi/megaraid/megaraid_sas_fusion.h
+@@ -1313,8 +1313,6 @@ struct fusion_context {
+ 	u8 *sense;
+ 	dma_addr_t sense_phys_addr;
  
+-	atomic_t   busy_mq_poll[MAX_MSIX_QUEUES_FUSION];
+-
+ 	dma_addr_t reply_frames_desc_phys[MAX_MSIX_QUEUES_FUSION];
+ 	union MPI2_REPLY_DESCRIPTORS_UNION *reply_frames_desc[MAX_MSIX_QUEUES_FUSION];
+ 	struct rdpq_alloc_detail rdpq_tracker[RDPQ_MAX_CHUNK_COUNT];
 -- 
 2.50.1 (Apple Git-155)
 
