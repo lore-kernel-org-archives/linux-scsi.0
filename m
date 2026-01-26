@@ -1,53 +1,53 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.16])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A59E3EBF2D;
-	Mon, 26 Jan 2026 04:17:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E560C262A6;
+	Mon, 26 Jan 2026 05:19:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769401065; cv=none; b=JP5yaShq8sI0X66U5JgpfUyCL0xdKhe+T1qc29VtVUUtPWunyG51nxp4IhdPyRjQDdiQo3niVxCFXyE2pi0/HS3Sn5j4LVhr5AliGUd+9dCctzadG4G/NIYo3NhhJWuMXoOD6hz9IThO5PLhpq85tHDr4HjH7zk3wCqci77s+YA=
+	t=1769404761; cv=none; b=Di4EaDbtAbc+35wePKSN/wHewMtVp3gq4SQdR4WksLLsZGrhAt3I/Avwk2/YG/toPg7XFBPExrSziCkOoXv7BPMJZkazttfcX1CyQbHs/PBwXtOMm5hwpecjCN4luCpd+hvIY8BHC6jR7vtf7qVJd1REuTbGOoxn8bWvStZt1i0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769401065; c=relaxed/simple;
-	bh=DWZ+zP/o+PNSV1Ca2XQ1KKvlddtKK0JFY+YM1EtEhz8=;
+	s=arc-20240116; t=1769404761; c=relaxed/simple;
+	bh=t/fa3a7X4u8DrISTvupz9KIcCGarM7GxWYjhFW0pueM=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=N83Cc+ds6sYyGxn1OYp+kswARWUdX7PhX8xQIaNdLlJieMevsbj7ne0HJbTYnM/7DTF4vdysk72eNyhYTiGNPhQTbMj4hi8cPcQE4KE0Yjc+0oJIn74ZXWw97bdCl9xrKDMTEEDoSfYkWeLHFSa0oANMP0RT0phEXT4lSVVUPFc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=WdPh0p1R; arc=none smtp.client-ip=192.198.163.16
+	 Content-Type:Content-Disposition:In-Reply-To; b=QypH/kWB0JRNNvZ/9/S+Mzv9X9ii64VSDiRKaSDNqf7d0bMlVTCQPLBWNvRzue00VaM2GwbngCD7/FAtPixQO6rs2J2XwYm+YhAyHorAWKKAKqxEKLDuF6CRUgI9RY2RI2c0x6Wfm2ZMHCwjSO+7eSlVCUb7m7FzJ4hf1bO43NY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=YtoQFOMP; arc=none smtp.client-ip=198.175.65.14
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="WdPh0p1R"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="YtoQFOMP"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1769401063; x=1800937063;
+  t=1769404760; x=1800940760;
   h=date:from:to:cc:subject:message-id:references:
    mime-version:in-reply-to;
-  bh=DWZ+zP/o+PNSV1Ca2XQ1KKvlddtKK0JFY+YM1EtEhz8=;
-  b=WdPh0p1R1HbklSpxUr5ZDlrBNk1LvfQdSCrOw25on3s2DhFHOFA2Tm2L
-   abA/lEu9jCv05iKF/Urj00sln+X+7iCDYC45fh6VGLcmiNqiFS8ohLnRG
-   tyjv/pgWb7aCjWJ/QmBm+tMn8uPy12en+55lzkQnrzRoKrY59pDf8a3US
-   DhqgIcWOVk3SUFPqNwFjnyZRdViDq6TZ5YFWpbJYPztSMsTWv5jqvzgDK
-   ckWCPDCc6fiQoGxDtnDrEhGieNCyughf3UvaCa8KYUva7ILLe1HVbgGSj
-   CYJsLk6zcPAxGugQN8zvZSU6tZEvE6+rr60oxBMdWNzJ+83XrgLOZa+Iq
+  bh=t/fa3a7X4u8DrISTvupz9KIcCGarM7GxWYjhFW0pueM=;
+  b=YtoQFOMPbQnXrQQrWKkZJ3ZJuhi/+9W++vz0gXHvnd7DkK4nvKZgyshK
+   uZk7IMjzncZ6+gKinym3+DUBBntAU24H14mIySwJYqoxR7UXgY+CEK4oY
+   rY2ewIQKF7AgxbrSMwi73NMxwKHHBvZVn6sJgNsD6lb7zNykxJVthUD2P
+   IC+JCVf3uQT2TK4gmhcHnhtnIXDctz4jmU3N5vokCY+eL/CK4r3u5lgjN
+   8PKb7HKEvqkh+S+0hq4lN8r77XyLf3vm5pzroi5C2xRJIMxTLSVhantGT
+   eY92LazP/vYz/dEDQRu7iHHXc8zQdjAkGmXfDwF3uDMv7OhHlbC6FJ1Dd
    A==;
-X-CSE-ConnectionGUID: DL+nVYwlRfiDojWsYNVgdg==
-X-CSE-MsgGUID: rYX4Fh5fTzGo+65tg8MCvw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11682"; a="58154488"
+X-CSE-ConnectionGUID: vIS0vtGfTra72kCEi9cjFw==
+X-CSE-MsgGUID: j/gsvhGNQO6szn9bOJGK5w==
+X-IronPort-AV: E=McAfee;i="6800,10657,11682"; a="74422224"
 X-IronPort-AV: E=Sophos;i="6.21,254,1763452800"; 
-   d="scan'208";a="58154488"
-Received: from orviesa004.jf.intel.com ([10.64.159.144])
-  by fmvoesa110.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Jan 2026 20:17:43 -0800
-X-CSE-ConnectionGUID: ww/ezrmCQ8uTtHlfDIpmNg==
-X-CSE-MsgGUID: zDSOzlbFSp+iCBosbAWMkA==
+   d="scan'208";a="74422224"
+Received: from orviesa006.jf.intel.com ([10.64.159.146])
+  by orvoesa106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Jan 2026 21:19:19 -0800
+X-CSE-ConnectionGUID: uinJaD5ZTt2WBO+w+yhgCA==
+X-CSE-MsgGUID: bX22nsKMT/ekVQcZPT+Unw==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.21,254,1763452800"; 
-   d="scan'208";a="212090609"
-Received: from lkp-server01.sh.intel.com (HELO 765f4a05e27f) ([10.239.97.150])
-  by orviesa004.jf.intel.com with ESMTP; 25 Jan 2026 20:17:41 -0800
-Received: from kbuild by 765f4a05e27f with local (Exim 4.98.2)
+   d="scan'208";a="206712129"
+Received: from igk-lkp-server01.igk.intel.com (HELO afc5bfd7f602) ([10.211.93.152])
+  by orviesa006.jf.intel.com with ESMTP; 25 Jan 2026 21:19:17 -0800
+Received: from kbuild by afc5bfd7f602 with local (Exim 4.98.2)
 	(envelope-from <lkp@intel.com>)
-	id 1vkE2j-00000000Wsk-1w9l;
-	Mon, 26 Jan 2026 04:17:37 +0000
-Date: Mon, 26 Jan 2026 12:17:16 +0800
+	id 1vkF0M-000000001R7-0xOA;
+	Mon, 26 Jan 2026 05:19:14 +0000
+Date: Mon, 26 Jan 2026 06:19:07 +0100
 From: kernel test robot <lkp@intel.com>
 To: Haoxiang Li <lihaoxiang@isrc.iscas.ac.cn>, sathya.prakash@broadcom.com,
 	sreekanth.reddy@broadcom.com, suganath-prabu.subramani@broadcom.com,
@@ -57,7 +57,7 @@ Cc: oe-kbuild-all@lists.linux.dev, MPT-FusionLinux.pdl@broadcom.com,
 	Haoxiang Li <lihaoxiang@isrc.iscas.ac.cn>
 Subject: Re: [PATCH] scsi: mpt3sas: fix a potential memory leak in
  scsih_pci_slot_reset()
-Message-ID: <202601261249.g2g6MMxT-lkp@intel.com>
+Message-ID: <202601260641.AHnz8FCz-lkp@intel.com>
 References: <20260125161201.2156109-1-lihaoxiang@isrc.iscas.ac.cn>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -83,23 +83,22 @@ url:    https://github.com/intel-lab-lkp/linux/commits/Haoxiang-Li/scsi-mpt3sas-
 base:   https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git for-next
 patch link:    https://lore.kernel.org/r/20260125161201.2156109-1-lihaoxiang%40isrc.iscas.ac.cn
 patch subject: [PATCH] scsi: mpt3sas: fix a potential memory leak in scsih_pci_slot_reset()
-config: arm-randconfig-002-20260126 (https://download.01.org/0day-ci/archive/20260126/202601261249.g2g6MMxT-lkp@intel.com/config)
-compiler: arm-linux-gnueabi-gcc (GCC) 13.4.0
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260126/202601261249.g2g6MMxT-lkp@intel.com/reproduce)
+config: x86_64-rhel-9.4-ltp (https://download.01.org/0day-ci/archive/20260126/202601260641.AHnz8FCz-lkp@intel.com/config)
+compiler: gcc-14 (Debian 14.2.0-19) 14.2.0
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260126/202601260641.AHnz8FCz-lkp@intel.com/reproduce)
 
 If you fix the issue in a separate patch/commit (i.e. not just a new version of
 the same patch/commit), kindly add following tags
 | Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202601261249.g2g6MMxT-lkp@intel.com/
+| Closes: https://lore.kernel.org/oe-kbuild-all/202601260641.AHnz8FCz-lkp@intel.com/
 
 All errors (new ones prefixed by >>):
 
    drivers/scsi/mpt3sas/mpt3sas_scsih.c: In function 'scsih_pci_slot_reset':
->> drivers/scsi/mpt3sas/mpt3sas_scsih.c:12533:9: error: implicit declaration of function 'mpt3sas_base_unmap_resources'; did you mean 'mpt3sas_base_map_resources'? [-Werror=implicit-function-declaration]
+>> drivers/scsi/mpt3sas/mpt3sas_scsih.c:12533:9: error: implicit declaration of function 'mpt3sas_base_unmap_resources'; did you mean 'mpt3sas_base_map_resources'? [-Wimplicit-function-declaration]
    12533 |         mpt3sas_base_unmap_resources(ioc);
          |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
          |         mpt3sas_base_map_resources
-   cc1: some warnings being treated as errors
 
 
 vim +12533 drivers/scsi/mpt3sas/mpt3sas_scsih.c
