@@ -1,48 +1,48 @@
-Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
+Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 193EA33E372
-	for <linux-scsi@vger.kernel.org>; Mon, 26 Jan 2026 17:04:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.14
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3A8A433508F
+	for <linux-scsi@vger.kernel.org>; Mon, 26 Jan 2026 17:07:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769447096; cv=none; b=FsWEDE0SCcG7sTI0pO2aN+Fht7mpYgWAaUuqv3HBeZBd6WzpfBpGRWpGbrE8mNFXXGMHO98KpPXVAqfVsOWFrcHcZeSlNngHFz0lWM7PtxjwnZGoJYhINt5vsI9W1JVyo51OCLr7CbiwCzSBURDpulHZDQ1eQH4movlgdrfPzfM=
+	t=1769447223; cv=none; b=ajtsJ74D6hG+vyfSLUSq0Hlam1CEJWbG39M68EGXmBKW3WTn0DPWZpkE2ONL76V2P9EphlR8w9JLzO5rm8L46IoUDItHvH0cpoXHdE6iKKAE38RlEzMIrOUQVGY3oQjVTRWFZarPpNZ9QTWdv8woqHuBWm6oYnV0hjkP3Kp0jEw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769447096; c=relaxed/simple;
-	bh=DzH71sGLTHY/4umdgPz2Kx0QrBrLABDLct1KfBk3znQ=;
+	s=arc-20240116; t=1769447223; c=relaxed/simple;
+	bh=lpvfQTJ9QgMxJJoR0JcXBck12pj91R/OL4I336bTNTI=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=ISrABUXsq11XPEhCVMN18sf9WINP2bx3xmCOUUMAhnuNnaCFcBJSwvjcFWK1+/Ub4ZSehcFZU9vsK9Shrj+FgWSEnEVHs/QAT1r6PLNu5sK853Baw9fAQo+g7gYi8oCsVbLQqCku/Igm35rV0upt3PStkabDkgn11M7yMs9gAmM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=aQq8HjPM; arc=none smtp.client-ip=199.89.1.14
+	 In-Reply-To:Content-Type; b=HjBVL7Cq9HKWEWYhp5lBjIVviIUbfCVIgSARkuolWbka/JvXXXT5t6xT9wC7kDQeBCVS/ol3vMpm+FHhpqlJypUhvEOkbeCoA5gMIaH52+RwHkBrguBDbco7Zx4P16zgun+uvgjk9oF/Zmbn2S6+2G2QolZVZMMiay6DXPaeMAc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=dVFGLP55; arc=none smtp.client-ip=199.89.1.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="aQq8HjPM"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="dVFGLP55"
 Received: from localhost (localhost [127.0.0.1])
-	by 011.lax.mailroute.net (Postfix) with ESMTP id 4f0FJk56Xvz1XM6Jf;
-	Mon, 26 Jan 2026 17:04:54 +0000 (UTC)
+	by 013.lax.mailroute.net (Postfix) with ESMTP id 4f0FM95V3wzlfdGT;
+	Mon, 26 Jan 2026 17:07:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:content-type:content-type:in-reply-to
 	:from:from:content-language:references:subject:subject
 	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1769447093; x=1772039094; bh=sdASKopwoGV8Tlli2UBc+oPt
-	bWwSMfk3K/1cyNX5XMY=; b=aQq8HjPMqlBDgiFixDHNhub9ApJtHBS63dKSnOQ1
-	8NIn34KW5BISpgdaZH1BDxAlCULW/zhujBi7tN7mWMu/aMdHxtT3M80u+ENHPrPm
-	PRSV2WB5lDe5B6Br8AAJeHxEXcMCG6cZkyotuB+57CLiam12ouytJu8X3tT3BlUm
-	wgD+RSytE3fGBeupKDQO3NgngoNSewSoAeTkg6vFkdlwBqQkJZpR2/jT6+uKy6zn
-	ZtFJDNF0cid4P7xKI4fXUyedfhOLtB/PfomebhrV8bBCK46bpk71NBKMaZ5TfvSx
-	LQ5+kf2lIJgNXVK1OV5RQ/HYWgUm0Q8km45Wn/9rZPhnoQ==
+	 s=mr01; t=1769447220; x=1772039221; bh=lpvfQTJ9QgMxJJoR0JcXBck1
+	2pj91R/OL4I336bTNTI=; b=dVFGLP55EhFPSYEtrTzHw2MYVZ/bWoAp+Uc6JfRh
+	RNCHf7LNX9UGhGZHMq4JXzgcc9HZPxViwyV7dPY5cesv9sYO8iNKIwjoLGm0jy41
+	DoX/zzrHNCDZit0ZUhuCuTEXoz4tPgeVzTeBnsF3kugEfZCS735n40+hUlyq05r6
+	SzWCexr0H2RfRsHDANOn3Z7S6LE3KS76iQNu0SI+8WCJ0ZM5zH5RJ9Clh4R3StdI
+	wvHE+76cA5dZUCmF5gc528mIzzk3Ze4OCPyabgzZRL/CyrJ+vEHFQoD2i9snC/Wz
+	zqGO0znZ1ErzW+t5+zbJbpEocfW9Z+7da49f1CTAdriJ2w==
 X-Virus-Scanned: by MailRoute
-Received: from 011.lax.mailroute.net ([127.0.0.1])
- by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id bl6d10Cmguzz; Mon, 26 Jan 2026 17:04:53 +0000 (UTC)
+Received: from 013.lax.mailroute.net ([127.0.0.1])
+ by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id adO4h9_7BCSS; Mon, 26 Jan 2026 17:07:00 +0000 (UTC)
 Received: from [100.119.48.131] (unknown [104.135.180.219])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4f0FJg59tQz1XM5kD;
-	Mon, 26 Jan 2026 17:04:51 +0000 (UTC)
-Message-ID: <1f5708a2-b00a-4be1-a005-c5137ce5863b@acm.org>
-Date: Mon, 26 Jan 2026 09:04:50 -0800
+	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4f0FM65F01zlfdCs;
+	Mon, 26 Jan 2026 17:06:58 +0000 (UTC)
+Message-ID: <fc0c8b16-2ca1-41c5-8310-e722c68a10cd@acm.org>
+Date: Mon, 26 Jan 2026 09:06:57 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,26 +50,30 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 2/3] scsi: sg: Resolve soft lockup issue when opening
- /dev/sgX
+Subject: Re: [PATCH 3/3] scsi: sg: Remove deprecated sg-big-buff
 To: Yang Erkun <yangerkun@huawei.com>, dgilbert@interlog.com,
  James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com,
  linux-scsi@vger.kernel.org
 Cc: yangerkun@huaweicloud.com
 References: <20260126132745.1830629-1-yangerkun@huawei.com>
- <20260126132745.1830629-3-yangerkun@huawei.com>
+ <20260126132745.1830629-4-yangerkun@huawei.com>
 Content-Language: en-US
 From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20260126132745.1830629-3-yangerkun@huawei.com>
+In-Reply-To: <20260126132745.1830629-4-yangerkun@huawei.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
 On 1/26/26 5:27 AM, Yang Erkun wrote:
-> +	/* limit "big buff" to 1 MB */
-> +	if (size < 0 || size > 1048576)
-> +		return -ERANGE;
+> These deprecated sysctl has been gone since commit 26d1c80fd61e5
 
-Why 1 MB? Please explain this in the patch description.
+gone -> broken
+
+> ("scsi/sg: move sg-big-buff sysctl to scsi/sg.c") and nobody has found
+> this. I believe it's time to remove them, which will allow us to clean
+
+them -> it
+
+> up a significant amount of code.
 
 Thanks,
 
