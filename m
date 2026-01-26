@@ -1,154 +1,420 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.9])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 500D721B192;
-	Mon, 26 Jan 2026 05:20:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.9
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 98D6327F75C;
+	Mon, 26 Jan 2026 06:39:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769404849; cv=none; b=PwnPDB/GfhI95KqNeY+5SWHywpgIa6Okn0EZs91F5c/RZvtgwuJxBIfIVTJHBjMi4lYu9T2eQOEqYSM6HRmuLO9ph1PLv3hPvvfm2XUWD7vq3ELgSVInW5j1lmeYGDqJTJLg+xUywTZpqErCOcZ6q/vaNPSDLYA6VmbvkPGhHBU=
+	t=1769409566; cv=none; b=RSkBmx563wYnoEq9EH9tLbVROxdLPM/JrtNlqQUfDL48mYZJcV+8cIzraxLWjYGFbBv2KFxt1LAulyyFHJNV/YD3Ic7OAil9rkokWpzN/N37oNDBOuSlGIlzGNuZkNkK9zYAu238AoGBQmdiflbcOXYzIi8UnP8nwjANhTJXbD0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769404849; c=relaxed/simple;
-	bh=lIIySIxjC+F/+hLCaAdTMtlygliQTbPaYAx9O5w1niM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ooHN0IhVsgpBbg3La3bQpfJEu8MN6UjpVgAv2BT8h55mbFZkDUCS4zuYu6ul617ziN6pSQItA/l0cfRCmHYe+0xYQaFk0o3Y0vpbl5x1NNMKz8JM2QwucrRMnTc3KBWxZgwKuKX2O5lJ7u9GZ3U0kT26XCk7SKrTZiQn8JkikVU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=jnyQW9We; arc=none smtp.client-ip=198.175.65.9
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1769409566; c=relaxed/simple;
+	bh=Ozq3rhl/4iBmgWrbD3sMw4Z4ZrAfKTqvMwv611o48Ag=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=KNlLShKVv27dR2XECWvGQ7hYfyFFDvP0LhQMXh5bEZkysMLtAROD/dm2laT4IXgaVR7kQfs/lrCvnSybUzQM1E+zyjxi7l6sJiJ2zMCZ21pGpk1G/aMzKqNDSSh2fPsWQx0EEYCfw1X4ij2RB2iIKGs7RjmYBI2ueDfA0SCviyU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Q9/aN4bK; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="jnyQW9We"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1769404849; x=1800940849;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=lIIySIxjC+F/+hLCaAdTMtlygliQTbPaYAx9O5w1niM=;
-  b=jnyQW9We4WFTioHd8qigtIRyCKdYwEquAv0CgOrAYE1yuJpMahsJL8WO
-   SOpFi8X8E4kzDH99htzeFK4oZPxPBz84ufgejPOvp/Tayt6W3l33BNxsP
-   RlSp0cP5KBg9CXXrEa69VkOH4uhDqdYo7QLz/iNzG/vNoNKa7wIbjkm55
-   niFh+bXhrFdrBUGU4OwgWa6ncaTqYciBJsWcZZYm13z1nxtgd4legtpkx
-   wL8gInpikgJ3omuwacD75+KX3OMIsWdGkJzJP3lDOJudJuwk9YpHaNmK+
-   rOkbOOZY0emkzNKfU/MeZWtihcoc4Fx/FfOpqWNaYtCVA8s7gszVL81N5
-   g==;
-X-CSE-ConnectionGUID: JFLDQ8Z1RQae3/Fi7HUWZQ==
-X-CSE-MsgGUID: f+XJ5FdMRSaaW1hdOp+55Q==
-X-IronPort-AV: E=McAfee;i="6800,10657,11682"; a="93243272"
-X-IronPort-AV: E=Sophos;i="6.21,254,1763452800"; 
-   d="scan'208";a="93243272"
-Received: from orviesa003.jf.intel.com ([10.64.159.143])
-  by orvoesa101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Jan 2026 21:20:48 -0800
-X-CSE-ConnectionGUID: shdXjNf4S0evh3rcUgSJqw==
-X-CSE-MsgGUID: 7fFaf1RbTM+qk/O1vpVBxw==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.21,254,1763452800"; 
-   d="scan'208";a="211688175"
-Received: from lkp-server01.sh.intel.com (HELO 765f4a05e27f) ([10.239.97.150])
-  by orviesa003.jf.intel.com with ESMTP; 25 Jan 2026 21:20:45 -0800
-Received: from kbuild by 765f4a05e27f with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1vkF1m-00000000Wve-1v2U;
-	Mon, 26 Jan 2026 05:20:42 +0000
-Date: Mon, 26 Jan 2026 13:20:13 +0800
-From: kernel test robot <lkp@intel.com>
-To: Haoxiang Li <lihaoxiang@isrc.iscas.ac.cn>, sathya.prakash@broadcom.com,
-	sreekanth.reddy@broadcom.com, suganath-prabu.subramani@broadcom.com,
-	James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com
-Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
-	MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Haoxiang Li <lihaoxiang@isrc.iscas.ac.cn>
-Subject: Re: [PATCH] scsi: mpt3sas: fix a potential memory leak in
- scsih_pci_slot_reset()
-Message-ID: <202601261539.Dt3EKe8y-lkp@intel.com>
-References: <20260125161201.2156109-1-lihaoxiang@isrc.iscas.ac.cn>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Q9/aN4bK"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 50C37C19421;
+	Mon, 26 Jan 2026 06:39:24 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1769409566;
+	bh=Ozq3rhl/4iBmgWrbD3sMw4Z4ZrAfKTqvMwv611o48Ag=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=Q9/aN4bK1dEyIM0GKFjk1KC8fmlWK7Evbol/b8phPKg9RpYg3sJO9Q7COu9QxG8NR
+	 h+ena9Q9Fg6niI8Pms55mam8N2YyUPfEgt8Sho848SIQi26sUauOoK8/uJpEeUGqP/
+	 XBuP2Toy+y57l3qoKtmq/ykeAiM1W095OSbokaug3pO0vLXa4f6azSaz4bn0Q0V+RT
+	 +dGaUQm5zb7TiRQhz9+UGithmg8F5uKgoqsHIj9u1MEmsBqiKkoqhNreLYAAzO5gBD
+	 p54QobuF8D7NhBlsSgyFuW/jsS3Qs/wpaJRVKndLgnTi81JcPJg3/vQ8LZINM+ZE5G
+	 7PehOXm3bhGBg==
+Message-ID: <62bbfb0e-20bd-47f7-ada1-7f4d30c888d7@kernel.org>
+Date: Mon, 26 Jan 2026 15:34:25 +0900
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260125161201.2156109-1-lihaoxiang@isrc.iscas.ac.cn>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH RFC 4/4] leds: add disk trigger for each ata port
+To: Markus Probst <markus.probst@posteo.de>, Lee Jones <lee@kernel.org>,
+ Pavel Machek <pavel@kernel.org>, Rob Herring <robh@kernel.org>,
+ Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley
+ <conor+dt@kernel.org>, Jacek Anaszewski <jacek.anaszewski@gmail.com>,
+ Niklas Cassel <cassel@kernel.org>, John Garry <john.g.garry@oracle.com>,
+ Jason Yan <yanaijie@huawei.com>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Pavel Machek <pavel@ucw.cz>, linux-leds@vger.kernel.org,
+ devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+References: <20260123-ledtrig_disk_-v1-0-07004756467b@posteo.de>
+ <20260123-ledtrig_disk_-v1-4-07004756467b@posteo.de>
+Content-Language: en-US
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <20260123-ledtrig_disk_-v1-4-07004756467b@posteo.de>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Hi Haoxiang,
+On 1/24/26 4:05 AM, Markus Probst wrote:
+> Register a disk trigger for each ata port. This trigger will only show
+> the activity for the ata port it has been registered for.
+> 
+> This allows individual leds to be mapped to one ata port.
+> This is especially useful for NAS devices, which have an own led for each
+> disk slot.
+> 
+> Signed-off-by: Markus Probst <markus.probst@posteo.de>
+> ---
+>  drivers/ata/libata-core.c           |  22 +++++-
+>  drivers/leds/trigger/ledtrig-disk.c | 144 ++++++++++++++++++++++++++++++------
+>  drivers/scsi/libsas/sas_ata.c       |   3 +-
+>  include/linux/leds.h                |  16 +++-
+>  include/linux/libata.h              |   6 +-
+>  5 files changed, 161 insertions(+), 30 deletions(-)
+> 
+> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+> index 09d8c035fcdf..796c46449298 100644
+> --- a/drivers/ata/libata-core.c
+> +++ b/drivers/ata/libata-core.c
+> @@ -4921,8 +4921,10 @@ void ata_qc_complete(struct ata_queued_cmd *qc)
+>  	struct ata_device *dev = qc->dev;
+>  	struct ata_eh_info *ehi = &dev->link->eh_info;
+>  
+> +#ifdef CONFIG_LEDS_TRIGGER_DISK
+>  	/* Trigger the LED (if available) */
+> -	ledtrig_disk_activity(!!(qc->tf.flags & ATA_TFLAG_WRITE));
+> +	ledtrig_disk_activity(ap->led_trigger, !!(qc->tf.flags & ATA_TFLAG_WRITE));
+> +#endif
 
-kernel test robot noticed the following build errors:
+Please define an empty wrapper for the !CONFIG_LEDS_TRIGGER_DISK case to avoid
+adding this ifdef.
 
-[auto build test ERROR on jejb-scsi/for-next]
-[also build test ERROR on mkp-scsi/for-next linus/master v6.19-rc7 next-20260123]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+>  
+>  	/*
+>  	 * In order to synchronize EH with the regular execution path, a qc that
+> @@ -5538,10 +5540,13 @@ int sata_link_init_spd(struct ata_link *link)
+>   *	LOCKING:
+>   *	Inherited from calling layer (may sleep).
+>   */
+> -struct ata_port *ata_port_alloc(struct ata_host *host)
+> +struct ata_port *ata_port_alloc(struct ata_host *host, int port_no)
+>  {
+>  	struct ata_port *ap;
+>  	int id;
+> +#ifdef CONFIG_LEDS_TRIGGER_DISK
+> +	char name[32];
+> +#endif
+>  
+>  	ap = kzalloc(sizeof(*ap), GFP_KERNEL);
+>  	if (!ap)
+> @@ -5557,6 +5562,7 @@ struct ata_port *ata_port_alloc(struct ata_host *host)
+>  	ap->print_id = id;
+>  	ap->host = host;
+>  	ap->dev = host->dev;
+> +	ap->port_no = port_no;
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Haoxiang-Li/scsi-mpt3sas-fix-a-potential-memory-leak-in-scsih_pci_slot_reset/20260126-001420
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git for-next
-patch link:    https://lore.kernel.org/r/20260125161201.2156109-1-lihaoxiang%40isrc.iscas.ac.cn
-patch subject: [PATCH] scsi: mpt3sas: fix a potential memory leak in scsih_pci_slot_reset()
-config: s390-allmodconfig (https://download.01.org/0day-ci/archive/20260126/202601261539.Dt3EKe8y-lkp@intel.com/config)
-compiler: clang version 18.1.8 (https://github.com/llvm/llvm-project 3b5b5c1ec4a3095ab096dd780e84d7ab81f3d7ff)
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260126/202601261539.Dt3EKe8y-lkp@intel.com/reproduce)
+Please extract this change in a prep patch.
 
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202601261539.Dt3EKe8y-lkp@intel.com/
+>  
+>  	mutex_init(&ap->scsi_scan_mutex);
+>  	INIT_DELAYED_WORK(&ap->hotplug_task, ata_scsi_hotplug);
+> @@ -5579,6 +5585,11 @@ struct ata_port *ata_port_alloc(struct ata_host *host)
+>  
+>  	ata_force_pflags(ap);
+>  
+> +#ifdef CONFIG_LEDS_TRIGGER_DISK
+> +	if (snprintf(name, sizeof(name), "%s-ata%d", dev_name(host->dev), port_no) < sizeof(name))
+> +		ap->led_trigger = ledtrig_disk_trigger_register(name);
+> +#endif
 
-All errors (new ones prefixed by >>):
+Same here: please define a helper function which is void for the
+!CONFIG_LEDS_TRIGGER_DISK case. That will avoid both ifdefs here. Sprinkling
+the code with such ifdef makes maintenance a nightmare. Wrap everything to
+avoid that please.
 
->> drivers/scsi/mpt3sas/mpt3sas_scsih.c:12533:2: error: call to undeclared function 'mpt3sas_base_unmap_resources'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]
-    12533 |         mpt3sas_base_unmap_resources(ioc);
-          |         ^
-   drivers/scsi/mpt3sas/mpt3sas_scsih.c:12533:2: note: did you mean 'mpt3sas_base_map_resources'?
-   drivers/scsi/mpt3sas/mpt3sas_base.h:1700:5: note: 'mpt3sas_base_map_resources' declared here
-    1700 | int mpt3sas_base_map_resources(struct MPT3SAS_ADAPTER *ioc);
-         |     ^
-   1 error generated.
+> +
+>  	return ap;
+>  }
+>  EXPORT_SYMBOL_GPL(ata_port_alloc);
+> @@ -5588,6 +5599,10 @@ void ata_port_free(struct ata_port *ap)
+>  	if (!ap)
+>  		return;
+>  
+> +#ifdef CONFIG_LEDS_TRIGGER_DISK
+> +	ledtrig_disk_trigger_unregister(ap->led_trigger);
+> +#endif
 
+Same comment. Use a void function or null macro to define this for the
+!CONFIG_LEDS_TRIGGER_DISK case.
 
-vim +/mpt3sas_base_unmap_resources +12533 drivers/scsi/mpt3sas/mpt3sas_scsih.c
+> +
+>  	kfree(ap->pmp_link);
+>  	kfree(ap->slave_link);
+>  	ida_free(&ata_ida, ap->print_id);
+> @@ -5690,11 +5705,10 @@ struct ata_host *ata_host_alloc(struct device *dev, int n_ports)
+>  	for (i = 0; i < n_ports; i++) {
+>  		struct ata_port *ap;
+>  
+> -		ap = ata_port_alloc(host);
+> +		ap = ata_port_alloc(host, i);
+>  		if (!ap)
+>  			goto err_out;
+>  
+> -		ap->port_no = i;
+>  		host->ports[i] = ap;
+>  	}
+>  
+> diff --git a/drivers/leds/trigger/ledtrig-disk.c b/drivers/leds/trigger/ledtrig-disk.c
+> index ed5ef83a5b35..fd25b4e45fb4 100644
+> --- a/drivers/leds/trigger/ledtrig-disk.c
+> +++ b/drivers/leds/trigger/ledtrig-disk.c
 
- 12496	
- 12497	/**
- 12498	 * scsih_pci_slot_reset - Called when PCI slot has been reset.
- 12499	 * @pdev: PCI device struct
- 12500	 *
- 12501	 * Description: This routine is called by the pci error recovery
- 12502	 * code after the PCI slot has been reset, just before we
- 12503	 * should resume normal operations.
- 12504	 */
- 12505	static pci_ers_result_t
- 12506	scsih_pci_slot_reset(struct pci_dev *pdev)
- 12507	{
- 12508		struct Scsi_Host *shost;
- 12509		struct MPT3SAS_ADAPTER *ioc;
- 12510		int rc;
- 12511	
- 12512		if (_scsih_get_shost_and_ioc(pdev, &shost, &ioc))
- 12513			return PCI_ERS_RESULT_DISCONNECT;
- 12514	
- 12515		ioc_info(ioc, "PCI error: slot reset callback!!\n");
- 12516	
- 12517		ioc->pci_error_recovery = 0;
- 12518		ioc->pdev = pdev;
- 12519		pci_restore_state(pdev);
- 12520		rc = mpt3sas_base_map_resources(ioc);
- 12521		if (rc)
- 12522			return PCI_ERS_RESULT_DISCONNECT;
- 12523	
- 12524		ioc_info(ioc, "Issuing Hard Reset as part of PCI Slot Reset\n");
- 12525		rc = mpt3sas_base_hard_reset_handler(ioc, FORCE_BIG_HAMMER);
- 12526	
- 12527		ioc_warn(ioc, "hard reset: %s\n",
- 12528			 (rc == 0) ? "success" : "failed");
- 12529	
- 12530		if (!rc)
- 12531			return PCI_ERS_RESULT_RECOVERED;
- 12532	
- 12533		mpt3sas_base_unmap_resources(ioc);
- 12534		return PCI_ERS_RESULT_DISCONNECT;
- 12535	}
- 12536	
+Can you try to split this part into a prep patch to avoid mixing led code and
+ata code ?
+
+> @@ -159,20 +159,22 @@ static int ledtrig_disk_activate(struct led_classdev *led_cdev)
+>  	return 0;
+>  }
+>  
+> -static struct led_trigger ledtrig_disk = {
+> -	.name = "disk-activity",
+> -	.activate = ledtrig_disk_activate,
+> -	.groups = ledtrig_disk_groups,
+> -};
+> -static struct led_trigger ledtrig_disk_read = {
+> -	.name = "disk-read",
+> -	.activate = ledtrig_disk_activate,
+> -	.groups = ledtrig_disk_groups,
+> -};
+> -static struct led_trigger ledtrig_disk_write = {
+> -	.name = "disk-write",
+> -	.activate = ledtrig_disk_activate,
+> -	.groups = ledtrig_disk_groups,
+> +static struct ledtrig_disk_trigger ledtrig_disk = {
+> +	.all = {
+> +		.name = "disk-activity",
+> +		.activate = ledtrig_disk_activate,
+> +		.groups = ledtrig_disk_groups,
+> +	},
+> +	.read = {
+> +		.name = "disk-read",
+> +		.activate = ledtrig_disk_activate,
+> +		.groups = ledtrig_disk_groups,
+> +	},
+> +	.write = {
+> +		.name = "disk-write",
+> +		.activate = ledtrig_disk_activate,
+> +		.groups = ledtrig_disk_groups,
+> +	},
+>  };
+>  
+>  static void ledtrig_disk_blink_oneshot(struct led_trigger *trig)
+> @@ -189,21 +191,121 @@ static void ledtrig_disk_blink_oneshot(struct led_trigger *trig)
+>  	rcu_read_unlock();
+>  }
+>  
+> -void ledtrig_disk_activity(bool write)
+> +static void ledtrig_disk_trigger_activity(struct ledtrig_disk_trigger *trig, bool write)
+>  {
+> -	ledtrig_disk_blink_oneshot(&ledtrig_disk);
+> +	if (IS_ERR_OR_NULL(trig))
+> +		return;
+> +	ledtrig_disk_blink_oneshot(&trig->all);
+>  	if (write)
+> -		ledtrig_disk_blink_oneshot(&ledtrig_disk_write);
+> +		ledtrig_disk_blink_oneshot(&trig->write);
+>  	else
+> -		ledtrig_disk_blink_oneshot(&ledtrig_disk_read);
+> +		ledtrig_disk_blink_oneshot(&trig->read);
+> +}
+> +
+> +void ledtrig_disk_activity(struct ledtrig_disk_trigger *port, bool write)
+> +{
+> +	ledtrig_disk_trigger_activity(&ledtrig_disk, write);
+> +	ledtrig_disk_trigger_activity(port, write);
+>  }
+>  EXPORT_SYMBOL(ledtrig_disk_activity);
+>  
+> +struct ledtrig_disk_trigger *ledtrig_disk_trigger_register(const char *name)
+> +{
+> +	struct ledtrig_disk_trigger *trigger = kzalloc(sizeof(*trigger), GFP_KERNEL);
+> +	int ret, n;
+> +
+> +	if (!trigger)
+> +		return ERR_PTR(-ENOMEM);
+> +
+> +	trigger->all.name = kzalloc(TRIG_NAME_MAX, GFP_KERNEL);
+> +	if (!trigger->all.name) {
+> +		ret = -ENOMEM;
+> +		goto err1;
+> +	}
+> +
+> +	n = snprintf((char *)trigger->all.name, TRIG_NAME_MAX, "%s-disk-activity", name);
+> +	if (n >= TRIG_NAME_MAX) {
+> +		ret = -E2BIG;
+> +		goto err1;
+> +	}
+> +
+> +	trigger->all.activate = ledtrig_disk_activate;
+> +	trigger->all.groups = ledtrig_disk_groups;
+> +
+> +	ret = led_trigger_register(&trigger->all);
+> +	if (ret)
+> +		goto err1;
+> +
+> +	trigger->read.name = kzalloc(TRIG_NAME_MAX, GFP_KERNEL);
+> +	if (!trigger->read.name) {
+> +		ret = -ENOMEM;
+> +		goto err2;
+> +	}
+> +
+> +	n = snprintf((char *)trigger->read.name, TRIG_NAME_MAX, "%s-disk-read", name);
+> +	if (n >= TRIG_NAME_MAX) {
+> +		ret = -E2BIG;
+> +		goto err2;
+> +	}
+> +
+> +	trigger->read.activate = ledtrig_disk_activate;
+> +	trigger->read.groups = ledtrig_disk_groups;
+> +
+> +	ret = led_trigger_register(&trigger->read);
+> +	if (ret)
+> +		goto err2;
+> +
+> +	trigger->write.name = kzalloc(TRIG_NAME_MAX, GFP_KERNEL);
+> +	if (!trigger->write.name) {
+> +		ret = -ENOMEM;
+> +		goto err3;
+> +	}
+> +
+> +	n = snprintf((char *)trigger->write.name, TRIG_NAME_MAX, "%s-disk-write", name);
+> +	if (n >= TRIG_NAME_MAX) {
+> +		ret = -E2BIG;
+> +		goto err3;
+> +	}
+> +
+> +	trigger->write.activate = ledtrig_disk_activate;
+> +	trigger->write.groups = ledtrig_disk_groups;
+> +
+> +	ret = led_trigger_register(&trigger->write);
+> +	if (ret)
+> +		goto err3;
+> +
+> +	return trigger;
+> +
+> +err3:
+> +	led_trigger_unregister(&trigger->read);
+> +err2:
+> +	led_trigger_unregister(&trigger->all);
+> +err1:
+> +	kfree(trigger->all.name);
+> +	kfree(trigger->read.name);
+> +	kfree(trigger->write.name);
+> +	kfree(trigger);
+> +
+> +	return ERR_PTR(ret);
+> +}
+> +EXPORT_SYMBOL(ledtrig_disk_trigger_register);
+> +
+> +void ledtrig_disk_trigger_unregister(struct ledtrig_disk_trigger *trig)
+> +{
+> +	if (IS_ERR_OR_NULL(trig))
+> +		return;
+> +
+> +	led_trigger_unregister(&trig->all);
+> +	led_trigger_unregister(&trig->read);
+> +	led_trigger_unregister(&trig->write);
+> +}
+> +EXPORT_SYMBOL(ledtrig_disk_trigger_unregister);
+> +
+>  static int __init ledtrig_disk_init(void)
+>  {
+> -	led_trigger_register(&ledtrig_disk);
+> -	led_trigger_register(&ledtrig_disk_read);
+> -	led_trigger_register(&ledtrig_disk_write);
+> +	led_trigger_register(&ledtrig_disk.all);
+> +	led_trigger_register(&ledtrig_disk.read);
+> +	led_trigger_register(&ledtrig_disk.write);
+>  
+>  	return 0;
+>  }
+> diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
+> index bcecb4911da9..8841850684f7 100644
+> --- a/drivers/scsi/libsas/sas_ata.c
+> +++ b/drivers/scsi/libsas/sas_ata.c
+> @@ -587,14 +587,13 @@ int sas_ata_init(struct domain_device *found_dev)
+>  
+>  	ata_host_init(ata_host, ha->dev, &sas_sata_ops);
+>  
+> -	ap = ata_port_alloc(ata_host);
+> +	ap = ata_port_alloc(ata_host, 0);
+>  	if (!ap) {
+>  		pr_err("ata_port_alloc failed.\n");
+>  		rc = -ENODEV;
+>  		goto free_host;
+>  	}
+>  
+> -	ap->port_no = 0;
+>  	ap->pio_mask = ATA_PIO4;
+>  	ap->mwdma_mask = ATA_MWDMA2;
+>  	ap->udma_mask = ATA_UDMA6;
+> diff --git a/include/linux/leds.h b/include/linux/leds.h
+> index b16b803cc1ac..3221be97e9c0 100644
+> --- a/include/linux/leds.h
+> +++ b/include/linux/leds.h
+> @@ -619,10 +619,22 @@ enum led_trigger_netdev_modes {
+>  };
+>  
+>  /* Trigger specific functions */
+> +struct ledtrig_disk_trigger {
+> +	struct led_trigger all;
+> +	struct led_trigger read;
+> +	struct led_trigger write;
+> +};
+>  #ifdef CONFIG_LEDS_TRIGGER_DISK
+> -void ledtrig_disk_activity(bool write);
+> +struct ledtrig_disk_trigger *ledtrig_disk_trigger_register(const char *name);
+> +void ledtrig_disk_trigger_unregister(struct ledtrig_disk_trigger *trig);
+> +void ledtrig_disk_activity(struct ledtrig_disk_trigger *port, bool write);
+>  #else
+> -static inline void ledtrig_disk_activity(bool write) {}
+> +static inline struct ledtrig_disk_trigger *ledtrig_disk_trigger_register(const char *name)
+> +{
+> +	return ERR_PTR(-EOPNOTSUPP);
+> +}
+> +static inline void ledtrig_disk_trigger_unregister(struct ledtrig_disk_trigger *trig) {}
+> +static inline void ledtrig_disk_activity(struct ledtrig_disk_trigger *port, bool write) {}
+>  #endif
+>  
+>  #ifdef CONFIG_LEDS_TRIGGER_MTD
+> diff --git a/include/linux/libata.h b/include/linux/libata.h
+> index 39534fafa36a..50124d170d13 100644
+> --- a/include/linux/libata.h
+> +++ b/include/linux/libata.h
+> @@ -940,6 +940,10 @@ struct ata_port {
+>  #ifdef CONFIG_ATA_ACPI
+>  	struct ata_acpi_gtm	__acpi_init_gtm; /* use ata_acpi_init_gtm() */
+>  #endif
+> +
+> +#ifdef CONFIG_LEDS_TRIGGER_DISK
+> +	struct ledtrig_disk_trigger *led_trigger;
+> +#endif
+>  };
+>  
+>  /* The following initializer overrides a method to NULL whether one of
+> @@ -1307,7 +1311,7 @@ extern int sata_link_scr_lpm(struct ata_link *link, enum ata_lpm_policy policy,
+>  			     bool spm_wakeup);
+>  extern int ata_slave_link_init(struct ata_port *ap);
+>  extern void ata_port_probe(struct ata_port *ap);
+> -extern struct ata_port *ata_port_alloc(struct ata_host *host);
+> +extern struct ata_port *ata_port_alloc(struct ata_host *host, int port_no);
+>  extern void ata_port_free(struct ata_port *ap);
+>  extern int ata_tport_add(struct device *parent, struct ata_port *ap);
+>  extern void ata_tport_delete(struct ata_port *ap);
+> 
+
 
 -- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+Damien Le Moal
+Western Digital Research
