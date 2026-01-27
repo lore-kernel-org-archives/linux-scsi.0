@@ -1,28 +1,28 @@
 Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7854A32AAA5
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 784CC1E2858
 	for <linux-scsi@vger.kernel.org>; Tue, 27 Jan 2026 06:30:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769495403; cv=none; b=rmOreMBl/lLhiCnqjttGj4JssfndXVaDL74p7ZLCgIyf8UcNDtMrcTulif03z+wqHjXMaBe5B/OGFMRa5I55KZSWA6gmt0CX2Hrb8pvPBRKKKI1BOURaGynX9AAoymTDCgOW2xPz+ROnDb8+Y4c4bJ/I+jIzJg+l0P0TL1auZew=
+	t=1769495404; cv=none; b=D5+vC/vn4CemKKQFuR2CNtANtewYfD+kGrWlnOpKWyWU3AjisVd0juCcdlUQstbf+BRt2J9C5geED1llfqzey4Zzl5VB35QTcYxy2Prn1jacQPbQpK4Ll9QxgwBzSTcvpMfv+1Y3ZUmOtwFpgQV+r+1CBrSsecnTJkI8Jua593E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769495403; c=relaxed/simple;
-	bh=NKgh3Hkj/5gQkJBitSkEcln+TWr5GbQwes7T+SF2mg0=;
+	s=arc-20240116; t=1769495404; c=relaxed/simple;
+	bh=08REbb35qUt0o2HUogn2468UIDAltM5Lqc7Ti3ZOMQc=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=D6+QcKJ0hIZyn+Jx14W4IO7IGquZWNpOh+WXlHOWOFLRQOKLYTPtP6AfUeVZaluZsljKeiCaw47phwspMjW3f7q0uSp7kbIujlaSt5BTvM88vwRm6XNHA9Z0x2m7OgrFETvgFYrGptNcOujbtMNXEbKzjYjAA9Wuu8M1WfDwzZY=
+	 MIME-Version; b=H+/hdbbh86T0XLg/21Gv2d/HUduTj7hXdm9azTuI6LCaFPF8AAmK+dxjmbhqylDsglsN9gU5/6hjl0z+Gbac4iN0oYRI8/z6EW9dc7fKYjW7GoKjKYgPn46Ydg4o4hTs7GIJwN0cl3GGcH6QV4sBeYEk1MpUbeithyEEOQ3rWbg=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.198])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4f0b9M2BwBzKHMbD
+Received: from mail.maildlp.com (unknown [172.19.163.170])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4f0b9M2WhJzKHMKQ
 	for <linux-scsi@vger.kernel.org>; Tue, 27 Jan 2026 14:29:43 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id D6BEE40577
+	by mail.maildlp.com (Postfix) with ESMTP id E198B4056B
 	for <linux-scsi@vger.kernel.org>; Tue, 27 Jan 2026 14:29:53 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.50.87.129])
-	by APP4 (Coremail) with SMTP id gCh0CgAXxfVZW3hpL_QVFQ--.16598S6;
-	Tue, 27 Jan 2026 14:29:51 +0800 (CST)
+	by APP4 (Coremail) with SMTP id gCh0CgAXxfVZW3hpL_QVFQ--.16598S7;
+	Tue, 27 Jan 2026 14:29:53 +0800 (CST)
 From: Yang Erkun <yangerkun@huawei.com>
 To: bvanassche@acm.org,
 	dgilbert@interlog.com,
@@ -31,9 +31,9 @@ To: bvanassche@acm.org,
 	linux-scsi@vger.kernel.org
 Cc: yangerkun@huawei.com,
 	yangerkun@huaweicloud.com
-Subject: [PATCH v2 2/3] scsi: sg: Resolve soft lockup issue when opening /dev/sgX
-Date: Tue, 27 Jan 2026 14:20:43 +0800
-Message-Id: <20260127062044.3034148-3-yangerkun@huawei.com>
+Subject: [PATCH v2 3/3] scsi: sg: Remove deprecated sg-big-buff
+Date: Tue, 27 Jan 2026 14:20:44 +0800
+Message-Id: <20260127062044.3034148-4-yangerkun@huawei.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20260127062044.3034148-1-yangerkun@huawei.com>
 References: <20260127062044.3034148-1-yangerkun@huawei.com>
@@ -44,13 +44,13 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgAXxfVZW3hpL_QVFQ--.16598S6
-X-Coremail-Antispam: 1UD129KBjvJXoWxuF18ArW5WF15ZFW5trykAFb_yoW5Gw4DpF
-	WxJa45ArWUGrsF9r4ftrWUAF98ua9aqrWakFZ3X343ZFs8X34SvF18JFyYvrW5GrZ5Wr1j
-	qF1DZw1rua47JFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+X-CM-TRANSID:gCh0CgAXxfVZW3hpL_QVFQ--.16598S7
+X-Coremail-Antispam: 1UD129KBjvJXoWxur48AryUuFWftrykZFy5urg_yoWrKry7pF
+	Wa9r4IvrW5Wr18Grs8tFWDAFy5uasrt3429FZ7Z34avF1UGr9IqF1fJFyIqFW3GrZ5Ga18
+	Jw1DZa4ru3yUJaDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
 	9KBjDU0xBIdaVrnRJUUUHSb4IE77IF4wAFF20E14v26rWj6s0DM7CY07I20VC2zVCF04k2
-	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUXw
-	A2048vs2IY020Ec7CjxVAFwI0_Gr0_Xr1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxS
+	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUWw
+	A2048vs2IY020Ec7CjxVAFwI0_Xr0E3s1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxS
 	w2x7M28EF7xvwVC0I7IYx2IY67AKxVWDJVCq3wA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxV
 	W8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v2
 	6rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMc
@@ -61,95 +61,149 @@ X-Coremail-Antispam: 1UD129KBjvJXoWxuF18ArW5WF15ZFW5trykAFb_yoW5Gw4DpF
 	AFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUAVWUtwCI
 	c40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267
 	AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_
-	Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7IU8ha9D
+	Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7IU1sqXP
 	UUUUU==
 Sender: yangerkun@huaweicloud.com
 X-CM-SenderInfo: 51dqwvhunx0q5kxd4v5lfo033gof0z/
 
-The parameter def_reserved_size defines the default buffer size reserved
-for each Sg_fd and should be restricted to a range between 0 and
-1,048,576 (see https://tldp.org/HOWTO/SCSI-Generic-HOWTO/proc.html).
-Although the function sg_proc_write_dressz enforces this limit, it is
-possible to bypass it by directly modifying the module parameter as
-shown below, which then causes a soft lockup:
+These deprecated sysctl has been broken since commit 26d1c80fd61e5
+("scsi/sg: move sg-big-buff sysctl to scsi/sg.c") and nobody has found
+this. I believe it's time to remove it, which will allow us to clean
+up a significant amount of code.
 
-echo -1 > /sys/module/sg/parameters/def_reserved_size
-exec 4<> /dev/sg0
-
-watchdog: BUG: soft lockup - CPU#5 stuck for 26 seconds! [bash:537]
-Modules loaded:
-CPU: 5 UID: 0 PID: 537 Command: bash, kernel version 6.19.0-rc3+ #134,
-PREEMPT disabled
-Hardware: QEMU Standard PC (i440FX + PIIX, 1996), BIOS version
-1.16.1-2.fc37 dated 04/01/2014
-...
-Call Trace:
-
-  sg_build_reserve+0x5c/0xa0
-  sg_add_sfp+0x168/0x270
-  sg_open+0x16e/0x340
-  chrdev_open+0xbe/0x230
-  do_dentry_open+0x175/0x480
-  vfs_open+0x34/0xf0
-  do_open+0x265/0x3d0
-  path_openat+0x110/0x290
-  do_filp_open+0xc3/0x170
-  do_sys_openat2+0x71/0xe0
-  __x64_sys_openat+0x6d/0xa0
-  do_syscall_64+0x62/0x310
-  entry_SYSCALL_64_after_hwframe+0x76/0x7e
-
-The fix is to use module_param_cb to validate and reject invalid values
-assigned to def_reserved_size.
-
-Fixes: 6460e75a104d ("[SCSI] sg: fixes for large page_size")
 Signed-off-by: Yang Erkun <yangerkun@huawei.com>
 ---
- drivers/scsi/sg.c | 29 +++++++++++++++++++++++++++--
- 1 file changed, 27 insertions(+), 2 deletions(-)
+ drivers/scsi/sg.c | 59 +++++++++--------------------------------------
+ 1 file changed, 11 insertions(+), 48 deletions(-)
 
 diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index c93cc9323f56..21c3962ee1cb 100644
+index 21c3962ee1cb..ff66613f418f 100644
 --- a/drivers/scsi/sg.c
 +++ b/drivers/scsi/sg.c
-@@ -1621,10 +1621,35 @@ sg_remove_device(struct device *cl_dev)
+@@ -81,14 +81,14 @@ static int sg_proc_init(void);
+ 
+ #define SG_DEFAULT_TIMEOUT mult_frac(SG_DEFAULT_TIMEOUT_USER, HZ, USER_HZ)
+ 
+-static int sg_big_buff = SG_DEF_RESERVED_SIZE;
+ /* N.B. This variable is readable and writeable via
+-   /proc/scsi/sg/def_reserved_size . Each time sg_open() is called a buffer
+-   of this size (or less if there is not enough memory) will be reserved
+-   for use by this file descriptor. [Deprecated usage: this variable is also
+-   readable via /proc/sys/kernel/sg-big-buff if the sg driver is built into
+-   the kernel (i.e. it is not a module).] */
+-static int def_reserved_size = -1;	/* picks up init parameter */
++ * /proc/scsi/sg/def_reserved_size . Each time sg_open() is called a buffer
++ * of this size (or less if there is not enough memory) will be reserved
++ * for use by this file descriptor.
++ */
++
++/* picks up init parameter */
++static int def_reserved_size = SG_DEF_RESERVED_SIZE;
+ static int sg_allow_dio = SG_ALLOW_DIO_DEF;
+ 
+ static int scatter_elem_sz = SG_SCATTER_SZ;
+@@ -1661,35 +1661,6 @@ MODULE_PARM_DESC(scatter_elem_sz, "scatter gather element "
+ MODULE_PARM_DESC(def_reserved_size, "size of buffer reserved for each fd");
+ MODULE_PARM_DESC(allow_dio, "allow direct I/O (default: 0 (disallow))");
+ 
+-#ifdef CONFIG_SYSCTL
+-#include <linux/sysctl.h>
+-
+-static const struct ctl_table sg_sysctls[] = {
+-	{
+-		.procname	= "sg-big-buff",
+-		.data		= &sg_big_buff,
+-		.maxlen		= sizeof(int),
+-		.mode		= 0444,
+-		.proc_handler	= proc_dointvec,
+-	},
+-};
+-
+-static struct ctl_table_header *hdr;
+-static void register_sg_sysctls(void)
+-{
+-	if (!hdr)
+-		hdr = register_sysctl("kernel", sg_sysctls);
+-}
+-
+-static void unregister_sg_sysctls(void)
+-{
+-	unregister_sysctl_table(hdr);
+-}
+-#else
+-#define register_sg_sysctls() do { } while (0)
+-#define unregister_sg_sysctls() do { } while (0)
+-#endif /* CONFIG_SYSCTL */
+-
+ static int __init
+ init_sg(void)
+ {
+@@ -1699,10 +1670,6 @@ init_sg(void)
+ 		scatter_elem_sz = PAGE_SIZE;
+ 		scatter_elem_sz_prev = scatter_elem_sz;
+ 	}
+-	if (def_reserved_size >= 0)
+-		sg_big_buff = def_reserved_size;
+-	else
+-		def_reserved_size = sg_big_buff;
+ 
+ 	rc = register_chrdev_region(MKDEV(SCSI_GENERIC_MAJOR, 0), 
+ 				    SG_MAX_DEVS, "sg");
+@@ -1714,7 +1681,6 @@ init_sg(void)
+ 	sg_sysfs_valid = 1;
+ 	rc = scsi_register_interface(&sg_interface);
+ 	if (0 == rc) {
+-		register_sg_sysctls();
+ #ifdef CONFIG_SCSI_PROC_FS
+ 		sg_proc_init();
+ #endif				/* CONFIG_SCSI_PROC_FS */
+@@ -1729,7 +1695,6 @@ init_sg(void)
+ static void __exit
+ exit_sg(void)
+ {
+-	unregister_sg_sysctls();
+ #ifdef CONFIG_SCSI_PROC_FS
+ 	remove_proc_subtree("scsi/sg", NULL);
+ #endif				/* CONFIG_SCSI_PROC_FS */
+@@ -2205,10 +2170,8 @@ sg_add_sfp(Sg_device * sdp)
+ 	write_unlock_irqrestore(&sdp->sfd_lock, iflags);
+ 	SCSI_LOG_TIMEOUT(3, sg_printk(KERN_INFO, sdp,
+ 				      "sg_add_sfp: sfp=0x%p\n", sfp));
+-	if (unlikely(sg_big_buff != def_reserved_size))
+-		sg_big_buff = def_reserved_size;
+ 
+-	bufflen = min_t(int, sg_big_buff,
++	bufflen = min_t(int, def_reserved_size,
+ 			max_sectors_bytes(sdp->device->request_queue));
+ 	sg_build_reserve(sfp, bufflen);
+ 	SCSI_LOG_TIMEOUT(3, sg_printk(KERN_INFO, sdp,
+@@ -2436,7 +2399,7 @@ sg_proc_write_adio(struct file *filp, const char __user *buffer,
+ 
+ static int sg_proc_single_open_dressz(struct inode *inode, struct file *file)
+ {
+-	return single_open(file, sg_proc_seq_show_int, &sg_big_buff);
++	return single_open(file, sg_proc_seq_show_int, &def_reserved_size);
  }
  
- module_param_named(scatter_elem_sz, scatter_elem_sz, int, S_IRUGO | S_IWUSR);
--module_param_named(def_reserved_size, def_reserved_size, int,
--		   S_IRUGO | S_IWUSR);
- module_param_named(allow_dio, sg_allow_dio, int, S_IRUGO | S_IWUSR);
+ static ssize_t 
+@@ -2453,7 +2416,7 @@ sg_proc_write_dressz(struct file *filp, const char __user *buffer,
+ 	if (err)
+ 		return err;
+ 	if (k <= 1048576) {	/* limit "big buff" to 1 MB */
+-		sg_big_buff = k;
++		def_reserved_size = k;
+ 		return count;
+ 	}
+ 	return -ERANGE;
+@@ -2626,7 +2589,7 @@ static int sg_proc_seq_show_debug(struct seq_file *s, void *v)
  
-+static int def_reserved_size_set(const char *val, const struct kernel_param *kp)
-+{
-+	int size, ret;
-+
-+	if (!val)
-+		return -EINVAL;
-+
-+	ret = kstrtoint(val, 0, &size);
-+	if (ret)
-+		return ret;
-+
-+	/* limit to 1 MB */
-+	if (size < 0 || size > 1048576)
-+		return -ERANGE;
-+
-+	def_reserved_size = size;
-+	return 0;
-+}
-+
-+static const struct kernel_param_ops def_reserved_size_ops = {
-+	.set	= def_reserved_size_set,
-+	.get	= param_get_int,
-+};
-+
-+module_param_cb(def_reserved_size, &def_reserved_size_ops, &def_reserved_size,
-+		   S_IRUGO | S_IWUSR);
-+
- MODULE_AUTHOR("Douglas Gilbert");
- MODULE_DESCRIPTION("SCSI generic (sg) driver");
- MODULE_LICENSE("GPL");
+ 	if (it && (0 == it->index))
+ 		seq_printf(s, "max_active_device=%d  def_reserved_size=%d\n",
+-			   (int)it->max, sg_big_buff);
++			   (int)it->max, def_reserved_size);
+ 
+ 	read_lock_irqsave(&sg_index_lock, iflags);
+ 	sdp = it ? sg_lookup_dev(it->index) : NULL;
 -- 
 2.39.2
 
