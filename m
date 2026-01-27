@@ -1,85 +1,113 @@
-Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f202.google.com (mail-pf1-f202.google.com [209.85.210.202])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D385F306B1B
-	for <linux-scsi@vger.kernel.org>; Mon, 26 Jan 2026 22:27:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.14
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4F8D3242D76
+	for <linux-scsi@vger.kernel.org>; Tue, 27 Jan 2026 01:27:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.202
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769466474; cv=none; b=E0EOsQo3WPQTHrjaDpD8d4DaFqfLVNeynLij9wP4xHw1hTfyPF8d+7okPo3i632C/LRppX71IiU9Ekz5ng6ZWwr2yz1cY9np2/bwMBkELbsKqpvyophkgrzu2myeVI/DvNXjRUfmnfKPJpqkDCa967qVY3MtGEExl0JSsCvra6k=
+	t=1769477236; cv=none; b=GP+jmN4LziMaLybQKyCC5Y3hiqFMP8auGwuvoWY2n6hdnNoF2ylJ2jlQdCIe4UKR6AB9OG77XRt83/TJjUq+w13KA8816dzGlzRFoLhIIeg+MYOCBQXsl15K8lb6Xu+L9j0/GYdRj1zPv1kOkTvDwz8MKOvt/62TneKUCex0V4c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769466474; c=relaxed/simple;
-	bh=lFwO/XRKtNMnypPwC5IHo/imhAP9FHFENLVsrZ5m9B4=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=ZMfkgK9wJT8eCJPgQDrzSVvjEGcp1OO4hnYQLxbyhiZY2TMNGw8hr+6ZUOXb/txhySlI4fkRMctZ4FnSbVK7JlQCjBIZ3UHH3J3xXlgn5/+fYcFPSgUnLUjsEcKU+z3EoX2408gAS2QR/I54G0cXEZnklsIewcg6XO3yVx98vK8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=MhfJ+2Mp; arc=none smtp.client-ip=199.89.1.14
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1769477236; c=relaxed/simple;
+	bh=2PkusNBvCXPAaSE7WSYZ8b1NjsEsw/WwT2shsz++lr4=;
+	h=Date:Mime-Version:Message-ID:Subject:From:Cc:Content-Type; b=OOzXPEQJiLyPZZaCFi2RwDODrhpqxNgbhfg6lwJ4ZvoDs/zcTYZ6gcLXy7mT6IHR8RWKT2wfBELfCaES5qxs7d+5BykiJcmX0l84EYvUnTcOSdxVp1895rbMHq/uOk81oQHb4Dlx+YvW1ZaHoaus2EaytC4Qhd8zCiBVL8xYxXI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--thomasyen.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=07SKOVP/; arc=none smtp.client-ip=209.85.210.202
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--thomasyen.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="MhfJ+2Mp"
-Received: from localhost (localhost [127.0.0.1])
-	by 011.lax.mailroute.net (Postfix) with ESMTP id 4f0NTN2hV4z1XLwWp;
-	Mon, 26 Jan 2026 22:27:52 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1769466470; x=1772058471; bh=lFwO/XRKtNMnypPwC5IHo/im
-	hAP9FHFENLVsrZ5m9B4=; b=MhfJ+2MpdmWxsG9J6GTCLD2+SxkUgBjQ/FGgLoEN
-	oDmjTb3aWT2dT9PX5VTbuwHPyiac3RdPP9yzVmZe7R/NnDJHwkhK2v4kVq6Q2wjV
-	Q7tuNtvaqreSdrwB5EPjXEqxhNa9ox+hXIY8YbqDy1R6kirh01W2xnnm75Dby/Lb
-	dsnFoEX70M5W4kXD/uE7W6z61QGcor7KrE9UduyB7WhFqUr5BENY1eAeoXtMnmO9
-	/UVcislAp2JorVA+FKaQPHCav9EWjl7cfU0iicCXm4XHnOLAUGzS8NrFOkMs3HZe
-	fdziodFAlthmiOzaSxoSqspUMEHMlwDRJLp5gr9rTY0ypA==
-X-Virus-Scanned: by MailRoute
-Received: from 011.lax.mailroute.net ([127.0.0.1])
- by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id URdYttsiJszn; Mon, 26 Jan 2026 22:27:50 +0000 (UTC)
-Received: from [100.119.48.131] (unknown [104.135.180.219])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4f0NTK58XQz1XM5kD;
-	Mon, 26 Jan 2026 22:27:49 +0000 (UTC)
-Message-ID: <25f3e3af-5a38-4e86-97c4-80c8fa2a1f90@acm.org>
-Date: Mon, 26 Jan 2026 14:27:48 -0800
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="07SKOVP/"
+Received: by mail-pf1-f202.google.com with SMTP id d2e1a72fcca58-81d9b88caf2so3690241b3a.1
+        for <linux-scsi@vger.kernel.org>; Mon, 26 Jan 2026 17:27:15 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20230601; t=1769477235; x=1770082035; darn=vger.kernel.org;
+        h=cc:from:subject:message-id:mime-version:date:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=164t62qeBCYmLeLaFusukV4c4GOaOGQY6hBpjpPEgbk=;
+        b=07SKOVP/wWQwOeO1sw12rFVja1wXjqw7V8WdnIy31DuA2ET/jcLs8eDKzYgmlDu/Ne
+         HKP6nsRxu9ZAVx1rI9K1Jng1A7p8qu7JAtQR115DnGdNJ8Kr6K9EmNSZauxqEcIp/UeP
+         BnNcRHA1OvhO8yFWpSB7AOg1xHSyJfVflDYea0ihwR1TalkdR5HqX4+ZVK4cckLi5tEg
+         5giF/J2tkRJMLsrjMh79HcLcP+t8iv0+XckgPYkxIOvY4eWMmJidhE3itQTozqUHoqP+
+         5Mt9HS+FevcoQCWjZh11i0rBeoS5+4Mn+j0119saio93ib4ZU+tKrqZKDmNWLgtERtXC
+         JYXQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1769477235; x=1770082035;
+        h=cc:from:subject:message-id:mime-version:date:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=164t62qeBCYmLeLaFusukV4c4GOaOGQY6hBpjpPEgbk=;
+        b=t+5MlyHjSxZjBRUVLriOiLIjI4qjVofBcYCUKU/jwPNWWPKMnqyJbqLk1TtXugvY0i
+         oYt7hy2K1Hu59Zu91SGPLoy2wxHVhmXdj0EryB9jJAr2uos6RSIPHFD2HkYg1/wwUwDi
+         0BYXsbt8b5gzMIX+S05YAJnBTuz94Atfez9YuutvhLgR6Pz/1Vw9/BuNtZ0BrDyY+VS0
+         UDH3FMLpILz7cmcrhRtGTfsBq533zXxyCfqBzuonAJo4/ZT6sNyRvsiyNWYVImtR1pVX
+         35CZ88QO1dkleiF2VYZlH99J5hTf/8kpezsxr2aJsALO9xd/Eukbt2SuKxlgJRyS8PXm
+         czYw==
+X-Forwarded-Encrypted: i=1; AJvYcCU69OO+rL8Q/drytKMHrWrJxvAd+C8WXrumZTNdsYuYCijbxqCvJNgLx5BR6qq6YQiyL87lgZrx+lDW@vger.kernel.org
+X-Gm-Message-State: AOJu0YzvaJlpeW6J1qrx+kdzFePGS6MfZ+SHk01D7snv1gVq9o2Mk9lV
+	lQjj/EbymOtAtuDqL5CzdbYpA/trsBrAAuOHSrHd7KDg9HmUcmkmW9S0ZOWz5xvXUShuK8LpZw3
+	+7dbqFa/omoKnjI1Cvw==
+X-Received: from pfbhw19.prod.google.com ([2002:a05:6a00:8913:b0:7e2:fa44:4fac])
+ (user=thomasyen job=prod-delivery.src-stubby-dispatcher) by
+ 2002:a05:6a00:2e1b:b0:821:81aa:add with SMTP id d2e1a72fcca58-823691c12e3mr180205b3a.31.1769477234543;
+ Mon, 26 Jan 2026 17:27:14 -0800 (PST)
+Date: Tue, 27 Jan 2026 09:26:45 +0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 0/7] ufs: Remove the clock gating code
-To: =?UTF-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= <peter.wang@mediatek.com>,
- "mani@kernel.org" <mani@kernel.org>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
- "nitin.rawat@oss.qualcomm.com" <nitin.rawat@oss.qualcomm.com>,
- "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
- "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-References: <20260116182628.3255116-1-bvanassche@acm.org>
- <r3upegmcqg5fxo22u63dwtwrlc7qpwi57drlvujtw4jkbinx7f@xluie2klyr55>
- <cb72534c1eac0740e24eed7ca4207371f55bb273.camel@mediatek.com>
- <1ebc9a1e-c36e-4d9b-a695-a6153a32e0c0@acm.org>
- <2798fa37f745f9d91757f5097e158c61f72bc835.camel@mediatek.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <2798fa37f745f9d91757f5097e158c61f72bc835.camel@mediatek.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: quoted-printable
+Mime-Version: 1.0
+X-Mailer: git-send-email 2.52.0.457.g6b5491de43-goog
+Message-ID: <20260127012700.3311649-1-thomasyen@google.com>
+Subject: [PATCH v2 1/1] scsi: ufs: core: Flush exception handling work when
+ RPM level is zero
+From: Thomas Yen <thomasyen@google.com>
+Cc: Thomas Yen <thomasyen@google.com>, Stable Tree <stable@vger.kernel.org>, 
+	Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>, 
+	Bart Van Assche <bvanassche@acm.org>, 
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
+	"Martin K. Petersen" <martin.petersen@oracle.com>, Peter Wang <peter.wang@mediatek.com>, 
+	Bean Huo <beanhuo@micron.com>, Adrian Hunter <adrian.hunter@intel.com>, 
+	"Bao D. Nguyen" <quic_nguyenb@quicinc.com>, 
+	"open list:UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER" <linux-scsi@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 
-On 1/25/26 7:44 PM, Peter Wang (=E7=8E=8B=E4=BF=A1=E5=8F=8B) wrote:
-> This is true when it comes to power saving, but not when it comes to=20
-> performance. UFS resume takes more time than simply turning the
-> clock on.
-Hi Peter,
+Ensure that the exception event handling work (&hba->eeh_work) is
+explicitly flushed during suspend when the runtime power management
+level (rpm_lvl) is set to UFS_PM_LVL_0.
 
-It seems to me that there is insufficient consensus to proceed with the
-current form of this patch series. I will look into moving the clock
-gating code into the runtime suspend and resume callbacks without
-affecting the behavior of the UFS driver.
+When the RPM level is zero, the device power mode remains active and the
+link remains in an active state. In this specific configuration, the UFS
+core driver previously bypassed the flushing of exception event handling
+jobs. This created a race condition where the driver could attempt to
+access the host controller to handle an exception after the system had
+already entered a deep power-down state, leading to a system crash.
 
-Thanks,
+By explicitly flushing this work before the suspend callback proceeds,
+pending exception handling tasks are guaranteed to complete, preventing
+illegal hardware access during the power-down sequence.
 
-Bart.
+Signed-off-by: Thomas Yen <thomasyen@google.com>
+Cc: Stable Tree <stable@vger.kernel.org>
+---
+v2:
+ - Add Cc: stable tag.
+ - Reformat commit message text for better line wrapping.
+
+ drivers/ufs/core/ufshcd.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 0369043ca010..3a0e6c9ba86a 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -9997,6 +9997,7 @@ static int __ufshcd_wl_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+ 
+ 	if (req_dev_pwr_mode == UFS_ACTIVE_PWR_MODE &&
+ 			req_link_state == UIC_LINK_ACTIVE_STATE) {
++		flush_work(&hba->eeh_work);
+ 		goto vops_suspend;
+ 	}
+ 
+
+base-commit: a48ca06cf343423faa01c573aeafba9fa5f92577
+-- 
+2.52.0.457.g6b5491de43-goog
 
