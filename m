@@ -1,202 +1,191 @@
-Received: from mout02.posteo.de (mout02.posteo.de [185.67.36.66])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-yx1-f41.google.com (mail-yx1-f41.google.com [74.125.224.41])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 005DC2EAB64
-	for <linux-scsi@vger.kernel.org>; Tue, 27 Jan 2026 15:34:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.67.36.66
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B80DC2EC0AA
+	for <linux-scsi@vger.kernel.org>; Tue, 27 Jan 2026 18:03:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.224.41
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769528062; cv=none; b=UtIvDesySfIJ9mj59aIMn8oUtlOvxVPKgNNSuFyhX0G87shkWXwCWb/2xJSsmiwHav4Flz2pUDC++j5rMs1xPefyzrDJp6dhs0sycSjuIsS4mDlymof1Qd6AfehVnjBLYF7AKsesfKOZxAymMuKP8vljlbstuc37mswLrtqQ/+0=
+	t=1769537037; cv=none; b=VjyFqitXCkaYqKkNEC2EDQ+Oa91iQ1WgX9+71mS/eZ8gryInsLeAHcw2MaR+MK2tX+EDbjwo76aiUMPTV/QtADIYGWckshigM0VppPKqyPh1GGEzwpjaSb1c5on5TV6ftinNmruUJYJdsb3IGYVW4vYWCPbZx25kgZZirl1Xx0g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769528062; c=relaxed/simple;
-	bh=DQ2F9P8gXel5sqSxKC7vJrPwpNY2sFgwvFDvzLpmLHk=;
+	s=arc-20240116; t=1769537037; c=relaxed/simple;
+	bh=PaYS45mgcByiPEFKsFUr7GpvQrXjsdkBjJYrXKyAauc=;
 	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=C5PycqTMixLC0iDU+9JKfVW19+ogHXmz3tx7CIiwZ1QOaJ+9K/nR1Q6Cd1LQJox6jxmCUE33rjkjjEX5nkC0kzl95MLzA0urOhyPd+DmapdL9wbGoTj8bHggiB2vtEAX8FxCosmuWnqm7NMUWi4uRm/cyHUqK/iuJrJoCKOvev8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de; spf=pass smtp.mailfrom=posteo.de; dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b=YrDjqjod; arc=none smtp.client-ip=185.67.36.66
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=posteo.de
+	 Content-Type:MIME-Version; b=dAOhVdnbjsrx43OF4Ggczp3GSHqeu5fvsG59uXx/xTMn4x1l4JSDFX/gIp+y8aTt9SnKdo8CDU5hKmQxogPqkpBSKiozAbhbJhiNhBtJXJOLcgqH1nJtRVGyxr1KNZHPlq75BgNcMIbxqHBvEFyBAUVfeP5eg6dMgMem8OavMXc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=dubeyko.com; spf=pass smtp.mailfrom=dubeyko.com; dkim=pass (2048-bit key) header.d=dubeyko-com.20230601.gappssmtp.com header.i=@dubeyko-com.20230601.gappssmtp.com header.b=WYZwojb1; arc=none smtp.client-ip=74.125.224.41
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=dubeyko.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=dubeyko.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b="YrDjqjod"
-Received: from submission (posteo.de [185.67.36.169]) 
-	by mout02.posteo.de (Postfix) with ESMTPS id 5686D240105
-	for <linux-scsi@vger.kernel.org>; Tue, 27 Jan 2026 16:34:12 +0100 (CET)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=posteo.de; s=2017;
-	t=1769528052; bh=DQ2F9P8gXel5sqSxKC7vJrPwpNY2sFgwvFDvzLpmLHk=;
-	h=Message-ID:Subject:From:To:Cc:Date:Autocrypt:Content-Type:
-	 MIME-Version:OpenPGP:From;
-	b=YrDjqjodyTN2o1jhx3pYdrRv4p1dpea4aVqvN3P6yD10/jlRfBL1QgA0CAzwttAIU
-	 VcsgjRBKH1nFKRVh0eTwW+uEYAjRbtD8+ZgC/29Q2QJHTeUtA2KE/xVE9l/t8A++NS
-	 /ymidxlXfweavFOuK8QrjfYGxYqbiZ979htB+VC8aY+iryVkw3+TL8b3cgx1NrpOdl
-	 ERP9wl6siAM200TuzFUBuHZc9jmcP2Ja2cm3pZuwBqkaqDNKLNlep4FQgmZ8XytzGe
-	 anF6dqRRSK9T1i7kUVG3aqsitbAPw2W+TosT0doxaVZgXiPQsMDGeoR/gPE5xAVpyj
-	 AnTiIOSvVQeuQ==
-Received: from customer (localhost [127.0.0.1])
-	by submission (posteo.de) with ESMTPSA id 4f0qFY3Lk8z9rxN;
-	Tue, 27 Jan 2026 16:34:09 +0100 (CET)
-Message-ID: <20f855baaa7c36010eab9997a2f43b4f62be726b.camel@posteo.de>
-Subject: Re: [PATCH RFC 0/4] leds: extend disk trigger
-From: Markus Probst <markus.probst@posteo.de>
-To: Niklas Cassel <cassel@kernel.org>
-Cc: Lee Jones <lee@kernel.org>, Pavel Machek <pavel@kernel.org>, Rob Herring
-	 <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley	
- <conor+dt@kernel.org>, Jacek Anaszewski <jacek.anaszewski@gmail.com>,
- Damien Le Moal <dlemoal@kernel.org>, John Garry <john.g.garry@oracle.com>,
- Jason Yan <yanaijie@huawei.com>,  "James E.J. Bottomley"
- <James.Bottomley@hansenpartnership.com>, "Martin K. Petersen"
- <martin.petersen@oracle.com>, Pavel Machek	 <pavel@ucw.cz>,
- linux-leds@vger.kernel.org, devicetree@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, 
-	linux-scsi@vger.kernel.org, Ian Pilcher <arequipeno@gmail.com>
-Date: Tue, 27 Jan 2026 15:34:11 +0000
-In-Reply-To: <aXiGNZm12vLhQJ4Q@fedora>
-References: <20260123-ledtrig_disk_-v1-0-07004756467b@posteo.de>
-	 <aXctPaaXFYemV20T@ryzen>
-	 <ce454969b83dbb0e3bb4ea78f682603cc328ceb9.camel@posteo.de>
-	 <aXiGNZm12vLhQJ4Q@fedora>
-Autocrypt: addr=markus.probst@posteo.de; prefer-encrypt=mutual;
- keydata=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
- jfGillcaQOqFZ3WwVqyzG1BUfTow==
-Content-Type: multipart/signed; micalg="pgp-sha256";
-	protocol="application/pgp-signature"; boundary="=-95wXs24+lMxxeIwklhSG"
+	dkim=pass (2048-bit key) header.d=dubeyko-com.20230601.gappssmtp.com header.i=@dubeyko-com.20230601.gappssmtp.com header.b="WYZwojb1"
+Received: by mail-yx1-f41.google.com with SMTP id 956f58d0204a3-649523de905so147579d50.1
+        for <linux-scsi@vger.kernel.org>; Tue, 27 Jan 2026 10:03:55 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=dubeyko-com.20230601.gappssmtp.com; s=20230601; t=1769537034; x=1770141834; darn=vger.kernel.org;
+        h=mime-version:user-agent:content-transfer-encoding:autocrypt
+         :references:in-reply-to:date:cc:to:from:subject:message-id:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=PaYS45mgcByiPEFKsFUr7GpvQrXjsdkBjJYrXKyAauc=;
+        b=WYZwojb1GRGHLjgA80J99/Eafib/dgVxKDW3UbVQskFwMf8BPxUmHf9IO1YdTB5NLR
+         u3SriWq5SBaGHbY5Q4M7OdfX0B0S6E4eEaBuO2Fa62Qej1E3TgBiVRZSvLmdh+AphKCT
+         m70itLb7N4kzFk73d8uEleLJGgg+8Iqi5PidROrLh+DMIP+j4R8a8DOCOcdUJEt68xiD
+         0M84s5UpcGN/gEaANUPcK3x0Tg9ZYQ+y6RdF8ageZePFYIUesyr9uuqAlRKhRlzmE56i
+         BAfkyaFzYMHoH1DGzjnrRO9VWxdPUeJ1Yd2EKPX0FE6biy0fSWoUenHQkI0P/l2vhMZH
+         URVw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1769537034; x=1770141834;
+        h=mime-version:user-agent:content-transfer-encoding:autocrypt
+         :references:in-reply-to:date:cc:to:from:subject:message-id:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=PaYS45mgcByiPEFKsFUr7GpvQrXjsdkBjJYrXKyAauc=;
+        b=bjLaFbdBN5gNiXSr2mTTYvug6PzdKQO3NGzDr3ktAaTKyyaZPKKjdRvDkt0Nsmb9v6
+         jvdRL2v4y+usRZFyQjtbPp246/Vqqs21L7TQf6+Jfs79kRZTMPkMfvj+3eVJ74AQFy0T
+         /SXjXJ4s0Q562WDru7JoD/sBwdB+OPH01BBROOZATL1RjDLmzrFTAhCUBXVhEItUbq6z
+         /ApxefIlSdoTIQQSJsI19SEdz6zw6BUOms2UItGQFW6xGTJOZLKgZOsjQsMMPIzYXkq3
+         3ri0ry90qYLseflhPKv26htn4uOVZK5uIZDxeTg8JlfgJooDNUo2sckEVPcZ0PNdv0Mq
+         OKgg==
+X-Forwarded-Encrypted: i=1; AJvYcCWN9jej8FYsa7ucjTKOcWytVQjRWK1GjGwW5nPOt4vIILwxbuieLxpmA86wyG/T+Y8z6f9urlmm/DKb@vger.kernel.org
+X-Gm-Message-State: AOJu0YzUnTJAJUpfNKxMPrBsinxZhHbJ0wXs2XgP9967pZN7zFq/Nv3X
+	rWAlNOjOJr3eHOxlxWVY36f9YA8E6jm9YGvcQyflrAfqv81srzXdFsZ++LvekA7BFOfQOcltt3b
+	QPRyY0uc=
+X-Gm-Gg: AZuq6aKvgyHOnZ21APYRcr+w9BEpD0i4X9kV/CpJrLBQb36+iBzNv6q++1Vxfez5IQr
+	Utgv+DHZ9DdMPqVYpU33ngQsaWVGJalBldHoBIYxbhxogQvCTLvbWWz0a5l95SzlAAoTgmC20H1
+	6J23izmGJENiPjYDf/rDRh4M39YXBKjK54BMX9rWYPG48qSqZvddaskra2P7QIbaVAlPCO9eSrO
+	LNi9eh6tXUEqPrx+6aiTsMtGDABOn0Rq3oy9D4+lGdUC0Zxid8B9OX+wxv49Xyn7SZ0D7IUjWqO
+	Sx78QjSCt6bw9yUOQTmM22+z78A6aRe0A2/tJ3vMqEul1q6JXB9P0KCYFIXy6DdSL22CDQiqjYQ
+	JIW+E1Ix7+u9MddhxGDk7dx26/s9ssFSJN+Pd2k2GJSapgzYlfUvLZ56hmVlXsrANViERermHGQ
+	Ql9ygqCj0CrtsvLle7u8iouhb6o31TDRcpxALhJmFijyojEJC0/+2elHFFyspmE31DPN9/pjlbz
+	SrVw17mhDZwpdWwwy9+XASm11ORbA==
+X-Received: by 2002:a05:690e:d08:b0:649:5789:ded with SMTP id 956f58d0204a3-6498fb06c9fmr1668118d50.29.1769537034520;
+        Tue, 27 Jan 2026 10:03:54 -0800 (PST)
+Received: from unknown207bd2cf251a.attlocal.net ([2600:1700:6476:1430:99d0:666f:c9ab:3bf0])
+        by smtp.gmail.com with ESMTPSA id 00721157ae682-79482762dfdsm473777b3.9.2026.01.27.10.03.53
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 27 Jan 2026 10:03:53 -0800 (PST)
+Message-ID: <fcd8fae5950ea5888eab5279fa3ebcad1d27bfa4.camel@dubeyko.com>
+Subject: Re: [LSF/MM/BPF TOPIC] Block storage copy offloading
+From: Viacheslav Dubeyko <slava@dubeyko.com>
+To: Bart Van Assche <bvanassche@acm.org>, "linux-block@vger.kernel.org"
+	 <linux-block@vger.kernel.org>, "linux-scsi@vger.kernel.org"
+	 <linux-scsi@vger.kernel.org>, "linux-nvme@lists.infradead.org"
+	 <linux-nvme@lists.infradead.org>
+Cc: lsf-pc@lists.linux-foundation.org, Jaegeuk Kim <jaegeuk@kernel.org>
+Date: Tue, 27 Jan 2026 10:03:52 -0800
+In-Reply-To: <5273400e-5cf8-4d70-a85d-accfb2977d8e@acm.org>
+References: <0cfe6fe2-3865-4dc2-92a7-74b1240f7b63@acm.org>
+	 <eab078c99e17e45632c6b35e2fe1145e9459ff2f.camel@dubeyko.com>
+	 <5273400e-5cf8-4d70-a85d-accfb2977d8e@acm.org>
+Autocrypt: addr=slava@dubeyko.com; prefer-encrypt=mutual;
+ keydata=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
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.58.2 (by Flathub.org) 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-OpenPGP: url=https://posteo.de/keys/markus.probst@posteo.de.asc; preference=encrypt
 
-
---=-95wXs24+lMxxeIwklhSG
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-
-On Tue, 2026-01-27 at 10:32 +0100, Niklas Cassel wrote:
-> On Mon, Jan 26, 2026 at 10:06:02PM +0000, Markus Probst wrote:
-> > On Mon, 2026-01-26 at 10:00 +0100, Niklas Cassel wrote:
-> > >=20
-> > > Why do we want to have this in kernel space?
-> > Because there are more than enough devices that could make use of it.
-> >=20
-> > Just search the term "NAS device" and you see rarely any devices for
-> > which this wouldn't be useful.
-> >=20
-> > The only reason the leds work on those devices currently, is because
-> > they get shipped with a custom modified kernel by the manufacturer.
-> > This shouldn't be a requirement for running Linux properly on a NAS
-> > device with disk leds.
+On Mon, 2026-01-26 at 11:12 -0800, Bart Van Assche wrote:
+> On 1/26/26 10:18 AM, Viacheslav Dubeyko wrote:
+> > I am not completely sure that copy offloading to the storage device
+> > can
+> > reduce energy consumption. The storage device needs to spend energy
+> > for
+> > executing this operation, anyway. Do you have any numbers that can
+> > prove your point?
 >=20
-> I understand why you want the feature. I just don't understand why we
-> should add this feature to the kernel, rather than implement it in
-> user space.
->=20
-> Having a user space implementation for your feature would also allow
-> an upstream kernel, without the need for any custom kernel patches.
-Only because it can be done in userspace, doesn't mean it should be.
->=20
-> > > If we want something more complex than what is already there, then it
-> > > is probably much better handled in user space, considering the amount
-> > > of possible configuration options.
-> > A userspace daemon by itself is possible, but I don't think it is the
-> > best solution. Having an indicator for disk activity on a per-disk
-> > basis seems like basic led functionality that should be present in the
-> > kernel.
->=20
-> There seems to be existing user space applications that handles this,
-> I think both the daemon I linked to before, which uses /sys/block/<dev>/s=
-tat
-> which is thus per device and not per port, and e.g. this:
-> https://linux.die.net/man/8/ledmon
-> https://github.com/md-raid-utilities/ledmon
-> https://github.com/md-raid-utilities/ledmon/blob/main/src/lib/ahci.c
-As far as I can tell, this daemon doesn't actually use the LED
-Subsystem, but instead leds directly connected to the storage
-controller.
-But yes, I would be capable of coding such daemon.
+> Yes, we have measurements that prove this point but unfortunately the
+> vendor that collected this data does not allow us to publish that
+> data.
 
-> > > Basically the same argument as used in:
-> > > https://lore.kernel.org/linux-nvme/20220227234258.24619-1-ematsumiya@=
-suse.de/T/#u
-> > If I understood it corretly, the argument there is that led code
-> > shouldn't be present in a fast path.
-> >=20
-> > This does not apply to this scenario.
->=20
-> I think my main concern is that I don't think we should bloat the kernel
-> for a complex feature that can just as well be implemented in user space.
-It is still unclear to me if you worry about the complexity in
-drivers/ata/libata-* or drivers/leds/trigger/ledtrig-disk.c
-
-@Pavel,@Lee: I would like to know your opinion on this.
-
-Thanks
-- Markus Probst
+I see.
 
 >=20
+> Reducing energy consumption matters for mobile devices. There are
+> other
+> applications for copy offloading, e.g. in data centers and in
+> enterprise
+> applications. I don't think that these other users care as much about
+> reducing energy consumption as we do.
 >=20
-> Kind regards,
-> Niklas
+> > Which file system have you considered as working model of your
+> > approach?
+> Every LFS for zoned storage has to perform garbage collection, isn't
+> it?
+> I think that we can discuss copy offloading without having to discuss
+> filesystem implementation details.
+>=20
+>=20
 
---=-95wXs24+lMxxeIwklhSG
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+It is not exactly correct. :) Unfortunately, we have to discuss the
+file system implementation details.
 
------BEGIN PGP SIGNATURE-----
+First of all, not every LFS file system needs GC. Because, SSDFS uses
+migration scheme instead of classical GC. And migration scheme is not
+GC based technique because the regular file system operations moves
+valid blocks from exhausted erase block (segment) into clean one.
 
-iQJPBAABCAA5FiEEgnQYxPSsWOdyMMRzNHYf+OetQ9IFAml42uAbFIAAAAAABAAO
-bWFudTIsMi41KzEuMTEsMiwyAAoJEDR2H/jnrUPSj0QP/jBX+51lTUOAQlHdCXB1
-cnq3yWDlRE7864F+m33J5Zi3YXSdntJ5rza26ByMmx8liyHJMD5UDdGfz9L93sHM
-TSv4OClvl/xZ6gFRvaFPqBIL38erO9osMuwKsFVzdA3wwHWKeQWl2ZO3IWSiyRxn
-xy1U+Zxr6LxQlMENbKfTPmCyo1l6visyMouSYqV2ysJ9p+D1n9I81rvrBZYm1ebt
-EcPJiWGPzzgsA84NR13qKBjJFmelzJyiF48cYOGM5C1mlE3FjYjiVsyJe4h9FGsu
-d1kbovKMCuY+QAvtRnbFCeth2o8g6ky3Ij8OPIROhrH2NnA+w/INS8Ok92P8Ewvm
-CfGMkYVq8KXVhEaEaQRw9yWzLLKAquuLRFQ9oUUF3I3b6hEW4ALJkfWraWOPHA6/
-i9gx32NO2Pjo6urNcVBGTIAHUQnKwgsmtpCCX2YsF9/j/Vkq6KWmvxuO9eH2tu49
-fbEaehSqRlQnC7Q6ERVb2X4UaQYutytRAIJSloPLbmve44c7dE+kjSS460QY69FC
-Z8hKNL3H8UPSZFqeKGg77X94FYK8Hepd6ccQ0zEYhtLihVNEBC/Jdf5EIY17K4bN
-Es0E5bqHZMVAIr62ZxqmUdNI6gmnqxlV32OTp8s4BbpJiSoUbrp7JuUqI98rUdKr
-ELLweuctc6nLul+zl/4Nl71I
-=G8+8
------END PGP SIGNATURE-----
+Even if GC must to be used, then (1) valid blocks needs to be taken
+from the logs of exhausted segment (victim segment in GC terminology),
+(2) log needs to be prepared and (3) stored into clean or current
+segment. And log starts from metadata header and describes location of
+other metadata structures in the log, and user data portions. For
+example, NILFS2 contains b-tree + other metadata + user data in the
+log. SSDFS's log starts from header that describes locations in the log
+of block bitmap, offsets translation table. Finally, offsets
+translation table contains offsets to compressed portions of logical
+blocks with user data or other metadata (like inodes b-tree, etc).
 
---=-95wXs24+lMxxeIwklhSG--
+And even if we are talking about F2FS, then offloaded copy operations
+needs to be accounted in metadata portion of the file system.
+
+So, frankly speaking, currently, I don't see the generic technique that
+can work for all LFS file systems. But, maybe, I simply don't see your
+point. :) And this is why I am asking explanation of details how this
+suggested technique can work for LFS file systems. Because, GC is
+integrated subsystem of any LFS file system.
+
+Thanks,
+Slava.
