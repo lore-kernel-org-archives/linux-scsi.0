@@ -1,213 +1,168 @@
-Received: from mout01.posteo.de (mout01.posteo.de [185.67.36.65])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-yw1-f178.google.com (mail-yw1-f178.google.com [209.85.128.178])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 63A84290D81
-	for <linux-scsi@vger.kernel.org>; Wed, 28 Jan 2026 15:44:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.67.36.65
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B7F0F37107E
+	for <linux-scsi@vger.kernel.org>; Wed, 28 Jan 2026 18:45:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.178
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769615069; cv=none; b=IWXFUCsy4a3QFoZGPqNSK8U6IV1XGvYJe4+WLZl9BOCjMqvHnrgU3qgqi9X/vhyZ210C0m4GgalzvUCamZuu/Ftw4yhXl/j4mH0HO8+/oAy5jiHqzhGZKJQmZaOHjC0PWTOpmCURRhl5Jxp46o0q7NUB3CJ1ITZh/PyGImoVjGQ=
+	t=1769625908; cv=none; b=Rtxqd7yOOEoxQx+5Jpx9LNnwbwLsTf6G5M7Gy13a32W+kJxoHdL3eBQFW5ehdXMfUhcBGxXjL+rRHGYqMGFOd3HlU4hT7kMcA43OMpQcSRZhVNcZUytVmG9slY2VfNuORTKlAZpr7C5+14HuYvqvnV6voGeusNjryiVe/NEAkzg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769615069; c=relaxed/simple;
-	bh=BD3at9pjwcauOnkQ9bbwkuD9iYFLAFoZUI6i5XrE3eo=;
+	s=arc-20240116; t=1769625908; c=relaxed/simple;
+	bh=4E3/cI2ff13Nq+m47QYVkwCHRa6OfvjvBseA3qycb8I=;
 	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=R5cb/2ewuPqkRe/st0viMoHywBHQw6mFXLcSXibwD1K17SdtddlGSzNff1O0XRHz2kL71K8WeNy/JKDSrRoOQQtsn5TU1UBXIeFOODl49NMYiZ3T1Tbt6MuYVU8q06XCbK/zWfSAE7ZVgn6fNmGzNgD4nWRysxze6ZM/nig1yfk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de; spf=pass smtp.mailfrom=posteo.de; dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b=fxW3ezFZ; arc=none smtp.client-ip=185.67.36.65
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=posteo.de
+	 Content-Type:MIME-Version; b=SXxF8+WTZcTKnQWH9YaDCYkvnSCon/+utjvUdmOk0pnT4qtCV07w35lw4WMIgFhM7siSVcTWbaaWcu9bQrSEyAztjnkwiEhT9ZwZb9kfhAChYLEo6/+wBZ7UH76SLqCzf7HwmjDVuMaeqzB5lyo3gb9CWIUQ2x1sWtpzldW7Bm0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=dubeyko.com; spf=pass smtp.mailfrom=dubeyko.com; dkim=pass (2048-bit key) header.d=dubeyko-com.20230601.gappssmtp.com header.i=@dubeyko-com.20230601.gappssmtp.com header.b=tT3jzINF; arc=none smtp.client-ip=209.85.128.178
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=dubeyko.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=dubeyko.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b="fxW3ezFZ"
-Received: from submission (posteo.de [185.67.36.169]) 
-	by mout01.posteo.de (Postfix) with ESMTPS id 93C15240028
-	for <linux-scsi@vger.kernel.org>; Wed, 28 Jan 2026 16:44:20 +0100 (CET)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=posteo.de; s=2017;
-	t=1769615060; bh=BD3at9pjwcauOnkQ9bbwkuD9iYFLAFoZUI6i5XrE3eo=;
-	h=Message-ID:Subject:From:To:Cc:Date:Autocrypt:Content-Type:
-	 MIME-Version:OpenPGP:From;
-	b=fxW3ezFZiXgu/hUWecf1YYWjh8IrOEe7Ldko2XR6uJwIUGNBDGTescpuZWFQ14fy1
-	 qG8vE2adzo0cexwaiBBno+u2XUGfdMR/MYm/82/QGhF+0ANazhASHlM2agnVTxw9ze
-	 UJlaXUEU/pLHk/27L4CiGg5hCLtTcqjAD8X0smEmZ38bATG1fHAWHIpHi3gQBCPFGI
-	 2Ew8cD7mwhL9wo0GhvOXnWFpmUhdwMyBvJrQfZ8/ArFm6r+wjTyIw5sbwadbICtY0i
-	 +BrxojuI56vF8NIbbqZc0g7mh09QqdLAZnpoOwwZSidvhTs0bMpZ0kVvE7Y+ja+sUY
-	 weLyjLLftysVg==
-Received: from customer (localhost [127.0.0.1])
-	by submission (posteo.de) with ESMTPSA id 4f1RQn6TJRz9rxG;
-	Wed, 28 Jan 2026 16:44:17 +0100 (CET)
-Message-ID: <c34fb5404e7033fe719b0072ea8a87a1caa2bf80.camel@posteo.de>
-Subject: Re: [PATCH RFC 0/4] leds: extend disk trigger
-From: Markus Probst <markus.probst@posteo.de>
-To: Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>
-Cc: Lee Jones <lee@kernel.org>, Pavel Machek <pavel@kernel.org>, Rob Herring
-	 <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley	
- <conor+dt@kernel.org>, Jacek Anaszewski <jacek.anaszewski@gmail.com>, John
- Garry <john.g.garry@oracle.com>, Jason Yan <yanaijie@huawei.com>, "James
- E.J. Bottomley"	 <James.Bottomley@hansenpartnership.com>, "Martin K.
- Petersen"	 <martin.petersen@oracle.com>, Pavel Machek <pavel@ucw.cz>, 
-	linux-leds@vger.kernel.org, devicetree@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, 
-	linux-scsi@vger.kernel.org, Ian Pilcher <arequipeno@gmail.com>
-Date: Wed, 28 Jan 2026 15:44:19 +0000
-In-Reply-To: <2382dee0-983f-4c69-af7b-a7a48cad23aa@kernel.org>
-References: <20260123-ledtrig_disk_-v1-0-07004756467b@posteo.de>
-	 <aXctPaaXFYemV20T@ryzen>
-	 <ce454969b83dbb0e3bb4ea78f682603cc328ceb9.camel@posteo.de>
-	 <aXiGNZm12vLhQJ4Q@fedora>
-	 <20f855baaa7c36010eab9997a2f43b4f62be726b.camel@posteo.de>
-	 <2382dee0-983f-4c69-af7b-a7a48cad23aa@kernel.org>
-Autocrypt: addr=markus.probst@posteo.de; prefer-encrypt=mutual;
- keydata=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
- jfGillcaQOqFZ3WwVqyzG1BUfTow==
-Content-Type: multipart/signed; micalg="pgp-sha256";
-	protocol="application/pgp-signature"; boundary="=-8gSyxWODBlgM20tLx8kB"
+	dkim=pass (2048-bit key) header.d=dubeyko-com.20230601.gappssmtp.com header.i=@dubeyko-com.20230601.gappssmtp.com header.b="tT3jzINF"
+Received: by mail-yw1-f178.google.com with SMTP id 00721157ae682-794911acb04so1327837b3.0
+        for <linux-scsi@vger.kernel.org>; Wed, 28 Jan 2026 10:45:06 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=dubeyko-com.20230601.gappssmtp.com; s=20230601; t=1769625906; x=1770230706; darn=vger.kernel.org;
+        h=mime-version:user-agent:content-transfer-encoding:autocrypt
+         :references:in-reply-to:date:cc:to:from:subject:message-id:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=4E3/cI2ff13Nq+m47QYVkwCHRa6OfvjvBseA3qycb8I=;
+        b=tT3jzINFXaG5Ix9iB5hNVdH1o9GS1Onn59BaLuTw2czsLSSS7pIdHb+rIgD4KaFB9t
+         SKZ+HoNsjRmNavR2pCZX2Ut6LY9A8HgsH9eoJRsm6ITpAlQQDvonHIlSnM22Ie4h0G3M
+         bLUpv+zuCSzxxCjQt/yaMCfQ2pAzn/1018OhfDF4vhI6dyIVS+8tNDa1r1boMfAzbIPJ
+         S/drsvPQmwWr6j3t271D6gsBLdQcN4J7S0u9PFI1NDptrRiez77uACM9Kuvlw0XPEzGa
+         MW8JVYvcG0+0WEvCny1GuYdSCm9CvDPNHSR8M8tkBGAtUyFxF2fpYlgpLRTo5Xxmzytj
+         b9Lw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1769625906; x=1770230706;
+        h=mime-version:user-agent:content-transfer-encoding:autocrypt
+         :references:in-reply-to:date:cc:to:from:subject:message-id:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=4E3/cI2ff13Nq+m47QYVkwCHRa6OfvjvBseA3qycb8I=;
+        b=BV6xjpDo+c9bmx4+/YppTs0S27Mpotb/008Ie4hL+R4J6SrBjd+sK7T0KxveaIHhhL
+         /6y+Eh8W2dP/tblZ94gMzmRFLL+DB9cMzdNrma53ZZtXPGaqG8Gfd5dPRcIXt2oOyCl2
+         rrBTu5lKVSPkIT03Vlf+n7r+iq38g3h5Im1TzSG/zhDiXbDvZOE7EaKXKe1ZLk9T/M1l
+         FGDtTjn8HdR0JewxFC6WGv3yn7Hz86BoyUps3NLEVLICPJ/tORRXQFhsDqEXstYx5tYn
+         YTJ3H09UGljIlXjxzbaPlU66UTJj62eE+Akl6ofLrMOXdDQUFgd0666RC9ROJcJukZT3
+         6FUg==
+X-Forwarded-Encrypted: i=1; AJvYcCWV0/YKaw1tpEcjOPaPtmCxwpmwMvmF6RYLi/Y28iv/PDHrJW9W9BFlT++xwQpS/vMxRxI8gt+30B4B@vger.kernel.org
+X-Gm-Message-State: AOJu0YxtR64SBEJAcxW4/Na37SLmwY3kv4SoK2D11oGYPsqR6xAETBgd
+	izQJoaaYyaacwKBRDGxVBqRC5z1qPTEB+KNHXxdj0MdjzKo27SAgk8OX1s+QW3IWTM4=
+X-Gm-Gg: AZuq6aL9+GXXcS8qw6L9nPtsDB3BS24hiVA9iLGeOxXZfEWJBEdrGg3jEUv2AjvCJYf
+	YgzzvwXG/x+YXqRCtzFk6/kxYhIWqVM2igwwjU72BYap8LQGo0EWDlnpojbAJ79do8cd/hjxoMc
+	Jie/NzDtGnIgaWafaTeTUs//+t8MpfCNQy4j/v9QC4xC2INnHTJI0LyDN7Jd9wrm0v+aTO8PUPo
+	MNmsSO36GSOhOux8RWNyLIo0RRlAdeqg60Em8rNk3/D9YkbfKKuRGLKT57BzwZufKvmMeY8b2hh
+	ztXkl3GzzdXxJsMawoGu45Jj7N8Nmt56evePQaWdTXXeiwTWWhkRTYtf9z9lfR0RGsK9uLlj70h
+	iFA9MCQ6FcglG51hzpb8f8vb/cT/5Z5A+vG/YK5/u7z2z1O3Mvu8Ev6I93CEzR1rTYDv5Ds96gU
+	z6CV7UFUM7V4qjsuzr0Pnk+4iFtDWla0oTigofmNDdGMa/0O1dgTBIWakCRvJQik3BthxewX2hc
+	USzj0IJMHU+nyd83JJATd2wBBfHlQ==
+X-Received: by 2002:a05:690c:2010:b0:794:29e6:791e with SMTP id 00721157ae682-7947ac921a1mr38503337b3.64.1769625905638;
+        Wed, 28 Jan 2026 10:45:05 -0800 (PST)
+Received: from unknown207bd2cf251a.attlocal.net ([2600:1700:6476:1430:32c7:2b13:eb34:a3c8])
+        by smtp.gmail.com with ESMTPSA id 00721157ae682-79482767fb2sm14313737b3.6.2026.01.28.10.45.04
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 28 Jan 2026 10:45:05 -0800 (PST)
+Message-ID: <aae4cf37afbf84ca8ac192acccf984d10d51dc2d.camel@dubeyko.com>
+Subject: Re: [LSF/MM/BPF TOPIC] Block storage copy offloading
+From: Viacheslav Dubeyko <slava@dubeyko.com>
+To: Bart Van Assche <bvanassche@acm.org>, "linux-block@vger.kernel.org"
+	 <linux-block@vger.kernel.org>, "linux-scsi@vger.kernel.org"
+	 <linux-scsi@vger.kernel.org>, "linux-nvme@lists.infradead.org"
+	 <linux-nvme@lists.infradead.org>
+Cc: lsf-pc@lists.linux-foundation.org, Jaegeuk Kim <jaegeuk@kernel.org>, 
+	Slava.Dubeyko@ibm.com
+Date: Wed, 28 Jan 2026 10:45:02 -0800
+In-Reply-To: <6d648dab-fe05-437e-be25-6c026302322e@acm.org>
+References: <0cfe6fe2-3865-4dc2-92a7-74b1240f7b63@acm.org>
+	 <eab078c99e17e45632c6b35e2fe1145e9459ff2f.camel@dubeyko.com>
+	 <5273400e-5cf8-4d70-a85d-accfb2977d8e@acm.org>
+	 <fcd8fae5950ea5888eab5279fa3ebcad1d27bfa4.camel@dubeyko.com>
+	 <6d648dab-fe05-437e-be25-6c026302322e@acm.org>
+Autocrypt: addr=slava@dubeyko.com; prefer-encrypt=mutual;
+ keydata=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
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.58.2 (by Flathub.org) 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-OpenPGP: url=https://posteo.de/keys/markus.probst@posteo.de.asc; preference=encrypt
 
-
---=-8gSyxWODBlgM20tLx8kB
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-
-On Wed, 2026-01-28 at 15:34 +0900, Damien Le Moal wrote:
-> On 1/28/26 12:34 AM, Markus Probst wrote:
-> > > Having a user space implementation for your feature would also allow
-> > > an upstream kernel, without the need for any custom kernel patches.
-> > Only because it can be done in userspace, doesn't mean it should be.
+On Tue, 2026-01-27 at 11:11 -0800, Bart Van Assche wrote:
+> On 1/27/26 10:03 AM, Viacheslav Dubeyko wrote:
+> > So, frankly speaking, currently, I don't see the generic technique
+> > that
+> > can work for all LFS file systems.
+> If I change my topic proposal such that it says "some LFS can benefit
+> from copy offloading" instead of "all LFS can benefit from copy
+> offloading", is that sufficient to agree?
 >=20
-> Yes it should. Maintaining userspace is far easier than forcing kernel ch=
-anges
-> onto users to get blinking LEDs. So unless you have a very strong argumen=
-t for
-> doing it in the kernel, userspace is probably the right approach. That wi=
-ll
-> apply to any block device, and not just ATA devices. E.g. NAS with M.2 NV=
-Me
-> storage can work with the same.
->=20
-> > > There seems to be existing user space applications that handles this,
-> > > I think both the daemon I linked to before, which uses /sys/block/<de=
-v>/stat
-> > > which is thus per device and not per port, and e.g. this:
-> > > https://linux.die.net/man/8/ledmon
-> > > https://github.com/md-raid-utilities/ledmon
-> > > https://github.com/md-raid-utilities/ledmon/blob/main/src/lib/ahci.c
-> > As far as I can tell, this daemon doesn't actually use the LED
-> > Subsystem, but instead leds directly connected to the storage
-> > controller.
-> > But yes, I would be capable of coding such daemon.
->=20
-> Then let's try.
-I will give it a try.
-
-@Ian: I will notify you, once there is a working version.
-
-> That will allow checking if anything is missing in the kernel
-> interface to do that nicely.
-There is.
-
-I noticed for leds, that the fwnode path isn't exposed in sysfs.
-"/sys/class/leds/<name>/device/firmware_node/path" exists, but points
-to the parent device.
-
-Something similar with scsi and ata exists. scsi doesn't expose the
-firmware_node and there is no symlink (or other connection that I am
-ware of) between scsi_* and ata_* in sysfs. This means, I cannot map a
-fwnode path to a block device.
-
-If I want to distribute a pre-defined config for such led userspace
-daemon alongside the ACPI Overlay for a specific NAS model, I need an
-identifier that is equal across all devices with that specific NAS
-model.
-
-This is less of an issue for leds, but given that leds could be renamed
-on name collisions the issue still exists.
-
-Thanks
-- Markus Probst
-
->=20
-> > > I think my main concern is that I don't think we should bloat the ker=
-nel
-> > > for a complex feature that can just as well be implemented in user sp=
-ace.
-> > It is still unclear to me if you worry about the complexity in
-> > drivers/ata/libata-* or drivers/leds/trigger/ledtrig-disk.c
->=20
-> It is not so much about complexity but rather the fact that controlling
-> blinking LEDs in the hot IO path is not desirable. While SATA HDDs will b=
-e less
-> sensible to the delays caused by the calls to the LED control functions
-> compared to fast NVMe SSDs, we do also need to think about much faster SA=
-TA
-> SSDs. So instead of risking performance regressions, let's try to do this=
- in
-> userspace first.
 >=20
 
---=-8gSyxWODBlgM20tLx8kB
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+I assume that your approach is based on suggestion of capability to
+move one or several physical sectors as it is in background and, then,
+correct file system metadata on new location of user data (or
+metadata). So, you need to do this as part of GC operations because a
+file system uses Copy-On-Write (COW) policy. This file system can be
+LFS (log-structured) file system or not LFS file system. If file system
+based on log concept, then we cannot simply move physical sectors as it
+is because we need to extract valid blocks from the log and prepare the
+new log. If we can offload this logic into storage device, then we can
+use this approach for LFS file systems. Otherwise, we cannot talk about
+LFS file systems. If file system uses COW policy, it has GC, but it
+doesn't use the log-structured concept, then we can use the suggested
+approach. Because, we can move physical sectors as it is in the
+background. However, if file system uses compression or encryption,
+then situation can be complicated again. Because, logical block could
+be smaller than physical sector and some metadata structure needs to
+keep the knowledge of the size and location of a particular logical
+block. So, again, moving physical sectors as it is could move the
+invalidated logical blocks.
 
------BEGIN PGP SIGNATURE-----
+Potentially, it needs to talk about COW policy and non-compressed/non-
+encrypted data? But it limits the approach significantly. And real
+business case should be ready for compression and encryption.
 
-iQJPBAABCAA5FiEEgnQYxPSsWOdyMMRzNHYf+OetQ9IFAml6LsUbFIAAAAAABAAO
-bWFudTIsMi41KzEuMTEsMiwyAAoJEDR2H/jnrUPSm8oQAKRQAKBP5x2x0oS19ZAZ
-qx7X1N3zE1DJgE+75+3c8VsHQ6dz8upFCHvT9QqnXfuuNIzTl478k5X5JhoSbuGT
-52pCq/rq1QW0V50nnytA2/LwYm7Jo9ivA0HIFkk0sJtru5+iBtKIFqAdHHm7JVMK
-C39Tf8SCpsR7nawefFUV4zQgKIPTFjw9u+VmIXSBdLS/wORLuoMpvJuIQVOmmUSX
-nVMz4FyaYbrp/ES6c+6y3psXg/LKgaqzLsb9otBjFQ0eWt2FLFxO5JhgF18E6LCY
-q1giueWwPl7FXkf/BBBWq5kL12n3TlwnRVc6qiAxJN6PpI6iVTM5rARO13RUGroR
-Q9sAmwICpEQ9vebkLN8K6v9z3qzPCNeLwKHkY1KNxMV/gvQRILmZr7qYNUU/dtai
-+Xw3Gd6gdzuTLraK/A1GKTJ0PESENgzqrE96pXInH1KSHPzw+o6ciuSCNHxxB9Ny
-jD5KUAXE8crXz3vohEC6nVF8fKfuGhd3x4bhTC3ivTLjkuaVJ+SnQRxVf4MLCzRD
-hSRR7NrIpqoOeC/Xy87bDKVFP6MWAcN76TPPdpGNHsUMyCC2SE/OTAoYBfhri25H
-bZe6Rszr8IoBiJKCxK3rj83v7TmrADodq3/xV1Xo16pSwxoKm7yxG3cB4/j2ow+Q
-HntdSem3a9aiC5zCvDh1YymF
-=ue8/
------END PGP SIGNATURE-----
-
---=-8gSyxWODBlgM20tLx8kB--
+Thanks,
+Slava.
