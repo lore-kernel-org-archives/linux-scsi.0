@@ -1,103 +1,68 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7793F221F1C;
-	Wed, 28 Jan 2026 06:39:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0256D275AE3
+	for <linux-scsi@vger.kernel.org>; Wed, 28 Jan 2026 06:54:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769582346; cv=none; b=O/OPwhu4+mMSEf80LpZ9VvpMwRa1bb6g9gL43cGP50EPMIn5aLb/VRlHAzL+87BCuIwKI966WsFit+5F3AcilD6TrGvnrLrgkW84uXi+BK4kn3LltWyVTGsCbyIPvbrRxK6Z4UM8qeh9GMxZ0aw/kvarxWWnKHbj5Cv9T0Sk+j8=
+	t=1769583276; cv=none; b=JoxARsbTSr6G5x3de+cY+k8IBnHH5aliPxs5XYc7cZw0nmX+Lwg0kMCIrdfPXRcC99hK+X6y3LJVh16kkQNQhgVVkC8gmsPEJXAbj3RlfpsoQ3bEGHbGWpqv27c+b5RqCG2HZ58+7lwLMSfRxzpzt4iRTmFFqVK9bht91QXiO0o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769582346; c=relaxed/simple;
-	bh=o/WtRBxzGHwSv6xQweCyJfYQx241NkL25tgSbj+LWRc=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=W6sKR/1saHBCXm8lvBtozZMwUJf22xonNWqXb7BRfrLj1BPBgNokEpxN55+DQpsln57S8wGqOpwZG4xRVNdVdxo0T2jLBf7AK9JVia/wTjspiZxtGCxnfJS7ZCl/n80iAYgzN+/uBtzGnWPkgt5ne71BlhS+QkpNjlIY9tvwsC0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZJNgekUQ; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1769583276; c=relaxed/simple;
+	bh=c6mVKayqobUSgqyLIYXCBhvhSJL4jSQ5a3ggZ08JffY=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=lCEBLRX3KL7GeRWc4pxamFy2mcaZZoECpQGO6V/6Wwn6csvamJB3qcSpj+j/cAYC/5CqK2jZgIa/NetjASkrbjuNo6kxT50SEItLwtiVhRzQHiN6YVLy6umIDkdD0DoFPc2vYDAuFGNOwH5jD7XIIiL9tg9Cq9Ly16GCiKR0sF0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=fZP8AIQb; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZJNgekUQ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D0076C4CEF1;
-	Wed, 28 Jan 2026 06:39:03 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1769582346;
-	bh=o/WtRBxzGHwSv6xQweCyJfYQx241NkL25tgSbj+LWRc=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=ZJNgekUQnsvB5Y63llMBD5JJZOtW7c0LEj6L/nASW1Y/l88BAFCFyLgdWdgdxzfkb
-	 lF8PpIlf9H+0S+bZd9l8QM3IhbPt2yy6a/rt2zWaEgGKxme39a60nGAbuHu13u/pc5
-	 q6v4Ghe/VQgYUJiWsXUa6rFptA3a/OHWXHQyJLYpPMvV+MgdAiqLpfAzc9EPa67Qnw
-	 0aL8hwhtE2x98JSlRKVijvXGjNyTj9rz13wScVXtdTQCDeWmkMt2j2cAtqbiNkx5W3
-	 w/dDfZkm3ujgCbex1Vn9+sJ3Zdto0eJ4b/lhf6sOg3xoniqFVLFKuEkh4b6ZOYsPHb
-	 m9w9wZd45FvMg==
-Message-ID: <2382dee0-983f-4c69-af7b-a7a48cad23aa@kernel.org>
-Date: Wed, 28 Jan 2026 15:34:05 +0900
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="fZP8AIQb"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=8ZqNjMclPY8YJu3dzyChLI3jmgD0k8Bx9DjDyWmCbJM=; b=fZP8AIQbjvK2EAzEU0l81JynvT
+	tlOsnDLZEORrIIAHax0LVe9sFCnrd4qfoft5RQ5/187NHLtHukGdOoeZzl1m3amYI1rPmLA1CnfYb
+	GbJdcvRSGGqhJINO6giXKclddE2R3hksOuHkkjqZizk20GJgsFLObNejR3RWHomVkY3N1SSNRSw2A
+	OnmjxTM2NuDfRAz/q5iyh4emrM52VdJWSxMAa64Qz+4SxsGZuhnJulOUDy96KPlWWA2EwwOTi6P3H
+	L49bZMfK4bESTPV+DisEuNiQQDYI+39Bs5gmYKbGY39xeeDRag++m80uveTaXT//tQlMzRUhWCVSY
+	2zcuUdGA==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1vkzRh-0000000FYCD-0hkS;
+	Wed, 28 Jan 2026 06:54:33 +0000
+Date: Tue, 27 Jan 2026 22:54:33 -0800
+From: Christoph Hellwig <hch@infradead.org>
+To: "Ewan D. Milne" <emilne@redhat.com>
+Cc: linux-scsi@vger.kernel.org
+Subject: Re: [PATCH] scsi: sg: Add warning message in source code about
+ non-idempotent SG_IO
+Message-ID: <aXmyqfCzBBeV8Jj2@infradead.org>
+References: <20260127180427.471487-1-emilne@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH RFC 0/4] leds: extend disk trigger
-To: Markus Probst <markus.probst@posteo.de>, Niklas Cassel <cassel@kernel.org>
-Cc: Lee Jones <lee@kernel.org>, Pavel Machek <pavel@kernel.org>,
- Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>,
- Conor Dooley <conor+dt@kernel.org>,
- Jacek Anaszewski <jacek.anaszewski@gmail.com>,
- John Garry <john.g.garry@oracle.com>, Jason Yan <yanaijie@huawei.com>,
- "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- Pavel Machek <pavel@ucw.cz>, linux-leds@vger.kernel.org,
- devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
- Ian Pilcher <arequipeno@gmail.com>
-References: <20260123-ledtrig_disk_-v1-0-07004756467b@posteo.de>
- <aXctPaaXFYemV20T@ryzen>
- <ce454969b83dbb0e3bb4ea78f682603cc328ceb9.camel@posteo.de>
- <aXiGNZm12vLhQJ4Q@fedora>
- <20f855baaa7c36010eab9997a2f43b4f62be726b.camel@posteo.de>
-Content-Language: en-US
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <20f855baaa7c36010eab9997a2f43b4f62be726b.camel@posteo.de>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260127180427.471487-1-emilne@redhat.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On 1/28/26 12:34 AM, Markus Probst wrote:
->> Having a user space implementation for your feature would also allow
->> an upstream kernel, without the need for any custom kernel patches.
-> Only because it can be done in userspace, doesn't mean it should be.
+On Tue, Jan 27, 2026 at 01:04:27PM -0500, Ewan D. Milne wrote:
+>  	case SG_IO:
+> +		/*
+> +		 * WARNING:
+> +		 *
+> +		 * This ioctl() uses an interruptible wait for I/O completion.
+> +		 * As a result, if it is interrupted by a signal (e.g. SIGSTOP)
+> +		 * the result will be discarded and the syscall will be retried.
+> +		 * Caution should be used with issuing commands that are not
+> +		 * idempotent (e.g. COMPARE AND WRITE, or commands to a sequential
 
-Yes it should. Maintaining userspace is far easier than forcing kernel changes
-onto users to get blinking LEDs. So unless you have a very strong argument for
-doing it in the kernel, userspace is probably the right approach. That will
-apply to any block device, and not just ATA devices. E.g. NAS with M.2 NVMe
-storage can work with the same.
+overly long line.
 
->> There seems to be existing user space applications that handles this,
->> I think both the daemon I linked to before, which uses /sys/block/<dev>/stat
->> which is thus per device and not per port, and e.g. this:
->> https://linux.die.net/man/8/ledmon
->> https://github.com/md-raid-utilities/ledmon
->> https://github.com/md-raid-utilities/ledmon/blob/main/src/lib/ahci.c
-> As far as I can tell, this daemon doesn't actually use the LED
-> Subsystem, but instead leds directly connected to the storage
-> controller.
-> But yes, I would be capable of coding such daemon.
+But I don't think a comment in the source code is helpful for
+applications anyway.
 
-Then let's try. That will allow checking if anything is missing in the kernel
-interface to do that nicely.
-
->> I think my main concern is that I don't think we should bloat the kernel
->> for a complex feature that can just as well be implemented in user space.
-> It is still unclear to me if you worry about the complexity in
-> drivers/ata/libata-* or drivers/leds/trigger/ledtrig-disk.c
-
-It is not so much about complexity but rather the fact that controlling
-blinking LEDs in the hot IO path is not desirable. While SATA HDDs will be less
-sensible to the delays caused by the calls to the LED control functions
-compared to fast NVMe SSDs, we do also need to think about much faster SATA
-SSDs. So instead of risking performance regressions, let's try to do this in
-userspace first.
-
-
--- 
-Damien Le Moal
-Western Digital Research
+Maybe we need a proper man page for this ioctl or some other kind of
+official user facing documentation?
