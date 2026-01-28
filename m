@@ -1,68 +1,196 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0256D275AE3
-	for <linux-scsi@vger.kernel.org>; Wed, 28 Jan 2026 06:54:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2EF912BE7BA
+	for <linux-scsi@vger.kernel.org>; Wed, 28 Jan 2026 08:46:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769583276; cv=none; b=JoxARsbTSr6G5x3de+cY+k8IBnHH5aliPxs5XYc7cZw0nmX+Lwg0kMCIrdfPXRcC99hK+X6y3LJVh16kkQNQhgVVkC8gmsPEJXAbj3RlfpsoQ3bEGHbGWpqv27c+b5RqCG2HZ58+7lwLMSfRxzpzt4iRTmFFqVK9bht91QXiO0o=
+	t=1769590012; cv=none; b=UBJ2EWXEwSs3GwC3piZx8qbsHwJDDR5imhwpRcjZXw66aQoDOnSHXOk5SzrlVMo3LjHZVp/7oYWjgrktMEY3VrhinbUYE22u0qDnui0igOF8KGM28tO7Dnxa7Zx92bpS1/cdI0HjhyXp5evwG6yYZNj1Ix8B0EVouuu1xtZJdF4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769583276; c=relaxed/simple;
-	bh=c6mVKayqobUSgqyLIYXCBhvhSJL4jSQ5a3ggZ08JffY=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=lCEBLRX3KL7GeRWc4pxamFy2mcaZZoECpQGO6V/6Wwn6csvamJB3qcSpj+j/cAYC/5CqK2jZgIa/NetjASkrbjuNo6kxT50SEItLwtiVhRzQHiN6YVLy6umIDkdD0DoFPc2vYDAuFGNOwH5jD7XIIiL9tg9Cq9Ly16GCiKR0sF0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=fZP8AIQb; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1769590012; c=relaxed/simple;
+	bh=HRWGogkSiHy+QJi6EM67FXTpuIKksxP63f2OUF86h10=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=ZyFhhM1f6MNz0ohxj3nAEK8EHfjNC8Wo/4DX8ThD4O+liHBM0trkvTnx1fTAmVZtP2zXE9WR1NCIVdOKvxIrqdM0bkJ21yT3TDboBb/tuXPtTYWYjzfCe9uXVtY8oYihgkwScGfZePH+d0VRLm+JcAfF6G0vvE1MRdSBkf/DJSM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=Ckm6s4os; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=JE52M7X9; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="fZP8AIQb"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=8ZqNjMclPY8YJu3dzyChLI3jmgD0k8Bx9DjDyWmCbJM=; b=fZP8AIQbjvK2EAzEU0l81JynvT
-	tlOsnDLZEORrIIAHax0LVe9sFCnrd4qfoft5RQ5/187NHLtHukGdOoeZzl1m3amYI1rPmLA1CnfYb
-	GbJdcvRSGGqhJINO6giXKclddE2R3hksOuHkkjqZizk20GJgsFLObNejR3RWHomVkY3N1SSNRSw2A
-	OnmjxTM2NuDfRAz/q5iyh4emrM52VdJWSxMAa64Qz+4SxsGZuhnJulOUDy96KPlWWA2EwwOTi6P3H
-	L49bZMfK4bESTPV+DisEuNiQQDYI+39Bs5gmYKbGY39xeeDRag++m80uveTaXT//tQlMzRUhWCVSY
-	2zcuUdGA==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1vkzRh-0000000FYCD-0hkS;
-	Wed, 28 Jan 2026 06:54:33 +0000
-Date: Tue, 27 Jan 2026 22:54:33 -0800
-From: Christoph Hellwig <hch@infradead.org>
-To: "Ewan D. Milne" <emilne@redhat.com>
-Cc: linux-scsi@vger.kernel.org
-Subject: Re: [PATCH] scsi: sg: Add warning message in source code about
- non-idempotent SG_IO
-Message-ID: <aXmyqfCzBBeV8Jj2@infradead.org>
-References: <20260127180427.471487-1-emilne@redhat.com>
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="Ckm6s4os";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="JE52M7X9"
+Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 60S6kDC12943877
+	for <linux-scsi@vger.kernel.org>; Wed, 28 Jan 2026 08:46:49 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:message-id
+	:mime-version:subject:to; s=qcppdkim1; bh=hY9hL2IizyBWMbIQRXnyE1
+	ImG2q26W3C317pRVUUTqY=; b=Ckm6s4osztYLxzLe5cLt4K23dGX9x6moUMayNz
+	7hNXF0CsX/Rg20QFFDqeupM8AxneSzCzzmwRgpZDxOj85pJcJfgClDWmpJv1uMwB
+	0wRH+9fegnffKdChT2J1wsJfZiV9510e7dpbBngPzKD/xadsLk2DU6DJ6vKqH0YZ
+	XE14+i0u1VzPpVGdFy2pOyUp4ovwqugCCmC6WMJQ/V+pUQkmtpDia7CToX796i1X
+	V2KDwesomailY32uUJAoVNEwShk/Sxq5iwtDYZl/M0is4HS6wei8a9/gR11EcjRh
+	haNEHAdXc2vF/pSe9NnPipVZKRYk31TLEJaydB6zhnmfZ8iA==
+Received: from mail-pl1-f199.google.com (mail-pl1-f199.google.com [209.85.214.199])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4bydfk0cfh-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Wed, 28 Jan 2026 08:46:49 +0000 (GMT)
+Received: by mail-pl1-f199.google.com with SMTP id d9443c01a7336-2a0f0c7a06eso50858325ad.2
+        for <linux-scsi@vger.kernel.org>; Wed, 28 Jan 2026 00:46:48 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1769590008; x=1770194808; darn=vger.kernel.org;
+        h=cc:to:content-transfer-encoding:mime-version:message-id:date
+         :subject:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=hY9hL2IizyBWMbIQRXnyE1ImG2q26W3C317pRVUUTqY=;
+        b=JE52M7X9aTet/q97+N2RhR1wX343qILNkYvdURmJtelaQkxDg78PtQajwOMLBrJx0D
+         fg0aVKCt6Tw5ONXq4XCBwepICK/CV9CN/EK0mkvHoot1/VttJIcgibpGTDvL0FCdby0W
+         0L0MiGoUSbi+DamsP8B0Drm7HXb4Soud/DUi9WIzKISI++AfknZLnCVTb0XTzaBXds/Z
+         OkDZYorDvvm9CMHqaR/viLxLYm/Q4Jz+37tT7I2QuCP3PBk5EF2rKxuljyaYPT5OqhlD
+         l5vPfsCy+1rFVeQtQRXSPTNXwPsVGI6alPKVaPNE7J+p0kU60TIvIdZ2PBatN8xdGMZY
+         Z4eg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1769590008; x=1770194808;
+        h=cc:to:content-transfer-encoding:mime-version:message-id:date
+         :subject:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=hY9hL2IizyBWMbIQRXnyE1ImG2q26W3C317pRVUUTqY=;
+        b=F0MKtp0mSGd1HyAdOW0FAQdhnalfFML9QFWJyWa7ZcAgKr2qqWcfZrPszahFNDM7Cb
+         GPWrH0VDMLqIcTo8PxUlawEg5hqDNOfE0PKqKb42wJYEWGiKAPQzMkJ0dal6GoYEUbwd
+         vEj47996SDOjtSgPisRNtcBzXS9oJq0U1IzyqyIDXoildPKtHSXIZfKOXCX3NcG1u5oc
+         id7D4MOXBa+4F0lgxkbN1Q/VREbuSAV/7L4VGbje4CnSaAG5IyqeNghrBpk+Mk1cAVoR
+         9+pQJmWmbooOVNB9hPQ6RU0ommEVsNy6yvmQHuOQnMhUCSrQWdnhQZ2FVIRMvmCUOPYP
+         li4A==
+X-Forwarded-Encrypted: i=1; AJvYcCUomcyvNuNHmLZQGyxXAqDyfWdSAgnqw9ypvmNNItcRlaop7CZSLfTmUiDb1tD6cHr3YXrQZGAJ8Xre@vger.kernel.org
+X-Gm-Message-State: AOJu0YyyZeWfn5Qdr+BMQERs1lZGoMmHV0y3EHNXRnRz2Kfrlg5/QPsz
+	SO27DbV+DHJzNahHxSsIT+IEsuAmYA4YsOMXE33+3tZ5wdSj7UnrEP7ZMRlOciwCCdlONsb9AS9
+	C04ILh12MdnELQpRsacUbNHnQw1AKBJcpNEPH+20crRA6vdJDQ8XxkCbE6XfYt/zO
+X-Gm-Gg: AZuq6aK5mQaNDOFf3uBeDnupxsU1/s8y1oAqH47OP46vbC9zGGZtCKjomGecYpR7F6k
+	6PoOaUJidlkAALuS7FcVmbD0oDA3qDjPOU3pNI9Nrr4RB4a5l4VhjX1joWHuX3HBnm8Qsz1Oz6T
+	vxBkK8mMAmlaiz98TA0+vIXBSjnw5CUQmeCOAGdXtguUU8yR17ZQ+EchhJRIConTpAxpxaJ836T
+	7UPD6bM4q/IoiOwFF9Nbnze6EC/eV/wChYiK12zsEjQUqg4ginz+uBJ1C9ck6uEUakcOA/HOgm9
+	ERL8Jjr00juQo+mbjeNwl943BXiUkaE8OuniOv6tJPCVLXWXbwh6Wy6PfkiPUcnEHnCy9AO7qL4
+	n9ckM1RPRtCxVICsEpWmJYHUu9fvbup6X4p+yvmJURayZ6+I=
+X-Received: by 2002:a17:902:ea01:b0:29a:5ce:b467 with SMTP id d9443c01a7336-2a870e0490bmr49886825ad.54.1769590007980;
+        Wed, 28 Jan 2026 00:46:47 -0800 (PST)
+X-Received: by 2002:a17:902:ea01:b0:29a:5ce:b467 with SMTP id d9443c01a7336-2a870e0490bmr49886505ad.54.1769590007455;
+        Wed, 28 Jan 2026 00:46:47 -0800 (PST)
+Received: from hu-arakshit-hyd.qualcomm.com ([202.46.22.19])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2a88b4c3b1esm16263075ad.63.2026.01.28.00.46.42
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 28 Jan 2026 00:46:47 -0800 (PST)
+From: Abhinaba Rakshit <abhinaba.rakshit@oss.qualcomm.com>
+Subject: [PATCH v4 0/4] Enable ICE clock scaling
+Date: Wed, 28 Jan 2026 14:16:39 +0530
+Message-Id: <20260128-enable-ufs-ice-clock-scaling-v4-0-260141e8fce6@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260127180427.471487-1-emilne@redhat.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+X-B4-Tracking: v=1; b=H4sIAO/MeWkC/4XNwU7DMAzG8VeZcl4m21lNsxPvgTgkrrtF6xpoW
+ AWa+u5kQ4gLsIulvw+/72KKTkmL2a0uZtI5lZTHGtv1ysghjHu1qattCKhBJLA6hjioPffFJlE
+ rQ5ajLRKGNO5tBHYSeqfce1OJl0n79H7jn55rH1J5y9PHbW3G6/cLBsD/4RltnRbfMDJE9vyYS
+ 9m8nsMg+XTa1GOu/kw/JtI9k6rJLPGBvG9hi3+Y7ttkQHJ3TFfNDrq2cRRi59tfzGVZPgG1riG
+ 7dwEAAA==
+X-Change-ID: 20251120-enable-ufs-ice-clock-scaling-b063caf3e6f9
+To: Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio <konradybcio@kernel.org>,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Neeraj Soni <neeraj.soni@oss.qualcomm.com>,
+        Herbert Xu <herbert@gondor.apana.org.au>,
+        "David S. Miller" <davem@davemloft.net>, Rob Herring <robh@kernel.org>,
+        Krzysztof Kozlowski <krzk+dt@kernel.org>,
+        Conor Dooley <conor+dt@kernel.org>
+Cc: linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-crypto@vger.kernel.org,
+        devicetree@vger.kernel.org,
+        Abhinaba Rakshit <abhinaba.rakshit@oss.qualcomm.com>
+X-Mailer: b4 0.14.2
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMTI4MDA3MCBTYWx0ZWRfX2XNVC5KPIuAW
+ EYqH26GvpDa0zyO0H8THCRxyVrsWyQsJdi41/S8G9GM2E1VKr4Mt3Dt32p+rin5SDI9Kk1TQXlS
+ oX1LOrxKpIvfmrSaKfA225H7kk1y884GndLsiC84Zy0BInukfWnty6yTo+r8nVfvaP9mjqSuLqF
+ VlTiitXoV69aLJL2SWRGqakN0n4XGPv3f118vabAycfOI+HKYLw8Ro3If6nxc8h74ibFG4m0qRM
+ 4bJ2MRcWCPHZg1PGBJA+ppa/cE4jLwZGXL9biQ1IC3D21TH2McJFkhsGXcvN3+S9+iuTJeNeKlR
+ A8RhAItDdAqdX34c4jGURGh9FNfOhI+5r5clc1y6rPukzubspSEG3AAP6RvyF5jZdV/sq34wxjf
+ /mzbq/rJH6Sq0evK3PhQRWIzX980LPsz/yEJsvlMCVmlV7J/kFIn6UOpBzrmGOVaL0wN7OivSpS
+ PwjFuuiEJBIGWtLPUog==
+X-Authority-Analysis: v=2.4 cv=XfWEDY55 c=1 sm=1 tr=0 ts=6979ccf9 cx=c_pps
+ a=JL+w9abYAAE89/QcEU+0QA==:117 a=fChuTYTh2wq5r3m49p7fHw==:17
+ a=IkcTkHD0fZMA:10 a=vUbySO9Y5rIA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=VwQbUJbxAAAA:8 a=EUspDBNiAAAA:8
+ a=Lsz1E_LYmYg3FmW8_BQA:9 a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
+ a=324X-CrmTo6CU4MGRt3R:22
+X-Proofpoint-GUID: rcZfmGbMcRm51m1A6-Uo5ZIJCgU7MnEP
+X-Proofpoint-ORIG-GUID: rcZfmGbMcRm51m1A6-Uo5ZIJCgU7MnEP
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-01-28_01,2026-01-27_03,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ malwarescore=0 clxscore=1015 impostorscore=0 phishscore=0 priorityscore=1501
+ suspectscore=0 adultscore=0 bulkscore=0 lowpriorityscore=0 spamscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2601150000 definitions=main-2601280070
 
-On Tue, Jan 27, 2026 at 01:04:27PM -0500, Ewan D. Milne wrote:
->  	case SG_IO:
-> +		/*
-> +		 * WARNING:
-> +		 *
-> +		 * This ioctl() uses an interruptible wait for I/O completion.
-> +		 * As a result, if it is interrupted by a signal (e.g. SIGSTOP)
-> +		 * the result will be discarded and the syscall will be retried.
-> +		 * Caution should be used with issuing commands that are not
-> +		 * idempotent (e.g. COMPARE AND WRITE, or commands to a sequential
+Introduce support for dynamic clock scaling of the ICE (Inline Crypto Engine)
+using the OPP framework. During ICE device probe, the driver now attempts to
+parse an optional OPP table from the ICE-specific device tree node to
+determine minimum and maximum supported frequencies for DVFS-aware operations.
+API qcom_ice_scale_clk is exposed by ICE driver and is invoked by UFS host
+controller driver in response to clock scaling requests, ensuring coordination
+between ICE and host controller.
 
-overly long line.
+For MMC controllers that do not support clock scaling, the ICE clock frequency
+is kept aligned with the MMC controller’s clock rate (TURBO) to ensure
+consistent operation.
 
-But I don't think a comment in the source code is helpful for
-applications anyway.
+Dynamic clock scaling based on OPP tables enables better power-performance
+trade-offs. By adjusting ICE clock frequencies according to workload and power
+constraints, the system can achieve higher throughput when needed and
+reduce power consumption during idle or low-load conditions.
 
-Maybe we need a proper man page for this ioctl or some other kind of
-official user facing documentation?
+The OPP table remains optional, absence of the table will not cause
+probe failure. However, in the absence of an OPP table, ICE clocks will
+remain at their default rates, which may limit performance under
+high-load scenarios or prevent performance optimizations during idle periods.
+
+Signed-off-by: Abhinaba Rakshit <abhinaba.rakshit@oss.qualcomm.com>
+---
+Changes in v4:
+- Enable multiple frequency scaling based OPP-entries as suggested in v3 patchset.
+- Include bindings change: https://lore.kernel.org/all/20260123-add-operating-points-v2-property-for-qcom-ice-bindings-v1-1-2155f7aacc28@oss.qualcomm.com/.
+- Link to v3: https://lore.kernel.org/r/20260123-enable-ufs-ice-clock-scaling-v3-0-d0d8532abd98@oss.qualcomm.com
+
+Changes in v3:
+- Avoid clock scaling in case of legacy bindings as suggested.
+- Use of_device_is_compatible to distinguish between legacy and non-legacy bindings.
+- Link to v2: https://lore.kernel.org/r/20251121-enable-ufs-ice-clock-scaling-v2-0-66cb72998041@oss.qualcomm.com
+
+Changes in v2:
+- Use OPP-table instead of freq-table-hz for clock scaling.
+- Enable clock scaling for legacy targets as well, by fetching frequencies from storage opp-table.
+- Introduce has_opp variable in qcom_ice structure to keep track, if ICE instance has dedicated OPP-table registered.
+- Combined the changes for patch-series <20251001-set-ice-clock-to-turbo-v1-1-7b802cf61dda@oss.qualcomm.com> as suggested.
+- Link to v1: https://lore.kernel.org/r/20251001-enable-ufs-ice-clock-scaling-v1-0-ec956160b696@oss.qualcomm.com
+
+---
+Abhinaba Rakshit (4):
+      dt-bindings: crypto: ice: add operating-points-v2 property for QCOM ICE
+      soc: qcom: ice: Add OPP-based clock scaling support for ICE
+      ufs: host: Add ICE clock scaling during UFS clock changes
+      soc: qcom: ice: Set ICE clk to TURBO on probe
+
+ .../bindings/crypto/qcom,inline-crypto-engine.yaml |  29 ++++++
+ drivers/soc/qcom/ice.c                             | 112 +++++++++++++++++++++
+ drivers/ufs/host/ufs-qcom.c                        |  17 ++++
+ include/soc/qcom/ice.h                             |   5 +
+ 4 files changed, 163 insertions(+)
+---
+base-commit: fe4d0dea039f2befb93f27569593ec209843b0f5
+change-id: 20251120-enable-ufs-ice-clock-scaling-b063caf3e6f9
+
+Best regards,
+-- 
+Abhinaba Rakshit <abhinaba.rakshit@oss.qualcomm.com>
+
