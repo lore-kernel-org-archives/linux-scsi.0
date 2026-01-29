@@ -1,116 +1,139 @@
-Received: from mail-pg1-f201.google.com (mail-pg1-f201.google.com [209.85.215.201])
+Received: from mail-wr1-f51.google.com (mail-wr1-f51.google.com [209.85.221.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F3416379978
-	for <linux-scsi@vger.kernel.org>; Thu, 29 Jan 2026 07:07:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B30FA3793B5
+	for <linux-scsi@vger.kernel.org>; Thu, 29 Jan 2026 07:38:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769670458; cv=none; b=GTFFs52BHckKATQ8db7dg36MwG5Ewfr7FN4yfROkaWtS+FzcVSl8gP/dyNSqMuoeQSR/vRTtV0ufpAh50iOO70Br1Q8F3i6k7xf+gMFyULa0iLbkZWYoZ50V/F/z6jk5fcIMU5EYyR55Z9RqAgu5HWeZrmIVsZdDdaTCcR6JneM=
+	t=1769672323; cv=none; b=R+QV6MlD6SBJAOcZo2rqTazRQUGhwbAu1Ys90wJzojDbXUsTt92s11DMoFSB/Sfq/y43iBrchVRdQ9MmV5lMwt8roKdrKnNMHwzj7UMCvj19FFFJMrSkJYVi/KRKi84/ECGX08NzijKoKZ3gE4Mzba3YlYkz7kHCJ6EjiPbjGbY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769670458; c=relaxed/simple;
-	bh=cKG+sXr+1ziofqpBsJjwfmGfj2KJzaG2xyY+bHw/yFo=;
-	h=Date:Mime-Version:Message-ID:Subject:From:Cc:Content-Type; b=O8S54FbK5fSGiKTuKGRmyMW0vPW/gh35cjfTH3QR5JHrSpIBfVUdAyBjoaVHHdL3CRKbTEcDIT8+3/RRa7twBY4tBh1OGJju/j0YDcAex21iMWDmUHefamdKdVFuWwByIdWjUJ8nXCbI1/aa0GjcXOHEohDYB16BgHc51ZpfnXc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--thomasyen.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=qmiQr36Z; arc=none smtp.client-ip=209.85.215.201
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--thomasyen.bounces.google.com
+	s=arc-20240116; t=1769672323; c=relaxed/simple;
+	bh=PmaYDRNArfyuojBEcajPNrOJP8kPqJiIHREyZgI5rkY=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=LCffMOvOGPF9QRvum1ICXmHJ6R+8vW3YfbvqY0isuIswv5naakSB03iVuLu0HRgad6gQkNylMvTr+a2g96Ip5JWX7823ZAKUfHxyLc0z2nVoe/imCbafcTpPmUBwr3Ff1QSzPKnCGPbUynzGd2g6ua6WP1LDY/08eokc4PNr+YM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=flipper.net; spf=pass smtp.mailfrom=flipper.net; dkim=pass (2048-bit key) header.d=flipper.net header.i=@flipper.net header.b=4SQCfbk6; arc=none smtp.client-ip=209.85.221.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=flipper.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flipper.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="qmiQr36Z"
-Received: by mail-pg1-f201.google.com with SMTP id 41be03b00d2f7-c6124a9fb86so1425567a12.3
-        for <linux-scsi@vger.kernel.org>; Wed, 28 Jan 2026 23:07:36 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=flipper.net header.i=@flipper.net header.b="4SQCfbk6"
+Received: by mail-wr1-f51.google.com with SMTP id ffacd0b85a97d-430f3ef2d37so534964f8f.3
+        for <linux-scsi@vger.kernel.org>; Wed, 28 Jan 2026 23:38:41 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1769670456; x=1770275256; darn=vger.kernel.org;
-        h=cc:from:subject:message-id:mime-version:date:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=GqQ9jDDf7KcRrhdcWeUtqgvD39js2kt0QEInAi/KKEU=;
-        b=qmiQr36ZDaE+svI/zAHJI+4mTt6T6b8cKZ+amYo9jMv3D+IGYmu0YbLcLinVVf2mWR
-         S0zrfVI+dGUa/O4Qm2qv5yv7NA+JhmJgKRB8goSXN9gwLWDLe+jU39hTY7od1aKM+8fU
-         rjXpSGBp+jXhLf48ZTXS3HpAJDELX5SQePRqwwJ13+KstAJK/LTKvj3Jz7C+9LYiEfoe
-         qT+sX7mrzIVsR7+AodJibPRJQDdgrqqgKdgTMCtIgr1KkaNi55NZWRlfL2GR/vZvcZXn
-         IUjMrz7Ew/hvInpSzCm251yHR4Z3tq/btmnGcjonizl+KwnTt6vTsE2KhN665GnHTdEL
-         0OTA==
+        d=flipper.net; s=google; t=1769672320; x=1770277120; darn=vger.kernel.org;
+        h=cc:to:message-id:content-transfer-encoding:mime-version:subject
+         :date:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=TbOIHVaOGbxzrvzjWHvUZsbmdUqai/LursAc/ajXxRQ=;
+        b=4SQCfbk6twnMyuQmc1eO+9aU7/NDkhZpMal3+wp4gTBVvObIDyWBgMxjpStQQcYif+
+         KBVUKGdceHCEVlpshmhP/ps9CqNy6c2mjyFyAXrOdK5ai4fwlnJAH94plz+yPDyUCZrH
+         KX5qfr1SeY2wVKNE7e4lAypubZ1H4V3IwscJtKSIqmAEw3lYETS/cjbTBhsCm5wktX7Z
+         NKlAVfV3aKMVD8pjz+gmaO8AoBUpQDUr3ipj/5myFbUManFi2IENXpaDVi5YfYniItFa
+         Zsvs7yYRh5kLJiFS7RwXVcUFMeLdnOtbiKOEf/1YYA2UWckm5q/BjQXFNblIWYCGgWdQ
+         pJEg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1769670456; x=1770275256;
-        h=cc:from:subject:message-id:mime-version:date:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=GqQ9jDDf7KcRrhdcWeUtqgvD39js2kt0QEInAi/KKEU=;
-        b=ZG1FqSBJ1gGoMbcY9sYNAF5bCaez87gmv6iuodXcImhwlT6961iQnvZZnkTcpsTKYK
-         tn3TukVfMZ6SZsKKAuSQtcd9XxyonUCYM/iUxvIuOyHzoMoRPpOVDBoGqVCqrW21L+2M
-         qk307wlmCrlwGMDoRRCven+HTU6t6XNHC9VaMe3K46p1nkb01JVnG2nq7qTBu0RzgYJd
-         RbbDvNpaYGRRrEM4ahaNDuTqdOrEXei9PTxzn60+hp1cHa51Mc+YXNqQ9FMfvCYpbL/p
-         GRp03l5rURHxuihTJvyjyFgpJfcspN0rDDaonQs+qNPK/W2k/X44t0kv+YPkUHjasij+
-         5qFg==
-X-Forwarded-Encrypted: i=1; AJvYcCUeji7jG9Onja1OoZ57UZCnasOaptvx+aZ/JBP7kNQcrIfQ0mKSryqU2Q1ZnOS/1CjmUoUzyEbKUBYS@vger.kernel.org
-X-Gm-Message-State: AOJu0Yw41XaHxsYT5QQop/I5WoxYfbvNKDmRZ4lUuOSkqMkPWnKqwWb2
-	Vrs1/GBJ2EVYdLmPRHVg6Ju2hLvQ7YijQafVmy0w9/ftELK12HGwj0dJfMapYtjiRSR038KIWMt
-	2q+ay3ZnD/QIYZP+Ztw==
-X-Received: from pffx27.prod.google.com ([2002:aa7:93bb:0:b0:823:f96:63b3])
- (user=thomasyen job=prod-delivery.src-stubby-dispatcher) by
- 2002:a05:6a00:7585:b0:81e:b2ba:5b36 with SMTP id d2e1a72fcca58-823692fd797mr6468252b3a.63.1769670456140;
- Wed, 28 Jan 2026 23:07:36 -0800 (PST)
-Date: Thu, 29 Jan 2026 15:06:47 +0800
+        d=1e100.net; s=20230601; t=1769672320; x=1770277120;
+        h=cc:to:message-id:content-transfer-encoding:mime-version:subject
+         :date:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=TbOIHVaOGbxzrvzjWHvUZsbmdUqai/LursAc/ajXxRQ=;
+        b=mT/7Cx6sqNdDsmnug5+goGhT6irFF9UVf5c+CEieZDIqve5PaUglBKV0tx2CeOgIpq
+         jYVfQwg3ODP5uvoM0Av95EYVH7PizqZjTJV5HMtKt1GpzkGqXQeMm+J+tUa+pFTinygF
+         MdF5eVOvItzNeOB/IKZQhN4pvgv1Jr5fAXXAI/kf1Y8xFi4OAm8fkawwvvUYaS7QYsiJ
+         /po98rCx3HdvEc3V7dp+21KKtWeYHDtnsGdB1XL/tOWiz/MtTUeB03mLYW6Hdc2gfQmI
+         8Dy9KDNkm1vxmIzErPzGEnBRZqE6Af5Q6Hf58oRXr1RUpQZMelhIWvbPfmWXRofqXkV5
+         ef0w==
+X-Gm-Message-State: AOJu0YzJMwdDiwP6buj6ABK5sO+8CB06jIQZZ6BH/pgWcN3+aA8I1MnJ
+	UCYEmvT176GzQzY65Qp5lqTuwUBONI1Pn0MkIWWVMbPwzl3ta8tsZRtIGrXhMixqYuY=
+X-Gm-Gg: AZuq6aJzBNks6Icrozyw+Jh0NOlXKr8KujCFw7X60/KdPnMqfjFRWx8qt71vy+pD5aj
+	GKGsPdkOXaIPIxTcN2fv80AvMKqd4hmSOyrVVCDMnzjT2E2l+LYC7C7LX/nkLDQA7cmQjjk0n5u
+	044aTo40iYecF+88j9cB011/1N9mnJf+FVSJ0SPqiXEXM1PdFYHv07B2ecKo6UeK+wUfYPzZKdl
+	HkW+oPOSbJxQva6rXJiTtFaGOGw9be6T9RlBWCVq5VkoDbSzu+ldjH6ZjBPTHCX+U/8lFgi8VIS
+	gm6mNedqzZZSlY8GOiVMPGP/Ixj4YC5lKw/p+CjBAVb6xMn8mScqUrV4AZmnpq3OWO08ylXfBu+
+	knBNacuCPSRbIukHpRrv8o0KHHYJaBl8lQelegIpQxZdIjFCl0b8ZWgIkpIvKqm/k4BbyPG6P16
+	3BjGmu97OkDZ0/wxBxDqSmONcrHmZpa72EqCWT04PiRD4eFKTr7KKeo6fDjLEwM+tBoQ==
+X-Received: by 2002:a05:6000:310f:b0:435:9ea8:8b83 with SMTP id ffacd0b85a97d-435dd074b85mr11666526f8f.19.1769672320024;
+        Wed, 28 Jan 2026 23:38:40 -0800 (PST)
+Received: from alchark-surface.localdomain (bba-83-110-134-52.alshamil.net.ae. [83.110.134.52])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-435e10ee040sm12418751f8f.11.2026.01.28.23.38.38
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 28 Jan 2026 23:38:39 -0800 (PST)
+From: Alexey Charkov <alchark@flipper.net>
+Date: Thu, 29 Jan 2026 11:38:35 +0400
+Subject: [PATCH] scsi: ufs: core: Fix RPMB region size detection for UFS
+ 2.2
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-X-Mailer: git-send-email 2.53.0.rc1.225.gd81095ad13-goog
-Message-ID: <20260129070657.678532-1-thomasyen@google.com>
-Subject: [PATCH v3 1/1] scsi: ufs: core: Flush exception handling work when
- RPM level is zero
-From: Thomas Yen <thomasyen@google.com>
-Cc: Thomas Yen <thomasyen@google.com>, Stable Tree <stable@vger.kernel.org>, 
-	Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>, 
-	Bart Van Assche <bvanassche@acm.org>, 
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
-	"Martin K. Petersen" <martin.petersen@oracle.com>, Peter Wang <peter.wang@mediatek.com>, 
-	Bean Huo <beanhuo@micron.com>, Adrian Hunter <adrian.hunter@intel.com>, 
-	"Bao D. Nguyen" <quic_nguyenb@quicinc.com>, 
-	"open list:UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER" <linux-scsi@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20260129-ufs-rpmb-v1-1-691534ab723f@flipper.net>
+X-B4-Tracking: v=1; b=H4sIAHoOe2kC/6tWKk4tykwtVrJSqFYqSi3LLM7MzwNyDHUUlJIzE
+ vPSU3UzU4B8JSMDIzMDQyNL3dK0Yt2igtwk3RRDS4tEM0vLRBODFCWg8oKi1LTMCrBR0bG1tQD
+ LvFbbWgAAAA==
+X-Change-ID: 20260129-ufs-rpmb-d198a699a40d
+To: Alim Akhtar <alim.akhtar@samsung.com>, 
+ Avri Altman <avri.altman@wdc.com>, Bart Van Assche <bvanassche@acm.org>, 
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
+ "Martin K. Petersen" <martin.petersen@oracle.com>, 
+ Bean Huo <beanhuo@micron.com>, Can Guo <can.guo@oss.qualcomm.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ stable@vger.kernel.org, Alexey Charkov <alchark@flipper.net>
+X-Mailer: b4 0.14.3
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1922; i=alchark@flipper.net;
+ h=from:subject:message-id; bh=PmaYDRNArfyuojBEcajPNrOJP8kPqJiIHREyZgI5rkY=;
+ b=owGbwMvMwCW2adGNfoHIK0sZT6slMWRW8zUEbZVzCQp6X+lUdITlx1/ZC64pZe5r9jExXvrPH
+ /R68aHujoksDGJcDJZiiixzvy2xnWrEN2uXh8dXmDmsTCBDpEUaGICAhYEvNzGv1EjHSM9U21DP
+ 0FDHWMeIgYtTAKb62iGG/zGG3Keb73xiXBkaW7L+3tnpFs9SgrYXiU6a1vsgd29n9D6G32wp5of
+ F731mSL2auMJjQfyGkrwJO2dWGd2pULxY9aZgHR8A
+X-Developer-Key: i=alchark@flipper.net; a=openpgp;
+ fpr=9DF6A43D95320E9ABA4848F5B2A2D88F1059D4A5
 
-Ensure that the exception event handling work is explicitly flushed
-during suspend when the runtime power management level is set to
-UFS_PM_LVL_0.
+Older UFS spec devices (2.2 and earlier) do not expose per-region RPMB
+sizes, as only one RPMB region is supported. In such cases, the size of
+the single RPMB region can be deduced from the Logical Block Count and
+Logical Block Size fields in the RPMB Unit Descriptor.
 
-When the RPM level is zero, the device power mode and link state both
-remain active. Previously, the UFS core driver bypassed flushing
-exception event handling jobs in this configuration. This created a race
-condition where the driver could attempt to access the host controller
-to handle an exception after the system had already entered a deep
-power-down state, resulting in a system crash.
+Add a fallback mechanism to calculate the RPMB region size from these
+fields if the device implements an older spec, so that the RPMB driver
+can work with such devices - otherwise it silently skips the whole RPMB.
 
-Explicitly flush this work and disable auto BKOPs before the suspend
-callback proceeds. This guarantees that pending exception tasks complete
-and prevents illegal hardware access during the power-down sequence.
+        Section 14.1.4.6 (RPMB Unit Descriptor)
 
-Signed-off-by: Thomas Yen <thomasyen@google.com>
-Cc: Stable Tree <stable@vger.kernel.org>
+Link: https://www.jedec.org/system/files/docs/JESD220C-2_2.pdf
+Cc: stable@vger.kernel.org
+Fixes: b06b8c421485 ("scsi: ufs: core: Add OP-TEE based RPMB driver for UFS devices")
+Signed-off-by: Alexey Charkov <alchark@flipper.net>
 ---
-v3:
- - Add logic to disable BKOPs.
-v2:
- - Add Cc: stable tag.
- - Reformat commit message text for better line wrapping.
----
- drivers/ufs/core/ufshcd.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/ufs/core/ufshcd.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
 diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 0369043ca010..8c88dd5c2cca 100644
+index 52ffd0c3aa4c..80be7d0a0315 100644
 --- a/drivers/ufs/core/ufshcd.c
 +++ b/drivers/ufs/core/ufshcd.c
-@@ -9997,6 +9997,8 @@ static int __ufshcd_wl_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
- 
- 	if (req_dev_pwr_mode == UFS_ACTIVE_PWR_MODE &&
- 			req_link_state == UIC_LINK_ACTIVE_STATE) {
-+		ufshcd_disable_auto_bkops(hba);
-+		flush_work(&hba->eeh_work);
- 		goto vops_suspend;
+@@ -5249,6 +5249,15 @@ static void ufshcd_lu_init(struct ufs_hba *hba, struct scsi_device *sdev)
+ 		hba->dev_info.rpmb_region_size[1] = desc_buf[RPMB_UNIT_DESC_PARAM_REGION1_SIZE];
+ 		hba->dev_info.rpmb_region_size[2] = desc_buf[RPMB_UNIT_DESC_PARAM_REGION2_SIZE];
+ 		hba->dev_info.rpmb_region_size[3] = desc_buf[RPMB_UNIT_DESC_PARAM_REGION3_SIZE];
++
++		if (hba->dev_info.wspecversion <= 0x0220) {
++			/* Only one RPMB region used, and no per-region size information */
++			hba->dev_info.rpmb_region_size[0] =
++				get_unaligned_be64(desc_buf
++					+ RPMB_UNIT_DESC_PARAM_LOGICAL_BLK_COUNT)
++				<< desc_buf[RPMB_UNIT_DESC_PARAM_LOGICAL_BLK_SIZE]
++				>> 17; /* convert to 128 kBytes units */
++		}
  	}
  
+ 
 
-base-commit: a48ca06cf343423faa01c573aeafba9fa5f92577
+---
+base-commit: 3f24e4edcd1b8981c6b448ea2680726dedd87279
+change-id: 20260129-ufs-rpmb-d198a699a40d
+
+Best regards,
 -- 
-2.53.0.rc1.225.gd81095ad13-goog
+Alexey Charkov <alchark@flipper.net>
 
