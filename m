@@ -1,82 +1,97 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B5D835B654;
-	Thu, 29 Jan 2026 03:31:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1645726E71F;
+	Thu, 29 Jan 2026 04:41:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769657512; cv=none; b=rVqF5hCEmN6kk+wJ8IVCL9XOcT1ufiMlhUDVaB3S+PNdEh/4hs0Y0PF7HYx7lUKLhC6akfSDV1bFRcRz4QO+ZStu+AcqYgpiaDBBqgO1gyYn/KgMuNDTk7sI8kkFL8sjysVVFUldg200RddyHczhK5LIQFDSdTM4Yyh4jtc7SWI=
+	t=1769661675; cv=none; b=bfVMo21yZplp2yEyXlcBRKM9yYc60u2y+KhySXL3lDpna+U1U0TMCB3qyj1RCBoh0Ek2dErctkgacv/eHNMUTHpJGltXFcU9i4uNGo3rN0PK/JXojQjP6sTjw53vq78792jTVBuGuZ2rsS62XTmtOfnCIJ+67wK9Pu0mk4R+txM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769657512; c=relaxed/simple;
-	bh=L3CYYnxH7rMmNN6PUUb3m9dtTAhsGVfencgw6kW6wXc=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=YLlwrp3usbXlFPmpoRKN1B/CVjAdeAsKvi8v6YgqFHh2DEwcI2pxpt2d/avv3IKmo2ehI70Ri9x+zH3sJC9FilhEsvHLfaalYCryNTO/0PF8/WDn36Vt8xQR2ubI8e6vMt1OEql+dt7rJy5XRgmTxH/dS8CnjDhov8pDl642pUE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cX5LrfTt; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1769661675; c=relaxed/simple;
+	bh=gROWjWmyD7Nqp3cAvySmJU8PRCZMcKtAX74x9H8kGuA=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=KmVXpo9/GCFHISkbQ1GUxUOUUgTDExhc+ZrQKoZEHJI5VsJYGu4XBiOTBZ35m+AU/lxHzK91lAyvabKcNTrzd6CGzEfD2xssEy9i6zeaB/oJnVqUhqmegXKNK2YjmZdHyoFMBDDa6Ktc1Oxvxfota9UoqbJFU58OjIn/EYmnNBc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ICkOUpqn; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cX5LrfTt"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7A0DCC116D0;
-	Thu, 29 Jan 2026 03:31:50 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ICkOUpqn"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D7CAAC116D0;
+	Thu, 29 Jan 2026 04:41:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1769657510;
-	bh=L3CYYnxH7rMmNN6PUUb3m9dtTAhsGVfencgw6kW6wXc=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=cX5LrfTtA1ZFfO2h8kHxSV1HJbpy/tmPjbH4KwGozekQMHo2s6Jqo6uRPgcZlkPBb
-	 GfOKx+c2SEfPmyvuL7DJjJws3qI1U5JRg67rYOVxmmXTNp8rroHuMrDLfAkJeofKaF
-	 vqVooz52aU8jad/39pYkGLAde3eUPbI0G9VqCF7Duajusi4QUuHlw1G9EVc70iEe/W
-	 Gnxv1xHsR2uA6RpdEspnARUi1THsoFMr8Fx4KGzWcdqxcBXIkMkDo35pakJDx63ij0
-	 kcPAsGcgclbyc+u6vswnllmGFfbd8ceF1q1n8MVQBMtnsseEZtBI8JS5O/nZbo6ZHD
-	 Y1rBbj9ZI6a0Q==
-Date: Wed, 28 Jan 2026 19:31:16 -0800
-From: Eric Biggers <ebiggers@kernel.org>
-To: "zheng.gong" <zheng.gong@samsung.com>
-Cc: linux-scsi@vger.kernel.org, avri.altman@wdc.com, bvanassche@acm.org,
-	quic_cang@quicinc.com, alim.akhtar@samsung.com,
-	martin.petersen@oracle.com, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v4 0/3] scsi: ufs: Add crypto_keyslot_remap support
-Message-ID: <20260129033116.GA68575@sol>
-References: <20251112031035.GA2832160@google.com>
- <CGME20260129031038epcas5p3975b1f66414a7393b85c362523ebe1b8@epcas5p3.samsung.com>
- <20260129031033.3428295-1-zheng.gong@samsung.com>
+	s=k20201202; t=1769661674;
+	bh=gROWjWmyD7Nqp3cAvySmJU8PRCZMcKtAX74x9H8kGuA=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=ICkOUpqn6bj8mPbjH6dzPbCIEiLLmTRtoGZX1UAB841E9xUZ7nn2H64sKhEX5B/9p
+	 jkpsgVWgeoQ6/X24R5XDeYveTYQUkQkz7DAaUcLGQjcF6T4gyRjdvcubWlqfjqMQ0Q
+	 +zszQx3lWJfFbOK7+XGW1xGvBwLrh9pY2BcMNrPoVpD2PdexL+kCphAo2V+cY+UGKl
+	 8m+pTwrT24O3RXWdv15EbqR16sVxEhaWuP0xsi04FTqr2qtly1PCzxzn+SxNR9yGcm
+	 1cVnwerlAzE4OZlq/Ucj1eBt37Bjn0u1OWQ30rg6aMrTE8+aDQ1oNIHT3sODuefx+H
+	 ZSGkBcd/+EN9g==
+Message-ID: <9e062635-f946-4a8b-862d-a38bfc50d6ce@kernel.org>
+Date: Thu, 29 Jan 2026 13:41:10 +0900
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260129031033.3428295-1-zheng.gong@samsung.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH RFC 0/4] leds: extend disk trigger
+To: Markus Probst <markus.probst@posteo.de>, Niklas Cassel <cassel@kernel.org>
+Cc: Lee Jones <lee@kernel.org>, Pavel Machek <pavel@kernel.org>,
+ Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>,
+ Conor Dooley <conor+dt@kernel.org>,
+ Jacek Anaszewski <jacek.anaszewski@gmail.com>,
+ John Garry <john.g.garry@oracle.com>, Jason Yan <yanaijie@huawei.com>,
+ "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ Pavel Machek <pavel@ucw.cz>, linux-leds@vger.kernel.org,
+ devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
+ Ian Pilcher <arequipeno@gmail.com>
+References: <20260123-ledtrig_disk_-v1-0-07004756467b@posteo.de>
+ <aXctPaaXFYemV20T@ryzen>
+ <ce454969b83dbb0e3bb4ea78f682603cc328ceb9.camel@posteo.de>
+ <aXiGNZm12vLhQJ4Q@fedora>
+ <20f855baaa7c36010eab9997a2f43b4f62be726b.camel@posteo.de>
+ <2382dee0-983f-4c69-af7b-a7a48cad23aa@kernel.org>
+ <c34fb5404e7033fe719b0072ea8a87a1caa2bf80.camel@posteo.de>
+Content-Language: en-US
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <c34fb5404e7033fe719b0072ea8a87a1caa2bf80.camel@posteo.de>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Thu, Jan 29, 2026 at 11:10:30AM +0800, zheng.gong wrote:
-> Hello Eric,
+On 1/29/26 00:44, Markus Probst wrote:
+>> That will allow checking if anything is missing in the kernel
+>> interface to do that nicely.
+> There is.
 > 
-> Sorry for late due to other affairs.
+> I noticed for leds, that the fwnode path isn't exposed in sysfs.
+> "/sys/class/leds/<name>/device/firmware_node/path" exists, but points
+> to the parent device.
 > 
-> Readjuest the patchset adds support for platform-specific crypto keyslot
-> remapping in the exynos UFS host driver.
+> Something similar with scsi and ata exists. scsi doesn't expose the
+> firmware_node and there is no symlink (or other connection that I am
+> ware of) between scsi_* and ata_* in sysfs. This means, I cannot map a
+> fwnode path to a block device.
 > 
-> The 1st patch raise a new variant op:
->   ufs_hba_variant_ops::crypto_keyslot_remap
-> which allows platforms to adjust the keyslot index at io request period.
+> If I want to distribute a pre-defined config for such led userspace
+> daemon alongside the ACPI Overlay for a specific NAS model, I need an
+> identifier that is equal across all devices with that specific NAS
+> model.
 > 
-> The 2nd patch adds a real, upstream user in ufs-exynos.c that supports
-> remapping via device tree. This makes the hook justifiable for mainline
-> inclusion.
-> 
-> The 3rd patch adds DT binding description for the new property
-> 'ufs-keyslot-offset'.
+> This is less of an issue for leds, but given that leds could be renamed
+> on name collisions the issue still exists.
 
-I don't think it's plausible that this actually works, considering that
-ufs-exynos.c installs a custom blk_crypto_profile that doesn't have any
-keyslots.  (It does that because the Exynos UFS host controller takes
-the raw key directly in the PRDT on a per-block basis.)  With no
-keyslots, the concept of remapping them is meaningless.
+All of this is not the hot path, so we can work on it.
 
-Could you clarify what exactly this patchset is meant to do, and how you
-tested it?
+If new sysfs device attributes for an ATA device, you can add them to
+ata_ncq_sdev_attrs in libata-sata.c. These show up as part of the scsi device
+attributes, so if you define this well with the scsi side, the same attribute
+names can be used for pure scsi devices and ATA devices served with libata.
 
-Do you perhaps have additional patches that this depends on?  Perhaps
-patches that add support for a version of the Exynos UFS host controller
-that does have keyslots?
 
-- Eric
+-- 
+Damien Le Moal
+Western Digital Research
