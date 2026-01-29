@@ -1,114 +1,74 @@
-Received: from mail-wm1-f53.google.com (mail-wm1-f53.google.com [209.85.128.53])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E4E2F2BD0B
-	for <linux-scsi@vger.kernel.org>; Thu, 29 Jan 2026 15:54:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.53
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B29E5335090;
+	Thu, 29 Jan 2026 16:13:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769702092; cv=none; b=VayCkenGZhujfojgd8SHxLAcliqKUjO96+olwWbRLwDlCcszSrMhO0z5FjUg3oTTsGNMWqIDcrTVl9mPi9CPiiMZp9MUWHffWImL8ZLUEPSmvoRQyfq3IE9XckyiJZonNPzQcU356eGEmddLSZ23SPpDX31M9FCKgwcRcdIE+Q0=
+	t=1769703238; cv=none; b=rrBcoYjdMoRO2Tc8cKF17DBMF8X5/lDm39j2XcHUFtjz6F4/w8Jvvl7ZdHy+jabGNNyonUqGqc14YuKIoJw80MAwRBsdp9kgcc7V+wcVfHH4WVpssNXrv6ZP/MaO6xPwG7/phqncZZDqPyuM/N5A72o0wdnieh/dUOhr20qZtJg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769702092; c=relaxed/simple;
-	bh=Q4L9DM+YHHs0NooWoD0Qmd+HVUl64DDZt5vhvmO5zS8=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=OEPcHjKfTJAcQmLef2RLtrXVeSR5b0RrnHDox4kJVti4tKMC4ufJXmyicMBEW7Ic/+0xRCXdVbU7Uk955u+dCrykJ7gOMekvYoIaPeUAsJgFVwHccQDI0XU3HCKLF4jxEdge3LrxIjI4iyH9WXUx6DktI7vLzuiVY4B/wqjlJxk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=FT7dzVsn; arc=none smtp.client-ip=209.85.128.53
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1769703238; c=relaxed/simple;
+	bh=La9o6W4y0vVBdcH6KlN6XyFOKCu8acKZkPR8qhv2+vE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=JZEBplK+140FXvlXjzq/HzJE6vemql/Vf3b81/K70VMvdmtF5ZgBijvSZBcyZSSHMDYkyGVQMMmMSnRIj0xnRK9DraClOpg8KjhiPFn9/R6aH4DxPoorxdLKAJGnT0f728c5kcPmhPsEXROYAnkwG7jB8pnJJY4DHUr9yjMMNDI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lRPlLdn+; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="FT7dzVsn"
-Received: by mail-wm1-f53.google.com with SMTP id 5b1f17b1804b1-4806f9e61f9so6320005e9.1
-        for <linux-scsi@vger.kernel.org>; Thu, 29 Jan 2026 07:54:50 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1769702088; x=1770306888; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=rgSIXDM9Q8jFQpsfIVGKAZMTSqvcnmD4Z2E/dsepmqI=;
-        b=FT7dzVsn/AAOHeaUC8tsHFnanWQTYd/29NKwgz4z42MmHqoHyQk4H/xW0jYK0zGHfS
-         CmJm/JC2lE8qQMznjCdUCSHOsO9GscmCu48PkkmkTML7CpstX+IERMpKEpAB0eQ4NigO
-         afMBjbw+GKbBMp4nQECEj5tzIBYBdAFgulkROmS9QHLWF76jSLK1eYC0FAPGy0IRJkMH
-         VS6FYF79f1o2hZtIJWtvFHlXffvzCkeAET5EiQO/oTCcB8gXE5QxhwMXXOxLXSp72C+U
-         OYVdu+OjwLT5wbDsm7rGbgzuQlv7JzSAbt9tEJ1u0b+UpNbw8mMkReZJ9Iuxiua7SXtl
-         xdOw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1769702088; x=1770306888;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=rgSIXDM9Q8jFQpsfIVGKAZMTSqvcnmD4Z2E/dsepmqI=;
-        b=MtL9p2RxvigECG26tCnibA971/jYqbvJk1g94IWl7bdfDQVPEdWv86gF8wH+bQW6yx
-         9/2fU0n6y9BLQS+sQEn7Rzz6AbWEgsYQehKV9F+R+h4hs7ikLrmGgoCBoHNuoiKZpIZG
-         poxAmFNBbfRyEmhJfnmM5vWvMIIN/Cag5oW1VYCOwXD7Pp48fMyz64iTuveoPHi0X4/U
-         Oq3QlUjw/OeiPpeqCWTmr72N6ua8Kt7S64Acw6DVMmwUhBo4LTOrNN8i5NcLXr6wcV9G
-         5UDykeo2Z/JTcrgmFwsjqLgImo2/fZT2e6Q0Mn54bI/3haQqMjVZ74snUJD7YdcOZdJw
-         AWbA==
-X-Forwarded-Encrypted: i=1; AJvYcCWcJoxkqLV7HMoEKi7PHtFM1ZYI69Infau7j+fgjFfpJeKFhPVG3e40QXiqYXU3uElE4bC/Hd0TcB+k@vger.kernel.org
-X-Gm-Message-State: AOJu0YzskgHukMOq+6TmiN+Kc62t+/MmIaOfz6zcO1WVzTm5+j3eydiO
-	tQ6uw9PPL4bqiNHe7M82xSHhdZpn+ZZ8L0JcSUvYM8dMeVbGh+rC9sH9
-X-Gm-Gg: AZuq6aK+A3n7C2w7Ujo4yfjlwTSSTF8ccV0qAtR2tqGFf8YeWlzz6hi870VR7nsaOSc
-	UVYsIeQzDOfTpyF32NDIoQ5vCtkKq2J5XVxDMbnyUh9yE2pEi504iVXmPgenlH889M+tkSN9BvI
-	nWe2RwM15SSQTw27dy1FLRvkgpElOSJawpDkl5d7wyr9NjyzsJa9jXpINXqYxNl4WMZ702mc8Vy
-	d/prkUhxF/iK7BGpFvb+JsWHVfQ2G639pukp0SjHGtE7QeYXH1ak66pu9zHBdWgYpQgtFztaxjZ
-	se7iXdvcc1jOBzXutJILMcC7aainpiQEKjg0yC3+vPoH/4eHdEslxctsnrEnnzYZvU093lZVxjf
-	PSOhr4IUNhLhxrpMvQVRrysFwJMFtABQNzs3dUvKcQnGyWEgIe6mIKL9KRWTeIL8ZW8aUEyzA8Z
-	MX/lj26hUnsA==
-X-Received: by 2002:a05:600c:4ed0:b0:480:4a90:1b00 with SMTP id 5b1f17b1804b1-48069c69584mr113197125e9.20.1769702088044;
-        Thu, 29 Jan 2026 07:54:48 -0800 (PST)
-Received: from localhost ([87.254.0.129])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-481a5e18429sm6767465e9.16.2026.01.29.07.54.47
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 29 Jan 2026 07:54:47 -0800 (PST)
-From: Colin Ian King <colin.i.king@gmail.com>
-To: "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	Bart Van Assche <bvanassche@acm.org>,
-	Naresh Kumar Inna <naresh@chelsio.com>,
-	linux-scsi@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] scsi: csiostor: Fix dereference of null pointer rn
-Date: Thu, 29 Jan 2026 15:53:32 +0000
-Message-ID: <20260129155332.196338-1-colin.i.king@gmail.com>
-X-Mailer: git-send-email 2.51.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lRPlLdn+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 74017C4CEF7;
+	Thu, 29 Jan 2026 16:13:55 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1769703238;
+	bh=La9o6W4y0vVBdcH6KlN6XyFOKCu8acKZkPR8qhv2+vE=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=lRPlLdn++Td8jmuOq6JleUntXrH91GO4yrJZdWSzMPTDmpPBJ6nv76jPziMi9ovQp
+	 bIn02G/pVE0WSFFQmfs4D1nBRF7jyfqdm7ehToSqEm91VEq0IutGkhv3z1n9RPuTNq
+	 07q0cp4WRe74VrHEBVTpBegZIA/HFkpII9yOkSQrViRSZbri6Umnol8B8tzJ6/hFgD
+	 ooc+izjKn0i5pxc9MlAcI6lh8Xbnz+ypRl6Awzf5VWArZUfWKLIV4l64hYaquEYURB
+	 CwO2X2rA1nCqjH75mPKQtKLqEM/8oUvJbHJY7TUdsRFkbGTVS3GiTVhk7thEdz6std
+	 VQBPs3W7lUXTA==
+Date: Thu, 29 Jan 2026 17:13:52 +0100
+From: Christian Brauner <brauner@kernel.org>
+To: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, 
+	linux-block@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, 
+	linux-nvme@lists.infradead.org, bpf@vger.kernel.org
+Cc: lsf-pc@lists.linux-foundation.org, linux-kernel@vger.kernel.org, 
+	lwn@lwn.net
+Subject: Re: LSF/MM/BPF: 2026: Call for Proposals
+Message-ID: <20260129-beidseitig-unwohl-9ae543e9f9f5@brauner>
+References: <20260110-lsfmm-2026-cfp-ae970765d60e@brauner>
+ <20260119-bagger-desaster-e11c27458c49@brauner>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <20260119-bagger-desaster-e11c27458c49@brauner>
 
-The error exit path when rn is NULL ends up deferencing the null
-pointer rn via the use of the macro CSIO_INC_STATS. Fix this by
-adding a new error return path label after the use of the macro
-to avoid the deference.
+On Mon, Jan 19, 2026 at 03:26:39PM +0100, Christian Brauner wrote:
+> > (1) Fill out the following Google form to request attendance and
+> >     suggest any topics for discussion:
+> > 
+> >           https://forms.gle/hUgiEksr8CA1migCA
+> > 
+> >     If advance notice is required for visa applications, please point
+> >     that out in your proposal or request to attend, and submit the topic
+> >     as soon as possible.
 
-Fixes: a3667aaed569 ("[SCSI] csiostor: Chelsio FCoE offload driver")
-Signed-off-by: Colin Ian King <colin.i.king@gmail.com>
----
- drivers/scsi/csiostor/csio_scsi.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+This is another reminder to put in your invitation request!
 
-diff --git a/drivers/scsi/csiostor/csio_scsi.c b/drivers/scsi/csiostor/csio_scsi.c
-index c29bf2807e31..05137784f369 100644
---- a/drivers/scsi/csiostor/csio_scsi.c
-+++ b/drivers/scsi/csiostor/csio_scsi.c
-@@ -2074,7 +2074,7 @@ csio_eh_lun_reset_handler(struct scsi_cmnd *cmnd)
- 	struct csio_scsi_level_data sld;
- 
- 	if (!rn)
--		goto fail;
-+		goto fail_ret;
- 
- 	csio_dbg(hw, "Request to reset LUN:%llu (ssni:0x%x tgtid:%d)\n",
- 		      cmnd->device->lun, rn->flowid, rn->scsi_id);
-@@ -2220,6 +2220,7 @@ csio_eh_lun_reset_handler(struct scsi_cmnd *cmnd)
- 	csio_put_scsi_ioreq_lock(hw, scsim, ioreq);
- fail:
- 	CSIO_INC_STATS(rn, n_lun_rst_fail);
-+fail_ret:
- 	return FAILED;
- }
- 
--- 
-2.47.3
+What are you waiting for? The weather in Croatia in May is nice. What
+could be better than soaking up some sun through the meeting room window
+while someone's asking you to make your locking more complicated, grow
+your data structure by just a few bytes, or to add some more spaghetti
+to that code?
 
+Please also don't forget to pester^wask^wremind your respective
+organizations to sponsor LSF/MM/BPF 2026! Bring it up as much as you
+bring up that patch on-list that didn't get accepted but would've made
+everything so much better.
+
+Thanks!
+Christian
