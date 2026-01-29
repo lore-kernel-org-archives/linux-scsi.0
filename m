@@ -1,149 +1,105 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6A04D31C57B;
-	Wed, 28 Jan 2026 21:51:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA5F029D293
+	for <linux-scsi@vger.kernel.org>; Thu, 29 Jan 2026 03:20:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.33
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769637092; cv=none; b=p0z2t0gp7EkezG7fkWBdozMLCvPiE8b04l+FLvNElYu13R6Nh//JTYMeMkP8va8QrUYnEplrPsSlz9NRxAVEss2j6MuBNfdTTYPaxeNfZ3rIOsmAbP7e6HvniirJh0siRdY3qu8ecfvYBMLQg0rEP+Ulsd0nq/7drllnvESk2FI=
+	t=1769656824; cv=none; b=mClPLPEJHjloSXfI+jS2NBk65yR/rjA42c3v5Zum72NKtwXg7AkUFhLxjwsJ/ezX24U0hegYzc0SSwROf3Hf/85YuL7fobwC5RgEWGqV5TtxtF/5DTE/WspCi4BfmUtJPU1ON5Xm+wNvT/7dVpC17d4XF0VYZEjxnMrbLXFbox4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769637092; c=relaxed/simple;
-	bh=jd/m6ATiT++9/cH2mRhstNtAGJEDjd8OgcmOnu0mXWU=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=qYbUfrXsxyShlepV7Gqc6OkbhSsSZ3bBiW3bB2dF9CZCjfJPqwNvYKueoy+TMy/babpq2dcQ5UaVKQJMi0w991dyv79BSEim2MXPCVGnmx+NY7VlmqfdBGzc6yj+UCdIz3iBfubsKxzCZsQXeyDqjWM7sN8DLAZBJnFXvrX4mak=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ypu8e0xL; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1769656824; c=relaxed/simple;
+	bh=yQPJ4GFNyXGAOkR8CTwUmXYRfxABL75TYNhGtTZmUTk=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:MIME-Version:
+	 Content-Type:References; b=uMT5gz89xTDCJHWAjHpeX6MtfeGNVtr5fDTm+l5r8i3ex7smR7LT4+9oCG+jcPzYHupn/wU62Z588v7sSNOLPc8ZpqlSVEzRmq4oqo2I7QTUicr6dQKyOE4T7DiW1kQP0rb1O/aidwmZgu4wJmWfrd8F2GlPR5fn/wuoxa7c5Ho=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=myXdrCbq; arc=none smtp.client-ip=203.254.224.33
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ypu8e0xL"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9E5FAC4CEF1;
-	Wed, 28 Jan 2026 21:51:28 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1769637092;
-	bh=jd/m6ATiT++9/cH2mRhstNtAGJEDjd8OgcmOnu0mXWU=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Ypu8e0xLeAzQkaVnrXua7G8E9oF19JxmuoWyy/ov1c6he9+meQuexyqRkGxb3bHR2
-	 FcwTZCNPXBqzlxnAAohWG4TDQIauXUGSOIPPh8iWWgTsBUA/uvsvt3Qs20ac7pPSqh
-	 0L8HxqHmE1/PsqHSdMug5NP/WHBVUl1cdMgicrUM6s/BYSGlBvs4KsDDnDmHNgEaPC
-	 ROgHlm+Zh9EFdBS4kBfqv78oEN57nXVCiYKozOftp5/8+hsR1DzDBZ6ufIpMSyZZol
-	 sk0Bg2FovzUMLzz9NJMrftq6KvisfNhQf0aG7us3jRlani3euJRjxMXUfsaAhLdLYo
-	 fs+0VPxAsCDrQ==
-Date: Wed, 28 Jan 2026 22:51:26 +0100
-From: Niklas Cassel <cassel@kernel.org>
-To: Markus Probst <markus.probst@posteo.de>
-Cc: Damien Le Moal <dlemoal@kernel.org>, Lee Jones <lee@kernel.org>,
-	Pavel Machek <pavel@kernel.org>, Rob Herring <robh@kernel.org>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Jacek Anaszewski <jacek.anaszewski@gmail.com>,
-	John Garry <john.g.garry@oracle.com>,
-	Jason Yan <yanaijie@huawei.com>,
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Pavel Machek <pavel@ucw.cz>, linux-leds@vger.kernel.org,
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
-	Ian Pilcher <arequipeno@gmail.com>
-Subject: Re: [PATCH RFC 0/4] leds: extend disk trigger
-Message-ID: <aXqE3tn4ACa9HnwU@ryzen>
-References: <20260123-ledtrig_disk_-v1-0-07004756467b@posteo.de>
- <aXctPaaXFYemV20T@ryzen>
- <ce454969b83dbb0e3bb4ea78f682603cc328ceb9.camel@posteo.de>
- <aXiGNZm12vLhQJ4Q@fedora>
- <20f855baaa7c36010eab9997a2f43b4f62be726b.camel@posteo.de>
- <2382dee0-983f-4c69-af7b-a7a48cad23aa@kernel.org>
- <c34fb5404e7033fe719b0072ea8a87a1caa2bf80.camel@posteo.de>
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="myXdrCbq"
+Received: from epcas5p1.samsung.com (unknown [182.195.41.39])
+	by mailout3.samsung.com (KnoxPortal) with ESMTP id 20260129032019epoutp0382c44a3d500f2376c1b26b7543c6bcc7~PFYBxT5An2252322523epoutp03I
+	for <linux-scsi@vger.kernel.org>; Thu, 29 Jan 2026 03:20:19 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20260129032019epoutp0382c44a3d500f2376c1b26b7543c6bcc7~PFYBxT5An2252322523epoutp03I
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1769656820;
+	bh=dxOGgWTz2qsdcXCisfq99m95YS1mWPUuBANvG+zg+/U=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=myXdrCbqThfNV1xjnqjCves6hDLF4+sGYS9/FMeYhTvc8ijujGY8Q7YJC8TBr3lNf
+	 NkwbAbxm8L4tWZ9KQ8EZR53ty3JQ77miBZuFIRx8nLUCpn50yxwp1mrPp0GGo/kfdr
+	 7wAbS2IL2etT/ZXYPmhkm1yxfUIpRaoSKl3v1238=
+Received: from epsnrtp02.localdomain (unknown [182.195.42.154]) by
+	epcas5p2.samsung.com (KnoxPortal) with ESMTPS id
+	20260129032019epcas5p21f605eac32f9f1d2dabc4c067af323ba~PFYBQh4ON1818718187epcas5p2b;
+	Thu, 29 Jan 2026 03:20:19 +0000 (GMT)
+Received: from epcas5p1.samsung.com (unknown [182.195.38.93]) by
+	epsnrtp02.localdomain (Postfix) with ESMTP id 4f1kst2ypjz2SSKj; Thu, 29 Jan
+	2026 03:20:18 +0000 (GMT)
+Received: from epsmtip1.samsung.com (unknown [182.195.34.30]) by
+	epcas5p3.samsung.com (KnoxPortal) with ESMTPA id
+	20260129031038epcas5p3975b1f66414a7393b85c362523ebe1b8~PFPkiqM3y1571115711epcas5p3b;
+	Thu, 29 Jan 2026 03:10:38 +0000 (GMT)
+Received: from testpc12933.samsungds.net (unknown [109.105.129.33]) by
+	epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
+	20260129031037epsmtip168365c55793bea30e129507021d865ea~PFPjj5UKO0411304113epsmtip1o;
+	Thu, 29 Jan 2026 03:10:37 +0000 (GMT)
+From: "zheng.gong" <zheng.gong@samsung.com>
+To: linux-scsi@vger.kernel.org
+Cc: avri.altman@wdc.com, bvanassche@acm.org, quic_cang@quicinc.com,
+	alim.akhtar@samsung.com, martin.petersen@oracle.com, ebiggers@kernel.org,
+	linux-kernel@vger.kernel.org, "zheng.gong" <zheng.gong@samsung.com>
+Subject: [PATCH v4 0/3] scsi: ufs: Add crypto_keyslot_remap support
+Date: Thu, 29 Jan 2026 11:10:30 +0800
+Message-ID: <20260129031033.3428295-1-zheng.gong@samsung.com>
+X-Mailer: git-send-email 2.50.1
+In-Reply-To: <20251112031035.GA2832160@google.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <c34fb5404e7033fe719b0072ea8a87a1caa2bf80.camel@posteo.de>
+Content-Transfer-Encoding: 8bit
+X-CMS-MailID: 20260129031038epcas5p3975b1f66414a7393b85c362523ebe1b8
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: REQ_APPROVE
+CMS-TYPE: 105P
+cpgsPolicy: CPGSC10-505,Y
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20260129031038epcas5p3975b1f66414a7393b85c362523ebe1b8
+References: <20251112031035.GA2832160@google.com>
+	<CGME20260129031038epcas5p3975b1f66414a7393b85c362523ebe1b8@epcas5p3.samsung.com>
 
-Hello Markus,
+Hello Eric,
 
-On Wed, Jan 28, 2026 at 03:44:19PM +0000, Markus Probst wrote:
-> Something similar with scsi and ata exists. scsi doesn't expose the
-> firmware_node and there is no symlink (or other connection that I am
-> ware of) between scsi_* and ata_* in sysfs. This means, I cannot map a
-> fwnode path to a block device.
+Sorry for late due to other affairs.
 
-Hopefully this might help you:
+Readjuest the patchset adds support for platform-specific crypto keyslot
+remapping in the exynos UFS host driver.
 
-$ ls -al /sys/class/scsi_device | grep ata
-lrwxrwxrwx.  1 root root 0 Jan 29 05:12 4:0:0:0 -> ../../devices/pci0000:00/0000:00:17.0/ata5/host4/target4:0:0/4:0:0:0/scsi_device/4:0:0:0
-lrwxrwxrwx.  1 root root 0 Jan 29 05:12 5:0:0:0 -> ../../devices/pci0000:00/0000:00:17.0/ata6/host5/target5:0:0/5:0:0:0/scsi_device/5:0:0:0
-lrwxrwxrwx.  1 root root 0 Jan 29 05:12 8:0:0:0 -> ../../devices/pci0000:00/0000:00:17.0/ata9/host8/target8:0:0/8:0:0:0/scsi_device/8:0:0:0
-lrwxrwxrwx.  1 root root 0 Jan 29 05:12 9:0:0:0 -> ../../devices/pci0000:00/0000:00:17.0/ata10/host9/target9:0:0/9:0:0:0/scsi_device/9:0:0:0
+The 1st patch raise a new variant op:
+  ufs_hba_variant_ops::crypto_keyslot_remap
+which allows platforms to adjust the keyslot index at io request period.
 
+The 2nd patch adds a real, upstream user in ufs-exynos.c that supports
+remapping via device tree. This makes the hook justifiable for mainline
+inclusion.
 
-For a specific device, e.g. 4:0:0:0:
+The 3rd patch adds DT binding description for the new property
+'ufs-keyslot-offset'.
 
-$ realpath /sys/class/scsi_device/4:0:0:0/
-/sys/devices/pci0000:00/0000:00:17.0/ata5/host4/target4:0:0/4:0:0:0/scsi_device/4:0:0:0
+zheng.gong (3):
+  scsi: ufs: crypto: Add ufs_hba_variant_ops::crypto_keyslot_remap
+  scsi: ufs: exynos: Support crypto keyslot remapping via DT
+  dt-bindings: ufs: Add binding for ufs-keyslot-offset
 
-To get the block device name:
-$ ls /sys/class/scsi_device/4:0:0:0/device/block/
-sda
+ .../bindings/ufs/samsung,exynos-ufs.yaml         |  5 +++++
+ drivers/ufs/core/ufshcd-crypto.h                 | 10 ++++++++--
+ drivers/ufs/core/ufshcd.c                        |  9 +++++----
+ drivers/ufs/host/ufs-exynos.c                    | 16 ++++++++++++++++
+ include/ufs/ufshcd.h                             |  6 ++++++
+ 5 files changed, 40 insertions(+), 6 deletions(-)
 
-or
+-- 
+2.50.1
 
-$ ls /sys/devices/pci0000:00/0000:00:17.0/ata5/host4/target4:0:0/4:0:0:0/scsi_device/4:0:0:0/device/block/
-sda
-
-
-You can parse the port from the path. The above example is port 5.
-
-If using a port multiplier (PM), there can be multiple links/devices per port.
-
-
-Otherwise, for SATA there should be only one.
-
-$ ls -al /sys/class/ata_port/ata5/device/ | grep link | wc -l
-1
-
-$ ls -al /sys/class/ata_port/ata5/device/link5/dev5.0/firmware_node
-
-or
-
-$ ls -al  /sys/class/ata_device/dev5.*/device/firmware_node
-
-
-
-For PCI BDF, you can use /dev/disk/by-path/
-
-$ ls -al /dev/disk/by-path/ | grep ata
-lrwxrwxrwx.  1 root root   9 Jan 29 05:11 pci-0000:00:17.0-ata-3 -> ../../sda
-lrwxrwxrwx.  1 root root   9 Jan 29 05:11 pci-0000:00:17.0-ata-3.0 -> ../../sda
-lrwxrwxrwx.  1 root root   9 Jan 29 05:11 pci-0000:00:17.0-ata-4 -> ../../sdb
-lrwxrwxrwx.  1 root root   9 Jan 29 05:11 pci-0000:00:17.0-ata-4.0 -> ../../sdb
-lrwxrwxrwx.  1 root root   9 Jan 29 05:11 pci-0000:00:17.0-ata-7 -> ../../sdc
-lrwxrwxrwx.  1 root root   9 Jan 29 05:11 pci-0000:00:17.0-ata-7.0 -> ../../sdc
-lrwxrwxrwx.  1 root root   9 Jan 29 05:11 pci-0000:00:17.0-ata-8 -> ../../sdd
-lrwxrwxrwx.  1 root root   9 Jan 29 05:11 pci-0000:00:17.0-ata-8.0 -> ../../sdd
-
-Note that these suffixes do not correlate to the ata port number in /sys/class/ata_*
-
-
-$ ls -al /sys/class/ata_port/
-total 0
-drwxr-xr-x.  2 root root 0 Jan 29 05:11 .
-drwxr-xr-x. 84 root root 0 Jan 29 05:12 ..
-lrwxrwxrwx.  1 root root 0 Nov 19 04:01 ata1 -> ../../devices/pci0000:00/0000:00:11.5/ata1/ata_port/ata1
-lrwxrwxrwx.  1 root root 0 Jan 29 05:26 ata10 -> ../../devices/pci0000:00/0000:00:17.0/ata10/ata_port/ata10
-lrwxrwxrwx.  1 root root 0 Nov 19 04:01 ata11 -> ../../devices/pci0000:50/0000:50:02.0/0000:51:00.0/ata11/ata_port/ata11
-lrwxrwxrwx.  1 root root 0 Nov 19 04:01 ata12 -> ../../devices/pci0000:50/0000:50:02.0/0000:51:00.0/ata12/ata_port/ata12
-lrwxrwxrwx.  1 root root 0 Nov 19 04:01 ata13 -> ../../devices/pci0000:50/0000:50:02.0/0000:51:00.0/ata13/ata_port/ata13
-lrwxrwxrwx.  1 root root 0 Nov 19 04:01 ata2 -> ../../devices/pci0000:00/0000:00:11.5/ata2/ata_port/ata2
-lrwxrwxrwx.  1 root root 0 Jan 29 05:26 ata3 -> ../../devices/pci0000:00/0000:00:17.0/ata3/ata_port/ata3
-lrwxrwxrwx.  1 root root 0 Jan 29 05:26 ata4 -> ../../devices/pci0000:00/0000:00:17.0/ata4/ata_port/ata4
-lrwxrwxrwx.  1 root root 0 Jan 29 05:26 ata5 -> ../../devices/pci0000:00/0000:00:17.0/ata5/ata_port/ata5
-lrwxrwxrwx.  1 root root 0 Jan 29 05:26 ata6 -> ../../devices/pci0000:00/0000:00:17.0/ata6/ata_port/ata6
-lrwxrwxrwx.  1 root root 0 Jan 29 05:26 ata7 -> ../../devices/pci0000:00/0000:00:17.0/ata7/ata_port/ata7
-lrwxrwxrwx.  1 root root 0 Jan 29 05:26 ata8 -> ../../devices/pci0000:00/0000:00:17.0/ata8/ata_port/ata8
-lrwxrwxrwx.  1 root root 0 Jan 29 05:26 ata9 -> ../../devices/pci0000:00/0000:00:17.0/ata9/ata_port/ata9
-
-
-Kind regards,
-Niklas
