@@ -1,97 +1,122 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1645726E71F;
-	Thu, 29 Jan 2026 04:41:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B13C21E5B70
+	for <linux-scsi@vger.kernel.org>; Thu, 29 Jan 2026 06:22:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.33
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769661675; cv=none; b=bfVMo21yZplp2yEyXlcBRKM9yYc60u2y+KhySXL3lDpna+U1U0TMCB3qyj1RCBoh0Ek2dErctkgacv/eHNMUTHpJGltXFcU9i4uNGo3rN0PK/JXojQjP6sTjw53vq78792jTVBuGuZ2rsS62XTmtOfnCIJ+67wK9Pu0mk4R+txM=
+	t=1769667776; cv=none; b=DPbWmFg2ktTIIExKUi3bwPRoNtwugwPYqtGHavuX+HrfCuU+zqqP2tEvhjtNU/CEWcDALqZUjnYlavLwtLjkt5AR4+veQ5wHV44ibg0yVG8LmH3Nr5tdDo96M9y581JwNDuKHnnv1NKanNftO9D2CeTzQvmCGnSk3woqDI8CW6k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769661675; c=relaxed/simple;
-	bh=gROWjWmyD7Nqp3cAvySmJU8PRCZMcKtAX74x9H8kGuA=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=KmVXpo9/GCFHISkbQ1GUxUOUUgTDExhc+ZrQKoZEHJI5VsJYGu4XBiOTBZ35m+AU/lxHzK91lAyvabKcNTrzd6CGzEfD2xssEy9i6zeaB/oJnVqUhqmegXKNK2YjmZdHyoFMBDDa6Ktc1Oxvxfota9UoqbJFU58OjIn/EYmnNBc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ICkOUpqn; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1769667776; c=relaxed/simple;
+	bh=I6Fr/YujG5kY3udIbUtO/8Cp56SbxfDZQHhbtQwkX2s=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:MIME-Version:
+	 Content-Type:References; b=JiuTiopEDGzeQQAm+Cf+6L4B+9eYXFQt+hBH9uIGc7dGRg3Qtwt1OCOtxMIXz59Itc6p/CUhY17wz9HHyFKC9YrllXpC353G4lvtbkApZgyuySU/IfBmtuBMzss4D4Nx2M8ghGXFiuv0uYmrxezkzzZIo0XhoJSTG9GtJy8fKE4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=CHklQ68o; arc=none smtp.client-ip=203.254.224.33
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ICkOUpqn"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D7CAAC116D0;
-	Thu, 29 Jan 2026 04:41:11 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1769661674;
-	bh=gROWjWmyD7Nqp3cAvySmJU8PRCZMcKtAX74x9H8kGuA=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=ICkOUpqn6bj8mPbjH6dzPbCIEiLLmTRtoGZX1UAB841E9xUZ7nn2H64sKhEX5B/9p
-	 jkpsgVWgeoQ6/X24R5XDeYveTYQUkQkz7DAaUcLGQjcF6T4gyRjdvcubWlqfjqMQ0Q
-	 +zszQx3lWJfFbOK7+XGW1xGvBwLrh9pY2BcMNrPoVpD2PdexL+kCphAo2V+cY+UGKl
-	 8m+pTwrT24O3RXWdv15EbqR16sVxEhaWuP0xsi04FTqr2qtly1PCzxzn+SxNR9yGcm
-	 1cVnwerlAzE4OZlq/Ucj1eBt37Bjn0u1OWQ30rg6aMrTE8+aDQ1oNIHT3sODuefx+H
-	 ZSGkBcd/+EN9g==
-Message-ID: <9e062635-f946-4a8b-862d-a38bfc50d6ce@kernel.org>
-Date: Thu, 29 Jan 2026 13:41:10 +0900
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="CHklQ68o"
+Received: from epcas5p4.samsung.com (unknown [182.195.41.42])
+	by mailout3.samsung.com (KnoxPortal) with ESMTP id 20260129062252epoutp034b2a9b6b3c7f18e2d6c2a25cea3e8c5d~PH3aQzxoQ1058910589epoutp03g
+	for <linux-scsi@vger.kernel.org>; Thu, 29 Jan 2026 06:22:52 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20260129062252epoutp034b2a9b6b3c7f18e2d6c2a25cea3e8c5d~PH3aQzxoQ1058910589epoutp03g
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1769667772;
+	bh=jph+wUnLlCRFQcr4iB2hzFiOjy3APcOw4EwJOk+Udiw=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=CHklQ68o69JoOnK4vIe++2GJJpT2VMHME4EmGEWsG4/Di6CHb9Kj25f6Hol19lNKC
+	 dkb2GYXla0JPjF0PkR1VElpJHMxUbl89HIuU9s2F7J1bPDRTxxzsVryvfLKgo0kSWm
+	 j7EuMoE7SzdFsdY92Ad+E0EagKy9wIlyrGkriBKg=
+Received: from epsnrtp04.localdomain (unknown [182.195.42.156]) by
+	epcas5p4.samsung.com (KnoxPortal) with ESMTPS id
+	20260129062252epcas5p4d48892413c8ae46091faab70f0dd5b20~PH3Z3DRO91933119331epcas5p46;
+	Thu, 29 Jan 2026 06:22:52 +0000 (GMT)
+Received: from epcas5p2.samsung.com (unknown [182.195.38.93]) by
+	epsnrtp04.localdomain (Postfix) with ESMTP id 4f1pwW174Jz6B9m6; Thu, 29 Jan
+	2026 06:22:51 +0000 (GMT)
+Received: from epsmtip2.samsung.com (unknown [182.195.34.31]) by
+	epcas5p2.samsung.com (KnoxPortal) with ESMTPA id
+	20260129061800epcas5p27ea107df6d3b296e4a63d948a8d6af17~PHzKkQigs2810128101epcas5p2m;
+	Thu, 29 Jan 2026 06:18:00 +0000 (GMT)
+Received: from testpc12933.samsungds.net (unknown [109.105.129.33]) by
+	epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
+	20260129061759epsmtip282fc76f950b7432ee8e62dfe060a6ccc~PHzJn5IiV2848628486epsmtip2K;
+	Thu, 29 Jan 2026 06:17:59 +0000 (GMT)
+From: "zheng.gong" <zheng.gong@samsung.com>
+To: linux-scsi@vger.kernel.org
+Cc: avri.altman@wdc.com, bvanassche@acm.org, quic_cang@quicinc.com,
+	alim.akhtar@samsung.com, martin.petersen@oracle.com, ebiggers@kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re:Re: [PATCH v4 0/3] scsi: ufs: Add crypto_keyslot_remap support
+Date: Thu, 29 Jan 2026 14:17:58 +0800
+Message-ID: <20260129061758.329806-1-zheng.gong@samsung.com>
+X-Mailer: git-send-email 2.50.1
+In-Reply-To: <20251112031035.GA2832160@google.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH RFC 0/4] leds: extend disk trigger
-To: Markus Probst <markus.probst@posteo.de>, Niklas Cassel <cassel@kernel.org>
-Cc: Lee Jones <lee@kernel.org>, Pavel Machek <pavel@kernel.org>,
- Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>,
- Conor Dooley <conor+dt@kernel.org>,
- Jacek Anaszewski <jacek.anaszewski@gmail.com>,
- John Garry <john.g.garry@oracle.com>, Jason Yan <yanaijie@huawei.com>,
- "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- Pavel Machek <pavel@ucw.cz>, linux-leds@vger.kernel.org,
- devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
- Ian Pilcher <arequipeno@gmail.com>
-References: <20260123-ledtrig_disk_-v1-0-07004756467b@posteo.de>
- <aXctPaaXFYemV20T@ryzen>
- <ce454969b83dbb0e3bb4ea78f682603cc328ceb9.camel@posteo.de>
- <aXiGNZm12vLhQJ4Q@fedora>
- <20f855baaa7c36010eab9997a2f43b4f62be726b.camel@posteo.de>
- <2382dee0-983f-4c69-af7b-a7a48cad23aa@kernel.org>
- <c34fb5404e7033fe719b0072ea8a87a1caa2bf80.camel@posteo.de>
-Content-Language: en-US
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <c34fb5404e7033fe719b0072ea8a87a1caa2bf80.camel@posteo.de>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-CMS-MailID: 20260129061800epcas5p27ea107df6d3b296e4a63d948a8d6af17
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: REQ_APPROVE
+CMS-TYPE: 105P
+cpgsPolicy: CPGSC10-505,Y
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20260129061800epcas5p27ea107df6d3b296e4a63d948a8d6af17
+References: <20251112031035.GA2832160@google.com>
+	<CGME20260129061800epcas5p27ea107df6d3b296e4a63d948a8d6af17@epcas5p2.samsung.com>
 
-On 1/29/26 00:44, Markus Probst wrote:
->> That will allow checking if anything is missing in the kernel
->> interface to do that nicely.
-> There is.
-> 
-> I noticed for leds, that the fwnode path isn't exposed in sysfs.
-> "/sys/class/leds/<name>/device/firmware_node/path" exists, but points
-> to the parent device.
-> 
-> Something similar with scsi and ata exists. scsi doesn't expose the
-> firmware_node and there is no symlink (or other connection that I am
-> ware of) between scsi_* and ata_* in sysfs. This means, I cannot map a
-> fwnode path to a block device.
-> 
-> If I want to distribute a pre-defined config for such led userspace
-> daemon alongside the ACPI Overlay for a specific NAS model, I need an
-> identifier that is equal across all devices with that specific NAS
-> model.
-> 
-> This is less of an issue for leds, but given that leds could be renamed
-> on name collisions the issue still exists.
+Hi Eric,
 
-All of this is not the hot path, so we can work on it.
+Thank you for ur kind question. I understand your concern.
+the confusion arises from the coexistence of two different UFS drivers on Exynos platforms.
 
-If new sysfs device attributes for an ATA device, you can add them to
-ata_ncq_sdev_attrs in libata-sata.c. These show up as part of the scsi device
-attributes, so if you define this well with the scsi side, the same attribute
-names can be used for pure scsi devices and ATA devices served with libata.
+There are two distinct UFS host controller implementations on Samsung Exynos:
+- ufs-exynos.c
+- ufs-exynosautovX.c
+
+But ufs-exynosautovX is not mainlined, which:
+- Uses a hardware crypto engine that does support keyslots
+- Assigns keyslots to VMs (e.g., QNX, Linux, Android)
+- Needs to remap logical keyslot + VM-specific offset at request time
+
+We added a minimal, DT-based remap in ufs-exynos.c not because mobile uses it, but to:
+- Prove that the hook has a real, upstream-mergeable use pattern
+- Show that the mechanism can be used by actual platform
+
+It is a generic, not tied to one usecase.
+
+As for how we use it in our platform.
+
+In our driver, we implement as like:
+
+void exynos_ufs_fmp_crypto_keyslot_remap(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
+{
+    struct exynosauto_ufs *ufs = to_exynosauto_ufs(hba);
+    u32 vm_id = ufs->iov->vm_id;
+    u32 offset = vm_id * UFS_KEYSLOTS;
+
+    if (lrbp->crypto_key_slot >= 0)
+        lrbp->crypto_key_slot += offset;
+}
+
+We have tested this on ExynosAuto V920 platform with:
+4 virtual machines: QNX, Linux, Linux, Android.
+Each VM has its own UFS VH and keyslot range as per allocation.
+Inline encryption is enabled for all VMs. offset is configured in dt for each VH node.
+
+Despite driver resides in our out-of-tree exynosauto-modules and cannot be upstreamed easily,
+but the use case is real and actively used in production platform.
+
+To help move this forward, could you please let us know what additional 
+information or changes would be needed to make this patch acceptable?
+
+If it is not plausible for mainline, do u have any suggestion in terms of this kind of case?
+
+Appreciate it.
 
 
--- 
-Damien Le Moal
-Western Digital Research
