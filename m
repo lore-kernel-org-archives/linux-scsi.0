@@ -1,84 +1,119 @@
-Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pg1-f202.google.com (mail-pg1-f202.google.com [209.85.215.202])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D374D25485A;
-	Thu, 29 Jan 2026 16:43:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B0F71296BC1
+	for <linux-scsi@vger.kernel.org>; Thu, 29 Jan 2026 16:52:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.202
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769705033; cv=none; b=NMQQVhA65IPrEPBsA1qfaHQrK/9M0JLhuWxnCGHJEkcDE6PIJTUi9ArnBtuPus3235eFhbS7L6kXAxJzLiXwlFia/SNC6vJGRMr5oDVZroOcXNiC/vaNJUndTNt0dACidiXDbnJtM4UHrYpKSWK8pzqiTwQfY9gD4MVSVlmRrog=
+	t=1769705560; cv=none; b=AnUeMft9KsczSlrFf4Xnvsl0HS6soKDMdtP8CxJTLg+PviFYsHGdJGSH+zlEekx85CiLgV0lzf/Nn9rmsw6W4YJuxn1D13GuDEzjFzjVUH/6YrdyYNdLpr+vcqH1zq+F5uEPUKWRXbswKSKs+mqiBvLgZr8595CsE4bf+TVMBWM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769705033; c=relaxed/simple;
-	bh=6x/Xt7u+48LVS5qZbRzLiF5xCmZzw8Wh44GZZ3yNY8o=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Lt82cKvVpIUKtY28Aicuppn0EnhTTSrwaI4knN2uacH30PcI3v5hwPx0cFFm3yrg4DsDhHOy4cdUBqoBY54vQc4EL89jKISHfQXYpMXKYZeYo7l+MuGSqi2G9asctImf3Vuhyhaw0DJoApjjQ8n8mmYx2fEYR1dxjkMA6fFtvOk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=WIyhOWua; arc=none smtp.client-ip=199.89.1.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1769705560; c=relaxed/simple;
+	bh=B1MPTM/kJP5aRghCWlM0TtdejrUwSpsLDbd7d2LgvqE=;
+	h=Date:Mime-Version:Message-ID:Subject:From:To:Cc:Content-Type; b=aY3E17P62wAl5okjqsOOphjLwLQFV85fVKBDN2NZagqrtfC62n7XLt4jurrHkgIJzfPq+oOiUjEl5VOkOBQ581B3dpX6No4WaIba9UPVrUz/DdI1zh6Q/EbGGp2S/INd5o4jgxdprIwgFfEKoQcjHybaBKjeYwBSRW9LVVf1o5g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--thomasyen.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=bNwmq8wy; arc=none smtp.client-ip=209.85.215.202
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--thomasyen.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="WIyhOWua"
-Received: from localhost (localhost [127.0.0.1])
-	by 013.lax.mailroute.net (Postfix) with ESMTP id 4f24j32N80zlfl8L;
-	Thu, 29 Jan 2026 16:43:51 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1769705029; x=1772297030; bh=8IBfaP+jY3aUJxV9MXbFRvv9
-	G6Bgc/GCKR1UkyKzt1Q=; b=WIyhOWuaqc1JdtTPSpV6hIW8f07t91vM47DQa+Km
-	dZh9omHwJVWOnG3nfoZkw5j+Nzo/v7q1qubXKNjLoShGNRWCDbomyzXJAeFADPTG
-	EHaX3twklwmp14U44UNuftF1wrILGfgs8kqLTqFQj4IH6D3AaVkbWk+tdk09TUSN
-	0hAyBNr84dCFJximEjDxLQVadSq5t7BpaqolLzTQrs4eUtl5ylLm1+3ckZLjglI6
-	YczdxLwzAxjDGJjCf/qwv980hbT7SOuRh7pkTmkZZaxpwzTjBi0r0D035x/P8ac6
-	ZPbN+hTupFdLWPVeh0PAu54jKZdWei+bpYXl7heq0TuCVA==
-X-Virus-Scanned: by MailRoute
-Received: from 013.lax.mailroute.net ([127.0.0.1])
- by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id y6aJS1kQdb_N; Thu, 29 Jan 2026 16:43:49 +0000 (UTC)
-Received: from [100.119.48.131] (unknown [104.135.180.219])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4f24hz4zQ6zlfwHM;
-	Thu, 29 Jan 2026 16:43:47 +0000 (UTC)
-Message-ID: <33a0c782-3ca5-4e5a-8d53-2ae0cf1376b9@acm.org>
-Date: Thu, 29 Jan 2026 08:43:45 -0800
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="bNwmq8wy"
+Received: by mail-pg1-f202.google.com with SMTP id 41be03b00d2f7-c549aaa796dso2101123a12.1
+        for <linux-scsi@vger.kernel.org>; Thu, 29 Jan 2026 08:52:38 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20230601; t=1769705558; x=1770310358; darn=vger.kernel.org;
+        h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=xcI8KLWScQWADlApPVsSl8lWzsA1EUoFkehAyhaBPxM=;
+        b=bNwmq8wyFYJMZ0neaxdFwkcnXta0wpe21vKFaIUtdA93jw2ttSVtfY8LBsSLnxaK8O
+         miilxEuSKXfmSk+Stv2M6anfMbIpmhvHv7atm9N7TKXvsH6a5+kk46ZjT/XOjWTA3Xk1
+         fcvTCB+pzXiTodOI+yNiig9bF0SdntWNGNCdA7hHWj+jYZkR2Cr+ELAMM6a/LjlGCTwE
+         LZDRRkeAO3VuPtUEaX8sev9d00ZnQoUrkfR32dEbF03AHMLW/oVlCo53jhdBaKr57Jkg
+         PE6KQcaJKOpoaENMPcu4u873Bjn+G9IAusQ+Pwr8kRTgE9FUx2Al9cJZkmN4XfvXQDA5
+         KPxA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1769705558; x=1770310358;
+        h=cc:to:from:subject:message-id:mime-version:date:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=xcI8KLWScQWADlApPVsSl8lWzsA1EUoFkehAyhaBPxM=;
+        b=aptebch3sE5lRCgfCSMnBTQViAzasZUiodwPK0Ppl5dQTfOwFxGG6g31km6wOu2v2b
+         BlvNlalew6+zCJ/3GmM3bXAhhvaFVLZzQBtqiF2xxIUcaw+aN7aeEVfbTQkIT5xFz4KQ
+         OSUYn3WfFWYY8kjmEjHoOe98cz4vHid1yrdsxaDCoeXybjw/exlp4gOARdpm/eqN2Tut
+         9pGTHOqquSJCjEZ1Z8EnO7hjB0xTaeDflWR1oUXiux+5vbRiMKWA8TVsbuHW2XymNE60
+         wWagp3hTExlR12G4DwF9lnOpQfrQLh7Sa6Kdu5QVjAbKWI3WHR0DT4VIL8XLyxB+hbw7
+         zVaw==
+X-Forwarded-Encrypted: i=1; AJvYcCWUnZWT4l2viMuZnWl5ACvtDCMgY9Qechg5lMw1ArayA/Nk0160y+0fkTEzT0ZHKEXzxG9gvXYrls67@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw1I+fMlXRz8zDBGSLr0doE9ywkIBJRhJNlV6MtKYbfsNdqJyXy
+	+OdhFEREvR8/CrhmqGTQ0ytExLLV3U4SGK7YnEhkRxSEsrzVB9ACOwt8kdk+uKqlPR5SOxceD1X
+	9GyfE7HVUeRlIBeRQIQ==
+X-Received: from pgg10.prod.google.com ([2002:a05:6a02:4d8a:b0:bc4:233b:be04])
+ (user=thomasyen job=prod-delivery.src-stubby-dispatcher) by
+ 2002:a05:6a21:b82:b0:364:13ab:4119 with SMTP id adf61e73a8af0-38ec628953cmr8347913637.15.1769705557995;
+ Thu, 29 Jan 2026 08:52:37 -0800 (PST)
+Date: Fri, 30 Jan 2026 00:51:51 +0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4 1/3] scsi: ufs: crypto: Add
- ufs_hba_variant_ops::crypto_keyslot_remap
-To: "zheng.gong" <zheng.gong@samsung.com>, linux-scsi@vger.kernel.org
-Cc: avri.altman@wdc.com, quic_cang@quicinc.com, alim.akhtar@samsung.com,
- martin.petersen@oracle.com, ebiggers@kernel.org, linux-kernel@vger.kernel.org
-References: <20251112031035.GA2832160@google.com>
- <20260129031033.3428295-1-zheng.gong@samsung.com>
- <CGME20260129031040epcas5p1446e3f496de82836acdf78a400e6b116@epcas5p1.samsung.com>
- <20260129031033.3428295-2-zheng.gong@samsung.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20260129031033.3428295-2-zheng.gong@samsung.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Mime-Version: 1.0
+X-Mailer: git-send-email 2.53.0.rc1.225.gd81095ad13-goog
+Message-ID: <20260129165156.956601-1-thomasyen@google.com>
+Subject: [PATCH v4 1/1] scsi: ufs: core: Flush exception handling work when
+ RPM level is zero
+From: Thomas Yen <thomasyen@google.com>
+To: martin.petersen@oracle.com, James.Bottomley@HansenPartnership.com
+Cc: Thomas Yen <thomasyen@google.com>, Stable Tree <stable@vger.kernel.org>, 
+	Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>, 
+	Bart Van Assche <bvanassche@acm.org>, Peter Wang <peter.wang@mediatek.com>, 
+	Bean Huo <beanhuo@micron.com>, Adrian Hunter <adrian.hunter@intel.com>, 
+	"Bao D. Nguyen" <quic_nguyenb@quicinc.com>, Subhash Jadavani <subhashj@codeaurora.org>, 
+	Dolev Raviv <draviv@codeaurora.org>, Sujit Reddy Thumma <sthumma@codeaurora.org>, 
+	"open list:UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER" <linux-scsi@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 
-On 1/28/26 7:10 PM, zheng.gong wrote:
-> +static void __ufshcd_setup_cmd(struct ufs_hba *hba, struct ufshcd_lrb *lrbp,
-> +				  struct scsi_cmnd *cmd, u8 lun, int tag)
->   {
->   	memset(lrbp->ucd_req_ptr, 0, sizeof(*lrbp->ucd_req_ptr));
->   
->   	lrbp->cmd = cmd;
->   	lrbp->task_tag = tag;
->   	lrbp->lun = lun;
-> -	ufshcd_prepare_lrbp_crypto(cmd ? scsi_cmd_to_rq(cmd) : NULL, lrbp);
-> +	ufshcd_prepare_lrbp_crypto(hba, cmd ? scsi_cmd_to_rq(cmd) : NULL, lrbp);
->   }
+Ensure that the exception event handling work is explicitly flushed
+during suspend when the runtime power management level is set to
+UFS_PM_LVL_0.
 
-lrbp->cmd has been removed recently. Please use Martin's staging branch 
-when preparing patches for the upstream kernel.
+When the RPM level is zero, the device power mode and link state both
+remain active. Previously, the UFS core driver bypassed flushing
+exception event handling jobs in this configuration. This created a race
+condition where the driver could attempt to access the host controller
+to handle an exception after the system had already entered a deep
+power-down state, resulting in a system crash.
 
-Bart.
+Explicitly flush this work and disable auto BKOPs before the suspend
+callback proceeds. This guarantees that pending exception tasks complete
+and prevents illegal hardware access during the power-down sequence.
+
+Fixes: 57d104c153d3 ("scsi: ufs: ufshcd: Fix link state during system suspend")
+Signed-off-by: Thomas Yen <thomasyen@google.com>
+Cc: Stable Tree <stable@vger.kernel.org>
+---
+v4:
+ - Add Fixes tag.
+v3:
+ - Add logic to disable BKOPs.
+v2:
+ - Add Cc: stable tag.
+ - Reformat commit message text for better line wrapping.
+ 
+ drivers/ufs/core/ufshcd.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 0369043ca010..8c88dd5c2cca 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -9997,6 +9997,8 @@ static int __ufshcd_wl_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+ 
+ 	if (req_dev_pwr_mode == UFS_ACTIVE_PWR_MODE &&
+ 			req_link_state == UIC_LINK_ACTIVE_STATE) {
++		ufshcd_disable_auto_bkops(hba);
++		flush_work(&hba->eeh_work);
+ 		goto vops_suspend;
+ 	}
+ 
+
+base-commit: a48ca06cf343423faa01c573aeafba9fa5f92577
+-- 
+2.53.0.rc1.225.gd81095ad13-goog
+
