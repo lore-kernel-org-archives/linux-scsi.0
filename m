@@ -1,184 +1,160 @@
-Received: from mail-pf1-f169.google.com (mail-pf1-f169.google.com [209.85.210.169])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mout.web.de (mout.web.de [212.227.17.11])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F665341046
-	for <linux-scsi@vger.kernel.org>; Thu, 29 Jan 2026 13:49:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.169
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 79756341660;
+	Thu, 29 Jan 2026 14:08:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.227.17.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769694594; cv=none; b=udGHrdy31ddFrL0WCG2SVXMK7JHNr6dVXPBDuEsMlgdW9Zf40Ejh0kywFNFd7I1EkGMtZ9vyIbrRtxvxb1Lz888kNirNFqLxTLU8FSXYXMhsHQ2MKNWING2GSzcoNO8VtOCQk98y/W6E6AgKV+CrQ+qOo/abNhLSZfc0f/JnniY=
+	t=1769695719; cv=none; b=nw4fYNTBENAWk4+d9u31nU6dqEkO5CswFVxmvwx9fb3XGQyq/uI5B6fCfaNYO7V4QaNE55hxQASNcsBT3C/sgWdS9gNFF9MfnvPn3+/RxxXt6xruFgFVDXM9Y3Al30sxxewF9XDKs1Dl4OK+vi5JEP1tpHTCDrlFSArZJcQsPMU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769694594; c=relaxed/simple;
-	bh=2xZSRJHHmdboCugVEUKL+Afar9NGlC9UFADcCPB8rOs=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=SJWoC2NRfYIwLTSn5fOpTE/kSkupaZmNjy231G4xKVTK8S+F2Jc/vs3eQzYjOJh5c4VDy3+Ora9mYarEi38gFatzYaf/xO6Zt+jA37TZLAnfl5cj25h3smFnyB/Gl+jtKH/HxbIeJ0RABPUwNGGFJcGdG++sN1LRtmM6QP1Hx0Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=RGkdnfNY; arc=none smtp.client-ip=209.85.210.169
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1769695719; c=relaxed/simple;
+	bh=ihJlG9qUNlcUAuX2ockYsdNK2zJsa3otehqDcA+4/wc=;
+	h=Message-ID:Date:MIME-Version:To:Cc:References:Subject:From:
+	 In-Reply-To:Content-Type; b=B1qQhoD8tr268IvFs9bHbxPTmkK3tTZM6HRhv575Qst2pcCo/op7064q0PW60FBDH1KTcBaZXkouxxbRVMV2bVtkLxNnd+L66ZDYHUd//9UuIgIDhdLnlktTxvPLO/VrSXK45Sxc/6W7ve6F+jTPYgmnmvFRbB+1Qf/9JQqcIUc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de; spf=pass smtp.mailfrom=web.de; dkim=pass (2048-bit key) header.d=web.de header.i=markus.elfring@web.de header.b=CUKlEBax; arc=none smtp.client-ip=212.227.17.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=web.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="RGkdnfNY"
-Received: by mail-pf1-f169.google.com with SMTP id d2e1a72fcca58-8217f2ad01eso831932b3a.2
-        for <linux-scsi@vger.kernel.org>; Thu, 29 Jan 2026 05:49:51 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1769694591; x=1770299391; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=Qa6Pc/7YQxTkk1AR/CK47HEuWzh3zruMmwF2wm/H0lA=;
-        b=RGkdnfNYKv+wa33NKm86JeRBY1qbJ/rLJ3/METsgCdIjQ3B8/Jw6QyhrbtShvxmdhv
-         Z3ChhnaKuxr04lnp8oXGiDVt//f5LfnBHFqoCo/XZlr+zcv4E5lRzWOk3hDIavmW/m7R
-         aWsbg2VIpDqqsmod3lXML6zd6RNjyIw0IGc64CZxDWYUcE3snh6FYcfiPzzPXYxWOR97
-         JqglYWLaiyOpZC7Oujc9QpCxnhF5hrKKdYwmNqKyZOq02uD2g/DABG1yXhHI2fft1Nb2
-         dygRdO7YeDRrVRVjpKvuznL8ZjKRxu6DwYgHwqyYi2ugf2HJokcW+CjTK1SH6FVoDmO2
-         xRew==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1769694591; x=1770299391;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=Qa6Pc/7YQxTkk1AR/CK47HEuWzh3zruMmwF2wm/H0lA=;
-        b=QD7/7Y8T7ibYGQZI55hzLs2QAIveAEkHh2io0O6pABUUaFpJAyGZmQ0UVfCgodDTqM
-         pixVmQ1Qg1fZAh2QYswCPXcDvGpWcP2vCE42ToxIXCkpWWICSwdyAmAmTXSfqmdJbBQc
-         nWRzNwIpVZdjYomw9UmNi6IuwQHKehYf0kgrjCEccNlFtDQLe497W8GUwofKzLXWT74A
-         gnjMn6yA/2LrXN3Q3j00EcvuEqnRoTiN+yag9iHNidlRoziAndZFP1gLDqHv5OWbqBTf
-         We/WAXI/xsoaGzV7S3gV/a+ftiS+uMzHDYg22V0rvMWx95/hfBlPnUYib9m2Mm5PjL+V
-         XjSg==
-X-Gm-Message-State: AOJu0YxCVL8blcZ4fxan2tMSrEDdci12yJ90/RTG9pf90WNik0vzDk09
-	tahhheMNDmq58Ff0gxF0qy+CYUo5dvS+tZIYQJrXnbGZcSHZ1OVD7rRT
-X-Gm-Gg: AZuq6aL7WfRxu5AQKxYLp35ayW2IOlgXt2+8oWMVaJuPz8/82ENnivBzRGAHdzUjXjw
-	yKz7eOHIHiXs0V2O1xjEPm7GAFPb6ZH68rbTQRrlN8faV3G6gsRNBGCrxPrDp6QoNCKIo8z+EHD
-	897L6gN+h7g8DDYcIiyAXR5aps3gQ9HeqG3ECDAiYgHddtxRstGDylaoCfLBRAUbs2yX3KYOj2y
-	OMaU77s4Yi9UwlQJraEipQt04Xxf8BFb8NVLBK7vF8TUjmTr0b1thMRvnRozoMopWKmF13VnJQ7
-	l3zuCzAZyDJVvjwTLkLpm6hRBx1dGoeGfnyU9KEmD3GEvYZ+nV3VrEmEw3fVvSmYd/yM7p3c83O
-	OV8g1SHArq+5ZNDblqy/HxIx34rGTxjYp0lWJo4QAHo9xbILcbj99Bc39O6aeliOMj6Pd0h+5mE
-	RHNHHLjtiXdT4=
-X-Received: by 2002:a05:6a21:6009:b0:350:3436:68de with SMTP id adf61e73a8af0-38ec6583a23mr8026625637.53.1769694590569;
-        Thu, 29 Jan 2026 05:49:50 -0800 (PST)
-Received: from inspiron ([111.125.210.144])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2a88b3eef44sm53768715ad.11.2026.01.29.05.49.45
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 29 Jan 2026 05:49:50 -0800 (PST)
-Date: Thu, 29 Jan 2026 19:19:42 +0530
-From: Prithvi <activprithvi@gmail.com>
-To: martin.petersen@oracle.com, d.bogdanov@yadro.com, bvanassche@acm.org
-Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-kernel-mentees@lists.linux.dev,
-	skhan@linuxfoundation.org, david.hunter.linux@gmail.com,
-	khalid@kernel.org,
-	syzbot+f6e8174215573a84b797@syzkaller.appspotmail.com,
-	stable@vger.kernel.org
-Subject: Re: [PATCH v2] scsi: target: fix recursive locking in
- __configfs_open_file()
-Message-ID: <20260129134942.nooyuvarh6vr32eu@inspiron>
-References: <20260122154051.64132-1-activprithvi@gmail.com>
+	dkim=pass (2048-bit key) header.d=web.de header.i=markus.elfring@web.de header.b="CUKlEBax"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=web.de;
+	s=s29768273; t=1769695713; x=1770300513; i=markus.elfring@web.de;
+	bh=jTYYn0MQi71YcdkOXOO3u8uXdB6IcPRey8m8jSJVOOg=;
+	h=X-UI-Sender-Class:Message-ID:Date:MIME-Version:To:Cc:References:
+	 Subject:From:In-Reply-To:Content-Type:Content-Transfer-Encoding:
+	 cc:content-transfer-encoding:content-type:date:from:message-id:
+	 mime-version:reply-to:subject:to;
+	b=CUKlEBaxEG+zCiIp4O+OzwW6KdTEv7+aa+F3GIia4Ux6rLBRw0TFmrDK0KT4J8jS
+	 kCpzYH8/pBiguG0nYYEjGr7nUBGgdViEUXw66KsJ7eulKj7jFnRLbHP7FKPUX3GEH
+	 JdlG0DcJOB29HZPfHuXRXpspfFR3q1YL4XR9k7qzsOdEASZGLhpn52XE5Wd4mYQ5d
+	 uKiawCqFlVd4+BTqxOOCf/oHGRI1EIuW382k20sj5UVkhjv6rxxbH+rkhV6kwNchS
+	 Vyky3jOclEvh3pFYNIp9V837BX0uazqW5fZO8RbpNS9h9Z3/GbTrz8RtMBoVGUnn4
+	 y+gXGF1GqGxY6gsg2w==
+X-UI-Sender-Class: 814a7b36-bfc1-4dae-8640-3722d8ec6cd6
+Received: from [192.168.178.29] ([94.31.92.239]) by smtp.web.de (mrweb105
+ [213.165.67.124]) with ESMTPSA (Nemesis) id 1MPKFD-1vO20413UL-00YFUh; Thu, 29
+ Jan 2026 15:08:33 +0100
+Message-ID: <f5e18b32-1d25-4286-b869-e3cf7d23e52d@web.de>
+Date: Thu, 29 Jan 2026 15:08:29 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260122154051.64132-1-activprithvi@gmail.com>
+User-Agent: Mozilla Thunderbird
+To: Thomas Yen <thomasyen@google.com>, linux-scsi@vger.kernel.org,
+ Adrian Hunter <adrian.hunter@intel.com>,
+ Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <Avri.Altman@wdc.com>,
+ "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
+ Bart Van Assche <bvanassche@acm.org>, Bean Huo <beanhuo@micron.com>,
+ James Bottomley <James.Bottomley@HansenPartnership.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ Peter Wang <peter.wang@mediatek.com>
+Cc: stable@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+References: <20260129070657.678532-1-thomasyen@google.com>
+Subject: Re: [PATCH v3] scsi: ufs: core: Flush exception handling work when
+ RPM level is zero
+Content-Language: en-GB, de-DE
+From: Markus Elfring <Markus.Elfring@web.de>
+In-Reply-To: <20260129070657.678532-1-thomasyen@google.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+X-Provags-ID: V03:K1:4PgqTlzRFr96HVobjX2v2NCxtW56g9e4LDF7PsLf3Y84lwZvbsr
+ fzKiLa+bJq90D9m3YEgTM6J/Z2Y7YxzA8lKNUgXEkIrwwBe9m6LwZYvBeJHYRukdRmzqubV
+ 7WFfk5E8A+Rpx/yy4fOmwY6PrDuZt8RzG9C55VEJprli4rUJV22azHI3DF5XtH7ddbj7HHj
+ VKd9rCdggZp3tgfqqLoNw==
+X-Spam-Flag: NO
+UI-OutboundReport: notjunk:1;M01:P0:cNDSbYtYhlE=;htgEm8FaKV2s+pXLUVw45tXgrfy
+ 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
 
-On Thu, Jan 22, 2026 at 09:10:51PM +0530, Prithvi Tambewagh wrote:
-> In flush_write_buffer, &p->frag_sem is acquired and then the loaded store
-> function is called, which, here, is target_core_item_dbroot_store().
-> This function called filp_open(), following which these functions were
-> called (in reverse order), according to the call trace:
-> 
-> down_read
-> __configfs_open_file
-> do_dentry_open
-> vfs_open
-> do_open
-> path_openat
-> do_filp_open
-> file_open_name
-> filp_open
-> target_core_item_dbroot_store
-> flush_write_buffer
-> configfs_write_iter
-> 
-> target_core_item_dbroot_store() tries to validate the new file path by
-> trying to open the file path provided to it; however, in this case,
-> the bug report shows:
-> 
-> db_root: not a directory: /sys/kernel/config/target/dbroot
-> 
-> indicating that the same configfs file was tried to be opened, on which
-> it is currently working on. Thus, it is trying to acquire frag_sem
-> semaphore of the same file of which it already holds the semaphore obtained
-> in flush_write_buffer(), leading to acquiring the semaphore in a nested
-> manner and a possibility of recursive locking.
-> 
-> Fix this by modifying target_core_item_dbroot_store() to use kern_path()
-> instead of filp_open() to avoid opening the file using filesystem-specific
-> function __configfs_open_file(), and further modifying it to make this
-> fix compatible.
-> 
-> Reported-by: syzbot+f6e8174215573a84b797@syzkaller.appspotmail.com
-> Closes: https://syzkaller.appspot.com/bug?extid=f6e8174215573a84b797
-> Tested-by: syzbot+f6e8174215573a84b797@syzkaller.appspotmail.com
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Prithvi Tambewagh <activprithvi@gmail.com>
+You should probably specify message recipients not only in the header fiel=
+d =E2=80=9CCc=E2=80=9D.
+https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/Do=
+cumentation/process/submitting-patches.rst?h=3Dv6.19-rc7#n231
+
+=E2=80=A6
 > ---
-> Changes since v1:
->  - Update commit message to reflect the fact that same file, which code was 
->    currently operating on, was tried to be opened again, leading to 
->    acquiring the same semaphore in nested manner & possibility of recursive
->    locking.
-> 
-> v1 link: https://lore.kernel.org/all/20260108191523.303114-1-activprithvi@gmail.com/T/ 
-> 
->  drivers/target/target_core_configfs.c | 13 +++++++------
->  1 file changed, 7 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
-> index b19acd662726..f29052e6a87d 100644
-> --- a/drivers/target/target_core_configfs.c
-> +++ b/drivers/target/target_core_configfs.c
-> @@ -108,8 +108,8 @@ static ssize_t target_core_item_dbroot_store(struct config_item *item,
->  					const char *page, size_t count)
->  {
->  	ssize_t read_bytes;
-> -	struct file *fp;
->  	ssize_t r = -EINVAL;
-> +	struct path path = {};
->  
->  	mutex_lock(&target_devices_lock);
->  	if (target_devices) {
-> @@ -131,17 +131,18 @@ static ssize_t target_core_item_dbroot_store(struct config_item *item,
->  		db_root_stage[read_bytes - 1] = '\0';
->  
->  	/* validate new db root before accepting it */
-> -	fp = filp_open(db_root_stage, O_RDONLY, 0);
-> -	if (IS_ERR(fp)) {
-> +	r = kern_path(db_root_stage, LOOKUP_FOLLOW, &path);
-> +	if (r) {
->  		pr_err("db_root: cannot open: %s\n", db_root_stage);
->  		goto unlock;
->  	}
-> -	if (!S_ISDIR(file_inode(fp)->i_mode)) {
-> -		filp_close(fp, NULL);
-> +	if (!d_is_dir(path.dentry)) {
-> +		path_put(&path);
->  		pr_err("db_root: not a directory: %s\n", db_root_stage);
-> +		r = -ENOTDIR;
->  		goto unlock;
->  	}
-> -	filp_close(fp, NULL);
-> +	path_put(&path);
->  
->  	strscpy(db_root, db_root_stage);
->  	pr_debug("Target_Core_ConfigFS: db_root set to %s\n", db_root);
-> 
-> base-commit: 3a8660878839faadb4f1a6dd72c3179c1df56787
-> -- 
-> 2.34.1
-> 
+> v3:
+=E2=80=A6
+> v2:
+>  - Add Cc: stable tag.
+=E2=80=A6
 
-Hello all,
+Will the tag =E2=80=9CFixes=E2=80=9D become also helpful accordingly?
+https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/Do=
+cumentation/process/submitting-patches.rst?h=3Dv6.19-rc7#n145
 
-Just a gentle ping on this thread
-
-Thanks,
-Prithvi
+Regards,
+Markus
