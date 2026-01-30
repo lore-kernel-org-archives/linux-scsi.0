@@ -1,133 +1,262 @@
-Received: from mail-lf1-f49.google.com (mail-lf1-f49.google.com [209.85.167.49])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4BCA634F490
-	for <linux-scsi@vger.kernel.org>; Thu, 29 Jan 2026 17:40:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.167.49
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769708407; cv=pass; b=Yg0+1vaxJuzVJ2IW+90h2AmjfeZ9Xt4m///R5xXzulfFS98i3iM9VLTGYwVOtmjmEZOodaI0Y+XgqdVZGmCmtyoOqTTD8AOb8miptfz/LOBMEc9+VWENg/Gurw4UySLF62Zp1to77A0v42smHGaSS19brPYQ3+PFAmOEL0z83hA=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769708407; c=relaxed/simple;
-	bh=WoM64yTCNB7JYnEmUR+2RQGgCYwp8/a1dcVHbRqdJek=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=AHLikUzDwYRW/qgB024C7arqoqXvXzgyvQCRz1o6zXfTzzfXqFL1r/rj0QZzPwEDkKzRLSG3fBwTjyYBEVskfnieKvUw6KkbwGpudNWocJMDAGa19MgM6GaDdVG20EeIwWrrFHpkGAPACgk29XqPZrZ/+2YqUyw/yITrYMgk2ZA=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=soyRwUac; arc=pass smtp.client-ip=209.85.167.49
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 08C8325F7A9;
+	Fri, 30 Jan 2026 03:02:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1769742125; cv=none; b=SYqT6dDhhGuFUx2aY/4JE3VXnWaTq4V+W9kgiRCHlndOJWdcGCUjMrpwdNJuGRmUsR2ZTpXckohMnW/ylesN7ffPZ051phsy9nQrDk6kqFwj3qwnQlbLqbCdrk7/sdSFIYHTjG/M7pogyaroOI/6mEl4ink8lQRgOmYHoaUdSbQ=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1769742125; c=relaxed/simple;
+	bh=A4YfM+zfTczKpjl2dplTXZI2lD+xPV+s59uqx5+/34U=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=UHUrgubFz13K2AcsHcLmDSWFgTM33Me0nmq43Y0vTkLUqTyBA8h0NEDV5H1jPBPpN9tpONtitmKXWsKbSysjf5jUQJ6I+VPSDOm6wEUp6N0SN03cIIJe3hURtc86jfgQ8NBdeJfSs0xFl0uYGuRo0o/8zgCTJhCIWaRPrt6ZJes=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=t01RtS46; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="soyRwUac"
-Received: by mail-lf1-f49.google.com with SMTP id 2adb3069b0e04-59b6935a784so8531e87.1
-        for <linux-scsi@vger.kernel.org>; Thu, 29 Jan 2026 09:40:05 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; t=1769708404; cv=none;
-        d=google.com; s=arc-20240605;
-        b=Nk3XXDdqHCAwyKR/IfuEnvmMjmLt4Y+mbFwdZ8fWNsGmvqcVCv7jXv2imvEcqOaoRQ
-         RNk8Kh3tq0e+qG00nkkfejzZYeidBh1xXbRw1WwfprNmmSYFIH8/nsxicapEkXKLspCB
-         HyVgDl0iWpeDEAgFMUqKf5vxqK/p8xz1dOOVpSFK46HMOjbt9tfgJe+MqCC10ITlJnhs
-         uy0Y+69EE9pF0aAhGA6ecobqQ5Q5ola9S/JSjyKYDuxUu/gSbY+8PoSeJlmHX/V03E8O
-         6s/xTBRzHqG68YtNNLyv3aOdPiCyu+LJe/5BN4sgiyC2S9sslDkQNIqCtBXubMnvN7Cz
-         orSQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=WoM64yTCNB7JYnEmUR+2RQGgCYwp8/a1dcVHbRqdJek=;
-        fh=4XBG1NPHlbNoHJsoK2ipLzfTvDqAAu8lxIbB+8mkCgs=;
-        b=NOmUucIP2J0VPptAG/SKCwIvZ80q+ihJYY1fCiesP2NAqjRqXspYqzfuW8GovHKLrX
-         nyrdXLQbgmqN4BGHFB9PxXoEIqVG1z73UAgikq/Xogu5hgHzkJ2ntlEXUyQLOgPn9GfO
-         YkDZx96XFu7adeidCJ45+zAeMGejdXhleo9ipnBxXF6v/LY4oRP+PfpLa67CEnHL1kf+
-         5Nlt111nuCSy1arZRWMGWUT1U5vmIZW/Jc5XrIvalDTE6TJhqh/mriL7u9ufamTrKp3x
-         iEyfMcF4sog8S2kL2+KX1ghYwCORhM/h+ehh6ae1elS3uxCUzRhD2Pw9HV/yzmZ3pT45
-         Rj8A==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1769708404; x=1770313204; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=WoM64yTCNB7JYnEmUR+2RQGgCYwp8/a1dcVHbRqdJek=;
-        b=soyRwUacE5+/d0e1xEvLV3CzQwvRklUgZu+07GCR5r6HWPCEcGPgNAwsyje7XAM642
-         9WUS3lZda5f3vTrH01PbicEy0xRYVAVabN63Nks1UQ0sDagNFW3YaIEubznbwPJrgoSP
-         3Pc2ExKHKNIwplB5vwCN0citQkrpJutv8v7RSLL97RVIFuFGZaacTrKRG9BGlz2V3gLs
-         5OzAFINrUM7vvNS0CutWlx6ATilTDDr1Q98bwtWkjIFk750tNQNVONDMm+fjB5iy+gFM
-         n/KBsc0bPGAssm48so91Lihz/DNXIeDtVVRpHpGHQDI3aRYVTn70fpoq1gpD+FECxVF3
-         KVLA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1769708404; x=1770313204;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=WoM64yTCNB7JYnEmUR+2RQGgCYwp8/a1dcVHbRqdJek=;
-        b=dUi4XZ+la0YELvlgKiySS6yAzRx9gqusBfwM4w4FpDbFUgQNTufogdMD2a0Yd7TlOu
-         7mpmCAXMg0XhnJMM53GmQhVs98SuHr/0qSIMb4lrn1WvzbMRnppVA2Hxny0hfarh7MW7
-         s1utA0erOeEzktom82D4+cAnaNRCWKSP3ATfe6loilvtBD8Gra/MKnhY1xeuUJxlnrPz
-         Wa/Nvk0dS7jVp4iNj06IiB1k+w/h6GLkgyFUwt5L8WGe2Vzj6+xV1J8LiQOOvVraQGyK
-         /liOVxL/EWrh/0G/lf1gh5UE8RzjBBz81CV3q0rPC+9iy8mejmxi332GW+NxrOmPmwL0
-         6DGQ==
-X-Forwarded-Encrypted: i=1; AJvYcCXfygke036TAADcskOvOT02tmrgitASmziIgCg60uSJcXIjjvWi4GDpZsuP6K7QjJ2vLUPHkypquFNz@vger.kernel.org
-X-Gm-Message-State: AOJu0YztHHy76lCXuOm9cgS+YC0RFpZSG0TL5mDk3OguXL6yEVll5nRz
-	/7tK8L2h2gm56O8gEyU/2/B4KG6LPOEqsDPDJclXlKPRnWDYfOmfAslbzGvBEAQknMYYd43wypf
-	WYmeWQlJcOrd35jvU1WfplNFR7oWkxmMohqlI+INH
-X-Gm-Gg: AZuq6aINWqYKttTjTkifZILMJZ9OAhQeBCL/VEl70IAtRSxNp8jAN1XVjaRax6XPrjE
-	2VPl39TxrTd00mtZk80RQgeSUkbEEdF4+be24aSAUst7TejbpL3adjquDrvsUmPlClwUsu/FySA
-	Mxgi2wGlCXpQizd5bSOLt++D/nnfNIZFvxa2Hk+UK6s9MLL4mzl0NcjcSJNK2tGOdr0c3uCUmaS
-	mbUjNevVlM9WCH4+EoI1Lq79XZdAl8Dun7blG3np5x/EdgTv6H0G5byAGfLgiT4f4PjAHraGr0+
-	Yt8C2NwWr2V4OhyxSC1sci8=
-X-Received: by 2002:a05:6512:67c8:b0:59d:d4b4:97c7 with SMTP id
- 2adb3069b0e04-59e0e9eea13mr143439e87.10.1769708402489; Thu, 29 Jan 2026
- 09:40:02 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="t01RtS46"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D9CDBC4CEF7;
+	Fri, 30 Jan 2026 03:02:02 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1769742124;
+	bh=A4YfM+zfTczKpjl2dplTXZI2lD+xPV+s59uqx5+/34U=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=t01RtS46jKqjVbdyZqyp71MUzAy//b4nDcKc0FLiiIoLsWJeatAWdWQRa2jwCLhKR
+	 EDrQpGb2+oqR1DVp/1wHH+6ytlw4LggYMmKtNaIBroDyUGVRvCUOXpwivPqPepTXa2
+	 Ui4q222fKZ7aMbTEBJ4G2O+r43xlBs00OI4nOX4TS0QOAHWDfcz1qwXovwxva+74R4
+	 Q9q559OO2XiehLvO4vzoy5DATCQmPt4YuKl325tkJl6z8zsSV1AUJ5c4nFaUTcFTMO
+	 Fq7oQP+ErehiKegpEtazE5gMorAH7hI/+PX1kYVxBYmYVCRKZqaUc5c5HcA0ia4nxW
+	 QARKURjNToaWQ==
+Message-ID: <aa5ca682-ea38-49f6-81a1-6b154f00239d@kernel.org>
+Date: Fri, 30 Jan 2026 12:02:01 +0900
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260129070657.678532-1-thomasyen@google.com> <491d53b9-a110-431b-9a5e-3b46d833fdbb@acm.org>
- <CALw5pqG735L-6-umZspQOKB9DfRHf7D0AfpkRD_=xwX0LtZ2Vg@mail.gmail.com> <076fe171-6fd3-4dbc-9876-242905379594@acm.org>
-In-Reply-To: <076fe171-6fd3-4dbc-9876-242905379594@acm.org>
-From: Thomas Yen <thomasyen@google.com>
-Date: Fri, 30 Jan 2026 01:39:50 +0800
-X-Gm-Features: AZwV_Qhggi4K8iOK9JRp7-P2bluiHLmE4haFJYoFWzKZ5xvP88OESko2o3VKUME
-Message-ID: <CALw5pqH8LDxxHcpS=KGnLtdA0GG7sdd1y3Zz9hQLfcChgyH+GQ@mail.gmail.com>
-Subject: Re: [PATCH v3 1/1] scsi: ufs: core: Flush exception handling work
- when RPM level is zero
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: Stable Tree <stable@vger.kernel.org>, Alim Akhtar <alim.akhtar@samsung.com>, 
-	Avri Altman <avri.altman@wdc.com>, 
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
-	"Martin K. Petersen" <martin.petersen@oracle.com>, Peter Wang <peter.wang@mediatek.com>, 
-	Bean Huo <beanhuo@micron.com>, Adrian Hunter <adrian.hunter@intel.com>, 
-	"Bao D. Nguyen" <quic_nguyenb@quicinc.com>, 
-	"open list:UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER" <linux-scsi@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] scsi: libsas: Fix dev_list race conditions with proper
+ locking
+To: Chaohai Chen <wdhh6@aliyun.com>, john.g.garry@oracle.com,
+ yanaijie@huawei.com, James.Bottomley@HansenPartnership.com,
+ martin.petersen@oracle.com, johannes.thumshirn@wdc.com, mingo@kernel.org,
+ cassel@kernel.org, tglx@kernel.org
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20260129093859.1418749-1-wdhh6@aliyun.com>
+Content-Language: en-US
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <20260129093859.1418749-1-wdhh6@aliyun.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Hi Bart,
+On 1/29/26 18:38, Chaohai Chen wrote:
+> Multiple functions in libsas were accessing port->dev_list without
+> proper locking, leading to potential race conditions that could cause:
+> - Use-after-free when devices are removed during list traversal
+> - List corruption from concurrent modifications
+> - System crashes from accessing freed memory
 
-My apologies. I missed that Peter had already replied with his
-Reviewed-by tag on this v3 thread before I sent v4.
+There si a lot going on in this patch with reference counting changes that are
+not very clear. Ideally, this patch should be split to address reference
+counting and exclusive access to the list with a spinlock.
 
-Since v4 is currently bare of tags but the code is identical, would
-you prefer I send a v5 to consolidate all the tags and fix the Cc-tag
-ordering? Or should I wait for you and Peter to reply to the v4
-thread?
+More comments below.
 
-Thanks,
-Thomas
+> 
+> This patch adds proper dev_list_lock protection to the following functions:
+> 
+> 1. sas_ex_level_discovery(): Added locking around list traversal with
+>    safe iteration and reference counting for devices. The lock is
+>    released before calling functions that may sleep
+>    (sas_ex_discover_devices).
+> 
+> 2. sas_dev_present_in_domain(): Added locking for read-only list access
+>    to prevent reading inconsistent list state.
+> 
+> 3. sas_suspend_devices(): Added locking around list traversal to prevent
+>    concurrent modifications during device suspension.
+> 
+> 4. sas_unregister_domain_devices(): Added proper locking with reference
+>    counting. The lock is released before calling sas_unregister_dev()
+>    which may sleep, but device references are held to prevent premature
+>    removal.
+> 
+> 5. sas_port_event_worker(): Added locking around list traversal with
+>    reference counting for devices accessed outside the lock.
+> 
+> All modifications follow the pattern of:
+> - Hold dev_list_lock during list traversal
+> - Use list_for_each_entry_safe where list may be modified
+> - Take device reference (kref_get) before releasing lock
+> - Release lock before calling functions that may sleep
+> - Release device reference (sas_put_device) after use
+> 
+> Signed-off-by: Chaohai Chen <wdhh6@aliyun.com>
+> ---
+>  drivers/scsi/libsas/sas_discover.c | 14 +++++++++++++
+>  drivers/scsi/libsas/sas_expander.c | 32 +++++++++++++++++++++++-------
+>  drivers/scsi/libsas/sas_port.c     | 10 ++++++++++
+>  3 files changed, 49 insertions(+), 7 deletions(-)
+> 
+> diff --git a/drivers/scsi/libsas/sas_discover.c b/drivers/scsi/libsas/sas_discover.c
+> index b07062db50b2..3c18fdfde8c2 100644
+> --- a/drivers/scsi/libsas/sas_discover.c
+> +++ b/drivers/scsi/libsas/sas_discover.c
+> @@ -245,8 +245,10 @@ static void sas_suspend_devices(struct work_struct *work)
+>  	 * suspension, we force the issue here to keep the reference
+>  	 * counts aligned
+>  	 */
+> +	spin_lock_irq(&port->dev_list_lock);
+>  	list_for_each_entry(dev, &port->dev_list, dev_list_node)
+>  		sas_notify_lldd_dev_gone(dev);
+> +	spin_unlock_irq(&port->dev_list_lock);
+>  
+>  	/* we are suspending, so we know events are disabled and
+>  	 * phy_list is not being mutated
+> @@ -410,11 +412,23 @@ void sas_unregister_domain_devices(struct asd_sas_port *port, bool gone)
+>  {
+>  	struct domain_device *dev, *n;
+>  
+> +	/* Lock while iterating to prevent concurrent modifications.
 
-On Fri, Jan 30, 2026 at 1:23=E2=80=AFAM Bart Van Assche <bvanassche@acm.org=
-> wrote:
->
-> On 1/29/26 9:19 AM, Thomas Yen wrote:
-> > I had just sent v4 (to add the missing Fixes tag) before seeing this
-> > message. Since the code logic in v4 is identical to v3, I hope that is
-> > acceptable.
-> It seems like our emails crossed each other. This is something that can
-> happen.
->
-> When reposting a patch, Reviewed-by tags should be included. I don't see
-> any Reviewed-by tags in v4 of this patch although Peter Wang had posted
-> a Reviewed-by?
->
-> Thanks,
->
-> Bart.
+Please use the correct kernel style: multi-line comments start with a "/*" line
+with no text.
+
+> +	 * We need to unlock before calling sas_unregister_dev() as it
+> +	 * may sleep, but we hold a reference to prevent device removal.
+
+And why is that necessary ?
+
+> +	 */
+> +	spin_lock_irq(&port->dev_list_lock);
+>  	list_for_each_entry_safe_reverse(dev, n, &port->dev_list, dev_list_node) {
+>  		if (gone)
+>  			set_bit(SAS_DEV_GONE, &dev->state);
+> +		kref_get(&dev->kref);
+> +		spin_unlock_irq(&port->dev_list_lock);
+> +
+>  		sas_unregister_dev(port, dev);
+> +		sas_put_device(dev);
+> +
+> +		spin_lock_irq(&port->dev_list_lock);
+>  	}
+> +	spin_unlock_irq(&port->dev_list_lock);
+>  
+>  	list_for_each_entry_safe(dev, n, &port->disco_list, disco_list_node)
+>  		sas_unregister_dev(port, dev);
+> diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
+> index d953225f6cc2..c82c9b3d5103 100644
+> --- a/drivers/scsi/libsas/sas_expander.c
+> +++ b/drivers/scsi/libsas/sas_expander.c
+> @@ -643,14 +643,21 @@ static int sas_dev_present_in_domain(struct asd_sas_port *port,
+>  					    u8 *sas_addr)
+>  {
+>  	struct domain_device *dev;
+> +	int found = 0;
+
+Use a bool please. That menas changing the function to return a bool as well.
+
+>  
+>  	if (SAS_ADDR(port->sas_addr) == SAS_ADDR(sas_addr))
+>  		return 1;
+> +
+> +	spin_lock_irq(&port->dev_list_lock);
+>  	list_for_each_entry(dev, &port->dev_list, dev_list_node) {
+> -		if (SAS_ADDR(dev->sas_addr) == SAS_ADDR(sas_addr))
+> -			return 1;
+> +		if (SAS_ADDR(dev->sas_addr) == SAS_ADDR(sas_addr)) {
+> +			found = 1;
+> +			break;
+> +		}
+>  	}
+> -	return 0;
+> +	spin_unlock_irq(&port->dev_list_lock);
+> +
+> +	return found;
+>  }
+>  
+>  #define RPEL_REQ_SIZE	16
+> @@ -1579,20 +1586,31 @@ static int sas_discover_expander(struct domain_device *dev)
+>  static int sas_ex_level_discovery(struct asd_sas_port *port, const int level)
+>  {
+>  	int res = 0;
+> -	struct domain_device *dev;
+> +	struct domain_device *dev, *n;
+>  
+> -	list_for_each_entry(dev, &port->dev_list, dev_list_node) {
+> +	spin_lock_irq(&port->dev_list_lock);
+> +	list_for_each_entry_safe(dev, n, &port->dev_list, dev_list_node) {
+>  		if (dev_is_expander(dev->dev_type)) {
+>  			struct sas_expander_device *ex =
+>  				rphy_to_expander_device(dev->rphy);
+>  
+> -			if (level == ex->level)
+> +			if (level == ex->level) {
+> +				kref_get(&dev->kref);
+> +				spin_unlock_irq(&port->dev_list_lock);
+>  				res = sas_ex_discover_devices(dev, -1);
+> -			else if (level > 0)
+> +				sas_put_device(dev);
+> +				spin_lock_irq(&port->dev_list_lock);
+
+This was locked already before the loop. So you will deadlock here... no ?
+
+> +			} else if (level > 0) {
+> +				kref_get(&port->port_dev->kref);
+> +				spin_unlock_irq(&port->dev_list_lock);
+>  				res = sas_ex_discover_devices(port->port_dev, -1);
+> +				sas_put_device(port->port_dev);
+> +				spin_lock_irq(&port->dev_list_lock);
+> +			}
+>  
+>  		}
+>  	}
+> +	spin_unlock_irq(&port->dev_list_lock);
+>  
+>  	return res;
+>  }
+> diff --git a/drivers/scsi/libsas/sas_port.c b/drivers/scsi/libsas/sas_port.c
+> index de7556070048..491c9f7104c6 100644
+> --- a/drivers/scsi/libsas/sas_port.c
+> +++ b/drivers/scsi/libsas/sas_port.c
+> @@ -44,13 +44,19 @@ static void sas_resume_port(struct asd_sas_phy *phy)
+>  	 * 1/ presume every device came back
+>  	 * 2/ force the next revalidation to check all expander phys
+>  	 */
+> +	spin_lock_irq(&port->dev_list_lock);
+>  	list_for_each_entry_safe(dev, n, &port->dev_list, dev_list_node) {
+>  		int i, rc;
+>  
+> +		kref_get(&dev->kref);
+> +		spin_unlock_irq(&port->dev_list_lock);
+> +
+>  		rc = sas_notify_lldd_dev_found(dev);
+>  		if (rc) {
+>  			sas_unregister_dev(port, dev);
+>  			sas_destruct_devices(port);
+> +			sas_put_device(dev);
+
+Same here. Why is the extra reference count needed ?
+
+> +			spin_lock_irq(&port->dev_list_lock);
+>  			continue;
+>  		}
+>  
+> @@ -62,7 +68,11 @@ static void sas_resume_port(struct asd_sas_phy *phy)
+>  				phy->phy_change_count = -1;
+>  			}
+>  		}
+> +
+> +		sas_put_device(dev);
+> +		spin_lock_irq(&port->dev_list_lock);
+>  	}
+> +	spin_unlock_irq(&port->dev_list_lock);
+>  
+>  	sas_discover_event(port, DISCE_RESUME);
+>  }
+
+
+-- 
+Damien Le Moal
+Western Digital Research
