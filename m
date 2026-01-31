@@ -1,78 +1,114 @@
-Received: from abb.hmeau.com (abb.hmeau.com [180.181.231.80])
+Received: from mail-m49198.qiye.163.com (mail-m49198.qiye.163.com [45.254.49.198])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA0E014A60F;
-	Sat, 31 Jan 2026 02:51:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=180.181.231.80
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7070527AC45;
+	Sat, 31 Jan 2026 09:36:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.254.49.198
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769827872; cv=none; b=PzWz7gASktKCPizKq5TcPjfl7Q4pFx6WISzp5CyHh123tNLiHuekI1uTBhEXQq2b2Muj2osmTTGIgoQKzCMNaAplgQ1pMQOu5QJN2Eb4t1gJcmvH1J3j8v7FuCsh4/CerAilq/ypoQ8jPL+OMwPHlOFAQjo/LtRwZxHWALag5eU=
+	t=1769852217; cv=none; b=gtdqRRlP6bv7p3r7kgO7X7NjAwXfv7VRBQpf9PERBcnk7Twj6EAkoYovU+bp1F6/q7pFt93BMKeOGcRid2Vq00QJUeBXNRC57Kb250JxTwJILVoN3n2WJK25TZiGN8TCKZ1WySKI3QRrQblmSI/e3Bmgva4gOJSL3qC6LOjcuB8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769827872; c=relaxed/simple;
-	bh=z2IUnKDxCffO/oajqBFwUfRPGVi7JlF9z6BsZ+0SCVY=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=d7WxjgSEnXVqQ6qDJBsIy9Fjf36vOLgVzNJJF83qvT9u/22prkJWqhUqsbr5+2L9HNJz6SWUGXLiUNFD5d9RMX2iualtYvG8KfJ9f9E78pArvmQHdMj9tilQmMp1dVdLqRFtvuL4XJA+hDfOKEg8EPvf870eYcxEsy9S5O8WHXs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=gondor.apana.org.au; spf=pass smtp.mailfrom=gondor.apana.org.au; dkim=pass (2048-bit key) header.d=gondor.apana.org.au header.i=@gondor.apana.org.au header.b=bS7F/nbd; arc=none smtp.client-ip=180.181.231.80
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=gondor.apana.org.au
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gondor.apana.org.au
+	s=arc-20240116; t=1769852217; c=relaxed/simple;
+	bh=0AdnMuQX5JVCkk78w/uis4nTZrjlfI8w0JvqND6rQTw=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=NHWZdlba6G1PR941i1pAofROrvdj0y0qvWZnoci/s2DjJSSAVwUhsEFwEdN4pLtvssfI8sjQFBrX7vpwMsKkSK4vgmKTI2EBo+4mhWXILQZrZE3MZG5+4j3XtqfxXQf55FUkU3Kuq8SUs0rc8fo+fhcWeVG1uMXC5WT2Oljtoi0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=seu.edu.cn; spf=pass smtp.mailfrom=seu.edu.cn; dkim=pass (1024-bit key) header.d=seu.edu.cn header.i=@seu.edu.cn header.b=LQ2iI/ZE; arc=none smtp.client-ip=45.254.49.198
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=seu.edu.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=seu.edu.cn
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gondor.apana.org.au header.i=@gondor.apana.org.au header.b="bS7F/nbd"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=gondor.apana.org.au; s=h01; h=In-Reply-To:Content-Type:MIME-Version:
-	References:Message-ID:Subject:Cc:To:From:Date:cc:to:subject:message-id:date:
-	from:content-type:reply-to; bh=zHrmQwFLqA3OLiwbqOe/h4SuxVGBdkNc6DkN33Q2rhs=; 
-	b=bS7F/nbdMYLt3Bs8D0c9yg4djWYLv7cpXsdW3jahmAHVbcm9vR/EYuWY6+cjmYKKO7L7IevJO5c
-	uSwhPL7dPgEEXO3hyshrJuzl4H+RLnxZrM/nW8hNfdwlvbLHvZu6EtzBpDEcxOSn8ZfSYCzEBQ3Fc
-	IqWGqSgRkQjoj6wf3MxFIhAW2dJSrkhud0GHa4NLx0zB4+lSLaTHOXsG5MdyBnlsx9mijQomzW4d9
-	nTH9yyU0c4SzDra0tftXwTNEE8HCOs7a1yTC3vvYhyWz6k9pNu0IXyGeZJ+aY6NUbLV4z93YFcG28
-	nfoHo0XAM147lFuM6SLWYzDHEMx1/JE0sdRg==;
-Received: from loth.rohan.me.apana.org.au ([192.168.167.2])
-	by formenos.hmeau.com with smtp (Exim 4.96 #2 (Debian))
-	id 1vm14N-003Rv5-15;
-	Sat, 31 Jan 2026 10:50:44 +0800
-Received: by loth.rohan.me.apana.org.au (sSMTP sendmail emulation); Sat, 31 Jan 2026 10:50:43 +0800
-Date: Sat, 31 Jan 2026 10:50:43 +0800
-From: Herbert Xu <herbert@gondor.apana.org.au>
-To: Luca Weiss <luca.weiss@fairphone.com>
-Cc: "David S. Miller" <davem@davemloft.net>, Rob Herring <robh@kernel.org>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Bjorn Andersson <andersson@kernel.org>,
-	Alim Akhtar <alim.akhtar@samsung.com>,
-	Avri Altman <avri.altman@wdc.com>,
-	Bart Van Assche <bvanassche@acm.org>, Vinod Koul <vkoul@kernel.org>,
-	Neil Armstrong <neil.armstrong@linaro.org>,
-	Konrad Dybcio <konradybcio@kernel.org>,
-	~postmarketos/upstreaming@lists.sr.ht, phone-devel@vger.kernel.org,
-	linux-arm-msm@vger.kernel.org, linux-crypto@vger.kernel.org,
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-scsi@vger.kernel.org, linux-phy@lists.infradead.org,
-	Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
-Subject: Re: [PATCH v2 1/6] dt-bindings: crypto: qcom,inline-crypto-engine:
- document the Milos ICE
-Message-ID: <aX1uAxZmO0ZR8c9e@gondor.apana.org.au>
-References: <20260112-milos-ufs-v2-0-d3ce4f61f030@fairphone.com>
- <20260112-milos-ufs-v2-1-d3ce4f61f030@fairphone.com>
+	dkim=pass (1024-bit key) header.d=seu.edu.cn header.i=@seu.edu.cn header.b="LQ2iI/ZE"
+Received: from LAPTOP-N070L597.localdomain (unknown [221.228.238.82])
+	by smtp.qiye.163.com (Hmail) with ESMTP id 32a58d328;
+	Sat, 31 Jan 2026 17:36:44 +0800 (GMT+08:00)
+From: Zilin Guan <zilin@seu.edu.cn>
+To: don.brace@microchip.com
+Cc: James.Bottomley@HansenPartnership.com,
+	martin.petersen@oracle.com,
+	scott.teel@microchip.com,
+	john.p.donnelly@oracle.com,
+	scott.benesh@microchip.com,
+	Mike.McGowen@microchip.com,
+	storagedev@microchip.com,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	jianhao.xu@seu.edu.cn,
+	Zilin Guan <zilin@seu.edu.cn>
+Subject: [PATCH] scsi: smartpqi: fix memory leak in pqi_report_phys_luns()
+Date: Sat, 31 Jan 2026 09:36:41 +0000
+Message-Id: <20260131093641.1008117-1-zilin@seu.edu.cn>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260112-milos-ufs-v2-1-d3ce4f61f030@fairphone.com>
+Content-Transfer-Encoding: 8bit
+X-HM-Tid: 0a9c1369755c03a1kunme2a66fd5182f78
+X-HM-MType: 10
+X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
+	tZV1koWUFITzdXWS1ZQUlXWQ8JGhUIEh9ZQVlCS0xPVk9OHR0YTUkeGklPH1YeHw5VEwETFhoSFy
+	QUDg9ZV1kYEgtZQVlJSUpVSUlDVUlIQ1VDSVlXWRYaDxIVHRRZQVlPS0hVSktJSE5DQ1VKS0tVS1
+	kG
+DKIM-Signature: a=rsa-sha256;
+	b=LQ2iI/ZEjXADD/kpEJ7mze8b1X88CJSu6xsfuHvyYFpKwBHhJ9Lpqxz9+ZCvoqfljPyqMSJtqnL6/2zZDMHSYCQbJaqhwK/HTcxADt0TKod6ez1JRe6OKYNcJG7N3L3j9x5hYhyDHBoyle+rg6X73lrO6VgsuTx9/3VVNUNrCcU=; s=default; c=relaxed/relaxed; d=seu.edu.cn; v=1;
+	bh=ptFv/pjeZ1h1A9ostGF0CCCZQ9RIs9n1X+TG1LiUbLQ=;
+	h=date:mime-version:subject:message-id:from;
 
-On Mon, Jan 12, 2026 at 02:53:14PM +0100, Luca Weiss wrote:
-> Document the Inline Crypto Engine (ICE) on the Milos SoC.
-> 
-> Acked-by: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
-> Signed-off-by: Luca Weiss <luca.weiss@fairphone.com>
-> ---
->  Documentation/devicetree/bindings/crypto/qcom,inline-crypto-engine.yaml | 1 +
->  1 file changed, 1 insertion(+)
+pqi_report_phys_luns() fails to release the rpl_list buffer when
+encountering an unsupported data format or when the allocation for
+rpl_16byte_wwid_list fails. These early returns bypass the cleanup
+logic, leading to memory leaks.
 
-Patch applied.  Thanks.
+Consolidate the error handling by adding an out_free_rpl_list label
+and use goto statements to ensure rpl_list is consistently freed
+on failure.
+
+Compile tested only. Issue found using a prototype static analysis tool
+and code review.
+
+Fixes: 28ca6d876c5a ("scsi: smartpqi: Add extended report physical LUNs")
+Signed-off-by: Zilin Guan <zilin@seu.edu.cn>
+---
+ drivers/scsi/smartpqi/smartpqi_init.c | 13 ++++++++++---
+ 1 file changed, 10 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
+index fe549e2b7c94..c829d9590558 100644
+--- a/drivers/scsi/smartpqi/smartpqi_init.c
++++ b/drivers/scsi/smartpqi/smartpqi_init.c
+@@ -1241,7 +1241,8 @@ static inline int pqi_report_phys_luns(struct pqi_ctrl_info *ctrl_info, void **b
+ 			dev_err(&ctrl_info->pci_dev->dev,
+ 				"RPL returned unsupported data format %u\n",
+ 				rpl_response_format);
+-			return -EINVAL;
++			rc = -EINVAL;
++			goto out_free_rpl_list;
+ 		} else {
+ 			dev_warn(&ctrl_info->pci_dev->dev,
+ 				"RPL returned extended format 2 instead of 4\n");
+@@ -1253,8 +1254,10 @@ static inline int pqi_report_phys_luns(struct pqi_ctrl_info *ctrl_info, void **b
+ 
+ 	rpl_16byte_wwid_list = kmalloc(struct_size(rpl_16byte_wwid_list, lun_entries,
+ 						   num_physicals), GFP_KERNEL);
+-	if (!rpl_16byte_wwid_list)
+-		return -ENOMEM;
++	if (!rpl_16byte_wwid_list) {
++		rc = -ENOMEM;
++		goto out_free_rpl_list;
++	}
+ 
+ 	put_unaligned_be32(num_physicals * sizeof(struct report_phys_lun_16byte_wwid),
+ 		&rpl_16byte_wwid_list->header.list_length);
+@@ -1275,6 +1278,10 @@ static inline int pqi_report_phys_luns(struct pqi_ctrl_info *ctrl_info, void **b
+ 	*buffer = rpl_16byte_wwid_list;
+ 
+ 	return 0;
++
++out_free_rpl_list:
++	kfree(rpl_list);
++	return rc;
+ }
+ 
+ static inline int pqi_report_logical_luns(struct pqi_ctrl_info *ctrl_info, void **buffer)
 -- 
-Email: Herbert Xu <herbert@gondor.apana.org.au>
-Home Page: http://gondor.apana.org.au/~herbert/
-PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
+2.34.1
+
