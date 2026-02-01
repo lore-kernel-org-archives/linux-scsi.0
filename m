@@ -1,197 +1,160 @@
-Received: from mail-pf1-f180.google.com (mail-pf1-f180.google.com [209.85.210.180])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from lamorak.hansenpartnership.com (lamorak.hansenpartnership.com [198.37.111.173])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 229CF25D208
-	for <linux-scsi@vger.kernel.org>; Sun,  1 Feb 2026 03:31:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.180
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9DE4B3D3B3;
+	Sun,  1 Feb 2026 14:10:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.37.111.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769916689; cv=none; b=abvslJ0eBPpT94ka+Nr72Dmwm+ikKKpOChBCFEv3aeK1e1kS6EknzX1fgVngGyE+ofkbY3jVFGL4a+dJqkyoSxIXf5rXrhTWp9xBLD9YDljQcv1gyf13uZqGj/wLm6CllQRTvF84/A9ddEkvsSahrBqz7YobrYDRF3DKIrbOXkY=
+	t=1769955029; cv=none; b=pxSzjchhF4kf/7u5aJE/J54NIHobB6h/Hw1YgTCTmrh6jpeTE/N8URtgBb6SzKsyYjFRCUS+G1u0p53ed9jNoJZGsyA55VMFNy3mgY23CqUmZ6eiOOjIsYw7D2igTiVGDTLvZf+GR2NUO9bmSXX9fXDcQecW4CSsMVC8KQhxo0g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769916689; c=relaxed/simple;
-	bh=jN28yZ14SSfhHITtLRvQK90xF038BUMXya78mVCodOU=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=IG9G4RGXqHbKusMoh/y2rhfkvLL4sw+SnJEuULH3Fbiuz1IXAKfdLFXV9aLmoBsLc5KRAttQH5voBwWnCSp4PZRGlG0t0NX/s0EA9Zca1ODayWYiJL45TLl6+8ZBBIYTM2QAmZPwKFFEdkBQG8E8F/+yKt9m7Hk82ebLUK81+sE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=KNQxxa13; arc=none smtp.client-ip=209.85.210.180
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1769955029; c=relaxed/simple;
+	bh=r8L2oczZPC9ovRrfHcj/wFGpMGnugk6YEwRiFDx3OYU=;
+	h=Message-ID:Subject:From:To:Cc:Date:Content-Type:MIME-Version; b=IPYNTm0K7ODhYpUi63KS712yPdNHVTVU6hM7aTE5WgvZQUhYgACcpw9kryvFmVIIYCyL1L9ZSYUZD4XP+HkW75soyk88T8VsELTd9mgnNy7fzrvsqOK/YJUORSWGzJ3Ron5f3w0GezqP6tX0j5Y0SrR2hwNP+rRV8P+lSriLNwA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com; spf=pass smtp.mailfrom=HansenPartnership.com; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=W+bnR3dA; arc=none smtp.client-ip=198.37.111.173
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=HansenPartnership.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="KNQxxa13"
-Received: by mail-pf1-f180.google.com with SMTP id d2e1a72fcca58-81dab89f286so1649357b3a.2
-        for <linux-scsi@vger.kernel.org>; Sat, 31 Jan 2026 19:31:27 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1769916687; x=1770521487; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=a2AMZ9BtzpQEyHwPhgk6NcROcagmE4M1IuOctvq52M4=;
-        b=KNQxxa13m7ED0WQPKV31AZvigum2BQe2zy80v12d8lBysvKZXvUrV1COPgchGXcsce
-         ldLdenYAVrDU4B+z0D/JrcusAxEWVGvt77HLtTZd63TKwQu0r2TikyRCH6NaT26XeJg7
-         sMhqoaosrw7ll+v5fWV4e4+Dibnndu3ek/f/yULViSValeLSPVmg/F9rNm3kQyRK18YM
-         Bm+JFei0xu10zdeF5MdTaF0chtckUDDSjEVT5hDswe8fE8mvGJhd0TUGh87gItM3zgnq
-         V1LieOqMnhq+t/J2ABpkMscCm7lM97I7hOaIuRCdgDjvn1Xz9HOXHzLISi1UiOPXIPJd
-         NyBQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1769916687; x=1770521487;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=a2AMZ9BtzpQEyHwPhgk6NcROcagmE4M1IuOctvq52M4=;
-        b=DwlcDC3psy7ndK23LTuwteKXe4qxl2beC0GUHvQd5Rh9UKlNQgaCN2Yoa/2PAnmeUS
-         8NGN7MVAhM0+m+uJEN7r9opgWIJMa0+HTa4NcdKL9537QfaeoUkAOYjq9RhKSQuUnCdT
-         zFnn3y4RmymYNDukXmhudohFgqmGQE6R8ihJtTBaJZO/lD8VuWPNo6iBhntQlSvZn8tw
-         1r49w1Vi3/L+HKfcyEXe/MX8KKlWyMgxz076+6LHoBAndN5oaupoNziAizUa2EmiW2me
-         ehdeuZRDtyk30cAOWJPzN7EFdZPZ10/IMpI/AbpmArCmqWr+Alik3Uxe42k+6IKqpe+q
-         P7bw==
-X-Forwarded-Encrypted: i=1; AJvYcCVO7iLYalvdpdWyHuxijn4z8C4S7NKUaWPrKUFbeiWQdmU+Nl5vH8NcD+je27kBHhfHzc539iyu31t8@vger.kernel.org
-X-Gm-Message-State: AOJu0YwL2nHK7nzlW095Us6kGubNLa1Yq/bt4cjJu0MmFBH9gjsTAf1Q
-	gWx0GcSichaEYgp+ovK+PnqSNdnOleXFvYtc5t+yKL58glPtsJns0cxV
-X-Gm-Gg: AZuq6aKmLs5CA4HZKCWZrYekAWz9RSJe57AI9E8VzvZunkm9ZOD9v7iIrjqMQDbXeXL
-	5QMMFH2yHqehwUb5Ls1hVgNlE5mJhWR9uEiT9bXg4ZLp9ojnCca1UWS2ZV7Wyd65N15GfTfO5Y9
-	bNI3dIThHAgOT9cmvX89Fm9At2ySoUYhnt34awlN8UEHkdEUCrFi/F+DJZpzSoEZG/xsBJ+2Gl7
-	of9TC1vlBlnR6Q0r2HHB0neGG8lxUWvo9c7PQXIiPcodxl3Q6Fud6pesO5Mfqtojy8Vptq+Oa6p
-	Y2/PHvMgC20oy7AAKlyFtIVLgn60RoyyADB664QOIrJWMfumdPaxzJA7sKbj4x1uEr4EDyxXddT
-	1MQzNITFf5v4+sjPnK4ftUgMvlPHOy7CDyCE+Lu5P+7YYA4yhTw/pkpXfRo5VcHo8qSdKdxObEz
-	+XBU+WGEpu9qCkfC/5iGAWK0/+waD4cE5UpA32e+MRrw==
-X-Received: by 2002:a05:6a00:2349:b0:81f:44bb:8aa with SMTP id d2e1a72fcca58-823aa3fd6b1mr9229916b3a.8.1769916687456;
-        Sat, 31 Jan 2026 19:31:27 -0800 (PST)
-Received: from localhost.localdomain ([113.218.252.120])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-82379b6b2bdsm11831817b3a.30.2026.01.31.19.31.23
-        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
-        Sat, 31 Jan 2026 19:31:26 -0800 (PST)
-From: chengkaitao <pilgrimtao@gmail.com>
-To: kashyap.desai@broadcom.com,
-	sumit.saxena@broadcom.com,
-	shivasharan.srikanteshwara@broadcom.com,
-	chandrakanth.patil@broadcom.com,
-	James.Bottomley@HansenPartnership.com,
-	martin.petersen@oracle.com
-Cc: megaraidlinux.pdl@broadcom.com,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Chengkaitao <chengkaitao@kylinos.cn>,
-	Zheng tan <tanzheng@kylinos.cn>
-Subject: [RFC RESEND 2/2] megaraid: replacing fusion->busy_mq_poll[*] with irq_context->in_used in megasas_blk_mq_poll
-Date: Sun,  1 Feb 2026 11:31:10 +0800
-Message-ID: <20260201033110.34297-3-pilgrimtao@gmail.com>
-X-Mailer: git-send-email 2.50.1
-In-Reply-To: <20260201033110.34297-1-pilgrimtao@gmail.com>
-References: <20260201033110.34297-1-pilgrimtao@gmail.com>
+	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="W+bnR3dA"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+	d=hansenpartnership.com; s=20151216; t=1769955026;
+	bh=r8L2oczZPC9ovRrfHcj/wFGpMGnugk6YEwRiFDx3OYU=;
+	h=Message-ID:Subject:From:To:Date:From;
+	b=W+bnR3dASNqfmgyLxvpU4C9gybi9EPDQxbNjIiFirvHwQMwk05EeST7mTHB+Mol08
+	 RNytEAGsoFdoKcnkiFusU474ZHu6K+oJA6AZYy2eiP3Kp0b1swwxwOZS6HClyy3oU/
+	 RxetjWoTa5FG8jM94efJXEHcZ9Iv5WdfKWFRSkQc=
+Received: from [IPv6:2001:67c:1810:f051:aa84:e46e:cdd1:cb4c] (unknown [IPv6:2001:67c:1810:f051:aa84:e46e:cdd1:cb4c])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by lamorak.hansenpartnership.com (Postfix) with ESMTPSA id CCD2E1C0214;
+	Sun, 01 Feb 2026 09:10:25 -0500 (EST)
+Message-ID: <c6f1dc6f9354596c40c5bb310c915e500832ca66.camel@HansenPartnership.com>
+Subject: [GIT PULL] SCSI fixes for 6.19-rc7
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds
+	 <torvalds@linux-foundation.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel
+	 <linux-kernel@vger.kernel.org>
+Date: Sun, 01 Feb 2026 15:10:23 +0100
+Autocrypt: addr=James.Bottomley@HansenPartnership.com;
+ prefer-encrypt=mutual;
+ keydata=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
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.50.3 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-From: Chengkaitao <chengkaitao@kylinos.cn>
+Small changes in drivers only, no core changes.  The firewire one fixes
+a user controlled overflow (but I still can't see how it could be
+exploited).
 
-The following two types of kernel panics occur on the 4.19 kernel:
-Call Trace:
-complete_cmd_fusion+0x448/0x6a0 [megaraid_sas]
-megasas_blk_mq_poll+0xa8/0x110 [megaraid_sas]
-scsi_mq_poll+0x38/0x50
-blk_mq_poll+0x198/0x2d8
-blk_poll+0x60/0x70
-swap_readpage+0x1b0/0x260
-read_swap_cache_async+0x5c/0x78
-swap_cluster_readahead+0x1e0/0x2b0
-swapin_readahead+0x100/0x4c0
-do_swap_page+0x244/0xb40
-__handle_mm_fault+0x4b0/0x560
-handle_mm_fault+0x114/0x280
-do_page_fault+0x1f8/0x4c0
-do_translation_fault+0xa8/0xbc
-do_mem_abort+0x50/0xe0
-el1_da+0x20/0x94
+The patch is available here:
 
-Call trace:
-complete_cmd_fusion+0x448/0x6a0 [megaraid_sas]
-megasas_isr_fusion+0x98/0xa8 [megaraid_sas]
-__handle_irq_event_percpu+0x64/0x260
-handle_irq_event_percpu+0x28/0x60
-handle_irq_event+0x50/0xf8
-handle_fasteoi_edge_irq+0x190/0x208
-generic_handle_irq+0x3c/0x58
-__handle_domain_irq+0x68/0xc0
-gic_handle_irq+0x78/0x180
-el1_irq+0xb8/0x140
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
 
-Later, we applied commit 9650b453a3d4 ("block: ignore RWF_HIPRI hint
-for sync dio"), and the issue disappeared. Although most of the mq-poll
-paths have been removed upstream, io-uring related calls still remain.
+The short changelog is:
 
-We cannot completely rule out the possibility of [patch 1/2] causing
-the issue. I still suspect a concurrency/race condition between
-megasas_blk_mq_poll and megasas_isr_fusion. Although historical patch
-commit logs mention that interrupts are disabled when polling is used,
-I haven't found code evidence to confirm it.
+Ajay Neeli (1):
+      scsi: ufs: amd-versal2: Fix PHY initialization in HCE enable notify
 
-Replacing fusion->busy_mq_poll[*] with irq_context->in_used serves two
-purposes:
-To handle synchronization issues between mq-poll and megasas_isr_fusion
-To handle synchronization between mq-poll and megasas_reset_reply_desc
+Haoxiang Li (1):
+      scsi: be2iscsi: Fix a memory leak in beiscsi_boot_get_sinfo()
 
-Note: This is a proposed patch for discussion only. It has not been
-verified to resolve the issue. If you have alternative suggestions,
-please join the discussion.
+Kery Qi (1):
+      scsi: firewire: sbp-target: Fix overflow in sbp_make_tpg()
 
-Signed-off-by: Chengkaitao <chengkaitao@kylinos.cn>
-Reported-by: Zheng tan <tanzheng@kylinos.cn>
+Thomas Fourier (1):
+      scsi: qla2xxx: edif: Fix dma_free_coherent() size
+
+And the dffstat:
+
+ drivers/scsi/be2iscsi/be_mgmt.c    | 1 +
+ drivers/scsi/qla2xxx/qla_os.c      | 2 +-
+ drivers/target/sbp/sbp_target.c    | 4 ++--
+ drivers/ufs/host/ufs-amd-versal2.c | 2 +-
+ 4 files changed, 5 insertions(+), 4 deletions(-)
+
+With full diff below.
+
+Regards,
+
+James
+
 ---
- drivers/scsi/megaraid/megaraid_sas_fusion.c | 11 +++--------
- drivers/scsi/megaraid/megaraid_sas_fusion.h |  2 --
- 2 files changed, 3 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-index 3d3480b19734..b647bec7115b 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-@@ -1871,9 +1871,6 @@ megasas_init_adapter_fusion(struct megasas_instance *instance)
- 				MEGASAS_FUSION_IOCTL_CMDS);
- 	sema_init(&instance->ioctl_sem, MEGASAS_FUSION_IOCTL_CMDS);
- 
--	for (i = 0; i < MAX_MSIX_QUEUES_FUSION; i++)
--		atomic_set(&fusion->busy_mq_poll[i], 0);
--
- 	if (megasas_alloc_ioc_init_frame(instance))
- 		return 1;
- 
-@@ -3731,6 +3728,7 @@ int megasas_blk_mq_poll(struct Scsi_Host *shost, unsigned int queue_num)
- 	struct megasas_instance *instance;
- 	int num_entries = 0;
- 	struct fusion_context *fusion;
-+	struct megasas_irq_context *irq_context;
- 
- 	instance = (struct megasas_instance *)shost->hostdata;
- 
-@@ -3738,11 +3736,8 @@ int megasas_blk_mq_poll(struct Scsi_Host *shost, unsigned int queue_num)
- 
- 	queue_num = queue_num + instance->low_latency_index_start;
- 
--	if (!atomic_add_unless(&fusion->busy_mq_poll[queue_num], 1, 1))
--		return 0;
--
--	num_entries = complete_cmd_fusion(instance, queue_num, NULL);
--	atomic_dec(&fusion->busy_mq_poll[queue_num]);
-+	irq_context = &instance->irq_context[queue_num];
-+	num_entries = complete_cmd_fusion(instance, queue_num, irq_context);
- 
- 	return num_entries;
- }
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.h b/drivers/scsi/megaraid/megaraid_sas_fusion.h
-index ddeea0ee2834..70679f53bf9d 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fusion.h
-+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.h
-@@ -1313,8 +1313,6 @@ struct fusion_context {
- 	u8 *sense;
- 	dma_addr_t sense_phys_addr;
- 
--	atomic_t   busy_mq_poll[MAX_MSIX_QUEUES_FUSION];
--
- 	dma_addr_t reply_frames_desc_phys[MAX_MSIX_QUEUES_FUSION];
- 	union MPI2_REPLY_DESCRIPTORS_UNION *reply_frames_desc[MAX_MSIX_QUEUES_FUSION];
- 	struct rdpq_alloc_detail rdpq_tracker[RDPQ_MAX_CHUNK_COUNT];
--- 
-2.50.1 (Apple Git-155)
+diff --git a/drivers/scsi/be2iscsi/be_mgmt.c b/drivers/scsi/be2iscsi/be_mgm=
+t.c
+index 4e899ec1477d..b1cba986f0fb 100644
+--- a/drivers/scsi/be2iscsi/be_mgmt.c
++++ b/drivers/scsi/be2iscsi/be_mgmt.c
+@@ -1025,6 +1025,7 @@ unsigned int beiscsi_boot_get_sinfo(struct beiscsi_hb=
+a *phba)
+ 					      &nonemb_cmd->dma,
+ 					      GFP_KERNEL);
+ 	if (!nonemb_cmd->va) {
++		free_mcc_wrb(ctrl, tag);
+ 		mutex_unlock(&ctrl->mbox_lock);
+ 		return 0;
+ 	}
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index 16a44c0917e1..e939bc88e151 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -4489,7 +4489,7 @@ qla2x00_mem_alloc(struct qla_hw_data *ha, uint16_t re=
+q_len, uint16_t rsp_len,
+ fail_elsrej:
+ 	dma_pool_destroy(ha->purex_dma_pool);
+ fail_flt:
+-	dma_free_coherent(&ha->pdev->dev, SFP_DEV_SIZE,
++	dma_free_coherent(&ha->pdev->dev, sizeof(struct qla_flt_header) + FLT_REG=
+IONS_SIZE,
+ 	    ha->flt, ha->flt_dma);
+=20
+ fail_flt_buffer:
+diff --git a/drivers/target/sbp/sbp_target.c b/drivers/target/sbp/sbp_targe=
+t.c
+index 9f167ff8da7b..09120a538a40 100644
+--- a/drivers/target/sbp/sbp_target.c
++++ b/drivers/target/sbp/sbp_target.c
+@@ -1960,12 +1960,12 @@ static struct se_portal_group *sbp_make_tpg(struct =
+se_wwn *wwn,
+ 		container_of(wwn, struct sbp_tport, tport_wwn);
+=20
+ 	struct sbp_tpg *tpg;
+-	unsigned long tpgt;
++	u16 tpgt;
+ 	int ret;
+=20
+ 	if (strstr(name, "tpgt_") !=3D name)
+ 		return ERR_PTR(-EINVAL);
+-	if (kstrtoul(name + 5, 10, &tpgt) || tpgt > UINT_MAX)
++	if (kstrtou16(name + 5, 10, &tpgt))
+ 		return ERR_PTR(-EINVAL);
+=20
+ 	if (tport->tpg) {
+diff --git a/drivers/ufs/host/ufs-amd-versal2.c b/drivers/ufs/host/ufs-amd-=
+versal2.c
+index 40543db621a1..6c454ae8a9c8 100644
+--- a/drivers/ufs/host/ufs-amd-versal2.c
++++ b/drivers/ufs/host/ufs-amd-versal2.c
+@@ -367,7 +367,7 @@ static int ufs_versal2_hce_enable_notify(struct ufs_hba=
+ *hba,
+ {
+ 	int ret =3D 0;
+=20
+-	if (status =3D=3D PRE_CHANGE) {
++	if (status =3D=3D POST_CHANGE) {
+ 		ret =3D ufs_versal2_phy_init(hba);
+ 		if (ret)
+ 			dev_err(hba->dev, "Phy init failed (%d)\n", ret);
 
