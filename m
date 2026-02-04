@@ -1,117 +1,119 @@
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr1-f48.google.com (mail-wr1-f48.google.com [209.85.221.48])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 02D3F2DECA0;
-	Wed,  4 Feb 2026 03:53:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.177.32
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 56879394481
+	for <linux-scsi@vger.kernel.org>; Wed,  4 Feb 2026 08:37:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.48
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770177190; cv=none; b=gMp3yBW30d+MTYraS5IQ6wcFjzBv8zxKIwQW6QFGPpacgFB2XoiEbs//o/HS7DEx4Ac0Q0UhFZM+rQNs/RgUahxjvxlRngKWdwGANqntVFU7tRoINhWwXwI4wMAPVRp8qlVTUUshmhFkKDUfnfZIUvaFPOqLg5TIFl6pVxuvK9Q=
+	t=1770194276; cv=none; b=T8G8wxTXyjipEi5VLqwPBh7vRiMKSVh5WPx2Pq74wo8IgldrhkciuRGGBgNV/LyQwmj9eswwv50jTrkazp1VpVP+FQjFjeH7Y0yCGtq7dmVosLLdWzG18FCjIsyJxatFO6cqhOmQAd7GLH0CPEaThceEgwr8eNcMCuXkMMYV3wo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770177190; c=relaxed/simple;
-	bh=LegNMFoypy23b4i4rDbr542BpzdVn00oA5t3tXLLpCQ=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=QM6UbsBIEgA9r0su2cTwf2W1uymx02orOrg0n4EqF4JQ26wy4RQmjXXFX+N/NZfBEe84YBHdB2RpmTn3OqiW90E2h9skmGPPjVt7Yx+Ro3Mb98XtwaXkAi1nwkCbkRXWC9CLKe7loUz1uaLj1A9kaYHA4YmW9Giups8skxVuQ+c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=jJ/XGzaF; arc=none smtp.client-ip=205.220.177.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+	s=arc-20240116; t=1770194276; c=relaxed/simple;
+	bh=YdGqnKEXZqPfejPy+MWDZJlt5n9n5NEiIZZsEFwyGbI=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=h6Dq0/w0Rae2+RuRStpHMXUA2rRv+8S10vSbxlAR2QTgbeYUI/vuFYExLoQXU4pn7mo/PxxW/UHVoOgTv/Bb1aFoyhfH1A9bAYzLbSU1oX+QF6uF2W7JxRkZEhehbGLM9QR3wxiOhKS4HCJBy68Spf7D+m3E+9OaSpL4TT0EUpM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=BmyYo5Yc; arc=none smtp.client-ip=209.85.221.48
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="jJ/XGzaF"
-Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 613IuMow468059;
-	Wed, 4 Feb 2026 03:52:49 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=
-	corp-2025-04-25; bh=Y9W+5NWZ6GIRyFxLTZSvdosboKQ0xT4fuaDZ0C4rFaI=; b=
-	jJ/XGzaFUEStrnWDXCIeiYAXic9039qrLKfL/cPKupGSRP2DWjiOWc7GJoUJ6tkH
-	X5sC12PWYU64MWCWJ0I5aZw0SMLnkCbNo3myYj/GhWT8kRdf9uUpS2/heNsaLtNP
-	lmaR3LIxrip9aEJF0aNw8ShGZxjw9z0E4bGPavD8gw4wE7VdDaPUnpV7bdG+DsZ3
-	jXvdr9uAVBH5HXtL6gktAAKHBwHQmX2MxSKssxyL6YIPsL7O5dTnen7+mKJrum76
-	r+N6Y0g+ARUgYoyTuR4nrrsuN5287wf+2cXa1N1STZe6KTwdmL6T2q2AdjY462m4
-	g2TkxXu1yp7IYYxjPzu6mw==
-Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4c3jm4s50e-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 04 Feb 2026 03:52:48 +0000 (GMT)
-Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 6142A9Xq018750;
-	Wed, 4 Feb 2026 03:52:48 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 4c186nd32q-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 04 Feb 2026 03:52:48 +0000
-Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 6143qllp024698;
-	Wed, 4 Feb 2026 03:52:47 GMT
-Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 4c186nd32a-2;
-	Wed, 04 Feb 2026 03:52:47 +0000
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        Marco Crivellari <marco.crivellari@suse.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Tejun Heo <tj@kernel.org>, Lai Jiangshan <jiangshanlai@gmail.com>,
-        Frederic Weisbecker <frederic@kernel.org>,
-        Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
-        Michal Hocko <mhocko@suse.com>, Nilesh Javali <njavali@marvell.com>,
-        GR-QLogic-Storage-Upstream@marvell.com,
-        "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 0/3] Add WQ_PERCPU to alloc_workqueue() users
-Date: Tue,  3 Feb 2026 22:52:41 -0500
-Message-ID: <177000116198.3467927.13394907147902446660.b4-ty@oracle.com>
-X-Mailer: git-send-email 2.51.2
-In-Reply-To: <20260113145711.242316-1-marco.crivellari@suse.com>
-References: <20260113145711.242316-1-marco.crivellari@suse.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="BmyYo5Yc"
+Received: by mail-wr1-f48.google.com with SMTP id ffacd0b85a97d-435a517be33so3897920f8f.0
+        for <linux-scsi@vger.kernel.org>; Wed, 04 Feb 2026 00:37:56 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1770194275; x=1770799075; darn=vger.kernel.org;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=YdGqnKEXZqPfejPy+MWDZJlt5n9n5NEiIZZsEFwyGbI=;
+        b=BmyYo5Yc+5frcx3oQ8iRzs7iSTpsXLh3VAmvVJf6i6XsSgQYrkNjrgtkkMoYpSP/HI
+         FnHpHuSxoM7qexfaew2PxolAsGWMSVft7hG1BrF9tkkHubIAuijpD95UOMeETLMir3ZL
+         5tjxePJimm8JTGZOcYiRAvGKCOUFgJciqumH8CaZLf+s5YOJ9AsFTgfgQmZqRCPf69xf
+         TrPw7uEz525z5ySMLttoESHqeUnQw09eaCUUrQifgWhioU47YoXlT5jb/nQuKOsmKKle
+         x6ETjMfPJRMKeKZjlb2CkFKJZO3mEnyBBqVOcr3iju16J4x4f7ZZgudvfzcbVyDdZtLw
+         KYIw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1770194275; x=1770799075;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=YdGqnKEXZqPfejPy+MWDZJlt5n9n5NEiIZZsEFwyGbI=;
+        b=P7OfbEjqQQ04klH34mr4TS1ttb31NYdKJbujNAne1UoSz/6WF08rPzbV5WxSCchjL8
+         5UBupfuYb02lRERLX+PoflM6R2kL3psc99e2yJjeGBnmmdYZtk5a2FadG/+8x2WrR6o/
+         bCfiYkzqkjUJlg7+wvQwM55TnAtKgkwaTXX9BUgzsWGLA0g6fP8O2kvYbJXVcskRl6kS
+         VFyNwWwPuPqbhkWWrItk33sW/eCF1DYaQZMDWxin9ueW9cs5a7xfqAvn3+5ZD3PvvpW4
+         JYUNM1MEdcVmCoRcvbDDr6HUbmKt/7gK+eAmEeJMIVR5d8glIVgvTkGGXtDK51ST1mK4
+         ov4Q==
+X-Forwarded-Encrypted: i=1; AJvYcCWT8t90zeIOgE94xBoJlfi10TjwrfITV/1WCwZ0TiU4A/rCQYAravkEgBUgbfbkoe1lBVdeP8f8Y123@vger.kernel.org
+X-Gm-Message-State: AOJu0YyaH00j00Pb4Hh+rHbEv7dkhOB1zsfVs6foqmwY8Qe8P0BxPnZM
+	MD1zaMP44BBMqWDTea36BMwpqYYorPGQ1h8ynXXlbuls2hNF9ZoFAMY+
+X-Gm-Gg: AZuq6aLa/XKU+wvG4v8JtETfWgzY4JWJqZQmrKLvqrmB7xzI/Wu1vK1cviiHx+3PJ0R
+	oqBWigM+Y0kv5IXILIyLEleXoFazF/0BXbvcm1lWYVj4TRLCxlOnpsnojRsQ9IjkD44t3nRMEJQ
+	4vX1DrMtZzrgPJDYpuFNYrEKc4OzXkggPkxp2nhy9Q4+M+RfWmuOKbNazhY/ehjEwaOQdv4hVjm
+	39cDGS1nTz4TOklRbECf1OXAgx2JSSh1OGvNE5UjMW5GduTPcPP6DU3P3p071pFZ6m23tmpbsYC
+	8/w7LTOjiWIdRoXkd6ju2C2queo2EkrXCRLqU2U0iDXbB7MW1b8l51KsuNAcgZRc2GXTcX3dFO2
+	+HCoqT6gfvyQb55eUSWggaWXfKx2r+jVeKnhSuyNxhhQCinBYe4Q/jeGajLmOpnGS/qFxVklZHR
+	gMBssvo2vgoQEbiw==
+X-Received: by 2002:a05:6000:1885:b0:425:769e:515a with SMTP id ffacd0b85a97d-4361805c0famr3038165f8f.42.1770194274302;
+        Wed, 04 Feb 2026 00:37:54 -0800 (PST)
+Received: from [10.176.235.211] ([137.201.254.43])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-43617e38e38sm4832086f8f.11.2026.02.04.00.37.52
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 04 Feb 2026 00:37:53 -0800 (PST)
+Message-ID: <a729a7d1b63d0b7e78806bfec238d8db2705c693.camel@gmail.com>
+Subject: Re: [PATCH] scsi: ufs: core: Fix RPMB region size detection for UFS
+ 2.2
+From: Bean Huo <huobean@gmail.com>
+To: Alexey Charkov <alchark@flipper.net>
+Cc: Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman
+ <avri.altman@wdc.com>,  Bart Van Assche <bvanassche@acm.org>, "James E.J.
+ Bottomley" <James.Bottomley@hansenpartnership.com>, "Martin K. Petersen"
+ <martin.petersen@oracle.com>, Bean Huo <beanhuo@micron.com>, Can Guo
+ <can.guo@oss.qualcomm.com>,  linux-scsi@vger.kernel.org,
+ linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Date: Wed, 04 Feb 2026 09:37:51 +0100
+In-Reply-To: <CAKTNdwG_RycHp++Z++D5HzcybSyQwvKbb++AhtXhNgE6sOoThQ@mail.gmail.com>
+References: <20260129-ufs-rpmb-v1-1-691534ab723f@flipper.net>
+	 <8149b8cb5a7b36a1543ca05666f33a6373674e0e.camel@gmail.com>
+	 <CAKTNdwG=He3iJ8cPo4fFbcEwQQRrt_SGzoviMhi2a3kMXAO8hA@mail.gmail.com>
+	 <ad7e2d0e5b219b4b2ef2aa7ab342513a2c66171f.camel@gmail.com>
+	 <CAKTNdwG_RycHp++Z++D5HzcybSyQwvKbb++AhtXhNgE6sOoThQ@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.44.4-0ubuntu2.1 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-02-03_07,2026-02-03_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 malwarescore=0 phishscore=0
- suspectscore=0 mlxlogscore=896 adultscore=0 spamscore=0 bulkscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2601150000
- definitions=main-2602040023
-X-Authority-Analysis: v=2.4 cv=OuJCCi/t c=1 sm=1 tr=0 ts=6982c290 b=1 cx=c_pps
- a=zPCbziy225d3KhSqZt3L1A==:117 a=zPCbziy225d3KhSqZt3L1A==:17
- a=IkcTkHD0fZMA:10 a=HzLeVaNsDn8A:10 a=VkNPw1HP01LnGYTKEx00:22
- a=VwQbUJbxAAAA:8 a=V6UdTrCVnvP9DkvkYaUA:9 a=QEXdDO2ut3YA:10 cc=ntf
- awl=host:12103
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMjA0MDAyNCBTYWx0ZWRfX9MFztE2yeypH
- MPyb+TIO59PdwZs9lojoWyKIkzW1/DeCDeTmDAgyDv/JgRF7aZNgoF6cvRO3qDQXTLLy2Ew/2HT
- Tgins9jWJ14LSqwRcwVbahYVZqpvt3oF5dcBYNh5Nmgyl+bXra02oe0UxDPe2/0RE7scR/iWPtv
- jwP52IduolPGtTEPRL2t/ZrwJjl/3AUf8CxnTOtM20Cl/7IW9JPSS0WJ2TmY94kXDNf0oewT6WH
- IGsHS8FbPzJ7P1GbSYgjEweILp0PJrTTvBCkpIYA/eTskL7vzY4p6q8xyhPoO0hr6vVXIpSHmYo
- p69FRKwUrT4JUsUqnEoz1sg6Eqm7J1YECagYjT4VRj7OAET7x5mLY2rnErw4azVmtcQOcN7p+v9
- tjd6OKqYLCGQnEMLSrkrHGjbLBxze5ZCQLUHEU6P/QEoTQ1M2cWjHkbgJFr/wh6busnk3U7cxJn
- hcogZXEWT3/xjuUiS3jza3vBgGTfyYptFfzQQsGo=
-X-Proofpoint-GUID: J4-GFOrklRHE0aayZUl9BVXMXD4oKBit
-X-Proofpoint-ORIG-GUID: J4-GFOrklRHE0aayZUl9BVXMXD4oKBit
 
-On Tue, 13 Jan 2026 15:57:08 +0100, Marco Crivellari wrote:
+On Fri, 2026-01-30 at 18:49 +0400, Alexey Charkov wrote:
+> > > The spec says it can only be up to 16MB maximum (see section 12.4.3.1
+> > > RPMB Resources), so it should always fit. Happy to add a comment abou=
+t
+> > > that.
+> > >=20
+> > > Best regards,
+> > > Alexey
+> >=20
+> > Hi Alexey,
+> >=20
+> > Thanks for the clarification on the 16MB RPMB limit - that addresses th=
+e
+> > overflow concern.
+> >=20
+> >=20
+> > In your above operation, why not use SZ_128K to avoid the magic number?
+> > BTW, please update your comment.
+>=20
+> Good point, thanks Bean! Will amend in v2.
+>=20
+> Best regards,
+> Alexey
 
-> This series continues the effort to refactor the Workqueue API.
-> No behavior changes are introduced by this series.
-> 
-> === Recent changes to the WQ API ===
-> 
-> The following, address the recent changes in the Workqueue API:
-> 
-> [...]
+Alexey,=20
 
-Applied to 6.20/scsi-queue, thanks!
+did you send your new version patch?
 
-[1/3] scsi: qla4xxx: add WQ_PERCPU to alloc_workqueue users
-      https://git.kernel.org/mkp/scsi/c/267345b6d1dc
-[2/3] scsi: qla2xxx: add WQ_PERCPU to alloc_workqueue users
-      https://git.kernel.org/mkp/scsi/c/e4c7c844fae0
-[3/3] scsi: qla2xxx: target: add WQ_PERCPU to alloc_workqueue users
-      https://git.kernel.org/mkp/scsi/c/e6b42979ea61
+Kind regards,
+Bean
 
--- 
-Martin K. Petersen
