@@ -1,65 +1,67 @@
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 051B0273809;
-	Wed,  4 Feb 2026 03:53:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.165.32
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 02D3F2DECA0;
+	Wed,  4 Feb 2026 03:53:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.177.32
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770177185; cv=none; b=Xf6YSclrn41+hUx2kkgP3AS+p3pcytrNdJYrjz7HqfHPO4lwyqI3gSQreQldAi0m5fy5PObJ5YxPxxdO15VqpkTOmGk2tVDJ1ouE24I/Slszvp++Idtysdb5Yj2PT1BqsetPMlr2xbRI+LNH9Uvi+VIVqP0/Rj72njfqh4fokAw=
+	t=1770177190; cv=none; b=gMp3yBW30d+MTYraS5IQ6wcFjzBv8zxKIwQW6QFGPpacgFB2XoiEbs//o/HS7DEx4Ac0Q0UhFZM+rQNs/RgUahxjvxlRngKWdwGANqntVFU7tRoINhWwXwI4wMAPVRp8qlVTUUshmhFkKDUfnfZIUvaFPOqLg5TIFl6pVxuvK9Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770177185; c=relaxed/simple;
-	bh=WsWJ4pA76Y9dfi75XAQeP9j6QMXKCrH+fkFQFvQBqYc=;
+	s=arc-20240116; t=1770177190; c=relaxed/simple;
+	bh=LegNMFoypy23b4i4rDbr542BpzdVn00oA5t3tXLLpCQ=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=IUobocPPKnEWWJvDiDm/7UPU4bQiXMMYYcB0cC2GeW2t9ZRcx23NKlPFJCezD5hug/MlJJhc3iEMtu8CqZJFrr6b/M4aLlZI/BrzgT7uAF+1cPY1nbtMBMHLhBljl9unfJkmvuNhq+8QhEBiDRIYLK8iaQyflBf6gNNw8+tAddY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=bvYgCLwR; arc=none smtp.client-ip=205.220.165.32
+	 MIME-Version:Content-Type; b=QM6UbsBIEgA9r0su2cTwf2W1uymx02orOrg0n4EqF4JQ26wy4RQmjXXFX+N/NZfBEe84YBHdB2RpmTn3OqiW90E2h9skmGPPjVt7Yx+Ro3Mb98XtwaXkAi1nwkCbkRXWC9CLKe7loUz1uaLj1A9kaYHA4YmW9Giups8skxVuQ+c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=jJ/XGzaF; arc=none smtp.client-ip=205.220.177.32
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="bvYgCLwR"
-Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 613IuFwW318461;
-	Wed, 4 Feb 2026 03:52:50 GMT
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="jJ/XGzaF"
+Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 613IuMow468059;
+	Wed, 4 Feb 2026 03:52:49 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
 	:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=
-	corp-2025-04-25; bh=3XKAryPtxogdcLAxCh1HrDZrzstpB9MRU8o1LuKbNkY=; b=
-	bvYgCLwRmjGE6hYOngg8toTA1o0T8MJqjTcAe2wSBmTjY0GH6Xevt/L1AA9HUoNh
-	XcsefHsVVxhKHURPSukdUf68U1nblw/mkJX/JfimbvyfyOe5uPof+hXWRPUvOF3S
-	WkgCm+YFpDw1947DOOCmfpNUdI3KigUofjcfnq8CKAJxE4bJX+oPMrKeF3h1/Siz
-	l/VRyuzvlnN3iMyOegTBbxK3vBEAbmHYQZb+FlcZJFHuT94ubNRBLn/h0T4Y+yV7
-	x3pkBU2Oi2RnQtaZDUDWYVOv4yE6DBS9pwUpdJD5ty14q44ludNHiw6C1Qqi/9jG
-	/dRv/6z0do8Is5lIQdw75g==
+	corp-2025-04-25; bh=Y9W+5NWZ6GIRyFxLTZSvdosboKQ0xT4fuaDZ0C4rFaI=; b=
+	jJ/XGzaFUEStrnWDXCIeiYAXic9039qrLKfL/cPKupGSRP2DWjiOWc7GJoUJ6tkH
+	X5sC12PWYU64MWCWJ0I5aZw0SMLnkCbNo3myYj/GhWT8kRdf9uUpS2/heNsaLtNP
+	lmaR3LIxrip9aEJF0aNw8ShGZxjw9z0E4bGPavD8gw4wE7VdDaPUnpV7bdG+DsZ3
+	jXvdr9uAVBH5HXtL6gktAAKHBwHQmX2MxSKssxyL6YIPsL7O5dTnen7+mKJrum76
+	r+N6Y0g+ARUgYoyTuR4nrrsuN5287wf+2cXa1N1STZe6KTwdmL6T2q2AdjY462m4
+	g2TkxXu1yp7IYYxjPzu6mw==
 Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4c3k7uh1pc-1
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4c3jm4s50e-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 04 Feb 2026 03:52:50 +0000 (GMT)
+	Wed, 04 Feb 2026 03:52:48 +0000 (GMT)
 Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 6143Xmlm018710;
+	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 6142A9Xq018750;
 	Wed, 4 Feb 2026 03:52:48 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 4c186nd32w-1
+	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 4c186nd32q-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
 	Wed, 04 Feb 2026 03:52:48 +0000
 Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 6143qllr024698;
-	Wed, 4 Feb 2026 03:52:48 GMT
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 6143qllp024698;
+	Wed, 4 Feb 2026 03:52:47 GMT
 Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 4c186nd32a-3;
-	Wed, 04 Feb 2026 03:52:48 +0000
+	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 4c186nd32a-2;
+	Wed, 04 Feb 2026 03:52:47 +0000
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-To: mani@kernel.org, alim.akhtar@samsung.com, avri.altman@wdc.com,
-        bvanassche@acm.org, robh@kernel.org, krzk+dt@kernel.org,
-        conor+dt@kernel.org, James.Bottomley@HansenPartnership.com,
-        Ram Kumar Dwivedi <ram.dwivedi@oss.qualcomm.com>
+To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        Marco Crivellari <marco.crivellari@suse.com>
 Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH V5 0/4] ufs: ufs-qcom: Add support firmware managed platforms
-Date: Tue,  3 Feb 2026 22:52:42 -0500
-Message-ID: <177000116185.3467927.6891331238644067167.b4-ty@oracle.com>
+        Tejun Heo <tj@kernel.org>, Lai Jiangshan <jiangshanlai@gmail.com>,
+        Frederic Weisbecker <frederic@kernel.org>,
+        Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
+        Michal Hocko <mhocko@suse.com>, Nilesh Javali <njavali@marvell.com>,
+        GR-QLogic-Storage-Upstream@marvell.com,
+        "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 0/3] Add WQ_PERCPU to alloc_workqueue() users
+Date: Tue,  3 Feb 2026 22:52:41 -0500
+Message-ID: <177000116198.3467927.13394907147902446660.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.51.2
-In-Reply-To: <20260113080046.284089-1-ram.dwivedi@oss.qualcomm.com>
-References: <20260113080046.284089-1-ram.dwivedi@oss.qualcomm.com>
+In-Reply-To: <20260113145711.242316-1-marco.crivellari@suse.com>
+References: <20260113145711.242316-1-marco.crivellari@suse.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -72,48 +74,44 @@ X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.51,FMLib:17.12.100.49
  definitions=2026-02-03_07,2026-02-03_01,2025-10-01_01
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 malwarescore=0 phishscore=0
- suspectscore=0 mlxlogscore=999 adultscore=0 spamscore=0 bulkscore=0
+ suspectscore=0 mlxlogscore=896 adultscore=0 spamscore=0 bulkscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2601150000
  definitions=main-2602040023
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMjA0MDAyNCBTYWx0ZWRfX6Ux8U/AVJBDV
- AthrSaWkjYCVyhUn4jANUywlDPtLZRxZ1V8cJspoMP51bYJD/ao8D7W8UvZDhJx4S4FVRf9lc7C
- A9Qlusydt7ub/5DUZuyjk5ylEREmPXXxKWE7mSuBB4z2XgXdIBgp4JvzOiefbzRtzLiYJkhgvwN
- K50SLlgCfe9LT5LaPE6Fa56Q+samd8UTwNcU5zgWmnHSJMMba8j95JO2xhk0uUymE56qF97wGdC
- 3ECqlw/ZVqZF2sJJPZ480faZfl0equKSIwnvPhpf9XKmTeNPUTN4PwUnqgvdEx55igk0pY2cr3R
- GLvhauwsRwjnElLO2LyYgI7XOhuSM69aRYUlZzUyo7/aKt4a94FfkCm7mmskl3IpG5iNSBmaGGt
- Gz4W1RyPjuey69Y34QsRDxt6NMeDCbn1Babft7rSEoQobJ0mNWcbHI87uXTkyOzLPcU1q5MEYby
- y8PZOGuplsz2g33nF3VOXa1i/gCah8ZMtfWhor8E=
-X-Proofpoint-GUID: AMn0Sx3Ev-GuXTfFpvjFYY88hP5bFUvS
-X-Authority-Analysis: v=2.4 cv=Z7Dh3XRA c=1 sm=1 tr=0 ts=6982c292 b=1 cx=c_pps
+X-Authority-Analysis: v=2.4 cv=OuJCCi/t c=1 sm=1 tr=0 ts=6982c290 b=1 cx=c_pps
  a=zPCbziy225d3KhSqZt3L1A==:117 a=zPCbziy225d3KhSqZt3L1A==:17
  a=IkcTkHD0fZMA:10 a=HzLeVaNsDn8A:10 a=VkNPw1HP01LnGYTKEx00:22
- a=VwQbUJbxAAAA:8 a=oZ1sQb9pZEqHDet5TIMA:9 a=QEXdDO2ut3YA:10 cc=ntf
+ a=VwQbUJbxAAAA:8 a=V6UdTrCVnvP9DkvkYaUA:9 a=QEXdDO2ut3YA:10 cc=ntf
  awl=host:12103
-X-Proofpoint-ORIG-GUID: AMn0Sx3Ev-GuXTfFpvjFYY88hP5bFUvS
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMjA0MDAyNCBTYWx0ZWRfX9MFztE2yeypH
+ MPyb+TIO59PdwZs9lojoWyKIkzW1/DeCDeTmDAgyDv/JgRF7aZNgoF6cvRO3qDQXTLLy2Ew/2HT
+ Tgins9jWJ14LSqwRcwVbahYVZqpvt3oF5dcBYNh5Nmgyl+bXra02oe0UxDPe2/0RE7scR/iWPtv
+ jwP52IduolPGtTEPRL2t/ZrwJjl/3AUf8CxnTOtM20Cl/7IW9JPSS0WJ2TmY94kXDNf0oewT6WH
+ IGsHS8FbPzJ7P1GbSYgjEweILp0PJrTTvBCkpIYA/eTskL7vzY4p6q8xyhPoO0hr6vVXIpSHmYo
+ p69FRKwUrT4JUsUqnEoz1sg6Eqm7J1YECagYjT4VRj7OAET7x5mLY2rnErw4azVmtcQOcN7p+v9
+ tjd6OKqYLCGQnEMLSrkrHGjbLBxze5ZCQLUHEU6P/QEoTQ1M2cWjHkbgJFr/wh6busnk3U7cxJn
+ hcogZXEWT3/xjuUiS3jza3vBgGTfyYptFfzQQsGo=
+X-Proofpoint-GUID: J4-GFOrklRHE0aayZUl9BVXMXD4oKBit
+X-Proofpoint-ORIG-GUID: J4-GFOrklRHE0aayZUl9BVXMXD4oKBit
 
-On Tue, 13 Jan 2026 13:30:42 +0530, Ram Kumar Dwivedi wrote:
+On Tue, 13 Jan 2026 15:57:08 +0100, Marco Crivellari wrote:
 
-> On Qualcomm automotive SoC SA8255P, platform resource like clocks,
-> interconnect, resets, regulators and PHY are configured remotely by
-> firmware.
+> This series continues the effort to refactor the Workqueue API.
+> No behavior changes are introduced by this series.
 > 
-> Logical power domain is used to abstract these resources in firmware
-> and SCMI power protocol is used to request resource operations by using
-> runtime PM framework APIs such as pm_runtime_get/put_sync to invoke
-> power_on/_off calls from kernel respectively.
+> === Recent changes to the WQ API ===
+> 
+> The following, address the recent changes in the Workqueue API:
 > 
 > [...]
 
 Applied to 6.20/scsi-queue, thanks!
 
-[1/4] MAINTAINERS: broaden UFS Qualcomm binding file pattern
-      https://git.kernel.org/mkp/scsi/c/7f386b05f994
-[2/4] dt-bindings: ufs: Document bindings for SA8255P UFS Host Controller
-      https://git.kernel.org/mkp/scsi/c/e2725ed2a7fb
-[3/4] scsi: ufs: core Enforce minimum pm level for sysfs configuration
-      https://git.kernel.org/mkp/scsi/c/26c06d0baeb7
-[4/4] ufs: ufs-qcom: Add support for firmware-managed resource abstraction
-      https://git.kernel.org/mkp/scsi/c/ad44cf1b2845
+[1/3] scsi: qla4xxx: add WQ_PERCPU to alloc_workqueue users
+      https://git.kernel.org/mkp/scsi/c/267345b6d1dc
+[2/3] scsi: qla2xxx: add WQ_PERCPU to alloc_workqueue users
+      https://git.kernel.org/mkp/scsi/c/e4c7c844fae0
+[3/3] scsi: qla2xxx: target: add WQ_PERCPU to alloc_workqueue users
+      https://git.kernel.org/mkp/scsi/c/e6b42979ea61
 
 -- 
 Martin K. Petersen
