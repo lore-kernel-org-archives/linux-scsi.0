@@ -1,142 +1,98 @@
-Received: from mail-ej1-f43.google.com (mail-ej1-f43.google.com [209.85.218.43])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from lamorak.hansenpartnership.com (lamorak.hansenpartnership.com [198.37.111.173])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5722C344D94
-	for <linux-scsi@vger.kernel.org>; Thu,  5 Feb 2026 08:33:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.218.43
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770280383; cv=pass; b=OpxAuu8kHL8BS5FGkZmGdF4UO89486ovy3DukcZEqT+Hffib7b5+4CbtQuk7Xu/S+q0qJPyZfh1qaf0jWQhZikYxZQsl/8v0WxLEb6U/EhongtBIWIOSaCfyeuAQx9m4uZaE2PfshEx42F2JkRjTbzCeSPKmLSLga+lkPv9H7ZU=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770280383; c=relaxed/simple;
-	bh=4nRf6SHJsVhZfYah+s5gm1QOcWTJwdFxjn6FWyPfPpI=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=iL6VO1WZ1G8nwR3Ii3eg3XVMxCi6HFhCMugyMg1gUkzFCQ91Ev8X/sr+820KC1Z0o16TtE8N85apv+rq4na1RW7UTi21J38U8nQxnMlZPh2qBAipLT3PTxWH68aQbSk5IuCOBFveTmUdSAgyfn9CYmwc0Po6uf49hH/1UZutPMw=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=flipper.net; spf=pass smtp.mailfrom=flipper.net; dkim=pass (2048-bit key) header.d=flipper.net header.i=@flipper.net header.b=HjcjDghD; arc=pass smtp.client-ip=209.85.218.43
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=flipper.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flipper.net
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5DAAA260588;
+	Thu,  5 Feb 2026 09:51:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.37.111.173
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1770285090; cv=none; b=IT3EuWU/dhrCSaBjKWztzG74E/6pAIXosRlaNv4e+BN4EyfQ1XmwXqveyY0eOfpaQMni/IbIRz4Cr6DtsOyggUdEQu+Aes1wjOokJ8aPi/94rsRlcE0zHVVOs/rRcnrdPIMRGgw9ckLGBPPhLoEh3fQwnYF0fCdUwrC3bgfGJCM=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1770285090; c=relaxed/simple;
+	bh=ZzcmRFurz0umv4heyjbHKrDb04DTP0QA52AQrPzk6Cs=;
+	h=Message-ID:Subject:From:To:Date:Content-Type:MIME-Version; b=b/f3WNfzOQzRZ/ZKF6QqNf9IrlnIDAVJxlFjbCgjt+fjrU9ypA0djGK+nBMopqPb8tM0PEEt6SXfIKEwf3T/z4X1TCOJOKixhHmVUHOBKqs7efAxyquUJq3hb8YHBg6pbnObCBx5EKxrDK6AvDwBgOA02m1j6XBGYCqNkJks5Lk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com; spf=pass smtp.mailfrom=HansenPartnership.com; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=borAD4Az; arc=none smtp.client-ip=198.37.111.173
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=HansenPartnership.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=flipper.net header.i=@flipper.net header.b="HjcjDghD"
-Received: by mail-ej1-f43.google.com with SMTP id a640c23a62f3a-b79f8f7ea43so123110066b.2
-        for <linux-scsi@vger.kernel.org>; Thu, 05 Feb 2026 00:33:03 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; t=1770280382; cv=none;
-        d=google.com; s=arc-20240605;
-        b=O25BBfE4qMLX03rm9tH64zQs7KLzBHu+TZluuaowq5iOwcrgqvLbQFxDXPJRdbk/9f
-         0hP8uQx/Zrn4c6i3bAXGFsBJc7vTOBspjw5swFWO3B82rm3bIn4Ca485r7h4qZ8X74kN
-         CT+21wgNvoXjYQuS6JU1fAhBEPzYnuN3izHezXD6Zb2cijxxVVgqe5bSAXI5xGDT7rFo
-         A/PgpXwOPxoDiwnvRkKDFfYRazHtlXfd8xdYRE76AT3MHVhErTPkG6zqbScTwgS/QSK2
-         Qzf4+IBohPE0tPbDCvvMLYGmYjAWKRieXW/cErDiaVLVnAUjAwIXyqw1Q6OTuX1uMzCh
-         rEjA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=4nRf6SHJsVhZfYah+s5gm1QOcWTJwdFxjn6FWyPfPpI=;
-        fh=a7Z7VV0c4KPjhs5qQpKX6pDTxUvqpcP+nnuAVxePFO4=;
-        b=Hp74pXJhweKNlPYjZgkP2sk0wWEu5MrGcAN/UvTlTM/tIE+nlS/RhwUL0sGZc1ltGR
-         2HeavL0P0dtcPwtRgDriNlREAoHRB+cLQ2R2k8LKQ2h40/AAclAU9PPgorzFHfBfOHsv
-         GYtzD2yqNr8IJHNuHZojv1VeoD4rLg40237r3IdNten96k8huFgLeL/VHnypNXG4ublM
-         1+USIWid4qaUft1raRkJDfa3Ok9V2lKbso8l9itjgy/6UvS3nh1AVUGtgKKFAD90CJvH
-         4G7H/eBOhN55eAaZHEb4usVpkdXuhqwFKJ04uVQNrDCviwj8Z/saP7EsDjew1Sfxs4Hz
-         dbMg==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=flipper.net; s=google; t=1770280382; x=1770885182; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=4nRf6SHJsVhZfYah+s5gm1QOcWTJwdFxjn6FWyPfPpI=;
-        b=HjcjDghDS/90cGDiNRVffTvIvz0gqHw2tenTaaodvNszai2MyVomSf+bHa73gQdxBg
-         doZEZZ+RFD1NqfNhAIWk2ZXiSu+5422TIROD/L3lcaZFi0LJkLStltJgBLHCo7Z7TIN+
-         Qx14E0+EHu0G+bXlr47C0hn0yRGBWpVpg49hpRvHZ5AB1nzvOo9xwCN3qyD6X0wipujk
-         1SMuYmgAQ4BOtlgTEjWpoOoAsK0xChsMwp5/5sVpenSig/T0/TiCziPf5kPWnpSvN5Hv
-         oz1KNNoYCKc+xK4d3bl4lSF9Ht9REYLObBeDaDPHGS1souRnzKY++t/Nae1J0Td1trec
-         eDuQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1770280382; x=1770885182;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=4nRf6SHJsVhZfYah+s5gm1QOcWTJwdFxjn6FWyPfPpI=;
-        b=gX+sjSm1lhmmidydsNUozpepqkGnQuuNek55HvKIbxzyHm468rIHK9wqGaxDHKSZaN
-         iwFyxlNKQ1gnqlMDH7llng5ktiFkcvVbnehdP7Thz9DnMPjzwfqBjgpu6v2WHairhdvo
-         8DBsJVWvNgTdW08vlz1CDxyVU17kbmK9jRzGrOWVB92XIsL3evwNCUnWsnMQ2fEUuO/H
-         QcXEiH/tpnFCoLGsx/3jhlsRMpLXVAO+/W1ZHAk8LhEncoGMd/NgY+mZYqfBWvkhIVC3
-         wKe6PFA4HFB6/4aDk7lGd3kNhs8gjy06uILCmRM7kfo9zIlHBfjCAPZB+KBRXbKLD3+2
-         4+BA==
-X-Forwarded-Encrypted: i=1; AJvYcCXPWNrKKVoz9tFhyxD56eTfoMzwRCUMear4z4m5IrDYody3E22kBr2Of8b+ZaCvKHv2z951iXhctujw@vger.kernel.org
-X-Gm-Message-State: AOJu0YzABlLigI1f3EzaVVBdeINBcIj7ZGYxHCcnCC74l7GdROJvMtxa
-	B28NlB3t73ng7Ns3z+knt3271yXkgKuKc7hlhSCJslvYqS8+X3HwbN9BmY4/DqccwxwfQIrau7p
-	L7kmR0mG2jAtF9Rh9AZ5lpe9JU6bMjiOlZV6LVCHMxg==
-X-Gm-Gg: AZuq6aLDE7wiqnDtFnYalLlx8CXKTMa1Uq27gHtvulz7yD/sPNfk7rejbtCWBWMO7cn
-	PXw7iK6+djB7guBjNYnrOnwpvWqFIcXfBfQha67mKqY1jwz94xzdtUVz0B5wbGJpdeQk+VIAJBj
-	6hYwUeqUk+koyd40+/PDG3f28YT5K16vFHx5EP6HUSkg0Q+mLdQ+GcFrJERFJU3ym4FbqSuWNWU
-	zh9ph0KW4irf7OYodvVlz19fRKUN4jCLyBQHBLTj0fKUXXU9xBMRo1uATHNboio+JwThCrW7Ffv
-	y0Q2zr5Q0au1GxpMMLC+0nKvCoB/
-X-Received: by 2002:a17:906:8f8a:b0:b88:637d:aa75 with SMTP id
- a640c23a62f3a-b8e9f3c9e3emr429179066b.30.1770280381624; Thu, 05 Feb 2026
- 00:33:01 -0800 (PST)
+	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="borAD4Az"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+	d=hansenpartnership.com; s=20151216; t=1770285088;
+	bh=ZzcmRFurz0umv4heyjbHKrDb04DTP0QA52AQrPzk6Cs=;
+	h=Message-ID:Subject:From:To:Date:From;
+	b=borAD4AzcEj9swR785erA/tRi8QAWNDFAyorxUmqs0J7dWiGRaPNdW0TEbYyI9xmz
+	 +geFggTqo1Zi9gf8UA4azcWTiTWNlmr4tDElp6jCyk4tzecgZXeY4IUzmu1mUYsB92
+	 4dH3c9uBTDDmQ89qyQrnp0XKzljcYnzUsY2zwP2E=
+Received: from [10.10.7.5] (unknown [51.52.16.146])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by lamorak.hansenpartnership.com (Postfix) with ESMTPSA id 72E1E1C0106;
+	Thu, 05 Feb 2026 04:51:28 -0500 (EST)
+Message-ID: <32e620691c0ecf76f469a21bffaba396f207ccb9.camel@HansenPartnership.com>
+Subject: [LSF/MM/BPF TOPIC] Documenting the correct pushback on AI inspired
+ (and other) fixes in older drivers
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, 
+	"linux-block@vger.kernel.org"
+	 <linux-block@vger.kernel.org>, linux-fsdevel@vger.kernel.org
+Date: Thu, 05 Feb 2026 09:51:26 +0000
+Autocrypt: addr=James.Bottomley@HansenPartnership.com;
+ prefer-encrypt=mutual;
+ keydata=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
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.50.3 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260129-ufs-rpmb-v1-1-691534ab723f@flipper.net>
- <8149b8cb5a7b36a1543ca05666f33a6373674e0e.camel@gmail.com>
- <CAKTNdwG=He3iJ8cPo4fFbcEwQQRrt_SGzoviMhi2a3kMXAO8hA@mail.gmail.com>
- <ad7e2d0e5b219b4b2ef2aa7ab342513a2c66171f.camel@gmail.com>
- <CAKTNdwG_RycHp++Z++D5HzcybSyQwvKbb++AhtXhNgE6sOoThQ@mail.gmail.com> <a729a7d1b63d0b7e78806bfec238d8db2705c693.camel@gmail.com>
-In-Reply-To: <a729a7d1b63d0b7e78806bfec238d8db2705c693.camel@gmail.com>
-From: Alexey Charkov <alchark@flipper.net>
-Date: Thu, 5 Feb 2026 12:32:51 +0400
-X-Gm-Features: AZwV_QiABBd14DLM48ZE4ziYazv0fNb_LhoTNM5ingrU5uicHByC4S43axTn9GU
-Message-ID: <CAKTNdwGE5oR-axDGYfBCsmG_p=G1oeKCDZ6GmYoRHMN1PXcJSg@mail.gmail.com>
-Subject: Re: [PATCH] scsi: ufs: core: Fix RPMB region size detection for UFS 2.2
-To: Bean Huo <huobean@gmail.com>
-Cc: Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>, 
-	Bart Van Assche <bvanassche@acm.org>, 
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
-	"Martin K. Petersen" <martin.petersen@oracle.com>, Bean Huo <beanhuo@micron.com>, 
-	Can Guo <can.guo@oss.qualcomm.com>, linux-scsi@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
 
-Hi Bean,
+To set the stage, we in SCSI have seen an uptick in patches to older
+drivers mostly fixing missing free (data leak) and data race problems.
+I'm not even sure they're all AI found, but we don't really need to
+know that. The problem, that the submitters often don't appreciate, is
+that every "fix" has some chance of being wrong, so it requires code
+inspection (which is also not free, and which may get it wrong too) and
+testing, for which, often, no-one has any immediate hardware. The
+problems we see is that missed frees (often in error legs) represent
+tiny amounts of memory over the lifetime of the driver (they're often
+in the remove legs) and so we have to ask set against the risk of a
+wrong patch, is the problem even worth fixing? The same goes for data
+races ... and here the suggested fixes are often somewhat complex and,
+on analysis, problematic in some way. I've cc'd fsdevel, because I
+think you're seeing a similar thing for less well maintained
+filesystems.
 
-On Wed, Feb 4, 2026 at 12:37=E2=80=AFPM Bean Huo <huobean@gmail.com> wrote:
->
-> On Fri, 2026-01-30 at 18:49 +0400, Alexey Charkov wrote:
-> > > > The spec says it can only be up to 16MB maximum (see section 12.4.3=
-.1
-> > > > RPMB Resources), so it should always fit. Happy to add a comment ab=
-out
-> > > > that.
-> > > >
-> > > > Best regards,
-> > > > Alexey
-> > >
-> > > Hi Alexey,
-> > >
-> > > Thanks for the clarification on the 16MB RPMB limit - that addresses =
-the
-> > > overflow concern.
-> > >
-> > >
-> > > In your above operation, why not use SZ_128K to avoid the magic numbe=
-r?
-> > > BTW, please update your comment.
-> >
-> > Good point, thanks Bean! Will amend in v2.
-> >
-> > Best regards,
-> > Alexey
->
-> Alexey,
->
-> did you send your new version patch?
+I'd like to see us formulate a document we can put into the kernel and
+point to when they come along. Probably formulated along the lines of
+"first do no harm" and pointing out that every "fix" carries risk and
+we have to set that risk against what we actually get in terms of
+benefits. So require the submitter to specify:
 
-Just sent it out, thanks for your help!
+ * What are the user visible effects (memory leak =3D none), transient
+   bad stats data, or actual data corruption or kernel crash (latter
+   being most serious)
+ * how likely (or often) will this be seen?  If about once a kernel boot(
+   or less), at this point if you have anything less than corruption or
+   a crash, don't bother fixing it because the effect is too minor
+ * For bad stats data, is there an existing tool that uses the data, if
+   not don't bother and even if so show it leads to issues
+ * How was the fix tested (to reduce risk) i.e. do you have the
+   hardware or an acceptable emulation? =C2=A0If not, report the issue, but
+   don't bother sending the fix.
 
-Best regards,
-Alexey
+I think this is just a starting point, and, obviously, it's a bit
+driver centric, but we can probably add generalizations for filesystems
+(and even mm and bpf).
+
+Regards,
+
+James
+
