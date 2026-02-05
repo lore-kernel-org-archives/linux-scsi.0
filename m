@@ -1,181 +1,205 @@
-Received: from mail-lj1-f180.google.com (mail-lj1-f180.google.com [209.85.208.180])
+Received: from mail-pl1-f202.google.com (mail-pl1-f202.google.com [209.85.214.202])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 780FD3EDAC9
-	for <linux-scsi@vger.kernel.org>; Thu,  5 Feb 2026 16:40:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.180
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770309652; cv=pass; b=RcDhPb/oo3Ex/6JTQVIHVfds9rZdi5YctGfjY/kqyUNc3ul2RI9269YHru5sUJcRpoIjCWrkGkHD3KO6035UGwblxcXzHngVI6FQTmwV0G4smZWvtiKpAGpQBEckSjwbJVoIll1TIHBBZq/qUThCU3seeb8zjAPAKa6Hr5vec/A=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770309652; c=relaxed/simple;
-	bh=xwzG2Ogh4J2uFhZawtzchjseHiH8POO4drcnSGr4eYI=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=UFvMfmrp/umN3KsQXn98vjNHQzcSww0wp22sFQKNYuKwLHDMqzAvNdrt2TvDYc6b1tpE1Zrnj680KCIXbRhBun0ZQQNWMuqIK668IWa1ISJVMBl8ydrW6Mdxtb1M6WoJZpIviRJMeL6dN3ibkOmkCLKOvcOiia0qXSma9KcC68Q=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=ionos.com; spf=pass smtp.mailfrom=ionos.com; dkim=pass (2048-bit key) header.d=ionos.com header.i=@ionos.com header.b=I7gIGQDG; arc=pass smtp.client-ip=209.85.208.180
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=ionos.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ionos.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B36228C869
+	for <linux-scsi@vger.kernel.org>; Thu,  5 Feb 2026 18:00:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.202
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1770314421; cv=none; b=SteZSqFE42q51U3Y/K2i5eUierYYyjFfsa7d/Go1zjt4+3cxLrJXlQOS2l6zB+Hk8fpr/akTxuOUw/bUjeLP299xHn8GpJMOiShFV/nt5bTIAAQowZgRZLpIhzkh/GGCLWtYm4IHddnPUTRBTB5u+El3S8EeP56ehofAHSICrJ4=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1770314421; c=relaxed/simple;
+	bh=qu/Fz4UEyq1oOpxLbieusUW35tltYWUfD2p/iMP7H2k=;
+	h=Date:Mime-Version:Message-ID:Subject:From:To:Cc:Content-Type; b=Hq2Wfz5gi6aG+CzaPfX+FfEXlDp2oJXBBMarUlCrwGDA9OX0m1IxvI7AXkc2m+402rNEmDTV7JKjjPldxls8lXmX+TMELJQ9PrRgxZDS/qu2/1x18XnZcQonJiQkI9crvcwFF8qVBs2M6f8LEnn3ZgxZ4u6eI0SzN8kBGJsOt8A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--ipylypiv.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=kpKsvdiL; arc=none smtp.client-ip=209.85.214.202
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--ipylypiv.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ionos.com header.i=@ionos.com header.b="I7gIGQDG"
-Received: by mail-lj1-f180.google.com with SMTP id 38308e7fff4ca-382f9211cbfso11094121fa.0
-        for <linux-scsi@vger.kernel.org>; Thu, 05 Feb 2026 08:40:51 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; t=1770309650; cv=none;
-        d=google.com; s=arc-20240605;
-        b=CD/E4+0H4m4bdLTaJNe7VQOa6bfDIerZ1lf9kSB77FzITJZ8P+9ePujwiTAYug6hXy
-         YXmHZB6flAedI3KR0PZKsXL5/4NrrT2VzhL83IYGVHBMQHMcr+/f0j4LqzOP/eqW6sqr
-         UucA1leQcxWiZM3blXACOvUjOytFc/N+KsC/0ELVW6KZSpFOjdAAs4MBc7R3TdIvcJU1
-         seiNhkrzOo3B/VBS7UnDY9sFLNa7D+6BWVm9snILldgmYLOb5jByNJvUyOJC/aegmqsq
-         8DoS+Gy8e71eZzH9m2lXLuukln65G84xif++ThHGn+doovklVBFHzBPGv+zzhMJ6Jof1
-         Y8yA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=j8o2goC0ypz7sAm3yTvsQ1LLpo4GKpdQO8NpPSiwx6c=;
-        fh=yyEtXWVdb0XsFdtK+SjvkzP21tCOAkqBoG+RXYIyV0w=;
-        b=cZcjSviJI/STYyZqXgprhszJWA0u5UYAL3IlowsHJlPj9xa61KEE0rAdZuYBrnhvoJ
-         rA9ZWbBgs3nHs+n9HpEx/GhmR6InTMDK70F9Qhc77oiKF/xiWLftsmTU4GnqeWXNxBuN
-         Jb8jZ5xaLFsLJrZxLbBB8DcshISuuT7N//zJzYXfRqwasFkuZDDMsOw3IqSzdbhrvIEw
-         cAoLB1ZIIvUJcDbGb8Kkn74Rs5EXgNakIwa7f66JrFC6PyQwaLFdFs71Aho3Hcssy/MU
-         5qC53ZioQ090cAbA2/JfIAnnwlUYt3hTJCAvjeCH/cCYSiabFugJwHjOyHr0iuEw2k9c
-         Geww==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="kpKsvdiL"
+Received: by mail-pl1-f202.google.com with SMTP id d9443c01a7336-2a90510a6d1so10336035ad.0
+        for <linux-scsi@vger.kernel.org>; Thu, 05 Feb 2026 10:00:20 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ionos.com; s=google; t=1770309650; x=1770914450; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=j8o2goC0ypz7sAm3yTvsQ1LLpo4GKpdQO8NpPSiwx6c=;
-        b=I7gIGQDGevnIjfO3BC9CI7Y6QpFDKEaHHK9ja4EqIoCuHGWfasDEKHuF37GeN0iKp9
-         pWmTBaCcVdEbyucTBQbBH10GOqnxAm8N4igijj7XaD9pwuU0je8UX/SkGUSaq8SbJiM8
-         DEpPfQk3zfL5/QLKb03UazTWf9Q84BzOEx7jEpTb6QXdlI0en3/u5frmYII4zHOB9uDf
-         WfzpUfXCUp4xiHR3JwUB3A43JxhGqhtNaF8vOvrcAxM5VtGa8OiR+EbivKzfDKez6ePX
-         r1QKCcK6md2WlOrdzxr0Rp+uImMlI3w6y7VX58HTlYDmB5b5Co9ylG+spuVDWjNsGGkl
-         MsZw==
+        d=google.com; s=20230601; t=1770314420; x=1770919220; darn=vger.kernel.org;
+        h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=cY5JYqVcIMLD/+VD15f76fWimBZZz3wJhNHYazJcVMk=;
+        b=kpKsvdiL/opiUtjuAp7By0MOmSpJ3aIrrvPlkytX+38j2lkAbFMmSqw6ObgEiYvUqG
+         PwRiNUg7QagGX95cpNnvKyhJimgEyZ9U4MkGEaf/JE4A3LwFNNFugdVZ8qq/CAIXeoiL
+         C7XdgmvBXROwCU776llj21SE0O/bRerX6ra19+HOeSP/V5172/F//liWCVzHaH9gixor
+         zDOEMJe/KTKM7zfgtXvosYiFbJyr/HZ80vk/3ptZBDRl41RjCwK6MYONC7BE/qKtbANN
+         OF7fXx1395Rl82/eRy/D6cMI9/s0aybBv+3EI/lfyYTwrido4a+OQv1bIWZUXmakJOx/
+         VxZQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1770309650; x=1770914450;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=j8o2goC0ypz7sAm3yTvsQ1LLpo4GKpdQO8NpPSiwx6c=;
-        b=gE1TWkSTzq4/jC1UpRltpUFHbFMSmUqjQF4dQAiCYTy36qmJyJVB5pZj081iNEjwOc
-         URpFqT00KZYHJuFQ2Mf72CIRNi6TUEeypbsyhq1T1PzOHRkPkW3P5iuQMqu5375obgjr
-         fYnV6R5tqo9ax/VNQhlO4JobPJBXCr1XhfNvLGZrhek87NAf8Jdy6qIxrlQvJQBPeCTG
-         dZWTfD8fjmex7VmjDZMp8MPykacDjAXQmsvLY8W/8nXhuDBtF6OqfOuy+wEj/5YxcwTm
-         TJBgob+IHo9MW2ZG6fGXl2UZSeCP0QX6A8enyGOY57193g9N/TOHNllaWgoM3Wx7BVbQ
-         vY1Q==
-X-Gm-Message-State: AOJu0Yza2QXckgQheV06FFkS24MDZ/wyuCoaZosT4W86j5UPiIm/7S+j
-	lQUz1YF4WrN3inQ4tH2uPEXAAQr+6iSexDpC0xnVAumUKWr/b7IS26hn++pWOfodwhFZ0POPC06
-	DW62dDE6caFgtt4oNnFoJKipLLKVXBt+P0P0hen6ElA==
-X-Gm-Gg: AZuq6aLqP6J3LOGOLEvd0rh5TKvKesHTR0LP07+0lBFezqNigQqVX1J1KYFeXZ60fkS
-	p3W9yv6871WFxzVA2sXlPb21eWTCQwCIH/YwDEtC048bvvY+uSHg1goIEmInTuKINjRY0QWRxfH
-	XGvLpAAJLOP+spwP3kpwOvb14+SwARyseFPYHS5DcpiZcacfERgSs/yqiqlbgjE6d7JZRv8a+xJ
-	7pi5xS1FT7yMKBY6X/KFQoceAvz7X2cZ2PD1jdCzvDzCJDHRc0J7S0nqpxTls96YejezpxTVa2A
-	6hihoGzAP7YFF5Fz8vio+pRZCWTWj6vj9+jlPsDEBEViD7wA5XJiU1fO
-X-Received: by 2002:a05:651c:31ce:b0:385:da28:1e4d with SMTP id
- 38308e7fff4ca-38691e38f7cmr23240501fa.24.1770309649567; Thu, 05 Feb 2026
- 08:40:49 -0800 (PST)
+        d=1e100.net; s=20230601; t=1770314420; x=1770919220;
+        h=cc:to:from:subject:message-id:mime-version:date:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=cY5JYqVcIMLD/+VD15f76fWimBZZz3wJhNHYazJcVMk=;
+        b=MwNwfviTmn53rNZ3ZDxNJfvt2mDX6pjr0XHUrTHXCEiVbrayugdZpYwojErCG6sewS
+         iK8fYqwolKtnoFg3g5jLJ2xnrCIaPwUsMPqPmT3Y8c+7wnp6JNJmRk/U0jqtK6bSbUZl
+         PJc60PBMw0C4Pn3CvTfSyJvovJ5A9edlQZxdTUQ7JLRdvxOoE0jOyavOCFrkV5Y/9wtq
+         YfKh+3l3YaqZOEcmzZTk9OP01HrEAbSOoaurVAn/jwxeyUAOPaMX3PhEqZztMOPeLY3B
+         qhe1O3qpTl079qf92qwBP1rTThOw0/fxp4I6NtmFtUu28GcN5p6nJHoAOSXkpiIJNaCy
+         q7ww==
+X-Forwarded-Encrypted: i=1; AJvYcCVoDhHXIKmM5ZrplFuvPv2PLmUSwfFOm2yQYzyH/B3HZqE078tJyRt/AlW2zDw2S+QU0DNCH+d/cF0P@vger.kernel.org
+X-Gm-Message-State: AOJu0YytqBJNHXQ6IQGaY/4kMz41ocWkRgli36do/prm/2PWN0yCKVuq
+	o0g895i4lQQ8T6SmWAwFQ8eX3r1ouRA1xZGTBg6eHojXzGFg4YIuvOn8tP7xB4Ul4GNbgIvS6sx
+	qxUQSimBHDeCOOw==
+X-Received: from plth1.prod.google.com ([2002:a17:902:7041:b0:2a0:9ab8:a28d])
+ (user=ipylypiv job=prod-delivery.src-stubby-dispatcher) by
+ 2002:a17:903:32c4:b0:2a7:a6fa:eddf with SMTP id d9443c01a7336-2a951949ea9mr917735ad.17.1770314420363;
+ Thu, 05 Feb 2026 10:00:20 -0800 (PST)
+Date: Thu,  5 Feb 2026 10:00:15 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-References: <32e620691c0ecf76f469a21bffaba396f207ccb9.camel@HansenPartnership.com>
-In-Reply-To: <32e620691c0ecf76f469a21bffaba396f207ccb9.camel@HansenPartnership.com>
-From: Haris Iqbal <haris.iqbal@ionos.com>
-Date: Thu, 5 Feb 2026 17:40:37 +0100
-X-Gm-Features: AZwV_QjmZRCeTXVDFflMu1LZl_ZSuoZx08sEIUmia56TUKmCgVvLJHiLQYSMHpw
-Message-ID: <CAJpMwyg4Etv3qOw2Ur+L9YmWbt7Rw19uTs0=RsRtuORaEOoHnQ@mail.gmail.com>
-Subject: Re: [LSF/MM/BPF TOPIC] Documenting the correct pushback on AI
- inspired (and other) fixes in older drivers
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, 
-	"linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, linux-fsdevel@vger.kernel.org
+Mime-Version: 1.0
+X-Mailer: git-send-email 2.53.0.rc2.204.g2597b5adb4-goog
+Message-ID: <20260205180015.2215143-1-ipylypiv@google.com>
+Subject: [RESEND PATCH v2] scsi: core: Add 'serial' sysfs attribute for SCSI/SATA
+From: Igor Pylypiv <ipylypiv@google.com>
+To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
+	"Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Bart Van Assche <bvanassche@acm.org>, linux-scsi@vger.kernel.org, 
+	linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	Igor Pylypiv <ipylypiv@google.com>
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
 
-On Thu, Feb 5, 2026 at 10:52=E2=80=AFAM James Bottomley
-<James.Bottomley@hansenpartnership.com> wrote:
->
-> To set the stage, we in SCSI have seen an uptick in patches to older
-> drivers mostly fixing missing free (data leak) and data race problems.
-> I'm not even sure they're all AI found, but we don't really need to
-> know that. The problem, that the submitters often don't appreciate, is
-> that every "fix" has some chance of being wrong, so it requires code
-> inspection (which is also not free, and which may get it wrong too) and
-> testing, for which, often, no-one has any immediate hardware. The
-> problems we see is that missed frees (often in error legs) represent
-> tiny amounts of memory over the lifetime of the driver (they're often
-> in the remove legs) and so we have to ask set against the risk of a
-> wrong patch, is the problem even worth fixing? The same goes for data
-> races ... and here the suggested fixes are often somewhat complex and,
-> on analysis, problematic in some way. I've cc'd fsdevel, because I
-> think you're seeing a similar thing for less well maintained
-> filesystems.
->
-> I'd like to see us formulate a document we can put into the kernel and
-> point to when they come along. Probably formulated along the lines of
-> "first do no harm" and pointing out that every "fix" carries risk and
-> we have to set that risk against what we actually get in terms of
-> benefits. So require the submitter to specify:
->
->  * What are the user visible effects (memory leak =3D none), transient
->    bad stats data, or actual data corruption or kernel crash (latter
->    being most serious)
->  * how likely (or often) will this be seen?  If about once a kernel boot(
->    or less), at this point if you have anything less than corruption or
->    a crash, don't bother fixing it because the effect is too minor
->  * For bad stats data, is there an existing tool that uses the data, if
->    not don't bother and even if so show it leads to issues
->  * How was the fix tested (to reduce risk) i.e. do you have the
->    hardware or an acceptable emulation?  If not, report the issue, but
->    don't bother sending the fix.
->
-> I think this is just a starting point, and, obviously, it's a bit
-> driver centric, but we can probably add generalizations for filesystems
-> (and even mm and bpf).
+Add a 'serial' sysfs attribute for SCSI and SATA devices. This attribute
+exposes the Unit Serial Number, which is derived from the Device
+Identification Vital Product Data (VPD) page 0x80.
 
-It is an interesting proposal, but I feel the problem statement
-overlaps with some other, already being discussed, or covered topics.
-For example, the topic of fixes requiring effort and time of the
-maintainer/reviewer, and the fact that AI now potentially leads to too
-many such fixes is being discussed in the following link,
+Whitespace is stripped from the retrieved serial number to handle
+the different alignment (right-aligned for SCSI, potentially
+left-aligned for SATA). As noted in SAT-5 10.5.3, "Although SPC-5 defines
+the PRODUCT SERIAL NUMBER field as right-aligned, ACS-5 does not require
+its SERIAL NUMBER field to be right-aligned. Therefore, right-alignment
+of the PRODUCT SERIAL NUMBER field for the translation is not assured."
 
-https://lore.kernel.org/ksummit/20251114183528.1239900-1-dave.hansen@linux.=
-intel.com/#t
+This attribute is used by tools such as lsblk to display the serial
+number of block devices.
 
-TL;DR
-The submitter has to mention the tools used to generate the fix.
-And the maintainer can choose how to handle fixes from certain tools,
+Signed-off-by: Igor Pylypiv <ipylypiv@google.com>
+---
 
-+As with all contributions, individual maintainers have discretion to
-+choose how they handle the contribution. For example, they might:
+v1->v2 changes:
+- Reordered declarations in scsi_vpd_lun_serial() from longest to shortest.
+- Replaced rcu_read_lock()/rcu_read_unlock() with guard(rcu)().
+
+ drivers/scsi/scsi_lib.c    | 47 ++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/scsi_sysfs.c  | 14 ++++++++++++
+ include/scsi/scsi_device.h |  1 +
+ 3 files changed, 62 insertions(+)
+
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index c7d6b76c86d2..16eed661d657 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -13,6 +13,7 @@
+ #include <linux/bitops.h>
+ #include <linux/blkdev.h>
+ #include <linux/completion.h>
++#include <linux/ctype.h>
+ #include <linux/kernel.h>
+ #include <linux/export.h>
+ #include <linux/init.h>
+@@ -3451,6 +3452,52 @@ int scsi_vpd_lun_id(struct scsi_device *sdev, char *id, size_t id_len)
+ }
+ EXPORT_SYMBOL(scsi_vpd_lun_id);
+ 
++/**
++ * scsi_vpd_lun_serial - return a unique device serial number
++ * @sdev: SCSI device
++ * @sn:   buffer for the serial number
++ * @sn_size: size of the buffer
++ *
++ * Copies the device serial number into @sn based on the information in
++ * the VPD page 0x80 of the device. The string will be null terminated
++ * and have leading and trailing whitespace stripped.
++ *
++ * Returns the length of the serial number or error on failure.
++ */
++int scsi_vpd_lun_serial(struct scsi_device *sdev, char *sn, size_t sn_size)
++{
++	const struct scsi_vpd *vpd_pg80;
++	const unsigned char *d;
++	int len;
 +
-+ - Treat it just like any other contribution.
-+ - Reject it outright.
-+ - Treat the contribution specially like reviewing with extra scrutiny,
-+   or at a lower priority than human-generated content
-+ - Suggest a better prompt instead of suggesting specific code changes.
-+ - Ask for some other special steps, like asking the contributor to
-+   elaborate on how the tool or model was trained.
-+ - Ask the submitter to explain in more detail about the contribution
-+   so that the maintainer can feel comfortable that the submitter fully
-+   understands how the code works.
++	guard(rcu)();
++	vpd_pg80 = rcu_dereference(sdev->vpd_pg80);
++	if (!vpd_pg80)
++		return -ENXIO;
++
++	len = vpd_pg80->len - 4;
++	d = vpd_pg80->data + 4;
++
++	/* Skip leading spaces */
++	while (len > 0 && isspace(*d)) {
++		len--;
++		d++;
++	}
++
++	/* Skip trailing spaces */
++	while (len > 0 && isspace(d[len - 1]))
++		len--;
++
++	if (sn_size < len + 1)
++		return -EINVAL;
++
++	memcpy(sn, d, len);
++	sn[len] = '\0';
++
++	return len;
++}
++EXPORT_SYMBOL(scsi_vpd_lun_serial);
++
+ /**
+  * scsi_vpd_tpg_id - return a target port group identifier
+  * @sdev: SCSI device
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index 99eb0a30df61..d80a546f54c2 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -1013,6 +1013,19 @@ sdev_show_wwid(struct device *dev, struct device_attribute *attr,
+ }
+ static DEVICE_ATTR(wwid, S_IRUGO, sdev_show_wwid, NULL);
+ 
++static ssize_t
++sdev_show_serial(struct device *dev, struct device_attribute *attr, char *buf)
++{
++	struct scsi_device *sdev = to_scsi_device(dev);
++	ssize_t ret;
++
++	ret = scsi_vpd_lun_serial(sdev, buf, PAGE_SIZE);
++	if (ret < 0)
++		return ret;
++	return sysfs_emit(buf, "%s\n", buf);
++}
++static DEVICE_ATTR(serial, S_IRUGO, sdev_show_serial, NULL);
++
+ #define BLIST_FLAG_NAME(name)					\
+ 	[const_ilog2((__force __u64)BLIST_##name)] = #name
+ static const char *const sdev_bflags_name[] = {
+@@ -1257,6 +1270,7 @@ static struct attribute *scsi_sdev_attrs[] = {
+ 	&dev_attr_device_busy.attr,
+ 	&dev_attr_vendor.attr,
+ 	&dev_attr_model.attr,
++	&dev_attr_serial.attr,
+ 	&dev_attr_rev.attr,
+ 	&dev_attr_rescan.attr,
+ 	&dev_attr_delete.attr,
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index d32f5841f4f8..9c2a7bbe5891 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -571,6 +571,7 @@ void scsi_put_internal_cmd(struct scsi_cmnd *scmd);
+ extern void sdev_disable_disk_events(struct scsi_device *sdev);
+ extern void sdev_enable_disk_events(struct scsi_device *sdev);
+ extern int scsi_vpd_lun_id(struct scsi_device *, char *, size_t);
++extern int scsi_vpd_lun_serial(struct scsi_device *, char *, size_t);
+ extern int scsi_vpd_tpg_id(struct scsi_device *, int *);
+ 
+ #ifdef CONFIG_PM
+-- 
+2.52.0.457.g6b5491de43-goog
 
-The topic of how big are the effects, or how likely (or often) the
-effects happens may just be linked to the main and IMHO an important
-topic; availability of the hardware for testing.
-For this too, the previous discussion explicitly asks the submitter
-for the following,
-
-+ - How is the submission tested and tools used to test the fix?
-
-I am not sure if this discussion can be linked to the above mentioned
-one, but there are definitely parallels here.
-
->
-> Regards,
->
-> James
->
->
