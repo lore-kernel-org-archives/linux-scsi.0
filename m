@@ -1,48 +1,46 @@
-Received: from zeniv.linux.org.uk (zeniv.linux.org.uk [62.89.141.173])
+Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA9172BE629;
-	Thu,  5 Feb 2026 19:24:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=62.89.141.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AEBED308F23;
+	Thu,  5 Feb 2026 20:54:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770319485; cv=none; b=qldoDcKFxko+NN4WHvPsj8rHfIJEUaSTDKOGW6a3LQxjK3F2NYxq3D9GFP3CGNtGyz3TXyd1lyOeItlW7AoLUq9pxJRdzvetsRWzdzpC7mUu8GQAZX1fe2ndqBaGmVcX9L7haoE8Dej27M6/t+HwkIl7nD1yXQbd85vBYYjMBLE=
+	t=1770324891; cv=none; b=VBwXh+DaV1E+jCkHqeJg+8nEwMf7ldhtDzZqU4K0VsAUWcC8gAbFsoqtcnyoTGIcPSG/lVYl3/VmebThPc2aQyudJrQotkXWpMlCvYnqKIkV282xUYIGiP+F+nh+hQjpzoFu7bXXeCyRw2ez2jkssRISwKqnOJXjaTtU72xDtEQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770319485; c=relaxed/simple;
-	bh=DCqOuOW1zh9oQXmIZrwwP7pi8FgCeO4C23MyGCwMBKc=;
+	s=arc-20240116; t=1770324891; c=relaxed/simple;
+	bh=QCGEePM51IFrGcckX9+zNaK04MVj1phQo6eD/w44ZIE=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=GPyv+z//iRTi0FDVfa9LejArDXjU7756YU14wa7NLS4O1visSK1ok70Y8XwZCQvNSFdmZl6BAXdsl7FC8T6Hug2BpzwZPxKlraMMIBcbXDdELy5zRhqJ0jebX8jbZ+os+0uUkzIXeEuX/9k93uN8q3ab3JTQVYvRFXwFWOdqcA4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zeniv.linux.org.uk; spf=none smtp.mailfrom=ftp.linux.org.uk; dkim=pass (2048-bit key) header.d=linux.org.uk header.i=@linux.org.uk header.b=fRy9MmnB; arc=none smtp.client-ip=62.89.141.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zeniv.linux.org.uk
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=ftp.linux.org.uk
+	 Content-Type:Content-Disposition:In-Reply-To; b=KDDXDIAKTVg8E2Y6UQ9LZ+D8DIbfskqft1zjisiNqiLwn6GtFwG2iDHmW9Kn39LxJTBODOSuzJiy/8Wa7b6C23fJNv0E272yA41VwZp/mjgXMPYCm8SB1GKBNuzibzKHYUjaAybwNaonZVY15VZM2mPSxooX8tRaXb+30GogxgY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=DUEBxaH5; arc=none smtp.client-ip=90.155.50.34
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linux.org.uk header.i=@linux.org.uk header.b="fRy9MmnB"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="DUEBxaH5"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=linux.org.uk; s=zeniv-20220401; h=Sender:In-Reply-To:Content-Type:
-	MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
+	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
 	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=+SYqMu+RR2nCNVh1RNByYxA+l2fsT58P8/htWp+vtkU=; b=fRy9MmnBFf3iSDZ0MNXdHP5eeW
-	zKKErOwGEVWlkdik25Q/zU03k9mvix5CSvPgjuJgZJEJZsDHPoXrra8YB/dWJIo+SglI2JZ5yrMoQ
-	kdp+0FT7ojG+yy/v87cNBkKjmqBXeb3lGjZH/hlRYsDGlSlxOK1For39A0ftGmh2f5fPvEKgBTbgB
-	DjB5GAm5CD+hJZuFOfxP3RNwpI16WKo6GtgbYCJmh9hvpI/Y+bg0WJIDqCcIys22zbYcPJW+v+389
-	2AKCnLYqT/+Mtnj1x3xpMTw7DEZFFtNwTqE1ntSoMSZQxNWv1b/UZl+u3vTlsTwfq7kD1Xauo4JKO
-	8qCB30Fw==;
-Received: from viro by zeniv.linux.org.uk with local (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1vo500-00000003N06-3HaJ;
-	Thu, 05 Feb 2026 19:26:44 +0000
-Date: Thu, 5 Feb 2026 19:26:44 +0000
-From: Al Viro <viro@zeniv.linux.org.uk>
-To: Prithvi Tambewagh <activprithvi@gmail.com>
-Cc: martin.petersen@oracle.com, d.bogdanov@yadro.com, bvanassche@acm.org,
-	linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-kernel-mentees@lists.linux.dev,
-	skhan@linuxfoundation.org, david.hunter.linux@gmail.com,
-	khalid@kernel.org,
-	syzbot+f6e8174215573a84b797@syzkaller.appspotmail.com,
-	stable@vger.kernel.org
-Subject: Re: [PATCH v3] scsi: target: fix recursive locking in
- __configfs_open_file()
-Message-ID: <20260205192644.GT3183987@ZenIV>
-References: <20260205162624.117957-1-activprithvi@gmail.com>
+	bh=9WkNCDLjrKmOzJKlCZsKv6sJAcu+pisPBJ2qYlKWt80=; b=DUEBxaH58hijGXYwfyIuTAfjiM
+	iTCzQRgrTueOgAKWrcS3F6Lsm7CqGYvifruBqEZtf2Pt9iSWZtwap4jIvgszczMefPg4GtTQcwzce
+	9+NpU1qd3beHwrG+j+aOPZk9yjEHPjPnpYTOhaT+RSaJHFHPfb2OYalmoI0Xr6XXZ6dajEZlRLRDi
+	I0cW9+mFtHCDf9SIikZGcaF+OmgQooSLrOIV7H4uRYxPy/J+Q0DJyVaW0YCPg+HP+yRSgSSZKtAE8
+	QEIAVarurLon0oCsNYty+QC2JAcvuzBNMpkA0rpSyl0g2v7/Sh3OsHaAVbDu+rozADefCVvPqbvJy
+	+Sx076ag==;
+Received: from willy by casper.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1vo6N5-000000049Xj-2zqu;
+	Thu, 05 Feb 2026 20:54:39 +0000
+Date: Thu, 5 Feb 2026 20:54:39 +0000
+From: Matthew Wilcox <willy@infradead.org>
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: James Bottomley <James.Bottomley@hansenpartnership.com>,
+	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+	"linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+	linux-fsdevel@vger.kernel.org
+Subject: Re: [LSF/MM/BPF TOPIC] Documenting the correct pushback on AI
+ inspired (and other) fixes in older drivers
+Message-ID: <aYUDj5zge6amIkTv@casper.infradead.org>
+References: <32e620691c0ecf76f469a21bffaba396f207ccb9.camel@HansenPartnership.com>
+ <8075dab2-49db-408e-bff6-5de6b0b372cd@acm.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -51,26 +49,14 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260205162624.117957-1-activprithvi@gmail.com>
-Sender: Al Viro <viro@ftp.linux.org.uk>
+In-Reply-To: <8075dab2-49db-408e-bff6-5de6b0b372cd@acm.org>
 
-On Thu, Feb 05, 2026 at 09:56:24PM +0530, Prithvi Tambewagh wrote:
+On Thu, Feb 05, 2026 at 08:30:53AM -0800, Bart Van Assche wrote:
+> We don't want to forbid tree-wide API changes, isn't it? See also
+> Documentation/process/stable-api-nonsense.rst.
 
-> +	r = kern_path(db_root_stage, LOOKUP_FOLLOW, &path);
-> +	if (r) {
->  		pr_err("db_root: cannot open: %s\n", db_root_stage);
->  		goto unlock;
->  	}
-> -	if (!S_ISDIR(file_inode(fp)->i_mode)) {
-> -		filp_close(fp, NULL);
-> +	if (!d_is_dir(path.dentry)) {
-> +		path_put(&path);
->  		pr_err("db_root: not a directory: %s\n", db_root_stage);
-> +		r = -ENOTDIR;
->  		goto unlock;
->  	}
-> -	filp_close(fp, NULL);
-> +	path_put(&path);
+That's plainly not what James was talking about.  Tree-wide API changes
+have an obvious benefit (... or if not, they'll be rejected).  The
+question is what benefit does anyone receive from fixing an unlikely
+memory leak in the ncr53c8xx driver?
 
-Just pass it LOOKUP_FOLLOW | LOOKUP_DIRECTORY and be done with the manual
-"is it a directory" tests in any form...
