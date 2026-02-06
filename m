@@ -1,117 +1,61 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 97EA133B6E5;
-	Thu,  5 Feb 2026 23:37:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+Received: from angie.orcam.me.uk (angie.orcam.me.uk [78.133.224.34])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id EB30D1E3DCD;
+	Fri,  6 Feb 2026 00:39:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=78.133.224.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770334660; cv=none; b=XuqUTclVIlZLj0gehgrDY1xCKVT1Pjy1dU1TbsGSHDQ3xmTGPXMALiWDOypzoqfnYSBtGKAcKPo0ip9lvK7j7G85McNGDDa09WvEE6b5VvvXq1K+vmaoCnTHogras9QOa2TZklwX8Ayy5WKTE1KwDtZ2mPP9k0Q5JFpLpNoRNCE=
+	t=1770338366; cv=none; b=s4R8S07l0qo7oOmrsGXxkea38fP9jqKZvARU0yQm7q0dLIMUXwrAZtHGVXl7FTFOdCyaoKXkaTPXlUAGzeQN+i7bk95sFFLHbqBR01pfqAT/41BoO0HU9UF2lJ3Ck1JTH/LVieEZnlWRCE7no4qj62JB47MI6vhKheZRppvYS2I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770334660; c=relaxed/simple;
-	bh=9fsQs8XyfGV7KTfiHy+W3SDSyzHyIaPegIt6rYd4HUQ=;
-	h=MIME-Version:Date:From:To:Cc:Message-Id:In-Reply-To:References:
-	 Subject:Content-Type; b=EPyaqvLCbcC7IrLqOIzQyXntGknJFTVC3fWxOm6WYV/9kYyjIKQYhzo5GaedVxqLaQZIg9VebFqf9cytkmscSCsODu+oIMSv7g1pG3k9U/OyUaQ1E1K9xA1wjEuLoC8+REUpTwBlUDi1oAeFvQuYS6/XzoSuSjN4N/cr21dfh2o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hHOLfnJo; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hHOLfnJo"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0ED6DC4CEF7;
-	Thu,  5 Feb 2026 23:37:39 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1770334660;
-	bh=9fsQs8XyfGV7KTfiHy+W3SDSyzHyIaPegIt6rYd4HUQ=;
-	h=Date:From:To:Cc:In-Reply-To:References:Subject:From;
-	b=hHOLfnJor7JN/Fk+Ipfr8313t5UcmUT4+/bPAdvLFp9KcVAfrJlCXC8jeZxgK7ZKu
-	 UAJnyL9LitnG/o8sqDUIAmZimtnaV0qSBIgOgU79OEIu9eSm/a1F+63Ss8jx4Do+KO
-	 GuTNTdFKXU2kWHSMSqEK0xI7TaRGf2z9/dNBzYdmxI5vi0m4PDh8FrovW1Nk+1eU7w
-	 L3T2TEnWpIExy6AiXi+lNdpEHyiz4EkoyWUyR5/tlqzqSTrFEfdbPk/CLgdk361JYG
-	 CkNqnKu1IfP6tZPpZomk3ZcFK+pl4Zk3glIkVSvLvqq9IoPedZOIqQZkJ8PWvoTaiy
-	 nw++dTLuaZfVw==
-Received: from phl-compute-10.internal (phl-compute-10.internal [10.202.2.50])
-	by mailfauth.phl.internal (Postfix) with ESMTP id E87B0F4006A;
-	Thu,  5 Feb 2026 18:37:38 -0500 (EST)
-Received: from phl-imap-15 ([10.202.2.104])
-  by phl-compute-10.internal (MEProxy); Thu, 05 Feb 2026 18:37:38 -0500
-X-ME-Sender: <xms:wimFaezCUfDBlfEYFLVzioBh4Z28aXLdgMUqYRP7In0ecaqYyjkS3A>
-    <xme:wimFaVHaDv2KDpCVAjlmDegnwZVQgiqhxr9FnqgPQ0iTm-cn1LuamV8rTKH1VUpnP
-    S4FlQLC3N7ywiRAqAgcyzlOnGsGxzXlAqlWr0_YEhESQZKIliMPuYA>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefgedrtddtgddukeeiieefucetufdoteggodetrf
-    dotffvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfurfetoffkrfgpnffqhgenuceu
-    rghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujf
-    gurhepofggfffhvfevkfgjfhfutgfgsehtjeertdertddtnecuhfhrohhmpedfvehhuhgt
-    khcunfgvvhgvrhdfuceotggvlheskhgvrhhnvghlrdhorhhgqeenucggtffrrghtthgvrh
-    hnpeejvefhudehleetvdejhfejvefghfelgeejvedvgfduuefffeegtdejuefhiedukeen
-    ucffohhmrghinhepkhgvrhhnvghlrdhorhhgnecuvehluhhsthgvrhfuihiivgeptdenuc
-    frrghrrghmpehmrghilhhfrhhomheptghhuhgtkhhlvghvvghrodhmvghsmhhtphgruhht
-    hhhpvghrshhonhgrlhhithihqdduieefgeelleelheelqdefvdelkeeggedvfedqtggvlh
-    eppehkvghrnhgvlhdrohhrghesfhgrshhtmhgrihhlrdgtohhmpdhnsggprhgtphhtthho
-    peehpdhmohguvgepshhmthhpohhuthdprhgtphhtthhopehjrghmvghsrdgsohhtthhomh
-    hlvgihsehhrghnshgvnhhprghrthhnvghrshhhihhprdgtohhmpdhrtghpthhtohephhgr
-    rhhishdrihhqsggrlhesihhonhhoshdrtghomhdprhgtphhtthhopehlihhnuhigqdgslh
-    hotghksehvghgvrhdrkhgvrhhnvghlrdhorhhgpdhrtghpthhtoheplhhinhhugidqfhhs
-    uggvvhgvlhesvhhgvghrrdhkvghrnhgvlhdrohhrghdprhgtphhtthhopehlihhnuhigqd
-    hstghsihesvhhgvghrrdhkvghrnhgvlhdrohhrgh
-X-ME-Proxy: <xmx:wimFaamcC7LS6xrIjGsMcMZp71GshtwnFO8kurRootLvqHU_R_jxjQ>
-    <xmx:wimFaVjL7i6qC9voVRUaffyClSrEoJlSoaJFyDWh_Iny7Xu1P3fAUA>
-    <xmx:wimFaSf_QJSDBvyWiOup5ZVVb7suhF6dRJl3aCXmQQQIReXQvjIQIg>
-    <xmx:wimFaVgdy3IKuQ1KTgm-5i6Bwf4XabBaGrrPTB3_TXGXioZM0Cpn-A>
-    <xmx:wimFaaxdbiCLgKb98sy8mIrBvP2vGFFF7YXJVyISgZbPkJGq3fwgVK1e>
-Feedback-ID: ifa6e4810:Fastmail
-Received: by mailuser.phl.internal (Postfix, from userid 501)
-	id BF118780070; Thu,  5 Feb 2026 18:37:38 -0500 (EST)
-X-Mailer: MessagingEngine.com Webmail Interface
+	s=arc-20240116; t=1770338366; c=relaxed/simple;
+	bh=azrVc2TDguDWWe9dsocpaHFjd1ZLoReJ5OuDTtfK788=;
+	h=Date:From:To:cc:Subject:In-Reply-To:Message-ID:References:
+	 MIME-Version:Content-Type; b=cQ1TlluKMNvywvIIDd76ZSB8pcd5pJrzQL88b7ohWuo/bfm9gfye9h/btCGN6LGM7nn7TL3RuFLrFyKAfejKm4lhHIIWCet0EClT6uIh09lzdDdVBvASfbt7KBzv4K8/swwc4qosVt6Rc0qojEq0287hsbeItVCoiSykVtnmkMo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=orcam.me.uk; spf=none smtp.mailfrom=orcam.me.uk; arc=none smtp.client-ip=78.133.224.34
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=orcam.me.uk
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=orcam.me.uk
+Received: by angie.orcam.me.uk (Postfix, from userid 500)
+	id 165FF92009C; Fri,  6 Feb 2026 01:39:24 +0100 (CET)
+Received: from localhost (localhost [127.0.0.1])
+	by angie.orcam.me.uk (Postfix) with ESMTP id 100DB92009B;
+	Fri,  6 Feb 2026 00:39:24 +0000 (GMT)
+Date: Fri, 6 Feb 2026 00:39:23 +0000 (GMT)
+From: "Maciej W. Rozycki" <macro@orcam.me.uk>
+To: Arnd Bergmann <arnd@kernel.org>
+cc: Khalid Aziz <khalid@gonehiking.org>, 
+    "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
+    "Martin K. Petersen" <martin.petersen@oracle.com>, 
+    Arnd Bergmann <arnd@arndb.de>, Al Viro <viro@zeniv.linux.org.uk>, 
+    Jens Axboe <axboe@kernel.dk>, Bart Van Assche <bvanassche@acm.org>, 
+    Alexey Gladkov <legion@kernel.org>, linux-scsi@vger.kernel.org, 
+    linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] SCSI: buslogic: reduce stack usage
+In-Reply-To: <20260203163321.2598593-1-arnd@kernel.org>
+Message-ID: <alpine.DEB.2.21.2602060029161.17548@angie.orcam.me.uk>
+References: <20260203163321.2598593-1-arnd@kernel.org>
+User-Agent: Alpine 2.21 (DEB 202 2017-01-01)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-ThreadId: Ag-6jdtruc1N
-Date: Thu, 05 Feb 2026 18:37:03 -0500
-From: "Chuck Lever" <cel@kernel.org>
-To: "James Bottomley" <James.Bottomley@hansenpartnership.com>,
- "Haris Iqbal" <haris.iqbal@ionos.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
- "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
- linux-fsdevel@vger.kernel.org
-Message-Id: <8cf8658a-4cea-45d6-b098-0c44da503e44@app.fastmail.com>
-In-Reply-To: 
- <5cfff8c0b44968cf75d74aef17de6dce73e1a26d.camel@HansenPartnership.com>
-References: 
- <32e620691c0ecf76f469a21bffaba396f207ccb9.camel@HansenPartnership.com>
- <CAJpMwyg4Etv3qOw2Ur+L9YmWbt7Rw19uTs0=RsRtuORaEOoHnQ@mail.gmail.com>
- <5cfff8c0b44968cf75d74aef17de6dce73e1a26d.camel@HansenPartnership.com>
-Subject: Re: [LSF/MM/BPF TOPIC] Documenting the correct pushback on AI inspired (and
- other) fixes in older drivers
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
 
-Hello James,
+On Tue, 3 Feb 2026, Arnd Bergmann wrote:
 
-On Thu, Feb 5, 2026, at 5:40 PM, James Bottomley wrote:
-> On Thu, 2026-02-05 at 17:40 +0100, Haris Iqbal wrote:
-> [...]
->> It is an interesting proposal, but I feel the problem statement
->> overlaps with some other, already being discussed, or covered topics.
->> For example, the topic of fixes requiring effort and time of the
->> maintainer/reviewer, and the fact that AI now potentially leads to
->> too many such fixes is being discussed in the following link,
->> 
->> https://lore.kernel.org/ksummit/20251114183528.1239900-1-dave.hansen@linux.intel.com/#t
->
-> They are actually pretty orthogonal.  The email is about identifying AI
-> tools used in submission.  I may suspect the uptick in the fixes is due
-> to the use of AI, but I don't really care.  The problem isn't what tool
-> you used it's that the risk vs benefit of actually fixing the driver
-> isn't favourable.
+> Some randconfig builds run into excessive stack usage with gcc-14 or
+> higher, which use __attribute__((cold)) where earlier versions did
+> not do that:
+> 
+> drivers/scsi/BusLogic.c: In function 'blogic_init':
+> drivers/scsi/BusLogic.c:2398:1: error: the frame size of 1680 bytes is larger than 1536 bytes [-Werror=frame-larger-than=]
 
-Agreed, the fire hose of patches that a maintainer has to deal with
-is a perennial problem, no matter the source of the patches.
+ Probably obviously correct, but still:
 
-Seems to me that benefits/cost analysis is part of patch review. But
-when using AI for review, you can ask it to do an initial analysis
-for you, rather than legislating contributor behavior (over which you
-have no control).
+Tested-by: Maciej W. Rozycki <macro@orcam.me.uk>
 
+-- with GCC 15 and a BT-958 MultiMaster host adapter, and the rootfs as 
+well as most other filesystems on devices downstream.  This is with 
+slightly older 6.19.0-rc1 from the pci repo, which I've had handy from 
+other verification and should not matter for the scope of this testing.
 
--- 
-Chuck Lever
+  Maciej
