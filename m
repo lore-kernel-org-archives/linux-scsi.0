@@ -1,110 +1,112 @@
-Received: from fout-a4-smtp.messagingengine.com (fout-a4-smtp.messagingengine.com [103.168.172.147])
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ACE8C3043D7;
-	Fri,  6 Feb 2026 22:38:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.147
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D75302C0268
+	for <linux-scsi@vger.kernel.org>; Sun,  8 Feb 2026 02:02:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.165.32
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770417504; cv=none; b=eEmaRQHO2xHsRvgwMdTrYEK8nEwnsR5F4iMlRyKwriUddVHvy72Mht9h+zqrHr5HXRzydEQ4mZc5ipEordR04fC24MIs+ps8qHSLZcFdolMY5miMqwli/xWubjLlqzxghxby/InTF7qcgyZViL9QIMZdDZR9M2OndpnHM6Vt9vU=
+	t=1770516127; cv=none; b=Wn9pD5+pfYCAzugnwKh/RJomQo/lzCsTaTD7xL9+asXkaYu6F+MO2tISHHphI0/zjif4OwAR8kLjb5qd/+4kPmoaQ103KxP9LvTDaOCYGGK4hJ9g0Zo+V+9jLFaSzlLtGfXXIUoLKniPh3aR3fc8XloRadf7jb3KYES4NLAi3fg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770417504; c=relaxed/simple;
-	bh=Bbw6VXoNApPGgxUT2nfFc0/wHQooiDOMNJ4U0eo4hJE=;
-	h=Date:From:To:cc:Subject:In-Reply-To:Message-ID:References:
-	 MIME-Version:Content-Type; b=bRpvFatAPZnRCCoxYj+GLdwR701ccZ4R0/Cs3qAYlcgzpvlQzM+oCaym0iaGJY7X6fzuh9bjUoGZZNsl6sHIEklyDGHtsMSasQ4eCRHpUXB1DQ+1iKSAbCkHOCtCynjtFpKwvcBYFkIjnmbSsB62qejnPeHsTi8dY0dzmAv05Wo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org; spf=none smtp.mailfrom=linux-m68k.org; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=liqzkMWI; arc=none smtp.client-ip=103.168.172.147
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux-m68k.org
+	s=arc-20240116; t=1770516127; c=relaxed/simple;
+	bh=rlB/9QCTEcbrvRkE3Zz89nNjR23ygwPKGNbYvLCS4Q0=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=aQwiM/12+8GhKmokSTZuYol57gOiWyTCoVoacr02jIqKjlnSKEIFAirTN5YraseEbN3PXZ2on94V+r2pumSQpp+QLKTN3ONveincrrOsZkkQ2s076QerY2NxPH2G/EvFhYziWwEpCxIoDOFLRMWA55A2wJdNLDp5LwfQEEecYAs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=B2y0b2h5; arc=none smtp.client-ip=205.220.165.32
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="liqzkMWI"
-Received: from phl-compute-01.internal (phl-compute-01.internal [10.202.2.41])
-	by mailfout.phl.internal (Postfix) with ESMTP id ACE2FEC00B1;
-	Fri,  6 Feb 2026 17:38:22 -0500 (EST)
-Received: from phl-frontend-04 ([10.202.2.163])
-  by phl-compute-01.internal (MEProxy); Fri, 06 Feb 2026 17:38:22 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-type:content-type:date:date
-	:feedback-id:feedback-id:from:from:in-reply-to:in-reply-to
-	:message-id:mime-version:references:reply-to:subject:subject:to
-	:to:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=
-	1770417502; x=1770503902; bh=TOe6tBoZ94gvWUM5HNpF1Y5kR38DOrSzRwj
-	4lmrYzFE=; b=liqzkMWI2o6lmVZkic1bmZQBYB1Wm9kJTC2pdTtDXU8OhW6DvCp
-	y5lYzgpyixYHhrvcoVp7F2+u9G7MmMmIeAmOsG9uucStcMNVBcbqx3GkfwHDvjC2
-	jTl4jg+wnpPvRirEqnHrR9eeZ1qWP2ppJSoPR8dW7smPdGpmxJcuLAjNXaEeqHI4
-	W3sETnr7Nv4NmEu6FE1dTr+l+XX0lrVOoNoiTmWRWOTx6J6Pa8OcjE91SlAbBjmO
-	U9/eg5FRzIl0fLXeHH19XTbHdjSKKfYDpVfLDUpeOKXkY0tzXDUD2Xt65X7BjKep
-	n0qCEH4y8mNhJ1VTPi+ysOPPFkOqFxxSI5A==
-X-ME-Sender: <xms:Xm2GaZJtEaTWxoE5dQxXaeVlgM8lw6Lymae5BggK1gsWuC68pFAA-Q>
-    <xme:Xm2GaeEscSZ_n_ffVKVWF8y8OunTm6vuCsYf9D4Hdeoy6OFaM9boK4pNiRbyY2bRX
-    AWtYczPYIcew-EHRIw502zCE54QnFiGhAW8FuUv-dO6_SgO-yF88XI>
-X-ME-Received: <xmr:Xm2GadSJJ-Cd3BhLLl1oDQJpG8tnvlnAxAH9jbiUq_FoMHK5mp04P-bfvy_3>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefgedrtddtgddukeelfeelucetufdoteggodetrf
-    dotffvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfurfetoffkrfgpnffqhgenuceu
-    rghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujf
-    gurhepfffhvfevufgjkfhfgggtsehttdertddttddvnecuhfhrohhmpefhihhnnhcuvfhh
-    rghinhcuoehfthhhrghinheslhhinhhugidqmheikehkrdhorhhgqeenucggtffrrghtth
-    gvrhhnpeelueehleehkefgueevtdevteejkefhffekfeffffdtgfejveekgeefvdeuheeu
-    leenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepmhgrihhlfhhrohhmpehfth
-    hhrghinheslhhinhhugidqmheikehkrdhorhhgpdhnsggprhgtphhtthhopeehpdhmohgu
-    vgepshhmthhpohhuthdprhgtphhtthhopegujhifohhngheskhgvrhhnvghlrdhorhhgpd
-    hrtghpthhtohepjhgrmhgvshdrsghothhtohhmlhgvhieshhgrnhhsvghnphgrrhhtnhgv
-    rhhshhhiphdrtghomhdprhgtphhtthhopehlihhnuhigqdhstghsihesvhhgvghrrdhkvg
-    hrnhgvlhdrohhrghdprhgtphhtthhopehlihhnuhigqdgslhhotghksehvghgvrhdrkhgv
-    rhhnvghlrdhorhhgpdhrtghpthhtoheplhhinhhugidqfhhsuggvvhgvlhesvhhgvghrrd
-    hkvghrnhgvlhdrohhrgh
-X-ME-Proxy: <xmx:Xm2Gaadoi9VU5l4Rt4ViIHjceh6k1fWZs92-LS1Z4ECSNDEdbdl_Cw>
-    <xmx:Xm2GacrzGMEsEnoKqMjqQAGQeq8QhiWMm0ph9wLX_3YxMfbSipLHoA>
-    <xmx:Xm2Gab-4zHCp0mcKkpK08x7KccbukYJNJfDTbkX8T_XDyfIcz6WLFA>
-    <xmx:Xm2GaYcSsE3piS4lvU9UptTvQrOk4X1jv3t0c5PQAAQprDsksXqI3g>
-    <xmx:Xm2GaU_lcluMy6f64WLj3G8hzLByEop2ylf5m0D7h0DlCS71Xlmzor_J>
-Feedback-ID: i58a146ae:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Fri,
- 6 Feb 2026 17:38:20 -0500 (EST)
-Date: Sat, 7 Feb 2026 09:38:48 +1100 (AEDT)
-From: Finn Thain <fthain@linux-m68k.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-cc: James Bottomley <James.Bottomley@hansenpartnership.com>, 
-    "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, 
-    "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, 
-    linux-fsdevel@vger.kernel.org
-Subject: Re: [LSF/MM/BPF TOPIC] Documenting the correct pushback on AI inspired
- (and other) fixes in older drivers
-In-Reply-To: <20260206051847.GC7693@frogsfrogsfrogs>
-Message-ID: <2f1cd352-44d8-d014-240c-8b264c1ba95c@linux-m68k.org>
-References: <32e620691c0ecf76f469a21bffaba396f207ccb9.camel@HansenPartnership.com> <5938441c-aaa9-c405-a78a-a66f387a5370@linux-m68k.org> <20260206051847.GC7693@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="B2y0b2h5"
+Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6181j2731948907;
+	Sun, 8 Feb 2026 02:02:00 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=
+	corp-2025-04-25; bh=CYAAcD2fFeHMTXwA6IIa1xUIdkoAsE+se4wBC2eRRtY=; b=
+	B2y0b2h5dDZwK+43+7I3X1VgSf/b1LkctZu71E37WYGPfr/4fBczpeRwz8Z7TmNo
+	gFJ5NORWdqpONSngTsgjmq+8heLrTFE2r61/3U0D1Jq+3ASaYrNUsSPivlBTY6n7
+	nGzetMj2S0D1rdHes6AQKkpwqtVFvx3HvSyc+S91YBLZ0iAbGEqLV9jzP/cc0uMh
+	IleIbw+YvmXf7DCzsqL98OK8V0AiudpBxZixG66OVNxIW53wFSwScJtuEbOOdFN2
+	LIk94RJVX9Yj4RUPtDy0Ok2jHckf7+5mtJ/Q8GbQT24OEKkzhsZTq+8EIzJWkPvT
+	E+A2OG736TpWaeBRFQ9+0g==
+Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4c5xes0hyr-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Sun, 08 Feb 2026 02:01:59 +0000 (GMT)
+Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 6181A7dG006552;
+	Sun, 8 Feb 2026 02:01:58 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 4c5uubuk5a-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Sun, 08 Feb 2026 02:01:58 +0000
+Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 61821sxV016745;
+	Sun, 8 Feb 2026 02:01:58 GMT
+Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
+	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 4c5uubuk3y-6;
+	Sun, 08 Feb 2026 02:01:57 +0000
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+To: Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>,
+        Kashyap Desai <kashyap.desai@broadcom.com>,
+        Sumit Saxena <sumit.saxena@broadcom.com>,
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+        "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+        Guixin Liu <kanie@linux.alibaba.com>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
+        mpi3mr-linuxdrv.pdl@broadcom.com, linux-scsi@vger.kernel.org
+Subject: Re: [PATCH] scsi: mpi3mr: Make driver probing asynchronously
+Date: Sat,  7 Feb 2026 21:01:47 -0500
+Message-ID: <177051564488.3805738.987932524511486331.b4-ty@oracle.com>
+X-Mailer: git-send-email 2.51.2
+In-Reply-To: <20260130080207.90053-1-kanie@linux.alibaba.com>
+References: <20260130080207.90053-1-kanie@linux.alibaba.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-02-08_01,2026-02-05_03,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 adultscore=0 phishscore=0
+ bulkscore=0 mlxlogscore=698 suspectscore=0 mlxscore=0 malwarescore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2601150000
+ definitions=main-2602080015
+X-Authority-Analysis: v=2.4 cv=KaTfcAYD c=1 sm=1 tr=0 ts=6987ee97 b=1 cx=c_pps
+ a=zPCbziy225d3KhSqZt3L1A==:117 a=zPCbziy225d3KhSqZt3L1A==:17
+ a=IkcTkHD0fZMA:10 a=HzLeVaNsDn8A:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=Mpw57Om8IfrbqaoTuvik:22 a=GgsMoib0sEa3-_RKJdDe:22 a=VwQbUJbxAAAA:8
+ a=Hvy75GJ01QyooZ2wtikA:9 a=QEXdDO2ut3YA:10 cc=ntf awl=host:12103
+X-Proofpoint-GUID: w898CH4JHu-fkaZ0y2PPuhNBDEuwuuwG
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMjA4MDAxNSBTYWx0ZWRfX/B4Klk1Em78i
+ ULTUZ7ozVCExBHGILcMGyrDUFTHN1wGew244VY2TkfNCQ8jzOiFuDPv3Y4jvfjU9idoolVi/qHa
+ ljJr47v3tO023scSaEVeuQFVsgk/K38UmRzjvwxsicKW3/uXUbyDiapejSXx0zTu6FRC4lsqzvg
+ 5ublVosyOanwz8D/5kpZvSIG2+WuqaqDWjqdRg4/yE6asZ5Wj64gFW1QJS1BgMYAL+GGhzRPZSG
+ I6OCQaMLWPraWHcKu/4ntvENyQcmdfRI92fiDsGgezf0ikQawdpfd3dCVTRje+mVVoaZs2HeKHU
+ F3o4wByUMt1e+keuY0R9wYHRmarFqN1mE+Q8HvLmOJWCHZac9UuyY0k2PJxVK3Xkq1cAZt9juwb
+ htP6cLGIeIguqH+YH7ua4+cRqZmAFcbSMxs5oEffl8tHc3yS5Q5zhI4mgtx6VfhuzDAeqF5MNw5
+ 8lg8oqJmzaSWZnLP4SU073WvXmHw8OcQQwhhIeoA=
+X-Proofpoint-ORIG-GUID: w898CH4JHu-fkaZ0y2PPuhNBDEuwuuwG
 
+On Fri, 30 Jan 2026 16:02:07 +0800, Guixin Liu wrote:
 
-On Thu, 5 Feb 2026, Darrick J. Wong wrote:
-
-> On Fri, Feb 06, 2026 at 09:57:45AM +1100, Finn Thain wrote:
-> > 
-> > On Thu, 5 Feb 2026, James Bottomley wrote:
-> > 
-> > > To set the stage, we in SCSI have seen an uptick in patches to older 
-> > > drivers mostly fixing missing free (data leak) and data race 
-> > > problems. I'm not even sure they're all AI found, but we don't 
-> > > really need to know that.
-> > 
-> > If I may predict the next scene, by extrapolating only a little, we 
-> > are approaching the point where it will be feasible to request that an 
-> > AI simply generate a new driver, based on chip datasheets plus all of 
-> > the open source drivers available for training, rather than patch the 
-> > bugs in an existing driver.
-> > 
-> > At that point, what use is a maintainer? I think we can still add 
-> > value if
+> Speed up the boot process by using the asynchronous probing feature
+> supported by the kernel.
 > 
-> Being a magic sources of datasheets obtained through murky means, 
-> obviously.  What /was/ grandpa doing when he came home with a bunch of 
-> weird machinery at 3am in 1957??  :P
+> Set the PROBE_PREFER_ASYNCHRONOUS flag in the device_driver
+> structure so that the driver core probes in parallel.
 > 
+> 
+> [...]
 
-I'm told he was building a steam-powered flying saucer. I don't know 
-whether he was more interested in the question, how did we get here or to 
-where might we go.
+Applied to 6.20/scsi-queue, thanks!
+
+[1/1] scsi: mpi3mr: Make driver probing asynchronously
+      https://git.kernel.org/mkp/scsi/c/21a16f0f0226
+
+-- 
+Martin K. Petersen
