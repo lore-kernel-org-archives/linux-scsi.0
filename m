@@ -1,114 +1,87 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED4B732E750;
-	Tue, 10 Feb 2026 06:56:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D694532ED37
+	for <linux-scsi@vger.kernel.org>; Tue, 10 Feb 2026 07:08:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.61.82.184
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770706619; cv=none; b=tVEHBRGhzGyRuIUmhQnh1TDf7i/3AQv2n3dfrfWVFygj8exse2whj5qJiWqiYBnSHiq7ZV2eIQSl6nw33QFQ6vm3D342BUJLt29dAz98xf8utmzbQGQeXdYv53heGOXiefsHuAb2rpLWdQ3mLJBSkddJJTQFp2JILum5qoNhUCw=
+	t=1770707327; cv=none; b=UKJ3C78RU+NH7KNr3u/HZP0sOMZcDhH3OANLkGaFMp4bxFpJ84e4LyGU+UmV92pvaoKLwmz+q7mWmr94juwUcDzajc161c7HMsaK3KPKW/cfs+DNqefDEUXEZGBpE5/SwjZpd6tVE0WeinNcvz29INKUbAJ3glotTL3t9WPBDQ8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770706619; c=relaxed/simple;
-	bh=BqHZGQIeCQ45SHzcHrF0Fr/DAKVMrwgf/SUEWdoIFb0=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=csyFe/Uom5cH49FAhH8FNWR57GbbGV+Mam0h79VSGsCrkkVT20GALPZ+/d3gu3WgVsQs/yyWq7MyRcbDBBNm8HouQNYEOq9Jt9O84Xh/ZG7JzqF/wkNx8XM7W7ojbD9jxMzRfK+AtI4InJa5fAEe46U251MJUHR8YGuxMsQwNVc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pi7wZMB4; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1770707327; c=relaxed/simple;
+	bh=pyCg8BDixb2W47G0uJLqx4U1+9bKjg/Gj3Rla1yaq40=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=eYDDYGUAO3GUnLRTFH3PwQA517ZHKmfatE1t4/Rn6f4sqNacZTUve60CKqomZ3SZJQPITavmSrxFgy/41nZ8fcnD14XdS0n2t5yZ4kUFwF1hWqP3X5vioN8oUsiXxNesaw2pX40y+G6DGTUmMQDqyN0lP8N2oTlTrNgy14acGDQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=N4Y+zYHG; arc=none smtp.client-ip=210.61.82.184
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pi7wZMB4"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id C8ADCC4AF0D;
-	Tue, 10 Feb 2026 06:56:58 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1770706618;
-	bh=BqHZGQIeCQ45SHzcHrF0Fr/DAKVMrwgf/SUEWdoIFb0=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=pi7wZMB4OyDrcCpDoqfQdeZ6mbBCKxYR3hG/5x0+Vmr6DrP3p4ybynWxeVtj9IX9j
-	 +hyHd9AoVtBYa45lYUKHTX6SFdl4JLPEkWJzkEXNuNIEg227d3xHEBu1mnnGBvQEJ+
-	 8C+x02pGjckz7KjdhdAJasoLt1NfV5Xru5/iA9eUWIeu8N5LtF0JvzmuAxaf0lkyLp
-	 DIPdTu5o3QstdFHxQ7su/1CWdSZdG1AkgC9nnqkFK3Wv+gEZe5TJOgju28VB3H0geF
-	 PDuow52fo/WkqcGHhL7H1LrcRtlALC/cCUbWvjcSHSxUeU2Me1mimLlLhzx0X1fOZo
-	 Zq1QvqSmHHYjg==
-Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BE6E9EA3F12;
-	Tue, 10 Feb 2026 06:56:58 +0000 (UTC)
-From: Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org>
-Date: Tue, 10 Feb 2026 12:26:53 +0530
-Subject: [PATCH v2 4/4] scsi: ufs: ufs-qcom: Remove NULL check from
- devm_of_qcom_ice_get()
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="N4Y+zYHG"
+X-UUID: 53f76264064f11f1b7fc4fdb8733b2bc-20260210
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+	h=Content-Type:Content-Transfer-Encoding:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=EQSKw1Zxqh3yfhQJOprXxiikhgbHS7MU4joIUwR58+8=;
+	b=N4Y+zYHGajOR1QIUHkhWoALEfjqmZftZqRNOEa+l+eYPrt8b9tidJGpBA80CJqA/5wVjbZKOFdYUDny4XbP3EKYeS5xkYqIEk2jMO7SBY7nl3RHLVwvFR0pcHQZq8U908b1+tuU4ZtsLhfTEQMTDwPM1On2FuLvCl5pDXMhwswA=;
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.3.11,REQID:4fec9984-58a6-4986-9717-1b2f196ee8eb,IP:0,U
+	RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
+	release,TS:0
+X-CID-META: VersionHash:89c9d04,CLOUDID:b75e215b-a957-4259-bcca-d3af718d7034,B
+	ulkID:nil,BulkQuantity:0,Recheck:0,SF:102|123|836|888|898,TC:-5,Content:0|
+	15|50,EDM:-3,IP:nil,URL:0,File:130,RT:0,Bulk:nil,QS:nil,BEC:-1,COL:0,OSI:0
+	,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-BVR: 2,SSN|SDN
+X-CID-BAS: 2,SSN|SDN,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR
+X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
+X-UUID: 53f76264064f11f1b7fc4fdb8733b2bc-20260210
+Received: from mtkmbs10n1.mediatek.inc [(172.21.101.34)] by mailgw02.mediatek.com
+	(envelope-from <peter.wang@mediatek.com>)
+	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+	with ESMTP id 995122630; Tue, 10 Feb 2026 15:08:40 +0800
+Received: from mtkmbs13n1.mediatek.inc (172.21.101.193) by
+ MTKMBS09N1.mediatek.inc (172.21.101.35) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.29; Tue, 10 Feb 2026 15:08:40 +0800
+Received: from mtksitap99.mediatek.inc (10.233.130.16) by
+ mtkmbs13n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
+ 15.2.2562.29 via Frontend Transport; Tue, 10 Feb 2026 15:08:40 +0800
+From: <peter.wang@mediatek.com>
+To: <linux-scsi@vger.kernel.org>, <martin.petersen@oracle.com>,
+	<avri.altman@sandisk.com>, <alim.akhtar@samsung.com>, <jejb@linux.ibm.com>
+CC: <wsd_upstream@mediatek.com>, <linux-mediatek@lists.infradead.org>,
+	<peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
+	<alice.chao@mediatek.com>, <cc.chou@mediatek.com>,
+	<chaotian.jing@mediatek.com>, <tun-yu.yu@mediatek.com>,
+	<eddie.huang@mediatek.com>, <naomi.chu@mediatek.com>, <ed.tsai@mediatek.com>,
+	<bvanassche@acm.org>
+Subject: [PATCH v2 0/2] add debug log for command timeout
+Date: Tue, 10 Feb 2026 14:41:42 +0800
+Message-ID: <20260210070837.1820710-1-peter.wang@mediatek.com>
+X-Mailer: git-send-email 2.45.2
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20260210-qcom-ice-fix-v2-4-9c1ab5d6502c@oss.qualcomm.com>
-References: <20260210-qcom-ice-fix-v2-0-9c1ab5d6502c@oss.qualcomm.com>
-In-Reply-To: <20260210-qcom-ice-fix-v2-0-9c1ab5d6502c@oss.qualcomm.com>
-To: Bjorn Andersson <andersson@kernel.org>, 
- Konrad Dybcio <konradybcio@kernel.org>, Abel Vesa <abel.vesa@linaro.org>, 
- Adrian Hunter <adrian.hunter@intel.com>, 
- Ulf Hansson <ulf.hansson@linaro.org>, 
- Manivannan Sadhasivam <mani@kernel.org>, 
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
- "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org, 
- linux-mmc@vger.kernel.org, linux-scsi@vger.kernel.org, 
- Sumit Garg <sumit.garg@oss.qualcomm.com>, mani@kernel.org, 
- Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=openpgp-sha256; l=988;
- i=manivannan.sadhasivam@oss.qualcomm.com; h=from:subject:message-id;
- bh=FiX0U3Dm1c+1x6b4FdICdmWPYMgaPZ7RllOZdWKy2K8=;
- b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBpita42yOVZvNIs7XIN83MKt1HqaVNv0rUcGwMj
- 6V1ximH0EqJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCaYrWuAAKCRBVnxHm/pHO
- 9fx+B/4gycPlxXLFgpHn+yVLSbelGWv8BKp29Oc7vTQvS5fmWt73d9YPbmyfTZdS8oyUixibIyB
- kEyYLxKTqDBjV3Xq7GHx0bCc5xIzKWwchVW3NvP9qB3AzNYy3QkEmTj/8YOmAh6OrhxFL4cw3wd
- I3Ag5/FxcdSd/ND04ug4B+P6dW97zvT+0DimBimsGGDX3QJvmwcW3xqEn2IJ6A7rkIpFgl5kXmH
- j63Rj5wJFbkYT1xlpiZBYWtJMhJS9aOhm5elMwC6f5YsPncwIGULfaioRb0R3Q5Lh66+NG7u+Wa
- MjQd/jeTErP7lOn9qp1F1Zr3knyHdvU8hZWWs+G1OjBi3juG
-X-Developer-Key: i=manivannan.sadhasivam@oss.qualcomm.com; a=openpgp;
- fpr=C668AEC3C3188E4C611465E7488550E901166008
-X-Endpoint-Received: by B4 Relay for
- manivannan.sadhasivam@oss.qualcomm.com/default with auth_id=461
-X-Original-From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-Reply-To: manivannan.sadhasivam@oss.qualcomm.com
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-MTK: N
 
-From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+From: Peter Wang <peter.wang@mediatek.com>
 
-Now since the devm_of_qcom_ice_get() API never returns NULL, remove the
-NULL check and also simplify the error handling.
+Add some logs to make it easier to debug after a command timeout.
 
-Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
----
- drivers/ufs/host/ufs-qcom.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+Changes since v1:
+1. Fix typos in the cover letter and commit message title.
+2. Improve log clarity.
 
-diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-index 8ebee0cc5313..6ab08565413b 100644
---- a/drivers/ufs/host/ufs-qcom.c
-+++ b/drivers/ufs/host/ufs-qcom.c
-@@ -176,14 +176,14 @@ static int ufs_qcom_ice_init(struct ufs_qcom_host *host)
- 	int i;
- 
- 	ice = devm_of_qcom_ice_get(dev);
--	if (ice == ERR_PTR(-EOPNOTSUPP)) {
-+	if (IS_ERR(ice)) {
-+		if (ice != ERR_PTR(-EOPNOTSUPP))
-+			return PTR_ERR(ice);
-+
- 		dev_warn(dev, "Disabling inline encryption support\n");
--		ice = NULL;
-+		return 0;
- 	}
- 
--	if (IS_ERR_OR_NULL(ice))
--		return PTR_ERR_OR_ZERO(ice);
--
- 	host->ice = ice;
- 
- 	/* Initialize the blk_crypto_profile */
+Peter Wang (2):
+  ufs: core: add debug log for uic command timeout
+  ufs: core: add debug log for mcq command timeout
+
+ drivers/ufs/core/ufs-mcq.c | 2 ++
+ drivers/ufs/core/ufshcd.c  | 5 ++++-
+ 2 files changed, 6 insertions(+), 1 deletion(-)
 
 -- 
-2.51.0
-
+2.45.2
 
