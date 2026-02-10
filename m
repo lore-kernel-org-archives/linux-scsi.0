@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB3AA2EA151;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BF0512F3618;
 	Tue, 10 Feb 2026 06:56:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770706618; cv=none; b=kQ/5IlSmPLhqwqnvgFuZ6AflnBRk7G0CffXd0yQhuZZkgCnN9m6dNHvVQN6hLVJX3nGdFMc9AAWZ6ZjYsxGhvU2nLJzyFq8QhqqbmoR904+j7gPbwAVGdHhiOn6HwOqY7AjV0xNsXr+rH73rGLFLpObznY15KFfe31GCw9S/VyU=
+	t=1770706618; cv=none; b=odDMlqJ+zvLEA723qh1ZZwTbhm16Yox3L4BHmuISYAC8AbTaeHZ3tskf9NoLHy0G5X1YWo7BmZCMZA6iiHnktxzDxyvB3+wTmzbTNrLnulUqeyojM0uhHYZJKk9r91V9OicOyBlz4hX12M7CiKi5bE5vKL+bQMxiMnYu7/kraOU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1770706618; c=relaxed/simple;
-	bh=14eJu/e65Krl0O98yiBCxz41S1FxvvsUyw5DkWoDIB8=;
-	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=uUZcPQpDPb6r8f7/+Pb2htrRiYsHLLr47DT7fb3n1UBuX/CvUgq5dqiMgiFQBtmEBuF4oRXGpYndbx5wgMkXhsPw+bPdz705w4tFUkBWwvdlvv6z+f3/4UEbV/xNqdFbmIMbPxyL8ROA8x4CIxHrd8ADTsH/ByZZJD4WL5GXb5w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=D3UICiD0; arc=none smtp.client-ip=10.30.226.201
+	bh=U91t0kFHPzGEKPnhTW3rHjasrA7cECKpz8gy7FXoBwk=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=CdYo5v3ZQthFqL+xH5CN9caUvFfnva6/ri0iBYghtV8a4NCSbFrs6BgicdO9WE9kVQ6VafgLKNa35TdRtED84CK3MIye7fyX0G8y2VARG+PCUdUX7BWwSU6zgbqs2m5RGIWJ32LLtEZIrGOpa1pd6UlbOxoIyjOggOV2/N2Vh9A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cHZdIWYw; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="D3UICiD0"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 5ED95C19421;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cHZdIWYw"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 97FA8C19424;
 	Tue, 10 Feb 2026 06:56:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1770706618;
-	bh=14eJu/e65Krl0O98yiBCxz41S1FxvvsUyw5DkWoDIB8=;
-	h=From:Subject:Date:To:Cc:Reply-To:From;
-	b=D3UICiD0BGyRJ5b8KqMi13pRqwt+2ffVcb/neP3YqVmfhRBITdz06vpS/6DsGzqjM
-	 rqcMhHDfkT2iDm/ZQoRqV8/fSUnxcZNyi0H4O2ocd1oWjMIA69j/EATGUy7gaAEIaj
-	 CzEDS1+uBEgJBXaeBG778YzAYqDO4FGJwa/9jPzKOVLuG8HFI+5IwyJ72SDD6DMRs8
-	 nLJQSDVXwjI+UUKQdyHSNxKCzCkoLHjDbPXwJZtR1AxUPa7vSHSG49R9xJ002f2jGd
-	 dyerFQR/vFQSZQJrxmNIE6hPBGsQ4h8d29s0z3ADIYZyg1L7JXPmnBd+4jPmFKPIKy
-	 oOFkkE8kUQl4Q==
+	bh=U91t0kFHPzGEKPnhTW3rHjasrA7cECKpz8gy7FXoBwk=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
+	b=cHZdIWYwy1dAubQBzr6Vl2WkcrlWeLkm6vf7RqTdhgUm0kqBmSVnXiEq14YiU0ANZ
+	 4d9gcxGLN4566t0bOJdVNam/jL3R26GmhWNQ+SdLsfnwd97cvl217NJnoBSTTJXv+M
+	 Jchl/DJctdndILhwcJ28533OnBus1QlxHFySLFmc0HXl+gwumBNhAcMcAhOgCjimMO
+	 0pgO/y3VjUJkXBAcPhyN1yBvt6FozUEWbEHICegGX5skt1UaAZlWd0td9Kc64KgzK1
+	 eMtnSNU9euMMKP5xOP+Qzwjf66+LStNplBBjcx7C4XabgP8eamRyiNeH3J9DzusxXY
+	 IRN/eRAklNvNw==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 45086EA3F11;
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D4B4EA3F13;
 	Tue, 10 Feb 2026 06:56:58 +0000 (UTC)
 From: Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org>
-Subject: [PATCH v2 0/4] soc: qcom: ice: Remove platform_driver support and
- expose as a pure library
-Date: Tue, 10 Feb 2026 12:26:49 +0530
-Message-Id: <20260210-qcom-ice-fix-v2-0-9c1ab5d6502c@oss.qualcomm.com>
+Date: Tue, 10 Feb 2026 12:26:51 +0530
+Subject: [PATCH v2 2/4] soc: qcom: ice: Return proper error codes from
+ devm_of_qcom_ice_get() instead of NULL
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -41,10 +41,9 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-X-B4-Tracking: v=1; b=H4sIALHWimkC/x2MQQqAIBAAvxJ7bsHW6tBXooPpVntISyEC8e9Jx
- xmYyZA4CieYmgyRH0kSfAVqG7CH8TujuMpAikZFncLbhhPFMm7yoiOjjeqHVZODmlyRq/5381L
- KBwYdpUJeAAAA
-X-Change-ID: 20260210-qcom-ice-fix-d2a3a045b32d
+Message-Id: <20260210-qcom-ice-fix-v2-2-9c1ab5d6502c@oss.qualcomm.com>
+References: <20260210-qcom-ice-fix-v2-0-9c1ab5d6502c@oss.qualcomm.com>
+In-Reply-To: <20260210-qcom-ice-fix-v2-0-9c1ab5d6502c@oss.qualcomm.com>
 To: Bjorn Andersson <andersson@kernel.org>, 
  Konrad Dybcio <konradybcio@kernel.org>, Abel Vesa <abel.vesa@linaro.org>, 
  Adrian Hunter <adrian.hunter@intel.com>, 
@@ -55,19 +54,18 @@ To: Bjorn Andersson <andersson@kernel.org>,
 Cc: linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org, 
  linux-mmc@vger.kernel.org, linux-scsi@vger.kernel.org, 
  Sumit Garg <sumit.garg@oss.qualcomm.com>, mani@kernel.org, 
- Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>, 
- stable@vger.kernel.org, Abel Vesa <abel.vesa@oss.qualcomm.com>
+ Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1328;
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1991;
  i=manivannan.sadhasivam@oss.qualcomm.com; h=from:subject:message-id;
- bh=14eJu/e65Krl0O98yiBCxz41S1FxvvsUyw5DkWoDIB8=;
- b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBpitaz5wD+GT+GNV8a016Lvwg57YK23bFzxBP4T
- liFCTBMpFiJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCaYrWswAKCRBVnxHm/pHO
- 9crvB/44ZaWUxDpDQJq9WmevFXzgclsf03FlbKbk890kwx9abXvj9q2xOGnKtNy9W2zK+MKIPPN
- skq61LCzs7pwGsfrnRWI2TmJCVFnEVqppxWy8YDoFpRMCbUdNBPq12xxP5I3WSoCBOAh/ygugw7
- KUy+CKxs/EqzCqWrVkltMw5+tYDZQoyghuSHZ29LvRNYmiZRdVwENkmtuK4K7WhL7iTc/uEs+/r
- DUJUp5uzcnJ06ioX1J0W5hzr5quhoyXmd/vlpz4I2gutArY9InQyvxkqY2sKMQo7L2fpLuhXkOe
- J6wmCiokkV8CBUJpVsk/dRe7SaNffe42WDTQlgjarZSZ6l3b
+ bh=R3ti+Do4o2blOWOwxCpVWH7G3OaIyEGRpXFXfGBMGwo=;
+ b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBpita4hjQe5fQN8fLFldr783St9cfJQ2pKAom0u
+ BxfbrQuiKyJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCaYrWuAAKCRBVnxHm/pHO
+ 9bSNB/9Ys1wwQndfMoM+YNJqTzJ0bBhbgtGkAXjt+CgID8ZLWfGL3duLhuG7Eif4zs1MN/B7fVP
+ jxPKfkL/Z5gcKtKrgO3+gIpHMaAPavMGsUiLMlacyTvB7B1ZldnzAaZ6/4YlqaBRPt+zFcRk714
+ t2ciDbjvCblFyxZBTIhhFHOTj2zUusCymuP9UVgdCN7oOM/+sd9dmgg/kHl29pONtAiKANf/FuF
+ BQXl6JAo1xnhvl4L/eKjZM8kkByA2qGJ7NEoW8TMq9suF16s5GJ64mwEJVgKg8wld3QN9DrAk6+
+ a5d34SRNXnxOHQiV6Kp92AUcILXELkiHWJaqqvq4HP18xsAX
 X-Developer-Key: i=manivannan.sadhasivam@oss.qualcomm.com; a=openpgp;
  fpr=C668AEC3C3188E4C611465E7488550E901166008
 X-Endpoint-Received: by B4 Relay for
@@ -75,43 +73,62 @@ X-Endpoint-Received: by B4 Relay for
 X-Original-From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 Reply-To: manivannan.sadhasivam@oss.qualcomm.com
 
-Hi,
+From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 
-This series removes the platform_driver support from Qcom ICE driver and
-exposes it as a pure library to the clients to avoid race conditions with ICE
-SCM call availability.
+devm_of_qcom_ice_get() currently returns NULL if ICE SCM is not available or
+"qcom,ice" property is not found in DT. But this confuses the clients since
+NULL doesn't convey the reason for failure. So return proper error codes
+instead of NULL.
 
-Merge Strategy
-==============
-
-ICE patches (1,2) through Qcom tree and MMC/UFS patches (3,4) through respective
-subsystem trees as there is no dependency.
-
+Reported-by: Sumit Garg <sumit.garg@oss.qualcomm.com>
 Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 ---
-Changes in v2:
+ drivers/soc/qcom/ice.c | 9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
 
-* Added MODULE_* macros back
-* Removed spurious platform_device_put()
-* Added patches to remove NULL return
+diff --git a/drivers/soc/qcom/ice.c b/drivers/soc/qcom/ice.c
+index 8e25609c7e7b..498cb0e0d1e4 100644
+--- a/drivers/soc/qcom/ice.c
++++ b/drivers/soc/qcom/ice.c
+@@ -563,7 +563,7 @@ static struct qcom_ice *qcom_ice_create(struct device *dev,
+ 
+ 	if (!qcom_scm_ice_available()) {
+ 		dev_warn(dev, "ICE SCM interface not found\n");
+-		return NULL;
++		return ERR_PTR(-EOPNOTSUPP);
+ 	}
+ 
+ 	engine = devm_kzalloc(dev, sizeof(*engine), GFP_KERNEL);
+@@ -641,7 +641,7 @@ static struct qcom_ice *of_qcom_ice_get(struct device *dev)
+ 	struct device_node *node __free(device_node) = of_parse_phandle(dev->of_node,
+ 									"qcom,ice", 0);
+ 	if (!node)
+-		return NULL;
++		return ERR_PTR(-ENODEV);
+ 
+ 	pdev = of_find_device_by_node(node);
+ 	if (!pdev) {
+@@ -697,8 +697,7 @@ static void devm_of_qcom_ice_put(struct device *dev, void *res)
+  * Devres automatically decrements the refcount when consumer device gets
+  * destroyed and frees the ICE instance when the last consumer goes away.
+  *
+- * Return: ICE pointer on success, NULL if there is no ICE data provided by the
+- * consumer or ERR_PTR() on error.
++ * Return: ICE pointer on success, ERR_PTR() on error.
+  */
+ struct qcom_ice *devm_of_qcom_ice_get(struct device *dev)
+ {
+@@ -709,7 +708,7 @@ struct qcom_ice *devm_of_qcom_ice_get(struct device *dev)
+ 		return ERR_PTR(-ENOMEM);
+ 
+ 	ice = of_qcom_ice_get(dev);
+-	if (!IS_ERR_OR_NULL(ice)) {
++	if (!IS_ERR(ice)) {
+ 		*dr = ice;
+ 		devres_add(dev, dr);
+ 	} else {
 
----
-Manivannan Sadhasivam (4):
-      soc: qcom: ice: Remove platform_driver support and expose as a pure library
-      soc: qcom: ice: Return proper error codes from devm_of_qcom_ice_get() instead of NULL
-      mmc: sdhci-msm: Remove NULL check from devm_of_qcom_ice_get()
-      scsi: ufs: ufs-qcom: Remove NULL check from devm_of_qcom_ice_get()
-
- drivers/mmc/host/sdhci-msm.c |  10 ++--
- drivers/soc/qcom/ice.c       | 127 ++++++++++++++++---------------------------
- drivers/ufs/host/ufs-qcom.c  |  10 ++--
- 3 files changed, 58 insertions(+), 89 deletions(-)
----
-base-commit: 8f0b4cce4481fb22653697cced8d0d04027cb1e8
-change-id: 20260210-qcom-ice-fix-d2a3a045b32d
-
-Best regards,
 -- 
-Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+2.51.0
 
 
