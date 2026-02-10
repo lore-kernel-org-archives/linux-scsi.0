@@ -1,71 +1,98 @@
-Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B795D32D7E6
-	for <linux-scsi@vger.kernel.org>; Tue, 10 Feb 2026 18:42:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B62DD2D3A89
+	for <linux-scsi@vger.kernel.org>; Tue, 10 Feb 2026 19:18:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770748923; cv=none; b=lQkhCHRg3+CNq9T0VgTkI2Dx7awbewbblcNQuqnhnuICUWsxhfHAw+GNjNzeD1WWpJzijdiqDh93T21a0jGuaDM/v2ewOd/h74kYzYwIj9PyBTDjc7KK7W4/g6QnGRobBJ+W/v/jOnej2qmkVBHOMOA7876pBRJaDKuvjRbnJtQ=
+	t=1770751137; cv=none; b=Hyg/+ifzfUur9dtL6rJKw+OTUp72bjmLu1n3iXhI49q1BbkC75NBRXjnUnq7JEfU9xfMW+GQ+/EIgWDJ/D2Ai80IThIBF720ofuFy2I5NToGEHX/LDHXuDNZbWffhne15cWtOgF53/uZZnmpTwyVwjm4eBQt5FBO8Faw7PQMzlg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770748923; c=relaxed/simple;
-	bh=qA7I/kJYrPEzo77yMTNNn8uGOXpGSKO6msM5RGhG9Gc=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=RVHTBlI/oQinAJ7x1rxh2kKXFx5q2/1JDtn0dORLdkg+XxkG+vglavrPuLhwTSk5ZOrqnVMkpdBghyRBNXlyZ7PDnNfTcq4NE/x7rzKa0vlhcWaAO0pD/SCYpkZCcfZ3SPbkFngbR/7CVLnxlSvvJMMnKsO/z0QEZ2q9pVz7JaY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=DnNkr2Rf; arc=none smtp.client-ip=199.89.1.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1770751137; c=relaxed/simple;
+	bh=ErHp/v1VC5jf8zDEqDoFHJRRTOBfFZEA9+mMEZN6j+Q=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=OwEZoRahXARqIWxzByy6leJFeknmkz1sKcTbUGeeveUEetJDoi6G4cNUVtr//JGRq3SXLIsWlgkhjN4bUiLD23E1R5oomPUFfkN6eSJE3H0No0DjHb0ThgkRoVh2MCKjprNBvxyKpg4GZt2mQtMnHa0UPcarIlu4UvQvysqxjUQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=IbgHsPCv; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="DnNkr2Rf"
-Received: from localhost (localhost [127.0.0.1])
-	by 013.lax.mailroute.net (Postfix) with ESMTP id 4f9Vlt2v2Rzlfvq4;
-	Tue, 10 Feb 2026 18:42:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1770748919; x=1773340920; bh=qA7I/kJYrPEzo77yMTNNn8uG
-	OXpGSKO6msM5RGhG9Gc=; b=DnNkr2Rf6RkNeryW7z6+17Xjx2KmqtOyLxk2knAa
-	FmHdtc18I6YI5oV2orxOy1HKZpHmcMYo3FVCDGc8PF/U3vBkEyuj4Cplz7XwQzy2
-	p/hXqyRLxzEzhglE9E1whAqUc7nTJzwTzYOShHZn82twgKHc6OeylG/iMCtfBBEH
-	1Ei5kPEDlUSlYmfB6/IHZ48eTwpDhp3TBNISH7+9unGL9sDrn7KNGSBRmrODk5m5
-	TZEQJzLsxJFvr1IxXDEJaHkcjpl+AAooviGsD+ijs0po4zTLpWroNwGdT3qrg/5O
-	GK890ifIz0sT+R0fEoffOOnFvb1ssCfkcjSAGKQ4v24CVg==
-X-Virus-Scanned: by MailRoute
-Received: from 013.lax.mailroute.net ([127.0.0.1])
- by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id MPqQywuOkm4f; Tue, 10 Feb 2026 18:41:59 +0000 (UTC)
-Received: from [100.119.48.131] (unknown [104.135.180.219])
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="IbgHsPCv"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1770751135;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=jhKnI7LyQ6k1aerlYWiEAQ7BcCXzhRrp9u9m9Yh2LYA=;
+	b=IbgHsPCvQa2ozvEtA8aGEXm7m4pEMekxHArcqzEJby2LKP3mpKoNkigLVZ160Tv7SEnf4o
+	L1QaKRgs0YFTGh+625UqpN+CigRmGzyEdPO191JGb6oGaYkH7N1Ux2Xz1MbBmbORdVbhPE
+	OU8PBtbKw6JlilWDsCqMZeYM5WHxCDs=
+Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-264-4UV_KRkkOlOlkVLHjY5JzA-1; Tue,
+ 10 Feb 2026 14:18:54 -0500
+X-MC-Unique: 4UV_KRkkOlOlkVLHjY5JzA-1
+X-Mimecast-MFC-AGG-ID: 4UV_KRkkOlOlkVLHjY5JzA_1770751133
+Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4f9Vll3136zlfvpH;
-	Tue, 10 Feb 2026 18:41:55 +0000 (UTC)
-Message-ID: <21c0f687-ce78-4720-b29e-fca35f7f85e1@acm.org>
-Date: Tue, 10 Feb 2026 10:41:53 -0800
+	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id BA201195608F
+	for <linux-scsi@vger.kernel.org>; Tue, 10 Feb 2026 19:18:53 +0000 (UTC)
+Received: from localhost.localdomain.com (unknown [10.45.224.253])
+	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id CA7931956053;
+	Tue, 10 Feb 2026 19:18:52 +0000 (UTC)
+From: Tomas Henzl <thenzl@redhat.com>
+To: linux-scsi@vger.kernel.org
+Cc: djeffery@redhat.com
+Subject: [PATCH] scsi: ses: fix devices attaching to different hosts
+Date: Tue, 10 Feb 2026 20:18:50 +0100
+Message-ID: <20260210191850.36784-1-thenzl@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 0/2] add debug log for command timeout
-To: peter.wang@mediatek.com, linux-scsi@vger.kernel.org,
- martin.petersen@oracle.com, avri.altman@sandisk.com,
- alim.akhtar@samsung.com, jejb@linux.ibm.com
-Cc: wsd_upstream@mediatek.com, linux-mediatek@lists.infradead.org,
- chun-hung.wu@mediatek.com, alice.chao@mediatek.com, cc.chou@mediatek.com,
- chaotian.jing@mediatek.com, tun-yu.yu@mediatek.com,
- eddie.huang@mediatek.com, naomi.chu@mediatek.com, ed.tsai@mediatek.com
-References: <20260210070837.1820710-1-peter.wang@mediatek.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20260210070837.1820710-1-peter.wang@mediatek.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
 
-On 2/9/26 10:41 PM, peter.wang@mediatek.com wrote:
-> Add some logs to make it easier to debug after a command timeout.
+On a multipath SAS scsi system some devices don't end up with enclosure
+symlinks from a scsi device to its enclosure. Scsi devices which have
+enclosures linked to them are linked to enclosures on different
+scsi hosts.
+In ses_match_to_enclosure is being called enclosure_for_each_device which
+iterates over all enclosures not just enclosures on the current host.
+Fix this by replacing this call with ses_enclosure_find_by_addr.
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Reviewed-by: David Jeffery <djeffery@redhat.com>
+Signed-off-by: Tomas Henzl <thenzl@redhat.com>
+---
+ drivers/scsi/ses.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/scsi/ses.c b/drivers/scsi/ses.c
+index 789b170da652..98a7367d2f20 100644
+--- a/drivers/scsi/ses.c
++++ b/drivers/scsi/ses.c
+@@ -528,9 +528,8 @@ struct efd {
+ };
+ 
+ static int ses_enclosure_find_by_addr(struct enclosure_device *edev,
+-				      void *data)
++				      struct efd *efd)
+ {
+-	struct efd *efd = data;
+ 	int i;
+ 	struct ses_component *scomp;
+ 
+@@ -683,7 +682,7 @@ static void ses_match_to_enclosure(struct enclosure_device *edev,
+ 	if (efd.addr) {
+ 		efd.dev = &sdev->sdev_gendev;
+ 
+-		enclosure_for_each_device(ses_enclosure_find_by_addr, &efd);
++		ses_enclosure_find_by_addr(edev, &efd);
+ 	}
+ }
+ 
+-- 
+2.52.0
+
