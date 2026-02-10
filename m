@@ -1,226 +1,318 @@
-Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 57507B665
-	for <linux-scsi@vger.kernel.org>; Tue, 10 Feb 2026 03:41:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=60.244.123.138
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770694870; cv=fail; b=EjM83ERUmrD2Uoe/pBgx2QedUo21BhR674TcI0lWpMHhrXyWpkirFOu1r2oirtM1Jxi0al6FoWaEsvaRYChX5O1AKdWJN4KAdnEpAls+eB7Iaw1kkVuudJgIJofEuNuzGKcZ4dfMfzc/5JHNryyyQa7RC81QguXa42Cdbb/NmJU=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770694870; c=relaxed/simple;
-	bh=G8J6hkShxUxUkJPE5UrU23ZgDOP4/K5grFzD4HdVdDo=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=Kxn27WV4Fn6S2CNT0h9juGvvKJ9oxmSFpidrkU9wpi/rwL/oQf9YgBPxV5GYjV2lKdJ4cZe3T7Sz/NAFV/cBKTsJ1i8ZvxiWk06ZlUSBVVqVLQSh2YEhVsPp36Sht4PqR5u1WrTlcToXHcRyB2RC6WrhAMe3Aa/xRAEQF0PutfA=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=gJtLC9qr; dkim=pass (1024-bit key) header.d=mediateko365.onmicrosoft.com header.i=@mediateko365.onmicrosoft.com header.b=voj+2s5X; arc=fail smtp.client-ip=60.244.123.138
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB3411F03EF;
+	Tue, 10 Feb 2026 06:56:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1770706618; cv=none; b=DOT8qEIxHl9ZO0v+P+iLhYx3oEza/VeGEfny5ZCifSsFax9wZ9JnXx5c9DfbTdqC/eP49huU8+JOTcAjyHSiRvtsnegp1ZD90b2rozfBBAzgBHtXBon/mZXO0nJb2fIHjtXUQqxZMNwYvTbMkIy9e9Ne55F7QHPMibYyZOcceqw=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1770706618; c=relaxed/simple;
+	bh=9k6PZUXz+WIcEyDU8GQDLchGRBb94F0Zkoj+zNNUO1w=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=F9ZDHc/4i4VKtCQcbet0hlTc/9Gw6yeusfW5dqOjYtVi+dMMLPbGEg3Bxnnxn4jRwdcNiPDgRk2cWdogRpYZt0uIA6Z9sEJXrCBRk8FmgbfkAAw7wj3zqF/vq0IpukH4yq/tgBOAA6T/E8PK2mdBK77RCi4WaFofeXednRklkHo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Q8p9C0N4; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="gJtLC9qr";
-	dkim=pass (1024-bit key) header.d=mediateko365.onmicrosoft.com header.i=@mediateko365.onmicrosoft.com header.b="voj+2s5X"
-X-UUID: 51e59986063211f185319dbc3099e8fb-20260210
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=MIME-Version:Content-Transfer-Encoding:Content-ID:Content-Type:In-Reply-To:References:Message-ID:Date:Subject:CC:To:From; bh=G8J6hkShxUxUkJPE5UrU23ZgDOP4/K5grFzD4HdVdDo=;
-	b=gJtLC9qrnxoA+MHr5GcJixH72OvMCHreEL8VQBEvG0sY3NduKepHGYaQG73rgKS5N9q+RsHyUFxM1tkinIef6j8755fAVF/dpCHSGGBil6PFGoZNooLEvM5IPY9RYMuHhaEYUtanIk7iohmjFDLotm+SqrSCFzSANAeVXqFIUfQ=;
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.11,REQID:b8a8f4e4-7b14-42e5-a491-99f2127f818a,IP:0,U
-	RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
-	release,TS:0
-X-CID-META: VersionHash:89c9d04,CLOUDID:eb11c87a-8c8a-4fc4-88c0-3556e7711556,B
-	ulkID:nil,BulkQuantity:0,Recheck:0,SF:80|81|82|83|102|110|111|836|888|898,
-	TC:-5,Content:0|15|50,EDM:-3,IP:nil,URL:0,File:130,RT:0,Bulk:nil,QS:nil,BE
-	C:-1,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
-X-CID-BVR: 2,SSN|SDN
-X-CID-BAS: 2,SSN|SDN,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR
-X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: 51e59986063211f185319dbc3099e8fb-20260210
-Received: from mtkmbs14n2.mediatek.inc [(172.21.101.76)] by mailgw01.mediatek.com
-	(envelope-from <peter.wang@mediatek.com>)
-	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 1154439252; Tue, 10 Feb 2026 11:41:01 +0800
-Received: from mtkmbs10n1.mediatek.inc (172.21.101.34) by
- mtkmbs13n2.mediatek.inc (172.21.101.108) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.29; Tue, 10 Feb 2026 11:41:00 +0800
-Received: from SI4PR04CU001.outbound.protection.outlook.com (172.21.101.237)
- by mtkmbs10n1.mediatek.inc (172.21.101.34) with Microsoft SMTP Server id
- 15.2.2562.29 via Frontend Transport; Tue, 10 Feb 2026 11:41:00 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=HbY5npECPise9BG3Bx0+xnOrl3hzzWs4r7Xj+lmcDgVHaJjIT/Y+BAQoObP0JX9HTDc9rY4xZ5EgddO4sAa+TR49XDpUnVNBaylDhfXpOUmiOMoecLMolEcePULAZSp5KFF5K0m/t2Uw88ATWYFm+GK8lMj/2c+J/qeym6AZpBzxxt+L5JM2C/jRCmuUlLavtB4jvuRLw2Se/EBHaLd+BZMmZ1MojcoPxz6Q3+TdO7xe164spFUVyE0oRvYxolFEqQFWC755su/bwxO9FJrxBimOZuFflFMGoI2lJvjtMi2h9LsOK6YfiZyhpQsQDiW1+QEcNjr+VIh7+hV2mQp+bw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=G8J6hkShxUxUkJPE5UrU23ZgDOP4/K5grFzD4HdVdDo=;
- b=YNAGKgNAWSfBGyLbfHUdZK5JOHtzDbhxj8jWJLYFHy3ObQSbF4kGveL0CQbz2o2jxKzyhMB/ueTUXPt/EicejX4dNRvOLM+jX+YrQ1gMZkVpNL8Uw/UaZUeN2PsMYDpLI9evvB47oBdWZNMNwKx0pm+X1YG+4JDM8Xl4ZC4wa94c/CLTD/q2KjFRKghtb64Np1KFrK5wDKm7BDLCz3E3oli5QtoRP3CPrmzKrnLGBd21VnKOM6L/zby8lAaO30XQlQhGw2JvdUx9JPiPvU09mKvGvw7iz+YcIzEFfqS5/VbyTs7S6vms2+yuCUP+spOn6/eS8x6muPcMwoOHcMkiew==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=mediatek.com; dmarc=pass action=none header.from=mediatek.com;
- dkim=pass header.d=mediatek.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=mediateko365.onmicrosoft.com; s=selector2-mediateko365-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=G8J6hkShxUxUkJPE5UrU23ZgDOP4/K5grFzD4HdVdDo=;
- b=voj+2s5XPDAwYpNQaH77Oq2mvyMzLk2OG7PvdS+OVNsM4ZCVG4rxR2OJARNuq7lstqF+CGGCv8rSJPtVsGdcKse3Q2018qC0rH/65ujqC1h7F6k9HAgLF4e36//QCwZqYzjasbtQHEZFbF+yD7cK1JGCCZ0a6DdXFbjPQHyfqPo=
-Received: from PSAPR03MB5605.apcprd03.prod.outlook.com (2603:1096:301:66::6)
- by KUXPR03MB9643.apcprd03.prod.outlook.com (2603:1096:d10:5f::13) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9587.19; Tue, 10 Feb
- 2026 03:40:58 +0000
-Received: from PSAPR03MB5605.apcprd03.prod.outlook.com
- ([fe80::165:d36a:3f76:2925]) by PSAPR03MB5605.apcprd03.prod.outlook.com
- ([fe80::165:d36a:3f76:2925%4]) with mapi id 15.20.9587.016; Tue, 10 Feb 2026
- 03:40:57 +0000
-From: =?utf-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= <peter.wang@mediatek.com>
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-	"jejb@linux.ibm.com" <jejb@linux.ibm.com>, "avri.altman@sandisk.com"
-	<avri.altman@sandisk.com>, "bvanassche@acm.org" <bvanassche@acm.org>,
-	"alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
-	"martin.petersen@oracle.com" <martin.petersen@oracle.com>
-CC: =?utf-8?B?QWxpY2UgQ2hhbyAo6LaZ54+u5Z2HKQ==?= <Alice.Chao@mediatek.com>,
-	=?utf-8?B?RWRkaWUgSHVhbmcgKOm7g+aZuuWCkSk=?= <eddie.huang@mediatek.com>,
-	=?utf-8?B?Q0MgQ2hvdSAo5ZGo5b+X5p2wKQ==?= <cc.chou@mediatek.com>,
-	=?utf-8?B?RWQgVHNhaSAo6JSh5a6X6LuSKQ==?= <Ed.Tsai@mediatek.com>, wsd_upstream
-	<wsd_upstream@mediatek.com>, =?utf-8?B?Q2hhb3RpYW4gSmluZyAo5LqV5pyd5aSpKQ==?=
-	<Chaotian.Jing@mediatek.com>, =?utf-8?B?Q2h1bi1IdW5nIFd1ICjlt6vpp7/lro8p?=
-	<Chun-hung.Wu@mediatek.com>, =?utf-8?B?TmFvbWkgQ2h1ICjmnLHoqaDnlLAp?=
-	<Naomi.Chu@mediatek.com>, "linux-mediatek@lists.infradead.org"
-	<linux-mediatek@lists.infradead.org>,
-	=?utf-8?B?VHVuLXl1IFl1ICjmuLjmlabogb8p?= <Tun-yu.Yu@mediatek.com>
-Subject: Re: [PATCH v1 1/2] ufs: core: add debug log for uic commnad timoeut
-Thread-Topic: [PATCH v1 1/2] ufs: core: add debug log for uic commnad timoeut
-Thread-Index: AQHcmZ5+/A6mUIR89kqipbvJkdrcqLV6lv2AgACz5YA=
-Date: Tue, 10 Feb 2026 03:40:57 +0000
-Message-ID: <e423a3546c68262ca9163b57f7cb7f298322f4a5.camel@mediatek.com>
-References: <20260209083053.1467647-1-peter.wang@mediatek.com>
-	 <20260209083053.1467647-2-peter.wang@mediatek.com>
-	 <6241685f-fc24-49aa-96f9-c2a69a4cee75@acm.org>
-In-Reply-To: <6241685f-fc24-49aa-96f9-c2a69a4cee75@acm.org>
-Accept-Language: zh-TW, en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=mediatek.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: PSAPR03MB5605:EE_|KUXPR03MB9643:EE_
-x-ms-office365-filtering-correlation-id: c135aaf7-c3a0-454e-ccc0-08de685633ad
-x-ld-processed: a7687ede-7a6b-4ef6-bace-642f677fbe31,ExtAddr
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;ARA:13230040|366016|376014|1800799024|38070700021;
-x-microsoft-antispam-message-info: =?utf-8?B?UTJTdC9vTUhKb2NhZUJjVmpyTkVrR1hESk5wNkh1b21VTUFFSjJwazl3Y2FP?=
- =?utf-8?B?S0lKSUhKY0tIN1M4VmwvNlhOSVNob3JkckhibG02R05sN2ZiUGhoT3NZS2Rw?=
- =?utf-8?B?by9WUGNLeVhNY1dEV2o5Qy9qSUZoUzR6Sy83dkQ2UXk5SGhLakxlK3RGekdv?=
- =?utf-8?B?Ti9EY0FoZDBBLzJjY0ZHY04wb3MxOFhUZ2p4T3Y3NENoNnNacHUzQUVaK1A4?=
- =?utf-8?B?Z1VYR2pMUTZMRDFLR3hKTldxYm9kRjRXRDFoV3RTTEpKVUxkMlRROFd6eC9L?=
- =?utf-8?B?eUZidWpsRVF4MkI3VlpPQmFRdkYyemtwV2tFTDM0WHM0RVhybE9nUkNEdGVE?=
- =?utf-8?B?aW0yVTMvVDF6dlFWMFlZZW9kYkp5bFo1YzFobGJ1ajRnYS82VTNnQVQ0bFRi?=
- =?utf-8?B?eWcvYWh0RENhUXpvV000aS9hUUduczZwSG5QdGRRb3lMeTJ6eDRiVVY5aHJO?=
- =?utf-8?B?RzVhVlk2KzRReTIyaVhvT2JhOXV3bWgxcE5qV2E0NVlUenZKeDFJRlRqMWxu?=
- =?utf-8?B?Wk5ObEIyZ3EvQTBPeHFTbEpuYlBmNHpzcEx4N3FINGN6UDJBVnFoRHA5RmQ2?=
- =?utf-8?B?NTc3eUJmTnVTdHdxSkpjOXlTYmtIdTRQOHlmc2lxR3oyZVU2UExIOFNvQk0w?=
- =?utf-8?B?N01qRStFOFVtKzI0MkZSNkt6SXhzY0hDamZ5dlQ5czBvMklYSjNKN05FOE1u?=
- =?utf-8?B?YnJkOElqRjBoSzdjb2gzc2ZiTjlVTTQveURvSUR1SzhJZWlMaXg3ODFSZ21l?=
- =?utf-8?B?QjFYc0JkNFp0blphZ0R1QmdSVWlOOWxGeW5mV29qRmxoZEttdnlNbFIrQ0Fh?=
- =?utf-8?B?b3EwekNxd0wxTndxdTVJM2pvVUdFdEhwR2xzaHEvaW9zTEprV1h6ZTRGbXMw?=
- =?utf-8?B?QUluQ2xaMm5SaUVxTUNOLzc4bCs3R1Q4WGd1MjhTeHhXR2lhSHc3SDU0WFJO?=
- =?utf-8?B?dTMweHBhUGkydXE1Z3BoVEpVUDMyN3RKODBoQnNkMUFUZEwwQm5SNnl6WXRi?=
- =?utf-8?B?MDNuWm9pYTlEMWpONG9DZ2ZMdHZGSGhvM2ErdGM1dVBDL3N4V0VlUTMwRWV3?=
- =?utf-8?B?dkhoZmd2SmNEVG11dkZkRXJ0dnN4SEtkZEVqOU8wazEwaEpETHAzdkVSMHJs?=
- =?utf-8?B?cnVUN2p0R3FFSnNSOFFya2piZzdxU1cxYzlyZ3hoMGlJcGtvS3lCSWNPdUh1?=
- =?utf-8?B?RHFQSnpyVFA4OXJRNXlLZ3J4V1V6cy9TVjQzd01Lb0U5M1JieWViSE05bmdN?=
- =?utf-8?B?elU2V252RmRmMFQrMDdzSXg1a04rUVNyc3V6UmgwN2dkNHFqbENBdm9Bd1BH?=
- =?utf-8?B?QmtwVXlkOEJtMWhWbHNnQXdGY2lSNjZBaEJlR3ZUb2loam10ZWdkd3ZzNFFQ?=
- =?utf-8?B?ekdhNjdNUGx3ODJsbm1wR1d3anpDdGdhNElZTGNiOEU4eTVLM2tGUFZHWUFj?=
- =?utf-8?B?c2IwTWV3SUFoZ3M4Nnc5YlpUbGd5Si9XT3N5MndUQWJjbmdLT0I0dWpFL2lF?=
- =?utf-8?B?RFl4M1VWZG8zeE16RDdXekdTaWtXYWRKTXhvZExzQnM2RktMWVk5Y1QvdXAx?=
- =?utf-8?B?QXhIaTR1UFVYVHNlVzQ0R1FwNVVJVForZGdSc3MwOGdmQW1aL05tTXZPL25V?=
- =?utf-8?B?czlWSlJIbXpTY2RYUXIyc2Y2WkZSZ1lsbVNqSjJpTGxpRUNUU0taTTJhbVRE?=
- =?utf-8?B?YzdnbG9zZ3d2ZXh6cWp5ZmlYOUFPWXRxS045cFYxM01vVnY2akFBaEo5OFgw?=
- =?utf-8?B?Q2hwbHZKVlhmSTFyV1lOT2tuejEvd3ZoTng0dlF0akxWdGxlT1BYcjZGS1lB?=
- =?utf-8?B?b0xDY3k5OXNWZDFid2I0WXRqT3hwOFllQTllR3Z6WTFhZTUzcE01R0dJZ0ZK?=
- =?utf-8?B?QlppSDJkRk9ZN0ttdEFXK0FNd0d5SE1lclFOQXhLbVo1V0kxU25obG9mVFd1?=
- =?utf-8?B?Mm9qbkcxMG5uR2owUC9tOEh4R240dTRHQm9RRklSTUFiNnl6TmhmK0tYSUsv?=
- =?utf-8?B?aFVUUXRxM2xDQ3E0Q3g3VnlCN1hseEh1UE9IMVV6cUFlY1p6RVk0ZGgwSU5x?=
- =?utf-8?B?TFRZaENycVNNZVVBczlzcFgwZ0RjUTg4QkUvWXM5N24wVDV3bUdYUXBKWk02?=
- =?utf-8?B?aTZDNXBUQ0tYNEZaZ2crVnRtNjdPMjlidlhBWGF6L3E3cnpuYmptNFg0dm9J?=
- =?utf-8?Q?nO7iEa4UxT1MxCqIxj/e7IA=3D?=
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PSAPR03MB5605.apcprd03.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(376014)(1800799024)(38070700021);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?utf-8?B?dGt0YXYvQ1dqUmwzeHdlRUVhY3A1bkxOK2d4R1lCUUFQUytLU0htYkRIUG5t?=
- =?utf-8?B?eUNFYklGL202ODYwemJraGljNWpCTEJsMXUrRmkrdXdXUXBDWlNMZEgwd2lT?=
- =?utf-8?B?ekdoaVBIZ3ZEeE9RUDM1Y29RdDBzN0ZZZG9sZmlzblFwbXZtUG5QLzNGcHFF?=
- =?utf-8?B?TEIrR2FTbUd4L3pkNHZnUlVnSjZVU1o1N0RYd0VDMjlsVHRBa2dvOEVsZUtJ?=
- =?utf-8?B?K09Yb3pEZDBiSHBsK0NENlJhY25oUlptRXNPcFRaaGNNY3RGM09QUjNPZ2dF?=
- =?utf-8?B?RXZVNjVUYktjLzFxL2l4amZ2dVl3TUlMRzRGZDd0RFJZdndzcEF0NnVxM0NN?=
- =?utf-8?B?dEdUNFY3aUkvRmNpU0hLZjhHc0taLzJXLysweS9MTm9ibU9HNndibnloQlhB?=
- =?utf-8?B?Q0FzUTJscUc5a0FPdysxS1ZQZGxkU0hUU1UyZDdzRHBxQUNuOXhtRzh4UFBW?=
- =?utf-8?B?ZXAzeGZ3bnNiRzgwQTJLcldwVFFWSjJDSEtzK280bkhVWk1MRHMzZXJSZ3pQ?=
- =?utf-8?B?M1M2ZlNBYmF4YVZ3cmlRcmh5Tk1VWll2MWRXR01YbVVsSE84eHcwelAyQSt1?=
- =?utf-8?B?dDVoZlppbnlTREtCVGxvV1pJNTUvZEN0LzZCVlZXZlAxOGlsWlB3UHYxbWYz?=
- =?utf-8?B?cUZlTTd4SnVTa0ZxTERZZW1IWUdkaHk2TG9Zb0JVTWU3Z1FEVUZPOHBGNDVw?=
- =?utf-8?B?bTBsMnh5Qi8vWjNuNnZBdjl6eWFFbjZQVG92TkV0bmZWOVF6SnZhNlZ0dFlJ?=
- =?utf-8?B?SEtVMExpbEZkQ2QrZ2lRaTFaeEZMTWJ3dmFBWXB6Qm55YnFpUzU1UFM3OG0r?=
- =?utf-8?B?VGlJU3BpTm5ja0h1SEIyUU12WS96VVgvV3hyS205WGQ5TVNMZS96emFDOUdm?=
- =?utf-8?B?bUdkL25EOXk5UDFkdElRZG9xSWQyTHQ0dTNRK3ZZeDVTcDVKd2hpOWZVMXVa?=
- =?utf-8?B?dGhtZm5tU2pZQlMrdEIrc3c4TVNjS0JlSXNEcG9peTR0VHVXZHh4cm4yUXFC?=
- =?utf-8?B?Z2tDU1JyZHNLU0NsQTFYNHgyN3hlcEVWb0lINjJFR1VEOFp3enA4b3kzNGJN?=
- =?utf-8?B?a201REp6VndCWlA5MGtKNFEyUnRJSGlXZ0tLS0pmNytiRGx5aUVHaXBhSHFH?=
- =?utf-8?B?S1ZEakxyK2FMa2NsN2N3T1ZXQVNmTVNPamVXUk14bktPREUrbW1JNjY4UmFD?=
- =?utf-8?B?ZkNFU21Vc0l4c0duQnJibU0rZHZVUGlsMUo2NFg4UlNIRUxHQU5VTG01RGI4?=
- =?utf-8?B?T1E5YVpoaE9peVAzS09LaWhiSU9UMmFKZmJsaElaYWRIUE9mWGpORlZPWDZx?=
- =?utf-8?B?V2wyakFwWE9SNHg3NkplUGs0VHk0c01OQ0ZPa0tpUVovYlZrRzNST0dQSXNj?=
- =?utf-8?B?RW9zVlI5MWZBdUY1blpqQmc3a0tjR3dqekJwd2FUNDB2cng1UzVVM1J2bDd5?=
- =?utf-8?B?RlBoZWFHbm9BVjhYNk96aEVxdGZqd1kzT0VmZHNQSTg0ZzV0WHY3OWl3NG5N?=
- =?utf-8?B?bm1scElubFRBL2dLUEpHdmRyN0RSK2trVU1ydG9lRE9pUTNyU090ZmZIYlNV?=
- =?utf-8?B?dlhaa2wwSWtxUVJQY1o4RUdtbjYxeW0wS3RzUVJzdTM2RG9heEgwQXhWWWJQ?=
- =?utf-8?B?a212L0E2K1JOeDJnK0hrYjR6SkNSN0EzcDVDUnRXMzZxV1FDcmwwc2d5bytO?=
- =?utf-8?B?MnRCdzg4R1VTUmU3cWRLeDZzU0ttc0JGL0txWGtzZk5ZdnVaRUg0dlZ5Y2Nr?=
- =?utf-8?B?SWFmeXRVdkFORmVmWG5PT0g2MTl6QU5FbmgrNG8wNXVEV0FRN2lnQjd5NkJl?=
- =?utf-8?B?b1kvRTNYRmc3T1RSVmRoMDZ0ZWdpQ0x5dkFpbmsrZkovR2FoRTRZWlFMVXZB?=
- =?utf-8?B?ZFFlcWNGT29OeFE4K2JMWkljK2hxVXhDQUwxS0dURW1hbXlTTzI3U2orNEk3?=
- =?utf-8?B?MEpxbU12bHREb1dHRGhZZTJ6TzFmNmJ3elI3WlByZEdxaTVFdGdubVNzZlJO?=
- =?utf-8?B?elMzVjMyWWZLYnd4TW9uSDZMQnRTNFQ2Z1o2N2dNemZTT0MvR1g4SG51cXE0?=
- =?utf-8?B?RFdPZlA1ekE4M2dRazUzR2FlbWhibWNCVDRJOUpPWWVmRm5qSXlVUXRJRWU3?=
- =?utf-8?B?NTdPZGY3UWprZlRGYXl5VlRFYmhmUmhoUnNlbzVkVS9nNjN6cllrQVEzaFBB?=
- =?utf-8?B?YnhGa1JPdlBUMGtubHZiM2Q1Nm1sVkNyOUFmdmFnVnIyNUhrV05seTJFQloy?=
- =?utf-8?B?RmhiTTBvQ3puRnhYc1grUldFNmNUb2VVRG1GUzNZZnd3NlJaNnBrcnFyajYw?=
- =?utf-8?B?eUNKc0VVVW5aeHdVamNRRGVBVGcwQlB5VEtQSXBtWEI4R0JDSlY4c3RERmdt?=
- =?utf-8?Q?FjvIoVJMQz9gyJeM=3D?=
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <D01AD3885847514183DBFDFEB99AAB57@apcprd03.prod.outlook.com>
-Content-Transfer-Encoding: base64
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Q8p9C0N4"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 7AEDFC116C6;
+	Tue, 10 Feb 2026 06:56:58 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1770706618;
+	bh=9k6PZUXz+WIcEyDU8GQDLchGRBb94F0Zkoj+zNNUO1w=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
+	b=Q8p9C0N4e3p3wXLXwIbeE5jCUAUkJfDbWcg192PD0qweCb8wkDSECUXyJ9+tmGE1I
+	 PRSSsyF6+jgsaxZDB2U3zvhqxhh8ozXFSUcesbEIm0dU3c0Iv9A0FbT+Uk+ByYAShQ
+	 Ukwq9ULcgesP8Q8hFfDueowkBioXPcOwt4gAjmsPmj2n5bkZhshcvwJgkrNGNrht2c
+	 +4Fj3YJcvOsw0I8bQv1ietkYzRv8WROk8sYiB5Oqqf3ENJePdKZd59v8J6ybQS1QQO
+	 +Z2dirjv3oKGMWxVKD+gn94kaFRF6sF4vPuSW4MntkJnQ+6NNxOYRN2aWkYPNOYo+q
+	 1Zm/vKtJo8D7Q==
+Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 67C21EA3F0D;
+	Tue, 10 Feb 2026 06:56:58 +0000 (UTC)
+From: Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org>
+Date: Tue, 10 Feb 2026 12:26:50 +0530
+Subject: [PATCH v2 1/4] soc: qcom: ice: Remove platform_driver support and
+ expose as a pure library
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: PSAPR03MB5605.apcprd03.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: c135aaf7-c3a0-454e-ccc0-08de685633ad
-X-MS-Exchange-CrossTenant-originalarrivaltime: 10 Feb 2026 03:40:57.6296
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: a7687ede-7a6b-4ef6-bace-642f677fbe31
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: KErRh73pd7WK4uRAGUQRV5VVTv3WqcTak5yxnjzXiHr4PRWDmXxYLzVkvRH5GHlM2e91cElOf8p3WYv6BsmcDA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: KUXPR03MB9643
-X-MTK: N
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20260210-qcom-ice-fix-v2-1-9c1ab5d6502c@oss.qualcomm.com>
+References: <20260210-qcom-ice-fix-v2-0-9c1ab5d6502c@oss.qualcomm.com>
+In-Reply-To: <20260210-qcom-ice-fix-v2-0-9c1ab5d6502c@oss.qualcomm.com>
+To: Bjorn Andersson <andersson@kernel.org>, 
+ Konrad Dybcio <konradybcio@kernel.org>, Abel Vesa <abel.vesa@linaro.org>, 
+ Adrian Hunter <adrian.hunter@intel.com>, 
+ Ulf Hansson <ulf.hansson@linaro.org>, 
+ Manivannan Sadhasivam <mani@kernel.org>, 
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
+ "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ linux-mmc@vger.kernel.org, linux-scsi@vger.kernel.org, 
+ Sumit Garg <sumit.garg@oss.qualcomm.com>, mani@kernel.org, 
+ Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>, 
+ stable@vger.kernel.org, Abel Vesa <abel.vesa@oss.qualcomm.com>
+X-Mailer: b4 0.14.3
+X-Developer-Signature: v=1; a=openpgp-sha256; l=8433;
+ i=manivannan.sadhasivam@oss.qualcomm.com; h=from:subject:message-id;
+ bh=GPFUIIrwKER6IyezrGPLm3Ggoo7yyD5LRXIRLkVOue8=;
+ b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBpita4HLKQ2qFWK/ODxaFMc9Uuv/lk/7t/VT+Uc
+ ciozcx8mkCJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCaYrWuAAKCRBVnxHm/pHO
+ 9ZKRB/9UzSOkSfrzOGjWmUpqiQKmJ0Nf4P2Fz1nvOBb/HIlvldfV6BKviQ96AWI1GrCOep/aHlK
+ 7UoFF8aasoykQB1ToCqdM8vQa/iGXwBwj/xiFzSvOE9FflWfR2+2e5nqUMLFSjU1oFki6Okh7E/
+ 8tppcC5VETVwiXtoCWK6zxbOmgfXIC/YK8PxT0myYAEcwiAxdfc7+mSTxbDs9trCBJFnQbTpXyQ
+ YnMYLeJ2W5wP6SBN+Wro6KqSGNqPk7AMYq3OEN5EiEsMTuevRsq5f08Ui2mbmVIzCTJVXm9FcJA
+ XuO5jtGfMha5qxIKup9cT8hF8jB92LR1U6WExmGuI0APDOBX
+X-Developer-Key: i=manivannan.sadhasivam@oss.qualcomm.com; a=openpgp;
+ fpr=C668AEC3C3188E4C611465E7488550E901166008
+X-Endpoint-Received: by B4 Relay for
+ manivannan.sadhasivam@oss.qualcomm.com/default with auth_id=461
+X-Original-From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+Reply-To: manivannan.sadhasivam@oss.qualcomm.com
 
-T24gTW9uLCAyMDI2LTAyLTA5IGF0IDA4OjU3IC0wODAwLCBCYXJ0IFZhbiBBc3NjaGUgd3JvdGU6
-DQo+IE9uIDIvOS8yNiAxMjoyOCBBTSwgcGV0ZXIud2FuZ0BtZWRpYXRlay5jb23CoHdyb3RlOg0K
-PiDCoD4gWyAuLi4gXQ0KPiANCj4gUGxlYXNlIGNoYW5nZSAiY29tbW5hZCIgaW50byAiY29tbWFu
-ZCIgaW4gdGhlIGNvdmVyIGxldHRlciBvZiB0aGlzDQo+IHBhdGNoDQo+IHNlcmllcyBhbmQgYWxz
-byBpbiB0aGUgc3ViamVjdCBvZiB0aGlzIHBhdGNoLg0KDQpUaGFuayB5b3UuIEkgd2lsbCBjb3Jy
-ZWN0IHRoaXMgdHlwby4NCg0KPiANCj4gPiArwqDCoMKgwqAgaWYgKCFjbWQpIHsNCj4gPiArwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgIGRldl9lcnIoaGJhLT5kZXYsDQo+ID4gK8KgwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAgIk5vIGFjdGl2ZV91aWNfY21kLCBtYXkgdGlt
-ZW91dCBhbmQgYmUNCj4gPiBjbGVhcmVkLlxuIik7DQo+ID4gwqDCoMKgwqDCoMKgwqDCoMKgwqDC
-oMKgwqAgcmV0dXJuIHJldHZhbDsNCj4gPiArwqDCoMKgwqAgfQ0KPiANCj4gVGhlIG5ldyBtZXNz
-YWdlIGlzIGluY29tcHJlaGVuc2libGUgdG8gbWUuIFBsZWFzZSBtYWtlIGl0IG1vcmUgY2xlYXIu
-DQo+IElzDQo+IHRoaXMgcGVyaGFwcyB3aGF0IHlvdSB3YW50IHRvIGJlIHJlcG9ydGVkPw0KPiAN
-Cj4gIk5vIGFjdGl2ZSBVSUMgY29tbWFuZC4gTWF5YmUgYSB0aW1lb3V0IG9jY3VycmVkPyINCj4g
-DQo+IFRoYW5rcywNCj4gDQo+IEJhcnQuDQoNClllcywgdGhpcyBpcyB3aGF0IEkgbWVhbi4NCklm
-IHRoaXMgbG9nIGlzIGZvbGxvd2VkIGJ5IGEgdGltZW91dCBsb2csIHdlIGNhbiBiZSBzdXJlIGl0
-IHdhcyANCmNsZWFyZWQgYnkgdGhlIHRpbWVvdXQuDQpJZiBub3QsIHRoZW4gc29tZXRoaW5nIG1p
-Z2h0IGJlIHdyb25nLg0KDQpUaGFua3MuDQpQZXRlcg0KDQo=
+From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+
+The current platform driver design causes probe ordering races with
+consumers (UFS, eMMC) due to ICE's dependency on SCM firmware calls. If ICE
+probe fails (missing ICE SCM or DT registers), devm_of_qcom_ice_get() loops
+with -EPROBE_DEFER, leaving consumers non-functional even when ICE should
+be gracefully disabled. devm_of_qcom_ice_get() cannot know if the ICE
+driver probe has failed due to above reasons or it is waiting for the SCM
+driver.
+
+Moreover, there is no devlink dependency between ICE and consumer drivers
+as 'qcom,ice' is not considered as a DT 'supplier'. So the consumer drivers
+have no idea of when the ICE driver is going to probe.
+
+To avoid all this hassle, remove the platform driver support altogether and
+just expose the ICE driver as a pure library to consumer drivers. With this
+design, when devm_of_qcom_ice_get() is called, it will check if the ICE
+instance is available or not. If not, it will create one based on the ICE
+DT node, increase the refcount and return the handle. When the next
+consumer calls the API again, the ICE instance would be available. So this
+function will just increment the refcount and return the instance.
+
+Finally, when the consumer devices get destroyed, refcount will be
+decremented and finally the cleanup will happen once the last consumer goes
+away.
+
+For the consumers using the old DT binding of providing the separate 'ice'
+register range in their node, this change has no impact.
+
+This change also warrants rewording the kernel-doc of
+devm_of_qcom_ice_get() API. While at it, remove the duplicate kernel-doc
+for of_qcom_ice_get() static helper as it provides no value.
+
+Cc: stable@vger.kernel.org
+Cc: Abel Vesa <abel.vesa@oss.qualcomm.com>
+Reported-by: Sumit Garg <sumit.garg@oss.qualcomm.com>
+Fixes: 2afbf43a4aec ("soc: qcom: Make the Qualcomm UFS/SDCC ICE a dedicated driver")
+Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+---
+ drivers/soc/qcom/ice.c | 118 ++++++++++++++++++-------------------------------
+ 1 file changed, 44 insertions(+), 74 deletions(-)
+
+diff --git a/drivers/soc/qcom/ice.c b/drivers/soc/qcom/ice.c
+index b203bc685cad..8e25609c7e7b 100644
+--- a/drivers/soc/qcom/ice.c
++++ b/drivers/soc/qcom/ice.c
+@@ -107,12 +107,16 @@ struct qcom_ice {
+ 	struct device *dev;
+ 	void __iomem *base;
+ 
++	struct kref refcount;
+ 	struct clk *core_clk;
+ 	bool use_hwkm;
+ 	bool hwkm_init_complete;
+ 	u8 hwkm_version;
+ };
+ 
++static DEFINE_MUTEX(ice_mutex);
++struct qcom_ice *ice_handle;
++
+ static bool qcom_ice_check_supported(struct qcom_ice *ice)
+ {
+ 	u32 regval = qcom_ice_readl(ice, QCOM_ICE_REG_VERSION);
+@@ -592,30 +596,18 @@ static struct qcom_ice *qcom_ice_create(struct device *dev,
+ 	return engine;
+ }
+ 
+-/**
+- * of_qcom_ice_get() - get an ICE instance from a DT node
+- * @dev: device pointer for the consumer device
+- *
+- * This function will provide an ICE instance either by creating one for the
+- * consumer device if its DT node provides the 'ice' reg range and the 'ice'
+- * clock (for legacy DT style). On the other hand, if consumer provides a
+- * phandle via 'qcom,ice' property to an ICE DT, the ICE instance will already
+- * be created and so this function will return that instead.
+- *
+- * Return: ICE pointer on success, NULL if there is no ICE data provided by the
+- * consumer or ERR_PTR() on error.
+- */
+ static struct qcom_ice *of_qcom_ice_get(struct device *dev)
+ {
+ 	struct platform_device *pdev = to_platform_device(dev);
+ 	struct qcom_ice *ice;
+ 	struct resource *res;
+ 	void __iomem *base;
+-	struct device_link *link;
+ 
+ 	if (!dev || !dev->of_node)
+ 		return ERR_PTR(-ENODEV);
+ 
++	guard(mutex)(&ice_mutex);
++
+ 	/*
+ 	 * In order to support legacy style devicetree bindings, we need
+ 	 * to create the ICE instance using the consumer device and the reg
+@@ -631,6 +623,16 @@ static struct qcom_ice *of_qcom_ice_get(struct device *dev)
+ 		return qcom_ice_create(&pdev->dev, base);
+ 	}
+ 
++	/*
++	 * If the ICE node has been initialized already, just increase the
++	 * refcount and return the handle.
++	 */
++	if (ice_handle) {
++		kref_get(&ice_handle->refcount);
++
++		return ice_handle;
++	}
++
+ 	/*
+ 	 * If the consumer node does not provider an 'ice' reg range
+ 	 * (legacy DT binding), then it must at least provide a phandle
+@@ -643,41 +645,42 @@ static struct qcom_ice *of_qcom_ice_get(struct device *dev)
+ 
+ 	pdev = of_find_device_by_node(node);
+ 	if (!pdev) {
+-		dev_err(dev, "Cannot find device node %s\n", node->name);
++		dev_err(dev, "Cannot find ICE platform device\n");
+ 		return ERR_PTR(-EPROBE_DEFER);
+ 	}
+ 
+-	ice = platform_get_drvdata(pdev);
+-	if (!ice) {
+-		dev_err(dev, "Cannot get ice instance from %s\n",
+-			dev_name(&pdev->dev));
++	base = devm_platform_ioremap_resource(pdev, 0);
++	if (IS_ERR(base)) {
++		dev_warn(&pdev->dev, "ICE registers not found\n");
+ 		platform_device_put(pdev);
+-		return ERR_PTR(-EPROBE_DEFER);
++		return base;
+ 	}
+ 
+-	link = device_link_add(dev, &pdev->dev, DL_FLAG_AUTOREMOVE_SUPPLIER);
+-	if (!link) {
+-		dev_err(&pdev->dev,
+-			"Failed to create device link to consumer %s\n",
+-			dev_name(dev));
++	ice = qcom_ice_create(&pdev->dev, base);
++	if (IS_ERR(ice)) {
+ 		platform_device_put(pdev);
+-		ice = ERR_PTR(-EINVAL);
++		return ice_handle;
+ 	}
+ 
+-	return ice;
++	ice_handle = ice;
++	kref_init(&ice_handle->refcount);
++
++	return ice_handle;
+ }
+ 
+-static void qcom_ice_put(const struct qcom_ice *ice)
++static void qcom_ice_put(struct kref *kref)
+ {
+-	struct platform_device *pdev = to_platform_device(ice->dev);
+-
+-	if (!platform_get_resource_byname(pdev, IORESOURCE_MEM, "ice"))
+-		platform_device_put(pdev);
++	platform_device_put(to_platform_device(ice_handle->dev));
++	ice_handle = NULL;
+ }
+ 
+ static void devm_of_qcom_ice_put(struct device *dev, void *res)
+ {
+-	qcom_ice_put(*(struct qcom_ice **)res);
++	const struct qcom_ice *ice = *(struct qcom_ice **)res;
++	struct platform_device *pdev = to_platform_device(ice->dev);
++
++	if (!platform_get_resource_byname(pdev, IORESOURCE_MEM, "ice"))
++		kref_put(&ice_handle->refcount, qcom_ice_put);
+ }
+ 
+ /**
+@@ -685,11 +688,14 @@ static void devm_of_qcom_ice_put(struct device *dev, void *res)
+  * a DT node.
+  * @dev: device pointer for the consumer device.
+  *
+- * This function will provide an ICE instance either by creating one for the
+- * consumer device if its DT node provides the 'ice' reg range and the 'ice'
+- * clock (for legacy DT style). On the other hand, if consumer provides a
+- * phandle via 'qcom,ice' property to an ICE DT, the ICE instance will already
+- * be created and so this function will return that instead.
++ * This function will create the ICE instance (for the first time) and increase
++ * its refcount if the consumer device has either 'ice' reg range (legacy DT
++ * binding) or the 'qcom,ice' property pointing to the ICE DT node. If the ICE
++ * instance was already created, it will just increase its refcount and return
++ * the handle.
++ *
++ * Devres automatically decrements the refcount when consumer device gets
++ * destroyed and frees the ICE instance when the last consumer goes away.
+  *
+  * Return: ICE pointer on success, NULL if there is no ICE data provided by the
+  * consumer or ERR_PTR() on error.
+@@ -714,41 +720,5 @@ struct qcom_ice *devm_of_qcom_ice_get(struct device *dev)
+ }
+ EXPORT_SYMBOL_GPL(devm_of_qcom_ice_get);
+ 
+-static int qcom_ice_probe(struct platform_device *pdev)
+-{
+-	struct qcom_ice *engine;
+-	void __iomem *base;
+-
+-	base = devm_platform_ioremap_resource(pdev, 0);
+-	if (IS_ERR(base)) {
+-		dev_warn(&pdev->dev, "ICE registers not found\n");
+-		return PTR_ERR(base);
+-	}
+-
+-	engine = qcom_ice_create(&pdev->dev, base);
+-	if (IS_ERR(engine))
+-		return PTR_ERR(engine);
+-
+-	platform_set_drvdata(pdev, engine);
+-
+-	return 0;
+-}
+-
+-static const struct of_device_id qcom_ice_of_match_table[] = {
+-	{ .compatible = "qcom,inline-crypto-engine" },
+-	{ },
+-};
+-MODULE_DEVICE_TABLE(of, qcom_ice_of_match_table);
+-
+-static struct platform_driver qcom_ice_driver = {
+-	.probe	= qcom_ice_probe,
+-	.driver = {
+-		.name = "qcom-ice",
+-		.of_match_table = qcom_ice_of_match_table,
+-	},
+-};
+-
+-module_platform_driver(qcom_ice_driver);
+-
+ MODULE_DESCRIPTION("Qualcomm Inline Crypto Engine driver");
+ MODULE_LICENSE("GPL");
+
+-- 
+2.51.0
+
+
