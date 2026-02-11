@@ -1,169 +1,280 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f47.google.com (mail-wm1-f47.google.com [209.85.128.47])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CBA66249EB
-	for <linux-scsi@vger.kernel.org>; Wed, 11 Feb 2026 13:30:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DEFB2153598
+	for <linux-scsi@vger.kernel.org>; Wed, 11 Feb 2026 14:34:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.47
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770816616; cv=none; b=qm11n9bB/JmQHvzRWKlNqg2Ad5BYC2DQfPGRHA5iG2ZCT+0Own7SAXlsWzQg9//eNfa3KU8+7eDN5tWr/ZE10gIdgzUrn16R1ktgxGGS3/fI+RJWIDfj/CdCBepCGzB5jMciETISVuJnZIGcXFim121asIBtFxslEBLqGE4Uatc=
+	t=1770820459; cv=none; b=PSxtD0+mfJI01RsQzqh+bAUgmXWFj3YFJkArY1knIVNtdkFl9wB62bxF4xEhmGqRaq3I8luibXw8A7mtzI9d8jau3F41Epo5/0Nd6EVYq1qb+KR/5wrqWgThKLkAgHAHJu/DqAZfXaCkx2RH1bIrz/IPAqqooKMtIYaHAeeVpRE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770816616; c=relaxed/simple;
-	bh=gdujZ99MevCVsCb4NBaclIUNi1Glc0RnL/gPWCQ/g1M=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=Nt/0zw6WFBob3NiCLEOpByM1au7lbuNEhMezvZ4G3AgFqwGtxhz7AfCvUfoRihbNMrNcvoU1rxv5srlBTkJbo2DPlZDBXMZWRxIQ7nk+lQQhNlvEzV5/ZKvFbIJlLfKQhJdVwRqxqu1iwN3AgHWhkkSPsn3T2tzVywf16G740SA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=hd84I2QF; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=IYffNPSU; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	s=arc-20240116; t=1770820459; c=relaxed/simple;
+	bh=4C6y6kEEkJcBGMXN9ItqYeem+UPO961GNzIxDCW4P5g=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=hwAaXGO4Oz9fi+/KTHUPaS4xvIlPszZWfX0FgCWCIBaIbGAdl5y4pJPXSlbq7V+We/RLMlxfgAojpOJsVvBwR/osUXNA/jEbBQp4LYdqPb0jUVORa6nnwup1oNWZMGcAOmxdPT/wMtCllrQE0tjXM/uxAv9qJzOAdjSVzH7GIOU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=grsecurity.net; spf=pass smtp.mailfrom=opensrcsec.com; dkim=pass (2048-bit key) header.d=grsecurity.net header.i=@grsecurity.net header.b=ddOmkkBS; arc=none smtp.client-ip=209.85.128.47
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=grsecurity.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=opensrcsec.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="hd84I2QF";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="IYffNPSU"
-Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 61BAHSbq2297566
-	for <linux-scsi@vger.kernel.org>; Wed, 11 Feb 2026 13:30:15 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:date:from:in-reply-to:message-id
-	:mime-version:references:subject:to; s=qcppdkim1; bh=yBxQPWSZi11
-	Gi7fw7yJ514mCuqG/sJlj9eUQZXPJahI=; b=hd84I2QFoG2o8wydmcKyOdgB8VC
-	zvLHHYCfmvquU0D6I1mPVBrcI/y4ZqTQis7+VGF1L0JV/K3y2M7T5n5s++hSpQ16
-	fHCNLBbYLBLwcf2EQOKRn+213CZ1aRSbdABqL5PIx2ODMNRGwK+B5JU5Le02N+s0
-	ZvKWA0Gn/B76KmJ6pNFN3NeJXhktYJNs8JCb2rfNQN3c9TEm2yaV42mf2Ov+x75h
-	wnMqm+S3fb2nYjWeiLYxHqhHbJmimXhdjaubz6g3+61eEwdSC/fHfWnl+BwO+wIA
-	rOoTUmC6NAP4snoXBokUMlGflYpS/RiG98gt5I8GrjABQbLKuhTLz9JWcQg==
-Received: from mail-pf1-f200.google.com (mail-pf1-f200.google.com [209.85.210.200])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4c8qvq8hhx-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Wed, 11 Feb 2026 13:30:14 +0000 (GMT)
-Received: by mail-pf1-f200.google.com with SMTP id d2e1a72fcca58-82442b44d94so2927011b3a.2
-        for <linux-scsi@vger.kernel.org>; Wed, 11 Feb 2026 05:30:14 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=grsecurity.net header.i=@grsecurity.net header.b="ddOmkkBS"
+Received: by mail-wm1-f47.google.com with SMTP id 5b1f17b1804b1-48068ed1eccso70310505e9.2
+        for <linux-scsi@vger.kernel.org>; Wed, 11 Feb 2026 06:34:17 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1770816614; x=1771421414; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=yBxQPWSZi11Gi7fw7yJ514mCuqG/sJlj9eUQZXPJahI=;
-        b=IYffNPSUWCZOQqzKMnSyVhc160unRrFaoS30Fiyd0aK1GrPw8euciOKKGE/a8DmadT
-         8q+V1FAMUnHnBdY82GgUKeCfJM/QPUeI4ptjgAMeXPJZW/JvSpizn43CBLsUds2cuJCY
-         XP9xmSonN6pFo0MKlM0IVQCA6hCc+SZfcWFBKSCnHXmqRStgnTJw3RSvRCe361jWNDal
-         fZ2O0OpjXvcBWbG/m7cLQ1PeP2UY0vs/I9M0HseDlLUKh3sU/UBRQzWXwaTSQdpCbU6p
-         kEKpqRde3LjMoJR4XFOHiQNGUz0W2bCBvRWqQU4mBArZ63K//O7a60Pu1tF7qh3qpxRd
-         KtwQ==
+        d=grsecurity.net; s=grsec; t=1770820456; x=1771425256; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:autocrypt:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:from:to:cc:subject:date:message-id:reply-to;
+        bh=WVIXXmPY6V4whXaCwITzEzH8RnJSLzmycKi4L/qVHqo=;
+        b=ddOmkkBS5AQ3OumFMy9agQb0SFKmYCoVcWkF8M+4SjR9W9s7tsEKIBpdx59vVErpRG
+         j+iOBCo6crFZPisQZqfOWggI6g2Fc7qxBWdtcYrxanaGGEUQlhtfe8+gCYMKCv6URlas
+         5u4ZdunJuXSy10af32BYddoPcr2+Ri0QC4H/fVi9AbPpFu9AcyaCtI1hMZKXZzADU50M
+         Zh4UplTK5+MbdFilaphC7wElU1A4rFv/XL/s6+HLZW5Rl/MwWCcTX2wCyOQf12SmkYc6
+         VYxL2sjm6qQjCbK5yOeXxFoWU2oPtnRxuGMfRK/OqEDGcR7qqaBKp/KrNob+02detSWO
+         Dzsw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1770816614; x=1771421414;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=yBxQPWSZi11Gi7fw7yJ514mCuqG/sJlj9eUQZXPJahI=;
-        b=q1zKfNaAmhZb+iTta3Uzof9TtmmpB3zkCx9jEzFE3ryrjvWMQbsVZo+GijKktBpNzL
-         bIAjhkM/C2LSFB6OW9acmfMELTnm+ukjo55ffJ7oDnH7II9SrbRxG4CBvoAaKlXlA+GV
-         oAkjA+BmpLmTDPeHo4INGU1r5MJQGUM6Xm4JLwB/o0W9tps94defH4jciJ2vT6P5gmFf
-         ccT4KfyyxW6zxYN3GlUM/zTLhI1piW8GRY/5iRQ7crjwMkgoCotraaX6Hy5tjKW6HVlq
-         UAy/R1CA1JsKPMnGJcavfIaLQ+bgF+OUaKnVG0kcOmEqN8TAy1XTGt1OnQreHd7BSeXS
-         ZpdA==
-X-Forwarded-Encrypted: i=1; AJvYcCXs+0elv3Dzfrm9ood8a1LY82JiHdI5UJpFW+K1x3Z7zb1qwQ8PJS/2//pbovZl+4aMnGQ8YhisztNa@vger.kernel.org
-X-Gm-Message-State: AOJu0YwFKySzTTsssunlDhl3bFb6WJEGNJqN1ti0cVPO8cvYJGmKUxmW
-	LodpGCBu45n0sOEMOhevhDczcAj7HwoVeCDwAOl5/fLbe60xpooO8IqelnWHucXfD5jJkIkD4Wv
-	RQ7SxuOvTTr3Tv/9aBVRWTAJpqHq4B8UjZkBoqRjv4qBEDT5sLRJMMX7uLhZl30ut
-X-Gm-Gg: AZuq6aIIf3E41is00f9+jPbJoGX2Ks3TAtKvZEkQF8QgoVkNV/DjvdpwzM5fq63Y/Cj
-	uT59qZzatjPVMZ5Ort9fecB3bwuMGUQpxnpAom5ehDqwTogNaFknI5VUhNoKARGL/ol8zcOb3R9
-	5ebFUdtvvUrFjXg1h+YVQhWs7ufKdIsP8F7LOTRVxwrT1yy7AdLVE7wov+WFQx4RuUamNplYBsO
-	YzUrtgdi2ku//m7UL+KhrV4Ru5ACA99ij1QTNxoib5B8slt41o2q7WBAZmdVn9AohtBgtDZej4D
-	+lRsNZsTi1PYEPk+eNHki5PSjNKpFchlls0uOP+BuW4ddAGdk+9aMI+5lmxJ9IAONrxAD6X9dNp
-	Eq/HVXp0JrxYhXWq2WAk/Y3m/uNyZGUKtaabvTygfp9pwUpww9HSchD6US/dGsLfu
-X-Received: by 2002:a05:6a00:6ca1:b0:824:374a:1402 with SMTP id d2e1a72fcca58-8249fc25cbfmr1597580b3a.11.1770816613599;
-        Wed, 11 Feb 2026 05:30:13 -0800 (PST)
-X-Received: by 2002:a05:6a00:6ca1:b0:824:374a:1402 with SMTP id d2e1a72fcca58-8249fc25cbfmr1597539b3a.11.1770816613061;
-        Wed, 11 Feb 2026 05:30:13 -0800 (PST)
-Received: from hu-pragalla-hyd.qualcomm.com ([202.46.23.25])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-8249e84bc1asm2143655b3a.58.2026.02.11.05.30.06
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 11 Feb 2026 05:30:11 -0800 (PST)
-From: Pradeep P V K <pradeep.pragallapati@oss.qualcomm.com>
-To: vkoul@kernel.org, neil.armstrong@linaro.org, robh@kernel.org,
-        krzk+dt@kernel.org, conor+dt@kernel.org, martin.petersen@oracle.com,
-        andersson@kernel.org, konradybcio@kernel.org,
-        taniya.das@oss.qualcomm.com, dmitry.baryshkov@oss.qualcomm.com,
-        manivannan.sadhasivam@oss.qualcomm.com
-Cc: linux-arm-msm@vger.kernel.org, linux-phy@lists.infradead.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org, nitin.rawat@oss.qualcomm.com,
-        Pradeep P V K <pradeep.pragallapati@oss.qualcomm.com>,
-        Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>,
-        Manivannan Sadhasivam <mani@kernel.org>
-Subject: [PATCH V5 3/3] arm64: dts: qcom: hamoa-iot-evk: Enable UFS
-Date: Wed, 11 Feb 2026 18:59:26 +0530
-Message-Id: <20260211132926.3716716-4-pradeep.pragallapati@oss.qualcomm.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20260211132926.3716716-1-pradeep.pragallapati@oss.qualcomm.com>
-References: <20260211132926.3716716-1-pradeep.pragallapati@oss.qualcomm.com>
+        d=1e100.net; s=20230601; t=1770820456; x=1771425256;
+        h=content-transfer-encoding:in-reply-to:autocrypt:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=WVIXXmPY6V4whXaCwITzEzH8RnJSLzmycKi4L/qVHqo=;
+        b=ckOcCExMN7P5Qb/oJgZKC2lsfIE9+M76DHisbmdiUtd5N7FhPwBFbVeEl3oT4/oLCY
+         sG2lfLNgIN0cfSo9xvu7520WcIMJOmvD/v5NQPSjS5N3JWHjFqKfC9kdvDfvyeHlhGDu
+         a3rty11JllLIDMH3l86J87ruOA8iiQukDdXNroK2NoZZRDQafDwod+6H553azibAOjPO
+         CaM/bghrNJUj3QM5sUqItlQbKj6W3RgRVEKoGdPpv5CtzK26q/WmE5GoZjr+NfGEwnTX
+         bgpUOp9csBWGhnDVnBiRouPis4YfoHx4kpmKAuR6XZI3Bpz5uAEHDm0Rn1I0vOD9KSWy
+         KzxQ==
+X-Forwarded-Encrypted: i=1; AJvYcCUOkxHE0Giv3bOuvZCCYAQNCBwG5TZ4vQsqSHrk0sZImvQPrNyhKWG9EZOXHGEVxKP2rb4nIzzEYlkc@vger.kernel.org
+X-Gm-Message-State: AOJu0YzTU8Q2nDGqMrcdr03HZesGaKuJ3eFKA+jvhcpzpYexyRdKmtdR
+	h62XKES3j2XS+5WieThQcCbGYnBnXF04eMX3Jf5ZUhvCgeb2hxsBijnJbOj82Fj9Bz4=
+X-Gm-Gg: AZuq6aKxC97PQ2WlKHOVNpnvj0vcGSx60GxwDNzsEX3f134eF6N8rV1qtRsk2YeG0V+
+	qJ00NCdL3f2B1y9iHO8IYQakrJyZkcS6i77chl4ROfRGX2bemxyYGIaeeAJ4jcSP6XzyJteGvo1
+	SySVo4NJP3htAUeqRobKTrCI8OTLzkSUIwSa57HCWIt4f7vbJXcvuyoL3xZH9usRQIqragG+KnX
+	o7ZudKwtsGg3yk5avDIy6mhbmGFm2gfXOO3IIeIRUS+0ppaDbxMO4X7s/oXL6Js1E/I26FEB6hW
+	bTcKTshjBzD5A2sXYjsM8WCRLenwaf+OMZQzAnmfkaDYR5tSZTl2RJ0EYD46QB1qXO0XFCZVSOp
+	ju9PyyYNpSHxObMv22XGbh/fGm5nS7Kb6T6uTFga0DToIJ2uC0CfEloJbIEGZq7R/4pfu5RyUUw
+	u/m1SbiX27atNI98ggKB3r45nfbtaatsXEmM5kPAQ1GBXCiTW4WEKzV7WdqKXfJgNYoUf6cLHpO
+	voht4zGfHBxmpcS37hrmF7tqaFFhgkMlpTHRt/hDdYKx2jlIv7HR7A867MUuw==
+X-Received: by 2002:a05:600c:8108:b0:475:da1a:5418 with SMTP id 5b1f17b1804b1-483507cffd2mr76136255e9.1.1770820455627;
+        Wed, 11 Feb 2026 06:34:15 -0800 (PST)
+Received: from ?IPV6:2003:fa:af22:2200:e0d6:dee7:4f29:a60a? (p200300faaf222200e0d6dee74f29a60a.dip0.t-ipconnect.de. [2003:fa:af22:2200:e0d6:dee7:4f29:a60a])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4834d5d77b3sm147348895e9.2.2026.02.11.06.34.14
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 11 Feb 2026 06:34:15 -0800 (PST)
+Message-ID: <82f38f49-2f50-4c8b-9482-e446e61d5006@grsecurity.net>
+Date: Wed, 11 Feb 2026 15:34:14 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] scsi: lpfc: Properly set WC for DPP mapping
+To: Justin Tee <justintee8345@gmail.com>
+Cc: Justin Tee <justin.tee@broadcom.com>, Paul Ely <paul.ely@broadcom.com>,
+ linux-scsi@vger.kernel.org, James Smart <jsmart2021@gmail.com>
+References: <20260113222716.2454544-1-minipli@grsecurity.net>
+ <CABPRKS89zwXdUT1Bhj37cQDyOHNupOJ-Ez6kS7Dp_pu06X9Myw@mail.gmail.com>
+ <CABPRKS-ongXPqWVpNYiKvy_afVKn999bxtSEfsBVQ7z5JVCgeQ@mail.gmail.com>
+ <59933d92-eefe-49f6-ad70-79fe7aef0f3c@grsecurity.net>
+ <CABPRKS8C4WmEYX+jtAOTS_jeFYt_GeTp9uBoWzCMF8cUZxxzUA@mail.gmail.com>
+ <CABPRKS_cT5f21A-Jkx_uhA+SF4THpPSaqKtk8mWk9nN4Gh9LFQ@mail.gmail.com>
+Content-Language: en-US, de-DE
+From: Mathias Krause <minipli@grsecurity.net>
+Autocrypt: addr=minipli@grsecurity.net; keydata=
+ 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
+ RzDVkdgPJkL/NFTKZHo5foFXNi89kA==
+In-Reply-To: <CABPRKS_cT5f21A-Jkx_uhA+SF4THpPSaqKtk8mWk9nN4Gh9LFQ@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-Proofpoint-ORIG-GUID: 9Qj8cWPuD5jsYOPDYEVQtMH0zoESPJgM
-X-Authority-Analysis: v=2.4 cv=Q77fIo2a c=1 sm=1 tr=0 ts=698c8466 cx=c_pps
- a=mDZGXZTwRPZaeRUbqKGCBw==:117 a=ZePRamnt/+rB5gQjfz0u9A==:17
- a=HzLeVaNsDn8A:10 a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=Mpw57Om8IfrbqaoTuvik:22 a=GgsMoib0sEa3-_RKJdDe:22 a=EUspDBNiAAAA:8
- a=VwQbUJbxAAAA:8 a=M7MUb3q_Ox69Zn6kGXoA:9 a=zc0IvFSfCIW2DFIPzwfm:22
-X-Proofpoint-GUID: 9Qj8cWPuD5jsYOPDYEVQtMH0zoESPJgM
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMjExMDEwNCBTYWx0ZWRfX8Xb7epW2IR3Y
- 1iPkobFaQlv5WK+rXV44WlsCyjToX+tc4/MWslO+e07kw2yVOxDjBhXXPbArRb58L5uruFCYBdW
- r0DqHtfnXtvZnisoHzXGjvaFI7/bQHAgMI9AY/42VxkbEwRhSEkL9Cm8+ibR+Y2bb2pIoL2fm0v
- T7RuyAaaiEOpmTC2dROEUjd1PEB/o0cHgNBtBKDbPSuNrPhNQv2Bil/zEMSaz5ayCFFUb0cHSP7
- w+r5iYa0H/NsYV/IYK1R6DFc1Wvlc3gfNXQD8B9mc5oDg3Ad10xRWbYcxad7EEKURU9/uOvYb8i
- S0rGl6PLZZbxs4Wjbs2DjqlY5GFLTDu3KzS7/ygSR6wQUYM86QmgVc0+DvLRPEUnRgf5v15pYgV
- 2+ai9QKt1MpVwokzPDGK7SkYk4uNj4l0bQ2vtUQQy0VFKlq9xz6rAfsVQ9Ln0RxTqX5rjqQxh2c
- CPaRE9q3VNUooGgDd8Q==
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-02-11_01,2026-02-11_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- clxscore=1015 suspectscore=0 bulkscore=0 impostorscore=0 malwarescore=0
- lowpriorityscore=0 spamscore=0 priorityscore=1501 adultscore=0 phishscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2601150000 definitions=main-2602110104
 
-Enable UFS for HAMOA-IOT-EVK board.
+On 09.02.26 19:47, Justin Tee wrote:
+> Hi Mathias,
+> 
+>> Thanks, I think I’m able to reproduce the call trace of concern.  I’ll
+>> have a closer look at this patch and will report back.
+> 
+> I have some slight changes to the original patch, which I've tested on
+> real hardware.  Please see below.
 
-Reviewed-by: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
-Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
-Signed-off-by: Pradeep P V K <pradeep.pragallapati@oss.qualcomm.com>
----
- arch/arm64/boot/dts/qcom/hamoa-iot-evk.dts | 18 ++++++++++++++++++
- 1 file changed, 18 insertions(+)
+Thanks for testing! ...and fixing my goof with using pci_barset instead
+of dpp_barset. Dunno what I was thinking!
 
-diff --git a/arch/arm64/boot/dts/qcom/hamoa-iot-evk.dts b/arch/arm64/boot/dts/qcom/hamoa-iot-evk.dts
-index 2390648a248f..fccf1d1bdc60 100644
---- a/arch/arm64/boot/dts/qcom/hamoa-iot-evk.dts
-+++ b/arch/arm64/boot/dts/qcom/hamoa-iot-evk.dts
-@@ -1461,6 +1461,24 @@ &uart21 {
- 	status = "okay";
- };
- 
-+&ufs_mem_phy {
-+	vdda-phy-supply = <&vreg_l3i_0p8>;
-+	vdda-pll-supply = <&vreg_l3e_1p2>;
-+
-+	status = "okay";
-+};
-+
-+&ufs_mem_hc {
-+	reset-gpios = <&tlmm 238 GPIO_ACTIVE_LOW>;
-+
-+	vcc-supply = <&vreg_l17b_2p5>;
-+	vcc-max-microamp = <1300000>;
-+	vccq-supply = <&vreg_l2i_1p2>;
-+	vccq-max-microamp = <1200000>;
-+
-+	status = "okay";
-+};
-+
- &usb_1_ss0_dwc3_hs {
- 	remote-endpoint = <&pmic_glink_ss0_hs_in>;
- };
--- 
-2.34.1
+> Is it possible to check if this works for the customer as well?
 
+If your tests on real hardware ran fine, it should be good for our
+customer as well. It still gets rid of the problematic set_memory_wc()
+call so it's fine from our point of view.
+
+Though, some comments below...
+
+> 
+> diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+> index a116a16c4a6f..b5e53c7d33e7 100644
+> --- a/drivers/scsi/lpfc/lpfc_init.c
+> +++ b/drivers/scsi/lpfc/lpfc_init.c
+> @@ -12039,6 +12039,8 @@ lpfc_sli4_pci_mem_unset(struct lpfc_hba *phba)
+>          iounmap(phba->sli4_hba.conf_regs_memmap_p);
+>          if (phba->sli4_hba.dpp_regs_memmap_p)
+>              iounmap(phba->sli4_hba.dpp_regs_memmap_p);
+> +        if (phba->sli4_hba.dpp_regs_memmap_wc_p)
+> +            iounmap(phba->sli4_hba.dpp_regs_memmap_wc_p);
+>          break;
+>      case LPFC_SLI_INTF_IF_TYPE_1:
+>          break;
+> diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+> index 734af3d039f8..a0b55bd8566e 100644
+> --- a/drivers/scsi/lpfc/lpfc_sli.c
+> +++ b/drivers/scsi/lpfc/lpfc_sli.c
+> @@ -15981,6 +15981,47 @@ lpfc_dual_chute_pci_bar_map(struct lpfc_hba
+> *phba, uint16_t pci_barset)
+>      return NULL;
+>  }
+> 
+> +static phys_addr_t
+> +lpfc_dual_chute_pci_bar_addr(struct lpfc_hba *phba, uint16_t pci_barset)
+> +{
+> +    if (!phba->pcidev)
+> +        return PHYS_ADDR_MAX;
+> +
+> +    switch (pci_barset) {
+> +    case WQ_PCI_BAR_0_AND_1:
+> +        return phba->pci_bar0_map;
+> +    case WQ_PCI_BAR_2_AND_3:
+> +        return phba->pci_bar1_map;
+> +    case WQ_PCI_BAR_4_AND_5:
+> +        return phba->pci_bar2_map;
+> +    default:
+> +        break;
+> +    }
+> +    return PHYS_ADDR_MAX;
+> +}
+> +
+> +static __maybe_unused void __iomem *
+> +lpfc_dpp_wc_map(struct lpfc_hba *phba, uint16_t dpp_barset)
+> +{
+> +    if (!phba->sli4_hba.dpp_regs_memmap_wc_p) {
+> +        void __iomem *dpp_map;
+> +        phys_addr_t dpp_addr;
+> +
+> +        dpp_addr = lpfc_dual_chute_pci_bar_addr(phba, dpp_barset);
+> +        if (dpp_addr == PHYS_ADDR_MAX)
+> +            return NULL;
+> +
+
+> +        dpp_map = ioremap_wc(dpp_addr,
+> +                     pci_resource_len(phba->pcidev,
+> +                              PCI_64BIT_BAR4));
+
+You're hard-coding PCI_64BIT_BAR4 here which *feels* inappropriate if we
+went all the way with wrappers like lpfc_dual_chute_pci_bar_addr() and
+making sure to be using the BAR the device told us. In fact, that was
+the reason, I did it like this, assuming it might be something else than
+WQ_PCI_BAR_4_AND_5, e.g. a BAR shared with the doorbell registers. If
+that cannot happen, what's the reason to have 'dpp_offset'?
+
+Also, what's the reason to do the offset calculation in the caller?
+ioremap_wc() can handle non-page-aligned / offset addresses just fine.
+That's why my version passed dpp_offset to lpfc_dpp_wc_map() and made it
+adjust the to-be-mapped address before calling ioremap_wc(); to only
+remap what's needed.
+Same for the size: I just capped it to what's needed by its only user in
+lpfc_sli4_wq_put(). Again, ioremap_wc() will do "The Right Thing(TM)"
+and map all required pages.
+
+> +
+> +        if (dpp_map)
+> +            phba->sli4_hba.dpp_regs_memmap_wc_p = dpp_map;
+> +    }
+> +
+> +    return phba->sli4_hba.dpp_regs_memmap_wc_p;
+> +}
+> +
+>  /**
+>   * lpfc_modify_hba_eq_delay - Modify Delay Multiplier on EQs
+>   * @phba: HBA structure that EQs are on.
+> @@ -16944,9 +16985,6 @@ lpfc_wq_create(struct lpfc_hba *phba, struct
+> lpfc_queue *wq,
+>      uint8_t dpp_barset;
+>      uint32_t dpp_offset;
+>      uint8_t wq_create_version;
+> -#ifdef CONFIG_X86
+> -    unsigned long pg_addr;
+> -#endif
+> 
+>      /* sanity check on queue memory */
+>      if (!wq || !cq)
+> @@ -17132,14 +17170,15 @@ lpfc_wq_create(struct lpfc_hba *phba, struct
+> lpfc_queue *wq,
+> 
+>  #ifdef CONFIG_X86
+>              /* Enable combined writes for DPP aperture */
+> -            pg_addr = (unsigned long)(wq->dpp_regaddr) & PAGE_MASK;
+> -            rc = set_memory_wc(pg_addr, 1);
+> -            if (rc) {
+> +            bar_memmap_p = lpfc_dpp_wc_map(phba, dpp_barset);
+> +            if (!bar_memmap_p) {
+>                  lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+>                      "3272 Cannot setup Combined "
+>                      "Write on WQ[%d] - disable DPP\n",
+>                      wq->queue_id);
+>                  phba->cfg_enable_dpp = 0;
+> +            } else {
+> +                wq->dpp_regaddr = bar_memmap_p + dpp_offset;
+>              }
+>  #else
+>              phba->cfg_enable_dpp = 0;
+> diff --git a/drivers/scsi/lpfc/lpfc_sli4.h b/drivers/scsi/lpfc/lpfc_sli4.h
+> index ee58383492b2..b6d90604bb61 100644
+> --- a/drivers/scsi/lpfc/lpfc_sli4.h
+> +++ b/drivers/scsi/lpfc/lpfc_sli4.h
+> @@ -785,6 +785,9 @@ struct lpfc_sli4_hba {
+>      void __iomem *dpp_regs_memmap_p;  /* Kernel memory mapped address for
+>                         * dpp registers
+>                         */
+> +    void __iomem *dpp_regs_memmap_wc_p;/* Kernel memory mapped address for
+> +                        * dpp registers with write combining
+> +                        */
+>      union {
+>          struct {
+>              /* IF Type 0, BAR 0 PCI cfg space reg mem map */
+> 
+> 
+> Regards,
+> Justin
+
+Out of curiosity, the I/O stalls are no longer happening with this version?
+
+Thanks,
+Mathias
