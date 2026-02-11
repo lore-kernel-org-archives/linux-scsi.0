@@ -1,275 +1,204 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 57F272F6574;
-	Wed, 11 Feb 2026 08:55:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 18F62366821
+	for <linux-scsi@vger.kernel.org>; Wed, 11 Feb 2026 09:48:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770800117; cv=none; b=Mla4DjD6JO0VP5Svlwj7SeBcKk4ncdTPXIP/GQ0GTi6wgycoI1z402zatNutSJfU2zIjS3k8CQwpy7lF9Pw0lrHQsYYkkO3ebTXbYt2yPRKyOYk6zOAf88kq3luIe66OsY2KCEw9lVwZ1y/hmFdiB2qtJCLkkV9EmMmJ7S+C9HM=
+	t=1770803281; cv=none; b=Fx6M3fTda1wywBBZw0w3tsEB5yMJ5jiNohzp+rblsUxz/OCnzMB4BHsgCqNH21FAEXmCgVmlAGrPG+FcLodgPKRgHyp8rcUantRgPP3tVvCre6vHKOF8Kaj8xcDaccMXhvzHXB+WTGOiAmwojpigXIlr7aw5BkKU4OR2mESEQ1A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770800117; c=relaxed/simple;
-	bh=SRECHDvO140WFtKA/tFIseU6GpR6GBPAjB+p1GDmUUA=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=W7lA6SvS9CJXi1lXBpVnCqukQ9u6Qqo+A+pzPm1hYRD+58D+LKnbsSZ/nt7r2hR30liKo4E1ucRpUZO4l7rE4eoNpsYwyMw44GtT0S7dLKvEDs+BDRUp7zp/k6g9CpFV1gaxtzmVxql8CkAQRMqnylNOeRoNO7EcpXIO3FFZiqI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fr0Z7yie; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1770803281; c=relaxed/simple;
+	bh=6ARsp9atQmUNw6Xa7IgxkJuoDS+d7gKJ9ZK7Tf/3pt0=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=dGwBME/bKqNa40k9bcC9E8X+3tGjXW9VKxgNOMmf3oTNwK9Qg0TChn+CTwTudplpcTGS++gU6qocTU+J8FgluDj3jH5pD3E5l6Klyqn1wZoiZoqvLyZ9rgrgVJDJpimyOo9yxZm1lsP1yzzluii8+a6M7bUyWBA11GQ4PVueuds=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=W61R0L6k; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=FXf9HXBd; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fr0Z7yie"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 970FBC4CEF7;
-	Wed, 11 Feb 2026 08:55:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1770800117;
-	bh=SRECHDvO140WFtKA/tFIseU6GpR6GBPAjB+p1GDmUUA=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=fr0Z7yieEv0LIAjum5RT2T8qYxo7Nm8PDKxPN//GKUHV8kQOiG2ZxiivhMIpKCYoZ
-	 wcK/BYM6I8xXd7yVqDjfdm7SaWO+NxLxq7XsnTtHZXG0P3OsZJ9WlHZObVwOUGnOqO
-	 QcUnUq+q1wjTADkYjVPYtobcFHfQlgIC6TgJTq/9msJEBh1GIn1TtAKKqcFX0bf6YQ
-	 XEcLV2iSci7EG5t4ASiqONx6kAIkiJIQd9zYM0PgB66KJqlmudiS0r4iOXOt1i11Hm
-	 hqgQhtKapn+OXuHketPIxlUTtgOWthHlksDvdBojyMBOfdH0e9C0sFkNdMlQ1YqLtT
-	 4G9w8YnDgD0bA==
-Message-ID: <b88f01b8-6f02-402a-90b1-cc5016d1eee3@kernel.org>
-Date: Wed, 11 Feb 2026 17:55:14 +0900
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="W61R0L6k";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="FXf9HXBd"
+Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 61B4fmWc4013626
+	for <linux-scsi@vger.kernel.org>; Wed, 11 Feb 2026 09:47:59 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:message-id
+	:mime-version:subject:to; s=qcppdkim1; bh=UsW5mcXGCmvKB7BggdY6RH
+	n50BgOLMf7MW1eLSPUZMQ=; b=W61R0L6kZoToLklZBXzXsP1CG1cRQ5eA+/dRqm
+	8j2ICFQ2uXbR//Q+t6krjkdGNlCeI6USkaowIaOQhLTEkVPLJigAeHI1SjFA0+8Y
+	KW0wXsfG6xDGBkQA0w4gz+EhndeMFPB58X2QLjlKiMrEEACoK92A3qXDxzu47xnD
+	UvrA/eHEP/gxo8znWtwI6aSopUHUq8z/gw+tqiBbtLHwTS0zicOHHVYYY2+vk6tt
+	mlSxjFeytpWQO3KrZ6GGj0gPqhZeP943DK+bXtHrtG/r9dXsk18FhJpUisEA3Pzo
+	30Am0MdOXWuzZbQex/ycLwl+6EhdYfCJmnUQTkGMFv1ty9ww==
+Received: from mail-pj1-f69.google.com (mail-pj1-f69.google.com [209.85.216.69])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4c8aadagwm-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Wed, 11 Feb 2026 09:47:59 +0000 (GMT)
+Received: by mail-pj1-f69.google.com with SMTP id 98e67ed59e1d1-3562370038dso1315878a91.3
+        for <linux-scsi@vger.kernel.org>; Wed, 11 Feb 2026 01:47:58 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1770803278; x=1771408078; darn=vger.kernel.org;
+        h=cc:to:content-transfer-encoding:mime-version:message-id:date
+         :subject:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=UsW5mcXGCmvKB7BggdY6RHn50BgOLMf7MW1eLSPUZMQ=;
+        b=FXf9HXBd+R5txdUg3c2dt++QI5KCrIKfYeJ3+ZPDy5PbLtZUtx4Lb1vSr2cXSV9o9Z
+         YA7DMioMuwyp1a/aqkRfNpieO7lApoFHpyn0c+NgXg5fIFnjvxSPx5MeoKMNOjS4den/
+         coLor1YzFwnUOS1oFRR7LybXWzx5TyuZ07Ey4gY8B1ymK1ELeYKCMV0Y3OZbB6jTvcX2
+         pLlAOYWKKhBEgVWxKKrJZZe0q/MZyuOvWcPMdrAytKhtc6AWVown60QWaQWYm40wDCcl
+         RqS1s0DVtDnSmw5u8O23p2DXKYARCo+7qGj/AjPGsilNSmvuQuW9cloqhMAFz7mgKwEA
+         cNkA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1770803278; x=1771408078;
+        h=cc:to:content-transfer-encoding:mime-version:message-id:date
+         :subject:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=UsW5mcXGCmvKB7BggdY6RHn50BgOLMf7MW1eLSPUZMQ=;
+        b=ZyBriVmnJPgk9HMkbeCQsiP/dc3FdqIxrKatvvUvXgM9AD4CkkDxt0L/F5u5/TcJS7
+         WcyXT+cZ+FZLyWZ+iSWVWplxdtB0nZ49plHPOc9mD2P2K00QTQtnvJqOYpOQywajgSBx
+         Cn8SgaewxuwZpUX47iDKmnOYGIJHNvM0k0XYIrZ4x2P9wyslV/V+QE67uwXUdBaU9efx
+         Qrlkae5SrzGRziOu4PAKBLuPiFvDV+wsEixhBPePceYGrMY/AVlescXvxrvUs5HWX6Gx
+         4SDnvAJPgv++Sdg1LPjvW2glxIKAFotuHt1xIecB88cyjEodUbVpwYjs8G29IRlXbQ7I
+         EA8A==
+X-Forwarded-Encrypted: i=1; AJvYcCXD24pi2XbBM/LC3bGDvNt1EGJ6WMpAaqFx22rf5WEl9fI+C9MXiFuM4+w2pYAXYPsxNpixQFtQTBMI@vger.kernel.org
+X-Gm-Message-State: AOJu0YyAcPSmdnSraCLtXt0ZnOEoe0pmbDl+C4kxzeFoKd+4pyFuggmZ
+	Q6SHHVL6TsA3uc/2rMEgoWedgF6ySM9OvzyPcSb5Mj4IlTiq0ECJyOA3aRop44ZOylIqWUqJ2sk
+	eEpERUyr/xZNJ2kQNDUnULUKFoQZMCQjIY1inOJjGxVroxwIazVEQRnrGISSk1eip31nH9omX
+X-Gm-Gg: AZuq6aILL5tKIR2AySznByXreVrIV9xpERY+umQzdwHal3RtqLeFD8ako4Ekn0F6Vrf
+	tCQ1SCcIxw1qIqGF2Tr32yHyFkd+CEWPNke23f6MvA61gWQhLrmbLmuKSi2j80+iRw4r8tVhJUK
+	DCJZVCqd8iliA7T8E26bgqlAF9S0N+qOOw040UyH958R2oovtcfRP69+FUT1CTpnWl+qnZbASQQ
+	I5chMLipHOpcQokBEJvbq0TW96RKvuQaS+Zp63m9UUCdvDT3+5ClMxBDltk+CHykk9JJGJC3kWT
+	Il9Am3GCaf3mVt1Rh5s+QbL2xoAUn+v+CrxWfv7fQvOeZW7k66Ga52Qk6+B/y1ph7K/xepMRh9B
+	KnNPV3TFJZdElCpVVXtnH+c4IMzM69bWZ7G4JyHci4eI9+vQeCt64VOTUrRs=
+X-Received: by 2002:a17:90a:7f85:b0:340:c60b:f362 with SMTP id 98e67ed59e1d1-354b3c53063mr11896880a91.6.1770803277825;
+        Wed, 11 Feb 2026 01:47:57 -0800 (PST)
+X-Received: by 2002:a17:90a:7f85:b0:340:c60b:f362 with SMTP id 98e67ed59e1d1-354b3c53063mr11896875a91.6.1770803277308;
+        Wed, 11 Feb 2026 01:47:57 -0800 (PST)
+Received: from hu-arakshit-hyd.qualcomm.com ([202.46.22.19])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-35662f6b84dsm7526640a91.10.2026.02.11.01.47.52
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 11 Feb 2026 01:47:56 -0800 (PST)
+From: Abhinaba Rakshit <abhinaba.rakshit@oss.qualcomm.com>
+Subject: [PATCH v5 0/4] Enable ICE clock scaling
+Date: Wed, 11 Feb 2026 15:17:43 +0530
+Message-Id: <20260211-enable-ufs-ice-clock-scaling-v5-0-221c520a1f2e@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 1/2] scsi: sd: fix write_same(16/10) to enable sector size
- > PAGE_SIZE
-To: sw.prabhu6@gmail.com, James.Bottomley@HansenPartnership.com,
- martin.petersen@oracle.com, linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, mcgrof@kernel.org, pankaj.raghav@linux.dev,
- bvanassche@acm.org, stable@vger.kernel.org,
- Swarna Prabhu <s.prabhu@samsung.com>, Pankaj Raghav <p.raghav@samsung.com>
-References: <20260211015043.2608866-1-sw.prabhu6@gmail.com>
- <20260211015043.2608866-2-sw.prabhu6@gmail.com>
-Content-Language: en-US
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <20260211015043.2608866-2-sw.prabhu6@gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+X-B4-Tracking: v=1; b=H4sIAD9QjGkC/4XPwU7DMAwG4FeZciZTnLQm2Yn3QDskrrNFdA00W
+ wWa+u6kQwgOjF4s/Zb1/fJVFB4TF7HbXMXIUyopDzW0DxtBRz8cWKauZqGVbgG0kjz40LO8xCI
+ TsaQ+04ss5Ps0HGRQaMhHwxidqMTryDG93/jnfc3HVM55/Li1TbBsv2Cl4H94AlmrybUIqAI6f
+ MqlbN8uvqd8Om3rEIs/6R8T9Jqpq4lI4VE7Z1UDd0zzbaICbVZMU81OdbY12ofO2Ttm89u0K2Z
+ TzeWwAbaR+K/f53n+BM0ZukLLAQAA
+X-Change-ID: 20251120-enable-ufs-ice-clock-scaling-b063caf3e6f9
+To: Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio <konradybcio@kernel.org>,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Neeraj Soni <neeraj.soni@oss.qualcomm.com>,
+        Herbert Xu <herbert@gondor.apana.org.au>,
+        "David S. Miller" <davem@davemloft.net>, Rob Herring <robh@kernel.org>,
+        Krzysztof Kozlowski <krzk+dt@kernel.org>,
+        Conor Dooley <conor+dt@kernel.org>
+Cc: linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-crypto@vger.kernel.org,
+        devicetree@vger.kernel.org,
+        Abhinaba Rakshit <abhinaba.rakshit@oss.qualcomm.com>
+X-Mailer: b4 0.14.2
+X-Proofpoint-ORIG-GUID: ZTC-wB3Ypn-_tyyddhJeeRyglCaioz3A
+X-Proofpoint-GUID: ZTC-wB3Ypn-_tyyddhJeeRyglCaioz3A
+X-Authority-Analysis: v=2.4 cv=OoVCCi/t c=1 sm=1 tr=0 ts=698c504f cx=c_pps
+ a=vVfyC5vLCtgYJKYeQD43oA==:117 a=fChuTYTh2wq5r3m49p7fHw==:17
+ a=IkcTkHD0fZMA:10 a=HzLeVaNsDn8A:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=Mpw57Om8IfrbqaoTuvik:22 a=GgsMoib0sEa3-_RKJdDe:22
+ a=VwQbUJbxAAAA:8 a=EUspDBNiAAAA:8 a=Lsz1E_LYmYg3FmW8_BQA:9 a=3ZKOabzyN94A:10
+ a=QEXdDO2ut3YA:10 a=rl5im9kqc5Lf4LNbBjHf:22
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMjExMDA3OSBTYWx0ZWRfX9OqcE/Ezfnko
+ nR28dl3AU1FwsAU9fWY1UlAIjqoRvb3NwlJGL0YEfDaNw2I+gGvVIF+ANsT/fdPnwM0cHeQKYpE
+ nyTmJhyXCBHzwESBJq3+p9ddkYSUZWVKnDzLni8I4rlvw7Y3I6srJzKF6sDvplGgiUCMgBoTzoZ
+ 3RX5wtfKDOxm/jykEFhwHXLYCVexeLXDj2t0plJLNrH/ahnp8wmhS7eTRwmYgiuCqCVx16f+o9n
+ KalZuM52uZE7DvxPX+QvluaBxlLaY3eS07EbloZZ/Ut/1A46rl78GypTYLeb+gfMWzcqV/5foqc
+ MVLqYBANusaH0cuz2sKoBX9C96AMhKgmBo3Q/99Po90v/4mM8HpVFdCC1R/hFxsLnBH0L5Guej7
+ 62q+9uUTu2orSlOB8dVPkVi59LcFPP55e78y3a7nZJ4D+q/Pp7s1gZY5BGOUTUXV2HSanUoZ9Bm
+ o64cL831aldVYe6Y5qg==
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-02-10_03,2026-02-10_03,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ priorityscore=1501 adultscore=0 phishscore=0 lowpriorityscore=0
+ impostorscore=0 spamscore=0 clxscore=1015 malwarescore=0 bulkscore=0
+ suspectscore=0 classifier=typeunknown authscore=0 authtc= authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2601150000
+ definitions=main-2602110079
 
-On 2/11/26 10:50, sw.prabhu6@gmail.com wrote:
-> From: Swarna Prabhu <sw.prabhu6@gmail.com>
-> 
-> The WRITE SAME(16) and WRITE SAME(10) scsi commands uses
-> a page from a dedicated mempool('sd_page_pool') for its
-> payload. This pool was initialized to allocate single
-> pages, which was sufficient as long as the device sector
-> size did not exceed the PAGE_SIZE.
-> 
-> Given that block layer now supports block size upto
-> 64K ie beyond PAGE_SIZE, initialize large page pool in
-> 'sd_probe()' if a higher sector device is attached ensuring
-> atomicity. Adapt 'sd_set_special_bvec()' to use large page
-> pool when a higher sector size device is attached.
-> 
-> With the above fix, enable sector sizes > PAGE_SIZE in
-> scsi sd driver.
+Introduce support for dynamic clock scaling of the ICE (Inline Crypto Engine)
+using the OPP framework. During ICE device probe, the driver now attempts to
+parse an optional OPP table from the ICE-specific device tree node to
+determine minimum and maximum supported frequencies for DVFS-aware operations.
+API qcom_ice_scale_clk is exposed by ICE driver and is invoked by UFS host
+controller driver in response to clock scaling requests, ensuring coordination
+between ICE and host controller.
 
-This is not a fix (as in a bug fix) but rather a new feature.
+For MMC controllers that do not support clock scaling, the ICE clock frequency
+is kept aligned with the MMC controller’s clock rate (TURBO) to ensure
+consistent operation.
 
-> Cc: stable@vger.kernel.org
+Dynamic clock scaling based on OPP tables enables better power-performance
+trade-offs. By adjusting ICE clock frequencies according to workload and power
+constraints, the system can achieve higher throughput when needed and
+reduce power consumption during idle or low-load conditions.
 
-Why ? Before this patch, scsi allows only up to 4K sector size, which is not >
-PAGE_SIZE.
+The OPP table remains optional, absence of the table will not cause
+probe failure. However, in the absence of an OPP table, ICE clocks will
+remain at their default rates, which may limit performance under
+high-load scenarios or prevent performance optimizations during idle periods.
 
-> Signed-off-by: Swarna Prabhu <s.prabhu@samsung.com>
-> Co-developed-by: Pankaj Raghav <p.raghav@samsung.com>
-> Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
-> ---
->  drivers/scsi/sd.c | 79 ++++++++++++++++++++++++++++++++++++++++-------
->  1 file changed, 67 insertions(+), 12 deletions(-)
-> 
-> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> index f50b92e63201..0e0c5dd1c668 100644
-> --- a/drivers/scsi/sd.c
-> +++ b/drivers/scsi/sd.c
-> @@ -112,8 +112,11 @@ static void sd_shutdown(struct device *);
->  static void scsi_disk_release(struct device *cdev);
->  
->  static DEFINE_IDA(sd_index_ida);
-> +static DEFINE_MUTEX(sd_mutex_lock);
->  
->  static mempool_t *sd_page_pool;
-> +static mempool_t *sd_large_page_pool;
-> +static atomic_t sd_large_page_pool_users = ATOMIC_INIT(0);
->  static struct lock_class_key sd_bio_compl_lkclass;
->  
->  static const char *sd_cache_types[] = {
-> @@ -922,14 +925,27 @@ static void sd_config_discard(struct scsi_disk *sdkp, struct queue_limits *lim,
->  		(logical_block_size >> SECTOR_SHIFT);
->  }
->  
-> -static void *sd_set_special_bvec(struct request *rq, unsigned int data_len)
-> +static void *sd_set_special_bvec(struct scsi_cmnd *cmd, unsigned int data_len)
->  {
->  	struct page *page;
-> +	struct request *rq = scsi_cmd_to_rq(cmd);
-> +	struct scsi_device *sdp = cmd->device;
-> +	unsigned sector_size = sdp->sector_size;
-> +	unsigned int nr_pages = DIV_ROUND_UP(sector_size, PAGE_SIZE);
-> +	int n = 0;
->  
-> -	page = mempool_alloc(sd_page_pool, GFP_ATOMIC);
-> +	if (sector_size > PAGE_SIZE)
-> +		page = mempool_alloc(sd_large_page_pool, GFP_ATOMIC);
-> +	else
-> +		page = mempool_alloc(sd_page_pool, GFP_ATOMIC);
->  	if (!page)
->  		return NULL;
-> -	clear_highpage(page);
-> +
-> +	do {
-> +		clear_highpage(page + n);
-> +		n++;
-> +	} while (n < nr_pages);
+Signed-off-by: Abhinaba Rakshit <abhinaba.rakshit@oss.qualcomm.com>
+---
+Changes in v5:
+- Update operating-points-v2 property in dtbindings as suggested.
+- Fix comment styles.
+- Add argument in qcom_ice_create to distinguish between legacy bindings and newer bindings.
+- Ensure to drop votes in suspend and enable the last vote in resume.
+- Link to v4: https://lore.kernel.org/r/20260128-enable-ufs-ice-clock-scaling-v4-0-260141e8fce6@oss.qualcomm.com
 
-A for loop would be a lot cleaner and simpler.
+Changes in v4:
+- Enable multiple frequency scaling based OPP-entries as suggested in v3 patchset.
+- Include bindings change: https://lore.kernel.org/all/20260123-add-operating-points-v2-property-for-qcom-ice-bindings-v1-1-2155f7aacc28@oss.qualcomm.com/.
+- Link to v3: https://lore.kernel.org/r/20260123-enable-ufs-ice-clock-scaling-v3-0-d0d8532abd98@oss.qualcomm.com
 
-> +
->  	bvec_set_page(&rq->special_vec, page, data_len, 0);
->  	rq->rq_flags |= RQF_SPECIAL_PAYLOAD;
->  	return bvec_virt(&rq->special_vec);
-> @@ -945,7 +961,7 @@ static blk_status_t sd_setup_unmap_cmnd(struct scsi_cmnd *cmd)
->  	unsigned int data_len = 24;
->  	char *buf;
->  
-> -	buf = sd_set_special_bvec(rq, data_len);
-> +	buf = sd_set_special_bvec(cmd, data_len);
->  	if (!buf)
->  		return BLK_STS_RESOURCE;
->  
-> @@ -1034,7 +1050,7 @@ static blk_status_t sd_setup_write_same16_cmnd(struct scsi_cmnd *cmd,
->  	u32 nr_blocks = sectors_to_logical(sdp, blk_rq_sectors(rq));
->  	u32 data_len = sdp->sector_size;
->  
-> -	if (!sd_set_special_bvec(rq, data_len))
-> +	if (!sd_set_special_bvec(cmd, data_len))
->  		return BLK_STS_RESOURCE;
->  
->  	cmd->cmd_len = 16;
-> @@ -1061,7 +1077,7 @@ static blk_status_t sd_setup_write_same10_cmnd(struct scsi_cmnd *cmd,
->  	u32 nr_blocks = sectors_to_logical(sdp, blk_rq_sectors(rq));
->  	u32 data_len = sdp->sector_size;
->  
-> -	if (!sd_set_special_bvec(rq, data_len))
-> +	if (!sd_set_special_bvec(cmd, data_len))
->  		return BLK_STS_RESOURCE;
->  
->  	cmd->cmd_len = 10;
-> @@ -1507,9 +1523,15 @@ static blk_status_t sd_init_command(struct scsi_cmnd *cmd)
->  static void sd_uninit_command(struct scsi_cmnd *SCpnt)
->  {
->  	struct request *rq = scsi_cmd_to_rq(SCpnt);
-> +	struct scsi_device *sdp = SCpnt->device;
-> +	unsigned sector_size = sdp->sector_size;
->  
-> -	if (rq->rq_flags & RQF_SPECIAL_PAYLOAD)
-> -		mempool_free(rq->special_vec.bv_page, sd_page_pool);
-> +	if (rq->rq_flags & RQF_SPECIAL_PAYLOAD) {
-> +		if (sector_size > PAGE_SIZE)
-> +			mempool_free(rq->special_vec.bv_page, sd_large_page_pool);
-> +		else
-> +			mempool_free(rq->special_vec.bv_page, sd_page_pool);
-> +	}
->  }
->  
->  static bool sd_need_revalidate(struct gendisk *disk, struct scsi_disk *sdkp)
-> @@ -2920,10 +2942,7 @@ sd_read_capacity(struct scsi_disk *sdkp, struct queue_limits *lim,
->  			  "assuming 512.\n");
->  	}
->  
-> -	if (sector_size != 512 &&
-> -	    sector_size != 1024 &&
-> -	    sector_size != 2048 &&
-> -	    sector_size != 4096) {
-> +	if (blk_validate_block_size(sector_size)) {
->  		sd_printk(KERN_NOTICE, sdkp, "Unsupported sector size %d.\n",
->  			  sector_size);
->  		/*
-> @@ -4044,6 +4063,21 @@ static int sd_probe(struct device *dev)
->  	sdkp->max_medium_access_timeouts = SD_MAX_MEDIUM_TIMEOUTS;
->  
->  	sd_revalidate_disk(gd);
-> +	if (sdp->sector_size > PAGE_SIZE) {
-> +		mutex_lock(&sd_mutex_lock);
-> +		if (!sd_large_page_pool) {
-> +			sd_large_page_pool = mempool_create_page_pool(
-> +					SD_MEMPOOL_SIZE, get_order(BLK_MAX_BLOCK_SIZE));
-> +			if (!sd_large_page_pool) {
-> +				printk(KERN_ERR "sd: can't create large page mempool\n");
-> +				error = -ENOMEM;
-> +				mutex_unlock(&sd_mutex_lock);
-> +				goto out_free_index;
-> +			}
-> +		}
-> +		atomic_inc(&sd_large_page_pool_users);
-> +		mutex_unlock(&sd_mutex_lock);
-> +	}
+Changes in v3:
+- Avoid clock scaling in case of legacy bindings as suggested.
+- Use of_device_is_compatible to distinguish between legacy and non-legacy bindings.
+- Link to v2: https://lore.kernel.org/r/20251121-enable-ufs-ice-clock-scaling-v2-0-66cb72998041@oss.qualcomm.com
 
-It would be a lot nicer to have this defined as a helper function that goes
-together with a pool destroy function (see below).
+Changes in v2:
+- Use OPP-table instead of freq-table-hz for clock scaling.
+- Enable clock scaling for legacy targets as well, by fetching frequencies from storage opp-table.
+- Introduce has_opp variable in qcom_ice structure to keep track, if ICE instance has dedicated OPP-table registered.
+- Combined the changes for patch-series <20251001-set-ice-clock-to-turbo-v1-1-7b802cf61dda@oss.qualcomm.com> as suggested.
+- Link to v1: https://lore.kernel.org/r/20251001-enable-ufs-ice-clock-scaling-v1-0-ec956160b696@oss.qualcomm.com
 
->  
->  	if (sdp->removable) {
->  		gd->flags |= GENHD_FL_REMOVABLE;
-> @@ -4061,6 +4095,14 @@ static int sd_probe(struct device *dev)
->  	if (error) {
->  		device_unregister(&sdkp->disk_dev);
->  		put_disk(gd);
-> +		if (sdp->sector_size > PAGE_SIZE) {
-> +			mutex_lock(&sd_mutex_lock);
-> +			if (atomic_dec_and_test(&sd_large_page_pool_users)) {
-> +				mempool_destroy(sd_large_page_pool);
-> +				sd_large_page_pool = NULL;
-> +			}
-> +			mutex_unlock(&sd_mutex_lock);
-> +		}
+---
+Abhinaba Rakshit (4):
+      dt-bindings: crypto: ice: add operating-points-v2 property for QCOM ICE
+      soc: qcom: ice: Add OPP-based clock scaling support for ICE
+      ufs: host: Add ICE clock scaling during UFS clock changes
+      soc: qcom: ice: Set ICE clk to TURBO on probe
 
-This hunk is repeated twice. Make this a helper please.
+ .../bindings/crypto/qcom,inline-crypto-engine.yaml |  26 ++++
+ drivers/soc/qcom/ice.c                             | 137 ++++++++++++++++++++-
+ drivers/ufs/host/ufs-qcom.c                        |  17 +++
+ include/soc/qcom/ice.h                             |   5 +
+ 4 files changed, 182 insertions(+), 3 deletions(-)
+---
+base-commit: fe4d0dea039f2befb93f27569593ec209843b0f5
+change-id: 20251120-enable-ufs-ice-clock-scaling-b063caf3e6f9
 
->  		goto out;
->  	}
->  
-> @@ -4101,6 +4143,7 @@ static int sd_probe(struct device *dev)
->  static int sd_remove(struct device *dev)
->  {
->  	struct scsi_disk *sdkp = dev_get_drvdata(dev);
-> +	struct scsi_device *sdp = sdkp->device;
->  
->  	scsi_autopm_get_device(sdkp->device);
->  
-> @@ -4110,6 +4153,16 @@ static int sd_remove(struct device *dev)
->  		sd_shutdown(dev);
->  
->  	put_disk(sdkp->disk);
-> +
-> +	if (sdp->sector_size > PAGE_SIZE) {
-> +		mutex_lock(&sd_mutex_lock);
-> +		if (atomic_dec_and_test(&sd_large_page_pool_users)) {
-> +			mempool_destroy(sd_large_page_pool);
-> +			sd_large_page_pool = NULL;
-> +		}
-> +		mutex_unlock(&sd_mutex_lock);
-> +	}
-> +
->  	return 0;
->  }
->  
-> @@ -4446,6 +4499,8 @@ static void __exit exit_sd(void)
->  
->  	scsi_unregister_driver(&sd_template.gendrv);
->  	mempool_destroy(sd_page_pool);
-> +	if (sd_large_page_pool)
-> +		mempool_destroy(sd_large_page_pool);
->  
->  	class_unregister(&sd_disk_class);
->  
-
-
+Best regards,
 -- 
-Damien Le Moal
-Western Digital Research
+Abhinaba Rakshit <abhinaba.rakshit@oss.qualcomm.com>
+
