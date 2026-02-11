@@ -1,280 +1,211 @@
-Received: from mail-wm1-f47.google.com (mail-wm1-f47.google.com [209.85.128.47])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from SN4PR2101CU001.outbound.protection.outlook.com (mail-southcentralusazon11012006.outbound.protection.outlook.com [40.93.195.6])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DEFB2153598
-	for <linux-scsi@vger.kernel.org>; Wed, 11 Feb 2026 14:34:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.47
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770820459; cv=none; b=PSxtD0+mfJI01RsQzqh+bAUgmXWFj3YFJkArY1knIVNtdkFl9wB62bxF4xEhmGqRaq3I8luibXw8A7mtzI9d8jau3F41Epo5/0Nd6EVYq1qb+KR/5wrqWgThKLkAgHAHJu/DqAZfXaCkx2RH1bIrz/IPAqqooKMtIYaHAeeVpRE=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770820459; c=relaxed/simple;
-	bh=4C6y6kEEkJcBGMXN9ItqYeem+UPO961GNzIxDCW4P5g=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=hwAaXGO4Oz9fi+/KTHUPaS4xvIlPszZWfX0FgCWCIBaIbGAdl5y4pJPXSlbq7V+We/RLMlxfgAojpOJsVvBwR/osUXNA/jEbBQp4LYdqPb0jUVORa6nnwup1oNWZMGcAOmxdPT/wMtCllrQE0tjXM/uxAv9qJzOAdjSVzH7GIOU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=grsecurity.net; spf=pass smtp.mailfrom=opensrcsec.com; dkim=pass (2048-bit key) header.d=grsecurity.net header.i=@grsecurity.net header.b=ddOmkkBS; arc=none smtp.client-ip=209.85.128.47
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=grsecurity.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=opensrcsec.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 439301632E7;
+	Wed, 11 Feb 2026 20:35:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.195.6
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1770842136; cv=fail; b=OXd7ydFfOrcJenUSsj4ctG5YnqDqsgjld4oHgUZSZf7hdYqgnQ/lroJCr+Y9sypaznzT/Bum3gTCapKHTEh8AcTDCN97o741lNztUcSw3BmSyA9g/5fCvldKl+pSxkxS7zOPKLkk3Z2jQvksD9SNDzoh6RD0I6+aM70vAWivZ8Y=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1770842136; c=relaxed/simple;
+	bh=jzH4FhmDEeUbfY6eOSbezGrtrS1Gy4nQ/AprrHoIq4E=;
+	h=From:To:CC:Subject:Date:Message-ID:Content-Type:MIME-Version; b=UWJJKKQjP7RPTDFCEkKdXEUXhwMZoJOeDHN6th3wgEtF5SFsF+h1uzptGhc0Nmt+9I9uI/YI6rzlPY+zemZkjLxQpO6/ZKV7upA6QAAK0ffJIS//KXKTl5lhOXyTdZq+yH9kz95qUXHaAhovZXwxRHYpuJiY91bmedgje+8IC44=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=IEHd9bUJ; arc=fail smtp.client-ip=40.93.195.6
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=grsecurity.net header.i=@grsecurity.net header.b="ddOmkkBS"
-Received: by mail-wm1-f47.google.com with SMTP id 5b1f17b1804b1-48068ed1eccso70310505e9.2
-        for <linux-scsi@vger.kernel.org>; Wed, 11 Feb 2026 06:34:17 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=grsecurity.net; s=grsec; t=1770820456; x=1771425256; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:autocrypt:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:from:to:cc:subject:date:message-id:reply-to;
-        bh=WVIXXmPY6V4whXaCwITzEzH8RnJSLzmycKi4L/qVHqo=;
-        b=ddOmkkBS5AQ3OumFMy9agQb0SFKmYCoVcWkF8M+4SjR9W9s7tsEKIBpdx59vVErpRG
-         j+iOBCo6crFZPisQZqfOWggI6g2Fc7qxBWdtcYrxanaGGEUQlhtfe8+gCYMKCv6URlas
-         5u4ZdunJuXSy10af32BYddoPcr2+Ri0QC4H/fVi9AbPpFu9AcyaCtI1hMZKXZzADU50M
-         Zh4UplTK5+MbdFilaphC7wElU1A4rFv/XL/s6+HLZW5Rl/MwWCcTX2wCyOQf12SmkYc6
-         VYxL2sjm6qQjCbK5yOeXxFoWU2oPtnRxuGMfRK/OqEDGcR7qqaBKp/KrNob+02detSWO
-         Dzsw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1770820456; x=1771425256;
-        h=content-transfer-encoding:in-reply-to:autocrypt:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=WVIXXmPY6V4whXaCwITzEzH8RnJSLzmycKi4L/qVHqo=;
-        b=ckOcCExMN7P5Qb/oJgZKC2lsfIE9+M76DHisbmdiUtd5N7FhPwBFbVeEl3oT4/oLCY
-         sG2lfLNgIN0cfSo9xvu7520WcIMJOmvD/v5NQPSjS5N3JWHjFqKfC9kdvDfvyeHlhGDu
-         a3rty11JllLIDMH3l86J87ruOA8iiQukDdXNroK2NoZZRDQafDwod+6H553azibAOjPO
-         CaM/bghrNJUj3QM5sUqItlQbKj6W3RgRVEKoGdPpv5CtzK26q/WmE5GoZjr+NfGEwnTX
-         bgpUOp9csBWGhnDVnBiRouPis4YfoHx4kpmKAuR6XZI3Bpz5uAEHDm0Rn1I0vOD9KSWy
-         KzxQ==
-X-Forwarded-Encrypted: i=1; AJvYcCUOkxHE0Giv3bOuvZCCYAQNCBwG5TZ4vQsqSHrk0sZImvQPrNyhKWG9EZOXHGEVxKP2rb4nIzzEYlkc@vger.kernel.org
-X-Gm-Message-State: AOJu0YzTU8Q2nDGqMrcdr03HZesGaKuJ3eFKA+jvhcpzpYexyRdKmtdR
-	h62XKES3j2XS+5WieThQcCbGYnBnXF04eMX3Jf5ZUhvCgeb2hxsBijnJbOj82Fj9Bz4=
-X-Gm-Gg: AZuq6aKxC97PQ2WlKHOVNpnvj0vcGSx60GxwDNzsEX3f134eF6N8rV1qtRsk2YeG0V+
-	qJ00NCdL3f2B1y9iHO8IYQakrJyZkcS6i77chl4ROfRGX2bemxyYGIaeeAJ4jcSP6XzyJteGvo1
-	SySVo4NJP3htAUeqRobKTrCI8OTLzkSUIwSa57HCWIt4f7vbJXcvuyoL3xZH9usRQIqragG+KnX
-	o7ZudKwtsGg3yk5avDIy6mhbmGFm2gfXOO3IIeIRUS+0ppaDbxMO4X7s/oXL6Js1E/I26FEB6hW
-	bTcKTshjBzD5A2sXYjsM8WCRLenwaf+OMZQzAnmfkaDYR5tSZTl2RJ0EYD46QB1qXO0XFCZVSOp
-	ju9PyyYNpSHxObMv22XGbh/fGm5nS7Kb6T6uTFga0DToIJ2uC0CfEloJbIEGZq7R/4pfu5RyUUw
-	u/m1SbiX27atNI98ggKB3r45nfbtaatsXEmM5kPAQ1GBXCiTW4WEKzV7WdqKXfJgNYoUf6cLHpO
-	voht4zGfHBxmpcS37hrmF7tqaFFhgkMlpTHRt/hDdYKx2jlIv7HR7A867MUuw==
-X-Received: by 2002:a05:600c:8108:b0:475:da1a:5418 with SMTP id 5b1f17b1804b1-483507cffd2mr76136255e9.1.1770820455627;
-        Wed, 11 Feb 2026 06:34:15 -0800 (PST)
-Received: from ?IPV6:2003:fa:af22:2200:e0d6:dee7:4f29:a60a? (p200300faaf222200e0d6dee74f29a60a.dip0.t-ipconnect.de. [2003:fa:af22:2200:e0d6:dee7:4f29:a60a])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4834d5d77b3sm147348895e9.2.2026.02.11.06.34.14
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 11 Feb 2026 06:34:15 -0800 (PST)
-Message-ID: <82f38f49-2f50-4c8b-9482-e446e61d5006@grsecurity.net>
-Date: Wed, 11 Feb 2026 15:34:14 +0100
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="IEHd9bUJ"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=WoE9tvgsOXYVN9qn10mGI24feLU7Z0r4ufFRq3YV9AKUBXgNbpYUgsENdlJ4aZiTTsiSL9sYem/Cd6QX/MyFojWyTx3Y7rF/JaoAxVMjThQL06WAGqFYSgX1MEZsJTHw1qNWBBKOOBryOh2dp6x6hBgkV4H4b0PckJFQsb1fiIN1X2kXlamd8OQMMNnzbKFM8JBSu5DW5PrYX7FKE4dJ0H+4HC1frEOZv217tXRiw3GNXsEwfZO0D6QuZ8bWkge8QbtA+a9daoR4aWlB1fHDDIBcSKtXVQs47XBoAUrlf03PezphgPy6FpQlYY32Dhl4NYxpqkvYwKzAuKzySEgAsw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=jzH4FhmDEeUbfY6eOSbezGrtrS1Gy4nQ/AprrHoIq4E=;
+ b=AYVLcO58Dij9OrcKb7XtFTM1NzKVXkrhCd/QnZm3BVExOHimpyCZgsxGO/hnHwsVnh3eWTEb+ClOGyW58b2myt2VBl+3RoR1hnHBXHAN1Y6g/yl/sHBSmHnc/3P/rDxhaZ+1wc0Z46Q59jhuju6LpWelMPxxFaQR8PZ2WxLf/4jNlNJmRBGz4VDML+XghuXjCpXR1UxFU+E3EJbxpA7jvRkBR/RIj92k3HOPaKgAB1lQUM0X4vadOUpcL4U4rSgzrF6sNmOOHV7zKCCRMe0UI+4nzckjldc0upH/bwAwiPUnYASuvJ8Ae2k4TDXF/KyJ6YXd/FfeatitzogkW5CWcg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=jzH4FhmDEeUbfY6eOSbezGrtrS1Gy4nQ/AprrHoIq4E=;
+ b=IEHd9bUJe9qMfvEc5XH9X+BF9mQjOUK5ZjbSwIH/Ku+RLpapArDkBUshAcGeJ/Rq0c2my2Y1b/4Z8usuumwbR+zTxpTsDFIOtRbuyAp2GGyFdehfBKywB4srSldf6VyekSjzMcnQCCf8MVqezjO7muq3Je07l3Qvh6W+ZFD8F4lbac0NR1zzzhRPGVPA9NXWbiMmjKNB0kcwWTafSZYRSiuv3MSX9kFb/Bks509/ZPJWzAkDAiKHS/JO9moiEC08upIbaCKAEgdR0R7CkG7Uckmt/C+B/L/muHWXm3jHrUgQZkwzNgW9rhyizp0gRvpjyA7MicqeS5A7UhueL/Wf7g==
+Received: from LV3PR12MB9404.namprd12.prod.outlook.com (2603:10b6:408:219::9)
+ by SA0PR12MB7002.namprd12.prod.outlook.com (2603:10b6:806:2c0::18) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9611.10; Wed, 11 Feb
+ 2026 20:35:31 +0000
+Received: from LV3PR12MB9404.namprd12.prod.outlook.com
+ ([fe80::2109:679c:3b3e:b008]) by LV3PR12MB9404.namprd12.prod.outlook.com
+ ([fe80::2109:679c:3b3e:b008%6]) with mapi id 15.20.9587.013; Wed, 11 Feb 2026
+ 20:35:30 +0000
+From: Chaitanya Kulkarni <chaitanyak@nvidia.com>
+To: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+	"linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+	"lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>
+CC: Bart Van Assche <bvanassche@acm.org>, Shinichiro Kawasaki
+	<shinichiro.kawasaki@wdc.com>, Daniel Wagner <dwagner@suse.de>, Hannes
+ Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>, Jens Axboe
+	<axboe@kernel.dk>, "sagi@grimberg.me" <sagi@grimberg.me>, "tytso@mit.edu"
+	<tytso@mit.edu>, Johannes Thumshirn <Johannes.Thumshirn@wdc.com>, Christian
+ Brauner <brauner@kernel.org>, "Martin K. Petersen"
+	<martin.petersen@oracle.com>, "linux-fsdevel@vger.kernel.org"
+	<linux-fsdevel@vger.kernel.org>, =?utf-8?B?SmF2aWVyIEdvbnrDoWxleg==?=
+	<javier@javigon.com>, "willy@infradead.org" <willy@infradead.org>, Jan Kara
+	<jack@suse.cz>, "amir73il@gmail.com" <amir73il@gmail.com>, "vbabka@suse.cz"
+	<vbabka@suse.cz>, Damien Le Moal <dlemoal@kernel.org>
+Subject: [LSF/MM/BPF ATTEND][LSF/MM/BPF TOPIC] : blktests: status, expansion
+ plan for the storage stack test framework
+Thread-Topic: [LSF/MM/BPF ATTEND][LSF/MM/BPF TOPIC] : blktests: status,
+ expansion plan for the storage stack test framework
+Thread-Index: AQHcm5X2GyQlbhzV6UGhlrLvCD3GoA==
+Date: Wed, 11 Feb 2026 20:35:30 +0000
+Message-ID: <31a2a4c2-8c33-429a-a2b1-e1f3a0e90d72@nvidia.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+user-agent: Mozilla Thunderbird
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: LV3PR12MB9404:EE_|SA0PR12MB7002:EE_
+x-ms-office365-filtering-correlation-id: e7860c31-eef8-4e5e-e17c-08de69ad1956
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam:
+ BCL:0;ARA:13230040|7416014|10070799003|376014|1800799024|366016|38070700021;
+x-microsoft-antispam-message-info:
+ =?utf-8?B?N0ZVczlEbDNwRitNL1NOWk1RQk52K3dLQ2hiMU5JTEM1SGtvN1I4NjVFOUhp?=
+ =?utf-8?B?RHVHaE1SSGVvejRWMFA4SGJjMVBYVWRRbnBrS09jL0RtQ29rc2tkeTVpVUZ6?=
+ =?utf-8?B?VTJRNW92L3NENTFwNU9UTUdlZVlHcUxjV2l6YVc1VUx5VlhBYjQ4ajBsdUgr?=
+ =?utf-8?B?M1pWNm5Qb2hlSnpQcmgvQjJFZ2xKUnhnZHVvM1lDYXlaVmxNd1grWVRVVWZ1?=
+ =?utf-8?B?RURjeVkxNWtKem5vQ2d1RDJqRSttamRqNThQZlNRTkJyMXJQZmFOU01rYmJC?=
+ =?utf-8?B?YzlCWHMySmQzUkg1KzNWUytlNXZMVnVYTmkzbGo2NVNsQlpzN3VnbU4yeWpZ?=
+ =?utf-8?B?UC9pN2Z3dWZmb3g0QnNxSEl4Q3JFKysrbWd4SkhERlFCOXAzb3AxbjBIRkZT?=
+ =?utf-8?B?eW4vOERYdU9mT2kzVDYycVR6c1hGYmZvQnAzOTh6OE9SODV5d1oyNTNHNThX?=
+ =?utf-8?B?ZmIxRENHek1BMXc2R3FqZ25lWHdUaFVxYjJzMjZFbDRnUkhGeThEbGZ5UUVG?=
+ =?utf-8?B?b3hZYnZaVko2QWdaN1lmNmNmU3F4ek5JUVZmSS9KL2xUN0ViZlRCSXJmejhP?=
+ =?utf-8?B?S0x1SFdHdUZrSC83UE5SRFNjazN0QmlscjYwaE9lVUY3cjEzZ2xtcjJnb3Jq?=
+ =?utf-8?B?ekZ2cDhCRTVzQnJSeDhXSmlPbjYxN1dwYU9kdlk1Wk5YOVRsNHNDWEFNQTA2?=
+ =?utf-8?B?T20rRHVPd09zNEltdlVZU1k4WXJhU3ZYN1p4YlgwR0JqWFJxamdpd2FCdllH?=
+ =?utf-8?B?b29MM3RpY1VaYXVEbkx0cVV3SEZZcEtwU1lXazh6dGRDSG04ZXBRYWVsbkYz?=
+ =?utf-8?B?YU01WDBxRTBFekwvZEMxdlZkSGx6bzAxMlZNZC9wS3BrMWJPSjRlTi9sK1la?=
+ =?utf-8?B?M3NxVUowVDVGK29JY3hwS2xtd3p2MkFiczZEdGt0NEQxT3BPRFlndUxYc1Rh?=
+ =?utf-8?B?dlE0aFM3dTBBNmxvU0pRcnFiOHpjcm4zcXBQZXl3TXFJQUR0YWJLS2g0bVVM?=
+ =?utf-8?B?R1NBVlJGSEJmckMyOWUyRkREbFdoUTc3bDRIWDRNenNiSUVURWM2QzBSRDAv?=
+ =?utf-8?B?VTdDQktJYlpQNDhSLy9IRTg2a096Qnp2bmZYRjBkUlRDWGFvREQvZXhOZW5l?=
+ =?utf-8?B?b2dGYTJSaVFKL1FHTmp2RUZZU0hCYlh4Wko5S0NJV00wZU04UG1qVWtVRHlu?=
+ =?utf-8?B?aUliOGdTUjdwQVA3OXg1S1JzaEg0RHFCVFZBcGM2bjlSM28zdHRPaDNKazcw?=
+ =?utf-8?B?REM4UzJrcFFWK01Sak1uVE5jcGpKRWt2d3prdWFHU0hqMUJnNk5hM01jTkc1?=
+ =?utf-8?B?WkNpTGlGQW4wNW1nUWJ5OHpZTUhpYkR1UjJ2d1NuSUNFSkhreVozZTZPU1N6?=
+ =?utf-8?B?emRMcEFMelhaQW5MdXZ1dVc3VWJ5ZHA1QkxSVTM0Z3lOdG5XUUxZMHE5VVdj?=
+ =?utf-8?B?NGxQK2xRSXF4VjN3eFhXcElRb1pYKy9lYlNhZzhDazZPek5LU0xFK2ZvcHh0?=
+ =?utf-8?B?Y3VueDNoRk5PREk5U0JZZVRoT2tGcG5sNko2SFhrRUpnaStPM1htTW82VHRo?=
+ =?utf-8?B?STU1TG9xMENnazhqZE9rcGM4NDlSSFE3K2doaUVwQk9EVERKaWkyOFBOdkxL?=
+ =?utf-8?B?T3habjBwdjdIQmtNc28wQ2dRaTFMNnRJaTFhdXJ1ZnBrODFLbmJYdDljaGFs?=
+ =?utf-8?B?N29jY1RMbE9FWEt6ek5tdjlvOFZBWWtEeUY2enJnNjZPbG9jWEk5MGttU3NU?=
+ =?utf-8?B?Q2tSQXYveFhKekkrZUphM2w4OWFDMk5iM0N1ZEpQN1UrV3FsUjN3UnVBQ2lm?=
+ =?utf-8?B?YXEwY0VnRDdrL25ldllwekV5V2RVMkM4akJweWdlR29hSGI4TlBpZDZkYmtE?=
+ =?utf-8?B?SXVDY3lPejFjUHRFUHVtemxjRXNwRTJ5aFBJbGFoaVlwL2JtNzFvVUFzSzVz?=
+ =?utf-8?B?bXZ2dDFkbG1TOU1CSFFxdEw2NC9McE5jR0RSY3ZjYVJCZDhGUzNRb0VGNG5W?=
+ =?utf-8?B?emdoTGErd1lDcWFKR0ZzNHRGQzI2bkJoZmcvdFVXVHlFZ2I4UTRvaGNEK1Er?=
+ =?utf-8?B?aW1RV2tjWVNLYkl3WVlLcDB0TEx3cXEwWExlc3VndkZoUHVNU2xRZDJOODlR?=
+ =?utf-8?B?OFBiTVI3T2k2WWd5RVJXL2hYREpvQ3phMnBIa0FHSm8zcWNzTFhVb2hOVWta?=
+ =?utf-8?Q?es6XTESm+H7SVreR/k5/P4o=3D?=
+x-forefront-antispam-report:
+ CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LV3PR12MB9404.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(7416014)(10070799003)(376014)(1800799024)(366016)(38070700021);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 2
+x-ms-exchange-antispam-messagedata-0:
+ =?utf-8?B?YVFqaUdOWGtFNXBWMEpQR0g1VG1adm9YQmoySzBIYU11SXZVdVZTajlDdmJY?=
+ =?utf-8?B?RnUyWlZnYjg0Qys1dnYyRVFYbURVaGFqa2RJbEZ6ZFlCa3Q2aHFLYlZoU21E?=
+ =?utf-8?B?a3FZRDRUOE9UQ20rR1VJNkhEa0ZMZGZtc1IyaVJkV1VKY0dOcThUZHhDenF0?=
+ =?utf-8?B?VzRFWWNoK2lSVkRIS2QydFFOd2pKUHBjSEp6dHVHN2FGY1V0VUY2T21SYzdj?=
+ =?utf-8?B?b1VRazAxSWJpSTQrakF0eCtMU2wvaGtnQm15U1JLVnFkdVBVUzA4bXh2V2lq?=
+ =?utf-8?B?SXZyV0hpd0Z4MWI4OTQ1QU5uUFZTTld6Q2hQNE82ODVzbkZSdU9hNHNXTzlB?=
+ =?utf-8?B?WTNYc20zMi9GMFNSckphUUhMVmR0MVBabnQ2bFowUWZyWlVrUWdCdU0yRnIy?=
+ =?utf-8?B?L0E0dHE1TWprZlJEUVJUUHEzSjB4VkFGeko2S2hhQ2NwV1J2eTBPSjVhbjlq?=
+ =?utf-8?B?K0RLUFJCNEFyci9waDBod3dFQmhjM3Q4bjhUeXduYUI3aUtzZEFZajl5UFA1?=
+ =?utf-8?B?QVVTYUFldFMyOHFJOFZqT1g2aTNWQmRHV3IwSzRmdC9TSnVQSzFiTmVjTnBL?=
+ =?utf-8?B?ZTN3ci9jVnNUdTQ1Tmc0aHNsNE9MeDF6UTFIZGN6SmtaaEFkeUtYbE1ldjZz?=
+ =?utf-8?B?aHM0QkJPaVgrZ0doalYvM3llTDhPb2pIQWVBbEFlR1U1eXYxdnlOc3RnZ2Uw?=
+ =?utf-8?B?bnpmSWdybmNpRnlzYkdyaThUQ0hMRUtMcUt5MXJZcFNtbWFnZjJUQkNFTUx4?=
+ =?utf-8?B?MlBQcHNkRUNGeFo4aG9NUzNvaFg1Zm5UQldsOXFNbFk4cmZpRFk4eHVZUmJ5?=
+ =?utf-8?B?Z1JSVkxzZTQvN29Wd0Y5VGkvNW5jYUw2Um9SZmdqRlByOTRhbDZlOHRkL3Fl?=
+ =?utf-8?B?eldqNVc3RjJtZ1BlN0xCSkRocUR5Z1hwbEUycHlhL2tYeThoRnE0eFd5Qm90?=
+ =?utf-8?B?Tm9DWTBJcTlhQk5SS011S3ViTUxJVmY0NVhaOG41VW51UUdBRE1IbFBTanpU?=
+ =?utf-8?B?aHdzTE5aYUhmeHptYzZ2WDYzV2dtOVZqYzVsUmRPdXYwY01QWFRGZkNRNit2?=
+ =?utf-8?B?WXNRRnphZzBKMENObUUvbHBSTWU3S2hPcFljNXFMdklGRlhEREx0NXlGWGNS?=
+ =?utf-8?B?anVvZEdOZEJkalA3SnR6QTl5VU00YkZob0Z5VHdiRGRkS05wMFc5d3kwdlZq?=
+ =?utf-8?B?b1A5cnpQSDd1MXloc1oyTGlIZFdJZldHQU14OXpjWGYxVDVyMGZUanNldVpD?=
+ =?utf-8?B?eU5zQ1Zrc2lzZVlmNC9kMC9LUzE2ZDkrT0dJaisrZ2hFeDBWbWtwWjIvaXRh?=
+ =?utf-8?B?QVJZTTcwTDBBKzBjSVAwbEVIRXRMQW1WcE1RNExqTU42WmtLeWdaZml1dnVQ?=
+ =?utf-8?B?ZjZyeXM3OGlTM3hQdmZTbjRnbFdNRUlZMFh3Vm9RNUtiNzA3THR4NUhSazdw?=
+ =?utf-8?B?VUlrcEJ3eHFiUTdoMlBpOWNUYlVLcmpnb21YYVpyZmlEd3NFSFROK3RuTkhB?=
+ =?utf-8?B?WFZLQmRVUE5YaG5zUGdOaXZrYXpuNExmOFFhUmxhcVZUZlhIZ0JVRW9WbU5m?=
+ =?utf-8?B?dlRMbEphMWdiajhFbW5YQnJGQytSbkhRdEJibEpTTng2QlFoUEc2b0ZXYWZh?=
+ =?utf-8?B?SU1peXlIOVlSblFuSHZKaURpVXVCSzZ5RjYvTW9vSWlJU2J6VzZoYlZEMVJU?=
+ =?utf-8?B?ZktoeWljOW9FRCtTYThOMVpVblBQT1NrZW1yaHo3ckF3RzBWa1lGMGJ2cjhh?=
+ =?utf-8?B?bDhkTGZtM2I0SmhkYVkvUVlIbWNDeDBwVCtKaEt1bnA0a3VLblJkaXZFaDNx?=
+ =?utf-8?B?NXlPMGRmdGViSC93SXlaQ2gxa1JnUThneW5YcGJGZU04WlRDeGplZlFNU285?=
+ =?utf-8?B?bGI4UFF2eENZdjYrYUFHK2NBSWkwckJ6VXA5VlRHQTVkTGN4bE1VQlZuVW0x?=
+ =?utf-8?B?aUtHUzhTeDJ5WVlOWkFEd2Nzd3FiUDFpTGxDNTBzdGcvQ3lZK2E5OWpvcnBi?=
+ =?utf-8?B?bkZYMDNjY1BNYzBaZGFEeDdEVnJqQ3BzMW5zVGJDVUNhVmJsdVNHbkpZTHUw?=
+ =?utf-8?B?aFdkTGVnWWpETnFVTVZrOWtPazczN2dPdzZsa3FKR1YzODB5UTFtemlWU0oz?=
+ =?utf-8?B?SWJVM1drRjJkZEUyWkE3YVo1YnkybjV1cThhSmNSckVzSXpHU0tuNzMyWHNL?=
+ =?utf-8?B?MWFHZXE3ekZHZzJLcUFCNUJudjFhRmlWVkFqMFRwT2RzaG41VEZ0cGhodmNV?=
+ =?utf-8?B?Z0h0ZGt4MmFDL1FxUGk5SkcxRTg3VTlNR3FBaDE4LzZBbWYvbDRDWmlESnJV?=
+ =?utf-8?B?MnJvVXFESTBNN2JGdEhWYkNLNElQK2JFSElNd2I2Ry83VUFGd0pkZXNNWFlM?=
+ =?utf-8?Q?B8Icg/qbixXaDW3fxPIuqE6ARkYPnEUW1IVWYLwJCj3gv?=
+x-ms-exchange-antispam-messagedata-1: qEK4LGWumboMfg==
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <A0913777B8503247841A276033396EE4@namprd12.prod.outlook.com>
+Content-Transfer-Encoding: base64
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi: lpfc: Properly set WC for DPP mapping
-To: Justin Tee <justintee8345@gmail.com>
-Cc: Justin Tee <justin.tee@broadcom.com>, Paul Ely <paul.ely@broadcom.com>,
- linux-scsi@vger.kernel.org, James Smart <jsmart2021@gmail.com>
-References: <20260113222716.2454544-1-minipli@grsecurity.net>
- <CABPRKS89zwXdUT1Bhj37cQDyOHNupOJ-Ez6kS7Dp_pu06X9Myw@mail.gmail.com>
- <CABPRKS-ongXPqWVpNYiKvy_afVKn999bxtSEfsBVQ7z5JVCgeQ@mail.gmail.com>
- <59933d92-eefe-49f6-ad70-79fe7aef0f3c@grsecurity.net>
- <CABPRKS8C4WmEYX+jtAOTS_jeFYt_GeTp9uBoWzCMF8cUZxxzUA@mail.gmail.com>
- <CABPRKS_cT5f21A-Jkx_uhA+SF4THpPSaqKtk8mWk9nN4Gh9LFQ@mail.gmail.com>
-Content-Language: en-US, de-DE
-From: Mathias Krause <minipli@grsecurity.net>
-Autocrypt: addr=minipli@grsecurity.net; keydata=
- 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
- RzDVkdgPJkL/NFTKZHo5foFXNi89kA==
-In-Reply-To: <CABPRKS_cT5f21A-Jkx_uhA+SF4THpPSaqKtk8mWk9nN4Gh9LFQ@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: LV3PR12MB9404.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: e7860c31-eef8-4e5e-e17c-08de69ad1956
+X-MS-Exchange-CrossTenant-originalarrivaltime: 11 Feb 2026 20:35:30.8419
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: RHNSaqu22owZzlvx+7ZzGGbOpvwltwf8dwnFoHea/1ftLYvQ86+xPH7HxvVFEpmSrJyH9ZY+QozicN92aTXIgg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA0PR12MB7002
 
-On 09.02.26 19:47, Justin Tee wrote:
-> Hi Mathias,
-> 
->> Thanks, I think I’m able to reproduce the call trace of concern.  I’ll
->> have a closer look at this patch and will report back.
-> 
-> I have some slight changes to the original patch, which I've tested on
-> real hardware.  Please see below.
-
-Thanks for testing! ...and fixing my goof with using pci_barset instead
-of dpp_barset. Dunno what I was thinking!
-
-> Is it possible to check if this works for the customer as well?
-
-If your tests on real hardware ran fine, it should be good for our
-customer as well. It still gets rid of the problematic set_memory_wc()
-call so it's fine from our point of view.
-
-Though, some comments below...
-
-> 
-> diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-> index a116a16c4a6f..b5e53c7d33e7 100644
-> --- a/drivers/scsi/lpfc/lpfc_init.c
-> +++ b/drivers/scsi/lpfc/lpfc_init.c
-> @@ -12039,6 +12039,8 @@ lpfc_sli4_pci_mem_unset(struct lpfc_hba *phba)
->          iounmap(phba->sli4_hba.conf_regs_memmap_p);
->          if (phba->sli4_hba.dpp_regs_memmap_p)
->              iounmap(phba->sli4_hba.dpp_regs_memmap_p);
-> +        if (phba->sli4_hba.dpp_regs_memmap_wc_p)
-> +            iounmap(phba->sli4_hba.dpp_regs_memmap_wc_p);
->          break;
->      case LPFC_SLI_INTF_IF_TYPE_1:
->          break;
-> diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-> index 734af3d039f8..a0b55bd8566e 100644
-> --- a/drivers/scsi/lpfc/lpfc_sli.c
-> +++ b/drivers/scsi/lpfc/lpfc_sli.c
-> @@ -15981,6 +15981,47 @@ lpfc_dual_chute_pci_bar_map(struct lpfc_hba
-> *phba, uint16_t pci_barset)
->      return NULL;
->  }
-> 
-> +static phys_addr_t
-> +lpfc_dual_chute_pci_bar_addr(struct lpfc_hba *phba, uint16_t pci_barset)
-> +{
-> +    if (!phba->pcidev)
-> +        return PHYS_ADDR_MAX;
-> +
-> +    switch (pci_barset) {
-> +    case WQ_PCI_BAR_0_AND_1:
-> +        return phba->pci_bar0_map;
-> +    case WQ_PCI_BAR_2_AND_3:
-> +        return phba->pci_bar1_map;
-> +    case WQ_PCI_BAR_4_AND_5:
-> +        return phba->pci_bar2_map;
-> +    default:
-> +        break;
-> +    }
-> +    return PHYS_ADDR_MAX;
-> +}
-> +
-> +static __maybe_unused void __iomem *
-> +lpfc_dpp_wc_map(struct lpfc_hba *phba, uint16_t dpp_barset)
-> +{
-> +    if (!phba->sli4_hba.dpp_regs_memmap_wc_p) {
-> +        void __iomem *dpp_map;
-> +        phys_addr_t dpp_addr;
-> +
-> +        dpp_addr = lpfc_dual_chute_pci_bar_addr(phba, dpp_barset);
-> +        if (dpp_addr == PHYS_ADDR_MAX)
-> +            return NULL;
-> +
-
-> +        dpp_map = ioremap_wc(dpp_addr,
-> +                     pci_resource_len(phba->pcidev,
-> +                              PCI_64BIT_BAR4));
-
-You're hard-coding PCI_64BIT_BAR4 here which *feels* inappropriate if we
-went all the way with wrappers like lpfc_dual_chute_pci_bar_addr() and
-making sure to be using the BAR the device told us. In fact, that was
-the reason, I did it like this, assuming it might be something else than
-WQ_PCI_BAR_4_AND_5, e.g. a BAR shared with the doorbell registers. If
-that cannot happen, what's the reason to have 'dpp_offset'?
-
-Also, what's the reason to do the offset calculation in the caller?
-ioremap_wc() can handle non-page-aligned / offset addresses just fine.
-That's why my version passed dpp_offset to lpfc_dpp_wc_map() and made it
-adjust the to-be-mapped address before calling ioremap_wc(); to only
-remap what's needed.
-Same for the size: I just capped it to what's needed by its only user in
-lpfc_sli4_wq_put(). Again, ioremap_wc() will do "The Right Thing(TM)"
-and map all required pages.
-
-> +
-> +        if (dpp_map)
-> +            phba->sli4_hba.dpp_regs_memmap_wc_p = dpp_map;
-> +    }
-> +
-> +    return phba->sli4_hba.dpp_regs_memmap_wc_p;
-> +}
-> +
->  /**
->   * lpfc_modify_hba_eq_delay - Modify Delay Multiplier on EQs
->   * @phba: HBA structure that EQs are on.
-> @@ -16944,9 +16985,6 @@ lpfc_wq_create(struct lpfc_hba *phba, struct
-> lpfc_queue *wq,
->      uint8_t dpp_barset;
->      uint32_t dpp_offset;
->      uint8_t wq_create_version;
-> -#ifdef CONFIG_X86
-> -    unsigned long pg_addr;
-> -#endif
-> 
->      /* sanity check on queue memory */
->      if (!wq || !cq)
-> @@ -17132,14 +17170,15 @@ lpfc_wq_create(struct lpfc_hba *phba, struct
-> lpfc_queue *wq,
-> 
->  #ifdef CONFIG_X86
->              /* Enable combined writes for DPP aperture */
-> -            pg_addr = (unsigned long)(wq->dpp_regaddr) & PAGE_MASK;
-> -            rc = set_memory_wc(pg_addr, 1);
-> -            if (rc) {
-> +            bar_memmap_p = lpfc_dpp_wc_map(phba, dpp_barset);
-> +            if (!bar_memmap_p) {
->                  lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
->                      "3272 Cannot setup Combined "
->                      "Write on WQ[%d] - disable DPP\n",
->                      wq->queue_id);
->                  phba->cfg_enable_dpp = 0;
-> +            } else {
-> +                wq->dpp_regaddr = bar_memmap_p + dpp_offset;
->              }
->  #else
->              phba->cfg_enable_dpp = 0;
-> diff --git a/drivers/scsi/lpfc/lpfc_sli4.h b/drivers/scsi/lpfc/lpfc_sli4.h
-> index ee58383492b2..b6d90604bb61 100644
-> --- a/drivers/scsi/lpfc/lpfc_sli4.h
-> +++ b/drivers/scsi/lpfc/lpfc_sli4.h
-> @@ -785,6 +785,9 @@ struct lpfc_sli4_hba {
->      void __iomem *dpp_regs_memmap_p;  /* Kernel memory mapped address for
->                         * dpp registers
->                         */
-> +    void __iomem *dpp_regs_memmap_wc_p;/* Kernel memory mapped address for
-> +                        * dpp registers with write combining
-> +                        */
->      union {
->          struct {
->              /* IF Type 0, BAR 0 PCI cfg space reg mem map */
-> 
-> 
-> Regards,
-> Justin
-
-Out of curiosity, the I/O stalls are no longer happening with this version?
-
-Thanks,
-Mathias
+SGkgYWxsLA0KDQogwqAgU2luY2UgdGhlIGRpc2N1c3Npb24gYXQgdGhlIExTRk1NIDIwMTcgWzFd
+LCBPbWFyIFNhbmRvdmFsIGludHJvZHVjZWQgDQp0aGUgbmV3DQogwqAgZnJhbWV3b3JrICJibGt0
+ZXN0cyIgZGVkaWNhdGVkIGZvciBMaW51eCBLZXJuZWwgQmxvY2sgbGF5ZXIgdGVzdGluZy4NCg0K
+IMKgIEJsa3Rlc3RzIHNlcnZlcyBhcyB0aGUgY2VudHJhbGl6ZWQgdGVzdGluZyBmcmFtZXdvcmsu
+IEl0IGhhcyBncm93biANCndpdGggdGhlDQogwqAgbGF0ZXN0IGJsb2NrIGxheWVyIGNoYW5nZXMg
+YW5kIHN1Y2Nlc3NmdWxseSBpbnRlZ3JhdGVkIHZhcmlvdXMgDQpzdGFuZC1hbG9uZQ0KIMKgIHRl
+c3Qgc3VpdGVzIGxpa2UgU1JQLXRlc3RzLCBOVk1GVEVTVFMsIE5WTWUgTXVsdGlwYXRoIHRlc3Rz
+LCB6b25lIA0KYmxvY2sgZGV2aWNlDQogwqAgdGVzdHMuIFRoaXMgaW50ZWdyYXRpb24gaGFzIHNp
+Z25pZmljYW50bHkgc2ltcGxpZmllZCB0aGUgcHJvY2VzcyBvZiANCmJsb2NrIGxheWVyDQogwqAg
+dGVzdGluZyBhbmQgZGV2ZWxvcG1lbnQsIGVsaW1pbmF0aW5nIHRoZSBuZWVkIHRvIGNvbmZpZ3Vy
+ZSBhbmQgDQpleGVjdXRlIHRlc3QNCiDCoCBjYXNlcyBmb3IgZWFjaCBrZXJuZWwgcmVsZWFzZS4N
+Cg0KIMKgIFRoZSBzdG9yYWdlIHN0YWNrIGNvbW11bml0eSBpcyBhY3RpdmVseSBlbmdhZ2VkLCBj
+b250cmlidXRpbmcgYW5kIA0KYWRkaW5nIG5ldw0KIMKgIHRlc3QgY2FzZXMgYWNyb3NzIGRpdmVy
+c2UgY2F0ZWdvcmllcyB0byB0aGUgZnJhbWV3b3JrLiBTaW5jZSB0aGUgDQpiZWdpbm5pbmcsIHdl
+DQogwqAgYXJlIGNvbnNpc3RlbnRseSBmaW5kaW5nIGJ1Z3MgcHJvYWN0aXZlbHkgd2l0aCB0aGUg
+aGVscCBvZiBibGt0ZXN0cyANCnRlc3RjYXNlcy4NCg0KIMKgIEJlbG93IGlzIGEgc3VtbWFyeSBv
+ZiB0aGUgZXhpc3RpbmcgdGVzdCBjYXRlZ29yaWVzIGFuZCB0aGVpciB0ZXN0IA0KY2FzZXMgYXMg
+b2YNCiDCoCBGZWJydWFyeSAyMDI2Lg0KDQogwqAgYmxvY2vCoCDCoCDCoCDCoCA6wqAgNDENCiDC
+oCBibGt0cmFjZcKgIMKgIMKgOsKgIMKgMg0KIMKgIGRtwqAgwqAgwqAgwqAgwqAgwqA6wqAgwqAz
+DQogwqAgbG9vcMKgIMKgIMKgIMKgIMKgOsKgIDExDQogwqAgbWTCoCDCoCDCoCDCoCDCoCDCoDrC
+oCDCoDQNCiDCoCBtZXRhwqAgwqAgwqAgwqAgwqA6wqAgMjQNCiDCoCBuYmTCoCDCoCDCoCDCoCDC
+oCA6wqAgwqA0DQogwqAgbnZtZcKgIMKgIMKgIMKgIMKgOsKgIDU5DQogwqAgcm5iZMKgIMKgIMKg
+IMKgIMKgOsKgIMKgMg0KIMKgIHNjc2nCoCDCoCDCoCDCoCDCoDrCoCAxMA0KIMKgIHNycMKgIMKg
+IMKgIMKgIMKgIDrCoCAxNQ0KIMKgIHRocm90bMKgIMKgIMKgIMKgOsKgIMKgNw0KIMKgIHVibGvC
+oCDCoCDCoCDCoCDCoDrCoCDCoDYNCiDCoCB6YmTCoCDCoCDCoCDCoCDCoCA6wqAgMTQNCiDCoCAt
+LS0tLS0tLS0tLS0tLS0tLS0NCg0KIMKgIDE0IENhdGVnb3JpZXPCoCDCoDogMjAyIFRlc3RzDQoN
+CiDCoCBGb3IgdGhlIHN0b3JhZ2UgdHJhY2sgYXQgTFNGTU1CUEYyMDI2LCBJIHByb3Bvc2UgYSBz
+ZXNzaW9uIGRlZGljYXRlZCB0bw0KIMKgIGJsa3Rlc3RzIHRvIGRpc2N1c3MgZXhwYW5zaW9uIHBs
+YW4gYW5kIENJIGludGVncmF0aW9uIHByb2dyZXNzLg0KDQotY2sNCg0KDQoNCg==
