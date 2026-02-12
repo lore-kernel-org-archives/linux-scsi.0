@@ -1,71 +1,70 @@
-Received: from mail-qt1-f177.google.com (mail-qt1-f177.google.com [209.85.160.177])
+Received: from mail-qv1-f53.google.com (mail-qv1-f53.google.com [209.85.219.53])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC5CF28467C
-	for <linux-scsi@vger.kernel.org>; Thu, 12 Feb 2026 20:55:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.177
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 39E472D4805
+	for <linux-scsi@vger.kernel.org>; Thu, 12 Feb 2026 20:55:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.53
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770929747; cv=none; b=Qc4KTqEDB5otU6CFA3dKxNcEy4nUa4MNsJZsTi6C0lctzdjtFqMEOxzpDNNm+uN1dPEt06KknC2cBhJa+88suQxAlK3FKA+ONvvlKQfM8zGU3mZ83EXKWlC09vUunjHqQfP7PZxSHPCy6br3+ahW+8sOKKM23D4s61YFSDWDpp8=
+	t=1770929747; cv=none; b=AzuNJ+8ssnjtiy71JId0BBMASM+g3Lsr0WseyU9gxhSPmnmdWwFlSYBl2L2qMO0RAo+L1KCYLRJTchBwd7rhiOgGTYMIsK3Hmmw/xY5uQ3raC1+sJz/SXBYha3H8rB8kYxaac3dr9190QKuti3MkhybXR3Gxs7qvv+/4KAhR2Qo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1770929747; c=relaxed/simple;
-	bh=niv1LVqJS0oRWShpXQsSYVmzuSt15Xxg0zeI0Au6rFw=;
+	bh=B6jhxoAMWDRvf/Dx78zLFcHVZprg/YnIuwTWATOozCc=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=ouCcUci5d3HopBydgHkWy/zK2I8WT2F/pz4MDkrfIhe8OWM35XVe9hrOHGc6Fqc5WSZJ9V/x2/aXlHDVE569qkTSqfYKlYZLGZR8Xlgiz1H7Zjh5U575zdrNDly/6EwPIFQf48NKKd0Mym5rYdN9IB+b89JJ7XE6n25liz4yihM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=kFs6i2Gs; arc=none smtp.client-ip=209.85.160.177
+	 MIME-Version:Content-Type; b=iv95zIQ+atmFxg6R4zRNvb9nSpeuY9ukbM7Ah1djXzCA9CDg06rIbXdI04ttu6dgHM25LBX9HbEhupbEoTLrX574oUVibxttSS2hR7Nf3IqhzOewicK9U4dEhzmB7TqjmV1eL2Her18hOMg2YV71+3cJQzPP66J/QWcjEiRMBPo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Y5axJjtn; arc=none smtp.client-ip=209.85.219.53
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="kFs6i2Gs"
-Received: by mail-qt1-f177.google.com with SMTP id d75a77b69052e-50335b926c2so2341441cf.2
-        for <linux-scsi@vger.kernel.org>; Thu, 12 Feb 2026 12:55:45 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Y5axJjtn"
+Received: by mail-qv1-f53.google.com with SMTP id 6a1803df08f44-896f8feee14so4422776d6.0
+        for <linux-scsi@vger.kernel.org>; Thu, 12 Feb 2026 12:55:46 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20230601; t=1770929745; x=1771534545; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=0omlKu9DWW2g2VCakVXaEzsNGOWFZY7QUu4zDf6BmhI=;
-        b=kFs6i2Gs27EfoREipu5xHh3+2Kfsb3JymWVqfxydS1kxHFzhuN+tOJcbHUFoAuQEZZ
-         fgMWTu8kwc1I6Tb/7MnYnEjoYsbrAajmi8DPYTtlUnK4YZn2myBTZ6sOZJ4KFNLBeueZ
-         KXTp20befoxgTFMDD8f3bpS6nwDWlky9itrtsPe6EmsR/niKd5FOMJnVAKcu51P0TMDa
-         oioeeHu6MflGiHNhN6QSzXSjOFYuJkPm0m9MMPFx5p7g/Mkdb4PUupTG9vgNObk5dXdW
-         V6ETuavK+FBxNp3Eutg4SHOrGon+fxZpjTpfwEssP+KQ8D3ca3OOLIt22UOUzznAfYB9
-         v9cQ==
+        bh=8TxAFhFqsXqi5gx5s5X1W6jdhjvwP7Xh9wd2DI5NqPQ=;
+        b=Y5axJjtn24JRciBGFB2v52T56gl0XCfZMEhxnKQbp9A82l8lY5DObcU5mftZFZEasm
+         76Vxp1P/l2UeVTBPF8gscPNfWassS09g0+4wSBfVvwGqyYdfyWm7lNQbN0Yn/PjUfJQg
+         dIY/q/gha2h+CxQboTiKJltpR1r4b+GuUDihMMuMw/9b3XVrigjplN7UthV/4OXl02xl
+         95PV5QRtHe1MWkCXEVGUFRp99enKfUnCciWHkh/MI2TyUPJA7UoPR2nq8fXmTZ/1Y45P
+         xLal746CtYhIYJcrZRLnDYMVtRyz8YPklZeNG8YNHhF9IOwaFAO+4YStaX+WBqq/FbsY
+         lBxA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20230601; t=1770929745; x=1771534545;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to;
-        bh=0omlKu9DWW2g2VCakVXaEzsNGOWFZY7QUu4zDf6BmhI=;
-        b=oao9KgtdD/KJwV92vSzlwUcFWKHZhbm3VKWfgcuzltOQr/EBE0ICH7uA03ijk2Ob1Q
-         W+mVFgiKu20k/o0BqXxune3z+JYDAg7VeVM8ErKGvquh6uObG4mWMf7z0Z5bI1aldoHN
-         0xE5fYWINSCfDwQzfrLf5g0DUJVYCMF2SzQiHD0EnVfQalHK9XRDGGMUuYhkR6n9BWYc
-         U5nVEneClZobmb0/EPsC9N4Zz0wB/jB0hEhunwalmRaQgVm8l2HsrKL3Iv/nODRii/AS
-         0GEWRV9qTUNOPpSxR9sooM7ELh3dHEQyh2czxiACv38SR4oQE1fBtoVwEyd7n250RQH6
-         VVAQ==
-X-Gm-Message-State: AOJu0Yy1UBsJp7nigAoE/w8XiBLZi1vqndTD4ZA8H3Zhyt2xP2PQUGg2
-	tFJ7Xqmakg3NdMGPQdhWXQCeYaidilgQp7MzB0zhpM6jYpnfIF7u8xL1R6zEE3i4
-X-Gm-Gg: AZuq6aI1gFH+6ZxbL1OGivM3+ZT5j9udBKmzbEQeMUw2llnxsVrmG12Q8uAsjNDsMHf
-	Cqxe5rSktvlcRzeeT8c0OGfxJuSz0kB7CR4Ynq0BzMRYOf5vpi39FfwlWtjUhigXvW4B9FwRI+q
-	ntGJe1p6o36qf+oodnx/4EvOlSsD6NsuVmA0WpBTxynX0exHZBh+Os0QFJCv6e70CO9cagmaIwt
-	MPjOc8/GAs65eawOulb3b6IkX4Q711JW3KF/yKJO+lEYLQBl0G/Sc1CysrSODYmisigDfWRkkuE
-	8firflJYRbFmCNWaAWypgwmASLioUukgEsVZ+ZIUA2xOetGuGXsktTps3YZKS2RdPBeJj0DD0Pm
-	B7SUXn67Nnqc73jOZEClxCT2sQZlHM000HmuFm/og3WAIVGiAb51HGcY2q3WoVHEakQyXrHmPrr
-	/b0LjbPhZYKyD6kFRjTaLyjE730GWzA9zlQ99B8YsEPKJTQLleE5xzaGL2FyJpuNU/ktlBgHO7B
-	3HpTbr+BUBbiuHeDQ15rQ==
-X-Received: by 2002:a05:622a:182a:b0:4fb:f98d:454 with SMTP id d75a77b69052e-506a6a7fb1amr647761cf.52.1770929744737;
-        Thu, 12 Feb 2026 12:55:44 -0800 (PST)
+        bh=8TxAFhFqsXqi5gx5s5X1W6jdhjvwP7Xh9wd2DI5NqPQ=;
+        b=n8EacxlFQUKsh+4ZuHfaTWkXCxI4SrDR1dkEi16/JsV5CSH2ZwofwciG2SHZsr+cC8
+         ATAeGg9j+J0rUXO8juEgQp56Y85+TV9gANfYj1FJHmdD/ieovgByXUWOMAGjvdjU2rks
+         tWn9R8AJQ7AhkisyYzbK4cfYD78E3b6bL6EDYeaWYa4AxAwN5UNOge9DxEF+c3GJ+9CW
+         S0lxewoTvw01IcoZXSVgJteUWBN35jxFYzHRq+cNSD6WZ9SkYWdVYySui++9hqyEnjU1
+         U1M7E7HHiDMMF6slOkugOxOq9pXqVCEC/yrIGfI3Qzb8DeVsQZH/8O/Vd1tXKOjomJIS
+         qyoA==
+X-Gm-Message-State: AOJu0YxegsbuMkIDmJ9jCjpMQlNXjC11oDYZOfj0FfXWRsXzKsl2fReW
+	/CCKAFXeBYYPqXRN7kFmSxu+8yMjmfXkXGy3duiKJbpuPKhV13uVMhEL
+X-Gm-Gg: AZuq6aKcgL+jbodY3GaDn7EwO4WtH7GaW/o5B+OZG3+4gjRyuSZGakVb3WdhCdXLHFc
+	TXIckOGAcQoy9Qr/e/dU0FP9S5HS2eqL3dm6G/mAl5Pn/y4yCPLRA7Jt2rV6u+Bu3ADmUyxUV6z
+	VCU0oNYUV1tg/iU/Ewg4mosjPLVL9OtUTMplYYcxoQx+Ec8BkKVNaytdRL8uBKeOCCk/aOHzMeX
+	JgEj/qYe5CsriwQh2N8VTWORKzhYbMso9UmI8KMuo8CHofUR0UQeWO6xaWpIajC38PYcpNHT8rY
+	C0X0oOb+gZKwUwVpOG8/JHuKksJy9aUD9wWspThOfVkB0IMOUvz4hDSyBQGWv3L1sPVQzGrwOG4
+	55oXvq8DhnArmN8vYDPr5XjOqVkI9xzLEfVbP7h4plYVfE8wM31QX9Da0JZplOqi+nVtfHpvlOn
+	KVAMN155T77+ZffBFfPfh+uBTgutAtoxw5OPSDd43O
+X-Received: by 2002:ad4:5ccd:0:b0:896:fc72:f92 with SMTP id 6a1803df08f44-897349b7efamr5696886d6.67.1770929743212;
+        Thu, 12 Feb 2026 12:55:43 -0800 (PST)
 Received: from dhcp-10-231-55-133.dhcp.broadcom.net ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-8971cc823a4sm44446646d6.8.2026.02.12.12.55.43
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-8971cc823a4sm44446646d6.8.2026.02.12.12.55.42
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 12 Feb 2026 12:55:44 -0800 (PST)
+        Thu, 12 Feb 2026 12:55:43 -0800 (PST)
 From: Justin Tee <justintee8345@gmail.com>
 To: linux-scsi@vger.kernel.org
 Cc: jsmart833426@gmail.com,
 	justin.tee@broadcom.com,
 	Justin Tee <justintee8345@gmail.com>
-Subject: [PATCH 11/13] lpfc: Restrict first burst to non-FCoE and SLI4 adapters only
-Date: Thu, 12 Feb 2026 13:30:06 -0800
-Message-Id: <20260212213008.149873-12-justintee8345@gmail.com>
+Subject: [PATCH 10/13] lpfc: Update class of service bit field to 3 bits for WQE submissions
+Date: Thu, 12 Feb 2026 13:30:05 -0800
+Message-Id: <20260212213008.149873-11-justintee8345@gmail.com>
 X-Mailer: git-send-email 2.38.0
 In-Reply-To: <20260212213008.149873-1-justintee8345@gmail.com>
 References: <20260212213008.149873-1-justintee8345@gmail.com>
@@ -75,32 +74,92 @@ List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-First burst is only supported on adapters running in SLI4 mode and that
-are non-FCoE based.  Include sli_rev and FCoE mode checks before setting
-the write transfer ready disabled bit in PRLIs.
+WQE submissions only require a 3 bit field when specifying the class of
+service to use.  So, update WQE submission paths to use a 3 bit field
+instead of 0x0f as the bit mask.  A NLP_FCP_CLASS_MASK bitmask is defined
+to ensure only a 3 bit mask is used.
 
 Signed-off-by: Justin Tee <justintee8345@gmail.com>
 ---
- drivers/scsi/lpfc/lpfc_els.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ drivers/scsi/lpfc/lpfc_disc.h |  5 +++--
+ drivers/scsi/lpfc/lpfc_scsi.c | 10 +++++-----
+ 2 files changed, 8 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-index e5736b06c3dd..12c125247295 100644
---- a/drivers/scsi/lpfc/lpfc_els.c
-+++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -2649,7 +2649,9 @@ lpfc_issue_els_prli(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
- 		}
- 		npr->estabImagePair = 1;
- 		npr->readXferRdyDis = 1;
--		if (vport->cfg_first_burst_size)
-+		if (phba->sli_rev == LPFC_SLI_REV4 &&
-+		    !test_bit(HBA_FCOE_MODE, &phba->hba_flag) &&
-+		    vport->cfg_first_burst_size)
- 			npr->writeXferRdyDis = 1;
+diff --git a/drivers/scsi/lpfc/lpfc_disc.h b/drivers/scsi/lpfc/lpfc_disc.h
+index de0adeecf668..a377e97cbe65 100644
+--- a/drivers/scsi/lpfc/lpfc_disc.h
++++ b/drivers/scsi/lpfc/lpfc_disc.h
+@@ -1,7 +1,7 @@
+ /*******************************************************************
+  * This file is part of the Emulex Linux Device Driver for         *
+  * Fibre Channel Host Bus Adapters.                                *
+- * Copyright (C) 2017-2025 Broadcom. All Rights Reserved. The term *
++ * Copyright (C) 2017-2026 Broadcom. All Rights Reserved. The term *
+  * “Broadcom” refers to Broadcom Inc. and/or its subsidiaries.     *
+  * Copyright (C) 2004-2013 Emulex.  All rights reserved.           *
+  * EMULEX and SLI are trademarks of Emulex.                        *
+@@ -137,7 +137,8 @@ struct lpfc_nodelist {
+ 	uint16_t	nlp_maxframe;		/* Max RCV frame size */
+ 	uint8_t		nlp_class_sup;		/* Supported Classes */
+ 	uint8_t         nlp_retry;		/* used for ELS retries */
+-	uint8_t         nlp_fcp_info;	        /* class info, bits 0-3 */
++	uint8_t         nlp_fcp_info;	        /* class info, bits 0-2 */
++#define NLP_FCP_CLASS_MASK 0x07			/* class info bitmask */
+ #define NLP_FCP_2_DEVICE   0x10			/* FCP-2 device */
+ 	u8		nlp_nvme_info;	        /* NVME NSLER Support */
+ 	uint8_t		vmid_support;		/* destination VMID support */
+diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
+index df64948e55ee..bb3f5077f35e 100644
+--- a/drivers/scsi/lpfc/lpfc_scsi.c
++++ b/drivers/scsi/lpfc/lpfc_scsi.c
+@@ -1,7 +1,7 @@
+ /*******************************************************************
+  * This file is part of the Emulex Linux Device Driver for         *
+  * Fibre Channel Host Bus Adapters.                                *
+- * Copyright (C) 2017-2025 Broadcom. All Rights Reserved. The term *
++ * Copyright (C) 2017-2026 Broadcom. All Rights Reserved. The term *
+  * “Broadcom” refers to Broadcom Inc. and/or its subsidiaries.     *
+  * Copyright (C) 2004-2016 Emulex.  All rights reserved.           *
+  * EMULEX and SLI are trademarks of Emulex.                        *
+@@ -4665,7 +4665,7 @@ static int lpfc_scsi_prep_cmnd_buf_s3(struct lpfc_vport *vport,
+ 	else
+ 		piocbq->iocb.ulpFCP2Rcvy = 0;
  
- 		/* For FCP support */
+-	piocbq->iocb.ulpClass = (pnode->nlp_fcp_info & 0x0f);
++	piocbq->iocb.ulpClass = (pnode->nlp_fcp_info & NLP_FCP_CLASS_MASK);
+ 	piocbq->io_buf  = lpfc_cmd;
+ 	if (!piocbq->cmd_cmpl)
+ 		piocbq->cmd_cmpl = lpfc_scsi_cmd_iocb_cmpl;
+@@ -4777,7 +4777,7 @@ static int lpfc_scsi_prep_cmnd_buf_s4(struct lpfc_vport *vport,
+ 		bf_set(wqe_erp, &wqe->generic.wqe_com, 1);
+ 
+ 	bf_set(wqe_class, &wqe->generic.wqe_com,
+-	       (pnode->nlp_fcp_info & 0x0f));
++	       (pnode->nlp_fcp_info & NLP_FCP_CLASS_MASK));
+ 
+ 	 /* Word 8 */
+ 	wqe->generic.wqe_com.abort_tag = pwqeq->iotag;
+@@ -4877,7 +4877,7 @@ lpfc_scsi_prep_task_mgmt_cmd_s3(struct lpfc_vport *vport,
+ 	piocb->ulpCommand = CMD_FCP_ICMND64_CR;
+ 	piocb->ulpContext = ndlp->nlp_rpi;
+ 	piocb->ulpFCP2Rcvy = (ndlp->nlp_fcp_info & NLP_FCP_2_DEVICE) ? 1 : 0;
+-	piocb->ulpClass = (ndlp->nlp_fcp_info & 0x0f);
++	piocb->ulpClass = (ndlp->nlp_fcp_info & NLP_FCP_CLASS_MASK);
+ 	piocb->ulpPU = 0;
+ 	piocb->un.fcpi.fcpi_parm = 0;
+ 
+@@ -4945,7 +4945,7 @@ lpfc_scsi_prep_task_mgmt_cmd_s4(struct lpfc_vport *vport,
+ 	bf_set(wqe_erp, &wqe->fcp_icmd.wqe_com,
+ 	       ((ndlp->nlp_fcp_info & NLP_FCP_2_DEVICE) ? 1 : 0));
+ 	bf_set(wqe_class, &wqe->fcp_icmd.wqe_com,
+-	       (ndlp->nlp_fcp_info & 0x0f));
++	       (ndlp->nlp_fcp_info & NLP_FCP_CLASS_MASK));
+ 
+ 	/* ulpTimeout is only one byte */
+ 	if (lpfc_cmd->timeout > 0xff) {
 -- 
 2.38.0
 
