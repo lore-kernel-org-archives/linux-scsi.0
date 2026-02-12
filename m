@@ -1,71 +1,71 @@
-Received: from mail-qk1-f177.google.com (mail-qk1-f177.google.com [209.85.222.177])
+Received: from mail-qv1-f42.google.com (mail-qv1-f42.google.com [209.85.219.42])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7732E2ED84C
-	for <linux-scsi@vger.kernel.org>; Thu, 12 Feb 2026 20:55:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.177
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E07302F90C4
+	for <linux-scsi@vger.kernel.org>; Thu, 12 Feb 2026 20:55:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770929742; cv=none; b=eEKn2QbKb6rvvdID1AEEQlZFw1r1Hn09c0P/253/FJldrxuisILXez9iNX+ehtAdezvdGE7Ri7C6CHdTYL0Z9TNOLYlrbPx5OoRc1krOJMfTCsJsAIVA5Pp1ImDcv4oFH5t+nvLY7SiMzM7vSxpzT4lQFqm6a3ygrF1JDHamvpU=
+	t=1770929744; cv=none; b=dTyPIgihRJfMPX8UXHvJ5y9f2HfvVlfdaAYrXOOz++M1W6qC3A5ZNceHSwlO26MvoHfxwe5SM++hngxswNWo5IOSyDDT8UmE0Zszk3oHUVmng9n3FFrHPCMGDirURqH1H6fQK6Hygzaipg6AAKpkPKfSza06r0DXPusZ7DPFeHE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770929742; c=relaxed/simple;
-	bh=Ivv0zj28P1I0Ep+H+80TNMjN0tFf1A/7QprVylhho18=;
+	s=arc-20240116; t=1770929744; c=relaxed/simple;
+	bh=cH2Z2/8k65JanH4ji9+Sf2xrutYHJXbQ2UIZcyMx8vY=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=EJ1kjozawPqdUjf48btr+/H7A7gkdzCt0ghUnEQWl0+FrzCIsFh8nCFy67XKfGBypOkRXNvBd50+MRGPCjo44kQNEinlFZ1wyeh5hgCL39ITnHUFcU2tYghawZxmA1vpvXAkTn+OuUnQfFIY7okfqhcoLO5XzqsgPjeJ4UEmbfc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=m0vBU8Zv; arc=none smtp.client-ip=209.85.222.177
+	 MIME-Version:Content-Type; b=L6K+6ShltWL7VgSQOIYWYcb3nxWaBL9v99BhRs43SSrqHtcjo3BNZjmyyxmakw90LYQZnscdr+WFVMe6nYXt2lmgoVPHN4hbXjJKLSv3+qC3nYIxK5RweILiWh/fAzfE0IigI1gTL4gEiQ+mBxmHZXFR0KZZOqSi4d+rcZZ53B4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=BMGPH+Tu; arc=none smtp.client-ip=209.85.219.42
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="m0vBU8Zv"
-Received: by mail-qk1-f177.google.com with SMTP id af79cd13be357-8c533228383so20595185a.3
-        for <linux-scsi@vger.kernel.org>; Thu, 12 Feb 2026 12:55:41 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="BMGPH+Tu"
+Received: by mail-qv1-f42.google.com with SMTP id 6a1803df08f44-8951c720496so2300246d6.2
+        for <linux-scsi@vger.kernel.org>; Thu, 12 Feb 2026 12:55:42 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1770929740; x=1771534540; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1770929742; x=1771534542; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=+Di4AVhm56TU07ql39j66lxUcy6NgZxParhW1Pokv5U=;
-        b=m0vBU8ZvAv6U+rFafEvd0zzzw9CQ6PlNeyDfKY3YiZMxbXiZCTQ9QSk2RlGEG5HPeX
-         mHSzWUU5qvReLfjCHKVlNtUY2o0V9nNY6Kq+ILpZ/O7BpOV1nnZwSIx09oZNSklw+K7r
-         lqycHuCRZi3qQJfMvErilNlVBLpPo04Qq94ulqHiw8ASbQYr6KhmOfnK32cKz+3sQG/H
-         c1Z4UrgoqFZFmU9JuCLq6Z+wPBRRabJM4j3Ewgf5R5n6/c+meOwlZEs5THyTm9TntfGp
-         Rt/K3AfVFWcOIE/9wI/9ymx2hiU5rt67IRZCzMo+U7VohgUjqy/tsilVdAa96Y+dS/lo
-         zCww==
+        bh=Q65li+f19GiMmdqt01ybvWxqzWyrocRgVPVJZ3dSz3A=;
+        b=BMGPH+TuffXaBqTL4q5QsmtHnCwMUiG79SnfBS0DXV3oapbQXWLTqhv/3kRoc5UNhk
+         I+tPam2CVUbdrggJzBjSj4XlRqWQR72PZYM5/VhDGBO2JeCGIkrJi/FRs0JQv6ulxbtd
+         UGm2lbMZyFDYfVkGNkvXtTzPSFcHXvo20GM0jRFrr4j+72MXm7bGgtfnd7NqD9VKpMaE
+         rBDnNqVfm8W37H7IfcvSLyxbw4KlKIIWC/zTVnnLU34wYlH0LsgsUs51Sp9AMIkVoJN0
+         OJ04kaW0c3vQJRs0+qRiJvDs4HMB/y7IcUqk3fOIKOqrnZ6sMS6pirvLNcttI6CQ56Ku
+         uA8g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1770929740; x=1771534540;
+        d=1e100.net; s=20230601; t=1770929742; x=1771534542;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to;
-        bh=+Di4AVhm56TU07ql39j66lxUcy6NgZxParhW1Pokv5U=;
-        b=aTvEnIPAkXe7exYMVblEWBJmpEzkd9Dd+r+qKHuWsbybw+/L+haiOPyT4D6EvvNHer
-         +VNj0vRB79vu2MoYfRwiW696TljIxeyLCX8qzOXh0L2nYtPZVuThTOAqNoidUmYWM/Gp
-         1rz7RJV8I4k2b2TtrAataz7BFujTOSGaL9q9Lt0ECyMci2Z1AqO7jNhVFgxZ2kz3WPWF
-         EB3qrSm787MF/5zsI09AX+7u37Zc7fx1vg+jibmmbkOFbNen0eRj1MIk4tCKrU4y1VFy
-         /I5kB49CpbhDEmxVPc+Z+FkoXBdpuluIOjMnPU7R2lxYkF6SbU5K3z42CnwxUUb1pgqt
-         6p2Q==
-X-Gm-Message-State: AOJu0YxiLSY/7TXYH0qBzfIz+PUeG6HRsAxObkgBmmPKFX0ERD8Um9Ai
-	nufoIKzoPGribjuuBHjrtYBRfBt9zh0DSB98A6YpzC9kSC94g90UBZ5K63xC9uV1
-X-Gm-Gg: AZuq6aLBLX6nszHYKb7IVD98WjNyHjaqz0+nBeRIfSNuBEO/nPYBEbGi87916koJY4n
-	Olr+nGy8ylksgBy4NUbq8TTu0nXc43j/tEVxZ0tCs6fgwuFraErgO36FiPIAcepmIY3aDMki4e+
-	KINX145CH+DLClvnmdSty0obt43wtsPoWWnl0f2TAlEYligjJb0NLjTkXjkeAc/d/X9uvICOGoO
-	PIYtwbBmsbRUKqcop77efhLSNPV0q9zhA7B5N3JRyAhUueqOsyx9iAjhZ7JDIbQZUQaImH8j3GH
-	Bm9yj00UCHsDaxu/eNAu6R2vqBmj0qe79w4QjFyU6R0qB7PSQmHgXODqTfRNwCy+3zqNSgX/uCp
-	ulG0dEQ2uPpeMqRQunj5bFLZnS5AT2EO9tbxrfWC4raRliVmyYqCl7YpWTIVekCais2fqi2niQl
-	cWSzbM1HXv9Vs2F9KMOTKJrweIH8YBc2ws9B64Vgz9HHWr81g3wcEnhj7NOeaoDweNKes6c9+8Y
-	4EI3nBN7Yw=
-X-Received: by 2002:a05:620a:2986:b0:8ca:105a:298e with SMTP id af79cd13be357-8cb408fea9fmr26742885a.63.1770929740291;
-        Thu, 12 Feb 2026 12:55:40 -0800 (PST)
+        bh=Q65li+f19GiMmdqt01ybvWxqzWyrocRgVPVJZ3dSz3A=;
+        b=rZa0z1QYev1zqcvasvMR72pTNi6DsFJutWhCwMyaW7jhX7HgJeurq/gLH7Y6um7/4/
+         m+GU8qsNA8/xnDjNyOow6V6w0OReBgGGbVs7ESVD5ytiPfcqoo+66HnRO1u0S+UXpdru
+         jh2Q+nNH0CKxjDdlQLsD0qZ5Xk3YuEJ/v0Dv9EpJQ7JpNhzaXK5MkYYZFjF95elm7MUt
+         B8jy9B51tBrTTZCoD/PZs7EIHyjL/bj/feMyqoURUMpO6uEhJ3yZ+FU5h/cg2I9Wp6fZ
+         4gvfj/p7oFW2yrps8Vgn7ioSLZNXQN0HXlnG2Q19Py3VJ2u1XcfTzghCIej45hLEkXpm
+         7XKg==
+X-Gm-Message-State: AOJu0YwkYBwlOrgs1G7/EkLhEVYKKQ36AcpGEylRDlnYBl2ou6RwSQi5
+	YDXH5h3zLDUSEfc8jAKPTNRm3l6Ya+KBBDAKC159h1sSdkXl2TDeEqi/2Vm6jH5W
+X-Gm-Gg: AZuq6aKNKK0SUfoF6Rw7bdrE/IlSbSnD4wWRnhDTLc63uI9hxZJ3ZnkRAz/LdTv+r43
+	49gnkmioTJYVd8W667OWVaQ9/q+1fTqNww2YFxU+t5cbDlOkK4luUW0mEQLoQLWV5GEblM3sRJn
+	99bmiPBtvlN3icu0EPfJOPHLTcsH7j4F/PXErde3vxp3ozgMZIiyqLNKrDB99PVSazdAZ2tWg9R
+	JqDQtzqB6mmuYvpI+tQr5QPsayOVce8FoK+CgcaSqdVcT7nDOUxtcTTvc05xRn9LgKn6nLClnQ+
+	KVLIeqjZGwjq0v3PTUeab3vt/msLz0+ni8knbW49Z4YYnfijHKGt2RwOTFXA+tVi8rqfhB59krD
+	p/y+XGt252c5ZTDET5w82H+cnGAUrGRinqM4tAAeJfb0IzAn/Q7EdjnyZYZCPDk51FUQ5/kEMdk
+	2aPFUcJXq6Yy4e3G9BXnmCmVKmN7r8m+aYHVpjvZPjSZFKBlZ2jIvZkEXj1V3t0TqMOmQzZpWyw
+	38zW6U8HTc=
+X-Received: by 2002:a05:6214:4109:b0:896:fbdd:ef02 with SMTP id 6a1803df08f44-8973470738dmr7263446d6.3.1770929741773;
+        Thu, 12 Feb 2026 12:55:41 -0800 (PST)
 Received: from dhcp-10-231-55-133.dhcp.broadcom.net ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-8971cc823a4sm44446646d6.8.2026.02.12.12.55.39
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-8971cc823a4sm44446646d6.8.2026.02.12.12.55.40
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 12 Feb 2026 12:55:39 -0800 (PST)
+        Thu, 12 Feb 2026 12:55:41 -0800 (PST)
 From: Justin Tee <justintee8345@gmail.com>
 To: linux-scsi@vger.kernel.org
 Cc: jsmart833426@gmail.com,
 	justin.tee@broadcom.com,
 	Justin Tee <justintee8345@gmail.com>
-Subject: [PATCH 08/13] lpfc: Fix incorrect txcmplq_cnt during cleanup in lpfc_sli_abort_ring
-Date: Thu, 12 Feb 2026 13:30:03 -0800
-Message-Id: <20260212213008.149873-9-justintee8345@gmail.com>
+Subject: [PATCH 09/13] lpfc: Add clean up of aborted NVMe commands during PCI fcn reset
+Date: Thu, 12 Feb 2026 13:30:04 -0800
+Message-Id: <20260212213008.149873-10-justintee8345@gmail.com>
 X-Mailer: git-send-email 2.38.0
 In-Reply-To: <20260212213008.149873-1-justintee8345@gmail.com>
 References: <20260212213008.149873-1-justintee8345@gmail.com>
@@ -75,109 +75,131 @@ List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-When a port is offline in lpfc_sli_abort_ring, the phba->txcmplq is cleared
-but the phba->txcmplq_cnt is not reset to zero.  This can sometimes result
-in a phba->txcmplq_cnt that never reaches zero, which hangs the cleanup
-process.
-
-Update lpfc_sli_abort_ring so that txcmplq_cnt is reset to zero and also
-ensure that the LPFC_IO_ON_TXCMPLQ flag is properly cleared.
+When handling a PCI function reset, notification to the NVME transport
+layer is skipped for outstanding aborted NVME I/O.  Introduce a new routine
+called lpfc_nvme_flush_abts_list, which notifies upper NVME transport layer
+of outstanding aborted NVME I/O that are not planned to be completed
+normally due to a PCI function reset request.
 
 Signed-off-by: Justin Tee <justintee8345@gmail.com>
 ---
- drivers/scsi/lpfc/lpfc_sli.c | 66 +++++++++++++-----------------------
- 1 file changed, 24 insertions(+), 42 deletions(-)
+ drivers/scsi/lpfc/lpfc_crtn.h |  3 ++-
+ drivers/scsi/lpfc/lpfc_init.c |  2 +-
+ drivers/scsi/lpfc/lpfc_nvme.c | 50 ++++++++++++++++++++++++++++++++++-
+ 3 files changed, 52 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index 3d88888d8ee8..e6e138064a7e 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -4573,59 +4573,41 @@ void
- lpfc_sli_abort_iocb_ring(struct lpfc_hba *phba, struct lpfc_sli_ring *pring)
- {
- 	LIST_HEAD(tx_completions);
--	LIST_HEAD(txcmplq_completions);
-+	spinlock_t *plock;		/* for transmit queue access */
- 	struct lpfc_iocbq *iocb, *next_iocb;
- 	int offline;
+diff --git a/drivers/scsi/lpfc/lpfc_crtn.h b/drivers/scsi/lpfc/lpfc_crtn.h
+index efeb61b15a5b..ddd6485f31be 100644
+--- a/drivers/scsi/lpfc/lpfc_crtn.h
++++ b/drivers/scsi/lpfc/lpfc_crtn.h
+@@ -1,7 +1,7 @@
+ /*******************************************************************
+  * This file is part of the Emulex Linux Device Driver for         *
+  * Fibre Channel Host Bus Adapters.                                *
+- * Copyright (C) 2017-2024 Broadcom. All Rights Reserved. The term *
++ * Copyright (C) 2017-2026 Broadcom. All Rights Reserved. The term *
+  * “Broadcom” refers to Broadcom Inc. and/or its subsidiaries.     *
+  * Copyright (C) 2004-2016 Emulex.  All rights reserved.           *
+  * EMULEX and SLI are trademarks of Emulex.                        *
+@@ -660,6 +660,7 @@ void lpfc_wqe_cmd_template(void);
+ void lpfc_nvmet_cmd_template(void);
+ void lpfc_nvme_cancel_iocb(struct lpfc_hba *phba, struct lpfc_iocbq *pwqeIn,
+ 			   uint32_t stat, uint32_t param);
++void lpfc_nvme_flush_abts_list(struct lpfc_hba *phba);
+ void lpfc_nvmels_flush_cmd(struct lpfc_hba *phba);
+ extern int lpfc_enable_nvmet_cnt;
+ extern unsigned long long lpfc_enable_nvmet[];
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index c3023474427a..62289e6620ad 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -1087,7 +1087,6 @@ lpfc_hba_down_post_s4(struct lpfc_hba *phba)
+ 	struct lpfc_async_xchg_ctx *ctxp, *ctxp_next;
+ 	struct lpfc_sli4_hdw_queue *qp;
+ 	LIST_HEAD(aborts);
+-	LIST_HEAD(nvme_aborts);
+ 	LIST_HEAD(nvmet_aborts);
+ 	struct lpfc_sglq *sglq_entry = NULL;
+ 	int cnt, idx;
+@@ -1946,6 +1945,7 @@ lpfc_sli4_port_sta_fn_reset(struct lpfc_hba *phba, int mbx_action,
  
--	if (pring->ringno == LPFC_ELS_RING) {
-+	if (phba->sli_rev >= LPFC_SLI_REV4)
-+		plock = &pring->ring_lock;
-+	else
-+		plock = &phba->hbalock;
+ 	lpfc_offline_prep(phba, mbx_action);
+ 	lpfc_sli_flush_io_rings(phba);
++	lpfc_nvme_flush_abts_list(phba);
+ 	lpfc_nvmels_flush_cmd(phba);
+ 	lpfc_offline(phba);
+ 	/* release interrupt for possible resource change */
+diff --git a/drivers/scsi/lpfc/lpfc_nvme.c b/drivers/scsi/lpfc/lpfc_nvme.c
+index e6f632521cff..2e3fc2ddcf12 100644
+--- a/drivers/scsi/lpfc/lpfc_nvme.c
++++ b/drivers/scsi/lpfc/lpfc_nvme.c
+@@ -1,7 +1,7 @@
+ /*******************************************************************
+  * This file is part of the Emulex Linux Device Driver for         *
+  * Fibre Channel Host Bus Adapters.                                *
+- * Copyright (C) 2017-2025 Broadcom. All Rights Reserved. The term *
++ * Copyright (C) 2017-2026 Broadcom. All Rights Reserved. The term *
+  * “Broadcom” refers to Broadcom Inc. and/or its subsidiaries.  *
+  * Copyright (C) 2004-2016 Emulex.  All rights reserved.           *
+  * EMULEX and SLI are trademarks of Emulex.                        *
+@@ -2846,6 +2846,54 @@ lpfc_nvme_cancel_iocb(struct lpfc_hba *phba, struct lpfc_iocbq *pwqeIn,
+ #endif
+ }
+ 
++/**
++ * lpfc_nvme_flush_abts_list - Clean up nvme commands from the abts list
++ * @phba: Pointer to HBA context object.
++ *
++ **/
++void
++lpfc_nvme_flush_abts_list(struct lpfc_hba *phba)
++{
++#if (IS_ENABLED(CONFIG_NVME_FC))
++	struct lpfc_io_buf *psb, *psb_next;
++	struct lpfc_sli4_hdw_queue *qp;
++	LIST_HEAD(aborts);
++	int i;
 +
-+	if (pring->ringno == LPFC_ELS_RING)
- 		lpfc_fabric_abort_hba(phba);
--	}
++	/* abts_xxxx_buf_list_lock required because worker thread uses this
++	 * list.
++	 */
++	spin_lock_irq(&phba->hbalock);
++	for (i = 0; i < phba->cfg_hdw_queue; i++) {
++		qp = &phba->sli4_hba.hdwq[i];
 +
- 	offline = pci_channel_offline(phba->pcidev);
- 
--	/* Error everything on txq and txcmplq
--	 * First do the txq.
--	 */
--	if (phba->sli_rev >= LPFC_SLI_REV4) {
--		spin_lock_irq(&pring->ring_lock);
--		list_splice_init(&pring->txq, &tx_completions);
--		pring->txq_cnt = 0;
-+	/* Cancel everything on txq */
-+	spin_lock_irq(plock);
-+	list_splice_init(&pring->txq, &tx_completions);
-+	pring->txq_cnt = 0;
- 
--		if (offline) {
--			list_splice_init(&pring->txcmplq,
--					 &txcmplq_completions);
--		} else {
--			/* Next issue ABTS for everything on the txcmplq */
--			list_for_each_entry_safe(iocb, next_iocb,
--						 &pring->txcmplq, list)
--				lpfc_sli_issue_abort_iotag(phba, pring,
--							   iocb, NULL);
--		}
--		spin_unlock_irq(&pring->ring_lock);
-+	if (offline) {
-+		/* Cancel everything on txcmplq */
-+		list_for_each_entry_safe(iocb, next_iocb, &pring->txcmplq, list)
-+			iocb->cmd_flag &= ~LPFC_IO_ON_TXCMPLQ;
-+		list_splice_init(&pring->txcmplq, &tx_completions);
-+		pring->txcmplq_cnt = 0;
- 	} else {
--		spin_lock_irq(&phba->hbalock);
--		list_splice_init(&pring->txq, &tx_completions);
--		pring->txq_cnt = 0;
--
--		if (offline) {
--			list_splice_init(&pring->txcmplq, &txcmplq_completions);
--		} else {
--			/* Next issue ABTS for everything on the txcmplq */
--			list_for_each_entry_safe(iocb, next_iocb,
--						 &pring->txcmplq, list)
--				lpfc_sli_issue_abort_iotag(phba, pring,
--							   iocb, NULL);
--		}
--		spin_unlock_irq(&phba->hbalock);
-+		/* Issue ABTS for everything on the txcmplq */
-+		list_for_each_entry_safe(iocb, next_iocb, &pring->txcmplq, list)
-+			lpfc_sli_issue_abort_iotag(phba, pring, iocb, NULL);
- 	}
-+	spin_unlock_irq(plock);
- 
--	if (offline) {
--		/* Cancel all the IOCBs from the completions list */
--		lpfc_sli_cancel_iocbs(phba, &txcmplq_completions,
--				      IOSTAT_LOCAL_REJECT, IOERR_SLI_ABORTED);
--	} else {
--		/* Make sure HBA is alive */
-+	if (!offline)
- 		lpfc_issue_hb_tmo(phba);
--	}
++		spin_lock(&qp->abts_io_buf_list_lock);
++		list_for_each_entry_safe(psb, psb_next,
++					 &qp->lpfc_abts_io_buf_list, list) {
++			if (!(psb->cur_iocbq.cmd_flag & LPFC_IO_NVME))
++				continue;
++			list_move(&psb->list, &aborts);
++			qp->abts_nvme_io_bufs--;
++		}
++		spin_unlock(&qp->abts_io_buf_list_lock);
++	}
++	spin_unlock_irq(&phba->hbalock);
 +
- 	/* Cancel all the IOCBs from the completions list */
- 	lpfc_sli_cancel_iocbs(phba, &tx_completions, IOSTAT_LOCAL_REJECT,
- 			      IOERR_SLI_ABORTED);
++	list_for_each_entry_safe(psb, psb_next, &aborts, list) {
++		list_del_init(&psb->list);
++		lpfc_printf_log(phba, KERN_INFO, LOG_NVME_ABTS,
++				"6195 %s: lpfc_ncmd x%px flags x%x "
++				"cmd_flag x%x xri x%x\n", __func__,
++				psb, psb->flags,
++				psb->cur_iocbq.cmd_flag,
++				psb->cur_iocbq.sli4_xritag);
++		psb->flags &= ~LPFC_SBUF_XBUSY;
++		psb->status = IOSTAT_SUCCESS;
++		lpfc_sli4_nvme_pci_offline_aborted(phba, psb);
++	}
++#endif
++}
++
+ /**
+  * lpfc_nvmels_flush_cmd - Clean up outstanding nvmels commands for a port
+  * @phba: Pointer to HBA context object.
 -- 
 2.38.0
 
