@@ -1,377 +1,215 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C1798242D7D
-	for <linux-scsi@vger.kernel.org>; Thu, 12 Feb 2026 08:38:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 519712F5328
+	for <linux-scsi@vger.kernel.org>; Thu, 12 Feb 2026 10:50:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.33
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770885518; cv=none; b=rAG8Md9wxw4OP+hsk+6TdTwgw3LBDmLcJFjDbo9JG4PQOG1imyN0x1JWyRSJqVxcBZv/TAG5SIwuRjn/9UIO0gh3qz2QthE2J5in+B8yZdXMnLIiUKdxZoAaYyDeNbdUGluWG+s9NWmweSgRuiXDaKfjYKHyrNxUn9G5hBw8afY=
+	t=1770893408; cv=none; b=GgBtFeioLZOAicoQ2OA6uOOna3smJ6bCWlSrm4zbcRQNMe2tJ0ruO2CqN9H/IZArkH3mP0/W6JMQwfDxrxsoztABcercxfqxRc0mwQ+PHxAvlnUfDVDJQr/+cRH+Z+N6o/3tLd2zI5njquaUN4JhaL/k9uWku23FSTf4UR1fZDo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770885518; c=relaxed/simple;
-	bh=ef3LzpCrcs4QdW7jFhPSXJPb9kTcCbi08cRJaE50Ur4=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=RnKy9A8YdD6mCp3BBiUfHC7MQFgaaFZ4uMbOKAbpEMNKGZtcJHnqDtaSgwfyV+uegfWjKZB+OPPPU+siG79FV71PVYjLESV5YAabGqP5k20XOOKemn1a8zDe4emLICMzNO0v+qbsGVdJdgfaGETqVrMZc0PtB8sETRNxc1Pmj/g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b=Gn6GWT0t; dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b=Gn6GWT0t; arc=none smtp.client-ip=195.135.223.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+	s=arc-20240116; t=1770893408; c=relaxed/simple;
+	bh=eMxH6oxJ6izA8EaE0/nSvHqTStD2UOv6NtQfEG3jgtg=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type:
+	 References; b=t/lsOtadzw93T8A7bzR7aZRxxAu5vSI7qrv+Io/ZXnnvOh48KUm19+4v4PUDTQsxYQz7pf+6KX1/7Pt8HPy6ZQrxPOJIA0w/s/ctlwGID++/VtNcuuyqkgwZlsowYlRFCDD4wKCHUwMoGoPWj+mbW9PanpWKmBuMvQLo0rpwpw0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=rfgz3A+L; arc=none smtp.client-ip=203.254.224.33
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b="Gn6GWT0t";
-	dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b="Gn6GWT0t"
-Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id 1B1C33E6E8;
-	Thu, 12 Feb 2026 08:38:35 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-	t=1770885515; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=/ASzH9qE0mBRibU9uWHl4KojtE+mVdpgEGiVGmw5TkI=;
-	b=Gn6GWT0tpFD4Wj0aIBXIADPNbMyqxnarB7G6+MOUb7r55zoH19ifoS/6oYN98O3iKcRraw
-	9/gjSCt246xTx4r9GkhCsE063MzrrvxyeGrIY20vFRLxt6LIR4BvoDSJ0VCcO4dLRLaU/Z
-	kwxe3FAh1YLhI3NjeVZLnZSoQpjmJsc=
-Authentication-Results: smtp-out1.suse.de;
-	none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-	t=1770885515; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=/ASzH9qE0mBRibU9uWHl4KojtE+mVdpgEGiVGmw5TkI=;
-	b=Gn6GWT0tpFD4Wj0aIBXIADPNbMyqxnarB7G6+MOUb7r55zoH19ifoS/6oYN98O3iKcRraw
-	9/gjSCt246xTx4r9GkhCsE063MzrrvxyeGrIY20vFRLxt6LIR4BvoDSJ0VCcO4dLRLaU/Z
-	kwxe3FAh1YLhI3NjeVZLnZSoQpjmJsc=
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id A551A3EA62;
-	Thu, 12 Feb 2026 08:38:34 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id +qE3J4qRjWmJMwAAD6G6ig
-	(envelope-from <jgross@suse.com>); Thu, 12 Feb 2026 08:38:34 +0000
-From: Juergen Gross <jgross@suse.com>
-To: linux-kernel@vger.kernel.org,
-	netdev@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	linux-scsi@vger.kernel.org
-Cc: Juergen Gross <jgross@suse.com>,
-	Stefano Stabellini <sstabellini@kernel.org>,
-	Oleksandr Tyshchenko <oleksandr_tyshchenko@epam.com>,
-	Andrew Lunn <andrew+netdev@lunn.ch>,
-	"David S. Miller" <davem@davemloft.net>,
-	Eric Dumazet <edumazet@google.com>,
-	Jakub Kicinski <kuba@kernel.org>,
-	Paolo Abeni <pabeni@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	xen-devel@lists.xenproject.org,
-	=?UTF-8?q?Marek=20Marczykowski-G=C3=B3recki?= <marmarek@invisiblethingslab.com>
-Subject: [PATCH 1/2] xenbus: add xenbus_device parameter to xenbus_read_driver_state()
-Date: Thu, 12 Feb 2026 09:38:25 +0100
-Message-ID: <20260212083826.136221-2-jgross@suse.com>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260212083826.136221-1-jgross@suse.com>
-References: <20260212083826.136221-1-jgross@suse.com>
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="rfgz3A+L"
+Received: from epcas2p4.samsung.com (unknown [182.195.41.56])
+	by mailout3.samsung.com (KnoxPortal) with ESMTP id 20260212105004epoutp03312fd94387b0e3ee9139579bd4cc7d5a~TeisaIBRu2412524125epoutp03h
+	for <linux-scsi@vger.kernel.org>; Thu, 12 Feb 2026 10:50:04 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20260212105004epoutp03312fd94387b0e3ee9139579bd4cc7d5a~TeisaIBRu2412524125epoutp03h
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1770893404;
+	bh=mPMLshFdrtiHfJxwfnqdDTjg2QzJaav2jyMnhRq85AY=;
+	h=From:To:Cc:Subject:Date:References:From;
+	b=rfgz3A+LYJkgK6JDxI1sZCAmSKuTHc1brtAYfQ6m/sxgtAIEl4O5sfVqcOcIuuTwx
+	 o5WTVqm6zlcCWyIT8Ks/EgPy/qrRsOECVQkJFTUaHuo0kWj+W2QRvx7sMyCQxN/7aV
+	 V0654GVtrBRxDesAHZTKV13u+rbNjbJLWZlGnSjk=
+Received: from epsnrtp03.localdomain (unknown [182.195.42.155]) by
+	epcas2p3.samsung.com (KnoxPortal) with ESMTPS id
+	20260212105003epcas2p318b4e910e37fdb6669a221562a2574b4~Teir3IhH21185111851epcas2p3v;
+	Thu, 12 Feb 2026 10:50:03 +0000 (GMT)
+Received: from epcpadp1new (unknown [182.195.40.141]) by
+	epsnrtp03.localdomain (Postfix) with ESMTP id 4fBXBM2sR1z3hhT3; Thu, 12 Feb
+	2026 10:50:03 +0000 (GMT)
+Received: from epsmtip2.samsung.com (unknown [182.195.34.31]) by
+	epcas2p1.samsung.com (KnoxPortal) with ESMTPA id
+	20260212104911epcas2p1ada1bb6a8bcac1126bece2dccd3ed10f~Teh7FDuJl0514805148epcas2p1r;
+	Thu, 12 Feb 2026 10:49:11 +0000 (GMT)
+Received: from KORCO118546 (unknown [12.80.207.184]) by epsmtip2.samsung.com
+	(KnoxPortal) with ESMTPA id
+	20260212104910epsmtip26f8e98bcdc5eb1875bee44f36b9ad5a4~Teh6_DgkU2026820268epsmtip2c;
+	Thu, 12 Feb 2026 10:49:10 +0000 (GMT)
+From: "hoyoung seo" <hy50.seo@samsung.com>
+To: <bvanassche@acm.org>
+Cc: <Arthur.Simchaev@wdc.com>, <JBottomley@Parallels.com>,
+	<adrian.hunter@intel.com>, <athierry@redhat.com>, <avri.altman@wdc.com>,
+	<beanhuo@micron.com>, <jaegeuk@kernel.org>, <jejb@linux.ibm.com>,
+	<linux-scsi@vger.kernel.org>, <martin.petersen@oracle.com>,
+	<quic_asutoshd@quicinc.com>, <quic_ziqichen@quicinc.com>,
+	<santoshsy@gmail.com>, <stanley.chu@mediatek.com>, <h10.kim@samsung.com>,
+	<kwangwon.min@samsung.com>, <cpgs@samsung.com>
+Subject: Re: [PATCH v3 2/4] scsi: ufs: Fix handling of lrbp->cmd
+Date: Thu, 12 Feb 2026 19:49:10 +0900
+Message-ID: <626742236.41770893403397.JavaMail.epsvc@epcpadp1new>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-Spamd-Result: default: False [-5.80 / 50.00];
-	REPLY(-4.00)[];
-	BAYES_HAM(-3.00)[100.00%];
-	SUSPICIOUS_RECIPS(1.50)[];
-	MID_CONTAINS_FROM(1.00)[];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	URIBL_BLOCKED(0.00)[invisiblethingslab.com:email,imap1.dmz-prg2.suse.org:helo,suse.com:mid,suse.com:email];
-	DKIM_SIGNED(0.00)[suse.com:s=susede1];
-	FUZZY_RATELIMITED(0.00)[rspamd.com];
-	MIME_TRACE(0.00)[0:+];
-	ARC_NA(0.00)[];
-	RCPT_COUNT_TWELVE(0.00)[17];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	RCVD_TLS_ALL(0.00)[];
-	RCVD_COUNT_TWO(0.00)[2];
-	FROM_EQ_ENVFROM(0.00)[];
-	TO_DN_SOME(0.00)[];
-	TAGGED_RCPT(0.00)[netdev];
-	R_RATELIMIT(0.00)[to_ip_from(RLsote1drt81dzioaq3931x19g)];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.com:mid,suse.com:email,imap1.dmz-prg2.suse.org:helo]
-X-Spam-Flag: NO
-X-Spam-Score: -5.80
-X-Spam-Level: 
+Content-Transfer-Encoding: quoted-printable
+X-Mailer: Microsoft Outlook 16.0
+Thread-Index: AdycDQLTGQ8W4mPFSbinOiPWbRqqcA==
+Content-Language: ko
+X-CMS-MailID: 20260212104911epcas2p1ada1bb6a8bcac1126bece2dccd3ed10f
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+CMS-TYPE: 102P
+X-CPGSPASS: Y
+X-Hop-Count: 3
+X-CMS-RootMailID: 20260212104911epcas2p1ada1bb6a8bcac1126bece2dccd3ed10f
+References: <CGME20260212104911epcas2p1ada1bb6a8bcac1126bece2dccd3ed10f@epcas2p1.samsung.com>
 
-In order to prepare checking the xenbus device status in
-xenbus_read_driver_state(), add the pointer to struct xenbus_device
-as a parameter.
+>On 6/26/23 18:26, hoyoung seo wrote:
+>> @@ -5408,7 +5406,6 @@ static void ufshcd_release_scsi_cmd(struct ufs_hba=
+ *hba,
+>>   =09struct scsi_cmnd *cmd =3D lrbp->cmd;
+>>  =20
+>>   =09scsi_dma_unmap(cmd);
+>> -=09lrbp->cmd =3D NULL;=09/* Mark the command as completed. */
+>>   =09ufshcd_release(hba);
+>>   =09ufshcd_clk_scaling_update_busy(hba);
+>>   }
+>>=20
+>> Hi,
+>> Is there any reason to delete "lrbp->cmd =3D NULL"?
+>> As far as I know, clear to NULL to indicate that cmd is completed.
+>>=20
+>> When the UFS MCQ mode is activated, check that lrbp->cmd is NULL to chec=
+k the completion of the command.
+>> https://lore.kernel.org/linux-scsi/f0d923ee1f009f171a55c258d044e814ec091=
+7ab.1685396241.git.quic_nguyenb@quicinc.com/
+>>=20
+>> If there is no special reason, why don't you add "lrb->cmd =3D NULL" aga=
+in?
+>
+>The lrbp->cmd =3D NULL assignment has been removed because if it would be =
+kept
+>the SCSI error handler would crash if it reuses a SCSI command. See also t=
+he
+>scsi_eh_prep_cmnd() and scsi_eh_restore_cmnd() callers. The MCQ code shoul=
+d
+>still work because it uses blk_mq_request_started() to check whether or no=
+t
+>a request is still active.
+>
+>Bart.
 
-Signed-off-by: Juergen Gross <jgross@suse.com>
-Tested-by: Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>
----
- drivers/net/xen-netfront.c                 | 34 +++++++++++-----------
- drivers/pci/xen-pcifront.c                 |  8 ++---
- drivers/scsi/xen-scsifront.c               |  2 +-
- drivers/xen/xen-pciback/xenbus.c           | 10 +++----
- drivers/xen/xenbus/xenbus_client.c         |  3 +-
- drivers/xen/xenbus/xenbus_probe.c          |  6 ++--
- drivers/xen/xenbus/xenbus_probe_frontend.c |  2 +-
- include/xen/xenbus.h                       |  3 +-
- 8 files changed, 35 insertions(+), 33 deletions(-)
 
-diff --git a/drivers/net/xen-netfront.c b/drivers/net/xen-netfront.c
-index 0969d5c9f6b7..2c414b77dd0f 100644
---- a/drivers/net/xen-netfront.c
-+++ b/drivers/net/xen-netfront.c
-@@ -1646,7 +1646,7 @@ static int xennet_xdp_set(struct net_device *dev, struct bpf_prog *prog,
- 
- 	/* avoid the race with XDP headroom adjustment */
- 	wait_event(module_wq,
--		   xenbus_read_driver_state(np->xbdev->otherend) ==
-+		   xenbus_read_driver_state(np->xbdev, np->xbdev->otherend) ==
- 		   XenbusStateReconfigured);
- 	np->netfront_xdp_enabled = true;
- 
-@@ -1764,9 +1764,9 @@ static struct net_device *xennet_create_dev(struct xenbus_device *dev)
- 	do {
- 		xenbus_switch_state(dev, XenbusStateInitialising);
- 		err = wait_event_timeout(module_wq,
--				 xenbus_read_driver_state(dev->otherend) !=
-+				 xenbus_read_driver_state(dev, dev->otherend) !=
- 				 XenbusStateClosed &&
--				 xenbus_read_driver_state(dev->otherend) !=
-+				 xenbus_read_driver_state(dev, dev->otherend) !=
- 				 XenbusStateUnknown, XENNET_TIMEOUT);
- 	} while (!err);
- 
-@@ -2627,31 +2627,31 @@ static void xennet_bus_close(struct xenbus_device *dev)
- {
- 	int ret;
- 
--	if (xenbus_read_driver_state(dev->otherend) == XenbusStateClosed)
-+	if (xenbus_read_driver_state(dev, dev->otherend) == XenbusStateClosed)
- 		return;
- 	do {
- 		xenbus_switch_state(dev, XenbusStateClosing);
- 		ret = wait_event_timeout(module_wq,
--				   xenbus_read_driver_state(dev->otherend) ==
--				   XenbusStateClosing ||
--				   xenbus_read_driver_state(dev->otherend) ==
--				   XenbusStateClosed ||
--				   xenbus_read_driver_state(dev->otherend) ==
--				   XenbusStateUnknown,
--				   XENNET_TIMEOUT);
-+				xenbus_read_driver_state(dev, dev->otherend) ==
-+				XenbusStateClosing ||
-+				xenbus_read_driver_state(dev, dev->otherend) ==
-+				XenbusStateClosed ||
-+				xenbus_read_driver_state(dev, dev->otherend) ==
-+				XenbusStateUnknown,
-+				XENNET_TIMEOUT);
- 	} while (!ret);
- 
--	if (xenbus_read_driver_state(dev->otherend) == XenbusStateClosed)
-+	if (xenbus_read_driver_state(dev, dev->otherend) == XenbusStateClosed)
- 		return;
- 
- 	do {
- 		xenbus_switch_state(dev, XenbusStateClosed);
- 		ret = wait_event_timeout(module_wq,
--				   xenbus_read_driver_state(dev->otherend) ==
--				   XenbusStateClosed ||
--				   xenbus_read_driver_state(dev->otherend) ==
--				   XenbusStateUnknown,
--				   XENNET_TIMEOUT);
-+				xenbus_read_driver_state(dev, dev->otherend) ==
-+				XenbusStateClosed ||
-+				xenbus_read_driver_state(dev, dev->otherend) ==
-+				XenbusStateUnknown,
-+				XENNET_TIMEOUT);
- 	} while (!ret);
- }
- 
-diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
-index 11636634ae51..cd22bf984024 100644
---- a/drivers/pci/xen-pcifront.c
-+++ b/drivers/pci/xen-pcifront.c
-@@ -856,7 +856,7 @@ static void pcifront_try_connect(struct pcifront_device *pdev)
- 	int err;
- 
- 	/* Only connect once */
--	if (xenbus_read_driver_state(pdev->xdev->nodename) !=
-+	if (xenbus_read_driver_state(pdev->xdev, pdev->xdev->nodename) !=
- 	    XenbusStateInitialised)
- 		return;
- 
-@@ -876,7 +876,7 @@ static int pcifront_try_disconnect(struct pcifront_device *pdev)
- 	enum xenbus_state prev_state;
- 
- 
--	prev_state = xenbus_read_driver_state(pdev->xdev->nodename);
-+	prev_state = xenbus_read_driver_state(pdev->xdev, pdev->xdev->nodename);
- 
- 	if (prev_state >= XenbusStateClosing)
- 		goto out;
-@@ -895,7 +895,7 @@ static int pcifront_try_disconnect(struct pcifront_device *pdev)
- 
- static void pcifront_attach_devices(struct pcifront_device *pdev)
- {
--	if (xenbus_read_driver_state(pdev->xdev->nodename) ==
-+	if (xenbus_read_driver_state(pdev->xdev, pdev->xdev->nodename) ==
- 	    XenbusStateReconfiguring)
- 		pcifront_connect(pdev);
- }
-@@ -909,7 +909,7 @@ static int pcifront_detach_devices(struct pcifront_device *pdev)
- 	struct pci_dev *pci_dev;
- 	char str[64];
- 
--	state = xenbus_read_driver_state(pdev->xdev->nodename);
-+	state = xenbus_read_driver_state(pdev->xdev, pdev->xdev->nodename);
- 	if (state == XenbusStateInitialised) {
- 		dev_dbg(&pdev->xdev->dev, "Handle skipped connect.\n");
- 		/* We missed Connected and need to initialize. */
-diff --git a/drivers/scsi/xen-scsifront.c b/drivers/scsi/xen-scsifront.c
-index 924025305753..ef74d4da5ab0 100644
---- a/drivers/scsi/xen-scsifront.c
-+++ b/drivers/scsi/xen-scsifront.c
-@@ -1175,7 +1175,7 @@ static void scsifront_backend_changed(struct xenbus_device *dev,
- 			return;
- 		}
- 
--		if (xenbus_read_driver_state(dev->nodename) ==
-+		if (xenbus_read_driver_state(dev, dev->nodename) ==
- 		    XenbusStateInitialised)
- 			scsifront_do_lun_hotplug(info, VSCSIFRONT_OP_ADD_LUN);
- 
-diff --git a/drivers/xen/xen-pciback/xenbus.c b/drivers/xen/xen-pciback/xenbus.c
-index b11e401f1b1e..4bd1c7a8957e 100644
---- a/drivers/xen/xen-pciback/xenbus.c
-+++ b/drivers/xen/xen-pciback/xenbus.c
-@@ -149,12 +149,12 @@ static int xen_pcibk_attach(struct xen_pcibk_device *pdev)
- 
- 	mutex_lock(&pdev->dev_lock);
- 	/* Make sure we only do this setup once */
--	if (xenbus_read_driver_state(pdev->xdev->nodename) !=
-+	if (xenbus_read_driver_state(pdev->xdev, pdev->xdev->nodename) !=
- 	    XenbusStateInitialised)
- 		goto out;
- 
- 	/* Wait for frontend to state that it has published the configuration */
--	if (xenbus_read_driver_state(pdev->xdev->otherend) !=
-+	if (xenbus_read_driver_state(pdev->xdev, pdev->xdev->otherend) !=
- 	    XenbusStateInitialised)
- 		goto out;
- 
-@@ -374,7 +374,7 @@ static int xen_pcibk_reconfigure(struct xen_pcibk_device *pdev,
- 	dev_dbg(&pdev->xdev->dev, "Reconfiguring device ...\n");
- 
- 	mutex_lock(&pdev->dev_lock);
--	if (xenbus_read_driver_state(pdev->xdev->nodename) != state)
-+	if (xenbus_read_driver_state(pdev->xdev, pdev->xdev->nodename) != state)
- 		goto out;
- 
- 	err = xenbus_scanf(XBT_NIL, pdev->xdev->nodename, "num_devs", "%d",
-@@ -572,7 +572,7 @@ static int xen_pcibk_setup_backend(struct xen_pcibk_device *pdev)
- 	/* It's possible we could get the call to setup twice, so make sure
- 	 * we're not already connected.
- 	 */
--	if (xenbus_read_driver_state(pdev->xdev->nodename) !=
-+	if (xenbus_read_driver_state(pdev->xdev, pdev->xdev->nodename) !=
- 	    XenbusStateInitWait)
- 		goto out;
- 
-@@ -662,7 +662,7 @@ static void xen_pcibk_be_watch(struct xenbus_watch *watch,
- 	struct xen_pcibk_device *pdev =
- 	    container_of(watch, struct xen_pcibk_device, be_watch);
- 
--	switch (xenbus_read_driver_state(pdev->xdev->nodename)) {
-+	switch (xenbus_read_driver_state(pdev->xdev, pdev->xdev->nodename)) {
- 	case XenbusStateInitWait:
- 		xen_pcibk_setup_backend(pdev);
- 		break;
-diff --git a/drivers/xen/xenbus/xenbus_client.c b/drivers/xen/xenbus/xenbus_client.c
-index 2dc874fb5506..6ed0cd8e9676 100644
---- a/drivers/xen/xenbus/xenbus_client.c
-+++ b/drivers/xen/xenbus/xenbus_client.c
-@@ -936,7 +936,8 @@ static int xenbus_unmap_ring_hvm(struct xenbus_device *dev, void *vaddr)
-  * Returns: the state of the driver rooted at the given store path, or
-  * XenbusStateUnknown if no state can be read.
-  */
--enum xenbus_state xenbus_read_driver_state(const char *path)
-+enum xenbus_state xenbus_read_driver_state(const struct xenbus_device *dev,
-+					   const char *path)
- {
- 	enum xenbus_state result;
- 	int err = xenbus_gather(XBT_NIL, path, "state", "%d", &result, NULL);
-diff --git a/drivers/xen/xenbus/xenbus_probe.c b/drivers/xen/xenbus/xenbus_probe.c
-index 9f9011cd7447..2eed06ba5d38 100644
---- a/drivers/xen/xenbus/xenbus_probe.c
-+++ b/drivers/xen/xenbus/xenbus_probe.c
-@@ -191,7 +191,7 @@ void xenbus_otherend_changed(struct xenbus_watch *watch,
- 		return;
- 	}
- 
--	state = xenbus_read_driver_state(dev->otherend);
-+	state = xenbus_read_driver_state(dev, dev->otherend);
- 
- 	dev_dbg(&dev->dev, "state is %d, (%s), %s, %s\n",
- 		state, xenbus_strstate(state), dev->otherend_watch.node, path);
-@@ -364,7 +364,7 @@ void xenbus_dev_remove(struct device *_dev)
- 	 * closed.
- 	 */
- 	if (!drv->allow_rebind ||
--	    xenbus_read_driver_state(dev->nodename) == XenbusStateClosing)
-+	    xenbus_read_driver_state(dev, dev->nodename) == XenbusStateClosing)
- 		xenbus_switch_state(dev, XenbusStateClosed);
- }
- EXPORT_SYMBOL_GPL(xenbus_dev_remove);
-@@ -514,7 +514,7 @@ int xenbus_probe_node(struct xen_bus_type *bus,
- 	size_t stringlen;
- 	char *tmpstring;
- 
--	enum xenbus_state state = xenbus_read_driver_state(nodename);
-+	enum xenbus_state state = xenbus_read_driver_state(NULL, nodename);
- 
- 	if (state != XenbusStateInitialising) {
- 		/* Device is not new, so ignore it.  This can happen if a
-diff --git a/drivers/xen/xenbus/xenbus_probe_frontend.c b/drivers/xen/xenbus/xenbus_probe_frontend.c
-index f04707d1f667..ca04609730df 100644
---- a/drivers/xen/xenbus/xenbus_probe_frontend.c
-+++ b/drivers/xen/xenbus/xenbus_probe_frontend.c
-@@ -253,7 +253,7 @@ static int print_device_status(struct device *dev, void *data)
- 	} else if (xendev->state < XenbusStateConnected) {
- 		enum xenbus_state rstate = XenbusStateUnknown;
- 		if (xendev->otherend)
--			rstate = xenbus_read_driver_state(xendev->otherend);
-+			rstate = xenbus_read_driver_state(xendev, xendev->otherend);
- 		pr_warn("Timeout connecting to device: %s (local state %d, remote state %d)\n",
- 			xendev->nodename, xendev->state, rstate);
- 	}
-diff --git a/include/xen/xenbus.h b/include/xen/xenbus.h
-index c94caf852aea..15319da65b7f 100644
---- a/include/xen/xenbus.h
-+++ b/include/xen/xenbus.h
-@@ -228,7 +228,8 @@ int xenbus_unmap_ring_vfree(struct xenbus_device *dev, void *vaddr);
- int xenbus_alloc_evtchn(struct xenbus_device *dev, evtchn_port_t *port);
- int xenbus_free_evtchn(struct xenbus_device *dev, evtchn_port_t port);
- 
--enum xenbus_state xenbus_read_driver_state(const char *path);
-+enum xenbus_state xenbus_read_driver_state(const struct xenbus_device *dev,
-+					   const char *path);
- 
- __printf(3, 4)
- void xenbus_dev_error(struct xenbus_device *dev, int err, const char *fmt, ...);
--- 
-2.53.0
+Hi, Bart
+
+The problem I asked before was caused by an KASAN error.
+I try to work based on kernel-6.18.
+When I stability checked, occurred a KASAN error related to UFS was detecte=
+d.
+In below log, UFS driver accessed bad address during operate pending reques=
+t.
+It seems that a problem occurred when accessing the already de-allocated cm=
+d memory.
+The cmd memory will de-allocated after IO cmd complete, but lrbp->cmd conti=
+nues=20
+to have the address of the released memory.
+So occurred below KASAN error.
+In fact, the tag at the time of allocation to send cmd is 09, but the tag=
+=20
+in memory is 90 now.
+This means that the memory is released once and then re-allocated by anothe=
+r process.
+
+The situation you mentioned seems to be that the scsi layer uses cmd=20
+in the error recovery situation, so it should not be made null.
+However, in normal situations, scsi_eh_prep_cmnd() and scsi_eh_restore_cmnd=
+()=20
+of the scsi layer do not seem to reuse cmd.
+And now the cmd is processed normally and there is a KASAN error while=20
+checking if there is a pending cmd during UFS re linkup.
+
+I wanted to modify the mainline, but lrbp->cmd was deleted in kernel-6.20.
+I have to use kernel-6.18, what should I do in this case?
+Please give us your opinion.
+
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D
+
+BUG: KASAN: invalid-access in ufshcd_mcq_compl_pending_transfer+0x10c/0x21c
+Read of size 4 at addr 09ffff881b0a2708 by task kworker/u40:22/3402
+Pointer tag: [09], memory tag: [90]
+
+CPU: 5 UID: 0 PID: 3402 Comm: kworker/u40:22 Tainted: G           OE       =
+6.18.1
+Workqueue: async async_run_entry_fn
+Call trace:
+ show_stack+0x18/0x28 (C)
+ __dump_stack+0x28/0x3c
+ dump_stack_lvl+0x7c/0xa8
+ print_address_description+0x7c/0x20c
+ print_report+0x70/0x8c
+ kasan_report+0xb4/0x114
+ __hwasan_load4_noabort+0x88/0x98
+ ufshcd_mcq_compl_pending_transfer+0x10c/0x21c
+ ufshcd_host_reset_and_restore+0x26c/0x2c4
+ ufshcd_reset_and_restore+0xcc/0x554
+ __ufshcd_wl_resume+0x100/0x510
+ ufshcd_wl_resume+0x70/0x284
+ scsi_bus_resume+0x70/0xb4
+ dpm_run_callback+0xa0/0x358
+ device_resume+0x2b8/0x3b4
+ async_resume+0x24/0x3c
+ async_run_entry_fn+0x68/0x210
+ process_one_work+0x3fc/0x954
+ worker_thread+0x3e4/0x5b0
+ kthread+0x388/0x3f0
+ ret_from_fork+0x10/0x20
+
+The buggy address belongs to the object at ffffff881b0a2600
+ which belongs to the cache kmalloc-512 of size 512
+The buggy address is located 264 bytes inside of
+ 416-byte region [ffffff881b0a2600, ffffff881b0a27a0)
+
+The buggy address belongs to the physical page:
+page: refcount:0 mapcount:0 mapping:0000000000000000 index:0x0 pfn:0x89b0a0
+head: order:3 mapcount:0 entire_mapcount:0 nr_pages_mapped:0 pincount:0
+memcg:e4ffff881b0a4a01
+flags: 0x4000000000000040(head|zone=3D1|kasantag=3D0x0)
+page_type: f5(slab)
+raw: 4000000000000040 06ffff8800008ac0 fffffffee15a3810 fffffffee83bd810
+raw: 0000000000000000 0000000000150015 00000000f5000000 e4ffff881b0a4a01
+head: 4000000000000040 06ffff8800008ac0 fffffffee15a3810 fffffffee83bd810
+head: 0000000000000000 0000000000150015 00000000f5000000 e4ffff881b0a4a01
+head: 4000000000000003 fffffffee06c2801 00000000ffffffff 00000000ffffffff
+head: ffffffffffffffff 0000000000000000 00000000ffffffff 0000000000000008
+page dumped because: kasan: bad access detected
+
+Memory state around the buggy address:
+ ffffff881b0a2500: fe fe fe fe fe fe fe fe fe fe fe fe fe fe fe fe
+ ffffff881b0a2600: 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90
+>ffffff881b0a2700: 90 90 90 90 90 90 90 90 90 90 fe fe fe fe fe fe
+
+                   ^
+ ffffff881b0a2800: fe fe fe fe fe fe fe fe fe fe fe fe fe fe fe fe
+ ffffff881b0a2900: fe fe fe fe fe fe fe fe fe fe fe fe fe fe fe fe
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+Kernel panic - not syncing: KASAN: panic_on_warn set ...
+
+Thanks
+SEO
+
 
