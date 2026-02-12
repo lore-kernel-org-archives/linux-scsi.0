@@ -1,71 +1,71 @@
-Received: from mail-qv1-f45.google.com (mail-qv1-f45.google.com [209.85.219.45])
+Received: from mail-qt1-f176.google.com (mail-qt1-f176.google.com [209.85.160.176])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 891DC2EA15C
-	for <linux-scsi@vger.kernel.org>; Thu, 12 Feb 2026 20:55:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.45
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 30FA02D4805
+	for <linux-scsi@vger.kernel.org>; Thu, 12 Feb 2026 20:55:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.176
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770929737; cv=none; b=X9QNjOTmZFEWhaAQaVnLRHNeC22EKgZuo9RiuJFHaOyfwKPsBmnjO0iPnLzptMX7eRWXP/bHjdLQJQ5ZWoA1OKrMu4qV4c/ed9cg/cdqsiJkzxDs9IMp6dSwBm154QJUPerpBwwEf7FBUUkMUEoPZD/KiWrW1JJ3sXsQWiytY/k=
+	t=1770929739; cv=none; b=LKfrYYt+Dj1h6zb6TfFCQJzd6kdTvfnV0s9y91OmzBUZnqu2lVIH/mNSG6R7M8bk7s1g9Qfi4Asf2kDzPFvbTP26qK5yeZB8d6lO8ykn3Szl3xJ5Gij8upsuRc88KBkq1dbHZ1OH23M4voJla7xGlW+F19v6X74Nfuingx0UAYQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770929737; c=relaxed/simple;
-	bh=Xw+G7ZtVaCvwPg3LY47HJZQyFROrt+Yv/jhesgnmv9M=;
+	s=arc-20240116; t=1770929739; c=relaxed/simple;
+	bh=iUDSNtlK0Gs7+fXP4Z9sVT6dhPcix9T8qU4QPx26FtA=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=tf2PWu6UXnLeFCSuYFEH8Qh/ZkgE1E3F9MfphWDBi/3Cl+mZX7tOo9YCuByqA9CV7AMYgpuLQj55u/7P09c7yer3KnFdP0W63Hdhg32T6lWJaKoL4/ASNMa1Kk0bQV2Fg1QmVVHkySNIdZ4RxTi7TsiDIYBgSgFHQm2jMJNWRb4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Th9TfG0v; arc=none smtp.client-ip=209.85.219.45
+	 MIME-Version; b=oJ/e1nLNOcIwlvdH/NAiBWgi74RGTl4XKAzFNhQgWlJBKuz1MwK6zLPA7X4eKE4lfzT56H7PCQn0szdtSL0tD0hOADyFwI064LKQSdn9IY0XVsoLY8d1j7OpOhD/v5T8pP3C0/oNW+eOoOoclko0tidW5TOyysz5IYH67NEaSnA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=UEWcqo/6; arc=none smtp.client-ip=209.85.160.176
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Th9TfG0v"
-Received: by mail-qv1-f45.google.com with SMTP id 6a1803df08f44-8947404b367so3312406d6.3
-        for <linux-scsi@vger.kernel.org>; Thu, 12 Feb 2026 12:55:36 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="UEWcqo/6"
+Received: by mail-qt1-f176.google.com with SMTP id d75a77b69052e-50697d6a69cso1676141cf.2
+        for <linux-scsi@vger.kernel.org>; Thu, 12 Feb 2026 12:55:38 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1770929735; x=1771534535; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1770929737; x=1771534537; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=Guxj2g55uGJ6nFTk7mINRabezBxQFUozTCTb5c3zvCo=;
-        b=Th9TfG0vtTrkaWj+cJg2xXJJfDMS6fameJYmGO9cf6w97hLy9qv+E/UPx3xmhdZ/4P
-         ZiQi5WMhNpxpCk+GSyISFZXfow6L5hg6eJTelwMQnBawiI74VHSs+ORTX1e5kAiVu1zr
-         7zCfYUY0ZG5ugc4Q7RqzW9AeUt9/AhNcB5Vrb/qMsfeQclfw506YZwjRDPM2nN4Xvzb8
-         M4k5Rxg07rk3DsgeICdfLkOqqmrisZ0C9gA/Dugffjhefe644PHBa8GeWdhAeBHOLTiM
-         CkeCd/NM17lzTq8PDFb3Lquq0hSKYBcJi5+JS4FF0YDxU5XRLEAPEgPCYvFVfdRxX7Vj
-         1Enw==
+        bh=brLOvCDrZQ7jb5nfFcJVD0wv+nVS4N9OWw0mF9SPY7k=;
+        b=UEWcqo/6//XePpQNObFkf+0mbcrfn9ZjPQymWsxpdxtWgaZt/RWj2/QruTk5rM8Xms
+         IXFnpn4MpR1DQ/j4jeTOF383sAwI2/sd3YnMlECjERP/UZiTYgZRs32KMyvGpY3CH+2K
+         dJGP0HGjUm539S857K6UNQE/cnfHqW5jj8yQTf1bv+fTrCjR8idHz6sWRuS8CDCq5RYV
+         uhFXdHjry+yWg70bhOryQAXbxLHaA0nvfb8jCGTu9JbT+LEE3rJXF+Omw2km7e273T0R
+         g/Vl1LBPdVpHgGLUrV8FCHfiSJDc5UeDSMv7gNkXcGsgUrRb6wlidnH0SesrbjTqXPBn
+         yfWw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1770929735; x=1771534535;
+        d=1e100.net; s=20230601; t=1770929737; x=1771534537;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to;
-        bh=Guxj2g55uGJ6nFTk7mINRabezBxQFUozTCTb5c3zvCo=;
-        b=H2/CTx4YMeJp6TZ+rGdb2rSc1yTMTiIiEbxEpZeq8x99LtfyXljF9tg5wP4KJuAvHR
-         T8BZSO1+SJkPD36RQbCVK74P/P7QCQIdOgBIF++R98vtl4dPMjXHCU6MWGsKp41T99kB
-         yxCqBvTY3JmrzqGbN6n5T+5Y+SWHrleXC5z9lNICKOrKuOVXlWCjVMh7h6QAT+HRPvoi
-         m6bideHlzvR5p84gLVbtyMn16jSxGrhOSoDAy/wO8pRlyl0Ts4WLJnz499w9kuEzApQQ
-         yIE2FZmeaQ9r+FAaxmEx7xdJN3aodcspQxUNIIX7fFtdlGGyzbv09YCjp/CrO1CFuSl+
-         rylA==
-X-Gm-Message-State: AOJu0YxNQ+BGXdjfIxm8IGARLSpgnnljlaGxCXBx5ChKj7uo/AHpmkDi
-	uzRIZjg4RGHGjrOnNWLa55H/CNnsdAyfKiAvlcR/b8E+hmZh7XmuMdz6IhjwltfD
-X-Gm-Gg: AZuq6aL3bdE6optJ9dzS7aSHdukF0pI6pA4k9Ri+KLPrS8fOUpQ1LjP2D/DgyUi7oOG
-	HtUlbchyIfaEGnL8YunUxgREzAMpi09rRBGB6g/XcvGk4GbnS7kh14PorbEUbfRgjTJkncCFuxj
-	NUR+/WdDq4Zv3FCu0tN68YyG5iMCyJiwdoRzqAweeMHHNc7dVIDE8wzdpiD9mTHu0Gl8D/Vb23H
-	Xc9r7YgU7yh56bQEGGmNCN8/NoI11dBvVjdIlfl4j/8xX+b1D5TdvkLnpUZCmCHfYGAF3Xhjffw
-	hYpN3dOAH9LgIp+MN47lJZur+WezogoZKvIbndVLREkifjAOSABAU8bmiwtcRauFAISyHFaGavK
-	VOv4N2k/tKugtf7rtqGXWZ3UZCUp/VhFL3qU0A29ErQL+5MwxrfNlPiCzQ0MIKJq95K0MToo/Eh
-	bUEP9VPWPwBHM2OXDdO40OIcGFKi+dgIkA7L3cJ1Qfs7N//Yo6/YO0qAC+Rkvuwp8wqmrajxngN
-	jQ0iFWtgX4=
-X-Received: by 2002:a05:6214:1cc4:b0:894:7cd8:59b2 with SMTP id 6a1803df08f44-897347dce1emr7189306d6.58.1770929735295;
-        Thu, 12 Feb 2026 12:55:35 -0800 (PST)
+        bh=brLOvCDrZQ7jb5nfFcJVD0wv+nVS4N9OWw0mF9SPY7k=;
+        b=rGNmjwRRLbcPv1fR5+0312w1TJnIDhWJCHGEq5tgCbtARDJZhBdZ4b0NZ+jrm1o7cj
+         9PURaZUr0wzHK5MW7+71RKJmq0qyTz3bjV2G/hx1LD88CfaK6CAadtCTQaFyoEX06peU
+         MuRmmIB4tokGJ+sUz0J/Bb8IOOtWqUfJFuv3AJOylk+xOvU8yg4bLFGyYAgTVnblSBYi
+         jiV7JXBylrKLD0Dusryf+p4aYlGeNzO9JPUhmO9sgHWI8wMeq8aWFvxAWL+qDpRtsF/F
+         sw8oPhmQEfZnFbFkVCDsNVo0Xl+q1u3JMx6DF9JfMz9tQ/Kbesp5HawBUqbx/DPo7lnA
+         Kdnw==
+X-Gm-Message-State: AOJu0Yzxy3fEPw/ev6f9D547D8EeP/GbM0nYjdFjm00zNWj57VGbZSG3
+	KSPPowAFtOxP627YkNwqWS/XaaXgCQaVxGlDEEvynztiasURp9crSg9RX8891W58
+X-Gm-Gg: AZuq6aIFAtr6C1ZvBDp8dgleBrgX58IV5blEd2qp/7rRn8zO7ZfxwLh9kPyjUvP1oq1
+	hJkt+5pF8k8D+vwoPQ1gJiSNZWvHoe+6OL+ShV5t6wcLSx2GH93v6kp/IeIFcehXWokeWpLFtr1
+	4Hl8vLbXvHjs18gPSwfiT9G4GOlNCo62VNnT9Pbs/wbxDSw/adt4grwJdGHHgTU9/PDUnYlTdj9
+	tTB+8j0L19FMHHDsZZZZUGN1qPq0HysSnMG18iYIA17Bh3e+JdAX7OYXS7Cku0kK1+GtnDGfTfm
+	JfyryZIWzyDoO4eV/lSlKgz8e8ZW5CR4IVD6k3vwad4H0Ub5JZ4fiayG0dIB5lkrdhvzlXCb8FM
+	LNpSb9+NDT4LPNo/03h4xU+r8YJfhyBtTJGvDE0eIIGE/kjsDB13jheQz81gwSJtUfXD8yjdofx
+	/1P9e8Hcpj45fwAwdY3YXxTy6CUXwCrN86Kj9DTfIobCPQZRO8zd8F6T0/4YUTtImkNouoc0VkS
+	ASJm+5omog=
+X-Received: by 2002:ac8:7d04:0:b0:4ed:6dde:4573 with SMTP id d75a77b69052e-506a6af3d2amr570251cf.52.1770929737108;
+        Thu, 12 Feb 2026 12:55:37 -0800 (PST)
 Received: from dhcp-10-231-55-133.dhcp.broadcom.net ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-8971cc823a4sm44446646d6.8.2026.02.12.12.55.34
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-8971cc823a4sm44446646d6.8.2026.02.12.12.55.36
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 12 Feb 2026 12:55:34 -0800 (PST)
+        Thu, 12 Feb 2026 12:55:36 -0800 (PST)
 From: Justin Tee <justintee8345@gmail.com>
 To: linux-scsi@vger.kernel.org
 Cc: jsmart833426@gmail.com,
 	justin.tee@broadcom.com,
 	Justin Tee <justintee8345@gmail.com>
-Subject: [PATCH 05/13] lpfc: Reduce pointer chasing when accessing vmid_flag
-Date: Thu, 12 Feb 2026 13:30:00 -0800
-Message-Id: <20260212213008.149873-6-justintee8345@gmail.com>
+Subject: [PATCH 06/13] lpfc: Remove unnecessary ndlp kref get in lpfc_check_nlp_post_devloss
+Date: Thu, 12 Feb 2026 13:30:01 -0800
+Message-Id: <20260212213008.149873-7-justintee8345@gmail.com>
 X-Mailer: git-send-email 2.38.0
 In-Reply-To: <20260212213008.149873-1-justintee8345@gmail.com>
 References: <20260212213008.149873-1-justintee8345@gmail.com>
@@ -77,29 +77,30 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-For all FLOGI completions, the vport->phba->pport pointer is actually a
-pointer to the original vport pointer because FLOGIs always complete on the
-physical lpfc_vport object.  Thus, we can reduce the
-vport->phba->pport->vmid_flag dereference to simply vport->vmid_flag.
+When NLP_IN_RECOV_POST_DEV_LOSS is set, the initial node reference remains
+held while recovery is in progress.  Taking a reference when
+NLP_IN_RECOV_POST_DEV_LOSS is cleared results in an additional reference
+being held.  This causes an extra reference when cleaning up lpfc_vport
+instances.  Thus, remove the extraneous ndlp kref get in
+lpfc_check_nlp_post_devloss.
 
 Signed-off-by: Justin Tee <justintee8345@gmail.com>
 ---
- drivers/scsi/lpfc/lpfc_els.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/lpfc/lpfc_hbadisc.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-index 019851da8766..e5736b06c3dd 100644
---- a/drivers/scsi/lpfc/lpfc_els.c
-+++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -1107,7 +1107,7 @@ lpfc_cmpl_els_flogi(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 		vport->vmid_flag = 0;
- 	}
- 	if (sp->cmn.priority_tagging)
--		vport->phba->pport->vmid_flag |= (LPFC_VMID_ISSUE_QFPA |
-+		vport->vmid_flag |= (LPFC_VMID_ISSUE_QFPA |
- 						  LPFC_VMID_TYPE_PRIO);
- 
- 	/*
+diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
+index 210aa88f9df9..2fa121e50c1c 100644
+--- a/drivers/scsi/lpfc/lpfc_hbadisc.c
++++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
+@@ -425,7 +425,6 @@ lpfc_check_nlp_post_devloss(struct lpfc_vport *vport,
+ {
+ 	if (test_and_clear_bit(NLP_IN_RECOV_POST_DEV_LOSS, &ndlp->save_flags)) {
+ 		clear_bit(NLP_DROPPED, &ndlp->nlp_flag);
+-		lpfc_nlp_get(ndlp);
+ 		lpfc_printf_vlog(vport, KERN_INFO, LOG_DISCOVERY | LOG_NODE,
+ 				 "8438 Devloss timeout reversed on DID x%x "
+ 				 "refcnt %d ndlp %p flag x%lx "
 -- 
 2.38.0
 
