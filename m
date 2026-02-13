@@ -1,140 +1,110 @@
-Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-dy1-f202.google.com (mail-dy1-f202.google.com [74.125.82.202])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8F9AF1C5D72;
-	Fri, 13 Feb 2026 17:44:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B031274B3B
+	for <linux-scsi@vger.kernel.org>; Fri, 13 Feb 2026 19:22:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.202
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771004651; cv=none; b=Y1nciqY7pqI0IqvOk8WqpWqGMB3PQUJBGrqdoujtEKUqrTjRzu5D00nT7oD+ycD41+zyZUcSirhjNjzL9G7LrvO07+tlENXlEd7D+flv2Gr4XHdut6ZQYk0eesIUcV8hSl6A6PZh3kx/YYJZ/vrOFpKVmQelUTOxDUuwyQIWK4Q=
+	t=1771010548; cv=none; b=M7EMvxlxvloDphL6A3BNLbnVA2gzZOJGHJ3UVJ1A6yl4L50mGUwYtLkf1pwWLREiCnB7HfYxudc3MbUUfmz6DzO6HaWjldMhIIUpv3sgYXJusUO0g9eMB7fgJ8/lIQnLS8+vUpkJPc7PWCP65wV5dmtZBwojprp0j8YROB6e9ns=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771004651; c=relaxed/simple;
-	bh=D79a4GzqBUqsbj5ac+8oLuPoUQ+fQfKkkmR+53g3EUY=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=qPYM6mN4+8zSifFLNRf/5bBriMqspeRdi8pDX//wmA37e6Fs0/cXPlmbp7/0FUvMAWTJy9MzNQDUMStvGjr7VXP1zu5lXytF5LhJEFLcKz9jvovBbvmJ+AmIRrhkXhlxGXNE8xkdXkdkCf+ba1+x5U6E1zTQq5oLNFw1Tm7pkq8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=QzNyeC+7; arc=none smtp.client-ip=199.89.1.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1771010548; c=relaxed/simple;
+	bh=lRAN5b2s8qIPY0Klj1P6SKq3/Ipitbr21jiXQae+3nw=;
+	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
+	 To:Cc:Content-Type; b=rg7mPGXXkobKsZaJFEtC1BpCRWveHOEvbFXG6HZjHEmHh4GmbsCgwPYV40wTiSD8Y5IXfiSASWmcCcfwZpNiPozyAIU4zVL2NHWX38doEshXntQmZ0fCGasd/HT/FFxjaIvoqZufsX6mPyTLaT8S8j5x8vp7FnsRfgk+OWnQOr8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--salomondush.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=2uK2D5U0; arc=none smtp.client-ip=74.125.82.202
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--salomondush.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="QzNyeC+7"
-Received: from localhost (localhost [127.0.0.1])
-	by 013.lax.mailroute.net (Postfix) with ESMTP id 4fCKKj6mlFzlgqwF;
-	Fri, 13 Feb 2026 17:44:09 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1771004648; x=1773596649; bh=t9RzRfvwbSgpAAn+57L/twMb
-	K6THI0fSwkzw1UKZRes=; b=QzNyeC+78j+FCizjBSZLWJPixMNPatJ8HNzEwubp
-	yRQdiq+UcNG4TgXbrCcSBO+1U5RLvQF2JDPAWNVvrEr9kjznYAo+foAHwGGzPjK2
-	8iNettCMNTrcbNYGdjuD6pbrRwHvT07kkG+TTiCX6wWnUDwHG+0J+H4goOL9P1lh
-	ey4fyk4jg112tX+f2Ac+RqUjOivwmP4IltVmK6Fk1BvJjCIe418yhhV7GOZV7IK0
-	GF7K2kY2+RDX9ynJ2WTrhSKVHXX2gD16iDiIbiXGi7BvEh0+Zgid3FSsfUv10bFq
-	Snt3Pp7CNxP2zBTqV4ydz3FCoyDTnnOozvhyQU0r7U2m/A==
-X-Virus-Scanned: by MailRoute
-Received: from 013.lax.mailroute.net ([127.0.0.1])
- by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id 8XnJ08o8QUxG; Fri, 13 Feb 2026 17:44:08 +0000 (UTC)
-Received: from [100.119.48.131] (unknown [104.135.180.219])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4fCKKg1FjCzlfgPZ;
-	Fri, 13 Feb 2026 17:44:06 +0000 (UTC)
-Message-ID: <5157497a-3536-4187-883e-19a54167955a@acm.org>
-Date: Fri, 13 Feb 2026 09:44:06 -0800
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="2uK2D5U0"
+Received: by mail-dy1-f202.google.com with SMTP id 5a478bee46e88-2ba68ed568bso815137eec.1
+        for <linux-scsi@vger.kernel.org>; Fri, 13 Feb 2026 11:22:26 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20230601; t=1771010546; x=1771615346; darn=vger.kernel.org;
+        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
+         :date:from:to:cc:subject:date:message-id:reply-to;
+        bh=E+HQuoE8UnGrCMiVyAiZ9ndoG4yhkaEaK1xHNudOJZk=;
+        b=2uK2D5U0gL/2yFHTyu4fYu41/rduFxzcvOeeDFhfXhJZnc+4EUTrdOXwWa3M1J9B3f
+         PhRmtF1gUQbPYxLFGiTozhNy+2QYWueBhWLpcylq2v2wjbr5Ni2bshyhoVyRCM751b3U
+         UMHOiNkgINivBc/ukq8LOf+88rv8lyEibDWBCij3eAIFuiffqZXx20y29UU8LbW5NY0I
+         7qatuBYtn9twIDqcgbrwNvy4cYx86flBcEcz5bsuCNDVEVjm2UgTVBUUDAWJhAfWCple
+         7E9qNWBB2gVZ+d/j6uC6TCDQnHDSXAqTslMfl4mLkrUFztm1EpYf9KrGnKXUnUy2ruAB
+         Dyhg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1771010546; x=1771615346;
+        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
+         :date:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=E+HQuoE8UnGrCMiVyAiZ9ndoG4yhkaEaK1xHNudOJZk=;
+        b=TSp6iEJX3j1xyWuRlw9H4vzD+lPHyKaW1CPAL0+vL4V2kARfOUPAX2JbBqGJEwXMle
+         cAyCfO2UJy2BWZONC2IoWG0TPK7dUalmwEpug6ZDLh7xgA9FRPfLcBp7e1lDLjO2t290
+         WHKJKMJjpdetzo63XW0PATyeG3Fp1N4c/IffwP1BVCk+hQc+JdG8dedHpASVYeeUGiTc
+         Qa/5Rv5lfEgj56P3BkAP0lcVxdUZKsLyEayA4ZuQebgyCAfs+ybQ/vLj/drcNsW9Xb47
+         L4SvSC1Mjwz7R+ZgKD+xlzHxkJb1q8nrXIxAbuuvW6hJbqKX5LaUPP/0bAc8ykxlmYsc
+         Uk2w==
+X-Forwarded-Encrypted: i=1; AJvYcCUVIhrIzO9AkzAsA75f25tze2/QRb1+Vem/r6kl+GF99pOi2i27HClEzUXLjrtgQmQq2uuFqJ96Hi+x@vger.kernel.org
+X-Gm-Message-State: AOJu0YyGDd+ktyCVa73d8lNNpim1n6SHACNeQEXa2WThvOVfN7VqwUDz
+	uTMlmXnHcYhcJP6gXmMBqwgiDMDiOM0xn3DujKbS0Bql9+xRIlXtZhOVfRriElh0Euo2x+Wwe2q
+	7P70w7+Eh+CagTTyhs48BSSE9YQ==
+X-Received: from dybfe28.prod.google.com ([2002:a05:7300:bf9c:b0:2ba:88ba:e0f5])
+ (user=salomondush job=prod-delivery.src-stubby-dispatcher) by
+ 2002:a05:7300:ca1:b0:2b8:3b47:8951 with SMTP id 5a478bee46e88-2bac71d4b02mr507084eec.1.1771010545892;
+ Fri, 13 Feb 2026 11:22:25 -0800 (PST)
+Date: Fri, 13 Feb 2026 19:22:14 +0000
+In-Reply-To: <05c3fac5-b604-496b-b0eb-5b2dbd68e66c@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: blktests failures with v6.19 kernel
-To: Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>,
- "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
- "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
- "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
- "nbd@other.debian.org" <nbd@other.debian.org>,
- "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>
-References: <aY7ZBfMjVIhe_wh3@shinmob>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <aY7ZBfMjVIhe_wh3@shinmob>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Mime-Version: 1.0
+References: <05c3fac5-b604-496b-b0eb-5b2dbd68e66c@kernel.org>
+X-Mailer: git-send-email 2.53.0.273.g2a3d683680-goog
+Message-ID: <20260213192214.437871-1-salomondush@google.com>
+Subject: [PATCH v2] scsi: pm8001: Fix use-after-free in pm8001_queue_command()
+From: Salomon Dushimirimana <salomondush@google.com>
+To: dlemoal@kernel.org
+Cc: James.Bottomley@HansenPartnership.com, damien.lemoal@opensource.wdc.com, 
+	jinpu.wang@cloud.ionos.com, john.g.garry@oracle.com, 
+	linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, 
+	martin.petersen@oracle.com, salomondush@google.com
+Content-Type: text/plain; charset="UTF-8"
 
-On 2/12/26 11:57 PM, Shinichiro Kawasaki wrote:
-> [5] kmemleak at nvme/061 wiht rdma transport and siw driver
-> 
-> unreferenced object 0xffff888114792600 (size 32):
->    comm "kworker/2:1H", pid 66, jiffies 4295489358
->    hex dump (first 32 bytes):
->      c2 f6 83 05 00 ea ff ff 00 00 00 00 00 10 00 00  ................
->      00 b0 fd 60 81 88 ff ff 00 10 00 00 00 00 00 00  ...`............
->    backtrace (crc 3dbac61d):
->      __kmalloc_noprof+0x62f/0x8b0
->      sgl_alloc_order+0x74/0x330
->      0xffffffffc1b73433
->      0xffffffffc1bc1f0d
->      0xffffffffc1bc8064
->      __ib_process_cq+0x14f/0x3e0 [ib_core]
->      ib_cq_poll_work+0x49/0x160 [ib_core]
->      process_one_work+0x868/0x1480
->      worker_thread+0x5ee/0xfd0
->      kthread+0x3af/0x770
->      ret_from_fork+0x55c/0x810
->      ret_from_fork_asm+0x1a/0x30
+Commit e29c47fe8946 ("scsi: pm8001: Simplify pm8001_task_exec()")
+refactors pm8001_queue_command(), however it introduces a potential
+cause of a double free scenario when it changes the function to return
+-ENODEV in case of phy down/device gone state.
 
-There are no sgl_alloc() calls in the RDMA subsystem. I think the above
-indicates a memory leak in either the RDMA NVMe target driver or in the
-NVMe target core.
+In this path, pm8001_queue_command updates task status and calls
+task_done to indicate to upper layer that the task has been handled.
+However, this also frees the underlying sas task. A -ENODEV is then
+returned to the caller. When libsas sas_ata_qc_issue receives this error
+value, it assumes the task wasn't handled/queued by LLDD and proceeds to
+clean up and free the task again, resulting in a double free.
 
-> [7] kmemleak at zbd/009
-> 
-> unreferenced object 0xffff88815f1f1280 (size 32):
->    comm "mount", pid 1745, jiffies 4294866235
->    hex dump (first 32 bytes):
->      6d 65 74 61 64 61 74 61 2d 74 72 65 65 6c 6f 67  metadata-treelog
->      00 93 9c fb af bb ae 00 00 00 00 00 00 00 00 00  ................
->    backtrace (crc 2ee03cc2):
->      __kmalloc_node_track_caller_noprof+0x66b/0x8c0
->      kstrdup+0x42/0xc0
->      kobject_set_name_vargs+0x44/0x110
->      kobject_init_and_add+0xcf/0x140
->      btrfs_sysfs_add_space_info_type+0xf2/0x200 [btrfs]
->      create_space_info_sub_group.constprop.0+0xfb/0x1b0 [btrfs]
->      create_space_info+0x247/0x320 [btrfs]
->      btrfs_init_space_info+0x143/0x1b0 [btrfs]
->      open_ctree+0x2eed/0x43fe [btrfs]
->      btrfs_get_tree.cold+0x90/0x1da [btrfs]
->      vfs_get_tree+0x87/0x2f0
->      vfs_cmd_create+0xbd/0x280
->      __do_sys_fsconfig+0x64f/0xa30
->      do_syscall_64+0x95/0x540
->      entry_SYSCALL_64_after_hwframe+0x76/0x7e
-> unreferenced object 0xffff888128d80000 (size 16):
->    comm "mount", pid 1745, jiffies 4294866237
->    hex dump (first 16 bytes):
->      64 61 74 61 2d 72 65 6c 6f 63 00 4b 96 f6 48 82  data-reloc.K..H.
->    backtrace (crc 1598f702):
->      __kmalloc_node_track_caller_noprof+0x66b/0x8c0
->      kstrdup+0x42/0xc0
->      kobject_set_name_vargs+0x44/0x110
->      kobject_init_and_add+0xcf/0x140
->      btrfs_sysfs_add_space_info_type+0xf2/0x200 [btrfs]
->      create_space_info_sub_group.constprop.0+0xfb/0x1b0 [btrfs]
->      create_space_info+0x211/0x320 [btrfs]
->      open_ctree+0x2eed/0x43fe [btrfs]
->      btrfs_get_tree.cold+0x90/0x1da [btrfs]
->      vfs_get_tree+0x87/0x2f0
->      vfs_cmd_create+0xbd/0x280
->      __do_sys_fsconfig+0x64f/0xa30
->      do_syscall_64+0x95/0x540
->      entry_SYSCALL_64_after_hwframe+0x76/0x7e
+Since pm8001_queue_command handles the sas task in this case, it should
+return 0 to the caller indicating that the task has been handled.
 
-Please report the above to the BTRFS maintainers.
+Fixes: e29c47fe8946 ("scsi: pm8001: Simplify pm8001_task_exec()")
+Signed-off-by: Salomon Dushimirimana <salomondush@google.com>
+---
+ drivers/scsi/pm8001/pm8001_sas.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-Thanks,
+diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
+index 6a8d35aea93a..645524f3fe2d 100644
+--- a/drivers/scsi/pm8001/pm8001_sas.c
++++ b/drivers/scsi/pm8001/pm8001_sas.c
+@@ -525,8 +525,9 @@ int pm8001_queue_command(struct sas_task *task, gfp_t gfp_flags)
+ 		} else {
+ 			task->task_done(task);
+ 		}
+-		rc = -ENODEV;
+-		goto err_out;
++		spin_unlock_irqrestore(&pm8001_ha->lock, flags);
++		pm8001_dbg(pm8001_ha, IO, "pm8001_task_exec device gone\n");
++		return 0;
+ 	}
+ 
+ 	ccb = pm8001_ccb_alloc(pm8001_ha, pm8001_dev, task);
+-- 
+2.53.0.273.g2a3d683680-goog
 
-Bart.
