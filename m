@@ -1,101 +1,115 @@
-Received: from mail-qt1-f179.google.com (mail-qt1-f179.google.com [209.85.160.179])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9971825B2F4
-	for <linux-scsi@vger.kernel.org>; Thu, 12 Feb 2026 20:55:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.179
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 531993EBF33;
+	Fri, 13 Feb 2026 01:02:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770929751; cv=none; b=EFmCAoiyesbcTnqMJ9JD6E1PlKcvZ8LPGVeCNX/u/+RczLq2DV/m8HqgEF0zuO6DSPnWQVKjzX0kKhm8ewSf7JIivwrVJ7G3thG0M6K6X87HgP/mPszoYGmTSGvPXh9s7iPuYEXb46E1I4A/RjwubunGA6Jd68YM+UYHEnwf9fg=
+	t=1770944575; cv=none; b=FNNIsLfFyH3TaroHblwyF+TD2VWF2IU6RMKmhNXEc3OEURMBCNFBqiIkOQ2psHcqkqiirt3EY5F49ejnBBmM8XbTJYTqgLZhKXFVvaZI9YsW8zrMEKnOqw3hfzqgvm5A5I3SCgn4wlszvefJ/CmH2ofrlrcw2LwRDL0Ke69c2CE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770929751; c=relaxed/simple;
-	bh=N4Db8elwtoJ3w5qsb2krFN3RSRUE8VFtvGdNcrG4zro=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=bA7gFFyAHYXeV6TIHtB17AILIyt4aQoUIiBxCzlPGP2+w4stagFp8hoypGcnn2bzprqJDNaGjiZsbVhMyjaBtrMt1g9Jhou0Thqt5JBn7cKoX9h8MOfEjXPnRtU8U/+IWSAAPSovReXsN65V9c7IR0SEQxP+PVIsDk27/5L4KY4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=hx+RbfRJ; arc=none smtp.client-ip=209.85.160.179
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1770944575; c=relaxed/simple;
+	bh=KwbmCqQa/Q37dD8NJdF3IkFjL0StaTgXiGrl/kaJs5Q=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=DPaNHGvHT7Ilopg77ovsCEDwvjKKEwWacfk1Bf8XLe8amtRJJk4GzhjxqahKnRKkbIWx4pX7YdtVABdjduzISUZUnMKz1Or5zNbGH2oQKrEJu9KSBO9uLib2n0Kd/Px/Y+nRoA1sjxffg1opo626tU9CVDLNIyAnJbltgx7Dfos=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=k1r/4Yxz; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="hx+RbfRJ"
-Received: by mail-qt1-f179.google.com with SMTP id d75a77b69052e-506a3400f30so2563411cf.1
-        for <linux-scsi@vger.kernel.org>; Thu, 12 Feb 2026 12:55:50 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1770929749; x=1771534549; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=1zmUE8kO3Eh5r3psNfiUeJgNrgRhN12plLQdkN7lO6Q=;
-        b=hx+RbfRJuTVveYRn6HcZ4kxIwfWIPN0iId0oude009Yh1yV8bIgdpGMreDUuCTWwQN
-         grYj6G9hU5WvXActoIvu0YbSCdFFBliZQzOXB0GUUfqCA1j2wV0g/TAeYMqccdu5+OVG
-         kFdf1eFIZDho+q8RZaHXuPmho/Y4VcjFVUMRt/JYn8FBeeq0HDIs5ILjoj1mFlxJ+wIp
-         ZSlqyr5594w3Zazg/lq/r82KqRk9cQQByyM+ME4U+pPnogsJVQm3V2ijYLU7thi5Qk1J
-         4XPJ2aA+imaWedmBC8g1wodqU/AbeZCGPDiqSfzC0SJbOcriFZqDMSpLk3+Nj272Bq58
-         t75Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1770929749; x=1771534549;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=1zmUE8kO3Eh5r3psNfiUeJgNrgRhN12plLQdkN7lO6Q=;
-        b=qfF8Ztu5sl6nkcTksXVYCUO1iovR8QDsYM5Glf/I//7bIoq3qwPOl9C3R4Nwh+BIPK
-         qBpDsM+YnAuJq3NvOAlOVKheqN8XCp2+4xQxx4xQuU56zG5fV2Ikx+Uzi/x3vcyuAk86
-         NNb5/nxup3wUhjmcqH8U1mP2Z7fhHzi3zwh2nZTx6LeS/GBeVH3pgLJATZnAM2+H/onv
-         R6IBPtEchVVtMBdqiF27ALa9mUwVZT9XSPp2rzmMIriqVHdk7uhTqT7B7BKaRfHF/c6C
-         vT6Rctal1k5jR8XuuqIpVADUcDiDWZKmTxc4hkPI1bVwzDqS6QlmptRFfiK2xzcxkxb5
-         m3dg==
-X-Gm-Message-State: AOJu0YwQXExFvLPkWsOmbZI6W70cGxV/n/Uf+zZyFXEmSlSuBPrnlo7Q
-	ze/ssYdegRw91JtHR0UustIJeWyZXsgvD2fyREo0iTBHH+xEDqbAuyDo
-X-Gm-Gg: AZuq6aJOWeNrt1ZUdY/zBCvjpPALaCKZfIZhCsPBkvHVgvXH/ZDQKbxzVIicv+Ynhp+
-	INBUXIY51f5xUcmQbkeFkKRe/fM8ZX862i5Y3dZCNq65LPUUsWaYA6ZA/WMAEsFhJ06zBgUVgAw
-	i9kBWMtUPFW7MyBdvJPWZ+8YRCDSi/9PdCuJLufr5KCQDqsUE7SMDQhi9eSLwhPz5/+g8I7vxDk
-	RTznZEkzAUWoKJVwvNOD7wbubDAwM98dbVbwLraqJjD2tHZ3oPt42DIxJj3kH8BXTDDFNZrIfhW
-	VUVyrEGg6heRjtpD94qarffTL21vwDjJbt7IbMSTR78R0+nl2HCgIw/RIMzFNPDo2Zxtnu5pXON
-	MutMwyNvgjpU/DPEQ6k5s8kS14TqdtbiDjTIEJ+yyjOfnKCGXNUcOrTrmga7ONFntOIOo453C/L
-	lJC2iygIuwAaXrno0EmZEHSzKegB+M9o5z2z6V4M+S
-X-Received: by 2002:ac8:5f8a:0:b0:4f1:8412:46e2 with SMTP id d75a77b69052e-506934bb4f3mr55062931cf.29.1770929747654;
-        Thu, 12 Feb 2026 12:55:47 -0800 (PST)
-Received: from dhcp-10-231-55-133.dhcp.broadcom.net ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-8971cc823a4sm44446646d6.8.2026.02.12.12.55.46
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 12 Feb 2026 12:55:47 -0800 (PST)
-From: Justin Tee <justintee8345@gmail.com>
-To: linux-scsi@vger.kernel.org
-Cc: jsmart833426@gmail.com,
-	justin.tee@broadcom.com,
-	Justin Tee <justintee8345@gmail.com>
-Subject: [PATCH 13/13] lpfc: Update lpfc version to 14.4.0.14
-Date: Thu, 12 Feb 2026 13:30:08 -0800
-Message-Id: <20260212213008.149873-14-justintee8345@gmail.com>
-X-Mailer: git-send-email 2.38.0
-In-Reply-To: <20260212213008.149873-1-justintee8345@gmail.com>
-References: <20260212213008.149873-1-justintee8345@gmail.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="k1r/4Yxz"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6F376C4CEF7;
+	Fri, 13 Feb 2026 01:02:54 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1770944574;
+	bh=KwbmCqQa/Q37dD8NJdF3IkFjL0StaTgXiGrl/kaJs5Q=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=k1r/4Yxz7bCefYO+ld67cg3Bg1TPvFMtLZxiDotgFV/1EE86IolC4qpNqp2Mp/RCy
+	 0fy0cSCyNtjTmBWiQ77+78NduSt+GWYmjnFvDxs8CBtcLMGv7mb1DX6JgNxtFoY3L1
+	 DEjgpdi899HXRRQAn5rNrxP2U/PZooLV6dVFJCgMtBCMC4Kz9Tqd3HgGZWdLHffYVH
+	 hL0uj7J4B01tLYLd5n8E1DjU8C4IYDeYA9/VYamdSuBTAh9+JY81YNT9r4TzPP2hnm
+	 8yN78C7o4TLtT/LEfz5L+ccWzn7XHxIMqVipKdRAHCsKkCxESD1LO0x8/qd6IeXbkl
+	 fm6voAeBhpjIQ==
+Date: Thu, 12 Feb 2026 17:02:53 -0800
+From: Eric Biggers <ebiggers@kernel.org>
+To: manivannan.sadhasivam@oss.qualcomm.com
+Cc: Bjorn Andersson <andersson@kernel.org>,
+	Konrad Dybcio <konradybcio@kernel.org>,
+	Abel Vesa <abel.vesa@linaro.org>,
+	Adrian Hunter <adrian.hunter@intel.com>,
+	Ulf Hansson <ulf.hansson@linaro.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-mmc@vger.kernel.org, linux-scsi@vger.kernel.org,
+	Sumit Garg <sumit.garg@oss.qualcomm.com>, stable@vger.kernel.org,
+	Abel Vesa <abel.vesa@oss.qualcomm.com>
+Subject: Re: [PATCH v2 1/4] soc: qcom: ice: Remove platform_driver support
+ and expose as a pure library
+Message-ID: <20260213010253.GA6208@quark>
+References: <20260210-qcom-ice-fix-v2-0-9c1ab5d6502c@oss.qualcomm.com>
+ <20260210-qcom-ice-fix-v2-1-9c1ab5d6502c@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260210-qcom-ice-fix-v2-1-9c1ab5d6502c@oss.qualcomm.com>
 
-Update lpfc version to 14.4.0.14
+On Tue, Feb 10, 2026 at 12:26:50PM +0530, Manivannan Sadhasivam via B4 Relay wrote:
+>  drivers/soc/qcom/ice.c | 118 ++++++++++++++++++-------------------------------
+>  1 file changed, 44 insertions(+), 74 deletions(-)
 
-Signed-off-by: Justin Tee <justintee8345@gmail.com>
----
- drivers/scsi/lpfc/lpfc_version.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+I don't yet know enough to be confident that this is the correct fix,
+but there are a few things I noticed that look like bugs:
 
-diff --git a/drivers/scsi/lpfc/lpfc_version.h b/drivers/scsi/lpfc/lpfc_version.h
-index a362a7356435..31a0cd9db1c2 100644
---- a/drivers/scsi/lpfc/lpfc_version.h
-+++ b/drivers/scsi/lpfc/lpfc_version.h
-@@ -20,7 +20,7 @@
-  * included with this package.                                     *
-  *******************************************************************/
- 
--#define LPFC_DRIVER_VERSION "14.4.0.13"
-+#define LPFC_DRIVER_VERSION "14.4.0.14"
- #define LPFC_DRIVER_NAME		"lpfc"
- 
- /* Used for SLI 2/3 */
--- 
-2.38.0
+> +static DEFINE_MUTEX(ice_mutex);
+> +struct qcom_ice *ice_handle;
 
+ice_handle is used only in this file, so it should be static
+
+> @@ -643,41 +645,42 @@ static struct qcom_ice *of_qcom_ice_get(struct device *dev)
+[...]
+> +	ice = qcom_ice_create(&pdev->dev, base);
+> +	if (IS_ERR(ice)) {
+>  		platform_device_put(pdev);
+> -		ice = ERR_PTR(-EINVAL);
+> +		return ice_handle;
+>  	}
+
+This error path returns NULL, where this patch seems to have been
+intended to remove NULL as a possible return value.
+
+> -static void qcom_ice_put(const struct qcom_ice *ice)
+> +static void qcom_ice_put(struct kref *kref)
+>  {
+> -	struct platform_device *pdev = to_platform_device(ice->dev);
+> -
+> -	if (!platform_get_resource_byname(pdev, IORESOURCE_MEM, "ice"))
+> -		platform_device_put(pdev);
+> +	platform_device_put(to_platform_device(ice_handle->dev));
+> +	ice_handle = NULL;
+>  }
+
+Elsewhere ice_handle is protected by ice_mutex, but this seems to modify
+it without holding the mutex.
+
+I'm also wondering what happens if all consumer devices are removed.
+platform_device_put() gets executed on the ICE platform_device for each
+one, but does that actually drop the last reference and cause the
+resources allocated with devm_*() to be freed?  On do they stick around
+until/unless the ICE device is actually removed as well?
+
+>  static void devm_of_qcom_ice_put(struct device *dev, void *res)
+>  {
+> -	qcom_ice_put(*(struct qcom_ice **)res);
+> +	const struct qcom_ice *ice = *(struct qcom_ice **)res;
+> +	struct platform_device *pdev = to_platform_device(ice->dev);
+> +
+> +	if (!platform_get_resource_byname(pdev, IORESOURCE_MEM, "ice"))
+> +		kref_put(&ice_handle->refcount, qcom_ice_put);
+>  }
+
+Above probably should use the ice local variable, not ice_handle.
+
+- Eric
