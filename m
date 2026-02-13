@@ -1,71 +1,71 @@
-Received: from mail-dy1-f202.google.com (mail-dy1-f202.google.com [74.125.82.202])
+Received: from mail-dy1-f201.google.com (mail-dy1-f201.google.com [74.125.82.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B031274B3B
-	for <linux-scsi@vger.kernel.org>; Fri, 13 Feb 2026 19:22:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.202
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 72F3A2882AA
+	for <linux-scsi@vger.kernel.org>; Fri, 13 Feb 2026 19:28:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771010548; cv=none; b=M7EMvxlxvloDphL6A3BNLbnVA2gzZOJGHJ3UVJ1A6yl4L50mGUwYtLkf1pwWLREiCnB7HfYxudc3MbUUfmz6DzO6HaWjldMhIIUpv3sgYXJusUO0g9eMB7fgJ8/lIQnLS8+vUpkJPc7PWCP65wV5dmtZBwojprp0j8YROB6e9ns=
+	t=1771010894; cv=none; b=WIK3sZ4hLfaOpRL5XYavFP4Of9dln3efmOBbYgwLT++IYj5cz4t/TMq5T+DIIVe4wtIzLxV0wifMqEs8SbSFyjUKe271jufVGYxGM7Zv8ga2+w/d189t929lRcbTB+xfdDJdZ6yFaDu2Z63gt7DO33+MI7dhFqAowiydazwlKfo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771010548; c=relaxed/simple;
-	bh=lRAN5b2s8qIPY0Klj1P6SKq3/Ipitbr21jiXQae+3nw=;
+	s=arc-20240116; t=1771010894; c=relaxed/simple;
+	bh=UjPW0uVC2RWu7xh9+kmvnIIFZpqlM8pLv8XfawnKCxM=;
 	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
-	 To:Cc:Content-Type; b=rg7mPGXXkobKsZaJFEtC1BpCRWveHOEvbFXG6HZjHEmHh4GmbsCgwPYV40wTiSD8Y5IXfiSASWmcCcfwZpNiPozyAIU4zVL2NHWX38doEshXntQmZ0fCGasd/HT/FFxjaIvoqZufsX6mPyTLaT8S8j5x8vp7FnsRfgk+OWnQOr8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--salomondush.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=2uK2D5U0; arc=none smtp.client-ip=74.125.82.202
+	 To:Cc:Content-Type; b=G3DvzEcY/SI+iWPPQ3gGSQkjdf2hRdDL8wpFSjBFbPq8+fpGdHM+UoziQwKh7P7JhvTvolfY3FRXuCJ33WFVUL3oEhHPKgSI8xtfH2EMxoXTjmYpsyETGSWmgpgSH4h+6cVS0RDGUrnWP68w7Hi7VJHteYWa+aL/f6SYjP5ciLY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--salomondush.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=Yhkimedf; arc=none smtp.client-ip=74.125.82.201
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--salomondush.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="2uK2D5U0"
-Received: by mail-dy1-f202.google.com with SMTP id 5a478bee46e88-2ba68ed568bso815137eec.1
-        for <linux-scsi@vger.kernel.org>; Fri, 13 Feb 2026 11:22:26 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="Yhkimedf"
+Received: by mail-dy1-f201.google.com with SMTP id 5a478bee46e88-2ba87c0e198so1127848eec.1
+        for <linux-scsi@vger.kernel.org>; Fri, 13 Feb 2026 11:28:12 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1771010546; x=1771615346; darn=vger.kernel.org;
+        d=google.com; s=20230601; t=1771010891; x=1771615691; darn=vger.kernel.org;
         h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
          :date:from:to:cc:subject:date:message-id:reply-to;
-        bh=E+HQuoE8UnGrCMiVyAiZ9ndoG4yhkaEaK1xHNudOJZk=;
-        b=2uK2D5U0gL/2yFHTyu4fYu41/rduFxzcvOeeDFhfXhJZnc+4EUTrdOXwWa3M1J9B3f
-         PhRmtF1gUQbPYxLFGiTozhNy+2QYWueBhWLpcylq2v2wjbr5Ni2bshyhoVyRCM751b3U
-         UMHOiNkgINivBc/ukq8LOf+88rv8lyEibDWBCij3eAIFuiffqZXx20y29UU8LbW5NY0I
-         7qatuBYtn9twIDqcgbrwNvy4cYx86flBcEcz5bsuCNDVEVjm2UgTVBUUDAWJhAfWCple
-         7E9qNWBB2gVZ+d/j6uC6TCDQnHDSXAqTslMfl4mLkrUFztm1EpYf9KrGnKXUnUy2ruAB
-         Dyhg==
+        bh=2WKcVaD9Ft2wlm83LrNWA0nU10pfi9iyt0eM/oNmk6A=;
+        b=Yhkimedfc5pWyHBEPS8viZNbgwcANmvNsnXClEyGjdnqknLXbJXCgwbUSBkhzOxI8j
+         IWtTzAhgMOr+5BsKJvojdjI31va/hohENQ9e4nPrynIaJ/BqxEXFym26FiOPhS8o3I8p
+         HgcdQFVHM51GD4U0ID9jZp888M+cZIfti7i9+vREGVMMAGOnRmwg/z49msDVXK/Bwc/o
+         5csxgT38/pYdyYtWkCmTschv9jPRGaJHXgNmmr+vY0wLO4DOgI3oIx/ia1SfV1bFMiBC
+         PKLW7Y4Bp9tBSy3ME2ubyIth8JkNPYr8A0li+cgUqiI5S7ItuO5YCmfQqZY2PojA+SG9
+         1Z9Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1771010546; x=1771615346;
+        d=1e100.net; s=20230601; t=1771010891; x=1771615691;
         h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
          :date:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=E+HQuoE8UnGrCMiVyAiZ9ndoG4yhkaEaK1xHNudOJZk=;
-        b=TSp6iEJX3j1xyWuRlw9H4vzD+lPHyKaW1CPAL0+vL4V2kARfOUPAX2JbBqGJEwXMle
-         cAyCfO2UJy2BWZONC2IoWG0TPK7dUalmwEpug6ZDLh7xgA9FRPfLcBp7e1lDLjO2t290
-         WHKJKMJjpdetzo63XW0PATyeG3Fp1N4c/IffwP1BVCk+hQc+JdG8dedHpASVYeeUGiTc
-         Qa/5Rv5lfEgj56P3BkAP0lcVxdUZKsLyEayA4ZuQebgyCAfs+ybQ/vLj/drcNsW9Xb47
-         L4SvSC1Mjwz7R+ZgKD+xlzHxkJb1q8nrXIxAbuuvW6hJbqKX5LaUPP/0bAc8ykxlmYsc
-         Uk2w==
-X-Forwarded-Encrypted: i=1; AJvYcCUVIhrIzO9AkzAsA75f25tze2/QRb1+Vem/r6kl+GF99pOi2i27HClEzUXLjrtgQmQq2uuFqJ96Hi+x@vger.kernel.org
-X-Gm-Message-State: AOJu0YyGDd+ktyCVa73d8lNNpim1n6SHACNeQEXa2WThvOVfN7VqwUDz
-	uTMlmXnHcYhcJP6gXmMBqwgiDMDiOM0xn3DujKbS0Bql9+xRIlXtZhOVfRriElh0Euo2x+Wwe2q
-	7P70w7+Eh+CagTTyhs48BSSE9YQ==
-X-Received: from dybfe28.prod.google.com ([2002:a05:7300:bf9c:b0:2ba:88ba:e0f5])
+        bh=2WKcVaD9Ft2wlm83LrNWA0nU10pfi9iyt0eM/oNmk6A=;
+        b=XUmrSBfvYC3Sh6OvhlstSSOB6ZDe60Rw09m2BLgIy0jYqo4XXpNS9XOKjuLB/frwcq
+         NwRXzATHUbI6ZGXv+JJwewKKX1pgmBCQgp/f310JP5u4wiqzqfZJCP+9b5gQgSZVZV9Y
+         wZjmn0U/+GMJ2EpyYHhhXp1nWbiilAS+kcAHLYpF2QHi7I0rYiBpQ3D0Ro8xmgLImvS3
+         GnvCwNrGH4NNBb16THm7j7y5ZLvkMEkTQUvvZAaFrdcQw/6AA/oUYPCGiei4blvZXHuF
+         nqmOfNDawsAApy037yBmFW3H2dl8icYRRCn2noKSOp3D2mycB8Dde2+czHocJWYYhZu0
+         Q+iA==
+X-Forwarded-Encrypted: i=1; AJvYcCVYidkECaaBd4Z5B1P+LZNkL0riPxaAiXLt7ZEHwJnQ70Yw8dQOzTIQP2IRr66e2fv6frlSp+KQqUMN@vger.kernel.org
+X-Gm-Message-State: AOJu0Yy9R/NDaCTsnkPil9HZHh15y5EnVTUgQqp6jMtmSNNSqkZUxziB
+	DJzZ0oZdQtJ7iTVvmMesQUfiIpKJ0rrsxLsct1e7f6px0TjP5WsmjZ5M2SMjUascXv3Miu/iiRs
+	bSGZQxYcZkNIzLTOhLMVuPYCuPQ==
+X-Received: from dybmf43.prod.google.com ([2002:a05:7301:92b:b0:2ba:a6e4:cb81])
  (user=salomondush job=prod-delivery.src-stubby-dispatcher) by
- 2002:a05:7300:ca1:b0:2b8:3b47:8951 with SMTP id 5a478bee46e88-2bac71d4b02mr507084eec.1.1771010545892;
- Fri, 13 Feb 2026 11:22:25 -0800 (PST)
-Date: Fri, 13 Feb 2026 19:22:14 +0000
-In-Reply-To: <05c3fac5-b604-496b-b0eb-5b2dbd68e66c@kernel.org>
+ 2002:a05:7300:23cc:b0:2ba:769b:813e with SMTP id 5a478bee46e88-2baba13689dmr1357345eec.38.1771010891196;
+ Fri, 13 Feb 2026 11:28:11 -0800 (PST)
+Date: Fri, 13 Feb 2026 19:28:06 +0000
+In-Reply-To: <20260213192214.437871-1-salomondush@google.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
-References: <05c3fac5-b604-496b-b0eb-5b2dbd68e66c@kernel.org>
+References: <20260213192214.437871-1-salomondush@google.com>
 X-Mailer: git-send-email 2.53.0.273.g2a3d683680-goog
-Message-ID: <20260213192214.437871-1-salomondush@google.com>
-Subject: [PATCH v2] scsi: pm8001: Fix use-after-free in pm8001_queue_command()
+Message-ID: <20260213192806.439432-1-salomondush@google.com>
+Subject: [PATCH v3] scsi: pm8001: Fix use-after-free in pm8001_queue_command()
 From: Salomon Dushimirimana <salomondush@google.com>
-To: dlemoal@kernel.org
+To: salomondush@google.com
 Cc: James.Bottomley@HansenPartnership.com, damien.lemoal@opensource.wdc.com, 
-	jinpu.wang@cloud.ionos.com, john.g.garry@oracle.com, 
+	dlemoal@kernel.org, jinpu.wang@cloud.ionos.com, john.g.garry@oracle.com, 
 	linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, 
-	martin.petersen@oracle.com, salomondush@google.com
+	martin.petersen@oracle.com
 Content-Type: text/plain; charset="UTF-8"
 
 Commit e29c47fe8946 ("scsi: pm8001: Simplify pm8001_task_exec()")
@@ -86,6 +86,12 @@ return 0 to the caller indicating that the task has been handled.
 Fixes: e29c47fe8946 ("scsi: pm8001: Simplify pm8001_task_exec()")
 Signed-off-by: Salomon Dushimirimana <salomondush@google.com>
 ---
+Changelog since v2:
+- Added this changelog section
+
+Changelog since v3:
+- Added debug messsage to signal device gone issue
+
  drivers/scsi/pm8001/pm8001_sas.c | 5 +++--
  1 file changed, 3 insertions(+), 2 deletions(-)
 
