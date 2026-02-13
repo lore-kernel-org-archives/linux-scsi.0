@@ -1,97 +1,140 @@
-Received: from lamorak.hansenpartnership.com (lamorak.hansenpartnership.com [198.37.111.173])
+Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 11A0230E0FB;
-	Fri, 13 Feb 2026 17:35:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.37.111.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8F9AF1C5D72;
+	Fri, 13 Feb 2026 17:44:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771004115; cv=none; b=r4pDGlCTGCRPMJft4cgLeMj76dilOz15t7fg8M9sgKuWPBL452GfNrjwhLE3zOIIMeexfmE36F5pErmiFWmpcDixt0sE/cshfDb4XviBc5YLYuPZBYTA/xgz5UHzxZcc2qd/QpG+wblfI6arE4fKbk9pEZIKXBzD5B0nHHfGjaI=
+	t=1771004651; cv=none; b=Y1nciqY7pqI0IqvOk8WqpWqGMB3PQUJBGrqdoujtEKUqrTjRzu5D00nT7oD+ycD41+zyZUcSirhjNjzL9G7LrvO07+tlENXlEd7D+flv2Gr4XHdut6ZQYk0eesIUcV8hSl6A6PZh3kx/YYJZ/vrOFpKVmQelUTOxDUuwyQIWK4Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771004115; c=relaxed/simple;
-	bh=078Urn+cINKSZb6O/zyy4zsXNkVkYlJujFz2tQX9BiA=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=Zg8T9pRUrQ8hvayUFhSfOICiKhsAjv8BurgQbDnfUoflR6xATbPo/O6y/X7NsrCdK6Yro0nNw36yaH5RUztMGWdwhJ9vNsma3jnUirT/HsKo46WJBPYndU6WO4KFDgt+jJ+CM+Viy9DjwUkoQm0/cTPA3EwsCZpVUR6/ybqjhT8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com; spf=pass smtp.mailfrom=HansenPartnership.com; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=CPW7M+Cp; arc=none smtp.client-ip=198.37.111.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=HansenPartnership.com
+	s=arc-20240116; t=1771004651; c=relaxed/simple;
+	bh=D79a4GzqBUqsbj5ac+8oLuPoUQ+fQfKkkmR+53g3EUY=;
+	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=qPYM6mN4+8zSifFLNRf/5bBriMqspeRdi8pDX//wmA37e6Fs0/cXPlmbp7/0FUvMAWTJy9MzNQDUMStvGjr7VXP1zu5lXytF5LhJEFLcKz9jvovBbvmJ+AmIRrhkXhlxGXNE8xkdXkdkCf+ba1+x5U6E1zTQq5oLNFw1Tm7pkq8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=QzNyeC+7; arc=none smtp.client-ip=199.89.1.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="CPW7M+Cp"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-	d=hansenpartnership.com; s=20151216; t=1771004111;
-	bh=078Urn+cINKSZb6O/zyy4zsXNkVkYlJujFz2tQX9BiA=;
-	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
-	b=CPW7M+Cpxi6WFEOQqyjW4wTuRSvjeArjIVf30wi2Hw8PLi10Ld7eiVvO0CpzspkfL
-	 wCD+qLsDsrZSu1hZq2t+IKrFOBAsaufjmu99Q7Y9jZqtM2x7VRbQpqv98/As8yDcwI
-	 PlezM0S+8ljS5ih2Hx2HXH8ungCYFhGNrI+GXnQU=
-Received: from [10.100.48.88] (unknown [208.52.86.90])
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="QzNyeC+7"
+Received: from localhost (localhost [127.0.0.1])
+	by 013.lax.mailroute.net (Postfix) with ESMTP id 4fCKKj6mlFzlgqwF;
+	Fri, 13 Feb 2026 17:44:09 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1771004648; x=1773596649; bh=t9RzRfvwbSgpAAn+57L/twMb
+	K6THI0fSwkzw1UKZRes=; b=QzNyeC+78j+FCizjBSZLWJPixMNPatJ8HNzEwubp
+	yRQdiq+UcNG4TgXbrCcSBO+1U5RLvQF2JDPAWNVvrEr9kjznYAo+foAHwGGzPjK2
+	8iNettCMNTrcbNYGdjuD6pbrRwHvT07kkG+TTiCX6wWnUDwHG+0J+H4goOL9P1lh
+	ey4fyk4jg112tX+f2Ac+RqUjOivwmP4IltVmK6Fk1BvJjCIe418yhhV7GOZV7IK0
+	GF7K2kY2+RDX9ynJ2WTrhSKVHXX2gD16iDiIbiXGi7BvEh0+Zgid3FSsfUv10bFq
+	Snt3Pp7CNxP2zBTqV4ydz3FCoyDTnnOozvhyQU0r7U2m/A==
+X-Virus-Scanned: by MailRoute
+Received: from 013.lax.mailroute.net ([127.0.0.1])
+ by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id 8XnJ08o8QUxG; Fri, 13 Feb 2026 17:44:08 +0000 (UTC)
+Received: from [100.119.48.131] (unknown [104.135.180.219])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by lamorak.hansenpartnership.com (Postfix) with ESMTPSA id DE8A01C0248;
-	Fri, 13 Feb 2026 12:35:09 -0500 (EST)
-Message-ID: <bb79a1b879e62496f64c3b264a2786701ac57942.camel@HansenPartnership.com>
-Subject: Re: [LSF/MM/BPF ATTEND][LSF/MM/BPF TOPIC] : blktests: status,
- expansion plan for the storage stack test framework
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-To: Bart Van Assche <bvanassche@acm.org>, Johannes Thumshirn
-	 <Johannes.Thumshirn@wdc.com>, Daniel Wagner <dwagner@suse.de>, Chaitanya
-	Kulkarni <chaitanyak@nvidia.com>
-Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, 
- "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
- "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
- "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>,
- Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>, Hannes Reinecke
- <hare@suse.de>, hch <hch@lst.de>,  Jens Axboe <axboe@kernel.dk>,
- "sagi@grimberg.me" <sagi@grimberg.me>, "tytso@mit.edu" <tytso@mit.edu>, 
- Christian Brauner <brauner@kernel.org>, "Martin K. Petersen"
- <martin.petersen@oracle.com>,  "linux-fsdevel@vger.kernel.org"
- <linux-fsdevel@vger.kernel.org>, Javier =?ISO-8859-1?Q?Gonz=E1lez?=
- <javier@javigon.com>, "willy@infradead.org" <willy@infradead.org>, Jan Kara
- <jack@suse.cz>, "amir73il@gmail.com" <amir73il@gmail.com>, "vbabka@suse.cz"
- <vbabka@suse.cz>, Damien Le Moal <dlemoal@kernel.org>
-Date: Fri, 13 Feb 2026 09:35:08 -0800
-In-Reply-To: <678a951d-7da1-4089-a3d8-f9d9cb48aa35@acm.org>
-References: <31a2a4c2-8c33-429a-a2b1-e1f3a0e90d72@nvidia.com>
-	 <459953fa-5330-4eb1-a1b4-7683b04e3d45@flourine.local>
-	 <24634187-a4fd-4fbd-9053-03484eadf16f@wdc.com>
-	 <678a951d-7da1-4089-a3d8-f9d9cb48aa35@acm.org>
-Autocrypt: addr=James.Bottomley@HansenPartnership.com;
- prefer-encrypt=mutual;
- keydata=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
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.50.3 
+	(Authenticated sender: bvanassche@acm.org)
+	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4fCKKg1FjCzlfgPZ;
+	Fri, 13 Feb 2026 17:44:06 +0000 (UTC)
+Message-ID: <5157497a-3536-4187-883e-19a54167955a@acm.org>
+Date: Fri, 13 Feb 2026 09:44:06 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: blktests failures with v6.19 kernel
+To: Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>,
+ "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+ "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+ "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+ "nbd@other.debian.org" <nbd@other.debian.org>,
+ "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>
+References: <aY7ZBfMjVIhe_wh3@shinmob>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <aY7ZBfMjVIhe_wh3@shinmob>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Fri, 2026-02-13 at 09:30 -0800, Bart Van Assche wrote:
-> On 2/11/26 11:57 PM, Johannes Thumshirn wrote:
-> > One thing that comes to my mind (and that I always wanted to do for
-> > fstests but didn't for $REASONS) is adding per-test code coverage
-> > information.
->=20
-> Code coverage information is useful but it's important to keep in
-> mind that 100% code coverage (which is very hard to achieve) does not
-> guarantee code correctness. There are many state machines in the
-> block layer and also in block drivers. Code coverage information does
-> not reveal what percentage of the states of state machines has been
-> triggered.
+On 2/12/26 11:57 PM, Shinichiro Kawasaki wrote:
+> [5] kmemleak at nvme/061 wiht rdma transport and siw driver
+> 
+> unreferenced object 0xffff888114792600 (size 32):
+>    comm "kworker/2:1H", pid 66, jiffies 4295489358
+>    hex dump (first 32 bytes):
+>      c2 f6 83 05 00 ea ff ff 00 00 00 00 00 10 00 00  ................
+>      00 b0 fd 60 81 88 ff ff 00 10 00 00 00 00 00 00  ...`............
+>    backtrace (crc 3dbac61d):
+>      __kmalloc_noprof+0x62f/0x8b0
+>      sgl_alloc_order+0x74/0x330
+>      0xffffffffc1b73433
+>      0xffffffffc1bc1f0d
+>      0xffffffffc1bc8064
+>      __ib_process_cq+0x14f/0x3e0 [ib_core]
+>      ib_cq_poll_work+0x49/0x160 [ib_core]
+>      process_one_work+0x868/0x1480
+>      worker_thread+0x5ee/0xfd0
+>      kthread+0x3af/0x770
+>      ret_from_fork+0x55c/0x810
+>      ret_from_fork_asm+0x1a/0x30
 
-This is not an either/or.  Usually our functional tests try to cover
-the state machine (although often requiring error injection).  However,
-a lot of our bugs hide in error legs and code coverage at least assures
-us we've looked for them.
+There are no sgl_alloc() calls in the RDMA subsystem. I think the above
+indicates a memory leak in either the RDMA NVMe target driver or in the
+NVMe target core.
 
-Regards,
+> [7] kmemleak at zbd/009
+> 
+> unreferenced object 0xffff88815f1f1280 (size 32):
+>    comm "mount", pid 1745, jiffies 4294866235
+>    hex dump (first 32 bytes):
+>      6d 65 74 61 64 61 74 61 2d 74 72 65 65 6c 6f 67  metadata-treelog
+>      00 93 9c fb af bb ae 00 00 00 00 00 00 00 00 00  ................
+>    backtrace (crc 2ee03cc2):
+>      __kmalloc_node_track_caller_noprof+0x66b/0x8c0
+>      kstrdup+0x42/0xc0
+>      kobject_set_name_vargs+0x44/0x110
+>      kobject_init_and_add+0xcf/0x140
+>      btrfs_sysfs_add_space_info_type+0xf2/0x200 [btrfs]
+>      create_space_info_sub_group.constprop.0+0xfb/0x1b0 [btrfs]
+>      create_space_info+0x247/0x320 [btrfs]
+>      btrfs_init_space_info+0x143/0x1b0 [btrfs]
+>      open_ctree+0x2eed/0x43fe [btrfs]
+>      btrfs_get_tree.cold+0x90/0x1da [btrfs]
+>      vfs_get_tree+0x87/0x2f0
+>      vfs_cmd_create+0xbd/0x280
+>      __do_sys_fsconfig+0x64f/0xa30
+>      do_syscall_64+0x95/0x540
+>      entry_SYSCALL_64_after_hwframe+0x76/0x7e
+> unreferenced object 0xffff888128d80000 (size 16):
+>    comm "mount", pid 1745, jiffies 4294866237
+>    hex dump (first 16 bytes):
+>      64 61 74 61 2d 72 65 6c 6f 63 00 4b 96 f6 48 82  data-reloc.K..H.
+>    backtrace (crc 1598f702):
+>      __kmalloc_node_track_caller_noprof+0x66b/0x8c0
+>      kstrdup+0x42/0xc0
+>      kobject_set_name_vargs+0x44/0x110
+>      kobject_init_and_add+0xcf/0x140
+>      btrfs_sysfs_add_space_info_type+0xf2/0x200 [btrfs]
+>      create_space_info_sub_group.constprop.0+0xfb/0x1b0 [btrfs]
+>      create_space_info+0x211/0x320 [btrfs]
+>      open_ctree+0x2eed/0x43fe [btrfs]
+>      btrfs_get_tree.cold+0x90/0x1da [btrfs]
+>      vfs_get_tree+0x87/0x2f0
+>      vfs_cmd_create+0xbd/0x280
+>      __do_sys_fsconfig+0x64f/0xa30
+>      do_syscall_64+0x95/0x540
+>      entry_SYSCALL_64_after_hwframe+0x76/0x7e
 
-James
+Please report the above to the BTRFS maintainers.
 
+Thanks,
+
+Bart.
