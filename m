@@ -1,63 +1,133 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4B15922A7E9;
-	Fri, 13 Feb 2026 01:18:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E24A17D2;
+	Fri, 13 Feb 2026 02:17:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770945524; cv=none; b=JKrqolelDIdTyKfsbdCat7589Gj0BYPXZdlAO1P4i8XxQczNWdYUqplr4g485QO453fbpTa8ZctHOr6Pd56hVKkj+9jDQXnJWgf+Tnck4HUsJsWC5MVlz+hhVwJmIiCsel9xtRASDysyjlVhz493qXW7Yk0tRmwa51ia1VMR180=
+	t=1770949067; cv=none; b=npzvhoKo8OaotNLMmnNDVtLTqRNRKAOjq2xljW6WfUCTNzXccZEjkwdnfzIqqO4/hqfJdEJw32wvsvYsYxZcDQnjVRCjsKW4SkvyXZQGRCOd8YLmzLFxukkzMpwKuYbTiQmvCtQh5R6tI1Hg8fpMdKzVAmO/lo/zv4vRPK0Quf8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770945524; c=relaxed/simple;
-	bh=sxktNOCSpF0Uk8bN1IsXyrkIF8p7xGYHcEH+LIk+yug=;
-	h=Subject:From:In-Reply-To:References:Message-Id:Date:To:Cc; b=U1Z0WuhgbrHV8LvDERFAwHmjPwyjX5TfuNjM7Djr3GC1bEjXh+OU1k1eOcHA0BuMbjfayfoCN1DNXAA4BMuLZQ3Dzq8nS81lQ4kTgEk4MQQC88Q9WgeLOLhrNNsp3X/D5vh25DGsmFXUk1TQYEkdIYa7kUK9FvycqbhvSEfFZpc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DdsWQGGO; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1770949067; c=relaxed/simple;
+	bh=jcn/tgnFKkNrRO9Qp2BKNUBc3hhBvbOk0me8Jij/eW4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=mF2bMDwy03HAW1pcS2WTBVOadt8t2ikmV/lahtPkQyMVmATmH6yDOaF3ulcXCKGcRc2RiDS78amDpp45rpHw/9t2dIPS7WVHfI7SfNECKZzj2GDqn1l7TEfvTJzX8LaXgHenOmHw1cgs85Qa5vpVpwwog+L4+WlQwBLgANPcxz4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ONdoe+fa; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DdsWQGGO"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D722EC4CEF7;
-	Fri, 13 Feb 2026 01:18:43 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ONdoe+fa"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C2CAFC4CEF7;
+	Fri, 13 Feb 2026 02:17:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1770945523;
-	bh=sxktNOCSpF0Uk8bN1IsXyrkIF8p7xGYHcEH+LIk+yug=;
-	h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
-	b=DdsWQGGOuoz9a4eTMLXsAfPikrhGKCusNWZ9lnzbtsUpMu/+hadJFg6NWUPKGnfeL
-	 pcEb7rq2QZ0/B9qYokXlOgkb3XtkNk+NTX212TMYbRoV7gygKdHN4lc+ipWOvOVTOc
-	 rIPQBeg0gTgJIWtfO4+rCdCek14/aByGeVk2LjT341c0Pb1IHwMPayY5ASwelBPC0N
-	 IKAcOsWnzyreJwAEtPgkKrKVpgIVVW5aAUG2s6nkOaietMLr8hIydplHox8+XnSLOq
-	 27+uBfROgsHELBtVhvVx4DNGgKKIWO3Ty/hFZ6k2MdmOBU9YKoMCsNkwbX63rPI+uX
-	 hQ+w2/KcTZCqg==
-Received: from [10.30.226.235] (localhost [IPv6:::1])
-	by aws-us-west-2-korg-oddjob-rhel9-1.codeaurora.org (Postfix) with ESMTP id 480DD393108D;
-	Fri, 13 Feb 2026 01:18:39 +0000 (UTC)
-Subject: Re: [GIT PULL] SCSI updates for the 6.19+ merge window
-From: pr-tracker-bot@kernel.org
-In-Reply-To: <3a45b4e6edc8d66c33202c98d8b85a67678938bb.camel@HansenPartnership.com>
-References: <3a45b4e6edc8d66c33202c98d8b85a67678938bb.camel@HansenPartnership.com>
-X-PR-Tracked-List-Id: <linux-kernel.vger.kernel.org>
-X-PR-Tracked-Message-Id: <3a45b4e6edc8d66c33202c98d8b85a67678938bb.camel@HansenPartnership.com>
-X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-misc
-X-PR-Tracked-Commit-Id: 1982257570b84dc33753d536dd969fd357a014e9
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: d4a379a52c3c2dc44366c4f6722c063a7d0de179
-Message-Id: <177094551790.1792804.2304477175794875562.pr-tracker-bot@kernel.org>
-Date: Fri, 13 Feb 2026 01:18:37 +0000
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+	s=k20201202; t=1770949066;
+	bh=jcn/tgnFKkNrRO9Qp2BKNUBc3hhBvbOk0me8Jij/eW4=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=ONdoe+faYA8iPCOxVbp+REhPAA5BwqK6pOII8ZPfhf4OBkKsmqS1wUi1OEoxpvED9
+	 Ke81p4BTYJL9qG50tNSahM8SwWdsfPG9J6cEm2Fy3NDkwus979NlohLEA5SyK4SryA
+	 EN51/E+ZNCOd9dIbmfaRdvAm4eqvJpwvvsdsxgi3MPJhubo7Yb3XU6LZdUexUJ5xzt
+	 slzzwa8qfDGiwi1hhEbW4guaH9v20Nks0gGyy7r84aJBu5sx4vfKkdxnnT9Ve4kVba
+	 epIZB0YHrgVdUufiYJHyyKeb79zbzqBaucfFCADlo/jEraouW7RxOgPVEt6Wdipu9K
+	 DS///vG42hm/Q==
+Date: Fri, 13 Feb 2026 07:47:37 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Eric Biggers <ebiggers@kernel.org>
+Cc: manivannan.sadhasivam@oss.qualcomm.com, 
+	Bjorn Andersson <andersson@kernel.org>, Konrad Dybcio <konradybcio@kernel.org>, 
+	Abel Vesa <abel.vesa@linaro.org>, Adrian Hunter <adrian.hunter@intel.com>, 
+	Ulf Hansson <ulf.hansson@linaro.org>, "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
+	"Martin K. Petersen" <martin.petersen@oracle.com>, linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-mmc@vger.kernel.org, linux-scsi@vger.kernel.org, 
+	Sumit Garg <sumit.garg@oss.qualcomm.com>, stable@vger.kernel.org, Abel Vesa <abel.vesa@oss.qualcomm.com>
+Subject: Re: [PATCH v2 1/4] soc: qcom: ice: Remove platform_driver support
+ and expose as a pure library
+Message-ID: <gsm6l7b3sjrddyiaykhiai2pthvpuo4vilp6houmhgkgnfu4af@lodndyakg7bj>
+References: <20260210-qcom-ice-fix-v2-0-9c1ab5d6502c@oss.qualcomm.com>
+ <20260210-qcom-ice-fix-v2-1-9c1ab5d6502c@oss.qualcomm.com>
+ <20260213010253.GA6208@quark>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260213010253.GA6208@quark>
 
-The pull request you sent on Thu, 12 Feb 2026 11:34:50 -0800:
+On Thu, Feb 12, 2026 at 05:02:53PM -0800, Eric Biggers wrote:
+> On Tue, Feb 10, 2026 at 12:26:50PM +0530, Manivannan Sadhasivam via B4 Relay wrote:
+> >  drivers/soc/qcom/ice.c | 118 ++++++++++++++++++-------------------------------
+> >  1 file changed, 44 insertions(+), 74 deletions(-)
+> 
+> I don't yet know enough to be confident that this is the correct fix,
+> but there are a few things I noticed that look like bugs:
+> 
+> > +static DEFINE_MUTEX(ice_mutex);
+> > +struct qcom_ice *ice_handle;
+> 
+> ice_handle is used only in this file, so it should be static
+> 
+> > @@ -643,41 +645,42 @@ static struct qcom_ice *of_qcom_ice_get(struct device *dev)
+> [...]
+> > +	ice = qcom_ice_create(&pdev->dev, base);
+> > +	if (IS_ERR(ice)) {
+> >  		platform_device_put(pdev);
+> > -		ice = ERR_PTR(-EINVAL);
+> > +		return ice_handle;
+> >  	}
+> 
+> This error path returns NULL, where this patch seems to have been
+> intended to remove NULL as a possible return value.
+> 
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-misc
+Oops... I should return 'ice' here, not 'ice_handle'.
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/d4a379a52c3c2dc44366c4f6722c063a7d0de179
+> > -static void qcom_ice_put(const struct qcom_ice *ice)
+> > +static void qcom_ice_put(struct kref *kref)
+> >  {
+> > -	struct platform_device *pdev = to_platform_device(ice->dev);
+> > -
+> > -	if (!platform_get_resource_byname(pdev, IORESOURCE_MEM, "ice"))
+> > -		platform_device_put(pdev);
+> > +	platform_device_put(to_platform_device(ice_handle->dev));
+> > +	ice_handle = NULL;
+> >  }
+> 
+> Elsewhere ice_handle is protected by ice_mutex, but this seems to modify
+> it without holding the mutex.
+> 
 
-Thank you!
+I'll add it.
+
+> I'm also wondering what happens if all consumer devices are removed.
+> platform_device_put() gets executed on the ICE platform_device for each
+> one, but does that actually drop the last reference and cause the
+> resources allocated with devm_*() to be freed?  On do they stick around
+> until/unless the ICE device is actually removed as well?
+> 
+
+No, they'll stick around because the platform device itself won't be removed.
+of_qcom_ice_get() increments the refcount due to of_find_device_by_node() and we
+keep the refcount as we expect the platform device to be available until all the
+consumers call devm_of_qcom_ice_put(). Then we'll finally drop our own refcount.
+
+But I get your concern that we are not freeing the ioremap.
+
+> >  static void devm_of_qcom_ice_put(struct device *dev, void *res)
+> >  {
+> > -	qcom_ice_put(*(struct qcom_ice **)res);
+> > +	const struct qcom_ice *ice = *(struct qcom_ice **)res;
+> > +	struct platform_device *pdev = to_platform_device(ice->dev);
+> > +
+> > +	if (!platform_get_resource_byname(pdev, IORESOURCE_MEM, "ice"))
+> > +		kref_put(&ice_handle->refcount, qcom_ice_put);
+> >  }
+> 
+> Above probably should use the ice local variable, not ice_handle.
+> 
+
+Ack.
+
+- Mani
 
 -- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+மணிவண்ணன் சதாசிவம்
