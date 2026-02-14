@@ -1,143 +1,142 @@
-Received: from out-177.mta0.migadu.com (out-177.mta0.migadu.com [91.218.175.177])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-yw1-f171.google.com (mail-yw1-f171.google.com [209.85.128.171])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B4E633D6D6
-	for <linux-scsi@vger.kernel.org>; Fri, 13 Feb 2026 23:38:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.177
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B6F9202F65
+	for <linux-scsi@vger.kernel.org>; Sat, 14 Feb 2026 01:19:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771025906; cv=none; b=WqpVlX1i6imEXqG7pRdnXwYo6m9QoeqiXjoNSZPS7T/p9EP9gRsuALJL2o1FG/lCgdpOR1SuB8oJkSrmHQtjGv5wemmSWDaOGlKS0zN+LWrW1crgmsgc+nD+fkKcGGEnlHFx5GKi7RdlunPyjEEVSW1O2FH964vOu8QhWRWMiG8=
+	t=1771031958; cv=none; b=kPMbzBe64ksW/SsgBlU+xLHvJDw2SlZJhhfISakUetrl3UbBFYGGa3YEy86QKOjrPBEPbWZYHKGMMpaoCH1vTJWw9AwBKTQlgvNhlmqqwrR+syGbUiiZ31v2+tVCqdI2EpJ1FRqbpQFIMHQCOr7XLwM67Gr1X9XAOcompSwEDuE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771025906; c=relaxed/simple;
-	bh=TXMJe3hBKLcPh/W+bHssOgmmFSwiSApZC4ftDAEiPaA=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=tO0CjTdzeu16u7REe3GpnYBKcukgN8B0QFK7hg1UMv/grKoUhRQyG4hoJwNWi1yjoDj0aGZGYdQJHPgIKVzjqpkmH/ht/cntAPAUY7GmxicTMgE0b/jRGqYdM2gKB2gzr9Jt9i0HqAuQywc02Nj7ulVClo3gIu6v2HOa6drdqcg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=P7NNcXId; arc=none smtp.client-ip=91.218.175.177
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1771031958; c=relaxed/simple;
+	bh=baoYx6QR7n0FRoIEbXK83Lclxt0pfJj/tUAo4hsJmdQ=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=WTHbdtT+p7jGP2inRnnE8u/Y27LRh8I0tJ/Pt4mHR05ifjf0Ti/04KybB3rjqt6+x8wQDWz0ZWkE08TuwGNf3uJvNGVwkBqpWJTtXNw5KUWS3nGBAut/j4Fa4wZUYuVpShDfWiD+4D65uutjt13A64IyIRkUgKOXG36yfuFm5Eg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=J9JMk865; arc=none smtp.client-ip=209.85.128.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="P7NNcXId"
-Message-ID: <b8589b6b-504c-4fdb-b73b-83b9c97e65df@linux.dev>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1771025893;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=G0u/IuCNWvSJPlla9QPP4kMmxoVzieNBHkIWAmPtgRc=;
-	b=P7NNcXIdPcDZ58+AYdPbw5Z3ONI++aHW/pw1hK92qtUQMed4x8YZOqThUAXbMtzoF/5eoy
-	JdtATkM0c7QB5T58X1JzqDFMmCFWJLc0kTEhJ/uJ8B9Lpi8Wd1Y44a+kyOPj6/Z1w7WCc2
-	HR+DVY84GEc/kkzdnSO3Rs6ns34Rcvo=
-Date: Fri, 13 Feb 2026 15:38:08 -0800
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="J9JMk865"
+Received: by mail-yw1-f171.google.com with SMTP id 00721157ae682-79274e0e56bso14896047b3.0
+        for <linux-scsi@vger.kernel.org>; Fri, 13 Feb 2026 17:19:17 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1771031956; x=1771636756; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=6C9Jxn0OLf2Xmfmsud9RmUJXy/88yPl8N+iMOUt6rC0=;
+        b=J9JMk865HnaSmkeRkFR8IVgxnZIDcXzE21TqDCAVIYRnne62e7eEJKwk6fGF+PBqkS
+         vh1PXw3mNFxIStcZzWIEDgYYW2cFoPjV2MAxXazpO8aCwrwWUEk112ArQmGXxIDW059f
+         I3c3tHn/d/Tu0JtiwEVhI6IbPKUuAvgRKl64fYe3sf7IbhRX/xWePpG9R+oPA6TDrVN3
+         A5VX37G1fv9j7Dsre3Lzq0Uk4rDqintCq8bqnpkysnja/xA/VDD3BLbPHZdF/kXfwmTO
+         /OolCc+EiTkrLxLMerDIgB6RFs4D1r9MC66RFWgpUsT6XSsqptuSZI3x0ZenN43WOL6v
+         ch6Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1771031956; x=1771636756;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=6C9Jxn0OLf2Xmfmsud9RmUJXy/88yPl8N+iMOUt6rC0=;
+        b=LyyFstX9Y3U3L3qNbxbwvtJ6dTwRhSptbXpF+zE3u5lYNU2xFzPk9aQvli90GPPPe0
+         2z8AmH3AdcSkEzcVirmCx6diEsoDKCnxbakkLopEDyxsy9MJpn17xBpsBak9LvxTWq0l
+         8cZj2AmL9TXj0DFh/U3ZWsVbljLatsBF4CQOHJX33ZTpAyj37LYN6gUEJdJqby+xgXDX
+         qXJRTrFulL3IOdcPw1I0X0aRlMe61qKiBLt9eqNXyBKzlAf4A4Lv38eNS+/xd+MGvw8D
+         JpCVJStevYDexY6jX1JTJTFeRLMSUyMHwI2rM7FsI4/iBmkosI1tnUJ9dvjhxXOcCkaW
+         KjRA==
+X-Forwarded-Encrypted: i=1; AJvYcCVw+FKyh8AlHvnSbWdGEdbsfqdAZ4sBm1zIRZS0WwC7dY6u6r0/0uzP3zVSfI3M2N2tuXDGsFh2p3GS@vger.kernel.org
+X-Gm-Message-State: AOJu0Yyd8I5YyGMQ7604iSeYMM5DXufwm5Q7bQe3fy8PIhxUuFbEUnwX
+	9fGmI0JmdkJco4lrOcl+M1S+N+pkAx8fsdyK9uab/tY+KxwiNHjOuSCq
+X-Gm-Gg: AZuq6aIIvSeNAGSZJfz8O+bFoWLuXEmlD/BXda7L4PSYWCSSioYyW5d4Dun2O0z8qZO
+	BFHQT1rcdcu+RIJ4EfdvAHX5Av5VDAtKk8S3JpFv4PXzPmqvyCfh9PvzP4XDss17VIp5KgIeUvZ
+	aEijSp41fr3Fi1BEz9wb2MWsbWlOMwBCP+2pvrlumbXruHQOpHqBAaVPV98tC2T36sdIlrIGzGg
+	0pzrfdAUKXYNhvtQUb30Z4gwI+KdLpD+QJ4BQxK8dQDZdlY4YXppGz1pkYCdKiPeWu0y9hphddH
+	AjvWEIOe4qqxJktfV37h4SMi3NH3s7D1DNkf+B1u9gYBUC+emQCe6pboXMnJXC2pztDVEAMvaJ9
+	azMtHN3Wv0XaLGTYFu4rDZdLnI6QseZT+R6vOWkbARaGgPPkOyCty5H7KxDS/tVqsxcT3p4uzIv
+	djS4dgGQu73VMb56n1d+Wwb8KTja0Y6c1ns/a1Hr+3YmEOUp4=
+X-Received: by 2002:a05:690c:368a:b0:794:f011:29f6 with SMTP id 00721157ae682-797a0cd516cmr33992927b3.54.1771031956131;
+        Fri, 13 Feb 2026 17:19:16 -0800 (PST)
+Received: from 5163NRD-SPRABHU.ssi.samsung.com ([50.205.20.42])
+        by smtp.gmail.com with ESMTPSA id 00721157ae682-7966c177773sm77655057b3.2.2026.02.13.17.19.14
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 13 Feb 2026 17:19:15 -0800 (PST)
+From: sw.prabhu6@gmail.com
+To: James.Bottomley@HansenPartnership.com,
+	martin.petersen@oracle.com,
+	linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org,
+	mcgrof@kernel.org,
+	pankaj.raghav@linux.dev,
+	bvanassche@acm.org,
+	dlemoal@kernel.org,
+	Swarna Prabhu <sw.prabhu6@gmail.com>
+Subject: [PATCH v3 0/2] enable sector size > PAGE_SIZE for scsi
+Date: Fri, 13 Feb 2026 17:18:28 -0800
+Message-Id: <20260214011829.508272-1-sw.prabhu6@gmail.com>
+X-Mailer: git-send-email 2.39.5
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Subject: Re: blktests failures with v6.19 kernel
-To: Bart Van Assche <bvanassche@acm.org>,
- Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>,
- "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
- "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
- "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
- "nbd@other.debian.org" <nbd@other.debian.org>,
- "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>
-References: <aY7ZBfMjVIhe_wh3@shinmob>
- <5157497a-3536-4187-883e-19a54167955a@acm.org>
-Content-Language: en-US
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From: "yanjun.zhu" <yanjun.zhu@linux.dev>
-In-Reply-To: <5157497a-3536-4187-883e-19a54167955a@acm.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-Migadu-Flow: FLOW_OUT
 
-On 2/13/26 9:44 AM, Bart Van Assche wrote:
-> On 2/12/26 11:57 PM, Shinichiro Kawasaki wrote:
->> [5] kmemleak at nvme/061 wiht rdma transport and siw driver
->>
->> unreferenced object 0xffff888114792600 (size 32):
->>    comm "kworker/2:1H", pid 66, jiffies 4295489358
->>    hex dump (first 32 bytes):
->>      c2 f6 83 05 00 ea ff ff 00 00 00 00 00 10 00 00  ................
->>      00 b0 fd 60 81 88 ff ff 00 10 00 00 00 00 00 00  ...`............
->>    backtrace (crc 3dbac61d):
->>      __kmalloc_noprof+0x62f/0x8b0
->>      sgl_alloc_order+0x74/0x330
->>      0xffffffffc1b73433
->>      0xffffffffc1bc1f0d
->>      0xffffffffc1bc8064
->>      __ib_process_cq+0x14f/0x3e0 [ib_core]
->>      ib_cq_poll_work+0x49/0x160 [ib_core]
->>      process_one_work+0x868/0x1480
->>      worker_thread+0x5ee/0xfd0
->>      kthread+0x3af/0x770
->>      ret_from_fork+0x55c/0x810
->>      ret_from_fork_asm+0x1a/0x30
-> 
-> There are no sgl_alloc() calls in the RDMA subsystem. I think the above
-> indicates a memory leak in either the RDMA NVMe target driver or in the
-> NVMe target core.
+From: Swarna Prabhu <sw.prabhu6@gmail.com>
 
-3a2c32d357db RDMA/siw: reclassify sockets in order to avoid false 
-positives from lockdep
-85cb0757d7e1 net: Convert proto_ops connect() callbacks to use 
-sockaddr_unsized
-0e50474fa514 net: Convert proto_ops bind() callbacks to use sockaddr_unsized
+Hi All,
 
-There are only three commits touching the siw driver between v6.18 and 
-v6.19. I therefore suspect the issue is more likely in the NVMe side.
+This is v3 series sent based on the review comments received on v2 [1].
+This patchset enables sector sizes > PAGE_SIZE for
+sd driver and scsi_debug driver since block layer can support block
+size > PAGE_SIZE. There was one issue with write_same16 and write_same10
+command, which is fixed as a part of the series.
 
-Best Regards,
-Zhu Yanjun
+Changes since v2:
+ - create a helper function to initialize a large page mempool at
+   'sd_probe' when the first device with sector size > 4k is detected
+   for sd driver with ensuring atomicity.
+ - create a helper function for safe destruction of the large page
+   mempool and use that in 'sd_probe' if the device fails at probe
+   after the mempool is successfully created.
+ - Utilize the helper function for safe destruction of the large
+   page mempool in 'sd_remove' when the last device with sector
+   size > PAGE_SIZE is detached from the system.
+ - Replace while with for loop to 'clear_page' in 'sd_set_special_bvec'
+   function in sd driver.
+ - Modified the git commit title and message to remove the fix tag for
+   for scsi sd driver patch.
+ - Rebased the changes on latest origin/master branch.
 
-> 
->> [7] kmemleak at zbd/009
->>
->> unreferenced object 0xffff88815f1f1280 (size 32):
->>    comm "mount", pid 1745, jiffies 4294866235
->>    hex dump (first 32 bytes):
->>      6d 65 74 61 64 61 74 61 2d 74 72 65 65 6c 6f 67  metadata-treelog
->>      00 93 9c fb af bb ae 00 00 00 00 00 00 00 00 00  ................
->>    backtrace (crc 2ee03cc2):
->>      __kmalloc_node_track_caller_noprof+0x66b/0x8c0
->>      kstrdup+0x42/0xc0
->>      kobject_set_name_vargs+0x44/0x110
->>      kobject_init_and_add+0xcf/0x140
->>      btrfs_sysfs_add_space_info_type+0xf2/0x200 [btrfs]
->>      create_space_info_sub_group.constprop.0+0xfb/0x1b0 [btrfs]
->>      create_space_info+0x247/0x320 [btrfs]
->>      btrfs_init_space_info+0x143/0x1b0 [btrfs]
->>      open_ctree+0x2eed/0x43fe [btrfs]
->>      btrfs_get_tree.cold+0x90/0x1da [btrfs]
->>      vfs_get_tree+0x87/0x2f0
->>      vfs_cmd_create+0xbd/0x280
->>      __do_sys_fsconfig+0x64f/0xa30
->>      do_syscall_64+0x95/0x540
->>      entry_SYSCALL_64_after_hwframe+0x76/0x7e
->> unreferenced object 0xffff888128d80000 (size 16):
->>    comm "mount", pid 1745, jiffies 4294866237
->>    hex dump (first 16 bytes):
->>      64 61 74 61 2d 72 65 6c 6f 63 00 4b 96 f6 48 82  data-reloc.K..H.
->>    backtrace (crc 1598f702):
->>      __kmalloc_node_track_caller_noprof+0x66b/0x8c0
->>      kstrdup+0x42/0xc0
->>      kobject_set_name_vargs+0x44/0x110
->>      kobject_init_and_add+0xcf/0x140
->>      btrfs_sysfs_add_space_info_type+0xf2/0x200 [btrfs]
->>      create_space_info_sub_group.constprop.0+0xfb/0x1b0 [btrfs]
->>      create_space_info+0x211/0x320 [btrfs]
->>      open_ctree+0x2eed/0x43fe [btrfs]
->>      btrfs_get_tree.cold+0x90/0x1da [btrfs]
->>      vfs_get_tree+0x87/0x2f0
->>      vfs_cmd_create+0xbd/0x280
->>      __do_sys_fsconfig+0x64f/0xa30
->>      do_syscall_64+0x95/0x540
->>      entry_SYSCALL_64_after_hwframe+0x76/0x7e
-> 
-> Please report the above to the BTRFS maintainers.
-> 
-> Thanks,
-> 
-> Bart.
+Thanks to Damien for review on the v2 series.
+
+Testing:
+-Test suite: xfs and generic from fstest + QEMU emulated block
+    device(scsi and nvme)
+  - fstest Config for patched xfs 16k block size [xfs_reflink_16k_scsi]
+    TEST_DEV=/dev/sda
+    SCRATCH_DEV_POOL="/dev/sdb"
+    MKFS_OPTIONS='-f -m reflink=1,rmapbt=1, -i sparse=1, -b size=16384,
+    -s size=16384'
+  - Generic test results
+    Baseline: 6.19-rc8 kernel + nvme 16k logical block size
+    Patched: 6.19-rc8 kernel + scsi 16k logical block size
+    No regressions introduced by the patch.
+  - XFS tests results
+    Baseline: 6.19-rc8 kernel + nvme 16k logical block size
+    Patched: 6.19-rc8 kernel + scsi 16k logical block size
+    No regressions introduced by the patch
+  - Blktests results
+    scsi and block layer tests with 16k logical block size.
+    Baseline: vanilla kernel + scsi 4k
+    No regressions seen by the patch.
+
+Link to v2: https://lore.kernel.org/all/20260211015043.2608866-1-sw.prabhu6@gmail.com/ [1]
+
+Swarna Prabhu (2):
+  scsi: sd: enable sector size > PAGE_SIZE in scsi sd driver
+  scsi: scsi_debug: enable sdebug_sector_size > PAGE_SIZE
+
+ drivers/scsi/scsi_debug.c |  8 +---
+ drivers/scsi/sd.c         | 80 +++++++++++++++++++++++++++++++++------
+ 2 files changed, 69 insertions(+), 19 deletions(-)
+
+-- 
+2.39.5
 
