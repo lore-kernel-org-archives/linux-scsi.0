@@ -1,48 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 83FEE1367;
-	Sun, 15 Feb 2026 15:03:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C7FB222E3E9;
+	Sun, 15 Feb 2026 15:03:41 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771167818; cv=none; b=AAe+XGg2zdu1AVQgduehEVnG6RJgiqxgflgkgj0+XzVrdBKxDHzu+g4t5aBeQ26rn0zlEThejZgJfQenM/wH9VxVPrF6aNicvf76nkCtMU70i8RWN5PdNYGyHe+XR8UgPa5Cnx68TK928KaJtXXX1s5jJQdlK7Yro1aECV84tWU=
+	t=1771167821; cv=none; b=KohzczkQ7rhizO33tf/mmkTx6Ynqana7JAJmNqYrQw+pRR56VPtdmlmlp90Sm/OLJ6CDormjsGZ3Ni7EW6YwCyD/XBH17dhy5cP2RDWpGTppPVA/mqwipzAiVGZxiu1XHE+bgdnz5CfPmJRItnrLwbdmz6Jm15KCxv8zzsvQrAo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771167818; c=relaxed/simple;
-	bh=ALJQ6v0jihErAld2wDaIVC7Dc1Pu90VzccUmQjBo3qE=;
+	s=arc-20240116; t=1771167821; c=relaxed/simple;
+	bh=2dPrBu8j0us7nEkgdVmbRUJlm2QdZGJiygdk1zHhv/U=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=gdBDAsdDNbEQjv8lGoLEY8Z20J9DFsvg/4gyhxcg8zMSLaQf4qVV9O+zO337Vuy7RNsGH63dPxztdZSNiuxjWqlwB4klAk2QzuMK19mz77c3gBV+2f2uOWgRvahO1hXkkXegnPiZBL2Wfr8oIhqfYQv5EqNZg4ZjyJG5OUWKdGQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SnD4l3f9; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=lPbzFPzkusdA7MGx2heuOeCovWaEcM5ZNbhCnSDtk1JHFugESKZovuRoKb54sd64oLnFCQBTMjIhuZ4nF9DROJyY8Q8DseXR7ME7bGYevu221z6t1xiiSlIvt/hGuh1ZZBcxQrG4VoE5/rXpuCfdKxv8qPuf7WRrb0B7/xUKf5g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UP+XQui/; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SnD4l3f9"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E36BAC4CEF7;
-	Sun, 15 Feb 2026 15:03:36 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UP+XQui/"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AD387C4AF09;
+	Sun, 15 Feb 2026 15:03:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1771167818;
-	bh=ALJQ6v0jihErAld2wDaIVC7Dc1Pu90VzccUmQjBo3qE=;
+	s=k20201202; t=1771167821;
+	bh=2dPrBu8j0us7nEkgdVmbRUJlm2QdZGJiygdk1zHhv/U=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=SnD4l3f95hoKZ/Qa9q6GeL+aHkkQKVGQWYcFSumWEgq764zoOJ+SDty/oFEzQOMYl
-	 lSM3cEflzIPYKNXUptUEOm3DlLfAonrrD6hxii/Vz95CXvLTu//U46YAHR2Vc9Cls5
-	 4n6DrSkRYbsSpscFIsDngHW/KOAxCoy9GBRWHFezHLSJrjnfzAnoEaIppTare5prrM
-	 57vm27zFvAnmjZx/0eH/CbGKvSPqpcbSy4DaVWwVXj3q57LZF4LpkjDG4JL8mFJonC
-	 FbPDZj8zapFhj9fzpbEYFua19kRVE8XXhciHFMChAQAWHAzjjJ0N4HHJvVw9uM8fg6
-	 JTwGGwMHJgF0A==
+	b=UP+XQui/Wcfntg4fIG60JHyYKiQy+wfymi/ysZfSQ46cdcg10WtEqKyD1MAFt2CYp
+	 pTC8w7eraesatQOYjPPSW7C63zGxQU7+ewg2lvHWfJmC766CY5wc8G4YdACVP6MPft
+	 FfTl8hlt964Ib5g1KE03hyxEs3dlYXD2nyEgxiWAu8aaEWd2OZlsMCZCFYflCxBRKS
+	 AZUDER/jZXs58qAv1TrARY4rClzXKtYQW/MwvpbEqzmYkU3s1nJiPAq7qDWgnG92+I
+	 AsnLqib9dDeUcjHZ6Kpe+obzvtB0kDeaVn6xFTagpVy+HX2vhWbqtYPxKN9WfKswY4
+	 yW8NYWMCaheFA==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
-Cc: Keita Morisaki <keita.morisaki@tier4.jp>,
-	Peter Wang <peter.wang@mediatek.com>,
+Cc: Arnd Bergmann <arnd@arndb.de>,
 	"Martin K. Petersen" <martin.petersen@oracle.com>,
 	Sasha Levin <sashal@kernel.org>,
-	chaotian.jing@mediatek.com,
-	matthias.bgg@gmail.com,
-	angelogioacchino.delregno@collabora.com,
-	linux-scsi@vger.kernel.org,
-	linux-mediatek@lists.infradead.org,
-	linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: [PATCH AUTOSEL 6.19-6.12] scsi: ufs: mediatek: Fix page faults in ufs_mtk_clk_scale() trace event
-Date: Sun, 15 Feb 2026 10:03:19 -0500
-Message-ID: <20260215150333.2150455-2-sashal@kernel.org>
+	khalid@gonehiking.org,
+	James.Bottomley@HansenPartnership.com,
+	linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.19-5.15] scsi: buslogic: Reduce stack usage
+Date: Sun, 15 Feb 2026 10:03:22 -0500
+Message-ID: <20260215150333.2150455-5-sashal@kernel.org>
 X-Mailer: git-send-email 2.51.0
 In-Reply-To: <20260215150333.2150455-1-sashal@kernel.org>
 References: <20260215150333.2150455-1-sashal@kernel.org>
@@ -58,99 +53,153 @@ X-stable-base: Linux 6.19
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-From: Keita Morisaki <keita.morisaki@tier4.jp>
+From: Arnd Bergmann <arnd@arndb.de>
 
-[ Upstream commit 9672ed3de7d772ceddd713c769c05e832fc69bae ]
+[ Upstream commit e17f0d4cc006265dd92129db4bf9da3a2e4a4f66 ]
 
-The ufs_mtk_clk_scale() trace event currently stores the address of the
-name string directly via __field(const char *, name). This pointer may
-become invalid after the module is unloaded, causing page faults when the
-trace buffer is subsequently accessed.
+Some randconfig builds run into excessive stack usage with gcc-14 or
+higher, which use __attribute__((cold)) where earlier versions did not do
+that:
 
-This can occur because the MediaTek UFS driver can be configured as a
-loadable module (tristate in Kconfig), meaning the name string passed to
-the trace event may reside in module memory that becomes invalid after
-module unload.
+drivers/scsi/BusLogic.c: In function 'blogic_init':
+drivers/scsi/BusLogic.c:2398:1: error: the frame size of 1680 bytes is larger than 1536 bytes [-Werror=frame-larger-than=]
 
-Fix this by using __string() and __assign_str() to copy the string contents
-into the ring buffer instead of storing the pointer. This ensures the trace
-data remains valid regardless of module state.
+The problem is that a lot of code gets inlined into blogic_init() here. Two
+functions stick out, but they are a bit different:
 
-This change increases the memory usage for each ftrace entry by a few bytes
-(clock names are typically 7-15 characters like "ufs_sel" or
-"ufs_sel_max_src") compared to storing an 8-byte pointer.
+ - blogic_init_probeinfo_list() actually uses a few hundred bytes of kernel
+   stack, which is a problem in combination with other functions that also
+   do. Marking this one as noinline means that the stack slots get get
+   reused between function calls
 
-Note that this change does not affect anything unless all of the following
-conditions are met:
+ - blogic_reportconfig() has a few large variables, but whenever it is not
+   inlined into its caller, the compiler is actually smart enough to reuse
+   stack slots for these automatically, so marking it as noinline saves
+   most of the stack space by itself.
 
- - CONFIG_SCSI_UFS_MEDIATEK is enabled
+The combination of both of these should avoid the problem entirely.
 
- - ftrace tracing is enabled
-
- - The ufs_mtk_clk_scale event is enabled in ftrace
-
-Signed-off-by: Keita Morisaki <keita.morisaki@tier4.jp>
-Reviewed-by: Peter Wang <peter.wang@mediatek.com>
-Link: https://patch.msgid.link/20260202024526.122515-1-keita.morisaki@tier4.jp
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Link: https://patch.msgid.link/20260203163321.2598593-1-arnd@kernel.org
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
 
 LLM Generated explanations, may be completely bogus:
 
-The `ufs_mtk_clk_scale` trace event was introduced in August 2022
-(kernel 6.1 era), so this buggy code exists in multiple stable trees
-(6.1.y, 6.6.y, and later).
+## Analysis of commit: "scsi: buslogic: Reduce stack usage"
 
-### 8. CONCLUSION
+### Commit Message Analysis
+
+The commit addresses a **build failure** (-Werror=frame-larger-than=)
+that occurs with gcc-14 or higher on certain randconfig builds. The
+function `blogic_init()` exceeds the 1536-byte stack frame limit
+(reaching 1680 bytes) due to excessive inlining by the compiler.
+
+The fix is to mark two functions as `noinline_for_stack`:
+1. `blogic_init_probeinfo_list()` - uses significant stack space that
+   compounds with other inlined functions
+2. `blogic_reportconfig()` - has large local variables that the compiler
+   can reuse stack slots for when not inlined
+
+### Code Change Analysis
+
+The change is extremely minimal and surgical:
+- **Two functions** have their declarations changed from `static ...
+  __init` to `static noinline_for_stack ... __init`
+- **Zero logic changes** - no behavior modification whatsoever
+- **Zero new code paths** - the functions still do exactly the same
+  thing
+- The `noinline_for_stack` annotation is a well-established kernel
+  mechanism specifically designed for this purpose
+
+### Classification: Build Fix
+
+This is a **build fix** — one of the explicitly allowed exception
+categories for stable backports. With gcc-14+, the kernel fails to
+compile with `-Werror=frame-larger-than=` enabled in certain
+configurations. Build failures prevent users from building the kernel at
+all, which is a critical issue.
+
+### Scope and Risk Assessment
+
+- **Lines changed**: Effectively 2 lines (function signature annotations
+  only)
+- **Files touched**: 1 (drivers/scsi/BusLogic.c)
+- **Risk**: Extremely low. `noinline_for_stack` only prevents the
+  compiler from inlining these functions. Since they are `__init`
+  functions (called once during initialization and then discarded), the
+  negligible performance impact of preventing inlining is irrelevant.
+- **Regression potential**: Near zero. The functions still execute
+  identically; only their calling convention changes slightly.
+
+### User Impact
+
+- Users building kernels with gcc-14 or newer (increasingly common as
+  distributions adopt newer toolchains) will hit build failures on
+  certain configurations
+- The BusLogic SCSI driver is a legacy driver, but it still has users
+  and is compiled in many kernel configs
+- Build failures are binary — either you can build or you can't — making
+  this high impact for affected configurations
+
+### Stability Indicators
+
+- **Author**: Arnd Bergmann — a very well-known and respected kernel
+  developer who regularly contributes build fixes and architecture
+  improvements
+- **Reviewer**: Martin K. Petersen — SCSI subsystem maintainer
+- The fix uses `noinline_for_stack`, the standard kernel annotation for
+  exactly this type of stack reduction
+
+### Dependency Check
+
+- No dependencies on other commits
+- The `noinline_for_stack` macro has been available in the kernel for
+  many years
+- The BusLogic driver exists in all stable trees
+
+### Conclusion
 
 This is a textbook stable backport candidate:
-- **Fixes a real crash** (page fault / use-after-free on dangling
-  pointer)
-- **Extremely small and contained** (4-line change in one file)
-- **Uses well-established patterns**
-  (`__string()/__assign_str()/__get_str()`) that are the correct and
-  standard approach
-- **Zero risk of regression** — this is strictly more correct than the
-  original code
-- **Affected code exists in stable trees** dating back to at least 6.1
-- **Reviewed and accepted** by the relevant maintainers
-- **Self-contained** — no dependencies on other patches
-
-The fix is small, surgical, and meets all stable kernel criteria.
+1. **Build fix** — explicitly allowed in stable rules
+2. **Trivially correct** — annotation-only change with no logic
+   modification
+3. **Zero risk** of regression — functions behave identically
+4. **Real impact** — prevents build failure with modern gcc versions
+5. **Tiny scope** — 2 annotation additions in a single file
+6. **Well-established pattern** — `noinline_for_stack` is the standard
+   kernel solution for this class of problem
 
 **YES**
 
- drivers/ufs/host/ufs-mediatek-trace.h | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/scsi/BusLogic.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/ufs/host/ufs-mediatek-trace.h b/drivers/ufs/host/ufs-mediatek-trace.h
-index b5f2ec3140748..0df8ac843379a 100644
---- a/drivers/ufs/host/ufs-mediatek-trace.h
-+++ b/drivers/ufs/host/ufs-mediatek-trace.h
-@@ -33,19 +33,19 @@ TRACE_EVENT(ufs_mtk_clk_scale,
- 	TP_ARGS(name, scale_up, clk_rate),
+diff --git a/drivers/scsi/BusLogic.c b/drivers/scsi/BusLogic.c
+index a86d780d1ba40..026c3e617cb1c 100644
+--- a/drivers/scsi/BusLogic.c
++++ b/drivers/scsi/BusLogic.c
+@@ -920,7 +920,8 @@ static int __init blogic_init_fp_probeinfo(struct blogic_adapter *adapter)
+   a particular probe order.
+ */
  
- 	TP_STRUCT__entry(
--		__field(const char*, name)
-+		__string(name, name)
- 		__field(bool, scale_up)
- 		__field(unsigned long, clk_rate)
- 	),
+-static void __init blogic_init_probeinfo_list(struct blogic_adapter *adapter)
++static noinline_for_stack void __init
++blogic_init_probeinfo_list(struct blogic_adapter *adapter)
+ {
+ 	/*
+ 	   If a PCI BIOS is present, interrogate it for MultiMaster and
+@@ -1690,7 +1691,8 @@ static bool __init blogic_rdconfig(struct blogic_adapter *adapter)
+   blogic_reportconfig reports the configuration of Host Adapter.
+ */
  
- 	TP_fast_assign(
--		__entry->name = name;
-+		__assign_str(name);
- 		__entry->scale_up = scale_up;
- 		__entry->clk_rate = clk_rate;
- 	),
- 
- 	TP_printk("ufs: clk (%s) scaled %s @ %lu",
--		  __entry->name,
-+		  __get_str(name),
- 		  __entry->scale_up ? "up" : "down",
- 		  __entry->clk_rate)
- );
+-static bool __init blogic_reportconfig(struct blogic_adapter *adapter)
++static noinline_for_stack bool __init
++blogic_reportconfig(struct blogic_adapter *adapter)
+ {
+ 	unsigned short alltgt_mask = (1 << adapter->maxdev) - 1;
+ 	unsigned short sync_ok, fast_ok;
 -- 
 2.51.0
 
