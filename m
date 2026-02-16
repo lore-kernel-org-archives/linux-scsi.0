@@ -1,127 +1,179 @@
-Received: from mail-wm1-f49.google.com (mail-wm1-f49.google.com [209.85.128.49])
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4CF363115A2
-	for <linux-scsi@vger.kernel.org>; Mon, 16 Feb 2026 14:25:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.49
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DB64F310644
+	for <linux-scsi@vger.kernel.org>; Mon, 16 Feb 2026 16:32:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771251936; cv=none; b=twOaCtvdQrD1c5an5enq/jAePv4WNTMEY994mL4BHnS/JyuJpumf4uWDsJj5g7K8KIHVlX0UmhfwEbIxuznp0uX4QMg6UhwfrQeaJJVilWhh2lrkH3085RiP0HCmdnCdw5uI6Q5Kd03mliBYJGtOu7hXFv2xF9IP/bHIT1g9qlg=
+	t=1771259530; cv=none; b=bDlgOAQkOHPVcIEZOAkY/Mm1wG2N2GQN13fM7QmkIG3t3frgVcqNfraYRgGwBFNJSxyaZMmDUHgTejDhSFdAOen3YZ0cAIQbgaz5SiKV4+1/xol6uQASQK9c282DvyAU5Fv9FMnpkoA9bLC3NffzVOo3sJcilImpw29LaBajxfs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771251936; c=relaxed/simple;
-	bh=rZ1cI02ZyGsF5YC4P0LfQX97Kl0v9+FZ0eOX8dFmAtk=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=bCHSjgyFR1L2Zt6sg30XVB9TVT86czkUn7agCR6foTaVLVfCuCxY1rtIK1Hq8lrCWm+KYW/zpwSb5LggOTBt3Y3e2FtBSi74zboWzz3H+TnN7NBtirNPhSvqyoNLikg7Zz317ojAnfqtOCfj2G3YKoLlh9OHxO1979bciAA/tL4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=lEBiKWIe; arc=none smtp.client-ip=209.85.128.49
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1771259530; c=relaxed/simple;
+	bh=AvRD2J9IHtyHe0iyt1Pa0Aq7UxnwZUwQ4OhSsM5wRFU=;
+	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=ntTVKvGmVCeWFaznttRmsqTMYg+SQgLjdxpJN85zYnCq2pdMZde9ymHRvSi1gW3Pl90rRmJv8XxUNdC43i5JtDGdjDclBfjFbFRtX9zvjNwaPrdt6RaQr7Ly2z8rKZGajAGkTQn1eDLLnvxMVwCjZcRjr44RH7oEI73ANeksNLE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=fViQDg7Q; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=vYB6yA03; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=fViQDg7Q; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=vYB6yA03; arc=none smtp.client-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="lEBiKWIe"
-Received: by mail-wm1-f49.google.com with SMTP id 5b1f17b1804b1-4806b88d8c9so4154455e9.2
-        for <linux-scsi@vger.kernel.org>; Mon, 16 Feb 2026 06:25:35 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1771251934; x=1771856734; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=XaRMBbsVUDPXG0cpvkwkXzPiYYVpsnTMm43yQAxsAgY=;
-        b=lEBiKWIeuO4gYZCAYmclIi5F3ikaZylno8cIeeVEMSeIV/t++SoldQA25wZCDnopIg
-         j9gMBbIQFJIz4ZD5QyssJHi+zD88a17rjfTXbTp3SgkfK9XAsUIJSRf4FMEVQOWgXrnp
-         Hb8xqh3lZ7MX3O+/m0v9Q3B2T3nLdpIUIEgg8NATNMBOPcgmvHhb4Q6BF6W8OmtmGVWS
-         9GshuDiJbiFBvhldEaLxLjG5jMP7Z6JdTlIHQp0lK1dyHj1w8TYuDnhqAM4JSvqzJ/Wd
-         oXMe+xWfnI3RTk6kgA3U/l2GmMohmJ9Xbf/wPm9TEKFF6/EjCnyZhAZdK5ug2uRVIWoV
-         r49w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1771251934; x=1771856734;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=XaRMBbsVUDPXG0cpvkwkXzPiYYVpsnTMm43yQAxsAgY=;
-        b=Kl4M+EVElkghH9kbwT9D3w9M5b9VFjp5LilFmkRHzmx9jpdGeJO/6nOu4PY+mds73M
-         x49i03rDeC7sFjJec05EBCkVXtuX7CJtZOQYHR8ITHkkjjwvcop2Jywj8a+F5jhEjAhm
-         /qr5qVHnRpzrQ0xjBRwObXDS2HmT3kPqqIDL8vMsCLd2jq6PwJEre5Wu6OP0w1EJMW0O
-         DDC/m3rDR/V3FNErOtOyXQBpoSM02IiGDUl5zmLmHakdzdMTz+Up5CacRdZSu7SNZ9Dq
-         fHw0RMqxBoPoGHJVM3MkJzlv6pVu8b/Bj5YzbHYGtgE3Cx42ykJmUJaDPOx02uJJJ7tD
-         6qdg==
-X-Forwarded-Encrypted: i=1; AJvYcCVAGvpiInP4hLelBoKgjDPNi3MzDteAdAmdUgKLXWjOGMBhJRR8KNFKbcyN+BE0EoZAkqlw2U28yQQV@vger.kernel.org
-X-Gm-Message-State: AOJu0YxSLD8jTLNmAjyMNW0pcJ50081okUyPdmX+ZocE89Cq3o8KjOOL
-	2X2Y3Bey1OBz+8sDgxCs5C0x3M036GXl+gkqGpYhgr1lEiL3LIVb0rHX
-X-Gm-Gg: AZuq6aILVSg7wEXwn0BMraGqNTGrfStATYR9RvZ1MO1oOIFeZp4YUcWKmXV1UcfmoQh
-	Pi5GdbkanGqoTBbA1ZdGDFW3gGFoKjTQ3C3D4vuIwU1TQoDafjuF+ySL+6ge/fHY/VS6Gj+3gR9
-	WDRxKBuywKjlMNAAOnf3DOx0Hse6GpyDvWSSM44IHNamcPA4/DL3ShfKPKWW1QGFKUc7Ti7f5wS
-	aGQMlQDbyfnoYe0StkJwN2yIyAiYkNsTZ+EAdSq+A0RpIsfgOEou6VKjSXWkOJYrafOaSAtMtgk
-	kzc/NIfbJDsux3STx85R+cWBux1peGJY1BrRajNOvhJ9lzmrsAJSsaToYWNTH1mDPiOpr9zrtuK
-	3uhTPr4SSMsyQTQNZvb5CiIurVLUmSAYqn2hCluQw++8w4HCgvbJxrXDe0qaoAr3vBqZYsdRevq
-	eqKF0iRLsJWDbZlkN8t3edadaWI1K1cvtIn2iN+zJ4aDNpuDRcA67E7uhlfHgFchq27K3rcJCSL
-	9EvEJmCokghIEmrf1xHiyY38hUVAQs=
-X-Received: by 2002:a05:600c:190c:b0:47e:e20e:bbbc with SMTP id 5b1f17b1804b1-48370e2b589mr122893065e9.1.1771251933297;
-        Mon, 16 Feb 2026 06:25:33 -0800 (PST)
-Received: from thomas-precision3591.paris.inria.fr (wifi-pro-82-204.paris.inria.fr. [128.93.82.204])
-        by smtp.googlemail.com with ESMTPSA id 5b1f17b1804b1-4835dd0e327sm434486105e9.14.2026.02.16.06.25.32
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 16 Feb 2026 06:25:32 -0800 (PST)
-From: Thomas Fourier <fourier.thomas@gmail.com>
-To: 
-Cc: Thomas Fourier <fourier.thomas@gmail.com>,
-	Karan Tilak Kumar <kartilak@cisco.com>,
-	Sesidhar Baddela <sebaddel@cisco.com>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] scsi: snic: Remove unused linkstatus
-Date: Mon, 16 Feb 2026 15:10:55 +0100
-Message-ID: <20260216141056.59429-2-fourier.thomas@gmail.com>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="fViQDg7Q";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="vYB6yA03";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="fViQDg7Q";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="vYB6yA03"
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id 15C5A5BEAF;
+	Mon, 16 Feb 2026 16:32:07 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1771259527; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=5qZ+gncTo83Pa/tlAU8PPmKc8PzepOWLFBYa3C1pQmQ=;
+	b=fViQDg7Qdz9huI0oulDTwoA0x6hHSJFIoyRdmeiLDYIBaik91tSR7FXJ9EpGuv3onDYThw
+	br04eWdvnosi/gJ/6B0LujgPZXC45O6nwhiK0tsK8wRVvMNi2OFM9a7QNEPrz5R+Pm8+Sy
+	F3bJF5SwDcXSfy2nFjXtdBWeKtv8CIM=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1771259527;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=5qZ+gncTo83Pa/tlAU8PPmKc8PzepOWLFBYa3C1pQmQ=;
+	b=vYB6yA03PcbPIEDTwNCvsQH8ZZ8hFwkOhCBzN1sXpi8CQnnGCnVTMq8BHDY2/2ucwcGaSo
+	KE5ytuzaPc4gPeAw==
+Authentication-Results: smtp-out2.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1771259527; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=5qZ+gncTo83Pa/tlAU8PPmKc8PzepOWLFBYa3C1pQmQ=;
+	b=fViQDg7Qdz9huI0oulDTwoA0x6hHSJFIoyRdmeiLDYIBaik91tSR7FXJ9EpGuv3onDYThw
+	br04eWdvnosi/gJ/6B0LujgPZXC45O6nwhiK0tsK8wRVvMNi2OFM9a7QNEPrz5R+Pm8+Sy
+	F3bJF5SwDcXSfy2nFjXtdBWeKtv8CIM=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1771259527;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=5qZ+gncTo83Pa/tlAU8PPmKc8PzepOWLFBYa3C1pQmQ=;
+	b=vYB6yA03PcbPIEDTwNCvsQH8ZZ8hFwkOhCBzN1sXpi8CQnnGCnVTMq8BHDY2/2ucwcGaSo
+	KE5ytuzaPc4gPeAw==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id C83E93EA62;
+	Mon, 16 Feb 2026 16:32:06 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id Km20IYZGk2kxKwAAD6G6ig
+	(envelope-from <hare@suse.de>); Mon, 16 Feb 2026 16:32:06 +0000
+Message-ID: <a5a0aa42-33e4-401f-ad94-8104cff9368c@suse.de>
+Date: Mon, 16 Feb 2026 17:32:04 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [LSF/MM/BPF TOPIC] Native SCSI multipath support
+To: John Garry <john.g.garry@oracle.com>, lsf-pc@lists.linux-foundation.org,
+ linux-nvme@lists.infradead.org, linux-block@vger.kernel.org,
+ linux-scsi@vger.kernel.org
+References: <69349b51-72c2-47f9-948f-f89843af62e4@oracle.com>
+ <b598c5c9-6732-4661-85b2-7ab10a0830d4@suse.de>
+ <dbf5fbdd-8894-40b7-b574-0c6385995ec2@oracle.com>
+Content-Language: en-US
+From: Hannes Reinecke <hare@suse.de>
+In-Reply-To: <dbf5fbdd-8894-40b7-b574-0c6385995ec2@oracle.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
+X-Spam-Score: -4.30
+X-Spamd-Result: default: False [-4.30 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	NEURAL_HAM_SHORT(-0.20)[-0.999];
+	MIME_GOOD(-0.10)[text/plain];
+	FUZZY_RATELIMITED(0.00)[rspamd.com];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	ARC_NA(0.00)[];
+	TO_DN_SOME(0.00)[];
+	MID_RHS_MATCH_FROM(0.00)[];
+	RCVD_TLS_ALL(0.00)[];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	FROM_HAS_DN(0.00)[];
+	RCPT_COUNT_FIVE(0.00)[5];
+	FROM_EQ_ENVFROM(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:mid,suse.de:email]
+X-Spam-Level: 
+X-Spam-Flag: NO
 
-The (struct vnic_dev).linkstatus buffer is freed in
-svnic_dev_unregister() and referenced in svnic_dev_link_status() but
-never alloc'd. This means (struct vnic_dev).linkstatus is always null
-and the dealloc the reference in svnic_dev_link_status() is dead code.
+On 2/14/26 10:42, John Garry wrote:
+> On 13/02/2026 17:21, Hannes Reinecke wrote:
+>>> At ALPSS 25 I presented a proposal for Native SCSI multipath support. 
+>>> Let's discuss this topic at LSFMM.
+>>>
+>>> The idea for this is that SCSI could natively support multipath, like 
+>>> how NVMe host driver does today. It is intended as an alternative to 
+>>> dm- multipath support.
+>>>
+>>> I have been working on the implementation and I plan to post patches 
+>>> in the next cycle. I am looking at a 3-stage approach:
+>>> a. create a driver-agnostic multipath library, very heavily based on 
+>>> NVMe host multipath support.
+>>> The library would support features such as path management, path 
+>>> selection/iopolicy, failover recovery, PR, delayed removal, gendisk 
+>>> management etc.
+>>> b. switch NVMe over to use this library
+>>> c. add native SCSI multipath support based on this common library
+>>>
+>> Go for it, John!
+>>
+>> I'd be very interested in that.
+> 
+> cheers, in the meantime, I have some comments:
+> 
+> - I need to test PRs for both NVMe and SCSI, any advice on that would be 
+> good. I don't think that blktests covers it. I did see Christoph mention 
+> a testsuite at: https://lore.kernel.org/linux-nvme/1438672271-11309-1- 
+> git-send-email-hch@lst.de/ - I can check that.
+> 
+Well, you might have seen the discussion on the device-mapper list, 
+where stefanha is implementing generic PRs for dm-multipathing.
+Or rather, trying to. We might need to revisit that and see what we
+could be doing on the SCSI side.
+Maybe we should be having a session about PRs at LSF?
 
-Signed-off-by: Thomas Fourier <fourier.thomas@gmail.com>
----
- drivers/scsi/snic/vnic_dev.c | 9 ---------
- 1 file changed, 9 deletions(-)
+> - I am still not sure on whether we require a multipath version of sg. 
+> We can still have per-path sg. NVMe does have a multipath nvme-generic 
+> dev, but that just handles IOCTLs/uring cmd, and nothing like sg read/ 
+> write fops
+> 
+'sg' is primarily for testing 'raw' SCSI commands. (And dastardly 
+complex to boot). I really would keep it in it's current form, and not
+try to mimick something with SCSI multipathing.
 
-diff --git a/drivers/scsi/snic/vnic_dev.c b/drivers/scsi/snic/vnic_dev.c
-index 760f3f22095c..c4df0b17c86c 100644
---- a/drivers/scsi/snic/vnic_dev.c
-+++ b/drivers/scsi/snic/vnic_dev.c
-@@ -42,8 +42,6 @@ struct vnic_dev {
- 	struct vnic_devcmd_notify *notify;
- 	struct vnic_devcmd_notify notify_copy;
- 	dma_addr_t notify_pa;
--	u32 *linkstatus;
--	dma_addr_t linkstatus_pa;
- 	struct vnic_stats *stats;
- 	dma_addr_t stats_pa;
- 	struct vnic_devcmd_fw_info *fw_info;
-@@ -650,8 +648,6 @@ int svnic_dev_init(struct vnic_dev *vdev, int arg)
- 
- int svnic_dev_link_status(struct vnic_dev *vdev)
- {
--	if (vdev->linkstatus)
--		return *vdev->linkstatus;
- 
- 	if (!vnic_dev_notify_ready(vdev))
- 		return 0;
-@@ -686,11 +682,6 @@ void svnic_dev_unregister(struct vnic_dev *vdev)
- 				sizeof(struct vnic_devcmd_notify),
- 				vdev->notify,
- 				vdev->notify_pa);
--		if (vdev->linkstatus)
--			dma_free_coherent(&vdev->pdev->dev,
--				sizeof(u32),
--				vdev->linkstatus,
--				vdev->linkstatus_pa);
- 		if (vdev->stats)
- 			dma_free_coherent(&vdev->pdev->dev,
- 				sizeof(struct vnic_stats),
+> - I have not tried to detangle ALUA support from SCSI DH, so no ALUA 
+> support yet
+> 
+Ouch. But that is the key point of the implementation; ALUA provides
+_all_ the information required for multipathing, so how can you _not_
+have support for it?
+
+Cheers,
+
+Hannes
 -- 
-2.43.0
-
+Dr. Hannes Reinecke                  Kernel Storage Architect
+hare@suse.de                                +49 911 74053 688
+SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
+HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
