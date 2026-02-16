@@ -1,230 +1,151 @@
-Received: from mail-pf1-f179.google.com (mail-pf1-f179.google.com [209.85.210.179])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 256AC1BD035
-	for <linux-scsi@vger.kernel.org>; Mon, 16 Feb 2026 06:20:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.179
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0464817ADE0;
+	Mon, 16 Feb 2026 09:38:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771222829; cv=none; b=rgSXzSUdZcHuJfVUf7+SJIRXllBweYcht6lziFQWw2HB3NMawgf7FDdYbyXHuQymenoYQWHqWPvzIj9I/lCh21Fuwti5aj9cioF5XF0HX/AoGjfOQ/HOb3rqtXBhcjMN8kzp1i804glvVrxpLttYdKx/N+mSrCjhHdfhs3qaxLE=
+	t=1771234700; cv=none; b=fI6NlKFqkTQHNkzccgh22aDBnrSMZ2rJszGD5ntoZmnf7BqgSUmzh76/xtZm+YMj/zTz2BALlNago1CBBGkIYNYKTpYfV003wr0KibZTMA72FtrYzO21I5fDSakrhSergsTNDpjc2Rn3i6JQMmPovH1NrU8bbW5k5orkIGM6Hkk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771222829; c=relaxed/simple;
-	bh=lweh5wTqdn5NyXCEB1iITaZxpjD9zsXuEt4pDx+EBK4=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=DLQyXdc0/KrmYc8+74/i+5PVBtUYB6EFasHmN9+QppeyyCOgBc05yA0UdDO6P+Xty25punySKk5CTctIZnWmLWcmNNaopahS7QkTOp24NhZY8/Zb55wJwUA2isCaZL92Mkd3vCol2cgPr9QYzNQmSp4kfKKlgYbNOEAg3IG/jFw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ALAEpDBW; arc=none smtp.client-ip=209.85.210.179
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1771234700; c=relaxed/simple;
+	bh=Vq9wLW5l4G1QN/P9tcYbXvyQv5NBtix6IgJEB1L0r04=;
+	h=Message-ID:Date:MIME-Version:Subject:To:References:Cc:From:
+	 In-Reply-To:Content-Type; b=Tu9znKFSyglB+OFc/KXp9beFe2U19JObTUhtHtmbCnq22nlWctgpheiUokyCmgRWL6bLY+3w6GnMec9xAkQyzYuLe4llWjsiqaRfXyPkKEAtumg1dU1Z887iNqnoJIrWaow6IKofdNjvFMrOAk1Kw0LtFQkSToV3BwQwUdxuf70=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=bhQteBup; arc=none smtp.client-ip=148.163.158.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ALAEpDBW"
-Received: by mail-pf1-f179.google.com with SMTP id d2e1a72fcca58-824af5e5c81so2694240b3a.0
-        for <linux-scsi@vger.kernel.org>; Sun, 15 Feb 2026 22:20:27 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1771222826; x=1771827626; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=gq3u6/pH6XaIhkLYyxC209miQpGjF2eS8OFp0J3cin8=;
-        b=ALAEpDBWJxUjzuwSWKAnp/tMqGNmMxFuwNAjeuQXGFVfxHaXlhJ+ZT8cxJX/qPwao/
-         hYz0pxajX5pN/xjXORvEfNN8AMMFd1LiRivuBTmv693BuH7gqJwWHgcVVtwgqwvgxQn0
-         x2h9k0gSCiHgWYDMOXBhrU9pbVgRj8k42Z3X325TwHdOLJQg+/9BMlq0X69+nC8M/NNb
-         gy63Ha8sdQnw+PL5ePrmGT6RaMGKuQbCtxmQxVgy6y0HaHfmJ2rOagsVynAN6t27zh7F
-         TMXqpTMeTHwOqXee/2AhBRUwg9lVJEzsXhkWbY3XvE2l2OLfNOxJW9IRe5Phn+xYd33u
-         MwzQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1771222826; x=1771827626;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=gq3u6/pH6XaIhkLYyxC209miQpGjF2eS8OFp0J3cin8=;
-        b=O/pQ7ypF6UaNOfCyg1ntPWTjTYlMdxBT6I5x0qUG5NETtmmvQYY3toqhDcPvP6MJEX
-         YhvLG+Xq90Gypbd98PGT5VHrDf5DRyEMypUFwqhrLJz/v4Vh7VwA0vNCcG/zL//+fz13
-         pa9HEAX76/szOXhDzGZB2l6PqnboIMc5QJaBj11/SoHPPv+OU3Q/sDlSyqZ6YBZb/kfM
-         jFtX70GSqSKURA6EZKdvTfT0uRd5GGvWeAeyj7iII3bOY932F7K1i5OWAHVp43yvHujy
-         n15QZObV/PHrZAHzd8npqz0VcNTw/BZgMpXsBXaItncSTG4blZh8VZ5I4rCA6qORbX69
-         VxLg==
-X-Gm-Message-State: AOJu0YzHKzvzJdRjD6jZolpkOCNvpFDcqmKNvs7w6daqdzrAED//uyxQ
-	nIZyKJ8dA1zZ/KNBc1bN64HHFeMNdhr3eXpyKmjeJXfxKOmXXP6aWbdd
-X-Gm-Gg: AZuq6aI9T1SnuL+FRU8sZC7iSVoE/YaHDW4fGeihuF1NMkudFry8WzNdeC4/WO3D4rU
-	2E2ouWU7BRlO+P1aAwxlXZrpLq/J54QYLdAO9ynanVkXH7zWDh3EkOkud4aW8WwtBKCPSilEUA7
-	BCCzteUW4frqot0gxB0JpZtpjbrpFp+bA4KZ0yEBPHvTnJkbMvEhll7RhHewxRv4tyS2QU+3j/m
-	3wRIrPEV2VWkXR2ogsR+Tn2lHaD/ARr8m9EYNQ9Fr6/26s0iWLZNr4y9j1nBxN6XHM3QfmSMvFd
-	ZzAtmmrvAsPLx5KDRrJdfWZVhXKPPXKYiV8R2Vpq/jJ1fKOakZs0Ox+xiNHH7dq9hctqVYcVQYw
-	1YTjnudCrytktPC6xAdRCetZQZLll6qlIxgK+ZXzRaiPE3Ty/AMVJt+y5pIf3kIvz1slhWOYgml
-	dFxv6fnEScIkkIR4lvZPIDSNrdWxSxBZo+OpBqhA==
-X-Received: by 2002:a05:6a00:7543:b0:81e:12f1:d83 with SMTP id d2e1a72fcca58-824c6102ba1mr7161063b3a.42.1771222826432;
-        Sun, 15 Feb 2026 22:20:26 -0800 (PST)
-Received: from localhost.localdomain ([114.79.136.20])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-824c6a626bfsm8992768b3a.28.2026.02.15.22.20.21
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 15 Feb 2026 22:20:26 -0800 (PST)
-From: Prithvi Tambewagh <activprithvi@gmail.com>
-To: martin.petersen@oracle.com,
-	d.bogdanov@yadro.com,
-	bvanassche@acm.org,
-	viro@zeniv.linux.org.uk
-Cc: linux-scsi@vger.kernel.org,
-	target-devel@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-kernel-mentees@lists.linux.dev,
-	skhan@linuxfoundation.org,
-	david.hunter.linux@gmail.com,
-	khalid@kernel.org,
-	Prithvi Tambewagh <activprithvi@gmail.com>,
-	syzbot+f6e8174215573a84b797@syzkaller.appspotmail.com,
-	stable@vger.kernel.org
-Subject: [PATCH v4] scsi: target: fix recursive locking in __configfs_open_file()
-Date: Mon, 16 Feb 2026 11:50:02 +0530
-Message-Id: <20260216062002.61937-1-activprithvi@gmail.com>
-X-Mailer: git-send-email 2.34.1
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="bhQteBup"
+Received: from pps.filterd (m0356516.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 61G5tlvD1899745;
+	Mon, 16 Feb 2026 09:38:07 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=pp1; bh=4HrMsi
+	96Cy/CaTxkBTb5YFPGwcrGeCvkrINOL9lL5oI=; b=bhQteBupFtfXRzSU+E+ZZz
+	lQc8LL+aa3xccbiF8dGfeOPU4ChlHcxXC0rHSca0IOcXEK2Av1yKj7OGLN23TOln
+	2XeOVWT45A4R/yhsrr3ZjM8/PHuAqPE3u7AoXt4rEqzOcqD5/szrgrPR5NwQ2PI3
+	29LNJonJUNym2robOYEBSjZU8nXW8K7ZzMZI+Iy2roJ209FOyEU36hyB66KjwHwh
+	fsR6i4BLlVMX7Knwr0KBF4GEoIiAmDC/Q7NU6Tgq1njrhNdLxJL6GLM6SfUGUAF4
+	oR6WAkbzP6LXot8RxSU87BRC72bvrQ2vgfxJ8mAFj1+7qEZ3DzyJ/SaCRJUDZE8Q
+	==
+Received: from ppma12.dal12v.mail.ibm.com (dc.9e.1632.ip4.static.sl-reverse.com [50.22.158.220])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4caj63xkvn-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 16 Feb 2026 09:38:07 +0000 (GMT)
+Received: from pps.filterd (ppma12.dal12v.mail.ibm.com [127.0.0.1])
+	by ppma12.dal12v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 61G6KwFI012621;
+	Mon, 16 Feb 2026 09:38:06 GMT
+Received: from smtprelay07.wdc07v.mail.ibm.com ([172.16.1.74])
+	by ppma12.dal12v.mail.ibm.com (PPS) with ESMTPS id 4cb3crvy5f-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 16 Feb 2026 09:38:06 +0000
+Received: from smtpav03.wdc07v.mail.ibm.com (smtpav03.wdc07v.mail.ibm.com [10.39.53.230])
+	by smtprelay07.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 61G9c5bY1639122
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Mon, 16 Feb 2026 09:38:05 GMT
+Received: from smtpav03.wdc07v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 901A75805A;
+	Mon, 16 Feb 2026 09:38:05 +0000 (GMT)
+Received: from smtpav03.wdc07v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 06D075805C;
+	Mon, 16 Feb 2026 09:38:03 +0000 (GMT)
+Received: from [9.109.198.164] (unknown [9.109.198.164])
+	by smtpav03.wdc07v.mail.ibm.com (Postfix) with ESMTP;
+	Mon, 16 Feb 2026 09:38:02 +0000 (GMT)
+Message-ID: <1ea3f9bf-c271-46bf-9310-be489ded05fc@linux.ibm.com>
+Date: Mon, 16 Feb 2026 15:08:01 +0530
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: blktests failures with v6.19 kernel
+To: Chaitanya Kulkarni <chaitanyak@nvidia.com>
+References: <aY7ZBfMjVIhe_wh3@shinmob>
+Content-Language: en-US
+Cc: Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        "nbd@other.debian.org" <nbd@other.debian.org>
+From: Nilay Shroff <nilay@linux.ibm.com>
+In-Reply-To: <aY7ZBfMjVIhe_wh3@shinmob>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-ORIG-GUID: 02YJqje8rZh6Zxh_b1ejtbuICIlU1eHN
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMjE2MDA3NiBTYWx0ZWRfX9dagytfdB2m7
+ bKVX8PF5kCI102GPsiD8smfB0skHb92xNYXGmf5V+TG42gMwGuumR+xBk7adniDnWObPhul965g
+ R1+Qr4rF3u0OQFUMgr5a54DoiTFhfeOpcaTPn1nC5yQqQ0EzAXn27BuRSIAb76S4DludVtomvzL
+ WwOpVzXbT73mJicNYEBB1wPox3vMiR/3g/TYkQXGOCZvJSBwixJBIENJmZifFmNS5B8Tdxoxn5j
+ SfaOmXdWs8+agR9m5jbHeV5BcmlkSMGog9ngEYTZbxQU+VprHkauo5N4FKmFVjBR48CtUB+xiMy
+ VTXbAB3/OjY27okuhCS5QjWSLHxV/kKNfHfch9EzUunp583SWtp8p+ZbSJEO1BLgohAwxdgAmOx
+ hL5LRql2FCIpm1l8i+k8VkAAxkUSJ/tJkRE9/A7kRa+4WS6pxrimrM1YJhKheyXF85KPT6hyyij
+ E57bNAz+jjthMEyVkLw==
+X-Proofpoint-GUID: 02YJqje8rZh6Zxh_b1ejtbuICIlU1eHN
+X-Authority-Analysis: v=2.4 cv=U+mfzOru c=1 sm=1 tr=0 ts=6992e57f cx=c_pps
+ a=bLidbwmWQ0KltjZqbj+ezA==:117 a=bLidbwmWQ0KltjZqbj+ezA==:17
+ a=IkcTkHD0fZMA:10 a=HzLeVaNsDn8A:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=Mpw57Om8IfrbqaoTuvik:22 a=GgsMoib0sEa3-_RKJdDe:22 a=VwQbUJbxAAAA:8
+ a=JF9118EUAAAA:8 a=pGLkceISAAAA:8 a=rseCahVfaKpdl2NpX8UA:9 a=QEXdDO2ut3YA:10
+ a=xVlTc564ipvMDusKsbsT:22
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-02-16_03,2026-02-16_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ clxscore=1011 bulkscore=0 impostorscore=0 malwarescore=0 spamscore=0
+ adultscore=0 phishscore=0 lowpriorityscore=0 priorityscore=1501
+ suspectscore=0 classifier=typeunknown authscore=0 authtc= authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2601150000
+ definitions=main-2602160076
 
-In flush_write_buffer, &p->frag_sem is acquired and then the loaded store
-function is called, which, here, is target_core_item_dbroot_store().
-This function called filp_open(), following which these functions were
-called (in reverse order), according to the call trace:
+Hi Chaitanya,
 
-down_read
-__configfs_open_file
-do_dentry_open
-vfs_open
-do_open
-path_openat
-do_filp_open
-file_open_name
-filp_open
-target_core_item_dbroot_store
-flush_write_buffer
-configfs_write_iter
+On 2/13/26 1:27 PM, Shinichiro Kawasaki wrote:
+> Hi all,
+> 
+> I ran the latest blktests (git hash: b5b699341102) with the v6.19 kernel. I
+> observed 6 failures listed below. Comparing with the previous report with the
+> v6.19-rc1 kernel [1], two failures were resolved (nvme/033 and srp) and three
+> failures are newly observed (nvme/061, zbd/009 and zbd/013). Recently, kmemleak
+> support was introduced to blktests. Two out of the three new failures were
+> detected by kmemleak. Your actions to fix the failures will be appreciated as
+> always.
+> 
+> [1] https://lore.kernel.org/linux-block/a078671f-10b3-47e7-acbb-4251c8744523@wdc.com/
+> 
+> 
+> List of failures
+> ================
+> #1: nvme/005,063 (tcp transport)
+> #2: nvme/058 (fc transport)
+> #3: nvme/061 (rdma transport, siw driver)(new)(kmemleak)
+> #4: nbd/002
+> #5: zbd/009 (new)(kmemleak)
+> #6: zbd/013 (new)
+> 
+> 
+> Failure description
+> ===================
+> 
+> #1: nvme/005,063 (tcp transport)
+> 
+>     The test case nvme/005 and 063 fail for tcp transport due to the lockdep
+>     WARN related to the three locks q->q_usage_counter, q->elevator_lock and
+>     set->srcu. Refer to the nvme/063 failure report for v6.16-rc1 kernel [2].
+> 
+>     [2] https://lore.kernel.org/linux-block/4fdm37so3o4xricdgfosgmohn63aa7wj3ua4e5vpihoamwg3ui@fq42f5q5t5ic/
 
-target_core_item_dbroot_store() tries to validate the new file path by
-trying to open the file path provided to it; however, in this case,
-the bug report shows:
+For the lockdep failure reported above for nvme/063, it seems we already had
+solution but it appears that it's not yet upstreamed, check this:
+https://lore.kernel.org/all/20251125061142.18094-1-ckulkarnilinux@gmail.com/
 
-db_root: not a directory: /sys/kernel/config/target/dbroot
+Can you please update and resend the above patch per the last feedback? I think
+this should fix the lockdep reported under nvme/063.
 
-indicating that the same configfs file was tried to be opened, on which
-it is currently working on. Thus, it is trying to acquire frag_sem
-semaphore of the same file of which it already holds the semaphore obtained
-in flush_write_buffer(), leading to acquiring the semaphore in a nested
-manner and a possibility of recursive locking.
-
-Fix this by modifying target_core_item_dbroot_store() to use kern_path()
-instead of filp_open() to avoid opening the file using filesystem-specific
-function __configfs_open_file(), and further modifying it to make this
-fix compatible.
-
-Reported-by: syzbot+f6e8174215573a84b797@syzkaller.appspotmail.com
-Closes: https://syzkaller.appspot.com/bug?extid=f6e8174215573a84b797
-Tested-by: syzbot+f6e8174215573a84b797@syzkaller.appspotmail.com
-Cc: stable@vger.kernel.org
-Signed-off-by: Prithvi Tambewagh <activprithvi@gmail.com>
-Reviewed-by: Dmitry Bogdanov <d.bogdanov@yadro.com>
----
-Changes since v3:
- - Add LOOKUP_DIRECTORY flag in call to kern_path() so as to check presence 
-   of directory checks more efficiently
-
-v3 link: https://lore.kernel.org/all/20260205162624.117957-1-activprithvi@gmail.com/T/#m175d152067817dd6e9dc1821b6fbf626e47a4007
-
-
-Note:
-I checked out and found that when I try to test on commit 3a8660878839faadb4f1a6dd72c3179c1df56787
-(latest commit on which bug dashboard reports the bug on, in upstream repository) 
-syzbot uses, in its kernel config:
-
-CONFIG_CC_VERSION_TEXT="gcc (Debian 12.2.0-14+deb12u1) 12.2.0"
-
-Ref: https://syzkaller.appspot.com/x/.config?x=e854293d7f44b5a5
-Syzbot Reply: https://lore.kernel.org/all/6767d8ea.050a0220.226966.0021.GAE@google.com/T/#m62bc76de5549460ae98e843bb120712548489794
-
-While when #syz test (i.e. on HEAD commit of upstream) is used, it uses, in
-its kernel config:
-
-CONFIG_CC_VERSION_TEXT="gcc (Debian 14.2.0-19) 14.2.0"
-
-Ref: https://syzkaller.appspot.com/x/.config?x=99ac58566e9eb044
-Syzbot reply: https://lore.kernel.org/all/6767d8ea.050a0220.226966.0021.GAE@google.com/T/#me8b79610e4c18a8d8a7d8d6bc249d1c7cf2f8819
-
-However in both cases it uses:
-
-gcc (Debian 14.2.0-19) 14.2.0, GNU ld (GNU Binutils for Debian) 2.44
-
-Probably due to mismatch in compiler version which syzbot actually uses and 
-whats present in kernel config, the build fails for the first case. However, 
-the patch succeeds in fixing the bug in second case.
-
-Earlier for v1 patch (sine v2 patch involved minor change to commit message 
-and v3 involved adding a missed out Reviewed-by tag) patch the kernel builds 
-as well as testing succeeded since syzbot used this in its kernel config:
-
-CONFIG_CC_VERSION_TEXT="gcc (Debian 12.2.0-14+deb12u1) 12.2.0"
-
-as well as used the compiler:
-
-gcc (Debian 12.2.0-14+deb12u1) 12.2.0, GNU ld (GNU Binutils for Debian) 2.40 
-
-Changes since v2:
- - Add Reviewed-by tag received from Dmitry Bogdanov, which was accidentally
-   left to be added in v2 patch.
-
-v2 link: https://lore.kernel.org/linux-scsi/20260122154051.64132-1-activprithvi@gmail.com/T/#u
-Reference for Reviewed-by Tag: https://lore.kernel.org/all/20260108191523.303114-1-activprithvi@gmail.com/T/#mb22d0fc06e747e2b2df8320a15afd2a0670fd0e7
-
-
-Changes since v1:
- - Update commit message to reflect the fact that same file, which code was 
-   currently operating on, was tried to be opened again, leading to 
-   acquiring the same semaphore in nested manner & possibility of recursive
-   locking.
-
-v1 link: https://lore.kernel.org/all/20260108191523.303114-1-activprithvi@gmail.com/T/
-
- drivers/target/target_core_configfs.c | 15 ++++++---------
- 1 file changed, 6 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
-index b19acd662726..f94c242eff97 100644
---- a/drivers/target/target_core_configfs.c
-+++ b/drivers/target/target_core_configfs.c
-@@ -108,8 +108,8 @@ static ssize_t target_core_item_dbroot_store(struct config_item *item,
- 					const char *page, size_t count)
- {
- 	ssize_t read_bytes;
--	struct file *fp;
- 	ssize_t r = -EINVAL;
-+	struct path path = {};
- 
- 	mutex_lock(&target_devices_lock);
- 	if (target_devices) {
-@@ -131,17 +131,14 @@ static ssize_t target_core_item_dbroot_store(struct config_item *item,
- 		db_root_stage[read_bytes - 1] = '\0';
- 
- 	/* validate new db root before accepting it */
--	fp = filp_open(db_root_stage, O_RDONLY, 0);
--	if (IS_ERR(fp)) {
-+	r = kern_path(db_root_stage, LOOKUP_FOLLOW | LOOKUP_DIRECTORY, &path);
-+	if (r) {
- 		pr_err("db_root: cannot open: %s\n", db_root_stage);
-+		if (r == -ENOTDIR)
-+			pr_err("db_root: not a directory: %s\n", db_root_stage);
- 		goto unlock;
- 	}
--	if (!S_ISDIR(file_inode(fp)->i_mode)) {
--		filp_close(fp, NULL);
--		pr_err("db_root: not a directory: %s\n", db_root_stage);
--		goto unlock;
--	}
--	filp_close(fp, NULL);
-+	path_put(&path);
- 
- 	strscpy(db_root, db_root_stage);
- 	pr_debug("Target_Core_ConfigFS: db_root set to %s\n", db_root);
-
-base-commit: 3a8660878839faadb4f1a6dd72c3179c1df56787
--- 
-2.34.1
-
+Thanks,
+--Nilay
