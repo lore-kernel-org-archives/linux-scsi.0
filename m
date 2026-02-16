@@ -1,139 +1,123 @@
-Received: from sender4-pp-f112.zoho.com (sender4-pp-f112.zoho.com [136.143.188.112])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D5ED30FC1B;
-	Mon, 16 Feb 2026 13:40:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=136.143.188.112
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771249245; cv=pass; b=OkIETzyBMb3dzf8JWjMTbjtSo3n5fb5jNmf3Cujoqw+rEz+spleMSOrV9nSo3avd6KsoHFB5oqnhyKSVrcbX6nWHL28y1OdhU1i4JxqKPvRx3Bhhlph2Kw9Gm+/1EJPpPFiXS/8aeJW1snGV0HHgo9w4RKfVzGcMc/mlGpIndV4=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771249245; c=relaxed/simple;
-	bh=7v6nsSjnWyx2tTS8Z+t+yL6fPLY1IBfZYvovaWIaD3g=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=AtlI9aSmyYN+n3jUKI4HTrg0BQDLRUkzxhbTVfYfrXis8UTz0Qr0svbSsa2NDvPDqx3lYlPInMG1NQkpVDe0jpxaBJzkiylRVkepJXdpGZiOWl3WYzJqXjnatoOAkvf4CbRjBrJeZ2jIWhdvV4s2NdqxcvSK/8/uAC5cUy/ElB4=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (1024-bit key) header.d=collabora.com header.i=nicolas.frattaroli@collabora.com header.b=BU0JVnqM; arc=pass smtp.client-ip=136.143.188.112
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collabora.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B2F8223339
+	for <linux-scsi@vger.kernel.org>; Mon, 16 Feb 2026 13:46:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1771249603; cv=none; b=aW0AwGSSXqniSIXHtcRjAUfb65kDt27do3uNi/a1smFFXj0JMJE0DIdmyMM9oKYrg4n11e+TlGq0s3TpKm7cVaQTWUeBs6/eIQ9WqXJzG4/2Nx1H+frpSjMrWylfGOojXqLqcR0vCqUCx/80WC7YbMaaHnmr3Q8JfzBnppi3iEU=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1771249603; c=relaxed/simple;
+	bh=iDADPA9k4+KVhqgRr2wi/o0BAhPgl0uv51ND53uUeXY=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=RSk1m4hbftxQfeYwH7UDQkGRBYMhGUnVfXM4L93pAaKU5WsLesky5/Mpn6sTFUG2s0/wXGPyNd5rrfBOfxMX2LcKtmMUgP2CqptwX13gcawIp0VCVMq4RZS8MHYKlJMnb7dut2xlVoPzYw4w5yBczGk98B2HyKulCQFfA+IImX4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=Wt79u+pM; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=collabora.com header.i=nicolas.frattaroli@collabora.com header.b="BU0JVnqM"
-ARC-Seal: i=1; a=rsa-sha256; t=1771249209; cv=none; 
-	d=zohomail.com; s=zohoarc; 
-	b=WJ9QKfw3JJHYvbKIy5Eous45tPMOFps72SrGwjAWjwBcW0507Z6eJzkcXXSRjFe/UL1vItG03Kcy7rNpUTMwmkWi5wDiL92WgFwaSnGs1ldXYATwFCoKOA9TumzrMW242eIeX2ivy0IHjh0XBu07dE59bjImJkf4/pj7DwmQbks=
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.com; s=zohoarc; 
-	t=1771249209; h=Content-Type:Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:Subject:To:To:Message-Id:Reply-To; 
-	bh=BBmYQAz3B0wPgIhHKwRD2+RWVeSx2MIYfR2onqufqQY=; 
-	b=CKJPSbNoiDegN+vB3eY8ijbk9whkOjEGmT8qFQieyg5ii1C1Mx6hIVshQrRMToTBz6qIN5W1QblQBBYxG8PqvSmVUewlfPdUpCxUwPhKZyt5Tn0zxuzgrcnWvaXPfkgai4LKwmsq6Z3E57jDd3qImAu2/T0Cm8opWpPCcSBqQ7Y=
-ARC-Authentication-Results: i=1; mx.zohomail.com;
-	dkim=pass  header.i=collabora.com;
-	spf=pass  smtp.mailfrom=nicolas.frattaroli@collabora.com;
-	dmarc=pass header.from=<nicolas.frattaroli@collabora.com>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1771249209;
-	s=zohomail; d=collabora.com; i=nicolas.frattaroli@collabora.com;
-	h=From:From:Date:Date:Subject:Subject:MIME-Version:Content-Type:Content-Transfer-Encoding:Message-Id:Message-Id:References:In-Reply-To:To:To:Cc:Cc:Reply-To;
-	bh=BBmYQAz3B0wPgIhHKwRD2+RWVeSx2MIYfR2onqufqQY=;
-	b=BU0JVnqM2NCyPSIHeYw6UOAly+8QqIL7VdQAM5pdAl2aCv02bpPSxvGaa9lKN2KK
-	DqPUbwQY+XZnLvsWlgQsISqFdmeyCE2ThcyvXhseVN2OFfa9KjSneDzqNyFTqBfI22d
-	poXdl2DC1aLwoVIMdKaUwvHeV0GEk3Bd/mTxVtBo=
-Received: by mx.zohomail.com with SMTPS id 1771249207413377.4724544258762;
-	Mon, 16 Feb 2026 05:40:07 -0800 (PST)
-From: Nicolas Frattaroli <nicolas.frattaroli@collabora.com>
-Date: Mon, 16 Feb 2026 14:37:56 +0100
-Subject: [PATCH v7 23/23] scsi: ufs: mediatek: Add MT8196 compatible,
- update copyright
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="Wt79u+pM"
+Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 61GBeNJi2170175;
+	Mon, 16 Feb 2026 13:46:40 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:date:from:message-id:mime-version
+	:subject:to; s=qcppdkim1; bh=wcAoY7fiW2MWTvJ+uysYOB2R7G0n1i8d414
+	yn7x0gf4=; b=Wt79u+pMGvihKlYU7BORwj1DxNRtEXpZ6YTot+t6qxDTeEorSS4
+	S6nNdEiM65nBUu40iDsDUqyMW2683nNLfuyIM/UsAMdKMjovRYxeBD17YhL2D63B
+	5GLPXwp0Ys52YXw22SYVhIlFGOYV3Qcs4iJQKKIM7uM4Aqe/CN+/pFOWvxWfgtGF
+	BkhnSP1y9wfR6jqTqwXXIhXlkabDwtqUdpKQFGASeT/ilS5doSBCHhEYzuWr2juH
+	nVjMx/ymV3D4E/etFxpoPnl27h3G9PTgsMzaSureIJz1hT5M3KoCQjbvpDyA0WSi
+	HjFefPp57Jui56fewL+2x+yeEOfiGtg7Zmw==
+Received: from nalasppmta05.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4cbnv9hrw5-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 16 Feb 2026 13:46:40 +0000 (GMT)
+Received: from pps.filterd (NALASPPMTA05.qualcomm.com [127.0.0.1])
+	by NALASPPMTA05.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTP id 61GDkdwN009490;
+	Mon, 16 Feb 2026 13:46:39 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+	by NALASPPMTA05.qualcomm.com (PPS) with ESMTPS id 4cc04njfqc-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 16 Feb 2026 13:46:39 +0000
+Received: from NALASPPMTA05.qualcomm.com (NALASPPMTA05.qualcomm.com [127.0.0.1])
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 61GDkcn0009475;
+	Mon, 16 Feb 2026 13:46:39 GMT
+Received: from hu-devc-lv-u22-c.qualcomm.com (hu-cang-lv.qualcomm.com [10.81.25.255])
+	by NALASPPMTA05.qualcomm.com (PPS) with ESMTPS id 61GDkcQp009472
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 16 Feb 2026 13:46:38 +0000
+Received: by hu-devc-lv-u22-c.qualcomm.com (Postfix, from userid 359480)
+	id A97C25A8; Mon, 16 Feb 2026 05:46:38 -0800 (PST)
+From: Can Guo <can.guo@oss.qualcomm.com>
+To: martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, Can Guo <can.guo@oss.qualcomm.com>
+Subject: [PATCH 0/2] Add sysfs entries to facilitate UFS UniPro QoS monitoring
+Date: Mon, 16 Feb 2026 05:46:34 -0800
+Message-Id: <20260216134636.3477154-1-can.guo@oss.qualcomm.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20260216-mt8196-ufs-v7-23-b5f2907c6da7@collabora.com>
-References: <20260216-mt8196-ufs-v7-0-b5f2907c6da7@collabora.com>
-In-Reply-To: <20260216-mt8196-ufs-v7-0-b5f2907c6da7@collabora.com>
-To: Alim Akhtar <alim.akhtar@samsung.com>, 
- Avri Altman <avri.altman@wdc.com>, Bart Van Assche <bvanassche@acm.org>, 
- Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
- Conor Dooley <conor+dt@kernel.org>, 
- Matthias Brugger <matthias.bgg@gmail.com>, 
- AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>, 
- Chunfeng Yun <chunfeng.yun@mediatek.com>, Vinod Koul <vkoul@kernel.org>, 
- Kishon Vijay Abraham I <kishon@kernel.org>, 
- Peter Wang <peter.wang@mediatek.com>, Stanley Jhu <chu.stanley@gmail.com>, 
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
- "Martin K. Petersen" <martin.petersen@oracle.com>, 
- Philipp Zabel <p.zabel@pengutronix.de>, Liam Girdwood <lgirdwood@gmail.com>, 
- Mark Brown <broonie@kernel.org>, Chaotian Jing <Chaotian.Jing@mediatek.com>, 
- Neil Armstrong <neil.armstrong@linaro.org>
-Cc: Louis-Alexis Eyraud <louisalexis.eyraud@collabora.com>, 
- kernel@collabora.com, linux-scsi@vger.kernel.org, 
- devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
- linux-arm-kernel@lists.infradead.org, linux-mediatek@lists.infradead.org, 
- linux-phy@lists.infradead.org, 
- Nicolas Frattaroli <nicolas.frattaroli@collabora.com>
-X-Mailer: b4 0.14.3
+Content-Transfer-Encoding: 8bit
+X-QCInternal: smtphost
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: OG_3LipfedoKjEVVk9kFxjE4DDyihnYu
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMjE2MDExNiBTYWx0ZWRfXyrBZLmvd0sEP
+ lrwU8TP0jaWZIC7Y7lmW/9ZVaQ8P5mk0dbGnpy0KopJEg2GxXZs8v+MofOZIKs8XFGul+pvevil
+ LmBjUfsvmSHFXgXWSDYhuzFWjjAzY+L6u4jMXQy+5YI9HiDb0gcT+qFPFlCoFSsXlxDAFMNLT8B
+ vZd/tHNI1BrGTzxlIm3WSDS9a2BqXZDDu230q9T3aDQk2e3vrslxsal59ztVmYDhrZtN10ESpWF
+ vPVXbHlsu21Aa51muI4Hkc84023HTKmQOowKn+7tGr5Abhcdns3o5OodM8B//M3gII5GdGZQici
+ r5crOUvrc4hWq0hZYHi1gIFrqOxNkn+oWHdkgMHpJq0QGEsJNEBrxfsFvAQbK/FwIr8LPIhPs5H
+ dumk7VVT/I3FdUkATUIPA6j+sjTGtzUBb9tvmMTfVePLGjnDrTdfkyYsfZ403KqOy1dw59UannM
+ xFqOPOf6aVS+XOGL1Tw==
+X-Authority-Analysis: v=2.4 cv=b7K/I9Gx c=1 sm=1 tr=0 ts=69931fc0 cx=c_pps
+ a=ouPCqIW2jiPt+lZRy3xVPw==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
+ a=HzLeVaNsDn8A:10 a=VkNPw1HP01LnGYTKEx00:22 a=Mpw57Om8IfrbqaoTuvik:22
+ a=GgsMoib0sEa3-_RKJdDe:22 a=DoZd3WRFHSi2sOIFn6IA:9
+X-Proofpoint-GUID: OG_3LipfedoKjEVVk9kFxjE4DDyihnYu
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-02-16_04,2026-02-16_03,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ suspectscore=0 impostorscore=0 lowpriorityscore=0 adultscore=0 malwarescore=0
+ phishscore=0 spamscore=0 clxscore=1011 priorityscore=1501 bulkscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2601150000 definitions=main-2602160116
 
-THe MT8196's UFS controller has a new compatible. Add the necessary
-struct definitions to support it.
+This series introduces two sysfs entries to the UFS core to improve the
+observability of UFS Link and HBA states from userspace.
 
-Also update the copyrights and authors, without tabs following spaces to
-avoid checkpatch errors, to list myself as having contributed to this
-driver after the preceding rework patches.
+While userspace can currently configure UniPro QoS monitoring via UFS BSG,
+tracking events requires constant polling of UniPro attributes. This series
+enables event-driven monitoring by using sysfs_notify_dirent(), allowing
+the driver to proactively signal userspace via poll() whenever a DME QoS
+interrupt occurs.
 
-Reviewed-by: AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
-Signed-off-by: Nicolas Frattaroli <nicolas.frattaroli@collabora.com>
----
- drivers/ufs/host/ufs-mediatek.c | 17 +++++++++++++++--
- 1 file changed, 15 insertions(+), 2 deletions(-)
+Additionally, UFS host or device resets triggered by error handling can
+reset UniPro QoS monitoring attributes. The first patch introduces a
+ufshcd_state sysfs entry, allowing userspace to monitor the HBA state
+and determine when a re-configuration of QoS attributes is necessary
+following a reset.
 
-diff --git a/drivers/ufs/host/ufs-mediatek.c b/drivers/ufs/host/ufs-mediatek.c
-index dfa104207cc6..122bc741294d 100644
---- a/drivers/ufs/host/ufs-mediatek.c
-+++ b/drivers/ufs/host/ufs-mediatek.c
-@@ -1,9 +1,11 @@
- // SPDX-License-Identifier: GPL-2.0
- /*
-  * Copyright (C) 2019 MediaTek Inc.
-+ * Copyright (C) 2025 Collabora Ltd.
-  * Authors:
-- *	Stanley Chu <stanley.chu@mediatek.com>
-- *	Peter Wang <peter.wang@mediatek.com>
-+ *      Stanley Chu <stanley.chu@mediatek.com>
-+ *      Peter Wang <peter.wang@mediatek.com>
-+ *      Nicolas Frattaroli <nicolas.frattaroli@collabora.com> (Major cleanups)
-  */
- 
- #include <linux/arm-smccc.h>
-@@ -2200,6 +2202,10 @@ static const char *const ufs_mtk_regs_avdd12_ckbuf_avdd18[] = {
- 	"avdd12", "avdd12-ckbuf", "avdd18"
- };
- 
-+static const char *const ufs_mtk_regs_avdd12_ckbuf[] = {
-+	"avdd12", "avdd12-ckbuf"
-+};
-+
- static const struct ufs_mtk_soc_data mt8183_data = {
- 	.has_avdd09 = true,
- 	.reg_names = ufs_mtk_regs_avdd12_avdd18,
-@@ -2212,10 +2218,17 @@ static const struct ufs_mtk_soc_data mt8192_8195_data = {
- 	.num_reg_names = ARRAY_SIZE(ufs_mtk_regs_avdd12_ckbuf_avdd18),
- };
- 
-+static const struct ufs_mtk_soc_data mt8196_data = {
-+	.has_avdd09 = true,
-+	.reg_names = ufs_mtk_regs_avdd12_ckbuf,
-+	.num_reg_names = ARRAY_SIZE(ufs_mtk_regs_avdd12_ckbuf),
-+};
-+
- static const struct of_device_id ufs_mtk_of_match[] = {
- 	{ .compatible = "mediatek,mt8183-ufshci", .data = &mt8183_data },
- 	{ .compatible = "mediatek,mt8192-ufshci", .data = &mt8192_8195_data },
- 	{ .compatible = "mediatek,mt8195-ufshci", .data = &mt8192_8195_data },
-+	{ .compatible = "mediatek,mt8196-ufshci", .data = &mt8196_data },
- 	{},
- };
- MODULE_DEVICE_TABLE(of, ufs_mtk_of_match);
+Together, these changes provide an efficient, low-overhead mechanism for
+userspace to perform real-time link quality monitoring and reporting.
+
+Can Guo (2):
+  scsi: ufs: core: Add support to notify userspace of UniPro QoS events
+  scsi: ufs: core: Add a sysfs entry for ufshcd_state
+
+ Documentation/ABI/testing/sysfs-driver-ufs | 19 +++++++++
+ drivers/ufs/core/ufs-sysfs.c               | 48 ++++++++++++++++++++++
+ drivers/ufs/core/ufshcd-priv.h             |  6 +++
+ drivers/ufs/core/ufshcd.c                  | 18 ++++++--
+ include/ufs/ufshcd.h                       |  6 +++
+ include/ufs/ufshci.h                       |  1 +
+ 6 files changed, 95 insertions(+), 3 deletions(-)
 
 -- 
-2.53.0
+2.34.1
 
