@@ -1,164 +1,139 @@
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+Received: from mail-lj1-f174.google.com (mail-lj1-f174.google.com [209.85.208.174])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 054102C0F6C
-	for <linux-scsi@vger.kernel.org>; Tue, 17 Feb 2026 07:06:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771311966; cv=none; b=Vu9e4ephG9f2dTkcgzSUeEnZh7BBi6dRU8cj+vBJoahUR0LYQ51yTkC4Dn5UvpFC9tIgO54k6jupS2GFHTlMYJ2wyp0ZeY20/HfAdmbArM0LeLK3dK3OC1IhPLlwG4j5WHh3k5ZlkNdVjztG3gL86kEj3O459YrlvIhDdVIyY8s=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771311966; c=relaxed/simple;
-	bh=VyyMLbMJcOl0NASLo2SkPcPA9ncFuhioDNds2owx+X0=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=jWJT7jDqqhfETPkxnWWzaWVjyOQ2NIHkxfhzhLUelw6tjV0ujSMaFCTCT5tvdFp8gXxby75Jxu3c5HqLrRKT+WCglFPGgvNE9IsmvhT/IyyeMBEv0kBFYzyzGJ2J1Hd9CA51H7iGbYhZ6oriVr/yCNCE0cDUwmJgRJtJlsI+6/Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=1V7GS3jX; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=5R7ttY1m; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=1V7GS3jX; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=5R7ttY1m; arc=none smtp.client-ip=195.135.223.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A630D32694F
+	for <linux-scsi@vger.kernel.org>; Tue, 17 Feb 2026 10:37:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.174
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1771324655; cv=pass; b=lEm73GAycSHxe9Ve0CS36FWylg2UYANYHPtwy6Dza029FkAG2bhMHmc9r22NjfYsWCQG9ZK8t2bZJXgnOKbdwQgdHcKWiysRLGkwdEfn7vEOtZviPrhrxsy3Gx0qA+xD8AshNiSsHEfyKlAPxaPcUBAToAy5jTqIIXpODWYtfjQ=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1771324655; c=relaxed/simple;
+	bh=dPjtly+ZxqrcgnTcKSIFDHsF1hA5MWE73lwPbiR8+3U=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=C0fsjCO/bTjm3LZvTGfvj3RKqYnrmk93+fOmtDoV5chHdOxDkU0OzIlBKc9pwtC+wzDgIEuxSxqXZ/zGT6iKpoorpe+1hm+VLco9LHFNwYSmclbKavNRccoZy1GQo63mW7fyRyb/n/Qq/1QUjbNMIYSeR//Q2nT41Ua1KYfAmGo=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=ionos.com; spf=pass smtp.mailfrom=ionos.com; dkim=pass (2048-bit key) header.d=ionos.com header.i=@ionos.com header.b=dmYLmGrQ; arc=pass smtp.client-ip=209.85.208.174
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=ionos.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ionos.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="1V7GS3jX";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="5R7ttY1m";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="1V7GS3jX";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="5R7ttY1m"
-Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id 4366A5BCD9;
-	Tue, 17 Feb 2026 07:06:03 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1771311963; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=l0OmiP93TfgVIe/TNXJ0aBY8NrnPYQkGRPtu1BM8h1s=;
-	b=1V7GS3jX1+tAIZH7f1irMqHd7SdPygdJLncJL7Gttb5oQw/ZGyEE7JsONLKWB0CjKenrmm
-	WGc+/x5F5uhSJ2qtZ+Q3gmzNje/eGNiogM0RmkzrV57Z22hTt1x4sjg/p1mrN8HnvTpHDL
-	JPWS86T6OBVPhxajNEi0z79+XsmibnY=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1771311963;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=l0OmiP93TfgVIe/TNXJ0aBY8NrnPYQkGRPtu1BM8h1s=;
-	b=5R7ttY1ml3NZVrHQZRNq9M9U95QiTXquKu7UhsdfbZBU+otbeaCTQ+meYYG1OOZmpgSEsh
-	GcePSsaw058owlCA==
-Authentication-Results: smtp-out2.suse.de;
-	none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1771311963; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=l0OmiP93TfgVIe/TNXJ0aBY8NrnPYQkGRPtu1BM8h1s=;
-	b=1V7GS3jX1+tAIZH7f1irMqHd7SdPygdJLncJL7Gttb5oQw/ZGyEE7JsONLKWB0CjKenrmm
-	WGc+/x5F5uhSJ2qtZ+Q3gmzNje/eGNiogM0RmkzrV57Z22hTt1x4sjg/p1mrN8HnvTpHDL
-	JPWS86T6OBVPhxajNEi0z79+XsmibnY=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1771311963;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=l0OmiP93TfgVIe/TNXJ0aBY8NrnPYQkGRPtu1BM8h1s=;
-	b=5R7ttY1ml3NZVrHQZRNq9M9U95QiTXquKu7UhsdfbZBU+otbeaCTQ+meYYG1OOZmpgSEsh
-	GcePSsaw058owlCA==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 891973EA65;
-	Tue, 17 Feb 2026 07:06:00 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id WIzYOlgTlGnaBwAAD6G6ig
-	(envelope-from <hare@suse.de>); Tue, 17 Feb 2026 07:06:00 +0000
-Message-ID: <f682b34e-aa40-4e0f-b89d-6a56452a66c3@suse.de>
-Date: Tue, 17 Feb 2026 08:05:57 +0100
+	dkim=pass (2048-bit key) header.d=ionos.com header.i=@ionos.com header.b="dmYLmGrQ"
+Received: by mail-lj1-f174.google.com with SMTP id 38308e7fff4ca-3870c7479c6so25852941fa.3
+        for <linux-scsi@vger.kernel.org>; Tue, 17 Feb 2026 02:37:33 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; t=1771324652; cv=none;
+        d=google.com; s=arc-20240605;
+        b=aH6XcfQ+jWNMlGTIYNlIGj0e2wLsjD4G5Bwq4Om+mYufivORzALV8FaSmoIVN3tjrQ
+         uLJKwLciPYnhgfn7uoL/iuXAduMEI9G8kkLMLNbmETWZQv+D5RANupOWgFWaq3J2yBY9
+         9BeeHnzC9BGbVNMhuPYooFbqhTVYZyWhmaR94mFtdXmpmLxXFAZHTqz2xXb7ei16rJhH
+         eytdshWGuUqUF0kaHHWE+WZkWcw1GmgWuZnJDKRy7Z7Ji1NvPHvgZzN2wUEYnjrayKPW
+         5fRvcvMVvZR4gyFD8zBkdBsKzwOOGb3wt8JLSvlacoK04zP8f3pJ6nvfkYqKlh8d2jv4
+         zOGA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=NZMo/PtOIzSJeD+bvKh62aH9xtqgsP4XaPk4C2v4d9E=;
+        fh=Wq0Z0YfGvXIiZxspuv+SATtsswMJNTURSDGwHQvBtPg=;
+        b=hi+8hytR7NKXX9IIiATjdCB2YjU8i8KnvPbSs/qfXl45kT612rTOaAr1HnxYLklhdI
+         nzM1QHjosHYPnV/AbPHnyJZVc0ykd/JRuP0HAOifYWtl9A3ujJ1EAb43kqXe1DIyov/b
+         CCJC/jDKHuXcq5XYCSR+Uz8AP+OZC6pMgHxP/IVA839/wE2SWvtGFV18HuCZshFhlP7v
+         cuxCI44HXux0307hqHSjEr/XwdYB73uVJvg3xmSXoJxfyFJOTKbdjcZFzmSeSTsUy4/w
+         PIVkhUjfI/1aSnTaBJwUQh8+DNQufbLL6CkLusZtWepaBwjayMdJMzOZ9En8voywSXor
+         ChkQ==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ionos.com; s=google; t=1771324652; x=1771929452; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=NZMo/PtOIzSJeD+bvKh62aH9xtqgsP4XaPk4C2v4d9E=;
+        b=dmYLmGrQL6EpWGinGmazJYZO2mJYS/9YAtjKAkQYVsYcu67/5AA8mkj764LmfULiGy
+         Bq1tyIlasq5pw9UoS4Sr+XCwvWTBbwX8s+hIVYntsZPYoiwNa3nVU4Db6qMzN0KObR5u
+         +szP0cw+XNRlcTzTNf4B5GXh2CK1xmRAFYDmrGhbKeZ1DNZbm24/fY6wlyVWhzNOgLOX
+         /tZInKxJH3v+wzSCU2v2Mk1DEhlRMMh0/0h0X+K4aDFEi0cYkMFereA5+SHXhdwt9Ejn
+         m9++REQio3HlLCp4R4ZiLcPl3WV10drQ7hxCz+iw3pxBnEx/RC6cNykCWYgpsliYzvIg
+         1YKA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1771324652; x=1771929452;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=NZMo/PtOIzSJeD+bvKh62aH9xtqgsP4XaPk4C2v4d9E=;
+        b=Wl3+3OxSJcqo1W8LNKizUlFC0ylUQY55Lh72IRZFfsd0IjP/dyMdc4x1NNu+AjVk+j
+         w+hsP7BXoEAdZ0ZRL3jfxzYhLNrJnsmjAplPIsR4D6BTDzXin64ozlLw7IB8FBlgY4rT
+         YjUKI9TtFrExldfJgO2oRWfXxv9Oz7rJfJcAqHwWP268it+fmRPup4+zOVb4XocfwS1X
+         h3vHbmVMDIbnpMeaAgBZKgOIonahhMdVetSs51eFQwdWiB2+IV/czh6S8Q5y8F1SSdrU
+         4RTJJn8hhmfhxhfCCzgnuTWrBbGKJe8Pex7FwvUln0bOURvNIRW7obCP5GI8UMgAUeE3
+         Urmg==
+X-Forwarded-Encrypted: i=1; AJvYcCX7J3G7q/KdXPW9MeJ0Ad6rZjstPH0W9U4KJBsgsTGSicVqeabKVWlVuy6uFtq9MKw1OwT1BagP0AQ+@vger.kernel.org
+X-Gm-Message-State: AOJu0YxyJ9ZSKBQGXsSm0jnFC7sxi2FBdTiDgD8wq6OwpNtAcSc6EuVY
+	fQUFrHqkohvpzj6wK4x/SHiFcOLOVZjaTutKeCR8QlYkId9TfCFm+e9eFs+scPYrIWvQzbzFYjw
+	i3Fzg56b0mgldbHHPIa5SY6L6Orc/Tq4g5+ht3esM7g==
+X-Gm-Gg: AZuq6aL3IrPJfv8Aq+a3wZ2553K6G4x8M7WcEfnxc8jGn+mRyADg+oeg24kV8tgI7Sh
+	P/rp3bTdkqRz2JaIiQ+mp8dQ2mn9VxUq8BUnACfFqdK4nKXuut433OkaXkkipqAXD7vgR2ycUl4
+	IC1Sso8kY6erGYXbVC7uedlYYAS12C3UmlHLsLf8rEZ8bPPxx761KWpu12f7RaZTTopI+9vowKd
+	702FXikIk78xoQMPu1UCrkMGD+Uuvgsg69dfq2oeXApO3ahUa4bM//M4dOohPTPdDybLfokXnLV
+	k+WS7T6cQ7XW9xOPvI+sIM/IAQ7xkv0SVCHrPag+q/Z+hIjpeQ2N+MLDcvG6/SBodDAw
+X-Received: by 2002:a05:651c:1ca:b0:386:ec21:c87f with SMTP id
+ 38308e7fff4ca-3881b99cc9cmr30135731fa.42.1771324651832; Tue, 17 Feb 2026
+ 02:37:31 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [LSF/MM/BPF TOPIC] Native SCSI multipath support
-To: John Garry <john.g.garry@oracle.com>, lsf-pc@lists.linux-foundation.org,
- linux-nvme@lists.infradead.org, linux-block@vger.kernel.org,
- linux-scsi@vger.kernel.org
-References: <69349b51-72c2-47f9-948f-f89843af62e4@oracle.com>
- <b598c5c9-6732-4661-85b2-7ab10a0830d4@suse.de>
- <dbf5fbdd-8894-40b7-b574-0c6385995ec2@oracle.com>
- <a5a0aa42-33e4-401f-ad94-8104cff9368c@suse.de>
- <28ab3aa2-7654-4b4b-94be-bd691c1903dd@oracle.com>
-Content-Language: en-US
-From: Hannes Reinecke <hare@suse.de>
-In-Reply-To: <28ab3aa2-7654-4b4b-94be-bd691c1903dd@oracle.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Spamd-Result: default: False [-4.30 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	FUZZY_RATELIMITED(0.00)[rspamd.com];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	ARC_NA(0.00)[];
-	TO_DN_SOME(0.00)[];
-	MID_RHS_MATCH_FROM(0.00)[];
-	RCVD_TLS_ALL(0.00)[];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	FROM_HAS_DN(0.00)[];
-	RCPT_COUNT_FIVE(0.00)[5];
-	FROM_EQ_ENVFROM(0.00)[];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	RCVD_COUNT_TWO(0.00)[2];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,suse.de:mid,suse.de:email]
-X-Spam-Flag: NO
-X-Spam-Score: -4.30
-X-Spam-Level: 
+References: <20260110-lsfmm-2026-cfp-ae970765d60e@brauner> <20260119-bagger-desaster-e11c27458c49@brauner>
+ <20260129-beidseitig-unwohl-9ae543e9f9f5@brauner> <20260216-ruhelosigkeit-umlegen-548e2a107686@brauner>
+In-Reply-To: <20260216-ruhelosigkeit-umlegen-548e2a107686@brauner>
+From: Haris Iqbal <haris.iqbal@ionos.com>
+Date: Tue, 17 Feb 2026 11:37:19 +0100
+X-Gm-Features: AaiRm52ye33PKO28CcExseV6coNOG-rZ2nBeMP78z80h8Dwp-N455yQLK7UlhmY
+Message-ID: <CAJpMwyg-3-Z=ZDC60Vn0s-8Z78VOPKYmvX9s=Nnvcoao4T5zbg@mail.gmail.com>
+Subject: Re: LSF/MM/BPF: 2026: Call for Proposals
+To: Christian Brauner <brauner@kernel.org>
+Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, 
+	linux-block@vger.kernel.org, linux-ide@vger.kernel.org, 
+	linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org, 
+	bpf@vger.kernel.org, lsf-pc@lists.linux-foundation.org, 
+	linux-kernel@vger.kernel.org, lwn@lwn.net
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On 2/16/26 17:55, John Garry wrote:
-> On 16/02/2026 16:32, Hannes Reinecke wrote:
->>> cheers, in the meantime, I have some comments:
->>>
-[ .. ]>>> - I am still not sure on whether we require a multipath 
-version of
->>> sg. We can still have per-path sg. NVMe does have a multipath nvme- 
->>> generic dev, but that just handles IOCTLs/uring cmd, and nothing like 
->>> sg read/ write fops
->>>
->> 'sg' is primarily for testing 'raw' SCSI commands. (And dastardly 
->> complex to boot). I really would keep it in it's current form, and not
->> try to mimick something with SCSI multipathing.
-> 
-> I can get to scsi_ioctl() from the multipath sd device ioctl - 
-> sd_ioctl() - maybe that is enough.
-> 
-Yeah, it should. In the end, the read/write path is less interesting
-for 'raw' SCSI commands; I would think sg is more interesting for the
-more obscure commands. And most of these would be path-specific anyway.
+On Mon, Feb 16, 2026 at 3:28=E2=80=AFPM Christian Brauner <brauner@kernel.o=
+rg> wrote:
+>
+> On Thu, Jan 29, 2026 at 05:13:52PM +0100, Christian Brauner wrote:
+> > On Mon, Jan 19, 2026 at 03:26:39PM +0100, Christian Brauner wrote:
+> > > > (1) Fill out the following Google form to request attendance and
+> > > >     suggest any topics for discussion:
+> > > >
+> > > >           https://forms.gle/hUgiEksr8CA1migCA
+> > > >
+> > > >     If advance notice is required for visa applications, please poi=
+nt
+> > > >     that out in your proposal or request to attend, and submit the =
+topic
+> > > >     as soon as possible.
+>
+> This is (likely) the final reminder to put in your invitation request!
+> The invitation request form closes this Friday, 20th February.
 
->>
->>> - I have not tried to detangle ALUA support from SCSI DH, so no ALUA 
->>> support yet
->>>
->> Ouch. But that is the key point of the implementation; ALUA provides
->> _all_ the information required for multipathing, so how can you _not_
->> have support for it?
-> 
-> So far every path is just "optimised" and scsi_vpd_lun_id() is used to 
-> match scsi_devices ... ALUA support will be added, but if I were to do 
-> it now, it would just delay posting anything even further...
+Hello,
 
-Fair enough. Eagerly awaiting the patchset.
+What is the announcement date for accepted topics and invitations?
 
-Cheers,
-
-Hannes
--- 
-Dr. Hannes Reinecke                  Kernel Storage Architect
-hare@suse.de                                +49 911 74053 688
-SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
-HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
+>
+> Fever has struck me down so all you get is a bad limerick:
+>
+> There's a conference called LSFMM,
+> Where maintainers debate and condemn,
+> They argue till dawn
+> What's merged or withdrawn,
+> Then next year do it over again!
+>
+> Don't forget to pester^wask^wremind your respective organizations to
+> sponsor LSF/MM/BPF 2026! If it helps, you can tell them that we're
+> considering renaming it LSF/MM/BPF/AI.
+>
+> Thanks!
+> Christian
+>
