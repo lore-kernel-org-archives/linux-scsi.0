@@ -1,279 +1,274 @@
-Received: from BYAPR05CU005.outbound.protection.outlook.com (mail-westusazolkn19010022.outbound.protection.outlook.com [52.103.2.22])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f176.google.com (mail-pl1-f176.google.com [209.85.214.176])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C4561D90DF;
-	Tue, 17 Feb 2026 15:47:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.103.2.22
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771343243; cv=fail; b=WW4CEh/MR1oY7mBtkjMw6GZd/E+9cRpHrCjto06i8riPXqP8Pa+8FdOQtpLG94R5D+f1vAK7AgrgOjEarcSSbfrRgK7/SmPfo1UXBeOVrRmbaQM+UMIRZPGA63I+zm6fXd8lBxJH+h58/D6H3rzZxjpSWooecWzYP4RaEGDY/HM=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771343243; c=relaxed/simple;
-	bh=fsFyHogiIvzfgS1SXYmYQPtNU2/OUkY9rclxqso8Prs=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=NHNrNpOiFiCpz/5BnmoWsypMAoEKaBSSNqmB5M9DswBSe28s4HdMfjanM24LD6VWZks9LDfQ0xEAr6tkvzaXaUabVx4DRI0tCrLtwHk+HbenEx9vjzzd7gTRAbVwVgWj8l5KOGmzSarP3Q9fRe0yRqjqmhC/qTzixD2ho++ba0I=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=outlook.com; spf=pass smtp.mailfrom=outlook.com; dkim=pass (2048-bit key) header.d=outlook.com header.i=@outlook.com header.b=tWl80eXj; arc=fail smtp.client-ip=52.103.2.22
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=outlook.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=outlook.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F0D236D51B
+	for <linux-scsi@vger.kernel.org>; Tue, 17 Feb 2026 16:58:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.176
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1771347491; cv=none; b=FnCKsSXaLb1mkif2lFYJTh/YO0gr5fG65HBIJY4qT4hvAtTax7oQ2u93/rvxYzD3SCbd61XIPmW0/Pqo1kmQz+EsiTgu+MPVf1IxPO7k/Snxgo/4wCmlYfxzxLKz5Y9X4Scu9gUmOXcGVYljL7bD7/lTqgvg89DJX0RRWvnlpgc=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1771347491; c=relaxed/simple;
+	bh=ieXwuS9RqKG5AbDgk6zK3Sz/gDnf1qgIn0zAze1pTE8=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=F0qaiJY4yequULCHKeAusjmmoWcax4in9qxlO0DH3e/bVsSmHV5ZZP6GlduI1aKQbzp9BQQ6Sa2isj0Qj8yMpVUcKqW/jVH14U9iBISiZkkA7d83HbNMVwRCS0QP+fYCQNT9gz+zd+RNYB3dyX4TCnsJWaO3rd8lKHbMZHkkyLQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=4HIGJeI1; arc=none smtp.client-ip=209.85.214.176
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=outlook.com header.i=@outlook.com header.b="tWl80eXj"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=GYH1FmbxvEjvUaHQdmxPjKAf6fI1/haSU3/eYzXa6pHybEwVfxRhOncC0+fCUJ5j1qD75BjsGFaKGrTRShwN2gy9HZgBrY62N3G9y7c2/lAS5J/MUDmjyvAp1TbXwwxXsWadKV9VP8SawbG03v3o/lJn8hguYN1pofXzbhE2DXzYld5Ny/VExxPAGsytUZatgSnzM3/nc2UnnzlxvrwlWCjxjrZCr0hXDNn6b9CocV6S1ZdWfnmVr4yrt8wNOFa+8579tuP3024cpDvTwLGotOcHgKM93Pxry4hzDbHT8YcfgmLiulk8VnYBu9EpEbS/EO7uJsVCX/BBly/JB+4GJg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=MYBG0/7CwaJyy8WOt3hfIh1nwDFf9hhj1p6JBOx/FKg=;
- b=uc9bygmj6pE5QWUkFm7hm/U8lTp+6CwTSgDjRfgMfnAlrlMMZDtt10nPRtjoiudqLutoS5dCpypsH6gLjkeCjZRDePV2FCQFv8bQAsmBVcyWTTtClWY7qb0ToUPeHCuuj6HGIbuZDtAeHJaA4OhEOHRwF0fSZ08L/67NC0StnRIOSQjxEgJoWL5R4/QZVlX76jlx3LFdqxLBuIXCzqsdYxXdcbgXyq7HvSfCOtHY6eXoXp8dY/rG5g6v1BhNcN2yEPUy/XkC8mRGeDVEM5xy0XhC+5v0p1HF79z5q/PP7rN+UfCWdYUdIRMZYoyWdiGjSpKlO+9d3eRTqINeACdHUg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
- dkim=none; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=outlook.com;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=MYBG0/7CwaJyy8WOt3hfIh1nwDFf9hhj1p6JBOx/FKg=;
- b=tWl80eXjNU0Hs6f9Xs7Y9fdnbVLb76HEe2gB98BLh1Xzypztjpa0QjnV9/Cq/nUu/yboqAJHtOmQbjCI2O4fm59Q6h/IwWVr/Hh6CH6uyejXmmPxKhhOUICgw3qp9XbTd72FH9+c+xYivsgSHUG8oa8je6pYOpAJmiwY1jVCBUX5ZyuzgElgj9amNFXARoOj8gGl6dPfm8qMtzhlaGMK9UGwj20TQ1vYjCM0nkSJp7kceVBCuK2a5gdKzcmmjabEWs1MU9m0c6XPDPWpwq9xZ32PSBByoREhAIZoEavOIvPRhscdtrLCW5JoIihVL4d54GAx4OZEJl71TdiWBGxgVw==
-Received: from SN6PR02MB4157.namprd02.prod.outlook.com (2603:10b6:805:33::23)
- by DM3PR02MB10274.namprd02.prod.outlook.com (2603:10b6:0:3d::8) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9611.11; Tue, 17 Feb
- 2026 15:47:19 +0000
-Received: from SN6PR02MB4157.namprd02.prod.outlook.com
- ([fe80::900:1ccf:2b1e:52b6]) by SN6PR02MB4157.namprd02.prod.outlook.com
- ([fe80::900:1ccf:2b1e:52b6%6]) with mapi id 15.20.9611.013; Tue, 17 Feb 2026
- 15:47:19 +0000
-From: Michael Kelley <mhklinux@outlook.com>
-To: Jan Kiszka <jan.kiszka@siemens.com>, "K. Y. Srinivasan"
-	<kys@microsoft.com>, Haiyang Zhang <haiyangz@microsoft.com>, Wei Liu
-	<wei.liu@kernel.org>, Dexuan Cui <decui@microsoft.com>, Long Li
-	<longli@microsoft.com>, "James E.J. Bottomley"
-	<James.Bottomley@HansenPartnership.com>, "Martin K. Petersen"
-	<martin.petersen@oracle.com>, "linux-hyperv@vger.kernel.org"
-	<linux-hyperv@vger.kernel.org>
-CC: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Linux Kernel
- Mailing List <linux-kernel@vger.kernel.org>, Florian Bezdeka
-	<florian.bezdeka@siemens.com>, RT <linux-rt-users@vger.kernel.org>, Mitchell
- Levy <levymitchell0@gmail.com>
-Subject: RE: [PATCH] scsi: storvsc: Fix scheduling while atomic on PREEMPT_RT
-Thread-Topic: [PATCH] scsi: storvsc: Fix scheduling while atomic on PREEMPT_RT
-Thread-Index: AQHckSxbvhmgYaIv+0OErRpLCnikxbWHJg5w
-Date: Tue, 17 Feb 2026 15:47:19 +0000
-Message-ID:
- <SN6PR02MB41579C9B4F885B33D57705CFD46DA@SN6PR02MB4157.namprd02.prod.outlook.com>
-References: <0c7fb5cd-fb21-4760-8593-e04bade84744@siemens.com>
-In-Reply-To: <0c7fb5cd-fb21-4760-8593-e04bade84744@siemens.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: SN6PR02MB4157:EE_|DM3PR02MB10274:EE_
-x-ms-office365-filtering-correlation-id: f419cf10-95a5-4ef3-5241-08de6e3bd56d
-x-microsoft-antispam:
- BCL:0;ARA:14566002|13091999003|8062599012|51005399006|15080799012|19110799012|31061999003|8060799015|461199028|1602099012|40105399003|3412199025|440099028|4302099013|10035399007|102099032;
-x-microsoft-antispam-message-info:
- =?us-ascii?Q?WkB/Gzx99I8okgxmUIfdVw5CYK9i9fRv2EIC7hnkvwXapvc+mDlYRndy8s8y?=
- =?us-ascii?Q?PGZTxhOqxWRMfnIW4xZm8j4efCJ4/l2TomWpBIN1NYH0rzHXKCfxsNn29clV?=
- =?us-ascii?Q?DNPDE7WHzicNKW+Wf9obf1wn4HDs5y3lbleWEbLZafexHCw60JWH1GY2UZrt?=
- =?us-ascii?Q?jLfxgBG43rLyVch6zs/MoIunaFf5dU/KJDn8zS3Wr8cM5DzKFrSkIh6A4h8J?=
- =?us-ascii?Q?78gtZPvd5Ui00Z+wEmciyCfa2Fgde0ASGZ+GPE+RTEr1I5r1cv4bRwAfCNcv?=
- =?us-ascii?Q?3FMdvj8NNZB9aWRCkb2Sbm+P00gNx3MEwENfmrk9n13RpIJTOSJSaBbHR8b7?=
- =?us-ascii?Q?osEQAZUw26u/fvcoV2tbb+RaMsOjDzp3nERiy+/5uG8bIdVFXzleqooUlOTt?=
- =?us-ascii?Q?y1yjGZV94XvFU2LY+nGYeS+bTy7scxHUuHFsPRW6/m7JrbDtOY5jBMls4tvK?=
- =?us-ascii?Q?p+y4xN74GMsAzH74xDN6VVio2Ka0XT6Aw/WlxwF2przwfbXWYNVTVWQa+7+W?=
- =?us-ascii?Q?fIOfa74DRRccZs+kd++xbZrk6p0O3/QGJhHA+brTRJEIBgHPs51sex+QaTaN?=
- =?us-ascii?Q?bnueuCrZPnV2vujycFwnNjjPc6byfCc81Zcwx0XgVrLFCBzpxyQLFXwkc2NW?=
- =?us-ascii?Q?La1fIlcTSluyoc9dSBUrEqBffF0KHjSWVRxoK3INFvUPJymxHEgYkoK5w12s?=
- =?us-ascii?Q?iXbGKjhmnctNZfIAF4kEXJisPCsKgEM+P34elv7+5d8jVE0XJcmcbgh7/Ya7?=
- =?us-ascii?Q?yhSM9H/cP3ZoFmOnMTvXHOusTWUloUoScxDRkg5fQ+vaCAuqsyCEyRwezzjU?=
- =?us-ascii?Q?R0efLhVjTTUMulrnhee2X/fPfbOi1roy/aiOXF3NXMkYE5KH0WseINrbKD+3?=
- =?us-ascii?Q?pgVA4Zj3Mwyw+dnELU6zJjU2/h0rGwA28w281skaBmitsklPECX+GOv3f88Q?=
- =?us-ascii?Q?UVKjHGCsLbrQG0INZvdgFNHRQySc+FmKqGBOQNAnvyt4xDjFHDqW/LzwMM25?=
- =?us-ascii?Q?q7dySFYKGoKoybOT8NIo6CqS5V5Hj260ekTg0y37zwzUVKpoHJnfQ/BEqv80?=
- =?us-ascii?Q?yxZ7LN9qw4CKssDV+UUYShWtdbDd/+RGCBm4t4gdih1JKaDrxIgcyK2tfSQi?=
- =?us-ascii?Q?H8gccMw9LsKa/T2ZfIAjKiwxVGuEY4IAdOYOAI7Zu94/OLDr7r7JvvwZTfxU?=
- =?us-ascii?Q?WPRdV/lUE6j5MgzmbxH3Jika0+bkYb13wIKEYb7W/NjFg9EasEAAdltiCq6w?=
- =?us-ascii?Q?tbEe6KVcPUcuEkq2WDlME363llnUa7zwIjQDD2LkPSmDjZhbd3ErmLpDezrB?=
- =?us-ascii?Q?JWdIggw33+4/+cF/efQE2zSpwrlC4RFciDTExgY9LUAZmA=3D=3D?=
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?us-ascii?Q?+A5/+51lAcLZud9VfJKKn9BZLtDFOnUtwfUgidC6+qugcBQusO+JX1cMzqkq?=
- =?us-ascii?Q?0X5YSdGaSBSa4AE33tprKG2ABs0+4ex6+ks6lFe/PDojWZL3Hr8Is/ejyDev?=
- =?us-ascii?Q?NZGjuwypcD/cr7bqKN5kKDFuTqexamrmPA/jBbDEC33mHw1jIuN3Bb1doQs0?=
- =?us-ascii?Q?pXEqzl535TE8/nk72nugP2KUkPZwTgksxm4L4zo1roKwfZM/tzL9nOui0Act?=
- =?us-ascii?Q?Baj7XI0u7/8NbHtkTN0OCzRynfXLBPPJNuYXgPJuH7p8UamN8YVb1wOS96xc?=
- =?us-ascii?Q?LTHBaXCCrHR1M0MGKJeASP0Y5PQFNS9KIUO5dv7n9uos1gpWWJueuDjj5RFb?=
- =?us-ascii?Q?kijSH/7WYY99lNib4Z4QFZhS8pzVXNC1k3pMSNA2L34SWQmxPCWqIvTEd+xj?=
- =?us-ascii?Q?+eYRAXRuOOAAMRy2R3sNmUEWrjeUjZWs+TjQ2jVMOSprG7nb/pfPZEfaKGTg?=
- =?us-ascii?Q?Dpnxw14zMSy7QrY0O6dF7D6wDNzMQ+i3IS9F9q38iFTGqNrupwxY8pLDCMUt?=
- =?us-ascii?Q?ZlTERHgWuX4i/wn3C3p3/RYqvheS01uWbylCV5Dz1vcaeYJkDvHEj8ABQhzZ?=
- =?us-ascii?Q?+b994CZ7FGoXXiQk3zVGHsfSsTVGnpywKxwVh351G/fTUoPTV/rBnRuI74B3?=
- =?us-ascii?Q?IaZkQIkuEo38NnVBWFdc8SqG5UuGQSVveT0/v8fuaaiiujXQZ9sgEUASOR1m?=
- =?us-ascii?Q?0DXiE9tGFp1lyb7TRk1JqzZGJ7arYOgUDl5SEA+M9sUx9AmS7dQIRLQ23bcT?=
- =?us-ascii?Q?FupERvpp3KAt2D6CenCG1C60mTh03nKPb4dylNY5Hl1liORHlDEUk86D1ifG?=
- =?us-ascii?Q?nFIlhzzC7dnm2RbaD7KgZorfQv5cfCEBkt693kqBrUt+GzFZahpiC3aUSB+y?=
- =?us-ascii?Q?aWMK32kP3HlFdofNvt61q7MZlEhrQe+YgTZ/9TgI6j8hoTuWT0wLxKjSSF/M?=
- =?us-ascii?Q?+7NHvkyaYVed0UeaXjuVS7DFdJOQgntwA0XVDYKrjECmCx9i7Q2wYIFNSAkH?=
- =?us-ascii?Q?q9hOEq2sT1LR4pUsyj7CgDvsHJXGfCFEbyLCjk76w8d6jsfk4nEj3hM1CLIA?=
- =?us-ascii?Q?DPUaQ/lJOu3neL/+sLlz6la3ifR4qjHM5uRYtLogVLn4AnAPN7yvLThJEIIb?=
- =?us-ascii?Q?aYyhWZ4mApGvZ+du6nnp35HCfpjyud/9o4DrE9bQmd994nwMq1KvrM0OMTNr?=
- =?us-ascii?Q?4MhvmFRFVkT5EacpdQoMFKkmHc5PmbM0Y6y5MnMwf15siNP0seX7TRnMDtk8?=
- =?us-ascii?Q?aUONV68tjz9Xphq2uXF6BCeIdjQONlvX7OwW1p7IuRkhUOPMaL/ZmSASjqtK?=
- =?us-ascii?Q?kEQPTvCD8suOmosqNY0zoYDVWtv96IBoahnwvawBE8NYZr7BYqQ6QzObXAtp?=
- =?us-ascii?Q?IPFr6kU=3D?=
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="4HIGJeI1"
+Received: by mail-pl1-f176.google.com with SMTP id d9443c01a7336-2a885af8ee7so209005ad.1
+        for <linux-scsi@vger.kernel.org>; Tue, 17 Feb 2026 08:58:10 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20230601; t=1771347490; x=1771952290; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=XlBGe6Nd5IhwkGo2tJT1WGLgnhboDh9a8xjyQWZ5EZg=;
+        b=4HIGJeI1p4U2u1W7AnWPETiuTNRVFOj4/Tcf7KClz9NCMrLteZfK86yP4g9uzjXzd4
+         HQfrS5xh7Z7FQI1ivcPvcxUGoAuoEIGd8lPEqEy4vLyAAR4AjJQM4WSscA5qDElgHGZC
+         SyyBMpypydYZOpwFgRL6Jwo2AxwFQezoIRvdeG0epXEvImLWCGh2LWk/abqtjeBTSa5G
+         x4/XrOzlt3MMFZ5NPjFDhlHGR/ahcxMkIL36j4pRN0LCBOpMgJw0x4HX7J7dGjTWoVaj
+         ytosGwDDJU2VuqNYBl0XjfFuRoeexOkxw41ICqnmQM33R5VmHvQcr70bFQfOoSEdfbup
+         c1CQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1771347490; x=1771952290;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=XlBGe6Nd5IhwkGo2tJT1WGLgnhboDh9a8xjyQWZ5EZg=;
+        b=Zd/ZyotwpMWkdd99IZYQeVgKLAkWi3SSc7TJOihIYjRRGQr6y6tikjE0+45n1QkkAK
+         QxQAkRWerbslCVvBh7Dol1ZYO6DL2iEV4ZGuTptuXr1HJL+Ms8Xpl1lF4+9jhAuBRzQJ
+         pYv4FjjxE8U5nNtpXW33u7777BLsu52VKHxg+vRQa/x8GU62Y80OECNGDoxn3Oikw63W
+         ESymiS8tVmqvXhN9OzsoykBK0jJ/44g6axZIpo2xSWl2pyaBsX/CAw3+iY2gzpwrevfF
+         8TIMELPA0MumADZoGmxGCT/rVzeotAxbO4c2YS6ux7ow0YdwGQHgHH+WZTTJzfNIPy/E
+         bSww==
+X-Forwarded-Encrypted: i=1; AJvYcCVlFtgUZDl13B/G2O+/3EsWOx/N0sZ+Asw52yD5iEUwzNFcJzQwprbePYgOfuo2bqmIaqnS5DwqRO+3@vger.kernel.org
+X-Gm-Message-State: AOJu0YzITINpVD3UVlIshySNwCw0aSPREfvZdY/Ai+xIDpnDNIjkE4G0
+	89DfsWyWXWRRGBkAfiXfgtwAghBFOUM4B/GcM5c6JkLgT2T1A57tb7nM9JwYvL2FEg==
+X-Gm-Gg: AZuq6aL6bU3NkTszQ3vM5GJ3FdFH+tPl7cN56WnkvfBPI0q8mUsa9h6y8BPvKMBOphm
+	db0g6g166raBwwuS0pCCQR35BUTkiRgkpBqTy/xLD4AFpPm7EBjFbbTbjxNupA4bUUP5MaJ8CrU
+	735pgqziGtwNKT6d94uFGzZLSMHgeFN0x9BPGWYqmuK2t80eHJeIahGttoRRUlEBxF5J6laxEXK
+	ZwbtF9UQFCj7UTMkbE0xMbtof8AzX2gXPeVtviJ4Zszx/IuZ27qAQtRtjYQWoUGAhQZmAlNiE59
+	4vkpFwyCgT5ZmgCnlfW++kzSL/Tqzv3Hm5tWidxV5BUTrUhPnP6+dIXWqaVta9OS9M1vMGG4kZ2
+	6W26yglIiGVgln6H8raoS2s76cg9JsuJ740gpa2nd/xkuQMwqcgiy2iezQgxsPKu0lykwXzPzsV
+	Cmkm3pir1jgeSTbVe5LFcGsQZhxU6ttJCwkwiFIvM4Iibc+To5rdct1/heRr8ESA==
+X-Received: by 2002:a17:902:8216:b0:2a0:89b0:71d7 with SMTP id d9443c01a7336-2ad36c912c4mr2366405ad.13.1771347489590;
+        Tue, 17 Feb 2026 08:58:09 -0800 (PST)
+Received: from google.com (185.29.127.34.bc.googleusercontent.com. [34.127.29.185])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3567e9da8a2sm19378161a91.5.2026.02.17.08.58.08
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 17 Feb 2026 08:58:08 -0800 (PST)
+Date: Tue, 17 Feb 2026 08:58:04 -0800
+From: Igor Pylypiv <ipylypiv@google.com>
+To: Hannes Reinecke <hare@suse.de>
+Cc: "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Bart Van Assche <bvanassche@acm.org>, linux-scsi@vger.kernel.org,
+	linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3] scsi: core: Add 'serial' sysfs attribute for SCSI/SATA
+Message-ID: <aZSeHCH-IOjqw2n3@google.com>
+References: <20260209212151.342151-1-ipylypiv@google.com>
+ <d61a1830-d9d0-4697-b547-80106ce57023@suse.de>
+ <aYtiDLvRotCE0hEt@google.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-OriginatorOrg: outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: SN6PR02MB4157.namprd02.prod.outlook.com
-X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg: 00000000-0000-0000-0000-000000000000
-X-MS-Exchange-CrossTenant-Network-Message-Id: f419cf10-95a5-4ef3-5241-08de6e3bd56d
-X-MS-Exchange-CrossTenant-originalarrivaltime: 17 Feb 2026 15:47:19.5627
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
-X-MS-Exchange-CrossTenant-rms-persistedconsumerorg: 00000000-0000-0000-0000-000000000000
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM3PR02MB10274
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <aYtiDLvRotCE0hEt@google.com>
 
-From: Jan Kiszka <jan.kiszka@siemens.com> Sent: Thursday, January 29, 2026 =
-6:31 AM
->=20
-> This resolves the follow splat and lock-up when running with PREEMPT_RT
-> enabled on Hyper-V:
->=20
-> [  415.140818] BUG: scheduling while atomic: stress-ng-iomix/1048/0x00000=
-002
-> [  415.140822] INFO: lockdep is turned off.
-> [  415.140823] Modules linked in: intel_rapl_msr intel_rapl_common
-> intel_uncore_frequency_common intel_pmc_core pmt_telemetry pmt_discovery
-> pmt_class intel_pmc_ssram_telemetry intel_vsec ghash_clmulni_intel aesni_=
-intel rapl
-> binfmt_misc nls_ascii nls_cp437 vfat fat snd_pcm hyperv_drm snd_timer drm=
-_client_lib
-> drm_shmem_helper snd sg soundcore drm_kms_helper pcspkr hv_balloon hv_uti=
-ls
-> evdev joydev drm configfs efi_pstore nfnetlink vsock_loopback
-> vmw_vsock_virtio_transport_common hv_sock vmw_vsock_vmci_transport vsock
-> vmw_vmci efivarfs autofs4 ext4 crc16 mbcache jbd2 sr_mod sd_mod cdrom hv_=
-storvsc
-> serio_raw hid_generic scsi_transport_fc hid_hyperv scsi_mod hid hv_netvsc
-> hyperv_keyboard scsi_common
-> [  415.140846] Preemption disabled at:
-> [  415.140847] [<ffffffffc0656171>] storvsc_queuecommand+0x2e1/0xbe0 [hv_=
-storvsc]
-> [  415.140854] CPU: 8 UID: 0 PID: 1048 Comm: stress-ng-iomix Not tainted =
-6.19.0-rc7 #30 PREEMPT_{RT,(full)}
-> [  415.140856] Hardware name: Microsoft Corporation Virtual Machine/Virtu=
-al Machine, BIOS Hyper-V UEFI Release v4.1 09/04/2024
-> [  415.140857] Call Trace:
-> [  415.140861]  <TASK>
-> [  415.140861]  ? storvsc_queuecommand+0x2e1/0xbe0 [hv_storvsc]
-> [  415.140863]  dump_stack_lvl+0x91/0xb0
-> [  415.140870]  __schedule_bug+0x9c/0xc0
-> [  415.140875]  __schedule+0xdf6/0x1300
-> [  415.140877]  ? rtlock_slowlock_locked+0x56c/0x1980
-> [  415.140879]  ? rcu_is_watching+0x12/0x60
-> [  415.140883]  schedule_rtlock+0x21/0x40
-> [  415.140885]  rtlock_slowlock_locked+0x502/0x1980
-> [  415.140891]  rt_spin_lock+0x89/0x1e0
-> [  415.140893]  hv_ringbuffer_write+0x87/0x2a0
-> [  415.140899]  vmbus_sendpacket_mpb_desc+0xb6/0xe0
-> [  415.140900]  ? rcu_is_watching+0x12/0x60
-> [  415.140902]  storvsc_queuecommand+0x669/0xbe0 [hv_storvsc]
-> [  415.140904]  ? HARDIRQ_verbose+0x10/0x10
-> [  415.140908]  ? __rq_qos_issue+0x28/0x40
-> [  415.140911]  scsi_queue_rq+0x760/0xd80 [scsi_mod]
-> [  415.140926]  __blk_mq_issue_directly+0x4a/0xc0
-> [  415.140928]  blk_mq_issue_direct+0x87/0x2b0
-> [  415.140931]  blk_mq_dispatch_queue_requests+0x120/0x440
-> [  415.140933]  blk_mq_flush_plug_list+0x7a/0x1a0
-> [  415.140935]  __blk_flush_plug+0xf4/0x150
-> [  415.140940]  __submit_bio+0x2b2/0x5c0
-> [  415.140944]  ? submit_bio_noacct_nocheck+0x272/0x360
-> [  415.140946]  submit_bio_noacct_nocheck+0x272/0x360
-> [  415.140951]  ext4_read_bh_lock+0x3e/0x60 [ext4]
-> [  415.140995]  ext4_block_write_begin+0x396/0x650 [ext4]
-> [  415.141018]  ? __pfx_ext4_da_get_block_prep+0x10/0x10 [ext4]
-> [  415.141038]  ext4_da_write_begin+0x1c4/0x350 [ext4]
-> [  415.141060]  generic_perform_write+0x14e/0x2c0
-> [  415.141065]  ext4_buffered_write_iter+0x6b/0x120 [ext4]
-> [  415.141083]  vfs_write+0x2ca/0x570
-> [  415.141087]  ksys_write+0x76/0xf0
-> [  415.141089]  do_syscall_64+0x99/0x1490
-> [  415.141093]  ? rcu_is_watching+0x12/0x60
-> [  415.141095]  ? finish_task_switch.isra.0+0xdf/0x3d0
-> [  415.141097]  ? rcu_is_watching+0x12/0x60
-> [  415.141098]  ? lock_release+0x1f0/0x2a0
-> [  415.141100]  ? rcu_is_watching+0x12/0x60
-> [  415.141101]  ? finish_task_switch.isra.0+0xe4/0x3d0
-> [  415.141103]  ? rcu_is_watching+0x12/0x60
-> [  415.141104]  ? __schedule+0xb34/0x1300
-> [  415.141106]  ? hrtimer_try_to_cancel+0x1d/0x170
-> [  415.141109]  ? do_nanosleep+0x8b/0x160
-> [  415.141111]  ? hrtimer_nanosleep+0x89/0x100
-> [  415.141114]  ? __pfx_hrtimer_wakeup+0x10/0x10
-> [  415.141116]  ? xfd_validate_state+0x26/0x90
-> [  415.141118]  ? rcu_is_watching+0x12/0x60
-> [  415.141120]  ? do_syscall_64+0x1e0/0x1490
-> [  415.141121]  ? do_syscall_64+0x1e0/0x1490
-> [  415.141123]  ? rcu_is_watching+0x12/0x60
-> [  415.141124]  ? do_syscall_64+0x1e0/0x1490
-> [  415.141125]  ? do_syscall_64+0x1e0/0x1490
-> [  415.141127]  ? irqentry_exit+0x140/0x7e0
-> [  415.141129]  entry_SYSCALL_64_after_hwframe+0x76/0x7e
->=20
-> get_cpu() disables preemption while the spinlock hv_ringbuffer_write is
-> using is converted to an rt-mutex under PREEMPT_RT.
->=20
-> Signed-off-by: Jan Kiszka <jan.kiszka@siemens.com>
+On Tue, Feb 10, 2026 at 08:51:24AM -0800, Igor Pylypiv wrote:
+> On Tue, Feb 10, 2026 at 12:38:51PM +0100, Hannes Reinecke wrote:
+> > On 2/9/26 22:21, Igor Pylypiv wrote:
+> > > Add a 'serial' sysfs attribute for SCSI and SATA devices. This attribute
+> > > exposes the Unit Serial Number, which is derived from the Device
+> > > Identification Vital Product Data (VPD) page 0x80.
+> > > 
+> > > Whitespace is stripped from the retrieved serial number to handle
+> > > the different alignment (right-aligned for SCSI, potentially
+> > > left-aligned for SATA). As noted in SAT-5 10.5.3, "Although SPC-5 defines
+> > > the PRODUCT SERIAL NUMBER field as right-aligned, ACS-5 does not require
+> > > its SERIAL NUMBER field to be right-aligned. Therefore, right-alignment
+> > > of the PRODUCT SERIAL NUMBER field for the translation is not assured."
+> > > 
+> > > This attribute is used by tools such as lsblk to display the serial
+> > > number of block devices.
+> > > 
+> > > Signed-off-by: Igor Pylypiv <ipylypiv@google.com>
+> > > ---
+> > > 
+> > > v2->v3 changes:
+> > > - Replaced sysfs_emit(buf, "%s\n", buf) with a manual newline placement
+> > >    to avoid undefined behavior of passing the output buffer as an input.
+> > > 
+> > > v1->v2 changes:
+> > > - Reordered declarations in scsi_vpd_lun_serial() from longest to shortest.
+> > > - Replaced rcu_read_lock()/rcu_read_unlock() with guard(rcu)().
+> > > 
+> > > 
+> > >   drivers/scsi/scsi_lib.c    | 47 ++++++++++++++++++++++++++++++++++++++
+> > >   drivers/scsi/scsi_sysfs.c  | 16 +++++++++++++
+> > >   include/scsi/scsi_device.h |  1 +
+> > >   3 files changed, 64 insertions(+)
+> > > 
+> > > diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> > > index 4a902c9dfd8b..c17fbe4dd845 100644
+> > > --- a/drivers/scsi/scsi_lib.c
+> > > +++ b/drivers/scsi/scsi_lib.c
+> > > @@ -13,6 +13,7 @@
+> > >   #include <linux/bitops.h>
+> > >   #include <linux/blkdev.h>
+> > >   #include <linux/completion.h>
+> > > +#include <linux/ctype.h>
+> > >   #include <linux/kernel.h>
+> > >   #include <linux/export.h>
+> > >   #include <linux/init.h>
+> > > @@ -3459,6 +3460,52 @@ int scsi_vpd_lun_id(struct scsi_device *sdev, char *id, size_t id_len)
+> > >   }
+> > >   EXPORT_SYMBOL(scsi_vpd_lun_id);
+> > > +/**
+> > > + * scsi_vpd_lun_serial - return a unique device serial number
+> > > + * @sdev: SCSI device
+> > > + * @sn:   buffer for the serial number
+> > > + * @sn_size: size of the buffer
+> > > + *
+> > > + * Copies the device serial number into @sn based on the information in
+> > > + * the VPD page 0x80 of the device. The string will be null terminated
+> > > + * and have leading and trailing whitespace stripped.
+> > > + *
+> > > + * Returns the length of the serial number or error on failure.
+> > > + */
+> > > +int scsi_vpd_lun_serial(struct scsi_device *sdev, char *sn, size_t sn_size)
+> > > +{
+> > > +	const struct scsi_vpd *vpd_pg80;
+> > > +	const unsigned char *d;
+> > > +	int len;
+> > > +
+> > > +	guard(rcu)();
+> > > +	vpd_pg80 = rcu_dereference(sdev->vpd_pg80);
+> > > +	if (!vpd_pg80)
+> > > +		return -ENXIO;
+> > > +
+> > > +	len = vpd_pg80->len - 4;
+> > > +	d = vpd_pg80->data + 4;
+> > > +
+> > > +	/* Skip leading spaces */
+> > > +	while (len > 0 && isspace(*d)) {
+> > > +		len--;
+> > > +		d++;
+> > > +	}
+> > > +
+> > > +	/* Skip trailing spaces */
+> > > +	while (len > 0 && isspace(d[len - 1]))
+> > > +		len--;
+> > > +
+> > 
+> > Please use 'strim()' instead.
+> 
+> Hi Hannes,
+> 
+> Bart pointed this out in V1 as well. I'll copy-paste my reply from V1:
+> 
+> "Yes, I considered using strim(). strim() modifies the input buffer by
+> replacing first trailing whitespace with '\0' so we can't use it directly
+> on the vpd_pg80->data. The solution would be to copy the whole vpd page
+> data into the sn buffer and call strim() on the sn buffer. strim() returns
+> a pointer to the first non-whitespace character so we would also need to
+> memmove the serial number to the beginning of the sn buffer. All this extra
+> copying seems to be redundant so I went ahead with a simpler solution
+> that does a single memcpy()."
+> 
+> Please let me know your thoughts on this.
 
-Reviewed-by: Michael Kelley <mhklinux@outlook.com>
-Tested-by: Michael Kelley <mhklinux@outlook.com>
+Hi Hannes,
 
-> ---
->=20
-> This is likely just the tip of an iceberg, see specifically [1], but if
-> you never start addressing it, it will continue to crash ships, even if
-> those are only on test cruises (we are fully aware that Hyper-V provides
-> no RT guarantees for guests). A pragmatic alternative to that would be a
-> simple
->=20
-> config HYPERV
->     depends on !PREEMPT_RT
->=20
-> Please share your thoughts if this fix is worth it, or if we should
-> better stop looking at the next splats that show up after it. We are
-> currently considering to thread some of the hv platform IRQs under
-> PREEMPT_RT as potential next step.
->=20
-> TIA!
->=20
-> [1] https://lore.kernel.org/all/20230809-b4-rt_preempt-fix-v1-0-7283bbdc8=
-b14@gmail.com/
->=20
->  drivers/scsi/storvsc_drv.c | 5 +++--
->  1 file changed, 3 insertions(+), 2 deletions(-)
->=20
-> diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-> index b43d876747b7..68c837146b9e 100644
-> --- a/drivers/scsi/storvsc_drv.c
-> +++ b/drivers/scsi/storvsc_drv.c
-> @@ -1855,8 +1855,9 @@ static int storvsc_queuecommand(struct Scsi_Host *h=
-ost, struct scsi_cmnd *scmnd)
->  	cmd_request->payload_sz =3D payload_sz;
->=20
->  	/* Invokes the vsc to start an IO */
-> -	ret =3D storvsc_do_io(dev, cmd_request, get_cpu());
-> -	put_cpu();
-> +	migrate_disable();
-> +	ret =3D storvsc_do_io(dev, cmd_request, smp_processor_id());
-> +	migrate_enable();
->=20
->  	if (ret)
->  		scsi_dma_unmap(scmnd);
-> --
-> 2.51.0
+Ping for a feedback.
+Sending this in case my previous reply fell through the cracks.
 
+Thank you!
+Igor
+
+> 
+> > 
+> > > +	if (sn_size < len + 1)
+> > > +		return -EINVAL;
+> > > +
+> > > +	memcpy(sn, d, len);
+> > 
+> > 'len' might well be '0' after 'strim()', please check
+> > before calling 'memcpy'.
+> 
+> It looks like calling a memcpy() with zero length is a no-op. Is checking
+> for len > 0 really necessary in this case?
+> 
+> Thank you,
+> Igor
+> 
+> > > +	sn[len] = '\0';
+> > > +
+> > > +	return len;
+> > > +}
+> > > +EXPORT_SYMBOL(scsi_vpd_lun_serial);
+> > > +
+> > >   /**
+> > >    * scsi_vpd_tpg_id - return a target port group identifier
+> > >    * @sdev: SCSI device
+> > > diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+> > > index 99eb0a30df61..9c4f47e7a298 100644
+> > > --- a/drivers/scsi/scsi_sysfs.c
+> > > +++ b/drivers/scsi/scsi_sysfs.c
+> > > @@ -1013,6 +1013,21 @@ sdev_show_wwid(struct device *dev, struct device_attribute *attr,
+> > >   }
+> > >   static DEVICE_ATTR(wwid, S_IRUGO, sdev_show_wwid, NULL);
+> > > +static ssize_t
+> > > +sdev_show_serial(struct device *dev, struct device_attribute *attr, char *buf)
+> > > +{
+> > > +	struct scsi_device *sdev = to_scsi_device(dev);
+> > > +	ssize_t ret;
+> > > +
+> > > +	ret = scsi_vpd_lun_serial(sdev, buf, PAGE_SIZE);
+> > > +	if (ret < 0)
+> > > +		return ret;
+> > > +
+> > > +	buf[ret] = '\n';
+> > > +	return ret + 1;
+> > > +}
+> > > +static DEVICE_ATTR(serial, S_IRUGO, sdev_show_serial, NULL);
+> > > +
+> > >   #define BLIST_FLAG_NAME(name)					\
+> > >   	[const_ilog2((__force __u64)BLIST_##name)] = #name
+> > >   static const char *const sdev_bflags_name[] = {
+> > > @@ -1257,6 +1272,7 @@ static struct attribute *scsi_sdev_attrs[] = {
+> > >   	&dev_attr_device_busy.attr,
+> > >   	&dev_attr_vendor.attr,
+> > >   	&dev_attr_model.attr,
+> > > +	&dev_attr_serial.attr,
+> > >   	&dev_attr_rev.attr,
+> > >   	&dev_attr_rescan.attr,
+> > >   	&dev_attr_delete.attr,
+> > > diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+> > > index d32f5841f4f8..9c2a7bbe5891 100644
+> > > --- a/include/scsi/scsi_device.h
+> > > +++ b/include/scsi/scsi_device.h
+> > > @@ -571,6 +571,7 @@ void scsi_put_internal_cmd(struct scsi_cmnd *scmd);
+> > >   extern void sdev_disable_disk_events(struct scsi_device *sdev);
+> > >   extern void sdev_enable_disk_events(struct scsi_device *sdev);
+> > >   extern int scsi_vpd_lun_id(struct scsi_device *, char *, size_t);
+> > > +extern int scsi_vpd_lun_serial(struct scsi_device *, char *, size_t);
+> > >   extern int scsi_vpd_tpg_id(struct scsi_device *, int *);
+> > >   #ifdef CONFIG_PM
+> > 
+> > Otherwise looks okay.
+> > 
+> > Cheers,
+> > 
+> > Hannes
+> > -- 
+> > Dr. Hannes Reinecke                  Kernel Storage Architect
+> > hare@suse.de                                +49 911 74053 688
+> > SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
+> > HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
