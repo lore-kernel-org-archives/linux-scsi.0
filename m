@@ -1,94 +1,109 @@
-Received: from mail-wm1-f41.google.com (mail-wm1-f41.google.com [209.85.128.41])
+Received: from mail-pf1-f179.google.com (mail-pf1-f179.google.com [209.85.210.179])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3971A238C16
-	for <linux-scsi@vger.kernel.org>; Thu, 19 Feb 2026 06:06:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.41
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C031334C25
+	for <linux-scsi@vger.kernel.org>; Thu, 19 Feb 2026 09:03:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771481188; cv=none; b=L4r3M2CrxHCaF0z5fPf0bXJhO9AdjicXPy4Ju0t+H/Sh/N0b9bkmJk1kns8aRLpxSYyIsCpRTcdFNeAqNPtV2qRGJm8xGuS8IF25Fq6tZwxThxTXPW+LINYSvlhlviP89D+fH3QA7FNh7bOCqASzERJ8GAuo/wnjw07P6XVz4qU=
+	t=1771491815; cv=none; b=FirKoW//tkMG7f+Z2A8c3udp/CRL0wyowPaFGfaOw99JpzcQq7pbPZLAZPehT8zs0xJaVtY4UiLacz6z/jAnU14gNsMqO1BYk0PZLNSQ5gSYSF32zKCNz/BPjoc0CHYyiM8f3DOo6Omh0opE3JcnPjgJRU+d8/OeXJdT95iiJbA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771481188; c=relaxed/simple;
-	bh=gbw86lH9zHcV52bv58VrZvPzxGJBTiMlN+0U/OXGPOQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=CIMjTzKdobX8G1LaimKD1HbPvaLTTTHAIJmOPruR50eoqNWQaXEKLtwuIbZupvF/J0lcs/66Dw367zthMRMQJaNrgifeE83K5QV6oArmMOyuyrS8dJ/zAEfn9QSpXXHVGhFOv+Si4pUU9Gx9LFh8fEYlV2dTe0iAKsGiD/qUL1c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=pZhlsx4m; arc=none smtp.client-ip=209.85.128.41
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1771491815; c=relaxed/simple;
+	bh=928OAOahZdG4Xfvx2DerQUpFBhMcEhz7CAZj5Aci8zc=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=eVUcpP8kMIRmo0M1VGGJPXSUO0ppqxDiNwi4vFpKf7U+gnYfSMIpH6VATIz915yVYDwYHl1HN2Hta5cup1ECRddcTTRs85nWDJ2Q3XEhp6Lp7o31sQ8iOdCntwEzh8XA3xo6QmjHzIIpkqCQ8GR+6hABMsCO44KfXEoTQl9YAOM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cse.iitm.ac.in; spf=pass smtp.mailfrom=cse.iitm.ac.in; dkim=pass (2048-bit key) header.d=cse-iitm-ac-in.20230601.gappssmtp.com header.i=@cse-iitm-ac-in.20230601.gappssmtp.com header.b=nbIuT/vJ; arc=none smtp.client-ip=209.85.210.179
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cse.iitm.ac.in
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cse.iitm.ac.in
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="pZhlsx4m"
-Received: by mail-wm1-f41.google.com with SMTP id 5b1f17b1804b1-482f2599980so6753415e9.0
-        for <linux-scsi@vger.kernel.org>; Wed, 18 Feb 2026 22:06:26 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=cse-iitm-ac-in.20230601.gappssmtp.com header.i=@cse-iitm-ac-in.20230601.gappssmtp.com header.b="nbIuT/vJ"
+Received: by mail-pf1-f179.google.com with SMTP id d2e1a72fcca58-823075fed75so346731b3a.1
+        for <linux-scsi@vger.kernel.org>; Thu, 19 Feb 2026 01:03:30 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1771481185; x=1772085985; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=boGhfzw1KRhdRR34NLhbsa+Vh9+Xgvok+OeVAzYzW+k=;
-        b=pZhlsx4mwCU3xvZSjzdyC8SdDQ8IoJ8GXgEkPGci9w7mFoofwTYJfZ7cLgBkDKOoda
-         vktKMGn2tWDP96aWtfVCbHOfRmy3aiBvryBntwFqn36cilZ4C6ovoV9VqMwHB7YDII6A
-         vCM4hGZwlFA5nWf16C9Vx1b7XxsjXL0pDfr4m5l8pUmkqiTODog4nHcZvdp7nlPWRcti
-         Pah2yVuuY2nV1GoZjP13jM+1xFdZJOiB2ayv0JBuRw52/EZhK+fMvjnevQpPafLDe6oc
-         8MDuXcO2MzdT2FbH1c7rQbDUF1I+OFW2BlB+3z28mnvV8H8gGvFjgchVwpWGIJTYUddy
-         MZjA==
+        d=cse-iitm-ac-in.20230601.gappssmtp.com; s=20230601; t=1771491810; x=1772096610; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=woTan9VVYvyV1yh7C/L083Hx/xNDYsj+r3LiM0PqHJ0=;
+        b=nbIuT/vJLyA/crDZWYVFRKLI3FTPEXAHc8Mf2hbGWljvGArPteYGEoZ93nrZ7pC5VT
+         xYl4QaTr0HdNuFfEOrwYQ/zpnCOQ/ek7K2LkkQvHLdcz85HtbQxuJFNs1DQxOwkSycRe
+         7TmBOfCMu9fThGRPrLZoSeanu0F0DaOdov2mPFIwj7Vlero/NgscxD998oBVOXncyAbX
+         RvAyH16SKdsPbD6BdJfckVjXnwzoHOtj8krJDVV65vWnvsCEdcq/KPA5GsbAVAxWzaTG
+         Kewb1qboIpzT1vubRfa+xihM8o5ax/Mc6uLL+/S5RV2fv9oiL1joMpQvANPVJ/g4HnDt
+         K6AQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1771481185; x=1772085985;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=boGhfzw1KRhdRR34NLhbsa+Vh9+Xgvok+OeVAzYzW+k=;
-        b=RqOV9rjxu9AbmnyX3jND30Ucj/Q0ANYxuslT/RV/RI4hofRTDn/5VW5B1pSlZxQkRB
-         1FkO76D+h+gILBMTFRs8OpVkxT10e4anoltyibTacco7hVbr1WYUqeWDflZzCNKdIg4F
-         Iq/Aj3rg7i3vkR5NwQ2QOCrDJrbQYPe6iAU6WFjOggWOTQjna7Z9rq400ZrPPxgg5bVe
-         6v6UrYaIRuXvAGe4zHUp6fdHXchfyuMxr0wMXVLqGQ9sAWtF06Lt4HUmzsdf3uiCHSA+
-         vIfVaYAaRWi99CuBz6U3IC5H2IU4C08aAkg3IraHZytOpU/3++juvzuSiP+ypdAU7l+V
-         q/2A==
-X-Forwarded-Encrypted: i=1; AJvYcCWinM2ntY9mzdNuWbcpyPvQrynHxYs+WSPQsfDJ+etIUPKc4Zv8Fh27jV+a3jGSXtEOwNutw94j93DY@vger.kernel.org
-X-Gm-Message-State: AOJu0Yw6DenxPSYAjxHQ6GeQM11IKOagUB+b2PkNMsShhNGhCzA2wqEu
-	e5+1JZPVvZFB+QjZIwwrZLX1jIrwg5Q1jHUvWmDRvTNGP5U6WPt/Q8AObWMpVlVNcow=
-X-Gm-Gg: AZuq6aIGDfbh7W4RJSMzy4nCPMXLXtRbD/KFYrts1VF7QyP14wq3lDe4Qrsz0kINkax
-	4JXUgx3viD77A3RFBVE7l/4JjXuFbyuIYFPphUQLv7Yhn1uAlVDnwp6P5MaxDb7uH6R+PkkOsK0
-	kkkDVIndk3SRptmLt8ge9EV+LiNsp7tbXS0o72IzHS2jCPbLiwQNJgzGSnxpbMxlCqKRzfGj/2s
-	dhpfq9WilxN2HLjw7VRxGubjlMkKT8E2ELawC9ul1D/cP+drRtON6KqHPsjXedCnqIi8RnsvuBi
-	4gmAUGVe88+KEg519FfUOqXMN9I1Y5hGOCoTDtivtgA8B977/VJb+29917p/pmZ5Xu3WIHOG+Yg
-	CyDC8ulU2dAch9F4wdXR/alvOo+tfqW9OUA049fiR+y9lSbtxycaXeAtt3a7g1gyQfBz8uOaubM
-	Ae9TKeMOTTnrdpCcTYd2/pJiOdf+4G
-X-Received: by 2002:a05:600c:314f:b0:483:3380:ca12 with SMTP id 5b1f17b1804b1-48398b79bc8mr68572115e9.29.1771481185331;
-        Wed, 18 Feb 2026 22:06:25 -0800 (PST)
-Received: from localhost ([196.207.164.177])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-43796abd793sm45673429f8f.25.2026.02.18.22.06.24
+        d=1e100.net; s=20230601; t=1771491810; x=1772096610;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=woTan9VVYvyV1yh7C/L083Hx/xNDYsj+r3LiM0PqHJ0=;
+        b=Wx7CfHJFk9xWAsI6dd05Hiyu8BGrNbJSWIjIqdoHqHe4/E1PZhoDUSoFPLU+g2QrE/
+         sXiKUJIjnG4gcalle9SsT+wZguAz15G1P/MXylZGecKbKP3K/9c68nAbfw15Q8S/TVoP
+         6EdpTeJx78rPcONPh5EnOeyqB5LIIjxeHOQ5xnbDqno4h+EJEbgQi1kAJHFJ2VY9YzGW
+         Ra2CtmvBc+kDhPN+T1cZgJ1yEyRRnvIh1lKPZcHs9UAvN9GpREMPaAdZufI8k3MElT+9
+         xhaKO7hBjOTVcDsnlfskIAvk/yFy8d4ZQQHIexqrAEeGJGVjQeMRI5q1NrNDSCAPMPjI
+         7M4A==
+X-Forwarded-Encrypted: i=1; AJvYcCWXCYw+EIgwWckQcpT7+98E2gfR2SMCCIfSnVZJXhnVptjXbHxE7IeBGNegj0F06D5O587C0UGTAAtQ@vger.kernel.org
+X-Gm-Message-State: AOJu0YytYI5aglOH7KTc7piNTQ2BlPAkfwPNxRFWeng9dGkGpZbV58ow
+	x9EniHw0qwVAQzuhJIpGGOx2+UVyhdvnv5zJzVhGvVrauEV9piMs+t9fkQBiTmdPmUo=
+X-Gm-Gg: AZuq6aLOfHAgVq3Uo2fNpKPHSSyQw2SicFQgnd+Ss4iKK8eewy+P4wqoVRP1bLw7ziD
+	Q3FoI/StUv6YqXz1rmCn7hzgGr2SYtcKMpFCm4rKA43cdIalhVwNQACV27nw06FIv2LFEyCmAuv
+	bcs1FXJVul1bKoDObyr2v8UBG0AcDNo02RIkDzHPTTQ2jffITfYhgAoMrE4jirlZKg9FmJ6nkGS
+	tpxGSpeDEkHoyLxVIWjnzKqhLp4HgzJEjl0/KT6NMKius8XdKgDMT+bhxE/zDAabMwqga3bQzVg
+	xScViwhYRWyrPor1VhAnYwCV3SBrsQ66HbZG3wdpoXd0aHro1Aeer9AmnyMQg72ExYivqTpFAQ/
+	Vp86YlUBXrN26NI96W0C7kh5IfzrevEVD3uxw0J+ZQ1d/SMYjGexUk2wpldRk6rlCBM3eyjD7k/
+	l6tWLLwv5RQOTSq2HykCneE/sBwbX3jwHNBmA8R9JHb1p5w9c+CMBa4xUwfoYR2x/I+HyN+IaRk
+	C876a4FYDvspMYLGf9r72NFYSnkJKxXcd5y/Ev1Y9jE0uUnaf/N+4kxpg==
+X-Received: by 2002:a05:6a00:1d83:b0:81e:b93a:ab09 with SMTP id d2e1a72fcca58-826bab56b60mr1002475b3a.1.1771491810251;
+        Thu, 19 Feb 2026 01:03:30 -0800 (PST)
+Received: from localhost.localdomain ([103.158.43.38])
+        by smtp.googlemail.com with ESMTPSA id d2e1a72fcca58-824c6bb3549sm19985248b3a.59.2026.02.19.01.03.26
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 18 Feb 2026 22:06:24 -0800 (PST)
-Date: Thu, 19 Feb 2026 09:06:21 +0300
-From: Dan Carpenter <dan.carpenter@linaro.org>
-To: Karan Tilak Kumar <kartilak@cisco.com>
-Cc: sebaddel@cisco.com, arulponn@cisco.com, djhawar@cisco.com,
-	gcboffa@cisco.com, aeasi@cisco.com, mkai2@cisco.com,
-	satishkh@cisco.com, jejb@linux.ibm.com, martin.petersen@oracle.com,
-	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	jmeneghi@redhat.com, revers@redhat.com,
-	Hannes Reinecke <hare@kernel.org>, Lee Duncan <lduncan@suse.com>
-Subject: Re: [PATCH 2/5] scsi: fnic: Do not use GFP_ZERO for mempools
-Message-ID: <aZaoXRkzyCsGm9n7@stanley.mountain>
-References: <20260217223943.7938-1-kartilak@cisco.com>
- <20260217223943.7938-2-kartilak@cisco.com>
+        Thu, 19 Feb 2026 01:03:29 -0800 (PST)
+From: Abdun Nihaal <nihaal@cse.iitm.ac.in>
+To: ram.vegesna@broadcom.com
+Cc: Abdun Nihaal <nihaal@cse.iitm.ac.in>,
+	James.Bottomley@HansenPartnership.com,
+	martin.petersen@oracle.com,
+	linux-scsi@vger.kernel.org,
+	target-devel@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	jsmart2021@gmail.com,
+	stable@vger.kernel.org
+Subject: [PATCH] scsi: efct: Fix potential memory leak in efct_io_pool_free()
+Date: Thu, 19 Feb 2026 14:31:31 +0530
+Message-ID: <20260219090136.108938-1-nihaal@cse.iitm.ac.in>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260217223943.7938-2-kartilak@cisco.com>
+Content-Transfer-Encoding: 8bit
 
-On Tue, Feb 17, 2026 at 02:39:40PM -0800, Karan Tilak Kumar wrote:
-> One cannot use the GFP_ZERO flag for mempool allocation, so use
-> memset() instead.
-> 
+The memory allocated for struct efct_io in efct_io_pool_create(), is
+not freed by it's corresponding free function efct_io_pool_free().
+Fix that by adding a kfree().
 
-This kind of thing could easily translate into a static checker rule.
+Fixes: e2cf422ba833 ("scsi: elx: efct: Hardware queues processing")
+Cc: stable@vger.kernel.org
+Signed-off-by: Abdun Nihaal <nihaal@cse.iitm.ac.in>
+---
+Compile tested only. Found using static analysis.
 
-KTODO: make a static checker rule to not pass GFP_ZERO to mempool_alloc()
+ drivers/scsi/elx/efct/efct_io.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-regards,
-dan carpenter
+diff --git a/drivers/scsi/elx/efct/efct_io.c b/drivers/scsi/elx/efct/efct_io.c
+index c612f0a48839..bdafecca7573 100644
+--- a/drivers/scsi/elx/efct/efct_io.c
++++ b/drivers/scsi/elx/efct/efct_io.c
+@@ -92,6 +92,7 @@ efct_io_pool_free(struct efct_io_pool *io_pool)
+ 					  io->rspbuf.size, io->rspbuf.virt,
+ 					  io->rspbuf.phys);
+ 			memset(&io->rspbuf, 0, sizeof(struct efc_dma));
++			kfree(io);
+ 		}
+ 
+ 		kfree(io_pool);
+-- 
+2.43.0
 
