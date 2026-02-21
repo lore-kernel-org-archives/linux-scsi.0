@@ -1,155 +1,85 @@
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 77A411F8691
-	for <linux-scsi@vger.kernel.org>; Fri, 20 Feb 2026 15:02:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF6CC325711;
+	Sat, 21 Feb 2026 17:41:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771599728; cv=none; b=M9OMWN0XUV9coBNCKnGzzSyRKXvQd9lBLtbPk8uCMm+wwf3leLJtZHzxEJiVbioq7nGVLeyxNh7SVlY/NJNJzvsEbFHaiZMkqIeugRq8LXpvDEoRZiPNsXQZ/MslKQBSNpsrC6zKQLNw42BKbu3p181rVMp7fGMgBosadzAMSSk=
+	t=1771695690; cv=none; b=cbdZLcNvWzNk0blabFPH+RPI81ec+vEnD1jgxdNaeOlxT/76qy0phHtKxbR9bdVAdnkzC0FGWK7KwNIVPi0JG8DHhPojSF9vdf/gdVnA9ov6tqyZ+C/W0D/wW6KSTIgAPKhW0chidQ81V2EC+7sGhJPn1luEIaPryUHaQ+hkZmM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771599728; c=relaxed/simple;
-	bh=7uYyRSAdKMRd5mDitWwfp98DtUzANsIQdwTtCyHpDOM=;
-	h=Message-ID:Subject:From:To:Cc:Date:Content-Type:MIME-Version; b=egj1kFlggkgYxUgXtka1Gu9kpHXFZveAJVsblPlH16I9+Iplugwu+WZJy2sO8yoyisQp6oVX73D0RxbXE5YuhoWHaQGv5S+RfzhGa2Z8I7Bah/KB8voIkzGNroHgirHc1ZI6bPMmqVIS6OrkZu2fThFBYhVAG+wDX1pSq1AW0bg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b=kE8bAE4S; dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b=eiWxoaOm; arc=none smtp.client-ip=195.135.223.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+	s=arc-20240116; t=1771695690; c=relaxed/simple;
+	bh=hC/bKukwvz707+9AogQXTJbFdJshNSgSwFm4eZcmcjM=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=HIk4tGWNo3rbApJH1uchWDSInGaQ+EgHfzSMo0zeH7W/N40spk30bSh3c36dXD+e1CQ9zK+rFrf2TKl6FaP3ZwPWhjg4qzr0Yf360NcSYp63AmVyhyjUO3/+yrXOkZ9d+7JGqXQjEGTdmdCP/NMwXbp9Bjwm/ZHSuVKmoOr58q0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZLZY01/u; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b="kE8bAE4S";
-	dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b="eiWxoaOm"
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id EF82A5BCE3;
-	Fri, 20 Feb 2026 15:01:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-	t=1771599716; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=7uYyRSAdKMRd5mDitWwfp98DtUzANsIQdwTtCyHpDOM=;
-	b=kE8bAE4Scyb82JxvvvPaI3thYPadPs/vRrEB9F4FshKlXLnor97yOY1DmDdecUEzKRup3q
-	+R4D5ddEJW8mYCrdl+9IexQ3ajr6Q/WUtXDOA9RvW9uB3D52aYWVRaNhSeWEy8sTuk2zXv
-	5fx3vHVG8cfng3Z/QbQwpV6ARalaMWM=
-Authentication-Results: smtp-out2.suse.de;
-	dkim=pass header.d=suse.com header.s=susede1 header.b=eiWxoaOm
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-	t=1771599710; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=7uYyRSAdKMRd5mDitWwfp98DtUzANsIQdwTtCyHpDOM=;
-	b=eiWxoaOmwgb0pAkEFC0uZICLf/atzTI7G+MMg0vSEcFLMqvNUuXoSh+rB9ycz480oZxCvT
-	8QYyAYXMvdY97oH0gyIzRCnVfbtqdmhpZaWKgHnk5kA1ma/XHEUBchxW2XygTtbiNd75mm
-	zuWETATkXg5f+82TcIZXmPEt5t4+S3U=
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 9A5153EA65;
-	Fri, 20 Feb 2026 15:01:50 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id WLiQJF53mGlcRQAAD6G6ig
-	(envelope-from <mwilck@suse.com>); Fri, 20 Feb 2026 15:01:50 +0000
-Message-ID: <e99744196d8a0ca2bffec1d13109eea071c99096.camel@suse.com>
-Subject: linux-scsi project on GitHub & SCSI user space utilities maintenance
-From: Martin Wilck <mwilck@suse.com>
-To: "Martin K. Petersen" <martin.petersen@oracle.com>, 
-	linux-scsi@vger.kernel.org
-Cc: Paul Evans <pevans@redhat.com>, =?UTF-8?Q?Tom=C3=A1=C5=A1_B=C5=BEatek?=	
- <tbzatek@redhat.com>, Hannes Reinecke <hare@suse.de>, Lee Duncan	
- <lduncan@suse.com>, Martin Wilck <martin.wilck@suse.com>, Bart Van Assche	
- <bvanassche@acm.org>, Mike Christie <michael.christie@oracle.com>, James
- Bottomley <James.Bottomley@HansenPartnership.com>, Chris Hofstaedtler
- <ze1ha@debian.org>, Xose Vazquez Perez <xose.vazquez@gmail.com>, Daniel
- Horak <dhorak@redhat.com>
-Date: Fri, 20 Feb 2026 16:01:50 +0100
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.58.3 
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZLZY01/u"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 44B31C4CEF7;
+	Sat, 21 Feb 2026 17:41:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1771695690;
+	bh=hC/bKukwvz707+9AogQXTJbFdJshNSgSwFm4eZcmcjM=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=ZLZY01/u2Mj5XoC/TEIMxkn1Fyn4UOpnYAx04p7FeFCEMq1SbrqBA5WkhzTtI6kZb
+	 QFBx2zeeeONDEz0vZwpr1znz0VM59flDkyZUsvQ11iRioTnfrZY5b02mfaBO49+xkT
+	 gVIGx9J54pngaVg75opSFOrSuBqPazXU6im3VACIsoci3hh+mvxcqgHmuyOmrFJxlk
+	 PM3x4aiUzSceUFq3RvIcK9e6yWTGZYZgn4p1RIPgV1Lvzjful53O01jX92CcsdvXef
+	 C+BwuALX2iFuZVFbMf3f5j+3hnw2jdxCRNw49xhYSPafldjS/KvQ8ZczKvKSKrh8Bd
+	 jINjZMvYA9SXg==
+Date: Sat, 21 Feb 2026 12:41:28 -0500
+From: Mike Snitzer <snitzer@kernel.org>
+To: John Garry <john.g.garry@oracle.com>
+Cc: lsf-pc@lists.linux-foundation.org, linux-nvme@lists.infradead.org,
+	linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+	dm-devel@lists.linux.dev
+Subject: Re: [LSF/MM/BPF TOPIC] Native SCSI multipath support
+Message-ID: <aZnuSC0qYfw0hiwM@kernel.org>
+References: <69349b51-72c2-47f9-948f-f89843af62e4@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Spamd-Result: default: False [-3.01 / 50.00];
-	BAYES_HAM(-3.00)[99.99%];
-	SUSPICIOUS_RECIPS(1.50)[];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	R_DKIM_ALLOW(-0.20)[suse.com:s=susede1];
-	MIME_GOOD(-0.10)[text/plain];
-	MX_GOOD(-0.01)[];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	DKIM_SIGNED(0.00)[suse.com:s=susede1];
-	FUZZY_RATELIMITED(0.00)[rspamd.com];
-	ARC_NA(0.00)[];
-	RCPT_COUNT_TWELVE(0.00)[13];
-	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	MIME_TRACE(0.00)[0:+];
-	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	FREEMAIL_ENVRCPT(0.00)[gmail.com];
-	FREEMAIL_CC(0.00)[redhat.com,suse.de,suse.com,acm.org,oracle.com,HansenPartnership.com,debian.org,gmail.com];
-	RCVD_TLS_ALL(0.00)[];
-	RCVD_COUNT_TWO(0.00)[2];
-	FROM_EQ_ENVFROM(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	TO_DN_SOME(0.00)[];
-	MID_RHS_MATCH_FROM(0.00)[];
-	TAGGED_RCPT(0.00)[];
-	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
-	DKIM_TRACE(0.00)[suse.com:+];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.com:mid,suse.com:dkim,suse.com:email,suse.de:email,imap1.dmz-prg2.suse.org:helo,imap1.dmz-prg2.suse.org:rdns]
-X-Rspamd-Action: no action
-X-Spam-Flag: NO
-X-Spam-Score: -3.01
-X-Spam-Level: 
-X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
-X-Rspamd-Queue-Id: EF82A5BCE3
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <69349b51-72c2-47f9-948f-f89843af62e4@oracle.com>
 
-Hi Martin,
+On Fri, Feb 13, 2026 at 02:19:11PM +0000, John Garry wrote:
+> At ALPSS 25 I presented a proposal for Native SCSI multipath support. Let's
+> discuss this topic at LSFMM.
+> 
+> The idea for this is that SCSI could natively support multipath, like how
+> NVMe host driver does today. It is intended as an alternative to
+> dm-multipath support.
+> 
+> I have been working on the implementation and I plan to post patches in the
+> next cycle. I am looking at a 3-stage approach:
+> a. create a driver-agnostic multipath library, very heavily based on NVMe
+> host multipath support.
+> The library would support features such as path management, path
+> selection/iopolicy, failover recovery, PR, delayed removal, gendisk
+> management etc.
+> b. switch NVMe over to use this library
 
-a while ago you created the linux-scsi organization on GitHub. Thanks
-again for that. I think it's time that we move forward with this
-organization. While we have clones of the repositories there that were
-previously maintained by Doug Gilbert, we haven't applied any changes,
-or moved any issues or PRs yet.
+I can appreciate that the kernel to userspace interface of DM
+multipath is clearly unwanted (hence NVMe multipath and now SCSI
+multipath).
 
-IMO the main problem is currently that people are lacking permissions
-to access the repositories in the linux-scsi organization. I assume
-that you have full admin rights. I think that we need 1-2 more people
-with maintainer rights, and a few more people with write permissions,
-to share the work load.
+But you should really be switching DM-multipath over to using it too;
+or at least detailing _why_ the core of DM multipath
+(drivers/md/dm-mpath.c) cannot be updated to use this common backend
+library.
 
-In private communication during the past two weeks, Red Hat and SUSE
-have collected a few volunteers that would be willing to join this
-organization:
+This line of work makes little sense to me if it just ignores
+dm-multipath.
 
-Paul Evans <pevans@redhat.com> @pauljevans
-Tom=C3=A1=C5=A1 B=C5=BEatek <tbzatek@redhat.com>, @tbzatek (as Paul's backu=
-p)
-Lee Duncan <lduncan@suse.com>, @gonzoleeman
-Hannes Reinecke <hare@suse.de>, @hreinecke
-Martin Wilck <mwilck@suse.com>, @mwilck
+Mike
 
-IMPORTANT: This is NOT an attempt by Red Hat and SUSE to take over the
-organization. Quite to the contrary, we would be very happy if other
-people and organizations / distributions joined in. I've added some
-people the CC list who might be interested; I'd be grateful if this
-message could be forwarded to others as well.
-
-We'd be grateful if you could grant permissions to some of us.
-
-None of the volunteers above will be able to devote a lot of resources
-to the maintenance of these projects, but we hope to be able to
-maintain them such that bugs get fixed and reasonable PRs merged.
-Unless some additional and highly motivated volunteers show up, I
-suppose this means that the tools will remain in maintenance mode.
-
-Once permissions are set up, we'd start to migrate the open issues and
-PRs from Doug's repos to the linux-scsi ones, and then start working on
-them.
-
-Best regards,
-Martin
+> c. add native SCSI multipath support based on this common library
+> 
+> Thanks,
+> John
+> 
+> 
+> 
