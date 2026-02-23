@@ -1,97 +1,73 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 307AC1C5D5E;
-	Mon, 23 Feb 2026 14:47:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F01331FBCA7;
+	Mon, 23 Feb 2026 15:45:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771858042; cv=none; b=a9tD8v5O7RBLQZMDCU2qcHaa45XPmeWMPOPVlkItUbObrOZmvfTZjMsBFuP/VLRCVwKZLDI5gV6shGU/B2MHJ4ueLTPeq2YGgAk2PEfGtUs9uFhuKHV/+M5TTMtm2rSPca1fJdg3OgokMI9dqGN89stR2mIImkWXeZiGpeYCEak=
+	t=1771861522; cv=none; b=GnWfFpK1xPpShR4D98FtRFOJ0jz56ih14BkYbyl/8rFC6LePLQ1K0LLDlE5x9Qu161O1RGq62VdtDIQ3PzLCgJQTcsmvZrzvwyQYN8GSej3Ew+GetAghMVZEF9cIjbAArQL9D721L33B8Ci+QGZZKRK/WfVWtrSOAAuoAupzOjc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771858042; c=relaxed/simple;
-	bh=icV9iyo+h9GaMN5lmtCZ6OdHP8LFkhi8/85F34Tqhzo=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=t06rd7qb0aZIiEHmGxPifEkEgWxFRlPwz+7Z+/GH3zQ1fa66t+kMDfCYUqT3RLKnHfMh7+5NNk6nk914zgcEl04EY6TPn/kER68esWKNO5NQDXHOlBdNX4lRFc5m+++0pJG9Qglx+x4DcNMoV1yN1bOBP9Ad0nZd3mq52/fAzAQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=P0SktaM7; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1771861522; c=relaxed/simple;
+	bh=uI2CTnMZZo8iPqYpwm0xtZd6/FFIAG4bUniP6Ll6Ts8=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Ef5W20iaDwzTwAKIvmEeLmgyqxeeKAB5qSbMbk6xVEUg2iKCOA58CNFWmbalyakhKn+wBNDQJJFgOtr99bKlb1zOEPxlUqb2yyxoBpfmP3N1EHPB5S1ZbGZfNaCFPvnHLgZkEjNglAH3VJr4U2rw/2jyk7/E6qADXwkPL3nkwQ8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=q33Cd8Cl; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="P0SktaM7"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5D936C116C6;
-	Mon, 23 Feb 2026 14:47:18 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1771858042;
-	bh=icV9iyo+h9GaMN5lmtCZ6OdHP8LFkhi8/85F34Tqhzo=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=P0SktaM7k9qCcZICfH7dRkRf37YQTCXaPyqZjP86xsCFcMdyWt3kNR4dMdflrkSXy
-	 TXbKd4jd8Ky6hBfsZJk2zV2+Uif05jPqj34qbmwuyvaRRulG3BM5BhiT72IMLGadNd
-	 7uCKZ4aALeagR7+wMb3VB/Awsb6U/A9jSe+NO2GuKNlD8F49VniZQ17/C6ZCJcVEnK
-	 7Sp0sp0UnyeFzLos3j/YPkgGShMhWjWN1ZPupLocOFTSdIJZO7nPYjzdhaGP5ymTSf
-	 awuHVwVS3JOOd5PlJR3uvXdelzngoBFGWbaGGYgZBAd+ja2qvB4oPZnYqPGKLB8+hC
-	 5UHv0TeRpIvIQ==
-Date: Mon, 23 Feb 2026 20:17:09 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Abel Vesa <abel.vesa@oss.qualcomm.com>
-Cc: Alim Akhtar <alim.akhtar@samsung.com>, 
-	Avri Altman <avri.altman@wdc.com>, Bart Van Assche <bvanassche@acm.org>, 
-	Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
-	Conor Dooley <conor+dt@kernel.org>, Bjorn Andersson <andersson@kernel.org>, 
-	linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org, devicetree@vger.kernel.org, 
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] scsi: ufs: qcom: dt-bindings: Document the Eliza UFS
- controller
-Message-ID: <qroy3qzudcgtme4xxo2dy63ay7ojd674ski3njwew5ky7rjw3m@iagzzywq3we2>
-References: <20260223-eliza-bindings-ufs-v1-1-c4059596337f@oss.qualcomm.com>
+	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="q33Cd8Cl"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A11BDC116C6;
+	Mon, 23 Feb 2026 15:45:19 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+	s=korg; t=1771861521;
+	bh=uI2CTnMZZo8iPqYpwm0xtZd6/FFIAG4bUniP6Ll6Ts8=;
+	h=From:To:Cc:Subject:Date:From;
+	b=q33Cd8Cl2SYM5KlzfAb/xFHR4WHivHVw0eru2+E0awP9IVPiERW6Z+ep959rKmqG8
+	 +n0ESof9gl4vgXKbLZKK+kcAR3XT9BgFidR1b1WG4rhpRZvnYwhf7qECGcQVPcJ+uM
+	 h09hZBr1QmnQaAOvQ4y94Pg8C5MEheF4XLK+p6pE=
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	stable <stable@kernel.org>
+Subject: [PATCH] scsi: ses: Handle positive SCSI error from ses_recv_diag()
+Date: Mon, 23 Feb 2026 16:44:59 +0100
+Message-ID: <2026022301-bony-overstock-a07f@gregkh>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1051; i=gregkh@linuxfoundation.org; h=from:subject:message-id; bh=uI2CTnMZZo8iPqYpwm0xtZd6/FFIAG4bUniP6Ll6Ts8=; b=owGbwMvMwCRo6H6F97bub03G02pJDJlzSv+qMPh9jmmf/aVCzy7ZUt+iYNkyeYcbW+7uc/N9P dm2Oq+mI5aFQZCJQVZMkeXLNp6j+ysOKXoZ2p6GmcPKBDKEgYtTACaydCfD/Fz2ZQfUD+15am+Z uL1o8eykc1MeMTEs2DqnX/1edsOOdayH99y5et7jRaHNfwA=
+X-Developer-Key: i=gregkh@linuxfoundation.org; a=openpgp; fpr=F4B60CC5BF78C2214A313DCB3147D40DDB2DFB29
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260223-eliza-bindings-ufs-v1-1-c4059596337f@oss.qualcomm.com>
 
-On Mon, Feb 23, 2026 at 04:32:35PM +0200, Abel Vesa wrote:
-> Document the UFS Controller on the Eliza Platform.
-> 
+ses_recv_diag() can return a positive value, which also means that an
+error happened, so do not only test for negative values.
 
-Could you please include some info about the IP revision, compatibility etc...?
+Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: stable <stable@kernel.org>
+Assisted-by: gkh_clanker_2000
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ drivers/scsi/ses.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-- Mani
-
-> Signed-off-by: Abel Vesa <abel.vesa@oss.qualcomm.com>
-> ---
->  Documentation/devicetree/bindings/ufs/qcom,sm8650-ufshc.yaml | 2 ++
->  1 file changed, 2 insertions(+)
-> 
-> diff --git a/Documentation/devicetree/bindings/ufs/qcom,sm8650-ufshc.yaml b/Documentation/devicetree/bindings/ufs/qcom,sm8650-ufshc.yaml
-> index cea84ab2204f..80550144f932 100644
-> --- a/Documentation/devicetree/bindings/ufs/qcom,sm8650-ufshc.yaml
-> +++ b/Documentation/devicetree/bindings/ufs/qcom,sm8650-ufshc.yaml
-> @@ -15,6 +15,7 @@ select:
->      compatible:
->        contains:
->          enum:
-> +          - qcom,eliza-ufshc
->            - qcom,kaanapali-ufshc
->            - qcom,sm8650-ufshc
->            - qcom,sm8750-ufshc
-> @@ -25,6 +26,7 @@ properties:
->    compatible:
->      items:
->        - enum:
-> +          - qcom,eliza-ufshc
->            - qcom,kaanapali-ufshc
->            - qcom,sm8650-ufshc
->            - qcom,sm8750-ufshc
-> 
-> ---
-> base-commit: 6de23f81a5e08be8fbf5e8d7e9febc72a5b5f27f
-> change-id: 20260221-eliza-bindings-ufs-2aa269f9c72f
-> 
-> Best regards,
-> --  
-> Abel Vesa <abel.vesa@oss.qualcomm.com>
-> 
-
+diff --git a/drivers/scsi/ses.c b/drivers/scsi/ses.c
+index 35101e9b7ba7..128042c734cc 100644
+--- a/drivers/scsi/ses.c
++++ b/drivers/scsi/ses.c
+@@ -215,7 +215,7 @@ static unsigned char *ses_get_page2_descriptor(struct enclosure_device *edev,
+ 	unsigned char *type_ptr = ses_dev->page1_types;
+ 	unsigned char *desc_ptr = ses_dev->page2 + 8;
+ 
+-	if (ses_recv_diag(sdev, 2, ses_dev->page2, ses_dev->page2_len) < 0)
++	if (ses_recv_diag(sdev, 2, ses_dev->page2, ses_dev->page2_len))
+ 		return NULL;
+ 
+ 	for (i = 0; i < ses_dev->page1_num_types; i++, type_ptr += 4) {
 -- 
-மணிவண்ணன் சதாசிவம்
+2.53.0
+
