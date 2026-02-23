@@ -1,129 +1,198 @@
-Received: from lamorak.hansenpartnership.com (lamorak.hansenpartnership.com [198.37.111.173])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E1DB836B040;
-	Mon, 23 Feb 2026 19:30:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.37.111.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E5D7A24C076;
+	Mon, 23 Feb 2026 20:35:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771875007; cv=none; b=bqNCemO3DCVCj3hAz6CChBlfRtNSDIaLJCkwpvdeN0AmWG/CAleaVnEBMxVImOHDHT2qsU28jiMW9BmDSSvpK13Tc8CDxq0tI3S3wobE8G8PpW2ofIPTYYziEhQl+WQTH7fB52hr8saRvWhZiRfjoTFkopNkNnyCx/cLHKA/uoA=
+	t=1771878908; cv=none; b=FjLYFOjji/RL9MgFbwFjG9gSk4eZgPxDfPYIRclkV7GFR6s7AYL4kwnVb4GbMqSIZzFg+7jPqkFsB0LA1azFKZPqla2L5KebTMGlmzo23nhEFs40ZxdxVjHqp5/LfwoxmwUSn/E0bW3CYlv8cAypv4wDX23A7KAXyuWUHts62rM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771875007; c=relaxed/simple;
-	bh=0X8EtmQAljpsd7bE4d1rDKBmSYY/2DgLb/G9JsM6+Ks=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=FMsfNTPXmv6j5qVvCAmYWFpTsFCgTo0nVH7tFoP7sDmUKO04+akKraQJDkeHbUt4nMdnaiTqUQckDL4jQFai3IlwA7/8i+OoCSyv6AM3Piwck7KSjbd3Sh36AiTqSas+eL5AhkiNJzEGx5yJGTjtO9UgUzsYUe2d4C2XhBBKD2o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com; spf=pass smtp.mailfrom=HansenPartnership.com; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=a+0N4EEg; arc=none smtp.client-ip=198.37.111.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=HansenPartnership.com
+	s=arc-20240116; t=1771878908; c=relaxed/simple;
+	bh=rOqSdRScNFD29t+Pk6i05NgN3EhYNGzQOGIkyT1MpKs=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=jYzKRlq0i6RTAcZWRJ/gh5guhsQAAHNwtmSD2HaDjJnQWZNrc9ffd/FSG3ng0UdV7EDmZur292ABGwXhL39XCTzvTlv65XKm2SZdVp0CyUVRgTTPeHk9CNx76+SF+ID3n1iDct48+PmblNOIufXKnYT/HuY2nh+1sJ24RccnJiE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YTDwjTaY; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="a+0N4EEg"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-	d=hansenpartnership.com; s=20151216; t=1771875001;
-	bh=0X8EtmQAljpsd7bE4d1rDKBmSYY/2DgLb/G9JsM6+Ks=;
-	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
-	b=a+0N4EEgLMifkOvLEBKNMAY9a3vp7cCH/VH/ijCgrxu4pr9+CG8FnXAul73FplMET
-	 2ywuRWAi1bmH0VEK648KTNzPOCJ6ZFdvOPPiow8q61yOe8v6Pw2VjmE+Ab2vA5OS/o
-	 qdSH11Bq9C2BvEzX+obgowxC4ag77J0FM+inYP04=
-Received: from [IPv6:2601:5c4:4300:d341::a774] (unknown [IPv6:2601:5c4:4300:d341::a774])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by lamorak.hansenpartnership.com (Postfix) with ESMTPSA id 551601C02A0;
-	Mon, 23 Feb 2026 14:30:01 -0500 (EST)
-Message-ID: <864e8bde0e2d04d6d877616e669832127a168dc3.camel@HansenPartnership.com>
-Subject: Re: [PATCH] scsi: ses: Handle positive SCSI error from
- ses_recv_diag()
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
-	linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, "Martin K. Petersen"
-	 <martin.petersen@oracle.com>, stable <stable@kernel.org>
-Date: Mon, 23 Feb 2026 14:30:00 -0500
-In-Reply-To: <2026022355-dress-revoke-89ea@gregkh>
-References: <2026022301-bony-overstock-a07f@gregkh>
-	 <2026022355-dress-revoke-89ea@gregkh>
-Autocrypt: addr=James.Bottomley@HansenPartnership.com;
- prefer-encrypt=mutual;
- keydata=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
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.50.3 
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YTDwjTaY"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 382F5C19421;
+	Mon, 23 Feb 2026 20:35:06 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1771878907;
+	bh=rOqSdRScNFD29t+Pk6i05NgN3EhYNGzQOGIkyT1MpKs=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=YTDwjTaY1ti8LJ0EyGob64e68Sxmt9wuBPSpSfdDHG/n4Yi3vIFcdkGd97DTKZ9vz
+	 7+M1I7ZjM+0uT9ucuRrloNrhMqm8bvItgf/mEetZB4HoeSe2y+UWW+Ua7R51G4lccc
+	 SAVl2nZEtCfFyegsO3i7K2/vdag/R2lWNo91l0tdQIHylgpf/OTdTb8TnuPCcfhMde
+	 gLdkOtLztpS3OIQ1GfBAIcHtiLd74xSRvZ3UtF531uwv1VNEt+70vQOCbx4FiFR/kL
+	 HCn7f+bsmD3Pzh5tWy48AlxIln8ea0s38uN05xG057Psk/9XDIW04bLE409hldciKs
+	 LQ6WF5NQlBJqQ==
+Date: Mon, 23 Feb 2026 14:35:04 -0600
+From: Bjorn Andersson <andersson@kernel.org>
+To: manivannan.sadhasivam@oss.qualcomm.com
+Cc: Konrad Dybcio <konradybcio@kernel.org>, 
+	Adrian Hunter <adrian.hunter@intel.com>, Ulf Hansson <ulf.hansson@linaro.org>, 
+	Manivannan Sadhasivam <mani@kernel.org>, "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
+	"Martin K. Petersen" <martin.petersen@oracle.com>, Abel Vesa <abelvesa@kernel.org>, linux-arm-msm@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-mmc@vger.kernel.org, linux-scsi@vger.kernel.org, 
+	Sumit Garg <sumit.garg@oss.qualcomm.com>, stable@vger.kernel.org
+Subject: Re: [PATCH v3 1/4] soc: qcom: ice: Fix race between qcom_ice_probe()
+ and of_qcom_ice_get()
+Message-ID: <h2uhrsjlvovjcj7k2ckpkgrhpuwm6biun4ueq7kyzcm4hqcsjr@y3iiqx2vo6s2>
+References: <20260223-qcom-ice-fix-v3-0-6ca5846329f7@oss.qualcomm.com>
+ <20260223-qcom-ice-fix-v3-1-6ca5846329f7@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260223-qcom-ice-fix-v3-1-6ca5846329f7@oss.qualcomm.com>
 
-On Mon, 2026-02-23 at 17:03 +0100, Greg Kroah-Hartman wrote:
-> On Mon, Feb 23, 2026 at 04:44:59PM +0100, Greg Kroah-Hartman wrote:
-> > ses_recv_diag() can return a positive value, which also means that
-> > an
-> > error happened, so do not only test for negative values.
-> >=20
-> > Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-> > Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-> > Cc: stable <stable@kernel.org>
-> > Assisted-by: gkh_clanker_2000
-> > Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> > ---
-> > =C2=A0drivers/scsi/ses.c | 2 +-
-> > =C2=A01 file changed, 1 insertion(+), 1 deletion(-)
-> >=20
-> > diff --git a/drivers/scsi/ses.c b/drivers/scsi/ses.c
-> > index 35101e9b7ba7..128042c734cc 100644
-> > --- a/drivers/scsi/ses.c
-> > +++ b/drivers/scsi/ses.c
-> > @@ -215,7 +215,7 @@ static unsigned char
-> > *ses_get_page2_descriptor(struct enclosure_device *edev,
-> > =C2=A0	unsigned char *type_ptr =3D ses_dev->page1_types;
-> > =C2=A0	unsigned char *desc_ptr =3D ses_dev->page2 + 8;
-> > =C2=A0
-> > -	if (ses_recv_diag(sdev, 2, ses_dev->page2, ses_dev-
-> > >page2_len) < 0)
-> > +	if (ses_recv_diag(sdev, 2, ses_dev->page2, ses_dev-
-> > >page2_len))
-> > =C2=A0		return NULL;
-> > =C2=A0
-> > =C2=A0	for (i =3D 0; i < ses_dev->page1_num_types; i++, type_ptr +=3D
-> > 4) {
-> > --=20
-> > 2.53.0
-> >=20
->=20
-> Along these lines, any specific reason why the following code in
-> ses_enclosure_data_process() doesn't also check the return value of
-> ses_recv_diag():
->=20
-> 	/* re-read page 10 */
-> 	if (ses_dev->page10)
-> 		ses_recv_diag(sdev, 10, ses_dev->page10, ses_dev-
-> >page10_len);
-> 	/* Page 7 for the descriptors is optional */
-> 	result =3D ses_recv_diag(sdev, 7, hdr_buf, INIT_ALLOC_SIZE);
-> 	if (result)
-> 		goto simple_populate;
->=20
-> Is that because re-reading always succeeds, or because it can fail
-> and we just want to ignore it?=C2=A0 It feels odd that the "optional" rea=
-d
-> command for page 7 is checked by not page 10.=C2=A0 But hey, scsi is odd
-> :)
+On Mon, Feb 23, 2026 at 01:32:52PM +0530, Manivannan Sadhasivam via B4 Relay wrote:
+> From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+> 
+> The current platform driver design causes probe ordering races with
+> consumers (UFS, eMMC) due to ICE's dependency on SCM firmware calls. If ICE
+> probe fails (missing ICE SCM or DT registers), devm_of_qcom_ice_get() loops
+> with -EPROBE_DEFER, leaving consumers non-functional even when ICE should
+> be gracefully disabled. devm_of_qcom_ice_get() doesn't know if the ICE
+> driver probe has failed due to above reasons or it is waiting for the SCM
+> driver.
+> 
+> Moreover, there is no devlink dependency between ICE and consumer drivers
+> as 'qcom,ice' is not considered as a DT 'supplier'. So the consumer drivers
+> have no idea of when the ICE driver is going to probe.
+> 
+> To address these issues, introduce a global ice_handle to store the valid
+> ICE handle pointer, and set during successful ICE driver probe. On probe
+> failure, set it to an error pointer and propagate the error from
+> of_qcom_ice_get().
+> 
+> Additionally, add a global ice_mutex to synchronize qcom_ice_probe() and
+> of_qcom_ice_get().
+> 
+> Note that this change only fixes the standalone ICE DT node bindings and
+> not the ones with 'ice' range embedded in the consumer nodes, where there
+> is no issue.
+> 
+> Cc: <stable@vger.kernel.org> # 6.4
+> Fixes: 2afbf43a4aec ("soc: qcom: Make the Qualcomm UFS/SDCC ICE a dedicated driver")
+> Reported-by: Sumit Garg <sumit.garg@oss.qualcomm.com>
+> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+> ---
+>  drivers/soc/qcom/ice.c | 44 +++++++++++++++++++++++++++-----------------
+>  1 file changed, 27 insertions(+), 17 deletions(-)
+> 
+> diff --git a/drivers/soc/qcom/ice.c b/drivers/soc/qcom/ice.c
+> index b203bc685cad..3c3c189e24f9 100644
+> --- a/drivers/soc/qcom/ice.c
+> +++ b/drivers/soc/qcom/ice.c
+> @@ -113,6 +113,9 @@ struct qcom_ice {
+>  	u8 hwkm_version;
+>  };
+>  
+> +static DEFINE_MUTEX(ice_mutex);
+> +static struct qcom_ice *ice_handle;
 
-Pretty much.  The re-read should never fail for SCSI reasons (although
-there's a remote possibility it could fail for transient reasons) the
-scsi_execute will already have tried (and logged errors), so there's no
-further error handling ses can add so the best thing it can do is
-proceed with stale data.
-
-The reason for the page 7 check is because that will fail if the page
-does not exist (which is allowed by spec).
+Did we get confirmation that in the UFS + SDCC case, there's only a
+single ICE instance per SoC?
 
 Regards,
+Bjorn
 
-James
-
+> +
+>  static bool qcom_ice_check_supported(struct qcom_ice *ice)
+>  {
+>  	u32 regval = qcom_ice_readl(ice, QCOM_ICE_REG_VERSION);
+> @@ -608,7 +611,6 @@ static struct qcom_ice *qcom_ice_create(struct device *dev,
+>  static struct qcom_ice *of_qcom_ice_get(struct device *dev)
+>  {
+>  	struct platform_device *pdev = to_platform_device(dev);
+> -	struct qcom_ice *ice;
+>  	struct resource *res;
+>  	void __iomem *base;
+>  	struct device_link *link;
+> @@ -631,6 +633,22 @@ static struct qcom_ice *of_qcom_ice_get(struct device *dev)
+>  		return qcom_ice_create(&pdev->dev, base);
+>  	}
+>  
+> +	guard(mutex)(&ice_mutex);
+> +
+> +	/*
+> +	 * If ice_handle is NULL, then it means the ICE driver is not probed
+> +	 * yet. So return -EPROBE_DEFER to let the client try later.
+> +	 */
+> +	if (!ice_handle)
+> +		return ERR_PTR(-EPROBE_DEFER);
+> +
+> +	/*
+> +	 * If ice_handle has error code, then it means the ICE driver has probe
+> +	 * failed. So return the handle for the client to digest it.
+> +	 */
+> +	if (IS_ERR(ice_handle))
+> +		return ice_handle;
+> +
+>  	/*
+>  	 * If the consumer node does not provider an 'ice' reg range
+>  	 * (legacy DT binding), then it must at least provide a phandle
+> @@ -647,24 +665,16 @@ static struct qcom_ice *of_qcom_ice_get(struct device *dev)
+>  		return ERR_PTR(-EPROBE_DEFER);
+>  	}
+>  
+> -	ice = platform_get_drvdata(pdev);
+> -	if (!ice) {
+> -		dev_err(dev, "Cannot get ice instance from %s\n",
+> -			dev_name(&pdev->dev));
+> -		platform_device_put(pdev);
+> -		return ERR_PTR(-EPROBE_DEFER);
+> -	}
+> -
+>  	link = device_link_add(dev, &pdev->dev, DL_FLAG_AUTOREMOVE_SUPPLIER);
+>  	if (!link) {
+>  		dev_err(&pdev->dev,
+>  			"Failed to create device link to consumer %s\n",
+>  			dev_name(dev));
+>  		platform_device_put(pdev);
+> -		ice = ERR_PTR(-EINVAL);
+> +		return ERR_PTR(-EINVAL);
+>  	}
+>  
+> -	return ice;
+> +	return ice_handle;
+>  }
+>  
+>  static void qcom_ice_put(const struct qcom_ice *ice)
+> @@ -716,20 +726,20 @@ EXPORT_SYMBOL_GPL(devm_of_qcom_ice_get);
+>  
+>  static int qcom_ice_probe(struct platform_device *pdev)
+>  {
+> -	struct qcom_ice *engine;
+>  	void __iomem *base;
+>  
+> +	guard(mutex)(&ice_mutex);
+> +
+>  	base = devm_platform_ioremap_resource(pdev, 0);
+>  	if (IS_ERR(base)) {
+>  		dev_warn(&pdev->dev, "ICE registers not found\n");
+> +		ice_handle = base;
+>  		return PTR_ERR(base);
+>  	}
+>  
+> -	engine = qcom_ice_create(&pdev->dev, base);
+> -	if (IS_ERR(engine))
+> -		return PTR_ERR(engine);
+> -
+> -	platform_set_drvdata(pdev, engine);
+> +	ice_handle = qcom_ice_create(&pdev->dev, base);
+> +	if (IS_ERR(ice_handle))
+> +		return PTR_ERR(ice_handle);
+>  
+>  	return 0;
+>  }
+> 
+> -- 
+> 2.51.0
+> 
+> 
