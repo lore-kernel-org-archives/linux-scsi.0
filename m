@@ -1,230 +1,238 @@
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pg1-f170.google.com (mail-pg1-f170.google.com [209.85.215.170])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 98DAC13959D;
-	Sun, 22 Feb 2026 23:29:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.165.32
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771802999; cv=fail; b=lTGX2qNgIssbg9TM3LBkOma1OPITCtWSZP3YPLicZjl8PYNt16/fzjLLBpSA2jBhruB7dajHNKicDTeCk/W+tgAcC922vIXNBZHcdc7qSr88sRHKx5VPAk6f+Nx49twB/43CnQyA1jbbE9GyzUyQ5TyL37uRfpW/ZPtBjpKcfFM=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771802999; c=relaxed/simple;
-	bh=WSSNSph7vRFb21Amm1JnT6wKr69Qsogj5KLjTTFbIIU=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=QXb+Ntv1bFfMqoINJVc8UHxPRLubRcsM7pvEv8X2kli12gjwVoSAFXlMmOTa4cV/OlA35zoGkcXfoP271uQLYDPVJIV9Rsn0VKO6Wfteb+wtnGypGnysXSUTBdJ953J1iBtpXUtDeik0GPjqmxVwRzXDnNuF21tPLrPPnqYrAEQ=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=WxStdy9E; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=oetlAVSr; arc=fail smtp.client-ip=205.220.165.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BCF6031690A
+	for <linux-scsi@vger.kernel.org>; Mon, 23 Feb 2026 03:48:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.170
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1771818496; cv=none; b=XmGy+N4j63IJs/zci9g/EzXlW5rBPgSeZZiX9FYoGWumAjHJ4DzcKz9YvT09b2UL/2vj+I2WQU+peAlFzHfvvsG+lfcWXkHrxfEpXPgONW9wiazwLFBIDTlIt009oRaiRzFN1WeBAIBjhMqJ7EwKbIhq3iPIJHDm0eb2Ym9R15o=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1771818496; c=relaxed/simple;
+	bh=SF93mBnv6b6pLe/1HBoftNRah+ZLiF1OcBwwqbvPe6E=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=ft51bIm+XC/aLNS6AUp+bndGKpxl1k4l7Gxo3+58fIbVA7h9e7O9KDBlXOLcAholOoXdTXf57vERkXJr8aIV6II93F8APF4o9oyjac3hZldsUGYfUjILLQbPCT9C39fTyaWuY3M4fNzGXwWokzEU0KgU8X/izRM9Vwz/fWTzjgk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=kn+WqJAI; arc=none smtp.client-ip=209.85.215.170
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="WxStdy9E";
-	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="oetlAVSr"
-Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 61MNQwTm3892001;
-	Sun, 22 Feb 2026 23:29:58 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=
-	corp-2025-04-25; bh=m8jMXGEOnmiVmFkmf//XlZ8hOthqTcphD7kRTzxdKAY=; b=
-	WxStdy9EysoLK/XDy0Dcv3q/5h2I6ucgEWBopgim7l0CdY0Z5y+lOOinVoDVu3mk
-	WnOZRlmOPXY8aQtlEtLUWETFbkMVcNyI1ktsZa/rSm2+NzHn8xKK1nqAj+fbOo9S
-	HZB9doWZmybuKVVeyfSbxYrbeSbS9glohHElP3D9msz+0RkCh48ZsoxtDZHAe5Tf
-	e5R5oL6o4avyFI+d5CZoObBtuQQrf4Hc0ggghHmDICL45Y/Ut1RPuQE+u9AqdEvB
-	WoQtYeFE6ZPAL9ZIKiyQYlHln7ooRkas2WqEMRxRj6rJ4L7GA9I0D0Nu8luNOikQ
-	oMV09qscwudU3jpHkUVGxg==
-Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4cf3a01afp-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Sun, 22 Feb 2026 23:29:57 +0000 (GMT)
-Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 61MGTAIx015693;
-	Sun, 22 Feb 2026 23:29:57 GMT
-Received: from cy7pr03cu001.outbound.protection.outlook.com (mail-westcentralusazon11010014.outbound.protection.outlook.com [40.93.198.14])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 4cf357yft3-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Sun, 22 Feb 2026 23:29:57 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=Mq8x8yDZywq3jlc44bnE2MRgvzFk1vZ8tB4BzgnGH/CXLnrsXiBw9TOlR/aqg1jb9cZobBcyTCsNBVhYiHTCRPkDGL6U3Jde+e5ws7Dbjedg5HNGZFx5rcs4BoWm1qAPfiYsMl5EKk+9/pgeRzA3/rK+f8WDeO2JI03/dvci9IBDQ6i3oxFpfYNLMeTHkpiGD0bn4t9PISwLj/Gpan6rjynbnvxvbLYUXioyyYFjQFcf607z+nNlfvLlTpcH2+7eaMZYw3jCxOZQGIA+jxGeYFbnqBdEXE7AO4FeeGAWYxScuNyhH1uXTMCwGI90SauXk7EwsSegBD2P7vgqQZwopg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=m8jMXGEOnmiVmFkmf//XlZ8hOthqTcphD7kRTzxdKAY=;
- b=KwIPdIsuZKCnSr04xms3and8e3SSBiOo33VxykpjwNna70e3eDb3ScAyFkGzC+aw36KkdnXCoySKqAeRS86320Ij0vP4msi0UVxPdLWRYhSJwKPmhsbisOAk6XGtJlQ0r5Be8+bQo+396FAu6G9GgloNImSrznGh2O/Jh/BmYvjsr5SyxTM27nZX+tSFI27akq2ZtRjgRS4PdIRfYAd5H0f910g2iZSMZ7bvD9d8tZkdHHgict8ohM7wmkKwZwvuEd6YVn+iLfvFjmhyams1Ziquu86IDXNr3pm5v0rLvIUUuAwCw95LhBBHc6ofAZ1uteR9iRprjtMQTHudlpM3Jg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="kn+WqJAI"
+Received: by mail-pg1-f170.google.com with SMTP id 41be03b00d2f7-c61343f82d7so1290164a12.1
+        for <linux-scsi@vger.kernel.org>; Sun, 22 Feb 2026 19:48:14 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=m8jMXGEOnmiVmFkmf//XlZ8hOthqTcphD7kRTzxdKAY=;
- b=oetlAVSrlIJpcy6HgsLohHfXKntPVE6S9qKEZmXhtAfPCIrRIbRRl0b2lJybxFXKbRr9P+pRcDxGzhheEEpLGtVmc3AN7Wn+w1OSt5xZvKfvCG1DyMSN8BF2HFP2mSsXLmm4mTQZ2j0LYNhhHpoV3OsQ/hUM4vdN/K0Dfxe6+RU=
-Received: from DM3PPF905D77450.namprd10.prod.outlook.com
- (2603:10b6:f:fc00::c37) by CO6PR10MB5587.namprd10.prod.outlook.com
- (2603:10b6:303:146::18) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9632.21; Sun, 22 Feb
- 2026 23:29:54 +0000
-Received: from DM3PPF905D77450.namprd10.prod.outlook.com
- ([fe80::4ee0:38a:f5b6:336c]) by DM3PPF905D77450.namprd10.prod.outlook.com
- ([fe80::4ee0:38a:f5b6:336c%3]) with mapi id 15.20.9632.015; Sun, 22 Feb 2026
- 23:29:54 +0000
-From: Mike Christie <michael.christie@oracle.com>
-To: martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org
-Cc: Mike Christie <michael.christie@oracle.com>
-Subject: [PATCH 4/4] vhost-scsi: Report direction completion support
-Date: Sun, 22 Feb 2026 17:27:04 -0600
-Message-ID: <20260222232946.7637-5-michael.christie@oracle.com>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20260222232946.7637-1-michael.christie@oracle.com>
-References: <20260222232946.7637-1-michael.christie@oracle.com>
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: DS7PR03CA0128.namprd03.prod.outlook.com
- (2603:10b6:5:3b4::13) To DM3PPF905D77450.namprd10.prod.outlook.com
- (2603:10b6:f:fc00::c37)
+        d=gmail.com; s=20230601; t=1771818494; x=1772423294; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=W4rzQ0T621GZSjBat75RSIcrNnampDyhuho7rtv7pj0=;
+        b=kn+WqJAIJ/4YHgC84EqeJVuE0n4c+IV1m44Cj81aoaJ0joDEls+GVbdMq6YNMXCLWY
+         ALy6uiwRdoGfNuImrkaPD1T9XhkN5x/5XyJGQHrwiigHgKHkveltqmgeOMPDbChCdN3O
+         f9kqH9az3Z/5mBBfDeOq0ARYAqcVBGfY05GRGe8qWxXkI0Wwu9pKh8i6is9+Yp9c64Eg
+         w7pEnjyiUBmsyVdGR7sRb41Ohqb/ypkDF5rleXmrcFluW4yYHewuYGsEn/7dC3XLpcSF
+         ZgzlHW1JRLHIUekk2DT0AMN/A3nBYosdPEwvh+xFcEjII2ziyKIZLFIo1VFyMAFUc4mT
+         sNjA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1771818494; x=1772423294;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=W4rzQ0T621GZSjBat75RSIcrNnampDyhuho7rtv7pj0=;
+        b=JKjXTzWBHko+Ae8bFVyFZaZ0RWUXLebUmJZrXGzaLtF8GeG11NhEnWoR5A2nbrKiP5
+         H/5v9ou4Y5ueMMck2dH/uIX9feqBp9h+19mnxxpGd6AdT8KwNMFqcO9YJQ06OcEUH0t1
+         VoHjlbWjpv6g+mzxJpCQa2vl91lAB3a1MTvfmfLMZjcaSlCZpRDsRd5h3fk1klRj4Yao
+         MYZyxFs2vI2I0QxJYFxAZC2pNmLD9FcIxFv6I5ULt9rEM7Bh+kC5XR4+l0w3yYs3unrV
+         y3uMKwUJUY2vlsnyf4CFzYdfx0oUOlI5QOIN5ZrGpSKGbycLfqLvBCSvcvnj7I5mPt3O
+         PsFA==
+X-Gm-Message-State: AOJu0YxXvmVmPthelMdKYJtVBmRbWUafYkvoeYpVrV9tK6xSsFkuBNlO
+	mNnrQd3FxnCHrcGm35dpRv7meLlhUE3t1alq9YZuLbt7aRMHl0yku5jE
+X-Gm-Gg: ATEYQzy1q/hCsl3FRr7NmPNUhrc5n93J62EaQJxOk4fpMxD6KpN4yXOTdu6lIgxzSpq
+	uDXMa5yImOjEsdbjp13sKb0/T4c/3k4go1HGJhSBWnpxw15imM5ywZV5z6xQ9y97efTc0F11Ry/
+	VZ9NJizewShDWNT85I7UbOZmcyaeE/F7zxO0de6DKgthVpvSRR1bvQvS/tloxNgMB+E5Zwe8h3t
+	I6pD5gGf+IJey66FUj7kSRZu/qUtnR7Y108bcuN+hP/53YafjIayUZHDqIlhnvwSUUgooeZJdhk
+	KY4Cy+fb4V1dNi3/6IsGBg8w2YSb9I2Lnzx70LPrJmDLysULCCdQm1vVdBojx56kMiR79g1WwWy
+	jyuDg8RoVueo41D6dUGdeFF+qlTU8quxFVcNXPR9NktFOC0wyM28ZTFzCy+6AfkW1mXmgrLi57e
+	qNppsun69aWaEeTfAHCuaBL/E=
+X-Received: by 2002:a17:902:ecc6:b0:2aa:d7fe:8603 with SMTP id d9443c01a7336-2ad74419e3emr70224515ad.8.1771818493881;
+        Sun, 22 Feb 2026 19:48:13 -0800 (PST)
+Received: from inspiron ([111.125.235.136])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2ad75027641sm67314185ad.64.2026.02.22.19.48.08
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 22 Feb 2026 19:48:13 -0800 (PST)
+Date: Mon, 23 Feb 2026 09:18:05 +0530
+From: Prithvi <activprithvi@gmail.com>
+To: martin.petersen@oracle.com, d.bogdanov@yadro.com, bvanassche@acm.org,
+	viro@zeniv.linux.org.uk
+Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-kernel-mentees@lists.linux.dev,
+	skhan@linuxfoundation.org, david.hunter.linux@gmail.com,
+	khalid@kernel.org,
+	syzbot+f6e8174215573a84b797@syzkaller.appspotmail.com,
+	stable@vger.kernel.org
+Subject: Re: [PATCH v4] scsi: target: fix recursive locking in
+ __configfs_open_file()
+Message-ID: <20260223034805.yhzmheiwndxtj5zu@inspiron>
+References: <20260216062002.61937-1-activprithvi@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DM3PPF905D77450:EE_|CO6PR10MB5587:EE_
-X-MS-Office365-Filtering-Correlation-Id: 99548dee-9a31-4fad-3e06-08de726a48b4
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;ARA:13230040|366016|376014|1800799024;
-X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?Igzx9XjLeIjt98H+WjBdqnuFdEcQsVS8hztroqEHq26WGRq7P8pHCfAMm+Ou?=
- =?us-ascii?Q?VuKbOenKAemLx3g3IYqz7abSGkYdgxM68t4WQts8bouXZ1Pri2GT/C2hHZUr?=
- =?us-ascii?Q?HytBuZOnpwDLe8zrAfW+iCZgF6DkaNCWhhgnvhEUaHR/KDHYSX2IRtbSToAe?=
- =?us-ascii?Q?KTEUqQZLdW7UbforgR30JOZjBxVgJmkUsjSKrYXV55uog+fl1hMt1Zb4TLgJ?=
- =?us-ascii?Q?NJ/Sfi81eT/AR2fvV59FjMBc5EwXxnsyf33MTqmoQjdSvgGvrFhCMkmosljp?=
- =?us-ascii?Q?duwGP/5fsZvXkXTKFKYeSCPdDjPt4mgLdp6KRu9OtdLwuTqHW7ELrmpQMdUg?=
- =?us-ascii?Q?yMglM6+tNnlNrzU4dl7jirrVHZiDC1JV4HAgq2T93I4T1Yqbq0O0KoVP19zO?=
- =?us-ascii?Q?4p6ZAGWgZNXSBfAfit/lSjgRygBL0oeV/ulQmCvjprqWvV4xP9DGSRpy5ogQ?=
- =?us-ascii?Q?RIOIzXF6hUVlJI19yYPIrvwBJOnFgI3rboCFf0+6AOqsM8C+p4/4YYrjqG5Z?=
- =?us-ascii?Q?eZTi0QOZx7Ri0rDCf6rHG/dfri3SQrtwsCZ4cbU0Lz0EmrrL2zPkCgTTHje9?=
- =?us-ascii?Q?RWekWfK5LpGMZbNGDo6amqUSQeM3CsW0yZTbIM86V1IR9XYfCywuryhlX0Hz?=
- =?us-ascii?Q?LzmJazt10rG/3wZ+5ILbHNlqYbP1sXmzBd+44lpXPCMjhFAmhD4zJi+Av+yd?=
- =?us-ascii?Q?u5RGRfsvb7J0InzflyEkEDyaYeN2lXRU2ka1ZWNdfZ5FekhiDI4GUfqpo3RK?=
- =?us-ascii?Q?T2vIXdtsyPey3OhOrEM+TSZwupqLsR7u3LuGweJiz6NFXAzH8204GzWEAkX6?=
- =?us-ascii?Q?FfGgFYtbqQ9MwOEK68f8NQMRRJS5FnoMg9dIFIOr3rTy9qzDd1Y6dd69V4ga?=
- =?us-ascii?Q?f1i9HPE2VydcY96dFuvml6N5zMnzvx3aOLDNpX89EcZ2nMGvPPedx6Re9JET?=
- =?us-ascii?Q?WG9OtvJlaoc2kTNVouBspUurnNZLBToba6b9fTU0ZpLxk5WG6C1a2GIJLOeY?=
- =?us-ascii?Q?+t0M3mGYOlVTOhHqfKbmDW2H8ZKfE9wIZC6H5qRYcPxtxGsDiDyXgUdnDVVq?=
- =?us-ascii?Q?SvTxM7WuBB3S7geHgeZkY4p+rqKt0dIjQRKDXY2lRPTS7ntG9b5jM0LnUQX/?=
- =?us-ascii?Q?z+bE8mJ5t1bUh1XzlV9G/LUlxPXDSQ8PxvOGfE+8uggE1FfuDFKybwm0y68C?=
- =?us-ascii?Q?wZaIARVzbaRnnEMmMmh7VaUjDhmZoJgNZamwIzCbrIBP3mVrtVZJGYt5x5yg?=
- =?us-ascii?Q?QkvoRLJYsD+qmIyxyI/ao6szTHQ+IFsvgAfIf7/bPuFFrLTqvQ5PpYHRmF4h?=
- =?us-ascii?Q?LAWXkX8zA0RBQnCDqmuM8e9RJ1D24ddzrhIlROZsAWSV0eU8ZTIQc0K3ePRB?=
- =?us-ascii?Q?O6Pg59H4CB8Uii4bqsT8SeSX+bUDyayt/GdNmtUkjkDEEGSGzr116aKkRuuh?=
- =?us-ascii?Q?DTqMaKnAd/nPi8JTb2lHjwYOm1j/9kEX35UhvN+IPj1PlB1sAQc+/bEOX1uw?=
- =?us-ascii?Q?IQbwL6EgjPHkinI/4sqnbmmyKqe+P6QFOL+KfsMZ4jysX8xQd+1arI262IYd?=
- =?us-ascii?Q?PugFW09KSjo3w3foeUA=3D?=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM3PPF905D77450.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(376014)(1800799024);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?wItiz6MYZ5kXl5yFjLYQddDGWg4sBQ/mjGBeYIHouqqav8PaXouQvoxv5m/W?=
- =?us-ascii?Q?hdjRcyQwbxVsEIRbPdUBVpYGTXeRZsyv4EsqZEXwWyp3buN/+LyrQdVRnYDy?=
- =?us-ascii?Q?RE9mtVay34xufFagmRkBhn3h7wTb4Z9RJoo83P/lEA1+gv1FDuTrwn6bB0t9?=
- =?us-ascii?Q?11h73xPFbe4ZI9Af4FVM9UphYtu5FP5mxFfhAXsflMAe0jSd4DYQ2oAue2Nz?=
- =?us-ascii?Q?ZCrwjnowQEyNIoxZFLW9YC6BYtZon9+eOgrKCIvFjNUjKYsuAGfYnNnTj4DF?=
- =?us-ascii?Q?sWxAMi1TDQH9irS9stUn+y56oCYo0HJ4fThrlocWSfKi8Z7haEyZCiAvkU+k?=
- =?us-ascii?Q?iRMtqMrTPZNqCGZaTJw10l5Y89Oi6tumTIkQ+OPk4pnORXqsrPDBmOK+f8GM?=
- =?us-ascii?Q?aSMMjpp0f9eWULMjiBbo/Of7p0dSZmKk6kCMYI0LkRTP6kdoJW49q53/6agR?=
- =?us-ascii?Q?GfjSoOeQsKY/FMbLFxLna6fl4YT+aAS/QSZsAoYurDkN2msReOVg1+RyPTj2?=
- =?us-ascii?Q?VNSGBhZS2A4P6WGnURYhonM0DeuQcdKxi+HEH1rLCmrpVMgM4eYMIK1mMj2+?=
- =?us-ascii?Q?mpfOABzheS5SaPtNUqZUKSHfzTaNCJK78P+KTbupCjsNjkFtK0IstSUhqF8n?=
- =?us-ascii?Q?Seu17ww4560rpKt3Kdwm0suZswjASiIMv8fsLlCG6Wio6jwwNmyvwxf5eXy6?=
- =?us-ascii?Q?gbuXB+EpAf8Mx8gFGp+woF8EKDDbuCFr8lUqoOCnB7en8i94uiHFsZK+jPT2?=
- =?us-ascii?Q?Qu/tqIg7bv3DBCn46dfyoLraaETfHpM0hTrROq2IN+dgvUhEiexuxEt1iput?=
- =?us-ascii?Q?K8OnQLsrfggtrXalYpE7AiUEqMKmxZBe3KbUUfLFy0h6xQ0VXK8JD9eRz7Tj?=
- =?us-ascii?Q?K1p5HXi5l++lR5RFC6RHNpuk85SaGxo2h1YWSzdsBrVtay7HfkxR1D9bdlsb?=
- =?us-ascii?Q?ORtdyFk8RoLYV4NnvWAf7e6JDqhqmxkaL4yCr3dlMP7vBJbmnTMpNkXlANU5?=
- =?us-ascii?Q?+T7w93mdY2qvrkH8hUoq56FfBTdY0AbmyCZjnqf56jhEwrOcIPrpb0N144Av?=
- =?us-ascii?Q?226fsaK2btMgK6PhIB5vDyeQjtThc7KrOYFv2Ttd91zNev0bABiwHwQxNGlT?=
- =?us-ascii?Q?y6zu1ta/NOhEFlsH63ywQYspsJHqHyIFGggCAmdT4fav/NTflE/kd7/TaROQ?=
- =?us-ascii?Q?OVkRnrqqchpK3LVpnJilenXt7A1I0LJPWacMMa17irCFBvFIXWnBY5itDngL?=
- =?us-ascii?Q?xzEb57MbOxrx88pnAYvdKrc3g+CzH8WXbcsG8acP/ZhMYDmCA8cu8fNES0xK?=
- =?us-ascii?Q?xJoamLjbtpIDzgIcdudjrD/FRiDZy7XIeueFOEYsXVS/6Ix9sdNazUh1kmMr?=
- =?us-ascii?Q?uaUWpmUjEAf5fqnOyGqBW+2fBP0VhZo5L1YZ1VOYzKVmaYZyrmX79Z+i6euV?=
- =?us-ascii?Q?MS08FH0oA9yWwHLE52s0lPJXaY+Jxc897uhvZYHevDx534jWpAP0vRTMdxnm?=
- =?us-ascii?Q?YdJdOm/Bqx9on4YGs+moELTJ8esfo1vMPFqpc/ytiPBvD61BL8UZ2TZhYLvR?=
- =?us-ascii?Q?scTtHPiusdlKD6xa8g3FQry8p458jbBJEcPeJjU91UyjoTUgXJyqH11rvI2Q?=
- =?us-ascii?Q?c68/H1dOeFX8aYp/HNKnbNaxIU15naedYHd1wTPjfWBsJb8AR8xuEpmnq9W+?=
- =?us-ascii?Q?O6P006fgfMzVBTvysn7j6JTRLru8U1zYV0hNazYb+obyKyHwKoOxsk3zRPD8?=
- =?us-ascii?Q?xI+YTXhhezlLYSQhF0aGzscxOemLGoo=3D?=
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
-	JrksqN7XfRCIsFeIpH717BlML7sMGkw6wB1h9cfkjBUAwer93wfb8wSZzJl8gyLd6KoUMbAih8Ej3fzvm8krBEDP9mEEFaeHtZ1+RnR0cfYup+WB0h0aAvaMtsd55uzQtLZnhLE6a2zGo8CWnfctDzMMfvCHKbmSfPK9705/YvCes/W/etQrdYqWshLDBvACdnIZ+HhrBqkj9UqFjdUzkUQqpwVu2R+zN9ZtYzaBZ1ui1+AKBjujR24S6E/wTLS0z8awz8UpiYSB99vBe3bzvPsbbAajDvrCV/H5vR86bldAJh7+qcGdVIN0NxvuEps1MRxPqPv1eKE7Yf/WxWR7osVaEsY46ZOAtpyLbwE3MjnNkqcFJUd9/MPe5Ne+zhDedZ5ssRx1fXsuZw+Zkmo+HIQX3HCuCnFNiS3Fxaov7SuUrBKc+eGE9uMtGYpD30cQjkUkOEA4FXD4qXXpMK/El+lR7R1iFl1smRAtWANGYyMFAkzOAmjXbp+lFgpwizFW+RXTc9ovxQWATdtfCsCtf6M99J21OC/McWyr7HHGPKJ/8O7MpVo+iMlviHH/7vZ0nrYdR5UN2ZLRigSLPAJ1XhA4PZSKiJxuJp7oiY5HgRk=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 99548dee-9a31-4fad-3e06-08de726a48b4
-X-MS-Exchange-CrossTenant-AuthSource: DM3PPF905D77450.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 22 Feb 2026 23:29:54.6789
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: fdmm3g3wfwrJpwTzJC/HnbxXMEe9xTmkooKWwNzOMerNTH27OaljS0tfsAjSvaDhpFrcEUH9kGEYrx5mppASwkMr5H77/3waYEifBkcXSsY=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CO6PR10MB5587
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-02-22_05,2026-02-20_04,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 phishscore=0 malwarescore=0
- spamscore=0 bulkscore=0 mlxlogscore=999 suspectscore=0 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2602130000
- definitions=main-2602220224
-X-Authority-Analysis: v=2.4 cv=IskTsb/g c=1 sm=1 tr=0 ts=699b9175 cx=c_pps
- a=OOZaFjgC48PWsiFpTAqLcw==:117 a=OOZaFjgC48PWsiFpTAqLcw==:17
- a=6eWqkTHjU83fiwn7nKZWdM+Sl24=:19 a=z/mQ4Ysz8XfWz/Q5cLBRGdckG28=:19
- a=lCpzRmAYbLLaTzLvsPZ7Mbvzbb8=:19 a=xqWC_Br6kY4A:10 a=HzLeVaNsDn8A:10
- a=GoEa3M9JfhUA:10 a=VkNPw1HP01LnGYTKEx00:22 a=Mpw57Om8IfrbqaoTuvik:22
- a=GgsMoib0sEa3-_RKJdDe:22 a=yPCof4ZbAAAA:8 a=jXCLNjUwQNANgAvSNEIA:9
-X-Proofpoint-ORIG-GUID: WEQJmrDkzFPLoH8G1kEBhx9bM297uGC6
-X-Proofpoint-GUID: WEQJmrDkzFPLoH8G1kEBhx9bM297uGC6
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMjIyMDIyNCBTYWx0ZWRfX8zuBkKjP94ZN
- 0sXIxt2CyEaHihTr7Y46tgl5S4tvtrHroVq0jpqUblSXgBBy1ECjydaGzFtAWXJ472OE36x1AA9
- 7oJhPBKZPOAGqJ+vjInm1g7DY5tyD6JD4+geDPc+73tUfCxKClY29ZSyTi/GRVsF+sCOgUZR8Sp
- tTmBg3SHixUQYNfJj8gIhQpFFPiU5qjpmS0XR0z9fVKxpSPDxgN1eSIkbmxe5LOqWyCnkGbva+F
- 9A6w5TrFL0u0H66U8eantNy2peOBk0bxKh4p1RGlhoqpKl7EBPw7vsVHOrv3aPNdRjNpLjHN+Dg
- 2qSduAhBSjtkLXh8W1ig5OdUsoj2UjEEpgbFCmnhDi6k67TkLqlexRWm34JhdSuresHB6AO7XC7
- P8abI3XXnuaMkQKjnI/BiCOsOyZWYZl2vJK07Fft7Kelp5yW34AB1cD7ZkKXRa5imrq2sSF5PmU
- 8OgfE5rtmsy0Lcw/7qg==
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260216062002.61937-1-activprithvi@gmail.com>
 
-This has vhost-scsi report that it supports direct completions.
+On Mon, Feb 16, 2026 at 11:50:02AM +0530, Prithvi Tambewagh wrote:
+> In flush_write_buffer, &p->frag_sem is acquired and then the loaded store
+> function is called, which, here, is target_core_item_dbroot_store().
+> This function called filp_open(), following which these functions were
+> called (in reverse order), according to the call trace:
+> 
+> down_read
+> __configfs_open_file
+> do_dentry_open
+> vfs_open
+> do_open
+> path_openat
+> do_filp_open
+> file_open_name
+> filp_open
+> target_core_item_dbroot_store
+> flush_write_buffer
+> configfs_write_iter
+> 
+> target_core_item_dbroot_store() tries to validate the new file path by
+> trying to open the file path provided to it; however, in this case,
+> the bug report shows:
+> 
+> db_root: not a directory: /sys/kernel/config/target/dbroot
+> 
+> indicating that the same configfs file was tried to be opened, on which
+> it is currently working on. Thus, it is trying to acquire frag_sem
+> semaphore of the same file of which it already holds the semaphore obtained
+> in flush_write_buffer(), leading to acquiring the semaphore in a nested
+> manner and a possibility of recursive locking.
+> 
+> Fix this by modifying target_core_item_dbroot_store() to use kern_path()
+> instead of filp_open() to avoid opening the file using filesystem-specific
+> function __configfs_open_file(), and further modifying it to make this
+> fix compatible.
+> 
+> Reported-by: syzbot+f6e8174215573a84b797@syzkaller.appspotmail.com
+> Closes: https://syzkaller.appspot.com/bug?extid=f6e8174215573a84b797
+> Tested-by: syzbot+f6e8174215573a84b797@syzkaller.appspotmail.com
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Prithvi Tambewagh <activprithvi@gmail.com>
+> Reviewed-by: Dmitry Bogdanov <d.bogdanov@yadro.com>
+> ---
+> Changes since v3:
+>  - Add LOOKUP_DIRECTORY flag in call to kern_path() so as to check presence 
+>    of directory checks more efficiently
+> 
+> v3 link: https://lore.kernel.org/all/20260205162624.117957-1-activprithvi@gmail.com/T/#m175d152067817dd6e9dc1821b6fbf626e47a4007
+> 
+> 
+> Note:
+> I checked out and found that when I try to test on commit 3a8660878839faadb4f1a6dd72c3179c1df56787
+> (latest commit on which bug dashboard reports the bug on, in upstream repository) 
+> syzbot uses, in its kernel config:
+> 
+> CONFIG_CC_VERSION_TEXT="gcc (Debian 12.2.0-14+deb12u1) 12.2.0"
+> 
+> Ref: https://syzkaller.appspot.com/x/.config?x=e854293d7f44b5a5
+> Syzbot Reply: https://lore.kernel.org/all/6767d8ea.050a0220.226966.0021.GAE@google.com/T/#m62bc76de5549460ae98e843bb120712548489794
+> 
+> While when #syz test (i.e. on HEAD commit of upstream) is used, it uses, in
+> its kernel config:
+> 
+> CONFIG_CC_VERSION_TEXT="gcc (Debian 14.2.0-19) 14.2.0"
+> 
+> Ref: https://syzkaller.appspot.com/x/.config?x=99ac58566e9eb044
+> Syzbot reply: https://lore.kernel.org/all/6767d8ea.050a0220.226966.0021.GAE@google.com/T/#me8b79610e4c18a8d8a7d8d6bc249d1c7cf2f8819
+> 
+> However in both cases it uses:
+> 
+> gcc (Debian 14.2.0-19) 14.2.0, GNU ld (GNU Binutils for Debian) 2.44
+> 
+> Probably due to mismatch in compiler version which syzbot actually uses and 
+> whats present in kernel config, the build fails for the first case. However, 
+> the patch succeeds in fixing the bug in second case.
+> 
+> Earlier for v1 patch (sine v2 patch involved minor change to commit message 
+> and v3 involved adding a missed out Reviewed-by tag) patch the kernel builds 
+> as well as testing succeeded since syzbot used this in its kernel config:
+> 
+> CONFIG_CC_VERSION_TEXT="gcc (Debian 12.2.0-14+deb12u1) 12.2.0"
+> 
+> as well as used the compiler:
+> 
+> gcc (Debian 12.2.0-14+deb12u1) 12.2.0, GNU ld (GNU Binutils for Debian) 2.40 
+> 
+> Changes since v2:
+>  - Add Reviewed-by tag received from Dmitry Bogdanov, which was accidentally
+>    left to be added in v2 patch.
+> 
+> v2 link: https://lore.kernel.org/linux-scsi/20260122154051.64132-1-activprithvi@gmail.com/T/#u
+> Reference for Reviewed-by Tag: https://lore.kernel.org/all/20260108191523.303114-1-activprithvi@gmail.com/T/#mb22d0fc06e747e2b2df8320a15afd2a0670fd0e7
+> 
+> 
+> Changes since v1:
+>  - Update commit message to reflect the fact that same file, which code was 
+>    currently operating on, was tried to be opened again, leading to 
+>    acquiring the same semaphore in nested manner & possibility of recursive
+>    locking.
+> 
+> v1 link: https://lore.kernel.org/all/20260108191523.303114-1-activprithvi@gmail.com/T/
+> 
+>  drivers/target/target_core_configfs.c | 15 ++++++---------
+>  1 file changed, 6 insertions(+), 9 deletions(-)
+> 
+> diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
+> index b19acd662726..f94c242eff97 100644
+> --- a/drivers/target/target_core_configfs.c
+> +++ b/drivers/target/target_core_configfs.c
+> @@ -108,8 +108,8 @@ static ssize_t target_core_item_dbroot_store(struct config_item *item,
+>  					const char *page, size_t count)
+>  {
+>  	ssize_t read_bytes;
+> -	struct file *fp;
+>  	ssize_t r = -EINVAL;
+> +	struct path path = {};
+>  
+>  	mutex_lock(&target_devices_lock);
+>  	if (target_devices) {
+> @@ -131,17 +131,14 @@ static ssize_t target_core_item_dbroot_store(struct config_item *item,
+>  		db_root_stage[read_bytes - 1] = '\0';
+>  
+>  	/* validate new db root before accepting it */
+> -	fp = filp_open(db_root_stage, O_RDONLY, 0);
+> -	if (IS_ERR(fp)) {
+> +	r = kern_path(db_root_stage, LOOKUP_FOLLOW | LOOKUP_DIRECTORY, &path);
+> +	if (r) {
+>  		pr_err("db_root: cannot open: %s\n", db_root_stage);
+> +		if (r == -ENOTDIR)
+> +			pr_err("db_root: not a directory: %s\n", db_root_stage);
+>  		goto unlock;
+>  	}
+> -	if (!S_ISDIR(file_inode(fp)->i_mode)) {
+> -		filp_close(fp, NULL);
+> -		pr_err("db_root: not a directory: %s\n", db_root_stage);
+> -		goto unlock;
+> -	}
+> -	filp_close(fp, NULL);
+> +	path_put(&path);
+>  
+>  	strscpy(db_root, db_root_stage);
+>  	pr_debug("Target_Core_ConfigFS: db_root set to %s\n", db_root);
+> 
+> base-commit: 3a8660878839faadb4f1a6dd72c3179c1df56787
+> -- 
+> 2.34.1
+> 
 
-When using a worker task per queue or group of queues with fast
-backends then enabling direct completion and submissions increases
-performance 20-30% with workloads like:
+Hello everyone,
 
-fio --filename=/dev/sdb  --direct=1 --rw=randrw --bs=8K \
-    --ioengine=libaio --iodepth=128  --numjobs=$jobs
+Just a gentle ping on this v4 patch; it incorporates Al Viro's suggestion 
+from v3 to use LOOKUP_DIRECTORY flag in kern_path(). Kindly let me know if 
+anything else is needed from my side or any feedback is to be addressed.
 
-As jobs matches and passes the number of vCPUs in the VM then
-the benefit increases.
-
-However, when using a single worker then queueing completions
-and submissions is best as the worker is busy handling mapping data
-and setting/tearing down commands.
-
-Signed-off-by: Mike Christie <michael.christie@oracle.com>
----
- drivers/vhost/scsi.c | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/drivers/vhost/scsi.c b/drivers/vhost/scsi.c
-index 1f00145116f4..653c08bb2520 100644
---- a/drivers/vhost/scsi.c
-+++ b/drivers/vhost/scsi.c
-@@ -2959,6 +2959,7 @@ static const struct target_core_fabric_ops vhost_scsi_ops = {
- 	.tfc_tpg_attrib_attrs		= vhost_scsi_tpg_attrib_attrs,
- 
- 	.default_compl_type		= TARGET_QUEUE_COMPL,
-+	.direct_compl_supp		= 1,
- 	.default_submit_type		= TARGET_QUEUE_SUBMIT,
- 	.direct_submit_supp		= 1,
- };
--- 
-2.43.0
-
+Thanks,
+Prithvi
