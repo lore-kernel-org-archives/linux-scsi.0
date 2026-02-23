@@ -1,32 +1,32 @@
-Received: from out-179.mta0.migadu.com (out-179.mta0.migadu.com [91.218.175.179])
+Received: from out-180.mta0.migadu.com (out-180.mta0.migadu.com [91.218.175.180])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7BC8B379999
-	for <linux-scsi@vger.kernel.org>; Mon, 23 Feb 2026 22:03:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.179
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C1E9E37C0F7
+	for <linux-scsi@vger.kernel.org>; Mon, 23 Feb 2026 22:03:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.180
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771884190; cv=none; b=hL0niwZkcualD8sPuuEhJWjGcqvHiJLEG9MJNClaZ+Z4DNkBPrquQqen3rGGJliimAyS31y5yYsglxIGzjdTelc2h1z6xUJVITrqW9Wk5KoD3tV/oqFb+YiDpIjJ3cYIhaA034fQu9zcY1bkcJzwpMjv2sPmjiNzKZzVLGERvCc=
+	t=1771884196; cv=none; b=GAmqfX0dGsohDUpdwW80M1FyWv60RiGCWE1m+W+q5ZOUbQHvdFHkAtCZW+GPcxjxEND3YSwoW5uljpcQcJE+FLtUkOUMQoNVTcFgiOq1i7/MV9cj5m2ZCRQFR3GwfmOV+qgDlbXkCRxhFV+jBYQcQgKM/q7owuYdjIu3yfZuVVg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771884190; c=relaxed/simple;
-	bh=RpAhE9r22npbM9BsWlbQn7ZMmDDAGl3nfOjnsxFKEco=;
+	s=arc-20240116; t=1771884196; c=relaxed/simple;
+	bh=FV/Zc0Nryt5cF3ZDo6ayXMMzxhax4Z+/sPPgWEAc9RQ=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Su97NGupaoj7z+R+0K2tnOnR5HOidUVfKAijDtkvii4gkv5vsxsg0SI1mEIk7jmyqlhdwqfLf2v6SJrmIcElywGt55on0Wiq5kagl84czzv1vU5HIMY7vcjkKdwp/1HFO9bR8GHt7OoaGO8fvOiVJSyUFC4nnk0to5qkHgjOqaE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=uW7J6Rh9; arc=none smtp.client-ip=91.218.175.179
+	 MIME-Version; b=KBOACHiENGDJ7gCvy422IyuHbapFI4LE0Pv1fR3IBN9lzOm/PHvxIg83gQeze/Bbp5ve3HJklAeVhUhJ22gSXBireqb1CYhHfhkaeBd7pFqiXjRBg3AcjHmJHXc+XhJd0FwUGiu5omIdDKpR6NXSAIhRsMjPCD1ziD/u2Hk1dz4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=giFYeIPD; arc=none smtp.client-ip=91.218.175.180
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="uW7J6Rh9"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="giFYeIPD"
 X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1771884187;
+	t=1771884192;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=6WYV+RYD8F55D+aSz2Pa8PWyUJmjrbupsrCQtG2IOqk=;
-	b=uW7J6Rh9rkxCxWP5dtPhIiNajkzMPUl2QTsJXxZgDUDzWF9ezhCOqy3wY0BZu4woMJAVQf
-	R0H6gkipx1EiBDaDTHYnQ1Le0zP9InflsuYmaNyoPI7y+NzvhkAe+ppMBuvGxiWyAD8IPj
-	CL3h0gUPzMFzLujoZtzPbVRHZSyF+4k=
+	bh=Ro9rHEijIDt7itwr8DpFzXTmzaFSsQxHZ6tyzYu4xOY=;
+	b=giFYeIPDC1hq3hCORMhLu86pqCbiRS3+50g5dsxsRlXjoq4aAp6eTVFzREzkBvvareBN30
+	F1jYQE9LvzOKVvXie4De1qkHmhZWIKUyhsNx/RG2i9HWmqWyx/V184Q2n0+kAr9kqRO5Ai
+	sdhIDSd0WPVyx9izDRDGTFXJJ0lzbtc=
 From: Bart Van Assche <bart.vanassche@linux.dev>
 To: Peter Zijlstra <peterz@infradead.org>
 Cc: Ingo Molnar <mingo@redhat.com>,
@@ -42,15 +42,17 @@ Cc: Ingo Molnar <mingo@redhat.com>,
 	Kees Cook <kees@kernel.org>,
 	Jann Horn <jannh@google.com>,
 	Bart Van Assche <bvanassche@acm.org>,
-	Satish Kharat <satishkh@cisco.com>,
-	Sesidhar Baddela <sebaddel@cisco.com>,
-	Karan Tilak Kumar <kartilak@cisco.com>,
+	Kashyap Desai <kashyap.desai@broadcom.com>,
+	Sumit Saxena <sumit.saxena@broadcom.com>,
+	Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
+	Chandrakanth patil <chandrakanth.patil@broadcom.com>,
 	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
 	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	megaraidlinux.pdl@broadcom.com,
 	linux-scsi@vger.kernel.org
-Subject: [PATCH 29/62] fnic: Make fnic_queuecommand() easier to analyze
-Date: Mon, 23 Feb 2026 14:00:29 -0800
-Message-ID: <20260223220102.2158611-30-bart.vanassche@linux.dev>
+Subject: [PATCH 30/62] megaraid: Protect more code with instance->reset_mutex
+Date: Mon, 23 Feb 2026 14:00:30 -0800
+Message-ID: <20260223220102.2158611-31-bart.vanassche@linux.dev>
 In-Reply-To: <20260223220102.2158611-1-bart.vanassche@linux.dev>
 References: <20260223220102.2158611-1-bart.vanassche@linux.dev>
 Precedence: bulk
@@ -64,59 +66,53 @@ X-Migadu-Flow: FLOW_OUT
 
 From: Bart Van Assche <bvanassche@acm.org>
 
-Move a spin_unlock_irqrestore() call such that the io_lock_acquired
-variable can be eliminated. This patch prepares for enabling the Clang
-thread-safety analyzer.
+megasas_get_device_list() and megasas_get_snapdump_properties() may
+unlock instance->reset_mutex indirectly. Hence, hold reset_mutex while
+calling these functions.
 
-Cc: Satish Kharat <satishkh@cisco.com>
-Cc: Sesidhar Baddela <sebaddel@cisco.com>
-Cc: Karan Tilak Kumar <kartilak@cisco.com>
+Cc: Kashyap Desai <kashyap.desai@broadcom.com>
+Cc: Sumit Saxena <sumit.saxena@broadcom.com>
+Cc: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
+Cc: Chandrakanth patil <chandrakanth.patil@broadcom.com>
 Cc: James E.J. Bottomley <James.Bottomley@HansenPartnership.com>
 Cc: Martin K. Petersen <martin.petersen@oracle.com>
+Cc: megaraidlinux.pdl@broadcom.com
 Cc: linux-scsi@vger.kernel.org
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/fnic/fnic_scsi.c | 9 +++------
- 1 file changed, 3 insertions(+), 6 deletions(-)
+ drivers/scsi/megaraid/megaraid_sas_base.c | 15 +++++++++------
+ 1 file changed, 9 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/fnic/fnic_scsi.c b/drivers/scsi/fnic/fnic_scsi.c
-index 29d7aca06958..f47c92dfbfd0 100644
---- a/drivers/scsi/fnic/fnic_scsi.c
-+++ b/drivers/scsi/fnic/fnic_scsi.c
-@@ -471,7 +471,6 @@ enum scsi_qc_status fnic_queuecommand(struct Scsi_Host *shost,
- 	int sg_count = 0;
- 	unsigned long flags = 0;
- 	unsigned long ptr;
--	int io_lock_acquired = 0;
- 	uint16_t hwq = 0;
- 	struct fnic_tport_s *tport = NULL;
- 	struct rport_dd_data_s *rdd_data;
-@@ -636,7 +635,6 @@ enum scsi_qc_status fnic_queuecommand(struct Scsi_Host *shost,
- 	spin_lock_irqsave(&fnic->wq_copy_lock[hwq], flags);
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+index ac71ea4898b2..ecd365d78ae3 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -6365,11 +6365,13 @@ static int megasas_init_fw(struct megasas_instance *instance)
  
- 	/* initialize rest of io_req */
--	io_lock_acquired = 1;
- 	io_req->port_id = rport->port_id;
- 	io_req->start_time = jiffies;
- 	fnic_priv(sc)->state = FNIC_IOREQ_CMD_PENDING;
-@@ -689,6 +687,9 @@ enum scsi_qc_status fnic_queuecommand(struct Scsi_Host *shost,
- 		/* REVISIT: Use per IO lock in the final code */
- 		fnic_priv(sc)->flags |= FNIC_IO_ISSUED;
+ 	megasas_setup_jbod_map(instance);
+ 
+-	if (megasas_get_device_list(instance) != SUCCESS) {
+-		dev_err(&instance->pdev->dev,
+-			"%s: megasas_get_device_list failed\n",
+-			__func__);
+-		goto fail_get_ld_pd_list;
++	scoped_guard(mutex, &instance->reset_mutex) {
++		if (megasas_get_device_list(instance) != SUCCESS) {
++			dev_err(&instance->pdev->dev,
++				"%s: megasas_get_device_list failed\n",
++				__func__);
++			goto fail_get_ld_pd_list;
++		}
  	}
-+
-+	spin_unlock_irqrestore(&fnic->wq_copy_lock[hwq], flags);
-+
- out:
- 	cmd_trace = ((u64)sc->cmnd[0] << 56 | (u64)sc->cmnd[7] << 40 |
- 			(u64)sc->cmnd[8] << 32 | (u64)sc->cmnd[2] << 24 |
-@@ -699,10 +700,6 @@ enum scsi_qc_status fnic_queuecommand(struct Scsi_Host *shost,
- 		   mqtag, sc, io_req, sg_count, cmd_trace,
- 		   fnic_flags_and_state(sc));
  
--	/* if only we issued IO, will we have the io lock */
--	if (io_lock_acquired)
--		spin_unlock_irqrestore(&fnic->wq_copy_lock[hwq], flags);
--
- 	atomic_dec(&fnic->in_flight);
- 	atomic_dec(&tport->in_flight);
+ 	/* stream detection initialization */
+@@ -6468,7 +6470,8 @@ static int megasas_init_fw(struct megasas_instance *instance)
+ 	}
  
+ 	if (instance->snapdump_wait_time) {
+-		megasas_get_snapdump_properties(instance);
++		scoped_guard(mutex, &instance->reset_mutex)
++			megasas_get_snapdump_properties(instance);
+ 		dev_info(&instance->pdev->dev, "Snap dump wait time\t: %d\n",
+ 			 instance->snapdump_wait_time);
+ 	}
