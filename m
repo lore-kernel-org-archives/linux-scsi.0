@@ -1,117 +1,121 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B2D8D34AB19;
-	Mon, 23 Feb 2026 08:02:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9912B34FF41
+	for <linux-scsi@vger.kernel.org>; Mon, 23 Feb 2026 10:39:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=60.244.123.138
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771833776; cv=none; b=LcG40s09mymgY4JGbQ8+1v/+9jPu/acxyfRLYZpnjNya/0o9UG45yRZjmoqN5/iEQGJ0nN2n5v3r4DEyX7Focd8gNA8HveQcWR51OVzEM4pORz5tCcIn3EB2TR+8BDRA37eqFAHhNzJta9HE6Qu1FpKy8KFZxmJy7QLaFrO1ozY=
+	t=1771843160; cv=none; b=TRNhriZ7c+nZwICgzZKE2hKtztDnTGKqX3f/QEDqgeSpFl1KFlU6vYCJmfjqucM464JKEODPE41MYjPeY1cmA01KuKyyY47ANE60tJy2Glq1H5vhDdgJQKQtIIUhWbxrM2RPINzaCX8MPBiArsBg6ofaKoQo2Kr3WjyOtfqfbS0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771833776; c=relaxed/simple;
-	bh=YyqeYUKRpKHURHARSOuya62ZCBi74yt3fhOSz5OKUrE=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=G5PejJD3W/81WviCA/ntggNx9iL2tOFnhwYQ7Ev0QlDWypjEHkTLhtq5wRHXQ477U1k8JQXzEdgjiPu/rP00n2NkXCmQ2MjVlsmywisL+L1rAmEHvQhNGzVrXKtHIvjqmMOngBPpQZQsjnDlbKWbAaeKo8LPdMFAcGBKx6SPsCM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OhrghLVz; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1771843160; c=relaxed/simple;
+	bh=IHhu0bsADy/wJVYMzwVUAkFnrjgoGtECpCyHWA4D4PI=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=mqbMt/5bzVdCObnEEY4OJjZw85Z5fP74h/bWSyzamwC3Q1iBdUAdU8pOIo+M6d70M/DmIKmv8T+TZyVQzozEnYiq9cm14CAX9Zpee68L3Pnf1WPWGWFEfzdykhHNVkktmHAFKrSMmV1fMUETIqaPEq2MESbNIBD3Y+j9Wxk0h7A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=EyxOPe70; arc=none smtp.client-ip=60.244.123.138
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OhrghLVz"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 7D009C2BCB5;
-	Mon, 23 Feb 2026 08:02:56 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1771833776;
-	bh=YyqeYUKRpKHURHARSOuya62ZCBi74yt3fhOSz5OKUrE=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=OhrghLVz+iOPrq0dusyzxZydzbqrF0iL2zCwG4FT/r/BskzIGjcXnBNs8ax95n2B6
-	 xdsA3ednYes2b+pYoZS8os+LRwWrHF54GNHKFv4Fpb7lR8h2Zkf17d88KYB0W9+ETy
-	 EBaRjfm3W4tvO5+Mc9E2Yi9K3nroBw3G3wljIVK8Pwo2MwAtEenOt9gt6P0khV9kLZ
-	 ++FdAj1uuT4xoRsoees0pJ7QhDStvA1xNwYH3pJ2DOnfCc194Ca68+bFqeB/Zy8XHF
-	 CsW6hdvxFC3Fw8JxAM3h9K/nr7Q44jj2rNCd0sVrgg2D8Xl2PBwtwm1XNxoTFkl62M
-	 vnD5e4pjmfz0A==
-Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7085EE98E01;
-	Mon, 23 Feb 2026 08:02:56 +0000 (UTC)
-From: Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org>
-Date: Mon, 23 Feb 2026 13:32:55 +0530
-Subject: [PATCH v3 4/4] scsi: ufs: ufs-qcom: Remove NULL check from
- devm_of_qcom_ice_get()
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="EyxOPe70"
+X-UUID: e2f4fbc610a311f1bcd7499a721e883d-20260223
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+	h=Content-Type:Content-Transfer-Encoding:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=pQGO0rOrP6CshyI23vD7FI6nty5bzJA+eY3Su3dHLJQ=;
+	b=EyxOPe700SZVQeoTFn0XtbWd5i3FaQ+fX2WvChQi8+6fc9RhINXTO3o+7wismmR2bZMufBcEIBHyfFA6IjpimyP7+60pomcKuVedtUOqHrn2cPM94gNjexnu2B4uq6SawXL6Gn1mD1PUl58MnjzlD3pvyt4nfgeZbKSla4Se4r8=;
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.3.11,REQID:2a8dcbd6-2551-492c-af45-2eaf39a075a6,IP:0,U
+	RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
+	release,TS:0
+X-CID-META: VersionHash:89c9d04,CLOUDID:8904e9f0-16bd-4243-b4ca-b08ca08ab1d8,B
+	ulkID:nil,BulkQuantity:0,Recheck:0,SF:102|123|836|888|898,TC:-5,Content:0|
+	15|50,EDM:-3,IP:nil,URL:0,File:130,RT:0,Bulk:nil,QS:nil,BEC:-1,COL:0,OSI:0
+	,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-BVR: 2,SSN|SDN
+X-CID-BAS: 2,SSN|SDN,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR
+X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
+X-UUID: e2f4fbc610a311f1bcd7499a721e883d-20260223
+Received: from mtkmbs14n2.mediatek.inc [(172.21.101.76)] by mailgw01.mediatek.com
+	(envelope-from <peter.wang@mediatek.com>)
+	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+	with ESMTP id 766810847; Mon, 23 Feb 2026 18:39:09 +0800
+Received: from mtkmbs11n1.mediatek.inc (172.21.101.185) by
+ MTKMBS09N2.mediatek.inc (172.21.101.94) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.29; Mon, 23 Feb 2026 18:39:08 +0800
+Received: from mtksitap99.mediatek.inc (10.233.130.16) by
+ mtkmbs11n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
+ 15.2.2562.29 via Frontend Transport; Mon, 23 Feb 2026 18:39:08 +0800
+From: <peter.wang@mediatek.com>
+To: <linux-scsi@vger.kernel.org>, <martin.petersen@oracle.com>,
+	<avri.altman@sandisk.com>, <alim.akhtar@samsung.com>, <jejb@linux.ibm.com>
+CC: <wsd_upstream@mediatek.com>, <linux-mediatek@lists.infradead.org>,
+	<peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
+	<alice.chao@mediatek.com>, <cc.chou@mediatek.com>,
+	<chaotian.jing@mediatek.com>, <tun-yu.yu@mediatek.com>,
+	<eddie.huang@mediatek.com>, <naomi.chu@mediatek.com>, <ed.tsai@mediatek.com>,
+	<bvanassche@acm.org>, <sh043.lee@samsung.com>
+Subject: [PATCH v1] ufs: core: Move link recovery for hibern8 exit failure to wl_resume
+Date: Mon, 23 Feb 2026 18:37:57 +0800
+Message-ID: <20260223103906.2533654-1-peter.wang@mediatek.com>
+X-Mailer: git-send-email 2.45.2
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20260223-qcom-ice-fix-v3-4-6ca5846329f7@oss.qualcomm.com>
-References: <20260223-qcom-ice-fix-v3-0-6ca5846329f7@oss.qualcomm.com>
-In-Reply-To: <20260223-qcom-ice-fix-v3-0-6ca5846329f7@oss.qualcomm.com>
-To: Bjorn Andersson <andersson@kernel.org>, 
- Konrad Dybcio <konradybcio@kernel.org>, 
- Adrian Hunter <adrian.hunter@intel.com>, 
- Ulf Hansson <ulf.hansson@linaro.org>, 
- Manivannan Sadhasivam <mani@kernel.org>, 
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
- "Martin K. Petersen" <martin.petersen@oracle.com>, 
- Abel Vesa <abelvesa@kernel.org>, Abel Vesa <abelvesa@kernel.org>
-Cc: linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org, 
- linux-mmc@vger.kernel.org, linux-scsi@vger.kernel.org, 
- Sumit Garg <sumit.garg@oss.qualcomm.com>, mani@kernel.org, 
- Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>, 
- Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
-X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1049;
- i=manivannan.sadhasivam@oss.qualcomm.com; h=from:subject:message-id;
- bh=K/orRBPrLSqNof1kmCJZCxhyo4EZ9ZRQZsR0+L1qTcE=;
- b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBpnAmuHMzsxDUfHs8N8ALR6oEJYQWQDnXUzVb+x
- zHhvm8YvUmJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCaZwJrgAKCRBVnxHm/pHO
- 9Qm9B/42Y0R3B2B04OH3iyfnwU3rtYgU6nNwsu6w+5x6t+fNt/IKcWtD6iXPwODYDWjL2KnpDmO
- 7skmS+bhB/7EM89m6PruPxJcfEz11yVUNEB0F9qrt2LPy7t5s1XwHtA93iW+oqec12FipeKc6w7
- K96F8U4xCjhe/m9yRXslRG1I0iMYEa3/lkrjAP3QDZ0qSOscgPsiaEz1MlJiGL5IQJQ+7EputCP
- KMmKUV9IieOB1YMuZGPYi56cyee/P6aBWsMhoVNa6TPO8nQtIUr5pn/0biOI5TPJ8fHBr6lz5io
- GOYdiKQvJoLx6CtfEoIG408HnRx4ig+QxRaTmLuoxo6OQZTH
-X-Developer-Key: i=manivannan.sadhasivam@oss.qualcomm.com; a=openpgp;
- fpr=C668AEC3C3188E4C611465E7488550E901166008
-X-Endpoint-Received: by B4 Relay for
- manivannan.sadhasivam@oss.qualcomm.com/default with auth_id=461
-X-Original-From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-Reply-To: manivannan.sadhasivam@oss.qualcomm.com
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-MTK: N
 
-From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+From: Peter Wang <peter.wang@mediatek.com>
 
-Now since the devm_of_qcom_ice_get() API never returns NULL, remove the
-NULL check and also simplify the error handling.
+Move the link recovery trigger from ufshcd_uic_pwr_ctrl() to
+__ufshcd_wl_resume(). Ensure link recovery is only attempted
+when hibern8 exit fails during resume, not during hibern8 enter
+in suspend. Improve error handling and prevent unnecessary link
+recovery attempts.
 
-Reviewed-by: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
-Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+Fixes: 35dabf4503b9 ("scsi: ufs: core: Use link recovery when h8 exit fails during runtime resume")
+Signed-off-by: Peter Wang <peter.wang@mediatek.com>
 ---
- drivers/ufs/host/ufs-qcom.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+ drivers/ufs/core/ufshcd.c | 18 +++++++++---------
+ 1 file changed, 9 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-index 375fd24ba458..72c24ed65fe1 100644
---- a/drivers/ufs/host/ufs-qcom.c
-+++ b/drivers/ufs/host/ufs-qcom.c
-@@ -177,14 +177,14 @@ static int ufs_qcom_ice_init(struct ufs_qcom_host *host)
- 	int i;
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 44efb03765b9..9908375b2f98 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -4385,14 +4385,6 @@ static int ufshcd_uic_pwr_ctrl(struct ufs_hba *hba, struct uic_command *cmd)
+ 	spin_unlock_irqrestore(hba->host->host_lock, flags);
+ 	mutex_unlock(&hba->uic_cmd_mutex);
  
- 	ice = devm_of_qcom_ice_get(dev);
--	if (ice == ERR_PTR(-EOPNOTSUPP)) {
-+	if (IS_ERR(ice)) {
-+		if (ice != ERR_PTR(-EOPNOTSUPP))
-+			return PTR_ERR(ice);
-+
- 		dev_warn(dev, "Disabling inline encryption support\n");
--		ice = NULL;
-+		return 0;
- 	}
- 
--	if (IS_ERR_OR_NULL(ice))
--		return PTR_ERR_OR_ZERO(ice);
+-	/*
+-	 * If the h8 exit fails during the runtime resume process, it becomes
+-	 * stuck and cannot be recovered through the error handler.  To fix
+-	 * this, use link recovery instead of the error handler.
+-	 */
+-	if (ret && hba->pm_op_in_progress)
+-		ret = ufshcd_link_recovery(hba);
 -
- 	host->ice = ice;
+ 	return ret;
+ }
  
- 	/* Initialize the blk_crypto_profile */
-
+@@ -10175,7 +10167,15 @@ static int __ufshcd_wl_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+ 		} else {
+ 			dev_err(hba->dev, "%s: hibern8 exit failed %d\n",
+ 					__func__, ret);
+-			goto vendor_suspend;
++			/*
++			 * If the h8 exit fails during the runtime resume
++			 * process, it becomes stuck and cannot be recovered
++			 * through the error handler. To fix this, use link
++			 * recovery instead of the error handler.
++			 */
++			ret = ufshcd_link_recovery(hba);
++			if (ret)
++				goto vendor_suspend;
+ 		}
+ 	} else if (ufshcd_is_link_off(hba)) {
+ 		/*
 -- 
-2.51.0
-
+2.45.2
 
