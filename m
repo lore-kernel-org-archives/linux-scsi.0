@@ -1,121 +1,83 @@
-Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f42.google.com (mail-wm1-f42.google.com [209.85.128.42])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9912B34FF41
-	for <linux-scsi@vger.kernel.org>; Mon, 23 Feb 2026 10:39:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=60.244.123.138
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D9C28356A3E
+	for <linux-scsi@vger.kernel.org>; Mon, 23 Feb 2026 10:49:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771843160; cv=none; b=TRNhriZ7c+nZwICgzZKE2hKtztDnTGKqX3f/QEDqgeSpFl1KFlU6vYCJmfjqucM464JKEODPE41MYjPeY1cmA01KuKyyY47ANE60tJy2Glq1H5vhDdgJQKQtIIUhWbxrM2RPINzaCX8MPBiArsBg6ofaKoQo2Kr3WjyOtfqfbS0=
+	t=1771843801; cv=none; b=FQ+6xFo0pkTmIDYuhI6CHJnDZKv2BzyX5ivTFqfoVrBOzpUWyZ1F3j5PlN3Ic/KnxTY7gQzw2kyk1pgJ0l+wk3TE9Ep44S/DV7CIDhODXnG3FMYQwzu3/vCkWuuFNsln5NAdaGtWWX2eEgnEDDeOLUUMq1zAkIFoVcQ6oPyfBNo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771843160; c=relaxed/simple;
-	bh=IHhu0bsADy/wJVYMzwVUAkFnrjgoGtECpCyHWA4D4PI=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=mqbMt/5bzVdCObnEEY4OJjZw85Z5fP74h/bWSyzamwC3Q1iBdUAdU8pOIo+M6d70M/DmIKmv8T+TZyVQzozEnYiq9cm14CAX9Zpee68L3Pnf1WPWGWFEfzdykhHNVkktmHAFKrSMmV1fMUETIqaPEq2MESbNIBD3Y+j9Wxk0h7A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=EyxOPe70; arc=none smtp.client-ip=60.244.123.138
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
+	s=arc-20240116; t=1771843801; c=relaxed/simple;
+	bh=x+816UkHLyRvuKb/oS0wEATvXuUn8rJpVOodqIFEeMc=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=HZRFDT1A6zM4vw808ebn1TgUDdBeAsVHSFcvLHdkVmBX1fZeFnUvju32aNy+YebGE3RwBUnB9tc0uRTFCnQsJZuDn9zmbzhFjxc2DBi8Cj0mGPvmPguoKNr0rrNUt0+TEr56tR//jw5CM7GlBFQ1xIqt4wrLOuZxd2h2+lLnpoE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=HdIT/5Kf; arc=none smtp.client-ip=209.85.128.42
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="EyxOPe70"
-X-UUID: e2f4fbc610a311f1bcd7499a721e883d-20260223
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=Content-Type:Content-Transfer-Encoding:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=pQGO0rOrP6CshyI23vD7FI6nty5bzJA+eY3Su3dHLJQ=;
-	b=EyxOPe700SZVQeoTFn0XtbWd5i3FaQ+fX2WvChQi8+6fc9RhINXTO3o+7wismmR2bZMufBcEIBHyfFA6IjpimyP7+60pomcKuVedtUOqHrn2cPM94gNjexnu2B4uq6SawXL6Gn1mD1PUl58MnjzlD3pvyt4nfgeZbKSla4Se4r8=;
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.11,REQID:2a8dcbd6-2551-492c-af45-2eaf39a075a6,IP:0,U
-	RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
-	release,TS:0
-X-CID-META: VersionHash:89c9d04,CLOUDID:8904e9f0-16bd-4243-b4ca-b08ca08ab1d8,B
-	ulkID:nil,BulkQuantity:0,Recheck:0,SF:102|123|836|888|898,TC:-5,Content:0|
-	15|50,EDM:-3,IP:nil,URL:0,File:130,RT:0,Bulk:nil,QS:nil,BEC:-1,COL:0,OSI:0
-	,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
-X-CID-BVR: 2,SSN|SDN
-X-CID-BAS: 2,SSN|SDN,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR
-X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: e2f4fbc610a311f1bcd7499a721e883d-20260223
-Received: from mtkmbs14n2.mediatek.inc [(172.21.101.76)] by mailgw01.mediatek.com
-	(envelope-from <peter.wang@mediatek.com>)
-	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 766810847; Mon, 23 Feb 2026 18:39:09 +0800
-Received: from mtkmbs11n1.mediatek.inc (172.21.101.185) by
- MTKMBS09N2.mediatek.inc (172.21.101.94) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.29; Mon, 23 Feb 2026 18:39:08 +0800
-Received: from mtksitap99.mediatek.inc (10.233.130.16) by
- mtkmbs11n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.2562.29 via Frontend Transport; Mon, 23 Feb 2026 18:39:08 +0800
-From: <peter.wang@mediatek.com>
-To: <linux-scsi@vger.kernel.org>, <martin.petersen@oracle.com>,
-	<avri.altman@sandisk.com>, <alim.akhtar@samsung.com>, <jejb@linux.ibm.com>
-CC: <wsd_upstream@mediatek.com>, <linux-mediatek@lists.infradead.org>,
-	<peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
-	<alice.chao@mediatek.com>, <cc.chou@mediatek.com>,
-	<chaotian.jing@mediatek.com>, <tun-yu.yu@mediatek.com>,
-	<eddie.huang@mediatek.com>, <naomi.chu@mediatek.com>, <ed.tsai@mediatek.com>,
-	<bvanassche@acm.org>, <sh043.lee@samsung.com>
-Subject: [PATCH v1] ufs: core: Move link recovery for hibern8 exit failure to wl_resume
-Date: Mon, 23 Feb 2026 18:37:57 +0800
-Message-ID: <20260223103906.2533654-1-peter.wang@mediatek.com>
-X-Mailer: git-send-email 2.45.2
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="HdIT/5Kf"
+Received: by mail-wm1-f42.google.com with SMTP id 5b1f17b1804b1-4836f363ad2so46630455e9.1
+        for <linux-scsi@vger.kernel.org>; Mon, 23 Feb 2026 02:49:59 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1771843798; x=1772448598; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:message-id:subject:cc
+         :to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=x+816UkHLyRvuKb/oS0wEATvXuUn8rJpVOodqIFEeMc=;
+        b=HdIT/5KfbG82S0hp1RME9DD4/xjGjskBI9w/522BIoTBxIHYFTMTBV20YFDTDrOMkH
+         XNk1gU+e8tAjrmyayAZg+HWgsaTA1PQFZLTMoBn+SReLbE3AvH6ul3rg2Ny/sHRijF4h
+         WuER1y0K5yWLp5wp+mTrcptNlwt1xoidbsfe+HqL1BFcwB5MI97fy9WiDj0lY3WaX7X6
+         CcKNxjz4sInGKm1up6bM8INWw7divT/8Mkgiot3AawSrdGoq/kZWFWLoeKWt+APFaaH6
+         TFByzlrvdV3UrS0jMrsp40JCjuDWAce4IU/5GPmt5TGBmWlxyCM18Idzx7Hj+tLJM4Rt
+         lEZg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1771843798; x=1772448598;
+        h=in-reply-to:content-disposition:mime-version:message-id:subject:cc
+         :to:from:date:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=x+816UkHLyRvuKb/oS0wEATvXuUn8rJpVOodqIFEeMc=;
+        b=rCAW6Dsin+Y9e7E0gWFwX9mifhZve1aguehumOuWyaHBzXaJV7TclznJTw1zZkiRXr
+         C3xBkp/H5Nk2L1KNtp9w0Eq1qI/Wh+8Jyy7rggyU//YQ2pdo0UDhbA4UGRnT6voBDVpd
+         3dFhOsA2fuUJpXIjNsH3l1ingpq3oaOgHyC9sEtK8ho+XQSIwQOhiR6ErEHUdwR8plBt
+         Hu9R5ky50W9eLnZ49ok8JlcGGFFY8ueuRZ9MefxNlbOhYHSJsF/IBc/fhE0s4wguf/AY
+         70FVkPMvH2YdUyMQ+mw+gzBQry2t0JoZeQ3htrAK00HuUkoNZ7T8DZkB7OrXT8AxncsA
+         oeXg==
+X-Forwarded-Encrypted: i=1; AJvYcCVK7OBq5+418Fg4l0QQyLhppet7diw0HVdaHqjTg5iZ/mcuPQBQndvNYnSIKDnRgQpwiXNvvoUyHTGU@vger.kernel.org
+X-Gm-Message-State: AOJu0YyEJy/vIcuxn8M2sn+ppypcQObLLv64JptOp9VMb1ql92ZW0kZS
+	RFc5iEeq9YuQS+UAHEgh3ZDTOdOiAKPviY+ng4dTrDxgTGA0ZXBpFus=
+X-Gm-Gg: AZuq6aLCM/e57+N7O9HXEBDSt8qP6LslZSMBW9cYct0BDeFswJwIuXB7UjHl3WY/Xaw
+	YnvOCeqa38bzqxOwV9YCaIWAeg6J/wWmcWK2j4yrOIQRRBz5PyzJArMyreW88UL1RrxrQ5c6T6/
+	I6CI1UcJmrQrOT9H7PDiSpPrfH5BrLM4CreX8VII/rRFoYr2OqpmnERYMyxvXboOQ8wEA0YpxMo
+	oylXPlPxUCcJCqbfbQmVaFwKC1icahtFT4UGxcuNxskGDUv9B/WZ0pck+ExPakoMB/A7vE0j5Cl
+	3lmyaoSsyVJ6wUBnR06FI+zB6f8RHTsnYcAt5eM95Y3T3hrK2ghOgDvPLyONS69p6mOdvos0jgR
+	lS2iynNohS0p29vw12XRDRjMwP7T0aN5urfSxhBcmqO2z8yfUpYcu1L26McM3RIGqR+e8eRzRxj
+	Db8JOSNIT5rVyJZqXd1M0ZFQc=
+X-Received: by 2002:a05:600c:1e28:b0:477:5af7:6fa with SMTP id 5b1f17b1804b1-483a95fe96bmr115063385e9.32.1771843798140;
+        Mon, 23 Feb 2026 02:49:58 -0800 (PST)
+Received: from vova-pc ([78.155.60.190])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-483a31f0370sm448490105e9.11.2026.02.23.02.49.56
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 23 Feb 2026 02:49:57 -0800 (PST)
+Date: Mon, 23 Feb 2026 11:49:55 +0100
+From: Vladimir Riabchun <ferr.lambarginio@gmail.com>
+To: ferr.lambarginio@gmail.com
+Cc: GR-QLogic-Storage-Upstream@marvell.com,
+	James.Bottomley@hansenpartnership.com, himanshu.madhani@oracle.com,
+	linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+	martin.petersen@oracle.com, njavali@marvell.com, qutran@marvell.com,
+	skashyap@marvell.com
+Subject: Re: [PATCH] scsi: qla2xxx: Completely fix fcport double free
+Message-ID: <aZww0-I8gw7AZkib@vova-pc>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-MTK: N
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <aYsDln9NFQQsPDgg@vova-pc>
 
-From: Peter Wang <peter.wang@mediatek.com>
+Friendly ping.
 
-Move the link recovery trigger from ufshcd_uic_pwr_ctrl() to
-__ufshcd_wl_resume(). Ensure link recovery is only attempted
-when hibern8 exit fails during resume, not during hibern8 enter
-in suspend. Improve error handling and prevent unnecessary link
-recovery attempts.
-
-Fixes: 35dabf4503b9 ("scsi: ufs: core: Use link recovery when h8 exit fails during runtime resume")
-Signed-off-by: Peter Wang <peter.wang@mediatek.com>
----
- drivers/ufs/core/ufshcd.c | 18 +++++++++---------
- 1 file changed, 9 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 44efb03765b9..9908375b2f98 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -4385,14 +4385,6 @@ static int ufshcd_uic_pwr_ctrl(struct ufs_hba *hba, struct uic_command *cmd)
- 	spin_unlock_irqrestore(hba->host->host_lock, flags);
- 	mutex_unlock(&hba->uic_cmd_mutex);
- 
--	/*
--	 * If the h8 exit fails during the runtime resume process, it becomes
--	 * stuck and cannot be recovered through the error handler.  To fix
--	 * this, use link recovery instead of the error handler.
--	 */
--	if (ret && hba->pm_op_in_progress)
--		ret = ufshcd_link_recovery(hba);
--
- 	return ret;
- }
- 
-@@ -10175,7 +10167,15 @@ static int __ufshcd_wl_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
- 		} else {
- 			dev_err(hba->dev, "%s: hibern8 exit failed %d\n",
- 					__func__, ret);
--			goto vendor_suspend;
-+			/*
-+			 * If the h8 exit fails during the runtime resume
-+			 * process, it becomes stuck and cannot be recovered
-+			 * through the error handler. To fix this, use link
-+			 * recovery instead of the error handler.
-+			 */
-+			ret = ufshcd_link_recovery(hba);
-+			if (ret)
-+				goto vendor_suspend;
- 		}
- 	} else if (ufshcd_is_link_off(hba)) {
- 		/*
--- 
-2.45.2
-
+Best regards,
+Riabchun Vladimir
