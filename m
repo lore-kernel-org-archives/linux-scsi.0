@@ -1,115 +1,87 @@
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 437623A9014;
-	Tue, 24 Feb 2026 16:48:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.165.32
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 578733A9002
+	for <linux-scsi@vger.kernel.org>; Tue, 24 Feb 2026 16:49:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771951725; cv=none; b=O6aL6PW+0XRGVGuFlP1mfo/orvw1MqSPhyjeGgqwC6ZEXNAaY+w8Wc6kXlOYyITEBxSpCd6a9bxTiuJxijgCMXf3v+zDnyeIKu3KXQBeReYSlESWhBZQ2tUJ409max4wRJndO0zJ6/gqTh7KPi3+x8YqTvn5H8i8dc+qjBi18Rw=
+	t=1771951743; cv=none; b=fwSaJYidhZxD+97wMBShKI6HprsuBWPYgYEZTFw8x/9lUX02LEAVpaTLynuR6eDsyMUMuc7+37JxEKQBS1bhBIXNs5rS7UVVZSk+fJBma3GpsIeAXYDVHcaKIwK1ieW7xm/y7GPqzO9OI+kRNov2T1q8XpLTBrTn72ChbJ2HIog=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771951725; c=relaxed/simple;
-	bh=RtvXueMkqgNBUC5C4HEPQpC29MFR8R/6b/n7GSlv2Vs=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=ec2PJv4KIV5uPlwXBi41bCgxEFEM60rLnBwNEJb++yhY7Rt6jcK+p5OM9YqMA8l02SSRZ9RbEcOtxyCWkQamIJ9nMxyPXek26xmDI6mx5u/DrXrK300GXABvnRY2t7bSKKeHvfubPROe3Z4HBLWRnl8oj926tcAP8GiwlG+ys2g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=oQ55hGOa; arc=none smtp.client-ip=205.220.165.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+	s=arc-20240116; t=1771951743; c=relaxed/simple;
+	bh=EExyUxWYg07VD+FMtbZqoIMHqeeFR0efaC4++c5uyMU=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=r3FZW1X1F6sQvkSFeSNWluR4A1WttqzCDmKUiSl5DBFgk0TXAS4pXcm03AU7Y6Okihbse2rMTsf3cTOOVGcaM21LFy/tRzJ5NNzaeq2Pc2pQj/2VNbS8tLLJ7x0nPfit29bVfiTyxTbm79wDF73XnXdBmi1D+BdUaKE1DjNmlbw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=qBxE8ENT; arc=none smtp.client-ip=199.89.1.14
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="oQ55hGOa"
-Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 61OEMrDv3553354;
-	Tue, 24 Feb 2026 16:48:34 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=
-	corp-2025-04-25; bh=Ol6g1BRW0NVLF/YpYhxQYJqzYDIfIfHnqjOXuYUJMkY=; b=
-	oQ55hGOaVsdBgQz7AmWRX5q9lw/ldpCAUGzu2BQqpNYdHReuOVmA1A+5OxjE5PJt
-	jWfAsI/k36z1bvN8YD2vTfW8NwbNt8xs3cr9MHi0HoA/XnWZaQNwKsgD3wf0/SOP
-	wyzLt1QndDWUf525jviPZtqQuMVEOlu4n+LbnaNLakqnOwhtqPq/zQqDCB4N5Txn
-	MUUadPQrUTXO9T3GViNiOuWSewSisfXuz7CJeU5ejYThZwemiCFr8Y+TA1bNdx9Z
-	HuJPG1SBRl6Bcn/O5wiuTJBHD8yOW/8AUWKoFwfAD0hi3gQrl+wyYaCkhWAqgQq3
-	AhPzGF3hAh8D/WnKs5CWMg==
-Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4cf3a04n35-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 24 Feb 2026 16:48:34 +0000 (GMT)
-Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 61OFiDvB015761;
-	Tue, 24 Feb 2026 16:48:33 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 4cf35a6m6j-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 24 Feb 2026 16:48:33 +0000
-Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 61OGlt4t012936;
-	Tue, 24 Feb 2026 16:48:33 GMT
-Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 4cf35a6kjb-9;
-	Tue, 24 Feb 2026 16:48:32 +0000
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-To: ALIM AKHTAR <alim.akhtar@samsung.com>, avri.altman@wdc.com,
-        bvanassche@acm.org, James.Bottomley@HansenPartnership.com,
-        peter.wang@mediatek.com, beanhuo@micron.com, adrian.hunter@intel.com,
-        quic_nguyenb@quicinc.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Jinyoung Choi <j-young.choi@samsung.com>,
-        Jeuk Kim <jeuk20.kim@samsung.com>, Won Jung <wone.jung@samsung.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: ufs: core: Reset urgent_bkops_lvl to allow runtime PM power mode
-Date: Tue, 24 Feb 2026 11:47:48 -0500
-Message-ID: <177195161214.1154639.16641690739618569948.b4-ty@oracle.com>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <1891546521.01770806581968.JavaMail.epsvc@epcpadp2new>
-References: <1891546521.01770806581968.JavaMail.epsvc@epcpadp2new>
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="qBxE8ENT"
+Received: from localhost (localhost [127.0.0.1])
+	by 011.lax.mailroute.net (Postfix) with ESMTP id 4fL3b16G4sz1XM6JH;
+	Tue, 24 Feb 2026 16:49:01 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1771951740; x=1774543741; bh=XalST2aF8KFTi0PVkHHN8BFR
+	Ii0fE5s/1PbfuL/uOZY=; b=qBxE8ENTIOpj/w4jV//jJhXpbdxJx0rJD44PgWzK
+	TH0+veOghWtUkKHbe2ZuvTAN/5eJ1Ouwt/ep/hOoHHxLyVo9eVVVZg8PHIkvyNmW
+	/fG4x0WxUBtREo4ki3yl5rjrrlXH5ISFcipWseCYlvNOr5GxUHiJYU6Le2CNBbqH
+	LF6gJfqEutGtaP05d8wAX8S5zuRTnePJAdXowr4FHvzjRWec2QzYYPGqOjyvIZAW
+	SLgK0fs2hwRz7Fx7n/vw8Dqfvw8viepiX5cdqQMjAlw42e9wRgyUgZG63ADqsEqs
+	XsK22yCNPZGgVErTefzCIclHy9EpNq4SdolKTiMjyvkd6Q==
+X-Virus-Scanned: by MailRoute
+Received: from 011.lax.mailroute.net ([127.0.0.1])
+ by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id nWkhkSnBG_o3; Tue, 24 Feb 2026 16:49:00 +0000 (UTC)
+Received: from [172.20.150.38] (unknown [4.28.11.157])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4fL3Zz1FXGz1XM6J7;
+	Tue, 24 Feb 2026 16:48:58 +0000 (UTC)
+Message-ID: <72757f9f-20de-4fb8-b5eb-507dbcdbe22a@acm.org>
+Date: Tue, 24 Feb 2026 08:48:58 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-02-24_02,2026-02-23_03,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 phishscore=0 malwarescore=0
- spamscore=0 bulkscore=0 mlxlogscore=999 suspectscore=0 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2602130000
- definitions=main-2602240140
-X-Authority-Analysis: v=2.4 cv=IskTsb/g c=1 sm=1 tr=0 ts=699dd662 cx=c_pps
- a=OOZaFjgC48PWsiFpTAqLcw==:117 a=OOZaFjgC48PWsiFpTAqLcw==:17
- a=IkcTkHD0fZMA:10 a=HzLeVaNsDn8A:10 a=VkNPw1HP01LnGYTKEx00:22
- a=Mpw57Om8IfrbqaoTuvik:22 a=GgsMoib0sEa3-_RKJdDe:22 a=VwQbUJbxAAAA:8
- a=-L6MuwTYVIaK99d2qzQA:9 a=QEXdDO2ut3YA:10 a=zZCYzV9kfG8A:10
-X-Proofpoint-ORIG-GUID: p7Lj8UX3_xPzPNsKD512bU4TzeY3A24M
-X-Proofpoint-GUID: p7Lj8UX3_xPzPNsKD512bU4TzeY3A24M
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMjI0MDE0MCBTYWx0ZWRfX3ehNWvIAT9qZ
- fut8xt5QQL5XzT/oi2JRfm3pfZQuQ65YGPcJnCpreprmgkaa+sayxmE/HL227sc/rhXjuEim63f
- E4LKwUWNrdxgMEkhE74AOJqYyh0vTdwaiRSP2X9VFntNT0hsFO5QTtxFzJC1liguLaa2y58vF4I
- ZQnWbxSULUmSdwYnXDl/gxFkMjyvOOQmw4xS5x77fZ8HTmWgzzU3VYW/G6mDoONjqC8dLfV/deJ
- 1nvmX9Bd/XOWmXtSKB/AqK5d8xAF/07MiFyCDVBEX0frcH3gxORtd05b3Zx4BH/tvqvHCR/yvbw
- Tr8Vr1vqRIPoDb4XFi+cL2JaX+3fsO8pPOc6uUTt/yGbwTAF9Jfoq7s0du8HGG0aoGCHyD4Oq8d
- QC8bQaRM+0mOTFRtzVSfnxcs5TePxvQLu8HMNnbZ7846u2xl7EFa0vv6yohakakklDGis8TpDs1
- FqQ/jMhqZVcGwfkMrxg==
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v1] ufs: core: Fix possible NULL pointer dereference in
+ ufshcd_add_command_trace()
+To: =?UTF-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= <peter.wang@mediatek.com>,
+ "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+ "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+ "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: "linux-mediatek@lists.infradead.org" <linux-mediatek@lists.infradead.org>
+References: <20260223065657.2432447-1-peter.wang@mediatek.com>
+ <5017b907-16de-4d7f-a7c6-dbc504ffd1eb@acm.org>
+ <399765bade9b7adcca89a94313e71635d1336172.camel@mediatek.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <399765bade9b7adcca89a94313e71635d1336172.camel@mediatek.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: quoted-printable
 
-On Wed, 11 Feb 2026 15:01:05 +0900, Won Jung wrote:
+On 2/23/26 9:29 PM, Peter Wang (=E7=8E=8B=E4=BF=A1=E5=8F=8B) wrote:
+> Therefore, there is no need to assign hwq_id separately.
 
-> This patch ensures that UFS Runtime PM can achieve power saving
-> after System PM suspend by resetting hba->urgent_bkops_lvl.
-> It also modifies ufshcd_bkops_exception_event_handler to avoid
-> setting urgent_bkops_lvl when status is 0, which helps maintain
-> optimal power management.
-> 
-> On UFS devices supporting UFSHCD_CAP_AUTO_BKOPS_SUSPEND,
-> a BKOPS exception event can lead to a situation
-> where UFS Runtime PM can't enter low-power mode states even
-> after the BKOPS exception has been resolved.
-> 
-> [...]
+Hi Peter,
 
-Applied to 7.0/scsi-fixes, thanks!
+That's not what I proposed. When ignoring the NULL test, this is what
+the current ufshcd_add_command_trace() implementation does:
 
-[1/1] scsi: ufs: core: Reset urgent_bkops_lvl to allow runtime PM power mode
-      https://git.kernel.org/mkp/scsi/c/5b313760059c
+	hwq_id =3D hba->uhq[READ_ONCE(req->mq_hctx)->queue_num].id;
 
--- 
-Martin K. Petersen
+That's more complicated than necessary. This should be sufficient
+(again ignoring the NULL test):
+
+	hwq_id =3D READ_ONCE(req->mq_hctx)->queue_num;
+
+Anyway, since the proposed change probably only results in a small
+performance improvement, let's proceed with the current patch.
+
+Bart.
