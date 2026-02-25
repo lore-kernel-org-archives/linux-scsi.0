@@ -1,238 +1,86 @@
-Received: from mail-ed1-f52.google.com (mail-ed1-f52.google.com [209.85.208.52])
+Received: from mail-dl1-f42.google.com (mail-dl1-f42.google.com [74.125.82.42])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B1F5A3176E0
-	for <linux-scsi@vger.kernel.org>; Wed, 25 Feb 2026 21:43:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.52
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772055828; cv=pass; b=Lced3ARiB6Dle6U2vtpqAXUUKzVFaz9TsqiZEm3ZKoFpCCNvo0vtinaEGGmQt1qRSAKmdzPI5PafyjDdSjb3bLoPRdPpnITO0N31hxit4vPj0ac1buBthOJkgR2NxTns9j5yNn4/kCu5s3BE2SflKM757sahdMN6Qawfh+dwtW4=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772055828; c=relaxed/simple;
-	bh=hoZBQczrzcuyVPOXD+tTAmFlTYabJ94zI9Irylb/EVw=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=iaLkvgsPA9RETSKHeJ6NB6qJMIcEtj30efUnhLKg9sFGBOMfea5CR5+vuFqh1jBPSAqBTlo6RmXtDTNn1UFZ7mWixw8qohMEeld7+9huGjs3SwEAaTWVLaGihUPx4qihOU8OYq3aFrqvIeqO/dNzIQhKhLgBfuwDF1FddmaCdkc=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=DcXnIIPe; arc=pass smtp.client-ip=209.85.208.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B90862D5A19
+	for <linux-scsi@vger.kernel.org>; Wed, 25 Feb 2026 22:31:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.42
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1772058716; cv=none; b=US749WJwbepFAALNif5csmVSLZgE7niqrhViPLetC72tb37k54r97pVUM4QYNZ6tNq22/6zIXefetBVggTEJRwZ2lb5FKljt/QrlFRvNpqp9tXSCV0+na6qIQXti85clQCVDcEe5LD4klZ3oDh4fI9x8eyHHluYWgHO+iKAfsSc=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1772058716; c=relaxed/simple;
+	bh=Eo8mcJx96u8VH4jn7nXN0WzI3pTAqmoosY5GMUzgLRE=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=aVKpVMGkD3GQ9aQ0bTQEEJjSdngzrJY1hUzUZZ2IVGUMZNI3VA+5kE6lxzLPfJC++4T4Pim2cByiJKBXuFu2fnMTi0Tqawv72cmvLrqOsKLppC/SNqnH1a05qJcDNEOR66Lcn5WM7QwwDc69Cq/9IwGNzbB1ZoKsdqFLk7y3Gws=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Tp07kAtj; arc=none smtp.client-ip=74.125.82.42
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="DcXnIIPe"
-Received: by mail-ed1-f52.google.com with SMTP id 4fb4d7f45d1cf-65f3a35ff13so3613a12.0
-        for <linux-scsi@vger.kernel.org>; Wed, 25 Feb 2026 13:43:45 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; t=1772055824; cv=none;
-        d=google.com; s=arc-20240605;
-        b=NSG0ySRYizrnl2GGL6+FTEBckGiWsI8RKG7LfSRkISmWRDaEAQgSnZbLFmNzBEd02Z
-         Y0m+zzkjzoCyoFMQ4Gq49RlHWdX4UEUFcgASNZclo39eUESCszLMd/3b+5faMKwU7KXV
-         tJgEJ8+SVsa1aFeqnqKScQIRaBp419n6AysIvigqST51uCrQOXPDVpp5z2AdDhx6QEom
-         gOXdASTfE8JKEx3ny0D5c4uj2na8/GK8ed8kA3v+I/Y0kaCf0LSjhouxrgDCntDyk67r
-         bm0vlf8g24ChKQN5xSpExDelxk0mv918EGX4Ei10TvEq95DTKHBrK+ZlL6b5igNMFNFB
-         HCIw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=vB9FeLIHdzkOeJQl8sZ1jnIIU5NTPuPRUQDCv7qOk1c=;
-        fh=E7Ey2w2yJ2Orw82ch25GKofu0Ty1teiOZSJV+fGABqQ=;
-        b=VAt/ML8+/e1NfFVAD7101UFITqubooG9FxZ/WrlfWzjQ6aTPk+skUVDLXQrePxi1/V
-         rp7BEWGZrLYkbjRAItECDK828dShz6BjCKa35kV6mzWysV3ahlJzoV3pohHfZF2FHZar
-         KkBg0J/U0KzOp96+NaLVBfnP3xlhG+CkcGs4Px8V49spDkL5+QBIN0TedgGzJsTHAECw
-         eJqJyXic+xzO2XEtL/QGUAG6b9tzziEkp5BNPTlmkx/3wqkIuEv8L1nV2f2VE/q/29T5
-         w4Y//yeiBC7Pms3Z7YhxF4QDJvjqLMB3dn2Tcrg+YsmtxwqSUqAwDUcwZOVEwSArypIl
-         K7lw==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Tp07kAtj"
+Received: by mail-dl1-f42.google.com with SMTP id a92af1059eb24-126ea4b77adso247383c88.1
+        for <linux-scsi@vger.kernel.org>; Wed, 25 Feb 2026 14:31:55 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1772055824; x=1772660624; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=vB9FeLIHdzkOeJQl8sZ1jnIIU5NTPuPRUQDCv7qOk1c=;
-        b=DcXnIIPehOR7Zcc84tU5ax/4/X+fJQQXdh6G/qeIGgAwD6QNLuPBvyozFNu04p1olg
-         g2ioHyEBoajIsPgNamu8pOCASAUioThGOznYmtfFxA2PNCUI/goNDca2bs4YaC57UiMX
-         hrNrJLYnxtIrwCeUCMpB65/mfvXVpuwHhNmB8r2rpeEZVUk9JmP1VTBaWsG8jXrjKXwl
-         UiqonoSGe9mduDMaJoz8Kgszdb+iCjKBceJQZRl2elaXYdryJsUcOdQPBv+X7m1a9tcz
-         uA3wykguwgIff37UR05C2cadCAQdbVnrzA/akWYG16NJ0Q72rMQDl7LjJp/0lKeJMubA
-         Zb8Q==
+        d=gmail.com; s=20230601; t=1772058715; x=1772663515; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=Eo8mcJx96u8VH4jn7nXN0WzI3pTAqmoosY5GMUzgLRE=;
+        b=Tp07kAtjt9w9szm0I6Wg060fd5rONuofIm7XoYyayNYZ/T0X/jJEvPMUd88Ko3myHB
+         ONc6mvdF/u3lYroB3cLR2dIdMKjLH7xY4N7/dcG8QW5A55zQ7bSVnmOCiYdOmNF8mKMF
+         VUiid4TBd3uRzy+N86WHBc8qczQcTPSho+EgzRnhiiTThj4N/PRuLNfLg3pYwCAghD+f
+         KldGSsb/Hxk6xb6mc4855f+mOUAlOOcvChKVisMd5xThRf1HDVTdvqCW2k5jrYF+WAMi
+         0HejbetwhO2s6wgE3bXq2D1qdq2r9NfgHowiM924Fz+IeBZig2Y22otOPFezN492dtWf
+         xovQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1772055824; x=1772660624;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=vB9FeLIHdzkOeJQl8sZ1jnIIU5NTPuPRUQDCv7qOk1c=;
-        b=wzrmFL7eOkwTcggcPtdK/XhcKKN6C6RwPzD1EPEfC9bmuWafOxworbUrSSywSEnAzS
-         6sNOg20sFsShbviYQ1pdblyT5pZwhTf5t8vVzkLXcjUp5n9jHdy4YLTdXKYixbQgW86z
-         GpbwcneaK5Q0Y1V2yxXJaSXYLb8wFpiv080TSpHQtXftN2o3ncPjAAKn6tU/FaG1rjec
-         qBOs7J+AjcKgtkqlef9+GpEljMx8dmM1YWjizD9hX49wBxPgE7n/ABUHxQSS/8Rq+ntm
-         m5aliKVFQ6xJnDPPDZMlb8dcXj9DDlf3FxSYyVaGwpdC9XElqGpT45wO6fwEsZN6CnY4
-         J7OQ==
-X-Forwarded-Encrypted: i=1; AJvYcCUyBa5HOFouRWH2Ivsl5p2WecsJCwRy04wAnYT9C2RbvfBbfc8sKwwEtqEm6AL+vTlbdsbFFBw5MkOv@vger.kernel.org
-X-Gm-Message-State: AOJu0Ywb8dlQkOANbxIMKzLf/URDDda4gL8Fifp3y/Zd04FcSOweNNro
-	exDi4yBYLwaFWDr40NzfosGh8MsJhoJMUXg+gc0Cc7vS57aMMQe8DLUd/WOpUk4FWmYeTx57G/m
-	EwEXWo0wtWcOOw6ZaOuAamsKORphkwVP+uP9FgyxH
-X-Gm-Gg: ATEYQzxnTW/0KgDa4LC0Yl9/DPWbI6ewH9NaOym5XXO1Q2DOq1JMT7MlCI6yHLS5jXd
-	HDnuAVL/XaTU7noqNTzh+9+gpxTU6uwKtuciKPmhhFh3XMwKsjGV06bybM7QSxhOzEatlv5ly20
-	8oWap+wPYixjjt4xeOpuMzFLt64tOdSN4JEMqmGa75e3hO5i5mall8fGITS4sy9A2WvBd+wLGPy
-	HeZ5tPzJpoTsS4P7PZYhpOYFDQlWIWZDLT2IS1h2bCdObp9OSc8ID/LAnLYB5THbLfNWsbm7mj2
-	vyX7kFOCrSx77H7S35R26lZFYDUIQNqh9A5j8A==
-X-Received: by 2002:aa7:c7cf:0:b0:658:e7a:6fa7 with SMTP id
- 4fb4d7f45d1cf-65fab61a7b0mr11377a12.4.1772055823405; Wed, 25 Feb 2026
- 13:43:43 -0800 (PST)
+        d=1e100.net; s=20230601; t=1772058715; x=1772663515;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=Eo8mcJx96u8VH4jn7nXN0WzI3pTAqmoosY5GMUzgLRE=;
+        b=VQWvH4fI1pL1xAKKQVSzWYkWZwoU9zhHk/dvbrasYw6rrm9qGP50iHpE/ozHM1Dn1r
+         II8u1xwXgT3GmF4Ukuyn7bs9F7Kbqdnp9fk+fa/aVdSeh7T13jiOjZDQcpcwPRBvg9vn
+         B4zgYDpSTegvo/d7Gno1JknMVcO2bwe8pSJSwar2xjA/yqfS4dVriTFVSqqf0eh03hzS
+         W1pSsEj4wAnP+AMQ0m4YQ8qAZ1BWqS1yXGfUYqxwPr5zZpLjuXQK4K3xtzvzfUNOR9gC
+         VYbFKv3OzrGO7OfoEmEXqZH1F56+v9D2iq6WZtcAzr8AVhZD48zE8IkzCwY9QY23wI+I
+         sWZQ==
+X-Forwarded-Encrypted: i=1; AJvYcCX992FibWXBWPvBUwXwFGi8x8pAZvXWuZlRCy+Z2z+14ZHce+JQ+VQv4HVUthTapvBclJi+ReEvuhE8@vger.kernel.org
+X-Gm-Message-State: AOJu0YwF/w78ashUHX49Meus1auqH531qCjajdIUZ7Ma0uiTuqiiakOY
+	sh3+kgJKG3pJtDNXDazeAbzUkjh6hLBlQXo3wRZ5P/+wJ/z9qr8kYEiV
+X-Gm-Gg: ATEYQzyEuWP7PnZzZHardL++zmle7+POBzkj/uQ3t/Lxc4k/xtf8ymVaeRCcfJ5O3mV
+	/XZO/GmiH4ToZqNkON14KTnpqqEBQAhDg+BeBrvtjbL3AjwqY6pu0YG80SR+8hAZoLHn4E9IMAE
+	1U4g9OzycH57O4TTqiFE9WqgsCn8CeQEGN5Jgiyry2zXs1ppx9FUKPK6YLBSMQCVHq0Ws5VUfCX
+	uK7FH46jepSKNVb1xRjiJ6z6wQbN/c9Ua1uCEt698lBNRmxVuYSfpKOe5Ljf3O8xWgLNdVqN/ba
+	AQVaGOe27vc0GSAoEynzpbCpU0MjpFy7ia6qQMuj4cZieQWptzthGH63Ozp8vwjhNHHu4rtPZQZ
+	fe6EAD+aqE9GWp43zLhdffMuso5bUOBU91MKNM0BJUXNcTRoBxJ8r4HB97JwSDAMrSP6DzMfFO9
+	AqBViZNbuLOIpazXoEkemx6ZJJ/mbZB0hDBX9vl1R2qQ==
+X-Received: by 2002:a05:7022:603:b0:119:e56c:18b1 with SMTP id a92af1059eb24-1276ad182b0mr7064155c88.25.1772058714699;
+        Wed, 25 Feb 2026 14:31:54 -0800 (PST)
+Received: from [10.69.70.152] ([192.19.223.252])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-2bdd1bce281sm325930eec.2.2026.02.25.14.31.54
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 25 Feb 2026 14:31:54 -0800 (PST)
+Message-ID: <6e0b646e-462d-4698-b2ad-156d58a53500@gmail.com>
+Date: Wed, 25 Feb 2026 14:31:46 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20250619111806.3546162-3-yi.zhang@huaweicloud.com>
- <20260225000531.3658802-1-robertpang@google.com> <7d2a3f65-4272-46c1-991a-356f0d2323cb@huaweicloud.com>
-In-Reply-To: <7d2a3f65-4272-46c1-991a-356f0d2323cb@huaweicloud.com>
-From: Robert Pang <robertpang@google.com>
-Date: Wed, 25 Feb 2026 13:43:31 -0800
-X-Gm-Features: AaiRm53fO14_kYBnlB-QimzynwfGzteAR7wRZiT1Sf0awQgFveGcUyR_Z7IWsCY
-Message-ID: <CAJhEC05L7QEc9iY7gFZVK3SPYvFhtFyURss6xQgZ-qWwZZkFjA@mail.gmail.com>
-Subject: Re: [PATCH v2 2/9] nvme: set max_hw_wzeroes_unmap_sectors if device
- supports DEAC bit
-To: Zhang Yi <yi.zhang@huaweicloud.com>
-Cc: Zhang Yi <yi.zhang@huawei.com>, bmarzins@redhat.com, brauner@kernel.org, 
-	chaitanyak@nvidia.com, chengzhihao1@huawei.com, djwong@kernel.org, 
-	dm-devel@lists.linux.dev, hch@lst.de, john.g.garry@oracle.com, 
-	linux-block@vger.kernel.org, linux-ext4@vger.kernel.org, 
-	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org, 
-	linux-xfs@vger.kernel.org, martin.petersen@oracle.com, 
-	shinichiro.kawasaki@wdc.com, tytso@mit.edu, yangerkun@huawei.com, 
-	yukuai3@huawei.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] scsi: lpfc: eliminate kernel-doc warnings in lpfc.h
+To: Randy Dunlap <rdunlap@infradead.org>, linux-scsi@vger.kernel.org
+Cc: Justin Tee <justin.tee@broadcom.com>, Paul Ely <paul.ely@broadcom.com>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>
+References: <20260224234954.3606638-1-rdunlap@infradead.org>
+Content-Language: en-US
+From: Justin Tee <justintee8345@gmail.com>
+In-Reply-To: <20260224234954.3606638-1-rdunlap@infradead.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Dear Zhang Yi
+Reviewed-by: Justin Tee <justin.tee@broadcom.com>
 
-Thank you for your quick response. Please see my comments below:
-
-On Tue, Feb 24, 2026 at 6:32=E2=80=AFPM Zhang Yi <yi.zhang@huaweicloud.com>=
- wrote:
->
-> Hi Robert!
->
-> On 2/25/2026 8:05 AM, Robert Pang wrote:
-> > Dear Zhang Yi,
-> >
-> > In reviewing your patch series implementing support for the
-> > FALLOC_FL_WRITE_ZEROES flag, I noted the logic propagating
-> > max_write_zeroes_sectors to max_hw_wzeroes_unmap_sectors in commit 545f=
-b46e5bc6
-> > "nvme: set max_hw_wzeroes_unmap_sectors if device supports DEAC bit" [1=
-]. This
-> > appears to be intended for devices that support the Write Zeroes comman=
-d
-> > alongside the DEAC bit to indicate unmap capability.
-> >
-> > Furthermore, within core.c, the NVME_QUIRK_DEALLOCATE_ZEROES quirk alre=
-ady
-> > identifies devices that deterministically return zeroes after a dealloc=
-ate
-> > command [2]. This quirk currently enables Write Zeroes support via disc=
-ard in
-> > existing implementations [3, 4].
-> >
-> > Given this, would it be appropriate to respect NVME_QUIRK_DEALLOCATE_ZE=
-ROES also
-> > to enable unmap Write Zeroes for these devices, following the prior com=
-mit
-> > 6e02318eaea5 "nvme: add support for the Write Zeroes command" [5]? I ha=
-ve
-> > included a proposed change to nvme_update_ns_info_block() below for you=
-r
-> > consideration.
-> >
->
-> Thank you for your point. Overall, this makes sense to me, but I have one
-> question below.
->
-> > Best regards
-> > Robert Pang
-> >
-> > diff --git a/drivers/nvme/host/core.c b/drivers/nvme/host/core.c
-> > index f5ebcaa2f859..9c7e2cabfab3 100644
-> > --- a/drivers/nvme/host/core.c
-> > +++ b/drivers/nvme/host/core.c
-> > @@ -2422,7 +2422,9 @@ static int nvme_update_ns_info_block(struct nvme_=
-ns *ns,
-> >          * require that, it must be a no-op if reads from deallocated d=
-ata
-> >          * do not return zeroes.
-> >          */
-> > -       if ((id->dlfeat & 0x7) =3D=3D 0x1 && (id->dlfeat & (1 << 3))) {
-> > +       if ((id->dlfeat & 0x7) =3D=3D 0x1 && (id->dlfeat & (1 << 3)) ||
-> > +           (ns->ctrl->quirks & NVME_QUIRK_DEALLOCATE_ZEROES) &&
-> > +           (ns->ctrl->oncs & NVME_CTRL_ONCS_DSM)) {
->                                 ^^^^^^^^^^^^^^^^^^
-> Why do you want to add a check for NVME_CTRL_ONCS_DSM? In nvme_config_dis=
-card(),
-> it appears that we prioritize ctrl->dmrsl, allowing discard to still be
-> supported even on some non-standard devices where NVME_CTRL_ONCS_DSM is n=
-ot set.
-> In nvme_update_disk_info(), if the device only has NVME_QUIRK_DEALLOCATE_=
-ZEROES,
-> we still populate lim->max_write_zeroes_sectors (which might be non-zero =
-on
-> devices that support NVME_CTRL_ONCS_WRITE_ZEROES). Right? So I'm not sure=
- if we
-> only need to check for NVME_QUIRK_DEALLOCATE_ZEROES here.
->
-The check for NVME_CTRL_ONCS_DSM is to follow the same check in [3]. There,=
- the
-check was added by 58a0c875ce02 "nvme: don't apply NVME_QUIRK_DEALLOCATE_ZE=
-ROES
-when DSM is not supported" [6]. The idea is to limit
-NVME_QUIRK_DEALLOCATE_ZEROES
-to those devices that support DSM.
-
-> >                 ns->head->features |=3D NVME_NS_DEAC;
->
-> I think we should not set NVME_NS_DEAC for the quirks case.
->
-Make sense. In that case, will it be more appropriate to set
-max_hw_wzeroes_unmap_sectors in nvme_update_disk_info() where
-NVME_QUIRK_DEALLOCATE_ZEROES is checked? I.e.
-
-diff --git a/drivers/nvme/host/core.c b/drivers/nvme/host/core.c
-index f5ebcaa2f859..3f5dd3f867e9 100644
---- a/drivers/nvme/host/core.c
-+++ b/drivers/nvme/host/core.c
-@@ -2120,9 +2120,10 @@ static bool nvme_update_disk_info(struct
-nvme_ns *ns, struct nvme_id_ns *id,
-        lim->io_min =3D phys_bs;
-        lim->io_opt =3D io_opt;
-        if ((ns->ctrl->quirks & NVME_QUIRK_DEALLOCATE_ZEROES) &&
--           (ns->ctrl->oncs & NVME_CTRL_ONCS_DSM))
-+           (ns->ctrl->oncs & NVME_CTRL_ONCS_DSM)) {
-                lim->max_write_zeroes_sectors =3D UINT_MAX;
--       else
-+               lim->max_hw_wzeroes_unmap_sectors =3D UINT_MAX;
-+       } else
-                lim->max_write_zeroes_sectors =3D ns->ctrl->max_zeroes_sect=
-ors;
-        return valid;
- }
-
-Best regards
-Robert
-
-> Cheers,
-> Yi.
->
-> >                 lim.max_hw_wzeroes_unmap_sectors =3D lim.max_write_zero=
-es_sectors;
-> >         }
-> >
-> > [1] https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/=
-commit/?id=3D545fb46e5bc6
-> > [2] https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/=
-tree/drivers/nvme/host/nvme.h#n72
-> > [3] https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/=
-tree/drivers/nvme/host/core.c#n938
-> > [4] https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/=
-tree/drivers/nvme/host/core.c#n2122
-> > [5] https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/=
-commit/?id=3D6e02318eaea5
-[6] https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/comm=
-it/?id=3D58a0c875ce02
+Regards,
+Justin
