@@ -1,125 +1,111 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 230B32309B2
-	for <linux-scsi@vger.kernel.org>; Wed, 25 Feb 2026 00:46:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0CB8326560A
+	for <linux-scsi@vger.kernel.org>; Wed, 25 Feb 2026 02:08:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.177.32
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771980410; cv=none; b=KyMYH0jVhQRU/hOodVH0ueOatNbGUMRpcODB0QbuJSFbDfW0+u6hDPUGN8Xp3WhdFgU/HLYUIJPT2ncsHAIFWFler4dOEf7iKFrPo+wieNy0NlwHl2yypt8k4vUtJT8YP4ZCvFjlwJexIZpQ37nJKqs4EgCGd6edSmsaFjTYU8s=
+	t=1771985327; cv=none; b=T+b2G9SEOxh2kOdeQK00PwMQ5UtXljWSj2BcL3p0fSxfrBghO1mb5MtSEACOFvttpFODYa4tEyVNhaW0W0fLsUVVOQFLZgSUV+ot/UATHB1DQ/bBWwlqvop3vJ5x6uCamhD2wKoUtxbZ5VlJNW+5lsJmYuopfQ20xdoT902lY7I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771980410; c=relaxed/simple;
-	bh=9GHiBkrPxDxT4gm/0NFYVvV91kzXbVO7+7SdoSElsUE=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=WaXVyXrj7YrDIW4RlKNTDzQ6eo0bw695wLX7Z66PbfPoSt7rw/o4gJwsA5F2tABYlNuPyoqbeJjlPzt726NEsVO4FGpQIr85VwLfacTdnmFve6krgr4ow3y4HUblLFJk7QJ9+cxTP8+5X9FifVwSBmCapfo40j1+mjzu+Yawahg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=hZnbumvh; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1771985327; c=relaxed/simple;
+	bh=VkCuI/G0u0qDhrNtxgAgKWRQp06DJJXTgxTu8OXKRwQ=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=OmIVvXMIs5zQ67c1tN0Uwoqv1PfUumz+MemiRrFxiqYQX+6UaWScC3wCkSOLU6YIKGvLq0Q+yCf+k9Chb5VkxUjH2wQUbHakaOHbTcen01xh1EG2f12X60OODVxE6KhkoUPUvPfVzbh41aovV01k5KsRUkpkkiLvKDJ8FSfELAw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=dzqsBBPe; arc=none smtp.client-ip=205.220.177.32
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="hZnbumvh"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1771980408;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=wu6e7y6744AKrfSalZoNneCouriwnPLCWnCIppXtUnk=;
-	b=hZnbumvhRqa8J0PLDDpTW0gmidYa0WKvlCC8pDqApCD9K1ecja9mAPG6jmQzxS9/K6PxET
-	/SYdiBgVe89eJZZAasYdhCoZVDswO7KRmgViMjtRR1jlQEfjXkdzD5vbCpcGFboOWWaK2K
-	zwDM4use1UTidHNjNaFBt+MDaEWuiek=
-Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-561-4PJYxqWAM6iAB9Q5q0qJVQ-1; Tue,
- 24 Feb 2026 19:46:41 -0500
-X-MC-Unique: 4PJYxqWAM6iAB9Q5q0qJVQ-1
-X-Mimecast-MFC-AGG-ID: 4PJYxqWAM6iAB9Q5q0qJVQ_1771980400
-Received: from mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.93])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 1B5AD1956052;
-	Wed, 25 Feb 2026 00:46:40 +0000 (UTC)
-Received: from bmarzins-01.fast.eng.rdu2.dc.redhat.com (unknown [10.6.23.247])
-	by mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 266451800348;
-	Wed, 25 Feb 2026 00:46:39 +0000 (UTC)
-Received: from bmarzins-01.fast.eng.rdu2.dc.redhat.com (localhost [127.0.0.1])
-	by bmarzins-01.fast.eng.rdu2.dc.redhat.com (8.18.1/8.17.1) with ESMTPS id 61P0kbjW1637572
-	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
-	Tue, 24 Feb 2026 19:46:38 -0500
-Received: (from bmarzins@localhost)
-	by bmarzins-01.fast.eng.rdu2.dc.redhat.com (8.18.1/8.18.1/Submit) id 61P0kbXS1637571;
-	Tue, 24 Feb 2026 19:46:37 -0500
-Date: Tue, 24 Feb 2026 19:46:37 -0500
-From: Benjamin Marzinski <bmarzins@redhat.com>
-To: Mike Snitzer <snitzer@kernel.org>
-Cc: John Garry <john.g.garry@oracle.com>, lsf-pc@lists.linux-foundation.org,
-        linux-nvme@lists.infradead.org, linux-block@vger.kernel.org,
-        linux-scsi@vger.kernel.org, dm-devel@lists.linux.dev
-Subject: Re: [LSF/MM/BPF TOPIC] Native SCSI multipath support
-Message-ID: <aZ5GbVxDT3gcS6WE@redhat.com>
-References: <69349b51-72c2-47f9-948f-f89843af62e4@oracle.com>
- <aZnuSC0qYfw0hiwM@kernel.org>
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="dzqsBBPe"
+Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 61OItxKI553150;
+	Wed, 25 Feb 2026 02:08:38 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=
+	corp-2025-04-25; bh=jexq13pqC2EZm52QNf6VPpZ2ZXjEAlCveI75dZSxQO8=; b=
+	dzqsBBPe9ClHvPbOdNVm6dvQnJd/OB7sOmayIiLW8DRu6wTanxU5QXVxEDoOqgDX
+	3DRMU7lmx77gMOuIdtblk5KYGfW2c324uOmbpnyA46V3MHxUEzH3Cqc1RidxF46t
+	3lWCuzl3CDRPLVsJkoktlw+5e6xB9mt0U28YGvdBxmISAgua4OOyR7mvxB2U+sbb
+	DWjZShBaOgoUUq1fwD4AEcvIq8ai22KUaCSauEWa7hNmbmmk6MprCodxk15gF3sy
+	3WA39Eu4tmdagTCYhckus6c7SIcwRsSfN+mZdfRTTM1BIUKD8mYZal+aOc3FzFdm
+	+UlkiLYt8OHR7CS73DP1jg==
+Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4cf3g3nejk-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Wed, 25 Feb 2026 02:08:38 +0000 (GMT)
+Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 61P10oi5015743;
+	Wed, 25 Feb 2026 02:08:37 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 4cf35ar24v-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Wed, 25 Feb 2026 02:08:37 +0000
+Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 61P28YNT029537;
+	Wed, 25 Feb 2026 02:08:37 GMT
+Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 4cf35ar1yt-3;
+	Wed, 25 Feb 2026 02:08:37 +0000
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+To: "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+        WangShuaiwei <wangshuaiwei1@xiaomi.com>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>, linux-scsi@vger.kernel.org,
+        wanghui33@xiaomi.com
+Subject: Re: [PATCH] scsi: ufs: core: Fix shift out of bounds when MAXQ=32
+Date: Tue, 24 Feb 2026 21:08:05 -0500
+Message-ID: <177198526957.1649777.17327613686157442002.b4-ty@oracle.com>
+X-Mailer: git-send-email 2.53.0
+In-Reply-To: <20260224063228.50112-1-wangshuaiwei1@xiaomi.com>
+References: <20260224063228.50112-1-wangshuaiwei1@xiaomi.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <aZnuSC0qYfw0hiwM@kernel.org>
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.93
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-02-24_03,2026-02-23_03,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 phishscore=0 malwarescore=0
+ spamscore=0 bulkscore=0 mlxlogscore=841 suspectscore=0 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2602130000
+ definitions=main-2602250018
+X-Authority-Analysis: v=2.4 cv=Y6r1cxeN c=1 sm=1 tr=0 ts=699e59a6 cx=c_pps
+ a=OOZaFjgC48PWsiFpTAqLcw==:117 a=OOZaFjgC48PWsiFpTAqLcw==:17
+ a=IkcTkHD0fZMA:10 a=HzLeVaNsDn8A:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=Mpw57Om8IfrbqaoTuvik:22 a=GgsMoib0sEa3-_RKJdDe:22 a=VwQbUJbxAAAA:8
+ a=nKQEoseQ2CVAKv_AYDcA:9 a=QEXdDO2ut3YA:10
+X-Proofpoint-ORIG-GUID: L4SPIvcXtUEpUKzc8838cIOZX_JG3ehx
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMjI1MDAxOCBTYWx0ZWRfX1b9LS1aY34vI
+ UtIKVQBjBc2GRlOUUX7aFRECVVf83Pw5bhvRsqWIBWiBgEEs10tdpWaurobyduacNrBZKH254GJ
+ u4C458AU4VY+hLN/bjyxaL1fV+2r7mSiiHBAwCx4FtgxJHpOwSJcK6ukLleTGBTlA70kitk/HXL
+ +W4LofjOiUMkPqfEh5xbJTkDZBEpuXmYrM82GV8UzOLNb0XwRSEPS/L2cjWGhXCimz1xk7GzpG5
+ TYKbSIXXp4LOECRYEwrYqxJKEsg6CzdT5oGONYGXxGbwMqNo9G0ASz8BKd6cOdSLPpPS/WmZ6s/
+ ixShqXL6eLgcFiPuviskp7rISkE6vkAAkDCrZUJAmbJdW0jakDpo35ZwEmxSsRnlXve5NhPjXt7
+ JMp2kNmhPGvzYy6mld+ezX9/TREprmsk+IO+G1Dx1HxK2pho0xWGAOsZZRYZb4Zirl+B90w+cMM
+ rI0VsfYytf4vAYjVUuQ==
+X-Proofpoint-GUID: L4SPIvcXtUEpUKzc8838cIOZX_JG3ehx
 
-On Sat, Feb 21, 2026 at 12:41:28PM -0500, Mike Snitzer wrote:
-> On Fri, Feb 13, 2026 at 02:19:11PM +0000, John Garry wrote:
-> > At ALPSS 25 I presented a proposal for Native SCSI multipath support. Let's
-> > discuss this topic at LSFMM.
-> > 
-> > The idea for this is that SCSI could natively support multipath, like how
-> > NVMe host driver does today. It is intended as an alternative to
-> > dm-multipath support.
-> > 
-> > I have been working on the implementation and I plan to post patches in the
-> > next cycle. I am looking at a 3-stage approach:
-> > a. create a driver-agnostic multipath library, very heavily based on NVMe
-> > host multipath support.
-> > The library would support features such as path management, path
-> > selection/iopolicy, failover recovery, PR, delayed removal, gendisk
-> > management etc.
-> > b. switch NVMe over to use this library
+On Tue, 24 Feb 2026 14:32:28 +0800, WangShuaiwei wrote:
+
+> According to JESD223F, the maximum number of queues (MAXQ) is 32. When
+> MCQ is enabled and ESI is disabled, nr_hw_queues=32 causes a shift overflow
+> problem.
 > 
-> I can appreciate that the kernel to userspace interface of DM
-> multipath is clearly unwanted (hence NVMe multipath and now SCSI
-> multipath).
+> Fix this by using 64-bit intermediate values to handle the nr_hw_queues=32
+> case safely.
 > 
-> But you should really be switching DM-multipath over to using it too;
-> or at least detailing _why_ the core of DM multipath
-> (drivers/md/dm-mpath.c) cannot be updated to use this common backend
-> library.
-> 
-> This line of work makes little sense to me if it just ignores
-> dm-multipath.
-> 
-> Mike
+> [...]
 
-Thinking about this work from a DM multipath perspective, I'm more
-interested in how much it plans to handle the more annoying niche cases
-of dealing with SCSI devices, like paths that confidently report that
-they are able to accept IO, only to fail all IO sent to them. Also, I
-wonder how/if this is planning on handling Persistent Reservations. The
-arrays, I assume, are still going to see this as a collection of I_T
-Nexuses (some of which may be down and unable to accept commands at any
-given time, and to which new ones my be added) instead of a single one.
+Applied to 7.0/scsi-fixes, thanks!
 
-I also think this would be useful to talk about at LSF.
+[1/1] scsi: ufs: core: Fix shift out of bounds when MAXQ=32
+      https://git.kernel.org/mkp/scsi/c/2f38fd99c000
 
--Ben
-
-> 
-> > c. add native SCSI multipath support based on this common library
-> > 
-> > Thanks,
-> > John
-> > 
-> > 
-> > 
-
+-- 
+Martin K. Petersen
