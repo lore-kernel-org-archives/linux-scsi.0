@@ -1,77 +1,238 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ed1-f52.google.com (mail-ed1-f52.google.com [209.85.208.52])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F53D265621
-	for <linux-scsi@vger.kernel.org>; Wed, 25 Feb 2026 21:41:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772055696; cv=none; b=qxl0Kha+RxdUMuw6FcWGCEBo7v7fXmIOWKNR3CuJ3Zksi82Q7ykaLFnSiOoZ6OAOzTf5z8Ps2ORJgUiifoqyQTsPdvG4xrMan21z/GNufPPyWJ8qBv22+S0NMB+LAPalQKaKdB+BCJffNYtVZdxJSIjwEPzufF0RtHXXTo+Wteg=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772055696; c=relaxed/simple;
-	bh=Fpk7tbw1NnxpCGy61JuvRTfaQXL6WxnsCaO2aHRbBRM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=eGRAh1QGIRKq31UjWiy7d/chuFeHoquVQzy9G0B2MHyvNZFh+nguJVAKJbCxRfSlYU/0rrZYcI0lhwxH2GsRbicSXEtZvmycW1ZIe8Ru5p2IEAISeQX14DCGTGMBzJYH6reFt603S80MVbWZ7pfbtOwuoxE/sdbl/AxomyKPMeg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DT2z7s3a; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B1F5A3176E0
+	for <linux-scsi@vger.kernel.org>; Wed, 25 Feb 2026 21:43:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.52
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1772055828; cv=pass; b=Lced3ARiB6Dle6U2vtpqAXUUKzVFaz9TsqiZEm3ZKoFpCCNvo0vtinaEGGmQt1qRSAKmdzPI5PafyjDdSjb3bLoPRdPpnITO0N31hxit4vPj0ac1buBthOJkgR2NxTns9j5yNn4/kCu5s3BE2SflKM757sahdMN6Qawfh+dwtW4=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1772055828; c=relaxed/simple;
+	bh=hoZBQczrzcuyVPOXD+tTAmFlTYabJ94zI9Irylb/EVw=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=iaLkvgsPA9RETSKHeJ6NB6qJMIcEtj30efUnhLKg9sFGBOMfea5CR5+vuFqh1jBPSAqBTlo6RmXtDTNn1UFZ7mWixw8qohMEeld7+9huGjs3SwEAaTWVLaGihUPx4qihOU8OYq3aFrqvIeqO/dNzIQhKhLgBfuwDF1FddmaCdkc=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=DcXnIIPe; arc=pass smtp.client-ip=209.85.208.52
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DT2z7s3a"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4258DC116D0;
-	Wed, 25 Feb 2026 21:41:35 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772055695;
-	bh=Fpk7tbw1NnxpCGy61JuvRTfaQXL6WxnsCaO2aHRbBRM=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=DT2z7s3aCz+tTN7U22L3olUcb3ngSga7ZTIHIxxJNmAUchckrNj4LxTJaEwwIFFYO
-	 7VwbFDPszcqaBPhTr/d9O3pqgmCJu7HLKXbj+Z1GXtwZtoZWDsR/VW0EDOGKz77Jup
-	 GH+X38heNcV6E5kJkBPzct8OTaa+VBO5iGjYLT0qQemNGBR4XqpdTZW9lvap5QfRmq
-	 Gp/QvaVXWAf7gFnRVcVz7iyIxf+RNly9yrN1EX59GU3GDawYiZa8+kOA/9XvvMiG0r
-	 jdxjADS/Qz4eJz4VuD3c8uyC8KVlRlpO5RGYMIehwbYmqG+sLTEtVaEyG8mnWLE4PD
-	 3KN+P9Lo5oNgw==
-Date: Wed, 25 Feb 2026 14:41:33 -0700
-From: Keith Busch <kbusch@kernel.org>
-To: Maurizio Lombardi <mlombard@redhat.com>
-Cc: hch@lst.de, hare@suse.de, chaitanyak@nvidia.com, bvanassche@acm.org,
-	linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org,
-	James.Bottomley@hansenpartnership.com, mlombard@arkamax.eu,
-	jmeneghi@redhat.com, emilne@redhat.com, bgurney@redhat.com
-Subject: Re: [PATCH V3 0/3] Ensure ordered namespace registration during
- async scan
-Message-ID: <aZ9sjbZ3CEW_1rW1@kbusch-mbp>
-References: <20260225161203.76168-1-mlombard@redhat.com>
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="DcXnIIPe"
+Received: by mail-ed1-f52.google.com with SMTP id 4fb4d7f45d1cf-65f3a35ff13so3613a12.0
+        for <linux-scsi@vger.kernel.org>; Wed, 25 Feb 2026 13:43:45 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; t=1772055824; cv=none;
+        d=google.com; s=arc-20240605;
+        b=NSG0ySRYizrnl2GGL6+FTEBckGiWsI8RKG7LfSRkISmWRDaEAQgSnZbLFmNzBEd02Z
+         Y0m+zzkjzoCyoFMQ4Gq49RlHWdX4UEUFcgASNZclo39eUESCszLMd/3b+5faMKwU7KXV
+         tJgEJ8+SVsa1aFeqnqKScQIRaBp419n6AysIvigqST51uCrQOXPDVpp5z2AdDhx6QEom
+         gOXdASTfE8JKEx3ny0D5c4uj2na8/GK8ed8kA3v+I/Y0kaCf0LSjhouxrgDCntDyk67r
+         bm0vlf8g24ChKQN5xSpExDelxk0mv918EGX4Ei10TvEq95DTKHBrK+ZlL6b5igNMFNFB
+         HCIw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=vB9FeLIHdzkOeJQl8sZ1jnIIU5NTPuPRUQDCv7qOk1c=;
+        fh=E7Ey2w2yJ2Orw82ch25GKofu0Ty1teiOZSJV+fGABqQ=;
+        b=VAt/ML8+/e1NfFVAD7101UFITqubooG9FxZ/WrlfWzjQ6aTPk+skUVDLXQrePxi1/V
+         rp7BEWGZrLYkbjRAItECDK828dShz6BjCKa35kV6mzWysV3ahlJzoV3pohHfZF2FHZar
+         KkBg0J/U0KzOp96+NaLVBfnP3xlhG+CkcGs4Px8V49spDkL5+QBIN0TedgGzJsTHAECw
+         eJqJyXic+xzO2XEtL/QGUAG6b9tzziEkp5BNPTlmkx/3wqkIuEv8L1nV2f2VE/q/29T5
+         w4Y//yeiBC7Pms3Z7YhxF4QDJvjqLMB3dn2Tcrg+YsmtxwqSUqAwDUcwZOVEwSArypIl
+         K7lw==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20230601; t=1772055824; x=1772660624; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=vB9FeLIHdzkOeJQl8sZ1jnIIU5NTPuPRUQDCv7qOk1c=;
+        b=DcXnIIPehOR7Zcc84tU5ax/4/X+fJQQXdh6G/qeIGgAwD6QNLuPBvyozFNu04p1olg
+         g2ioHyEBoajIsPgNamu8pOCASAUioThGOznYmtfFxA2PNCUI/goNDca2bs4YaC57UiMX
+         hrNrJLYnxtIrwCeUCMpB65/mfvXVpuwHhNmB8r2rpeEZVUk9JmP1VTBaWsG8jXrjKXwl
+         UiqonoSGe9mduDMaJoz8Kgszdb+iCjKBceJQZRl2elaXYdryJsUcOdQPBv+X7m1a9tcz
+         uA3wykguwgIff37UR05C2cadCAQdbVnrzA/akWYG16NJ0Q72rMQDl7LjJp/0lKeJMubA
+         Zb8Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1772055824; x=1772660624;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=vB9FeLIHdzkOeJQl8sZ1jnIIU5NTPuPRUQDCv7qOk1c=;
+        b=wzrmFL7eOkwTcggcPtdK/XhcKKN6C6RwPzD1EPEfC9bmuWafOxworbUrSSywSEnAzS
+         6sNOg20sFsShbviYQ1pdblyT5pZwhTf5t8vVzkLXcjUp5n9jHdy4YLTdXKYixbQgW86z
+         GpbwcneaK5Q0Y1V2yxXJaSXYLb8wFpiv080TSpHQtXftN2o3ncPjAAKn6tU/FaG1rjec
+         qBOs7J+AjcKgtkqlef9+GpEljMx8dmM1YWjizD9hX49wBxPgE7n/ABUHxQSS/8Rq+ntm
+         m5aliKVFQ6xJnDPPDZMlb8dcXj9DDlf3FxSYyVaGwpdC9XElqGpT45wO6fwEsZN6CnY4
+         J7OQ==
+X-Forwarded-Encrypted: i=1; AJvYcCUyBa5HOFouRWH2Ivsl5p2WecsJCwRy04wAnYT9C2RbvfBbfc8sKwwEtqEm6AL+vTlbdsbFFBw5MkOv@vger.kernel.org
+X-Gm-Message-State: AOJu0Ywb8dlQkOANbxIMKzLf/URDDda4gL8Fifp3y/Zd04FcSOweNNro
+	exDi4yBYLwaFWDr40NzfosGh8MsJhoJMUXg+gc0Cc7vS57aMMQe8DLUd/WOpUk4FWmYeTx57G/m
+	EwEXWo0wtWcOOw6ZaOuAamsKORphkwVP+uP9FgyxH
+X-Gm-Gg: ATEYQzxnTW/0KgDa4LC0Yl9/DPWbI6ewH9NaOym5XXO1Q2DOq1JMT7MlCI6yHLS5jXd
+	HDnuAVL/XaTU7noqNTzh+9+gpxTU6uwKtuciKPmhhFh3XMwKsjGV06bybM7QSxhOzEatlv5ly20
+	8oWap+wPYixjjt4xeOpuMzFLt64tOdSN4JEMqmGa75e3hO5i5mall8fGITS4sy9A2WvBd+wLGPy
+	HeZ5tPzJpoTsS4P7PZYhpOYFDQlWIWZDLT2IS1h2bCdObp9OSc8ID/LAnLYB5THbLfNWsbm7mj2
+	vyX7kFOCrSx77H7S35R26lZFYDUIQNqh9A5j8A==
+X-Received: by 2002:aa7:c7cf:0:b0:658:e7a:6fa7 with SMTP id
+ 4fb4d7f45d1cf-65fab61a7b0mr11377a12.4.1772055823405; Wed, 25 Feb 2026
+ 13:43:43 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260225161203.76168-1-mlombard@redhat.com>
+References: <20250619111806.3546162-3-yi.zhang@huaweicloud.com>
+ <20260225000531.3658802-1-robertpang@google.com> <7d2a3f65-4272-46c1-991a-356f0d2323cb@huaweicloud.com>
+In-Reply-To: <7d2a3f65-4272-46c1-991a-356f0d2323cb@huaweicloud.com>
+From: Robert Pang <robertpang@google.com>
+Date: Wed, 25 Feb 2026 13:43:31 -0800
+X-Gm-Features: AaiRm53fO14_kYBnlB-QimzynwfGzteAR7wRZiT1Sf0awQgFveGcUyR_Z7IWsCY
+Message-ID: <CAJhEC05L7QEc9iY7gFZVK3SPYvFhtFyURss6xQgZ-qWwZZkFjA@mail.gmail.com>
+Subject: Re: [PATCH v2 2/9] nvme: set max_hw_wzeroes_unmap_sectors if device
+ supports DEAC bit
+To: Zhang Yi <yi.zhang@huaweicloud.com>
+Cc: Zhang Yi <yi.zhang@huawei.com>, bmarzins@redhat.com, brauner@kernel.org, 
+	chaitanyak@nvidia.com, chengzhihao1@huawei.com, djwong@kernel.org, 
+	dm-devel@lists.linux.dev, hch@lst.de, john.g.garry@oracle.com, 
+	linux-block@vger.kernel.org, linux-ext4@vger.kernel.org, 
+	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org, 
+	linux-xfs@vger.kernel.org, martin.petersen@oracle.com, 
+	shinichiro.kawasaki@wdc.com, tytso@mit.edu, yangerkun@huawei.com, 
+	yukuai3@huawei.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Wed, Feb 25, 2026 at 05:12:00PM +0100, Maurizio Lombardi wrote:
-> The NVMe fully asynchronous namespace scanning introduced in
-> commit 4e893ca81170 ("nvme-core: scan namespaces asynchronously")
-> significantly improved discovery times. However, it also introduced
-> non-deterministic ordering for namespace registration.
+Dear Zhang Yi
+
+Thank you for your quick response. Please see my comments below:
+
+On Tue, Feb 24, 2026 at 6:32=E2=80=AFPM Zhang Yi <yi.zhang@huaweicloud.com>=
+ wrote:
 >
-> While kernel device names (/dev/nvmeXnY) are not guaranteed to be stable
-> across reboots, this unpredictable ordering has caused considerable user
-> confusion and has been perceived as a regression, leading to multiple bug
-> reports.
+> Hi Robert!
+>
+> On 2/25/2026 8:05 AM, Robert Pang wrote:
+> > Dear Zhang Yi,
+> >
+> > In reviewing your patch series implementing support for the
+> > FALLOC_FL_WRITE_ZEROES flag, I noted the logic propagating
+> > max_write_zeroes_sectors to max_hw_wzeroes_unmap_sectors in commit 545f=
+b46e5bc6
+> > "nvme: set max_hw_wzeroes_unmap_sectors if device supports DEAC bit" [1=
+]. This
+> > appears to be intended for devices that support the Write Zeroes comman=
+d
+> > alongside the DEAC bit to indicate unmap capability.
+> >
+> > Furthermore, within core.c, the NVME_QUIRK_DEALLOCATE_ZEROES quirk alre=
+ady
+> > identifies devices that deterministically return zeroes after a dealloc=
+ate
+> > command [2]. This quirk currently enables Write Zeroes support via disc=
+ard in
+> > existing implementations [3, 4].
+> >
+> > Given this, would it be appropriate to respect NVME_QUIRK_DEALLOCATE_ZE=
+ROES also
+> > to enable unmap Write Zeroes for these devices, following the prior com=
+mit
+> > 6e02318eaea5 "nvme: add support for the Write Zeroes command" [5]? I ha=
+ve
+> > included a proposed change to nvme_update_ns_info_block() below for you=
+r
+> > consideration.
+> >
+>
+> Thank you for your point. Overall, this makes sense to me, but I have one
+> question below.
+>
+> > Best regards
+> > Robert Pang
+> >
+> > diff --git a/drivers/nvme/host/core.c b/drivers/nvme/host/core.c
+> > index f5ebcaa2f859..9c7e2cabfab3 100644
+> > --- a/drivers/nvme/host/core.c
+> > +++ b/drivers/nvme/host/core.c
+> > @@ -2422,7 +2422,9 @@ static int nvme_update_ns_info_block(struct nvme_=
+ns *ns,
+> >          * require that, it must be a no-op if reads from deallocated d=
+ata
+> >          * do not return zeroes.
+> >          */
+> > -       if ((id->dlfeat & 0x7) =3D=3D 0x1 && (id->dlfeat & (1 << 3))) {
+> > +       if ((id->dlfeat & 0x7) =3D=3D 0x1 && (id->dlfeat & (1 << 3)) ||
+> > +           (ns->ctrl->quirks & NVME_QUIRK_DEALLOCATE_ZEROES) &&
+> > +           (ns->ctrl->oncs & NVME_CTRL_ONCS_DSM)) {
+>                                 ^^^^^^^^^^^^^^^^^^
+> Why do you want to add a check for NVME_CTRL_ONCS_DSM? In nvme_config_dis=
+card(),
+> it appears that we prioritize ctrl->dmrsl, allowing discard to still be
+> supported even on some non-standard devices where NVME_CTRL_ONCS_DSM is n=
+ot set.
+> In nvme_update_disk_info(), if the device only has NVME_QUIRK_DEALLOCATE_=
+ZEROES,
+> we still populate lim->max_write_zeroes_sectors (which might be non-zero =
+on
+> devices that support NVME_CTRL_ONCS_WRITE_ZEROES). Right? So I'm not sure=
+ if we
+> only need to check for NVME_QUIRK_DEALLOCATE_ZEROES here.
+>
+The check for NVME_CTRL_ONCS_DSM is to follow the same check in [3]. There,=
+ the
+check was added by 58a0c875ce02 "nvme: don't apply NVME_QUIRK_DEALLOCATE_ZE=
+ROES
+when DSM is not supported" [6]. The idea is to limit
+NVME_QUIRK_DEALLOCATE_ZEROES
+to those devices that support DSM.
 
-The nvme-pci driver also probes the controllers asynchronously, which
-can also create non-determinisitic names. Is that part not a problem?
+> >                 ns->head->features |=3D NVME_NS_DEAC;
+>
+> I think we should not set NVME_NS_DEAC for the quirks case.
+>
+Make sense. In that case, will it be more appropriate to set
+max_hw_wzeroes_unmap_sectors in nvme_update_disk_info() where
+NVME_QUIRK_DEALLOCATE_ZEROES is checked? I.e.
 
-Just on the suffix part of the namespace's block handle, I have a
-potential alternate suggestion here. The instance names pulled from the
-ida guarantee we'll always have unique names for the lifetime of the
-backing kobject. I introduced that a while ago, but I'm testing this out
-now and it seems kobject_del is sufficient to reuse that name. The
-driver already did that to all the objects when deleting the namespace,
-so there doesn't appear to be a reason to wait for the final
-kobject_put.
+diff --git a/drivers/nvme/host/core.c b/drivers/nvme/host/core.c
+index f5ebcaa2f859..3f5dd3f867e9 100644
+--- a/drivers/nvme/host/core.c
++++ b/drivers/nvme/host/core.c
+@@ -2120,9 +2120,10 @@ static bool nvme_update_disk_info(struct
+nvme_ns *ns, struct nvme_id_ns *id,
+        lim->io_min =3D phys_bs;
+        lim->io_opt =3D io_opt;
+        if ((ns->ctrl->quirks & NVME_QUIRK_DEALLOCATE_ZEROES) &&
+-           (ns->ctrl->oncs & NVME_CTRL_ONCS_DSM))
++           (ns->ctrl->oncs & NVME_CTRL_ONCS_DSM)) {
+                lim->max_write_zeroes_sectors =3D UINT_MAX;
+-       else
++               lim->max_hw_wzeroes_unmap_sectors =3D UINT_MAX;
++       } else
+                lim->max_write_zeroes_sectors =3D ns->ctrl->max_zeroes_sect=
+ors;
+        return valid;
+ }
 
-What I'm saying is I may have been mistaken about the naming collision
-issues and we can just use the head's ns_id to get a consistent and
-meaningful name based off the backing namespaces. There's some unlikely
-races with multipath at the moment if we did use ns_id, but I think
-they're all fixable.
+Best regards
+Robert
+
+> Cheers,
+> Yi.
+>
+> >                 lim.max_hw_wzeroes_unmap_sectors =3D lim.max_write_zero=
+es_sectors;
+> >         }
+> >
+> > [1] https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/=
+commit/?id=3D545fb46e5bc6
+> > [2] https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/=
+tree/drivers/nvme/host/nvme.h#n72
+> > [3] https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/=
+tree/drivers/nvme/host/core.c#n938
+> > [4] https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/=
+tree/drivers/nvme/host/core.c#n2122
+> > [5] https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/=
+commit/?id=3D6e02318eaea5
+[6] https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/comm=
+it/?id=3D58a0c875ce02
