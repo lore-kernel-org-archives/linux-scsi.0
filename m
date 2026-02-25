@@ -1,70 +1,70 @@
 Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0911134EF05;
-	Wed, 25 Feb 2026 15:41:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CCC9D3F075C;
+	Wed, 25 Feb 2026 15:42:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.177.32
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772034097; cv=fail; b=dQR3wWZodJ5FIbbJP69ridWZvF9vbLN6ysQ21E/Iq3Rp44egHiSkZVl1OFzsd8ICpSODCqelFRzgMav89/Zl72ta/g/NZYENJLu0ZYtvpALIyU+PdGk1CpFSwLyj5C0YS1hgT5+gUyS0VxMV3LlJXkLy/Rq922X56VkjQNw+6JA=
+	t=1772034130; cv=fail; b=JmcvGGNGvWDGa2luObVmLnr+mJHcyr7R1eW45GIVbNzL+F23g3C8F6BYIp6LJcd/vPwDBvg5nGoB8Po4jXslCUaC5Aau4KJXOmGVpsEqOCdddVmraSa8/MncztFAK/LTMk3D91kZ56JrygwddxHqQnF68Y0ZKsScgl5tt7t5bmU=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772034097; c=relaxed/simple;
-	bh=AFGOWN0eXCpplyQmJnaittUK48HLoKMw87E/gJnHiBQ=;
+	s=arc-20240116; t=1772034130; c=relaxed/simple;
+	bh=FrBVHfZCPPZQ/4hQOZOuGEWG1BewiYQ0cKUbisuZi6M=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=CQpIJJcT7A9Yy9Bb93XkmkQCuwkTnyiZnuCPyiiL9RpNKQS1aQ/LS7zzR1Sl1sWXNvwT6mwKFvuXSNyTZ8SFiNNq9Aa7+Xj8Xs3dTVMZCiDBeDIh2teJfsT3r2j3SOUJdyKYTpUa7cykKve8y7sYVcyS5hjLwe9NaPpuPNvRZck=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=IgYL8tzb; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=irr9VIp1; arc=fail smtp.client-ip=205.220.177.32
+	 Content-Type:MIME-Version; b=LCcbM155umCnpbcXZ2KgsbD/w0SNyB2C7wAuYOle/61XQGI4crfzwkm4nERAAHxWrkQw1uCwJ5sec2OrwN6ur0B5lYE0uz3xCYMVYqRdfOPbjU3VF+A7PF3+F7mhdvGPbjtMt4RyknI0BiQzDhPaBi/LnEyJKGXhJMZ5+53MS7E=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=WBAGxRBq; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=C0apNM9g; arc=fail smtp.client-ip=205.220.177.32
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="IgYL8tzb";
-	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="irr9VIp1"
-Received: from pps.filterd (m0246632.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 61PAjClQ817392;
-	Wed, 25 Feb 2026 15:40:46 GMT
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="WBAGxRBq";
+	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="C0apNM9g"
+Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 61PAYSUi719577;
+	Wed, 25 Feb 2026 15:40:51 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
 	:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=
-	corp-2025-04-25; bh=3VNKRwcxBhu09Hrl8043+J1LdhMGueH4K8+IJi2W8Lg=; b=
-	IgYL8tzbO6L2QV/XWqVQzaW/ECUmXzfHYIABeDHq7LPEs9hYvLDEGrSYuFjDD+rt
-	th8LisjROkmthEiyLu6IraIAAhYzErzXYC4mNtdJj8O+cotF2oZfeqIxRR6Z5vZz
-	42pvrYhCTCRpd56HeG6/ZSoa4ohBkw7w/KIwZP1yCAXtIomen6qJhmygAqVoTm9I
-	vGVU0IzNiqVM0es2HH2qaChFb3FD7lAe8oZpwBhq3+L8I6vSYukXc/tCaVRVwpJs
-	n6zqFmZVFjkLqERBjJV/58LwYs9bK+MufhcVuGvHGpL3Bgk1W0AzX1eueRjmgUsz
-	6PSiHEOmB5rvrrdBV9dy1Q==
-Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4cf4areetr-1
+	corp-2025-04-25; bh=2dybJn/vBOsx8StXvDiQTGnBXjQQHwYIv1GVOy+AeRY=; b=
+	WBAGxRBqNUe39HJR/14gGlkItCJJ1dbKXS7o62E2SS7zdLmU7GOaHDeCXrG/NAQU
+	Yv11PPvY2hGss5KPmLU5Jx9Kn2GTqJsqRKS4LVRvL8rTNxzcgg72+wlv8YBLVFrU
+	4vsRjcPLk9k0GRzBrsa2MhCDDuO70tChrrwBMh3Tm+/nuiJx+eOhUgDxgy38hb06
+	BX3uJkq6MGoxSPom87xv65tDUY2OqtdB9pvPvULJ61r73hWEp8560HWg7giRc3PA
+	5Y1dczxNfbvNWbgP4Wc8lFPeAErl1uauNA9hQZCWWQUgMPoN1R/hDxIfWbBfW2Bk
+	0fyD5muJPCUjT6uECqXO5g==
+Received: from iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta02.appoci.oracle.com [147.154.18.20])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4cf34b6eqc-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 25 Feb 2026 15:40:45 +0000 (GMT)
-Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 61PFCLrt038517;
-	Wed, 25 Feb 2026 15:40:45 GMT
-Received: from ch5pr02cu005.outbound.protection.outlook.com (mail-northcentralusazon11012002.outbound.protection.outlook.com [40.107.200.2])
-	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 4cf35nfwuv-1
+	Wed, 25 Feb 2026 15:40:50 +0000 (GMT)
+Received: from pps.filterd (iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 61PF7TS4012588;
+	Wed, 25 Feb 2026 15:40:50 GMT
+Received: from sj2pr03cu001.outbound.protection.outlook.com (mail-westusazon11012039.outbound.protection.outlook.com [52.101.43.39])
+	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 4cf35fg53w-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 25 Feb 2026 15:40:45 +0000
+	Wed, 25 Feb 2026 15:40:49 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=eBK+FUbOuXR4tKVI8KYsyjV3y6UdjRJSDp92EAAJBN/hX/IhTI3vbIDjWTqqxaEC598I92gpJ2BVMy0qcywU1cOCtXn8XIp0y1nZsld4I4uUhPR9FBCn0lfA9tZdU7ekmfSDwYnv9fQPIfcy7yh4LaBcuiE+ddbAt/Pw1xi2FBsbmxE11T4xc2Sp1G06O+nLkJiL0KHLCWDVteDmOSnMWtm6ioWNYTVKLh4s79bZ0U8BvGW1O8iXcu5rLslnRC6dlCGh14u2Xs57r+MvVsq2BmR39miZF+R12ezssPYKoL/afDIsOQ9YEch8TjXvHTUmgJk7rgEk4lJg/J9fmJxtPQ==
+ b=uz3C3qJ+PHzSf5I8NAEvttsiR4EuXg49XGf8hTjfVS26yHgshKDE44meFKxPess2WWyWgkdP46TDlk+cAeIpNmBnXJjxScPhB606bOGct8K7gGzaCi0yydg760yGf89YAwMpiXIPwQNMP0Yw2lQo5FiNIGXYt8sZbb3ulUxWD3WD3cHQfJjYvGbcEHGQTh/sdEZnplBdK4coYR+1P8OtQrDEdNg2c32lLVGVQGOEt7F79LMCfloEgmlflJ4DKfpfTZN62X9WXNNi2OdJxqQFsMRoMjRA55hxISXHkUvXorm2CDREOk3V9eAHa7UiNkoGp0SliMROz96p2de0G+tMog==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=3VNKRwcxBhu09Hrl8043+J1LdhMGueH4K8+IJi2W8Lg=;
- b=Jni2hr+pLJqDC5w5w2teNgevrQutMtzCojKvV3ym9epSlMgictO2I4++QSvvN4qCtmu/vvumH5FPVpSXlEtApktW/uDeRNMvFi4O0a+QGysuvkkFEinCtGLBfFOs7ucsBhWSTqTQJIAvgbIs+B1w5ZmlhkmzmVIo4cTkAtXhKLaY3gy34jI/PiAorDoUnEzGpyFwdP51goFP6gv4Cdhs4ame1BvI3HOu7441yYkeusu91JaE4Gxmhu79Kcq+vCGhj5D2SA3TOj6BbbVyM4g/2u2ey39wHQ+9uzyd1yoKbGcbNO/P8lN0YX6uumBu9I0+i6OmT6545xSCmTTnz9ng9w==
+ bh=2dybJn/vBOsx8StXvDiQTGnBXjQQHwYIv1GVOy+AeRY=;
+ b=AEGgvTL8CYso6zeC8AmBb4TIi/WevJeMl0KoyWrhOV6ZKgyphmWiZh+4efGB3d6w7ju8e6gjBJ5i+AZN6zidOcETGdA3+gZ3KKRVxDMIFOJrHybLY+wIqJ8Gn4Uu2xqxQXtMlJ7npePfzcVom8qr08FouUPAVcSKhmV91ULEboxAFSlaUrjc0ci0NWx08eafViPCALOWqiv0nIitkU4gfnHELbhrGveymZL/kDLHCAziPyjmOJtQoUJpufIdT7Os3A64b/ex/hTcMhsFkZ3Hukt+/g/Vc4BUnnNojVv6ruIycOVWlWtZQWGm+vOvVBOMUq5UV+2Pnm0ZgPplB0FpcQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
  dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=3VNKRwcxBhu09Hrl8043+J1LdhMGueH4K8+IJi2W8Lg=;
- b=irr9VIp1n3PDYxwSA0KOypiXgJEdrca7X5ksu5SXp7o4ZGaM8vX062JK/DG2m9GgJWY7lZytyJYpvAew4E4shfUUVci/odMz8sJ50o+dKGnm0Y+b3CZejN2Qu6NOWUm+EbVPGtMWlnow7Jl9O2r7Rz7rKHSq2oNdVHpyrb6j5AI=
+ bh=2dybJn/vBOsx8StXvDiQTGnBXjQQHwYIv1GVOy+AeRY=;
+ b=C0apNM9gs47/WEw+5HvbGvWO4LZFxnV3277jWguEOpiyAFMPJt2BHpCkMuZ+mxT5o6Pm72s0ROdAaOpsESVfV+3maYNSvfv1KfpFZKFwtGy+DT0fbJR8bInCZWXdQtX82X9dm60BYak5HtP/cxV2PrQxKQ+MhFd2Dih81jrpqXo=
 Received: from DS4PPFEAFA21C69.namprd10.prod.outlook.com
  (2603:10b6:f:fc00::d54) by PH3PPF34C504C55.namprd10.prod.outlook.com
  (2603:10b6:518:1::793) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9632.21; Wed, 25 Feb
- 2026 15:40:39 +0000
+ 2026 15:40:45 +0000
 Received: from DS4PPFEAFA21C69.namprd10.prod.outlook.com
  ([fe80::5266:1601:5598:3f0a]) by DS4PPFEAFA21C69.namprd10.prod.outlook.com
  ([fe80::5266:1601:5598:3f0a%4]) with mapi id 15.20.9632.017; Wed, 25 Feb 2026
- 15:40:39 +0000
+ 15:40:45 +0000
 From: John Garry <john.g.garry@oracle.com>
 To: hch@lst.de, kbusch@kernel.org, sagi@grimberg.me, axboe@fb.com,
         martin.petersen@oracle.com, james.bottomley@hansenpartnership.com,
@@ -74,16 +74,16 @@ Cc: jmeneghi@redhat.com, linux-nvme@lists.infradead.org,
         snitzer@kernel.org, bmarzins@redhat.com, dm-devel@lists.linux.dev,
         linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
         John Garry <john.g.garry@oracle.com>
-Subject: [PATCH 09/19] nvme-multipath: add nvme_mpath_{bdev, cdev}_ioctl()
-Date: Wed, 25 Feb 2026 15:39:57 +0000
-Message-ID: <20260225154007.1033735-10-john.g.garry@oracle.com>
+Subject: [PATCH 12/19] nvme-multipath: add PR support for libmultipath
+Date: Wed, 25 Feb 2026 15:40:00 +0000
+Message-ID: <20260225154007.1033735-13-john.g.garry@oracle.com>
 X-Mailer: git-send-email 2.43.5
 In-Reply-To: <20260225154007.1033735-1-john.g.garry@oracle.com>
 References: <20260225154007.1033735-1-john.g.garry@oracle.com>
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-ClientProxiedBy: PH7P223CA0001.NAMP223.PROD.OUTLOOK.COM
- (2603:10b6:510:338::22) To DS4PPFEAFA21C69.namprd10.prod.outlook.com
+X-ClientProxiedBy: PH3PEPF000040AE.namprd05.prod.outlook.com
+ (2603:10b6:518:1::59) To DS4PPFEAFA21C69.namprd10.prod.outlook.com
  (2603:10b6:f:fc00::d54)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -93,276 +93,505 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
 X-MS-TrafficTypeDiagnostic: DS4PPFEAFA21C69:EE_|PH3PPF34C504C55:EE_
-X-MS-Office365-Filtering-Correlation-Id: 3b8d6ee4-852d-4629-0b81-08de748439f2
+X-MS-Office365-Filtering-Correlation-Id: 0ee43a02-ce06-45e6-0151-08de74843dbe
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;ARA:13230040|1800799024|376014|366016|7416014;
 X-Microsoft-Antispam-Message-Info:
-	K1RV1x7MzwPxpLsO5yfcOHBHcaxRwm4aWxsBIoDvqACQl+N9ODgdlnfjjQ88WQa3hqTy+5KuCUqXS7ag4GfNAGeJ3bmn6BxkzR42ObRfU4HKVax+HBQKyQNgadqbFcFhZApX+LZ9w20ZjhD8cEHGO1M674qgkFcrbp5aZIo1MYWuEXYVGPhv6XlZZQcvMcS2sYH85Qoaxw7pM++zigEAJs2rXJ+GRjjjaSorlMmC36xNfWPPAVvBkBEyxHsrrXyDKT4gzh+3AX41cV8FwVy4HPJ7hluQYkDB28G16XPVE7AO0Ej6x9/Zo64hRjmpi5gIJk4gwnN7UK0/VkGXUZVk4aCDNvkwwavfIGx9xEP/pcebtS+WEzNW0hD9YZOTcuEcRW4wsr5QMoxwyXAuaEBJx5VIfzB1nLSuOxEJshvOMf8f+mqIWbAfITH6YayyEO9tvJNhx4KVUBwq5eU2JvxoM5xXBXL6aeqgjX1qwLuDc2YoiO7B7ahmpjpZeEHEHzzq8cAyetz5Xe3QRoOYo0WOKKlQngPkBC1gUkJT4oJHe0hE0veexznQpzwiXWISvBTH3qoxdkAsX6AzYQNO02AGOVx0CunQs9vlC80KWr9CwpdDI1WfccWbTCOL7ag3AgdV7pDkei5Ac0kJk8DhRDBAighMDcnxEqd3kH2ULZ7J6bYTJZlnMC5wu/ONy6F8ZSjRZLEVkD+S5A7Ha5SQwTrh+8/zyrL1fJVHWQcrvj1enRw=
+	Gwz8IAQ/lNv9qcf5WQxOj8FkPKPmGaYuDazBTsrSIhkKIfuxIEs2s5loT1LHEGHObagBI4cLIyn2bqBGidxoLhF96OSCcsTTHcIA0oa86JWHU06gSfDfQ8uxuzy1VkiXU+tuEpZ2Alta3WzWzrj28M/VG3mBZbjUrjHM7g/cZLAq6NDAFu8CXiTCuY6H9Ue6tmo//9oihl624S19dURLSMEch2qaEYQh6FloO1GPE901TfsDrHcU09bmNcJvcuQ+RkbyeObRAQuQ68Cedh3mZzAh68vPjqp0331fvDjIhTKe8yqEFTNMUWLcTcdzJQD2R+ZZ3fZ4lwwIhdff6CFSYt5HqKwzdumodYdm1uFuMIdp9AeGrU5RB+wKkZTTZQUMzMW7eIhlyXuFtiCkXRk3w76iJert4wgQglgavzV1r7ShmFktc+SFXrWaZhxUIx+ytP+PxUElWecomBpb500j4a9OwWq6nfnNcl/OmZLs9xINkdo8EZSTSwG6fY9jGz6CZT/eQu6JTUwXCVFz0dgDqs+xUHtQBzF1zAN23ZBlSdPm0n/j5KfH8MNXxIdF5iPy8lpKaE/Cgsvg4LOFuMWkQy7kMfIx7zbJPoEyhUdEw9mYZ1BhQcmWwfr9QuyDpc9CQsVwEL3ThP1bpHjHTSAaqYcaReoEaIJaA+aOEATKWQpP8klZHbpCG5+BkM7naXX2UtwuidzvCxhmHN7dKC/MZT2068prZ0EvcdKMLkpUiDE=
 X-Forefront-Antispam-Report:
 	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DS4PPFEAFA21C69.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(376014)(366016)(7416014);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?Vf3mCbYoL0xxHnZTZ3UrNa0iI2r34eSxrvuQuXdOIbpUEq8r/bOJz+o50eM1?=
- =?us-ascii?Q?eu9Z8EHGVrhUW1VQS/+7pRtbmayhcxft5BZozw7n6nLARCDbtGUwxTLQiIsi?=
- =?us-ascii?Q?3LBuiby0b+vfAv6UePdk3u80k4gO6/OZhfSPhZVipWy3KDmdRrkj9luPl3GB?=
- =?us-ascii?Q?ZjBDHeSgyKzJBShJacyDs8pe20zet0NPNKG1ply6wzfsTZipcIH9owEt05D1?=
- =?us-ascii?Q?33gFqvvGmAGzTKxr/CA9EeNZzvJNYwyOOcuQRaTzzXQaaL5tgn5Tl2enPINU?=
- =?us-ascii?Q?4iaoH1DmZRu9Jy7VMAWYhbLhhW6wlXbrc01Rnqf58b5h0Pb8KyDpoxhMt/s8?=
- =?us-ascii?Q?6ARaZ2vZ8leebxbp0EdB1yHTmZUU5ZNkZvGpjY9OaQIHH59mXt2y88Ekxkt6?=
- =?us-ascii?Q?LL9WKDZW2joX7bT8zeBm+Pape6kQ3kSC8lxPYQdl5NymZuG8qbJnFse2Fjot?=
- =?us-ascii?Q?XhFFsatqcs6KyP8Yz2qBQbYkKGVgaAW7WDgABVkFLc2M35n5OpGZLPzwSrXW?=
- =?us-ascii?Q?Yv0akunLFUNYiCVj3OgSIe8NaGOFB98VJj2v79vr0F8+uql6dJPtKkSwoqMe?=
- =?us-ascii?Q?1bnsu0bJdIGBBA1FflL75rZD9n4fVhHFzmE1d5BTa2sGkcpLeDy4KjIV6Q6m?=
- =?us-ascii?Q?xemAlFxClLbTbU+VLVogcXo+iUVe5mA12IGT5kYvbZHawONfopgkiP2bcpZw?=
- =?us-ascii?Q?mw34YqyEUF90/PI2F3m8VeBfVXmPxU9BFInq/64M15xlFq6tfAANBz5TkrhI?=
- =?us-ascii?Q?lykF2JTFLUfbawTLM5DE+2xh3bfAiiz57qVUM004Dv+00QR89JQZ+gfcGIJu?=
- =?us-ascii?Q?gVzoJY1s3l9wG53/WalgXpiG5CWuK8HuOSDD1zPPLvYgYkt/cCyYx75hhLYP?=
- =?us-ascii?Q?/hfidWaP1rkgqBdz7o5xv0/ffgaM8/1/pbjE2J+WCAHmp8qLk3GHr8RSouwe?=
- =?us-ascii?Q?TBF0bBDEqolnavghpgbRc5r0rafd94txmhDJOS3moBVXzfmitmNVMyAiif6t?=
- =?us-ascii?Q?8HqdSzl5CtBM0czRkuXwffcAmp7oQl/2TBEHq+ukyc6zQ10LtUAW2nMxI6rh?=
- =?us-ascii?Q?IisSOz0CHwvrgEKBItphVH+ytfhKSjNpZvZY7+uLtMKVaOOqnnTOYW7mnerw?=
- =?us-ascii?Q?iMLkbWqONex6BK2UMHw0Z6btXJR24rbbDAg1+otv9R2TAtrQ0DdVqiPUVIib?=
- =?us-ascii?Q?Ql8wGgIK9bbnRAA/o52XWqMeEYdNfK5djXQxOy4mZiNzO63GiNhlKcaxX1Wg?=
- =?us-ascii?Q?PKjNy+rQ5BLeKQSZMd5Ywtq5bUKgRQfoRdswB+XJ5xZnE9aLvAVEpBeB562U?=
- =?us-ascii?Q?tYBBlL4n1EUJEiZkgIMgt2HeVlsnO6X/zP26IDhzK7l+V97sutJqjvSo/FQq?=
- =?us-ascii?Q?rvHUyBSYUR1nMZc+5IcTFtXcqtkkUV8OJ6LX+E+KSdbKUXiOSd/9tpif47hY?=
- =?us-ascii?Q?MeZO07pMVRIGlTCYJRB2wD52Z2ehhEGWkxxF0FL1Cji23cBW8PzC/ielIpYm?=
- =?us-ascii?Q?eAkBxoDzXOxlL5tFyd+JI03N9AvjcRKkhbsHPMXZJF1y4miQ1rfXAfwKdhCi?=
- =?us-ascii?Q?rOz2E8aLGoeVGmugtEZ5nmKHVMazHranSnzRAHnOkgRNCjcIk6s0QnhDKDmx?=
- =?us-ascii?Q?7AaPn/7u5lSMHZSw+Dpxeq+sNBJbuLW2NIGnc0nK1xaAROFPNDapbjEuZuX/?=
- =?us-ascii?Q?wFY2ocsTrH0J5wX+skEvxV4ye7bci7jmqwULZ6pEShX3Y9xZSWtdS/VsMTSL?=
- =?us-ascii?Q?9g5fxUaRWvv7HyYjE9P0SS9EjD+h7qI=3D?=
+	=?us-ascii?Q?QeSrVnRrsdFuSv+nha1qZkH/vOdKI5/RVcClsqJaSWn3Nq1oLzMrmqAKS1bg?=
+ =?us-ascii?Q?v2gQB0hrQr3q1Gj2sE9wXqcZyJOyEtray3VjQ+6DpmRWkV/m+t94o5wgSr7J?=
+ =?us-ascii?Q?7wwrXDvhGvz6RW17i7Gbi2GYVW2pL3/8WyGMDc1aywxEHXfRF7+3BkmbinhM?=
+ =?us-ascii?Q?zdcn/pc4/+kxt6/DP6wDY8+Xm3rNBZF57CP+s02DcnpG6rF/2MpKMKNpvi3b?=
+ =?us-ascii?Q?yu9bkqs47j97azg0+MoNVRhyOAegq/Y+esj+T/fv0/+nA3j0MlT4VGUv4c7i?=
+ =?us-ascii?Q?RNi3azkOpcPQVqqF2VOJj/01LSlub5QsVbkURo+ToXLD8KU0NDJIX/6uz+DZ?=
+ =?us-ascii?Q?3w8OjHaHsML/ahj+qwgAaGzf5ucmiF1ewcuvGh1lVDAoyK/wmkzcpZ6IfoS0?=
+ =?us-ascii?Q?pUJQaKSI3/QfduCxRqMe2v0CgzMbYFWdDDIkVQw/CbOn2CBuYgE4IbulhV0o?=
+ =?us-ascii?Q?b5SwPaBJpKSNoRaoksgDhF33r2m9yR9jiJkRjSXE73wBd/4qK+Ttb3b8GK11?=
+ =?us-ascii?Q?9biYn0EpWxxOB1/H01/RSqlt+UQNfheNSr1GAeOaQHeJuexeFRmMOhRQ8J+f?=
+ =?us-ascii?Q?BEIpqu5jmPHxfrxHwvowFN2k/4cnlHEL2uNbMWXwLypW/7SYJ5kv/3D12zTp?=
+ =?us-ascii?Q?uPo4Dv4J62Nrndj7hEPSCAnh2Y9qtnoYDAQZw/NEfDE7xvrCQh97OVGW85Hg?=
+ =?us-ascii?Q?kchMxxYoF7VcX6TAeNFSqOibFI2snEhHo+guRWJ4Q9yX9vk4P1kX6EyEasS2?=
+ =?us-ascii?Q?cXA+lc2In9bts8xFbRNE1Vq4zWbgYoTKE+wqR9GeMQb7TSh2JQLfMeRjWC39?=
+ =?us-ascii?Q?ACsxYrGI7MjHy8ss62nUgVWUIGRM+EgCNnTNlMBAXbRpsOyGzaHbACCBjxlA?=
+ =?us-ascii?Q?4ym15qkLrsRuDND2rIXi/tMi+T+nnnlo1CmfL5xXWl+1N+dxmOvKj8aHJbu7?=
+ =?us-ascii?Q?oXa7uBljgwLtdCpQBfyDasHRklKTArLhbbRskexsxKWVrGgHWQARdEJZfmsK?=
+ =?us-ascii?Q?xwg6pfYGMt+++mbcScJjDggD3mDanHYJzZvQU/KiBbN+YKJ7lJZuob4r3F7J?=
+ =?us-ascii?Q?e4CvnzPq1U41cZeW5oX+IytA7xwV3Mas5EWB3qojYbYbh7XRt2T/moBM/OPR?=
+ =?us-ascii?Q?nQO5tfug+W4UdbkTkBoV7Ff5NC02LdZQKMCkMnpoqoapISXcg3fYG/1fQP3m?=
+ =?us-ascii?Q?pOhdvabb8V2qHPdDDOkKkx7yv98/AGEJtYB5SC/YlkaB23aKOuYmxFsLCLOw?=
+ =?us-ascii?Q?FGER++7GkZmCE6B0Ha1RIa+Xf4UiuuOvGr0exvmbSsiBKxC6B1NpILJjk+Gb?=
+ =?us-ascii?Q?GBcpzu6AEMWH1LtZRtlmTAaPA3TuDL8y/fLex/CrWomm4QiRCwDE1GFhnzwE?=
+ =?us-ascii?Q?uxexg6tm8TTcA08CqpeYXd3tR5ysm2MlNV919Sy91VtFBV3xhI8RvQVO7m5b?=
+ =?us-ascii?Q?/nyFWQHegFc6V1zRmC0tk2uaLB+52AN+cRWyHcegJvC4Pg2dfsqDQ9X4q/Tz?=
+ =?us-ascii?Q?08iIeo/EhkQl11bMMjskOkuJtKTQkpQafk6/eTrRbT7yaPSLHKG1CL7YVAY/?=
+ =?us-ascii?Q?X6w23TF2P7/qrV38M+kL2LGQgKh0eaTtua1nzs82oUFIGETcuG8NrHk54Hfv?=
+ =?us-ascii?Q?5qQOwWJ8Fzn6WYAjH6P35Zi4NaP43w1NNw2Y9Shpi3kaBsCGC4NPW8OQXUPE?=
+ =?us-ascii?Q?beUtVyJPtm4w+A/6fxrjIvAmyHh7JYM7KWHuegqrZqQZCO614MPakZVmuqDy?=
+ =?us-ascii?Q?mrU1PMVHGpHxbQ0ZDVO+uZUq3Rdlib0=3D?=
 X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
-	tBUsIV0N04PgCu8/HwLHOuOjUPV1i3wSG+N1RKQjPCjmdHVV+TyEc2HZGwxNdm5oXw6Isn/Q+8WLbeHxbMsMW3GfgaajpZwh7GZVN0S4XGs4iIvEhhWX3oB71XKx7qOez4DNoTmY1CxH23lMzYKyuy3d8w+0y3V9hVlG6yvSvk8X99sneawE9h5MxrDGC2/Y2227VfstfaRD7pLr+G52qFxNFVgoDGO8H+kgsAQnJkQTmyeZ80j74sazuckIisSKRkOA9RccizWa8Xz946WTWw8cBlTLFvS37d0UPeNW6dr/ytuKMLd90sAPb7SBEq3SQoUu+AoO8SMNOIGlPJYcP9ftvv6t+szw5QUbKdJDbzBFRH9Ed5ljJAFvEeET2Jp7b7002fkgzAqXXGnz0uFNkPnYhoaT2gUAcm7/r8169drzgJtAvVX7gsDq+j1Vu6fYBjW86cnvUfd/D9tsFXro55BOYoKJI2GGrSmRLKbVgEwSOKK2yoMABdI2Ag6vTyTJGdvhlzhoFZYOVNcVtIS96BrSkVSk8OFKGPHSgZ08mwcc8LZgJH5Af44HsaEwW9DEcwQ4lKhpg0FE/i0SkxOjnRgEh71IPNS17UGzITcAJhc=
+	LvMi17KbTMB40xs/O/Riu9ehcShZgJ3Q/xTOKJyfcBtWct5+aLaFvE8/AWQfpjCe9X9oE/26Pw130C/WWW/yFRnxlGoEsD4FT2EGFbLjLCDUaiPUd4eaLDliVb7h+yU1wvKv+nFQXk/RRtYn38FpdrQhYxlstiqUTR48tyoD8gjQVUDWDz1qR7OQGbb/CH6YeFHb8USbu1KVY3/i1F2bX6bYYOacLxc21Z/ZaqcjPtWkelDhEF+UTWaw23esiusg3xEzDYlV853Z/JtcmnTtVSUcsDmTFoHY/+AZi9tYLMIBjz+whYeHQ0HdJZcIQ2xFfnwTgLM/QO4QLyig1dZ/0Wu9xozkfM0/m/5M4DkcRNCaPwylMIqeb3PwXvSjWbISbKGzTZYp1zmnYf/VQCSgJ/oJpZdYht3RGHV5+19YwKofdSqnCdIiKsxSDwYGq94BSZEJVw8d06u+MCNj1fCpYCLfSm7hjx6Is31EEEWJVOUszeAAeni2yWGcyCgPVb9B1/mPs1YKSBMhwwhxlD/vhkRb8cXh3t3cd2BKs5Yqf9RtVni8kahc5Wx2OXjMMFOK1iWwdQcYPMNn8y0POgb0cnAASwHEd58YS5pxYbgalW4=
 X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 3b8d6ee4-852d-4629-0b81-08de748439f2
+X-MS-Exchange-CrossTenant-Network-Message-Id: 0ee43a02-ce06-45e6-0151-08de74843dbe
 X-MS-Exchange-CrossTenant-AuthSource: DS4PPFEAFA21C69.namprd10.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 25 Feb 2026 15:40:39.1151
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 25 Feb 2026 15:40:45.4878
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 6ssKZmdAcdFVYRmi6XxfPTI4OPcDHnbxN/Qn6V7/H6XcvSn+ytKdIaS8B99E/2l44pfqUM1XE4NLQB3URA7gUw==
+X-MS-Exchange-CrossTenant-UserPrincipalName: RRlBI57s8FMKd93ev3r/DlUb48R+QOOHDuSrYaQzPN2r4Tj/U7IOkTAaTMCX5XEz9IUfTihbIGNoJIqKmI8zfw==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH3PPF34C504C55
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.51,FMLib:17.12.100.49
  definitions=2026-02-25_01,2026-02-25_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 mlxscore=0 suspectscore=0
- spamscore=0 bulkscore=0 adultscore=0 malwarescore=0 mlxlogscore=999
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2602130000
- definitions=main-2602250149
-X-Authority-Analysis: v=2.4 cv=La0xKzfi c=1 sm=1 tr=0 ts=699f17fd b=1 cx=c_pps
- a=zPCbziy225d3KhSqZt3L1A==:117 a=zPCbziy225d3KhSqZt3L1A==:17
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 adultscore=0
+ bulkscore=0 spamscore=0 phishscore=0 malwarescore=0 suspectscore=0
+ mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2602130000 definitions=main-2602250149
+X-Authority-Analysis: v=2.4 cv=GrlPO01C c=1 sm=1 tr=0 ts=699f1802 b=1 cx=c_pps
+ a=e1sVV491RgrpLwSTMOnk8w==:117 a=e1sVV491RgrpLwSTMOnk8w==:17
  a=6eWqkTHjU83fiwn7nKZWdM+Sl24=:19 a=z/mQ4Ysz8XfWz/Q5cLBRGdckG28=:19
  a=lCpzRmAYbLLaTzLvsPZ7Mbvzbb8=:19 a=xqWC_Br6kY4A:10 a=HzLeVaNsDn8A:10
  a=GoEa3M9JfhUA:10 a=VkNPw1HP01LnGYTKEx00:22 a=Mpw57Om8IfrbqaoTuvik:22
- a=GgsMoib0sEa3-_RKJdDe:22 a=yPCof4ZbAAAA:8 a=3GUDSd1fvbfyDRxfsxAA:9 cc=ntf
- awl=host:12261
-X-Proofpoint-ORIG-GUID: d9RGSStuHwpBlZownrG6sidkvES5Dj0O
-X-Proofpoint-GUID: d9RGSStuHwpBlZownrG6sidkvES5Dj0O
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMjI1MDE0OSBTYWx0ZWRfX93Sh5JFCkHd7
- qoS3Bt6qE0SWFnUR62bVWCA9rw0FQVZmxRn5oc7pWsyh+rTc395B1zPiGSK+y55xM5rM0V9GKi/
- RpaZ6G9XiJpuDZBmJ5ytme2jsjw7TDRD2mAhKIurGuJWNidwcY6FuEBJOJE7AXCod49onoss34Z
- iMu8ETboEvKoe88Eb9U52qFKAcxtrmVf4wU0NggQm4ouodaD5C8Nuoil4mVRTAU0XGlApbleoJp
- OyyspvFcc0sqnt3AF71VyTY5b1+KxvGeiW078EJ55F7/c+kdws6EdOSwJ49ljNcCwKVrqFIWaO5
- vFN4yoj6/XISSiknPEaOy5JyUI3HngPGkNJp8/3sLUc1kG5UcvwZsAuI/WrKfoW+gL5nSQaeUkZ
- yLZFi3k1TSBsCmDeGwFhMRNqLJM3L13qNOkGqk1d7t6yhVjR9KJ9tMAoq2e3LYGpVqSlYXOVOvO
- AJPZgqCYnnQT0vyv6QtZ08sFZJ/qFyJ9PjY1xqhY=
+ a=GgsMoib0sEa3-_RKJdDe:22 a=yPCof4ZbAAAA:8 a=aVeFJVSm2r6GLGaMoIIA:9 cc=ntf
+ awl=host:13810
+X-Proofpoint-ORIG-GUID: cMKlWq5wxMFfyR34hRKEVD0LVjXHQyi1
+X-Proofpoint-GUID: cMKlWq5wxMFfyR34hRKEVD0LVjXHQyi1
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMjI1MDE0OSBTYWx0ZWRfXxQuaB08tzmmu
+ 62kJkCqz/+6ABGWr8+CjI5s1h1dX/PzH0Tb8Ja0La4wQC9I10+jhNuya2E/6/KadI7d4ThkUinb
+ Mpe+vxhjNJx/wDfGbJenT2pSpKoG+Vd54RDLkvEyIbsTZNrnBozaET+cg9RbVyxKs/j4VnKC7lK
+ 2bs/TLPA2BTGr0qdL62HRxgaPYHBicxJT8/PCg7yU7gTNrDkXqUbPvZXYffCCmmxfNuWcFDPjl2
+ So7IecutSSXgb/q5KoQ8ciAZ71xYmEPlq1SsbRj0ZBtFnGVHYGmKJkakpmCdiM4lGhdBXi49PE7
+ kOBqCpgedNghvW50EyNF0ENNKHVRHWUEY7Z/+sresdRYVnhN5XVBnFCs1t8qQpCx2jBgBINh/Sb
+ HoN5YXSdeS70bu9ZWbmGu3dDVWXxaUH36eSsk2P1Mzo19Ud/tKPeKCNHu/o4cvnfARTV6QQXZOW
+ jYm+18KHKyVhiNb0HPNCrv4BwaDt6xxaHcD95g18=
 
-Add ioctl callsbacks as follows:
-- nvme_mpath_bdev_ioctl(), which does the same as nvme_ns_head_ioctl()
-- nvme_mpath_cdev_ioctl(), which does the same as nvme_ns_head_chr_ioctl()
+Add PR support for libmultipath in the addition of nvme_mpath_pr_ops
+structure.
 
-Note that ioctl callbacks are called with the mpath_head srcu read lock
-taken. Since nvme_ns_head_ctrl_ioctl() releases the lock itself, it
-is expected that the ioctls always release the srcu read lock themselves.
+The callbacks here pass mpath_device pointers. These can be converted to
+NS pointer. However, the current PR callbacks for nvme_pr_ops work in
+pass a bdev, and the helps us this to figure out if we are for a
+multipath head or a NS. Later the send command helpers can be changed to
+work per NS, when the full change to libmultipath happens. Until then,
+have separate per-NS command send helpers. The original PR callback
+functions from nvme_pr_ops can also be refactored to use the new
+NS-based callbacks then, reducing duplication.
+
+The new NS-based helpers are marked as __maybe_unused until the switch
+to libmultipath happens.
 
 Signed-off-by: John Garry <john.g.garry@oracle.com>
 ---
- drivers/nvme/host/ioctl.c     | 76 +++++++++++++++++++++++++++++++++++
- drivers/nvme/host/multipath.c | 42 ++++++++++---------
- drivers/nvme/host/nvme.h      |  6 +++
- 3 files changed, 104 insertions(+), 20 deletions(-)
+ drivers/nvme/host/multipath.c |   1 +
+ drivers/nvme/host/nvme.h      |   1 +
+ drivers/nvme/host/pr.c        | 314 ++++++++++++++++++++++++++++++++++
+ 3 files changed, 316 insertions(+)
 
-diff --git a/drivers/nvme/host/ioctl.c b/drivers/nvme/host/ioctl.c
-index a9c097dacad6f..7f0bd38f8c24e 100644
---- a/drivers/nvme/host/ioctl.c
-+++ b/drivers/nvme/host/ioctl.c
-@@ -682,6 +682,25 @@ int nvme_ns_chr_uring_cmd_iopoll(struct io_uring_cmd *ioucmd,
- 	return 0;
+diff --git a/drivers/nvme/host/multipath.c b/drivers/nvme/host/multipath.c
+index 6cadbc0449d3d..ac75db92dd124 100644
+--- a/drivers/nvme/host/multipath.c
++++ b/drivers/nvme/host/multipath.c
+@@ -1501,6 +1501,7 @@ static const struct mpath_head_template mpdt = {
+ 	.get_access_state = nvme_mpath_get_access_state,
+ 	.bdev_ioctl = nvme_mpath_bdev_ioctl,
+ 	.cdev_ioctl = nvme_mpath_cdev_ioctl,
++	.pr_ops = &nvme_mpath_pr_ops,
+ 	.chr_uring_cmd = nvme_mpath_chr_uring_cmd,
+ 	.chr_uring_cmd_iopoll = nvme_ns_chr_uring_cmd_iopoll,
+ 	.get_iopolicy = nvme_mpath_get_iopolicy,
+diff --git a/drivers/nvme/host/nvme.h b/drivers/nvme/host/nvme.h
+index da9bd1ada6ad6..619d2fff969e3 100644
+--- a/drivers/nvme/host/nvme.h
++++ b/drivers/nvme/host/nvme.h
+@@ -22,6 +22,7 @@
+ #include <trace/events/block.h>
+ 
+ extern const struct pr_ops nvme_pr_ops;
++extern const struct mpath_pr_ops nvme_mpath_pr_ops;
+ 
+ extern unsigned int nvme_io_timeout;
+ #define NVME_IO_TIMEOUT	(nvme_io_timeout * HZ)
+diff --git a/drivers/nvme/host/pr.c b/drivers/nvme/host/pr.c
+index ad2ecc2f49a97..fd5a9f309a56f 100644
+--- a/drivers/nvme/host/pr.c
++++ b/drivers/nvme/host/pr.c
+@@ -116,6 +116,51 @@ static int nvme_send_pr_command(struct block_device *bdev, u32 cdw10, u32 cdw11,
+ 	return ret < 0 ? ret : nvme_status_to_pr_err(ret);
  }
- #ifdef CONFIG_NVME_MULTIPATH
-+static int nvme_mpath_device_ctrl_ioctl(struct mpath_device *mpath_device,
-+			unsigned int cmd, void __user *argp,
-+			struct nvme_ns_head *head, int srcu_idx,
-+			bool open_for_write)
+ 
++static int __nvme_send_pr_command_ns(struct nvme_ns *ns, u32 cdw10,
++		u32 cdw11, u8 op, void *data, unsigned int data_len)
 +{
-+	struct nvme_ns *ns = nvme_mpath_to_ns(mpath_device);
-+	struct mpath_disk *mpath_disk = head->mpath_disk;
-+	struct mpath_head *mpath_head = mpath_disk->mpath_head;
-+	struct nvme_ctrl *ctrl = ns->ctrl;
++	struct nvme_command c = { 0 };
++
++	c.common.opcode = op;
++	c.common.cdw10 = cpu_to_le32(cdw10);
++	c.common.cdw11 = cpu_to_le32(cdw11);
++
++	return nvme_send_ns_pr_command(ns, &c, data, data_len);
++}
++
++static int nvme_send_pr_command_ns(struct nvme_ns *ns, u32 cdw10, u32 cdw11,
++		u8 op, void *data, unsigned int data_len)
++{
 +	int ret;
 +
-+	nvme_get_ctrl(ns->ctrl);
-+	mpath_head_read_unlock(mpath_head, srcu_idx);
-+	ret = nvme_ctrl_ioctl(ns->ctrl, cmd, argp, open_for_write);
++	ret = __nvme_send_pr_command_ns(ns, cdw10, cdw11, op, data, data_len);
++	return ret < 0 ? ret : nvme_status_to_pr_err(ret);
++}
 +
-+	nvme_put_ctrl(ctrl);
++__maybe_unused
++static int nvme_pr_register_ns(struct nvme_ns *ns, u64 old_key, u64 new_key,
++			u32 flags)
++{
++	struct nvmet_pr_register_data data = { 0 };
++	u32 cdw10;
++	int ret;
++
++	if (flags & ~PR_FL_IGNORE_KEY)
++		return -EOPNOTSUPP;
++
++	data.crkey = cpu_to_le64(old_key);
++	data.nrkey = cpu_to_le64(new_key);
++
++	cdw10 = old_key ? NVME_PR_REGISTER_ACT_REPLACE :
++		NVME_PR_REGISTER_ACT_REG;
++	cdw10 |= (flags & PR_FL_IGNORE_KEY) ? NVME_PR_IGNORE_KEY : 0;
++	cdw10 |= NVME_PR_CPTPL_PERSIST;
++
++	ret = nvme_send_pr_command_ns(ns, cdw10, 0, nvme_cmd_resv_register,
++			&data, sizeof(data));
 +	return ret;
 +}
 +
- static int nvme_ns_head_ctrl_ioctl(struct nvme_ns *ns, unsigned int cmd,
- 		void __user *argp, struct nvme_ns_head *head, int srcu_idx,
- 		bool open_for_write)
-@@ -698,6 +717,63 @@ static int nvme_ns_head_ctrl_ioctl(struct nvme_ns *ns, unsigned int cmd,
+ static int nvme_pr_register(struct block_device *bdev, u64 old_key, u64 new_key,
+ 		unsigned int flags)
+ {
+@@ -137,6 +182,26 @@ static int nvme_pr_register(struct block_device *bdev, u64 old_key, u64 new_key,
+ 			&data, sizeof(data));
+ }
+ 
++__maybe_unused
++static int nvme_pr_reserve_ns(struct nvme_ns *ns, u64 key, enum pr_type type,
++		u32 flags)
++{
++	struct nvmet_pr_acquire_data data = { 0 };
++	u32 cdw10;
++
++	if (flags & ~PR_FL_IGNORE_KEY)
++		return -EOPNOTSUPP;
++
++	data.crkey = cpu_to_le64(key);
++
++	cdw10 = NVME_PR_ACQUIRE_ACT_ACQUIRE;
++	cdw10 |= nvme_pr_type_from_blk(type) << 8;
++	cdw10 |= (flags & PR_FL_IGNORE_KEY) ? NVME_PR_IGNORE_KEY : 0;
++
++	return nvme_send_pr_command_ns(ns, cdw10, 0, nvme_cmd_resv_acquire,
++			&data, sizeof(data));
++}
++
+ static int nvme_pr_reserve(struct block_device *bdev, u64 key,
+ 		enum pr_type type, unsigned flags)
+ {
+@@ -156,6 +221,24 @@ static int nvme_pr_reserve(struct block_device *bdev, u64 key,
+ 			&data, sizeof(data));
+ }
+ 
++__maybe_unused
++static int nvme_pr_preempt_ns(struct nvme_ns *ns, u64 old, u64 new,
++		enum pr_type type, bool abort)
++{
++	struct nvmet_pr_acquire_data data = { 0 };
++	u32 cdw10;
++
++	data.crkey = cpu_to_le64(old);
++	data.prkey = cpu_to_le64(new);
++
++	cdw10 = abort ? NVME_PR_ACQUIRE_ACT_PREEMPT_AND_ABORT :
++			NVME_PR_ACQUIRE_ACT_PREEMPT;
++	cdw10 |= nvme_pr_type_from_blk(type) << 8;
++
++	return nvme_send_pr_command_ns(ns, cdw10, 0, nvme_cmd_resv_acquire,
++			&data, sizeof(data));
++}
++
+ static int nvme_pr_preempt(struct block_device *bdev, u64 old, u64 new,
+ 		enum pr_type type, bool abort)
+ {
+@@ -173,6 +256,21 @@ static int nvme_pr_preempt(struct block_device *bdev, u64 old, u64 new,
+ 			&data, sizeof(data));
+ }
+ 
++__maybe_unused
++static int nvme_pr_clear_ns(struct nvme_ns *ns, u64 key)
++{
++	struct nvmet_pr_release_data data = { 0 };
++	u32 cdw10;
++
++	data.crkey = cpu_to_le64(key);
++
++	cdw10 = NVME_PR_RELEASE_ACT_CLEAR;
++	cdw10 |= key ? 0 : NVME_PR_IGNORE_KEY;
++
++	return nvme_send_pr_command_ns(ns, cdw10, 0, nvme_cmd_resv_release,
++			&data, sizeof(data));
++}
++
+ static int nvme_pr_clear(struct block_device *bdev, u64 key)
+ {
+ 	struct nvmet_pr_release_data data = { 0 };
+@@ -202,6 +300,45 @@ static int nvme_pr_release(struct block_device *bdev, u64 key, enum pr_type type
+ 			&data, sizeof(data));
+ }
+ 
++__maybe_unused
++static int nvme_pr_release_ns(struct nvme_ns *ns, u64 key, enum pr_type type)
++{
++	struct nvmet_pr_release_data data = { 0 };
++	u32 cdw10;
++
++	data.crkey = cpu_to_le64(key);
++
++	cdw10 = NVME_PR_RELEASE_ACT_RELEASE;
++	cdw10 |= nvme_pr_type_from_blk(type) << 8;
++	cdw10 |= key ? 0 : NVME_PR_IGNORE_KEY;
++
++	return nvme_send_pr_command_ns(ns, cdw10, 0, nvme_cmd_resv_release,
++			&data, sizeof(data));
++}
++
++static int nvme_mpath_pr_resv_report_ns(struct nvme_ns *ns, void *data,
++		u32 data_len, bool *eds)
++{
++	u32 cdw10, cdw11;
++	int ret;
++
++	cdw10 = nvme_bytes_to_numd(data_len);
++	cdw11 = NVME_EXTENDED_DATA_STRUCT;
++	*eds = true;
++
++retry:
++	ret = __nvme_send_pr_command_ns(ns, cdw10, cdw11, nvme_cmd_resv_report,
++			data, data_len);
++	if (ret == NVME_SC_HOST_ID_INCONSIST &&
++	    cdw11 == NVME_EXTENDED_DATA_STRUCT) {
++		cdw11 = 0;
++		*eds = false;
++		goto retry;
++	}
++
++	return ret < 0 ? ret : nvme_status_to_pr_err(ret);
++}
++
+ static int nvme_pr_resv_report(struct block_device *bdev, void *data,
+ 		u32 data_len, bool *eds)
+ {
+@@ -225,6 +362,52 @@ static int nvme_pr_resv_report(struct block_device *bdev, void *data,
+ 	return ret < 0 ? ret : nvme_status_to_pr_err(ret);
+ }
+ 
++__maybe_unused
++static int nvme_pr_read_keys_ns(struct nvme_ns *ns, struct pr_keys *keys_info)
++{
++	size_t rse_len;
++	u32 num_keys = keys_info->num_keys;
++	struct nvme_reservation_status_ext *rse;
++	int ret, i;
++	bool eds;
++
++	/*
++	 * Assume we are using 128-bit host IDs and allocate a buffer large
++	 * enough to get enough keys to fill the return keys buffer.
++	 */
++	rse_len = struct_size(rse, regctl_eds, num_keys);
++	if (rse_len > U32_MAX)
++		return -EINVAL;
++
++	rse = kzalloc(rse_len, GFP_KERNEL);
++	if (!rse)
++		return -ENOMEM;
++
++	ret = nvme_mpath_pr_resv_report_ns(ns, rse, rse_len, &eds);
++	if (ret)
++		goto free_rse;
++
++	keys_info->generation = le32_to_cpu(rse->gen);
++	keys_info->num_keys = get_unaligned_le16(&rse->regctl);
++
++	num_keys = min(num_keys, keys_info->num_keys);
++	for (i = 0; i < num_keys; i++) {
++		if (eds) {
++			keys_info->keys[i] =
++					le64_to_cpu(rse->regctl_eds[i].rkey);
++		} else {
++			struct nvme_reservation_status *rs;
++
++			rs = (struct nvme_reservation_status *)rse;
++			keys_info->keys[i] = le64_to_cpu(rs->regctl_ds[i].rkey);
++		}
++	}
++
++free_rse:
++	kfree(rse);
++	return ret;
++}
++
+ static int nvme_pr_read_keys(struct block_device *bdev,
+ 		struct pr_keys *keys_info)
+ {
+@@ -271,6 +454,70 @@ static int nvme_pr_read_keys(struct block_device *bdev,
  	return ret;
  }
  
-+int nvme_mpath_bdev_ioctl(struct block_device *bdev,
-+			struct mpath_device *mpath_device, blk_mode_t mode,
-+			unsigned int cmd, unsigned long arg, int srcu_idx)
++__maybe_unused
++static int nvme_pr_read_reservation_ns(struct nvme_ns *ns,
++				  struct pr_held_reservation *resv)
 +{
-+	struct gendisk *disk = bdev->bd_disk;
-+	struct mpath_disk *mpath_disk = mpath_gendisk_to_disk(disk);
-+	struct nvme_ns *ns = nvme_mpath_to_ns(mpath_device);
-+	struct nvme_ns_head *head = ns->head;
-+	bool open_for_write = mode & BLK_OPEN_WRITE;
-+	void __user *argp = (void __user *)arg;
-+	struct mpath_head *mpath_head = mpath_disk->mpath_head;
-+	int ret = -EWOULDBLOCK;
-+	unsigned int flags = 0;
++	struct nvme_reservation_status_ext tmp_rse, *rse;
++	int ret, i, num_regs;
++	u32 rse_len;
++	bool eds;
 +
-+	if (bdev_is_partition(bdev))
-+		flags |= NVME_IOCTL_PARTITION;
-+
++get_num_regs:
 +	/*
-+	 * Handle ioctls that apply to the controller instead of the namespace
-+	 * separately and drop the ns SRCU reference early.  This avoids a
-+	 * deadlock when deleting namespaces using the passthrough interface.
++	 * Get the number of registrations so we know how big to allocate
++	 * the response buffer.
 +	 */
-+	if (is_ctrl_ioctl(cmd))
-+		return nvme_mpath_device_ctrl_ioctl(mpath_device, cmd, argp,
-+				head, srcu_idx, open_for_write);
-+
-+	ret = nvme_ns_ioctl(ns, cmd, argp, flags, open_for_write);
-+	mpath_head_read_unlock(mpath_head, srcu_idx);
-+
-+	return ret;
-+}
-+
-+int nvme_mpath_cdev_ioctl(struct mpath_head *mpath_head,
-+			struct mpath_device *mpath_device, blk_mode_t mode,
-+			unsigned int cmd, unsigned long arg, int srcu_idx)
-+{
-+	struct nvme_ns *ns = nvme_mpath_to_ns(mpath_device);
-+	struct nvme_ns_head *head = ns->head;
-+	bool open_for_write = mode & BLK_OPEN_WRITE;
-+	void __user *argp = (void __user *)arg;
-+	int ret = -EWOULDBLOCK;
-+
-+	/*
-+	 * Handle ioctls that apply to the controller instead of the namespace
-+	 * separately and drop the ns SRCU reference early.  This avoids a
-+	 * deadlock when deleting namespaces using the passthrough interface.
-+	 */
-+	if (is_ctrl_ioctl(cmd))
-+		return nvme_mpath_device_ctrl_ioctl(mpath_device, cmd, argp,
-+				head, srcu_idx, open_for_write);
-+
-+	ret = nvme_ns_ioctl(ns, cmd, argp, 0, open_for_write);
-+	mpath_head_read_unlock(mpath_head, srcu_idx);
-+
-+	return ret;
-+}
-+
- int nvme_ns_head_ioctl(struct block_device *bdev, blk_mode_t mode,
- 		unsigned int cmd, unsigned long arg)
- {
-diff --git a/drivers/nvme/host/multipath.c b/drivers/nvme/host/multipath.c
-index a67db36f3c5a5..513d73e589a58 100644
---- a/drivers/nvme/host/multipath.c
-+++ b/drivers/nvme/host/multipath.c
-@@ -642,26 +642,6 @@ const struct block_device_operations nvme_ns_head_ops = {
- 	.pr_ops		= &nvme_pr_ops,
- };
- 
--static int nvme_mpath_add_cdev(struct mpath_head *mpath_head)
--{
--	struct nvme_ns_head *head = mpath_head->drvdata;
--	int ret;
--
--	mpath_head->cdev_device.parent = &head->subsys->dev;
--	ret = dev_set_name(&mpath_head->cdev_device, "ng%dn%d",
--			   head->subsys->instance, head->instance);
--	if (ret)
--		return ret;
--	ret = nvme_cdev_add(&mpath_head->cdev, &mpath_head->cdev_device,
--			    &mpath_generic_chr_fops, THIS_MODULE);
--	return ret;
--}
--
--static void nvme_mpath_del_cdev(struct mpath_head *mpath_head)
--{
--	nvme_cdev_del(&mpath_head->cdev, &mpath_head->cdev_device);
--}
--
- static inline struct nvme_ns_head *cdev_to_ns_head(struct cdev *cdev)
- {
- 	return container_of(cdev, struct nvme_ns_head, cdev);
-@@ -690,6 +670,26 @@ static const struct file_operations nvme_ns_head_chr_fops = {
- 	.uring_cmd_iopoll = nvme_ns_chr_uring_cmd_iopoll,
- };
- 
-+static int nvme_mpath_add_cdev(struct mpath_head *mpath_head)
-+{
-+	struct nvme_ns_head *head = mpath_head->drvdata;
-+	int ret;
-+
-+	mpath_head->cdev_device.parent = &head->subsys->dev;
-+	ret = dev_set_name(&mpath_head->cdev_device, "ng%dn%d",
-+			   head->subsys->instance, head->instance);
++	ret = nvme_mpath_pr_resv_report_ns(ns, &tmp_rse, sizeof(tmp_rse),
++					&eds);
 +	if (ret)
 +		return ret;
-+	ret = nvme_cdev_add(&mpath_head->cdev, &mpath_head->cdev_device,
-+			    &mpath_generic_chr_fops, THIS_MODULE);
++
++	num_regs = get_unaligned_le16(&tmp_rse.regctl);
++	if (!num_regs) {
++		resv->generation = le32_to_cpu(tmp_rse.gen);
++		return 0;
++	}
++
++	rse_len = struct_size(rse, regctl_eds, num_regs);
++	rse = kzalloc(rse_len, GFP_KERNEL);
++	if (!rse)
++		return -ENOMEM;
++
++	ret = nvme_mpath_pr_resv_report_ns(ns, rse, rse_len, &eds);
++	if (ret)
++		goto free_rse;
++
++	if (num_regs != get_unaligned_le16(&rse->regctl)) {
++		kfree(rse);
++		goto get_num_regs;
++	}
++
++	resv->generation = le32_to_cpu(rse->gen);
++	resv->type = block_pr_type_from_nvme(rse->rtype);
++
++	for (i = 0; i < num_regs; i++) {
++		if (eds) {
++			if (rse->regctl_eds[i].rcsts) {
++				resv->key = le64_to_cpu(rse->regctl_eds[i].rkey);
++				break;
++			}
++		} else {
++			struct nvme_reservation_status *rs;
++
++			rs = (struct nvme_reservation_status *)rse;
++			if (rs->regctl_ds[i].rcsts) {
++				resv->key = le64_to_cpu(rs->regctl_ds[i].rkey);
++				break;
++			}
++		}
++	}
++
++free_rse:
++	kfree(rse);
 +	return ret;
 +}
 +
-+static void nvme_mpath_del_cdev(struct mpath_head *mpath_head)
+ static int nvme_pr_read_reservation(struct block_device *bdev,
+ 		struct pr_held_reservation *resv)
+ {
+@@ -333,6 +580,73 @@ static int nvme_pr_read_reservation(struct block_device *bdev,
+ 	return ret;
+ }
+ 
++#if defined(CONFIG_NVME_MULTIPATH)
++static int nvme_mpath_pr_register(struct mpath_device *mpath_device,
++		u64 old_key, u64 new_key, unsigned int flags)
 +{
-+	nvme_cdev_del(&mpath_head->cdev, &mpath_head->cdev_device);
++	struct nvme_ns *ns = nvme_mpath_to_ns(mpath_device);
++
++	return nvme_pr_register_ns(ns, old_key, new_key, flags);
 +}
 +
- static int nvme_add_ns_head_cdev(struct nvme_ns_head *head)
- {
- 	int ret;
-@@ -1490,4 +1490,6 @@ static const struct mpath_head_template mpdt = {
- 	.is_disabled = nvme_mpath_is_disabled,
- 	.is_optimized = nvme_mpath_is_optimized,
- 	.get_access_state = nvme_mpath_get_access_state,
-+	.bdev_ioctl = nvme_mpath_bdev_ioctl,
-+	.cdev_ioctl = nvme_mpath_cdev_ioctl,
- };
-diff --git a/drivers/nvme/host/nvme.h b/drivers/nvme/host/nvme.h
-index c48efbfb46efc..11b63e92502ad 100644
---- a/drivers/nvme/host/nvme.h
-+++ b/drivers/nvme/host/nvme.h
-@@ -1047,6 +1047,12 @@ void nvme_mpath_clear_ctrl_paths(struct nvme_ctrl *ctrl);
- void nvme_mpath_remove_disk(struct nvme_ns_head *head);
- void nvme_mpath_start_request(struct request *rq);
- void nvme_mpath_end_request(struct request *rq);
-+int nvme_mpath_bdev_ioctl(struct block_device *bdev,
-+		struct mpath_device *mpath_device, blk_mode_t mode,
-+		unsigned int cmd, unsigned long arg, int srcu_idx);
-+int nvme_mpath_cdev_ioctl(struct mpath_head *mpath_device,
-+		struct mpath_device *mpath_head, blk_mode_t mode,
-+		unsigned int cmd, unsigned long arg, int srcu_idx);
- 
- static inline bool nvme_is_mpath_request(struct request *req)
- {
++static int nvme_mpath_pr_reserve(struct mpath_device *mpath_device, u64 key,
++		enum pr_type type, unsigned flags)
++{
++	struct nvme_ns *ns = nvme_mpath_to_ns(mpath_device);
++
++	return nvme_pr_reserve_ns(ns, key, type, flags);
++}
++
++static int nvme_mpath_pr_release(struct mpath_device *mpath_device, u64 key,
++		enum pr_type type)
++{
++	struct nvme_ns *ns = nvme_mpath_to_ns(mpath_device);
++
++	return nvme_pr_release_ns(ns, key, type);
++}
++
++static int nvme_mpath_pr_preempt(struct mpath_device *mpath_device, u64 old,
++		u64 new, enum pr_type type, bool abort)
++{
++	struct nvme_ns *ns = nvme_mpath_to_ns(mpath_device);
++
++	return nvme_pr_preempt_ns(ns, old, new, type, abort);
++}
++
++static int nvme_mpath_pr_clear(struct mpath_device *mpath_device, u64 key)
++{
++	struct nvme_ns *ns = nvme_mpath_to_ns(mpath_device);
++
++	return nvme_pr_clear_ns(ns, key);
++}
++
++static int nvme_mpath_pr_read_keys(struct mpath_device *mpath_device,
++		struct pr_keys *keys_info)
++{
++	struct nvme_ns *ns = nvme_mpath_to_ns(mpath_device);
++
++	return nvme_pr_read_keys_ns(ns, keys_info);
++}
++
++static int nvme_mpath_pr_read_reservation(struct mpath_device *mpath_device,
++		struct pr_held_reservation *resv)
++{
++	struct nvme_ns *ns = nvme_mpath_to_ns(mpath_device);
++
++	return nvme_pr_read_reservation_ns(ns, resv);
++}
++
++const struct mpath_pr_ops nvme_mpath_pr_ops = {
++	.pr_register	= nvme_mpath_pr_register,
++	.pr_reserve	= nvme_mpath_pr_reserve,
++	.pr_release	= nvme_mpath_pr_release,
++	.pr_preempt	= nvme_mpath_pr_preempt,
++	.pr_clear	= nvme_mpath_pr_clear,
++	.pr_read_keys	= nvme_mpath_pr_read_keys,
++	.pr_read_reservation = nvme_mpath_pr_read_reservation,
++};
++#endif
++
+ const struct pr_ops nvme_pr_ops = {
+ 	.pr_register	= nvme_pr_register,
+ 	.pr_reserve	= nvme_pr_reserve,
 -- 
 2.43.5
 
