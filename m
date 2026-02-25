@@ -1,64 +1,63 @@
-Received: from mail-qv1-f66.google.com (mail-qv1-f66.google.com [209.85.219.66])
+Received: from mail-qv1-f46.google.com (mail-qv1-f46.google.com [209.85.219.46])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 70B46378D8F
-	for <linux-scsi@vger.kernel.org>; Wed, 25 Feb 2026 23:14:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.66
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 31F38366054
+	for <linux-scsi@vger.kernel.org>; Wed, 25 Feb 2026 23:16:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.46
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772061243; cv=none; b=uD1tQ7tMvAAU2nymkZN1ZAKJDnOjtW20H4jcaYu9wrcV/WXSUNgGSLm+r0syKEX2i4OKwn4NJ72zvU59ByP00bOeAA7qBQ3q60HtYPZ9jnKuMH3BaZNwLq0VVbg6qD1jIjFT66nTmnM4QrNvGtDTSwEN0Jwf3IjVIdRsaDpf8jo=
+	t=1772061376; cv=none; b=ckFJUvdwAB51zr/S+/aocnSUlQfpV8NWwvdEZyLfcS1bkVPg5pzctAvak+a3dGwOCVVRYYITTh7ZwxYv0wRh2IFKwsSIdI+YXd9z8PhkVdY7tbTLlBvS+evAXVvjdp84xXiaeqcMbB7Rm+1jPmfqogHQD81Hef9kpg9t3BWDUX8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772061243; c=relaxed/simple;
-	bh=ZKupJcpDk412tRvHx2oY49WGENTOA6g3D3dL6CQUfEQ=;
-	h=Message-ID:Date:MIME-Version:To:Cc:From:Subject:Content-Type; b=Z7pSx8KFj4gWmM6Cr7tQe//02oW4LyQ0edqMJqZQ6mLLGhCB/YmnvHUIynkiIVxJ03NjOYhJfQFwGG6v6hSs0cxK3UUyvlO0T0IUMc9eqJtkPgcs1J2BYyJdQPJrksWxvLjkKLWL8z11E7MuKP8wgA1VyFybPui10BqttL9k+Qg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Ei71Zzlx; arc=none smtp.client-ip=209.85.219.66
+	s=arc-20240116; t=1772061376; c=relaxed/simple;
+	bh=vGLV6MMskITK2z/wINdyUTs6uwN3zcL4fdNAbCEPOI8=;
+	h=Message-ID:Date:MIME-Version:To:Cc:From:Subject:Content-Type; b=XpyVFer8acGh6ZCOeqOYD91uzaA7ZVDbR3Xnf4FsFIPpoX4Kk346AO8qZhnHgI7fl4uOPRvGO3M6HlGgb7CEZjK/Mr8Z0P3qCxvZjc3Gtt637oS1SspKYuCOFGKbixYaWUzvwXlz3p/fU2EmLVfY84DYItUn+AA7YYtvEpxSGdY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=OYP+WNBi; arc=none smtp.client-ip=209.85.219.46
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Ei71Zzlx"
-Received: by mail-qv1-f66.google.com with SMTP id 6a1803df08f44-8972a14e27bso3193056d6.2
-        for <linux-scsi@vger.kernel.org>; Wed, 25 Feb 2026 15:14:01 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="OYP+WNBi"
+Received: by mail-qv1-f46.google.com with SMTP id 6a1803df08f44-899a5db525cso2383036d6.3
+        for <linux-scsi@vger.kernel.org>; Wed, 25 Feb 2026 15:16:15 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1772061240; x=1772666040; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1772061374; x=1772666174; darn=vger.kernel.org;
         h=content-transfer-encoding:subject:from:cc:to:content-language
          :user-agent:mime-version:date:message-id:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=6Zo072AtpeglW5vzuPR7O93iMv1AZlyADWsBJMQs7nY=;
-        b=Ei71ZzlxxOnhj3ixJoCmpmibX52CXAmVyLwE+mIcqeCWvm8bRSif2vJyKHRSPyXwFT
-         713Uk1/28r9Nqggh4WfheM+Uszg01dhwlRQ13EozAV8Eu3UFN7Tx4c4VzJk8CMY1td5A
-         Keleci7Z/aVtGIagZjppDC4AcRh7L5QTJuvCv4h844lp1LxvvyrLNCU7HrExj/fbxJW7
-         QF9XLpVWM9d8akUKYlooHsRvBNykeaNnop7CgSRkDbRzYKAx9yQfcAbaLO/6tqZsh56M
-         PM056WK2+UMMCN6Jj7AtraOqqA4K4ExEPj/u48E5nET+DvrbJqlbU1GiBhWmFmKKJGS+
-         uDuw==
+        bh=1PApqkreHhTno1KBvHo9H0FXDAItxdLWhHiztfTVJd4=;
+        b=OYP+WNBiQmx2DZLRhhVMtszBVSnZuUlV/tTxqCBi1DwDal12AW9rUD24De3G7rZ8vV
+         YBy9Be0b2Mfip6o1K5XRQQFcwjLXgem6IY4jwzRCZX6a8UMRR0J4S4D32VPlN8COKFX8
+         yp5uuIuZfPe9ELyZTr/geU9tTfCitATDclvI9yuzx9wWlo4n7XNaLV157BiW164Tjlxq
+         046/D0szqIHyPl5RF7oiA1coB3v22Z5zTvvsYNRds2ncNnbP4Pszu/IdLgP8z7HqnHKV
+         egv016OZvI3TNN11GSnBLEhaz+oUuUE40aZt93AqySEojo0A83i5EIkaiiAlNdWCys9T
+         BShQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1772061240; x=1772666040;
+        d=1e100.net; s=20230601; t=1772061374; x=1772666174;
         h=content-transfer-encoding:subject:from:cc:to:content-language
          :user-agent:mime-version:date:message-id:x-gm-gg:x-gm-message-state
          :from:to:cc:subject:date:message-id:reply-to;
-        bh=6Zo072AtpeglW5vzuPR7O93iMv1AZlyADWsBJMQs7nY=;
-        b=YuYT7t+NNBKLWUQP7xsddiAOFRU2IifB4wpAZLj+X71+O1oLrwzKYY7mceB0aI5Kdt
-         7wxp7nf766U4PQQ97/jCf/LoPwKvYiNG8tZXuI9yuCjwQrIBlUIttLMDjvki1bTg1S7Z
-         yvwkKsfuyMSjnc3n5+SmyX2+zqU/QJbv4qw9BQIrc1jKBUoQUPRxFjzzkK7EZ2A6Pate
-         INmKabiUcNvStHpeWsXeDeoA8WL0KAzNANZnt/vapSSBpiaD9oAlV0DUJXnfvQDfFaRl
-         Kqt1JYm15RyXosMZiL+hl/crqUhhlMG01Z+vdh0QAIHanMw9k96mAPK4kOg6s+iiUsNX
-         DIMQ==
-X-Gm-Message-State: AOJu0YxECOzpAgMx5rdYjhcEu0jbMjiJRA5tT6jxQcCsgUd4bIF+QIwN
-	nbZUq7KNbGwY8zBexDN1iIz/JKE8T92UpziWkJ+gZyyAIO7xa3T1rKac9YEPMlUi
-X-Gm-Gg: ATEYQzxCN5VegxwV2hRRHYLhaRBH9zp8uoEygqgsCw+RfbpfLVgncWsvHF4albyMhaj
-	iDeSyOuyY0o2SYhJ15u4HvPSwI8iUB2jSO1MDFzsTI9GGCTw2v3vCvEl7zHpTCYx+q2KYCWWzYs
-	KEkhrPz4TXQLv+Ieg28nuYw2htI0SA8xK5D7RemLgaHBcOecNF6BDUZztGJODYeuKc7Mo0/rYId
-	IVzRaZ7YbjeG/HWP9zwVTHp/YPZ3z5EqaxYSbfYUZCmRSVSvU+T6sN/n11sN7+kX14To4rcsNJ7
-	nk26bG8IFR85jip0wjJC6ByEPM+0e/8F7p5gPEQ/5KaTc84sjXNrxvEg5xmI+00j7guT4lRDIap
-	DK3BuiU4TnpkC3X0ovPjK/xZOIOJKx2Bt2MOeeJI+AbP48/Paie8IYDFNfDAIy44Xez7ofdmNkN
-	mh5L1upx88cjWOVOD1RuXeYmnzQEwchBDBitbCzixbXHVgxoevwwJVwUIYJxaxr//sqDJMDTVJ0
-	RxBkw==
-X-Received: by 2002:a05:6214:1c47:b0:894:6622:a6d4 with SMTP id 6a1803df08f44-89979f32bf2mr252222636d6.61.1772061240013;
-        Wed, 25 Feb 2026 15:14:00 -0800 (PST)
+        bh=1PApqkreHhTno1KBvHo9H0FXDAItxdLWhHiztfTVJd4=;
+        b=aXwTt+3fUgVWBzxRHhqUTPecUf6ifElw/tf1kEoEYUJpp/7O36AOcsp5hqL9JwX3Bp
+         C/vmJtM9ONuISEEbS3ViVH49ledbxs4l92QZbPmzmlwDRUQzF2zm7FN5Q6a5Vd0P16XI
+         FyhNF6TBplDgO3kXVB6yhhhd2nsftsTqkWjSqdJo6SUFmyyZ0etONguVgkekv1/Er7H9
+         F3J++I3qEtQhQy5DQbIXxE5UV0jZxzi4UG+uKlMoET3Dop2pYEfOeKsvN659wgbajxkB
+         k8aPXECa4W4YDrKWb9JzP6YltYODx9cwE6JTWtDBtGxFkiyjZ9BdlFFY4AQQm+xjK1Jv
+         7V9w==
+X-Gm-Message-State: AOJu0YwYC1b2WJkDmGFu9hEUuDhEn6gV/7MeIVvQeyb6/zN3cVqQrpR6
+	wMFPkAzoFO/ZRbj7ZPHVh1O1MQvhjFQUMZYurje+Rvr2fmDKGlSfeuOTT7MY9Q==
+X-Gm-Gg: ATEYQzwwgHn3zKd9WOVaYbbp4BsVdH2HGj+3ouEH4a9+mnkGj9oDzgh8Mwcy7I/zZNF
+	VWssABBr5EGzy9A/78B3kUAnQGu+YanJ6VG2rXsC5Y+9PYeYCO0BShDo0C1guckLwlkT/g14Jvf
+	NuqlYTe4yjtaYlssqkrEfvymaODDT2PpLzDCu+AeXURbek2yx4zhGPExVR1sT/ikfPU7OXDlAD+
+	tYICvXgH7Cr9O4klSO4YPsuS1SAQGS4vIRTU2xd0Nle9BWIb6yFYU+8nJ4gplNEbgTrig/my/LQ
+	jDXe4MG4sqrBCfvHL6N5Ru+BT6KtFwCmdcAN2jGIjKi/d8U71El5Avru4rtuAX1ltOm5lq4TY/Z
+	bmKE8Wqz4ar0Fu6WU2W1W95TvBX402zjvfZadhkDWMO/bN0A5UcPKW0EcLXfIh4Kz6NWMAEYj92
+	ZZd79A8aRYz7dyvD+na93OZeU1PyYOQNRxm80O7FB6yNL/IFHCzkPoPIO+1ry0Ta5zO4Q=
+X-Received: by 2002:a05:6214:21e1:b0:895:4b4f:133a with SMTP id 6a1803df08f44-899c7ea4d33mr2757096d6.5.1772061373791;
+        Wed, 25 Feb 2026 15:16:13 -0800 (PST)
 Received: from ?IPV6:2601:244:417c:14a0:214:15e2:6a74:6134? ([2601:244:417c:14a0:214:15e2:6a74:6134])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-899c7374e07sm2799996d6.33.2026.02.25.15.13.58
+        by smtp.gmail.com with ESMTPSA id af79cd13be357-8cbbf71ae8esm47392385a.41.2026.02.25.15.16.13
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 25 Feb 2026 15:13:58 -0800 (PST)
-Message-ID: <786c3713-ebd7-406a-bb93-ce43e249583d@gmail.com>
-Date: Wed, 25 Feb 2026 17:13:57 -0600
+        Wed, 25 Feb 2026 15:16:13 -0800 (PST)
+Message-ID: <293e4493-023b-415f-b2b0-0fe3cdfe7149@gmail.com>
+Date: Wed, 25 Feb 2026 17:16:12 -0600
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -71,67 +70,87 @@ To: linux-scsi@vger.kernel.org
 Cc: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com,
  linux-kernel@vger.kernel.org, kylek389@gmail.com
 From: Kamil Kaminski <kylek389@gmail.com>
-Subject: Subject: [PATCH 1/2] scsi: core: Treat "Logical unit access not
- authorized" as permanent error
+Subject: Subject: [PATCH 2/2] scsi: sd: Treat locked encrypted drives as "no
+ media"
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 
- From 21dfa18035fb03b9c141550aeded92cf6d23473a Mon Sep 17 00:00:00 2001
+ From 4cf844d0840836e406e6eb1b65bd512b89fcdc20 Mon Sep 17 00:00:00 2001
 From: Kamil Kaminski <kylek389@gmail.com>
-Date: Wed, 25 Feb 2026 13:42:12 -0600
-Subject: [PATCH 1/2] scsi: core: Treat "Logical unit access not 
-authorized" as
-  permanent error
+Date: Wed, 25 Feb 2026 13:43:29 -0600
+Subject: [PATCH 2/2] scsi: sd: Treat locked encrypted drives as "no media"
 
-SanDisk Extreme Portable SSD and similar hardware-encrypted USB drives
-return Sense Key DATA_PROTECT (0x07) with ASC 0x74, ASCQ 0x71 ("Logical
-unit access not authorized") when password-locked.
+SanDisk Extreme Portable SSD and similar hardware-encrypted drives
+return "Logical unit access not authorized" (ASC 0x74, ASCQ 0x71) when
+password-locked. Currently, the driver attempts to read capacity and
+partition tables, causing excessive I/O errors that crash USB controllers.
 
-The SCSI error handler currently treats this as a generic DATA_PROTECT
-error. While it eventually fails the command, the block layer continues
-retrying operations, causing excessive I/O errors that saturate the USB
-bus and crash xHCI controllers (kernel bug 216696).
+Detect the locked condition early in sd_revalidate_disk() using
+scsi_test_unit_ready(). If locked, mark the drive as having no media
+and set capacity to 0. This prevents partition scanning and allows
+graceful handling (similar to an empty optical drive).
 
-Add special handling to return SUCCESS immediately for ASC 0x74/ASCQ
-0x71, preventing SCSI-level retries and allowing the sd driver to
-handle the condition gracefully.
+The virtual CD-ROM interface remains available for vendor unlock
+software.
 
 Closes: https://bugzilla.kernel.org/show_bug.cgi?id=216696
 Signed-off-by: Kamil Kaminski <kylek389@gmail.com>
 ---
-  drivers/scsi/scsi_error.c | 18 ++++++++++++++++++
-  1 file changed, 18 insertions(+)
+  drivers/scsi/sd.c | 34 ++++++++++++++++++++++++++++++++++
+  1 file changed, 34 insertions(+)
 
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index 147127fb4db9..aceb7c55893b 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -692,6 +691,23 @@ enum scsi_disposition scsi_check_sense(struct 
-scsi_cmnd *scmd)
-
-          /* these are not supported */
-      case DATA_PROTECT:
-+        /*
-+         * ASC 0x74/ASCQ 0x71: "Logical unit access not authorized"
-+         *
-+         * This indicates a password-locked or hardware-encrypted device
-+         * (e.g., SanDisk Extreme Portable SSD, WD My Passport) that
-+         * requires vendor-specific unlock software.
-+         *
-+         * Unlike write protection, this is a security lock that cannot
-+         * be cleared by the OS. Retrying causes USB bus saturation.
-+         * Treat as permanent failure immediately.
-+         */
-+        if (sshdr.asc == 0x74 && sshdr.ascq == 0x71) {
-+            sdev_printk(KERN_WARNING, scmd->device,
-+                    "scsi: Logical unit access not authorized - device 
-is password locked, treating as permanent error\n");
-+            set_scsi_ml_byte(scmd, SCSIML_STAT_TGT_FAILURE);
-+            return SUCCESS;
-+        }
-          if (sshdr.asc == 0x27 && sshdr.ascq == 0x07) {
-              /* Thin provisioning hard threshold reached */
-              set_scsi_ml_byte(scmd, SCSIML_STAT_NOSPC);
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 628a1d0a74ba..c83004100bc4 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -3721,6 +3721,8 @@ static void sd_revalidate_disk(struct gendisk *disk)
+  	struct scsi_device *sdp = sdkp->device;
+  	sector_t old_capacity = sdkp->capacity;
+  	struct queue_limits *lim = NULL;
++	struct scsi_sense_hdr sshdr;
++	int retval;
+  	unsigned char *buffer = NULL;
+  	unsigned int dev_max;
+  	int err;
+@@ -3743,6 +3744,37 @@ static void sd_revalidate_disk(struct gendisk *disk)
+  	if (!buffer)
+  		goto out;
+  
++	/*
++	 * Check for hardware-encrypted locked devices early.
++	 * SanDisk Extreme and similar drives return ASC 0x74/ASCQ 0x71
++	 * "Logical unit access not authorized" when password locked.
++	 * Detect this before attempting capacity reads to prevent
++	 * excessive I/O errors during partition scanning.
++	 */
++	memset(&sshdr, 0, sizeof(sshdr));
++	retval = scsi_test_unit_ready(sdp, SD_TIMEOUT, sdkp->max_retries, &sshdr);
++	if (retval && sshdr.sense_key == DATA_PROTECT &&
++	    sshdr.asc == 0x74 && sshdr.ascq == 0x71) {
++		sd_printk(KERN_WARNING, sdkp,
++			"Device is locked (hardware encryption) - treating as no media to prevent I/O errors\n");
++		set_media_not_present(sdkp);
++		sdkp->capacity = 0;
++		/* Set minimal valid block sizes */
++		sdkp->physical_block_size = 512;
++		sdp->sector_size = 512;
++
++		*lim = queue_limits_start_update(sdkp->disk->queue);
++		lim->logical_block_size = 512;
++		lim->physical_block_size = 512;
++		err = queue_limits_commit_update_frozen(sdkp->disk->queue, lim);
++		if (err)
++			goto out;
++
++		set_capacity_and_notify(disk, 0);
++		sdkp->first_scan = 0;
++		goto out;
++	}
++
+  	sd_spinup_disk(sdkp);
+  
+  	*lim = queue_limits_start_update(sdkp->disk->queue);
 -- 
 2.53.0
+
 
