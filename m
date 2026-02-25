@@ -1,41 +1,41 @@
 Received: from sender4-pp-f112.zoho.com (sender4-pp-f112.zoho.com [136.143.188.112])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B06DB3ACA70;
-	Wed, 25 Feb 2026 12:52:29 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F55F318EDC;
+	Wed, 25 Feb 2026 12:57:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=136.143.188.112
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772023950; cv=pass; b=NWsiz97BPqgiHxNHcGiKUuTJr7s+s4LJMSVtKiTvAvSdGlzE5PNR3lkFG6vDLnY9gTXmoKG3zm/BY0bultJCkhu22ERJlZGt8iQGj0rnm/6MuOa7rThsQm79bPaSEKk/aI3XDLXaKX0nSOjD1KysNipLgePKZqokIeIgi2LZz80=
+	t=1772024251; cv=pass; b=okYjzM2L2F6zSBVX7kjItf80iv+h+gZye9pMtD4uUhEFg9NEomEdLZ0NlEL9DnIAolhz3CN+7/+S0SVVCr1b1Bpz3UgrMTM1e7o6kGowICh2FiPBXQGUwftlb/9yNN6XPuakTbGehfy7kpznytTdJlUanl5TastGaALxfnMMmFE=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772023950; c=relaxed/simple;
-	bh=B2rBAV3x2imjtMXvRpm/a6EYY+5lEBFKR6gItPqv/X0=;
+	s=arc-20240116; t=1772024251; c=relaxed/simple;
+	bh=0ajGVOhZgJOdHcOgWpjrAR3tDuhSfoXYdy0PzsAjZP0=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=AM34947SP2h+4aKTt6svETpZd3YnpVbPnGxbSQuJ+L21BDM+1lmKW9dqVPPje2/dPONXEm/h6b6YyX2OVKtl4IRWxqVM8WYdRp1wxVbPc9ffP/mWORmcQ/aNg6Kiusli2DuKgOvcnZGb6MBpauPAiXOFmEe21aVGyZRmCg9Vajs=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (1024-bit key) header.d=collabora.com header.i=nicolas.frattaroli@collabora.com header.b=Z7mEQDq9; arc=pass smtp.client-ip=136.143.188.112
+	 MIME-Version:Content-Type; b=Rlw27HNIsck4SNzhJ/2tsFkeFkENSSCRgKasxYVzJp45mBRQbNlZCwcPxbDMenveWEY5J0HADqIZEyxbp3A24/uMUtrnq6KYF7uiHbIwcZIsHKNkSrzLrI8zEn+9iUlWjwbn/0AcrNH5XEjsdRQeoy+SyQbylNo77gT/GyV9Xmc=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (1024-bit key) header.d=collabora.com header.i=nicolas.frattaroli@collabora.com header.b=ipYumGPf; arc=pass smtp.client-ip=136.143.188.112
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collabora.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=collabora.com header.i=nicolas.frattaroli@collabora.com header.b="Z7mEQDq9"
-ARC-Seal: i=1; a=rsa-sha256; t=1772023918; cv=none; 
+	dkim=pass (1024-bit key) header.d=collabora.com header.i=nicolas.frattaroli@collabora.com header.b="ipYumGPf"
+ARC-Seal: i=1; a=rsa-sha256; t=1772024214; cv=none; 
 	d=zohomail.com; s=zohoarc; 
-	b=ICTEfHhyDwLJkhsdDnqW0m6pUOTdJbtZU+i7vtiytvbTDJZv5wHNiLsHIP9QegFSAI1ghfZVLZOplV1gbia6JuQe8RmfFiG69QBoa14HfclhBdamUFMc2BucV25iR8ZRHDMz3mkC+iCPTsXEFmEJjsVMZrkLLok0AZe9Yf0lkLA=
+	b=ZNKGY3r6ToOIex/fDgwa1coiqUw5WWa6sJezR4UUbMvkusuwIcXwNH8M0nf3ZT+kHxOFkIYKp1ERgvUJIMa7d2F/P+MNMcid8C43vYW+CQYnvP5QNaOJf3OoWvxsBQdq9+yJGG34WE9hYSIBba8r4y6eCHvEZa424zzuagcEqlk=
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.com; s=zohoarc; 
-	t=1772023918; h=Content-Type:Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:Subject:To:To:Message-Id:Reply-To; 
-	bh=T70ySPmQ1GqRu+gzswXj2+yT3BqSZsUEEsLuHeI35co=; 
-	b=QHK/4er+tLCtdBvg1RAIKIHElknd71Syfrn0VLgKCF4JurPSJa3MK3aNPOkwa+oUNOgfcllqhHG0L889/m0zoxNbJGYht22ffNrLLbEZRRd26KCII8SiZ3DzFdZD9bLcs51Yf/bWtFUWsvuHGKjfnTLq20XJhJkaUPgfWqBxNJw=
+	t=1772024214; h=Content-Type:Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:Subject:To:To:Message-Id:Reply-To; 
+	bh=0ajGVOhZgJOdHcOgWpjrAR3tDuhSfoXYdy0PzsAjZP0=; 
+	b=fIqc4e1FDvi63gN4ZwdRJDdp3jasdNBD7AG4GNLIH6wDMS9/OxTfGeWdrsT5wcfacvbY0dDrqFQ5aUf2A+fFYsgVpa2ALaqIzW8TZIICz9MPLiETcwZ2X6+/iOBtG0rgEmBiBGmeb6XTcKOCZARmzCuaK1b8SSPH8a7VstAYUlE=
 ARC-Authentication-Results: i=1; mx.zohomail.com;
 	dkim=pass  header.i=collabora.com;
 	spf=pass  smtp.mailfrom=nicolas.frattaroli@collabora.com;
 	dmarc=pass header.from=<nicolas.frattaroli@collabora.com>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1772023917;
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1772024214;
 	s=zohomail; d=collabora.com; i=nicolas.frattaroli@collabora.com;
 	h=From:From:To:To:Cc:Cc:Subject:Subject:Date:Date:Message-ID:In-Reply-To:References:MIME-Version:Content-Transfer-Encoding:Content-Type:Message-Id:Reply-To;
-	bh=T70ySPmQ1GqRu+gzswXj2+yT3BqSZsUEEsLuHeI35co=;
-	b=Z7mEQDq9HC4wHL2/KtkISM6JrMa8Ymly1nhRZFgYFA6bLp+TR1/JhcV/4yorEipU
-	9UpkbXY7tYpq0mRVXesynsKp0CU5ycg6NSuRBuJcMgNO106uILhZVZ3Vt/W3SipYe25
-	L0fI3wr0n+YkIDSfSdbwDI154gEHdXaU+MsSWI1I=
-Received: by mx.zohomail.com with SMTPS id 1772023915403681.8519199142135;
-	Wed, 25 Feb 2026 04:51:55 -0800 (PST)
+	bh=0ajGVOhZgJOdHcOgWpjrAR3tDuhSfoXYdy0PzsAjZP0=;
+	b=ipYumGPfVekix1b30H5OrkHdJ75Du0EPbskX0BqwHuNtUsOPeSPeVt9b4ypgICk6
+	XnnowUv+Y8bxWYzdOLaOlMu6ZbBiiFU3ktHsOPDjubZNr+HDf1QTLC3/NveceeRuEok
+	2L+C606lheDu7Ip93rblXJDGT9j+c8gYCJsycLEg=
+Received: by mx.zohomail.com with SMTPS id 1772024213678970.8709094887984;
+	Wed, 25 Feb 2026 04:56:53 -0800 (PST)
 From: Nicolas Frattaroli <nicolas.frattaroli@collabora.com>
 To: "chu.stanley@gmail.com" <chu.stanley@gmail.com>,
  "robh@kernel.org" <robh@kernel.org>,
@@ -68,15 +68,15 @@ Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
  Louis-Alexis Eyraud <louisalexis.eyraud@collabora.com>,
  "kernel@collabora.com" <kernel@collabora.com>
 Subject:
- Re: [PATCH v7 14/23] scsi: ufs: mediatek: Remove mediatek,ufs-broken-rtc
- property
-Date: Wed, 25 Feb 2026 13:51:47 +0100
-Message-ID: <3140774.mvXUDI8C0e@workhorse>
-In-Reply-To: <ee2e18e1a6177c40c5a4b3ed0ff228b9302429b7.camel@mediatek.com>
+ Re: [PATCH v7 22/23] scsi: ufs: mediatek: Remove undocumented
+ "clk-scale-up-vcore-min"
+Date: Wed, 25 Feb 2026 13:56:46 +0100
+Message-ID: <6563087.lOV4Wx5bFT@workhorse>
+In-Reply-To: <e452951498ae82433337ca428bd49c7358194dd8.camel@mediatek.com>
 References:
  <20260216-mt8196-ufs-v7-0-b5f2907c6da7@collabora.com>
- <20260216-mt8196-ufs-v7-14-b5f2907c6da7@collabora.com>
- <ee2e18e1a6177c40c5a4b3ed0ff228b9302429b7.camel@mediatek.com>
+ <20260216-mt8196-ufs-v7-22-b5f2907c6da7@collabora.com>
+ <e452951498ae82433337ca428bd49c7358194dd8.camel@mediatek.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -86,42 +86,36 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 Content-Type: text/plain; charset="utf-8"
 
-On Tuesday, 24 February 2026 13:43:10 Central European Standard Time Peter =
-Wang (=E7=8E=8B=E4=BF=A1=E5=8F=8B) wrote:
+On Wednesday, 25 February 2026 11:37:27 Central European Standard Time Pete=
+r Wang (=E7=8E=8B=E4=BF=A1=E5=8F=8B) wrote:
 > On Mon, 2026-02-16 at 14:37 +0100, Nicolas Frattaroli wrote:
-> > diff --git a/drivers/ufs/host/ufs-mediatek.c b/drivers/ufs/host/ufs-
-> > mediatek.c
-> > index 230e11533eac..424533538b90 100644
-> > --- a/drivers/ufs/host/ufs-mediatek.c
-> > +++ b/drivers/ufs/host/ufs-mediatek.c
-> > @@ -655,9 +655,6 @@ static void ufs_mtk_init_host_caps(struct ufs_hba
-> > *hba)
-> >  	if (of_property_read_bool(np, "mediatek,ufs-rtff-mtcmos"))
-> >  		host->caps |=3D UFS_MTK_CAP_RTFF_MTCMOS;
-> > =20
-> > -	if (of_property_read_bool(np, "mediatek,ufs-broken-rtc"))
-> > -		host->caps |=3D UFS_MTK_CAP_MCQ_BROKEN_RTC;
-> > -
-> >  	dev_info(hba->dev, "caps: 0x%x", host->caps);
-> >  }
-> > =20
-> > @@ -1185,8 +1182,6 @@ static int ufs_mtk_init(struct ufs_hba *hba)
-> >  	hba->quirks |=3D UFSHCI_QUIRK_SKIP_MANUAL_WB_FLUSH_CTRL;
-> > =20
-> >  	hba->quirks |=3D UFSHCD_QUIRK_MCQ_BROKEN_INTR;
-> > -	if (host->caps & UFS_MTK_CAP_MCQ_BROKEN_RTC)
-> > -		hba->quirks |=3D UFSHCD_QUIRK_MCQ_BROKEN_RTC;
-> > =20
+> > The MediaTek UFS driver contains support for an undocumented,
+> > non-vendor-prefixed u32 property named "clk-scale-up-vcore-min".
+> >=20
+> > Since it is not part of any binding, and would not pass a bindings
+> > review in its current form, remove it.
+> >=20
+> > To return this functionality, it needs to be resubmitted in a series
+> > that also introduces it to the binding, and justifies what it is used
+> > for. Compatibility with downstream device trees is not a valid
+> > justification for its existence.
+> >=20
+> > Signed-off-by: Nicolas Frattaroli <nicolas.frattaroli@collabora.com>
 >=20
-> Maybe check the hardware version (host->ip_ver)=20
-> and set UFSHCD_QUIRK_MCQ_BROKEN_RTC instead of removing it?
+> Can MT8196 work on Gear 5 without raising Vcore?
 
-I do not have access to a complete list of hardware IP versions
-that need this quirk applied. No upstream DTs seem to use it.
+I do not have access to the documentation to answer this question.
+However, you likely do.
 
-If MediaTek wants the quirk back, you can submit a patch to apply
-it based on the ip_ver once this series has landed, as you have all
-the necessary information.
+> I'm afraid it might cause problems.
+> Maybe we can add the correct binding for MT8196?
+
+The correct binding is to do this with OPPs instead, which is a
+future task that can be tackled (by someone else) once the broad
+cleanups in this series have landed.
+
+Adding a "clk-scale-up-vcore-min" property to the MediaTek UFS
+binding would not pass DT bindings review.
 
 >=20
 > Thanks
