@@ -1,196 +1,138 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 04EE626F46F;
-	Wed, 25 Feb 2026 02:30:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F28126F46F;
+	Wed, 25 Feb 2026 02:32:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771986639; cv=none; b=AVoE3U5BAEsAnqEBkyA7U0C6RuDshfgYLrxJ7xsYzrSYzdl/TgsJBwQpqUYwwxACNGN+ftGsHt6pPQqxSUXkpltWqh5BJHMjz4ZleBZkV45ESdudFn2N9r385qbe5WGoUWFml/YpCQoS9Ol3VS9S5S/e6Cy/uefyzBQrqkFF5gA=
+	t=1771986766; cv=none; b=l+E45UVhBKtn7DAnmXakzmH5IfW2jfW/Tn9woMeqiMC4Uzvjcx84ZMLZCskH/5ky7YaQR0HEd32a7qHyMoPjU3jKuDma5Cy4dyZHBv+t367R/H67SlZ0ugeY0rCvP5PFgVN/FQSxEyuc/dy/gRI9XgWcESfDN7pCsG1fG+k763c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771986639; c=relaxed/simple;
-	bh=uRrjzOl+PtlzqU88b5S83LRos4F9qAL9gYJiEzWw4mY=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=XywZHawzy+rBpoXOKLbDLFkWGYrnQFxg2Wo+SVk6Ii1o2n9BK2x2YZ5JI2XLWaIKEI/zLH2zQOZUBWlGuBZi3W7Ftc93BckrAw8ckDQ2kUKOBSDEDEOTNfiuAnNA2CRcyCy52yMETtYrABAnDRFsTtMlnH6EZkHYaEOShM6q7PQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=NWlx2sQh; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="NWlx2sQh"
-Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 61OMjmvd4044329;
-	Wed, 25 Feb 2026 02:30:26 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:date:from:in-reply-to:message-id
-	:mime-version:references:subject:to; s=qcppdkim1; bh=cXqRX0SK2nA
-	QUGkzZ132JJWUCuSaUGuakNeIqrcjJhE=; b=NWlx2sQhdU6xHr96ipY9KHiu10j
-	CbNYcB1MOMdYR9fklQZ5FZDxkY6CugMa8cPTjGHz3544neWRKhjHorcjEUf91LP3
-	1GPdlmBjTGR8h8FZvo3KJjih7R/2L6e5MWdKJMRGQOdlUClUAbO52azA+hMZnsQS
-	FsIfCAr3EZuCtzvcMMacY13AH/siYCAo5Jn4QyILd7UY/YydW12JEydssR7oMHy8
-	1TwwyXoIqK6ZPAfrSjPx6Fr8jHBKV0SIbVRR4XPOsl6Yzcs9LPISMUYaVnSIBOYI
-	6QFe4grymV8yw3NUc9n1+yDicSQIK56D8OZQCpz9rkHhsW6Ht9lfNPgC83g==
-Received: from nalasppmta04.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4chexehwv0-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 25 Feb 2026 02:30:25 +0000 (GMT)
-Received: from pps.filterd (NALASPPMTA04.qualcomm.com [127.0.0.1])
-	by NALASPPMTA04.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTP id 61P2Sqcj005322;
-	Wed, 25 Feb 2026 02:30:24 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-	by NALASPPMTA04.qualcomm.com (PPS) with ESMTPS id 4chbqu67wr-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 25 Feb 2026 02:30:24 +0000
-Received: from NALASPPMTA04.qualcomm.com (NALASPPMTA04.qualcomm.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 61P2UOSD007218;
-	Wed, 25 Feb 2026 02:30:24 GMT
-Received: from hu-devc-lv-u22-c.qualcomm.com (hu-cang-lv.qualcomm.com [10.81.25.255])
-	by NALASPPMTA04.qualcomm.com (PPS) with ESMTPS id 61P2UO4B007209
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 25 Feb 2026 02:30:24 +0000
-Received: by hu-devc-lv-u22-c.qualcomm.com (Postfix, from userid 359480)
-	id 20EE75A5; Tue, 24 Feb 2026 18:30:24 -0800 (PST)
-From: Can Guo <can.guo@oss.qualcomm.com>
-To: martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, Can Guo <can.guo@oss.qualcomm.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-        Peter Wang <peter.wang@mediatek.com>, Huan Tang <tanghuan@vivo.com>,
-        "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
-        Daniel Lee <chullee@google.com>, Liu Song <liu.song13@zte.com.cn>,
-        Ram Kumar Dwivedi <ram.dwivedi@oss.qualcomm.com>,
-        Bean Huo <huobean@gmail.com>, Adrian Hunter <adrian.hunter@intel.com>,
-        linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH v2 2/2] scsi: ufs: core: Add a sysfs entry for ufshcd_state
-Date: Tue, 24 Feb 2026 18:29:42 -0800
-Message-Id: <20260225022942.345564-3-can.guo@oss.qualcomm.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20260225022942.345564-1-can.guo@oss.qualcomm.com>
-References: <20260225022942.345564-1-can.guo@oss.qualcomm.com>
+	s=arc-20240116; t=1771986766; c=relaxed/simple;
+	bh=aG/j1CTumnrhavQPqTjfysHv89qbQiOwddXSaUmOgMc=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=B/HVsQTtAARInCqwNAm1tUKkeL8ZP47vm+oa+Gtd9aUxxYFbxe65+rMu4gta2T5GMeLZ7HmYbx6XxszqrMh+wuW29hno0dpLkfiZwuZvlgSqvL+UO/Mj2YciB0DEMuy5GX8h71oKzshk+tJqVSVP0S+4N93uRAQa4PYVf7SeO6I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.170])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4fLJX14fZ2zYQtwf;
+	Wed, 25 Feb 2026 10:32:17 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.128])
+	by mail.maildlp.com (Postfix) with ESMTP id 9C73E4056E;
+	Wed, 25 Feb 2026 10:32:40 +0800 (CST)
+Received: from [10.174.178.253] (unknown [10.174.178.253])
+	by APP4 (Coremail) with SMTP id gCh0CgBnE_REX55p6vqmIg--.46236S3;
+	Wed, 25 Feb 2026 10:32:38 +0800 (CST)
+Message-ID: <7d2a3f65-4272-46c1-991a-356f0d2323cb@huaweicloud.com>
+Date: Wed, 25 Feb 2026 10:32:36 +0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-QCInternal: smtphost
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMjI1MDAyMSBTYWx0ZWRfX38lUiIg+mz5x
- 2OQMLj4Kz9O1VRQaSUEk9V1zWv4jTp/35iOVM+mClL4FglXStE7E9B72fUJE9fAQMUZoMhuEhZ+
- Fxokd6mcyVFOOFI2innuAM1LCkaHchemRVRo4CLFO4yx4pHdY7JBi9LzvPROVAmDo/LbGspRggZ
- mZ50YiAOs2uNsx9Bk3E12jNdyrHlfOREfEpQP+waf0guEyMLsIomoo4WzY+/5PTwkNFdbjpJmm9
- ZiEWNCUVjd86u23SpQ67f4CWn9+/xc92Ih85Hg+he6EorjUeegfL3gZKChQvI4V0tbQ+ANxE0N0
- RZH3qrlJNMteTCEtERUYRhs+JO/GOsUgV4vpeCg16G/nKPjnnoA4Lvu76khk3Aif2vWICjC10ve
- TtAAeuXwAOKSWzabBSoBjHd/ezX5NGeAXSmHHpRie40GI0wXkESD31uijC6Du9PbZv+1F/WW5IE
- c69Spq+ND1g29njRbHA==
-X-Authority-Analysis: v=2.4 cv=V85wEOni c=1 sm=1 tr=0 ts=699e5ec1 cx=c_pps
- a=ouPCqIW2jiPt+lZRy3xVPw==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
- a=HzLeVaNsDn8A:10 a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22
- a=gowsoOTTUOVcmtlkKump:22 a=EUspDBNiAAAA:8 a=NxQxUFsvoc-cg5by0coA:9
-X-Proofpoint-GUID: TiwqMsby8nvHJ3AybvUapoembLH9MNGg
-X-Proofpoint-ORIG-GUID: TiwqMsby8nvHJ3AybvUapoembLH9MNGg
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-02-24_03,2026-02-23_03,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- impostorscore=0 bulkscore=0 malwarescore=0 priorityscore=1501 spamscore=0
- suspectscore=0 phishscore=0 adultscore=0 lowpriorityscore=0 clxscore=1015
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2602130000 definitions=main-2602250021
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 2/9] nvme: set max_hw_wzeroes_unmap_sectors if device
+ supports DEAC bit
+To: Robert Pang <robertpang@google.com>, Zhang Yi <yi.zhang@huawei.com>
+Cc: bmarzins@redhat.com, brauner@kernel.org, chaitanyak@nvidia.com,
+ chengzhihao1@huawei.com, djwong@kernel.org, dm-devel@lists.linux.dev,
+ hch@lst.de, john.g.garry@oracle.com, linux-block@vger.kernel.org,
+ linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
+ linux-scsi@vger.kernel.org, linux-xfs@vger.kernel.org,
+ martin.petersen@oracle.com, shinichiro.kawasaki@wdc.com, tytso@mit.edu,
+ yangerkun@huawei.com, yukuai3@huawei.com
+References: <20250619111806.3546162-3-yi.zhang@huaweicloud.com>
+ <20260225000531.3658802-1-robertpang@google.com>
+Content-Language: en-US
+From: Zhang Yi <yi.zhang@huaweicloud.com>
+In-Reply-To: <20260225000531.3658802-1-robertpang@google.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-CM-TRANSID:gCh0CgBnE_REX55p6vqmIg--.46236S3
+X-Coremail-Antispam: 1UD129KBjvJXoWxur4rJFyDCw15JF4UuF4fGrg_yoW5ZFyrpF
+	4DWry0vrn8WF1UA3yDZw1I9FyUXws5Zry3Wa4kG3W5ZrZ0qryfZr1kuFZ0qa1DGrnrWw4F
+	ya1xZryqvasrXaDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUv0b4IE77IF4wAFF20E14v26ryj6rWUM7CY07I20VC2zVCF04k2
+	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
+	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7Cj
+	xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
+	0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
+	6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
+	Cjc4AY6r1j6r4UM4x0Y48IcVAKI48JM4IIrI8v6xkF7I0E8cxan2IY04v7MxkF7I0En4kS
+	14v26r4a6rW5MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I
+	8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVW8ZVWr
+	XwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x
+	0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_
+	Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7IU0
+	s2-5UUUUU==
+X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
 
-Add a sysfs entry for ufshcd_state, such that userspace can check and
-track the state transitions of hba.
+Hi Robert!
 
-Signed-off-by: Can Guo <can.guo@oss.qualcomm.com>
----
- Documentation/ABI/testing/sysfs-driver-ufs |  9 +++++++++
- drivers/ufs/core/ufs-sysfs.c               | 18 ++++++++++++++++++
- drivers/ufs/core/ufshcd.c                  |  2 ++
- 3 files changed, 29 insertions(+)
+On 2/25/2026 8:05 AM, Robert Pang wrote:
+> Dear Zhang Yi,
+> 
+> In reviewing your patch series implementing support for the
+> FALLOC_FL_WRITE_ZEROES flag, I noted the logic propagating
+> max_write_zeroes_sectors to max_hw_wzeroes_unmap_sectors in commit 545fb46e5bc6
+> "nvme: set max_hw_wzeroes_unmap_sectors if device supports DEAC bit" [1]. This
+> appears to be intended for devices that support the Write Zeroes command
+> alongside the DEAC bit to indicate unmap capability.
+> 
+> Furthermore, within core.c, the NVME_QUIRK_DEALLOCATE_ZEROES quirk already
+> identifies devices that deterministically return zeroes after a deallocate
+> command [2]. This quirk currently enables Write Zeroes support via discard in
+> existing implementations [3, 4].
+> 
+> Given this, would it be appropriate to respect NVME_QUIRK_DEALLOCATE_ZEROES also
+> to enable unmap Write Zeroes for these devices, following the prior commit
+> 6e02318eaea5 "nvme: add support for the Write Zeroes command" [5]? I have
+> included a proposed change to nvme_update_ns_info_block() below for your
+> consideration.
+> 
 
-diff --git a/Documentation/ABI/testing/sysfs-driver-ufs b/Documentation/ABI/testing/sysfs-driver-ufs
-index 665819308b40..339bb1befc9c 100644
---- a/Documentation/ABI/testing/sysfs-driver-ufs
-+++ b/Documentation/ABI/testing/sysfs-driver-ufs
-@@ -1778,3 +1778,12 @@ Description:
- 		notification from UFSHCI UECDME.
- 
- 		The attribute is read/write.
-+
-+What:		/sys/bus/platform/drivers/ufshcd/*/ufshcd_state
-+What:		/sys/bus/platform/devices/*.ufs/ufshcd_state
-+Date:		February 2026
-+Contact:	Can Guo <can.guo@oss.qualcomm.com>
-+Description:
-+		This attribute shows the state of ufshcd.
-+
-+		The attribute is read only.
-diff --git a/drivers/ufs/core/ufs-sysfs.c b/drivers/ufs/core/ufs-sysfs.c
-index 99af3c73f1af..10804ec6e252 100644
---- a/drivers/ufs/core/ufs-sysfs.c
-+++ b/drivers/ufs/core/ufs-sysfs.c
-@@ -97,6 +97,14 @@ static const char * const ufs_hid_states[] = {
- 	[DEFRAG_NOT_REQUIRED]	= "defrag_not_required",
- };
- 
-+static const char * const ufshcd_states[] = {
-+	[UFSHCD_STATE_RESET]			= "reset",
-+	[UFSHCD_STATE_OPERATIONAL]		= "operational",
-+	[UFSHCD_STATE_EH_SCHEDULED_NON_FATAL]	= "eh_scheduled_non_fatal",
-+	[UFSHCD_STATE_EH_SCHEDULED_FATAL]	= "eh_scheduled_fatal",
-+	[UFSHCD_STATE_ERROR]			= "error",
-+};
-+
- static const char *ufs_hid_state_to_string(enum ufs_hid_state state)
- {
- 	if (state < NUM_UFS_HID_STATES)
-@@ -633,6 +641,14 @@ static ssize_t dme_qos_notification_store(struct device *dev,
- 	return count;
- }
- 
-+static ssize_t ufshcd_state_show(struct device *dev,
-+				 struct device_attribute *attr, char *buf)
-+{
-+	struct ufs_hba *hba = dev_get_drvdata(dev);
-+
-+	return sysfs_emit(buf, "%s\n", ufshcd_states[hba->ufshcd_state]);
-+}
-+
- static DEVICE_ATTR_RW(rpm_lvl);
- static DEVICE_ATTR_RO(rpm_target_dev_state);
- static DEVICE_ATTR_RO(rpm_target_link_state);
-@@ -650,6 +666,7 @@ static DEVICE_ATTR_RO(critical_health);
- static DEVICE_ATTR_RW(device_lvl_exception_count);
- static DEVICE_ATTR_RO(device_lvl_exception_id);
- static DEVICE_ATTR_RW(dme_qos_notification);
-+static DEVICE_ATTR_RO(ufshcd_state);
- 
- static struct attribute *ufs_sysfs_ufshcd_attrs[] = {
- 	&dev_attr_rpm_lvl.attr,
-@@ -669,6 +686,7 @@ static struct attribute *ufs_sysfs_ufshcd_attrs[] = {
- 	&dev_attr_device_lvl_exception_count.attr,
- 	&dev_attr_device_lvl_exception_id.attr,
- 	&dev_attr_dme_qos_notification.attr,
-+	&dev_attr_ufshcd_state.attr,
- 	NULL
- };
- 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index c6c7de7a0603..32a508e1582e 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -7917,6 +7917,8 @@ static void ufshcd_process_probe_result(struct ufs_hba *hba,
- 		hba->ufshcd_state = UFSHCD_STATE_OPERATIONAL;
- 	spin_unlock_irqrestore(hba->host->host_lock, flags);
- 
-+	sysfs_notify(&hba->dev->kobj, NULL, "ufshcd_state");
-+
- 	trace_ufshcd_init(hba, ret,
- 			  ktime_to_us(ktime_sub(ktime_get(), probe_start)),
- 			  hba->curr_dev_pwr_mode, hba->uic_link_state);
--- 
-2.34.1
+Thank you for your point. Overall, this makes sense to me, but I have one
+question below.
+
+> Best regards
+> Robert Pang
+> 
+> diff --git a/drivers/nvme/host/core.c b/drivers/nvme/host/core.c
+> index f5ebcaa2f859..9c7e2cabfab3 100644
+> --- a/drivers/nvme/host/core.c
+> +++ b/drivers/nvme/host/core.c
+> @@ -2422,7 +2422,9 @@ static int nvme_update_ns_info_block(struct nvme_ns *ns,
+>          * require that, it must be a no-op if reads from deallocated data
+>          * do not return zeroes.
+>          */
+> -       if ((id->dlfeat & 0x7) == 0x1 && (id->dlfeat & (1 << 3))) {
+> +       if ((id->dlfeat & 0x7) == 0x1 && (id->dlfeat & (1 << 3)) ||
+> +           (ns->ctrl->quirks & NVME_QUIRK_DEALLOCATE_ZEROES) &&
+> +           (ns->ctrl->oncs & NVME_CTRL_ONCS_DSM)) {
+                                ^^^^^^^^^^^^^^^^^^
+Why do you want to add a check for NVME_CTRL_ONCS_DSM? In nvme_config_discard(),
+it appears that we prioritize ctrl->dmrsl, allowing discard to still be
+supported even on some non-standard devices where NVME_CTRL_ONCS_DSM is not set.
+In nvme_update_disk_info(), if the device only has NVME_QUIRK_DEALLOCATE_ZEROES,
+we still populate lim->max_write_zeroes_sectors (which might be non-zero on
+devices that support NVME_CTRL_ONCS_WRITE_ZEROES). Right? So I'm not sure if we
+only need to check for NVME_QUIRK_DEALLOCATE_ZEROES here.
+
+>                 ns->head->features |= NVME_NS_DEAC;
+
+I think we should not set NVME_NS_DEAC for the quirks case.
+
+Cheers,
+Yi.
+
+>                 lim.max_hw_wzeroes_unmap_sectors = lim.max_write_zeroes_sectors;
+>         }
+> 
+> [1] https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=545fb46e5bc6
+> [2] https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/drivers/nvme/host/nvme.h#n72
+> [3] https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/drivers/nvme/host/core.c#n938
+> [4] https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/drivers/nvme/host/core.c#n2122
+> [5] https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=6e02318eaea5
 
