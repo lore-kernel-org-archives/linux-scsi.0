@@ -1,137 +1,144 @@
-Received: from mail-oi1-f226.google.com (mail-oi1-f226.google.com [209.85.167.226])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD0C421A453
-	for <linux-scsi@vger.kernel.org>; Wed, 25 Feb 2026 08:32:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.226
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 310682F691D;
+	Wed, 25 Feb 2026 08:39:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772008367; cv=none; b=Iy0xzdVq8Evs6iY0H+Et4pMUGdT5fme4luzzo4DyuludKQ6Q4gPZWdncZeVFrk0ZNdsxcIAaQbp5cYUEmslRT4cdJxF0IZ2KqCLTPPWgaL205YCdY06aUEhns1H4T5LpkLgx98Q/0vfpsL88Haapls3n0vYRs6L+emJ88h4SP6o=
+	t=1772008777; cv=none; b=Q0jDldKUAPXKlh9wZIlQb+sM7uq+zvSjmwJmtR9af5H6sAPcE4WFpqIeVdIKb0LwQu318NkkoFde8Pionm6baHx5/eUMOH62o3y7EejCB/C8H3m4rA+pUl9mJO+HnKIQO5Vin5gVBcndNltMJ6l5bXM2nfoxicJ9ufP3Y9j4Zgs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772008367; c=relaxed/simple;
-	bh=T3BDWhX68lSsYU9+wvCEApk2BI6omk9WZULhxMx12oM=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=ZaO0P4AHW02++ZqwVRvkf/76UxI2N8j5sjeWO/3Ubf/lWir3Ie5G3yD8YOCaug4jYLNifhkbM5O1MeLIPw1ak7BNyHGEWmWzqAgMKvwil9+7WUr6a8syJ9GJEa+bXr8t/F6jhzfFnLU3zb5ShNWb70DEEUdE6aNBMBJu178cLKc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=QQWyWdeu; arc=none smtp.client-ip=209.85.167.226
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
+	s=arc-20240116; t=1772008777; c=relaxed/simple;
+	bh=1OCPxXntM+s7o5PBlMuNbV/cDG5o/3yTIzhrli3dG8Y=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Mxdwq3EKz99UsdgObydbcgj1qQh+u1qt4XvDubk7Pe0abtbPNK4BjNnSQo6fxpQ+gPGpz5NQuJ2aTDHxQiEiYzR9omS1b9lOkFHmTJoaOCCJeRVHbuby7K+WgMJV2dWNKiTXxxNzZ5u7RXrdryQOi4i/Xms6Ya9Y6e0yimZtliM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MSSl2XTg; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="QQWyWdeu"
-Received: by mail-oi1-f226.google.com with SMTP id 5614622812f47-46413b2c3d8so2200610b6e.2
-        for <linux-scsi@vger.kernel.org>; Wed, 25 Feb 2026 00:32:45 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1772008364; x=1772613164;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:dkim-signature:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=6r1ydyvMhAB0kpg/vJ+VWXvjahaNSh1DbXJDE94meNI=;
-        b=cdHQdRhR+9hzrvEwECW3LSdQKUUp1O0C8bPEdNY9GJRGr1Yv9XxUt70fTrog+0l2dS
-         Ehp2Rbr6x20bHIigT8qc0m0MtPEg5XvWOKKVko4wpJH048qMQGEn2I8M01lLhCsJ81FT
-         o6mFiEdwt//+H3W40l/SW7qdoZX+nfJsSDrmr8UVQRE8oD+VScDS/5UZ6lKIoH/ey/Az
-         1JNu6dMoRPyxNTzP27PqHqjBWc6YgRNYZHGptpab5jC8FEHsqMelOmpHx7hheWNSsNVv
-         XbrtRV0X/h2mwMCfmurmYmRima6AAMGaqnOKzWXldTg6s313geETOmTVmLbvMEcG3dSZ
-         BoZA==
-X-Gm-Message-State: AOJu0YzrqSVUeXSAXiDxt227eQlHN56CYp1plOrm0TMYMOu8PyBEZwnZ
-	pQWBvgwGkRqNtC1OSjH6z9tBARj5SV5YvgoHTAS5voGF8aXfU8OQKSWDvRbPGFzaaV93Wrea8pC
-	mHsDcJSQdqqqr4zoTBQ9YQS0DTbgo9gF4LlPik3gTvI/N7pLzIro4lc82iWFHvd2eAL1V7uUhYX
-	gIgacKKdWdalzO1NidbNFSgn6aSEptRHXvU3eM9YmcB85fQzxwU3CxpAnA9xN6W14IoEIk2jeFo
-	oqZaV7Caw3oyaO/
-X-Gm-Gg: ATEYQzycMvDGECoYuxXu/y9o0LUZrd/cJSWDAuHH3GQitQYa0t2XqNJQPm2jZXbVsz6
-	SC79aNtTMsvSbAMCWAOnttTENwbcSqh0jNuOQSbVjTBN6clNjSBl6/M/H65LkvU9pb51NW+36uB
-	mD3uW91O/knMiOBIIJ6N4wwm8Lte05OgnDr1HHFyAYGVW87YhUIDjKCNkUawZEsIBuaSlaI9RdM
-	zKKDC9LVYrSD9+31UD20itVclTX3XTYUxe0M+be+NAxo6TF9Fl0KfcmYxS60Doj/7HENdkjSNZw
-	HeVZt7wVMVM2zbD9anmzUOWgF5Frb1YH/2N5pbiXoWA30ldmUe7HVPqYrmqNtxsFnGGx0J4rTfg
-	R4ECCNpXKHex2RNw+I1wjyf3W5rtSYviZ/XgcspMUbR6BFGwLj3gwoIQzUujQC8BkVZ1lA6eLga
-	oPWnf4NtECxkaBuL35eVe9qSAmFniBFKva7csw76peBLp/jwVlYwuc1lATtVE=
-X-Received: by 2002:a05:6871:7891:b0:409:66f2:c281 with SMTP id 586e51a60fabf-4157b1aaed5mr8434076fac.48.1772008364424;
-        Wed, 25 Feb 2026 00:32:44 -0800 (PST)
-Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-117.dlp.protect.broadcom.com. [144.49.247.117])
-        by smtp-relay.gmail.com with ESMTPS id 586e51a60fabf-4157d2c8b35sm1645438fac.11.2026.02.25.00.32.44
-        for <linux-scsi@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 25 Feb 2026 00:32:44 -0800 (PST)
-X-Relaying-Domain: broadcom.com
-X-CFilter-Loop: Reflected
-Received: by mail-pl1-f200.google.com with SMTP id d9443c01a7336-2addb9ba334so2258525ad.2
-        for <linux-scsi@vger.kernel.org>; Wed, 25 Feb 2026 00:32:43 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1772008362; x=1772613162; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=6r1ydyvMhAB0kpg/vJ+VWXvjahaNSh1DbXJDE94meNI=;
-        b=QQWyWdeuKcGJXF5oxO7YEqBk3Nr/CSp5K/r618S5XTpRwkgMnZP4rgpUbn/XhfEdKf
-         6Nf32UPjTeiYrNqqBKO6oCEtXget1oxuk68lw3ZpLbuO2Na+nbjzALSIhSGplYQnHDa3
-         zeBR7A0LwtPMVdHJZssR1R3lRf5OlHGXQK6Ks=
-X-Received: by 2002:a17:902:ea0f:b0:2a0:c942:8adf with SMTP id d9443c01a7336-2ad74400677mr144776255ad.8.1772008362575;
-        Wed, 25 Feb 2026 00:32:42 -0800 (PST)
-X-Received: by 2002:a17:902:ea0f:b0:2a0:c942:8adf with SMTP id d9443c01a7336-2ad74400677mr144776035ad.8.1772008362006;
-        Wed, 25 Feb 2026 00:32:42 -0800 (PST)
-Received: from localhost.localdomain ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2ad750591e2sm126791905ad.91.2026.02.25.00.32.39
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 25 Feb 2026 00:32:41 -0800 (PST)
-From: Ranjan Kumar <ranjan.kumar@broadcom.com>
-To: linux-scsi@vger.kernel.org,
-	martin.petersen@oracle.com
-Cc: sathya.prakash@broadcom.com,
-	chandrakanth.patil@broadcom.com,
-	shivasharan.srikanteshwara@broadcom.com,
-	Ranjan Kumar <ranjan.kumar@broadcom.com>
-Subject: [PATCH v1] mpi3mr: Clear reset history on ready and recheck state after timeout
-Date: Wed, 25 Feb 2026 13:56:22 +0530
-Message-ID: <20260225082622.82588-1-ranjan.kumar@broadcom.com>
-X-Mailer: git-send-email 2.47.3
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MSSl2XTg"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 40E05C116D0;
+	Wed, 25 Feb 2026 08:39:32 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1772008776;
+	bh=1OCPxXntM+s7o5PBlMuNbV/cDG5o/3yTIzhrli3dG8Y=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=MSSl2XTgEWR03qgz9kE0MAQkk6LLIOSabSJrrBAHX1/2OXar3ZUBFKegvn4Bi1huI
+	 jG5FQF9+VMmkW3zolT9IkoWE2Cc4+Sf+FKkQmHgVj3eswe1GK/KAvWXovETDe5/HPG
+	 HbmLKXD222dYwl+PhY/8r5oxLMjRlVB336p2byRAhbpjJYLnldLPWckWA+Eu6BUs2v
+	 620VHwkWrzey57XFfPleHkHEQbC5Q+dWsHVmEwvCi/ODyn0bkVENz12opZ8lc6bVwQ
+	 Zg438WzlHpS+cmUZP0KZyLBEWGuwsdxOxC9r5c2a9gPcdjnLOSzbHKHgR2/gIme6Iw
+	 KlxPR0bXZcf2g==
+Message-ID: <100347ef-ab5e-45d4-a3b8-5d900110e0c8@kernel.org>
+Date: Wed, 25 Feb 2026 09:39:30 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 2/6] scsi: ufs: qcom,sc7180-ufshc: dt-bindings:
+ Document the Milos UFS Controller
+To: Luca Weiss <luca.weiss@fairphone.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Herbert Xu <herbert@gondor.apana.org.au>,
+ "David S. Miller" <davem@davemloft.net>, Rob Herring <robh@kernel.org>,
+ Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley
+ <conor+dt@kernel.org>, Bjorn Andersson <andersson@kernel.org>,
+ Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>,
+ Bart Van Assche <bvanassche@acm.org>, Vinod Koul <vkoul@kernel.org>,
+ Neil Armstrong <neil.armstrong@linaro.org>,
+ Konrad Dybcio <konradybcio@kernel.org>,
+ ~postmarketos/upstreaming@lists.sr.ht, phone-devel@vger.kernel.org,
+ linux-arm-msm@vger.kernel.org, linux-crypto@vger.kernel.org,
+ devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-scsi@vger.kernel.org, linux-phy@lists.infradead.org,
+ Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
+References: <20260112-milos-ufs-v2-0-d3ce4f61f030@fairphone.com>
+ <20260112-milos-ufs-v2-2-d3ce4f61f030@fairphone.com>
+ <DGDW69W84LJ1.2GHM2WU31VANR@fairphone.com>
+ <yq14in67xwd.fsf@ca-mkp.ca.oracle.com>
+ <DGNVDXQTH812.3MCVKWNCKR8B6@fairphone.com>
+From: Krzysztof Kozlowski <krzk@kernel.org>
+Content-Language: en-US
+Autocrypt: addr=krzk@kernel.org; keydata=
+ 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 a/A=
+In-Reply-To: <DGNVDXQTH812.3MCVKWNCKR8B6@fairphone.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-The driver retains reset history even after the IOC has successfully
-reached the READY state. That leaves stale reset information active
-during normal operation and can mislead recovery and diagnostics.
-In addition, if the IOC becomes READY just as the ready timeout
-loop exits, the driver still follows the failure path and may
-retry or report failure incorrectly.
+On 25/02/2026 08:38, Luca Weiss wrote:
+> On Tue Feb 24, 2026 at 8:19 PM CET, Martin K. Petersen wrote:
+>>
+>> Luca,
+>>
+>>> I've added you to this email now since you seem to pick up most patches
+>>> for these files. Could you take this one please to unblock Milos UFS
+>>> dts?
+>>
+>> Applied #2, #5, and #6 to 7.1/scsi-staging, thanks!
+> 
+> Hi Martin,
+> 
+> Thanks for picking up the bindings!
+> 
+> I'm surprised you picked up the dts as well (and modified the subject
+> line), these patches should go via Bjorn's qcom tree.
+> 
+> * scsi: qcom: milos: arm64: dts: Add UFS nodes
+> * scsi: qcom: milos-fairphone-fp6: arm64: dts: Enable UFS
+> 
+> I also see these in your staging branch as well:
+> 
+> * scsi: qcom: hamoa: arm64: dts: Add UFS nodes for x1e80100 SoC
+> * scsi: qcom: hamoa-iot-evk: arm64: dts: Enable UFS
 
-Clear reset history once READY is confirmed so driver state matches
-actual IOC status. After the timeout loop, recheck the IOC state and
-treat READY as success instead of failing.
 
-Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
----
- drivers/scsi/mpi3mr/mpi3mr_fw.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+Uh, what? First, renaming prefix is not correct for arm64 DTS patches,
+but nevertheless these MUST NOT be merged into SCSI/UFS.
 
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-index 04d4a2aea7d7..e418bf1b47d3 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-@@ -1618,6 +1618,7 @@ static int mpi3mr_bring_ioc_ready(struct mpi3mr_ioc *mrioc)
- 			ioc_info(mrioc,
- 			    "successfully transitioned to %s state\n",
- 			    mpi3mr_iocstate_name(ioc_state));
-+			mpi3mr_clear_reset_history(mrioc);
- 			return 0;
- 		}
- 		ioc_status = readl(&mrioc->sysif_regs->ioc_status);
-@@ -1637,6 +1638,15 @@ static int mpi3mr_bring_ioc_ready(struct mpi3mr_ioc *mrioc)
- 		elapsed_time_sec = jiffies_to_msecs(jiffies - start_time)/1000;
- 	} while (elapsed_time_sec < mrioc->ready_timeout);
- 
-+	ioc_state = mpi3mr_get_iocstate(mrioc);
-+	if (ioc_state == MRIOC_STATE_READY) {
-+		ioc_info(mrioc,
-+		    "successfully transitioned to %s state after %llu seconds\n",
-+		    mpi3mr_iocstate_name(ioc_state), elapsed_time_sec);
-+		mpi3mr_clear_reset_history(mrioc);
-+		return 0;
-+	}
-+
- out_failed:
- 	elapsed_time_sec = jiffies_to_msecs(jiffies - start_time)/1000;
- 	if ((retry < 2) && (elapsed_time_sec < (mrioc->ready_timeout - 60))) {
--- 
-2.47.3
+Never.
 
+I will mark SCSI/UFS subsystem as one needing explicit patchset split.
+
+Best regards,
+Krzysztof
