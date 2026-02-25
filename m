@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 421C414BF97
-	for <linux-scsi@vger.kernel.org>; Wed, 25 Feb 2026 23:25:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3FDFC14BF97
+	for <linux-scsi@vger.kernel.org>; Wed, 25 Feb 2026 23:26:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772061958; cv=none; b=pP13Rq8rfbw3IqQuyiGFrVt7rRHHjIEITZSvbYI7tgT4w9zIAXQ/VjpgRlQrMMk9FDz/pmqkG8iesBXovfVL8x5J89zujTMtolMIjRw6HfSrMMdsMXUAPjPu5OpTyAzI5RbbfXcve8n1TpcG2sctLVMRBpG81GFV3zaMWJKRSWw=
+	t=1772061983; cv=none; b=aGLT4u9Ag6a/Ghuz3eAz/afIj9aSe8v/7gS+TISw7NzCR6Knu2LWqtor2y3QEaiVWzkyyfJ577judGGhxPMqux4UEYDqyMFwlhZ/R7EshqlP3tsTDwRnpj14T9EQ2IMXk5Xv5fhEwnR5gwQbNuxRHLPTg3BSUsClC1xg3PEQuGg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772061958; c=relaxed/simple;
-	bh=s20vuPoTLnFFQbljBq71xMbGGKecwZ9Xv0VUVz8+W84=;
+	s=arc-20240116; t=1772061983; c=relaxed/simple;
+	bh=xwU4KNgtNw2nqKOZKVrdCKKkfVJacUz21atrQ2SToWk=;
 	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=dn6nSfRV0Id4l3Ow59eQBCQY/3bNQ5Ko5E3MidgM0zlTshXnW56LGEvt8IiZ+ugvn6IcucfpxVtnYbuBupXMIx3ckz/SE1Ux6L2aJaj7bNFuBCN5dkQHkTunMFTGPjRF4Af4FX12vmfL+byhRBtn5pXRDImgjVhq+utjW1fFBRU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZvbQIl+e; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:MIME-Version; b=Ytr/n5JONwmw8Z16hNdDCIsS8cJwvqCR2oINsgtK0OMsrSaZrFrJsiM+b2q2GE3eOkAiEcMTRtgcwgM73dWQnY7ZEQEUxlLEuBee5B6hzHaOdw20jdbcu10ESX5IlIi+yrPpUK3GnBSQq+mkjn0F1LYjcmkkCjUxoXIRqTTrN3c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Hl/l89fY; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZvbQIl+e"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id D241CC2BC86
-	for <linux-scsi@vger.kernel.org>; Wed, 25 Feb 2026 23:25:57 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Hl/l89fY"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id CF00BC2BC86
+	for <linux-scsi@vger.kernel.org>; Wed, 25 Feb 2026 23:26:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772061957;
-	bh=s20vuPoTLnFFQbljBq71xMbGGKecwZ9Xv0VUVz8+W84=;
+	s=k20201202; t=1772061982;
+	bh=xwU4KNgtNw2nqKOZKVrdCKKkfVJacUz21atrQ2SToWk=;
 	h=From:To:Subject:Date:In-Reply-To:References:From;
-	b=ZvbQIl+e8wClNY30+py7TvA6dkpqBXsjB5qBab+ck91OK2U8QevUT+mdeZzKJmx1n
-	 0NVe2KddC9W/cmRsadBVH7kWGCoJjTOpsKQBlgZha0zlF9ThdRs7131an6GS+Hx3JP
-	 OLXE9SXQWq6JcA6QjE5hdVl40dP5KUo2ksIXWgmaseUYsk56tROSPDJIV7B9OHDGV1
-	 1ZociGB5QnwECFzES92izlpKsFoM9vGQaL6h7IgUDr/jlUwxWrh1vqrNLormVA4udS
-	 0LzaZW9mfgTqhKZgxBQgVt4DsPX1NP6502jpTXEJjSFvwGzcqR5Yi6pk0LZHtU2lZg
-	 4vjTn3LXqzEhQ==
+	b=Hl/l89fY1TkI6+Y9btoamPD/yzfMMfBoOl01OVmypgnLjij9zIRxanZ2Nmhu0u7ba
+	 qvOXX6gMZoRy10Hd7oswapoPtqyc+hU1bt28x0FGtEdWjFYaQ4+0byGAJSTYPZDtLS
+	 fXo6jwGzDXg3vPSuidd8fRmCEAPJvOXesVUNNj6d7XbqrNuaWQEvApJ+LAek2Ozqr5
+	 OW+5sOWZr7QStcxdHkKxgC93MMjKgHhlCg3m4xawaq8OOjC5rw0cNw+FevFYzrZRmP
+	 iP7N5Bibvn4k8iId80ZZcyk9+V1FwsoYfv+jkoE3s0leGbE8gLrTBrwoK1eer6QWs+
+	 EWJQnlqUAnpog==
 Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-	id CBE7BCAB781; Wed, 25 Feb 2026 23:25:57 +0000 (UTC)
+	id CAAFFCAB781; Wed, 25 Feb 2026 23:26:22 +0000 (UTC)
 From: bugzilla-daemon@kernel.org
 To: linux-scsi@vger.kernel.org
 Subject: [Bug 216696] Linux unusable upon plugging encrypted SanDisk Extreme
  55AE USB 3.0 SSD, causes xHCI controller crash and drops USB keyboard/mouse
-Date: Wed, 25 Feb 2026 23:25:57 +0000
+Date: Wed, 25 Feb 2026 23:26:22 +0000
 X-Bugzilla-Reason: AssignedTo
 X-Bugzilla-Type: changed
 X-Bugzilla-Watch-Reason: None
@@ -48,7 +48,7 @@ X-Bugzilla-Priority: P1
 X-Bugzilla-Assigned-To: linux-scsi@vger.kernel.org
 X-Bugzilla-Flags: 
 X-Bugzilla-Changed-Fields: attachments.created
-Message-ID: <bug-216696-11613-mND2EdjbCz@https.bugzilla.kernel.org/>
+Message-ID: <bug-216696-11613-lkgyAlYRMW@https.bugzilla.kernel.org/>
 In-Reply-To: <bug-216696-11613@https.bugzilla.kernel.org/>
 References: <bug-216696-11613@https.bugzilla.kernel.org/>
 Content-Type: text/plain; charset="UTF-8"
@@ -64,10 +64,10 @@ MIME-Version: 1.0
 
 https://bugzilla.kernel.org/show_bug.cgi?id=3D216696
 
---- Comment #9 from Kamil Kaminski (kylek389@gmail.com) ---
-Created attachment 309464
-  --> https://bugzilla.kernel.org/attachment.cgi?id=3D309464&action=3Dedit
-0001-scsi-core-Treat-Logical-unit-access-not-authorized-a.patch
+--- Comment #10 from Kamil Kaminski (kylek389@gmail.com) ---
+Created attachment 309465
+  --> https://bugzilla.kernel.org/attachment.cgi?id=3D309465&action=3Dedit
+0002-scsi-sd-Treat-locked-encrypted-drives-as-no-media.patch
 
 --=20
 You may reply to this email to add a comment.
