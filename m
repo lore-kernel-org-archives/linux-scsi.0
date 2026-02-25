@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8973231ED81;
-	Wed, 25 Feb 2026 09:00:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E31DC37756A;
+	Wed, 25 Feb 2026 09:06:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772010017; cv=none; b=IuzpM/75OXc0/xjzXoiOnKcjygpzKhXj5l0GeYhNZ9veF7v936360fuAT2LG3I/kzjlwITE+1GGMvnKo0PTdtYuXa9J7PjqNAmGWYxGghd0NiFlyUGR3WhF3ygcnS14A8qNLN8zDvxULFeyoOuCKdQ+SA/hKsidr1Xw1P04DB2c=
+	t=1772010403; cv=none; b=FrlsZ55KxuusreirUsyC4VdGKCkqcbbf45Ez3Ewmc9svcD4nl43ZnO7kHTPv4oNOggNOuLTB9ImjH7W2NUBdnzGUGZt4xgHDP0T2NGk2AhCe8IFE0OGmlgxmHrZSxB5jluM6eaVo/izVwr4lLZfjYE9prnu8AVyc5C9VHucrSe0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772010017; c=relaxed/simple;
-	bh=dVWfSmIUUjCFmllCvxIPPcCyTqDUd3G6LkkkZjx77F8=;
+	s=arc-20240116; t=1772010403; c=relaxed/simple;
+	bh=/oWeM9VzlAEddbav+TAFX9OMBiadR3mWDwcrd6F/xd4=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Q0b8R1MORfh8YGa6dPR2wF77i00IH4QfYkKrdxhaIGIj2mMounAip0i/Nje2gwITdzVFCuXuvH/IW41Ffhgz3ITuwdxpr9kCGUYN03grG+yzX5orEcV5Q6dgUA1AWhZ2GscHk81pTbfgeFJl7LIzB20ckFaazPhwDWmeP7QOYPw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oviQlUN1; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=C39nT5X6gpuX7vcSKcA+pITMjsqVvnQmGcEA/GDTHF+nFCrCcBCX0Auku7RQwSoAtvUt08C6eDs3dd7eMPr5oBZ9trugEKZYrdk+QIl4zNLeGjAVdE3ktSxXgDV5jeiio4spEh85JuJ+LQYGaCLoNDth95ZdEcxXvUbM+Tbh9aE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Xnz6SIfM; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oviQlUN1"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BAEFAC19423;
-	Wed, 25 Feb 2026 09:00:13 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Xnz6SIfM"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 63F17C19422;
+	Wed, 25 Feb 2026 09:06:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772010017;
-	bh=dVWfSmIUUjCFmllCvxIPPcCyTqDUd3G6LkkkZjx77F8=;
+	s=k20201202; t=1772010402;
+	bh=/oWeM9VzlAEddbav+TAFX9OMBiadR3mWDwcrd6F/xd4=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=oviQlUN1s7efrUmOLqLUrhcagT7cAxAM/PGvBBciTItJev3mYYfh9c/LLN+HJEZD0
-	 Nq+zLuA2s/HG7WJUmuRfC+njerBHxNJmsC4AYARCBOgzXa13ufXDX00DtPFrTpZ9YT
-	 RD+XavJsrnyeMiOvgQG+jEHEyOvzA9wRN5FI98BF/iVZ9KpRR0mvKDCi0kqJzeID1v
-	 2fGi7N96NZGY/Lt75bg8f6llKEYjv7p12khjMQh43qaEt4KJ6ZZW5ygIyk8gGJ+5lO
-	 +HmCXbSybJLdLmJ/1SIWv52aRv0arEWDbECCXMVMpwEhB31GcJgoWmhIKgEFoVPVx/
-	 PenaBwRbec4+g==
-Message-ID: <f984c9a0-9ce2-49f9-927b-e69c26f69176@kernel.org>
-Date: Wed, 25 Feb 2026 10:00:12 +0100
+	b=Xnz6SIfMTm7AjMtx6wUUldY/ygUQpT5pLYGVgByskwzDjZWwvR570EyhtrWR3AO/Z
+	 0y1szhdRDsiLK3WCWfOIdpblFdVPfGWZXKZllYduCP2mpdyE5wD+HA0dgtbDYAmk+L
+	 XuvziLSndxBT7xsgf/b4Af8SXkGSozGPL/S2Xw2NJ47rJC1T49iztYedXusjSMqBJt
+	 QbR5piuw8vluWpRCEK9WYERv9dgXcNcgFuSj8QAKNCNlyDu1qVgE5En6jl6iX8TthS
+	 OTZvlminbggQy5emAgG4gmHwfSPIFWacjvQw2AKIIvz/G261QT8pIvNcYY7zscXpgq
+	 N9kIrH/1tQV0g==
+Message-ID: <52f9b88c-8c13-459e-bfc3-9c0992627659@kernel.org>
+Date: Wed, 25 Feb 2026 10:06:37 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,23 +35,19 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v6 3/4] ufs: host: Add ICE clock scaling during UFS clock
- changes
-To: Abhinaba Rakshit <abhinaba.rakshit@oss.qualcomm.com>,
- Herbert Xu <herbert@gondor.apana.org.au>,
- "David S. Miller" <davem@davemloft.net>, Rob Herring <robh@kernel.org>,
- Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley
- <conor+dt@kernel.org>, Bjorn Andersson <andersson@kernel.org>,
- Konrad Dybcio <konradybcio@kernel.org>,
- Manivannan Sadhasivam <mani@kernel.org>,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- Neeraj Soni <neeraj.soni@oss.qualcomm.com>
-Cc: linux-arm-msm@vger.kernel.org, linux-crypto@vger.kernel.org,
- devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-scsi@vger.kernel.org
-References: <20260219-enable-ufs-ice-clock-scaling-v6-0-0c5245117d45@oss.qualcomm.com>
- <20260219-enable-ufs-ice-clock-scaling-v6-3-0c5245117d45@oss.qualcomm.com>
+Subject: Re: [PATCH v2 0/6] Enable UFS support on Milos
+To: Krzysztof Kozlowski <krzk+dt@kernel.org>,
+ Avri Altman <avri.altman@wdc.com>, Bart Van Assche <bvanassche@acm.org>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
+ linux-scsi@vger.kernel.org, Konrad Dybcio <konradybcio@kernel.org>,
+ Conor Dooley <conor+dt@kernel.org>,
+ Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>,
+ Luca Weiss <luca.weiss@fairphone.com>,
+ Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>, Rob Herring
+ <robh@kernel.org>, Bjorn Andersson <andersson@kernel.org>
+References: <20260112-milos-ufs-v2-0-d3ce4f61f030@fairphone.com>
+ <bab87b07-42a8-4712-ba14-3489b7424ac3@kernel.org>
 From: Krzysztof Kozlowski <krzk@kernel.org>
 Content-Language: en-US
 Autocrypt: addr=krzk@kernel.org; keydata=
@@ -97,29 +93,50 @@ Autocrypt: addr=krzk@kernel.org; keydata=
  jWt87ecuHlpL3uuQ0ZZNWqHgZoQLXoqC2ZV5KrtKWb/jyiFX/sxSrodALf0zf+tfHv0FZWT2
  zHjUqd0t4njD/UOsuIMOQn4Ig0SdivYPfZukb5cdasKJukG1NOpbW7yRNivaCnfZz6dTawXw
  XRIV/KDsHQiyVxKvN73bThKhONkcX2LWuD928tAR6XMM2G5ovxLe09vuOzzfTWQDsm++9UKF a/A=
-In-Reply-To: <20260219-enable-ufs-ice-clock-scaling-v6-3-0c5245117d45@oss.qualcomm.com>
+In-Reply-To: <bab87b07-42a8-4712-ba14-3489b7424ac3@kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 19/02/2026 10:39, Abhinaba Rakshit wrote:
-> Implement ICE (Inline Crypto Engine) clock scaling in sync with
-> UFS controller clock scaling. This ensures that the ICE operates at
-> an appropriate frequency when the UFS clocks are scaled up or down,
-> improving performance and maintaining stability for crypto operations.
+On 25/02/2026 09:56, Krzysztof Kozlowski wrote:
+> On 12/01/2026 14:53, Luca Weiss wrote:
+>> Add inline-crypto-engine and UFS bindings & driver parts, then add them
+>> to milos dtsi and enable the UFS storage on Fairphone (Gen. 6).
+>>
+>> Signed-off-by: Luca Weiss <luca.weiss@fairphone.com>
+>> ---
+>> Changes in v2:
+>> - Add missing dma-coherent in milos.dtsi (Neil)
+>> - Pick up tags
+>> - Link to v1: https://lore.kernel.org/r/20260107-milos-ufs-v1-0-6982ab20d0ac@fairphone.com
+> Trimming some Cc entries
 > 
-> Incase of OPP scaling is not supported by ICE, ensure to not prevent
-> devfreq for UFS, as ICE OPP-table is optional.
+> @Martin,
 > 
-> Acked-by: Manivannan Sadhasivam <mani@kernel.org>
-> Signed-off-by: Abhinaba Rakshit <abhinaba.rakshit@oss.qualcomm.com>
-> ---
->  drivers/ufs/host/ufs-qcom.c | 21 ++++++++++++++++++++-
+> It seems you picked at least four patches clearly marked not for
+> SCSI/UFS. These had CLEAR marking "arm64" subsystem.
+> 
+> Driver subsystems CANNOT take DTS patches because DTS is independent
+> hardware description, thus combining them implies dependency and usually
+> means users can be silently affected. We expressed it many times and
+> documented it in point 7 of [1] (although it does not need any
+> documenting because it is different subsystem - why would you ever take
+> arm64 stuff without acks/permission from its maintainers?)
+> 
+> Please drop all DTS patches like:
+> 
+> https://web.git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git/commit/?h=for-next&id=38fe636f266bc340e91ac2618c7e5aa473ea54df
+> 
+> https://web.git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git/commit/?h=for-next&id=7a941f1f631933972393a735e372fd9b5294f7f0
+> 
+> https://web.git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git/commit/?h=for-next&id=3c4c2ea631adce8d71075339431c5064c12c4ec4
+> 
+> https://web.git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git/commit/?h=for-next&id=a76d404af148fb7b70c1db436912dfe031d995ef
+> 
+> [1]
+> https://www.kernel.org/doc/html/latest/devicetree/bindings/submitting-patches.html
 
-
-SCSI/UFS is not respecting subsystem boundaries, thus you must not
-combine multiple subsystem when targeting UFS.
-
-Please split your patches.
+For maintainers it is actually point (4) here:
+https://www.kernel.org/doc/html/latest/devicetree/bindings/submitting-patches.html#ii-for-kernel-maintainers
 
 Best regards,
 Krzysztof
