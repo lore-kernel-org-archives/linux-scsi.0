@@ -1,40 +1,40 @@
 Received: from bali.collaboradmins.com (bali.collaboradmins.com [148.251.105.195])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B7B99399024;
-	Thu, 26 Feb 2026 10:33:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA4BF2949E0;
+	Thu, 26 Feb 2026 10:36:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.251.105.195
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772102012; cv=none; b=njIoD0S7WRFBx2/tzWveCVwrZvlwIZvPLRM1/2ibW8zCcyieu43jeir6AgGlUZdUDWeHI0FRowCEzAoWi1bzOHA/hG6hRITZPyiepRORTMFC+QwhEQBxo0yjiwodOe2i/WYcBFRvfBuZMOhmO5GnAeqFXciQ44Bh3g9I8PPbrRU=
+	t=1772102171; cv=none; b=duqBMMB++qNMg5a5wY66I06xm7JTYiC71p+gObxpB4MV6eEefxsppdy3D647N6PgEhAKdwykit93XlsGUyzpF/iG4b8uNh/txqaBko9u9ls9Lh6ef6Cgf8qGgAy8Lpc7N7Z1tP05f9OqAFsDn3yxwxWOJU9zHup2aytSCCNBNXk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772102012; c=relaxed/simple;
-	bh=jdsbqMmee99OyhJwJac7k9/iwfoy7HEhr67oW7RcG5E=;
+	s=arc-20240116; t=1772102171; c=relaxed/simple;
+	bh=W3qLjNuC+QLK2F8P217EOXE0d8RIhLDiKC2NEPOx7v8=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=V2wQeoAI4ZjUpuZgPG2/P0ETDxqu+PqD4Zls6mpIKKs3IhmxrJSrHx+M8A1nhxci5zJMEjnMAcEaMSooclwICJND3hHNcL6gN4hLx78p/0i3XiPFtSINXwdryOyOxelBM5Iu2tA+o12xUN1S959UxIqyc0OJ1nRtMe61uCgJOws=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b=PRHn6pu+; arc=none smtp.client-ip=148.251.105.195
+	 In-Reply-To:Content-Type; b=UaSQLnQT6KuMGn0G64HJcfjySrlyUUgN/L2ag7398K4Gcln2FEhEDry6l3HsCys+99YEHU8J2JOLNgAvJ9bFAj9Zy1gAg1JUvY5KAzyeGBo+jTVmopCk1PzxzlloQifuTN97+qD72n7wUz8UEE44iRy5ilDlcECngGlxZeGdUt8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b=G3B4blNb; arc=none smtp.client-ip=148.251.105.195
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collabora.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b="PRHn6pu+"
+	dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b="G3B4blNb"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=collabora.com;
-	s=mail; t=1772102009;
-	bh=jdsbqMmee99OyhJwJac7k9/iwfoy7HEhr67oW7RcG5E=;
+	s=mail; t=1772102169;
+	bh=W3qLjNuC+QLK2F8P217EOXE0d8RIhLDiKC2NEPOx7v8=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=PRHn6pu+LYe1i99VPr8a907RdPH5EhiuOOyQtA7a/NK/fnXla5CncaTSQKWOpYLQR
-	 yLbX7w4Xe9MowggMHpLaITfeEpI+vsE0HWZUuixZchr0IlNWYy621A3ihrW9g7yvLE
-	 CnJT3vghjIDsu/lmOBoB0OPGCB6zUTciwjtb27n7mBeY/enrvY4dfDucHEFtrbW+AX
-	 c11jnZBAwJk2LQgPKxdFbQoEgV4ItyB2JHLJV9tLiX8kXhxpE9C1t/c9gxnUROXJqf
-	 narGfuanBg48j2NvI4RInpxAiTp4PPsU2ExWCANyvvLuSv1UNVQEHNyJMV2QQ+JKGm
-	 48XTfhIxKJXcw==
+	b=G3B4blNbzGIfSFsN2Pq23YbXZim4VHupb3i2mKyKj4xFv4ddYl4Sus69IZSY4lw7t
+	 6i3gpratx3W9zv3kXHtvbOfl9x7tdqVZqqI21laWGAoq/8yUCaCC9bd0OqJM3K8qaT
+	 g/FFF2doYJdQTsguQe+VkqThZ94g1f5Rng8kQXTj93PmZ+7sM+oa4TswUvr1tDvYfa
+	 oBWqzoOAdgoPg10cd8Vk1HprIvxxB0YEa3NsPoWq2O9uwpXi3Djqf0LodAgvm4nL3s
+	 F923l+cXyGnxkL14T07f6d3l4PLUpzdDw/rJMFjqYdv2NDs/AmzXSYMLGfdBq34uWs
+	 e1XlOztdw9ebw==
 Received: from [192.168.1.100] (2-237-20-237.ip236.fastwebnet.it [2.237.20.237])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits))
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: kholk11)
-	by bali.collaboradmins.com (Postfix) with ESMTPSA id EB06017E0097;
-	Thu, 26 Feb 2026 11:33:28 +0100 (CET)
-Message-ID: <20e7b970-df30-455e-8067-128de2dca022@collabora.com>
-Date: Thu, 26 Feb 2026 11:33:28 +0100
+	by bali.collaboradmins.com (Postfix) with ESMTPSA id 24C5817E03E5;
+	Thu, 26 Feb 2026 11:36:08 +0100 (CET)
+Message-ID: <48e8f40b-f5f3-42b5-a97b-7a25d1dc0fb8@collabora.com>
+Date: Thu, 26 Feb 2026 11:36:07 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -42,8 +42,8 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v7 18/23] scsi: ufs: mediatek: Don't acquire dvfsrc-vcore
- twice
+Subject: Re: [PATCH v7 20/23] scsi: ufs: mediatek: Back up idle timer in
+ per-instance struct
 To: =?UTF-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= <peter.wang@mediatek.com>,
  "chu.stanley@gmail.com" <chu.stanley@gmail.com>,
  "robh@kernel.org" <robh@kernel.org>,
@@ -75,65 +75,57 @@ Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
  Louis-Alexis Eyraud <louisalexis.eyraud@collabora.com>,
  "kernel@collabora.com" <kernel@collabora.com>
 References: <20260216-mt8196-ufs-v7-0-b5f2907c6da7@collabora.com>
- <20260216-mt8196-ufs-v7-18-b5f2907c6da7@collabora.com>
- <010d77378b9cca477439b92d92c8f5bfb2d4df65.camel@mediatek.com>
- <edf07a47-77be-4acc-8825-b14a5d1838df@collabora.com>
- <c7214effa728b74e753abc0dee8d655e036ca7fb.camel@mediatek.com>
+ <20260216-mt8196-ufs-v7-20-b5f2907c6da7@collabora.com>
+ <5d9723fd6b4ff8430889efb33e0fc93a10c4a880.camel@mediatek.com>
+ <cad2e275-8b5d-4023-b3da-a191bfd065c5@collabora.com>
+ <6297edc9c2d6d1a323f188ef411205701a629d88.camel@mediatek.com>
 From: AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
 Content-Language: en-US
-In-Reply-To: <c7214effa728b74e753abc0dee8d655e036ca7fb.camel@mediatek.com>
+In-Reply-To: <6297edc9c2d6d1a323f188ef411205701a629d88.camel@mediatek.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 
-Il 26/02/26 04:45, Peter Wang (王信友) ha scritto:
-> On Wed, 2026-02-25 at 13:37 +0100, AngeloGioacchino Del Regno wrote:
->> We need to check both because UFS_MTK_CAP_BOOST_CRYPT_ENGINE depends
->> on:
->>    1. reg_vcore
->>    2. clocks (crypt_mux, crypt_lp, crypt_perf).
+Il 26/02/26 04:46, Peter Wang (王信友) ha scritto:
+> On Wed, 2026-02-25 at 13:40 +0100, AngeloGioacchino Del Regno wrote:
+>> In my opinion "ahit" is way less readable than
+>> "hibernate_idle_timer".
 >>
->> Failing to check for both ufs_mtk_is_boost_crypt_enabled() and
->> reg_vcore here
->> will introduce a bug that may result in storage corruption.
+>> The hibernate_idle_timer member here stores the AUTO HIBERNATE IDLE
+>> TIMER, and
+>> there is no other possible hibernation state in this driver.
 >>
->> So yes, Nicolas is checking both because it is *required* to check
->> both.
+>> Not sure why this could ever be confusing in terms of its intended
+>> use: its
+>> intended use is to store the (auto) hibern8 idle timer, and the
+>> member is called
+>> hibernate_idle_timer.
+>>
+>> In my eyes, that matches 1:1 with its usage. Loud and clear.
 >>
 >> Regards,
 >> Angelo
+>>
+>>
 > 
 > Hi AngeloGioacchino,
 > 
-> To clarify, BCE stands for UFS_MTK_CAP_BOOST_CRYPT_ENGINE.
+> If you want to refer to the AUTO HIBERNATE IDLE TIMER,
+> then you cannot omit "auto" because the UFS driver also
+> has a manual hibernate method.
+> However, "AUTO HIBERNATE IDLE TIMER" is too long,
+> and we often use "ahit" instead (which is also used in
+> the UFSHCI spec). For example:
+> https://elixir.bootlin.com/linux/v6.19.3/source/include/ufs/ufshcd.h#L978
 > 
-> BCE     reg_vcore   Action
-> true	true	    If check is false, continue
-> true	false	    This case cannot happen (X)
-> false	true	    If check is true, return
-> false	false	    If check is true, return
-> Therefore, we only need to check whether BCE is
-> true (to continue) or false (to return).
+> So, if you want to distinguish it from hba->ahit, I suggest
+> using backup_ahit or saved_ahit instead.
 > 
 
-Thanks for the information.
+Okay, does "saved_auto_hibern8_idle_tmr" sound good for you instead?
 
-Now I agree. There's no need to check for that twice, as the cap is set
-only when all clocks and when reg_vcore is not NULL - I missed the first
-lines of the ufs_mtk_init_boost_crypt_function() from this patch, where
-Nicolas is adding a check for that at the very beginning of this function.
-
-This means that the UFS_MTK_CAP_BOOST_CRYPT_ENGINE flag is being set only
-when all of the prerequisites (reg_vcore and clocks) are satisfied.
-
-I agree with you, Peter, there's no need to check for both the vreg and
-caps, as the cap can only be set if the vreg+clocks are present.
-
-Nicolas, can you please fix that and send a v8 ASAP?
-
-Thanks,
+Regards,
 Angelo
 
 > Thanks
 > Peter
-
 
