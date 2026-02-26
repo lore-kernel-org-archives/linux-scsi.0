@@ -1,89 +1,74 @@
-Received: from mail.ispras.ru (mail.ispras.ru [83.149.199.84])
-	(using TLSv1.2 with cipher DHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF930368953;
-	Thu, 26 Feb 2026 17:13:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=83.149.199.84
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6AD6C23A9B3
+	for <linux-scsi@vger.kernel.org>; Thu, 26 Feb 2026 18:15:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772126021; cv=none; b=N9OwF08woSvXoYPw1SD8vvRjogyMLxDvYzF8XmemtfyGmw3yeNfJVnyKxWCL10mAhHHQ4gypiRkxKyyna1nZ5yyNRprl0Ij6XBQGREvtOx7r/8apGKdq+GlHEbpjE4VkbLjbmJ7mN7X4jDxXO/DKwnmsKPVahjmM4ZxJcFndDlU=
+	t=1772129721; cv=none; b=thWYFvy/4e+9y0GP8vuzmlUm5X+j5+ZQF9kCPR3zzLsyaN1yHFZBcyDEDQEm/yf+i/AcoaE8Ind3fIH+PMQcH/xyriEg2m+2w82yKBLoTNnAgp9LHRv+9yfaEsVVrlBpOfoWzjaJEofO/626vZRCnFCoZEGeoYGStGKlRn7OJeA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772126021; c=relaxed/simple;
-	bh=b7Byh7AKmIrPB6JnsHWQxCom1SBCJiTuJvCA4ZoANxU=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=sI+0aNGFOIG6JVdsaYKTVHuP6YFRvPfHTrCLz0Why+wOyZwKhWAza4zfbJ4iLjrXWhmF+/JmjDH/tPrS6q1ulBLlZPbE9WLwmI5U7xX8CP5yAMF8Toe8RAZS1ch3dh17wI1OJ0ULues/GvxZJsvehdQPzD+x4Rghlb/Kw2gz5UU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ispras.ru; spf=pass smtp.mailfrom=ispras.ru; dkim=pass (1024-bit key) header.d=ispras.ru header.i=@ispras.ru header.b=os8x+1Li; arc=none smtp.client-ip=83.149.199.84
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ispras.ru
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ispras.ru
+	s=arc-20240116; t=1772129721; c=relaxed/simple;
+	bh=MEpTSyjNRJ1W/nhZpu80wpvFIoWLaZGQNhVRqRoIJIc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=TkdlZcOKD7UiVU/Km0fnnZH/9FWJ7jnLpJ9cT0QxHPTX7181vsvx2J8TnyY+lC9j6UDtk+h3NFuvml/IL+u57MF2LmGIHZFnbHjYE/p79EKY4xR1d8r73BWgqrSBwBKJs7XmlABlWOuxw+lvsVHAFB+UqRZgd2DeXRZXAk13lGE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nQCJVlF5; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=ispras.ru header.i=@ispras.ru header.b="os8x+1Li"
-Received: from VelichayshiyPC.Dlink (unknown [178.69.152.134])
-	by mail.ispras.ru (Postfix) with ESMTPSA id 35E23407617A;
-	Thu, 26 Feb 2026 17:13:29 +0000 (UTC)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail.ispras.ru 35E23407617A
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ispras.ru;
-	s=default; t=1772126009;
-	bh=/GZydmRwpoky6IbFYodD1KRJPAHPKTTbYzddIMSkiiY=;
-	h=From:To:Cc:Subject:Date:From;
-	b=os8x+1LiGigSPG/omStujELOqHYhM5IW9ZkbAgeHKRoR7VK3sTFZW5u5nGUsw/GiI
-	 tJrVH5EyQClCBz6WA5M+B9GBdYfAIWA0FQfCwcBdHbnv4Dte/BR0GM7kqEOvve6oCq
-	 JFJLELd3biw53ASRSSDV2kTYlEAbVAe4AjCFonZU=
-From: Alexey Velichayshiy <a.velichayshiy@ispras.ru>
-To: a.velichayshiy@ispras.ru,
-	Don Brace <don.brace@microchip.com>
-Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Kevin Barnett <kevin.barnett@microsemi.com>,
-	Scott Benesh <scott.benesh@microsemi.com>,
-	storagedev@microchip.com,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	lvc-project@linuxtesting.org
-Subject: [PATCH] scsi: smartpqi: add safety checks for RAID 50/60 stripe size value
-Date: Thu, 26 Feb 2026 20:11:46 +0300
-Message-ID: <20260226171205.353635-1-a.velichayshiy@ispras.ru>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nQCJVlF5"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B3C39C116C6;
+	Thu, 26 Feb 2026 18:15:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1772129721;
+	bh=MEpTSyjNRJ1W/nhZpu80wpvFIoWLaZGQNhVRqRoIJIc=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=nQCJVlF56ElQbLw0Amw24fH3uaB/IhI++rV66xhuKkiNWed1UDzN4vhKbXeWVjpwU
+	 S60EeAZBiZ1MhjUvr9CsS8m88MRnDwNtMkHQKANwWkiZtZDbCsC95qQ4WgVVekHtQv
+	 URyKkwrvKDWZ9CZcyiVStalXpqVJIu6Ag5wuDuI8I3AXEsRfPzPTxu9AoKiRtArmyJ
+	 pz1X8pxhj74a0LKnYNoJ3kPhtV3MQAavzuNggTfsjp3Iud+Ijn294gJDnsMBNcztDz
+	 ckIn4VVDxVeJ9hQwaj57zghiPn/i9os9THVForBKs6vwkq26NEonlYYwXcT3GqpW5i
+	 pZmROTL5AH0sw==
+Date: Thu, 26 Feb 2026 11:15:18 -0700
+From: Keith Busch <kbusch@kernel.org>
+To: John Meneghini <jmeneghi@redhat.com>
+Cc: Maurizio Lombardi <mlombard@arkamax.eu>,
+	Maurizio Lombardi <mlombard@redhat.com>, hch@lst.de, hare@suse.de,
+	chaitanyak@nvidia.com, bvanassche@acm.org,
+	linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org,
+	James.Bottomley@hansenpartnership.com, emilne@redhat.com,
+	bgurney@redhat.com
+Subject: Re: [PATCH V3 0/3] Ensure ordered namespace registration during
+ async scan
+Message-ID: <aaCNtpPzP9TIDNjE@kbusch-mbp>
+References: <20260225161203.76168-1-mlombard@redhat.com>
+ <aZ9sjbZ3CEW_1rW1@kbusch-mbp>
+ <DGOQMFJJ6K5P.3KLF45WQT2SAS@arkamax.eu>
+ <e43b914c-2ca5-455e-b0fe-3ce2eb0c64bd@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <e43b914c-2ca5-455e-b0fe-3ce2eb0c64bd@redhat.com>
 
-Add zero check for 'rmd->layout_map_count' and overflow check when
-computing 'rmd->stripesize' as the product of 'rmd->blocks_per_row' and
-'rmd->layout_map_count'. Using the check_mul_overflow() macro prevents
-potential overflow of a 32-bit type, which could produce incorrect data in
-subsequent calculations, including division-by-zero errors.
+On Thu, Feb 26, 2026 at 11:35:15AM -0500, John Meneghini wrote:
+> It's worse than this.  Yes, in RHEL we carry out of tree patches to tun off the async scanning with SCSI,
+> and we reverted this async namespace scanning patch in NVMe.
+> 
+> We had to do this because, as soon as we turned these async scanning mechanisms on, we immediately
+> received customer escalations. Customer were not able to upgrade their systems. We have customer issues
+> and complaints open about this and we see this async namespace scanning as a barrier to adoption with NVMEe -
+> especially with NVME-OF which tends to have many more Namespaces than PCIe.
 
-Found by Linux Verification Center (linuxtesting.org) with SVACE.
-
-Fixes: 6c223761eb54 ("smartpqi: initial commit of Microsemi smartpqi driver")
-Signed-off-by: Alexey Velichayshiy <a.velichayshiy@ispras.ru>
----
- drivers/scsi/smartpqi/smartpqi_init.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-index fe549e2b7c94..42c2c137a819 100644
---- a/drivers/scsi/smartpqi/smartpqi_init.c
-+++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -2824,12 +2824,14 @@ static int pqi_calc_aio_r5_or_r6(struct pqi_scsi_dev_raid_map_data *rmd,
- 	u64 tmpdiv;
- #endif
+Sounds like some people just don't know how to use labels or persistent
+names. Relying on /dev/nvmeXnY or /dev/sdX to always be a handle to the
+same device is a fragile solution.
  
--	if (rmd->blocks_per_row == 0) /* Used as a divisor in many calculations */
-+	/* Used as a divisors in many calculations */
-+	if (rmd->blocks_per_row == 0 || rmd->layout_map_count == 0)
- 		return PQI_RAID_BYPASS_INELIGIBLE;
- 
- 	/* RAID 50/60 */
- 	/* Verify first and last block are in same RAID group. */
--	rmd->stripesize = rmd->blocks_per_row * rmd->layout_map_count;
-+	if (check_mul_overflow(rmd->blocks_per_row, rmd->layout_map_count, &rmd->stripesize))
-+		return PQI_RAID_BYPASS_INELIGIBLE;
- #if BITS_PER_LONG == 32
- 	tmpdiv = rmd->first_block;
- 	rmd->first_group = do_div(tmpdiv, rmd->stripesize);
--- 
-2.43.0
+> And yes, the PCIe async discovery stuff does cause some problems.  The difference is: the PCIe bus configuration does
+> not change nearly as often as, e.g., the nvme namespace configuration in a fabric, so customers don't notice the changing pci ids.
+> Unless some one is going lots of hot unplugging and plugging with their PCI bus, the PCI ids typically don't change at all.
 
+It's not about the PCI topology changing. The async probe makes it
+non-deterministic as to which PCI device is going to claim which
+instance out of the nvme ida since they all try to run concurrently.
