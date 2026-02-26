@@ -1,28 +1,40 @@
-Received: from mx3.molgen.mpg.de (mx3.molgen.mpg.de [141.14.17.11])
+Received: from bali.collaboradmins.com (bali.collaboradmins.com [148.251.105.195])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6DE213A4F3A;
-	Thu, 26 Feb 2026 10:05:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=141.14.17.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B7B99399024;
+	Thu, 26 Feb 2026 10:33:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.251.105.195
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772100328; cv=none; b=TC4HV17Pn63cCtsRKBsZ1xMPaGALHdxODfu6HwgbKzCmHYxcPdrToYsPObHmKsZ9PyZrSO3oOE6cOM4VDEG+7vVWU1o2J0TFF7L68wr2obIVcbJDy7+Rlx6ewD944jOiPNLX5x4CHEAG7fs1qBGxMtIFdl4QnbziwzmEyWfiRLU=
+	t=1772102012; cv=none; b=njIoD0S7WRFBx2/tzWveCVwrZvlwIZvPLRM1/2ibW8zCcyieu43jeir6AgGlUZdUDWeHI0FRowCEzAoWi1bzOHA/hG6hRITZPyiepRORTMFC+QwhEQBxo0yjiwodOe2i/WYcBFRvfBuZMOhmO5GnAeqFXciQ44Bh3g9I8PPbrRU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772100328; c=relaxed/simple;
-	bh=Jr71TEpuefliB8XSf5nWXwoG0tj6pv/9i9Mu40e8vMc=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:Cc:From:
-	 In-Reply-To:Content-Type; b=Eq0DOPAB10eaRXThNxhi9TWp082YYnEJGPGSMy9t8g572UXTwV0xVt1U5j7vn/KnIJKD0craxlkq0CUqS8VRno5YtXrYefFGy2hYtW5+Eb0ZtzwZQA446XVWim7Jppq07y+/LeG75ZA1Y7VGWeRsKIzGYnk73V2B70PuRY+BU/8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=molgen.mpg.de; spf=pass smtp.mailfrom=molgen.mpg.de; arc=none smtp.client-ip=141.14.17.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=molgen.mpg.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=molgen.mpg.de
-Received: from [10.108.10.175] (unknown [194.94.98.184])
+	s=arc-20240116; t=1772102012; c=relaxed/simple;
+	bh=jdsbqMmee99OyhJwJac7k9/iwfoy7HEhr67oW7RcG5E=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=V2wQeoAI4ZjUpuZgPG2/P0ETDxqu+PqD4Zls6mpIKKs3IhmxrJSrHx+M8A1nhxci5zJMEjnMAcEaMSooclwICJND3hHNcL6gN4hLx78p/0i3XiPFtSINXwdryOyOxelBM5Iu2tA+o12xUN1S959UxIqyc0OJ1nRtMe61uCgJOws=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b=PRHn6pu+; arc=none smtp.client-ip=148.251.105.195
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collabora.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b="PRHn6pu+"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=collabora.com;
+	s=mail; t=1772102009;
+	bh=jdsbqMmee99OyhJwJac7k9/iwfoy7HEhr67oW7RcG5E=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=PRHn6pu+LYe1i99VPr8a907RdPH5EhiuOOyQtA7a/NK/fnXla5CncaTSQKWOpYLQR
+	 yLbX7w4Xe9MowggMHpLaITfeEpI+vsE0HWZUuixZchr0IlNWYy621A3ihrW9g7yvLE
+	 CnJT3vghjIDsu/lmOBoB0OPGCB6zUTciwjtb27n7mBeY/enrvY4dfDucHEFtrbW+AX
+	 c11jnZBAwJk2LQgPKxdFbQoEgV4ItyB2JHLJV9tLiX8kXhxpE9C1t/c9gxnUROXJqf
+	 narGfuanBg48j2NvI4RInpxAiTp4PPsU2ExWCANyvvLuSv1UNVQEHNyJMV2QQ+JKGm
+	 48XTfhIxKJXcw==
+Received: from [192.168.1.100] (2-237-20-237.ip236.fastwebnet.it [2.237.20.237])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits))
 	(No client certificate requested)
-	(Authenticated sender: pmenzel)
-	by mx.molgen.mpg.de (Postfix) with ESMTPSA id 95D5A4C4430406;
-	Thu, 26 Feb 2026 11:04:24 +0100 (CET)
-Message-ID: <5b8c1811-c9d9-469a-b8d0-992814a11b9a@molgen.mpg.de>
-Date: Thu, 26 Feb 2026 11:04:23 +0100
+	(Authenticated sender: kholk11)
+	by bali.collaboradmins.com (Postfix) with ESMTPSA id EB06017E0097;
+	Thu, 26 Feb 2026 11:33:28 +0100 (CET)
+Message-ID: <20e7b970-df30-455e-8067-128de2dca022@collabora.com>
+Date: Thu, 26 Feb 2026 11:33:28 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -30,202 +42,98 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] block: remove bdev_nonrot()
-To: Damien Le Moal <dlemoal@kernel.org>
-References: <20260226075448.2229655-1-dlemoal@kernel.org>
+Subject: Re: [PATCH v7 18/23] scsi: ufs: mediatek: Don't acquire dvfsrc-vcore
+ twice
+To: =?UTF-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= <peter.wang@mediatek.com>,
+ "chu.stanley@gmail.com" <chu.stanley@gmail.com>,
+ "robh@kernel.org" <robh@kernel.org>,
+ =?UTF-8?B?Q2h1bmZlbmcgWXVuICjkupHmmKXls7Ap?= <Chunfeng.Yun@mediatek.com>,
+ "kishon@kernel.org" <kishon@kernel.org>,
+ "James.Bottomley@HansenPartnership.com"
+ <James.Bottomley@HansenPartnership.com>,
+ "bvanassche@acm.org" <bvanassche@acm.org>,
+ =?UTF-8?B?Q2hhb3RpYW4gSmluZyAo5LqV5pyd5aSpKQ==?=
+ <Chaotian.Jing@mediatek.com>, "conor+dt@kernel.org" <conor+dt@kernel.org>,
+ "lgirdwood@gmail.com" <lgirdwood@gmail.com>,
+ "nicolas.frattaroli@collabora.com" <nicolas.frattaroli@collabora.com>,
+ "vkoul@kernel.org" <vkoul@kernel.org>,
+ "krzk+dt@kernel.org" <krzk+dt@kernel.org>,
+ "p.zabel@pengutronix.de" <p.zabel@pengutronix.de>,
+ "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
+ "neil.armstrong@linaro.org" <neil.armstrong@linaro.org>,
+ "matthias.bgg@gmail.com" <matthias.bgg@gmail.com>,
+ "avri.altman@wdc.com" <avri.altman@wdc.com>,
+ "broonie@kernel.org" <broonie@kernel.org>,
+ "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+ "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "linux-arm-kernel@lists.infradead.org"
+ <linux-arm-kernel@lists.infradead.org>,
+ "linux-phy@lists.infradead.org" <linux-phy@lists.infradead.org>,
+ "linux-mediatek@lists.infradead.org" <linux-mediatek@lists.infradead.org>,
+ Louis-Alexis Eyraud <louisalexis.eyraud@collabora.com>,
+ "kernel@collabora.com" <kernel@collabora.com>
+References: <20260216-mt8196-ufs-v7-0-b5f2907c6da7@collabora.com>
+ <20260216-mt8196-ufs-v7-18-b5f2907c6da7@collabora.com>
+ <010d77378b9cca477439b92d92c8f5bfb2d4df65.camel@mediatek.com>
+ <edf07a47-77be-4acc-8825-b14a5d1838df@collabora.com>
+ <c7214effa728b74e753abc0dee8d655e036ca7fb.camel@mediatek.com>
+From: AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
 Content-Language: en-US
-Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org,
- Song Liu <song@kernel.org>, Yu Kuai <yukuai@fnnas.com>,
- linux-raid@vger.kernel.org, "Martin K . Petersen"
- <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org,
- target-devel@vger.kernel.org, David Sterba <dsterba@suse.com>,
- linux-btrfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>,
- linux-ext4@vger.kernel.org, Andreas Dilger <adilger.kernel@dilger.ca>,
- Andrew Morton <akpm@linux-foundation.org>, Chris Li <chrisl@kernel.org>,
- Kairui Song <kasong@tencent.com>, linux-mm@kvack.org
-From: Paul Menzel <pmenzel@molgen.mpg.de>
-In-Reply-To: <20260226075448.2229655-1-dlemoal@kernel.org>
+In-Reply-To: <c7214effa728b74e753abc0dee8d655e036ca7fb.camel@mediatek.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-Dear Damien,
-
-
-Thank you for your patch.
-
-
-Am 26.02.26 um 08:54 schrieb Damien Le Moal:
-> bdev_nonrot() is simply the negative return value of bdev_rot().
-> So replace all call sites of bdev_nonrot() with calls to bdev_rot()
-> and remove bdev_nonrot().
-
-Is the generated code different now?
-
-Is it worth the change, as it looks quite subjective if you prefer the 
-one or the other way?
-
-> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
-> ---
->   drivers/md/raid1.c                  | 2 +-
->   drivers/md/raid10.c                 | 2 +-
->   drivers/md/raid5.c                  | 2 +-
->   drivers/target/target_core_file.c   | 2 +-
->   drivers/target/target_core_iblock.c | 2 +-
->   fs/btrfs/volumes.c                  | 4 ++--
->   fs/ext4/mballoc-test.c              | 2 +-
->   fs/ext4/mballoc.c                   | 2 +-
->   include/linux/blkdev.h              | 5 -----
->   mm/swapfile.c                       | 2 +-
->   10 files changed, 10 insertions(+), 15 deletions(-)
+Il 26/02/26 04:45, Peter Wang (王信友) ha scritto:
+> On Wed, 2026-02-25 at 13:37 +0100, AngeloGioacchino Del Regno wrote:
+>> We need to check both because UFS_MTK_CAP_BOOST_CRYPT_ENGINE depends
+>> on:
+>>    1. reg_vcore
+>>    2. clocks (crypt_mux, crypt_lp, crypt_perf).
+>>
+>> Failing to check for both ufs_mtk_is_boost_crypt_enabled() and
+>> reg_vcore here
+>> will introduce a bug that may result in storage corruption.
+>>
+>> So yes, Nicolas is checking both because it is *required* to check
+>> both.
+>>
+>> Regards,
+>> Angelo
 > 
-> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-> index 181400e147c0..cda6af0712b9 100644
-> --- a/drivers/md/raid1.c
-> +++ b/drivers/md/raid1.c
-> @@ -1878,7 +1878,7 @@ static bool raid1_add_conf(struct r1conf *conf, struct md_rdev *rdev, int disk,
->   	if (info->rdev)
->   		return false;
->   
-> -	if (bdev_nonrot(rdev->bdev)) {
-> +	if (!bdev_rot(rdev->bdev)) {
->   		set_bit(Nonrot, &rdev->flags);
->   		WRITE_ONCE(conf->nonrot_disks, conf->nonrot_disks + 1);
->   	}
-> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> index 0653b5d8545a..cfbd345805ca 100644
-> --- a/drivers/md/raid10.c
-> +++ b/drivers/md/raid10.c
-> @@ -806,7 +806,7 @@ static struct md_rdev *read_balance(struct r10conf *conf,
->   		if (!do_balance)
->   			break;
->   
-> -		nonrot = bdev_nonrot(rdev->bdev);
-> +		nonrot = !bdev_rot(rdev->bdev);
->   		has_nonrot_disk |= nonrot;
->   		pending = atomic_read(&rdev->nr_pending);
->   		if (min_pending > pending && nonrot) {
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index a8e8d431071b..ba9d6d05b089 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -7541,7 +7541,7 @@ static struct r5conf *setup_conf(struct mddev *mddev)
->   	rdev_for_each(rdev, mddev) {
->   		if (test_bit(Journal, &rdev->flags))
->   			continue;
-> -		if (bdev_nonrot(rdev->bdev)) {
-> +		if (!bdev_rot(rdev->bdev)) {
->   			conf->batch_bio_dispatch = false;
->   			break;
->   		}
-> diff --git a/drivers/target/target_core_file.c b/drivers/target/target_core_file.c
-> index 3ae1f7137d9d..d6e3e5214652 100644
-> --- a/drivers/target/target_core_file.c
-> +++ b/drivers/target/target_core_file.c
-> @@ -173,7 +173,7 @@ static int fd_configure_device(struct se_device *dev)
->   		 */
->   		dev->dev_attrib.max_write_same_len = 0xFFFF;
->   
-> -		if (bdev_nonrot(bdev))
-> +		if (!bdev_rot(bdev))
->   			dev->dev_attrib.is_nonrot = 1;
->   	} else {
->   		if (!(fd_dev->fbd_flags & FBDF_HAS_SIZE)) {
-> diff --git a/drivers/target/target_core_iblock.c b/drivers/target/target_core_iblock.c
-> index 3c92f94497b4..1087d1d17c36 100644
-> --- a/drivers/target/target_core_iblock.c
-> +++ b/drivers/target/target_core_iblock.c
-> @@ -148,7 +148,7 @@ static int iblock_configure_device(struct se_device *dev)
->   	else
->   		dev->dev_attrib.max_write_same_len = 0xFFFF;
->   
-> -	if (bdev_nonrot(bd))
-> +	if (!bdev_rot(bd))
->   		dev->dev_attrib.is_nonrot = 1;
->   
->   	target_configure_write_atomic_from_bdev(&dev->dev_attrib, bd);
-> diff --git a/fs/btrfs/volumes.c b/fs/btrfs/volumes.c
-> index 6fb0c4cd50ff..c6e49eb74f3a 100644
-> --- a/fs/btrfs/volumes.c
-> +++ b/fs/btrfs/volumes.c
-> @@ -694,7 +694,7 @@ static int btrfs_open_one_device(struct btrfs_fs_devices *fs_devices,
->   			set_bit(BTRFS_DEV_STATE_WRITEABLE, &device->dev_state);
->   	}
->   
-> -	if (!bdev_nonrot(file_bdev(bdev_file)))
-> +	if (bdev_rot(file_bdev(bdev_file)))
->   		fs_devices->rotating = true;
->   
->   	if (bdev_max_discard_sectors(file_bdev(bdev_file)))
-> @@ -2919,7 +2919,7 @@ int btrfs_init_new_device(struct btrfs_fs_info *fs_info, const char *device_path
->   
->   	atomic64_add(device->total_bytes, &fs_info->free_chunk_space);
->   
-> -	if (!bdev_nonrot(device->bdev))
-> +	if (bdev_rot(device->bdev))
->   		fs_devices->rotating = true;
->   
->   	orig_super_total_bytes = btrfs_super_total_bytes(fs_info->super_copy);
-> diff --git a/fs/ext4/mballoc-test.c b/fs/ext4/mballoc-test.c
-> index 9fbdf6a09489..b9f22e3a8d5c 100644
-> --- a/fs/ext4/mballoc-test.c
-> +++ b/fs/ext4/mballoc-test.c
-> @@ -72,7 +72,7 @@ static int mbt_mb_init(struct super_block *sb)
->   	ext4_fsblk_t block;
->   	int ret;
->   
-> -	/* needed by ext4_mb_init->bdev_nonrot(sb->s_bdev) */
-> +	/* needed by ext4_mb_init->bdev_rot(sb->s_bdev) */
->   	sb->s_bdev = kzalloc_obj(*sb->s_bdev);
->   	if (sb->s_bdev == NULL)
->   		return -ENOMEM;
-> diff --git a/fs/ext4/mballoc.c b/fs/ext4/mballoc.c
-> index 20e9fdaf4301..8a4dfe19878c 100644
-> --- a/fs/ext4/mballoc.c
-> +++ b/fs/ext4/mballoc.c
-> @@ -3836,7 +3836,7 @@ int ext4_mb_init(struct super_block *sb)
->   		spin_lock_init(&lg->lg_prealloc_lock);
->   	}
->   
-> -	if (bdev_nonrot(sb->s_bdev))
-> +	if (!bdev_rot(sb->s_bdev))
->   		sbi->s_mb_max_linear_groups = 0;
->   	else
->   		sbi->s_mb_max_linear_groups = MB_DEFAULT_LINEAR_LIMIT;
-> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-> index d463b9b5a0a5..e439d6fa8484 100644
-> --- a/include/linux/blkdev.h
-> +++ b/include/linux/blkdev.h
-> @@ -1467,11 +1467,6 @@ static inline bool bdev_rot(struct block_device *bdev)
->   	return blk_queue_rot(bdev_get_queue(bdev));
->   }
->   
-> -static inline bool bdev_nonrot(struct block_device *bdev)
-> -{
-> -	return !bdev_rot(bdev);
-> -}
-> -
->   static inline bool bdev_synchronous(struct block_device *bdev)
->   {
->   	return bdev->bd_disk->queue->limits.features & BLK_FEAT_SYNCHRONOUS;
-> diff --git a/mm/swapfile.c b/mm/swapfile.c
-> index 94af29d1de88..60e21414624b 100644
-> --- a/mm/swapfile.c
-> +++ b/mm/swapfile.c
-> @@ -3460,7 +3460,7 @@ SYSCALL_DEFINE2(swapon, const char __user *, specialfile, int, swap_flags)
->   	if (si->bdev && bdev_synchronous(si->bdev))
->   		si->flags |= SWP_SYNCHRONOUS_IO;
->   
-> -	if (si->bdev && bdev_nonrot(si->bdev)) {
-> +	if (si->bdev && !bdev_rot(si->bdev)) {
->   		si->flags |= SWP_SOLIDSTATE;
->   	} else {
->   		atomic_inc(&nr_rotate_swap);
+> Hi AngeloGioacchino,
+> 
+> To clarify, BCE stands for UFS_MTK_CAP_BOOST_CRYPT_ENGINE.
+> 
+> BCE     reg_vcore   Action
+> true	true	    If check is false, continue
+> true	false	    This case cannot happen (X)
+> false	true	    If check is true, return
+> false	false	    If check is true, return
+> Therefore, we only need to check whether BCE is
+> true (to continue) or false (to return).
+> 
 
-My point above aside, the diff looks good.
+Thanks for the information.
 
-Reviewed-by: Paul Menzel <pmenzel@molgen.mpg.de>
+Now I agree. There's no need to check for that twice, as the cap is set
+only when all clocks and when reg_vcore is not NULL - I missed the first
+lines of the ufs_mtk_init_boost_crypt_function() from this patch, where
+Nicolas is adding a check for that at the very beginning of this function.
+
+This means that the UFS_MTK_CAP_BOOST_CRYPT_ENGINE flag is being set only
+when all of the prerequisites (reg_vcore and clocks) are satisfied.
+
+I agree with you, Peter, there's no need to check for both the vreg and
+caps, as the cap can only be set if the vreg+clocks are present.
+
+Nicolas, can you please fix that and send a v8 ASAP?
+
+Thanks,
+Angelo
+
+> Thanks
+> Peter
 
 
-Kind regards,
-
-Paul
