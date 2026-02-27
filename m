@@ -1,270 +1,273 @@
-Received: from AM0PR83CU005.outbound.protection.outlook.com (mail-westeuropeazon11010017.outbound.protection.outlook.com [52.101.69.17])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C1DC329361;
-	Fri, 27 Feb 2026 15:55:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.69.17
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772207716; cv=fail; b=tQrI1IlKftzA/t0kGiJgTWd5o0Dxa6YFcdY83bscOdhW+vSFspX+z/B6lrPq2cOEgUSwBxeM3KaWbW8PgbnYvBpqDrosB38S+o6HlbS+egxVQMv83GhIv2PuYCWNNLMEKTjtju+7O2GmaaGkvzr0VaKEcAXWgV/TrYZev4ZuCac=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772207716; c=relaxed/simple;
-	bh=WSWspxpiATjtsMq6XrJLl7U8/+wo0wUp4wcsfVTcCeU=;
-	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=gOhfzJaxngre6LeQzubvyuSUy8bzqu2tUJV5hJ6JrEy1yww282C9ux4m+Z6Jtxym2eUP8wP5+Nl7e7knuNpSIhpxJyaLZN5bP3lLUl9wO+JgYSDP6I/QD73Bb9drwEUiqd/FGQxQGUEIuRMZ9HLwhoZe1pnEIQpIF0UyqFjJI+M=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=siemens.com; spf=pass smtp.mailfrom=siemens.com; dkim=pass (2048-bit key) header.d=siemens.com header.i=@siemens.com header.b=iBk2IQvf; arc=fail smtp.client-ip=52.101.69.17
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=siemens.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=siemens.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7CA1C42DFEB;
+	Fri, 27 Feb 2026 16:08:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1772208513; cv=none; b=XARrpIXbLFpXb/AkeEO8LQth2c5cy4INXa5l+HQoYB7s8Jx+mAu2tXmHsaabTKQ1mO3vLUUK7YpyDNah0U/ItwFl26kT02zasCvOfTbWed44WXB8+gRZ1M92D00u8LQIxBDAkB3MG2BQbxzPFiLwO3UgxLlZVSu3XZMnp0POQ9o=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1772208513; c=relaxed/simple;
+	bh=HbbaVRtOWYWtVXWHUubdiS5hY5T1c8nqhmwHVFd5qeI=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=mJJorfqjo+EvTnzwE3SR4HW5shIxts3RmXJRGk2f1kfsgM+5cSfdjrURo/33Vnh0Hy6cdsQmY/VAF8RABdwgXqDsEX/r3oFfh6ez4jI3ax5yENqj7eEESTuurIcmNTTXVlDn5sB0UTxaH4dU+2w33MDA2CGDD76bBLZMAKtfBrQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=bfvFMeKd; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=siemens.com header.i=@siemens.com header.b="iBk2IQvf"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=l586jTPL7EDf5LcCvixuG8GOZvDGMVIy65ZdCXuWrUg2L9JlqKgZdqtXYNp47eaoAM+4oG3fsc5JS8800KkaaqFc3CuAgg4bSqTHVOF86AyHbml/DVqgg7XEiI9l2n8zHSE1u8p7koX5D/t6vDeK1WuOnRsLApk1QnVM20uH7guD5ht3bdaapPSS8a71YE2rt5S0kv9nAP+kxeedkH8plYjAMf8F4KkZSlqey65dul1buXuC9/eHX/0wybTrcuA5hNFlHzwoBDDLVayDjfsRRbWHL/zVQ+0Po9Dp8x4nNbVKx09DWYiRL+XhmeHwGv/cf4M/t57DbKPVYyZpoOrp6Q==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=0+QoHePhVG9iRkUUrw+HLJD+o8XSMIfKoL4DPSYyAw4=;
- b=GsYlaJGOvmXaesPLFxSSK4VlriHBXwYpzZvD83arzCtBQ6peBMgduV0S5rT4D6TE7xG/7EW58jp/EEg6pUNHMCGWAL4DCvpwkh2Z0yzhC1Z8ACwSpl2R3Sr/mgv+B1SVOwOnHWhxxudk4Wf5WitBw++fYHrcUexipORaCAfHPR24apz15xjXPE7hA3SndWCsg6eO8Z+n2MPL//IUI13dIrkdsS/w1uDGb5JDxjON9XRHYKF24zFeo0dBHuXSeZ4wNvJ9LttdVL8BlgeQCFlAV4DgfNCMRbQXZ2HcLSQpLcIwnh7/FSxKdTECGDeXC5B6TEfwLqg/XkPo2HXSbDicOw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=siemens.com; dmarc=pass action=none header.from=siemens.com;
- dkim=pass header.d=siemens.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=siemens.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=0+QoHePhVG9iRkUUrw+HLJD+o8XSMIfKoL4DPSYyAw4=;
- b=iBk2IQvfOJayYs4WMfSlq3AqPP/IQjc5pfbcJZdWx39DeKIAJX2LUCEEKG8I5RZ1InBkDye2Vy4TvqMtMFOD13ymTrUSwEhw0QMLhIzUvNSeOIvWjaQFDSVVXr9ystLFnxLVnJHNqEAjEUOPcXk4U3h2prDi7n69RUxoKPSLRQuNaH+Ux7IJSl6Tl9ojR1K6W1EarM2fvZ1drY+dj0Jv8phJC0kXGTszWwFDWdOvVmirzqiUXi9n1HFK1q30k0YRA9mIUHD6gnVPz4Rt9ai8mQfisur/a5UsD0+84tq0bK3H4KDgrI1FiyBXp/qhKFfNm0WlJt9E4G/cwF3yF/qoxw==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=siemens.com;
-Received: from GV2PR10MB6186.EURPRD10.PROD.OUTLOOK.COM (2603:10a6:150:76::15)
- by GV1PR10MB8318.EURPRD10.PROD.OUTLOOK.COM (2603:10a6:150:1ca::8) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9654.16; Fri, 27 Feb
- 2026 15:55:09 +0000
-Received: from GV2PR10MB6186.EURPRD10.PROD.OUTLOOK.COM
- ([fe80::63bc:6561:54d3:94b9]) by GV2PR10MB6186.EURPRD10.PROD.OUTLOOK.COM
- ([fe80::63bc:6561:54d3:94b9%5]) with mapi id 15.20.9654.013; Fri, 27 Feb 2026
- 15:55:09 +0000
-Message-ID: <898e9467-0c05-46b4-a3ed-518797b829c5@siemens.com>
-Date: Fri, 27 Feb 2026 16:55:07 +0100
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi: storvsc: Fix scheduling while atomic on PREEMPT_RT
-To: "Martin K. Petersen" <martin.petersen@oracle.com>,
- "K. Y. Srinivasan" <kys@microsoft.com>,
- Haiyang Zhang <haiyangz@microsoft.com>, Wei Liu <wei.liu@kernel.org>,
- Dexuan Cui <decui@microsoft.com>, Long Li <longli@microsoft.com>,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
- linux-hyperv@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org,
- Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
- Florian Bezdeka <florian.bezdeka@siemens.com>,
- RT <linux-rt-users@vger.kernel.org>, Mitchell Levy <levymitchell0@gmail.com>
-References: <0c7fb5cd-fb21-4760-8593-e04bade84744@siemens.com>
- <177195161164.1154639.10246495163151300179.b4-ty@oracle.com>
-From: Jan Kiszka <jan.kiszka@siemens.com>
-Content-Language: en-US
-Autocrypt: addr=jan.kiszka@siemens.com; keydata=
- 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
-In-Reply-To: <177195161164.1154639.10246495163151300179.b4-ty@oracle.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: FR3P281CA0081.DEUP281.PROD.OUTLOOK.COM
- (2603:10a6:d10:1f::11) To GV2PR10MB6186.EURPRD10.PROD.OUTLOOK.COM
- (2603:10a6:150:76::15)
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="bfvFMeKd"
+Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 61REaRGp4030873;
+	Fri, 27 Feb 2026 16:08:13 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:date:from:message-id:mime-version
+	:subject:to; s=qcppdkim1; bh=EJrpQhdCOoRte/zJtlYXaNBE8fWqDiq/wvN
+	e1P3Th94=; b=bfvFMeKdb2icMQxHceT/U3bJoPqwRnFympuOsdZA9fbgQ8eN5iO
+	7xXfRNztt5XwDNji04+lAJCGKZVIVttd1s5THUiT0m0iVHl5H/4EjA5zYNgJ9/Bz
+	jac1Ei+EaICM4mhT+jw8keZnMfYJyr7oY79U6AEKZ1sinWPgP4ZTj6XuUK6qYTiv
+	o5M1X6icMFlC22oI9nEihaUPbW8BkUJt3EN8LBR1yEOQK6Rq+VIQE09Wjal1b7nu
+	UUNKBKl/Kspl1dCGSlpJ8O9bUUbsvNQv/uNX6KBGb7SyMWICHiqV/laD0QvrvWtU
+	RZAbymGI+LeHFGRo1a4xYEb3EjmM6hFEMZQ==
+Received: from nalasppmta05.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4cju4r41xu-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 27 Feb 2026 16:08:12 +0000 (GMT)
+Received: from pps.filterd (NALASPPMTA05.qualcomm.com [127.0.0.1])
+	by NALASPPMTA05.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTP id 61RG8BCa010861;
+	Fri, 27 Feb 2026 16:08:11 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+	by NALASPPMTA05.qualcomm.com (PPS) with ESMTPS id 4cjx30h5tt-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 27 Feb 2026 16:08:11 +0000
+Received: from NALASPPMTA05.qualcomm.com (NALASPPMTA05.qualcomm.com [127.0.0.1])
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 61RG8B0A010847;
+	Fri, 27 Feb 2026 16:08:11 GMT
+Received: from hu-devc-lv-u22-c.qualcomm.com (hu-cang-lv.qualcomm.com [10.81.25.255])
+	by NALASPPMTA05.qualcomm.com (PPS) with ESMTPS id 61RG8BBa010843
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 27 Feb 2026 16:08:11 +0000
+Received: by hu-devc-lv-u22-c.qualcomm.com (Postfix, from userid 359480)
+	id 1FC4D5A0; Fri, 27 Feb 2026 08:08:11 -0800 (PST)
+From: Can Guo <can.guo@oss.qualcomm.com>
+To: avri.altman@wdc.com, bvanassche@acm.org, beanhuo@micron.com,
+        martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, Can Guo <can.guo@oss.qualcomm.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
+        linux-kernel@vger.kernel.org (open list:ARM/Mediatek SoC support:Keyword:mediatek),
+        linux-arm-kernel@lists.infradead.org (moderated list:ARM/Mediatek SoC support:Keyword:mediatek),
+        linux-mediatek@lists.infradead.org (moderated list:ARM/Mediatek SoC support:Keyword:mediatek)
+Subject: [PATCH 00/11] scsi: ufs: Add TX Equalization support for UFS 5.0
+Date: Fri, 27 Feb 2026 08:07:57 -0800
+Message-Id: <20260227160809.2620598-1-can.guo@oss.qualcomm.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: GV2PR10MB6186:EE_|GV1PR10MB8318:EE_
-X-MS-Office365-Filtering-Correlation-Id: 074f56bb-7caa-4333-be78-08de76189569
-X-MS-Exchange-AtpMessageProperties: SA
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;ARA:13230040|1800799024|366016|376014|7416014;
-X-Microsoft-Antispam-Message-Info:
-	16kkxlA5TghtKJMyII3Wk2h7symU0w3CRx+QSZ6DnFuYqf/W997vzjq7NglPXTAOxg/tis0P9adYQBqS/5GX77ZSRfXz3Y6nys+pLWAWgifh8juW85oztWhI+nK7lGfzTp9KLF8II/l1o3g0k7GKsH4MB+1p8tkylGYWVYqpoepUU6L7zTrOrW+HMMJfq52rfaMNdR6gLYJKlUUTToHHvqdGrVmtzmWANSG2zi+oclbLN4Y1A6m6jmzH0R/eFfaGPSSC2nL6tKQn5nmchurGiOWuJT9VEcgbKD6pFycd5ySYtWtyGeyNnIQkjenuPDud/IgUsGgEz/HkToVcKOVnNnF/Vicw12n3JZ3C1PwqVYTz7FjdijqlIwY/PNKUi05thT6JAtJ0uhnR1wzkhacICnOq/vDQslf3NAr/vCnuZ8RpbHeP8D2HS2m30QcSjbCwskm0j1mKf+jLEly+gfnc9+Bxn+e5R7prAwnlKgwgYev6gfvgGAii6brFEesQ42gnpv7UvFwbP9K0+gCLZ3ELOGYpzYByJZFxP6uk+XMN89qMvQSswq6o6nE9vrGNoAlfFamksr4DtrYwrN7PFycAm8F6vgTDQnpFpcSAB+0fAwH1uMWxcyXCC6ycx+2t11Qq160/W39CDvks+tme9g8K7prdtiELZRPnbqu15xS5owEn9yrrvPGsWUV9jS0ZdDJF
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:GV2PR10MB6186.EURPRD10.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(376014)(7416014);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?YWc3TXNOL0UzL2IrVXVFNjRhUVpxakp2TlNraXZLZkxkeTRBZ1l3blNsSFov?=
- =?utf-8?B?MlpyMmptSk1XdDI3ZjdTV3R3akg1dHlJdmVjTHBxVDRsNUExNGw0TnlNY0Nj?=
- =?utf-8?B?KzNKSDFJNkpIWXhxVkh0K2UvTVRyRzhVVGhRc09hNEtxUXZaUTd4SlJlWTBW?=
- =?utf-8?B?V01jdkxTRWpQeWNDM0VUeFdFcmZJTEgvcWJVL2ZMc29GMkJwOHBhalhnTWFG?=
- =?utf-8?B?UW5uQkVoNE8zS0M2dHErWDVzV2hJeU1CTVlDVCtmSVZVZUhkcTJoYWhISkl0?=
- =?utf-8?B?bk5ZQXViVGk0TjBDRzNvUmVCSFFIeHJUSXhIdGVJNVZRZnRXOHk5ZHVnWXdu?=
- =?utf-8?B?MkpScVU4OEwwVzl5KzJCNXVlZWdPb1hDL014d2Z5UDRkNDNQVTZpYncxRVdP?=
- =?utf-8?B?TS8yZC92QzRtdjMwMmQ1R09xWTVQcXJNc0dIV0JHTXRGdG83TldhYWlqcDFR?=
- =?utf-8?B?a0w1emE2QWJzSUZyY1pKa25qdnByT2RkdHJLVnlRcG85OFUxZlZ2VFJQcURu?=
- =?utf-8?B?cTBtcWQvWWRzbXpsd2JITnFmeENZSDNTa2NaNVo2UG9HME1mY0FMVTBUN1M1?=
- =?utf-8?B?alovYUFPMVdrVXZXZ2p1dTEwWmFNY2x5c21ST3ZUVFJmc1pac0Jxa0xZTkdM?=
- =?utf-8?B?UENlMXkxS2dTY3N2dzdaTjZmdUpMNEhIRWZjRzNXQWNIMjhvdkl2bmNSOHNO?=
- =?utf-8?B?aG9jYUlvWDJEbkVOb0dhc0xFQmwzbUVYbjJJYWwwczgyN085SWhQQlp5WFZR?=
- =?utf-8?B?R0tTQWt1WnhaUXZkdFllODMrdVFUNE41NzNXVnAvc1ZubjVXTDZKd1F2V29M?=
- =?utf-8?B?Y1VrQ05yYTFxSmFrbSszWEFrR3BYempvUXVuemUrOWkrclpPNjh1UTRDUnRi?=
- =?utf-8?B?RkVSMEwwT2xLKzZpaXZ0VmtUY2lIbXY1bGZaZ1hxd0pPMzN4VFlYekhmVFJz?=
- =?utf-8?B?cloyNkJsQTlSREJraldvVjh1UGZKdXREV3dBRjQ4WFBUQ1Z4eUlUbjlmQWRB?=
- =?utf-8?B?TTB6anozUDA0UVZWZWo0WTFFOVVYblJrMTVWNlBQZUFuMmt1cHVnT3ZrbFNL?=
- =?utf-8?B?bGNVejNmTnNwVEJRTndCVHJjbnFmQ29sT09NREQ4RXZ0blF4UmRRWisybUFO?=
- =?utf-8?B?QmF5REVKZkcwRHpHL1FDVUZPZ0JiVS9PV2x5UW5RcnFoa3dBMkZHeVpPMVl2?=
- =?utf-8?B?WkJtbG9ObHFYam9keHlETjEwYnl2MWxIM1lMTi8rL24zbGtwdXZQRzlDano2?=
- =?utf-8?B?REVuWklONTdZdnllUkVZSkFHOW5XTTJvYVphcll5WHpUUVd1ZVZyeVpWeUJI?=
- =?utf-8?B?aUpXYTVhZWpqOUFGb0pKUnlKd0Z3Q09mR2FVZWNscUV1Qld4QTdnaTRkTHNa?=
- =?utf-8?B?VDRUL1VCNVVjZWFrL3VrTmV6Sm5CYlJQUHBPcGhzczZ1TmpoRTFwR3MxNzdO?=
- =?utf-8?B?N1dDZjJIaUdNS2pTZ0IwVW11YUVTcVJFYmFnTUZFb1cwUi80YzZzcm82WVV1?=
- =?utf-8?B?UXJGOExwWHFtanhrYXVjSVZmcitrSGVMZ3pETysrUU93YTZ5MmRXUnBHbm13?=
- =?utf-8?B?OHZLd1dNN1BUazNzL3BDSHBHd0svNFhiS3J2UlhlRnNybXZJR3JOU2cySHRh?=
- =?utf-8?B?RFBnOGcwUW12VklZU0RwOCt6WGIrSVBqem41elVEZWVmRHA1Ums4WStRbk1h?=
- =?utf-8?B?emdNQ2E0Z3pqZ0JLa0JiS0Jzc0UzbHF6M1ZQM1ViRUkreWFoQ3QrT2Myb3VQ?=
- =?utf-8?B?dkZaNy9JZm91WGtPTjYycm1sL3hROVJMUVFyQlAwV3lnSU5BMFVxVk5TdTY5?=
- =?utf-8?B?bUlhdzRzbDk5eDZwNk5WZnFDVjdMM3dSYXVjVUdoWXpoMXk1RDUzMlIxVVZY?=
- =?utf-8?B?d0hnQmwyWVFOTW5La3h4ekhDZmdoTG5wQ0lMcjI0aUtKeE56TThUN3F1WGQr?=
- =?utf-8?B?UGNKc3ZNYVhhR2JVNDJROWliWWFTSnVCb2txZXJrVHc5bDE3ZzNzamI3Wkx5?=
- =?utf-8?B?WGNoMlhoYUdLazgrVmpLazFXK3R0b0ZuQjNKVldJVTU5Uy9TcTVxMk42aDln?=
- =?utf-8?B?QWFEakloZ250NFVHeG0rMmhuNng3NlFnRXNXQ0RtOXFkUm1ieXdzUFUzZitq?=
- =?utf-8?B?NUI4ZTNhaFR2UHhiZ2Ura004Q1lEdjJSTGJROE13VHpWZWZBTTEvYVZGKzQv?=
- =?utf-8?B?YUF6K2phMEJ2dVYweHAwek1BNjFsSmhyTTdJWDkraWtscTZUbTY1alg4aFMz?=
- =?utf-8?B?ZXdsOSt0UGJJL2NrbGpLM1J4cmxwNzk3aUF2dHByOXNjU1Y0YmV4WEh0NExv?=
- =?utf-8?B?Yi9RNm1GdjFrR1UxM1dkdVVLQkEvdkd1OE1KWXVJazI1NGIrM1d5UT09?=
-X-OriginatorOrg: siemens.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 074f56bb-7caa-4333-be78-08de76189569
-X-MS-Exchange-CrossTenant-AuthSource: GV2PR10MB6186.EURPRD10.PROD.OUTLOOK.COM
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 27 Feb 2026 15:55:09.4014
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 38ae3bcd-9579-4fd4-adda-b42e1495d55a
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: at6sJNgV9ECjTBUwq+PYkFX56AzK/pBTBWRn3JQLLsR5pmNFLXHnSEN4ci+Ftx2wXdcLPRnNsAyx25ZqowniLw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: GV1PR10MB8318
+Content-Transfer-Encoding: 8bit
+X-QCInternal: smtphost
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMjI3MDE0NCBTYWx0ZWRfXyKJPTRg3lAOB
+ RMFEZFJ02CG/HEexnm6wGKqtDFGgc5rE2n9q0dHNN1rbh5BsZLO9FNf/GHTPJLQByfYMMWWo+bp
+ PlfkIzSRQCfXEcaoB6iXtzXnpVA3QJlLDKM9eCHo6syLUxOUoL/gwLq+DpKmZGVnfS8bp2Wowkm
+ kdF4/C1SHisd8i/N62tiOdunAA7TcunduUqhtgZlgnuHEhZUlO1FTgSEGed85D0Zj418AS2NV0k
+ bb1thlF8asoM0Y7h91mjiNxH/Ejifr8wU9EBOmTNcpxTdkHLYSxJs7/q8OTR530XdL76A+XroXF
+ 0CiE9V6US3h8xbnSP6PWi/Rk6hA3A8xnMLRVta1UIXC6CyzSHLlcT6pfC1Ic9xUJj7WKGoIM7uh
+ Rl17t+2XYlrc3I/RNeDAYkimKmgZQnij7WJ03oHgRoaYe0Oem560EipvAKOJyL075q6pQYw+QUZ
+ r0CSzsHC7beJWbbSxlw==
+X-Proofpoint-GUID: ibfUSS6Km65TSfdTOttW-QylCDXF8Bki
+X-Authority-Analysis: v=2.4 cv=KZzfcAYD c=1 sm=1 tr=0 ts=69a1c16c cx=c_pps
+ a=ouPCqIW2jiPt+lZRy3xVPw==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
+ a=HzLeVaNsDn8A:10 a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22
+ a=yOCtJkima9RkubShWh1s:22 a=yxO-sryqdY87dfIgdzYA:9
+X-Proofpoint-ORIG-GUID: ibfUSS6Km65TSfdTOttW-QylCDXF8Bki
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-02-27_03,2026-02-27_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ clxscore=1011 lowpriorityscore=0 priorityscore=1501 suspectscore=0
+ malwarescore=0 bulkscore=0 adultscore=0 phishscore=0 spamscore=0
+ impostorscore=0 classifier=typeunknown authscore=0 authtc= authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2602130000
+ definitions=main-2602270144
 
-On 24.02.26 17:47, Martin K. Petersen wrote:
-> On Thu, 29 Jan 2026 15:30:39 +0100, Jan Kiszka wrote:
-> 
->> This resolves the follow splat and lock-up when running with PREEMPT_RT
->> enabled on Hyper-V:
->>
->> [  415.140818] BUG: scheduling while atomic: stress-ng-iomix/1048/0x00000002
->> [  415.140822] INFO: lockdep is turned off.
->> [  415.140823] Modules linked in: intel_rapl_msr intel_rapl_common intel_uncore_frequency_common intel_pmc_core pmt_telemetry pmt_discovery pmt_class intel_pmc_ssram_telemetry intel_vsec ghash_clmulni_intel aesni_intel rapl binfmt_misc nls_ascii nls_cp437 vfat fat snd_pcm hyperv_drm snd_timer drm_client_lib drm_shmem_helper snd sg soundcore drm_kms_helper pcspkr hv_balloon hv_utils evdev joydev drm configfs efi_pstore nfnetlink vsock_loopback vmw_vsock_virtio_transport_common hv_sock vmw_vsock_vmci_transport vsock vmw_vmci efivarfs autofs4 ext4 crc16 mbcache jbd2 sr_mod sd_mod cdrom hv_storvsc serio_raw hid_generic scsi_transport_fc hid_hyperv scsi_mod hid hv_netvsc hyperv_keyboard scsi_common
->> [  415.140846] Preemption disabled at:
->> [  415.140847] [<ffffffffc0656171>] storvsc_queuecommand+0x2e1/0xbe0 [hv_storvsc]
->> [  415.140854] CPU: 8 UID: 0 PID: 1048 Comm: stress-ng-iomix Not tainted 6.19.0-rc7 #30 PREEMPT_{RT,(full)}
->> [  415.140856] Hardware name: Microsoft Corporation Virtual Machine/Virtual Machine, BIOS Hyper-V UEFI Release v4.1 09/04/2024
->> [  415.140857] Call Trace:
->> [  415.140861]  <TASK>
->> [  415.140861]  ? storvsc_queuecommand+0x2e1/0xbe0 [hv_storvsc]
->> [  415.140863]  dump_stack_lvl+0x91/0xb0
->> [  415.140870]  __schedule_bug+0x9c/0xc0
->> [  415.140875]  __schedule+0xdf6/0x1300
->> [  415.140877]  ? rtlock_slowlock_locked+0x56c/0x1980
->> [  415.140879]  ? rcu_is_watching+0x12/0x60
->> [  415.140883]  schedule_rtlock+0x21/0x40
->> [  415.140885]  rtlock_slowlock_locked+0x502/0x1980
->> [  415.140891]  rt_spin_lock+0x89/0x1e0
->> [  415.140893]  hv_ringbuffer_write+0x87/0x2a0
->> [  415.140899]  vmbus_sendpacket_mpb_desc+0xb6/0xe0
->> [  415.140900]  ? rcu_is_watching+0x12/0x60
->> [  415.140902]  storvsc_queuecommand+0x669/0xbe0 [hv_storvsc]
->> [  415.140904]  ? HARDIRQ_verbose+0x10/0x10
->> [  415.140908]  ? __rq_qos_issue+0x28/0x40
->> [  415.140911]  scsi_queue_rq+0x760/0xd80 [scsi_mod]
->> [  415.140926]  __blk_mq_issue_directly+0x4a/0xc0
->> [  415.140928]  blk_mq_issue_direct+0x87/0x2b0
->> [  415.140931]  blk_mq_dispatch_queue_requests+0x120/0x440
->> [  415.140933]  blk_mq_flush_plug_list+0x7a/0x1a0
->> [  415.140935]  __blk_flush_plug+0xf4/0x150
->> [  415.140940]  __submit_bio+0x2b2/0x5c0
->> [  415.140944]  ? submit_bio_noacct_nocheck+0x272/0x360
->> [  415.140946]  submit_bio_noacct_nocheck+0x272/0x360
->> [  415.140951]  ext4_read_bh_lock+0x3e/0x60 [ext4]
->> [  415.140995]  ext4_block_write_begin+0x396/0x650 [ext4]
->> [  415.141018]  ? __pfx_ext4_da_get_block_prep+0x10/0x10 [ext4]
->> [  415.141038]  ext4_da_write_begin+0x1c4/0x350 [ext4]
->> [  415.141060]  generic_perform_write+0x14e/0x2c0
->> [  415.141065]  ext4_buffered_write_iter+0x6b/0x120 [ext4]
->> [  415.141083]  vfs_write+0x2ca/0x570
->> [  415.141087]  ksys_write+0x76/0xf0
->> [  415.141089]  do_syscall_64+0x99/0x1490
->> [  415.141093]  ? rcu_is_watching+0x12/0x60
->> [  415.141095]  ? finish_task_switch.isra.0+0xdf/0x3d0
->> [  415.141097]  ? rcu_is_watching+0x12/0x60
->> [  415.141098]  ? lock_release+0x1f0/0x2a0
->> [  415.141100]  ? rcu_is_watching+0x12/0x60
->> [  415.141101]  ? finish_task_switch.isra.0+0xe4/0x3d0
->> [  415.141103]  ? rcu_is_watching+0x12/0x60
->> [  415.141104]  ? __schedule+0xb34/0x1300
->> [  415.141106]  ? hrtimer_try_to_cancel+0x1d/0x170
->> [  415.141109]  ? do_nanosleep+0x8b/0x160
->> [  415.141111]  ? hrtimer_nanosleep+0x89/0x100
->> [  415.141114]  ? __pfx_hrtimer_wakeup+0x10/0x10
->> [  415.141116]  ? xfd_validate_state+0x26/0x90
->> [  415.141118]  ? rcu_is_watching+0x12/0x60
->> [  415.141120]  ? do_syscall_64+0x1e0/0x1490
->> [  415.141121]  ? do_syscall_64+0x1e0/0x1490
->> [  415.141123]  ? rcu_is_watching+0x12/0x60
->> [  415.141124]  ? do_syscall_64+0x1e0/0x1490
->> [  415.141125]  ? do_syscall_64+0x1e0/0x1490
->> [  415.141127]  ? irqentry_exit+0x140/0x7e0
->> [  415.141129]  entry_SYSCALL_64_after_hwframe+0x76/0x7e
->>
->> [...]
-> 
-> Applied to 7.0/scsi-fixes, thanks!
-> 
-> [1/1] scsi: storvsc: Fix scheduling while atomic on PREEMPT_RT
->       https://git.kernel.org/mkp/scsi/c/57297736c082
-> 
+Hi,
 
-Should it be here then already?
+The UFS 5.0 standard was published today, introducing support for HS-G6
+(23.2 Gbps per lane) through the new UniPro V3.0 interconnect layer and
+M-PHY V6.0 physical layer specifications. To achieve reliable operation
+at these higher speeds, UniPro V3.0 introduces TX Equalization and
+Pre-Coding mechanisms that are essential for signal integrity.
 
-https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git/log/?h=7.0/scsi-fixes
+This patch series implements TX Equalization support in the UFS core
+driver as specified in UFSHCI v5.0, along with the necessary vendor
+operations and a reference implementation for Qualcomm UFS host
+controllers.
 
-Sorry, just trying to understand the process.
+Background
+==========
 
-Jan
+TX Equalization is a signal conditioning technique that compensates for
+channel impairments at high data rates (HS-G4 through HS-G6). It works
+by adjusting two key parameters:
+
+- PreShoot: Pre-emphasis applied before the main signal transition
+- DeEmphasis: De-emphasis applied after the main signal transition
+
+UniPro V3.0 defines TX Equalization Training (EQTR) procedure to
+automatically discover optimal TX Equalization settings. The EQTR
+procedure:
+
+1. Starts from the most reliable link state (HS-G1)
+2. Iterates through all possible PreShoot and DeEmphasis combinations
+3. Evaluates signal quality using Figure of Merit (FOM) measurements
+4. Selects the best settings for both host and device TX lanes
+
+For HS-G6, Pre-Coding is also introduced to further improve signal
+quality. Pre-Coding must be enabled on both transmitter and receiver
+when the RX_FOM indicates it is required.
+
+Implementation Overview
+=======================
+
+The implementation follows the UFSHCI v5.0 specification and consists of:
+
+Core Infrastructure (Patches 1-6):
+- New vops callback negotiate_pwr_mode() to allow vendors to negotiate
+  power mode parameters before applying TX Equalization settings
+- Support for HS-G6 gear enumeration
+- Complete TX EQTR procedure implementation in ufs-txeq.c
+- Debugfs interface for TX Equalization parameter inspection and manual
+  retraining
+- Module parameters for adaptive TX Equalization control
+
+Qualcomm Implementation (Patches 7-11):
+- PHY-specific configurations for TX EQTR procedure
+- Vendor-specific FOM measurement support
+- TX Equalization settings application
+- Enable TX Equalization for HW version 0x7 and onwards
+
+The implementation is designed to be vendor-agnostic, with platform-
+specific details handled through the vops callbacks. Other vendors can
+add support by implementing the three new vops:
+
+- tx_eqtr_notify(): Called before/after TX EQTR for vendor setup
+- apply_tx_eqtr_settings(): Apply vendor-specific PHY configurations
+- get_rx_fom(): Retrieve vendor-specific FOM measurements if needed
+
+Module Parameters
+=================
+
+The implementation provides several module parameters for flexibility:
+
+- use_adaptive_txeq: Enable/disable adaptive TX Equalization (default: false)
+- adaptive_txeq_gear: Minimum gear for adaptive TX EQ (default: HS-G6)
+- use_txeq_presets: Use only the 8 standard presets (default: true)
+- txeq_presets_selected[]: Select specific presets for EQTR
+
+Testing
+=======
+
+This patch series has been tested on Qualcomm platforms with UFS 5.0
+devices, validating:
+
+- Successful TX EQTR completion for HS-G6
+- Proper FOM evaluation and optimal settings selection
+- Pre-Coding enablement for HS-G6
+- Power mode changes with TX Equalization settings applied
+- Report of TX Equalization settings via debugfs entries
+- Report of TX EQTR histories via debug entries (see next section)
+- Re-training TX Equalization via debugfs entry
+
+Example of TX EQTR history
+==========================
+
+# cat /sys/kernel/debug/ufshcd/*ufshcd*/device_tx_eqtr_record
+Device TX EQTR record summary -
+Target Power Mode: HS-G6, Rate-B
+Number of records: 1
+Last record timestamp: 11643252 us
+
+TX Lane 0: PreShoot\DeEmphasis
+\       0        1        2        3        4        5        6        7
+0      50       70       65        -        -        -        -        x
+1       x        x        x        x        x        x        x        x
+2     100       90       70        -        -        -        -        x
+3       x        x        x        x        x        x        x        x
+4      95       90        -        -        -        -        -        x
+5       -        -        -        -        -        -        -        x
+6       x        x        x        x        x        x        x        x
+7       x        x        x        x        x        x        x        x
+
+TX Lane 1: PreShoot\DeEmphasis
+\       0        1        2        3        4        5        6        7
+0      50       70       60        -        -        -        -        x
+1       x        x        x        x        x        x        x        x
+2     100       80       65        -        -        -        -        x
+3       x        x        x        x        x        x        x        x
+4      95       85        -        -        -        -        -        x
+5       -        -        -        -        -        -        -        x
+6       x        x        x        x        x        x        x        x
+7       x        x        x        x        x        x        x        x
+
+Patch Structure
+===============
+
+Patches 1-3: Preparatory changes for power mode negotiation and HS-G6
+Patch 4: Core TX Equalization and EQTR implementation
+Patches 5-6: Debugfs support for TX Equalization
+Patches 7-11: Qualcomm vendor implementation
+
+Next
+====
+
+One more series has been developed to enhance TX Equalization support,
+which will be submitted for review after this series is accepted:
+
+- Provide board specific (static) TX Equalization settings from DTS
+- Parse static TX Equalization settings from DTS if provided
+- Apply static TX Equalization settings if use_adaptive_txeq is disabled
+- Add support for UFS v5.0 attributes qTxEQGnSettings & wTxEQGnSettingsExt
+- Enable persistent storage and retrieval of optimal TX Equalization settings
+
+Can Guo (11):
+  scsi: ufs: core: Introduce a new ufshcd vops negotiate_pwr_mode()
+  scsi: ufs: core: Pass force_pmc to ufshcd_config_pwr_mode() as a
+    parameter
+  scsi: ufs: core: Add UFS_HS_G6 and UFS_HS_GEAR_MAX to enum
+    ufs_hs_gear_tag
+  scsi: ufs: core: Add support for TX Equalization
+  scsi: ufs: core: Add debugfs entries for TX Equalization params
+  scsi: ufs: core: Add support to retrain TX Equalization via debugfs
+  scsi: ufs: ufs-qcom: Fixup PAM-4 TX L0_L1_L2_L3 adaptation pattern
+    length
+  scsi: ufs: ufs-qcom: Implement vops tx_eqtr_notify()
+  scsi: ufs: ufs-qcom: Implement vops get_rx_fom()
+  scsi: ufs: ufs-qcom: Implement vops apply_tx_eqtr_settings()
+  scsi: ufs: ufs-qcom: Enable TX Equalization
+
+ drivers/ufs/core/Makefile          |    2 +-
+ drivers/ufs/core/ufs-debugfs.c     |  238 ++++++
+ drivers/ufs/core/ufs-txeq.c        | 1265 ++++++++++++++++++++++++++++
+ drivers/ufs/core/ufshcd-priv.h     |   59 +-
+ drivers/ufs/core/ufshcd.c          |  117 ++-
+ drivers/ufs/host/ufs-amd-versal2.c |   13 +-
+ drivers/ufs/host/ufs-exynos.c      |   44 +-
+ drivers/ufs/host/ufs-hisi.c        |   32 +-
+ drivers/ufs/host/ufs-mediatek.c    |   46 +-
+ drivers/ufs/host/ufs-qcom.c        |  620 +++++++++++++-
+ drivers/ufs/host/ufs-qcom.h        |   44 +
+ drivers/ufs/host/ufs-sprd.c        |   13 +-
+ drivers/ufs/host/ufshcd-pci.c      |   16 +-
+ include/ufs/ufshcd.h               |  136 ++-
+ include/ufs/unipro.h               |  266 ++++--
+ 15 files changed, 2729 insertions(+), 182 deletions(-)
+ create mode 100644 drivers/ufs/core/ufs-txeq.c
 
 -- 
-Siemens AG, Foundational Technologies
-Linux Expert Center
+2.34.1
+
