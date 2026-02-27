@@ -1,111 +1,84 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D13AC46AF15
-	for <linux-scsi@vger.kernel.org>; Fri, 27 Feb 2026 19:52:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 67A0030FC2E;
+	Fri, 27 Feb 2026 20:46:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772221949; cv=none; b=jGBrwnyaXDZyZYZENDdaVAmdIhMIG3fuMWap9F7EouiZGJl4WALRg8JZyTOIkXszo+XqQKBu/bIjbningKU7fOLyD0pfX39CROupLO/t076g8YADKXGWVksERjf6t8LeHpeYSo9YONF51afPEFdZs8C9djM/+7G0IESGpcPpEUY=
+	t=1772225205; cv=none; b=FyMo/EvL3hipNmaKOvWiqOFuigh+6HU4uZc4JObAsBCxfUaKPNCbMk7s1xSy2va5Pn0xQ759YGNwDegWLY3Oj85DIWffDEueyYzrmw3wDbEBYheqHPqh7fEA17X2OvVUGJJBq0OzW385lyZkQCQ0DTefBPMkXlaCM3vuHh8e3uc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772221949; c=relaxed/simple;
-	bh=AVjNWv52I/SShc+g8l5QzIxcmqI4KZIzz5YjHaqQqns=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=UJD3DvHed/NTv3c3wzqLgWtTs0qAUvaWtdnWKilBM23MOFuyZtlyrWkpkoVBSNlG3aHE9xa6euw9EFjSRabqhK1LUIxkHUJ2MsfNqWjmq0HbYhNHrx0HY5tVD4Y2OI9hBNLlRq+xbbv0d5krxXXFk29VWt5T35qnLRIEyEy8seg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=HY5+wgMV; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1772225205; c=relaxed/simple;
+	bh=A3ZTFazjTo65N6ono0ieXnUEptFZk+KaOQW6P8PPGeo=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Ltm6Xy6rbl2SNbTuTBOE869/iUIuyOg26BSMf1CNC1SOHuXZj87YqXsWv5FclXkQXt983pTCyny0VOp2EMONsTfOt2xN5sNVY1APXyV6qGg4WYj9h5qqAS1Z11JT/Aa6luFmR40XF82NgKV27ykG5BWNziO9Isk9VbfCsvUPcGQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=bzFg57BV; arc=none smtp.client-ip=199.89.1.14
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="HY5+wgMV"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1772221944;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=i9XwpDxs/qoFLn1Jvyqbmikgtgk6yGhzXhIV9M3DNKQ=;
-	b=HY5+wgMVdLS3ylN3R8TBC69Fd+fOj0KVbEqnd/ZRYQNcHCGKTDE4T7hwHUG/kBCZAtb5I9
-	tT9cDkm1GZweB06SvzJXKS4PiZuO8HplO0pk8WgJrToLNdy61jO/59LTOcqhT62wMX6/fc
-	7/STZ9qNGDg31GqmJVh6OQ1lyy5MO2Y=
-Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-690-AAfjTlalMvC76zMyXgTzMA-1; Fri,
- 27 Feb 2026 14:52:21 -0500
-X-MC-Unique: AAfjTlalMvC76zMyXgTzMA-1
-X-Mimecast-MFC-AGG-ID: AAfjTlalMvC76zMyXgTzMA_1772221939
-Received: from mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.111])
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="bzFg57BV"
+Received: from localhost (localhost [127.0.0.1])
+	by 011.lax.mailroute.net (Postfix) with ESMTP id 4fN0jv6XPDz1XM6JS;
+	Fri, 27 Feb 2026 20:46:43 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1772225198; x=1774817199; bh=yZKIJczsxO/YthEXVX6+Qeyx
+	MvfkP35Ki+QPuvBfAvo=; b=bzFg57BVY8ioK0xChCsHPgmmG/XsVSYfED1TSCA1
+	9iv2ucN/5sSpZx9blGBsa/rH3nqJkpxGT88zf7r33Ocy+IpM1IA+aiGdGYI9lLS4
+	bWRExcSJRU+0Ra75MqXi7SehbO/RMMeA6INlddnHbV5d0Rh/TULYAx+s9KwnxiPP
+	UeG0OSJ9m1kgH0yq2xsKEJ3OoEYbV0PFMQci6icP9eon3eHsFXrbUNsoSXsTFIql
+	ZkKMtgViGe7dTz/VZq4SUW0umIQ8smBSRGQzRyi+4NgzV3Ty/qy6/1IacNFEv4QE
+	A1/+rKlOsh3e+k0W4uIOyr3eP+5mgJ6qHC7ANzAQwhJLuA==
+X-Virus-Scanned: by MailRoute
+Received: from 011.lax.mailroute.net ([127.0.0.1])
+ by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id QfVLMf5Llq1C; Fri, 27 Feb 2026 20:46:38 +0000 (UTC)
+Received: from [100.119.48.131] (unknown [104.135.180.219])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 1C8E61956063;
-	Fri, 27 Feb 2026 19:52:19 +0000 (UTC)
-Received: from bmarzins-01.fast.eng.rdu2.dc.redhat.com (unknown [10.6.23.247])
-	by mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 47D8B1800286;
-	Fri, 27 Feb 2026 19:52:18 +0000 (UTC)
-Received: from bmarzins-01.fast.eng.rdu2.dc.redhat.com (localhost [127.0.0.1])
-	by bmarzins-01.fast.eng.rdu2.dc.redhat.com (8.18.1/8.17.1) with ESMTPS id 61RJqH8H1743483
-	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
-	Fri, 27 Feb 2026 14:52:17 -0500
-Received: (from bmarzins@localhost)
-	by bmarzins-01.fast.eng.rdu2.dc.redhat.com (8.18.1/8.18.1/Submit) id 61RJqG1o1743482;
-	Fri, 27 Feb 2026 14:52:16 -0500
-Date: Fri, 27 Feb 2026 14:52:16 -0500
-From: Benjamin Marzinski <bmarzins@redhat.com>
-To: John Garry <john.g.garry@oracle.com>
-Cc: hch@lst.de, kbusch@kernel.org, sagi@grimberg.me, axboe@fb.com,
-        martin.petersen@oracle.com, james.bottomley@hansenpartnership.com,
-        hare@suse.com, jmeneghi@redhat.com, linux-nvme@lists.infradead.org,
-        linux-scsi@vger.kernel.org, michael.christie@oracle.com,
-        snitzer@kernel.org, dm-devel@lists.linux.dev,
-        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 11/13] libmultipath: Add support for block device IOCTL
-Message-ID: <aaH18HKCMdjuUhUh@redhat.com>
-References: <20260225153225.1031169-1-john.g.garry@oracle.com>
- <20260225153225.1031169-12-john.g.garry@oracle.com>
+	(Authenticated sender: bvanassche@acm.org)
+	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4fN0jm28pfz1XM6Hx;
+	Fri, 27 Feb 2026 20:46:36 +0000 (UTC)
+Message-ID: <7a90c4ec-7638-4840-bebd-f38cead6435e@acm.org>
+Date: Fri, 27 Feb 2026 12:46:35 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260225153225.1031169-12-john.g.garry@oracle.com>
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.111
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 02/11] scsi: ufs: core: Pass force_pmc to
+ ufshcd_config_pwr_mode() as a parameter
+To: Can Guo <can.guo@oss.qualcomm.com>, avri.altman@wdc.com,
+ beanhuo@micron.com, martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, Alim Akhtar <alim.akhtar@samsung.com>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ Peter Wang <peter.wang@mediatek.com>, Adrian Hunter
+ <adrian.hunter@intel.com>, "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
+ Archana Patni <archana.patni@intel.com>,
+ open list <linux-kernel@vger.kernel.org>
+References: <20260227160809.2620598-1-can.guo@oss.qualcomm.com>
+ <20260227160809.2620598-3-can.guo@oss.qualcomm.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20260227160809.2620598-3-can.guo@oss.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Wed, Feb 25, 2026 at 03:32:23PM +0000, John Garry wrote:
-> Add mpath_bdev_ioctl() as a multipath block device IOCTL handler. This
-> handler calls into driver mpath_head_template.ioctl handler.
-> 
-> It is expected that the .ioctl handler will unlock the SRCU read lock,
-> as this is what NVMe requires - see nvme_ns_head_ctrl_ioctl(). As such,
-> export a handler to unlock, mpath_head_read_unlock().
-> 
-> The .compat_ioctl handler is given the standard handler.
-> 
-> Signed-off-by: John Garry <john.g.garry@oracle.com>
-> ---
->  include/linux/multipath.h |  4 ++++
->  lib/multipath.c           | 42 +++++++++++++++++++++++++++++++++++++++
->  2 files changed, 46 insertions(+)
-> 
-> diff --git a/include/linux/multipath.h b/include/linux/multipath.h
-> index 3846ea8cfd319..40dda6a914c5f 100644
-> --- a/include/linux/multipath.h
-> +++ b/include/linux/multipath.h
-> @@ -72,6 +72,9 @@ struct mpath_head_template {
->  	bool (*is_disabled)(struct mpath_device *);
->  	bool (*is_optimized)(struct mpath_device *);
->  	enum mpath_access_state (*get_access_state)(struct mpath_device *);
-> +	int (*bdev_ioctl)(struct block_device *bdev, struct mpath_device *,
-> +			blk_mode_t mode, unsigned int cmd, unsigned long arg,
-> +			int srcu_idx);
+On 2/27/26 8:07 AM, Can Guo wrote:
+> -	ret = ufshcd_config_pwr_mode(hba, &new_pwr_info);
+> +	ret = ufshcd_config_pwr_mode(hba, &new_pwr_info, /*force_pmc=*/false);
+Comments like "/*force_pmc=*/" are uncommon in the Linux kernel. Please
+consider introducing an enumeration type for the new argument, e.g.
+enum ufshcd_power_mode_change_policy { DONT_FORCE_PMC, FORCE_PMC }.
+While comments like "/*force_pmc=*/" are not verified at compile time
+(the Clang option -Wdocumentation is disabled as far as I know), the
+type of enumeration labels is checked at compile time.
 
-I don't know that this API is going to work out. SCSI persistent
-reservations need access to all the mpath_devices, not just one, and
-they are commonly handled via SG_IO ioctls. Unless you want to disallow
-SCSI persistent reservations via SG_IO, you need to be able to detect
-them, and handle them using the persistent reservation code with the
-mpath_head.
+Thanks,
 
--Ben 
+Bart.
 
