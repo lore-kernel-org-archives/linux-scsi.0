@@ -1,197 +1,147 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr1-f54.google.com (mail-wr1-f54.google.com [209.85.221.54])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F3C5366DDD
-	for <linux-scsi@vger.kernel.org>; Fri, 27 Feb 2026 18:12:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F169B3612E6
+	for <linux-scsi@vger.kernel.org>; Fri, 27 Feb 2026 18:20:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.54
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772215935; cv=none; b=Q4SRZq883rdwostVWpQ5GFhkI7YyQ3zp00Ia9s9TGt8FM6Z3d8bXMJt5ol7nT/yFDgwD0A+tp9Q5BIgIxDQPSLPcorKoNniL5eRMJxmX5UK5Zsxxnzl0Vo/1TqPfrtkn+vcvBBUVrz3JmWg201v0xavH75Vg+4cdD6696m/mZYM=
+	t=1772216442; cv=none; b=iY/wuygj+sNyZeVEHcHKm7ZL8IXLPCefJgCgOBNBRJpDFEODNrLHJrs7wIsby2G0n0NEDH9POiVC2/J0goNWPQssaEqz1eOkJH4q4ajcetH3rZsmax0+D6xVe2fY2CSicVtMKFM7XLlMdkA3W2bTd3Amj/Dh4DqoC5Q4QRq/aSo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772215935; c=relaxed/simple;
-	bh=LhWoa3Gc15gL8xOlC3I0r2uKc6Y2oNYr1JgGUU8tc8Y=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=KVWO687vBpV4o4qVjdwFH70JmvWfaKh7cM5gKyaNCLAoY6psefxO/KrQuc75v8PsWYlzgaW0asvRdByXepO1UMhVJl8gptu9koMRHmj205m819ju+Jh62LC/xa7o+/IyCEwwECLC2I29dY3FioCLnFJsod6P27QTNsCKqoPAA7M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=fqCs1Qqf; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1772216442; c=relaxed/simple;
+	bh=jTmJNz3JOVdyba92WBCm0BzI8m25eUf0xEN3z2CYgZ0=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Kz6+Fh0Zy00Bu/c9RoV5W44e/1aiv239ahtWsJ5d2LjIsbMj3loLimJ2JgRdGNokXbgPxt/hCKUwAkca8Lalp13mrO7t8fESLDkrqAV82uqiacsI0m6Ts8xou4oCY8vgFQUxT1ebY8ikq2te4jVGdkNUl32ALWFAekcICVVfYSM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=WvJRImBg; arc=none smtp.client-ip=209.85.221.54
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="fqCs1Qqf"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1772215932;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=iG5lt5XxO/hh9xVt2TbhtRpf4Oxa4xmbAazMvGovJ3Q=;
-	b=fqCs1Qqf4n35hwzd2bnt589fUjuzSBEtycA1xHY7jYHKumVj0imiBj40cfJFlAr63Rx+Tz
-	iDJDXwYL15L/ok2aWpUviCbuoqE6djI4iqR+q21SMBpgKKoAemoJxAC7rDsRfzUP6tH0n3
-	ULkkIZXXEt+ruusdD4ws8lCOMw+HAC0=
-Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-562-omPVtsOgMy-QsqCfcc6GHw-1; Fri,
- 27 Feb 2026 13:12:09 -0500
-X-MC-Unique: omPVtsOgMy-QsqCfcc6GHw-1
-X-Mimecast-MFC-AGG-ID: omPVtsOgMy-QsqCfcc6GHw_1772215927
-Received: from mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.111])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id EFC28180025E;
-	Fri, 27 Feb 2026 18:12:05 +0000 (UTC)
-Received: from bmarzins-01.fast.eng.rdu2.dc.redhat.com (unknown [10.6.23.247])
-	by mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 3FC081800286;
-	Fri, 27 Feb 2026 18:12:04 +0000 (UTC)
-Received: from bmarzins-01.fast.eng.rdu2.dc.redhat.com (localhost [127.0.0.1])
-	by bmarzins-01.fast.eng.rdu2.dc.redhat.com (8.18.1/8.17.1) with ESMTPS id 61RIC3Le1740709
-	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
-	Fri, 27 Feb 2026 13:12:03 -0500
-Received: (from bmarzins@localhost)
-	by bmarzins-01.fast.eng.rdu2.dc.redhat.com (8.18.1/8.18.1/Submit) id 61RIC2001740708;
-	Fri, 27 Feb 2026 13:12:02 -0500
-Date: Fri, 27 Feb 2026 13:12:02 -0500
-From: Benjamin Marzinski <bmarzins@redhat.com>
-To: Keith Busch <kbusch@kernel.org>
-Cc: John Garry <john.g.garry@oracle.com>, hch@lst.de, sagi@grimberg.me,
-        axboe@fb.com, martin.petersen@oracle.com,
-        james.bottomley@hansenpartnership.com, hare@suse.com,
-        jmeneghi@redhat.com, linux-nvme@lists.infradead.org,
-        linux-scsi@vger.kernel.org, michael.christie@oracle.com,
-        snitzer@kernel.org, dm-devel@lists.linux.dev,
-        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 09/13] libmultipath: Add PR support
-Message-ID: <aaHecneNg9Q8EtiS@redhat.com>
-References: <20260225153225.1031169-1-john.g.garry@oracle.com>
- <20260225153225.1031169-10-john.g.garry@oracle.com>
- <aZ8Z7A4uOFfOTDeY@kbusch-mbp>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="WvJRImBg"
+Received: by mail-wr1-f54.google.com with SMTP id ffacd0b85a97d-43767807cf3so1586960f8f.1
+        for <linux-scsi@vger.kernel.org>; Fri, 27 Feb 2026 10:20:40 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1772216439; x=1772821239; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=7lkvvORJcUpRwcgHDhrU7VhBdAXzpHVrJB8Pl7/ogIQ=;
+        b=WvJRImBgWnQzT1MV6UQNzYAnLIBZhpI50VLw1aLYvlNymNJjxy4sY/KUU8RR2nCK6V
+         10yAdbY7abYIZnKUBwgDMbVS/hGA9vOH5613lLcqCaCKrV8wEa2MmSeaKa/bdSk38gnz
+         I/4e1RIeTS6YjCjlJWE3w8NawzshmrUPjVeZ+j8m7ja2EcoBgsTwq9d8I9EKgmyFdCiU
+         p771xz85fA6kPOIGRKXdTBsm3ZjrFeHue1EeNkReDGdXookC8Nu3Nb3lX7MR/oyN9kUt
+         t0Wem4Bg1avIn1REL16tBFDD+7Y/wmGLUTjnE14RMk2S1/LuLHgjR2vqcMxNwLcbcA5R
+         KT4A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1772216439; x=1772821239;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=7lkvvORJcUpRwcgHDhrU7VhBdAXzpHVrJB8Pl7/ogIQ=;
+        b=KCtyou9SCUcovT2onHCsmBJGMBbPlsJLBLcl/nQS4prqnkvhgHIXyzSLUp7rTToneq
+         Pdc9Hw7Gd0h+T05NBaCso5Wbk//ggG06oj+vLUd5uAdqrtd3u6tnsyKAzkpYk2bZPdpZ
+         h/AmRBnK1svGJSE6d3NcmGd0Uh1Sdlx+pDvjCWAuxOGNa8aZ+6FiO/dGWgT0taFkZUs5
+         tMPXO2B7DCXxeQAXivLTF+JZItdNuhWLLpGSJHaDruu3sYEJ3n3imdURk4ZPVwXPsEjy
+         7Md913GCrJvDad0lqmX85Feo3SA85lTfBaPBw19eiktMS0Vn2Wp6SDZ435ry2ATMVMOL
+         j+hA==
+X-Gm-Message-State: AOJu0YyHPVnvJt4MI8NBt6sxe8s8alzNlqCychhFTYE5n7GIFkzIbqi2
+	6WUDO1of/T5R9q9nWdH0093yq/NLAU3WbLpHMKghyM13H7M6kAXsJt0=
+X-Gm-Gg: ATEYQzxlnUwRqe+DqntAWOh0XoY3rznT2otpar/VOHLcBZVyXEBmY01scfdzhng16xS
+	LX+4jy9QZm7hHCP5L1rQWgts6qu3dNNegAQpjPDQEAPNCHj3d6asNlDzDqp05Cf8M35b8UQLcCN
+	impd2lrsoOm08JvYXtdcP5K6t7txIjMH9vZSZTZR9ZaQZlqkVoqYRm7ZbPq1USUXDBk1QZeUZJR
+	6yt0bYgTbboOdPWF29o+mleCXrWJAUKFf7lVHGQngSl3BS5vZlV9/kR3l9t/L6EXg1wGmAQFYI5
+	CFI5Jc7RAr8ZvYHJ5E4raqyKsqSvISaZhFa5xZztyH86AoAJCgBG+R3Zh9yEgvmdWMuGnqqCPHX
+	83yGmxSWz3tbq9pJT5Gg5VjNBJSgOo3OgxMMCY5CPCi2pxHFsEFjeLIFKsLgSb7p4a58LuvE+eh
+	FFyJAsBsh+1jkU407HTPvP2svElBI/0e6qcNW+PKpiAr6kUBIjGv8EDdl0j/CcbAlgq55PT0EW7
+	dl+nwQGpSzWXyLcWWY=
+X-Received: by 2002:a05:6000:2301:b0:439:938a:3de1 with SMTP id ffacd0b85a97d-4399ddf1edcmr6329774f8f.16.1772216439061;
+        Fri, 27 Feb 2026 10:20:39 -0800 (PST)
+Received: from localhost ([2a02:810d:4a94:b300:dfb0:2728:8964:e209])
+        by smtp.gmail.com with UTF8SMTPSA id ffacd0b85a97d-4399c70e8dasm7819525f8f.9.2026.02.27.10.20.38
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 27 Feb 2026 10:20:38 -0800 (PST)
+From: Florian Fuchs <fuchsfl@gmail.com>
+To: "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	fuchsfl@gmail.com
+Subject: [PATCH] scsi: devinfo: Add BLIST_SKIP_IO_HINTS for Iomega ZIP
+Date: Fri, 27 Feb 2026 19:18:23 +0100
+Message-ID: <20260227181823.892932-1-fuchsfl@gmail.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <aZ8Z7A4uOFfOTDeY@kbusch-mbp>
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.111
+Content-Transfer-Encoding: 8bit
 
-On Wed, Feb 25, 2026 at 08:49:00AM -0700, Keith Busch wrote:
-> On Wed, Feb 25, 2026 at 03:32:21PM +0000, John Garry wrote:
-> > +static int mpath_pr_register(struct block_device *bdev, u64 old_key,
-> > +			u64 new_key, unsigned int flags)
-> > +{
-> > +	struct mpath_disk *mpath_disk = dev_get_drvdata(&bdev->bd_device);
-> > +	struct mpath_head *mpath_head = mpath_disk->mpath_head;
-> > +	struct mpath_device *mpath_device;
-> > +	int srcu_idx, ret = -EWOULDBLOCK;
-> > +
-> > +	srcu_idx = srcu_read_lock(&mpath_head->srcu);
-> > +	mpath_device = mpath_find_path(mpath_head);
-> > +	if (mpath_device)
-> > +		ret = mpath_head->mpdt->pr_ops->pr_register(mpath_device,
-> > +				old_key, new_key, flags);
-> > +	srcu_read_unlock(&mpath_head->srcu, srcu_idx);
-> 
-> Instead of having the lower layer define new mp template functions, why
-> not use the existing pr_ops from mpath_device->disk->fops->pr_ops?
+The Iomega ZIP 100 (Z100P2) can't process IO Advice Hints Grouping mode
+page query. It immediately switches to the status phase 0xb8 after
+receiving the subpage code 0x05 of MODE_SENSE_10 command, which fails
+imm_out() and turns into DID_ERROR of this command, which leads to
+unusable device. This was tested with an Iomega ZIP 100 (Z100P2)
+connected with a StarTech PEX1P2 AX99100 PCIe parallel port card.
 
-I don't think that's the right answer. The regular scsi persistent
-reservation functions simply won't work on a multipath device. Even just
-a simple reservation fails.
+Prior to this fix, Test Unit Ready fails and the drive can't be used:
+        IMM: returned SCSI status b8
+        sd 7:0:6:0: [sdh] Test Unit Ready failed: Result: hostbyte=0x01 driverbyte=DRIVER_OK
 
-For example (with /dev/sda being multipath device 0):
-# echo round-robin > /sys/class/scsi_mpath_device/0/iopolicy
-# blkpr -c register -k 0x1 /dev/sda
-# blkpr -c reserve -k 0x1 -t exclusive-access-reg-only /dev/sda
-# dd if=/dev/sda of=/dev/null iflag=direct count=100
-dd: error reading '/dev/sda': Invalid exchange
-1+0 records in
-1+0 records out
-512 bytes copied, 0.00871312 s, 58.8 kB/s
+Signed-off-by: Florian Fuchs <fuchsfl@gmail.com>
+---
+The processed CDB, where 0xb8 was set after subpage code 0x05:
+	5a 08 0a 05 00 00 00 02 00 00
 
-Here are the kernel messages:
-[ 3494.660401] sd 7:0:1:0: reservation conflict
-[ 3494.661802] sd 7:0:1:0: [sda:1] tag#768 FAILED Result: hostbyte=DID_OK driverbyte=DRIVER_OK cmd_age=0s
-[ 3494.664848] sd 7:0:1:0: [sda:1] tag#768 CDB: Read(10) 28 00 00 00 00 01 00 00 01 00
-[ 3494.667092] reservation conflict error, dev sda:1, sector 1 op 0x0:(READ) flags 0x2800800 phys_seg 1 prio class 2
+Prior error message, no partitions found and Test Unit Ready failed:
 
-If you don't have a multipathed scsi device to try this on, you can run:
+	imm: Found device at ID 6, Attempting to use EPP 8 bit
+	imm: Communication established at 0xd010 with ID 6 using EPP 8 bit
+	scsi host7: Iomega VPI2 (imm) interface
+	scsi 7:0:6:0: Direct-Access     IOMEGA   ZIP 100          P.04 PQ: 0 ANSI: 2
+	sd 7:0:6:0: Power-on or device reset occurred
+	sd 7:0:6:0: Power-on or device reset occurred
+	sd 7:0:6:0: [sdh] 196608 512-byte logical blocks: (101 MB/96.0 MiB)
+	sd 7:0:6:0: [sdh] Write Protect is off
+	sd 7:0:6:0: [sdh] Mode Sense: 25 00 00 08
+	sd 7:0:6:0: [sdh] Cache data unavailable
+	sd 7:0:6:0: [sdh] Assuming drive cache: write through
+	IMM: returned SCSI status b8
+	sd 7:0:6:0: [sdh] Test Unit Ready failed: Result: hostbyte=0x01 driverbyte=DRIVER_OK
+	sdh: detected capacity change from 196608 to 0
+	sd 7:0:6:0: [sdh] Attached SCSI removable disk
 
-targetcli <<EOF
-/backstores/ramdisk create mptest 1G
-/loopback create naa.5001401111111111
-/loopback create naa.5001402222222222
-/loopback create naa.5001403333333333
-/loopback create naa.5001404444444444
-/loopback/naa.5001401111111111/luns create /backstores/ramdisk/mptest
-/loopback/naa.5001402222222222/luns create /backstores/ramdisk/mptest
-/loopback/naa.5001403333333333/luns create /backstores/ramdisk/mptest
-/loopback/naa.5001404444444444/luns create /backstores/ramdisk/mptest
-EOF
+Ater this fix, the partition is detected and the drive works like we deserve:
 
-to create one.
+	imm: Found device at ID 6, Attempting to use EPP 8 bit
+	imm: Communication established at 0xd010 with ID 6 using EPP 8 bit
+	scsi host7: Iomega VPI2 (imm) interface
+	scsi 7:0:6:0: Direct-Access     IOMEGA   ZIP 100          P.04 PQ: 0 ANSI: 2
+	sd 7:0:6:0: Power-on or device reset occurred
+	sd 7:0:6:0: Power-on or device reset occurred
+	sd 7:0:6:0: [sdh] 196608 512-byte logical blocks: (101 MB/96.0 MiB)
+	sd 7:0:6:0: [sdh] Write Protect is off
+	sd 7:0:6:0: [sdh] Mode Sense: 25 00 00 08
+	sd 7:0:6:0: [sdh] Cache data unavailable
+	sd 7:0:6:0: [sdh] Assuming drive cache: write through
+	 sdh: sdh4
+	sd 7:0:6:0: [sdh] Attached SCSI removable disk
+---
+ drivers/scsi/scsi_devinfo.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Handling scsi Persistent Reservations on a multipath device is painful.
-Here is a non-exhaustive list of the problems with trying to make a
-multipath device act like a single scsi device for persistent
-reservation purposes:
+diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
+index 0dada89d8d99..68a992494b12 100644
+--- a/drivers/scsi/scsi_devinfo.c
++++ b/drivers/scsi/scsi_devinfo.c
+@@ -190,7 +190,7 @@ static struct {
+ 	{"IBM", "2076", NULL, BLIST_NO_VPD_SIZE},
+ 	{"IBM", "2105", NULL, BLIST_RETRY_HWERROR},
+ 	{"iomega", "jaz 1GB", "J.86", BLIST_NOTQ | BLIST_NOLUN},
+-	{"IOMEGA", "ZIP", NULL, BLIST_NOTQ | BLIST_NOLUN},
++	{"IOMEGA", "ZIP", NULL, BLIST_NOTQ | BLIST_NOLUN | BLIST_SKIP_IO_HINTS},
+ 	{"IOMEGA", "Io20S         *F", NULL, BLIST_KEY},
+ 	{"INSITE", "Floptical   F*8I", NULL, BLIST_KEY},
+ 	{"INSITE", "I325VM", NULL, BLIST_KEY},
 
-You need to register the key on all the I_T Nexuses. You can't just pick
-a single path. Otherwise, when you set up the reservation, you will only
-be able to do IO on one of the paths. That's what happened above.
-
-If an path is down when you do the resevation, you might not be able to
-register the key on that path. You certainly can't do it directly.
-Using the All Target Ports bit (assuming the device supports it) could
-let you extend a reservation from one target port to others, assuming
-your path isn't down because of connection issue on the host side. But
-in general, you have to be able to handle the case where you can't
-register (or unregister) a key on your failed paths. If you don't do
-that (un)registration when the path comes up, before it can get seleted
-for handling IO, you will fail when accessing a path you should be
-allowed allowed to access, or succeed in accessing a path that you are
-should not be allowed to access.
-
-The same is true when new paths are discovered. You need to register
-them.
-
-Except that a preempt can come and remove your registration at any time.
-You can't register the new (or newly active) path if the key has been
-preempted, and this preemption can happen at any moment, even after you
-check if the other paths are still registered. If this isn't handled
-correctly, paths can access storage that they should not be allowed to
-access.
-
-Changing the reservation type (for instance from
-exclusive-access-reg-only to write-exclusive-reg-only) in scsi devices
-is done by preempting the existing reservation. This will remove the
-registered keys from every path except the one issuing the command. The
-key needs to be reregistered on all the other paths again. If any IO
-goes to these paths before they are reregistered, it will fail with a
-reservation conflict, so IO needs to be suspended during this time.
-
-The path that is holding the reservation might be down. In this case,
-you aren't able to release the reservation from that path. The only way
-I figured out to handle this in dm-mpath was for the device to preempt
-it's own key, to move the reservation to a working path. This causes the
-same issues as preempting key to change the reservation type, where you
-need to reregister all the paths with IO suspended.
-
-An actual preemption can come in from another machine while you are
-doing this. In that case, you must not reregister the paths, and if you
-already started, you must unregister them.
-
-I can probably come up with more issues.
-
-I think the best course of action for now is to just fail persistent
-reservations as non-supported for scsi devices. IMHO Making them work
-correctly (where mulitpath device IO won't fail when it should succeed,
-and succeed when it should fail with a reservation conflict) dwarfs the
-amount of work necessary to support ALUA.
-
-dm-mpath previously did a pretty good job handling Persistent
-Reservations. But recently it became much better, because it become very
-clear that pretty good is not good enough for what people what to do
-with Persistent Reservations and multipath devices.
-
--Ben
+base-commit: 2f38fd99c0004676d835ae96ac4f3b54edc02c82
+-- 
+2.43.0
 
