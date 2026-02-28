@@ -1,65 +1,63 @@
 Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 740142571D7;
-	Sat, 28 Feb 2026 22:22:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A15B363089;
+	Sat, 28 Feb 2026 22:22:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.177.32
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772317346; cv=none; b=dwocXHw73jSw20S4XLdUQpgnaAXRK8nPeF1bXRA0x122T66RPCzApjYN62pwzR1CJ8mzfto0B8rE0zQ8HSudzvR4TgkzB7qpiorwOLsxMd+6Oh8/ti2w3g99GEQg+evNC8MgtKda1FjHMk3WIQJlNu+nHGuZGFTgql+P3CBvgJc=
+	t=1772317350; cv=none; b=RkmoxUGPrwRRUIxC5NR608bycdMjoyFXGKmlJqSlWfsDiS23cGSx6tFzWQzP4LOciaNt8GSLt3vDnLkcHC+Ok+V6pZL4W6TttJA8495cJtrN6mBuq9bBPyDezXejXjMETuhk2Kpf5Ac9TwvOMqK44vPcTi1YrH1oTXZOcUBuwRo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772317346; c=relaxed/simple;
-	bh=fJZTwkE3P3m2ok+sM+wYSuZiMIzmevdJuIvhbT5f9k0=;
+	s=arc-20240116; t=1772317350; c=relaxed/simple;
+	bh=YVPkE/NeCyhbYL0DiIp7U+8LdjWl9ZnsqWu08ZGDlg8=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=aXPxbnkvf9dxMVs3XUb4Cv/XG3/sPi50+K7PxX5PzDw25HYfDbX7orAExMrSK4ypoCoRVQjgJP9eqK/vvO8C7P/ur15BbTiDCAK5CA90SpKf0ky8QaxUjHQlQDBSrRYGP/vy2h01OkZaxheRVPnbO2GE86l14HlERMudLXN6tdA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=STEEit80; arc=none smtp.client-ip=205.220.177.32
+	 MIME-Version:Content-Type; b=KnRpU6Ot0KQyHYIm9aYctXm0kb75wSafNnNfTGaC8wPMlY05YMo1E3nLnKSqUvmrdgtNXhujsC5XgJ3EhkONBdF2IeGHZm9iUJFuE+E78VW/jE0XuX3Iz2b19V66kGnPRz2Uhnk2jfdyNkk6eyEbK5NTYZVT6wgYbaY+lqTo3GQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=Kho2rTBw; arc=none smtp.client-ip=205.220.177.32
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="STEEit80"
-Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 61SJJ6E92145042;
-	Sat, 28 Feb 2026 22:22:16 GMT
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Kho2rTBw"
+Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 61SKd8qr2456665;
+	Sat, 28 Feb 2026 22:22:19 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
 	:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=
-	corp-2025-04-25; bh=3vuVSVh28n28th73eyGAjigTNMpQssx3NIOnyrKZKA8=; b=
-	STEEit80jmO2b+oYtVifbXP/foEnA1OYnf2jgFDeMf7VfySLpnm8MP2BuWrNUk6F
-	J5tXj4wCgSh6vDYrfzzIGzJmwmuN7HEZ13Cle+dwqv7MoS5uEBiMkzy8WUF7smnp
-	PMv2jaXYudoauhjlJfw+djyJ1bxk/9dKngiBl+r4mwGFb4YhIBuATNJUX7HL0qNK
-	iYG/gIbYJ755t6YcUsoACv2T5881ytPQbOJ8LB2m++3MMq9k2oiI6cJBc82hl5W4
-	qK3qtzyHFQoG09ycmsIIZldpd9/VDMz9GjjttiSVCjMaGvhHipEVWDQE4KNCCTx9
-	5RK4lq30ZsonEppFsEUxQw==
+	corp-2025-04-25; bh=rcuZYhgDbmvntPnJSE0MEigsu1v7wThgSt5wpUTx35w=; b=
+	Kho2rTBwgXQVOHujI7JCc7CskRh449+uxupMuOYVLWiob+i8hSKcNr/1Alz8e8nr
+	hpen9LysNzMWXKfd5n/QIFLWyXB7TbQkZI5YI2wMihwE3tRkczCMZZJQtRDIkNQz
+	DI6vFC8/Hmto8PE4mjGmnqqnuDHAfhojtV4q7cf5vIga7WPDICPUopWbV48TwK9H
+	UbYnsq0t6jOhBBR5+yZSQaijBIQYN1bQzktihumpsRQy+/SUwl2waj+rgsZNlwnO
+	zJoi9e3RgPWT2vJsNqXMPv586xU9YlBkYWirKPsa9vceVOE5ypElvwp/gwU63459
+	7qZcZpMQfSVbAPSrOyGrZw==
 Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.appoci.oracle.com [138.1.114.2])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4ckshn0k6q-1
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4cksh8rjse-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Sat, 28 Feb 2026 22:22:15 +0000 (GMT)
+	Sat, 28 Feb 2026 22:22:19 +0000 (GMT)
 Received: from pps.filterd (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 61SL0iv3037177;
-	Sat, 28 Feb 2026 22:22:14 GMT
+	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 61SL0kFD037736;
+	Sat, 28 Feb 2026 22:22:18 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 4ckpt7bhdj-1
+	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 4ckpt7bheg-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Sat, 28 Feb 2026 22:22:14 +0000
+	Sat, 28 Feb 2026 22:22:18 +0000
 Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 61SMHlvX018394;
-	Sat, 28 Feb 2026 22:22:14 GMT
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 61SMHlvd018394;
+	Sat, 28 Feb 2026 22:22:18 GMT
 Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 4ckpt7bhc9-3;
-	Sat, 28 Feb 2026 22:22:13 +0000
+	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 4ckpt7bhc9-6;
+	Sat, 28 Feb 2026 22:22:18 +0000
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-To: sebaddel@cisco.com, Karan Tilak Kumar <kartilak@cisco.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, arulponn@cisco.com,
-        djhawar@cisco.com, gcboffa@cisco.com, aeasi@cisco.com, mkai2@cisco.com,
-        satishkh@cisco.com, jejb@linux.ibm.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, jmeneghi@redhat.com, revers@redhat.com,
-        dan.carpenter@linaro.org, Hannes Reinecke <hare@suse.de>,
-        Hannes Reinecke <hare@kernel.org>
-Subject: Re: [PATCH 1/5] scsi: fnic: Use mempool for receive frames
-Date: Sat, 28 Feb 2026 17:22:03 -0500
-Message-ID: <177231727985.1778274.8891985262905640044.b4-ty@oracle.com>
+To: Khalid Aziz <khalid@gonehiking.org>,
+        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+        Thorsten Blum <thorsten.blum@linux.dev>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH RESEND] platform/surface: Replace deprecated strcpy + strcat in blogic_rdconfig
+Date: Sat, 28 Feb 2026 17:22:06 -0500
+Message-ID: <177231727960.1778274.16035222472937487567.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260217223943.7938-1-kartilak@cisco.com>
-References: <20260217223943.7938-1-kartilak@cisco.com>
+In-Reply-To: <20260224144828.585577-1-thorsten.blum@linux.dev>
+References: <20260224144828.585577-1-thorsten.blum@linux.dev>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -72,48 +70,36 @@ X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.51,FMLib:17.12.100.49
  definitions=2026-02-28_07,2026-02-27_03,2025-10-01_01
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 phishscore=0 suspectscore=0
- spamscore=0 malwarescore=0 bulkscore=0 mlxlogscore=936 adultscore=0
+ spamscore=0 malwarescore=0 bulkscore=0 mlxlogscore=907 adultscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2602130000
  definitions=main-2602280208
-X-Authority-Analysis: v=2.4 cv=RsPI7SmK c=1 sm=1 tr=0 ts=69a36a97 cx=c_pps
+X-Proofpoint-ORIG-GUID: orTXQMsaDuFP4SOONMO2a1BwtxvMN6YJ
+X-Authority-Analysis: v=2.4 cv=D8VK6/Rj c=1 sm=1 tr=0 ts=69a36a9b cx=c_pps
  a=XiAAW1AwiKB2Y8Wsi+sD2Q==:117 a=XiAAW1AwiKB2Y8Wsi+sD2Q==:17
  a=IkcTkHD0fZMA:10 a=HzLeVaNsDn8A:10 a=VkNPw1HP01LnGYTKEx00:22
- a=jiCTI4zE5U7BLdzWsZGv:22 a=o5oIOnhZENCTenyL_yNV:22 a=VwQbUJbxAAAA:8
- a=MKO0JlC4SyYoFBfRIWkA:9 a=QEXdDO2ut3YA:10
-X-Proofpoint-GUID: vCAcJpouNKqrgLl1XBNEd9KpXObgxJvX
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMjI4MDIwOSBTYWx0ZWRfX6zN1fghHSfqm
- QOyKJO1exQdxTnZ+N3vNl8lnXsCDWHQv1URIGlxqSvpjp2P52YskRpNJLWhSh6wRSxI37v3nykA
- Dm2VnxHnshp5iJpyF//kKFxlUsco9eKGm1bvkH3u3ksuDC0vhGTByLcrst4La1kgP4AykV0OTx3
- 6oDHuUhw32NwN7nlN++oXenm2Pasy+fsNdQnoBSKfdE4QHVKVRXj5ZSfupVBaqDbehmSoU9SxMt
- fOfVZpwuz+Y9qLojuCp++D/XcYXOQdd1H68ZroYM5ZQQqmBXLvgrG2v/aaJAaQe4VP/rWa4fLeb
- aFvfNMOzE/JWQtOl/V8MVoAVgJy0nrV8K2IQidzdZMHpyIyG45WYkOLjTgtIvFQNYejAAehAtyH
- KpTg+WHwpjHdWU89FC/CvK0eg9U6gNKkWoWtB/Bvlpf39XEyVFeDCsEzSeDawX8e7iemOqXUcSX
- dE+RMLrxnDXuIETDpJQ==
-X-Proofpoint-ORIG-GUID: vCAcJpouNKqrgLl1XBNEd9KpXObgxJvX
+ a=jiCTI4zE5U7BLdzWsZGv:22 a=x4eqshVgHu-cdnggieHk:22 a=VwQbUJbxAAAA:8
+ a=YR8jykVuY81jn_sEDjkA:9 a=QEXdDO2ut3YA:10
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMjI4MDIwOSBTYWx0ZWRfX3yQApEYNcub5
+ 46tdRzAsq6juh17vMyNqVZSAjgerl/hCTLi06t+nCndpMe7ibe55rb4vG34X9LzaA/nTB1eLqGC
+ npzodfx54xDktvwg/FlTpGXPDILX9zv0QHGRB1XVaD3FTslZZZXBZjth+VlIGiwAQsc/lRNZFVk
+ 8F/ao1iVDEuMKb8FN17m3KwhtzDxMcmvII4m36kgNIDD25WG+eN+cLShD6rduDwW2Zc5r7OuheI
+ gOiePkWY1s7HUi4LSDBe7FwbUvDQ2W8FeKcNjoR3wzNHchJWTwrm3/SqSLd/aX+hSpQAVVhAZxn
+ meGQXDQmKQIzEiKfXmNpfcBAHYyAF1+b6Gzrv80qqHSXB9Q43YpYupNxMc1Khe4/7pGRwdVZ/oh
+ mRAhKsBdVLy9dz00An5Pw/gYnYX4C6nri2qW5nyZN2/lArLg1gTv3oV9bA43BGf0d0uamZxJJX1
+ f0uPYwQU18GJdh1Xrjw==
+X-Proofpoint-GUID: orTXQMsaDuFP4SOONMO2a1BwtxvMN6YJ
 
-On Tue, 17 Feb 2026 14:39:39 -0800, Karan Tilak Kumar wrote:
+On Tue, 24 Feb 2026 15:48:27 +0100, Thorsten Blum wrote:
 
-> The receive frames are constantly replenished so we should rather
-> use a mempool here.
+> strcpy() is deprecated [1] and using strcat() is discouraged. Replace
+> them with scnprintf().  No functional changes.
 > 
-> fip_frame_queue is an rxq. De-alloc it in fnic_free_rxq.
-> Incorporate review comments from Hannes:
->     Modify fnic_free_txq to have same arguments as fnic_free_rxq
 > 
-> [...]
 
 Applied to 7.1/scsi-queue, thanks!
 
-[1/5] scsi: fnic: Use mempool for receive frames
-      https://git.kernel.org/mkp/scsi/c/0e07baae55bc
-[2/5] scsi: fnic: Do not use GFP_ZERO for mempools
-      https://git.kernel.org/mkp/scsi/c/a59d1caf1ded
-[3/5] scsi: fnic: Rename fnic_scsi_fcpio_reset()
-      https://git.kernel.org/mkp/scsi/c/31eda39bfd46
-[4/5] scsi: fnic: Refactor in_remove flag and call to fnic_fcpio_reset()
-      https://git.kernel.org/mkp/scsi/c/927b5282df64
-[5/5] scsi: fnic: Bump up version number
-      https://git.kernel.org/mkp/scsi/c/47e088c9d1a0
+[1/1] platform/surface: Replace deprecated strcpy + strcat in blogic_rdconfig
+      https://git.kernel.org/mkp/scsi/c/931c105de11c
 
 -- 
 Martin K. Petersen
