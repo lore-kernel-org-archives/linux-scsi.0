@@ -1,66 +1,61 @@
 Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3B395233134
-	for <linux-scsi@vger.kernel.org>; Sun,  1 Mar 2026 02:16:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 08D7B1A5B9E
+	for <linux-scsi@vger.kernel.org>; Sun,  1 Mar 2026 02:38:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.177.32
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772331418; cv=none; b=cY0Jr8wchbTw3BpianzFnHd8SjYgsScENab5/0WX8D/zdCxerCb/DAXJ7q2Gs/2wzhJTWkjwejTt7kOJi49iD8h6dIGNpqFkbwpIQ3gAG89RUXLboAxmvtyRUmGL9kDrZ8qEZKylBDeo3kaYwnk7lQ/979WuOFTyzhoFSFcM6tM=
+	t=1772332715; cv=none; b=AiyHro0ShuWEuPTPU03enVjbSunvXX4lcyOoDX5a8Ziv02Uuh/ywGA5oROkkFbd7LDACO13DGsP5S8iUhhlpRtzpe1aGDfkDKoSgKoce4kZjGl/TsxedwWrjCippsixW6pFgcxwif/dopdLaklPEppyzKLiuwNMTpnQuFZ6um2c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772331418; c=relaxed/simple;
-	bh=MC3W+xnaMfJ7Chl2dXLXZHGosbDRHS0evtyTpQriHB4=;
+	s=arc-20240116; t=1772332715; c=relaxed/simple;
+	bh=oCsaYnTTUzxdHud5LggUSGydBv4/zQIDrCchkmlHZW4=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=B76iziUrXIv175luivXEkYgg/ElJLk8u5Xm36UQYVfGBPQVJLv0zGkr2X2vI9MMYHe3RhOSANWlTjsbiLrsLf8DrtFj8mktJlT5SZwMqQojb+tNsKC8Xd1mkhBLTmH+SzyV/n8LWYRggREVfe0zzxN5yc35M6Y7nEWAEa1t0GWI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=aQH/qoGx; arc=none smtp.client-ip=205.220.177.32
+	 MIME-Version:Content-Type; b=jsLHvM5/Wp5eha0tJYE8xhvFZoXR9KWyjbxQ0nC3llFp5iYfwBngmFoxocJQ0inHQNB/SajbFjnGpT6PyCcXhQZ8oLmm2u4QbCOs6jIAsTH+KR+1gnccUW+EW9DT1gnYb5P54dfPgWAIRJa2+PEUZyXZzqO3anI9NBtjdmaow9o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=amAk2geI; arc=none smtp.client-ip=205.220.177.32
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="aQH/qoGx"
-Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6211vS4p2966046;
-	Sun, 1 Mar 2026 02:16:42 GMT
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="amAk2geI"
+Received: from pps.filterd (m0333520.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 61SMGVQ33915379;
+	Sat, 28 Feb 2026 22:22:14 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
 	:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=
-	corp-2025-04-25; bh=bwUkbaTki6TTnhaRVp0leO5Xd4rs/qy/Oc0xfqrFu94=; b=
-	aQH/qoGxFJcDCz2Q1Mb7MJya/6IRfx7s9kCy0j0GDns+bjRCi1D42pRFth0tz8uy
-	brsMgEBCaIkn0aRPHp0Qp8sh2zGF9T50lxplkscFd0t7GJLCtxWTS+XiMfc1IZTD
-	Ik//ZhrT9+1/lSMuJ4+Yvoti8N7MwEES0UWQOohMnTalPu1eFp7xGF93o173CAFY
-	EfnP9NgSwwOlg47EcetXZwMTLcZmwgV+Hq7m8U7bp606dkLxxUJxTbnhXyzR9nPA
-	JWDnAD5GkeuLluathkiLR8pn6T75sCV+UPHGk0uKpP0LAnmbMYb+6FQcn8xPpDTX
-	mRQEcwTA+QAbBBQ84ZgFrQ==
+	corp-2025-04-25; bh=E5Z40bfTa0h/OqvIAWFFcrfk1aYZASiSQ+vUL+AZ35I=; b=
+	amAk2geIGJ1EVhPp8TR1ZTjU5rkp7Xfd5o+KEyI5LobvDNOb5EYDkMRnFhQ+Tbaw
+	xFxiBvBSRyoPYyk7PBO1g0xC58jKC+rCwKdk6XndOqtTcp+5VjljmWo5l1f3zxzV
+	yIJVPK5O9DKZ2QTSatIK52XJiQeBrdCbcpjra6lVr9XQwQzZ8V1U4gnsVcjuRvpy
+	liP3HhULjNlHA96G351TLKbm8RvBAUZKgVuwsy03ahYsExciJG4a7TReX39gO8dd
+	ZVxY8K55GEEc8NLAyzZxKHS7/qNBcY83VtgAHEabSfZwItpJtQ657BnB/HtFzFbl
+	A6yHQk/QCHbpN4Z8Nk7Raw==
 Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.appoci.oracle.com [138.1.114.2])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4cksh8rny5-1
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4ckshbrkf2-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Sun, 01 Mar 2026 02:16:42 +0000 (GMT)
+	Sat, 28 Feb 2026 22:22:13 +0000 (GMT)
 Received: from pps.filterd (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 61SL0gO3036920;
-	Sun, 1 Mar 2026 02:16:41 GMT
+	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 61SL0hme037114;
+	Sat, 28 Feb 2026 22:22:12 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 4ckpt7ehhy-1
+	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 4ckpt7bhd4-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Sun, 01 Mar 2026 02:16:41 +0000
+	Sat, 28 Feb 2026 22:22:12 +0000
 Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 6212GXt4019643;
-	Sun, 1 Mar 2026 02:16:40 GMT
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 61SMHlvV018394;
+	Sat, 28 Feb 2026 22:22:12 GMT
 Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 4ckpt7ehdg-5;
-	Sun, 01 Mar 2026 02:16:40 +0000
+	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 4ckpt7bhc9-2;
+	Sat, 28 Feb 2026 22:22:12 +0000
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-To: linux-scsi@vger.kernel.org, avri.altman@sandisk.com,
-        alim.akhtar@samsung.com, jejb@linux.ibm.com, peter.wang@mediatek.com
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
-        wsd_upstream@mediatek.com, linux-mediatek@lists.infradead.org,
-        chun-hung.wu@mediatek.com, alice.chao@mediatek.com,
-        cc.chou@mediatek.com, chaotian.jing@mediatek.com,
-        tun-yu.yu@mediatek.com, eddie.huang@mediatek.com,
-        naomi.chu@mediatek.com, ed.tsai@mediatek.com, bvanassche@acm.org
-Subject: Re: [PATCH v2] ufs: core: support UFSHCI 4.1 CQ entry tag
-Date: Sat, 28 Feb 2026 21:16:18 -0500
-Message-ID: <177231727974.1778274.1876634781735565722.b4-ty@oracle.com>
+To: linux-scsi@vger.kernel.org, Justin Tee <justintee8345@gmail.com>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, jsmart833426@gmail.com,
+        justin.tee@broadcom.com
+Subject: Re: [PATCH 00/13] Update lpfc to revision 14.4.0.14
+Date: Sat, 28 Feb 2026 17:22:02 -0500
+Message-ID: <177231727955.1778274.3490259535072252193.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260210071834.1837878-1-peter.wang@mediatek.com>
-References: <20260210071834.1837878-1-peter.wang@mediatek.com>
+In-Reply-To: <20260212213008.149873-1-justintee8345@gmail.com>
+References: <20260212213008.149873-1-justintee8345@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -75,35 +70,63 @@ X-Proofpoint-Virus-Version: vendor=baseguard
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 phishscore=0 suspectscore=0
  spamscore=0 malwarescore=0 bulkscore=0 mlxlogscore=999 adultscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2602130000
- definitions=main-2603010017
-X-Proofpoint-ORIG-GUID: VxlT5mDGgUN2wem8cDGj-jmHOqv32lPi
-X-Authority-Analysis: v=2.4 cv=D8VK6/Rj c=1 sm=1 tr=0 ts=69a3a18a cx=c_pps
+ definitions=main-2602280208
+X-Proofpoint-GUID: 7yneOCSDjIQwLjufn-5sU0AADhkAVTYW
+X-Proofpoint-ORIG-GUID: 7yneOCSDjIQwLjufn-5sU0AADhkAVTYW
+X-Authority-Analysis: v=2.4 cv=Qaxrf8bv c=1 sm=1 tr=0 ts=69a36a95 cx=c_pps
  a=XiAAW1AwiKB2Y8Wsi+sD2Q==:117 a=XiAAW1AwiKB2Y8Wsi+sD2Q==:17
- a=IkcTkHD0fZMA:10 a=Yq5XynenixoA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=jiCTI4zE5U7BLdzWsZGv:22 a=x4eqshVgHu-cdnggieHk:22 a=VwQbUJbxAAAA:8
- a=mpaa-ttXAAAA:8 a=QqvJkLw1XXo513EEspsA:9 a=QEXdDO2ut3YA:10
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzAxMDAxOCBTYWx0ZWRfX8LI1x4/X2Hh1
- sL6QS0eCqyNOPXsHlaVXRoDYVdGKefsyNKENGkxgLR+sTIO47y6KUVCS2t9x9EV0f0rZ4EgRDzR
- B3ESgo4C6IIEJ1XNmI4JWncCqYdCaZmPHUhrfIMLJiYP1pts4kRSSrnKUn+QhcMG4+bpgJRbYfA
- 0GOaEDXaVdzrzTK0vOyQ3KVfYqGhau5uzh8djl9cbhBPNGYedaza4zHT+RdKK7r/1qrZi0MMEJ2
- oNZvBXfzW58fUCqH2AsdViWKNl4MrFhvDZQDBYPmN0p8AWPBrDgoofpDKKzrF2bkdpA+eKQCARo
- wM8LHqpyZ6phY+iP01BA5XOS9Yp+99OBwxUuUuzchsBicsEMXWGqm0az0oF8VhsB5VtoNj+dEGE
- OYe5Ewx/EuGtO0G6vBLKIyLrNzPFi7ZB+tr2lKkb3825lSoR/8EyXyj5DCGT880uwSSdUu2cC3q
- tpJguvE1HkuKsQeKbCw==
-X-Proofpoint-GUID: VxlT5mDGgUN2wem8cDGj-jmHOqv32lPi
-Message-ID: <20260301021618.4VSfBzsJMBQqwFudwkK0g8h2PtOefmVwgSeMJQQv7dc@z>
+ a=IkcTkHD0fZMA:10 a=HzLeVaNsDn8A:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=jiCTI4zE5U7BLdzWsZGv:22 a=BqU2WV_vvsyTyxaotp0D:22 a=VwQbUJbxAAAA:8
+ a=eRhhiKW_uzDJ5QdGn9YA:9 a=QEXdDO2ut3YA:10
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMjI4MDIwOSBTYWx0ZWRfXwy+LOlaK91Pm
+ ExRGX9jn3+oVmGbzmPGeKb8DwtFqgSfuzgNmY7w3a/OPHBLdoJRUb6GmCndJVEWQZ4qqfHfcZxn
+ SRgLK279m0B0zT/ZE4yHOrfLJVYW7DqhL4P5Ur9whcUaCbjaWKvA1x0znY2+C/J7i1g8MPD8r5X
+ 21dQvE2tvsPgJntZBoF6uRtB4pnUQBJuodNVaVbOq00dDFkT/zOrMbVpfaPUy4D0NC1bgnuzn1s
+ YvV4SMg3vkWh8EkmFMJIA+BbNSsVaJoiwMAXNL3C8RwMEGaJdIrwnnWsSqYnWgzitl46HLM2kUB
+ ZsypxWI2ZGceVvt9xjzv810qo20hBNOD7cQJRYnQ2VCUvMAoYAVqLKKjlc7Z4C0SG5tHe0AMIH4
+ IPAqpBVHxeZRLAgpmNq3ZYZAbaZaw9ojcWK79Z/gdfpuSkiS8shsU86AibDAcV1jJgbjD31IKxM
+ HGzrNjTfH7r2E+iDY9w==
+Message-ID: <20260228222202.NDcdL6JhErN3iVH27H9hRrTHd9hQCV7YuBKDBacoXcU@z>
 
-On Tue, 10 Feb 2026 15:17:30 +0800, peter.wang@mediatek.com wrote:
+On Thu, 12 Feb 2026 13:29:55 -0800, Justin Tee wrote:
 
-> The UFSHCI 4.1 specification introduces a new completion queue(CQ)
-> entry format, allowing the tag to be obtained directly.
+> Update lpfc to revision 14.4.0.14
 > 
+> This patch set contains updates to log messaging, trivial typecast and
+> pointer changes, bug fixes related to kref accounting and cleanup handling,
+> an update to a WQE submission bitfield, and restriction of first burst to
+> specific HBAs only.
 > 
+> [...]
 
 Applied to 7.1/scsi-queue, thanks!
 
-[1/1] ufs: core: support UFSHCI 4.1 CQ entry tag
-      https://git.kernel.org/mkp/scsi/c/f707860ebc84
+[01/13] lpfc: Update log message when ndlp kref get is unsuccessful
+        https://git.kernel.org/mkp/scsi/c/8ecb3ec244ac
+[02/13] lpfc: Log discarded and insufficient RQE buffer events
+        https://git.kernel.org/mkp/scsi/c/b4082ac8e62c
+[03/13] lpfc: Add log messages to fabric login error labels
+        https://git.kernel.org/mkp/scsi/c/5f442e54e9ef
+[04/13] lpfc: Use min_t() instead of min() in lpfc_sli4_driver_resource_setup
+        https://git.kernel.org/mkp/scsi/c/f8c599ad90f5
+[05/13] lpfc: Reduce pointer chasing when accessing vmid_flag
+        https://git.kernel.org/mkp/scsi/c/70b468d41b82
+[06/13] lpfc: Remove unnecessary ndlp kref get in lpfc_check_nlp_post_devloss
+        https://git.kernel.org/mkp/scsi/c/f6bfb8d14933
+[07/13] lpfc: Cleanup error exit paths in lpfc_fdmi_cmd and associated messages
+        https://git.kernel.org/mkp/scsi/c/6b0bcf4b6430
+[08/13] lpfc: Fix incorrect txcmplq_cnt during cleanup in lpfc_sli_abort_ring
+        https://git.kernel.org/mkp/scsi/c/2da10bcaa58a
+[09/13] lpfc: Add clean up of aborted NVMe commands during PCI fcn reset
+        https://git.kernel.org/mkp/scsi/c/559a6c2ab097
+[10/13] lpfc: Update class of service bit field to 3 bits for WQE submissions
+        https://git.kernel.org/mkp/scsi/c/9714c5463fd1
+[11/13] lpfc: Restrict first burst to non-FCoE and SLI4 adapters only
+        https://git.kernel.org/mkp/scsi/c/5807d96c46d5
+[12/13] lpfc: Update copyright year string for 2026
+        https://git.kernel.org/mkp/scsi/c/107cb8ed4f44
+[13/13] lpfc: Update lpfc version to 14.4.0.14
+        https://git.kernel.org/mkp/scsi/c/6446e8c2b6c7
 
 -- 
 Martin K. Petersen
