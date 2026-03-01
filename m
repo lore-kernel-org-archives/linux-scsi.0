@@ -1,30 +1,30 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 372DE13B58A;
-	Sun,  1 Mar 2026 01:36:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D8B12DC349;
+	Sun,  1 Mar 2026 01:45:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772328981; cv=none; b=NCzhLvzyPHkdSCIFXAnspoS8lhCKBs+2BJm6M1SY4igzjtOgD3QHW07HGshG3FMyGDhwyVwZYa6pOtG8yuRJfc5jY3HSWb/ScPrBelosdA6YQzkpARVKFH2EWlvC7mVbTgQhCDUV/tXRrBivJsEcbEJhJWSUbSI/zOAnNhyAd3U=
+	t=1772329507; cv=none; b=iNgH6hyou2Adodl0r+xenLdw5v0prsdp4YIATCTZBhQyomO6kzqQdl3besY28msPSbeaMTqX5yKl0oe3Inb5hikf2pjxdD+YZCvJOF0H9qSjpCBfCf8g7MrJbFyiPIyZ/8Sc949YRx4ZySdWJg8OgyqxFGG2XdfQnOz7zcPivX0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772328981; c=relaxed/simple;
-	bh=tRcoHPL1SnJU0xLlCrcYeFzmKPCMpkkyxCC7E+YL23Q=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=MYaBeWFX1gekFXWQs9hxwK+fjDilydc7n315gnyfe1Xsio9DmiBZG4wsenjiDt906XoCjjf3ZFL7202+II8uPAemC/NgnRiUH4T81wrbeH5qTzmJuvUlQKkCDjq7xLBy7D4N1q3hDlcOlTvgwCzyATgTw160IpBHPfp5rlCOk5o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Lw8VzEQo; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1772329507; c=relaxed/simple;
+	bh=r7w0U+t3BkYHSoclmCe+XAJmVrbSuVYfKVg+jGqjFdw=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=CeLF3PYhScts1dCUaHmqdjisGBekuqKMvLDcA7q3rcRtUhh/BeUOPzaLosqzBnky163cHaSZyAFRjxSvQAbe8TlG4Y4+mFGyJxDsKSjct4FAeXlXdfoK1nBacdURcpTBYVTg5lQT0U6ktUaD43Z+AgIViECYwdFme6sQaTftI5E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Rw3wLAMP; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Lw8VzEQo"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3E136C19421;
-	Sun,  1 Mar 2026 01:36:20 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Rw3wLAMP"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7B600C19424;
+	Sun,  1 Mar 2026 01:45:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772328981;
-	bh=tRcoHPL1SnJU0xLlCrcYeFzmKPCMpkkyxCC7E+YL23Q=;
+	s=k20201202; t=1772329507;
+	bh=r7w0U+t3BkYHSoclmCe+XAJmVrbSuVYfKVg+jGqjFdw=;
 	h=From:To:Cc:Subject:Date:From;
-	b=Lw8VzEQoN8fC/NrFfeDjHTHBOXIrjM6u2Z3sCo8oZC3oTI1uevOANXWGD2gy8fAIL
-	 hkQe7670ICAroJZxd40NP76fsD341ICkWZe4J2ng6A3gTGT3IAtU1pTocv88BxlMUM
-	 YdcSEeyiW4UPNU3xllzvCIyfFG32cJ7Jq4jEBcTskKhwiD+3BH+osEKzppJKi+paOB
-	 qy+NN6lwlEKJRaNVG7ueXuLZXMRVyWbTbtQFlwbCSioNTQ6kLACjmB4EfkdfZvMceU
-	 0dVOYMzBvl7iDBpCWDEa+LvVFM2CL/Ej1JPRQY+4AHEMOEBuUfSkVuVcNKwRgQCFVt
-	 vcD6UXONojG5Q==
+	b=Rw3wLAMP93vKF568TyH9/YiMrMkAVBYpBk8r2vXueMJwN6DiW4IcOkGBQQrnouyZI
+	 lJzmxtGxx9CGy4nR3k7JzaGit0eB06b8ZcuLPb3fctMQC/WX4a5/Wx3rnYv5qeHoWW
+	 xHIoh8GPdilgJY1574/ssaF71TLcRblnhW9ZNaoYr/TB/a0fQB/gRInPWbnqqMhadv
+	 gcrGEGYsAmJ8PPu807GarFAxSm0aGw5kdOUIRLtFWPu0pSfU2W5yJhY6mLmlQ1+/bl
+	 BqjVzFFGasPCj1X/9XoKs/GpItuIcaADzn8RiI6HEYdB/0RoW7mctYI4/EFblOk5U4
+	 UvMbt4zAhJqqg==
 From: Sasha Levin <sashal@kernel.org>
 To: stable@vger.kernel.org,
 	thomasyen@google.com
@@ -34,9 +34,9 @@ Cc: Peter Wang <peter.wang@mediatek.com>,
 	linux-scsi@vger.kernel.org,
 	linux-arm-kernel@lists.infradead.org,
 	linux-mediatek@lists.infradead.org
-Subject: FAILED: Patch "scsi: ufs: core: Flush exception handling work when RPM level is zero" failed to apply to 6.6-stable tree
-Date: Sat, 28 Feb 2026 20:36:18 -0500
-Message-ID: <20260301013619.1696250-1-sashal@kernel.org>
+Subject: FAILED: Patch "scsi: ufs: core: Flush exception handling work when RPM level is zero" failed to apply to 6.1-stable tree
+Date: Sat, 28 Feb 2026 20:45:05 -0500
+Message-ID: <20260301014505.1707608-1-sashal@kernel.org>
 X-Mailer: git-send-email 2.51.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -48,7 +48,7 @@ X-Patchwork-Hint: ignore
 X-stable: review
 Content-Transfer-Encoding: 8bit
 
-The patch below does not apply to the 6.6-stable tree.
+The patch below does not apply to the 6.1-stable tree.
 If someone wants it applied there, or to any other stable or longterm
 tree, then please email the backport, including the original git commit
 id to <stable@vger.kernel.org>.
