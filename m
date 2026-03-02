@@ -1,153 +1,180 @@
-Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 19BC93630B1;
-	Mon,  2 Mar 2026 12:57:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 564583D6CD2;
+	Mon,  2 Mar 2026 13:00:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772456261; cv=none; b=B8BKQwoIMewfYeSfT72Thz+xsBZyNf+8ivIifTeUFGeTDCYHB/6BS/FnEx6lkYoVDLtosVOx3mlnzoo3JbHMg0YEf+QrN0JwTzf0HRrUHVnxOi3L3szXc0/Pax2vYErPyRZ7rD7PrWCLtgLycDMxCmjgcznCI6H8u41BTBt48A0=
+	t=1772456437; cv=none; b=AZHarL0nGE/4bH0gqdAeupDhrRg3ht7HAj0rNqwbUMiGy79gKj2gSmRgwSOM4O+lCxSQwPAZxxKf36zPd6YoaQA1xZfErQSxpW02ACmZUphbRgkgcI7JTCECHP+ZKAg4cv40vRYsPwITvvDZ808nt65N7Z9/+QGUHvg6lG046wI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772456261; c=relaxed/simple;
-	bh=hvLSZiQsLnWzNs6WZ5wabnubTCSvxN70/ljhaRbQ3sU=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=pBbRw73fDkZmY5Jr9SXjneNrRIt4fmV+wY55jEuGMh1mZl1F8VOkN/3AGIc7Ihxpx6QZpnSVV5xcpZYCkMjJK3lBbkygUSv3pKbq7iqj1akyIf/Q39kliSO6Q+suKd5k+4gYFljE4uKPV+b53G0vuXzy+kvC27QJjkW51r9dAVk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=j1HJk5Mi; arc=none smtp.client-ip=148.163.158.5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	s=arc-20240116; t=1772456437; c=relaxed/simple;
+	bh=GjYJ0sv55slG3sVEqFeYGczFX9MBpOsZQCWJvgRMcfo=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=gRscewgr3c7eTWAjOaYylwteYQa68pP3WVKR8PJ3MWVHbuToEQHlpmjwuPtCrpecGvaY/dkoQ+xyV1sMN0LpovGU4NjnykZMUKjdh3PaVqo4KZIY5kS5ixEzC7U0dAjia/GVGELgmLLaqfWtiH9/Cte7I09Cq2rgdPSVNtO40Kc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HxcJXzEO; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="j1HJk5Mi"
-Received: from pps.filterd (m0360072.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 621KiDCG1941479;
-	Mon, 2 Mar 2026 12:57:20 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=pp1; bh=HGxsnL
-	Yfy9kHPdT/nhG4VlprNXrSE18ZkeT+apwbbHo=; b=j1HJk5Micy3UEBWVybBLb4
-	y/CoykrpD+y5spqD4mq7pRQ4RqYy/VdMN+op1dnRE5kCwDPk4FP4/r4WOa+ywACw
-	9924BaKbvbomfZ2M48lB+8TIPsi2Tt25IFvNw48O/v9czGCuqoS6xh+oMElnkFJg
-	lFnaeN0UxC7wxbgCZ6jTBasRb+7EH5j905TQxls3Gnp6ehgiVb/qyR6q2k+7ziYh
-	lrk+xgUDlpBeBLRPBnpKjE6b1WBeC1QucUSC/W8PVVRFD9MgtnmKQsYBEfNVZI/D
-	K7xAFibvHzzq4RNxtqSCOUEl6TwFuDb1/TdBktnuJr5sDg8PCChEh/M0T0eMKGLg
-	==
-Received: from ppma13.dal12v.mail.ibm.com (dd.9e.1632.ip4.static.sl-reverse.com [50.22.158.221])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4ckssmef16-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 02 Mar 2026 12:57:19 +0000 (GMT)
-Received: from pps.filterd (ppma13.dal12v.mail.ibm.com [127.0.0.1])
-	by ppma13.dal12v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 622AOjTE027704;
-	Mon, 2 Mar 2026 12:57:19 GMT
-Received: from smtprelay01.wdc07v.mail.ibm.com ([172.16.1.68])
-	by ppma13.dal12v.mail.ibm.com (PPS) with ESMTPS id 4cmcwj5w68-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 02 Mar 2026 12:57:19 +0000
-Received: from smtpav02.dal12v.mail.ibm.com (smtpav02.dal12v.mail.ibm.com [10.241.53.101])
-	by smtprelay01.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 622CvI4162718236
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Mon, 2 Mar 2026 12:57:18 GMT
-Received: from smtpav02.dal12v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 0CA325805E;
-	Mon,  2 Mar 2026 12:57:18 +0000 (GMT)
-Received: from smtpav02.dal12v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id AFC635805C;
-	Mon,  2 Mar 2026 12:57:12 +0000 (GMT)
-Received: from [9.79.192.112] (unknown [9.79.192.112])
-	by smtpav02.dal12v.mail.ibm.com (Postfix) with ESMTP;
-	Mon,  2 Mar 2026 12:57:12 +0000 (GMT)
-Message-ID: <bfc2bfa4-a28d-47dc-9362-b9ff6680cfab@linux.ibm.com>
-Date: Mon, 2 Mar 2026 18:27:11 +0530
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HxcJXzEO"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 188E3C2BC86;
+	Mon,  2 Mar 2026 13:00:37 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1772456437;
+	bh=GjYJ0sv55slG3sVEqFeYGczFX9MBpOsZQCWJvgRMcfo=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
+	b=HxcJXzEO0+ISCCYu4dQzrYWs2uvev9BVT6b9o34QBrEUKLCWuEFbtgaGz/tkpHesa
+	 gCJoFgzP3gh2b7MKB8RhsdUbO2emWqY89YdOP7zjbbm33ub1M6S8JHYVSIzbfChIkA
+	 IRR5WvdOOvZrBOa+5RV+Ik7mUL+ClpN6u2/Q9avrXWeEJZSW8PxB709yKV4YrF6Qvw
+	 f6ZVA2ynNaU2o4UdG6KQSBdLMUkjyd8FRhgwCLKA5HlDrQ83DK3VZX6JHRtq2INO1g
+	 Qc44FsYPN2J09PV3bgMjvK9kRpJ9tY87jrTR46YabI/LbrufUPOsuFZVn/CJp/ETPX
+	 7US8GvN2EtDzw==
+Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F1580E9B377;
+	Mon,  2 Mar 2026 13:00:36 +0000 (UTC)
+From: Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org>
+Date: Mon, 02 Mar 2026 18:30:18 +0530
+Subject: [PATCH v4 1/5] soc: qcom: ice: Fix race between qcom_ice_probe()
+ and of_qcom_ice_get()
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 19/19] nvme-multipath: switch to use libmultipath
-To: John Garry <john.g.garry@oracle.com>, hch@lst.de, kbusch@kernel.org,
-        sagi@grimberg.me, axboe@fb.com, martin.petersen@oracle.com,
-        james.bottomley@hansenpartnership.com, hare@suse.com
-Cc: jmeneghi@redhat.com, linux-nvme@lists.infradead.org,
-        linux-scsi@vger.kernel.org, michael.christie@oracle.com,
-        snitzer@kernel.org, bmarzins@redhat.com, dm-devel@lists.linux.dev,
-        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20260225154007.1033735-1-john.g.garry@oracle.com>
- <20260225154007.1033735-20-john.g.garry@oracle.com>
-Content-Language: en-US
-From: Nilay Shroff <nilay@linux.ibm.com>
-In-Reply-To: <20260225154007.1033735-20-john.g.garry@oracle.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzAyMDEwNiBTYWx0ZWRfX08ZG4mfYdE6+
- Pgtc0Q/jGKa+jDQNE0D+GrQjHKgMnFzoHCqSu1ifqjMpkeREbPJtmEaIO9GDdlyqoix0A4iKnHM
- cWPTqmGukRD+IAgnETbDg4A6HsMmzcl3mFPG7whALYPLnrPwsfSmk1d1HmZsuB3/sJnjvrcC+ws
- jrR24Dv2Nb41sT1mxJEx7tjCxkwzHlmsRf/oGegnyhGZfHMj7tY/ZXlIJfTJgNj+4eYSdTHnN23
- VToJkQiBTVF7qOd756gghV+boAmuRDWm+lRlynZeh1XKhyAQJZ4pBkmcVgZ7y/gwxByv15H44fi
- ih3mFr+3mKU1Jx+t5maDc4pBFEK1wLhsR/5WxfDXr+lGl9dlfVYLVIU354rQFSrtrdOF+X+vi1s
- /jrdGPpTmejHF9fPkuh+jbj3TYi0P2fTwTjgcFf7fs9l9egIJER25DB/fhJCYN66PvOFOO/v2yQ
- I6RLWIDDP3LRYFqC9Xw==
-X-Proofpoint-ORIG-GUID: 9hUb9hBF3IRM0ca70u5en9RE3Z-TTG7C
-X-Proofpoint-GUID: 9hUb9hBF3IRM0ca70u5en9RE3Z-TTG7C
-X-Authority-Analysis: v=2.4 cv=AobjHe9P c=1 sm=1 tr=0 ts=69a58930 cx=c_pps
- a=AfN7/Ok6k8XGzOShvHwTGQ==:117 a=AfN7/Ok6k8XGzOShvHwTGQ==:17
- a=IkcTkHD0fZMA:10 a=Yq5XynenixoA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=RnoormkPH1_aCDwRdu11:22 a=RzCfie-kr_QcCd8fBx8p:22 a=CpEX-UuAubdY51wu2XgA:9
- a=QEXdDO2ut3YA:10
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-03-02_03,2026-02-27_03,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- phishscore=0 lowpriorityscore=0 bulkscore=0 impostorscore=0 malwarescore=0
- spamscore=0 clxscore=1015 suspectscore=0 adultscore=0 priorityscore=1501
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2602130000 definitions=main-2603020106
+Message-Id: <20260302-qcom-ice-fix-v4-1-0e65740a5dcc@oss.qualcomm.com>
+References: <20260302-qcom-ice-fix-v4-0-0e65740a5dcc@oss.qualcomm.com>
+In-Reply-To: <20260302-qcom-ice-fix-v4-0-0e65740a5dcc@oss.qualcomm.com>
+To: Bjorn Andersson <andersson@kernel.org>, 
+ Konrad Dybcio <konradybcio@kernel.org>, 
+ Adrian Hunter <adrian.hunter@intel.com>, 
+ Ulf Hansson <ulf.hansson@linaro.org>, 
+ Manivannan Sadhasivam <mani@kernel.org>, 
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
+ "Martin K. Petersen" <martin.petersen@oracle.com>, 
+ Abel Vesa <abelvesa@kernel.org>, Abel Vesa <abelvesa@kernel.org>
+Cc: linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ linux-mmc@vger.kernel.org, linux-scsi@vger.kernel.org, 
+ Sumit Garg <sumit.garg@oss.qualcomm.com>, mani@kernel.org, 
+ Neeraj Soni <neeraj.soni@oss.qualcomm.com>, 
+ Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>, 
+ stable@vger.kernel.org
+X-Mailer: b4 0.14.3
+X-Developer-Signature: v=1; a=openpgp-sha256; l=3469;
+ i=manivannan.sadhasivam@oss.qualcomm.com; h=from:subject:message-id;
+ bh=PxxI5HrtkjPrewqydVjynd/KfkIqbLW5DMY9IbWY+NA=;
+ b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBppYnyYy1MQoGSXd/MDRFIrOfC/xxPjbIcsmm6f
+ lyIwDa27+KJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCaaWJ8gAKCRBVnxHm/pHO
+ 9fXMB/4kmYdO/8QSldFwnY9RlPzmF3wDrJqZfUBmCjSLXpzobrai5e3qPCC8OC5IfHmiKBSiJzK
+ d34+Ra8ERcgshcviBGZXHljmwY5mGaTdhFzhkbt4sSoIq6IxQCNLp7oswrCjHJ07P504km+h46w
+ vMO7T676t4oQTLOAinGa9weFEIcpy8va4XWuMuenNyA4SYtpVb6xabm64cIYHZ5666Nc0KKNDKF
+ aDCJqSkzTgWM/g+aymzYHPtun8gLP91xJWvDEqLWFixvSVoqcI/+WrxL8sEWiYe+BY5JF65elxK
+ iSmvaF/YbWxoBseeCvO+DBVHs1chMmaVHyQXwVegRb4JCn2X
+X-Developer-Key: i=manivannan.sadhasivam@oss.qualcomm.com; a=openpgp;
+ fpr=C668AEC3C3188E4C611465E7488550E901166008
+X-Endpoint-Received: by B4 Relay for
+ manivannan.sadhasivam@oss.qualcomm.com/default with auth_id=461
+X-Original-From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+Reply-To: manivannan.sadhasivam@oss.qualcomm.com
 
-On 2/25/26 9:10 PM, John Garry wrote:
->   void nvme_mpath_clear_ctrl_paths(struct nvme_ctrl *ctrl)
-> @@ -277,30 +279,35 @@ void nvme_mpath_clear_ctrl_paths(struct nvme_ctrl *ctrl)
->   	srcu_idx = srcu_read_lock(&ctrl->srcu);
->   	list_for_each_entry_srcu(ns, &ctrl->namespaces, list,
->   				 srcu_read_lock_held(&ctrl->srcu)) {
-> +		struct nvme_ns_head *head = ns->head;
-> +		struct mpath_disk *mpath_disk = head->mpath_disk;
-> +
-> +		if (!mpath_disk)
-> +			continue;
-> +
->   		nvme_mpath_clear_current_path(ns);
-> -		kblockd_schedule_work(&ns->head->requeue_work);
-> +		kblockd_schedule_work(&mpath_disk->mpath_head->requeue_work);
->   	}
->   	srcu_read_unlock(&ctrl->srcu, srcu_idx);
->   }
->   
-> +static void nvme_mpath_revalidate_paths_cb(struct mpath_device *mpath_device,
-> +					sector_t capacity)
-> +{
-> +	struct nvme_ns *ns = nvme_mpath_to_ns(mpath_device);
-> +
-> +	if (capacity != get_capacity(ns->disk))
-> +		clear_bit(NVME_NS_READY, &ns->flags);
-> +}
-> +
+From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 
-I don't quite understand the intent of the above function.
-Here I see that we compare mpath_disk capacity with per-path
-disk. Do we really have sectors allocated for mpath_disk?
+The current platform driver design causes probe ordering races with
+consumers (UFS, eMMC) due to ICE's dependency on SCM firmware calls. If ICE
+probe fails (missing ICE SCM or DT registers), devm_of_qcom_ice_get() loops
+with -EPROBE_DEFER, leaving consumers non-functional even when ICE should
+be gracefully disabled. devm_of_qcom_ice_get() doesn't know if the ICE
+driver probe has failed due to above reasons or it is waiting for the SCM
+driver.
 
-Overall, IMO abstracting out common multipath function into
-a separate library is a good move. But then I just want to
-understand layering here with libmultipath. Does it sit above
-the driver or below? I see in some places we have back and forth
-callbacks from driver to libmultipath and then back to the
-driver, for instance:
-nvme_mpath_add_disk          => driver
-  -> mpath_device_set_live    => libmultipath
-   -> mpath_head_add_cdev     => libmultipath
-     -> nvme_mpath_add_cdev   => driver
+Moreover, there is no devlink dependency between ICE and consumer drivers
+as 'qcom,ice' is not considered as a DT 'supplier'. So the consumer drivers
+have no idea of when the ICE driver is going to probe.
 
-Does this intentional? Or am I missing overall picture...
+To address these issues, store the error pointer in the platform drvdata
+during probe in addition to the valid ice pointer and synchronize both
+qcom_ice_probe() and of_qcom_ice_get() using a mutex.
 
-Thanks,
---Nilay
+If the platform drvdata is NULL, then it implies that the driver is not
+probed yet, so return -EPROBE_DEFER. If it has any error pointer, return
+that error pointer directly.
+
+Note that this change only fixes the standalone ICE DT node bindings and
+not the ones with 'ice' range embedded in the consumer nodes, where there
+is no issue.
+
+Cc: <stable@vger.kernel.org> # 6.4
+Fixes: 2afbf43a4aec ("soc: qcom: Make the Qualcomm UFS/SDCC ICE a dedicated driver")
+Reported-by: Sumit Garg <sumit.garg@oss.qualcomm.com>
+Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+---
+ drivers/soc/qcom/ice.c | 22 +++++++++++++++++-----
+ 1 file changed, 17 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/soc/qcom/ice.c b/drivers/soc/qcom/ice.c
+index b203bc685cad..a7e7e2251015 100644
+--- a/drivers/soc/qcom/ice.c
++++ b/drivers/soc/qcom/ice.c
+@@ -113,6 +113,8 @@ struct qcom_ice {
+ 	u8 hwkm_version;
+ };
+ 
++static DEFINE_MUTEX(ice_mutex);
++
+ static bool qcom_ice_check_supported(struct qcom_ice *ice)
+ {
+ 	u32 regval = qcom_ice_readl(ice, QCOM_ICE_REG_VERSION);
+@@ -631,6 +633,8 @@ static struct qcom_ice *of_qcom_ice_get(struct device *dev)
+ 		return qcom_ice_create(&pdev->dev, base);
+ 	}
+ 
++	guard(mutex)(&ice_mutex);
++
+ 	/*
+ 	 * If the consumer node does not provider an 'ice' reg range
+ 	 * (legacy DT binding), then it must at least provide a phandle
+@@ -648,11 +652,12 @@ static struct qcom_ice *of_qcom_ice_get(struct device *dev)
+ 	}
+ 
+ 	ice = platform_get_drvdata(pdev);
+-	if (!ice) {
+-		dev_err(dev, "Cannot get ice instance from %s\n",
+-			dev_name(&pdev->dev));
++	if (IS_ERR_OR_NULL(ice)) {
+ 		platform_device_put(pdev);
+-		return ERR_PTR(-EPROBE_DEFER);
++		if (!ice)
++			return ERR_PTR(-EPROBE_DEFER);
++		else
++			return ice;
+ 	}
+ 
+ 	link = device_link_add(dev, &pdev->dev, DL_FLAG_AUTOREMOVE_SUPPLIER);
+@@ -719,15 +724,22 @@ static int qcom_ice_probe(struct platform_device *pdev)
+ 	struct qcom_ice *engine;
+ 	void __iomem *base;
+ 
++	guard(mutex)(&ice_mutex);
++
+ 	base = devm_platform_ioremap_resource(pdev, 0);
+ 	if (IS_ERR(base)) {
+ 		dev_warn(&pdev->dev, "ICE registers not found\n");
++		/* Store the error pointer for devm_of_qcom_ice_get() */
++		platform_set_drvdata(pdev, base);
+ 		return PTR_ERR(base);
+ 	}
+ 
+ 	engine = qcom_ice_create(&pdev->dev, base);
+-	if (IS_ERR(engine))
++	if (IS_ERR(engine)) {
++		/* Store the error pointer for devm_of_qcom_ice_get() */
++		platform_set_drvdata(pdev, engine);
+ 		return PTR_ERR(engine);
++	}
+ 
+ 	platform_set_drvdata(pdev, engine);
+ 
+
+-- 
+2.51.0
+
 
