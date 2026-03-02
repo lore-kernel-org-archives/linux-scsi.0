@@ -1,283 +1,237 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A7B1329C5F
-	for <linux-scsi@vger.kernel.org>; Mon,  2 Mar 2026 10:12:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772446324; cv=none; b=E65nLNjDuBvZlaxHSgrVspceUGa7YEfsdNz1LjqXXsR/kHk5kgiSj6m9anwsmUmXAf1Md4IEA6DhL3keX+NZdDtYzYpyf2MaPhvqZG/zrySGzSfjsKhZYvSzcoQeOG/+ro1glpCdMv4ua8ZUy3jytTWFMBvI9ZuG7oV7N7gay0Q=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772446324; c=relaxed/simple;
-	bh=txdY5rJ/ZRLNRF9fgeSs9EjL4oxzE2aFUDw8jLdrJpo=;
-	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=F2weV0fkpe5BesYm+3vi5r+7MtUZd7JGxa/+bKeQmYEP1+eu1x7CKZWw2pENnhPnaDbq3GPUn3lNQ527x+yykP9DQNCPFVhyf6IcKF5G9d27vsKjeBrbbSR1YmPUXw8uuDAzeUWfq63z8mMWsNjPLS37IXMdSGQJEQDQWT+kUBg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=pHv8Y92O; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=SEjWzZiI; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B401733B6DA
+	for <linux-scsi@vger.kernel.org>; Mon,  2 Mar 2026 10:44:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.165.32
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1772448261; cv=fail; b=tSEC/HSyLos3g/wGBAqFKT9prw4eyWjbeDJT7omG+z+c5io3RTEcD0lh7THI51vEESqRUqmTYo91gDdiaD1ShbHycgHIxvQF2ZrpAeg7WEnjozZQFiILqotiO7EaiMa/9nXODgPBK+S/RA13tu2wTPIJ3t2wZiHyxuXFNm10nDk=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1772448261; c=relaxed/simple;
+	bh=5RuvePVrs+OC35zez+y1dmnf6HS8yo7yyfetsGb+EMg=;
+	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
+	 Content-Type:MIME-Version; b=jvO4BS193dy5vLknEy9yyeNIUzu/l+OLc2PkXGbaipDi6vnAgRVbMtOnRM3UXCU7FKqtP17XvHVn70z1Dyza4YH5DKhbL1/qg81K0wShgglALcyDiOTe4VR4V23+rZAeNsFEKUZRCOLvkcyNjGOKqLMYsmCwdT7Z2qDagTfSgAc=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=VNvR07BO; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=O7Oe1p/D; arc=fail smtp.client-ip=205.220.165.32
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="pHv8Y92O";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="SEjWzZiI"
-Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6226h9we2504593
-	for <linux-scsi@vger.kernel.org>; Mon, 2 Mar 2026 10:12:02 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	qYtlAUqEB4PsAxcph4isW3Atz2Cxuy6C5HTehGmJZIc=; b=pHv8Y92ORgWuZQvE
-	Dv1vZHnzRiq4Rxg9Qf8YbmYZZwspNFX1eMLxm4EVDF59j8BZYcZchO6Zuix0W10T
-	hsi3o8pvD8cB4mzvqNyMntd2em0PjXOGroc/ONvosYqN7Amq56YZxVD8eMU0zS1L
-	wYZ91dZ3mwpo+L/UN9Y3AC28sMEM2VL0QFbFKa7pkpz2q5KuWus+hoZLOOUNtdgI
-	qhaF3SOBzjBGGVxd3uO+vKxW7vMOFZYrumSrPz6FhMgw7+Ktp+96WJNVxyzkUHMj
-	XiS48K1tCDxX3PiafQj/eMUEun25FNNTu8LFIx8qnuTPpRer5JUq5CwUVT7YkNLX
-	+wxnSQ==
-Received: from mail-pf1-f197.google.com (mail-pf1-f197.google.com [209.85.210.197])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4cn5hersfr-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Mon, 02 Mar 2026 10:12:01 +0000 (GMT)
-Received: by mail-pf1-f197.google.com with SMTP id d2e1a72fcca58-8274dbdbadcso10458644b3a.0
-        for <linux-scsi@vger.kernel.org>; Mon, 02 Mar 2026 02:12:01 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="VNvR07BO";
+	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="O7Oe1p/D"
+Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 622Aacdv1522602;
+	Mon, 2 Mar 2026 10:44:18 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=
+	corp-2025-04-25; bh=ftFQ43t1NXHu27WVdncK90UvwYDekVKWQ8+iWxlU8G8=; b=
+	VNvR07BO671UWh3x4MT+yrnC4rQ9Sb4eg8NBF1Zftw8YDptuOfh01u2umY/K4xwx
+	S7KnTVqFAzZ4Zz9bwDIX9P60WvIgVO9uaRN7J2s96SgnDyLzwn51HLjBWED/5Jxy
+	qqQF3bcgrVn6OBveQbNJKGBTEMNtRYJFs/mnzvcRT2RVvMjsOFxLv87DORAkobbI
+	EvuRCe6YRHRgo1LsE2pR4QgNmwB3R32WfyARsw1KOg5vEwGEUTi71f9w5OHybqms
+	1DPW0dTHQTC7ch3FQdb9At+kU8CqU4ODa1sizZbAIJG78XAkh5Ig1gjaoXwDvkpb
+	Vx5ny+XEp8gs+J4/zkDTKg==
+Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.appoci.oracle.com [138.1.37.129])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4cn8xs806v-16
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Mon, 02 Mar 2026 10:44:17 +0000 (GMT)
+Received: from pps.filterd (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 6229wu5w029707;
+	Mon, 2 Mar 2026 10:30:19 GMT
+Received: from dm5pr21cu001.outbound.protection.outlook.com (mail-centralusazon11011053.outbound.protection.outlook.com [52.101.62.53])
+	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 4ckpt8rshq-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Mon, 02 Mar 2026 10:30:18 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=KrMyV/Cb+1e6zYhQn0KPsalHKANShp85upEMojHalNz2j9cL2h71G6yV7eL/wSVXzwBRQlbSJuoMldmu07JM97NzZIOGxcIc4lpxYNVhh7Kb+C707PBrl9inWsyytY9himg0Yr6eYvfuNXFii+5ZbGNtRG6B8vBdkdOAZ3Qb0p+Hm13qHNMvEQ9hiuhticJ/FqZchCibrHUtMfkfueEY6SmxlK6kOorpxM89rT4gfN0pLwFVM8T5OkLTLtDUuMa5Tyi+ApXX/lmSrdJ/+wM1YQUK5KbFEt46WJcguilYSI2pHqr3lkUu/sqvhtkTATgHYIgQWTJPkpyN3HVjX8l2SA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=ftFQ43t1NXHu27WVdncK90UvwYDekVKWQ8+iWxlU8G8=;
+ b=KK3TioBhiZTq7GcmbDvGaQTBcnQfVxNiCTG2VHh/KZ72WeM0Kr15MramXmNc9C3i+23gF5JLs41HzOm7s93dUsGuuqV8BWPM0oApOZb0bCvH4A5tbkX+Buzxt3eGqRa0Y7cjcPWX/72SON8X7cnH3327w5MR/njvCnnKOib/BuQ9gvz545L0xZLrwaycMUEPq6riYn0aPX6EjSg8ABhWc3rQ7rcYIFvZUfM0jvWEN9wr1oF0TtdUakZA+Mgr0JxPJSQ1Cyo5J229WKAFlHlbEcTroDPYQHMlZj38Llf06QttsxmstkdcZx9RTHDugefyq/Wxzi77dSBBR3DfB8+MLw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1772446321; x=1773051121; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-language:in-reply-to:mime-version
-         :user-agent:date:message-id:from:references:cc:to:subject:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=qYtlAUqEB4PsAxcph4isW3Atz2Cxuy6C5HTehGmJZIc=;
-        b=SEjWzZiInW1PZPVefcOKX8V9USzDQ8+NwpVNAwQSoYe/QWvUR0Ggjgy7yVYhFO0wVV
-         SHMb75sIKRfb1V/+ZML4lAYbytD5mhmtIiMCk7tVQ0WHwd3BPtcY2GYVm8VAMuUoPy7d
-         T17QqtKnzBzAwcxdlloLQ6fNUTESbVLpFPLgID+c+ORf1HwZIRQDwMOXiQOB2kQj4bJC
-         BE+efFHM0RKaV9exb3CmX8uhGBk+1WCqbSXhMlaTeyHAhk9SptXY38HPmQPQQH2qVC+r
-         nsLsi+ZB8g9SRS5D2gb16uqdpAPyeEEHfpLj+425yXXvbGihlxP3PPsSIh/6G2zdGeed
-         Zt+g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1772446321; x=1773051121;
-        h=content-transfer-encoding:content-language:in-reply-to:mime-version
-         :user-agent:date:message-id:from:references:cc:to:subject:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=qYtlAUqEB4PsAxcph4isW3Atz2Cxuy6C5HTehGmJZIc=;
-        b=qxzGQ4O/7VekEasPChRAWPtn0t2AOotR9in7SJqHPds+lLnY3GWEnx2jb38P8JPaqJ
-         Wa7EcxsRGtdvJVkfHTRLfWWbk7t1XbztVrmW21lmtYKvDwMNp5rJ5C+OTwGCV0/4Qk/9
-         IrlrfGzby6MYHjqofoOWaJyRDBvd8g3J/FiTVNxHYKefcmlGw7OjQdFRYsrAJV+7SS4t
-         lwrMvxb0Jw1kxED2cZdtFyYzDDjUbOkNE/f/+rAhlbVGEPmD7BQk7SMYTCpgtKqvA9Ww
-         dWb5csj//e1OmiSpSShA9QsiynDBq7i7NiAGhbc06C15lbpty8Oinc9GVUH+013Ywf1h
-         THhg==
-X-Forwarded-Encrypted: i=1; AJvYcCUW/pav3j83TT8U5vxsY9AJ8KW7lH7Nfz7d7TySuRLSmEtMtdMlA8blgzql/gkh+rK7luC2lV31YDmS@vger.kernel.org
-X-Gm-Message-State: AOJu0Yw3RQMGvgPJDQXQHsmFK/ac7kaNSCuNnpFklTLkvsTsQLoON6iI
-	fambDtykZL9v9tZnf5EEBu9kxOPIgr1pTXe+L1wwy5ZUwwMjtoldG35VGOgcfr3BiucMmKGY7+d
-	H40JNySTV/dKEqpoSad1GJgUUxJBCB2QjrOJaEbTEvURVtWTtjqJxuIYGYZXp42j5
-X-Gm-Gg: ATEYQzzRaJXzwrIgDbF6jyh8W9TZ5faF5zTZcw5aPzTl7wWd7z/x3Sz56I+vj9GFZKL
-	yNjRoYy4OWwq7MJieUDp0PmgofqwNb7HmeU/OJYeYWWs5XVn9YnKdtyn7QLCD5mWoz9Gw6O8PWj
-	z1Be4fvVL6W7l31TG5f0GVikxbyZ3dtPI8sAzOhUnZxQpOtR8Rc0c/KQ5bTIXnPmZB8+McU+NvU
-	lVr/jwrI8JJ7kqqTrtU+TySBoO+dXrh0Mx/J7M1mR9ZMqHV/NjxHTLuz96wINs0L2E8IWIm2o2j
-	W6KE/iYgVEKHoQHSAQAWPY9Ut6N93jxByr7DJxSG2GWVgihwdmIX6Alqrv8CENdI96PbVyouzOa
-	SrVd1RX3VpJ2R/dr8JTV4xtFtWIGPypPS6r2JykoPrGfXAxyYJw==
-X-Received: by 2002:a05:6a00:4ac9:b0:81e:408e:47d2 with SMTP id d2e1a72fcca58-8274da12e28mr9293454b3a.53.1772446321171;
-        Mon, 02 Mar 2026 02:12:01 -0800 (PST)
-X-Received: by 2002:a05:6a00:4ac9:b0:81e:408e:47d2 with SMTP id d2e1a72fcca58-8274da12e28mr9293421b3a.53.1772446320642;
-        Mon, 02 Mar 2026 02:12:00 -0800 (PST)
-Received: from [10.217.222.63] ([202.46.22.19])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-82739d4c910sm12494189b3a.8.2026.03.02.02.11.55
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 02 Mar 2026 02:12:00 -0800 (PST)
-Subject: Re: [PATCH v3 1/4] soc: qcom: ice: Fix race between qcom_ice_probe()
- and of_qcom_ice_get()
-To: manivannan.sadhasivam@oss.qualcomm.com,
-        Bjorn Andersson <andersson@kernel.org>,
-        Konrad Dybcio <konradybcio@kernel.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        Ulf Hansson
- <ulf.hansson@linaro.org>,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Abel Vesa <abelvesa@kernel.org>
-Cc: linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-mmc@vger.kernel.org, linux-scsi@vger.kernel.org,
-        Sumit Garg <sumit.garg@oss.qualcomm.com>, stable@vger.kernel.org
-References: <20260223-qcom-ice-fix-v3-0-6ca5846329f7@oss.qualcomm.com>
- <20260223-qcom-ice-fix-v3-1-6ca5846329f7@oss.qualcomm.com>
-From: Neeraj Soni <neeraj.soni@oss.qualcomm.com>
-Message-ID: <5e9a399a-074b-4b41-2e10-f2ed654eafcf@oss.qualcomm.com>
-Date: Mon, 2 Mar 2026 15:41:54 +0530
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.12.1
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=ftFQ43t1NXHu27WVdncK90UvwYDekVKWQ8+iWxlU8G8=;
+ b=O7Oe1p/DMuPHsjP0eYd6XXyX3ixXW/W0XxKbVTBVldFCrhEYhH4JLxfQbMqKJRrEUQznbPqbB1W+C+5U2sbfsgE9OdushUCRRN8/CBDx/BtM4DPGruxY6mZhMN4B1z5RGyJ8F2wnaRSQL4n0CJIqFM6vi54mOOkBmwEgHMAEKyk=
+Received: from DS4PPFEAFA21C69.namprd10.prod.outlook.com
+ (2603:10b6:f:fc00::d54) by CY8PR10MB6586.namprd10.prod.outlook.com
+ (2603:10b6:930:59::5) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9654.18; Mon, 2 Mar
+ 2026 10:30:15 +0000
+Received: from DS4PPFEAFA21C69.namprd10.prod.outlook.com
+ ([fe80::5266:1601:5598:3f0a]) by DS4PPFEAFA21C69.namprd10.prod.outlook.com
+ ([fe80::5266:1601:5598:3f0a%4]) with mapi id 15.20.9632.017; Mon, 2 Mar 2026
+ 10:30:15 +0000
+Message-ID: <7ed13647-8b26-4c88-b1fe-af6c3ac41751@oracle.com>
+Date: Mon, 2 Mar 2026 10:30:11 +0000
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] scsi: fix refcount leaking for "tagset_refcnt"
+To: Junxiao Bi <junxiao.bi@oracle.com>, linux-scsi@vger.kernel.org
+Cc: martin.petersen@oracle.com, James.Bottomley@HansenPartnership.com
+References: <20260223232728.93350-1-junxiao.bi@oracle.com>
+Content-Language: en-US
+From: John Garry <john.g.garry@oracle.com>
+Organization: Oracle Corporation
+In-Reply-To: <20260223232728.93350-1-junxiao.bi@oracle.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: LO0P265CA0006.GBRP265.PROD.OUTLOOK.COM
+ (2603:10a6:600:355::17) To DS4PPFEAFA21C69.namprd10.prod.outlook.com
+ (2603:10b6:f:fc00::d54)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20260223-qcom-ice-fix-v3-1-6ca5846329f7@oss.qualcomm.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-GB
-Content-Transfer-Encoding: 7bit
-X-Authority-Analysis: v=2.4 cv=BI++bVQG c=1 sm=1 tr=0 ts=69a56271 cx=c_pps
- a=rEQLjTOiSrHUhVqRoksmgQ==:117 a=fChuTYTh2wq5r3m49p7fHw==:17
- a=IkcTkHD0fZMA:10 a=Yq5XynenixoA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=YMgV9FUhrdKAYTUUvYB2:22
- a=VwQbUJbxAAAA:8 a=EUspDBNiAAAA:8 a=MqxRADgNEBqUf3RlVf8A:9 a=QEXdDO2ut3YA:10
- a=2VI0MkxyNR6bbpdq8BZq:22
-X-Proofpoint-GUID: 2ZWqp4F63q1hIZKubgjc2r3wsO14rRaB
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzAyMDA4NSBTYWx0ZWRfXyhnkRy5oQq2f
- kvEFHKYgrQ1ujSSnIKHIvfRc4HGFX0gV8Q6GUWiy5lIl1GVJrZVxQdOtw739kGXYeLHTw2/M3U6
- qvMyj07iM5B+oZPnkcxtMpowNHs7EE0MsOqrkMZ69DOhTKxgcKJIaCPaHvPumZdhUZPZVQE8ry3
- vr8UiA2n4QITAAxA1cPlKr/NXkx2Bn0MBG4/C9XeRjwmr/1L1go4Sq9JA4tlblX/ZvOuR0kqN+E
- BtS9wJVIkUGA85buyJx9fGx1wvjCcaQ/9+ehwrBEJ5emS3xXBsdhW25ctOeQqUoQ473mRFeH0Bf
- TWbKG0TCp3hKP5yZNoDtfm+2dSr7bvrmR+pXIgjlIARjxtxX4sr9ZgkGiF0GVYb8ezDxg9W5Icr
- XA7vSOyrWED2oBX6Kl2KIcgj0eDeqaNMkQFSO6TwzW1DXv5Qa9JI34z8uRkRURKWOUkkMhjykW6
- Qx54NI352NtjJPpbmFg==
-X-Proofpoint-ORIG-GUID: 2ZWqp4F63q1hIZKubgjc2r3wsO14rRaB
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DS4PPFEAFA21C69:EE_|CY8PR10MB6586:EE_
+X-MS-Office365-Filtering-Correlation-Id: 37064f10-9fce-4d38-a378-08de7846b18c
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;ARA:13230040|376014|1800799024|366016;
+X-Microsoft-Antispam-Message-Info:
+	FeTZ7P/xwUir9v0zgCdXS6R8Ok1wjB+pOktrb76ukgsLZ7+JyAYiWHcUnQgA1fpx6p9Zdo0KmSLYXd3wpOmEMtt5cHswGCBS2eBcqHWX8sco9+z08EG8QAITBjzRCd7iLb7Gnr1tfnT2tQ139O+bdrgk45lv6D58Dk0ISIht6NYuMSolr5ijb+awvGJhNNR4Ke1fi57joW1HvlV9+HUK7Chkpp3L6Vc2i7RCYySJmBZjfHlPf4X2JyWE0d+/xfSO3dPFp9cDgg1h7gFUhh+XBa83+/9SsaS9Kq/YIJwWcQrb52IGudKOUpfTkWouhCFWBqpGejx0S4weXvlFlDANR38RkYHtwHxHGy0soKfVcCymViRMgDmnAu8wKZ6pdzF+5AU5Go/SP7bqVoimCVUrpseyQLXuXrCwrV5tlm05LOPF5u90SnREiPrlLKHtkUFfHm8CLZvBmmxzz7vUxU1B15EMVFPMhH2dpPbC5F1fKTVSScxcXKPXjKLMWQ56MAP5edR4j+baIojmVN9k6VrEdM0WiZJEulASjDCweVI/01BL9NT2Dz3AHr1gWl66K1u7yhAlqFng0ckGg8ASavh9RdZjgK1OVxk3OMb/qsoQjA4/TU1Z9HR91W0CW/keq3w7ADNEegwvA5hnqWa89PJeo4DCQdC/Y45Whr3Bbs+//2+Ov/eSoMWMwZYi6+qLKTLarl8AiAk/nkp3Fu5uiPFfMKjTEhSKHFhz8trs34tLZLE=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DS4PPFEAFA21C69.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(1800799024)(366016);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?RXpsajk3NitJRkZoVExCWjRiVWJvQmZuaXFyOWQxVTdzQ2F3aDBvVHpocXNk?=
+ =?utf-8?B?ZVN3a1RmbU04cTkrZzNVRUpFWVJDUlRlYkFVTWQxaW5HMC9zaTZxU244MEhw?=
+ =?utf-8?B?ZmhZNnJYSVdJcWpUT0NacWxtTHJNSkZqWDBvUGl3VFFHWEdpRVVta0dkak5I?=
+ =?utf-8?B?ODBqdVZ2SCtHMEtWZWdZaWJaTXhvRmpoclU0SXFRTzRFMUE5NWJNNkM0MGhk?=
+ =?utf-8?B?Qk53dkdTY2pkeC9pVGs1NTl3OWRVUVhKWlU1eVB3ZU5NUEpvK0FlWWhtVjdt?=
+ =?utf-8?B?NGFqVkRZTjJPTENHd1RjSGhXNjBHa1JNeHlnakVTTk1QUktOQkRXS3FHV3lN?=
+ =?utf-8?B?NXZpMzhqR1FHNWxNUmpuUEtrYk45WHpCYUZVWWxNemQ0SnR3eGdJTkdlbmVL?=
+ =?utf-8?B?QXlGKzZpMms3L0h6SnVXM2E4djdBajgzWFhvNVVpcmREaFdZNndhaWU5Vk9k?=
+ =?utf-8?B?WHAvZ1pmSHM0SjhlQ2xNZ3RLZm04VHpGMUlLSElvcmhzVDlhRFdRQ0JjNXVW?=
+ =?utf-8?B?WTZNdTdDNmtmeWl6R09vOUtubWQvektjc2R1Q1JXYTI0dzR5YmdOSG1JdWNG?=
+ =?utf-8?B?VXVQdDRBdzZ0c1REU24xNVpMR1EyNW9MckRjNndYclFqUjdTazNvMDl3WUVQ?=
+ =?utf-8?B?VWtZMktKamVUYVIrYjlnZWFZZWRsOGNIb05qUVhtQk1xSm0rSlpuNFYyWURU?=
+ =?utf-8?B?RmVwUGlRMXgrUUhKUzZZK1oyMjRiMDZlZE1MbC9NdTlpRm1SR3VZK2FWTTBL?=
+ =?utf-8?B?akdkeWgvenFZUUhIaERYOXpPQzZ1cHNxTXQreHQwaGV0NFFrRVVRL0g0Qy9U?=
+ =?utf-8?B?NnJOdEZ3YjlkNDM2Nm9ZaTVRNE53MHRoL0VuVE5KTFZsdFVrNnYwU1dxOUlQ?=
+ =?utf-8?B?NyszYVQ0U04vR3lFc2RnQmU0L2xrS0JQM1FuZlljY0pmeG1ia3c2dEZxcXdz?=
+ =?utf-8?B?Q2dtZ2hhVDN4K0VzdS9uSWJnQmtPUmJqcVdMVGJ4Z05xR0RuNnZjSmhYS3ZI?=
+ =?utf-8?B?ZWNEbVNLdWNOM1pRRTFHbmZYNW1LeTVLamgxUkE0K2xTdnpuWG1SYkZyS2FO?=
+ =?utf-8?B?cnVXMTJRUHhGNGhRL3dldCtmM1UwUXI3ZjJONkVRV0RYcGpKRndqOFdCalIw?=
+ =?utf-8?B?N2ppVW5xU28ySmFKYzY4dmthK1FCQzVBYWFkbmRjUHJ3Wk16Q3MvNHBSdjNm?=
+ =?utf-8?B?eU1mMHJkc0RqenpKeVJjZ0gwMlJlZGlsTk91TG9ieUJLVUJkT3MxbmhtU3Jw?=
+ =?utf-8?B?NjNEOVQ3d1FSajdsMEVFTnEvMktwU2VBTVBYb2doL2hndVcvWXM3V2g0M25D?=
+ =?utf-8?B?ZHI0bzltaEJhaFBBcGk3K1dlSXpFMzBWSTBNUWI3VlQxV1UyR04xV1pQbnNs?=
+ =?utf-8?B?TGhNRk1EbmI1MzZGd29GS3kvZndONDlvNkxTeHJQeUN1bUJ4YkZBUFU3UDRx?=
+ =?utf-8?B?ZktaaHc1Q00rQkx6cnMvdFJFMWZtNmJjKzFlK3FUT0ZRY1RNbTdCTjVqWFpu?=
+ =?utf-8?B?ejdkN2J5RmVaSEMyOGpXam1qNmQzQThQUnVVVHVxUTgvaEYxMHRLZkpqeTZN?=
+ =?utf-8?B?YnVFTnZZeHkzUStac1ZxamtiV0FZY3h2alJwYk5rcDNlUWZ3TDJFNDlMc09t?=
+ =?utf-8?B?UnEzMlptUnJZOXE2UTVYNm9vWjlvT1Q2QjU4KzNSZ0pQVzZJSU10L3M5ZGhy?=
+ =?utf-8?B?cGtzMDJuMUxGMUw5RFJCaTJ6VTFrVGRNbWttdWZxWTk2YWR1QU4ybXZtQW01?=
+ =?utf-8?B?REo2OUs3WlVUYTZ6anIzWVFveGltTlI5VFJjS0RHM1ZwdSthSWM5dWlraHFM?=
+ =?utf-8?B?blhvSlZTSEJKYTRabCtSYWdVZG9SSEltOXRzaXhpVHhtSUVveVNRRjhCaXdr?=
+ =?utf-8?B?SGFpdmM2Rkg3MmtnbWp2ZnQrajJVVzY2aXEvMXFBMWMvOTFUbGpJK0ZSeWNF?=
+ =?utf-8?B?VzhKZk9lRnJwRFk4MWFJL1I5Y2JheDQ3SFpoRnFyNHp6M3NFcDFrYUs0a2lq?=
+ =?utf-8?B?WHl6TjJtZlZvUWxKTXVaZ3JPemcvSTliLzlBZnpXRVM0eHZtUjhodncwODNw?=
+ =?utf-8?B?SnZ4d2VCbE0zSEhjMGxtZlQ1bGowRWNEQXIzdkNxdVFLUGFHK2dzdEVvUGo5?=
+ =?utf-8?B?Z0tQU25OOThMc1dNaDFWcGdaZjFMcENRYm1yQ3ZjKzFzYkhqWERobllrRWJT?=
+ =?utf-8?B?WFZNd3Qrd2c5TkVISjVMcnlWQktYdVpFQVpEbzE3RE1SbmN3b01YMnNiRnVW?=
+ =?utf-8?B?UmdSczlRdEUzYzZOdFZCRHIzNWxob01iWkI2RW5jYlY3WStEbUtrRjB2Uitj?=
+ =?utf-8?B?M1VRZXN4TmVGZEtGbFNCRk9NaXhTZUQwYzg0L3drREF4NWJueDNTQT09?=
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
+	fWER5Ye4Q3kURMO/FBYn+kGYZNEgl8ObNKq77dlVF5NIjR9lQas9ZTZlLERsHvs3E+63g57gglbp4VYtIvK/LQbUIZrMcgHEMmuoKeUwx1j4IVkvGWT76A15v8ozlwESko9t7w2KnR569BBsQzoYEES7zUmbLVNg4d50p6KD+BY/rYVKKVrCJRUnM/y52dGpGkwgJXiz2bF+MGBaCbTOem6MY7QhVdAxFFT5CH12AhzeFESDa3+KAY2jyNF+8viVGjISQmUrd2uZmjzDv1m1Bzhempfr0jGB2BbvqP37KGnjDzmX0i5ay+Bz+CnGFnnuO9iRlkp/mIfB/OzbgwE7NI6rrErGahoM7Vb+DN3yx5CbS3dPLt/g+4v0n2+6Ao5UXYxmozY82usMLu58Ewf/PNzf3MtoOuTrXnqmaqMgGKMTfQ88n7Izy520pUNk8eAeycYuBrbZ76dHG4GIoV1tNyuNOnR76/RUXAOTjjIF3HU3zfNPP5v/1a8T4kZvGZkiODZAiA2Jy/H28vqT48JSoCKbZW1lk4guvnt5ou8GK7ok5c1qgFgV6q79j0xlvREokEZX9Vd9tHRXCuXKbV0sb2idBGKaqZ6CUQ9BBcd6yKA=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 37064f10-9fce-4d38-a378-08de7846b18c
+X-MS-Exchange-CrossTenant-AuthSource: DS4PPFEAFA21C69.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 02 Mar 2026 10:30:15.6667
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: uieC94GZ8CzcHWv4qeVeVv9AmCgHn5Bm7+OS5cB7ydFB5OPyS1T3Ra5sxu8VVE28CUjF8IWu79gaqmLlE/f56g==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY8PR10MB6586
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.51,FMLib:17.12.100.49
  definitions=2026-03-02_02,2026-02-27_03,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- suspectscore=0 clxscore=1015 lowpriorityscore=0 bulkscore=0 phishscore=0
- spamscore=0 adultscore=0 impostorscore=0 priorityscore=1501 malwarescore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2602130000 definitions=main-2603020085
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 mlxlogscore=999
+ phishscore=0 bulkscore=0 mlxscore=0 adultscore=0 spamscore=0
+ suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2602130000 definitions=main-2603020086
+X-Proofpoint-ORIG-GUID: qqA1nuo9d-0ThAG2S3Sx-Pkjuht0KQur
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzAyMDA4NyBTYWx0ZWRfX2EIj2VRdTRIf
+ HOGEwY8oKw1kl/Ib6L5KCmd0UpWHeoMcCPtFsw6UTjh8CeZT37cmbcs3JqYSPZ1+dwmefP7WeBR
+ W+qKhqCuKFTMl0nMvA9656Bj9cmr2DXFufv9Dx2mQ7xe4jWQEx31Gijiqn8+3dOIXvCzTWvJah/
+ 6djd1XFZVcP7ePSzN2/q/259sQ5dOm0+QykcsKLN22xMVDU/WCO4akI7Ez7cvlBSYNQIv4kfYQt
+ d60A6GJu1+yO22AyLH821riRUieMA6R6XyWuAIZCK/cE4QaiZocORcsdNQSOT2i1RpDlvv1g1Fm
+ np0rsV1t7PneoQm/yYNW8gf0Edahy3VJL7eUEFruh+j5kNqqyTKnT4L7jWIcoJkpExrtTsEZzq5
+ 2NLKSAu0Jpn6cWTe8NXGVYe5HDW5i0q8h5hj6NjhsCWxayoGKjl+IGS/aVoLueXSqy731rjtn0X
+ irTa7jZpMhSyl2NCs7A==
+X-Authority-Analysis: v=2.4 cv=BNi+bVQG c=1 sm=1 tr=0 ts=69a56a01 b=1 cx=c_pps
+ a=WeWmnZmh0fydH62SvGsd2A==:117 a=WeWmnZmh0fydH62SvGsd2A==:17
+ a=6eWqkTHjU83fiwn7nKZWdM+Sl24=:19 a=z/mQ4Ysz8XfWz/Q5cLBRGdckG28=:19
+ a=lCpzRmAYbLLaTzLvsPZ7Mbvzbb8=:19 a=xqWC_Br6kY4A:10 a=IkcTkHD0fZMA:10
+ a=Yq5XynenixoA:10 a=GoEa3M9JfhUA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=jiCTI4zE5U7BLdzWsZGv:22 a=EIcjfB9IiI4px24ztqRk:22 a=VwQbUJbxAAAA:8
+ a=yPCof4ZbAAAA:8 a=-lJZzBaNzpi4HHeSNtoA:9 a=QEXdDO2ut3YA:10
+X-Proofpoint-GUID: qqA1nuo9d-0ThAG2S3Sx-Pkjuht0KQur
 
-
-
-On 2/23/2026 1:32 PM, Manivannan Sadhasivam via B4 Relay wrote:
-> From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+On 23/02/2026 23:27, Junxiao Bi wrote:
+> This leaking will cause hung when tearing down the scsi host.
+> This is an example with iscsi, iscsid hung with the following
+> call trace after this kernel log.
 > 
-> The current platform driver design causes probe ordering races with
-> consumers (UFS, eMMC) due to ICE's dependency on SCM firmware calls. If ICE
-> probe fails (missing ICE SCM or DT registers), devm_of_qcom_ice_get() loops
-> with -EPROBE_DEFER, leaving consumers non-functional even when ICE should
-> be gracefully disabled. devm_of_qcom_ice_get() doesn't know if the ICE
-> driver probe has failed due to above reasons or it is waiting for the SCM
-> driver.
+> [130120.652718] scsi_alloc_sdev: Allocation failure during SCSI scanning, some SCSI devices might not be configured
 > 
-> Moreover, there is no devlink dependency between ICE and consumer drivers
-> as 'qcom,ice' is not considered as a DT 'supplier'. So the consumer drivers
-> have no idea of when the ICE driver is going to probe.
+> PID: 2528     TASK: ffff9d0408974e00  CPU: 3    COMMAND: "iscsid"
+>   #0 [ffffb5b9c134b9e0] __schedule at ffffffff860657d4
+>   #1 [ffffb5b9c134ba28] schedule at ffffffff86065c6f
+>   #2 [ffffb5b9c134ba40] schedule_timeout at ffffffff86069fb0
+>   #3 [ffffb5b9c134bab0] __wait_for_common at ffffffff8606674f
+>   #4 [ffffb5b9c134bb10] scsi_remove_host at ffffffff85bfe84b
+>   #5 [ffffb5b9c134bb30] iscsi_sw_tcp_session_destroy at ffffffffc03031c4 [iscsi_tcp]
+>   #6 [ffffb5b9c134bb48] iscsi_if_recv_msg at ffffffffc0292692 [scsi_transport_iscsi]
+>   #7 [ffffb5b9c134bb98] iscsi_if_rx at ffffffffc02929c2 [scsi_transport_iscsi]
+>   #8 [ffffb5b9c134bbf0] netlink_unicast at ffffffff85e551d6
+>   #9 [ffffb5b9c134bc38] netlink_sendmsg at ffffffff85e554ef
 > 
-> To address these issues, introduce a global ice_handle to store the valid
-> ICE handle pointer, and set during successful ICE driver probe. On probe
-> failure, set it to an error pointer and propagate the error from
-> of_qcom_ice_get().
-> 
-> Additionally, add a global ice_mutex to synchronize qcom_ice_probe() and
-> of_qcom_ice_get().
-> 
-> Note that this change only fixes the standalone ICE DT node bindings and
-> not the ones with 'ice' range embedded in the consumer nodes, where there
-> is no issue.
-> 
-> Cc: <stable@vger.kernel.org> # 6.4
-> Fixes: 2afbf43a4aec ("soc: qcom: Make the Qualcomm UFS/SDCC ICE a dedicated driver")
-> Reported-by: Sumit Garg <sumit.garg@oss.qualcomm.com>
-> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+> Fixes: 8fe4ce5836e9 ("scsi: core: Fix a use-after-free")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Junxiao Bi <junxiao.bi@oracle.com>
 > ---
->  drivers/soc/qcom/ice.c | 44 +++++++++++++++++++++++++++-----------------
->  1 file changed, 27 insertions(+), 17 deletions(-)
+>   drivers/scsi/scsi_scan.c | 1 +
+>   1 file changed, 1 insertion(+)
 > 
-> diff --git a/drivers/soc/qcom/ice.c b/drivers/soc/qcom/ice.c
-> index b203bc685cad..3c3c189e24f9 100644
-> --- a/drivers/soc/qcom/ice.c
-> +++ b/drivers/soc/qcom/ice.c
-> @@ -113,6 +113,9 @@ struct qcom_ice {
->  	u8 hwkm_version;
->  };
->  
-> +static DEFINE_MUTEX(ice_mutex);
-> +static struct qcom_ice *ice_handle;
-> +
->  static bool qcom_ice_check_supported(struct qcom_ice *ice)
->  {
->  	u32 regval = qcom_ice_readl(ice, QCOM_ICE_REG_VERSION);
-> @@ -608,7 +611,6 @@ static struct qcom_ice *qcom_ice_create(struct device *dev,
->  static struct qcom_ice *of_qcom_ice_get(struct device *dev)
->  {
->  	struct platform_device *pdev = to_platform_device(dev);
-> -	struct qcom_ice *ice;
->  	struct resource *res;
->  	void __iomem *base;
->  	struct device_link *link;
-> @@ -631,6 +633,22 @@ static struct qcom_ice *of_qcom_ice_get(struct device *dev)
->  		return qcom_ice_create(&pdev->dev, base);
->  	}
->  
-> +	guard(mutex)(&ice_mutex);
-> +
-> +	/*
-> +	 * If ice_handle is NULL, then it means the ICE driver is not probed
-> +	 * yet. So return -EPROBE_DEFER to let the client try later.
-> +	 */
-> +	if (!ice_handle)
-> +		return ERR_PTR(-EPROBE_DEFER);
-> +
-> +	/*
-> +	 * If ice_handle has error code, then it means the ICE driver has probe
-> +	 * failed. So return the handle for the client to digest it.
-> +	 */
-> +	if (IS_ERR(ice_handle))
-> +		return ice_handle;
-> +
->  	/*
->  	 * If the consumer node does not provider an 'ice' reg range
->  	 * (legacy DT binding), then it must at least provide a phandle
-> @@ -647,24 +665,16 @@ static struct qcom_ice *of_qcom_ice_get(struct device *dev)
->  		return ERR_PTR(-EPROBE_DEFER);
->  	}
->  
-> -	ice = platform_get_drvdata(pdev);
-> -	if (!ice) {
-> -		dev_err(dev, "Cannot get ice instance from %s\n",
-> -			dev_name(&pdev->dev));
-> -		platform_device_put(pdev);
-> -		return ERR_PTR(-EPROBE_DEFER);
-> -	}
-> -
->  	link = device_link_add(dev, &pdev->dev, DL_FLAG_AUTOREMOVE_SUPPLIER);
->  	if (!link) {
->  		dev_err(&pdev->dev,
->  			"Failed to create device link to consumer %s\n",
->  			dev_name(dev));
->  		platform_device_put(pdev);
-> -		ice = ERR_PTR(-EINVAL);
-> +		return ERR_PTR(-EINVAL);
->  	}
->  
-> -	return ice;
-> +	return ice_handle;
->  }
->  
->  static void qcom_ice_put(const struct qcom_ice *ice)
-> @@ -716,20 +726,20 @@ EXPORT_SYMBOL_GPL(devm_of_qcom_ice_get);
->  
->  static int qcom_ice_probe(struct platform_device *pdev)
->  {
-> -	struct qcom_ice *engine;
->  	void __iomem *base;
->  
-> +	guard(mutex)(&ice_mutex);
-> +
->  	base = devm_platform_ioremap_resource(pdev, 0);
->  	if (IS_ERR(base)) {
->  		dev_warn(&pdev->dev, "ICE registers not found\n");
-> +		ice_handle = base;
->  		return PTR_ERR(base);
->  	}
->  
-> -	engine = qcom_ice_create(&pdev->dev, base);
-> -	if (IS_ERR(engine))
-> -		return PTR_ERR(engine);
-> -
-> -	platform_set_drvdata(pdev, engine);
+> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+> index 7acbfcfc2172..c64ef71633d8 100644
+> --- a/drivers/scsi/scsi_scan.c
+> +++ b/drivers/scsi/scsi_scan.c
+> @@ -361,6 +361,7 @@ static struct scsi_device *scsi_alloc_sdev(struct scsi_target *starget,
+>   	 * since we use this queue depth most of times.
+>   	 */
+>   	if (scsi_realloc_sdev_budget_map(sdev, depth)) {
 
-This allows the driver to set the data per ICE device instance which allows
-the addition of multiple ICE platform devices. For example this patch:
-https://lore.kernel.org/all/20260217052526.2335759-1-neeraj.soni@oss.qualcomm.com/
-utilizes this capability. I think it doesen't harm to keep this support. 
-Moreover, the issue which your patch intends to address do not need this to be removed.
+At this point scsi_sysfs_device_initialize() has been called. Then if 
+you check the comment in __scsi_remove_device():
 
-> +	ice_handle = qcom_ice_create(&pdev->dev, base);
-> +	if (IS_ERR(ice_handle))
-> +		return PTR_ERR(ice_handle);
->  
->  	return 0;
->  }
-> 
-Regards,
-Neeraj
+Paired with kref_get() in scsi_sysfs_device_initialize()*
+
+So I wonder why we don't call __scsi_remove_device() instead, which 
+calls scsi_target_reap().
+
+Indeed, the current error handling in scsi_alloc_sdev() is odd - we only 
+call __scsi_remove_device() for ->sdev_init() failure, but nothing 
+happens between calling  ->sdev_init() and after 
+scsi_sysfs_device_initialize() which means that at this point we should 
+only now call __scsi_remove_device().
+
+* I think that should be scsi_sysfs_initialize() and has always been 
+incorrect
+
+
+> +		kref_put(&sdev->host->tagset_refcnt, scsi_mq_free_tags);
+>   		put_device(&starget->dev);
+>   		kfree(sdev);
+>   		goto out;
+
