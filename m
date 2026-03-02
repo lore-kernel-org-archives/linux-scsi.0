@@ -1,54 +1,54 @@
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C46C2DF151
-	for <linux-scsi@vger.kernel.org>; Mon,  2 Mar 2026 03:58:06 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8669C23C4F2
+	for <linux-scsi@vger.kernel.org>; Mon,  2 Mar 2026 04:08:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772423887; cv=none; b=Say/KQBLX0bZIGIW8Gnf9vg4OCemgWuPIQbBmsx56WYmdN3/NoxasofFcktjes0sJoircn7mZEgBbh6AHkdnXuRGuJYGTQqc3IKFEIxYPbTz+CNydwfVsv2HDUvpi+pUHen6BrwImpmtdb0YhdTraxHajsGywNIhcCEt9JjGlMU=
+	t=1772424527; cv=none; b=tffZiMlCcsoKMGcI2ejFxygKzlks1QvbJbAiLoq7nvBiqweasOzP1v6PfkaCOyK/0d0z8YAzbHfwfVWLCLTfzCXkIwzssKgmofvGlHSN9oEBs6zVNj0zArvSN9n0j3+lTzo3On9M8SAD3zkZI5UQ2Cb+BqwDvmKOUNZ1dcsKmX0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772423887; c=relaxed/simple;
-	bh=dZCirF+d+Cw3tiWYV9u8CCreqoTN55Hii2si/BtHZUI=;
+	s=arc-20240116; t=1772424527; c=relaxed/simple;
+	bh=ddnR7K08vPwBrR16+xYPOB55dXcC1YG6QcLfS0NeXUU=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=jEWl2fNnF0CLuWvSYwZXwi8CkeimqDNC45NMKv5H7+lAtLqad9V0Uq0SbPgVB+fC8jl6FoV2g9LArhEfIeO/Y0nOd2LPVhSnNYgqjsCto5WBmnstL4rZVQdroegmdopBoCrkkA2vRoGIcYApAtoMZfsvG7TEhiTaDv6W8ExakgA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=CnAqHt+6; arc=none smtp.client-ip=170.10.133.124
+	 Content-Type:Content-Disposition:In-Reply-To; b=fkGgNllf+MJZ6X3659XDfO/qVrjV13jgLzi1g/Hs2VpkzK1Ym5FjDpH+in1V94SovIXauD6KGbmRXr2xJBP6/n9XqZkW4LU/8KlDP68bilvlpkTqzONV9MYcT09raGsOcHEQOJZAEyTU/eshK73ze8Gd/FJIymRQucYnAEH2/Zw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=NuU1rBQS; arc=none smtp.client-ip=170.10.133.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="CnAqHt+6"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="NuU1rBQS"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1772423885;
+	s=mimecast20190719; t=1772424524;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 in-reply-to:in-reply-to:references:references;
-	bh=t17Mj1eHT4BQtcJr+lrLfPnsDWPF4OBSvXbUFhohcuY=;
-	b=CnAqHt+6Mhl0puSaXPgswN2QdLebQwKLWb6iLKGZhO4/NE38wKinWzUY5cICd95o9MOQxX
-	NJlxFGoyHJscTAUHwRz4Ywxn7qWY+gMslkEPW/g2rfbWukWiNZBivGdbpvDLUiYA6sMxgY
-	YowZq9vNvc32uP8OnU4fXVXVh8UOb2U=
-Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+	bh=NKGcz8tlyCPU7NrDjoUUnPCQmL3iAFi9IJXAqCR6JYs=;
+	b=NuU1rBQSWaNDhWlbi59vy8kGBYlFWPMwJXf+QhCQFzgHzP/tJgnUU8ls4YLKq1lSIJEtD4
+	fCdsEo8Yx5cMrf5CXdQ0rCe9ifYzlKOHXmzAJjj949gMZA6ojxEIm+e861kUc93wJzqpMK
+	vBFSvbChB4ikVmaLZjVo5tbjbqGb7tk=
+Received: from mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-676-1u7MPTEFMsGtKZXuyyxYVg-1; Sun,
- 01 Mar 2026 22:58:02 -0500
-X-MC-Unique: 1u7MPTEFMsGtKZXuyyxYVg-1
-X-Mimecast-MFC-AGG-ID: 1u7MPTEFMsGtKZXuyyxYVg_1772423880
-Received: from mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.4])
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-464-Q2mNSiM0N7OQD_xm4M8l5A-1; Sun,
+ 01 Mar 2026 23:08:39 -0500
+X-MC-Unique: Q2mNSiM0N7OQD_xm4M8l5A-1
+X-Mimecast-MFC-AGG-ID: Q2mNSiM0N7OQD_xm4M8l5A_1772424517
+Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id CBF3E18003FC;
-	Mon,  2 Mar 2026 03:57:59 +0000 (UTC)
+	by mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 0330E1956089;
+	Mon,  2 Mar 2026 04:08:37 +0000 (UTC)
 Received: from bmarzins-01.fast.eng.rdu2.dc.redhat.com (unknown [10.6.23.247])
-	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id DB20230001B9;
-	Mon,  2 Mar 2026 03:57:58 +0000 (UTC)
+	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id E984F19560A3;
+	Mon,  2 Mar 2026 04:08:35 +0000 (UTC)
 Received: from bmarzins-01.fast.eng.rdu2.dc.redhat.com (localhost [127.0.0.1])
-	by bmarzins-01.fast.eng.rdu2.dc.redhat.com (8.18.1/8.17.1) with ESMTPS id 6223vve81831914
+	by bmarzins-01.fast.eng.rdu2.dc.redhat.com (8.18.1/8.17.1) with ESMTPS id 62248YjS1832189
 	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
-	Sun, 1 Mar 2026 22:57:57 -0500
+	Sun, 1 Mar 2026 23:08:34 -0500
 Received: (from bmarzins@localhost)
-	by bmarzins-01.fast.eng.rdu2.dc.redhat.com (8.18.1/8.18.1/Submit) id 6223vv4F1831913;
-	Sun, 1 Mar 2026 22:57:57 -0500
-Date: Sun, 1 Mar 2026 22:57:57 -0500
+	by bmarzins-01.fast.eng.rdu2.dc.redhat.com (8.18.1/8.18.1/Submit) id 62248Ype1832188;
+	Sun, 1 Mar 2026 23:08:34 -0500
+Date: Sun, 1 Mar 2026 23:08:34 -0500
 From: Benjamin Marzinski <bmarzins@redhat.com>
 To: John Garry <john.g.garry@oracle.com>
 Cc: hch@lst.de, kbusch@kernel.org, sagi@grimberg.me, axboe@fb.com,
@@ -57,10 +57,11 @@ Cc: hch@lst.de, kbusch@kernel.org, sagi@grimberg.me, axboe@fb.com,
         linux-scsi@vger.kernel.org, michael.christie@oracle.com,
         snitzer@kernel.org, dm-devel@lists.linux.dev,
         linux-block@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 09/24] scsi-multipath: failover handling
-Message-ID: <aaUKxeoT69K435UE@redhat.com>
+Subject: Re: [PATCH 10/24] scsi-multipath: add
+ scsi_mpath_{start,end}_request()
+Message-ID: <aaUNQgJu8sEx-lsv@redhat.com>
 References: <20260225153627.1032500-1-john.g.garry@oracle.com>
- <20260225153627.1032500-10-john.g.garry@oracle.com>
+ <20260225153627.1032500-11-john.g.garry@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -69,117 +70,56 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260225153627.1032500-10-john.g.garry@oracle.com>
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.4
+In-Reply-To: <20260225153627.1032500-11-john.g.garry@oracle.com>
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
 
-On Wed, Feb 25, 2026 at 03:36:12PM +0000, John Garry wrote:
-> For a scmd which suffers failover, requeue the master bio of each bio
-> attached to its request.
+On Wed, Feb 25, 2026 at 03:36:13PM +0000, John Garry wrote:
+> Add scsi_mpath_{start,end}_request() to handle updating private multipath
+> request data, like nvme_mpath_{start,end}_request().
 > 
-> A handler is added in the scsi_driver structure to lookup a
-> mpath_disk from a request. This is needed because the scsi_disk structure
-> will manage the mpath_disk, and the code core has no method to look this
-> up from the scsi_scmnd.
-> 
-> Failover occurs when the scsi_cmnd has failed and it is discovered that the
-> original scsi_device has transport down.
+> Since we may need to update mpath_disk data, add a callbacks in
+> scsi_driver to actually do this work for the scsi driver.
 > 
 > Signed-off-by: John Garry <john.g.garry@oracle.com>
 > ---
->  drivers/scsi/scsi_error.c     | 12 ++++++
->  drivers/scsi/scsi_lib.c       |  9 +++-
->  drivers/scsi/scsi_multipath.c | 80 +++++++++++++++++++++++++++++++++++
->  include/scsi/scsi.h           |  1 +
->  include/scsi/scsi_driver.h    |  3 ++
->  include/scsi/scsi_multipath.h | 14 ++++++
->  6 files changed, 118 insertions(+), 1 deletion(-)
+>  drivers/scsi/scsi_lib.c       |  4 ++++
+>  include/scsi/scsi_driver.h    |  2 ++
+>  include/scsi/scsi_multipath.h | 24 ++++++++++++++++++++++++
+>  3 files changed, 30 insertions(+)
 > 
-> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-> index f869108fd9693..0fd1b46764c3f 100644
-> --- a/drivers/scsi/scsi_error.c
-> +++ b/drivers/scsi/scsi_error.c
-> @@ -40,6 +40,7 @@
->  #include <scsi/scsi_ioctl.h>
->  #include <scsi/scsi_dh.h>
->  #include <scsi/scsi_devinfo.h>
-> +#include <scsi/scsi_multipath.h>
->  #include <scsi/sg.h>
->  
->  #include "scsi_priv.h"
-> @@ -1901,12 +1902,16 @@ bool scsi_noretry_cmd(struct scsi_cmnd *scmd)
->  enum scsi_disposition scsi_decide_disposition(struct scsi_cmnd *scmd)
->  {
-
-I'm no scsi expert, but the checks in scsi_decide_disposition() don't
-look quite right to me. You only failover in cases were it the code
-might want to retry (and when the device is offline), but there are
-other cases, when you don't want to retry the same path, where it would
-make sense to try another path, DID_TRANSPORT_FAILFAST for example. 
-
-As a more general issue, since you are already cloning the bios,
-couldn't you just trigger the failovers in scsi_mpath_clone_end_io().
-blk_path_error() can tell you which bios should be retried. That seems
-like a much simpler approach than trying to intercept the request before
-it completes the clones, and I don't see what you're losing by letting
-the clones complete, and dealing requeueing there (again, I'm no scsi
-expert).
-
->  	enum scsi_disposition rtn;
-> +	struct request *req = scsi_cmd_to_rq(scmd);
->  
->  	/*
->  	 * if the device is offline, then we clearly just pass the result back
->  	 * up to the top level.
->  	 */
->  	if (!scsi_device_online(scmd->device)) {
-> +		if (scsi_is_mpath_request(req))
-> +			return scsi_mpath_failover_disposition(scmd);
+>  	#ifdef CONFIG_SCSI_MULTIPATH
+> +	void (*mpath_start_cmd)(struct scsi_cmnd *);
+> +	void (*mpath_end_cmd)(struct scsi_cmnd *);
+>  	struct mpath_disk *(*to_mpath_disk)(struct request *);
+>  	#endif
+>  };
+> diff --git a/include/scsi/scsi_multipath.h b/include/scsi/scsi_multipath.h
+> index 07db217edb085..6cb3107260952 100644
+> --- a/include/scsi/scsi_multipath.h
+> +++ b/include/scsi/scsi_multipath.h
+> @@ -56,6 +56,23 @@ void scsi_mpath_add_sysfs_link(struct scsi_device *sdev);
+>  void scsi_mpath_remove_sysfs_link(struct scsi_device *sdev);
+>  int scsi_mpath_get_head(struct scsi_mpath_head *);
+>  void scsi_mpath_put_head(struct scsi_mpath_head *);
 > +
->  		SCSI_LOG_ERROR_RECOVERY(5, scmd_printk(KERN_INFO, scmd,
->  			"%s: device offline - report as SUCCESS\n", __func__));
->  		return SUCCESS;
-> diff --git a/drivers/scsi/scsi_multipath.c b/drivers/scsi/scsi_multipath.c
-> index c3e0f792e921f..16b1f84fc552c 100644
-> --- a/drivers/scsi/scsi_multipath.c
-> +++ b/drivers/scsi/scsi_multipath.c
-> @@ -518,6 +518,86 @@ void scsi_mpath_put_head(struct scsi_mpath_head *scsi_mpath_head)
->  }
->  EXPORT_SYMBOL_GPL(scsi_mpath_put_head);
->  
-> +bool scsi_is_mpath_request(struct request *req)
+> +static inline void scsi_mpath_start_request(struct request *req)
 > +{
-> +	return is_mpath_request(req);
+> +	struct scsi_cmnd *cmd = blk_mq_rq_to_pdu(req);
+> +
+> +	if (is_mpath_request(req))
+> +		scsi_cmd_to_driver(cmd)->mpath_start_cmd(cmd);
 > +}
-> +EXPORT_SYMBOL_GPL(scsi_is_mpath_request);
 > +
-> +static inline void bio_list_add_clone_master(struct bio_list *bl,
-> +				struct bio *clone)
+> +static inline void scsi_mpath_end_request(struct request *req)
 > +{
-> +	struct scsi_mpath_clone_bio *scsi_mpath_clone_bio;
-> +	struct bio *master_bio;
+> +	struct scsi_cmnd *cmd = blk_mq_rq_to_pdu(req);
 > +
-> +	if (clone->bi_next)
-> +		bio_list_add_clone_master(bl, clone->bi_next);
+> +	if (is_mpath_request(req))
+> +		scsi_cmd_to_driver(cmd)->mpath_start_cmd(cmd);
 
-This is a pretty minimal function, but a request could have a lot of
-merged bios, so you probably want to hande them iteratively, instead of
-recursing into the function, and eating up stack space unnecessarily.
-Also, this reverses the bio's order when adding them to the requeue
-list.
+Copy-paste error. It should be:
+
+		scsi_cmd_to_driver(cmd)->mpath_end_cmd(cmd);
 
 -Ben
-
-> +
-> +	scsi_mpath_clone_bio = scsi_mpath_to_master_bio(clone);
-> +	master_bio = scsi_mpath_clone_bio->master_bio;
-> +
-> +	if (bl->tail)
-> +		bl->tail->bi_next = master_bio;
-> +	else
-> +		bl->head = master_bio;
-> +
-> +	bl->tail = master_bio;
-> +
-> +	bio_put(clone);
-> +}
 
