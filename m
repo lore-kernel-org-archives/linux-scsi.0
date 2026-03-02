@@ -1,202 +1,221 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from out203-205-221-209.mail.qq.com (out203-205-221-209.mail.qq.com [203.205.221.209])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 25A4836EA97;
-	Mon,  2 Mar 2026 13:02:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A5F363FB072;
+	Mon,  2 Mar 2026 13:29:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.205.221.209
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772456566; cv=none; b=riKIwqc0D84/cgpoYA+yN7mjWXXOp3OXtVm+g0Krj88b/vmylp7x6qojs85pD6+q+py228g/uct16cpVJF83Ja0zMNE1Y3vpytvYrbruFWgT4CJbxh9xCEDA4v4Tlh8xCIfCT6oMg8ByFMCdWwaxq4AqqTKsB1zfrSQnKzHgNxE=
+	t=1772458156; cv=none; b=PWsZhnFhJN0+Gfhv91Hi/ljTPkD+nHzckKXaTAGizFu5J3p1ERQ7I3HNO2ciZBkr+eRXA8/mypSTfWYcq5k8w0WqjVaspRP8+KQN1I/RH1yS5+6P5igZjkyIX3nhcjNlXMjIaY7hNObIqThf3lc0+T3qnJL1DtyGfE3uZ/BmmfI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772456566; c=relaxed/simple;
-	bh=tvQbPWh9zBD8AmK6ovLnwO1ZZ2dYVs2CTC8gfkbuoP0=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=hVg3sXUCYTDdUBZFTUiENq1zT24tDZ0KBbvH4NIB8b6InRpq92Z+g0zx18uUturhsMvaxesxqEVHNMab2mTkIC9b3dbHIeHHqoOcOLEwc5paXXAI9fB63nobdX/05rzXJNfi9tWaKAiMATallyB+R6uGChuIt/i2D4ej84eOdbY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=P34GWGZM; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1772458156; c=relaxed/simple;
+	bh=H6eZMqKoaqsEVn/jxHZUMAPy5H/Sp2MlyjTW88t1QNo=;
+	h=From:To:Cc:Subject:Mime-Version:Content-Type:Date:Message-ID; b=R8xVdjfSzsaV+SrRFYP9I7x7y/Z+ftDrIcqCQszb3FNuTlqC+IcKUU6ePywKyHNNe4r8Gpt05AEUNCHVRld4mRSL83g3HE6Bu+bxvOZstn9jDijFC8v7+txea77By1Q2ZM8GRqkc+SBNAozRM8upetEy4FbC6ipPSPhWn2S3Nmg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=qq.com; spf=pass smtp.mailfrom=qq.com; dkim=pass (1024-bit key) header.d=qq.com header.i=@qq.com header.b=ClDihqRs; arc=none smtp.client-ip=203.205.221.209
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=qq.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qq.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="P34GWGZM"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 18D56C19423;
-	Mon,  2 Mar 2026 13:02:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772456565;
-	bh=tvQbPWh9zBD8AmK6ovLnwO1ZZ2dYVs2CTC8gfkbuoP0=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=P34GWGZM5JlkPygmke9K4O46YU16DBi5pIlrUBDSoNn9iYWsoXGx4j1sd2SlgAgUg
-	 mwPIxF1Wid7RIVJRJOQaB11Mk4kDdM72uJjMT8hE1OYVoMLcK7odUEGQ6XKGnRul8r
-	 BPLCJHUvqsBJ4yqaFbH/RBc5VolCEwETirMLf+zde2PQKa3MLQP65BkBFfmEZAFGoM
-	 ubNcTq0O1BXzC7PqJtZupuLWTqgsTi/ol9n3f+Bk9YXpJ/Aydkd0FOmteLNSwekWQC
-	 dzHGbN8DCgHkPgpShpHUeQD2eLrtU52GLTvHSmRocO3Wv5SLOpW7Maj2QX0pdcOiQH
-	 WQiSyS3tSMfzw==
-Date: Mon, 2 Mar 2026 18:32:31 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Neeraj Soni <neeraj.soni@oss.qualcomm.com>
-Cc: manivannan.sadhasivam@oss.qualcomm.com, 
-	Bjorn Andersson <andersson@kernel.org>, Konrad Dybcio <konradybcio@kernel.org>, 
-	Adrian Hunter <adrian.hunter@intel.com>, Ulf Hansson <ulf.hansson@linaro.org>, 
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, 
-	Abel Vesa <abelvesa@kernel.org>, linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-mmc@vger.kernel.org, linux-scsi@vger.kernel.org, 
-	Sumit Garg <sumit.garg@oss.qualcomm.com>, stable@vger.kernel.org
-Subject: Re: [PATCH v3 1/4] soc: qcom: ice: Fix race between qcom_ice_probe()
- and of_qcom_ice_get()
-Message-ID: <tbmsoi5the4y2gbocwbqecictrbrpwxx4grugaimc24bu5oacu@4yucsbmyhv5d>
-References: <20260223-qcom-ice-fix-v3-0-6ca5846329f7@oss.qualcomm.com>
- <20260223-qcom-ice-fix-v3-1-6ca5846329f7@oss.qualcomm.com>
- <5e9a399a-074b-4b41-2e10-f2ed654eafcf@oss.qualcomm.com>
+	dkim=pass (1024-bit key) header.d=qq.com header.i=@qq.com header.b="ClDihqRs"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qq.com; s=s201512;
+	t=1772458139; bh=H6eZMqKoaqsEVn/jxHZUMAPy5H/Sp2MlyjTW88t1QNo=;
+	h=From:To:Cc:Subject:Date;
+	b=ClDihqRsuc1Ujwm6XHc77YAfFNqkeqNPMR9OzhRHdxBaTEw6KfE4sD94H76CI1hgG
+	 9+gsy7kuPYAE8eAyNXGE+plzq0pnv0DD6AhDBhzXwcj6b5pAJuFPx6Ivw6yt/R/o6m
+	 a8RuVNWMeGVLmbI8Y92E5mUDtyklj0I+P+ZS6iK4=
+X-QQ-XMRINFO: Mp0Kj//9VHAxzExpfF+O8yhSrljjwrznVg==
+X-QQ-XMAILINFO: MXi6VldghLL7jqECueVD3Om9mkxTaWDqFl02kjYBjP4otn6nbH6p7XF6P1YHrC
+	 UEJqcLzV2Bt7u6jd73w7z3+80flbEA2HxbKFCp8f3mxy2IcGy4djzwsFHexziQuv4me7jy0mJNWxG
+	 7AIK//Ca3Og+gB5MboossL1NwohciFeixV2jsTCeXy7aqxmROwZ+VVl5EQ4Rvtf+hxhRl8CE1FGAm
+	 tzE4/9H1QLc6ylvzOo74s5YgQ1SQqKruegY0jMbmtgnAA7IjmuGrz7Nem5h3Gfhj/n33oFusp8vzi
+	 7dikhrPko7axcM4Nx+nChiuyfv6Ez4PZNmJ95byyPP9xmkTLlOyAshahjJ7/m7Y0IzImBfR70FaMX
+	 zOi+IomA02sjdlgN5SUYGgOv4yUJHpx/A1oNTL02vgb6ZDyjWsNCVrRdJf3dkN1qr5ULxj+eI4keR
+	 wdXZMr+Ui9XuPF5TtsKqUD9Qp91RW9POrPgbo7FB262rj/yUv89T4NUpemsEQknBr0hTf+fMZmFuJ
+	 fjEHO31HtHIKe6sIanPye5EUq/aKzZo0EJ6+X0YYGEkLUzV9pUm56Igqqjz5ri4sk2pXIj3Q6D4av
+	 E2x7CEoFZePiehDVqrAMk9359XOPoxGh4p5Qb/7ZwYP8Bd2gB72YDN1Q+hdeFtD5FROtnge4s4qbG
+	 ATf2e2V2oHSiH4HIeBueSiEZKFQMQe4iFG5YB2Zv4Q5bpPxkEu1pP8CMALz8hocgHmeBUtWwe7fyW
+	 kMDzzTcvtxk7wiFARBBU8T7DJHL4JYjDsIk49damKTAC4bhni7v9ULDDYqqJYEK8ENOzRF3HY6CEy
+	 UuX+kE6ctJ+q+3h1VLgi5NL7cTBuVXuRF+18S9zK0tH/N4vGl9c9hPDWd40WiQ9018w2DSWTYLkZu
+	 2COk9f6QIrbzPVrXIVW+Hh8GAanJnZz8vX/EMdHersy2bVDSCmg+iKWfFvvoFHj+UIsrbzrvMjEsc
+	 NZdelex9vuu+21MDSDpUmoyhVx0tzOr0gg64Mto8uehXlpveCLnlXoWb5uvcVBkICxGBp+6WG/1tT
+	 7F0+X7vlaMqBx+diC2XN/qiift28HgRy3Xp3m
+From: "=?utf-8?B?eml5YW5n?=" <ceylanfish@qq.com>
+To: "=?utf-8?B?bGludXgtc2NzaQ==?=" <linux-scsi@vger.kernel.org>
+Cc: "=?utf-8?B?bGludXgta2VybmVs?=" <linux-kernel@vger.kernel.org>
+Subject: [BUG] Null pointer dereference in esp_scsi leading to GPF(drivers/scsi/esp_scsi.c)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <5e9a399a-074b-4b41-2e10-f2ed654eafcf@oss.qualcomm.com>
+Mime-Version: 1.0
+Content-Type: text/plain;
+	charset="utf-8"
+Content-Transfer-Encoding: base64
+Date: Mon, 2 Mar 2026 21:28:57 +0800
+X-Priority: 3
+Message-ID: <tencent_41DE2367753344A933D9845E766261A14808@qq.com>
+X-QQ-MIME: TCMime 1.0 by Tencent
+X-Mailer: QQMail 2.x
+X-QQ-Mailer: QQMail 2.x
+X-QQ-mid: xmseza48-0t1772458137tazlhwy0n
 
-On Mon, Mar 02, 2026 at 03:41:54PM +0530, Neeraj Soni wrote:
-> 
-> 
-> On 2/23/2026 1:32 PM, Manivannan Sadhasivam via B4 Relay wrote:
-> > From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-> > 
-> > The current platform driver design causes probe ordering races with
-> > consumers (UFS, eMMC) due to ICE's dependency on SCM firmware calls. If ICE
-> > probe fails (missing ICE SCM or DT registers), devm_of_qcom_ice_get() loops
-> > with -EPROBE_DEFER, leaving consumers non-functional even when ICE should
-> > be gracefully disabled. devm_of_qcom_ice_get() doesn't know if the ICE
-> > driver probe has failed due to above reasons or it is waiting for the SCM
-> > driver.
-> > 
-> > Moreover, there is no devlink dependency between ICE and consumer drivers
-> > as 'qcom,ice' is not considered as a DT 'supplier'. So the consumer drivers
-> > have no idea of when the ICE driver is going to probe.
-> > 
-> > To address these issues, introduce a global ice_handle to store the valid
-> > ICE handle pointer, and set during successful ICE driver probe. On probe
-> > failure, set it to an error pointer and propagate the error from
-> > of_qcom_ice_get().
-> > 
-> > Additionally, add a global ice_mutex to synchronize qcom_ice_probe() and
-> > of_qcom_ice_get().
-> > 
-> > Note that this change only fixes the standalone ICE DT node bindings and
-> > not the ones with 'ice' range embedded in the consumer nodes, where there
-> > is no issue.
-> > 
-> > Cc: <stable@vger.kernel.org> # 6.4
-> > Fixes: 2afbf43a4aec ("soc: qcom: Make the Qualcomm UFS/SDCC ICE a dedicated driver")
-> > Reported-by: Sumit Garg <sumit.garg@oss.qualcomm.com>
-> > Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-> > ---
-> >  drivers/soc/qcom/ice.c | 44 +++++++++++++++++++++++++++-----------------
-> >  1 file changed, 27 insertions(+), 17 deletions(-)
-> > 
-> > diff --git a/drivers/soc/qcom/ice.c b/drivers/soc/qcom/ice.c
-> > index b203bc685cad..3c3c189e24f9 100644
-> > --- a/drivers/soc/qcom/ice.c
-> > +++ b/drivers/soc/qcom/ice.c
-> > @@ -113,6 +113,9 @@ struct qcom_ice {
-> >  	u8 hwkm_version;
-> >  };
-> >  
-> > +static DEFINE_MUTEX(ice_mutex);
-> > +static struct qcom_ice *ice_handle;
-> > +
-> >  static bool qcom_ice_check_supported(struct qcom_ice *ice)
-> >  {
-> >  	u32 regval = qcom_ice_readl(ice, QCOM_ICE_REG_VERSION);
-> > @@ -608,7 +611,6 @@ static struct qcom_ice *qcom_ice_create(struct device *dev,
-> >  static struct qcom_ice *of_qcom_ice_get(struct device *dev)
-> >  {
-> >  	struct platform_device *pdev = to_platform_device(dev);
-> > -	struct qcom_ice *ice;
-> >  	struct resource *res;
-> >  	void __iomem *base;
-> >  	struct device_link *link;
-> > @@ -631,6 +633,22 @@ static struct qcom_ice *of_qcom_ice_get(struct device *dev)
-> >  		return qcom_ice_create(&pdev->dev, base);
-> >  	}
-> >  
-> > +	guard(mutex)(&ice_mutex);
-> > +
-> > +	/*
-> > +	 * If ice_handle is NULL, then it means the ICE driver is not probed
-> > +	 * yet. So return -EPROBE_DEFER to let the client try later.
-> > +	 */
-> > +	if (!ice_handle)
-> > +		return ERR_PTR(-EPROBE_DEFER);
-> > +
-> > +	/*
-> > +	 * If ice_handle has error code, then it means the ICE driver has probe
-> > +	 * failed. So return the handle for the client to digest it.
-> > +	 */
-> > +	if (IS_ERR(ice_handle))
-> > +		return ice_handle;
-> > +
-> >  	/*
-> >  	 * If the consumer node does not provider an 'ice' reg range
-> >  	 * (legacy DT binding), then it must at least provide a phandle
-> > @@ -647,24 +665,16 @@ static struct qcom_ice *of_qcom_ice_get(struct device *dev)
-> >  		return ERR_PTR(-EPROBE_DEFER);
-> >  	}
-> >  
-> > -	ice = platform_get_drvdata(pdev);
-> > -	if (!ice) {
-> > -		dev_err(dev, "Cannot get ice instance from %s\n",
-> > -			dev_name(&pdev->dev));
-> > -		platform_device_put(pdev);
-> > -		return ERR_PTR(-EPROBE_DEFER);
-> > -	}
-> > -
-> >  	link = device_link_add(dev, &pdev->dev, DL_FLAG_AUTOREMOVE_SUPPLIER);
-> >  	if (!link) {
-> >  		dev_err(&pdev->dev,
-> >  			"Failed to create device link to consumer %s\n",
-> >  			dev_name(dev));
-> >  		platform_device_put(pdev);
-> > -		ice = ERR_PTR(-EINVAL);
-> > +		return ERR_PTR(-EINVAL);
-> >  	}
-> >  
-> > -	return ice;
-> > +	return ice_handle;
-> >  }
-> >  
-> >  static void qcom_ice_put(const struct qcom_ice *ice)
-> > @@ -716,20 +726,20 @@ EXPORT_SYMBOL_GPL(devm_of_qcom_ice_get);
-> >  
-> >  static int qcom_ice_probe(struct platform_device *pdev)
-> >  {
-> > -	struct qcom_ice *engine;
-> >  	void __iomem *base;
-> >  
-> > +	guard(mutex)(&ice_mutex);
-> > +
-> >  	base = devm_platform_ioremap_resource(pdev, 0);
-> >  	if (IS_ERR(base)) {
-> >  		dev_warn(&pdev->dev, "ICE registers not found\n");
-> > +		ice_handle = base;
-> >  		return PTR_ERR(base);
-> >  	}
-> >  
-> > -	engine = qcom_ice_create(&pdev->dev, base);
-> > -	if (IS_ERR(engine))
-> > -		return PTR_ERR(engine);
-> > -
-> > -	platform_set_drvdata(pdev, engine);
-> 
-> This allows the driver to set the data per ICE device instance which allows
-> the addition of multiple ICE platform devices. For example this patch:
-> https://lore.kernel.org/all/20260217052526.2335759-1-neeraj.soni@oss.qualcomm.com/
-> utilizes this capability. I think it doesen't harm to keep this support. 
-> Moreover, the issue which your patch intends to address do not need this to be removed.
-> 
+RGVhciBMaW51eCBrZXJuZWwgZGV2ZWxvcG1lbnQgdGVhbSwNCkkgd291bGQgbGlrZSB0byBy
+ZXBvcnQgYSBudWxsIHBvaW50ZXIgZGVyZWZlcmVuY2UgdnVsbmVyYWJpbGl0eSBpbiB0aGUg
+RVNQIFNDU0kgZHJpdmVyIA0KKGRyaXZlcnMvc2NzaS9lc3Bfc2NzaS5jKSBpbiBMaW51eCBL
+ZXJuZWwgdjYuMTguIA0KVGhlIGJ1ZyBjYW4gYmUgdHJpZ2dlcmVkIGZyb20gdXNlcnNwYWNl
+IHZpYSBCU0cgaW9jdGxzLCBsZWFkaW5nIHRvIGEgZ2VuZXJhbCANCnByb3RlY3Rpb24gZmF1
+bHQgYW5kIGtlcm5lbCBjcmFzaC4gSSBkaXNjb3ZlcmVkIHRoaXMgYnVnIGR1cmluZyBmdXp6
+aW5nIHdpdGggU3l6a2FsbGVyLg0KDQpUaGUgY3Jhc2ggc3RhY2sgc2hvd3MgYmVsb3c6DQpg
+YGANCk9vcHM6IGdlbmVyYWwgcHJvdGVjdGlvbiBmYXVsdCwgcHJvYmFibHkgZm9yIG5vbi1j
+YW5vbmljYWwgYWRkcmVzcyAweGRmZmZmYzAwMDAwMDAwMDI6IDAwMDAgWyMxXSBTTVAgS0FT
+QU4gTk9QVEkNCktBU0FOOiBudWxsLXB0ci1kZXJlZiBpbiByYW5nZSBbMHgwMDAwMDAwMDAw
+MDAwMDEwLTB4MDAwMDAwMDAwMDAwMDAxN10NCkNQVTogMCBVSUQ6IDAgUElEOiA3OTM2IENv
+bW06IHN5ei43LjEzODMgTm90IHRhaW50ZWQgNi4xOC4wICMyIFBSRUVNUFQodm9sdW50YXJ5
+KSANCkhhcmR3YXJlIG5hbWU6IFFFTVUgU3RhbmRhcmQgUEMgKGk0NDBGWCArIFBJSVgsIDE5
+OTYpLCBCSU9TIEFyY2ggTGludXggMS4xNy4wLTItMiAwNC8wMS8yMDE0DQpSSVA6IDAwMTA6
+ZXNwX2N1cl9kbWFfYWRkciBkcml2ZXJzL3Njc2kvZXNwX3Njc2kuYzo0MTQgW2lubGluZV0N
+ClJJUDogMDAxMDplc3BfcHJvY2Vzc19ldmVudCBkcml2ZXJzL3Njc2kvZXNwX3Njc2kuYzox
+NzQxIFtpbmxpbmVdDQpSSVA6IDAwMTA6X19lc3BfaW50ZXJydXB0IGRyaXZlcnMvc2NzaS9l
+c3Bfc2NzaS5jOjIxNjggW2lubGluZV0NClJJUDogMDAxMDpzY3NpX2VzcF9pbnRyKzB4MTgx
+ZC8weDZlMjAgZHJpdmVycy9zY3NpL2VzcF9zY3NpLmM6MjE4NA0KQ29kZTogMDAgMDAgNDgg
+ODkgZjggNDggYzEgZTggMDMgODAgM2MgMjggMDAgMGYgODUgZDggNDMgMDAgMDAgNDggOGIg
+NDQgMjQgMjAgNDggOGIgOTggODggMDEgMDAgMDAgNDggOGQgN2IgMTAgNDggODkgZjggNDgg
+YzEgZTggMDMgPDgwPiAzYyAyOCAwMCAwZiA4NSBjMSA0MyAwMCAwMCA0OCA4ZCA3YiAxOCA0
+OCA4YiA3MyAxMCA0OCA4OSBmOCA0OA0KUlNQOiAwMDE4OmZmZmY4ODgwNmNlMDhkYjggRUZM
+QUdTOiAwMDAxMDAxMg0KUkFYOiAwMDAwMDAwMDAwMDAwMDAyIFJCWDogMDAwMDAwMDAwMDAw
+MDAwMCBSQ1g6IGZmZmZmZmZmODM0YzEzZmMNClJEWDogZmZmZjg4ODAwZjRiNGVjMCBSU0k6
+IGZmZmZmZmZmODM0YzE0MDkgUkRJOiAwMDAwMDAwMDAwMDAwMDEwDQpSQlA6IGRmZmZmYzAw
+MDAwMDAwMDAgUjA4OiBmZmZmZmZmZjgzNGMxM2ZjIFIwOTogMDAwMDAwMDAwMDAwMDAwMA0K
+UjEwOiAwMDAwMDAwMDAwMDAwMDAxIFIxMTogMDAwMDAwMDAwMDAwMDAwMCBSMTI6IGZmZmY4
+ODgwMGI5OWU3MDANClIxMzogZmZmZjg4ODAwYjk5ZTczNCBSMTQ6IDAwMDAwMDAwMDAwMDAw
+MDAgUjE1OiBmZmZmODg4MDBiZGYwZDc4DQpGUzogIDAwMDA3ZmQwODkzMGY2YzAoMDAwMCkg
+R1M6ZmZmZjg4ODBlNTZlYjAwMCgwMDAwKSBrbmxHUzowMDAwMDAwMDAwMDAwMDAwDQpDUzog
+IDAwMTAgRFM6IDAwMDAgRVM6IDAwMDAgQ1IwOiAwMDAwMDAwMDgwMDUwMDMzDQpDUjI6IDAw
+MDAwMDAwMDAwMDAwMDAgQ1IzOiAwMDAwMDAwMDIxMzM3MDAwIENSNDogMDAwMDAwMDAwMDAw
+MDZmMA0KQ2FsbCBUcmFjZToNCiA8SVJRPg0KIF9faGFuZGxlX2lycV9ldmVudF9wZXJjcHUr
+MHgyMWMvMHg3YjAga2VybmVsL2lycS9oYW5kbGUuYzoyMDMNCiBoYW5kbGVfaXJxX2V2ZW50
+X3BlcmNwdSBrZXJuZWwvaXJxL2hhbmRsZS5jOjI0MCBbaW5saW5lXQ0KIGhhbmRsZV9pcnFf
+ZXZlbnQrMHhhYi8weDFlMCBrZXJuZWwvaXJxL2hhbmRsZS5jOjI1Nw0KIGhhbmRsZV9sZXZl
+bF9pcnErMHgyNmMvMHg2NjAga2VybmVsL2lycS9jaGlwLmM6Njk0DQogZ2VuZXJpY19oYW5k
+bGVfaXJxX2Rlc2MgaW5jbHVkZS9saW51eC9pcnFkZXNjLmg6MTczIFtpbmxpbmVdDQogaGFu
+ZGxlX2lycSBhcmNoL3g4Ni9rZXJuZWwvaXJxLmM6MjU0IFtpbmxpbmVdDQogY2FsbF9pcnFf
+aGFuZGxlciBhcmNoL3g4Ni9rZXJuZWwvaXJxLmM6MzEwIFtpbmxpbmVdDQogX19jb21tb25f
+aW50ZXJydXB0KzB4YTgvMHgyMTAgYXJjaC94ODYva2VybmVsL2lycS5jOjMyNQ0KIGNvbW1v
+bl9pbnRlcnJ1cHQrMHg3YS8weDkwIGFyY2gveDg2L2tlcm5lbC9pcnEuYzozMTgNCiA8L0lS
+UT4NCiA8VEFTSz4NCiBhc21fY29tbW9uX2ludGVycnVwdCsweDI2LzB4NDAgYXJjaC94ODYv
+aW5jbHVkZS9hc20vaWR0ZW50cnkuaDo2ODgNClJJUDogMDAxMDpfX3ByZWVtcHRfY291bnRf
+ZGVjX2FuZF90ZXN0IGFyY2gveDg2L2luY2x1ZGUvYXNtL3ByZWVtcHQuaDo5NSBbaW5saW5l
+XQ0KUklQOiAwMDEwOl9fcmF3X3NwaW5fdW5sb2NrX2lycXJlc3RvcmUgaW5jbHVkZS9saW51
+eC9zcGlubG9ja19hcGlfc21wLmg6MTUyIFtpbmxpbmVdDQpSSVA6IDAwMTA6X3Jhd19zcGlu
+X3VubG9ja19pcnFyZXN0b3JlKzB4MmEvMHg1MCBrZXJuZWwvbG9ja2luZy9zcGlubG9jay5j
+OjE5NA0KQ29kZTogZjMgMGYgMWUgZmEgNTUgNDggODkgZjUgNTMgNDggOGIgNzQgMjQgMTAg
+NDggODkgZmIgNDggODMgYzcgMTggZTggZDYgOTggYmIgZmMgNDggODkgZGYgZTggNGUgZTIg
+YmIgZmMgZjcgYzUgMDAgMDIgMDAgMDAgNzUgMTAgPDY1PiBmZiAwZCAxZiAwNiBjYSAwMiA3
+NCAwZiA1YiA1ZCBjMyBjYyBjYyBjYyBjYyBlOCA0MSA1OCBlNSBmYyBmYg0KUlNQOiAwMDE4
+OmZmZmY4ODgwMTBiY2Y3ZTggRUZMQUdTOiAwMDAwMDI5Mg0KUkFYOiAwMDAwMDAwMDAwMDAw
+NDA3IFJCWDogZmZmZjg4ODAwYmRmMDAzMCBSQ1g6IGZmZmZmZmZmODRhOTRhMWYNClJEWDog
+ZmZmZjg4ODAwZjRiNGVjMCBSU0k6IDAwMDAwMDAwMDAwMDAwMDAgUkRJOiBmZmZmZmZmZjg0
+YTk0YTFmDQpSQlA6IDAwMDAwMDAwMDAwMDAyNDYgUjA4OiAwMDAwMDAwMDAwMDAwMDAwIFIw
+OTogMDAwMDAwMDAwMDAwMDAwMQ0KUjEwOiAwMDAwMDAwMDAwMDAwMDAxIFIxMTogMDAwMDAw
+MDAwMDAxMDAwMCBSMTI6IGZmZmY4ODgwMGJkZjAwMDANClIxMzogZmZmZjg4ODAwYmRmMDAw
+MCBSMTQ6IDAwMDAwMDAwMDAwMDAyNDYgUjE1OiBmZmZmODg4MDBiZGYwZGE4DQogc3Bpbl91
+bmxvY2tfaXJxcmVzdG9yZSBpbmNsdWRlL2xpbnV4L3NwaW5sb2NrLmg6NDA2IFtpbmxpbmVd
+DQogZXNwX3F1ZXVlY29tbWFuZCsweDJjMy8weDRhMCBkcml2ZXJzL3Njc2kvZXNwX3Njc2ku
+Yzo5NzgNCiBzY3NpX2Rpc3BhdGNoX2NtZCBkcml2ZXJzL3Njc2kvc2NzaV9saWIuYzoxNjI2
+IFtpbmxpbmVdDQogc2NzaV9xdWV1ZV9ycSsweDIwYjgvMHgzMDEwIGRyaXZlcnMvc2NzaS9z
+Y3NpX2xpYi5jOjE4NjgNCiBibGtfbXFfZGlzcGF0Y2hfcnFfbGlzdCsweDNlMy8weDFkOTAg
+YmxvY2svYmxrLW1xLmM6MjEyOQ0KIF9fYmxrX21xX3NjaGVkX2Rpc3BhdGNoX3JlcXVlc3Rz
+KzB4MjFiLzB4MTY5MCBibG9jay9ibGstbXEtc2NoZWQuYzoyOTkNCiBibGtfbXFfc2NoZWRf
+ZGlzcGF0Y2hfcmVxdWVzdHMrMHhkNS8weDFjMCBibG9jay9ibGstbXEtc2NoZWQuYzozMjkN
+CiBibGtfbXFfcnVuX2h3X3F1ZXVlKzB4MzNlLzB4NjcwIGJsb2NrL2Jsay1tcS5jOjIzNjcN
+CiBibGtfZXhlY3V0ZV9ycSsweDNhYi8weGFmMCBibG9jay9ibGstbXEuYzoxNTA0DQogc2Nz
+aV9ic2dfc2dfaW9fZm4rMHgzZGUvMHhhZTAgZHJpdmVycy9zY3NpL3Njc2lfYnNnLmM6NjEN
+CiBic2dfc2dfaW8rMHgxYjcvMHgyYjAgYmxvY2svYnNnLmM6NjcNCiBic2dfaW9jdGwrMHgz
+OTIvMHg1YTAgYmxvY2svYnNnLmM6MTUxDQogdmZzX2lvY3RsIGZzL2lvY3RsLmM6NTEgW2lu
+bGluZV0NCiBfX2RvX3N5c19pb2N0bCBmcy9pb2N0bC5jOjU5NyBbaW5saW5lXQ0KIF9fc2Vf
+c3lzX2lvY3RsIGZzL2lvY3RsLmM6NTgzIFtpbmxpbmVdDQogX194NjRfc3lzX2lvY3RsKzB4
+MThlLzB4MjEwIGZzL2lvY3RsLmM6NTgzDQogZG9fc3lzY2FsbF94NjQgYXJjaC94ODYvZW50
+cnkvc3lzY2FsbF82NC5jOjYzIFtpbmxpbmVdDQogZG9fc3lzY2FsbF82NCsweGJiLzB4Mzgw
+IGFyY2gveDg2L2VudHJ5L3N5c2NhbGxfNjQuYzo5NA0KIGVudHJ5X1NZU0NBTExfNjRfYWZ0
+ZXJfaHdmcmFtZSsweDc3LzB4N2YNClJJUDogMDAzMzoweDdmZDA4YThkYmYzZA0KQ29kZTog
+ZmYgYzMgNjYgMmUgMGYgMWYgODQgMDAgMDAgMDAgMDAgMDAgOTAgZjMgMGYgMWUgZmEgNDgg
+ODkgZjggNDggODkgZjcgNDggODkgZDYgNDggODkgY2EgNGQgODkgYzIgNGQgODkgYzggNGMg
+OGIgNGMgMjQgMDggMGYgMDUgPDQ4PiAzZCAwMSBmMCBmZiBmZiA3MyAwMSBjMyA0OCBjNyBj
+MSBlOCBmZiBmZiBmZiBmNyBkOCA2NCA4OSAwMSA0OA0KUlNQOiAwMDJiOjAwMDA3ZmQwODkz
+MGVmZjggRUZMQUdTOiAwMDAwMDI0NiBPUklHX1JBWDogMDAwMDAwMDAwMDAwMDAxMA0KUkFY
+OiBmZmZmZmZmZmZmZmZmZmRhIFJCWDogMDAwMDdmZDA4YWI2NWZhMCBSQ1g6IDAwMDA3ZmQw
+OGE4ZGJmM2QNClJEWDogMDAwMDIwMDAwMDAwMDEwMCBSU0k6IDAwMDAwMDAwMDAwMDIyODUg
+UkRJOiAwMDAwMDAwMDAwMDAwMDAzDQpSQlA6IDAwMDAwMDAwMDAwMDAwMDAgUjA4OiAwMDAw
+MDAwMDAwMDAwMDAwIFIwOTogMDAwMDAwMDAwMDAwMDAwMA0KUjEwOiAwMDAwMDAwMDAwMDAw
+MDAwIFIxMTogMDAwMDAwMDAwMDAwMDI0NiBSMTI6IDAwMDAwMDAwMDAwMDAwMDANClIxMzog
+MDAwMDdmZmQxZjVkYjJkMCBSMTQ6IDAwMDA3ZmQwODkzMGZjZTQgUjE1OiAwMDAwN2ZmZDFm
+NWRiM2M3DQogPC9UQVNLPg0KTW9kdWxlcyBsaW5rZWQgaW46DQotLS1bIGVuZCB0cmFjZSAw
+MDAwMDAwMDAwMDAwMDAwIF0tLS0NClJJUDogMDAxMDplc3BfY3VyX2RtYV9hZGRyIGRyaXZl
+cnMvc2NzaS9lc3Bfc2NzaS5jOjQxNCBbaW5saW5lXQ0KUklQOiAwMDEwOmVzcF9wcm9jZXNz
+X2V2ZW50IGRyaXZlcnMvc2NzaS9lc3Bfc2NzaS5jOjE3NDEgW2lubGluZV0NClJJUDogMDAx
+MDpfX2VzcF9pbnRlcnJ1cHQgZHJpdmVycy9zY3NpL2VzcF9zY3NpLmM6MjE2OCBbaW5saW5l
+XQ0KUklQOiAwMDEwOnNjc2lfZXNwX2ludHIrMHgxODFkLzB4NmUyMCBkcml2ZXJzL3Njc2kv
+ZXNwX3Njc2kuYzoyMTg0DQpDb2RlOiAwMCAwMCA0OCA4OSBmOCA0OCBjMSBlOCAwMyA4MCAz
+YyAyOCAwMCAwZiA4NSBkOCA0MyAwMCAwMCA0OCA4YiA0NCAyNCAyMCA0OCA4YiA5OCA4OCAw
+MSAwMCAwMCA0OCA4ZCA3YiAxMCA0OCA4OSBmOCA0OCBjMSBlOCAwMyA8ODA+IDNjIDI4IDAw
+IDBmIDg1IGMxIDQzIDAwIDAwIDQ4IDhkIDdiIDE4IDQ4IDhiIDczIDEwIDQ4IDg5IGY4IDQ4
+DQpSU1A6IDAwMTg6ZmZmZjg4ODA2Y2UwOGRiOCBFRkxBR1M6IDAwMDEwMDEyDQpSQVg6IDAw
+MDAwMDAwMDAwMDAwMDIgUkJYOiAwMDAwMDAwMDAwMDAwMDAwIFJDWDogZmZmZmZmZmY4MzRj
+MTNmYw0KUkRYOiBmZmZmODg4MDBmNGI0ZWMwIFJTSTogZmZmZmZmZmY4MzRjMTQwOSBSREk6
+IDAwMDAwMDAwMDAwMDAwMTANClJCUDogZGZmZmZjMDAwMDAwMDAwMCBSMDg6IGZmZmZmZmZm
+ODM0YzEzZmMgUjA5OiAwMDAwMDAwMDAwMDAwMDAwDQpSMTA6IDAwMDAwMDAwMDAwMDAwMDEg
+UjExOiAwMDAwMDAwMDAwMDAwMDAwIFIxMjogZmZmZjg4ODAwYjk5ZTcwMA0KUjEzOiBmZmZm
+ODg4MDBiOTllNzM0IFIxNDogMDAwMDAwMDAwMDAwMDAwMCBSMTU6IGZmZmY4ODgwMGJkZjBk
+NzgNCkZTOiAgMDAwMDdmZDA4OTMwZjZjMCgwMDAwKSBHUzpmZmZmODg4MGU1NmViMDAwKDAw
+MDApIGtubEdTOjAwMDAwMDAwMDAwMDAwMDANCkNTOiAgMDAxMCBEUzogMDAwMCBFUzogMDAw
+MCBDUjA6IDAwMDAwMDAwODAwNTAwMzMNCkNSMjogMDAwMDAwMDAwMDAwMDAwMCBDUjM6IDAw
+MDAwMDAwMjEzMzcwMDAgQ1I0OiAwMDAwMDAwMDAwMDAwNmYwDQotLS0tLS0tLS0tLS0tLS0t
+DQpDb2RlIGRpc2Fzc2VtYmx5IChiZXN0IGd1ZXNzKToNCiAgIDA6IDAwIDAwICAgICAgICAg
+ICAgICAgICBhZGQgICAgJWFsLCglcmF4KQ0KICAgMjogNDggODkgZjggICAgICAgICAgICAg
+IG1vdiAgICAlcmRpLCVyYXgNCiAgIDU6IDQ4IGMxIGU4IDAzICAgICAgICAgICBzaHIgICAg
+JDB4MywlcmF4DQogICA5OiA4MCAzYyAyOCAwMCAgICAgICAgICAgY21wYiAgICQweDAsKCVy
+YXgsJXJicCwxKQ0KICAgZDogMGYgODUgZDggNDMgMDAgMDAgICAgIGpuZSAgICAweDQzZWIN
+CiAgMTM6IDQ4IDhiIDQ0IDI0IDIwICAgICAgICBtb3YgICAgMHgyMCglcnNwKSwlcmF4DQog
+IDE4OiA0OCA4YiA5OCA4OCAwMSAwMCAwMCAgbW92ICAgIDB4MTg4KCVyYXgpLCVyYngNCiAg
+MWY6IDQ4IDhkIDdiIDEwICAgICAgICAgICBsZWEgICAgMHgxMCglcmJ4KSwlcmRpDQogIDIz
+OiA0OCA4OSBmOCAgICAgICAgICAgICAgbW92ICAgICVyZGksJXJheA0KICAyNjogNDggYzEg
+ZTggMDMgICAgICAgICAgIHNociAgICAkMHgzLCVyYXgNCiogMmE6IDgwIDNjIDI4IDAwICAg
+ICAgICAgICBjbXBiICAgJDB4MCwoJXJheCwlcmJwLDEpIDwtLSB0cmFwcGluZyBpbnN0cnVj
+dGlvbg0KICAyZTogMGYgODUgYzEgNDMgMDAgMDAgICAgIGpuZSAgICAweDQzZjUNCiAgMzQ6
+IDQ4IDhkIDdiIDE4ICAgICAgICAgICBsZWEgICAgMHgxOCglcmJ4KSwlcmRpDQogIDM4OiA0
+OCA4YiA3MyAxMCAgICAgICAgICAgbW92ICAgIDB4MTAoJXJieCksJXJzaQ0KICAzYzogNDgg
+ODkgZjggICAgICAgICAgICAgIG1vdiAgICAlcmRpLCVyYXgNCiAgM2Y6IDQ4ICAgICAgICAg
+ICAgICAgICAgICByZXguVw0KDQo8PDw8PDw8PDw8PDw8PDwgdGFpbCByZXBvcnQgPj4+Pj4+
+Pj4+Pj4+Pj4+DQoNCmBgYA0KDQpBY2NvcmRpbmcgdG8gdGhlIGxvZ3MgcHJvdmlkZWQgYnkg
+U3l6a2FsbGVyLCBvbmUgb2YgdGhlIHByb2dyYW1zDQpiZWluZyBleGVjdXRlZCBqdXN0IGJl
+Zm9yZSB0aGUgY3Jhc2ggb2NjdXJyZWQgaXMgYXMgZm9sbG93czoNCiANCmBgYA0KcjAgPSBv
+cGVuYXQkYnNnKDB4ZmZmZmZmZmZmZmZmZmY5YywNCiYoMHg3ZjAwMDAwMDAwYzApPScvZGV2
+L2JzZy8wOjA6MDowXHgwMCcsIDB4ODA4MDAsIDB4MCkNCnIxID0gb3BlbmF0JHB0bXgoMHhm
+ZmZmZmZmZmZmZmZmZjljLCAmKDB4N2YwMDAwMDAwMDAwKSwgMHhjMDAwMCwgMHgwKQ0KcjIg
+PSBvcGVuYXQkYmluZm10X2Zvcm1hdCgweGZmZmZmZmZmZmZmZmZmOWMsDQogICYoMHg3ZjAw
+MDAwMDAwNDApPScvcHJvYy9zeXMvZnMvYmluZm10X21pc2Mvc3l6MFx4MDAnLCAweDIsIDB4
+MCkNCndyaXRlJGJpbmZtdF9mb3JtYXQocjIsIDB4MCwgMHgzMDApDQppb2N0bCRUSU9DU1BU
+TENLKHIxLCAweDQwMDQ1NDMxLCAmKDB4N2YwMDAwMDAwMGMwKSkNCmlvY3RsJFRJT0NHTENL
+VFJNSU9TKDB4ZmZmZmZmZmZmZmZmZmZmZiwgMHg1NDU2LCAweDApDQpyMyA9IGlvY3RsJFRJ
+T0NHUFRQRUVSKHIxLCAweDU0NDEsIDB4MTAwMDAwMDA0KQ0KaW9jdGwkVElPQ1ZIQU5HVVAo
+cjMsIDB4NTQzNywgMHgwKQ0KaW9jdGwkVENTRVRTRihyMSwgMHg1NDA0LCAmKDB4N2YwMDAw
+MDAwMDQwKT17MHg4MDAwMDAwMCwgMHgxZmYsIDB4NywNCiAgMHgxMDAsIDB4NSwgIjFmZTUx
+ZmU4OTg0YWU0OTE0NWYyM2FhOTQwY2ZjN2UwNmQwNzhkIn0pDQpzeXpfb3Blbl9kZXYkc2co
+MHgwLCAweDAsIDB4MTIxYmMxKQ0KcjQgPSBvcGVuYXQkcHJvY2ZzKDB4ZmZmZmZmZmZmZmZm
+ZmY5YywNCiAgJigweDdmMDAwMDAwMDAwMCk9Jy9wcm9jL3Ztc3RhdFx4MDAnLCAweDAsIDB4
+MCkNCnByZWFkNjQocjQsICYoMHg3ZjAwMDAwMDAxNDApPSIiLzkzLCAweGZmZmZmZDNkLCAw
+eDUpDQpyNSA9IG9wZW5hdCRzbmRzZXEoMHhmZmZmZmZmZmZmZmZmZjljLCAmKDB4N2YwMDAw
+MDAwMDAwKSwgMHgxNjkxMDEpDQpyNiA9IG9wZW5hdCRic2coMHhmZmZmZmZmZmZmZmZmZjlj
+LA0KICAmKDB4N2YwMDAwMDAwMDAwKT0nL2Rldi9ic2cvMTowOjA6MFx4MDAnLCAweDYwMTAw
+LCAweDApDQppb2N0bCRCU0dfSU8ocjYsIDB4MjI4NSwgJigweDdmMDAwMDAwMDJjMCk9ezB4
+NTEsIDB4MCwgMHgwLCAweDEsDQogICYoMHg3ZjAwMDAwMDAwYzApPSI4MiIsIDB4MCwgMHgw
+LCAweGMsIDB4MTAxLCAweDYwLA0KICAmKDB4N2YwMDAwMDAwMWMwKSwgMHgwLCAweDAsIDB4
+MCwgMHgwLCAweDAsIDB4MCwgMHhmZmVmZmZmOSwgMHgyMCwNCiAgMHgwfSkNCmlvY3RsJFNO
+RFJWX1NFUV9JT0NUTF9DUkVBVEVfUVVFVUUocjUsIDB4YzA4YzUzMzIsDQogICYoMHg3ZjAw
+MDAwMDAwYzApPXsweGZmZmZmZjE4LCAweGYxNGMsIDB4MSwgJ3F1ZXVlMVx4MDAnfSkNCndy
+aXRlJHNuZHNlcShyNSwgJigweDdmMDAwMDAwMDM0MCksIDB4M2EpDQppb2N0bCRCU0dfSU8o
+cjAsIDB4MjI4NSwgJigweDdmMDAwMDAwMDEwMCk9ezB4NTEsIDB4MCwgMHgwLCAweDEsDQog
+ICYoMHg3ZjAwMDAwMDAwMDApPSdVJywgMHg2LCAweDAsIDB4MywgMHgyMDAwMDcsIDB4MCwg
+MHgwLCAweDAsIDB4MCwNCiAgMHgwLCAweDAsIDB4MCwgMHgwLCAweDAsIDB4MTAsIDB4MCwg
+MHgyfSkNCmBgYA0KDQpCZXN0IHJlZ2FyZHMsDQpZYW5nIFppIDwyOTU5MjQzMDE5QHFxLmNv
+bT4=
 
-Hmm, ok. I figured out that if we store the err ptr in drvdata, we can fix the
-race and also allow multiple ice instances in a SoC. So sent v4 incorporating
-this change.
-
-- Mani
-
--- 
-மணிவண்ணன் சதாசிவம்
