@@ -1,157 +1,168 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1AF572BCFB
-	for <linux-scsi@vger.kernel.org>; Mon,  2 Mar 2026 00:52:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F3362175A8D
+	for <linux-scsi@vger.kernel.org>; Mon,  2 Mar 2026 02:16:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772412736; cv=none; b=ENBlTeNtm5KsBVHal6YUikD/m3VtyuaKNj+Mm00xJaoqkOiA7KNG/a3cxnDx04hq+EVZtCvQt6ZFVjHF6N4OE7ajUteK9q6hcdfWqNVE1F7N1U7crn/EKpBUatDUibaZZQNJ4dRAibD3GjUpYQFYtfI9KtVNfXGuKCNEBtDytXA=
+	t=1772417814; cv=none; b=hIbKolXFAWeYZNs9MvV1v0N+uZENUQWGQW+jee8DzjNd2bi021/808Csluoi+rXSvtX7rydYTFONTT3lOMv0Xc26pXcnhNMwJPTcKBN6SyhZ3wDurZJbmsbHE7QeVBmc45UoA+q8LhaYpogeNcxoRF2Ydjp9/EdgNDuCpKV/V6g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772412736; c=relaxed/simple;
-	bh=rPZKyCmWEkOOignIKtTtpVzMsgteP4OwOw0W+4UKWPE=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Qfh+Z5y87i5sNHgU1Nqj8xEDh/Gi7VeHg86Aj8kR8uxuRwPPwyve+JizzAVz2pGZY0/SSt4xRfbGl2x4QncXfuVW+uKmq/Ws98yOyJY5IfFBAo/ktrhsis3O02rA9tshE1B3GuAO06ddARC3ruz9gMc68w6wzr81Sd+S0TMMrPI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=KTnalncA; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=LMqNwB8D; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	s=arc-20240116; t=1772417814; c=relaxed/simple;
+	bh=cVUQ+s9aBdJOPWf0dOVbIo2IZw9Ax0z/YXdjyJs0I8s=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=nvwVtoLeO3n251O9kKrJW/FY0JMeVaAkyigMffnXKTSFU0M6VjZW5+j3PLHIibMilf2Onn1OzzRuQUEjnYYcW7E6CLkbXGJcYJws6P0alW7gTwvHwc5U4RqvsPMcGS6XLrEBBI80vlpPBTu+k2N4Edujdszy6FvgVNWFbs75AxA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=HK9qi+JE; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="KTnalncA";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="LMqNwB8D"
-Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 621JHksb2358125
-	for <linux-scsi@vger.kernel.org>; Mon, 2 Mar 2026 00:52:14 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	2DRIiigrcgQRf+E/zj5M8crqP7PpZrcnZl+qbkcV6lQ=; b=KTnalncAIDBNehXN
-	uypKMoflbP4NMBYbfGOKlh+7puLoe+78R9+zeL6//2usA+DD3rrUWFGHx1BWXu8T
-	5jMc0KVBmaDwuVfn9uV816Ifbfdqvnaob2MDdqNTW4xzB1spTQPahpDgFwJqs7AH
-	XBtHzR5sh/b1GLOkdp+yg3L4r0+VBEXBH3dEvwoawMpq4pR4gxUpcs1BRo4VkKV/
-	ERhZizlbnP6RhCdo+FYxx9XARA2UWxuS7DFgZyE1cVGPN7xmpHH7akvV28NJ3rLC
-	F/bcOoH1T5osuCloOUQe2kYsdLokSB5jc0rRIT5FAu9QCydDwynjPM3gHOnQ89lH
-	d54/2Q==
-Received: from mail-pg1-f200.google.com (mail-pg1-f200.google.com [209.85.215.200])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4cmgbas6y9-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Mon, 02 Mar 2026 00:52:14 +0000 (GMT)
-Received: by mail-pg1-f200.google.com with SMTP id 41be03b00d2f7-c6e18b8fe1eso2864965a12.1
-        for <linux-scsi@vger.kernel.org>; Sun, 01 Mar 2026 16:52:13 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1772412733; x=1773017533; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=2DRIiigrcgQRf+E/zj5M8crqP7PpZrcnZl+qbkcV6lQ=;
-        b=LMqNwB8DGu4oNQ50ERUhZKDgzQ7d73rOGXI/gwBWeZeRHVzItPDBTDVtksXFP3ddD4
-         eEbDtPKvXag3Z2IFYWjULfZuNMSQO4CL9/EhMPj2tslJSfEcd9L3d2RcDUz1oesy2fOc
-         UTurVGvWoow19kpKhRmMXcNrqbAN6HAcOVGaXyCtV4YxN9UJBOxancZd632UqLsTNVkB
-         LAP+0jgixuEJEAq7hwyCJlHYHAdFMAPHzLfC07aICpaiWekfcPlIYRJPTsuhvCIymV/p
-         Xd76+Xq9qPSxkZvmmuol9H25sLw2V1nqOUs5Bn2akPiXSQCdGmIUbDgn2jXCJT4qlyKO
-         bmMw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1772412733; x=1773017533;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=2DRIiigrcgQRf+E/zj5M8crqP7PpZrcnZl+qbkcV6lQ=;
-        b=MmfV+QQeKlGciwL25Ap60Q4I05CrWAbRsclUkzy548PB/p0HrFuNqD6+D/4Yu51g3S
-         Wc00REy7S/4+e1T5x1wWbplBcQN5X7YeYSYAWyJM3nvZ2Mo+MOR7xaTcjYENEcBGnO92
-         79QVeeWQ5Niy83vcSsXcsbg0aPeF/GfOU6a0dIgv6/csJmjf2H1BYvXWXMme1CI2smMw
-         ayb/bexb+Ko/+TyaLc5k8JKyYlwLZp6i40MUW8TU7kvJpdBPcYI3XFDqnNuHJk3lGd71
-         l8PDnXJqA5T4zhiOt7o981l+d/IOPeEBJF+rs1RjhJClSSBaf5L7IVEzx8ZRDbGGMsR/
-         asFQ==
-X-Gm-Message-State: AOJu0Yx0gdSnXknlQIKsI+efSlA8heUtvN/dc6CPoaczLVGfkMzkGFm4
-	HxAwjFdGp2VUNXhYuGDpBjdv+CLZSVB0xi4DJ8HNFYvVUZT7bBRN62WdEiM6Rvjnfw85H+ymtEn
-	ffY6K4c/LsK4mOrWnyePTOTOuPzSZ34uw5PTFaGACbK8IAz5dQ7oZN7OH0XAouDkK
-X-Gm-Gg: ATEYQzzYk4gKiZPPrRE2kSp18rZHu/wFyi8jW3oR9l6Qyjb43JmD3Ig+TgD+bT/Rshz
-	ZXYC5BmIbd8iAF0dFqph43ImrD4NrVPB2AmnYKatleeefdR5bPatExH6mx1GxmarftuShYy+bFv
-	f7baGXYIm+brR+b5S0dZLqtbMkLagF9fttiDr0Q026Opy+T1cwYQX7FmzUPec6s3o2glt6Rekq7
-	RfFu8A6P9NB58tobgLMajrUWpSjGsFjIA+3fmUw59K5TQl/pvta5OXnQZ+QqUb+veau9/OWx55Y
-	XFOWSqaWke8QMybKqIyKQ8F3XuVuNUii89YnKyUvbdTAvL42NTq1+22RLKZtiCFN9D4A2lhFM8w
-	V/Y9q6QQDSMpTpcI40QtMKnz7gp2uaGpRUqfAAmew2OnM1Aw=
-X-Received: by 2002:a17:902:d489:b0:2a7:c188:bd1b with SMTP id d9443c01a7336-2ae2bbddf43mr90575655ad.25.1772412733079;
-        Sun, 01 Mar 2026 16:52:13 -0800 (PST)
-X-Received: by 2002:a17:902:d489:b0:2a7:c188:bd1b with SMTP id d9443c01a7336-2ae2bbddf43mr90575515ad.25.1772412732585;
-        Sun, 01 Mar 2026 16:52:12 -0800 (PST)
-Received: from [192.168.0.102] ([183.193.18.168])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2adfb6a041asm124649995ad.57.2026.03.01.16.52.09
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sun, 01 Mar 2026 16:52:12 -0800 (PST)
-Message-ID: <8c1dd977-966f-4463-9bc5-adda7ebdaf84@oss.qualcomm.com>
-Date: Mon, 2 Mar 2026 08:52:08 +0800
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="HK9qi+JE"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1772417812;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=TKRBAHBhGf33PeUUogtnMtfD26THedM4RUsbkwW8suQ=;
+	b=HK9qi+JEk5gAjoe9dBZqjlz2STJMTT2Hgq63EB3Jgzu2UHghm1XWreKzqK8p2sQ0ZhO1f+
+	xP1pepXCwn4cOTRGmTJ6lfNTKQVTkkkJNfCyL54uo2S4ZGlxw6JuSvC/vVjM6BcKG868wO
+	fSAqjA50V9dxIoN3ODhBY0oJ2PHaL7Q=
+Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-63-LCW3ziGGOgyxShhomJFY4Q-1; Sun,
+ 01 Mar 2026 21:16:43 -0500
+X-MC-Unique: LCW3ziGGOgyxShhomJFY4Q-1
+X-Mimecast-MFC-AGG-ID: LCW3ziGGOgyxShhomJFY4Q_1772417801
+Received: from mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.4])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 1B87E1800451;
+	Mon,  2 Mar 2026 02:16:40 +0000 (UTC)
+Received: from bmarzins-01.fast.eng.rdu2.dc.redhat.com (unknown [10.6.23.247])
+	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 1C33030001BF;
+	Mon,  2 Mar 2026 02:16:38 +0000 (UTC)
+Received: from bmarzins-01.fast.eng.rdu2.dc.redhat.com (localhost [127.0.0.1])
+	by bmarzins-01.fast.eng.rdu2.dc.redhat.com (8.18.1/8.17.1) with ESMTPS id 6222Gavh1829082
+	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
+	Sun, 1 Mar 2026 21:16:37 -0500
+Received: (from bmarzins@localhost)
+	by bmarzins-01.fast.eng.rdu2.dc.redhat.com (8.18.1/8.18.1/Submit) id 6222Gaxo1829081;
+	Sun, 1 Mar 2026 21:16:36 -0500
+Date: Sun, 1 Mar 2026 21:16:36 -0500
+From: Benjamin Marzinski <bmarzins@redhat.com>
+To: John Garry <john.g.garry@oracle.com>
+Cc: hch@lst.de, kbusch@kernel.org, sagi@grimberg.me, axboe@fb.com,
+        martin.petersen@oracle.com, james.bottomley@hansenpartnership.com,
+        hare@suse.com, jmeneghi@redhat.com, linux-nvme@lists.infradead.org,
+        linux-scsi@vger.kernel.org, michael.christie@oracle.com,
+        snitzer@kernel.org, dm-devel@lists.linux.dev,
+        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 02/24] scsi-multipath: introduce basic SCSI device support
+Message-ID: <aaTzBNPE7lDEyxd1@redhat.com>
+References: <20260225153627.1032500-1-john.g.garry@oracle.com>
+ <20260225153627.1032500-3-john.g.garry@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 02/11] scsi: ufs: core: Pass force_pmc to
- ufshcd_config_pwr_mode() as a parameter
-To: Bart Van Assche <bvanassche@acm.org>, avri.altman@wdc.com,
-        beanhuo@micron.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, Alim Akhtar <alim.akhtar@samsung.com>,
-        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-        Peter Wang <peter.wang@mediatek.com>,
-        Adrian Hunter
- <adrian.hunter@intel.com>,
-        "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
-        Archana Patni <archana.patni@intel.com>,
-        open list <linux-kernel@vger.kernel.org>
-References: <20260227160809.2620598-1-can.guo@oss.qualcomm.com>
- <20260227160809.2620598-3-can.guo@oss.qualcomm.com>
- <7a90c4ec-7638-4840-bebd-f38cead6435e@acm.org>
-Content-Language: en-US
-From: Can Guo <can.guo@oss.qualcomm.com>
-In-Reply-To: <7a90c4ec-7638-4840-bebd-f38cead6435e@acm.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzAyMDAwNCBTYWx0ZWRfX6/OCFA0kqMvt
- v6iAkIv/PHJ55npjsDA/uaXngzdBhxj8WXWNKjW6UeoEe1GCOXxXXIqzkx9j8ufh88XWO8eyEoa
- lQ6R5Uc8yXFYHfrx3g4gPio9fSXvV2B25N2vogmfsLIONYtSb0om4zi3k1rxArKdqw6JFziW4Nc
- d9nT6/167loP8oeTqByJMRL8rvMIDtphto0708sJRLV2/CWmc2eetcszNMdiFOt+/+WVTSlMTpF
- KiAqE44nult19FVTJU9ix3KLW2aVT9W5p/6w06wi4hf6TmCWbe8kicvxUONiwEgsDFj92IIXjsg
- Nhl53JwMfk/6dNsCPFTGSvUfy3bFiRcfYTF61mAWd+LreMYxBnwHzU2vDUEVYS1FnsaXxsSbtmw
- 7JzdX9T/+LXFI4zJ35qOir3t3665jd3AtYdSpPizgKtpVZx3vWa9qXnI9MoU0aOple0e5ABKfz9
- /NTP8RxFsGVwURucaqg==
-X-Authority-Analysis: v=2.4 cv=QfVrf8bv c=1 sm=1 tr=0 ts=69a4df3e cx=c_pps
- a=oF/VQ+ItUULfLr/lQ2/icg==:117 a=4/OApUm1v7sVY8kc7hZvWg==:17
- a=IkcTkHD0fZMA:10 a=Yq5XynenixoA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=yx91gb_oNiZeI1HMLzn7:22
- a=i7b9DVKwuiEtFV1sOI0A:9 a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
- a=3WC7DwWrALyhR5TkjVHa:22
-X-Proofpoint-ORIG-GUID: dmG0ya20YzinI4U9rgMhxsARirmGr-MH
-X-Proofpoint-GUID: dmG0ya20YzinI4U9rgMhxsARirmGr-MH
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-03-01_05,2026-02-27_03,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- malwarescore=0 priorityscore=1501 spamscore=0 bulkscore=0 clxscore=1015
- adultscore=0 lowpriorityscore=0 phishscore=0 impostorscore=0 suspectscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2602130000 definitions=main-2603020004
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260225153627.1032500-3-john.g.garry@oracle.com>
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.4
 
-Hi Bart,
+On Wed, Feb 25, 2026 at 03:36:05PM +0000, John Garry wrote:
+> For a scsi_device to support multipath, introduce structure
+> scsi_mpath_device to hold multipath-specific details.
+> 
+> Like NS structure for NVME, scsi_mpath_device holds the mpath_device
+> structure to device management and path selection.
+> 
+> Two module params are introduced to enable multipath:
+> - scsi_multipath
+> - scsi_multipath_always
+> 
+> SCSI multipath will only be available until the following conditions:
+> - scsi_multipath enabled and ALUA supported and unique ID available in
+>   VPD page 83.
+> - scsi_multipath_always enabled and unique ID available in VPD page 83
+> 
+> The scsi_device structure contains a pointer to scsi_mpath_device, which
+> means whether multipath is enabled or disabled for the scsi_device.
+> 
+> Signed-off-by: John Garry <john.g.garry@oracle.com>
+>
+> diff --git a/include/scsi/scsi_multipath.h b/include/scsi/scsi_multipath.h
+> new file mode 100644
+> index 0000000000000..ca00ea10cd5db
+> --- /dev/null
+> +++ b/include/scsi/scsi_multipath.h
+> @@ -0,0 +1,55 @@
+> +/* SPDX-License-Identifier: GPL-2.0 */
+> +#ifndef _SCSI_SCSI_MULTIPATH_H
+> +#define _SCSI_SCSI_MULTIPATH_H
+> +
+> +#include <linux/list.h>
+> +#include <linux/types.h>
+> +#include <linux/rcupdate.h>
+> +#include <linux/workqueue.h>
+> +#include <linux/mutex.h>
+> +#include <linux/blk-mq.h>
+> +#include <linux/multipath.h>
+> +#include <scsi/scsi.h>
+> +#include <scsi/scsi_cmnd.h>
+> +#include <scsi/scsi_dbg.h>
+> +#include <scsi/scsi_device.h>
+> +#include <scsi/scsi_devinfo.h>
+> +#include <scsi/scsi_driver.h>
+> +
+> +#ifdef CONFIG_SCSI_MULTIPATH
+> +#define SCSI_MPATH_DEVICE_ID_LEN 40
 
-On 2/28/2026 4:46 AM, Bart Van Assche wrote:
-> On 2/27/26 8:07 AM, Can Guo wrote:
->> -    ret = ufshcd_config_pwr_mode(hba, &new_pwr_info);
->> +    ret = ufshcd_config_pwr_mode(hba, &new_pwr_info, 
->> /*force_pmc=*/false);
-> Comments like "/*force_pmc=*/" are uncommon in the Linux kernel. Please
-> consider introducing an enumeration type for the new argument, e.g.
-> enum ufshcd_power_mode_change_policy { DONT_FORCE_PMC, FORCE_PMC }.
-> While comments like "/*force_pmc=*/" are not verified at compile time
-> (the Clang option -Wdocumentation is disabled as far as I know), the
-> type of enumeration labels is checked at compile time.
-Thanks for the suggestions, I will make such change in next version.
+Is there a reason that this is set to 40? scsi_vpd_lun_id() can return
+ids larger than 40 (struct alua_port_group uses 256 bytes to hold the
+response), and I don't know of any guarantee that the id will be unique
+within the first 40 characters, although it certainly seems like only
+pathological devices wouldn't.
 
-Best Regards,
-Can Guo.
->
-> Thanks,
->
-> Bart.
->
+-Ben
+
+> +
+> +struct scsi_mpath_device {
+> +	struct mpath_device	mpath_device;
+> +	struct scsi_device 	*sdev;
+> +
+> +	char			device_id_str[SCSI_MPATH_DEVICE_ID_LEN];
+> +};
+> +#define to_scsi_mpath_device(d) \
+> +	container_of(d, struct scsi_mpath_device, mpath_device)
+> +
+> +int scsi_mpath_dev_alloc(struct scsi_device *sdev);
+> +void scsi_mpath_dev_release(struct scsi_device *sdev);
+> +int scsi_multipath_init(void);
+> +void scsi_multipath_exit(void);
+> +#else /* CONFIG_SCSI_MULTIPATH */
+> +
+> +struct scsi_mpath_device {
+> +};
+> +
+> +static inline int scsi_mpath_dev_alloc(struct scsi_device *sdev)
+> +{
+> +	return 0;
+> +}
+> +static inline void scsi_mpath_dev_release(struct scsi_device *sdev)
+> +{
+> +}
+> +static inline int scsi_multipath_init(void)
+> +{
+> +	return 0;
+> +}
+> +static inline void scsi_multipath_exit(void)
+> +{
+> +}
+> +#endif /* CONFIG_SCSI_MULTIPATH */
+> +#endif /* _SCSI_SCSI_MULTIPATH_H */
+> -- 
+> 2.43.5
 
