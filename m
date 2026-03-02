@@ -1,140 +1,229 @@
-Received: from mail-pf1-f173.google.com (mail-pf1-f173.google.com [209.85.210.173])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F108936C9DB
-	for <linux-scsi@vger.kernel.org>; Mon,  2 Mar 2026 12:27:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5036536C9F5;
+	Mon,  2 Mar 2026 12:31:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772454443; cv=none; b=czdkGLrTewy7EetnZ2CJ00yrpAAQIyLUkaA3iBUWAWhUF4u6Lqc3HeNQs+CRUXWqFx/kGWSSte3gtTwrbQix1dyV4jg4Dr9hdCGSXJQO55xkZRFEL6P1a8+gfpZS6PqIOkHud6AQCXQAZknUbgw1p7TyEEe/2g3Z/1m25hD+e+o=
+	t=1772454699; cv=none; b=TyICcZzkzQ5N+PUUdSM948MpaN1VfDAsB07zIEszLCWc4wd+9oZD851beVEWfaM9qqm93ZQSE//5/msARGJ7yvwxwNdIE2ncRjV8AttA1raVpiy5Cl5YScRgUwOZ6uAmc6spyBfF2O1ylvYRZ6Bkt2QGpWkBIRUJJCiriAgLE3A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772454443; c=relaxed/simple;
-	bh=cGQv2ztvi5jIkl576TfXg/XFJLJeV0yo94W/lsVxk9c=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=OpdS7VeYV4wGwrZpEXOM4q10Xx+unT2cd+IK50CIJePRQc6zn2p5Tvu/OobbPQjJ0/+sK2KH2CYsJMAnnNaqlKzfn+2gRQViodMFD/XJg7czJTdNFdZtjb/5Ds9+EIuncKzf0itJ7SFdchfBLSHdXXqr4FShHGXgze2z1+aBQCg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=EhpRGMSP; arc=none smtp.client-ip=209.85.210.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1772454699; c=relaxed/simple;
+	bh=dI5Mxdbi75BXnUs2IIQvU225KkUzJCQUIQ+EQFOLRhA=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=X1lGlBAsXJ/CuLMyoeACVjMqwRDTDXDYlBLXh0k7gqc/IPJCsrvAKdJ+93eKDzL4rpGysbYh+90Ew+kC239O6Z0iIiS4ay53DRSTLI/WVugwlWd3WheYvBKaMIcPSunmqJdE1jFB8oCgSYpbgnfzA8Q/NhUbEmS0oXC65AnkdjA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=C0MzRvs+; arc=none smtp.client-ip=148.163.156.1
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="EhpRGMSP"
-Received: by mail-pf1-f173.google.com with SMTP id d2e1a72fcca58-82746ed8cb1so2126353b3a.3
-        for <linux-scsi@vger.kernel.org>; Mon, 02 Mar 2026 04:27:21 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1772454441; x=1773059241; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=ASWnQPLO3rtKQNOUBxn8c+Zg8CdQWeT2KYTxFtlRXPM=;
-        b=EhpRGMSPRU4P5qYcUjoO0gC/DMy0/4U9dOehxufCGLSi95Lwb2Vs1r5J2OP/9qSEq8
-         zj9+hpgk9yK7h5VSbqr2q80jqIt3NF93xjk3+2M/t26Ymr9BmgCm+9nAAIoZgZ4NP/l7
-         QMyFM4Kc4VIbmyuzL6ia9eeFJG21LFDqoyQV2PMzL2WCOwoIxFVsgWikYx4TnUZv2s6Y
-         D9XzQsdKA6rvQT9n/8IR1KH8kLptlFuXD2Y+Yj+z1GId+0ZQ3uu//65BW5wDGzDllz+l
-         EAqBfbE3nJK0/2Rvenx6UWs8ZDf7H0A3x4u3+Hx4WnlMUT5hX7grQGUj/JKc5MnciUY/
-         B+ow==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1772454441; x=1773059241;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=ASWnQPLO3rtKQNOUBxn8c+Zg8CdQWeT2KYTxFtlRXPM=;
-        b=DJ2ceDkurC4oIIWlCx73x6BA5UbiR3hGZ/keock1b8HY0YJbEmzpveVXT6Z8yro72+
-         fGaOSW+9J6gkJVSVFbipC9VQlV5lS1ut6VqIieewZvrmBb/zsE9rYQAN7LRiWwhGDtHv
-         bhMc94SMkusfPQXoM4iE7M50/YkPhWTj4h3IZHY9bycO+OFCYczehjkDZEZiaBbJtwBJ
-         kQQ/ZEgk+ngJNd+JeoxCUqi6XwIFJmzGeXO40QJ3H4N9RIrZ5+06Ov12k2NmuECh6HNH
-         IjKzBXSE6ZTMscXo3PeinN38+3lwq+1fuXoLrR3NgVcPYK0uCQ80tgi/kAYf+RmILMck
-         DaIA==
-X-Forwarded-Encrypted: i=1; AJvYcCXNuy4CupDlyGkn2UjbL+mzbGQPUUsWuEwmgKMd2iOl70Tqq183QIaNYGogd/NEiYjg80PE2MN/6uiI@vger.kernel.org
-X-Gm-Message-State: AOJu0YwsoqEN5mY/2YCoVQbMPhPdiTDio3TcuglDt5zxgHpcKzCwrrZe
-	1qVRzWAPN2Io//NLGXX8ezYNvKmtnvid47gio/Obz+Lvv6CAxBpdSk1Y
-X-Gm-Gg: ATEYQzxpR35Pdb6xx9eCkqQs4YjuXczVpVF6nPiIhAPZoRvu9MKMPxUuGs7xBuWtkHO
-	dYacicJk4nYX5Ye5RVvsXVerbaGTG/foCacKBOa5+dakZb4wypvjweKlXF2kHdDWa+ZorYXW202
-	Mw6mnYgVau4JcZRcMOMrx+ahrfbfIa+hvFM740YQV2a5X5+k9hDLE1KLnrXOv240FS7Og1xQCeC
-	oZOtsQ0zxB0a5Bj5c1psmm3Kw189QODo8WBI+P2T6HlzX5NMMm7RtSHoLqXnhjCTjGin9a0+38H
-	H5QP5xegSqyXb0ODGottWacZ1HmaVk1LxIFHQkN8T7xICjt9bQnmNgbsLGcuZLg5P7guJbSeI6o
-	zsPoKoBMkejMUHRcKPxo0lzW/Et9XfdHhY4C/qOyVy3RCowAxwvDyammVHYFvyyhAKowEWqihpQ
-	VaGhu8OA0pLvD24QFe+8+g5e5LKRWtuEu9ZrKuzLR1m5VRQ0SI
-X-Received: by 2002:a05:6a20:729c:b0:38d:e87c:48ca with SMTP id adf61e73a8af0-395c39e0f08mr12933027637.1.1772454441192;
-        Mon, 02 Mar 2026 04:27:21 -0800 (PST)
-Received: from 5163NRD-SPRABHU.ssi.samsung.com ([103.50.21.102])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-35977bf69bcsm4002488a91.7.2026.03.02.04.27.17
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 02 Mar 2026 04:27:20 -0800 (PST)
-Date: Mon, 2 Mar 2026 04:27:15 -0800
-From: Swarna Prabhu <sw.prabhu6@gmail.com>
-To: John Garry <john.g.garry@oracle.com>
-Cc: James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com,
-	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	mcgrof@kernel.org, pankaj.raghav@linux.dev, bvanassche@acm.org,
-	dlemoal@kernel.org, Swarna Prabhu <s.prabhu@samsung.com>
-Subject: Re: [PATCH 2/2] scsi: scsi_debug: enable sdebug_sector_size >
- PAGE_SIZE
-Message-ID: <aaWCI69aQAWEgjv7@5163NRD-SPRABHU.ssi.samsung.com>
-References: <20260219043741.276729-1-sw.prabhu6@gmail.com>
- <20260219043741.276729-3-sw.prabhu6@gmail.com>
- <bd5605d1-3f2e-49ca-9807-e4819a8ddfee@oracle.com>
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="C0MzRvs+"
+Received: from pps.filterd (m0353729.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 621NS2nK2182589;
+	Mon, 2 Mar 2026 12:31:13 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=pp1; bh=dSLORL
+	I/87grEANj2rM6SoKUGaa7FR3DqQSrzG22o4U=; b=C0MzRvs+Ma5tG+oDVrLlTb
+	nhV7jsyM8Pt22n0J72AU+5XrQIF9hUMNoIv0CPgFFmF2ylgGd/7OyBClf5SpBSTa
+	x9uhrSn5BgpP3WHQaxKO0lBoYTcrAH08VFPnV0Gi8nj1SR8vhcNy42lejTan/ebr
+	eJxTAHBN/GKXTRtA6yRSQ0FhfIZYkumXxbmYf1eLo5xyjFH/bw6xTCRAnQBLhud5
+	S6FX74Q0llgqyLLWUthWc/FBdTFpftqpKGuPpzlTfkmIJdgi9pjGcWrvm0+PyzoG
+	o0MFLkjvgT+S63ZUMOqLw3dcQ8OkraKm2xxXW2eFb2RfNrD9/aUhovH+4OwCx3SA
+	==
+Received: from ppma21.wdc07v.mail.ibm.com (5b.69.3da9.ip4.static.sl-reverse.com [169.61.105.91])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4ckskcph2s-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 02 Mar 2026 12:31:13 +0000 (GMT)
+Received: from pps.filterd (ppma21.wdc07v.mail.ibm.com [127.0.0.1])
+	by ppma21.wdc07v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 6229YM9X016756;
+	Mon, 2 Mar 2026 12:31:12 GMT
+Received: from smtprelay03.wdc07v.mail.ibm.com ([172.16.1.70])
+	by ppma21.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4cmbpmx0f3-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 02 Mar 2026 12:31:12 +0000
+Received: from smtpav02.dal12v.mail.ibm.com (smtpav02.dal12v.mail.ibm.com [10.241.53.101])
+	by smtprelay03.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 622CUoio27656756
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Mon, 2 Mar 2026 12:30:50 GMT
+Received: from smtpav02.dal12v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id A7D8F58051;
+	Mon,  2 Mar 2026 12:31:11 +0000 (GMT)
+Received: from smtpav02.dal12v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 7B7A058060;
+	Mon,  2 Mar 2026 12:31:06 +0000 (GMT)
+Received: from [9.79.192.112] (unknown [9.79.192.112])
+	by smtpav02.dal12v.mail.ibm.com (Postfix) with ESMTP;
+	Mon,  2 Mar 2026 12:31:06 +0000 (GMT)
+Message-ID: <98aa0bac-bf62-4e7e-b7c6-d2547ab34ef7@linux.ibm.com>
+Date: Mon, 2 Mar 2026 18:01:05 +0530
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <bd5605d1-3f2e-49ca-9807-e4819a8ddfee@oracle.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 02/13] libmultipath: Add basic gendisk support
+To: John Garry <john.g.garry@oracle.com>, hch@lst.de, kbusch@kernel.org,
+        sagi@grimberg.me, axboe@fb.com, martin.petersen@oracle.com,
+        james.bottomley@hansenpartnership.com, hare@suse.com
+Cc: jmeneghi@redhat.com, linux-nvme@lists.infradead.org,
+        linux-scsi@vger.kernel.org, michael.christie@oracle.com,
+        snitzer@kernel.org, bmarzins@redhat.com, dm-devel@lists.linux.dev,
+        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20260225153225.1031169-1-john.g.garry@oracle.com>
+ <20260225153225.1031169-3-john.g.garry@oracle.com>
+Content-Language: en-US
+From: Nilay Shroff <nilay@linux.ibm.com>
+In-Reply-To: <20260225153225.1031169-3-john.g.garry@oracle.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-GUID: 2Y_9jEIfo6BzAy5XXTuJ_wL1KCY4A--T
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzAyMDEwMSBTYWx0ZWRfX/523h69KuRwA
+ GAX0BWVPkVFrq6JN9sCsOWeXwDYSsQux5R2LzyKPR3vFtra3jxWwfS1z9kK/d2kDMRuaW88sSzA
+ BIr+tGZulUQiZVk2jF8iFHxeNRFwmf9fbljeimZzUNYxZc5ajUlwDUxXVvHlRMpoBLnCMv2uF5b
+ B8oZmfXoSz/mPpt9LAEk6jLQoknnQDQ4FCsubtM1KGOFnNLe+K/ISAI4mAoCjxUbZFDb8beOQS8
+ DGj1hi4hTrfR3ExdUDmnS6v6Z1bur6cPHYHjuigqBOWMx9KekFUubevQaiVPK+Q95Z9jU2d6rXC
+ 2JbrlffhjFTjaFQvJdqIa2OhDDGk8tDeBpIwqRMPL4dJ/4k5fkVHvlUr6LxpDErH7yRE/b1MQlx
+ 2Ped+uxdFNcw9Z4pYFlzQwZjpTSviYVyl3DXy6eJWqhnYRXGs81DmLavBWykql5B8YtPEyXsUwf
+ 0RTfe0d9Up/wyHiVQRQ==
+X-Authority-Analysis: v=2.4 cv=H7DWAuYi c=1 sm=1 tr=0 ts=69a58311 cx=c_pps
+ a=GFwsV6G8L6GxiO2Y/PsHdQ==:117 a=GFwsV6G8L6GxiO2Y/PsHdQ==:17
+ a=IkcTkHD0fZMA:10 a=Yq5XynenixoA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=RnoormkPH1_aCDwRdu11:22 a=uAbxVGIbfxUO_5tXvNgY:22 a=yPCof4ZbAAAA:8
+ a=rDq5FJpoOqKp8R3o3wAA:9 a=QEXdDO2ut3YA:10
+X-Proofpoint-ORIG-GUID: 2Y_9jEIfo6BzAy5XXTuJ_wL1KCY4A--T
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-03-02_03,2026-02-27_03,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ impostorscore=0 suspectscore=0 phishscore=0 clxscore=1015 priorityscore=1501
+ adultscore=0 bulkscore=0 spamscore=0 malwarescore=0 lowpriorityscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2602130000 definitions=main-2603020101
 
-On Fri, Feb 27, 2026 at 08:35:32AM +0000, John Garry wrote:
-> On 19/02/2026 04:37, sw.prabhu6@gmail.com wrote:
-> > From: Swarna Prabhu <s.prabhu@samsung.com>
-> > 
-> > Now that block layer can support block size > PAGE_SIZE
-> > and the issue with WRITE_SAME(16) and WRITE_SAME(10) are
-> > fixed for sector sizes > PAGE_SIZE, enable sdebug_sector_size
-> > > PAGE_SIZE in scsi_debug.
-> > 
+On 2/25/26 9:02 PM, John Garry wrote:
+> Add support to allocate and free a multipath gendisk.
 > 
-> Surely the sd driver or block layer should be catching non-compliant HW,
-> right?
-
-Yes, the sd driver and block layer will catch any non compliant HW.
+> NVMe has almost like-for-like equivalents here:
+> - mpath_alloc_head_disk() -> nvme_mpath_alloc_disk()
+> - multipath_partition_scan_work() -> nvme_partition_scan_work()
+> - mpath_remove_disk() -> nvme_remove_head()
+> - mpath_device_set_live() -> nvme_mpath_set_live()
 > 
-> The scsi_debug driver should minic HW, and there is nothing in any SCSI
-> specs which mentions that the sector size needs to be limited to 64KB or the
-> like - am I correct? The useful thing about scsi_debug is that we can
-> pretend to be broken* HW and see if the upper layers catch it.
+> struct mpath_head_template is introduced as a method for drivers to
+> provide custom multipath functionality.
 > 
-> *broken for Linux or non-compliant wrt spec
->
-
-As you pointed, the SCSI spec doesn't restrict the sector size to be
-limited to 64 KiB. Earlier block layer had limitations on block size
-upto PAGE_SIZE. With that limitation being addressed and sd driver
-change, sd driver and block layer can handle large block sizes
-correctly. By allowing large sector size on scsi debug we allow 
-emulation of spec compliant HW. 
-
-Thanks
-Swarna
-
-> > Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
-> > Signed-off-by: Swarna Prabhu <s.prabhu@samsung.com>
-> > ---
-> >   drivers/scsi/scsi_debug.c | 8 +-------
-> >   1 file changed, 1 insertion(+), 7 deletions(-)
-> > 
-> > diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-> > index c947655db518..4c6feee87f05 100644
-> > --- a/drivers/scsi/scsi_debug.c
-> > +++ b/drivers/scsi/scsi_debug.c
-> > @@ -8495,13 +8495,7 @@ static int __init scsi_debug_init(void)
-> >   	} else if (sdebug_ndelay > 0)
-> >   		sdebug_jdelay = JDELAY_OVERRIDDEN;
-> > -	switch (sdebug_sector_size) {
-> > -	case  512:
-> > -	case 1024:
-> > -	case 2048:
-> > -	case 4096:
-> > -		break;
-> > -	default:
-> > +	if (blk_validate_block_size(sdebug_sector_size)) {
-> >   		pr_err("invalid sector_size %d\n", sdebug_sector_size);
-> >   		return -EINVAL;
-> >   	}
+> Signed-off-by: John Garry <john.g.garry@oracle.com>
+> ---
+>   include/linux/multipath.h |  41 ++++++++++++
+>   lib/multipath.c           | 129 ++++++++++++++++++++++++++++++++++++++
+>   2 files changed, 170 insertions(+)
 > 
+> diff --git a/include/linux/multipath.h b/include/linux/multipath.h
+> index 18cd133b7ca21..be9dd9fb83345 100644
+> --- a/include/linux/multipath.h
+> +++ b/include/linux/multipath.h
+> @@ -5,11 +5,28 @@
+>   #include <linux/blkdev.h>
+>   #include <linux/srcu.h>
+>   
+> +extern const struct block_device_operations mpath_ops;
+> +
+> +struct mpath_disk {
+> +	struct gendisk		*disk;
+> +	struct kref		ref;
+> +	struct work_struct	partition_scan_work;
+> +	struct mutex		lock;
+> +	struct mpath_head	*mpath_head;
+> +	struct device		*parent;
+> +};
+> +
+>   struct mpath_device {
+>   	struct list_head	siblings;
+>   	struct gendisk		*disk;
+>   };
+>   
+> +struct mpath_head_template {
+> +	const struct attribute_group **device_groups;
+> +};
+> +
+> +#define MPATH_HEAD_DISK_LIVE 			0
+> +
+>   struct mpath_head {
+>   	struct srcu_struct	srcu;
+>   	struct list_head	dev_list;	/* list of all mpath_devs */
+> @@ -17,12 +34,36 @@ struct mpath_head {
+>   
+>   	struct kref		ref;
+>   
+> +	unsigned long		flags;
+>   	struct mpath_device __rcu 		*current_path[MAX_NUMNODES];
+> +	const struct mpath_head_template	*mpdt;
+>   	void			*drvdata;
+>   };
+>   
+Not sure why we don't have back reference to struct mpath_disk
+from struct mpath_head here. Does it make sense to have this?
+
+
+> +static inline struct mpath_disk *mpath_bd_device_to_disk(struct device *dev)
+> +{
+> +	return dev_get_drvdata(dev);
+> +}
+> +
+> +static inline struct mpath_disk *mpath_gendisk_to_disk(struct gendisk *disk)
+> +{
+> +	return mpath_bd_device_to_disk(disk_to_dev(disk));
+> +}
+> +
+>   int mpath_get_head(struct mpath_head *mpath_head);
+>   void mpath_put_head(struct mpath_head *mpath_head);
+>   struct mpath_head *mpath_alloc_head(void);
+> +void mpath_put_disk(struct mpath_disk *mpath_disk);
+> +void mpath_remove_disk(struct mpath_disk *mpath_disk);
+> +void mpath_unregister_disk(struct mpath_disk *mpath_disk);
+> +struct mpath_disk *mpath_alloc_head_disk(struct queue_limits *lim,
+> +			int numa_node);
+> +void mpath_device_set_live(struct mpath_disk *mpath_disk,
+> +			struct mpath_device *mpath_device);
+> +void mpath_unregister_disk(struct mpath_disk *mpath_disk);
+>   
+> +static inline bool is_mpath_head(struct gendisk *disk)
+> +{
+> +	return disk->fops == &mpath_ops;
+> +}
+>   #endif // _LIBMULTIPATH_H
+> diff --git a/lib/multipath.c b/lib/multipath.c
+> index 15c495675d729..88efb0ae16acb 100644
+> --- a/lib/multipath.c
+> +++ b/lib/multipath.c
+> @@ -32,6 +32,135 @@ void mpath_put_head(struct mpath_head *mpath_head)
+>   }
+>   EXPORT_SYMBOL_GPL(mpath_put_head);
+>   
+> +static void mpath_free_disk(struct kref *ref)
+> +{
+> +	struct mpath_disk *mpath_disk =
+> +		container_of(ref, struct mpath_disk, ref);
+> +	struct mpath_head *mpath_head = mpath_disk->mpath_head;
+> +
+> +	put_disk(mpath_disk->disk);
+> +	mpath_put_head(mpath_head);
+> +	kfree(mpath_disk);
+> +}
+> +
+
+The mpath_alloc_head_disk() doesn't get a reference to the
+mpath_head object but here while freeing mpath_disk we put
+the reference to mpath_head. Would that create a reference
+imbalance? Yes we got a reference to mpath_head while
+allocating it but then these are two (alloc mpath_disk and
+alloc mpath_head) disjoint operations. In that case, can't
+we have both mpath_disk and mpath_head allocated under one
+libmultipath API?
+
+Thanks,
+--Nilay
+
+
