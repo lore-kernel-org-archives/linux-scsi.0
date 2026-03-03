@@ -1,108 +1,111 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from sender4-pp-f112.zoho.com (sender4-pp-f112.zoho.com [136.143.188.112])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA64130B517;
-	Tue,  3 Mar 2026 09:28:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772530128; cv=none; b=qkHIi2ZPLDO/p5z73nhCQmBvxf3kHfPQ6HVdvpcu96gRcvT97Agfx/2sPvckfcsh5qzaPOFhLto8peTVmn0NcRz/81sIqQVyO0b5ZQOicM6Y2lHH3BMwWvJpqCjJqLt7GWlt97i4masUlli4HGApJvT4S0MF0TZKW5ixmW7J8Ew=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772530128; c=relaxed/simple;
-	bh=snQQAqpN+Px5szP1GBbRKTwRqyFK23kN7q93+YlTrtc=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=WVBugd2qm8HwaDt/HzjB8L+Ri/9TSYeVgjwYSpE0J8mk/Zmc3GMz8lr2zqcWoHAXgDuuWnTAH4RelmC0usArgoy3qqK2fNhWfOw+bN0mpnEuKe5mtu72alWl2WpO8BlpbzAlIXmPh8px8FehLRaclFIoaKzx6EA47jEXkGzjSf0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HTK7Hint; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 92392390208;
+	Tue,  3 Mar 2026 10:16:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=136.143.188.112
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1772532994; cv=pass; b=KKpaDEDbTZqD4/wdTGj2BbjQ4/i/B2uOKgKSucbxv0XmFXvFXfNmYerRpv4x+SfOajVI3Us+a72+wwfd9F5/U0jIHAVieKDxkNQ19E/OD9vysi52G/dxNwSqmIxGQm7AgJAepKQjLidalJSb4VfJPIhsfnUQfgmYRQp4r/bq9Xo=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1772532994; c=relaxed/simple;
+	bh=hV7pmbruCuv2YT3GXeR/WB6MvDM5iYmpBJg+CzfkEy0=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=VLq608vbOCopJOTje6M57sKuVUA5W3q1f4VpN5su0kKEIeXfQKC+8Ry6cW1akNtNzBFG4RrYHkAeeHEa3HBqP0xuOUjmTejIKVE+z2n1p4PNwrsLLsf5A2bj3UZ24mtEOPEgukHcpbVssZUPL4iUrH0Ghii5jXVAUVatJk4mlNM=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (1024-bit key) header.d=collabora.com header.i=nicolas.frattaroli@collabora.com header.b=F5qPoP+y; arc=pass smtp.client-ip=136.143.188.112
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collabora.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HTK7Hint"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8E74CC116C6;
-	Tue,  3 Mar 2026 09:28:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772530127;
-	bh=snQQAqpN+Px5szP1GBbRKTwRqyFK23kN7q93+YlTrtc=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=HTK7HintawKKidB+q4HiiLWO4MlEh48R7V0qKbi5ys+c5k1Kg38BmnSkz3S09M/FD
-	 WRWV2wILTzTlDc47G3NM3SWJ8/7KoijJMScgozpZn6XD8MHLknbL+QoXoF0t8W5yrR
-	 eHFkEK5elAgPsb2uiITwfaVsJbK8gs2ekCtokAbLIz24rSSTLx+UY4tRnVVOeeRAGZ
-	 q9GG2xTs7pnOOTzuDS/Efp53JE1nP2uNyZlZkPeTgt+izqP+fwsGETa/dqeocJCU4L
-	 +rQy0CSyskJi+TdGNJ12RPiJebgIe1isSPLuWUM1bfpMI9OSngeOz4bRbehD2RKNAr
-	 1cTgjUXEjefyQ==
-Message-ID: <aef9e1a5-769d-46ff-9929-0c5ab37ff1d6@kernel.org>
-Date: Tue, 3 Mar 2026 18:28:45 +0900
+	dkim=pass (1024-bit key) header.d=collabora.com header.i=nicolas.frattaroli@collabora.com header.b="F5qPoP+y"
+ARC-Seal: i=1; a=rsa-sha256; t=1772532960; cv=none; 
+	d=zohomail.com; s=zohoarc; 
+	b=Ld3WEFmDwMm4C8fsVqUW9jEYfexkJC1pErlxbI/bd/u9wIjtVtvEVj8KmR0gRsm98qMtTP6QY8zJumJp5cYAbNZWQ35InHNDLhk/8GhbAljJwLPwqVX4HhwIgZCxfoTb6rKos4yI3CDdMlV0qY8RELcbxWOIMcCzdIgBitH8UZQ=
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.com; s=zohoarc; 
+	t=1772532960; h=Content-Type:Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:Subject:To:To:Message-Id:Reply-To; 
+	bh=hV7pmbruCuv2YT3GXeR/WB6MvDM5iYmpBJg+CzfkEy0=; 
+	b=JtfUa7LseAVWU3UlSAtrwverfSpUtmpCjPEyafLJjiAK3vZ00o/14AaNVB0IC70ImJhgp7ji1aDL4FQEazN6WfPdPiJdPZoBhN524W9lLhn7hANpCraR/BdYv3XF6P96rXwCvpIsHE6aZPmY1cRXTN3ltHcCNeu19Hcogp4glyY=
+ARC-Authentication-Results: i=1; mx.zohomail.com;
+	dkim=pass  header.i=collabora.com;
+	spf=pass  smtp.mailfrom=nicolas.frattaroli@collabora.com;
+	dmarc=pass header.from=<nicolas.frattaroli@collabora.com>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1772532960;
+	s=zohomail; d=collabora.com; i=nicolas.frattaroli@collabora.com;
+	h=From:From:To:To:Cc:Cc:Subject:Subject:Date:Date:Message-ID:In-Reply-To:References:MIME-Version:Content-Transfer-Encoding:Content-Type:Message-Id:Reply-To;
+	bh=hV7pmbruCuv2YT3GXeR/WB6MvDM5iYmpBJg+CzfkEy0=;
+	b=F5qPoP+y66wlCndzg6MYVKVtavNrhdcVXA/icpMvQ4iG7XzaZ+AdmtKjIhnioEfD
+	CCg27jDedafjWLNPBfBCXN9pwPOraOvLcdYQVMKXZobzVBaGUxoDNoAY8wYQgSKj33g
+	tDgvFKaUVkCZ8FpdhOGOEpFy3i1HslBStZudJQac=
+Received: by mx.zohomail.com with SMTPS id 1772532958810282.7970747621265;
+	Tue, 3 Mar 2026 02:15:58 -0800 (PST)
+From: Nicolas Frattaroli <nicolas.frattaroli@collabora.com>
+To: "chu.stanley@gmail.com" <chu.stanley@gmail.com>,
+ "robh@kernel.org" <robh@kernel.org>,
+ Chunfeng Yun =?UTF-8?B?KOS6keaYpeWzsCk=?= <Chunfeng.Yun@mediatek.com>,
+ "kishon@kernel.org" <kishon@kernel.org>,
+ "James.Bottomley@HansenPartnership.com"
+ <James.Bottomley@hansenpartnership.com>,
+ "bvanassche@acm.org" <bvanassche@acm.org>,
+ AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
+ Chaotian Jing =?UTF-8?B?KOS6leacneWkqSk=?= <Chaotian.Jing@mediatek.com>,
+ "conor+dt@kernel.org" <conor+dt@kernel.org>,
+ "lgirdwood@gmail.com" <lgirdwood@gmail.com>,
+ "vkoul@kernel.org" <vkoul@kernel.org>,
+ "krzk+dt@kernel.org" <krzk+dt@kernel.org>,
+ "p.zabel@pengutronix.de" <p.zabel@pengutronix.de>,
+ "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
+ "neil.armstrong@linaro.org" <neil.armstrong@linaro.org>,
+ "matthias.bgg@gmail.com" <matthias.bgg@gmail.com>,
+ "avri.altman@wdc.com" <avri.altman@wdc.com>,
+ "broonie@kernel.org" <broonie@kernel.org>,
+ "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+ Peter Wang =?UTF-8?B?KOeOi+S/oeWPiyk=?= <peter.wang@mediatek.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+ "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "linux-arm-kernel@lists.infradead.org"
+ <linux-arm-kernel@lists.infradead.org>,
+ "linux-phy@lists.infradead.org" <linux-phy@lists.infradead.org>,
+ "linux-mediatek@lists.infradead.org" <linux-mediatek@lists.infradead.org>,
+ Louis-Alexis Eyraud <louisalexis.eyraud@collabora.com>,
+ "kernel@collabora.com" <kernel@collabora.com>
+Subject:
+ Re: [PATCH v7 20/23] scsi: ufs: mediatek: Back up idle timer in per-instance
+ struct
+Date: Tue, 03 Mar 2026 11:15:51 +0100
+Message-ID: <3072176.mvXUDI8C0e@workhorse>
+In-Reply-To: <0bef3e1592e64f74e6a6fd8ef59129ac71b307e4.camel@mediatek.com>
+References:
+ <20260216-mt8196-ufs-v7-0-b5f2907c6da7@collabora.com>
+ <48e8f40b-f5f3-42b5-a97b-7a25d1dc0fb8@collabora.com>
+ <0bef3e1592e64f74e6a6fd8ef59129ac71b307e4.camel@mediatek.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi: core: Fix missing lock when read async_scan in
- Scsi_Host
-To: Chaohai Chen <wdhh6@aliyun.com>
-Cc: James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com,
- linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20260302121343.1630837-1-wdhh6@aliyun.com>
- <8dbc772a-e0dd-44d2-8e1f-1e54df42d72b@kernel.org>
- <aaan8Vlw7HQMZdA7@VM-209-93-tencentos>
-Content-Language: en-US
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <aaan8Vlw7HQMZdA7@VM-209-93-tencentos>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
 
-On 3/3/26 18:20, Chaohai Chen wrote:
-> On Tue, Mar 03, 2026 at 05:45:13PM +0900, Damien Le Moal wrote:
->> On 3/2/26 21:13, Chaohai Chen wrote:
->>> When setting the async_scan flag in host, the host lock was locked,
->>> but it is not locked during reading. Encapsulate the corresponding
->>> API to fix this issue.
->>>
->>> Signed-off-by: Chaohai Chen <wdhh6@aliyun.com>
->>> ---
->>>  drivers/scsi/scsi_scan.c | 60 +++++++++++++++++++++++++++++-----------
->>>  1 file changed, 44 insertions(+), 16 deletions(-)
->>>
->>> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
->>> index 60c06fa4ec32..8b63130ef2e5 100644
->>> --- a/drivers/scsi/scsi_scan.c
->>> +++ b/drivers/scsi/scsi_scan.c
->>> @@ -122,6 +122,42 @@ struct async_scan_data {
->>>  	struct completion prev_finished;
->>>  };
->>>  
->>> +static bool scsi_test_async_scan(struct Scsi_Host *shost)
->>> +{
->>> +	bool async;
->>> +	unsigned long flags;
->>> +
->>> +	lockdep_assert_not_held(shost->host_lock);
->>> +
->>> +	spin_lock_irqsave(shost->host_lock, flags);
->>> +	async = shost->async_scan;
->>> +	spin_unlock_irqrestore(shost->host_lock, flags);
->>> +
->>> +	return async;
->>> +}
->>
->> Use an atomic ?
->>
-> The structure member async_stcan is defined in a bit field manner, 
-> and using atomic may change the structure definition, making it too complex
+On Tuesday, 3 March 2026 09:01:14 Central European Standard Time Peter Wang=
+ (=E7=8E=8B=E4=BF=A1=E5=8F=8B) wrote:
+> On Thu, 2026-02-26 at 11:36 +0100, AngeloGioacchino Del Regno wrote:
+> >=20
+> > Okay, does "saved_auto_hibern8_idle_tmr" sound good for you instead?
+> >=20
+> > Regards,
+> > Angelo
+> >=20
+> >=20
+>=20
+> Hi AngeloGioacchino,
+>=20
+> I=E2=80=99m fine with saved_auto_hibern8_idle_tmr, but it is more=20
+> verbose compared to saved_ahit.
+>=20
+> Thanks
+> Peter
+>=20
 
-But the spinlock is useless here...
+Yeah no I won't change this, this is pointless bikeshedding.
 
-lock
-copy async_scan
-unlock
 
-test using the copy
-
-That is not atomic at all, and does not need to be. So all the spinlock is doing
-is to avoid "getting garbage" because another bit around it is being changed.
-Using an atomic would be far simpler and cleaner. I do not see any complexity at
-all with that. And that would not even grow the Scsi_Host structure size: use
-pahole and you can see that there are 4 Bytes holes in there.
-
--- 
-Damien Le Moal
-Western Digital Research
