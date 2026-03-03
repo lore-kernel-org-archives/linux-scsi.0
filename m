@@ -1,183 +1,243 @@
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 71EFE227EB9;
-	Tue,  3 Mar 2026 21:45:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772574332; cv=none; b=NWoj9Y87l7avyGCHNRUKUUeDrcS3CqRfUUYW8V/dQUWFth5r27npF+E2thvFZCLdHTZ+7RCJkYsrCUOyBd2g1zbACh2UIou7Is0FUyPKNXVYRYHXAOwXVG3raSNefCbtSSj27BSzt+Ek9trGD4w5WGvO8GbM6iZaxlQvaWokpDE=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772574332; c=relaxed/simple;
-	bh=akBhoEbue+savF20VufnHcTBz7Ya6Se5TJcza/g/BAE=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=FiPCWMt59VgZdD9ghVAK7suzTwwXb7WxiIzoUzPAblTrR0ehLiIAt78bi/jbhU6VXo/mWSuwLl7TFGhlZohpk3u8IjaxnLGjjuNvUT0vmrnOUQWBhJaqrvLB8GdyVePDmYPCyI6QOHXix/vmiRushwJvZ1CU85o8Msoaz3d4pp4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=BY11qorQ; arc=none smtp.client-ip=148.163.156.1
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 95A79336894;
+	Tue,  3 Mar 2026 21:55:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.165.32
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1772574959; cv=fail; b=cSEopaoiQBkaXIb/aUp5twVOsr5V7BSYJw3QjJctOa4CqVExoyPikxF1rYEtD+ojFk/Z0kzIIKI7xYDp0izBh57fAW2XFC7Esrybj7Uls/y0VtKkiTBEuOB3h90q0Ur51iVg8TICvFi9YYsREBGTtWyJ3YzDyvXMb3DwAvw71KU=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1772574959; c=relaxed/simple;
+	bh=LSte86RYGWAEMAn8PDqjlFMZwUTywItVTGVwEZXkL2g=;
+	h=Message-ID:Date:Subject:To:References:From:In-Reply-To:
+	 Content-Type:MIME-Version; b=Xm2te1zq3ygRWIDyDDjoTjTILUuXorXqz3pQ409BicY6EZluNbQRUFQHTksKBgsrXzHaUIvIXMoWn218Yo+vYEa0wGou4SD7kSuQishTCGNaIpuL7dTpGQxkugJg6djgI/6j4qr9RtcS0TrX+J+eojmetkHxOdrtWjaCBdENsJI=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=D9Dh0Tq8; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=ec2tNsba; arc=fail smtp.client-ip=205.220.165.32
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="BY11qorQ"
-Received: from pps.filterd (m0360083.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 623HvHhW1952726;
-	Tue, 3 Mar 2026 21:45:25 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=pp1; bh=63eIU8
-	o8Q7zAMTxVx3xYRedmz9y574WSPae7H346HCM=; b=BY11qorQGBqvZs5k4vD2En
-	tRl7IEHnINPRqT9FviaypGmY3KPSGQ2L35RKkzCaTCcNiv2IBex1EcXey5rSTSxE
-	upPxoBkZUQcHswL0K7squqgLBUj6HrI5iq4FRNeU50wf7b/soDt19FiXvWZzSATn
-	wnPi2PK1BSwfMl1TbkK3aLfY03ktz6ynv+WY5q73VWgJePBEaKXeqtEmKYH85WKZ
-	oWkFk5Ig35geKGz7BnqZN5IWP+loAKdnx13o3uDxWUOk2rhNiA97JbaiIteplAES
-	UyBTa73aK373LVBqhaA/EMIogPEGKVdzASJSKU2hRkjXB3epJ9HNU2T0MdMoKDnA
-	==
-Received: from ppma21.wdc07v.mail.ibm.com (5b.69.3da9.ip4.static.sl-reverse.com [169.61.105.91])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4cksrj50js-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 03 Mar 2026 21:45:24 +0000 (GMT)
-Received: from pps.filterd (ppma21.wdc07v.mail.ibm.com [127.0.0.1])
-	by ppma21.wdc07v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 623II2Ws016397;
-	Tue, 3 Mar 2026 21:45:23 GMT
-Received: from smtprelay02.dal12v.mail.ibm.com ([172.16.1.4])
-	by ppma21.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4cmbpn45dp-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 03 Mar 2026 21:45:23 +0000
-Received: from smtpav03.dal12v.mail.ibm.com (smtpav03.dal12v.mail.ibm.com [10.241.53.102])
-	by smtprelay02.dal12v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 623LjMUg18285140
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 3 Mar 2026 21:45:22 GMT
-Received: from smtpav03.dal12v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 397935805A;
-	Tue,  3 Mar 2026 21:45:22 +0000 (GMT)
-Received: from smtpav03.dal12v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 44C865803F;
-	Tue,  3 Mar 2026 21:45:21 +0000 (GMT)
-Received: from li-479af74c-31f9-11b2-a85c-e4ddee11713b.ibm.com (unknown [9.61.97.94])
-	by smtpav03.dal12v.mail.ibm.com (Postfix) with ESMTP;
-	Tue,  3 Mar 2026 21:45:21 +0000 (GMT)
-Message-ID: <77b2b44d7101d55151c8e9852ce41783205ed987.camel@linux.ibm.com>
-Subject: Re: [PATCH 1/1] scsi: virtio_scsi: move INIT_WORK calls to
- virtscsi_init
-From: Eric Farman <farman@linux.ibm.com>
-To: Joshua Daley <jdaley@linux.ibm.com>, linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, virtualization@lists.linux.dev,
-        mst@redhat.com, jasowang@redhat.com, pbonzini@redhat.com,
-        stefanha@redhat.com, eperezma@redhat.com,
-        James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com,
-        mjrosato@linux.ibm.com, frankja@linux.ibm.com
-Date: Tue, 03 Mar 2026 16:45:20 -0500
-In-Reply-To: <20260226204345.1904786-2-jdaley@linux.ibm.com>
-References: <20260226204345.1904786-1-jdaley@linux.ibm.com>
-	 <20260226204345.1904786-2-jdaley@linux.ibm.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.58.3 (3.58.3-1.fc43) 
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="D9Dh0Tq8";
+	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="ec2tNsba"
+Received: from pps.filterd (m0333521.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 623LbcgQ789434;
+	Tue, 3 Mar 2026 21:55:23 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=
+	content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=
+	corp-2025-04-25; bh=3O4TJezjjRAe3Bv6DHl69Dg7cpjSViWLYjGpXbomHGQ=; b=
+	D9Dh0Tq8yZL18vta7Ov9C0OKKoJge7syo8Wvy6RI59dYfAfFvkmlP9R6iYzeqqCc
+	3qkPwVMb8pDPKusxrBwg8GxAyDL47AEazPNhmP09cLhRF8/iE9hpmBwbMqRyWdJn
+	rvGjMrXUahISjbZmHEJ/wL/LZ16n53ahCkbv/a74ddo3ZGT51to4n4hu3qcZD9Dg
+	gAd3NNmvIQdFNlDJtnpc3YQgGaPZtzgD7sNvKNREdMo1kjX8AljTJQwYP86BN/I5
+	lJevGNNCUW7FentAWSQ4AZaU+alBcH4tBoH8xIZUuJzSb/9MkI9xqJtjO89Ma07f
+	G2aZxdGITei7IaFBnSXCHw==
+Received: from iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta02.appoci.oracle.com [147.154.18.20])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4cp7qq00p2-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Tue, 03 Mar 2026 21:55:23 +0000 (GMT)
+Received: from pps.filterd (iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 623LHE15037800;
+	Tue, 3 Mar 2026 21:55:22 GMT
+Received: from sj2pr03cu001.outbound.protection.outlook.com (mail-westusazon11012036.outbound.protection.outlook.com [52.101.43.36])
+	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 4ckptf7e2y-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Tue, 03 Mar 2026 21:55:21 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=OTLEp3otKBhqs/2merWSUTCxBDnpknVsdplaxdLfN287K6C4pBOeKhR7ES7VubVPWIZb5ei76M4G1B39fjdnilnzG5Hs7EnDIop85S6VkIjcxVyCI6eQhm6/bERrPar/9k+/xOZRcRdI66s/Zz3fLlBo/Z4cWkqOy4h8boxVItb9O+nptyVW3kaz12bTK94sFxYGtLPGtFmzktbAiE7+hKxssZwu3dduDbvhk9MPgzgx+l1INGUsG5CyWDwmvp40iXPei2ThON1w99o/mP1f+UOV74XPRuV14hcuWdkDZ6cAZ+FMRTs+Gh7E/xjviTnTLNc/m4uDfoIrlXeYb/4uWw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=3O4TJezjjRAe3Bv6DHl69Dg7cpjSViWLYjGpXbomHGQ=;
+ b=jYznFhONgYcya0SHmTuoNH+aQwSI+jXUXgP6kxOXyCCTJAxMsR5KAR4b7B6jjpjdXre8C7mcZVtu9RCe430oJDXf11PJMOuv3O63fhjTzgquY08tcl5de46v2D1q0BPqx6GxJieUWLyq3YlroO9b10DzGgx4rNEyvNNN5XMVZF8F4iCY8gdVcFguyklbripz+FZzKo2Z68mmvHzPtBQ4PvFc8bleMP6SaOekTTaSIRJppp1MCHb9N2nVzr9xltbR8KpDILRmRqowwm9NXw3QEvuoj0w/uNFX1w1jNS6zqR691kr8N54Q2NVIfYvAoUcCUTp882BWjjD9aaXAZydkqA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=3O4TJezjjRAe3Bv6DHl69Dg7cpjSViWLYjGpXbomHGQ=;
+ b=ec2tNsba202RWv6GF4O0/SO7nERN2Q4ET4sCJLfQziURy6ULaAXUyJGMus8ynOh/PeYcQ1YxvXSkfFYzokCD+zDr/r95mnux88ndWMHQzqRWKDdkajYqc0UvX6M72Tje+ixIzTjKbUCI47I2ELsQ/NI5QXlhlI0Enp6KKcUh2XA=
+Received: from DS4PPFEAFA21C69.namprd10.prod.outlook.com
+ (2603:10b6:f:fc00::d54) by SN7PR10MB7002.namprd10.prod.outlook.com
+ (2603:10b6:806:344::20) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9654.22; Tue, 3 Mar
+ 2026 21:55:19 +0000
+Received: from DS4PPFEAFA21C69.namprd10.prod.outlook.com
+ ([fe80::5266:1601:5598:3f0a]) by DS4PPFEAFA21C69.namprd10.prod.outlook.com
+ ([fe80::5266:1601:5598:3f0a%4]) with mapi id 15.20.9632.017; Tue, 3 Mar 2026
+ 21:55:18 +0000
+Message-ID: <46567e4a-9e0c-4020-a976-238b6a95240b@oracle.com>
+Date: Tue, 3 Mar 2026 21:55:16 +0000
+User-Agent: Mozilla Thunderbird
+Subject: Re: blktests failures with v7.0-rc1 kernel
+To: Chaitanya Kulkarni <chaitanyak@nvidia.com>,
+        Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "nbd@other.debian.org" <nbd@other.debian.org>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>
+References: <aZ_-cH8euZLySxdD@shinmob>
+ <15ee757e-6140-4151-a1dd-cccb781c89a1@oracle.com>
+ <73ada395-a06d-4ac7-ae0e-dbbc1ebfb36e@nvidia.com>
+Content-Language: en-US
+From: John Garry <john.g.garry@oracle.com>
+Organization: Oracle Corporation
+In-Reply-To: <73ada395-a06d-4ac7-ae0e-dbbc1ebfb36e@nvidia.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: DUZPR01CA0016.eurprd01.prod.exchangelabs.com
+ (2603:10a6:10:46b::9) To DS4PPFEAFA21C69.namprd10.prod.outlook.com
+ (2603:10b6:f:fc00::d54)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-TM-AS-GCONF: 00
-X-Authority-Analysis: v=2.4 cv=Rp/I7SmK c=1 sm=1 tr=0 ts=69a75674 cx=c_pps
- a=GFwsV6G8L6GxiO2Y/PsHdQ==:117 a=GFwsV6G8L6GxiO2Y/PsHdQ==:17
- a=IkcTkHD0fZMA:10 a=Yq5XynenixoA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=RnoormkPH1_aCDwRdu11:22 a=iQ6ETzBq9ecOQQE5vZCe:22 a=VnNF1IyMAAAA:8
- a=OoLDd18DN7KcugGRceQA:9 a=QEXdDO2ut3YA:10
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzAzMDE3OCBTYWx0ZWRfX9UV+9tKVerIM
- k10Vj2ibRJ8eww0ccLke/e0k0hZswnhSv7Dtw/F/rqVEjA3f+LOI5SnCldZe+nTAq+cWReKtMb4
- KjrpWkPpznsGS5fNGk1yXarMN+lnSUpjegM1kHo8lJQSn88KaWaJQwj45fTtEZnKb7W5DBc/SPI
- PNlXp1X2DAGnLx0YDgn1OgLyZT/fsqKJPGRsv4g41cFePt4/Vt/R+Z++kU47TjEem0nPamikORv
- kKgSLqSIksZW2awxqAVxqbSHZiYdZVhj8sST8ttrduRR6xrExTVxUEynL1+dtSCEpAl28As7Emq
- ZvdvKRTV7GgeHAyPXJ3R0yIr0NDsh6Ukqzxu3c4c/TCLOzzas6ZT+HxGWP+qBaJ1jGoQOhvh5sz
- ddIds/XKb9rf2Wdf9mHv97lwz0Fp1nIcyPlTTXxdGR4PpnDT994XcDDhncWyu8hE8KELMsHv3kz
- HcZentz7j5rknyj+1Hg==
-X-Proofpoint-GUID: M9-a5C4YNMae_nxfA-v5ZeCBMvDe9zWq
-X-Proofpoint-ORIG-GUID: M9-a5C4YNMae_nxfA-v5ZeCBMvDe9zWq
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DS4PPFEAFA21C69:EE_|SN7PR10MB7002:EE_
+X-MS-Office365-Filtering-Correlation-Id: 170a0663-0066-490b-9af9-08de796f8f5e
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;ARA:13230040|1800799024|376014|366016;
+X-Microsoft-Antispam-Message-Info:
+	lawf5hplOD9ou65pZQiqi1kcgCVtDwVquHEiNhNBVukQnYasyGpRQyv8ImxKI0n+0s7yKZd6txvOGTZ//xcY0ML5B+02zSZHr6VyZKSG1VWnAefWpuaCptDLR6YSM4jAHSSPlf5hmlJ/Ao1jP3A+FIffbZRvLbsdfHQ0/uxsblxnufCNOplcki3lu3VX3LOPU1P5CNJO7X3Xp69VmDhg0/Ul9cckg0PMBtwh0h/OsAg2J6oozwUxhT7o8WPwXMXJH/WKxDm18i0j7wDvFM1/q9uCufGoCd2JJNFT9fbrnPLzh+JYlz8LjwIaPhmXBKi/PlrBNebovLB4BdogPyoZNGjIvbOO/4fZcpxArZTcXSoMxpNiwqUVMacgzhDs1RukbIJGAjsY7RCI0qc8QJKk749lkgtPaAxjTjqy+znoj+oDaYysmao9h2i/PKPFngJcpeO4L5JTx0S0WQtpqUtiE9NDUNEeIyv53/Q0LLEPNOX4giNbIrJ544j05J2rZINLpmzWa0ZSJIXRw/ysjDHud80X46TgJI1rgSn1wu3eV2A+urMK2xaURuB3pcz8dOIRSbI8dhebkTIydWTLHn65D6UITmjCbIZQeMttt3Qj096IPM0RZL/5qP/gaOsunhXJm3KP2/ANxB3lrNUVFIW2T+WAiEJlZvMD+7xvsgB/lz+soV9rUqr96A/oF9b5/kF1IPU/15U7Wpw8VtzazbIWbh0nE2dzLOwbYNHJZkSbZVs=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DS4PPFEAFA21C69.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(376014)(366016);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?VW8zNkJDYlIrTnRhT2o4cWkvNmNMb3M0WHNtQlZaZzVuZUVUZWNjK211WmFB?=
+ =?utf-8?B?T2ZROWFrVmJHMHo3SStVTWxSTyt4WVAzMEtMZjVXRUloeEZWYXUvZkMwb0Nw?=
+ =?utf-8?B?NHpHcXExZXF2MkcxMklkMW8wMHM0NWV6TitIeVJFUXdCOHlIYjk5bWhRUjFY?=
+ =?utf-8?B?ajV6bmdFSjBVaEZsZCtrNW9aV0F3eGhTMmlEV1BlS1FtakR4L0VaNnhZRkNh?=
+ =?utf-8?B?c2JEM081elZ0UnNkOGxHRFVZKy90UWd3NmIvUWRkVCt3WW80c3Y3aDJUS0lH?=
+ =?utf-8?B?ZmpCNWdGU2MrbktKZEtiZy9Vb3BpNDVtRHJDSmdiRXcwV24xRi9KOXNhdWFB?=
+ =?utf-8?B?bmxXNjBqMFdjeUczM3FWUmpGZDVQV2hRbWVqamZjbnQ0bnA1Q3BDdkVrWWxh?=
+ =?utf-8?B?K0VkS1VUL0IvRjZhVXdYUEtacHJrSVdqOVgyTSsvY1NqRElMRTY0WG43QnI5?=
+ =?utf-8?B?QXB5YjRXNlpiR3o1ZzFoeng2anZJa0kwc1ByMmN1eks4R3Y2dUZJUytiUjNO?=
+ =?utf-8?B?SVFJcTQ1amcyYVdnTndyWUZyZ0RoQ0dLSmlWUXcxdEgveHptMjQwUmZ5SitW?=
+ =?utf-8?B?MzliNTFBWnhtRVVSY3h5TUxDOVRiTFVjZU1Ec21zejMrNDRYOTBBVnMybGsr?=
+ =?utf-8?B?cDdVV01XZ3RLVmNGdWhlVUhwcnNIS1BUZGc5UFBsTU5vcHJNcGpDRWdjT2dU?=
+ =?utf-8?B?Rm1QQnFUKzQzV1d2L2JJVmV0SWlKNnp4VnRtK1hUN1l4bkZ3Vjg5bHdzOTg4?=
+ =?utf-8?B?c2FjdGxRaVRiSXVFYVdEQmVOYk5wSFN5Y1UzQVgyNVZUZExreExmUkd6cjdT?=
+ =?utf-8?B?dnVyNkNxdmtoaHZFTDZZVmZBQlY2Y1dwd2tmZ2NjdTlXaEo1RGR1RHIranVN?=
+ =?utf-8?B?L2tzSVR4SUVaUjJ4cWs3Z1FQQ3kzYlpJUjNhVEw0bU9ueEFiallzQndsQU1k?=
+ =?utf-8?B?L3lzLzJyaHpjaUZoWnpvRndRS3ZuT0JVNzlETk55TERRSkVwQUhhM0t1REYx?=
+ =?utf-8?B?blo1NUlnUHJOdkQydVFQb1RmYXYzakFObzNLVHRtck0rMmx3YUp0d1llWXBX?=
+ =?utf-8?B?TG5vZ0tOWDdmZEo3ai9FcTRlbXVCOUFvZWQvWlJWeG95QXJkR0lTbHRaQVpE?=
+ =?utf-8?B?WHZqSDI4ZHdWZ1NlZmp0UFVYamtkc0pURTNUVmc4YndMNVI1MlZPQmJETWpR?=
+ =?utf-8?B?bHdhYUliNDVseDF1WjA1S0dvbmdRY1VPVGxyamdITUdRdnUvZ3F0SFVOZmQ4?=
+ =?utf-8?B?aE5MbTJlZ3F0Uzg5clV2eTVVd2tZZkNINm1GQmFCdTRTdGR6V0NlRHFpNWNL?=
+ =?utf-8?B?QUo0NkcyZ1hHb3EvbmFZQ0lNa2lFeWRMRjZmZmwxMGdtR3FhMHJqYUlSUklk?=
+ =?utf-8?B?NUlrUGFCcGR2MlBkRENlbVZVT2YyVVp3VjBKclp5Tm5VZGVoWWxuaE9La1h6?=
+ =?utf-8?B?cWMyZGFlNXdVTzFvelliQ1AveGdKcU9TcVQrTEN5ZG9YQkVBYkx4VjlqSEFT?=
+ =?utf-8?B?LzJ5V2x6WUEzQVdieDZPdXMwMm5NN3ZMMmZvd014TjFYNzFGc3F3TmFwRVdS?=
+ =?utf-8?B?NEF4aFhZcUVSZnlXdHVDZzBVaGtIOTY3Zk9hZENVY3JFNVBtcXY2U3ZIdGM5?=
+ =?utf-8?B?TG1USjBvdVhWOUJhUngwMllmd08wejFzL3lZMnZhZWJEUnJ6Q3FBdzV4NGNE?=
+ =?utf-8?B?ZXZpMU1adEtrSVlOWFhsbEwrWjc3R0lWOVk3QlVvNVR3c1Vjb2V3VVhITHJ5?=
+ =?utf-8?B?YjExQUxTL3BqM2kwNGFuQWVsYW83LzQyUkVCNFovdU5LQWFXa0ZjWktGQVNT?=
+ =?utf-8?B?cU5zTXBEM0tqNEx5QWhudmNsMFJDWGJwUVg5Zzc5RWJZTDc5Z3MrSERwQmV1?=
+ =?utf-8?B?MytEbXo0Q3pXVG1QWXNIZkpPaEg0UUFHdU9CRFV2Q3BFcStlSGw4c1BFZmdo?=
+ =?utf-8?B?Wmx5YVRrMHdQcFBUMWFlYzNpblZoVEVJQlZWSVdEckx1dTIwclVlWnZqZ2Fa?=
+ =?utf-8?B?S3AyUEpzUHR3MnRITTZHUHF5YStFaW9EaVRJR3lnbk1CRjZnVFZ4YmRheno1?=
+ =?utf-8?B?eHF4NFp1Z29MUzZUT09HWTcvcVgyQXpEcDRJeDVXazNKditMZC9DcmZaRS9L?=
+ =?utf-8?B?VGJwUWhCVkNKNU1pMUdmNWVMU2p4c0Y0NjNBTUdLMS92bVU0dXBmV1MzUG9P?=
+ =?utf-8?B?czVOOWYyN00zSnFPQTFNem5PTitlanVHMEdrNFdTb2NQSjBmOVMzY216cHRI?=
+ =?utf-8?B?US9zNW5URTdxeGRkNkZKankxZE5mV1hxZHplOUZsZHZ4KzF2bWtJUUlUSzdX?=
+ =?utf-8?B?STA5aEV5OEc1aHQrZzNOd1FYaFFOSFVpS3ZEVE94cktzR2Zod1oxQT09?=
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
+	sW3xkZY/5fTddnzw+/d1KnEs37s8yA4YZt85Ta0uqAOmo6/gEZrI7Bx9u4UJZzQCBkgSqBloqFA8GzQKz3i7ogNG+8j1N5J76+v0XOlYV5SdnBWbudtXiS5clQILsJlqKYXVa/TTYwKudk3CUsfRTYSxQhOBapvBPn9J2UmmY7bk/TYiZKF0cXm/NvqD46u5jApzYffxSOeUKF+TDX9XHtHUKeY5U+m6qZ1EJ7adj0ysbMgoNMdXTEcuDvwI77j7XNvERmYMPLgziMi4XvtQCUWzWlVA30vsc2q5m2q80zJKBtAnf3XA3Evf1kW5XqtMVfK/F3fK4Bki4k7VrlyA2SaWZ/0Ef2JC7T1GKGnVw+Y66I/Pj0bZfsdVlc189n6L8RY/3s2WR82IgBy0rGf3hYsO3aAfFbmVrNN8t67fwM3z6P6Op04mDhxuPfmFVFOyk8mmvgb/ETBPoH3go7XPBqsF0zy8j324YncHKzAI0W5hCdTU+r+UVVh2igh0t8ainhDED3GvPfUzgS2B0ucmix9HshDqmN6Dow+1fWyBLU5GjGn6S7eOPTOofoPmhKfztGWF20OnGd+Td8+DyCx/x7T6luBYrDYL6x/OS+LQ2C4=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 170a0663-0066-490b-9af9-08de796f8f5e
+X-MS-Exchange-CrossTenant-AuthSource: DS4PPFEAFA21C69.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 03 Mar 2026 21:55:18.8786
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: BuQViSbaqyoBtuqYL/T/Ga4sMD+YK3yKdjANFGuWMf3INDcnPgEj5ZUjBk3l9Ip4yjqqg+gZ6KanfMvRFPDgQQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN7PR10MB7002
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.51,FMLib:17.12.100.49
  definitions=2026-03-03_03,2026-03-03_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- suspectscore=0 priorityscore=1501 spamscore=0 phishscore=0 adultscore=0
- bulkscore=0 clxscore=1011 impostorscore=0 malwarescore=0 lowpriorityscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2602130000 definitions=main-2603030178
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 malwarescore=0 phishscore=0
+ spamscore=0 mlxscore=0 mlxlogscore=999 suspectscore=0 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2602130000
+ definitions=main-2603030180
+X-Authority-Analysis: v=2.4 cv=TK5Iilla c=1 sm=1 tr=0 ts=69a758cb b=1 cx=c_pps
+ a=e1sVV491RgrpLwSTMOnk8w==:117 a=e1sVV491RgrpLwSTMOnk8w==:17
+ a=6eWqkTHjU83fiwn7nKZWdM+Sl24=:19 a=z/mQ4Ysz8XfWz/Q5cLBRGdckG28=:19
+ a=lCpzRmAYbLLaTzLvsPZ7Mbvzbb8=:19 a=xqWC_Br6kY4A:10 a=IkcTkHD0fZMA:10
+ a=Yq5XynenixoA:10 a=GoEa3M9JfhUA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=jiCTI4zE5U7BLdzWsZGv:22 a=x0eKOSpe3m1H3M0S9YoZ:22 a=W_wgObZiZZpR-WtE39MA:9
+ a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10 cc=ntf awl=host:13812
+X-Proofpoint-GUID: qt9gZsG0W7iMQ8tcimexrkwXJq4r6rZ1
+X-Proofpoint-ORIG-GUID: qt9gZsG0W7iMQ8tcimexrkwXJq4r6rZ1
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzAzMDE4MCBTYWx0ZWRfX96IeolHagMKT
+ cwMEJwOWnrbTVchbFZA+lymyiuQVVhPvNHrxFStM/r0bZksuxFjhkUi8D1gRBf1ZtFu1JCtpR00
+ 1uilkYSPfn0RDtN4B6rCcR6bKA6eUxVHlk6MqwkE6366lTbCkSMZKFVo6KVYdw/UdKAaTm+9gbw
+ tpw34a2DbnOwFcik+BBRwib31krvIaXAQ9TN4WUz912fG07iXQdj45xt7YB/6jRe/hmj3/yKHfK
+ C14rbeXBtmdoximyQgEHQ2+TEmezzp56/v0mZnRSptyunQVFskpqCnf+NqcU5vB/np0KxxLW+m6
+ epV434EVlBVy3B2h7YBNfUVr5Hj1nBUcOc4gBTlEHc3NpigqlWaesYzWlghIjUtDYu9OZBi/9wV
+ H4WWh6E5GzHvsirToHt3KG2o+sYlCI0eZD7U4GovblZ0Omcz1nE79yJNwNsJzsSmkH43oy+RRQn
+ U9AFjOsOPDzG6XBRR0kW3ctLTAqkepy9rlWknn1A=
 
-On Thu, 2026-02-26 at 21:43 +0100, Joshua Daley wrote:
-> The last step of virtscsi_handle_event is to call virtscsi_kick_event,
-> which calls INIT_WORK on it's own work item. INIT_WORK resets the
-> work item's data bits to 0.
->=20
-> If this occurs while the work item is being flushed by
-> cancel_work_sync, then kernel/workqueue.c/work_offqd_enable triggers a
-> kernel warning, as it expects the "disable" bit to be 1:
->=20
-> [   21.450115] workqueue: work disable count underflowed
-> [   21.450117] WARNING: CPU: 1 PID: 56 at kernel/workqueue.c:4328 enable_=
-work+0x10a/0x120
-> ...
-> [   21.450171] Call Trace:
-> [   21.450173]  [<000003db2e5bdc3e>] enable_work+0x10e/0x120
-> [   21.450176] ([<000003db2e5bdc3a>] enable_work+0x10a/0x120)
-> [   21.450178]  [<000003db2e5bdd86>] cancel_work_sync+0x86/0xa0
-> [   21.450181]  [<000003daae97d9e4>] virtscsi_remove+0xb4/0xd0 [virtio_sc=
-si]
-> [   21.450184]  [<000003db2ef3b5ca>] virtio_dev_remove+0x6a/0xd0
-> [   21.450186]  [<000003db2ef9106c>] device_release_driver_internal+0x1ac=
-/0x260
-> [   21.450190]  [<000003db2ef8edc8>] bus_remove_device+0xf8/0x190
-> [   21.450192]  [<000003db2ef88d72>] device_del+0x142/0x340
-> [   21.450194]  [<000003db2ef88fa0>] device_unregister+0x30/0xa0
-> [   21.450196]  [<000003db2ef3b2fa>] unregister_virtio_device+0x2a/0x40
->=20
-> This warning may occur if a controller is detached immediately
-> following a disk detach.
->=20
-> Move the INIT_WORK call to prevent this. Don't re-init event list
-> work items in virtscsi_kick_event, init them only once in
-> virtscsi_init instead.
->=20
-> Signed-off-by: Joshua Daley <jdaley@linux.ibm.com>
+On 03/03/2026 19:48, Chaitanya Kulkarni wrote:
+> On 2/26/26 01:18, John Garry wrote:
+>> JFYI, I saw this splat for nvme/033 on nvme-7.0 branch *:
+>>
+>> [   15.525025] systemd-journald[347]:
+>> /var/log/journal/89df182291654cc0b051327dd5a58135/user-1000.journal:
+>> Journal file uses a different sequence number ID, rotating.
+>> [   21.339287] run blktests nvme/033 at 2026-02-26 08:45:20
+>> [   21.522168] nvmet: Created nvm controller 1 for subsystem
+>> blktests-subsystem-1 for NQN
+>> nqn.2014-08.org.nvmexpress:uuid:0f01fb42-9f7f-4856-b0b3-51e60b8de349.
+>> [   21.527332]
+>> ==================================================================
+>> [   21.527408] BUG: KASAN: slab-out-of-bounds in
+>> nvmet_passthru_execute_cmd_work+0xf94/0x1a80 [nvmet]
+>> [   21.527494] Read of size 256 at addr ffff888100be2bc0 by task
+>> kworker/u17:2/50
+>>
+>> [   21.527580] CPU: 0 UID: 0 PID: 50 Comm: kworker/u17:2 Not tainted
+>> 6.19.0-rc3-00080-g6c7172c14e92 #37 PREEMPT(voluntary)
+>> [   21.527589] Hardware name: QEMU Standard PC (Q35 + ICH9, 2009),
+>> BIOS 1.16.3-debian-1.16.3-2 04/01/2014
+>> [   21.527594] Workqueue: nvmet-wq nvmet_passthru_execute_cmd_work
+>> [nvmet]
+>> [   21.527636] Call Trace:
+>> [   21.527639]  <TASK>
+>> [   21.527643]  dump_stack_lvl+0x91/0xf0
+>> [   21.527695]  print_report+0xd1/0x660
+>> [   21.527710]  ? __virt_addr_valid+0x23a/0x440
+>> [   21.527721]  ? kasan_complete_mode_report_info+0x26/0x200
+>> [   21.527733]  kasan_report+0xf3/0x130
+>> [   21.527739]  ? nvmet_passthru_execute_cmd_work+0xf94/0x1a80 [nvmet]
+>> [   21.527776]  ? nvmet_passthru_execute_cmd_work+0xf94/0x1a80 [nvmet]
+>> [   21.527816]  kasan_check_range+0x11c/0x200
+>> [   21.527824]  __asan_memcpy+0x23/0x80
+>> [   21.527834]  nvmet_passthru_execute_cmd_work+0xf94/0x1a80 [nvmet]
+> 
+> I've not seen this, can you try following, from quick look it
+> from copying subsnqn admin-cmd.c uses strscpy() and passhru-cmd.c uses
+> memcpy :-
+> 
+> diff --git a/drivers/nvme/target/passthru.c b/drivers/nvme/target/passthru.c
+> index 96648ec2fadb..67c423a8b052 100644
+> --- a/drivers/nvme/target/passthru.c
+> +++ b/drivers/nvme/target/passthru.c
+> @@ -150,7 +150,7 @@ static u16 nvmet_passthru_override_id_ctrl(struct nvmet_req *req)
+>    	 * code path with duplicate ctrl subsysnqn. In order to prevent that we
+>    	 * mask the passthru-ctrl subsysnqn with the target ctrl subsysnqn.
+>    	 */
+> -	memcpy(id->subnqn, ctrl->subsys->subsysnqn, sizeof(id->subnqn));
+> +	strscpy(id->subnqn, ctrl->subsys->subsysnqn, sizeof(id->subnqn));
 
-The fact that the INIT_WORK points to virtscsi_handle_event(), which itself=
- calls
-virtscsi_kick_event() and re-inits the workqueue struct today, does seem od=
-d. Moving this to _init,
-as part of the _probe() process, seems correct to me. One nit below, but FW=
-IW:
 
-Reviewed-by: Eric Farman <farman@linux.ibm.com>
-Tested-by: Eric Farman <farman@linux.ibm.com>
+Yeah, AFAICS, this same change is in mainline as an nvme fix, but it was 
+not in the nvme 7.0 branch.
 
-> ---
->  drivers/scsi/virtio_scsi.c | 6 +++++-
->  1 file changed, 5 insertions(+), 1 deletion(-)
->=20
-> diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
-> index 0ed8558dad72..173092931df6 100644
-> --- a/drivers/scsi/virtio_scsi.c
-> +++ b/drivers/scsi/virtio_scsi.c
-> @@ -242,7 +242,6 @@ static int virtscsi_kick_event(struct virtio_scsi *vs=
-csi,
-
-Just before this hunk is a prototype for virtscsi_handle_event(), since it =
-was previously used in
-this function but defined afterwards. I suspect it can be removed now?
-
->  	struct scatterlist sg;
->  	unsigned long flags;
-> =20
-> -	INIT_WORK(&event_node->work, virtscsi_handle_event);
->  	sg_init_one(&sg, event_node->event, sizeof(struct virtio_scsi_event));
-> =20
->  	spin_lock_irqsave(&vscsi->event_vq.vq_lock, flags);
-> @@ -898,6 +897,11 @@ static int virtscsi_init(struct virtio_device *vdev,
->  	virtscsi_config_set(vdev, cdb_size, VIRTIO_SCSI_CDB_SIZE);
->  	virtscsi_config_set(vdev, sense_size, VIRTIO_SCSI_SENSE_SIZE);
-> =20
-> +	if (virtio_has_feature(vdev, VIRTIO_SCSI_F_HOTPLUG)) {
-> +		for (i =3D 0; i < VIRTIO_SCSI_EVENT_LEN; i++)
-> +			INIT_WORK(&vscsi->event_list[i].work, virtscsi_handle_event);
-> +	}
-> +
->  	err =3D 0;
-> =20
->  out:
+Thanks for checking
