@@ -1,76 +1,182 @@
-Received: from lamorak.hansenpartnership.com (lamorak.hansenpartnership.com [198.37.111.173])
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2F1DC37A4B5;
-	Wed,  4 Mar 2026 17:00:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.37.111.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D99ED3594A;
+	Wed,  4 Mar 2026 18:14:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772643622; cv=none; b=nnMvUOjr5TnbpoK/lUGUpxf+lYG98BYYB00ua/+3XEdDjykKppSXjSv58lujtjuR/Ro6+2XO29Bd4kEL1Cz2Lyk91nWZcBcGwVEuaLF24axW/C/qs4dLd9vCdtTlpaBNHyKTtY2SQU/swadgvpM4MSPwxrptBOWaSyV6S3rJLOs=
+	t=1772648060; cv=none; b=pth8vBtqFnSEKTeZ1gq0QlG6HeWJIaUSpACA5V5krjjG7jCtaONNByNIQKtbfNCmyR9H917rhaOGjFxB2bBrEVcaQindzqngaBxHgpK7AejGNkUPlNN429YJm6a39mk1HjhpUV/L+JhD5GqFaLVb+coq4Bu8j3eNUiZCcc9NlQs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772643622; c=relaxed/simple;
-	bh=9gwzWCX3SSrMbFBW95BJONit0LVwBkoiRovw4JLvNm0=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=fugp75SkwZYv6QqiWmHljqjQqv7THvaXG2ejn1FRnY3tpIAwP0g16sE+hWWBlg6O0CfTeFSkvCUkiJihZu/pfgW2rYopi/tWTh0tT2K+LDZy1I2wmgC+xZf4sQLqoS7y2d1nLx4+diR9+jWf7JslNuVf4hzZaVQUPXxN6OyQjqA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com; spf=pass smtp.mailfrom=HansenPartnership.com; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=HilOWas6; arc=none smtp.client-ip=198.37.111.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=HansenPartnership.com
+	s=arc-20240116; t=1772648060; c=relaxed/simple;
+	bh=N0t/81yrJUe5Rx8j5uGDsCVNdplsl+rfxZdcT4DcAwo=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=CL1QLJi/FTNS8XEL7Xhpi8AmoujQ6LxALG6GzxxPFDulsSDf1L5uNi4KMwl2oDaj+61sMIVa3fRTg4KZdLvSmY/2Y096wwBcoXeGoSbCqcEAhCfJKN+Gy0v45wEPimvCb7ZRPb5BTCLPS9c361N4fSPdfq+gVnw5xd2usOhPmpE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=E6kavG2h; arc=none smtp.client-ip=148.163.158.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="HilOWas6"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-	d=hansenpartnership.com; s=20151216; t=1772643618;
-	bh=9gwzWCX3SSrMbFBW95BJONit0LVwBkoiRovw4JLvNm0=;
-	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
-	b=HilOWas6PKRqKaO1pu6Y7D85U+Zn2xjTU2rD1owubfYMxKqNj3dI102RRg8PTrfw1
-	 orWHDHDzor4yXKF5auZpWgT6bi+4ZuqFzByNO1u1TovaGD4mRh3VvTtozIakzievJV
-	 gd18LYnhk9P4dIRR2qhnAHbdf0pMdLpF5aTJGiic=
-Received: from [IPv6:2601:5c4:4300:d341::a774] (unknown [IPv6:2601:5c4:4300:d341::a774])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by lamorak.hansenpartnership.com (Postfix) with ESMTPSA id C0F6E1C0244;
-	Wed, 04 Mar 2026 12:00:17 -0500 (EST)
-Message-ID: <dda830851d25f66373b556a4816214124b02d669.camel@HansenPartnership.com>
-Subject: Re: [PATCH] scsi: target: fix integer overflow in UNMAP bounds check
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-To: Junrui Luo <moonafterrain@outlook.com>, "Martin K. Petersen"
-	 <martin.petersen@oracle.com>, Nicholas Bellinger <nab@linux-iscsi.org>, 
-	Asias He <asias@redhat.com>
-Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, Yuhao Jiang <danisjiang@gmail.com>
-Date: Wed, 04 Mar 2026 12:00:17 -0500
-In-Reply-To: <SYBPR01MB7881593C61AD52C69FBDB0BDAF7CA@SYBPR01MB7881.ausprd01.prod.outlook.com>
-References: 
-	<SYBPR01MB7881593C61AD52C69FBDB0BDAF7CA@SYBPR01MB7881.ausprd01.prod.outlook.com>
-Autocrypt: addr=James.Bottomley@HansenPartnership.com;
- prefer-encrypt=mutual;
- keydata=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
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.50.3 
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="E6kavG2h"
+Received: from pps.filterd (m0360072.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 624AXUpg1941479;
+	Wed, 4 Mar 2026 18:14:12 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=pp1; bh=z95qgG
+	9jgMcU2Mk11/ghoYOk/oTcNwfxCeln3bivKbw=; b=E6kavG2hD1c7SvLYFItWgG
+	977W7QHE83uMtf5b7DD5luDeWy1n8MC+WzDQLHXc7uzkmO6JLLUaQ7dg0LtSvuMV
+	VkslGpNvRHwq390syU6GRRwLlz6NLisyYS0BQmX6i6c3GzWdRrZRBZx6jTEbqmCU
+	ykPBbMAekMT0o3bcvrRDGpoYrpUHi+Jetl1ADm6B4zVI26NdNu3I/edeDmclUs/Q
+	USwS8a0FYBRNW7IcPujO5lpAFd00GIk0YWU6yYFSvVy9MwsL1rV2AacUcTxgLj33
+	CdNYNXu91woTDsC/SolP83ScfuAcCzbxEFSxHAF7GONVnPwhnruDUSJ8aeMyrs0g
+	==
+Received: from ppma23.wdc07v.mail.ibm.com (5d.69.3da9.ip4.static.sl-reverse.com [169.61.105.93])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4ckssmr8t1-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 04 Mar 2026 18:14:11 +0000 (GMT)
+Received: from pps.filterd (ppma23.wdc07v.mail.ibm.com [127.0.0.1])
+	by ppma23.wdc07v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 624FVDtd010284;
+	Wed, 4 Mar 2026 18:14:11 GMT
+Received: from smtprelay05.dal12v.mail.ibm.com ([172.16.1.7])
+	by ppma23.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4cmc6k7s18-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 04 Mar 2026 18:14:11 +0000
+Received: from smtpav06.wdc07v.mail.ibm.com (smtpav06.wdc07v.mail.ibm.com [10.39.53.233])
+	by smtprelay05.dal12v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 624IE9sd62587294
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Wed, 4 Mar 2026 18:14:10 GMT
+Received: from smtpav06.wdc07v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id A174F5803F;
+	Wed,  4 Mar 2026 18:14:09 +0000 (GMT)
+Received: from smtpav06.wdc07v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 85FE058055;
+	Wed,  4 Mar 2026 18:14:08 +0000 (GMT)
+Received: from [9.57.45.114] (unknown [9.57.45.114])
+	by smtpav06.wdc07v.mail.ibm.com (Postfix) with ESMTP;
+	Wed,  4 Mar 2026 18:14:08 +0000 (GMT)
+Message-ID: <c3ce317d-5314-4339-862d-051440df619a@linux.ibm.com>
+Date: Wed, 4 Mar 2026 13:14:07 -0500
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 1/1] scsi: virtio_scsi: move INIT_WORK calls to
+ virtscsi_init
+To: Eric Farman <farman@linux.ibm.com>, linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, virtualization@lists.linux.dev,
+        mst@redhat.com, jasowang@redhat.com, pbonzini@redhat.com,
+        stefanha@redhat.com, eperezma@redhat.com,
+        James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com,
+        mjrosato@linux.ibm.com, frankja@linux.ibm.com
+References: <20260226204345.1904786-1-jdaley@linux.ibm.com>
+ <20260226204345.1904786-2-jdaley@linux.ibm.com>
+ <77b2b44d7101d55151c8e9852ce41783205ed987.camel@linux.ibm.com>
+Content-Language: en-US
+From: Joshua Daley <jdaley@linux.ibm.com>
+In-Reply-To: <77b2b44d7101d55151c8e9852ce41783205ed987.camel@linux.ibm.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzA0MDE0OCBTYWx0ZWRfX4KpazI42zp4Q
+ nvCMLCxG0s7tGjhqmxqKZ4gtV/Z+LkqAJ/BUd0A1hVoPrmVbdIQAyPVbw7mJ7q4oCuB6V8c59Qf
+ z4P2t99M0hKhjCric1CW73OS8lRkXs0HC14SKdjaMag/UN5bV7QXdRq33I93ezcG468W12GygV4
+ W+cD2l6omwRv2yGN8rCCipiJVUZ3ZL2fynBin50NrJSgXYnNtXbMeb6d7SUKu9gf4MXU1rf5nHN
+ FcER47W/r8JNh56WKeV50sg+Wi1loQrN6xWCwrZMSUiGm/glmGIozhGnc764mFsKlMqQwqnUXAl
+ aayr3HnWCi1Qe/NqQe9B5FNThIkiHNOgbE/d0O4VgNp3+Qa3OPB8S+RAxQ1VXah4/XACZ0IjhH7
+ zyqGJrgz8yXPofv2n6DuyfkDL6sX/NroRaFT/t9/xait9hM+8O4XVdYQcrQ5AfpRb9NeDOrxksN
+ TU5Hog3h1LAIBSk+0ig==
+X-Proofpoint-ORIG-GUID: UWWdT2tYBCkJBGFJiu7PLn4JWP3ZAbku
+X-Proofpoint-GUID: UWWdT2tYBCkJBGFJiu7PLn4JWP3ZAbku
+X-Authority-Analysis: v=2.4 cv=AobjHe9P c=1 sm=1 tr=0 ts=69a87673 cx=c_pps
+ a=3Bg1Hr4SwmMryq2xdFQyZA==:117 a=3Bg1Hr4SwmMryq2xdFQyZA==:17
+ a=IkcTkHD0fZMA:10 a=Yq5XynenixoA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=RnoormkPH1_aCDwRdu11:22 a=RzCfie-kr_QcCd8fBx8p:22 a=VnNF1IyMAAAA:8
+ a=eS4R6lfaZEnlwP-vdxAA:9 a=QEXdDO2ut3YA:10
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-03-04_07,2026-03-04_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ phishscore=0 lowpriorityscore=0 bulkscore=0 impostorscore=0 malwarescore=0
+ spamscore=0 clxscore=1015 suspectscore=0 adultscore=0 priorityscore=1501
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2602130000 definitions=main-2603040148
 
-On Wed, 2026-03-04 at 23:42 +0800, Junrui Luo wrote:
-> sbc_execute_unmap() checks lba + range does not exceed the device
-> capacity, but does not guard against lba + range wrapping around on
-> 64-bit overflow.
+On 3/3/2026 4:45 PM, Eric Farman wrote:
+> On Thu, 2026-02-26 at 21:43 +0100, Joshua Daley wrote:
+>> The last step of virtscsi_handle_event is to call virtscsi_kick_event,
+>> which calls INIT_WORK on it's own work item. INIT_WORK resets the
+>> work item's data bits to 0.
+>>
+>> If this occurs while the work item is being flushed by
+>> cancel_work_sync, then kernel/workqueue.c/work_offqd_enable triggers a
+>> kernel warning, as it expects the "disable" bit to be 1:
+>>
+>> [   21.450115] workqueue: work disable count underflowed
+>> [   21.450117] WARNING: CPU: 1 PID: 56 at kernel/workqueue.c:4328 enable_work+0x10a/0x120
+>> ...
+>> [   21.450171] Call Trace:
+>> [   21.450173]  [<000003db2e5bdc3e>] enable_work+0x10e/0x120
+>> [   21.450176] ([<000003db2e5bdc3a>] enable_work+0x10a/0x120)
+>> [   21.450178]  [<000003db2e5bdd86>] cancel_work_sync+0x86/0xa0
+>> [   21.450181]  [<000003daae97d9e4>] virtscsi_remove+0xb4/0xd0 [virtio_scsi]
+>> [   21.450184]  [<000003db2ef3b5ca>] virtio_dev_remove+0x6a/0xd0
+>> [   21.450186]  [<000003db2ef9106c>] device_release_driver_internal+0x1ac/0x260
+>> [   21.450190]  [<000003db2ef8edc8>] bus_remove_device+0xf8/0x190
+>> [   21.450192]  [<000003db2ef88d72>] device_del+0x142/0x340
+>> [   21.450194]  [<000003db2ef88fa0>] device_unregister+0x30/0xa0
+>> [   21.450196]  [<000003db2ef3b2fa>] unregister_virtio_device+0x2a/0x40
+>>
+>> This warning may occur if a controller is detached immediately
+>> following a disk detach.
+>>
+>> Move the INIT_WORK call to prevent this. Don't re-init event list
+>> work items in virtscsi_kick_event, init them only once in
+>> virtscsi_init instead.
+>>
+>> Signed-off-by: Joshua Daley <jdaley@linux.ibm.com>
+> 
+> The fact that the INIT_WORK points to virtscsi_handle_event(), which itself calls
+> virtscsi_kick_event() and re-inits the workqueue struct today, does seem odd. Moving this to _init,
+> as part of the _probe() process, seems correct to me. One nit below, but FWIW:
+> 
+> Reviewed-by: Eric Farman <farman@linux.ibm.com>
+> Tested-by: Eric Farman <farman@linux.ibm.com>
+> 
+>> ---
+>>   drivers/scsi/virtio_scsi.c | 6 +++++-
+>>   1 file changed, 5 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
+>> index 0ed8558dad72..173092931df6 100644
+>> --- a/drivers/scsi/virtio_scsi.c
+>> +++ b/drivers/scsi/virtio_scsi.c
+>> @@ -242,7 +242,6 @@ static int virtscsi_kick_event(struct virtio_scsi *vscsi,
+> 
+> Just before this hunk is a prototype for virtscsi_handle_event(), since it was previously used in
+> this function but defined afterwards. I suspect it can be removed now?
+> 
 
-What's the theory about how this could occur and the problem it causes?
-range is a u32 so lba would have to have all 1's in the upper 32 bits
-for this to happen (i.e. be a 15 ExB device).  Plus do we even care?=20
-If we send an unmap with lba and range that wraps 64 bits then the
-device should error or truncate it anyway, shouldn't it?
+Yes, looks like it can be removed safely. That should probably be done in a separate patch.
 
-Regards,
-
-James
+>>   	struct scatterlist sg;
+>>   	unsigned long flags;
+>>   
+>> -	INIT_WORK(&event_node->work, virtscsi_handle_event);
+>>   	sg_init_one(&sg, event_node->event, sizeof(struct virtio_scsi_event));
+>>   
+>>   	spin_lock_irqsave(&vscsi->event_vq.vq_lock, flags);
+>> @@ -898,6 +897,11 @@ static int virtscsi_init(struct virtio_device *vdev,
+>>   	virtscsi_config_set(vdev, cdb_size, VIRTIO_SCSI_CDB_SIZE);
+>>   	virtscsi_config_set(vdev, sense_size, VIRTIO_SCSI_SENSE_SIZE);
+>>   
+>> +	if (virtio_has_feature(vdev, VIRTIO_SCSI_F_HOTPLUG)) {
+>> +		for (i = 0; i < VIRTIO_SCSI_EVENT_LEN; i++)
+>> +			INIT_WORK(&vscsi->event_list[i].work, virtscsi_handle_event);
+>> +	}
+>> +
+>>   	err = 0;
+>>   
+>>   out:
 
