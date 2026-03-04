@@ -1,140 +1,110 @@
-Received: from sender4-pp-f112.zoho.com (sender4-pp-f112.zoho.com [136.143.188.112])
+Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4DA3A3B3C1C;
-	Wed,  4 Mar 2026 14:56:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=136.143.188.112
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772636173; cv=pass; b=qmhLNwqZ+7OePrJ55bYki5hmlOyT30HQW8UNLtHsN+CAS16xplVhopLr38fAcdSFpEbrxD+6b43Pw0Tc+BcOjgUVHd/R0340v0cvl6iaH/t6CvjwM7cEM5c8mxrX16xY0GgBH7iPzoWPRAojSbBAb90I+woKMGFqThj37FTKMVc=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772636173; c=relaxed/simple;
-	bh=GjFf63axbaazfur7KNFjfv9PwinzFu/ZI3jq7p25c4k=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=frrSrSahvi16Pu2RSRuUaFDlUI+Ghpf9yKBAmNnVpVPNt0xzcEmTYiVjW/Nt8xMsuBuEZsCWyOmrsaTNouCbLlfCQYk6fUayNiIKUxQBwmJ4/3Udmr2sYBTkfl0Ktm6CExNvkVSCM5/ilRRRk7vwWVqr/MZof1URidsS0eqCgvU=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (1024-bit key) header.d=collabora.com header.i=nicolas.frattaroli@collabora.com header.b=CAIVtC2j; arc=pass smtp.client-ip=136.143.188.112
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collabora.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 014F2347FED;
+	Wed,  4 Mar 2026 15:03:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.14
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1772636640; cv=none; b=iuPezc9Unx1qIhpbv/+fPvX1NkzqOzA6g0sqvYSM1hZdaa+gXhPRexJBttQiNcw+XMV+OJkU8Qv8QVggQb3750T9Ve5achma50EBk1HknJuLatISwMhhSIqW2a9tZPmD8opJ1/fSTbWH+9BX1tve1Zby6A+KFJXs5puEVrvaiGw=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1772636640; c=relaxed/simple;
+	bh=qUBhHFU3PdKI4qz6TzxREgJyoDaNnI1/K/vqlI7LWzc=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=LK+TDTCS4LJ39DiH6tltqTdE6mfhx/u9Bh15OCMtzDZHVQVIatIFe9S261gkmLhi1/XgQ//haqaMdFzaalWHnJGf2FQ3YxwURJAKoajrBsoRNQ8zKDYU65w/B7Ovq4hha12sZM9Rz85UsD3fdd9bF/ZyXITrC6XIEJTZ4DEAWkw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=FCyZUgq5; arc=none smtp.client-ip=199.89.1.14
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=collabora.com header.i=nicolas.frattaroli@collabora.com header.b="CAIVtC2j"
-ARC-Seal: i=1; a=rsa-sha256; t=1772636138; cv=none; 
-	d=zohomail.com; s=zohoarc; 
-	b=AU0dfGiZJIbbK19p+MDgaZqtm2R8hFunuv7hkxWvN6CN/Aehq1IiXkufMjjxOL+R25jcZDVaPiMZfBItqQtx75t42UPS+/GgGnRIUqfkplF11c4ihG1S3X30yatO7evq/t4n+4V9xSku8D16cGIyjOQjw1ZXk7afzaTo/2Wioi0=
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.com; s=zohoarc; 
-	t=1772636138; h=Content-Type:Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:Subject:To:To:Message-Id:Reply-To; 
-	bh=4zl1V74JjZEQ00igJg/pKn4t3Auq4QD7fJPZAoJSVfA=; 
-	b=gVlxjpgtsUFSiDmVuH1dHsCkCcvn3hhWRu2pjJvqKFZCevfTZPYhmUGpobIh2sCnRq5Ciu2SyjLfO2x2zY+ACJIK50SV4Tu6LB37FnyUkfRyeK8DvH8WZgw/P0gQXQnvxefRett//bTBNB0uM98T6uHy9eUegPTQ0uQeSDSJYQg=
-ARC-Authentication-Results: i=1; mx.zohomail.com;
-	dkim=pass  header.i=collabora.com;
-	spf=pass  smtp.mailfrom=nicolas.frattaroli@collabora.com;
-	dmarc=pass header.from=<nicolas.frattaroli@collabora.com>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1772636138;
-	s=zohomail; d=collabora.com; i=nicolas.frattaroli@collabora.com;
-	h=From:From:Date:Date:Subject:Subject:MIME-Version:Content-Type:Content-Transfer-Encoding:Message-Id:Message-Id:References:In-Reply-To:To:To:Cc:Cc:Reply-To;
-	bh=4zl1V74JjZEQ00igJg/pKn4t3Auq4QD7fJPZAoJSVfA=;
-	b=CAIVtC2jK4y+72dTp8PKmASE6jlKNXnPR7+5yTnczVfwQIxsAE1s+eZp8CUQsKwR
-	yq+31FkI+NLA2Im8mXncAY/VPyFUzIYORcdaORlxoEp3lwIhNDnB5dRaiVH8AYe3ip1
-	cK3jtSiLDlRxqgwnoELj0W8RVGgyqMCy/Vq86t0g=
-Received: by mx.zohomail.com with SMTPS id 177263613629493.10029857824361;
-	Wed, 4 Mar 2026 06:55:36 -0800 (PST)
-From: Nicolas Frattaroli <nicolas.frattaroli@collabora.com>
-Date: Wed, 04 Mar 2026 15:53:28 +0100
-Subject: [PATCH v8 23/23] scsi: ufs: mediatek: Add MT8196 compatible,
- update copyright
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="FCyZUgq5"
+Received: from localhost (localhost [127.0.0.1])
+	by 011.lax.mailroute.net (Postfix) with ESMTP id 4fQwt30VfRz1XM0pS;
+	Wed,  4 Mar 2026 15:03:55 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1772636607; x=1775228608; bh=qUBhHFU3PdKI4qz6TzxREgJy
+	oDaNnI1/K/vqlI7LWzc=; b=FCyZUgq52i07D3SIoLO0QTggaglP6YI0lQ/ERccf
+	v9yvln40MGipTrGuLxJp5bCizrYqRJHLSccTYT+unBxFUj8DCFCya37dzwHkLmWq
+	MutIP5+Xibv4axuvoHIbxGuc2pxl4l/AB77EgDT8hvLpNR+Vuxn7lrBT3n59omFP
+	26Zs7wvGuC4cZLQNZJ0yTy/QZ2PicgZrOpaM0tT2KH0IWWesdyjDKiCjXU2XhlXm
+	twy1ihWeze436pYITtdwHNeAV1vpzi3jVUBKbC38V+H+byDiFMPrUt9yNOXBY+oD
+	KDbHAORBv86Iabn3Z4s04IV9CTixV0rRUNEm+aROaLEcHA==
+X-Virus-Scanned: by MailRoute
+Received: from 011.lax.mailroute.net ([127.0.0.1])
+ by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id bcHpn71STf_C; Wed,  4 Mar 2026 15:03:27 +0000 (UTC)
+Received: from [192.168.132.187] (unknown [12.150.89.26])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4fQwsM3WJQz1XM6Hv;
+	Wed,  4 Mar 2026 15:03:18 +0000 (UTC)
+Message-ID: <2cdc620b-b521-4058-a802-87591aa4c253@acm.org>
+Date: Wed, 4 Mar 2026 09:02:57 -0600
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20260304-mt8196-ufs-v8-23-5b0eac23314f@collabora.com>
-References: <20260304-mt8196-ufs-v8-0-5b0eac23314f@collabora.com>
-In-Reply-To: <20260304-mt8196-ufs-v8-0-5b0eac23314f@collabora.com>
-To: Alim Akhtar <alim.akhtar@samsung.com>, 
- Avri Altman <avri.altman@wdc.com>, Bart Van Assche <bvanassche@acm.org>, 
- Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
- Conor Dooley <conor+dt@kernel.org>, 
- Matthias Brugger <matthias.bgg@gmail.com>, 
- AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>, 
- Chunfeng Yun <chunfeng.yun@mediatek.com>, Vinod Koul <vkoul@kernel.org>, 
- Kishon Vijay Abraham I <kishon@kernel.org>, 
- Peter Wang <peter.wang@mediatek.com>, Stanley Jhu <chu.stanley@gmail.com>, 
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
- "Martin K. Petersen" <martin.petersen@oracle.com>, 
- Philipp Zabel <p.zabel@pengutronix.de>, Liam Girdwood <lgirdwood@gmail.com>, 
- Mark Brown <broonie@kernel.org>, Chaotian Jing <Chaotian.Jing@mediatek.com>, 
- Neil Armstrong <neil.armstrong@linaro.org>
-Cc: Louis-Alexis Eyraud <louisalexis.eyraud@collabora.com>, 
- kernel@collabora.com, linux-scsi@vger.kernel.org, 
- devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
- linux-arm-kernel@lists.infradead.org, linux-mediatek@lists.infradead.org, 
- linux-phy@lists.infradead.org, 
- Nicolas Frattaroli <nicolas.frattaroli@collabora.com>
-X-Mailer: b4 0.14.3
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] scsi: ufs: core: Handle MCQ IAG events
+To: =?UTF-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= <peter.wang@mediatek.com>,
+ "vamshigajjela@google.com" <vamshigajjela@google.com>,
+ "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
+ "James.Bottomley@HansenPartnership.com"
+ <James.Bottomley@HansenPartnership.com>,
+ "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+ "avri.altman@wdc.com" <avri.altman@wdc.com>
+Cc: "beanhuo@micron.com" <beanhuo@micron.com>,
+ "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+ "adrian.hunter@intel.com" <adrian.hunter@intel.com>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "quic_nguyenb@quicinc.com" <quic_nguyenb@quicinc.com>,
+ "arthur.simchaev@sandisk.com" <arthur.simchaev@sandisk.com>
+References: <20260302180117.2797184-1-vamshigajjela@google.com>
+ <1fa500fdfbfff7d43bea1839ce1992fb4283c5eb.camel@mediatek.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <1fa500fdfbfff7d43bea1839ce1992fb4283c5eb.camel@mediatek.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: quoted-printable
 
-THe MT8196's UFS controller has a new compatible. Add the necessary
-struct definitions to support it.
+On 3/3/26 4:25 AM, Peter Wang (=E7=8E=8B=E4=BF=A1=E5=8F=8B) wrote:
+> On Mon, 2026-03-02 at 23:31 +0530, vamshi gajjela wrote:
+>> @@ -7141,7 +7149,10 @@ static irqreturn_t ufshcd_sl_intr(struct
+>> ufs_hba *hba, u32 intr_status)
+>> =C2=A0retval |=3D ufshcd_transfer_req_compl(hba);
+>> =20
+>> =C2=A0if (intr_status & MCQ_CQ_EVENT_STATUS)
+>> -retval |=3D ufshcd_handle_mcq_cq_events(hba);
+>> +retval |=3D ufshcd_handle_mcq_cq_events(hba, false);
+>> +
+>> +if (intr_status & MCQ_IAG_EVENT_STATUS)
+>> +retval |=3D ufshcd_handle_mcq_cq_events(hba, true);
+>=20
+> Hi Vamshi,
+>=20
+> This is strange to me.
+> Why does receiving an IAG_EVENT call ufshcd_handle_mcq_cq_events?
+> Shouldn't it be ufshcd_handle_mcq_iag_events instead?
+Doesn't this follow from the UFSHCI standard? From the UFSHCI 5.0
+standard: "MCQ Interrupt Aggregation Event Status (IAGES): This bit is
+transparent and becomes =E2=80=981=E2=80=99 when all of the following con=
+ditions are met
+=E2=80=A2 Controller is operating in MCQ mode (Config.QT =3D 1)
+=E2=80=A2 ESI is not enabled (Config.ESIE =3D 0)
+=E2=80=A2 At least one interrupt aggregation group has triggered, which m=
+eans it
+has satisfied either counter or timer condition
 
-Also update the copyrights and authors, without tabs following spaces to
-avoid checkpatch errors, to list myself as having contributed to this
-driver after the preceding rework patches.
+When in MCQ mode, and ESI is not used, SW can use traditional interrupt=20
+approach. When this bit is set, interrupt routine needs to scan all
+interrupt aggregation groups to determine which IAG has caused this
+interrupt.
 
-Reviewed-by: AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
-Reviewed-by: Peter Wang <peter.wang@mediatek.com>
-Signed-off-by: Nicolas Frattaroli <nicolas.frattaroli@collabora.com>
----
- drivers/ufs/host/ufs-mediatek.c | 17 +++++++++++++++--
- 1 file changed, 15 insertions(+), 2 deletions(-)
+Thanks,
 
-diff --git a/drivers/ufs/host/ufs-mediatek.c b/drivers/ufs/host/ufs-mediatek.c
-index 6292c943ef99..a9e8641e6f29 100644
---- a/drivers/ufs/host/ufs-mediatek.c
-+++ b/drivers/ufs/host/ufs-mediatek.c
-@@ -1,9 +1,11 @@
- // SPDX-License-Identifier: GPL-2.0
- /*
-  * Copyright (C) 2019 MediaTek Inc.
-+ * Copyright (C) 2025 Collabora Ltd.
-  * Authors:
-- *	Stanley Chu <stanley.chu@mediatek.com>
-- *	Peter Wang <peter.wang@mediatek.com>
-+ *      Stanley Chu <stanley.chu@mediatek.com>
-+ *      Peter Wang <peter.wang@mediatek.com>
-+ *      Nicolas Frattaroli <nicolas.frattaroli@collabora.com> (Major cleanups)
-  */
- 
- #include <linux/arm-smccc.h>
-@@ -2200,6 +2202,10 @@ static const char *const ufs_mtk_regs_avdd12_ckbuf_avdd18[] = {
- 	"avdd12", "avdd12-ckbuf", "avdd18"
- };
- 
-+static const char *const ufs_mtk_regs_avdd12_ckbuf[] = {
-+	"avdd12", "avdd12-ckbuf"
-+};
-+
- static const struct ufs_mtk_soc_data mt8183_data = {
- 	.has_avdd09 = true,
- 	.reg_names = ufs_mtk_regs_avdd12_avdd18,
-@@ -2212,10 +2218,17 @@ static const struct ufs_mtk_soc_data mt8192_8195_data = {
- 	.num_reg_names = ARRAY_SIZE(ufs_mtk_regs_avdd12_ckbuf_avdd18),
- };
- 
-+static const struct ufs_mtk_soc_data mt8196_data = {
-+	.has_avdd09 = true,
-+	.reg_names = ufs_mtk_regs_avdd12_ckbuf,
-+	.num_reg_names = ARRAY_SIZE(ufs_mtk_regs_avdd12_ckbuf),
-+};
-+
- static const struct of_device_id ufs_mtk_of_match[] = {
- 	{ .compatible = "mediatek,mt8183-ufshci", .data = &mt8183_data },
- 	{ .compatible = "mediatek,mt8192-ufshci", .data = &mt8192_8195_data },
- 	{ .compatible = "mediatek,mt8195-ufshci", .data = &mt8192_8195_data },
-+	{ .compatible = "mediatek,mt8196-ufshci", .data = &mt8196_data },
- 	{},
- };
- MODULE_DEVICE_TABLE(of, ufs_mtk_of_match);
-
--- 
-2.53.0
-
+Bart.
