@@ -1,123 +1,158 @@
-Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.19])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6BB89282F17;
-	Wed,  4 Mar 2026 13:11:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 729FB269D18;
+	Wed,  4 Mar 2026 13:50:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.19
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772629888; cv=none; b=WgDERuAJGmjtww7K8gumXYH2pR316tCkam+hDTxfXM0jRH68En2vtGMSWkX/xcDH5CXrRKHdHfJeDwSgsrT1MJgOcYBjMW14mEhAxEvkslYy5JStrgOHyFuvaAPokcn47LYHj9OOJndqdSq4PVM1ZFtLMsVnvfBU87x5tfkHbK4=
+	t=1772632235; cv=none; b=JsKhxPhlxuX94nyV6a26OBWdeFNTlecUvouykFuIhT50WyzVM4lTQTIwvHYWTOnXCW7hZWP0t2YQB4eu4KvVnErgiT8KPB9Yrc8iJidOloYBkyuey/ncRoLPA4Ch+6u9GXIcGvCzt2rDt51bU1jhnHbHEEsDQJHelu+wQQn1HRQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772629888; c=relaxed/simple;
-	bh=8CQVbZhvgDEerj7hpjqj+mgqxQVM5P1qrl9uzHGXzhw=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=W4S7Jkc04Zip9TBSNjlol5yjhszJgmGir7lsIz+Gu+7oSll/bWSOpoIBbjprRQHndtt3fnFy6gsZVyE0Jj6pUdhAT2sVNgihX+qb0jP0LPYm0pu48vf9iPO2BD9mK+9lPufewW240LmdljbemJSH2GtV7XARd0nmbKNjt2hwxn0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=h3r7OaJO; arc=none smtp.client-ip=148.163.158.5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	s=arc-20240116; t=1772632235; c=relaxed/simple;
+	bh=CvBFSLoX33HHaYixzYhjVgKTwhFEBX5XLgiyHC53qns=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=RX3ygvrffLeoYmg80dKISUfkciVlS1ucX7LFeVtvvsHgL7zcaPYenSjuZms4nfVCqophao35QkE6zWaln+bL+Onzr+JorDqAmAHO56IWdw6WVCgaNH4Eiy6zQBEK6kbrFHm+MufQ+SUCJXm3BBE1QkL3Ptoz7YnfIqfHxUsleaw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=S7+on1be; arc=none smtp.client-ip=192.198.163.19
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="h3r7OaJO"
-Received: from pps.filterd (m0356516.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 624CSMtH2021490;
-	Wed, 4 Mar 2026 13:11:06 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=pp1; bh=uqJLKJ
-	wpEhz8qK4MbW7QESrzLNSyj+3jTip8w/7IyDQ=; b=h3r7OaJO1ts3VC2QEvUPzF
-	gnucWd10yDnTJFzeBhfJ9fwKHu6k0UaARXrzb9ALUHzQIubHX7ymytRxSrs3+0Nw
-	CqhHOUkSDjDp8MDdvneAYUoUMjuquUILelu1XFp5VHPEWPdqz1VjjjEtB+t2DD3d
-	/MQ7unT8+zQXHq4FUfJmeOdpHY+hAXGj6YjPtQUJDAueVLRIdtwO+F9E30BleOtU
-	GThXLlY9NuNC5OulxoIHfrF27aYTPyrzuDSCMD+Os4o9kAoocyk+K6ZzrgopIVa1
-	eBcBgvxJUpXdQZxW3/CEybCpjw9LFbQbgE+0mYfOAANZDOnJGihyveeK373KqloQ
-	==
-Received: from ppma13.dal12v.mail.ibm.com (dd.9e.1632.ip4.static.sl-reverse.com [50.22.158.221])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4cksk3y19e-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 04 Mar 2026 13:11:06 +0000 (GMT)
-Received: from pps.filterd (ppma13.dal12v.mail.ibm.com [127.0.0.1])
-	by ppma13.dal12v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 624BdcjQ027692;
-	Wed, 4 Mar 2026 13:11:05 GMT
-Received: from smtprelay06.dal12v.mail.ibm.com ([172.16.1.8])
-	by ppma13.dal12v.mail.ibm.com (PPS) with ESMTPS id 4cmcwjefeg-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 04 Mar 2026 13:11:05 +0000
-Received: from smtpav04.dal12v.mail.ibm.com (smtpav04.dal12v.mail.ibm.com [10.241.53.103])
-	by smtprelay06.dal12v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 624DB5IR18416304
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 4 Mar 2026 13:11:05 GMT
-Received: from smtpav04.dal12v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 272665805A;
-	Wed,  4 Mar 2026 13:11:05 +0000 (GMT)
-Received: from smtpav04.dal12v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 74ED55805E;
-	Wed,  4 Mar 2026 13:10:59 +0000 (GMT)
-Received: from [9.124.211.174] (unknown [9.124.211.174])
-	by smtpav04.dal12v.mail.ibm.com (Postfix) with ESMTP;
-	Wed,  4 Mar 2026 13:10:59 +0000 (GMT)
-Message-ID: <93696b95-7c01-4988-8fe2-baf427469f4f@linux.ibm.com>
-Date: Wed, 4 Mar 2026 18:40:57 +0530
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="S7+on1be"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1772632233; x=1804168233;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=CvBFSLoX33HHaYixzYhjVgKTwhFEBX5XLgiyHC53qns=;
+  b=S7+on1beXofLBbeVIEHWQBSQSvTQIZjVH7zPoHMfFCXo10CK8cEBzdSc
+   hG3MJKLlcP6MBqaMeRHroZNMZdAJhbcd+/7OcubForceGJx8PvnKp5PNr
+   RgIr/5VxScDa2XQmVyBDO6pna8buKeH4+zC14ftoUDxAuJk+tTR16y0Yz
+   s5ITuoBEGlMMTurngORRPQnb10DOp2Pm4xY+kzX1ZXUU77aJpMzIYDvr3
+   rsu073raljIMFHmd7YxH6n32aLkNkVAHI5hu3Bg9hIyzPWzkI/hnTrEhK
+   mbNkTWWPNAA38toO4BFfIJpGDqTWXQxdyEx3SK03tGGSkOK/5WWhCXE12
+   A==;
+X-CSE-ConnectionGUID: kmZ580dGRWimb1hdRaU8Jg==
+X-CSE-MsgGUID: 8yJ+VgB8TvqooW/XlzD/pg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11719"; a="72716438"
+X-IronPort-AV: E=Sophos;i="6.21,324,1763452800"; 
+   d="scan'208";a="72716438"
+Received: from orviesa006.jf.intel.com ([10.64.159.146])
+  by fmvoesa113.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Mar 2026 05:50:33 -0800
+X-CSE-ConnectionGUID: qyz74MoRSr6dtWijARqkUA==
+X-CSE-MsgGUID: yyvgiF75S7qCuY+bN4KKCA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.21,324,1763452800"; 
+   d="scan'208";a="217502197"
+Received: from igk-lkp-server01.igk.intel.com (HELO 9958d990ccf2) ([10.211.93.152])
+  by orviesa006.jf.intel.com with ESMTP; 04 Mar 2026 05:50:31 -0800
+Received: from kbuild by 9958d990ccf2 with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1vxmcN-000000001iR-2yOe;
+	Wed, 04 Mar 2026 13:50:27 +0000
+Date: Wed, 4 Mar 2026 14:50:07 +0100
+From: kernel test robot <lkp@intel.com>
+To: Yang Xiuwei <yangxiuwei@kylinos.cn>, fujita.tomonori@lab.ntt.co.jp,
+	axboe@kernel.dk, James.Bottomley@hansenpartnership.com,
+	martin.petersen@oracle.com
+Cc: oe-kbuild-all@lists.linux.dev, bvanassche@acm.org,
+	linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
+	io-uring@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yang Xiuwei <yangxiuwei@kylinos.cn>
+Subject: Re: [PATCH v5 3/3] scsi: bsg: add io_uring passthrough handler
+Message-ID: <202603041450.tuj48h9Q-lkp@intel.com>
+References: <20260304080313.675768-4-yangxiuwei@kylinos.cn>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 03/13] libmultipath: Add path selection support
-To: John Garry <john.g.garry@oracle.com>, hch@lst.de, kbusch@kernel.org,
-        sagi@grimberg.me, axboe@fb.com, martin.petersen@oracle.com,
-        james.bottomley@hansenpartnership.com, hare@suse.com
-Cc: jmeneghi@redhat.com, linux-nvme@lists.infradead.org,
-        linux-scsi@vger.kernel.org, michael.christie@oracle.com,
-        snitzer@kernel.org, bmarzins@redhat.com, dm-devel@lists.linux.dev,
-        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20260225153225.1031169-1-john.g.garry@oracle.com>
- <20260225153225.1031169-4-john.g.garry@oracle.com>
-Content-Language: en-US
-From: Nilay Shroff <nilay@linux.ibm.com>
-In-Reply-To: <20260225153225.1031169-4-john.g.garry@oracle.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-ORIG-GUID: Aaom7RQJ9fQrig_94ibNusALFS6MxUTI
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzA0MDEwNSBTYWx0ZWRfX5GdPTBXG37lh
- obKehUKoCQlVUGZyUcfC/SdqLQB+cSi+1P1ob56lr79kjlAiXD4OcWk1CMWTcW9NQp9Yh9QdDEb
- PGKfWiZYziTXUe1PNoIe1ilM2tIOjHuEgUqzwr8EXwp5dn/mdhuUEC1c6idtJwp0TQ+P4m6sIDz
- 18dFdPjt+ipaG+nuf3YjwDvUfB9TjU1IWuXWrs6sVG516JhlWsPZFKZsKQejWM0pzgir2+mj8FN
- alHrf/+iTfpQIMBTzmjJUXhRnd4VHyi+QhhWIwn/xwHYMVclX06Yjf9zqVozLCQZP2Bw9gRl7Es
- G2B0Bv2UCja8vqveqkhfkZKlyXSKcWJwesIT80xzZvRqOqcxfzcthHRZeJEDw4eJJ6EdZmG6cqO
- gsuaoofWMQ185sG5VqST6cBcCywBEn/+OOvO3S+OTojNVzi1VC8Q9ePihcQ8LMQuVcH9CoLg9r/
- E+C31FDrk4tl1+qhvZw==
-X-Authority-Analysis: v=2.4 cv=csCWUl4i c=1 sm=1 tr=0 ts=69a82f6a cx=c_pps
- a=AfN7/Ok6k8XGzOShvHwTGQ==:117 a=AfN7/Ok6k8XGzOShvHwTGQ==:17
- a=IkcTkHD0fZMA:10 a=Yq5XynenixoA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=RnoormkPH1_aCDwRdu11:22 a=Y2IxJ9c9Rs8Kov3niI8_:22 a=DxhCtTx9tnWbhxYo0-8A:9
- a=QEXdDO2ut3YA:10
-X-Proofpoint-GUID: Aaom7RQJ9fQrig_94ibNusALFS6MxUTI
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-03-04_06,2026-03-03_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- impostorscore=0 priorityscore=1501 suspectscore=0 malwarescore=0 adultscore=0
- clxscore=1015 bulkscore=0 phishscore=0 spamscore=0 lowpriorityscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2602130000 definitions=main-2603040105
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260304080313.675768-4-yangxiuwei@kylinos.cn>
 
-Hi John,
+Hi Yang,
 
-On 2/25/26 9:02 PM, John Garry wrote:
-> +static struct mpath_device *__mpath_find_path(struct mpath_head *mpath_head,
-> +			enum mpath_iopolicy_e iopolicy, int node)
-> +{
-> +	int found_distance = INT_MAX, fallback_distance = INT_MAX, distance;
-> +	struct mpath_device *mpath_dev_found, *mpath_dev_fallback,
-> +			*mpath_device;
-> +
+kernel test robot noticed the following build errors:
 
-I think we should initialize mpath_dev_found and mpath_dev_fallback to
-NULL. Otherwise this may lead upto adding a junk mpath_device pointer
-in ->current_path[node] when mpath_head->dev_list is empty. This may
-particularly manifests when a controller is being shutdown and
-concurrently I/O is forwarded to the same controller.
+[auto build test ERROR on axboe/for-next]
+[also build test ERROR on jejb-scsi/for-next mkp-scsi/for-next linus/master v7.0-rc2 next-20260303]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
-Thanks,
---Nilay
+url:    https://github.com/intel-lab-lkp/linux/commits/Yang-Xiuwei/bsg-add-bsg_uring_cmd-uapi-structure/20260304-160717
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/axboe/linux.git for-next
+patch link:    https://lore.kernel.org/r/20260304080313.675768-4-yangxiuwei%40kylinos.cn
+patch subject: [PATCH v5 3/3] scsi: bsg: add io_uring passthrough handler
+config: x86_64-rhel-9.4 (https://download.01.org/0day-ci/archive/20260304/202603041450.tuj48h9Q-lkp@intel.com/config)
+compiler: gcc-14 (Debian 14.2.0-19) 14.2.0
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260304/202603041450.tuj48h9Q-lkp@intel.com/reproduce)
+
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202603041450.tuj48h9Q-lkp@intel.com/
+
+All errors (new ones prefixed by >>):
+
+   drivers/scsi/scsi_bsg.c: In function 'scsi_bsg_map_user_buffer':
+>> drivers/scsi/scsi_bsg.c:111:71: error: macro "io_uring_sqe_cmd" requires 2 arguments, but only 1 given
+     111 |         const struct bsg_uring_cmd *cmd = io_uring_sqe_cmd(ioucmd->sqe);
+         |                                                                       ^
+   In file included from drivers/scsi/scsi_bsg.c:3:
+   include/linux/io_uring/cmd.h:29:9: note: macro "io_uring_sqe_cmd" defined here
+      29 | #define io_uring_sqe_cmd(sqe, type)     ({                                      \
+         |         ^~~~~~~~~~~~~~~~
+>> drivers/scsi/scsi_bsg.c:111:43: error: 'io_uring_sqe_cmd' undeclared (first use in this function); did you mean 'io_uring_sqe'?
+     111 |         const struct bsg_uring_cmd *cmd = io_uring_sqe_cmd(ioucmd->sqe);
+         |                                           ^~~~~~~~~~~~~~~~
+         |                                           io_uring_sqe
+   drivers/scsi/scsi_bsg.c:111:43: note: each undeclared identifier is reported only once for each function it appears in
+   drivers/scsi/scsi_bsg.c: In function 'scsi_bsg_uring_cmd':
+   drivers/scsi/scsi_bsg.c:137:71: error: macro "io_uring_sqe_cmd" requires 2 arguments, but only 1 given
+     137 |         const struct bsg_uring_cmd *cmd = io_uring_sqe_cmd(ioucmd->sqe);
+         |                                                                       ^
+   include/linux/io_uring/cmd.h:29:9: note: macro "io_uring_sqe_cmd" defined here
+      29 | #define io_uring_sqe_cmd(sqe, type)     ({                                      \
+         |         ^~~~~~~~~~~~~~~~
+   drivers/scsi/scsi_bsg.c:137:43: error: 'io_uring_sqe_cmd' undeclared (first use in this function); did you mean 'io_uring_sqe'?
+     137 |         const struct bsg_uring_cmd *cmd = io_uring_sqe_cmd(ioucmd->sqe);
+         |                                           ^~~~~~~~~~~~~~~~
+         |                                           io_uring_sqe
+   drivers/scsi/scsi_bsg.c:203:21: error: assignment to 'enum rq_end_io_ret (*)(struct request *, blk_status_t,  const struct io_comp_batch *)' {aka 'enum rq_end_io_ret (*)(struct request *, unsigned char,  const struct io_comp_batch *)'} from incompatible pointer type 'enum rq_end_io_ret (*)(struct request *, blk_status_t)' {aka 'enum rq_end_io_ret (*)(struct request *, unsigned char)'} [-Wincompatible-pointer-types]
+     203 |         req->end_io = scsi_bsg_uring_cmd_done;
+         |                     ^
+
+
+vim +/io_uring_sqe_cmd +111 drivers/scsi/scsi_bsg.c
+
+   106	
+   107	static int scsi_bsg_map_user_buffer(struct request *req,
+   108					    struct io_uring_cmd *ioucmd,
+   109					    unsigned int issue_flags, gfp_t gfp_mask)
+   110	{
+ > 111		const struct bsg_uring_cmd *cmd = io_uring_sqe_cmd(ioucmd->sqe);
+   112		struct iov_iter iter;
+   113		bool is_write = cmd->dout_xfer_len > 0;
+   114		u64 buf_addr = is_write ? cmd->dout_xferp : cmd->din_xferp;
+   115		unsigned long buf_len = is_write ? cmd->dout_xfer_len : cmd->din_xfer_len;
+   116		int ret;
+   117	
+   118		if (ioucmd->flags & IORING_URING_CMD_FIXED) {
+   119			ret = io_uring_cmd_import_fixed(buf_addr, buf_len,
+   120							is_write ? WRITE : READ,
+   121							&iter, ioucmd, issue_flags);
+   122			if (ret < 0)
+   123				return ret;
+   124			ret = blk_rq_map_user_iov(req->q, req, NULL, &iter, gfp_mask);
+   125		} else {
+   126			ret = blk_rq_map_user(req->q, req, NULL, uptr64(buf_addr),
+   127					      buf_len, gfp_mask);
+   128		}
+   129	
+   130		return ret;
+   131	}
+   132	
+
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
