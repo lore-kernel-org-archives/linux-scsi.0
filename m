@@ -1,114 +1,101 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3E3E0351C18
-	for <linux-scsi@vger.kernel.org>; Wed,  4 Mar 2026 06:13:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D2C62AE8D
+	for <linux-scsi@vger.kernel.org>; Wed,  4 Mar 2026 07:14:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.61.82.184
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772604839; cv=none; b=mA3OB9aPxGRnF8n9Gdd05U35hC0Ve4SJ01szbMTUu9pJndAGtPf0g1T8vn9Qsj0wMgeYqzhG94UJ35sspsNetJI6JLhDNksuwvQBKyy4nergrGApd9vAMiFr2uGrjuToWd2hIU3PAl3pvozsVtlPJPbeHcK9nYIHn10+thWQ5q8=
+	t=1772608444; cv=none; b=owRXLKf28JFgnZ8/PJz8VEc4s2bzb1BgP09/Ap4IOBhjnSWpnhHRFhjvgFOtazMYTXIY3X1tziiiIKJTJ1/ZvH7DE3dpcYuFZeqaN5Sh+C3PrC2+IBo+0FMcexvr3bdrGXBPs1X2Ng6qplhJiDhoZ2BWgKi8kwV8TN12oqqvSs8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772604839; c=relaxed/simple;
-	bh=gqXRrFTZaqcVbrfVc+/wuwQR8f0xb49c1Wd6BXvdxFE=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=TbEbENaK9ATq2GQEhJ141SzEk7ixysNGT/vQWK1rpBUWaRGaqybms7lxc2QNOYpmAvIZO4J0n/qn8jV+GbFS+3GIBmOtlzLq8V9Sh+Jvz3EqaxHnJqWkQfFn1BzabCk7AiaOQVgUlWgebY78aCbshx6OIgIadUj2bmjG2jT3NJI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=HkFYOMZE; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1772608444; c=relaxed/simple;
+	bh=ghq81Jeuvoq11zxI6QY6VqoYA7W6aGrsOGBSVh9fhhw=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=dURR7+rxfqghScIu2qe4FJzXoi8j4oaa3ba1im6t9+U6O8gMhNbS+//AXc7Vuc9PTPsWyYa84LpYK775ZBAU478WXmyXBiLvMihDxCjJNXsLX7EIi+YWRZr38vnqarvDDUvHBemoaLsPYfUWwqiiUjH79x5c0hsnBjDKOrvE6AI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=QmTY9Zs5; arc=none smtp.client-ip=210.61.82.184
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="HkFYOMZE"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1772604837;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=hifhB8EKHJQ7PQPYx3jR5aKs6hdV4ehfn0Z4JLP6Nxg=;
-	b=HkFYOMZEgI5NR5c9K7j7g9MQnmwmpwNPt1Ns4Q9BdtFNMDIq8j6cLScdq1jYRM9gRt/m4b
-	u8RwjjaSBJR8z6AskcgaVdZ5LgwL7Gk7nSOD9ivWA//wrvvA3rB4vJ0RQl/Q6zNEXMTRli
-	P2ZhY0ul5bGl7gipTpFmMng5dCoUn5k=
-Received: from mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-447-QBsmGE1QP9ycB549mn9zFQ-1; Wed,
- 04 Mar 2026 01:13:54 -0500
-X-MC-Unique: QBsmGE1QP9ycB549mn9zFQ-1
-X-Mimecast-MFC-AGG-ID: QBsmGE1QP9ycB549mn9zFQ_1772604832
-Received: from mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.111])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id D94C7195609F;
-	Wed,  4 Mar 2026 06:13:50 +0000 (UTC)
-Received: from bmarzins-01.fast.eng.rdu2.dc.redhat.com (unknown [10.6.23.247])
-	by mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 0873D18002A6;
-	Wed,  4 Mar 2026 06:13:49 +0000 (UTC)
-Received: from bmarzins-01.fast.eng.rdu2.dc.redhat.com (localhost [127.0.0.1])
-	by bmarzins-01.fast.eng.rdu2.dc.redhat.com (8.18.1/8.17.1) with ESMTPS id 6246Dm4e1917917
-	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
-	Wed, 4 Mar 2026 01:13:48 -0500
-Received: (from bmarzins@localhost)
-	by bmarzins-01.fast.eng.rdu2.dc.redhat.com (8.18.1/8.18.1/Submit) id 6246Dmhf1917916;
-	Wed, 4 Mar 2026 01:13:48 -0500
-Date: Wed, 4 Mar 2026 01:13:48 -0500
-From: Benjamin Marzinski <bmarzins@redhat.com>
-To: John Garry <john.g.garry@oracle.com>
-Cc: hch@lst.de, kbusch@kernel.org, sagi@grimberg.me, axboe@fb.com,
-        martin.petersen@oracle.com, james.bottomley@hansenpartnership.com,
-        hare@suse.com, jmeneghi@redhat.com, linux-nvme@lists.infradead.org,
-        linux-scsi@vger.kernel.org, michael.christie@oracle.com,
-        snitzer@kernel.org, dm-devel@lists.linux.dev,
-        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 10/24] scsi-multipath: add
- scsi_mpath_{start,end}_request()
-Message-ID: <aafNnO6o2yoeLjPs@redhat.com>
-References: <20260225153627.1032500-1-john.g.garry@oracle.com>
- <20260225153627.1032500-11-john.g.garry@oracle.com>
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="QmTY9Zs5"
+X-UUID: b1981b06179911f1b7fc4fdb8733b2bc-20260304
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+	h=Content-Type:Content-Transfer-Encoding:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=eGCFx++2VzGehtBzmKmti7W4IMXs0RaEEqoTklgLkF8=;
+	b=QmTY9Zs5Ogr5rsM6HYlIUgwAqK6YR+arqXVaNaeHLHLQaZ17KpTy5Lfl5qVMJ6taqkNyS0Kkyt08QR0a8GL0XQ+g0MN4IPVVbTjjUP0qgM7U7F2cTX086Ldgkt2sV2LjhdBrJ4ckxoS0x6l6ndM9zXh2hqRhgZrWkNGkAegsFqo=;
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.3.11,REQID:c0c211cc-07c3-465f-934b-5a80d472813c,IP:0,U
+	RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
+	release,TS:0
+X-CID-META: VersionHash:89c9d04,CLOUDID:082c3ef1-16bd-4243-b4ca-b08ca08ab1d8,B
+	ulkID:nil,BulkQuantity:0,Recheck:0,SF:102|123|836|888|898,TC:-5,Content:0|
+	15|50,EDM:-3,IP:nil,URL:0,File:130,RT:0,Bulk:nil,QS:nil,BEC:-1,COL:0,OSI:0
+	,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-BVR: 2,SSN|SDN
+X-CID-BAS: 2,SSN|SDN,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR
+X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
+X-UUID: b1981b06179911f1b7fc4fdb8733b2bc-20260304
+Received: from mtkmbs11n2.mediatek.inc [(172.21.101.187)] by mailgw02.mediatek.com
+	(envelope-from <peter.wang@mediatek.com>)
+	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+	with ESMTP id 726065777; Wed, 04 Mar 2026 15:13:50 +0800
+Received: from mtkmbs13n2.mediatek.inc (172.21.101.108) by
+ MTKMBS09N2.mediatek.inc (172.21.101.94) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.29; Wed, 4 Mar 2026 15:13:49 +0800
+Received: from mtksitap99.mediatek.inc (10.233.130.16) by
+ mtkmbs13n2.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
+ 15.2.2562.29 via Frontend Transport; Wed, 4 Mar 2026 15:13:48 +0800
+From: <peter.wang@mediatek.com>
+To: <linux-scsi@vger.kernel.org>, <martin.petersen@oracle.com>,
+	<avri.altman@sandisk.com>, <alim.akhtar@samsung.com>, <jejb@linux.ibm.com>
+CC: <wsd_upstream@mediatek.com>, <linux-mediatek@lists.infradead.org>,
+	<peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
+	<alice.chao@mediatek.com>, <cc.chou@mediatek.com>,
+	<chaotian.jing@mediatek.com>, <tun-yu.yu@mediatek.com>,
+	<eddie.huang@mediatek.com>, <naomi.chu@mediatek.com>, <ed.tsai@mediatek.com>,
+	<bvanassche@acm.org>
+Subject: [PATCH v1] ufs: core: Avoid IRQ thread wakeup during active UIC command
+Date: Wed, 4 Mar 2026 15:12:45 +0800
+Message-ID: <20260304071346.1391315-1-peter.wang@mediatek.com>
+X-Mailer: git-send-email 2.45.2
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260225153627.1032500-11-john.g.garry@oracle.com>
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.111
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-MTK: N
 
-On Wed, Feb 25, 2026 at 03:36:13PM +0000, John Garry wrote:
-> Add scsi_mpath_{start,end}_request() to handle updating private multipath
-> request data, like nvme_mpath_{start,end}_request().
-> 
-> Since we may need to update mpath_disk data, add a callbacks in
-> scsi_driver to actually do this work for the scsi driver.
-> 
-> Signed-off-by: John Garry <john.g.garry@oracle.com>
-> ---
->  drivers/scsi/scsi_lib.c       |  4 ++++
->  include/scsi/scsi_driver.h    |  2 ++
->  include/scsi/scsi_multipath.h | 24 ++++++++++++++++++++++++
->  3 files changed, 30 insertions(+)
-> 
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index 7ed0defc8161e..61179caa7b2c8 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -654,6 +654,8 @@ static bool scsi_end_request(struct request *req, blk_status_t error,
->  	 */
->  	destroy_rcu_head(&cmd->rcu);
->  
-> +	scsi_mpath_end_request(req);
-> +
->  	/*
->  	 * In the MQ case the command gets freed by __blk_mq_end_request,
->  	 * so we have to do all cleanup that depends on it earlier.
+From: Peter Wang <peter.wang@mediatek.com>
 
-This looks wrong. We start accounting in scsi_queue_rq(), and we need to
-end it whenever we complete or requeue the request, otherwise the
-accounting will get off. But not all requests go through
-scsi_end_request(). scsi_mpath_failover_req(), for instance, calls
-blk_mq_end_request() directly, and other functions, like
-scsi_queue_insert() call blk_mq_requeue_request(). I'm pretty sure that
-this should go in scsi_complete(), as well in the error path of
-scsi_queue_rq().
+Only return IRQ_WAKE_THREAD when MCQ and ESI are not enabled
+and no UIC command is active. Since the default UIC command
+timeout is 500ms, handling IRQs in a thread during an active UIC
+command can easily lead to timeouts due to delayed processing.
 
--Ben
+Signed-off-by: Peter Wang <peter.wang@mediatek.com>
+---
+ drivers/ufs/core/ufshcd.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 9908375b2f98..3f18c1a39f27 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -7201,8 +7201,11 @@ static irqreturn_t ufshcd_intr(int irq, void *__hba)
+ 	u32 intr_status, enabled_intr_status;
+ 
+ 	/* Move interrupt handling to thread when MCQ & ESI are not enabled */
+-	if (!hba->mcq_enabled || !hba->mcq_esi_enabled)
+-		return IRQ_WAKE_THREAD;
++	if (!hba->mcq_enabled || !hba->mcq_esi_enabled) {
++		/* UIC commands should be processed promptly */
++		if (!hba->active_uic_cmd)
++			return IRQ_WAKE_THREAD;
++	}
+ 
+ 	intr_status = ufshcd_readl(hba, REG_INTERRUPT_STATUS);
+ 	enabled_intr_status = intr_status & ufshcd_readl(hba, REG_INTERRUPT_ENABLE);
+-- 
+2.45.2
 
