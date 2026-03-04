@@ -1,43 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 81CD433121F;
-	Wed,  4 Mar 2026 15:20:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5754C3563EA;
+	Wed,  4 Mar 2026 15:40:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772637637; cv=none; b=fOpVySlgJnSqTvat7UIfFR/JiqOYUzDtsPVcjpxEyfXW/guuy1VBbNvCN8+vAqrPIMLt49MyDOUF8CikDsGKieodG8EMlM4DfxxNz7TbwFBpTcvAsHOUrNW4BrEekG7v6CXRVXNBKUnx/6hUe1l1y/MlpTys47p+hg414dE1hV0=
+	t=1772638809; cv=none; b=L3jwzjcIXWLPpC8u7Fa8ntMEaIgQJlYvhnhyXLyu41jfskGlb9q2RalG6ZEmavo3AdsyhiMSy5+jgRfyB6LsvSS6zmI5ebRTPZPmkzrC5BrNYSZ4M35rDoBET1yFpgrkfJyrRGFPMavbfe2GuWuzgpWo9zql6MsZJKyRplGBLbs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772637637; c=relaxed/simple;
-	bh=lbNhH/cdOWVOv0hoQh2SiUucMhK/gL8qIkSi1wMeBQo=;
+	s=arc-20240116; t=1772638809; c=relaxed/simple;
+	bh=x2GFsWUAXVV+143T8OkPA+H5dyk+qg28t8r9xm3JhX8=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=qcFLCJ5qGiMtA6AO8qWxjIo8X+AK1bY9kZuttZFxqVzWHF3YSriUDhztX7YPEJrdS84CV6QcuQ8bcYa9wiOjN88w+/4kCDGk/RIwKl2bDyM0PDYmIvgm1moGHPYPiyvD+8VRN2NRa0PopRVIccrp2JWy6vZlk2mDgDgSwYchZSs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=vRozwjX+; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=JREOicHsjpFdr1rF+Qz0WqHwsUJPz4iZRwQ665/R4tPoxGMaQOMFzHy++yA9XIRM+iHe2CW/nXUT8cC6soxVQ5oHsFqcrdKEqiwuKwvp4+iUGtmXmjCCF+twJ5RylA50zohz/hn/GZ7XbVDGVA62tiuAft9Fq+LlzXHaP++jztQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Yn0IldHN; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="vRozwjX+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 78C4CC4CEF7;
-	Wed,  4 Mar 2026 15:20:34 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Yn0IldHN"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DF9EFC19423;
+	Wed,  4 Mar 2026 15:40:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772637637;
-	bh=lbNhH/cdOWVOv0hoQh2SiUucMhK/gL8qIkSi1wMeBQo=;
+	s=k20201202; t=1772638809;
+	bh=x2GFsWUAXVV+143T8OkPA+H5dyk+qg28t8r9xm3JhX8=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=vRozwjX+Gv1G1vWt/CohlzqmGBdoCTOD3z8131ZjgYK3YOUh4vFFufgYS8+ucHRSz
-	 yAC1TmdOGNXGT+drUiwBn26SAHDJ/YqDJz9JXb3zpItpLtgY1l5uvAEns8RQv14oQ6
-	 ZnxTJ3qh8OmumDJyRbJT8zppbg5IxyasGsbIT1qjgF0P8aE0RQCMwgnaZ7fbTHO8fO
-	 56nEu8Z8TWDuF9imRpt7vkPhnX5IiVXLmHXixe+MGx/tihj7FzYEDKc63+gTJkfQxN
-	 u80wMqYrercPxKBCzbIFMqUJ6sb8bWEhMx/2eooMfjS8ARoiUWy+36DEzUGoMXfyLK
-	 GYvY+qgkKMK6g==
-Date: Wed, 4 Mar 2026 20:50:24 +0530
+	b=Yn0IldHNgZINLiTnuH0mbEp72zbKpNo6Cw3EcrWyAb8zivGrF+mxaqrCZsfxTfw6q
+	 R+CGEoCUHEPHYfEqiWRqY9vCZqXUvkEYAFhcUMvgKvTZw3dd2ckOE0P8kxTyfKYKGG
+	 aIw4jZg7KMi6qulIKrGJjofI/vR0ZTE+jGkmQN7lpcu+t7ZRECFopm4eAWi+H6UDDT
+	 gvjsU/SqfNkZFnM/9W6TsAM0V/c0XKKaRqm+aQp+fi8KXz3gLEdLzmBQTN9yy97iUs
+	 +QcU1cKLaiE97QVnPA8de7r0Kz5bNJ1L0uEpUdXqZ6rZBJbs2jgPf9uqXzRtV87hWo
+	 IzVyVrIiztGoQ==
+Date: Wed, 4 Mar 2026 21:09:55 +0530
 From: Manivannan Sadhasivam <mani@kernel.org>
 To: Can Guo <can.guo@oss.qualcomm.com>
 Cc: avri.altman@wdc.com, bvanassche@acm.org, beanhuo@micron.com, 
 	martin.petersen@oracle.com, linux-scsi@vger.kernel.org, 
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
-	"open list:ARM/QUALCOMM MAILING LIST" <linux-arm-msm@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v2 08/11] scsi: ufs: ufs-qcom: Implement vops
- tx_eqtr_notify()
-Message-ID: <fpcbidjthsvsxszyqhd6qwydjilquq76pkexjcqiis5wzdplzx@6ap7gopmudqu>
+	Alim Akhtar <alim.akhtar@samsung.com>, "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
+	open list <linux-kernel@vger.kernel.org>, 
+	"open list:UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER..." <linux-arm-msm@vger.kernel.org>
+Subject: Re: [PATCH v2 09/11] scsi: ufs: ufs-qcom: Implement vops get_rx_fom()
+Message-ID: <ffijub727efmyhatukpqlridfdknwzbsc2dedeohx3snosxqzs@os7ddqrmziqd>
 References: <20260304135313.413688-1-can.guo@oss.qualcomm.com>
- <20260304135313.413688-9-can.guo@oss.qualcomm.com>
+ <20260304135313.413688-10-can.guo@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -47,47 +47,181 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260304135313.413688-9-can.guo@oss.qualcomm.com>
+In-Reply-To: <20260304135313.413688-10-can.guo@oss.qualcomm.com>
 
-On Wed, Mar 04, 2026 at 05:53:10AM -0800, Can Guo wrote:
-> On some platforms, HW does not support triggering TX EQTR from the most
-> reliable High-Speed (HS) Gear (HS Gear1), but only allows to trigger TX
-> EQTR for the target HS Gear from the same HS Gear. To work around the HW
-> limitation, implement vops tx_eqtr_notify() to change Power Mode to the
-> target TX EQTR HS Gear prior to TX EQTR procedure and change Power Mode
-> back to HS Gear1 (the most reliable gear) post TX EQTR procedure.
+On Wed, Mar 04, 2026 at 05:53:11AM -0800, Can Guo wrote:
+> On some platforms, host's M-PHY RX_FOM Attribute always reads 0, meaning
+> SW cannot rely on Figure of Merit (FOM) to identify the optimal TX
+> Equalization settings for device's TX Lanes. Implement the vops
+> ufs_qcom_get_rx_fom() such that SW can utilize the UFS Eye Opening Monitor
+> (EOM) to evaluate the TX Equalization settings for device's TX Lanes.
 > 
 > Signed-off-by: Can Guo <can.guo@oss.qualcomm.com>
 > ---
->  drivers/ufs/host/ufs-qcom.c | 63 +++++++++++++++++++++++++++++++++++++
->  1 file changed, 63 insertions(+)
+>  drivers/ufs/core/ufs-txeq.c |   6 +-
+>  drivers/ufs/host/ufs-qcom.c | 315 ++++++++++++++++++++++++++++++++++++
+>  drivers/ufs/host/ufs-qcom.h |  42 +++++
+>  include/ufs/ufshcd.h        |   3 +
+>  include/ufs/unipro.h        |  16 ++
+>  5 files changed, 379 insertions(+), 3 deletions(-)
 > 
+> diff --git a/drivers/ufs/core/ufs-txeq.c b/drivers/ufs/core/ufs-txeq.c
+> index 2cd2d5156607..02c1a8479910 100644
+> --- a/drivers/ufs/core/ufs-txeq.c
+> +++ b/drivers/ufs/core/ufs-txeq.c
+> @@ -227,9 +227,8 @@ ufshcd_compose_tx_eq_setting(struct ufshcd_tx_eq_settings *settings,
+>   *
+>   * Returns 0 on success, negative error code otherwise
+>   */
+> -static int ufshcd_apply_tx_eq_settings(struct ufs_hba *hba,
+> -				       struct ufshcd_tx_eq_params *params,
+> -				       u32 gear)
+> +int ufshcd_apply_tx_eq_settings(struct ufs_hba *hba,
+> +				struct ufshcd_tx_eq_params *params, u32 gear)
+>  {
+>  	u32 setting;
+>  	int ret;
+> @@ -259,6 +258,7 @@ static int ufshcd_apply_tx_eq_settings(struct ufs_hba *hba,
+>  
+>  	return ret;
+>  }
+> +EXPORT_SYMBOL_GPL(ufshcd_apply_tx_eq_settings);
+>  
+>  /**
+>   * ufshcd_evaluate_fom - Update TX EQ params based on FOM results
 > diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-> index 3a9279066192..1e074058f23d 100644
+> index 1e074058f23d..b8fa4670ddd6 100644
 > --- a/drivers/ufs/host/ufs-qcom.c
 > +++ b/drivers/ufs/host/ufs-qcom.c
-> @@ -2512,6 +2512,68 @@ static u32 ufs_qcom_freq_to_gear_speed(struct ufs_hba *hba, unsigned long freq)
->  	return min_t(u32, gear, hba->max_pwr_info.info.gear_rx);
+> @@ -2534,6 +2534,320 @@ static int ufs_qcom_change_power_mode(struct ufs_hba *hba,
+>  	return ret;
 >  }
 >  
-> +static int ufs_qcom_change_power_mode(struct ufs_hba *hba,
-> +				      struct ufs_pa_layer_attr *pwr_mode,
-> +				      enum ufshcd_pmc_policy pmc_policy)
+> +static int ufs_qcom_host_eom_config(struct ufs_hba *hba, int lane, int v_step,
+> +				    int t_step, enum ufs_eom_eye_pos eye_pos,
+> +				    u32 target_test_count)
 > +{
+> +	u32 volt_step, timing_step;
 > +	int ret;
 > +
-> +	ret = ufs_qcom_pwr_change_notify(hba, PRE_CHANGE, pwr_mode);
+> +	if (v_step > 127 || v_step < -127) {
+> +		dev_err(hba->dev, "Invalid EOM Voltage Step: %d\n", v_step);
+> +		return -EINVAL;
+
+-ERANGE
+
+> +	}
+> +
+> +	if (t_step > 63 || t_step < -63) {
+> +		dev_err(hba->dev, "Invalid EOM Timing Step: %d\n", t_step);
+> +		return -EINVAL;
+
+-ERANGE
+
+> +	}
+> +
+> +	if (v_step < 0)
+> +		volt_step = BIT(6) | (u32)(-v_step);
+
+What does BIT(6) correspond to? Create a define maybe?
+
+> +	else
+> +		volt_step = (u32)v_step;
+> +
+> +	if (t_step < 0)
+> +		timing_step = BIT(6) | (u32)(-t_step);
+> +	else
+> +		timing_step = (u32)t_step;
+> +
+> +	ret = ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(RX_EYEMON_ENABLE,
+> +				UIC_ARG_MPHY_RX_GEN_SEL_INDEX(lane)),
+> +			     BIT(eye_pos) | BIT(6));
 > +	if (ret) {
-> +		dev_err(hba->dev, "Power change notify (PRE_CHANGE) failed: %d\n",
-> +			ret);
+> +		dev_err(hba->dev, "Failed to enable Host EOM on Lane %d: %d\n",
+> +			lane, ret);
 > +		return ret;
 > +	}
 > +
-> +	ret = ufshcd_change_power_mode(hba, pwr_mode, pmc_policy);
-> +	if (ret)
+> +	ret = ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(RX_EYEMON_TIMING_STEPS,
+> +				UIC_ARG_MPHY_RX_GEN_SEL_INDEX(lane)),
+> +			     timing_step);
+> +	if (ret) {
+> +		dev_err(hba->dev, "Failed to set Host EOM timing step on Lane %d: %d\n",
+> +			lane, ret);
 > +		return ret;
+> +	}
 > +
-> +	ufs_qcom_pwr_change_notify(hba, POST_CHANGE, pwr_mode);
+> +	ret = ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(RX_EYEMON_VOLTAGE_STEPS,
+> +				UIC_ARG_MPHY_RX_GEN_SEL_INDEX(lane)),
+> +			     volt_step);
+> +	if (ret) {
+> +		dev_err(hba->dev, "Failed to set Host EOM voltage step on Lane %d: %d\n",
+> +			lane, ret);
+> +		return ret;
+> +	}
+> +
+> +	ret = ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(RX_EYEMON_TARGET_TEST_COUNT,
+> +				UIC_ARG_MPHY_RX_GEN_SEL_INDEX(lane)),
+> +			     target_test_count);
+> +	if (ret)
+> +		dev_err(hba->dev, "Failed to set Host EOM target test count on Lane %d: %d\n",
+> +			lane, ret);
+> +
+> +	return ret;
+> +}
+> +
+> +static int ufs_qcom_host_eom_may_stop(struct ufs_hba *hba, int lane,
+> +				      u32 target_test_count, u32 *err_count)
+> +{
+> +	u32 start, tested_count, error_count;
+> +	int ret;
+> +
+> +	ret = ufshcd_dme_get(hba, UIC_ARG_MIB_SEL(RX_EYEMON_START,
+> +				UIC_ARG_MPHY_RX_GEN_SEL_INDEX(lane)),
+> +			     &start);
+> +	if (ret) {
+> +		dev_err(hba->dev, "Failed to get Host EOM start status on Lane %d: %d\n",
+> +			lane, ret);
+> +		return ret;
+> +	}
+> +
+> +	if (start & 0x1)
+> +		return -EAGAIN;
+> +
+> +	ret = ufshcd_dme_get(hba, UIC_ARG_MIB_SEL(RX_EYEMON_TESTED_COUNT,
+> +				UIC_ARG_MPHY_RX_GEN_SEL_INDEX(lane)),
+> +			     &tested_count);
+> +	if (ret) {
+> +		dev_err(hba->dev, "Failed to get Host EOM tested count on Lane %d: %d\n",
+> +			lane, ret);
+> +		return ret;
+> +	}
+> +
+> +	ret = ufshcd_dme_get(hba, UIC_ARG_MIB_SEL(RX_EYEMON_ERROR_COUNT,
+> +				UIC_ARG_MPHY_RX_GEN_SEL_INDEX(lane)),
+> +			     &error_count);
+> +	if (ret) {
+> +		dev_err(hba->dev, "Failed to get Host EOM error count on Lane %d: %d\n",
+> +			lane, ret);
+> +		return ret;
+> +	}
+> +
+> +	/* EOM can stop */
+> +	if ((tested_count >= target_test_count - 3) || error_count > 0) {
+> +		*err_count = error_count;
+> +
+> +		/* Disable EOM */
+> +		ret = ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(RX_EYEMON_ENABLE,
+> +					UIC_ARG_MPHY_RX_GEN_SEL_INDEX(lane)),
+> +				     0x0);
+> +		if (ret) {
+> +			dev_err(hba->dev, "Failed to disable Host EOM on Lane %d: %d\n",
+> +				lane, ret);
+> +			return ret;
+> +		}
+> +	} else {
+> +		return -EAGAIN;
+> +	}
 > +
 > +	return ret;
 
@@ -95,39 +229,212 @@ return 0;
 
 > +}
 > +
-> +static int ufs_qcom_tx_eqtr_notify(struct ufs_hba *hba,
-> +				   enum ufs_notify_change_status status,
-> +				   struct ufs_pa_layer_attr *pwr_mode)
+> +static int ufs_qcom_host_eom_scan(struct ufs_hba *hba, int num_lanes,
+> +				  const struct ufs_eom_coord *eom_coord,
+> +				  u32 target_test_count, u32 *err_count)
 > +{
+> +	bool eom_stopped[PA_MAXDATALANES] = { 0 };
+> +	enum ufs_eom_eye_pos eye_pos;
+> +	int lane, v_step, t_step, ret;
+> +	u32 setting;
+> +
+> +	if (!err_count || !eom_coord)
+> +		return -EINVAL;
+> +
+> +	if (target_test_count < 8) {
+> +		dev_err(hba->dev, "%s: Target test count (%u) too small for Host EOM\n",
+> +			__func__, target_test_count);
+
+No __func__ please.
+
+> +		return -EINVAL;
+
+-ERANGE
+
+> +	}
+> +
+> +	v_step = eom_coord->v_step;
+> +	t_step = eom_coord->t_step;
+> +	eye_pos = eom_coord->eye_pos;
+> +
+> +	for (lane = 0; lane < num_lanes; lane++) {
+> +		ret = ufs_qcom_host_eom_config(hba, lane, v_step, t_step,
+> +					       eye_pos, target_test_count);
+> +		if (ret) {
+> +			dev_err(hba->dev, "Failed to config Host EOM: %d\n",
+> +				ret);
+> +			return ret;
+> +		}
+> +	}
+> +
+> +	/*
+> +	 * Trigger a PACP_PWR_req to kick start EOM, but not to really change
+> +	 * the Power Mode.
+> +	 */
+> +	ret = ufshcd_uic_change_pwr_mode(hba, FAST_MODE << 4 | FAST_MODE);
+> +	if (ret) {
+> +		dev_err(hba->dev, "Failed to change power mode to kick start Host EOM: %d\n",
+> +			ret);
+> +		return ret;
+> +	}
+> +
+> +more_burst:
+> +	/* Create burst on Host RX Lane. */
+> +	ufshcd_dme_peer_get(hba, UIC_ARG_MIB(PA_LOCALVERINFO), &setting);
+> +
+> +	for (lane = 0; lane < num_lanes; lane++) {
+> +		if (eom_stopped[lane])
+> +			continue;
+> +
+> +		ret = ufs_qcom_host_eom_may_stop(hba, lane, target_test_count,
+> +						 &err_count[lane]);
+> +		if (!ret) {
+> +			eom_stopped[lane] = true;
+> +		} else if (ret == -EAGAIN) {
+> +			/* Need more burst to excercise EOM */
+> +			goto more_burst;
+> +		} else {
+> +			dev_err(hba->dev, "Failed to stop Host EOM: %d\n", ret);
+> +			return ret;
+> +		}
+> +
+> +		dev_dbg(hba->dev, "%s: Host RX Lane %d EOM, v_step %d, t_step %d, error count %u\n",
+> +			__func__, lane, v_step, t_step, err_count[lane]);
+> +	}
+> +
+> +	return ret;
+
+return 0;
+
+> +}
+> +
+> +static int ufs_qcom_host_sw_rx_fom(struct ufs_hba *hba, int num_lanes, u32 *fom)
+> +{
+> +	const struct ufs_eom_coord *eom_coord = sw_rx_fom_eom_coords_g6;
+> +	u32 eom_err_count[PA_MAXDATALANES] = { 0 };
+> +	u32 curr_ahit;
+> +	int lane, i, ret;
+> +
+> +	if (!fom)
+> +		return -EINVAL;
+> +
+> +	/* Stop the auto hibernate idle timer */
+> +	curr_ahit = ufshcd_readl(hba, REG_AUTO_HIBERNATE_IDLE_TIMER);
+> +	if (curr_ahit)
+> +		ufshcd_writel(hba, 0, REG_AUTO_HIBERNATE_IDLE_TIMER);
+> +
+> +	ret = ufshcd_dme_set(hba, UIC_ARG_MIB(PA_TXHSADAPTTYPE), PA_NO_ADAPT);
+> +	if (ret) {
+> +		dev_err(hba->dev, "%s: Failed to select NO_ADAPT before starting Host EOM: %d\n",
+> +			__func__, ret);
+> +		goto out;
+> +	}
+> +
+> +	for (i = 0; i < SW_RX_FOM_EOM_COORDS; i++, eom_coord++) {
+> +		ret = ufs_qcom_host_eom_scan(hba, num_lanes, eom_coord, 0x3F,
+> +					     eom_err_count);
+> +		if (ret) {
+> +			dev_err(hba->dev, "%s: Failed to run Host EOM scan: %d\n",
+> +				__func__, ret);
+> +			break;
+> +		}
+> +
+> +		for (lane = 0; lane < num_lanes; lane++) {
+> +			/* Bad coordinates have no weights */
+> +			if (eom_err_count[lane])
+> +				continue;
+> +			fom[lane] += SW_RX_FOM_EOM_COORDS_WEIGHT;
+> +		}
+> +	}
+> +
+> +out:
+> +	/* Restore the auto hibernate idle timer */
+> +	if (curr_ahit)
+> +		ufshcd_writel(hba, curr_ahit, REG_AUTO_HIBERNATE_IDLE_TIMER);
+> +
+> +	return ret;
+> +}
+> +
+> +static int ufs_qcom_get_rx_fom(struct ufs_hba *hba,
+> +			       struct ufs_pa_layer_attr *pwr_mode,
+> +			       struct tx_eqtr_iter *h_iter,
+> +			       struct tx_eqtr_iter *d_iter)
+> +{
+> +	struct ufshcd_tx_eq_params *params __free(kfree) =
+> +		kzalloc(sizeof(*params), GFP_KERNEL);
 > +	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
-> +	struct ufs_pa_layer_attr pwr_mode_hs_g1 = {
-> +		.gear_rx = UFS_HS_G1,
-> +		.gear_tx = UFS_HS_G1,
-> +		.lane_rx = pwr_mode->lane_rx,
-> +		.lane_tx = pwr_mode->lane_tx,
-> +		.pwr_rx = FAST_MODE,
-> +		.pwr_tx = FAST_MODE,
-> +		.hs_rate = pwr_mode->hs_rate,
-> +	};
+> +	struct ufs_pa_layer_attr old_pwr_info;
+> +	u32 fom[PA_MAXDATALANES] = { 0 };
 > +	u32 gear = pwr_mode->gear_tx;
 > +	u32 rate = pwr_mode->hs_rate;
-> +	int ret;
+> +	int lane, ret;
 > +
-> +	if (host->hw_ver.major != 0x7 || host->hw_ver.minor > 0x1)
+> +	if (host->hw_ver.major != 0x7 || host->hw_ver.minor > 0x1 ||
+> +	    gear <= UFS_HS_G5 || !d_iter || !d_iter->is_new)
 > +		return 0;
 > +
-> +	if (status == PRE_CHANGE) {
-> +		/* PMC to target HS Gear. */
-> +		ret = ufs_qcom_change_power_mode(hba, pwr_mode,
-> +						 UFSHCD_PMC_POLICY_DONT_FORCE);
-> +		if (ret)
-> +			dev_err(hba->dev, "%s: Failed to change power mode to target HS-G%u, Rate-%s: %d\n",
+> +	if (gear < UFS_HS_G1 || gear >= UFS_HS_GEAR_MAX)
+> +		return -EINVAL;
 
-Same comment as other patch. Goes over 100 column.
+-ERANGE
 
-> +				__func__, gear, UFS_HS_RATE_STRING(rate), ret);
+> +
+> +	if (!params)
+> +		return -ENOMEM;
+> +
+> +	memcpy(&old_pwr_info, &hba->pwr_info, sizeof(struct ufs_pa_layer_attr));
+> +
+> +	memcpy(params, &hba->tx_eq_params[gear - 1], sizeof(struct ufshcd_tx_eq_params));
+> +	for (lane = 0; lane < d_iter->num_lanes; lane++) {
+> +		params->device[lane].preshoot = d_iter->preshoot;
+> +		params->device[lane].deemphasis = d_iter->deemphasis;
+> +	}
+> +
+> +	/* Use TX EQTR settings as Device's TX Equalization settings. */
+> +	ret = ufshcd_apply_tx_eq_settings(hba, params, gear);
+> +	if (ret) {
+> +		dev_err(hba->dev, "%s: Failed to apply TX EQ settings for HS-G%u: %d\n",
+> +			__func__, gear, ret);
+> +		return ret;
+> +	}
+> +
+> +	/* Force PMC to target HS Gear to use new TX Equalization settings. */
+> +	ret = ufs_qcom_change_power_mode(hba, pwr_mode, UFSHCD_PMC_POLICY_FORCE);
+> +	if (ret) {
+> +		dev_err(hba->dev, "%s: Failed to change power mode to HS-G%u, Rate-%s: %d\n",
+> +			__func__, gear, UFS_HS_RATE_STRING(rate), ret);
+> +		return ret;
+> +	}
+> +
+> +	ret = ufs_qcom_host_sw_rx_fom(hba, d_iter->num_lanes, fom);
+> +	if (ret) {
+> +		dev_err(hba->dev, "Failed to get Host SW FOM for Device TX Lane (PreShoot: %u, DeEmphasis: %u): %d\n",
+> +			d_iter->preshoot, d_iter->deemphasis, ret);
+> +		return ret;
+> +	}
+> +
+> +	/* Restore Device's TX Equalization settings. */
+> +	ret = ufshcd_apply_tx_eq_settings(hba, &hba->tx_eq_params[gear - 1], gear);
+> +	if (ret) {
+> +		dev_err(hba->dev, "%s: Failed to apply TX EQ settings for HS-G%u: %d\n",
+> +			__func__, gear, ret);
+> +		return ret;
+> +	}
+> +
+> +	/* Restore Power Mode. */
+> +	ret = ufs_qcom_change_power_mode(hba, &old_pwr_info, UFSHCD_PMC_POLICY_FORCE);
+> +	if (ret) {
+> +		dev_err(hba->dev, "%s: Failed to retore power mode to HS-G%u: %d\n",
+> +			__func__, old_pwr_info.gear_tx, ret);
+> +		return ret;
+> +	}
+> +
+> +	for (lane = 0; lane < d_iter->num_lanes; lane++)
+> +		d_iter->fom[lane] = fom[lane];
+> +
+> +	return ret;
 
-Can we please not specify the function name in error log?
+return 0;
 
 - Mani
 
