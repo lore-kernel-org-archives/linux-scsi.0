@@ -1,61 +1,41 @@
-Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
+Received: from out30-65.freemail.mail.aliyun.com (out30-65.freemail.mail.aliyun.com [115.124.30.65])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D2C62AE8D
-	for <linux-scsi@vger.kernel.org>; Wed,  4 Mar 2026 07:14:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.61.82.184
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 34375382F31;
+	Wed,  4 Mar 2026 07:57:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.65
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772608444; cv=none; b=owRXLKf28JFgnZ8/PJz8VEc4s2bzb1BgP09/Ap4IOBhjnSWpnhHRFhjvgFOtazMYTXIY3X1tziiiIKJTJ1/ZvH7DE3dpcYuFZeqaN5Sh+C3PrC2+IBo+0FMcexvr3bdrGXBPs1X2Ng6qplhJiDhoZ2BWgKi8kwV8TN12oqqvSs8=
+	t=1772611049; cv=none; b=rKvHDOUZTKT7iUcQJ5xlTpCs+cAFPslJs+vsO4BxVI9LI6oLEqDRs9fqEHrzh4f9S7YJic2pz9oju0PiB4NORwkWpv0g66qSnsBfxAIGIeCBkbADJTx5J2w4caoqLtBzxcj7U9n9H6+uOZk/cyhTM8/C3wnxRNi626WKziBVyw8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772608444; c=relaxed/simple;
-	bh=ghq81Jeuvoq11zxI6QY6VqoYA7W6aGrsOGBSVh9fhhw=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=dURR7+rxfqghScIu2qe4FJzXoi8j4oaa3ba1im6t9+U6O8gMhNbS+//AXc7Vuc9PTPsWyYa84LpYK775ZBAU478WXmyXBiLvMihDxCjJNXsLX7EIi+YWRZr38vnqarvDDUvHBemoaLsPYfUWwqiiUjH79x5c0hsnBjDKOrvE6AI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=QmTY9Zs5; arc=none smtp.client-ip=210.61.82.184
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
+	s=arc-20240116; t=1772611049; c=relaxed/simple;
+	bh=Jys2tm4wdsFkaXHimIspWlP8VMjjv8Lce2XRhukObyI=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=H4YwQcMhjW0m++DrtNvO7rS+3Z9iWY2CKf7+fxA7yUiCzaUwyWhzjjrt6AexQ74rlrrIXOYn1Y06XqscRSuQxWmfZGR6usunw0dDJiZcvIqvMF557PeBCbULyCICkLSdcz4OJHLqWonfiSh2mTFdwm/S683S7nzMu+K1d6HnhHA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=aliyun.com; spf=pass smtp.mailfrom=aliyun.com; dkim=pass (1024-bit key) header.d=aliyun.com header.i=@aliyun.com header.b=eDrys2js; arc=none smtp.client-ip=115.124.30.65
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=aliyun.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=aliyun.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="QmTY9Zs5"
-X-UUID: b1981b06179911f1b7fc4fdb8733b2bc-20260304
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=Content-Type:Content-Transfer-Encoding:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=eGCFx++2VzGehtBzmKmti7W4IMXs0RaEEqoTklgLkF8=;
-	b=QmTY9Zs5Ogr5rsM6HYlIUgwAqK6YR+arqXVaNaeHLHLQaZ17KpTy5Lfl5qVMJ6taqkNyS0Kkyt08QR0a8GL0XQ+g0MN4IPVVbTjjUP0qgM7U7F2cTX086Ldgkt2sV2LjhdBrJ4ckxoS0x6l6ndM9zXh2hqRhgZrWkNGkAegsFqo=;
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.11,REQID:c0c211cc-07c3-465f-934b-5a80d472813c,IP:0,U
-	RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
-	release,TS:0
-X-CID-META: VersionHash:89c9d04,CLOUDID:082c3ef1-16bd-4243-b4ca-b08ca08ab1d8,B
-	ulkID:nil,BulkQuantity:0,Recheck:0,SF:102|123|836|888|898,TC:-5,Content:0|
-	15|50,EDM:-3,IP:nil,URL:0,File:130,RT:0,Bulk:nil,QS:nil,BEC:-1,COL:0,OSI:0
-	,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
-X-CID-BVR: 2,SSN|SDN
-X-CID-BAS: 2,SSN|SDN,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR
-X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: b1981b06179911f1b7fc4fdb8733b2bc-20260304
-Received: from mtkmbs11n2.mediatek.inc [(172.21.101.187)] by mailgw02.mediatek.com
-	(envelope-from <peter.wang@mediatek.com>)
-	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 726065777; Wed, 04 Mar 2026 15:13:50 +0800
-Received: from mtkmbs13n2.mediatek.inc (172.21.101.108) by
- MTKMBS09N2.mediatek.inc (172.21.101.94) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.29; Wed, 4 Mar 2026 15:13:49 +0800
-Received: from mtksitap99.mediatek.inc (10.233.130.16) by
- mtkmbs13n2.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.2562.29 via Frontend Transport; Wed, 4 Mar 2026 15:13:48 +0800
-From: <peter.wang@mediatek.com>
-To: <linux-scsi@vger.kernel.org>, <martin.petersen@oracle.com>,
-	<avri.altman@sandisk.com>, <alim.akhtar@samsung.com>, <jejb@linux.ibm.com>
-CC: <wsd_upstream@mediatek.com>, <linux-mediatek@lists.infradead.org>,
-	<peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
-	<alice.chao@mediatek.com>, <cc.chou@mediatek.com>,
-	<chaotian.jing@mediatek.com>, <tun-yu.yu@mediatek.com>,
-	<eddie.huang@mediatek.com>, <naomi.chu@mediatek.com>, <ed.tsai@mediatek.com>,
-	<bvanassche@acm.org>
-Subject: [PATCH v1] ufs: core: Avoid IRQ thread wakeup during active UIC command
-Date: Wed, 4 Mar 2026 15:12:45 +0800
-Message-ID: <20260304071346.1391315-1-peter.wang@mediatek.com>
-X-Mailer: git-send-email 2.45.2
+	dkim=pass (1024-bit key) header.d=aliyun.com header.i=@aliyun.com header.b="eDrys2js"
+DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=aliyun.com; s=s1024;
+	t=1772611039; h=From:To:Subject:Date:Message-ID:MIME-Version;
+	bh=kKWlY/Al6Bn7Vqp7QnoBuuIAht21Xl6dFtbJrhF04P8=;
+	b=eDrys2js/DSJc88uI8TIHnZIQSuFe7qD5UWT2o2Qt748VSC4lk7cT4/8QhryxP+5hLtiYwPpeva+esTIfFgXiLBhmXcWEvE7stFEM4pn1uU81WcnQOrmLAALk4jyGkteGKwiuwHyOBV3FVs3X1dGBVwwi6lFclnlpuHOxUfX8uU=
+Received: from localhost.localdomain(mailfrom:wdhh6@aliyun.com fp:SMTPD_---0X-DNxS7_1772611034 cluster:ay36)
+          by smtp.aliyun-inc.com;
+          Wed, 04 Mar 2026 15:57:18 +0800
+From: Chaohai Chen <wdhh6@aliyun.com>
+To: James.Bottomley@HansenPartnership.com,
+	martin.petersen@oracle.com,
+	dlemoal@kernel.org,
+	bvanassche@acm.org,
+	hch@infradead.org
+Cc: linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Chaohai Chen <wdhh6@aliyun.com>
+Subject: [PATCH v3] scsi: core: Fix async_scan race condition with READ_ONCE/WRITE_ONCE
+Date: Wed,  4 Mar 2026 15:57:12 +0800
+Message-ID: <20260304075712.3039960-1-wdhh6@aliyun.com>
+X-Mailer: git-send-email 2.43.7
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -63,39 +43,144 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-MTK: N
 
-From: Peter Wang <peter.wang@mediatek.com>
+Previously, host_lock was used to prevent bit-set conflicts in async_scan,
+but this approach introduced naked reads in some code paths.
 
-Only return IRQ_WAKE_THREAD when MCQ and ESI are not enabled
-and no UIC command is active. Since the default UIC command
-timeout is 500ms, handling IRQs in a thread during an active UIC
-command can easily lead to timeouts due to delayed processing.
+Convert async_scan from a bitfield to a bool type to eliminate bit-level
+conflicts entirely. Use READ_ONCE() and WRITE_ONCE() to ensure proper
+memory ordering on Alpha and satisfy KCSAN requirements.
 
-Signed-off-by: Peter Wang <peter.wang@mediatek.com>
+Signed-off-by: Chaohai Chen <wdhh6@aliyun.com>
 ---
- drivers/ufs/core/ufshcd.c | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 9908375b2f98..3f18c1a39f27 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -7201,8 +7201,11 @@ static irqreturn_t ufshcd_intr(int irq, void *__hba)
- 	u32 intr_status, enabled_intr_status;
+v1->v3:
+use READ_ONCE()/WRITE_ONCE() to fix the issue (Christoph Hellwig, Damien Le Moal)
+
+v1: https://lore.kernel.org/all/20260302121343.1630837-1-wdhh6@aliyun.com/
+
+ drivers/scsi/scsi_scan.c | 22 ++++++++--------------
+ include/scsi/scsi_host.h |  6 +++---
+ 2 files changed, 11 insertions(+), 17 deletions(-)
+
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index 60c06fa4ec32..892be54dacc6 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -1298,7 +1298,7 @@ static int scsi_probe_and_add_lun(struct scsi_target *starget,
+ 		goto out_free_result;
+ 	}
  
- 	/* Move interrupt handling to thread when MCQ & ESI are not enabled */
--	if (!hba->mcq_enabled || !hba->mcq_esi_enabled)
--		return IRQ_WAKE_THREAD;
-+	if (!hba->mcq_enabled || !hba->mcq_esi_enabled) {
-+		/* UIC commands should be processed promptly */
-+		if (!hba->active_uic_cmd)
-+			return IRQ_WAKE_THREAD;
-+	}
+-	res = scsi_add_lun(sdev, result, &bflags, shost->async_scan);
++	res = scsi_add_lun(sdev, result, &bflags, READ_ONCE(shost->async_scan));
+ 	if (res == SCSI_SCAN_LUN_PRESENT) {
+ 		if (bflags & BLIST_KEY) {
+ 			sdev->lockable = 0;
+@@ -1629,7 +1629,7 @@ struct scsi_device *__scsi_add_device(struct Scsi_Host *shost, uint channel,
+ 	scsi_autopm_get_target(starget);
  
- 	intr_status = ufshcd_readl(hba, REG_INTERRUPT_STATUS);
- 	enabled_intr_status = intr_status & ufshcd_readl(hba, REG_INTERRUPT_ENABLE);
+ 	mutex_lock(&shost->scan_mutex);
+-	if (!shost->async_scan)
++	if (!READ_ONCE(shost->async_scan))
+ 		scsi_complete_async_scans();
+ 
+ 	if (scsi_host_scan_allowed(shost) && scsi_autopm_get_host(shost) == 0) {
+@@ -1839,7 +1839,7 @@ void scsi_scan_target(struct device *parent, unsigned int channel,
+ 		return;
+ 
+ 	mutex_lock(&shost->scan_mutex);
+-	if (!shost->async_scan)
++	if (!READ_ONCE(shost->async_scan))
+ 		scsi_complete_async_scans();
+ 
+ 	if (scsi_host_scan_allowed(shost) && scsi_autopm_get_host(shost) == 0) {
+@@ -1896,7 +1896,7 @@ int scsi_scan_host_selected(struct Scsi_Host *shost, unsigned int channel,
+ 		return -EINVAL;
+ 
+ 	mutex_lock(&shost->scan_mutex);
+-	if (!shost->async_scan)
++	if (!READ_ONCE(shost->async_scan))
+ 		scsi_complete_async_scans();
+ 
+ 	if (scsi_host_scan_allowed(shost) && scsi_autopm_get_host(shost) == 0) {
+@@ -1943,13 +1943,12 @@ static void scsi_sysfs_add_devices(struct Scsi_Host *shost)
+ static struct async_scan_data *scsi_prep_async_scan(struct Scsi_Host *shost)
+ {
+ 	struct async_scan_data *data = NULL;
+-	unsigned long flags;
+ 
+ 	if (strncmp(scsi_scan_type, "sync", 4) == 0)
+ 		return NULL;
+ 
+ 	mutex_lock(&shost->scan_mutex);
+-	if (shost->async_scan) {
++	if (READ_ONCE(shost->async_scan)) {
+ 		shost_printk(KERN_DEBUG, shost, "%s called twice\n", __func__);
+ 		goto err;
+ 	}
+@@ -1962,9 +1961,7 @@ static struct async_scan_data *scsi_prep_async_scan(struct Scsi_Host *shost)
+ 		goto err;
+ 	init_completion(&data->prev_finished);
+ 
+-	spin_lock_irqsave(shost->host_lock, flags);
+-	shost->async_scan = 1;
+-	spin_unlock_irqrestore(shost->host_lock, flags);
++	WRITE_ONCE(shost->async_scan, true);
+ 	mutex_unlock(&shost->scan_mutex);
+ 
+ 	spin_lock(&async_scan_lock);
+@@ -1992,7 +1989,6 @@ static struct async_scan_data *scsi_prep_async_scan(struct Scsi_Host *shost)
+ static void scsi_finish_async_scan(struct async_scan_data *data)
+ {
+ 	struct Scsi_Host *shost;
+-	unsigned long flags;
+ 
+ 	if (!data)
+ 		return;
+@@ -2001,7 +1997,7 @@ static void scsi_finish_async_scan(struct async_scan_data *data)
+ 
+ 	mutex_lock(&shost->scan_mutex);
+ 
+-	if (!shost->async_scan) {
++	if (!READ_ONCE(shost->async_scan)) {
+ 		shost_printk(KERN_INFO, shost, "%s called twice\n", __func__);
+ 		dump_stack();
+ 		mutex_unlock(&shost->scan_mutex);
+@@ -2012,9 +2008,7 @@ static void scsi_finish_async_scan(struct async_scan_data *data)
+ 
+ 	scsi_sysfs_add_devices(shost);
+ 
+-	spin_lock_irqsave(shost->host_lock, flags);
+-	shost->async_scan = 0;
+-	spin_unlock_irqrestore(shost->host_lock, flags);
++	WRITE_ONCE(shost->async_scan, false);
+ 
+ 	mutex_unlock(&shost->scan_mutex);
+ 
+diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+index f6e12565a81d..668ec9a1b33c 100644
+--- a/include/scsi/scsi_host.h
++++ b/include/scsi/scsi_host.h
+@@ -678,9 +678,6 @@ struct Scsi_Host {
+ 	/* Task mgmt function in progress */
+ 	unsigned tmf_in_progress:1;
+ 
+-	/* Asynchronous scan in progress */
+-	unsigned async_scan:1;
+-
+ 	/* Don't resume host in EH */
+ 	unsigned eh_noresume:1;
+ 
+@@ -699,6 +696,9 @@ struct Scsi_Host {
+ 	/* The transport requires the LUN bits NOT to be stored in CDB[1] */
+ 	unsigned no_scsi2_lun_in_cdb:1;
+ 
++	/* Asynchronous scan in progress */
++	bool async_scan;
++
+ 	/*
+ 	 * Optional work queue to be utilized by the transport
+ 	 */
 -- 
-2.45.2
+2.43.7
 
