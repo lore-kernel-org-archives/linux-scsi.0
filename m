@@ -1,92 +1,141 @@
-Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
+Received: from mo4-p01-ob.smtp.rzone.de (mo4-p01-ob.smtp.rzone.de [81.169.146.167])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 593953BFE29;
-	Thu,  5 Mar 2026 15:18:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.16
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772723888; cv=none; b=aJFQew+p8xeC+k3Dtsqp5FGHOLnyGwWdF7mowuFzpAy426964hkmRf7brAIr3rHqBA9ruxMHKjx7JKmwZEWsZbsdWqEiph7mt4PFTJtAHQbveqtztV8vD8tqZADPEFseiA42dXGNcazADMCbilprAJuweAKtCtQ6wBJTjUDP5Ck=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772723888; c=relaxed/simple;
-	bh=4nZYjED8YNnNBnVQh2FNaZsGgF6vzOORzOtL9Ez3H/E=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=a5k1EzoFrhq9Eq7xOCwPBUbKwNsIwybBIdwVi1We+kzzBqRxXcXUl9YGcHeMFoIg6NjV8dk2e+bI8mJN7IazqwD/b3cBzt9wAExU9CPp4FgKnybskllVPfSKnV5tvvwXDPoqC73WmmnsgGY7JkrNtZDUyq5K1+0brpCtOb0VC9Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=Z7BiU6RX; arc=none smtp.client-ip=199.89.1.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F08E381B05;
+	Thu,  5 Mar 2026 15:28:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=81.169.146.167
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1772724528; cv=pass; b=TEXwPXc1BIFl8A3CbdxS2g0V4MNNjhahiWDDZTpOF9LGLPPmMQtCSfZEsgw4F+6yNWIvim5YmpkQ1ENAvN3dd7jhrfz0urRWRk6hp3/TQdi5Hc8hCWSYyXMeFMjTq+SUKjRyAY7ZI/oxULsBQBW6k92yk+bYxszzHr1CiLZZLP8=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1772724528; c=relaxed/simple;
+	bh=GyfEWDA4WY/JVJH+sN9E8894942o4AuX6wqzVKR7s0o=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=idcP+lj1+8lNw5w5FFDHL2eLkceZbPNjKLzNDykUr1EwI024sJuGFrPU3mukUjhMHjZYzx3HbGOUAuODeT+m7UrqX4QrISmoSQ1rYh3I0Cw4DHZ9VsyESvuLhH9JX0oH9Y+ihviqgQo0Pk2Zpcn57THrkwv2l7InhQj2rreCVCI=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iokpp.de; spf=none smtp.mailfrom=iokpp.de; dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.b=Ivu5PIdL; dkim=permerror (0-bit key) header.d=iokpp.de header.i=@iokpp.de header.b=UwRwlIrv; arc=pass smtp.client-ip=81.169.146.167
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iokpp.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=iokpp.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="Z7BiU6RX"
-Received: from localhost (localhost [127.0.0.1])
-	by 013.lax.mailroute.net (Postfix) with ESMTP id 4fRY7y6LjPzlfpMC;
-	Thu,  5 Mar 2026 15:18:06 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1772723883; x=1775315884; bh=YCtyvLy0gs1hmVzUNBuXuXnS
-	68gNDqY6hpoyPbBO4Nw=; b=Z7BiU6RXVA90y20zHyOD8JKg71QUN/+wn+TPSlCt
-	3Pp+PVN5OMTkzfRe/19Xm+4+PGgN3tKck2h/MuqBimtJyJPRZOkiNsrw6YuxVtBA
-	h0Egkfk+dz0yWT+5j7KUcBMJFzDkMIKN5GmqaP0hpZ7mUEIZAQUXIN0HYzjUKDYd
-	HJ5fgqHbqjvVW3H4JbjyzXrG4gG7bfg1Ym12b2/QfeMulCg8Ece7jCFIiY421B2Q
-	9Z/81dwQeeu41oGylCWL2TD2TYait4eHQBHWCt3J4FEJtAoP2/BwPPKvgefAGOKI
-	gfeY8aiolVhQUnUyjB3R62d4b1TJuP91ej+mEg6SR139NQ==
-X-Virus-Scanned: by MailRoute
-Received: from 013.lax.mailroute.net ([127.0.0.1])
- by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id 1kGTZzfQ7AHv; Thu,  5 Mar 2026 15:18:03 +0000 (UTC)
-Received: from [192.168.132.187] (unknown [12.150.89.26])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4fRY7r0bRgzlfvpG;
-	Thu,  5 Mar 2026 15:17:59 +0000 (UTC)
-Message-ID: <072ec437-c324-472c-9fed-f9b2c6e69233@acm.org>
-Date: Thu, 5 Mar 2026 09:17:57 -0600
+	dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.b="Ivu5PIdL";
+	dkim=permerror (0-bit key) header.d=iokpp.de header.i=@iokpp.de header.b="UwRwlIrv"
+ARC-Seal: i=1; a=rsa-sha256; t=1772723084; cv=none;
+    d=strato.com; s=strato-dkim-0002;
+    b=cw4m37SOvk8u7b9ffp1hw9PhdWe11RmUm9AziYiNGzXYouhmCt9WhPUIIRjdNPXjJq
+    6PHfaodLGvgSyf7mKWV62+fqql0Ks+6szfCtMr1I+gdiZYSOJs4TgBIrrlDdsnwZAG2r
+    aYDhUmpoKVe5mcGCo+zng3cvNgchf53GHRZRdLyItCF8bzkSQ08KmBxO9s8G+HlDFT5V
+    tUoVqEU9LFvNGHc71KBdTeLO0++63QtmaRI95p21GjY7ndFqOxLm3j/mVr+QiVDIRRAT
+    WyIh1Pqk2ZSrKdb+oF4qoZ5MrDrQn833OyOu6Q9Tx02jSvI5vcZ6P9nwZjkY9LHHMHzl
+    ON8A==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; t=1772723084;
+    s=strato-dkim-0002; d=strato.com;
+    h=References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Cc:Date:
+    From:Subject:Sender;
+    bh=GyfEWDA4WY/JVJH+sN9E8894942o4AuX6wqzVKR7s0o=;
+    b=SzhKspfABu22MxjYbpof4D4qXJH077/WPXs+E6FSiwuXMU/1oxDLqdjJyLtk1ObXKk
+    Qy7RQwUFkq4U1y6b0jicRWmqEcYtZKkbGWGtBD9QouNhpf7wNmWfTuxOMcHtQHO1gxWg
+    DNEXZug4l9cSZz/pRoSue0cRllLhwA0jUKvyUwiCA+HTb7Fq8rx5jQr8TyrJNhgqDFs6
+    Mq+cQwmMMEYdq2G+RQJPAYfC3MlwCfX4IgDg49X2yF7pkd7o4QQIevl7+keUieRE1n+S
+    KGKmXvWcTyG+HWMhTESKBXmlQ/rfvm0M+T70eDl4qPGLA+pJEDRFOBl6LpxD+0QIVj2h
+    jD3w==
+ARC-Authentication-Results: i=1; strato.com;
+    arc=none;
+    dkim=none
+X-RZG-CLASS-ID: mo01
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1772723084;
+    s=strato-dkim-0002; d=iokpp.de;
+    h=References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Cc:Date:
+    From:Subject:Sender;
+    bh=GyfEWDA4WY/JVJH+sN9E8894942o4AuX6wqzVKR7s0o=;
+    b=Ivu5PIdLe657vURoySW9zhV5BcRkIGzQS9+Q5Xt9ocPIW1Te2r0gwnf1P6Uy/DW9u0
+    Nb+/8EEaf0LdB00bTXANLcGq48MpPQEBekNLakrA7vcRDxutObNxfb747fqhPYN6wOqm
+    wa5sTTIuduFF80x6p75uQXiOqV1mwUVcZmFC68R4ap7TvCDwz7oEDtiGvtHREm0X0KKt
+    EiMZIG9F/8Nvl7ssut917fGxPGYuZwOhx0Kdu1YMdvpSdWPnz9vDAh6FEeQhcIqO/Ydq
+    HkUIm3nFVO3gTK4YckgXWMjdzPLXabl1RbLF9UX4OVKQG0Q3Ng3pwuuOYwkS0UdIwN38
+    HIzA==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; t=1772723084;
+    s=strato-dkim-0003; d=iokpp.de;
+    h=References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Cc:Date:
+    From:Subject:Sender;
+    bh=GyfEWDA4WY/JVJH+sN9E8894942o4AuX6wqzVKR7s0o=;
+    b=UwRwlIrvUlqsxvhWnwFKEUi5e7iADlH5h+t66RJbZEC+WpmOsIRA7DyMrjSQAOBfNk
+    tG6MBjwHM+9Mxc3tuGAQ==
+X-RZG-AUTH: ":LmkFe0i9dN8c2t4QQyGBB/NDXvjDB6pBSe9tgBDSDt0V0DBslXBtZUxPOub3IZqk"
+Received: from [10.176.235.211]
+    by smtp.strato.de (RZmta 55.0.1 AUTH)
+    with ESMTPSA id z79345225F4h63E
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256 bits))
+	(Client did not present a certificate);
+    Thu, 5 Mar 2026 16:04:43 +0100 (CET)
+Message-ID: <e116e78ad9590f5845aaaf7d4e26833a7a0194d0.camel@iokpp.de>
+Subject: Re: [PATCH v2 00/11] scsi: ufs: Add TX Equalization support for UFS
+ 5.0
+From: Bean Huo <beanhuo@iokpp.de>
+To: Can Guo <can.guo@oss.qualcomm.com>, avri.altman@wdc.com,
+ bvanassche@acm.org,  beanhuo@micron.com, martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, Matthias Brugger <matthias.bgg@gmail.com>, 
+ AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>, "open
+ list:ARM/Mediatek SoC support:Keyword:mediatek"
+ <linux-kernel@vger.kernel.org>, "moderated list:ARM/Mediatek SoC
+ support:Keyword:mediatek" <linux-arm-kernel@lists.infradead.org>,
+ "moderated list:ARM/Mediatek SoC support:Keyword:mediatek"
+ <linux-mediatek@lists.infradead.org>
+Date: Thu, 05 Mar 2026 16:04:43 +0100
+In-Reply-To: <20260304135313.413688-1-can.guo@oss.qualcomm.com>
+References: <20260304135313.413688-1-can.guo@oss.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.44.4-0ubuntu2.1 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v6 2/3] bsg: add io_uring command support to generic layer
-To: Yang Xiuwei <yangxiuwei@kylinos.cn>, fujita.tomonori@lab.ntt.co.jp,
- axboe@kernel.dk, James.Bottomley@HansenPartnership.com,
- martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
- io-uring@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20260304080313.675768-1-yangxiuwei@kylinos.cn>
- <20260305012857.2136525-1-yangxiuwei@kylinos.cn>
- <20260305012857.2136525-3-yangxiuwei@kylinos.cn>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20260305012857.2136525-3-yangxiuwei@kylinos.cn>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
 
-On 3/4/26 7:28 PM, Yang Xiuwei wrote:
-> +static int bsg_uring_cmd(struct io_uring_cmd *ioucmd, unsigned int issue_flags)
-> +{
-> +	struct bsg_device *bd = to_bsg_device(file_inode(ioucmd->file));
-> +	struct request_queue *q = bd->queue;
-> +	bool open_for_write = ioucmd->file->f_mode & FMODE_WRITE;
-> +	int ret;
+Can,=20
 
-Please order declarations from longest to shortest.
+On Wed, 2026-03-04 at 05:53 -0800, Can Guo wrote:
+> Hi,
+>=20
+> The UFS 5.0 standard was published today,=C2=A0
 
-> +	if (bd->uring_cmd_fn)
-> +		return bd->uring_cmd_fn(q, ioucmd, issue_flags, open_for_write);
-> +	return -EOPNOTSUPP;
+Myabe replace time sensitive wording =E2=80=9Cpublished today=E2=80=9D with=
+ stable wording?
 
-The traditional Linux kernel coding style is to return early in case of
-an error. For the above code that means writing it as follows:
 
-	if (!bd->uring_cmd_fn)
-		return -EOPNOTSUPP;
+> introducing support for HS-G6
+> (23.2 Gbps per lane) through the new UniPro V3.0 interconnect layer and
+> M-PHY V6.0 physical layer specifications. To achieve reliable operation
+> at these higher speeds, UniPro V3.0 introduces TX Equalization and
+> Pre-Coding mechanisms that are essential for signal integrity.
+>=20
+> This patch series implements TX Equalization support in the UFS core
+> driver as specified in UFSHCI v5.0, along with the necessary vendor
+> operations and a reference implementation for Qualcomm UFS host
+> controllers.
+>=20
+> Background
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+>=20
+> TX Equalization is a signal conditioning technique that compensates for
+> channel impairments at high data rates (HS-G4 through HS-G6). It works
+> by adjusting two key parameters:
+>=20
+> - PreShoot: Pre-emphasis applied before the main signal transition
+> - DeEmphasis: De-emphasis applied after the main signal transition
+>=20
+> UniPro V3.0 defines TX Equalization Training (EQTR) procedure to
+> automatically discover optimal TX Equalization settings. The EQTR
+> procedure:
+>=20
+> 1. Starts from the most reliable link state (HS-G1)
+> 2. Iterates through all possible PreShoot and DeEmphasis combinations
+> 3. Evaluates signal quality using Figure of Merit (FOM) measurements
+> 4. Selects the best settings for both host and device TX lanes
+>=20
 
-	return bd->uring_cmd_fn(q, ioucmd, issue_flags, open_for_write);
+what happens when EQTR fails, mabye you have this comments in the patch.
 
-Thanks,
+Kind regards,
+Bean
 
-Bart.
+
