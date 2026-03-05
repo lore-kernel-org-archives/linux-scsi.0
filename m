@@ -1,134 +1,108 @@
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.4])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3486920ED;
-	Thu,  5 Mar 2026 01:30:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.4
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE5A625DD1E
+	for <linux-scsi@vger.kernel.org>; Thu,  5 Mar 2026 02:37:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772674211; cv=none; b=KxN5upXh8envW0MHAaKVZdDUkST1zkL0a9byZ7CN/DG/mcqw9zPnfzEV+tHtyh054q98erUtcItV8j84LE/N5kATD4+DnGPlSdI8t1qkdOxcwHYkYmPTn2ihU0LwhTjBSkpx0c/aaqRVxkutJdStnTPW2ZXxvS/+QbybhtDcHWg=
+	t=1772678252; cv=none; b=tSHAPBHFfKS4pCwcJEzsqx1LRNAu3pnq3cxQaAk2JayGXMz23Udy0v8yWronnKB0KcrTOeUXnrvVx37WnCoEIVGBVm3AFqsuCmN/SQLSsll5JK/G7J5NsCSE82qyCgTxKL01hnspMlNHEio1AmsdCu1uPMAEZFkQI3ZKWVP2PLc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772674211; c=relaxed/simple;
-	bh=dV/FPRteY1wulI6CA5N2gnWp2+JTFOt8V+6zE8RHQ+0=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=KIM9q33XU8c+e5zO8/Sa17sBa/xbzLIhebssqhY2zqh3Qldrhi6Sn44fAt14l3S8ZpcNi806qCPn3skgN+du/FtIPyRmKqFN5aKx3edTS3KESvAcvpYc7iIlXj8t2nljT3ni2pQnCKDOgb72dhfqRGY/xZCRRH9c7kdaThfg9oE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=jcgYLnkA; arc=none smtp.client-ip=220.197.31.4
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+	s=arc-20240116; t=1772678252; c=relaxed/simple;
+	bh=Zrg3xQuzRFUmRFcIu7kcHq6e2o8cqc90mKbBofbKzTI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=b1jOJzfQv7EYlWRCtPV+PaUuD8fDfVLRvWQomkr9f5/4i5T0xFBk535NlFyfB2SJJUQZmV4SmgaVTHmAaldEbHtQR/enerzPf71X0dpXqe5SWC/gc7R4AWNlDGJ0W0tkCwP8pFhcQ5y5A1riPS05fwen0IgfGKHIa5KdqguDYdM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=WkVZ2TIo; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="jcgYLnkA"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=T6
-	3Vv00CV8w3oQ42GU98ZAmfpnNbI05s+0v60yzo/hI=; b=jcgYLnkAHsm5AXxDfA
-	97cMJd8WdoGQisRv2oPMcZGCM6A6dvw54CzqzmfRdUSovaFWMFrqQYhf/grbkFXU
-	azNgmfmxSqWn6DbvSvF96HbumjVq4CDEnRo4DsAb2NI1ch/en/Dx3lcgr7Q3ToFb
-	B2Wfqqj9Bl0sKpENdehOABGQk=
-Received: from localhost.localdomain (unknown [])
-	by gzga-smtp-mtada-g1-2 (Coremail) with SMTP id _____wBXMO9b3Khp6W63OA--.24976S2;
-	Thu, 05 Mar 2026 09:29:01 +0800 (CST)
-From: Yang Xiuwei <yangxiuwei@kylinos.cn>
-To: fujita.tomonori@lab.ntt.co.jp,
-	axboe@kernel.dk,
-	James.Bottomley@HansenPartnership.com,
-	martin.petersen@oracle.com
-Cc: bvanassche@acm.org,
-	linux-scsi@vger.kernel.org,
-	linux-block@vger.kernel.org,
-	io-uring@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Yang Xiuwei <yangxiuwei@kylinos.cn>
-Subject: [PATCH v6 0/3] bsg: add io_uring command support for SCSI passthrough
-Date: Thu,  5 Mar 2026 09:28:54 +0800
-Message-Id: <20260305012857.2136525-1-yangxiuwei@kylinos.cn>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20260304080313.675768-1-yangxiuwei@kylinos.cn>
-References: <20260304080313.675768-1-yangxiuwei@kylinos.cn>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="WkVZ2TIo"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1772678249;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=yBUhNsBoeECXQ2g42ZbRUoURW/9mr3wjydrCeND0ozI=;
+	b=WkVZ2TIos7vMR8datonuO+xUMd5g68v0iIl7OkrywObdeGPWib0vi9+A8peTwq3UGM/E9A
+	HXU/V7rrtBYvtNmG94NaXaIO7cVNlw+MMg7wvJey5u5tXR+TFA1J5fi+kQVBizczgB6adB
+	IhPtQwd2/bko5uPmlVIkqBE1Oy7p8Jg=
+Received: from mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-408-gnIwOrr_MGynkDKdRAbF8A-1; Wed,
+ 04 Mar 2026 21:37:26 -0500
+X-MC-Unique: gnIwOrr_MGynkDKdRAbF8A-1
+X-Mimecast-MFC-AGG-ID: gnIwOrr_MGynkDKdRAbF8A_1772678244
+Received: from mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.93])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 19BF119560A5;
+	Thu,  5 Mar 2026 02:37:23 +0000 (UTC)
+Received: from bmarzins-01.fast.eng.rdu2.dc.redhat.com (unknown [10.6.23.247])
+	by mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id DEF321800671;
+	Thu,  5 Mar 2026 02:37:21 +0000 (UTC)
+Received: from bmarzins-01.fast.eng.rdu2.dc.redhat.com (localhost [127.0.0.1])
+	by bmarzins-01.fast.eng.rdu2.dc.redhat.com (8.18.1/8.17.1) with ESMTPS id 6252bKqD1952898
+	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
+	Wed, 4 Mar 2026 21:37:20 -0500
+Received: (from bmarzins@localhost)
+	by bmarzins-01.fast.eng.rdu2.dc.redhat.com (8.18.1/8.18.1/Submit) id 6252bIIF1952897;
+	Wed, 4 Mar 2026 21:37:18 -0500
+Date: Wed, 4 Mar 2026 21:37:18 -0500
+From: Benjamin Marzinski <bmarzins@redhat.com>
+To: John Garry <john.g.garry@oracle.com>
+Cc: hch@lst.de, kbusch@kernel.org, sagi@grimberg.me, axboe@fb.com,
+        martin.petersen@oracle.com, james.bottomley@hansenpartnership.com,
+        hare@suse.com, jmeneghi@redhat.com, linux-nvme@lists.infradead.org,
+        linux-scsi@vger.kernel.org, michael.christie@oracle.com,
+        snitzer@kernel.org, dm-devel@lists.linux.dev,
+        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 10/24] scsi-multipath: add
+ scsi_mpath_{start,end}_request()
+Message-ID: <aajsXqau3gHFIqVG@redhat.com>
+References: <20260225153627.1032500-1-john.g.garry@oracle.com>
+ <20260225153627.1032500-11-john.g.garry@oracle.com>
+ <aafNnO6o2yoeLjPs@redhat.com>
+ <93752514-3225-4cdf-b9a5-e0964d693b5b@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wBXMO9b3Khp6W63OA--.24976S2
-X-Coremail-Antispam: 1Uf129KBjvJXoWxWF13Ar13Xw4DKry3WryDWrg_yoW5WFy8pF
-	WYgFnxJrWUC3WftFyfAF4DWFyYq3s3Ca1xG347Z34kArn8AF9Fgr1DKF45XFZrCw129a4U
-	Xr12vrZ8u3WDAaDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07j1HqcUUUUU=
-Sender: yangxiuwei2025@163.com
-X-CM-SenderInfo: p1dqw55lxzvxisqskqqrwthudrp/xtbC6R-SY2mo3F+X1wAA3F
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <93752514-3225-4cdf-b9a5-e0964d693b5b@oracle.com>
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.93
 
-This series adds io_uring command support to the BSG SCSI passthrough
-path.
+On Wed, Mar 04, 2026 at 11:11:08AM +0000, John Garry wrote:
+> On 04/03/2026 06:13, Benjamin Marzinski wrote:
+> > > +	scsi_mpath_end_request(req);
+> > > +
+> > >   	/*
+> > >   	 * In the MQ case the command gets freed by __blk_mq_end_request,
+> > >   	 * so we have to do all cleanup that depends on it earlier.
+> > This looks wrong. We start accounting in scsi_queue_rq(), and we need to
+> > end it whenever we complete or requeue the request, otherwise the
+> > accounting will get off. But not all requests go through
+> > scsi_end_request(). scsi_mpath_failover_req(), for instance, calls
+> > blk_mq_end_request() directly, and other functions, like
+> > scsi_queue_insert() call blk_mq_requeue_request(). I'm pretty sure that
+> > this should go in scsi_complete(), as well in the error path of
+> > scsi_queue_rq().
+> 
+> ok, let me check that further.
+> 
 
-The goal is to allow userspace to submit SCSI passthrough commands via
-IORING_OP_URING_CMD, in addition to the existing sg_io interface.
-The io_uring path mirrors the existing BSG behaviour: it currently only
-supports BSG_PROTOCOL_SCSI + BSG_SUB_PROTOCOL_SCSI_CMD and does not
-support BIDI transfers.
+I think I was a little hasty here. Looking at sd_mpath_start_command()
+and sd_mpath_end_command() in patch 17, I can see that they protect
+against repeat calls, so requeueing the request should be o.k. There's
+still a problem when scsi_mpath_failover_req() calls blk_mq_end_request()
+directly, and when scsi_queue_rq() exits with a failure where the
+request won't requeued (all the returns except BLK_STS_OK,
+BLK_STS_RESOURCE, and BLK_STS_DEV_RESOURCE).
 
-Patch 1 defines struct bsg_uring_cmd in the UAPI so that userspace can
-describe SCSI passthrough requests for io_uring.
+-Ben
 
-Patch 2 extends the generic BSG layer with an .uring_cmd file operation
-and a bsg_uring_cmd_fn callback, allowing transport-specific handlers to
-be registered.
-
-Patch 3 implements the SCSI BSG io_uring handler. It builds a SCSI
-request from struct bsg_uring_cmd, maps user buffers (including fixed
-buffers), and completes asynchronously via a request end_io callback and
-task_work. Completion returns SCSI device/host/driver status, residual
-length and sense data length packed into the CQE result.
-
-Changes since v5:
-- Fixed compilation errors:
-  * Use io_uring_sqe128_cmd() instead of io_uring_sqe_cmd()
-  * Update scsi_bsg_uring_cmd_done() signature to match rq_end_io_fn typedef
-
-Compared to the earlier RFC v4 series [1], this version only includes
-minor code cleanups (mainly comments and wording), without changing the
-behaviour or logic of the implementation.
-
-[1] https://lore.kernel.org/linux-block/20260122015653.703188-1-yangxiuwei@kylinos.cn/
-
-Testing
--------
-Testing was done inside a VM on a disk with:
-  /sys/block/sdd/mq/0/nr_tags     = 1024
-  /sys/block/sdd/queue/nr_requests = 256
-
-The following SCSI INQUIRY micro-benchmark was run with N=100000:
-
-  sg+SG_IO (v3), /dev/sg4:
-    avg = 139.0 us, p50 = 128.9 us, p90 = 149.7 us, p99 = 301.0 us
-
-  bsg+SG_IO (v4), /dev/bsg/2:0:0:0:
-    avg = 97.2 us,  p50 = 92.7 us,  p90 = 111.5 us, p99 = 150.9 us
-
-  bsg+io_uring, /dev/bsg/2:0:0:0:
-    avg = 105.9 us, p50 = 95.4 us,  p90 = 116.2 us, p99 = 175.0 us
-
-  bsg+io_uring (batch=64), /dev/bsg/2:0:0:0:
-    avg = 61.9 us,  p50 = 60.9 us,  p90 = 63.9 us,  p99 = 94.6 us
-
-These results show that the new io_uring path is comparable to the
-existing BSG SG_IO interface for single-command workloads, and that
-batched io_uring submission can significantly improve latency for
-high-concurrency workloads when the device supports sufficient queue
-depth.
-
-Yang Xiuwei (3):
-  bsg: add bsg_uring_cmd uapi structure
-  bsg: add io_uring command support to generic layer
-  scsi: bsg: add io_uring passthrough handler
-
- block/bsg-lib.c          |   2 +-
- block/bsg.c              |  32 +++++-
- drivers/scsi/scsi_bsg.c  | 207 ++++++++++++++++++++++++++++++++++++++-
- include/linux/bsg.h      |   6 +-
- include/uapi/linux/bsg.h |  21 ++++
- 5 files changed, 264 insertions(+), 4 deletions(-)
-
-base-commit: af4e9ef3d78420feb8fe58cd9a1ab80c501b3c08
--- 
-2.25.1
+> Thanks for the notice.
 
