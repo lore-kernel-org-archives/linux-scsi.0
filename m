@@ -1,189 +1,91 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C7373D646A;
-	Thu,  5 Mar 2026 15:37:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 11D933D301F;
+	Thu,  5 Mar 2026 15:39:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772725050; cv=none; b=jRXXXO2qmqlvCz9Donyss79ROUji7bUXnXqvIxeN5QBoNHlPy2rbbECmpazW2kP9WdMzZRRVaUhXfkVQVWnPIJp8ixD/sl253OGi6VnPQsDS5pM08y3wHCG6albqsAORxGlGvba1Ao9oZWFtC0Mve+NNmbWiAvvaPvCUf1ra4YU=
+	t=1772725175; cv=none; b=dCckr+Ca7x9rdtVz+Ir2Z8SneccqOKprgM3MpKOuAHuf8dT2UefR+lOS3dPuSmRqjSd0cFJ52sg1yjEAs5XKM5CpNtQBelitaAz4q7N7Z6zrGSpxcj8KSHvLZYAUBQd2Y4M3srQu3MTI5175BraeyjSkp//ip/YMdiKD/EJOXM8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772725050; c=relaxed/simple;
-	bh=4zbz1EImMJQzUPsZuB7/QAcByUKZ/gGp6Y/TRttdjns=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=GMJebN/TI83l1FHj5vSeRaFuXxI+VelbjxfXEfGX96IU74Q75C7nDYwmJrZwp+gYsb3vTV/fET56xR3GBDLRWIizxbKMKfqFe4D0PNMB+pv8UU6UEJXxuhm24Z0xh8WeAQSO9qZVx5LQmZXbZdZTn0g7DZxj1iKXa5ohTvdb7js=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=E0gbCNHh; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1772725175; c=relaxed/simple;
+	bh=4vKkD2bQ7wsYqu7NG+qbw589pcm5RiJmrgvrlw1ne80=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=H27ZTO79J4b1LF2tGGBaYmjF5uO/P7jdAMvOEOM0xVBuzjHrep/vpA/B+evhiY2nLQ7BQspwCJXMUzPHdVdpkWeijye0y9CtOZQ0C9Y3NOP03AVgHibgpP0RU9WT5WTIfSZNqk89ooylNyq0rBiVPGMty78ZEgf1O+O3ijUYYNY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=pGTT5qE3; arc=none smtp.client-ip=199.89.1.14
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="E0gbCNHh"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 190B4C2BC87;
-	Thu,  5 Mar 2026 15:37:29 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772725050;
-	bh=4zbz1EImMJQzUPsZuB7/QAcByUKZ/gGp6Y/TRttdjns=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=E0gbCNHhd2DMZF7hjVDcHu8tkeVL625IZvYCisUgE5AK8/skiVNchyIIi1MrVQE7E
-	 gAVGv4pUCRZuiNXG4dC0MKJ4aX1LjTQ/04B2jYa5WVe18nAnoUQm5mekES3OZf8T6n
-	 CkObz0NmObkU/JkByDxk/Y5w1ic/1OXGXv7YiDQZkAyW6E/HMkuAUiYgqNHJ0mCNh2
-	 2nyVoGzpHriFPLbZTw/nblBsml+2xwiOrVMTKobJfaIabtV1Yvx8vcKMXJVUIu3COl
-	 Ag8/odUZqkGqwrb1IRNfUz0j70gkep5FdW6nyQjo5akERMPdI4VkqU2u51NGUOjVLo
-	 h9lwtThMJh5dw==
-From: Sasha Levin <sashal@kernel.org>
-To: patches@lists.linux.dev,
-	stable@vger.kernel.org
-Cc: Ranjan Kumar <ranjan.kumar@broadcom.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Sasha Levin <sashal@kernel.org>,
-	sathya.prakash@broadcom.com,
-	kashyap.desai@broadcom.com,
-	sumit.saxena@broadcom.com,
-	sreekanth.reddy@broadcom.com,
-	James.Bottomley@HansenPartnership.com,
-	mpi3mr-linuxdrv.pdl@broadcom.com,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.19-5.15] scsi: mpi3mr: Add NULL checks when resetting request and reply queues
-Date: Thu,  5 Mar 2026 10:37:00 -0500
-Message-ID: <20260305153704.106918-17-sashal@kernel.org>
-X-Mailer: git-send-email 2.51.0
-In-Reply-To: <20260305153704.106918-1-sashal@kernel.org>
-References: <20260305153704.106918-1-sashal@kernel.org>
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="pGTT5qE3"
+Received: from localhost (localhost [127.0.0.1])
+	by 011.lax.mailroute.net (Postfix) with ESMTP id 4fRYcj4cYdz1XLyhV;
+	Thu,  5 Mar 2026 15:39:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1772725169; x=1775317170; bh=ZT1xeQ78rZdKqjwQAgBP42M2
+	nv+x1KS/hRB7o+tH3ds=; b=pGTT5qE38kMmle/K0vcUgEGT3h5LTLnnTSHQvb+O
+	UzyVovZMYWbWWeZoPp2EZLoPXBXbYEhiDLolpn/vjCL0aGzoTy9CPyRV3+uInABe
+	KfF/ULWCDbsqmI191w8vfM50qXoDf7rxxYiiRsS6kNK71WKefthlEjWbUJSkKv04
+	asY3i/P/kInfZ/slxs7jkb0bj+kOiMianGMua3RKMYLwGocXjpCVaOVfrwEDNr3R
+	nsoQ+B2tHWu3w9RDOv/OC1JapfAniBdwq6921w58fw9iZYhtA5U8QWQ91id3Bhlu
+	/4YzF6ld48dMGa4H2C79X+QusIeVs9elLuwDTkdPMNULkg==
+X-Virus-Scanned: by MailRoute
+Received: from 011.lax.mailroute.net ([127.0.0.1])
+ by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id TEN_fP1-4f8E; Thu,  5 Mar 2026 15:39:29 +0000 (UTC)
+Received: from [192.168.132.187] (unknown [12.150.89.26])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4fRYcZ5ycJz1XM5kD;
+	Thu,  5 Mar 2026 15:39:26 +0000 (UTC)
+Message-ID: <b3d4d3c0-3992-44be-827b-e9089ab4471c@acm.org>
+Date: Thu, 5 Mar 2026 09:39:24 -0600
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-X-stable-base: Linux 6.19.6
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v6 3/3] scsi: bsg: add io_uring passthrough handler
+To: Yang Xiuwei <yangxiuwei@kylinos.cn>, fujita.tomonori@lab.ntt.co.jp,
+ axboe@kernel.dk, James.Bottomley@HansenPartnership.com,
+ martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
+ io-uring@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20260304080313.675768-1-yangxiuwei@kylinos.cn>
+ <20260305012857.2136525-1-yangxiuwei@kylinos.cn>
+ <20260305012857.2136525-4-yangxiuwei@kylinos.cn>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20260305012857.2136525-4-yangxiuwei@kylinos.cn>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-From: Ranjan Kumar <ranjan.kumar@broadcom.com>
+On 3/4/26 7:28 PM, Yang Xiuwei wrote:
+> +			u8 device_status;	/* SCSI device status (low 8 bits of result) */
+> +			u8 driver_status;	/* SCSI driver status (DRIVER_SENSE if check) */
+> +			u8 host_status;		/* SCSI host status (host_byte of result) */
 
-[ Upstream commit fa96392ebebc8fade2b878acb14cce0f71016503 ]
+Why separate members for device_status, driver_status and host_status 
+instead of storing the SCSI result (scsi_cmnd.result)?
 
-The driver encountered a crash during resource cleanup when the reply and
-request queues were NULL due to freed memory.  This issue occurred when the
-creation of reply or request queues failed, and the driver freed the memory
-first, but attempted to mem set the content of the freed memory, leading to
-a system crash.
+> +	/* Build res2 with status information */
+> +	res2 = ((u64)pdu->resid_len << 32) |
+> +	       ((u64)(pdu->scsi.sense_len_wr & 0xff) << 24) |
+> +	       ((u64)(pdu->scsi.host_status & 0xff) << 16) |
+> +	       ((u64)(pdu->scsi.driver_status & 0xff) << 8) |
+> +	       (pdu->scsi.device_status & 0xff);
 
-Add NULL pointer checks for reply and request queues before accessing the
-reply/request memory during cleanup
+Please remove the superfluous " & 0xff" from u8 expressions.
 
-Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
-Link: https://patch.msgid.link/20260212070026.30263-1-ranjan.kumar@broadcom.com
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
+> +	pdu->scsi.device_status = scmd->result & 0xff;
 
-LLM Generated explanations, may be completely bogus:
+Please use the status_byte() macro instead of open-coding it.
 
-### Assessment
+Thanks,
 
-**What the fix does:** Adds NULL checks for `mrioc->op_reply_qinfo` and
-`mrioc->req_qinfo` inside the loop in `mpi3mr_memset_buffers()`. The
-function already has similar NULL checks for other pointers
-(`admin_req_base`, `admin_reply_base`, `init_cmds.reply`) but was
-missing checks for these two queue arrays.
-
-**Bug mechanism:** When queue creation fails during controller
-initialization or re-initialization, the cleanup path calls
-`mpi3mr_memset_buffers()`. If `op_reply_qinfo` or `req_qinfo` was
-already freed (or never allocated), dereferencing them causes a NULL
-pointer dereference → kernel crash/oops.
-
-**Callers:** The function is called from:
-- `mpi3mr_init_ioc()` retry path (line 4405) — controller init failure
-- `mpi3mr_reinit_ioc()` retry path (line 4598) — controller re-init
-  failure
-- `mpi3mr_soft_reset_handler()` (line 5522) — controller reset
-- `mpi3mr_remove()` (line 5748 in mpi3mr_os.c) — device removal
-
-All of these are realistic trigger paths. The crash would happen on real
-systems when queue creation fails (e.g., memory pressure, hardware
-fault).
-
-**Stable criteria:**
-- **Fixes a real bug:** Yes — NULL pointer dereference causing a kernel
-  crash
-- **Obviously correct:** Yes — simple NULL check before dereference,
-  consistent with existing patterns in the same function
-- **Small and contained:** Yes — only adds two `if` checks wrapping
-  existing code, no behavioral change otherwise
-- **No new features:** Correct — purely defensive NULL check
-- **Risk:** Very low — the NULL check only skips work that would crash
-  anyway
-
-### Verification
-
-- Read the `mpi3mr_memset_buffers()` function (line 4667) and confirmed
-  it already has NULL checks for `admin_req_base`, `admin_reply_base`,
-  and `init_cmds.reply` but was missing them for `op_reply_qinfo` and
-  `req_qinfo`
-- Confirmed `kfree(mrioc->req_qinfo)` and `kfree(mrioc->op_reply_qinfo)`
-  in the cleanup function (lines 4804, 4808) set pointers to NULL after
-  free, establishing the NULL state
-- Verified callers of `mpi3mr_memset_buffers()`: called from init retry
-  paths (4405, 4598), reset handler (5522), and remove (5748) — all
-  reachable when queues may be NULL
-- The commit message explicitly states the driver crashed during cleanup
-  — this is a reported real-world crash, not theoretical
-- The fix follows the same pattern already used in the function for
-  other pointers
-- The mpi3mr driver has been in the kernel since at least v5.15 (long-
-  standing driver), so this fix applies to stable trees
-
-**YES**
-
- drivers/scsi/mpi3mr/mpi3mr_fw.c | 34 ++++++++++++++++++---------------
- 1 file changed, 19 insertions(+), 15 deletions(-)
-
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-index 8c4bb7169a87c..8382afed12813 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-@@ -4705,21 +4705,25 @@ void mpi3mr_memset_buffers(struct mpi3mr_ioc *mrioc)
- 	}
- 
- 	for (i = 0; i < mrioc->num_queues; i++) {
--		mrioc->op_reply_qinfo[i].qid = 0;
--		mrioc->op_reply_qinfo[i].ci = 0;
--		mrioc->op_reply_qinfo[i].num_replies = 0;
--		mrioc->op_reply_qinfo[i].ephase = 0;
--		atomic_set(&mrioc->op_reply_qinfo[i].pend_ios, 0);
--		atomic_set(&mrioc->op_reply_qinfo[i].in_use, 0);
--		mpi3mr_memset_op_reply_q_buffers(mrioc, i);
--
--		mrioc->req_qinfo[i].ci = 0;
--		mrioc->req_qinfo[i].pi = 0;
--		mrioc->req_qinfo[i].num_requests = 0;
--		mrioc->req_qinfo[i].qid = 0;
--		mrioc->req_qinfo[i].reply_qid = 0;
--		spin_lock_init(&mrioc->req_qinfo[i].q_lock);
--		mpi3mr_memset_op_req_q_buffers(mrioc, i);
-+		if (mrioc->op_reply_qinfo) {
-+			mrioc->op_reply_qinfo[i].qid = 0;
-+			mrioc->op_reply_qinfo[i].ci = 0;
-+			mrioc->op_reply_qinfo[i].num_replies = 0;
-+			mrioc->op_reply_qinfo[i].ephase = 0;
-+			atomic_set(&mrioc->op_reply_qinfo[i].pend_ios, 0);
-+			atomic_set(&mrioc->op_reply_qinfo[i].in_use, 0);
-+			mpi3mr_memset_op_reply_q_buffers(mrioc, i);
-+		}
-+
-+		if (mrioc->req_qinfo) {
-+			mrioc->req_qinfo[i].ci = 0;
-+			mrioc->req_qinfo[i].pi = 0;
-+			mrioc->req_qinfo[i].num_requests = 0;
-+			mrioc->req_qinfo[i].qid = 0;
-+			mrioc->req_qinfo[i].reply_qid = 0;
-+			spin_lock_init(&mrioc->req_qinfo[i].q_lock);
-+			mpi3mr_memset_op_req_q_buffers(mrioc, i);
-+		}
- 	}
- 
- 	atomic_set(&mrioc->pend_large_data_sz, 0);
--- 
-2.51.0
-
+Bart.
