@@ -1,44 +1,51 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 94D7B3CA4B9;
-	Thu,  5 Mar 2026 15:37:14 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA3843CD8D2;
+	Thu,  5 Mar 2026 15:37:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772725034; cv=none; b=qL8mcFIz/99lNMr5aWkCDLkOBAKy+pEhljQiHbVYFqJx5xZHNxjCRW2L3Pcb8Y3tQd1jNDkIIQH2Efv8GSs+08Bs3R0WsnjCnz4sQw3yzaj+2nd93ggHrJEyKatFAkRBkNAyK9wXfFtiVaFiP3sNsJMRQ8HGjrjTE+wOZfo48gs=
+	t=1772725040; cv=none; b=LnWQpXdO7Gm+Qf42ctTZdPGhY6d1ahCdQVH+czWKIFWlahZUseeEc7hVpzcwwmk+ekV18zY4xmJCbdBqbHj6F6H+EXzRAKQGP7JP0hoRz4AzLqW6+7gYZcr/exfodFpThOf1K3onH6AfGD89Gr4p2Q3szM0F/mhw1Pc7FcwfFcs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772725034; c=relaxed/simple;
-	bh=iQ0yLgTGAJZgiDZIOQexcimPC6Gs/WY2/5Nfp5GgG2E=;
+	s=arc-20240116; t=1772725040; c=relaxed/simple;
+	bh=Yhl0gWZMiDd1Tqs4mW2XcYXwszy4vPsjwXrYC/z2oHQ=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=grmjem5kqyp08Q52NKWs5QKyfQqmW0V7HxCTdqPLFJrJsJGNF9Fb3OGa8GRC3h7Ae/hlNByyZspUaCAKskMHAUB0xS9kMXNqeirLxSnR5OnH+4gqnZjCKxggsTTu8oL7dvTDqV/wbw/UCQr/DWhb1Nhv88Jp5rF5iSZWETkx5hA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BPCjtOsh; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=oo0s1fn+OeuNg5wqtFz7ESotbS4gBkyWGyVSEGT5OxbI/U7KGYb/UWNLxLZYW9gdU1pFFhc5brGHXbaFeegge7mIf5TpIS5xk5vWGS5Gfk4/tbXUDW+93x7H8FyLuMpOcjVV9nWpfgsgFOFq44uwJt0EgjWHgrloYJDOXYP19Qg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Bhfd7vYD; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BPCjtOsh"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 73271C19423;
-	Thu,  5 Mar 2026 15:37:13 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Bhfd7vYD"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id ECA5AC2BC9E;
+	Thu,  5 Mar 2026 15:37:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772725034;
-	bh=iQ0yLgTGAJZgiDZIOQexcimPC6Gs/WY2/5Nfp5GgG2E=;
+	s=k20201202; t=1772725040;
+	bh=Yhl0gWZMiDd1Tqs4mW2XcYXwszy4vPsjwXrYC/z2oHQ=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=BPCjtOshOzcviEsHmW6Gu1mbDrDMgdtNPs9RFAqW5oK8sz3LbcmU7HABW9KLmaqwu
-	 guFaJ5gy1t4jLPQu9r3BTrSO794eI24oQLtOtCsGr//NiN4OClS9u1ScB2TLpLQRoY
-	 iLH1A/OIzWD9FG12jPMtUsTDjKeGz1G0Ru+3M749xZs7doZ5cfrgkHi4QQbmVSN4ak
-	 Y1OjfLyyIaM9Wanq5iiprHLbOFF1JW3gU/Ahw0WiZB1oCP01VKVPIEgtSKcBWe75Sd
-	 KQ4PF1DFVNTuLZx/Mzd76duN7rYAbWfCmaF8D/2hg+8tVOXsFDgi3d2F2gxoy/F51O
-	 opUEesr7l0UsA==
+	b=Bhfd7vYDbZj+VJmQhKmtyFyGcODJGK0wyrht/H5hO7JcFBdZQANLPiyJ2opxoTfZM
+	 Ce2eAurzJsHVFQ9mim5tpUtk3yrtXltnsdokK6sgkRptIQKl1zMP0cugsWkJhbDJq6
+	 JeNCnZ4UsF9w3Gzkv3jpUH8pjDPtpJ3sPFrglV3IRvFcTGQqKRM61EvS0B1JC9ebrW
+	 ua9y0es3BCrly8cBpSIj/IRY74rkCG1eyX0YT2syXQIFvQ1NyJL4XvVoFURgxzCqo2
+	 oLpD+zA5EkYLBcLY7a9ddJCXNU/Von5DR8LYCxlsH38u8FkPApIgDQUAfOEEjreCEk
+	 3aR5NC6duRyaw==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
-Cc: Tomas Henzl <thenzl@redhat.com>,
-	David Jeffery <djeffery@redhat.com>,
+Cc: Jan Kiszka <jan.kiszka@siemens.com>,
+	Florian Bezdeka <florian.bezdeka@siemens.com>,
+	Michael Kelley <mhklinux@outlook.com>,
 	"Martin K. Petersen" <martin.petersen@oracle.com>,
 	Sasha Levin <sashal@kernel.org>,
+	kys@microsoft.com,
+	haiyangz@microsoft.com,
+	wei.liu@kernel.org,
+	decui@microsoft.com,
+	longli@microsoft.com,
 	James.Bottomley@HansenPartnership.com,
+	linux-hyperv@vger.kernel.org,
 	linux-scsi@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.19-5.10] scsi: ses: Fix devices attaching to different hosts
-Date: Thu,  5 Mar 2026 10:36:49 -0500
-Message-ID: <20260305153704.106918-6-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.19-5.10] scsi: storvsc: Fix scheduling while atomic on PREEMPT_RT
+Date: Thu,  5 Mar 2026 10:36:53 -0500
+Message-ID: <20260305153704.106918-10-sashal@kernel.org>
 X-Mailer: git-send-email 2.51.0
 In-Reply-To: <20260305153704.106918-1-sashal@kernel.org>
 References: <20260305153704.106918-1-sashal@kernel.org>
@@ -54,143 +61,198 @@ X-stable-base: Linux 6.19.6
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-From: Tomas Henzl <thenzl@redhat.com>
+From: Jan Kiszka <jan.kiszka@siemens.com>
 
-[ Upstream commit 70ca8caa96ce473647054f5c7b9dab5423902402 ]
+[ Upstream commit 57297736c08233987e5d29ce6584c6ca2a831b12 ]
 
-On a multipath SAS system some devices don't end up with correct symlinks
-from the SCSI device to its enclosure. Some devices even have enclosure
-links pointing to enclosures attached to different SCSI hosts.
+This resolves the follow splat and lock-up when running with PREEMPT_RT
+enabled on Hyper-V:
 
-ses_match_to_enclosure() calls enclosure_for_each_device() which iterates
-over all enclosures on the system, not just enclosures attached to the
-current SCSI host.
+[  415.140818] BUG: scheduling while atomic: stress-ng-iomix/1048/0x00000002
+[  415.140822] INFO: lockdep is turned off.
+[  415.140823] Modules linked in: intel_rapl_msr intel_rapl_common intel_uncore_frequency_common intel_pmc_core pmt_telemetry pmt_discovery pmt_class intel_pmc_ssram_telemetry intel_vsec ghash_clmulni_intel aesni_intel rapl binfmt_misc nls_ascii nls_cp437 vfat fat snd_pcm hyperv_drm snd_timer drm_client_lib drm_shmem_helper snd sg soundcore drm_kms_helper pcspkr hv_balloon hv_utils evdev joydev drm configfs efi_pstore nfnetlink vsock_loopback vmw_vsock_virtio_transport_common hv_sock vmw_vsock_vmci_transport vsock vmw_vmci efivarfs autofs4 ext4 crc16 mbcache jbd2 sr_mod sd_mod cdrom hv_storvsc serio_raw hid_generic scsi_transport_fc hid_hyperv scsi_mod hid hv_netvsc hyperv_keyboard scsi_common
+[  415.140846] Preemption disabled at:
+[  415.140847] [<ffffffffc0656171>] storvsc_queuecommand+0x2e1/0xbe0 [hv_storvsc]
+[  415.140854] CPU: 8 UID: 0 PID: 1048 Comm: stress-ng-iomix Not tainted 6.19.0-rc7 #30 PREEMPT_{RT,(full)}
+[  415.140856] Hardware name: Microsoft Corporation Virtual Machine/Virtual Machine, BIOS Hyper-V UEFI Release v4.1 09/04/2024
+[  415.140857] Call Trace:
+[  415.140861]  <TASK>
+[  415.140861]  ? storvsc_queuecommand+0x2e1/0xbe0 [hv_storvsc]
+[  415.140863]  dump_stack_lvl+0x91/0xb0
+[  415.140870]  __schedule_bug+0x9c/0xc0
+[  415.140875]  __schedule+0xdf6/0x1300
+[  415.140877]  ? rtlock_slowlock_locked+0x56c/0x1980
+[  415.140879]  ? rcu_is_watching+0x12/0x60
+[  415.140883]  schedule_rtlock+0x21/0x40
+[  415.140885]  rtlock_slowlock_locked+0x502/0x1980
+[  415.140891]  rt_spin_lock+0x89/0x1e0
+[  415.140893]  hv_ringbuffer_write+0x87/0x2a0
+[  415.140899]  vmbus_sendpacket_mpb_desc+0xb6/0xe0
+[  415.140900]  ? rcu_is_watching+0x12/0x60
+[  415.140902]  storvsc_queuecommand+0x669/0xbe0 [hv_storvsc]
+[  415.140904]  ? HARDIRQ_verbose+0x10/0x10
+[  415.140908]  ? __rq_qos_issue+0x28/0x40
+[  415.140911]  scsi_queue_rq+0x760/0xd80 [scsi_mod]
+[  415.140926]  __blk_mq_issue_directly+0x4a/0xc0
+[  415.140928]  blk_mq_issue_direct+0x87/0x2b0
+[  415.140931]  blk_mq_dispatch_queue_requests+0x120/0x440
+[  415.140933]  blk_mq_flush_plug_list+0x7a/0x1a0
+[  415.140935]  __blk_flush_plug+0xf4/0x150
+[  415.140940]  __submit_bio+0x2b2/0x5c0
+[  415.140944]  ? submit_bio_noacct_nocheck+0x272/0x360
+[  415.140946]  submit_bio_noacct_nocheck+0x272/0x360
+[  415.140951]  ext4_read_bh_lock+0x3e/0x60 [ext4]
+[  415.140995]  ext4_block_write_begin+0x396/0x650 [ext4]
+[  415.141018]  ? __pfx_ext4_da_get_block_prep+0x10/0x10 [ext4]
+[  415.141038]  ext4_da_write_begin+0x1c4/0x350 [ext4]
+[  415.141060]  generic_perform_write+0x14e/0x2c0
+[  415.141065]  ext4_buffered_write_iter+0x6b/0x120 [ext4]
+[  415.141083]  vfs_write+0x2ca/0x570
+[  415.141087]  ksys_write+0x76/0xf0
+[  415.141089]  do_syscall_64+0x99/0x1490
+[  415.141093]  ? rcu_is_watching+0x12/0x60
+[  415.141095]  ? finish_task_switch.isra.0+0xdf/0x3d0
+[  415.141097]  ? rcu_is_watching+0x12/0x60
+[  415.141098]  ? lock_release+0x1f0/0x2a0
+[  415.141100]  ? rcu_is_watching+0x12/0x60
+[  415.141101]  ? finish_task_switch.isra.0+0xe4/0x3d0
+[  415.141103]  ? rcu_is_watching+0x12/0x60
+[  415.141104]  ? __schedule+0xb34/0x1300
+[  415.141106]  ? hrtimer_try_to_cancel+0x1d/0x170
+[  415.141109]  ? do_nanosleep+0x8b/0x160
+[  415.141111]  ? hrtimer_nanosleep+0x89/0x100
+[  415.141114]  ? __pfx_hrtimer_wakeup+0x10/0x10
+[  415.141116]  ? xfd_validate_state+0x26/0x90
+[  415.141118]  ? rcu_is_watching+0x12/0x60
+[  415.141120]  ? do_syscall_64+0x1e0/0x1490
+[  415.141121]  ? do_syscall_64+0x1e0/0x1490
+[  415.141123]  ? rcu_is_watching+0x12/0x60
+[  415.141124]  ? do_syscall_64+0x1e0/0x1490
+[  415.141125]  ? do_syscall_64+0x1e0/0x1490
+[  415.141127]  ? irqentry_exit+0x140/0x7e0
+[  415.141129]  entry_SYSCALL_64_after_hwframe+0x76/0x7e
 
-Replace the iteration with a direct call to ses_enclosure_find_by_addr().
+get_cpu() disables preemption while the spinlock hv_ringbuffer_write is
+using is converted to an rt-mutex under PREEMPT_RT.
 
-Reviewed-by: David Jeffery <djeffery@redhat.com>
-Signed-off-by: Tomas Henzl <thenzl@redhat.com>
-Link: https://patch.msgid.link/20260210191850.36784-1-thenzl@redhat.com
+Signed-off-by: Jan Kiszka <jan.kiszka@siemens.com>
+Tested-by: Florian Bezdeka <florian.bezdeka@siemens.com>
+Reviewed-by: Michael Kelley <mhklinux@outlook.com>
+Tested-by: Michael Kelley <mhklinux@outlook.com>
+Link: https://patch.msgid.link/0c7fb5cd-fb21-4760-8593-e04bade84744@siemens.com
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
 
 LLM Generated explanations, may be completely bogus:
 
+Now I have enough context to analyze this commit thoroughly.
+
 ## Analysis
 
-### Problem Description
-On multipath SAS systems, `ses_match_to_enclosure()` calls
-`enclosure_for_each_device(ses_enclosure_find_by_addr, &efd)` at line
-687, which iterates over **all** enclosures registered system-wide via
-`container_list`. This means a SCSI device can be incorrectly matched to
-an enclosure on a completely different SCSI host, resulting in wrong
-sysfs symlinks from devices to enclosures.
+### 1. Problem Description
+The commit fixes a **"BUG: scheduling while atomic"** crash and
+**lockup** on Hyper-V VMs running with `PREEMPT_RT` enabled. The stack
+trace in the commit message clearly shows the issue:
 
-### The Fix
-The fix replaces the global iteration with a direct call:
-`ses_enclosure_find_by_addr(edev, &efd)`, which searches only the
-specific `edev` enclosure device already passed into
-`ses_match_to_enclosure()`. The function signature also changes from
-`void *data` to `struct efd *efd` for type safety (since it's no longer
-used as a callback for `enclosure_for_each_device`).
+- `storvsc_queuecommand()` calls `get_cpu()` which disables preemption
+- It then calls `storvsc_do_io()` → `vmbus_sendpacket_mpb_desc()` →
+  `hv_ringbuffer_write()`
+- `hv_ringbuffer_write()` takes a spinlock that, under PREEMPT_RT, is
+  converted to an rt-mutex
+- rt-mutexes can sleep/schedule, but preemption is disabled →
+  **scheduling while atomic BUG**
 
-### Stable Kernel Criteria Assessment
+### 2. The Fix
+The fix replaces:
+```c
+ret = storvsc_do_io(dev, cmd_request, get_cpu());
+put_cpu();
+```
+with:
+```c
+migrate_disable();
+ret = storvsc_do_io(dev, cmd_request, smp_processor_id());
+migrate_enable();
+```
 
-1. **Obviously correct and tested**: Yes. The `edev` is already the
-   correct enclosure for the current host — using the global iterator
-   was simply wrong. Reviewed-by David Jeffery (Red Hat), Signed-off-by
-   Martin K. Petersen (SCSI maintainer).
+The purpose of `get_cpu()` here was to get a stable CPU number to use as
+a channel index in `storvsc_do_io()`. The actual requirement is just to
+prevent migration (so the CPU number stays valid), not to disable
+preemption entirely. `migrate_disable()` achieves this while allowing
+scheduling under PREEMPT_RT.
 
-2. **Fixes a real bug**: Yes. Incorrect device-to-enclosure associations
-   cause wrong symlinks, which breaks storage management tools that rely
-   on enclosure topology on multipath SAS systems (enterprise storage
-   environments).
+### 3. Correctness
+- `migrate_disable()` prevents the task from being migrated to another
+  CPU, so `smp_processor_id()` remains valid throughout the call
+- On non-PREEMPT_RT kernels, this is functionally equivalent
+  (migrate_disable maps to preempt_disable)
+- On PREEMPT_RT, it allows the rt-mutex in `hv_ringbuffer_write()` to
+  sleep as needed
 
-3. **Important issue**: Yes. Enterprise SAS multipath setups are common
-   in production servers. Incorrect enclosure associations can lead to
-   operators targeting wrong devices during maintenance.
+### 4. Scope and Risk
+- **3 lines changed** - extremely small and surgical
+- Only affects `storvsc_queuecommand()` in the Hyper-V storage driver
+- Well-understood transformation pattern
+  (`get_cpu()`→`migrate_disable()`+`smp_processor_id()`) used
+  extensively across the kernel for PREEMPT_RT fixes
+- Has been **Tested-by** two people and **Reviewed-by** the Hyper-V
+  subsystem expert (Michael Kelley)
 
-4. **Small and contained**: Yes. Single file change
-   (`drivers/scsi/ses.c`), ~10 meaningful lines changed. The core fix is
-   replacing one function call.
+### 5. User Impact
+- **Hyper-V VMs with PREEMPT_RT**: This is a hard crash/lockup during
+  normal I/O operations (ext4 writes), making the system completely
+  unusable
+- PREEMPT_RT is increasingly used in enterprise and embedded
+  deployments, including on Hyper-V/Azure
+- Without this fix, PREEMPT_RT kernels on Hyper-V are effectively broken
+  for any storage I/O
 
-5. **No new features**: Correct. Pure bug fix.
-
-6. **Self-contained**: Yes. No dependencies on other patches.
-   `ses_enclosure_find_by_addr` is only called from this one site, and
-   it's a static function within ses.c.
-
-### Risk Assessment
-**Very low risk.** The fix narrows the search scope from all enclosures
-to just the relevant one. The matching logic within
-`ses_enclosure_find_by_addr` is completely unchanged. The only
-behavioral difference is that devices will no longer be incorrectly
-associated with enclosures on different hosts.
-
-### Bug Age
-The buggy code was introduced in commit `c38c007af04b92` ("[SCSI] ses:
-Use vpd information from scsi_device") by Hannes Reinecke in v3.15-rc1
-(2014). This bug affects **all** current stable trees.
+### 6. Stable Criteria Assessment
+- **Obviously correct**: Yes - standard PREEMPT_RT fix pattern
+- **Fixes a real bug**: Yes - kernel BUG + lockup
+- **Important issue**: Yes - system lockup during normal I/O
+- **Small and contained**: Yes - 3-line change in one file
+- **No new features**: Correct - pure bug fix
+- **Tested**: Yes - two Tested-by tags
 
 ### Verification
-
-- **git blame** confirmed line 687
-  (`enclosure_for_each_device(ses_enclosure_find_by_addr, &efd)`) was
-  introduced in commit `c38c007af04b92` (v3.15-rc1)
-- **git describe --contains c38c007af04b92** confirmed version:
-  `v3.15-rc1~136^2~4`
-- **Read of `drivers/misc/enclosure.c:85-101`** confirmed
-  `enclosure_for_each_device()` iterates over ALL entries in
-  `container_list` (global list of all enclosures)
-- **Grep for `ses_enclosure_find_by_addr`** confirmed it is only
-  referenced at two locations in ses.c: its definition (line 531) and
-  the single call site (line 687) — no other callers exist
-- **Grep for `enclosure_for_each_device`** confirmed the SES driver at
-  line 687 is the ONLY caller outside of enclosure.c itself — so this
-  change has no impact on other subsystems
-- **Read of `ses_match_to_enclosure()`** (lines 669-689) confirmed
-  `edev` is already passed as a parameter but was ignored in favor of
-  global iteration
-- **lore.kernel.org search** found the patch was reviewed by Martin K.
-  Petersen and included in multiple stable releases (6.1.165, 6.6.128,
-  6.12.75, 6.18.16, 6.19.6), indicating broad acceptance
-
-### Conclusion
-This is a clear, surgical fix for a real bug affecting enterprise
-multipath SAS systems. The bug has existed since v3.15 (2014). The fix
-is small, self-contained, obviously correct, low-risk, and has been
-reviewed by the SCSI maintainer.
+- Read `storvsc_drv.c:1858` confirming the old code uses
+  `get_cpu()`/`put_cpu()` (matches the diff)
+- Read `storvsc_do_io()` at line 1453: confirms `q_num` is used as a CPU
+  index into `stor_chns[]` array and passed to
+  `cpumask_of_node(cpu_to_node(q_num))` - only needs migration
+  stability, not preemption disabled
+- Confirmed the call chain: `storvsc_do_io()` →
+  `vmbus_sendpacket_mpb_desc()` (line 1547) → `hv_ringbuffer_write()`
+  which takes a spinlock (as shown in the stack trace)
+- The stack trace shows `rt_spin_lock` → `rtlock_slowlock_locked` →
+  `schedule_rtlock` confirming the spinlock-to-rt-mutex conversion is
+  the trigger
+- `git log` confirmed this is in a well-maintained driver with recent
+  activity
 
 **YES**
 
- drivers/scsi/ses.c | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+ drivers/scsi/storvsc_drv.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/ses.c b/drivers/scsi/ses.c
-index 2c61624cb4b03..50e744e891295 100644
---- a/drivers/scsi/ses.c
-+++ b/drivers/scsi/ses.c
-@@ -529,9 +529,8 @@ struct efd {
- };
+diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+index b43d876747b76..68c837146b9ea 100644
+--- a/drivers/scsi/storvsc_drv.c
++++ b/drivers/scsi/storvsc_drv.c
+@@ -1855,8 +1855,9 @@ static int storvsc_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scmnd)
+ 	cmd_request->payload_sz = payload_sz;
  
- static int ses_enclosure_find_by_addr(struct enclosure_device *edev,
--				      void *data)
-+				      struct efd *efd)
- {
--	struct efd *efd = data;
- 	int i;
- 	struct ses_component *scomp;
+ 	/* Invokes the vsc to start an IO */
+-	ret = storvsc_do_io(dev, cmd_request, get_cpu());
+-	put_cpu();
++	migrate_disable();
++	ret = storvsc_do_io(dev, cmd_request, smp_processor_id());
++	migrate_enable();
  
-@@ -684,7 +683,7 @@ static void ses_match_to_enclosure(struct enclosure_device *edev,
- 	if (efd.addr) {
- 		efd.dev = &sdev->sdev_gendev;
- 
--		enclosure_for_each_device(ses_enclosure_find_by_addr, &efd);
-+		ses_enclosure_find_by_addr(edev, &efd);
- 	}
- }
- 
+ 	if (ret)
+ 		scsi_dma_unmap(scmnd);
 -- 
 2.51.0
 
