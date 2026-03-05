@@ -1,116 +1,139 @@
-Received: from sender4-pp-f112.zoho.com (sender4-pp-f112.zoho.com [136.143.188.112])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6A9E933F374;
-	Thu,  5 Mar 2026 10:00:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=136.143.188.112
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772704829; cv=pass; b=rYqKn7CBH5Sc+LKSs6OcqiA1YxApJxjWRldMBNRYs8sXipsEvVfs7N+A1kjuy+1MT+iJpRaL75AxUMuqvKaoNnmpe0kzjNz98pogLKDpurEdNhMxlaXqGdEMIE2IgvFQCxykOg1gh/ABX5mmFrd0gaJ4uicoURII+hJ+w2XoRjY=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772704829; c=relaxed/simple;
-	bh=yTf9GYa92CxOR0v1gm9TC/TaEGiV9h9oOyqTiChyhQc=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=CeGNdwp89J4HgoEqukjQw0SH4cjuCInkA2wODUUWWuPRQumX422Bxxdcie9keod117lAKGoXhqKohsFSLOFKIVM42uameIKpmntcV5okj3T3Xif6d3E9J6B+6MDIV6g8TtNbpijfygH/hIxRq3zegUrjD2vS4UyryjzgN6LI700=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (1024-bit key) header.d=collabora.com header.i=nicolas.frattaroli@collabora.com header.b=J/301NWa; arc=pass smtp.client-ip=136.143.188.112
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collabora.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C95A8384237
+	for <linux-scsi@vger.kernel.org>; Thu,  5 Mar 2026 11:09:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1772708948; cv=none; b=VG30KNML5IJXiGSdSGpEEXrtqUC2ELQ47TkwydvpcdmLealEJNM9Wx1N0gPvfYiL76qN0m/TP5ZR5LSCDZB7Qyh1rHOXWyqZsi2Gs1qp0GNSnCpEdi/rQV2G2qpVlO99JFUx3C0lOXP2i83ivAt57NEHcrNynUYZpZQGHt12Pek=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1772708948; c=relaxed/simple;
+	bh=bzFoEOvQxPWNEihZz4JkJfD8XtgjFB5z2yTqJBVJEh4=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=n8tJpUmDp1rYDSRniVmTetft0QLgR+OGisFaC10V3I5nUpIsqzJM9/XmO99HaRBsi1vwZiJW0Lppf9YtdduiGmaRznRYJ4vo5zsFxb9DUF5F/wrXF4Ngoh4GI52R5u1r9RLPGbCuIxgd7e0raKf9CiQua5229w5+/yPzvVTC9Uo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=o8d+/mPg; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=collabora.com header.i=nicolas.frattaroli@collabora.com header.b="J/301NWa"
-ARC-Seal: i=1; a=rsa-sha256; t=1772704683; cv=none; 
-	d=zohomail.com; s=zohoarc; 
-	b=kBoMhSSPZC5RsRfS4lwUYt+DXbeKYd998viSF8OfQgMUxb/zXbxyemZauGhuLeYTbPBelQjuTfEL9D0+cWo40OIheo5HwWCwpwlhtF3FhqUusAxKkTY416Dmd3KJxG3Sfv/E4HjLm8ThGO3Xq0gjfknscHV4kjjKHfgvW8ob+Yc=
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.com; s=zohoarc; 
-	t=1772704683; h=Content-Type:Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:Subject:To:To:Message-Id:Reply-To; 
-	bh=t+dM/ivqOh9qFQC6P4MhMScrDFmdYfA44gwq4G7yKZA=; 
-	b=fK4RwTEpB/dukN63XUnC6gB0R4xTNhIruor1iiIurQIm8TsF4kKFxi+gMjRHWSoxFymTAVKJ+sVEYYCSrvj5kS8FLsPP41vixq+SkwRlXPTwlKClaT5CvK20ffWU7wnncuAFyu8PJwB95ylrXrsozTseCxJZpS1ZLScgCqos7R4=
-ARC-Authentication-Results: i=1; mx.zohomail.com;
-	dkim=pass  header.i=collabora.com;
-	spf=pass  smtp.mailfrom=nicolas.frattaroli@collabora.com;
-	dmarc=pass header.from=<nicolas.frattaroli@collabora.com>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1772704683;
-	s=zohomail; d=collabora.com; i=nicolas.frattaroli@collabora.com;
-	h=From:From:To:To:Cc:Cc:Subject:Subject:Date:Date:Message-ID:In-Reply-To:References:MIME-Version:Content-Transfer-Encoding:Content-Type:Message-Id:Reply-To;
-	bh=t+dM/ivqOh9qFQC6P4MhMScrDFmdYfA44gwq4G7yKZA=;
-	b=J/301NWaZdxu3OBlGpm+tcT8tF32LtInDWcbPlcVv41C/2xK55Pi9n2RO8pJgD/l
-	wkCpA7kwqrt9OFuobYiiO8tC+AKWML/dxJuO+AITRr9jlC6DgJvNBBrTSC2C5FGya/f
-	yyvNJiQC2PXlDeManSvq/+q1AWUAAinyKmpE1e2Y=
-Received: by mx.zohomail.com with SMTPS id 1772704680982221.39391748095557;
-	Thu, 5 Mar 2026 01:58:00 -0800 (PST)
-From: Nicolas Frattaroli <nicolas.frattaroli@collabora.com>
-To: "chu.stanley@gmail.com" <chu.stanley@gmail.com>,
- "robh@kernel.org" <robh@kernel.org>,
- Chunfeng Yun =?UTF-8?B?KOS6keaYpeWzsCk=?= <Chunfeng.Yun@mediatek.com>,
- "kishon@kernel.org" <kishon@kernel.org>,
- "James.Bottomley@HansenPartnership.com"
- <James.Bottomley@hansenpartnership.com>,
- "bvanassche@acm.org" <bvanassche@acm.org>,
- AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
- "neil.armstrong@linaro.org" <neil.armstrong@linaro.org>,
- "conor+dt@kernel.org" <conor+dt@kernel.org>,
- Chaotian Jing =?UTF-8?B?KOS6leacneWkqSk=?= <Chaotian.Jing@mediatek.com>,
- "lgirdwood@gmail.com" <lgirdwood@gmail.com>,
- "vkoul@kernel.org" <vkoul@kernel.org>,
- "krzk+dt@kernel.org" <krzk+dt@kernel.org>,
- "p.zabel@pengutronix.de" <p.zabel@pengutronix.de>,
- "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
- "matthias.bgg@gmail.com" <matthias.bgg@gmail.com>,
- "avri.altman@wdc.com" <avri.altman@wdc.com>,
- "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
- "broonie@kernel.org" <broonie@kernel.org>,
- Peter Wang =?UTF-8?B?KOeOi+S/oeWPiyk=?= <peter.wang@mediatek.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
- "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- "linux-arm-kernel@lists.infradead.org"
- <linux-arm-kernel@lists.infradead.org>,
- "linux-phy@lists.infradead.org" <linux-phy@lists.infradead.org>,
- "linux-mediatek@lists.infradead.org" <linux-mediatek@lists.infradead.org>,
- Louis-Alexis Eyraud <louisalexis.eyraud@collabora.com>,
- "kernel@collabora.com" <kernel@collabora.com>
-Subject:
- Re: [PATCH v8 11/23] scsi: ufs: mediatek: Remove undocumented downstream
- reset cruft
-Date: Thu, 05 Mar 2026 10:57:53 +0100
-Message-ID: <3472277.mvXUDI8C0e@workhorse>
-In-Reply-To: <3aeee75e78fed2be92038c776463a231b94462f3.camel@mediatek.com>
-References:
- <20260304-mt8196-ufs-v8-0-5b0eac23314f@collabora.com>
- <20260304-mt8196-ufs-v8-11-5b0eac23314f@collabora.com>
- <3aeee75e78fed2be92038c776463a231b94462f3.camel@mediatek.com>
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="o8d+/mPg"
+Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 625AFjDV2922834;
+	Thu, 5 Mar 2026 11:09:00 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:date:from:message-id:mime-version
+	:subject:to; s=qcppdkim1; bh=FWG6BW8u1EDqaQGKincjoexSPOlUDV6bKsb
+	t/n2w/SY=; b=o8d+/mPggnLFP+bYVn8J4pmcT7cgzHTD01RLy4G0JZs4z5z2/kg
+	F7P07Iul/U4SwnKLez1xTgv3DmynlT7lKNAjEbCSoGfq3aP32aB07l2Uy3jmvV5c
+	tL2kirSrgbMlIsCknlDPg88RPMDzL93X837bzIZYxkdL/HJN4g/wiwo1+7EOxAM3
+	PE5EhFPM41ihZ3+EgXe+R2g96pOXuc4PapD8QsWvJQZxa96jseBC3AwOqw45MNeX
+	+LLVxHUc8VVpttDrMn+O5cxL6K6j/2LyqlN24s/nsejnRKaKVecteAPOpCB8V3yj
+	JAwkDdu9I2Kh5aK7orTBjnSeaim9iDwzSOQ==
+Received: from nalasppmta05.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4cq2q81amc-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 05 Mar 2026 11:09:00 +0000 (GMT)
+Received: from pps.filterd (NALASPPMTA05.qualcomm.com [127.0.0.1])
+	by NALASPPMTA05.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTP id 625B8xXW017960;
+	Thu, 5 Mar 2026 11:08:59 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+	by NALASPPMTA05.qualcomm.com (PPS) with ESMTPS id 4cq51yantj-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 05 Mar 2026 11:08:59 +0000
+Received: from NALASPPMTA05.qualcomm.com (NALASPPMTA05.qualcomm.com [127.0.0.1])
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 625B8xVR017950;
+	Thu, 5 Mar 2026 11:08:59 GMT
+Received: from hu-devc-lv-u22-c.qualcomm.com (hu-cang-lv.qualcomm.com [10.81.25.255])
+	by NALASPPMTA05.qualcomm.com (PPS) with ESMTPS id 625B8wXt017947
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 05 Mar 2026 11:08:59 +0000
+Received: by hu-devc-lv-u22-c.qualcomm.com (Postfix, from userid 359480)
+	id C6B535B2; Thu,  5 Mar 2026 03:08:58 -0800 (PST)
+From: Can Guo <can.guo@oss.qualcomm.com>
+To: avri.altman@wdc.com, bvanassche@acm.org, beanhuo@micron.com,
+        martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, Can Guo <can.guo@oss.qualcomm.com>
+Subject: [PATCH v4 0/1] Add sysfs entries to facilitate UFS UniPro QoS monitoring
+Date: Thu,  5 Mar 2026 03:08:55 -0800
+Message-Id: <20260305110856.959211-1-can.guo@oss.qualcomm.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+X-QCInternal: smtphost
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: rLczA3ZS6q4q1oUIPBrVBlMgBhj4_PyU
+X-Proofpoint-ORIG-GUID: rLczA3ZS6q4q1oUIPBrVBlMgBhj4_PyU
+X-Authority-Analysis: v=2.4 cv=GecaXAXL c=1 sm=1 tr=0 ts=69a9644c cx=c_pps
+ a=ouPCqIW2jiPt+lZRy3xVPw==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
+ a=Yq5XynenixoA:10 a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22
+ a=_K5XuSEh1TEqbUxoQ0s3:22 a=L804ja9khbPVvLby85IA:9
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzA1MDA5MCBTYWx0ZWRfX38/Tx2KRJ0xB
+ dsVgWgxRjxq4z811mU86LcRkGcQU+q6jej+xGK8/+wT32e/bdj4cH0VdLy6T4pRQOOWRL1gStXg
+ MJzvPpgQ6uEN4G+/odWQ83x6PgYnFhcPp4eQ1NEhdqQMzIZhplwZv2ELiOFeY6DYhb7ckSyifRH
+ ikdbEZeLuOaKKAxX4LLL9GTcrwUG0PA9OCVI3D6wEi2q0W5xx6MZt6XoEfK4Hgs8qnRMxGinOCl
+ NqQTCCFmwQ4dWF98Yw4HaglZlfZSGOnnhr38iUy11hzSDwcfexvuVeCrNgEpY12lXAm1IIA5YTj
+ 5wNk1NOrrbohld28KAdfb7+O6xL+BTKtZbvLfMeCQwLfeZb3DJTwEvvlHLplsfiQ3LisgS61fk/
+ fW+f9QiJBvFA1g4RuVHng6FjHn4yiNn8taKAKcozwRelolYUzWg1kx4gOQvfL6UV99Qh6khtq/L
+ Ny07tDrJJc5dnXmIAEw==
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-03-05_03,2026-03-04_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ priorityscore=1501 bulkscore=0 impostorscore=0 spamscore=0 suspectscore=0
+ clxscore=1015 lowpriorityscore=0 adultscore=0 malwarescore=0 phishscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2602130000 definitions=main-2603050090
 
-On Thursday, 5 March 2026 10:14:47 Central European Standard Time Peter Wan=
-g (=E7=8E=8B=E4=BF=A1=E5=8F=8B) wrote:
-> On Wed, 2026-03-04 at 15:53 +0100, Nicolas Frattaroli wrote:
-> > @@ -2383,38 +2383,12 @@ MODULE_DEVICE_TABLE(of, ufs_mtk_of_match);
-> >  static int ufs_mtk_probe(struct platform_device *pdev)
-> >  {
-> >  	int err;
-> > -	struct device *dev =3D &pdev->dev, *phy_dev =3D NULL;
-> >=20
->=20
-> Will there be a build error if phy_dev is removed?
-> Please make sure that each patch can build successfully, one by one.
->=20
-> Thanks
-> Peter
->=20
->=20
->=20
->=20
+While userspace can currently configure UniPro Quality of Service (QoS)
+monitoring via UFS BSG, tracking events requires constant polling of
+UniPro attributes. Additionally, UFS host reset caused by err handling or
+resuming (from LPM) can reset UniPro QoS monitoring attributes.
 
-Yes, these are the kinds of mistakes that happen when you ask someone
-to pick apart patches for your downstream convenience.
+This series introduces a sysfs attribute to the UFS core to improve the
+observability of DME QoS monitoring. Userspace can configure and enable
+UniPro QoS monitor via UniPro QoS Attributes (using UFS BSG) and get
+notified by the proposed dme_qos_notification attribute without polling
+UniPro QoS Status attribute. The dme_qos_notification attribute is a
+bitfield with the following bit assignments:
 
-I'll hand dealing with any further fixups and variable naming concerns
-you have over to Angelo, as I can't be bothered to deal with you
-anymore.
+Bit	Description
+===	======================================
+0	DME QoS Monitor has been reset by host
+1	QoS from TX is detected
+2	QoS from RX is detected
+3	QoS from PA_INIT is detected
 
+v3 -> v4:
+  1. Updated 'Date' to March in Documentation/ABI/testing/sysfs-driver-ufs
+
+v2 -> v3:
+  1. Updated texts in cover letter.
+  2. Removed the second patch in v2.
+  3. Incorporated comments from Bart.
+  2. Improved the Documentation writeup in the first patch.
+  3. Added sysfs_put() in ufshcd_hba_exit().
+  4. Used Bit[0] in dme_qos_notification attribute to indicate DME QoS
+     has been reset by host.
+
+v1 -> v2:
+  1. Removed a blank line in the first patch in v1.
+  2. Updated texts in cover letter.
+
+Can Guo (1):
+  scsi: ufs: core: Add support to notify userspace of UniPro QoS events
+
+ Documentation/ABI/testing/sysfs-driver-ufs | 23 +++++++++++++++++
+ drivers/ufs/core/ufs-sysfs.c               | 30 ++++++++++++++++++++++
+ drivers/ufs/core/ufshcd.c                  | 24 ++++++++++++++---
+ include/ufs/ufshcd.h                       |  9 +++++++
+ include/ufs/ufshci.h                       |  1 +
+ 5 files changed, 84 insertions(+), 3 deletions(-)
+
+-- 
+2.34.1
 
