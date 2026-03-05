@@ -1,108 +1,140 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from SY2PR01CU004.outbound.protection.outlook.com (mail-australiaeastazolkn19011024.outbound.protection.outlook.com [52.103.72.24])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE5A625DD1E
-	for <linux-scsi@vger.kernel.org>; Thu,  5 Mar 2026 02:37:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772678252; cv=none; b=tSHAPBHFfKS4pCwcJEzsqx1LRNAu3pnq3cxQaAk2JayGXMz23Udy0v8yWronnKB0KcrTOeUXnrvVx37WnCoEIVGBVm3AFqsuCmN/SQLSsll5JK/G7J5NsCSE82qyCgTxKL01hnspMlNHEio1AmsdCu1uPMAEZFkQI3ZKWVP2PLc=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772678252; c=relaxed/simple;
-	bh=Zrg3xQuzRFUmRFcIu7kcHq6e2o8cqc90mKbBofbKzTI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=b1jOJzfQv7EYlWRCtPV+PaUuD8fDfVLRvWQomkr9f5/4i5T0xFBk535NlFyfB2SJJUQZmV4SmgaVTHmAaldEbHtQR/enerzPf71X0dpXqe5SWC/gc7R4AWNlDGJ0W0tkCwP8pFhcQ5y5A1riPS05fwen0IgfGKHIa5KdqguDYdM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=WkVZ2TIo; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CDD6B20ED;
+	Thu,  5 Mar 2026 02:49:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.103.72.24
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1772678949; cv=fail; b=ndn7tkkw4XdN+lOiWonoF6yPmlC3tE0rG8CHNAZs/kbEQtrG6h5vHsHlsA82Jli5ePHJ7hcVJYRQ82zqvz0/o9rH3kcPlESUVQRz4v1jPYfGWW/WGEI48cQgGbFn6hbStO/hfvFgsHoG7aOaCS2BttcxTrOcsCGx9sfwsQHmAH4=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1772678949; c=relaxed/simple;
+	bh=crf73NUUzvrxTX0Vu7XOCKfaGniwcBvzI5HZKuXY/Oo=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=dxiotRudfAwOhaBpX6v3W5VpEoroPrydOaW6njjsXbo8uBDCsk0FhrJiRG7frNvJyvrT2/IeyQMJ1GEU9B3Ooq7hgeshrNJGmKiaJYgtiwIMTPiuNTtP6Gx/joLgfWbbYsUSuL/++NGS+l1LUX4V8GJ15hvdWuLBUGu2k5Fevy8=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=outlook.com; spf=pass smtp.mailfrom=outlook.com; dkim=pass (2048-bit key) header.d=outlook.com header.i=@outlook.com header.b=PwALEQJ3; arc=fail smtp.client-ip=52.103.72.24
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=outlook.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=outlook.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="WkVZ2TIo"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1772678249;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=yBUhNsBoeECXQ2g42ZbRUoURW/9mr3wjydrCeND0ozI=;
-	b=WkVZ2TIos7vMR8datonuO+xUMd5g68v0iIl7OkrywObdeGPWib0vi9+A8peTwq3UGM/E9A
-	HXU/V7rrtBYvtNmG94NaXaIO7cVNlw+MMg7wvJey5u5tXR+TFA1J5fi+kQVBizczgB6adB
-	IhPtQwd2/bko5uPmlVIkqBE1Oy7p8Jg=
-Received: from mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-408-gnIwOrr_MGynkDKdRAbF8A-1; Wed,
- 04 Mar 2026 21:37:26 -0500
-X-MC-Unique: gnIwOrr_MGynkDKdRAbF8A-1
-X-Mimecast-MFC-AGG-ID: gnIwOrr_MGynkDKdRAbF8A_1772678244
-Received: from mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.93])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 19BF119560A5;
-	Thu,  5 Mar 2026 02:37:23 +0000 (UTC)
-Received: from bmarzins-01.fast.eng.rdu2.dc.redhat.com (unknown [10.6.23.247])
-	by mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id DEF321800671;
-	Thu,  5 Mar 2026 02:37:21 +0000 (UTC)
-Received: from bmarzins-01.fast.eng.rdu2.dc.redhat.com (localhost [127.0.0.1])
-	by bmarzins-01.fast.eng.rdu2.dc.redhat.com (8.18.1/8.17.1) with ESMTPS id 6252bKqD1952898
-	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
-	Wed, 4 Mar 2026 21:37:20 -0500
-Received: (from bmarzins@localhost)
-	by bmarzins-01.fast.eng.rdu2.dc.redhat.com (8.18.1/8.18.1/Submit) id 6252bIIF1952897;
-	Wed, 4 Mar 2026 21:37:18 -0500
-Date: Wed, 4 Mar 2026 21:37:18 -0500
-From: Benjamin Marzinski <bmarzins@redhat.com>
-To: John Garry <john.g.garry@oracle.com>
-Cc: hch@lst.de, kbusch@kernel.org, sagi@grimberg.me, axboe@fb.com,
-        martin.petersen@oracle.com, james.bottomley@hansenpartnership.com,
-        hare@suse.com, jmeneghi@redhat.com, linux-nvme@lists.infradead.org,
-        linux-scsi@vger.kernel.org, michael.christie@oracle.com,
-        snitzer@kernel.org, dm-devel@lists.linux.dev,
-        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 10/24] scsi-multipath: add
- scsi_mpath_{start,end}_request()
-Message-ID: <aajsXqau3gHFIqVG@redhat.com>
-References: <20260225153627.1032500-1-john.g.garry@oracle.com>
- <20260225153627.1032500-11-john.g.garry@oracle.com>
- <aafNnO6o2yoeLjPs@redhat.com>
- <93752514-3225-4cdf-b9a5-e0964d693b5b@oracle.com>
+	dkim=pass (2048-bit key) header.d=outlook.com header.i=@outlook.com header.b="PwALEQJ3"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=Nk8MdI9W0VHrUoemcCulE32o7fRSZjEvzw34VlwEDO0OlgFrh2xEiVCPiHlF2qAc6CBYHUxebBPU9dRj1YgcKR+lztUpB1mr/futG2Zo+1CeE3NbXLSkxrBfdnSAcT8RI6NmEkUisS35cWs3kW8n37uJRwsR1PRAp5pdsscaQ5WBFP7VTn2Cc9IleGunnOMAKRVLNd7NsQkMI8jrhA6iQKrg3+MdVoUXGfVeMXxGQVgDBo6bMZMm8zf3nSfpBQXIpJ908QDMWBXmJyzo4BWlPR8LZeuASUji45cakv0PN5O2FOwAR/Ke5dGpjdmtkupwoXXTWs1Bxhx0hM2F2QFIww==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=v1izccchhNTMyPdnZ3IC61c54o8lsmMzQjC0yGSr2J0=;
+ b=jRbm3zk3sxhrU5CGpQ8omtS83bo9W+XL479UC9+K2/3UTJ4007oG0GxyPkR5ewjf/c7WA5DzdIyL+mvU5PDPNADL1ULvmm0jHU/qN+dBlbESV3VSXYup04qhJYkYa0kXiQ8f8tq4ZolLPMZUwoO3b1OtftBK+DYfeuN90C7xA29IuAupHzttmHa+Epo15Di8KfLRk34BHhRCd1We2L9EMvn10jVhX6Kx2Ytr2eKXkk6kpzyUAQWRtDn9nr3tYE3T0qBxTJVw4Hc8J0mTrEes9JcF29HunuR9HV1qbtMpQSdPedRxxB1KVeI0RK7VwQruO8P8ojm5Bx9CNE1usdK3EQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
+ dkim=none; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=outlook.com;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=v1izccchhNTMyPdnZ3IC61c54o8lsmMzQjC0yGSr2J0=;
+ b=PwALEQJ3uQqY2C4sVopOkEaHHueAyoLbhglFqOLR1OcflgRdOdMP7gFqfQgDwtNSOn/kLUjeDvymgOCm+9VGZ6c3TRrARpzrWd+Sl/272ITMCphljkkFGSHtCF7/Q6Ijz2pOlKinBkz4AW8ZwdrXWh2IW0UxXPDvcM2620/Qv0rlv84evB/QFa3cokpMBiNjNJOhEnFv5Y1i3MbfqsDOpRapRN2JOt1x8aMFN7DKEGeNvM+N4/Rb2yYDa23yS3YUY8+uFKOjSsuu4dpgf2DGuqRaJPqmUqUxwNBux0nXwBwfq+tmsMTfSzEa/9AQIXkhFm3uc5toHbGfmnM6UyMiUA==
+Received: from SYBPR01MB7881.ausprd01.prod.outlook.com (2603:10c6:10:1b0::5)
+ by SY0PR01MB8601.ausprd01.prod.outlook.com (2603:10c6:10:221::15) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9678.18; Thu, 5 Mar
+ 2026 02:49:01 +0000
+Received: from SYBPR01MB7881.ausprd01.prod.outlook.com
+ ([fe80::7cd2:d6e8:3fa0:5f0c]) by SYBPR01MB7881.ausprd01.prod.outlook.com
+ ([fe80::7cd2:d6e8:3fa0:5f0c%5]) with mapi id 15.20.9678.017; Thu, 5 Mar 2026
+ 02:49:01 +0000
+From: Junrui Luo <moonafterrain@outlook.com>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+CC: "Martin K. Petersen" <martin.petersen@oracle.com>, Nicholas Bellinger
+	<nab@linux-iscsi.org>, Asias He <asias@redhat.com>,
+	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+	"target-devel@vger.kernel.org" <target-devel@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Yuhao Jiang
+	<danisjiang@gmail.com>
+Subject: Re: [PATCH] scsi: target: fix integer overflow in UNMAP bounds check
+Thread-Topic: [PATCH] scsi: target: fix integer overflow in UNMAP bounds check
+Thread-Index: AQHcq+2irpso1+WEh0i6au8hZMqNK7WemOWAgACkaIA=
+Date: Thu, 5 Mar 2026 02:49:01 +0000
+Message-ID: <956B2459-79A1-4C49-AE89-62A949498695@outlook.com>
+References:
+ <SYBPR01MB7881593C61AD52C69FBDB0BDAF7CA@SYBPR01MB7881.ausprd01.prod.outlook.com>
+ <dda830851d25f66373b556a4816214124b02d669.camel@HansenPartnership.com>
+In-Reply-To:
+ <dda830851d25f66373b556a4816214124b02d669.camel@HansenPartnership.com>
+Accept-Language: en-US, zh-CN
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+x-ms-exchange-messagesentrepresentingtype: 1
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: SYBPR01MB7881:EE_|SY0PR01MB8601:EE_
+x-ms-office365-filtering-correlation-id: 3677e4b4-9874-47fa-8f46-08de7a61c1d9
+x-microsoft-antispam:
+ BCL:0;ARA:14566002|8062599012|41001999006|461199028|31061999003|15080799012|8022599003|8060799015|19110799012|12121999013|3412199025|440099028|102099032;
+x-microsoft-antispam-message-info:
+ 3yyTnyT0qO/vPFOgA3sB61KZXDPDT39LrLmd+H4F/cjK8NmN2Rq3K11Pl3Rw5GV/SZ0VXA8QBtSERw+L6TEyR5bXKBQt0fKrM7P9cHolPxRk5b0lox2LbE4ysdPnLYClQwg9ixLB5ghue/1cx/EZEmc2B7k8QSuR3n5XoeXGlkJmUq/P3b+uZi/9wZYy5YrEtO6vHMmk+WyQvVkKVRs1DKYAkQeVhQprWxpoxXA0Ahuex06DG4/I3h18A+p3cExb+CCKl6vYupXxyHNGffF1+ZH64ArFVDNVfBGs4YppeTdDpxlA3hucR/q5b4UNHEqUO6lRbtYAjkk0jcTbGOSspqaJmgOtbuEbds/Be13yIdQBnv0CpaOIOPeK6KYO3s+0+3LbLz21ywwMrjdnhECJYrobWuE42gNjduK4+kZlKK543gLya0/0MWsit2s4XaxYonolIoueACC/Gp6RjeGlxQ0D7paTBaqUHG6oSV63lVvbxj0qjeirIw9Uss0wFqNVmnfaK9oszns5uK4MYZ4+ImZfpHXc7P2DjLz3oz5a043y6p152vUKbn29P7z3qKMjI7JfAX8gSBIm5IEpiHjZyuPAPlUeldlezygqPUvZHhTF2tj4j1Mh4Rud7JY9Q34z0yjA0WZW1eMLdT92DdKefN00pMmg9c0qiFNOsJCnv/2y7rzR6m7hADXIiLTRoQzQMzWxUCF1SnxfWM3UoHfHVq5oQmPGq4KjNxWpWuiO9j/Ylrd5e2aMIO+sUxOFvzYolIpsEW1WefbzAMpE2FcQSN7TP5gH66ZcNIzNQ6QdpTQs0bV4urlKRJPucTWd23dCLyiuqavGeV4VSPqBLR6exsyq0VnHYvF0uVJUb4UKKDYDorD6O3d1Ov6ySEfgrWVti/PV7Qeem8SR2N4XUMj3zmuJqWwYXZJoMa9kMZRuRVxBEdjSTwzSa5tDDnf9pXZZ
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0:
+ =?us-ascii?Q?GFCApwOjIkkVCbvpGoaMuaJo5rQWI0PXqoaBZzeBCTzZduOmnQ+QsEVec+MX?=
+ =?us-ascii?Q?IB/ZqIJPjrYtEM98R4/DlocmZX+dMS686EVAbpVWodzUKgxVmyOy/Yy8aIhk?=
+ =?us-ascii?Q?mmfU6su2BLqgoIIGHmVmVS19KIH++KBlxF1QXsksqhwzF8p/ShAYbntmCXei?=
+ =?us-ascii?Q?fP7CxUfApOVmO02YsdQBynUONKDnD3TCUXbM2HZ2QMUFA+lAvw+yRJwYxbVc?=
+ =?us-ascii?Q?WJu40WcQUo8ZGvTHvqVWJ6hu7nxbcUxNjDuuY1MgJj6Qvl8IOT8pzwtvCVsS?=
+ =?us-ascii?Q?ktfHnOhJ/bDg3SjJ3vnjG8A9W5GuEjhLRtkAARQikCvo22MVOHp/y4rfAXN/?=
+ =?us-ascii?Q?9mdVRaeXFYHzQ4Q9l1/OSUCFkldjzDBrW8JgydZYOeiBCyaIlu9MePm4Z/9y?=
+ =?us-ascii?Q?HEx1r42lBHkaSP5wveJIQ06YVsT4jNgrY051UUmaZdQSyMGxlROPFPPyRFvX?=
+ =?us-ascii?Q?tqc7VGfzYh76ELWR2YmN+JUoCEe3N2i14uL1vhj2Jx2siv4niAE02i31VfU0?=
+ =?us-ascii?Q?NiXmHTv8zuzmvD1i0iGkzX0mtWUz9gB4HP5c3pCqTp+rCTrwAJKbZINJhyuN?=
+ =?us-ascii?Q?as76NsE+6iVXLhL+fsHNbsFQvTmIjJVBOOxpuOvtZ5opfwzmh0s7PyMvRri9?=
+ =?us-ascii?Q?OFrSg/ke8ENW6FOZbggzMHI10h+Uoqo8aeclH3NMc4Bp3yvD86ExTdRHmo2y?=
+ =?us-ascii?Q?/C5GT7qgcwnpkJF07xH4beek4EzH0UJCXYhJM1k1F8DAieyL+jhpfMA7Es+8?=
+ =?us-ascii?Q?81qg1Y5q78hR0s42PuOlkis1qKuDn3jMkZVZjXxusqKKou5m1/sUnqcL22JD?=
+ =?us-ascii?Q?gDNyee8JbQNPUyAnGshDbeS3pdtH2az3+718fGhfoK8GDXmcqB26TPnJVtgV?=
+ =?us-ascii?Q?Mighur5M3OvUdMN9NiyuGO9sTFMPy2CWpN/kFf8vjJjJ3Yn6PcAPdsfoxsHS?=
+ =?us-ascii?Q?RYX4yZa8OhaFaCq1uDpaLHlvDWRyVltFogrli8ArzMoBpXg/05EdL8kApiYt?=
+ =?us-ascii?Q?Wf5pVOUmdxySC0qww0J4VP8Ivazxb1IulQ9RetQ0iYyDmz8MmQ4p8ycbVvP0?=
+ =?us-ascii?Q?96ZFXbvLgf5sBQtSABMSqq1X/mu9SWM27N/aJWxstxj6fwJ31CMYaTKXiCCA?=
+ =?us-ascii?Q?9tA1dsrMmdH4ZxUmyJxiv1HSmWgNjbO1m1rAgd20A8x5KzGA1cQ6xDtect+e?=
+ =?us-ascii?Q?w+TYkfgmXTGTVwdqVYllGT61U/aawRrNITv8G051x3bnVsMFyNBg3yWvZkQU?=
+ =?us-ascii?Q?+MC5QXysmI4/TwalkoCeDQfV031dj86IQXMQ5yxX12jnsW9LL4zxC7ky8lo9?=
+ =?us-ascii?Q?7nsOy4xexf7zeD/8rOQGyqeMayvSSzrO2JYn5+V7VAujf2Lfl6e/4WaEluI+?=
+ =?us-ascii?Q?hPN0xj1QMaLpnhOMF50oEkmHgePmz91eQW+GTEVsYbqE41i+7Q=3D=3D?=
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <1AF3775E92CF8C4AA75B8D1857DC1308@ausprd01.prod.outlook.com>
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <93752514-3225-4cdf-b9a5-e0964d693b5b@oracle.com>
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.93
+X-OriginatorOrg: outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: SYBPR01MB7881.ausprd01.prod.outlook.com
+X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg: 00000000-0000-0000-0000-000000000000
+X-MS-Exchange-CrossTenant-Network-Message-Id: 3677e4b4-9874-47fa-8f46-08de7a61c1d9
+X-MS-Exchange-CrossTenant-originalarrivaltime: 05 Mar 2026 02:49:01.5262
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
+X-MS-Exchange-CrossTenant-rms-persistedconsumerorg: 00000000-0000-0000-0000-000000000000
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SY0PR01MB8601
 
-On Wed, Mar 04, 2026 at 11:11:08AM +0000, John Garry wrote:
-> On 04/03/2026 06:13, Benjamin Marzinski wrote:
-> > > +	scsi_mpath_end_request(req);
-> > > +
-> > >   	/*
-> > >   	 * In the MQ case the command gets freed by __blk_mq_end_request,
-> > >   	 * so we have to do all cleanup that depends on it earlier.
-> > This looks wrong. We start accounting in scsi_queue_rq(), and we need to
-> > end it whenever we complete or requeue the request, otherwise the
-> > accounting will get off. But not all requests go through
-> > scsi_end_request(). scsi_mpath_failover_req(), for instance, calls
-> > blk_mq_end_request() directly, and other functions, like
-> > scsi_queue_insert() call blk_mq_requeue_request(). I'm pretty sure that
-> > this should go in scsi_complete(), as well in the error path of
-> > scsi_queue_rq().
-> 
-> ok, let me check that further.
-> 
+On Wed, Mar 04, 2026 at 12:00:17PM -0500, James Bottomley wrote:
+> What's the theory about how this could occur and the problem it causes?
 
-I think I was a little hasty here. Looking at sd_mpath_start_command()
-and sd_mpath_end_command() in patch 17, I can see that they protect
-against repeat calls, so requeueing the request should be o.k. There's
-still a problem when scsi_mpath_failover_req() calls blk_mq_end_request()
-directly, and when scsi_queue_rq() exits with a failure where the
-request won't requeued (all the returns except BLK_STS_OK,
-BLK_STS_RESOURCE, and BLK_STS_DEV_RESOURCE).
+lba is not the device's actual LBA range - it comes directly from the
+initiator's UNMAP parameter block descriptor:
 
--Ben
+   lba =3D get_unaligned_be64(&ptr[0]);
 
-> Thanks for the notice.
+where ptr points into the data buffer received from the initiator via
+transport_kmap_data_sg(). An initiator can put any 64-bit value here
+regardless of device size.
 
+> If we send an unmap with lba and range that wraps 64 bits then the
+> device should error or truncate it anyway, shouldn't it?
+
+The backends will catch it in practice. But without this check, the
+initiator gets TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE instead of
+TCM_ADDRESS_OUT_OF_RANGE and WRITE_SAME already has this exact guard in
+the same file.
+
+Thanks,
+Junrui Luo
