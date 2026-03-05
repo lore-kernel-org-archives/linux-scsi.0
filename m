@@ -1,44 +1,48 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 092DC3D34BE;
-	Thu,  5 Mar 2026 15:37:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C7373D646A;
+	Thu,  5 Mar 2026 15:37:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772725049; cv=none; b=cjkNDfO8WqAJzsORYTvm41+d4s4tgFxE7YZA9eXtQ9a2vhhDdMJrBFA6ucdlYm5IJ7boFMLfrzAcW1THzImkwxsPTIEGz73KnLGmFxnPV9oCE2NoRFhcgPtBx0F1AEzT3WmgBhXJvdGiCHa8AQt0x3mWVlcPdvMmLKoA/xx64jY=
+	t=1772725050; cv=none; b=jRXXXO2qmqlvCz9Donyss79ROUji7bUXnXqvIxeN5QBoNHlPy2rbbECmpazW2kP9WdMzZRRVaUhXfkVQVWnPIJp8ixD/sl253OGi6VnPQsDS5pM08y3wHCG6albqsAORxGlGvba1Ao9oZWFtC0Mve+NNmbWiAvvaPvCUf1ra4YU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772725049; c=relaxed/simple;
-	bh=XIrrC99mBb44C1oN2x309uDrkIvlWbGqqxQfSCTkmIU=;
+	s=arc-20240116; t=1772725050; c=relaxed/simple;
+	bh=4zbz1EImMJQzUPsZuB7/QAcByUKZ/gGp6Y/TRttdjns=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=bzS3yTyrkZyp56KGpfDJjUC/Uf7b6zlleSh8zAvAtO2JomU/DoVk752hyRielETzx/v2WPDbc2Yasxj2b7NM7VJXWSnyUTzU6xNE2nCtZU2tXsSzlUhWmXom9ygSkSvIQPAa/05eKx0YmiO4ttq9BIDPhOPGGB9vltQjvyrki4Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VKWOaS5L; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=GMJebN/TI83l1FHj5vSeRaFuXxI+VelbjxfXEfGX96IU74Q75C7nDYwmJrZwp+gYsb3vTV/fET56xR3GBDLRWIizxbKMKfqFe4D0PNMB+pv8UU6UEJXxuhm24Z0xh8WeAQSO9qZVx5LQmZXbZdZTn0g7DZxj1iKXa5ohTvdb7js=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=E0gbCNHh; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VKWOaS5L"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C383FC19423;
-	Thu,  5 Mar 2026 15:37:27 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="E0gbCNHh"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 190B4C2BC87;
+	Thu,  5 Mar 2026 15:37:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772725048;
-	bh=XIrrC99mBb44C1oN2x309uDrkIvlWbGqqxQfSCTkmIU=;
+	s=k20201202; t=1772725050;
+	bh=4zbz1EImMJQzUPsZuB7/QAcByUKZ/gGp6Y/TRttdjns=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=VKWOaS5Lx3fgsk2IUDQE1ijUEs2cMadw651Dgl48sYDdhobRjj1IgdXv3WOvuCsrn
-	 daLRUZknMVpgUv0urNNMjlvtNEBruFuIX8jCYUCPBdbkF1vBwoJWrir1W1oEpyKW8a
-	 5XoXui22z/W1pfy+Rne3VOQ33euwTiER+99eBoB4KWx8GmDx3YdGnsbaR8GKmjZ2Ji
-	 LiRolduSH1c0aoD6UBpKDY+hvhOdm7gPYxCGIAS0mNNPxtoDZLJpyHW+5bTl8+W6sv
-	 4e5F/O1ZZZhcVvNfNw0MoS4X6PW3DnTiveD4l91vtdL8tIoPu5Wxna1rj86ngrpLcG
-	 0ZmznFvIh3myQ==
+	b=E0gbCNHhd2DMZF7hjVDcHu8tkeVL625IZvYCisUgE5AK8/skiVNchyIIi1MrVQE7E
+	 gAVGv4pUCRZuiNXG4dC0MKJ4aX1LjTQ/04B2jYa5WVe18nAnoUQm5mekES3OZf8T6n
+	 CkObz0NmObkU/JkByDxk/Y5w1ic/1OXGXv7YiDQZkAyW6E/HMkuAUiYgqNHJ0mCNh2
+	 2nyVoGzpHriFPLbZTw/nblBsml+2xwiOrVMTKobJfaIabtV1Yvx8vcKMXJVUIu3COl
+	 Ag8/odUZqkGqwrb1IRNfUz0j70gkep5FdW6nyQjo5akERMPdI4VkqU2u51NGUOjVLo
+	 h9lwtThMJh5dw==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
-Cc: wangshuaiwei <wangshuaiwei1@xiaomi.com>,
-	Bart Van Assche <bvanassche@acm.org>,
+Cc: Ranjan Kumar <ranjan.kumar@broadcom.com>,
 	"Martin K. Petersen" <martin.petersen@oracle.com>,
 	Sasha Levin <sashal@kernel.org>,
+	sathya.prakash@broadcom.com,
+	kashyap.desai@broadcom.com,
+	sumit.saxena@broadcom.com,
+	sreekanth.reddy@broadcom.com,
 	James.Bottomley@HansenPartnership.com,
+	mpi3mr-linuxdrv.pdl@broadcom.com,
 	linux-scsi@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.19-6.6] scsi: ufs: core: Fix shift out of bounds when MAXQ=32
-Date: Thu,  5 Mar 2026 10:36:59 -0500
-Message-ID: <20260305153704.106918-16-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.19-5.15] scsi: mpi3mr: Add NULL checks when resetting request and reply queues
+Date: Thu,  5 Mar 2026 10:37:00 -0500
+Message-ID: <20260305153704.106918-17-sashal@kernel.org>
 X-Mailer: git-send-email 2.51.0
 In-Reply-To: <20260305153704.106918-1-sashal@kernel.org>
 References: <20260305153704.106918-1-sashal@kernel.org>
@@ -54,121 +58,132 @@ X-stable-base: Linux 6.19.6
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-From: wangshuaiwei <wangshuaiwei1@xiaomi.com>
+From: Ranjan Kumar <ranjan.kumar@broadcom.com>
 
-[ Upstream commit 2f38fd99c0004676d835ae96ac4f3b54edc02c82 ]
+[ Upstream commit fa96392ebebc8fade2b878acb14cce0f71016503 ]
 
-According to JESD223F, the maximum number of queues (MAXQ) is 32. When MCQ
-is enabled and ESI is disabled, nr_hw_queues=32 causes a shift overflow
-problem.
+The driver encountered a crash during resource cleanup when the reply and
+request queues were NULL due to freed memory.  This issue occurred when the
+creation of reply or request queues failed, and the driver freed the memory
+first, but attempted to mem set the content of the freed memory, leading to
+a system crash.
 
-Fix this by using 64-bit intermediate values to handle the nr_hw_queues=32
-case safely.
+Add NULL pointer checks for reply and request queues before accessing the
+reply/request memory during cleanup
 
-Signed-off-by: wangshuaiwei <wangshuaiwei1@xiaomi.com>
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
-Link: https://patch.msgid.link/20260224063228.50112-1-wangshuaiwei1@xiaomi.com
+Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
+Link: https://patch.msgid.link/20260212070026.30263-1-ranjan.kumar@broadcom.com
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
 
 LLM Generated explanations, may be completely bogus:
 
-## Analysis
+### Assessment
 
-### What the commit fixes
+**What the fix does:** Adds NULL checks for `mrioc->op_reply_qinfo` and
+`mrioc->req_qinfo` inside the loop in `mpi3mr_memset_buffers()`. The
+function already has similar NULL checks for other pointers
+(`admin_req_base`, `admin_reply_base`, `init_cmds.reply`) but was
+missing checks for these two queue arrays.
 
-This is a classic **undefined behavior (UB) / shift out of bounds** bug.
-The expression `(1U << hba->nr_hw_queues) - 1` uses a 32-bit unsigned
-integer literal `1U`. When `hba->nr_hw_queues == 32` (which is the
-maximum allowed by the JESD223F UFS specification), the expression `1U
-<< 32` is undefined behavior in C — shifting a 32-bit value by 32 or
-more positions is explicitly undefined per the C standard.
+**Bug mechanism:** When queue creation fails during controller
+initialization or re-initialization, the cleanup path calls
+`mpi3mr_memset_buffers()`. If `op_reply_qinfo` or `req_qinfo` was
+already freed (or never allocated), dereferencing them causes a NULL
+pointer dereference → kernel crash/oops.
 
-The fix changes `1U` to `1ULL` (64-bit), making the shift well-defined
-for values up to 63.
+**Callers:** The function is called from:
+- `mpi3mr_init_ioc()` retry path (line 4405) — controller init failure
+- `mpi3mr_reinit_ioc()` retry path (line 4598) — controller re-init
+  failure
+- `mpi3mr_soft_reset_handler()` (line 5522) — controller reset
+- `mpi3mr_remove()` (line 5748 in mpi3mr_os.c) — device removal
 
-### Bug mechanism and impact
+All of these are realistic trigger paths. The crash would happen on real
+systems when queue creation fails (e.g., memory pressure, hardware
+fault).
 
-- **Variable:** `outstanding_cqs` is declared as `unsigned long` (64-bit
-  on 64-bit platforms)
-- **Context:** This is a fallback path in the interrupt handler
-  `ufshcd_handle_mcq_cq_events()` — executed when
-  `ufshcd_vops_get_outstanding_cqs()` fails (vendor-specific register
-  not available)
-- **Trigger:** Hardware with MAXQ=32 (the maximum allowed by UFS spec)
-- **Consequence:** On such hardware, the undefined behavior could result
-  in `outstanding_cqs` being set to 0 instead of the intended bitmask of
-  all 1s (0xFFFFFFFF). This would mean **no completion queues get
-  serviced**, potentially causing I/O hangs or lost completions — a
-  severe storage subsystem issue.
-
-### Stable kernel criteria assessment
-
-1. **Obviously correct and tested:** Yes — a single-character change
-   (`U` → `ULL`), reviewed by Bart Van Assche (UFS maintainer). The fix
-   is trivially correct.
-2. **Fixes a real bug:** Yes — undefined behavior that can cause I/O
-   failures on hardware with 32 queues.
-3. **Important issue:** Yes — storage I/O hangs are critical. UFS is the
-   standard storage interface for mobile devices.
-4. **Small and contained:** Yes — a single line change, single character
-   modification.
-5. **No new features:** Correct — pure bug fix.
-
-### Risk assessment
-
-**Risk: Extremely low.** This is a one-character change from `1U` to
-`1ULL`. It cannot introduce regressions — on hardware with fewer than 32
-queues, the behavior is identical. On hardware with exactly 32 queues,
-it fixes the undefined behavior.
-
-### Affected versions
-
-The buggy code was introduced in commit `f87b2c41822aa` ("scsi: ufs:
-mcq: Add completion support of a CQE") which landed in v6.3 (merged
-January 2023). All stable trees from 6.3 onward that include MCQ support
-are affected.
+**Stable criteria:**
+- **Fixes a real bug:** Yes — NULL pointer dereference causing a kernel
+  crash
+- **Obviously correct:** Yes — simple NULL check before dereference,
+  consistent with existing patterns in the same function
+- **Small and contained:** Yes — only adds two `if` checks wrapping
+  existing code, no behavioral change otherwise
+- **No new features:** Correct — purely defensive NULL check
+- **Risk:** Very low — the NULL check only skips work that would crash
+  anyway
 
 ### Verification
 
-- **git blame** confirmed the buggy line `(1U << hba->nr_hw_queues) - 1`
-  originates from commit `f87b2c41822aa` (January 2023)
-- **Code reading** confirmed `outstanding_cqs` is `unsigned long` and
-  `nr_hw_queues` is `unsigned int`, verifying the type mismatch concern
-- **Read `ufs-mcq.c:174`** confirmed `hba_maxq` is derived from
-  `FIELD_GET(MAX_QUEUE_SUP, ...)` + 1, and per JESD223F the max is 32,
-  confirming `nr_hw_queues=32` is a valid hardware configuration
-- **Read `ufs-mcq.c:193-219`** confirmed `hba->nr_hw_queues` is set to
-  the total number of queues which can reach `hba_maxq` (up to 32)
-- **Reviewed-by: Bart Van Assche** — UFS subsystem expert confirms the
-  fix
-- The commit applies to a single file with a trivial one-character
-  change
-
-This is a textbook stable backport candidate: a one-character fix for
-undefined behavior in a storage driver interrupt handler, with potential
-for I/O hangs on compliant hardware. Minimal risk, clear correctness,
-important subsystem.
+- Read the `mpi3mr_memset_buffers()` function (line 4667) and confirmed
+  it already has NULL checks for `admin_req_base`, `admin_reply_base`,
+  and `init_cmds.reply` but was missing them for `op_reply_qinfo` and
+  `req_qinfo`
+- Confirmed `kfree(mrioc->req_qinfo)` and `kfree(mrioc->op_reply_qinfo)`
+  in the cleanup function (lines 4804, 4808) set pointers to NULL after
+  free, establishing the NULL state
+- Verified callers of `mpi3mr_memset_buffers()`: called from init retry
+  paths (4405, 4598), reset handler (5522), and remove (5748) — all
+  reachable when queues may be NULL
+- The commit message explicitly states the driver crashed during cleanup
+  — this is a reported real-world crash, not theoretical
+- The fix follows the same pattern already used in the function for
+  other pointers
+- The mpi3mr driver has been in the kernel since at least v5.15 (long-
+  standing driver), so this fix applies to stable trees
 
 **YES**
 
- drivers/ufs/core/ufshcd.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/mpi3mr/mpi3mr_fw.c | 34 ++++++++++++++++++---------------
+ 1 file changed, 19 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 27d53a044dbad..f65b0aeef6dde 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -7094,7 +7094,7 @@ static irqreturn_t ufshcd_handle_mcq_cq_events(struct ufs_hba *hba)
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+index 8c4bb7169a87c..8382afed12813 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+@@ -4705,21 +4705,25 @@ void mpi3mr_memset_buffers(struct mpi3mr_ioc *mrioc)
+ 	}
  
- 	ret = ufshcd_vops_get_outstanding_cqs(hba, &outstanding_cqs);
- 	if (ret)
--		outstanding_cqs = (1U << hba->nr_hw_queues) - 1;
-+		outstanding_cqs = (1ULL << hba->nr_hw_queues) - 1;
+ 	for (i = 0; i < mrioc->num_queues; i++) {
+-		mrioc->op_reply_qinfo[i].qid = 0;
+-		mrioc->op_reply_qinfo[i].ci = 0;
+-		mrioc->op_reply_qinfo[i].num_replies = 0;
+-		mrioc->op_reply_qinfo[i].ephase = 0;
+-		atomic_set(&mrioc->op_reply_qinfo[i].pend_ios, 0);
+-		atomic_set(&mrioc->op_reply_qinfo[i].in_use, 0);
+-		mpi3mr_memset_op_reply_q_buffers(mrioc, i);
+-
+-		mrioc->req_qinfo[i].ci = 0;
+-		mrioc->req_qinfo[i].pi = 0;
+-		mrioc->req_qinfo[i].num_requests = 0;
+-		mrioc->req_qinfo[i].qid = 0;
+-		mrioc->req_qinfo[i].reply_qid = 0;
+-		spin_lock_init(&mrioc->req_qinfo[i].q_lock);
+-		mpi3mr_memset_op_req_q_buffers(mrioc, i);
++		if (mrioc->op_reply_qinfo) {
++			mrioc->op_reply_qinfo[i].qid = 0;
++			mrioc->op_reply_qinfo[i].ci = 0;
++			mrioc->op_reply_qinfo[i].num_replies = 0;
++			mrioc->op_reply_qinfo[i].ephase = 0;
++			atomic_set(&mrioc->op_reply_qinfo[i].pend_ios, 0);
++			atomic_set(&mrioc->op_reply_qinfo[i].in_use, 0);
++			mpi3mr_memset_op_reply_q_buffers(mrioc, i);
++		}
++
++		if (mrioc->req_qinfo) {
++			mrioc->req_qinfo[i].ci = 0;
++			mrioc->req_qinfo[i].pi = 0;
++			mrioc->req_qinfo[i].num_requests = 0;
++			mrioc->req_qinfo[i].qid = 0;
++			mrioc->req_qinfo[i].reply_qid = 0;
++			spin_lock_init(&mrioc->req_qinfo[i].q_lock);
++			mpi3mr_memset_op_req_q_buffers(mrioc, i);
++		}
+ 	}
  
- 	/* Exclude the poll queues */
- 	nr_queues = hba->nr_hw_queues - hba->nr_queues[HCTX_TYPE_POLL];
+ 	atomic_set(&mrioc->pend_large_data_sz, 0);
 -- 
 2.51.0
 
