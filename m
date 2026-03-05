@@ -1,49 +1,64 @@
-Received: from canpmsgout09.his.huawei.com (canpmsgout09.his.huawei.com [113.46.200.224])
+Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 22B9B2EBB86;
-	Thu,  5 Mar 2026 06:47:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.224
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6535A372EF7;
+	Thu,  5 Mar 2026 08:36:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=60.244.123.138
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772693231; cv=none; b=r8HMPT8sDjcIjIlUCZJkx1S7tsySN2/oT3Bu0eDHScEzicxvn6gc5hCZncJIKoDfm3kvCIhG0St9D3DB02C21voyaIX+CZWGWX3SkXGbzexortQ6ijqk82jRaLYjq0NzxbVqbu30arSU7CV2d1aWSkBdStd5XbGXU6b9vZdw1NY=
+	t=1772699788; cv=none; b=NH2RbRfOBqiS54o6Ur+dt3U97SefTHJ8MtypqEACRKF5A8TI/s+POMDwcrZHT6mdcZG/YyVZsdMPqmgh4mZOaL6RhN7ZjSVe1VmM8SwkWkBz8SKqHdgC7KblidkByiAMvF8BrV7ClZ3iXFe5P0SzDfCSdRHvuR65MJI3bIQ/F5M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772693231; c=relaxed/simple;
-	bh=tjz8DYTFLILaLPZ2POqqGVLbbtO83RpCWW9MF1wDxnA=;
+	s=arc-20240116; t=1772699788; c=relaxed/simple;
+	bh=WjG4Nj8jpVmZSJ73hWezTDpx+t+1+5QiFkEVfYPdl+U=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=P0yPsHndgDdqHFYoVzPgW7TkLOoJeIBqI50iYOJNMLqqPtoUp9QkV5Dmq93YN8QvTJcT1qtizymCjDiIS4IpkvMCUj7NOlFVfqmYXRWSKf7z7qkUAJWm0Tu/nyxmsn0u8UI1eyI+GModjB6j9BIjervt/Ej35PvKq+1fuAbJLXQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=h-partners.com; dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b=VAMv6CGV; arc=none smtp.client-ip=113.46.200.224
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=h-partners.com
+	 MIME-Version:Content-Type; b=VFNZgPCC1XZQxf8V5WiVbpRjfUV39ia5AbP2moB3k+Cs7hZ/OF+zwOYLLkgxBjwfUUX4Q8itUlK2SuWKrSiHxrAfK5U3cMUb1525U5RVvs0SIXYDEAE9t1bjA6O1qizvJtlxO8wS/gXuoTGaBLrfsmwRSgJpYXmCcC4PaqFJb4A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=UCUbdqIv; arc=none smtp.client-ip=60.244.123.138
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b="VAMv6CGV"
-dkim-signature: v=1; a=rsa-sha256; d=h-partners.com; s=dkim;
-	c=relaxed/relaxed; q=dns/txt;
-	h=From;
-	bh=iBOVi96Sh49dtoTfm+FbmO+TG0+HTIsqRUXIifZb570=;
-	b=VAMv6CGV1oPRE1T62SqdTnfWCyUc6XQp4pSZeb4ruQDt2OxWrDEIYrCt5bwyy/mMh/ik6eYo/
-	GvZRfsz/yRiSD9s6TvY311k3W5QgErXjRUdfhTvQSv330PqqiUkamh7LKk0ZbKLTYfG3MdWKz0j
-	An3vP7tLqh+GPeBpQEymYY8=
-Received: from mail.maildlp.com (unknown [172.19.162.92])
-	by canpmsgout09.his.huawei.com (SkyGuard) with ESMTPS id 4fRKhf3y9rz1cyp9;
-	Thu,  5 Mar 2026 14:42:10 +0800 (CST)
-Received: from kwepemh200005.china.huawei.com (unknown [7.202.181.112])
-	by mail.maildlp.com (Postfix) with ESMTPS id EB9AD40568;
-	Thu,  5 Mar 2026 14:47:01 +0800 (CST)
-Received: from localhost.localdomain (10.50.163.32) by
- kwepemh200005.china.huawei.com (7.202.181.112) with Microsoft SMTP Server
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="UCUbdqIv"
+X-UUID: 62014a9c186e11f1bcd7499a721e883d-20260305
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+	h=Content-Type:Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=t6TRgPq7DKxCDmOZh4rGAZ9xbu66Z1j+cgR3cmV0iYU=;
+	b=UCUbdqIvDYpMCCaFrsSpARAzhm/yhivo/IvE+2AAWtOp9I1zq3i47hRPwLuVknWJpm98n8BwKoS5Ck0Dg3NJY1ypOEwzLswUqKl/u9HiOe3Ll7RcduCNJ6pw565TxGj9RDqTS5SiMITW1YW5fm0foeey2RXjMhdw4cRlFCHra4E=;
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.3.11,REQID:5d3b40ed-dcb0-43c8-8508-998fbac33366,IP:0,U
+	RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
+	release,TS:0
+X-CID-META: VersionHash:89c9d04,CLOUDID:83e18c7b-8c8a-4fc4-88c0-3556e7711556,B
+	ulkID:nil,BulkQuantity:0,Recheck:0,SF:81|82|102|123|836|888|898,TC:-5,Cont
+	ent:0|15|50,EDM:-3,IP:nil,URL:0,File:130,RT:0,Bulk:nil,QS:nil,BEC:-1,COL:0
+	,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-BVR: 2,SSN|SDN
+X-CID-BAS: 2,SSN|SDN,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR
+X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
+X-UUID: 62014a9c186e11f1bcd7499a721e883d-20260305
+Received: from mtkmbs14n1.mediatek.inc [(172.21.101.75)] by mailgw01.mediatek.com
+	(envelope-from <ed.tsai@mediatek.com>)
+	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+	with ESMTP id 1893048622; Thu, 05 Mar 2026 16:36:19 +0800
+Received: from mtkmbs11n1.mediatek.inc (172.21.101.185) by
+ MTKMBS09N1.mediatek.inc (172.21.101.35) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.11; Thu, 5 Mar 2026 14:47:01 +0800
-From: Yihang Li <liyihang9@huawei.com>
-To: <martin.petersen@oracle.com>, <James.Bottomley@HansenPartnership.com>
-CC: <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<yangxingui@h-partners.com>, <linuxarm@huawei.com>, <prime.zeng@huawei.com>,
-	<liyihang9@h-partners.com>, <liuyonglong@huawei.com>
-Subject: [RESEND PATCH 2/2] scsi: hisi_sas: Fixed the risk of overflow in bitwise logical operations
-Date: Thu, 5 Mar 2026 14:47:00 +0800
-Message-ID: <20260305064700.116033-3-liyihang9@huawei.com>
-X-Mailer: git-send-email 2.33.0
-In-Reply-To: <20260305064700.116033-1-liyihang9@huawei.com>
-References: <20260305064700.116033-1-liyihang9@huawei.com>
+ 15.2.2562.29; Thu, 5 Mar 2026 16:36:18 +0800
+Received: from mtksitap99.mediatek.inc (10.233.130.16) by
+ mtkmbs11n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
+ 15.2.2562.29 via Frontend Transport; Thu, 5 Mar 2026 16:36:18 +0800
+From: <ed.tsai@mediatek.com>
+To: Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>,
+	Bart Van Assche <bvanassche@acm.org>, "James E.J. Bottomley"
+	<James.Bottomley@HansenPartnership.com>, "Martin K. Petersen"
+	<martin.petersen@oracle.com>, Matthias Brugger <matthias.bgg@gmail.com>,
+	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
+CC: Ed Tsai <ed.tsai@mediatek.com>, <linux-scsi@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
+	<linux-mediatek@lists.infradead.org>
+Subject: [PATCH 1/2] ufs: core: Add quriks for VCC ramp-up delay
+Date: Thu, 5 Mar 2026 16:29:14 +0800
+Message-ID: <20260305083610.2672344-2-ed.tsai@mediatek.com>
+X-Mailer: git-send-email 2.45.2
+In-Reply-To: <20260305083610.2672344-1-ed.tsai@mediatek.com>
+References: <20260305083610.2672344-1-ed.tsai@mediatek.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -52,38 +67,79 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-ClientProxiedBy: kwepems200002.china.huawei.com (7.221.188.68) To
- kwepemh200005.china.huawei.com (7.202.181.112)
+X-MTK: N
 
-Fixed a few constants defined via macros that had overflow risks.
+From: Ed Tsai <ed.tsai@mediatek.com>
 
-Signed-off-by: Yihang Li <liyihang9@huawei.com>
+On some platforms, the VCC regulator has a slow ramp-up time. Add a
+delay after enabling VCC to ensure voltage has fully stabilized before
+we enable the clocks.
+
+Signed-off-by: Ed Tsai <ed.tsai@mediatek.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/ufs/core/ufshcd.c | 12 ++++++++++++
+ include/ufs/ufshcd.h      |  6 ++++++
+ 2 files changed, 18 insertions(+)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index 6a841d53bb10..ba9d6877483a 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -432,7 +432,7 @@
- #define CMPLT_HDR_IPTT_OFF		0
- #define CMPLT_HDR_IPTT_MSK		(0xffff << CMPLT_HDR_IPTT_OFF)
- #define CMPLT_HDR_DEV_ID_OFF		16
--#define CMPLT_HDR_DEV_ID_MSK		(0xffff << CMPLT_HDR_DEV_ID_OFF)
-+#define CMPLT_HDR_DEV_ID_MSK		(0xffffU << CMPLT_HDR_DEV_ID_OFF)
- /* dw3 */
- #define SATA_DISK_IN_ERROR_STATUS_OFF	8
- #define SATA_DISK_IN_ERROR_STATUS_MSK	(0x1 << SATA_DISK_IN_ERROR_STATUS_OFF)
-@@ -444,7 +444,7 @@
- #define FIS_ATA_STATUS_ERR_OFF		18
- #define FIS_ATA_STATUS_ERR_MSK		(0x1 << FIS_ATA_STATUS_ERR_OFF)
- #define FIS_TYPE_SDB_OFF		31
--#define FIS_TYPE_SDB_MSK		(0x1 << FIS_TYPE_SDB_OFF)
-+#define FIS_TYPE_SDB_MSK		(0x1U << FIS_TYPE_SDB_OFF)
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 899e663fea6e..bea72e7c1d32 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -9942,11 +9942,13 @@ static void ufshcd_vreg_set_lpm(struct ufs_hba *hba)
+ #ifdef CONFIG_PM
+ static int ufshcd_vreg_set_hpm(struct ufs_hba *hba)
+ {
++	bool vcc_on = false;
+ 	int ret = 0;
  
- /* ITCT header */
- /* qw0 */
+ 	if (ufshcd_is_ufs_dev_poweroff(hba) && ufshcd_is_link_off(hba) &&
+ 	    !hba->dev_info.is_lu_power_on_wp) {
+ 		ret = ufshcd_setup_vreg(hba, true);
++		vcc_on = true;
+ 	} else if (!ufshcd_is_ufs_dev_active(hba)) {
+ 		if (!ufshcd_is_link_active(hba)) {
+ 			ret = ufshcd_config_vreg_hpm(hba, hba->vreg_info.vccq);
+@@ -9957,6 +9959,7 @@ static int ufshcd_vreg_set_hpm(struct ufs_hba *hba)
+ 				goto vccq_lpm;
+ 		}
+ 		ret = ufshcd_toggle_vreg(hba->dev, hba->vreg_info.vcc, true);
++		vcc_on = true;
+ 	}
+ 	goto out;
+ 
+@@ -9965,6 +9968,15 @@ static int ufshcd_vreg_set_hpm(struct ufs_hba *hba)
+ vcc_disable:
+ 	ufshcd_toggle_vreg(hba->dev, hba->vreg_info.vcc, false);
+ out:
++	/*
++	 * On platforms with a slow VCC ramp-up, a delay is needed after
++	 * turning on VCC to ensure the voltage is stable before the
++	 * reference clock is enabled.
++	 */
++	if (hba->quirks & UFSHCD_QUIRK_VCC_ON_DELAY && !ret && vcc_on &&
++	    hba->vreg_info.vcc && !hba->vreg_info.vcc->always_on)
++		usleep_range(1000, 1100);
++
+ 	return ret;
+ }
+ #endif /* CONFIG_PM */
+diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
+index 8563b6648976..bf50078708b9 100644
+--- a/include/ufs/ufshcd.h
++++ b/include/ufs/ufshcd.h
+@@ -690,6 +690,12 @@ enum ufshcd_quirks {
+ 	 * because it causes link startup to become unreliable.
+ 	 */
+ 	UFSHCD_QUIRK_PERFORM_LINK_STARTUP_ONCE		= 1 << 26,
++
++	/*
++	 * On some platforms, the VCC regulator has a slow ramp-up time. Add a
++	 * delay after enable VCC to ensure it's stable.
++	 */
++	UFSHCD_QUIRK_VCC_ON_DELAY			= 1 << 27,
+ };
+ 
+ enum ufshcd_caps {
 -- 
-2.33.0
+2.45.2
 
