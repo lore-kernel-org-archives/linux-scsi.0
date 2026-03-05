@@ -1,44 +1,47 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6AE1039A7F7;
-	Thu,  5 Mar 2026 15:37:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 94D7B3CA4B9;
+	Thu,  5 Mar 2026 15:37:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772725027; cv=none; b=lv5Bx9G10yswLCMtFEbipSVtlLrF70+umk+23zh53k+Y4DpHQs0P05yDUlyGeWg9BEE7h0OuPp1FEgqWHToyYLnwWPNiw9ZRX1ogG/jJ+j6dz4tSGX0aYcrEVqo4NETHb0zO/pC4OgTeO3YCN4chanEvx8zGliMdIAiVp0LJetw=
+	t=1772725034; cv=none; b=qL8mcFIz/99lNMr5aWkCDLkOBAKy+pEhljQiHbVYFqJx5xZHNxjCRW2L3Pcb8Y3tQd1jNDkIIQH2Efv8GSs+08Bs3R0WsnjCnz4sQw3yzaj+2nd93ggHrJEyKatFAkRBkNAyK9wXfFtiVaFiP3sNsJMRQ8HGjrjTE+wOZfo48gs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772725027; c=relaxed/simple;
-	bh=+nzeOiKNaQXmRUtyeHkCzpRH4sloOKMj+grbCcB6miI=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=THqKpTZixfwOdmY3p6illqqVdvZYSwP9p3GX1dksR+w87kcW8eR7cJexK2Q6xT5nl9weJzdZCXx06JltDX5WdWbqJCn1QXCo4YO45XvXrsqkbWlajIzmRZ6BdICU0l4O1ls7v8FGOTvuBXPWrbdKscpqYp51D48zMtO+TLMsuZs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UHrCsgai; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1772725034; c=relaxed/simple;
+	bh=iQ0yLgTGAJZgiDZIOQexcimPC6Gs/WY2/5Nfp5GgG2E=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=grmjem5kqyp08Q52NKWs5QKyfQqmW0V7HxCTdqPLFJrJsJGNF9Fb3OGa8GRC3h7Ae/hlNByyZspUaCAKskMHAUB0xS9kMXNqeirLxSnR5OnH+4gqnZjCKxggsTTu8oL7dvTDqV/wbw/UCQr/DWhb1Nhv88Jp5rF5iSZWETkx5hA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BPCjtOsh; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UHrCsgai"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1A01AC116C6;
-	Thu,  5 Mar 2026 15:37:06 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BPCjtOsh"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 73271C19423;
+	Thu,  5 Mar 2026 15:37:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772725027;
-	bh=+nzeOiKNaQXmRUtyeHkCzpRH4sloOKMj+grbCcB6miI=;
-	h=From:To:Cc:Subject:Date:From;
-	b=UHrCsgai809zYr+wGuS6MK4xYgKCiSvDtAleIDK9Zrpo9H06Is5yrIGQ02BoZlna3
-	 53JA/fUZYXHFcggmm8SFRBQGSNx4JV90WlA1QIPQawxG+0pZ4Gcw4zeGiGuXBz7d1x
-	 v8khR65TiuWOtMewrFzx+r2NpL8IFf84I7owMrX7T30jTB2fTpDpkcDCIVuruNFvt0
-	 0VP4nF89/Ko6cLYWCFDh60rloTQ+EZt33QXpimPHUWvCaeRs3AAGWh5YBHoShI+nOs
-	 drCSSBYXyfCZwsqrXLvEaATk3YnEeynR+DhM7Jlw0lxCIJqRWrx04vhU7VGocsrxj8
-	 FXDJg0gP3ORyg==
+	s=k20201202; t=1772725034;
+	bh=iQ0yLgTGAJZgiDZIOQexcimPC6Gs/WY2/5Nfp5GgG2E=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=BPCjtOshOzcviEsHmW6Gu1mbDrDMgdtNPs9RFAqW5oK8sz3LbcmU7HABW9KLmaqwu
+	 guFaJ5gy1t4jLPQu9r3BTrSO794eI24oQLtOtCsGr//NiN4OClS9u1ScB2TLpLQRoY
+	 iLH1A/OIzWD9FG12jPMtUsTDjKeGz1G0Ru+3M749xZs7doZ5cfrgkHi4QQbmVSN4ak
+	 Y1OjfLyyIaM9Wanq5iiprHLbOFF1JW3gU/Ahw0WiZB1oCP01VKVPIEgtSKcBWe75Sd
+	 KQ4PF1DFVNTuLZx/Mzd76duN7rYAbWfCmaF8D/2hg+8tVOXsFDgi3d2F2gxoy/F51O
+	 opUEesr7l0UsA==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
-Cc: Won Jung <wone.jung@samsung.com>,
-	Peter Wang <peter.wang@mediatek.com>,
+Cc: Tomas Henzl <thenzl@redhat.com>,
+	David Jeffery <djeffery@redhat.com>,
 	"Martin K. Petersen" <martin.petersen@oracle.com>,
 	Sasha Levin <sashal@kernel.org>,
 	James.Bottomley@HansenPartnership.com,
 	linux-scsi@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.19-6.18] scsi: ufs: core: Reset urgent_bkops_lvl to allow runtime PM power mode
-Date: Thu,  5 Mar 2026 10:36:44 -0500
-Message-ID: <20260305153704.106918-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.19-5.10] scsi: ses: Fix devices attaching to different hosts
+Date: Thu,  5 Mar 2026 10:36:49 -0500
+Message-ID: <20260305153704.106918-6-sashal@kernel.org>
 X-Mailer: git-send-email 2.51.0
+In-Reply-To: <20260305153704.106918-1-sashal@kernel.org>
+References: <20260305153704.106918-1-sashal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -51,180 +54,143 @@ X-stable-base: Linux 6.19.6
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-From: Won Jung <wone.jung@samsung.com>
+From: Tomas Henzl <thenzl@redhat.com>
 
-[ Upstream commit 5b313760059c9df7d60aba7832279bcb81b4aec0 ]
+[ Upstream commit 70ca8caa96ce473647054f5c7b9dab5423902402 ]
 
-Ensures that UFS Runtime PM can achieve power saving after System PM
-suspend by resetting hba->urgent_bkops_lvl. Also modify the
-ufshcd_bkops_exception_event_handler to avoid setting urgent_bkops_lvl when
-status is 0, which helps maintain optimal power management.
+On a multipath SAS system some devices don't end up with correct symlinks
+from the SCSI device to its enclosure. Some devices even have enclosure
+links pointing to enclosures attached to different SCSI hosts.
 
-On UFS devices supporting UFSHCD_CAP_AUTO_BKOPS_SUSPEND, a BKOPS exception
-event can lead to a situation where UFS Runtime PM can't enter low-power
-mode states even after the BKOPS exception has been resolved.
+ses_match_to_enclosure() calls enclosure_for_each_device() which iterates
+over all enclosures on the system, not just enclosures attached to the
+current SCSI host.
 
-BKOPS exception with bkops status 0 occurs, the driver logs:
+Replace the iteration with a direct call to ses_enclosure_find_by_addr().
 
- "ufshcd_bkops_exception_event_handler: device raised urgent BKOPS exception for bkops status 0"
-
-When a BKOPS exception occurs, ufshcd_bkops_exception_event_handler() reads
-the BKOPS status and sets hba->urgent_bkops_lvl to BKOPS_STATUS_NO_OP(0).
-This allows the device to perform Runtime PM without changing the UFS power
-mode.  (__ufshcd_wl_suspend(hba, UFS_RUNTIME_PM))
-
-During system PM suspend, ufshcd_disable_auto_bkops() is called, disabling
-auto bkops. After UFS System PM Resume, when runtime PM attempts to suspend
-again, ufshcd_urgent_bkops() is invoked. Since hba->urgent_bkops_lvl
-remains at BKOPS_STATUS_NO_OP(0), ufshcd_enable_auto_bkops() is triggered.
-
-However, in ufshcd_bkops_ctrl(), the driver compares the current BKOPS
-status with hba->urgent_bkops_lvl, and only enables auto bkops if
-curr_status >= hba->urgent_bkops_lvl.  Since both values are 0, the
-condition is met
-
-As a result, __ufshcd_wl_suspend(hba, UFS_RUNTIME_PM) skips power mode
-transitions and remains in an active state, preventing power saving even
-though no urgent BKOPS condition exists.
-
-Signed-off-by: Won Jung <wone.jung@samsung.com>
-Reviewed-by: Peter Wang <peter.wang@mediatek.com>
-Link: https://patch.msgid.link/1891546521.01770806581968.JavaMail.epsvc@epcpadp2new
+Reviewed-by: David Jeffery <djeffery@redhat.com>
+Signed-off-by: Tomas Henzl <thenzl@redhat.com>
+Link: https://patch.msgid.link/20260210191850.36784-1-thenzl@redhat.com
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
 
 LLM Generated explanations, may be completely bogus:
 
-The bug exists in v5.15 and v6.1 — both LTS kernels. The vulnerable code
-pattern (`if (curr_status < BKOPS_STATUS_PERF_IMPACT)` setting
-`urgent_bkops_lvl = curr_status` where curr_status could be 0) has been
-present since the exception handler was first written.
-
 ## Analysis
 
-### What the commit fixes
+### Problem Description
+On multipath SAS systems, `ses_match_to_enclosure()` calls
+`enclosure_for_each_device(ses_enclosure_find_by_addr, &efd)` at line
+687, which iterates over **all** enclosures registered system-wide via
+`container_list`. This means a SCSI device can be incorrectly matched to
+an enclosure on a completely different SCSI host, resulting in wrong
+sysfs symlinks from devices to enclosures.
 
-This commit fixes a power management regression on UFS storage devices
-that support `UFSHCD_CAP_AUTO_BKOPS_SUSPEND`. The bug scenario:
+### The Fix
+The fix replaces the global iteration with a direct call:
+`ses_enclosure_find_by_addr(edev, &efd)`, which searches only the
+specific `edev` enclosure device already passed into
+`ses_match_to_enclosure()`. The function signature also changes from
+`void *data` to `struct efd *efd` for type safety (since it's no longer
+used as a callback for `enclosure_for_each_device`).
 
-1. A device raises a spurious urgent BKOPS exception with status 0
-   (`BKOPS_STATUS_NO_OP`)
-2. `ufshcd_bkops_exception_event_handler()` sets `hba->urgent_bkops_lvl
-   = 0`
-3. During system suspend, `ufshcd_disable_auto_bkops()` resets
-   `is_urgent_bkops_lvl_checked = false` but does NOT reset
-   `urgent_bkops_lvl`
-4. After resume, Runtime PM tries to suspend via `__ufshcd_wl_suspend()`
-   → `ufshcd_bkops_ctrl()`
-5. In `ufshcd_bkops_ctrl()`, `curr_status(0) >= urgent_bkops_lvl(0)`
-   evaluates true, so auto BKOPS gets enabled
-6. With auto BKOPS enabled, the runtime suspend path skips power mode
-   transition, keeping the device in active state permanently
+### Stable Kernel Criteria Assessment
 
-This causes **persistent excessive power consumption** on
-mobile/embedded devices — a serious user-visible issue.
+1. **Obviously correct and tested**: Yes. The `edev` is already the
+   correct enclosure for the current host — using the global iterator
+   was simply wrong. Reviewed-by David Jeffery (Red Hat), Signed-off-by
+   Martin K. Petersen (SCSI maintainer).
 
-### Two-part fix
+2. **Fixes a real bug**: Yes. Incorrect device-to-enclosure associations
+   cause wrong symlinks, which breaks storage management tools that rely
+   on enclosure topology on multipath SAS systems (enterprise storage
+   environments).
 
-1. **`ufshcd_disable_auto_bkops()`**: Resets `urgent_bkops_lvl` to
-   `BKOPS_STATUS_PERF_IMPACT` (the default/safe value) when auto BKOPS
-   is disabled during system suspend. This mirrors what
-   `ufshcd_force_reset_auto_bkops()` already does at line 5987.
+3. **Important issue**: Yes. Enterprise SAS multipath setups are common
+   in production servers. Incorrect enclosure associations can lead to
+   operators targeting wrong devices during maintenance.
 
-2. **`ufshcd_bkops_exception_event_handler()`**: Adds `curr_status >
-   BKOPS_STATUS_NO_OP` check to prevent setting `urgent_bkops_lvl` to 0
-   when a device raises a spurious exception with status 0.
+4. **Small and contained**: Yes. Single file change
+   (`drivers/scsi/ses.c`), ~10 meaningful lines changed. The core fix is
+   replacing one function call.
 
-### Stable kernel criteria assessment
+5. **No new features**: Correct. Pure bug fix.
 
-- **Fixes a real bug**: Yes — prevents UFS Runtime PM from entering low-
-  power modes, causing power drain
-- **Obviously correct**: Yes — both changes are small, logical, and
-  align with existing patterns (the reset matches
-  `ufshcd_force_reset_auto_bkops`, and the status 0 filter is clearly
-  the right semantic)
-- **Small and contained**: Yes — 2 lines changed in a single file, no
-  API/ABI changes
-- **No new features**: Correct — purely a bug fix
-- **Reviewed**: Yes — `Reviewed-by: Peter Wang` (MediaTek UFS
-  maintainer)
-- **Tested**: From Samsung, who manufactured the UFS device exhibiting
-  this bug
-- **Historical precedent**: Commit `be32acff43800` fixed the same class
-  of bug in 2020 and was stable material (had `Fixes:` tag)
-- **Wide applicability**: Affects all stable trees from v5.15+ (the
-  vulnerable code exists in all of them)
-- **Low risk**: The changes are minimal and defensive — they only affect
-  an edge case (status 0 exception) and reset to the safe default value
+6. **Self-contained**: Yes. No dependencies on other patches.
+   `ses_enclosure_find_by_addr` is only called from this one site, and
+   it's a static function within ses.c.
 
-### Risk assessment
+### Risk Assessment
+**Very low risk.** The fix narrows the search scope from all enclosures
+to just the relevant one. The matching logic within
+`ses_enclosure_find_by_addr` is completely unchanged. The only
+behavioral difference is that devices will no longer be incorrectly
+associated with enclosures on different hosts.
 
-**Risk: Very Low**
-- The fix adds a safe default reset and tightens a condition to exclude
-  an invalid state
-- The `BKOPS_STATUS_PERF_IMPACT` reset value is the same value used in
-  initialization and in `ufshcd_force_reset_auto_bkops()`
-- No functional change for the normal case where status > 0
-- May need minor context adjustment for older stable trees (trace
-  function signature change) but the actual fix applies cleanly
+### Bug Age
+The buggy code was introduced in commit `c38c007af04b92` ("[SCSI] ses:
+Use vpd information from scsi_device") by Hannes Reinecke in v3.15-rc1
+(2014). This bug affects **all** current stable trees.
 
 ### Verification
 
-- **Verified** `ufshcd_disable_auto_bkops()` current code at line 5933:
-  does NOT reset `urgent_bkops_lvl` (confirmed via Read tool)
-- **Verified** `ufshcd_bkops_exception_event_handler()` at line 6065:
-  uses `if (curr_status < BKOPS_STATUS_PERF_IMPACT)` which accepts
-  status 0 (confirmed via Read tool)
-- **Verified** `ufshcd_bkops_ctrl()` at line 6030: `curr_status >=
-  status` where status comes from `hba->urgent_bkops_lvl` — so status 0
-  causes `0 >= 0` = true, enabling auto BKOPS (confirmed via Read tool)
-- **Verified** `ufshcd_force_reset_auto_bkops()` at line 5987: already
-  resets `urgent_bkops_lvl = BKOPS_STATUS_PERF_IMPACT`, confirming this
-  is the expected default (confirmed via Read tool)
-- **Verified** prior fix `be32acff43800` (2020): addressed same class of
-  bug where `urgent_bkops_lvl` got set to 0 via `ufshcd_bkops_ctrl`, had
-  `Fixes:` tag (confirmed via git show)
-- **Verified** prerequisite `0a5167e21126c` (refactor removing
-  `ufshcd_urgent_bkops()`): landed in v6.12. The fix itself does NOT
-  depend on this refactor — the two functions being changed exist in all
-  stable trees (confirmed by checking v6.11, v6.1, v5.15 code via git
-  show)
-- **Verified** `__ufshcd_wl_suspend()` calls
-  `ufshcd_disable_auto_bkops()` during system PM (not runtime PM) at
-  line 10059, confirming the suspend path described in the commit
-  message (confirmed via Grep)
-- **Verified** bug affects stable trees v5.15.y and v6.1.y by checking
-  the exception handler code is identical (confirmed via git show)
-- **Verified** BKOPS_STATUS_NO_OP = 0x0 and BKOPS_STATUS_PERF_IMPACT =
-  0x2 in include/ufs/ufs.h (confirmed via agent research)
+- **git blame** confirmed line 687
+  (`enclosure_for_each_device(ses_enclosure_find_by_addr, &efd)`) was
+  introduced in commit `c38c007af04b92` (v3.15-rc1)
+- **git describe --contains c38c007af04b92** confirmed version:
+  `v3.15-rc1~136^2~4`
+- **Read of `drivers/misc/enclosure.c:85-101`** confirmed
+  `enclosure_for_each_device()` iterates over ALL entries in
+  `container_list` (global list of all enclosures)
+- **Grep for `ses_enclosure_find_by_addr`** confirmed it is only
+  referenced at two locations in ses.c: its definition (line 531) and
+  the single call site (line 687) — no other callers exist
+- **Grep for `enclosure_for_each_device`** confirmed the SES driver at
+  line 687 is the ONLY caller outside of enclosure.c itself — so this
+  change has no impact on other subsystems
+- **Read of `ses_match_to_enclosure()`** (lines 669-689) confirmed
+  `edev` is already passed as a parameter but was ignored in favor of
+  global iteration
+- **lore.kernel.org search** found the patch was reviewed by Martin K.
+  Petersen and included in multiple stable releases (6.1.165, 6.6.128,
+  6.12.75, 6.18.16, 6.19.6), indicating broad acceptance
+
+### Conclusion
+This is a clear, surgical fix for a real bug affecting enterprise
+multipath SAS systems. The bug has existed since v3.15 (2014). The fix
+is small, self-contained, obviously correct, low-risk, and has been
+reviewed by the SCSI maintainer.
 
 **YES**
 
- drivers/ufs/core/ufshcd.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/scsi/ses.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 09f0d77d57f02..c71a449850573 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -5959,6 +5959,7 @@ static int ufshcd_disable_auto_bkops(struct ufs_hba *hba)
+diff --git a/drivers/scsi/ses.c b/drivers/scsi/ses.c
+index 2c61624cb4b03..50e744e891295 100644
+--- a/drivers/scsi/ses.c
++++ b/drivers/scsi/ses.c
+@@ -529,9 +529,8 @@ struct efd {
+ };
  
- 	hba->auto_bkops_enabled = false;
- 	trace_ufshcd_auto_bkops_state(hba, "Disabled");
-+	hba->urgent_bkops_lvl = BKOPS_STATUS_PERF_IMPACT;
- 	hba->is_urgent_bkops_lvl_checked = false;
- out:
- 	return err;
-@@ -6062,7 +6063,7 @@ static void ufshcd_bkops_exception_event_handler(struct ufs_hba *hba)
- 	 * impacted or critical. Handle these device by determining their urgent
- 	 * bkops status at runtime.
- 	 */
--	if (curr_status < BKOPS_STATUS_PERF_IMPACT) {
-+	if ((curr_status > BKOPS_STATUS_NO_OP) && (curr_status < BKOPS_STATUS_PERF_IMPACT)) {
- 		dev_err(hba->dev, "%s: device raised urgent BKOPS exception for bkops status %d\n",
- 				__func__, curr_status);
- 		/* update the current status as the urgent bkops level */
+ static int ses_enclosure_find_by_addr(struct enclosure_device *edev,
+-				      void *data)
++				      struct efd *efd)
+ {
+-	struct efd *efd = data;
+ 	int i;
+ 	struct ses_component *scomp;
+ 
+@@ -684,7 +683,7 @@ static void ses_match_to_enclosure(struct enclosure_device *edev,
+ 	if (efd.addr) {
+ 		efd.dev = &sdev->sdev_gendev;
+ 
+-		enclosure_for_each_device(ses_enclosure_find_by_addr, &efd);
++		ses_enclosure_find_by_addr(edev, &efd);
+ 	}
+ }
+ 
 -- 
 2.51.0
 
