@@ -1,81 +1,137 @@
-Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
+Received: from sender4-pp-f112.zoho.com (sender4-pp-f112.zoho.com [136.143.188.112])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B8CFC2E8897
-	for <linux-scsi@vger.kernel.org>; Fri,  6 Mar 2026 13:00:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.14
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772802045; cv=none; b=PMqne82mf/LfTQI7qk/+1Iuh34Rck346XSpZh82SxL4ysuMf61IecmgvLtGmjIQlzUijZ+0bRtChhgYCS4wz+X5a9KDNtyU+gxg8p+Guz0YhLoGX0VjPl3+y3EE4dSrf0gw918Vry2BcicSVdro/XYoFgSO6Fc6uzXSmJShmF0U=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772802045; c=relaxed/simple;
-	bh=FTWCEgxsIFL5rqSjlUXUxvNiQA8jhw8NCnxQBv6Nrm8=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=EFRCPeSPCJewon1XoFGf+zyHpZQQosdeGZT5r0hn5WJX5fbZgGpuVUIhfIWz5cQfajPZS1LEDbTwQoudsde4peirmGJLW61IBPN8ZQUHS3mE6jfFStmHikMtm6BJDMDhccX1Ptf5+FI7kdhpaOtu5qvT8apmIMCwi0hFfAW0fto=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=KCYNTC3o; arc=none smtp.client-ip=199.89.1.14
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D748C39903D;
+	Fri,  6 Mar 2026 13:25:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=136.143.188.112
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1772803544; cv=pass; b=g91474KWfNG++buMKHtP7e67/uuMOR2cddXWhNBJ+aPM05qG4VChHSp6wdM57egKQ4IfX0pyynf3q8VmVm5vtkWiTpG8aaqULaovtoKdsuG118WV6jXhFWohyX5ZGsd6/Y2atwLMecEU4iaGQoCsLQ05PfzXAFJ5ojf4UJjrB8c=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1772803544; c=relaxed/simple;
+	bh=EypgtlfYshILgwlUk3/w02vtCCXWaUCb7oIkiSqhtWQ=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=f8KZ7uzWjcSdVDMu7R//x4sY4AKMhIyzHwwAiF8EKfdr4g2KwEtaOJAwtsa0MMCYhw/00B/zlqKkXaCJTiYHOkvjIXvG8XmqNDKKb4c0LPfBIqVCmBodIUuLTxar6pucMEEvcFBo8GkM+ufaAURQMUAGdp7OXomNDTAQvssxXtk=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (1024-bit key) header.d=collabora.com header.i=nicolas.frattaroli@collabora.com header.b=RZQP4j2J; arc=pass smtp.client-ip=136.143.188.112
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collabora.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="KCYNTC3o"
-Received: from localhost (localhost [127.0.0.1])
-	by 011.lax.mailroute.net (Postfix) with ESMTP id 4fS63020qLz1XLyYZ;
-	Fri,  6 Mar 2026 13:00:44 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1772802041; x=1775394042; bh=FTWCEgxsIFL5rqSjlUXUxvNi
-	QA8jhw8NCnxQBv6Nrm8=; b=KCYNTC3oOpo3LfrZl8LDTNpFmFn1gdXlqEEkMen7
-	NOYp0UeAF1YQ/zAdiYAJVNkcvKO6SdaBwjTLP2SI3Ssnp9FwuGtfw82jXQqKiyJE
-	ZCU9Ph/chfFG+baX+zXyUMtW+k4473comh19gedq+CKZ6bC3uoAa4wMbGCvHcuP4
-	wVvsTl7Bfwp6f4FG/ES6nVAGLK/l1gI8w1ndCKmhh7seMiISIyKNuNJxG3pVbbQm
-	yAnUAOEUvHI/Yu9+bzq1vvI68InRUWcv7bkPZaCYKjcGUou+sUGyLkDNRZeFo1/X
-	LW1giSCa+EWIU85r2flGDr/en6ePsbFV77n5vf073Ji1WQ==
-X-Virus-Scanned: by MailRoute
-Received: from 011.lax.mailroute.net ([127.0.0.1])
- by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id 58NB20eqm7M0; Fri,  6 Mar 2026 13:00:41 +0000 (UTC)
-Received: from [192.168.132.187] (unknown [12.150.89.26])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4fS62v39Dyz1XM0p2;
-	Fri,  6 Mar 2026 13:00:38 +0000 (UTC)
-Message-ID: <15409eb0-53c7-4d15-a29e-653b3415f4df@acm.org>
-Date: Fri, 6 Mar 2026 07:00:37 -0600
+	dkim=pass (1024-bit key) header.d=collabora.com header.i=nicolas.frattaroli@collabora.com header.b="RZQP4j2J"
+ARC-Seal: i=1; a=rsa-sha256; t=1772803509; cv=none; 
+	d=zohomail.com; s=zohoarc; 
+	b=MRgrvv3zLP7EH3uZhGsFFFqYTStidSTuXHi+wiCJ+X1FvErgC6Ynfh/u/I8csJXWXE+KZbEiqhOpyvTWsRLSocSrN7mHORops/lt/+56+kIoTvEhyLdqxb76wRAMkQUsW1TgOqERrT9BGp6ua1C1meLbLcXOPeJFsS8XtNfhLKI=
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.com; s=zohoarc; 
+	t=1772803509; h=Content-Type:Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:Subject:To:To:Message-Id:Reply-To; 
+	bh=wIUS+P9KTYwp9LndB8yjQ3RjTNoJrePfDlm02gE6g6U=; 
+	b=oBdFsAQQar+5ZxmwKYpb0x7Q6Nb/9L3c/c53yLi7kzvObjzaZBtM6n0Nr9w1YisR1DTBqPJBYfPkbgTQkoqtSS4UgqMadGwx8p6wPKJ48lbvEfvFg12WZBsizBROm7Epv7MQ3e9M7AwctBzkabV/YW6yZ366nU6gOlqu9nMJhZQ=
+ARC-Authentication-Results: i=1; mx.zohomail.com;
+	dkim=pass  header.i=collabora.com;
+	spf=pass  smtp.mailfrom=nicolas.frattaroli@collabora.com;
+	dmarc=pass header.from=<nicolas.frattaroli@collabora.com>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1772803509;
+	s=zohomail; d=collabora.com; i=nicolas.frattaroli@collabora.com;
+	h=From:From:Date:Date:Subject:Subject:MIME-Version:Content-Type:Content-Transfer-Encoding:Message-Id:Message-Id:References:In-Reply-To:To:To:Cc:Cc:Reply-To;
+	bh=wIUS+P9KTYwp9LndB8yjQ3RjTNoJrePfDlm02gE6g6U=;
+	b=RZQP4j2JEexlZXHGUFmyijv9A82g4TyduO6X9DqYNrdQYU8I5/ehg5R0mtVXu7w2
+	ySkmnRhHWahUElbTyIx5yszoSrsbq5sGrxhok42utZ9n1zsQKkYqdOV9bYMpLBhKutf
+	QZ1qNKUQhaV8dom0oaAJmyj+It9MCkiOKyYCE+xk=
+Received: by mx.zohomail.com with SMTPS id 1772803507807240.81662629010486;
+	Fri, 6 Mar 2026 05:25:07 -0800 (PST)
+From: Nicolas Frattaroli <nicolas.frattaroli@collabora.com>
+Date: Fri, 06 Mar 2026 14:24:42 +0100
+Subject: [PATCH v9 01/23] dt-bindings: phy: Add mediatek,mt8196-ufsphy
+ variant
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v8 11/23] scsi: ufs: mediatek: Remove undocumented
- downstream reset cruft
-To: Nicolas Frattaroli <nicolas.frattaroli@collabora.com>,
- "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
- =?UTF-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= <peter.wang@mediatek.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
- "kernel@collabora.com" <kernel@collabora.com>
-References: <20260304-mt8196-ufs-v8-0-5b0eac23314f@collabora.com>
- <3472277.mvXUDI8C0e@workhorse>
- <2a68eb32987c21b6a48547ce044ee38d1eb01fa5.camel@mediatek.com>
- <4282403.mvXUDI8C0e@workhorse>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <4282403.mvXUDI8C0e@workhorse>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
+Message-Id: <20260306-mt8196-ufs-v9-1-55b073f7a830@collabora.com>
+References: <20260306-mt8196-ufs-v9-0-55b073f7a830@collabora.com>
+In-Reply-To: <20260306-mt8196-ufs-v9-0-55b073f7a830@collabora.com>
+To: Alim Akhtar <alim.akhtar@samsung.com>, 
+ Avri Altman <avri.altman@wdc.com>, Bart Van Assche <bvanassche@acm.org>, 
+ Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+ Conor Dooley <conor+dt@kernel.org>, 
+ Matthias Brugger <matthias.bgg@gmail.com>, 
+ AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>, 
+ Chunfeng Yun <chunfeng.yun@mediatek.com>, Vinod Koul <vkoul@kernel.org>, 
+ Kishon Vijay Abraham I <kishon@kernel.org>, 
+ Peter Wang <peter.wang@mediatek.com>, Stanley Jhu <chu.stanley@gmail.com>, 
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
+ "Martin K. Petersen" <martin.petersen@oracle.com>, 
+ Philipp Zabel <p.zabel@pengutronix.de>, Liam Girdwood <lgirdwood@gmail.com>, 
+ Mark Brown <broonie@kernel.org>, Chaotian Jing <Chaotian.Jing@mediatek.com>, 
+ Neil Armstrong <neil.armstrong@linaro.org>
+Cc: Louis-Alexis Eyraud <louisalexis.eyraud@collabora.com>, 
+ kernel@collabora.com, linux-scsi@vger.kernel.org, 
+ devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ linux-arm-kernel@lists.infradead.org, linux-mediatek@lists.infradead.org, 
+ linux-phy@lists.infradead.org, 
+ Nicolas Frattaroli <nicolas.frattaroli@collabora.com>, 
+ Conor Dooley <conor.dooley@microchip.com>
+X-Mailer: b4 0.14.3
 
-On 3/6/26 6:53 AM, Nicolas Frattaroli wrote:
-> And I thought putting bindings through bindings review was a basic
-> requirement, but apparently not for you when you can subvert the
-> kernel's review process and push your downstream crap into mainline
-> willy-nilly.
+The MediaTek MT8196 SoC includes an M-PHY compatible with the already
+existing mt8183 binding.
 
-Please keep it professional and focus on the reported issue rather than
-attacking the person who reported the issue.
+However, one omission from the original binding was that all of these
+variants may have an optional reset.
 
-Thanks,
+Add the new compatible, and also the resets property, with an example.
 
-Bart.
+Reviewed-by: AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
+Reviewed-by: Peter Wang <peter.wang@mediatek.com>
+Acked-by: Conor Dooley <conor.dooley@microchip.com>
+Acked-by: Vinod Koul <vkoul@kernel.org>
+Signed-off-by: Nicolas Frattaroli <nicolas.frattaroli@collabora.com>
+---
+ .../devicetree/bindings/phy/mediatek,ufs-phy.yaml        | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/phy/mediatek,ufs-phy.yaml b/Documentation/devicetree/bindings/phy/mediatek,ufs-phy.yaml
+index 6e2edd43fc2a..ee71dfa4e0c0 100644
+--- a/Documentation/devicetree/bindings/phy/mediatek,ufs-phy.yaml
++++ b/Documentation/devicetree/bindings/phy/mediatek,ufs-phy.yaml
+@@ -27,6 +27,7 @@ properties:
+       - items:
+           - enum:
+               - mediatek,mt8195-ufsphy
++              - mediatek,mt8196-ufsphy
+           - const: mediatek,mt8183-ufsphy
+       - const: mediatek,mt8183-ufsphy
+ 
+@@ -43,6 +44,10 @@ properties:
+       - const: unipro
+       - const: mp
+ 
++  resets:
++    items:
++      - description: Optional UFS M-PHY reset.
++
+   "#phy-cells":
+     const: 0
+ 
+@@ -66,5 +71,16 @@ examples:
+         clock-names = "unipro", "mp";
+         #phy-cells = <0>;
+     };
++  - |
++    #include <dt-bindings/reset/mediatek,mt8196-resets.h>
++    ufs-phy@16800000 {
++        compatible = "mediatek,mt8196-ufsphy", "mediatek,mt8183-ufsphy";
++        reg = <0x16800000 0x10000>;
++        clocks = <&ufs_ao_clk 3>,
++                 <&ufs_ao_clk 5>;
++        clock-names = "unipro", "mp";
++        resets = <&ufs_ao_clk MT8196_UFSAO_RST0_UFS_MPHY>;
++        #phy-cells = <0>;
++    };
+ 
+ ...
+
+-- 
+2.53.0
+
