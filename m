@@ -1,149 +1,143 @@
-Received: from sender4-pp-f112.zoho.com (sender4-pp-f112.zoho.com [136.143.188.112])
+Received: from fhigh-a3-smtp.messagingengine.com (fhigh-a3-smtp.messagingengine.com [103.168.172.154])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF60136EAA5;
-	Fri,  6 Mar 2026 18:37:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=136.143.188.112
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772822269; cv=pass; b=TUkaY17IBovHz9TYVsMvdMYtW5D5IwnFg2uDpJV14jNQ8fwWdg6FKqzeJL6m1M/qmLMhu8OBsQl8SkrXKJut24BvzTtkNPrd15g9ujtCjgpgmKDc2d7hG1Vqns16c/1nrHME9tb4Q2ztPrln6YDgS/BvEnJr5p9GVL7o5S/8H0g=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772822269; c=relaxed/simple;
-	bh=ms56C9eFSzzRt3OcP7Fkoz/qaTer4zF1m+gpItxdYsw=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=sBhe3sf0g/i2v0aNFEnqxM1zIiXuTe8Uh2VElMmb03QS4k901/pT08HhHOekE6ZIx/w2nJT14PoyYdkIKUoCFQ9nqH8Cnl8Mtwm0kQtYrRY5EpVEiOrttaU3UD5DGynmNCTIa4RylwvEVFwhCAQ2eHzmtKf8/CEK/e+IAkhRTqw=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (1024-bit key) header.d=collabora.com header.i=nicolas.frattaroli@collabora.com header.b=K2UYhZDq; arc=pass smtp.client-ip=136.143.188.112
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collabora.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA87F2F361F;
+	Fri,  6 Mar 2026 22:52:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.154
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1772837540; cv=none; b=HUodMXuYswUbRbhb2Qtvhb4nPbcZB023fQVOOQB8hJD3qzP+Vum/JawKbc8x2Utz8nJQK5A+/ix9FgEwjSxAru2ZsQAN7ceaQ1z4nRoa4/TDfTiqW1YHFN8wbzocoetnEVz0apKiVHDX3AXXxy6I0l6VBQX16QUTOoABBQsHMIM=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1772837540; c=relaxed/simple;
+	bh=ueSxhuFfXVTZmPnCypuDKPfsx1ObPB34vjdrZQoDXxk=;
+	h=Date:From:To:cc:Subject:In-Reply-To:Message-ID:References:
+	 MIME-Version:Content-Type; b=EXPIbhy5WMdPJDUx7cuy5V1H7HJcN9SV8o1LTlqIZOxzAEIPh+6F6UoT0jgVvWXb+XmIsRfnTsH+tlcXGGKDzl0KGcx7qEfLkRMW0uvdS/6qDTfq8/qt+m/sS/sYxcxUz/89zujegEBGqB4s5kvM+NqfpnEiOQnGG/CrqoWy65s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org; spf=none smtp.mailfrom=linux-m68k.org; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=s3iJX0ga; arc=none smtp.client-ip=103.168.172.154
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux-m68k.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=collabora.com header.i=nicolas.frattaroli@collabora.com header.b="K2UYhZDq"
-ARC-Seal: i=1; a=rsa-sha256; t=1772822232; cv=none; 
-	d=zohomail.com; s=zohoarc; 
-	b=VMEWbvz5Hnj4zLmKTQduz85HWk/983I4lo59idwq7q35KXDHwytP9XlKfLdFURo+P+b0UhCEdR14V13S4KY87hdQZDMScQ+TvwjJqFoYhxEXiHMH5Ahrwk47FTFBB0Qi/zU/i0FKZN98kxErgKtyMm9Vupd3WuL/roxAGAobj/s=
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.com; s=zohoarc; 
-	t=1772822232; h=Content-Type:Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:Subject:To:To:Message-Id:Reply-To; 
-	bh=oKyKNZTQ3z66jWtSjSN1+R3K9aCPt08hx4nox97xvHk=; 
-	b=XrWbKcUyPpthDMFxY696KrDfler1hA+RB2/7EjBkQRxuEz8wOG5h++7KXIzztVwSzrNFZiK6b9cfzGOXMrBhJQuiiEWZrEin96hapASASro8tOAR0ajl1LvedgcnggAxbqm4vtzvoW8HhDFoeOLAmKOcdYsBtRZIw/fV3PuixrI=
-ARC-Authentication-Results: i=1; mx.zohomail.com;
-	dkim=pass  header.i=collabora.com;
-	spf=pass  smtp.mailfrom=nicolas.frattaroli@collabora.com;
-	dmarc=pass header.from=<nicolas.frattaroli@collabora.com>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1772822232;
-	s=zohomail; d=collabora.com; i=nicolas.frattaroli@collabora.com;
-	h=From:From:To:To:Cc:Cc:Subject:Subject:Date:Date:Message-ID:In-Reply-To:References:MIME-Version:Content-Transfer-Encoding:Content-Type:Message-Id:Reply-To;
-	bh=oKyKNZTQ3z66jWtSjSN1+R3K9aCPt08hx4nox97xvHk=;
-	b=K2UYhZDqtQWwaDNMOSNXNi/NUilmovHzmHnxXpWOa4Bg9Pj9jPWEmhsIq/DNNgbM
-	c8vlhm5MZIhtvigANBjvTPU9lxq1duvw2Y3XrP0ZyU6WfG9JCa05+wUDHYGsJiuS/3L
-	ujchqcxj/xFKK1Y75VVQDxT2pQCRfszw5vxZ7yn4=
-Received: by mx.zohomail.com with SMTPS id 1772822230152545.7385167448177;
-	Fri, 6 Mar 2026 10:37:10 -0800 (PST)
-From: Nicolas Frattaroli <nicolas.frattaroli@collabora.com>
-To: Rob Herring <robh@kernel.org>
-Cc: Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>,
- Bart Van Assche <bvanassche@acm.org>,
- Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>,
- Matthias Brugger <matthias.bgg@gmail.com>,
- AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
- Chunfeng Yun <chunfeng.yun@mediatek.com>, Vinod Koul <vkoul@kernel.org>,
- Kishon Vijay Abraham I <kishon@kernel.org>,
- Peter Wang <peter.wang@mediatek.com>, Stanley Jhu <chu.stanley@gmail.com>,
- "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- Philipp Zabel <p.zabel@pengutronix.de>, Liam Girdwood <lgirdwood@gmail.com>,
- Mark Brown <broonie@kernel.org>, Chaotian Jing <Chaotian.Jing@mediatek.com>,
- Neil Armstrong <neil.armstrong@linaro.org>,
- Louis-Alexis Eyraud <louisalexis.eyraud@collabora.com>, kernel@collabora.com,
- linux-scsi@vger.kernel.org, devicetree@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
- linux-mediatek@lists.infradead.org, linux-phy@lists.infradead.org,
- Conor Dooley <conor.dooley@microchip.com>
-Subject:
- Re: [PATCH v9 03/23] dt-bindings: ufs: mediatek,ufs: Add mt8196 variant
-Date: Fri, 06 Mar 2026 19:37:02 +0100
-Message-ID: <4089450.ElGaqSPkdT@workhorse>
-In-Reply-To: <20260306163305.GA2680515-robh@kernel.org>
-References:
- <20260306-mt8196-ufs-v9-0-55b073f7a830@collabora.com>
- <20260306-mt8196-ufs-v9-3-55b073f7a830@collabora.com>
- <20260306163305.GA2680515-robh@kernel.org>
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="s3iJX0ga"
+Received: from phl-compute-05.internal (phl-compute-05.internal [10.202.2.45])
+	by mailfhigh.phl.internal (Postfix) with ESMTP id DC1141400224;
+	Fri,  6 Mar 2026 17:52:17 -0500 (EST)
+Received: from phl-frontend-04 ([10.202.2.163])
+  by phl-compute-05.internal (MEProxy); Fri, 06 Mar 2026 17:52:17 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:cc:content-type:content-type:date:date
+	:feedback-id:feedback-id:from:from:in-reply-to:in-reply-to
+	:message-id:mime-version:references:reply-to:subject:subject:to
+	:to:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=fm1; t=
+	1772837537; x=1772923937; bh=J4ttQBQyxcdE0l/xLJs1ENyVImrG4/R+VQV
+	++FoX8vo=; b=s3iJX0gavR5LVGKHXLmuHj2Se8Saiw/6Yb186QPPeb2Cq1jnkGj
+	kyy6q6nNKd1c6kr7oei9AQHRSykN4WDGvoqixauPt3UfcF94c0l9QHD+FaswUS1i
+	XBapyiLRHE8hORWz+E8BaN/UWk/6OXQlcbPt3MwrBkzxgTvM0LcVInxfpSmMBYst
+	B2Vs7rr1sYzFUeTtBwopnDY6zaBZxn5KDObCXk54zkcONKEB4rzJVp1VBS4Avmcn
+	iPeXAW+YZKMQgeuQogbGdX0V3x9FvV/H+n+EE1muQfHcUbfBJ/82ikOQgZr25A6i
+	0iZv6A65miGWVTtBCtb0PbG7o8iQdzQI1Ng==
+X-ME-Sender: <xms:oVqraSuSlG0YT_bjtA2sNtXWW-R9aWWDOYkM_3F9m5dyhAB1mLzhhA>
+    <xme:oVqraTWxHSTp6gz34wYzvpPTWqi-FuzMQbzmdDTUIyBD1ixqDaMrp3lTRH969CVZ0
+    VyRRONGkhAMeZohzeu3STnBluuSV5HhGLYghgbhdViNOg6J1gT1J5o>
+X-ME-Received: <xmr:oVqraawsgTA_hj93kK50uYkEuDZMCyecHvBO1sXDTnB2r6D7b6IDE0rSeqvM9rJ3ezG07J2L54jecYCOZ6wYUrTSyKmTrbqBTEI>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefgedrtddtgddvjedtheehucetufdoteggodetrf
+    dotffvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfurfetoffkrfgpnffqhgenuceu
+    rghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujf
+    gurhepfffhvfevufgjkfhfgggtsehttdertddttddvnecuhfhrohhmpefhihhnnhcuvfhh
+    rghinhcuoehfthhhrghinheslhhinhhugidqmheikehkrdhorhhgqeenucggtffrrghtth
+    gvrhhnpeelueehleehkefgueevtdevteejkefhffekfeffffdtgfejveekgeefvdeuheeu
+    leenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepmhgrihhlfhhrohhmpehfth
+    hhrghinheslhhinhhugidqmheikehkrdhorhhgpdhnsggprhgtphhtthhopeduuddpmhho
+    uggvpehsmhhtphhouhhtpdhrtghpthhtohepghgvvghrtheslhhinhhugidqmheikehkrd
+    horhhgpdhrtghpthhtohepnhhjrghvrghlihesmhgrrhhvvghllhdrtghomhdprhgtphht
+    thhopehgrhdqqhhlohhgihgtqdhsthhorhgrghgvqdhuphhsthhrvggrmhesmhgrrhhvvg
+    hllhdrtghomhdprhgtphhtthhopehjrghmvghsrdgsohhtthhomhhlvgihsehhrghnshgv
+    nhhprghrthhnvghrshhhihhprdgtohhmpdhrtghpthhtohepmhgrrhhtihhnrdhpvghtvg
+    hrshgvnhesohhrrggtlhgvrdgtohhmpdhrtghpthhtohepthhonhihsgestgihsggvrhhn
+    vghtihgtshdrtghomhdprhgtphhtthhopegrkhhpmheslhhinhhugidqfhhouhhnuggrth
+    hiohhnrdhorhhgpdhrtghpthhtoheprghrnhgusegrrhhnuggsrdguvgdprhgtphhtthho
+    pehlihhnuhigqdhmieekkheslhhishhtshdrlhhinhhugidqmheikehkrdhorhhg
+X-ME-Proxy: <xmx:oVqraSH448iEHqSLMaQUvp_F9TnYyp7UnYKbBnrHNnv-X-hMum5dJA>
+    <xmx:oVqraXuFu34XmM7oS1cQ77GWRF83E-_mWhM2Ry5d6abYOtqFfoJoWg>
+    <xmx:oVqraaCU1ln99CPhpFMNNvgD9-YxYIn9tQA0deLwpk6Syqb9h_g53Q>
+    <xmx:oVqraaCe7xOb4oOWAuDw0XD4r5RBpmhRIg5PG3w9l3OOm-CXrFQElw>
+    <xmx:oVqraR07JqqvTYolFQX84YEWz3EiwFdGoGNRQpQyI5ZnZ5G1sHM1Fg-J>
+Feedback-ID: i58a146ae:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Fri,
+ 6 Mar 2026 17:52:14 -0500 (EST)
+Date: Sat, 7 Mar 2026 09:53:16 +1100 (AEDT)
+From: Finn Thain <fthain@linux-m68k.org>
+To: Geert Uytterhoeven <geert@linux-m68k.org>
+cc: Nilesh Javali <njavali@marvell.com>, 
+    GR-QLogic-Storage-Upstream@marvell.com, 
+    "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
+    "Martin K. Petersen" <martin.petersen@oracle.com>, 
+    Tony Battersby <tonyb@cybernetics.com>, 
+    Andrew Morton <akpm@linux-foundation.org>, Arnd Bergmann <arnd@arndb.de>, 
+    linux-m68k@lists.linux-m68k.org, linux-scsi@vger.kernel.org, 
+    linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] scsi: qla2xxx: Remove problematic BUILD_BUG_ON()
+ assertion
+In-Reply-To: <CAMuHMdV4=t5G8fz1ARO7oKA86RwZP6T6yNXm5D7JgVtdaq5Rqg@mail.gmail.com>
+Message-ID: <90212eb8-434a-1b04-02c1-03410b483e1c@linux-m68k.org>
+References: <550e7d7bb8c2620ca4f6c9e809a4f853bdfa4c67.1772751689.git.fthain@linux-m68k.org> <CAMuHMdV4=t5G8fz1ARO7oKA86RwZP6T6yNXm5D7JgVtdaq5Rqg@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
 
-On Friday, 6 March 2026 17:33:05 Central European Standard Time Rob Herring wrote:
-> On Fri, Mar 06, 2026 at 02:24:44PM +0100, Nicolas Frattaroli wrote:
-> > The MediaTek MT8196 SoC's UFS controller uses three additional clocks
-> > compared to the MT8195, and a different set of supplies. It is therefore
-> > not compatible with the MT8195.
-> > 
-> > While it does have a AVDD09_UFS_1 pin in addition to the AVDD09_UFS pin,
-> > it appears that these two pins are commoned together, as the board
-> > schematic I have access to uses the same supply for both, and the
-> > downstream driver does not distinguish between the two supplies either.
-> > 
-> > Add a compatible for it, and modify the binding correspondingly.
-> > 
-> > Reviewed-by: Conor Dooley <conor.dooley@microchip.com>
-> > Acked-by: Vinod Koul <vkoul@kernel.org>
-> > Acked-by: Conor Dooley <conor.dooley@microchip.com>
-> > Reviewed-by: AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
-> > Signed-off-by: Nicolas Frattaroli <nicolas.frattaroli@collabora.com>
-> > ---
-> >  .../devicetree/bindings/ufs/mediatek,ufs.yaml      | 58 +++++++++++++++++++++-
-> >  1 file changed, 57 insertions(+), 1 deletion(-)
-> > 
-> > diff --git a/Documentation/devicetree/bindings/ufs/mediatek,ufs.yaml b/Documentation/devicetree/bindings/ufs/mediatek,ufs.yaml
-> > index e0aef3e5f56b..a82119ecbfe8 100644
-> > --- a/Documentation/devicetree/bindings/ufs/mediatek,ufs.yaml
-> > +++ b/Documentation/devicetree/bindings/ufs/mediatek,ufs.yaml
-> > @@ -16,10 +16,11 @@ properties:
-> >        - mediatek,mt8183-ufshci
-> >        - mediatek,mt8192-ufshci
-> >        - mediatek,mt8195-ufshci
-> > +      - mediatek,mt8196-ufshci
-> >  
-> >    clocks:
-> >      minItems: 1
-> > -    maxItems: 13
-> > +    maxItems: 16
-> >  
-> >    clock-names:
-> >      minItems: 1
-> > @@ -37,6 +38,9 @@ properties:
-> >        - const: crypt_perf
-> >        - const: ufs_rx_symbol0
-> >        - const: ufs_rx_symbol1
-> > +      - const: ufs_sel
-> 
-> "ufs" is redundant as all the clocks are for UFS. Same comment on prior 
-> patch.
 
-Is this naming a big enough concern to block this series with two
-explicit acks on this patch that fixes a wholly broken and useless
-binding?
+On Fri, 6 Mar 2026, Geert Uytterhoeven wrote:
 
+> > I don't know of a good way to encode an invariant like "the last 
+> > member of struct qla_tgt_sess_op is named atio" such that it might be 
+> > statically checked. But perhaps there is a good way to do that (?)
 > 
-> > +      - const: ufs_sel_min_src
-> > +      - const: ufs_sel_max_src
-> 
-> "src" sounds like a parent clock? If so, probably shouldn't be in the 
-> clocks list. 'assigned-clocks' is for dealing with parent clocks.
+> Keeping the BUILD_BUG_ON(), but adding "__aligned(8);" to the ratio 
+> member, as suggested by Arnd, would do that?
 > 
 
-I don't know what it is, and I have no way to consult any documentation
-that would tell me what it is. I am trying to put out this dumpster fire
-of a downstream turd that made its way into mainline as the review process
-has been completely subverted, and is only getting worse with each passing
-month that MediaTek is allowed to block this series from progressing while
-sneaking further changes through.
+No, that would merely limit the possibilities for tail padding in the 
+future. Again, the tail padding is harmless. The assertion is bogus, not 
+the struct layout.
 
-> Rob
+Like I said to Arnd in that thread, the kind of twisted logic that would 
+add an alignment rule here requires a comment to explain it (there is an 
+example of this elsewhere in the same driver).
+
+So now we're writing comments to explain code that exists solely to 
+support a spurious assertion, which itself exists solely to allow an 
+inadequate checker to prevent accidents that were already prevented by the 
+warning in the comments. Why? Fear of regression.
+
+It's true what they say -- "fear is the mind killer".
+
+> > There's no Fixes tag here because there's no need to backport.
+> > The BUILD_BUG_ON() comes from commit 091719c21d5a ("scsi: qla2xxx: target:
+> > Fix invalid memory access with big CDBs") which appeared in v6.19-rc1.
+> > The build failure first appeared in v7.0-rc1 with commit e428b013d9df
+> > ("atomic: specify alignment for atomic_t and atomic64_t").
+> 
+> I would add both in Fixes, just in case anyone ever wants to backport
+> e428b013d9df (which looks like a valid bugfix to me).
 > 
 
+Good point. I will add both.
 
+> > --- a/drivers/scsi/qla2xxx/qla_target.c
+> > +++ b/drivers/scsi/qla2xxx/qla_target.c
+> > @@ -213,7 +213,6 @@ static void qlt_queue_unknown_atio(scsi_qla_host_t *vha,
+> >         unsigned int add_cdb_len = 0;
+> >
+> >         /* atio must be the last member of qla_tgt_sess_op for add_cdb_len */
+> > -       BUILD_BUG_ON(offsetof(struct qla_tgt_sess_op, atio) + sizeof(u->atio) != sizeof(*u));
+> 
+> Iff you remove the BUILD_BUG_ON(), you should remove the comment, too.
+> 
 
+Again, the comment refers to an assertion about the name of the last 
+member. The BUILD_BUG_ON is an assertion about the size of the struct. 
+These are not the same thing. If they were, I could agree with you: 
+"remove both or neither".
 
+Thanks for your review.
