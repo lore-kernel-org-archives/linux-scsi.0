@@ -1,108 +1,66 @@
-Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
+Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.3])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7242E2FD1B6;
-	Fri,  6 Mar 2026 02:19:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.14
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E072833E363;
+	Fri,  6 Mar 2026 02:47:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.3
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772763550; cv=none; b=GC0vGlx+tO8wBks80zjn2T82X9L6N/WLecoeVoVR7w210KdwDCgE2r6SBlNqqMyUuVH1CDkYwBAc8m8v2GaPTK4T/+Iyr7qVRlm+gZCWfhOe86hyevnT81yH3bDOgO8FXnLAoYSulDuUqEx8waD6brSqwkHDksj9InkCz33504Y=
+	t=1772765252; cv=none; b=FCJFY6zkvOmXAcA+1Bk22EqDlE6Bd73ke7iZV4NMZAeNQdC+YkzrJodiUC2PohOsO7mIQ2LaoFploJfiFMfuekan1kqyRk5Ioulb1PCwWbDxIeVyAKyIil/s3unSlma5L484el0HXpoIauqeNB0kAF7k2MUcI4grfJCH8vQXpqM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772763550; c=relaxed/simple;
-	bh=QQzhNc04McOCTp4ZWH0zZtCOyhhtw3rBPEi5ryyYZDs=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=SW+pCDbjS0yea4cL925nEWOTcQw1V6QltqUcRu5nv216wqjahf1S0wCP9oyM3XW11TdOP+WahZZ+S+b2goyR4ICj4fr8g6nzzL+MlgBM/+7NWGtNz5Xc89JBS+o89EULjG90IkwJwHUqTK89FmUODxo6KExhBCjW4hQMy31F2ZA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=JVocAbDc; arc=none smtp.client-ip=199.89.1.14
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1772765252; c=relaxed/simple;
+	bh=ss1qzT2zGltopR2HmNiT0A8layIVs3at5mlgB6wi2U4=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=TKF6uoaIq7bsC/OBDD/a+LWocWeZZdATRSz0q7E34xp9IqOOPJLQwq/j4PdHzW/4cYr9EW5K1QoSEYgADu9ZbpSe82mpfmRA9W0eLv3mc0a5xctZyGkZ/wLxIDmdC1sAFYMdnHlyTPi8XCbV2pH91o99dCO2UhPGwKlgexLCSGk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=qUPRU+T5; arc=none smtp.client-ip=220.197.31.3
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="JVocAbDc"
-Received: from localhost (localhost [127.0.0.1])
-	by 011.lax.mailroute.net (Postfix) with ESMTP id 4fRqkq3gjdz1XLyhj;
-	Fri,  6 Mar 2026 02:15:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1772763341; x=1775355342; bh=QQzhNc04McOCTp4ZWH0zZtCO
-	yhhtw3rBPEi5ryyYZDs=; b=JVocAbDcPCawaLdZUbGJ/JA5LZXFqCklWhrTCayZ
-	+PFOMpYsRetddtYRypn1ESePaMZTi6OD+Z1i7/xXGEzOBZxYwfWsAmsaj5CGwgRY
-	xhnTN37ra7EojpmRd5/rhEXtFSSIqw35jTrvhFtZwHIXmhf5MvhYZqldLW45B6n5
-	/ommnXVv+teANBYAKlJh79scM91RgXGVAwuNegFiAuoIhfJMD02uTPocuOAsDvqe
-	Msoqjo8A7nHcIu1CM4UAaSM4Dmd+LzYxgOxCc/yUe8a+BJO50HArwpMuVl5a/OZN
-	q3/Aiwori8z5C7rpzcHsEk3C5syk0Uc+rfUfqSGQEjF0BQ==
-X-Virus-Scanned: by MailRoute
-Received: from 011.lax.mailroute.net ([127.0.0.1])
- by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id XSnpNyjx8kaO; Fri,  6 Mar 2026 02:15:41 +0000 (UTC)
-Received: from [192.168.132.187] (unknown [12.150.89.26])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4fRqkf112nz1XLyhh;
-	Fri,  6 Mar 2026 02:15:37 +0000 (UTC)
-Message-ID: <0c793e57-ee29-4322-8cf9-0a4a859b9981@acm.org>
-Date: Thu, 5 Mar 2026 20:15:36 -0600
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="qUPRU+T5"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=ss
+	1qzT2zGltopR2HmNiT0A8layIVs3at5mlgB6wi2U4=; b=qUPRU+T5lBV8hRVgez
+	S4iAmjixh3FqBZ1l4bfhzxeJDzLpICg8CpxGonEE3VIp5u53jenTVFBNGa07CCrr
+	eExwnkbX+9WHE+o0rZTlEo5x0WY4FOVkohhgZuAVnP5c9n4ONFsRy97qyXZ/XZ4s
+	cr4MhMD3rt3OEOkr8+tn1jwnM=
+Received: from localhost.localdomain (unknown [])
+	by gzga-smtp-mtada-g0-3 (Coremail) with SMTP id _____wDXPv0DQKppel3WPQ--.833S2;
+	Fri, 06 Mar 2026 10:46:29 +0800 (CST)
+From: Yang Xiuwei <yangxiuwei@kylinos.cn>
+To: bvanassche@acm.org
+Cc: fujita.tomonori@lab.ntt.co.jp,
+	axboe@kernel.dk,
+	James.Bottomley@HansenPartnership.com,
+	martin.petersen@oracle.com,
+	yangxiuwei@kylinos.cn,
+	linux-scsi@vger.kernel.org,
+	linux-block@vger.kernel.org,
+	io-uring@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v6 0/3] bsg: add io_uring command support for SCSI passthrough
+Date: Fri,  6 Mar 2026 10:46:27 +0800
+Message-Id: <20260306024627.58267-1-yangxiuwei@kylinos.cn>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <3ce6f611-330c-4705-9842-f85eb9a13556@acm.org>
+References: <3ce6f611-330c-4705-9842-f85eb9a13556@acm.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 1/2] ufs: core: Add quriks for VCC ramp-up delay
-To: =?UTF-8?B?RWQgVHNhaSAo6JSh5a6X6LuSKQ==?= <Ed.Tsai@mediatek.com>,
- AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
- "James.Bottomley@HansenPartnership.com"
- <James.Bottomley@HansenPartnership.com>,
- "matthias.bgg@gmail.com" <matthias.bgg@gmail.com>,
- "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
- "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
- "avri.altman@wdc.com" <avri.altman@wdc.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
- "linux-arm-kernel@lists.infradead.org"
- <linux-arm-kernel@lists.infradead.org>,
- "linux-mediatek@lists.infradead.org" <linux-mediatek@lists.infradead.org>,
- =?UTF-8?B?Q2h1bi1IdW5nIFd1ICjlt6vpp7/lro8p?= <Chun-hung.Wu@mediatek.com>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- =?UTF-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= <peter.wang@mediatek.com>
-References: <20260305083610.2672344-1-ed.tsai@mediatek.com>
- <20260305083610.2672344-2-ed.tsai@mediatek.com>
- <fd1fb573-6d02-433e-a74a-1a015c64e3be@acm.org>
- <0e812b2b96603f69467b57ae6e9836ef8b4bd1ff.camel@mediatek.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <0e812b2b96603f69467b57ae6e9836ef8b4bd1ff.camel@mediatek.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:_____wDXPv0DQKppel3WPQ--.833S2
+X-Coremail-Antispam: 1Uf129KBjDUn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7v73
+	VFW2AGmfu7bjvjm3AaLaJ3UbIYCTnIWIevJa73UjIFyTuYvjxUo38eUUUUU
+Sender: yangxiuwei2025@163.com
+X-CM-SenderInfo: p1dqw55lxzvxisqskqqrwthudrp/xtbC6QUWpmmqQAW72wAA36
 
-On 3/5/26 6:19 PM, Ed Tsai (=E8=94=A1=E5=AE=97=E8=BB=92) wrote:
-> On Thu, 2026-03-05 at 06:24 -0600, Bart Van Assche wrote:
->> On 3/5/26 2:29 AM, ed.tsai@mediatek.com=C2=A0wrote:
->>> +=C2=A0=C2=A0=C2=A0=C2=A0 /*
->>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 * On platforms with a slow VCC ramp-u=
-p, a delay is needed
->>> after
->>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 * turning on VCC to ensure the voltag=
-e is stable before the
->>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 * reference clock is enabled.
->>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 */
->>> +=C2=A0=C2=A0=C2=A0=C2=A0 if (hba->quirks & UFSHCD_QUIRK_VCC_ON_DELAY=
- && !ret && vcc_on
->>> &&
->>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 hba->vreg_info.vcc =
-&& !hba->vreg_info.vcc->always_on)
->>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0 usleep_range(1000, 1100);
->>
->> Since the value of the delay is platform-dependent, has it been
->> considered to introduce a new vendor operation (vop)?
->
-> A vop does feel a bit heavyweight for a simple sleep. How about we add
-> a new configurable variable, similar to the approach used for the VCC
-> off delay?
+On 2026-03-05 15:12, Bart Van Assche wrote:
+> Please send a new version of a patch series as a new email thread.
+> Otherwise the new version may get overlooked.
 
-Let's postpone introducing such a configuration variable until there is
-a real need for such a configuration variable.
+Thanks for the reminder. I'll send v7 as a new thread.
 
-Bart.
+Best regards,
+Yang Xiuwei
+
