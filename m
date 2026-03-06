@@ -1,45 +1,45 @@
 Received: from sender4-pp-f112.zoho.com (sender4-pp-f112.zoho.com [136.143.188.112])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 66BB0396B9F;
-	Fri,  6 Mar 2026 13:27:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5399839A07A;
+	Fri,  6 Mar 2026 13:27:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=136.143.188.112
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772803659; cv=pass; b=afW9jww0s8hhvVW/6WkiA5XzvQk4hkccIDZaSkm3UumKsQiLdmS9YfFauI+se9p6co6b04tKRKm+4Va8HiVxdGOuUa3yx8FcdVJcp+0DSYWAvUQnLs8+33KM3TlG+RafasrAeI0/GkWqbMiPu5pXAPgGRb9QMcGqYZ0WoW+z+JQ=
+	t=1772803673; cv=pass; b=I8czfzDOy/hadwBrMstQVhF/Io5U6wIdqh+nxzHJFQvLzrO8l4YpifhNxwhXo5qCGUOfm3apeQTt/kJxUOu1UG7Wg6gJ9JW8VasJhohz4GXun/Eh4RO1KwqbgBiFAPF4g1ZLBRVEEoRDaFL93ukFcDPPZ70FgrygAI8l2R63+uM=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772803659; c=relaxed/simple;
-	bh=GZtjWnFKpaNwfR8be4GXH/Jucljzt/W5m7Urv0uGYAk=;
+	s=arc-20240116; t=1772803673; c=relaxed/simple;
+	bh=25+iV2Au5DtMz96R754wxjUHPhs70Lf9nLBCTgqmmxE=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=bpuwQZUBvbMWehen0aMXntJnWAB4jkKPCfJ74WjSUqiv3NoXgQotKZsHrMiiUQDv0wO/vRnim7oO1EJhH6SPcEt7e8zt06ZQCVEScq1uqnsy/fCgefjbOkRqP7K4Agr8Wiepn6BwIj5bEXraGH70sfuUL6bP/ZAMjyRVz8BXZjs=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (1024-bit key) header.d=collabora.com header.i=nicolas.frattaroli@collabora.com header.b=CJlt411l; arc=pass smtp.client-ip=136.143.188.112
+	 In-Reply-To:To:Cc; b=FqDUQ38ze9KDPG0rrlp6ucJjQp/aATazsNCKSNeMiiBuUkkSSZSu6lf0IcyFm/+yLTzwgQaT/LdITVRepEDiWja/l+tSgZek6m0eHAzNBHcsEVwLluWiUmEhlFXiPjXEEQX9bRsdS0ZNNrCz9+2VoaIbCgG0fprsUk+owGZFxYo=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (1024-bit key) header.d=collabora.com header.i=nicolas.frattaroli@collabora.com header.b=PCm5n0K+; arc=pass smtp.client-ip=136.143.188.112
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collabora.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=collabora.com header.i=nicolas.frattaroli@collabora.com header.b="CJlt411l"
-ARC-Seal: i=1; a=rsa-sha256; t=1772803593; cv=none; 
+	dkim=pass (1024-bit key) header.d=collabora.com header.i=nicolas.frattaroli@collabora.com header.b="PCm5n0K+"
+ARC-Seal: i=1; a=rsa-sha256; t=1772803640; cv=none; 
 	d=zohomail.com; s=zohoarc; 
-	b=W1bzqw3/Q7BSBf8W0aw4EnNeUgQSVOBZMNR5n30iwrNDdeFghLZXToH416gAh50UjkDmGuwXtUBSKpAqoFBqAmuEAJPvHvjyJQzmcNgobbi0TFLAr5tSZZMeWdFLXmXMvZczb5Bw9lRTUl/e3oFEzVJIzWQnSvmY+RlAh73YJes=
+	b=IPRCzkVxE6M4aDhgBlXimsImFAvM3nc/Ogv8hn2yUwyhmhbLOuYqj7aiP/dhPZiweLejYERnnUigepDRlAxaGxniRWBsIKEN5tiW6E3b66wCGZRQ4w35znuKHVKGlQ06ECexzIlcHIN5l/xKAYqlzQr8FLqKzEmrBxvl4eVJkIk=
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.com; s=zohoarc; 
-	t=1772803593; h=Content-Type:Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:Subject:To:To:Message-Id:Reply-To; 
-	bh=ilvaeSQdvAIhMd9Bkb0KlXY7prc43eyjYEc19Fh00Nk=; 
-	b=TgaJ9rpqZfyTwnRNqCRfZq3c78QMy+tgFblkfY/X2Xv9KTh/QuKyqIk57ta9psoOme651Wabrt/RbFV76cAuuJdOPsjCzppaOmyLzVWFIB0pOQX3RBTULPHnYb9Wic5RHG82Je9foFV4KrbC8DhuJNQGgnSIah4JIA5HV7YqxuY=
+	t=1772803640; h=Content-Type:Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:Subject:To:To:Message-Id:Reply-To; 
+	bh=ZHQPBt/sMVRGZaNIxvx/Z2lE1RPR2Q3ZOvgh4mDSFHM=; 
+	b=A5R3F6CKGbe+lSt9y0wwZlYfQ0k0r6dsx8NA05pOSyV4DLQ1wVaBbnFRtoeuYkJf3cTGudGlmqdb2kFjj4wp9MHJZRsZGDsX/FNSPfd7UihjslmNd35qh3/vXKl/wABRonwLPj4W7gcgUSlT5kht2LMvh0TsIe4p/M3910uI8Nw=
 ARC-Authentication-Results: i=1; mx.zohomail.com;
 	dkim=pass  header.i=collabora.com;
 	spf=pass  smtp.mailfrom=nicolas.frattaroli@collabora.com;
 	dmarc=pass header.from=<nicolas.frattaroli@collabora.com>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1772803593;
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1772803640;
 	s=zohomail; d=collabora.com; i=nicolas.frattaroli@collabora.com;
 	h=From:From:Date:Date:Subject:Subject:MIME-Version:Content-Type:Content-Transfer-Encoding:Message-Id:Message-Id:References:In-Reply-To:To:To:Cc:Cc:Reply-To;
-	bh=ilvaeSQdvAIhMd9Bkb0KlXY7prc43eyjYEc19Fh00Nk=;
-	b=CJlt411lbqoy5yM+ndnYiHrr7WoWQxikB7nJrS3JSAyo9f3oV2JkAj2i8B9p+GvY
-	3igzz0/lDwosmwQ8stEIg52PerD+HzcSjjfIAzNKagYOsKmDTGt7l+dpPIIqO+pQ4ZX
-	8Pe9ck74Tj+RN69vd4bZqbTWuaBICnpDyTA7jNUA=
-Received: by mx.zohomail.com with SMTPS id 1772803592183913.3347051718122;
-	Fri, 6 Mar 2026 05:26:32 -0800 (PST)
+	bh=ZHQPBt/sMVRGZaNIxvx/Z2lE1RPR2Q3ZOvgh4mDSFHM=;
+	b=PCm5n0K+WKIimvgUMe9biPXhV8+XCSZ3IAoeo4smSXKcNlLsbTjcv7tL/P3S03UE
+	iRvx3Zl4xHVeJUNEwv+ClqFnvHYTrBCTf+FfRtDf8YnGokb8qDbAaOYv1khbjxA7lUF
+	R3Scl96aHuHBCE08aDY7KyJFxMQqhw+QC3TVHu3Y=
+Received: by mx.zohomail.com with SMTPS id 1772803637392630.491848334385;
+	Fri, 6 Mar 2026 05:27:17 -0800 (PST)
 From: Nicolas Frattaroli <nicolas.frattaroli@collabora.com>
-Date: Fri, 06 Mar 2026 14:24:55 +0100
-Subject: [PATCH v9 14/23] scsi: ufs: mediatek: Remove
- mediatek,ufs-broken-rtc property
+Date: Fri, 06 Mar 2026 14:25:03 +0100
+Subject: [PATCH v9 22/23] scsi: ufs: mediatek: Remove undocumented
+ "clk-scale-up-vcore-min"
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -48,7 +48,7 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260306-mt8196-ufs-v9-14-55b073f7a830@collabora.com>
+Message-Id: <20260306-mt8196-ufs-v9-22-55b073f7a830@collabora.com>
 References: <20260306-mt8196-ufs-v9-0-55b073f7a830@collabora.com>
 In-Reply-To: <20260306-mt8196-ufs-v9-0-55b073f7a830@collabora.com>
 To: Alim Akhtar <alim.akhtar@samsung.com>, 
@@ -73,59 +73,61 @@ Cc: Louis-Alexis Eyraud <louisalexis.eyraud@collabora.com>,
  Nicolas Frattaroli <nicolas.frattaroli@collabora.com>
 X-Mailer: b4 0.14.3
 
-This flag property was never described in the binding, and its
-capability wrapper seems pointless.
+The MediaTek UFS driver contains support for an undocumented,
+non-vendor-prefixed u32 property named "clk-scale-up-vcore-min".
 
-If one of the MediaTek SoCs needs the ufshcd quirk applied, then this
-can be done per-compatible, without needing to give the device tree
-author the option to forget to set it.
+Since it is not part of any binding, and would not pass a bindings
+review in its current form, remove it.
 
-Remove it and the associated capability flag wrapping code.
+To return this functionality, it needs to be resubmitted in a series
+that also introduces it to the binding, and justifies what it is used
+for. Compatibility with downstream device trees is not a valid
+justification for its existence.
 
 Reviewed-by: AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
-Reviewed-by: Peter Wang <peter.wang@mediatek.com>
 Signed-off-by: Nicolas Frattaroli <nicolas.frattaroli@collabora.com>
 ---
- drivers/ufs/host/ufs-mediatek.c | 5 -----
- drivers/ufs/host/ufs-mediatek.h | 2 --
- 2 files changed, 7 deletions(-)
+ drivers/ufs/host/ufs-mediatek.c | 19 -------------------
+ 1 file changed, 19 deletions(-)
 
 diff --git a/drivers/ufs/host/ufs-mediatek.c b/drivers/ufs/host/ufs-mediatek.c
-index e7948fad2e39..909e4ea2d92c 100644
+index ae6735683f76..1dfc299b93b5 100644
 --- a/drivers/ufs/host/ufs-mediatek.c
 +++ b/drivers/ufs/host/ufs-mediatek.c
-@@ -655,9 +655,6 @@ static void ufs_mtk_init_host_caps(struct ufs_hba *hba)
- 	if (of_property_read_bool(np, "mediatek,ufs-rtff-mtcmos"))
- 		host->caps |= UFS_MTK_CAP_RTFF_MTCMOS;
+@@ -880,8 +880,6 @@ static void ufs_mtk_init_clocks(struct ufs_hba *hba)
+ 	struct ufs_mtk_host *host = ufshcd_get_variant(hba);
+ 	struct list_head *head = &hba->clk_list_head;
+ 	struct ufs_clk_info *clki, *clki_tmp;
+-	struct device *dev = hba->dev;
+-	u32 volt;
  
--	if (of_property_read_bool(np, "mediatek,ufs-broken-rtc"))
--		host->caps |= UFS_MTK_CAP_MCQ_BROKEN_RTC;
+ 	/*
+ 	 * Find private clocks and store them in struct ufs_mtk_clk.
+@@ -918,24 +916,7 @@ static void ufs_mtk_init_clocks(struct ufs_hba *hba)
+ 	if (!ufs_mtk_is_clk_scale_ready(hba)) {
+ 		hba->caps &= ~UFSHCD_CAP_CLK_SCALING;
+ 		dev_info(hba->dev, "%s: Clock scaling unavailable", __func__);
+-		return;
+-	}
 -
- 	dev_info(hba->dev, "caps: 0x%x", host->caps);
+-	if (!host->reg_vcore)
+-		return;
+-
+-	if (of_property_read_u32(dev->of_node, "clk-scale-up-vcore-min",
+-				 &volt)) {
+-		dev_info(dev, "failed to get clk-scale-up-vcore-min");
+-		return;
+ 	}
+-
+-	host->mclk.vcore_volt = volt;
+-
+-	/* If default boot is max gear, request vcore */
+-	if (volt && host->clk_scale_up)
+-		if (regulator_set_voltage(host->reg_vcore, volt, INT_MAX))
+-			dev_err(hba->dev, "Failed to set vcore to %d\n", volt);
  }
  
-@@ -1185,8 +1182,6 @@ static int ufs_mtk_init(struct ufs_hba *hba)
- 	hba->quirks |= UFSHCI_QUIRK_SKIP_MANUAL_WB_FLUSH_CTRL;
- 
- 	hba->quirks |= UFSHCD_QUIRK_MCQ_BROKEN_INTR;
--	if (host->caps & UFS_MTK_CAP_MCQ_BROKEN_RTC)
--		hba->quirks |= UFSHCD_QUIRK_MCQ_BROKEN_RTC;
- 
- 	hba->vps->wb_flush_threshold = UFS_WB_BUF_REMAIN_PERCENT(80);
- 
-diff --git a/drivers/ufs/host/ufs-mediatek.h b/drivers/ufs/host/ufs-mediatek.h
-index 4e6a34f4ac39..9c377745f7a0 100644
---- a/drivers/ufs/host/ufs-mediatek.h
-+++ b/drivers/ufs/host/ufs-mediatek.h
-@@ -138,8 +138,6 @@ enum ufs_mtk_host_caps {
- 	UFS_MTK_CAP_DISABLE_MCQ                = 1 << 8,
- 	/* Control MTCMOS with RTFF */
- 	UFS_MTK_CAP_RTFF_MTCMOS                = 1 << 9,
--
--	UFS_MTK_CAP_MCQ_BROKEN_RTC             = 1 << 10,
- };
- 
- struct ufs_mtk_crypt_cfg {
+ static void ufs_mtk_setup_clk_gating(struct ufs_hba *hba)
 
 -- 
 2.53.0
