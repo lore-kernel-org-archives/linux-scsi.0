@@ -1,45 +1,45 @@
 Received: from sender4-pp-f112.zoho.com (sender4-pp-f112.zoho.com [136.143.188.112])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2837A39902C;
-	Fri,  6 Mar 2026 13:26:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E466839902C;
+	Fri,  6 Mar 2026 13:26:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=136.143.188.112
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772803590; cv=pass; b=NK+UzA8y0eptlE1M5kKCiqQIf8GzZxXgsAovgVBwdCEzROfMjd9OvgvGXhVNhAn0CHtNd7BrEIsn4LFeNyXriWM7ANuB0rrcI1zu0MZBEMottymvOqktA87wzL9yvd0JnVW5EmuMrENKCxedYW/WluVVc+ErGrRzJWm00zQAG0s=
+	t=1772803595; cv=pass; b=fl+2c2BHepsink9wDC8padR4pk0mpTzA7S+JTbjI8/2+yXE/YxDDL2qqGrSK9dVN/fzkO8xst1aq4HVTDCYIza7KCwDDuERUuxQJbCcQkf5bZ/0wwpBpbRb4rZbnL1zz7ytoLRabCC6pYunMRtU7bTTlmSQb3CsZleQAxt7rWFM=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772803590; c=relaxed/simple;
-	bh=PIJwcg7b7PGyxpfg72fGBTChA7MxXYqq/VCQrBvntZA=;
+	s=arc-20240116; t=1772803595; c=relaxed/simple;
+	bh=/o5JHSPjla4i9AUWahy5CwXrdQrv1a3I6cveHxXCkcw=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=FNWZjkgF/RhWa2o0pv96vH6EqXZ90P7y8yeeiYMLSIg+3K65PtBu58rQvbnWS3V0HMPobALOPcqvcE41LSeLplVdh5grNUhAEBfq90WbYQ/WbNmJIQAnJIW8778ghNHO43BD+r9B3RkdpTvN093O5gs7HXCf226RA0HkF02M/sk=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (1024-bit key) header.d=collabora.com header.i=nicolas.frattaroli@collabora.com header.b=jVS5d1F3; arc=pass smtp.client-ip=136.143.188.112
+	 In-Reply-To:To:Cc; b=TwCRSID2eXE6OURQK9e25gMzl8+nw/ChHcoOQS5Ddwk8Xyq8w54LN0XEqpr8Rxat/dggw/tderpmw2nZ5pDm7aZ9vHH/dJ14JwJwqDD5pQMPDxbmmrRgDEZ+zNDpd+D4MaCyWDF0qT9B/dTfCr6h8+gsdNaCGFVNu2IAdnj2FgI=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (1024-bit key) header.d=collabora.com header.i=nicolas.frattaroli@collabora.com header.b=ZO4d9MJc; arc=pass smtp.client-ip=136.143.188.112
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collabora.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=collabora.com header.i=nicolas.frattaroli@collabora.com header.b="jVS5d1F3"
-ARC-Seal: i=1; a=rsa-sha256; t=1772803561; cv=none; 
+	dkim=pass (1024-bit key) header.d=collabora.com header.i=nicolas.frattaroli@collabora.com header.b="ZO4d9MJc"
+ARC-Seal: i=1; a=rsa-sha256; t=1772803567; cv=none; 
 	d=zohomail.com; s=zohoarc; 
-	b=OC2rXeR52OCB3Sg9gb6nx44BwtEnPzFhVR4v9unEiq9eKKTNOWNyvC1gmyiX5dTyQWoWHIHWLajlDHoZCZ7FDsgpp1sj6195kIFJzX8ma+ebCUavEpCdl0MRnqSdgAa5d4blNQIHvLxRWHW4ftl8HCj6pVODmB9fR5KvFMKVc/s=
+	b=cp7D57xv6Gw5vvIHymjnyyKfEcmSsgNbcokRE8ODBn2r39dwYBmQPLKmVNL7SFIx/i4oPdSSaAWw9pWbnkfOHMAE6hoZxpw4aPdoos2GZuHMbWtxktSQ4u/eEaHTxA0+NIyq86MPVYgQ8QDJWC2/nK3Vcq49gCF6vCOspSzl4kU=
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.com; s=zohoarc; 
-	t=1772803561; h=Content-Type:Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:Subject:To:To:Message-Id:Reply-To; 
-	bh=5Xyy8e3p/cq+P8guK42rqsXIPHr3owm/c/IQ70yQSTU=; 
-	b=W/0qr7YEVwzN3WzOtTP/2a5CFudi9SX0nKan1HuFEjSc6io8AmDK9QNrJE/PyAXa/oe+fs7j4V2lThbFSVQTxr0+e/MB07jpYA5Mt8D9iJul+CvBf2i8MWf/7D8q1yNcE+1FZAqEkMsAQacSh9E6E7GuoKjRIA2/ZOlr4QKl4Ak=
+	t=1772803567; h=Content-Type:Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:Subject:To:To:Message-Id:Reply-To; 
+	bh=bbVcQElh2n3zPCzRWLmxu2NrF4FVP7AQKqTrhwDzV5M=; 
+	b=jYRDdLMcpl0pBqAdhMELQZcbZEQtUsfwABZGnZP5eGOxKA3ZVXPAM56Qrj/UJ8E+sAvfhaFJR3pqBbrcxaCxhnedVlTknugSbPDwi7esTQ4S+E65kGCIgy0sT+tr578RMW/l1NwURgzi47nIc0Et2ZYOSxkf9h/+3Jj34U6zgwA=
 ARC-Authentication-Results: i=1; mx.zohomail.com;
 	dkim=pass  header.i=collabora.com;
 	spf=pass  smtp.mailfrom=nicolas.frattaroli@collabora.com;
 	dmarc=pass header.from=<nicolas.frattaroli@collabora.com>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1772803561;
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1772803567;
 	s=zohomail; d=collabora.com; i=nicolas.frattaroli@collabora.com;
 	h=From:From:Date:Date:Subject:Subject:MIME-Version:Content-Type:Content-Transfer-Encoding:Message-Id:Message-Id:References:In-Reply-To:To:To:Cc:Cc:Reply-To;
-	bh=5Xyy8e3p/cq+P8guK42rqsXIPHr3owm/c/IQ70yQSTU=;
-	b=jVS5d1F3qz2G06VMoTop7qI3FKguH46tvRuIU1v8kJOaPYNMZdP7dgjhkov9h7xK
-	ZE/ks408IXcmd1gMcN4ZehBa4cJPobBFfWZZiUUB9xFWZAp1z3aDAJaFA5jhpaWLhXS
-	+1cqwg6twyYVdWSlUO6/6KMCphz0loQq0nfYg3ds=
-Received: by mx.zohomail.com with SMTPS id 177280355950865.93873774029385;
-	Fri, 6 Mar 2026 05:25:59 -0800 (PST)
+	bh=bbVcQElh2n3zPCzRWLmxu2NrF4FVP7AQKqTrhwDzV5M=;
+	b=ZO4d9MJch6aDhmPuTr2kv+VQZT1C4aAl5C1jFQ9q/67fkuE3e2MDh+VUrRTENHAB
+	9pc5Z9erfJoo7WKvcUFZunh1Ba2fD9pNKhkN4i/b2PUn4Ev0KkuVXeI/Pfi82iSa6Z2
+	LaFV1jwJBb0kCj3cLHI04GkDH35/BGHxXMn6cWW0=
+Received: by mx.zohomail.com with SMTPS id 177280356507259.18972104731074;
+	Fri, 6 Mar 2026 05:26:05 -0800 (PST)
 From: Nicolas Frattaroli <nicolas.frattaroli@collabora.com>
-Date: Fri, 06 Mar 2026 14:24:51 +0100
-Subject: [PATCH v9 10/23] scsi: ufs: mediatek: Handle misc host voltage
- regulators
+Date: Fri, 06 Mar 2026 14:24:52 +0100
+Subject: [PATCH v9 11/23] scsi: ufs: mediatek: Remove undocumented
+ downstream reset cruft
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -48,7 +48,7 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260306-mt8196-ufs-v9-10-55b073f7a830@collabora.com>
+Message-Id: <20260306-mt8196-ufs-v9-11-55b073f7a830@collabora.com>
 References: <20260306-mt8196-ufs-v9-0-55b073f7a830@collabora.com>
 In-Reply-To: <20260306-mt8196-ufs-v9-0-55b073f7a830@collabora.com>
 To: Alim Akhtar <alim.akhtar@samsung.com>, 
@@ -73,90 +73,72 @@ Cc: Louis-Alexis Eyraud <louisalexis.eyraud@collabora.com>,
  Nicolas Frattaroli <nicolas.frattaroli@collabora.com>
 X-Mailer: b4 0.14.3
 
-MediaTek SoCs handled by this driver contain a per-SoC specific set of
-miscellaneous supplies. These feed parts of the UFS controller silicon
-inside the SoC, as opposed to the UFS card.
+The MediaTek UFS host driver's probe function allows using a
+ti,syscon-reset as a reset, without going through the appropriate
+abstractions, or by documenting this in the binding at all.
 
-Add the necessary driver code to acquire these supplies using the
-regulator bulk API. They should be kept on during suspend, so enable
-them when acquiring.
+Remove this, it's downstream code and does not belong here.
 
 Reviewed-by: AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
-Reviewed-by: Peter Wang <peter.wang@mediatek.com>
 Signed-off-by: Nicolas Frattaroli <nicolas.frattaroli@collabora.com>
 ---
- drivers/ufs/host/ufs-mediatek.c | 37 ++++++++++++++++++++++++++++++++++---
- 1 file changed, 34 insertions(+), 3 deletions(-)
+ drivers/ufs/host/ufs-mediatek.c | 33 +++------------------------------
+ 1 file changed, 3 insertions(+), 30 deletions(-)
 
 diff --git a/drivers/ufs/host/ufs-mediatek.c b/drivers/ufs/host/ufs-mediatek.c
-index 9b7d7e4ba4ba..3282b2d2d498 100644
+index 3282b2d2d498..6b4db7c09bbc 100644
 --- a/drivers/ufs/host/ufs-mediatek.c
 +++ b/drivers/ufs/host/ufs-mediatek.c
-@@ -40,6 +40,8 @@ static void _ufs_mtk_clk_scale(struct ufs_hba *hba, bool scale_up);
- 
- struct ufs_mtk_soc_data {
- 	bool has_avdd09;
-+	u8 num_reg_names;
-+	const char *const *reg_names;
- };
- 
- static const struct ufs_dev_quirk ufs_mtk_dev_fixups[] = {
-@@ -1188,8 +1190,21 @@ static int ufs_mtk_get_supplies(struct ufs_mtk_host *host)
+@@ -2383,38 +2383,12 @@ MODULE_DEVICE_TABLE(of, ufs_mtk_of_match);
+ static int ufs_mtk_probe(struct platform_device *pdev)
  {
- 	struct device *dev = host->hba->dev;
- 	const struct ufs_mtk_soc_data *data = of_device_get_match_data(dev);
-+	int ret;
-+
-+	if (!data)
-+		return 0;
-+
-+	if (data->num_reg_names) {
-+		ret = devm_regulator_bulk_get_enable(dev, data->num_reg_names,
-+						     data->reg_names);
-+		if (ret) {
-+			dev_err(dev, "Failed to get misc regulators: %pe\n", ERR_PTR(ret));
-+			return ret;
-+		}
-+	}
+ 	int err;
+-	struct device *dev = &pdev->dev, *phy_dev = NULL;
+-	struct device_node *reset_node, *phy_node = NULL;
+-	struct platform_device *reset_pdev, *phy_pdev = NULL;
+-	struct device_link *link;
+ 	struct ufs_hba *hba;
++	struct platform_device *phy_pdev = NULL;
++	struct device *dev = &pdev->dev, *phy_dev = NULL;
++	struct device_node *phy_node = NULL;
+ 	struct ufs_mtk_host *host;
  
--	if (!data || !data->has_avdd09)
-+	if (!data->has_avdd09)
- 		return 0;
+-	reset_node = of_find_compatible_node(NULL, NULL,
+-					     "ti,syscon-reset");
+-	if (!reset_node) {
+-		dev_notice(dev, "find ti,syscon-reset fail\n");
+-		goto skip_reset;
+-	}
+-	reset_pdev = of_find_device_by_node(reset_node);
+-	if (!reset_pdev) {
+-		dev_notice(dev, "find reset_pdev fail\n");
+-		goto skip_reset;
+-	}
+-	link = device_link_add(dev, &reset_pdev->dev,
+-		DL_FLAG_AUTOPROBE_CONSUMER);
+-	put_device(&reset_pdev->dev);
+-	if (!link) {
+-		dev_notice(dev, "add reset device_link fail\n");
+-		goto skip_reset;
+-	}
+-	/* supplier is not probed */
+-	if (link->status == DL_STATE_DORMANT) {
+-		err = -EPROBE_DEFER;
+-		goto out;
+-	}
+-
+-skip_reset:
+ 	/* find phy node */
+ 	phy_node = of_parse_phandle(dev->of_node, "phys", 0);
  
- 	host->reg_avdd09 = devm_regulator_get_optional(dev, "avdd09");
-@@ -2331,14 +2346,30 @@ static const struct ufs_hba_variant_ops ufs_hba_mtk_vops = {
- 	.config_scsi_dev     = ufs_mtk_config_scsi_dev,
- };
+@@ -2460,7 +2434,6 @@ static int ufs_mtk_probe(struct platform_device *pdev)
  
-+static const char *const ufs_mtk_regs_avdd12_avdd18[] = {
-+	"avdd12", "avdd18"
-+};
-+
-+static const char *const ufs_mtk_regs_avdd12_ckbuf_avdd18[] = {
-+	"avdd12", "avdd12-ckbuf", "avdd18"
-+};
-+
- static const struct ufs_mtk_soc_data mt8183_data = {
- 	.has_avdd09 = true,
-+	.reg_names = ufs_mtk_regs_avdd12_avdd18,
-+	.num_reg_names = ARRAY_SIZE(ufs_mtk_regs_avdd12_avdd18),
-+};
-+
-+static const struct ufs_mtk_soc_data mt8192_8195_data = {
-+	.has_avdd09 = false,
-+	.reg_names = ufs_mtk_regs_avdd12_ckbuf_avdd18,
-+	.num_reg_names = ARRAY_SIZE(ufs_mtk_regs_avdd12_ckbuf_avdd18),
- };
+ out:
+ 	of_node_put(phy_node);
+-	of_node_put(reset_node);
+ 	return err;
+ }
  
- static const struct of_device_id ufs_mtk_of_match[] = {
- 	{ .compatible = "mediatek,mt8183-ufshci", .data = &mt8183_data },
--	{ .compatible = "mediatek,mt8192-ufshci" },
--	{ .compatible = "mediatek,mt8195-ufshci" },
-+	{ .compatible = "mediatek,mt8192-ufshci", .data = &mt8192_8195_data },
-+	{ .compatible = "mediatek,mt8195-ufshci", .data = &mt8192_8195_data },
- 	{},
- };
- MODULE_DEVICE_TABLE(of, ufs_mtk_of_match);
 
 -- 
 2.53.0
