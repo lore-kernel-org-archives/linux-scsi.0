@@ -1,143 +1,166 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qt1-f172.google.com (mail-qt1-f172.google.com [209.85.160.172])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B34D33A9603;
-	Fri,  6 Mar 2026 14:34:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772807664; cv=none; b=A0aAa9RRNlygXYjcrgOFNZ+XE2UbRoW7kaHCASY8u3X/J4Mx0q36A7GYIdcHt/xab2QAyTAO4Ohe9wrwvFQz23Iq8Q8Xu+sF6Tphw9Vil2K/vtf28UZ0+63xgc6lxwGSJI4vDyR6hu4trpk2ezW416UyV0jhS29VRkDhMQDwx2w=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772807664; c=relaxed/simple;
-	bh=KN/c1puIwrPuySCS9Z5SJ0m0+sc0zU7fO0fXfozJE2c=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=hVpFMAjId8FtY/jYLpF0OfkaAWOwh/dP3u0SyVn3m+c/w9myJ9K4b11k0d1kYZaWylrNrsGpTUkXjWP1C8Ax+93jAhVq9A7KBRYepZ1m2p+LW2uWK4kAQKjr1ixtWFB/rvBkbPoePXX/mBXVYb4JlPdZlUg9cFF+NnLyXskXMpM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ql4OxffO; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3EA9D3EBF37
+	for <linux-scsi@vger.kernel.org>; Fri,  6 Mar 2026 16:23:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.160.172
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1772814189; cv=pass; b=YaoJo2mp2pa5eHx6rN9PerTZe4DOMmvyhVNde38oi5L7sni1bGRDdTZ2uYsuxncrp9Vrrgkf5WQaFwQT8kplRM9VMYrFYboRcr1wzi9dYA7VAud1KMIg4igUogokKZLIXuFBL08jYP4HpB4Kka9TBNgWo6Y6VUAehsByQTLVvyc=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1772814189; c=relaxed/simple;
+	bh=IbZsvgrBS6qG9+ONh351wVbKqsdzZem/iGnupFSfxjY=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=LOlV1h71lGhvGsyhooVksvk3Q3SjzXiLew+ArZwULaI3klnTI5e0lQaU3HW9NjYk8J5Ww12xVXBpnK0yuZN1JhPwlTLtRZ/keFcb4Jg0pGdV3WSE3Kh09NjBHEYoZ7QhPSBPt3SOyRQaXo+cynwXOSmwfOHdK6yXSRgQxvsgT9w=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=zMoC2u9C; arc=pass smtp.client-ip=209.85.160.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ql4OxffO"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E2E7EC4CEF7;
-	Fri,  6 Mar 2026 14:34:19 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772807664;
-	bh=KN/c1puIwrPuySCS9Z5SJ0m0+sc0zU7fO0fXfozJE2c=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Ql4OxffOxzNST2q2yixG+i2mgbirVumzzOwCko6Mu67EnRA63AlqdZio7X/ixEOLa
-	 6faKXKSdAldXY0+Lu3dr+2dkIOtZz0d/HS5j/iVqVFJ91yLlrPVG91DqpRRzx/vMTc
-	 qRQJe36egHo7+eexun6jtNfvmjw2XqHAjFUBlkCgKz9415JxPzsahUpfpLLKz79+7m
-	 pqPpDB2Hyqg6Wz4e0h22C9qyQmMm/AGsn+t+4qPWKfSfUQc0YdtvpwsO13Ciy1rHDy
-	 3l6q2Udi3bki6lqtgOn59jTykTM6p1Atn9h4gJq73VXmOySnF5ZF8hqxCnM4bYTzOR
-	 hpO4EcPpN21uw==
-Date: Fri, 6 Mar 2026 20:04:11 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Sumit Garg <sumit.garg@oss.qualcomm.com>
-Cc: manivannan.sadhasivam@oss.qualcomm.com, 
-	Bjorn Andersson <andersson@kernel.org>, Konrad Dybcio <konradybcio@kernel.org>, 
-	Adrian Hunter <adrian.hunter@intel.com>, Ulf Hansson <ulf.hansson@linaro.org>, 
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, 
-	Abel Vesa <abelvesa@kernel.org>, linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-mmc@vger.kernel.org, linux-scsi@vger.kernel.org, 
-	Neeraj Soni <neeraj.soni@oss.qualcomm.com>, Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
-Subject: Re: [PATCH v4 3/5] soc: qcom: ice: Return proper error codes from
- devm_of_qcom_ice_get() instead of NULL
-Message-ID: <k3pswjaxnptwbqgtrs7j3bsf7il6cxtfgc3sccrotb4tfjwi3q@d47blzsosoob>
-References: <20260302-qcom-ice-fix-v4-0-0e65740a5dcc@oss.qualcomm.com>
- <20260302-qcom-ice-fix-v4-3-0e65740a5dcc@oss.qualcomm.com>
- <CAGptzHN=uiYoDC-LwmWcGc=bO6gYWmnr6DNiS+o0M_BS80QftQ@mail.gmail.com>
- <CAGptzHO+cXBib_cpD+GvM8riKVSKMF_1Y3DUJO6KL7HcM__mJg@mail.gmail.com>
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="zMoC2u9C"
+Received: by mail-qt1-f172.google.com with SMTP id d75a77b69052e-5069a785ed2so465521cf.1
+        for <linux-scsi@vger.kernel.org>; Fri, 06 Mar 2026 08:23:08 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; t=1772814187; cv=none;
+        d=google.com; s=arc-20240605;
+        b=QJYodNr7/kRUbnt0OhpLJpB6f4FDj8UznmxKpUm0jMW91pgpfYg+HbQqaKrMtlYMG/
+         kw1JfduEAbjPPcpqdK2S4M/v82LNrG+OPNyo6vXXuoTgXktuMRIpGk/7DH0kwYKPlmGc
+         pYKovHTu8sV0jQSlXcT4CGkCYLjlce79yGJFYw+izv+osOfopJ/JyR13sYuPUEQcEWOc
+         W2a2ed9deZaWo2CqPVjQfdHZjF8n2SbVHfPCCSiVbdKawBuPzuDgTlw8nMhmHWO1uU9v
+         U28nEhFCD34BQZ1/nAfaoB5rZJq/N+bzzbHMG8/ejmCm86Djl2E3b3r5s/9rHNemDif8
+         OhCA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=2DZ/CDFVfoeP8qynByzEZbDrTtlY+jSYJfWbSadwVH8=;
+        fh=zLXkBjMJYwE60GUIwVszea9gBAsa/A1eM8se/NCKrCc=;
+        b=B5igrO5iDFRSGcyHY6IaFxeztusV66KWq2MwkMchh2Sihj6SGtsPd91j38CoETQYmU
+         WH2rqC1etE1oiRauXJkT1GvcGTq7n+PNSdzzviZb5u0x5Euiab0sm8SFUEzidfeJ08Zg
+         EhXFvJ5pVlRfHtwVZ60/ck0sFJcWr13Up1st/3gMVsr4P454nSkNBgkw7mrSyyFG14aC
+         C0YZuYwF6AaaOd64tYfxv6u//NUILCbLxWje2O6sGfl1XKQF8FJs5mvmA7ek16qM9d29
+         cQZUimiIrnaQfnLUevx+hC5E/cMgER4iMnD2M2jyTMfiQ6F5hcDHMd353hxwyzGQSs5a
+         sYJQ==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20230601; t=1772814187; x=1773418987; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=2DZ/CDFVfoeP8qynByzEZbDrTtlY+jSYJfWbSadwVH8=;
+        b=zMoC2u9CTCUEA/YD12k5F4P7X8QsDxh4MJK8LD2cqPUqqGJ7Dees1ESCxifahCsUjS
+         rz+MoyaRUmfZ+4Ybc44SXyUqnISGxU1d5lbJwAU3B1PSV22wsY8qfLECJ2JJW/QAPDSU
+         CWQc4zfActQ2KiIymgJ5Za0RCxzCMPdVxaL+pEc1XtZYsL7BxEGneFpzmH6du2dqyOHc
+         I0WZXNSeR+X4SqBzGB8pGrQoBZTXwdnAMZb/XB3/BqOS08C4PhCSB936tQMIAA53TIDw
+         +TBiYCFA2wFXdCEIB9dEyMMuFt0HYrfaGkIaSLoLvH72kOC3h6AWzAcXQipYdX7b/5D9
+         J/jg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1772814187; x=1773418987;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=2DZ/CDFVfoeP8qynByzEZbDrTtlY+jSYJfWbSadwVH8=;
+        b=WCMJB9GR46dGK7zR0hIe8WlnvjUkhEH7q5x3jExuRgtIKvKNlZ4iAS+iqRMYAt1sw9
+         fHDIq1rasNfTdVlYFzrUQ84Xy/aBJvKCdKJPFbk/53ydZEzw8qbqrr7i9wqvxq1JBKa4
+         rP2OVwa+COvx1s8jTibKzs6zGDGpIKv/R6HrlfYfz5zuAk3pkDNktUMqccCFnFn8VwY8
+         OBWYbSAuvED9Qm60S6SkzmyN9gegbGLzbkWnXItenDlYldxUGCxfHiozvWu3j+0vZmk0
+         1KBWnTIsHgKPYKVQckJ0JhM6kNHvEhuRyX5gjn67M1OKi9WS9a55HFKDMoO1SKmlIUrK
+         UKuA==
+X-Forwarded-Encrypted: i=1; AJvYcCUax8F6lwdGfYPDPkSaJdahLZQ5J0R5HTTORsYi5DqVfGfYoWvwZOENvYFuaG2SeZPWPSKmU4pIVyVN@vger.kernel.org
+X-Gm-Message-State: AOJu0YyADvb8n5a+JpHDamgRQT/3Zmx044YCZ412ZyK22KlsUB6Ih9Wt
+	6JXpNULa4U6FvdHE++YmO5qGHyKR3UOpUXVtcjVZ4w6hHwPOLPfIo8BiXXfE5ALnIuKtF7GjDYN
+	k7U3OUDbY2b+QRkqjXcZ3w/G1IYCFbLNi16emMRK3
+X-Gm-Gg: ATEYQzwuYv37XiGvvViqBUWLLnupHDho8P4DV9Ai4FTGcyBrJajl8mqVqeAWVUcYdVX
+	ZAMRzCHStbX8Ui3ADMrN2on6NWTIQsdAgJXkmbUvKN86GQ8nwlaNn6ELLF7yxEPmMLwQk2Wp8tX
+	tJnJqD1DHj0phqtqdflACAicrzSyltvbjgiwiH4lu4mSqr/0jwRWmrtUnj4D+EcG25klhy+VGel
+	HYOyS54dglkpxiE7etySXqAEzHcCtPsSymB5pRMiRadEOrWi7IhBYb8SGOsIJmUdYabl4wFP+uB
+	Lybtz214B+8ZjisLb7m84T+LUqS0Mzz7Mk2G/UGIRQ==
+X-Received: by 2002:a05:622a:91:b0:501:3e46:6bd5 with SMTP id
+ d75a77b69052e-508f3a8dbd1mr4339751cf.19.1772814186599; Fri, 06 Mar 2026
+ 08:23:06 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAGptzHO+cXBib_cpD+GvM8riKVSKMF_1Y3DUJO6KL7HcM__mJg@mail.gmail.com>
+References: <20260302180117.2797184-1-vamshigajjela@google.com>
+ <1fa500fdfbfff7d43bea1839ce1992fb4283c5eb.camel@mediatek.com>
+ <2cdc620b-b521-4058-a802-87591aa4c253@acm.org> <151ef927de40cd3e663b816194761a029c07ab23.camel@mediatek.com>
+ <c18581fb-d44a-4aff-973c-27cdcc9683fa@acm.org> <8b1faf1871c067c28e25f1248d0f358facde38b7.camel@mediatek.com>
+In-Reply-To: <8b1faf1871c067c28e25f1248d0f358facde38b7.camel@mediatek.com>
+From: VAMSHI GAJJELA <vamshigajjela@google.com>
+Date: Fri, 6 Mar 2026 21:52:54 +0530
+X-Gm-Features: AaiRm50PUgJhFxKijtOCoFghbJDJHsYjfFHSQWZkFqmlT3pK29eDMbJhD7Y1Sc0
+Message-ID: <CAMTSyjo1LzUwqW8wnoJka=V_whC3-2VBtUQko6P-BOtoeNhjXg@mail.gmail.com>
+Subject: Re: [PATCH] scsi: ufs: core: Handle MCQ IAG events
+To: =?UTF-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= <peter.wang@mediatek.com>
+Cc: "James.Bottomley@HansenPartnership.com" <James.Bottomley@hansenpartnership.com>, 
+	"bvanassche@acm.org" <bvanassche@acm.org>, "avri.altman@wdc.com" <avri.altman@wdc.com>, 
+	"martin.petersen@oracle.com" <martin.petersen@oracle.com>, 
+	"alim.akhtar@samsung.com" <alim.akhtar@samsung.com>, "beanhuo@micron.com" <beanhuo@micron.com>, 
+	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, 
+	"adrian.hunter@intel.com" <adrian.hunter@intel.com>, 
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, 
+	"quic_nguyenb@quicinc.com" <quic_nguyenb@quicinc.com>, 
+	"arthur.simchaev@sandisk.com" <arthur.simchaev@sandisk.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Fri, Mar 06, 2026 at 02:30:02PM +0530, Sumit Garg wrote:
-> On Fri, Mar 6, 2026 at 2:17 PM Sumit Garg <sumit.garg@oss.qualcomm.com> wrote:
+ or
+
+On Fri, Mar 6, 2026 at 9:19=E2=80=AFAM Peter Wang (=E7=8E=8B=E4=BF=A1=E5=8F=
+=8B) <peter.wang@mediatek.com> wrote:
+>
+> On Thu, 2026-03-05 at 06:07 -0600, Bart Van Assche wrote
 > >
-> > Hey Mani,
+> > Hi Peter,
 > >
-> > On Mon, Mar 2, 2026 at 6:30 PM Manivannan Sadhasivam via B4 Relay
-> > <devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org> wrote:
-> > >
-> > > From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-> > >
-> > > devm_of_qcom_ice_get() currently returns NULL if ICE SCM is not available
-> > > or "qcom,ice" property is not found in DT. But this confuses the clients
-> > > since NULL doesn't convey the reason for failure. So return proper error
-> > > codes instead of NULL.
-> > >
-> > > Reported-by: Sumit Garg <sumit.garg@oss.qualcomm.com>
-> > > Reviewed-by: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
-> > > Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-> > > ---
-> > >  drivers/soc/qcom/ice.c | 9 ++++-----
-> > >  1 file changed, 4 insertions(+), 5 deletions(-)
-> > >
-> > > diff --git a/drivers/soc/qcom/ice.c b/drivers/soc/qcom/ice.c
-> > > index 833d23dc7b06..d1efc676b63c 100644
-> > > --- a/drivers/soc/qcom/ice.c
-> > > +++ b/drivers/soc/qcom/ice.c
-> > > @@ -561,7 +561,7 @@ static struct qcom_ice *qcom_ice_create(struct device *dev,
-> > >
-> > >         if (!qcom_scm_ice_available()) {
-> > >                 dev_warn(dev, "ICE SCM interface not found\n");
-> > > -               return NULL;
-> > > +               return ERR_PTR(-EOPNOTSUPP);
-> > >         }
+> > It is not clear to me why the above code is considered confusing?
 > >
-> > With this patch-set on top of v7.0-rc2, I still see UFS probe failing
-> > when ICE isn't supported with OP-TEE as follows:
+> > UFS controllers are the only storage controllers I know of
+> > that generate different interrupts depending on whether or not
+> > interrupt
+> > aggregation is enabled. All other storage controllers I know of use
+> > the
+> > same completion interrupt whether or not interrupt aggregation is
+> > enabled.
 > >
-> > [    5.401558] qcom-ice 1d88000.crypto: ICE SCM interface not found
-> > [    5.419482] qcom-ice 1d88000.crypto: probe with driver qcom-ice
-> > failed with error -95
-> > <snip>
-> > [   18.662977] ufshcd-qcom 1d84000.ufshc: freq-table-hz property not specified
-> > [   18.670193] ufshcd-qcom 1d84000.ufshc: ufshcd_populate_vreg: Unable
-> > to find vdd-hba-supply regulator, assuming enabled
-> > [   18.737665] platform 1d84000.ufshc: deferred probe pending:
-> > ufshcd-qcom: ufshcd_pltfrm_init() failed
-> > [   18.747141] platform 3370000.codec: deferred probe pending:
-> > platform: wait for supplier /soc@0/pinctrl@33c0000/dmic23-data-state
+> > To me the above code means that whether or not interrupt aggregation
+> > is
+> > enabled, ufshcd_handle_mcq_cq_events() is called to process the
+> > pending
+> > completions.
 > >
-> > Maybe it's the "qcom-ice" driver failure leading to this deferred
-> > probe problem again.
+> > Thanks,
 > >
+> > Bart.
+>
+> Hi Bart,
+>
+> Sorry, I may not have explained it clearly enough. Normally,
+> the logic is to handle A when receiving A event, and handle B
+> when receiving B event. But now, the code seems to be hnadle A
+> when receiving B event.
+> If not familiar with this hardware logic, it=E2=80=99s easy to
+> misunderstand.
+>
+> Thanks
+> Peter
 
-Urgh... I completely forgot that the driver core removes the drvdata during
-probe error >.<
+Hi Peter and Bart, thanks for the feedback and discussion
 
-> 
-> Following diff on top of your patchset allows the UFS driver to probe
-> successfully without ICE support. I suppose just setting the drvdata
-> should be sufficient.
-> 
-> diff --git a/drivers/soc/qcom/ice.c b/drivers/soc/qcom/ice.c
-> index d1efc676b63c..a86980647097 100644
-> --- a/drivers/soc/qcom/ice.c
-> +++ b/drivers/soc/qcom/ice.c
-> @@ -734,12 +734,6 @@ static int qcom_ice_probe(struct platform_device *pdev)
->         }
-> 
->         engine = qcom_ice_create(&pdev->dev, base);
-> -       if (IS_ERR(engine)) {
-> -               /* Store the error pointer for devm_of_qcom_ice_get() */
-> -               platform_set_drvdata(pdev, engine);
-> -               return PTR_ERR(engine);
-> -       }
-> -
+Bart: I agree that renaming the boolean flag to reset_iag improves clarity,
+and I will address this in the next version of the patch
 
-No, this will indicate probe success which we do not want and is not safe all
-the time. Like what if qcom_ice_create() returned -EPROBE_DEFER.
+Peter:  I understand your concern about the readability when calling
+ufshcd_handle_mcq_cq_events for both the events. As said, either
+MCQ_CQ_EVENT_STATUS or MCQ_IAG_EVENT_STATUS, we are
+essentially handling Completion Queue events. The only extra step in
+the IAG path is clearing the counters/timers.
 
-Let me just store the ice_handle in a global xarray with key based on node
-phandle instead of drvdata. This will ensure that the pointer stays till the
-driver is loaded.
+Sticking to ufshcd_handle_mcq_cq_events and adding the agreed-upon
+descriptive argument reset_iag should help the readability IMO.
 
-- Mani
+Do you think a more detailed comments right before those two function
+calls would be beneficial?
 
--- 
-மணிவண்ணன் சதாசிவம்
+Regards,
+Vamshi G.
