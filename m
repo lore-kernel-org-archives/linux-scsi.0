@@ -1,275 +1,383 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DA17E26A0C7
-	for <linux-scsi@vger.kernel.org>; Fri,  6 Mar 2026 09:00:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=205.220.168.131
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772787618; cv=pass; b=H29Ef99nIATFpQQixKqJnlvds/14okHHaok+OQoxFC2eLtkqnvgbsyUYTZ755OodffqUKHamoOdKGxtgjFXhn199Q07mLew8Fi2nwWIp2P2XPBqly5RdNCRGVRr+iW1MBYeOrV9R6G+cEYNdg5YiQvzZCSJKGUZZZsA8ing9k9M=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772787618; c=relaxed/simple;
-	bh=0L16VWQr8QG1LSKiQzk1dxuu8pTEnzyJmWWHaNU5jqI=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=g4gmsrYIWTpmlEnLiQpL2HgD624i5SllMY/k2+VbZkUOkqPKRNnMp/sj2xJ85KoMYjs9lQmamwqMtoE7d68xUMKDKub37FGAbEQLrBlpDkabVgh9ge7GvDUYGc9/KcPdBiotPR6O1pNpzUNWIHJSHosYXbTsrijq1XWqcLBTrfk=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=AQXAEIyP; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=URben4Zv; arc=pass smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D430026B973
+	for <linux-scsi@vger.kernel.org>; Fri,  6 Mar 2026 11:14:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1772795678; cv=none; b=LChSr5qeikJmHtLBN6ugz6XqDQj/k/ycAzVsgpWa2rpoqyQEBxTuwPHMBJYTtpWL+WC+Hwn9kh8FaW0o8L5S99U4EQBGqwDepmpMidn+tJ6a5cpDIoVJRsWrwzArDbqzZezAZ8h3oR+HkpURBzBbRwx43Qv9DZX2CM7K56UVWKU=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1772795678; c=relaxed/simple;
+	bh=63vfcV8HzZBeQeBm+9/XeNyWSm+HWmcNtW7uzdAMD08=;
+	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:References:
+	 In-Reply-To:Content-Type; b=nQRkru0N0Z36iD/sCf8Qwl7QIdDujs35pOtccZCScdOQB9DSfV84JsQDAS30Rj7ssposaIsnSEhqZy2RxGSPRcp81dX3ZmYSMnur6cYWL3Drk+GmjHukQWJRpQ9eCUspiw1o2BG8lyOP4dQHZwwtBinlXRl50m23EPxUJflRUrc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=PHE/dTcE; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=bCJKth9w; arc=none smtp.client-ip=205.220.180.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="AQXAEIyP";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="URben4Zv"
-Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6264a4Gk3296661
-	for <linux-scsi@vger.kernel.org>; Fri, 6 Mar 2026 09:00:16 GMT
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="PHE/dTcE";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="bCJKth9w"
+Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6269QGYq3121395
+	for <linux-scsi@vger.kernel.org>; Fri, 6 Mar 2026 11:14:35 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
 	cc:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	Y0Q2OpTNsJNsKwES2aOblrfidPOydSd+/tsgWOvLO+k=; b=AQXAEIyPy0omLWNY
-	xC5AkIZtvCyVzSjqALxnkJ5jaZOZbV5AmW9deGfMB7OCurlXwS6rhPDVV3np6dCT
-	MMdSn3RHsUAs1YjrjEt/LjZYVwOvFH6y2n5m69T3BGCOiuNWwF497Yls9ayhkG4h
-	LtuelBRmMz1QSQEp8CEq2nTuH6mOqTdcb5Ogo+JpJXVmVNe4Bnl8Ds2x976CwNof
-	EJyRrTgo7DpmBffbcR9bt/64YS/xpNmoMo2NcTn/UP8X53T4UQR/eX1vtWbQEkcN
-	LSOfF8PucvZTRYEwRqU+JYUBAmPArlJSlrd5vxmVg1MVEzCQBqqr8oq3DvKJwJPV
-	hzPrlA==
-Received: from mail-dy1-f198.google.com (mail-dy1-f198.google.com [74.125.82.198])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4cqpxds1qs-1
+	ROs7foJ9C7wWq6029alq5/CQprIQotEEK0bAcQMfs6A=; b=PHE/dTcE/rhAlNPX
+	FI+PMKYEx/eFcg3DZjtLutfucTOe3+vtNWzOZZasoLd8a3zQvb0zod+pm+kymH2N
+	YgCXUjHyX/UuUt1Xu4Fkea8HG+M98JexkJF0rAACp1y2FG+N4Qhbzfr9ZqaSz0Bw
+	rVUuEDSLOlKKGtG6FKpf9d1mYlwyCgQCAlFolfpdpRMob7Zcd6amBcWi+SifJFCk
+	0YOKQIUfthqPUXNWwHx3tYJbrJJw/otP5nfafDoJsQOvjGWRTCkhhTqr9SD6ZkBF
+	X2KVXnxn9Jcqh7sOFPwcgdLe6+/pIILSs3ksi0k7I1ahA00aZDlEVSc97afin/5k
+	aP92yg==
+Received: from mail-pl1-f200.google.com (mail-pl1-f200.google.com [209.85.214.200])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4cqv9u8ba6-1
 	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Fri, 06 Mar 2026 09:00:15 +0000 (GMT)
-Received: by mail-dy1-f198.google.com with SMTP id 5a478bee46e88-2be1bc0905bso4095373eec.1
-        for <linux-scsi@vger.kernel.org>; Fri, 06 Mar 2026 01:00:15 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; t=1772787615; cv=none;
-        d=google.com; s=arc-20240605;
-        b=DNHV6oGe1N2RThpGxlWyUixJt74ffqy4a2cOE8o1wJRSv6Al4MASAj2jX+lbP4Uwl1
-         LpooVlnlgNcfktk3ioBOZJPStLcJJKLhi046YLMc9R1o3kLusxQwBIlttHUbrfe/dLGq
-         OcOODdF1riLBLT9YqnDHZiniYC+DnpvDXt4T5GPZ5KscxZ9/i8cJNVOTFYFrowVtFLLc
-         7uVpMjOJSNHRnxkOI0aX3qKA1cwwNzeuBI52v3NXKOy0w7kCVlr1kYOIoAN5lNxJdOCC
-         KtduwnkElEPGgC34i3gzGRPGCg2zpheqfQDVYkfZ3Zq+iOL3nMv1rntb2+AuOUSA5w7v
-         QzKg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=Y0Q2OpTNsJNsKwES2aOblrfidPOydSd+/tsgWOvLO+k=;
-        fh=ALRy19YpI01IEnmFmVX1UvWAhA+RtVJG1d+gaRrQOXU=;
-        b=d3qyILUmqT8nn6M4h+k00Ln7ya5GAg0jdvv5tvjBe6zT7nshHR129JWAwLsLC3PEQc
-         UcZjDv2LT3w7vItt8t/I5RcpdiiROOORv5JDwm7eYEY8lanKiy0RiNNl6fcR+pvQp2xJ
-         piyos3YhUACPHymzxJN/PjPVFzm/ki5/S2Fz+NdPZl1gkKufosnA9t/WV8Ajt+K+a5by
-         z4vgniKryKIYeGK3TILzAGmYoGBwu7IgTq1oZRtNrUaeT9lZpk+pzapzgIXPWViAuC/v
-         M3PN7sJnmsm6J9aIOiVH+oVCm5W6XVs3B2s8/dh2q5AoO046hTofv68NK4xfAGPRhCVk
-         xQow==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	for <linux-scsi@vger.kernel.org>; Fri, 06 Mar 2026 11:14:35 +0000 (GMT)
+Received: by mail-pl1-f200.google.com with SMTP id d9443c01a7336-2ae4f27033cso56497665ad.3
+        for <linux-scsi@vger.kernel.org>; Fri, 06 Mar 2026 03:14:35 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1772787615; x=1773392415; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=Y0Q2OpTNsJNsKwES2aOblrfidPOydSd+/tsgWOvLO+k=;
-        b=URben4ZvgK/XK6SdXj/KFdReI25zCzLMo4LJf7lfGAhBEI/UpMgMcjs+Dh/E536SOm
-         m5T+9EPoif2VEMLvnS85Wtg2mq40j3MhmYLC/6PNhqoKV7/j6RwwaNfmrYdrG2FxQEgL
-         JTB4C8inHjayDZ5W1eU2d5O4cuah7udvupB1eQXKSr1x8/nDSlUsBmp8Du3Y2plwLisG
-         8/+QjAbxRsU/Fm1pniopmKwhGi/Pxq1onmh05yAjUN+ZiHXFZXRCu0oqHRrNl5X+be/S
-         mlSwoPz5aUNq79vTcQUHWAyjSOl/FHoKMY8XlpuWVSPf+XteWoOjKMzB87JisiDG52M6
-         GdHQ==
+        d=oss.qualcomm.com; s=google; t=1772795674; x=1773400474; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:content-language:references
+         :cc:to:subject:from:user-agent:mime-version:date:message-id:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=ROs7foJ9C7wWq6029alq5/CQprIQotEEK0bAcQMfs6A=;
+        b=bCJKth9wHJTiYkmXZThYVxxm94RHCNu26S//COyvJazG5xFt6K824eNFldtzx+QVnJ
+         /5/EzBukz1SEYaFggP5lO4EEzOmJr+I1C2y+dCNRe/zFbH/C8CUM8E1PAzsxWK8LtMc/
+         NkVT/KVVCFo6e8ejnaBffubN/2sJkl2nlECib4tdQ3+T72qi7oc1e/JOmTF7Kx5HjiZY
+         s9IVrZTaoM/nybEYhXWdkzBtW9Zzeigt8+893qAOwgpzX8QIDkaPnlsgxPOTsC/R0brn
+         e4dU7oazzDPBrhcgQaIVjIT3XWdo1G3YXZV5OKmGLHIzBybGCWkSSTQR5hbsmm8v01EZ
+         2X8w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1772787615; x=1773392415;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=Y0Q2OpTNsJNsKwES2aOblrfidPOydSd+/tsgWOvLO+k=;
-        b=JT9ToWeDQ0GQSMq42L4yOzYeDcFsUtl7uP8FU62JSUWO4emOSuhEtCc7QG2GHJyOr7
-         G/xwvJNT03W4qOseSaTwlWBvWno5x4SVuv3UVUyQI1qSn/Ja8YEo/KkGKJqeR3ieradC
-         V4rPPxUFmihmmn0bZNAok2KrGALHA22RHA9pwUCu6IPLxOxt9nhpOnCytYVMY/oXMLzk
-         WtcgloEcjG+sxM7DOgPzKMN/qkyfns+F5Ln0MI7FEpl7jK3zz6DtaEYSZcMZvr91z32g
-         XhHZzGxPpeaSkIGzU1mjKUt14JfKsgLAtcXqpcxWSSf2v5rspLUtRDv0UK/ZoOPfqtmP
-         3MPw==
-X-Forwarded-Encrypted: i=1; AJvYcCWHn+8Ca5SpYz5LGMlB9KpXtGxFuuSHmuJL9cUcHykNb0scA3vte+TQPX4FRL3JFcjaw6300Vn3Br7c@vger.kernel.org
-X-Gm-Message-State: AOJu0Ywuy53DkW/+j3GZXgrCNzauHLsyiPeVljKmDD1t+yvRvuCi3bqr
-	iSBAi+D4mIROtjNHjHniQzaEJwEPZGrzFme5p4EiIWle86KVfOSs3XeXgjCt6dxy6ZFRHOHT9Ss
-	WsRTJi1RkPWlS90qxRuveJW3phBDKqkDIwwDJgso3WHPYli3hsAAQ7B5jGQUSlywXcBOzJ3mLHf
-	9LzPBaQbfGDV7+XI/ip3kDgpDssHWCkGjHaRh2g24=
-X-Gm-Gg: ATEYQzxELKkPdNIWpoq+8qdHdHO2jXbXyectVMuyHJRshaE6tkhgCqYPBPeHtPLTDX8
-	oPOOysEeceyeSUlce9TJMnDX0XmtrEDOyxbgxO3Y9VmUMJRkRI/cx2wxRRddewXIITzWGm+wVrt
-	wNdOAJM4M96mYL6lMKCnn4oXYLJCPcq4i49pv8sXe93n25Pxw2QoEZMBH/U6SfqDoK1Jo2hdgMs
-	Gi8F2bY
-X-Received: by 2002:a05:7301:1296:b0:2ba:7b63:3f4f with SMTP id 5a478bee46e88-2be4dfc5efemr474945eec.15.1772787614559;
-        Fri, 06 Mar 2026 01:00:14 -0800 (PST)
-X-Received: by 2002:a05:7301:1296:b0:2ba:7b63:3f4f with SMTP id
- 5a478bee46e88-2be4dfc5efemr474918eec.15.1772787613896; Fri, 06 Mar 2026
- 01:00:13 -0800 (PST)
+        d=1e100.net; s=20230601; t=1772795674; x=1773400474;
+        h=content-transfer-encoding:in-reply-to:content-language:references
+         :cc:to:subject:from:user-agent:mime-version:date:message-id:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=ROs7foJ9C7wWq6029alq5/CQprIQotEEK0bAcQMfs6A=;
+        b=wd87ZR9igOZn50Mazn5Y2XWf3kJQk10M1br7rydip+zDiWl4vFZ53quhlrHKri2KJs
+         9RAkNOFJBHnc8oL9DpvwJtuL+bavPzrSxbWrnOMlixrdI1dhB8WYZkZAEYFClOS6Amcr
+         THfgrYwoNjCw/H+cDsSe8O5dKL+UWG6mAo2J2IHN2Qi5UcvxYKfkWeA7Ii4Ji87pCAKr
+         Ni0fusD4j2s5ECSR1fWr57hV0ZDpb9eS0rQ47SjVumSzu9AyX2MJIF9IEJ5EqLmCt5R+
+         fI6J3lxOPk49j3+blrQg8Sb7IsJGTd0f5NAnbSsHZKXLF8Mz+ZwMiUUrbqrynduKPcyl
+         6opg==
+X-Forwarded-Encrypted: i=1; AJvYcCUAhkyjvB6+gjyWDMYn9JRGQPT/seIAPjRrR7narNMHQPmX1D0uI7ELVKs2EcU2huOqSde231MSNh6u@vger.kernel.org
+X-Gm-Message-State: AOJu0YySv2V/nxf3R4ctTKKpeGdJ3MeQ5kJNSSpbsllpUAhr7a/gozmK
+	YVW3Hk4WuUWePHVYLHUIVnmhh2q7dnq/SsasyWrLE9fDiDbUgi0OksHd495gRTRAzc+f0QmN3PE
+	QZ9CYRaHyddHSvDMSunwdjFkeXrzj+jE8os3+G7FE9/LapPxucz0CZejecM2xQbRc
+X-Gm-Gg: ATEYQzz9eptMyJ2j3wLmpTsM770qGcQoK6rNGEub9Bv0FqfJzs8oSTdbz2HmDjMbZJH
+	1+5GcN/TAiTwcLQ1z9G74O7GKxWTqGn3GKwQm+HI6ag3YvuxlTcB1sVaD9BgFd04hsTsc6BS0Wd
+	xq2s7l9PPg9rqvsGuH0F/IsE+IgFqzvgqKhnEdnItzgP9CRqWjTGK1INQVPYXWyCBpuFdnDU8Am
+	sGAYuF100ZOJ4oBN+/ADnZv81UnGHt/C3iR30+UlW5z+F6/8Wv6+ITmCfNuTwMy0Bz/U7PIQqGR
+	pc9wLemxuhynUp/QmRHTLK9sV6NCoB2RxzRWr2pSc/Dq0ChcTwEKRzQ4oLNMhTNZBGf0MXAjwKo
+	FCZExbqrSY3wPtRq709zHqniLFVAcgoTcv3TDWZmnOnpQoG3kTF74axeWb6RhoJk9PPLcJYNFdZ
+	hqKrtb+kutnIw=
+X-Received: by 2002:a17:903:3bac:b0:2aa:e3c2:f925 with SMTP id d9443c01a7336-2ae82432967mr18614675ad.34.1772795674403;
+        Fri, 06 Mar 2026 03:14:34 -0800 (PST)
+X-Received: by 2002:a17:903:3bac:b0:2aa:e3c2:f925 with SMTP id d9443c01a7336-2ae82432967mr18614355ad.34.1772795673710;
+        Fri, 06 Mar 2026 03:14:33 -0800 (PST)
+Received: from [10.133.33.226] (tpe-colo-wan-fw-bordernet.qualcomm.com. [103.229.16.4])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2ae83e9c965sm16771595ad.32.2026.03.06.03.14.31
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 06 Mar 2026 03:14:33 -0800 (PST)
+Message-ID: <48d39a5e-b3ca-4cab-883b-33307fd85dce@oss.qualcomm.com>
+Date: Fri, 6 Mar 2026 19:14:28 +0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260302-qcom-ice-fix-v4-0-0e65740a5dcc@oss.qualcomm.com>
- <20260302-qcom-ice-fix-v4-3-0e65740a5dcc@oss.qualcomm.com> <CAGptzHN=uiYoDC-LwmWcGc=bO6gYWmnr6DNiS+o0M_BS80QftQ@mail.gmail.com>
-In-Reply-To: <CAGptzHN=uiYoDC-LwmWcGc=bO6gYWmnr6DNiS+o0M_BS80QftQ@mail.gmail.com>
-From: Sumit Garg <sumit.garg@oss.qualcomm.com>
-Date: Fri, 6 Mar 2026 14:30:02 +0530
-X-Gm-Features: AaiRm506ir4AC8l0C0Le9ozBvSlNRLBgtgndnExCGvFEbKvlm59knOgNeJByd-c
-Message-ID: <CAGptzHO+cXBib_cpD+GvM8riKVSKMF_1Y3DUJO6KL7HcM__mJg@mail.gmail.com>
-Subject: Re: [PATCH v4 3/5] soc: qcom: ice: Return proper error codes from
- devm_of_qcom_ice_get() instead of NULL
-To: manivannan.sadhasivam@oss.qualcomm.com
-Cc: Bjorn Andersson <andersson@kernel.org>,
-        Konrad Dybcio <konradybcio@kernel.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        Manivannan Sadhasivam <mani@kernel.org>,
+User-Agent: Mozilla Thunderbird
+From: Can Guo <can.guo@oss.qualcomm.com>
+Subject: Re: [PATCH v2 07/11] scsi: ufs: ufs-qcom: Fixup PAM-4 TX L0_L1_L2_L3
+ adaptation pattern length
+To: Manivannan Sadhasivam <mani@kernel.org>
+Cc: avri.altman@wdc.com, bvanassche@acm.org, beanhuo@micron.com,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
         "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Abel Vesa <abelvesa@kernel.org>, linux-arm-msm@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-mmc@vger.kernel.org,
-        linux-scsi@vger.kernel.org, Neeraj Soni <neeraj.soni@oss.qualcomm.com>,
-        Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Proofpoint-ORIG-GUID: -RF8T6aj47tVbtB14GcOj2WchZu5D3mo
-X-Authority-Analysis: v=2.4 cv=E83AZKdl c=1 sm=1 tr=0 ts=69aa979f cx=c_pps
- a=wEP8DlPgTf/vqF+yE6f9lg==:117 a=IkcTkHD0fZMA:10 a=Yq5XynenixoA:10
- a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22
- a=yOCtJkima9RkubShWh1s:22 a=EUspDBNiAAAA:8 a=VwQbUJbxAAAA:8
- a=FoKZgoKw912WVnOwPkcA:9 a=QEXdDO2ut3YA:10 a=bBxd6f-gb0O0v-kibOvt:22
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzA2MDA4NSBTYWx0ZWRfX3ed5UPBfEORi
- 00MhpxvHPhe5cxQxVhudkqaKHcpsvcS+UW6IXZ7Ean/iXnBE4mdR40sUByhsr04twoGMfXsB/Oq
- sBlGUaIbJEJzaKpwMJp173NP/L6T9J0P3eUDDRfub+s36Mak3dfc4kaUgs17wmJ+jekkMDm8n97
- /9gOFHpXZyeoHSam4NlBB9S6uVi1+z/2DSDEi1bFPB1hlsSL861EDBBawIfy8a6mc/gAUhRiYXP
- kJ4F7qntZAJxIWL2plPv011yjoxCJqmROy2ZWG4ybJoFJAXoE0qZSXh/4aEt59X2RR1XbI2UlnC
- ZkCJS5TSIPQkfBWXeAHuIcJFLTQZ1ry5vnb7KymeiJRzLQ16alHiGbcFBSkMPqMDIUUo+LVecmY
- IoNO9UM+y+yTswTd1E0xdmWmw2FUb08DZ7o1koAWfHQ6Eq1cg5GuTmn4vbcCVsya6l9ewOe8lrH
- 1IN9PntTL+Chs+7KUZg==
-X-Proofpoint-GUID: -RF8T6aj47tVbtB14GcOj2WchZu5D3mo
+        "open list:ARM/QUALCOMM MAILING LIST" <linux-arm-msm@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>
+References: <20260304135313.413688-1-can.guo@oss.qualcomm.com>
+ <20260304135313.413688-8-can.guo@oss.qualcomm.com>
+ <5jri65eq7jc4p3bd2tcgvlgctqf4c2v4sthotkqvavp4rjyzha@hkhw7maeftq3>
+Content-Language: en-US
+In-Reply-To: <5jri65eq7jc4p3bd2tcgvlgctqf4c2v4sthotkqvavp4rjyzha@hkhw7maeftq3>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzA2MDEwNiBTYWx0ZWRfXxoERFolssYUS
+ AF+sxdbpOdzgE8KIvxMw9RkgEQYf6DeB+p5zWjVxQYt2zka9z6pe503/RuHQ6HfleWhYUpV9cZ5
+ Mr2+KkLYIF8yIkhKRWNkBZAPQxkGNWSkRXcWmc1NfvaQcnEa/u0vH+7BNUY8EAmU/sAS3QtNcCU
+ e9FcH5FWE84e8w6qlPAJ1YrOCvDvYyhVqs4BgOfQGAhecjB48c0JH3izrlI5EkxKUu71BGbmRKM
+ bHhU6ocHD1iO4K0xkzoqXffVUZ9vBD5o5oihwGrquSYoy87A9yZUuEM6jzM6+EvkvOWcNMNBy4D
+ aEnkZuln9sNQUmyiabBT30y9CrjyCPyqbtwuEHyAiq8/nccuAd6FHe9UFwGMGuXL5ZdraSPVfhv
+ JlXIClnyZOSfT+3htVBO57jXV9eEM3H95EpT8LDYczyjgEOfkQhjPm1d3uQ8Yh04DzxYSYjF7ut
+ I8/VK61W423EyQgjS+w==
+X-Proofpoint-ORIG-GUID: G2jawsUqbEHwuAW3XzxKXIynHGgP9zH9
+X-Proofpoint-GUID: G2jawsUqbEHwuAW3XzxKXIynHGgP9zH9
+X-Authority-Analysis: v=2.4 cv=eJoeTXp1 c=1 sm=1 tr=0 ts=69aab71b cx=c_pps
+ a=IZJwPbhc+fLeJZngyXXI0A==:117 a=nuhDOHQX5FNHPW3J6Bj6AA==:17
+ a=IkcTkHD0fZMA:10 a=Yq5XynenixoA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=rJkE3RaqiGZ5pbrm-msn:22
+ a=EUspDBNiAAAA:8 a=ufAJUjbdAAAA:8 a=hWv5-68019lLMkcv5WcA:9 a=QEXdDO2ut3YA:10
+ a=uG9DUKGECoFWVXl0Dc02:22 a=rB1ygNaI0PWiOa_UD5GD:22
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
  definitions=2026-03-06_03,2026-03-04_01,2025-10-01_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- clxscore=1015 suspectscore=0 bulkscore=0 phishscore=0 impostorscore=0
- adultscore=0 lowpriorityscore=0 priorityscore=1501 malwarescore=0 spamscore=0
+ clxscore=1015 spamscore=0 adultscore=0 lowpriorityscore=0 suspectscore=0
+ priorityscore=1501 malwarescore=0 impostorscore=0 bulkscore=0 phishscore=0
  classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2602130000 definitions=main-2603060085
+ reason=mlx scancount=1 engine=8.22.0-2602130000 definitions=main-2603060106
 
-On Fri, Mar 6, 2026 at 2:17=E2=80=AFPM Sumit Garg <sumit.garg@oss.qualcomm.=
-com> wrote:
+Hi Mani,
+
+On 3/4/2026 11:10 PM, Manivannan Sadhasivam wrote:
+> On Wed, Mar 04, 2026 at 05:53:09AM -0800, Can Guo wrote:
+>> If HS-G6 Power Mode change handshake is successful and outbound data Lanes
+>> are expected to transmit ADAPT, M-TX Lanes shall be configured as
+>>
+>> if (Adapt Type == REFRESH)
+>>    TX_HS_ADAPT_LENGTH_L0_L1_L2_L3 = PA_PeerRxHsG6AdaptRefreshL0L1L2L3.
+>> else if (Adapt Type == INITIAL)
+>>    TX_HS_ADAPT_LENGTH_L0_L1_L2_L3 = PA_PeerRxHsG6AdaptInitialL0L1L2L3.
+>>
+>> On some platforms, the ADAPT_L0_L1_L2_L3 duration on Host TX Lanes is only
+>> a half of theoretical ADAPT_L0_L1_L2_L3 duration TADAPT_L0_L1_L2_L3 (in
+>> PAM-4 UI) calculated from TX_HS_ADAPT_LENGTH_L0_L1_L2_L3.
+>>
+>> For such platforms, the workaround is to double the ADAPT_L0_L1_L2_L3
+>> duration by uplifting TX_HS_ADAPT_LENGTH_L0_L1_L2_L3. UniPro initializes
+>> TX_HS_ADAPT_LENGTH_L0_L1_L2_L3 during HS-G6 Power Mode change handshake,
+>> it would be too late for SW to update TX_HS_ADAPT_LENGTH_L0_L1_L2_L3 post
+>> HS-G6 Power Mode change. Update PA_PeerRxHsG6AdaptRefreshL0L1L2L3 and
+>> PA_PeerRxHsG6AdaptInitialL0L1L2L3 post Link Startup and before HS-G6
+>> Power Mode change, so that the UniPro would use the updated value during
+>> HS-G6 Power Mode change handshake.
+>>
+>> Signed-off-by: Can Guo <can.guo@oss.qualcomm.com>
+>> ---
+>>   drivers/ufs/host/ufs-qcom.c | 175 ++++++++++++++++++++++++++++++++++++
+>>   1 file changed, 175 insertions(+)
+>>
+>> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+>> index 5eb12a999eb1..3a9279066192 100644
+>> --- a/drivers/ufs/host/ufs-qcom.c
+>> +++ b/drivers/ufs/host/ufs-qcom.c
+>> @@ -1079,10 +1079,185 @@ static void ufs_qcom_override_pa_tx_hsg1_sync_len(struct ufs_hba *hba)
+>>   		dev_err(hba->dev, "Failed (%d) set PA_TX_HSG1_SYNC_LENGTH\n", err);
+>>   }
+>>   
+>> +/**
+>> + * ufs_qcom_double_t_adapt_l0l1l2l3 - Create a new adapt that doubles the
+>> + * adaptation duration TADAPT_L0_L1_L2_L3 derived from the old adapt.
+>> + *
+>> + * @old_adapt: Original ADAPT_L0_L1_L2_L3 capability
+>> + *
+>> + * ADAPT_length_L0_L1_L2_L3 formula from M-PHY spec:
+>> + * if (ADAPT_range_L0_L1_L2_L3 == COARSE) {
+>> + *   ADAPT_length_L0_L1_L2_L3 = [0, 12]
+>> + *   ADAPT_L0_L1_L2_L3 = 215 x 2^ADAPT_length_L0_L1_L2_L3
+>> + * } else if (ADAPT_range_L0_L1_L2_L3 == FINE) {
+>> + *   ADAPT_length_L0_L1_L2_L3 = [0, 127]
+>> + *   TADAPT_L0_L1_L2_L3 = 215 x (ADAPT_length_L0_L1_L2_L3 + 1)
+>> + * }
+>> + *
+>> + * To double the adaptation duration TADAPT_L0_L1_L2_L3:
+>> + * 1. If adapt range is COARSE (1'b1), new adapt = old adapt + 1.
+>> + * 2. If adapt range is FINE (1'b0):
+>> + *   a) If old adapt length is < 64, (new adapt + 1) = 2 * (old adapt + 1).
+>> + *   b) If old adapt length is >= 64, set new adapt to 0x88 using COARSE
+>> + *      range, because new adapt get from equation in a) shall exceed 127.
+>> + *
+>> + * Examples:
+>> + * ADAPT_range_L0_L1_L2_L3 | ADAPT_length_L0_L1_L2_L3 | TADAPT_L0_L1_L2_L3 (PAM-4 UI)
+>> + *		0			3			131072
+>> + *		0			7			262144
+>> + *		0			63			2097152
+>> + *		0			64			2129920
+>> + *		0			127			4194304
+>> + *		1			8			8388608
+>> + *		1			9			16777216
+>> + *		1			10			33554432
+>> + *		1			11			67108864
+>> + *		1			12			134217728
+>> + *
+>> + * Return: new adapt.
+>> + */
+>> +static inline u32 ufs_qcom_double_t_adapt_l0l1l2l3(u32 old_adapt)
+> No need of 'inline' keyword in a .c file. Same comment to other helpers.
+OK.
 >
-> Hey Mani,
+> Also, can you change the '_l0l1l2l3' suffix to something like '_level' or
+> '_length'?
 >
-> On Mon, Mar 2, 2026 at 6:30=E2=80=AFPM Manivannan Sadhasivam via B4 Relay
-> <devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org> wrote:
-> >
-> > From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-> >
-> > devm_of_qcom_ice_get() currently returns NULL if ICE SCM is not availab=
-le
-> > or "qcom,ice" property is not found in DT. But this confuses the client=
-s
-> > since NULL doesn't convey the reason for failure. So return proper erro=
-r
-> > codes instead of NULL.
-> >
-> > Reported-by: Sumit Garg <sumit.garg@oss.qualcomm.com>
-> > Reviewed-by: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
-> > Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcom=
-m.com>
-> > ---
-> >  drivers/soc/qcom/ice.c | 9 ++++-----
-> >  1 file changed, 4 insertions(+), 5 deletions(-)
-> >
-> > diff --git a/drivers/soc/qcom/ice.c b/drivers/soc/qcom/ice.c
-> > index 833d23dc7b06..d1efc676b63c 100644
-> > --- a/drivers/soc/qcom/ice.c
-> > +++ b/drivers/soc/qcom/ice.c
-> > @@ -561,7 +561,7 @@ static struct qcom_ice *qcom_ice_create(struct devi=
-ce *dev,
-> >
-> >         if (!qcom_scm_ice_available()) {
-> >                 dev_warn(dev, "ICE SCM interface not found\n");
-> > -               return NULL;
-> > +               return ERR_PTR(-EOPNOTSUPP);
-> >         }
+There are many Adapt length attributes in M-PHY spec, their definitions 
+are similar
+but used for different purposes. To make sure we are capture the correct 
+one,
+let's use the full name
+>> +{
+>> +	u32 adapt_length = old_adapt & 0x7F;
+> Please add a define for 0x75
+Sure.
 >
-> With this patch-set on top of v7.0-rc2, I still see UFS probe failing
-> when ICE isn't supported with OP-TEE as follows:
+>> +	u32 new_adapt;
+>> +
+>> +	/* Adapt range == COARSE */
+>> +	if (old_adapt & 0x80) {
+> This one also.
+Will do.
 >
-> [    5.401558] qcom-ice 1d88000.crypto: ICE SCM interface not found
-> [    5.419482] qcom-ice 1d88000.crypto: probe with driver qcom-ice
-> failed with error -95
-> <snip>
-> [   18.662977] ufshcd-qcom 1d84000.ufshc: freq-table-hz property not spec=
-ified
-> [   18.670193] ufshcd-qcom 1d84000.ufshc: ufshcd_populate_vreg: Unable
-> to find vdd-hba-supply regulator, assuming enabled
-> [   18.737665] platform 1d84000.ufshc: deferred probe pending:
-> ufshcd-qcom: ufshcd_pltfrm_init() failed
-> [   18.747141] platform 3370000.codec: deferred probe pending:
-> platform: wait for supplier /soc@0/pinctrl@33c0000/dmic23-data-state
+>> +		new_adapt = (adapt_length + 1) | 0x80;
+>> +	} else {
+>> +		if (adapt_length < 64)
+> And this one.
+Will do.
 >
-> Maybe it's the "qcom-ice" driver failure leading to this deferred
-> probe problem again.
+>> +			new_adapt = (adapt_length << 1) + 1;
+>> +		else
+>> +			new_adapt = 0x88;
+>> +	}
+>> +
+>> +	return new_adapt;
+>> +}
+>> +
+>> +static inline void ufs_qcom_limit_max_gear(struct ufs_hba *hba,
+>> +					   enum ufs_hs_gear_tag gear)
+>> +{
+>> +	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+>> +	struct ufs_pa_layer_attr *pwr_info = &hba->max_pwr_info.info;
+>> +	struct ufs_host_params *host_params = &host->host_params;
+>> +
+>> +	host_params->hs_tx_gear = gear;
+>> +	host_params->hs_rx_gear = gear;
+>> +	pwr_info->gear_tx = gear;
+>> +	pwr_info->gear_rx = gear;
+>> +
+>> +	dev_warn(hba->dev, "Limited max gear of both sides to HS-G%d\n", gear);
+> s/both sides/host and device
+OK.
+>
+>> +}
+>> +
+>> +static void ufs_qcom_fixup_tx_adapt_l0l1l2l3(struct ufs_hba *hba)
+>> +{
+>> +	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+>> +	struct ufs_pa_layer_attr *pwr_info = &hba->max_pwr_info.info;
+>> +	struct ufs_host_params *host_params = &host->host_params;
+>> +	u32 adapt_l0l1l2l3, new_adapt, actual_adapt;
+> Can you shorten adapt_l0l1l2l3?
+As I explained above, I want to capture the precise Adapt attribute.
+>
+>> +	bool limit_speed = false;
+>> +	int err;
+>> +
+>> +	if (host->hw_ver.major != 0x7 || host->hw_ver.minor > 0x1 ||
+>> +	    host_params->hs_tx_gear <= UFS_HS_G5 ||
+>> +	    pwr_info->gear_tx <= UFS_HS_G5)
+>> +		return;
+>> +
+>> +	err = ufshcd_dme_get(hba, UIC_ARG_MIB(PA_PEERRXHSG6ADAPTINITIALL0L1L2L3), &adapt_l0l1l2l3);
+>> +	if (err)
+>> +		goto out;
+>> +
+>> +	if (adapt_l0l1l2l3 > ADAPT_L0L1L2L3_LENGTH_MAX) {
+>> +		dev_err(hba->dev, "PA_PeerRxHsG6AdaptInitialL0L1L2L3 value (0x%x) exceeds MAX.\n",
+> Nit: remove full stop at the end
+OK.
+>
+>> +			adapt_l0l1l2l3);
+>> +		err = -EINVAL;
+> -ERANGE
+Sure.
+>
+>> +		goto out;
+>> +	}
+>> +
+>> +	new_adapt = ufs_qcom_double_t_adapt_l0l1l2l3(adapt_l0l1l2l3);
+>> +	dev_dbg(hba->dev, "Original PA_PeerRxHsG6AdaptInitialL0L1L2L3 value = 0x%x, new value = 0x%x\n",
+>> +		adapt_l0l1l2l3, new_adapt);
+>> +
+>> +	/*
+>> +	 * 0x8C is the max possible value allowed by UniPro v3.0 spec, some HWs
+>> +	 * can accept 0x8D but some cannot.
+>> +	 */
+>> +	if (new_adapt <= ADAPT_L0L1L2L3_LENGTH_MAX ||
+>> +	    (new_adapt == ADAPT_L0L1L2L3_LENGTH_MAX + 1 && host->hw_ver.minor == 0x1)) {
+>> +		err = ufshcd_dme_set(hba, UIC_ARG_MIB(PA_PEERRXHSG6ADAPTINITIALL0L1L2L3),
+>> +				     new_adapt);
+>> +		if (err)
+>> +			goto out;
+>> +
+>> +		err = ufshcd_dme_get(hba, UIC_ARG_MIB(PA_PEERRXHSG6ADAPTINITIALL0L1L2L3),
+>> +				     &actual_adapt);
+>> +		if (err)
+>> +			goto out;
+>> +
+>> +		if (actual_adapt != new_adapt) {
+>> +			limit_speed = true;
+>> +			dev_warn(hba->dev, "Failed to update host PA_PeerRxHsG6AdaptInitialL0L1L2L3 to new value 0x%x, actual value = 0x%x\n",
+> This goes beyond 100 column width. Please consider shortening up. Applies to
+> other prints as well.
+Will shorten them in next version.
+>
+>> +				 new_adapt, actual_adapt);
+>> +		}
+>> +	} else {
+>> +		limit_speed = true;
+>> +		dev_warn(hba->dev, "New PA_PeerRxHsG6AdaptInitialL0L1L2L3 value (0x%x) is too large!\n",
+>> +			 new_adapt);
+>> +	}
+>> +
+>> +	err = ufshcd_dme_get(hba, UIC_ARG_MIB(PA_PEERRXHSG6ADAPTREFRESHL0L1L2L3), &adapt_l0l1l2l3);
+>> +	if (err)
+>> +		goto out;
+>> +
+>> +	if (adapt_l0l1l2l3 > ADAPT_L0L1L2L3_LENGTH_MAX) {
+>> +		dev_err(hba->dev, "PA_PeerRxHsG6AdaptRefreshL0L1L2L3 value (0x%x) exceeds MAX.\n",
+>> +			adapt_l0l1l2l3);
+>> +		err = -EINVAL;
+> -ERANGE
+>
+>> +		goto out;
+>> +	}
+>> +
+>> +	new_adapt = ufs_qcom_double_t_adapt_l0l1l2l3(adapt_l0l1l2l3);
+>> +	dev_dbg(hba->dev, "Original PA_PeerRxHsG6AdaptRefreshL0L1L2L3 value = 0x%x, new value = 0x%x\n",
+>> +		adapt_l0l1l2l3, new_adapt);
+>> +
+>> +	/*
+>> +	 * 0x8C is the max possible value allowed by UniPro v3.0 spec, some HWs
+>> +	 * can accept 0x8D but some cannot.
+>> +	 */
+>> +	if (new_adapt <= ADAPT_L0L1L2L3_LENGTH_MAX ||
+>> +	    (new_adapt == ADAPT_L0L1L2L3_LENGTH_MAX + 1 && host->hw_ver.minor == 0x1)) {
+>> +		err = ufshcd_dme_set(hba, UIC_ARG_MIB(PA_PEERRXHSG6ADAPTREFRESHL0L1L2L3),
+>> +				     new_adapt);
+>> +		if (err)
+>> +			goto out;
+>> +
+>> +		err = ufshcd_dme_get(hba, UIC_ARG_MIB(PA_PEERRXHSG6ADAPTREFRESHL0L1L2L3),
+>> +				     &actual_adapt);
+>> +		if (err)
+>> +			goto out;
+>> +
+>> +		if (actual_adapt != new_adapt) {
+>> +			limit_speed = true;
+>> +			dev_warn(hba->dev, "Failed to update host PA_PeerRxHsG6AdaptRefreshL0L1L2L3 to new value 0x%x, actual value = 0x%x\n",
+>> +				 new_adapt, actual_adapt);
+>> +		}
+>> +	} else {
+>> +		limit_speed = true;
+>> +		dev_warn(hba->dev, "New PA_PeerRxHsG6AdaptRefreshL0L1L2L3 value (0x%x) is too large!\n",
+>> +			 new_adapt);
+> I'm assuming it is safe to continue despite the warnings.
+Yes, warning here is to give the reason as well as heads up that it is 
+going to limit the max gear.
+
+Thanks,
+Can Guo.
+>
+> - Mani
 >
 
-Following diff on top of your patchset allows the UFS driver to probe
-successfully without ICE support. I suppose just setting the drvdata
-should be sufficient.
-
-diff --git a/drivers/soc/qcom/ice.c b/drivers/soc/qcom/ice.c
-index d1efc676b63c..a86980647097 100644
---- a/drivers/soc/qcom/ice.c
-+++ b/drivers/soc/qcom/ice.c
-@@ -734,12 +734,6 @@ static int qcom_ice_probe(struct platform_device *pdev=
-)
-        }
-
-        engine =3D qcom_ice_create(&pdev->dev, base);
--       if (IS_ERR(engine)) {
--               /* Store the error pointer for devm_of_qcom_ice_get() */
--               platform_set_drvdata(pdev, engine);
--               return PTR_ERR(engine);
--       }
--
-        platform_set_drvdata(pdev, engine);
-
--Sumit
-
->
-> >
-> >         engine =3D devm_kzalloc(dev, sizeof(*engine), GFP_KERNEL);
-> > @@ -643,7 +643,7 @@ static struct qcom_ice *of_qcom_ice_get(struct devi=
-ce *dev)
-> >         struct device_node *node __free(device_node) =3D of_parse_phand=
-le(dev->of_node,
-> >                                                                        =
- "qcom,ice", 0);
-> >         if (!node)
-> > -               return NULL;
-> > +               return ERR_PTR(-ENODEV);
-> >
-> >         pdev =3D of_find_device_by_node(node);
-> >         if (!pdev) {
-> > @@ -696,8 +696,7 @@ static void devm_of_qcom_ice_put(struct device *dev=
-, void *res)
-> >   * phandle via 'qcom,ice' property to an ICE DT, the ICE instance will=
- already
-> >   * be created and so this function will return that instead.
-> >   *
-> > - * Return: ICE pointer on success, NULL if there is no ICE data provid=
-ed by the
-> > - * consumer or ERR_PTR() on error.
-> > + * Return: ICE pointer on success, ERR_PTR() on error.
-> >   */
-> >  struct qcom_ice *devm_of_qcom_ice_get(struct device *dev)
-> >  {
-> > @@ -708,7 +707,7 @@ struct qcom_ice *devm_of_qcom_ice_get(struct device=
- *dev)
-> >                 return ERR_PTR(-ENOMEM);
-> >
-> >         ice =3D of_qcom_ice_get(dev);
-> > -       if (!IS_ERR_OR_NULL(ice)) {
-> > +       if (!IS_ERR(ice)) {
-> >                 *dr =3D ice;
-> >                 devres_add(dev, dr);
-> >         } else {
-> >
-> > --
-> > 2.51.0
-> >
-> >
