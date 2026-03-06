@@ -1,48 +1,37 @@
-Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
+Received: from mail.cybernetics.com (mail.cybernetics.com [72.215.153.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 75E9E3EB7FE
-	for <linux-scsi@vger.kernel.org>; Fri,  6 Mar 2026 16:34:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.14
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D08673EDABE
+	for <linux-scsi@vger.kernel.org>; Fri,  6 Mar 2026 16:44:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=72.215.153.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772814891; cv=none; b=dKoJImjfuxhFRHiBs/glkmfLgc2IfFCRVDCe6oURphcHAjBD1ZLfasPokHqcQL7PApNFyZGUsIINF0SzTOj8xwKifpudZB5O5RqBaYDiWkhLDMXCCyxBDiqnLQ7bdMpUT8YtcwApsHM4svHwuEf31wOHSJQcgxOZWWd4GRt8pWs=
+	t=1772815463; cv=none; b=SZ/m7xrt05F0aaOmZSKCQBchdYi+fvLMMTQtvqtTOqltDznnEMgLHOw4W18AdWR1Ja2eaJ50fDSjqGuW7wg9NZrVBooo+bSDjXDp90mLcxWLZpLHnX/973eY674IitsTu3WrrBdl26SjZSiCYtPVlP8Ze6LAQ0gKFhfEv/rSLmo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772814891; c=relaxed/simple;
-	bh=BTnHghhzC/4435ME5gJ6kCp/nCWvq1j07LPB7IjNf0k=;
+	s=arc-20240116; t=1772815463; c=relaxed/simple;
+	bh=cOQutnMuWPDAVk3zo7eIzYx5aU00kd5NNsyvvZTBtjQ=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=F0d7h7ssHEW3ygtb8z2CZ2VZyA0JfJr/jCXiny4dstjz5TVpxhwOhS3fXk1gKXf89DZm9b4QA1I0pdUbsZYYIRYbjU1B1UJjfzOH1XaGnBk6IeKANzzAsxWzGWwQRau2QQJJFQlq/lVIGWHnrrSDMaAhMJj23OKF6sAeTN7zOMc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=eVHUZDn7; arc=none smtp.client-ip=199.89.1.14
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	 In-Reply-To:Content-Type; b=o5nM/hZriLudzOcMX5PUCq5GClmWLmNNUWgZeksRlqJmpur8U8HvFDnn2z+QuJYWQHhDrsI5eJoxuwmW7lllTAB7k21f5tT9Mh4PAJSV8XrndVr+UAxjx74C+VUjgYUZkxgdssevBM6WynQugAnUctEkMkASvDT1OZRGkmOzMKU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=cybernetics.com; spf=pass smtp.mailfrom=cybernetics.com; dkim=pass (1024-bit key) header.d=cybernetics.com header.i=@cybernetics.com header.b=jS9FPzow; arc=none smtp.client-ip=72.215.153.18
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=cybernetics.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cybernetics.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="eVHUZDn7"
-Received: from localhost (localhost [127.0.0.1])
-	by 011.lax.mailroute.net (Postfix) with ESMTP id 4fSBnv1zDbz1XMFjb;
-	Fri,  6 Mar 2026 16:34:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1772814875; x=1775406876; bh=eUMcn21fRpVvqrGOqfVjdpLc
-	64MmlG9YmMC8WmKCo+Y=; b=eVHUZDn7dDf6ss9LzktVwxMu+tMRj0UG7vAENGxq
-	U3RSfYM7mcFpqdh9g1tO7EqK6CNTwzsj5H+Oa9CaBtUjV0xktg1v8QdYRzYg+OIZ
-	FpIeEfoKCX867X0T3EfpgL9EuGWXiDV1w+4Ye1VIRnHQ9gAnFLTz4aBSQ62vf8CC
-	vq9ki44dAtUWy+p01XlLZGN9NGhC0NDCxd8aqvCvM7jPuNCoTPB3u5EwAPw5MwPS
-	XC82JA+XzvhhnMEyFSbrcUpwszflJ7e1P6SmItkFTOXupB41SPU2dMXocQ9Il0kB
-	bLq1pLeRj+I9cnqhHvRWEupDlPqfSrKVVp91G2E+34DSYg==
-X-Virus-Scanned: by MailRoute
-Received: from 011.lax.mailroute.net ([127.0.0.1])
- by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id uFYceNCoOJXC; Fri,  6 Mar 2026 16:34:35 +0000 (UTC)
-Received: from [10.96.36.50] (unknown [12.131.83.251])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4fSBnd6ylmz1XM0p2;
-	Fri,  6 Mar 2026 16:34:29 +0000 (UTC)
-Message-ID: <048e761a-0fed-43f7-a194-f804b9b08918@acm.org>
-Date: Fri, 6 Mar 2026 10:34:28 -0600
+	dkim=pass (1024-bit key) header.d=cybernetics.com header.i=@cybernetics.com header.b="jS9FPzow"
+Received: from cybernetics.com ([10.10.4.126]) by mail.cybernetics.com with ESMTP id QaDvRB5Ucpny5hxR; Fri, 06 Mar 2026 11:32:57 -0500 (EST)
+X-Barracuda-Envelope-From: tonyb@cybernetics.com
+X-Barracuda-RBL-Trusted-Forwarder: 10.10.4.126
+X-ASG-Whitelist: Client
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cybernetics.com; s=mail;
+	bh=8wEmeU1zB6chAGv2cB+8/88qXb3hAbn3QwMt0KRm3GY=;
+	h=Content-Transfer-Encoding:Content-Type:In-Reply-To:From:References:Cc:To:
+	Content-Language:Subject:MIME-Version:Date:Message-ID; b=jS9FPzowI2w9nRwmpVq3
+	HNcQFr+HjOWoEy/4ijHxZCfXkUEjJZ19FSjFkK/3Uy6TNBCIEl1tWiN6BEY34UMVVUCpHlsNLQO3R
+	NmXRSN/qnESzTPlCFy6yhmuwTn1NoOEuZEvScKyardUanESTTkBLlPH02irJmNSUv12njHjJdw=
+Received: from [10.157.2.224] (HELO [192.168.200.1])
+  by cybernetics.com (CommuniGate SPEC SMTP 8.0.5)
+  with ESMTPS id 14447498; Fri, 06 Mar 2026 11:32:57 -0500
+Message-ID: <ac99d3b6-0537-49c2-826b-118694056b93@cybernetics.com>
+X-Barracuda-RBL-Trusted-Forwarder: 10.157.2.224
+Date: Fri, 6 Mar 2026 11:32:57 -0500
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,41 +39,93 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2] ufs: core: Avoid IRQ thread wakeup during active UIC
- command
-To: peter.wang@mediatek.com, linux-scsi@vger.kernel.org,
- martin.petersen@oracle.com, avri.altman@sandisk.com,
- alim.akhtar@samsung.com, jejb@linux.ibm.com
-Cc: wsd_upstream@mediatek.com, linux-mediatek@lists.infradead.org,
- chun-hung.wu@mediatek.com, alice.chao@mediatek.com, cc.chou@mediatek.com,
- chaotian.jing@mediatek.com, tun-yu.yu@mediatek.com,
- eddie.huang@mediatek.com, naomi.chu@mediatek.com, ed.tsai@mediatek.com
-References: <20260306054419.3816557-1-peter.wang@mediatek.com>
+Subject: Re: [PATCH] scsi: qla2xxx: Remove problematic BUILD_BUG_ON()
+ assertion
 Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20260306054419.3816557-1-peter.wang@mediatek.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+X-ASG-Orig-Subj: Re: [PATCH] scsi: qla2xxx: Remove problematic BUILD_BUG_ON()
+ assertion
+To: Finn Thain <fthain@linux-m68k.org>, Nilesh Javali <njavali@marvell.com>,
+ GR-QLogic-Storage-Upstream@marvell.com,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Arnd Bergmann <arnd@arndb.de>,
+ linux-m68k@lists.linux-m68k.org, linux-scsi@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+References: <550e7d7bb8c2620ca4f6c9e809a4f853bdfa4c67.1772751689.git.fthain@linux-m68k.org>
+From: Tony Battersby <tonyb@cybernetics.com>
+In-Reply-To: <550e7d7bb8c2620ca4f6c9e809a4f853bdfa4c67.1772751689.git.fthain@linux-m68k.org>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
+X-Barracuda-Connect: UNKNOWN[10.10.4.126]
+X-Barracuda-Start-Time: 1772814777
+X-Barracuda-URL: https://10.10.4.122:443/cgi-mod/mark.cgi
+X-Barracuda-BRTS-Status: 0
+X-Virus-Scanned: by bsmtpd at cybernetics.com
+X-Barracuda-Scan-Msg-Size: 2423
+X-ASG-Debug-ID: 1772814777-1cf43940a6a58f0001-ziuLRu
 
-On 3/5/26 11:43 PM, peter.wang@mediatek.com wrote:
-> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> index 9908375b2f98..6554e1db3343 100644
-> --- a/drivers/ufs/core/ufshcd.c
-> +++ b/drivers/ufs/core/ufshcd.c
-> @@ -7200,8 +7200,12 @@ static irqreturn_t ufshcd_intr(int irq, void *__hba)
->   	struct ufs_hba *hba = __hba;
->   	u32 intr_status, enabled_intr_status;
->   
-> -	/* Move interrupt handling to thread when MCQ & ESI are not enabled */
-> -	if (!hba->mcq_enabled || !hba->mcq_esi_enabled)
-> +	/*
-> +	 * Handle interrupt in thread if MCQ or ESI is disabled,
-> +	 * and no active UIC command.
-> +	 */
-> +	if ((!hba->mcq_enabled || !hba->mcq_esi_enabled) &&
-> +	    !hba->active_uic_cmd)
->   		return IRQ_WAKE_THREAD;
->   
->   	intr_status = ufshcd_readl(hba, REG_INTERRUPT_STATUS);
+On 3/5/26 18:01, Finn Thain wrote:
+> The LKP bot reported a build failure with CONFIG_COLDFIRE=y together with
+> CONFIG_SCSI_QLA_FC=y, that's attributable to the BUILD_BUG_ON() in
+> qlt_queue_unknown_atio().
+>
+> That function uses kzalloc() to obtain memory for the following struct,
+> plus some extra bytes at the end.
+>
+> struct qla_tgt_sess_op {
+>         struct scsi_qla_host *vha;
+>         uint32_t chip_reset;
+>         struct work_struct work;
+>         struct list_head cmd_list;
+>         bool aborted;
+>         struct rsp_que *rsp;
+>
+>         struct atio_from_isp atio;
+>         /* DO NOT ADD ANYTHING ELSE HERE - atio must be last member */
+> };
+>
+> The location of the 'atio' member is subsequently used as the destination
+> for a memcpy() that's expected to fill in the extra bytes beyond the end
+> of the struct.
+>
+> That explains the loud warning in the comment above, which ought to be
+> sufficient to prevent some newly-added member from accidentally getting
+> clobbered. But, in case that warning was missed somehow, we also have the
+> failing assertion,
+>
+> BUILD_BUG_ON(offsetof(struct qla_tgt_sess_op, atio) + sizeof(u->atio) !=
+>              sizeof(*u));
+>
+> Unfortunately, this size assertion doesn't guarantee that 'atio' is the
+> last member. Indeed, adding a zero-length array member at the end does
+> not increase the struct size.
+>
+> Moreover, this assertion can fail even when 'atio' really is the last
+> member, and that's what happened with commit e428b013d9df ("atomic:
+> specify alignment for atomic_t and atomic64_t"), which added 2 bytes of
+> harmless padding to the end of the struct.
+...
+> I don't know of a good way to encode an invariant like "the last member of
+> struct qla_tgt_sess_op is named atio" such that it might be statically
+> checked. But perhaps there is a good way to do that (?)
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+It might work better to add a flex array:
+
+struct qla_tgt_sess_op {
+	...
+
+	struct atio_from_isp atio;
+	/*
+	atio.u.isp24.fcp_cmnd.add_cdb may extend past end of atio;
+	DO NOT DELETE; DO NOT ADD ANYTHING ELSE HERE.
+	*/
+	uint8_t atio_isp24_fcp_cmnd_add_cdb[];
+};
+
+/* atio_isp24_fcp_cmnd_add_cdb must come immediately after atio */
+BUILD_BUG_ON(offsetof(struct qla_tgt_sess_op, atio) +
+             sizeof(struct atio_from_isp) !=
+             offsetof(struct qla_tgt_sess_op, atio_isp24_fcp_cmnd_add_cdb));
+
+Tony Battersby
