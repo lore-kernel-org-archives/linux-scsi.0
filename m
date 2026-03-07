@@ -1,143 +1,126 @@
-Received: from fhigh-a3-smtp.messagingengine.com (fhigh-a3-smtp.messagingengine.com [103.168.172.154])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA87F2F361F;
-	Fri,  6 Mar 2026 22:52:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.154
+Received: from outboundhk.mxmail.xiaomi.com (outboundhk.mxmail.xiaomi.com [118.143.206.90])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 248A5284884
+	for <linux-scsi@vger.kernel.org>; Sat,  7 Mar 2026 03:51:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=118.143.206.90
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772837540; cv=none; b=HUodMXuYswUbRbhb2Qtvhb4nPbcZB023fQVOOQB8hJD3qzP+Vum/JawKbc8x2Utz8nJQK5A+/ix9FgEwjSxAru2ZsQAN7ceaQ1z4nRoa4/TDfTiqW1YHFN8wbzocoetnEVz0apKiVHDX3AXXxy6I0l6VBQX16QUTOoABBQsHMIM=
+	t=1772855496; cv=none; b=oXP+8Ad2IO+G+T7NJ4i8Wxmxsm/jGbTCQTdrk75Hr0IY1VgqD5EciGwxyqV252zEOjdRlhA/LX+fd7h8V/WcWGFRrk1byzer6av6Ht5RjjqF8RaUkHUoeam0he84fG06fyusObLa6Nt5xXk7OvQtabDj1BpDf3RhV93R53gCzyA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772837540; c=relaxed/simple;
-	bh=ueSxhuFfXVTZmPnCypuDKPfsx1ObPB34vjdrZQoDXxk=;
-	h=Date:From:To:cc:Subject:In-Reply-To:Message-ID:References:
-	 MIME-Version:Content-Type; b=EXPIbhy5WMdPJDUx7cuy5V1H7HJcN9SV8o1LTlqIZOxzAEIPh+6F6UoT0jgVvWXb+XmIsRfnTsH+tlcXGGKDzl0KGcx7qEfLkRMW0uvdS/6qDTfq8/qt+m/sS/sYxcxUz/89zujegEBGqB4s5kvM+NqfpnEiOQnGG/CrqoWy65s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org; spf=none smtp.mailfrom=linux-m68k.org; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=s3iJX0ga; arc=none smtp.client-ip=103.168.172.154
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux-m68k.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="s3iJX0ga"
-Received: from phl-compute-05.internal (phl-compute-05.internal [10.202.2.45])
-	by mailfhigh.phl.internal (Postfix) with ESMTP id DC1141400224;
-	Fri,  6 Mar 2026 17:52:17 -0500 (EST)
-Received: from phl-frontend-04 ([10.202.2.163])
-  by phl-compute-05.internal (MEProxy); Fri, 06 Mar 2026 17:52:17 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-type:content-type:date:date
-	:feedback-id:feedback-id:from:from:in-reply-to:in-reply-to
-	:message-id:mime-version:references:reply-to:subject:subject:to
-	:to:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=fm1; t=
-	1772837537; x=1772923937; bh=J4ttQBQyxcdE0l/xLJs1ENyVImrG4/R+VQV
-	++FoX8vo=; b=s3iJX0gavR5LVGKHXLmuHj2Se8Saiw/6Yb186QPPeb2Cq1jnkGj
-	kyy6q6nNKd1c6kr7oei9AQHRSykN4WDGvoqixauPt3UfcF94c0l9QHD+FaswUS1i
-	XBapyiLRHE8hORWz+E8BaN/UWk/6OXQlcbPt3MwrBkzxgTvM0LcVInxfpSmMBYst
-	B2Vs7rr1sYzFUeTtBwopnDY6zaBZxn5KDObCXk54zkcONKEB4rzJVp1VBS4Avmcn
-	iPeXAW+YZKMQgeuQogbGdX0V3x9FvV/H+n+EE1muQfHcUbfBJ/82ikOQgZr25A6i
-	0iZv6A65miGWVTtBCtb0PbG7o8iQdzQI1Ng==
-X-ME-Sender: <xms:oVqraSuSlG0YT_bjtA2sNtXWW-R9aWWDOYkM_3F9m5dyhAB1mLzhhA>
-    <xme:oVqraTWxHSTp6gz34wYzvpPTWqi-FuzMQbzmdDTUIyBD1ixqDaMrp3lTRH969CVZ0
-    VyRRONGkhAMeZohzeu3STnBluuSV5HhGLYghgbhdViNOg6J1gT1J5o>
-X-ME-Received: <xmr:oVqraawsgTA_hj93kK50uYkEuDZMCyecHvBO1sXDTnB2r6D7b6IDE0rSeqvM9rJ3ezG07J2L54jecYCOZ6wYUrTSyKmTrbqBTEI>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefgedrtddtgddvjedtheehucetufdoteggodetrf
-    dotffvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfurfetoffkrfgpnffqhgenuceu
-    rghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujf
-    gurhepfffhvfevufgjkfhfgggtsehttdertddttddvnecuhfhrohhmpefhihhnnhcuvfhh
-    rghinhcuoehfthhhrghinheslhhinhhugidqmheikehkrdhorhhgqeenucggtffrrghtth
-    gvrhhnpeelueehleehkefgueevtdevteejkefhffekfeffffdtgfejveekgeefvdeuheeu
-    leenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepmhgrihhlfhhrohhmpehfth
-    hhrghinheslhhinhhugidqmheikehkrdhorhhgpdhnsggprhgtphhtthhopeduuddpmhho
-    uggvpehsmhhtphhouhhtpdhrtghpthhtohepghgvvghrtheslhhinhhugidqmheikehkrd
-    horhhgpdhrtghpthhtohepnhhjrghvrghlihesmhgrrhhvvghllhdrtghomhdprhgtphht
-    thhopehgrhdqqhhlohhgihgtqdhsthhorhgrghgvqdhuphhsthhrvggrmhesmhgrrhhvvg
-    hllhdrtghomhdprhgtphhtthhopehjrghmvghsrdgsohhtthhomhhlvgihsehhrghnshgv
-    nhhprghrthhnvghrshhhihhprdgtohhmpdhrtghpthhtohepmhgrrhhtihhnrdhpvghtvg
-    hrshgvnhesohhrrggtlhgvrdgtohhmpdhrtghpthhtohepthhonhihsgestgihsggvrhhn
-    vghtihgtshdrtghomhdprhgtphhtthhopegrkhhpmheslhhinhhugidqfhhouhhnuggrth
-    hiohhnrdhorhhgpdhrtghpthhtoheprghrnhgusegrrhhnuggsrdguvgdprhgtphhtthho
-    pehlihhnuhigqdhmieekkheslhhishhtshdrlhhinhhugidqmheikehkrdhorhhg
-X-ME-Proxy: <xmx:oVqraSH448iEHqSLMaQUvp_F9TnYyp7UnYKbBnrHNnv-X-hMum5dJA>
-    <xmx:oVqraXuFu34XmM7oS1cQ77GWRF83E-_mWhM2Ry5d6abYOtqFfoJoWg>
-    <xmx:oVqraaCU1ln99CPhpFMNNvgD9-YxYIn9tQA0deLwpk6Syqb9h_g53Q>
-    <xmx:oVqraaCe7xOb4oOWAuDw0XD4r5RBpmhRIg5PG3w9l3OOm-CXrFQElw>
-    <xmx:oVqraR07JqqvTYolFQX84YEWz3EiwFdGoGNRQpQyI5ZnZ5G1sHM1Fg-J>
-Feedback-ID: i58a146ae:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Fri,
- 6 Mar 2026 17:52:14 -0500 (EST)
-Date: Sat, 7 Mar 2026 09:53:16 +1100 (AEDT)
-From: Finn Thain <fthain@linux-m68k.org>
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-cc: Nilesh Javali <njavali@marvell.com>, 
-    GR-QLogic-Storage-Upstream@marvell.com, 
-    "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
-    "Martin K. Petersen" <martin.petersen@oracle.com>, 
-    Tony Battersby <tonyb@cybernetics.com>, 
-    Andrew Morton <akpm@linux-foundation.org>, Arnd Bergmann <arnd@arndb.de>, 
-    linux-m68k@lists.linux-m68k.org, linux-scsi@vger.kernel.org, 
-    linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] scsi: qla2xxx: Remove problematic BUILD_BUG_ON()
- assertion
-In-Reply-To: <CAMuHMdV4=t5G8fz1ARO7oKA86RwZP6T6yNXm5D7JgVtdaq5Rqg@mail.gmail.com>
-Message-ID: <90212eb8-434a-1b04-02c1-03410b483e1c@linux-m68k.org>
-References: <550e7d7bb8c2620ca4f6c9e809a4f853bdfa4c67.1772751689.git.fthain@linux-m68k.org> <CAMuHMdV4=t5G8fz1ARO7oKA86RwZP6T6yNXm5D7JgVtdaq5Rqg@mail.gmail.com>
+	s=arc-20240116; t=1772855496; c=relaxed/simple;
+	bh=hQr8W7ZwOOvXUmiBU+Y4QFoxSPjl6o//VnpmwplbZnM=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=j2Rb+oN9Mp5V5xueNqjH9xIjBqXmDwUUuCH3AQl2WpZjFSSTqkf0qzKbh/Sh0kLxv9EDn2ScWzWrZ/SjqPJk6UFNsAH0NkV61rr0Ll+5XxkwkETAhekVdFx0MzytfHKi40zsRFi5/CzbQprj5HOiChSTWzhQPfc1d0sPMVJSabg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=xiaomi.com; spf=pass smtp.mailfrom=xiaomi.com; arc=none smtp.client-ip=118.143.206.90
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=xiaomi.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=xiaomi.com
+X-CSE-ConnectionGUID: c77eyd/IQKieDYhw410YYw==
+X-CSE-MsgGUID: lkB/AK9mRZK2MWv3caB30w==
+X-IronPort-AV: E=Sophos;i="6.23,106,1770566400"; 
+   d="scan'208";a="142799565"
+From: Wang Shuaiwei <wangshuaiwei1@xiaomi.com>
+To: Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>,
+	Bart Van Assche <bvanassche@acm.org>, "Martin K . Petersen"
+	<martin.petersen@oracle.com>, "James E . J . Bottomley"
+	<James.Bottomley@HansenPartnership.com>
+CC: Bean Huo <beanhuo@iokpp.de>, <linux-scsi@vger.kernel.org>,
+	<wanghui33@xiaomi.com>, Wang Shuaiwei <wangshuaiwei1@xiaomi.com>
+Subject: [PATCH v3] scsi: ufs: core: Fix SError in ufshcd_rtc_work() during UFS suspend
+Date: Sat, 7 Mar 2026 11:51:28 +0800
+Message-ID: <20260307035128.3419687-1-wangshuaiwei1@xiaomi.com>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20260306072647.2991132-1-wangshuaiwei1@xiaomi.com>
+References: <20260306072647.2991132-1-wangshuaiwei1@xiaomi.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: BJ-MBX02.mioffice.cn (10.237.8.122) To bj-mbx11.mioffice.cn
+ (10.237.8.131)
 
+In __ufshcd_wl_suspend(), cancel_delayed_work_sync() is called to cancel
+the UFS RTC work, but it is placed after ufshcd_vops_suspend(hba, pm_op,
+POST_CHANGE). This creates a race condition where ufshcd_rtc_work() can
+still be running while ufshcd_vops_suspend() is executing. When
+UFSHCD_CAP_CLK_GATING is not supported, the condition
+!hba->clk_gating.active_reqs is always true, causing ufshcd_update_rtc()
+to be executed. Since ufshcd_vops_suspend() typically performs clock
+gating operations, executing ufshcd_update_rtc() at that moment triggers
+an SError. The kernel panic trace is as follows:
 
-On Fri, 6 Mar 2026, Geert Uytterhoeven wrote:
+Kernel panic - not syncing: Asynchronous SError Interrupt
+Call trace:
+ dump_backtrace+0xec/0x128
+ show_stack+0x18/0x28
+ dump_stack_lvl+0x40/0xa0
+ dump_stack+0x18/0x24
+ panic+0x148/0x374
+ nmi_panic+0x3c/0x8c
+ arm64_serror_panic+0x64/0x8c
+ do_serror+0xc4/0xc8
+ el1h_64_error_handler+0x34/0x4c
+ el1h_64_error+0x68/0x6c
+ el1_interrupt+0x20/0x58
+ el1h_64_irq_handler+0x18/0x24
+ el1h_64_irq+0x68/0x6c
+ ktime_get+0xc4/0x12c
+ ufshcd_mcq_sq_stop+0x4c/0xec
+ ufshcd_mcq_sq_cleanup+0x64/0x1dc
+ ufshcd_clear_cmd+0x38/0x134
+ ufshcd_issue_dev_cmd+0x298/0x4d0
+ ufshcd_exec_dev_cmd+0x1a4/0x1c4
+ ufshcd_query_attr+0xbc/0x19c
+ ufshcd_rtc_work+0x10c/0x1c8
+ process_scheduled_works+0x1c4/0x45c
+ worker_thread+0x32c/0x3e8
+ kthread+0x120/0x1d8
+ ret_from_fork+0x10/0x20
 
-> > I don't know of a good way to encode an invariant like "the last 
-> > member of struct qla_tgt_sess_op is named atio" such that it might be 
-> > statically checked. But perhaps there is a good way to do that (?)
-> 
-> Keeping the BUILD_BUG_ON(), but adding "__aligned(8);" to the ratio 
-> member, as suggested by Arnd, would do that?
-> 
+Fix this by moving cancel_delayed_work_sync() before the call to
+ufshcd_vops_suspend(hba, pm_op, PRE_CHANGE), ensuring the UFS RTC work is
+fully completed or cancelled at that point.
 
-No, that would merely limit the possibilities for tail padding in the 
-future. Again, the tail padding is harmless. The assertion is bogus, not 
-the struct layout.
+Cc: Bean Huo <beanhuo@iokpp.de>
+Fixes: 6bf999e0eb41 ("scsi: ufs: core: Add UFS RTC support")
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Signed-off-by: Wang Shuaiwei <wangshuaiwei1@xiaomi.com>
+---
 
-Like I said to Arnd in that thread, the kind of twisted logic that would 
-add an alignment rule here requires a comment to explain it (there is an 
-example of this elsewhere in the same driver).
+v2->v3:
+- Add missing Fixes: tag
 
-So now we're writing comments to explain code that exists solely to 
-support a spurious assertion, which itself exists solely to allow an 
-inadequate checker to prevent accidents that were already prevented by the 
-warning in the comments. Why? Fear of regression.
+v2: https://lore.kernel.org/linux-scsi/20260306072647.2991132-1-wangshuaiwei1@xiaomi.com/
 
-It's true what they say -- "fear is the mind killer".
+v1->v2:
+- Modify commit message and add problem scenario description
 
-> > There's no Fixes tag here because there's no need to backport.
-> > The BUILD_BUG_ON() comes from commit 091719c21d5a ("scsi: qla2xxx: target:
-> > Fix invalid memory access with big CDBs") which appeared in v6.19-rc1.
-> > The build failure first appeared in v7.0-rc1 with commit e428b013d9df
-> > ("atomic: specify alignment for atomic_t and atomic64_t").
-> 
-> I would add both in Fixes, just in case anyone ever wants to backport
-> e428b013d9df (which looks like a valid bugfix to me).
-> 
+v1: https://lore.kernel.org/linux-scsi/20260226064601.56597-1-wangshuaiwei1@xiaomi.com/
+---
+ drivers/ufs/core/ufshcd.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Good point. I will add both.
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 899e663fea6e..9ceb6d6d479d 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -10066,6 +10066,7 @@ static int __ufshcd_wl_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+ 	}
+ 
+ 	flush_work(&hba->eeh_work);
++	cancel_delayed_work_sync(&hba->ufs_rtc_update_work);
+ 
+ 	ret = ufshcd_vops_suspend(hba, pm_op, PRE_CHANGE);
+ 	if (ret)
+@@ -10120,7 +10121,6 @@ static int __ufshcd_wl_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+ 	if (ret)
+ 		goto set_link_active;
+ 
+-	cancel_delayed_work_sync(&hba->ufs_rtc_update_work);
+ 	goto out;
+ 
+ set_link_active:
+-- 
+2.43.0
 
-> > --- a/drivers/scsi/qla2xxx/qla_target.c
-> > +++ b/drivers/scsi/qla2xxx/qla_target.c
-> > @@ -213,7 +213,6 @@ static void qlt_queue_unknown_atio(scsi_qla_host_t *vha,
-> >         unsigned int add_cdb_len = 0;
-> >
-> >         /* atio must be the last member of qla_tgt_sess_op for add_cdb_len */
-> > -       BUILD_BUG_ON(offsetof(struct qla_tgt_sess_op, atio) + sizeof(u->atio) != sizeof(*u));
-> 
-> Iff you remove the BUILD_BUG_ON(), you should remove the comment, too.
-> 
-
-Again, the comment refers to an assertion about the name of the last 
-member. The BUILD_BUG_ON is an assertion about the size of the struct. 
-These are not the same thing. If they were, I could agree with you: 
-"remove both or neither".
-
-Thanks for your review.
