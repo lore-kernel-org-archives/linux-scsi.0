@@ -1,63 +1,136 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 302AE2BD587;
-	Sat,  7 Mar 2026 23:53:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 84A502BD11;
+	Sun,  8 Mar 2026 06:27:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772927592; cv=none; b=UHCv+BGL2oplhN/LfjlzWl89jQuK5p6UizzCF5eshcsBBMqrd42lVvtQKRwoq5WyOgUmd9cK54TP/Rh0piKEeSWtObtHg0Qq5Bqx0V31Y9+VW+yUH8j6bVJ7c3/0w2o5ar6ehJ+CH4m1KkRsEgyi2JcEznfQvrVv0zvCermDwmc=
+	t=1772951267; cv=none; b=tSHJqVh2pqgT70crtxfg+fbsV4eTQLMUlnSX5J1tmqpDw5j+kqoOeuhx4Hk07xM4r+EZRUV+AJHp9hc1FM48Ltc/b15LjLIrkKA3CDQUwVwRgz2/fUktz0V5gmIlexr25BDhL5tWfrvyNmuQAqhVc8RLcGTaCShO1JK0GQHII5Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772927592; c=relaxed/simple;
-	bh=lAqThZtSWEcOEo5xRgQasYKljKR7R+NVI6ZAYUbxXlM=;
-	h=Subject:From:In-Reply-To:References:Message-Id:Date:To:Cc; b=hwTSNMvhQ1wqAqvlpFqnb59N+PieSizkgzQ9042kG5pjeJIZuxs0WxrqgWii+YKIvXHtWTfFVnOq/xohPac4M9h89W1ZswZtsJ5RMF4CdDlAIqTlFUXk2+3tQYd5Q75Asbr0BTalOT72STOuUi081oKUXjGeYJSL1wr08mIHfIs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dqLEieqh; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1772951267; c=relaxed/simple;
+	bh=x+5oBETJCIhKD/G4vbt1bz5h6D/Psa7OJAz2mIkVAhU=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=o8hMWuTfQu+osJOhzWmPXbw5B+m6j2thtq0Y/Azcz4YOAVPjoJPbdJs4+0awusrZAlGu/GK9ojssSgBI/oHeR/3WEI8AdjI3fge6wPLNK5qJiYSfOMdjZe2wXZJoRK3MzfE1gfw+0sabEC1R0NU0j2PIrhOVWirg4kDZmxvBaD0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jNWnnSfW; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dqLEieqh"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 12561C19422;
-	Sat,  7 Mar 2026 23:53:12 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jNWnnSfW"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 16C3EC116C6;
+	Sun,  8 Mar 2026 06:27:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772927592;
-	bh=lAqThZtSWEcOEo5xRgQasYKljKR7R+NVI6ZAYUbxXlM=;
-	h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
-	b=dqLEieqhhoglKZsCza2EruFe6MhdpeJwU5850DNMltBBcKFl+KhUBJ4aMA3S+IbH9
-	 zA/c1JkE+FrbZSP8mlws5ArIyshuc5oXe8YzOV+9ihniQSiWIjBS5ONZGRmYRvoLZ9
-	 uhrx1QZDTwT2FUVjBpKNQhG4/f95Q6nJDSB+K4ShWMW41q/vgVvrO2l1hSAeQOJgJA
-	 l7TbIvBYIaj3r97VPbO8REMXtURtIPCG1UKLE3WbAApM2c8kgm/rE7Bg+x3Qf+vAbt
-	 eAcNW0dceBJ+qK+5IDQwdOTmq0D0/LkwxhPIRHp1OoBs0UmdXVihS4UEgW+ccbYMxK
-	 SB8BTJt3O+d8w==
-Received: from [10.30.226.235] (localhost [IPv6:::1])
-	by aws-us-west-2-korg-oddjob-rhel9-1.codeaurora.org (Postfix) with ESMTP id BA29E3808200;
-	Sat,  7 Mar 2026 23:53:11 +0000 (UTC)
-Subject: Re: [GIT PULL] SCSI fixes for 7.0-rc2
-From: pr-tracker-bot@kernel.org
-In-Reply-To: <a07e33c269b4947f65174892bc3bc27daaba7fda.camel@HansenPartnership.com>
-References: <a07e33c269b4947f65174892bc3bc27daaba7fda.camel@HansenPartnership.com>
-X-PR-Tracked-List-Id: <linux-kernel.vger.kernel.org>
-X-PR-Tracked-Message-Id: <a07e33c269b4947f65174892bc3bc27daaba7fda.camel@HansenPartnership.com>
-X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
-X-PR-Tracked-Commit-Id: 14d4ac19d1895397532eec407433c5d74d9da53b
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: 3b5d535c635cbf88dbb63231cbae265b22e6a5f5
-Message-Id: <177292759047.346695.5877616149585008521.pr-tracker-bot@kernel.org>
-Date: Sat, 07 Mar 2026 23:53:10 +0000
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+	s=k20201202; t=1772951267;
+	bh=x+5oBETJCIhKD/G4vbt1bz5h6D/Psa7OJAz2mIkVAhU=;
+	h=From:Subject:Date:To:Cc:Reply-To:From;
+	b=jNWnnSfWo3Ae3mdAQOlvDUWSAMfGWQImf7Yihrrwp+bxRlRyuL3mp4Zx6l4P6Zrgm
+	 KT8eeGACxOZ5e7rEIS0Rk7IO7+FI9CZTfoGjpdKiJW0mkcyf1IlHZPSfl5y7KLGZyB
+	 xgejnq3s4N4zr76lzhjC7u4GPM3CUOoCpLZOmQ0/0b3pJpBfHNhwe7XnUTjG/FVH1E
+	 EEDM/cVgGloSKPEkC+MkoDDmrqZjlBkufuYQaXqyPdzLswP1b+QqemBcfJ0VbvpQAu
+	 Js9qPkIkXoKADSobND+eRcyUHeVsgJ+EzcqjvogCP0ZETghRX+bLiwPnf+633G6Xly
+	 7hoSS51YS8mZQ==
+Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 01EAAF55109;
+	Sun,  8 Mar 2026 06:27:46 +0000 (UTC)
+From: Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org>
+Subject: [PATCH v5 0/5] soc: qcom: ice: Fix race between qcom_ice_probe()
+ and of_qcom_ice_get()
+Date: Sun, 08 Mar 2026 11:57:26 +0530
+Message-Id: <20260308-qcom-ice-fix-v5-0-e47e8a44b6c4@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-B4-Tracking: v=1; b=H4sIAM4WrWkC/3XOTQ6CMBAF4KuQri0Zpj+IK+9hXJS2SBMBoUo0h
+ Ls7sNEQ3UzyXma+zMSiH4KP7JBMbPBjiKFrKahdwmxt2ovnwVFmCKgBM+C97RoerOdVeHKHRhi
+ QqhToGJ3cBk/1yp3OlOsQ793wWvURl/YPNCIHXtjMlMppBWiPXYxp/zBX2mpSGmzxRvFloNgYg
+ gxtjdpLLbCo8j+G/BgCcGNIMsBrlUswytlff8zz/AbjMpVqNwEAAA==
+X-Change-ID: 20260210-qcom-ice-fix-d2a3a045b32d
+To: Bjorn Andersson <andersson@kernel.org>, 
+ Konrad Dybcio <konradybcio@kernel.org>, 
+ Adrian Hunter <adrian.hunter@intel.com>, 
+ Ulf Hansson <ulf.hansson@linaro.org>, 
+ Manivannan Sadhasivam <mani@kernel.org>, 
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
+ "Martin K. Petersen" <martin.petersen@oracle.com>, 
+ Abel Vesa <abelvesa@kernel.org>, Abel Vesa <abelvesa@kernel.org>
+Cc: linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ linux-mmc@vger.kernel.org, linux-scsi@vger.kernel.org, 
+ Sumit Garg <sumit.garg@oss.qualcomm.com>, mani@kernel.org, 
+ Neeraj Soni <neeraj.soni@oss.qualcomm.com>, 
+ Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>, 
+ stable@vger.kernel.org, Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
+X-Mailer: b4 0.14.3
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2153;
+ i=manivannan.sadhasivam@oss.qualcomm.com; h=from:subject:message-id;
+ bh=x+5oBETJCIhKD/G4vbt1bz5h6D/Psa7OJAz2mIkVAhU=;
+ b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBprRbgIjxlREu2N3Oxerz1F9yhh7jyZHQc5N16l
+ tvwB7MMBvKJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCaa0W4AAKCRBVnxHm/pHO
+ 9dyyB/93wf6GMc4BczXT9iqaup4Keirysld8TVVwloGUzTO1C15URXSemhc9cLglxFps2Z/YupN
+ iJSNH7ajHi9B7My4XwLRwt6HiNig0twur2b9iuM5/g8/s4OKxBWL+x2DP/5QEcnruoDjMOYwzcE
+ 09Q4x9L3RsA1suy4VOWwcwzsxOO85zb2mNl0H4sOxY2wMPQxdLxA29OWiYV9n7DLaP3nITgxrtc
+ buOoTRj55bEODjI1zBTqN4N2yMb0Dw923JfhELEC91VpIYz+HWApIoDbVjr8is6WxSYw46BcLIC
+ tANvJN28Cdz9LTWdp8s256y5sO+Z7uX3f1HXUvEjLXlKWmQX
+X-Developer-Key: i=manivannan.sadhasivam@oss.qualcomm.com; a=openpgp;
+ fpr=C668AEC3C3188E4C611465E7488550E901166008
+X-Endpoint-Received: by B4 Relay for
+ manivannan.sadhasivam@oss.qualcomm.com/default with auth_id=461
+X-Original-From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+Reply-To: manivannan.sadhasivam@oss.qualcomm.com
 
-The pull request you sent on Sat, 07 Mar 2026 13:32:13 -0800:
+Hi,
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+This series fixes the race betwen qcom_ice_probe() and of_qcom_ice_get()
+but synchronizing the two APIs and properly propagating the error codes to
+clients.
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/3b5d535c635cbf88dbb63231cbae265b22e6a5f5
+Merge Strategy
+==============
 
-Thank you!
+Due to dependency, all patches should go through Qcom SoC tree.
 
+Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+---
+Changes in v5:
+- Used Xarray instead of platform drvdata for passing the pointer since driver
+  core frees drvdata on probe failure.
+- Link to v4: https://lore.kernel.org/r/20260302-qcom-ice-fix-v4-0-0e65740a5dcc@oss.qualcomm.com
+
+Changes in v4:
+- For supporting multi-ice instances in a SoC, stored the err ptr in platform
+  drvdata instead of in a global pointer.
+- Link to v3: https://lore.kernel.org/r/20260223-qcom-ice-fix-v3-0-6ca5846329f7@oss.qualcomm.com
+
+Changes in v3:
+- Dropped the platform driver removal patch and used the ice_handle to pass
+  error codes. This was done as I learned that we need to have the platform
+  driver design going forward and also removing it introduces other issues.
+- Link to v2: https://lore.kernel.org/r/20260210-qcom-ice-fix-v2-0-9c1ab5d6502c@oss.qualcomm.com
+
+Changes in v2:
+
+- Added MODULE_* macros back
+- Removed spurious platform_device_put()
+- Added patches to remove NULL return
+
+---
+Manivannan Sadhasivam (5):
+      soc: qcom: ice: Fix race between qcom_ice_probe() and of_qcom_ice_get()
+      soc: qcom: ice: Return -ENODEV if the ICE platform device is not found
+      soc: qcom: ice: Return proper error codes from devm_of_qcom_ice_get() instead of NULL
+      mmc: sdhci-msm: Remove NULL check from devm_of_qcom_ice_get()
+      scsi: ufs: ufs-qcom: Remove NULL check from devm_of_qcom_ice_get()
+
+ drivers/mmc/host/sdhci-msm.c | 10 ++++-----
+ drivers/soc/qcom/ice.c       | 49 ++++++++++++++++++++++++++++++++------------
+ drivers/ufs/host/ufs-qcom.c  | 10 ++++-----
+ 3 files changed, 46 insertions(+), 23 deletions(-)
+---
+base-commit: 6de23f81a5e08be8fbf5e8d7e9febc72a5b5f27f
+change-id: 20260210-qcom-ice-fix-d2a3a045b32d
+
+Best regards,
 -- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+
+
