@@ -1,46 +1,46 @@
-Received: from AS8PR04CU009.outbound.protection.outlook.com (mail-westeuropeazon11011064.outbound.protection.outlook.com [52.101.70.64])
+Received: from AM0PR02CU008.outbound.protection.outlook.com (mail-westeuropeazon11013017.outbound.protection.outlook.com [52.101.72.17])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4514A4014BF;
-	Mon,  9 Mar 2026 19:09:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.70.64
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C5403362122;
+	Mon,  9 Mar 2026 19:09:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.72.17
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773083388; cv=fail; b=NpKRVBXoMlcbysZPzhuhGVAXx8P4USC5jg6VdR84UNifTw6QSxiNcD2/sVkr/gy5qsyJZqptIwsjoaRQNuR+b8yqUUaZbsgX6bZ7EnOyPZNyduL+793ZU1RYrYBz/nHgK/hVH/Si6+hxxQvW/xSDCRdc3x4QMAEJ9/HVKz2x2mI=
+	t=1773083390; cv=fail; b=egFU01el9PyKjNCkQ2aq+3YV410KLVP40bMJn1tS1T1n/hImJ/0riTBuyTNp07BSjkm+QqUxsM8A2RRYmibAQc4ZIv0p7wPpmfHo405DdLZzMxxUyYdLgs8vW+d85mk4jdXJVAaGTUy3UklSb3aBsKS+fg8QmTUUVIhUqaj2O94=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773083388; c=relaxed/simple;
-	bh=elus96FR/znWc/gnDj0GVPwlwb9pWAbWcUaEyHIs/3s=;
+	s=arc-20240116; t=1773083390; c=relaxed/simple;
+	bh=06UMtLBGVZZoG5uoji6uLDB0OaBhY+nGiw/2hXVGSfE=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=fpmyhkrZ3UWks8s4a4xkKCK2HUmsur/Y0ONVGSg855fk9bvtjNEoyKZZ0hAtp3vi6f6xuiaPFxPv6OUT42ND+N+2NGiqXIMPL/XZlNy7Il3SSxann/Aj/f8YniSg6ZWKTTrzPxpKoEoPOH9qq7qLYLKyztRLjhXKo6RenIKgTTY=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=nrQGSFy2; arc=fail smtp.client-ip=52.101.70.64
+	 Content-Type:MIME-Version; b=eXiI0rn3PQdn+v1qFpSa20OJNNoGF0W2zD60g8s7XNsnAkJXZiWVoB96lUcVJq8i6IPbiGrAdbfHc4T5eos88ItjYu0s5DL5IfpQHCTw6iS+quzeVYhM3lm6ljCQBBFazWPOBc5XsXElsTkeFLrzI7UtM3X9mgD+pEAhVHFuieE=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=GjsaVudC; arc=fail smtp.client-ip=52.101.72.17
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="nrQGSFy2"
+	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="GjsaVudC"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=Gt9AQ3oPwJIzY/stO31GaQrT2jGlsDjSUfI2+luaNubtrFX6f79MhiV7mouI/anvvobqA2OqiQakt7+o6kHY0pCQA6iQig6649bF/II8qGZ7iy7gl+3egBv8TAXa6M0nMK3v6SnibJ6RKSYxJeZrVgtrybtVBa0djL+I1iSzvQ5cuQLl0B2I/WYnp+wu0az4HzTxLbUPxYJ5Dcz5oLtuJ8zfPss1aBcaomS9rhY7rYLR+KZKyKpKClL1nu3S8aJIKIoV1rgnsiQriPeJ/SPfG0DAcr0bcfX4vDn1O5p9WvjL8/oREPbMwl5GsMARouZgHo1bRPuTSosSvDcGTMtDNA==
+ b=npjtNqvJDFNsroScS+I+BrnjIafjJYBCGXtgX8PJTJBDzVtOpOOdf3aXrTI0LjWRXksZFi8wmhLeHO/VW6KGsN3cD+F4HCp9Ri2250sd2yLn1Ss+21kbGnCk8KzigsktbG6SfrN9KBfTvV12Mpy9Cs8fj6iCMfkBz30EE5u08aP1mIjDZqDUaDht1Y4CT0zWcPg2ilgSyKOCTpsiG8m0jm2qilkNsb1HgG2XYLCWkHzlyadBpYs1ZVjmpeaCeRlLJ9VTitT1zUcFyPf6FASCddm0mINxrH79pO3T+IlctikZwNKa5PPWPZTdoTbETFyB1LUM4dhNsxTIy2XuLfzG1A==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=Ur5P6XXC+lI2cmjawhXkkW4us30A+owlrT5uJMnAB/E=;
- b=JiM1JRhB3ubnUHceyuyurPJ6Xcp2aPeobrWg1aUc5SIjx3T18lqDVPRW9tJfniH4bm60SNbCKKvHLw7Xu/JL5lnkPYnx89dTfFpJNWKYDocbHALBEo+R6hiCGpA/g/bxyBI7xpfFElQ4bjs4+H23iB/1uXNKMU91y+a9c2t14ycvwBmx9qmZhTTHsnDcqkNOGgo06P8FW0zdQanxzx6hlKXqiokZzwjFGkYqJs3HYmPhOao6SWJfO3iBM0/mpuo/zm6yCD3HIdpMeCS/evDFU8Tu9ehIBnjolMZ/PTW7x9jngaXHH+d8zgKWsL8V/bAnmdc2qaDVSudRIbFfN7NJZw==
+ bh=mTTzT09xpxXuEdKLKhVqsLeMHTVqtBfx/ich4kwbJq4=;
+ b=U1V6QzVIHaHFQxWaU3o3FOy/hpH+4f3hbz2YCdlYHlB3uULZ64PmJVvA/dWnQfwiz9G4eKT2C8c7vM0Hxzo40yL+F7PBn7lWGmyfVrLKowotudtWxp4t2ZEh4oG0xvTWATN8b1gllOKwANmXrX7KJYR/YTskkNgy9327YAKOGyu6+NSCT5akw/CkZbGlhVLC3fytO7VbLeRkhHtA4dpG0KG4A5gAhksFDi9UlTYfq1I1esV/d48+zkVK7nyD63Lf2dtlf8I6FxfkNwOZEknw4lfFnHd0kvNFISFRw74LlgynMGxk7q4Wx100IicbhsUq6crTUU7As+EYbea+N/lNeg==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
  header.d=nxp.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Ur5P6XXC+lI2cmjawhXkkW4us30A+owlrT5uJMnAB/E=;
- b=nrQGSFy2zRf5XNTFAFcKBf0bUj0zAhwo+5N2g9H7NB1UoNOtjViJ9repE14R/T/baNrmC9js8i9DcQVzU3NDyaNjFYN2r65ehcyuNDwe373+0z+d/msINjPeZpyMbdT6Trf4qZ/WjgZHPS/CSuXrJadkDOhbqz5H7I3YGz8YAU6yZFD3SP1k2gos/fCmyeR0h2w07X9wLC2dSDbWfG73MsJGJ+4fdG/P3XUzd2yya0VunhIfbgp/Q4paxP46P6zmfCrvCen5k0wzte7PvSGVqr1wCvvYXfkN9AYlGp3sW49OSgfn/ounNbsp27Ad69eeUAjAIHbx1gypgDrE4JHtiA==
+ bh=mTTzT09xpxXuEdKLKhVqsLeMHTVqtBfx/ich4kwbJq4=;
+ b=GjsaVudC0Zc3HZ02awdT9gRmBNnecQ6ITP+127TWlddb5mt64vNlzSVAcMdJrRFjuEdxHLTR14B1B2L+A/LeijSkxkvncCueqKXCZHXNMPL6w8UBCVHpDCicqKbyY2OTxG5PA4/GtsncQKNO7r6X6GuBoSUDnzEujGz5Ahc5Z6HK0y7cnxuE/nd94RSeaUwgx9pjVbfz57n8jY71XrBLBxrL8z2NNvquv07Q5l09v/MX21P5bpz1hjhEFDPfKdvSH1UW88ApbHiLWsSGFDtuYCv8RWth0r2Rg3fHYDp5l5q3Oswi5ol+CFgavHk3alrDQLczdqaDJfvTEz69O0fZyw==
 Authentication-Results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=nxp.com;
 Received: from AM9PR04MB8585.eurprd04.prod.outlook.com (2603:10a6:20b:438::13)
  by AM9PR04MB7540.eurprd04.prod.outlook.com (2603:10a6:20b:283::14) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9678.25; Mon, 9 Mar
- 2026 19:09:31 +0000
+ 2026 19:09:27 +0000
 Received: from AM9PR04MB8585.eurprd04.prod.outlook.com
  ([fe80::f010:fca8:7ef:62f4]) by AM9PR04MB8585.eurprd04.prod.outlook.com
  ([fe80::f010:fca8:7ef:62f4%4]) with mapi id 15.20.9678.023; Mon, 9 Mar 2026
- 19:09:31 +0000
+ 19:09:27 +0000
 From: Vladimir Oltean <vladimir.oltean@nxp.com>
 To: linux-phy@lists.infradead.org
 Cc: Vinod Koul <vkoul@kernel.org>,
@@ -66,25 +66,22 @@ Cc: Vinod Koul <vkoul@kernel.org>,
 	netdev@vger.kernel.org,
 	spacemit@lists.linux.dev,
 	UNGLinuxDriver@microchip.com,
-	Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>,
-	Rob Clark <robin.clark@oss.qualcomm.com>,
-	Dmitry Baryshkov <lumag@kernel.org>,
-	Abhinav Kumar <abhinav.kumar@linux.dev>,
-	Jessica Zhang <jesszhan0024@gmail.com>,
-	Sean Paul <sean@poorly.run>,
-	Marijn Suijten <marijn.suijten@somainline.org>,
-	David Airlie <airlied@gmail.com>,
-	Simona Vetter <simona@ffwll.ch>
-Subject: [PATCH v3 phy-next 11/24] drm/msm/dp: remove debugging prints with internal struct phy state
-Date: Mon,  9 Mar 2026 21:08:29 +0200
-Message-ID: <20260309190842.927634-12-vladimir.oltean@nxp.com>
+	Alim Akhtar <alim.akhtar@samsung.com>,
+	Peter Griffin <peter.griffin@linaro.org>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Krzysztof Kozlowski <krzk@kernel.org>,
+	Chanho Park <chanho61.park@samsung.com>
+Subject: [PATCH v3 phy-next 09/24] ufs: exynos: stop poking into struct phy guts
+Date: Mon,  9 Mar 2026 21:08:27 +0200
+Message-ID: <20260309190842.927634-10-vladimir.oltean@nxp.com>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20260309190842.927634-1-vladimir.oltean@nxp.com>
 References: <20260309190842.927634-1-vladimir.oltean@nxp.com>
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-ClientProxiedBy: VI1P189CA0011.EURP189.PROD.OUTLOOK.COM
- (2603:10a6:802:2a::24) To AM9PR04MB8585.eurprd04.prod.outlook.com
+X-ClientProxiedBy: VI1P189CA0032.EURP189.PROD.OUTLOOK.COM
+ (2603:10a6:802:2a::45) To AM9PR04MB8585.eurprd04.prod.outlook.com
  (2603:10a6:20b:438::13)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -94,146 +91,183 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
 X-MS-TrafficTypeDiagnostic: AM9PR04MB8585:EE_|AM9PR04MB7540:EE_
-X-MS-Office365-Filtering-Correlation-Id: 8c3372f8-c14f-4131-41a5-08de7e0f647d
+X-MS-Office365-Filtering-Correlation-Id: 815c75e5-8bc8-4847-785e-08de7e0f620d
+X-LD-Processed: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635,ExtAddr
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|19092799006|1800799024|366016|10070799003|7416014|376014;
+ BCL:0;ARA:13230040|19092799006|1800799024|366016|10070799003|7416014|376014;
 X-Microsoft-Antispam-Message-Info:
-	zjLFwxdKpvUv2kCV+B4Ta874JN3TqoSW0YymbP7aZpPKyaBtpCndvwpOS+5l2j6T5aCnIkEgowGeEc9QY/2aDP0ltshY4o/3BafoGpRp8qhSATKQPnhpZBI+F/g6q9LreLAPzNoR0PhCT4Dmp0dtVdgw9Byqij6WNzZ3zFHwH2HR4+kZN5Mp1Le90e9PQGhUtSGoQLO67QSmB1ZD3cuMpUc4VpniN+22Ux/+dHpQZCMWz9lHgSUMl38ulqWExa3g/fUOw4kxsDn7qAy0XQjMq+pHU85F91eCEKtl63xiuySfhyjl038eNlOL7POrSxGp8yr0c3n32KyGjq6SobV3I1pH9zn/PAsLOuMrWAJ3G09tigZJF6foNKaRwhboxjjtaqJ/pHFNvyqxOQtRdSt/k7MNQ+osRJeZONOkNzPia8QLYhS6ynfk6KNgLbSC6VzFY24tW5rYPSnwQWOqXMLFT2f4ZSG5igBOYsRe9K9ZrxN0xZIayl24HlrPL8NrVhmNCZfPSWYmD3uyiB4HU1qyuBgQ0yaoX4fN1IlMDR+bd4REAPHwxyNzJc3I84vJ4a3GCKTCJZsmTUVfbgBjbyjnmGRDLDOR/g1Xc108JisW/n+lC6DVlUS+IBo2g71gB8T70AuwjAIdAHyVHaZ7pMlC3xJ9pCGXS+tY0ftu5DiOYDjZmM0xqwR+Bfcr71VXBT1TPyqHjeFQEXKtOPQb/aINnZPsuzRPuWuOEvXpFXcnj1A=
+ ySJk2f3zeNaTpXuIXEL8nL1iYHIPtjk+5Q+Dz45yX1RpgkZFlCgMm9HCBDxZ2PtpnNG9eSWuBTf31bC7Mq3NX/PTo1VlgLQpO4QP1Vr5cxyuxNnMWX40uakSpkSTFoxOJ9GlmzyUOSlDx7G/9mIms6Sfssehv0CsZkT/05k+NRU9qUd0wgTspGuPT1FcIaFud2/X5Vr85rUM3oolwPUvWEPaOVHF5o7tKHmgFpWEqFpQS3fbeZNJihglwhYgXFQwVqoHvsEjRjM9JVH1pfUqp+0X8nRwNlrZU0SC3lDRRiZDmQ1LqbOe2Cbi6hIkhqg7N2hP553cEikYIBInWRR2BOh8m0T3P8C0bjm9Tn4ZXwe64cnZyfiIcwbOci6ygf/IrponP+JUxZ7bsbYrgHqiyN8I8Zw9fBDl9YoyNq5g5oSE1Otp+GWJJ6KjmHBhJ0J+afFGPzq4v1DT0qex5JZcjD5/CmEnwuCAfAANV+aewwQ8mUVorVi+8QR+1stLaaEt1tqtRpZfPBrz12JwS5FSykB53H38iCk5dDDUuQ14nYc3U8LQvh7f2VQSvr04UYWHfxyMFBREJr+VgRQu6HRzx4d0mpphY8XbcqNxPEbNC8Vjp+UUhadVl/NmWrAtu+ZRP/mdvx3PWI0Pwb1tbDmmeXC99QvDydw3DxOLCGy4Ltk7Qh+r6SowgJBkI7UBRTpmcu+kPxlCtz6AfwXKpL2B4JEA/HBa4zlzNh45FaJqfdg=
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9PR04MB8585.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(19092799006)(1800799024)(366016)(10070799003)(7416014)(376014);DIR:OUT;SFP:1101;
+ CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9PR04MB8585.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(19092799006)(1800799024)(366016)(10070799003)(7416014)(376014);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 2
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?fkpA5UTPbZKIEBQIZQ7Ra4pv3sXRj+XFYMHOyC/jgXF7YTfn4ZuWVyvPph2D?=
- =?us-ascii?Q?GqxQ422/pv83bVN0mUINE/3AkgS/MiShr11ROx7s/iafhadqycZVWsmwBZVh?=
- =?us-ascii?Q?rNC+BeUOMkAWdqGp00KtyJDZDjZgAi7At0Dcklj0QpLwhT+rkyDvqCdf9gyj?=
- =?us-ascii?Q?YnIaua8Csch+EKOwPmIO4ruOqooixAiZ2e/AIdXopL0tiw0i7JbQXqflgrp+?=
- =?us-ascii?Q?3Gl9RbbZbch8fyvPpbI7VfEPHT1IHtmErZEOReawHdmVT3rMlcK3ZgaOs9Vv?=
- =?us-ascii?Q?VGqCcrnWK7HA9gFdhTUyOPRIDKJJRPUX/FVgjVpINrFkb9eB/4z7AS+z9aFU?=
- =?us-ascii?Q?LuMGt2NnPPbWpHBK0qUKjPCtdC7UWeuLRyT/4iZ5rAJyeeUCOJZcKa4ofZzx?=
- =?us-ascii?Q?9bG9VjNPIU2VfatZKRkzB0Xk/v+MSbCU7W6wmW9ui8595+YQli99R1eaRF+S?=
- =?us-ascii?Q?0SzsB0cy+sLTGBya9RowEPGpOtDF+Tnf6tbBgbKjkVWuMtoXar+ENciPoXac?=
- =?us-ascii?Q?fjw38/iNykO6Z6h+TN9WdWgVXyLRZZuRFfK2UStsccFdmupUUWSrq59euJ/j?=
- =?us-ascii?Q?hS6ItMLGKqkFIHpZPicz45svE3UY/CvsgZO6s8gKfv1u0olqCCgtHOHX2Q2V?=
- =?us-ascii?Q?50e0oBpZ/LjAUmjptB9cv45DQa5ab6vHboC2AQxGXUdFmGHNe+NvgpIhkO17?=
- =?us-ascii?Q?GIbQAUr/fzFXv62Xi5N7X1SvYeNrEKu4McQ0T4VSSIpiBNCrqkZ+VEkvMUC8?=
- =?us-ascii?Q?y5WeayJiKK4RsRkYbi6Tjnyj988Oze793Nr524bWFr1AgsjrTdD7Pn1hqNEa?=
- =?us-ascii?Q?7zfZcGPcMjVnCnMczX9Ps8j0vz4fuo1f39FFdxiaVFiQwpJlCX78hQSlMB7H?=
- =?us-ascii?Q?cIOpSVj6nqfh5ieEbsEHG+2STE8gzG5PA0AIPuNashnFSyZ+5rePCjP1JbW1?=
- =?us-ascii?Q?TNv73zBTZcuGFA6t5yUkb0OPWC2sRwPi3Q+P6MHqtNKbA1vUllgAvJSOloIr?=
- =?us-ascii?Q?LwtnU4bvkqul23abrRTWkn+trckKHwIaQcrtScIoi49oD3C2wv37p46wJZ/O?=
- =?us-ascii?Q?S5hm60IoYhw+gWr6iCsmh2kGOQ6neexElooAhjKrNVglXdksLvUSJZG/HpxT?=
- =?us-ascii?Q?JXL5pI/2MScvoPL/KN/jhztMv7yrkSuj6qr11sIgkXxB6H81Ohb9Ko0p0YFm?=
- =?us-ascii?Q?sP/OI/jpQ0FI8+74rE7mxY+pmEk1dDW57jhKe9Agwv77EQSnQBjf8/c9OtLe?=
- =?us-ascii?Q?AxgCTHkMLF7nnbn4QLlysAx2BLRe29T+WXlGFB8mMXIGrHhNJSwyQ9rot1n1?=
- =?us-ascii?Q?U7hBlT1XkVa7Mhrjb+KljDlLGGnYYgHp8vnVXZYbyNG+1uWob6qgxCN/fz1C?=
- =?us-ascii?Q?lK60RXQ6vSI8p7GMWhy9ScdTQoMOQlgKC8PeZ7je6zuahqalPgtk9W/TPRVe?=
- =?us-ascii?Q?g8f/64aCQZX0CsU9rOIVyfeFTbmbjL1fBBJJG02lohQgKt91J4HjOdbuNCJW?=
- =?us-ascii?Q?xM1P6KNM32wEkbFLlkV1lO7Oza1eouVZNHKlurh7bH3vFYSQo9WMA3c/NlbA?=
- =?us-ascii?Q?Exm2GLLZAEV+Rf2hyA+x2WuApcqpuABaqE/yQ6YQWYKYbQPtiYAOMYlzMJ+/?=
- =?us-ascii?Q?jfTsBXEz3LFTssro/ObJmupFSlcqhnR4Ea9kxFnris2kyZ5qKcaSabLEeOkt?=
- =?us-ascii?Q?P4rEwbHIRvkyVaR2LPUfxh4UIu+irF+Pd+WOFs9jBjO2hqqDUhwkltoHvx4c?=
- =?us-ascii?Q?vEpYVg7xCMm09WKScqt0YhC7TW3e/RzzWvbJ1nARFR5+Fqrsnk/rr3oZCvnG?=
-X-MS-Exchange-AntiSpam-MessageData-1: ozJ7YurQHJ2xVFDnzEievCuLCpxf+IZ/uy4=
+ =?us-ascii?Q?WfpQmH1bqcQle5cXiVmRoXWoMq69g1oFOFdUzqCLrfbQtGVb0UMx7tBIcVi/?=
+ =?us-ascii?Q?5BGmX2gLO2D0VCBdrAhZ3SG0yTXAxyVoeH4/sT5Ky1FtzzbOXRlICMkDUM+/?=
+ =?us-ascii?Q?w4dnhPQygV6sBlYE465g4fW5QdjIE3VmWUDgc7w98AX53uh4tX9KPg44fpw9?=
+ =?us-ascii?Q?4dBNLIlQwqBmUYpC1ydxHRapHCfrjM8RRDJzidCyUWb07rZvCkkdKDTtw8dw?=
+ =?us-ascii?Q?LGovm0NW1Q8FDohnaR+1XWAoHwyKIR7nBw/f2uK99XSBnwGmB5a/ZpONfjWO?=
+ =?us-ascii?Q?Jm7kb+i/25nBz4Kkij2nd+vYpyeAQNek3sXIVJyA19HtalcVpxKOSxJWRAJv?=
+ =?us-ascii?Q?QPXdJH+ADT7BAKtwKji5GGMvUyzYISqC23bY+rFZkZIgwB+YpHfWP/ZcHbfg?=
+ =?us-ascii?Q?34myXM0I+SkuwAJ9+bbjnKZGhfjrd89avp4UEvIKVFEW0sVNn+VqzKRtwfhe?=
+ =?us-ascii?Q?PclWJB/nvO6tKrklhnrnH8PhXk4yreR5kWUFjbClfVU/7uaG4FPMMl55eHL7?=
+ =?us-ascii?Q?GUDVZcAEC6FFxGxTpNdGayOnyUi+aNRyKnrc/0C05u8u3EJlPdiSOYeS/mmw?=
+ =?us-ascii?Q?QqTT/W+w0JDdjj5u6DlN0heyXQgdV6hF4K2wPIIlxkMsGej8rachmECsfKO/?=
+ =?us-ascii?Q?nZekhKzlBOBhnMTe7U2GSnYUpFcZBgUAZRcV8JqeFiObAZrcehT6IRfmOeEl?=
+ =?us-ascii?Q?mcNcqd7IkwrDKxwGLvsEkgfx1WVE4DyDEB7CtOuU9v75UuMcXWPkur4tH7pj?=
+ =?us-ascii?Q?l1uE5gIAx9l+KnfKdKbiYVynE+Ye3x2/RrhkH5ppRrLxxzazAiXoGLqFx5oT?=
+ =?us-ascii?Q?ZyWtH8Cv+6BuKnS02XrCYmUsWGia1y9X2TozGsrDnIErQA5ELbupYGcvZ7px?=
+ =?us-ascii?Q?xSJgM+Tzp1jR0xm+LrfLLz+vnsjLD3lpTj02kh8Rx7puQfWyHszOJdPjYTiC?=
+ =?us-ascii?Q?030yQEcZ6j+/lo8a8uADohWRTKjleWo/hiWm4m7dQr+mTfI4qxDdUl2LiIS9?=
+ =?us-ascii?Q?Xvy9b+ji73K9fF65GwmhVWYgl3MXSnr06AeQznUJ1u4CPCkDn1rtNW0j+cHq?=
+ =?us-ascii?Q?+G2XVFWujAmtsfBv2g15B2hQ9Kz2UK2gAUX1s73SHHl5o79FgVKCgtN+u+es?=
+ =?us-ascii?Q?hkZAAw6YJqf7ULglmnedjf3KeU8RLNVtlsqZq5vCJn/Y6pSzS5ZYqz76XG/H?=
+ =?us-ascii?Q?OUxIE+q/UpMZkdjWNMdqUoNx7Uy8ur1qKr++yXNhPRd0sYQcffDNTNTVJFQY?=
+ =?us-ascii?Q?Frh492CE+Dnsfe3ImjHNG6E+5bzmyrQyMP7XRezSRRqK8/lRPbbB/Ss4JHNB?=
+ =?us-ascii?Q?zS5t+dLFBfElPgirWch2VVy2kmO0l4OzP/klaknsDD95fF2sCHEbBZ3wznmP?=
+ =?us-ascii?Q?NFZOUmkKPGTogaPfG5bMpX8dHfpQHW8mnYm+3eW2+5iczjyYGcoQ801J0yek?=
+ =?us-ascii?Q?q+IVjVqgB+szELBg90Cv/hDPQ1uJ6dHJ+ZNcaO+uhJh1iQjjUfcSbmllKEOK?=
+ =?us-ascii?Q?Qv3it9f1nj4LqOwQn1451xTvN4St/L1fpjz1K5jZ/+JFQmMFu5Rvx3nuEkU3?=
+ =?us-ascii?Q?Utkx9nJL4uSfqeGlXOFKwKYzr/3JhBejzeeUOK2qf/cJoOYY5IKTKo4uzH3h?=
+ =?us-ascii?Q?HtuemVxzxMHpO4+nOzkinHgj0erRyNrWPj9+zb+JpvYvZFrAEZYac2Q+ZRC/?=
+ =?us-ascii?Q?GyILOegWw+UOLC0im+/Y1EFC2tfNr8n8/Cw6N/g2XMYbaQ3i6P2ZiCwCdsas?=
+ =?us-ascii?Q?c69MlZ/s1u7KGQWjvM/17HkWAl8sTSitqi8QfoVOqyoZTxhuINOTZFXNrEOF?=
+X-MS-Exchange-AntiSpam-MessageData-1: BXchlwbXih5cNE/9gne86+e0WmvXV/jtJDc=
 X-OriginatorOrg: nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 8c3372f8-c14f-4131-41a5-08de7e0f647d
+X-MS-Exchange-CrossTenant-Network-Message-Id: 815c75e5-8bc8-4847-785e-08de7e0f620d
 X-MS-Exchange-CrossTenant-AuthSource: AM9PR04MB8585.eurprd04.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 09 Mar 2026 19:09:31.1266
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 09 Mar 2026 19:09:26.9532
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: gFlP+K1vbwulkKtylNzvdFFNFdKYg8HksIZLI3po2uiGLmAe4MbZk0boHnaWk8uHnYx1A76Byp71A2o5rLxvvQ==
+X-MS-Exchange-CrossTenant-UserPrincipalName: zjK2aux57mmEH5BNwupzMjMNvF60OMHweMS9Tk9n8zpz13Oz8UnPz/trWt3yqqHIRSuZQj5fUJ498YXUYANJHg==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM9PR04MB7540
 
-These do not provide much value, and will become hard to maintain once
-the Generic PHY framework starts hiding the contents of struct phy from
-consumers.
+The Exynos host controller driver is clearly a PHY consumer (gets the
+ufs->phy using devm_phy_get()), but pokes into the guts of struct phy
+to get the generic_phy->power_count.
+
+The UFS core (specifically ufshcd_link_startup()) may call the variant
+operation exynos_ufs_pre_link() -> exynos_ufs_phy_init() multiple times
+if the link startup fails and needs to be retried.
+
+However ufs-exynos shouldn't be doing what it's doing, i.e. looking at
+the generic_phy->power_count, because in the general sense of the API, a
+single Generic PHY may have multiple consumers. If ufs-exynos looks at
+generic_phy->power_count, there's no guarantee that *ufs-exynos* is the
+one who previously bumped that power count. So it may be powering down
+the PHY on behalf of another consumer.
+
+The correct way in which this should be handled is ufs-exynos should
+*remember* whether it has initialized and powered up the PHY before, and
+power it down during link retries. Not rely on the power_count (which,
+btw, on the writer side is modified under &phy->mutex, but on the reader
+side is accessed unlocked). This is a discouraged pattern even if here
+it doesn't cause functional problems.
 
 Signed-off-by: Vladimir Oltean <vladimir.oltean@nxp.com>
-Acked-by: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
 ---
-Cc: Rob Clark <robin.clark@oss.qualcomm.com>
-Cc: Dmitry Baryshkov <lumag@kernel.org>
-Cc: Abhinav Kumar <abhinav.kumar@linux.dev>
-Cc: Jessica Zhang <jesszhan0024@gmail.com>
-Cc: Sean Paul <sean@poorly.run>
-Cc: Marijn Suijten <marijn.suijten@somainline.org>
-Cc: David Airlie <airlied@gmail.com>
-Cc: Simona Vetter <simona@ffwll.ch>
+Cc: Alim Akhtar <alim.akhtar@samsung.com>
+Cc: Peter Griffin <peter.griffin@linaro.org>
+Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Krzysztof Kozlowski <krzk@kernel.org>
+Cc: Chanho Park <chanho61.park@samsung.com>
 
-v1->v3: collect tag
+v2->v3:
+- add Cc Chanho Park, author of commit 3d73b200f989 ("scsi: ufs:
+  ufs-exynos: Change ufs phy control sequence")
+v1->v2:
+- add better ufs->phy_powered_on handling in exynos_ufs_exit(),
+  exynos_ufs_suspend() and exynos_ufs_resume() which ensures we won't
+  enter a phy->power_count underrun condition
 ---
- drivers/gpu/drm/msm/dp/dp_ctrl.c | 18 ------------------
- 1 file changed, 18 deletions(-)
+ drivers/ufs/host/ufs-exynos.c | 24 ++++++++++++++++++++----
+ drivers/ufs/host/ufs-exynos.h |  1 +
+ 2 files changed, 21 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/gpu/drm/msm/dp/dp_ctrl.c b/drivers/gpu/drm/msm/dp/dp_ctrl.c
-index ef298c7d3e5e..cba8a71a2561 100644
---- a/drivers/gpu/drm/msm/dp/dp_ctrl.c
-+++ b/drivers/gpu/drm/msm/dp/dp_ctrl.c
-@@ -1928,9 +1928,6 @@ void msm_dp_ctrl_phy_init(struct msm_dp_ctrl *msm_dp_ctrl)
+diff --git a/drivers/ufs/host/ufs-exynos.c b/drivers/ufs/host/ufs-exynos.c
+index 76fee3a79c77..274e53833571 100644
+--- a/drivers/ufs/host/ufs-exynos.c
++++ b/drivers/ufs/host/ufs-exynos.c
+@@ -963,9 +963,10 @@ static int exynos_ufs_phy_init(struct exynos_ufs *ufs)
  
- 	msm_dp_ctrl_phy_reset(ctrl);
- 	phy_init(phy);
--
--	drm_dbg_dp(ctrl->drm_dev, "phy=%p init=%d power_on=%d\n",
--			phy, phy->init_count, phy->power_count);
+ 	phy_set_bus_width(generic_phy, ufs->avail_ln_rx);
+ 
+-	if (generic_phy->power_count) {
++	if (ufs->phy_powered_on) {
+ 		phy_power_off(generic_phy);
+ 		phy_exit(generic_phy);
++		ufs->phy_powered_on = false;
+ 	}
+ 
+ 	ret = phy_init(generic_phy);
+@@ -979,6 +980,8 @@ static int exynos_ufs_phy_init(struct exynos_ufs *ufs)
+ 	if (ret)
+ 		goto out_exit_phy;
+ 
++	ufs->phy_powered_on = true;
++
+ 	return 0;
+ 
+ out_exit_phy:
+@@ -1527,6 +1530,9 @@ static void exynos_ufs_exit(struct ufs_hba *hba)
+ {
+ 	struct exynos_ufs *ufs = ufshcd_get_variant(hba);
+ 
++	if (!ufs->phy_powered_on)
++		return;
++
+ 	phy_power_off(ufs->phy);
+ 	phy_exit(ufs->phy);
  }
+@@ -1728,8 +1734,10 @@ static int exynos_ufs_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op,
+ 	if (ufs->drv_data->suspend)
+ 		ufs->drv_data->suspend(ufs);
  
- void msm_dp_ctrl_phy_exit(struct msm_dp_ctrl *msm_dp_ctrl)
-@@ -1943,8 +1940,6 @@ void msm_dp_ctrl_phy_exit(struct msm_dp_ctrl *msm_dp_ctrl)
+-	if (!ufshcd_is_link_active(hba))
++	if (!ufshcd_is_link_active(hba) && ufs->phy_powered_on) {
+ 		phy_power_off(ufs->phy);
++		ufs->phy_powered_on = false;
++	}
  
- 	msm_dp_ctrl_phy_reset(ctrl);
- 	phy_exit(phy);
--	drm_dbg_dp(ctrl->drm_dev, "phy=%p init=%d power_on=%d\n",
--			phy, phy->init_count, phy->power_count);
- }
- 
- static int msm_dp_ctrl_reinitialize_mainlink(struct msm_dp_ctrl_private *ctrl)
-@@ -1996,8 +1991,6 @@ static int msm_dp_ctrl_deinitialize_mainlink(struct msm_dp_ctrl_private *ctrl)
- 	phy_exit(phy);
- 	phy_init(phy);
- 
--	drm_dbg_dp(ctrl->drm_dev, "phy=%p init=%d power_on=%d\n",
--			phy, phy->init_count, phy->power_count);
  	return 0;
  }
+@@ -1737,9 +1745,17 @@ static int exynos_ufs_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op,
+ static int exynos_ufs_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+ {
+ 	struct exynos_ufs *ufs = ufshcd_get_variant(hba);
++	int err;
  
-@@ -2588,9 +2581,6 @@ void msm_dp_ctrl_off_link_stream(struct msm_dp_ctrl *msm_dp_ctrl)
- 	/* aux channel down, reinit phy */
- 	phy_exit(phy);
- 	phy_init(phy);
--
--	drm_dbg_dp(ctrl->drm_dev, "phy=%p init=%d power_on=%d\n",
--			phy, phy->init_count, phy->power_count);
- }
+-	if (!ufshcd_is_link_active(hba))
+-		phy_power_on(ufs->phy);
++	if (!ufshcd_is_link_active(hba) && !ufs->phy_powered_on) {
++		err = phy_power_on(ufs->phy);
++		if (err) {
++			dev_err(hba->dev, "Failed to power on PHY: %pe\n",
++				ERR_PTR(err));
++		} else {
++			ufs->phy_powered_on = true;
++		}
++	}
  
- void msm_dp_ctrl_off_link(struct msm_dp_ctrl *msm_dp_ctrl)
-@@ -2606,13 +2596,7 @@ void msm_dp_ctrl_off_link(struct msm_dp_ctrl *msm_dp_ctrl)
- 	dev_pm_opp_set_rate(ctrl->dev, 0);
- 	msm_dp_ctrl_link_clk_disable(&ctrl->msm_dp_ctrl);
- 
--	DRM_DEBUG_DP("Before, phy=%p init_count=%d power_on=%d\n",
--		phy, phy->init_count, phy->power_count);
--
- 	phy_power_off(phy);
--
--	DRM_DEBUG_DP("After, phy=%p init_count=%d power_on=%d\n",
--		phy, phy->init_count, phy->power_count);
- }
- 
- void msm_dp_ctrl_off(struct msm_dp_ctrl *msm_dp_ctrl)
-@@ -2638,8 +2622,6 @@ void msm_dp_ctrl_off(struct msm_dp_ctrl *msm_dp_ctrl)
- 	msm_dp_ctrl_link_clk_disable(&ctrl->msm_dp_ctrl);
- 
- 	phy_power_off(phy);
--	drm_dbg_dp(ctrl->drm_dev, "phy=%p init=%d power_on=%d\n",
--			phy, phy->init_count, phy->power_count);
- }
- 
- irqreturn_t msm_dp_ctrl_isr(struct msm_dp_ctrl *msm_dp_ctrl)
+ 	exynos_ufs_config_smu(ufs);
+ 	exynos_ufs_fmp_resume(hba);
+diff --git a/drivers/ufs/host/ufs-exynos.h b/drivers/ufs/host/ufs-exynos.h
+index abe7e472759e..683b9150e2ba 100644
+--- a/drivers/ufs/host/ufs-exynos.h
++++ b/drivers/ufs/host/ufs-exynos.h
+@@ -227,6 +227,7 @@ struct exynos_ufs {
+ 	int avail_ln_rx;
+ 	int avail_ln_tx;
+ 	int rx_sel_idx;
++	bool phy_powered_on;
+ 	struct ufs_pa_layer_attr dev_req_params;
+ 	struct ufs_phy_time_cfg t_cfg;
+ 	ktime_t entry_hibern8_t;
 -- 
 2.43.0
 
