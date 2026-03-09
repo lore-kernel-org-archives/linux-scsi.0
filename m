@@ -1,107 +1,220 @@
-Received: from sender4-pp-f112.zoho.com (sender4-pp-f112.zoho.com [136.143.188.112])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 92296378D74;
-	Mon,  9 Mar 2026 10:04:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=136.143.188.112
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773050700; cv=pass; b=nwCHNyG+6OYJeize/j37i/tP5ZWqHLLmq31P23jJ13tqd15EWxU8MatgF4sUf9TNu+5SmIBxx7tFq8jmN9FRgfe4mt39wKsDsRDlrptzxPmIChkWluQ7UlUBqpD6TdskF0xIor4vOTtNmTUClK+KdsFVvPuoLaZ3MYSlF/GQw4k=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773050700; c=relaxed/simple;
-	bh=G+Xnxpps21amy1K7SIrWThQt4U1Ss2y48Pw6FbA82Zs=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=TZvYKa+wceKGYGcF75Bu8e8yJfgG0tvt33p0vNsKB9jGMdUyhOEVDDATy2NrOFzdZDKS0/pQpyjo9O+CGtvv8esLZ2S26llVcoNsXMn+m9Uk60Ao/cb86+3jkE1UOyWbd1T/Q/LvJYIqFSuxjIgp6HsfiBcYvafVd5D622lOdCg=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (1024-bit key) header.d=collabora.com header.i=nicolas.frattaroli@collabora.com header.b=FfyXGNfa; arc=pass smtp.client-ip=136.143.188.112
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collabora.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 19ADB256C84;
+	Mon,  9 Mar 2026 10:24:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1773051865; cv=none; b=FjZALrB+tn2A8lnDjKor/8ZNb52frpoiCXDadez1G3/1c+nmSKOMUqymnv3IB+pSkop4FJXNXce/kzLFgQjnmPJXAiP10mWgXglkd4MtcS9lW2zuLNm2jkQ4b512MezJmKGahg67dNm8ix7+BmWyzMgv+paajjiDtnqm6Y05nNE=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1773051865; c=relaxed/simple;
+	bh=BvtwtwcwSfVKcyfpQtaLtqIA+tgqr1RTHQjVXI2Vme4=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=nf44ujCLCXoRRlbycuyQjTGGyjXxU+ku6q8dhmwfcZoGBlEHVPYr0GYKRlJYwxa4rj8MZg3zoZEUKiUDD2PwQOwC6xMtHi1Mi9b8f3hiV2yk8U2GAYnRuOdOsZQB2s6WoEyO5XmlQn5cvaLy6rlBxaE8xtxtt+ezFwfFdF2zDz4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VyxrtNLr; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=collabora.com header.i=nicolas.frattaroli@collabora.com header.b="FfyXGNfa"
-ARC-Seal: i=1; a=rsa-sha256; t=1773050663; cv=none; 
-	d=zohomail.com; s=zohoarc; 
-	b=WPKrdsecXgvpHVw3d3nA7UKT5PHJNT4CVQC1wG3jkoTNIrWS0kkfHp25A9EAsGTtUg3my3EIBZ9cAYhDH/7GZ87SYfPkLX9nWSV0hO7AsCEktYkMz08X1zMu77OuRIbRaX/3r1+PpRfXlG66IkdIhRZvRncGQ7Z9ascvWR05+D4=
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.com; s=zohoarc; 
-	t=1773050663; h=Content-Type:Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:Subject:To:To:Message-Id:Reply-To; 
-	bh=NlPBU6mm/vR3l3IynQJyTnSVRzr3DXJWAgerFRXKwLY=; 
-	b=ITht2xuBtAY+LyVbcl9bvvuPCXhHUIobCtTsZc5aFz2E4VdopHHB54s6J/T26V2aPee8kKx0Y8T/PCGRwsXTB5HQzkXEBUtiVmomJr13U5450kH9p11rX8gGW9jmq3SEV1GAmDKZIyxElT/VTgzgGJfOPj8GKyWMbhV1gitWc0M=
-ARC-Authentication-Results: i=1; mx.zohomail.com;
-	dkim=pass  header.i=collabora.com;
-	spf=pass  smtp.mailfrom=nicolas.frattaroli@collabora.com;
-	dmarc=pass header.from=<nicolas.frattaroli@collabora.com>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1773050663;
-	s=zohomail; d=collabora.com; i=nicolas.frattaroli@collabora.com;
-	h=From:From:To:To:Cc:Cc:Subject:Subject:Date:Date:Message-ID:In-Reply-To:References:MIME-Version:Content-Transfer-Encoding:Content-Type:Message-Id:Reply-To;
-	bh=NlPBU6mm/vR3l3IynQJyTnSVRzr3DXJWAgerFRXKwLY=;
-	b=FfyXGNfa7BdEYR+/X2BWXaCeOR1xLNi6bU3NnS6twJjCEsBQSvH3U0tRJJlNxVin
-	EthZxVdVb5u3865e3MDpOBj6BEMpriUN0Oqy+EMI529/FmafrTz8JcGKAzykVNai9Go
-	VPM5cR5IPh4kSsAqFib03nKGO6VeWMO4YndPgj5I=
-Received: by mx.zohomail.com with SMTPS id 1773050662683221.52211658341253;
-	Mon, 9 Mar 2026 03:04:22 -0700 (PDT)
-From: Nicolas Frattaroli <nicolas.frattaroli@collabora.com>
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Rob Herring <robh@kernel.org>, Alim Akhtar <alim.akhtar@samsung.com>,
- Avri Altman <avri.altman@wdc.com>, Bart Van Assche <bvanassche@acm.org>,
- Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>,
- Matthias Brugger <matthias.bgg@gmail.com>,
- AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
- Chunfeng Yun <chunfeng.yun@mediatek.com>, Vinod Koul <vkoul@kernel.org>,
- Kishon Vijay Abraham I <kishon@kernel.org>,
- Peter Wang <peter.wang@mediatek.com>, Stanley Jhu <chu.stanley@gmail.com>,
- "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- Philipp Zabel <p.zabel@pengutronix.de>, Liam Girdwood <lgirdwood@gmail.com>,
- Mark Brown <broonie@kernel.org>, Chaotian Jing <Chaotian.Jing@mediatek.com>,
- Neil Armstrong <neil.armstrong@linaro.org>,
- Louis-Alexis Eyraud <louisalexis.eyraud@collabora.com>, kernel@collabora.com,
- linux-scsi@vger.kernel.org, devicetree@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
- linux-mediatek@lists.infradead.org, linux-phy@lists.infradead.org,
- Conor Dooley <conor.dooley@microchip.com>
-Subject:
- Re: [PATCH v9 03/23] dt-bindings: ufs: mediatek,ufs: Add mt8196 variant
-Date: Mon, 09 Mar 2026 11:04:14 +0100
-Message-ID: <5973984.DvuYhMxLoT@workhorse>
-In-Reply-To: <yq14imrwp3z.fsf@ca-mkp.ca.oracle.com>
-References:
- <20260306-mt8196-ufs-v9-0-55b073f7a830@collabora.com>
- <4089450.ElGaqSPkdT@workhorse> <yq14imrwp3z.fsf@ca-mkp.ca.oracle.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VyxrtNLr"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2071CC4CEF7;
+	Mon,  9 Mar 2026 10:24:11 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1773051864;
+	bh=BvtwtwcwSfVKcyfpQtaLtqIA+tgqr1RTHQjVXI2Vme4=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=VyxrtNLruvKU9Vq3Qy2KtTqc+zYLfcjs4YIvhrvgiJb5gtOY46oVjmEXXf7YinaVE
+	 5khuGRS3qY3UVL3hy3wmqnxBqvI1CB9WN5omD4S1iOusTrEMAErj8IVjZpI2iwTydl
+	 kp1MAotDxje3JrxOzGaxEaQpq2ccXBvx6bQYBMFVG4QmeEjqOMPkj/eShoCuRfouBI
+	 VHIUcd0fANbygZgY+He3mnYpd8yx4sU8KIp4XiAdUHQzAwOv9Gh9kd8B65S5RAaXQY
+	 fNJ2en5dg5ao95Rm8vU1c8tDOfIl9ck6y/pl+8clVoNNZR7PoKKxzwBPVU5Skak+rq
+	 q5HmKfWfPwj6w==
+Message-ID: <01a4936f-77cd-4c60-a1be-cabec872a2bb@kernel.org>
+Date: Mon, 9 Mar 2026 11:24:06 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="utf-8"
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 01/10 net-next] ipv6: convert CONFIG_IPV6 to built-in only
+ and clean up Kconfigs
+To: Fernando Fernandez Mancera <fmancera@suse.de>, netdev@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, Geert Uytterhoeven <geert@linux-m68k.org>,
+ Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>,
+ Selvin Xavier <selvin.xavier@broadcom.com>,
+ Andrew Lunn <andrew+netdev@lunn.ch>, "David S. Miller"
+ <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>,
+ Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
+ Ido Schimmel <idosch@nvidia.com>, Petr Machata <petrm@nvidia.com>,
+ Simon Horman <horms@kernel.org>, Saurav Kashyap <skashyap@marvell.com>,
+ Javed Hasan <jhasan@marvell.com>,
+ "maintainer:BROADCOM BNX2FC 10 GIGABIT FCOE DRIVER"
+ <GR-QLogic-Storage-Upstream@marvell.com>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ Nilesh Javali <njavali@marvell.com>,
+ Manish Rangankar <mrangankar@marvell.com>, Varun Prakash
+ <varun@chelsio.com>, Alexander Aring <aahringo@redhat.com>,
+ David Teigland <teigland@redhat.com>,
+ Andreas Gruenbacher <agruenba@redhat.com>,
+ Nikolay Aleksandrov <razor@blackwall.org>, David Ahern <dsahern@kernel.org>,
+ Pablo Neira Ayuso <pablo@netfilter.org>, Florian Westphal <fw@strlen.de>,
+ Phil Sutter <phil@nwl.cc>, David Howells <dhowells@redhat.com>,
+ Marc Dionne <marc.dionne@auristor.com>,
+ Marcelo Ricardo Leitner <marcelo.leitner@gmail.com>,
+ Xin Long <lucien.xin@gmail.com>, Jon Maloy <jmaloy@redhat.com>,
+ Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>,
+ Bjorn Andersson <bjorn.andersson@oss.qualcomm.com>,
+ Arnd Bergmann <arnd@arndb.de>,
+ Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>,
+ Eric Biggers <ebiggers@kernel.org>, Michal Simek <michal.simek@amd.com>,
+ Luca Weiss <luca.weiss@fairphone.com>, Sven Peter <sven@kernel.org>,
+ Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>,
+ Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>,
+ Andrew Morton <akpm@linux-foundation.org>, David Gow <david@davidgow.net>,
+ Herbert Xu <herbert@gondor.apana.org.au>,
+ Ryota Sakamoto <sakamo.ryota@gmail.com>,
+ Kuniyuki Iwashima <kuniyu@google.com>, Kir Chou <note351@hotmail.com>,
+ Kuan-Wei Chiu <visitorckw@gmail.com>, Vikas Gupta
+ <vikas.gupta@broadcom.com>,
+ Bhargava Marreddy <bhargava.marreddy@broadcom.com>,
+ Rajashekar Hudumula <rajashekar.hudumula@broadcom.com>,
+ =?UTF-8?Q?Markus_Bl=C3=B6chl?= <markus@blochl.de>,
+ "open list:M68K ARCHITECTURE" <linux-m68k@lists.linux-m68k.org>,
+ "open list:INFINIBAND SUBSYSTEM" <linux-rdma@vger.kernel.org>,
+ "open list:NETRONOME ETHERNET DRIVERS" <oss-drivers@corigine.com>,
+ "open list:BROADCOM BNX2FC 10 GIGABIT FCOE DRIVER"
+ <linux-scsi@vger.kernel.org>,
+ "open list:DISTRIBUTED LOCK MANAGER (DLM)" <gfs2@lists.linux.dev>,
+ "open list:ETHERNET BRIDGE" <bridge@lists.linux.dev>,
+ "open list:NETFILTER" <netfilter-devel@vger.kernel.org>,
+ "open list:NETFILTER" <coreteam@netfilter.org>,
+ "open list:RXRPC SOCKETS (AF_RXRPC)" <linux-afs@lists.infradead.org>,
+ "open list:SCTP PROTOCOL" <linux-sctp@vger.kernel.org>,
+ "open list:TIPC NETWORK LAYER" <tipc-discussion@lists.sourceforge.net>
+References: <20260309022013.5199-1-fmancera@suse.de>
+ <20260309022013.5199-2-fmancera@suse.de>
+From: Krzysztof Kozlowski <krzk@kernel.org>
+Content-Language: en-US
+Autocrypt: addr=krzk@kernel.org; keydata=
+ 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 a/A=
+In-Reply-To: <20260309022013.5199-2-fmancera@suse.de>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Saturday, 7 March 2026 19:01:17 Central European Standard Time Martin K. Petersen wrote:
+On 09/03/2026 03:19, Fernando Fernandez Mancera wrote:
+> Configuring IPV6 as a module provides little or no benefit and requires
+> time and resources to maintain. Therefore, drop the support for it.
 > 
-> Nicolas,
+> Change CONFIG_IPV6 from tristate to bool. Remove all Kconfig
+> dependencies across the tree that explicitly checked for IPV6=m. Adjust
+> all the default configurations from CONFIG_IPV6=m to CONFIG_IPV6=y. In
+> addition, remove MODULE_DESCRIPTION(), MODULE_ALIAS(), MODULE_AUTHOR()
+> and MODULE_LICENSE().
 > 
-> >> "ufs" is redundant as all the clocks are for UFS. Same comment on prior 
-> >> patch.
-> >
-> > Is this naming a big enough concern to block this series with two
-> > explicit acks on this patch that fixes a wholly broken and useless
-> > binding?
+> This is also replacing module_init() by fs_initcall().
 > 
-> It is if it comes from one of the DT maintainers.
+> Signed-off-by: Fernando Fernandez Mancera <fmancera@suse.de>
+> ---
+>  arch/arm64/configs/defconfig                | 2 +-
+>  arch/m68k/configs/amiga_defconfig           | 2 +-
+>  arch/m68k/configs/apollo_defconfig          | 2 +-
+>  arch/m68k/configs/atari_defconfig           | 2 +-
+>  arch/m68k/configs/bvme6000_defconfig        | 2 +-
+>  arch/m68k/configs/hp300_defconfig           | 2 +-
+>  arch/m68k/configs/mac_defconfig             | 2 +-
+>  arch/m68k/configs/multi_defconfig           | 2 +-
+>  arch/m68k/configs/mvme147_defconfig         | 2 +-
+>  arch/m68k/configs/mvme16x_defconfig         | 2 +-
+>  arch/m68k/configs/q40_defconfig             | 2 +-
+>  arch/m68k/configs/sun3_defconfig            | 2 +-
+>  arch/m68k/configs/sun3x_defconfig           | 2 +-
+>  drivers/infiniband/Kconfig                  | 1 -
+>  drivers/infiniband/hw/ocrdma/Kconfig        | 2 +-
+>  drivers/infiniband/ulp/ipoib/Kconfig        | 2 +-
+>  drivers/net/Kconfig                         | 9 ---------
+>  drivers/net/ethernet/broadcom/Kconfig       | 2 +-
+>  drivers/net/ethernet/chelsio/Kconfig        | 2 +-
+>  drivers/net/ethernet/mellanox/mlxsw/Kconfig | 1 -
+>  drivers/net/ethernet/netronome/Kconfig      | 1 -
+>  drivers/scsi/bnx2fc/Kconfig                 | 1 -
+>  drivers/scsi/bnx2i/Kconfig                  | 1 -
+>  drivers/scsi/cxgbi/cxgb3i/Kconfig           | 2 +-
+>  drivers/scsi/cxgbi/cxgb4i/Kconfig           | 2 +-
+>  fs/dlm/Kconfig                              | 2 +-
+>  fs/gfs2/Kconfig                             | 2 +-
+>  net/bridge/Kconfig                          | 1 -
+>  net/ipv4/Kconfig                            | 9 ++++-----
+>  net/ipv6/Kconfig                            | 6 +-----
+>  net/ipv6/af_inet6.c                         | 8 +-------
+>  net/l2tp/Kconfig                            | 1 -
+>  net/netfilter/Kconfig                       | 8 --------
+>  net/rxrpc/Kconfig                           | 2 +-
+>  net/sctp/Kconfig                            | 1 -
+>  net/tipc/Kconfig                            | 1 -
+>  36 files changed, 28 insertions(+), 65 deletions(-)
 > 
-> > I am trying to put out this dumpster fire of a downstream turd that
-> > made its way into mainline as the review process has been completely
-> > subverted, and is only getting worse with each passing month
-> 
-> This has to stop. Please read Documentation/process/code-of-conduct.rst.
-> 
-> 
+> diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
+> index b67d5b1fc45b..0651a771f5c1 100644
+> --- a/arch/arm64/configs/defconfig
+> +++ b/arch/arm64/configs/defconfig
+> @@ -140,7 +140,7 @@ CONFIG_IP_MULTICAST=y
+>  CONFIG_IP_PNP=y
+>  CONFIG_IP_PNP_DHCP=y
+>  CONFIG_IP_PNP_BOOTP=y
+> -CONFIG_IPV6=m
+> +CONFIG_IPV6=y
+>  CONFIG_NETFILTER=y
+>  CONFIG_BRIDGE_NETFILTER=m
+>  CONFIG_NF_CONNTRACK=m
 
-I apologise for my tone, it's my frustration getting the better of me.
+No, I don't want IPV6. It is allowed as module if some users need, but
+it's heavy bloat added to each person's build testing setup. Kernel
+image is already huge and barely fits boot partitions when built with
+KASAN and I do want a generic image with KASAN.
 
-I'll be handing off this series to someone else, so you won't have to
-deal with me anymore.
+It must stay module for me. Alternatively, drop it, but then some users
+will be really affected.
 
-I do ask however that you don't apply patches from MediaTek blindly;
-if there's code to read an OF property, and that OF property is not
-in the binding, then the patch should be rejected, even if there's an
-Ack from the MediaTek maintainer.
-
-
+Best regards,
+Krzysztof
