@@ -1,85 +1,107 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.14])
+Received: from sender4-pp-f112.zoho.com (sender4-pp-f112.zoho.com [136.143.188.112])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EBCEF36F415;
-	Mon,  9 Mar 2026 08:58:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.14
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773046715; cv=none; b=MOfBttk9qPAlDZngvemdIGXd96tAyBYyI7sr7R7hgdMrGQV6juCCfnHdAyvekRUvfCogVmyusr5A4klCuJtYuNCfi13+2bDU67+Z1cyQh5kWR7+N0LQQoOQgWo1Xb13PcseMCavV5cz+2Lx6LvKjCsrAl2W5qx7kjXKDO7qK7a8=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773046715; c=relaxed/simple;
-	bh=2YL5m0nJUkBei4vZwMohzbVtCs+2Y2OUhORJZtMrNP8=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=N+FBJO+euLcnwUobX4WLDeV8Hlg+vAMVIYUUGDm0gQV/wstpTcxMNElo7EF0XFuX95NcFDRcuMIcfzAa//t+g7i+mYGu7eCQIGV0KOn74a23hfUFi4JiGDcJmG1K1aeyTbtG5XkbSTlaMoeqjD1kIRTEvE9hfJa/BdjkLawy+34=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=KRFpIgKI; arc=none smtp.client-ip=198.175.65.14
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 92296378D74;
+	Mon,  9 Mar 2026 10:04:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=136.143.188.112
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1773050700; cv=pass; b=nwCHNyG+6OYJeize/j37i/tP5ZWqHLLmq31P23jJ13tqd15EWxU8MatgF4sUf9TNu+5SmIBxx7tFq8jmN9FRgfe4mt39wKsDsRDlrptzxPmIChkWluQ7UlUBqpD6TdskF0xIor4vOTtNmTUClK+KdsFVvPuoLaZ3MYSlF/GQw4k=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1773050700; c=relaxed/simple;
+	bh=G+Xnxpps21amy1K7SIrWThQt4U1Ss2y48Pw6FbA82Zs=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=TZvYKa+wceKGYGcF75Bu8e8yJfgG0tvt33p0vNsKB9jGMdUyhOEVDDATy2NrOFzdZDKS0/pQpyjo9O+CGtvv8esLZ2S26llVcoNsXMn+m9Uk60Ao/cb86+3jkE1UOyWbd1T/Q/LvJYIqFSuxjIgp6HsfiBcYvafVd5D622lOdCg=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (1024-bit key) header.d=collabora.com header.i=nicolas.frattaroli@collabora.com header.b=FfyXGNfa; arc=pass smtp.client-ip=136.143.188.112
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collabora.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="KRFpIgKI"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1773046713; x=1804582713;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=2YL5m0nJUkBei4vZwMohzbVtCs+2Y2OUhORJZtMrNP8=;
-  b=KRFpIgKIvlpYCaxVeolx5Am+c5zFMsuWgbKREhzYuOr0u83FD5hYB5ZE
-   HVbrHshwkOT/3/AK5HKzwVubWfTcIwXSCb0+M47gcL5gnz0tN4CpDHBqT
-   kDt5w1+oepL1QF8GTqMpATfNJRWjVPpnVzOtRmW3MhzYdFmtXOXACSq7b
-   isvlUg8DuZ7HXRuQS/N5HEl7vUjjGUilNGWKXjwCKFxs0wXjo8LW8mNoQ
-   62Jzo6qlJdiQkiB70NL4ppZkOxAn+gcaMiPBnA7nuKWEUgRudkPEHvcgw
-   zsser2RLzs7X8vhBNg+XR/7DzoM1UPAblW3twCI+H2kE/xAhtXtodUHPB
-   A==;
-X-CSE-ConnectionGUID: hJUl0JZBQnyfNj+C5kBjfA==
-X-CSE-MsgGUID: KOmUVqgKSMuhfDtVgO0wLw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11723"; a="77916010"
-X-IronPort-AV: E=Sophos;i="6.23,109,1770624000"; 
-   d="scan'208";a="77916010"
-Received: from fmviesa006.fm.intel.com ([10.60.135.146])
-  by orvoesa106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Mar 2026 01:58:33 -0700
-X-CSE-ConnectionGUID: ByRcv3HbQmmLYkCN/ggQZA==
-X-CSE-MsgGUID: v+2QP5JVQuudSVXwU1FBkg==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.23,109,1770624000"; 
-   d="scan'208";a="216225887"
-Received: from pgcooper-mobl3.ger.corp.intel.com (HELO ahunter6-desk) ([10.245.245.128])
-  by fmviesa006-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Mar 2026 01:58:30 -0700
-From: Adrian Hunter <adrian.hunter@intel.com>
-To: Martin K Petersen <martin.petersen@oracle.com>
-Cc: James EJ Bottomley <James.Bottomley@HansenPartnership.com>,
-	Bart Van Assche <bvanassche@acm.org>,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] scsi: ufs: ufs-pci: Add support for Intel Nova Lake
-Date: Mon,  9 Mar 2026 10:58:15 +0200
-Message-ID: <20260309085815.55216-1-adrian.hunter@intel.com>
-X-Mailer: git-send-email 2.51.0
+	dkim=pass (1024-bit key) header.d=collabora.com header.i=nicolas.frattaroli@collabora.com header.b="FfyXGNfa"
+ARC-Seal: i=1; a=rsa-sha256; t=1773050663; cv=none; 
+	d=zohomail.com; s=zohoarc; 
+	b=WPKrdsecXgvpHVw3d3nA7UKT5PHJNT4CVQC1wG3jkoTNIrWS0kkfHp25A9EAsGTtUg3my3EIBZ9cAYhDH/7GZ87SYfPkLX9nWSV0hO7AsCEktYkMz08X1zMu77OuRIbRaX/3r1+PpRfXlG66IkdIhRZvRncGQ7Z9ascvWR05+D4=
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.com; s=zohoarc; 
+	t=1773050663; h=Content-Type:Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:Subject:To:To:Message-Id:Reply-To; 
+	bh=NlPBU6mm/vR3l3IynQJyTnSVRzr3DXJWAgerFRXKwLY=; 
+	b=ITht2xuBtAY+LyVbcl9bvvuPCXhHUIobCtTsZc5aFz2E4VdopHHB54s6J/T26V2aPee8kKx0Y8T/PCGRwsXTB5HQzkXEBUtiVmomJr13U5450kH9p11rX8gGW9jmq3SEV1GAmDKZIyxElT/VTgzgGJfOPj8GKyWMbhV1gitWc0M=
+ARC-Authentication-Results: i=1; mx.zohomail.com;
+	dkim=pass  header.i=collabora.com;
+	spf=pass  smtp.mailfrom=nicolas.frattaroli@collabora.com;
+	dmarc=pass header.from=<nicolas.frattaroli@collabora.com>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1773050663;
+	s=zohomail; d=collabora.com; i=nicolas.frattaroli@collabora.com;
+	h=From:From:To:To:Cc:Cc:Subject:Subject:Date:Date:Message-ID:In-Reply-To:References:MIME-Version:Content-Transfer-Encoding:Content-Type:Message-Id:Reply-To;
+	bh=NlPBU6mm/vR3l3IynQJyTnSVRzr3DXJWAgerFRXKwLY=;
+	b=FfyXGNfa7BdEYR+/X2BWXaCeOR1xLNi6bU3NnS6twJjCEsBQSvH3U0tRJJlNxVin
+	EthZxVdVb5u3865e3MDpOBj6BEMpriUN0Oqy+EMI529/FmafrTz8JcGKAzykVNai9Go
+	VPM5cR5IPh4kSsAqFib03nKGO6VeWMO4YndPgj5I=
+Received: by mx.zohomail.com with SMTPS id 1773050662683221.52211658341253;
+	Mon, 9 Mar 2026 03:04:22 -0700 (PDT)
+From: Nicolas Frattaroli <nicolas.frattaroli@collabora.com>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Rob Herring <robh@kernel.org>, Alim Akhtar <alim.akhtar@samsung.com>,
+ Avri Altman <avri.altman@wdc.com>, Bart Van Assche <bvanassche@acm.org>,
+ Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>,
+ Matthias Brugger <matthias.bgg@gmail.com>,
+ AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
+ Chunfeng Yun <chunfeng.yun@mediatek.com>, Vinod Koul <vkoul@kernel.org>,
+ Kishon Vijay Abraham I <kishon@kernel.org>,
+ Peter Wang <peter.wang@mediatek.com>, Stanley Jhu <chu.stanley@gmail.com>,
+ "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ Philipp Zabel <p.zabel@pengutronix.de>, Liam Girdwood <lgirdwood@gmail.com>,
+ Mark Brown <broonie@kernel.org>, Chaotian Jing <Chaotian.Jing@mediatek.com>,
+ Neil Armstrong <neil.armstrong@linaro.org>,
+ Louis-Alexis Eyraud <louisalexis.eyraud@collabora.com>, kernel@collabora.com,
+ linux-scsi@vger.kernel.org, devicetree@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ linux-mediatek@lists.infradead.org, linux-phy@lists.infradead.org,
+ Conor Dooley <conor.dooley@microchip.com>
+Subject:
+ Re: [PATCH v9 03/23] dt-bindings: ufs: mediatek,ufs: Add mt8196 variant
+Date: Mon, 09 Mar 2026 11:04:14 +0100
+Message-ID: <5973984.DvuYhMxLoT@workhorse>
+In-Reply-To: <yq14imrwp3z.fsf@ca-mkp.ca.oracle.com>
+References:
+ <20260306-mt8196-ufs-v9-0-55b073f7a830@collabora.com>
+ <4089450.ElGaqSPkdT@workhorse> <yq14imrwp3z.fsf@ca-mkp.ca.oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Organization: Intel Finland Oy, Registered Address: c/o Alberga Business Park, 6 krs, Bertel Jungin Aukio 5, 02600 Espoo, Business Identity Code: 0357606 - 4, Domiciled in Helsinki
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="utf-8"
 
-Add PCI ID to support Intel Nova Lake, same as Intel Meteor Lake (MTL).
+On Saturday, 7 March 2026 19:01:17 Central European Standard Time Martin K. Petersen wrote:
+> 
+> Nicolas,
+> 
+> >> "ufs" is redundant as all the clocks are for UFS. Same comment on prior 
+> >> patch.
+> >
+> > Is this naming a big enough concern to block this series with two
+> > explicit acks on this patch that fixes a wholly broken and useless
+> > binding?
+> 
+> It is if it comes from one of the DT maintainers.
+> 
+> > I am trying to put out this dumpster fire of a downstream turd that
+> > made its way into mainline as the review process has been completely
+> > subverted, and is only getting worse with each passing month
+> 
+> This has to stop. Please read Documentation/process/code-of-conduct.rst.
+> 
+> 
 
-Signed-off-by: Adrian Hunter <adrian.hunter@intel.com>
----
- drivers/ufs/host/ufshcd-pci.c | 1 +
- 1 file changed, 1 insertion(+)
+I apologise for my tone, it's my frustration getting the better of me.
 
-diff --git a/drivers/ufs/host/ufshcd-pci.c b/drivers/ufs/host/ufshcd-pci.c
-index 5f65dfad1a71..63f6b36b912f 100644
---- a/drivers/ufs/host/ufshcd-pci.c
-+++ b/drivers/ufs/host/ufshcd-pci.c
-@@ -695,6 +695,7 @@ static const struct pci_device_id ufshcd_pci_tbl[] = {
- 	{ PCI_VDEVICE(INTEL, 0x7747), (kernel_ulong_t)&ufs_intel_mtl_hba_vops },
- 	{ PCI_VDEVICE(INTEL, 0xE447), (kernel_ulong_t)&ufs_intel_mtl_hba_vops },
- 	{ PCI_VDEVICE(INTEL, 0x4D47), (kernel_ulong_t)&ufs_intel_mtl_hba_vops },
-+	{ PCI_VDEVICE(INTEL, 0xD335), (kernel_ulong_t)&ufs_intel_mtl_hba_vops },
- 	{ }	/* terminate list */
- };
- 
--- 
-2.51.0
+I'll be handing off this series to someone else, so you won't have to
+deal with me anymore.
+
+I do ask however that you don't apply patches from MediaTek blindly;
+if there's code to read an OF property, and that OF property is not
+in the binding, then the patch should be rejected, even if there's an
+Ack from the MediaTek maintainer.
+
 
