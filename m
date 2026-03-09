@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 000B6274B39;
-	Mon,  9 Mar 2026 06:58:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 098D22EA754;
+	Mon,  9 Mar 2026 06:58:41 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773039521; cv=none; b=RtkkIlM+d/Ugu9YBd7p0BDoamgopub3/r7qrqfEI334nRUxF21APrSlwTvAGW1qZh04z8aZZV3Pro0a4xLrAyoauE5hE81aRnGYx6E0vg4uezasNdBS+4gjUmAjZPVILiX+g+uh31p6ztdemAQG6TTjXOg1xJxKgXein0TISUA4=
+	t=1773039521; cv=none; b=L0Lg0FCPn0snrq8il5nH/LpbeNePnUe0zDiePoGudUiQ9zQBmc6UNPvqK2b+GUM2itgRLrE3WWpRFM17dHo/HHeAt6tc/XHwbWJ6uSmq0eF3iv9VOlPM4j3pwl421cXXFgfeifpV1R+FF7i3PrxGYkSrowdO9hJOrt9ctxuAOMw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1773039521; c=relaxed/simple;
-	bh=9ifWUGUuqbMEA3nM68bJhc8gfZIk88yslqLcdB+vYiY=;
+	bh=fIjVtLv2PApm9p7zByR7Rq2/I5Linm9JuIiBx8Q7GZw=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=Wu87tv8CJXIsAMfY2gipg1V0Z8ahBTKVHQhs/rWB7bEPu2vrg7noTwGpu+ZNeJHPnZtKGetiUbQ9qXgauh1iMbeauvwYSFbk27G3iH/j3dajWf+5UUkfTBstzNDoZhr2JaaWQ1ivpplvV4N9zEaKQPIJdKOTbI3MM1UEu83qKNA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DAKpMcmc; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:To:Cc; b=braVnpRtp0cd0IMmxAj+aFpOrx1ZjV76HG3j7y9xW9uhx1BZaICT0JqJb6IeIrHJ5VvRRzmtzJubdJQRqaQ/rpnpqd3DyoKCABY3tr8uKOr8fQ82j0T8Fx7OhUncJRDSi28nM+5YYmjitXE/sYhng91BJzj8i3aPXtYXF8jzQus=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fxq+GFGV; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DAKpMcmc"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id A4D58C2BC87;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fxq+GFGV"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id C81BEC2BCB7;
 	Mon,  9 Mar 2026 06:58:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1773039520;
-	bh=9ifWUGUuqbMEA3nM68bJhc8gfZIk88yslqLcdB+vYiY=;
+	bh=fIjVtLv2PApm9p7zByR7Rq2/I5Linm9JuIiBx8Q7GZw=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=DAKpMcmcA9TLNb/vBZq7oZbl6TzD+0cNcN98DcLgXlRSQE+tFTsmJKIBtvSvfIxPL
-	 oj85iW4GApmE31pu+CaQWQ4llUU3dXOYxNWmTKObkiDpeos6Ho2MB3IQjp5j2Z+tu/
-	 VSxxaQcyBKOX8xeH2cwPtFmIwuY7NZK/IjIvqsNevSitSk4RndDU3QXK2xz/OHVGme
-	 poeHg8Jz/Fo4YYCVzauCdNf+aP4pM08PQCi6DyTfJef5EEc9IJSkaCSmZXvzFcGflO
-	 NAGOQlzlvxhzt/Za5K8qgVDh6ejnuTzdqWRN8NBo0oqlRWEd/GBiiLcAROSss/1+9H
-	 h7V8jHPiKIIrQ==
+	b=fxq+GFGVMf5HzkaoM6WBQPw9A6Weqxek13CcQz9iIB8rNEzEzup1CUcQJwv1QQQXH
+	 cMJnoD0xEMNUsM4Kh9+S8wlZBmn1+nZBmEFv3Ng8C/n/jw/if+mB1d+6MtM2HQ2/3J
+	 a2xGCFSFcgtqYtxMcvndVpdozLyyh1A/jkn6tSudCC93gkVb0zNSfDljUa1tdHNbdT
+	 Zpy2vgL6kLP6NzI95ZFKBld2iT5r8x14e2y7BFGMhvLyBLOnqM7Qm2fa05lPZpS845
+	 Wnw0T2wr1xnjKI5S20S/5jF7X2uH5kIRWYOYBtEpyLHhac+B/tyadH7MLVYAhRXNuC
+	 e8MFKlfwG913w==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 90E05EF36EB;
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BCC9DEF36EC;
 	Mon,  9 Mar 2026 06:58:40 +0000 (UTC)
 From: Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org>
-Date: Mon, 09 Mar 2026 12:28:31 +0530
-Subject: [PATCH v6 1/5] soc: qcom: ice: Fix race between qcom_ice_probe()
- and of_qcom_ice_get()
+Date: Mon, 09 Mar 2026 12:28:34 +0530
+Subject: [PATCH v6 4/5] mmc: sdhci-msm: Remove NULL check from
+ devm_of_qcom_ice_get()
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -41,7 +41,7 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260309-qcom-ice-fix-v6-1-4dd3347df530@oss.qualcomm.com>
+Message-Id: <20260309-qcom-ice-fix-v6-4-4dd3347df530@oss.qualcomm.com>
 References: <20260309-qcom-ice-fix-v6-0-4dd3347df530@oss.qualcomm.com>
 In-Reply-To: <20260309-qcom-ice-fix-v6-0-4dd3347df530@oss.qualcomm.com>
 To: Bjorn Andersson <andersson@kernel.org>, 
@@ -57,18 +57,18 @@ Cc: linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
  Sumit Garg <sumit.garg@oss.qualcomm.com>, mani@kernel.org, 
  Neeraj Soni <neeraj.soni@oss.qualcomm.com>, 
  Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>, 
- stable@vger.kernel.org
+ Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
 X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=openpgp-sha256; l=4921;
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1276;
  i=manivannan.sadhasivam@oss.qualcomm.com; h=from:subject:message-id;
- bh=UmeyW+kNpWioyVDzVXqFfX4+r2Km4VFRq/bAVfTsmFo=;
- b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBprm+c6h0RSxkKmqMZ35CXym+leOD1teE3J69SW
- +sRVzluyX2JATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCaa5vnAAKCRBVnxHm/pHO
- 9YT+B/9ogjaHpyGpq0790JuBkYXU8G0pMbq/Ve1BH/aOc+RCwAK+5A4jrNYwxyIXNi8janl+9GE
- qXxLRg82md4IyNrK4roY3v2yWmr2TQ2rLlxMREiMrukyMNoIErdPdrm5d7q/U1vvp8oHfKyzkFR
- 5JIuCoVJw46Ycm9JAyINBONfPSMmK83tuwyxFaOBcG4G/naA2C2zCQusAVBvOpS1twySdC1VfdB
- 3nbnOw/9x6IOOHoc7ZzBiphhSfIbsj5zdV13WnVg/y1GjdHDGeMR3bpdMZIkUIktNF01Lm2qXTi
- etr8sw+N7iw91eo83oxjlMCd+8XZlu0dWRtxPbFfDxUfSf81
+ bh=+5SkLtRpHTnkAQ9yZWBecUdG7TMHCu1aRwm2dHYl1LQ=;
+ b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBprm+cxSFJKAT3tpQEkmozGp9einIfyo8LyYDAp
+ EL94vuno0qJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCaa5vnAAKCRBVnxHm/pHO
+ 9dVmB/9xzkZqg3JdQqo0aNv68bGvjpIh88CokEd8juqUVKVwgy6z1x7gfWjhDfg0M/oPchQctac
+ +juVr87XtrLLM3rrJAAvhxncqQQXMj3VtLSCZ3v9Uc9FUVNPB+uEK4xcVDJotL9JyYBPBN606sK
+ vMJFOBZv69AiLs867NHlbgV3ivxQngHKWaGkygZ7DRjVmuBVNCzItYksNrLC6/DeAu6BzQFU8uM
+ ck++vUu+Nsy5l61b6s+1nvNON9/Gg4Xtl1tlvrH3NoyC7WzInYlpex7Xn7R1wChev9y9T/++XAz
+ ACPF+Ue0g+fMTpZ/mYcPmTGXJ6mTbHo8ukgyiKk9AedREbny
 X-Developer-Key: i=manivannan.sadhasivam@oss.qualcomm.com; a=openpgp;
  fpr=C668AEC3C3188E4C611465E7488550E901166008
 X-Endpoint-Received: by B4 Relay for
@@ -78,144 +78,41 @@ Reply-To: manivannan.sadhasivam@oss.qualcomm.com
 
 From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 
-The current platform driver design causes probe ordering races with
-consumers (UFS, eMMC) due to ICE's dependency on SCM firmware calls. If ICE
-probe fails (missing ICE SCM or DT registers), devm_of_qcom_ice_get() loops
-with -EPROBE_DEFER, leaving consumers non-functional even when ICE should
-be gracefully disabled. devm_of_qcom_ice_get() doesn't know if the ICE
-driver probe has failed due to above reasons or it is waiting for the SCM
-driver.
+Now since the devm_of_qcom_ice_get() API never returns NULL, remove the
+NULL check and also simplify the error handling.
 
-Moreover, there is no devlink dependency between ICE and consumer drivers
-as 'qcom,ice' is not considered as a DT 'supplier'. So the consumer drivers
-have no idea of when the ICE driver is going to probe.
-
-To address these issues, store the error pointer in a global xarray with
-ice node phandle as a key during probe in addition to the valid ice pointer
-and synchronize both qcom_ice_probe() and of_qcom_ice_get() using a mutex.
-
-If the xarray entry is NULL, then it implies that the driver is not
-probed yet, so return -EPROBE_DEFER. If it has any error pointer, return
-that error pointer directly. Otherwise, add the devlink as usual and return
-the valid pointer to the consumer.
-
-Xarray is used instead of platform drvdata, since driver core frees the
-drvdata during probe failure. So it cannot be used to pass the error
-pointer to the consumers.
-
-Note that this change only fixes the standalone ICE DT node bindings and
-not the ones with 'ice' range embedded in the consumer nodes, where there
-is no issue.
-
-Cc: <stable@vger.kernel.org> # 6.4
-Fixes: 2afbf43a4aec ("soc: qcom: Make the Qualcomm UFS/SDCC ICE a dedicated driver")
-Reported-by: Sumit Garg <sumit.garg@oss.qualcomm.com>
+Reviewed-by: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
+Acked-by: Ulf Hansson <ulf.hansson@linaro.org>
+Acked-by: Adrian Hunter <adrian.hunter@intel.com>
 Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 ---
- drivers/soc/qcom/ice.c | 38 +++++++++++++++++++++++++++++++-------
- 1 file changed, 31 insertions(+), 7 deletions(-)
+ drivers/mmc/host/sdhci-msm.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/soc/qcom/ice.c b/drivers/soc/qcom/ice.c
-index b203bc685cad..91991864b4a3 100644
---- a/drivers/soc/qcom/ice.c
-+++ b/drivers/soc/qcom/ice.c
-@@ -16,6 +16,7 @@
- #include <linux/of.h>
- #include <linux/of_platform.h>
- #include <linux/platform_device.h>
-+#include <linux/xarray.h>
+diff --git a/drivers/mmc/host/sdhci-msm.c b/drivers/mmc/host/sdhci-msm.c
+index 3b85233131b3..8d862079cf17 100644
+--- a/drivers/mmc/host/sdhci-msm.c
++++ b/drivers/mmc/host/sdhci-msm.c
+@@ -1906,14 +1906,14 @@ static int sdhci_msm_ice_init(struct sdhci_msm_host *msm_host,
+ 		return 0;
  
- #include <linux/firmware/qcom/qcom_scm.h>
- 
-@@ -113,6 +114,9 @@ struct qcom_ice {
- 	u8 hwkm_version;
- };
- 
-+static DEFINE_XARRAY(ice_handles);
-+static DEFINE_MUTEX(ice_mutex);
+ 	ice = devm_of_qcom_ice_get(dev);
+-	if (ice == ERR_PTR(-EOPNOTSUPP)) {
++	if (IS_ERR(ice)) {
++		if (ice != ERR_PTR(-EOPNOTSUPP))
++			return PTR_ERR(ice);
 +
- static bool qcom_ice_check_supported(struct qcom_ice *ice)
- {
- 	u32 regval = qcom_ice_readl(ice, QCOM_ICE_REG_VERSION);
-@@ -631,6 +635,8 @@ static struct qcom_ice *of_qcom_ice_get(struct device *dev)
- 		return qcom_ice_create(&pdev->dev, base);
+ 		dev_warn(dev, "Disabling inline encryption support\n");
+-		ice = NULL;
++		return 0;
  	}
  
-+	guard(mutex)(&ice_mutex);
-+
- 	/*
- 	 * If the consumer node does not provider an 'ice' reg range
- 	 * (legacy DT binding), then it must at least provide a phandle
-@@ -647,12 +653,13 @@ static struct qcom_ice *of_qcom_ice_get(struct device *dev)
- 		return ERR_PTR(-EPROBE_DEFER);
- 	}
- 
--	ice = platform_get_drvdata(pdev);
--	if (!ice) {
--		dev_err(dev, "Cannot get ice instance from %s\n",
--			dev_name(&pdev->dev));
-+	ice = xa_load(&ice_handles, pdev->dev.of_node->phandle);
-+	if (IS_ERR_OR_NULL(ice)) {
- 		platform_device_put(pdev);
--		return ERR_PTR(-EPROBE_DEFER);
-+		if (!ice)
-+			return ERR_PTR(-EPROBE_DEFER);
-+		else
-+			return ice;
- 	}
- 
- 	link = device_link_add(dev, &pdev->dev, DL_FLAG_AUTOREMOVE_SUPPLIER);
-@@ -716,24 +723,40 @@ EXPORT_SYMBOL_GPL(devm_of_qcom_ice_get);
- 
- static int qcom_ice_probe(struct platform_device *pdev)
- {
-+	unsigned long phandle = pdev->dev.of_node->phandle;
- 	struct qcom_ice *engine;
- 	void __iomem *base;
- 
-+	guard(mutex)(&ice_mutex);
-+
- 	base = devm_platform_ioremap_resource(pdev, 0);
- 	if (IS_ERR(base)) {
- 		dev_warn(&pdev->dev, "ICE registers not found\n");
-+		/* Store the error pointer for devm_of_qcom_ice_get() */
-+		xa_store(&ice_handles, phandle, (__force void *)base, GFP_KERNEL);
- 		return PTR_ERR(base);
- 	}
- 
- 	engine = qcom_ice_create(&pdev->dev, base);
--	if (IS_ERR(engine))
-+	if (IS_ERR(engine)) {
-+		/* Store the error pointer for devm_of_qcom_ice_get() */
-+		xa_store(&ice_handles, phandle, engine, GFP_KERNEL);
- 		return PTR_ERR(engine);
-+	}
- 
--	platform_set_drvdata(pdev, engine);
-+	xa_store(&ice_handles, phandle, engine, GFP_KERNEL);
- 
- 	return 0;
- }
- 
-+static void qcom_ice_remove(struct platform_device *pdev)
-+{
-+	unsigned long phandle = pdev->dev.of_node->phandle;
-+
-+	guard(mutex)(&ice_mutex);
-+	xa_store(&ice_handles, phandle, NULL, GFP_KERNEL);
-+}
-+
- static const struct of_device_id qcom_ice_of_match_table[] = {
- 	{ .compatible = "qcom,inline-crypto-engine" },
- 	{ },
-@@ -742,6 +765,7 @@ MODULE_DEVICE_TABLE(of, qcom_ice_of_match_table);
- 
- static struct platform_driver qcom_ice_driver = {
- 	.probe	= qcom_ice_probe,
-+	.remove	= qcom_ice_remove,
- 	.driver = {
- 		.name = "qcom-ice",
- 		.of_match_table = qcom_ice_of_match_table,
+-	if (IS_ERR_OR_NULL(ice))
+-		return PTR_ERR_OR_ZERO(ice);
+-
+ 	if (qcom_ice_get_supported_key_type(ice) != BLK_CRYPTO_KEY_TYPE_RAW) {
+ 		dev_warn(dev, "Wrapped keys not supported. Disabling inline encryption support.\n");
+ 		return 0;
 
 -- 
 2.51.0
