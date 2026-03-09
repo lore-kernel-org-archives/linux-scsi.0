@@ -1,481 +1,628 @@
-Received: from mail-ot1-f44.google.com (mail-ot1-f44.google.com [209.85.210.44])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from AS8PR04CU009.outbound.protection.outlook.com (mail-westeuropeazon11011064.outbound.protection.outlook.com [52.101.70.64])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E8D313D75C6
-	for <linux-scsi@vger.kernel.org>; Mon,  9 Mar 2026 15:31:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.210.44
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 57BB74CB5B;
+	Mon,  9 Mar 2026 19:09:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.70.64
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773070304; cv=pass; b=Ssguaj24D8HdzXfcNw3hlyt2wFwMSxO2XgROENMaZr1UudIyoVBuN3RTqeUJJF/LmtNnHvt3J8oHA4eTpUkxBPCqbAGbNS/4GGiMrZV7pB29QnJWAdYNDB/645xjTqeDbded3W5bxXoP3vBH08JwpBymlICqerbZGckL1ly/rAI=
+	t=1773083352; cv=fail; b=i0dBJkiXCEFO7fgwMDNRrVY5/rxQ3yk/0oCKEQUjGjCMMPn3O9GDiy5FSe6/S7rb0s+Uo4k5EnrX+9G2f8U4hosMg8k40c/6S3dV0TBfi592Z/1DsgklQzubEZiHo1sUGiEiLtv4X5hB7pKNNAUKQEiA0lyyQAZMUdn+kHu/Cd4=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773070304; c=relaxed/simple;
-	bh=IAhun4C5RUHet00HwD7ul+JrFNPWw1T6eUv63nRkCNU=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=G35e9Bi8LWjolQeElrqwDAftLhjXtoX/A5u64D/L6EtIecML//WOrPsHnfntFaGByFrYy5TN5GM2P/ek8IjMsvf6oaIDjXfG0WdsxtoX0jD7FC9guubuVKSMWeyNn+ARRKVJkv2JyQHPGZ+AirbC3FtbzNryDlfDtbMQstX/RbA=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=purestorage.com; spf=fail smtp.mailfrom=purestorage.com; dkim=pass (2048-bit key) header.d=purestorage.com header.i=@purestorage.com header.b=PqFA5YcF; arc=pass smtp.client-ip=209.85.210.44
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=purestorage.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=purestorage.com
+	s=arc-20240116; t=1773083352; c=relaxed/simple;
+	bh=X7/XzpGy3abkHgsSsA6IB4i1QxmevKqfq6o+l7RE03g=;
+	h=From:To:Cc:Subject:Date:Message-ID:Content-Type:MIME-Version; b=U7YWIjxN8Avkg+cPMF211zI0CRiOL+et8FC8thB5j+1lgC0zziuYYSWwjTWpdEpGRDjRKO90KmTeVFFRUQe9I1cIboiuKsmMTq1YZy6W2UwY4DfwA9fUFbZeS9AhF2yJjSBEP/WrluUnEnitOa7/C+T+efCgJav+7VFTnT0zysg=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=B8hcSySU; arc=fail smtp.client-ip=52.101.70.64
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=purestorage.com header.i=@purestorage.com header.b="PqFA5YcF"
-Received: by mail-ot1-f44.google.com with SMTP id 46e09a7af769-7d74872c5b1so40654a34.2
-        for <linux-scsi@vger.kernel.org>; Mon, 09 Mar 2026 08:31:40 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1773070300; cv=none;
-        d=google.com; s=arc-20240605;
-        b=H4NTZ8E6Fw2PX9QHTztC3FG5yGRgNimjs89Ni53vOWnEN+02RRhuK5zaGBqZ6F5cGw
-         wKqUWTE8ixE36EcqjERM/DrXzIp592o+eIXJ/IsNtg0KiKcZOSjGtUnIVO128bNRT4gq
-         l+1WPcC0SYWh9/DpiJXqWlS4cXCyMLKPHjlt60N7K83GCOYN2AoiJShu6sI96lLI3j4X
-         SWtQlF+z2EXO81lzzADMANipTVoEeBj0i9i5fnp8IGAzzWzI2Op/ll/xOMqzTSDSx5sf
-         BxKjjZCEcywtPpE9WPd3tj76Fn9MpNkeDzz87RpDQtYE69opwlCJLiNnXZYHBY008h5u
-         LGjw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=6+r9RgPpLrGiXVfQx056rbYEWCZcszUA9kQtErD1KEc=;
-        fh=vbb6vCXrnlahpd7M6BzPsjSU3i4eoFWZuMe2U/yKrlQ=;
-        b=SvNGQm0MpV7gj5bNcLbVggZ9+f+TEGrAbYDE69LphaDYeFuD+ll5Zf76+gdcex7ixy
-         g6cMcUc78EFAtodyb39XIeZy4sF44QrPTh4LNMSsJRyGhdXUpukPfDhfYa1rTLfB2frB
-         kAxYPi8GuMlTxtIsbYt704Zkl/XBMHrwDjyoUxzlFDttrJyy6PlF1p5YtydTXtd+kEjG
-         Eet+C9YPHYVIaujG68Wm8iHJYZoYZkL08kUNvExpJXYjLcQPY0cspwvaNKwZnv4yWiC6
-         mJVugz3bzVsiNG2MLBr3LXxTutEUMo0U5AXzjnPi550acb6YKNYICXK+1LIbU6r74bfs
-         4VIg==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=purestorage.com; s=google2022; t=1773070300; x=1773675100; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=6+r9RgPpLrGiXVfQx056rbYEWCZcszUA9kQtErD1KEc=;
-        b=PqFA5YcFnKVkNGYXYu/zjEoz5CoL7xNnxWEUUjsrVreoUECANOFMpdhSPDT3a/sgL6
-         qy4/58lvq1tYnBuNh9ITTY2gZvwtG2GdAxBMWhLm6iPQajc/axdnYPY1PcJm+Jt3FwO4
-         UPq4HCUtTEzvK7AqgW6OwPbRxh3tv+3cuMz/C7Kanzv6RuohWEsGsDNOWxlpepfQvlE5
-         QXJR8AEnBG0uMYoEJ2pW1gslnIr/yEdowxKkuLPPg2dyaxvZf4z3mfMIj/jvhDGovvcE
-         +Y7CGBU5jKvdrIdHlNIPReTkr6E04odkkJ3lbz+zZ1tJCE9IUQ2S3kYtIyoztQ10N3I7
-         9iLg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1773070300; x=1773675100;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=6+r9RgPpLrGiXVfQx056rbYEWCZcszUA9kQtErD1KEc=;
-        b=PNbS46SaJaao3EFmF86voau/bhPLbIph0pAy+5G8T3d2e03YPcuPEoxoFsXzNyq4CO
-         skiLU/boHtHczayG61/s1uneIsan80AAu0br1OMdhjMX+PMRA5gBLw8wo4mBAuldel5B
-         4Eabw/OEXCtHvVVH+OMduo8YgT7G7Q/BPWSch5QEBdZac2jXhtKi4iHGykFAore4GAz3
-         Pi9vmLOfPapKLeEpM4vehskFamsI+Ky9enazrdvEE1gxhpxD9UkTeLWL3HXOmukv80w9
-         S/QMAN6weqDF8qvWJoIWvXPFghuRJ0At3RHPekVrVmtOFgTKtkGt5f5fo8hYwsatm9rI
-         4O2g==
-X-Forwarded-Encrypted: i=1; AJvYcCWTx5PzhcdbqkPz7EotrrY1XWguFzKnVwBe5chQ2bOxSjSN6urnxXJ32N8ITecaVO9tUBzYgLfrInjM@vger.kernel.org
-X-Gm-Message-State: AOJu0YzaaOm9qWCTBDq0D6g4TMdjeWdWbpnoNSW/q6f8TAWXu1oCCFSd
-	JRETVC4gEIaogjJ2Qdxwwm1zdS2ZKstV7mqS/8Gbgu25WxHvRM97zTJHy8qqFrU9iF9Et6+RnsW
-	tpJyhLK0uCyZtmLnYyZTywlRT7qH409ewFBeOXPtLyg==
-X-Gm-Gg: ATEYQzxECH1HHTIr06u9r/Ll8Lak7tT5pPcgcBudFWXNoWj+hu95IVQNaYpV6yi5vVV
-	0F6rl6/TQKuEJg9YGVr6KuOb5b2Rg4UF9Zbf7I9J4Zq6LkzNDlHsHoPsw0uvVv6Ze1pXB9afeL9
-	0rcZelg1qPgZLSdUvDIrGrWSYD+u3jGbO8pxFmqj68/BgHGio7YQY42+Ju9GIaTz/71ytGkaswk
-	8Y9f4GyGU08jR4lBsWw3XovTJK307aKjaUE2PDfeEqYjOKTUvRQzJZsiU1nj2FO8FFuzbDLwVWF
-	smB/YxI=
-X-Received: by 2002:a05:6830:3495:b0:7d7:40e7:9536 with SMTP id
- 46e09a7af769-7d740e79670mr3723400a34.0.1773070299522; Mon, 09 Mar 2026
- 08:31:39 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="B8hcSySU"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=bNbTDImIY7NqMJVU+MXwEf6Hc8bkSi2eRgLfH3ygomGYHNO6iPbUZ8qOYd3t85zl8nuCylPE/ar952deWfB/gxiNih0kGy1N+iJreRGtLphsR4sdnDhOxOI3MScU+l5gv/Y1XSzaZp1lQj/7KY16yMHgi5A/F3heEgQpXeNeNZyMmhcMHGXeZ7jjr+ovW/cMGO98BxjO3wtxKgA+3258QjJWD7t/98kosI/NLalUf8RxlLqnsKOGyvtWHIoKMPQ1REFjVLdeqV9ft8dCyzRPQXvQ5joraYSNRkzN0Er7bM07P23oxQMn/6RU4IxUxIRrE4B6HezADjbVV4mK8vNJ2g==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=IqFhRoKuEJh7cZsgILk/T3MDhA4GOK/prA32/q3g/gQ=;
+ b=GnpB0pw/YPFXd9adInxlE0TpPjFwc7Kv7Mhvt4jRsJRNZF7N2kahnokFL3jEQD7wMT0FSs6OZS/o5ics5v3zKKnS0h1ANyx+5V6b4j+ZKJ0KbRwfYPIAPMweBbmeg8gqtHnZ0l1HGkRdOz+dpJI5x0XFG4QbYZ5Ss3Cps0AyARI2NvtZZfZKsoUdw20hZGXrvzT7dARghAp9YRsGnGQLjKDVn74zLZRDBHSEEj3dD+DwfE/Cht4fXp5OXQxxp4TjGTdJK0/+7rmS0mqv/RlEtKoNzgcb2ciqqCpmHHP7kmyOWUPGxDNPO6Z2DZ20K7qrn7mD85rkZK5BStrVQPywRQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
+ header.d=nxp.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=IqFhRoKuEJh7cZsgILk/T3MDhA4GOK/prA32/q3g/gQ=;
+ b=B8hcSySUemsVNKUSzLuPg8v/55+Sr0SufQPWBfwBUgjJ/BFiK++ll1ncq9LuGL+SHsPULJ+P71LCg2IYvLj5ZXYdgVgJtmAd5054YZ0Ci5TWFmCHqd2vz4lTVIm9yccTiRWn+gQgf2hbJ3299HcIdUKkZ3h1xV4RxD/J4BtWUWyjZQH3M8zxUVYgXOzXiIrT8JT3khgHhZau7TJmrdcxopKATFSGc1KnCEC6hT44akBzJ+gOeFmmFJvSmhrp/TaZXaZnj06XxDjEh1iKXcg0qPLD7u7dThyf2QOMw96613tbkjRGe4uH58RIRquqMXtMRlfCFGQyhQEHW6eZcfkACQ==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nxp.com;
+Received: from AM9PR04MB8585.eurprd04.prod.outlook.com (2603:10a6:20b:438::13)
+ by AM9PR04MB7540.eurprd04.prod.outlook.com (2603:10a6:20b:283::14) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9678.25; Mon, 9 Mar
+ 2026 19:09:05 +0000
+Received: from AM9PR04MB8585.eurprd04.prod.outlook.com
+ ([fe80::f010:fca8:7ef:62f4]) by AM9PR04MB8585.eurprd04.prod.outlook.com
+ ([fe80::f010:fca8:7ef:62f4%4]) with mapi id 15.20.9678.023; Mon, 9 Mar 2026
+ 19:09:05 +0000
+From: Vladimir Oltean <vladimir.oltean@nxp.com>
+To: linux-phy@lists.infradead.org
+Cc: Vinod Koul <vkoul@kernel.org>,
+	Neil Armstrong <neil.armstrong@linaro.org>,
+	dri-devel@lists.freedesktop.org,
+	freedreno@lists.freedesktop.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-arm-msm@vger.kernel.org,
+	linux-can@vger.kernel.org,
+	linux-gpio@vger.kernel.org,
+	linux-ide@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-media@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-renesas-soc@vger.kernel.org,
+	linux-riscv@lists.infradead.org,
+	linux-rockchip@lists.infradead.org,
+	linux-samsung-soc@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	linux-sunxi@lists.linux.dev,
+	linux-tegra@vger.kernel.org,
+	linux-usb@vger.kernel.org,
+	netdev@vger.kernel.org,
+	spacemit@lists.linux.dev,
+	UNGLinuxDriver@microchip.com,
+	Abhinav Kumar <abhinav.kumar@linux.dev>,
+	Alexandre Belloni <alexandre.belloni@bootlin.com>,
+	=?UTF-8?q?Andr=C3=A9=20Draszik?= <andre.draszik@linaro.org>,
+	Andrew Lunn <andrew+netdev@lunn.ch>,
+	Andrzej Hajda <andrzej.hajda@intel.com>,
+	Andy Yan <andy.yan@rock-chips.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Chanho Park <chanho61.park@samsung.com>,
+	Chen-Yu Tsai <wens@kernel.org>,
+	Claudiu Beznea <claudiu.beznea@tuxon.dev>,
+	Damien Le Moal <dlemoal@kernel.org>,
+	Daniel Machon <daniel.machon@microchip.com>,
+	David Airlie <airlied@gmail.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Dmitry Baryshkov <lumag@kernel.org>,
+	Eric Dumazet <edumazet@google.com>,
+	Fabio Estevam <festevam@gmail.com>,
+	Frank Li <Frank.Li@nxp.com>,
+	Geert Uytterhoeven <geert+renesas@glider.be>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	=?UTF-8?q?Heiko=20St=C3=BCbner?= <heiko@sntech.de>,
+	Inki Dae <inki.dae@samsung.com>,
+	Jagan Teki <jagan@amarulasolutions.com>,
+	Jakub Kicinski <kuba@kernel.org>,
+	Jernej Skrabec <jernej.skrabec@gmail.com>,
+	Jessica Zhang <jesszhan0024@gmail.com>,
+	Joe Perches <joe@perches.com>,
+	Jonas Karlman <jonas@kwiboo.se>,
+	Jonathan Hunter <jonathanh@nvidia.com>,
+	Kevin Xie <kevin.xie@starfivetech.com>,
+	Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Laurent Pinchart <Laurent.pinchart@ideasonboard.com>,
+	Linus Walleij <linusw@kernel.org>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
+	Magnus Damm <magnus.damm@gmail.com>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Marc Kleine-Budde <mkl@pengutronix.de>,
+	Marek Szyprowski <m.szyprowski@samsung.com>,
+	Marijn Suijten <marijn.suijten@somainline.org>,
+	Markus Schneider-Pargmann <msp@baylibre.com>,
+	Mauro Carvalho Chehab <mchehab@kernel.org>,
+	Maxime Ripard <mripard@kernel.org>,
+	Michael Dege <michael.dege@renesas.com>,
+	Nicolas Ferre <nicolas.ferre@microchip.com>,
+	Niklas Cassel <cassel@kernel.org>,
+	Paolo Abeni <pabeni@redhat.com>,
+	Pengutronix Kernel Team <kernel@pengutronix.de>,
+	Peter Chen <peter.chen@kernel.org>,
+	Peter Griffin <peter.griffin@linaro.org>,
+	Rob Clark <robin.clark@oss.qualcomm.com>,
+	Robert Foss <rfoss@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	"Russell King (Oracle)" <rmk+kernel@armlinux.org.uk>,
+	Samuel Holland <samuel@sholland.org>,
+	Sandy Huang <hjc@rock-chips.com>,
+	Sascha Hauer <s.hauer@pengutronix.de>,
+	Sean Paul <sean@poorly.run>,
+	Sebastian Reichel <sre@kernel.org>,
+	Shawn Guo <shawn.guo@linaro.org>,
+	Shawn Lin <shawn.lin@rock-chips.com>,
+	Simona Vetter <simona@ffwll.ch>,
+	Steen Hegelund <Steen.Hegelund@microchip.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Thinh Nguyen <Thinh.Nguyen@synopsys.com>,
+	Thomas Zimmermann <tzimmermann@suse.de>,
+	Tudor Ambarus <tudor.ambarus@linaro.org>,
+	Vincent Mailhol <mailhol@kernel.org>,
+	Yixun Lan <dlan@kernel.org>,
+	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+Subject: [PATCH v3 phy-next 00/24] Split Generic PHY consumer and provider API
+Date: Mon,  9 Mar 2026 21:08:18 +0200
+Message-ID: <20260309190842.927634-1-vladimir.oltean@nxp.com>
+X-Mailer: git-send-email 2.43.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: VI1P190CA0018.EURP190.PROD.OUTLOOK.COM
+ (2603:10a6:802:2b::31) To AM9PR04MB8585.eurprd04.prod.outlook.com
+ (2603:10a6:20b:438::13)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260309062840.2937858-2-iam@sung-woo.kim>
-In-Reply-To: <20260309062840.2937858-2-iam@sung-woo.kim>
-From: Caleb Sander Mateos <csander@purestorage.com>
-Date: Mon, 9 Mar 2026 08:31:27 -0700
-X-Gm-Features: AaiRm50lVynE24y1iGtUrsPblHqAJTvTl9abhpAYnSu85cy3kb3SYItst0KXwYA
-Message-ID: <CADUfDZorSQCVtQyfjBuaziwG2Jo28yZiiqLKbp9PkFFw-9VgfQ@mail.gmail.com>
-Subject: Re: [PATCH] blk-mq: nvme: Fix general protection fault in nvme_setup_descriptor_pools()
-To: Sungwoo Kim <iam@sung-woo.kim>
-Cc: Jens Axboe <axboe@kernel.dk>, Josef Bacik <josef@toxicpanda.com>, 
-	Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@kernel.org>, 
-	Mikulas Patocka <mpatocka@redhat.com>, dm-devel@lists.linux.dev, 
-	Ulf Hansson <ulf.hansson@linaro.org>, Richard Weinberger <richard@nod.at>, 
-	Miquel Raynal <miquel.raynal@bootlin.com>, Vignesh Raghavendra <vigneshr@ti.com>, 
-	Hector Martin <marcan@marcan.st>, Sven Peter <sven@svenpeter.dev>, 
-	Alyssa Rosenzweig <alyssa@rosenzweig.io>, Keith Busch <kbusch@kernel.org>, Christoph Hellwig <hch@lst.de>, 
-	Sagi Grimberg <sagi@grimberg.me>, James Smart <james.smart@broadcom.com>, 
-	Chaitanya Kulkarni <kch@nvidia.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, 
-	"Martin K. Petersen" <martin.petersen@oracle.com>, Chao Shi <cshi008@fiu.edu>, 
-	Weidong Zhu <weizhu@fiu.edu>, Dave Tian <daveti@purdue.edu>, linux-block@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, nbd@other.debian.org, linux-mmc@vger.kernel.org, 
-	linux-mtd@lists.infradead.org, asahi@lists.linux.dev, 
-	linux-arm-kernel@lists.infradead.org, linux-nvme@lists.infradead.org, 
-	linux-scsi@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: AM9PR04MB8585:EE_|AM9PR04MB7540:EE_
+X-MS-Office365-Filtering-Correlation-Id: d8db4a24-62e4-4f49-72c9-08de7e0f554d
+X-LD-Processed: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635,ExtAddr
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+ BCL:0;ARA:13230040|19092799006|1800799024|366016|10070799003|7416014|376014;
+X-Microsoft-Antispam-Message-Info:
+ XEcgWjBqi6oAw9ADhw/hwylx+r+2Q7iiz83/myXhNFA4LTMwxUpd+4JTrYXlv5Mqf4Mbw7vPobfK60LghGo2iBZSXSJ2xR72X5+EG9GzHoMTJ0MrwjEnfw1Nfn89/bmnodwdWMZgSuxLjXMGDxhxov04Q7Vhc2H7cysYYY271m4yTBMHjZ+HA0ouCyDCNqVdrlaoOSjKVybRUhc3Js3cxYFwsUoSoD1wxSUB2GmtMMKSi2Xzli5jwmCZECSDUotVvVgGqUBIPRyCi5YM2RmtLR+lEICZ3eV7PdvoA29Qq6GZGiZ3YrD9vSwEyZ2UrT8RwokCKoDUCpFuuV3ndtNQkePM+GnaFgDw5luOI7blSD+LaskoMPmytgxviN4sdgA5jj98a/Guilu15YxzHf3v3ZuNKZT8W7JF2hqiaTgDnJkeBI6zkk3LZSnG7AC+NN6DsCINfZnd36qlroaj0nR43GZCkX1D/ARS+6D/YzcZEaCgaJY52n70mlNKaEF7InI0SPmR92sGJgOi6g97lyBce6TUnhMm0XoIQQ5I4XNOrOy4t04MMd/Q6OtOBDoaTVrM0rWv+szu+GMyvbjERTba/qY9lVv3NIGm4BxxowHhpcWC3qRz4N1Nc1qrbuztAFsREU1a0AIxV+s4yRVyqai5g7W7RkSiIfNQsFybc8aMQALnrJRmlxUaUGdZkEUM5nz4
+X-Forefront-Antispam-Report:
+ CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9PR04MB8585.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(19092799006)(1800799024)(366016)(10070799003)(7416014)(376014);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 2
+X-MS-Exchange-AntiSpam-MessageData-0:
+ =?utf-8?B?eldQUm1zVDZyUjRrM05QbHB6THY2SUFOWktmLys3eWNXeDIvRDU3Z1JabStT?=
+ =?utf-8?B?ZGN3N3hzQUpudWphaTdReXZYaTM1dHZyRG56MzZKZ1NiWHFONjVNWGs5eEt6?=
+ =?utf-8?B?N1FOQXBLR2orVnJqVk81dGNMYlArcTZwS25ob0RhczJCak5MT3hWMVVTUUg1?=
+ =?utf-8?B?WmlCc0gxK01LcldxZFAxTlJTdlg3RUlHMS9ldUl5dmhZZ0dYZ3did2MvaGZq?=
+ =?utf-8?B?WldVVlovQlRlemlQdDhmOWhtRDYwVVRBUWp4TExLeVV1Qi9KcHdWMVJkRm9R?=
+ =?utf-8?B?VzYwbkNML0pZbGVvOVhCZkRFYXpZSnM4V0pDRCtPb3ZlZlQzSC9DMlZCV0JF?=
+ =?utf-8?B?WVpWWngzS2kvTFl0Miswb0pBRXVscTBObmtGd3Vwd2g3b1lxWEp5WVhkbUVw?=
+ =?utf-8?B?RThFdE9CVkxNbG9vK2I4elhvYnlTOVIrZ1BBRlhLRWNrcXZYbXNNSU1GdFl5?=
+ =?utf-8?B?UXpIc2JNNktFMGlVMUMrbUNZMFpLZlVhKzNxL0RBS3VxbEpBeEphZW9uRGpW?=
+ =?utf-8?B?cklGREYzamlQV0thbndBbGl4Y2M3NEthYWpyTEV0akJ1eUZLSW1UNytjTkdN?=
+ =?utf-8?B?bHk4WEpUNWxzcXZHM3JBdlErSGtQQzFIMkx2NVB3QlBsN3F2bWJrQWVqM3dP?=
+ =?utf-8?B?MjlUTDlxbTRWQjR0a0ZQSlg5T1FLQWFtUmU0UHZ6NUhqdzBaek1YSDZOaVVL?=
+ =?utf-8?B?N1hKWmc0dUQvejlJTHRKQ3lxM25SUTR5eDBYWlhvWHhKVDdINWQ5VUUxM2c4?=
+ =?utf-8?B?eU9QeVovU2M5VUJTcHZDNy92T0JzenA1Q0ozVjh5YXl2Yi96M1VWb0JrZ1lR?=
+ =?utf-8?B?YmdnNEZDZThWV2VVL1VXcm5PRFNqczFMdHI0YnNRektNVDloMGZCSldkYnZh?=
+ =?utf-8?B?bTUyYitlb1VLa0IzVlZYRmlPL0tENjFRQzlxL29rU1Fua3FaQ2R1SE12YkFU?=
+ =?utf-8?B?YUdVdFRLQ3ZYaW91T09nR2VOWmRIRWNmOE9ibXJQaXNTaU9pRWloSkNOajhq?=
+ =?utf-8?B?cUQwTFV4V09aTS9Vbnh1QmVRdEF6N2NrMGpSdXkwVzdMaUxoWFdPam5zVnRY?=
+ =?utf-8?B?UG5GQy9XOXdaSlpKUERFcXlCUFREdEpHK1R2Ri81NC82UzlyNExGdnNqZG1V?=
+ =?utf-8?B?S2hDTjRXUWswbVQ5MllFVkYySElYWEJ0cndLSnhEYzRSdm00YkRKTFJsbmZD?=
+ =?utf-8?B?MmFodXRCUk5NeVprdERlK095U1VLd3FEYVFqekZ2VDNwUjBnU3htYi9NazlG?=
+ =?utf-8?B?WkVYSHJ5NFdrMTN4THM5bWI2WkxiRUJoQUY1QmhlZnBabzBYU2Zpek1qZzB0?=
+ =?utf-8?B?THdXMFgzTDZWQ0lWV0FZNUxUdzNXS3NORkMzcjRhUnp0akdDNkJYd0tDR29k?=
+ =?utf-8?B?ZE9NVFlkOFpybGsrQ25oM1BOMjU3Y0E0aU9TSjM4WVBmTmJrbVJoMHRUSERS?=
+ =?utf-8?B?ZG9pakVtRmJOQ3RRT00yRlYyMGw1a05wbWQ4d1E0eTNwdHlTWlUwTDJERUQ1?=
+ =?utf-8?B?T1VRKzdxS3I0bTNqYzdWd044SDVEWjc0TzdsYklKdFV2TTgveUtTN2xyOGl4?=
+ =?utf-8?B?YlRTaE5tL2xvOUVreUlHY09QbmhweTZmLysydGVBVVBtdmJDT3pVNnN3cHA0?=
+ =?utf-8?B?enVEZE1DNnZYNFlXSmoxY0xxb3YzVm1mOGNlb2hUVVhnbmR1aTczL0g3dmlB?=
+ =?utf-8?B?R1ZjZTlla1NGZVVnQlRJUXZYdnlkZmpFTkFSaERJbVRlNmYyVXJaRnZibEdE?=
+ =?utf-8?B?QUNFb1dudy9lTDBJSXlJeTFnclNLc3NWSDRIRTM0RWVRUUFjRUFPaHhBNURO?=
+ =?utf-8?B?UHZmVEhxaXBZWUUxeVROVlZCTDlhU0NaMjJlbkVxM1poRk1raVQ1U2VwamJ0?=
+ =?utf-8?B?V3pocFlXQUwrWVVVeDYvZ0ZFb3FNZGJ4VW9SenNRZjhKYzdxSVlDOHBsK3Ja?=
+ =?utf-8?B?Y0JXN05EK2o2anlNMFovYmZUeWllRzNkRThscEJNSk5TRHVaWDV2N0JBRi9X?=
+ =?utf-8?B?MHE1a2kwN3ZlSUlHR0hGYkQySkRDNm5BV09RZ3ZrUHNKM2FBTm5wdlQ1WDJw?=
+ =?utf-8?B?UE5KVkd2SmlJN0ZZZUN6bFYxc2diY1MxUFJGQ1JYTU9rcmg3UVZsRXJUMFBC?=
+ =?utf-8?B?Ry9mSG05b3dMdHVCdkxBTWxSR2xic0pTM2J2eW1ZM2MybHljejAyclIwdm5O?=
+ =?utf-8?B?TUhaQlpHc2ZnMmVKMXlXa09yWlpheXFKVlR3WmYyVHhJUnU3bU5xNHdqbFMr?=
+ =?utf-8?B?YW5QelNBN2pscVhsWXEvbXpJc2d4cjMrR2Q0cEJFbXg4UHBza09xU1MxZU1w?=
+ =?utf-8?B?eHZVOU9tVmlLQmJ5di9YMmZONnk2dHNZQ2ltaGFhUGhEMGtXSTFtM1Z0R21J?=
+ =?utf-8?Q?fPn/XMKu8RhTskNqW4usk5R2iwkANv3rOARNoneUEe3y7?=
+X-MS-Exchange-AntiSpam-MessageData-1: 25X3k10J55dIlE6TPhtIwsKPN+CfE6xF8ec=
+X-OriginatorOrg: nxp.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: d8db4a24-62e4-4f49-72c9-08de7e0f554d
+X-MS-Exchange-CrossTenant-AuthSource: AM9PR04MB8585.eurprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 09 Mar 2026 19:09:05.6104
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: 5mxjD6/cBZmSNNYvle+QI/FI4XTHe8+OQrb7WMkGgQN5jRGmnpvJWqahjcOmetD/K+9d1oEZ3Dqt4xLs+srDHQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM9PR04MB7540
 
-On Sun, Mar 8, 2026 at 11:30=E2=80=AFPM Sungwoo Kim <iam@sung-woo.kim> wrot=
-e:
->
-> The numa_node can be < 0 since NUMA_NO_NODE =3D -1. However,
-> struct blk_mq_hw_ctx{} defines numa_node as unsigned int. As a result,
-> numa_node is set to UINT_MAX for NUMA_NO_NODE in blk_mq_alloc_hctx().
+The biggest problem requiring this split is the fact that consumer
+drivers poke around in struct phy, accessing fields which shouldn't be
+visible to them. Follow the example of mux, gpio, iio, spi offload,
+pwrsec, pinctrl and regulator, which each expose separate headers for
+consumers and providers.
 
-The node argument to blk_mq_alloc_hctx() comes from
-blk_mq_alloc_and_init_hctx(), which is called by
-blk_mq_alloc_and_init_hctx() with int node =3D blk_mq_get_hctx_node(set,
-i). node =3D NUMA_NO_NODE would suggest that blk_mq_hw_queue_to_node()
-doesn't find any CPU affinitized to the queue. Is that even possible?
+Some off-list discussions were had with Vinod Koul regarding the 3 PHY
+providers outside the drivers/phy/ subsystem. It was agreed that it is
+desirable to relocate them to drivers/phy/, rather than to publish
+phy-provider.h to include/linux/phy/ for liberal use. Only phy.h and
+(new) phy-props.h - consumer-facing headers - stay there.
 
->
-> Later, nvme_setup_descriptor_pools() accesses
-> descriptor_pools[numa_node]. Due to the above, it tries to access
-> descriptor_pools[UINT_MAX]. The address is garbage but accessible
-> because it is canonical and still within the slab memory range.
-> Therefore, no page fault occurs, and KASAN cannot detect this since it
-> is beyond the redzones.
->
-> Subsequently, normal I/O calls dma_pool_alloc() with the garbage pool
-> address. pool->next_block contains a wild pointer, causing a general
-> protection fault (GPF).
->
-> To fix this, this patch changes the type of numa_node to int and adds
-> a check for NUMA_NO_NODE.
->
-> Log:
->
-> Oops: general protection fault, probably for non-canonical address 0xe980=
-3b040854d02c: 0000 [#1] SMP KASAN PTI
-> KASAN: maybe wild-memory-access in range [0x4c01f82042a68160-0x4c01f82042=
-a68167][FEMU] Err: I/O cmd failed: opcode=3D0x2 status=3D0x4002
-> CPU: 0 UID: 0 PID: 112363 Comm: systemd-udevd Not tainted 6.19.0-dirty #1=
-0 PREEMPT(voluntary)
-> Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS rel-1.16.3-0-=
-ga6ed6b701f0a-prebuilt.qemu.org 04/01/2014
-> RIP: 0010:pool_block_pop mm/dmapool.c:187 [inline]
-> RIP: 0010:dma_pool_alloc+0x110/0x990 mm/dmapool.c:417
-> Code: 00 0f 85 a4 07 00 00 4c 8b 63 58 4d 85 e4 0f 84 12 01 00 00 e8 41 1=
-d 93 ff 4c 89 e2 48 b8 00 00 00 00 00 fc ff df 48 c1 ea 03 <80> 3c 02 00 0f=
- 85 a7 07 00 00 49 8b 04 24 48 8d 7b 68 48 89 fa 48
-> RSP: 0018:ffffc90002b9efd0 EFLAGS: 00010003
-> RAX: dffffc0000000000 RBX: ffff888005466800 RCX: ffffffff94faab7f
-> RDX: 09803f040854d02c RSI: 6c9b26c9b26c9b27 RDI: ffff88800c725ea0
-> RBP: ffffc90002b9f060 R08: 0000000000000001 R09: 0000000000000001
-> R10: 0000000000000003 R11: 0000000000000000 R12: 4c01f82042a68164
-> R13: ffff888005466800 R14: 0000000000000820 R15: ffff888007b29000
-> FS:  00007f2abc4ff8c0(0000) GS:ffff8880d1ff7000(0000) knlGS:0000000000000=
-000
-> CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> CR2: 000056360eb89000 CR3: 000000000a480000 CR4: 00000000000006f0
-> Call Trace:
->  <TASK>
->  nvme_pci_setup_data_prp drivers/nvme/host/pci.c:906 [inline]
->  nvme_map_data drivers/nvme/host/pci.c:1114 [inline]
->  nvme_prep_rq.part.0+0x17d3/0x3c90 drivers/nvme/host/pci.c:1243
->  nvme_prep_rq drivers/nvme/host/pci.c:1239 [inline]
->  nvme_prep_rq_batch drivers/nvme/host/pci.c:1321 [inline]
->  nvme_queue_rqs+0x37b/0x8a0 drivers/nvme/host/pci.c:1336
->  __blk_mq_flush_list block/blk-mq.c:2848 [inline]
->  __blk_mq_flush_list+0xaa/0xe0 block/blk-mq.c:2844
->  blk_mq_dispatch_queue_requests+0x4f5/0x990 block/blk-mq.c:2893
->  blk_mq_flush_plug_list+0x232/0x650 block/blk-mq.c:2981
->  __blk_flush_plug+0x2c3/0x510 block/blk-core.c:1225
->  blk_finish_plug block/blk-core.c:1252 [inline]
->  blk_finish_plug+0x64/0xc0 block/blk-core.c:1249
->  read_pages+0x6bd/0x9d0 mm/readahead.c:176
->  page_cache_ra_unbounded+0x659/0x950 mm/readahead.c:269
->  do_page_cache_ra mm/readahead.c:332 [inline]
->  force_page_cache_ra+0x282/0x3a0 mm/readahead.c:361
->  page_cache_sync_ra+0x201/0xbf0 mm/readahead.c:579
->  filemap_get_pages+0x3be/0x1990 mm/filemap.c:2690
->  filemap_read+0x3ea/0xdf0 mm/filemap.c:2800
->  blkdev_read_iter+0x1b8/0x520 block/fops.c:856
->  new_sync_read fs/read_write.c:491 [inline]
->  vfs_read+0x90f/0xd80 fs/read_write.c:572
->  ksys_read+0x14e/0x280 fs/read_write.c:715
->  __do_sys_read fs/read_write.c:724 [inline]
->  __se_sys_read fs/read_write.c:722 [inline]
->  __x64_sys_read+0x7b/0xc0 fs/read_write.c:722
->  x64_sys_call+0x17ec/0x21b0 arch/x86/include/generated/asm/syscalls_64.h:=
-1
->  do_syscall_x64 arch/x86/entry/syscall_64.c:63 [inline]
->  do_syscall_64+0x8b/0x1200 arch/x86/entry/syscall_64.c:94
->  entry_SYSCALL_64_after_hwframe+0x76/0x7e
-> RIP: 0033:0x7f2abc7b204e
-> Code: 0f 1f 40 00 48 8b 15 79 af 00 00 f7 d8 64 89 02 48 c7 c0 ff ff ff f=
-f eb ba 0f 1f 00 64 8b 04 25 18 00 00 00 85 c0 75 14 0f 05 <48> 3d 00 f0 ff=
- ff 77 5a c3 66 0f 1f 84 00 00 00 00 00 48 83 ec 28
-> RSP: 002b:00007fff07113cb8 EFLAGS: 00000246 ORIG_RAX: 0000000000000000
-> RAX: ffffffffffffffda RBX: 000056360eb6a528 RCX: 00007f2abc7b204e
-> RDX: 0000000000040000 RSI: 000056360eb6a538 RDI: 000000000000000f
-> RBP: 000056360e8d23d0 R08: 000056360eb6a510 R09: 00007f2abc79abe0
-> R10: 0000000000040050 R11: 0000000000000246 R12: 000000003ff80000
-> R13: 0000000000040000 R14: 000056360eb6a510 R15: 000056360e8d2420
->  </TASK>
-> Modules linked in:
->
-> Fixes: 320ae51feed5 ("blk-mq: new multi-queue block IO queueing mechanism=
-")
-> Fixes: d977506f8863 ("nvme-pci: make PRP list DMA pools per-NUMA-node")
-> Acked-by: Chao Shi <cshi008@fiu.edu>
-> Acked-by: Weidong Zhu <weizhu@fiu.edu>
-> Acked-by: Dave Tian <daveti@purdue.edu>
-> Signed-off-by: Sungwoo Kim <iam@sung-woo.kim>
-> ---
->  block/bsg-lib.c                   |  2 +-
->  drivers/block/mtip32xx/mtip32xx.c |  2 +-
->  drivers/block/nbd.c               |  2 +-
->  drivers/md/dm-rq.c                |  2 +-
->  drivers/mmc/core/queue.c          |  2 +-
->  drivers/mtd/ubi/block.c           |  2 +-
->  drivers/nvme/host/apple.c         |  2 +-
->  drivers/nvme/host/fc.c            |  2 +-
->  drivers/nvme/host/pci.c           | 11 ++++++++---
->  drivers/nvme/host/rdma.c          |  2 +-
->  drivers/nvme/host/tcp.c           |  2 +-
->  drivers/nvme/target/loop.c        |  2 +-
->  drivers/scsi/scsi_lib.c           |  2 +-
->  include/linux/blk-mq.h            |  4 ++--
->  14 files changed, 22 insertions(+), 17 deletions(-)
->
-> diff --git a/block/bsg-lib.c b/block/bsg-lib.c
-> index 9ceb5d0832f5..e93b1018a346 100644
-> --- a/block/bsg-lib.c
-> +++ b/block/bsg-lib.c
-> @@ -299,7 +299,7 @@ static blk_status_t bsg_queue_rq(struct blk_mq_hw_ctx=
- *hctx,
->
->  /* called right after the request is allocated for the request_queue */
->  static int bsg_init_rq(struct blk_mq_tag_set *set, struct request *req,
-> -                      unsigned int hctx_idx, unsigned int numa_node)
-> +                      unsigned int hctx_idx, int numa_node)
->  {
->         struct bsg_job *job =3D blk_mq_rq_to_pdu(req);
->
-> diff --git a/drivers/block/mtip32xx/mtip32xx.c b/drivers/block/mtip32xx/m=
-tip32xx.c
-> index 567192e371a8..8aedba9b5690 100644
-> --- a/drivers/block/mtip32xx/mtip32xx.c
-> +++ b/drivers/block/mtip32xx/mtip32xx.c
-> @@ -3340,7 +3340,7 @@ static void mtip_free_cmd(struct blk_mq_tag_set *se=
-t, struct request *rq,
->  }
->
->  static int mtip_init_cmd(struct blk_mq_tag_set *set, struct request *rq,
-> -                        unsigned int hctx_idx, unsigned int numa_node)
-> +                        unsigned int hctx_idx, int numa_node)
->  {
->         struct driver_data *dd =3D set->driver_data;
->         struct mtip_cmd *cmd =3D blk_mq_rq_to_pdu(rq);
-> diff --git a/drivers/block/nbd.c b/drivers/block/nbd.c
-> index f6c33b21f69e..e1fac1c0c4cd 100644
-> --- a/drivers/block/nbd.c
-> +++ b/drivers/block/nbd.c
-> @@ -1888,7 +1888,7 @@ static void nbd_dbg_close(void)
->  #endif
->
->  static int nbd_init_request(struct blk_mq_tag_set *set, struct request *=
-rq,
-> -                           unsigned int hctx_idx, unsigned int numa_node=
-)
-> +                           unsigned int hctx_idx, int numa_node)
->  {
->         struct nbd_cmd *cmd =3D blk_mq_rq_to_pdu(rq);
->         cmd->nbd =3D set->driver_data;
-> diff --git a/drivers/md/dm-rq.c b/drivers/md/dm-rq.c
-> index a6ca92049c10..b687a209256b 100644
-> --- a/drivers/md/dm-rq.c
-> +++ b/drivers/md/dm-rq.c
-> @@ -455,7 +455,7 @@ static void dm_start_request(struct mapped_device *md=
-, struct request *orig)
->  }
->
->  static int dm_mq_init_request(struct blk_mq_tag_set *set, struct request=
- *rq,
-> -                             unsigned int hctx_idx, unsigned int numa_no=
-de)
-> +                             unsigned int hctx_idx, int numa_node)
->  {
->         struct mapped_device *md =3D set->driver_data;
->         struct dm_rq_target_io *tio =3D blk_mq_rq_to_pdu(rq);
-> diff --git a/drivers/mmc/core/queue.c b/drivers/mmc/core/queue.c
-> index 284856c8f655..06cb29190a88 100644
-> --- a/drivers/mmc/core/queue.c
-> +++ b/drivers/mmc/core/queue.c
-> @@ -203,7 +203,7 @@ static unsigned short mmc_get_max_segments(struct mmc=
-_host *host)
->  }
->
->  static int mmc_mq_init_request(struct blk_mq_tag_set *set, struct reques=
-t *req,
-> -                              unsigned int hctx_idx, unsigned int numa_n=
-ode)
-> +                              unsigned int hctx_idx, int numa_node)
->  {
->         struct mmc_queue_req *mq_rq =3D req_to_mmc_queue_req(req);
->         struct mmc_queue *mq =3D set->driver_data;
-> diff --git a/drivers/mtd/ubi/block.c b/drivers/mtd/ubi/block.c
-> index b53fd147fa65..1c0bd2b36637 100644
-> --- a/drivers/mtd/ubi/block.c
-> +++ b/drivers/mtd/ubi/block.c
-> @@ -312,7 +312,7 @@ static blk_status_t ubiblock_queue_rq(struct blk_mq_h=
-w_ctx *hctx,
->
->  static int ubiblock_init_request(struct blk_mq_tag_set *set,
->                 struct request *req, unsigned int hctx_idx,
-> -               unsigned int numa_node)
-> +               int numa_node)
->  {
->         struct ubiblock_pdu *pdu =3D blk_mq_rq_to_pdu(req);
->
-> diff --git a/drivers/nvme/host/apple.c b/drivers/nvme/host/apple.c
-> index ed61b97fde59..50ff5e9a168d 100644
-> --- a/drivers/nvme/host/apple.c
-> +++ b/drivers/nvme/host/apple.c
-> @@ -819,7 +819,7 @@ static int apple_nvme_init_hctx(struct blk_mq_hw_ctx =
-*hctx, void *data,
->
->  static int apple_nvme_init_request(struct blk_mq_tag_set *set,
->                                    struct request *req, unsigned int hctx=
-_idx,
-> -                                  unsigned int numa_node)
-> +                                  int numa_node)
->  {
->         struct apple_nvme_queue *q =3D set->driver_data;
->         struct apple_nvme *anv =3D queue_to_apple_nvme(q);
-> diff --git a/drivers/nvme/host/fc.c b/drivers/nvme/host/fc.c
-> index 6948de3f438a..64d0c5d7613a 100644
-> --- a/drivers/nvme/host/fc.c
-> +++ b/drivers/nvme/host/fc.c
-> @@ -2109,7 +2109,7 @@ __nvme_fc_init_request(struct nvme_fc_ctrl *ctrl,
->
->  static int
->  nvme_fc_init_request(struct blk_mq_tag_set *set, struct request *rq,
-> -               unsigned int hctx_idx, unsigned int numa_node)
-> +               unsigned int hctx_idx, int numa_node)
->  {
->         struct nvme_fc_ctrl *ctrl =3D to_fc_ctrl(set->driver_data);
->         struct nvme_fcp_op_w_sgl *op =3D blk_mq_rq_to_pdu(rq);
-> diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
-> index 3c83076a57e5..a5f12fc7655d 100644
-> --- a/drivers/nvme/host/pci.c
-> +++ b/drivers/nvme/host/pci.c
-> @@ -443,11 +443,16 @@ static bool nvme_dbbuf_update_and_check_event(u16 v=
-alue, __le32 *dbbuf_db,
->  }
->
->  static struct nvme_descriptor_pools *
-> -nvme_setup_descriptor_pools(struct nvme_dev *dev, unsigned numa_node)
-> +nvme_setup_descriptor_pools(struct nvme_dev *dev, int numa_node)
->  {
-> -       struct nvme_descriptor_pools *pools =3D &dev->descriptor_pools[nu=
-ma_node];
-> +       struct nvme_descriptor_pools *pools;
->         size_t small_align =3D NVME_SMALL_POOL_SIZE;
->
-> +       if (numa_node =3D=3D NUMA_NO_NODE)
-> +               pools =3D &dev->descriptor_pools[numa_node_id()];
-> +       else
-> +               pools =3D &dev->descriptor_pools[numa_node];
+The hope is that developers get a hint when they need to include the
+wrong header to get their job done.
 
-Simpler: if (numa_node =3D=3D NUMA_NO_NODE) numa_node =3D numa_node_id();
+If that fails, patch 24/24 adds a regex in the MAINTAINERS entry that
+ensures linux-phy is copied on all Generic PHY patches, for an extra set
+of eyes.
 
-> +
->         if (pools->small)
->                 return pools; /* already initialized */
->
-> @@ -516,7 +521,7 @@ static int nvme_init_hctx(struct blk_mq_hw_ctx *hctx,=
- void *data,
->
->  static int nvme_pci_init_request(struct blk_mq_tag_set *set,
->                 struct request *req, unsigned int hctx_idx,
-> -               unsigned int numa_node)
-> +               int numa_node)
->  {
->         struct nvme_iod *iod =3D blk_mq_rq_to_pdu(req);
->
-> diff --git a/drivers/nvme/host/rdma.c b/drivers/nvme/host/rdma.c
-> index 35c0822edb2d..c2514ef94028 100644
-> --- a/drivers/nvme/host/rdma.c
-> +++ b/drivers/nvme/host/rdma.c
-> @@ -292,7 +292,7 @@ static void nvme_rdma_exit_request(struct blk_mq_tag_=
-set *set,
->
->  static int nvme_rdma_init_request(struct blk_mq_tag_set *set,
->                 struct request *rq, unsigned int hctx_idx,
-> -               unsigned int numa_node)
-> +               int numa_node)
->  {
->         struct nvme_rdma_ctrl *ctrl =3D to_rdma_ctrl(set->driver_data);
->         struct nvme_rdma_request *req =3D blk_mq_rq_to_pdu(rq);
-> diff --git a/drivers/nvme/host/tcp.c b/drivers/nvme/host/tcp.c
-> index 69cb04406b47..385eef98081b 100644
-> --- a/drivers/nvme/host/tcp.c
-> +++ b/drivers/nvme/host/tcp.c
-> @@ -547,7 +547,7 @@ static void nvme_tcp_exit_request(struct blk_mq_tag_s=
-et *set,
->
->  static int nvme_tcp_init_request(struct blk_mq_tag_set *set,
->                 struct request *rq, unsigned int hctx_idx,
-> -               unsigned int numa_node)
-> +               int numa_node)
->  {
->         struct nvme_tcp_ctrl *ctrl =3D to_tcp_ctrl(set->driver_data);
->         struct nvme_tcp_request *req =3D blk_mq_rq_to_pdu(rq);
-> diff --git a/drivers/nvme/target/loop.c b/drivers/nvme/target/loop.c
-> index fc8e7c9ad858..72a8ea70eae7 100644
-> --- a/drivers/nvme/target/loop.c
-> +++ b/drivers/nvme/target/loop.c
-> @@ -202,7 +202,7 @@ static int nvme_loop_init_iod(struct nvme_loop_ctrl *=
-ctrl,
->
->  static int nvme_loop_init_request(struct blk_mq_tag_set *set,
->                 struct request *req, unsigned int hctx_idx,
-> -               unsigned int numa_node)
-> +               int numa_node)
->  {
->         struct nvme_loop_ctrl *ctrl =3D to_loop_ctrl(set->driver_data);
->         struct nvme_loop_iod *iod =3D blk_mq_rq_to_pdu(req);
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index 4a902c9dfd8b..8958ad31ed2a 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -1948,7 +1948,7 @@ static blk_status_t scsi_queue_rq(struct blk_mq_hw_=
-ctx *hctx,
->  }
->
->  static int scsi_mq_init_request(struct blk_mq_tag_set *set, struct reque=
-st *rq,
-> -                               unsigned int hctx_idx, unsigned int numa_=
-node)
-> +                               unsigned int hctx_idx, int numa_node)
->  {
->         struct Scsi_Host *shost =3D set->driver_data;
->         struct scsi_cmnd *cmd =3D blk_mq_rq_to_pdu(rq);
-> diff --git a/include/linux/blk-mq.h b/include/linux/blk-mq.h
-> index cae9e857aea4..1a5a3786522c 100644
-> --- a/include/linux/blk-mq.h
-> +++ b/include/linux/blk-mq.h
-> @@ -426,7 +426,7 @@ struct blk_mq_hw_ctx {
->         struct blk_mq_tags      *sched_tags;
->
->         /** @numa_node: NUMA node the storage adapter has been connected =
-to. */
-> -       unsigned int            numa_node;
-> +       int             numa_node;
->         /** @queue_num: Index of this hardware queue. */
->         unsigned int            queue_num;
->
-> @@ -651,7 +651,7 @@ struct blk_mq_ops {
->          * flush request.
->          */
->         int (*init_request)(struct blk_mq_tag_set *set, struct request *,
-> -                           unsigned int, unsigned int);
-> +                           unsigned int, int);
+The series is formatted on linux-phy/next for build testing, but is
+intended to be applied on top of commit
+https://git.kernel.org/pub/scm/linux/kernel/git/netdev/net-next.git/commit/?id=4ff5801f45b494ad8251a16ec06c9f303ed3b9a0
+which is v7.0-rc1 + 1 patch, and then merged into linux-phy/next.
+The idea being that it's better to resolve the merge conflict early.
+There are 4 expected conflicts, details in the conflicting patches
+(21/24 and 22/24).
 
-Pre-existing, but naming these integer arguments would be helpful for
-documentation.
+Requested merge strategy, I hope this works for everyone:
+- Subsystem maintainers ACK their affected portions
+- Entire series goes through linux-phy
+- linux-phy provides stable tag
+- (optionally) Said tag is merged back into affected subsystem 'next'
+  branches. Those who prefer can handle merge conflicts when they send
+  their PR.
 
-Best,
-Caleb
+Detailed change log in patches, summary below.
 
->         /**
->          * @exit_request: Ditto for exit/teardown.
->          */
-> --
-> 2.47.3
->
->
+v2->v3:
+- remove unused variable in PCI after device link removal
+- update MAINTAINERS regex pattern to escape forward slashes
+- add more people to CC list
+- provide conflict resolution
+v1->v2:
+- split "phy: include PHY provider header" into smaller chunks to work
+  around mailing list moderation due to patch size
+- improve MAINTAINERS regex pattern
+- make all PHY attribute helpers NULL-tolerant. Not just the new
+  phy_get_bus_width(), but also retroactively, the existing ones.
+- fixed the temporary include path from <linux/phy/phy.h> to
+  "phy-provider.h", removed anyway by the end of the series
+- logical bug fixes in the PCI controller <-> PHY device link removal
+  and Exynos UFS PHY API rework
+
+In case anyone wants to test the series, here it is on top of linux-phy/next:
+https://github.com/vladimiroltean/linux/tree/phy-split-consumer-provider-v3
+
+I've also test-applied it on v7.0-rc1 and provided conflict resolution
+with net-next and with linux-phy/next:
+https://github.com/vladimiroltean/linux/commits/phy-split-consumer-provider-merge/
+
+v2 at:
+https://lore.kernel.org/linux-phy/20260308114009.2546587-1-vladimir.oltean@nxp.com/
+v1 at:
+https://lore.kernel.org/linux-phy/20260304175735.2660419-13-vladimir.oltean@nxp.com/
+
+Cc: Abhinav Kumar <abhinav.kumar@linux.dev>
+Cc: Alexandre Belloni <alexandre.belloni@bootlin.com>
+Cc: "André Draszik" <andre.draszik@linaro.org>
+Cc: Andrew Lunn <andrew+netdev@lunn.ch>
+Cc: Andrzej Hajda <andrzej.hajda@intel.com>
+Cc: Andy Yan <andy.yan@rock-chips.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Chanho Park <chanho61.park@samsung.com>
+Cc: Chen-Yu Tsai <wens@kernel.org>
+Cc: Claudiu Beznea <claudiu.beznea@tuxon.dev>
+Cc: Damien Le Moal <dlemoal@kernel.org>
+Cc: Daniel Machon <daniel.machon@microchip.com>
+Cc: David Airlie <airlied@gmail.com>
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: Dmitry Baryshkov <lumag@kernel.org>
+Cc: Eric Dumazet <edumazet@google.com>
+Cc: Fabio Estevam <festevam@gmail.com>
+Cc: Frank Li <Frank.Li@nxp.com>
+Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: "Heiko Stübner" <heiko@sntech.de>
+Cc: Inki Dae <inki.dae@samsung.com>
+Cc: Jagan Teki <jagan@amarulasolutions.com>
+Cc: Jakub Kicinski <kuba@kernel.org>
+Cc: Jernej Skrabec <jernej.skrabec@gmail.com>
+Cc: Jessica Zhang <jesszhan0024@gmail.com>
+Cc: Joe Perches <joe@perches.com>
+Cc: Jonas Karlman <jonas@kwiboo.se>
+Cc: Jonathan Hunter <jonathanh@nvidia.com>
+Cc: Kevin Xie <kevin.xie@starfivetech.com>
+Cc: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
+Cc: "Krzysztof Wilczyński" <kwilczynski@kernel.org>
+Cc: Laurent Pinchart <Laurent.pinchart@ideasonboard.com>
+Cc: Linus Walleij <linusw@kernel.org>
+Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>
+Cc: Maarten Lankhorst <maarten.lankhorst@linux.intel.com>
+Cc: Magnus Damm <magnus.damm@gmail.com>
+Cc: Manivannan Sadhasivam <mani@kernel.org>
+Cc: Marc Kleine-Budde <mkl@pengutronix.de>
+Cc: Marek Szyprowski <m.szyprowski@samsung.com>
+Cc: Marijn Suijten <marijn.suijten@somainline.org>
+Cc: Markus Schneider-Pargmann <msp@baylibre.com>
+Cc: Mauro Carvalho Chehab <mchehab@kernel.org>
+Cc: Maxime Ripard <mripard@kernel.org>
+Cc: Michael Dege <michael.dege@renesas.com>
+Cc: Neil Armstrong <neil.armstrong@linaro.org>
+Cc: Nicolas Ferre <nicolas.ferre@microchip.com>
+Cc: Niklas Cassel <cassel@kernel.org>
+Cc: Paolo Abeni <pabeni@redhat.com>
+Cc: Pengutronix Kernel Team <kernel@pengutronix.de>
+Cc: Peter Chen <peter.chen@kernel.org>
+Cc: Peter Griffin <peter.griffin@linaro.org>
+Cc: Rob Clark <robin.clark@oss.qualcomm.com>
+Cc: Robert Foss <rfoss@kernel.org>
+Cc: Rob Herring <robh@kernel.org>
+Cc: "Russell King (Oracle)" <rmk+kernel@armlinux.org.uk>
+Cc: Samuel Holland <samuel@sholland.org>
+Cc: Sandy Huang <hjc@rock-chips.com>
+Cc: Sascha Hauer <s.hauer@pengutronix.de>
+Cc: Sean Paul <sean@poorly.run>
+Cc: Sebastian Reichel <sre@kernel.org>
+Cc: Shawn Guo <shawn.guo@linaro.org>
+Cc: Shawn Lin <shawn.lin@rock-chips.com>
+Cc: Simona Vetter <simona@ffwll.ch>
+Cc: Steen Hegelund <Steen.Hegelund@microchip.com>
+Cc: Thierry Reding <thierry.reding@gmail.com>
+Cc: Thinh Nguyen <Thinh.Nguyen@synopsys.com>
+Cc: Thomas Zimmermann <tzimmermann@suse.de>
+Cc: Tudor Ambarus <tudor.ambarus@linaro.org>
+Cc: Vincent Mailhol <mailhol@kernel.org>
+Cc: Yixun Lan <dlan@kernel.org>
+Cc: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+
+Vladimir Oltean (24):
+  ata: add <linux/pm_runtime.h> where missing
+  PCI: Add missing headers transitively included by <linux/phy/phy.h>
+  usb: add missing headers transitively included by <linux/phy/phy.h>
+  drm: add <linux/pm_runtime.h> where missing
+  phy: add <linux/pm_runtime.h> where missing
+  phy: spacemit: include missing <linux/phy/phy.h>
+  net: lan969x: include missing <linux/of.h>
+  PCI: Remove device links to PHY
+  ufs: exynos: stop poking into struct phy guts
+  drm/rockchip: dw_hdmi: avoid direct dereference of phy->dev.of_node
+  drm/msm/dp: remove debugging prints with internal struct phy state
+  phy: move provider API out of public <linux/phy/phy.h>
+  phy: make phy_get_mode(), phy_(get|set)_bus_width() NULL tolerant
+  phy: introduce phy_get_max_link_rate() helper for consumers
+  drm/rockchip: dsi: include PHY provider header
+  drm: bridge: cdns-mhdp8546: use consumer API for getting PHY bus width
+  media: sunxi: a83-mips-csi2: include PHY provider header
+  net: renesas: rswitch: include PHY provider header
+  pinctrl: tegra-xusb: include PHY provider header
+  power: supply: cpcap-charger: include missing <linux/property.h>
+  phy: include PHY provider header (1/2)
+  phy: include PHY provider header (2/2)
+  phy: remove temporary provider compatibility from consumer header
+  MAINTAINERS: add regexes for linux-phy
+
+ MAINTAINERS                                   |  11 +
+ drivers/ata/ahci.c                            |   1 +
+ drivers/ata/ahci_brcm.c                       |   1 +
+ drivers/ata/ahci_ceva.c                       |   1 +
+ drivers/ata/ahci_qoriq.c                      |   1 +
+ drivers/ata/libahci.c                         |   1 +
+ .../drm/bridge/analogix/analogix_dp_core.c    |   1 +
+ .../drm/bridge/cadence/cdns-mhdp8546-core.c   |   7 +-
+ drivers/gpu/drm/bridge/nwl-dsi.c              |   1 +
+ drivers/gpu/drm/bridge/samsung-dsim.c         |   1 +
+ drivers/gpu/drm/bridge/synopsys/dw-dp.c       |   2 +-
+ drivers/gpu/drm/msm/dp/dp_aux.c               |   1 +
+ drivers/gpu/drm/msm/dp/dp_ctrl.c              |  18 -
+ drivers/gpu/drm/rockchip/cdn-dp-core.c        |   1 +
+ .../gpu/drm/rockchip/dw-mipi-dsi-rockchip.c   |   1 +
+ drivers/gpu/drm/rockchip/dw_hdmi-rockchip.c   |  25 +-
+ .../sun8i-a83t-mipi-csi2/sun8i_a83t_dphy.c    |   2 +-
+ drivers/net/can/at91_can.c                    |   3 +-
+ drivers/net/can/flexcan/flexcan-core.c        |   3 +-
+ drivers/net/can/m_can/m_can_platform.c        |   3 +-
+ drivers/net/can/rcar/rcar_canfd.c             |   3 +-
+ .../microchip/sparx5/lan969x/lan969x_rgmii.c  |   1 +
+ drivers/net/ethernet/renesas/rswitch_main.c   |   1 +
+ .../controller/cadence/pcie-cadence-plat.c    |   4 -
+ drivers/pci/controller/cadence/pcie-cadence.c |  16 +-
+ drivers/pci/controller/cadence/pcie-cadence.h |   2 -
+ drivers/pci/controller/dwc/pci-dra7xx.c       |  16 -
+ drivers/pci/controller/dwc/pci-keystone.c     |  32 +-
+ drivers/pci/controller/dwc/pcie-dw-rockchip.c |   1 +
+ drivers/pci/controller/dwc/pcie-histb.c       |   1 +
+ drivers/pci/controller/dwc/pcie-qcom-ep.c     |   1 +
+ drivers/pci/controller/dwc/pcie-spacemit-k1.c |   2 +
+ drivers/pci/controller/dwc/pcie-tegra194.c    |   1 +
+ drivers/pci/controller/pci-tegra.c            |   1 +
+ drivers/pci/controller/pcie-rockchip-host.c   |   1 +
+ drivers/pci/controller/plda/pcie-starfive.c   |   1 +
+ drivers/phy/allwinner/phy-sun4i-usb.c         |   3 +-
+ drivers/phy/allwinner/phy-sun50i-usb3.c       |   3 +-
+ drivers/phy/allwinner/phy-sun6i-mipi-dphy.c   |   4 +-
+ drivers/phy/allwinner/phy-sun9i-usb.c         |   3 +-
+ drivers/phy/amlogic/phy-meson-axg-mipi-dphy.c |   2 +
+ .../amlogic/phy-meson-axg-mipi-pcie-analog.c  |   3 +-
+ drivers/phy/amlogic/phy-meson-axg-pcie.c      |   2 +
+ .../amlogic/phy-meson-g12a-mipi-dphy-analog.c |   3 +-
+ drivers/phy/amlogic/phy-meson-g12a-usb2.c     |   2 +
+ .../phy/amlogic/phy-meson-g12a-usb3-pcie.c    |   3 +-
+ drivers/phy/amlogic/phy-meson-gxl-usb2.c      |   3 +-
+ drivers/phy/amlogic/phy-meson8-hdmi-tx.c      |   3 +-
+ drivers/phy/amlogic/phy-meson8b-usb2.c        |   3 +-
+ drivers/phy/apple/atc.c                       |   3 +-
+ drivers/phy/broadcom/phy-bcm-cygnus-pcie.c    |   3 +-
+ drivers/phy/broadcom/phy-bcm-kona-usb2.c      |   4 +-
+ drivers/phy/broadcom/phy-bcm-ns-usb2.c        |   3 +-
+ drivers/phy/broadcom/phy-bcm-ns-usb3.c        |   3 +-
+ drivers/phy/broadcom/phy-bcm-ns2-pcie.c       |   3 +-
+ drivers/phy/broadcom/phy-bcm-ns2-usbdrd.c     |   3 +-
+ drivers/phy/broadcom/phy-bcm-sr-pcie.c        |   3 +-
+ drivers/phy/broadcom/phy-bcm-sr-usb.c         |   3 +-
+ drivers/phy/broadcom/phy-bcm63xx-usbh.c       |   3 +-
+ drivers/phy/broadcom/phy-brcm-sata.c          |   3 +-
+ drivers/phy/broadcom/phy-brcm-usb.c           |   2 +-
+ drivers/phy/cadence/cdns-dphy-rx.c            |   3 +-
+ drivers/phy/cadence/cdns-dphy.c               |   4 +-
+ drivers/phy/cadence/phy-cadence-salvo.c       |   3 +-
+ drivers/phy/cadence/phy-cadence-sierra.c      |   3 +-
+ drivers/phy/cadence/phy-cadence-torrent.c     |   3 +-
+ drivers/phy/canaan/phy-k230-usb.c             |   3 +-
+ drivers/phy/eswin/phy-eic7700-sata.c          |   3 +-
+ .../phy/freescale/phy-fsl-imx8-mipi-dphy.c    |   3 +-
+ drivers/phy/freescale/phy-fsl-imx8m-pcie.c    |   4 +-
+ drivers/phy/freescale/phy-fsl-imx8mq-usb.c    |   3 +-
+ drivers/phy/freescale/phy-fsl-imx8qm-hsio.c   |   6 +-
+ .../phy/freescale/phy-fsl-imx8qm-lvds-phy.c   |   3 +-
+ drivers/phy/freescale/phy-fsl-lynx-28g.c      |   3 +-
+ drivers/phy/hisilicon/phy-hi3660-usb3.c       |   3 +-
+ drivers/phy/hisilicon/phy-hi3670-pcie.c       |   3 +-
+ drivers/phy/hisilicon/phy-hi3670-usb3.c       |   3 +-
+ drivers/phy/hisilicon/phy-hi6220-usb.c        |   3 +-
+ drivers/phy/hisilicon/phy-hisi-inno-usb2.c    |   4 +-
+ drivers/phy/hisilicon/phy-histb-combphy.c     |   3 +-
+ drivers/phy/hisilicon/phy-hix5hd2-sata.c      |   3 +-
+ drivers/phy/ingenic/phy-ingenic-usb.c         |   3 +-
+ drivers/phy/intel/phy-intel-keembay-emmc.c    |   3 +-
+ drivers/phy/intel/phy-intel-keembay-usb.c     |   3 +-
+ drivers/phy/intel/phy-intel-lgm-combo.c       |   4 +-
+ drivers/phy/intel/phy-intel-lgm-emmc.c        |   3 +-
+ drivers/phy/lantiq/phy-lantiq-rcu-usb2.c      |   3 +-
+ drivers/phy/lantiq/phy-lantiq-vrx200-pcie.c   |   4 +-
+ drivers/phy/marvell/phy-armada375-usb2.c      |   3 +-
+ drivers/phy/marvell/phy-armada38x-comphy.c    |   3 +-
+ drivers/phy/marvell/phy-berlin-sata.c         |   3 +-
+ drivers/phy/marvell/phy-berlin-usb.c          |   3 +-
+ drivers/phy/marvell/phy-mmp3-hsic.c           |   3 +-
+ drivers/phy/marvell/phy-mmp3-usb.c            |   3 +-
+ drivers/phy/marvell/phy-mvebu-a3700-comphy.c  |   3 +-
+ drivers/phy/marvell/phy-mvebu-a3700-utmi.c    |   3 +-
+ drivers/phy/marvell/phy-mvebu-cp110-comphy.c  |   3 +-
+ drivers/phy/marvell/phy-mvebu-cp110-utmi.c    |   3 +-
+ drivers/phy/marvell/phy-mvebu-sata.c          |   3 +-
+ drivers/phy/marvell/phy-pxa-28nm-hsic.c       |   3 +-
+ drivers/phy/marvell/phy-pxa-28nm-usb2.c       |   3 +-
+ drivers/phy/marvell/phy-pxa-usb.c             |   3 +-
+ drivers/phy/mediatek/phy-mtk-dp.c             |   3 +-
+ drivers/phy/mediatek/phy-mtk-hdmi-mt8195.c    |   1 -
+ drivers/phy/mediatek/phy-mtk-hdmi.h           |   3 +-
+ drivers/phy/mediatek/phy-mtk-mipi-csi-0-5.c   |   2 +-
+ drivers/phy/mediatek/phy-mtk-mipi-dsi.h       |   3 +-
+ drivers/phy/mediatek/phy-mtk-pcie.c           |   2 +-
+ drivers/phy/mediatek/phy-mtk-tphy.c           |   2 +-
+ drivers/phy/mediatek/phy-mtk-ufs.c            |   2 +-
+ drivers/phy/mediatek/phy-mtk-xfi-tphy.c       |   2 +-
+ drivers/phy/mediatek/phy-mtk-xsphy.c          |   2 +-
+ drivers/phy/microchip/lan966x_serdes.c        |   4 +-
+ drivers/phy/microchip/sparx5_serdes.c         |   2 +-
+ drivers/phy/motorola/phy-cpcap-usb.c          |   3 +-
+ drivers/phy/motorola/phy-mapphone-mdm6600.c   |   5 +-
+ drivers/phy/mscc/phy-ocelot-serdes.c          |   3 +-
+ drivers/phy/nuvoton/phy-ma35d1-usb2.c         |   3 +-
+ drivers/phy/phy-airoha-pcie.c                 |   2 +-
+ drivers/phy/phy-can-transceiver.c             |   3 +-
+ drivers/phy/phy-core-mipi-dphy.c              |   4 +-
+ drivers/phy/phy-core.c                        |  52 ++
+ drivers/phy/phy-google-usb.c                  |   4 +-
+ drivers/phy/phy-lpc18xx-usb-otg.c             |   3 +-
+ drivers/phy/phy-nxp-ptn3222.c                 |   3 +-
+ drivers/phy/phy-pistachio-usb.c               |   4 +-
+ drivers/phy/phy-provider.h                    | 256 +++++++++
+ drivers/phy/phy-snps-eusb2.c                  |   2 +
+ drivers/phy/phy-xgene.c                       |   3 +-
+ drivers/phy/qualcomm/phy-ath79-usb.c          |   3 +-
+ drivers/phy/qualcomm/phy-qcom-apq8064-sata.c  |   3 +-
+ drivers/phy/qualcomm/phy-qcom-edp.c           |   3 +-
+ .../phy/qualcomm/phy-qcom-eusb2-repeater.c    |   3 +-
+ drivers/phy/qualcomm/phy-qcom-ipq4019-usb.c   |   3 +-
+ drivers/phy/qualcomm/phy-qcom-ipq806x-sata.c  |   3 +-
+ drivers/phy/qualcomm/phy-qcom-ipq806x-usb.c   |   3 +-
+ drivers/phy/qualcomm/phy-qcom-m31-eusb2.c     |   2 +
+ drivers/phy/qualcomm/phy-qcom-m31.c           |   3 +-
+ drivers/phy/qualcomm/phy-qcom-pcie2.c         |   3 +-
+ drivers/phy/qualcomm/phy-qcom-qmp-combo.c     |   4 +-
+ .../phy/qualcomm/phy-qcom-qmp-pcie-msm8996.c  |   3 +-
+ drivers/phy/qualcomm/phy-qcom-qmp-pcie.c      |   3 +-
+ drivers/phy/qualcomm/phy-qcom-qmp-ufs.c       |   3 +-
+ .../phy/qualcomm/phy-qcom-qmp-usb-legacy.c    |   4 +-
+ drivers/phy/qualcomm/phy-qcom-qmp-usb.c       |   4 +-
+ drivers/phy/qualcomm/phy-qcom-qmp-usbc.c      |   4 +-
+ drivers/phy/qualcomm/phy-qcom-qusb2.c         |   5 +-
+ drivers/phy/qualcomm/phy-qcom-sgmii-eth.c     |   3 +-
+ drivers/phy/qualcomm/phy-qcom-snps-femto-v2.c |   4 +-
+ .../phy/qualcomm/phy-qcom-uniphy-pcie-28lp.c  |   3 +-
+ drivers/phy/qualcomm/phy-qcom-usb-hs-28nm.c   |   3 +-
+ drivers/phy/qualcomm/phy-qcom-usb-hs.c        |   3 +-
+ drivers/phy/qualcomm/phy-qcom-usb-hsic.c      |   3 +-
+ drivers/phy/qualcomm/phy-qcom-usb-ss.c        |   3 +-
+ drivers/phy/ralink/phy-mt7621-pci.c           |   3 +-
+ drivers/phy/ralink/phy-ralink-usb.c           |   3 +-
+ drivers/phy/realtek/phy-rtk-usb2.c            |   3 +-
+ drivers/phy/realtek/phy-rtk-usb3.c            |   3 +-
+ drivers/phy/renesas/phy-rcar-gen2.c           |   3 +-
+ drivers/phy/renesas/phy-rcar-gen3-pcie.c      |   4 +-
+ drivers/phy/renesas/phy-rcar-gen3-usb2.c      |   3 +-
+ drivers/phy/renesas/phy-rcar-gen3-usb3.c      |   3 +-
+ drivers/phy/renesas/phy-rzg3e-usb3.c          |   3 +-
+ drivers/phy/renesas/r8a779f0-ether-serdes.c   |   4 +-
+ drivers/phy/rockchip/phy-rockchip-dp.c        |   3 +-
+ drivers/phy/rockchip/phy-rockchip-dphy-rx0.c  |   3 +-
+ drivers/phy/rockchip/phy-rockchip-emmc.c      |   3 +-
+ .../phy/rockchip/phy-rockchip-inno-csidphy.c  |   3 +-
+ .../phy/rockchip/phy-rockchip-inno-dsidphy.c  |   4 +-
+ drivers/phy/rockchip/phy-rockchip-inno-hdmi.c |   2 +
+ drivers/phy/rockchip/phy-rockchip-inno-usb2.c |   3 +-
+ .../rockchip/phy-rockchip-naneng-combphy.c    |   3 +-
+ drivers/phy/rockchip/phy-rockchip-pcie.c      |   2 +-
+ .../phy/rockchip/phy-rockchip-samsung-dcphy.c |   3 +-
+ .../phy/rockchip/phy-rockchip-samsung-hdptx.c |   2 +
+ .../phy/rockchip/phy-rockchip-snps-pcie3.c    |   3 +-
+ drivers/phy/rockchip/phy-rockchip-typec.c     |   5 +-
+ drivers/phy/rockchip/phy-rockchip-usb.c       |   3 +-
+ drivers/phy/rockchip/phy-rockchip-usbdp.c     |   2 +
+ drivers/phy/samsung/phy-exynos-dp-video.c     |   3 +-
+ drivers/phy/samsung/phy-exynos-mipi-video.c   |   3 +-
+ drivers/phy/samsung/phy-exynos-pcie.c         |   3 +-
+ drivers/phy/samsung/phy-exynos4210-usb2.c     |   3 +-
+ drivers/phy/samsung/phy-exynos4x12-usb2.c     |   3 +-
+ drivers/phy/samsung/phy-exynos5-usbdrd.c      |   2 +
+ drivers/phy/samsung/phy-exynos5250-sata.c     |   3 +-
+ drivers/phy/samsung/phy-exynos5250-usb2.c     |   3 +-
+ drivers/phy/samsung/phy-s5pv210-usb2.c        |   3 +-
+ drivers/phy/samsung/phy-samsung-ufs.c         |   2 +-
+ drivers/phy/samsung/phy-samsung-ufs.h         |   3 +-
+ drivers/phy/samsung/phy-samsung-usb2.c        |   2 +
+ drivers/phy/samsung/phy-samsung-usb2.h        |   3 +-
+ drivers/phy/socionext/phy-uniphier-ahci.c     |   3 +-
+ drivers/phy/socionext/phy-uniphier-pcie.c     |   3 +-
+ drivers/phy/socionext/phy-uniphier-usb2.c     |   3 +-
+ drivers/phy/socionext/phy-uniphier-usb3hs.c   |   3 +-
+ drivers/phy/socionext/phy-uniphier-usb3ss.c   |   3 +-
+ drivers/phy/sophgo/phy-cv1800-usb2.c          |   3 +-
+ drivers/phy/spacemit/phy-k1-pcie.c            |   4 +-
+ drivers/phy/spacemit/phy-k1-usb2.c            |   2 +
+ drivers/phy/st/phy-miphy28lp.c                |   4 +-
+ drivers/phy/st/phy-spear1310-miphy.c          |   3 +-
+ drivers/phy/st/phy-spear1340-miphy.c          |   3 +-
+ drivers/phy/st/phy-stih407-usb.c              |   3 +-
+ drivers/phy/st/phy-stm32-combophy.c           |   3 +-
+ drivers/phy/st/phy-stm32-usbphyc.c            |   2 +
+ drivers/phy/starfive/phy-jh7110-dphy-rx.c     |   3 +-
+ drivers/phy/starfive/phy-jh7110-dphy-tx.c     |   3 +-
+ drivers/phy/starfive/phy-jh7110-pcie.c        |   3 +-
+ drivers/phy/starfive/phy-jh7110-usb.c         |   3 +-
+ drivers/phy/sunplus/phy-sunplus-usb2.c        |   3 +-
+ drivers/phy/tegra/phy-tegra194-p2u.c          |   3 +-
+ drivers/phy/tegra/xusb-tegra124.c             |   2 +-
+ drivers/phy/tegra/xusb-tegra186.c             |   2 +-
+ drivers/phy/tegra/xusb-tegra210.c             |   2 +-
+ drivers/phy/tegra/xusb.c                      |   2 +-
+ drivers/phy/ti/phy-am654-serdes.c             |   3 +-
+ drivers/phy/ti/phy-da8xx-usb.c                |   3 +-
+ drivers/phy/ti/phy-dm816x-usb.c               |   3 +-
+ drivers/phy/ti/phy-gmii-sel.c                 |   3 +-
+ drivers/phy/ti/phy-omap-usb2.c                |   3 +-
+ drivers/phy/ti/phy-ti-pipe3.c                 |   3 +-
+ drivers/phy/ti/phy-tusb1210.c                 |   1 +
+ drivers/phy/ti/phy-twl4030-usb.c              |   3 +-
+ drivers/phy/xilinx/phy-zynqmp.c               |   4 +-
+ drivers/pinctrl/tegra/pinctrl-tegra-xusb.c    |   2 +-
+ drivers/power/supply/cpcap-charger.c          |   1 +
+ drivers/ufs/host/ufs-exynos.c                 |  24 +-
+ drivers/ufs/host/ufs-exynos.h                 |   1 +
+ drivers/usb/chipidea/ci_hdrc_imx.c            |   1 +
+ drivers/usb/core/hcd.c                        |   1 +
+ drivers/usb/dwc3/dwc3-generic-plat.c          |   1 +
+ drivers/usb/dwc3/gadget.c                     |   1 +
+ include/linux/phy/phy-props.h                 |  75 +++
+ include/linux/phy/phy-sun4i-usb.h             |   2 +-
+ include/linux/phy/phy.h                       | 497 ++++--------------
+ include/linux/phy/ulpi_phy.h                  |   2 +-
+ 237 files changed, 941 insertions(+), 705 deletions(-)
+ create mode 100644 drivers/phy/phy-provider.h
+ create mode 100644 include/linux/phy/phy-props.h
+
+-- 
+2.43.0
+
