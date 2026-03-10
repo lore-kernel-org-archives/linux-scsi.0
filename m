@@ -1,38 +1,39 @@
 Received: from mail.avm.de (mail.avm.de [212.42.244.120])
 	(using TLSv1.2 with cipher DHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C3A74C041D;
-	Tue, 10 Mar 2026 11:55:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F62947886E;
+	Tue, 10 Mar 2026 11:55:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.42.244.120
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773143766; cv=none; b=eNYgd1oWW7By0IZ69pfu5JB3MgYckysWTTL8yKiRzq4Y/11hNOmuN8HdnVEEtzeNLZWic7rRUZLrd1QX4z4T992MlO89GmJ2PqmEbQ7z2DQwRhNhXL/edznFZcin+HZWqQP67OIAWqCF8iiK9JZbtxf0PQCdxCP3YRODWyfCRi8=
+	t=1773143751; cv=none; b=DoHsgMPyU7qtsIvak0ixiYWiMVdWeTR9anWsmu0WRByYuXhTwf4zboq9PQF8x5EWX98NUexO1i1kHQ9tdng4LGg8oRdy5tG6dC0b1aXnVDnEuZS1POeOFc7V36y2lsy+/DF+OWuSAy/yOUStzIS7qnCU8OB/0i/GkiuUw4UuQhw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773143766; c=relaxed/simple;
-	bh=r2ZNUyu6wG+N08MfsdquggU1Q5xHuPu+4B/VYVv0t9Q=;
+	s=arc-20240116; t=1773143751; c=relaxed/simple;
+	bh=U4MQ2UyTEtTm9FfUFN8u0E2v86RR/vLyOkwrg7Rl0HM=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=UmahpJWAUWYLPWIrUetH/k6Cs5+UJW8qAGgvUDkSY47ZHTUxfpygVGAjbJHOMtDM6AXDknm21vYgu0S7/bX3ossrgEZoUck+Qk/WZc/I7DDr/qxU1nvN0creh8W++MmIAIf8l5AaVisarBsMdWhtgzmDLElZWmdbtH7KvjCtIYY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=avm.de; spf=pass smtp.mailfrom=avm.de; dkim=pass (1024-bit key) header.d=avm.de header.i=@avm.de header.b=YXGm2fdd; arc=none smtp.client-ip=212.42.244.120
+	 In-Reply-To:To:Cc; b=Dh316AFWOcD0gu4eQ9y28SbS/vrNW+rFVtIeWtr2V9xRe0vn1iVhN5rGpTtUxrdBsswxB37T7C/NwR3n3PaE7xKlJVea/fV8f7e5lMMc6GbtLvwiaiIHYp95EEjNca9JNpeqi494oURHw5g0jJPI8MdHeRXFFRMCd5EWNnu1FR8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=avm.de; spf=pass smtp.mailfrom=avm.de; dkim=pass (1024-bit key) header.d=avm.de header.i=@avm.de header.b=pkZgS6E2; arc=none smtp.client-ip=212.42.244.120
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=avm.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=avm.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=avm.de header.i=@avm.de header.b="YXGm2fdd"
+	dkim=pass (1024-bit key) header.d=avm.de header.i=@avm.de header.b="pkZgS6E2"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=avm.de; s=mail;
-	t=1773143727; bh=r2ZNUyu6wG+N08MfsdquggU1Q5xHuPu+4B/VYVv0t9Q=;
+	t=1773143724; bh=U4MQ2UyTEtTm9FfUFN8u0E2v86RR/vLyOkwrg7Rl0HM=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
-	b=YXGm2fddB0bD05XRQUo0zroBzSiXv55w6mXtnC3/rbyTRBzDlz9PWwan2loANEchz
-	 3nUHhdwioF2zPrdtj5GGDiz2/RlpAekCz2aZgV1toF9qbrEYEb5oV3jU7h9yUVsShF
-	 X4koU5bE7tqGGpl7IdLmkPqUNFFBIWSBlmjRRwMc=
-Received: from [212.42.244.71] (helo=mail.avm.de)
+	b=pkZgS6E2b6HyMFIjBzS/B+8+S0biV0Szf5QLvjvxmALO/k+UU3HGuHgtEcUK6r0hT
+	 l3sidqEaLmVC6CjiI74oRmEKxGfUqB5EqeVLendnLbzsQ2HomXxjkzlaNLXsRLIGkS
+	 uT2G4P9Dig0e7DdWmJ/gJ1GOA6l1sZgQVMwHxKoY=
+Received: from [2001:bf0:244:244::71] (helo=mail.avm.de)
 	by mail.avm.de with ESMTP (eXpurgate 4.55.2)
 	(envelope-from <phahn-oss@avm.de>)
-	id 69b006af-b734-7f0000032729-7f0000019c66-1
-	for <multiple-recipients>; Tue, 10 Mar 2026 12:55:27 +0100
-Received: from mail-auth.avm.de (dovecot-mx-01.avm.de [212.42.244.71])
+	id 69b006ac-b734-7f0000032729-7f000001c046-1
+	for <multiple-recipients>; Tue, 10 Mar 2026 12:55:24 +0100
+Received: from mail-auth.avm.de (dovecot-mx-01.avm.de [IPv6:2001:bf0:244:244::71])
 	by mail.avm.de (Postfix) with ESMTPS;
-	Tue, 10 Mar 2026 12:55:27 +0100 (CET)
+	Tue, 10 Mar 2026 12:55:24 +0100 (CET)
 From: Philipp Hahn <phahn-oss@avm.de>
-Date: Tue, 10 Mar 2026 12:49:20 +0100
-Subject: [PATCH 54/61] aoe: Prefer IS_ERR_OR_NULL over manual NULL check
+Date: Tue, 10 Mar 2026 12:48:51 +0100
+Subject: [PATCH 25/61] net/bluetooth: Prefer IS_ERR_OR_NULL over manual
+ NULL check
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -41,7 +42,7 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260310-b4-is_err_or_null-v1-54-bd63b656022d@avm.de>
+Message-Id: <20260310-b4-is_err_or_null-v1-25-bd63b656022d@avm.de>
 References: <20260310-b4-is_err_or_null-v1-0-bd63b656022d@avm.de>
 In-Reply-To: <20260310-b4-is_err_or_null-v1-0-bd63b656022d@avm.de>
 To: amd-gfx@lists.freedesktop.org, apparmor@lists.ubuntu.com, 
@@ -71,21 +72,23 @@ To: amd-gfx@lists.freedesktop.org, apparmor@lists.ubuntu.com,
  sched-ext@lists.linux.dev, target-devel@vger.kernel.org, 
  tipc-discussion@lists.sourceforge.net, v9fs@lists.linux.dev, 
  Philipp Hahn <phahn-oss@avm.de>
-Cc: Justin Sanders <justin@coraid.com>, Jens Axboe <axboe@kernel.dk>
-X-Developer-Signature: v=1; a=openpgp-sha256; l=955; i=phahn-oss@avm.de;
- h=from:subject:message-id; bh=r2ZNUyu6wG+N08MfsdquggU1Q5xHuPu+4B/VYVv0t9Q=;
- b=owEBbQGS/pANAwAKATQtBlPRrKzbAcsmYgBpsAaNWcUAch/xMnI0wAbOgPf41K9NsP36Msk7P
- Nki6xRL5YKJATMEAAEKAB0WIQQ5bPBtrWDUcDQCppg0LQZT0ays2wUCabAGjQAKCRA0LQZT0ays
- 2xbWCACfzS98X1Mp5R5EwpIK0pTgqrssQIB840NNUj3GRa/d9D29Lch2JFjR2Yy+ldzvSmEDJYr
- +FATwB8i4z+nArVkmYPgbG8vodjj8pep1H5lik7YhU3G9ClazVWr99T039Q+W8sEprULXLQ0dbA
- 4Kpe3/L1QfxY1N+GchfqAHMv0rRJq1RvirATmISGmxTg7n0SEymJW83Bn4X8R0ZnvK6kohy5NEW
- 2Ii5RKfTmBA8YgN2bfh5HrwrKAUrDiQU4qD40KTADcaRVC7Oxd160l9rFHE0+fB+GiDoct83TcC
- /85+2RTmaR+Iva1VQ69ftJxFcgDmZC/vMk3mknKyTuNPcNM+
+Cc: Marcel Holtmann <marcel@holtmann.org>, 
+ Johan Hedberg <johan.hedberg@gmail.com>, 
+ Luiz Augusto von Dentz <luiz.dentz@gmail.com>
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1522; i=phahn-oss@avm.de;
+ h=from:subject:message-id; bh=U4MQ2UyTEtTm9FfUFN8u0E2v86RR/vLyOkwrg7Rl0HM=;
+ b=owEBbQGS/pANAwAKATQtBlPRrKzbAcsmYgBpsAYq6Vp4tN82O3UqmYAB2rCpxamSEi8qzxQbQ
+ a7J5ECg00uJATMEAAEKAB0WIQQ5bPBtrWDUcDQCppg0LQZT0ays2wUCabAGKgAKCRA0LQZT0ays
+ 2zTjB/4mjCTr3iXgM6OBkpfxhcEN7EQQZ1y9EXzSAaaFnPJ4J6dbscyHQ/vrwihzqSCkid2ehYX
+ PXWgLr3enkVF+dbM8V9NRPpLg6F53eMyK7CDWQG9AEEJdJq5IDVkThiVxeIs2iOyPBRVnnYWh+Q
+ FhA5NtTEwVLOnsWfWahJLqDe7jVY+yfeXhrX4z5N5WnqSQs4m5vScZRnTkdBPMBPzYgMtNL5igV
+ SF/croNsrnotNJXtafaXYhWm05HCgfm5TNLHJLZIRe+0bC9Er8RwnfgRXEDKBgK6ljnqVy3QgCk
+ bdr+gnx+ukbOMXU8jf2GxeDozNZ6NjdS7QCYNHlx/c+fJCr+
 X-Developer-Key: i=phahn-oss@avm.de; a=openpgp;
  fpr=58AF7C2E007CDBE62C59E078F50EFDCF8AD04B1A
-X-purgate-ID: 149429::1773143727-DADD8A3D-0ED39ACF/0/0
+X-purgate-ID: 149429::1773143724-27DC6A3D-212813DF/0/0
 X-purgate-type: clean
-X-purgate-size: 957
+X-purgate-size: 1524
 X-purgate-Ad: Categorized by eleven eXpurgate (R) https://www.eleven.de
 X-purgate: This mail is considered clean (visit https://www.eleven.de for further information)
 X-purgate: clean
@@ -95,28 +98,47 @@ check.
 
 Change generated with coccinelle.
 
-To: Justin Sanders <justin@coraid.com>
-To: Jens Axboe <axboe@kernel.dk>
-Cc: linux-block@vger.kernel.org
+To: Marcel Holtmann <marcel@holtmann.org>
+To: Johan Hedberg <johan.hedberg@gmail.com>
+To: Luiz Augusto von Dentz <luiz.dentz@gmail.com>
+Cc: linux-bluetooth@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org
 Signed-off-by: Philipp Hahn <phahn-oss@avm.de>
 ---
- drivers/block/aoe/aoecmd.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ net/bluetooth/mgmt.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/block/aoe/aoecmd.c b/drivers/block/aoe/aoecmd.c
-index a4744a30a8af4ff05113f3234021eec728265b4f..b31e539a66433a0a5d6e81117a32d12735ffc1bc 100644
---- a/drivers/block/aoe/aoecmd.c
-+++ b/drivers/block/aoe/aoecmd.c
-@@ -1268,7 +1268,7 @@ aoe_ktstart(struct ktstate *k)
+diff --git a/net/bluetooth/mgmt.c b/net/bluetooth/mgmt.c
+index a7238fd3b03bb54f39af1afee74dc1acd931c324..06d2da67bbe14e17ee478aa939de26526c333d91 100644
+--- a/net/bluetooth/mgmt.c
++++ b/net/bluetooth/mgmt.c
+@@ -4169,7 +4169,7 @@ static void set_default_phy_complete(struct hci_dev *hdev, void *data, int err)
+ 		mgmt_phy_configuration_changed(hdev, cmd->sk);
+ 	}
  
- 	init_completion(&k->rendez);
- 	task = kthread_run(kthread, k, "%s", k->name);
--	if (task == NULL || IS_ERR(task))
-+	if (IS_ERR_OR_NULL(task))
- 		return -ENOMEM;
- 	k->task = task;
- 	wait_for_completion(&k->rendez); /* allow kthread to start */
+-	if (skb && !IS_ERR(skb))
++	if (!IS_ERR_OR_NULL(skb))
+ 		kfree_skb(skb);
+ 
+ 	mgmt_pending_free(cmd);
+@@ -5730,7 +5730,7 @@ static void read_local_oob_data_complete(struct hci_dev *hdev, void *data,
+ 			  MGMT_STATUS_SUCCESS, &mgmt_rp, rp_size);
+ 
+ remove:
+-	if (skb && !IS_ERR(skb))
++	if (!IS_ERR_OR_NULL(skb))
+ 		kfree_skb(skb);
+ 
+ 	mgmt_pending_free(cmd);
+@@ -8277,7 +8277,7 @@ static void read_local_oob_ext_data_complete(struct hci_dev *hdev, void *data,
+ 				 mgmt_rp, sizeof(*mgmt_rp) + eir_len,
+ 				 HCI_MGMT_OOB_DATA_EVENTS, cmd->sk);
+ done:
+-	if (skb && !IS_ERR(skb))
++	if (!IS_ERR_OR_NULL(skb))
+ 		kfree_skb(skb);
+ 
+ 	kfree(mgmt_rp);
 
 -- 
 2.43.0
