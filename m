@@ -1,135 +1,148 @@
-Received: from mail-ej1-f45.google.com (mail-ej1-f45.google.com [209.85.218.45])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A55DB3D544
-	for <linux-scsi@vger.kernel.org>; Mon,  9 Mar 2026 23:55:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.45
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A948F28469A;
+	Tue, 10 Mar 2026 00:54:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=60.244.123.138
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773100507; cv=none; b=lA1tNn0gr+u1JItm/J3HmrSdrRnvqcblJWNe9RixZ33OIaCE+HJiZjyVOahoGLbR/ptxmEUiiOBC9g6Fum2rvOvc4OvBoo1rANu3a9l4daaPbHGy2yjvHJ0KQxj9NabIZ8yN0389AaEqAaxFrrybyyyoNJ7xY6srFvOIT7BZz+A=
+	t=1773104086; cv=none; b=ILZJPtVGHgfLeXLEFvJ3KOBfvpN2QS5nAd29IXIY9/h4pNfSNeS0F6mj9ldI+KBletblDmB36mU/61cZ4EPrHKBCBr6PRYEo6RXfqEH2R/GJd0WdNNosh5A5mmXec3gK4MZia5UpQM3JIaNNFO2LyIBbWrP6EO5jlSYgBDHgKPU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773100507; c=relaxed/simple;
-	bh=6Vofe/6ZWdzfe1bQhwcok7tc5hua1lVSK0g1U2J3b8Y=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=My9Qo3NkBxiN9m6kkA4EI13zbzwjfDFc6FTQbt/KYpOQrU69c9AZT9NXmabARGziDU+swww6XImNqwVhIrXxAIb0axlvdU/95UQb2Qujfu1JchObPhnFBAX7RjxYf0ByShsXyir8lo9IVEWGBx3V5C53NlYJl9HaeVj62i6uxns=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=sung-woo.kim; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.218.45
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=sung-woo.kim
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-ej1-f45.google.com with SMTP id a640c23a62f3a-b955351e0a6so358710966b.3
-        for <linux-scsi@vger.kernel.org>; Mon, 09 Mar 2026 16:55:05 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1773100504; x=1773705304;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=wUJ62UzriDRExITrg9iBzNvEWYzDINBTrPfASD/nLws=;
-        b=K9ecS3qmyAmNPmk3njJz2O5kxs74z72HKEC29BIIqTSAeQGxpRyfj/YEkoeoWHTap3
-         bFIJ0I827BmMPeqAQS89zRD/Vj2zyfcErFeTpvUIV/DcHzs2Hi7hRHejJ6kx8QQNJKe4
-         bC5VKn5LsGxa2avZRiQlL7vsFQzci2cAnZomsJcVzwNJtKYroAcx7qyjR3Izm3fpCiqC
-         0SI3yo5cSHozN6EnyD5G65psiEoeqXp9sR6C5ZUvonUJkj48bNbj/RIRugqeKtu7/tn3
-         fv1sg+fptCOgGK4/uJUk//CEah3oE+BkaAUQx+LZP2TUeM5FcbeiShHmkC+I+Et9pXgK
-         d2Yg==
-X-Forwarded-Encrypted: i=1; AJvYcCU0IzgwPGY1vCn+apn6Y28cA6EeLC9jFaOYIBELqiQPaCmPIRzowg/ySzCNuMCDw+OSpZqV/E46y6wD@vger.kernel.org
-X-Gm-Message-State: AOJu0Yy8GpYqNfrZhNfv2tXLpzaTmfZsQIgbn1TDn2wrQmRPy1rX3Es1
-	1FYYxreVhkAyVBS7P2w8S4/0nZdpEUdE/NmeaTny7R0g2Np76EGH5AYUg4O0oxiBwkU=
-X-Gm-Gg: ATEYQzwgG6IYJE8GWuKsrhRyIcu2NLBU0qrSE+KuF7fSrwGcJbMsKXp/lHcyv/UXL8j
-	CxB4+dqgGE2cyPb84honcMUzqwGfwBNB2o2t2cUS1FoaMVdPU5RpfN1qsf1rLCJwPKOEVWZFSUy
-	4qv79szqJrL9TOAoRXNEOPJjRoVeIt8+kLWrW4ULJ+5FQkSsnho1itmA7MmdhddhdX6XcoZ5jOo
-	JrCnj9pEWbqU6koFzx2vkNsnXUn1BlsycArNaWO7ZyKHQzBqY49/egiFzR3L4GfZXkq99KTZ4gq
-	Y/JaZvjPW9XPk/AZEmaR24RGH1RMaXiE8rVSez5kdXxvFHVE4IYYpTRCqhSDHlvaVSbL+/19d9N
-	2+jVmgKy7KyUuNDrn4C88eHvfH7XDAjJyRnT7CZpV5WcwLyia5npqKhwR5VD6FLBBX2/hCv65Vy
-	u22/K7WbJj48bCaQ8IW4dDodlcld4aWxS+lq1Kc43XPppQ0V9L3PSYZ9o=
-X-Received: by 2002:a17:907:720e:b0:b94:2345:3e6a with SMTP id a640c23a62f3a-b942dfa4790mr720199266b.48.1773100503554;
-        Mon, 09 Mar 2026 16:55:03 -0700 (PDT)
-Received: from mail-wr1-f49.google.com (mail-wr1-f49.google.com. [209.85.221.49])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-b942f18bb33sm432835266b.65.2026.03.09.16.55.03
-        for <linux-scsi@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 09 Mar 2026 16:55:03 -0700 (PDT)
-Received: by mail-wr1-f49.google.com with SMTP id ffacd0b85a97d-439b8a3f2bcso6507778f8f.3
-        for <linux-scsi@vger.kernel.org>; Mon, 09 Mar 2026 16:55:03 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AJvYcCX7MqwAsOSB+kyCL2EWRyNfukUnj30D0ClYP2SlNbUom8tDvsd4sUCdTHoNDVAeibKiUcgiJyoK+KiF@vger.kernel.org
-X-Received: by 2002:a05:6000:144b:b0:439:ac33:5082 with SMTP id
- ffacd0b85a97d-439da66b72cmr23928350f8f.26.1773100503051; Mon, 09 Mar 2026
- 16:55:03 -0700 (PDT)
+	s=arc-20240116; t=1773104086; c=relaxed/simple;
+	bh=s3ltyxJYwyUKZyY1lDHJu7bHwbPIkdNJqgj5eS5HPTs=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=ayYjnFjVOyO/jkj6RIcvNOgIAU7OSDrCnJs0apfw/BpBY6iU6ru3OyCrlFU/oadfUQWUXMeCfbh9n9XgZp2qmB0srRCm6ncaI5oTclj4pzIkyraRso3nMj6DdISMsGjTOk0G6JxOVb2vrgfPVO/rRNMyeQCjHEHCea6mJMQsf9w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=oJO0HcmZ; arc=none smtp.client-ip=60.244.123.138
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="oJO0HcmZ"
+X-UUID: b84e2f721c1b11f1a02d4725871ece0b-20260310
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+	h=Content-Type:Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=rqlnym1aoDpo4JzJeL6Wh0vGCyxqGMsiqXv+LsEoihc=;
+	b=oJO0HcmZOztiv31WaIcXG0w2K7doqrO9y7AHRFdWFgPBHp/S/IzbHNJzxZQl4Xar03yAbscrzxeBZHKc0mz6D75bJWUkAI/ZyOC88T+GJX6tQkgB2fVpGkaKGEgcYbYuXdHG7EIbZByp1y4n5xMvaBViTrIOMMcsCHjHfwAhQrc=;
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.3.11,REQID:5c85bb30-cbf2-41eb-8c9a-7d23b8e68426,IP:0,U
+	RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
+	release,TS:0
+X-CID-META: VersionHash:89c9d04,CLOUDID:83f06eea-ef90-4382-9c6f-55f2a0689a6b,B
+	ulkID:nil,BulkQuantity:0,Recheck:0,SF:81|82|102|123|836|888|898,TC:-5,Cont
+	ent:0|15|50,EDM:-3,IP:nil,URL:0,File:130,RT:0,Bulk:nil,QS:nil,BEC:-1,COL:0
+	,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-BVR: 2,SSN|SDN
+X-CID-BAS: 2,SSN|SDN,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR
+X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
+X-UUID: b84e2f721c1b11f1a02d4725871ece0b-20260310
+Received: from mtkmbs14n1.mediatek.inc [(172.21.101.75)] by mailgw01.mediatek.com
+	(envelope-from <ed.tsai@mediatek.com>)
+	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+	with ESMTP id 1851573366; Tue, 10 Mar 2026 08:54:40 +0800
+Received: from mtkmbs11n2.mediatek.inc (172.21.101.187) by
+ MTKMBS09N1.mediatek.inc (172.21.101.35) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.29; Tue, 10 Mar 2026 08:54:39 +0800
+Received: from mtksitap99.mediatek.inc (10.233.130.16) by
+ mtkmbs11n2.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
+ 15.2.2562.29 via Frontend Transport; Tue, 10 Mar 2026 08:54:39 +0800
+From: <ed.tsai@mediatek.com>
+To: <bvanassche@acm.org>, Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman
+	<avri.altman@wdc.com>, "James E.J. Bottomley"
+	<James.Bottomley@HansenPartnership.com>, "Martin K. Petersen"
+	<martin.petersen@oracle.com>, Matthias Brugger <matthias.bgg@gmail.com>,
+	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
+CC: <linux-kernel@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
+	<linux-mediatek@lists.infradead.org>, <wsd_upstream@mediatek.com>,
+	<peter.wang@mediatek.com>, <alice.chao@mediatek.com>,
+	<naomi.chu@mediatek.com>, <chun-hung.wu@mediatek.com>, Ed Tsai
+	<ed.tsai@mediatek.com>, <linux-scsi@vger.kernel.org>
+Subject: [PATCH v2 1/2] ufs: core: Add quirks for VCC ramp-up delay
+Date: Tue, 10 Mar 2026 08:52:28 +0800
+Message-ID: <20260310005230.4001904-4-ed.tsai@mediatek.com>
+X-Mailer: git-send-email 2.45.2
+In-Reply-To: <20260310005230.4001904-2-ed.tsai@mediatek.com>
+References: <20260310005230.4001904-2-ed.tsai@mediatek.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260309062840.2937858-2-iam@sung-woo.kim> <CADUfDZorSQCVtQyfjBuaziwG2Jo28yZiiqLKbp9PkFFw-9VgfQ@mail.gmail.com>
-In-Reply-To: <CADUfDZorSQCVtQyfjBuaziwG2Jo28yZiiqLKbp9PkFFw-9VgfQ@mail.gmail.com>
-From: Sungwoo Kim <iam@sung-woo.kim>
-Date: Mon, 9 Mar 2026 19:54:47 -0400
-X-Gmail-Original-Message-ID: <CAJNyHp+i3M_ko7rhgTz=nxP=MZYM3oQf3L-y=7YnhnRyeUxayA@mail.gmail.com>
-X-Gm-Features: AaiRm53vE5uEinTHUYE1aa6bIvdkwyOpz0dn9fOlsjLR4PN8Z_3w05vllGJ47mw
-Message-ID: <CAJNyHp+i3M_ko7rhgTz=nxP=MZYM3oQf3L-y=7YnhnRyeUxayA@mail.gmail.com>
-Subject: Re: [PATCH] blk-mq: nvme: Fix general protection fault in nvme_setup_descriptor_pools()
-To: Caleb Sander Mateos <csander@purestorage.com>
-Cc: Jens Axboe <axboe@kernel.dk>, Josef Bacik <josef@toxicpanda.com>, 
-	Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@kernel.org>, 
-	Mikulas Patocka <mpatocka@redhat.com>, dm-devel@lists.linux.dev, 
-	Ulf Hansson <ulf.hansson@linaro.org>, Richard Weinberger <richard@nod.at>, 
-	Miquel Raynal <miquel.raynal@bootlin.com>, Vignesh Raghavendra <vigneshr@ti.com>, 
-	Hector Martin <marcan@marcan.st>, Sven Peter <sven@svenpeter.dev>, 
-	Alyssa Rosenzweig <alyssa@rosenzweig.io>, Keith Busch <kbusch@kernel.org>, Christoph Hellwig <hch@lst.de>, 
-	Sagi Grimberg <sagi@grimberg.me>, James Smart <james.smart@broadcom.com>, 
-	Chaitanya Kulkarni <kch@nvidia.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, 
-	"Martin K. Petersen" <martin.petersen@oracle.com>, Chao Shi <cshi008@fiu.edu>, 
-	Weidong Zhu <weizhu@fiu.edu>, Dave Tian <daveti@purdue.edu>, linux-block@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, nbd@other.debian.org, linux-mmc@vger.kernel.org, 
-	linux-mtd@lists.infradead.org, asahi@lists.linux.dev, 
-	linux-arm-kernel@lists.infradead.org, linux-nvme@lists.infradead.org, 
-	linux-scsi@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-MTK: N
 
-On Mon, Mar 9, 2026 at 11:31=E2=80=AFAM Caleb Sander Mateos
-<csander@purestorage.com> wrote:
->
-> On Sun, Mar 8, 2026 at 11:30=E2=80=AFPM Sungwoo Kim <iam@sung-woo.kim> wr=
-ote:
-> >
-> > The numa_node can be < 0 since NUMA_NO_NODE =3D -1. However,
-> > struct blk_mq_hw_ctx{} defines numa_node as unsigned int. As a result,
-> > numa_node is set to UINT_MAX for NUMA_NO_NODE in blk_mq_alloc_hctx().
->
-> The node argument to blk_mq_alloc_hctx() comes from
-> blk_mq_alloc_and_init_hctx(), which is called by
-> blk_mq_alloc_and_init_hctx() with int node =3D blk_mq_get_hctx_node(set,
-> i). node =3D NUMA_NO_NODE would suggest that blk_mq_hw_queue_to_node()
-> doesn't find any CPU affinitized to the queue. Is that even possible?
+From: Ed Tsai <ed.tsai@mediatek.com>
 
-Thanks for your review, Celeb.
+On some platforms, the VCC regulator has a slow ramp-up time. Add a
+delay after enabling VCC to ensure voltage has fully stabilized before
+we enable the clocks.
 
-blk_mq_hw_queue_to_node() can return NUMA_NO_NODE if the device queues
-exceed the
-number of CPUs. Afterward, it is adjusted on the caller side to
-numa_node =3D set->numa_node.
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Signed-off-by: Ed Tsai <ed.tsai@mediatek.com>
+---
+ drivers/ufs/core/ufshcd.c | 12 ++++++++++++
+ include/ufs/ufshcd.h      |  6 ++++++
+ 2 files changed, 18 insertions(+)
 
-set->numa_node can still be NUMA_NO_NODE if CONFIG_NUMA=3Dn (trivial) or
-pcibus_to_node() returns NUMA_NO_NODE if ACPI doesn't provide
-proximity information.
-But I'm not sure if this is usual in the real machines. We found the
-crash in QEMU.
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 899e663fea6e..bea72e7c1d32 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -9942,11 +9942,13 @@ static void ufshcd_vreg_set_lpm(struct ufs_hba *hba)
+ #ifdef CONFIG_PM
+ static int ufshcd_vreg_set_hpm(struct ufs_hba *hba)
+ {
++	bool vcc_on = false;
+ 	int ret = 0;
+ 
+ 	if (ufshcd_is_ufs_dev_poweroff(hba) && ufshcd_is_link_off(hba) &&
+ 	    !hba->dev_info.is_lu_power_on_wp) {
+ 		ret = ufshcd_setup_vreg(hba, true);
++		vcc_on = true;
+ 	} else if (!ufshcd_is_ufs_dev_active(hba)) {
+ 		if (!ufshcd_is_link_active(hba)) {
+ 			ret = ufshcd_config_vreg_hpm(hba, hba->vreg_info.vccq);
+@@ -9957,6 +9959,7 @@ static int ufshcd_vreg_set_hpm(struct ufs_hba *hba)
+ 				goto vccq_lpm;
+ 		}
+ 		ret = ufshcd_toggle_vreg(hba->dev, hba->vreg_info.vcc, true);
++		vcc_on = true;
+ 	}
+ 	goto out;
+ 
+@@ -9965,6 +9968,15 @@ static int ufshcd_vreg_set_hpm(struct ufs_hba *hba)
+ vcc_disable:
+ 	ufshcd_toggle_vreg(hba->dev, hba->vreg_info.vcc, false);
+ out:
++	/*
++	 * On platforms with a slow VCC ramp-up, a delay is needed after
++	 * turning on VCC to ensure the voltage is stable before the
++	 * reference clock is enabled.
++	 */
++	if (hba->quirks & UFSHCD_QUIRK_VCC_ON_DELAY && !ret && vcc_on &&
++	    hba->vreg_info.vcc && !hba->vreg_info.vcc->always_on)
++		usleep_range(1000, 1100);
++
+ 	return ret;
+ }
+ #endif /* CONFIG_PM */
+diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
+index 8563b6648976..ee5f1c60174f 100644
+--- a/include/ufs/ufshcd.h
++++ b/include/ufs/ufshcd.h
+@@ -690,6 +690,12 @@ enum ufshcd_quirks {
+ 	 * because it causes link startup to become unreliable.
+ 	 */
+ 	UFSHCD_QUIRK_PERFORM_LINK_STARTUP_ONCE		= 1 << 26,
++
++	/*
++	 * On some platforms, the VCC regulator has a slow ramp-up time. Add a
++	 * delay after enabling VCC to ensure it's stable.
++	 */
++	UFSHCD_QUIRK_VCC_ON_DELAY			= 1 << 27,
+ };
+ 
+ enum ufshcd_caps {
+-- 
+2.45.2
 
-> >  static struct nvme_descriptor_pools *
-> > -nvme_setup_descriptor_pools(struct nvme_dev *dev, unsigned numa_node)
-> > +nvme_setup_descriptor_pools(struct nvme_dev *dev, int numa_node)
-> >  {
-> > -       struct nvme_descriptor_pools *pools =3D &dev->descriptor_pools[=
-numa_node];
-> > +       struct nvme_descriptor_pools *pools;
-> >         size_t small_align =3D NVME_SMALL_POOL_SIZE;
-> >
-> > +       if (numa_node =3D=3D NUMA_NO_NODE)
-> > +               pools =3D &dev->descriptor_pools[numa_node_id()];
-> > +       else
-> > +               pools =3D &dev->descriptor_pools[numa_node];
->
-> Simpler: if (numa_node =3D=3D NUMA_NO_NODE) numa_node =3D numa_node_id();
->
-
-Thanks, I will modify it in V2.
-
-Sungwoo.
