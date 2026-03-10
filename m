@@ -1,38 +1,38 @@
-Received: from mail.avm.de (mail.avm.de [212.42.244.119])
+Received: from mail.avm.de (mail.avm.de [212.42.244.94])
 	(using TLSv1.2 with cipher DHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA0C14949F0;
-	Tue, 10 Mar 2026 11:55:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.42.244.119
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 53943492525;
+	Tue, 10 Mar 2026 11:55:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.42.244.94
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773143764; cv=none; b=gDed1uYFOkkiL+R7I6+5gvNbDiasHYtVnbBdBhVc/t7ErELZbhIH2GohzztEz84nogp1v+e0nNYocbHj2TUSoHiFLei5HcQUTcx3eYINpAIFxSUHhBietEE1PtZA9JvbCFTbU76bmaR1ORaHxinVi2eM8khZGO1NE9JGKK1IvJY=
+	t=1773143763; cv=none; b=AiGWlEPazg2Hkw6riQ2Onqfizj08rKU3LCh9f0eu6DQMB80EjNLvFrN5ycwiaIJqot1UJOzcJSdMAPTF3JDuKo+vnDnZJxBPCEL3hE1JLudul9D2q/HqtO/XI20CsBxbeicW2Q4S6f0h6wt8HNpOrHe5R/lfRrRSgo2YX2ofcQg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773143764; c=relaxed/simple;
-	bh=aOTa0J99wrUiCJDKciZIBaRSFy8AAIBeipk1P/Ry6Do=;
+	s=arc-20240116; t=1773143763; c=relaxed/simple;
+	bh=xxm4pfrA8vpE+55Nunaq1/3InG5TW5+yUEKOnNPaCHE=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=a99mqQJSIHNqdbUW3TIwn2IO5gQfu5vPagQQP5da59eR6JjjX3zKhDf0rRsLtniEV+xKCuTTjrNLeYE7gyLh917hFl9AyGhKdVlpdQIobb8MRkxS4/JqrMC5/c2wr+hqu4lhJVs45u24cISZjttx7qtTt8uolfZNoDj/Qq/+o7A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=avm.de; spf=pass smtp.mailfrom=avm.de; dkim=pass (1024-bit key) header.d=avm.de header.i=@avm.de header.b=OzCQWGEP; arc=none smtp.client-ip=212.42.244.119
+	 In-Reply-To:To:Cc; b=Kwp+r/MSuRNmhiHdLh4ERwZi761zrmIWEgDo1+Hy9pgNtS2pcQ2DI7j7sgV2Iprp863wiDcg1LeEMuSlXm/qATHYoo1Zhq3J58WZNwVOcFLXtc1gqFRcG90Di1hsi3QBTNtvLKedkBNpk+PK1v5J2QYXqBCzGUMlm9rJf7iTRJk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=avm.de; spf=pass smtp.mailfrom=avm.de; dkim=pass (1024-bit key) header.d=avm.de header.i=@avm.de header.b=vpe0akhP; arc=none smtp.client-ip=212.42.244.94
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=avm.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=avm.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=avm.de header.i=@avm.de header.b="OzCQWGEP"
+	dkim=pass (1024-bit key) header.d=avm.de header.i=@avm.de header.b="vpe0akhP"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=avm.de; s=mail;
-	t=1773143729; bh=aOTa0J99wrUiCJDKciZIBaRSFy8AAIBeipk1P/Ry6Do=;
+	t=1773143729; bh=xxm4pfrA8vpE+55Nunaq1/3InG5TW5+yUEKOnNPaCHE=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
-	b=OzCQWGEP3xIWg4aft9Gi61CqVxzVTLKLAimjDrWeQqUc3hUkPv1N3tKeXtgO8+TTP
-	 XhmqP+sFetcOut+NsJt0vEBnYbeIs2Hbr8gQtf+aklxbXgaq0RnUqAMfY7Dvjp000Y
-	 AkX7mNRKwyV5huTmoXbZ4xAO9eyZ3soV+HNDBiK0=
+	b=vpe0akhPijy+fdFGsJlWa9KadgjO2UW3S7CfTGj2Nb6xgJuadPCv9jJW3GCcgmmDp
+	 NsscICFVG30n95MZjrlzYTppWlcYdN0G1O633y0snTb7dDyj/NfP2miiuKsPdNfmP+
+	 vAwjLimypqw9PSgx5KgoEmL24wgMu4NPRFNkUtuM=
 Received: from [2001:bf0:244:244::71] (helo=mail.avm.de)
 	by mail.avm.de with ESMTP (eXpurgate 4.55.2)
 	(envelope-from <phahn-oss@avm.de>)
-	id 69b006b1-2367-7f0000032729-7f000001ca34-1
+	id 69b006b1-e21d-7f0000032729-7f000001bb0c-1
 	for <multiple-recipients>; Tue, 10 Mar 2026 12:55:29 +0100
 Received: from mail-auth.avm.de (dovecot-mx-01.avm.de [IPv6:2001:bf0:244:244::71])
 	by mail.avm.de (Postfix) with ESMTPS;
 	Tue, 10 Mar 2026 12:55:29 +0100 (CET)
 From: Philipp Hahn <phahn-oss@avm.de>
-Date: Tue, 10 Mar 2026 12:49:23 +0100
-Subject: [PATCH 57/61] reset: Prefer IS_ERR_OR_NULL over manual NULL check
+Date: Tue, 10 Mar 2026 12:49:26 +0100
+Subject: [PATCH 60/61] Input alps: Drop unlikely() around IS_ERR_OR_NULL()
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -40,8 +40,8 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20260310-b4-is_err_or_null-v1-57-bd63b656022d@avm.de>
+Content-Transfer-Encoding: 8bit
+Message-Id: <20260310-b4-is_err_or_null-v1-60-bd63b656022d@avm.de>
 References: <20260310-b4-is_err_or_null-v1-0-bd63b656022d@avm.de>
 In-Reply-To: <20260310-b4-is_err_or_null-v1-0-bd63b656022d@avm.de>
 To: amd-gfx@lists.freedesktop.org, apparmor@lists.ubuntu.com, 
@@ -71,54 +71,56 @@ To: amd-gfx@lists.freedesktop.org, apparmor@lists.ubuntu.com,
  sched-ext@lists.linux.dev, target-devel@vger.kernel.org, 
  tipc-discussion@lists.sourceforge.net, v9fs@lists.linux.dev, 
  Philipp Hahn <phahn-oss@avm.de>
-Cc: Philipp Zabel <p.zabel@pengutronix.de>
-X-Developer-Signature: v=1; a=openpgp-sha256; l=968; i=phahn-oss@avm.de;
- h=from:subject:message-id; bh=aOTa0J99wrUiCJDKciZIBaRSFy8AAIBeipk1P/Ry6Do=;
- b=owEBbQGS/pANAwAKATQtBlPRrKzbAcsmYgBpsAaYTbMwEnKjO28t4NGQZrm6X1QSq5SK/k8qB
- qh4VPr1rLCJATMEAAEKAB0WIQQ5bPBtrWDUcDQCppg0LQZT0ays2wUCabAGmAAKCRA0LQZT0ays
- 21umCACxIKapQYseolYqqyBm7SyLTZbMM7MUu/ruXbxGyc49Ef4ha2YprHG4wuhRGtqa+VJappe
- JyX0Z9X9KMdJsI/T+BsTdbSpg720pNSAKbSG/WcuoRUIgTiyuqx3+IKJLG0jtFT86FOozZPOWEy
- PPGiUFAfCi7lTKlHGrGHOhGX9fNEHoC67p+hbdbdmFe+ifTERx6lzSSYvUcvltMUMt2tdHG0fgm
- mbuvPyYzKrB65Gooayr+TJ6lncMe1eo3kIkCgAS0gJFF08HI7PwP3Atbb7J7YpFYREokazErNBn
- 540BWDngwOE49h53Z1ngLFPv4fl7uolW05pdRIimfw0qiceA
+Cc: =?utf-8?q?Pali_Roh=C3=A1r?= <pali@kernel.org>, 
+ Dmitry Torokhov <dmitry.torokhov@gmail.com>
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1263; i=phahn-oss@avm.de;
+ h=from:subject:message-id; bh=xxm4pfrA8vpE+55Nunaq1/3InG5TW5+yUEKOnNPaCHE=;
+ b=owEBbQGS/pANAwAKATQtBlPRrKzbAcsmYgBpsAai8jb0hbCBoPmYA/prWl4PUOkbFdhFm9gPO
+ hWtVu2rtPaJATMEAAEKAB0WIQQ5bPBtrWDUcDQCppg0LQZT0ays2wUCabAGogAKCRA0LQZT0ays
+ 28GYB/9rclpgBQgsqGF0yAXWM/97auTunqqLKOGDeyV/S4nC7HDn1d4UqQoeaSmUw2DOYO4u7t3
+ FPnU9VUXE2nXM5FAQLfpjYhH7CG3jEkW4klm33iXRLo1nkpvx8klWZbYR7PMwPnVZTnxKNJmzgZ
+ kL0ECVGQ0EahRXa5TL96qA0Z3YR0RjsX+MNWafES7VGwl+HS5Artyl+8jg+/p0RFHayhxpHi2hi
+ Ftz0Ut7BpqlmrXUo0TzIlFmAGFe7tZCdcMDr5ii9ECIA4sGLz4jBK2uiDVL8YFZ25Y3k7DF6RQV
+ m+hUB3KTG86705bO5a0t2DamRuiInU805Ah5rzh9tCueh4HO
 X-Developer-Key: i=phahn-oss@avm.de; a=openpgp;
  fpr=58AF7C2E007CDBE62C59E078F50EFDCF8AD04B1A
-X-purgate-ID: 149429::1773143729-7B4FEE1F-3FF7DD9F/0/0
+X-purgate-ID: 149429::1773143729-373CFF2F-EC21F89B/0/0
 X-purgate-type: clean
-X-purgate-size: 970
+X-purgate-size: 1265
 X-purgate-Ad: Categorized by eleven eXpurgate (R) https://www.eleven.de
 X-purgate: This mail is considered clean (visit https://www.eleven.de for further information)
 X-purgate: clean
 
-Prefer using IS_ERR_OR_NULL() over using IS_ERR() and a manual NULL
-check.
+IS_ERR_OR_NULL() already uses likely(!ptr) internally. checkpatch does
+not like nesting it:
+> WARNING: nested (un)?likely() calls, IS_ERR_OR_NULL already uses
+> unlikely() internally
+Remove the explicit use of unlikely().
 
-Semantich change: Previously the code only printed the warning on error,
-but not when the pointer was NULL. Now the warning is printed in both
-cases!
+Change generated with coccinelle.
 
-Change found with coccinelle.
-
-To: Philipp Zabel <p.zabel@pengutronix.de>
+To: "Pali Rohár" <pali@kernel.org>
+To: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+Cc: linux-input@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org
 Signed-off-by: Philipp Hahn <phahn-oss@avm.de>
 ---
- drivers/reset/core.c | 2 +-
+ drivers/input/mouse/alps.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/reset/core.c b/drivers/reset/core.c
-index fceec45c8afc1e74fe46311bdc023ff257e8d770..649bb4ebabb20a09349ccbfc62f8280621df450e 100644
---- a/drivers/reset/core.c
-+++ b/drivers/reset/core.c
-@@ -715,7 +715,7 @@ EXPORT_SYMBOL_GPL(reset_control_bulk_acquire);
-  */
- void reset_control_release(struct reset_control *rstc)
- {
--	if (!rstc || WARN_ON(IS_ERR(rstc)))
-+	if (WARN_ON(IS_ERR_OR_NULL(rstc)))
- 		return;
- 
- 	if (reset_control_is_array(rstc))
+diff --git a/drivers/input/mouse/alps.c b/drivers/input/mouse/alps.c
+index f3d3b6b4e02d798e75a90333ace72a367befdbac..82e11efad7f7f02b4aaefde340f9b71fa792cf6b 100644
+--- a/drivers/input/mouse/alps.c
++++ b/drivers/input/mouse/alps.c
+@@ -1482,7 +1482,7 @@ static void alps_report_bare_ps2_packet(struct psmouse *psmouse,
+ 		/* On V2 devices the DualPoint Stick reports bare packets */
+ 		dev = priv->dev2;
+ 		dev2 = psmouse->dev;
+-	} else if (unlikely(IS_ERR_OR_NULL(priv->dev3))) {
++	} else if (IS_ERR_OR_NULL(priv->dev3)) {
+ 		/* Register dev3 mouse if we received PS/2 packet first time */
+ 		if (!IS_ERR(priv->dev3))
+ 			psmouse_queue_work(psmouse, &priv->dev3_register_work,
 
 -- 
 2.43.0
