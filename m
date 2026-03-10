@@ -1,70 +1,70 @@
 Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 60FA938A725;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E20F638B7A2;
 	Tue, 10 Mar 2026 11:50:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.165.32
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773143411; cv=fail; b=U5lpvHZbZB6dyIeNAevORqOqRZ0POLM5fl/bMIHz2Arx4My3fxsAxmpParSoDvxgZNpY7a3On2zGw36Uu55BQLGHoN4BuTejlj+edfZp4LKk3OEFIMuq3ci45c71zgazE3tSJZG5QhEK5YTTgLQ5a5IB9WnJH9dc5pVqNsn4xKY=
+	t=1773143411; cv=fail; b=Kk2CJMIycLDaRIysS9lA/2UQmCCNlGojurQUbvRB8L0L83tJjB4LZtNtAhwGnSJCey2mJJ33Nb0KmC5lP70ZHM5FZBjxDADZsZA2UVGATI6+mtk4SShSuHkbqwdLveZ/tDQxCvfjSFgc7aWz/fR6+bPBYWrtZDDYApQ/a8xYbrE=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1773143411; c=relaxed/simple;
-	bh=sPjRpDYqwjwpemHUoo2OXIbcVuQu9lajdGqCHxdrUrI=;
+	bh=Gf+VFKEFWhy1azdIVE2ESqRHovNY0JtDccCUmagC4cQ=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=eS1eC5sVoVT95QUoy2ShUbSH8Zx+ACjkBXWv1qhBqnPm7tznYc+iyZMXwI/wAYc+eN/8SOeGROtcUcl5/vWwTP1EaXtXA5wQB5pG1YNVOYwPr+Nwvhj5Dep42vEYsJxJlirgCEPzkPEeqqA91mD5m2SFG8sOXjXn6BP5CFrYPI8=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=SO5jTP2t; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=x7aoJtf2; arc=fail smtp.client-ip=205.220.165.32
+	 Content-Type:MIME-Version; b=LWv6fI1tiEQ/tZSpMOlLz8c2TeMLysGeN4N3dQ3NR0kpb6i27GXGz6j0RCsUgvz7x1P960xZVsCXKmmpaR3phe68Yduz7Dpa0LHG91py1Qx4H4Ntn1xJxdTRcE4SXvDpT1TDd6SMRTHOAE9879N6xdhxiGCHmo5Ay4ZXAYsIv2Y=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=PEsh/i10; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=kFrNuKAy; arc=fail smtp.client-ip=205.220.165.32
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="SO5jTP2t";
-	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="x7aoJtf2"
-Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 62AADYPV2346954;
-	Tue, 10 Mar 2026 11:49:49 GMT
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="PEsh/i10";
+	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="kFrNuKAy"
+Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 62A9ovqX1719663;
+	Tue, 10 Mar 2026 11:49:53 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
 	:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=
-	corp-2025-04-25; bh=8n9Unpn0RFiP0EZbsLgPY55R6k52/EtX0jHRIFNIQKc=; b=
-	SO5jTP2tULcBeThyoAheB2OUrOTM8T/ctSzJpTsDJsMvnMyWVJWpnmESP0vK8B1C
-	51B5AF7xA3CvuzZSptwAQmzGObLLTslxkX2g1ahcElUpbVsk3KQ6yM11naOzw2Gc
-	YhnDFz+8Y5uyqljzuqSBVX1jUyMfDnltA/ePXNl9393vc5sNbhVk2Cqr/8WTPUAO
-	EBR1gLKRjUj7IWAkCDv6EZOMK+7flf26cgQ9ONU4MHKQP6mua1knwjQIzxMZHKa8
-	L3V8cQ7fOxN9HrdB/Y+h1wMSWPFk8oL2VKWP/N0hSCP0kql4MhL+AXpmsKPpUJ79
-	mNjEKJiCsIq0Vj4jDf2J6w==
-Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4csmmaanb9-1
+	corp-2025-04-25; bh=GF1l2qhVk7tpbiedlk77pij6CLCQbocOLn5SYO93ZSg=; b=
+	PEsh/i102WMifeLTXWNhk8lpPLURr6b1Hxhnk73OC29cll38Crfci7L6Lhbkk1ot
+	2Kr8WlITDIhHRhhdPmKFVITpnODyBRtV2lAcZszrk9lMS6DVPcRFwiXjydle/RF9
+	1Log8zQgxUIddEYIRMVDQOZnUT0vXjHFDiiYhogGU27Pyj0RRw44ecytudTpinkP
+	HEH7mpui3v/zTIvok5FYKRro8fYRb3kgHrLBopGJeONnsHedbDvXQeZOQgurXDj1
+	Id8USDnXT23RDrQKCQMdm/nzl2TY5j4c2LCY4yQhH5CU8HUXNBpdxD77bTjwDpn/
+	E3w5ON9tjEZPwUxYsNF+vg==
+Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.appoci.oracle.com [138.1.37.129])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4cskyp2nuq-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 10 Mar 2026 11:49:49 +0000 (GMT)
-Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 62AA07Fp039595;
-	Tue, 10 Mar 2026 11:49:48 GMT
-Received: from sn4pr2101cu001.outbound.protection.outlook.com (mail-southcentralusazon11012049.outbound.protection.outlook.com [40.93.195.49])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 4crafa18g8-1
+	Tue, 10 Mar 2026 11:49:53 +0000 (GMT)
+Received: from pps.filterd (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 62ABQZDI007766;
+	Tue, 10 Mar 2026 11:49:52 GMT
+Received: from ch1pr05cu001.outbound.protection.outlook.com (mail-northcentralusazon11010033.outbound.protection.outlook.com [52.101.193.33])
+	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 4craf9yfvw-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 10 Mar 2026 11:49:48 +0000
+	Tue, 10 Mar 2026 11:49:52 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=v9p5sYEThsTBPyPBXCV+fsQWx+9G58Fx2bdXH0AnnmgAy1OCwPiSeapcE9Ivp/PV1nT1rD2sTALzr12LRUK9cNOIy5hlA089GlENRDEoudd+EW/RpqX8riG7HhmkEvBq/TFPlG0fG4uv4Pwq5NqTDnCs9H+3Jr54fN94rilVWB0qqX4OyA8klSHrz3gORdWEUwbjrV5xpHorEoCYlosdPiHxbU4qaKYsUTDXlzEiInQ791Fj2xxR/6L0YhyDTkqqcriqkIA0/ZRqVo609psoPc4d53aEKDXPM5gMAd0qCJ4xZnVkSwUWtNtQmIXpapkjiitJSqm7QCQaEldPwCLlig==
+ b=rORK4K33Jru+nnXPIhIvyTIIIGVqmMYPMHqjEdYQHAdgHyRjuFHlDXF2n3Dah9oc1TFg5lP2l5lgHFkNtlimQahy3/1HAIXu/tvrzmcc8IqjYCfSGjcyLH558jfz8ebs6nIHlWIh6LyApGfk4+AgDgpyZ5EMAdcJR1rBV6B07Y8XGUTmFMqWwc7LQthf9NY25VOqZWPF7GBJ96jqF08Ymw7/4AazcrgqiZGxbEerHjYqFRhutm62QJTRNLaZVNFgh/ZAIUDN4v0AKPlRr4wV40iNHcjlQloXBYyo9h+aJAEW7QJok0Jq9VRWUJfO2apXP7rnteaCWoXQymgaSxRQZg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=8n9Unpn0RFiP0EZbsLgPY55R6k52/EtX0jHRIFNIQKc=;
- b=WvgmVdNhl2c7INOsKFkUZtk8S0on09Bye5CRwJd6NmjY42uZpUKphene9EgP/V3KPjMU6EldYW/MyGM6eIov9CrxsfjBUPjVUJ9y4DQ+58ALluoKddn4Tfc5LYE4zTaGH3nfRS3PsazjdITILft79YYlC/sjp/2NasQdfg6MO+8zrz4G6yjdw/XnysCoBNWr16uuYtefkPu3bb7OhE3y+RggM/ExgyUwAYxE6sTRVB1bHrhp3v1RkDr2d8wtN2eYREcvUtmw8LWI1zQmmgwkBhizeYWNYEYtanOKW4kXgxXiizJwMNr4fuYQDtYGDy2iHcZjOsnG6B7hVABKZWRXpA==
+ bh=GF1l2qhVk7tpbiedlk77pij6CLCQbocOLn5SYO93ZSg=;
+ b=uGv0oK1vf+a8D1DnGnujP03uHbt5ovHT7OZdfgEANtvtYRx2r4EQRr/+l/t8uq2qJffKIErAR2wLq8+gQa5ZKsUhqgUvYYms2yKYzqycriZvY3i7snKS+1rFPnlwN9fiZiHTQpGMkHCrIYKlr0n8FyHTy6SzmmHAQ4Lvi+HPj4+b4ElM+qgx/tECdyo38HS7FU9MhpSkpIiz/32G8Kv2rdg+Mp6Z2AWIadNyzgYtbwnpJq+t12SvasYnjTxe7aQvvOUD9gbv1nksHfQ4Eg76qyKSP1aVa2S6E/jxo0hnCgrV1QzHo8st78Eq4480UH2Yzl9t+f+4l3vLAC4dmBxfgw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
  dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=8n9Unpn0RFiP0EZbsLgPY55R6k52/EtX0jHRIFNIQKc=;
- b=x7aoJtf2mY/nfpm8YWDUXG1Q1vfbzkX2G70fVNlMtC9e895sLbbQosMxRCgHo57PjQLWNSJr39tdhwXLYfw4CoQkMaq0oo5x66NAA2rHBMQrmcTuwBHzPsNEsabV+y2b4PRObjpXCdKSMNZU6s9o01oDHbUUsHA0bQLcjra65jo=
+ bh=GF1l2qhVk7tpbiedlk77pij6CLCQbocOLn5SYO93ZSg=;
+ b=kFrNuKAyECsCeXsJb3tQe4d8XCmqny9OJaneNDCr2F/vua4EGkk/aZ+X4ptuqbFpPMwQoNVW9Yce5qLJQPPoy/4Ov0NHLrkCcKNwvsgbFydzbjZCllBRaptZS7AsJHBjY2130AlzP84hZXLtdbml3JtW8563J6HhQ/g6X5tgmog=
 Received: from DS4PPFEAFA21C69.namprd10.prod.outlook.com
- (2603:10b6:f:fc00::d54) by PH0PR10MB4519.namprd10.prod.outlook.com
- (2603:10b6:510:37::22) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9700.11; Tue, 10 Mar
- 2026 11:49:45 +0000
+ (2603:10b6:f:fc00::d54) by DS7PR10MB5166.namprd10.prod.outlook.com
+ (2603:10b6:5:3a4::12) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9678.25; Tue, 10 Mar
+ 2026 11:49:49 +0000
 Received: from DS4PPFEAFA21C69.namprd10.prod.outlook.com
  ([fe80::5266:1601:5598:3f0a]) by DS4PPFEAFA21C69.namprd10.prod.outlook.com
  ([fe80::5266:1601:5598:3f0a%5]) with mapi id 15.20.9700.010; Tue, 10 Mar 2026
- 11:49:45 +0000
+ 11:49:49 +0000
 From: John Garry <john.g.garry@oracle.com>
 To: hch@lst.de, kbusch@kernel.org, martin.petersen@oracle.com,
         james.bottomley@hansenpartnership.com, hare@suse.com,
@@ -74,16 +74,16 @@ Cc: jmeneghi@redhat.com, linux-nvme@lists.infradead.org, sagi@grimberg.me,
         snitzer@kernel.org, dm-devel@lists.linux.dev,
         linux-kernel@vger.kernel.org, nilay@linux.ibm.com,
         John Garry <john.g.garry@oracle.com>
-Subject: [PATCH 4/8] scsi: Create a core ALUA driver
-Date: Tue, 10 Mar 2026 11:49:21 +0000
-Message-ID: <20260310114925.1222263-5-john.g.garry@oracle.com>
+Subject: [PATCH 7/8] scsi: scsi-multipath: Issue a periodic TUR per path
+Date: Tue, 10 Mar 2026 11:49:24 +0000
+Message-ID: <20260310114925.1222263-8-john.g.garry@oracle.com>
 X-Mailer: git-send-email 2.43.5
 In-Reply-To: <20260310114925.1222263-1-john.g.garry@oracle.com>
 References: <20260310114925.1222263-1-john.g.garry@oracle.com>
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-ClientProxiedBy: BL1P221CA0018.NAMP221.PROD.OUTLOOK.COM
- (2603:10b6:208:2c5::30) To DS4PPFEAFA21C69.namprd10.prod.outlook.com
+X-ClientProxiedBy: BL1PR13CA0140.namprd13.prod.outlook.com
+ (2603:10b6:208:2bb::25) To DS4PPFEAFA21C69.namprd10.prod.outlook.com
  (2603:10b6:f:fc00::d54)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -92,676 +92,183 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DS4PPFEAFA21C69:EE_|PH0PR10MB4519:EE_
-X-MS-Office365-Filtering-Correlation-Id: 7a81f20f-28ec-4639-e48c-08de7e9b2005
+X-MS-TrafficTypeDiagnostic: DS4PPFEAFA21C69:EE_|DS7PR10MB5166:EE_
+X-MS-Office365-Filtering-Correlation-Id: 49054e3c-30d2-45af-9d02-08de7e9b2244
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;ARA:13230040|366016|376014|7416014|1800799024;
+X-Microsoft-Antispam: BCL:0;ARA:13230040|376014|7416014|1800799024|366016;
 X-Microsoft-Antispam-Message-Info:
-	tbiFnXFeKpjFyaHoO9Z7qkNx2Rd62m4Y4uybeWwH7tcaANl4GUgUKx712i0BVr++7LBIEgTmy7sM4mjpgoDuhPJy7xhqFaF9+Iae6VdgNQvC4sszGliLbBUdArsK7GlUjvtrlc9YJ9tC891LkgzpgZ/JbEH9u0KJqOrIeFzdbRBpTXZjgfWBIf/jN/ddu0HRIEjwV8cifwLngn3KW2pq+JIZHtMZPLIIXZLaRr6vfR/E1ezQi+Zqbj4bfg6hyEhPsLfj2zZLxM3gWl9UeHfWvIQtSf0bCgJouLwUjYHJ5GvPeuy2X7yamRyxuhk732nzGoT33FugIbQdz+wszQZ2i6o2xZ4XUaNPwfbwshUoJvWGwpiCRJL+V6BKxEcgvBGL2GTqv9TEXLQClyzFgjIzgRaUXi67xeAy6zS8nG4IOguNkT6not7hvtlwUSs7SuGgHjvT2d5vPOvrAVpZAjO6IX23tJa0m6gonczOlAeVHOOaP2wyYI9Ou+G6Q8R9YjQcWNYXY7ZScoanCeBKOuP8M1kX+e7P39y9VPWm8kIjR0wUJQIIr4rPLT+2M1Cx3oOu8UKolDeUG5EGsx2xQL/810bmkll97aXe/fSPo2fzS7xfyynVdX3nPDgSwZmmiHQVJQZwQJy/oAhDCxfApdFNbTwKXiRmwtYtkSQjcoN3dioN+OlrVEMjROPM+DhYCaNsJMHMbM9oxfQ/WBVNttpBtt/GDxgXP1cyyIoQ3ZJZ8UM=
+	+dcLZGJwwJ1MyL1jKhP17JwHz9OwMKlIG1fkFfOG1jEGKSL9Cj+Hwnn34EaJMY+xx/nqJVY3/gSN4Tc9xZA2cQ2N6mxj1vnaTSzDzkLSGc6zC13cVguo8t1ouEECFbCOK9jB+bN2nYieMQufcPHD8AjncZwWQ0SdZ6/pbfh0/yuxbBgQ6mbv+MImal0jU+ylj1C4PDgqMgr1e92x+ppMAoq7sZxG32sGG7YvAHxnGF4/t9kK1ViC93+tw87TkU232GnXf+yo2D79iK8pW4eSYXcUWtl0K/cIpWdA6GWaWyGqsdCMCOiyqDpPf+eCRqWx0PrE019OJR2WNfggktU61WmNJMYXtmAFJPK5D1LcWR8wd8yiqEhAJrk05aQvusYlKO3H/UsfHOFa0IGDkDAJE3PthwA/V2w6eSchy8VB4TEjHD5IyfQN27k2Mxq3Id6HocSjvs9lrHC5567Ca0DsHycfgV3RFKZE4WYd7uXZQ38bokc7+PoUosG9ZjcugYB9REsyy3++aitntjYQLDaGt9YbE0GiIXU3PDArL7XnYIQL/Wz3mxbGPgi5f0Mbu0cLNXY4ZY1+yHAf/Dib08GiGMjXQ4aBwUdWLPwQsOqns1E4GZfL/xOurAWm7iLPXixZXMMaxtVwZokt3swz4YXRTIrAuQb0+l4dikrQs8fJBZxq9o1UngL+S15g8sSQwyIXNIdFBPayKHVI2EDDx7B318nT2SvSD90t/Z4EQd4szHY=
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DS4PPFEAFA21C69.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(376014)(7416014)(1800799024);DIR:OUT;SFP:1101;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DS4PPFEAFA21C69.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(7416014)(1800799024)(366016);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?irRTKCdmBh1Xufhe/43OctqC16Kw3M7HkWX5KuzPM3/G1Xi0L7h9AOAp+YnQ?=
- =?us-ascii?Q?2roFyZ84nlOjaAlDyLDPr06ggb3K/qXAw+BiMu1jDq2B1LgO+O4Ie3AxyBi8?=
- =?us-ascii?Q?Ku9QckfiNkpvKBRMgMtqcqFbIZqSgw8NHn6kpO3WhlfJKRS6ssl7nBxc95As?=
- =?us-ascii?Q?seyXjfST7qmuNdsHdn29ALYa1ynygq8gteuPg0N1IzLRoNx1GcVS9Mdtsau+?=
- =?us-ascii?Q?R2DopLC8CFCwHqfc+Dout1Za7GFXD3sYiirukcc6anMeM0n+GT6Ci1hau70c?=
- =?us-ascii?Q?K7tdsUmAof3LrO7HJ+4Wz2DEtDb7RJWttTxfKMSb75YHcRo7cbS153un9YNC?=
- =?us-ascii?Q?IdJxZ5bP7ezJdtUcI63sAJ4s7UDH22gm8uh08rabev69FN1N2AMcIt7yCJtY?=
- =?us-ascii?Q?1AvXnvkhNhPU6maEihSozd3eOpD7Gyy8gXkIftpAfO53sPicLpM4oLYh6sQN?=
- =?us-ascii?Q?pzMrhPO4cgOyYlWpH4bmfpo68xpnfzsGGp6SgXJAlEz/NKrEEAKpdTQdSrGy?=
- =?us-ascii?Q?9WVua1+DHAKU6HC+u2GgVMx26iXflpgujqOXKbmVeQhbPIY8iwo2dMoG+cPm?=
- =?us-ascii?Q?9+L3ugNkQCcdhggD3hR5CyWU/DNj4YwCLT7LSUTZ7S0BOvYU8WQC8FJyv9WD?=
- =?us-ascii?Q?J2U0ZcNCrNAo9IAZv48qtSup6eO4iXrXW88o1T/ZPPPTAL5s6qKbxKtj45P3?=
- =?us-ascii?Q?DswdPLWpBWRVjTMUsthg+3yO7Ut29FoHczs5Qo+tjgzR1ySgTaf0VF4QZSic?=
- =?us-ascii?Q?5k9WT+pFCqSfsDpkWHJ/JGOMX6WSbNkVdY0a4l0o/PbgYTYr4E/r8o9VT3Er?=
- =?us-ascii?Q?o6Nng8rGmSTVBqggPfVy6C+oAojKRyotOx/3STSQbBRrWAJ5AKrSaKxzGWPX?=
- =?us-ascii?Q?ifFZWli5chydyEk+0KT1XcS5nXDGMkBuNu685zmDmR3DvB9zNhzD8wZnWVQ5?=
- =?us-ascii?Q?UGyrbqQOK2e/LCH+eZB+WiXxLMAQHzjU2bXJANbQwHrkrzqiDyEoxN3EwoKl?=
- =?us-ascii?Q?tl8/4S/oOlSZqxaQ/DgqpzhgiFttKpE+/4om+hsMYwKOd565oeW2ybzvlpd8?=
- =?us-ascii?Q?jgSuCANJUAhoCk4gP3Wk/W6lQacGNlrB0+lqoP6CfLEEenwBDY0gcDUj+mVp?=
- =?us-ascii?Q?zpBhCWmuZXlSzI15oIJml2blDn8ddv0FV2ZDoAJik45WH51TBr+k8j7wLiW5?=
- =?us-ascii?Q?unQm+5MODqtZnDnBlPErALussNozo9msShUhd5Gh0ExrEY5zz0Ieaew67Gzz?=
- =?us-ascii?Q?/xb0RLtE+nQvXyVh6nArzd5U44RPCbUZEdrZ5VuQcjWl94UcsGYytgwoMciP?=
- =?us-ascii?Q?ycyhBg1C9ELhlBM1akcxZgnw6LeRFiAIH0Sf0wG0plyYUNQrFMOSmtLKnPlM?=
- =?us-ascii?Q?+I733OdgMDv1RJRGh6U6cyvad2GD2g11wIUurl1pc9FAWy7Fs1sQN/lN/hT5?=
- =?us-ascii?Q?hm83dPYHitCBPHI2cPmlp57MfbQeE+I/wFU/r/yn+uVGjpWsAfAzbxPMF6Im?=
- =?us-ascii?Q?JGPDFeVEBzEoRPL8EbonaD7oLkK7tF1cdScgVp4LSRfgB9TStr0Ekzc7CN5k?=
- =?us-ascii?Q?tD9fdHYwlCRhiWzLB3G+nomhWayyIsbBsN1BKeMKPFe6QMC0eUvq8ORYEI0p?=
- =?us-ascii?Q?FWCfLQsOSbZ9EhLnLE7tTQL8mncSlzVQdlh79NSVvQOfXXXWTDHB2DpoEHlt?=
- =?us-ascii?Q?VUgi2Tn27sssD8vNkCkJLxU2XZiFpAgdgrHqrTlN9JwI0kY2xNt6xXv20oBH?=
- =?us-ascii?Q?fgHcjakrnQ=3D=3D?=
+	=?us-ascii?Q?bjZqLMsCI3WBlDZeS2b75Dk0+OXGUnm4PAEN2+aX6Dfr5K8k3np4fmXzhyf/?=
+ =?us-ascii?Q?exub0Z3+xMyw0lnGd/pdiQWrwM0Shp80Rx8hsPQ3xNvcOx9P5Esjga3zzBVm?=
+ =?us-ascii?Q?/6hdFHaCOBBtgNkbke8XJW7jHc875CBobtYn4AjFaYU7p0tC+9hd5yL12YHu?=
+ =?us-ascii?Q?FecYj0CVFceZuQUXFcfidbCgdINGxgJYNX5z+n3BXiRbTaYD7Kal08sDqLpu?=
+ =?us-ascii?Q?jwy4iLT5eiGoROquB6HUNreN1yjEIsaAnKmqlgYxcnOKfZSEwuJLpK4f/mZ1?=
+ =?us-ascii?Q?uV6cVPGaZ5DqXNGuBM5AHGCCaqhklTewW0G/2HNOk7aDQ2t3quo7IN6MDAsm?=
+ =?us-ascii?Q?6IdjnlTqO5iXJUS/ejs/IF8vHCp53HMWs5yfGFQFVmD4X82Z0CQ+nBLoX+rt?=
+ =?us-ascii?Q?DxGDBuckyFcFD1Yxj5+eqPcaOIAKLIEDrslK/HLiPCl27EtY97yGexifyu+Q?=
+ =?us-ascii?Q?JPX7yXgZZqbxn741vwheQRaX9DVgRcwWr7qVzAAPQf211EFZf6rB4JUXVVW0?=
+ =?us-ascii?Q?5mkAC0xGyODFodY/Uq8tjb2VJ/2NaE0Iam2InltOrOXr+AaY8x5jjSxJ/zLD?=
+ =?us-ascii?Q?JNDwFUoK7m0oaWFKjonRdB279FZsXVKaJaDfxAcblf1SwSJhGt9rz0S4Jxe6?=
+ =?us-ascii?Q?ZY/fmK8vM6CKjLMNqwGgCB3aKXuFELGP6Io7HQ2nD+mPFlS9KGusRlPv3ZmW?=
+ =?us-ascii?Q?qcPxZCKLgGkjcseYrTsc3bM8gcORKO483AwotsEGrc9EWkxv/2jbljAc5Cew?=
+ =?us-ascii?Q?Q/gbRwY1ao+tMfNchLsrcC5SlxlAkxhKCYdDmHPRI/yCf7n9vD7u056QOjYt?=
+ =?us-ascii?Q?EOAwhv/MGjVX59Hz+32zmlo093SQptgT5KP+3iQzq/ObMnNOxKFoVWzhStl4?=
+ =?us-ascii?Q?15PRWMCjtMCon8Gbh/u0isBuo8rPfvtSoiG9U+eg1sX/I2zL1oQy2o177Bad?=
+ =?us-ascii?Q?jgujZZyDE2BtOpcZGA4qbPKMwDYiD0v6q/6t3Rvh+WUT/qU0LMTLSMtGHuPu?=
+ =?us-ascii?Q?yRZ11bq488jQOJT1RHQu20Y507yhEeCoYsh1KhFD8HcjMoIbkP27zYhVB57G?=
+ =?us-ascii?Q?ObRG4pBxLqS3a4G/v08oHncXi8GJf160G0jVOuOLQn1jDAPf4S/jEjK9MMfV?=
+ =?us-ascii?Q?QdUIKgXP3jfuwnYtk4zdND0wanARqGxKeeTViB6LykJY7ExS6+fAUf3rMt1Q?=
+ =?us-ascii?Q?vne+9rY65zSf+lmnwufXjJrrjX2WvII9bd+4HnK1C+va+5s/XTz+uti2Vfro?=
+ =?us-ascii?Q?5iYjWqZPBqIB+SZEOB2xYTJzsDlt+XbuMsHuqsJUmX3NgAUC5mZ1vQUG7WbL?=
+ =?us-ascii?Q?3M9AySpbSrsyFS0HHliEQ8G196mFY+oRXNvc4JgwouCSBb4MUQOdPtp/fZZ5?=
+ =?us-ascii?Q?20I2XCVvQbIf+r7w+eAaF6PJqS/56IG5Uo5PAbXPgR7khWsrnARYMy4Bguyu?=
+ =?us-ascii?Q?uaWQTLjL0jKUoGcwo7y9BVv/28MiFMrFFw5OIvr8rq1W1GquGBVHQQUoPesS?=
+ =?us-ascii?Q?6n9raFwJeBAzaDdW7dBXN2nNdrLnzZ91BcRVz/yX2zKafTgS9XOD/8oNvBv2?=
+ =?us-ascii?Q?Oow+IwUgu5N4roW0wbLOil6hPZz7sksNEozHxUL00Lwh16k0z60LNQaK4LMp?=
+ =?us-ascii?Q?jHbE7qkJOxUyFXUR2J1mAOiVuGXq48zhpeDPWqRg0UuT2sh6hrgZvtGEjTET?=
+ =?us-ascii?Q?PtnrNjCV/HYrEVXbmWMm8M1VGfMc3vEomi0HSV3hPF9l1MXfCEV2fKaVm4IO?=
+ =?us-ascii?Q?7U+K6he1Wg=3D=3D?=
 X-Exchange-RoutingPolicyChecked:
-	OPSnN2AdvbbOVbcuH4wICYO7iajKsu9T5HDjqolJPK1tGXISCXeibKlOGPZriI+cXW1SylVy0+Uo9c3jx5+q2+DEiuzB5NsTNDyuVQNINW3LU0y1LYdEsdvNN3VHxze+d5FwcUNaNO1vbteoIK0upgOO8yXD+qjB4PweLcToO4iCwc9lke0A52bw0ITtNmY8SIzBrdNEvt0ePfDPw7L9nG0pSH7/QlnynHOvKGKT4MddWC/Puo5Mnph08ipCex3EFQ5fe3YcQBwsW0LX1Uakl8QcvuTLz6fhEowhbhxgAupdQLUCYRhr3G0Gkj6eERJ5iFECRpVNiWMDhMpsyUBJWw==
+	YI1S1pg6gKE6/QeNWiRdiaySLQYcRT3LMC4sv2YrvWF3YYAcrU3GMzqjU2tOgSg1ptQiUMdTY0jUzHunwu6uY+LQOD016WPHYFDUUcTYUm0bRrL8CMBxn3nGJyC6gWykcgsM5lHBIC/ux3NTlHgCxXkyyOuJZVCjfQUSw7l7MWoWvHbawJGpOZ2bZMP6SMiAlMQCJuIeg2lPut0GB2CbzAVM6UtXnDqKDPmrRTXRqqs1aJtJnoakWj6dl3TX8mNHstG+EtjeipYfgpx/Hz4hyS2FBGV2tYdF8sXHCgDohdEHthy6RK6tFW80zSvEbTuONhkE2TUEaeIag6A3NVY6XA==
 X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
-	eNm6PJN7dIvu7hCRSj/IOiwxAhme+hfOLvTzOaSNu+2JRIrV63VsiAv5KgeanLl9IPiR/5Jk2ma1rOWM3XNi9mPvF0MslSBzAmqc9nvsP9OS9+xthdLFjmsHH98RFaG2vd5URlMSKwUzPXJCCl1QP4j9zZw4GLr7FsA+kUrVTEGg8BTVIsSV8RpYofjX7VzbJhh10pHE6gzvLoYOxOiUxaTcrdyuDl+B/nZx7rapXQGO8qj1rHbeC/3eoJcSKP0ySELpNRgUE6LTcy0iJ8SZflVZRIcFN2SF7s29QwRntyTxHnNtOhOrqEjm0KyeMDvGwcvohYEVIZgEh++W526EviR+q7wST48+e1xYNjeNqIlUAG3J1fvhgg0nhmqGWXXtTjQaFEGTY61vXSK8Pv4VJZQTfUPbPXPr5UtjAR3GyDXwQvrdlOHSPFxvvxllNgyqDpAc+akX3Fkhh9BlRfQtbYBuEIOIYAOFsGM+7ChtVMrReLwvV+UjjKj+jkpYUljP8QeTBR67M2nZnmZfWiPUSwzFuDtcNK2il7mjnOAZ9kdYN8uG3EGUo18pEPmJ1VKMhwjUMSfTMZIE9PzQLotz7JgpdI9KvB8FNZMIJPVj4yg=
+	i3jK0w9cxV+rnV8Yz3X0Wx/T6SsMYQ4lp9q9Q6hxL0faxQPpHcBsaaveJm5kw2EivLGnuhJR5m2wqINNcJtd6QGt8pYpTok1hkv9VBFPqgYIIpOfVxG2lS3ahygJJC4N21owUbxl/AkxsTYE2U5IcU0ysjBelcluDP/4fmH7WA5zePEhLX76Q61hcFbGsY9OKk/bXZlTO2/g16KLSuYD2ROBX7SQDTkrkEZCcb7t7FXrZcdAcNQXmjpQQJZN7ECpQ6mcCynXJxsDbL+Jpn+CCOBoc3C0cC6k6bbYSzxKi+HNnS7iw0qCqjxe1+8qaV4OFLFa4W3W+f27NyOEMsG0ozQS1zJOAziLzY82RYX2UEZ6Krk9Nbue2qIkepSAdLzbYdozIFsN77SrgueuAAjtuSQ0xSwueBKdNwQy7/i8BVAk07ShfszgIikO+NSGkzFgSmhYjxsvt1GRJMeZwvNmADboDPn21ccTq2n7EAJgcznyM674ChCDVJDO8/yd779rXVQxGL3x3D7gtYKaQ+yZyfcmZfcZJPBu+PkVgYgyg4bFBEBIa0t+IEgtpAUmY7d+kq0nxgLOdvEKgqADTfdmDaKXyZ+AfsKmRuSsoab0+W8=
 X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 7a81f20f-28ec-4639-e48c-08de7e9b2005
+X-MS-Exchange-CrossTenant-Network-Message-Id: 49054e3c-30d2-45af-9d02-08de7e9b2244
 X-MS-Exchange-CrossTenant-AuthSource: DS4PPFEAFA21C69.namprd10.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 10 Mar 2026 11:49:45.6852
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 10 Mar 2026 11:49:49.4328
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: UELDF+2V6MoW+33IZH2cAPD8gJo/rgE6w78yjGT4m38lM7340Gr4UMipm+ITLzVL7D2f20XP1T+yHBsIH6wyfA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR10MB4519
+X-MS-Exchange-CrossTenant-UserPrincipalName: uEuXu4IvtYEeth52qAO+y65LrTLFZ1iGbkQpnH+IoqWnslt7J7SxW2zH7rnIamdI1f9jyZco6+MVGTvf/m6z9w==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS7PR10MB5166
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
  definitions=2026-03-10_02,2026-03-09_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 malwarescore=0 spamscore=0 suspectscore=0 bulkscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 suspectscore=0 adultscore=0
+ bulkscore=0 spamscore=0 phishscore=0 malwarescore=0 mlxlogscore=999
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2602130000
  definitions=main-2603100102
-X-Proofpoint-GUID: 2IGW4-oU6cXv4jqDiqWSNiYokvKOGJVR
-X-Proofpoint-ORIG-GUID: 2IGW4-oU6cXv4jqDiqWSNiYokvKOGJVR
-X-Authority-Analysis: v=2.4 cv=U5efzOru c=1 sm=1 tr=0 ts=69b0055d cx=c_pps
- a=OOZaFjgC48PWsiFpTAqLcw==:117 a=OOZaFjgC48PWsiFpTAqLcw==:17
+X-Proofpoint-GUID: dEHFXwj8NPrf5ez5aGazaQYL-TDAHe1f
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzEwMDEwMiBTYWx0ZWRfX9FVX5U7+h9dk
+ Ffyk7Ms5pU2Erpcfb9PTb4zXTdIiVjwZVdy0deVlPGtA+Sdg5byPtN/LqMSiSZ39cpDHQ6bZwUr
+ D19/VKy/vWkbsR1VIKu17jjLj2XWb1AiG0XrISv5ehEMr7LuK8ZPuhKNV3xCLcg9akRu64DLkMr
+ oFbk8SIBlmCaS9iOUBUT945+i5A+wgwuO9+cRs/w/atssYb1AhCraABUkG6xYwcWh6An24vLwVJ
+ st3GS+kzgxxw3bPD4AjBAkhKSU5aFdjA9/gPJ/whOZfRy9PqbDzN22BBSJg3/wFnxk/elHxrG9I
+ jUzeV76AoAeHLppRHRkgWl39NrWnrHwFPzFo8KxRZCmPTzpRSRZR8ak7k42bl+0A/KvQuIizSTS
+ 8kQSSsXQFotLPV0G7TnXZBEgoB2BcEdxxLnT0NyqRcr9xKl57bnYIQ71FyfpWfQf/kTIGdBdyiT
+ 83KpkqyRuIrhVVRDHnw==
+X-Proofpoint-ORIG-GUID: dEHFXwj8NPrf5ez5aGazaQYL-TDAHe1f
+X-Authority-Analysis: v=2.4 cv=XP89iAhE c=1 sm=1 tr=0 ts=69b00561 b=1 cx=c_pps
+ a=WeWmnZmh0fydH62SvGsd2A==:117 a=WeWmnZmh0fydH62SvGsd2A==:17
  a=6eWqkTHjU83fiwn7nKZWdM+Sl24=:19 a=z/mQ4Ysz8XfWz/Q5cLBRGdckG28=:19
  a=lCpzRmAYbLLaTzLvsPZ7Mbvzbb8=:19 a=xqWC_Br6kY4A:10 a=Yq5XynenixoA:10
  a=GoEa3M9JfhUA:10 a=VkNPw1HP01LnGYTKEx00:22 a=jiCTI4zE5U7BLdzWsZGv:22
- a=EIcjfB9IiI4px24ztqRk:22 a=yPCof4ZbAAAA:8 a=XL_M-tDpjql-NjFPQvkA:9
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzEwMDEwMiBTYWx0ZWRfX1l5Gxb0sutl0
- FtcXcl3KAWhCy2fKWDRKcY3IHy3LpmALR1pT/gFeE/lx1DFBshd8wTBqZXVq8dZvcHD1ZW1uYue
- oKWAwCMwPTgn9YjziE837hcqHcmjl+6nJWwEiCOcKm2Szq94W/SF9Of96Te7ydnqed9Q0qcNGmL
- rBadp7jcw+ii6GdNvV8BinTgbnbqVYPE0VyPyMjRaB19dnUmRaE8x1zDiNNgPHAAvXLP4bCRbVE
- QsRGNupa+li6C2D4XmbQQvG0HmJqOh+GPjHMraatKxdtvsckTmgkVvY8ssg4Y2iSQUI6cMPOUdP
- ODXNo/c6BQO3EzMnk4+z7eb3ifJn+jN5+K7ZI8UB+XpLL1Vdbv39dRm2xGuE3yWi8Z72Tp8/w1F
- JjI88B6t/pe/ik1IY6PHaiXF4rPnD6Zu9kLDBWSqvJpNUALlK2qqsfKiXgGrYJ5sxQVKJVIIxvg
- wRNvJW9884kJBaP/1VQ==
+ a=RD47p0oAkeU5bO7t-o6f:22 a=yPCof4ZbAAAA:8 a=437RAPt7mZHohC6A0YAA:9
 
-Add a dedicated ALUA driver which can be used for native SCSI multipath
-and also DH-based ALUA support.
+To allow the initiator know of any ALUA configuration changes, issue a
+periodic TUR.
 
-Only core functions to submit a RTPG, STPG, tur, and also helper functions
-are added.
+multipathd does something similar for dm-multipath in terms of issuing
+a periodic read per path.
 
-The code from scsi_dh_alua.c to maintain the port groups is not added,
-because it is quite intertwined with the DH code. However the port group
-management code would be quite useful.
-
-Hannes Reinecke originally authored this code.
+The purpose of the TUR is that the target can update UA info in the TUR
+response and the INI can handle it, but currently we don't for SCSI
+multipath.
 
 Signed-off-by: John Garry <john.g.garry@oracle.com>
 ---
- drivers/scsi/Kconfig                       |   9 +
- drivers/scsi/Makefile                      |   1 +
- drivers/scsi/device_handler/Kconfig        |   1 +
- drivers/scsi/device_handler/scsi_dh_alua.c | 198 +-------------------
- drivers/scsi/scsi_alua.c                   | 204 +++++++++++++++++++++
- include/scsi/scsi_alua.h                   |  50 +++++
- 6 files changed, 269 insertions(+), 194 deletions(-)
- create mode 100644 drivers/scsi/scsi_alua.c
- create mode 100644 include/scsi/scsi_alua.h
+ drivers/scsi/scsi_multipath.c | 36 +++++++++++++++++++++++++++++++++++
+ include/scsi/scsi_multipath.h |  1 +
+ 2 files changed, 37 insertions(+)
 
-diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-index cfab7ad1e3c2c..1a538c84ddf0a 100644
---- a/drivers/scsi/Kconfig
-+++ b/drivers/scsi/Kconfig
-@@ -86,6 +86,15 @@ config SCSI_MULTIPATH
+diff --git a/drivers/scsi/scsi_multipath.c b/drivers/scsi/scsi_multipath.c
+index 0c34b1151f5bf..2b916c7af4bd7 100644
+--- a/drivers/scsi/scsi_multipath.c
++++ b/drivers/scsi/scsi_multipath.c
+@@ -4,6 +4,7 @@
+  *
+  */
  
- 	  If unsure say N.
++#include <linux/kthread.h>
+ #include <scsi/scsi_alua.h>
+ #include <scsi/scsi_cmnd.h>
+ #include <scsi/scsi_driver.h>
+@@ -124,6 +125,7 @@ static void scsi_mpath_head_release(struct device *dev)
+ 		container_of(dev, struct scsi_mpath_head, dev);
+ 	struct mpath_head *mpath_head = scsi_mpath_head->mpath_head;
  
-+config SCSI_ALUA
-+	tristate "SPC-3 ALUA support"
-+	depends on SCSI
-+	help
-+	  SCSI support for generic SPC-3 Asymmetric Logical Unit
-+	  Access (ALUA).
++	WARN_ON_ONCE(kthread_stop(scsi_mpath_head->kua));
+ 	scsi_mpath_delete_head(scsi_mpath_head);
+ 	bioset_exit(&scsi_mpath_head->bio_pool);
+ 	ida_free(&scsi_multipath_dev_ida, scsi_mpath_head->index);
+@@ -514,6 +516,29 @@ struct mpath_head_template smpdt_pr = {
+ 	.device_groups = mpath_device_groups,
+ };
+ 
++static void scsi_mpath_cb_ua_thread(struct mpath_device *mpath_device)
++{
++	struct scsi_mpath_device *scsi_mpath_dev =
++			to_scsi_mpath_device(mpath_device);
 +
-+	  If unsure, say Y.
++	if (alua_tur(scsi_mpath_dev->sdev))
++		sdev_printk(KERN_NOTICE, scsi_mpath_dev->sdev,
++			    "%s: No target port descriptors found\n",
++			    __func__);
++}
 +
- comment "SCSI support type (disk, tape, CD-ROM)"
- 	depends on SCSI
- 
-diff --git a/drivers/scsi/Makefile b/drivers/scsi/Makefile
-index 64b7a82828b81..053fb51d98092 100644
---- a/drivers/scsi/Makefile
-+++ b/drivers/scsi/Makefile
-@@ -153,6 +153,7 @@ obj-$(CONFIG_SCSI_ENCLOSURE)	+= ses.o
- 
- obj-$(CONFIG_SCSI_HISI_SAS) += hisi_sas/
- 
-+obj-$(CONFIG_SCSI_ALUA) += scsi_alua.o
- # This goes last, so that "real" scsi devices probe earlier
- obj-$(CONFIG_SCSI_DEBUG)	+= scsi_debug.o
- scsi_mod-y			+= scsi.o hosts.o scsi_ioctl.o \
-diff --git a/drivers/scsi/device_handler/Kconfig b/drivers/scsi/device_handler/Kconfig
-index 368eb94c24562..ff06aea8c272c 100644
---- a/drivers/scsi/device_handler/Kconfig
-+++ b/drivers/scsi/device_handler/Kconfig
-@@ -35,6 +35,7 @@ config SCSI_DH_EMC
- config SCSI_DH_ALUA
- 	tristate "SPC-3 ALUA Device Handler"
- 	depends on SCSI_DH && SCSI
-+	select SCSI_ALUA
- 	help
- 	  SCSI Device handler for generic SPC-3 Asymmetric Logical Unit
- 	  Access (ALUA).
-diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
-index e9edd45ae28a3..42fa6bf8bb480 100644
---- a/drivers/scsi/device_handler/scsi_dh_alua.c
-+++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-@@ -14,31 +14,11 @@
- #include <scsi/scsi_dbg.h>
- #include <scsi/scsi_eh.h>
- #include <scsi/scsi_dh.h>
-+#include <scsi/scsi_alua.h>
- 
- #define ALUA_DH_NAME "alua"
- #define ALUA_DH_VER "2.0"
- 
--#define TPGS_SUPPORT_NONE		0x00
--#define TPGS_SUPPORT_OPTIMIZED		0x01
--#define TPGS_SUPPORT_NONOPTIMIZED	0x02
--#define TPGS_SUPPORT_STANDBY		0x04
--#define TPGS_SUPPORT_UNAVAILABLE	0x08
--#define TPGS_SUPPORT_LBA_DEPENDENT	0x10
--#define TPGS_SUPPORT_OFFLINE		0x40
--#define TPGS_SUPPORT_TRANSITION		0x80
--#define TPGS_SUPPORT_ALL		0xdf
--
--#define RTPG_FMT_MASK			0x70
--#define RTPG_FMT_EXT_HDR		0x10
--
--#define TPGS_MODE_UNINITIALIZED		 -1
--#define TPGS_MODE_NONE			0x0
--#define TPGS_MODE_IMPLICIT		0x1
--#define TPGS_MODE_EXPLICIT		0x2
--
--#define ALUA_RTPG_SIZE			128
--#define ALUA_FAILOVER_TIMEOUT		60
--#define ALUA_FAILOVER_RETRIES		5
- #define ALUA_RTPG_DELAY_MSECS		5
- #define ALUA_RTPG_RETRY_DELAY		2
- 
-@@ -119,70 +99,6 @@ static void release_port_group(struct kref *kref)
- 	kfree_rcu(pg, rcu);
- }
- 
--/*
-- * submit_rtpg - Issue a REPORT TARGET GROUP STATES command
-- * @sdev: sdev the command should be sent to
-- */
--static int submit_rtpg(struct scsi_device *sdev, unsigned char *buff,
--		       int bufflen, struct scsi_sense_hdr *sshdr,
--		       bool ext_hdr_unsupp)
--{
--	u8 cdb[MAX_COMMAND_SIZE];
--	blk_opf_t opf = REQ_OP_DRV_IN | REQ_FAILFAST_DEV |
--				REQ_FAILFAST_TRANSPORT | REQ_FAILFAST_DRIVER;
--	const struct scsi_exec_args exec_args = {
--		.sshdr = sshdr,
--	};
--
--	/* Prepare the command. */
--	memset(cdb, 0x0, MAX_COMMAND_SIZE);
--	cdb[0] = MAINTENANCE_IN;
--	if (ext_hdr_unsupp)
--		cdb[1] = MI_REPORT_TARGET_PGS;
--	else
--		cdb[1] = MI_REPORT_TARGET_PGS | MI_EXT_HDR_PARAM_FMT;
--	put_unaligned_be32(bufflen, &cdb[6]);
--
--	return scsi_execute_cmd(sdev, cdb, opf, buff, bufflen,
--				ALUA_FAILOVER_TIMEOUT * HZ,
--				ALUA_FAILOVER_RETRIES, &exec_args);
--}
--
--/*
-- * submit_stpg - Issue a SET TARGET PORT GROUP command
-- *
-- * Currently we're only setting the current target port group state
-- * to 'active/optimized' and let the array firmware figure out
-- * the states of the remaining groups.
-- */
--static int submit_stpg(struct scsi_device *sdev, int group_id,
--		       struct scsi_sense_hdr *sshdr)
--{
--	u8 cdb[MAX_COMMAND_SIZE];
--	unsigned char stpg_data[8];
--	int stpg_len = 8;
--	blk_opf_t opf = REQ_OP_DRV_OUT | REQ_FAILFAST_DEV |
--				REQ_FAILFAST_TRANSPORT | REQ_FAILFAST_DRIVER;
--	const struct scsi_exec_args exec_args = {
--		.sshdr = sshdr,
--	};
--
--	/* Prepare the data buffer */
--	memset(stpg_data, 0, stpg_len);
--	stpg_data[4] = SCSI_ACCESS_STATE_OPTIMAL;
--	put_unaligned_be16(group_id, &stpg_data[6]);
--
--	/* Prepare the command. */
--	memset(cdb, 0x0, MAX_COMMAND_SIZE);
--	cdb[0] = MAINTENANCE_OUT;
--	cdb[1] = MO_SET_TARGET_PGS;
--	put_unaligned_be32(stpg_len, &cdb[6]);
--
--	return scsi_execute_cmd(sdev, cdb, opf, stpg_data,
--				stpg_len, ALUA_FAILOVER_TIMEOUT * HZ,
--				ALUA_FAILOVER_RETRIES, &exec_args);
--}
--
- static struct alua_port_group *alua_find_get_pg(char *id_str, size_t id_size,
- 						int group_id)
++static int scsi_mpath_ua_thread(void *data)
++{
++	struct scsi_mpath_head *scsi_mpath_head = data;
++
++	while (!kthread_should_stop()) {
++		mpath_call_for_all_devices(scsi_mpath_head->mpath_head,
++			scsi_mpath_cb_ua_thread);
++		msleep(5000);
++	}
++	return 0;
++}
++
+ static struct scsi_mpath_head *scsi_mpath_alloc_head(void)
  {
-@@ -265,58 +181,6 @@ static struct alua_port_group *alua_alloc_pg(struct scsi_device *sdev,
- 	return pg;
- }
+ 	struct scsi_mpath_head *scsi_mpath_head;
+@@ -548,6 +573,17 @@ static struct scsi_mpath_head *scsi_mpath_alloc_head(void)
+ 		goto out_free_ida;
+ 	}
  
--/*
-- * alua_check_tpgs - Evaluate TPGS setting
-- * @sdev: device to be checked
-- *
-- * Examine the TPGS setting of the sdev to find out if ALUA
-- * is supported.
-- */
--static int alua_check_tpgs(struct scsi_device *sdev)
--{
--	int tpgs = TPGS_MODE_NONE;
--
--	/*
--	 * ALUA support for non-disk devices is fraught with
--	 * difficulties, so disable it for now.
--	 */
--	if (sdev->type != TYPE_DISK) {
--		sdev_printk(KERN_INFO, sdev,
--			    "%s: disable for non-disk devices\n",
--			    ALUA_DH_NAME);
--		return tpgs;
--	}
--
--	tpgs = scsi_device_tpgs(sdev);
--	switch (tpgs) {
--	case TPGS_MODE_EXPLICIT|TPGS_MODE_IMPLICIT:
--		sdev_printk(KERN_INFO, sdev,
--			    "%s: supports implicit and explicit TPGS\n",
--			    ALUA_DH_NAME);
--		break;
--	case TPGS_MODE_EXPLICIT:
--		sdev_printk(KERN_INFO, sdev, "%s: supports explicit TPGS\n",
--			    ALUA_DH_NAME);
--		break;
--	case TPGS_MODE_IMPLICIT:
--		sdev_printk(KERN_INFO, sdev, "%s: supports implicit TPGS\n",
--			    ALUA_DH_NAME);
--		break;
--	case TPGS_MODE_NONE:
--		sdev_printk(KERN_INFO, sdev, "%s: not supported\n",
--			    ALUA_DH_NAME);
--		break;
--	default:
--		sdev_printk(KERN_INFO, sdev,
--			    "%s: unsupported TPGS setting %d\n",
--			    ALUA_DH_NAME, tpgs);
--		tpgs = TPGS_MODE_NONE;
--		break;
--	}
--
--	return tpgs;
--}
--
- /*
-  * alua_check_vpd - Evaluate INQUIRY vpd page 0x83
-  * @sdev: device to be checked
-@@ -393,27 +257,6 @@ static int alua_check_vpd(struct scsi_device *sdev, struct alua_dh_data *h,
- 	return SCSI_DH_OK;
- }
- 
--static char print_alua_state(unsigned char state)
--{
--	switch (state) {
--	case SCSI_ACCESS_STATE_OPTIMAL:
--		return 'A';
--	case SCSI_ACCESS_STATE_ACTIVE:
--		return 'N';
--	case SCSI_ACCESS_STATE_STANDBY:
--		return 'S';
--	case SCSI_ACCESS_STATE_UNAVAILABLE:
--		return 'U';
--	case SCSI_ACCESS_STATE_LBA:
--		return 'L';
--	case SCSI_ACCESS_STATE_OFFLINE:
--		return 'O';
--	case SCSI_ACCESS_STATE_TRANSITIONING:
--		return 'T';
--	default:
--		return 'X';
--	}
--}
- 
- static void alua_handle_state_transition(struct scsi_device *sdev)
- {
-@@ -500,30 +343,6 @@ static enum scsi_disposition alua_check_sense(struct scsi_device *sdev,
- 	return SCSI_RETURN_NOT_HANDLED;
- }
- 
--/*
-- * alua_tur - Send a TEST UNIT READY
-- * @sdev: device to which the TEST UNIT READY command should be send
-- *
-- * Send a TEST UNIT READY to @sdev to figure out the device state
-- * Returns SCSI_DH_RETRY if the sense code is NOT READY/ALUA TRANSITIONING,
-- * SCSI_DH_OK if no error occurred, and SCSI_DH_IO otherwise.
-- */
--static int alua_tur(struct scsi_device *sdev)
--{
--	struct scsi_sense_hdr sense_hdr;
--	int retval;
--
--	retval = scsi_test_unit_ready(sdev, ALUA_FAILOVER_TIMEOUT * HZ,
--				      ALUA_FAILOVER_RETRIES, &sense_hdr);
--	if ((sense_hdr.sense_key == NOT_READY ||
--	     sense_hdr.sense_key == UNIT_ATTENTION) &&
--	    sense_hdr.asc == 0x04 && sense_hdr.ascq == 0x0a)
--		return SCSI_DH_RETRY;
--	else if (retval)
--		return SCSI_DH_IO;
--	else
--		return SCSI_DH_OK;
--}
- 
- /*
-  * alua_rtpg - Evaluate REPORT TARGET GROUP STATES
-@@ -722,17 +541,8 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg)
- 
- 	if (group_id_old != pg->group_id || state_old != pg->state ||
- 		pref_old != pg->pref || valid_states_old != pg->valid_states)
--		sdev_printk(KERN_INFO, sdev,
--			"%s: port group %02x state %c %s supports %c%c%c%c%c%c%c\n",
--			ALUA_DH_NAME, pg->group_id, print_alua_state(pg->state),
--			pg->pref ? "preferred" : "non-preferred",
--			pg->valid_states&TPGS_SUPPORT_TRANSITION?'T':'t',
--			pg->valid_states&TPGS_SUPPORT_OFFLINE?'O':'o',
--			pg->valid_states&TPGS_SUPPORT_LBA_DEPENDENT?'L':'l',
--			pg->valid_states&TPGS_SUPPORT_UNAVAILABLE?'U':'u',
--			pg->valid_states&TPGS_SUPPORT_STANDBY?'S':'s',
--			pg->valid_states&TPGS_SUPPORT_NONOPTIMIZED?'N':'n',
--			pg->valid_states&TPGS_SUPPORT_OPTIMIZED?'A':'a');
-+		alua_print_info(sdev, pg->group_id, pg->state, pg->pref,
-+						pg->valid_states);
- 
- 	switch (pg->state) {
- 	case SCSI_ACCESS_STATE_TRANSITIONING:
-@@ -911,7 +721,7 @@ static void alua_rtpg_work(struct work_struct *work)
- 		pg->flags &= ~ALUA_PG_RUN_RTPG;
- 		spin_unlock_irqrestore(&pg->lock, flags);
- 		if (state == SCSI_ACCESS_STATE_TRANSITIONING) {
--			if (alua_tur(sdev) == SCSI_DH_RETRY) {
-+			if (alua_tur(sdev) == -EAGAIN) {
- 				spin_lock_irqsave(&pg->lock, flags);
- 				pg->flags &= ~ALUA_PG_RUNNING;
- 				pg->flags |= ALUA_PG_RUN_RTPG;
-diff --git a/drivers/scsi/scsi_alua.c b/drivers/scsi/scsi_alua.c
-new file mode 100644
-index 0000000000000..2e4102192dcb9
---- /dev/null
-+++ b/drivers/scsi/scsi_alua.c
-@@ -0,0 +1,204 @@
-+// SPDX-License-Identifier: GPL-2.0-only
-+/*
-+ * Generic SCSI-3 ALUA SCSI driver
-+ *
-+ * Copyright (C) 2007-2010 Hannes Reinecke, SUSE Linux Products GmbH.
-+ * All rights reserved.
-+ */
-+
-+#include <scsi/scsi.h>
-+#include <scsi/scsi_proto.h>
-+#include <scsi/scsi_dbg.h>
-+#include <scsi/scsi_eh.h>
-+#include <scsi/scsi_alua.h>
-+
-+#define DRV_NAME "alua"
-+
-+#define ALUA_FAILOVER_RETRIES		5
-+
-+/*
-+ * alua_check_tpgs - Evaluate TPGS setting
-+ * @sdev: device to be checked
-+ *
-+ * Examine the TPGS setting of the sdev to find out if ALUA
-+ * is supported.
-+ */
-+int alua_check_tpgs(struct scsi_device *sdev)
-+{
-+	int tpgs = TPGS_MODE_NONE;
-+
-+	/*
-+	 * ALUA support for non-disk devices is fraught with
-+	 * difficulties, so disable it for now.
-+	 */
-+	if (sdev->type != TYPE_DISK) {
-+		sdev_printk(KERN_INFO, sdev,
-+			    "%s: disable for non-disk devices\n",
-+			    DRV_NAME);
-+		return tpgs;
++	scsi_mpath_head->kua = kthread_create(scsi_mpath_ua_thread,
++			scsi_mpath_head, "scsi-multipath-kua-%d",
++			scsi_mpath_head->index);
++	if (IS_ERR(scsi_mpath_head->kua)) {
++		put_device(&scsi_mpath_head->dev);
++		goto out_free_ida;
 +	}
 +
-+	tpgs = scsi_device_tpgs(sdev);
-+	switch (tpgs) {
-+	case TPGS_MODE_EXPLICIT|TPGS_MODE_IMPLICIT:
-+		sdev_printk(KERN_INFO, sdev,
-+			    "%s: supports implicit and explicit TPGS\n",
-+			    DRV_NAME);
-+		break;
-+	case TPGS_MODE_EXPLICIT:
-+		sdev_printk(KERN_INFO, sdev, "%s: supports explicit TPGS\n",
-+			    DRV_NAME);
-+		break;
-+	case TPGS_MODE_IMPLICIT:
-+		sdev_printk(KERN_INFO, sdev, "%s: supports implicit TPGS\n",
-+			    DRV_NAME);
-+		break;
-+	case TPGS_MODE_NONE:
-+		sdev_printk(KERN_INFO, sdev, "%s: not supported\n",
-+			    DRV_NAME);
-+		break;
-+	default:
-+		sdev_printk(KERN_INFO, sdev,
-+			    "%s: unsupported TPGS setting %d\n",
-+			    DRV_NAME, tpgs);
-+		tpgs = TPGS_MODE_NONE;
-+		break;
-+	}
++	set_user_nice(scsi_mpath_head->kua, 10);
++	wake_up_process(scsi_mpath_head->kua);
 +
-+	return tpgs;
-+}
-+EXPORT_SYMBOL_GPL(alua_check_tpgs);
-+
-+/*
-+ * alua_tur - Send a TEST UNIT READY
-+ * @sdev: device to which the TEST UNIT READY command should be send
-+ *
-+ * Send a TEST UNIT READY to @sdev to figure out the device state
-+ * Returns SCSI_DH_RETRY if the sense code is NOT READY/ALUA TRANSITIONING,
-+ * 0 if no error occurred, and SCSI_DH_IO otherwise.
-+ */
-+int alua_tur(struct scsi_device *sdev)
-+{
-+	struct scsi_sense_hdr sense_hdr;
-+	int retval;
-+
-+	retval = scsi_test_unit_ready(sdev, ALUA_FAILOVER_TIMEOUT * HZ,
-+				      ALUA_FAILOVER_RETRIES, &sense_hdr);
-+	if ((sense_hdr.sense_key == NOT_READY ||
-+	     sense_hdr.sense_key == UNIT_ATTENTION) &&
-+	    sense_hdr.asc == 0x04 && sense_hdr.ascq == 0x0a)
-+		return -EAGAIN;
-+	else if (retval)
-+		return -EIO;
-+	else
-+		return 0;
-+}
-+EXPORT_SYMBOL_GPL(alua_tur);
-+
-+/*
-+ * submit_rtpg - Issue a REPORT TARGET GROUP STATES command
-+ * @sdev: sdev the command should be sent to
-+ */
-+int submit_rtpg(struct scsi_device *sdev, unsigned char *buff,
-+		       int bufflen, struct scsi_sense_hdr *sshdr,
-+		       bool alua_rtpg_ext_hdr_unsupp)
-+{
-+	u8 cdb[MAX_COMMAND_SIZE];
-+	blk_opf_t opf = REQ_OP_DRV_IN | REQ_FAILFAST_DEV |
-+				REQ_FAILFAST_TRANSPORT | REQ_FAILFAST_DRIVER;
-+	const struct scsi_exec_args exec_args = {
-+		.sshdr = sshdr,
-+	};
-+
-+	/* Prepare the command. */
-+	memset(cdb, 0x0, MAX_COMMAND_SIZE);
-+	cdb[0] = MAINTENANCE_IN;
-+	if (alua_rtpg_ext_hdr_unsupp)
-+		cdb[1] = MI_REPORT_TARGET_PGS;
-+	else
-+		cdb[1] = MI_REPORT_TARGET_PGS | MI_EXT_HDR_PARAM_FMT;
-+	put_unaligned_be32(bufflen, &cdb[6]);
-+
-+	return scsi_execute_cmd(sdev, cdb, opf, buff, bufflen,
-+				ALUA_FAILOVER_TIMEOUT * HZ,
-+				ALUA_FAILOVER_RETRIES, &exec_args);
-+}
-+EXPORT_SYMBOL_GPL(submit_rtpg);
-+
-+static char print_alua_state(unsigned char state)
-+{
-+	switch (state) {
-+	case SCSI_ACCESS_STATE_OPTIMAL:
-+		return 'A';
-+	case SCSI_ACCESS_STATE_ACTIVE:
-+		return 'N';
-+	case SCSI_ACCESS_STATE_STANDBY:
-+		return 'S';
-+	case SCSI_ACCESS_STATE_UNAVAILABLE:
-+		return 'U';
-+	case SCSI_ACCESS_STATE_LBA:
-+		return 'L';
-+	case SCSI_ACCESS_STATE_OFFLINE:
-+		return 'O';
-+	case SCSI_ACCESS_STATE_TRANSITIONING:
-+		return 'T';
-+	default:
-+		return 'X';
-+	}
-+}
-+
-+void alua_print_info(struct scsi_device *sdev, int group_id, int state,
-+		int pref, int valid_states)
-+{
-+	sdev_printk(KERN_INFO, sdev,
-+		"alua: port group %02x state %c %s supports %c%c%c%c%c%c%c\n",
-+		group_id, print_alua_state(state),
-+		pref ? "preferred" : "non-preferred",
-+		valid_states&TPGS_SUPPORT_TRANSITION?'T':'t',
-+		valid_states&TPGS_SUPPORT_OFFLINE?'O':'o',
-+		valid_states&TPGS_SUPPORT_LBA_DEPENDENT?'L':'l',
-+		valid_states&TPGS_SUPPORT_UNAVAILABLE?'U':'u',
-+		valid_states&TPGS_SUPPORT_STANDBY?'S':'s',
-+		valid_states&TPGS_SUPPORT_NONOPTIMIZED?'N':'n',
-+		valid_states&TPGS_SUPPORT_OPTIMIZED?'A':'a');
-+}
-+EXPORT_SYMBOL_GPL(alua_print_info);
-+
-+/*
-+ * submit_stpg - Issue a SET TARGET PORT GROUP command
-+ *
-+ * Currently we're only setting the current target port group state
-+ * to 'active/optimized' and let the array firmware figure out
-+ * the states of the remaining groups.
-+ */
-+int submit_stpg(struct scsi_device *sdev, int group_id,
-+		       struct scsi_sense_hdr *sshdr)
-+{
-+	u8 cdb[MAX_COMMAND_SIZE];
-+	unsigned char stpg_data[8];
-+	int stpg_len = 8;
-+	blk_opf_t opf = REQ_OP_DRV_OUT | REQ_FAILFAST_DEV |
-+				REQ_FAILFAST_TRANSPORT | REQ_FAILFAST_DRIVER;
-+	const struct scsi_exec_args exec_args = {
-+		.sshdr = sshdr,
-+	};
-+
-+	/* Prepare the data buffer */
-+	memset(stpg_data, 0, stpg_len);
-+	stpg_data[4] = SCSI_ACCESS_STATE_OPTIMAL;
-+	put_unaligned_be16(group_id, &stpg_data[6]);
-+
-+	/* Prepare the command. */
-+	memset(cdb, 0x0, MAX_COMMAND_SIZE);
-+	cdb[0] = MAINTENANCE_OUT;
-+	cdb[1] = MO_SET_TARGET_PGS;
-+	put_unaligned_be32(stpg_len, &cdb[6]);
-+
-+	return scsi_execute_cmd(sdev, cdb, opf, stpg_data,
-+				stpg_len, ALUA_FAILOVER_TIMEOUT * HZ,
-+				ALUA_FAILOVER_RETRIES, &exec_args);
-+}
-+EXPORT_SYMBOL_GPL(submit_stpg);
-+
-+MODULE_LICENSE("GPL");
-+MODULE_DESCRIPTION("scsi_alua");
-diff --git a/include/scsi/scsi_alua.h b/include/scsi/scsi_alua.h
-new file mode 100644
-index 0000000000000..51b5ed1836c99
---- /dev/null
-+++ b/include/scsi/scsi_alua.h
-@@ -0,0 +1,50 @@
-+// SPDX-License-Identifier: GPL-2.0-or-later
-+/*
-+ * Generic SCSI-3 ALUA SCSI Device Handler
-+ *
-+ * Copyright (C) 2007-2010 Hannes Reinecke, SUSE Linux Products GmbH.
-+ * All rights reserved.
-+ */
-+#ifndef _SCSI_ALUA_H
-+#define _SCSI_ALUA_H
-+
-+#include <linux/slab.h>
-+#include <linux/delay.h>
-+#include <linux/module.h>
-+#include <linux/unaligned.h>
-+#include <scsi/scsi.h>
-+#include <scsi/scsi_proto.h>
-+#include <scsi/scsi_dbg.h>
-+#include <scsi/scsi_eh.h>
-+
-+#define TPGS_SUPPORT_NONE		0x00
-+#define TPGS_SUPPORT_OPTIMIZED		0x01
-+#define TPGS_SUPPORT_NONOPTIMIZED	0x02
-+#define TPGS_SUPPORT_STANDBY		0x04
-+#define TPGS_SUPPORT_UNAVAILABLE	0x08
-+#define TPGS_SUPPORT_LBA_DEPENDENT	0x10
-+#define TPGS_SUPPORT_OFFLINE		0x40
-+#define TPGS_SUPPORT_TRANSITION		0x80
-+#define TPGS_SUPPORT_ALL		0xdf
-+
-+#define RTPG_FMT_MASK			0x70
-+#define RTPG_FMT_EXT_HDR		0x10
-+
-+#define TPGS_MODE_UNINITIALIZED		 -1
-+#define TPGS_MODE_NONE			0x0
-+#define TPGS_MODE_IMPLICIT		0x1
-+#define TPGS_MODE_EXPLICIT		0x2
-+
-+#define ALUA_RTPG_SIZE			128
-+#define ALUA_FAILOVER_TIMEOUT		60
-+
-+int alua_check_tpgs(struct scsi_device *sdev);
-+int submit_rtpg(struct scsi_device *sdev, unsigned char *buff,
-+		       int bufflen, struct scsi_sense_hdr *sshdr,
-+		       bool alua_rtpg_ext_hdr_unsupp);
-+int alua_tur(struct scsi_device *sdev);
-+void alua_print_info(struct scsi_device *sdev, int group_id, int state,
-+		int pref, int valid_states);
-+int submit_stpg(struct scsi_device *sdev, int group_id,
-+		       struct scsi_sense_hdr *sshdr);
-+#endif // _SCSI_ALUA_H
+ 	return scsi_mpath_head;
+ 
+ out_free_ida:
+diff --git a/include/scsi/scsi_multipath.h b/include/scsi/scsi_multipath.h
+index 7c7ee2fb7def7..d30f2c41e17de 100644
+--- a/include/scsi/scsi_multipath.h
++++ b/include/scsi/scsi_multipath.h
+@@ -30,6 +30,7 @@ struct scsi_mpath_head {
+ 	struct mpath_head	*mpath_head;
+ 	struct device		dev;
+ 	int			index;
++	struct task_struct	*kua;
+ };
+ 
+ struct scsi_mpath_device {
 -- 
 2.43.5
 
