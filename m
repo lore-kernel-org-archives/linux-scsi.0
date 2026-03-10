@@ -1,31 +1,30 @@
 Received: from mail.avm.de (mail.avm.de [212.42.244.94])
 	(using TLSv1.2 with cipher DHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B934844D034;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC35644D023;
 	Tue, 10 Mar 2026 11:55:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.42.244.94
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773143741; cv=none; b=lLBzM5Epqdh/kz6LVuaSLDzxaZXr/NfX1a38d27ggPcazOpwVp7vs49ckwMtNLz515SoPnETjGvGogNNF+W72pTZfjfN8sRVO8pBwjuLXz9imw6hUvZ8mgHPwTbnJTjdnjAmw6CeJBNpEWoyGCNH1FphYCx86KEyQQbn31UwAz4=
+	t=1773143740; cv=none; b=PbOpIzAaCN1TlyPMCOHzn2+0LQlKvWP5uJfCaUR6dRamHNV4+A8uWi9+L4c4BPCrs/ltz3AohhdfNX953mQVGicILZdCHu1utJ/udP6HCaAtdlfXTIvLXWI249teR17XW3HfRUyuFG+qinoTQSB3MhHRExSwl737s/hJznvtmHE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773143741; c=relaxed/simple;
-	bh=x2oaB0qg8CghMqZVE4wv6e6u03uqEA8RFTswQdfTK1Q=;
+	s=arc-20240116; t=1773143740; c=relaxed/simple;
+	bh=Wx/k10vuVbp8ZUI17J5Bmoq0XIce6rBC9+YI4+K5MhY=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=lF5LzXo/NIVz3qBNPTMFiJfiC79wQeFBIoxe9tes13dhWQoFp51vK7RxIL+5//OpM/BHfvtw7L4H3fIPBDn9Y5+rNOvIEmPM/e/Idc4UL8UPVQ0BQJcjuJQaPuWVq1vabxfJfOG1mltSxd4zB73iYHFjk5OpfPRVtw1Q8rlXSuk=
+	 In-Reply-To:To:Cc; b=eX88ERyb/AOnCdHqbAW4sSJKteTA5gvUVTTV/hB/ssykw8A4LfYSzs6aTMRQYw02LEOpQx4+ux9m8zXfGivajFJZ4LfX9sE1IB8V5QsDIK3aJDWS5iC1wFtRi5xBMwnnQVMCYl7vOSxzKJgohC01yjVdOdLj4fZP41O35QQDpF0=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=avm.de; spf=pass smtp.mailfrom=avm.de; arc=none smtp.client-ip=212.42.244.94
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=avm.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=avm.de
 Received: from [212.42.244.71] (helo=mail.avm.de)
 	by mail.avm.de with ESMTP (eXpurgate 4.55.2)
 	(envelope-from <phahn-oss@avm.de>)
-	id 69b006ad-e21d-7f0000032729-7f000001d9f2-1
-	for <multiple-recipients>; Tue, 10 Mar 2026 12:55:25 +0100
+	id 69b006ab-e21d-7f0000032729-7f000001d99c-1
+	for <multiple-recipients>; Tue, 10 Mar 2026 12:55:24 +0100
 Received: from mail-auth.avm.de (dovecot-mx-01.avm.de [212.42.244.71])
 	by mail.avm.de (Postfix) with ESMTPS;
-	Tue, 10 Mar 2026 12:55:25 +0100 (CET)
+	Tue, 10 Mar 2026 12:55:23 +0100 (CET)
 From: Philipp Hahn <phahn-oss@avm.de>
-Date: Tue, 10 Mar 2026 12:48:52 +0100
-Subject: [PATCH 26/61] net/core: Prefer IS_ERR_OR_NULL over manual NULL
- check
+Date: Tue, 10 Mar 2026 12:48:33 +0100
+Subject: [PATCH 07/61] erofs: Prefer IS_ERR_OR_NULL over manual NULL check
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -34,7 +33,7 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260310-b4-is_err_or_null-v1-26-bd63b656022d@avm.de>
+Message-Id: <20260310-b4-is_err_or_null-v1-7-bd63b656022d@avm.de>
 References: <20260310-b4-is_err_or_null-v1-0-bd63b656022d@avm.de>
 In-Reply-To: <20260310-b4-is_err_or_null-v1-0-bd63b656022d@avm.de>
 To: amd-gfx@lists.freedesktop.org, apparmor@lists.ubuntu.com, 
@@ -64,27 +63,24 @@ To: amd-gfx@lists.freedesktop.org, apparmor@lists.ubuntu.com,
  sched-ext@lists.linux.dev, target-devel@vger.kernel.org, 
  tipc-discussion@lists.sourceforge.net, v9fs@lists.linux.dev, 
  Philipp Hahn <phahn-oss@avm.de>
-Cc: Alexei Starovoitov <ast@kernel.org>, 
- Daniel Borkmann <daniel@iogearbox.net>, 
- "David S. Miller" <davem@davemloft.net>, Jakub Kicinski <kuba@kernel.org>, 
- Jesper Dangaard Brouer <hawk@kernel.org>, 
- John Fastabend <john.fastabend@gmail.com>, 
- Stanislav Fomichev <sdf@fomichev.me>, Eric Dumazet <edumazet@google.com>, 
- Paolo Abeni <pabeni@redhat.com>, Simon Horman <horms@kernel.org>
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1267; i=phahn-oss@avm.de;
- h=from:subject:message-id; bh=x2oaB0qg8CghMqZVE4wv6e6u03uqEA8RFTswQdfTK1Q=;
- b=owEBbQGS/pANAwAKATQtBlPRrKzbAcsmYgBpsAYuz1CTGrbQpXzwm84r9mgKg2KIh9nV8i33X
- Xzcah43D7uJATMEAAEKAB0WIQQ5bPBtrWDUcDQCppg0LQZT0ays2wUCabAGLgAKCRA0LQZT0ays
- 231ZB/0bxZ/Qbs9IAD9kpPvo4QA+XnJGKWUdztF9j621/TW306I8+ggVrnqlG+FNuG2wVrw0WhJ
- ixcD9BMxptD/u4aa6XFjRfTlj5zAYq7AiLoV88hQ2zukJ0WZTgZ9ho7LLdTHbtDdQJg3IZi/ib8
- fJneCHe6P6SZ1m2EjqIO05fxr5kL7CgbuXZRdzSHe3+MgFHVghSrb0gT6dh9+gXstARt02FCx1t
- CbFc8t5W3HCfOWn15oLGczjOwJcE0jsoiVRPvvyO1awUr0bgUV2AJDFjkVpAz2ZTueHBx4ee0oO
- uXTsT9eV0KkVBz5xaaOgAyF5s8m06WIrMfH8OhTYPEwluE5m
+Cc: Gao Xiang <xiang@kernel.org>, Chao Yu <chao@kernel.org>, 
+ Yue Hu <zbestahu@gmail.com>, Jeffle Xu <jefflexu@linux.alibaba.com>, 
+ Sandeep Dhavale <dhavale@google.com>, Hongbo Li <lihongbo22@huawei.com>, 
+ Chunhai Guo <guochunhai@vivo.com>
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1165; i=phahn-oss@avm.de;
+ h=from:subject:message-id; bh=Wx/k10vuVbp8ZUI17J5Bmoq0XIce6rBC9+YI4+K5MhY=;
+ b=owEBbQGS/pANAwAKATQtBlPRrKzbAcsmYgBpsAXuTWLAsZgE3CYfS0prKIO5oYoR3eM1fSwdn
+ +XKr0TQn0GJATMEAAEKAB0WIQQ5bPBtrWDUcDQCppg0LQZT0ays2wUCabAF7gAKCRA0LQZT0ays
+ 2/j8B/sEd5J2vRHsnvhncB2lMo9VZ5h3+ZMJUztWw9QhmuXX9Qx3HEdJ5GLZ84ct6sqOhNTdJzS
+ JFD7aVZEzrOOhcVXC4LBSF/0LTyuRs08pHBx90juaWCHs505i/RK57onvWUjJYv2jNvBVJQQ+S6
+ AU4u0SqHLiT0AAUqbjuiM2TTHxhB5xD59cg+mk4rXkCdmvt3sw2+h9McRwE+VdqWIniC4/IsZt/
+ lSDklfOcCL2PaTrHCFhWHaM0/yrWd/ljPTRmFceOPsri9YRyl2VkofnQ4LBx/tIitZdlpukR5BZ
+ 3gdZMB70thXOoVOpRxkVmdjJvHPiGXebLpJqAK8oxLcbLF+S
 X-Developer-Key: i=phahn-oss@avm.de; a=openpgp;
  fpr=58AF7C2E007CDBE62C59E078F50EFDCF8AD04B1A
-X-purgate-ID: 149429::1773143725-C2E55F2F-BB07E72F/0/0
+X-purgate-ID: 149429::1773143724-8966EF2F-D5F13E8E/0/0
 X-purgate-type: clean
-X-purgate-size: 1269
+X-purgate-size: 1167
 X-purgate-Ad: Categorized by eleven eXpurgate (R) https://www.eleven.de
 X-purgate: This mail is considered clean (visit https://www.eleven.de for further information)
 X-purgate: clean
@@ -94,37 +90,33 @@ check.
 
 Change generated with coccinelle.
 
-To: Alexei Starovoitov <ast@kernel.org>
-To: Daniel Borkmann <daniel@iogearbox.net>
-To: "David S. Miller" <davem@davemloft.net>
-To: Jakub Kicinski <kuba@kernel.org>
-To: Jesper Dangaard Brouer <hawk@kernel.org>
-To: John Fastabend <john.fastabend@gmail.com>
-To: Stanislav Fomichev <sdf@fomichev.me>
-To: Eric Dumazet <edumazet@google.com>
-To: Paolo Abeni <pabeni@redhat.com>
-To: Simon Horman <horms@kernel.org>
-Cc: netdev@vger.kernel.org
-Cc: bpf@vger.kernel.org
+To: Gao Xiang <xiang@kernel.org>
+To: Chao Yu <chao@kernel.org>
+To: Yue Hu <zbestahu@gmail.com>
+To: Jeffle Xu <jefflexu@linux.alibaba.com>
+To: Sandeep Dhavale <dhavale@google.com>
+To: Hongbo Li <lihongbo22@huawei.com>
+To: Chunhai Guo <guochunhai@vivo.com>
+Cc: linux-erofs@lists.ozlabs.org
 Cc: linux-kernel@vger.kernel.org
 Signed-off-by: Philipp Hahn <phahn-oss@avm.de>
 ---
- net/core/xdp.c | 2 +-
+ fs/erofs/zdata.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/net/core/xdp.c b/net/core/xdp.c
-index 9890a30584ba7b08b246dacb984b639908f16242..c92cac2ccdb759457c7ce6a38e04e20190dff2a3 100644
---- a/net/core/xdp.c
-+++ b/net/core/xdp.c
-@@ -101,7 +101,7 @@ static void mem_allocator_disconnect(void *allocator)
- 	do {
- 		rhashtable_walk_start(&iter);
+diff --git a/fs/erofs/zdata.c b/fs/erofs/zdata.c
+index 3977e42b9516861bf3d59c072b6b8aaa6898dd8a..88c293ab2b1ef7962c6f5c0aa82639859e41b8e2 100644
+--- a/fs/erofs/zdata.c
++++ b/fs/erofs/zdata.c
+@@ -1227,7 +1227,7 @@ static int z_erofs_parse_in_bvecs(struct z_erofs_backend *be, bool *overlapped)
+ 		struct page *page = bvec->page;
  
--		while ((xa = rhashtable_walk_next(&iter)) && !IS_ERR(xa)) {
-+		while (!IS_ERR_OR_NULL((xa = rhashtable_walk_next(&iter)))) {
- 			if (xa->allocator == allocator)
- 				mem_xa_remove(xa);
- 		}
+ 		/* compressed data ought to be valid when decompressing */
+-		if (IS_ERR(page) || !page) {
++		if (IS_ERR_OR_NULL(page)) {
+ 			bvec->page = NULL;	/* clear the failure reason */
+ 			err = page ? PTR_ERR(page) : -EIO;
+ 			continue;
 
 -- 
 2.43.0
