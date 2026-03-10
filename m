@@ -1,150 +1,212 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f202.google.com (mail-pl1-f202.google.com [209.85.214.202])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B738138F940
-	for <linux-scsi@vger.kernel.org>; Tue, 10 Mar 2026 18:42:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D9A4B3A962D
+	for <linux-scsi@vger.kernel.org>; Tue, 10 Mar 2026 19:03:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.202
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773168161; cv=none; b=JUH+bcTA92oMcNnaLC53lp1JqYMj0xwdVjJOtFCy6qNRMgDtgUxlIEf3Z4snF0xx8tzfc/f766eoq/PFeP7z5SyVwsmj/3fBsrikHN8Xqb/9vuVD1WfH6ZVSQ722QzPcOL2Mh6uwjUlQkGe6BMy30tNizL0UMc0atCqD1c9/taE=
+	t=1773169398; cv=none; b=Gomxj9ru6hW6JeeJnJJAb9qAG7oljVdILw/Nvk9114XZbdCSEmd6wOJwFOu/9FgthXjfw3QHaygtVAYzDl73YVhdw3/ud5QVi4lvfTUzHDKxUQ6InqyA2UHODTsAm4QE42z85Fsr7h46DCzBQtqmK+t8HoWUYkambX6G9noHNgA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773168161; c=relaxed/simple;
-	bh=vAuO8LdLXgYjvO+f5USILfCGUhTqB4BPLoq9TY2aNWs=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=gGLRj3jlyO6Nde+dgEZtfJfWEZpZ/fRkXCImTzqU3PBPeGIEKn9PQNOHslMzDSfff65UXxROyP+0LOVEQUwRvxlDqqAio0KJFfz98z1C12ZhiA7+SD8IdKI33fo33cz1Adr+BcIUykOOR2H+2W1fq1bz/D5zxvlDcwMak8COk90=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=DiyAtYVg; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1773169398; c=relaxed/simple;
+	bh=xaNc7lt6Yn6fLZTNTlpCZ6yeGuA1W6XGBEcXcDK7bV0=;
+	h=Date:Mime-Version:Message-ID:Subject:From:To:Cc:Content-Type; b=kP9g8+LIPLLw3Hyl1kWmZ/80l3KPTLCA4FdYgRe0rNZkdGGyL3ss/hOk6MCrYRB9s/lbbEg7rW8yTqtrVwf6wtIYnMAIMgkDaCffl/n2dPvy/fCerQ5ZDc0Iv2msXW++D6BHyN9v8/F/oEA0NVLvnZPFRzn/6xA6bDuSDA5PM6Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--vamshigajjela.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=A2OTSq4F; arc=none smtp.client-ip=209.85.214.202
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--vamshigajjela.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="DiyAtYVg"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1773168158;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=Sk8lhoihK5pIbuF6YimmbJRBp6IudW+NAGwHbxnhgvE=;
-	b=DiyAtYVgcqFC1SadKJWVP6VlRiw/CyvlIOHKva8kNMWfYa7njgvRECdpwWpS61e9hhpu8h
-	kJVAiAgQuD/YYFFhSv3aF8IVnSJnmPN0mmUmYAPQoC3FNilpQOnWh0utD72f5b6UCRC3by
-	Hrp/DxuD1IAdRW9MViaqDiqjhVauom4=
-Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-137-4JQjCTqxPS-DB04r5hcr5w-1; Tue,
- 10 Mar 2026 14:42:34 -0400
-X-MC-Unique: 4JQjCTqxPS-DB04r5hcr5w-1
-X-Mimecast-MFC-AGG-ID: 4JQjCTqxPS-DB04r5hcr5w_1773168153
-Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 07E041955DAE;
-	Tue, 10 Mar 2026 18:42:33 +0000 (UTC)
-Received: from bmarzins-01.fast.eng.rdu2.dc.redhat.com (bmarzins-01.fast.eng.rdu2.dc.redhat.com [10.6.23.12])
-	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id A7D3B19560A6;
-	Tue, 10 Mar 2026 18:42:32 +0000 (UTC)
-Received: from bmarzins-01.fast.eng.rdu2.dc.redhat.com (localhost [127.0.0.1])
-	by bmarzins-01.fast.eng.rdu2.dc.redhat.com (8.18.1/8.17.1) with ESMTPS id 62AIgVla030181
-	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
-	Tue, 10 Mar 2026 14:42:31 -0400
-Received: (from bmarzins@localhost)
-	by bmarzins-01.fast.eng.rdu2.dc.redhat.com (8.18.1/8.18.1/Submit) id 62AIgTDO030180;
-	Tue, 10 Mar 2026 14:42:29 -0400
-Date: Tue, 10 Mar 2026 14:42:29 -0400
-From: Benjamin Marzinski <bmarzins@redhat.com>
-To: John Garry <john.g.garry@oracle.com>
-Cc: Ewan Milne <emilne@redhat.com>, Hannes Reinecke <hare@suse.de>,
-        Mike Snitzer <snitzer@kernel.org>, lsf-pc@lists.linux-foundation.org,
-        linux-nvme@lists.infradead.org, linux-block@vger.kernel.org,
-        linux-scsi@vger.kernel.org, dm-devel@lists.linux.dev
-Subject: Re: [LSF/MM/BPF TOPIC] Native SCSI multipath support
-Message-ID: <abBmFZY9PhGoZu7o@redhat.com>
-References: <69349b51-72c2-47f9-948f-f89843af62e4@oracle.com>
- <aZnuSC0qYfw0hiwM@kernel.org>
- <aZ5GbVxDT3gcS6WE@redhat.com>
- <0a6ec8d3-7623-4809-b275-3eccb94419d4@suse.de>
- <a1e5c1ac-fb5f-46f7-ad7c-e21a545e128d@oracle.com>
- <CAGtn9rnreF=AjejdZ_66Wicc6dhQjbjkK3BY4wdaRm3_bgC8tw@mail.gmail.com>
- <949c3319-1938-410e-8796-8e8bbdf59103@oracle.com>
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="A2OTSq4F"
+Received: by mail-pl1-f202.google.com with SMTP id d9443c01a7336-2ae47b3adacso92160225ad.3
+        for <linux-scsi@vger.kernel.org>; Tue, 10 Mar 2026 12:03:15 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20230601; t=1773169395; x=1773774195; darn=vger.kernel.org;
+        h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=Art6J6+gULfTzCDjpLQc7twXR+SSEmZJHs6QkuOum5g=;
+        b=A2OTSq4Fg7ILcQy0euxJkWmZDFlim/tRyWGoht/27cXD01nq108M3gz7qNCY1qYmqY
+         qKp1EGLtFFZrF1fbAO3M+v6Qqf5lAJW6/uxtw5B8TWzyXPjI15/l0xqgIL1yeujgeNZe
+         A88eneSxHs/ySx/tak08LOjYokcb51KdLhyfXHibxLMz+cXNGADzVy09wqqTuh8nFmxE
+         jcUSv763m1TX+52fdPl9pZVobA8wGsnUuvlKcIaz8syDXvqmwUzszbsSZAgHWNuYF5JG
+         Kf2Mn4tts+ECSrDuWe78aj0+zgEwJZX/mVHO7zi6e2JqcgJYA3biEC0xDw9O9ibLMgsS
+         71CQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1773169395; x=1773774195;
+        h=cc:to:from:subject:message-id:mime-version:date:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=Art6J6+gULfTzCDjpLQc7twXR+SSEmZJHs6QkuOum5g=;
+        b=ZzoCtulJBhdM6cZaLzSO4blkI+HzoBLCCRaGmMavKpoXvkcq/nRWkVLHHvDDMhrqKB
+         H8E8YooKtxTELEuoPttm3mxs322WjBqL+9wrvw+k9WBvyMsj1i8WUCWTn5bqT6RIbRv2
+         Or4A2eB6Gg9p6FWQqLAUoCR2wdG6LbgJWJdM8T34pfpndeqoWsncq/nFhxb3bqy/nnap
+         2Ss6/3CtCpayVcR3btmVXBn9w5y/1V94qO3qcyesyZ+v6QVapGhkIyxisUbjh5WF7hQ+
+         T4tPZseERWaunI3uDodHpIJwclAe4YT4+zlrPo43i1x4URCp09sE/eptsZMl9vxNn0bi
+         zeEA==
+X-Forwarded-Encrypted: i=1; AJvYcCWkJ/PU8DAF8ERjlbgt1NQB+PpN/Go1rtJO20scWS1k6D/22HYpBx9rLimMMwaAhXckEaxjzofRPLxk@vger.kernel.org
+X-Gm-Message-State: AOJu0Yz3JUpX41GVmgBok9YDJ0lByGl6T47yqE6sq96EwoFGLsv63DUe
+	Qb2iqlOz2Rs8xbMgccyzy1uQks/c7Zeupw06xx37LOeJuYtj4XNuzxHhrvFXQ38IRVtK0IrVKYv
+	ozbLPV8Luc7A0W8D8I5SGHYF571HYh8ESfA==
+X-Received: from plbkr14.prod.google.com ([2002:a17:903:80e:b0:2ab:2731:21b2])
+ (user=vamshigajjela job=prod-delivery.src-stubby-dispatcher) by
+ 2002:a17:903:46cc:b0:2ae:7f75:22e9 with SMTP id d9443c01a7336-2ae82417801mr170284235ad.1.1773169395125;
+ Tue, 10 Mar 2026 12:03:15 -0700 (PDT)
+Date: Wed, 11 Mar 2026 00:33:08 +0530
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <949c3319-1938-410e-8796-8e8bbdf59103@oracle.com>
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
+Mime-Version: 1.0
+X-Mailer: git-send-email 2.53.0.473.g4a7958ca14-goog
+Message-ID: <20260310190308.2474956-1-vamshigajjela@google.com>
+Subject: [PATCH v2] scsi: ufs: core: Handle MCQ IAG events
+From: vamshi gajjela <vamshigajjela@google.com>
+To: martin.petersen@oracle.com, James.Bottomley@HansenPartnership.com, 
+	bvanassche@acm.org, avri.altman@wdc.com, alim.akhtar@samsung.com
+Cc: peter.wang@mediatek.com, quic_nguyenb@quicinc.com, adrian.hunter@intel.com, 
+	beanhuo@micron.com, arthur.simchaev@sandisk.com, linux-scsi@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, vamshi gajjela <vamshigajjela@google.com>
+Content-Type: text/plain; charset="UTF-8"
 
-On Tue, Mar 10, 2026 at 06:05:29PM +0000, John Garry wrote:
-> On 10/03/2026 17:12, Ewan Milne wrote:
-> > Hi John-
-> > 
-> > Sorry, I was out for a couple of weeks and have been catching up...
-> > 
-> > Re: sg support, there were issues in the past with people attempting
-> > to do SG_IO through dm-mp
-> > assuming that DM would handle retry on other paths, which it didn't.
-> > You also have to be aware
-> > that non-idempotent commands don't work right if retried.  My
-> > recommendation would be to avoid
-> > implementing it, although there has been interest in a better way to
-> > do multipathed "generic"
-> > commands (e.g. virt pass-through) I think that is a more involved
-> > project than you want to do here.
-> 
-> Understood, my current plan is not have a multipathed sg driver - we will
-> still have the per-scsi device/path sg device.
+Add support for handling aggregation-based interrupts when operating
+in MCQ mode.
 
-The sd devices still handle SG_IO ioctls. For instance, the persistent
-reservation ioctls are SG_IO ioctls. But like I said elsewhere, getting
-multipathed persistent reservations working safely is going to be a
-large effort, better left for later.
+In legacy interrupt mode, an IE.IAGES is triggered when the counter
+or timer threshold is reached. To manage this, the handler now resets
+the aggregation counter and timer by writing to the MCQIACRy.CTR
+register.
 
-But even without them, to handle things like sending SCSI WRITE commands
-over SG_IO ioctls, in an ideal world, you would want to be able to retry
-on other paths in the ioctl code. However, like Ewan mentioned, there
-are times when you don't want to retry the ioctl. Just sending SG_IO
-ioctls to one path and letting them fail if they fail down that path is
-the safest way for now, even if there are times when that SG_IO ioctl
-could complete successfully down another path.
+Since the register layout of MCQIACRy is identical to the existing
+UTRIACR register, this implementation reuses the previously defined
+bitfield masks to maintain consistency and reduce code duplication.
 
--Ben
+Extend ufshcd_handle_mcq_cq_events() with a boolean iag parameter.
+If set, the handler resets the MCQ IAG counter and timer.
 
-> 
-> > 
-> > I see the discussion has progressed re: ALUA support in your later
-> > patch postings, which is good.
-> > As Hannes said, a Native SCSI MP would be useless without it.  You
-> > don't have to support the
-> > older non-ALUA mechanisms though, those arrays are way, way old.
-> > 
-> > SCSI does not have the equivalent of NVMe's AEN, so you need a way to
-> > ensure that your
-> > ALUA info is up-to-date.  DM-MP's path checker normally does this by
-> > sending commands on
-> > which the Unit Attention can be reported so that the code can fetch
-> > up-to-date ALUA info.
-> > Hannes made some optimizations years ago to avoid excessive RTPG
-> > commands with large
-> > numbers of LUNs which we would need also.
-> 
-> Hannes is suggesting to not have a kernel path checker, so let me know if
-> any issue with that.
-> 
-> > 
-> > It will be necessary for the functionality to be enabled via a module
-> > option, at least initially.
-> > Introducing this in general use will be a big change for people who
-> > have Enterprise SAN
-> > configurations with their own custom path monitoring tools.  I believe
-> > we put some functionality
-> > into usespace multipath tools so e.g. Native NVMe devices can still be
-> > monitored/observed
-> > which made things a bit easier for people.
-> > 
-> 
-> Sure, if you check my patches, we disable by default and enable via a module
-> param
-> 
-> cheers
+Define MCQ_IAG_EVENT_STATUS (0x200000) and include it in
+UFSHCD_ENABLE_MCQ_INTRS to ensure the interrupt is unmasked during
+initialization.
+
+Signed-off-by: vamshi gajjela <vamshigajjela@google.com>
+---
+v2: Rename argument to reset_iag
+
+ drivers/ufs/core/ufs-mcq.c     | 13 ++++++++++++-
+ drivers/ufs/core/ufshcd-priv.h |  2 ++
+ drivers/ufs/core/ufshcd.c      | 16 +++++++++++++---
+ include/ufs/ufshci.h           |  2 ++
+ 4 files changed, 29 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
+index 18a95b728633..377a57ce1fec 100644
+--- a/drivers/ufs/core/ufs-mcq.c
++++ b/drivers/ufs/core/ufs-mcq.c
+@@ -31,7 +31,8 @@
+ 
+ #define UFSHCD_ENABLE_MCQ_INTRS	(UTP_TASK_REQ_COMPL |\
+ 				 UFSHCD_ERROR_MASK |\
+-				 MCQ_CQ_EVENT_STATUS)
++				 MCQ_CQ_EVENT_STATUS |\
++				 MCQ_IAG_EVENT_STATUS)
+ 
+ /* Max mcq register polling time in microseconds */
+ #define MCQ_POLL_US 500000
+@@ -272,6 +273,16 @@ void ufshcd_mcq_write_cqis(struct ufs_hba *hba, u32 val, int i)
+ }
+ EXPORT_SYMBOL_GPL(ufshcd_mcq_write_cqis);
+ 
++u32 ufshcd_mcq_read_mcqiacr(struct ufs_hba *hba, int i)
++{
++	return readl(mcq_opr_base(hba, OPR_CQIS, i) + REG_MCQIACR);
++}
++
++void ufshcd_mcq_write_mcqiacr(struct ufs_hba *hba, u32 val, int i)
++{
++	writel(val, mcq_opr_base(hba, OPR_CQIS, i) + REG_MCQIACR);
++}
++
+ /*
+  * Current MCQ specification doesn't provide a Task Tag or its equivalent in
+  * the Completion Queue Entry. Find the Task Tag using an indirect method.
+diff --git a/drivers/ufs/core/ufshcd-priv.h b/drivers/ufs/core/ufshcd-priv.h
+index 37c32071e754..6d3d14e883b8 100644
+--- a/drivers/ufs/core/ufshcd-priv.h
++++ b/drivers/ufs/core/ufshcd-priv.h
+@@ -76,6 +76,8 @@ void ufshcd_mcq_compl_all_cqes_lock(struct ufs_hba *hba,
+ bool ufshcd_cmd_inflight(struct scsi_cmnd *cmd);
+ int ufshcd_mcq_sq_cleanup(struct ufs_hba *hba, int task_tag);
+ int ufshcd_mcq_abort(struct scsi_cmnd *cmd);
++u32 ufshcd_mcq_read_mcqiacr(struct ufs_hba *hba, int i);
++void ufshcd_mcq_write_mcqiacr(struct ufs_hba *hba, u32 val, int i);
+ int ufshcd_try_to_abort_task(struct ufs_hba *hba, int tag);
+ void ufshcd_release_scsi_cmd(struct ufs_hba *hba, struct scsi_cmnd *cmd);
+ 
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 847b55789bb8..eb7e8e2ae906 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -7084,16 +7084,17 @@ static irqreturn_t ufshcd_tmc_handler(struct ufs_hba *hba)
+ /**
+  * ufshcd_handle_mcq_cq_events - handle MCQ completion queue events
+  * @hba: per adapter instance
++ * @reset_iag: true, to reset MCQ IAG counter and timer of the CQ
+  *
+  * Return: IRQ_HANDLED if interrupt is handled.
+  */
+-static irqreturn_t ufshcd_handle_mcq_cq_events(struct ufs_hba *hba)
++static irqreturn_t ufshcd_handle_mcq_cq_events(struct ufs_hba *hba, bool reset_iag)
+ {
+ 	struct ufs_hw_queue *hwq;
+ 	unsigned long outstanding_cqs;
+ 	unsigned int nr_queues;
+ 	int i, ret;
+-	u32 events;
++	u32 events, reg;
+ 
+ 	ret = ufshcd_vops_get_outstanding_cqs(hba, &outstanding_cqs);
+ 	if (ret)
+@@ -7108,6 +7109,12 @@ static irqreturn_t ufshcd_handle_mcq_cq_events(struct ufs_hba *hba)
+ 		if (events)
+ 			ufshcd_mcq_write_cqis(hba, events, i);
+ 
++		if (reset_iag) {
++			reg = ufshcd_mcq_read_mcqiacr(hba, i);
++			reg |= INT_AGGR_COUNTER_AND_TIMER_RESET;
++			ufshcd_mcq_write_mcqiacr(hba, reg, i);
++		}
++
+ 		if (events & UFSHCD_MCQ_CQIS_TAIL_ENT_PUSH_STS)
+ 			ufshcd_mcq_poll_cqe_lock(hba, hwq);
+ 	}
+@@ -7141,7 +7148,10 @@ static irqreturn_t ufshcd_sl_intr(struct ufs_hba *hba, u32 intr_status)
+ 		retval |= ufshcd_transfer_req_compl(hba);
+ 
+ 	if (intr_status & MCQ_CQ_EVENT_STATUS)
+-		retval |= ufshcd_handle_mcq_cq_events(hba);
++		retval |= ufshcd_handle_mcq_cq_events(hba, false);
++
++	if (intr_status & MCQ_IAG_EVENT_STATUS)
++		retval |= ufshcd_handle_mcq_cq_events(hba, true);
+ 
+ 	return retval;
+ }
+diff --git a/include/ufs/ufshci.h b/include/ufs/ufshci.h
+index 806fdaf52bd9..43e87078538a 100644
+--- a/include/ufs/ufshci.h
++++ b/include/ufs/ufshci.h
+@@ -115,6 +115,7 @@ enum {
+ enum {
+ 	REG_CQIS		= 0x0,
+ 	REG_CQIE		= 0x4,
++	REG_MCQIACR		= 0x8,
+ };
+ 
+ enum {
+@@ -188,6 +189,7 @@ static inline u32 ufshci_version(u32 major, u32 minor)
+ #define SYSTEM_BUS_FATAL_ERROR			0x20000
+ #define CRYPTO_ENGINE_FATAL_ERROR		0x40000
+ #define MCQ_CQ_EVENT_STATUS			0x100000
++#define MCQ_IAG_EVENT_STATUS			0x200000
+ 
+ #define UFSHCD_UIC_HIBERN8_MASK	(UIC_HIBERNATE_ENTER |\
+ 				UIC_HIBERNATE_EXIT)
+-- 
+2.53.0.473.g4a7958ca14-goog
 
