@@ -1,30 +1,38 @@
-Received: from mail.avm.de (mail.avm.de [212.42.244.94])
+Received: from mail.avm.de (mail.avm.de [212.42.244.119])
 	(using TLSv1.2 with cipher DHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 165F046AEC2;
-	Tue, 10 Mar 2026 11:55:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.42.244.94
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 598A9472769;
+	Tue, 10 Mar 2026 11:55:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.42.244.119
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773143747; cv=none; b=uvf7c+8ZTaGEslqVXsuPaytsaBjNuDUtddyzjsegLuaLsJZGfWFmi+c/IVjyJkHZYjfYBnA47SQ/mOLgqGkORB/tcPB0okJnbufNBHrkksTrWeBQQ01jiJB3ttND/pXCgQueZLK4HR25XxuN1f7pc37doo3y8NJce8yyV5LBAzk=
+	t=1773143749; cv=none; b=uYfPkBkk3r9o+B55hRLmLL3kzrxU95kbsA5nVv1YmMX7z1VqlocoGkJrVw2cQytfKMCGZet1fu/d2lKvxu/OxixdUo+9dQHkzGatL9nKeqFp25I6nh0+EdStbbRsGFsKLcEXgrly7h/IZOr8KyD5+rLXLkNj0mXmxGzzdsuxTKU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773143747; c=relaxed/simple;
-	bh=w6c4PA3VGZ44yyLt8mghr+WTJ9TxkFa/GQpFHp0jaRg=;
+	s=arc-20240116; t=1773143749; c=relaxed/simple;
+	bh=kiPG2WUM9IIy6uswgVTVvYBzahqCQdDF2WT1QCoS/Vw=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=heHUHAMWnTgWR/+hP3/qGij7yTTg58MUJoEMNGyRPSAOsRWql+RnI/LWRXUW56oqEeYfFwf8a5aaL27+ikLUkRJPC9GurEAz01ARC72wdtBZ69EYk+QNGcy7Te0b1yq7ciZUs/leOTTp56Y2aF6YILL9nkYi0SNXQTVGJNi8H7s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=avm.de; spf=pass smtp.mailfrom=avm.de; arc=none smtp.client-ip=212.42.244.94
+	 In-Reply-To:To:Cc; b=JlrvXjEuTzN0U0bFGNxzc/m2ZwBBMuibtCfCDdnCunwholkANxJ1EWfJeJ+sjCJXMQ2KPXza63tnMuS2+7I60Nl2jFf9OrbQC24G0i0wfY41Cu2crz1FJb7CgMmd24Hh48LsBpRBBi2GRl9cyNICloR5KRCsUO0+QqNpmpZagP4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=avm.de; spf=pass smtp.mailfrom=avm.de; dkim=pass (1024-bit key) header.d=avm.de header.i=@avm.de header.b=ZhZk+uUN; arc=none smtp.client-ip=212.42.244.119
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=avm.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=avm.de
-Received: from [212.42.244.71] (helo=mail.avm.de)
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=avm.de header.i=@avm.de header.b="ZhZk+uUN"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=avm.de; s=mail;
+	t=1773143724; bh=kiPG2WUM9IIy6uswgVTVvYBzahqCQdDF2WT1QCoS/Vw=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
+	b=ZhZk+uUNXnEjnXl3w1yfhkldMOPDqhhLXZDAMjGv1auPlOiTaiSmNuwae77r69zpo
+	 wcrpRdQM8a/BZjLbD65ntammcni0DoJ16RicrUwWgtwucTmCe9C/jdQpatxzC+dLyR
+	 7BX2TKdOEfp7WLvyJKm7RVbstZgrWU81uOV3ziCw=
+Received: from [2001:bf0:244:244::71] (helo=mail.avm.de)
 	by mail.avm.de with ESMTP (eXpurgate 4.55.2)
 	(envelope-from <phahn-oss@avm.de>)
-	id 69b006ad-e21d-7f0000032729-7f000001da0c-1
-	for <multiple-recipients>; Tue, 10 Mar 2026 12:55:25 +0100
-Received: from mail-auth.avm.de (dovecot-mx-01.avm.de [212.42.244.71])
+	id 69b006ac-2367-7f0000032729-7f0000019d32-1
+	for <multiple-recipients>; Tue, 10 Mar 2026 12:55:24 +0100
+Received: from mail-auth.avm.de (dovecot-mx-01.avm.de [IPv6:2001:bf0:244:244::71])
 	by mail.avm.de (Postfix) with ESMTPS;
-	Tue, 10 Mar 2026 12:55:25 +0100 (CET)
+	Tue, 10 Mar 2026 12:55:24 +0100 (CET)
 From: Philipp Hahn <phahn-oss@avm.de>
-Date: Tue, 10 Mar 2026 12:48:56 +0100
-Subject: [PATCH 30/61] net/sunrpc: Prefer IS_ERR_OR_NULL over manual NULL
+Date: Tue, 10 Mar 2026 12:48:40 +0100
+Subject: [PATCH 14/61] seq_file: Prefer IS_ERR_OR_NULL over manual NULL
  check
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -34,7 +42,7 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260310-b4-is_err_or_null-v1-30-bd63b656022d@avm.de>
+Message-Id: <20260310-b4-is_err_or_null-v1-14-bd63b656022d@avm.de>
 References: <20260310-b4-is_err_or_null-v1-0-bd63b656022d@avm.de>
 In-Reply-To: <20260310-b4-is_err_or_null-v1-0-bd63b656022d@avm.de>
 To: amd-gfx@lists.freedesktop.org, apparmor@lists.ubuntu.com, 
@@ -64,27 +72,22 @@ To: amd-gfx@lists.freedesktop.org, apparmor@lists.ubuntu.com,
  sched-ext@lists.linux.dev, target-devel@vger.kernel.org, 
  tipc-discussion@lists.sourceforge.net, v9fs@lists.linux.dev, 
  Philipp Hahn <phahn-oss@avm.de>
-Cc: Trond Myklebust <trondmy@kernel.org>, Anna Schumaker <anna@kernel.org>, 
- Chuck Lever <chuck.lever@oracle.com>, Jeff Layton <jlayton@kernel.org>, 
- NeilBrown <neil@brown.name>, Olga Kornievskaia <okorniev@redhat.com>, 
- Dai Ngo <Dai.Ngo@oracle.com>, Tom Talpey <tom@talpey.com>, 
- "David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, 
- Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, 
- Simon Horman <horms@kernel.org>
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2551; i=phahn-oss@avm.de;
- h=from:subject:message-id; bh=w6c4PA3VGZ44yyLt8mghr+WTJ9TxkFa/GQpFHp0jaRg=;
- b=owEBbQGS/pANAwAKATQtBlPRrKzbAcsmYgBpsAY7O6x5f/jrEOlM2kM2YjYC7Xq22wW3Mikry
- 9AY9ISieLCJATMEAAEKAB0WIQQ5bPBtrWDUcDQCppg0LQZT0ays2wUCabAGOwAKCRA0LQZT0ays
- 24W7CACaVIegavbFPh1+6gPSjqv5T1Ou5hQU0OcaZ20nx5fdOimad+jK3UuGfZrC9Vgv0QMm0ym
- 3OSuSluEWbuIv6zcFp3UbdEj9aI7TM7en4Ha7pCkmDfNfPts09fhhi9VrPo390VGOMeNWeVMtD/
- CQde1U2q7DKI3QtGXyjY9I//uCPpAfeRw/e0X1QSKZ9eOdV+c4uWgQhNCPrPJZrHvycJx2lFn3Q
- ZNRGEplISNXY/bb/iuclRgqFYvGWnoUgBYQkpTrGJqDvFREwT8LcHN3+0nwKoz0xIqQbO7gBWgt
- +Dgbc3vk23keeP8aHFv6AZ7K16GCQyMm+zwDBr92eUq+pHvN
+Cc: Alexander Viro <viro@zeniv.linux.org.uk>, 
+ Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1255; i=phahn-oss@avm.de;
+ h=from:subject:message-id; bh=kiPG2WUM9IIy6uswgVTVvYBzahqCQdDF2WT1QCoS/Vw=;
+ b=owEBbQGS/pANAwAKATQtBlPRrKzbAcsmYgBpsAYFWY4XXOtO7D0H7zI3NI24qzy0WRyWgjhsq
+ Pb/2PtoUG2JATMEAAEKAB0WIQQ5bPBtrWDUcDQCppg0LQZT0ays2wUCabAGBQAKCRA0LQZT0ays
+ 2/mIB/9Q6s+1zeiVLXadpRpmyYqAancRy7Bn2FComUQinQhHrSfolPuiVxb6YyfHfnSDtXR2P+o
+ ZC/nc1mJGpByDWP4SS6acK19nNK/UVhicQydNeQRM17jmZovojRAWhs2/Nh6sutbizWZwHsYvxg
+ dtISFMErQIBKR+INYDqNnYmu1VPajdqnQ2qfmPWd9l1FO4V1847kZKmczXV6MF80eYNGSPwebB7
+ l5j+3Vv8ufK5FuVMTE1IDmjxjEXHtLbmfXLvEEcTc8Z+XvV4Rj3NOSWzcbcpJ8pMZ35IaPEecEu
+ E1IfNqm4CamuHsKtBBAJcEXcTCoiSwuZuARjawKppxNaRDTT
 X-Developer-Key: i=phahn-oss@avm.de; a=openpgp;
  fpr=58AF7C2E007CDBE62C59E078F50EFDCF8AD04B1A
-X-purgate-ID: 149429::1773143725-94E79F2F-D29BF16C/0/0
+X-purgate-ID: 149429::1773143724-84C8DE1F-2119C3CC/0/0
 X-purgate-type: clean
-X-purgate-size: 2553
+X-purgate-size: 1257
 X-purgate-Ad: Categorized by eleven eXpurgate (R) https://www.eleven.de
 X-purgate: This mail is considered clean (visit https://www.eleven.de for further information)
 X-purgate: clean
@@ -94,70 +97,38 @@ check.
 
 Change generated with coccinelle.
 
-To: Trond Myklebust <trondmy@kernel.org>
-To: Anna Schumaker <anna@kernel.org>
-To: Chuck Lever <chuck.lever@oracle.com>
-To: Jeff Layton <jlayton@kernel.org>
-To: NeilBrown <neil@brown.name>
-To: Olga Kornievskaia <okorniev@redhat.com>
-To: Dai Ngo <Dai.Ngo@oracle.com>
-To: Tom Talpey <tom@talpey.com>
-To: "David S. Miller" <davem@davemloft.net>
-To: Eric Dumazet <edumazet@google.com>
-To: Jakub Kicinski <kuba@kernel.org>
-To: Paolo Abeni <pabeni@redhat.com>
-To: Simon Horman <horms@kernel.org>
-Cc: linux-nfs@vger.kernel.org
-Cc: netdev@vger.kernel.org
+To: Alexander Viro <viro@zeniv.linux.org.uk>
+To: Christian Brauner <brauner@kernel.org>
+To: Jan Kara <jack@suse.cz>
+Cc: linux-fsdevel@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org
 Signed-off-by: Philipp Hahn <phahn-oss@avm.de>
 ---
- net/sunrpc/xprtrdma/svc_rdma_transport.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+ fs/seq_file.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/net/sunrpc/xprtrdma/svc_rdma_transport.c b/net/sunrpc/xprtrdma/svc_rdma_transport.c
-index 9b623849723ed0eb74b827881c6f32d3434c891b..b4d03e59a8202f20360cff1e2e79b1e325396517 100644
---- a/net/sunrpc/xprtrdma/svc_rdma_transport.c
-+++ b/net/sunrpc/xprtrdma/svc_rdma_transport.c
-@@ -578,7 +578,7 @@ static struct svc_xprt *svc_rdma_accept(struct svc_xprt *xprt)
-  errout:
- 	/* Take a reference in case the DTO handler runs */
- 	svc_xprt_get(&newxprt->sc_xprt);
--	if (newxprt->sc_qp && !IS_ERR(newxprt->sc_qp))
-+	if (!IS_ERR_OR_NULL(newxprt->sc_qp))
- 		ib_destroy_qp(newxprt->sc_qp);
- 	rdma_destroy_id(newxprt->sc_cm_id);
- 	rpcrdma_rn_unregister(dev, &newxprt->sc_rn);
-@@ -608,7 +608,7 @@ static void svc_rdma_free(struct svc_xprt *xprt)
- 	might_sleep();
- 
- 	/* This blocks until the Completion Queues are empty */
--	if (rdma->sc_qp && !IS_ERR(rdma->sc_qp))
-+	if (!IS_ERR_OR_NULL(rdma->sc_qp))
- 		ib_drain_qp(rdma->sc_qp);
- 	flush_workqueue(svcrdma_wq);
- 
-@@ -619,16 +619,16 @@ static void svc_rdma_free(struct svc_xprt *xprt)
- 	svc_rdma_recv_ctxts_destroy(rdma);
- 
- 	/* Destroy the QP if present (not a listener) */
--	if (rdma->sc_qp && !IS_ERR(rdma->sc_qp))
-+	if (!IS_ERR_OR_NULL(rdma->sc_qp))
- 		ib_destroy_qp(rdma->sc_qp);
- 
--	if (rdma->sc_sq_cq && !IS_ERR(rdma->sc_sq_cq))
-+	if (!IS_ERR_OR_NULL(rdma->sc_sq_cq))
- 		ib_free_cq(rdma->sc_sq_cq);
- 
--	if (rdma->sc_rq_cq && !IS_ERR(rdma->sc_rq_cq))
-+	if (!IS_ERR_OR_NULL(rdma->sc_rq_cq))
- 		ib_free_cq(rdma->sc_rq_cq);
- 
--	if (rdma->sc_pd && !IS_ERR(rdma->sc_pd))
-+	if (!IS_ERR_OR_NULL(rdma->sc_pd))
- 		ib_dealloc_pd(rdma->sc_pd);
- 
- 	/* Destroy the CM ID */
+diff --git a/fs/seq_file.c b/fs/seq_file.c
+index 4745db2a34d12b1084cb059a667c367f4fb56dad..da30cbd6485ca8eff6c2572eab10659c694387d2 100644
+--- a/fs/seq_file.c
++++ b/fs/seq_file.c
+@@ -226,7 +226,7 @@ ssize_t seq_read_iter(struct kiocb *iocb, struct iov_iter *iter)
+ 	p = m->op->start(m, &m->index);
+ 	while (1) {
+ 		err = PTR_ERR(p);
+-		if (!p || IS_ERR(p))	// EOF or an error
++		if (IS_ERR_OR_NULL(p))	// EOF or an error
+ 			break;
+ 		err = m->op->show(m, p);
+ 		if (err < 0)		// hard error
+@@ -266,7 +266,7 @@ ssize_t seq_read_iter(struct kiocb *iocb, struct iov_iter *iter)
+ 					    m->op->next);
+ 			m->index++;
+ 		}
+-		if (!p || IS_ERR(p))	// no next record for us
++		if (IS_ERR_OR_NULL(p))	// no next record for us
+ 			break;
+ 		if (m->count >= iov_iter_count(iter))
+ 			break;
 
 -- 
 2.43.0
