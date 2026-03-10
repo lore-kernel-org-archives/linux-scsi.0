@@ -1,212 +1,117 @@
-Received: from mail-pl1-f202.google.com (mail-pl1-f202.google.com [209.85.214.202])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from melduny.fyrkat.no (melduny.fyrkat.no [217.144.76.212])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D9A4B3A962D
-	for <linux-scsi@vger.kernel.org>; Tue, 10 Mar 2026 19:03:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.202
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 157633542CF;
+	Tue, 10 Mar 2026 19:52:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.144.76.212
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773169398; cv=none; b=Gomxj9ru6hW6JeeJnJJAb9qAG7oljVdILw/Nvk9114XZbdCSEmd6wOJwFOu/9FgthXjfw3QHaygtVAYzDl73YVhdw3/ud5QVi4lvfTUzHDKxUQ6InqyA2UHODTsAm4QE42z85Fsr7h46DCzBQtqmK+t8HoWUYkambX6G9noHNgA=
+	t=1773172337; cv=none; b=Ws8oXW8+FNpP06ngNgolfrMgeCrltogN5WBgdEfTxgRZjUcKhhxPgvIzJ+OFf3GYlG5LLVELld8ZD876phJSN9T92/8Mvb27nneON+owb4ylb7TVF/JuD+Ch1krkZCSmMs351VA28QmC5JEfadJo40z3zjxXWwkiWTY/MaVtJkE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773169398; c=relaxed/simple;
-	bh=xaNc7lt6Yn6fLZTNTlpCZ6yeGuA1W6XGBEcXcDK7bV0=;
-	h=Date:Mime-Version:Message-ID:Subject:From:To:Cc:Content-Type; b=kP9g8+LIPLLw3Hyl1kWmZ/80l3KPTLCA4FdYgRe0rNZkdGGyL3ss/hOk6MCrYRB9s/lbbEg7rW8yTqtrVwf6wtIYnMAIMgkDaCffl/n2dPvy/fCerQ5ZDc0Iv2msXW++D6BHyN9v8/F/oEA0NVLvnZPFRzn/6xA6bDuSDA5PM6Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--vamshigajjela.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=A2OTSq4F; arc=none smtp.client-ip=209.85.214.202
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--vamshigajjela.bounces.google.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="A2OTSq4F"
-Received: by mail-pl1-f202.google.com with SMTP id d9443c01a7336-2ae47b3adacso92160225ad.3
-        for <linux-scsi@vger.kernel.org>; Tue, 10 Mar 2026 12:03:15 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1773169395; x=1773774195; darn=vger.kernel.org;
-        h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=Art6J6+gULfTzCDjpLQc7twXR+SSEmZJHs6QkuOum5g=;
-        b=A2OTSq4Fg7ILcQy0euxJkWmZDFlim/tRyWGoht/27cXD01nq108M3gz7qNCY1qYmqY
-         qKp1EGLtFFZrF1fbAO3M+v6Qqf5lAJW6/uxtw5B8TWzyXPjI15/l0xqgIL1yeujgeNZe
-         A88eneSxHs/ySx/tak08LOjYokcb51KdLhyfXHibxLMz+cXNGADzVy09wqqTuh8nFmxE
-         jcUSv763m1TX+52fdPl9pZVobA8wGsnUuvlKcIaz8syDXvqmwUzszbsSZAgHWNuYF5JG
-         Kf2Mn4tts+ECSrDuWe78aj0+zgEwJZX/mVHO7zi6e2JqcgJYA3biEC0xDw9O9ibLMgsS
-         71CQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1773169395; x=1773774195;
-        h=cc:to:from:subject:message-id:mime-version:date:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=Art6J6+gULfTzCDjpLQc7twXR+SSEmZJHs6QkuOum5g=;
-        b=ZzoCtulJBhdM6cZaLzSO4blkI+HzoBLCCRaGmMavKpoXvkcq/nRWkVLHHvDDMhrqKB
-         H8E8YooKtxTELEuoPttm3mxs322WjBqL+9wrvw+k9WBvyMsj1i8WUCWTn5bqT6RIbRv2
-         Or4A2eB6Gg9p6FWQqLAUoCR2wdG6LbgJWJdM8T34pfpndeqoWsncq/nFhxb3bqy/nnap
-         2Ss6/3CtCpayVcR3btmVXBn9w5y/1V94qO3qcyesyZ+v6QVapGhkIyxisUbjh5WF7hQ+
-         T4tPZseERWaunI3uDodHpIJwclAe4YT4+zlrPo43i1x4URCp09sE/eptsZMl9vxNn0bi
-         zeEA==
-X-Forwarded-Encrypted: i=1; AJvYcCWkJ/PU8DAF8ERjlbgt1NQB+PpN/Go1rtJO20scWS1k6D/22HYpBx9rLimMMwaAhXckEaxjzofRPLxk@vger.kernel.org
-X-Gm-Message-State: AOJu0Yz3JUpX41GVmgBok9YDJ0lByGl6T47yqE6sq96EwoFGLsv63DUe
-	Qb2iqlOz2Rs8xbMgccyzy1uQks/c7Zeupw06xx37LOeJuYtj4XNuzxHhrvFXQ38IRVtK0IrVKYv
-	ozbLPV8Luc7A0W8D8I5SGHYF571HYh8ESfA==
-X-Received: from plbkr14.prod.google.com ([2002:a17:903:80e:b0:2ab:2731:21b2])
- (user=vamshigajjela job=prod-delivery.src-stubby-dispatcher) by
- 2002:a17:903:46cc:b0:2ae:7f75:22e9 with SMTP id d9443c01a7336-2ae82417801mr170284235ad.1.1773169395125;
- Tue, 10 Mar 2026 12:03:15 -0700 (PDT)
-Date: Wed, 11 Mar 2026 00:33:08 +0530
+	s=arc-20240116; t=1773172337; c=relaxed/simple;
+	bh=ZC/kikINZ4TAvirVIFkqBizjiOt39ErEkuGXZ1Z0W+Y=;
+	h=Date:From:To:cc:Subject:In-Reply-To:Message-ID:References:
+	 MIME-Version:Content-Type; b=spsv9j9FnU7JyeT9JkMuLJ5vAVexowszWi1mv5wnm4d1Wf9jIYq0HStyT8DGEoIvlPu4X8jJVdBqNDn8ka0pQoctIlLl68/VYiVM8B0meHe600Js4BcrLOas6s3x+PS7Hjez6hblBX1zrFMIV1FoyyPsYqA7ZrPZqU57Jyx4c8E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=kolla.no; spf=pass smtp.mailfrom=kolla.no; arc=none smtp.client-ip=217.144.76.212
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=kolla.no
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kolla.no
+Received: by melduny.fyrkat.no (Postfix) with ESMTPSA id 51FE78D0F;
+	Tue, 10 Mar 2026 19:40:41 +0000 (UTC)
+Date: Tue, 10 Mar 2026 20:40:36 +0100 (CET)
+From: =?UTF-8?Q?Kolbj=C3=B8rn_Barmen?= <linux-m68k@kolla.no>
+To: Krzysztof Kozlowski <krzk@kernel.org>
+cc: Fernando Fernandez Mancera <fmancera@suse.de>, netdev@vger.kernel.org, 
+    linux-kernel@vger.kernel.org, Geert Uytterhoeven <geert@linux-m68k.org>, 
+    Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>, 
+    Selvin Xavier <selvin.xavier@broadcom.com>, 
+    Andrew Lunn <andrew+netdev@lunn.ch>, 
+    "David S. Miller" <davem@davemloft.net>, 
+    Eric Dumazet <edumazet@google.com>, Jakub Kicinski <kuba@kernel.org>, 
+    Paolo Abeni <pabeni@redhat.com>, Ido Schimmel <idosch@nvidia.com>, 
+    Petr Machata <petrm@nvidia.com>, Simon Horman <horms@kernel.org>, 
+    Saurav Kashyap <skashyap@marvell.com>, Javed Hasan <jhasan@marvell.com>, 
+    "maintainer:BROADCOM BNX2FC 10 GIGABIT FCOE DRIVER" <GR-QLogic-Storage-Upstream@marvell.com>, 
+    "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
+    "Martin K. Petersen" <martin.petersen@oracle.com>, 
+    Nilesh Javali <njavali@marvell.com>, 
+    Manish Rangankar <mrangankar@marvell.com>, 
+    Varun Prakash <varun@chelsio.com>, Alexander Aring <aahringo@redhat.com>, 
+    David Teigland <teigland@redhat.com>, 
+    Andreas Gruenbacher <agruenba@redhat.com>, 
+    Nikolay Aleksandrov <razor@blackwall.org>, 
+    David Ahern <dsahern@kernel.org>, Pablo Neira Ayuso <pablo@netfilter.org>, 
+    Florian Westphal <fw@strlen.de>, Phil Sutter <phil@nwl.cc>, 
+    David Howells <dhowells@redhat.com>, 
+    Marc Dionne <marc.dionne@auristor.com>, 
+    Marcelo Ricardo Leitner <marcelo.leitner@gmail.com>, 
+    Xin Long <lucien.xin@gmail.com>, Jon Maloy <jmaloy@redhat.com>, 
+    Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>, 
+    Bjorn Andersson <bjorn.andersson@oss.qualcomm.com>, 
+    Arnd Bergmann <arnd@arndb.de>, 
+    Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>, 
+    Eric Biggers <ebiggers@kernel.org>, Michal Simek <michal.simek@amd.com>, 
+    Luca Weiss <luca.weiss@fairphone.com>, Sven Peter <sven@kernel.org>, 
+    Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>, 
+    Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>, 
+    Andrew Morton <akpm@linux-foundation.org>, David Gow <david@davidgow.net>, 
+    Herbert Xu <herbert@gondor.apana.org.au>, 
+    Ryota Sakamoto <sakamo.ryota@gmail.com>, 
+    Kuniyuki Iwashima <kuniyu@google.com>, Kir Chou <note351@hotmail.com>, 
+    Kuan-Wei Chiu <visitorckw@gmail.com>, 
+    Vikas Gupta <vikas.gupta@broadcom.com>, 
+    Bhargava Marreddy <bhargava.marreddy@broadcom.com>, 
+    Rajashekar Hudumula <rajashekar.hudumula@broadcom.com>, 
+    =?UTF-8?Q?Markus_Bl=C3=B6chl?= <markus@blochl.de>, 
+    "open list:M68K ARCHITECTURE" <linux-m68k@lists.linux-m68k.org>, 
+    "open list:INFINIBAND SUBSYSTEM" <linux-rdma@vger.kernel.org>, 
+    "open list:NETRONOME ETHERNET DRIVERS" <oss-drivers@corigine.com>, 
+    "open list:BROADCOM BNX2FC 10 GIGABIT FCOE DRIVER" <linux-scsi@vger.kernel.org>, 
+    "open list:DISTRIBUTED LOCK MANAGER (DLM)" <gfs2@lists.linux.dev>, 
+    "open list:ETHERNET BRIDGE" <bridge@lists.linux.dev>, 
+    "open list:NETFILTER" <netfilter-devel@vger.kernel.org>, 
+    "open list:NETFILTER" <coreteam@netfilter.org>, 
+    "open list:RXRPC SOCKETS (AF_RXRPC)" <linux-afs@lists.infradead.org>, 
+    "open list:SCTP PROTOCOL" <linux-sctp@vger.kernel.org>, 
+    "open list:TIPC NETWORK LAYER" <tipc-discussion@lists.sourceforge.net>
+Subject: Re: [PATCH 01/10 net-next] ipv6: convert CONFIG_IPV6 to built-in
+ only and clean up Kconfigs
+In-Reply-To: <01a4936f-77cd-4c60-a1be-cabec872a2bb@kernel.org>
+Message-ID: <e54d887c-5a70-b8c9-aeef-433c5134dd14@kolla.no>
+References: <20260309022013.5199-1-fmancera@suse.de> <20260309022013.5199-2-fmancera@suse.de> <01a4936f-77cd-4c60-a1be-cabec872a2bb@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-X-Mailer: git-send-email 2.53.0.473.g4a7958ca14-goog
-Message-ID: <20260310190308.2474956-1-vamshigajjela@google.com>
-Subject: [PATCH v2] scsi: ufs: core: Handle MCQ IAG events
-From: vamshi gajjela <vamshigajjela@google.com>
-To: martin.petersen@oracle.com, James.Bottomley@HansenPartnership.com, 
-	bvanassche@acm.org, avri.altman@wdc.com, alim.akhtar@samsung.com
-Cc: peter.wang@mediatek.com, quic_nguyenb@quicinc.com, adrian.hunter@intel.com, 
-	beanhuo@micron.com, arthur.simchaev@sandisk.com, linux-scsi@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, vamshi gajjela <vamshigajjela@google.com>
-Content-Type: text/plain; charset="UTF-8"
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 
-Add support for handling aggregation-based interrupts when operating
-in MCQ mode.
+On Mon, 9 Mar 2026, Krzysztof Kozlowski wrote:
 
-In legacy interrupt mode, an IE.IAGES is triggered when the counter
-or timer threshold is reached. To manage this, the handler now resets
-the aggregation counter and timer by writing to the MCQIACRy.CTR
-register.
+> On 09/03/2026 03:19, Fernando Fernandez Mancera wrote:
+> > Configuring IPV6 as a module provides little or no benefit and requires
+> > time and resources to maintain. Therefore, drop the support for it.
+> > 
+> > Change CONFIG_IPV6 from tristate to bool. Remove all Kconfig
+> > dependencies across the tree that explicitly checked for IPV6=m. Adjust
+> > all the default configurations from CONFIG_IPV6=m to CONFIG_IPV6=y. In
+> > addition, remove MODULE_DESCRIPTION(), MODULE_ALIAS(), MODULE_AUTHOR()
+> > and MODULE_LICENSE().
+> > 
+> > This is also replacing module_init() by fs_initcall().
+> > 
+> > Signed-off-by: Fernando Fernandez Mancera <fmancera@suse.de>
+> > ---
+-->8--
+> No, I don't want IPV6. It is allowed as module if some users need, but
+> it's heavy bloat added to each person's build testing setup. Kernel
+> image is already huge and barely fits boot partitions when built with
+> KASAN and I do want a generic image with KASAN.
+> 
+> It must stay module for me. Alternatively, drop it, but then some users
+> will be really affected.
 
-Since the register layout of MCQIACRy is identical to the existing
-UTRIACR register, this implementation reuses the previously defined
-bitfield masks to maintain consistency and reduce code duplication.
+I agree. If anything I would prefer to see IPv4 be made optional (and
+modular) as well, and not as something IPv6 depends on, it's (AFAIK)
+impossible today to build an IPv6-only Linux kernel. 
 
-Extend ufshcd_handle_mcq_cq_events() with a boolean iag parameter.
-If set, the handler resets the MCQ IAG counter and timer.
-
-Define MCQ_IAG_EVENT_STATUS (0x200000) and include it in
-UFSHCD_ENABLE_MCQ_INTRS to ensure the interrupt is unmasked during
-initialization.
-
-Signed-off-by: vamshi gajjela <vamshigajjela@google.com>
----
-v2: Rename argument to reset_iag
-
- drivers/ufs/core/ufs-mcq.c     | 13 ++++++++++++-
- drivers/ufs/core/ufshcd-priv.h |  2 ++
- drivers/ufs/core/ufshcd.c      | 16 +++++++++++++---
- include/ufs/ufshci.h           |  2 ++
- 4 files changed, 29 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
-index 18a95b728633..377a57ce1fec 100644
---- a/drivers/ufs/core/ufs-mcq.c
-+++ b/drivers/ufs/core/ufs-mcq.c
-@@ -31,7 +31,8 @@
- 
- #define UFSHCD_ENABLE_MCQ_INTRS	(UTP_TASK_REQ_COMPL |\
- 				 UFSHCD_ERROR_MASK |\
--				 MCQ_CQ_EVENT_STATUS)
-+				 MCQ_CQ_EVENT_STATUS |\
-+				 MCQ_IAG_EVENT_STATUS)
- 
- /* Max mcq register polling time in microseconds */
- #define MCQ_POLL_US 500000
-@@ -272,6 +273,16 @@ void ufshcd_mcq_write_cqis(struct ufs_hba *hba, u32 val, int i)
- }
- EXPORT_SYMBOL_GPL(ufshcd_mcq_write_cqis);
- 
-+u32 ufshcd_mcq_read_mcqiacr(struct ufs_hba *hba, int i)
-+{
-+	return readl(mcq_opr_base(hba, OPR_CQIS, i) + REG_MCQIACR);
-+}
-+
-+void ufshcd_mcq_write_mcqiacr(struct ufs_hba *hba, u32 val, int i)
-+{
-+	writel(val, mcq_opr_base(hba, OPR_CQIS, i) + REG_MCQIACR);
-+}
-+
- /*
-  * Current MCQ specification doesn't provide a Task Tag or its equivalent in
-  * the Completion Queue Entry. Find the Task Tag using an indirect method.
-diff --git a/drivers/ufs/core/ufshcd-priv.h b/drivers/ufs/core/ufshcd-priv.h
-index 37c32071e754..6d3d14e883b8 100644
---- a/drivers/ufs/core/ufshcd-priv.h
-+++ b/drivers/ufs/core/ufshcd-priv.h
-@@ -76,6 +76,8 @@ void ufshcd_mcq_compl_all_cqes_lock(struct ufs_hba *hba,
- bool ufshcd_cmd_inflight(struct scsi_cmnd *cmd);
- int ufshcd_mcq_sq_cleanup(struct ufs_hba *hba, int task_tag);
- int ufshcd_mcq_abort(struct scsi_cmnd *cmd);
-+u32 ufshcd_mcq_read_mcqiacr(struct ufs_hba *hba, int i);
-+void ufshcd_mcq_write_mcqiacr(struct ufs_hba *hba, u32 val, int i);
- int ufshcd_try_to_abort_task(struct ufs_hba *hba, int tag);
- void ufshcd_release_scsi_cmd(struct ufs_hba *hba, struct scsi_cmnd *cmd);
- 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 847b55789bb8..eb7e8e2ae906 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -7084,16 +7084,17 @@ static irqreturn_t ufshcd_tmc_handler(struct ufs_hba *hba)
- /**
-  * ufshcd_handle_mcq_cq_events - handle MCQ completion queue events
-  * @hba: per adapter instance
-+ * @reset_iag: true, to reset MCQ IAG counter and timer of the CQ
-  *
-  * Return: IRQ_HANDLED if interrupt is handled.
-  */
--static irqreturn_t ufshcd_handle_mcq_cq_events(struct ufs_hba *hba)
-+static irqreturn_t ufshcd_handle_mcq_cq_events(struct ufs_hba *hba, bool reset_iag)
- {
- 	struct ufs_hw_queue *hwq;
- 	unsigned long outstanding_cqs;
- 	unsigned int nr_queues;
- 	int i, ret;
--	u32 events;
-+	u32 events, reg;
- 
- 	ret = ufshcd_vops_get_outstanding_cqs(hba, &outstanding_cqs);
- 	if (ret)
-@@ -7108,6 +7109,12 @@ static irqreturn_t ufshcd_handle_mcq_cq_events(struct ufs_hba *hba)
- 		if (events)
- 			ufshcd_mcq_write_cqis(hba, events, i);
- 
-+		if (reset_iag) {
-+			reg = ufshcd_mcq_read_mcqiacr(hba, i);
-+			reg |= INT_AGGR_COUNTER_AND_TIMER_RESET;
-+			ufshcd_mcq_write_mcqiacr(hba, reg, i);
-+		}
-+
- 		if (events & UFSHCD_MCQ_CQIS_TAIL_ENT_PUSH_STS)
- 			ufshcd_mcq_poll_cqe_lock(hba, hwq);
- 	}
-@@ -7141,7 +7148,10 @@ static irqreturn_t ufshcd_sl_intr(struct ufs_hba *hba, u32 intr_status)
- 		retval |= ufshcd_transfer_req_compl(hba);
- 
- 	if (intr_status & MCQ_CQ_EVENT_STATUS)
--		retval |= ufshcd_handle_mcq_cq_events(hba);
-+		retval |= ufshcd_handle_mcq_cq_events(hba, false);
-+
-+	if (intr_status & MCQ_IAG_EVENT_STATUS)
-+		retval |= ufshcd_handle_mcq_cq_events(hba, true);
- 
- 	return retval;
- }
-diff --git a/include/ufs/ufshci.h b/include/ufs/ufshci.h
-index 806fdaf52bd9..43e87078538a 100644
---- a/include/ufs/ufshci.h
-+++ b/include/ufs/ufshci.h
-@@ -115,6 +115,7 @@ enum {
- enum {
- 	REG_CQIS		= 0x0,
- 	REG_CQIE		= 0x4,
-+	REG_MCQIACR		= 0x8,
- };
- 
- enum {
-@@ -188,6 +189,7 @@ static inline u32 ufshci_version(u32 major, u32 minor)
- #define SYSTEM_BUS_FATAL_ERROR			0x20000
- #define CRYPTO_ENGINE_FATAL_ERROR		0x40000
- #define MCQ_CQ_EVENT_STATUS			0x100000
-+#define MCQ_IAG_EVENT_STATUS			0x200000
- 
- #define UFSHCD_UIC_HIBERN8_MASK	(UIC_HIBERNATE_ENTER |\
- 				UIC_HIBERNATE_EXIT)
--- 
-2.53.0.473.g4a7958ca14-goog
-
+-- kolla
