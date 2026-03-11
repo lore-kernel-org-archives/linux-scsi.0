@@ -1,95 +1,134 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CFF9F2F4A14;
-	Wed, 11 Mar 2026 19:40:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A312B175A73;
+	Wed, 11 Mar 2026 21:37:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773258042; cv=none; b=KnXXNv4+I12bh8XDmQc6VSi5GNx4QodsWGmhMQDUsfw0WTlqZJpFNT75C6cVJlBQym4ueQOuQDVgxL+WfB8aIve8v/XIWmvFviSj6+WA+b6qetLgOUEAbzJlt+0S/Mri0tJRQQQz0zz2xxdW9eSY6RmH25/FXKPfInvzo6Pr3ss=
+	t=1773265050; cv=none; b=AvZCtez7Noi58kyFJHpyI2DqIwjDQ1YtMLqr7LLFpCgxMtNfo9b+nsKt/9k7kYYZy0L9Inpv05r+b55NVPDQp6Sffg8espNmLgYrnIfGIWzQ0oVqXJx2iaeYINgqr7a503sb6RKFw2uN8mhnQeNxpiSwPRMBrUzG6uc4SCWtYH0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773258042; c=relaxed/simple;
-	bh=cqcs0kdiwCEbSZ6YAhhVTcmjX99KADHLItChmhGh1fs=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=sD16HXcuhaWpGiWmsSYCgh/dr4Vi4mcWu2QSqqfS4k03HKiAvVZV6jjrh+eNQay3n6bpvoNcqR+BwboaUnAdvT0mnfj8dV5tngxH1+BJqpNCTgW2MbLAZzpH1pkZF2A3KBvkevknZh/qLUMt1AmVFLSbLn2Rw1ER3sZnbD+53Sk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=pKcY2qJb; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
+	s=arc-20240116; t=1773265050; c=relaxed/simple;
+	bh=ORQzYJ3u6URHD61tJ2SgGSNAbElHdRC0qUDT7hNEH6w=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=f8MrGTJBz/Kalsl417RY/+Fp6GrxxljUpp/7+JNM2R9nCdQm1zvrrzdyK2mPJkgPN2ICApvAoFUVgS2Wv2xCLJz/7vXYo6LbTEtYTF2eVm0Btb7vYGv9lYhzE4EBvO3gTVFQvfzH2m30g1xmDFlEKamiPAfcuJ4hcSycKjgQHuA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Nx21Hlgq; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="pKcY2qJb"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	Content-Type:In-Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:
-	Message-ID:Sender:Reply-To:Content-ID:Content-Description;
-	bh=UauR/UJlDBZ2dBizfiwZm7RvW4m8pMIUl2WRKBObDYM=; b=pKcY2qJbMrXpROU41g8NTDShBe
-	SJ7aODbeYHjAdkcD9fbpK4bb27SZdJrCihd4lZ/f7g462tkmKSVAovx0jxQTPP/97rwO2qNTTMixE
-	MU2wqxPtf0omdAGrkGMSHdCqEjResGWrLjq0Esq3PTOsvSntU6eZeQMg+fYFelVjRjeB7p8JrwGY/
-	cPkdJJDUDrObyaU2K1rp0w9jQ6OUJPyEOO6suxGf3XhciNSIwU1OHfhIHJupl8oJ3x/NGIc4hUdhu
-	mXh8DN8ZFmPjK8dMNRxsiGnXeaEbb36jcV7Po1zlKCyiAhykCe4vj8rC2qrxsicH4C6syO+vkUxvM
-	Wwlkr2YQ==;
-Received: from [50.53.43.113] (helo=[192.168.254.34])
-	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1w0PQ5-0000000CNMf-12Ug;
-	Wed, 11 Mar 2026 19:40:37 +0000
-Message-ID: <a15d4e2f-4a6f-4bf5-bc07-c4a1d38e8dda@infradead.org>
-Date: Wed, 11 Mar 2026 12:40:36 -0700
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Nx21Hlgq"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3B2F5C4CEF7;
+	Wed, 11 Mar 2026 21:37:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1773265050;
+	bh=ORQzYJ3u6URHD61tJ2SgGSNAbElHdRC0qUDT7hNEH6w=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=Nx21HlgqQ6VZ+y2Us6LdjW0RQ1hUYuC/0bmVaTeszZWdDsxJXElSuZzXoBCgyp6lH
+	 jkh4i3oqF5ejljyM9fxUvcxj9oxeg8UU+1E9TR7bIWP49btl8XpKIauCxvHL8Hqi31
+	 ihrwzBSdj6MiSGNo13Ur5xHwp/QSl6B+gwVfZ5QBbfohbZZv3sFgFfxJGRmNIeIGGw
+	 pQYDAxGrh5txU1Yy3u1G5RL6av0A6kpJpSIiqUd14kk4wKEG3r7qUzhsGwa7ilKUfy
+	 CzEYKpkz2z7TfiJ5j33hP9tOJezEAhDjDne7ZorrYnrSH502PK93L9wcFogEh54tlq
+	 roZ0rovRgelGA==
+Date: Wed, 11 Mar 2026 16:37:28 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: David Jeffery <djeffery@redhat.com>, linux-kernel@vger.kernel.org,
+	driver-core@lists.linux.dev, linux-pci@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Danilo Krummrich <dakr@kernel.org>,
+	Tarun Sahu <tarunsahu@google.com>,
+	Pasha Tatashin <tatashin@google.com>,
+	=?utf-8?B?TWljaGHFgiBDxYJhcGnFhHNraQ==?= <mclapinski@google.com>,
+	Jordan Richards <jordanrichards@google.com>,
+	Ewan Milne <emilne@redhat.com>,
+	John Meneghini <jmeneghi@redhat.com>,
+	"Lombardi, Maurizio" <mlombard@redhat.com>,
+	Stuart Hayes <stuart.w.hayes@gmail.com>,
+	Laurence Oberman <loberman@redhat.com>,
+	Marco Elver <elver@google.com>
+Subject: Re: [PATCH 2/5] driver core: separate function to shutdown one device
+Message-ID: <20260311213728.GA1024689@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 3/5] driver core: async device shutdown infrastructure
-To: David Jeffery <djeffery@redhat.com>, linux-kernel@vger.kernel.org,
- driver-core@lists.linux.dev, linux-pci@vger.kernel.org,
- linux-scsi@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- "Rafael J. Wysocki" <rafael@kernel.org>, Danilo Krummrich <dakr@kernel.org>
-Cc: Tarun Sahu <tarunsahu@google.com>, Pasha Tatashin <tatashin@google.com>,
- =?UTF-8?B?TWljaGHFgiBDxYJhcGnFhHNraQ==?= <mclapinski@google.com>,
- Jordan Richards <jordanrichards@google.com>, Ewan Milne <emilne@redhat.com>,
- John Meneghini <jmeneghi@redhat.com>,
- "Lombardi, Maurizio" <mlombard@redhat.com>,
- Stuart Hayes <stuart.w.hayes@gmail.com>,
- Laurence Oberman <loberman@redhat.com>
-References: <20260311171209.9205-1-djeffery@redhat.com>
- <20260311171209.9205-3-djeffery@redhat.com>
-Content-Language: en-US
-From: Randy Dunlap <rdunlap@infradead.org>
-In-Reply-To: <20260311171209.9205-3-djeffery@redhat.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <932d4e59-395f-4022-a2de-874fdea778ac@acm.org>
 
-Hi,
-
-On 3/11/26 10:12 AM, David Jeffery wrote:
-> Patterned after async suspend, allow devices to mark themselves as wanting
-> to perform async shutdown. Devices using async shutdown wait only for their
-> dependencies to shutdown before executing their shutdown routine.
+On Wed, Mar 11, 2026 at 11:00:11AM -0700, Bart Van Assche wrote:
+> On 3/11/26 10:12 AM, David Jeffery wrote:
+> > +static void shutdown_one_device(struct device *dev)
+> > +{
+> > +	/* hold lock to avoid race with probe/release */
+> > +	if (dev->parent && dev->bus && dev->bus->need_parent_lock)
+> > +		device_lock(dev->parent);
+> > +	device_lock(dev);
+> > +
+> > +	/* Don't allow any more runtime suspends */
+> > +	pm_runtime_get_noresume(dev);
+> > +	pm_runtime_barrier(dev);
+> > +
+> > +	if (dev->class && dev->class->shutdown_pre) {
+> > +		if (initcall_debug)
+> > +			dev_info(dev, "shutdown_pre\n");
+> > +		dev->class->shutdown_pre(dev);
+> > +	}
+> > +	if (dev->bus && dev->bus->shutdown) {
+> > +		if (initcall_debug)
+> > +			dev_info(dev, "shutdown\n");
+> > +		dev->bus->shutdown(dev);
+> > +	} else if (dev->driver && dev->driver->shutdown) {
+> > +		if (initcall_debug)
+> > +			dev_info(dev, "shutdown\n");
+> > +		dev->driver->shutdown(dev);
+> > +	}
+> > +
+> > +	device_unlock(dev);
+> > +	if (dev->parent && dev->bus && dev->bus->need_parent_lock)
+> > +		device_unlock(dev->parent);
+> > +
+> > +	put_device(dev->parent);
+> > +	put_device(dev);
+> > +}
 > 
-> Sync shutdown devices are shut down one at a time and will only wait for an
-> async shutdown device if the async device is a dependency.
+> Please keep the following code in the caller:
 > 
-> Signed-off-by: David Jeffery <djeffery@redhat.com>
-> Signed-off-by: Stuart Hayes <stuart.w.hayes@gmail.com>
-> Tested-by: Laurence Oberman <loberman@redhat.com>
-> ---
->  drivers/base/base.h    |   2 +
->  drivers/base/core.c    | 104 ++++++++++++++++++++++++++++++++++++++++-
->  include/linux/device.h |  13 ++++++
->  3 files changed, 118 insertions(+), 1 deletion(-)
+> 	if (dev->parent && dev->bus && dev->bus->need_parent_lock)
+> 		device_lock(dev->parent);
 > 
-> diff --git a/drivers/base/base.h b/drivers/base/base.h
-> index 79d031d2d845..ea2a039e7907 100644
-> --- a/drivers/base/base.h
-> +++ b/drivers/base/base.h
+> 	if (dev->parent && dev->bus && dev->bus->need_parent_lock)
+> 		device_unlock(dev->parent);
+> 
+> 	put_device(dev->parent);
+> 	put_device(dev);
 
-I know this isn't directly about this patch, but would you mind adding
-descriptions that are currently missing for a couple of struct member fields?
+Can you elaborate on this a little bit?  I can see that doing this in
+the caller is simpler in some ways, although there are two callers
+that would need this.  Maybe it's just the lock anti-pattern below?
 
-Warning: drivers/base/base.h:59 struct member 'drivers_autoprobe' not described in 'subsys_private'
-Warning: drivers/base/base.h:135 struct member 'deferred_probe_reason' not described in 'device_private'
+> Additionally, please make sure that the caller is made compatible with
+> lock context analysis (see also
+> https://lore.kernel.org/all/20250206181711.1902989-1-elver@google.com/).
+> All that is required to make this code compatible with lock context
+> analysis is to organize it as follows:
+> 
+> 	if (dev->parent && dev->bus && dev->bus->need_parent_lock) {
+> 		device_lock(dev->parent);
+> 		shutdown_one_device(dev);
+> 		device_unlock(dev->parent);
+> 	} else {
+> 		shutdown_one_device(dev);
+> 	}
 
-thanks.
--- 
-~Randy
+I guess avoiding the "conditional acquisition and later conditional
+release" pattern mentioned at [1] is what makes this compatible with
+lock context analysis?
 
+I guess this is another way of expressing the "no conditionally held
+locks" rule [2], which is more concise and fits better in my pea
+brain.
+
+[1] https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/Documentation/dev-tools/context-analysis.rst?id=v7.0-rc1#n42
+[2] https://clang.llvm.org/docs/ThreadSafetyAnalysis.html#no-conditionally-held-locks
