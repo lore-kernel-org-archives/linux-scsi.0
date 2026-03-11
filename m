@@ -1,99 +1,85 @@
-Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
+Received: from perceval.ideasonboard.com (perceval.ideasonboard.com [213.167.242.64])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 74087337B99;
-	Wed, 11 Mar 2026 21:42:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.14
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 969E039DBF5;
+	Wed, 11 Mar 2026 23:03:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.167.242.64
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773265343; cv=none; b=GByXCsHDQrte6gRi4D2Q5gbZkuIeJNiUlQmmCtl1Np7MuKNLkmiDaLA98rPWfVEercKtGd/JiIeS6e/qHXWimD42s6XUiQ8cQRAq3vQDAi4KYFdgUJuNuJakISLv/F1sjS9PCkDeipj8Pu7pNx0/olbsejUq1HZk7GWITdfwbRg=
+	t=1773270226; cv=none; b=AkA2Gnlxmrw7n8wlICODGs3io7QO9Oh/YDy07WP09JF/KFh9g5IxYQ17wt6vWQVzPCB+iYEQu7P3mBvtqRc+n31lnQN5NVwKohchMiBQHqmgSZE6jhjwc4hv3UUzJs1InFDBm/aIiY3ylNEkhCwq8TX0CYHFVkpY9m+PERgjhT4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773265343; c=relaxed/simple;
-	bh=Prnb/1D+hdTcUtzQ7DayB0zDn0vGSs/5ja3y9/MdumQ=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=cbK967AQ/O3LeMf5vcbEwLvtnOkFeNl3KF7L2fhie0eKnfUZTEWuIyVEpjWVOiiaO1UM49kFHRu1d+l3inzIal/k+3a9P4kUCIW06ExjVC7rA0mtukU4o2BWWx67k6bKmCUrUUB/0/YzDT1J2y6DatY/xURzj7NVtkIcdlcZum0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=s+LujL6U; arc=none smtp.client-ip=199.89.1.14
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1773270226; c=relaxed/simple;
+	bh=ATo3aRyKmYSXuSYD8x/NeBUp5LJcLKbzHVpozNXQJC0=;
+	h=Content-Type:MIME-Version:In-Reply-To:References:Subject:From:Cc:
+	 To:Date:Message-ID; b=riWYrESCcc9KNXqP13SZYyXzR58RrYMlS+b2xha5iOXuuIp+StTrVizqL6ketCeeYmMEMoyxUK8taVuLlBt+IYJOKFEOgMITJUBE5YxvJbFyx57ukqqJFBTg7MI8yXilCszhmCyW65ADzTthRqCB0cIhFeDkNxgzAb+Zf6dy7s0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ideasonboard.com; spf=pass smtp.mailfrom=ideasonboard.com; dkim=fail (1024-bit key) header.d=ideasonboard.com header.i=@ideasonboard.com header.b=WxcdvAR4 reason="signature verification failed"; arc=none smtp.client-ip=213.167.242.64
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ideasonboard.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ideasonboard.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="s+LujL6U"
-Received: from localhost (localhost [127.0.0.1])
-	by 011.lax.mailroute.net (Postfix) with ESMTP id 4fWPNR3XsTz1XM0pH;
-	Wed, 11 Mar 2026 21:42:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1773265326; x=1775857327; bh=Qx9K/t3ZE/eR6tRieLvRGViR
-	u+SqIDSvom8zScavz/g=; b=s+LujL6UiDiRgFnZof1YdV05nnSoy4d0n6HIjzFB
-	ncvjOlxwPEHpuTk8sxlZwoe+uO/giC8ir8G4dEdbLkcrcltZv4/xDWpIxbjG0DX+
-	JGlMNgZ+BfjFDYTo7EJLRQe6FZZvgQ2WhizjwSBBryd+afEBx97el5kISlHDjv6e
-	AdJrK5NkyELbYJKfGi+XxYWykv7Cv3aDB5I3aMmgq3bX9uzHfBloUC2N8x4ttSUc
-	9wbhk9mV1EUWiXA0MX+yzC/88dW28ggL80KncUMJiS9w6d8HqpemLST8Ps/VUICw
-	VLaWg7NkxT+NuA66JY4zaJNhfnsFMIq27khCcLAkxAVlgA==
-X-Virus-Scanned: by MailRoute
-Received: from 011.lax.mailroute.net ([127.0.0.1])
- by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id meJ6nrvm1YDA; Wed, 11 Mar 2026 21:42:06 +0000 (UTC)
-Received: from [100.119.48.131] (unknown [104.135.180.219])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4fWPN967Zpz1XM0p7;
-	Wed, 11 Mar 2026 21:42:01 +0000 (UTC)
-Message-ID: <6d82e4f3-7fd6-48b9-b319-b5350d54e9d3@acm.org>
-Date: Wed, 11 Mar 2026 14:42:00 -0700
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=ideasonboard.com header.i=@ideasonboard.com header.b="WxcdvAR4"
+Received: from monstersaurus.ideasonboard.com (cpc89244-aztw30-2-0-cust6594.18-1.cable.virginm.net [86.31.185.195])
+	by perceval.ideasonboard.com (Postfix) with ESMTPSA id CD91E448;
+	Thu, 12 Mar 2026 00:02:28 +0100 (CET)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=ideasonboard.com;
+	s=mail; t=1773270149;
+	bh=ATo3aRyKmYSXuSYD8x/NeBUp5LJcLKbzHVpozNXQJC0=;
+	h=In-Reply-To:References:Subject:From:Cc:To:Date:From;
+	b=WxcdvAR4zphcUuTNTLXCbLGiiCOKCwemLRMbnRdmW3ARcBHAWQiYVeysDpnfCIDuk
+	 B8rMCjKjDjoWJdgj4Zp0scfHxrPnr5P3xl9hFANY/wyWKZBZYHzyf2qsFxVEe9S31Y
+	 m9r/HjFnopry9bsUUdk6/id/Q3d97jYK/FiMa+Qw=
+Content-Type: text/plain; charset="utf-8"
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 2/5] driver core: separate function to shutdown one device
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: David Jeffery <djeffery@redhat.com>, linux-kernel@vger.kernel.org,
- driver-core@lists.linux.dev, linux-pci@vger.kernel.org,
- linux-scsi@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- "Rafael J. Wysocki" <rafael@kernel.org>, Danilo Krummrich <dakr@kernel.org>,
- Tarun Sahu <tarunsahu@google.com>, Pasha Tatashin <tatashin@google.com>,
- =?UTF-8?B?TWljaGHFgiBDxYJhcGnFhHNraQ==?= <mclapinski@google.com>,
- Jordan Richards <jordanrichards@google.com>, Ewan Milne <emilne@redhat.com>,
- John Meneghini <jmeneghi@redhat.com>,
- "Lombardi, Maurizio" <mlombard@redhat.com>,
- Stuart Hayes <stuart.w.hayes@gmail.com>,
- Laurence Oberman <loberman@redhat.com>, Marco Elver <elver@google.com>
-References: <20260311213728.GA1024689@bhelgaas>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20260311213728.GA1024689@bhelgaas>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <20260310-b4-is_err_or_null-v1-49-bd63b656022d@avm.de>
+References: <20260310-b4-is_err_or_null-v1-0-bd63b656022d@avm.de> <20260310-b4-is_err_or_null-v1-49-bd63b656022d@avm.de>
+Subject: Re: [PATCH 49/61] media: Prefer IS_ERR_OR_NULL over manual NULL check
+From: Kieran Bingham <kieran.bingham@ideasonboard.com>
+Cc: Shuah Khan <skhan@linuxfoundation.org>, Mauro Carvalho Chehab <mchehab@kernel.org>
+To: Philipp Hahn <phahn-oss@avm.de>, amd-gfx@lists.freedesktop.org, apparmor@lists.ubuntu.com, bpf@vger.kernel.org, ceph-devel@vger.kernel.org, cocci@inria.fr, dm-devel@lists.linux.dev, dri-devel@lists.freedesktop.org, gfs2@lists.linux.dev, intel-gfx@lists.freedesktop.org, intel-wired-lan@lists.osuosl.org, iommu@lists.linux.dev, kvm@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-block@vger.kernel.org, linux-bluetooth@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-cifs@vger.kernel.org, linux-clk@vger.kernel.org, linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-gpio@vger.kernel.org, linux-hyperv@vger.kernel.org, linux-input@vger.kernel.org, linux-kernel@vger.kernel.org, linux-leds@vger.kernel.org, linux-media@vger.kernel.org, linux-mips@vger.kernel.org, linux-mm@kvack.org, linux-modules@vger.kernel.org, linux-mtd@lists.infradead.org, linux-nfs@vger.kernel.org, linux-omap@vger.kernel.org, linux-phy@lists.infradead.org, lin
+ ux-pm@vger.kernel.org, linux-rockchip@lists.infradead.org, linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org, linux-sctp@vger.kernel.org, linux-security-module@vger.kernel.org, linux-sh@vger.kernel.org, linux-sound@vger.kernel.org, linux-stm32@st-md-mailman.stormreply.com, linux-trace-kernel@vger.kernel.org, linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org, netdev@vger.kernel.org, ntfs3@lists.linux.dev, samba-technical@lists.samba.org, sched-ext@lists.linux.dev, target-devel@vger.kernel.org, tipc-discussion@lists.sourceforge.net, v9fs@lists.linux.dev
+Date: Wed, 11 Mar 2026 23:03:33 +0000
+Message-ID: <177327021364.3167621.11851238159935183684@ping.linuxembedded.co.uk>
+User-Agent: alot/0.9.1
 
-On 3/11/26 2:37 PM, Bjorn Helgaas wrote:
-> Maybe it's just the lock anti-pattern below?
+Quoting Philipp Hahn (2026-03-10 11:49:15)
+> Prefer using IS_ERR_OR_NULL() over using IS_ERR() and a manual NULL
+> check.
+>=20
+> Change generated with coccinelle.
+>=20
+> To: Shuah Khan <skhan@linuxfoundation.org>
+> To: Kieran Bingham <kieran.bingham@ideasonboard.com>
+> To: Mauro Carvalho Chehab <mchehab@kernel.org>
+> Cc: linux-media@vger.kernel.org
+> Cc: linux-kernel@vger.kernel.org
+> Signed-off-by: Philipp Hahn <phahn-oss@avm.de>
+> ---
+>  drivers/media/test-drivers/vimc/vimc-streamer.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>=20
+> diff --git a/drivers/media/test-drivers/vimc/vimc-streamer.c b/drivers/me=
+dia/test-drivers/vimc/vimc-streamer.c
+> index 15d863f97cbf96b7ca7fbf3d7b6b6ec39fcc8ae3..da5aca50bcb4990c06f28e5a8=
+83eb398606991e9 100644
+> --- a/drivers/media/test-drivers/vimc/vimc-streamer.c
+> +++ b/drivers/media/test-drivers/vimc/vimc-streamer.c
+> @@ -167,7 +167,7 @@ static int vimc_streamer_thread(void *data)
+>                 for (i =3D stream->pipe_size - 1; i >=3D 0; i--) {
+>                         frame =3D stream->ved_pipeline[i]->process_frame(
+>                                         stream->ved_pipeline[i], frame);
+> -                       if (!frame || IS_ERR(frame))
+> +                       if (IS_ERR_OR_NULL(frame))
 
-Yes, that's my only concern.
+Reviewed-by: Kieran Bingham <kieran.bingham@ideasonboard.com>
 
-> I guess avoiding the "conditional acquisition and later conditional
-> release" pattern mentioned at [1] is what makes this compatible with
-> lock context analysis?
-
-Correct.
-
-> I guess this is another way of expressing the "no conditionally held
-> locks" rule [2], which is more concise and fits better in my pea
-> brain.
-> 
-> [1] https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/Documentation/dev-tools/context-analysis.rst?id=v7.0-rc1#n42
-> [2] https://clang.llvm.org/docs/ThreadSafetyAnalysis.html#no-conditionally-held-locks
-
-Is this perhaps intended as a suggestion for simplifying the language in
-Documentation/dev-tools/context-analysis.rst?
-
-s/such as conditional acquisition and later conditional release in the 
-same function/no conditionally held locks/
-
-Thanks,
-
-Bart.
+>                                 break;
+>                 }
+>                 //wait for 60hz
+>=20
+> --=20
+> 2.43.0
+>
