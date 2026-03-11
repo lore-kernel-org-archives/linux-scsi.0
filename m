@@ -1,130 +1,146 @@
-Received: from arkamax.eu (128-116-240-228.dyn.eolo.it [128.116.240.228])
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.5])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F05E43B27F6;
-	Wed, 11 Mar 2026 07:36:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=128.116.240.228
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE641376BFB;
+	Wed, 11 Mar 2026 08:06:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773214602; cv=none; b=pXH8V0rWIP10ku44t369FtLcYXgHpqvfdmBu0qAfT5LPJQYSLLt/yQN6MwZegjyfAejKUdsbZWVy/aUxiigPPOWN4m83LdrtU/WhLbDkfJvpOQQuQ4EdNttTrA3uz0Fa6bfhBUoaN2ivlyADgqTI8OsTZ4tClDdTiOySlBlN8/s=
+	t=1773216414; cv=none; b=HkNmW1IHQa6MTWJsh/kHyrZYmpSbB1NjUsYBjDIFNUpH20LMG5gq9tOi1o9o90T0MybrV3o+92nzjcK6rVQTq1LoFsONK5Kb0myZE7oeHArGMJgg443cA7FsE2ynAOiQ3FVs+9Ki7wt93/sur0kSep0zD2NC4f6zTI8u3C8htlI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773214602; c=relaxed/simple;
-	bh=zCL3VacVB1N095/jx1Q+CI0H/+tK3fJ/YGoEVk3Gbqk=;
-	h=Mime-Version:Content-Type:Date:Message-Id:To:Cc:Subject:From:
-	 References:In-Reply-To; b=DmX4XQwIysRvFFUpMA5gNw/X8B60Oteh02PxAyclX2TD9fifxr+3l92T6HW+wkiTj2gqAlCKgw02AZzTfYZ8ntI77oqq3FHToZlmJxBqDD6puNrvhoqnaDugs1tvE9iS8qzX7KBSqp4ZR6uWLzHZ06x5pNrRzLLIojMPAW+3ZyU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=arkamax.eu; spf=pass smtp.mailfrom=arkamax.eu; arc=none smtp.client-ip=128.116.240.228
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=arkamax.eu
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=arkamax.eu
-Received: from localhost (128-116-240-228.dyn.eolo.it [128.116.240.228])
-	by arkamax.eu (OpenSMTPD) with ESMTPSA id 1f15775b (TLSv1.3:TLS_AES_256_GCM_SHA384:256:NO);
-	Wed, 11 Mar 2026 08:29:51 +0100 (CET)
+	s=arc-20240116; t=1773216414; c=relaxed/simple;
+	bh=vyUFEum57AlHo8nJyMnSdtN1iUAl1gdenNgQDzO7PHk=;
+	h=Date:From:To:Subject:Content-Type:MIME-Version:Message-ID; b=b6+W/f2rzoxRryR3IiwI7OdY/u/Zf/HlNMApVTgHjXQWEqPPaAlt2hOdPFXRsvf7FxrtyBaAsQa6DB1razv1Vaw6CPs0Jo3I8BAayQlOw/DdGQt9qvvhyY+CJadAaUnVZKuOul1RpH4+FYtVZ78wMpaidBRZWHiO5bb1U5xa8lA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=PsJs+B/9; arc=none smtp.client-ip=117.135.210.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="PsJs+B/9"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=Date:From:To:Subject:Content-Type:MIME-Version:
+	Message-ID; bh=vyUFEum57AlHo8nJyMnSdtN1iUAl1gdenNgQDzO7PHk=; b=P
+	sJs+B/9sqSkBFRGUPtBQxHUIxe6ffPjhAjy72htSuomKrfYkeJ86mujurvANYUHt
+	civBG76Qk4BtC1OprhHcbNXqnU5VkK5/xvEj0iJIZ9RXQIvE5rh3/CmLIXkFgwNO
+	8KqLDu4/H7pq9osKHfhmc6pOvWBEZN3Qvso8aZ7TAE=
+Received: from luckd0g$163.com ( [183.205.138.18] ) by
+ ajax-webmail-wmsvr-40-127 (Coremail) ; Wed, 11 Mar 2026 16:06:31 +0800
+ (CST)
+Date: Wed, 11 Mar 2026 16:06:31 +0800 (CST)
+From: "Jianzhou Zhao" <luckd0g@163.com>
+To: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com,
+	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: KCSAN: data-race in scsi_block_when_processing_errors /
+ scsi_host_set_state
+X-Priority: 3
+X-Mailer: Coremail Webmail Server Version 2023.4-cmXT build
+ 20251222(83accb85) Copyright (c) 2002-2026 www.mailtech.cn 163com
+X-NTES-SC: AL_Qu2cAf6auUsi5yGQYukfmU4Rhug7UMO3uf8n24JfPJ9wjA/p2yseUUF9NmPf88CwFTuXvxiGfTNO1/ZAU5BifrwxAn/hsL8y9t3kMYcaDZFVmg==
+Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=GBK
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Wed, 11 Mar 2026 08:29:51 +0100
-Message-Id: <DGZRYXTKC049.1I6QFQSMSD88H@arkamax.eu>
-To: "Yi Zhang" <yi.zhang@redhat.com>, "Shinichiro Kawasaki"
- <shinichiro.kawasaki@wdc.com>
-Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
- "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
- "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
- "nbd@other.debian.org" <nbd@other.debian.org>, "linux-rdma@vger.kernel.org"
- <linux-rdma@vger.kernel.org>
-Subject: Re: blktests failures with v7.0-rc1 kernel
-From: "Maurizio Lombardi" <mlombard@arkamax.eu>
-X-Mailer: aerc 0.21.0
-References: <aZ_-cH8euZLySxdD@shinmob>
- <CAHj4cs8mzSZez+n2qLu5931YAuQ4=RxNt6D6YJCsMEwGrm4UtA@mail.gmail.com>
-In-Reply-To: <CAHj4cs8mzSZez+n2qLu5931YAuQ4=RxNt6D6YJCsMEwGrm4UtA@mail.gmail.com>
+MIME-Version: 1.0
+Message-ID: <36d59d0e.6db0.19cdbeee01b.Coremail.luckd0g@163.com>
+X-Coremail-Locale: zh_CN
+X-CM-TRANSID:fygvCgDnT5GHIrFpv8R2AA--.38938W
+X-CM-SenderInfo: poxfyvkqj6il2tof0z/xtbC9gdw+mmxIocG3QAA3d
+X-Coremail-Antispam: 1U5529EdanIXcx71UUUUU7vcSsGvfC2KfnxnUU==
 
-On Wed Mar 11, 2026 at 1:35 AM CET, Yi Zhang wrote:
-> On Thu, Feb 26, 2026 at 4:09=E2=80=AFPM Shinichiro Kawasaki
-> <shinichiro.kawasaki@wdc.com> wrote:
->>
->
-> I also reproduced this kmemleak issue with the blktests nvme/rdma
-> test. Here is the log:
->
-> unreferenced object 0xffff8882e7545a40 (size 32):
->   comm "kworker/0:0H", pid 36658, jiffies 4303559899
->   hex dump (first 32 bytes):
->     02 81 aa 09 00 ea ff ff 00 00 00 00 00 10 00 00  ................
->     00 40 a0 6a 82 88 ff ff 00 10 00 00 00 00 00 00  .@.j............
->   backtrace (crc e5de3e0c):
->     __kmalloc_noprof+0x6f1/0xa10
->     sgl_alloc_order+0x9e/0x370
->     nvmet_req_alloc_sgls+0x294/0x4f0 [nvmet]
->     nvmet_rdma_map_sgl_keyed+0x25a/0x940 [nvmet_rdma]
->     nvmet_rdma_handle_command+0x1ed/0x4e0 [nvmet_rdma]
->     __ib_process_cq+0x139/0x4b0 [ib_core]
->     ib_cq_poll_work+0x4d/0x160 [ib_core]
->     process_one_work+0x8b1/0x15e0
->     worker_thread+0x5e9/0xfc0
->     kthread+0x36b/0x470
->     ret_from_fork+0x5bf/0x910
->     ret_from_fork_asm+0x1a/0x30
-> unreferenced object 0xffff8882e7545280 (size 32):
->   comm "kworker/0:0H", pid 36658, jiffies 4303559900
->   hex dump (first 32 bytes):
->     02 2b 82 0b 00 ea ff ff 00 00 00 00 00 10 00 00  .+..............
->     00 c0 8a e0 82 88 ff ff 00 10 00 00 00 00 00 00  ................
->   backtrace (crc 42d20147):
->     __kmalloc_noprof+0x6f1/0xa10
->     sgl_alloc_order+0x9e/0x370
->     nvmet_req_alloc_sgls+0x294/0x4f0 [nvmet]
->     nvmet_rdma_map_sgl_keyed+0x25a/0x940 [nvmet_rdma]
->     nvmet_rdma_handle_command+0x1ed/0x4e0 [nvmet_rdma]
->     __ib_process_cq+0x139/0x4b0 [ib_core]
->     ib_cq_poll_work+0x4d/0x160 [ib_core]
->     process_one_work+0x8b1/0x15e0
->     worker_thread+0x5e9/0xfc0
->     kthread+0x36b/0x470
->     ret_from_fork+0x5bf/0x910
->     ret_from_fork_asm+0x1a/0x30
-
-Maybe the problem is in the nvmet_rdma_map_sgl_keyed() function
-
-static u16 nvmet_rdma_map_sgl_keyed(struct nvmet_rdma_rsp *rsp,
-                struct nvme_keyed_sgl_desc *sgl, bool invalidate)
-{
-        u64 addr =3D le64_to_cpu(sgl->addr);
-        u32 key =3D get_unaligned_le32(sgl->key);
-        struct ib_sig_attrs sig_attrs;
-        int ret;
-
-        rsp->req.transfer_len =3D get_unaligned_le24(sgl->length);
-
-        /* no data command? */
-        if (!rsp->req.transfer_len)
-                return 0;
-
-        if (rsp->req.metadata_len)
-                nvmet_rdma_set_sig_attrs(&rsp->req, &sig_attrs);
-
-        ret =3D nvmet_req_alloc_sgls(&rsp->req);
-        if (unlikely(ret < 0))
-                goto error_out;
-
-        ret =3D nvmet_rdma_rw_ctx_init(rsp, addr, key, &sig_attrs);
-        if (unlikely(ret < 0))
-                goto error_out;
-        rsp->n_rdma +=3D ret;
-
-        if (invalidate)
-                rsp->invalidate_rkey =3D key;
-
-        return 0;
-
-error_out:
-        rsp->req.transfer_len =3D 0;
-        return NVME_SC_INTERNAL;
-}
-
-If nvmet_rdma_rw_ctx_init() fails, shouldn't it call
-nvmet_req_free_sgls() before returning an error?
-
-Maurizio
+CgpTdWJqZWN0OiBbQlVHXSBzY3NpOiBjb3JlOiBLQ1NBTjogZGF0YS1yYWNlIGluIHNjc2lfYmxv
+Y2tfd2hlbl9wcm9jZXNzaW5nX2Vycm9ycyAvIHNjc2lfaG9zdF9zZXRfc3RhdGUKCkRlYXIgTWFp
+bnRhaW5lcnMsCgpXZSBhcmUgd3JpdGluZyB0byByZXBvcnQgYSBLQ1NBTi1kZXRlY3RlZCBkYXRh
+IHJhY2UgdnVsbmVyYWJpbGl0eSB3aXRoaW4gdGhlIFNDU0kgY29yZSBzdWJzeXN0ZW0gKGBkcml2
+ZXJzL3Njc2kvaG9zdHMuY2AgYW5kIGBpbmNsdWRlL3Njc2kvc2NzaV9ob3N0LmhgKS4gVGhpcyBi
+dWcgd2FzIGZvdW5kIGJ5IG91ciBjdXN0b20gZnV6emluZyB0b29sLCBSYWNlUGlsb3QuIFRoZSBy
+YWNlIG9jY3VycyBkdXJpbmcgdGhlIGhvc3Qgc3RhdGUgdHJhbnNpdGlvbiB3aGlsZSBhbiBlcnJv
+ciByZWNvdmVyeSBwcm9jZXNzIGlzIGFjdGl2ZSwgc3BlY2lmaWNhbGx5IGJldHdlZW4gdGhlIGFj
+dGl2ZSBtb2RpZmljYXRpb24gb2YgYHNob3N0LT5zaG9zdF9zdGF0ZWAgd2l0aGluIGBzY3NpX2hv
+c3Rfc2V0X3N0YXRlYCBhbmQgdGhlIGxvY2tsZXNzIGNoZWNraW5nIGxvb3AgaW5zaWRlIGBzY3Np
+X2Jsb2NrX3doZW5fcHJvY2Vzc2luZ19lcnJvcnNgIHRocm91Z2ggYHNjc2lfaG9zdF9pbl9yZWNv
+dmVyeSgpYC4gV2Ugb2JzZXJ2ZWQgdGhpcyBidWcgb24gdGhlIExpbnV4IGtlcm5lbCB2ZXJzaW9u
+IDYuMTguMC0wODY5MS1nMjA2MWYxOGFkNzZlLWRpcnR5LgoKQ2FsbCBUcmFjZSAmIENvbnRleHQK
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09CkJVRzogS0NTQU46IGRhdGEtcmFjZSBpbiBzY3NpX2Jsb2NrX3doZW5fcHJvY2Vz
+c2luZ19lcnJvcnMgLyBzY3NpX2hvc3Rfc2V0X3N0YXRlCgp3cml0ZSB0byAweGZmZmY4ODgwMDlm
+ZjQyODAgb2YgNCBieXRlcyBieSB0YXNrIDMwNyBvbiBjcHUgMToKIHNjc2lfaG9zdF9zZXRfc3Rh
+dGUrMHg5Mi8weDE4MCBkcml2ZXJzL3Njc2kvaG9zdHMuYzoxNDgKIHNjc2lfcmVzdGFydF9vcGVy
+YXRpb25zIGRyaXZlcnMvc2NzaS9zY3NpX2Vycm9yLmM6MjE2MiBbaW5saW5lXQogc2NzaV9lcnJv
+cl9oYW5kbGVyKzB4MjY5LzB4ODQwIGRyaXZlcnMvc2NzaS9zY3NpX2Vycm9yLmM6MjM3MgogLi4u
+CgpyZWFkIHRvIDB4ZmZmZjg4ODAwOWZmNDI4MCBvZiA0IGJ5dGVzIGJ5IHRhc2sgMjI2NTMgb24g
+Y3B1IDA6CiBzY3NpX2hvc3RfaW5fcmVjb3ZlcnkgaW5jbHVkZS9zY3NpL3Njc2lfaG9zdC5oOjc1
+NCBbaW5saW5lXQogc2NzaV9ibG9ja193aGVuX3Byb2Nlc3NpbmdfZXJyb3JzKzB4NDEvMHgyNDAg
+ZHJpdmVycy9zY3NpL3Njc2lfZXJyb3IuYzozODgKIHNyX29wZW4rMHgyZS8weDYwIGRyaXZlcnMv
+c2NzaS9zci5jOjYwOQogY2Ryb21fb3BlbisweGJjLzB4ZWMwIGRyaXZlcnMvY2Ryb20vY2Ryb20u
+YzoxMTU0CiBzcl9ibG9ja19vcGVuKzB4OWIvMHgxMjAgZHJpdmVycy9zY3NpL3NyLmM6NTEyCiBi
+bGtkZXZfZ2V0X3dob2xlKzB4NTUvMHgxZjAgYmxvY2svYmRldi5jOjc1OAogLi4uCiBfX3g2NF9z
+eXNfb3BlbmF0KzB4YzIvMHgxMzAgZnMvb3Blbi5jOjE0NDcKCnZhbHVlIGNoYW5nZWQ6IDB4MDAw
+MDAwMDUgLT4gMHgwMDAwMDAwMgoKUmVwb3J0ZWQgYnkgS2VybmVsIENvbmN1cnJlbmN5IFNhbml0
+aXplciBvbjoKQ1BVOiAwIFVJRDogMCBQSUQ6IDIyNjUzIENvbW06IHN5ei4xLjY3MiBOb3QgdGFp
+bnRlZCA2LjE4LjAtMDg2OTEtZzIwNjFmMThhZDc2ZS1kaXJ0eSAjNDIgUFJFRU1QVCh2b2x1bnRh
+cnkpIApIYXJkd2FyZSBuYW1lOiBRRU1VIFN0YW5kYXJkIFBDIChpNDQwRlggKyBQSUlYLCAxOTk2
+KSwgQklPUyAxLjE1LjAtMSAwNC8wMS8yMDE0Cj09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQoKRXhlY3V0aW9uIEZsb3cgJiBD
+b2RlIENvbnRleHQKV2hlbiB0aGUgU0NTSSBlcnJvciBoYW5kbGVyIHJlc29sdmVzIG91dHN0YW5k
+aW5nIGlzc3VlcyBhbmQgcmVzdGFydHMgb3BlcmF0aW9ucywgaXQgaW52b2tlcyBgc2NzaV9yZXN0
+YXJ0X29wZXJhdGlvbnMoKWAsIHdoaWNoIHRyYW5zaXRpb25zIHRoZSBTQ1NJIGhvc3Qgc3RhdGUg
+YmFjayB0byBgU0hPU1RfUlVOTklOR2AgYnkgY2FsbGluZyBgc2NzaV9ob3N0X3NldF9zdGF0ZSgp
+YC4gVGhpcyBhbHRlcnMgdGhlIHN0YXRlIGVudW0gdmFyaWFibGUgbG9ja2xlc3NseSBidXQgYXNz
+aWducyB0aGUgdGFyZ2V0IHN0YXRlIGluZGlzY3JpbWluYXRlbHkgdmlhIHN0YW5kYXJkIGFzc2ln
+bm1lbnQ6CmBgYGMKLy8gZHJpdmVycy9zY3NpL2hvc3RzLmMKaW50IHNjc2lfaG9zdF9zZXRfc3Rh
+dGUoc3RydWN0IFNjc2lfSG9zdCAqc2hvc3QsIGVudW0gc2NzaV9ob3N0X3N0YXRlIHN0YXRlKQp7
+CgkuLi4KCXNob3N0LT5zaG9zdF9zdGF0ZSA9IHN0YXRlOyAvLyA8LS0gUGxhaW4gY29uY3VycmVu
+dCA0LWJ5dGUgd3JpdGUKCXJldHVybiAwOwogICAgLi4uCn0KYGBgCgpBdCB0aGUgZXhhY3Qgc2Ft
+ZSB0aW1lLCBhIGNvbXBsZXRlbHkgc2VwYXJhdGUgdGhyZWFkIG9wZW5pbmcgdGhlIFNDU0kvQ0Qt
+Uk9NIGRldmljZSBpc3N1ZXMgYHdhaXRfZXZlbnQoc2Rldi0+aG9zdC0+aG9zdF93YWl0LCAhc2Nz
+aV9ob3N0X2luX3JlY292ZXJ5KHNkZXYtPmhvc3QpKTtgIGluc2lkZSBgc2NzaV9ibG9ja193aGVu
+X3Byb2Nlc3NpbmdfZXJyb3JzKClgLiBUaGUgYHdhaXRfZXZlbnRgIGxvb3AgcmVwZWF0ZWRseSBj
+aGVja3MgYHNjc2lfaG9zdF9pbl9yZWNvdmVyeSgpYCwgd2hpY2ggZXZhbHVhdGVzIHRoZSBgc2hv
+c3Rfc3RhdGVgOgpgYGBjCi8vIGluY2x1ZGUvc2NzaS9zY3NpX2hvc3QuaApzdGF0aWMgaW5saW5l
+IGludCBzY3NpX2hvc3RfaW5fcmVjb3Zlcnkoc3RydWN0IFNjc2lfSG9zdCAqc2hvc3QpCnsKCXJl
+dHVybiBzaG9zdC0+c2hvc3Rfc3RhdGUgPT0gU0hPU1RfUkVDT1ZFUlkgfHwgLy8gPC0tIFBsYWlu
+IGNvbmN1cnJlbnQgNC1ieXRlIHJlYWQKCQlzaG9zdC0+c2hvc3Rfc3RhdGUgPT0gU0hPU1RfQ0FO
+Q0VMX1JFQ09WRVJZIHx8CgkJc2hvc3QtPnNob3N0X3N0YXRlID09IFNIT1NUX0RFTF9SRUNPVkVS
+WSB8fAoJCXNob3N0LT50bWZfaW5fcHJvZ3Jlc3M7Cn0KYGBgCgpSb290IENhdXNlIEFuYWx5c2lz
+CkEgS0NTQU4gZGF0YSByYWNlIHVuZm9sZHMgZHVlIHRvIHRoZSB1bnByb3RlY3RlZCBtb2RpZmlj
+YXRpb24gb2YgdGhlIGVudW0gdHlwZSBgc2hvc3QtPnNob3N0X3N0YXRlYCBjb21wZXRpbmcgYWdh
+aW5zdCB0aGUgbG9ja2xlc3MgcHJlZGljYXRlIGxvb3AgaW5oZXJlbnQgdG8gYHdhaXRfZXZlbnRg
+LiBUaGUgY29uZGl0aW9uIGZ1bmN0aW9uIGBzY3NpX2hvc3RfaW5fcmVjb3ZlcnlgIHJlcGV0aXRp
+dmVseSBldmFsdWF0ZXMgYHNob3N0X3N0YXRlYC4gU2luY2UgdGhpcyB2YWx1ZSBjYW4gYXN5bmNo
+cm9ub3VzbHkgc2hpZnQgKGZyb20gYFNIT1NUX1JFQ09WRVJZYCB0byBgU0hPU1RfUlVOTklOR2Ag
+YXMgc2hvd24gaW4gdGhlIEtDU0FOIHRyYWNlIHdoZW4gb2JzZXJ2aW5nIHRoZSBjaGFuZ2UgYDB4
+MDAwMDAwMDUgLT4gMHgwMDAwMDAwMmApLCBldmFsdWF0aW5nIGl0IGFzIGEgcGxhaW4gdmFyaWFi
+bGUgbGFja3MgZnVuZGFtZW50YWwgY29tcGlsZXIgbWVtb3J5IGNvbnNpc3RlbmN5IGJvdW5kYXJp
+ZXMuIFdpdGhvdXQgYWRlcXVhdGUgY29tcGlsZXIgYmFycmllcnMsIHRoaXMgc3BlY2lmaWMgbXV0
+YXRpb24gY2FuIHN1ZmZlciBsb2FkIHRlYXJpbmcgb3IgZ2VuZXJhdGUgc2V2ZXJlIEtDU0FOIHNw
+YW0gZHVlIHRvIHJlYWQtY2FjaGluZyBjb21waWxlciBvcHRpbWl6YXRpb25zIGdsb2JhbGx5LgpV
+bmZvcnR1bmF0ZWx5LCB3ZSB3ZXJlIHVuYWJsZSB0byBnZW5lcmF0ZSBhIHJlcHJvZHVjZXIgZm9y
+IHRoaXMgYnVnLgoKUG90ZW50aWFsIEltcGFjdApUaGlzIGRhdGEgcmFjZSBsYXJnZWx5IGZvcmNl
+cyBkeW5hbWljIGFuYWx5c2lzIHRvb2xzIGxpa2UgS0NTQU4gdG8gcmVwZXRpdGl2ZWx5IGlzc3Vl
+IHdhcm5pbmdzIHdoZW4gdHJhdmVyc2luZyB0aGUgU0NTSSBibG9jayBwYXRocywgb2JzdHJ1Y3Rp
+bmcgdHJ1ZSBhbmFseXNpcy4gSW4gY2VydGFpbiBoaWdobHkgb3B0aW1pemVkIGFyY2hpdGVjdHVy
+ZXMsIHN0YW5kYXJkIGFzc2lnbm1lbnRzIGFuZCByZWFkcyBvdmVyIHZhcmlhYmxlIGRhdGEgY2Fu
+IGVuY291bnRlciBsb2FkLXRlYXJpbmcsIHdoZXJlaW4gdGhlIHByZWRpY2F0ZSBldmFsdWF0aW9u
+IG9ic2VydmVzIGFuIGlsbGVnYWwgb3IgaW5jb21wbGV0ZSB0cmFuc2l0aW9uYWwgc3RhdGUgc3Ry
+dWN0dXJlIGNhdXNpbmcgYHdhaXRfZXZlbnRgIHRvIGJlaGF2ZSBpbmNvbnNpc3RlbnRseS4KClBy
+b3Bvc2VkIEZpeApXZSBwcm9wb3NlIGltcGxlbWVudGluZyBgV1JJVEVfT05DRWAgYW5kIGBSRUFE
+X09OQ0VgIHdpdGhpbiB0aGUgdHJhbnNpdGlvbiBwYXRoIGFuZCB3YWl0IHF1ZXVlIGV2YWx1YXRv
+ciBzcGVjaWZpY2FsbHkgZm9yIGBzaG9zdF9zdGF0ZWAgdXBkYXRlcyB0byByZXNwZWN0IHByb3Bl
+ciBjb25jdXJyZW5jeSBwcm90b2NvbHMuCgpgYGBkaWZmCi0tLSBhL2RyaXZlcnMvc2NzaS9ob3N0
+cy5jCisrKyBiL2RyaXZlcnMvc2NzaS9ob3N0cy5jCkBAIC0xNDUsNyArMTQ1LDcgQEAgaW50IHNj
+c2lfaG9zdF9zZXRfc3RhdGUoc3RydWN0IFNjc2lfSG9zdCAqc2hvc3QsIGVudW0gc2NzaV9ob3N0
+X3N0YXRlIHN0YXRlKQogCQl9CiAJCWJyZWFrOwogCX0KLQlzaG9zdC0+c2hvc3Rfc3RhdGUgPSBz
+dGF0ZTsKKwlXUklURV9PTkNFKHNob3N0LT5zaG9zdF9zdGF0ZSwgc3RhdGUpOwogCXJldHVybiAw
+OwogCiAgaWxsZWdhbDoKLS0tIGEvaW5jbHVkZS9zY3NpL3Njc2lfaG9zdC5oCisrKyBiL2luY2x1
+ZGUvc2NzaS9zY3NpX2hvc3QuaApAQCAtNzUxLDkgKzc1MSwxMSBAQCBzdGF0aWMgaW5saW5lIHN0
+cnVjdCBTY3NpX0hvc3QgKmRldl90b19zaG9zdChzdHJ1Y3QgZGV2aWNlICpkZXYpCiAKIHN0YXRp
+YyBpbmxpbmUgaW50IHNjc2lfaG9zdF9pbl9yZWNvdmVyeShzdHJ1Y3QgU2NzaV9Ib3N0ICpzaG9z
+dCkKIHsKLQlyZXR1cm4gc2hvc3QtPnNob3N0X3N0YXRlID09IFNIT1NUX1JFQ09WRVJZIHx8Ci0J
+CXNob3N0LT5zaG9zdF9zdGF0ZSA9PSBTSE9TVF9DQU5DRUxfUkVDT1ZFUlkgfHwKLQkJc2hvc3Qt
+PnNob3N0X3N0YXRlID09IFNIT1NUX0RFTF9SRUNPVkVSWSB8fAorCWVudW0gc2NzaV9ob3N0X3N0
+YXRlIHN0YXRlID0gUkVBRF9PTkNFKHNob3N0LT5zaG9zdF9zdGF0ZSk7CisKKwlyZXR1cm4gc3Rh
+dGUgPT0gU0hPU1RfUkVDT1ZFUlkgfHwKKwkJc3RhdGUgPT0gU0hPU1RfQ0FOQ0VMX1JFQ09WRVJZ
+IHx8CisJCXN0YXRlID09IFNIT1NUX0RFTF9SRUNPVkVSWSB8fAogCQlzaG9zdC0+dG1mX2luX3By
+b2dyZXNzOwogfQpgYGAKCldlIHdvdWxkIGJlIGhpZ2hseSBob25vcmVkIGlmIHRoaXMgY291bGQg
+YmUgb2YgYW55IGhlbHAuCgpCZXN0IHJlZ2FyZHMsClJhY2VQaWxvdCBUZWFtCg==
