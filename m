@@ -1,140 +1,130 @@
-Received: from mail-m49217.qiye.163.com (mail-m49217.qiye.163.com [45.254.49.217])
+Received: from arkamax.eu (128-116-240-228.dyn.eolo.it [128.116.240.228])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 34AF824677F;
-	Wed, 11 Mar 2026 06:53:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.254.49.217
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F05E43B27F6;
+	Wed, 11 Mar 2026 07:36:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=128.116.240.228
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773212032; cv=none; b=KR3/E9tQJSY66OytL33l6PU+5mJWZYgMqeKEmewZgbyBFVz5y2yem65wnUJxeJrpYXRsWe9dQ4SsncdAVVcEK55gGXYs9nMYWK0qUd5f/fY3XqjlhTL5/RNcV6sqEPxT0aBhyUMX3OhLDPX8dfgSG3OktKLb4n4r5r9ED8iGGck=
+	t=1773214602; cv=none; b=pXH8V0rWIP10ku44t369FtLcYXgHpqvfdmBu0qAfT5LPJQYSLLt/yQN6MwZegjyfAejKUdsbZWVy/aUxiigPPOWN4m83LdrtU/WhLbDkfJvpOQQuQ4EdNttTrA3uz0Fa6bfhBUoaN2ivlyADgqTI8OsTZ4tClDdTiOySlBlN8/s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773212032; c=relaxed/simple;
-	bh=dvY98tOX7ng/TE7Z7kfM3hgk3b29dl3+MpHn3a1mhS0=;
-	h=Cc:Subject:To:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=ftmOwiAFT7p7PIzpHvJX3UabIyJoV3fu8v54ISG3XWNeHvDC2S0Cm8ioEkZMoccDVA4egtvKXpJ2a9zPEqN3O2FzvhkvdtBP+AV5fvkyppO1Ju2ZVSP4vsRyValwmodmv0mGVfwqRefd8s6ARFXr3UJpuJbNXweGolt2SOj+36Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=QN6TPNaN; arc=none smtp.client-ip=45.254.49.217
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="QN6TPNaN"
-Received: from [172.16.12.17] (unknown [58.22.7.114])
-	by smtp.qiye.163.com (Hmail) with ESMTP id 368545e6d;
-	Wed, 11 Mar 2026 14:53:37 +0800 (GMT+08:00)
-Cc: shawn.lin@rock-chips.com, linux-arm-msm@vger.kernel.org,
- linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
- nitin.rawat@oss.qualcomm.com, mani@kernel.org,
- James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
-Subject: Re: [PATCH v1 1/2] ufs: core: Configure only active lanes during link
-To: palash.kambar@oss.qualcomm.com
-References: <20260311060912.3139257-1-palash.kambar@oss.qualcomm.com>
- <20260311060912.3139257-2-palash.kambar@oss.qualcomm.com>
-From: Shawn Lin <shawn.lin@rock-chips.com>
-Message-ID: <a1822226-0881-b692-9663-c0832c9212fd@rock-chips.com>
-Date: Wed, 11 Mar 2026 14:53:36 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.11.0
+	s=arc-20240116; t=1773214602; c=relaxed/simple;
+	bh=zCL3VacVB1N095/jx1Q+CI0H/+tK3fJ/YGoEVk3Gbqk=;
+	h=Mime-Version:Content-Type:Date:Message-Id:To:Cc:Subject:From:
+	 References:In-Reply-To; b=DmX4XQwIysRvFFUpMA5gNw/X8B60Oteh02PxAyclX2TD9fifxr+3l92T6HW+wkiTj2gqAlCKgw02AZzTfYZ8ntI77oqq3FHToZlmJxBqDD6puNrvhoqnaDugs1tvE9iS8qzX7KBSqp4ZR6uWLzHZ06x5pNrRzLLIojMPAW+3ZyU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=arkamax.eu; spf=pass smtp.mailfrom=arkamax.eu; arc=none smtp.client-ip=128.116.240.228
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=arkamax.eu
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=arkamax.eu
+Received: from localhost (128-116-240-228.dyn.eolo.it [128.116.240.228])
+	by arkamax.eu (OpenSMTPD) with ESMTPSA id 1f15775b (TLSv1.3:TLS_AES_256_GCM_SHA384:256:NO);
+	Wed, 11 Mar 2026 08:29:51 +0100 (CET)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <20260311060912.3139257-2-palash.kambar@oss.qualcomm.com>
-Content-Type: text/plain; charset=gbk; format=flowed
-Content-Transfer-Encoding: 8bit
-X-HM-Tid: 0a9cdbac240e09cckunme40efd031a7dc5
-X-HM-MType: 1
-X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-	tZV1koWUFDSUNOT01LS0k3V1ktWUFJV1kPCRoVCBIfWUFZQx9KSFZLGh4aSk9MTh4eGhhWFRQJFh
-	oXVRMBExYaEhckFA4PWVdZGBILWUFZTkNVSUlVTFVKSk9ZV1kWGg8SFR0UWUFZT0tIVUpLSU9PT0
-	hVSktLVUpCS0tZBg++
-DKIM-Signature: a=rsa-sha256;
-	b=QN6TPNaN+/O3x8rCW08sK36iv5wEAVJSfWcTNF+EpvuHHa6oMyoCJLp4pKQN0CuDtfjJO+euOvpxpx/GluODJkcunkTdBpi9kfzfmD+4gV5pPFbvxosxZC62FjOHCRARkdpbOYKprgm44c7E4yoZnU0ZvvsC4TIbjKOIzqZ0sFc=; c=relaxed/relaxed; s=default; d=rock-chips.com; v=1;
-	bh=Zz6BdYhm4liL5OC0UKXb4kYkRuN17+JTehX0ZgMlp5I=;
-	h=date:mime-version:subject:message-id:from;
+Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Date: Wed, 11 Mar 2026 08:29:51 +0100
+Message-Id: <DGZRYXTKC049.1I6QFQSMSD88H@arkamax.eu>
+To: "Yi Zhang" <yi.zhang@redhat.com>, "Shinichiro Kawasaki"
+ <shinichiro.kawasaki@wdc.com>
+Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+ "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+ "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+ "nbd@other.debian.org" <nbd@other.debian.org>, "linux-rdma@vger.kernel.org"
+ <linux-rdma@vger.kernel.org>
+Subject: Re: blktests failures with v7.0-rc1 kernel
+From: "Maurizio Lombardi" <mlombard@arkamax.eu>
+X-Mailer: aerc 0.21.0
+References: <aZ_-cH8euZLySxdD@shinmob>
+ <CAHj4cs8mzSZez+n2qLu5931YAuQ4=RxNt6D6YJCsMEwGrm4UtA@mail.gmail.com>
+In-Reply-To: <CAHj4cs8mzSZez+n2qLu5931YAuQ4=RxNt6D6YJCsMEwGrm4UtA@mail.gmail.com>
 
-Hi Palash
+On Wed Mar 11, 2026 at 1:35 AM CET, Yi Zhang wrote:
+> On Thu, Feb 26, 2026 at 4:09=E2=80=AFPM Shinichiro Kawasaki
+> <shinichiro.kawasaki@wdc.com> wrote:
+>>
+>
+> I also reproduced this kmemleak issue with the blktests nvme/rdma
+> test. Here is the log:
+>
+> unreferenced object 0xffff8882e7545a40 (size 32):
+>   comm "kworker/0:0H", pid 36658, jiffies 4303559899
+>   hex dump (first 32 bytes):
+>     02 81 aa 09 00 ea ff ff 00 00 00 00 00 10 00 00  ................
+>     00 40 a0 6a 82 88 ff ff 00 10 00 00 00 00 00 00  .@.j............
+>   backtrace (crc e5de3e0c):
+>     __kmalloc_noprof+0x6f1/0xa10
+>     sgl_alloc_order+0x9e/0x370
+>     nvmet_req_alloc_sgls+0x294/0x4f0 [nvmet]
+>     nvmet_rdma_map_sgl_keyed+0x25a/0x940 [nvmet_rdma]
+>     nvmet_rdma_handle_command+0x1ed/0x4e0 [nvmet_rdma]
+>     __ib_process_cq+0x139/0x4b0 [ib_core]
+>     ib_cq_poll_work+0x4d/0x160 [ib_core]
+>     process_one_work+0x8b1/0x15e0
+>     worker_thread+0x5e9/0xfc0
+>     kthread+0x36b/0x470
+>     ret_from_fork+0x5bf/0x910
+>     ret_from_fork_asm+0x1a/0x30
+> unreferenced object 0xffff8882e7545280 (size 32):
+>   comm "kworker/0:0H", pid 36658, jiffies 4303559900
+>   hex dump (first 32 bytes):
+>     02 2b 82 0b 00 ea ff ff 00 00 00 00 00 10 00 00  .+..............
+>     00 c0 8a e0 82 88 ff ff 00 10 00 00 00 00 00 00  ................
+>   backtrace (crc 42d20147):
+>     __kmalloc_noprof+0x6f1/0xa10
+>     sgl_alloc_order+0x9e/0x370
+>     nvmet_req_alloc_sgls+0x294/0x4f0 [nvmet]
+>     nvmet_rdma_map_sgl_keyed+0x25a/0x940 [nvmet_rdma]
+>     nvmet_rdma_handle_command+0x1ed/0x4e0 [nvmet_rdma]
+>     __ib_process_cq+0x139/0x4b0 [ib_core]
+>     ib_cq_poll_work+0x4d/0x160 [ib_core]
+>     process_one_work+0x8b1/0x15e0
+>     worker_thread+0x5e9/0xfc0
+>     kthread+0x36b/0x470
+>     ret_from_fork+0x5bf/0x910
+>     ret_from_fork_asm+0x1a/0x30
 
-在 2026/03/11 星期三 14:09, palash.kambar@oss.qualcomm.com 写道:
-> From: Palash Kambar <palash.kambar@oss.qualcomm.com>
-> 
-> The number of active lanes detected during UFS link startup can be
+Maybe the problem is in the nvmet_rdma_map_sgl_keyed() function
 
-connected lanes(which is used in the code blow) or active lanes? There
-are different primitives in UniPro context.
+static u16 nvmet_rdma_map_sgl_keyed(struct nvmet_rdma_rsp *rsp,
+                struct nvme_keyed_sgl_desc *sgl, bool invalidate)
+{
+        u64 addr =3D le64_to_cpu(sgl->addr);
+        u32 key =3D get_unaligned_le32(sgl->key);
+        struct ib_sig_attrs sig_attrs;
+        int ret;
 
-> fewer than the lanes specified in the device tree. The current driver
-> logic attempts to configure all lanes defined in the device tree,
-> regardless of their actual availability. This mismatch may cause
-> failures during power mode changes.
-> 
+        rsp->req.transfer_len =3D get_unaligned_le24(sgl->length);
 
-It sounds vague, how it causes failures, could you quote some clue from
-spec?
+        /* no data command? */
+        if (!rsp->req.transfer_len)
+                return 0;
 
-> Hence, add check to identify only the lanes that were successfully
-> discovered during link startup, to warn on power mode change errors
-> caused by mismatched lane counts.
-> 
-> Signed-off-by: Palash Kambar <palash.kambar@oss.qualcomm.com>
-> ---
->   drivers/ufs/core/ufshcd.c | 39 +++++++++++++++++++++++++++++++++++++++
->   1 file changed, 39 insertions(+)
-> 
-> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> index 31950fc51a4c..c956fab32932 100644
-> --- a/drivers/ufs/core/ufshcd.c
-> +++ b/drivers/ufs/core/ufshcd.c
-> @@ -5035,6 +5035,42 @@ void ufshcd_update_evt_hist(struct ufs_hba *hba, u32 id, u32 val)
->   }
->   EXPORT_SYMBOL_GPL(ufshcd_update_evt_hist);
->   
-> +static int ufshcd_get_connected_tx_lanes(struct ufs_hba *hba, u32 *tx_lanes)
-> +{
-> +	return ufshcd_dme_get(hba,
-> +			      UIC_ARG_MIB(PA_CONNECTEDTXDATALANES), tx_lanes);
-> +}
-> +
-> +static int ufshcd_get_connected_rx_lanes(struct ufs_hba *hba, u32 *rx_lanes)
-> +{
-> +	return ufshcd_dme_get(hba,
-> +			      UIC_ARG_MIB(PA_CONNECTEDRXDATALANES), rx_lanes);
-> +}
-> +
-> +static void ufshcd_validate_link_params(struct ufs_hba *hba)
-> +{
-> +	int val = 0;
-> +
-> +	if (ufshcd_get_connected_tx_lanes(hba, &val))
-> +		return;
-> +
-> +	if (val != hba->lanes_per_direction) {
-> +		dev_err(hba->dev, "Tx lane mismatch [config,reported] [%d,%d]\n",
-> +			hba->lanes_per_direction, val);
-> +		return;
-> +	}
-> +
-> +	val = 0;
-> +
-> +	if (ufshcd_get_connected_rx_lanes(hba, &val))
-> +		return;
-> +
-> +	if (val != hba->lanes_per_direction) {
-> +		dev_err(hba->dev, "Rx lane mismatch [config,reported] [%d,%d]\n",
-> +			hba->lanes_per_direction, val);
-> +	}
-> +}
-> +
->   /**
->    * ufshcd_link_startup - Initialize unipro link startup
->    * @hba: per adapter instance
-> @@ -5108,6 +5144,9 @@ static int ufshcd_link_startup(struct ufs_hba *hba)
->   			goto out;
->   	}
->   
-> +	/* Check successfully detected lanes */
-> +	ufshcd_validate_link_params(hba);
-> +
->   	/* Include any host controller configuration via UIC commands */
->   	ret = ufshcd_vops_link_startup_notify(hba, POST_CHANGE);
->   	if (ret)
-> 
+        if (rsp->req.metadata_len)
+                nvmet_rdma_set_sig_attrs(&rsp->req, &sig_attrs);
+
+        ret =3D nvmet_req_alloc_sgls(&rsp->req);
+        if (unlikely(ret < 0))
+                goto error_out;
+
+        ret =3D nvmet_rdma_rw_ctx_init(rsp, addr, key, &sig_attrs);
+        if (unlikely(ret < 0))
+                goto error_out;
+        rsp->n_rdma +=3D ret;
+
+        if (invalidate)
+                rsp->invalidate_rkey =3D key;
+
+        return 0;
+
+error_out:
+        rsp->req.transfer_len =3D 0;
+        return NVME_SC_INTERNAL;
+}
+
+If nvmet_rdma_rw_ctx_init() fails, shouldn't it call
+nvmet_req_free_sgls() before returning an error?
+
+Maurizio
