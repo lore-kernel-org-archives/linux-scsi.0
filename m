@@ -1,275 +1,233 @@
-Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B16952FDC3C;
-	Wed, 11 Mar 2026 17:31:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.14
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773250296; cv=none; b=TcX4IOSF49tPlrNG9omozMdlxnzKFFsGyCBs8LoR6AuPj/AywVeQEZMp8Vh/mWYnuZyJqvJF6m0BwyGW4jkFjLwvWYKbYHQ5EVNVRWeeveu1UrRcmx65bEER1Umb2QvxT4mdmMHjlgGnqyPMoZoGp1uU4LUVVWnDK35xSIW9kOY=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773250296; c=relaxed/simple;
-	bh=0/p6tsqmd5yIzKIGhZca7+aS5v5d+arWVCVYCkP3EWs=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=FWDMKpSKVP7HMzOjwUfkdnClqqQJ0x2xx/Korowl5nl01u6CZUWRvDix4iqQECbcVq+sZgAG65a3BMzysK/rnR+L4c6QLGrs8hjEwtGGll7S0du7jeTpao17SzKLXcCVXbtKSgJuTIDyAmo4IyLEQqoc7nvXk9dZEbQWNhq32Z8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=EqxtotAJ; arc=none smtp.client-ip=199.89.1.14
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 800703E5561
+	for <linux-scsi@vger.kernel.org>; Wed, 11 Mar 2026 17:33:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=170.10.133.124
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1773250442; cv=pass; b=W5YX5OwO+B700TM3qQDvP8CNxXjy1dn64I0s4s38Fx4tQEWmcFfFsgZ+O4co1EoTkmwQyOl8Cst9oO0loIQfAtWqqr+yEIupd/l02UJYvN5P+kI74Trtnz25gk9CndlOKYN4NjK34hagRrPJb6thWhlC2POfvif+3by9TLVsb9o=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1773250442; c=relaxed/simple;
+	bh=s2TT4zBmTgKLBjwI2jX25EeD0XUul2cp2vaWxlr2I3Y=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=Tg3TbteSSqBUazDcqVyrSpkr2W2GgunUVoibq3mHGcYsQUHSTNAgM81mRLMk5MDvAsvNVMT2a5sYoqxN62RJOJLszKvGagL/xpQHuodrfNjAvFcMlMUMG33kLfFB4cSPFKKOH5VPDdAbmBY8ac317LircMRMHU6RBgWc0+jOEAU=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=fkRynZC9; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=awhL1Xiq; arc=pass smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="EqxtotAJ"
-Received: from localhost (localhost [127.0.0.1])
-	by 011.lax.mailroute.net (Postfix) with ESMTP id 4fWHq76LyYz1XM0ns;
-	Wed, 11 Mar 2026 17:31:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1773250284; x=1775842285; bh=tyS3PIz7dyxXyJKUlwIwyejE
-	SIFa7vwTtpWP18dYc18=; b=EqxtotAJyY9Sw5VB1wrj3jYao2M1JkYkPK6+y0pW
-	syJa4ki7W69iYt3bzGmYqzALnpQaud0mIOPaJnZa0N/ay/AbboHk3klP8Oi3gz5m
-	gC8kP9Tzb4Ddt4rxB2LrSlR/u5ykTYQEOPHo9qbetyHxtYyKidjICs6jNiVrRWXr
-	9EAoSBavyYX2F0KEpQDYw2+/f7M9XIgAZZPcJjpWKkQunyOWCcfrSQxiAigUTsL+
-	+7iZ640f6sUkmwr4vBaAFguBadgUMpyiF4cVnwRWlDHDQtwZF9Gn7CZ4qsWoWJ9V
-	uwXTV29Fry1MmJxKI3zSjiGH7nlgVeZcvS4ZHnYjqV0oIg==
-X-Virus-Scanned: by MailRoute
-Received: from 011.lax.mailroute.net ([127.0.0.1])
- by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id Ah3Xyeetc3Pv; Wed, 11 Mar 2026 17:31:24 +0000 (UTC)
-Received: from [100.119.48.131] (unknown [104.135.180.219])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4fWHpz3wcVz1XM0p7;
-	Wed, 11 Mar 2026 17:31:22 +0000 (UTC)
-Message-ID: <5f64591a-0c24-4f72-8473-18733779a225@acm.org>
-Date: Wed, 11 Mar 2026 10:31:20 -0700
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="fkRynZC9";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="awhL1Xiq"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1773250438;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=flJ16OLbnUTRR+lsZIvlkZ9oQtiHzlZe/Icpj7ZquZU=;
+	b=fkRynZC96qRwTgEaI80gfc7M97DxDcBA7mO6SRB2rl/xL6BnCtIuD9UT42TJwpjUQJYcxC
+	97tsy3zZ7uuSf3PHURRhESGqOf/MnWKNvgrKOq7WXD+Ar403xlo5HTBvqEP5E1dmK04UqJ
+	o7KKtp/+me0/BXABhwoa66mCm+w7KmU=
+Received: from mail-lj1-f199.google.com (mail-lj1-f199.google.com
+ [209.85.208.199]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-2-uffLgMT-PlSLRozSpRyueA-1; Wed, 11 Mar 2026 13:33:57 -0400
+X-MC-Unique: uffLgMT-PlSLRozSpRyueA-1
+X-Mimecast-MFC-AGG-ID: uffLgMT-PlSLRozSpRyueA_1773250435
+Received: by mail-lj1-f199.google.com with SMTP id 38308e7fff4ca-38a3baf3db6so736971fa.1
+        for <linux-scsi@vger.kernel.org>; Wed, 11 Mar 2026 10:33:56 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1773250435; cv=none;
+        d=google.com; s=arc-20240605;
+        b=Y1D3zL6v4xLyAvTLhkMsqQnwMkH7JtRd1rQKD2eyyexQ9jSXILBAAcVDTkqUMsCGPX
+         m4w+pBKNJbW1Qrr195olzIq8XRApL85deeheNcwkYNkL+HKU7qdsWQvORSYJv7OiqRfN
+         hpF9MW76d5BFy3MccHlNLMuhZUUhoj5TUX7XLgnLS0F8ed/IxSSbJMDe6bKZHRws+HRF
+         B8RYaPF71McmeOUcjtKa+Wk5PDuYvx1HjPipcqaLni7u6nd+ywk6noKZuRSJWdt5w2aV
+         sVJnXwToFNlJ5L2cTjQzighAxkS/1MxrIO4WPHr0oMLfkVB0ipLlrL4vRI0gMyl95ZEB
+         fqVw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=flJ16OLbnUTRR+lsZIvlkZ9oQtiHzlZe/Icpj7ZquZU=;
+        fh=8IgN5hs3XVxRL7l4Vb+e430zHPwks8PDBmwnPligDFQ=;
+        b=dS4P4GvwkwQeT9nbx2jzaNoSELe/uAU+Cmgj3EcFDw1U0yKUMzVRK97sPHnsXmz469
+         uWPkDr2VkfVGoPn+z0Nk9O7a8yfdqP07zsg/rnwLCm46WZTc2HkIf1W1PFg0m3jTP9vZ
+         8hy55QxhdF8H3Si6Yqos3VVeErmaj8wyJkITomRu7Ffromdm7MwKa7IEpCn9gftsvazx
+         4cTg/QBs0ppuCEh5uFa6SGB5e15kRrDK2DxEo04nX2IH1ZzufafPN7cmg2YyDGtxI4hy
+         tTYh+XpxEjGqiBvuNR3KgCbcDMh0wTwZ78jZtcR1XWGlg66q6W5GhlAS5Un6+SGtzN6k
+         50oA==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=redhat.com; s=google; t=1773250435; x=1773855235; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=flJ16OLbnUTRR+lsZIvlkZ9oQtiHzlZe/Icpj7ZquZU=;
+        b=awhL1Xiq4AaVmEFuiABPQdXBo+6jeYCinVI0Hzxq6xTDInIUXUFESGSajStTnEQFn3
+         MLAdvYlCjV/Z6mRFmdZgHaoXoE7c43+1vTZxX9bJfW9osYDumnMtpHG9m4Dm4566RylB
+         F1QpnHwzDMiAgLWSQPu4RE06lC05vtibnzexHY3vBgL+wQL/Ey0IvTIv4CmCsTVDz7/c
+         z367AWk9bFKNPevNLhparpBwUtA6tbcUJGmCIn51GskthhbsLcMZJVfyE/btsYXpLyNm
+         k9YOW734YztFpQVi0t5/hpYAIYhS+vl5kwMySFudwsM+/TU/Ozmw6NvJ9ZeWin9+TefH
+         DC8g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1773250435; x=1773855235;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=flJ16OLbnUTRR+lsZIvlkZ9oQtiHzlZe/Icpj7ZquZU=;
+        b=oJ1Wwx/F9jm8oP+k5AoknYsFmIOHIoYn8kJ4ILwFjH/OkWhQ6luG7XXPPnxa0TnMvr
+         FD0i3jTXqhQbNLapAXeTm0QeFGJeibHOc67L1fVNXh04gylWDPpbsHt+t/bsEYbPjATa
+         O/PARkFthg3hQcytTBws/eCOkTk0eLE0pzhciz1YcH65iUJc++lODVVv1LkaWcPzvh7p
+         t6YcKh5BxOhHf2sn22saIbSyeePs93k22ZfkdPU3891ZEQE890jqDYoiVkC87g/2ciJl
+         z2nNEk6t4IkQu7kuP2vNRkktbO53cjLZFWq5dRN+P+5eBL+t4zjQA7x98yyqXDKdFxbm
+         Efkw==
+X-Forwarded-Encrypted: i=1; AJvYcCUiN2fkzWKG5QoeJOmVYVqntvq4l/f85W2IXrcFMpkUio1J5PMF8H6MegtvHN4lvuoA0+nrI9aoF0dw@vger.kernel.org
+X-Gm-Message-State: AOJu0YxiAGxXSG8bLeYagtbzfTLdN96QiDg3e+TovpPYTFIM604rD0hk
+	HLqOOIx36vI5RlVyyTE5t5SD1+XmocyLDuKazBMP3C33DbIj8Xt0o1XdYltMNHrIuVBaYCIUM4O
+	rTjVYTorSxMFjfRHSDdbqc/4ef/b/bZkcI4cgLjCQ3+HSeh7PIfLZN2i94/mS8Lgkazt5eXg/gR
+	Ayd+4GXc6EsF8vHxZrWgGSgzJ8ZKxAoqLQQ2rDjg==
+X-Gm-Gg: ATEYQzx1B/fPfkR50orMJWbzcy1SCA/xHZmk5UllaujWC5rpUotLCcls0yIjyawNiL4
+	kIgJEOJ0Dm7xDraW91/s2j2olGvV6Zg5fzPaYaEOLTLCpGpV0W1pwprcN4oq5cIpxR8z7hp0jpH
+	0PyNs81D+TkVwcCJ1+iFOMigYZWr3PoEbBHie7y+677+hk0BlbSQhmeMzv8WW16kY314ikbExVi
+	5tM
+X-Received: by 2002:a05:651c:2118:b0:38a:5f1e:5a27 with SMTP id 38308e7fff4ca-38a67ac5bebmr12044251fa.0.1773250435320;
+        Wed, 11 Mar 2026 10:33:55 -0700 (PDT)
+X-Received: by 2002:a05:651c:2118:b0:38a:5f1e:5a27 with SMTP id
+ 38308e7fff4ca-38a67ac5bebmr12044041fa.0.1773250434837; Wed, 11 Mar 2026
+ 10:33:54 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: KCSAN: data-race in scsi_block_when_processing_errors /
- scsi_host_set_state
-To: Jianzhou Zhao <luckd0g@163.com>, James.Bottomley@HansenPartnership.com,
- martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
- linux-kernel@vger.kernel.org
-References: <36d59d0e.6db0.19cdbeee01b.Coremail.luckd0g@163.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <36d59d0e.6db0.19cdbeee01b.Coremail.luckd0g@163.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+References: <20260311170956.9146-1-djeffery@redhat.com>
+In-Reply-To: <20260311170956.9146-1-djeffery@redhat.com>
+From: David Jeffery <djeffery@redhat.com>
+Date: Wed, 11 Mar 2026 13:33:41 -0400
+X-Gm-Features: AaiRm52MnSut7lwQAhwTt7Xx2XUNBQi4rzRxg1tEEehWxmKQpJTSigbO7AwxnYw
+Message-ID: <CA+-xHTEdSk69BYpu+6mKVyoErgMTnOpZ-AFXntMe61w1BT0_FQ@mail.gmail.com>
+Subject: Re: [PATCH v11 0/5] shut down devices asynchronously
+To: linux-kernel@vger.kernel.org, driver-core@lists.linux.dev, 
+	linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org, 
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>, 
+	Danilo Krummrich <dakr@kernel.org>, Stuart Hayes <stuart.w.hayes@gmail.com>, 
+	Laurence Oberman <loberman@redhat.com>
+Cc: Tarun Sahu <tarunsahu@google.com>, Pasha Tatashin <tatashin@google.com>, 
+	=?UTF-8?B?TWljaGHFgiBDxYJhcGnFhHNraQ==?= <mclapinski@google.com>, 
+	Jordan Richards <jordanrichards@google.com>, Ewan Milne <emilne@redhat.com>, 
+	John Meneghini <jmeneghi@redhat.com>, "Lombardi, Maurizio" <mlombard@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
+On Wed, Mar 11, 2026 at 1:11=E2=80=AFPM David Jeffery <djeffery@redhat.com>=
+ wrote:
+>
+> This patchset allows the kernel to shutdown devices asynchronously and
+> unrelated async devices to be shut down in parallel to each other.
+>
+> Only devices which explicitly enable it are shut down asynchronously. The
+> default is for a device to be shut down from the synchronous shutdown loo=
+p.
+>
+> This can dramatically reduce system shutdown/reboot time on systems that
+> have multiple devices that take many seconds to shut down (like certain
+> NVMe drives). On one system tested, the shutdown time went from 11 minute=
+s
+> without this patch to 55 seconds with the patch. And on another system fr=
+om
+> 80 seconds to 11.
+>
+> Changes from V10:
+>
+> Reworked to more closely match the design used for async suspend
+>   * No longer uses async subsystem cookies for synchronization
+>   * Minimized changes to struct device
+>   * Enable async shutdown for pci and scsi devices which support async su=
+spend
+>
+> Changes from V9:
+>
+> Address resource and timing issues when spawning a unique async thread
+> for every device during shutdown:
+>   * Make the asynchronous threads able to shut down multiple devices,
+>     instead of spawning a unique thread for every device.
+>   * Modify core kernel async code with a custom wake function so it
+>     doesn't wake up a thread waiting to synchronize on a cookie until
+>     the cookie has reached the desired value, instead of waking up
+>     every waiting thread to check the cookie every time an async thread
+>     ends.
+>
+> Changes from V8:
+>
+> Deal with shutdown hangs resulting when a parent/supplier device is
+>   later in the devices_kset list than its children/consumers:
+>   * Ignore sync_state_only devlinks for shutdown dependencies
+>   * Ignore shutdown_after for devices that don't want async shutdown
+>   * Add a sanity check to revert to sync shutdown for any device that
+>     would otherwise wait for a child/consumer shutdown that hasn't
+>     already been scheduled
+>
+> Changes from V7:
+>
+> Do not expose driver async_shutdown_enable in sysfs.
+> Wrapped a long line.
+>
+> Changes from V6:
+>
+> Removed a sysfs attribute that allowed the async device shutdown to be
+> "on" (with driver opt-out), "safe" (driver opt-in), or "off"... what was
+> previously "safe" is now the only behavior, so drivers now only need to
+> have the option to enable or disable async shutdown.
+>
+> Changes from V5:
+>
+> Separated into multiple patches to make review easier.
+> Reworked some code to make it more readable
+> Made devices wait for consumers to shut down, not just children
+>   (suggested by David Jeffery)
+>
+> Changes from V4:
+>
+> Change code to use cookies for synchronization rather than async domains
+> Allow async shutdown to be disabled via sysfs, and allow driver opt-in or
+>   opt-out of async shutdown (when not disabled), with ability to control
+>   driver opt-in/opt-out via sysfs
+>
+> Changes from V3:
+>
+> Bug fix (used "parent" not "dev->parent" in device_shutdown)
+>
+> Changes from V2:
+>
+> Removed recursive functions to schedule children to be shutdown before
+>   parents, since existing device_shutdown loop will already do this
+>
+> Changes from V1:
+>
+> Rewritten using kernel async code (suggested by Lukas Wunner)
+>
+>
+> Stuart Hayes (2):
+>   driver core: don't always lock parent in shutdown
+>   driver core: separate function to shutdown one device
+>
+> David Jeffery (3):
+>   driver core: async device shutdown infrastructure
+>   pci: enable async shutdown support
+>   scsi: enable async shutdown support
+>
+>  drivers/base/base.h       |   2 +
+>  drivers/base/core.c       | 165 +++++++++++++++++++++++++++++++-------
+>  drivers/pci/probe.c       |   1 +
+>  drivers/scsi/hosts.c      |   3 +
+>  drivers/scsi/scsi_scan.c  |   1 +
+>  drivers/scsi/scsi_sysfs.c |   4 +
+>  include/linux/device.h    |  13 +++
+>  7 files changed, 160 insertions(+), 29 deletions(-)
+>
+> --
+> 2.53.0
+>
 
-On 3/11/26 1:06 AM, Jianzhou Zhao wrote:
-> Proposed Fix
-> We propose implementing `WRITE_ONCE` and `READ_ONCE` within the
-> transition path and wait queue evaluator specifically for `shost_state`
-> updates to respect proper concurrency protocols.
-
-Is the proposed fix complete? If I annotate the "shost_state" member
-variable with __guarded_by(&host_lock) and if I enable lock context
-analysis in all SCSI core and SCSI driver Makefiles, something like
-this is probably needed to suppress all compiler warnings reported by
-Clang:
-
-
-diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-index e047747d4ecf..3d9d183b4e84 100644
---- a/drivers/scsi/hosts.c
-+++ b/drivers/scsi/hosts.c
-@@ -278,7 +278,8 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, 
-struct device *dev,
-  	if (error)
-  		goto out_disable_runtime_pm;
-
--	scsi_host_set_state(shost, SHOST_RUNNING);
-+	scoped_guard(spinlock_irq, shost->host_lock)
-+		scsi_host_set_state(shost, SHOST_RUNNING);
-  	get_device(shost->shost_gendev.parent);
-
-  	device_enable_async_suspend(&shost->shost_dev);
-@@ -364,7 +365,7 @@ static void scsi_host_dev_release(struct device *dev)
-  	if (shost->work_q)
-  		destroy_workqueue(shost->work_q);
-
--	if (shost->shost_state == SHOST_CREATED) {
-+	if (context_unsafe(shost->shost_state == SHOST_CREATED)) {
-  		/*
-  		 * Free the shost_dev device name and remove the proc host dir
-  		 * here if scsi_host_{alloc,put}() have been called but neither
-@@ -380,7 +381,7 @@ static void scsi_host_dev_release(struct device *dev)
-
-  	ida_free(&host_index_ida, shost->host_no);
-
--	if (shost->shost_state != SHOST_CREATED)
-+	if (context_unsafe(shost->shost_state != SHOST_CREATED))
-  		put_device(parent);
-  	kfree(shost);
-  }
-@@ -414,7 +415,7 @@ struct Scsi_Host *scsi_host_alloc(const struct 
-scsi_host_template *sht, int priv
-
-  	shost->host_lock = &shost->default_lock;
-  	spin_lock_init(shost->host_lock);
--	shost->shost_state = SHOST_CREATED;
-+	context_unsafe(shost->shost_state = SHOST_CREATED);
-  	INIT_LIST_HEAD(&shost->__devices);
-  	INIT_LIST_HEAD(&shost->__targets);
-  	INIT_LIST_HEAD(&shost->eh_abort_list);
-@@ -600,7 +601,7 @@ EXPORT_SYMBOL(scsi_host_lookup);
-   **/
-  struct Scsi_Host *scsi_host_get(struct Scsi_Host *shost)
-  {
--	if ((shost->shost_state == SHOST_DEL) ||
-+	if (context_unsafe(shost->shost_state == SHOST_DEL) ||
-  		!get_device(&shost->shost_gendev))
-  		return NULL;
-  	return shost;
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c 
-b/drivers/scsi/megaraid/megaraid_sas_base.c
-index ccefe5841a17..a234b18bc01e 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -3075,7 +3075,7 @@ static int megasas_reset_bus_host(struct scsi_cmnd 
-*scmd)
-
-  	scmd_printk(KERN_INFO, scmd,
-  		"SCSI host state: %d  SCSI host busy: %d  FW outstanding: %d\n",
--		scmd->device->host->shost_state,
-+		context_unsafe(scmd->device->host->shost_state),
-  		scsi_host_busy(scmd->device->host),
-  		atomic_read(&instance->fw_outstanding));
-  	/*
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c 
-b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index 6ff788557294..0737a07afdf4 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -5460,7 +5460,7 @@ static enum scsi_qc_status scsih_qcmd(struct 
-Scsi_Host *shost,
-  	 * Avoid error handling escallation when device is disconnected
-  	 */
-  	if (handle == MPT3SAS_INVALID_DEVICE_HANDLE || 
-sas_device_priv_data->block) {
--		if (scmd->device->host->shost_state == SHOST_RECOVERY &&
-+		if (context_unsafe(scmd->device->host->shost_state == SHOST_RECOVERY) &&
-  		    scmd->cmnd[0] == TEST_UNIT_READY) {
-  			scsi_build_sense(scmd, 0, UNIT_ATTENTION, 0x29, 0x07);
-  			scsi_done(scmd);
-diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
-index d598ab4126f8..3bd55887a655 100644
---- a/drivers/scsi/qla4xxx/ql4_os.c
-+++ b/drivers/scsi/qla4xxx/ql4_os.c
-@@ -9413,9 +9413,7 @@ static int qla4xxx_eh_target_reset(struct 
-scsi_cmnd *cmd)
-   **/
-  static int qla4xxx_is_eh_active(struct Scsi_Host *shost)
-  {
--	if (shost->shost_state == SHOST_RECOVERY)
--		return 1;
--	return 0;
-+	return context_unsafe(shost->shost_state == SHOST_RECOVERY);
-  }
-
-  /**
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 6e8c7a42603e..5d35007bf9f1 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1638,7 +1638,7 @@ static enum scsi_qc_status 
-scsi_dispatch_cmd(struct scsi_cmnd *cmd)
-  		goto done;
-  	}
-
--	if (unlikely(host->shost_state == SHOST_DEL)) {
-+	if (unlikely(context_unsafe(host->shost_state == SHOST_DEL))) {
-  		cmd->result = (DID_NO_CONNECT << 16);
-  		goto done;
-
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index dfc3559e7e04..8e939e21ea18 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -214,8 +214,9 @@ store_shost_state(struct device *dev, struct 
-device_attribute *attr,
-  	if (!state)
-  		return -EINVAL;
-
--	if (scsi_host_set_state(shost, state))
--		return -EINVAL;
-+	scoped_guard(spinlock_irq, shost->host_lock)
-+		if (scsi_host_set_state(shost, state))
-+			return -EINVAL;
-  	return count;
-  }
-
-@@ -223,7 +224,7 @@ static ssize_t
-  show_shost_state(struct device *dev, struct device_attribute *attr, 
-char *buf)
-  {
-  	struct Scsi_Host *shost = class_to_shost(dev);
--	const char *name = scsi_host_state_name(shost->shost_state);
-+	const char *name = 
-scsi_host_state_name(context_unsafe(shost->shost_state));
-
-  	if (!name)
-  		return -EINVAL;
-diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-index 7e2011830ba4..a16d115c389b 100644
---- a/include/scsi/scsi_host.h
-+++ b/include/scsi/scsi_host.h
-@@ -727,7 +727,7 @@ struct Scsi_Host {
-  	unsigned int  irq;
-  	
-
--	enum scsi_host_state shost_state;
-+	enum scsi_host_state shost_state __guarded_by(&host_lock);
-
-  	/* ldm bits */
-  	struct device		shost_gendev, shost_dev;
-@@ -787,9 +787,11 @@ static inline struct Scsi_Host *dev_to_shost(struct 
-device *dev)
-
-  static inline int scsi_host_in_recovery(struct Scsi_Host *shost)
-  {
--	return shost->shost_state == SHOST_RECOVERY ||
--		shost->shost_state == SHOST_CANCEL_RECOVERY ||
--		shost->shost_state == SHOST_DEL_RECOVERY ||
-+	enum scsi_host_state state = 
-context_unsafe(READ_ONCE(shost->shost_state));
-+
-+	return state == SHOST_RECOVERY ||
-+		state == SHOST_CANCEL_RECOVERY ||
-+		state == SHOST_DEL_RECOVERY ||
-  		shost->tmf_in_progress;
-  }
-
-@@ -835,8 +837,9 @@ static inline struct device *scsi_get_device(struct 
-Scsi_Host *shost)
-   **/
-  static inline int scsi_host_scan_allowed(struct Scsi_Host *shost)
-  {
--	return shost->shost_state == SHOST_RUNNING ||
--	       shost->shost_state == SHOST_RECOVERY;
-+	enum scsi_host_state state = 
-context_unsafe(READ_ONCE(shost->shost_state));
-+
-+	return state == SHOST_RUNNING || state == SHOST_RECOVERY;
-  }
-
-  extern void scsi_unblock_requests(struct Scsi_Host *);
-@@ -940,6 +943,7 @@ static inline unsigned char 
-scsi_host_get_guard(struct Scsi_Host *shost)
-  	return shost->prot_guard_type;
-  }
-
--extern int scsi_host_set_state(struct Scsi_Host *, enum scsi_host_state);
-+int scsi_host_set_state(struct Scsi_Host *shost, enum scsi_host_state 
-state)
-+	__must_hold(&shost->host_lock);
-
-  #endif /* _SCSI_SCSI_HOST_H */
+Adding missed Stuart Hayes and Laurence Oberman addresses.
 
