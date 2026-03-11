@@ -1,65 +1,63 @@
 Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA8912DECBF
-	for <linux-scsi@vger.kernel.org>; Wed, 11 Mar 2026 02:09:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 477E028466C;
+	Wed, 11 Mar 2026 02:09:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.165.32
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773194990; cv=none; b=JbvcsNNwQzytmz6JM4MtnwcWO/pCpR8ozrDtzdYOcGJ+y8QKrQmH0ft2zCW2p7by9AoHRg/ynWDzHUoKSBfbjNjYHKYWjgXeAbl6mO/tTRYcVq8MqfT6J+yIJX9S2SjZoAlXcyrNhfdPt9zLC535Rt0sN0zoE46BttmDU0bT83s=
+	t=1773195000; cv=none; b=GwLGQcnZ04DILXXH+LChHNRcMVjW60/l0DiPRbeKGP9D3ir65C60GTfyvzixtHFvZF1LEWRp8o/8kVb1/WW1OpHry7AkBpvRztdNO4+88vDgVqOp+ntUkkt8cbXG0MB7pPWBcgD7fFYs6Z4gNNxoD06C6DuguBrhAaBbd8qOJ2I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773194990; c=relaxed/simple;
-	bh=/Cb1tr8j1dKA21uHsgC8HDNJBYZe1G/5dOj0DXDCIM0=;
+	s=arc-20240116; t=1773195000; c=relaxed/simple;
+	bh=KPmY88Ea/fW5GG4HNnP9eil0tKGecgw+g27CvvlQYyY=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=W4nCI3xyPz2ZdtTevCRKyH+N4xOupN15PC7fUsMTgdvxS260VHA986sZqkr+/NPM5ePk+pYhWX3NCmj/7emQRgwMYMvqjw8yvua4bm2D6tMwSW8AJRP0w+dROQ7vXvKJK8olynNl62OtEFXqj95+iHcQ3gLqMmaMzVtQIx75Too=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=m4LEJqP4; arc=none smtp.client-ip=205.220.165.32
+	 MIME-Version:Content-Type; b=pXAaDvqm1nAh61GNHsa/2lOIDd/8yF7YwchSQxOYT/Eq29sbUeG2yTJrUr2Y+lM65Iki0F8fAwiK9wR2RfGUJSNHM3ThDEd0VKM4Jrvc586wvXo0fAtz77RuCnTbduPTyb9uKh9FVfda2eVldUOo9wLH2eCaDYOOyy2XFrB8L0k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=RYuaKOOA; arc=none smtp.client-ip=205.220.165.32
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="m4LEJqP4"
-Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 62AJCaSu1627717;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="RYuaKOOA"
+Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 62AIYgxl2347887;
 	Wed, 11 Mar 2026 02:09:41 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
 	:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=
-	corp-2025-04-25; bh=kLZKT6+qawDAfTgh5jxrCJSNNDl5H+/TgfxXJBBMw3I=; b=
-	m4LEJqP4u0JK2HniXzraGVbG1CtMaUjzUGkV5+NW4d8ckkiHIvV1fuQXeSC6mY5v
-	4PNH+pF2ahH4fpaCFT2CEfzqFwn+pzL3DY+9GhyuQFp6NtE5dGhiGfA7vz3FN6dW
-	5HUgDLEF2yN6/Z6w9LF3xYBdQZp3jBcnh7FXTI3sA81/fGySV6I8Qb6jqvdYXxMX
-	IIhieeH/0sEND0bDwawXxKxaNNUHI3z6MJL85XhyUXWTplJJUgjqTIArpC9GcKff
-	E4h8Rde5MJXPVN8JNYLQqYYy7jpuoUBByxy/SWIPzwd4hL9WRWHdtYYGxDGImcY4
-	36HjLGub69qcih3L7MAgcA==
+	corp-2025-04-25; bh=2cz6alsdKKXtL/NaufthgCf3gRLP1VXTEABSy9kbUng=; b=
+	RYuaKOOARQsuOy2XGyvlu9HjQqTfMUodAZwVX30cD4v7tOvC7WXokPM4fL1iGzF6
+	Ld2e/zh67raXaSpL2boxi79xlmPN57jTkpFc/1etrggvXPo53ZTFo967LnatSkiD
+	Pmr4OcEgrCVkgeYe+9u5SAx3a8MJA/4fbcdsHWSCVo1c6/ciOqjMyPUu7SalkMgH
+	UPVKDWvaUOeGjzyIvLVjBlCkAXhqtvp+SBqYEGR+H1QuuaG6pjQEGQ++w0hSm+Xi
+	xrbki7d9OuwBzIuo7/fxpsV9TzjZPTT6KRWNC2z4EhywBQdw6Z/btPBOwfofThF8
+	vdiEVO8RESlvhutKpg5VgA==
 Received: from iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta02.appoci.oracle.com [147.154.18.20])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4csmps44db-1
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4csmmac31m-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
 	Wed, 11 Mar 2026 02:09:41 +0000 (GMT)
 Received: from pps.filterd (iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 62ANZSDt013580;
-	Wed, 11 Mar 2026 02:09:40 GMT
+	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 62B23hrT013484;
+	Wed, 11 Mar 2026 02:09:39 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 4craffewue-1
+	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 4craffewu9-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 11 Mar 2026 02:09:40 +0000
+	Wed, 11 Mar 2026 02:09:39 +0000
 Received: from iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 62B29c9k018454;
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 62B29c9i018454;
 	Wed, 11 Mar 2026 02:09:39 GMT
 Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 4craffewtr-4;
+	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 4craffewtr-3;
 	Wed, 11 Mar 2026 02:09:39 +0000
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-To: Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
-        Wang Shuaiwei <wangshuaiwei1@xiaomi.com>
+To: James.Bottomley@HansenPartnership.com, Yihang Li <liyihang9@huawei.com>
 Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Bean Huo <beanhuo@iokpp.de>, linux-scsi@vger.kernel.org,
-        wanghui33@xiaomi.com
-Subject: Re: [PATCH v3] scsi: ufs: core: Fix SError in ufshcd_rtc_work() during UFS suspend
-Date: Tue, 10 Mar 2026 22:09:35 -0400
-Message-ID: <177319446949.2524613.4552713745618708517.b4-ty@oracle.com>
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        yangxingui@h-partners.com, linuxarm@huawei.com, prime.zeng@huawei.com,
+        liyihang9@h-partners.com, liuyonglong@huawei.com
+Subject: Re: [PATCH] scsi: hisi_sas: Fix NULL pointer exception when do user_scan()
+Date: Tue, 10 Mar 2026 22:09:34 -0400
+Message-ID: <177319446962.2524613.14229090120578022614.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260307035128.3419687-1-wangshuaiwei1@xiaomi.com>
-References: <20260307035128.3419687-1-wangshuaiwei1@xiaomi.com>
+In-Reply-To: <20260305064039.4096775-1-liyihang9@huawei.com>
+References: <20260305064039.4096775-1-liyihang9@huawei.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -72,43 +70,41 @@ X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
  definitions=2026-03-10_05,2026-03-09_02,2025-10-01_01
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 malwarescore=0 bulkscore=0
- mlxlogscore=913 adultscore=0 phishscore=0 suspectscore=0 mlxscore=0
+ mlxlogscore=999 adultscore=0 phishscore=0 suspectscore=0 mlxscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2602130000
  definitions=main-2603110016
-X-Authority-Analysis: v=2.4 cv=IJQPywvG c=1 sm=1 tr=0 ts=69b0cee5 b=1 cx=c_pps
+X-Proofpoint-GUID: NC3EUTN4hc9U3_TaXQp5lRjBVVsNqTjk
+X-Proofpoint-ORIG-GUID: NC3EUTN4hc9U3_TaXQp5lRjBVVsNqTjk
+X-Authority-Analysis: v=2.4 cv=U5efzOru c=1 sm=1 tr=0 ts=69b0cee5 b=1 cx=c_pps
  a=e1sVV491RgrpLwSTMOnk8w==:117 a=e1sVV491RgrpLwSTMOnk8w==:17
  a=IkcTkHD0fZMA:10 a=Yq5XynenixoA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=jiCTI4zE5U7BLdzWsZGv:22 a=7Gl3-_t3PgB9XO-mQDs3:22 a=VwQbUJbxAAAA:8
- a=Og0uWtgEV8ecH7RMSB8A:9 a=QEXdDO2ut3YA:10 cc=ntf awl=host:13819
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzExMDAxNiBTYWx0ZWRfX+V7nO/bYbmIl
- 8/gdRpJbWZ7LFM6K2/2ZNikb6suNemgDEGzu3SZ125BRiHO9ea+WkXvXZMjh/rVUBCM/v8jo3uv
- RK6qerYAwYA9Q4kpzQ/A/+Qn/anCV4tqhAvcDNmfumapQQmx4c7IxcDbsjSVRLG+1rufUMFKaN8
- MVtnDukeaEEuHBs8Ei/XGTGTBlEkQEa1Pk3yaP80aIdt4z1NVZVinrV0JmwAgc5XKb7Vh5Cqnl+
- HDDo/Q8QUQIlVUPJA1I/N3kGbwv8P5dSoKhcjvmAu/t6Z8uxSlNZuO0jyWRrmc37tAgtPwuMp1x
- 7dKJKn6yyXziitXhPRRKQTt1+NuzbtT7W9z84eQ1H5zGZbc7SfC/o++U+c9tK72emvQo3PfAUMD
- 8ZkM4xn39FInuhTPX9CxJ3ytFTxR9wwLXiftMZgTa2MGxn0X/gLTmv1ZlOaDQWh6rk4VA3xaou8
- oBim7HDTURV0gd5kg0AYEGxhoxc71wn+1B1/303U=
-X-Proofpoint-GUID: usyAhaZ9x5Eff9CnI3BQm80ebrED6vvH
-X-Proofpoint-ORIG-GUID: usyAhaZ9x5Eff9CnI3BQm80ebrED6vvH
+ a=jiCTI4zE5U7BLdzWsZGv:22 a=EIcjfB9IiI4px24ztqRk:22 a=VwQbUJbxAAAA:8
+ a=5gXe__im_SQNU3M1EAIA:9 a=QEXdDO2ut3YA:10 cc=ntf awl=host:13819
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzExMDAxNiBTYWx0ZWRfX++iKlqUTEqhd
+ k8E6MNtArorCOzE0MFpe0rslxFgeuojMuX/LeVCzGU7K7AZZrqcgEyB/RI8mFEKSuCOrx3REhqx
+ Y8r72U+jq4BQSo2Co85zAxrbojrzccE/n7Bs+XYLNJ/l1+KC4FHtHmY7zpKMvi9j32ZrVqFEbr5
+ QbeULp0yMpSTp4NtUHo8GIPnyxPf/dikDp5SE4NVTdb3MP++4Zs2yh5elE9fs2yUT0HcILb3uwU
+ 7OxBYMqpiD6EkdjnqJ0jcqmYeUUWcwaiUctUFVUkmj5zXj1CUHvU75FsmdI63ByzhnBw3sGmkbE
+ HS8Y/6yTsffj8qwFBlk8qK8fiDyvMNaYvb8eB3K2F+AXmKCmrYb9dEB3xFfydzDzy0vzYOkLeu5
+ g3WI1JUldsgfLk/1gxHR2MTIFGzLzRt4zNmyRTp1pgzB2OUO0GP/6wG/IlJZf4onViD6Rk7jjCu
+ mSIXTaGJ3lMxO0GOvGR00dHEQL/uc5w/Ach9aKm0=
 
-On Sat, 07 Mar 2026 11:51:28 +0800, Wang Shuaiwei wrote:
+On Thu, 05 Mar 2026 14:40:39 +0800, Yihang Li wrote:
 
-> In __ufshcd_wl_suspend(), cancel_delayed_work_sync() is called to cancel
-> the UFS RTC work, but it is placed after ufshcd_vops_suspend(hba, pm_op,
-> POST_CHANGE). This creates a race condition where ufshcd_rtc_work() can
-> still be running while ufshcd_vops_suspend() is executing. When
-> UFSHCD_CAP_CLK_GATING is not supported, the condition
-> !hba->clk_gating.active_reqs is always true, causing ufshcd_update_rtc()
-> to be executed. Since ufshcd_vops_suspend() typically performs clock
-> gating operations, executing ufshcd_update_rtc() at that moment triggers
-> an SError. The kernel panic trace is as follows:
+> user_scan() invokes updated sas_user_scan() for channel 0, and if
+> successful, iteratively scans remaining channels (1 to shost->max_channel)
+> via scsi_scan_host_selected() in commit 37c4e72b0651 ("scsi: Fix
+> sas_user_scan() to handle wildcard and multi-channel scans"). However,
+> hisi_sas supports only one channel, and the current value of max_channel
+> is 1. sas_user_scan() for channel 1 will trigger the following NULL
+> pointer exception:
 > 
 > [...]
 
 Applied to 7.0/scsi-fixes, thanks!
 
-[1/1] scsi: ufs: core: Fix SError in ufshcd_rtc_work() during UFS suspend
-      https://git.kernel.org/mkp/scsi/c/b0bd84c39289
+[1/1] scsi: hisi_sas: Fix NULL pointer exception when do user_scan()
+      https://git.kernel.org/mkp/scsi/c/8ddc0c269165
 
 -- 
 Martin K. Petersen
