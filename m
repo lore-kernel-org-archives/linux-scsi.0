@@ -1,59 +1,55 @@
 Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9AE2138B132
-	for <linux-scsi@vger.kernel.org>; Thu, 12 Mar 2026 21:18:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8EF0E3CAE73
+	for <linux-scsi@vger.kernel.org>; Thu, 12 Mar 2026 21:18:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773350306; cv=none; b=PrQz1hiz2uCdR6ruleONeAQfNDVFmT0t50E4+5a+KAj5mazEl54j4oJp/shXdVKnOWxLxTknTXxa/QAso8b84ad5YZ9eq/RtT486+qgHben0ErrpBm9F3p/NKi7Z349koisB4MuuUE2MxsHxXGf5FGQ7/IslfqH+LoO9BkuYe7U=
+	t=1773350312; cv=none; b=GJ/dkplCY8Kr0SsY5fK1t+YZ2kJsi985FvT9KvqfU2CH342tpNoM4R0XL/tJcHZfD4l3JBEjiHyd9HOVMlWlXzhRGeackasl4M4b5IKwdElN2GrTKfxsMOt79zpWwRnBlk+/+beZzLu1eXkWX4z5QU/uCYu/s4R6xwSAQB1eWPA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773350306; c=relaxed/simple;
-	bh=gjhiACdZ4IgSb4Mh6BMPUTUaioGyOO6nX8h/yQZzW78=;
+	s=arc-20240116; t=1773350312; c=relaxed/simple;
+	bh=Op2xxYqFGe8XFJMQ/wiLJWfwuVDd+vD9wVTkvqaHgF0=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=rRnARs0FO4c/5afMd3TivUJMENmagII3CgZ5Szk6A6JFeYmNvJa0D/tND7wKDWqFF4Ia54yLuPBd5xoDeP9kEEB3hO7DI+DF8V2c/ObaCTTuc8aZb5IbJtXTguOJiws2oTNvp116gHXpjQe8U0yncoPFqA4WAC6WjwrreXm8ZiE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=VMIUoKCn; arc=none smtp.client-ip=199.89.1.16
+	 MIME-Version; b=s6pktC3C7kJlFkXVb0ATm8ZhUNjd4TO8cKcKxVsLHwMSaNIDBCcoG1w9xaHcGA5Skh+AlKPgHa8z2dmGiSsUUtyUvT4U7bfdMg+ope6VDHh3iF0aDV1AMfDWTWPuO6eztdaWwz24j17sHJUn3dYVJ+QGVpbT5GUS5pL//WRl8g0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=1SklbjSr; arc=none smtp.client-ip=199.89.1.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="VMIUoKCn"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="1SklbjSr"
 Received: from localhost (localhost [127.0.0.1])
-	by 013.lax.mailroute.net (Postfix) with ESMTP id 4fX0pT2hYrzlfl8L;
-	Thu, 12 Mar 2026 21:18:25 +0000 (UTC)
+	by 013.lax.mailroute.net (Postfix) with ESMTP id 4fX0pY01mvzlfl8L;
+	Thu, 12 Mar 2026 21:18:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:mime-version:references:in-reply-to
 	:x-mailer:message-id:date:date:subject:subject:from:from
-	:received:received; s=mr01; t=1773350299; x=1775942300; bh=r/1tz
-	KE7crjwPznQmtaiOePzkBhjhvYsLPHmv+PVrnI=; b=VMIUoKCniLOPTZfs0Yh2J
-	5xBWOGNO/YFhkWFBVIzyo+Un0vuvGlEFlitA0QBgZtyXkM/oXdIULTomVLLZsZwG
-	QG/8md1sTsJyTJIWjJDJGdP+kbuC4y3i7n1HnvN7oPH9tRwnpqWTpBhRQIbaaiwS
-	YlrdKbNHfafGpycXBq0HhgPf3yRubdogJDqNuYDgEpxhqCBCQ/5anGiiczdzunDK
-	EXFg25CkCFuL1+clJlLemXvgjaO4/FI5ZT3Hmn8Wi1+K8YWFolwKQB8sr1waLjRt
-	DeoajtKHEakOwoCbLBPuWrdX0kppWuQa/lmxX7v5VcB3jow4BxpmQ15eMVvM6XXg
-	A==
+	:received:received; s=mr01; t=1773350304; x=1775942305; bh=doCpq
+	rBDh1frlJt+X+TxP4wpSiPQFsczJ2pfHAK+x04=; b=1SklbjSrMhx9lFh8a8EdD
+	AQCQIr+CB7+XU7MqxyiH4ZiNbcBGxb6li8Uz8Nq9QWTPzc6ONh0GSvevbLJVWMv1
+	VAzVzlJeosLtCQCUoZhD3svBcnguRmpp15bjqqKM7VOHs/xlT6WBgu/RQYYBwBMZ
+	5W7yRqNdpEABuuE5z5zzR8t1DJXwHm8UweuHPA2RCMtdTWRqPT2RfaUpnli/J3Zw
+	h467vjXCYijOGa24A3O1wuzheGUK8Fv68JArWv5hm70iAryL1yQ9+ZsO7QEANTpb
+	thvs4eKjY/ut68XSDoK/ISLsrdpidgF1AHqbd9BQg+uJ3GmswTxwB5nScp8JrXfE
+	w==
 X-Virus-Scanned: by MailRoute
 Received: from 013.lax.mailroute.net ([127.0.0.1])
  by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id NvmQs3WzKVlJ; Thu, 12 Mar 2026 21:18:19 +0000 (UTC)
+ id bcn-5CcIGz5N; Thu, 12 Mar 2026 21:18:24 +0000 (UTC)
 Received: from bvanassche.mtv.corp.google.com (unknown [104.135.180.219])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4fX0pK6scQzlfl5W;
-	Thu, 12 Mar 2026 21:18:17 +0000 (UTC)
+	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4fX0pQ30vKzlfl5V;
+	Thu, 12 Mar 2026 21:18:22 +0000 (UTC)
 From: Bart Van Assche <bvanassche@acm.org>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org,
 	Bart Van Assche <bvanassche@acm.org>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	Peter Wang <peter.wang@mediatek.com>,
-	Avri Altman <avri.altman@sandisk.com>,
-	Bean Huo <beanhuo@micron.com>,
-	Adrian Hunter <adrian.hunter@intel.com>,
-	"Bao D. Nguyen" <quic_nguyenb@quicinc.com>
-Subject: [PATCH 32/36] scsi: ufs: Prepare for enabling lock context analysis
-Date: Thu, 12 Mar 2026 14:15:43 -0700
-Message-ID: <20260312211636.3245119-33-bvanassche@acm.org>
+	Don Brace <don.brace@microchip.com>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
+Subject: [PATCH 34/36] scsi: smartpqi: Prepare for enabling lock context analysis
+Date: Thu, 12 Mar 2026 14:15:45 -0700
+Message-ID: <20260312211636.3245119-35-bvanassche@acm.org>
 X-Mailer: git-send-email 2.53.0.851.ga537e3e6e9-goog
 In-Reply-To: <20260312211636.3245119-1-bvanassche@acm.org>
 References: <20260312211636.3245119-1-bvanassche@acm.org>
@@ -65,95 +61,173 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 
-Annotate functions that modify the state of a synchronization object.
-Remove the struct semaphore annotations because lock context annotations
-are not supported for semaphores.
+Document locking requirements with __acquires(), __releases() and
+__must_hold(). Annotate functions that perform conditional locking with
+__no_context_analysis.
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/ufs/core/ufs-debugfs.c |  8 ++++++--
- drivers/ufs/core/ufshcd.c      | 10 ++++++++++
- 2 files changed, 16 insertions(+), 2 deletions(-)
+ drivers/scsi/smartpqi/smartpqi_init.c | 18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
 
-diff --git a/drivers/ufs/core/ufs-debugfs.c b/drivers/ufs/core/ufs-debugf=
-s.c
-index e3baed6c70bd..d003f0450e7f 100644
---- a/drivers/ufs/core/ufs-debugfs.c
-+++ b/drivers/ufs/core/ufs-debugfs.c
-@@ -65,8 +65,10 @@ static int ee_usr_mask_get(void *data, u64 *val)
- 	return 0;
+diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpq=
+i/smartpqi_init.c
+index b4ed991976d0..2a36a798b66a 100644
+--- a/drivers/scsi/smartpqi/smartpqi_init.c
++++ b/drivers/scsi/smartpqi/smartpqi_init.c
+@@ -306,12 +306,14 @@ static inline void pqi_save_fw_triage_setting(struc=
+t pqi_ctrl_info *ctrl_info, b
  }
 =20
-+token_context_lock(ufs_debugfs);
-+
- static int ufs_debugfs_get_user_access(struct ufs_hba *hba)
--__acquires(&hba->host_sem)
-+	__cond_acquires(0, ufs_debugfs)
+ static inline void pqi_ctrl_block_scan(struct pqi_ctrl_info *ctrl_info)
++	__acquires(ctrl_info->scan_mutex)
  {
- 	down(&hba->host_sem);
- 	if (!ufshcd_is_user_access_allowed(hba)) {
-@@ -74,14 +76,16 @@ __acquires(&hba->host_sem)
- 		return -EBUSY;
- 	}
- 	ufshcd_rpm_get_sync(hba);
-+	__acquire(ufs_debugfs);
- 	return 0;
+ 	ctrl_info->scan_blocked =3D true;
+ 	mutex_lock(&ctrl_info->scan_mutex);
  }
 =20
- static void ufs_debugfs_put_user_access(struct ufs_hba *hba)
--__releases(&hba->host_sem)
-+	__releases(ufs_debugfs)
- {
- 	ufshcd_rpm_put_sync(hba);
- 	up(&hba->host_sem);
-+	__release(ufs_debugfs);
- }
-=20
- static int ee_usr_mask_set(void *data, u64 val)
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index cf7f0ae46f75..2d8b0eec1017 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -1427,6 +1427,9 @@ static int ufshcd_scale_gear(struct ufs_hba *hba, u=
-32 target_gear, bool scale_up
-  * Return: 0 upon success; -EBUSY upon timeout.
-  */
- static int ufshcd_clock_scaling_prepare(struct ufs_hba *hba, u64 timeout=
-_us)
-+	__cond_acquires(0, &hba->host->scan_mutex)
-+	__cond_acquires(0, &hba->wb_mutex)
-+	__cond_acquires(0, &hba->clk_scaling_lock)
- {
- 	int ret =3D 0;
- 	/*
-@@ -1456,6 +1459,9 @@ static int ufshcd_clock_scaling_prepare(struct ufs_=
-hba *hba, u64 timeout_us)
- }
-=20
- static void ufshcd_clock_scaling_unprepare(struct ufs_hba *hba, int err)
-+	__releases(&hba->clk_scaling_lock)
-+	__releases(&hba->wb_mutex)
-+	__releases(&hba->host->scan_mutex)
- {
- 	up_write(&hba->clk_scaling_lock);
- 	mutex_unlock(&hba->wb_mutex);
-@@ -3259,6 +3265,8 @@ ufshcd_dev_cmd_completion(struct ufs_hba *hba, stru=
-ct ufshcd_lrb *lrbp)
- }
-=20
- static void ufshcd_dev_man_lock(struct ufs_hba *hba)
-+	__acquires(&hba->dev_cmd.lock)
-+	__acquires_shared(&hba->clk_scaling_lock)
- {
- 	ufshcd_hold(hba);
- 	mutex_lock(&hba->dev_cmd.lock);
-@@ -3266,6 +3274,8 @@ static void ufshcd_dev_man_lock(struct ufs_hba *hba=
+ static inline void pqi_ctrl_unblock_scan(struct pqi_ctrl_info *ctrl_info=
 )
++	__releases(ctrl_info->scan_mutex)
+ {
+ 	ctrl_info->scan_blocked =3D false;
+ 	mutex_unlock(&ctrl_info->scan_mutex);
+@@ -323,11 +325,13 @@ static inline bool pqi_ctrl_scan_blocked(struct pqi=
+_ctrl_info *ctrl_info)
  }
 =20
- static void ufshcd_dev_man_unlock(struct ufs_hba *hba)
-+	__releases_shared(&hba->clk_scaling_lock)
-+	__releases(&hba->dev_cmd.lock)
+ static inline void pqi_ctrl_block_device_reset(struct pqi_ctrl_info *ctr=
+l_info)
++	__acquires(ctrl_info->lun_reset_mutex)
  {
- 	up_read(&hba->clk_scaling_lock);
- 	mutex_unlock(&hba->dev_cmd.lock);
+ 	mutex_lock(&ctrl_info->lun_reset_mutex);
+ }
+=20
+ static inline void pqi_ctrl_unblock_device_reset(struct pqi_ctrl_info *c=
+trl_info)
++	__releases(ctrl_info->lun_reset_mutex)
+ {
+ 	mutex_unlock(&ctrl_info->lun_reset_mutex);
+ }
+@@ -430,11 +434,13 @@ static inline bool pqi_device_offline(struct pqi_sc=
+si_dev *device)
+ }
+=20
+ static inline void pqi_ctrl_ofa_start(struct pqi_ctrl_info *ctrl_info)
++	__acquires(ctrl_info->ofa_mutex)
+ {
+ 	mutex_lock(&ctrl_info->ofa_mutex);
+ }
+=20
+ static inline void pqi_ctrl_ofa_done(struct pqi_ctrl_info *ctrl_info)
++	__releases(ctrl_info->ofa_mutex)
+ {
+ 	mutex_unlock(&ctrl_info->ofa_mutex);
+ }
+@@ -2210,6 +2216,7 @@ static inline bool pqi_volume_rescan_needed(struct =
+pqi_scsi_dev *device)
+=20
+ static void pqi_update_device_list(struct pqi_ctrl_info *ctrl_info,
+ 	struct pqi_scsi_dev *new_device_list[], unsigned int num_new_devices)
++	__no_context_analysis /* conditional locking */
+ {
+ 	int rc;
+ 	unsigned int i;
+@@ -3635,6 +3642,7 @@ static enum pqi_soft_reset_status pqi_poll_for_soft=
+_reset_status(
+ }
+=20
+ static void pqi_process_soft_reset(struct pqi_ctrl_info *ctrl_info)
++	__no_context_analysis /* conditional locking */
+ {
+ 	int rc;
+ 	unsigned int delay_secs;
+@@ -3690,6 +3698,7 @@ static void pqi_process_soft_reset(struct pqi_ctrl_=
+info *ctrl_info)
+ }
+=20
+ static void pqi_ofa_memory_alloc_worker(struct work_struct *work)
++	__no_context_analysis /* conditional locking */
+ {
+ 	struct pqi_ctrl_info *ctrl_info;
+=20
+@@ -3716,6 +3725,7 @@ static void pqi_ofa_quiesce_worker(struct work_stru=
+ct *work)
+=20
+ static bool pqi_ofa_process_event(struct pqi_ctrl_info *ctrl_info,
+ 	struct pqi_event *event)
++	__no_context_analysis /* conditional locking */
+ {
+ 	bool ack_event;
+=20
+@@ -3780,6 +3790,7 @@ static void pqi_disable_raid_bypass(struct pqi_ctrl=
+_info *ctrl_info)
+ }
+=20
+ static void pqi_event_worker(struct work_struct *work)
++	__no_context_analysis /* conditional locking */
+ {
+ 	unsigned int i;
+ 	bool rescan_needed;
+@@ -8603,6 +8614,7 @@ static void pqi_reinit_queues(struct pqi_ctrl_info =
+*ctrl_info)
+ }
+=20
+ static int pqi_ctrl_init_resume(struct pqi_ctrl_info *ctrl_info)
++	__no_context_analysis /* conditional locking */
+ {
+ 	int rc;
+=20
+@@ -8938,6 +8950,7 @@ static void pqi_remove_ctrl(struct pqi_ctrl_info *c=
+trl_info)
+ }
+=20
+ static void pqi_ofa_ctrl_quiesce(struct pqi_ctrl_info *ctrl_info)
++	__no_context_analysis /* conditional locking */
+ {
+ 	pqi_ctrl_block_scan(ctrl_info);
+ 	pqi_scsi_block_requests(ctrl_info);
+@@ -8948,6 +8961,7 @@ static void pqi_ofa_ctrl_quiesce(struct pqi_ctrl_in=
+fo *ctrl_info)
+ }
+=20
+ static void pqi_ofa_ctrl_unquiesce(struct pqi_ctrl_info *ctrl_info)
++	__no_context_analysis /* conditional locking */
+ {
+ 	pqi_start_heartbeat_timer(ctrl_info);
+ 	pqi_ctrl_unblock_requests(ctrl_info);
+@@ -9392,6 +9406,7 @@ static void pqi_crash_if_pending_command(struct pqi=
+_ctrl_info *ctrl_info)
+ }
+=20
+ static void pqi_shutdown(struct pci_dev *pci_dev)
++	__no_context_analysis /* conditional locking */
+ {
+ 	int rc;
+ 	struct pqi_ctrl_info *ctrl_info;
+@@ -9486,6 +9501,7 @@ static inline enum bmic_flush_cache_shutdown_event =
+pqi_get_flush_cache_shutdown_
+ }
+=20
+ static int pqi_suspend_or_freeze(struct device *dev, bool suspend)
++	__no_context_analysis /* conditional locking */
+ {
+ 	struct pci_dev *pci_dev;
+ 	struct pqi_ctrl_info *ctrl_info;
+@@ -9524,6 +9540,7 @@ static __maybe_unused int pqi_suspend(struct device=
+ *dev)
+ }
+=20
+ static int pqi_resume_or_restore(struct device *dev)
++	__no_context_analysis /* conditional locking */
+ {
+ 	int rc;
+ 	struct pci_dev *pci_dev;
+@@ -9552,6 +9569,7 @@ static int pqi_freeze(struct device *dev)
+ }
+=20
+ static int pqi_thaw(struct device *dev)
++	__no_context_analysis /* conditional locking */
+ {
+ 	int rc;
+ 	struct pci_dev *pci_dev;
