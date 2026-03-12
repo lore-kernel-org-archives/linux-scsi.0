@@ -1,207 +1,116 @@
-Received: from YT5PR01CU002.outbound.protection.outlook.com (mail-canadacentralazon11021093.outbound.protection.outlook.com [40.107.192.93])
+Received: from lamorak.hansenpartnership.com (lamorak.hansenpartnership.com [198.37.111.173])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E70D2295DAC;
-	Thu, 12 Mar 2026 15:28:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.192.93
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773329299; cv=fail; b=Wo/oJ+NBuHrT0gJb6OzGJrl4+YgbxuCZ4cZ20t4zpt2P56QbiNWn9Up6WCoCJa7Vp+RL389ii7oOTkIm8PhJDcmgmQRpAcFryRC4nDVAWSCQEDASsQUxwaPg2EjHB2vG10eF8jsSY28UBQ2/0DgaSm4u2cSBK//bp8C31ynIKRo=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773329299; c=relaxed/simple;
-	bh=+Zc3vlzTMGe/L0aRQyIt1xsmomUi2khrLSIaKbfzc9g=;
-	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=Pw5GRp/y3ZEgk290Rft3nqvysIz2Mg+q1GqrN7l/uMUnpZjW00DyUt+EiB6vUDEBvOeWpWgWnVScVnLP8pOCASIdheef+p37bb8GliOUHQ3BW3IUZrFYr2PAULSCkhKKyAdGMPYsb72evM0TmRe6yeIw7OSDL+LFW5ijdR/Mtwk=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=efficios.com; spf=pass smtp.mailfrom=efficios.com; dkim=pass (2048-bit key) header.d=efficios.com header.i=@efficios.com header.b=cVZDLM0X; arc=fail smtp.client-ip=40.107.192.93
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=efficios.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=efficios.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5489238552A;
+	Thu, 12 Mar 2026 15:32:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.37.111.173
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1773329562; cv=none; b=mqHb/DJurcag11SRnS5v0eXKw/B9KYnMFAy3k0LtOleIzyizQQIZGPykWB/Fmk1pYX0+BCwlxnWPlyFL0p4IAqK1AyjV+lTgP5B2vSizwLKg+5GL0Sd0YH7qCbTM9rqMlMY4753DXbwz9x4BcwiR/xWXOdqGvIlauCtTKbZdkZU=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1773329562; c=relaxed/simple;
+	bh=zTDNMMg/o0AbpOakTawLJV8HRHueJx9lUWpbuHSD3BU=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=R5LzA8Ou2FAlfTxruBbGM6k/z0Mz4c/yMKAdYnzLlIPQhgSJuhcbKkZvN1DS4RRkPHUDvwVX2kkuu25gzXZl/1tiNKIgamJTw7JCYSn//2RRSauf0uGJeCv2B6mWEI1AOeDpowYKobPwyLnOI9ONcClsULIU0+ZMOVB4W4VRrAQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com; spf=pass smtp.mailfrom=HansenPartnership.com; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=pcvJZxMl; arc=none smtp.client-ip=198.37.111.173
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=HansenPartnership.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=efficios.com header.i=@efficios.com header.b="cVZDLM0X"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=k0eciYYZ1kC0YfmXxxbPuK9a5QrMy99m1hQ+GjO4VOehOOrsXOOwpUMuKZQxcIpBnLlGX1NXlsqnPu5KtvnhtiyVSxzpxLmBkMGGk44jYn4EDX8VWQzfbpmO783RXMr4dPAdT6TdJa/bzTFBh/tipHYUQOFHhcB1gOnsnlRbUSTbILH1OdF0DEdtsbMmPjiXgAoC4GXzl0vGnWEvEAbSe0YyRGOQnRKAWfSKu+i9SNq72/0Du1BG71Mynasyivg95DyCTCGOU7+kZXIa2k80drL3vw66g76S8JCK//DDZZ6rDNafDfWUaqIR2ePFy2btHDLR68ZWsY5kLsNIZvlodQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=6fyE9YKYZ2l7vSlZuph4G4Ipsw+rzPxtapYIq78oDrc=;
- b=eA+H4/g8juOWon7u/sn+tsFUH3esrOfoPQqMy1Mk0evGCjajwL4rKX/GcJf1DKC6R9s0dfQ+oHyKN1nqIzOyg92OBR+Hx4YISioUnm9IWceEoDYDm45wvEc0xRi3K8t6okJIXrF8OSOT0yFv1UEmIA8VWX2fsvSRm0wqkSAN/z4VQAxIXt2lxjacEl49EWgSliZ1YTLCImbrtjBM6G1ENp6BGvXXOagImaFc9pj9iT7HRs2MIzq0oM4UrDPdhqC+4uGCFHN3VhOVWaV+K8yKyIYEOQHJao1B9NR4QpD1j3Rw3XxiWi6qkpOsRddWgYs82I41bUDjp5/aikPqKWYA7Q==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=efficios.com; dmarc=pass action=none header.from=efficios.com;
- dkim=pass header.d=efficios.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=efficios.com;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=6fyE9YKYZ2l7vSlZuph4G4Ipsw+rzPxtapYIq78oDrc=;
- b=cVZDLM0XR+3P+jR1RDu1i9z6bQS/bNlid0do4qzc95e6SNtxZt/dTPGd0X1oetueIE8Ce1ReIdtLFTSP2Tn9Fs2JDIQE/K2+WwyUgg0mtvisJ0O76hIdJoyJDVDtqbda7ULOIPA2QQPZHZOTk2onlOgUXhnDV7KcwmehM+L+KvIdz1YBN28qd2IBd4vciaCOnFx/a8W8kf60YXU7ByxQYUAOzJfRXucXcigSvrKkge1bBKGKhvm0DuU7GBtTih1AoReUJ/RHISxwQaQsExht1rZFqR4pC/zf8vPCE9GDGcWHTHgK+xd3TVYW8nrz4yYYyJFPRtRsaQGyISraTBQ4kg==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=efficios.com;
-Received: from YT2PR01MB9175.CANPRD01.PROD.OUTLOOK.COM (2603:10b6:b01:be::5)
- by YT3PR01MB5489.CANPRD01.PROD.OUTLOOK.COM (2603:10b6:b01:61::14) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9700.15; Thu, 12 Mar
- 2026 15:28:11 +0000
-Received: from YT2PR01MB9175.CANPRD01.PROD.OUTLOOK.COM
- ([fe80::6004:a862:d45d:90c1]) by YT2PR01MB9175.CANPRD01.PROD.OUTLOOK.COM
- ([fe80::6004:a862:d45d:90c1%3]) with mapi id 15.20.9700.015; Thu, 12 Mar 2026
- 15:28:08 +0000
-Message-ID: <219d015d-076b-4c80-8f63-88569115fdad@efficios.com>
-Date: Thu, 12 Mar 2026 11:28:07 -0400
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 00/15] tracepoint: Avoid double static_branch evaluation
- at guarded call sites
-To: Steven Rostedt <rostedt@goodmis.org>
-Cc: "Vineeth Pillai (Google)" <vineeth@bitbyteword.org>,
- Peter Zijlstra <peterz@infradead.org>, Dmitry Ilvokhin <d@ilvokhin.com>,
- Masami Hiramatsu <mhiramat@kernel.org>, Ingo Molnar <mingo@redhat.com>,
- Jens Axboe <axboe@kernel.dk>, io-uring@vger.kernel.org,
- "David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>,
- Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
- Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>,
- Marcelo Ricardo Leitner <marcelo.leitner@gmail.com>,
- Xin Long <lucien.xin@gmail.com>, Jon Maloy <jmaloy@redhat.com>,
- Aaron Conole <aconole@redhat.com>, Eelco Chaudron <echaudro@redhat.com>,
- Ilya Maximets <i.maximets@ovn.org>, netdev@vger.kernel.org,
- bpf@vger.kernel.org, linux-sctp@vger.kernel.org,
- tipc-discussion@lists.sourceforge.net, dev@openvswitch.org,
- Oded Gabbay <ogabbay@kernel.org>, Koby Elbaz <koby.elbaz@intel.com>,
- dri-devel@lists.freedesktop.org, "Rafael J. Wysocki" <rafael@kernel.org>,
- Viresh Kumar <viresh.kumar@linaro.org>,
- "Gautham R. Shenoy" <gautham.shenoy@amd.com>, Huang Rui <ray.huang@amd.com>,
- Mario Limonciello <mario.limonciello@amd.com>, Len Brown <lenb@kernel.org>,
- Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
- linux-pm@vger.kernel.org, MyungJoo Ham <myungjoo.ham@samsung.com>,
- Kyungmin Park <kyungmin.park@samsung.com>,
- Chanwoo Choi <cw00.choi@samsung.com>,
- =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>,
- Sumit Semwal <sumit.semwal@linaro.org>, linaro-mm-sig@lists.linaro.org,
- Eddie James <eajames@linux.ibm.com>,
- Andrew Jeffery <andrew@codeconstruct.com.au>, Joel Stanley <joel@jms.id.au>,
- linux-fsi@lists.ozlabs.org, David Airlie <airlied@gmail.com>,
- Simona Vetter <simona@ffwll.ch>, Alex Deucher <alexander.deucher@amd.com>,
- Danilo Krummrich <dakr@kernel.org>, Matthew Brost <matthew.brost@intel.com>,
- Philipp Stanner <phasta@kernel.org>, Harry Wentland
- <harry.wentland@amd.com>, Leo Li <sunpeng.li@amd.com>,
- amd-gfx@lists.freedesktop.org, Jiri Kosina <jikos@kernel.org>,
- Benjamin Tissoires <bentiss@kernel.org>, linux-input@vger.kernel.org,
- Wolfram Sang <wsa+renesas@sang-engineering.com>, linux-i2c@vger.kernel.org,
- Mark Brown <broonie@kernel.org>,
- Michael Hennerich <michael.hennerich@analog.com>,
- =?UTF-8?Q?Nuno_S=C3=A1?= <nuno.sa@analog.com>, linux-spi@vger.kernel.org,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- linux-scsi@vger.kernel.org, Chris Mason <clm@fb.com>,
- David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org,
- linux-trace-kernel@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20260312150523.2054552-1-vineeth@bitbyteword.org>
- <1e3c2830-765e-4271-89f7-0b6784b37597@efficios.com>
- <20260312112354.3dd99e36@gandalf.local.home>
-From: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
-Content-Language: en-US
-In-Reply-To: <20260312112354.3dd99e36@gandalf.local.home>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: YQZPR01CA0140.CANPRD01.PROD.OUTLOOK.COM
- (2603:10b6:c01:87::18) To YT2PR01MB9175.CANPRD01.PROD.OUTLOOK.COM
- (2603:10b6:b01:be::5)
+	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="pcvJZxMl"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+	d=hansenpartnership.com; s=20151216; t=1773329560;
+	bh=zTDNMMg/o0AbpOakTawLJV8HRHueJx9lUWpbuHSD3BU=;
+	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
+	b=pcvJZxMlUnyDHCQWdoy7oBw4t3ApqjoLShbfu4EGfeRRF/0XvwrUC3nRWEDXXVQdM
+	 hMwbriKe/NL1VZ4m3mEc/Q/oxiEwEcX/NNUV+xlSHstrQ2AykR2/lPVz8ssLEFKVvD
+	 cNP4AXmMocQMY4pE83K1rY1dx5NyhQ9bJbZtUZWw=
+Received: from [IPv6:2601:5c4:4300:d341::a774] (unknown [IPv6:2601:5c4:4300:d341::a774])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by lamorak.hansenpartnership.com (Postfix) with ESMTPSA id 599341C02A4;
+	Thu, 12 Mar 2026 11:32:38 -0400 (EDT)
+Message-ID: <f5688b895eaebabae6545a0d9baf8f1404e8454e.camel@HansenPartnership.com>
+Subject: Re: [PATCH 00/61] treewide: Use IS_ERR_OR_NULL over manual NULL
+ check - refactor
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+To: Jason Gunthorpe <jgg@ziepe.ca>, Kuan-Wei Chiu <visitorckw@gmail.com>
+Cc: Philipp Hahn <phahn-oss@avm.de>, amd-gfx@lists.freedesktop.org, 
+ apparmor@lists.ubuntu.com, bpf@vger.kernel.org, ceph-devel@vger.kernel.org,
+  cocci@inria.fr, dm-devel@lists.linux.dev, dri-devel@lists.freedesktop.org,
+  gfs2@lists.linux.dev, intel-gfx@lists.freedesktop.org, 
+ intel-wired-lan@lists.osuosl.org, iommu@lists.linux.dev,
+ kvm@vger.kernel.org,  linux-arm-kernel@lists.infradead.org,
+ linux-block@vger.kernel.org,  linux-bluetooth@vger.kernel.org,
+ linux-btrfs@vger.kernel.org,  linux-cifs@vger.kernel.org,
+ linux-clk@vger.kernel.org,  linux-erofs@lists.ozlabs.org,
+ linux-ext4@vger.kernel.org,  linux-fsdevel@vger.kernel.org,
+ linux-gpio@vger.kernel.org,  linux-hyperv@vger.kernel.org,
+ linux-input@vger.kernel.org,  linux-kernel@vger.kernel.org,
+ linux-leds@vger.kernel.org,  linux-media@vger.kernel.org,
+ linux-mips@vger.kernel.org, linux-mm@kvack.org, 
+ linux-modules@vger.kernel.org, linux-mtd@lists.infradead.org, 
+ linux-nfs@vger.kernel.org, linux-omap@vger.kernel.org, 
+ linux-phy@lists.infradead.org, linux-pm@vger.kernel.org, 
+ linux-rockchip@lists.infradead.org, linux-s390@vger.kernel.org, 
+ linux-scsi@vger.kernel.org, linux-sctp@vger.kernel.org, 
+ linux-security-module@vger.kernel.org, linux-sh@vger.kernel.org, 
+ linux-sound@vger.kernel.org, linux-stm32@st-md-mailman.stormreply.com, 
+ linux-trace-kernel@vger.kernel.org, linux-usb@vger.kernel.org, 
+ linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+ ntfs3@lists.linux.dev,  samba-technical@lists.samba.org,
+ sched-ext@lists.linux.dev,  target-devel@vger.kernel.org,
+ tipc-discussion@lists.sourceforge.net,  v9fs@lists.linux.dev
+Date: Thu, 12 Mar 2026 11:32:37 -0400
+In-Reply-To: <20260312125730.GI1469476@ziepe.ca>
+References: <20260310-b4-is_err_or_null-v1-0-bd63b656022d@avm.de>
+	 <abBlpGKO842B3yl9@google.com> <20260312125730.GI1469476@ziepe.ca>
+Autocrypt: addr=James.Bottomley@HansenPartnership.com;
+ prefer-encrypt=mutual;
+ keydata=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
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.50.3 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: YT2PR01MB9175:EE_|YT3PR01MB5489:EE_
-X-MS-Office365-Filtering-Correlation-Id: 6b9384eb-8eb4-47ba-72f3-08de804bf6b1
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|366016|1800799024|376014|7416014|56012099003|18002099003|22082099003;
-X-Microsoft-Antispam-Message-Info:
-	GtuKgrsXoof730hErIgwDxBLempp0wA+gObvtdwqEile/Aic/NbFR5omzszxT4zGfrLA3PaW9Whthk1ElCHGV/iS+n9yBV6Lx58P0+FokffyCekrZ3CZjz+K/Xmzyo7NNwCFBfQFPiXsBRVIu5Mv0+tKEUX7YzfHv/e8HxOFZSRqgirlH1JV2INxha5RcXN2xabQezTwvzIADMbApwoqyiV8b+v9e6AEf9OrgGZW9MY32Bgh8CSN1JsjJg5AUho3CLSb25k5pvJx7dUt+qG6CZ+h8XIMNVsSUZEYJTLwRZ8wdgE2IGGxJ5xTCkJ9XhSu1QnNVzDC92bTyrGYhNCfbPselr3/7iKuvo0EJRTrggbNb6RnmrWBUMU8Icotw8FnRBEncexhc+iz/JhVHXV72HeBOJ8I5UiHAO5yntEnl9axI8KEe0S/mpww+7OJsdJA5N+w1ahfWv2RuVLH9nTCtiSjrNNMbvAogT/S75M6MT3q+UStOEreJsPvdH1fXMrC3QNd3p7UOQkWyas0xHV+vUUetD32mHKev0s0BTW/dUjgND99XRs3Mixscfs7XgJq2wZ6KjZ+80zgMslNQV97C6gixRwW8+gz3uZAHDzNHnQBQWVZGejy//P3+RmVK6RlaHrlAuI8MPs843z+uYCT0QiV0toaLDybfJ6AsWKI1111GenABegdTBoe9uDLDwhI
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:YT2PR01MB9175.CANPRD01.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(376014)(7416014)(56012099003)(18002099003)(22082099003);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?aHpXMnhsVVB4MmFmQ0NBdU9KUVFFMGlBL1gzUFJlbjhmY2xZWThyNk5qVFZz?=
- =?utf-8?B?K3dBOTlCcDNnTmM5MW5NcXZ2VGpTUFJsQ1lHR0w4ZFZKUXVLUHRGSWJyYk9V?=
- =?utf-8?B?RExadkhva0xXa0k4eE1TM2FKenJFbFVTNUZMZFY3anl6cG5MbE0ybkJ0eUdz?=
- =?utf-8?B?cDBCeEZyNnhGOVhwc21wS0hXWnR5NjFHMDVYOEtnS0lWaXJSajRJY3VKMVJR?=
- =?utf-8?B?ZnlwL2RvRjc4K3ducWVmbVhNZyswTlI5enZjeDVWak8vdUNWMldQeHU4M0tM?=
- =?utf-8?B?aEJxNWtza21hNlN3SDFrWUZ3aGFnR2MvZGh1MGVlTGhIRnY5L1ZEZmo2MVNq?=
- =?utf-8?B?THlsODVNbHFsNlg0VDE1MnBiRVBobzRyeTJ1UnZFdVl5MFJsSXFZMlA2eXRx?=
- =?utf-8?B?ZjVsTE5SQStXNW5nK1RyMFVNY3JZdTNxcURKOGN3dnEwVjZUNUx0dkh6QzhD?=
- =?utf-8?B?cStqandtZlI2Vy83ZjdVN2NUL1BKMGFxb0hNQTdwUUIrUjY1Wm9tU2x2MDNJ?=
- =?utf-8?B?REpwRW9zMmYwa0txNHJ6bTRwT0xMZHFhSXo3Vkh4V2xYcXNvRHBiL2RuN2FN?=
- =?utf-8?B?bzF6bzlyQUN1NHdwZC9YT05keTAyMzAzQ3Q2TnFqWjBWYWZxdHJ0NE8vOUpn?=
- =?utf-8?B?TTBCQng1SUhQdDBHN2R0VWE4Y2JtYnNhc1B3VEVsMjdqdVZmR3MwQXBrdW5s?=
- =?utf-8?B?cHFiS2FHSnQ0VlhFbUdzVk9SUXlXNHgzNWQ4ejl4QVBNSjU3OEdGRHhjQXdW?=
- =?utf-8?B?cWVOL2JGZGZ6Z284OU01V2JUamc4alozREpYQXpqZEtJREF3NDZOVWk5N1lW?=
- =?utf-8?B?Y2FSbzJXamF5dmd4Z25udVJVK2U5Q0k2T05LUkZMeDBtWHBCeDJhVHlWUUdB?=
- =?utf-8?B?V2ljOExwaWNLcDgxS0ZQN04zQmFHa0RXMlhnVkpKVkhlRE5ZT09hMmhqYzln?=
- =?utf-8?B?V3pFMzhSYmhkYWk4eE5lN1JVN1NsRnV1ZnBzNWQ3RUE3TTRrOGVHUk1FWk50?=
- =?utf-8?B?blhtOFkzZWNnaDV1T3hZWDlEMHJaS2cvRUZIbUVvZXNOSk1aVFFKL2JrRTlB?=
- =?utf-8?B?cTFMbVkrYkk2RGJ4UlZSbEV3WStWRTMvRUx6TWZvVGRhVWRwNEE3R1JuM3Nz?=
- =?utf-8?B?WUhqVCtVbTdxc3BGcjg5dmozbVNTTENwOC9mbC9QM1I4OEJaN0JlMkJvL0Fx?=
- =?utf-8?B?S1NubFNqVVVDcUdYc1BNeDRuODBrcWc1S2dpM3FPdWpKT0lIOU82WVBKejVE?=
- =?utf-8?B?eUR0T2hINVZmQlBMMUFFYWppYisvTlJTQUVaQ1J0M0tydDdmT1hIbDc3TzdJ?=
- =?utf-8?B?dzZ4UmxlRGdsbnhvUU5UQXRIdXhZVENHc0ttd0FtWnNjSStPbkZSbWVXc2oy?=
- =?utf-8?B?UWM5cDI5RWpWR0txM3NJV0FEZzR5YTdQK21qL21wZ1BjMi9KUUIwOW0xZHZR?=
- =?utf-8?B?OHU5dkRObjNGOWdkY1RKYTdMWDhoMFlMSHJweFc2aGdJbWc2elVFby9UUG5s?=
- =?utf-8?B?cjlvOVNXMmdSRGw5SHRNVTJ6YVRXbHAwOHV6cWtWSjNNaFQ3a2k1ZW11NkZk?=
- =?utf-8?B?Zkh5RHhNVGJDajUvVVpVUlR2N2JTaE0zeFpZVmZpOGM5T0Ryem1pUHRDU0Jq?=
- =?utf-8?B?bDU0VU85VGFRRHluV3RtalI4V2RTc0ZwTlVBdWlmTFRyVWdwZjJpMW5ta1F5?=
- =?utf-8?B?TnVoNTdHRUYrSnhCZ1BRRTZMZGFhbWpLMkxpSEd1dnpMR01Ick43Z3l6MnBk?=
- =?utf-8?B?T2VkYjBSZ0twMGV5WUtoUzRCQkYxcTV4WXNzaDRyRVFaNXRxN21vV2RXQy9h?=
- =?utf-8?B?YTkxcU1UdFdvRGdpTTA0Smt0K0MrcUJTNWhEWE9ZYnhlbGNhRWRLQ2Z4MmJU?=
- =?utf-8?B?dmI3cUJ1aVR5VlI1Q0NFczlhK25LSUVNQ2JMUGJrQVJqd3JzRE0va2w5UTlp?=
- =?utf-8?B?QjRzc1RaUUdDOTdBSDlkdTg3elNlbHc2ZWttRUNrMkhzSVBhM3JRLzJuNWMy?=
- =?utf-8?B?R0NvQjJyWk5zMU9FMldlam1wWUgxTTBCbEZsU2NTQ0RGTHkvVHZZTkpjWFY2?=
- =?utf-8?B?bGtIUXdEalUrWkNUNkdBbFl3dkUxTENzZ25tcTdtbUVZZDY3NldCSlcwM09M?=
- =?utf-8?B?RFR1UU9XUWJYSEVYY21OVmNSYlp0OVk4THhMV2JCN1hGY0tvUjRNSHVGSzB2?=
- =?utf-8?B?eEo3ZVBtR2FySHF5WlZpYnh5clpKclFaRWZkNzhGdjVNT3Q0SXJJa05TWUtH?=
- =?utf-8?B?R3ZsNi9mY0xaaU9VOHJaSVRiczMxRVdOMk5KZUZ3dVBvUnVXajJEcFFRb2o4?=
- =?utf-8?B?dW5qVmp2eS9hbks1cDNsOWJ4VUcyakZLY3JTMXpxYTdBdGFPL2VpTVZMbDlM?=
- =?utf-8?Q?N0G7qJDZl//9Kdyg=3D?=
-X-OriginatorOrg: efficios.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 6b9384eb-8eb4-47ba-72f3-08de804bf6b1
-X-MS-Exchange-CrossTenant-AuthSource: YT2PR01MB9175.CANPRD01.PROD.OUTLOOK.COM
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 12 Mar 2026 15:28:08.4972
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4f278736-4ab6-415c-957e-1f55336bd31e
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 14Kd8DpPOuqEmLjuDA0H5TJOkhjXC4hS9l6M+tdR+vXFCEeA6d1VCWETWURnsr1PD7ccuNEzeEXkQLKbs4KodiVH6RYs7/8xaMtz4E+klgo=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: YT3PR01MB5489
 
-On 2026-03-12 11:23, Steven Rostedt wrote:
-> On Thu, 12 Mar 2026 11:12:41 -0400
-> Mathieu Desnoyers <mathieu.desnoyers@efficios.com> wrote:
-> 
->>>     if (trace_foo_enabled() && cond)
->>>         trace_invoke_foo(args);   /* calls __do_trace_foo() directly */
->>
->> FYI, we have a similar concept in LTTng-UST for userspace
->> instrumentation already:
->>
->> if (lttng_ust_tracepoint_enabled(provider, name))
->>           lttng_ust_do_tracepoint(provider, name, ...);
->>
->> Perhaps it can provide some ideas about API naming.
-> 
-> I find the word "invoke" sounding more official than "do" ;-)
-> 
-> Note, Vineeth came up with the naming. I would have done "do" but when I
-> saw "invoke" I thought it sounded better.
+On Thu, 2026-03-12 at 09:57 -0300, Jason Gunthorpe wrote:
+> On Wed, Mar 11, 2026 at 02:40:36AM +0800, Kuan-Wei Chiu wrote:
+>=20
+> > IMHO, the necessity of IS_ERR_OR_NULL() often highlights a
+> > confusing or flawed API design. It usually implies that the caller
+> > is unsure whether a failure results in an error pointer or a NULL
+> > pointer.=20
+>=20
+> +1
+>=20
+> IS_ERR_OR_NULL() should always be looked on with suspicion. Very
+> little should be returning some tri-state 'ERR' 'NULL' 'SUCCESS'
+> pointer. What does the middle condition even mean? IS_ERR_OR_NULL()
+> implies ERR and NULL are semanticly the same, so fix the things to
+> always use ERR.
 
-It works as long as you don't have a tracing subsystem called
-"invoke", then you get into identifier clash territory.
+Not in any way supporting the original patch.  However, the pattern
+ERR, NULL, PTR is used extensively in the dentry code of filesystems.=20
+See the try_lookup..() set of functions in fs/namei.c
 
-Thanks,
+The meaning is
 
-Mathieu
+PTR - I found it
+NULL - It definitely doesn't exist
+ERR - something went wrong during the lookup.
 
+So I don't think you can blanket say this pattern is wrong.
 
+Regards,
 
--- 
-Mathieu Desnoyers
-EfficiOS Inc.
-https://www.efficios.com
+James
+
