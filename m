@@ -1,58 +1,56 @@
 Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 552D026B2DA
-	for <linux-scsi@vger.kernel.org>; Thu, 12 Mar 2026 21:17:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EEAF426B2DA
+	for <linux-scsi@vger.kernel.org>; Thu, 12 Mar 2026 21:17:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773350271; cv=none; b=sMHgY9z/MNEHDwpL9XarxZcDsra8fMba6C525wIJGJlk63TYauXcUHT4Z21EKk+Ww9drS/CroeAAWrulZjq9LHa7KCoHhcOg7WAsRMCpFr3b1PKI55zfV4pcQIN80CcHjagEcLxDxXn9CxXFkrvDlCqMadXRkdnCnhUX4g7VNLs=
+	t=1773350274; cv=none; b=cxDGvwCFDNj8VI7KBP6T51mT8nnjB6f1OyvpmHOGFN1KUJ7+q8dt/tpv0MH0EgNGnZDvJXjcLK9tqrlDS57LcC3J3JTqLRrmv7JQAOzRwzS7/kbAwmZCOrMkU+27kCz05PfSyj/r5WQuQHnKnAMcSP7qwgwbHmeEzutX3qD7wB8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773350271; c=relaxed/simple;
-	bh=FWi4CpMql4IDN9cjoUOz6G0qNH11lTfYDDTVq7sGsAA=;
+	s=arc-20240116; t=1773350274; c=relaxed/simple;
+	bh=Uh2kqNzenSgeuokHHwOo59nRuvU3MlOuJNSDr8grqTc=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=ozPc+xcRqJ8TRQK/oRB7zh0pzCepWoxdAl6Uaap2mjP0G7NX8xb7jcoloSXPlPOJze92p57eOHZL5BkVqe/au1qvTSBI4ic4qHQeDKh/6bFlEpUzfWGkwoni5Ll5n+rwhoFLTcmcPTi/uS1W7VvcYsizuMXcbHtDztItwnxcPjg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=0WVodrNX; arc=none smtp.client-ip=199.89.1.16
+	 MIME-Version; b=WrPX5RqIVhNhd124IHxZHW7sQnXjAESNmqp1FdwmuWY4kAuJqJCg/gNDp1Rtp/rB5e+btLOcYdFV6zH3yAfTt7XPdimywsnw71kLCXem32A5CVb2LOgxducZmZba9ws0IEGe8JeDByAr9T/gIaDu1DrpBGQBhjKeJm1eYPjTW9w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=YJd/y5ul; arc=none smtp.client-ip=199.89.1.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="0WVodrNX"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="YJd/y5ul"
 Received: from localhost (localhost [127.0.0.1])
-	by 013.lax.mailroute.net (Postfix) with ESMTP id 4fX0nn6Snczlfl5x;
-	Thu, 12 Mar 2026 21:17:49 +0000 (UTC)
+	by 013.lax.mailroute.net (Postfix) with ESMTP id 4fX0nr4j1SzlfjRJ;
+	Thu, 12 Mar 2026 21:17:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:mime-version:references:in-reply-to
 	:x-mailer:message-id:date:date:subject:subject:from:from
-	:received:received; s=mr01; t=1773350261; x=1775942262; bh=0moX7
-	Fk7pisfRkF3+ASiubNDm8RjddB1G/uOnZNp354=; b=0WVodrNXRwmzMITQQsaaN
-	fJbG06yv8p+AtYHLDeVg9grlHg6HdAZftu/aL6b0B7HT+uTKR43liW/RglF6iI3k
-	clo6crQoFsyuQD97b/Zc7WBi9Ou3YE3KnCESqQygsnW3Dh/S8GGxskOyoaU3iw3g
-	eVqBiqpiKbExxgpW5ILyn0JTLHI+FfTWrfPl0KmDNvkM0Qzm5AMIfSZzjBW2jMk9
-	fxB4TkGj50kkxWXXS1zuoi85bUUtvR9PaG2fKSzXUujCyN98kVRgU3ZmPUlrAwyp
-	MkZ+pu0ieF0dEt5v8VOAiz2LtWEYSHLSepu8VdRrVQrYZ+b4f4JsCYvQjQZT1ojy
+	:received:received; s=mr01; t=1773350269; x=1775942270; bh=T8bCX
+	+kZFkL4o/NjINdXo14hgrpSu5S5lRQMb0p/oEI=; b=YJd/y5ulO3J5rkuTSdBDo
+	b2mK6Ar+1T3nsMtIFxKX0ISUyFPrN6gPLeOBvX5HLVCBEitLiegkwf0ZF2ODfZ9W
+	+SBM2JyPuNqxRKTXGcVnhtqd7zWurfdUrNbDBqHXUPx0OpMfIWFEtGQ+2akhDd36
+	KIIO/2ziiMfnd8SXloaZth+IvF5iVkFmYfssfWNL6HjPbaCNMmyUz01pie3Oo4ZN
+	cdxxDsum30h3Gmsa8AX4f62EVfxWIsiC7bpKgyVIo6jWSXtTs9Wn0bvbtpEu+TOF
+	ubB0qWDM5myfjYyJGkXtOkG4yrfux+66ucvc0WaR7V4v7XVFsMWVPmb3M287aXH2
 	w==
 X-Virus-Scanned: by MailRoute
 Received: from 013.lax.mailroute.net ([127.0.0.1])
  by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id wJ9qLQS3cBma; Thu, 12 Mar 2026 21:17:41 +0000 (UTC)
+ id Y7raQuOV1xvm; Thu, 12 Mar 2026 21:17:49 +0000 (UTC)
 Received: from bvanassche.mtv.corp.google.com (unknown [104.135.180.219])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4fX0nb4Cymzlfl7l;
-	Thu, 12 Mar 2026 21:17:39 +0000 (UTC)
+	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4fX0ng6Cp6zlfl5V;
+	Thu, 12 Mar 2026 21:17:43 +0000 (UTC)
 From: Bart Van Assche <bvanassche@acm.org>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org,
 	Bart Van Assche <bvanassche@acm.org>,
+	Don Brace <don.brace@microchip.com>,
 	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	Ingo Molnar <mingo@kernel.org>,
-	Thomas Gleixner <tglx@kernel.org>,
-	Kees Cook <kees@kernel.org>,
-	Colin Ian King <colin.i.king@gmail.com>
-Subject: [PATCH 15/36] scsi: csiostor: Prepare for enabling lock context analysis
-Date: Thu, 12 Mar 2026 14:15:26 -0700
-Message-ID: <20260312211636.3245119-16-bvanassche@acm.org>
+	Nathan Chancellor <nathan@kernel.org>
+Subject: [PATCH 17/36] scsi: hpsa: Prepare for enabling lock context analysis
+Date: Thu, 12 Mar 2026 14:15:28 -0700
+Message-ID: <20260312211636.3245119-18-bvanassche@acm.org>
 X-Mailer: git-send-email 2.53.0.851.ga537e3e6e9-goog
 In-Reply-To: <20260312211636.3245119-1-bvanassche@acm.org>
 References: <20260312211636.3245119-1-bvanassche@acm.org>
@@ -64,260 +62,30 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 
-Document lock context requirements with __must_hold().
+mutex_lock_interruptible() returns a negative value upon failure or zero
+upon success. Since the Clang thread-safety analyzer only supports =3D=3D=
+ 0
+and !=3D 0 tests for functions that perform conditional locking, change
+the =3D=3D -EINTR test into !=3D 0. This change does not modify the behav=
+ior
+of hpsa_do_reset().
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/csiostor/csio_hw.c    | 12 ++++++++++++
- drivers/scsi/csiostor/csio_lnode.c |  3 +++
- drivers/scsi/csiostor/csio_rnode.c |  6 ++++++
- drivers/scsi/csiostor/csio_scsi.c  |  6 ++++++
- 4 files changed, 27 insertions(+)
+ drivers/scsi/hpsa.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/csiostor/csio_hw.c b/drivers/scsi/csiostor/csio=
-_hw.c
-index df9f81f29950..4b4d3c42667f 100644
---- a/drivers/scsi/csiostor/csio_hw.c
-+++ b/drivers/scsi/csiostor/csio_hw.c
-@@ -914,6 +914,7 @@ csio_hw_dev_ready(struct csio_hw *hw)
-  */
- static int
- csio_do_hello(struct csio_hw *hw, enum csio_dev_state *state)
-+	__must_hold(&hw->lock)
- {
- 	struct csio_mb	*mbp;
- 	int	rv =3D 0;
-@@ -2050,6 +2051,7 @@ csio_hw_flash_config(struct csio_hw *hw, u32 *fw_cf=
-g_param, char *path)
-  */
- static int
- csio_hw_use_fwconfig(struct csio_hw *hw, int reset, u32 *fw_cfg_param)
-+	__must_hold(&hw->lock)
- {
- 	struct csio_mb	*mbp =3D NULL;
- 	struct fw_caps_config_cmd *caps_cmd;
-@@ -2475,6 +2477,7 @@ static int csio_hw_check_fwver(struct csio_hw *hw)
-  */
- static void
- csio_hw_configure(struct csio_hw *hw)
-+	__must_hold(&hw->lock)
- {
- 	int reset =3D 1;
- 	int rv;
-@@ -2604,6 +2607,7 @@ csio_hw_configure(struct csio_hw *hw)
-  */
- static void
- csio_hw_initialize(struct csio_hw *hw)
-+	__must_hold(&hw->lock)
- {
- 	struct csio_mb	*mbp;
- 	enum fw_retval retval;
-@@ -2778,6 +2782,7 @@ csio_hw_fatal_err(struct csio_hw *hw)
-  */
- static void
- csio_hws_uninit(struct csio_hw *hw, enum csio_hw_ev evt)
-+	__must_hold(&hw->lock)
- {
- 	hw->prev_evt =3D hw->cur_evt;
- 	hw->cur_evt =3D evt;
-@@ -2803,6 +2808,7 @@ csio_hws_uninit(struct csio_hw *hw, enum csio_hw_ev=
- evt)
-  */
- static void
- csio_hws_configuring(struct csio_hw *hw, enum csio_hw_ev evt)
-+	__must_hold(&hw->lock)
- {
- 	hw->prev_evt =3D hw->cur_evt;
- 	hw->cur_evt =3D evt;
-@@ -2988,6 +2994,7 @@ csio_hws_quiescing(struct csio_hw *hw, enum csio_hw=
-_ev evt)
-  */
- static void
- csio_hws_quiesced(struct csio_hw *hw, enum csio_hw_ev evt)
-+	__must_hold(&hw->lock)
- {
- 	hw->prev_evt =3D hw->cur_evt;
- 	hw->cur_evt =3D evt;
-@@ -3013,6 +3020,7 @@ csio_hws_quiesced(struct csio_hw *hw, enum csio_hw_=
-ev evt)
-  */
- static void
- csio_hws_resetting(struct csio_hw *hw, enum csio_hw_ev evt)
-+	__must_hold(&hw->lock)
- {
- 	hw->prev_evt =3D hw->cur_evt;
- 	hw->cur_evt =3D evt;
-@@ -3074,6 +3082,7 @@ csio_hws_removing(struct csio_hw *hw, enum csio_hw_=
-ev evt)
-  */
- static void
- csio_hws_pcierr(struct csio_hw *hw, enum csio_hw_ev evt)
-+	__must_hold(&hw->lock)
- {
- 	hw->prev_evt =3D hw->cur_evt;
- 	hw->cur_evt =3D evt;
-@@ -3763,6 +3772,7 @@ csio_hw_mb_timer(struct timer_list *t)
-  */
- static void
- csio_hw_mbm_cleanup(struct csio_hw *hw)
-+	__must_hold(&hw->lock)
- {
- 	LIST_HEAD(cbfn_q);
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index a1b116cd4723..1b3595c6e036 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -3163,7 +3163,7 @@ static int hpsa_do_reset(struct ctlr_info *h, struc=
+t hpsa_scsi_dev_t *dev,
+ 	int rc =3D 0;
 =20
-@@ -3883,6 +3893,7 @@ csio_free_evt(struct csio_hw *hw, struct csio_evt_m=
-sg *evt_entry)
-=20
- void
- csio_evtq_flush(struct csio_hw *hw)
-+	__must_hold(&hw->lock)
- {
- 	uint32_t count;
- 	count =3D 30;
-@@ -4142,6 +4153,7 @@ csio_mgmt_tmo_handler(struct timer_list *t)
-=20
- static void
- csio_mgmtm_cleanup(struct csio_mgmtm *mgmtm)
-+	__must_hold(&mgmtm->hw->lock)
- {
- 	struct csio_hw *hw =3D mgmtm->hw;
- 	struct csio_ioreq *io_req;
-diff --git a/drivers/scsi/csiostor/csio_lnode.c b/drivers/scsi/csiostor/c=
-sio_lnode.c
-index 78d5ecd14f65..161973957976 100644
---- a/drivers/scsi/csiostor/csio_lnode.c
-+++ b/drivers/scsi/csiostor/csio_lnode.c
-@@ -872,6 +872,7 @@ csio_ln_read_fcf_entry(struct csio_lnode *ln,
- static void
- csio_handle_link_up(struct csio_hw *hw, uint8_t portid, uint32_t fcfi,
- 		    uint32_t vnpi)
-+	__must_hold(&hw->lock)
- {
- 	struct csio_lnode *ln =3D NULL;
-=20
-@@ -1165,6 +1166,7 @@ csio_lns_uninit(struct csio_lnode *ln, enum csio_ln=
-_ev evt)
-  */
- static void
- csio_lns_online(struct csio_lnode *ln, enum csio_ln_ev evt)
-+	__must_hold(&csio_lnode_to_hw(ln)->lock)
- {
- 	struct csio_hw *hw =3D csio_lnode_to_hw(ln);
-=20
-@@ -1216,6 +1218,7 @@ csio_lns_online(struct csio_lnode *ln, enum csio_ln=
-_ev evt)
-  */
- static void
- csio_lns_ready(struct csio_lnode *ln, enum csio_ln_ev evt)
-+	__must_hold(&csio_lnode_to_hw(ln)->lock)
- {
- 	struct csio_hw *hw =3D csio_lnode_to_hw(ln);
-=20
-diff --git a/drivers/scsi/csiostor/csio_rnode.c b/drivers/scsi/csiostor/c=
-sio_rnode.c
-index 713e13adf4dc..74ef1e858cf3 100644
---- a/drivers/scsi/csiostor/csio_rnode.c
-+++ b/drivers/scsi/csiostor/csio_rnode.c
-@@ -546,6 +546,7 @@ csio_rn_verify_rparams(struct csio_lnode *ln, struct =
-csio_rnode *rn,
-=20
- static void
- __csio_reg_rnode(struct csio_rnode *rn)
-+	__must_hold(&csio_lnode_to_hw(csio_rnode_to_lnode(rn))->lock)
- {
- 	struct csio_lnode *ln =3D csio_rnode_to_lnode(rn);
- 	struct csio_hw *hw =3D csio_lnode_to_hw(ln);
-@@ -563,6 +564,7 @@ __csio_reg_rnode(struct csio_rnode *rn)
-=20
- static void
- __csio_unreg_rnode(struct csio_rnode *rn)
-+	__must_hold(&csio_lnode_to_hw(csio_rnode_to_lnode(rn))->lock)
- {
- 	struct csio_lnode *ln =3D csio_rnode_to_lnode(rn);
- 	struct csio_hw *hw =3D csio_lnode_to_hw(ln);
-@@ -602,6 +604,7 @@ __csio_unreg_rnode(struct csio_rnode *rn)
-  */
- static void
- csio_rns_uninit(struct csio_rnode *rn, enum csio_rn_ev evt)
-+	__must_hold(&csio_rnode_to_lnode(rn)->hwp->lock)
- {
- 	struct csio_lnode *ln =3D csio_rnode_to_lnode(rn);
- 	int ret =3D 0;
-@@ -642,6 +645,7 @@ csio_rns_uninit(struct csio_rnode *rn, enum csio_rn_e=
-v evt)
-  */
- static void
- csio_rns_ready(struct csio_rnode *rn, enum csio_rn_ev evt)
-+	__must_hold(&csio_rnode_to_lnode(rn)->hwp->lock)
- {
- 	struct csio_lnode *ln =3D csio_rnode_to_lnode(rn);
- 	int ret =3D 0;
-@@ -727,6 +731,7 @@ csio_rns_ready(struct csio_rnode *rn, enum csio_rn_ev=
- evt)
-  */
- static void
- csio_rns_offline(struct csio_rnode *rn, enum csio_rn_ev evt)
-+	__must_hold(&csio_rnode_to_lnode(rn)->hwp->lock)
- {
- 	struct csio_lnode *ln =3D csio_rnode_to_lnode(rn);
- 	int ret =3D 0;
-@@ -786,6 +791,7 @@ csio_rns_offline(struct csio_rnode *rn, enum csio_rn_=
-ev evt)
-  */
- static void
- csio_rns_disappeared(struct csio_rnode *rn, enum csio_rn_ev evt)
-+	__must_hold(&csio_rnode_to_lnode(rn)->hwp->lock)
- {
- 	struct csio_lnode *ln =3D csio_rnode_to_lnode(rn);
- 	int ret =3D 0;
-diff --git a/drivers/scsi/csiostor/csio_scsi.c b/drivers/scsi/csiostor/cs=
-io_scsi.c
-index b1de615cf316..b74fed463640 100644
---- a/drivers/scsi/csiostor/csio_scsi.c
-+++ b/drivers/scsi/csiostor/csio_scsi.c
-@@ -1157,6 +1157,7 @@ csio_scsi_cmpl_handler(struct csio_hw *hw, void *wr=
-, uint32_t len,
-  */
- void
- csio_scsi_cleanup_io_q(struct csio_scsim *scm, struct list_head *q)
-+	__must_hold(&scm->hw->lock)
- {
- 	struct csio_hw *hw =3D scm->hw;
- 	struct csio_ioreq *ioreq;
-@@ -1231,6 +1232,7 @@ csio_abrt_cls(struct csio_ioreq *ioreq, struct scsi=
-_cmnd *scmnd)
-  */
- static int
- csio_scsi_abort_io_q(struct csio_scsim *scm, struct list_head *q, uint32=
-_t tmo)
-+	__must_hold(&scm->hw->lock)
- {
- 	struct csio_hw *hw =3D scm->hw;
- 	struct list_head *tmp, *next;
-@@ -1271,6 +1273,7 @@ csio_scsi_abort_io_q(struct csio_scsim *scm, struct=
- list_head *q, uint32_t tmo)
-  */
- int
- csio_scsim_cleanup_io(struct csio_scsim *scm, bool abort)
-+	__must_hold(&scm->hw->lock)
- {
- 	struct csio_hw *hw =3D scm->hw;
- 	int rv =3D 0;
-@@ -1316,6 +1319,7 @@ csio_scsim_cleanup_io(struct csio_scsim *scm, bool =
-abort)
-  */
- int
- csio_scsim_cleanup_io_lnode(struct csio_scsim *scm, struct csio_lnode *l=
-n)
-+	__must_hold(&scm->hw->lock)
- {
- 	struct csio_hw *hw =3D scm->hw;
- 	struct csio_scsi_level_data sld;
-@@ -2192,6 +2196,8 @@ csio_eh_lun_reset_handler(struct scsi_cmnd *cmnd)
- 	 * completes, we gather pending I/Os after the LUN reset.
- 	 */
- 	spin_lock_irq(&hw->lock);
-+	/* Tell the compiler that scsim->hw =3D=3D hw. */
-+	__assume_ctx_lock(&scsim->hw->lock);
- 	csio_scsi_gather_active_ios(scsim, &sld, &local_q);
-=20
- 	retval =3D csio_scsi_abort_io_q(scsim, &local_q, 30000);
+ 	/* We can really only handle one reset at a time */
+-	if (mutex_lock_interruptible(&h->reset_mutex) =3D=3D -EINTR) {
++	if (mutex_lock_interruptible(&h->reset_mutex)) {
+ 		dev_warn(&h->pdev->dev, "concurrent reset wait interrupted.\n");
+ 		return -EINTR;
+ 	}
