@@ -1,127 +1,129 @@
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.4])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qk1-f181.google.com (mail-qk1-f181.google.com [209.85.222.181])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E837337648D;
-	Thu, 12 Mar 2026 09:23:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.4
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B09293C3C01
+	for <linux-scsi@vger.kernel.org>; Thu, 12 Mar 2026 12:57:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.181
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773307438; cv=none; b=A1dV+RvUQ5JcWBsS3EWPKrS3bWcafRTVcfVTTDt1ZJ5L1tGs1Ygyr3c430d11ywB/hMPKY3eiMmOEYAHKmCdsr10eALxX0hrcIHIgbAUkyC1s7a+KmUq40Jvi7/dsmX1t4WXuhNWf1yibKdymYlgl1FQ6BR1gZBXswVFYR9o/bU=
+	t=1773320257; cv=none; b=hC9eGQEWA8PsFL9ciBKOb2VbzdPnGghX3K8Dve/VMYNR4bfkPOvDuBVLRUylgx1sWEjGkv055oIcJ+8xtJL6NaGXZj1o3hkRKXGf2trk+nnG0+lYFuqcY2x0SpyYZt+WXEbNiB+eXuQXqfWxNvB2369DwlX7vO+16Q2Job8yiOA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773307438; c=relaxed/simple;
-	bh=T01e8uCCN0bl8hso7tWF+T2tLzx+D/e6Am6ptrAUPMU=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=raoy7H0ZfMMyZxv5I4W3wv19NzW/3Dh7wuLbHFikoPSf3mh5O4/l/KlQ8ZJuRnmEtkKqcF03udSSovB1xGziAE1Xml7dt91Njx/Muu4VNV+15ZNaOZM1kWPBtMGGg/vqgFwG7oojfE8hKlWiRTZ88deFveaVU5aemZdAmFEA8JY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=ocuH0/dN; arc=none smtp.client-ip=117.135.210.4
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+	s=arc-20240116; t=1773320257; c=relaxed/simple;
+	bh=Rr1jkAP22lZkLvo3o90a9fRSWh9+kilNKtAarSScWFY=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=oJI5n+aVpjQyl0zTECMn/uIU6ubbfYsRMb82XyHZsooEhpwafpnPgxIkxdDVA5Y8wssuQTaS9lpwWvtgNNREuhlLr2mTtySVQdr6OHf4VFR5yeCIb683M56l7DxJ4QyFKaJ4cKA1Oa3gMX1QB9uHkZEp6YHulz7rUS+0ja6lkTA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca; spf=pass smtp.mailfrom=ziepe.ca; dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b=fHqxjqGD; arc=none smtp.client-ip=209.85.222.181
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziepe.ca
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="ocuH0/dN"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=j+
-	aGSEZZtgdvqbWm66L5+yY/BK2NFwjcYx9a6LJE9RI=; b=ocuH0/dN4k85Ux1Oi+
-	5h28RqvGiQLZmmiXC1+Vnxlp0KnoyAsASivitbICPH/T+/RwOv5uw9q7wdjMP9IS
-	Ck2VaFe3LrB94ZKiSPy28H1a/EtCnuCdHdeocwgNtCcSxq1r2p8HlHPdrDNOBOkI
-	8m/lU4oKrrWtUTQwrJFc/Ot2A=
-Received: from localhost.localdomain (unknown [])
-	by gzga-smtp-mtada-g1-4 (Coremail) with SMTP id _____wDn0tbfhbJpu7uqAQ--.55S3;
-	Thu, 12 Mar 2026 17:22:50 +0800 (CST)
-From: Yang Xiuwei <yangxiuwei@kylinos.cn>
-To: axboe@kernel.dk,
-	fujita.tomonori@lab.ntt.co.jp,
-	James.Bottomley@HansenPartnership.com,
-	martin.petersen@oracle.com
-Cc: linux-block@vger.kernel.org,
-	linux-scsi@vger.kernel.org,
-	bvanassche@acm.org,
-	Yang Xiuwei <yangxiuwei@kylinos.cn>
-Subject: [PATCH v7 1/3] bsg: add bsg_uring_cmd uapi structure
-Date: Thu, 12 Mar 2026 17:22:35 +0800
-Message-Id: <20260312092237.2464560-2-yangxiuwei@kylinos.cn>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20260312092237.2464560-1-yangxiuwei@kylinos.cn>
-References: <20260312092237.2464560-1-yangxiuwei@kylinos.cn>
+	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="fHqxjqGD"
+Received: by mail-qk1-f181.google.com with SMTP id af79cd13be357-8cb40149037so106172285a.2
+        for <linux-scsi@vger.kernel.org>; Thu, 12 Mar 2026 05:57:32 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ziepe.ca; s=google; t=1773320252; x=1773925052; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=J1SF1XBHkHR0j7NZVucv0LxpGoGXl67PUefLsfwpAbo=;
+        b=fHqxjqGD7mReR8MT2yBowt9MuNKPAKQc++mWcb4ZOttX6YldICO+OnnxWIQjO0C8L5
+         wjOw0Gg7MqV4U+G9pES+s6h1NtZIjaKrBXMW81hrLyc8SxWYHtvQK3FlTjqiyroZskXE
+         jYj0kUENL7Yhu5zg+0UQ91XYlYYlozX9U8uAqBEFaih0fSnDo8kprjTDRYJ58gzKRExo
+         MSUW+Q+e0P2WpZGotx0DuVRaUqq4vGsUUSX1YbPnOxmRUKlXFY/aNRmXMXDbAEfx0Lnn
+         e41FpuPSZjTSuTkWfTMW8e1MvewVXC2p6zLd4GrSZjvSKS4Q06nDQYaSimUW3qR5RhoY
+         JV6A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1773320252; x=1773925052;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=J1SF1XBHkHR0j7NZVucv0LxpGoGXl67PUefLsfwpAbo=;
+        b=le5I7y/4krAS4WejZ0FKk2wKLDIq6pZC2Ysh81EOUG0DTfnFiq7iTbmt6cnRP/fJ7V
+         13omanURY+1VykmCjlYlXYN7n5x1oR9OgZV3RIWbo0dvYqcATfGYohCZXotP8lJ3oV/Z
+         GYm4hoIejaSFqsEPTVQM1afdrPSQ1oGCL5c3k2jlMhvDcm0Lo99HOmN5yM3pmILrWknF
+         ZW545aiMkEfzpomkyebc4SIhTbjGh5tgzTzxJyyJD7iN2GTtNsuBoINP1uazHX7i3aXt
+         +fSMtCauuhsLdW/L5fQRzrMc/+cNbEicgBFLl5x8lmZvjFIFcGBzaw2tTE3VJnXrmN82
+         aCnA==
+X-Forwarded-Encrypted: i=1; AJvYcCWOZ3wcevWIzI5+mGnTbnDqC/xNaiEyXx7X2lRkYeVcBCCildei2hSikVLFLCQP3d8bQGmptHJmXDEb@vger.kernel.org
+X-Gm-Message-State: AOJu0YwvFCCFHeA28yR5uVQDmgbvYr3E2MqSDFCZQm1Q9S8pT3jBfw/w
+	8JsN9HdCVtbidEs9pDKQm2MrHaTMOGY1jWZ91WKvz3Id/m0b1IYRW6j8I3Y7A05fEIg=
+X-Gm-Gg: ATEYQzwSPYLHbZWrGD3SGqUbUvMuzs0Y3TYr+VqB6uXU4JxC00pv3433mgUGIr/KCuD
+	p2rY88QFr8Z6qyW65y4dUfo5U0jXYA2EuAcJ0rSZ5LCJsEtvpCDRnmAtjO/XwlnWSKDyO41/A23
+	IcStjfEjyOWQYYR2I7RElim5LbDwoTEhg80S02R/D5V+/S6rwUHGIEWAVc86MekDg/UEjYErBuZ
+	QA8eXDr8epAFnzb8hzfhQeSFUw/EekZfO78bDWcATrx+gVETqg4WsZnurPpA4p05GqG5FXigMz+
+	7wq0KTB3zeb5QtrVsh1cwUYkWbbq6Lo3MDM8KY5prT1X/bWVLVxcEe90S8zpAclr0eXAI2xC75C
+	rYp1hSoVxITkxnP/Z0VTlKwrgN7WKe0hMqtieoOoLtVqP6DAwPKxiVDSZp5iwXkbTK848Sxp4QL
+	TzBolFn0GuKNYTOLSmM1Jc3gDxshCfrIWABN/5RHka7EXxG8mUIhOV7833WBhrsZ5atKyMm9IQC
+	z3trYt9
+X-Received: by 2002:ac8:5d4d:0:b0:509:cbc:127b with SMTP id d75a77b69052e-5093a1bd58fmr77950521cf.60.1773320251710;
+        Thu, 12 Mar 2026 05:57:31 -0700 (PDT)
+Received: from ziepe.ca (hlfxns017vw-142-162-112-119.dhcp-dynamic.fibreop.ns.bellaliant.net. [142.162.112.119])
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-89a65bd318fsm33341196d6.8.2026.03.12.05.57.30
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 12 Mar 2026 05:57:31 -0700 (PDT)
+Received: from jgg by wakko with local (Exim 4.97)
+	(envelope-from <jgg@ziepe.ca>)
+	id 1w0fbW-00000006fKD-1POa;
+	Thu, 12 Mar 2026 09:57:30 -0300
+Date: Thu, 12 Mar 2026 09:57:30 -0300
+From: Jason Gunthorpe <jgg@ziepe.ca>
+To: Kuan-Wei Chiu <visitorckw@gmail.com>
+Cc: Philipp Hahn <phahn-oss@avm.de>, amd-gfx@lists.freedesktop.org,
+	apparmor@lists.ubuntu.com, bpf@vger.kernel.org,
+	ceph-devel@vger.kernel.org, cocci@inria.fr,
+	dm-devel@lists.linux.dev, dri-devel@lists.freedesktop.org,
+	gfs2@lists.linux.dev, intel-gfx@lists.freedesktop.org,
+	intel-wired-lan@lists.osuosl.org, iommu@lists.linux.dev,
+	kvm@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-block@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	linux-btrfs@vger.kernel.org, linux-cifs@vger.kernel.org,
+	linux-clk@vger.kernel.org, linux-erofs@lists.ozlabs.org,
+	linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	linux-gpio@vger.kernel.org, linux-hyperv@vger.kernel.org,
+	linux-input@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-leds@vger.kernel.org, linux-media@vger.kernel.org,
+	linux-mips@vger.kernel.org, linux-mm@kvack.org,
+	linux-modules@vger.kernel.org, linux-mtd@lists.infradead.org,
+	linux-nfs@vger.kernel.org, linux-omap@vger.kernel.org,
+	linux-phy@lists.infradead.org, linux-pm@vger.kernel.org,
+	linux-rockchip@lists.infradead.org, linux-s390@vger.kernel.org,
+	linux-scsi@vger.kernel.org, linux-sctp@vger.kernel.org,
+	linux-security-module@vger.kernel.org, linux-sh@vger.kernel.org,
+	linux-sound@vger.kernel.org,
+	linux-stm32@st-md-mailman.stormreply.com,
+	linux-trace-kernel@vger.kernel.org, linux-usb@vger.kernel.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	ntfs3@lists.linux.dev, samba-technical@lists.samba.org,
+	sched-ext@lists.linux.dev, target-devel@vger.kernel.org,
+	tipc-discussion@lists.sourceforge.net, v9fs@lists.linux.dev
+Subject: Re: [PATCH 00/61] treewide: Use IS_ERR_OR_NULL over manual NULL
+ check - refactor
+Message-ID: <20260312125730.GI1469476@ziepe.ca>
+References: <20260310-b4-is_err_or_null-v1-0-bd63b656022d@avm.de>
+ <abBlpGKO842B3yl9@google.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wDn0tbfhbJpu7uqAQ--.55S3
-X-Coremail-Antispam: 1Uf129KBjvJXoWxCr4xGryrJr4fCw4Uury5CFg_yoW5WF4kpF
-	90kw4ayrW5Wr42krW3Xa4UCay5Zr48t342g39rAw1a9w1YqF18uF1j93WSqa1Iqw4kt34Y
-	vrnFqryDCwn2yaUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07jexRDUUUUU=
-Sender: yangxiuwei2025@163.com
-X-CM-SenderInfo: p1dqw55lxzvxisqskqqrwthudrp/xtbCwgqiM2myheqg7AAA3h
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <abBlpGKO842B3yl9@google.com>
 
-Add the bsg_uring_cmd structure to the BSG UAPI header to support
-io_uring-based SCSI passthrough operations via IORING_OP_URING_CMD.
+On Wed, Mar 11, 2026 at 02:40:36AM +0800, Kuan-Wei Chiu wrote:
 
-Signed-off-by: Yang Xiuwei <yangxiuwei@kylinos.cn>
----
- include/uapi/linux/bsg.h | 49 ++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 49 insertions(+)
+> IMHO, the necessity of IS_ERR_OR_NULL() often highlights a confusing or
+> flawed API design. It usually implies that the caller is unsure whether
+> a failure results in an error pointer or a NULL pointer. 
 
-diff --git a/include/uapi/linux/bsg.h b/include/uapi/linux/bsg.h
-index cd6302def5ed..757118660d86 100644
---- a/include/uapi/linux/bsg.h
-+++ b/include/uapi/linux/bsg.h
-@@ -63,5 +63,54 @@ struct sg_io_v4 {
- 	__u32 padding;
- };
- 
-+struct bsg_uring_cmd {
-+	__u64 request;		/* [i], [*i] command descriptor address */
-+	__u32 request_len;	/* [i] command descriptor length in bytes */
-+	__u32 protocol;		/* [i] protocol type (BSG_PROTOCOL_*) */
-+	__u32 subprotocol;	/* [i] subprotocol type (BSG_SUB_PROTOCOL_*) */
-+	__u32 max_response_len;	/* [i] response buffer size in bytes */
-+
-+	__u64 response;		/* [i], [*o] response data address */
-+	__u64 dout_xferp;	/* [i], [*i] */
-+	__u32 dout_xfer_len;	/* [i] bytes to be transferred to device */
-+	__u32 dout_iovec_count;	/* [i] 0 -> "flat" dout transfer else
-+				 * dout_xferp points to array of iovec
-+				 */
-+	__u64 din_xferp;	/* [i], [*o] */
-+	__u32 din_xfer_len;	/* [i] bytes to be transferred from device */
-+	__u32 din_iovec_count;	/* [i] 0 -> "flat" din transfer */
-+
-+	__u32 timeout_ms;	/* [i] timeout in milliseconds */
-+	__u8  reserved[12];	/* reserved for future extension */
-+};
-+
-+/*
-+ * SCSI BSG io_uring completion (res2, 64-bit)
-+ *
-+ * When using BSG_PROTOCOL_SCSI + BSG_SUB_PROTOCOL_SCSI_CMD with
-+ * IORING_OP_URING_CMD, the completion queue entry (CQE) contains:
-+ *   - result: errno (0 on success)
-+ *   - res2: packed SCSI status; see macros below to decode.
-+ *
-+ * res2 bit layout:
-+ *   [0..7]   device_status  (SCSI status byte, e.g. CHECK_CONDITION)
-+ *   [8..15]  driver_status  (e.g. DRIVER_SENSE when sense data is valid)
-+ *   [16..23] host_status    (e.g. DID_OK, DID_TIME_OUT)
-+ *   [24..31] sense_len_wr   (bytes of sense data written to response buffer)
-+ *   [32..63] resid_len      (residual transfer length)
-+ */
-+#define BSG_SCSI_RES2_DEVICE_STATUS(res2)   ((__u8)((__u64)(res2) & 0xff))
-+#define BSG_SCSI_RES2_DRIVER_STATUS(res2)   ((__u8)((__u64)(res2) >> 8))
-+#define BSG_SCSI_RES2_HOST_STATUS(res2)     ((__u8)((__u64)(res2) >> 16))
-+#define BSG_SCSI_RES2_SENSE_LEN(res2)       ((__u8)((__u64)(res2) >> 24))
-+#define BSG_SCSI_RES2_RESID_LEN(res2)       ((__u32)((__u64)(res2) >> 32))
-+
-+#define BSG_SCSI_RES2_BUILD(device_status, driver_status, host_status,   \
-+			    sense_len_wr, resid_len)			\
-+	(((__u64)(__u32)(resid_len) << 32) |				\
-+	 ((__u64)(__u8)(sense_len_wr) << 24) |				\
-+	 ((__u64)(__u8)(host_status) << 16) |				\
-+	 ((__u64)(__u8)(driver_status) << 8) |				\
-+	 ((__u64)(__u8)(device_status)))
- 
- #endif /* _UAPIBSG_H */
--- 
-2.25.1
++1
 
+IS_ERR_OR_NULL() should always be looked on with suspicion. Very
+little should be returning some tri-state 'ERR' 'NULL' 'SUCCESS'
+pointer. What does the middle condition even mean? IS_ERR_OR_NULL()
+implies ERR and NULL are semanticly the same, so fix the things to
+always use ERR.
+
+If you want to improve things work to get rid of the NULL checks this
+script identifies. Remove ERR or NULL because only one can ever
+happen, or fix the source to consistently return ERR.
+
+Jason
