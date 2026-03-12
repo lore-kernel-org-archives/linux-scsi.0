@@ -1,129 +1,206 @@
-Received: from mail-qk1-f181.google.com (mail-qk1-f181.google.com [209.85.222.181])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B09293C3C01
-	for <linux-scsi@vger.kernel.org>; Thu, 12 Mar 2026 12:57:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.181
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773320257; cv=none; b=hC9eGQEWA8PsFL9ciBKOb2VbzdPnGghX3K8Dve/VMYNR4bfkPOvDuBVLRUylgx1sWEjGkv055oIcJ+8xtJL6NaGXZj1o3hkRKXGf2trk+nnG0+lYFuqcY2x0SpyYZt+WXEbNiB+eXuQXqfWxNvB2369DwlX7vO+16Q2Job8yiOA=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773320257; c=relaxed/simple;
-	bh=Rr1jkAP22lZkLvo3o90a9fRSWh9+kilNKtAarSScWFY=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=oJI5n+aVpjQyl0zTECMn/uIU6ubbfYsRMb82XyHZsooEhpwafpnPgxIkxdDVA5Y8wssuQTaS9lpwWvtgNNREuhlLr2mTtySVQdr6OHf4VFR5yeCIb683M56l7DxJ4QyFKaJ4cKA1Oa3gMX1QB9uHkZEp6YHulz7rUS+0ja6lkTA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca; spf=pass smtp.mailfrom=ziepe.ca; dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b=fHqxjqGD; arc=none smtp.client-ip=209.85.222.181
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziepe.ca
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 166DD3B776A
+	for <linux-scsi@vger.kernel.org>; Thu, 12 Mar 2026 13:39:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=170.10.129.124
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1773322767; cv=pass; b=iSA5e7NUXR6ksdSTIvjyIR+3rTn5qBVu7pXwJX6lcNA8R/uWPsmMMjTyXl8EBd1PmElPiODazmd3XRTW6AtToGLZgNc4u2VH+eXU0SDb+mV99OPKICBqQdcXZLKc9Pup4UQw+7gXKmL+HwdH7XJI3gfZIAtJekqgjNEQN4QAhe8=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1773322767; c=relaxed/simple;
+	bh=L69QmC18hapMhcCCM9aOUH8w0vMV/TSuAPEAAljzmjo=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=rEOmxaz3eJA9wp4EVz3HUpX1uyBBm+JEkvKDbPJayukZDz7/QCA6YUcrV3AxPJl/KRQEKkc7odYNmTN2v18dl1D6KD9OtxU6bSzFRDbVe9+sjqLOkEy6Wf6lGo+lEh4dxNVb2xVrOgfSv2SKAYg8GcOpcVpe9YBO72QlZJyKiQU=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=JeKDyBXi; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=mFrD7SDV; arc=pass smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="fHqxjqGD"
-Received: by mail-qk1-f181.google.com with SMTP id af79cd13be357-8cb40149037so106172285a.2
-        for <linux-scsi@vger.kernel.org>; Thu, 12 Mar 2026 05:57:32 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="JeKDyBXi";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="mFrD7SDV"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1773322765;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=P1afq9gHFIfQK6ABVrm5mHYxKeNKd2BXTj6Ir4QwH/s=;
+	b=JeKDyBXiP2XS4jeVyyP54Kur1+7q4rX5xHpyhpKXJE+CEe8PF8EUSdEhI6c1Q0I8h0cxdO
+	3aWtpavdFwMy9t/lXGbaNe5jVF6Aay5IxwXEDFDN4ShcGrxV0BfVX5LouADHNiOun+ycXD
+	fadBqkCtM3NDdeKxkLp6kZ+5Ht9gX1c=
+Received: from mail-lj1-f200.google.com (mail-lj1-f200.google.com
+ [209.85.208.200]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-101-epAHGO2bNhq-G0HulN8g-w-1; Thu, 12 Mar 2026 09:39:21 -0400
+X-MC-Unique: epAHGO2bNhq-G0HulN8g-w-1
+X-Mimecast-MFC-AGG-ID: epAHGO2bNhq-G0HulN8g-w_1773322760
+Received: by mail-lj1-f200.google.com with SMTP id 38308e7fff4ca-385c90cbca6so5189481fa.1
+        for <linux-scsi@vger.kernel.org>; Thu, 12 Mar 2026 06:39:21 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1773322760; cv=none;
+        d=google.com; s=arc-20240605;
+        b=aDP8FSYFn6921prv6ZQWnoCSHDpnNZcFJYKjV1CSJzAvZut5k4y1L5dJrqB9P5BBKl
+         j5BvqmJFZKkqnwl414rtNqyQ8PPacvjElgYfC5BrlZjxJarS2pCqfDtgfMOxqDGM3a4K
+         PfBWOjO1K8+8zJLXeeYf6Bsn2cGs3IwczhmQ08AcKYrFGCBsZrhrYf5y9bvPd80EeF2a
+         GevQM7MkgmprnB9pPIJO7HaMvNTA+K7RhzlugJs+XggF1A6sgdgUUaPoxj5lcisEdWVN
+         lLq2QWg3V2xQtZg+Xi4j5MioFzI0dSfYstZvEoETX1XBt5DXPQfglly/0AtonYUhKaY2
+         TzQg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=P1afq9gHFIfQK6ABVrm5mHYxKeNKd2BXTj6Ir4QwH/s=;
+        fh=jhgJNDV3pL3TcjpSOCp+u6IJuI9fsyo2naqpZEfrRhQ=;
+        b=UAwf4xIBEoTiDsvkFXKxOrk1lM/8rGVc26ahR2X7VRXmb2OMjuqxxr4xgRyLzDoHxV
+         35qpQPjvGksXJhfoWhdw6W/eDbMaGTONQyGctgAJIzUeBifPeGQ1Pb6rIVj62xFq0ldk
+         72wuX3uGL6ixySfdoHvNGQVbNUD30r1lRWWiYwjDdVejT3uJuCx9tBPDz2X84Q+lTXt8
+         ZuQfEX18Hkj++QbD3n6dhlr4fgftwIEDpquO/tIqNF7NqUnmdQD61SD6nXXTauumArLm
+         XWAoFVw/1FMseomeUZm/4/4UXv1sWof3125/81ZtAj0PAiffNheXw7WnlOlG+kuoUXEw
+         4urQ==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ziepe.ca; s=google; t=1773320252; x=1773925052; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=J1SF1XBHkHR0j7NZVucv0LxpGoGXl67PUefLsfwpAbo=;
-        b=fHqxjqGD7mReR8MT2yBowt9MuNKPAKQc++mWcb4ZOttX6YldICO+OnnxWIQjO0C8L5
-         wjOw0Gg7MqV4U+G9pES+s6h1NtZIjaKrBXMW81hrLyc8SxWYHtvQK3FlTjqiyroZskXE
-         jYj0kUENL7Yhu5zg+0UQ91XYlYYlozX9U8uAqBEFaih0fSnDo8kprjTDRYJ58gzKRExo
-         MSUW+Q+e0P2WpZGotx0DuVRaUqq4vGsUUSX1YbPnOxmRUKlXFY/aNRmXMXDbAEfx0Lnn
-         e41FpuPSZjTSuTkWfTMW8e1MvewVXC2p6zLd4GrSZjvSKS4Q06nDQYaSimUW3qR5RhoY
-         JV6A==
+        d=redhat.com; s=google; t=1773322760; x=1773927560; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=P1afq9gHFIfQK6ABVrm5mHYxKeNKd2BXTj6Ir4QwH/s=;
+        b=mFrD7SDVKrdE5gTc1qr2gdfcWS/Wnz309/xCpxkYFbwAeth0t56LQz9Q0QwBI7qsko
+         bO8qmkUABZ4uZNPSMKbD4NGF59YaQxbsPQ2rQT13sZcHCOId0BBNdaagQOi9x0bBaxdP
+         TWYR8uLYUQE3eUOZFFdTbKnnb4GsdlxDjP3zUmWla0BkqP6pExDLb+0R9JGr3oGdajOJ
+         0zY87aMjBCQPVK7XRdxOlw+I/kimdz+n5lFjJ2gFgSI7zsNTCriHFfhjGnvhZPPBR0R0
+         z4rQnlDanMfkBrzQ+PJdnX0BMMrxDTYyzlwnfZ+9+BWlIKyqGXriD8UeiJLZhZmkBjPl
+         JYhQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1773320252; x=1773925052;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=J1SF1XBHkHR0j7NZVucv0LxpGoGXl67PUefLsfwpAbo=;
-        b=le5I7y/4krAS4WejZ0FKk2wKLDIq6pZC2Ysh81EOUG0DTfnFiq7iTbmt6cnRP/fJ7V
-         13omanURY+1VykmCjlYlXYN7n5x1oR9OgZV3RIWbo0dvYqcATfGYohCZXotP8lJ3oV/Z
-         GYm4hoIejaSFqsEPTVQM1afdrPSQ1oGCL5c3k2jlMhvDcm0Lo99HOmN5yM3pmILrWknF
-         ZW545aiMkEfzpomkyebc4SIhTbjGh5tgzTzxJyyJD7iN2GTtNsuBoINP1uazHX7i3aXt
-         +fSMtCauuhsLdW/L5fQRzrMc/+cNbEicgBFLl5x8lmZvjFIFcGBzaw2tTE3VJnXrmN82
-         aCnA==
-X-Forwarded-Encrypted: i=1; AJvYcCWOZ3wcevWIzI5+mGnTbnDqC/xNaiEyXx7X2lRkYeVcBCCildei2hSikVLFLCQP3d8bQGmptHJmXDEb@vger.kernel.org
-X-Gm-Message-State: AOJu0YwvFCCFHeA28yR5uVQDmgbvYr3E2MqSDFCZQm1Q9S8pT3jBfw/w
-	8JsN9HdCVtbidEs9pDKQm2MrHaTMOGY1jWZ91WKvz3Id/m0b1IYRW6j8I3Y7A05fEIg=
-X-Gm-Gg: ATEYQzwSPYLHbZWrGD3SGqUbUvMuzs0Y3TYr+VqB6uXU4JxC00pv3433mgUGIr/KCuD
-	p2rY88QFr8Z6qyW65y4dUfo5U0jXYA2EuAcJ0rSZ5LCJsEtvpCDRnmAtjO/XwlnWSKDyO41/A23
-	IcStjfEjyOWQYYR2I7RElim5LbDwoTEhg80S02R/D5V+/S6rwUHGIEWAVc86MekDg/UEjYErBuZ
-	QA8eXDr8epAFnzb8hzfhQeSFUw/EekZfO78bDWcATrx+gVETqg4WsZnurPpA4p05GqG5FXigMz+
-	7wq0KTB3zeb5QtrVsh1cwUYkWbbq6Lo3MDM8KY5prT1X/bWVLVxcEe90S8zpAclr0eXAI2xC75C
-	rYp1hSoVxITkxnP/Z0VTlKwrgN7WKe0hMqtieoOoLtVqP6DAwPKxiVDSZp5iwXkbTK848Sxp4QL
-	TzBolFn0GuKNYTOLSmM1Jc3gDxshCfrIWABN/5RHka7EXxG8mUIhOV7833WBhrsZ5atKyMm9IQC
-	z3trYt9
-X-Received: by 2002:ac8:5d4d:0:b0:509:cbc:127b with SMTP id d75a77b69052e-5093a1bd58fmr77950521cf.60.1773320251710;
-        Thu, 12 Mar 2026 05:57:31 -0700 (PDT)
-Received: from ziepe.ca (hlfxns017vw-142-162-112-119.dhcp-dynamic.fibreop.ns.bellaliant.net. [142.162.112.119])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-89a65bd318fsm33341196d6.8.2026.03.12.05.57.30
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 12 Mar 2026 05:57:31 -0700 (PDT)
-Received: from jgg by wakko with local (Exim 4.97)
-	(envelope-from <jgg@ziepe.ca>)
-	id 1w0fbW-00000006fKD-1POa;
-	Thu, 12 Mar 2026 09:57:30 -0300
-Date: Thu, 12 Mar 2026 09:57:30 -0300
-From: Jason Gunthorpe <jgg@ziepe.ca>
-To: Kuan-Wei Chiu <visitorckw@gmail.com>
-Cc: Philipp Hahn <phahn-oss@avm.de>, amd-gfx@lists.freedesktop.org,
-	apparmor@lists.ubuntu.com, bpf@vger.kernel.org,
-	ceph-devel@vger.kernel.org, cocci@inria.fr,
-	dm-devel@lists.linux.dev, dri-devel@lists.freedesktop.org,
-	gfs2@lists.linux.dev, intel-gfx@lists.freedesktop.org,
-	intel-wired-lan@lists.osuosl.org, iommu@lists.linux.dev,
-	kvm@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-block@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	linux-btrfs@vger.kernel.org, linux-cifs@vger.kernel.org,
-	linux-clk@vger.kernel.org, linux-erofs@lists.ozlabs.org,
-	linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	linux-gpio@vger.kernel.org, linux-hyperv@vger.kernel.org,
-	linux-input@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-leds@vger.kernel.org, linux-media@vger.kernel.org,
-	linux-mips@vger.kernel.org, linux-mm@kvack.org,
-	linux-modules@vger.kernel.org, linux-mtd@lists.infradead.org,
-	linux-nfs@vger.kernel.org, linux-omap@vger.kernel.org,
-	linux-phy@lists.infradead.org, linux-pm@vger.kernel.org,
-	linux-rockchip@lists.infradead.org, linux-s390@vger.kernel.org,
-	linux-scsi@vger.kernel.org, linux-sctp@vger.kernel.org,
-	linux-security-module@vger.kernel.org, linux-sh@vger.kernel.org,
-	linux-sound@vger.kernel.org,
-	linux-stm32@st-md-mailman.stormreply.com,
-	linux-trace-kernel@vger.kernel.org, linux-usb@vger.kernel.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	ntfs3@lists.linux.dev, samba-technical@lists.samba.org,
-	sched-ext@lists.linux.dev, target-devel@vger.kernel.org,
-	tipc-discussion@lists.sourceforge.net, v9fs@lists.linux.dev
-Subject: Re: [PATCH 00/61] treewide: Use IS_ERR_OR_NULL over manual NULL
- check - refactor
-Message-ID: <20260312125730.GI1469476@ziepe.ca>
-References: <20260310-b4-is_err_or_null-v1-0-bd63b656022d@avm.de>
- <abBlpGKO842B3yl9@google.com>
+        d=1e100.net; s=20230601; t=1773322760; x=1773927560;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=P1afq9gHFIfQK6ABVrm5mHYxKeNKd2BXTj6Ir4QwH/s=;
+        b=Ega6SeA3raho1a4lfrQVXnQnMYR0fxpr34URg4mMDqZSb7kwfW6W4317EvdI1oIdkp
+         IhFEjaa+NxJ7v+/YQI5ymkFpp7Cj9Fk09iVlQFCYc7bNoabDnM3PxPVC8GLQ0ioeTnms
+         EgBaGZFfTrmm+PS5cgfyGcpjAAJauF8PvVyZZ5u21jaiIa54/DmUqaaVQG8QNdej2Zji
+         KMSpZMTmpJ2I7wNsSdJFzLmpWuE88jLFxqGbd0m9iVnF2M+kbTiHY+uhKaFpL0JzMfi0
+         3PyCU0pg0Fe/Omytokr6oJB/5AYUVWjgFsPGeYBQMhqVzlsQ4hV5H7KrNZpDZupgX+SL
+         /aPQ==
+X-Forwarded-Encrypted: i=1; AJvYcCWx+p2nRUMh6WeCmdnd1uT8lZlIjaG4IL0EdkC27TFkEPz+GcI29UzYEImIaV8foB0w2cYhAKpOx8jc@vger.kernel.org
+X-Gm-Message-State: AOJu0Yxef8Pt4SpBvtnMS1yhVUe0BZEYGVSQueBHLSMGgymU8MJk7J7/
+	znSnin31qAG0gk4D0v4nxJcoc3c53izW8fn7G/iNWubpSynGblHssBlQiKTwP5XZHqOQo+DUcS7
+	bzAoga58UjY4zUY9TTgeDb03KiVnLkbNitwv332cPNQKJ7jNpOYf4Yl049Xf8Gls6LosiDVTjGL
+	3qoheARnYEwix2cP2NkHffQVEcO7jutMh21z+Itg==
+X-Gm-Gg: ATEYQzzIBSxDXJMY1vNDntGPzKY0z49zFqA2P8uWuQ1WG9hR2VojEBmccitLVRYzzXL
+	eNLTfxVrDU6b0SMwvU3kfXwK377cqu13NjIqOCHcHPBvvkw9q1gCCCvH8/ef+njIVWln534Gqa4
+	hm3ssqqbDQbcJDwpOKtmiIsqriEeOeJcNWx7tIglMEW+4Z3eGHP/R2qsNd5K8VGdiVwSyebEo62
+	L76
+X-Received: by 2002:a2e:a991:0:b0:38a:69ae:ed76 with SMTP id 38308e7fff4ca-38a69af0e32mr23484901fa.8.1773322759832;
+        Thu, 12 Mar 2026 06:39:19 -0700 (PDT)
+X-Received: by 2002:a2e:a991:0:b0:38a:69ae:ed76 with SMTP id
+ 38308e7fff4ca-38a69af0e32mr23484641fa.8.1773322759293; Thu, 12 Mar 2026
+ 06:39:19 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <abBlpGKO842B3yl9@google.com>
+References: <20260311171209.9205-1-djeffery@redhat.com> <20260311171209.9205-2-djeffery@redhat.com>
+ <932d4e59-395f-4022-a2de-874fdea778ac@acm.org>
+In-Reply-To: <932d4e59-395f-4022-a2de-874fdea778ac@acm.org>
+From: David Jeffery <djeffery@redhat.com>
+Date: Thu, 12 Mar 2026 09:39:06 -0400
+X-Gm-Features: AaiRm50cC3-HopgnDbEpZBKck8Qg_3xXUFA0iihGZz6Xo1ScI6fOim-Jwqz1X4I
+Message-ID: <CA+-xHTFnOtFqFeH=Va1vTC3qaa2J_tDCfpdq-RdHFFbByoNobg@mail.gmail.com>
+Subject: Re: [PATCH 2/5] driver core: separate function to shutdown one device
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: linux-kernel@vger.kernel.org, driver-core@lists.linux.dev, 
+	linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org, 
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>, 
+	Danilo Krummrich <dakr@kernel.org>, Tarun Sahu <tarunsahu@google.com>, 
+	Pasha Tatashin <tatashin@google.com>, =?UTF-8?B?TWljaGHFgiBDxYJhcGnFhHNraQ==?= <mclapinski@google.com>, 
+	Jordan Richards <jordanrichards@google.com>, Ewan Milne <emilne@redhat.com>, 
+	John Meneghini <jmeneghi@redhat.com>, "Lombardi, Maurizio" <mlombard@redhat.com>, 
+	Stuart Hayes <stuart.w.hayes@gmail.com>, Laurence Oberman <loberman@redhat.com>, 
+	Marco Elver <elver@google.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Wed, Mar 11, 2026 at 02:40:36AM +0800, Kuan-Wei Chiu wrote:
+On Wed, Mar 11, 2026 at 2:03=E2=80=AFPM Bart Van Assche <bvanassche@acm.org=
+> wrote:
+>
+> On 3/11/26 10:12 AM, David Jeffery wrote:
+> > +static void shutdown_one_device(struct device *dev)
+> > +{
+> > +     /* hold lock to avoid race with probe/release */
+> > +     if (dev->parent && dev->bus && dev->bus->need_parent_lock)
+> > +             device_lock(dev->parent);
+> > +     device_lock(dev);
+> > +
+> > +     /* Don't allow any more runtime suspends */
+> > +     pm_runtime_get_noresume(dev);
+> > +     pm_runtime_barrier(dev);
+> > +
+> > +     if (dev->class && dev->class->shutdown_pre) {
+> > +             if (initcall_debug)
+> > +                     dev_info(dev, "shutdown_pre\n");
+> > +             dev->class->shutdown_pre(dev);
+> > +     }
+> > +     if (dev->bus && dev->bus->shutdown) {
+> > +             if (initcall_debug)
+> > +                     dev_info(dev, "shutdown\n");
+> > +             dev->bus->shutdown(dev);
+> > +     } else if (dev->driver && dev->driver->shutdown) {
+> > +             if (initcall_debug)
+> > +                     dev_info(dev, "shutdown\n");
+> > +             dev->driver->shutdown(dev);
+> > +     }
+> > +
+> > +     device_unlock(dev);
+> > +     if (dev->parent && dev->bus && dev->bus->need_parent_lock)
+> > +             device_unlock(dev->parent);
+> > +
+> > +     put_device(dev->parent);
+> > +     put_device(dev);
+> > +}
+>
+> Please keep the following code in the caller:
+>
+>         if (dev->parent && dev->bus && dev->bus->need_parent_lock)
+>                 device_lock(dev->parent);
+>
+>         if (dev->parent && dev->bus && dev->bus->need_parent_lock)
+>                 device_unlock(dev->parent);
+>
+>         put_device(dev->parent);
+>         put_device(dev);
+>
+> Additionally, please make sure that the caller is made compatible with
+> lock context analysis (see also
+> https://lore.kernel.org/all/20250206181711.1902989-1-elver@google.com/).
+> All that is required to make this code compatible with lock context
+> analysis is to organize it as follows:
+>
+>         if (dev->parent && dev->bus && dev->bus->need_parent_lock) {
+>                 device_lock(dev->parent);
+>                 shutdown_one_device(dev);
+>                 device_unlock(dev->parent);
+>         } else {
+>                 shutdown_one_device(dev);
+>         }
+>
 
-> IMHO, the necessity of IS_ERR_OR_NULL() often highlights a confusing or
-> flawed API design. It usually implies that the caller is unsure whether
-> a failure results in an error pointer or a NULL pointer. 
+This would also need to either grab another reference or move the
+reference drops since shutdown_one_device may drop the last reference
+the task owns to parent and dev. Since shutdown_one_device ends up
+called in 2 places in the next patch, perhaps would be best to split
+the bulk into another function, then have shutdown_one_device be a
+wrapper like:
 
-+1
+         if (dev->parent && dev->bus && dev->bus->need_parent_lock) {
+                 device_lock(dev->parent);
+                 __shutdown_one_device(dev);
+                 device_unlock(dev->parent);
+         } else {
+                 __shutdown_one_device(dev);
+         }
+         put_device(dev->parent);
+         put_device(dev);
 
-IS_ERR_OR_NULL() should always be looked on with suspicion. Very
-little should be returning some tri-state 'ERR' 'NULL' 'SUCCESS'
-pointer. What does the middle condition even mean? IS_ERR_OR_NULL()
-implies ERR and NULL are semanticly the same, so fix the things to
-always use ERR.
+David Jeffery
 
-If you want to improve things work to get rid of the NULL checks this
-script identifies. Remove ERR or NULL because only one can ever
-happen, or fix the source to consistently return ERR.
-
-Jason
