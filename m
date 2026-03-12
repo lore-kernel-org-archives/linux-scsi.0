@@ -1,162 +1,197 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.17])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f46.google.com (mail-pj1-f46.google.com [209.85.216.46])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 803F638C2DC;
-	Thu, 12 Mar 2026 05:11:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.17
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6AFFEA59
+	for <linux-scsi@vger.kernel.org>; Thu, 12 Mar 2026 07:49:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.46
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773292268; cv=none; b=nIT2n8ACfNLYD4x6DI1InC9JyrFRp7DIdXrmevpZzLqIZHRk0LvxE4m23rg2LvXitIbjAhSPUAovgo9DK1eQBXxqAv/dXZmRex8zO6dfp9PerXz1KD5FNMf/FC70+yDqXC38Kt+7M9iwGBLmQ4VPjUSXwzfd/DdxRQwm7S4oUfY=
+	t=1773301778; cv=none; b=Zpo9T46k7oPIlcN/e3UovL9EhA3n1b9npY2oD/J3egj7FYYEUIw7hOuIekit5ABY/Hs2MlnxybqJUV2XJnPT9cTqBETFHw5y+IWHfgB3Q92q8ZOcV7r9op33hrRzD369dGBLmZE8ZBVhfPeBWDRPIqsfLqwYAVkztNt2vYtM8lc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773292268; c=relaxed/simple;
-	bh=p5/WrTMgXaFFzActxG74w2aUPlAbHxR5XrnLZAuEJD4=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=bkZph/KYEVCDdqDUgd3z2sY/NB2HACLGrEA3Ev/KzGATUdZFUAOXibXHZWzE/xSn3+cMXmHC1l674i+waIbiIXUTwdZDI7jjQ/okoI8RxTkJ3mxm5vZchJ5dzQsrfus2OonXuk1gsUjQJXk6sEabqYA+pCD1/xWj+eaAvJZ68Oc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=jryJekUG; arc=none smtp.client-ip=198.175.65.17
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="jryJekUG"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1773292267; x=1804828267;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=p5/WrTMgXaFFzActxG74w2aUPlAbHxR5XrnLZAuEJD4=;
-  b=jryJekUGGGQwJhN1Up51Ntr+ECDVH3AW5S0pBTbmTZoWVb6oAweGlimN
-   PlfUUGyr24dsIvFNzjaqYbMBAMR146ZlLc1m1NEJ0tnfBol3DIJuzVy3s
-   69c7MWOZ7qGlP5uiP7zKO+3DUYJk757ztwt1LfNvXlfyh/dJoe4eUgxGD
-   pePic4UnxkEh10FhAYBjNma+yT/f7/UeGDI3ltJwwLFbAAJEYBybf/INV
-   sxvpvHg5O/ujpRBAkkHhHowqcMWAnFNgCN5/2w5VgOQ05pdd9YA4wZhm5
-   VSDi0wFb50kHf8aXy5x1XLVpI+2FxRcyaDcW89DohYgalI/SYIXRn+Owq
-   w==;
-X-CSE-ConnectionGUID: dPn9xHWERZS7+nBO63gdWw==
-X-CSE-MsgGUID: AjjGj1j1RDyFICUCtDXAtQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11726"; a="74341837"
-X-IronPort-AV: E=Sophos;i="6.23,115,1770624000"; 
-   d="scan'208";a="74341837"
-Received: from orviesa001.jf.intel.com ([10.64.159.141])
-  by orvoesa109.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Mar 2026 22:11:06 -0700
-X-CSE-ConnectionGUID: 87LtlV16RoaXm4u1eKexlA==
-X-CSE-MsgGUID: 0BwqtQi+S0iWJ8cMC6bcOg==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.23,115,1770624000"; 
-   d="scan'208";a="258605653"
-Received: from igk-lkp-server01.igk.intel.com (HELO 9958d990ccf2) ([10.211.93.152])
-  by orviesa001.jf.intel.com with ESMTP; 11 Mar 2026 22:11:02 -0700
-Received: from kbuild by 9958d990ccf2 with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1w0YK3-000000003SX-0PTy;
-	Thu, 12 Mar 2026 05:10:59 +0000
-Date: Thu, 12 Mar 2026 06:10:51 +0100
-From: kernel test robot <lkp@intel.com>
-To: David Jeffery <djeffery@redhat.com>, linux-kernel@vger.kernel.org,
-	driver-core@lists.linux.dev, linux-pci@vger.kernel.org,
-	linux-scsi@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Danilo Krummrich <dakr@kernel.org>
-Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
-	Tarun Sahu <tarunsahu@google.com>,
-	Pasha Tatashin <tatashin@google.com>,
-	=?utf-8?B?TWljaGHFgiBDxYJhcGnFhHNraQ==?= <mclapinski@google.com>,
-	Jordan Richards <jordanrichards@google.com>,
-	Ewan Milne <emilne@redhat.com>,
-	John Meneghini <jmeneghi@redhat.com>,
-	"Lombardi, Maurizio" <mlombard@redhat.com>,
-	David Jeffery <djeffery@redhat.com>,
-	Stuart Hayes <stuart.w.hayes@gmail.com>,
-	Laurence Oberman <loberman@redhat.com>
-Subject: Re: [PATCH 2/5] driver core: separate function to shutdown one device
-Message-ID: <202603120643.h7j4avWA-lkp@intel.com>
-References: <20260311171209.9205-2-djeffery@redhat.com>
+	s=arc-20240116; t=1773301778; c=relaxed/simple;
+	bh=r2PdE6HYGVzZYpXyEn5kett8unUMILRQGQuMPOiuUPo=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=Vx8j3Spcadre4AN6nTGKPsy9cBWFmUJ7uttD2jUiTFTzUa+V2eu+dFEwuu79maRCsXBCdIpllAk0BgDLSH9Ww8HjhL6rWH0wxxzCxqjGLnwaYXAPZ3ni7MPEsUftDxyJYOm+4zMoLg4U66d3/jrrpDN+iJVT9G3w0NTkTNNmFK0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.216.46
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Received: by mail-pj1-f46.google.com with SMTP id 98e67ed59e1d1-3591cc98871so351455a91.3
+        for <linux-scsi@vger.kernel.org>; Thu, 12 Mar 2026 00:49:36 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1773301776; x=1773906576;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=/LhKuHInA3JH1whpdNQPR6DLSzWmpT0VhZEHTHtHiaY=;
+        b=ahxA3hE0i9P7yVky2O1spxLa18ukL9jQ/sYNkGpl28CpkBXw48pbqtXAQio/3i+Tq6
+         MDCTJBPpQVlYqtHVwK/edjnR0FC/IkkOIio8pPR7pMEXEG9HJq6c2MV+XreCCDsre7jl
+         r+2dDbk8TtUOQO0hiuctWGyORi/+8NGuLfp/cVYky2kgSPvVba+bZpi0hR+cRD9ZcC83
+         q0/tNVGm+bEUCO+tRyJmPTQFW/q8omicdiMDlsZZb1xyBK+4u+ol42JtAbazZoBvYE4E
+         29IcPMcSd6QiELoVDxBWzOlGQwepwV4SzPXCBmVLMXfv2ESEl0ZeA4WvBu1Pr0kdMEWM
+         mzxw==
+X-Forwarded-Encrypted: i=1; AJvYcCXf2ZyXHmC0PfdJAHw5YSyt51suewfE86e6Wa/34VPqu6d/YxiiDt5ENdKzUcBBGtvHOyjTle8IJyMZ@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw2sjbnaQ+Fkgc6QzVcOR0lrNeNJef7VhisxUNmoeQgyl91hubt
+	Z74BAMS+gIVW5u6sAbzwqqis7g/+Vqc2LpEyvhqFDn3cay/Ij61VtILFPbcJrhZ941p2Ag==
+X-Gm-Gg: ATEYQzx/tDkfnaIi0Ru/wF2fgP3CWvj6qCloXYqyJzazynTM4xIbIKdgGiRPqjsUuuO
+	qQvYNR6tnkCAaTHFQ5XqW1im80ASNQgasytyqHUDoed9MflaZ0i9ssg4TaD6G6x5Pta8c8fB+Wg
+	JdhAWzDMBg2mjorpIMZk1a0BIwvXbxt/9TLIsoaHHuzzybOhxwQkEaC8/3E+lWKz+tLPI3soMnP
+	X+lbFocvoDsMdh/ic/0WPAZNBrj4IqdvLc/KJNfnM8DoADmeC6Umt3HR87v+DIoRmOU9KGpPABw
+	nxMaOcD7WSFeJhbBB9DHbaQTEHtSikbqRsXm6TtbcIj+eO9oo85gfLEI1h4EE8ugg3E5HunUl1P
+	LoOgcMGTro8ddl14kSlI9e4ABDxwKwUhyg//QTUlVWM/lWRBWTgFwKqd3IVeVG5dmxKvvsGZVos
+	nH1GqbvVs9+3PWu96JTxazO0FJMXhv5Dw01nJu8B4jPNimL6GZOYI1/LUg7yupK8Q=
+X-Received: by 2002:a17:90b:3d82:b0:359:2204:a29 with SMTP id 98e67ed59e1d1-35a0133cf11mr5298709a91.27.1773301775620;
+        Thu, 12 Mar 2026 00:49:35 -0700 (PDT)
+Received: from mail-dy1-f178.google.com (mail-dy1-f178.google.com. [74.125.82.178])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-359f06ff204sm8349987a91.7.2026.03.12.00.49.35
+        for <linux-scsi@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 12 Mar 2026 00:49:35 -0700 (PDT)
+Received: by mail-dy1-f178.google.com with SMTP id 5a478bee46e88-2be4781d2baso1849479eec.0
+        for <linux-scsi@vger.kernel.org>; Thu, 12 Mar 2026 00:49:35 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AJvYcCXoEU1e2JXvjXZpjl0fwKMBf2ZR5HeSd0Yxz+hl/JTqDTvSRN41yiG9YmngzadkRjyHZdixwsEPNLa6@vger.kernel.org
+X-Received: by 2002:a05:6122:1b0f:b0:56a:9f03:1719 with SMTP id
+ 71dfb90a1353d-56b47483c0fmr2043365e0c.7.1773301414536; Thu, 12 Mar 2026
+ 00:43:34 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260311171209.9205-2-djeffery@redhat.com>
+References: <20260310153506.5181-1-fmancera@suse.de> <20260310153506.5181-2-fmancera@suse.de>
+In-Reply-To: <20260310153506.5181-2-fmancera@suse.de>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Date: Thu, 12 Mar 2026 08:43:23 +0100
+X-Gmail-Original-Message-ID: <CAMuHMdWj-7J5bMq=wpv12CGaV7xtq7=O3nLHLvOT_odxOE4ueA@mail.gmail.com>
+X-Gm-Features: AaiRm50vZ50YS2w5-6lod2s5W_kA6Ap8FK_nMN9HyVzDzz2AFRy7FAD50ZqnaYU
+Message-ID: <CAMuHMdWj-7J5bMq=wpv12CGaV7xtq7=O3nLHLvOT_odxOE4ueA@mail.gmail.com>
+Subject: Re: [PATCH 01/10 net-next v2] ipv6: convert CONFIG_IPV6 to built-in
+ only and clean up Kconfigs
+To: Fernando Fernandez Mancera <fmancera@suse.de>
+Cc: netdev@vger.kernel.org, rbm@suse.com, Jason Gunthorpe <jgg@ziepe.ca>, 
+	Leon Romanovsky <leon@kernel.org>, Selvin Xavier <selvin.xavier@broadcom.com>, 
+	Andrew Lunn <andrew+netdev@lunn.ch>, "David S. Miller" <davem@davemloft.net>, 
+	Eric Dumazet <edumazet@google.com>, Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, 
+	Ido Schimmel <idosch@nvidia.com>, Petr Machata <petrm@nvidia.com>, Simon Horman <horms@kernel.org>, 
+	Saurav Kashyap <skashyap@marvell.com>, Javed Hasan <jhasan@marvell.com>, 
+	"maintainer:BROADCOM BNX2FC 10 GIGABIT FCOE DRIVER" <GR-QLogic-Storage-Upstream@marvell.com>, 
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
+	"Martin K. Petersen" <martin.petersen@oracle.com>, Nilesh Javali <njavali@marvell.com>, 
+	Manish Rangankar <mrangankar@marvell.com>, Varun Prakash <varun@chelsio.com>, 
+	Alexander Aring <aahringo@redhat.com>, David Teigland <teigland@redhat.com>, 
+	Andreas Gruenbacher <agruenba@redhat.com>, Nikolay Aleksandrov <razor@blackwall.org>, 
+	David Ahern <dsahern@kernel.org>, Pablo Neira Ayuso <pablo@netfilter.org>, 
+	Florian Westphal <fw@strlen.de>, Phil Sutter <phil@nwl.cc>, David Howells <dhowells@redhat.com>, 
+	Marc Dionne <marc.dionne@auristor.com>, 
+	Marcelo Ricardo Leitner <marcelo.leitner@gmail.com>, Xin Long <lucien.xin@gmail.com>, 
+	Jon Maloy <jmaloy@redhat.com>, 
+	Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>, 
+	Bjorn Andersson <bjorn.andersson@oss.qualcomm.com>, Arnd Bergmann <arnd@arndb.de>, 
+	Eric Biggers <ebiggers@kernel.org>, Michal Simek <michal.simek@amd.com>, 
+	Luca Weiss <luca.weiss@fairphone.com>, Sven Peter <sven@kernel.org>, 
+	Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>, 
+	Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>, 
+	Andrew Morton <akpm@linux-foundation.org>, David Gow <david@davidgow.net>, 
+	Kuan-Wei Chiu <visitorckw@gmail.com>, Ryota Sakamoto <sakamo.ryota@gmail.com>, 
+	Kir Chou <note351@hotmail.com>, Kuniyuki Iwashima <kuniyu@google.com>, 
+	Herbert Xu <herbert@gondor.apana.org.au>, Vikas Gupta <vikas.gupta@broadcom.com>, 
+	Bhargava Marreddy <bhargava.marreddy@broadcom.com>, 
+	Rajashekar Hudumula <rajashekar.hudumula@broadcom.com>, =?UTF-8?Q?Markus_Bl=C3=B6chl?= <markus@blochl.de>, 
+	Heiner Kallweit <hkallweit1@gmail.com>, open list <linux-kernel@vger.kernel.org>, 
+	"open list:M68K ARCHITECTURE" <linux-m68k@lists.linux-m68k.org>, 
+	"open list:INFINIBAND SUBSYSTEM" <linux-rdma@vger.kernel.org>, 
+	"open list:NETRONOME ETHERNET DRIVERS" <oss-drivers@corigine.com>, 
+	"open list:BROADCOM BNX2FC 10 GIGABIT FCOE DRIVER" <linux-scsi@vger.kernel.org>, 
+	"open list:DISTRIBUTED LOCK MANAGER (DLM)" <gfs2@lists.linux.dev>, "open list:ETHERNET BRIDGE" <bridge@lists.linux.dev>, 
+	"open list:NETFILTER" <netfilter-devel@vger.kernel.org>, 
+	"open list:NETFILTER" <coreteam@netfilter.org>, 
+	"open list:RXRPC SOCKETS (AF_RXRPC)" <linux-afs@lists.infradead.org>, 
+	"open list:SCTP PROTOCOL" <linux-sctp@vger.kernel.org>, 
+	"open list:TIPC NETWORK LAYER" <tipc-discussion@lists.sourceforge.net>
+Content-Type: text/plain; charset="UTF-8"
 
-Hi David,
+Hi Fernando,
 
-kernel test robot noticed the following build warnings:
+On Tue, 10 Mar 2026 at 16:37, Fernando Fernandez Mancera
+<fmancera@suse.de> wrote:
+> Maintaining a modular IPv6 stack offers image size and memory savings
+> for specific setups, this benefit is outweighed by the architectural
+> burden it imposes on the subsystems on implementation and maintenance.
+> Therefore, drop it.
+>
+> Change CONFIG_IPV6 from tristate to bool. Remove all Kconfig
+> dependencies across the tree that explicitly checked for IPV6=m. In
+> addition, remove MODULE_DESCRIPTION(), MODULE_ALIAS(), MODULE_AUTHOR()
+> and MODULE_LICENSE().
+>
+> This is also replacing module_init() by device_initcall(). It is not
+> possible to use fs_initcall() as IPv4 does because that creates a race
+> condition on IPv6 addrconf.
+>
+> Finally, modify the default configs from CONFIG_IPV6=m to CONFIG_IPV6=y
+> except for m68k as according to the bloat-o-meter the image is
+> increasing by 330KB~ and that isn't acceptable. Instead, disable IPv6 on
+> this architecture by default. This is aligned with m68k RAM requirements
+> and recommendations [1].
+>
+> [1] http://www.linux-m68k.org/faq/ram.html
+>
+> Signed-off-by: Fernando Fernandez Mancera <fmancera@suse.de>
 
-[auto build test WARNING on driver-core/driver-core-testing]
-[also build test WARNING on driver-core/driver-core-next driver-core/driver-core-linus jejb-scsi/for-next mkp-scsi/for-next linus/master v7.0-rc3 next-20260311]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+Thanks for your patch!
 
-url:    https://github.com/intel-lab-lkp/linux/commits/David-Jeffery/driver-core-separate-function-to-shutdown-one-device/20260312-011646
-base:   driver-core/driver-core-testing
-patch link:    https://lore.kernel.org/r/20260311171209.9205-2-djeffery%40redhat.com
-patch subject: [PATCH 2/5] driver core: separate function to shutdown one device
-config: x86_64-kexec (https://download.01.org/0day-ci/archive/20260312/202603120643.h7j4avWA-lkp@intel.com/config)
-compiler: clang version 20.1.8 (https://github.com/llvm/llvm-project 87f0227cb60147a26a1eeb4fb06e3b505e9c7261)
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260312/202603120643.h7j4avWA-lkp@intel.com/reproduce)
+>  arch/m68k/configs/amiga_defconfig           | 45 +-------------------
+>  arch/m68k/configs/apollo_defconfig          | 46 +-------------------
+>  arch/m68k/configs/atari_defconfig           | 45 +-------------------
+>  arch/m68k/configs/bvme6000_defconfig        | 45 +-------------------
+>  arch/m68k/configs/hp300_defconfig           | 47 +--------------------
+>  arch/m68k/configs/mac_defconfig             | 45 +-------------------
+>  arch/m68k/configs/multi_defconfig           | 45 +-------------------
+>  arch/m68k/configs/mvme147_defconfig         | 45 +-------------------
+>  arch/m68k/configs/mvme16x_defconfig         | 45 +-------------------
+>  arch/m68k/configs/q40_defconfig             | 45 +-------------------
+>  arch/m68k/configs/sun3_defconfig            | 45 +-------------------
+>  arch/m68k/configs/sun3x_defconfig           | 45 +-------------------
 
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202603120643.h7j4avWA-lkp@intel.com/
+Why are the stats not the same for each file?
 
-All warnings (new ones prefixed by >>):
+> --- a/arch/m68k/configs/apollo_defconfig
+> +++ b/arch/m68k/configs/apollo_defconfig
 
->> drivers/base/core.c:4824:23: warning: variable 'parent' set but not used [-Wunused-but-set-variable]
-    4824 |         struct device *dev, *parent;
-         |                              ^
-   1 warning generated.
+> @@ -384,7 +343,6 @@ CONFIG_FB=y
+>  CONFIG_FRAMEBUFFER_CONSOLE=y
+>  CONFIG_FRAMEBUFFER_CONSOLE_LEGACY_ACCELERATION=y
+>  CONFIG_LOGO=y
+> -# CONFIG_LOGO_LINUX_VGA16 is not set
 
+Unrelated change.
 
-vim +/parent +4824 drivers/base/core.c
+>  # CONFIG_LOGO_LINUX_CLUT224 is not set
+>  CONFIG_HID=m
+>  CONFIG_HIDRAW=y
 
-f9dcdf9ae03c404 David Jeffery      2026-03-11  4818  
-37b0c0203430802 Greg Kroah-Hartman 2007-11-26  4819  /**
-37b0c0203430802 Greg Kroah-Hartman 2007-11-26  4820   * device_shutdown - call ->shutdown() on each device to shutdown.
-37b0c0203430802 Greg Kroah-Hartman 2007-11-26  4821   */
-37b0c0203430802 Greg Kroah-Hartman 2007-11-26  4822  void device_shutdown(void)
-37b0c0203430802 Greg Kroah-Hartman 2007-11-26  4823  {
-f123db8e9d6c84c Benson Leung       2013-09-24 @4824  	struct device *dev, *parent;
-6245838fe4d2ce4 Hugh Daschbach     2010-03-22  4825  
-3297c8fc65af5d4 Pingfan Liu        2018-07-19  4826  	wait_for_device_probe();
-3297c8fc65af5d4 Pingfan Liu        2018-07-19  4827  	device_block_probing();
-3297c8fc65af5d4 Pingfan Liu        2018-07-19  4828  
-65650b35133ff20 Rafael J. Wysocki  2019-10-09  4829  	cpufreq_suspend();
-65650b35133ff20 Rafael J. Wysocki  2019-10-09  4830  
-6245838fe4d2ce4 Hugh Daschbach     2010-03-22  4831  	spin_lock(&devices_kset->list_lock);
-6245838fe4d2ce4 Hugh Daschbach     2010-03-22  4832  	/*
-6245838fe4d2ce4 Hugh Daschbach     2010-03-22  4833  	 * Walk the devices list backward, shutting down each in turn.
-6245838fe4d2ce4 Hugh Daschbach     2010-03-22  4834  	 * Beware that device unplug events may also start pulling
-6245838fe4d2ce4 Hugh Daschbach     2010-03-22  4835  	 * devices offline, even as the system is shutting down.
-6245838fe4d2ce4 Hugh Daschbach     2010-03-22  4836  	 */
-6245838fe4d2ce4 Hugh Daschbach     2010-03-22  4837  	while (!list_empty(&devices_kset->list)) {
-6245838fe4d2ce4 Hugh Daschbach     2010-03-22  4838  		dev = list_entry(devices_kset->list.prev, struct device,
-6245838fe4d2ce4 Hugh Daschbach     2010-03-22  4839  				kobj.entry);
-d1c6c030fcec6f8 Ming Lei           2012-06-22  4840  
-d1c6c030fcec6f8 Ming Lei           2012-06-22  4841  		/*
-d1c6c030fcec6f8 Ming Lei           2012-06-22  4842  		 * hold reference count of device's parent to
-d1c6c030fcec6f8 Ming Lei           2012-06-22  4843  		 * prevent it from being freed because parent's
-d1c6c030fcec6f8 Ming Lei           2012-06-22  4844  		 * lock is to be held
-d1c6c030fcec6f8 Ming Lei           2012-06-22  4845  		 */
-f123db8e9d6c84c Benson Leung       2013-09-24  4846  		parent = get_device(dev->parent);
-6245838fe4d2ce4 Hugh Daschbach     2010-03-22  4847  		get_device(dev);
-6245838fe4d2ce4 Hugh Daschbach     2010-03-22  4848  		/*
-6245838fe4d2ce4 Hugh Daschbach     2010-03-22  4849  		 * Make sure the device is off the kset list, in the
-6245838fe4d2ce4 Hugh Daschbach     2010-03-22  4850  		 * event that dev->*->shutdown() doesn't remove it.
-6245838fe4d2ce4 Hugh Daschbach     2010-03-22  4851  		 */
-6245838fe4d2ce4 Hugh Daschbach     2010-03-22  4852  		list_del_init(&dev->kobj.entry);
-6245838fe4d2ce4 Hugh Daschbach     2010-03-22  4853  		spin_unlock(&devices_kset->list_lock);
-fe6b91f47080eb1 Alan Stern         2011-12-06  4854  
-f9dcdf9ae03c404 David Jeffery      2026-03-11  4855  		shutdown_one_device(dev);
-6245838fe4d2ce4 Hugh Daschbach     2010-03-22  4856  
-6245838fe4d2ce4 Hugh Daschbach     2010-03-22  4857  		spin_lock(&devices_kset->list_lock);
-37b0c0203430802 Greg Kroah-Hartman 2007-11-26  4858  	}
-6245838fe4d2ce4 Hugh Daschbach     2010-03-22  4859  	spin_unlock(&devices_kset->list_lock);
-37b0c0203430802 Greg Kroah-Hartman 2007-11-26  4860  }
-99bcf217183e02e Joe Perches        2010-06-27  4861  
+> --- a/arch/m68k/configs/hp300_defconfig
+> +++ b/arch/m68k/configs/hp300_defconfig
+
+> @@ -386,8 +345,6 @@ CONFIG_FB=y
+>  CONFIG_FRAMEBUFFER_CONSOLE=y
+>  CONFIG_FRAMEBUFFER_CONSOLE_LEGACY_ACCELERATION=y
+>  CONFIG_LOGO=y
+> -# CONFIG_LOGO_LINUX_MONO is not set
+> -# CONFIG_LOGO_LINUX_VGA16 is not set
+
+Two more.
+
+>  CONFIG_HID=m
+>  CONFIG_HIDRAW=y
+>  CONFIG_UHID=m
+
+Gr{oetje,eeting}s,
+
+                        Geert
 
 -- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
