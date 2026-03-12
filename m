@@ -1,114 +1,113 @@
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 166DD3B776A
-	for <linux-scsi@vger.kernel.org>; Thu, 12 Mar 2026 13:39:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 412CB2BE057
+	for <linux-scsi@vger.kernel.org>; Thu, 12 Mar 2026 13:47:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=170.10.129.124
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773322767; cv=pass; b=iSA5e7NUXR6ksdSTIvjyIR+3rTn5qBVu7pXwJX6lcNA8R/uWPsmMMjTyXl8EBd1PmElPiODazmd3XRTW6AtToGLZgNc4u2VH+eXU0SDb+mV99OPKICBqQdcXZLKc9Pup4UQw+7gXKmL+HwdH7XJI3gfZIAtJekqgjNEQN4QAhe8=
+	t=1773323233; cv=pass; b=aBuBITMGyniaXGyh8xGdqqzKYuyDDooUJvjxjRfVfyJA2ouxX5z6flCGi/euWSeg7UYNUuv7t+WzACBeciMelU4Wd0VGS1SUCsBxdT7Cbwmz8NFJhh2rAscdfhCrrrvfZSu1CDJxTukHikFcukjJ8YEelt2qASoeOT1NbvIDKWI=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773322767; c=relaxed/simple;
-	bh=L69QmC18hapMhcCCM9aOUH8w0vMV/TSuAPEAAljzmjo=;
+	s=arc-20240116; t=1773323233; c=relaxed/simple;
+	bh=ZV3VbZ1mNM0aS2EfUb3caDrCm043ueTXRh1wTOrM/Y4=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=rEOmxaz3eJA9wp4EVz3HUpX1uyBBm+JEkvKDbPJayukZDz7/QCA6YUcrV3AxPJl/KRQEKkc7odYNmTN2v18dl1D6KD9OtxU6bSzFRDbVe9+sjqLOkEy6Wf6lGo+lEh4dxNVb2xVrOgfSv2SKAYg8GcOpcVpe9YBO72QlZJyKiQU=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=JeKDyBXi; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=mFrD7SDV; arc=pass smtp.client-ip=170.10.129.124
+	 To:Cc:Content-Type; b=WzrWp0i/yIZSlGWAUsW1PdHr354fRIVRPVOm/l44es3d/JyscKxXIqx4Xq9u+QgBVaB83BWf2QrGoa8/wpEG5rGCz8ciUcZ+ph1yTmeekZwSz7Dg2m9wq+I2HSh/YQ1Vt2zveQSIPVhak8SfWNfg7jcklpcJIL3q8rKtAZ8Dy+k=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=TNJl/l/H; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=lgO31Eej; arc=pass smtp.client-ip=170.10.129.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="JeKDyBXi";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="mFrD7SDV"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="TNJl/l/H";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="lgO31Eej"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1773322765;
+	s=mimecast20190719; t=1773323231;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=P1afq9gHFIfQK6ABVrm5mHYxKeNKd2BXTj6Ir4QwH/s=;
-	b=JeKDyBXiP2XS4jeVyyP54Kur1+7q4rX5xHpyhpKXJE+CEe8PF8EUSdEhI6c1Q0I8h0cxdO
-	3aWtpavdFwMy9t/lXGbaNe5jVF6Aay5IxwXEDFDN4ShcGrxV0BfVX5LouADHNiOun+ycXD
-	fadBqkCtM3NDdeKxkLp6kZ+5Ht9gX1c=
-Received: from mail-lj1-f200.google.com (mail-lj1-f200.google.com
- [209.85.208.200]) by relay.mimecast.com with ESMTP with STARTTLS
+	bh=gdlxH/5WUEaVpOS5WFYwF5v8OUn3hB2b+n1tpHi0S+k=;
+	b=TNJl/l/HQe5oTpBpF3keEC2A2zIdmOtadlKl6X8p17HScOhCMgyur4Z/z9ZuUCubltxLan
+	WjN9aC7lnQ7z2hcSJEp2Y4SRCxLPoO6L4pINd2vrbv29xr074Fy2dph/T7leLOOB7NW+QO
+	SJuXXGg3myGwdzH9NOk698owGs+chQk=
+Received: from mail-lj1-f197.google.com (mail-lj1-f197.google.com
+ [209.85.208.197]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-101-epAHGO2bNhq-G0HulN8g-w-1; Thu, 12 Mar 2026 09:39:21 -0400
-X-MC-Unique: epAHGO2bNhq-G0HulN8g-w-1
-X-Mimecast-MFC-AGG-ID: epAHGO2bNhq-G0HulN8g-w_1773322760
-Received: by mail-lj1-f200.google.com with SMTP id 38308e7fff4ca-385c90cbca6so5189481fa.1
-        for <linux-scsi@vger.kernel.org>; Thu, 12 Mar 2026 06:39:21 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1773322760; cv=none;
+ us-mta-57-pbS7cEzPOiqnXbbXLl089w-1; Thu, 12 Mar 2026 09:47:10 -0400
+X-MC-Unique: pbS7cEzPOiqnXbbXLl089w-1
+X-Mimecast-MFC-AGG-ID: pbS7cEzPOiqnXbbXLl089w_1773323228
+Received: by mail-lj1-f197.google.com with SMTP id 38308e7fff4ca-38a80cbf03cso2689911fa.1
+        for <linux-scsi@vger.kernel.org>; Thu, 12 Mar 2026 06:47:09 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1773323228; cv=none;
         d=google.com; s=arc-20240605;
-        b=aDP8FSYFn6921prv6ZQWnoCSHDpnNZcFJYKjV1CSJzAvZut5k4y1L5dJrqB9P5BBKl
-         j5BvqmJFZKkqnwl414rtNqyQ8PPacvjElgYfC5BrlZjxJarS2pCqfDtgfMOxqDGM3a4K
-         PfBWOjO1K8+8zJLXeeYf6Bsn2cGs3IwczhmQ08AcKYrFGCBsZrhrYf5y9bvPd80EeF2a
-         GevQM7MkgmprnB9pPIJO7HaMvNTA+K7RhzlugJs+XggF1A6sgdgUUaPoxj5lcisEdWVN
-         lLq2QWg3V2xQtZg+Xi4j5MioFzI0dSfYstZvEoETX1XBt5DXPQfglly/0AtonYUhKaY2
-         TzQg==
+        b=EiblovvO8zvVdu7QLMpRyd/IAb1DtRTlcTVordbta3IzHFP9JVf4od7Sm8SrcYG5VM
+         q3MHo0kcMCvyIOZ3hjzre3tBAq6EbydYH8FJKSrzwbTQzLKG1lU5gZfFVCJ5nQecHIfB
+         k0CuLOe49dFtTy33vd09t/aSeWigqprSmdgCASi9EatjuJO1Wc2rCTHm/91jE7PtFF8k
+         Kh71xfR80rFV+Lnd2moVBT1MhHTRHP8iUpldt97nroyyVI3SOyKS/0YXGWleUPAjXE28
+         0MHpGFcnv9XzWZKzPcjClZnwAs7GTp/P/ckx5v+tKnaxQOJ8s527zRwWDBpkGXk/Kwni
+         8YNw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:dkim-signature;
-        bh=P1afq9gHFIfQK6ABVrm5mHYxKeNKd2BXTj6Ir4QwH/s=;
-        fh=jhgJNDV3pL3TcjpSOCp+u6IJuI9fsyo2naqpZEfrRhQ=;
-        b=UAwf4xIBEoTiDsvkFXKxOrk1lM/8rGVc26ahR2X7VRXmb2OMjuqxxr4xgRyLzDoHxV
-         35qpQPjvGksXJhfoWhdw6W/eDbMaGTONQyGctgAJIzUeBifPeGQ1Pb6rIVj62xFq0ldk
-         72wuX3uGL6ixySfdoHvNGQVbNUD30r1lRWWiYwjDdVejT3uJuCx9tBPDz2X84Q+lTXt8
-         ZuQfEX18Hkj++QbD3n6dhlr4fgftwIEDpquO/tIqNF7NqUnmdQD61SD6nXXTauumArLm
-         XWAoFVw/1FMseomeUZm/4/4UXv1sWof3125/81ZtAj0PAiffNheXw7WnlOlG+kuoUXEw
-         4urQ==;
+        bh=gdlxH/5WUEaVpOS5WFYwF5v8OUn3hB2b+n1tpHi0S+k=;
+        fh=CxuwgK6ZRqaY5q5GVVymRl3KxJdWdYgVDl8+gs8jwHY=;
+        b=IdAmT3Ij0tfx1wFxADxaXSVJJi+zNlA6tM1hjBwNXMdIhr1GIojhvNUM3ZKiwCnziS
+         TMMkcZPuI+ucuKnkPNeTjBvrTAW8NciIysxOYaenWNlSk433YbsPKuQkThsM+TURZbu7
+         jmtuIwEleO3uUIHSRqGXxxI2JQ9hL6XZ9CK0Q3gw7+CVSBCLeaiisEqY5OrqTrPE0HRM
+         SeXTvdoD1Vhq03kkfDSHAlVcRotONt/4LO01Ip4WktbFtUkTpxGnmIsvc7Q2LaPgUY4n
+         MJ7apKhm4nUoO+eFj7qaLASh03boUqdlxrRkm4YeLKrYFVED09JJcft4MNDtAbB3c3up
+         Cn1g==;
         darn=vger.kernel.org
 ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1773322760; x=1773927560; darn=vger.kernel.org;
+        d=redhat.com; s=google; t=1773323228; x=1773928028; darn=vger.kernel.org;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=P1afq9gHFIfQK6ABVrm5mHYxKeNKd2BXTj6Ir4QwH/s=;
-        b=mFrD7SDVKrdE5gTc1qr2gdfcWS/Wnz309/xCpxkYFbwAeth0t56LQz9Q0QwBI7qsko
-         bO8qmkUABZ4uZNPSMKbD4NGF59YaQxbsPQ2rQT13sZcHCOId0BBNdaagQOi9x0bBaxdP
-         TWYR8uLYUQE3eUOZFFdTbKnnb4GsdlxDjP3zUmWla0BkqP6pExDLb+0R9JGr3oGdajOJ
-         0zY87aMjBCQPVK7XRdxOlw+I/kimdz+n5lFjJ2gFgSI7zsNTCriHFfhjGnvhZPPBR0R0
-         z4rQnlDanMfkBrzQ+PJdnX0BMMrxDTYyzlwnfZ+9+BWlIKyqGXriD8UeiJLZhZmkBjPl
-         JYhQ==
+        bh=gdlxH/5WUEaVpOS5WFYwF5v8OUn3hB2b+n1tpHi0S+k=;
+        b=lgO31EejrsDVSyJRMnmAsJuX3vE1RlU55aGe+itHS+AM4A0l0fTm7izhrQGUrw9hJB
+         zNnNywQdnhXx+jK8rd9CfyETOlV3HU2edV/7Sq9vcPQfhwjnwR6mnP2QrnVKk2aZsd8i
+         Gsadd8bzvHllb17MKCIQMl25/vBt5Zk78WKBOxrMCKuRKYLfNgC5RnXSQz60ZQoIEgXU
+         QsU8o6Rtu5qLRcucZRmNDR5jCvmvdkSTVhFifjc2muleJo+xcX8Q5QLxO7M9rkjZ+W/F
+         GpULG9EMKnv0qqXWtOjOqkz/xgo0JMiTsszP12hG8rTRL+WheL3jASKJRjVMfdU79GVB
+         HYrg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1773322760; x=1773927560;
+        d=1e100.net; s=20230601; t=1773323228; x=1773928028;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to;
-        bh=P1afq9gHFIfQK6ABVrm5mHYxKeNKd2BXTj6Ir4QwH/s=;
-        b=Ega6SeA3raho1a4lfrQVXnQnMYR0fxpr34URg4mMDqZSb7kwfW6W4317EvdI1oIdkp
-         IhFEjaa+NxJ7v+/YQI5ymkFpp7Cj9Fk09iVlQFCYc7bNoabDnM3PxPVC8GLQ0ioeTnms
-         EgBaGZFfTrmm+PS5cgfyGcpjAAJauF8PvVyZZ5u21jaiIa54/DmUqaaVQG8QNdej2Zji
-         KMSpZMTmpJ2I7wNsSdJFzLmpWuE88jLFxqGbd0m9iVnF2M+kbTiHY+uhKaFpL0JzMfi0
-         3PyCU0pg0Fe/Omytokr6oJB/5AYUVWjgFsPGeYBQMhqVzlsQ4hV5H7KrNZpDZupgX+SL
-         /aPQ==
-X-Forwarded-Encrypted: i=1; AJvYcCWx+p2nRUMh6WeCmdnd1uT8lZlIjaG4IL0EdkC27TFkEPz+GcI29UzYEImIaV8foB0w2cYhAKpOx8jc@vger.kernel.org
-X-Gm-Message-State: AOJu0Yxef8Pt4SpBvtnMS1yhVUe0BZEYGVSQueBHLSMGgymU8MJk7J7/
-	znSnin31qAG0gk4D0v4nxJcoc3c53izW8fn7G/iNWubpSynGblHssBlQiKTwP5XZHqOQo+DUcS7
-	bzAoga58UjY4zUY9TTgeDb03KiVnLkbNitwv332cPNQKJ7jNpOYf4Yl049Xf8Gls6LosiDVTjGL
-	3qoheARnYEwix2cP2NkHffQVEcO7jutMh21z+Itg==
-X-Gm-Gg: ATEYQzzIBSxDXJMY1vNDntGPzKY0z49zFqA2P8uWuQ1WG9hR2VojEBmccitLVRYzzXL
-	eNLTfxVrDU6b0SMwvU3kfXwK377cqu13NjIqOCHcHPBvvkw9q1gCCCvH8/ef+njIVWln534Gqa4
-	hm3ssqqbDQbcJDwpOKtmiIsqriEeOeJcNWx7tIglMEW+4Z3eGHP/R2qsNd5K8VGdiVwSyebEo62
-	L76
-X-Received: by 2002:a2e:a991:0:b0:38a:69ae:ed76 with SMTP id 38308e7fff4ca-38a69af0e32mr23484901fa.8.1773322759832;
-        Thu, 12 Mar 2026 06:39:19 -0700 (PDT)
-X-Received: by 2002:a2e:a991:0:b0:38a:69ae:ed76 with SMTP id
- 38308e7fff4ca-38a69af0e32mr23484641fa.8.1773322759293; Thu, 12 Mar 2026
- 06:39:19 -0700 (PDT)
+        bh=gdlxH/5WUEaVpOS5WFYwF5v8OUn3hB2b+n1tpHi0S+k=;
+        b=WalnrPHnmDWCXbZlS0d0w01r5fvPAug9ggc50hq0NgKiWKK6WWGu18hgIRoHUufx+X
+         ap12Qe/vAAgcKMVwVdeEM/O0bb8xJtE+YaWdKTd/QOhd0ci+gEWUyiK/EGbUgPvjymwv
+         R/Wz0VsJKbUyp18Cxuf6Ylt/7/Z92FfRd3xAn0viFGWfZQ26kVrOq/NyRPbuchj6L2nG
+         Dk1ZutNTauj3H8SFBHkDv2xEDu/Dh/8LuXdO0O/fPeVyv2td7jTT6KMoD6UNUX9jCTzh
+         jNaWfx9UqzppjZafzaprbIxmEibf8YKR/x9Pj7kDvIvR2UKlmhzdZNE6wWGm3GNoY+Z1
+         /4jw==
+X-Forwarded-Encrypted: i=1; AJvYcCU7mLjROgxEwe9Bghq7AHu4KfqAN5a5MkByl5ZHBPGnZwLJONfNwycW31fy+2QVHiCudegKLb4ZrnoP@vger.kernel.org
+X-Gm-Message-State: AOJu0YwQ9LgvAW2b3Oqqvah4oLe6FmmFUYMOpiH9AMLuNTN4147SDusC
+	wFJsVrvQHBdzg0uApxnRpJKmAR4bGefQn/RFrE8KjqEuDY3OzrQuQMpMPDVAhJkoIxwI2vbnXau
+	XalVwvIkq+G0Xt7unHKE3rarPyE3UrZml0T3csSKN/hUSHv/8ROkqVQRj+/XNVMCacRRJvFyaZp
+	ODDTuWy08fTtz4tC5knBR/tn1OnXFlzL6JtnW/+g==
+X-Gm-Gg: ATEYQzxsi8yQMF+DKpAYL1Ugwrps6WeviYkpF5PYaaRecbqH662qLFuse0BgC3YwCzv
+	UjI4NtVv2Pr0yMEFDbTVz7xtFSwwWvXF2SPD9V5lDrgrwVNLDuvtnAc7bznYK0qjnucTmtmpKbQ
+	WYOYqtodnIolmYRxhu3a83Dop/kjgxRhLFtvcqhW9p/Ra6cNuJoP0OYcakJFPv8Wb6PnPTqJB26
+	73Z
+X-Received: by 2002:a05:651c:418a:b0:386:9653:5d52 with SMTP id 38308e7fff4ca-38a67e7491amr23214101fa.34.1773323228371;
+        Thu, 12 Mar 2026 06:47:08 -0700 (PDT)
+X-Received: by 2002:a05:651c:418a:b0:386:9653:5d52 with SMTP id
+ 38308e7fff4ca-38a67e7491amr23213891fa.34.1773323227890; Thu, 12 Mar 2026
+ 06:47:07 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260311171209.9205-1-djeffery@redhat.com> <20260311171209.9205-2-djeffery@redhat.com>
- <932d4e59-395f-4022-a2de-874fdea778ac@acm.org>
-In-Reply-To: <932d4e59-395f-4022-a2de-874fdea778ac@acm.org>
+References: <20260311171209.9205-4-djeffery@redhat.com> <20260311230854.GA1051125@bhelgaas>
+In-Reply-To: <20260311230854.GA1051125@bhelgaas>
 From: David Jeffery <djeffery@redhat.com>
-Date: Thu, 12 Mar 2026 09:39:06 -0400
-X-Gm-Features: AaiRm50cC3-HopgnDbEpZBKck8Qg_3xXUFA0iihGZz6Xo1ScI6fOim-Jwqz1X4I
-Message-ID: <CA+-xHTFnOtFqFeH=Va1vTC3qaa2J_tDCfpdq-RdHFFbByoNobg@mail.gmail.com>
-Subject: Re: [PATCH 2/5] driver core: separate function to shutdown one device
-To: Bart Van Assche <bvanassche@acm.org>
+Date: Thu, 12 Mar 2026 09:46:56 -0400
+X-Gm-Features: AaiRm52AtdZGk-qB4SJr26Fu0GESy8t58w0K_vuANNjeyWOVb3Y93GXrhdA1CIU
+Message-ID: <CA+-xHTFHCvqqg+_XKyvsWUEVo=hqXYARRMVT_nqZkwJOX+o6yQ@mail.gmail.com>
+Subject: Re: [PATCH 4/5] pci: enable async shutdown support
+To: Bjorn Helgaas <helgaas@kernel.org>
 Cc: linux-kernel@vger.kernel.org, driver-core@lists.linux.dev, 
 	linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org, 
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>, 
@@ -116,91 +115,68 @@ Cc: linux-kernel@vger.kernel.org, driver-core@lists.linux.dev,
 	Pasha Tatashin <tatashin@google.com>, =?UTF-8?B?TWljaGHFgiBDxYJhcGnFhHNraQ==?= <mclapinski@google.com>, 
 	Jordan Richards <jordanrichards@google.com>, Ewan Milne <emilne@redhat.com>, 
 	John Meneghini <jmeneghi@redhat.com>, "Lombardi, Maurizio" <mlombard@redhat.com>, 
-	Stuart Hayes <stuart.w.hayes@gmail.com>, Laurence Oberman <loberman@redhat.com>, 
-	Marco Elver <elver@google.com>
+	Stuart Hayes <stuart.w.hayes@gmail.com>, Laurence Oberman <loberman@redhat.com>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, Mar 11, 2026 at 2:03=E2=80=AFPM Bart Van Assche <bvanassche@acm.org=
-> wrote:
+On Wed, Mar 11, 2026 at 7:09=E2=80=AFPM Bjorn Helgaas <helgaas@kernel.org> =
+wrote:
 >
-> On 3/11/26 10:12 AM, David Jeffery wrote:
-> > +static void shutdown_one_device(struct device *dev)
-> > +{
-> > +     /* hold lock to avoid race with probe/release */
-> > +     if (dev->parent && dev->bus && dev->bus->need_parent_lock)
-> > +             device_lock(dev->parent);
-> > +     device_lock(dev);
-> > +
-> > +     /* Don't allow any more runtime suspends */
-> > +     pm_runtime_get_noresume(dev);
-> > +     pm_runtime_barrier(dev);
-> > +
-> > +     if (dev->class && dev->class->shutdown_pre) {
-> > +             if (initcall_debug)
-> > +                     dev_info(dev, "shutdown_pre\n");
-> > +             dev->class->shutdown_pre(dev);
-> > +     }
-> > +     if (dev->bus && dev->bus->shutdown) {
-> > +             if (initcall_debug)
-> > +                     dev_info(dev, "shutdown\n");
-> > +             dev->bus->shutdown(dev);
-> > +     } else if (dev->driver && dev->driver->shutdown) {
-> > +             if (initcall_debug)
-> > +                     dev_info(dev, "shutdown\n");
-> > +             dev->driver->shutdown(dev);
-> > +     }
-> > +
-> > +     device_unlock(dev);
-> > +     if (dev->parent && dev->bus && dev->bus->need_parent_lock)
-> > +             device_unlock(dev->parent);
-> > +
-> > +     put_device(dev->parent);
-> > +     put_device(dev);
-> > +}
+> In subject, to match history:
 >
-> Please keep the following code in the caller:
+>   PCI: Enable async shutdown support
 >
->         if (dev->parent && dev->bus && dev->bus->need_parent_lock)
->                 device_lock(dev->parent);
+> On Wed, Mar 11, 2026 at 01:12:08PM -0400, David Jeffery wrote:
+> > Like its async suspend support, allow pci device shutdown to be perform=
+ed
+> > asynchronously to improve shutdown time.
 >
->         if (dev->parent && dev->bus && dev->bus->need_parent_lock)
->                 device_unlock(dev->parent);
->
->         put_device(dev->parent);
->         put_device(dev);
->
-> Additionally, please make sure that the caller is made compatible with
-> lock context analysis (see also
-> https://lore.kernel.org/all/20250206181711.1902989-1-elver@google.com/).
-> All that is required to make this code compatible with lock context
-> analysis is to organize it as follows:
->
->         if (dev->parent && dev->bus && dev->bus->need_parent_lock) {
->                 device_lock(dev->parent);
->                 shutdown_one_device(dev);
->                 device_unlock(dev->parent);
->         } else {
->                 shutdown_one_device(dev);
->         }
->
+> s/pci/PCI/
+> s/improve/reduce/
 
-This would also need to either grab another reference or move the
-reference drops since shutdown_one_device may drop the last reference
-the task owns to parent and dev. Since shutdown_one_device ends up
-called in 2 places in the next patch, perhaps would be best to split
-the bulk into another function, then have shutdown_one_device be a
-wrapper like:
+Sure, I can clean up the wording.
 
-         if (dev->parent && dev->bus && dev->bus->need_parent_lock) {
-                 device_lock(dev->parent);
-                 __shutdown_one_device(dev);
-                 device_unlock(dev->parent);
-         } else {
-                 __shutdown_one_device(dev);
-         }
-         put_device(dev->parent);
-         put_device(dev);
+> I like how simple this looks, so I hope it all works out.
+>
+> BTW, something seems messed up in your post threading.  I assume this
+> series is supposed to go with the cover letter at
+> https://lore.kernel.org/all/20260311170956.9146-1-djeffery@redhat.com,
+> but the patches don't seem to be replies to the cover letter.
 
-David Jeffery
+This was from an email issue I should have handled better. For some
+reason, send-email hit an error with smtp after sending the cover
+letter and failed to send the rest. When I then sent the rest
+separately, I failed to consider the threading and didn't think to use
+the option to force it to work as a reply to an ID from the already
+sent cover letter.
+
+> >  drivers/pci/probe.c | 2 ++
+> >  1 file changed, 2 insertions(+)
+> >
+> > diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> > index bccc7a4bdd79..4d98bab2163d 100644
+> > --- a/drivers/pci/probe.c
+> > +++ b/drivers/pci/probe.c
+> > @@ -1040,6 +1040,7 @@ static int pci_register_host_bridge(struct pci_ho=
+st_bridge *bridge)
+> >
+> >       bus->bridge =3D get_device(&bridge->dev);
+> >       device_enable_async_suspend(bus->bridge);
+> > +     device_enable_async_shutdown(bus->bridge);
+> >       pci_set_bus_of_node(bus);
+> >       pci_set_bus_msi_domain(bus);
+> >       if (bridge->msi_domain && !dev_get_msi_domain(&bus->dev) &&
+> > @@ -2749,6 +2750,7 @@ void pci_device_add(struct pci_dev *dev, struct p=
+ci_bus *bus)
+> >       pci_reassigndev_resource_alignment(dev);
+> >
+> >       pci_init_capabilities(dev);
+> > +     device_enable_async_shutdown(&dev->dev);
+> >
+> >       /*
+> >        * Add the device to our list of discovered devices
+> > --
+> > 2.53.0
+> >
+>
 
