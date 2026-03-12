@@ -1,46 +1,46 @@
 Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 09E1C3C13EA
-	for <linux-scsi@vger.kernel.org>; Thu, 12 Mar 2026 21:17:34 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 097B926B2DA
+	for <linux-scsi@vger.kernel.org>; Thu, 12 Mar 2026 21:17:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773350256; cv=none; b=L7g+2qu/EaQLjMc5Cb9cgYOYWhI/GTPApKOXQDlBkmFwncic6/QI139oHR1wqRwe3o6S9w5ZsNV8I6meOR1GgIaBR0FrAvkGUR9olJOHP6w83lGBXgfPsnUvpsYgKu9YbKm24s4PHE77QfkNM3yqdgf/wviJTMKWRrPmCHZto7k=
+	t=1773350259; cv=none; b=TsjqTSR7BvinOMLE6UEsvPZiD9Vk59sj8TtFlBqQ2eKq1Uk/92XAtMrs6oBtbn4XwCkBVL+ZsXXUpLocZEdUcfmF8aMXoI2y6whvnL2jpPLso0IKYhi0+uPuAMGOTG7VKads5TDMpOdCZPqKhU6COEYju/vs9mDIQ9kUAuapvh0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773350256; c=relaxed/simple;
-	bh=KeZTp2O1AsE8PDcJN04ve8v4bzfeg5o1XKJfOdK2kjs=;
+	s=arc-20240116; t=1773350259; c=relaxed/simple;
+	bh=sbhSLWFmCOf33Bmmd5Jxo9A3acibyPAIAEHQvtW8JYY=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=mQEJlbGDnUkcux2n8ZoeA41CIwog0udPeTUEGm5u5hjFQAZ4KB/WXeeEMiq2JF0PkGIu3+3TLLMcIfBnl6ZWjRpBtTYRSQ69hgj9zQIJVlqdHBo3weBv3CfBttPVLCo2m/fv7+a5mjCJYUcMaEQ9nzk1oT0n3YfWD8Mpr09T9cc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=4Hdg8yUW; arc=none smtp.client-ip=199.89.1.16
+	 MIME-Version; b=DMG+WtNSGbf22LAaIi39f+TqTGUsV5TnGXYbAH74qeoq+2S83TSvGc7CL2iyd8qgL3DufaH/o583tG68zCXknxdSfSt/8dfFjsvHH96kdZtRjUAFazdHXCMjnrxXoDQ+uAWGmhxquX4Um7+vD3rMTmYyanQD9oqZoJzYMLSl99w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=Llklar8p; arc=none smtp.client-ip=199.89.1.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="4Hdg8yUW"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="Llklar8p"
 Received: from localhost (localhost [127.0.0.1])
-	by 013.lax.mailroute.net (Postfix) with ESMTP id 4fX0nV4znDzlfl8L;
-	Thu, 12 Mar 2026 21:17:34 +0000 (UTC)
+	by 013.lax.mailroute.net (Postfix) with ESMTP id 4fX0nY57Qpzlfl8L;
+	Thu, 12 Mar 2026 21:17:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:mime-version:references:in-reply-to
 	:x-mailer:message-id:date:date:subject:subject:from:from
-	:received:received; s=mr01; t=1773350250; x=1775942251; bh=K33jv
-	ZuiGhmssFpBQ2JG3o3pDqkv1UifTF0bCYPES0A=; b=4Hdg8yUWFPInGoyYYe+pt
-	W35mbbo5twXHy2GZ2j7xNjsHx9pggSCHn0Jf9ACIRUz/pYInvS+lMk8QRxZPLg6a
-	lxSQk1bm6zXPBTu6LrxdBLtR2jSeVOtAG6E9JFNr5wcjLVTnGLjDO+mB3w/cMh0G
-	pcRg2zzFQDVJNH/3k9hmwF9beXiWfpsHoHbwb8q+5xybS4GTB5gJncrt9rZl0rFt
-	Oq0zuIULlpmIW3BtgPt1rL9RehLu+d4254f2UQACDH53UrfJTwtMXMq2HkAkXHLc
-	ulWDDS1KXCybO49EXqm7RqRDiHrFyG/O9rNeGupAgV3ZlQyem423HZFRckNyEkV1
-	g==
+	:received:received; s=mr01; t=1773350252; x=1775942253; bh=jYQnw
+	yX/Zm0i6o4WlDWVmUBahgU7/qbERT4U3oiYZYU=; b=Llklar8pTdibTRmii1ldw
+	a1uZbZaRzLJpBTKcHAdrypyH514cf3GESZKGTWJ4FDdCSme8LRNKgjVnkYSLIGOu
+	jUc+Uv3DV4bIxkCenKS4EF2FMkX4Oy08MubFxAdaLMOLOModtPw7UFDqxbz2Jubn
+	wjsfnDK/tW5mQX4HAfQQSFU/Qf5xDIxnAQ2iFOoraWmJkteWM/uS1Dx7D/G0x/yp
+	/7IQqdbKPmsJ0vQq63L1qPqcDMdAsdQkrdIbqfUeJKLxzopCKP7oSrnJZStyEE14
+	ygSOPkKXZc9u/u/ORxw3l93JoJWv+ZorGz1C+8TFgeOtt9dEtoTDQlkijegmidYt
+	A==
 X-Virus-Scanned: by MailRoute
 Received: from 013.lax.mailroute.net ([127.0.0.1])
  by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id v8KtWxO9WZ3r; Thu, 12 Mar 2026 21:17:30 +0000 (UTC)
+ id t0j4K455QVcF; Thu, 12 Mar 2026 21:17:32 +0000 (UTC)
 Received: from bvanassche.mtv.corp.google.com (unknown [104.135.180.219])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4fX0nP0nZGzlfl5V;
-	Thu, 12 Mar 2026 21:17:28 +0000 (UTC)
+	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4fX0nR1kCfzlfl7l;
+	Thu, 12 Mar 2026 21:17:30 +0000 (UTC)
 From: Bart Van Assche <bvanassche@acm.org>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org,
@@ -49,9 +49,9 @@ Cc: linux-scsi@vger.kernel.org,
 	Manish Rangankar <mrangankar@marvell.com>,
 	GR-QLogic-Storage-Upstream@marvell.com,
 	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-Subject: [PATCH 13/36] scsi: bnx2i: Introduce a local variable
-Date: Thu, 12 Mar 2026 14:15:24 -0700
-Message-ID: <20260312211636.3245119-14-bvanassche@acm.org>
+Subject: [PATCH 14/36] scsi: bnx2i: Prepare for enabling lock context analysis
+Date: Thu, 12 Mar 2026 14:15:25 -0700
+Message-ID: <20260312211636.3245119-15-bvanassche@acm.org>
 X-Mailer: git-send-email 2.53.0.851.ga537e3e6e9-goog
 In-Reply-To: <20260312211636.3245119-1-bvanassche@acm.org>
 References: <20260312211636.3245119-1-bvanassche@acm.org>
@@ -63,46 +63,105 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 
-Prepare for adding a new statement that will use the new local variable
-'conn'. No functionality has been changed.
+Document locking requirements with __must_hold(). Use
+__assume_ctx_lock() to inform the compiler about aliases for
+synchronization objects.
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/bnx2i/bnx2i_hwi.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/scsi/bnx2i/bnx2i_hwi.c   | 8 ++++++++
+ drivers/scsi/bnx2i/bnx2i_iscsi.c | 1 +
+ 2 files changed, 9 insertions(+)
 
 diff --git a/drivers/scsi/bnx2i/bnx2i_hwi.c b/drivers/scsi/bnx2i/bnx2i_hw=
 i.c
-index d24cc2c795d6..4fb68ec8e9b0 100644
+index 4fb68ec8e9b0..5d927880d297 100644
 --- a/drivers/scsi/bnx2i/bnx2i_hwi.c
 +++ b/drivers/scsi/bnx2i/bnx2i_hwi.c
-@@ -1741,6 +1741,7 @@ static void bnx2i_process_async_mesg(struct iscsi_s=
-ession *session,
- 				     struct bnx2i_conn *bnx2i_conn,
- 				     struct cqe *cqe)
- {
-+	struct iscsi_conn *conn =3D bnx2i_conn->cls_conn->dd_data;
- 	struct bnx2i_async_msg *async_cqe;
- 	struct iscsi_async *resp_hdr;
- 	u8 async_event;
-@@ -1751,7 +1752,7 @@ static void bnx2i_process_async_mesg(struct iscsi_s=
-ession *session,
- 	async_event =3D async_cqe->async_event;
+@@ -1347,6 +1347,7 @@ int bnx2i_process_scsi_cmd_resp(struct iscsi_sessio=
+n *session,
 =20
- 	if (async_event =3D=3D ISCSI_ASYNC_MSG_SCSI_EVENT) {
--		iscsi_conn_printk(KERN_ALERT, bnx2i_conn->cls_conn->dd_data,
-+		iscsi_conn_printk(KERN_ALERT, conn,
- 				  "async: scsi events not supported\n");
- 		return;
+ 	resp_cqe =3D (struct bnx2i_cmd_response *)cqe;
+ 	spin_lock_bh(&session->back_lock);
++	__assume_ctx_lock(&conn->session->back_lock);
+ 	task =3D iscsi_itt_to_task(conn,
+ 				 resp_cqe->itt & ISCSI_CMD_RESPONSE_INDEX);
+ 	if (!task)
+@@ -1443,6 +1444,7 @@ static int bnx2i_process_login_resp(struct iscsi_se=
+ssion *session,
+=20
+ 	login =3D (struct bnx2i_login_response *) cqe;
+ 	spin_lock(&session->back_lock);
++	__assume_ctx_lock(&conn->session->back_lock);
+ 	task =3D iscsi_itt_to_task(conn,
+ 				 login->itt & ISCSI_LOGIN_RESPONSE_INDEX);
+ 	if (!task)
+@@ -1511,6 +1513,7 @@ static int bnx2i_process_text_resp(struct iscsi_ses=
+sion *session,
+=20
+ 	text =3D (struct bnx2i_text_response *) cqe;
+ 	spin_lock(&session->back_lock);
++	__assume_ctx_lock(&conn->session->back_lock);
+ 	task =3D iscsi_itt_to_task(conn, text->itt & ISCSI_LOGIN_RESPONSE_INDEX=
+);
+ 	if (!task)
+ 		goto done;
+@@ -1570,6 +1573,7 @@ static int bnx2i_process_tmf_resp(struct iscsi_sess=
+ion *session,
+=20
+ 	tmf_cqe =3D (struct bnx2i_tmf_response *)cqe;
+ 	spin_lock(&session->back_lock);
++	__assume_ctx_lock(&conn->session->back_lock);
+ 	task =3D iscsi_itt_to_task(conn,
+ 				 tmf_cqe->itt & ISCSI_TMF_RESPONSE_INDEX);
+ 	if (!task)
+@@ -1609,6 +1613,7 @@ static int bnx2i_process_logout_resp(struct iscsi_s=
+ession *session,
+=20
+ 	logout =3D (struct bnx2i_logout_response *) cqe;
+ 	spin_lock(&session->back_lock);
++	__assume_ctx_lock(&conn->session->back_lock);
+ 	task =3D iscsi_itt_to_task(conn,
+ 				 logout->itt & ISCSI_LOGOUT_RESPONSE_INDEX);
+ 	if (!task)
+@@ -1698,6 +1703,7 @@ static int bnx2i_process_nopin_mesg(struct iscsi_se=
+ssion *session,
+ 	nop_in =3D (struct bnx2i_nop_in_msg *)cqe;
+=20
+ 	spin_lock(&session->back_lock);
++	__assume_ctx_lock(&conn->session->back_lock);
+ 	hdr =3D (struct iscsi_nopin *)&bnx2i_conn->gen_pdu.resp_hdr;
+ 	memset(hdr, 0, sizeof(struct iscsi_hdr));
+ 	hdr->opcode =3D nop_in->op_code;
+@@ -1758,6 +1764,7 @@ static void bnx2i_process_async_mesg(struct iscsi_s=
+ession *session,
  	}
-@@ -1773,8 +1774,7 @@ static void bnx2i_process_async_mesg(struct iscsi_s=
-ession *session,
- 	resp_hdr->param2 =3D cpu_to_be16(async_cqe->param2);
- 	resp_hdr->param3 =3D cpu_to_be16(async_cqe->param3);
 =20
--	__iscsi_complete_pdu(bnx2i_conn->cls_conn->dd_data,
--			     (struct iscsi_hdr *)resp_hdr, NULL, 0);
-+	__iscsi_complete_pdu(conn, (struct iscsi_hdr *)resp_hdr, NULL, 0);
- 	spin_unlock(&session->back_lock);
+ 	spin_lock(&session->back_lock);
++	__assume_ctx_lock(&conn->session->back_lock);
+ 	resp_hdr =3D (struct iscsi_async *) &bnx2i_conn->gen_pdu.resp_hdr;
+ 	memset(resp_hdr, 0, sizeof(struct iscsi_hdr));
+ 	resp_hdr->opcode =3D async_cqe->op_code;
+@@ -1803,6 +1810,7 @@ static void bnx2i_process_reject_mesg(struct iscsi_=
+session *session,
+ 		bnx2i_unsol_pdu_adjust_rq(bnx2i_conn);
+=20
+ 	spin_lock(&session->back_lock);
++	__assume_ctx_lock(&conn->session->back_lock);
+ 	hdr =3D (struct iscsi_reject *) &bnx2i_conn->gen_pdu.resp_hdr;
+ 	memset(hdr, 0, sizeof(struct iscsi_hdr));
+ 	hdr->opcode =3D reject->op_code;
+diff --git a/drivers/scsi/bnx2i/bnx2i_iscsi.c b/drivers/scsi/bnx2i/bnx2i_=
+iscsi.c
+index 6c80e5b514fd..c868eada72c3 100644
+--- a/drivers/scsi/bnx2i/bnx2i_iscsi.c
++++ b/drivers/scsi/bnx2i/bnx2i_iscsi.c
+@@ -1154,6 +1154,7 @@ static void bnx2i_cpy_scsi_cdb(struct scsi_cmnd *sc=
+, struct bnx2i_cmd *cmd)
  }
 =20
+ static void bnx2i_cleanup_task(struct iscsi_task *task)
++	__must_hold(&task->conn->session->back_lock)
+ {
+ 	struct iscsi_conn *conn =3D task->conn;
+ 	struct bnx2i_conn *bnx2i_conn =3D conn->dd_data;
