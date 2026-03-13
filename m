@@ -1,86 +1,80 @@
-Received: from canpmsgout03.his.huawei.com (canpmsgout03.his.huawei.com [113.46.200.218])
+Received: from mail-m1973171.qiye.163.com (mail-m1973171.qiye.163.com [220.197.31.71])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C0642F5328
-	for <linux-scsi@vger.kernel.org>; Fri, 13 Mar 2026 01:35:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.218
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D855F277CA5;
+	Fri, 13 Mar 2026 02:12:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.71
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773365740; cv=none; b=f/MLq7d4Up2HxXucc2VpABkeqWhp6FkS1cM+dyMrxQXV1NZ2p5UzMpb7VH9MyPH6++CiTgnFCfaJCNde4KRKtF9r6r+jTsUXzYM8jj08kU8dCGMWEcPsOmkC2sn8oHPhSrwF3Or4q3x9qdQcqIicg/vGziNhGHTWnJYo/T2gPnc=
+	t=1773367972; cv=none; b=A1y+Cu9srMs0enHGoRSCUCbMH9V4QBCqBMhwdQEzoEwAGgAmQJoAC29mytOqDJKGMOL5jzIpRPcZuZninsB8XyST6lQFj4bygT5Kby5Ft5mxn9lz92x/qVl6aReH9uREA9/3DrPJ1W/cjLoI+07eL5wOd3OJYgkZAI4pKEh7Bd0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773365740; c=relaxed/simple;
-	bh=ydxrLyCF5Aq69CWOb0JG+87G8HeOZtzzK0LFGFlFzPc=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=clOIyoyJsdYqKxMJDQAYXwKMnsShc38qGDkkMKubV2t9fN2CsrhLyfhfSEAP24jkZELEKdehZHaEqba5/6NbGT/7aO7TH9/1f0bSjmngaI2zLpXhTe3QkunXKnrp4RoI4rOuMO/mg3vydWay5WnrXb1KISYV25iQ6tQfe68HuMc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=RVndYDAo; arc=none smtp.client-ip=113.46.200.218
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+	s=arc-20240116; t=1773367972; c=relaxed/simple;
+	bh=mRIB7NhAO1HviqMsvepXs4bIoiPSrEukukXrVHZOYgo=;
+	h=Cc:Subject:To:References:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=NrpnzHjsdZf5XbolcU13hjGmuouBsBzzVKqrdB+5i0qjd8u+c6sTbwa1ZE3h4cS4l2rvPL0+sNnbomnPZaTozBAkXvh1Lsxc4H8fP/sBJ68SdYdNRN6QN0wl3ZF/KMs59UUrBktQk6gKATkCDphmP5J1VbTzqlLxTATw3K+OVaM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=fWP88vm6; arc=none smtp.client-ip=220.197.31.71
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="RVndYDAo"
-dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
-	c=relaxed/relaxed; q=dns/txt;
-	h=From;
-	bh=oTjj8GDAS+SbEMAfQFA9hlIDPeizDEAK41Ydbne7Kh0=;
-	b=RVndYDAoou2CDBnd/Qvjmdaiub2OlOlC+TRSCyQiL0ctuJ+Koy3oYe+qUEiOfAdM8SOBmbNfj
-	GWMZ5LPIAOKtmfw9YI0p5B7WciDf7OYMOxrmWKOt6DSmDrd8yZKIOitKE27f5gsd+e3HF0kHgG5
-	YI6KTGxnAoQPDw4rop86YFk=
-Received: from mail.maildlp.com (unknown [172.19.162.197])
-	by canpmsgout03.his.huawei.com (SkyGuard) with ESMTPS id 4fX6P772qwzpT0t;
-	Fri, 13 Mar 2026 09:30:19 +0800 (CST)
-Received: from dggpemf500002.china.huawei.com (unknown [7.185.36.57])
-	by mail.maildlp.com (Postfix) with ESMTPS id 73CD340363;
-	Fri, 13 Mar 2026 09:35:34 +0800 (CST)
-Received: from [10.174.179.11] (10.174.179.11) by
- dggpemf500002.china.huawei.com (7.185.36.57) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.11; Fri, 13 Mar 2026 09:35:33 +0800
-Message-ID: <bf6eaa23-bf8a-4919-8165-114923a8f808@huawei.com>
-Date: Fri, 13 Mar 2026 09:35:32 +0800
+	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="fWP88vm6"
+Received: from [172.16.12.17] (unknown [58.22.7.114])
+	by smtp.qiye.163.com (Hmail) with ESMTP id 36c7a8923;
+	Fri, 13 Mar 2026 10:12:38 +0800 (GMT+08:00)
+Cc: shawn.lin@rock-chips.com, Rob Herring <robh@kernel.org>,
+ Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley
+ <conor+dt@kernel.org>, devicetree@vger.kernel.org,
+ linux-scsi@vger.kernel.org, linux-rockchip@lists.infradead.org
+Subject: Re: [PATCH v2] scsi: ufs: drockchip,rk3576-ufshc: dt-bindings: Add
+ new mphy reset item
+To: Bart Van Assche <bvanassche@acm.org>,
+ "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>,
+ Heiko Stuebner <heiko@sntech.de>
+References: <1773276707-24857-1-git-send-email-shawn.lin@rock-chips.com>
+ <b9024d90-6df7-4a2c-85fe-7f5178e7d1cf@acm.org>
+From: Shawn Lin <shawn.lin@rock-chips.com>
+Message-ID: <32093ab4-28aa-f494-1282-56227bd949e4@rock-chips.com>
+Date: Fri, 13 Mar 2026 10:12:37 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.11.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 23/36] scsi: libsas: Prepare for enabling lock context
- analysis
-To: Bart Van Assche <bvanassche@acm.org>, "Martin K . Petersen"
-	<martin.petersen@oracle.com>
-CC: <linux-scsi@vger.kernel.org>, "James E.J. Bottomley"
-	<James.Bottomley@HansenPartnership.com>, Nathan Chancellor
-	<nathan@kernel.org>, Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel
-	<cassel@kernel.org>, John Garry <john.g.garry@oracle.com>, Kees Cook
-	<kees@kernel.org>
-References: <20260312211636.3245119-1-bvanassche@acm.org>
- <20260312211636.3245119-24-bvanassche@acm.org>
-From: Jason Yan <yanaijie@huawei.com>
-In-Reply-To: <20260312211636.3245119-24-bvanassche@acm.org>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+In-Reply-To: <b9024d90-6df7-4a2c-85fe-7f5178e7d1cf@acm.org>
+Content-Type: text/plain; charset=gbk; format=flowed
 Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: kwepems200001.china.huawei.com (7.221.188.67) To
- dggpemf500002.china.huawei.com (7.185.36.57)
+X-HM-Tid: 0a9ce4f79bfb09cckunm77bce527620e7
+X-HM-MType: 1
+X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
+	tZV1koWUFDSUNOT01LS0k3V1ktWUFJV1kPCRoVCBIfWUFZGRhNGVZLT0NIT0xKHh9OSEJWFRQJFh
+	oXVRMBExYaEhckFA4PWVdZGBILWUFZTkNVSUlVTFVKSk9ZV1kWGg8SFR0UWUFZT0tIVUpLSEpKQk
+	xVSktLVUpCS0tZBg++
+DKIM-Signature: a=rsa-sha256;
+	b=fWP88vm6ML1mQOER8/N1zsRulgr1p0ALo5N3PNrkS0JGMI9iItVrwxdKeuDNcniHXqpkdJTyv+5NzWI/U3QsdpUGNh57Tfze0fIe9gAnt9fd0R+xOUVyNPtW5H3gR1NCgkqx/DdNjdbJr74+dMJc9OvHdnDqV7bhgxsSbYRMz2c=; s=default; c=relaxed/relaxed; d=rock-chips.com; v=1;
+	bh=40EDhtURQ1ujkPw8TBboNKLerCY21VM4ZRXSGa5HpGY=;
+	h=date:mime-version:subject:message-id:from;
 
-åœ¨ 2026/3/13 5:15, Bart Van Assche å†™é“:
-> Since Clang requires that lock context annotations only refer to
-> variables that are visible, modify a __must_hold() annotation.
+ÔÚ 2026/03/12 ÐÇÆÚËÄ 22:27, Bart Van Assche Ð´µÀ:
 > 
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-> ---
->   drivers/scsi/libsas/sas_ata.c | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
+> On 3/11/26 5:51 PM, Shawn Lin wrote:
+>> Add the mphy reset property to the devicetree bindings for the Rockchip
+>> RK3576 UFS host controller. The mphy reset signal is used to reset the
+>> physical adapter. Resetting other components while leaving the mphy
+>> unreset may occasionally prevent the UFS controller from successfully
+>> linking up with the device.
 > 
-> diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
-> index 61368e55bf86..2340790c9f6b 100644
-> --- a/drivers/scsi/libsas/sas_ata.c
-> +++ b/drivers/scsi/libsas/sas_ata.c
-> @@ -153,7 +153,7 @@ static void sas_ata_task_done(struct sas_task *task)
->   }
->   
->   static unsigned int sas_ata_qc_issue(struct ata_queued_cmd *qc)
-> -	__must_hold(ap->lock)
-> +	__must_hold(qc->ap->lock)
->   {
->   	struct sas_task *task;
->   	struct scatterlist *sg;
+> I see "drockchip" in the patch subject instead of "rockchip". Is that 
+> perhaps a typo?
 
-Reviewed-by: Jason Yan <yanaijie@huawei.com>
+Ah, my bad. Thanks for noticing this. Will fix it.
+
+> 
+> Bart.
+> 
+> _______________________________________________
+> Linux-rockchip mailing list
+> Linux-rockchip@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-rockchip
+> 
