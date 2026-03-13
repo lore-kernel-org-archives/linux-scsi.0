@@ -1,44 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1FD4E370D42;
-	Fri, 13 Mar 2026 08:00:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E4AE63803D9;
+	Fri, 13 Mar 2026 08:22:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773388812; cv=none; b=u0fSUl+h3DKQgBRrn2qOi/W7yNasIw6I1nrGmCFsmj7n+BDRKZn2K129Y9+0OFEUj6qQvC+u+YrmtyAnxO7WbfCfJg0uL/PAuATg9VFMraxssKrpTcPtf7Ldnp8bJCcsx9XTvxEQBBcMuRz6sPDzMpXSmAh52DO1iYSwm6T6b8M=
+	t=1773390176; cv=none; b=mhMyPvvzQO5BDIrJJ2ZcYG+xXiiJm5Xf91JTLGK+aouvyebjt6fhtIdXVzRaXslyx0ofcIobGDMdhUJ3PLI6nA/7sh0u5ka3ChQhLAuWLKZZn/GTzUaHUrjnVIRGSrVsBWlMwcHcSpDl/BwisYIzpjnK9QKQBo30d5Vn5i12Dq8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773388812; c=relaxed/simple;
-	bh=rPbyzzyhYcYuyC2z700AcTwx4hrO+t7fLbt3hPQWmWw=;
+	s=arc-20240116; t=1773390176; c=relaxed/simple;
+	bh=FFMDDxaT855Ix/TDP2Ll6xNFFN2aEjqsgnS1fdXsQlg=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=W0KJHZuOG6Xk1TmO0PMNZSNShFEdE0dXAH88i58anqno6PRljCMw1PpTHjhZdxwHBoObscgHFgh3UI+TteY8FU/Ebtn+o/J6dIEDY+LyxTu33H5k0GlZR8X3JCHRzz60YO14LdqkfEJV+hSs+hzr6dCbbrT6CiS9J5mOnJZECcU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MRldbB/c; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=YojwKw3ckrZTdL4HqeAxfjDmxorNoKGaXTYeWeVsVDiq0GUn2Vllvh/xHCmjgPJjfV/U/Hc9yj8teYcr82IQL5xcA2/ot1gGGYYudIQYmNq8UR1kHDHXrS6QzN+Y/fFQDa5AVbwAmCBH319Z7oigd2cJMLg7AW0QU5BDabrKvBI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EemAqlKN; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MRldbB/c"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 13669C2BCB4;
-	Fri, 13 Mar 2026 08:00:10 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EemAqlKN"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B28B0C19421;
+	Fri, 13 Mar 2026 08:22:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773388811;
-	bh=rPbyzzyhYcYuyC2z700AcTwx4hrO+t7fLbt3hPQWmWw=;
+	s=k20201202; t=1773390175;
+	bh=FFMDDxaT855Ix/TDP2Ll6xNFFN2aEjqsgnS1fdXsQlg=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=MRldbB/clocZ3MiaQeG2MEMUwOwno35Qbr5d6owUcUsQU3nnPLSiYXhhRtNpCX5DD
-	 I1Kd+izohXccq7pXZGHtGi6k8VdeEzmsmVbu6GuKgBp1qWPcDswRRQTmKdc8aS3Ruc
-	 yKGNYYN/6Ci12muBvEHhz4C9n/89im4BpHgTFRDpZ9IC85U5ugBFi3WN9zXp3C9dHp
-	 I/t/nFiPJ9UvT40ain6ZkWmc0nunASZHU8r1ZoIs7NO6V37axjFCrWkvAfn9241ca7
-	 goMPCFibDYG0UFfVmIhoe0gVa6NvLoeqfE++aYovQ7hb6OXet5ofzNQL9ckiGVhoyf
-	 L3K9Vl7PNPOLQ==
-Date: Fri, 13 Mar 2026 09:00:08 +0100
+	b=EemAqlKNrWIu3cLWwARNCP8JU0mlyJ+/4OimrZmunnnXZU9DTGUyniyNQWd+le20d
+	 A+zJplE8kdsvz/uM6G8FqChKyjrwk+Ypamo4/Fxh2bt6TUaXRRuUBG6fdh+y4r7HSh
+	 9J2sYNTDh2+1RynrsCs9Ugp1lX9ZhY7MSaa7sIJEQS2VKnsRhde/yN1DCH9j/6cTGU
+	 7gVcDrmEmOvPCKRGzLEOe0UGF0GjLucfPY+bQ/5kWRPPggGQbn9Lz3NfRfULP831er
+	 ++Q5b7Ctz+c7op+wm58J/zCNxxqsDscF4zqjAyaMcpYh1QT8pKAVTpEJRwlQIhWQbn
+	 YBEKdMeoih8xg==
+Date: Fri, 13 Mar 2026 09:22:52 +0100
 From: Krzysztof Kozlowski <krzk@kernel.org>
-To: Abel Vesa <abel.vesa@oss.qualcomm.com>
-Cc: Manivannan Sadhasivam <mani@kernel.org>, 
-	Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>, 
+To: Shawn Lin <shawn.lin@rock-chips.com>
+Cc: "James E . J . Bottomley" <James.Bottomley@hansenpartnership.com>, 
+	"Martin K . Petersen" <martin.petersen@oracle.com>, Heiko Stuebner <heiko@sntech.de>, 
 	Bart Van Assche <bvanassche@acm.org>, Rob Herring <robh@kernel.org>, 
-	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
-	Bjorn Andersson <andersson@kernel.org>, linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org, 
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3] scsi: ufs: qcom: dt-bindings: Document the Eliza UFS
- controller
-Message-ID: <20260313-classy-pogona-of-dignity-edb617@quoll>
-References: <20260311-eliza-bindings-ufs-v3-1-498b26864182@oss.qualcomm.com>
+	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, devicetree@vger.kernel.org, 
+	linux-scsi@vger.kernel.org, linux-rockchip@lists.infradead.org
+Subject: Re: [PATCH v3] scsi: ufs: rockchip,rk3576-ufshc: dt-bindings: Add
+ new mphy reset item
+Message-ID: <20260313-attentive-gharial-of-opportunity-b4b254@quoll>
+References: <1773368467-109650-1-git-send-email-shawn.lin@rock-chips.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -47,17 +46,31 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20260311-eliza-bindings-ufs-v3-1-498b26864182@oss.qualcomm.com>
+In-Reply-To: <1773368467-109650-1-git-send-email-shawn.lin@rock-chips.com>
 
-On Wed, Mar 11, 2026 at 03:04:04PM +0200, Abel Vesa wrote:
-> Document the UFS Controller on the Eliza Platform.
+On Fri, Mar 13, 2026 at 10:21:07AM +0800, Shawn Lin wrote:
+> Add the mphy reset property to the devicetree bindings for the Rockchip
+> RK3576 UFS host controller. The mphy reset signal is used to reset the
+> physical adapter. Resetting other components while leaving the mphy
+> unreset may occasionally prevent the UFS controller from successfully
+> linking up with the device.
 > 
-> The IP block version here is 6.0.0, exactly the same as on SM8650.
+> This addresses an intermittent hardware bug where the UFS link fails to
+> establish under specific timing conditions with certain chips. While
+> difficult to reproduce initially, this issue was consistently observed in
+> downstream testing and requires explicit mphy reset control for full
+> stability.
 > 
-> While MCQ reg range is also available on the already documented
-> platforms, enforce only starting with Eliza.
+> Although this change increases the maxItems for resets and adds a new
+> entry (which technically alters the binding ABI), it does not break
+> compatibility for existing Linux systems. The driver uses
+> devm_reset_control_array_get_exclusive() to manage resets, allowing it
+> to function correctly with both older Device Trees (without the mphy
+> entry) and newer ones.
 > 
-> Signed-off-by: Abel Vesa <abel.vesa@oss.qualcomm.com>
+> Fixes: d90e92023771 ("scsi: ufs: dt-bindings: Document Rockchip UFS host controller")
+> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+> ---
 
 Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
 
