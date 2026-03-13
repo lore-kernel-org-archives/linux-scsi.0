@@ -1,48 +1,48 @@
 Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8F2AB3AD503;
-	Fri, 13 Mar 2026 15:35:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 11AD2313267;
+	Fri, 13 Mar 2026 15:37:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773416121; cv=none; b=uDIA8TFXCRA9KrsbbMrD+PTpgsDMMFMZKkYg7f3m4j5Fw+YjjbEsDbrrnwYXfbU/3WwlVi6nItg1Ay/HVoxBlSnR9VEna9XgTBHN3VxV0E9hShh3Dv8GFLIK0EmFWjpO2mNwJTMezd+bQ5kbovSt6jKyevN0kKLHboU7BMm/+4Q=
+	t=1773416240; cv=none; b=gIcz/v+rIlmhcH1CaVoUY0/6lNkklzm+MetyQqQrR2UoD9Z7ivFfJOr81jzyXSyfplQcGPcpDsSDMQYq2lhRlj61I+DM3ToXihsEm11k6URQJ5OJwBhFQmHS74h/ovLkjJTGWY6i4GNYUFxp18EmrxVH3PnUNbCWILsaS6IbdZI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773416121; c=relaxed/simple;
-	bh=S5RrfOTR+vqS01jTUce/jcaNx6XQnb+g25kfAtPKCSA=;
+	s=arc-20240116; t=1773416240; c=relaxed/simple;
+	bh=Lq4Cs/UjN1YYM3lxwRR6FuodfhjXJFuFV3Kw6ipIAkc=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=L8MMq/BjS29GiY2leqTGed4ZPSKtyox3k7kQTpC/ajhN3FYc6U4FeZJMBS6oRmTyyF60XeDeSWjxryoBf0cWCY+lCIT8Z8RhJoBLUFJCU35QUDSx/O3kljzNnb3GEJkwu2SHRu163YIzG/s8/KTDDbP/JqF9267wjA9kj8Ub2co=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=4ULMzX5x; arc=none smtp.client-ip=199.89.1.16
+	 In-Reply-To:Content-Type; b=Fj9sFJBRbbaPEg4d/jfeFR85ycnJV62yqJjoFVqMXLOCn6Xd4zSkHK9i3KUhXgd98rf0jTC3nXCLb3fFVGMwVpKl6yaVyMaoXMR1VmXR/vUeHG+/jbQ0RcsJs+oH+Gxl4WNQgGPTJtEqdH6jbAZYZKnz9lxPTsBp//sTnLUbw9w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=VRBu+av4; arc=none smtp.client-ip=199.89.1.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="4ULMzX5x"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="VRBu+av4"
 Received: from localhost (localhost [127.0.0.1])
-	by 013.lax.mailroute.net (Postfix) with ESMTP id 4fXT861Z43zlfc3r;
-	Fri, 13 Mar 2026 15:35:18 +0000 (UTC)
+	by 013.lax.mailroute.net (Postfix) with ESMTP id 4fXTBQ4k3Zzlfc9G;
+	Fri, 13 Mar 2026 15:37:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:content-type:content-type:in-reply-to
 	:from:from:content-language:references:subject:subject
 	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1773416114; x=1776008115; bh=wxAWdKFlGcE3ZAuy6Sq0YSU7
-	T5KB2Hcae+M7EGn+ZSo=; b=4ULMzX5xit3Hk+GoYHfon6dsqsxbGoMJ3vp7wlrO
-	/l3o1aRI21r1D/FMTRLUYKQmqXm9ghwLVzlddNSk3vGa+zUqwgpTzTBl/Ih0Rr2j
-	CkGpBhjAxpBaJ9VlQ9mtcHVq4iiPidM+gIZ3bxe6obgYa0tm+F5whq0WvqZoYm+K
-	BMIolzbKE1fCdrGY9gSGq+yJwO8si2P8zoH4ejtw7tivkb5JgoZn6kIfgHnmEdzK
-	iDutnB8U3Z4LP1EfQBp7Up2SxzZRO2UETaiJONjK3/O4cHdZnSI+pD7KOgycYsm6
-	+43CXYXZ7ncuGPGolxEin10xlQ0dZTD0xjQV2KaqBPsGKw==
+	 s=mr01; t=1773416235; x=1776008236; bh=fwTlrE7W9YlBzE45EbCXgLTg
+	NZlbjMPq9I9sC+Dm/60=; b=VRBu+av4bYn5bysWUCRxbRTOP8knMpQH8sjMdbvN
+	cURXi3mYoDlPtFv7mXLDTXh6/2doiNcYNsuxAG1rtC6di+Wb6QFvGpjftSR+J34E
+	h9R3i844wX9+U0ytLX9DkDPO2N/NwFjXYRsesDrC8EcDeVBhBSqjkT02oO/Cmtqx
+	ambtUXq1gyyD+Z9NnuScwobnoy9hkacMQwpU6IfTnPSmx/WCOKO+C4+DZuMKMsT3
+	Cg14NPCj3KzvV5nUN7/vjUuAdVsYCL2dLdNN2Thi7Jfv/Zc1IC1DbdoX0gyYEPTX
+	LVsbNAgcBQM+lq2fHPH4I75PXdrMSFfywSWVGIjgiwXxoA==
 X-Virus-Scanned: by MailRoute
 Received: from 013.lax.mailroute.net ([127.0.0.1])
  by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id wklXI8EoBwZP; Fri, 13 Mar 2026 15:35:14 +0000 (UTC)
+ id mhVwUa2RWWsM; Fri, 13 Mar 2026 15:37:15 +0000 (UTC)
 Received: from [100.119.48.131] (unknown [104.135.180.219])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4fXT811DrlzlffvB;
-	Fri, 13 Mar 2026 15:35:12 +0000 (UTC)
-Message-ID: <11e4be87-de2b-4f5d-9f98-522191cc7711@acm.org>
-Date: Fri, 13 Mar 2026 08:35:12 -0700
+	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4fXTBK5Xtczlfc9C;
+	Fri, 13 Mar 2026 15:37:13 +0000 (UTC)
+Message-ID: <aa1e0517-3b90-4c14-aaac-d0f9526e088d@acm.org>
+Date: Fri, 13 Mar 2026 08:37:13 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,41 +50,31 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v7 2/3] bsg: add io_uring command support to generic layer
+Subject: Re: [PATCH v7 3/3] scsi: bsg: add io_uring passthrough handler
 To: Yang Xiuwei <yangxiuwei@kylinos.cn>
 Cc: axboe@kernel.dk, fujita.tomonori@lab.ntt.co.jp,
  James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com,
  linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
 References: <20260312092237.2464560-1-yangxiuwei@kylinos.cn>
- <20260312092237.2464560-2-yangxiuwei@kylinos.cn>
- <96545a0f-2cdf-47ae-bf15-bfb33a35c799@acm.org>
- <20260313073415.102437-2-yangxiuwei@kylinos.cn>
+ <20260312092237.2464560-4-yangxiuwei@kylinos.cn>
+ <e6167003-82e4-4814-9e11-d1609681b5a9@acm.org>
+ <20260313073415.102437-3-yangxiuwei@kylinos.cn>
 Content-Language: en-US
 From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20260313073415.102437-2-yangxiuwei@kylinos.cn>
+In-Reply-To: <20260313073415.102437-3-yangxiuwei@kylinos.cn>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
-
 On 3/13/26 12:34 AM, Yang Xiuwei wrote:
-> To follow your suggestion, I now combine the declarations with the
-> initializations, but I had to keep the dependency order between `bd`
-> and `q`, since `q` is initialized from `bd->queue`. The current version
-> looks like this:
-> 
->          struct bsg_device *bd = to_bsg_device(file_inode(ioucmd->file));
->          bool open_for_write = ioucmd->file->f_mode & FMODE_WRITE;
->          struct request_queue *q = bd->queue;
->          int ret;
-> 		
-> This way we respect the declaration+initialization style and keep the
-> data dependency clear, while following the reverse Christmas tree style
-> as far as it does not conflict with the dependency.
-> Does this arrangement look reasonable to you, or would you prefer a
-> different ordering here?
+> In particular, when there is a
+> tension between keeping the reverse Christmas tree order and making
+> data/control dependencies explicit in the declaration order, I would
+> very much appreciate your advice on how to handle such cases, so that I
+> can do better here and in future patches.
 
-That sounds good to me and I think this is the style followed elsewhere 
-in the Linux kernel.
+I think that combining declarations and initializations is considered 
+more important than strictly ordering declarations from longest to
+shortest.
 
 Thanks,
 
