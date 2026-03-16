@@ -1,139 +1,191 @@
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4FD5B39B95D;
-	Mon, 16 Mar 2026 14:04:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3198F280330;
+	Mon, 16 Mar 2026 14:29:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773669882; cv=none; b=kGQzKIlIsgN0iVkz5ALDftNXLFSfi9gPhEidu8LSdkeZrlM4eE9R6l9Mz+vkWV0v/8NI6MUjZhc5p/4AylMyXyQpyyCKgfYQl0DGw8wuWL3TKF+VlYIbg0MN1CCd4wbQm91fyftxLZ0YxAyzC+WSA3tuirz3mxL8vAiwvhbdnRs=
+	t=1773671356; cv=none; b=h+L1X9DpyE3S73JdT6m29d8IUBTLn6QDc28H3oejTAKKf41M9+K8agOkK8Edx2bBYfBJfQiDQK5B/uC9xOt97EB3Jpd1lFDkYkZ0HHkQaS5iF3ppRAa1KXnUkCBDfVylww13VTsW+locBYu/FGuYvnOMj0o07W9hFhinlzTVc7o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773669882; c=relaxed/simple;
-	bh=mPy27bcHbJYkQHRhzRTcD2juq8WeYLtVss7554Ec/UE=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=pytwbgEkVhRdD/nFkya498QfytWHSN7ci93TAdq1xvO03FZO71kJI658otESszzvOLqg9LAKrcXPjQuIyxuj1c3D4cPJ4USb2hz+c7g4rE/9VZ7xtU7jrt+vyHhIyOIQa9bxuMEmLwneYebitLfIciVtlvTw/cLsT2Bh/yowvNc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=p7/jnTAq; arc=none smtp.client-ip=148.163.156.1
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	s=arc-20240116; t=1773671356; c=relaxed/simple;
+	bh=PFUSnO/9ILgelOXbwjEIMdn/Aab1PlCJ0qMrqAnbvw4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=kRmLJJgqG+p0ZOnxyBW+ErBRLvRF4uzu5DHvEXpQ2mhIBcMNWsnyHshHybW4oNiohniuy8USKRjbUPIn+fCktcvYlWYomxXBMuJJrUP4Pq9h8T/IdFxoxNOIkH81IlvhOKlNDt8jViT5Zsf35tc37Mzj9dymmlsWngoG1isz/vE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZNArTqce; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="p7/jnTAq"
-Received: from pps.filterd (m0353729.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 62FKtSYV737432;
-	Mon, 16 Mar 2026 14:04:27 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-type:date:from:in-reply-to:message-id:mime-version
-	:references:subject:to; s=pp1; bh=9GcvlaVj9JseoW8iTrTJv7aIB+ClD6
-	Y7tN5Boz9Tvt4=; b=p7/jnTAq6McYJRa71Va47wxR26Qh5f3gWp5pirsmD/HNlQ
-	Wypmojdz0/wOQVIPl+sdpChIQ57egOAkWVWOqi9VgJ6isw1aajJFLomKIhryUut+
-	vTIFnX725LAbrvpUEuMf2zEg83d1eHQxnIRrYVbMk3TrHfhn/Xp4n6uJEiNLJ06X
-	G8vgW+84ixRR7A7fkmmHdRUUTfKMegKkqLNTRo5exWCyIeYCD0ssng21EgVlxelM
-	6nN1KGqkWX5gCmm6yauV3ZcA3/FJucWwsjZmn0rGOvWLIy2WcXCKF6pKnkdoH+2S
-	2NpibWPu+TQKd+LgzhL4Bt3fYw4FBCdDLtLEBNQQ==
-Received: from ppma23.wdc07v.mail.ibm.com (5d.69.3da9.ip4.static.sl-reverse.com [169.61.105.93])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4cvybs05rt-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 16 Mar 2026 14:04:26 +0000 (GMT)
-Received: from pps.filterd (ppma23.wdc07v.mail.ibm.com [127.0.0.1])
-	by ppma23.wdc07v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 62GAU3Ad028753;
-	Mon, 16 Mar 2026 14:04:25 GMT
-Received: from smtprelay07.dal12v.mail.ibm.com ([172.16.1.9])
-	by ppma23.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4cwkgk51v6-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 16 Mar 2026 14:04:25 +0000
-Received: from smtpav06.wdc07v.mail.ibm.com (smtpav06.wdc07v.mail.ibm.com [10.39.53.233])
-	by smtprelay07.dal12v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 62GE4OaA23462526
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Mon, 16 Mar 2026 14:04:24 GMT
-Received: from smtpav06.wdc07v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 83E605804E;
-	Mon, 16 Mar 2026 14:04:24 +0000 (GMT)
-Received: from smtpav06.wdc07v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id E57B05803F;
-	Mon, 16 Mar 2026 14:04:23 +0000 (GMT)
-Received: from d (unknown [9.61.72.10])
-	by smtpav06.wdc07v.mail.ibm.com (Postfix) with ESMTPS;
-	Mon, 16 Mar 2026 14:04:23 +0000 (GMT)
-From: Dave Marquardt <davemarq@linux.ibm.com>
-To: Tyllis Xu <livelycarpet87@gmail.com>
-Cc: tyreld@linux.ibm.com, James.Bottomley@HansenPartnership.com,
-        martin.petersen@oracle.com, brking@linux.vnet.ibm.com,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        stable@vger.kernel.org, danisjiang@gmail.com, ychen@northwestern.edu
-Subject: Re: [PATCH] scsi: ibmvfc: fix OOB access in
- ibmvfc_discover_targets_done()
-In-Reply-To: <20260314170151.548614-1-LivelyCarpet87@gmail.com> (Tyllis Xu's
-	message of "Sat, 14 Mar 2026 12:01:50 -0500")
-References: <20260314170151.548614-1-LivelyCarpet87@gmail.com>
-Date: Mon, 16 Mar 2026 09:04:23 -0500
-Message-ID: <87ms07euqg.fsf@linux.ibm.com>
-User-Agent: Gnus/5.13 (Gnus v5.13)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZNArTqce"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 901EFC19421;
+	Mon, 16 Mar 2026 14:29:06 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1773671355;
+	bh=PFUSnO/9ILgelOXbwjEIMdn/Aab1PlCJ0qMrqAnbvw4=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=ZNArTqce345KwAkB2/OySCnh6EME1XoJwR/oAl0lWq7Ylt9gkTfk6stvl4mVK9/3F
+	 KwYOcm79Ed4P16v4AgfrWxgeQ5kXFytmq8JtvKgeAJBHJni4gvkqoXRwSRojWkzMXW
+	 KjdJCy/qJzif6rc5Ha23V7TyHyiPTJueX/dmlebfwa3TllC3B8dzFJIvh09GNdM5hA
+	 U109OB4NNCj4y6zxKWnPMdODpWkf+W9tJkoIot699UjVOMo5rbg+oOW+XblrH75bPT
+	 2K9hfeg+fCNBKA/MiRSMUpOgDleW7qa6JeZtPbHw5YSqiNeQgyfmSpebEkCOjXVHFZ
+	 N7HDaEOyJ+00A==
+Date: Mon, 16 Mar 2026 14:29:04 +0000
+From: "Lorenzo Stoakes (Oracle)" <ljs@kernel.org>
+To: Suren Baghdasaryan <surenb@google.com>
+Cc: Usama Arif <usama.arif@linux.dev>, 
+	Andrew Morton <akpm@linux-foundation.org>, Clemens Ladisch <clemens@ladisch.de>, 
+	Arnd Bergmann <arnd@arndb.de>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
+	"K . Y . Srinivasan" <kys@microsoft.com>, Haiyang Zhang <haiyangz@microsoft.com>, 
+	Wei Liu <wei.liu@kernel.org>, Dexuan Cui <decui@microsoft.com>, Long Li <longli@microsoft.com>, 
+	Alexander Shishkin <alexander.shishkin@linux.intel.com>, Maxime Coquelin <mcoquelin.stm32@gmail.com>, 
+	Alexandre Torgue <alexandre.torgue@foss.st.com>, Miquel Raynal <miquel.raynal@bootlin.com>, 
+	Richard Weinberger <richard@nod.at>, Vignesh Raghavendra <vigneshr@ti.com>, 
+	Bodo Stroesser <bostroesser@gmail.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, 
+	David Howells <dhowells@redhat.com>, Marc Dionne <marc.dionne@auristor.com>, 
+	Alexander Viro <viro@zeniv.linux.org.uk>, Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>, 
+	David Hildenbrand <david@kernel.org>, "Liam R . Howlett" <Liam.Howlett@oracle.com>, 
+	Vlastimil Babka <vbabka@kernel.org>, Mike Rapoport <rppt@kernel.org>, Michal Hocko <mhocko@suse.com>, 
+	Jann Horn <jannh@google.com>, Pedro Falcato <pfalcato@suse.de>, linux-kernel@vger.kernel.org, 
+	linux-doc@vger.kernel.org, linux-hyperv@vger.kernel.org, 
+	linux-stm32@st-md-mailman.stormreply.com, linux-arm-kernel@lists.infradead.org, 
+	linux-mtd@lists.infradead.org, linux-staging@lists.linux.dev, linux-scsi@vger.kernel.org, 
+	target-devel@vger.kernel.org, linux-afs@lists.infradead.org, linux-fsdevel@vger.kernel.org, 
+	linux-mm@kvack.org, Ryan Roberts <ryan.roberts@arm.com>
+Subject: Re: [PATCH 05/15] fs: afs: correctly drop reference count on mapping
+ failure
+Message-ID: <2536c05e-e228-404f-9916-906c0447b114@lucifer.local>
+References: <4a5fa45119220b9d99ed72a36308aed01a30d2c1.1773346620.git.ljs@kernel.org>
+ <20260313110745.2573005-1-usama.arif@linux.dev>
+ <c62305d7-22c4-4cf7-969b-fbe214c93b64@lucifer.local>
+ <CAJuCfpFio6n-O-1NkPXrymV0o3UqvHYS8ZOyQtt=JXnZ5dTGhQ@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-TM-AS-GCONF: 00
-X-Proofpoint-Reinject: loops=2 maxloops=12
-X-Authority-Analysis: v=2.4 cv=MMttWcZl c=1 sm=1 tr=0 ts=69b80deb cx=c_pps
- a=3Bg1Hr4SwmMryq2xdFQyZA==:117 a=3Bg1Hr4SwmMryq2xdFQyZA==:17
- a=Yq5XynenixoA:10 a=VkNPw1HP01LnGYTKEx00:22 a=RnoormkPH1_aCDwRdu11:22
- a=uAbxVGIbfxUO_5tXvNgY:22 a=pGLkceISAAAA:8 a=VwQbUJbxAAAA:8 a=VnNF1IyMAAAA:8
- a=F9OWliIrSa7ykrEN07sA:9
-X-Proofpoint-ORIG-GUID: EolokV-Vn9u9N0e0P5MBrHTxebThJoAo
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzE2MDEwNCBTYWx0ZWRfX6qZN48idoYCz
- +T+i5GZSEFX4wpcE/wUK2D5FN+Lnca6h2/vV9WhLvJoFjRKjnuLqdeLXeSXsNuhTGO/21n3Ck3U
- lgXNnONiAjAbUiwYQJxhTROx9Lt8G+2WpgO52dGcnTsJIbYoSwuiZmGHkNc28Ia5ZIQWKPU/evS
- 9t+vKMHY+ZjyzMbCOCjy6iWFSSRv7TMLajH96WzqPDeM17k50we67uqGYu/N4xK3GU/sfBMa39B
- 6rBjO6P2GY8u7469NMhRQeXpwi7l7SD3BbM0s/+y5jWHIIrMLK5t7NGsP10VLu6DNWGo2UF7a3L
- LJbNmHE/6MVNKxdsHLQa1lUKA9lEsK2Rf/ApOdk94jCU23M5HG+8BwQRu56DEBZ7k6EnWynLnvM
- KP1lxf/U2Fy579DCZak1GKK68TlSmXat0M2wZaRwx/wgg71mDHIyvzqVO1NKVC6PHLn6zj/eshi
- OY2a9BcxLyoL7dABVww==
-X-Proofpoint-GUID: 1CWs5HVzl9OknVQy9i86GexwQpW1usNI
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-03-16_04,2026-03-16_03,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- suspectscore=0 lowpriorityscore=0 malwarescore=0 spamscore=0
- priorityscore=1501 impostorscore=0 adultscore=0 phishscore=0 clxscore=1011
- bulkscore=0 classifier=typeunknown authscore=0 authtc= authcc= route=outbound
- adjust=0 reason=mlx scancount=1 engine=8.22.0-2603050001
- definitions=main-2603160104
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAJuCfpFio6n-O-1NkPXrymV0o3UqvHYS8ZOyQtt=JXnZ5dTGhQ@mail.gmail.com>
 
-Tyllis Xu <livelycarpet87@gmail.com> writes:
+On Sun, Mar 15, 2026 at 07:32:54PM -0700, Suren Baghdasaryan wrote:
+> On Fri, Mar 13, 2026 at 5:00 AM Lorenzo Stoakes (Oracle) <ljs@kernel.org> wrote:
+> >
+> > On Fri, Mar 13, 2026 at 04:07:43AM -0700, Usama Arif wrote:
+> > > On Thu, 12 Mar 2026 20:27:20 +0000 "Lorenzo Stoakes (Oracle)" <ljs@kernel.org> wrote:
+> > >
+> > > > Commit 9d5403b1036c ("fs: convert most other generic_file_*mmap() users to
+> > > > .mmap_prepare()") updated AFS to use the mmap_prepare callback in favour of
+> > > > the deprecated mmap callback.
+> > > >
+> > > > However, it did not account for the fact that mmap_prepare can fail to map
+> > > > due to an out of memory error, and thus should not be incrementing a
+> > > > reference count on mmap_prepare.
+>
+> This is a bit confusing. I see the current implementation does
+> afs_add_open_mmap() and then if generic_file_mmap_prepare() fails it
+> does afs_drop_open_mmap(), therefore refcounting seems to be balanced.
+> Is there really a problem?
 
-> A malicious or compromised VIO server can return a num_written value in
-> the discover targets MAD response that exceeds max_targets. This value
-> is stored directly in vhost->num_targets without validation, and is then
-> used as the loop bound in ibmvfc_alloc_targets() to index into disc_buf[],
-> which is only allocated for max_targets entries. Indices at or beyond
-> max_targets access kernel memory outside the DMA-coherent allocation.
-> The out-of-bounds data is subsequently embedded in Implicit Logout and
-> PLOGI MADs that are sent back to the VIO server, leaking kernel memory.
->
-> Fix by clamping num_written to max_targets before storing it.
->
-> Fixes: 072b91f9c651 ("[SCSI] ibmvfc: IBM Power Virtual Fibre Channel Adapter Client Driver")
-> Reported-by: Yuhao Jiang <danisjiang@gmail.com>
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Tyllis Xu <LivelyCarpet87@gmail.com>
-> ---
->  drivers/scsi/ibmvscsi/ibmvfc.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
-> index a20fce04fe79..3dd2adda195e 100644
-> --- a/drivers/scsi/ibmvscsi/ibmvfc.c
-> +++ b/drivers/scsi/ibmvscsi/ibmvfc.c
-> @@ -4966,7 +4966,8 @@ static void ibmvfc_discover_targets_done(struct ibmvfc_event *evt)
->  	switch (mad_status) {
->  	case IBMVFC_MAD_SUCCESS:
->  		ibmvfc_dbg(vhost, "Discover Targets succeeded\n");
-> -		vhost->num_targets = be32_to_cpu(rsp->num_written);
-> +		vhost->num_targets = min_t(u32, be32_to_cpu(rsp->num_written),
-> +					   max_targets);
->  		ibmvfc_set_host_action(vhost, IBMVFC_HOST_ACTION_ALLOC_TGTS);
->  		break;
->  	case IBMVFC_MAD_FAILED:
+Firstly, mmap_prepare is invoked before we try to merge, so the VMA could in
+theory get merged and then the refcounting will be wrong.
 
-Reviewed-by: Dave Marquardt <davemarq@linux.ibm.com>
+Secondly, mmap_prepare occurs at such at time where it is _possible_ that
+allocation failures as described below could happen.
+
+I'll update the commit message to reflect the merge aspect actually.
+
+>
+> > > >
+> > > > With the newly added vm_ops->mapped callback available, we can simply defer
+> > > > this operation to that callback which is only invoked once the mapping is
+> > > > successfully in place (but not yet visible to userspace as the mmap and VMA
+> > > > write locks are held).
+> > > >
+> > > > Therefore add afs_mapped() to implement this callback for AFS.
+> > > >
+> > > > In practice the mapping allocations are 'too small to fail' so this is
+> > > > something that realistically should never happen in practice (or would do
+> > > > so in a case where the process is about to die anyway), but we should still
+> > > > handle this.
+>
+> nit: I would drop the above paragraph. If it's impossible why are you
+> handling it? If it's unlikely, then handling it is even more
+> important.
+
+Sure I can drop it, but it's an ongoing thing with these small allocations.
+
+I wish we could just move to a scenario where we can simpy assume allocations
+will always succeed :)
+
+Vlasta - thoughts?
+
+Cheers, Lorenzo
+
+>
+> > > >
+> > > > Signed-off-by: Lorenzo Stoakes (Oracle) <ljs@kernel.org>
+> > > > ---
+> > > >  fs/afs/file.c | 20 ++++++++++++++++----
+> > > >  1 file changed, 16 insertions(+), 4 deletions(-)
+> > > >
+> > > > diff --git a/fs/afs/file.c b/fs/afs/file.c
+> > > > index f609366fd2ac..69ef86f5e274 100644
+> > > > --- a/fs/afs/file.c
+> > > > +++ b/fs/afs/file.c
+> > > > @@ -28,6 +28,8 @@ static ssize_t afs_file_splice_read(struct file *in, loff_t *ppos,
+> > > >  static void afs_vm_open(struct vm_area_struct *area);
+> > > >  static void afs_vm_close(struct vm_area_struct *area);
+> > > >  static vm_fault_t afs_vm_map_pages(struct vm_fault *vmf, pgoff_t start_pgoff, pgoff_t end_pgoff);
+> > > > +static int afs_mapped(unsigned long start, unsigned long end, pgoff_t pgoff,
+> > > > +                 const struct file *file, void **vm_private_data);
+> > > >
+> > > >  const struct file_operations afs_file_operations = {
+> > > >     .open           = afs_open,
+> > > > @@ -61,6 +63,7 @@ const struct address_space_operations afs_file_aops = {
+> > > >  };
+> > > >
+> > > >  static const struct vm_operations_struct afs_vm_ops = {
+> > > > +   .mapped         = afs_mapped,
+> > > >     .open           = afs_vm_open,
+> > > >     .close          = afs_vm_close,
+> > > >     .fault          = filemap_fault,
+> > > > @@ -500,13 +503,22 @@ static int afs_file_mmap_prepare(struct vm_area_desc *desc)
+> > > >     afs_add_open_mmap(vnode);
+> > >
+> > > Is the above afs_add_open_mmap an additional one, which could cause a reference
+> > > leak? Does the above one need to be removed and only the one in afs_mapped()
+> > > needs to be kept?
+> >
+> > Ah yeah good spot, will fix thanks!
+> >
+> > >
+> > > >
+> > > >     ret = generic_file_mmap_prepare(desc);
+> > > > -   if (ret == 0)
+> > > > -           desc->vm_ops = &afs_vm_ops;
+> > > > -   else
+> > > > -           afs_drop_open_mmap(vnode);
+> > > > +   if (ret)
+> > > > +           return ret;
+> > > > +
+> > > > +   desc->vm_ops = &afs_vm_ops;
+> > > >     return ret;
+> > > >  }
+> > > >
+> > > > +static int afs_mapped(unsigned long start, unsigned long end, pgoff_t pgoff,
+> > > > +                 const struct file *file, void **vm_private_data)
+> > > > +{
+> > > > +   struct afs_vnode *vnode = AFS_FS_I(file_inode(file));
+> > > > +
+> > > > +   afs_add_open_mmap(vnode);
+> > > > +   return 0;
+> > > > +}
+> > > > +
+> > > >  static void afs_vm_open(struct vm_area_struct *vma)
+> > > >  {
+> > > >     afs_add_open_mmap(AFS_FS_I(file_inode(vma->vm_file)));
+> > > > --
+> > > > 2.53.0
+> > > >
+> > > >
+> >
+> > Cheers, Lorenzo
