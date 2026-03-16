@@ -1,66 +1,62 @@
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3FE7325B2FA
-	for <linux-scsi@vger.kernel.org>; Mon, 16 Mar 2026 01:41:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.165.32
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B3FE2459C9;
+	Mon, 16 Mar 2026 01:41:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.177.32
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773625309; cv=none; b=Yt2G+iK/rIpfcdgFmxFs0QKHPbg+Mx3bgC9G2ONKUVeSn4cqHAg1OzTOwJwSSF+3/47Of/PYyqzeNK+fygNHcewGUFJAe7GGU9h4lLwGVuOxQbE3OqFYDzQBtiKyNLG0O0V9eVPDkKUqLaz8yjwWFHEJFX9+dmV/vLGXBxIfe70=
+	t=1773625315; cv=none; b=IBepawFqq/NIJ4iZJzib8fmf0cwXxl01Dgn2ede2ycMNDU3LDyGi7AwpsVDnRROXUxsHCOn4pUxB4WAYFMTudgGrXKLu45XvAp4L9LTpXzKCn6rGVCaFfHlcBA+KitxsX3ZuD6RccEV3GFKQriZHksqpwCEnYuiP9gE84IBWYdI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773625309; c=relaxed/simple;
-	bh=Gp1RnjlYD/GObEpMR8gd8910vbZ9/+0KOnquayh2mjw=;
+	s=arc-20240116; t=1773625315; c=relaxed/simple;
+	bh=y7tclLjDWkYWEPx6oIfqnfKUe+3VOHmHEQZ7AwGuA2M=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Km2kdoFdAB/QaX2F/r7TvropMH4YwWUogfe6fiWLQz6bkfUvpJvc105i18vF7/BJ48NlRjWoqdkOeb9mZUXGESeIAR8Eu9hdENA0+QxkN6xJUz/6lV8asO7bqEJE0Ib6nEa18vlCAo6fiNDQcbSmxp3adcWsgr3ymIuc9+lRuUo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=Y57MtMOg; arc=none smtp.client-ip=205.220.165.32
+	 MIME-Version:Content-Type; b=g57nOxeTKYQB3xrYEkwkpSW5+VwZaj6v4C3Eoy/vjB31YbB0UlBm8f2+2yqsYV4Oxpct/XG8lNEUvKkSnUGuLEJwe9FzHztVAfLcCu9WePbQLScpxB6xyYdXL2v+dDvoXUO/LcH7cvgzKpQzV4q1QjadiQwjMJ4Kr7+NOjbA8B0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=B4Ylz9dn; arc=none smtp.client-ip=205.220.177.32
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Y57MtMOg"
-Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 62FMmRBv4177353;
-	Mon, 16 Mar 2026 01:41:38 GMT
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="B4Ylz9dn"
+Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 62G0dAPo1910558;
+	Mon, 16 Mar 2026 01:41:37 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
 	:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=
-	corp-2025-04-25; bh=lS5Nmckq8BzOO+HU/fwqkdq8Sst6mJg6TrX0okzH9WE=; b=
-	Y57MtMOgZ01d1wD+bDOslPO7c9ghT9juOT31LWU3zuToJi/7RrIiW+v1KJbVmVZo
-	Fe00R/vQZsiDuhmf8tNXtNOSHBxwkiiX4X5QesKmVQr+DJQ/fgRd6NHUnzZrVCOE
-	yJhp4qrNhJgbgOfls98FoOQF09oMXPm8nGZhidGan4wuR1S6BUAR8yS/O0YpJhZp
-	aSpgHRB/BzJ6X4A0vzTigAqibouq2ziCMd6O6yPE6cdEmp67bpDOcIV6QEc8Rh8m
-	w21bI5QZqaGHdgozkICai8XBfxIMWKePRCb7wYRqFXvYAY0J8BhiM+wycNNDl8Cg
-	2uvxwLXijqzqZf2dh7e0QQ==
+	corp-2025-04-25; bh=zDzVy1xNv++WhA1zmgvHcn0JamB8JOaqfCsCgbHoT44=; b=
+	B4Ylz9dn+ruxdm9luBptU/vnfWR3fULsU6Rb7VAjZk2CQTnTu+dP+nD8M7mOqlnU
+	7/cWRhMTzmlXjWSNUoVyI94Y82EDWD6nb64zlPR5C/bDZIsNuI/00BRCkJcfrKUS
+	PaEy2+cGO4QmLD96H0kdO+3aHZ66Iz6OONma242BfQObBSzGAowBSnUS9qsVFI+e
+	xN8P2IzHnFDCb/06x4/YvPaSCNtuurGzoNiLN6Uzx+XUKPUBJyg+oyhuIIw+SAwD
+	1DM9H9CxfmDiXuK4lPloC71IklRE+Sf8+qxW87IYWGeV3SkiSLO99v4gE87XRgAq
+	5wcIvH4p1k4dFcS0jFZxSg==
 Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4cw07r9aqs-1
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4cvxf41bgr-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
 	Mon, 16 Mar 2026 01:41:37 +0000 (GMT)
 Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 62FK3b3V002736;
+	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 62G0mbxh002900;
 	Mon, 16 Mar 2026 01:41:36 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 4cvx4j86np-1
+	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 4cvx4j86nt-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
 	Mon, 16 Mar 2026 01:41:36 +0000
 Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 62G1fXhZ032070;
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 62G1fXhb032070;
 	Mon, 16 Mar 2026 01:41:36 GMT
 Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 4cvx4j86mp-8;
-	Mon, 16 Mar 2026 01:41:35 +0000
+	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 4cvx4j86mp-9;
+	Mon, 16 Mar 2026 01:41:36 +0000
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-To: linux-scsi@vger.kernel.org, avri.altman@sandisk.com,
-        alim.akhtar@samsung.com, jejb@linux.ibm.com, peter.wang@mediatek.com
+To: James.Bottomley@HansenPartnership.com, dlemoal@kernel.org,
+        bvanassche@acm.org, hch@infradead.org, Chaohai Chen <wdhh6@aliyun.com>
 Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
-        wsd_upstream@mediatek.com, linux-mediatek@lists.infradead.org,
-        chun-hung.wu@mediatek.com, alice.chao@mediatek.com,
-        cc.chou@mediatek.com, chaotian.jing@mediatek.com,
-        tun-yu.yu@mediatek.com, eddie.huang@mediatek.com,
-        naomi.chu@mediatek.com, ed.tsai@mediatek.com, bvanassche@acm.org
-Subject: Re: [PATCH v2] ufs: core: Avoid IRQ thread wakeup during active UIC command
-Date: Sun, 15 Mar 2026 21:41:27 -0400
-Message-ID: <177362524479.2599440.14041046227573442647.b4-ty@oracle.com>
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v5] scsi: core: Drop using the host_lock to protect async_scan race condition
+Date: Sun, 15 Mar 2026 21:41:28 -0400
+Message-ID: <177362524465.2599440.17953436562715540427.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260306054419.3816557-1-peter.wang@mediatek.com>
-References: <20260306054419.3816557-1-peter.wang@mediatek.com>
+In-Reply-To: <20260305025125.3649517-1-wdhh6@aliyun.com>
+References: <20260305025125.3649517-1-wdhh6@aliyun.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -76,38 +72,37 @@ X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 phishs
  adultscore=0 malwarescore=0 mlxlogscore=999 suspectscore=0 bulkscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2603050001
  definitions=main-2603160011
-X-Authority-Analysis: v=2.4 cv=HcsZjyE8 c=1 sm=1 tr=0 ts=69b75fd1 b=1 cx=c_pps
+X-Authority-Analysis: v=2.4 cv=ftrRpV4f c=1 sm=1 tr=0 ts=69b75fd1 b=1 cx=c_pps
  a=zPCbziy225d3KhSqZt3L1A==:117 a=zPCbziy225d3KhSqZt3L1A==:17
  a=IkcTkHD0fZMA:10 a=Yq5XynenixoA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=jiCTI4zE5U7BLdzWsZGv:22 a=7Gl3-_t3PgB9XO-mQDs3:22 a=VwQbUJbxAAAA:8
- a=mpaa-ttXAAAA:8 a=qFATSNlW8LwFkCsGeMsA:9 a=QEXdDO2ut3YA:10 a=zZCYzV9kfG8A:10
- cc=ntf awl=host:12271
-X-Proofpoint-ORIG-GUID: m3f0sv0dYCe-_QKN0X64JSSNVPJROIwQ
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzE2MDAxMSBTYWx0ZWRfX/JXjjMWI9X3I
- HOrwuMf/93QG0JJHpBZXcHcEwQLd0YEXGvlOW/vZAuttODBe6AldVE0N3hj+96RENHW0SI0Bvo/
- jYl8JgFPISt7kxn0HaeKiFgd2xKKrqiUdGbMPmFAWpYLXXUDkwD/K6oEzQaxrhSDIn6QqQnkz1W
- 6DOvEeaCnvPZN7dRG9xuu5Ah3UjQAN7Jvw9ch4+rGUusYz7W7GFU7pn4ExgbkY90TR2QGecB0oO
- fZFuGLYmRPgYsGtDvlRN+PtUI+GZElVR7LT8D/Tf/Rg2PdJ16dY9FwWMVFL4OlJQXpL70jfFmeu
- lHETD8dxqdKZuMPMIjgCzrdy+geiKbAzoJprsnnuYSbwt+LZu1KjoXV6ToRUJam7u/ECV7ThAgs
- pYA0yqT963nvws+QEs9vlIeWT2ZxWm72ZilIhsr7LW3fd62a3XYmryOp8GAElRWQ4yIL31HSrY2
- SlBHcBItl1CobqQOvqP5mpsD0wkGDXWfe8Lr8rWo=
-X-Proofpoint-GUID: m3f0sv0dYCe-_QKN0X64JSSNVPJROIwQ
+ a=jiCTI4zE5U7BLdzWsZGv:22 a=o5oIOnhZENCTenyL_yNV:22 a=VwQbUJbxAAAA:8
+ a=zzhHhKhwZC4IQR6QcDYA:9 a=QEXdDO2ut3YA:10 cc=ntf awl=host:12271
+X-Proofpoint-GUID: fuXwdEeqY7WuPOlruJ-jfHVUvHDJAya4
+X-Proofpoint-ORIG-GUID: fuXwdEeqY7WuPOlruJ-jfHVUvHDJAya4
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzE2MDAxMSBTYWx0ZWRfX46Gtr55cXpAt
+ h2S48JwT/RFpQ/nOOLW1QqoSu6JqxxekprUw6O4HR4PTPehcVpJl/Pk1LHjaZLokNenfm4V3Kg8
+ rBeZc2gPbN/smKUE4MnV2pAPWm+ye9ftz9VBHtjyULgvg7p17vRt5KJz3ZGJA332xiNa4IMM3NW
+ ayj7qxFWJlBLtx0h/N4R2qFNl5LXxtvdLBv85TH6urkM2ykjzp/FobOJoZADq4J0YsPri59I3PR
+ zOz2bHNXU5V7zxagRwu14J1gfr0lRB1FFORzQOVqDeQeHVcCKHcmpU/YQIf66R7qoq2Tl8bYtMh
+ tBUr1oncDM1JOO8ulWgETi0juJyRs0u0B5LKchn7/9j7mfyNrdPdSYZRNwo9yzuXliOKXefadLE
+ 09PZCHY8ZF2wx0CiBsfL/HtLkRgDG9w2p3aaUgecHIGmob4J+8wke3DfQ5aQSkilZNFTQ25yRKV
+ SYNBoRHfr9FV2nx9sN1R60ze9/zcEj2tdVklMz9M=
 
-On Fri, 06 Mar 2026 13:43:02 +0800, peter.wang@mediatek.com wrote:
+On Thu, 05 Mar 2026 10:51:24 +0800, Chaohai Chen wrote:
 
-> Only return IRQ_WAKE_THREAD when MCQ and ESI are not enabled
-> and no UIC command is active. The default UIC command timeout
-> is 500ms, Using threaded IRQs during an active UIC command
-> increases the risk of timeout due to possible preemption
-> by other system IRQs.
+> Previously, host_lock was used to prevent bit-set conflicts in async_scan,
+> but this approach introduced naked reads in some code paths.
 > 
+> Convert async_scan from a bitfield to a bool type to eliminate bit-level
+> conflicts entirely. Use __guarded_by(&scan_mutex) to indicate that the
+> async_scan variable is protected by scan_mutex.
 > 
 > [...]
 
 Applied to 7.1/scsi-queue, thanks!
 
-[1/1] ufs: core: Avoid IRQ thread wakeup during active UIC command
-      https://git.kernel.org/mkp/scsi/c/6475cfb81fc4
+[1/1] scsi: core: Drop using the host_lock to protect async_scan race condition
+      https://git.kernel.org/mkp/scsi/c/7a3aff163c77
 
 -- 
 Martin K. Petersen
