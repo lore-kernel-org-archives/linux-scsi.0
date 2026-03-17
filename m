@@ -1,30 +1,30 @@
 Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.3])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E70B7946C;
-	Tue, 17 Mar 2026 07:24:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B873A946C;
+	Tue, 17 Mar 2026 07:25:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.3
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773732254; cv=none; b=WesnTGN6n7+v6gHGVMRRPpmKW77UtJ0GSDuGMAvZAjusfWoJoaLwg91MVc/79R/+5e8B+hslBUch4bkNBZxcCs6LZ8qAeUwKzHeC7YCpwfVQuxpvXbS3Cz3SvVJ5cnq8/TqJ5VBB1ZQ+blb4Ohw0y8P+doZarlHsQI91AMj9p4Y=
+	t=1773732343; cv=none; b=pRQ5XYbRkUVTywUZDHyGDjM7brmEMNa5hgY5/L/lSKRJN4zmbf64xjKUO9b7mG3OHplmiNKRdNkrml+uBdonx3qUTmiQAFMRwr5ue9/mkcVpJb664e/QtcALTs131XrtNLxLINn3o8cpA05vFictAvWIhaix8U7BwvaJ4GtDi7k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773732254; c=relaxed/simple;
-	bh=a+n992Xln5jtRxg82q/Gh2W5B+gNLSPyg5ksuA4Oy28=;
+	s=arc-20240116; t=1773732343; c=relaxed/simple;
+	bh=RYu/Hlzy4M1NMLc3Xhe8UGrQf4l5omMwfSrz1Eps63w=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=gkClyc6gGrgG1aWDpWZUNKpZdglBQea2hbbsF8aHHEhR1fP2CsWr9OaMbfvkxYIEgdewxY7ro3GB3voGW67ZnvitVMwO/r17gQ509rXE14ybo7wHOILBuhEsXHAGJnx0E7Al0qFLBhUgAJw6JrYE8DKCfJMkZ7ykWLDYjdkowWQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=gjk+1WjW; arc=none smtp.client-ip=220.197.31.3
+	 MIME-Version; b=upjxlRVVaXmWkB3STpf19lsFSOsNoDLIJodBoHyA0xJ55MbZzjsloMIBuRhxaP7BqITfG+J5JaOCnmfICmJx/Y06pWaCO2EZXyKTP/ERE7WeLn7kgNJqAaISxv/zqHf+/PG+6bCG0+EzQcI9nf+sWYaQkhCEUYXecQ3DQH8K02o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=B2/B/tRX; arc=none smtp.client-ip=220.197.31.3
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="gjk+1WjW"
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="B2/B/tRX"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=5Z
-	y+Ek4eFmndOd/ImuXNJGANQbfFZ1v9v3mlkQ4RqxA=; b=gjk+1WjWnmD8NeBGSS
-	TW/epec+RQki1yPh0KpMSooGs+FDZ2nY5yth3X78sJR/dleUURtQ1+nwfGFniRw+
-	JuowlpKYo4tMeIF8oh0JG9VYZFMS7oB2I8lAYVI1CfWIpdxMT1+rlpE8ghhUnJD8
-	r1+by2pFuIuqPJUW7W0SL1uwg=
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=VV
+	Awc+xdn6yxKxTFGsxyf3leIZLjYYGFor99fkx3VcY=; b=B2/B/tRXLqRU3I6JI1
+	nHtyO0tNTNiJHdb/Q/jSIbQFETEb1gblYnPNEhAb7NgqSA/g1wijUDUwe4Ee8vmt
+	3I1jLZhztTaNOmUmMaa9jZ/xTepvKI4dsDiD10xOt/3iqlCPjHbkaimvlzZwQ1UQ
+	l05QyjVVHFaqbF36Um1GCaeCk=
 Received: from localhost.localdomain (unknown [])
-	by gzsmtp2 (Coremail) with SMTP id PSgvCgCnhdw1AblpkrBDWA--.58229S5;
-	Tue, 17 Mar 2026 15:22:35 +0800 (CST)
+	by gzsmtp2 (Coremail) with SMTP id PSgvCgCnhdw1AblpkrBDWA--.58229S3;
+	Tue, 17 Mar 2026 15:22:33 +0800 (CST)
 From: Yang Xiuwei <yangxiuwei@kylinos.cn>
 To: axboe@kernel.dk,
 	fujita.tomonori@lab.ntt.co.jp,
@@ -34,9 +34,9 @@ Cc: linux-block@vger.kernel.org,
 	linux-scsi@vger.kernel.org,
 	bvanassche@acm.org,
 	Yang Xiuwei <yangxiuwei@kylinos.cn>
-Subject: [PATCH v8 3/3] scsi: bsg: add io_uring passthrough handler
-Date: Tue, 17 Mar 2026 15:22:26 +0800
-Message-Id: <20260317072226.2598233-4-yangxiuwei@kylinos.cn>
+Subject: [PATCH v8 1/3] bsg: add bsg_uring_cmd uapi structure
+Date: Tue, 17 Mar 2026 15:22:24 +0800
+Message-Id: <20260317072226.2598233-2-yangxiuwei@kylinos.cn>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20260317072226.2598233-1-yangxiuwei@kylinos.cn>
 References: <20260317072226.2598233-1-yangxiuwei@kylinos.cn>
@@ -47,210 +47,114 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:PSgvCgCnhdw1AblpkrBDWA--.58229S5
-X-Coremail-Antispam: 1Uf129KBjvJXoW3GrWfGrW3KFyUuFy5Gr17Wrg_yoWxGF1UpF
-	W5tw45ZrW5Wr1I9FZ5trs8uFWYvw4kCa47KFW5uw43Ar1UCr9ag3W0kF10qFy3ArWkAa42
-	qr4vgFZ8Cr1jq37anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07jaeHDUUUUU=
+X-CM-TRANSID:PSgvCgCnhdw1AblpkrBDWA--.58229S3
+X-Coremail-Antispam: 1Uf129KBjvJXoWxCr4xGry7Zw43Kw17tF1fWFg_yoW5ZFWxpF
+	Z8Kw43JFWUWw1fZrW3Ja4UCFW5Zr18Ja47Kay7Wwnak3W5tryrA3WjkryjqF48X39Yy34a
+	v3W7trW5C3yktw7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07jexRDUUUUU=
 Sender: yangxiuwei2025@163.com
-X-CM-SenderInfo: p1dqw55lxzvxisqskqqrwthudrp/xtbC6hsXp2m5ATvc+gAA3N
+X-CM-SenderInfo: p1dqw55lxzvxisqskqqrwthudrp/xtbCwhkXp2m5ATmARwAA3E
 
-Implement the SCSI-specific io_uring command handler for BSG using
-struct bsg_uring_cmd.
-
-The handler builds a SCSI request from the io_uring command, maps user
-buffers (including fixed buffers), and completes asynchronously via a
-request end_io callback and task_work. Completion returns a 32-bit
-status and packed residual/sense information via CQE res and res2, and
-supports IO_URING_F_NONBLOCK.
+Add the bsg_uring_cmd structure to the BSG UAPI header to support
+io_uring-based SCSI passthrough operations via IORING_OP_URING_CMD.
 
 Signed-off-by: Yang Xiuwei <yangxiuwei@kylinos.cn>
 ---
- drivers/scsi/scsi_bsg.c | 168 +++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 167 insertions(+), 1 deletion(-)
+ include/uapi/linux/bsg.h | 75 ++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 75 insertions(+)
 
-diff --git a/drivers/scsi/scsi_bsg.c b/drivers/scsi/scsi_bsg.c
-index 4d57e524e141..c3ce497a3b94 100644
---- a/drivers/scsi/scsi_bsg.c
-+++ b/drivers/scsi/scsi_bsg.c
-@@ -10,10 +10,176 @@
+diff --git a/include/uapi/linux/bsg.h b/include/uapi/linux/bsg.h
+index cd6302def5ed..6cff77f5b857 100644
+--- a/include/uapi/linux/bsg.h
++++ b/include/uapi/linux/bsg.h
+@@ -2,6 +2,9 @@
+ #ifndef _UAPIBSG_H
+ #define _UAPIBSG_H
  
- #define uptr64(val) ((void __user *)(uintptr_t)(val))
++#ifdef __KERNEL__
++#include <linux/build_bug.h>
++#endif /* __KERNEL__ */
+ #include <linux/types.h>
  
-+/*
-+ * Per-command BSG SCSI PDU stored in io_uring_cmd.pdu[32].
-+ * Holds temporary state between submission, completion and task_work.
-+ */
-+struct scsi_bsg_uring_cmd_pdu {
-+	struct bio *bio;		/* mapped user buffer, unmap in task work */
-+	struct request *req;		/* block request, freed in task work */
-+	u64 response_addr;		/* user space response buffer address */
+ #define BSG_PROTOCOL_SCSI		0
+@@ -63,5 +66,77 @@ struct sg_io_v4 {
+ 	__u32 padding;
+ };
+ 
++struct bsg_uring_cmd {
++	__u64 request;		/* [i], [*i] command descriptor address */
++	__u32 request_len;	/* [i] command descriptor length in bytes */
++	__u32 protocol;		/* [i] protocol type (BSG_PROTOCOL_*) */
++	__u32 subprotocol;	/* [i] subprotocol type (BSG_SUB_PROTOCOL_*) */
++	__u32 max_response_len;	/* [i] response buffer size in bytes */
++
++	__u64 response;		/* [i], [*o] response data address */
++	__u64 dout_xferp;	/* [i], [*i] */
++	__u32 dout_xfer_len;	/* [i] bytes to be transferred to device */
++	__u32 dout_iovec_count;	/* [i] 0 -> "flat" dout transfer else
++				 * dout_xferp points to array of iovec
++				 */
++	__u64 din_xferp;	/* [i], [*o] */
++	__u32 din_xfer_len;	/* [i] bytes to be transferred from device */
++	__u32 din_iovec_count;	/* [i] 0 -> "flat" din transfer */
++
++	__u32 timeout_ms;	/* [i] timeout in milliseconds */
++	__u8  reserved[12];	/* reserved for future extension */
 +};
-+static_assert(sizeof(struct scsi_bsg_uring_cmd_pdu) <= sizeof_field(struct io_uring_cmd, pdu));
 +
-+static inline struct scsi_bsg_uring_cmd_pdu *scsi_bsg_uring_cmd_pdu(
-+	struct io_uring_cmd *ioucmd)
++#ifdef __KERNEL__
++/* Must match IORING_OP_URING_CMD payload size (e.g. SQE128). */
++static_assert(sizeof(struct bsg_uring_cmd) == 80);
++#endif /* __KERNEL__ */
++
++
++/*
++ * SCSI BSG io_uring completion (res2, 64-bit)
++ *
++ * When using BSG_PROTOCOL_SCSI + BSG_SUB_PROTOCOL_SCSI_CMD with
++ * IORING_OP_URING_CMD, the completion queue entry (CQE) contains:
++ *   - result: errno (0 on success)
++ *   - res2: packed SCSI status
++ *
++ * res2 bit layout:
++ *   [0..7]   device_status  (SCSI status byte, e.g. CHECK_CONDITION)
++ *   [8..15]  driver_status  (e.g. DRIVER_SENSE when sense data is valid)
++ *   [16..23] host_status    (e.g. DID_OK, DID_TIME_OUT)
++ *   [24..31] sense_len_wr   (bytes of sense data written to response buffer)
++ *   [32..63] resid_len      (residual transfer length)
++ */
++static inline __u8 bsg_scsi_res2_device_status(__u64 res2)
 +{
-+	return io_uring_cmd_to_pdu(ioucmd, struct scsi_bsg_uring_cmd_pdu);
++	return res2 & 0xff;
 +}
-+
-+/* Task work: build res2 (layout in uapi/linux/bsg.h) and copy sense to user. */
-+static void scsi_bsg_uring_task_cb(struct io_tw_req tw_req, io_tw_token_t tw)
++static inline __u8 bsg_scsi_res2_driver_status(__u64 res2)
 +{
-+	struct io_uring_cmd *ioucmd = io_uring_cmd_from_tw(tw_req);
-+	struct scsi_bsg_uring_cmd_pdu *pdu = scsi_bsg_uring_cmd_pdu(ioucmd);
-+	struct request *rq = pdu->req;
-+	struct scsi_cmnd *scmd = blk_mq_rq_to_pdu(rq);
-+	u64 res2;
-+	int ret = 0;
-+	u8 driver_status = 0;
-+	u8 sense_len_wr = 0;
-+
-+	if (pdu->bio)
-+		blk_rq_unmap_user(pdu->bio);
-+
-+	if (scsi_status_is_check_condition(scmd->result)) {
-+		driver_status = DRIVER_SENSE;
-+		if (pdu->response_addr)
-+			sense_len_wr = min_t(u8, scmd->sense_len,
-+					     SCSI_SENSE_BUFFERSIZE);
-+	}
-+
-+	if (sense_len_wr) {
-+		if (copy_to_user(uptr64(pdu->response_addr), scmd->sense_buffer,
-+				 sense_len_wr))
-+			ret = -EFAULT;
-+	}
-+
-+	res2 = bsg_scsi_res2_build(status_byte(scmd->result), driver_status,
-+				  host_byte(scmd->result), sense_len_wr,
-+				  scmd->resid_len);
-+
-+	blk_mq_free_request(rq);
-+	io_uring_cmd_done32(ioucmd, ret, res2,
-+			    IO_URING_CMD_TASK_WORK_ISSUE_FLAGS);
++	return res2 >> 8;
 +}
-+
-+static enum rq_end_io_ret scsi_bsg_uring_cmd_done(struct request *req,
-+						  blk_status_t status,
-+						  const struct io_comp_batch *iocb)
++static inline __u8 bsg_scsi_res2_host_status(__u64 res2)
 +{
-+	struct io_uring_cmd *ioucmd = req->end_io_data;
-+
-+	io_uring_cmd_do_in_task_lazy(ioucmd, scsi_bsg_uring_task_cb);
-+	return RQ_END_IO_NONE;
++	return res2 >> 16;
 +}
-+
-+static int scsi_bsg_map_user_buffer(struct request *req,
-+				    struct io_uring_cmd *ioucmd,
-+				    unsigned int issue_flags, gfp_t gfp_mask)
++static inline __u8 bsg_scsi_res2_sense_len(__u64 res2)
 +{
-+	const struct bsg_uring_cmd *cmd = io_uring_sqe128_cmd(ioucmd->sqe, struct bsg_uring_cmd);
-+	bool is_write = cmd->dout_xfer_len > 0;
-+	u64 buf_addr = is_write ? cmd->dout_xferp : cmd->din_xferp;
-+	unsigned long buf_len = is_write ? cmd->dout_xfer_len : cmd->din_xfer_len;
-+	struct iov_iter iter;
-+	int ret;
-+
-+	if (ioucmd->flags & IORING_URING_CMD_FIXED) {
-+		ret = io_uring_cmd_import_fixed(buf_addr, buf_len,
-+						is_write ? WRITE : READ,
-+						&iter, ioucmd, issue_flags);
-+		if (ret < 0)
-+			return ret;
-+		ret = blk_rq_map_user_iov(req->q, req, NULL, &iter, gfp_mask);
-+	} else {
-+		ret = blk_rq_map_user(req->q, req, NULL, uptr64(buf_addr),
-+				      buf_len, gfp_mask);
-+	}
-+
-+	return ret;
++	return res2 >> 24;
 +}
-+
- static int scsi_bsg_uring_cmd(struct request_queue *q, struct io_uring_cmd *ioucmd,
- 			       unsigned int issue_flags, bool open_for_write)
- {
--	return -EOPNOTSUPP;
-+	struct scsi_bsg_uring_cmd_pdu *pdu = scsi_bsg_uring_cmd_pdu(ioucmd);
-+	const struct bsg_uring_cmd *cmd = io_uring_sqe128_cmd(ioucmd->sqe, struct bsg_uring_cmd);
-+	struct scsi_cmnd *scmd;
-+	struct request *req;
-+	blk_mq_req_flags_t blk_flags = 0;
-+	gfp_t gfp_mask = GFP_KERNEL;
-+	int ret;
-+
-+	if (cmd->protocol != BSG_PROTOCOL_SCSI ||
-+	    cmd->subprotocol != BSG_SUB_PROTOCOL_SCSI_CMD)
-+		return -EINVAL;
-+
-+	if (!cmd->request || cmd->request_len == 0)
-+		return -EINVAL;
-+
-+	if (cmd->dout_xfer_len && cmd->din_xfer_len) {
-+		pr_warn_once("BIDI support in bsg has been removed.\n");
-+		return -EOPNOTSUPP;
-+	}
-+
-+	if (cmd->dout_iovec_count > 0 || cmd->din_iovec_count > 0)
-+		return -EOPNOTSUPP;
-+
-+	if (issue_flags & IO_URING_F_NONBLOCK) {
-+		blk_flags = BLK_MQ_REQ_NOWAIT;
-+		gfp_mask = GFP_NOWAIT;
-+	}
-+
-+	req = scsi_alloc_request(q, cmd->dout_xfer_len ?
-+				 REQ_OP_DRV_OUT : REQ_OP_DRV_IN, blk_flags);
-+	if (IS_ERR(req))
-+		return PTR_ERR(req);
-+
-+	scmd = blk_mq_rq_to_pdu(req);
-+	scmd->cmd_len = cmd->request_len;
-+	if (scmd->cmd_len > sizeof(scmd->cmnd)) {
-+		ret = -EINVAL;
-+		goto out_free_req;
-+	}
-+	scmd->allowed = SG_DEFAULT_RETRIES;
-+
-+	if (copy_from_user(scmd->cmnd, uptr64(cmd->request), cmd->request_len)) {
-+		ret = -EFAULT;
-+		goto out_free_req;
-+	}
-+
-+	if (!scsi_cmd_allowed(scmd->cmnd, open_for_write)) {
-+		ret = -EPERM;
-+		goto out_free_req;
-+	}
-+
-+	pdu->response_addr = cmd->response;
-+	scmd->sense_len = cmd->max_response_len ?
-+		min(cmd->max_response_len, SCSI_SENSE_BUFFERSIZE) : SCSI_SENSE_BUFFERSIZE;
-+
-+	if (cmd->dout_xfer_len || cmd->din_xfer_len) {
-+		ret = scsi_bsg_map_user_buffer(req, ioucmd, issue_flags, gfp_mask);
-+		if (ret)
-+			goto out_free_req;
-+		pdu->bio = req->bio;
-+	} else {
-+		pdu->bio = NULL;
-+	}
-+
-+	req->timeout = cmd->timeout_ms ?
-+		msecs_to_jiffies(cmd->timeout_ms) : BLK_DEFAULT_SG_TIMEOUT;
-+
-+	req->end_io = scsi_bsg_uring_cmd_done;
-+	req->end_io_data = ioucmd;
-+	pdu->req = req;
-+
-+	blk_execute_rq_nowait(req, false);
-+	return -EIOCBQUEUED;
-+
-+out_free_req:
-+	blk_mq_free_request(req);
-+	return ret;
- }
++static inline __u32 bsg_scsi_res2_resid_len(__u64 res2)
++{
++	return res2 >> 32;
++}
++static inline __u64 bsg_scsi_res2_build(__u8 device_status, __u8 driver_status,
++					__u8 host_status, __u8 sense_len_wr,
++					__u32 resid_len)
++{
++	return ((__u64)(__u32)(resid_len) << 32) |
++		((__u64)sense_len_wr << 24) |
++		((__u64)host_status << 16) |
++		((__u64)driver_status << 8) |
++		(__u64)device_status;
++}
  
- static int scsi_bsg_sg_io_fn(struct request_queue *q, struct sg_io_v4 *hdr,
+ #endif /* _UAPIBSG_H */
 -- 
 2.25.1
 
