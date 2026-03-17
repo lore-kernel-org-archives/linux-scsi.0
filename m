@@ -1,162 +1,117 @@
-Received: from mailout1.w1.samsung.com (mailout1.w1.samsung.com [210.118.77.11])
+Received: from mail-05.mail-europe.com (mail-05.mail-europe.com [85.9.206.169])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0CF192116F6
-	for <linux-scsi@vger.kernel.org>; Tue, 17 Mar 2026 17:11:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.118.77.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 91A54191F94;
+	Tue, 17 Mar 2026 17:18:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=85.9.206.169
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773767503; cv=none; b=G7VV2rPYHm8fA6f0GtxNdSNw6gH9XVFP/8QMofcMT+Wi+kNyjjRvCLg6dQ83sf4n30qrfRdTtSC6vFNEXnvMIjRhSBKRRmuIpZeOH9kP/V/Bhey3OY07J+N5gbMS9VuF/+9viJWJCFElHtNJXy0U1lUOoJFEqGwAsZqvaeY2wXs=
+	t=1773767891; cv=none; b=IfbZ4N9H89wAJZKI0ufHw6otxh6K4Jm1MeVrzlfPF25PGcgb8jJLKjtXUU+hfrUdnpFJBB2vsAq0OfYVCP2hl8gcqw0M6jVSDlhlL0oP//PgbJX+yTDXdYlksRm1n6pAt6SKLejHnbXIvvD4BI4wcZ6x2xT7FKxlTsUB6fNhuDE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773767503; c=relaxed/simple;
-	bh=J/mSSwMRYTqeHmWoVcc8xSG1NZGKnjUHpOwCNvyb2oY=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:From:In-Reply-To:
-	 Content-Type:References; b=Ax4uFC4wGoMPXxL2WTkKW2f6mEOWSEzyYCRz+KW7X2TCky0sYKYOFpsFfCjJ3r8zFqUsrW/G3ZXKXG+eKeuYf+k8vSjIVNulHX/NL3gCEVmta9MR989lt1qIzD42/pRRDOvOaW43mtIX4RaGSuBgWq5vc4L3p9pneX9gtAyFUpc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=MYWnpHbE; arc=none smtp.client-ip=210.118.77.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+	s=arc-20240116; t=1773767891; c=relaxed/simple;
+	bh=vX1kx7VM5hkljShUyb582SJ3E0ltV+g/Ivrd5dmpxBU=;
+	h=Date:To:From:Cc:Subject:Message-ID:MIME-Version:Content-Type; b=ZMHeSDpHAn7sWXZ96CodTAd3RqaYGqS9vuOVtFEoH7iKVtJeCSySZwusPhLik8NSb28qRcWK1KOO/nbUgaF5jG9adgmP3dGr3sJ3N/7ehdgPdRIS64lEIMRssYcqVPaAKEEhByE5kFYyxlaUbOgrXfWexl+x/neOh1RpV+hRYeA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=proton.me; spf=pass smtp.mailfrom=proton.me; dkim=pass (2048-bit key) header.d=proton.me header.i=@proton.me header.b=cwCSE0dw; arc=none smtp.client-ip=85.9.206.169
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=proton.me
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=proton.me
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="MYWnpHbE"
-Received: from eucas1p2.samsung.com (unknown [182.198.249.207])
-	by mailout1.w1.samsung.com (KnoxPortal) with ESMTP id 20260317171132euoutp01bbdbfd5aca8cbb94ec1283e082d12b03~dsCLku-jy1291112911euoutp01_
-	for <linux-scsi@vger.kernel.org>; Tue, 17 Mar 2026 17:11:32 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.w1.samsung.com 20260317171132euoutp01bbdbfd5aca8cbb94ec1283e082d12b03~dsCLku-jy1291112911euoutp01_
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1773767492;
-	bh=pwQ1Tj/5fxwXOKenXlPq85WoWCXbsQhDWZrqEkDauDM=;
-	h=Date:Subject:To:Cc:From:In-Reply-To:References:From;
-	b=MYWnpHbEr3ciYUqKxZ6yIU+QrhAKa00vRYesIqH3QOFrGXdKqb5MUJooCBD0goO1m
-	 oOEgWYGxbL95r4onomXj8ywWt125YhIj4aMN+9SUCW5sIzaFIPUe82ZVZfqzLBReV0
-	 ukglRzTlXeJTuKeksp2cf5xbS+Ewwbv1jF4h7W1c=
-Received: from eusmtip2.samsung.com (unknown [203.254.199.222]) by
-	eucas1p2.samsung.com (KnoxPortal) with ESMTPA id
-	20260317171131eucas1p25dd55bf1aad6d5b310526d51885b3b7a~dsCLI5OAD2221222212eucas1p2N;
-	Tue, 17 Mar 2026 17:11:31 +0000 (GMT)
-Received: from [106.210.134.192] (unknown [106.210.134.192]) by
-	eusmtip2.samsung.com (KnoxPortal) with ESMTPA id
-	20260317171130eusmtip2df6d625da7072fe080e4a257996d4b9f~dsCJurUtG1242212422eusmtip2P;
-	Tue, 17 Mar 2026 17:11:30 +0000 (GMT)
-Message-ID: <1f88b91c-59e6-4347-84c2-50b7cf106c47@samsung.com>
-Date: Tue, 17 Mar 2026 18:11:29 +0100
+	dkim=pass (2048-bit key) header.d=proton.me header.i=@proton.me header.b="cwCSE0dw"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=proton.me;
+	s=dzntp2wu7ncnxeiiq4xjs6gciu.protonmail; t=1773767872; x=1774027072;
+	bh=ormOhq7y7cFOvw2DX0AmoKb1gOKEJgoMDD9goXSLiok=;
+	h=Date:To:From:Cc:Subject:Message-ID:Feedback-ID:From:To:Cc:Date:
+	 Subject:Reply-To:Feedback-ID:Message-ID:BIMI-Selector;
+	b=cwCSE0dwVwv3Q05AB7BH8CTHMJ4OIE4UwDYw60tifBrbsW8ivI33caY8yCEzuE01E
+	 l5wBktdKrSenY2P3ynVz0QxvLqzC8iCPq07oI4D9hOXWVRNXZvC+tVh7a43T6ezgiJ
+	 MsdbV+y5i5+WgTng/jVNwuRrfkFVf5c2kfnOSihA0A4VvlM8SFI6qeu3mCRFId8YRv
+	 D+wf8XzCbrykZzm/lkrWAIwbB3SDKVTRn9OfjjCs9MBW5EqsM7SKjRX9qGEQNGBdTn
+	 dKLo8jRIjJT9Cs6uBGDYW2WTcbkIgLgSGpTkTUHvc6CQ/qbJe9LRcY219M6WCj7jAE
+	 w1Pm0Lv7xnxXA==
+Date: Tue, 17 Mar 2026 17:17:46 +0000
+To: Peter Wang <peter.wang@mediatek.com>, linux-next@vger.kernel.org, "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+From: Tj <tj.iam.tj@proton.me>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Regression: scsi: ufs: core: Avoid IRQ thread wakeup during active UIC command
+Message-ID: <abmMptgPR581bPUS@mail.iam.tj>
+Feedback-ID: 113488376:user:proton
+X-Pm-Message-ID: d5894582a53cf692f29abc81b7ac3b999d1bd876
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Betterbird (Windows)
-Subject: Re: [PATCH v2] ufs: core: Avoid IRQ thread wakeup during active UIC
- command
-To: peter.wang@mediatek.com, linux-scsi@vger.kernel.org,
-	martin.petersen@oracle.com, avri.altman@sandisk.com,
-	alim.akhtar@samsung.com, jejb@linux.ibm.com
-Cc: wsd_upstream@mediatek.com, linux-mediatek@lists.infradead.org,
-	chun-hung.wu@mediatek.com, alice.chao@mediatek.com, cc.chou@mediatek.com,
-	chaotian.jing@mediatek.com, tun-yu.yu@mediatek.com,
-	eddie.huang@mediatek.com, naomi.chu@mediatek.com, ed.tsai@mediatek.com,
-	bvanassche@acm.org
-Content-Language: en-US
-From: Marek Szyprowski <m.szyprowski@samsung.com>
-In-Reply-To: <20260306054419.3816557-1-peter.wang@mediatek.com>
-Content-Transfer-Encoding: 8bit
-X-CMS-MailID: 20260317171131eucas1p25dd55bf1aad6d5b310526d51885b3b7a
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-X-RootMTR: 20260317171131eucas1p25dd55bf1aad6d5b310526d51885b3b7a
-X-EPHeader: CA
-X-CMS-RootMailID: 20260317171131eucas1p25dd55bf1aad6d5b310526d51885b3b7a
-References: <20260306054419.3816557-1-peter.wang@mediatek.com>
-	<CGME20260317171131eucas1p25dd55bf1aad6d5b310526d51885b3b7a@eucas1p2.samsung.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-Hi
+#regzbot ^introduced: 6475cfb81fc4f6175b6d15d1c205a5168dc10b46
 
-On 06.03.2026 06:43, peter.wang@mediatek.com wrote:
-> From: Peter Wang <peter.wang@mediatek.com>
->
-> Only return IRQ_WAKE_THREAD when MCQ and ESI are not enabled
-> and no UIC command is active. The default UIC command timeout
-> is 500ms, Using threaded IRQs during an active UIC command
-> increases the risk of timeout due to possible preemption
-> by other system IRQs.
->
-> Signed-off-by: Peter Wang <peter.wang@mediatek.com>
+I've had to revert this commit because it breaks UFS on Samsung Book2
+W737 sdm850. Below is transcribed from a blurry video so apologies if it
+is not exact:
 
-This patch landed in linux-next as commit 6475cfb81fc4 ("scsi: ufs: 
-core: Avoid IRQ thread wakeup during active UIC command"). In my tests I 
-found that it causes the following regression on QCom RB5 board 
-(arch/arm64/boot/dts/qcom/qrb5165-rb5.dts):
-
-=============================
-[ BUG: Invalid wait context ]
-7.0.0-rc4-next-20260316 #16535 Not tainted
+| BUG: Invalid wait context |
+ufshcd-qcom 1d84000.ufshc: uic cmd 0x1 with arg3 0x0 completion timeout
+7.0.0-rc3-next-202603110sdm845 #103 Not tainted
 -----------------------------
+ufshcd-qcom 1d84000.ufshc: dme-get: attr-id 0x41 failed 0 retries
 swapper/0/0 is trying to lock:
-ffff000089f58048 (shost->host_lock){....}-{3:3}, at: 
-ufshcd_sl_intr+0x3c0/0x6b4
+ffff000087ba4048 (shost->host_lock)(....)-(3:3). at: ufshcd_sl_intr+0x3dc/0=
+x7a0
 other info that might help us debug this:
-context-{2:2}
+ufshcd-qcom 1d84000.ufshc: uic cmd 0x1 with arg3 0x0 completion timeout
+context-(2:2)
+ufshcd-qcom 1d84000.ufshc: dme-get: sttr-id 0x41 failed 0 retries
 no locks held by swapper/0/0.
+ufshcd-qcom 1d84000.ufshc: ufs_wcom_check_hibern8: unable to get TX_FSM_STA=
+TE, err -110
 stack backtrace:
-CPU: 0 UID: 0 PID: 0 Comm: swapper/0 Not tainted 7.0.0-rc4-next-20260316 
-#16535 PREEMPT
-Hardware name: Qualcomm Technologies, Inc. Robotics RB5 (DT)
+CPU: 0 UID: 0 PID: 0 Comm: swapper/0 Not tainted 7.0.0-rc3-next-20260311-sd=
+m845 #103 PREEMPTLAZY ...${unclear}
+Hardware name: SAMSUNG ELECTRONICS CO,. LTD. Galaxy Book2/SM-W737YZSBTEL, B=
+IOS P02AHG.005.190624.WY.1359 06/24/2019
 Call trace:
-  show_stack+0x18/0x24 (C)
-  dump_stack_lvl+0x90/0xd0
-  dump_stack+0x18/0x24
-  __lock_acquire+0xa40/0x2254
-  lock_acquire+0x1c4/0x3fc
-  _raw_spin_lock_irqsave+0x60/0x88
-  ufshcd_sl_intr+0x3c0/0x6b4
-  ufshcd_intr+0x7c/0x90
-  __handle_irq_event_percpu+0xa0/0x4c4
-  handle_irq_event+0x4c/0xf8
-  handle_fasteoi_irq+0x108/0x198
-  handle_irq_desc+0x40/0x58
-  generic_handle_domain_irq+0x18/0x24
-  gic_handle_irq+0x4c/0x110
-  call_on_irq_stack+0x30/0x48
-  do_interrupt_handler+0x80/0x84
-  el1_interrupt+0x3c/0x60
-  el1h_64_irq_handler+0x18/0x24
-  el1h_64_irq+0x6c/0x70
-  cpuidle_enter_state+0xf8/0x41c (P)
-  cpuidle_enter+0x38/0x50
-  do_idle+0x170/0x2ac
-  cpu_startup_entry+0x34/0x3c
-  rest_init+0xf8/0x188
-  start_kernel+0x818/0x8ec
-  __primary_switched+0x88/0x90
+  show_stack+
+  dump_stack_lvl
+  dump_stack
+ufshcd-qcom 1d84000.ufshc: uic cmd 0x1 with arg3 0x0 completion timeout
+  __lock_acquire
+  lock_acquire
+  _raw_spin_lock_irqsave
+  ufshcd_sl_intr
+  ufshcd_intr
+  __handle_irq_event_percpu
+  handle_irq_event
+  handle_fast???_irq
+ufshcd-qcom 1d84000.ufshc: dme-get: attr-id 0xa00b failed 0 retries
+  handle_irq_desc
+  generic_handle_domain_irq
+  gic_handle_irq
+  do_interrupt_handler
+ufshcd-qcom 1d84000.ufshc: hw clk gating enabled failed
+  el1_interrupt
+  el1h_64_irq_handler
+  el1h_64_irq
 scsi host0: ufshcd
-
-
-Reverting $subject on top of linux-next fixes this issue.
-
-> ---
->   drivers/ufs/core/ufshcd.c | 8 ++++++--
->   1 file changed, 6 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> index 9908375b2f98..6554e1db3343 100644
-> --- a/drivers/ufs/core/ufshcd.c
-> +++ b/drivers/ufs/core/ufshcd.c
-> @@ -7200,8 +7200,12 @@ static irqreturn_t ufshcd_intr(int irq, void *__hba)
->   	struct ufs_hba *hba = __hba;
->   	u32 intr_status, enabled_intr_status;
->   
-> -	/* Move interrupt handling to thread when MCQ & ESI are not enabled */
-> -	if (!hba->mcq_enabled || !hba->mcq_esi_enabled)
-> +	/*
-> +	 * Handle interrupt in thread if MCQ or ESI is disabled,
-> +	 * and no active UIC command.
-> +	 */
-> +	if ((!hba->mcq_enabled || !hba->mcq_esi_enabled) &&
-> +	    !hba->active_uic_cmd)
->   		return IRQ_WAKE_THREAD;
->   
->   	intr_status = ufshcd_readl(hba, REG_INTERRUPT_STATUS);
-
-Best regards
--- 
-Marek Szyprowski, PhD
-Samsung R&D Institute Poland
+  handle_softirqs
+  __do_softirq
+  ___do_softirq
+  do_softirq_own_stack
+  __irq_exit_rcn
+  irq_exit_rcn
+ufshcd-qcom 1d84000.ufshc: uic cmd 0x1 with arg3 0x0 completion timeout
+  el1_interrupt
+  el1h_64_irq_handler
+  el1h_64_irq
+  cpuidle_enter_state
+  cpuidle_enter
+  do_idle
+  cpu_startup_entry
+  rest_init
+  start_kernel
+  __primary_switched
+ufshcd-qcom 1d84000.ufshc: cfg core clk ctrl failed
+ufshcd-qcom 1d84000.ufshc: No active UIC command. Maybe a timeout occurred?
+ufshcd-qcom 1d84000.ufshc: No active UIC command. Maybe a timeout occurred?
+ufshcd-qcom 1d84000.ufshc: ufshcd_threaded_intr: Unhadled interrupt 0x00000=
+000 (0x00000400, 0x00000400)
 
