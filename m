@@ -1,379 +1,228 @@
-Received: from mail-qt1-f177.google.com (mail-qt1-f177.google.com [209.85.160.177])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from GVXPR05CU001.outbound.protection.outlook.com (mail-swedencentralazon11013002.outbound.protection.outlook.com [52.101.83.2])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 534FC392C34
-	for <linux-scsi@vger.kernel.org>; Tue, 17 Mar 2026 21:32:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.160.177
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 095F11C8634;
+	Tue, 17 Mar 2026 23:05:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.83.2
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773783152; cv=pass; b=sWaQ9fQn1ep/ckC+jVHsSWWfVdXGaYCZ84znyw/0o6k5ZibDvRHMDPomNT8Hn/Po/acPHQnjuHmwAgokHsSqnq+C+7Zxt7szkv6h397fVnv0/F3cvMw9uXNRqSL/EJAoxizKvTI0T+oM/ErI4TpHkiawfcH/o4Y/MUdf07jpfBA=
+	t=1773788717; cv=fail; b=m98VUYwYuFtp67QeTaPFpvqDxBjbgeT7kcJMdTyOIXaP0qNK3IbKcuyU59jpPycfEmJzEE1iBfvmXwBleQwEHBs/zhTZ4iju93ROSiYUd+5mGtRLgey6brP7FLJtAzD5lb5//uuWLueyECySOkPQhoN317cQZyJmCibafJ1OoRE=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773783152; c=relaxed/simple;
-	bh=amSdOF8iP43yuio3xfh7J21wSaqCQ2v/F+hUcALmjDo=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=g8B4A11VK/5Vz2YHb8Rcq/XDfU5Z4y3HQvbLlR7o1fnmz9e5K9aQZ8ikL60vepfuJJwTra2kPOCawoMiOIe0A73EOARHOo6fwdS8b+l/k61XhTLRG/GCZ+xIdEnySrh25UhJoZ8ev2SNGzZ9ykpnd5Ns6Nj5jP+JZo8OgsSyq8I=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=A9ZcXAed; arc=pass smtp.client-ip=209.85.160.177
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	s=arc-20240116; t=1773788717; c=relaxed/simple;
+	bh=hPNyFOqwf4V8RFx7/kXBxpZ5ZPN9yy3bm1MCI3N6PU0=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=jbuzXhbYPjc+mXon+pycxyOKXJCV68b99Owm7LA5SLvuvlZLW+ayPMF01psFTCS/TEu2E2N+Pq8zME4+0BN+0A5342ROCvY/oTrKQ2CFiQgFFNZYDVwHbYtAWI6Hh1wLh51lI1xpstBU/kJuX2C6EeAr0yH6amGmhUiz5DrwpdQ=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=k5N2AqLy; arc=fail smtp.client-ip=52.101.83.2
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="A9ZcXAed"
-Received: by mail-qt1-f177.google.com with SMTP id d75a77b69052e-5091ed02c54so88941cf.1
-        for <linux-scsi@vger.kernel.org>; Tue, 17 Mar 2026 14:32:30 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1773783149; cv=none;
-        d=google.com; s=arc-20240605;
-        b=Xq3h5J89QJDLilbfAowZi2LgWfBj93AZopvUowRch3u0ZlZzo794pr4w0O9vOWiBfr
-         g/Fyl5rRTbsH3Z7XAqfCiizAcoSdNhamcGci15cOHcug4ALZO2D1YpozNto8qX6Wz9GF
-         6/WH2saD3I0o3ABWgLKFbbrx6orpmZ5sDs3ADB4Kri/Zl8yzARYP3m0MQ3DmCaN+tKLU
-         9StaDXIIxpsAs1nRvfoaNuVX2Cl4Qb3ofgN5mJ94yqbRyTs2EQ9HMhma6PSdkcHohUlw
-         8pmvkZ3hlK+4DRqh/2uWlf44THgWnheIk4fOR1PiFd7R5q9g8bGITGb3ADEr5Rf5VvRy
-         XRtA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=eaVVTt78dt2IOUr/WJrEfVNvHIkRI9uCxJf+IAlfUTo=;
-        fh=B6dmkRrijMxBpeJ9mAJDCoL5vhjTZ0cXcZs7mfdXS68=;
-        b=f7e6jHZBnifGXTqmYVLloPxHu9VpuRUp1btiqUJZB8ucQL/THhpdxwYIkWbiibDPlf
-         0Oea6FFnc9hH4o1xlYj6jt7cFoWhA5ph5DC0bHvll7jZ3M3pVTzDFXraK3SBPSnprNmy
-         kOxy4wqK+2MPO/W1R3SKgt6WiNZqg8Pra/VJNDLR/caPnDn6wuWHIxTYDU6u/2HXAqrB
-         BCy4XqhhuwxnmogC5nizqYVZ0Mh0Eawh+jAhkKxyh6Sx8W62r6lbIuxPwPAyxo89vRhI
-         2nHkncCVuSo3KqH7KGlH+n4Nwrfq4cXjxLQYgaITFW53ueB++GZ/at95wrEDSwWpaOL7
-         /gAg==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1773783149; x=1774387949; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=eaVVTt78dt2IOUr/WJrEfVNvHIkRI9uCxJf+IAlfUTo=;
-        b=A9ZcXAedtBA37VJ4Oq7nTy8F7ZmNiAG6IT3pgFvi+CJ83OstmjsjzzCgzIXAKUyVne
-         3HQAf4rWY+IGjQMXBG/PPRQ6FhqZP7iXBkhKVUGg5zbLTI4NYLGgQFpHBQ3hV6KUF6w8
-         Ij+/eXT4MZLE91S5l7w65sg6A3toIsczJuGiGpVAnmXpXoxEJotPW6/ugabO2rveSKKC
-         sTSo821St7+g6zI+Z3x9w0UlySp7EJ/eDzDT0d2RIa3PC3SuPtWdULr3g6j8CGgo3cBG
-         GvTe4aY19g2elueq1kGENMPkEY27T3Lo/gNeoHpPAngyDrt/fLnDHCiMwjZeHACq0+Sh
-         3glQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1773783149; x=1774387949;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=eaVVTt78dt2IOUr/WJrEfVNvHIkRI9uCxJf+IAlfUTo=;
-        b=kWd8YWrP9vX2iou8VjhZ3Dr18Fz3wYm6WDdiCehWA4FvrA+VlpxOmLR4a10HgI/USV
-         ZFRa6KNMciStULQapKjyz7aUEIEeKLWec1FHLlmSi/+d5GsXWWDHTzHBSyM8m9zgOrSz
-         YRtPp/rU1k0IEJ2d5/f22C93RO0rY5k/AKG13NMnefcN8SsArRjNk076WyCUljJt+7/E
-         EVKZH6FGazSEvCWSrn/fZhcMS8sDvPWkTi31nQEKPIC4GgfNQU3UA1Rbb+30SuDJbZ3s
-         MeF8jxiNUNvLM8WDmjL3NmNLt1b58AGdAWAyJ28miWMutICkXr4/1MsmH/t/yUhuY7WI
-         bwrA==
-X-Forwarded-Encrypted: i=1; AJvYcCVKG8gpYwu9urje9dIjOfxdmecw7a8S7Zl5bb7XaCcVuNVQ5vHZCNzFVZg7yRm3q9nO3oKNmI252bc3@vger.kernel.org
-X-Gm-Message-State: AOJu0YxP0WK04u5TRQCCcy2rleIC6NO7MvEou9fjX3THitixQfJYadJV
-	0+akKxaixV9DDcLfl/quARMIKjqHerZ4QiKh1YjhOJsxGnCzZOyhOL0yB6CooaVUdq8NkLAJEBV
-	+2/iLtrWgdl0Od8YSBb0bxyc+n5vrg7Fk6N3xzFXO
-X-Gm-Gg: ATEYQzwUBh196TalagIC899QrbaDymIW7xZMRnd3ff5+if2k8tKPfww6tdby8uzey+a
-	Mb5HrWPmg2MLPFF46V56A0MSETMcGJuahO/Cc6Ojzlabp15oD8G1GTy/TXr/dBqshVXXdrXz5GF
-	1gTAHJD/QNn+6odAhvMKwpW0XEj4tucEvMp1idbXkrWmM6F1PlDUdKcdblao7i8Bf3Hl3QZeeO0
-	YKSFEe5PWTnK/LmWOWsUjS/7aVyfkHlwpUCX3VXigstNJXyKTfqAaNgNUT1GgP7fOsrXjMEt4Op
-	K0K7IzSSBrBw0TeACTDsxZnA36JqG9UIPX/gOg==
-X-Received: by 2002:a05:622a:1a9b:b0:501:3b94:bcae with SMTP id
- d75a77b69052e-50b1480564fmr4695911cf.8.1773783147340; Tue, 17 Mar 2026
- 14:32:27 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="k5N2AqLy"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=nYn+k8gV3EQGqCL3mCCIIYAtoyT3A06gzqmU8ftXAT9hinC1e1UWTResI5Mf6s0NrJhLOWCUarV/x/ynuwTz17y3g5HmIu/o5CX+0jVVBzJ0ednCsjzOQePqIb5DXqmCEw/ETAg//aLoqslESSln0FZpI859y7vIth5aPduXLmcP6OQXEUMjYqJKFxLjpfQ6dr42Brs9X6A+Mlmhc2E8xNfq6Y1gvgSUifof0hbWTsf/ATJrHRo3DGjrrv2r7vHxo/X0twjs5mrqiw9YN3oI4Vw0tw0xBTncRMycd3u0rKS+SwJZx97QMq99TlQ9OafG6RamfbY6Er4Pq82qTrs5MA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=qPWhNEkrCqRZ+00OtaPJbnAsfNJUYl3B1RyQ7BFHr+s=;
+ b=js2cZv7wf39DceRjeL27RKS7Ce4kOOf0QXe0/Bs58TRnRpHp4kss2VuKwTJIbuTbRhRz2oR7Im/L6jVjGcD0E69sK7f5/jwAE1cuFmLYBH8UkhmcDPexrrmg5itCvE8pWhviwpZtihkc3YiJ+pJvRcpgYiJgwVVRgmcScAI85in17PMLrKAK8Qsq5C8byZI0Q3I8MdBe96UcJxPAnPV58DAkoIfAQzZSHJ6GWsSLQXCyW5rhcP4NzGU3u1EHqB2RVqSPXxjZo3SRHF2VqJ5jTP5WqXyWwpmoF9qJngUgXq0oX6i17fiUNqG/KXnj653JFbgHJzROuOsGyIDJ1PywPw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
+ header.d=nxp.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=qPWhNEkrCqRZ+00OtaPJbnAsfNJUYl3B1RyQ7BFHr+s=;
+ b=k5N2AqLydeJo1Yuts9MGW3tbhIUcTeHjsQI6b1StuD8Pi96IzwhX61+J630vaWE7wfvqqMEsliOy+kuqYvjNKMjnYVFKURJW2VFDzV94E4UqHLtSN6VRMIpYKdON2ED6O7EOWdYhcdpqxVl1J6njPukXj+E7OPfkJEjFBMnDJRJ4JdreqZCiIyS0tkrjLv0ibA1gQiIggYSutVqOgJqcbLlE6lhaBT7QaAVLs4E0GP35N0YOw94P7XBhq0gLNcWOnUWIGIbbZ7MVwREov3Os4HM95U+PJAVVCvdHAXas5X24hAkQPj+9MsWYHifrwsWkEy9kPLHkOlTWWsbJm2Jg5w==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nxp.com;
+Received: from AM9PR04MB8585.eurprd04.prod.outlook.com (2603:10a6:20b:438::13)
+ by VI0PR04MB12032.eurprd04.prod.outlook.com (2603:10a6:800:311::18) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9700.27; Tue, 17 Mar
+ 2026 23:05:14 +0000
+Received: from AM9PR04MB8585.eurprd04.prod.outlook.com
+ ([fe80::f010:fca8:7ef:62f4]) by AM9PR04MB8585.eurprd04.prod.outlook.com
+ ([fe80::f010:fca8:7ef:62f4%4]) with mapi id 15.20.9700.022; Tue, 17 Mar 2026
+ 23:05:12 +0000
+From: Vladimir Oltean <vladimir.oltean@nxp.com>
+To: linux-phy@lists.infradead.org
+Cc: Vinod Koul <vkoul@kernel.org>,
+	Neil Armstrong <neil.armstrong@linaro.org>,
+	dri-devel@lists.freedesktop.org,
+	freedreno@lists.freedesktop.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-arm-msm@vger.kernel.org,
+	linux-can@vger.kernel.org,
+	linux-gpio@vger.kernel.org,
+	linux-ide@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-media@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-renesas-soc@vger.kernel.org,
+	linux-riscv@lists.infradead.org,
+	linux-rockchip@lists.infradead.org,
+	linux-samsung-soc@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	linux-sunxi@lists.linux.dev,
+	linux-tegra@vger.kernel.org,
+	linux-usb@vger.kernel.org,
+	netdev@vger.kernel.org,
+	spacemit@lists.linux.dev,
+	UNGLinuxDriver@microchip.com,
+	Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>
+Subject: [PATCH v4 phy-next 01/24] ata: add <linux/pm_runtime.h> where missing
+Date: Wed, 18 Mar 2026 01:04:37 +0200
+Message-ID: <20260317230500.2056077-2-vladimir.oltean@nxp.com>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20260317230500.2056077-1-vladimir.oltean@nxp.com>
+References: <20260317230500.2056077-1-vladimir.oltean@nxp.com>
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: VIXP296CA0007.AUTP296.PROD.OUTLOOK.COM
+ (2603:10a6:800:2a9::17) To AM9PR04MB8585.eurprd04.prod.outlook.com
+ (2603:10a6:20b:438::13)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <cover.1773695307.git.ljs@kernel.org> <48c6d25e374b57dba6df4fdddd4830d3fc1105be.1773695307.git.ljs@kernel.org>
- <CAJuCfpFXuHg4KPY27pqMC-xV5y9ZY2W72_R8_rxO0DvrJ=_yvw@mail.gmail.com>
-In-Reply-To: <CAJuCfpFXuHg4KPY27pqMC-xV5y9ZY2W72_R8_rxO0DvrJ=_yvw@mail.gmail.com>
-From: Suren Baghdasaryan <surenb@google.com>
-Date: Tue, 17 Mar 2026 14:32:16 -0700
-X-Gm-Features: AaiRm50LOaxRG8hnm9GByPrpi5KQ-jnLdYLBR44IEnVyj1qDMmlGA-pMovuTqLE
-Message-ID: <CAJuCfpE5qZmi43EeZiRcy78pD6YvJb5n_xnoUJfwEjomowu0=A@mail.gmail.com>
-Subject: Re: [PATCH v2 11/16] staging: vme_user: replace deprecated mmap hook
- with mmap_prepare
-To: "Lorenzo Stoakes (Oracle)" <ljs@kernel.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Jonathan Corbet <corbet@lwn.net>, 
-	Clemens Ladisch <clemens@ladisch.de>, Arnd Bergmann <arnd@arndb.de>, 
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "K . Y . Srinivasan" <kys@microsoft.com>, 
-	Haiyang Zhang <haiyangz@microsoft.com>, Wei Liu <wei.liu@kernel.org>, 
-	Dexuan Cui <decui@microsoft.com>, Long Li <longli@microsoft.com>, 
-	Alexander Shishkin <alexander.shishkin@linux.intel.com>, 
-	Maxime Coquelin <mcoquelin.stm32@gmail.com>, Alexandre Torgue <alexandre.torgue@foss.st.com>, 
-	Miquel Raynal <miquel.raynal@bootlin.com>, Richard Weinberger <richard@nod.at>, 
-	Vignesh Raghavendra <vigneshr@ti.com>, Bodo Stroesser <bostroesser@gmail.com>, 
-	"Martin K . Petersen" <martin.petersen@oracle.com>, David Howells <dhowells@redhat.com>, 
-	Marc Dionne <marc.dionne@auristor.com>, Alexander Viro <viro@zeniv.linux.org.uk>, 
-	Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>, David Hildenbrand <david@kernel.org>, 
-	"Liam R . Howlett" <Liam.Howlett@oracle.com>, Vlastimil Babka <vbabka@kernel.org>, 
-	Mike Rapoport <rppt@kernel.org>, Michal Hocko <mhocko@suse.com>, Jann Horn <jannh@google.com>, 
-	Pedro Falcato <pfalcato@suse.de>, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, 
-	linux-hyperv@vger.kernel.org, linux-stm32@st-md-mailman.stormreply.com, 
-	linux-arm-kernel@lists.infradead.org, linux-mtd@lists.infradead.org, 
-	linux-staging@lists.linux.dev, linux-scsi@vger.kernel.org, 
-	target-devel@vger.kernel.org, linux-afs@lists.infradead.org, 
-	linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, 
-	Ryan Roberts <ryan.roberts@arm.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: AM9PR04MB8585:EE_|VI0PR04MB12032:EE_
+X-MS-Office365-Filtering-Correlation-Id: 2b37fc59-8dc9-4638-f784-08de8479a444
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|1800799024|10070799003|376014|19092799006|7416014|366016|18002099003|56012099003|22082099003;
+X-Microsoft-Antispam-Message-Info:
+	8K7h0VYCJTZLGONOGjWSRwObQMh3V61aBhMQXRkiiquKedM6Qffn92wPvHrzBzj+I/SomwfSAhKnQPaIbk5blEd7ui5FlQcGDLN9IAIGv40gf6UWtlQIM0fPjUzdKlli3tOHJKBaEpVfx/dcI7FPscU4KCCu11Wmyx26DbYJyBYR5yKmzRXSXofuLWZj7/3PwBB8pAmQxuRJARjvBA9oRhKV/u8BPPrdBbzMHVMZsCaB/iETypjBycXd38LmfoV/tK1Ww91AaWxG6lPzGBUEuRDXwyfyUnmuhG4+dQ3PhUeiOrqA4t/Mks7P90wuC5fvALzKrOue+Uvjtne/x2Xue0k/MhkLDa2EXlwOvj79GzJMZNDFx+hHOB7ApjFcu4/ITanjaP45GoTsJSvnK2xgHfuqipmdX62fd6ZZ7W/0KCsVK4ByWi5WS/M/iKhLhjwC8QFZWSmdJfu3g8/LCK0Z9/h/Yy/1PBHuCfLdAR74/f3ZD566FvumC8fGk3qM4hyMcYI6Z+whVTy6J/XilO+h5LK8YaWMX2t/jME9lbZWd5p8DrOlQRHzYLHhoeCkgKnyZZPlLeTYre6+awDi1DYce7A3oomRF3IpQLwhbou0UUhpK65i5Dm3VkTGmjMTPD2cGpBO/gfFfXPYVo+C3Xtr4qcRbGxB22JK22TqITPojZzkl+/wHskyS6s5rghW1q9e0Cz02Ls5Xi1h9wEvEiUahwWbR2vEk7PFTG2flq5Cxzo=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9PR04MB8585.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(10070799003)(376014)(19092799006)(7416014)(366016)(18002099003)(56012099003)(22082099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 2
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?Izc5M0BnBMoft74ZVgbAMBoa0bmYi+fRlVWLKkjqRiQyegBVsaUSqTeBdcf7?=
+ =?us-ascii?Q?g0ifvoC8MfnYJRrOIgi/sNwChvumtsFEBVKS000xEYZWfXTLlMKGQLy+FlTo?=
+ =?us-ascii?Q?EEM2/RNvFHmvsz9tLi487bDyPxnvFMY9z3DvtnkxyFE0W8aPXTmje62ynOA2?=
+ =?us-ascii?Q?aqGoeEMCyTo82G0SylwrXkV0s6BdkNJl+1lp13q4wDkPTREEkTQ9QLLOJ1os?=
+ =?us-ascii?Q?TVF6bFmMD0t5Igy1lBHX9B1WSmORnxRkCxMi+/9C6jrwHyzSqCcGqakwH+Ay?=
+ =?us-ascii?Q?FXOiqKL7HbLlpmfURcN76RU+lgg6U88jOkE7UvvvVUiyki4bqsAGXe27T0cS?=
+ =?us-ascii?Q?o1nFYuvDSSxqGnUR5i3pc56APe1bdD/KbpcWicBrORNFBOa1LlaRfVASd/KF?=
+ =?us-ascii?Q?uifpr15rjXrdMvup0R54RhOLHpyM0Z0M0DYEP9r1MBEJG1oXYbfGFsD1ej1E?=
+ =?us-ascii?Q?FgvsYx6cE1Q6qS2UzK90Le4UOZiZt9OfXonC3LnsrHXwLn7/NSEG3LC1JFX3?=
+ =?us-ascii?Q?W3Y86gqWJZ4n/t+cdvDpg/lQEI2yMsDIhH8HZjYmSq3uqgFs6nzu6pPNg2TW?=
+ =?us-ascii?Q?lSr0lHr/jZCjpzD80k8Bt6gcSqG16lfP7gys175O2a0CTe9tJ8Tjlvj/UgJr?=
+ =?us-ascii?Q?Y4OIdZahIfk0DABgLZdXqjokgtGB9f7nObirzY5so385cM9lWQ53aN0KOC1E?=
+ =?us-ascii?Q?+tjiWUot9YgadUL2sM8vXZNGJ4jyN3+zrCpyzkGQEk2P/CMLR/My0zpfrcF3?=
+ =?us-ascii?Q?kRJmv2RvKRb2A9rUSPcXfnnMXQWpE9MwQzoHxvBi0XX3VDtQbEoPmr97szmq?=
+ =?us-ascii?Q?sOiUbxYddNe/P4BJJxbHSTuBs5gPWaKqAV3+J8YmQAy5YSfcyLX0IbNKfU7a?=
+ =?us-ascii?Q?PcqYHbgsldEiJaXy7bQ7rOO6v6zmmcEPV5wNsxG7xUpPFM4N1SIjJmv7lTku?=
+ =?us-ascii?Q?X2uNjnvNBeMmIhZWxVBOvc6DdJ7oyZbIiAmnWwfbJJ6r0Az4Mi4MOQtBu+7+?=
+ =?us-ascii?Q?5x9H6HXKzFrisOgdYyBeuafLG9gZlJj8HB+B0Zau8eRaL2hkq7/J9PFwW2eO?=
+ =?us-ascii?Q?4M1Owc3r03deJwVqS5zJEQ7Y7jSYq+FchFkZtBwbPpyKiYbXc2D5FDHsBcdN?=
+ =?us-ascii?Q?4CqP0lNHUDrumOuzZXdytrexYOLjKIKTEOvTVk7N9pMsd1CCZo/6FTuhkWX3?=
+ =?us-ascii?Q?CpktG9UKGqL5iqo38+4QD1eMM8n0sodxX3nxXgwOq+AA0neG+Y7oTgAGsi9J?=
+ =?us-ascii?Q?b94sbcBRA9+at/xjC6oFsWafM0YRJ4gWf/eXd4q+vbftTe+hiNfJHSLEzJJ5?=
+ =?us-ascii?Q?nkNBwjMVEnDbAIlt/zEtwoRBa5PbVJ8XmkMXOY5X/ebVjvUjTfaWRwEsa6Fl?=
+ =?us-ascii?Q?y/C53WT4Bx3XliZhYqQaDAch3yFl1vecME1GomtaeQPjuxwLYDbAZqFmNpa5?=
+ =?us-ascii?Q?+XjJt6nAIoejSkFLJL3wednWSnmZcODwXFvRcrfBQBR5nA9cks/aTdgv1s/7?=
+ =?us-ascii?Q?cGUWxrhZGPjmaP/bU7gUzF5+JfWoZXhzv0A4EfEJb9wN9dW6RP1ofQZPOTPJ?=
+ =?us-ascii?Q?lP8UdwkZpCyfMnzB90mxZtt/gC8+1ZKSU8fHm2C+gm/drkfBvcRlNDjBTjtT?=
+ =?us-ascii?Q?fycgE68QqbAakELNOXHKLytUD43Cpbgy1rQ8MbQ49ndnsZVcp+ylaf9CcM5S?=
+ =?us-ascii?Q?ylV4VUuMU9W7i55UPSJPYv0Yz0CyXi9awe6PRUdbxOvzgytLa5dpdeF/QjFf?=
+ =?us-ascii?Q?6FtEIk5l0/uJKcbnGLwOGiNrWHYzOYQNQU5AQCNLw48Hv143taiZpw5bj88O?=
+X-MS-Exchange-AntiSpam-MessageData-1: Xbs0XP8Yosa5tnzQLkvw/znr+OnyaHKrVKU=
+X-OriginatorOrg: nxp.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 2b37fc59-8dc9-4638-f784-08de8479a444
+X-MS-Exchange-CrossTenant-AuthSource: AM9PR04MB8585.eurprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Mar 2026 23:05:11.9272
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: 6DZQvE8XIZGGctXeu1lb1Nkhw5kSPnmgv62H48eVCVdNYT770Lcx77cfoyFc+OoeYTqYSxwaZnkasj5K3+qdWA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: VI0PR04MB12032
 
-On Tue, Mar 17, 2026 at 2:26=E2=80=AFPM Suren Baghdasaryan <surenb@google.c=
-om> wrote:
->
-> On Mon, Mar 16, 2026 at 2:14=E2=80=AFPM Lorenzo Stoakes (Oracle) <ljs@ker=
-nel.org> wrote:
-> >
-> > The f_op->mmap interface is deprecated, so update driver to use its
-> > successor, mmap_prepare.
-> >
-> > The driver previously used vm_iomap_memory(), so this change replaces i=
-t
-> > with its mmap_prepare equivalent, mmap_action_simple_ioremap().
-> >
-> > Functions that wrap mmap() are also converted to wrap mmap_prepare()
-> > instead.
-> >
-> > Also update the documentation accordingly.
-> >
-> > Signed-off-by: Lorenzo Stoakes (Oracle) <ljs@kernel.org>
-> > ---
-> >  Documentation/driver-api/vme.rst    |  2 +-
-> >  drivers/staging/vme_user/vme.c      | 20 +++++------
-> >  drivers/staging/vme_user/vme.h      |  2 +-
-> >  drivers/staging/vme_user/vme_user.c | 51 +++++++++++++++++------------
-> >  4 files changed, 42 insertions(+), 33 deletions(-)
-> >
-> > diff --git a/Documentation/driver-api/vme.rst b/Documentation/driver-ap=
-i/vme.rst
-> > index c0b475369de0..7111999abc14 100644
-> > --- a/Documentation/driver-api/vme.rst
-> > +++ b/Documentation/driver-api/vme.rst
-> > @@ -107,7 +107,7 @@ The function :c:func:`vme_master_read` can be used =
-to read from and
-> >
-> >  In addition to simple reads and writes, :c:func:`vme_master_rmw` is pr=
-ovided to
-> >  do a read-modify-write transaction. Parts of a VME window can also be =
-mapped
-> > -into user space memory using :c:func:`vme_master_mmap`.
-> > +into user space memory using :c:func:`vme_master_mmap_prepare`.
-> >
-> >
-> >  Slave windows
-> > diff --git a/drivers/staging/vme_user/vme.c b/drivers/staging/vme_user/=
-vme.c
-> > index f10a00c05f12..7220aba7b919 100644
-> > --- a/drivers/staging/vme_user/vme.c
-> > +++ b/drivers/staging/vme_user/vme.c
-> > @@ -735,9 +735,9 @@ unsigned int vme_master_rmw(struct vme_resource *re=
-source, unsigned int mask,
-> >  EXPORT_SYMBOL(vme_master_rmw);
-> >
-> >  /**
-> > - * vme_master_mmap - Mmap region of VME master window.
-> > + * vme_master_mmap_prepare - Mmap region of VME master window.
-> >   * @resource: Pointer to VME master resource.
-> > - * @vma: Pointer to definition of user mapping.
-> > + * @desc: Pointer to descriptor of user mapping.
-> >   *
-> >   * Memory map a region of the VME master window into user space.
-> >   *
-> > @@ -745,12 +745,13 @@ EXPORT_SYMBOL(vme_master_rmw);
-> >   *         resource or -EFAULT if map exceeds window size. Other gener=
-ic mmap
-> >   *         errors may also be returned.
-> >   */
-> > -int vme_master_mmap(struct vme_resource *resource, struct vm_area_stru=
-ct *vma)
-> > +int vme_master_mmap_prepare(struct vme_resource *resource,
-> > +                           struct vm_area_desc *desc)
-> >  {
-> > +       const unsigned long vma_size =3D vma_desc_size(desc);
-> >         struct vme_bridge *bridge =3D find_bridge(resource);
-> >         struct vme_master_resource *image;
-> >         phys_addr_t phys_addr;
-> > -       unsigned long vma_size;
-> >
-> >         if (resource->type !=3D VME_MASTER) {
-> >                 dev_err(bridge->parent, "Not a master resource\n");
-> > @@ -758,19 +759,18 @@ int vme_master_mmap(struct vme_resource *resource=
-, struct vm_area_struct *vma)
-> >         }
-> >
-> >         image =3D list_entry(resource->entry, struct vme_master_resourc=
-e, list);
-> > -       phys_addr =3D image->bus_resource.start + (vma->vm_pgoff << PAG=
-E_SHIFT);
-> > -       vma_size =3D vma->vm_end - vma->vm_start;
-> > +       phys_addr =3D image->bus_resource.start + (desc->pgoff << PAGE_=
-SHIFT);
-> >
-> >         if (phys_addr + vma_size > image->bus_resource.end + 1) {
-> >                 dev_err(bridge->parent, "Map size cannot exceed the win=
-dow size\n");
-> >                 return -EFAULT;
-> >         }
-> >
-> > -       vma->vm_page_prot =3D pgprot_noncached(vma->vm_page_prot);
-> > -
-> > -       return vm_iomap_memory(vma, phys_addr, vma->vm_end - vma->vm_st=
-art);
-> > +       desc->page_prot =3D pgprot_noncached(desc->page_prot);
-> > +       mmap_action_simple_ioremap(desc, phys_addr, vma_size);
-> > +       return 0;
-> >  }
-> > -EXPORT_SYMBOL(vme_master_mmap);
-> > +EXPORT_SYMBOL(vme_master_mmap_prepare);
-> >
-> >  /**
-> >   * vme_master_free - Free VME master window
-> > diff --git a/drivers/staging/vme_user/vme.h b/drivers/staging/vme_user/=
-vme.h
-> > index 797e9940fdd1..b6413605ea49 100644
-> > --- a/drivers/staging/vme_user/vme.h
-> > +++ b/drivers/staging/vme_user/vme.h
-> > @@ -151,7 +151,7 @@ ssize_t vme_master_read(struct vme_resource *resour=
-ce, void *buf, size_t count,
-> >  ssize_t vme_master_write(struct vme_resource *resource, void *buf, siz=
-e_t count, loff_t offset);
-> >  unsigned int vme_master_rmw(struct vme_resource *resource, unsigned in=
-t mask, unsigned int compare,
-> >                             unsigned int swap, loff_t offset);
-> > -int vme_master_mmap(struct vme_resource *resource, struct vm_area_stru=
-ct *vma);
-> > +int vme_master_mmap_prepare(struct vme_resource *resource, struct vm_a=
-rea_desc *desc);
-> >  void vme_master_free(struct vme_resource *resource);
-> >
-> >  struct vme_resource *vme_dma_request(struct vme_dev *vdev, u32 route);
-> > diff --git a/drivers/staging/vme_user/vme_user.c b/drivers/staging/vme_=
-user/vme_user.c
-> > index d95dd7d9190a..11e25c2f6b0a 100644
-> > --- a/drivers/staging/vme_user/vme_user.c
-> > +++ b/drivers/staging/vme_user/vme_user.c
-> > @@ -446,24 +446,14 @@ static void vme_user_vm_close(struct vm_area_stru=
-ct *vma)
-> >         kfree(vma_priv);
-> >  }
-> >
-> > -static const struct vm_operations_struct vme_user_vm_ops =3D {
-> > -       .open =3D vme_user_vm_open,
-> > -       .close =3D vme_user_vm_close,
-> > -};
-> > -
-> > -static int vme_user_master_mmap(unsigned int minor, struct vm_area_str=
-uct *vma)
-> > +static int vme_user_vm_mapped(unsigned long start, unsigned long end, =
-pgoff_t pgoff,
-> > +                             const struct file *file, void **vm_privat=
-e_data)
-> >  {
-> > -       int err;
-> > +       const unsigned int minor =3D iminor(file_inode(file));
-> >         struct vme_user_vma_priv *vma_priv;
-> >
-> >         mutex_lock(&image[minor].mutex);
-> >
-> > -       err =3D vme_master_mmap(image[minor].resource, vma);
-> > -       if (err) {
-> > -               mutex_unlock(&image[minor].mutex);
-> > -               return err;
-> > -       }
-> > -
->
-> Ok, this changes the set of the operations performed under image[minor].m=
-utex.
-> Before we had:
->
-> mutex_lock(&image[minor].mutex);
-> vme_master_mmap();
-> <some final adjustments>
-> mutex_unlock(&image[minor].mutex);
->
-> Now we have:
->
-> mutex_lock(&image[minor].mutex);
-> vme_master_mmap_prepare()
-> mutex_unlock(&image[minor].mutex);
-> vm_iomap_memory();
-> mutex_lock(&image[minor].mutex);
-> vme_user_vm_mapped(); // <some final adjustments>
-> mutex_unlock(&image[minor].mutex);
->
-> I think as long as image[minor] does not change while we are not
-> holding the mutex we should be safe, and looking at the code it seems
-> to be the case. But I'm not familiar with this driver and might be
-> wrong. Worth double-checking.
+It appears that libahci.c, ahci.c as well as the ahci_brcm, ahci_ceva
+and ahci_qoriq drivers are using runtime PM operations without including
+<linux/pm_runtime.h>. This header is somehow being indirectly provided
+by <linux/phy/phy.h>, which would like to drop it (none of the functions
+it exports need it).
 
-A side note: if we had to hold the mutex across all those operations I
-think we would need to take the mutex in the vm_ops->mmap_prepare and
-add a vm_ops->map_failed hook or something along that line to drop the
-mutex in case mmap_action_complete() fails. Not sure if we will have
-such cases though...
+Signed-off-by: Vladimir Oltean <vladimir.oltean@nxp.com>
+Acked-by: Damien Le Moal <dlemoal@kernel.org>
+---
+Cc: Damien Le Moal <dlemoal@kernel.org>
+Cc: Niklas Cassel <cassel@kernel.org>
 
->
-> >         vma_priv =3D kmalloc_obj(*vma_priv);
-> >         if (!vma_priv) {
-> >                 mutex_unlock(&image[minor].mutex);
-> > @@ -472,22 +462,41 @@ static int vme_user_master_mmap(unsigned int mino=
-r, struct vm_area_struct *vma)
-> >
-> >         vma_priv->minor =3D minor;
-> >         refcount_set(&vma_priv->refcnt, 1);
-> > -       vma->vm_ops =3D &vme_user_vm_ops;
-> > -       vma->vm_private_data =3D vma_priv;
-> > -
-> > +       *vm_private_data =3D vma_priv;
-> >         image[minor].mmap_count++;
-> >
-> >         mutex_unlock(&image[minor].mutex);
-> > -
-> >         return 0;
-> >  }
-> >
-> > -static int vme_user_mmap(struct file *file, struct vm_area_struct *vma=
-)
-> > +static const struct vm_operations_struct vme_user_vm_ops =3D {
-> > +       .mapped =3D vme_user_vm_mapped,
-> > +       .open =3D vme_user_vm_open,
-> > +       .close =3D vme_user_vm_close,
-> > +};
-> > +
-> > +static int vme_user_master_mmap_prepare(unsigned int minor,
-> > +                                       struct vm_area_desc *desc)
-> > +{
-> > +       int err;
-> > +
-> > +       mutex_lock(&image[minor].mutex);
-> > +
-> > +       err =3D vme_master_mmap_prepare(image[minor].resource, desc);
-> > +       if (!err)
-> > +               desc->vm_ops =3D &vme_user_vm_ops;
-> > +
-> > +       mutex_unlock(&image[minor].mutex);
-> > +       return err;
-> > +}
-> > +
-> > +static int vme_user_mmap_prepare(struct vm_area_desc *desc)
-> >  {
-> > -       unsigned int minor =3D iminor(file_inode(file));
-> > +       const struct file *file =3D desc->file;
-> > +       const unsigned int minor =3D iminor(file_inode(file));
-> >
-> >         if (type[minor] =3D=3D MASTER_MINOR)
-> > -               return vme_user_master_mmap(minor, vma);
-> > +               return vme_user_master_mmap_prepare(minor, desc);
-> >
-> >         return -ENODEV;
-> >  }
-> > @@ -498,7 +507,7 @@ static const struct file_operations vme_user_fops =
-=3D {
-> >         .llseek =3D vme_user_llseek,
-> >         .unlocked_ioctl =3D vme_user_unlocked_ioctl,
-> >         .compat_ioctl =3D compat_ptr_ioctl,
-> > -       .mmap =3D vme_user_mmap,
-> > +       .mmap_prepare =3D vme_user_mmap_prepare,
-> >  };
-> >
-> >  static int vme_user_match(struct vme_dev *vdev)
-> > --
-> > 2.53.0
-> >
+v2->v4: none
+v1->v2: collect tag
+---
+ drivers/ata/ahci.c       | 1 +
+ drivers/ata/ahci_brcm.c  | 1 +
+ drivers/ata/ahci_ceva.c  | 1 +
+ drivers/ata/ahci_qoriq.c | 1 +
+ drivers/ata/libahci.c    | 1 +
+ 5 files changed, 5 insertions(+)
+
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 931d0081169b..aa3c4949c4ab 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -26,6 +26,7 @@
+ #include <linux/device.h>
+ #include <linux/dmi.h>
+ #include <linux/gfp.h>
++#include <linux/pm_runtime.h>
+ #include <scsi/scsi_host.h>
+ #include <scsi/scsi_cmnd.h>
+ #include <linux/libata.h>
+diff --git a/drivers/ata/ahci_brcm.c b/drivers/ata/ahci_brcm.c
+index 29be74fedcf0..48460e515722 100644
+--- a/drivers/ata/ahci_brcm.c
++++ b/drivers/ata/ahci_brcm.c
+@@ -16,6 +16,7 @@
+ #include <linux/module.h>
+ #include <linux/of.h>
+ #include <linux/platform_device.h>
++#include <linux/pm_runtime.h>
+ #include <linux/reset.h>
+ #include <linux/string.h>
+ 
+diff --git a/drivers/ata/ahci_ceva.c b/drivers/ata/ahci_ceva.c
+index 2d6a08c23d6a..3938bf378341 100644
+--- a/drivers/ata/ahci_ceva.c
++++ b/drivers/ata/ahci_ceva.c
+@@ -12,6 +12,7 @@
+ #include <linux/module.h>
+ #include <linux/of.h>
+ #include <linux/platform_device.h>
++#include <linux/pm_runtime.h>
+ #include <linux/reset.h>
+ #include "ahci.h"
+ 
+diff --git a/drivers/ata/ahci_qoriq.c b/drivers/ata/ahci_qoriq.c
+index 0dec1a17e5b1..409152bfefb6 100644
+--- a/drivers/ata/ahci_qoriq.c
++++ b/drivers/ata/ahci_qoriq.c
+@@ -14,6 +14,7 @@
+ #include <linux/device.h>
+ #include <linux/of.h>
+ #include <linux/platform_device.h>
++#include <linux/pm_runtime.h>
+ #include <linux/libata.h>
+ #include "ahci.h"
+ 
+diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+index c79abdfcd7a9..e0de4703a4f2 100644
+--- a/drivers/ata/libahci.c
++++ b/drivers/ata/libahci.c
+@@ -30,6 +30,7 @@
+ #include <scsi/scsi_cmnd.h>
+ #include <linux/libata.h>
+ #include <linux/pci.h>
++#include <linux/pm_runtime.h>
+ #include "ahci.h"
+ #include "libata.h"
+ 
+-- 
+2.43.0
+
