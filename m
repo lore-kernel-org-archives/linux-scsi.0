@@ -1,217 +1,283 @@
-Received: from mail-qk1-f174.google.com (mail-qk1-f174.google.com [209.85.222.174])
+Received: from mail-ed1-f49.google.com (mail-ed1-f49.google.com [209.85.208.49])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D6E52AD37
-	for <linux-scsi@vger.kernel.org>; Tue, 17 Mar 2026 00:24:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.174
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773707049; cv=none; b=Ht099IzsFlYei+8YuTIMXzCa+WwvAVIwshmA5AA3YfrAN0LMHaJ0h3mcm0FrAESZsrojmL5vggOVeJX+RQlFbk3upZ12mwO7ITPjS1WHJwo4bfAyEkjidD5Rv7mZy87yWLQBS9OVQCFKKh1B5hVkFVa26exza+QrYdJAOGjNnrE=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773707049; c=relaxed/simple;
-	bh=6IRs8tlqiAf4ieBRKO7C5hhLcs5yHFDoucg9tQ3elOE=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=KjI71oxvVno1WrXY9Zo0yLRl4qMC5lQIiPPeBxe/JFbiW1ZnKrHuKsgxetg2pJ5QCxeCBBmFDabHM8aa+RpmX1QJXpLu9FxBONdWgLhDguL2S/WjztR98Mhj6LMd4QUc5AALLhqJRI2MeROHsmN9GoXeRA0X1kM2VenrzotwvAM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=toxicpanda.com; spf=pass smtp.mailfrom=toxicpanda.com; dkim=pass (2048-bit key) header.d=toxicpanda.com header.i=@toxicpanda.com header.b=Z65J/hZO; arc=none smtp.client-ip=209.85.222.174
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=toxicpanda.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=toxicpanda.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B90C93093C6
+	for <linux-scsi@vger.kernel.org>; Tue, 17 Mar 2026 03:42:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.49
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1773718925; cv=pass; b=JPdRby0OMjMoylr7ejkStKP49fZ8EQEqtkkLn3tSbOn1R75I70HLrhlhwWTaWR+51/6abG0c1wRDBGDHaJszM4if7lAg5KB6eiK/F7hXv5pC5Be4D1Nuwl38TFo0aOgX7LcM33+FxaWKzzRJXg4kFlw3cf6PDl0A6dsnHDGDPHY=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1773718925; c=relaxed/simple;
+	bh=WMHI6RHUC26ebl9/TVkwR2rJeC5kBjFPfSnTY/Oar1A=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=oTD5Mus+yk5kWz96nN+BWBbTyXx2kmXccwwDQ57qwn08sZp4FoGcln94XlHH2ipY1j5xJJ5S2ZFMuLwNA26B5heorq8F44Q1j2qZE4dDWdxOhqVm9RyglOgh4JiqlDLH8iDCzw+/+9fZ3iTLIaCr7vvGuUKexJdHWG+Zzhfr8yI=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=cyh2ZdDD; arc=pass smtp.client-ip=209.85.208.49
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=toxicpanda.com header.i=@toxicpanda.com header.b="Z65J/hZO"
-Received: by mail-qk1-f174.google.com with SMTP id af79cd13be357-8cd77786e97so519557885a.3
-        for <linux-scsi@vger.kernel.org>; Mon, 16 Mar 2026 17:24:06 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="cyh2ZdDD"
+Received: by mail-ed1-f49.google.com with SMTP id 4fb4d7f45d1cf-661169cd6d8so3743a12.1
+        for <linux-scsi@vger.kernel.org>; Mon, 16 Mar 2026 20:42:03 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1773718922; cv=none;
+        d=google.com; s=arc-20240605;
+        b=KRHXC+icU2lfHE6tS1nMqY+ykFfOIoHPiYThKLCCKzyZdQxdH7tFHGlVHiUAG6dvdQ
+         DUKkItAXbqoJ0uxrO/k0DjpUPGhQ/Up3axRfKLhILgoI6UJIrAd0Q7+EJN3dvI8ifhdv
+         3f6Pq/D7UIEGi9Y5UWpKNF67wPk8l2vWEWAJNrOZKGHEVh3YgEa47B/vBfZlAJDy6oOr
+         RgTmk5Kcnmr5PxIWuKHNk1e7NXMHVtl7sc8zFmokrDoNEqzYC1KaqnlVBXLatdYlz8IY
+         KSEnBKfhjeepBXXlzQQUbXkGMBqEKGTKBa75Yz1d8olS3bD1vGtbgkbpdru/l+Y67rAk
+         FHOQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=SDjcbstE7vaBgKzikVP/a05WleFr4Bi6N01Q1DpO7Ng=;
+        fh=9kDymTAA0xg48seteoiOeLPszDONLdlcgY6aR3ViXTc=;
+        b=HmrENcVw4uDNC6uQx6e5VSiS4kwaSZYcTB+e28w8/fV1VbPz3OX/mBSirmz9/EE8hx
+         /KiSAGcmrDBSIEuCs5362v7dZITEc+orPvjuJCntiOA2LR5zV4MLgHMj2tqWPmCGnNkK
+         TEPa7cfU8P+CEhdDirOsncDyr31L7FTxBVXlNG/LSEVjY9J8hUZqDifzZnqzlu2ryCSw
+         hOrX/18HCkzdWt9Re10iNpip/xbJ6MkK0B+uvIYv+/eVIEOD7nBfVAEMi0h26GdPswU+
+         IRVlWIOJtplOpnUmyzU/CMOn7/aZTBkOYJ7ApDxgmy41e65/N/bDYeVnVJFOQz8ylcOX
+         bfiw==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=toxicpanda.com; s=google; t=1773707046; x=1774311846; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=tpTXvukljXQ4iNyJC/zaPdjtYHdHgquyGmKXKgxE1Rs=;
-        b=Z65J/hZOi7ZtqNfTpn6MIWXfnWXYT98KAARPzKZ/Db/wBKxfDy8qv3+3ou90OMP3hJ
-         gZZzSGJfX3vMb09quwzZyOmdq8+pt0gDdpOHrS3e33T1hEH6iFG+15FlN/m1dbA/04Do
-         gBPINl9A22CGnOA8bCbaYZf6Pu8pnvnQJ6HEklD+rR7LITfILG4fdLKydvFojj/OtVAS
-         vdiL9qYoVhEfQVhMWQHVWheCYtMkt9pVhZO2UJW4T8Tq3iMwmPnWbmKrNk7svfg9ZTnp
-         gc+fzhaiVFuuUzqdd4aK50FB1AknodCRWX+v+tHmQ2xlFPIkmdlL0pGef3aOyODup0kR
-         nssA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1773707046; x=1774311846;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=google.com; s=20251104; t=1773718922; x=1774323722; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=tpTXvukljXQ4iNyJC/zaPdjtYHdHgquyGmKXKgxE1Rs=;
-        b=q7XEQUTd/iw+3+6hl/CunbrVBVgeEkSbAJOBSaUoStmR+IR4wRAGYAgR8bMyflPbQW
-         E0pADqm7wtxbnaHITHuNLR0AxgFrnhXFBsM005EU43YgiZpr/mCv2M4F6ZT/jeW7jekX
-         YK+m1NsYTegEgfEt0+oHzt9AnglXvqhh65wddaHk2OIN2iamhCoIg6dnNrwFGftay8nP
-         +ZivdtChghmAM1XosgJIu6BCo+LSMf0mKKHXImCbn3n7CcNFrNskA504hDX8ieHIe7iW
-         rLYOeNVtdPnUcIsGE3ZJKwtZSTp6Saet6MCCz8603aqTP9tihTJKKF0jHMlzsoST7yIt
-         viLA==
-X-Forwarded-Encrypted: i=1; AJvYcCUvi9S7gg36zThTzvubQlmoMRGI8GNfh6dzfUdjBbwshPs/pIfRPgdtsH/PiLwAC2X7Dv6SXj9kc7UN@vger.kernel.org
-X-Gm-Message-State: AOJu0Yx+28AZvifGmEGKia+ENwWhJw89Fg3po0MMMjYLp4/8PMY4BCyG
-	m+7YOcnokYt3qvcLF1/fn6edZr7WmQauYGxyJXfS46sgHnnfWpFvUFf7UbyXskP01wSMzEoZwEl
-	mKHEC
-X-Gm-Gg: ATEYQzxkitKj4fJKgllqWN20pAlQuMdBfKVJUTRAIRvLSORtWNi8yYKScD90G0MJp71
-	uU0c40OKJ8cgh14bKOZL/Xa6Eg2eExuQJvVroOlPYFa4LcQlgEToXbNBplM0I9cg/dsHBrLmzHJ
-	enyJ+ab1iOv00u8szGMqCLQdp9b/aV/VI/wwnM4A3tdEiZJtIaaVhDnKCkxVPXNxHYvmnYLUuVj
-	9mkqbP6TK/q1JXs01iE4mYx/iYyzthSvAkbw4tQpNJgiLZtnCWKVM17ULQ9SH2slba0S6TbgEQb
-	nWFe2EOwHL5v+3AtdR2DSaIGyY9YiJ5Eb/LwDz7SOzbewBJ7RII4l1wdRS5VYX8S7/wxbY3TPv/
-	CVh6pzxalYv9ANarXdjI6Uno9ngBMxxpsYzAih3mFkMWAHnw+vp+HU/53vkoMOYYg/zTTTuHvDi
-	ZHP+NwR9RP71InoFu+/PGejjyoVw==
-X-Received: by 2002:a05:620a:294a:b0:8ca:3d7c:e74a with SMTP id af79cd13be357-8cdb5b6eef9mr1894858485a.56.1773707045762;
-        Mon, 16 Mar 2026 17:24:05 -0700 (PDT)
-Received: from localhost ([2603:6080:7702:ce00:96ef:dc7e:bb84:bc5a])
-        by smtp.gmail.com with ESMTPSA id af79cd13be357-8cda211518esm1384850785a.27.2026.03.16.17.24.05
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 16 Mar 2026 17:24:05 -0700 (PDT)
-From: Josef Bacik <josef@toxicpanda.com>
-To: martin.petersen@oracle.com,
-	linux-scsi@vger.kernel.org,
-	target-devel@vger.kernel.org
-Cc: stable@vger.kernel.org
-Subject: [PATCH] scsi: target: tcm_loop: drain commands in target_reset handler
-Date: Mon, 16 Mar 2026 20:23:29 -0400
-Message-ID: <27011aa34c8f6b1b94d2e3cf5655b6d037f53428.1773706803.git.josef@toxicpanda.com>
-X-Mailer: git-send-email 2.53.0
+        bh=SDjcbstE7vaBgKzikVP/a05WleFr4Bi6N01Q1DpO7Ng=;
+        b=cyh2ZdDD25f0Dcfzqn0/fTS1Bga/5Iu+bb9UdhDFPQNIA51BZAHkfSliATWdhbLUcl
+         sOHWrtsy2Cd9yl38Ox6btyowj5g2gHJJzLJfanN+CYAsvcO/BImZK3+yFQPksOjSst4R
+         YxA2YDu31NoFKwMCouBzhi/5/N2cQnY2vq8vFHjQL9NAz2wwweLtbyQOhm+5PUrmrNSj
+         BO3N70T5CON4JQc/JPoQpRwgCSEZzGNqswZuC7HmiGpZDUrc5OgCugAY8jwCrbtSx5KZ
+         dD0f45YCU5fBS++odpfk/GilBzxm1tK6oo7rcHXQCq2IL1OYuGHmm9w1/6V7ar73F5yT
+         DH6g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1773718922; x=1774323722;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=SDjcbstE7vaBgKzikVP/a05WleFr4Bi6N01Q1DpO7Ng=;
+        b=ii5Z1z20Rg1Ze08DrBPHVoL1f87CEkQ9qz0hLwWSuFIq5RMqgnpQz7M61bIfVcnOM9
+         y5JDPFDTFcNGLyRehH4oOQQqXepS2UsC9Vip1G57VGHi6URaYipjx79g/27FjvPCwE+F
+         GdS7VTSh9TICGFCfVgNptYT5BX9MzvtVmphUnFP76BzX9DzInVKcS69Tbzfz2njKOq8p
+         nS2WHbCRAztQCuXdnz7uC23URiseaDqi1bghWH+1mdj1Slk9RV9awWPfUAGRb8sBeagQ
+         w/91aeOx/of9t9AQTIoNSVLsSTokTZ1ukiYvKjO4U/a3j6GWdSlGptx9Cne47IKun2yY
+         PpjQ==
+X-Forwarded-Encrypted: i=1; AJvYcCX1YejVBGVhFia3VTw0YYJHyK1XtxsJkdX7z5xpBHzi9I94JjNOhOCQ9om/rsoxaX+TIt+U/mlWA1nb@vger.kernel.org
+X-Gm-Message-State: AOJu0YxoL/sX186naNwhTuG3pBHBq+9KXFkCvSq6MH+ntYULqNmBalqy
+	r4KCwoW6G+EwEl6sv4GPMb8o3GGwbLu8CD0Itm30st6Xx9FUItGC/nl4ASpXYHLPQo61C0GFlvP
+	VtE6cjbV+NSRRvY6ss6u62QIuM/OJcobKZvt/FXXa
+X-Gm-Gg: ATEYQzx4YTLkIDASdLIr7eG2OS8SgMsXboTkpsTKKg/Rcxsfktk6OTmV+l4qLk5ny2J
+	G2BRh2IAKCIOEWrQFFxWcVcXm+DUfS1STFLaoitzhwpUMOMoSo2lWg5XIE1gm/8b9xducNqsFDk
+	XYuz3+Bk3cYgJaiVNBReNWFvyy3KOpDQDVH4mgwjP2Lv1b1ZI4rNHv+3LtOk9LqaehjpTHV6pw+
+	I7Xvx3ca953LOonU8jL8eWvSVFSnQdI9fXiz+6ppeNC0bQ7kh2y1wG/tEdVNYa7DSS+ySBeu5H+
+	Oq7akA==
+X-Received: by 2002:a05:6402:5047:b0:667:926:56e with SMTP id
+ 4fb4d7f45d1cf-6671449f938mr28406a12.2.1773718921655; Mon, 16 Mar 2026
+ 20:42:01 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+References: <4a5fa45119220b9d99ed72a36308aed01a30d2c1.1773346620.git.ljs@kernel.org>
+ <20260313110745.2573005-1-usama.arif@linux.dev> <c62305d7-22c4-4cf7-969b-fbe214c93b64@lucifer.local>
+ <CAJuCfpFio6n-O-1NkPXrymV0o3UqvHYS8ZOyQtt=JXnZ5dTGhQ@mail.gmail.com> <2536c05e-e228-404f-9916-906c0447b114@lucifer.local>
+In-Reply-To: <2536c05e-e228-404f-9916-906c0447b114@lucifer.local>
+From: Suren Baghdasaryan <surenb@google.com>
+Date: Mon, 16 Mar 2026 20:41:48 -0700
+X-Gm-Features: AaiRm51L9yY6IK4TcJFLhN8NGwQS7Z64sx0O9EJzSXirWOtaRRhN6Ww7XVogluY
+Message-ID: <CAJuCfpH2XyAJOFKCZnviVV_UbF4O0wzj3QgJieo+LD=Cvr71jA@mail.gmail.com>
+Subject: Re: [PATCH 05/15] fs: afs: correctly drop reference count on mapping failure
+To: "Lorenzo Stoakes (Oracle)" <ljs@kernel.org>
+Cc: Usama Arif <usama.arif@linux.dev>, Andrew Morton <akpm@linux-foundation.org>, 
+	Clemens Ladisch <clemens@ladisch.de>, Arnd Bergmann <arnd@arndb.de>, 
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "K . Y . Srinivasan" <kys@microsoft.com>, 
+	Haiyang Zhang <haiyangz@microsoft.com>, Wei Liu <wei.liu@kernel.org>, 
+	Dexuan Cui <decui@microsoft.com>, Long Li <longli@microsoft.com>, 
+	Alexander Shishkin <alexander.shishkin@linux.intel.com>, 
+	Maxime Coquelin <mcoquelin.stm32@gmail.com>, Alexandre Torgue <alexandre.torgue@foss.st.com>, 
+	Miquel Raynal <miquel.raynal@bootlin.com>, Richard Weinberger <richard@nod.at>, 
+	Vignesh Raghavendra <vigneshr@ti.com>, Bodo Stroesser <bostroesser@gmail.com>, 
+	"Martin K . Petersen" <martin.petersen@oracle.com>, David Howells <dhowells@redhat.com>, 
+	Marc Dionne <marc.dionne@auristor.com>, Alexander Viro <viro@zeniv.linux.org.uk>, 
+	Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>, David Hildenbrand <david@kernel.org>, 
+	"Liam R . Howlett" <Liam.Howlett@oracle.com>, Vlastimil Babka <vbabka@kernel.org>, 
+	Mike Rapoport <rppt@kernel.org>, Michal Hocko <mhocko@suse.com>, Jann Horn <jannh@google.com>, 
+	Pedro Falcato <pfalcato@suse.de>, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, 
+	linux-hyperv@vger.kernel.org, linux-stm32@st-md-mailman.stormreply.com, 
+	linux-arm-kernel@lists.infradead.org, linux-mtd@lists.infradead.org, 
+	linux-staging@lists.linux.dev, linux-scsi@vger.kernel.org, 
+	target-devel@vger.kernel.org, linux-afs@lists.infradead.org, 
+	linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, 
+	Ryan Roberts <ryan.roberts@arm.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-tcm_loop_target_reset() violates the SCSI EH contract: it returns
-SUCCESS without draining any in-flight commands.  The SCSI EH
-documentation (scsi_eh.rst) requires that when a reset handler returns
-SUCCESS the driver has made lower layers "forget about timed out scmds"
-and is ready for new commands.  Every other SCSI LLD (virtio_scsi,
-mpt3sas, ipr, scsi_debug, mpi3mr) enforces this by draining or
-completing outstanding commands before returning SUCCESS.
+On Mon, Mar 16, 2026 at 7:29=E2=80=AFAM Lorenzo Stoakes (Oracle) <ljs@kerne=
+l.org> wrote:
+>
+> On Sun, Mar 15, 2026 at 07:32:54PM -0700, Suren Baghdasaryan wrote:
+> > On Fri, Mar 13, 2026 at 5:00=E2=80=AFAM Lorenzo Stoakes (Oracle) <ljs@k=
+ernel.org> wrote:
+> > >
+> > > On Fri, Mar 13, 2026 at 04:07:43AM -0700, Usama Arif wrote:
+> > > > On Thu, 12 Mar 2026 20:27:20 +0000 "Lorenzo Stoakes (Oracle)" <ljs@=
+kernel.org> wrote:
+> > > >
+> > > > > Commit 9d5403b1036c ("fs: convert most other generic_file_*mmap()=
+ users to
+> > > > > .mmap_prepare()") updated AFS to use the mmap_prepare callback in=
+ favour of
+> > > > > the deprecated mmap callback.
+> > > > >
+> > > > > However, it did not account for the fact that mmap_prepare can fa=
+il to map
+> > > > > due to an out of memory error, and thus should not be incrementin=
+g a
+> > > > > reference count on mmap_prepare.
+> >
+> > This is a bit confusing. I see the current implementation does
+> > afs_add_open_mmap() and then if generic_file_mmap_prepare() fails it
+> > does afs_drop_open_mmap(), therefore refcounting seems to be balanced.
+> > Is there really a problem?
+>
+> Firstly, mmap_prepare is invoked before we try to merge, so the VMA could=
+ in
+> theory get merged and then the refcounting will be wrong.
 
-Because tcm_loop_target_reset() doesn't drain, the SCSI EH reuses
-in-flight scsi_cmnd structures for recovery commands (e.g. TUR) while
-the target core still has async completion work queued for the old
-se_cmd.  The memset in queuecommand zeroes se_lun and lun_ref_active,
-causing transport_lun_remove_cmd() to skip its percpu_ref_put().  The
-leaked LUN reference prevents transport_clear_lun_ref() from
-completing, hanging configfs LUN unlink forever in D-state:
+I see now. Ok, makes sense.
 
-  INFO: task rm:264 blocked for more than 122 seconds.
-  rm              D    0   264    258 0x00004000
-  Call Trace:
-   __schedule+0x3d0/0x8e0
-   schedule+0x36/0xf0
-   transport_clear_lun_ref+0x78/0x90 [target_core_mod]
-   core_tpg_remove_lun+0x28/0xb0 [target_core_mod]
-   target_fabric_port_unlink+0x50/0x60 [target_core_mod]
-   configfs_unlink+0x156/0x1f0 [configfs]
-   vfs_unlink+0x109/0x290
-   do_unlinkat+0x1d5/0x2d0
+>
+> Secondly, mmap_prepare occurs at such at time where it is _possible_ that
+> allocation failures as described below could happen.
 
-Fix this by making tcm_loop_target_reset() actually drain commands:
+Right, but in that case afs_file_mmap_prepare() would drop its
+refcount and return an error, so refcounting is still good, no?
 
-1. Issue TMR_LUN_RESET via tcm_loop_issue_tmr() to drain all commands
-   that the target core knows about (those not yet CMD_T_COMPLETE).
+>
+> I'll update the commit message to reflect the merge aspect actually.
 
-2. Use blk_mq_tagset_busy_iter() to iterate all started requests and
-   flush_work() on each se_cmd — this drains any deferred completion
-   work for commands that already had CMD_T_COMPLETE set before the
-   TMR (which the TMR skips via __target_check_io_state()).  This is
-   the same pattern used by mpi3mr, scsi_debug, and libsas to drain
-   outstanding commands during reset.
+Thanks!
 
-Fixes: e0eb5d38b732 ("scsi: target: tcm_loop: Use block cmd allocator for se_cmds")
-Cc: stable@vger.kernel.org
-Assisted-by: Claude:claude-opus-4-6
-Signed-off-by: Josef Bacik <josef@toxicpanda.com>
----
-- I have a reproducer for this that you can run if you'd like, but it's Claude
-  generated so it's a bit special, but definitely triggers the issue every time
-  and this patch resolved it. We're hitting it in production quite a bit.
+>
+> >
+> > > > >
+> > > > > With the newly added vm_ops->mapped callback available, we can si=
+mply defer
+> > > > > this operation to that callback which is only invoked once the ma=
+pping is
+> > > > > successfully in place (but not yet visible to userspace as the mm=
+ap and VMA
+> > > > > write locks are held).
+> > > > >
+> > > > > Therefore add afs_mapped() to implement this callback for AFS.
+> > > > >
+> > > > > In practice the mapping allocations are 'too small to fail' so th=
+is is
+> > > > > something that realistically should never happen in practice (or =
+would do
+> > > > > so in a case where the process is about to die anyway), but we sh=
+ould still
+> > > > > handle this.
+> >
+> > nit: I would drop the above paragraph. If it's impossible why are you
+> > handling it? If it's unlikely, then handling it is even more
+> > important.
+>
+> Sure I can drop it, but it's an ongoing thing with these small allocation=
+s.
+>
+> I wish we could just move to a scenario where we can simpy assume allocat=
+ions
+> will always succeed :)
 
- drivers/target/loopback/tcm_loop.c | 52 ++++++++++++++++++++++++++----
- 1 file changed, 46 insertions(+), 6 deletions(-)
+That would be really nice but unfortunately the world is not that
+perfect. I just don't want to be chasing some rarely reproducible bug
+because of the assumption that an allocation is too small to fail.
 
-diff --git a/drivers/target/loopback/tcm_loop.c b/drivers/target/loopback/tcm_loop.c
-index d668bd19fd4a..528883d989b8 100644
---- a/drivers/target/loopback/tcm_loop.c
-+++ b/drivers/target/loopback/tcm_loop.c
-@@ -26,6 +26,7 @@
- #include <linux/slab.h>
- #include <linux/types.h>
- #include <linux/configfs.h>
-+#include <linux/blk-mq.h>
- #include <scsi/scsi.h>
- #include <scsi/scsi_tcq.h>
- #include <scsi/scsi_host.h>
-@@ -269,15 +270,27 @@ static int tcm_loop_device_reset(struct scsi_cmnd *sc)
- 	return (ret == TMR_FUNCTION_COMPLETE) ? SUCCESS : FAILED;
- }
- 
-+static bool tcm_loop_flush_work_iter(struct request *rq, void *data)
-+{
-+	struct scsi_cmnd *sc = blk_mq_rq_to_pdu(rq);
-+	struct tcm_loop_cmd *tl_cmd = scsi_cmd_priv(sc);
-+	struct se_cmd *se_cmd = &tl_cmd->tl_se_cmd;
-+
-+	flush_work(&se_cmd->work);
-+	return true;
-+}
-+
- static int tcm_loop_target_reset(struct scsi_cmnd *sc)
- {
- 	struct tcm_loop_hba *tl_hba;
- 	struct tcm_loop_tpg *tl_tpg;
-+	struct Scsi_Host *sh = sc->device->host;
-+	int ret;
- 
- 	/*
- 	 * Locate the tcm_loop_hba_t pointer
- 	 */
--	tl_hba = *(struct tcm_loop_hba **)shost_priv(sc->device->host);
-+	tl_hba = *(struct tcm_loop_hba **)shost_priv(sh);
- 	if (!tl_hba) {
- 		pr_err("Unable to perform device reset without active I_T Nexus\n");
- 		return FAILED;
-@@ -286,11 +299,38 @@ static int tcm_loop_target_reset(struct scsi_cmnd *sc)
- 	 * Locate the tl_tpg pointer from TargetID in sc->device->id
- 	 */
- 	tl_tpg = &tl_hba->tl_hba_tpgs[sc->device->id];
--	if (tl_tpg) {
--		tl_tpg->tl_transport_status = TCM_TRANSPORT_ONLINE;
--		return SUCCESS;
--	}
--	return FAILED;
-+	if (!tl_tpg)
-+		return FAILED;
-+
-+	/*
-+	 * Issue a LUN_RESET to drain all commands that the target core
-+	 * knows about.  This handles commands not yet marked CMD_T_COMPLETE.
-+	 */
-+	ret = tcm_loop_issue_tmr(tl_tpg, sc->device->lun, 0, TMR_LUN_RESET);
-+	if (ret != TMR_FUNCTION_COMPLETE)
-+		return FAILED;
-+
-+	/*
-+	 * Flush any deferred target core completion work that may still be
-+	 * queued.  Commands that already had CMD_T_COMPLETE set before the TMR
-+	 * are skipped by the TMR drain, but their async completion work
-+	 * (transport_lun_remove_cmd → percpu_ref_put, release_cmd → scsi_done)
-+	 * may still be pending in target_completion_wq.
-+	 *
-+	 * The SCSI EH will reuse in-flight scsi_cmnd structures for recovery
-+	 * commands (e.g. TUR) immediately after this handler returns SUCCESS —
-+	 * if deferred work is still pending, the memset in queuecommand would
-+	 * zero the se_cmd while the work accesses it, leaking the LUN
-+	 * percpu_ref and hanging configfs unlink forever.
-+	 *
-+	 * Use blk_mq_tagset_busy_iter() to find all started requests and
-+	 * flush_work() on each — the same pattern used by mpi3mr, scsi_debug,
-+	 * and other SCSI drivers to drain outstanding commands during reset.
-+	 */
-+	blk_mq_tagset_busy_iter(&sh->tag_set, tcm_loop_flush_work_iter, NULL);
-+
-+	tl_tpg->tl_transport_status = TCM_TRANSPORT_ONLINE;
-+	return SUCCESS;
- }
- 
- static const struct scsi_host_template tcm_loop_driver_template = {
--- 
-2.53.0
-
+>
+> Vlasta - thoughts?
+>
+> Cheers, Lorenzo
+>
+> >
+> > > > >
+> > > > > Signed-off-by: Lorenzo Stoakes (Oracle) <ljs@kernel.org>
+> > > > > ---
+> > > > >  fs/afs/file.c | 20 ++++++++++++++++----
+> > > > >  1 file changed, 16 insertions(+), 4 deletions(-)
+> > > > >
+> > > > > diff --git a/fs/afs/file.c b/fs/afs/file.c
+> > > > > index f609366fd2ac..69ef86f5e274 100644
+> > > > > --- a/fs/afs/file.c
+> > > > > +++ b/fs/afs/file.c
+> > > > > @@ -28,6 +28,8 @@ static ssize_t afs_file_splice_read(struct file=
+ *in, loff_t *ppos,
+> > > > >  static void afs_vm_open(struct vm_area_struct *area);
+> > > > >  static void afs_vm_close(struct vm_area_struct *area);
+> > > > >  static vm_fault_t afs_vm_map_pages(struct vm_fault *vmf, pgoff_t=
+ start_pgoff, pgoff_t end_pgoff);
+> > > > > +static int afs_mapped(unsigned long start, unsigned long end, pg=
+off_t pgoff,
+> > > > > +                 const struct file *file, void **vm_private_data=
+);
+> > > > >
+> > > > >  const struct file_operations afs_file_operations =3D {
+> > > > >     .open           =3D afs_open,
+> > > > > @@ -61,6 +63,7 @@ const struct address_space_operations afs_file_=
+aops =3D {
+> > > > >  };
+> > > > >
+> > > > >  static const struct vm_operations_struct afs_vm_ops =3D {
+> > > > > +   .mapped         =3D afs_mapped,
+> > > > >     .open           =3D afs_vm_open,
+> > > > >     .close          =3D afs_vm_close,
+> > > > >     .fault          =3D filemap_fault,
+> > > > > @@ -500,13 +503,22 @@ static int afs_file_mmap_prepare(struct vm_=
+area_desc *desc)
+> > > > >     afs_add_open_mmap(vnode);
+> > > >
+> > > > Is the above afs_add_open_mmap an additional one, which could cause=
+ a reference
+> > > > leak? Does the above one need to be removed and only the one in afs=
+_mapped()
+> > > > needs to be kept?
+> > >
+> > > Ah yeah good spot, will fix thanks!
+> > >
+> > > >
+> > > > >
+> > > > >     ret =3D generic_file_mmap_prepare(desc);
+> > > > > -   if (ret =3D=3D 0)
+> > > > > -           desc->vm_ops =3D &afs_vm_ops;
+> > > > > -   else
+> > > > > -           afs_drop_open_mmap(vnode);
+> > > > > +   if (ret)
+> > > > > +           return ret;
+> > > > > +
+> > > > > +   desc->vm_ops =3D &afs_vm_ops;
+> > > > >     return ret;
+> > > > >  }
+> > > > >
+> > > > > +static int afs_mapped(unsigned long start, unsigned long end, pg=
+off_t pgoff,
+> > > > > +                 const struct file *file, void **vm_private_data=
+)
+> > > > > +{
+> > > > > +   struct afs_vnode *vnode =3D AFS_FS_I(file_inode(file));
+> > > > > +
+> > > > > +   afs_add_open_mmap(vnode);
+> > > > > +   return 0;
+> > > > > +}
+> > > > > +
+> > > > >  static void afs_vm_open(struct vm_area_struct *vma)
+> > > > >  {
+> > > > >     afs_add_open_mmap(AFS_FS_I(file_inode(vma->vm_file)));
+> > > > > --
+> > > > > 2.53.0
+> > > > >
+> > > > >
+> > >
+> > > Cheers, Lorenzo
