@@ -1,46 +1,46 @@
-Received: from GVXPR05CU001.outbound.protection.outlook.com (mail-swedencentralazon11013002.outbound.protection.outlook.com [52.101.83.2])
+Received: from AM0PR02CU008.outbound.protection.outlook.com (mail-westeuropeazon11013052.outbound.protection.outlook.com [52.101.72.52])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6FE643F9F46;
-	Tue, 17 Mar 2026 23:05:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.83.2
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 281243F99C6;
+	Tue, 17 Mar 2026 23:05:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.72.52
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773788756; cv=fail; b=dDZdyy1xp2r6/6U5jVynfk2TuXKOIHFbtawDxR17SS2gs96czt1QXpAQyAINCD/DfqFf9cHR313M6UUSbXTcSfV9JCL/z5Fd8F/cnC22L8X2bq7cY4XlB6x2NF4VHMCeESmIYYkHoxATPyLMPX/RNFShpQjy0K16BaycV2Z/omc=
+	t=1773788755; cv=fail; b=Pa5ZyvkhZs0/fw3HjXD5hsm+UuTNnpMCQ1Zb5uSTtXWoboWE74X2Ul2z7QG7YJG8QJk6+AD/0erQyVd/RGPOJFoQdy6nFTvwROk6RqbbAhNfKJH9TDpjqfBwwX31D/PhDuGaEewzPasxu2BL9BtHINRFk0I297nbmouDOkBRqNo=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773788756; c=relaxed/simple;
-	bh=6NMU/SRrhXE/MiL6JHSCNEjH8NOC7WS2T3Jyi9wd6Yc=;
+	s=arc-20240116; t=1773788755; c=relaxed/simple;
+	bh=q+PxRLOLqHtXHAjfvVDL9Y8kLYm6cHOt3gcQ1ibwEqM=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=W5wT/jP95/ST+mzAfT9LT5Vn9AVVPQKH7QPMpV6KX7TO3AsMLf8LZydZI4PikCJiEzr02Aiv/1LrFD8EuErs6s4dVQmp+jQvvR2Z8T1LYVtymPBesBQyNEu0E/YHTIjxPT37aXmHblhnkcnteJghq2fXPRFXRmoC7LcQQ9Elvks=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=Cwn4DMXh; arc=fail smtp.client-ip=52.101.83.2
+	 Content-Type:MIME-Version; b=UdayzY8rDUpQxBzRnv387UNcFqCXtExUAqIif6XA2yiHs4xJiBBTcFwyUT6LTYzgF0z56a6TRd/ZYNXyAXz2hmDxFF03Qj7YbsxMVswaAQvBH3Sv9KX9Jyb3MOQGJIN+Ox9mJZIKn5MKwiku4lECiNusAEeWlSTmn6hcuFQ8pu8=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=SENM9U9w; arc=fail smtp.client-ip=52.101.72.52
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="Cwn4DMXh"
+	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="SENM9U9w"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=kgjaNVdqYTJ1kYQd8cH6dYNVVqFyRMJuYkOBlmwsaFXgxtrnaIkYFRVw9b5ZBG0yR39dqMHRopCVVEM909zCjoZI8BY0pQ64Ho4w1Pq9YayrkFaLF81zFs34ByITtusAB/PO+kwO9mwdGqLnc9akvr/Qmpncc1cjQ16l21EtEGj6OYrLctj8Qq1Y+E8TuwWCRkcqy1YqenSEorWnG6+eW1bZGlFTSnZ4J32wEeFHT21RwGCuLgJe01hfGu4FgnuxL3J/C3/Gc0O0dVgI2o9v2Pk8MPpk35T7CwN+4YG5n5FZErhrLdauY3ebTwVrMgs8roxBGrloJFMlCWsVHq/7xQ==
+ b=zWO8l+eZpoHDuEiuCcxwrsry/MLx0wLPF7Sq4nQJ6SMEFxYQz0H+18zo3FY4mRoWTZCrpdhAbJVfFNT90+jT6plkbwCJmNux5xOlBBx3jOeYH4c7ke61oITJc0inZDNSSfo/tY1LcNWexcTzlt08wWqnb27hTnlE6niD7R7wLrv34ncCSEhYzpvO3nkyS/BpneIAYjwtxCMX37vNsDZ4DBrkurbwy2LYTOu/SOC5g/YpE0xueP9rTz1qHWkbHwLc7UrRiOXiPSQJAEzYujJ7kqAHbo79OfYm9nDvx7euPCa3D81b43oZwmQLCAQU6gQ4bowFDfYuCKuvJUDmw9802A==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=KoRmlaBKq/HTgxcz7UdBU/a6FayMfH+6d7e1R8P1Rbs=;
- b=oh1s3nfPQMxukZnWudTsWSdfnnVTzG3TD49Vv7tEbtf4ijfItUnWPAH/Ujl8TUaDFbeIT/aqVr5tLsKQG64oK/2DulQS/RN5EYesX/oBUaMq9PRtwNO1Twn5xJ/X0d4ZqhokWh2+6PgOQ9i47VhCbOMeLsJry2LKVwJ/eZwCFcjgrOe+jcD25RBIQ1rlGd7JvllUwuSPP5g9U3531r2GlZz5ohRcG8U+ZZbu45053JjFfN1ylWPfjf5Rat07ZTqusqvQhPCWI6X4tMT1/J9i5NjIdbnsDFrjyadf723iCfCRscnWNmApVudwLolJfN6l6+QOtErl1AmoAU/TlSpnAA==
+ bh=gU2NyuJVLVhm6ddp77+YeTU53AYwE8f7Nv2x3g4J45M=;
+ b=QqpPagzBRsWWrT1kXnsZrohSglpOEFgBh8Ghf5V8ey7kviccG3c1yBWvYQHafNrkqkRbhpc4BpZgOoiRFKgbqBd1HD3GvtgPbZRcXT5ut1qfmyZOj6KYLt1YpOuaOfuZob7xCGspLfy+0yZZ75p0h4/rTYPcjcgWAsg/N47xJjRr1e2xSsJaDxGlHoira6i3gakWJi3E6uegLh3k4rymqlWBpKYglNuPyjfJvJHkCscg/6CLiS/jYEuoKGTv32DXWfLPh/sAEJ7Ixh+nD3JgQMqpBhqS4G4a2tzBUa1gmtgxu3ChlF+J4GBqQOaVQGQhOqrDqerMxNH+IVpBh4bHKg==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
  header.d=nxp.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=KoRmlaBKq/HTgxcz7UdBU/a6FayMfH+6d7e1R8P1Rbs=;
- b=Cwn4DMXhNya4QmdjF83P88UHVSajJah9Xu7r6cxxpFjBAolHqxPgALr0wPn3yhEeRM4DXOwk+sNUU5fYlWH8bKJrbryNRcVWYkqVYpwwCrbNV+LXDRJTj6mb6ic2+Q8bOU3jPTEx0pTBuGNGrpmtPp/qp4CiNHPoXxvTV5Xnm04/+vcv8j4TLYNgQSEHqrmSNOGdlHVjD6Hpnbssp7sXWNkjKToqiJ+gxclfFKWQ595vDbTxZ4Fptmmzb7f+NHAQEeAZqsJ84gIjbB1p/CLO+3BqnXY/sn6WXsIVjRz/LyPeYuTHSqGlQYzu8eZRyfh5zA/tSfLleEyKz1hQZUxiXQ==
+ bh=gU2NyuJVLVhm6ddp77+YeTU53AYwE8f7Nv2x3g4J45M=;
+ b=SENM9U9wm2MNfL5xihPdd3vgRXhcazT1ybg8IoHtHn1cByStfb8FFV0O3sWeX4VL+zz1KwEOKOU8f7s1pz438HBaPg28VlLDRz5y8hOQYWIN3WAg6EH1FkHwcUkgzVbEcNYhPIDVsWbrxpvhTHv1S8ugzVUbnGy8eedqdy8+pIOZXPEbSyo/sP1RWu/n9zm96PrDfjuXDhO6pVFHbcBa+fymfUR5JEkhZvsfbxKZGMqdBwhzF9Lxuj+ni3tAXkiPjA+c2TsZrUMaIqTea97a2fOzRAJgh2oyv1cIhrGxbrjF0gtYzQ2u7CZjgr/8yqaWvpTt2IfOcvkcH7Q28Fjm6w==
 Authentication-Results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=nxp.com;
 Received: from AM9PR04MB8585.eurprd04.prod.outlook.com (2603:10a6:20b:438::13)
- by VI0PR04MB12032.eurprd04.prod.outlook.com (2603:10a6:800:311::18) with
+ by DBBPR04MB7643.eurprd04.prod.outlook.com (2603:10a6:10:203::11) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9700.27; Tue, 17 Mar
- 2026 23:05:30 +0000
+ 2026 23:05:39 +0000
 Received: from AM9PR04MB8585.eurprd04.prod.outlook.com
  ([fe80::f010:fca8:7ef:62f4]) by AM9PR04MB8585.eurprd04.prod.outlook.com
  ([fe80::f010:fca8:7ef:62f4%4]) with mapi id 15.20.9700.022; Tue, 17 Mar 2026
- 23:05:27 +0000
+ 23:05:39 +0000
 From: Vladimir Oltean <vladimir.oltean@nxp.com>
 To: linux-phy@lists.infradead.org
 Cc: Vinod Koul <vkoul@kernel.org>,
@@ -66,23 +66,35 @@ Cc: Vinod Koul <vkoul@kernel.org>,
 	netdev@vger.kernel.org,
 	spacemit@lists.linux.dev,
 	UNGLinuxDriver@microchip.com,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Vignesh Raghavendra <vigneshr@ti.com>,
-	Siddharth Vadapalli <s-vadapalli@ti.com>
-Subject: [PATCH v4 phy-next 08/24] PCI: Remove device links to PHY
-Date: Wed, 18 Mar 2026 01:04:44 +0200
-Message-ID: <20260317230500.2056077-9-vladimir.oltean@nxp.com>
+	Markus Schneider-Pargmann <msp@baylibre.com>,
+	Andrzej Hajda <andrzej.hajda@intel.com>,
+	Robert Foss <rfoss@kernel.org>,
+	Laurent Pinchart <Laurent.pinchart@ideasonboard.com>,
+	Jonas Karlman <jonas@kwiboo.se>,
+	Jernej Skrabec <jernej.skrabec@gmail.com>,
+	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
+	Maxime Ripard <mripard@kernel.org>,
+	Thomas Zimmermann <tzimmermann@suse.de>,
+	David Airlie <airlied@gmail.com>,
+	Simona Vetter <simona@ffwll.ch>,
+	Andy Yan <andy.yan@rock-chips.com>,
+	Marc Kleine-Budde <mkl@pengutronix.de>,
+	Vincent Mailhol <mailhol@kernel.org>,
+	Nicolas Ferre <nicolas.ferre@microchip.com>,
+	Alexandre Belloni <alexandre.belloni@bootlin.com>,
+	Claudiu Beznea <claudiu.beznea@tuxon.dev>,
+	Geert Uytterhoeven <geert+renesas@glider.be>,
+	Magnus Damm <magnus.damm@gmail.com>
+Subject: [PATCH v4 phy-next 14/24] phy: introduce phy_get_max_link_rate() helper for consumers
+Date: Wed, 18 Mar 2026 01:04:50 +0200
+Message-ID: <20260317230500.2056077-15-vladimir.oltean@nxp.com>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20260317230500.2056077-1-vladimir.oltean@nxp.com>
 References: <20260317230500.2056077-1-vladimir.oltean@nxp.com>
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: VI1PR0102CA0003.eurprd01.prod.exchangelabs.com
- (2603:10a6:802::16) To AM9PR04MB8585.eurprd04.prod.outlook.com
+Content-Type: text/plain
+X-ClientProxiedBy: VI1PR04CA0128.eurprd04.prod.outlook.com
+ (2603:10a6:803:f0::26) To AM9PR04MB8585.eurprd04.prod.outlook.com
  (2603:10a6:20b:438::13)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -91,361 +103,247 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: AM9PR04MB8585:EE_|VI0PR04MB12032:EE_
-X-MS-Office365-Filtering-Correlation-Id: 36f4548c-169b-4db6-25ee-08de8479ad98
+X-MS-TrafficTypeDiagnostic: AM9PR04MB8585:EE_|DBBPR04MB7643:EE_
+X-MS-Office365-Filtering-Correlation-Id: eb8ab2d2-f826-4e09-3228-08de8479b4ca
+X-LD-Processed: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635,ExtAddr
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|10070799003|376014|19092799006|7416014|366016|18002099003|56012099003|22082099003;
+ BCL:0;ARA:13230040|19092799006|10070799003|1800799024|376014|7416014|366016|22082099003|18002099003|56012099003;
 X-Microsoft-Antispam-Message-Info:
-	XaTTd6/QTujM+hP53P61rUv/YaYJUA7q+4Wd1V+TGRoE++uCoDDk6uScEuYTjGefTiH0q1EfLetVp3H+C1lWPG06L7cbsA6kD9tlYV+cITLBTNkgH1JJeGlSDDslHhVnlO41aD0JzYMyCYWU7YNGS2Z4/NP3mxLtR8UlKVp7KS7z3fxoSQqwpZPMs1Se/O4izIt8Hxxxcp2EepooJfhjhRZGfLg8w+AapyunobGwQscCsfg2sat8agr1H7H16dBVBIjatc1LnwWnYkipeoJ4KjZM7BcY/h3rPAlqNcvyKzNL+9uHHqNV95xz63QizpVQXoqMGXIabVwUnWUdh+YEffiLAZylx0trPK/0zSEpunyJIQ75chjYPDwDUg4XEbTBOtL9xYY4a5WI8VU3q0UkLRJHPhMECb8lQfPnx6qA8DAxw3Qpx9U96V+BCAUorW5h8rH8Hmqhx7n8lfbcrrcpHf0hAJUzykpmRkVWRY8FoPze5xChONJlXH3B+ollviUA4nnN1wNRulzZuoTVGSusTKu0eG5+YQiUjnhBXW+T1VMOqUDdK+wUanHlUiU60nVdDmvSchI8fvlOEfY1+9Jaf2yQldTqKmPnmRSJXd+FtG7WzJcLvNoV95/r+w50/LFMiMNQ+AhmogXWgWFciql0SQunfalgPDooS6ZlKa4eUUpZLH0F1tOxQUL6QUXwfK+UnxGbUfXX4bvPyLfmlSmLZnqa6VLV/vSvhLLfoENtOSg=
+ /6qX6FdySg80Y7C5YMU9HHskuh4WHpyCMAIRI2QC9xXtC0w/4mYP+p6aCJQPZbCYzwCq30UKYNBjhMMAScp6lZhHrW4hY7tiRGJM+gz2mqZbrC0cUZ8NQklmP/fAF4f8EHwvniEbmbi47+DhIib16H43aFVAx+4Optywyk7UDFGxW4keghjx6K4v14CAkYDQ7N+E8vKv8vHpHt/06NXW089fvo7ZRjdh8qS78cJ4uwdQIIi5By5JSkB15RuVvbV9ONHzbubpN6oYJ6TNTMbVWmSAoWO/H1OD5cbKm4NSVsa9mYdgVH4/jMtNZHUsyyGPM58dBI6Iiqed60bgrXzpuyfqeJp2gr+FhjI8fM1+E/wd3nxjgqC+bKaZ6efieXS8aGBDBm6nl1ZtELmfOSNeln1/ndbYUozEA1ald3JIoC2B7vFKhA6oyoRYfd7IdkN7Ay/XAnVRvk2B8zd2SQQ8NA1bum9MfzwHq6K0FyocPykEBFaTMwkI8Y7A5ojYoO4vkeKah+KtKyZ3rxFH15Gl3u0KnDEV9FPutPwSFU+LhggYWkiQMpB/JA5c9+Yyuh9KnUJHDfc05gc4aBGM8PGPS76rNnTaWi6d7JJ5cBjNZOxf6IoU1ncljMu/1ebcXI3MilLEAoRaVs0yBNcjoIS1yJ0QWvsDchgc4OXATVAdunLZHneYG22Qt0XYQ1t/2I2Qe1aHc2k2yN4YgnSFpjx6Xa1/JzMkBh2/HWadhKBrP5g=
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9PR04MB8585.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(10070799003)(376014)(19092799006)(7416014)(366016)(18002099003)(56012099003)(22082099003);DIR:OUT;SFP:1101;
+ CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9PR04MB8585.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(19092799006)(10070799003)(1800799024)(376014)(7416014)(366016)(22082099003)(18002099003)(56012099003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 2
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?TjVEODdkcUZHR2pBM0tKOE9VZWJ0L2pKS2ZiNzVxQll4NDZqZ3lqc3hxWVhl?=
- =?utf-8?B?K0dLMFZhZWJZUFdIK3BJVzI2QmVZUlVwNmRYWm5IQkU1SkpPbkFsRTk2L3BE?=
- =?utf-8?B?bDU2Y0tScTdEbi83S2JzdFdMZWsxTWF4UTNkK3FYY0pPU1BBblFQNnllUjJS?=
- =?utf-8?B?STFjMlVGbU9PbjI0OW50eUd1R1BtR050ZkNCdS9hUlpEYSsrM25PRGtWQWVn?=
- =?utf-8?B?dVNwV24wUE1XT3FScVJ0R0tBekx1WTc2d1lXTThqZGFuNUxSaUw2dktCcjho?=
- =?utf-8?B?RVUzczFPMDYrTmIvZGJDaGVteERUQ0VtcnYvRVAyY3dKYmdNY2pxYzNTTEdn?=
- =?utf-8?B?UlV4dHBnOWZuRW9CUEd2ODJOSHlqVFJhUGYxYnJpblFQMHZnc1BjNXBkTG9Y?=
- =?utf-8?B?alpvMDE5Wk91dGtodnBzR25HTUh1UyszRUQ5TWdTMlFPN0gwYURIQzVabitD?=
- =?utf-8?B?dGhXYTVWTWRBeHZyRnRkTTdubUt2UkRwYjJkMmRoN2p1MXdod0FudmdhMnNW?=
- =?utf-8?B?SXMzMEVQTFVRVEhpMHlTd2tGVVlRTzRKWGZBakxHazhCY0FPVXNXNmN5dUEx?=
- =?utf-8?B?WTU3dEVDSVpEc2srTDZuVm9HVnZvUkpLcVk2bTZSY3ljZ2hoQmpkN3pFdG9Q?=
- =?utf-8?B?UW5xa0tIRDhTazVNK2FmSFh1UmpscVFTcmY2WnZoMm90VERFdGZEUUxDalRQ?=
- =?utf-8?B?OEpIWjRMeXRBeEdIamVHaDV6cldWbjJldDRvWk4zMEsxc1BJbmpzeDg0b3Ra?=
- =?utf-8?B?VUF1dzdXR2VXbmU0elVFWFJyK0JwWUI0S0ErSzIzR29tMVE3Q280dkc0dzll?=
- =?utf-8?B?c3JZR0lCdWFLMkJGUDFWZGhzSnVxNGd2L0JGYmUxVy94SzNtdUtRazdUQkw4?=
- =?utf-8?B?TEZxUERLQXdkc25EQWZPWDVWYWNTNkQwaVZ2WlBTNXJ3WkdKeFgzRlNWb25n?=
- =?utf-8?B?R1ZZZ2ZXa0Z5VmhhMUxYNUgvWmlzS2ZkU2p0VW5OdDFZQWVhUDJYRXNORW1x?=
- =?utf-8?B?MXpZZno3QzN6dlJQc2w0RFRxRlBWclk0Wi9SUnovZG9HVGFydGNySU11OEla?=
- =?utf-8?B?emlCamVVc0lFZ1EyUEpJaXBhbFlFWVhUcWJDdVl1aHE2UGNJa2hvK3J5K2p1?=
- =?utf-8?B?azJlaWZIbTNWK0oxOG15VjBBV2txZHd2UUZqNVJUdHl0TzV0UmlzR1QrWFlh?=
- =?utf-8?B?RmVDenFEMVJGaDd6eEs4TjJhYW5vZ0NyTWpZeGRiTGdJY2tOenhuZ2ZWMmxh?=
- =?utf-8?B?WTFyM1lBanc5S0tMRnAxUlNrVWNrclY5bGdBaEsrK2pWWWVsZEpWaFluMEZW?=
- =?utf-8?B?Rk9WcVo2NXRKS1NlNkJJblFPekFoVEpkRGVCT2xiZGJyck1TNGpiYVF5UEpm?=
- =?utf-8?B?NGpvYmMwMUt0MnpKZE5lMllvRHFKZkdxOXo2OGc4L21hZ2Q2U2xFOGNsSGxN?=
- =?utf-8?B?bnBMbmN5UVdwYjI2bWVkaStqSjVKaFFwM05DYjNsUnZRTG9tRUMwMTY5aENZ?=
- =?utf-8?B?QnIybkJ6bVlmdFR5MjljN3NEZCtBTjQrVDYvOVZZWjBxaUIyMUtmTXBkcjVL?=
- =?utf-8?B?L01xdisyODM5RGpPeU5JVWt1RG5iZnJCdGZvbTY2VmUxR2tYeGtUUTZxMFRo?=
- =?utf-8?B?YzNEVHdydU1Ic3JER0ZFazBtQVk4RTByNmNUcHEvZzd2aDN6aVBPNGI5ZnNY?=
- =?utf-8?B?M29DUFpaQmtmR1FhZ2lldzVPcEp2emZYNmgvV1RMR2JmOHU0MnAvQXdybGZq?=
- =?utf-8?B?MXgyczlwZGk5dE1UQStpV3ExS09jVWo3OUhyaDRNeTJjOUlGdWEvcGVQQW04?=
- =?utf-8?B?R1R1VFM3VFRNWE0wWmFXZHFHQS9uSkFDdC93QWtWL202b1hhUU02cnRCZitE?=
- =?utf-8?B?dnB5RXJsdU1IYmg3Z1lLMzJIdEtHNGZqV0x5b1hoZTlNdUpUQVl4NzdCQVUv?=
- =?utf-8?B?amJmd0hqeEJJSUFncEhLRHlGMmxRNk04OTI0MG1LUUxlYzluSE9aQnFlU2k5?=
- =?utf-8?B?UUZrOTAwc29qNHVYVThicnlLZSt3Y3Fwa0FUcWYzUzlMcGJsMTRURi9OLytN?=
- =?utf-8?B?MFJ6SVB6TGdjRFQ1THJoRDF2eDdNU2k3WmpGZ0FNRENTZlJ2NXVUcnFDbk56?=
- =?utf-8?B?RGtmdC9pZFZnSGcyZ1hLUjhNeW03SmFzY0VhQ0tEZ3F0M1lzK2xGN0x3UXc5?=
- =?utf-8?B?RUxiVVh5V3l0SnVlbG1aSzRxMVlxdXZEd2ExWnhHUXdHSllJSzBhR1dJVlY3?=
- =?utf-8?B?ZUptaDdVWVpRQ0dBZDBtZ0J2OXVPU09qek5uejFPWHNXWEVPTm52ajBqTWFk?=
- =?utf-8?B?dTc5bzNGcU1oSmxHWnFtM3pxMVExQWhjaW55Z29XM3YzK01TaUxxWE43dGxG?=
- =?utf-8?Q?nvIUbXYXkYUp97AIhOt4V+laXCr8nepFvLPM/EKvUEeRn?=
-X-MS-Exchange-AntiSpam-MessageData-1: HJhtuuIyKarmlGxGQV4QLVjq9Pr5YJtMzlI=
+ =?us-ascii?Q?1/hALWfwwv9R1aYbpq0x4i5h+apHi8UH4NIyr7n7FEudn6qIO2CNbQsNIFXo?=
+ =?us-ascii?Q?G2y7bLXmfv2/xPqeNnO+XNlfIlMLIcwULCrgAs5lggBXg6vCuUMnZo331N9m?=
+ =?us-ascii?Q?9Pk+nLQTEi6Bdohx4XfxDxgTWN0TB1i6PykdNI9vS1B/emNTukvd2m5egLFE?=
+ =?us-ascii?Q?a0nYPwqllZlslNqWumuPNRwrzYpkyceBxi69KggbARaIBjHmkR9V/ZMR8AmU?=
+ =?us-ascii?Q?r3y+KZaIx7CnfeFHRoDYAtmyB8pJNj0nge2NhI3DoG4lB7US/kTFwGld5V0Y?=
+ =?us-ascii?Q?4g37Wy5zQYliUGKEwx8xL6W2orgtt2IRGBdVYgMEIncIZVz6ffjbKgrs88Zk?=
+ =?us-ascii?Q?fH1gNsn6FpBTBKk5tip1j/JzCNRINgay/m4Ot/y6qXi2rA0lrtMKS/byk+EN?=
+ =?us-ascii?Q?P9Ju2zUPvvq65kLRn+ZDobxLdrxk2TE5GibFww2FbcKhXE2mkS8Z3yC0zlxp?=
+ =?us-ascii?Q?AvzuYN006b9SE9GHfPwshN4m7iozgr03hhQ5nkKeyE8Fl1Q4Jqb39hyiXhe8?=
+ =?us-ascii?Q?KtI3xz4efAWirL0Pfk34xy3wZG7XqeMzvlrM11HMnSyWxFhNP/ysFrfc654v?=
+ =?us-ascii?Q?Ik2bA9YOXk+2bTlDLi0OSG6jghqOY5brPs3KqA5ykovSL6283S/lXg+TxO39?=
+ =?us-ascii?Q?x1syXQIbMuKwCCcWUD4Eof6uMRMrnk7sMPJCnf7YVAdcmtYYwAVA0HmslaWi?=
+ =?us-ascii?Q?iK+BDp8spev3rWPP0e24Xc5lWHiJzJsnf7OCDFG2snqPPazuBb31Y/Lp7DJn?=
+ =?us-ascii?Q?cPkOUhflkan1B312ku/wMH8I5zMNAJYAV51TcfYlegTwg8OEaIuR2350tItr?=
+ =?us-ascii?Q?TQcGvsMuiflV/qr72Yx2jlSR/PHU9SxTFMXCVcLfPqHhBXWfjdTpejVK/iXC?=
+ =?us-ascii?Q?8jk7AsGtHql/RQDl8++uxq+NZcdu8aKI9WOEFoFDjowMo98Reeub2XCKgXGp?=
+ =?us-ascii?Q?UTJnkYO80wUvC3g8Lf3BOVkh6x1v0pBahaXBBMcyIzSr9X1ZB06fCv+QCOJm?=
+ =?us-ascii?Q?j+3n0zp/H9q+cZFsG5zMW7c3IaSrkwicyXH16N0tiX2Bs0yi41OityrH50FJ?=
+ =?us-ascii?Q?FG3USuWOU03wQlamHzI/AxvIZ4mzcBvVQbI0HyxA1D3haBtdgj3Iudb0hVrK?=
+ =?us-ascii?Q?cdNuihOpB7ajwWuGoT0KN2E3jmh9oUa+yI/MdlwZyPmHl6XRxjBNbzZoF1YU?=
+ =?us-ascii?Q?Qw0YdOgkK2C8+rLhmA0eTLXzxR9tuGuyWahDv8i09cuclwJ+aW2mEU4M3Dgc?=
+ =?us-ascii?Q?KIwzMovR/mvkMVSPNgkVpDMR3uFvxPPN0hFEXwDiPjkTrRZ0eCFSvjdwn9lB?=
+ =?us-ascii?Q?Ad43dVIq1jRGZrTuR20cBu01xPGOTIVQcvXKUaeSKadowy74r2kKWj/MrnJ9?=
+ =?us-ascii?Q?G/a1ePYMbvAVissEF6mBJN45JfJsFroArtGs/E8ephR8pw4s0JFy5a93iv3H?=
+ =?us-ascii?Q?kMqzBl2rmgazNGDx2yEp3BNlYkXD1FBo52UbZnplkqeAXCnoCw7G/lsy/IxZ?=
+ =?us-ascii?Q?d3uATJwktOZUfdHK4MjNiRSLF1YowoiYoiyjqsDKUa01DTxXkFxTXeMXhLz5?=
+ =?us-ascii?Q?GF247i+957XFT3CyvgBUiMxRgmWngM+UKLeZxEpuXwthmGSEaNcSQFRiQflt?=
+ =?us-ascii?Q?KUtz3skla41djYngVuPnv9fbPRzJr8xeezig8Cy6ZjIhCoLHXXHBFyPNpyT/?=
+ =?us-ascii?Q?YWbSUjVp2SB29p6eEM7HIGu6hokLHBAmsm6ZS1w2h6fWGssqJCBRcZNtnDIJ?=
+ =?us-ascii?Q?vVZaCws3/zastWyb0A7ahU0e6ZLRKvOIMkzudFGh1Rob/rufn83lVBaD3qRy?=
+X-MS-Exchange-AntiSpam-MessageData-1: YIYSVf722jBE2DwSjJ6G2c80fqSp8ANNmPw=
 X-OriginatorOrg: nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 36f4548c-169b-4db6-25ee-08de8479ad98
+X-MS-Exchange-CrossTenant-Network-Message-Id: eb8ab2d2-f826-4e09-3228-08de8479b4ca
 X-MS-Exchange-CrossTenant-AuthSource: AM9PR04MB8585.eurprd04.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Mar 2026 23:05:27.3325
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Mar 2026 23:05:39.3592
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: v7H/BIM5Ty+Xdbq88DoSugEXL7KR8cOnHmBmHTDHrmjFViXwskamPyGlOIWPQE0WYJ5axJWNbdtHrddUm00l1w==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: VI0PR04MB12032
+X-MS-Exchange-CrossTenant-UserPrincipalName: oE0UtoWagqTIF0oSOc6ArQUKvnHSDHLuwE92r4aVBU7IF6D0aNR8fNkqfS5dnx2QrXDUaGK+PcY8ioeQ8Hpz6Q==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DBBPR04MB7643
 
-This is practically a full revert of commit
-7a4db656a635 ("PCI: dra7xx: Create functional dependency between PCIe and PHY")
-and a partial revert of the device link pieces from commits
-dfb80534692d ("PCI: cadence: Add generic PHY support to host and EP drivers")
-49229238ab47 ("PCI: keystone: Cleanup PHY handling")
+Consumer drivers shouldn't dereference struct phy, not even to get to
+its attributes.
 
-The trouble with these commits is that they dereference fields inside
-struct phy from a consumer driver, which will become no longer possible.
+We have phy_get_bus_width() as a precedent for getting the bus_width
+attribute, so let's add phy_get_max_link_rate() and use it in DRM and
+CAN drivers.
 
-Since commit 987351e1ea77 ("phy: core: Add consumer device link
-support") from 2019, the PHY core also adds a device link to order PHY
-provider and consumer suspend/resume operations. All reverted commits
-are from 2017-2018, and what they do should actually be redundant now.
+In CAN drivers, the transceiver is acquired through devm_phy_optional_get()
+and NULL is given by the API as a non-error case, so the PHY API should
+also tolerate NULL coming back to it. This means we can further simplify
+the call sites that test for the NULL quality of the transceiver.
 
 Signed-off-by: Vladimir Oltean <vladimir.oltean@nxp.com>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Acked-by: Markus Schneider-Pargmann <msp@baylibre.com> # m_can
 ---
-Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>
-Cc: "Krzysztof Wilczyński" <kwilczynski@kernel.org>
-Cc: Manivannan Sadhasivam <mani@kernel.org>
-Cc: Rob Herring <robh@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Vignesh Raghavendra <vigneshr@ti.com>
-Cc: Siddharth Vadapalli <s-vadapalli@ti.com>
+Cc: Andrzej Hajda <andrzej.hajda@intel.com>
+Cc: Neil Armstrong <neil.armstrong@linaro.org>
+Cc: Robert Foss <rfoss@kernel.org>
+Cc: Laurent Pinchart <Laurent.pinchart@ideasonboard.com>
+Cc: Jonas Karlman <jonas@kwiboo.se>
+Cc: Jernej Skrabec <jernej.skrabec@gmail.com>
+Cc: Maarten Lankhorst <maarten.lankhorst@linux.intel.com>
+Cc: Maxime Ripard <mripard@kernel.org>
+Cc: Thomas Zimmermann <tzimmermann@suse.de>
+Cc: David Airlie <airlied@gmail.com>
+Cc: Simona Vetter <simona@ffwll.ch>
+Cc: Andy Yan <andy.yan@rock-chips.com>
+Cc: Marc Kleine-Budde <mkl@pengutronix.de>
+Cc: Vincent Mailhol <mailhol@kernel.org>
+Cc: Nicolas Ferre <nicolas.ferre@microchip.com>
+Cc: Alexandre Belloni <alexandre.belloni@bootlin.com>
+Cc: Claudiu Beznea <claudiu.beznea@tuxon.dev>
+Cc: Markus Schneider-Pargmann <msp@baylibre.com>
+Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+Cc: Magnus Damm <magnus.damm@gmail.com>
 
 v3->v4: none
-v2->v3:
-- remove dangling set but unused phy_count local variable in
-  cdns_plat_pcie_probe()
-v1->v2:
-- fully remove struct device link **link from struct cdns_pcie and from
-  cdns_plat_pcie_probe() error path
-- collect tag
-- adjust commit title
+v2->v3: collect tag
+v1->v2: make phy_get_bus_width() NULL-tolerant to simplify CAN callers
 ---
- .../controller/cadence/pcie-cadence-plat.c    |  4 ---
- drivers/pci/controller/cadence/pcie-cadence.c | 16 +---------
- drivers/pci/controller/cadence/pcie-cadence.h |  2 --
- drivers/pci/controller/dwc/pci-dra7xx.c       | 16 ----------
- drivers/pci/controller/dwc/pci-keystone.c     | 31 +++----------------
- 5 files changed, 5 insertions(+), 64 deletions(-)
+ drivers/gpu/drm/bridge/cadence/cdns-mhdp8546-core.c | 4 ++--
+ drivers/gpu/drm/bridge/synopsys/dw-dp.c             | 2 +-
+ drivers/net/can/at91_can.c                          | 3 +--
+ drivers/net/can/flexcan/flexcan-core.c              | 3 +--
+ drivers/net/can/m_can/m_can_platform.c              | 3 +--
+ drivers/net/can/rcar/rcar_canfd.c                   | 3 +--
+ drivers/phy/phy-core.c                              | 9 +++++++++
+ include/linux/phy/phy.h                             | 6 ++++++
+ 8 files changed, 22 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/pci/controller/cadence/pcie-cadence-plat.c b/drivers/pci/controller/cadence/pcie-cadence-plat.c
-index b067a3296dd3..fc39c01b7964 100644
---- a/drivers/pci/controller/cadence/pcie-cadence-plat.c
-+++ b/drivers/pci/controller/cadence/pcie-cadence-plat.c
-@@ -41,7 +41,6 @@ static int cdns_plat_pcie_probe(struct platform_device *pdev)
- 	struct pci_host_bridge *bridge;
- 	struct cdns_pcie_ep *ep;
- 	struct cdns_pcie_rc *rc;
--	int phy_count;
- 	bool is_rc;
- 	int ret;
+diff --git a/drivers/gpu/drm/bridge/cadence/cdns-mhdp8546-core.c b/drivers/gpu/drm/bridge/cadence/cdns-mhdp8546-core.c
+index a8b6ae58cb0a..ed7ed82ddb64 100644
+--- a/drivers/gpu/drm/bridge/cadence/cdns-mhdp8546-core.c
++++ b/drivers/gpu/drm/bridge/cadence/cdns-mhdp8546-core.c
+@@ -1300,7 +1300,7 @@ static u32 cdns_mhdp_get_training_interval_us(struct cdns_mhdp_device *mhdp,
  
-@@ -122,9 +121,6 @@ static int cdns_plat_pcie_probe(struct platform_device *pdev)
- 	pm_runtime_put_sync(dev);
- 	pm_runtime_disable(dev);
- 	cdns_pcie_disable_phy(cdns_plat_pcie->pcie);
--	phy_count = cdns_plat_pcie->pcie->phy_count;
--	while (phy_count--)
--		device_link_del(cdns_plat_pcie->pcie->link[phy_count]);
- 
- 	return 0;
- }
-diff --git a/drivers/pci/controller/cadence/pcie-cadence.c b/drivers/pci/controller/cadence/pcie-cadence.c
-index a1eada56edba..0ac980249941 100644
---- a/drivers/pci/controller/cadence/pcie-cadence.c
-+++ b/drivers/pci/controller/cadence/pcie-cadence.c
-@@ -222,7 +222,6 @@ int cdns_pcie_init_phy(struct device *dev, struct cdns_pcie *pcie)
- 	struct device_node *np = dev->of_node;
- 	int phy_count;
- 	struct phy **phy;
--	struct device_link **link;
- 	int i;
- 	int ret;
- 	const char *name;
-@@ -238,10 +237,6 @@ int cdns_pcie_init_phy(struct device *dev, struct cdns_pcie *pcie)
- 	if (!phy)
- 		return -ENOMEM;
- 
--	link = devm_kcalloc(dev, phy_count, sizeof(*link), GFP_KERNEL);
--	if (!link)
--		return -ENOMEM;
--
- 	for (i = 0; i < phy_count; i++) {
- 		of_property_read_string_index(np, "phy-names", i, &name);
- 		phy[i] = devm_phy_get(dev, name);
-@@ -249,17 +244,10 @@ int cdns_pcie_init_phy(struct device *dev, struct cdns_pcie *pcie)
- 			ret = PTR_ERR(phy[i]);
- 			goto err_phy;
- 		}
--		link[i] = device_link_add(dev, &phy[i]->dev, DL_FLAG_STATELESS);
--		if (!link[i]) {
--			devm_phy_put(dev, phy[i]);
--			ret = -EINVAL;
--			goto err_phy;
--		}
- 	}
- 
- 	pcie->phy_count = phy_count;
- 	pcie->phy = phy;
--	pcie->link = link;
- 
- 	ret =  cdns_pcie_enable_phy(pcie);
- 	if (ret)
-@@ -268,10 +256,8 @@ int cdns_pcie_init_phy(struct device *dev, struct cdns_pcie *pcie)
- 	return 0;
- 
- err_phy:
--	while (--i >= 0) {
--		device_link_del(link[i]);
-+	while (--i >= 0)
- 		devm_phy_put(dev, phy[i]);
--	}
- 
- 	return ret;
- }
-diff --git a/drivers/pci/controller/cadence/pcie-cadence.h b/drivers/pci/controller/cadence/pcie-cadence.h
-index 443033c607d7..35b0b33bc6fb 100644
---- a/drivers/pci/controller/cadence/pcie-cadence.h
-+++ b/drivers/pci/controller/cadence/pcie-cadence.h
-@@ -82,7 +82,6 @@ struct cdns_plat_pcie_of_data {
-  * @is_rc: tell whether the PCIe controller mode is Root Complex or Endpoint.
-  * @phy_count: number of supported PHY devices
-  * @phy: list of pointers to specific PHY control blocks
-- * @link: list of pointers to corresponding device link representations
-  * @ops: Platform-specific ops to control various inputs from Cadence PCIe
-  *       wrapper
-  * @cdns_pcie_reg_offsets: Register bank offsets for different SoC
-@@ -95,7 +94,6 @@ struct cdns_pcie {
- 	bool			             is_rc;
- 	int			             phy_count;
- 	struct phy		             **phy;
--	struct device_link	             **link;
- 	const  struct cdns_pcie_ops          *ops;
- 	const  struct cdns_plat_pcie_of_data *cdns_pcie_reg_offsets;
- };
-diff --git a/drivers/pci/controller/dwc/pci-dra7xx.c b/drivers/pci/controller/dwc/pci-dra7xx.c
-index d5d26229063f..b91ab37845c9 100644
---- a/drivers/pci/controller/dwc/pci-dra7xx.c
-+++ b/drivers/pci/controller/dwc/pci-dra7xx.c
-@@ -9,7 +9,6 @@
- 
- #include <linux/clk.h>
- #include <linux/delay.h>
--#include <linux/device.h>
- #include <linux/err.h>
- #include <linux/interrupt.h>
- #include <linux/irq.h>
-@@ -683,7 +682,6 @@ static int dra7xx_pcie_probe(struct platform_device *pdev)
- 	int i;
- 	int phy_count;
- 	struct phy **phy;
--	struct device_link **link;
- 	void __iomem *base;
- 	struct dw_pcie *pci;
- 	struct dra7xx_pcie *dra7xx;
-@@ -731,10 +729,6 @@ static int dra7xx_pcie_probe(struct platform_device *pdev)
- 	if (!phy)
- 		return -ENOMEM;
- 
--	link = devm_kcalloc(dev, phy_count, sizeof(*link), GFP_KERNEL);
--	if (!link)
--		return -ENOMEM;
--
- 	dra7xx->clk = devm_clk_get_optional(dev, NULL);
- 	if (IS_ERR(dra7xx->clk))
- 		return dev_err_probe(dev, PTR_ERR(dra7xx->clk),
-@@ -749,12 +743,6 @@ static int dra7xx_pcie_probe(struct platform_device *pdev)
- 		phy[i] = devm_phy_get(dev, name);
- 		if (IS_ERR(phy[i]))
- 			return PTR_ERR(phy[i]);
--
--		link[i] = device_link_add(dev, &phy[i]->dev, DL_FLAG_STATELESS);
--		if (!link[i]) {
--			ret = -EINVAL;
--			goto err_link;
--		}
- 	}
- 
- 	dra7xx->base = base;
-@@ -856,10 +844,6 @@ static int dra7xx_pcie_probe(struct platform_device *pdev)
- 	pm_runtime_disable(dev);
- 	dra7xx_pcie_disable_phy(dra7xx);
- 
--err_link:
--	while (--i >= 0)
--		device_link_del(link[i]);
--
- 	return ret;
- }
- 
-diff --git a/drivers/pci/controller/dwc/pci-keystone.c b/drivers/pci/controller/dwc/pci-keystone.c
-index 642e4c45eefc..07698c645e02 100644
---- a/drivers/pci/controller/dwc/pci-keystone.c
-+++ b/drivers/pci/controller/dwc/pci-keystone.c
-@@ -130,7 +130,6 @@ struct keystone_pcie {
- 	int			num_lanes;
- 	u32			num_viewport;
- 	struct phy		**phy;
--	struct device_link	**link;
- 	struct			device_node *msi_intc_np;
- 	struct irq_domain	*intx_irq_domain;
- 	struct device_node	*np;
-@@ -1118,7 +1117,6 @@ static int ks_pcie_probe(struct platform_device *pdev)
- 	enum dw_pcie_device_mode mode;
- 	struct dw_pcie *pci;
- 	struct keystone_pcie *ks_pcie;
--	struct device_link **link;
- 	struct gpio_desc *gpiod;
- 	struct resource *res;
- 	void __iomem *base;
-@@ -1189,31 +1187,17 @@ static int ks_pcie_probe(struct platform_device *pdev)
- 	if (!phy)
- 		return -ENOMEM;
- 
--	link = devm_kcalloc(dev, num_lanes, sizeof(*link), GFP_KERNEL);
--	if (!link)
--		return -ENOMEM;
--
- 	for (i = 0; i < num_lanes; i++) {
- 		snprintf(name, sizeof(name), "pcie-phy%d", i);
- 		phy[i] = devm_phy_optional_get(dev, name);
- 		if (IS_ERR(phy[i])) {
- 			ret = PTR_ERR(phy[i]);
--			goto err_link;
--		}
--
--		if (!phy[i])
--			continue;
--
--		link[i] = device_link_add(dev, &phy[i]->dev, DL_FLAG_STATELESS);
--		if (!link[i]) {
--			ret = -EINVAL;
--			goto err_link;
-+			goto err;
- 		}
- 	}
- 
- 	ks_pcie->np = np;
- 	ks_pcie->pci = pci;
--	ks_pcie->link = link;
- 	ks_pcie->num_lanes = num_lanes;
- 	ks_pcie->phy = phy;
- 
-@@ -1223,7 +1207,7 @@ static int ks_pcie_probe(struct platform_device *pdev)
- 		ret = PTR_ERR(gpiod);
- 		if (ret != -EPROBE_DEFER)
- 			dev_err(dev, "Failed to get reset GPIO\n");
--		goto err_link;
-+		goto err;
- 	}
- 
- 	/* Obtain references to the PHYs */
-@@ -1238,7 +1222,7 @@ static int ks_pcie_probe(struct platform_device *pdev)
- 
- 	if (ret) {
- 		dev_err(dev, "failed to enable phy\n");
--		goto err_link;
-+		goto err;
- 	}
- 
- 	platform_set_drvdata(pdev, ks_pcie);
-@@ -1325,25 +1309,18 @@ static int ks_pcie_probe(struct platform_device *pdev)
- 	pm_runtime_disable(dev);
- 	ks_pcie_disable_phy(ks_pcie);
- 
--err_link:
--	while (--i >= 0 && link[i])
--		device_link_del(link[i]);
--
-+err:
- 	return ret;
- }
- 
- static void ks_pcie_remove(struct platform_device *pdev)
+ static void cdns_mhdp_fill_host_caps(struct cdns_mhdp_device *mhdp)
  {
- 	struct keystone_pcie *ks_pcie = platform_get_drvdata(pdev);
--	struct device_link **link = ks_pcie->link;
--	int num_lanes = ks_pcie->num_lanes;
- 	struct device *dev = &pdev->dev;
+-	unsigned int link_rate;
++	u32 link_rate;
  
- 	pm_runtime_put(dev);
- 	pm_runtime_disable(dev);
- 	ks_pcie_disable_phy(ks_pcie);
--	while (num_lanes--)
--		device_link_del(link[num_lanes]);
+ 	/* Get source capabilities based on PHY attributes */
+ 
+@@ -1308,7 +1308,7 @@ static void cdns_mhdp_fill_host_caps(struct cdns_mhdp_device *mhdp)
+ 	if (!mhdp->host.lanes_cnt)
+ 		mhdp->host.lanes_cnt = 4;
+ 
+-	link_rate = mhdp->phy->attrs.max_link_rate;
++	link_rate = phy_get_max_link_rate(mhdp->phy);
+ 	if (!link_rate)
+ 		link_rate = drm_dp_bw_code_to_link_rate(DP_LINK_BW_8_1);
+ 	else
+diff --git a/drivers/gpu/drm/bridge/synopsys/dw-dp.c b/drivers/gpu/drm/bridge/synopsys/dw-dp.c
+index 4ab6922dd79c..79c72ee8e263 100644
+--- a/drivers/gpu/drm/bridge/synopsys/dw-dp.c
++++ b/drivers/gpu/drm/bridge/synopsys/dw-dp.c
+@@ -536,7 +536,7 @@ static int dw_dp_link_parse(struct dw_dp *dp, struct drm_connector *connector)
+ 
+ 	link->revision = link->dpcd[DP_DPCD_REV];
+ 	link->rate = min_t(u32, min(dp->plat_data.max_link_rate,
+-				    dp->phy->attrs.max_link_rate * 100),
++				    phy_get_max_link_rate(dp->phy) * 100),
+ 			   drm_dp_max_link_rate(link->dpcd));
+ 	link->lanes = min_t(u8, phy_get_bus_width(dp->phy),
+ 			    drm_dp_max_lane_count(link->dpcd));
+diff --git a/drivers/net/can/at91_can.c b/drivers/net/can/at91_can.c
+index 58da323f14d7..7749da0a58f6 100644
+--- a/drivers/net/can/at91_can.c
++++ b/drivers/net/can/at91_can.c
+@@ -1125,8 +1125,7 @@ static int at91_can_probe(struct platform_device *pdev)
+ 
+ 	can_rx_offload_add_timestamp(dev, &priv->offload);
+ 
+-	if (transceiver)
+-		priv->can.bitrate_max = transceiver->attrs.max_link_rate;
++	priv->can.bitrate_max = phy_get_max_link_rate(transceiver);
+ 
+ 	if (at91_is_sam9263(priv))
+ 		dev->sysfs_groups[0] = &at91_sysfs_attr_group;
+diff --git a/drivers/net/can/flexcan/flexcan-core.c b/drivers/net/can/flexcan/flexcan-core.c
+index f5d22c61503f..093e48b8da58 100644
+--- a/drivers/net/can/flexcan/flexcan-core.c
++++ b/drivers/net/can/flexcan/flexcan-core.c
+@@ -2210,8 +2210,7 @@ static int flexcan_probe(struct platform_device *pdev)
+ 	priv->reg_xceiver = reg_xceiver;
+ 	priv->transceiver = transceiver;
+ 
+-	if (transceiver)
+-		priv->can.bitrate_max = transceiver->attrs.max_link_rate;
++	priv->can.bitrate_max = phy_get_max_link_rate(transceiver);
+ 
+ 	if (priv->devtype_data.quirks & FLEXCAN_QUIRK_NR_IRQ_3) {
+ 		priv->irq_boff = platform_get_irq(pdev, 1);
+diff --git a/drivers/net/can/m_can/m_can_platform.c b/drivers/net/can/m_can/m_can_platform.c
+index 56da411878af..2a0f163a683a 100644
+--- a/drivers/net/can/m_can/m_can_platform.c
++++ b/drivers/net/can/m_can/m_can_platform.c
+@@ -131,8 +131,7 @@ static int m_can_plat_probe(struct platform_device *pdev)
+ 		goto probe_fail;
+ 	}
+ 
+-	if (transceiver)
+-		mcan_class->can.bitrate_max = transceiver->attrs.max_link_rate;
++	mcan_class->can.bitrate_max = phy_get_max_link_rate(transceiver);
+ 
+ 	priv->base = addr;
+ 	priv->mram_base = mram_addr;
+diff --git a/drivers/net/can/rcar/rcar_canfd.c b/drivers/net/can/rcar/rcar_canfd.c
+index eaf8cac78038..9062db48d477 100644
+--- a/drivers/net/can/rcar/rcar_canfd.c
++++ b/drivers/net/can/rcar/rcar_canfd.c
+@@ -1884,8 +1884,7 @@ static int rcar_canfd_channel_probe(struct rcar_canfd_global *gpriv, u32 ch,
+ 	priv->transceiver = transceiver;
+ 	priv->channel = ch;
+ 	priv->gpriv = gpriv;
+-	if (transceiver)
+-		priv->can.bitrate_max = transceiver->attrs.max_link_rate;
++	priv->can.bitrate_max = phy_get_max_link_rate(transceiver);
+ 	priv->can.clock.freq = fcan_freq;
+ 	dev_info(dev, "can_clk rate is %u\n", priv->can.clock.freq);
+ 
+diff --git a/drivers/phy/phy-core.c b/drivers/phy/phy-core.c
+index 0d0be494cfd7..737a760d97d1 100644
+--- a/drivers/phy/phy-core.c
++++ b/drivers/phy/phy-core.c
+@@ -647,6 +647,15 @@ void phy_set_bus_width(struct phy *phy, int bus_width)
  }
+ EXPORT_SYMBOL_GPL(phy_set_bus_width);
  
- static struct platform_driver ks_pcie_driver = {
++u32 phy_get_max_link_rate(struct phy *phy)
++{
++	if (!phy)
++		return 0;
++
++	return phy->attrs.max_link_rate;
++}
++EXPORT_SYMBOL_GPL(phy_get_max_link_rate);
++
+ /**
+  * _of_phy_get() - lookup and obtain a reference to a phy by phandle
+  * @np: device_node for which to get the phy
+diff --git a/include/linux/phy/phy.h b/include/linux/phy/phy.h
+index a7e2432ca1ae..34b656084caf 100644
+--- a/include/linux/phy/phy.h
++++ b/include/linux/phy/phy.h
+@@ -57,6 +57,7 @@ int phy_notify_disconnect(struct phy *phy, int port);
+ int phy_notify_state(struct phy *phy, union phy_notify state);
+ int phy_get_bus_width(struct phy *phy);
+ void phy_set_bus_width(struct phy *phy, int bus_width);
++u32 phy_get_max_link_rate(struct phy *phy);
+ #else
+ static inline struct phy *phy_get(struct device *dev, const char *string)
+ {
+@@ -256,6 +257,11 @@ static inline int phy_get_bus_width(struct phy *phy)
+ static inline void phy_set_bus_width(struct phy *phy, int bus_width)
+ {
+ }
++
++static inline u32 phy_get_max_link_rate(struct phy *phy)
++{
++	return 0;
++}
+ #endif /* IS_ENABLED(CONFIG_GENERIC_PHY) */
+ 
+ #endif /* __PHY_CONSUMER_H */
 -- 
 2.43.0
 
