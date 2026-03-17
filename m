@@ -1,93 +1,94 @@
-Received: from mail-qt1-f177.google.com (mail-qt1-f177.google.com [209.85.160.177])
+Received: from mail-qt1-f180.google.com (mail-qt1-f180.google.com [209.85.160.180])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 46846387579
-	for <linux-scsi@vger.kernel.org>; Tue, 17 Mar 2026 20:46:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.160.177
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F3FF39151C
+	for <linux-scsi@vger.kernel.org>; Tue, 17 Mar 2026 21:26:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.160.180
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773780409; cv=pass; b=Zh90LGQbcG/kUOBgjd8j6m7aKta6kexOiWRq6GwZZgHDSiEiBEJQTp1tWxG7xDSzIjS6si3IgiEiE3DA2Nt7SAUdFTWyNX3c/7i5PtXZ9UOZenYR2x6D/R9EZV6pF8zlD6D+Oy71cRM3jBi4bLJLDKUbfYjKhIyM6Pq/LY+puyg=
+	t=1773782797; cv=pass; b=hTjcW8ZToN0/GfXVsrnpvHtl0YpV/tImOjpTXV4+29VXXSo9eLKZZnhglPXZeu14c1e8g+JzcJldEQUFsOD4soQSWGF39Ru5FzW4HLKBrUj1/26iL3IfUIruBAAgEDh9ZNQxpdCM5kRfVkx99SjNcPqHEd9Nb4VZs+L2AHj0Shw=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773780409; c=relaxed/simple;
-	bh=RK/TCms+LvhqFMYFVVVIbiPX2SpvDGczeYFrHJlFfsM=;
+	s=arc-20240116; t=1773782797; c=relaxed/simple;
+	bh=LDRxpmDHqVACRLxJTnLszzlV2/NLpmV53JWM+2p1hpQ=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=hwMbLWDHTyq8V5nWzvvm55V0C8C8vJ5Z87uAbHe00qdIrNSBzvyUpp6ImNA5IfDt9v0BWvbWVtwrSz4imx1mMFQnOzVSUDdPutnInszHOlxQqg3owoBH+ona/udObROKPajjh7Ev7Ft+QEd0BBAo6iAfcpBDbi7eMylXzTvaFB4=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=R7wwizPP; arc=pass smtp.client-ip=209.85.160.177
+	 To:Cc:Content-Type; b=bo+7oO9rmAP1Ntlcxf4xUWZgq/Y0z/ebxud/4tdFcRKYxQNnBej+1Lfpg++staIApkldN1lp+DR43VWNZoyTTC/7fUhWAGyDxxL1n2S8LPCdajPogRin3WVipfUiMv/+ePohEoX25Jsy2MspRQ+46dpKJXWUnBA9ytlxgFYP7nY=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=TKpXCaIz; arc=pass smtp.client-ip=209.85.160.180
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="R7wwizPP"
-Received: by mail-qt1-f177.google.com with SMTP id d75a77b69052e-50906a98ffeso149841cf.0
-        for <linux-scsi@vger.kernel.org>; Tue, 17 Mar 2026 13:46:48 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1773780407; cv=none;
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="TKpXCaIz"
+Received: by mail-qt1-f180.google.com with SMTP id d75a77b69052e-5091ed02c54so85771cf.1
+        for <linux-scsi@vger.kernel.org>; Tue, 17 Mar 2026 14:26:34 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1773782793; cv=none;
         d=google.com; s=arc-20240605;
-        b=bCPwVunCPC9Tw/0gLUgY9VGt1RIdcM82DrQetQNctR6RVJkJ6EHAkZsMdRWX16uM6k
-         hV/qyFgoKqeo65/1ir1BWMaFiWCGfSCPlAsnUxK+1arCYs7vhcnZiD46FQ7Cl/FPpu9g
-         fe95fE2n6I0bDeHE1BLy1qkbLv8584PFiJfFptzDzb22iVBSETdeZDA7LO3akIwM4KVv
-         NoKIqc9YqcnBgXQ+05Qwk1he+YGmwhlzjxaqyNwNaDw8eRU+le85ZhcSmLU9TPui8zEU
-         D/3G7glHOWV4JWnDTnpqxVioH/bvDSjJXnCU83rqdPI09Q1ONAN2JoIK0/pOx4Kcdb5L
-         m4aA==
+        b=Hnar1zkSqYkc9AAdVVIw3vABy28DcYL89dkk7stPPQAQqL/ZrIVxiVumAlKrCcIxak
+         7eFuB8xTtytFdNN115c1OvI2O6ONF1I5UZbkMLlZDb4jzJPyn296QnAonjd82u82TAUY
+         koxNeLgkQF4WRAF0ym62Bw0OjYUvVLzRlxu9Fc5t1rdmEFUNBkT1YpES7ZX8f6zFIl8h
+         sFgpC4v1bXQkZwgswAx8fvXFm7AjEjLbwhha3jAira91MT0z/GlYV4fOAZzwkHa18z6P
+         c383m64BVbXlx3Q4Vn0QzGgew2NSSVupNKwXQBIOuCJRjiAXXL9Kwm4h/JCsLyRlMwj3
+         9nBg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:dkim-signature;
-        bh=puh87Pmz2QIedt98QmYFqHshzK8OJIco1FTLmkjNO+s=;
-        fh=A5lm99z8Vb4VmoinHjBQLPrQNk1SC0NCCyF0rzkLMLY=;
-        b=VY8KHUnPDzkrn41g+/eKZBnHzzO3eme9zIWcHAwQYOlS9716bjbc+0ThgqzJU8ojoG
-         2ifehRkqTaxlYBLMoZ1S6X9AY86etaFLzRrGghxpHHCkDCYAAA7pI7oIeuqu9CUqrTgg
-         W5Pd3QNi6oh1jGtXWStIlDhJoV9/sZpBraOVzxa8z7L5j4y9UYrY8Gj1SYn56YtkM2sn
-         SLvW6pLkvHtpkt191VOEc7eoXbnESJaimUbyePs540oZOf0mF2fUHJ3EmecKllCLR88W
-         GNqno9Ql4u6vHtzCHcpVB+Y7ahSCT4JkOAZx9AdIlvDq/6DozdRlaFywKQ7mfUiK3+vP
-         +X/Q==;
+        bh=O9MljJMIpne7nbSW7i1x1Or1SMzjT+hBLrQOgGeQvrk=;
+        fh=hJ2RDR6qSfB3h9Q8xR4zW/3cERUkQNhopdc8wKsEJiQ=;
+        b=X3zQtTbeP84CJXMKmacQjeH+ozGPQUWoWVmyTFemecb4IJlsOmP9AhgHQP3KjhEXTS
+         HuwJXSgegV4DzrFirDJxkXMH+U048Jap0FP8lDJDFYJp1iYbG60e80s/+uFVa4ayLZ3b
+         8FtpAbp6wC5Ye9734PYnlt1zgv25dlI4fnuxEOrgSVMsCg6CfJbXSFcI1OYWcNdsDED8
+         hsHuP4c7XYqzPJZvu2q9Qx9KmjcdxQCyE+G6Sg81F2M3LGUVAdScUYnJGuiIFt6xsYYm
+         yxcK/roeom4cVYNnPE5h85MCKnv9k0X1l0wBISkPxznJh/xBfARgXOGWq8SBQruWbXKY
+         ZbYw==;
         darn=vger.kernel.org
 ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1773780407; x=1774385207; darn=vger.kernel.org;
+        d=google.com; s=20251104; t=1773782793; x=1774387593; darn=vger.kernel.org;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=puh87Pmz2QIedt98QmYFqHshzK8OJIco1FTLmkjNO+s=;
-        b=R7wwizPP7dIx2oPvncRf5HBKNPKyAaVPKVkYmDRMxz0B46r+fPFmPBqna9GPZ7ifl7
-         GOGmPQyLNsC2D+dHxvnj7L/nFYjMYOX/uN2un6bKHtLyQrbLVqro2DG8Ns+L/uuYldfE
-         gNofHLRtSGWY0uigMa2awoJOlXvX33szc5mINax+vPuq3Ur9RwutTYt236NNI2+CUi3X
-         E58UFuY+bM2rUL4cDdcWDsoQ0JMcMkNqMWLGvVCYMiyoT5pQQ8PhyXwZdT/Yu9SnPTWA
-         LWmqRfmCDhx+tlZKoAYQILEY1NepardJAzZxu3KxNP0moF+PWsxvbPQLNCg2f9UKMTCx
-         YrYA==
+        bh=O9MljJMIpne7nbSW7i1x1Or1SMzjT+hBLrQOgGeQvrk=;
+        b=TKpXCaIzakLTLVXTv9kjgruZSwYkSJdfft392Az1fl49JSLon7kY0NtE/gyhEZtapR
+         TvoHtLjjbPnArV4oO5HSzekiAZMuEuskED9kriSFOQPKp9pAjr/SyVgY2BjSkKCa1cOx
+         hSbIcxShgTvRNhTxvQdd6H4DnOwDs42l2O7t4cEtTn4DCARCYUWcXZc4qvWZBlI786A/
+         6EL/Wnuohoku9m0fwIuPXOJly5tlb/PLi79pcOgJ5ReinYe+gmBFTfJGWOEWE5814jJv
+         SEmQj6soSa/abnsCDLbU8OR/8O3WisuU9x6Jt5c1BdtVZA2s6WPaLWKEiwUY5BbXz2f0
+         M82g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1773780407; x=1774385207;
+        d=1e100.net; s=20251104; t=1773782793; x=1774387593;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to;
-        bh=puh87Pmz2QIedt98QmYFqHshzK8OJIco1FTLmkjNO+s=;
-        b=DXSslXLw1Qt4iqQTfXoICPeiTMSJp9W0YT6ep5d1tmMFL/hXv9U4U+penP/Q1q7P3Y
-         XhjXZ8oj9Hu/qsValjX3a7YzYn1FG44Sb0nWaYbLV/advLBMmUl7HNJqJbXSw0zKW3ZB
-         TttI6b3pTSlvml1gqA5RXozbBNdzU/znjiHFlsUL+kpbfPzUd2L8fOaHx2+HidbwTXGx
-         y/xPnwczFpH7Y4RJZ+3RXJmv2z/wbaqZqNLOZCvsvHOMVar2J+Ht8yrlDzQrZsYBgWFh
-         L3IRM+HucqquyKDtrfZ+F7c0zS0V1F8EkEmPpEehzil0BZwff0yUVf0slJNnyVSJMTh5
-         84Hw==
-X-Forwarded-Encrypted: i=1; AJvYcCXaT4hLeeYxIJ+kUr2nnGkSjc3UJ7rTsYXA8MxSFJUuoqpkeXFSq3pOTeiUumCjyASbvNGrJtLyBGUW@vger.kernel.org
-X-Gm-Message-State: AOJu0Ywf44KbYhE+MDzVk2/znZApRDFcGcCroKGoCbkl/o8qCEuA5Icc
-	oODKGjaBDQURVbu6Jb8o46oHSEwiIuHVO8SdjA55IAfyYnaLWVKyAcMqKs++qd4cQ6F9/XQLcAG
-	zu22S9wi8lpOYJmYxprWMiP0GCrQjSimqGi0fshhP
-X-Gm-Gg: ATEYQzz6dEKcXe3Tks/QdPbPE8bKYrv+CkkcIPiBd9w8S6C9UchAiYKpe2f9nXwS/OC
-	9PjO9bz1bQ6NIPYYytlKZ2UKQ56pk6LqI2meC+MCyGIhlpitATOF8A1mxkXyoJsq92yNGkSttJ4
-	CXwTTQ8ALsNTxaySKql4sg3rJXiXe0Hu/ZhlMo28fUSzx5KKUvezO8gfcYObeQjLqk/xCNLfmdL
-	onAfvqNHmJqCXQOFsxEEvLx6MOJo1BBef8gisrUq7JuVDNu3vvGA1N81MjuUSS5c6wNG9c2B6MA
-	O8LMfH97horKB9zILNUx7nOsJtrXCZPT4ZrD3Q==
-X-Received: by 2002:a05:622a:130f:b0:509:371:f2ab with SMTP id
- d75a77b69052e-50b14848d70mr3924821cf.16.1773780406374; Tue, 17 Mar 2026
- 13:46:46 -0700 (PDT)
+        bh=O9MljJMIpne7nbSW7i1x1Or1SMzjT+hBLrQOgGeQvrk=;
+        b=nwuC8IwEaj/I43/qVSFXpIXFlrVnoJzVCgdU5YiYw6TFfs2oawtUagpeCpvb9qkjem
+         EB/4Se7BAkvbkpA/EKNeFQcjS+qIl7SXE3/RvB7E8UmDZkAMIkPb4qQElg4ub6e6ru8t
+         /i99p+4VEQxTtESLAXIiypQiJUhI1dcKLNlM188LkTnTeKlAaFPwSJgeKxfnV13QIvP8
+         FHgzC2ojyeFJfPw0jsRZgUb7d+Xaw1fkYehEZsMILRdidlt1IxrxAwegLhGlLMT4W6rI
+         ZhGSD85oITYoHIbH49gxm//Oeu1jqhejc/gCk0c7EtWQp/wcwkZjcaX6mxpzhFHy6XQp
+         ledA==
+X-Forwarded-Encrypted: i=1; AJvYcCVZGI515wHgLPGiqUFsVItTqsvWQWRoX20acFckmOxqKAsbSgwYJbTxViriWCMU1fjndbTnvl2L96X2@vger.kernel.org
+X-Gm-Message-State: AOJu0YyXxukc6F3M/q7XwmIycgg9WkeA30HpBbejQSh9PwBb33mKW2An
+	YUqFU6LfTq4XHa4qWr4XemnV6nPQh6z5ru1QfAKtwSHoouDlY3EiH8wbZcETYhc2Hrx+cSNQxqF
+	g1A7za3qxgBhDan7MtT+0F03yUbn40ractKtXBSAA
+X-Gm-Gg: ATEYQzyMmwxdy+aNaAIjczMg75QnYOasJuIdKK7CNeyzaoLdotzgC3AqgSqi3dwOve+
+	Yc2pzzRfkvyTuk38n96OMMABbgcDT+IatZJhWidXf0UGglAN3iljiftJxYUhHVkc4pGRW516729
+	kbZKkq/Ze1L7Y5vB9QC83cBbzOxwkwuov/gsrBoNqgeH501Hkchp/NATkcFwpSGPW69qSk9YXYT
+	+YLupLo5d+kui3+SA+DYrtcUlaQIjNW67ZXUu9Puopv3i23i4ZqgvohnYoyeZOFzAO82DGfPM5z
+	o3tuQMNLYVx2fb5DMcra2M5zVxyY1BKFkT2JMA==
+X-Received: by 2002:a05:622a:614:b0:509:1eca:6d24 with SMTP id
+ d75a77b69052e-50b1470ee58mr4568251cf.2.1773782792685; Tue, 17 Mar 2026
+ 14:26:32 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <cover.1773695307.git.ljs@kernel.org> <d34056a65bd387286f4e155d52449106ddc99f78.1773695307.git.ljs@kernel.org>
-In-Reply-To: <d34056a65bd387286f4e155d52449106ddc99f78.1773695307.git.ljs@kernel.org>
+References: <cover.1773695307.git.ljs@kernel.org> <48c6d25e374b57dba6df4fdddd4830d3fc1105be.1773695307.git.ljs@kernel.org>
+In-Reply-To: <48c6d25e374b57dba6df4fdddd4830d3fc1105be.1773695307.git.ljs@kernel.org>
 From: Suren Baghdasaryan <surenb@google.com>
-Date: Tue, 17 Mar 2026 13:46:34 -0700
-X-Gm-Features: AaiRm50ZSv0JOBEsyaTpLpUZLAlSOUqng_UaLNmSO0lPuUbLHyEvRlv0uikpAUM
-Message-ID: <CAJuCfpH653zdE=mXArpx8BUszVVC1PoN+rvp+WxdM3aAUbpqRw@mail.gmail.com>
-Subject: Re: [PATCH v2 10/16] stm: replace deprecated mmap hook with mmap_prepare
+Date: Tue, 17 Mar 2026 14:26:21 -0700
+X-Gm-Features: AaiRm51SJauRxJyG8YD3YuiOnfN0s_6akSz6AhkIFbo6vEz-Gt-mAXyXfHq04tA
+Message-ID: <CAJuCfpFXuHg4KPY27pqMC-xV5y9ZY2W72_R8_rxO0DvrJ=_yvw@mail.gmail.com>
+Subject: Re: [PATCH v2 11/16] staging: vme_user: replace deprecated mmap hook
+ with mmap_prepare
 To: "Lorenzo Stoakes (Oracle)" <ljs@kernel.org>
 Cc: Andrew Morton <akpm@linux-foundation.org>, Jonathan Corbet <corbet@lwn.net>, 
 	Clemens Ladisch <clemens@ladisch.de>, Arnd Bergmann <arnd@arndb.de>, 
@@ -122,103 +123,244 @@ l.org> wrote:
 > The driver previously used vm_iomap_memory(), so this change replaces it
 > with its mmap_prepare equivalent, mmap_action_simple_ioremap().
 >
-> Also, in order to correctly maintain reference counting, add a
-> vm_ops->mapped callback to increment the reference count when successfull=
-y
-> mapped.
+> Functions that wrap mmap() are also converted to wrap mmap_prepare()
+> instead.
+>
+> Also update the documentation accordingly.
 >
 > Signed-off-by: Lorenzo Stoakes (Oracle) <ljs@kernel.org>
-
-Reviewed-by: Suren Baghdasaryan <surenb@google.com>
-
 > ---
->  drivers/hwtracing/stm/core.c | 31 +++++++++++++++++++++----------
->  1 file changed, 21 insertions(+), 10 deletions(-)
+>  Documentation/driver-api/vme.rst    |  2 +-
+>  drivers/staging/vme_user/vme.c      | 20 +++++------
+>  drivers/staging/vme_user/vme.h      |  2 +-
+>  drivers/staging/vme_user/vme_user.c | 51 +++++++++++++++++------------
+>  4 files changed, 42 insertions(+), 33 deletions(-)
 >
-> diff --git a/drivers/hwtracing/stm/core.c b/drivers/hwtracing/stm/core.c
-> index 37584e786bb5..f48c6a8a0654 100644
-> --- a/drivers/hwtracing/stm/core.c
-> +++ b/drivers/hwtracing/stm/core.c
-> @@ -666,6 +666,16 @@ static ssize_t stm_char_write(struct file *file, con=
-st char __user *buf,
->         return count;
->  }
+> diff --git a/Documentation/driver-api/vme.rst b/Documentation/driver-api/=
+vme.rst
+> index c0b475369de0..7111999abc14 100644
+> --- a/Documentation/driver-api/vme.rst
+> +++ b/Documentation/driver-api/vme.rst
+> @@ -107,7 +107,7 @@ The function :c:func:`vme_master_read` can be used to=
+ read from and
 >
-> +static int stm_mmap_mapped(unsigned long start, unsigned long end, pgoff=
-_t pgoff,
-> +                          const struct file *file, void **vm_private_dat=
-a)
-> +{
-> +       struct stm_file *stmf =3D file->private_data;
-> +       struct stm_device *stm =3D stmf->stm;
-> +
-> +       pm_runtime_get_sync(&stm->dev);
-> +       return 0;
-> +}
-> +
->  static void stm_mmap_open(struct vm_area_struct *vma)
+>  In addition to simple reads and writes, :c:func:`vme_master_rmw` is prov=
+ided to
+>  do a read-modify-write transaction. Parts of a VME window can also be ma=
+pped
+> -into user space memory using :c:func:`vme_master_mmap`.
+> +into user space memory using :c:func:`vme_master_mmap_prepare`.
+>
+>
+>  Slave windows
+> diff --git a/drivers/staging/vme_user/vme.c b/drivers/staging/vme_user/vm=
+e.c
+> index f10a00c05f12..7220aba7b919 100644
+> --- a/drivers/staging/vme_user/vme.c
+> +++ b/drivers/staging/vme_user/vme.c
+> @@ -735,9 +735,9 @@ unsigned int vme_master_rmw(struct vme_resource *reso=
+urce, unsigned int mask,
+>  EXPORT_SYMBOL(vme_master_rmw);
+>
+>  /**
+> - * vme_master_mmap - Mmap region of VME master window.
+> + * vme_master_mmap_prepare - Mmap region of VME master window.
+>   * @resource: Pointer to VME master resource.
+> - * @vma: Pointer to definition of user mapping.
+> + * @desc: Pointer to descriptor of user mapping.
+>   *
+>   * Memory map a region of the VME master window into user space.
+>   *
+> @@ -745,12 +745,13 @@ EXPORT_SYMBOL(vme_master_rmw);
+>   *         resource or -EFAULT if map exceeds window size. Other generic=
+ mmap
+>   *         errors may also be returned.
+>   */
+> -int vme_master_mmap(struct vme_resource *resource, struct vm_area_struct=
+ *vma)
+> +int vme_master_mmap_prepare(struct vme_resource *resource,
+> +                           struct vm_area_desc *desc)
 >  {
->         struct stm_file *stmf =3D vma->vm_file->private_data;
-> @@ -684,12 +694,14 @@ static void stm_mmap_close(struct vm_area_struct *v=
-ma)
->  }
+> +       const unsigned long vma_size =3D vma_desc_size(desc);
+>         struct vme_bridge *bridge =3D find_bridge(resource);
+>         struct vme_master_resource *image;
+>         phys_addr_t phys_addr;
+> -       unsigned long vma_size;
 >
->  static const struct vm_operations_struct stm_mmap_vmops =3D {
-> +       .mapped =3D stm_mmap_mapped,
->         .open   =3D stm_mmap_open,
->         .close  =3D stm_mmap_close,
->  };
+>         if (resource->type !=3D VME_MASTER) {
+>                 dev_err(bridge->parent, "Not a master resource\n");
+> @@ -758,19 +759,18 @@ int vme_master_mmap(struct vme_resource *resource, =
+struct vm_area_struct *vma)
+>         }
 >
-> -static int stm_char_mmap(struct file *file, struct vm_area_struct *vma)
-> +static int stm_char_mmap_prepare(struct vm_area_desc *desc)
->  {
-> +       struct file *file =3D desc->file;
->         struct stm_file *stmf =3D file->private_data;
->         struct stm_device *stm =3D stmf->stm;
->         unsigned long size, phys;
-> @@ -697,10 +709,10 @@ static int stm_char_mmap(struct file *file, struct =
-vm_area_struct *vma)
->         if (!stm->data->mmio_addr)
->                 return -EOPNOTSUPP;
+>         image =3D list_entry(resource->entry, struct vme_master_resource,=
+ list);
+> -       phys_addr =3D image->bus_resource.start + (vma->vm_pgoff << PAGE_=
+SHIFT);
+> -       vma_size =3D vma->vm_end - vma->vm_start;
+> +       phys_addr =3D image->bus_resource.start + (desc->pgoff << PAGE_SH=
+IFT);
 >
-> -       if (vma->vm_pgoff)
-> +       if (desc->pgoff)
->                 return -EINVAL;
+>         if (phys_addr + vma_size > image->bus_resource.end + 1) {
+>                 dev_err(bridge->parent, "Map size cannot exceed the windo=
+w size\n");
+>                 return -EFAULT;
+>         }
 >
-> -       size =3D vma->vm_end - vma->vm_start;
-> +       size =3D vma_desc_size(desc);
->
->         if (stmf->output.nr_chans * stm->data->sw_mmiosz !=3D size)
->                 return -EINVAL;
-> @@ -712,13 +724,12 @@ static int stm_char_mmap(struct file *file, struct =
-vm_area_struct *vma)
->         if (!phys)
->                 return -EINVAL;
->
-> -       pm_runtime_get_sync(&stm->dev);
-> -
 > -       vma->vm_page_prot =3D pgprot_noncached(vma->vm_page_prot);
-> -       vm_flags_set(vma, VM_IO | VM_DONTEXPAND | VM_DONTDUMP);
-> -       vma->vm_ops =3D &stm_mmap_vmops;
-> -       vm_iomap_memory(vma, phys, size);
+> -
+> -       return vm_iomap_memory(vma, phys_addr, vma->vm_end - vma->vm_star=
+t);
 > +       desc->page_prot =3D pgprot_noncached(desc->page_prot);
-> +       vma_desc_set_flags(desc, VMA_IO_BIT, VMA_DONTEXPAND_BIT,
-> +                          VMA_DONTDUMP_BIT);
-> +       desc->vm_ops =3D &stm_mmap_vmops;
+> +       mmap_action_simple_ioremap(desc, phys_addr, vma_size);
+> +       return 0;
+>  }
+> -EXPORT_SYMBOL(vme_master_mmap);
+> +EXPORT_SYMBOL(vme_master_mmap_prepare);
 >
-> +       mmap_action_simple_ioremap(desc, phys, size);
+>  /**
+>   * vme_master_free - Free VME master window
+> diff --git a/drivers/staging/vme_user/vme.h b/drivers/staging/vme_user/vm=
+e.h
+> index 797e9940fdd1..b6413605ea49 100644
+> --- a/drivers/staging/vme_user/vme.h
+> +++ b/drivers/staging/vme_user/vme.h
+> @@ -151,7 +151,7 @@ ssize_t vme_master_read(struct vme_resource *resource=
+, void *buf, size_t count,
+>  ssize_t vme_master_write(struct vme_resource *resource, void *buf, size_=
+t count, loff_t offset);
+>  unsigned int vme_master_rmw(struct vme_resource *resource, unsigned int =
+mask, unsigned int compare,
+>                             unsigned int swap, loff_t offset);
+> -int vme_master_mmap(struct vme_resource *resource, struct vm_area_struct=
+ *vma);
+> +int vme_master_mmap_prepare(struct vme_resource *resource, struct vm_are=
+a_desc *desc);
+>  void vme_master_free(struct vme_resource *resource);
+>
+>  struct vme_resource *vme_dma_request(struct vme_dev *vdev, u32 route);
+> diff --git a/drivers/staging/vme_user/vme_user.c b/drivers/staging/vme_us=
+er/vme_user.c
+> index d95dd7d9190a..11e25c2f6b0a 100644
+> --- a/drivers/staging/vme_user/vme_user.c
+> +++ b/drivers/staging/vme_user/vme_user.c
+> @@ -446,24 +446,14 @@ static void vme_user_vm_close(struct vm_area_struct=
+ *vma)
+>         kfree(vma_priv);
+>  }
+>
+> -static const struct vm_operations_struct vme_user_vm_ops =3D {
+> -       .open =3D vme_user_vm_open,
+> -       .close =3D vme_user_vm_close,
+> -};
+> -
+> -static int vme_user_master_mmap(unsigned int minor, struct vm_area_struc=
+t *vma)
+> +static int vme_user_vm_mapped(unsigned long start, unsigned long end, pg=
+off_t pgoff,
+> +                             const struct file *file, void **vm_private_=
+data)
+>  {
+> -       int err;
+> +       const unsigned int minor =3D iminor(file_inode(file));
+>         struct vme_user_vma_priv *vma_priv;
+>
+>         mutex_lock(&image[minor].mutex);
+>
+> -       err =3D vme_master_mmap(image[minor].resource, vma);
+> -       if (err) {
+> -               mutex_unlock(&image[minor].mutex);
+> -               return err;
+> -       }
+> -
+
+Ok, this changes the set of the operations performed under image[minor].mut=
+ex.
+Before we had:
+
+mutex_lock(&image[minor].mutex);
+vme_master_mmap();
+<some final adjustments>
+mutex_unlock(&image[minor].mutex);
+
+Now we have:
+
+mutex_lock(&image[minor].mutex);
+vme_master_mmap_prepare()
+mutex_unlock(&image[minor].mutex);
+vm_iomap_memory();
+mutex_lock(&image[minor].mutex);
+vme_user_vm_mapped(); // <some final adjustments>
+mutex_unlock(&image[minor].mutex);
+
+I think as long as image[minor] does not change while we are not
+holding the mutex we should be safe, and looking at the code it seems
+to be the case. But I'm not familiar with this driver and might be
+wrong. Worth double-checking.
+
+>         vma_priv =3D kmalloc_obj(*vma_priv);
+>         if (!vma_priv) {
+>                 mutex_unlock(&image[minor].mutex);
+> @@ -472,22 +462,41 @@ static int vme_user_master_mmap(unsigned int minor,=
+ struct vm_area_struct *vma)
+>
+>         vma_priv->minor =3D minor;
+>         refcount_set(&vma_priv->refcnt, 1);
+> -       vma->vm_ops =3D &vme_user_vm_ops;
+> -       vma->vm_private_data =3D vma_priv;
+> -
+> +       *vm_private_data =3D vma_priv;
+>         image[minor].mmap_count++;
+>
+>         mutex_unlock(&image[minor].mutex);
+> -
 >         return 0;
 >  }
 >
-> @@ -836,7 +847,7 @@ static const struct file_operations stm_fops =3D {
->         .open           =3D stm_char_open,
->         .release        =3D stm_char_release,
->         .write          =3D stm_char_write,
-> -       .mmap           =3D stm_char_mmap,
-> +       .mmap_prepare   =3D stm_char_mmap_prepare,
->         .unlocked_ioctl =3D stm_char_ioctl,
->         .compat_ioctl   =3D compat_ptr_ioctl,
+> -static int vme_user_mmap(struct file *file, struct vm_area_struct *vma)
+> +static const struct vm_operations_struct vme_user_vm_ops =3D {
+> +       .mapped =3D vme_user_vm_mapped,
+> +       .open =3D vme_user_vm_open,
+> +       .close =3D vme_user_vm_close,
+> +};
+> +
+> +static int vme_user_master_mmap_prepare(unsigned int minor,
+> +                                       struct vm_area_desc *desc)
+> +{
+> +       int err;
+> +
+> +       mutex_lock(&image[minor].mutex);
+> +
+> +       err =3D vme_master_mmap_prepare(image[minor].resource, desc);
+> +       if (!err)
+> +               desc->vm_ops =3D &vme_user_vm_ops;
+> +
+> +       mutex_unlock(&image[minor].mutex);
+> +       return err;
+> +}
+> +
+> +static int vme_user_mmap_prepare(struct vm_area_desc *desc)
+>  {
+> -       unsigned int minor =3D iminor(file_inode(file));
+> +       const struct file *file =3D desc->file;
+> +       const unsigned int minor =3D iminor(file_inode(file));
+>
+>         if (type[minor] =3D=3D MASTER_MINOR)
+> -               return vme_user_master_mmap(minor, vma);
+> +               return vme_user_master_mmap_prepare(minor, desc);
+>
+>         return -ENODEV;
+>  }
+> @@ -498,7 +507,7 @@ static const struct file_operations vme_user_fops =3D=
+ {
+>         .llseek =3D vme_user_llseek,
+>         .unlocked_ioctl =3D vme_user_unlocked_ioctl,
+>         .compat_ioctl =3D compat_ptr_ioctl,
+> -       .mmap =3D vme_user_mmap,
+> +       .mmap_prepare =3D vme_user_mmap_prepare,
 >  };
+>
+>  static int vme_user_match(struct vme_dev *vdev)
 > --
 > 2.53.0
 >
