@@ -1,144 +1,112 @@
-Received: from foss.arm.com (foss.arm.com [217.140.110.172])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id F0FFD2E8DFC;
-	Wed, 18 Mar 2026 16:39:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.140.110.172
+Received: from mailout1.w1.samsung.com (mailout1.w1.samsung.com [210.118.77.11])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 00DA8244661
+	for <linux-scsi@vger.kernel.org>; Wed, 18 Mar 2026 17:13:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.118.77.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773851995; cv=none; b=F5hJJo+rG9LpssagvjgxbiSzCdx1Rb1jGVq9fuChFS+qE7//sLQ//TZvlvSP4+6qhVeT1sS4AVrrOcCDNIkuLbNZJE/34y9AAYXZTUNy3sB361RWMSBb7VDlxb2o9rVQgw+eVjLR7+C5g3Fc83DClLD7dUuYAmgajq+QiuwHZLw=
+	t=1773854019; cv=none; b=YSro/Pxrhm1ckJKrnuGxJWxmiQbc9caMIsCSnqKWI1hbVhHpHg1RpqXWEYWP0lOt62Vq5NbR8Bn42wzgL/dQWkOhHoMmD3bnGlY7R1FPx4lqleCfZnwDtlg6TMKErNISHVeHqqHckWaqUEzBDcEwe17D7Tvi5DTSRQ3iGOPrba4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773851995; c=relaxed/simple;
-	bh=RdV42oZ0AayoMXo41L0WZr3GLfG8ygEPlf5ODTypPpI=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=lRLRJAlk6oM0ZZWQKy4yXKggOw2YkX110O8nQopD1qQIzYcl1BxQGJp2yC5SI8mnM6Xyj8iysuesTk5jRyxOnBmx5+YQ4cWaVhfCnhqAskcm1YwoLJoE3zuhtWmRPNvf9fPhZMlCYjFaImhTTIcOA+DEtMF05wlGQS35nh2drNc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arm.com; spf=pass smtp.mailfrom=arm.com; arc=none smtp.client-ip=217.140.110.172
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=arm.com
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
-	by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 5CA081BD0;
-	Wed, 18 Mar 2026 09:39:46 -0700 (PDT)
-Received: from [10.57.59.172] (unknown [10.57.59.172])
-	by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 95BB13F778;
-	Wed, 18 Mar 2026 09:39:49 -0700 (PDT)
-Message-ID: <c116c75e-4e85-4f57-abb7-ba80bbc8f863@arm.com>
-Date: Wed, 18 Mar 2026 16:39:47 +0000
+	s=arc-20240116; t=1773854019; c=relaxed/simple;
+	bh=dFzFqKxpP0mALllupjzgpV2ZD6PJMlxsCoah7hdMjZM=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:From:In-Reply-To:
+	 Content-Type:References; b=WaVqOI8RZO7q5Sg99dKpNVyVtOHaINpL0FjpGrtHqHdSvi07maYxdAbh3sKMYHIQkKQUl3SPglyTAcNS0qEhyGsgMCbkWtXG8KuNDuSBqYOUb/+g4t0hGDKbnLFC1vifM2lg44Z3yye8K7X4tOs/aU4fqFFjFhdwDOqcm4n9UQs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=GlzcAZ9R; arc=none smtp.client-ip=210.118.77.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="GlzcAZ9R"
+Received: from eucas1p2.samsung.com (unknown [182.198.249.207])
+	by mailout1.w1.samsung.com (KnoxPortal) with ESMTP id 20260318171329euoutp01787125c052fc187204569e504a300579~d-tKy7gdr1589515895euoutp01R
+	for <linux-scsi@vger.kernel.org>; Wed, 18 Mar 2026 17:13:29 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.w1.samsung.com 20260318171329euoutp01787125c052fc187204569e504a300579~d-tKy7gdr1589515895euoutp01R
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1773854009;
+	bh=DjGYqWhafNt4JL8pxv2BfMAtvUGx8XCJbBr9eCwrEnI=;
+	h=Date:Subject:To:Cc:From:In-Reply-To:References:From;
+	b=GlzcAZ9RtGudSxVLJL7zq506li31c3D/EcOFiWfq9FfSOIvbQAqZBVzvAYP9HO7xu
+	 7ZMr2u8f6vD3METpxCzY9ue3LtV+Ees6y3rTdTtPkmFpgHs7f5fsDjepNeG7qp4aiC
+	 ChKRfgckGG48Bnw4ipNbJBp0E+ihuBeHZSBrgPDg=
+Received: from eusmtip1.samsung.com (unknown [203.254.199.221]) by
+	eucas1p1.samsung.com (KnoxPortal) with ESMTPA id
+	20260318171328eucas1p13f8bd42ec036e724893ac8d2492380da~d-tKJxfGz2951829518eucas1p1h;
+	Wed, 18 Mar 2026 17:13:28 +0000 (GMT)
+Received: from [106.210.134.192] (unknown [106.210.134.192]) by
+	eusmtip1.samsung.com (KnoxPortal) with ESMTPA id
+	20260318171326eusmtip19d9c14ed6d24b0fbcafe8e935194384f~d-tIxnPBK2725627256eusmtip1S;
+	Wed, 18 Mar 2026 17:13:26 +0000 (GMT)
+Message-ID: <1b9db59c-f736-4c59-b37a-15a60cfa4f3e@samsung.com>
+Date: Wed, 18 Mar 2026 18:13:26 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 1/1] scsi: sas: skip opt_sectors when DMA reports no real
- optimization hint
-To: "Ionut Nechita (Wind River)" <ionut.nechita@windriver.com>,
- "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
- "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: ahuang12@lenovo.com, axboe@kernel.dk, damien.lemoal@opensource.wdc.com,
- hch@lst.de, iommu@lists.linux.dev, ionut_n2001@yahoo.com,
- john.g.garry@oracle.com, kbusch@kernel.org, linux-kernel@vger.kernel.org,
- linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
- m.szyprowski@samsung.com, sagi@grimberg.me, stable@vger.kernel.org,
- sunlightlinux@gmail.com
-References: <20260318074314.17372-1-ionut.nechita@windriver.com>
- <20260318074314.17372-2-ionut.nechita@windriver.com>
-From: Robin Murphy <robin.murphy@arm.com>
-Content-Language: en-GB
-In-Reply-To: <20260318074314.17372-2-ionut.nechita@windriver.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+User-Agent: Betterbird (Windows)
+Subject: Re: [PATCH v2] ufs: core: Avoid IRQ thread wakeup during active UIC
+ command
+To: Bart Van Assche <bvanassche@acm.org>, peter.wang@mediatek.com,
+	linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
+	avri.altman@sandisk.com, alim.akhtar@samsung.com, jejb@linux.ibm.com
+Cc: wsd_upstream@mediatek.com, linux-mediatek@lists.infradead.org,
+	chun-hung.wu@mediatek.com, alice.chao@mediatek.com, cc.chou@mediatek.com,
+	chaotian.jing@mediatek.com, tun-yu.yu@mediatek.com,
+	eddie.huang@mediatek.com, naomi.chu@mediatek.com, ed.tsai@mediatek.com
+Content-Language: en-US
+From: Marek Szyprowski <m.szyprowski@samsung.com>
+In-Reply-To: <df1d0b3f-6822-4c49-aeea-fc513e2b05cb@acm.org>
 Content-Transfer-Encoding: 8bit
+X-CMS-MailID: 20260318171328eucas1p13f8bd42ec036e724893ac8d2492380da
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-RootMTR: 20260317171131eucas1p25dd55bf1aad6d5b310526d51885b3b7a
+X-EPHeader: CA
+X-CMS-RootMailID: 20260317171131eucas1p25dd55bf1aad6d5b310526d51885b3b7a
+References: <20260306054419.3816557-1-peter.wang@mediatek.com>
+	<CGME20260317171131eucas1p25dd55bf1aad6d5b310526d51885b3b7a@eucas1p2.samsung.com>
+	<1f88b91c-59e6-4347-84c2-50b7cf106c47@samsung.com>
+	<df1d0b3f-6822-4c49-aeea-fc513e2b05cb@acm.org>
 
-On 2026-03-18 7:43 am, Ionut Nechita (Wind River) wrote:
-> From: Ionut Nechita <ionut.nechita@windriver.com>
-> 
-> sas_host_setup() unconditionally sets shost->opt_sectors from
-> dma_opt_mapping_size().  When the IOMMU is disabled or in passthrough
-> mode and no DMA ops provide an opt_mapping_size callback,
-> dma_opt_mapping_size() returns min(dma_max_mapping_size(), SIZE_MAX)
-> which equals dma_max_mapping_size() — a hard upper bound, not an
-> optimization hint.
-> 
-> On a Dell PowerEdge R750 with mpt3sas (Broadcom SAS3816, FW 33.15.00.00)
-> and intel_iommu=off the following values are observed:
-> 
->    dma_opt_mapping_size()  = dma_max_mapping_size() (no real hint)
->    shost->max_sectors      = 32767
->    opt_sectors             = min(32767, huge >> 9) = 32767
->    optimal_io_size         = 32767 << 9 = 16776704
->                            → round_down(16776704, 4096) = 16773120
-> 
-> The SAS disk (SAMSUNG MZILT800HBHQ0D3) do not report an
-> Optimal Transfer Length in VPD page B0,so sdkp->opt_xfer_blocks remains 0.
-> sd_revalidate_disk() then uses min_not_zero(0, opt_sectors) = opt_sectors,
-> propagating the bogus value into the block device's optimal_io_size
-> (visible as OPT-IO = 16773120 in lsblk --topology).
-> 
-> mkfs.xfs picks up optimal_io_size and minimum_io_size and computes:
-> 
->    swidth = 16773120 / 4096 = 4095
->    sunit  = 8192 / 4096     = 2
-> 
-> Since 4095 % 2 != 0, XFS rejects the geometry:
-> 
->    SB stripe unit sanity check failed
-> 
-> This makes it impossible to create XFS filesystems (e.g. for
-> /var/lib/docker) during system bootstrap.
-> 
-> Fix this by only setting opt_sectors when dma_opt_mapping_size() returns
-> a value strictly less than dma_max_mapping_size(), which indicates a
-> genuine DMA optimization constraint from an IOMMU or DMA ops backend.
-> When they are equal, no backend provided a real hint, so leave
-> opt_sectors at its default of 0 ("no preference").
-> 
-> Fixes: 4cbfca5f7750 ("scsi: scsi_transport_sas: cap shost opt_sectors according to DMA optimal limit")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Ionut Nechita <ionut.nechita@windriver.com>
-> ---
->   drivers/scsi/scsi_transport_sas.c | 16 ++++++++++++++--
->   1 file changed, 14 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/scsi/scsi_transport_sas.c b/drivers/scsi/scsi_transport_sas.c
-> index 12124f9d5ccd..6b4de5116feb 100644
-> --- a/drivers/scsi/scsi_transport_sas.c
-> +++ b/drivers/scsi/scsi_transport_sas.c
-> @@ -240,8 +240,20 @@ static int sas_host_setup(struct transport_container *tc, struct device *dev,
->   			   shost->host_no);
->   
->   	if (dma_dev->dma_mask) {
-> -		shost->opt_sectors = min_t(unsigned int, shost->max_sectors,
-> -				dma_opt_mapping_size(dma_dev) >> SECTOR_SHIFT);
-> +		size_t opt = dma_opt_mapping_size(dma_dev);
-> +
-> +		/*
-> +		 * Only set opt_sectors when the DMA layer reports a
-> +		 * genuine optimization constraint.  When opt equals
-> +		 * dma_max_mapping_size() no backend provided a real
-> +		 * hint — the value is just the DMA maximum, which is
-> +		 * not useful as an optimal I/O size and can cause
-> +		 * mkfs.xfs to compute invalid stripe geometry.
-> +		 */
-> +		if (opt < dma_max_mapping_size(dma_dev))
+On 18.03.2026 16:50, Bart Van Assche wrote:
+> On 3/17/26 10:11 AM, Marek Szyprowski wrote:
+>> This patch landed in linux-next as commit 6475cfb81fc4 ("scsi: ufs:
+>> core: Avoid IRQ thread wakeup during active UIC command"). In my tests I
+>> found that it causes the following regression on QCom RB5 board
+>> (arch/arm64/boot/dts/qcom/qrb5165-rb5.dts):
+>>
+>> =============================
+>> [ BUG: Invalid wait context ]
+>> 7.0.0-rc4-next-20260316 #16535 Not tainted
+>> -----------------------------
+>> swapper/0/0 is trying to lock:
+>> ffff000089f58048 (shost->host_lock){....}-{3:3}, at:
+>
+> This line is a mystery to me. Are there perhaps any local changes in
+> your kernel tree on top of linux-next? I haven't been able to find the
+> text "shost->host_lock" in the UIC completion path.
 
-The point is more that dma_opt_mapping_size() is *always* only ever a 
-constraint, never a target. This code should be coming up with its own 
-idea of whether max_sectors is large enough to be meaningless, and 
-picking an initial opt_sectors value based on that, and only *then* 
-potentially reducing that value further if the DMA API indicates it 
-would be more efficient to do so. Making this conditional makes little 
-sense even if it wasn't clearly still broken when dma_opt_mapping_size() 
-== (dma_max_mapping_size() - n) for most non-zero values of n.
+I don't have any local changes, code is at commit 6475cfb81fc4. After 
+looking at the code this 'shost' indeed looks a bit mysterious, but 
+maybe it got that name after some inlining or code optimization.
 
-That said, the comment in sd_revalidate_disk() implies that opt_sectors 
-itself is also only intended as an upper limit rather than a specific 
-preference, so there wouldn't seem to be any harm in deriving a 
-suitably-aligned value from dma_max_mapping_size() either.
+> Instead, this is
+> what I found:
+>
+>     guard(spinlock_irqsave)(hba->host->host_lock);
+>
+>> ufshcd_sl_intr+0x3c0/0x6b4
+>
+> Can you please help with translating this information into a line
+> number? Tools like addr2line, llvm-addr2line or llvm-objdump -d -l -S
+> can be used to perform such a conversion.
 
-Thanks,
-Robin.
+ufshcd_clk_scaling_allow() in drivers/ufs/core/ufshcd.c:6492 (code 
+checkout at git commit 6475cfb81fc4)
 
-> +			shost->opt_sectors = min_t(unsigned int,
-> +					shost->max_sectors,
-> +					opt >> SECTOR_SHIFT);
->   	}
->   
->   	return 0;
+
+Best regards
+-- 
+Marek Szyprowski, PhD
+Samsung R&D Institute Poland
 
