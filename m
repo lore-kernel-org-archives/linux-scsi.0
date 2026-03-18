@@ -1,253 +1,298 @@
-Received: from mx0b-0064b401.pphosted.com (mx0b-0064b401.pphosted.com [205.220.178.238])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D4F3E36C0A1;
-	Wed, 18 Mar 2026 07:44:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.178.238
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773819899; cv=fail; b=C+ToPrDF21dgl4jGJ6yhGCMi+icj7O/N9ddHUvHf/c+fG3NpPyb/+15H1PG3k8YGE/qJuT678ObDarYekBO1+ywBhOj7bfqj7hIp5IBas+cP8pnSFmWWRi2pvxHgqMz0kEQ/RftppyzndVd89VtUvou5Om1sWbUA1iwUbpXTsIg=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773819899; c=relaxed/simple;
-	bh=7uSWhh0vEr8Cto/E7jACc5o+MN4ZDMBF7bA4DzczVyA=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=LdkkBBJq3g7eVDU8THQphNkiz4kgAjS+A2BCachpTY8KGBkoHCdADD9SsSJ6rBqrFDDqwsD0n5AM4Itg0pxJsH0+bcfKBPiVzGmZxvBrm0O/RjHa92DJ7R1Tv97bHp8KYvIfid4IConE7Z+l4KgBUSbFZq5SsMNUGZR/2CfCXvE=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=windriver.com; spf=fail smtp.mailfrom=windriver.com; dkim=pass (2048-bit key) header.d=windriver.com header.i=@windriver.com header.b=pDs19uX8; arc=fail smtp.client-ip=205.220.178.238
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=windriver.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=windriver.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E9C4936C5B6
+	for <linux-scsi@vger.kernel.org>; Wed, 18 Mar 2026 07:47:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1773820046; cv=none; b=bnv9O2BUn9jGDqLQGxbs4RJy8p9eAtabw2p+MbzKmXOJ/81yEXioTbw81T0OCj21Ilgb/coOT43rYiYLMKfd2VE0EonJI4WuRWOgcIroDas3F3zBN3UbaSsUUxwJy3lKu5XW2TVxGo9SqBBw8pawrhsE0Sq6qHuxmr0h5HyfORU=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1773820046; c=relaxed/simple;
+	bh=+lZUvICpL9gtUN2Elt9HmjBXjmfgP5GVh9n6pD6MK+A=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=RIl+wTQ00YjTxoh/ga7P7RfLIEH07uXeJziIeoy6VoYBc+79uY7da/VXgTJACjhXnNTZWWlo57UllwwVG76MzTc5Ka6FiMZtMDIvSVz6mS3ZW911+6FEwh9/sdVmYNCYL8CXFo+CpsLpI7BVpdpPblary0Jz+8vsBDmlN0wR4pA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=Il6QbHjx; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=+tq3P4qO; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=h1KrpRhT; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=LN/wM5BO; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=windriver.com header.i=@windriver.com header.b="pDs19uX8"
-Received: from pps.filterd (m0250812.ppops.net [127.0.0.1])
-	by mx0a-0064b401.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 62I4AVWD1191847;
-	Wed, 18 Mar 2026 07:43:40 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=windriver.com;
-	 h=cc:content-transfer-encoding:content-type:date:from
-	:in-reply-to:message-id:mime-version:references:subject:to; s=
-	PPS06212021; bh=/lOs9WcHmuTQgw94rCTBWjV9Ww/iR8wd+jVESQyZQ7E=; b=
-	pDs19uX8Xs07X+lDzJIC4osRQLImIB89eEfu8d2Xu6PzG/1VBx3Qh18+LxzgJ/jT
-	QBofNGi9c66166A1kYkSoFuUbkKjfHlpQLyWuZCMAPta0/Uj2R4bfwVSGdHmN3ur
-	po6R5PwMT8p22sWjYvDOw1soWv1HHcdGmH2/A1TA1cqPyucu1PZnNJ61WwhZCaVu
-	sSoB4/QsRWqhMCAGn1sqXx5jj0ZYbTnVU4WO1krxdl9nvL9pbeV6c7FzWDlJ/0Ul
-	x88gcA5Udlbiq1EN3LlRGYAc5dVPdmxe/67TgW+I09T+DjHe4+Exd7ExG1VLFmwb
-	Of/pVZl4J+KWG1u6FafiZg==
-Received: from dm5pr21cu001.outbound.protection.outlook.com (mail-centralusazon11011020.outbound.protection.outlook.com [52.101.62.20])
-	by mx0a-0064b401.pphosted.com (PPS) with ESMTPS id 4cxm66acvw-1
-	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
-	Wed, 18 Mar 2026 07:43:39 +0000 (GMT)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=OJZTeTc7WEy5oGBEeStX+R5t3m53zOArd7BYJjbEvwADIMqxekzfzyYb5DzkU1LhNu9uCdVDo5/x5jmAJPakbhKX4O3CCuIKys/wT5cUYau29O9PoKYBzdJFirsKj7NNspNf1+EIkRy1Z5A7pQ9ojfyHFK157hpdsIdfG+lGAacygQ+CzvsHPRBKtSkSoamRN+mq8hxs8d6vXJaju1jpCyDZzixEc29ubf3dlLjtmq2aIBSNEfTvmC4gqVAJ1zJCFKyRi/618nl0//DMpLJnq+5VhaFp/mbu4GG0/ujRSgAKcFuaKdIi2TB3wLYtpvK1neijqrnavX2K2DjIp4856Q==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=/lOs9WcHmuTQgw94rCTBWjV9Ww/iR8wd+jVESQyZQ7E=;
- b=kfa1Kmz9bKJmExp5kM25mjwpVaxaJ+gKpHblUmFUslh7W37r7icl3nBavvLOe9v3gmt02SqiOU2Hx0H2EWKDm+d8YbjRztdBgDxVZoiTaSzG4X8eaMGmg4PT84HRjRpR2ecf8dhQl5z+sq/PyWsnkkBaMWwUYFlxYEOHilBlXZHrNSoH8zF9ExeJMsgyGfc1K7TLGOduzNZ/+2hYAnonfHWxVqi5q8Ur/NZoQoPdh7TYkaCF24nnK6dyse1Cj3PqGr/XnQbMpdCVXNgwMh4NsV/o6XpskMQghqXhNhl29U8kY4SyyKMJiYX/SPU1Ws3QZo7p2UHWWpuuomYGrBlg8A==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=windriver.com; dmarc=pass action=none
- header.from=windriver.com; dkim=pass header.d=windriver.com; arc=none
-Received: from SJ2PR11MB7546.namprd11.prod.outlook.com (2603:10b6:a03:4cc::8)
- by IA4PR11MB9177.namprd11.prod.outlook.com (2603:10b6:208:569::19) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9723.19; Wed, 18 Mar
- 2026 07:43:38 +0000
-Received: from SJ2PR11MB7546.namprd11.prod.outlook.com
- ([fe80::ca9b:dcf:8881:bced]) by SJ2PR11MB7546.namprd11.prod.outlook.com
- ([fe80::ca9b:dcf:8881:bced%5]) with mapi id 15.20.9723.018; Wed, 18 Mar 2026
- 07:43:38 +0000
-From: "Ionut Nechita (Wind River)" <ionut.nechita@windriver.com>
-To: "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: ahuang12@lenovo.com, axboe@kernel.dk, damien.lemoal@opensource.wdc.com,
-        hch@lst.de, iommu@lists.linux.dev, ionut_n2001@yahoo.com,
-        john.g.garry@oracle.com, kbusch@kernel.org,
-        linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-scsi@vger.kernel.org, m.szyprowski@samsung.com,
-        robin.murphy@arm.com, sagi@grimberg.me, stable@vger.kernel.org,
-        sunlightlinux@gmail.com, Ionut Nechita <ionut.nechita@windriver.com>
-Subject: [PATCH 1/1] scsi: sas: skip opt_sectors when DMA reports no real optimization hint
-Date: Wed, 18 Mar 2026 09:43:14 +0200
-Message-ID: <20260318074314.17372-2-ionut.nechita@windriver.com>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260318074314.17372-1-ionut.nechita@windriver.com>
-References: <20260318074314.17372-1-ionut.nechita@windriver.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: BE0P281CA0034.DEUP281.PROD.OUTLOOK.COM
- (2603:10a6:b10:14::21) To SJ2PR11MB7546.namprd11.prod.outlook.com
- (2603:10b6:a03:4cc::8)
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="Il6QbHjx";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="+tq3P4qO";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="h1KrpRhT";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="LN/wM5BO"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id 543904D3DA;
+	Wed, 18 Mar 2026 07:47:22 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1773820043; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=FqdoGi+GbfPDFsEqwGpoJq9a4pvVW8Ucqfydr5LlJwE=;
+	b=Il6QbHjxapnOf83lfxBGQlF3Qv+wcvLkAksVXcnS5gisAi4XHRNwusxo9JVfgkO2WwinjT
+	yqKFUdjpIE3W5wRniHP4Gw4ubWk6m1ASekbCVQ62agZ8Eh6YbgV+UkCAV+v7eHcKJANBBB
+	Bqp+o3KyRSSrvj7PyqOenUPp1/Jhe6Q=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1773820043;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=FqdoGi+GbfPDFsEqwGpoJq9a4pvVW8Ucqfydr5LlJwE=;
+	b=+tq3P4qOIKeTaP/e1lkOcuIDv7j7uhizpYxHV7piEOQrkXNyVISk1M8+pV8kYF6Wyau2IG
+	b2W76itHTh53YfCQ==
+Authentication-Results: smtp-out1.suse.de;
+	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=h1KrpRhT;
+	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b="LN/wM5BO"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1773820042; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=FqdoGi+GbfPDFsEqwGpoJq9a4pvVW8Ucqfydr5LlJwE=;
+	b=h1KrpRhTSIRSRDVyQZq927oLMhxBfmMX/LqJTLTaiuHJ9zDy1c/LFxPEEIBRWLlA4k4Tcn
+	k6LURUjWMKKcbGJJ726m/8M7tXkMJHWYmnlXQCsWl2wZ+xP+TM87Il58FAa5QrlmFEObiS
+	h+8sTXuK8pCYeYaQMTwM6Z0RzWQBUdQ=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1773820042;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=FqdoGi+GbfPDFsEqwGpoJq9a4pvVW8Ucqfydr5LlJwE=;
+	b=LN/wM5BOmn6RfyJkcvEPT0963ZqDkjYWbP3sMrirLb/vc18H7ur1NMbl2BCbHkhxLrdta4
+	ANA+uDfju+Ipu0Dg==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id F143E4273B;
+	Wed, 18 Mar 2026 07:47:21 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id SjlSOYlYummTQwAAD6G6ig
+	(envelope-from <hare@suse.de>); Wed, 18 Mar 2026 07:47:21 +0000
+Message-ID: <25fd3a82-2a0e-4279-aed5-30c9b6f0a107@suse.de>
+Date: Wed, 18 Mar 2026 08:47:17 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: SJ2PR11MB7546:EE_|IA4PR11MB9177:EE_
-X-MS-Office365-Filtering-Correlation-Id: 9ed8a8ae-3ee9-4a2a-e77f-08de84c21126
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|52116014|7416014|376014|10070799003|366016|18002099003|22082099003|56012099003;
-X-Microsoft-Antispam-Message-Info:
-	n5v7v4zLruf2iDAPXEiyeZKbCeQQINYJLMEhC0BUvxyKY3MzPRFtvmPD+IwEGHHOPHQVNE/IZTre82fS8gS/xvC4y+oSTcqi7Ettf+RfGygwpqnFNrkbj3HB3Txqf3tsskmAzMRTqLZUqARdXXb07qqSJH4HgLp8qkGQLvX2N3k6PTbqciKF/b639UKNZdnLHtjgZ2QoeVbx9YHwlx+SYrsMR2dr5YV0u8ilzxFaTGRCEgUgutOXnprPVDHTHCTakrCYYQgA/9+nEMAYvmKsB/gm+7B8rXSbd+HtnTh+xxReOEuTBLsTNAuQGvGKXUdWgdvmeqGi1OgenZI8N84QYriLP4EKlsgaRTbWXfrOOW3QB0J63dpXezcc9QSQrRBFfLZj2WU7rQxSWOVJmPOmQ84unZuuw03BCVU7ljyVtBDnzhI2s61Mp2bBN9k17lptLB35DVJMqUncYflka3LJdCQfBmsnMV+xRoSCNKLmMXNd9r9868kamowN+tL18eVOxQ3dICxmYOVcZJSXLS9r0i5NqWhrNeZgAvdWcrF1T0rzDwWdPsX2/Xp5+p7UqfGe9svGAN+o5boFEt6DsxbNUgpMTYc5jfM1F40ROThduBQw+v8+qLXVciHUB12z4nU4Sr0CczS53A/V9VeAg5N8Orh+gAn6k598RXggJlWIlGUpAx7XeVfyBc8Mki4dQuCrVraImVObGza/ceGE92YWbkaSOsXOVCfDW16mbgx5lHE=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SJ2PR11MB7546.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(52116014)(7416014)(376014)(10070799003)(366016)(18002099003)(22082099003)(56012099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 2
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?R2hEdE5IS3lyckg2dCs5OGQxd1RSWktZa2E3cHJxTmJzS2NsOTVuWlhZNWZR?=
- =?utf-8?B?UGVNamhUZUZiVFh0dU9sYU9vY0hJM0hDVnN5Z1pNN0d5VDdTeHFqMTBXb3Qz?=
- =?utf-8?B?RzlMVU82T2diNFRyNDVMK2FYL0RWYkFRYUxxU050VXB0Z29XL1o2UVNrZHM2?=
- =?utf-8?B?Y0ZjTUZMNjF0eFBIczlRNXQ5c2swSE5qNHlOTWh1Q3B1K2hRTk8zS3N5U2JB?=
- =?utf-8?B?M1lxTG94M2Vyb3lmTHFXR3J6UDJiWFVlTzlaRHFkN3BrSktCTzl6RUdxMmd6?=
- =?utf-8?B?cnhnM1grTjVmZ0pkQk9USmo3RitGYzhsZEkrZlF0YnBjam9Od1BkK1cvNEZS?=
- =?utf-8?B?cnVjbmVtU2huVFQ5blJUUkwwM1hZSStOa2NUMFFyb3V0WEQ4dDZtRkt1Smx2?=
- =?utf-8?B?QW1TZnNuY3dJbTQ5R2lUYjRVUmhxQVE5V21VSFl1VDViS3E2VWdnQ1dhRHZD?=
- =?utf-8?B?NFZ1ZjlJS05PMlVnODkxVDJXOEs2TGwyVnUwNGZjYlFtWER4ZjFYWTVDRmhN?=
- =?utf-8?B?NXFEa2k1WndCamw4MFA5bTlKeFhoR3lycUNGeXIyd0NTM2JvUTNLdzN6TGls?=
- =?utf-8?B?VGJxRDhBYWZxd0Z3SmQxTzdCc0JEMXlxMWN3amRHUGRCYitQU1NHNnR6Qm8w?=
- =?utf-8?B?Rmg1bHF6bVZZUUxIR1Z5TytNS2NkRnZKZmFzL050cSswVUNwY1BxOFFaek9i?=
- =?utf-8?B?eXlwWnRFYkVlaUhGWTlaZXk2bDVIcE0vbE5HdDJZazVkNjdveHNPS2c3WDVD?=
- =?utf-8?B?VHpZcm1zTVZLaytCV2o2WTZVWC93VnVId2xGRU5POUJwZDcremM0UThkOWo0?=
- =?utf-8?B?WEt6SFNRQ1pvamtCSzlwZlMvc2hwRVVqd05CaDdkaFB5QlpiTDRLYUJacWVl?=
- =?utf-8?B?R2pEdmF4RkVIdnhVQ0FmZDk2dUVuRGVrZW5rWjQxMGVOT3ZKR2xMa1lKZEhR?=
- =?utf-8?B?N2FITEZwcUxEQzh0Rk5hVWhhcEl6aGQxVlo4Q0prekZqRUhLQVJLS0RWOVJM?=
- =?utf-8?B?WE9EM2dGQ2JoeHdlOFJ5aWFpVzB5OEdXLzlMTHFpUWU1K0NGWnkxcmdIYTJI?=
- =?utf-8?B?aFgvc1p3a1B0NG5ta2NrQU80N3BjKzd4czM5ckh5UnVhUlp1QU95dXltRkVa?=
- =?utf-8?B?MWtKVjNhUWdDMlhSU2t4QlAyLzY4UHBuejA0K2dFVXR4T1IxMG5sRnRRRDFt?=
- =?utf-8?B?TzlOVWM4dHNDV0RUNkxDNTJ5UDlqeWtxRmpaMjRMRDBndzR0dmtIaEFBSjVU?=
- =?utf-8?B?ZnlDTis2cFZmR0NUVjc0ODFDVnU0dzRKNStjdk1KN2JldTRRSHVXaDRuUGh6?=
- =?utf-8?B?a01pZkdZT3dFYnIwTEcvYTNFMWFKcGF1ZFB3U0lGOUVUNGVnQ2NvbWJPbjNp?=
- =?utf-8?B?M3RQLzc4dlA3SExxS3U3dTJ0ZXo5Yk5ENklMN2p1d1ZJQS9pN0NLUzF2TDhO?=
- =?utf-8?B?UTJlbXIxNjdjWVpOQm5wMm93amtnMlo1NVliZGpqL043eFdjOUZpcDMzVVdE?=
- =?utf-8?B?S1RScjZOVHFGYStaaWJjRDBuWVdyL2FhWnQ4dzhvV0JMK0dhYVN2c2E5LzJt?=
- =?utf-8?B?RlkzRUQzM0RMMmlnTjc5L3NQcHRJbWV4Rkp6dkpVUm9pMTJrcDlpS0pOc1Z1?=
- =?utf-8?B?dmJ0SytjMDV2bWR2VUMvMjY1ZUpBVEpvamV4SjBaWURkSHFFS2RDbWRiQ2FQ?=
- =?utf-8?B?T2xmRk5nMlRFTGptT2wyTEx6dDluWnoyTy9xNHhQbTFZQWJ0SkNzOEdPakJr?=
- =?utf-8?B?bExYWHhvaHdoVXRrcG1xWnNURE42d2tXOGYvVkRrYndJaGIxemxIcnZrUWgv?=
- =?utf-8?B?bWJQMmVsbWVhUDUzK1ptUklNeG5JMUJ6YnhaM0VxQ0QwOHNYU2l3WHZQTXFR?=
- =?utf-8?B?U0p3bzlyMmxya2kzdjB2VzFUNUprdHZvSWk0OTJoU0Z2OUtvdGJiYmVYbFQ0?=
- =?utf-8?B?L0xIQmR1cHpoM3RKeXkyN2tDdWswRVNjTk9LRGFNMXUxaHp3eTdxUmtFQ29X?=
- =?utf-8?B?OEY2T1VmZytGalNCbklJOE4yZFI3TE90WXFvL2xoYktEaHRCUkVTdFl2Uzdj?=
- =?utf-8?B?dGp4enduQmgwQ0JLV0RxMGVBYmdZTDNsOE55WFN4MlBJelFSU01ieWNDamh1?=
- =?utf-8?B?S0tZREVDRVE1QWJmUE1DQ0NzNVhHSW90WDZkVVdqOXBvU0RvTmg0RGxSR2Zl?=
- =?utf-8?B?VE1oY2NsU2YvTzZrUHppL3RuVmlLc3J0cXlIRHVwSUxQY2lYY1RTSGIxd25D?=
- =?utf-8?B?eWh5ckdwWXgwTDZBbW0wKzQ3TzU5TDNXTnJSa1hockViNEFOV3o4NFFJMWZB?=
- =?utf-8?B?by8xY3RNQzVpREFRTDZEeFRYcjlQL1B3SU9SM1lxSk94bkZhS3JYU3dqL3Nr?=
- =?utf-8?Q?w72y/FpJDiU43DJOQMCx3qhaXF/Kh38kS6me3OO9UQdfu?=
-X-MS-Exchange-AntiSpam-MessageData-1: UvQRGXPYiihgur/1Ui84cRzlQMoSrbNnOMY=
-X-Exchange-RoutingPolicyChecked:
-	Uuz1IaqDmGh8Kf5Flxq+DkSr1v2xnOKVtxB6miCWpTYOxUaA0ugcGRIWH8Fo9Uqr/SM/pDvh5s3pBdFF1RpSCNShGrq2YQQi8ahQ/JDPB3OgFWjN217aWgD2a7WjDMJQuHavoV469kBXFhsj3oFxMOR+Ol63rlnsvGoFxPbHbSy5YscBroFkQoh9SL8fFzychQyJ+/nZT3p/p5Ww8qBT3Xg72a3fEFhXxcO9KcPpOwgPZQCli4KefcxIr7O+B+qt5w1H4t15p3M/FwKd+3Tq4xIwVNLXLPfNupRxEIQwKVzCR9TOzhKOdx6QK8Nsa8a0cCYXuc7uOnb5+DSuiALUdg==
-X-OriginatorOrg: windriver.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 9ed8a8ae-3ee9-4a2a-e77f-08de84c21126
-X-MS-Exchange-CrossTenant-AuthSource: SJ2PR11MB7546.namprd11.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 18 Mar 2026 07:43:38.1068
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 8ddb2873-a1ad-4a18-ae4e-4644631433be
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: pvwGXbP5tssWhSp7PmNQ2mb0riwbv/SYhiKeCiIVxvhSpiKBvkva4Tah2LaVUceSQaCtgF7hrMqzG1vadnFSEoArX1Bb1jRHyCghFpN0v1c=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA4PR11MB9177
-X-Proofpoint-ORIG-GUID: wbGDK33nar7njh-GzpW2-ntg07lv6N0H
-X-Proofpoint-GUID: wbGDK33nar7njh-GzpW2-ntg07lv6N0H
-X-Authority-Analysis: v=2.4 cv=fLk0HJae c=1 sm=1 tr=0 ts=69ba57ab cx=c_pps
- a=wCl41NmqrnDcz9wBTMCcbg==:117 a=6eWqkTHjU83fiwn7nKZWdM+Sl24=:19
- a=z/mQ4Ysz8XfWz/Q5cLBRGdckG28=:19 a=lCpzRmAYbLLaTzLvsPZ7Mbvzbb8=:19
- a=xqWC_Br6kY4A:10 a=IkcTkHD0fZMA:10 a=Yq5XynenixoA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=bi6dqmuHe4P4UrxVR6um:22 a=fTW__CHxibyLmBMfj2wP:22
- a=t7CeM3EgAAAA:8 a=VwQbUJbxAAAA:8 a=-DCVhyIXrxZYsbhsFEUA:9 a=3ZKOabzyN94A:10
- a=QEXdDO2ut3YA:10 a=FdTzh2GWekK77mhwV6Dw:22
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzE4MDA2MyBTYWx0ZWRfX8N8MgHGGz3Gy
- XEoHFb/mPEhAIbSNJ6F7o5j0z7173facwTzJTDRpbRkyUmmETyPym3Bd5SBud8+tga/l8581dQu
- pEjhSUHLhFdlXRkUjd1tbzHhmJw+1V5krGp/6s1FdqQiadpT04QX5fhy3ZjPUJFUvqMp5ghfjG2
- N6fwG0UUH4Egus1LmqTYAkircgL8tZnp4D34C6Acka2jkOBoUkpAo8tF9xGg0iZfAxqvMKyih7Z
- iHeUgWtfbUC0kYK5aBIYrER7SjPF9yf7mUbg9ZNZNAOiKfIXIpHHifXU7mZNrNozFDsVhpUCZJq
- VyU9QlmmODGH1vNyNGk8jdvoln1IseALNQBDysV1sptTLfdnwIq+M3OnmIKtgidHuROvNnlgdJV
- YHF13v+vBY879ma12UUKSw19bO5MlGwjkhLcB0L3jEBbLcnt+IWc4QkrAKIkU34h+oKLdmvW/AI
- kar88KE6CBsNg/w33EQ==
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-03-17_05,2026-03-17_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- clxscore=1015 impostorscore=0 bulkscore=0 lowpriorityscore=0 phishscore=0
- suspectscore=0 malwarescore=0 priorityscore=1501 adultscore=0 spamscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2603050001 definitions=main-2603180063
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 02/13] scsi: alua: Create a core ALUA driver
+To: John Garry <john.g.garry@oracle.com>, martin.petersen@oracle.com,
+ james.bottomley@hansenpartnership.com, hare@suse.com, bmarzins@redhat.com
+Cc: jmeneghi@redhat.com, linux-scsi@vger.kernel.org,
+ michael.christie@oracle.com, snitzer@kernel.org, dm-devel@lists.linux.dev,
+ linux-kernel@vger.kernel.org
+References: <20260317120703.3702387-1-john.g.garry@oracle.com>
+ <20260317120703.3702387-3-john.g.garry@oracle.com>
+Content-Language: en-US
+From: Hannes Reinecke <hare@suse.de>
+In-Reply-To: <20260317120703.3702387-3-john.g.garry@oracle.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Rspamd-Action: no action
+X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
+X-Spamd-Result: default: False [-4.51 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	MX_GOOD(-0.01)[];
+	FUZZY_RATELIMITED(0.00)[rspamd.com];
+	RCVD_TLS_ALL(0.00)[];
+	ARC_NA(0.00)[];
+	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	TO_DN_SOME(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
+	MID_RHS_MATCH_FROM(0.00)[];
+	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	RCVD_COUNT_TWO(0.00)[2];
+	FROM_EQ_ENVFROM(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	RCPT_COUNT_SEVEN(0.00)[11];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,imap1.dmz-prg2.suse.org:rdns,suse.de:dkim,suse.de:mid,suse.de:email];
+	DNSWL_BLOCKED(0.00)[2a07:de40:b281:104:10:150:64:97:from,2a07:de40:b281:106:10:150:64:167:received];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	DKIM_TRACE(0.00)[suse.de:+]
+X-Rspamd-Queue-Id: 543904D3DA
+X-Spam-Flag: NO
+X-Spam-Score: -4.51
+X-Spam-Level: 
 
-From: Ionut Nechita <ionut.nechita@windriver.com>
+On 3/17/26 13:06, John Garry wrote:
+> Add a dedicated ALUA driver which can be used for native SCSI multipath
+> and also DH-based ALUA support.
+> 
+Is this really a 'driver'? It's more additional functionality for a SCSI
+device, and not really a driver.
+At least I _think_ it is ...
 
-sas_host_setup() unconditionally sets shost->opt_sectors from
-dma_opt_mapping_size().  When the IOMMU is disabled or in passthrough
-mode and no DMA ops provide an opt_mapping_size callback,
-dma_opt_mapping_size() returns min(dma_max_mapping_size(), SIZE_MAX)
-which equals dma_max_mapping_size() — a hard upper bound, not an
-optimization hint.
+> The core driver will provide ALUA support for when a scsi_device does not
+> have a DH attachment.
+> 
+> The core driver will provide functionality to handle RTPG and STPG, but
+> the scsi DH ALUA driver will be responsible for driving these when DH
+> attached.
+> 
+> New structure alua_data holds all ALUA-related scsi_device info.
+> 
+> Hannes Reinecke originally authored the kernel ALUA code.
+> 
+> Signed-off-by: John Garry <john.g.garry@oracle.com>
+> ---
+>   drivers/scsi/Kconfig                | 10 +++-
+>   drivers/scsi/Makefile               |  1 +
+>   drivers/scsi/device_handler/Kconfig |  1 +
+>   drivers/scsi/scsi.c                 |  7 +++
+>   drivers/scsi/scsi_alua.c            | 78 +++++++++++++++++++++++++++++
+>   drivers/scsi/scsi_scan.c            |  4 ++
+>   drivers/scsi/scsi_sysfs.c           |  3 ++
+>   include/scsi/scsi_alua.h            | 45 +++++++++++++++++
+>   include/scsi/scsi_device.h          |  1 +
+>   9 files changed, 149 insertions(+), 1 deletion(-)
+>   create mode 100644 drivers/scsi/scsi_alua.c
+>   create mode 100644 include/scsi/scsi_alua.h
+> 
+> diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+> index 19d0884479a24..396cc0fda9fcc 100644
+> --- a/drivers/scsi/Kconfig
+> +++ b/drivers/scsi/Kconfig
+> @@ -76,8 +76,16 @@ config SCSI_LIB_KUNIT_TEST
+>   
+>   	  If unsure say N.
+>   
+> -comment "SCSI support type (disk, tape, CD-ROM)"
+> +config SCSI_ALUA
+> +	tristate "SPC-3 ALUA support"
+>   	depends on SCSI
+> +	help
+> +	  SCSI support for generic SPC-3 Asymmetric Logical Unit
+> +	  Access (ALUA).
+> +
+> +	  If unsure, say Y.
+> +
+> +comment "SCSI support type (disk, tape, CD-ROM)"
+>   
+>   config BLK_DEV_SD
+>   	tristate "SCSI disk support"
+> diff --git a/drivers/scsi/Makefile b/drivers/scsi/Makefile
+> index 16de3e41f94c4..90c25f36ea3a8 100644
+> --- a/drivers/scsi/Makefile
+> +++ b/drivers/scsi/Makefile
+> @@ -153,6 +153,7 @@ obj-$(CONFIG_SCSI_ENCLOSURE)	+= ses.o
+>   
+>   obj-$(CONFIG_SCSI_HISI_SAS) += hisi_sas/
+>   
+> +obj-$(CONFIG_SCSI_ALUA) += scsi_alua.o
+>   # This goes last, so that "real" scsi devices probe earlier
+>   obj-$(CONFIG_SCSI_DEBUG)	+= scsi_debug.o
+>   scsi_mod-y			+= scsi.o hosts.o scsi_ioctl.o \
+> diff --git a/drivers/scsi/device_handler/Kconfig b/drivers/scsi/device_handler/Kconfig
+> index 368eb94c24562..ff06aea8c272c 100644
+> --- a/drivers/scsi/device_handler/Kconfig
+> +++ b/drivers/scsi/device_handler/Kconfig
+> @@ -35,6 +35,7 @@ config SCSI_DH_EMC
+>   config SCSI_DH_ALUA
+>   	tristate "SPC-3 ALUA Device Handler"
+>   	depends on SCSI_DH && SCSI
+> +	select SCSI_ALUA
+>   	help
+>   	  SCSI Device handler for generic SPC-3 Asymmetric Logical Unit
+>   	  Access (ALUA).
+> diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+> index 76cdad063f7bc..fc90ee19bb962 100644
+> --- a/drivers/scsi/scsi.c
+> +++ b/drivers/scsi/scsi.c
+> @@ -58,6 +58,7 @@
+>   #include <linux/unaligned.h>
+>   
+>   #include <scsi/scsi.h>
+> +#include <scsi/scsi_alua.h>
+>   #include <scsi/scsi_cmnd.h>
+>   #include <scsi/scsi_dbg.h>
+>   #include <scsi/scsi_device.h>
+> @@ -1042,12 +1043,17 @@ static int __init init_scsi(void)
+>   	error = scsi_sysfs_register();
+>   	if (error)
+>   		goto cleanup_sysctl;
+> +	error = scsi_alua_init();
+> +	if (error)
+> +		goto cleanup_sysfs;
+>   
+>   	scsi_netlink_init();
+>   
+>   	printk(KERN_NOTICE "SCSI subsystem initialized\n");
+>   	return 0;
+>   
+> +cleanup_sysfs:
+> +	scsi_sysfs_unregister();
+>   cleanup_sysctl:
+>   	scsi_exit_sysctl();
+>   cleanup_hosts:
+> @@ -1066,6 +1072,7 @@ static int __init init_scsi(void)
+>   static void __exit exit_scsi(void)
+>   {
+>   	scsi_netlink_exit();
+> +	scsi_exit_alua();
+>   	scsi_sysfs_unregister();
+>   	scsi_exit_sysctl();
+>   	scsi_exit_hosts();
+> diff --git a/drivers/scsi/scsi_alua.c b/drivers/scsi/scsi_alua.c
+> new file mode 100644
+> index 0000000000000..a5a67c6deff17
+> --- /dev/null
+> +++ b/drivers/scsi/scsi_alua.c
+> @@ -0,0 +1,78 @@
+> +// SPDX-License-Identifier: GPL-2.0-only
+> +/*
+> + * Generic SCSI-3 ALUA SCSI driver
+> + *
+> + * Copyright (C) 2007-2010 Hannes Reinecke, SUSE Linux Products GmbH.
+> + * All rights reserved.
+> + */
+> +
+> +#include <scsi/scsi.h>
+> +#include <scsi/scsi_proto.h>
+> +#include <scsi/scsi_dbg.h>
+> +#include <scsi/scsi_eh.h>
+> +#include <scsi/scsi_alua.h>
+> +
+> +#define DRV_NAME "alua"
+> +
+> +static struct workqueue_struct *kalua_wq;
+> +
+> +int scsi_alua_sdev_init(struct scsi_device *sdev)
+> +{
+> +	int rel_port, ret, tpgs;
+> +
+> +	tpgs = scsi_device_tpgs(sdev);
+> +	if (!tpgs)
+> +		return 0;
+> +
+> +	sdev->alua = kzalloc(sizeof(*sdev->alua), GFP_KERNEL);
+> +	if (!sdev->alua)
+> +		return -ENOMEM;
+> +
 
-On a Dell PowerEdge R750 with mpt3sas (Broadcom SAS3816, FW 33.15.00.00)
-and intel_iommu=off the following values are observed:
+Why do you allocate a separate structure?
+Is this structure shared with something?
+Wouldn't it be better to just add some field to the scsi_device?
 
-  dma_opt_mapping_size()  = dma_max_mapping_size() (no real hint)
-  shost->max_sectors      = 32767
-  opt_sectors             = min(32767, huge >> 9) = 32767
-  optimal_io_size         = 32767 << 9 = 16776704
-                          → round_down(16776704, 4096) = 16773120
+Cheers,
 
-The SAS disk (SAMSUNG MZILT800HBHQ0D3) do not report an
-Optimal Transfer Length in VPD page B0,so sdkp->opt_xfer_blocks remains 0.
-sd_revalidate_disk() then uses min_not_zero(0, opt_sectors) = opt_sectors,
-propagating the bogus value into the block device's optimal_io_size
-(visible as OPT-IO = 16773120 in lsblk --topology).
-
-mkfs.xfs picks up optimal_io_size and minimum_io_size and computes:
-
-  swidth = 16773120 / 4096 = 4095
-  sunit  = 8192 / 4096     = 2
-
-Since 4095 % 2 != 0, XFS rejects the geometry:
-
-  SB stripe unit sanity check failed
-
-This makes it impossible to create XFS filesystems (e.g. for
-/var/lib/docker) during system bootstrap.
-
-Fix this by only setting opt_sectors when dma_opt_mapping_size() returns
-a value strictly less than dma_max_mapping_size(), which indicates a
-genuine DMA optimization constraint from an IOMMU or DMA ops backend.
-When they are equal, no backend provided a real hint, so leave
-opt_sectors at its default of 0 ("no preference").
-
-Fixes: 4cbfca5f7750 ("scsi: scsi_transport_sas: cap shost opt_sectors according to DMA optimal limit")
-Cc: stable@vger.kernel.org
-Signed-off-by: Ionut Nechita <ionut.nechita@windriver.com>
----
- drivers/scsi/scsi_transport_sas.c | 16 ++++++++++++++--
- 1 file changed, 14 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/scsi_transport_sas.c b/drivers/scsi/scsi_transport_sas.c
-index 12124f9d5ccd..6b4de5116feb 100644
---- a/drivers/scsi/scsi_transport_sas.c
-+++ b/drivers/scsi/scsi_transport_sas.c
-@@ -240,8 +240,20 @@ static int sas_host_setup(struct transport_container *tc, struct device *dev,
- 			   shost->host_no);
- 
- 	if (dma_dev->dma_mask) {
--		shost->opt_sectors = min_t(unsigned int, shost->max_sectors,
--				dma_opt_mapping_size(dma_dev) >> SECTOR_SHIFT);
-+		size_t opt = dma_opt_mapping_size(dma_dev);
-+
-+		/*
-+		 * Only set opt_sectors when the DMA layer reports a
-+		 * genuine optimization constraint.  When opt equals
-+		 * dma_max_mapping_size() no backend provided a real
-+		 * hint — the value is just the DMA maximum, which is
-+		 * not useful as an optimal I/O size and can cause
-+		 * mkfs.xfs to compute invalid stripe geometry.
-+		 */
-+		if (opt < dma_max_mapping_size(dma_dev))
-+			shost->opt_sectors = min_t(unsigned int,
-+					shost->max_sectors,
-+					opt >> SECTOR_SHIFT);
- 	}
- 
- 	return 0;
+Hannes
 -- 
-2.53.0
-
+Dr. Hannes Reinecke                  Kernel Storage Architect
+hare@suse.de                                +49 911 74053 688
+SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
+HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
