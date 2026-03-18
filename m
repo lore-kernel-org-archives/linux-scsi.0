@@ -1,112 +1,102 @@
-Received: from mailout1.w1.samsung.com (mailout1.w1.samsung.com [210.118.77.11])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 00DA8244661
-	for <linux-scsi@vger.kernel.org>; Wed, 18 Mar 2026 17:13:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.118.77.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A414481DD;
+	Wed, 18 Mar 2026 17:18:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773854019; cv=none; b=YSro/Pxrhm1ckJKrnuGxJWxmiQbc9caMIsCSnqKWI1hbVhHpHg1RpqXWEYWP0lOt62Vq5NbR8Bn42wzgL/dQWkOhHoMmD3bnGlY7R1FPx4lqleCfZnwDtlg6TMKErNISHVeHqqHckWaqUEzBDcEwe17D7Tvi5DTSRQ3iGOPrba4=
+	t=1773854308; cv=none; b=JPgOrW/+sRj0zZ9/wkmaRucEzG/vJgie8bTBsBMXx86kFz2SEDP4jAPbRI6qnufZEuJytjaroIOCGf+7JnXWPTGJs1JWkLrBoOiaZk/r9dvv8oBxwq6unfj8O04GIqM4r9dGVljPexu2qxk84sUx9DCWG0PMaJoV2yD3heuBmsc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773854019; c=relaxed/simple;
-	bh=dFzFqKxpP0mALllupjzgpV2ZD6PJMlxsCoah7hdMjZM=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:From:In-Reply-To:
-	 Content-Type:References; b=WaVqOI8RZO7q5Sg99dKpNVyVtOHaINpL0FjpGrtHqHdSvi07maYxdAbh3sKMYHIQkKQUl3SPglyTAcNS0qEhyGsgMCbkWtXG8KuNDuSBqYOUb/+g4t0hGDKbnLFC1vifM2lg44Z3yye8K7X4tOs/aU4fqFFjFhdwDOqcm4n9UQs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=GlzcAZ9R; arc=none smtp.client-ip=210.118.77.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+	s=arc-20240116; t=1773854308; c=relaxed/simple;
+	bh=tcwBnr4PB39Z0VvfyqpTv96JTqTKA7HJd/AGMFQzpNE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=opTtzb13N+OOlli5EHxZGpjdqfnJb/Suyyi5StoL/jc/z4U8l162LmZ1aFCmiBdHmWXdDN41cG1lZJTVHNvfsqZED21U74HKhNexM6KfkRUqmNjj++haMCeqt++8DxT8NResTbAjBAwGOECpVeCP8iK4wDFcVnmtwjPp/XvS4N0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=N1/Bxw2J; arc=none smtp.client-ip=198.175.65.14
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="GlzcAZ9R"
-Received: from eucas1p2.samsung.com (unknown [182.198.249.207])
-	by mailout1.w1.samsung.com (KnoxPortal) with ESMTP id 20260318171329euoutp01787125c052fc187204569e504a300579~d-tKy7gdr1589515895euoutp01R
-	for <linux-scsi@vger.kernel.org>; Wed, 18 Mar 2026 17:13:29 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.w1.samsung.com 20260318171329euoutp01787125c052fc187204569e504a300579~d-tKy7gdr1589515895euoutp01R
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1773854009;
-	bh=DjGYqWhafNt4JL8pxv2BfMAtvUGx8XCJbBr9eCwrEnI=;
-	h=Date:Subject:To:Cc:From:In-Reply-To:References:From;
-	b=GlzcAZ9RtGudSxVLJL7zq506li31c3D/EcOFiWfq9FfSOIvbQAqZBVzvAYP9HO7xu
-	 7ZMr2u8f6vD3METpxCzY9ue3LtV+Ees6y3rTdTtPkmFpgHs7f5fsDjepNeG7qp4aiC
-	 ChKRfgckGG48Bnw4ipNbJBp0E+ihuBeHZSBrgPDg=
-Received: from eusmtip1.samsung.com (unknown [203.254.199.221]) by
-	eucas1p1.samsung.com (KnoxPortal) with ESMTPA id
-	20260318171328eucas1p13f8bd42ec036e724893ac8d2492380da~d-tKJxfGz2951829518eucas1p1h;
-	Wed, 18 Mar 2026 17:13:28 +0000 (GMT)
-Received: from [106.210.134.192] (unknown [106.210.134.192]) by
-	eusmtip1.samsung.com (KnoxPortal) with ESMTPA id
-	20260318171326eusmtip19d9c14ed6d24b0fbcafe8e935194384f~d-tIxnPBK2725627256eusmtip1S;
-	Wed, 18 Mar 2026 17:13:26 +0000 (GMT)
-Message-ID: <1b9db59c-f736-4c59-b37a-15a60cfa4f3e@samsung.com>
-Date: Wed, 18 Mar 2026 18:13:26 +0100
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="N1/Bxw2J"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1773854307; x=1805390307;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=tcwBnr4PB39Z0VvfyqpTv96JTqTKA7HJd/AGMFQzpNE=;
+  b=N1/Bxw2Jls0Wfx60V7+SXdvJ8Roh8foe+9nnJpDtqvkOATmYMMArn9dl
+   YQ8CEC3npkEyjE3rn4WJsiSMd4Tr8+NFb4zareZ6b7Puz9P6NnS8876AC
+   EmYW0HjAxzswbO4Wb8w1vZDO7fqhwn7b1nZn8FiG2MhEr3yTZfl0UgbgW
+   PR+321TUpIDozf7ITeL6sIUBvHFM1rgNVKNvPgvYZF/u4WIpiMGdhHWIc
+   SIhgYRaGU2/+BG3vFkKk5mxXv66P/yDS2lWXpY/ih5SoaOrbjWrQu+iI4
+   vEyipNgz3IBXyxSuEjJKl9VDwgcyo3ysrJ9xP5qRj+u5NXW0EcprEzyO/
+   Q==;
+X-CSE-ConnectionGUID: /EjCdJvxQWiEpJQsalH5fA==
+X-CSE-MsgGUID: 3XKICSbJTHC7NRC4945CZw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11733"; a="78777252"
+X-IronPort-AV: E=Sophos;i="6.23,127,1770624000"; 
+   d="scan'208";a="78777252"
+Received: from fmviesa003.fm.intel.com ([10.60.135.143])
+  by orvoesa106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Mar 2026 10:18:26 -0700
+X-CSE-ConnectionGUID: VjFluSBYSA6w+OIZxsFQjw==
+X-CSE-MsgGUID: FxqhJ4nVRnKXPpe36MzK0Q==
+X-ExtLoop1: 1
+Received: from lkp-server01.sh.intel.com (HELO 63737dd503cb) ([10.239.97.150])
+  by fmviesa003.fm.intel.com with ESMTP; 18 Mar 2026 10:18:24 -0700
+Received: from kbuild by 63737dd503cb with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1w2uXC-000000003BZ-2GZk;
+	Wed, 18 Mar 2026 17:18:18 +0000
+Date: Thu, 19 Mar 2026 01:17:24 +0800
+From: kernel test robot <lkp@intel.com>
+To: John Garry <john.g.garry@oracle.com>, martin.petersen@oracle.com,
+	james.bottomley@hansenpartnership.com, hare@suse.com,
+	bmarzins@redhat.com
+Cc: oe-kbuild-all@lists.linux.dev, jmeneghi@redhat.com,
+	linux-scsi@vger.kernel.org, michael.christie@oracle.com,
+	snitzer@kernel.org, dm-devel@lists.linux.dev,
+	linux-kernel@vger.kernel.org, John Garry <john.g.garry@oracle.com>
+Subject: Re: [PATCH 02/13] scsi: alua: Create a core ALUA driver
+Message-ID: <202603190113.JzA11dmp-lkp@intel.com>
+References: <20260317120703.3702387-3-john.g.garry@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Betterbird (Windows)
-Subject: Re: [PATCH v2] ufs: core: Avoid IRQ thread wakeup during active UIC
- command
-To: Bart Van Assche <bvanassche@acm.org>, peter.wang@mediatek.com,
-	linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
-	avri.altman@sandisk.com, alim.akhtar@samsung.com, jejb@linux.ibm.com
-Cc: wsd_upstream@mediatek.com, linux-mediatek@lists.infradead.org,
-	chun-hung.wu@mediatek.com, alice.chao@mediatek.com, cc.chou@mediatek.com,
-	chaotian.jing@mediatek.com, tun-yu.yu@mediatek.com,
-	eddie.huang@mediatek.com, naomi.chu@mediatek.com, ed.tsai@mediatek.com
-Content-Language: en-US
-From: Marek Szyprowski <m.szyprowski@samsung.com>
-In-Reply-To: <df1d0b3f-6822-4c49-aeea-fc513e2b05cb@acm.org>
-Content-Transfer-Encoding: 8bit
-X-CMS-MailID: 20260318171328eucas1p13f8bd42ec036e724893ac8d2492380da
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-X-RootMTR: 20260317171131eucas1p25dd55bf1aad6d5b310526d51885b3b7a
-X-EPHeader: CA
-X-CMS-RootMailID: 20260317171131eucas1p25dd55bf1aad6d5b310526d51885b3b7a
-References: <20260306054419.3816557-1-peter.wang@mediatek.com>
-	<CGME20260317171131eucas1p25dd55bf1aad6d5b310526d51885b3b7a@eucas1p2.samsung.com>
-	<1f88b91c-59e6-4347-84c2-50b7cf106c47@samsung.com>
-	<df1d0b3f-6822-4c49-aeea-fc513e2b05cb@acm.org>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260317120703.3702387-3-john.g.garry@oracle.com>
 
-On 18.03.2026 16:50, Bart Van Assche wrote:
-> On 3/17/26 10:11 AM, Marek Szyprowski wrote:
->> This patch landed in linux-next as commit 6475cfb81fc4 ("scsi: ufs:
->> core: Avoid IRQ thread wakeup during active UIC command"). In my tests I
->> found that it causes the following regression on QCom RB5 board
->> (arch/arm64/boot/dts/qcom/qrb5165-rb5.dts):
->>
->> =============================
->> [ BUG: Invalid wait context ]
->> 7.0.0-rc4-next-20260316 #16535 Not tainted
->> -----------------------------
->> swapper/0/0 is trying to lock:
->> ffff000089f58048 (shost->host_lock){....}-{3:3}, at:
->
-> This line is a mystery to me. Are there perhaps any local changes in
-> your kernel tree on top of linux-next? I haven't been able to find the
-> text "shost->host_lock" in the UIC completion path.
+Hi John,
 
-I don't have any local changes, code is at commit 6475cfb81fc4. After 
-looking at the code this 'shost' indeed looks a bit mysterious, but 
-maybe it got that name after some inlining or code optimization.
+kernel test robot noticed the following build errors:
 
-> Instead, this is
-> what I found:
->
->     guard(spinlock_irqsave)(hba->host->host_lock);
->
->> ufshcd_sl_intr+0x3c0/0x6b4
->
-> Can you please help with translating this information into a line
-> number? Tools like addr2line, llvm-addr2line or llvm-objdump -d -l -S
-> can be used to perform such a conversion.
+[auto build test ERROR on mkp-scsi/for-next]
+[also build test ERROR on jejb-scsi/for-next linus/master v7.0-rc4 next-20260317]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
-ufshcd_clk_scaling_allow() in drivers/ufs/core/ufshcd.c:6492 (code 
-checkout at git commit 6475cfb81fc4)
+url:    https://github.com/intel-lab-lkp/linux/commits/John-Garry/scsi-scsi_dh_alua-Delete-alua_port_group/20260318-105207
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git for-next
+patch link:    https://lore.kernel.org/r/20260317120703.3702387-3-john.g.garry%40oracle.com
+patch subject: [PATCH 02/13] scsi: alua: Create a core ALUA driver
+config: s390-randconfig-001-20260318 (https://download.01.org/0day-ci/archive/20260319/202603190113.JzA11dmp-lkp@intel.com/config)
+compiler: s390-linux-gcc (GCC) 11.5.0
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260319/202603190113.JzA11dmp-lkp@intel.com/reproduce)
 
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202603190113.JzA11dmp-lkp@intel.com/
 
-Best regards
+All errors (new ones prefixed by >>, old ones prefixed by <<):
+
+>> ERROR: modpost: "scsi_exit_alua" [drivers/scsi/scsi_mod.ko] undefined!
+>> ERROR: modpost: "scsi_alua_init" [drivers/scsi/scsi_mod.ko] undefined!
+>> ERROR: modpost: "scsi_alua_sdev_exit" [drivers/scsi/scsi_mod.ko] undefined!
+>> ERROR: modpost: "scsi_alua_sdev_init" [drivers/scsi/scsi_mod.ko] undefined!
+
 -- 
-Marek Szyprowski, PhD
-Samsung R&D Institute Poland
-
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
