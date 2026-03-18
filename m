@@ -1,170 +1,204 @@
-Received: from mailout1.w1.samsung.com (mailout1.w1.samsung.com [210.118.77.11])
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A02236C9D1
-	for <linux-scsi@vger.kernel.org>; Wed, 18 Mar 2026 08:14:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.118.77.11
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773821665; cv=none; b=Pzai6gPasDXvLh0x2w/Kt5Mtk6usAQsUbS77Ltwoiwb0rINGvaAHKAOLMSpEi4KMiSCDkkOYW4infQwToyHyhdNfQ+0akAQ+3Q8yyB9lJd6rZ+Ut9Btw9/0ns6j5CSRZPie3l/eBoEg2G6os2XhpPj/oiT4MST3NLL8wsxA/mVM=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773821665; c=relaxed/simple;
-	bh=PlQ5UKpu81n5vqT6sU1Oqs79Mqcg5X8rydWctn7CM00=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:From:In-Reply-To:
-	 Content-Type:References; b=VgpDIvcSykSIMhfCLS4izZ0njWfTvL3z++ipvw8HJq83igTUdAm2LC+TKgUv+derswgrmHuApNucbU1LGUksxzJGnB49SICjJddeXB/hN9s7HlwG4ZFoHwI75wMx1tLBQjF7b/tkyWAcPcvz0RmwQNTn45M+FPpiiZeQMSkWl3M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=rgJYDwvR; arc=none smtp.client-ip=210.118.77.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E94139184D;
+	Wed, 18 Mar 2026 08:52:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.165.32
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1773823946; cv=fail; b=GvKrvdI0y5ojcW/OtyHCU3QBIXdCjAtIJNuVUrvqhF16QhhpZAmHmIZTECKP5sf7jkrMa687yelYeF45U/0QJmDvCyhFK2lDfqfU/RXl4FvILKmaZdTaI28s2gVJa1i+kl+YVqPQVg2JI+MpD3KYlHk9d5n3jMUAPu5FtbOLYPI=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1773823946; c=relaxed/simple;
+	bh=K6WsNm9v7V1bQC/10EasV7ft4I+3YRtoz9KQKwX2YiM=;
+	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
+	 Content-Type:MIME-Version; b=tM7x4OPTYoqdJDtEKgyMQfT4qLBg15NxluHa5z/hYo0D+Z1SpBaTD704ouILgNyGHQwGVeRlFxlO7EdPsHVRJWhVSZk7Bo4P6xF8wnh4rGShkJggS26xBKlwF1pmE5ZzlVSSFbef1v+esA+giNXwC5uojCkK6/l40iJj1MsIStE=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=f/0LbWcq; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=m2d1Cxiu; arc=fail smtp.client-ip=205.220.165.32
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="rgJYDwvR"
-Received: from eucas1p2.samsung.com (unknown [182.198.249.207])
-	by mailout1.w1.samsung.com (KnoxPortal) with ESMTP id 20260318081421euoutp01eebe7c3cda97f8d3cc80278d90bfaa21~d4WcfI1aJ1522715227euoutp01L
-	for <linux-scsi@vger.kernel.org>; Wed, 18 Mar 2026 08:14:21 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.w1.samsung.com 20260318081421euoutp01eebe7c3cda97f8d3cc80278d90bfaa21~d4WcfI1aJ1522715227euoutp01L
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1773821661;
-	bh=yvFMvZTQXMKdyazswCtjEI004Xa7gBYHWW3UOLfDwIg=;
-	h=Date:Subject:To:Cc:From:In-Reply-To:References:From;
-	b=rgJYDwvRIwDt/FaftXWmG/5FBlUnztGMNle/opQZuhMYJ0thyVz59GqnttropbAeE
-	 Mw+9GwURV8SlXLsgDx7BkCkJS0OsyxD/yCV8p1fi3XKSDEp8cb8/hM90nGSduLriAw
-	 hPhKGzsdDkIOLptGVjdTA9KUVpPZoLuVO34lu4YM=
-Received: from eusmtip1.samsung.com (unknown [203.254.199.221]) by
-	eucas1p2.samsung.com (KnoxPortal) with ESMTPA id
-	20260318081420eucas1p2d63a59ae8d570c6723710071d3372859~d4WcI4HPW1653316533eucas1p21;
-	Wed, 18 Mar 2026 08:14:20 +0000 (GMT)
-Received: from [106.210.134.192] (unknown [106.210.134.192]) by
-	eusmtip1.samsung.com (KnoxPortal) with ESMTPA id
-	20260318081419eusmtip13f76841a77bec5816040238bbba36941~d4WaxSZ4S0399803998eusmtip1q;
-	Wed, 18 Mar 2026 08:14:19 +0000 (GMT)
-Message-ID: <473ecf74-1907-42a2-a785-6164720cb641@samsung.com>
-Date: Wed, 18 Mar 2026 09:14:18 +0100
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="f/0LbWcq";
+	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="m2d1Cxiu"
+Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 62I2NALl1711154;
+	Wed, 18 Mar 2026 08:51:48 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=
+	corp-2025-04-25; bh=/5TXdfG2stBItccVOdDcppgADy9e/bXGZEFrXp1CO+g=; b=
+	f/0LbWcqAHpMdqQfbv1u13e2aVTtMCTHkItRQ61YfQEtV4eaLPHvDv3fZMsJwSAY
+	ZJJ96g8xAl+Y5jnEoS+nVn8BlpEFOUWuoQytcaRWvuKBigQj0la6jFDzdTOl7X06
+	WZnV+isPhVqhY/x9Hx30tj3BZ/AZcRm1zIFkFIBcwqedmg6EHCTpI959cegceOEF
+	CCht/nLsNHtGKHvshECT+eOlH1Hz4EuaUY+XX1ALodZxF2u5hFO0b3IGLBoQgw1I
+	53CaCpmWeHgRmqN8KAfMngAKVdrg2alQfMbe91A/iAS3JjnzO/fonF866K0QIA0P
+	AHRp++f2MLAIVVcL3dNO2Q==
+Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.appoci.oracle.com [138.1.114.2])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4cvyj65na3-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Wed, 18 Mar 2026 08:51:47 +0000 (GMT)
+Received: from pps.filterd (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 62I6ldUL003688;
+	Wed, 18 Mar 2026 08:51:47 GMT
+Received: from co1pr03cu002.outbound.protection.outlook.com (mail-westus2azon11010065.outbound.protection.outlook.com [52.101.46.65])
+	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 4cvx4bb0kg-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Wed, 18 Mar 2026 08:51:47 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=krMhb2l/3HoeNnSw8HfljaFOo49K5tTcPNehvgMwlgYcgZCSnMHqZ18YhuZCxn/1rzkDHL9U+U2eY8juMOJWuTQStz5PIRRbzzXtaGPlmHor56pRl4WpSV3Qydj2iZdVpn8B0nf+Q+VrLXIAN5n4foBaKK3ylfD/iORL5ZIGf0yQcwaDZr3MfH8Sf+tgYUL4MC3k+VKt9MfJjkVENF4bUdkB1p5qibYsj/HuPz+NczuwGtbqL2lQPPV1s97tUelyhoqUkf2JaMRKzgq9G1g5HyiRDx9W8h+LEk5xkBIKgo+cnY/i6eUBFwN6A4FHw0fmBppwzebSfnqsgaWCCrg1jw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=/5TXdfG2stBItccVOdDcppgADy9e/bXGZEFrXp1CO+g=;
+ b=PlV0SAoM6wXJ6nHnpUm3YvCogyz4YZiTXoYigbEH8dCjGa4qh7bhhCy4ffLVWWy+Mh47ViTRgurMdA6AzQ0yOsChRN5ashhRfrCgk95lhR/zaX6cE3S4ejz5FwuI2vIbjLrZcLd32FGh8lfheWbez1JsLiVp/IzXc7xp4Nt7HfyrbLyfSG9zt7Z7QLt4SpfTsetMkbifev6ABwqQMkqafnzK2lt8+1k+hOyqqh+RWilxG1M3ixkJ/tKD6J+Ha1y22qHNmCUABbo2Fmhd7RPLhxblh5/8OY/V1EtUpDT2QfUVBvPNIt3Q6iLslnaNFtwMB9qx615ZafReoZZmwQ1IKg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=/5TXdfG2stBItccVOdDcppgADy9e/bXGZEFrXp1CO+g=;
+ b=m2d1CxiufuoBgyRXsy0fZv1ka+X85JHbjAC3Dteu5NZhNodEuDGQX583WMvYXsGvmhugMtSweietYKN4nptrgJg7pBGdh3HKNYhoxY4SVxyDibWtvDeVG5wQFoARTC6zZ+OAskBBNDnYN6zkxZZwLGQfZVeYiWPDi4RpoXJActQ=
+Received: from PH3PPFEDB06D67A.namprd10.prod.outlook.com
+ (2603:10b6:518:1::7d6) by PH0PR10MB5642.namprd10.prod.outlook.com
+ (2603:10b6:510:f9::7) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9723.19; Wed, 18 Mar
+ 2026 08:51:43 +0000
+Received: from PH3PPFEDB06D67A.namprd10.prod.outlook.com
+ ([fe80::e515:6610:798b:9d8f]) by PH3PPFEDB06D67A.namprd10.prod.outlook.com
+ ([fe80::e515:6610:798b:9d8f%7]) with mapi id 15.20.9723.018; Wed, 18 Mar 2026
+ 08:51:43 +0000
+Message-ID: <60c133d2-e9f1-4b5f-b3c4-4c37dd62dbb7@oracle.com>
+Date: Wed, 18 Mar 2026 08:51:38 +0000
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 0/1] scsi: sas: fix mkfs.xfs failure due to bogus
+ optimal_io_size
+To: "Ionut Nechita (Wind River)" <ionut.nechita@windriver.com>,
+        "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: ahuang12@lenovo.com, axboe@kernel.dk, damien.lemoal@opensource.wdc.com,
+        hch@lst.de, iommu@lists.linux.dev, ionut_n2001@yahoo.com,
+        kbusch@kernel.org, linux-kernel@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
+        m.szyprowski@samsung.com, robin.murphy@arm.com, sagi@grimberg.me,
+        stable@vger.kernel.org, sunlightlinux@gmail.com
+References: <20260318074314.17372-1-ionut.nechita@windriver.com>
+Content-Language: en-US
+From: John Garry <john.g.garry@oracle.com>
+Organization: Oracle Corporation
+In-Reply-To: <20260318074314.17372-1-ionut.nechita@windriver.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: LO4P265CA0278.GBRP265.PROD.OUTLOOK.COM
+ (2603:10a6:600:37a::19) To PH3PPFEDB06D67A.namprd10.prod.outlook.com
+ (2603:10b6:518:1::7d6)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Betterbird (Windows)
-Subject: Re: [PATCH v2] ufs: core: Avoid IRQ thread wakeup during active UIC
- command
-To: =?UTF-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= <peter.wang@mediatek.com>,
-	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-	"jejb@linux.ibm.com" <jejb@linux.ibm.com>, "avri.altman@sandisk.com"
-	<avri.altman@sandisk.com>, "alim.akhtar@samsung.com"
-	<alim.akhtar@samsung.com>, "martin.petersen@oracle.com"
-	<martin.petersen@oracle.com>
-Cc: "bvanassche@acm.org" <bvanassche@acm.org>,
-	=?UTF-8?B?QWxpY2UgQ2hhbyAo6LaZ54+u5Z2HKQ==?= <Alice.Chao@mediatek.com>,
-	=?UTF-8?B?RWRkaWUgSHVhbmcgKOm7g+aZuuWCkSk=?= <eddie.huang@mediatek.com>,
-	=?UTF-8?B?Q0MgQ2hvdSAo5ZGo5b+X5p2wKQ==?= <cc.chou@mediatek.com>,
-	=?UTF-8?B?RWQgVHNhaSAo6JSh5a6X6LuSKQ==?= <Ed.Tsai@mediatek.com>,
-	wsd_upstream <wsd_upstream@mediatek.com>,
-	=?UTF-8?B?Q2hhb3RpYW4gSmluZyAo5LqV5pyd5aSpKQ==?=
-	<Chaotian.Jing@mediatek.com>, =?UTF-8?B?Q2h1bi1IdW5nIFd1ICjlt6vpp7/lro8p?=
-	<Chun-hung.Wu@mediatek.com>, =?UTF-8?B?TmFvbWkgQ2h1ICjmnLHoqaDnlLAp?=
-	<Naomi.Chu@mediatek.com>, "linux-mediatek@lists.infradead.org"
-	<linux-mediatek@lists.infradead.org>,
-	=?UTF-8?B?VHVuLXl1IFl1ICjmuLjmlabogb8p?= <Tun-yu.Yu@mediatek.com>
-Content-Language: en-US
-From: Marek Szyprowski <m.szyprowski@samsung.com>
-In-Reply-To: <a341a70943ffb8b8c5bbc9b4e19c017fe664fdf1.camel@mediatek.com>
-Content-Transfer-Encoding: 8bit
-X-CMS-MailID: 20260318081420eucas1p2d63a59ae8d570c6723710071d3372859
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-X-RootMTR: 20260317171131eucas1p25dd55bf1aad6d5b310526d51885b3b7a
-X-EPHeader: CA
-X-CMS-RootMailID: 20260317171131eucas1p25dd55bf1aad6d5b310526d51885b3b7a
-References: <20260306054419.3816557-1-peter.wang@mediatek.com>
-	<CGME20260317171131eucas1p25dd55bf1aad6d5b310526d51885b3b7a@eucas1p2.samsung.com>
-	<1f88b91c-59e6-4347-84c2-50b7cf106c47@samsung.com>
-	<a341a70943ffb8b8c5bbc9b4e19c017fe664fdf1.camel@mediatek.com>
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: PH3PPFEDB06D67A:EE_|PH0PR10MB5642:EE_
+X-MS-Office365-Filtering-Correlation-Id: f2c3058a-8501-4fc0-cc72-08de84cb9458
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|1800799024|7416014|376014|366016|22082099003|56012099003|18002099003;
+X-Microsoft-Antispam-Message-Info:
+	OhEL5unOxizJFHExSWuqMwQcHGgMCFMQOp3ydRGfLKkkWrVtjfcc4yJE2g3SFgDTbvEkCrY5CH9QIB3kQlGXLDJkhG+vnXhRHUGqy++XhPIR7DRb44SL5HuQmu1IJgmbdHxWzOAFpYlt//GI3fNGRglgfSlTj6vN5VmSUGl+XUW5jnGHKKQXeT5Rv+kkyglzPwLZ0jzzZJzsB0w7Dy5qeOFpkswfyI4z0HUJRJBQ5lF6zvrKhZ8OLCfpNdRrtWjVJLppsabY+IzXIeml23GGXwnE6pKksiqRU0Ud/7z4bH4ca98lOx4xXl30D7kCei9kyBP08f7iKQ50l8K2DTg8uuxgwh6tDMClYF6CLPo5PSpE/iWLu1ReZy++FVh7XmwBshLZ5OI0g2IadtxVDbnuFJ/Jl/4BPIwXkxZYZFqU85CIN4vNpfcuMK3UmliddJKjRD7ltDD25NEJmoro0CTN/7DhNvRntQckdcbwR9/njJHCmfAJThEAGcUPrHqjMQLnCp98dGochZsWGcGEWVM9iqRgnLKbJNfdPqWKxyGz4mHOvW4wAJC9d402R18iPgySagL4DhEujE9ETZLM4LXprmKXSvQPkfW87tkBqopgamK8As3fIah4KsX/rzGA8nhAAB6WT2i0WGZIBY5V3AIgBBJWYX7/k4GqOy9urFsD+jJu73wxfNTM/YsnUp1Aarp1YtDaBopLEaIOBay1AimQuqGErNa9qkxXzHPmhqrZXyg=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH3PPFEDB06D67A.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(7416014)(376014)(366016)(22082099003)(56012099003)(18002099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?K2Nyc1hmQ2Riem1lbHJTeCtOQko0OFNVMUZWaW0vekRURXlsb0NVTkVVZjY5?=
+ =?utf-8?B?SDN3U0kvQ2JneEQvWmhuc3Y3blJyYXhBbXI1YkwwVENndDkwVjFnVXlnckhF?=
+ =?utf-8?B?MDZnOGNBRlA4NFB2QWs1SnI1TnZKb2ZRRlN3YU5Xa2JWc2FpcE9MeGNuUkNP?=
+ =?utf-8?B?eW1hUVRIbFppaDlIRzhHN0Zid1V0Tk1WRy9zbzBWTE9NemZ5aG1CeTgzb0dB?=
+ =?utf-8?B?TGFmTG1vcU9mM25GZFo2Q3d6ck9ZcmhkK0dqTytYM1VzMDJ4ekNNOHRNaDBW?=
+ =?utf-8?B?WlFFMXpUVEpVclkrMlBYWHFvNXpLNjdkaGd3WDc4L1h3bkJzYU5kQlRRdm4y?=
+ =?utf-8?B?NWliZ1hUL2hWTjVKY1Z6Q3lMY29CVHR5Zm8xdXB0RFgxOU0yK0RXVDhIazdm?=
+ =?utf-8?B?QU5HMGdoWERMakUxRVo1YjVtdWJwNlZPYUtldHhndmNqSmVrbUdobUVTR3Ex?=
+ =?utf-8?B?OFVQb2lMWHlMTlIxSXNIUTA1Ujl3M0t2Ty81TU4xQXhiRitQQmVPRklEaXhC?=
+ =?utf-8?B?YnBEOUV0WklEdnpQMGM0SlFQTU8yTFE5ODFDN3BPN29vc05UR0NJb0J4WWYx?=
+ =?utf-8?B?b3NyNDJOaThGQ1pUQmQ1RnJvVkErN2k0VE9tM29tQmlDR1YrOXhMQXNqRnEx?=
+ =?utf-8?B?WW5STnlTRlB3d3l2cGpaZ0RRUnRpVFd3WXBDMy9CeVBGeXVxNUNMYktNMGZo?=
+ =?utf-8?B?NVFraVZEUy81NkF5M3U5b20wM1pNRkFqNEMrQTMycktyV2JNSU83YUtPanV0?=
+ =?utf-8?B?bmg5dm1UUkdvYlVycldZdzVka2Q0aDJPRHFIUU53ajEwN0I5SjBXd0p1RUo3?=
+ =?utf-8?B?NXVnOFNlSzcrSW5wNS84Rmwva3pwK0VpQTQ1bVRPYlFuMEw5R1VBUDNHMnFX?=
+ =?utf-8?B?MG93dWpkSW9tYVpWeHJaQVg0UHVhWkhSdGdtRHFJR0dyUHJhN2dnMEJQSitZ?=
+ =?utf-8?B?bDlMaHkzQkhqcm1YSXV0ZUIwdEZlTEIvNzFVbFpZKzk5Rmh1Zmx4M2JIaHJv?=
+ =?utf-8?B?SWdNYk8yY1gycW51ZllDZDdnaEdDNy8yKzNxN0tFdUJQZm15K25BWXdiWXJn?=
+ =?utf-8?B?NVQrMGxiQ0JmeW5WaEVuekRHNG44M016b3B2ekdDV1djWkFkQ1M0MFdoRGdV?=
+ =?utf-8?B?UmY1T1Q2U0svOWtseWlsNHFadXBHa3oyNjNRQkdYSHNjZHJLNTlvUGV2YnMw?=
+ =?utf-8?B?TmtsUzdvcnE1elpnNWlhR09zUzRCMTZCQ0xXUlBleTNKZE0yWllQcEwxOUkv?=
+ =?utf-8?B?U1dEWEZJT3lybW9NYXA2MlVPU043cXFOZzJ2ZExXb2llMjlyU1RjWnRJUm03?=
+ =?utf-8?B?TDVia1dsUmJLamtLamxMbG9CaHAwcjNjUUFiNXg4WFJ0ajk3aTI5NjV1UG1P?=
+ =?utf-8?B?OVhtSTQxbDdxd3lHdWgxaDNJOFdEZ1hjaTFTNlg0ZWR4VlJGQjFwU0s3RlpY?=
+ =?utf-8?B?Zjlqb1JpRSsza05QNUVkY25nOHNwREZYeXY4d1B4TjhGR2pzUU5DSW14eGRS?=
+ =?utf-8?B?RzhCTm9uZ01BL0ptNlVoU3dUZWtTd1ZDSkVuTjBwN0FlTm1mdXVlNGlUcll2?=
+ =?utf-8?B?am1SN1BMRWRHWTRQaUJuU1lYcEU3OEFMN2JrNSsvOEltT0F2MEJlRDZvYnE1?=
+ =?utf-8?B?Q0M4ZUdSR0gvQWZWU3MxU2ZsSDVpMWhZOUl3RXZ1NmFadVZXK1YrUlZmd0My?=
+ =?utf-8?B?ZTV4VVorTFdVSTFzZnhJNllzbTdXVjJWUmRxcDdXUStRbGFMaTFIOWw5WENW?=
+ =?utf-8?B?ZGg0MUppdFJTQytYUUFSVnFTSzdoVUZmdDhJMjZaUjNQSXdnKzIxV3ZVZ1BS?=
+ =?utf-8?B?aXluUGxlN2gxb215WDcyL0R2NGcwdWh2ejJLMEIzM2gydXc5ZHlTWVljRXgz?=
+ =?utf-8?B?MUhFV0NWK0VUTVNjOTVmYS9WaEF2VkRXME5lYUJ2QUY4S1NTQjBuK05HRkhZ?=
+ =?utf-8?B?b3VxVTFnV3I0bWRtN3U0K1V5dTI3c04xRm9Zd3hJUXc1NDhqeFVJL2NEV0xy?=
+ =?utf-8?B?UW95d0srZ0diWjV3OUg0OVREa0VlK3dEaG5sbTB0eTBBbWlqVlpXM0ErcVNu?=
+ =?utf-8?B?Tlp2TlVYekpSeEgrcU5tSk1ZQk1XV1FsbmorV2ZKRzNnMlE0UFdZNjdPM1or?=
+ =?utf-8?B?a3dQYXZVc0ZWVUFOWGZiNGVZaXRpcC9WK2VyRXNWRVN1dUxkWjREcHVPd0ZU?=
+ =?utf-8?B?cmh5VG52UlVIdVJ4YVR6WWg5ejNsUmdQMlB3ZldSa2NDcUVpZURMam5Qdmkr?=
+ =?utf-8?B?ellFbjRuRW00TUxVYTlLb2ZZdis4L3RrY3VYZC9EWFpQK2NTa21pcUJyZXlY?=
+ =?utf-8?B?aDF0UVo3bDNhaFNxRmdLM3hzZ3loYUEwakFCcmxSclBkSWtLVC9Dcm56WlFU?=
+ =?utf-8?Q?xcALuuKytY8qg2NI=3D?=
+X-Exchange-RoutingPolicyChecked:
+	DsomD0kEAGDuznkvoLLVXqa11CBmQFsjYzukTxGxs1lcCg4wKJEDydlDngychrERhOn53HmnqTbt+Chj3L6XYkF8O9ONrHj4J0FM7NJUZZFCYbjoPZHGyWEy7RAQhz+IicyVfb7RezYkAl4F+WGgrELXKHNlYetf1B8h/cTYUyXpxiUyW8wYQxU7pDIYtLYCJ8LKsYXbiyV8ze5O88YH4Skq0au9kW8tlArAUlXaZ9/IaCc0Ujd7p7mRCLvKICfpcHXMB4Bhcd9SBEZk8xNPA0tUywlM0qL0A/qopkNAfmWvwrZPKIFVQwOGOcpV8sYLZHyxPDposyOao5BcgZgZqw==
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
+	JZXvWgoSlw0l0rpQVZs/ytrTkNOO4UXNPBRFf/zJNggML+mPaonLYuG3m5dFSvmy6uUm0Qqa1MAojGPMIeshhKddEUmtMtejd3cL/9tDIMXUbeDhubYAt6EsRY3x60s/jZ0h5e9X3pjWCHv67mVobfgxFqYSSfl4R3SdxsTLKoDh+g363gnyVdIjUUsgm7ZBq+M5dAAy3Cgux/wfhL7jPKazPSnU0oCPfq0IDR+hPJdu88shlItFIoPS+QPHTyz7BSya4hRPdQxCPhu77SzvHUHLRc2hDks78E7EenAls4Gt7NRCpkLJoNQGh8hfsHDBQ2S6GtnySTM8mZ9DWJtz/TRVtFeO/q90Xk7qzJzQlQ32Dn6z/4Su/9zN2lULW2uC2pAjDvfEQcDMcQzLLkFuN96Hg+3lPUJcBFJqCCXTPCUWP4Z4FP8fg0QWYItpNjP0fFg6A+TLH8wojQbLQP/sBu/s3QA51d+g94TiPi3D0D8c6XIF4x8UiKPoWMx2FuOyeofUA4LgPI/BbQzxTfh2Xbt0jfQDG0/FIZetnSjf0Nt0CMXpGSZrGsJLRqOgTUq/IlihRvt1rudfI9MoaxbnVagotqJ5kWSwH9AV8Qxl1r0=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: f2c3058a-8501-4fc0-cc72-08de84cb9458
+X-MS-Exchange-CrossTenant-AuthSource: PH3PPFEDB06D67A.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 18 Mar 2026 08:51:43.7724
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: wAkBbWGzfRyRb+LxwzLSpGe0CcKxBe4WKbRLfU90K0LF0aXX0p81dT2HZeONGaJbfGx8lBCPyUfH/Hf5AZWWuQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR10MB5642
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-03-17_05,2026-03-17_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 mlxlogscore=999
+ adultscore=0 phishscore=0 malwarescore=0 suspectscore=0 mlxscore=0
+ spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2603050001 definitions=main-2603180074
+X-Authority-Analysis: v=2.4 cv=LKFrgZW9 c=1 sm=1 tr=0 ts=69ba67a3 cx=c_pps
+ a=XiAAW1AwiKB2Y8Wsi+sD2Q==:117 a=XiAAW1AwiKB2Y8Wsi+sD2Q==:17
+ a=6eWqkTHjU83fiwn7nKZWdM+Sl24=:19 a=z/mQ4Ysz8XfWz/Q5cLBRGdckG28=:19
+ a=lCpzRmAYbLLaTzLvsPZ7Mbvzbb8=:19 a=xqWC_Br6kY4A:10 a=IkcTkHD0fZMA:10
+ a=Yq5XynenixoA:10 a=GoEa3M9JfhUA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=jiCTI4zE5U7BLdzWsZGv:22 a=EIcjfB9IiI4px24ztqRk:22 a=RzqYyRu2LyB9E_pxa0QA:9
+ a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzE4MDA3NCBTYWx0ZWRfXy/k5jd3Tdkn6
+ U8tkxj67dILWePJNas4lRV4pWtHgm7BJHVY9oXXk8A45Y2OlL/eNe2YVhGaDjvq4ZOSPxn7d7fV
+ b/YIl55P5lrSzlCvY5rWkOoCHXHUPcb2LlKxrP/4eLar11tHepbv4KNNK1cpjny1vDvH3R1N6Vp
+ umHa0y3Ccxqt/KJkMEVILKGPqAlPRtQ5cEYO/+Y9k6AGcqiYfRK8aHtnZZnqVDL6IZJDB9huwj9
+ wpPTipb5ahHkZKsi2DbCr42motMj+MqpQlzVwNnYx/q0xGjxKYwuB1A+HC8ItZVlp0ApDdgMI+k
+ Pd8ulk0qhUyXAagIjhOBEiqkVyVvP4Z2Gy0M59SMqffK6fG/wcN/dgOhzXI+C4uh+pUHLG/KWiJ
+ Sjiyf7vTi0BGAYm43r3IY2XPMpJh/2YrVA1GgXHhVJi7rcqFQsL+57Tyf7xlZCgHlvG3G+2vldW
+ T/sZZnCZc9Ak31aPN2A==
+X-Proofpoint-GUID: VVXSMGdynY-GxFcFyyzHDfnY39fNFHoI
+X-Proofpoint-ORIG-GUID: VVXSMGdynY-GxFcFyyzHDfnY39fNFHoI
 
-Hi Peter,
+On 18/03/2026 07:43, Ionut Nechita (Wind River) wrote:
+> Answer to John's question about blk_validate_limits() rounding:
+>    blk_validate_limits() rounds optimal_io_size down to physical_block_size
+>    (4096), but does NOT enforce that optimal_io_size is a multiple of
+>    minimum_io_size (8192).  So optimal_io_size=16773120 survives validation
+>    unchanged — it is already a multiple of 4096.  The mismatch only shows
+>    up when mkfs.xfs divides optimal_io_size by minimum_io_size and expects
+>    an integer result: 16773120 / 8192 = 2047.5, giving swidth=4095 and
+>    sunit=2, with 4095 % 2 != 0.
 
-On 18.03.2026 07:57, Peter Wang (王信友) wrote:
-> On Tue, 2026-03-17 at 18:11 +0100, Marek Szyprowski wrote:
->> This patch landed in linux-next as commit 6475cfb81fc4 ("scsi: ufs:
->> core: Avoid IRQ thread wakeup during active UIC command"). In my
->> tests I
->> found that it causes the following regression on QCom RB5 board
->> (arch/arm64/boot/dts/qcom/qrb5165-rb5.dts):
-> Hi Marek,
->
-> If this issue can always be reproduced with this patch?
-
-The issue I've observed is 100% reproducible. I've checked again by 
-compiling the kernel directly from commit 6475cfb81fc4:
-
-=============================
-[ BUG: Invalid wait context ]
-7.0.0-rc1+ #16536 Not tainted
------------------------------
-swapper/0/0 is trying to lock:
-ffff000080bdc048 (shost->host_lock){....}-{3:3}, at: 
-ufshcd_sl_intr+0x3c0/0x6b4
-other info that might help us debug this:
-context-{2:2}
-no locks held by swapper/0/0.
-stack backtrace:
-CPU: 0 UID: 0 PID: 0 Comm: swapper/0 Not tainted 7.0.0-rc1+ #16536 PREEMPT
-Hardware name: Qualcomm Technologies, Inc. Robotics RB5 (DT)
-Call trace:
-  show_stack+0x18/0x24 (C)
-  dump_stack_lvl+0x90/0xd0
-  dump_stack+0x18/0x24
-  __lock_acquire+0xa40/0x2254
-  lock_acquire+0x1c4/0x3fc
-  _raw_spin_lock_irqsave+0x60/0x88
-  ufshcd_sl_intr+0x3c0/0x6b4
-  ufshcd_intr+0x7c/0x90
-  __handle_irq_event_percpu+0xa0/0x4c4
-  handle_irq_event+0x4c/0xf8
-  handle_fasteoi_irq+0x108/0x198
-  handle_irq_desc+0x40/0x58
-  generic_handle_domain_irq+0x18/0x24
-  gic_handle_irq+0x4c/0x110
-  call_on_irq_stack+0x30/0x48
-  do_interrupt_handler+0x80/0x84
-  el1_interrupt+0x3c/0x60
-  el1h_64_irq_handler+0x18/0x24
-  el1h_64_irq+0x6c/0x70
-  cpuidle_enter_state+0xf8/0x41c (P)
-  cpuidle_enter+0x38/0x50
-  do_idle+0x208/0x290
-  cpu_startup_entry+0x34/0x3c
-  rest_init+0xf8/0x188
-  start_kernel+0x810/0x8e4
-  __primary_switched+0x88/0x90
-scsi host0: ufshcd
-
-
-
-> I have doubts because, in your log, it seems to be ISR trying
-> to acquire the spinlock (shost->host_lock), but cannot obtain
-> it in time, causing a timeout.
->
-> ufshcd-qcom 1d84000.ufshc: uic cmd 0x1 with arg3 0x0 completion timeout
-> ufshcd-qcom 1d84000.ufshc: dme-get: sttr-id 0x41 failed 0 retries no
-> locks held by swapper/0/0.
-> ufshcd-qcom 1d84000.ufshc: ufs_wcom_check_hibern8: unable to get
-> TX_FSM_STATE, err -110 stack backtrace:
-> ufshcd-qcom 1d84000.ufshc: No active UIC command. Maybe a timeout
-> occurred?
-> ufshcd-qcom 1d84000.ufshc: ufshcd_threaded_intr: Unhadled interrupt
-> 0x00000000 (0x00000400, 0x00000400)
->
-> Regardless of whether it runs in IRQ or thread IRQ context, the
-> outcome is the same (host_lock cannot be acquired in time).
-> So, could you check why this spinlock cannot be acquired first?
-> Additionally, ufs_wcom_check_hibern8 does not appear in the
-> current code base, so there might be some other unknown code
-> that has already acquired host_lock in your code base?
-
-You have probably mixed my report with this one 
-https://lore.kernel.org/all/abmNkRC_vSVaP2sC@mail.iam.tj/
-
-Best regards
--- 
-Marek Szyprowski, PhD
-Samsung R&D Institute Poland
-
+thanks for the info. I feel that that io_opt should be a multiple of the 
+io_min and we should enforce it in blk queue limits validation, but that 
+can mask problems like you have seen.
