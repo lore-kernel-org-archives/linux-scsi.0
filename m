@@ -1,45 +1,46 @@
 Received: from AM0PR02CU008.outbound.protection.outlook.com (mail-westeuropeazon11013003.outbound.protection.outlook.com [52.101.72.3])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1A167402BA6;
-	Thu, 19 Mar 2026 22:32:54 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E9FFB407571;
+	Thu, 19 Mar 2026 22:32:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.72.3
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773959576; cv=fail; b=T/R4wj9/rvCHPIG+4cAFKQ8xkQ9JADxygdHLIbcJSLu4e8zsr5M6/ODVWV6vCVyjyPESxbe2f1n+Th1d3PRtAyYU6+yAP6ZHYOek+7J90H9ebDsqLMUUTJNPzM2YezcpJopNQQugWWejCOnppyolkVr4T/DwYvUFdm6sCt5pS2I=
+	t=1773959586; cv=fail; b=T/WkZ0cPhjjlogWRubQ9Pn2JUzTwvntnh/lVLj4e5xAhdMHCk3oFAe7r2OeO3FPO6w6ydfrd0lTctM3j4bt97ggPC1syDJkmwRAkJE/wH3azihwoII47GzAjs6XV9B/KL00AoOYfdikFpHdVvSzCdpHN31+CjkeNNAu9U0M1Rbg=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773959576; c=relaxed/simple;
-	bh=WwzhUMim3dx/UnIN+/qrU2b0JhhIYhtUazaUxEhYGIg=;
-	h=From:To:Cc:Subject:Date:Message-ID:Content-Type:MIME-Version; b=pJ8XkR+nqYmC9i3tdRwWhneIrMzaf1YjW8SSpSxxRPzqIW/gJw3Qr5QWEq3iTTfgmicBFfaGOfefJF6bU3QHybdzp3f5Hv9Dyt84vfq9YYLuaSOZvBCnSC3YLFAlVkW+rVJ575Uxcrpv2akOQwUrOlYCbWKZzvJxetZTChRAKRY=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=naJabn6C; arc=fail smtp.client-ip=52.101.72.3
+	s=arc-20240116; t=1773959586; c=relaxed/simple;
+	bh=vvqbgRQb8LMkmNBDH4BPHipoabUfECnj7UBwChAKprA=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=GvnpNdCez0J55fn/ayYY3ccBP2rJYob8SJi8HlBDqVpN2qG11WRsj4IDVaK77ntOScWYnUIEpeq2vop884T1655uihqok619dSXPXv+iftbiAmFJ1GwDxofQBSyvHmLXxjlyRAwOuz3Gp+vT91HPyFbgcJfHPyL3p1QL3Tftris=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=QZHyfwlW; arc=fail smtp.client-ip=52.101.72.3
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="naJabn6C"
+	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="QZHyfwlW"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=n+4y+jlnZiJbrPq1uGBtzBHFbrgiomWUIzuHJ2y/J+bdjxgMG5LsHmrSz4GHt42SB13HWxpPxb96gpNa3Fd8F9UQ7B616ARPPMk+yO0ZRk9RPDorWxA2G0uchIpmJ/xxQptDt32ZhxlX8LizLTlbjvbN/sXUFp1YYUVluR33FLa0h30o4URq3owNvc7/ijV3RkxTqoyHrbYrfYMBwYTBxXzejCNdFDh3okYevMyleNafxnb2BtzSar24QjF7ALpEEJAJOu6C2hw2uziQm/YAQ2ywgsHEYZGr7KLc1KFuDrd2PGSYhYvfAH6hJbHK6/C4opM8hfqMAO4yzPJ7X65FcA==
+ b=kzUqfJoOPecluXkeAcvX/AeTGcvgsXKk8Nbquw+vwkd656mb/saXJ9zeBUpXB4khGgbnqhQyjVNMyuBK0QnCNMQU0Q5MxLpYDem3GDP6JFOGs9q6li04EgIst9hE70S3ySnHjRS4jJ68RwUXF8aDppTLizfALKRR4PKJecsUsB/FwMJm7TJSIYcyt/ZaT61VJCr1taUV/UqaImxcK1Yr40a/jyAn0tpGGxnPWnj2VnBUIyavx4VgHmctdURai2t1a5vbecpP0TJ5N3u350bl8SFLCDvp+GnRcNQzDfMugFthxha8JNwWBB3RRB+3AfZgahLXKVr5xEKifUa2dSTC7A==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=2KUh28j13blQ2LrfFK0ASncGGRnvBRaxrnslTSgJHjk=;
- b=TUIWLVseaVhk50UWLYnIx4IbAmtNmOmVp04gpfXshDAph+vin3kh9Rco0/1dBmnyzHpPup5nWAX9CIj2EPZ6tJGgJ26a5TTXo8kv239RICr/u3Be1MlY9VvjvJoF+QOU0UfS7Spz/AAG3MYyjV883c3BUh9YS7i2eH8pH36yK4CeXs+l3EhnN0izQgNQ4IOhS6BhK/TEgRo0cZJteR/UjQehwjxeSImh8F5V1OzYnWKP7tf6BMm+pvj2cN0fo5vPU7SwmoA6KRVD9Uxh/usSyUODNxK02RpFJLHtKV77TqPr9KICP1W5hv8NvW8fqMXoFb8KaY/PbKEGIqgVU8yEWg==
+ bh=aLJqBnYouQqh5qS2S5ADGrJeTBgpFcRUJT3ZIejU24A=;
+ b=kfMWCqRJJs8uRBJwOskxxr5T8z0WnVIQ36WlbgykbWsWUQrBr3WCj4qLrEDgPQ3OtrvYy4+oZStieFhqIXHpMMTb3T2QFoqYjbafs2VArTlUdcQ+cTbKqBz1PxWdWuGtDnv1ZHioAF+ot+Jf5L2mkWXQNdMU/pQCK+G/HvhE5DpIisho4b1aQRLJqbHE+hEgLp4BgINjja8DnndcTX6lj2MaE421t66J/Qz0v6mzD5dPlyRSEwf3gZu3FAzHc6ti/9rgl3zkEzODts152RjHNHbUEgrX1Cg3tA3778YU3dJ6jIUGaq9l5bHQRIIzbq83V+OEsQLPig+Rol9hRXI1lQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
  header.d=nxp.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=2KUh28j13blQ2LrfFK0ASncGGRnvBRaxrnslTSgJHjk=;
- b=naJabn6C0Cx0F/ktsniQKZgQnr9PaZc/lBbbpIzvgfXztUwicKf1csEqP5EXBetiARn1JJFTfkpNQWcxzDch9UGWwsbPGd0eM9zEiUekjMGaxL2OCad/9PjGkFhdHA6uzT2ggQcdro1iu4xEfNzr7ZTDCs8IjcEoM+Lb04r/capj7szVJKUzpBi7YIEL81BZzJPnoSZMlrNIqr7KrcdNMtBMjBm2p3K8ZEmZQeY68m+pRJncWkTycjJJ+bo6QuHfr3COONJ927CWXa2KXZrvNNJ3hFWSZ1HzE/roQlAoz6+p2+zTyB8NNG/X2NPGs1PY0wrRkaU8gt5wtCldoq7rWA==
+ bh=aLJqBnYouQqh5qS2S5ADGrJeTBgpFcRUJT3ZIejU24A=;
+ b=QZHyfwlW5qPdaUdMw+akkGTURzHV6gk32NNVRiyUJrLBFIZ0NXn/apnlJuWvxDlO0+85k0uu30jdFCSY12cUtAh7IZLtTGG8AlrmCEXaSP1nEibtHKvWIMKP/9kwlTUobeC5QQQerIYMYK1zldNgGkmtTuBEpdvBJijgpITKOzdbFTETZOSNCemLvH9HjQZHODi58Ttceiq3HU8YI1ygxHmSVJ5CvdR2ztOHjI2dAjPXEs5E0/e8XRk5KdAFQXV79rB5h0eiNhMWHxGhOJTQRnJgn6cU9KA/2O4dY+iXr7HLVBMET0B53yPDCeMf8fC3b3e1UqyCGT1s/zbT1xtlEg==
 Authentication-Results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=nxp.com;
 Received: from AM9PR04MB8585.eurprd04.prod.outlook.com (2603:10a6:20b:438::13)
  by GV4PR04MB11355.eurprd04.prod.outlook.com (2603:10a6:150:296::16) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9723.19; Thu, 19 Mar
- 2026 22:32:40 +0000
+ 2026 22:32:44 +0000
 Received: from AM9PR04MB8585.eurprd04.prod.outlook.com
  ([fe80::f010:fca8:7ef:62f4]) by AM9PR04MB8585.eurprd04.prod.outlook.com
  ([fe80::f010:fca8:7ef:62f4%4]) with mapi id 15.20.9723.018; Thu, 19 Mar 2026
- 22:32:37 +0000
+ 22:32:42 +0000
 From: Vladimir Oltean <vladimir.oltean@nxp.com>
 To: linux-phy@lists.infradead.org
 Cc: Vinod Koul <vkoul@kernel.org>,
@@ -65,88 +66,28 @@ Cc: Vinod Koul <vkoul@kernel.org>,
 	netdev@vger.kernel.org,
 	spacemit@lists.linux.dev,
 	UNGLinuxDriver@microchip.com,
-	Abhinav Kumar <abhinav.kumar@linux.dev>,
-	Alexandre Belloni <alexandre.belloni@bootlin.com>,
-	=?UTF-8?q?Andr=C3=A9=20Draszik?= <andre.draszik@linaro.org>,
-	Andrew Lunn <andrew+netdev@lunn.ch>,
-	Andrzej Hajda <andrzej.hajda@intel.com>,
-	Andy Yan <andy.yan@rock-chips.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Chanho Park <chanho61.park@samsung.com>,
-	Chen-Yu Tsai <wens@kernel.org>,
-	Claudiu Beznea <claudiu.beznea@tuxon.dev>,
-	Damien Le Moal <dlemoal@kernel.org>,
-	Daniel Machon <daniel.machon@microchip.com>,
-	David Airlie <airlied@gmail.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Dmitry Baryshkov <lumag@kernel.org>,
-	Eric Dumazet <edumazet@google.com>,
-	Fabio Estevam <festevam@gmail.com>,
-	Frank Li <Frank.Li@nxp.com>,
-	Geert Uytterhoeven <geert+renesas@glider.be>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	=?UTF-8?q?Heiko=20St=C3=BCbner?= <heiko@sntech.de>,
-	Inki Dae <inki.dae@samsung.com>,
-	Jagan Teki <jagan@amarulasolutions.com>,
-	Jakub Kicinski <kuba@kernel.org>,
-	JC Kuo <jckuo@nvidia.com>,
-	Jernej Skrabec <jernej.skrabec@gmail.com>,
-	Jessica Zhang <jesszhan0024@gmail.com>,
-	Joe Perches <joe@perches.com>,
-	Johan Hovold <johan+linaro@kernel.org>,
-	Jonas Karlman <jonas@kwiboo.se>,
-	Jonathan Hunter <jonathanh@nvidia.com>,
-	Kevin Xie <kevin.xie@starfivetech.com>,
-	Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Laurent Pinchart <Laurent.pinchart@ideasonboard.com>,
-	Linus Walleij <linusw@kernel.org>,
 	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
-	Magnus Damm <magnus.damm@gmail.com>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
 	Manivannan Sadhasivam <mani@kernel.org>,
-	Marc Kleine-Budde <mkl@pengutronix.de>,
-	Marek Szyprowski <m.szyprowski@samsung.com>,
-	Marijn Suijten <marijn.suijten@somainline.org>,
-	Markus Schneider-Pargmann <msp@baylibre.com>,
-	Mathias Nyman <mathias.nyman@intel.com>,
-	Mauro Carvalho Chehab <mchehab@kernel.org>,
-	Maxime Ripard <mripard@kernel.org>,
-	Michael Dege <michael.dege@renesas.com>,
-	Nicolas Ferre <nicolas.ferre@microchip.com>,
-	Niklas Cassel <cassel@kernel.org>,
-	Paolo Abeni <pabeni@redhat.com>,
-	Pengutronix Kernel Team <kernel@pengutronix.de>,
-	Peter Chen <peter.chen@kernel.org>,
-	Peter Griffin <peter.griffin@linaro.org>,
-	Rob Clark <robin.clark@oss.qualcomm.com>,
-	Robert Foss <rfoss@kernel.org>,
 	Rob Herring <robh@kernel.org>,
-	"Russell King (Oracle)" <rmk+kernel@armlinux.org.uk>,
-	Samuel Holland <samuel@sholland.org>,
-	Sandy Huang <hjc@rock-chips.com>,
-	Sascha Hauer <s.hauer@pengutronix.de>,
-	Sean Paul <sean@poorly.run>,
-	Sebastian Reichel <sre@kernel.org>,
+	Heiko Stuebner <heiko@sntech.de>,
 	Shawn Guo <shawn.guo@linaro.org>,
-	Shawn Lin <shawn.lin@rock-chips.com>,
-	Simona Vetter <simona@ffwll.ch>,
-	Steen Hegelund <Steen.Hegelund@microchip.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Thinh Nguyen <Thinh.Nguyen@synopsys.com>,
-	Thomas Zimmermann <tzimmermann@suse.de>,
-	Tudor Ambarus <tudor.ambarus@linaro.org>,
-	Vincent Mailhol <mailhol@kernel.org>,
 	Yixun Lan <dlan@kernel.org>,
-	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-Subject: [PATCH v5 phy-next 00/27] Split Generic PHY consumer and provider API
-Date: Fri, 20 Mar 2026 00:32:14 +0200
-Message-ID: <20260319223241.1351137-1-vladimir.oltean@nxp.com>
+	Thierry Reding <thierry.reding@gmail.com>,
+	Jonathan Hunter <jonathanh@nvidia.com>,
+	Shawn Lin <shawn.lin@rock-chips.com>,
+	Kevin Xie <kevin.xie@starfivetech.com>
+Subject: [PATCH v5 phy-next 02/27] PCI: Add missing headers transitively included by <linux/phy/phy.h>
+Date: Fri, 20 Mar 2026 00:32:16 +0200
+Message-ID: <20260319223241.1351137-3-vladimir.oltean@nxp.com>
 X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20260319223241.1351137-1-vladimir.oltean@nxp.com>
+References: <20260319223241.1351137-1-vladimir.oltean@nxp.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: WA2P291CA0018.POLP291.PROD.OUTLOOK.COM
- (2603:10a6:1d0:1e::13) To AM9PR04MB8585.eurprd04.prod.outlook.com
+X-ClientProxiedBy: WA0P291CA0020.POLP291.PROD.OUTLOOK.COM
+ (2603:10a6:1d0:1::17) To AM9PR04MB8585.eurprd04.prod.outlook.com
  (2603:10a6:20b:438::13)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -156,501 +97,232 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
 X-MS-TrafficTypeDiagnostic: AM9PR04MB8585:EE_|GV4PR04MB11355:EE_
-X-MS-Office365-Filtering-Correlation-Id: b299a9c7-ba92-4e7a-f615-08de86076c82
-X-LD-Processed: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635,ExtAddr
+X-MS-Office365-Filtering-Correlation-Id: 1d107028-ff1d-4616-bde4-08de86076f4b
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
- BCL:0;ARA:13230040|19092799006|366016|10070799003|1800799024|376014|7416014|56012099003|18002099003;
+	BCL:0;ARA:13230040|19092799006|366016|10070799003|1800799024|376014|7416014|22082099003|56012099003|18002099003;
 X-Microsoft-Antispam-Message-Info:
- pOx8kkKU8MaGVcRQAYffCjh9jmGtpVJtF/0j/8t5pEIQtrkn13usfPP9JVTkoCauK93n/Tw1mw6u7gBFmc+Q7i8QyjsaGUgoJONJ0W2hOWCq5lB7Ct4YOqLMAZrs2LCPY967P9c4gkD5I2XbVL0uFRrYTtvSy6qanRsxp+27L9G4FxV4Q02k2SNVq2CxiLLPc9wg4X0Z0Ld6f/9QGZgFAer0Y+DvXENtZl5C9u7n4t9Gb6WMwR8J7i48dRznfrSULe2rwSu+ZF8ioUNrf32AAyCmHfOeA/5kMoCms8ATbPZ6YYoITEFyYEWvh+3pxqNBUAC651ehkysJNiujA+GVb6VS5XqFyrGdfThH4VkO7locoj/+WLfumAjBYFiPcW9gQHjxAclCRCKcb+99YPmIjke0tTluK81IFkasdergWlkTLhCToslKuwVPJ3KR28o/QDdgVt9n85uvml43yfa9x1RbIwoUqc5pPLQv3XoX5iu9EWnmne5k0X/urnteYNwRdTj3xn7vp1xtPfCLsHdhr7q+f7L3aezD5d81wxWVR7dHRGKQacGIoVrm6VEgZD9TcuqiQm6rx0oTF1ZvU5k2PH2bcNzdG6uxZmEBGCrWHN1BjryaSyyeu9fnNSVrDk43FD35k7G741WTL8dU8rlG/vjgiC+QkyRwkJTv4TDEQrPHjvL00wZcYPHpCmPeZAJq
+	CDSZxqx+6y08SDwUfYb2iSEdG+NeNpbjDlc9qXNz6A3plPZA4YcVxuyA6RLcGJZVNMbBl39yKaHF9gsVQrTWVFriFWNxhzA1A6+4GQxVKD4Ut8Myex7xNHakVpxtR3fcF/TCU51mpMs1N47EpDZUUR2ymm9lZmcGdQnSQsIRSIO6GgP4a/AmfyJrD1jOMCUWACMwOXUpdQxUJSiXAnbM8M5PiCGwPE0JJa5EXpqRgoVMV1EySOeTerJx1bhkhu7hywi+obtkkbsbxjx0QnyockI8y2DKuSrWTwBdFkZJIPLEYiS2SAe0qxKM2oDQkiI/yvAY4mv92Gsj+DscVuwyNVEpMb7Kg1+cCpcCu6pxIxpN3GsLxq3wuDc48/TsKkHnDG/CoKx1osDQsI8kenRqizvPz2CF7xl2b/YNAgA7c2gEezaEKh283TpHAvKmM3Qbj2154PTLEFQd0YQaNPrFekxEFVJsDWFjsAuK9CvE/53+E6Tp4ivorcYYFC3K/KD7wXTca5Q4ISWvRQHpRp4bva9/i759MMhkPQsrkZFfQL0t38lUNXmeObd9/Jd80YMWYcWOzWC8LvyYPgQARbXo7CFyg67hUCbM1Ek9PjwBViZIaoq/st3JZE06wmxXQirPfBq2/i6tw0hI32E2/svMzPG6piuMx3vXb9Suj9qQmQLADHWjr9p0yyLkCl1rd6vKxgCGhI9TinbBwYb0TDxaoRLe11rdmipAb3XYDqtuUgs=
 X-Forefront-Antispam-Report:
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9PR04MB8585.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(19092799006)(366016)(10070799003)(1800799024)(376014)(7416014)(56012099003)(18002099003);DIR:OUT;SFP:1101;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9PR04MB8585.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(19092799006)(366016)(10070799003)(1800799024)(376014)(7416014)(22082099003)(56012099003)(18002099003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 2
 X-MS-Exchange-AntiSpam-MessageData-0:
- =?utf-8?B?TUc0bTNLNVhVUTZ4QXJuaTh2cjhjQ1AyM2RwcS9KWE8vQUdHL3NadXJzUWgz?=
- =?utf-8?B?TmliOFdoRGlxU3BGbytIZlRpQVhrZW01NlVGc0lXczE0aTdldmFIdyttYWhQ?=
- =?utf-8?B?WXRGRzNneTFYNGd4VzRkVWw3eEN0UEJ5cXFoVEJBNmdDeUJrRjArWkh4MHJM?=
- =?utf-8?B?Q09pUFFNTDFyRXQwaDduM2ZJSEtsM2F5ME9QWWk4RXdoandBVERQSkVqUTlq?=
- =?utf-8?B?YnB6S0NlQkYvSDBXNXVDNUpPbVZkRktLdDJuUElldjZ5cEpLRUpUaUd5SVRx?=
- =?utf-8?B?TkFmQlpvLzZYYyt4U3pwaDljbWF2NnJxSWtxY0NhY2ViNkVrdDNCSy9VNDIv?=
- =?utf-8?B?OVZCWEsvTHhrOGVjUW9rWGRDZk5MVDlhL2VmdDY1MUw1ZW00K1J4LzF1UzIv?=
- =?utf-8?B?K0kzOHZNc2hEMFJMUVY2aExpV2o1QlhmMHp3ZGxNdjByWWsvQk0vbGFoRTB4?=
- =?utf-8?B?RUtUUDN1UzFXUDJCSVdvZ1VPdU5zNU0xYzVXNVNLWU04RTh5V1M0bzI4ZGQv?=
- =?utf-8?B?dmhlQ1dOY3RCY2ZLYUR3bktOejRsMkUvU2V4ZWtUUlU3d0NHZlQyL004YXJo?=
- =?utf-8?B?WEZNWk9pMTdVTFFSZU8yS1VGd3RNUzhyM2g0ZmpvcjRidlluRUtPcFZoUE5M?=
- =?utf-8?B?SkNpcjhEc290S0laQjNldW1qR0NlTGRab1d3cXhrckYvam5TYWh1N2UzZndh?=
- =?utf-8?B?blIxZlZYUVdQR2xkNldkK25pbnI1T3VRczZGVHZxY0NrYi9NL0RCVGZNWTRr?=
- =?utf-8?B?ZS9aemc3V0x1Wmg4TDJYK3htS2VqSXpuWGJSOUdJbnBCSTN4WUVWV3JxOEFE?=
- =?utf-8?B?VlhMU25ESk9yd0tZRU81ZkQ4OUZUakRJeHk4a1RWMUlVdjQ0dXAxbVlvd1Fn?=
- =?utf-8?B?VXBKZzYyaUVYUGhBNStPOEh4alBVbHdwa3I4anRuZndMTHBxWU90cTRGcFRx?=
- =?utf-8?B?a3c1V0pzaHdqeGNPaUNibjBZSTJ2alVZOEtucEU2UVFkUHF4ek9qTDBoQm9Y?=
- =?utf-8?B?aW5remJUVkcwTUpOMFRHVlZ5VzI2YXNFZ3dzMEJoRUE0aVEvaFJ1SHNHSWFu?=
- =?utf-8?B?YVBzNTJPQU52Q2dBa0l3QmxmdjVoeVovUWNOUklxU0syZ2d4N2J5ZUNZOFI3?=
- =?utf-8?B?WU9maC9rNnc0ems4aUZ3eGxLTzFhVWlzKzJHUUtMTXRCeXNxRUo4WWdubHo5?=
- =?utf-8?B?dDZJcWVudjNsRkoxMU52SDdHQjFlM29ldU1mU3pqUGQ3R3ZHZHpIeEVyS0pC?=
- =?utf-8?B?L212NkhkU3ltNk1FZTB4Q3BDRHFiYkx2a0dFVFEvL0hpUW5idGRITXIzVUZR?=
- =?utf-8?B?c0ZERytFRUszNnR0ckxERDNzZXZxTTVLR0VvZ3BNUVNCUTdTVkRyYmdnTHFP?=
- =?utf-8?B?aEdpV0ltbmhNSDdodUhMMDZtY2R4MWFFSEFoM3FEWldBcUtod0h3ZkMzMDhu?=
- =?utf-8?B?aWtyK0xuNVVLL1EvWmdWR0crQS93am5DT0xCNGxzSFFFOFpHbThtcFBpcTBB?=
- =?utf-8?B?dDBkcE5IRHVYa2c3aHRnYUxTT2M1UktrRTdMRmdHOG5QSVRDZ09VazFOaktS?=
- =?utf-8?B?Ylp1U2Q1K3JmZVpCbnZlQ1J6UWZCTFBJYkkzalJMOEFrWlROeklUdUZBWnBE?=
- =?utf-8?B?cExUbko0SDF6QTc1L1haS2wzZEpxRGxJT1pHSWxzU1l1b3IycjFXWnk2Ynha?=
- =?utf-8?B?REEwNEIrRERaaVgxMG14azVjU1lwcGgzRzlEbkxnbDRFUmE1WEZ6MFhuV1or?=
- =?utf-8?B?VTF4bTY5ZUxyTWFlZ2M4VzFZSFpsNytidmVGNlVqdm9pNlcvMjZ4THFKTzIr?=
- =?utf-8?B?aXZYMzdJR200bXh2Y2VqL2dHcWJ3Q3ZwSnNaNGhLbEhTSE0rcnFMUGNzcHRV?=
- =?utf-8?B?SkNpMFoweG9iZk9CL3VqNHlXSDJEQXpNN1cwbkozTlFWUTJWbDRTQVhxaDhK?=
- =?utf-8?B?VWgxVnJNbUY1YmZ3NVlBTHJ4RlMzQnhSMHJ4eFRhYnhtSVVUTlMzUU56T0Na?=
- =?utf-8?B?K0hlWHpBRFI3TlNGTmhYZytHNUE2bjRJWGtSL1RHdzRhRlptaFBXY1o0WUJU?=
- =?utf-8?B?Tll3MWZrQ1FKU25yeWpURnVpeHVXUUxuRGk4TjY0YjgzRjNML2IvNDg4dW5X?=
- =?utf-8?B?MVZWWUkwbjJseUpOR1l3L2JDdWlpZi9wdEVocUJReUE3R2c0VjJDdUk0T0ZE?=
- =?utf-8?B?VTExVmpFR1M5NHpIb1RiZEEzbnA4UkVNSVhSM1B3TW0yTTBlRFAxYnNGTXBG?=
- =?utf-8?B?ejhDdEZkUW5jM1RRbERmQXdZZk0xeDVqM1gways4ZE93Z3k5ZlJVb2Zxcis2?=
- =?utf-8?B?UGk5Zmd1U0h3cjJ3eFYvQ3ZGUWlMMzVSM0RCb2N1L3ZCVTRGOTR0QnVBNGw2?=
- =?utf-8?Q?yIe3AbUIom0RXud/I8HxkzVpu/f/Jn1spYxU0Uqt4cOu/?=
-X-MS-Exchange-AntiSpam-MessageData-1: H+DxvMRlMbgs+Ut9FJ52hVwMIyLn4TDESZg=
+	=?utf-8?B?azArSlZUU091blllVXQ5T0Z1MUcwR1JtUkVHcE1McnkyNm5MY2JNT0hKTFFU?=
+ =?utf-8?B?Zit3R2Q2VjVaWngvVG9TU0VxUHpRa1pwQmRHeUs5RDRGWCtPVGxzQ1F5ZFow?=
+ =?utf-8?B?SmVOR0QxSm4vK2tIb0JaWTJHS2dNa0M5N1AyL05OdmdiaEY5UVNwckRKb3RG?=
+ =?utf-8?B?aWJuam0vbDJHRnVLd2tTVHZoMVBBSEtOcjBiVUZMSWZyTjZsZ25rRGNyZlE0?=
+ =?utf-8?B?QVJpVjM4N05vai8wMDZZcTZ5YyszMEZXdXBDSFFaSCtPOS80Z09kSUM3VmZY?=
+ =?utf-8?B?V1NHRFUyZHoxOFVLS0lPbzgvYkgzTkxXMEdpeVpGTnA0QnVzNjBJU0owRkNj?=
+ =?utf-8?B?RW5LeUhYMGdsQlU4TzREbnlsVU42U1RjbWhxOVpyS2tRNEZqeFJpZDUwSXNI?=
+ =?utf-8?B?aTREMGxPMjdFVm5TTzJlNmdzNU90bzVzZUZqUDU5SkJUdFRVQXVTWTByckI0?=
+ =?utf-8?B?RkcwS09JMWs0WHgwNCt1SGpEeDhxZDgrTTM0eXpOdjVnNE8xTE53ZFQrUkVw?=
+ =?utf-8?B?WTZpQ1I1UWZYRUF2OUdiaGRGUll6TlRnU01qSFVyL0R1cURIWVFVRGpyd0hR?=
+ =?utf-8?B?SFhHVTFjOElGTWJjSGYwM3IrVFJjWGJXZkltaDFod25ONjI1OFFxYUxaRGh5?=
+ =?utf-8?B?ZGM1MCt0V2pYZlRPWkNzRnl4SHdlY1d2dGExRE9JbHpPVFowb1Y2WlBtRmpT?=
+ =?utf-8?B?aE42bElpME5IK0ZjWmdCbWw4d3BWYkdLT1FOZlRlc3ZUNkt3ODg0WWtvczdW?=
+ =?utf-8?B?emlxbnNpNlpSdWFKNVRNS0dkZkpvUlU1S3FJcVIzQitqeEdJbkt5UEhsSk82?=
+ =?utf-8?B?R1JIY1hLUmtHMmdXeGI5ODlNWis0TktwTnhNMzNpMjJibWFkWkgwNDRBYUht?=
+ =?utf-8?B?N2JQemFtSTFRSHFySkd2N3orQkFKQkRjVWtJTzVKM3VtV3RzS3pHa3I4N3Ni?=
+ =?utf-8?B?ZzVsZ25DeDQrMDB5d2ZSbnpCM01MbURXdGgvMUdMME9YRE12Slc0Ry9oTG8x?=
+ =?utf-8?B?Y2JvQS8rcEl2bHFEQTRJTXpPa2JMTTM4NUNHa2FzdjFwUEFDU0Z6eHNwbGMr?=
+ =?utf-8?B?OWNYaVp2b2hpTWVSY0l3N01rYkI4Z0o0UW9WcWhuUU1HNnhGM0d5RWx0dE5k?=
+ =?utf-8?B?MGNKQ2hkMG45WUxNMGE2YzJFSk1VYy96NERMME94am9hdndvc29pOWY0ak1K?=
+ =?utf-8?B?bmRrS0VybHM1REpIUUtaZy9aTUorRUZEWDdETVg5T0krSGpacXY0ajY3ZWdL?=
+ =?utf-8?B?TjhpTSs0djk5NzFnNVdNeFJwaG9oRUNrZ3kxZFhKenhvTllmNlpwMFh3cVNX?=
+ =?utf-8?B?TlhZdUJqc1RQeWg2emYyeVQ5VGI5WnV0UzlhdTkyUXZPL2ZLRnJYSzNYNkFI?=
+ =?utf-8?B?YkpjRk40MTBRZkNXVTFldHFrQmxtUFc3YmlabG1KUzF2WWs1MERZL0JMeUMy?=
+ =?utf-8?B?ZTU2ZldIcGpYQ0s4a1RSd3pVNW9KNUl3SWhyaHVhWDN6d0dSYVJ5Y0pFSG1j?=
+ =?utf-8?B?bHFKYmhjcnRFMkVhWHlGbjQxRzVUZCtJeFYzcTl5bWdKK043OUgwVExkUzJq?=
+ =?utf-8?B?L29Wbm5ScHhFa0Zyam8zc0tGMTBCVFdJVWo0YzNQeWFlREhVOElWY2k1WW12?=
+ =?utf-8?B?TFZXVEVGdFM5Mlgxd3UzM3NnZkNvUGoxZVRzTktRdUNvaXd6bVlKWHJackhX?=
+ =?utf-8?B?MG1XS0NwSEpSaysybFFHS2xVcWN0RUF1SHhRbFZDZUtJNHJ4WG12RnpJRnNp?=
+ =?utf-8?B?Wm5ESHdXSm4wVEZuS0ZMem1oSFpsU1B3NEQxVGdSYU9EbTJROHpZdzdjQ2NW?=
+ =?utf-8?B?ZEJzS1FxTi9JTjN3NFpmK1MrUGswVTh4UUZ1U2FBWm1JQ0MrS3hFZWRZRjln?=
+ =?utf-8?B?UTRyVm16QkM1TSsvTCtLQ3I1TTFVQWpQR0FtSmVldUdXejUyYW9tVlV5L1hD?=
+ =?utf-8?B?OGNYSnJHQTBpekw4T1JlcFBzMUQyQWVDaHlCd1o0b1RLUkFiN1dscnVYYzI5?=
+ =?utf-8?B?cm5pV1puUGQzdTZKbHdDN054ZWswYVB6RDEyZzhud3ZiMVFJNGtteVJUczQx?=
+ =?utf-8?B?ZTBaazV2K1ZrRFd4NUlGYjhOWlh4OXU2K0hNbHlld1hHQUNQKzBlNW5HYWlS?=
+ =?utf-8?B?OVNLVGNjN1V4clRrSVB1WXorT3l5L2dIckVyaWNoTEl4SnRva0Y3U3R0VmNO?=
+ =?utf-8?B?UkJVSDBWbG5DdHJlY2Q2b0FwTEk2bzV4VWtVTnVTUXI0eGgwOS8xdmFyKzds?=
+ =?utf-8?B?SHZEN09IdlorMmRRQ2I4WXlQZG03NGg2UjZqOWk3Y1QwRldEVWM5L1huRkRR?=
+ =?utf-8?B?eWZ6WE1MZ2ZTK0Q1bDlsWGh4bTdTbnlKdTBZQlBIYVR6Q1A0d1ZuT01GQm93?=
+ =?utf-8?Q?p51Jh1womAfko/ZGPQovCwJ4xGMRVZB4zonjMxIfB7Xnw?=
+X-MS-Exchange-AntiSpam-MessageData-1: Su0X2ezl2MR5ER4kkXNy7Vd/eHwHh+sDhCA=
 X-OriginatorOrg: nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: b299a9c7-ba92-4e7a-f615-08de86076c82
+X-MS-Exchange-CrossTenant-Network-Message-Id: 1d107028-ff1d-4616-bde4-08de86076f4b
 X-MS-Exchange-CrossTenant-AuthSource: AM9PR04MB8585.eurprd04.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 19 Mar 2026 22:32:37.8218
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 19 Mar 2026 22:32:42.4404
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: FklR1p3XuJG9MTSFx7C7GRCuASzXF1CEIs+erX2TV1bKZDRY4n4/VqsI7TcItGuq4FjScaIoiXGZrNkNSv/MaA==
+X-MS-Exchange-CrossTenant-UserPrincipalName: sDFuM3Q29qxSss1364HGWa0ARJNtDsAB4sgUa4Wda7JtsZ0RKYwmWBwTFbQ/Z4UoQLLkYTqqBcefYbrPltxIOQ==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: GV4PR04MB11355
 
-The biggest problem requiring this split is the fact that consumer
-drivers poke around in struct phy, accessing fields which shouldn't be
-visible to them. Follow the example of mux, gpio, iio, spi offload,
-pwrsec, pinctrl and regulator, which each expose separate headers for
-consumers and providers.
+The tegra as well as a few dwc PCI controller drivers uses PM runtime
+operations without including the required <linux/pm_runtime.h> header.
 
-Some off-list discussions were had with Vinod Koul regarding the 3 PHY
-providers outside the drivers/phy/ subsystem. It was agreed that it is
-desirable to relocate them to drivers/phy/, rather than to publish
-phy-provider.h to include/linux/phy/ for liberal use. Only phy.h and
-(new) phy-props.h - consumer-facing headers - stay there.
+Similarly, pcie-rockchip-host, pcie-starfive as well as a few dwc PCI
+controllers use the regulator consumer API without including
+<linux/regulator/consumer.h>.
 
-The hope is that developers get a hint when they need to include the
-wrong header to get their job done.
+pcie-spacemit-k1.c uses of_get_next_available_child() and of_node_put()
+without including <linux/of.h>.
 
-If that fails, patch 27/27 adds a regex in the MAINTAINERS entry that
-ensures linux-phy is copied on all Generic PHY patches, for an extra set
-of eyes.
+It seems these function prototypes were indirectly provided by
+<linux/phy/phy.h>, mostly by mistake (none of the functions it exports
+need it).
 
-The series is formatted on linux-phy/next for build testing, but is
-intended to be applied on top of commit
-https://git.kernel.org/pub/scm/linux/kernel/git/netdev/net-next.git/commit/?id=4ff5801f45b494ad8251a16ec06c9f303ed3b9a0
-which is v7.0-rc1 + 1 patch, and then merged into linux-phy/next.
-The idea being that it's better to resolve the merge conflict early.
-There are 4 expected conflicts, details in the conflicting patches
-(24/27 and 25/27).
+Before the PHY header can drop the unnecessary includes, make sure the
+PCI controller drivers include what they use.
 
-Requested merge strategy, I hope this works for everyone:
-- Subsystem maintainers ACK their affected portions
-- Entire series goes through linux-phy
-- linux-phy provides stable tag
-- (optionally, but recommended) Said tag is merged back into affected
-  subsystem 'next' branches. Those who strongly prefer can handle merge
-  conflicts when they send their PR. But this series unexports a lot of
-  stuff from <linux/phy/phy.h> which may cause breakage if still used
-  later, directly or not, in other subsystems.
-
-Detailed change log in patches, summary below.
-
-v4->v5:
-- fix additional compilation breakage caught by better build coverage.
-  PCI patch 02/27 received an extra change for pcie-spacemit-k1.c,
-  patch 10/27 (for ufs-qcom.c) is new, so are 12/27 and 13/27 for Tegra
-  USB (host and gadget)
-v3->v4:
-- fix build breakage in drivers/phy/qualcomm/phy-qcom-ipq806x-sata.c and
-  include/linux/phy/tegra/xusb.h added by patch 22/24
-v2->v3:
-- remove unused variable in PCI after device link removal
-- update MAINTAINERS regex pattern to escape forward slashes
-- add more people to CC list
-- provide conflict resolution
-v1->v2:
-- split "phy: include PHY provider header" into smaller chunks to work
-  around mailing list moderation due to patch size
-- improve MAINTAINERS regex pattern
-- make all PHY attribute helpers NULL-tolerant. Not just the new
-  phy_get_bus_width(), but also retroactively, the existing ones.
-- fixed the temporary include path from <linux/phy/phy.h> to
-  "phy-provider.h", removed anyway by the end of the series
-- logical bug fixes in the PCI controller <-> PHY device link removal
-  and Exynos UFS PHY API rework
-
-In case anyone wants to test the series, here it is on top of linux-phy/next:
-https://github.com/vladimiroltean/linux/tree/phy-split-consumer-provider-v5
-
-I've also test-applied it on v7.0-rc1 and provided conflict resolution
-with net-next and with linux-phy/next:
-https://github.com/vladimiroltean/linux/commits/phy-split-consumer-provider-v5-merge/
-
-v4 at:
-https://lore.kernel.org/linux-phy/20260317230500.2056077-1-vladimir.oltean@nxp.com/
-v3 at:
-https://lore.kernel.org/linux-phy/20260309190842.927634-1-vladimir.oltean@nxp.com/
-v2 at:
-https://lore.kernel.org/linux-phy/20260308114009.2546587-1-vladimir.oltean@nxp.com/
-v1 at:
-https://lore.kernel.org/linux-phy/20260304175735.2660419-13-vladimir.oltean@nxp.com/
-
-Cc: Abhinav Kumar <abhinav.kumar@linux.dev>
-Cc: Alexandre Belloni <alexandre.belloni@bootlin.com>
-Cc: "André Draszik" <andre.draszik@linaro.org>
-Cc: Andrew Lunn <andrew+netdev@lunn.ch>
-Cc: Andrzej Hajda <andrzej.hajda@intel.com>
-Cc: Andy Yan <andy.yan@rock-chips.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Chanho Park <chanho61.park@samsung.com>
-Cc: Chen-Yu Tsai <wens@kernel.org>
-Cc: Claudiu Beznea <claudiu.beznea@tuxon.dev>
-Cc: Damien Le Moal <dlemoal@kernel.org>
-Cc: Daniel Machon <daniel.machon@microchip.com>
-Cc: David Airlie <airlied@gmail.com>
-Cc: "David S. Miller" <davem@davemloft.net>
-Cc: Dmitry Baryshkov <lumag@kernel.org>
-Cc: Eric Dumazet <edumazet@google.com>
-Cc: Fabio Estevam <festevam@gmail.com>
-Cc: Frank Li <Frank.Li@nxp.com>
-Cc: Geert Uytterhoeven <geert+renesas@glider.be>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: "Heiko Stübner" <heiko@sntech.de>
-Cc: Inki Dae <inki.dae@samsung.com>
-Cc: Jagan Teki <jagan@amarulasolutions.com>
-Cc: Jakub Kicinski <kuba@kernel.org>
-Cc: JC Kuo <jckuo@nvidia.com>
-Cc: Jernej Skrabec <jernej.skrabec@gmail.com>
-Cc: Jessica Zhang <jesszhan0024@gmail.com>
-Cc: Joe Perches <joe@perches.com>
-Cc: Johan Hovold <johan+linaro@kernel.org>
-Cc: Jonas Karlman <jonas@kwiboo.se>
-Cc: Jonathan Hunter <jonathanh@nvidia.com>
-Cc: Kevin Xie <kevin.xie@starfivetech.com>
-Cc: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
-Cc: "Krzysztof Wilczyński" <kwilczynski@kernel.org>
-Cc: Laurent Pinchart <Laurent.pinchart@ideasonboard.com>
-Cc: Linus Walleij <linusw@kernel.org>
+Signed-off-by: Vladimir Oltean <vladimir.oltean@nxp.com>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+---
 Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>
-Cc: Maarten Lankhorst <maarten.lankhorst@linux.intel.com>
-Cc: Magnus Damm <magnus.damm@gmail.com>
+Cc: "Krzysztof Wilczyński" <kwilczynski@kernel.org>
 Cc: Manivannan Sadhasivam <mani@kernel.org>
-Cc: Marc Kleine-Budde <mkl@pengutronix.de>
-Cc: Marek Szyprowski <m.szyprowski@samsung.com>
-Cc: Marijn Suijten <marijn.suijten@somainline.org>
-Cc: Markus Schneider-Pargmann <msp@baylibre.com>
-Cc: Mathias Nyman <mathias.nyman@intel.com>
-Cc: Mauro Carvalho Chehab <mchehab@kernel.org>
-Cc: Maxime Ripard <mripard@kernel.org>
-Cc: Michael Dege <michael.dege@renesas.com>
-Cc: Neil Armstrong <neil.armstrong@linaro.org>
-Cc: Nicolas Ferre <nicolas.ferre@microchip.com>
-Cc: Niklas Cassel <cassel@kernel.org>
-Cc: Paolo Abeni <pabeni@redhat.com>
-Cc: Pengutronix Kernel Team <kernel@pengutronix.de>
-Cc: Peter Chen <peter.chen@kernel.org>
-Cc: Peter Griffin <peter.griffin@linaro.org>
-Cc: Rob Clark <robin.clark@oss.qualcomm.com>
-Cc: Robert Foss <rfoss@kernel.org>
 Cc: Rob Herring <robh@kernel.org>
-Cc: "Russell King (Oracle)" <rmk+kernel@armlinux.org.uk>
-Cc: Samuel Holland <samuel@sholland.org>
-Cc: Sandy Huang <hjc@rock-chips.com>
-Cc: Sascha Hauer <s.hauer@pengutronix.de>
-Cc: Sean Paul <sean@poorly.run>
-Cc: Sebastian Reichel <sre@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Heiko Stuebner <heiko@sntech.de>
 Cc: Shawn Guo <shawn.guo@linaro.org>
-Cc: Shawn Lin <shawn.lin@rock-chips.com>
-Cc: Simona Vetter <simona@ffwll.ch>
-Cc: Steen Hegelund <Steen.Hegelund@microchip.com>
-Cc: Thierry Reding <thierry.reding@gmail.com>
-Cc: Thinh Nguyen <Thinh.Nguyen@synopsys.com>
-Cc: Thomas Zimmermann <tzimmermann@suse.de>
-Cc: Tudor Ambarus <tudor.ambarus@linaro.org>
-Cc: Vincent Mailhol <mailhol@kernel.org>
 Cc: Yixun Lan <dlan@kernel.org>
-Cc: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+Cc: Thierry Reding <thierry.reding@gmail.com>
+Cc: Jonathan Hunter <jonathanh@nvidia.com>
+Cc: Shawn Lin <shawn.lin@rock-chips.com>
+Cc: Kevin Xie <kevin.xie@starfivetech.com>
 
-Vladimir Oltean (27):
-  ata: add <linux/pm_runtime.h> where missing
-  PCI: Add missing headers transitively included by <linux/phy/phy.h>
-  usb: add missing headers transitively included by <linux/phy/phy.h>
-  drm: add <linux/pm_runtime.h> where missing
-  phy: add <linux/pm_runtime.h> where missing
-  phy: spacemit: include missing <linux/phy/phy.h>
-  net: lan969x: include missing <linux/of.h>
-  PCI: Remove device links to PHY
-  scsi: ufs: exynos: stop poking into struct phy guts
-  scsi: ufs: qcom: keep parallel track of PHY power state
-  drm/rockchip: dw_hdmi: avoid direct dereference of phy->dev.of_node
-  usb: host: tegra: avoid direct dereference of phy->dev.of_node
-  usb: gadget: tegra-xudc: avoid direct dereference of phy->dev.of_node
-  drm/msm/dp: remove debugging prints with internal struct phy state
-  phy: move provider API out of public <linux/phy/phy.h>
-  phy: make phy_get_mode(), phy_(get|set)_bus_width() NULL tolerant
-  phy: introduce phy_get_max_link_rate() helper for consumers
-  drm/rockchip: dsi: include PHY provider header
-  drm: bridge: cdns-mhdp8546: use consumer API for getting PHY bus width
-  media: sunxi: a83-mips-csi2: include PHY provider header
-  net: renesas: rswitch: include PHY provider header
-  pinctrl: tegra-xusb: include PHY provider header
-  power: supply: cpcap-charger: include missing <linux/property.h>
-  phy: include PHY provider header (1/2)
-  phy: include PHY provider header (2/2)
-  phy: remove temporary provider compatibility from consumer header
-  MAINTAINERS: add regexes for linux-phy
+v4->v5: fix pcie-spacemit-k1 driver, previously missed due to limited
+        build coverage
+v2->v4: none
+v1->v2: collect tag, adjust commit title
+---
+ drivers/pci/controller/dwc/pci-keystone.c     | 1 +
+ drivers/pci/controller/dwc/pcie-dw-rockchip.c | 1 +
+ drivers/pci/controller/dwc/pcie-histb.c       | 1 +
+ drivers/pci/controller/dwc/pcie-qcom-ep.c     | 1 +
+ drivers/pci/controller/dwc/pcie-spacemit-k1.c | 3 +++
+ drivers/pci/controller/dwc/pcie-tegra194.c    | 1 +
+ drivers/pci/controller/pci-tegra.c            | 1 +
+ drivers/pci/controller/pcie-rockchip-host.c   | 1 +
+ drivers/pci/controller/plda/pcie-starfive.c   | 1 +
+ 9 files changed, 11 insertions(+)
 
- MAINTAINERS                                   |  11 +
- drivers/ata/ahci.c                            |   1 +
- drivers/ata/ahci_brcm.c                       |   1 +
- drivers/ata/ahci_ceva.c                       |   1 +
- drivers/ata/ahci_qoriq.c                      |   1 +
- drivers/ata/libahci.c                         |   1 +
- .../drm/bridge/analogix/analogix_dp_core.c    |   1 +
- .../drm/bridge/cadence/cdns-mhdp8546-core.c   |   7 +-
- drivers/gpu/drm/bridge/nwl-dsi.c              |   1 +
- drivers/gpu/drm/bridge/samsung-dsim.c         |   1 +
- drivers/gpu/drm/bridge/synopsys/dw-dp.c       |   2 +-
- drivers/gpu/drm/msm/dp/dp_aux.c               |   1 +
- drivers/gpu/drm/msm/dp/dp_ctrl.c              |  18 -
- drivers/gpu/drm/rockchip/cdn-dp-core.c        |   1 +
- .../gpu/drm/rockchip/dw-mipi-dsi-rockchip.c   |   1 +
- drivers/gpu/drm/rockchip/dw_hdmi-rockchip.c   |  25 +-
- .../sun8i-a83t-mipi-csi2/sun8i_a83t_dphy.c    |   2 +-
- drivers/net/can/at91_can.c                    |   3 +-
- drivers/net/can/flexcan/flexcan-core.c        |   3 +-
- drivers/net/can/m_can/m_can_platform.c        |   3 +-
- drivers/net/can/rcar/rcar_canfd.c             |   3 +-
- .../microchip/sparx5/lan969x/lan969x_rgmii.c  |   1 +
- drivers/net/ethernet/renesas/rswitch_main.c   |   1 +
- .../controller/cadence/pcie-cadence-plat.c    |   4 -
- drivers/pci/controller/cadence/pcie-cadence.c |  16 +-
- drivers/pci/controller/cadence/pcie-cadence.h |   2 -
- drivers/pci/controller/dwc/pci-dra7xx.c       |  16 -
- drivers/pci/controller/dwc/pci-keystone.c     |  32 +-
- drivers/pci/controller/dwc/pcie-dw-rockchip.c |   1 +
- drivers/pci/controller/dwc/pcie-histb.c       |   1 +
- drivers/pci/controller/dwc/pcie-qcom-ep.c     |   1 +
- drivers/pci/controller/dwc/pcie-spacemit-k1.c |   3 +
- drivers/pci/controller/dwc/pcie-tegra194.c    |   1 +
- drivers/pci/controller/pci-tegra.c            |   1 +
- drivers/pci/controller/pcie-rockchip-host.c   |   1 +
- drivers/pci/controller/plda/pcie-starfive.c   |   1 +
- drivers/phy/allwinner/phy-sun4i-usb.c         |   3 +-
- drivers/phy/allwinner/phy-sun50i-usb3.c       |   3 +-
- drivers/phy/allwinner/phy-sun6i-mipi-dphy.c   |   4 +-
- drivers/phy/allwinner/phy-sun9i-usb.c         |   3 +-
- drivers/phy/amlogic/phy-meson-axg-mipi-dphy.c |   2 +
- .../amlogic/phy-meson-axg-mipi-pcie-analog.c  |   3 +-
- drivers/phy/amlogic/phy-meson-axg-pcie.c      |   2 +
- .../amlogic/phy-meson-g12a-mipi-dphy-analog.c |   3 +-
- drivers/phy/amlogic/phy-meson-g12a-usb2.c     |   2 +
- .../phy/amlogic/phy-meson-g12a-usb3-pcie.c    |   3 +-
- drivers/phy/amlogic/phy-meson-gxl-usb2.c      |   3 +-
- drivers/phy/amlogic/phy-meson8-hdmi-tx.c      |   3 +-
- drivers/phy/amlogic/phy-meson8b-usb2.c        |   3 +-
- drivers/phy/apple/atc.c                       |   3 +-
- drivers/phy/broadcom/phy-bcm-cygnus-pcie.c    |   3 +-
- drivers/phy/broadcom/phy-bcm-kona-usb2.c      |   4 +-
- drivers/phy/broadcom/phy-bcm-ns-usb2.c        |   3 +-
- drivers/phy/broadcom/phy-bcm-ns-usb3.c        |   3 +-
- drivers/phy/broadcom/phy-bcm-ns2-pcie.c       |   3 +-
- drivers/phy/broadcom/phy-bcm-ns2-usbdrd.c     |   3 +-
- drivers/phy/broadcom/phy-bcm-sr-pcie.c        |   3 +-
- drivers/phy/broadcom/phy-bcm-sr-usb.c         |   3 +-
- drivers/phy/broadcom/phy-bcm63xx-usbh.c       |   3 +-
- drivers/phy/broadcom/phy-brcm-sata.c          |   3 +-
- drivers/phy/broadcom/phy-brcm-usb.c           |   2 +-
- drivers/phy/cadence/cdns-dphy-rx.c            |   3 +-
- drivers/phy/cadence/cdns-dphy.c               |   4 +-
- drivers/phy/cadence/phy-cadence-salvo.c       |   3 +-
- drivers/phy/cadence/phy-cadence-sierra.c      |   3 +-
- drivers/phy/cadence/phy-cadence-torrent.c     |   3 +-
- drivers/phy/canaan/phy-k230-usb.c             |   3 +-
- drivers/phy/eswin/phy-eic7700-sata.c          |   3 +-
- .../phy/freescale/phy-fsl-imx8-mipi-dphy.c    |   3 +-
- drivers/phy/freescale/phy-fsl-imx8m-pcie.c    |   4 +-
- drivers/phy/freescale/phy-fsl-imx8mq-usb.c    |   3 +-
- drivers/phy/freescale/phy-fsl-imx8qm-hsio.c   |   6 +-
- .../phy/freescale/phy-fsl-imx8qm-lvds-phy.c   |   3 +-
- drivers/phy/freescale/phy-fsl-lynx-28g.c      |   3 +-
- drivers/phy/hisilicon/phy-hi3660-usb3.c       |   3 +-
- drivers/phy/hisilicon/phy-hi3670-pcie.c       |   3 +-
- drivers/phy/hisilicon/phy-hi3670-usb3.c       |   3 +-
- drivers/phy/hisilicon/phy-hi6220-usb.c        |   3 +-
- drivers/phy/hisilicon/phy-hisi-inno-usb2.c    |   4 +-
- drivers/phy/hisilicon/phy-histb-combphy.c     |   3 +-
- drivers/phy/hisilicon/phy-hix5hd2-sata.c      |   3 +-
- drivers/phy/ingenic/phy-ingenic-usb.c         |   3 +-
- drivers/phy/intel/phy-intel-keembay-emmc.c    |   3 +-
- drivers/phy/intel/phy-intel-keembay-usb.c     |   3 +-
- drivers/phy/intel/phy-intel-lgm-combo.c       |   4 +-
- drivers/phy/intel/phy-intel-lgm-emmc.c        |   3 +-
- drivers/phy/lantiq/phy-lantiq-rcu-usb2.c      |   3 +-
- drivers/phy/lantiq/phy-lantiq-vrx200-pcie.c   |   4 +-
- drivers/phy/marvell/phy-armada375-usb2.c      |   3 +-
- drivers/phy/marvell/phy-armada38x-comphy.c    |   3 +-
- drivers/phy/marvell/phy-berlin-sata.c         |   3 +-
- drivers/phy/marvell/phy-berlin-usb.c          |   3 +-
- drivers/phy/marvell/phy-mmp3-hsic.c           |   3 +-
- drivers/phy/marvell/phy-mmp3-usb.c            |   3 +-
- drivers/phy/marvell/phy-mvebu-a3700-comphy.c  |   3 +-
- drivers/phy/marvell/phy-mvebu-a3700-utmi.c    |   3 +-
- drivers/phy/marvell/phy-mvebu-cp110-comphy.c  |   3 +-
- drivers/phy/marvell/phy-mvebu-cp110-utmi.c    |   3 +-
- drivers/phy/marvell/phy-mvebu-sata.c          |   3 +-
- drivers/phy/marvell/phy-pxa-28nm-hsic.c       |   3 +-
- drivers/phy/marvell/phy-pxa-28nm-usb2.c       |   3 +-
- drivers/phy/marvell/phy-pxa-usb.c             |   3 +-
- drivers/phy/mediatek/phy-mtk-dp.c             |   3 +-
- drivers/phy/mediatek/phy-mtk-hdmi-mt8195.c    |   1 -
- drivers/phy/mediatek/phy-mtk-hdmi.h           |   3 +-
- drivers/phy/mediatek/phy-mtk-mipi-csi-0-5.c   |   2 +-
- drivers/phy/mediatek/phy-mtk-mipi-dsi.h       |   3 +-
- drivers/phy/mediatek/phy-mtk-pcie.c           |   2 +-
- drivers/phy/mediatek/phy-mtk-tphy.c           |   2 +-
- drivers/phy/mediatek/phy-mtk-ufs.c            |   2 +-
- drivers/phy/mediatek/phy-mtk-xfi-tphy.c       |   2 +-
- drivers/phy/mediatek/phy-mtk-xsphy.c          |   2 +-
- drivers/phy/microchip/lan966x_serdes.c        |   4 +-
- drivers/phy/microchip/sparx5_serdes.c         |   2 +-
- drivers/phy/motorola/phy-cpcap-usb.c          |   3 +-
- drivers/phy/motorola/phy-mapphone-mdm6600.c   |   5 +-
- drivers/phy/mscc/phy-ocelot-serdes.c          |   3 +-
- drivers/phy/nuvoton/phy-ma35d1-usb2.c         |   3 +-
- drivers/phy/phy-airoha-pcie.c                 |   2 +-
- drivers/phy/phy-can-transceiver.c             |   3 +-
- drivers/phy/phy-core-mipi-dphy.c              |   4 +-
- drivers/phy/phy-core.c                        |  52 ++
- drivers/phy/phy-google-usb.c                  |   4 +-
- drivers/phy/phy-lpc18xx-usb-otg.c             |   3 +-
- drivers/phy/phy-nxp-ptn3222.c                 |   3 +-
- drivers/phy/phy-pistachio-usb.c               |   4 +-
- drivers/phy/phy-provider.h                    | 256 +++++++++
- drivers/phy/phy-snps-eusb2.c                  |   2 +
- drivers/phy/phy-xgene.c                       |   3 +-
- drivers/phy/qualcomm/phy-ath79-usb.c          |   3 +-
- drivers/phy/qualcomm/phy-qcom-apq8064-sata.c  |   3 +-
- drivers/phy/qualcomm/phy-qcom-edp.c           |   3 +-
- .../phy/qualcomm/phy-qcom-eusb2-repeater.c    |   3 +-
- drivers/phy/qualcomm/phy-qcom-ipq4019-usb.c   |   3 +-
- drivers/phy/qualcomm/phy-qcom-ipq806x-sata.c  |   3 +-
- drivers/phy/qualcomm/phy-qcom-ipq806x-usb.c   |   3 +-
- drivers/phy/qualcomm/phy-qcom-m31-eusb2.c     |   2 +
- drivers/phy/qualcomm/phy-qcom-m31.c           |   3 +-
- drivers/phy/qualcomm/phy-qcom-pcie2.c         |   3 +-
- drivers/phy/qualcomm/phy-qcom-qmp-combo.c     |   4 +-
- .../phy/qualcomm/phy-qcom-qmp-pcie-msm8996.c  |   3 +-
- drivers/phy/qualcomm/phy-qcom-qmp-pcie.c      |   3 +-
- drivers/phy/qualcomm/phy-qcom-qmp-ufs.c       |   3 +-
- .../phy/qualcomm/phy-qcom-qmp-usb-legacy.c    |   4 +-
- drivers/phy/qualcomm/phy-qcom-qmp-usb.c       |   4 +-
- drivers/phy/qualcomm/phy-qcom-qmp-usbc.c      |   4 +-
- drivers/phy/qualcomm/phy-qcom-qusb2.c         |   5 +-
- drivers/phy/qualcomm/phy-qcom-sgmii-eth.c     |   3 +-
- drivers/phy/qualcomm/phy-qcom-snps-femto-v2.c |   4 +-
- .../phy/qualcomm/phy-qcom-uniphy-pcie-28lp.c  |   3 +-
- drivers/phy/qualcomm/phy-qcom-usb-hs-28nm.c   |   3 +-
- drivers/phy/qualcomm/phy-qcom-usb-hs.c        |   3 +-
- drivers/phy/qualcomm/phy-qcom-usb-hsic.c      |   3 +-
- drivers/phy/qualcomm/phy-qcom-usb-ss.c        |   3 +-
- drivers/phy/ralink/phy-mt7621-pci.c           |   3 +-
- drivers/phy/ralink/phy-ralink-usb.c           |   3 +-
- drivers/phy/realtek/phy-rtk-usb2.c            |   3 +-
- drivers/phy/realtek/phy-rtk-usb3.c            |   3 +-
- drivers/phy/renesas/phy-rcar-gen2.c           |   3 +-
- drivers/phy/renesas/phy-rcar-gen3-pcie.c      |   4 +-
- drivers/phy/renesas/phy-rcar-gen3-usb2.c      |   3 +-
- drivers/phy/renesas/phy-rcar-gen3-usb3.c      |   3 +-
- drivers/phy/renesas/phy-rzg3e-usb3.c          |   3 +-
- drivers/phy/renesas/r8a779f0-ether-serdes.c   |   4 +-
- drivers/phy/rockchip/phy-rockchip-dp.c        |   3 +-
- drivers/phy/rockchip/phy-rockchip-dphy-rx0.c  |   3 +-
- drivers/phy/rockchip/phy-rockchip-emmc.c      |   3 +-
- .../phy/rockchip/phy-rockchip-inno-csidphy.c  |   3 +-
- .../phy/rockchip/phy-rockchip-inno-dsidphy.c  |   4 +-
- drivers/phy/rockchip/phy-rockchip-inno-hdmi.c |   2 +
- drivers/phy/rockchip/phy-rockchip-inno-usb2.c |   3 +-
- .../rockchip/phy-rockchip-naneng-combphy.c    |   3 +-
- drivers/phy/rockchip/phy-rockchip-pcie.c      |   2 +-
- .../phy/rockchip/phy-rockchip-samsung-dcphy.c |   3 +-
- .../phy/rockchip/phy-rockchip-samsung-hdptx.c |   2 +
- .../phy/rockchip/phy-rockchip-snps-pcie3.c    |   3 +-
- drivers/phy/rockchip/phy-rockchip-typec.c     |   5 +-
- drivers/phy/rockchip/phy-rockchip-usb.c       |   3 +-
- drivers/phy/rockchip/phy-rockchip-usbdp.c     |   2 +
- drivers/phy/samsung/phy-exynos-dp-video.c     |   3 +-
- drivers/phy/samsung/phy-exynos-mipi-video.c   |   3 +-
- drivers/phy/samsung/phy-exynos-pcie.c         |   3 +-
- drivers/phy/samsung/phy-exynos4210-usb2.c     |   3 +-
- drivers/phy/samsung/phy-exynos4x12-usb2.c     |   3 +-
- drivers/phy/samsung/phy-exynos5-usbdrd.c      |   2 +
- drivers/phy/samsung/phy-exynos5250-sata.c     |   3 +-
- drivers/phy/samsung/phy-exynos5250-usb2.c     |   3 +-
- drivers/phy/samsung/phy-s5pv210-usb2.c        |   3 +-
- drivers/phy/samsung/phy-samsung-ufs.c         |   2 +-
- drivers/phy/samsung/phy-samsung-ufs.h         |   3 +-
- drivers/phy/samsung/phy-samsung-usb2.c        |   2 +
- drivers/phy/samsung/phy-samsung-usb2.h        |   3 +-
- drivers/phy/socionext/phy-uniphier-ahci.c     |   3 +-
- drivers/phy/socionext/phy-uniphier-pcie.c     |   3 +-
- drivers/phy/socionext/phy-uniphier-usb2.c     |   3 +-
- drivers/phy/socionext/phy-uniphier-usb3hs.c   |   3 +-
- drivers/phy/socionext/phy-uniphier-usb3ss.c   |   3 +-
- drivers/phy/sophgo/phy-cv1800-usb2.c          |   3 +-
- drivers/phy/spacemit/phy-k1-pcie.c            |   4 +-
- drivers/phy/spacemit/phy-k1-usb2.c            |   2 +
- drivers/phy/st/phy-miphy28lp.c                |   4 +-
- drivers/phy/st/phy-spear1310-miphy.c          |   3 +-
- drivers/phy/st/phy-spear1340-miphy.c          |   3 +-
- drivers/phy/st/phy-stih407-usb.c              |   3 +-
- drivers/phy/st/phy-stm32-combophy.c           |   3 +-
- drivers/phy/st/phy-stm32-usbphyc.c            |   2 +
- drivers/phy/starfive/phy-jh7110-dphy-rx.c     |   3 +-
- drivers/phy/starfive/phy-jh7110-dphy-tx.c     |   3 +-
- drivers/phy/starfive/phy-jh7110-pcie.c        |   3 +-
- drivers/phy/starfive/phy-jh7110-usb.c         |   3 +-
- drivers/phy/sunplus/phy-sunplus-usb2.c        |   3 +-
- drivers/phy/tegra/phy-tegra194-p2u.c          |   3 +-
- drivers/phy/tegra/xusb-tegra124.c             |   2 +-
- drivers/phy/tegra/xusb-tegra186.c             |   2 +-
- drivers/phy/tegra/xusb-tegra210.c             |   2 +-
- drivers/phy/tegra/xusb.c                      |   2 +-
- drivers/phy/ti/phy-am654-serdes.c             |   3 +-
- drivers/phy/ti/phy-da8xx-usb.c                |   3 +-
- drivers/phy/ti/phy-dm816x-usb.c               |   3 +-
- drivers/phy/ti/phy-gmii-sel.c                 |   3 +-
- drivers/phy/ti/phy-omap-usb2.c                |   3 +-
- drivers/phy/ti/phy-ti-pipe3.c                 |   3 +-
- drivers/phy/ti/phy-tusb1210.c                 |   1 +
- drivers/phy/ti/phy-twl4030-usb.c              |   3 +-
- drivers/phy/xilinx/phy-zynqmp.c               |   4 +-
- drivers/pinctrl/tegra/pinctrl-tegra-xusb.c    |   2 +-
- drivers/power/supply/cpcap-charger.c          |   1 +
- drivers/ufs/host/ufs-exynos.c                 |  24 +-
- drivers/ufs/host/ufs-exynos.h                 |   1 +
- drivers/ufs/host/ufs-qcom.c                   |   9 +-
- drivers/ufs/host/ufs-qcom.h                   |   1 +
- drivers/usb/chipidea/ci_hdrc_imx.c            |   1 +
- drivers/usb/core/hcd.c                        |   1 +
- drivers/usb/dwc3/dwc3-generic-plat.c          |   1 +
- drivers/usb/dwc3/gadget.c                     |   1 +
- drivers/usb/gadget/udc/tegra-xudc.c           |  35 +-
- drivers/usb/host/xhci-tegra.c                 |  42 +-
- include/linux/phy/phy-props.h                 |  75 +++
- include/linux/phy/phy-sun4i-usb.h             |   2 +-
- include/linux/phy/phy.h                       | 497 ++++--------------
- include/linux/phy/tegra/xusb.h                |   1 +
- include/linux/phy/ulpi_phy.h                  |   2 +-
- 242 files changed, 1001 insertions(+), 734 deletions(-)
- create mode 100644 drivers/phy/phy-provider.h
- create mode 100644 include/linux/phy/phy-props.h
-
+diff --git a/drivers/pci/controller/dwc/pci-keystone.c b/drivers/pci/controller/dwc/pci-keystone.c
+index 20fa4dadb82a..642e4c45eefc 100644
+--- a/drivers/pci/controller/dwc/pci-keystone.c
++++ b/drivers/pci/controller/dwc/pci-keystone.c
+@@ -24,6 +24,7 @@
+ #include <linux/of_pci.h>
+ #include <linux/phy/phy.h>
+ #include <linux/platform_device.h>
++#include <linux/pm_runtime.h>
+ #include <linux/regmap.h>
+ #include <linux/resource.h>
+ #include <linux/signal.h>
+diff --git a/drivers/pci/controller/dwc/pcie-dw-rockchip.c b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
+index 5b17da63151d..e0079ec108ab 100644
+--- a/drivers/pci/controller/dwc/pcie-dw-rockchip.c
++++ b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
+@@ -21,6 +21,7 @@
+ #include <linux/phy/phy.h>
+ #include <linux/platform_device.h>
+ #include <linux/regmap.h>
++#include <linux/regulator/consumer.h>
+ #include <linux/reset.h>
+ 
+ #include "../../pci.h"
+diff --git a/drivers/pci/controller/dwc/pcie-histb.c b/drivers/pci/controller/dwc/pcie-histb.c
+index a52071589377..432a54c5bfce 100644
+--- a/drivers/pci/controller/dwc/pcie-histb.c
++++ b/drivers/pci/controller/dwc/pcie-histb.c
+@@ -18,6 +18,7 @@
+ #include <linux/pci.h>
+ #include <linux/phy/phy.h>
+ #include <linux/platform_device.h>
++#include <linux/regulator/consumer.h>
+ #include <linux/resource.h>
+ #include <linux/reset.h>
+ 
+diff --git a/drivers/pci/controller/dwc/pcie-qcom-ep.c b/drivers/pci/controller/dwc/pcie-qcom-ep.c
+index 18460f01b2c6..e417122da51d 100644
+--- a/drivers/pci/controller/dwc/pcie-qcom-ep.c
++++ b/drivers/pci/controller/dwc/pcie-qcom-ep.c
+@@ -19,6 +19,7 @@
+ #include <linux/phy/phy.h>
+ #include <linux/platform_device.h>
+ #include <linux/pm_domain.h>
++#include <linux/pm_runtime.h>
+ #include <linux/regmap.h>
+ #include <linux/reset.h>
+ #include <linux/module.h>
+diff --git a/drivers/pci/controller/dwc/pcie-spacemit-k1.c b/drivers/pci/controller/dwc/pcie-spacemit-k1.c
+index be20a520255b..41316aa54106 100644
+--- a/drivers/pci/controller/dwc/pcie-spacemit-k1.c
++++ b/drivers/pci/controller/dwc/pcie-spacemit-k1.c
+@@ -13,9 +13,12 @@
+ #include <linux/gfp.h>
+ #include <linux/mfd/syscon.h>
+ #include <linux/mod_devicetable.h>
++#include <linux/of.h>
+ #include <linux/phy/phy.h>
+ #include <linux/platform_device.h>
++#include <linux/pm_runtime.h>
+ #include <linux/regmap.h>
++#include <linux/regulator/consumer.h>
+ #include <linux/reset.h>
+ #include <linux/types.h>
+ 
+diff --git a/drivers/pci/controller/dwc/pcie-tegra194.c b/drivers/pci/controller/dwc/pcie-tegra194.c
+index 06571d806ab3..3378a89580ab 100644
+--- a/drivers/pci/controller/dwc/pcie-tegra194.c
++++ b/drivers/pci/controller/dwc/pcie-tegra194.c
+@@ -27,6 +27,7 @@
+ #include <linux/platform_device.h>
+ #include <linux/pm_runtime.h>
+ #include <linux/random.h>
++#include <linux/regulator/consumer.h>
+ #include <linux/reset.h>
+ #include <linux/resource.h>
+ #include <linux/types.h>
+diff --git a/drivers/pci/controller/pci-tegra.c b/drivers/pci/controller/pci-tegra.c
+index 512309763d1f..a2c1662b6e81 100644
+--- a/drivers/pci/controller/pci-tegra.c
++++ b/drivers/pci/controller/pci-tegra.c
+@@ -36,6 +36,7 @@
+ #include <linux/phy/phy.h>
+ #include <linux/pinctrl/consumer.h>
+ #include <linux/platform_device.h>
++#include <linux/pm_runtime.h>
+ #include <linux/reset.h>
+ #include <linux/sizes.h>
+ #include <linux/slab.h>
+diff --git a/drivers/pci/controller/pcie-rockchip-host.c b/drivers/pci/controller/pcie-rockchip-host.c
+index ee1822ca01db..46adb4582fcc 100644
+--- a/drivers/pci/controller/pcie-rockchip-host.c
++++ b/drivers/pci/controller/pcie-rockchip-host.c
+@@ -24,6 +24,7 @@
+ #include <linux/of_pci.h>
+ #include <linux/phy/phy.h>
+ #include <linux/platform_device.h>
++#include <linux/regulator/consumer.h>
+ 
+ #include "../pci.h"
+ #include "pcie-rockchip.h"
+diff --git a/drivers/pci/controller/plda/pcie-starfive.c b/drivers/pci/controller/plda/pcie-starfive.c
+index 298036c3e7f9..22344cca167b 100644
+--- a/drivers/pci/controller/plda/pcie-starfive.c
++++ b/drivers/pci/controller/plda/pcie-starfive.c
+@@ -21,6 +21,7 @@
+ #include <linux/platform_device.h>
+ #include <linux/pm_runtime.h>
+ #include <linux/regmap.h>
++#include <linux/regulator/consumer.h>
+ #include <linux/reset.h>
+ #include "../../pci.h"
+ 
 -- 
 2.43.0
 
