@@ -1,70 +1,114 @@
-Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr1-f51.google.com (mail-wr1-f51.google.com [209.85.221.51])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D40D62750E6;
-	Thu, 19 Mar 2026 17:17:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.14
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EB617318EF6
+	for <linux-scsi@vger.kernel.org>; Thu, 19 Mar 2026 17:19:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773940624; cv=none; b=RzH1+5jGzrCOt5QjQMcK72OjJpM3afIO+3zftk0Lz0rlLN0bncEAmsw3MunFftUXGKhOkjFslLzLaQyu5iGx/QGYrEyt0oNwZLkyty/P5JCHEC+4iB8grev3LBjrzFCPz+/nd9b8VBbXclLhmlzJiphO+g0i/o6Beea/Ws6d8+w=
+	t=1773940759; cv=none; b=k+uKWldWAyQSi+3yGOVgpQRC8n1BejfgRSZWquiSbBUn3C+DTg1zE7BNEQaLnmlqam+DI+lN8A+fuUx2I9MqcKX5LhBeMVv0Nkh88waBaj8TKe2mij1DAl9WnmlPxxjftjh1sfdikwigRl1znri6yzLyY2Z5qLYH5X0GGbu4sEo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773940624; c=relaxed/simple;
-	bh=sMs4tbCRE7Y8mRcZnpjGXsMXGLsOdqkSVeqsLVQg8uc=;
+	s=arc-20240116; t=1773940759; c=relaxed/simple;
+	bh=txPm2KPLbr2A67SUot0NMUFBiy3OJLCXmwdS7cx+l+M=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=oBe4Pqe20aoQOx17fslHGzQwbndTNkA5I1Qfm/kVXn/uVARQukQP/Mp4Ey6taGAf6r+17bDiz9vtVxVSTIRFE/F/9HhWkXXxDd+V55xwMu6sz1kdtFKlUAd+f1HHC8E2z8d6DYzFIfLeSKAj2ayXlRu378Xr+Bpsi2iJIUYrv+E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=H5ne9uKr; arc=none smtp.client-ip=199.89.1.14
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	 In-Reply-To:Content-Type; b=hUxgVWgSSvkF7JKaYig3rzJkj8SRkhBnzir4xSIPBnwWfGwxHAChDDRM10nvx0EmfJAhFboabtaB3nMABzqbeyWdAt7hoMl5Q3TaZmKbyaNkcafQ/bEHgxK5+cnYLXBVptTePzCSP2p9upKuaSAJzPAmfPi78S5csmhmV/KdJOY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=WBDFuZVl; arc=none smtp.client-ip=209.85.221.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="H5ne9uKr"
-Received: from localhost (localhost [127.0.0.1])
-	by 011.lax.mailroute.net (Postfix) with ESMTP id 4fcC6l29gNz1XM5kW;
-	Thu, 19 Mar 2026 17:17:03 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1773940619; x=1776532620; bh=sMs4tbCRE7Y8mRcZnpjGXsMX
-	GLsOdqkSVeqsLVQg8uc=; b=H5ne9uKr47f+oqrBi0meTojJpIeU2Gm/aFWq+2y5
-	N/cl4Vy42hiu5fTfjyiHnaDQZtqs1HEdCNF3AqnS6LKzabchl5mFknv3j2368eLZ
-	DPy0mWjuj4iTV4FGIYGKSoeAWdBfWbz7P3CpW5BkrIDzKqzhOxW9Az5NstCLdaRW
-	/wHBlZFga+RD1FyXXMcFnBo11aM3N5TU2aweWu32aTlysmSTcIOtgRyQ801sbP8/
-	4SuPWvhyYa87EeJPfir44wCPVsNNHdk9M9xhhGXOzRQguGlKK3lq524kwSOqLmMo
-	Vjyeoe0Pm5AW388ijsmzaRBeRBwTXLkyhBKLENZ+4mKMpg==
-X-Virus-Scanned: by MailRoute
-Received: from 011.lax.mailroute.net ([127.0.0.1])
- by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id O_tk3I2BQP4i; Thu, 19 Mar 2026 17:16:59 +0000 (UTC)
-Received: from [100.119.48.131] (unknown [104.135.180.219])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4fcC6d6N65z1XMFx7;
-	Thu, 19 Mar 2026 17:16:57 +0000 (UTC)
-Message-ID: <21f22aff-afa1-455f-bd0f-3ebb38f6d598@acm.org>
-Date: Thu, 19 Mar 2026 10:16:56 -0700
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="WBDFuZVl"
+Received: by mail-wr1-f51.google.com with SMTP id ffacd0b85a97d-43b446ee9b3so41868f8f.3
+        for <linux-scsi@vger.kernel.org>; Thu, 19 Mar 2026 10:19:17 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1773940756; x=1774545556; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:mime-version:date:message-id:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=I+EmpvHf2OI7v2k1uuTeZgZ4uT/TXFRLspVIKOW76nE=;
+        b=WBDFuZVlKpFtF5RrvISND4xKNOJUR8UbrCcZztFR7dJxYsjGnvtIL4v0Mpp7fFF01C
+         A0TQ9mUFooCsN1O2uFWzXQNyLiclvp5WTYLv+TI4P00IxxwxZ+ev6HLsTbhXvTHIEIBc
+         oTGmV3IBYYborMkOlBJGDqx016/40AFw8wTu/zMW8s7UbHCuowi5IsCw6ocaAyVrl0Zi
+         N7ZFwAIjnKRjvX5gGamMe2/GxNpigE/h/vWbawqgAGDDisGxJwF/VQXoItvEkL1Hp0EF
+         oLInO5nHE3CTlri8qASxPjtgdtbQIjK+Hb2CldGuBGiUkr655EO9iX54DfjZ9tHVoAVW
+         EiyA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1773940756; x=1774545556;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:mime-version:date:message-id:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=I+EmpvHf2OI7v2k1uuTeZgZ4uT/TXFRLspVIKOW76nE=;
+        b=tINsQgouNJycoqJdNrybqrD/Fbe0lYJLNKg1UBjXsqGKgM8CFjdO407wlNMhvRxA8I
+         OSOuqEuaejgYUWja79H5z9j8xOvmetwwR3XI/DivI6C2wAICE6iZ3OUdqznBWfscuaxB
+         NBE9KDT35DhxaY0/rFrKoVXuqU/tE1nM5Y+hbxRTavTMFFVOygu5MlUelmapinosJU4c
+         zYLmowdAe94QDNxj93RbxBOKmLeyxUk7WwvmmMDM8cENMCgrZrU+s0dHcCX6z/cMEEzo
+         J1HMyuFGVDA1WPdntbGTHjr802vVTcKwbyPp603UWPKuk/hsELgyHwnVFffRUl1AJbYZ
+         y1yA==
+X-Forwarded-Encrypted: i=1; AJvYcCXlZg2JLUI14OgS0UgxTTGGn5aNAnjXJQY7G3Omztyq3Dj0a8J2vIG5jl2BiOXVvO/85yAJnNrXrj0L@vger.kernel.org
+X-Gm-Message-State: AOJu0YxKWi7C2QvZCnzZlXeefwCzxKiwD0ylpQ1fA/4Pt5ITZMK58i+w
+	1IV8JgwfzfTwVAm3JD3bqN82JLPOG7yxFVTK8TjBdYfPShULMsrSX4I=
+X-Gm-Gg: ATEYQzxYg1AmbKMpv6rmjd2NVrLozWNEmQnwEuqggPyXTJ2IjAAEZj5wpJysYdwWboV
+	J1XGmLXu+pCkloql8/mX4AGSbeWthsk6l54g9dFWssLl9Eq+YmoBLh84YHXJQLMV/Sa851HyZRI
+	PkER4cFpz1NUambFLns4n8LP82jla8JcE6oBwLTzUjDn1QgP6C7VDuUg+kOPfFvkdrEPqum/ci8
+	L52UXCc5flQm0PhsQjse+e4n8tfc0UYjeQGDV3Wpg1K0l5Lx6wknbi8BzkW4sDS5y5QshwoXNG3
+	BeVrmpz6LvqZNfzNYpUubgn3AIkH3sAMDhMWWWpq54fKX5MJ0Uot56vCftHRxhgzqucL7V7C7DR
+	yzMTb/14PKiats05L6LFmAjj8e6eJXjPkYtsEEtIpq1vzkAOFWJHFK5d6P/c8bZ3dqoTZTHiLmW
+	72+965uVrzn7blqWzlr7QKMS/gIXzlW38mQsXOReRk1jPjxdZq6XgtzEKGxcuo
+X-Received: by 2002:a05:600c:314c:b0:47b:d992:601e with SMTP id 5b1f17b1804b1-486f442f9e4mr92221045e9.2.1773940755879;
+        Thu, 19 Mar 2026 10:19:15 -0700 (PDT)
+Received: from localhost (30.red-80-39-21.staticip.rima-tde.net. [80.39.21.30])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-486fe89cbccsm448715e9.24.2026.03.19.10.19.14
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 19 Mar 2026 10:19:15 -0700 (PDT)
+Message-ID: <a37483bb-bc57-4c73-97a6-8410b67fef65@gmail.com>
+Date: Thu, 19 Mar 2026 18:19:14 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v8 0/3] bsg: add io_uring command support for SCSI
- passthrough
-To: Yang Xiuwei <yangxiuwei@kylinos.cn>, axboe@kernel.dk,
- fujita.tomonori@lab.ntt.co.jp, James.Bottomley@HansenPartnership.com,
- martin.petersen@oracle.com
-Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
-References: <20260317072226.2598233-1-yangxiuwei@kylinos.cn>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20260317072226.2598233-1-yangxiuwei@kylinos.cn>
+Subject: Re: [PATCH] scsi: scsi_devinfo: blacklist HPE/DISK-SUBSYSTEM
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "Ewan D. Milne" <emilne@redhat.com>,
+ Anthony Cheung <anthony.cheung@hpe.com>,
+ Takahiro Yasui <takahiro.yasui@hitachivantara.com>,
+ Matthias Rudolph <Matthias.Rudolph@hitachivantara.com>,
+ "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ SCSI-ML <linux-scsi@vger.kernel.org>, Martin Wilck <mwilck@suse.com>,
+ Benjamin Marzinski <bmarzins@redhat.com>
+References: <20251004145459.58259-1-xose.vazquez@gmail.com>
+ <924c8c63-904f-4da4-afdb-5ac5de403dca@gmail.com>
+ <aSRmXAQPSMHQXLCV@infradead.org>
+Content-Language: en-US, en-GB, es-ES
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+In-Reply-To: <aSRmXAQPSMHQXLCV@infradead.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
-On 3/17/26 12:22 AM, Yang Xiuwei wrote:
-> This series adds io_uring command support to the BSG SCSI passthrough path.
-For the series:
+On 11/24/25 3:06 PM, Christoph Hellwig wrote:
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+> On Sat, Nov 22, 2025 at 11:16:47PM +0100, Xose Vazquez Perez wrote:
+>> On 10/4/25 4:54 PM, Xose Vazquez Perez wrote:
+>>
+>> Same here, any problem/drawback?
+> 
+> The could be asked the other way around.  What serious enough problem
+> are you trying to fix that warrants bloating the devinfo lists?
+> 
+
+This entry was originally covered when "HP" was used as a prefix, as seen in
+(add HP DISK-SUBSYSTEM device, for HP XP arrays)
+https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=5f96f42b76e00e2871033745ff029056cc725c76
+
+However, after (fixup string compare: ... Vendor strings must match exactly)
+https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=b8018b973c7cefa5eb386540130fa47315b8e337
+the "HP" entry no longer covers devices reporting as "HPE".
+
+This patch simply restores the intended behavior for the newer "HPE" vendor string.
+
+
+Thanks.
+
+
+[ This thread is almost six months old, for reference:
+https://lore.kernel.org/linux-scsi/20251004145459.58259-1-xose.vazquez@gmail.com/ ]
