@@ -1,45 +1,43 @@
 Received: from mx0b-0064b401.pphosted.com (mx0b-0064b401.pphosted.com [205.220.178.238])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E70FA3A963B;
-	Thu, 19 Mar 2026 08:41:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7399A38A299;
+	Thu, 19 Mar 2026 08:41:26 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.178.238
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773909678; cv=fail; b=ePCg44S9qzD6xgtNJ3wXEmfWkM7463GNEF+TV55M92ZMSgs8J9ZcU+jrKuywrW6TaX1uO8HCK5eBK/KgC5ZwoeVVuhSoPaWZ8kFmsiJb8jqdo5/VLSwD3FB6HYA/iAZ8yhHcrgqZ2kdlDVME4fwbOcRQkQtoyh1JMjPXzXgzB+U=
+	t=1773909687; cv=fail; b=bqa8rwfuLmYRyONWHQnq/eYpQCWqQGyrv6pE5HLQC3laqcwoi3ZXDI4C8y/DetxdqSkGU7q5GTLYO2cIkT+GHVD5udfcfwMe+3IOXgOpfpFQ9YoGmRSm7moX4K0DChdtVX6U2MtvVD84hVSs4zIkCklCjgbawCg0c5BP58urDAY=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773909678; c=relaxed/simple;
-	bh=TUjOA5Mt31rv+XBTkzTh9vJ9qJlK6nKbSOS40gshUaE=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=sSftzFB8UsZIbUTQiUlR1Zrdv3mFZdG+myFhS2cK13mgQCswOcSVJKHIM+vrQkcAkBgafyHESkKm+RI0fcTfWCz9U7iifHD15H/vodQHDj2CEpQ6kGnsFTlkjb+gYuWq8VT9WROTmW17x+XKnoosUQGfDeNIM1fzhvFrJGTpxg0=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=windriver.com; spf=pass smtp.mailfrom=windriver.com; dkim=pass (2048-bit key) header.d=windriver.com header.i=@windriver.com header.b=bQ2YTE3m; arc=fail smtp.client-ip=205.220.178.238
+	s=arc-20240116; t=1773909687; c=relaxed/simple;
+	bh=P6CjPnl+pBqAwgi/SENKf/W6jS2h5FO5aw1PIszx3Ok=;
+	h=From:To:Cc:Subject:Date:Message-ID:Content-Type:MIME-Version; b=l7JJd2aYyu841Dr3tqloeuY5ggJGb38LWSZz7T7lzElbCRRfE/A7sur5zkntxTfwri/g9a91lGKp/qEIDdRegL9dGazcUuXJ6PeFjQD8nLHclHSzQ15HAxeWSH5pfgB3b3ycrG/cF4YlGkX9YwuO33FJqFhvmkWIfnuB0k90FmE=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=windriver.com; spf=pass smtp.mailfrom=windriver.com; dkim=pass (2048-bit key) header.d=windriver.com header.i=@windriver.com header.b=S4+B3rZy; arc=fail smtp.client-ip=205.220.178.238
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=windriver.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=windriver.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=windriver.com header.i=@windriver.com header.b="bQ2YTE3m"
-Received: from pps.filterd (m0250811.ppops.net [127.0.0.1])
-	by mx0a-0064b401.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 62J6F5pq1343739;
-	Thu, 19 Mar 2026 08:40:18 GMT
+	dkim=pass (2048-bit key) header.d=windriver.com header.i=@windriver.com header.b="S4+B3rZy"
+Received: from pps.filterd (m0250812.ppops.net [127.0.0.1])
+	by mx0a-0064b401.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 62J4rOjn3710506;
+	Thu, 19 Mar 2026 08:40:14 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=windriver.com;
 	 h=cc:content-transfer-encoding:content-type:date:from
-	:in-reply-to:message-id:mime-version:references:subject:to; s=
-	PPS06212021; bh=C0cCGODiFcKK2hRzNTh2p6jaBf+98NXglTTyHLPLarg=; b=
-	bQ2YTE3mSQbKGazLNJMKw0x13nxux61gv3jpcgVCLe99+0QeQEp9ff8rCvy9P7WA
-	srECgqCVAMTaixCkItTHLOGqONJ6f5aqgP6FfHls6fWC+1XEHmyn6i4i9dGMNp+g
-	Unj68zvqxUzr2pd1b+Rk9Q4xXqsEfQlbtqAKaz/uUCSp1x5w1ef2CZ8gzHJnYY3X
-	CrMxsUtShcskHkmw12Hb6Mh7Z4qjNDu5m+QS7Q20HpxGkR+Jwc3Fp537Nz3dhYoS
-	1uXtNrO1ktD/8Q+GWInRjACiZ/i5+6hF4J6Tz/A0ByjuGirrLA9rtplpWJ+aanoz
-	rzXUgOktuQDSCVtwaoCV5g==
-Received: from cy7pr03cu001.outbound.protection.outlook.com (mail-westcentralusazon11010018.outbound.protection.outlook.com [40.93.198.18])
-	by mx0a-0064b401.pphosted.com (PPS) with ESMTPS id 4cy9antmj3-1
+	:message-id:mime-version:subject:to; s=PPS06212021; bh=EacNoMxRT
+	LiumRnjECvojRzW0JMjB95olGSP3o1mlfg=; b=S4+B3rZyckHuRv3Zlzpr8EbMw
+	L0tH/xSzkYyQvdTT76cpJokFgabWW3mh8JQYqrPvargwFlNq9UBH7x6AYJZLPNpC
+	Gi+oUwABer60OkYrMfr5ZyOkPpaCXxMilFKg8kOfFhjdd7aWqHGWLl0a1vG/uLLx
+	zNtaKa6wUt2ujczEwXdm57NIVF2kOxwx0B+AsKZbwAUFPOcpeLpHJgwW42rGY+2m
+	EAjeuh6Pxawpx05bVx55YQEAID3rizLY2/wTc93G+dhs1d2jMDB0mRWbbOI/va4I
+	XA5qbHJO8IjLOT8Zkk+IG8cR+VdB0k5N9U3FVwe3yDwjPnAwD3j7bRdEEBtYQ==
+Received: from ph0pr06cu001.outbound.protection.outlook.com (mail-westus3azon11011001.outbound.protection.outlook.com [40.107.208.1])
+	by mx0a-0064b401.pphosted.com (PPS) with ESMTPS id 4cxm66c1q8-1
 	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
-	Thu, 19 Mar 2026 08:40:18 +0000 (GMT)
+	Thu, 19 Mar 2026 08:40:14 +0000 (GMT)
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=KJR6iESshCas18+wGCr7eDBBGnBnD0WiLS2Rrq2lp46FmVeUkakCVB+Uf2mscwFEU8Eo1gachaQDGAQr0fWZyjHwo5xDCs0r5ALeeSho2RYpbNAMQyiCrY0RbTXxljrJgklXEMaI9iXEN0DPe3nC/7UeWiM4B4Fs4sjrUs6IzPrUHx7TPMfSfRpqKbDFz9/xcqZRTI/7vKznHOUMAs4ikxNbUUlJeQ5rtUSqpxIzfgxObEsB7SS5/Of49fCKb0lofZ/yh4wa8DsvDpTq1BAz1lNdvZHLFUbuUCab8zBMzIoSrZp4vZ/DgNU9rIC0nOKNn4u3ZaCGjzOwyquCz/2Acw==
+ b=HornCgeSKOmfV7bQBUuUcr4bDOTIOIbSHdY4u56jXcmAz+HR0dUXmmmWWQKeyHXnDR9TjAtwVkeVoZnOBtpQRn/Mjij3AN7NFFQDYj/49zSag7Gig5/X2XQa+OVjPN0q/k6/eyUAliFnptFt4OFH9HVGBQNHmwZY7dGjdf4uCUp0oKH08mCqmrrOaDdGlFnjoCEtn98p+PVdt3oBWF1W8CiN54hBC3VMVQtgWhXGFCX7G2tcLE0xG4wWGMEJlFcHHvB3xb6+Az+5ePFW98eeFZNodpfgj5k2k2cJBHErPTFPBuDOjN2WlddwStbezv751HqTAt/87VBcoI7JfLvNFQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=C0cCGODiFcKK2hRzNTh2p6jaBf+98NXglTTyHLPLarg=;
- b=erGzSfQhsSnD8EzvHi+lu5AwCqpcUjWB4iJemnj1uUvRSE8SBF9SlaXHEwLs/OZtxj2mgd9o48FVi2/uehQMlj5Hsm8wOn1Hfm6srP5h4xNMzn0u05b1kVABWRv2tj7Pta7+98Pm5cSSMwjgB1MKWBMcP4ciy20glPa7aMoFtuGGCAbZjCh9/EhOtWni2KiVHixolP4mWUimxrAyuneTWDUCADPyU5vcfnklof1H5VgecR6FtfQTNZKrH6NmBZwKxlliFW0cnnNEaGzmcF8cdbtFLaif4QTmkNa9LQw0jIMzsmGNGHLIBGLqNVeeDWf6u2xl9X17nWYy4zINDMgwPg==
+ bh=EacNoMxRTLiumRnjECvojRzW0JMjB95olGSP3o1mlfg=;
+ b=F8cPJ3yOSt/gIKnVdS0ya/DvGz2g4FaMdDnLYiwnw9silJdC1t5O0koDe1zLvsxoToBjBmoir3D+10jc5y0XdyBKZ1xtY0yBc2uLmE1lhR64swVSFEniw/5htJZun59Tw3EhAfs24Fp0K0tP1fsF1SFHJHtlViqFWY4B+UbQCL1p7NionBTvise5+irw36ML8indb5hamc0S1Cjh5z/h5wtAUDiBNlg62bRj8PHQ2fOyfiUlHxLFLvEkecABQJ2JFPWbBskQQpcBiHwr+Z/uoaP3YwQg6kIaRy66DbqjUdqNyV1hqgaj+NYnf5X2y7CpxW7GhEb1pKnNpnfGGwFFuw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=windriver.com; dmarc=pass action=none
  header.from=windriver.com; dkim=pass header.d=windriver.com; arc=none
@@ -47,11 +45,11 @@ Received: from SJ2PR11MB7546.namprd11.prod.outlook.com (2603:10b6:a03:4cc::8)
  by PH3PPF37A184CA6.namprd11.prod.outlook.com (2603:10b6:518:1::d15) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9745.9; Thu, 19 Mar
- 2026 08:40:16 +0000
+ 2026 08:40:11 +0000
 Received: from SJ2PR11MB7546.namprd11.prod.outlook.com
  ([fe80::ca9b:dcf:8881:bced]) by SJ2PR11MB7546.namprd11.prod.outlook.com
  ([fe80::ca9b:dcf:8881:bced%5]) with mapi id 15.20.9745.007; Thu, 19 Mar 2026
- 08:40:16 +0000
+ 08:40:11 +0000
 From: "Ionut Nechita (Wind River)" <ionut.nechita@windriver.com>
 To: linux-scsi@vger.kernel.org
 Cc: James.Bottomley@HansenPartnership.com, ahuang12@lenovo.com,
@@ -62,12 +60,10 @@ Cc: James.Bottomley@HansenPartnership.com, ahuang12@lenovo.com,
         m.szyprowski@samsung.com, martin.petersen@oracle.com,
         robin.murphy@arm.com, sagi@grimberg.me, stable@vger.kernel.org,
         sunlightlinux@gmail.com, Ionut Nechita <ionut.nechita@windriver.com>
-Subject: [PATCH v4] scsi: sas: skip opt_sectors when DMA reports no real optimization hint
-Date: Thu, 19 Mar 2026 10:39:54 +0200
-Message-ID: <20260319083954.21056-2-ionut.nechita@windriver.com>
+Subject: [PATCH v4 0/1] scsi: sas: fix mkfs.xfs failure due to bogus optimal_io_size
+Date: Thu, 19 Mar 2026 10:39:53 +0200
+Message-ID: <20260319083954.21056-1-ionut.nechita@windriver.com>
 X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260319083954.21056-1-ionut.nechita@windriver.com>
-References: <20260319083954.21056-1-ionut.nechita@windriver.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 X-ClientProxiedBy: BE0P281CA0006.DEUP281.PROD.OUTLOOK.COM
@@ -81,219 +77,163 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
 X-MS-TrafficTypeDiagnostic: SJ2PR11MB7546:EE_|PH3PPF37A184CA6:EE_
-X-MS-Office365-Filtering-Correlation-Id: 20ad6d8f-b7a4-45b3-ffb9-08de859324f0
+X-MS-Office365-Filtering-Correlation-Id: 2982a6aa-b9a9-4ef5-b426-08de859321f9
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|366016|7416014|376014|52116014|10070799003|1800799024|18002099003|56012099003|22082099003;
+	BCL:0;ARA:13230040|366016|7416014|376014|52116014|10070799003|1800799024|18002099003|56012099003;
 X-Microsoft-Antispam-Message-Info:
-	UpxoKEwaP1wb8bBzzlQVYojj7k8O31GNdgrTwdePflkWo1tRTIYU/PXpXMILkZfpDRgYlUlp2dT5bQb1yNITtey2K/fTJci+ETtOWC8WS0qnBRZ+pLCYSylcHKgF/oDSVnai2FmM10+mw7Sdg8SofM20eN9K1M2ncmVPEWzYST/eDtCUgzvLov1Z5TX8EL9aRg0VlTYD63cLsNLvc/ANVAa2kG7Dls7XEpvnZpFKomNv/GC4i3D/pLdGbnmOvDlaP2QfSfCaGZ5UawGfvjlLrEFDJCnzQf8HBWHeUfJr18YMpHb5zkKfl+h2itBqx7vfk4JYDJxlORLmuiCoWki7qzVEHBWMOn3jJ/UStpZrgGqlmDb8vbvNt7F6xGIsj5PbAfpvq7hJxszrt+jJ+vTeCnlY2by7ZbUC1pRKfqCUbIbIPor8wsQRJSVC110o79A/1rYn2MAjNzQZzbgcNthUyaZZSSfyMygpCZTugdgvf1yE+Cb9bHITYhcmFGFvDPMj/WWkx1dY/Gp19s/V4PUQIsXv5+TE6Ld1Ske9d5IQ+ZVIlBwHziTsNFbvaicZHUOpVDqLQWgPaZ+0TkRDwTQjgZCjfEwhWIaKN8feX8fmA+2u5TpUtlizbOhgoCKjKDl1QgSliQR64hec/QwCF2Tnz3VHhvxQsuWIFPlmeIzwNUeuky4ukPxy8i3c0/peR/BFo7M8i/nQ2Il0jSR6fX2VPHbLk6+hj03/BF83yVT+gEs=
+	4rbcOgHSgXqwIG2UKJaDEBHXSj5DjW6k7x6NRkztgxD1Tdg6CCqDVFh7PcT5DJfy41Zz2HJJQgTXpDYb9C5SPdkTL7iJVJ4N0c/YGh+EmofREEvxHjs1llbz2K7ckOHaixATkAQk9QG5hPM1JDp4dLz4B7scJTPHLXs9t1nlglCp34CS4ZQbI3Yob9yCWWEZRQ1R5vW3L4S+oXd6NJFi3iDXhsX9GBibZ5KOibYmqa0utyYfCc/hqZwPsHKp0nqaMG5bu+xqEPtauvr05YueQiJF90GgV007Ii86lvJZUfSqZeKLpx1l8KWdN4gfGBQoGVuZkymE2vTy218Qlbi8C1nQAGYz412Q+GhghpKck1xXS7LmL4XZUKgdkQ9Uf0SE6qLzkiNONst/dXlGKIgfb1N9nM6GjxZCxRjOjqcGdzttbJpsLu+e9P0cwjCRyW/qCWIlINWJ/+Rnf7khJn3tx0ZwQnUbCiK7pj8q6znyQKoVqGsdVailcG9b1FtjhCZTzxap9RjqPCSFD8X34gbABxhwFsKbWvy/L74ponXROvgSsoPpPv8pqIewihTAOdDl9uOioTix21PNxhlNTAQOvryovff0IZ4fOVT5NT4pC7u1Wgt/QZGwU8Tqrxh4XQvztL0FEbsxx0QLoamJuBK2ZMQrqgB1ips97I27liV1CgJf6KTLQJo7/okQylpLuzcbxMasls8WDhDZgPldw2Wf+nNeJAi9hDEUj6U5TIOzvNZZBw6awzkAM73h/XR3c8Wl
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SJ2PR11MB7546.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(7416014)(376014)(52116014)(10070799003)(1800799024)(18002099003)(56012099003)(22082099003);DIR:OUT;SFP:1101;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SJ2PR11MB7546.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(7416014)(376014)(52116014)(10070799003)(1800799024)(18002099003)(56012099003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 2
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?dWt0c2dFWm14T0p4RGdrZzdYdGhqZFg2YnVHUGMzQ2U1RGZBMGhLdEozMmti?=
- =?utf-8?B?NDBHTzVDNGZycEY5WTY0L3JVUDBOR3pPZVVPM0lsUjlIUWdwMkRRaEVzT2Iw?=
- =?utf-8?B?Y1BNNG0rSy9BOXZuRGtwMUJxOFRsc3lRalRCQU5VS3ZCdjl4d1YwL2Qwdmkx?=
- =?utf-8?B?N3A3Z09CWDBPU29XL1Y3ZEppMjhBL2haZ2xVS0p5c2RhRTRvTTlrOU5pTTFu?=
- =?utf-8?B?a3BzYXVobWNQRWVtVHU2cmRSZlJDeFIzYWJZeGhkaEZMdlh4Nzh2bFNiZGhP?=
- =?utf-8?B?em13RnN4ZE0ybWphSmJldDJuWmo0UkE5MDhPU3N3cjZITGFDL1dHVlg0eGNh?=
- =?utf-8?B?Qm5aelNSS3puZjl2Vkd6b0xxZXBuOGp5aVE3N0FIVXVOaVZTQkg5bE44MEtT?=
- =?utf-8?B?YXVvQWR0anR5ZE52aWFzQ1BIeUlsN1F4cjJTVjhKd0xKTVlzZ0xzSXlMaWxt?=
- =?utf-8?B?eVBaWWtFYTY5M3JrY0pwYlo5VStqYXFpelJOMU8yRmFKeWVzbXFsUk9MQmpG?=
- =?utf-8?B?cHp3V0dBSlZWWm5MU3E4NUM4L0JuWUlsRzZkMXZhbjUxa2VEdkRmMWFxSFI1?=
- =?utf-8?B?eVdKbTFONG1qTTNGS1R4WU5QYkQ0UFhhbVVySUZiK1BvUm0ya1RkVWlDSENz?=
- =?utf-8?B?Y0oxS1ZJaWJUTjhxQm13K2lQeUlLYWt6WTVTZzAxbjZSaG53STNyc3VVWWxB?=
- =?utf-8?B?MW9PWFhXK1Y1UFh3YXBGZ1U1d0hjd2RnNjJMcmMzVlNXdENnZDdzN2tNQTdk?=
- =?utf-8?B?TllnQS9YRllMSFVobzVzeG1zNFBXUG1ZU3pXS1UrNWFheTQ1T3dLa3h0OWZ4?=
- =?utf-8?B?QUJIZURWYldqV1lCOVcwNnFsb1dHUmFpa2Z4aTJyaFp4SDVZY0s1YzlFa1Rh?=
- =?utf-8?B?TUR4WVI4TlVqTVRIckZkMzNqbXhaWkNyMERNTFo4K1NBUWlKZW92THd3SUtY?=
- =?utf-8?B?MUdjWEVnMnZicjJqRE9aMnJpQ2paaS92UXcvTkE2K3RDaUdXbjhsY2duUWlh?=
- =?utf-8?B?cmVnNHFXb1p5aWRjWkVoT0pJNTRiREpidE1sUWwvV1EvckwraUFZczdNclJF?=
- =?utf-8?B?bFlHZEZCdVhhRG1jZWpWOUZWb1hmN0s2d1g2dkIxVjErZncway9VZEJDQXo5?=
- =?utf-8?B?VkRTa21rRjBFQ2RwcVZUN05oVitsQm10OVc3NmhWWkJ0eEM1WWdyL1NyUlda?=
- =?utf-8?B?aUtoOTB5NUU1TmJoS3ppUHVFRGg0N01rWXJKaUJNLzkzcXVkU01pbnljYW02?=
- =?utf-8?B?RndrNU1xaE1qd2J5M0tnRWRvUGZITHFrVlZ0M1JZcDREZzJrR2M0SVVnT0p1?=
- =?utf-8?B?N3hpWGxFcUVPS2VxcUIyYkFzZXJWSDAzMlZiRXE4d0ZMZlhoTjlpVjd0T3NT?=
- =?utf-8?B?RkFPYmUxRWMybjhNU1NaVSs4U0FVQnlKcHRNMmpubUVWMzF1U3Z0TUsreDJz?=
- =?utf-8?B?THVUdjRXVXJEcnA4QkdMU2JUelBRN291TVk5U25oVTJnODB2bCtNcnRqNUZh?=
- =?utf-8?B?OEU2ZEZycmFJRDNpVURoK1h6N01oY2VVMFlQazNGcjdTbExTQzdnUUpiWStM?=
- =?utf-8?B?QWRPalZmb1c4VzVSa3lNOXdkTWR3U1A3eDY3eTUrcDBkT3BZc2ZnbDdJRjFD?=
- =?utf-8?B?TmY4SkhaOVROSC9zaWZzRFFDcW94UXdteGJXWnJtZFE0T1JhQXpqdjhrV2Z0?=
- =?utf-8?B?TkZMRGhNTzEyUW4wY2tzOE5tc2YwOTFueEdCZFp2VWNiZVBST1NEV25VUERF?=
- =?utf-8?B?RDdnRFFkMFNzYkZpejdxR3ZRUzViSEZqaUZLUGpDZFhKOVdUOUdFZVdLanF0?=
- =?utf-8?B?YmVYUHJNYUMvTUNqWmwydFVVT1c2SmFlRm5ETjBLalRobmRqd3FqQ0YwanVP?=
- =?utf-8?B?WEtUaXFZWlZ3NXdMTnRJMStHelpCRHF0L01TSng1S0gxYXpLTXFYaGhGMlpz?=
- =?utf-8?B?S0Y2amUrbndLcW9IV2gvTFVSbkJZd0tnLytxVjF5UW81UWxLTk5ySForYkt3?=
- =?utf-8?B?RktEK05aSUpZUFp3NkFORjZJbnQ0MG4rWGNLeUo0dzcreXBadGQrTXBpaXl6?=
- =?utf-8?B?bk5JSXlxUzNPL0JHbDZZa0tPM3h3bERIMWJjODdwa0F6c0R5K3ZnRDg2dU1z?=
- =?utf-8?B?VFJCa29ERHpmNUgwWmIwaldkZGJHUkZ1dmREWUhnNzdseHJxZHFKNUZMQmh2?=
- =?utf-8?B?TlJtTzJPMTZDVUt3bnFzczFkNEI5RUk2Z0I0cWUrQWdHM2psdmpYM2kxdmMr?=
- =?utf-8?B?NE9Pa2l6bXdpbkx1SGZJWDhKTHNMcll4Y1NwNUdjSjNvWm1SU0VPeWRXcjZo?=
- =?utf-8?B?bjN5d05WOStCRitvZ2dhakFCNFI5VmRIM3B4K0ZtNDEzUFdoY2lmb3hGTFlr?=
- =?utf-8?Q?tepfcpBBOOIj4QvkP/bZddSoNOZ6Qmcm64HO6awiDg5TJ?=
-X-MS-Exchange-AntiSpam-MessageData-1: XbmJXwgyYwTRdz7Anz5aEktMpiBqH8yw7Fc=
+	=?utf-8?B?em85dlRsM2dhSDNCYmp0ejltVnlRcUVLN0dxU2tPY3ppM1RWdHF5ZjhvdjV6?=
+ =?utf-8?B?ZysyNTR3OTN1V1hOR2tzeUlzLzZSeVVUTzZ4d3ZHeFROc0M2MHdKZ0hQM2xy?=
+ =?utf-8?B?bXJqTGtDcVhHNm9vdTA4RWZCSThmUVl2Q2RRcXI1MC9NQitjMlJqTVZPYlhp?=
+ =?utf-8?B?RUZuNFArc0ZNazNMN3RTTFpERzlQUllJYUQ4aytMNDRaZWdDZkh5Mm1PNHpS?=
+ =?utf-8?B?czQ1eUthMjFsSVdPalJ5Y0JBbERITThWNUt1c1lEeFpMWTJJUUFqWXpHc29v?=
+ =?utf-8?B?WXVWRVVxNkZNZm55azNpeVhLNlFnNkFXNExuS3ljc1FBcU5tZjJNaWd4cXY2?=
+ =?utf-8?B?bHkveXBxUlJQL1ltOEoxWWpVd0JaYkxyU0lyOEt2NXdXcGEzQXZOa0ZxRVM3?=
+ =?utf-8?B?cTR0ZG93dzZJRTBaWFNKM3JqNENyWm45U2lISXF1RmV6eFdMcGpjVk1CME9k?=
+ =?utf-8?B?dllIdHVMQUliL0l0QnRYd05CbzVHQnlMWUVTbUN6L2ozMnArTkFvMDZ0emN6?=
+ =?utf-8?B?WmU0aDU2YWthdkJLUitmeUdDaEZIWnBMbEZ3bE5VUHV1VnVPSndRMXY3a0pE?=
+ =?utf-8?B?a3d3WkZKanZmZ29oTW5hNlZKWHk2RlQvb1o4OWJCcDJDZjNjQlUyUmVwUXNk?=
+ =?utf-8?B?OTdiM3lpazg0NWIzUmVCTng4S2x2NHNuUXBvdkM0VDNXeDBJdlBNV3pzS2w5?=
+ =?utf-8?B?VkYwOXBtNFlHWGljRCtxTlVTQUthQXdWQjhIeHJaYVFnOE9ZUnVEVzRFa2Z4?=
+ =?utf-8?B?TWZZYXVGS1QrRHhTaUNHcnppTnd6cXN1aW0wQUp3eVFkK20rREd2dzZGZmxD?=
+ =?utf-8?B?QW5HdDhERjB6dXhNTVFuU1JqOTlYVG45bXRGTzNibGViYkhGOVpoZXgvWEJM?=
+ =?utf-8?B?a0pZSkg5U2Npdm9xcmphb2g0b1BvUE9BWkNrSVB4YlgxOHZzYmd2c2xyVUtT?=
+ =?utf-8?B?VVBjOEFMTm9JN0RVM0c4OVdJWklrOGFIaXMzNFpJNXN1ZmJmSG40SlU0a2ZI?=
+ =?utf-8?B?L3RtdTd5YWxHMVY4YklMTXEwSWZVSFBTMlEzRjNjTW81RUJyY042RzlZTjRu?=
+ =?utf-8?B?bGtrRzZkZitFYmRKZUovMkVKdnQvR1NBRm5WQXE2WWM4YXVyT2RKWTFVYXJT?=
+ =?utf-8?B?ZjBzeHB5OW1od3Jhc2lCOTZ3Vk9wL2wxYklJVnZHbFBIaE5jN28xMzliRUpz?=
+ =?utf-8?B?WDRKTTJZVmMxbUgyRjlwVTh0M29NL1plVjBkbDhEZnVlTW9ic3FSM2ZrS1BT?=
+ =?utf-8?B?QjB3VElSbGtla3FBeVQ3U3FhbjJHVlFNZ051Wlh0RzB2L2dUdDlaK2Q5ME1N?=
+ =?utf-8?B?cURzSERXUU9lckZ2K1htQzRrSUNMWk9OWElIbWVvKzg4dDhIbldOaHJVZjI5?=
+ =?utf-8?B?QTVYUHkrTGY4ZHJFblNxcGFXWUpYMmNDZWJ0YnpQVkZMUUdGdkpDQ0xXcVZ4?=
+ =?utf-8?B?Y0tHaU1zWlNSNU82dGhMcmNRYmtWTlRZWCtxSzFaUnZDR1dYWVhDZ0VoTU0r?=
+ =?utf-8?B?SHdKTHZDVVp0Q1RKRnhFcklhNzNFUzIyRDEzeEhPbFY2ZFhSMVY3VHNuMHBI?=
+ =?utf-8?B?cUNtZjNZVGlTcVNlbGdGRHhDVWpGVXVpVkRnSGw0V3NzWEJCb2pEUjNzcTJt?=
+ =?utf-8?B?SmdEL2NIRnlKMTBJclBpZnFzWjZYN25iUmF1cVBVN090UExJUGdNZ0Q5V1Q1?=
+ =?utf-8?B?S284c29abjVvcXZxRUhFUzB0R3Q0VHVtbElISWVFZmQ5TnlMWitKby9NMzhY?=
+ =?utf-8?B?OGQxN1AzQThjUStGdjdrallxRXFLT2s5M1lENzR5WE1MSXZNemZRTE1kcnhF?=
+ =?utf-8?B?NnRRNlFCME4zcHJoZTFrbkY3cjhvWWtuOTJHV1phMVhVMXg5TTJFdFNJdmhT?=
+ =?utf-8?B?TWhHdFlDUGhrUy8zYk5ucGNBcVhjS0xnVmNpWnNlcmFCZHc5MmxBcTM4QkNv?=
+ =?utf-8?B?UFZ3SjJweTZtR1ViV2hVcnZNZFFIVUZkSVNqQkZCT2IvTEFFVWdha2RmdnVW?=
+ =?utf-8?B?SzkwVGRlclJNWGFxUzRhN1hkcW5XdjdXVjVZKzByYk1XT2hlWFVwckhhbnUv?=
+ =?utf-8?B?ZFp6UEZUNVdJOHVHVWQ3NnFwcmFHSzZXZjNHdjhLQlFzLytiR2NvNUtrK1lF?=
+ =?utf-8?B?YkEyWlJ6ZmIxb24xdCtNK3ZlVENIUFhlZnNjdE00Q0I0K2pzaU1kUHd1cGZY?=
+ =?utf-8?B?bzhLOTdoSUM1N2JNdFVKaU9SdFRNS01IUVVGci9xaWdieFd6WlIzMDBnZVd6?=
+ =?utf-8?B?TGg1V1QvdkJHalo5Q05tWEovZW1teldFMkNpSVpveHB5TmdZNjhqc1RXNHY5?=
+ =?utf-8?B?cUpBOERpU2gyVEJ3RkliL1hNZmtpR29FeTlzQzJ4L09xQ3RhbE8vbStSVGxU?=
+ =?utf-8?Q?Rw/PjnHdnnl8rgAtXYlE5I/jOIqMqulYBm3q7dHKKQ1LP?=
+X-MS-Exchange-AntiSpam-MessageData-1: lTwQmDmdWVrqoTflnRnTbjl77sJ1JcUCbw8=
 X-Exchange-RoutingPolicyChecked:
-	Nw6ubvp5EMYGjt/o+CCZa/yut+pZHvfcjXAW6FbdJwqZxgfWUBfvhvLCiaeUwzE+HwckkiHpVWAmwvHDbYNxZciWuLe4cMTns9rvIEZZU53DQkD1vN6XYgT0xNAnVrLLnbQcyOwqOriHo4EiJU5Dmq4rFBIjkeD5YgD1msb6atpZKJyZuniIX9M1Ikcwdxj0oj4rPXc9f6OU4FtxUro6rqTMOrHcerKWgfZ27YjhMsyKP3oxz9Hc0+PiLGOQmOJsrvnGqyE/zsyMgTMJpDBjlK8pnSGB5YiAoE6ERL4j6SHuagT4WlqxOoA95aRmIBMOt6sXd4tc1U0Q53RLwkxomw==
+	oRTkhdff9jjNirf3St+S7DH1cEDCOvaEs6alAGIq/+rQRYmCn5FaKW7MsAvEdYt1hj0saaZBJBDjL0vnhaqYusrLqq9sNK9y2RNDaDvGaH5i868UoTGsfx4dX29CQjZgGHCbEW3NTq19s//Xf+nlvzfMy0lOcMzeOfvt9jwMo8G2oM3MyIetGUqxOGjObkAa50C2k5xIAjewAk1jLVqwOmGhH/BrMP3BXig3/bm5wbtiAX4kNDLCY7EIhQZKT5FFyH9QPMzXJTVSLML9DQ5FetVzvpUJbi31UQBvXH2VzFGO8wicUUx5J9LGPcHMoy7stAS1TmkjHn8aL2TheVuYHQ==
 X-OriginatorOrg: windriver.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 20ad6d8f-b7a4-45b3-ffb9-08de859324f0
+X-MS-Exchange-CrossTenant-Network-Message-Id: 2982a6aa-b9a9-4ef5-b426-08de859321f9
 X-MS-Exchange-CrossTenant-AuthSource: SJ2PR11MB7546.namprd11.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 19 Mar 2026 08:40:16.1272
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 19 Mar 2026 08:40:11.2425
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 8ddb2873-a1ad-4a18-ae4e-4644631433be
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: k3Dhnw/D5KH1Q52J2EIyDC6d6wUMNjhVEWPYF2H7HU6pSYtsPG3T9cKijdzrG6z7J8VUTsjZlRGqIL8iqO9vIUDjA955PNFcSpJYqZ+Ks5k=
+X-MS-Exchange-CrossTenant-UserPrincipalName: +kVcjs6NL6htKR5JQViGMzFw/4v9bjz9KtIU34DzM2ity2PDC7NMHZ0X0mKaDy42gDw5BU94ol01gAQtx/IHlr2Y/kw1JTQpuWj9nEtTvFw=
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH3PPF37A184CA6
-X-Authority-Analysis: v=2.4 cv=IrMTsb/g c=1 sm=1 tr=0 ts=69bbb672 cx=c_pps
- a=TKURuYQIacZDyiG+Utq8vw==:117 a=6eWqkTHjU83fiwn7nKZWdM+Sl24=:19
+X-Proofpoint-ORIG-GUID: 1K8aBBnnYMSEBNqLJv9jW2EAGIG81V03
+X-Proofpoint-GUID: 1K8aBBnnYMSEBNqLJv9jW2EAGIG81V03
+X-Authority-Analysis: v=2.4 cv=fLk0HJae c=1 sm=1 tr=0 ts=69bbb66e cx=c_pps
+ a=+gGuMjfID3j0L7k8h/8w9A==:117 a=6eWqkTHjU83fiwn7nKZWdM+Sl24=:19
  a=z/mQ4Ysz8XfWz/Q5cLBRGdckG28=:19 a=lCpzRmAYbLLaTzLvsPZ7Mbvzbb8=:19
  a=xqWC_Br6kY4A:10 a=IkcTkHD0fZMA:10 a=Yq5XynenixoA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=bi6dqmuHe4P4UrxVR6um:22 a=klDOsUkWDRETUCZYPvoE:22
- a=t7CeM3EgAAAA:8 a=VwQbUJbxAAAA:8 a=kuvo3jlHsurVFeJ2yhoA:9 a=3ZKOabzyN94A:10
- a=QEXdDO2ut3YA:10 a=FdTzh2GWekK77mhwV6Dw:22
-X-Proofpoint-ORIG-GUID: NI2A-Whl74Y0jY3I4N6N-jd6f1IexDlc
-X-Proofpoint-GUID: NI2A-Whl74Y0jY3I4N6N-jd6f1IexDlc
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzE5MDA2NyBTYWx0ZWRfX0GaFftftR3zF
- JmTv79lvT7QZMutwWWtPtwWVSRJRyhm2qNjr74eta7WQQWXrYlrKiOBKpInvHOENeLngz3PGheE
- TYN+TeNGhlefgL0WlE8VQ0joSwkzxF7dFI6hHpAmu/DahFQACGpfF1kSEB46Fv+trePUIBvXpdQ
- mgduDjy4uFeMMJcEEMy6KiwrHMIk7BegZ4UBKZw2Ep9X3wDYKeYFWX7OwI85jTMAiV8/HK8+Azm
- TkRP2TFsbLf06MFux8Ifq7CEfzH46c7gFBz0LSw+OXZsbxWrIFGNmsPVfT1hXhW1HfLBG0CzSfp
- eAFZzO0mL3A39dhApr5tqmtIhOIZoavRMhkZrw6ndD/d5Ub+RPIySJkOgP0hKcbXqgmE3MBX0vK
- EZRS36VVcYpnEVcba7cYztBEH43/gMVt4GhBQnDeT7PWb8QRa6hCCkZfVegR8H8JKmyB/PaRwjb
- TwRE/+vL8IZeZY+N6tw==
+ a=VkNPw1HP01LnGYTKEx00:22 a=bi6dqmuHe4P4UrxVR6um:22 a=fTW__CHxibyLmBMfj2wP:22
+ a=VwQbUJbxAAAA:8 a=t7CeM3EgAAAA:8 a=peZQmNii5BG9Q2hMFvcA:9 a=QEXdDO2ut3YA:10
+ a=FdTzh2GWekK77mhwV6Dw:22
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzE5MDA2NyBTYWx0ZWRfX8v/T/VIlYYSJ
+ JjOdMu+Pu2GUckr4PazwQ7pi0dwIM5wsz7r3vBQSZYBGdxYj4lKGpxgSsXlnGN9nxgD7/pijoqi
+ CtsxK5TbRCG8p/eBQgVCEYsDo/RY97DT2Ta7nMrC49COC1jrafXgyrssALmGhPhgIt8CO3PGRV1
+ yNYu+qg1fd/9E7dp2XIewUPZMc/kq9ZJvvFmiB9ElyHtj1x1YYez7G1/XwsU2/xeU5UrxqoOiPw
+ YcFbyoLTU+XukwhUaI0Xn9WT7eyrUt2T/hH7mWpPfVX+oIHxw+ARTLWIXzAbnPynBKFJRDVQv4w
+ SBFXSshfmNOPYxJmKEZY0Xsh4btixc0AXLhVSf2780w+w9U3zA/5/9fOWC9igDavfrbNLz0XS2I
+ PsQ/6LXLrUOY7xAHxJ2dnOKYVd5iPgluy19LELnbe0xYyPjZCG8jH482y8dVJk6WL3L685kbsHk
+ Ztqye1Y7+mXp1TVUJ6Q==
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
  definitions=2026-03-19_01,2026-03-17_02,2025-10-01_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- spamscore=0 adultscore=0 suspectscore=0 clxscore=1011 bulkscore=0
- impostorscore=0 lowpriorityscore=0 phishscore=0 priorityscore=1501
- malwarescore=0 classifier=typeunknown authscore=0 authtc= authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2603050001
- definitions=main-2603190067
+ clxscore=1011 impostorscore=0 bulkscore=0 lowpriorityscore=0 phishscore=0
+ suspectscore=0 malwarescore=0 priorityscore=1501 adultscore=0 spamscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2603050001 definitions=main-2603190067
 
 From: Ionut Nechita <ionut.nechita@windriver.com>
 
-sas_host_setup() unconditionally sets shost->opt_sectors from
-dma_opt_mapping_size().  When the IOMMU is disabled or in passthrough
-mode and no DMA ops provide an opt_mapping_size callback,
-dma_opt_mapping_size() returns min(dma_max_mapping_size(), SIZE_MAX)
-which equals dma_max_mapping_size() — a hard upper bound, not an
-optimization hint.
+v4 (per Damien Le Moal's review of v3):
+  - Split the opt >= max check into a WARN_ONCE for the impossible
+    opt > max case (driver bug) and a plain == check for the "no hint"
+    case.
+  - Used min_t(unsigned int, ...) for the return value to avoid any
+    potential overflow when shifting size_t down to sectors.
+  - Reformatted the call site as suggested:
+      shost->opt_sectors =
+          sas_dma_opt_sectors(dma_dev, shost->max_sectors);
 
-On a Dell PowerEdge R750 with mpt3sas (Broadcom SAS3816, FW 33.15.00.00)
-and intel_iommu=off the following values are observed:
+v3 (per Christoph Hellwig's review of v2):
+  - Extracted the opt_sectors logic into a dedicated sas_dma_opt_sectors()
+    helper function, clearly split out from sas_host_setup().
+  - Added rounddown_pow_of_two() on the DMA optimal mapping size so that
+    the resulting opt_sectors is always a power of two, keeping filesystem
+    geometry calculations clean.
+  - Added #include <linux/log2.h> for rounddown_pow_of_two().
 
-  dma_opt_mapping_size()  = dma_max_mapping_size() (no real hint)
-  shost->max_sectors      = 32767
-  opt_sectors             = min(32767, huge >> 9) = 32767
-  optimal_io_size         = 32767 << 9 = 16776704
-                          → round_down(16776704, 4096) = 16773120
+v2:
+  - Dropped the dma_opt_mapping_size() change per Robin Murphy's feedback:
+    the DMA core semantics are correct, the bug is in the caller.
+  - Dropped the nvme-pci patch (no longer needed).
+  - Single patch now fixes the actual bug in scsi_transport_sas.c.
 
-The SAS disk (SAMSUNG MZILT800HBHQ0D3) do not report an
-Optimal Transfer Length in VPD page B0,so sdkp->opt_xfer_blocks remains 0.
-sd_revalidate_disk() then uses min_not_zero(0, opt_sectors) = opt_sectors,
-propagating the bogus value into the block device's optimal_io_size
-(visible as OPT-IO = 16773120 in lsblk --topology).
+v1 feedback summary:
+  - Robin Murphy: dma_opt_mapping_size() semantics are correct; if no
+    restriction exists, the largest efficient size IS the largest size.
+    Fix the caller, not the common code.
+  - John Garry: Asked for concrete max_sectors/opt_sectors values and
+    questioned whether sd_revalidate_disk() would override opt_sectors
+    via opt_xfer_blocks.
+  - Damien Le Moal: Suggested min_not_zero() for nvme-pci (now moot).
 
-mkfs.xfs picks up optimal_io_size and minimum_io_size and computes:
+Answer to John's question (from v2, still relevant):
+  The SAS disks on this system do not report Optimal Transfer Length in
+  VPD page B0, so sdkp->opt_xfer_blocks = 0.  sd_revalidate_disk() uses
+  min_not_zero(0, opt_sectors) which returns opt_sectors, propagating
+  the bogus value.  Observed values:
 
-  swidth = 16773120 / 4096 = 4095
-  sunit  = 8192 / 4096     = 2
+    shost->max_sectors      = 32767
+    opt_sectors             = 32767  (capped at max_sectors)
+    optimal_io_size         = 16773120  (visible in lsblk --topology)
+    minimum_io_size         = 8192
 
-Since 4095 % 2 != 0, XFS rejects the geometry:
+  mkfs.xfs computes swidth=4095, sunit=2, fails because 4095 % 2 != 0.
 
-  SB stripe unit sanity check failed
+Test environment:
+  - Dell PowerEdge R750
+  - SAS Controller: Broadcom/LSI mpt3sas (SAS3816, FW 33.15.00.00)
+  - Disks: SAMSUNG MZILT800HBHQ0D3 (800GB SCSI SAS SSD)
+  - Kernel: 6.12.0-1-amd64 with intel_iommu=off
+  - IOMMU: Disabled (DMAR: IOMMU disabled), default domain: Passthrough
 
-This makes it impossible to create XFS filesystems (e.g. for
-/var/lib/docker) during system bootstrap.
+Based on linux-next (next-20260318).
 
-Fix this by introducing a sas_dma_opt_sectors() helper that only returns
-a non-zero opt_sectors when dma_opt_mapping_size() is strictly less than
-dma_max_mapping_size(), indicating a genuine DMA optimization constraint
-from an IOMMU or DMA ops backend.  The helper also rounds the value down
-to a power of two so that filesystem geometry calculations always produce
-clean results.  When the two DMA values are equal, no backend provided a
-real hint, so opt_sectors stays at 0 ("no preference").
+Link: https://lore.kernel.org/lkml/20260316203956.64515-1-ionut.nechita@windriver.com/
+Link: https://lore.kernel.org/all/20260318074314.17372-1-ionut.nechita@windriver.com/
+Link: https://lore.kernel.org/all/20260318200532.51232-1-ionut.nechita@windriver.com/
 
-A WARN_ONCE guards against dma_opt_mapping_size() returning a value
-larger than dma_max_mapping_size(), which would indicate a driver bug.
-The return value uses min_t(unsigned int, ...) to avoid any potential
-overflow when shifting the size_t opt value down to sectors.
+Ionut Nechita (1):
+  scsi: sas: skip opt_sectors when DMA reports no real optimization hint
 
-Fixes: 4cbfca5f7750 ("scsi: scsi_transport_sas: cap shost opt_sectors according to DMA optimal limit")
-Cc: stable@vger.kernel.org
-Signed-off-by: Ionut Nechita <ionut.nechita@windriver.com>
----
  drivers/scsi/scsi_transport_sas.c | 40 +++++++++++++++++++++++++++----
  1 file changed, 36 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/scsi_transport_sas.c b/drivers/scsi/scsi_transport_sas.c
-index 12124f9d5ccd0..696627b6fe2c3 100644
---- a/drivers/scsi/scsi_transport_sas.c
-+++ b/drivers/scsi/scsi_transport_sas.c
-@@ -27,6 +27,7 @@
- #include <linux/module.h>
- #include <linux/jiffies.h>
- #include <linux/err.h>
-+#include <linux/log2.h>
- #include <linux/slab.h>
- #include <linux/string.h>
- #include <linux/blkdev.h>
-@@ -222,6 +223,38 @@ static int sas_bsg_initialize(struct Scsi_Host *shost, struct sas_rphy *rphy)
-  * SAS host attributes
-  */
- 
-+/**
-+ * sas_dma_opt_sectors - derive opt_sectors from DMA optimal mapping size
-+ * @dma_dev: device to query DMA parameters for
-+ * @max_sectors: upper bound from the host adapter
-+ *
-+ * When the DMA layer reports a genuine optimization constraint (i.e.
-+ * dma_opt_mapping_size() < dma_max_mapping_size()), convert it to a
-+ * sector count, round it down to a power of two so that filesystem
-+ * geometry calculations stay sane, and cap it at @max_sectors.
-+ *
-+ * When the two values are equal no backend provided a real hint and
-+ * the function returns 0 ("no preference").
-+ */
-+static unsigned int sas_dma_opt_sectors(struct device *dma_dev,
-+					unsigned int max_sectors)
-+{
-+	size_t opt = dma_opt_mapping_size(dma_dev);
-+	size_t max = dma_max_mapping_size(dma_dev);
-+
-+	if (WARN_ONCE(opt > max,
-+		      "dma_opt_mapping_size (%zu) > dma_max_mapping_size (%zu)\n",
-+		      opt, max))
-+		return 0;
-+
-+	if (opt == max)
-+		return 0;
-+
-+	opt = rounddown_pow_of_two(opt);
-+
-+	return min_t(unsigned int, opt >> SECTOR_SHIFT, max_sectors);
-+}
-+
- static int sas_host_setup(struct transport_container *tc, struct device *dev,
- 			  struct device *cdev)
- {
-@@ -239,10 +272,9 @@ static int sas_host_setup(struct transport_container *tc, struct device *dev,
- 		dev_printk(KERN_ERR, dev, "fail to a bsg device %d\n",
- 			   shost->host_no);
- 
--	if (dma_dev->dma_mask) {
--		shost->opt_sectors = min_t(unsigned int, shost->max_sectors,
--				dma_opt_mapping_size(dma_dev) >> SECTOR_SHIFT);
--	}
-+	if (dma_dev->dma_mask)
-+		shost->opt_sectors =
-+			sas_dma_opt_sectors(dma_dev, shost->max_sectors);
- 
- 	return 0;
- }
--- 
-2.53.0
-
+--
+2.43.0
