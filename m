@@ -1,190 +1,198 @@
-Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 52638364EA1;
-	Thu, 19 Mar 2026 12:42:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=210.61.82.184
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773924141; cv=fail; b=qC96+XjwQU+DsQjJ3Z6QAefHOObCZZmlpGOU+2SONGX+piCj5KZNdi0/R1KyrFZQHfE5rBRWiIHz4uKSLa3Hx8XXUY6K9X/husu2TzU4Y8ozXfVsVfLPC/9NKxwy2MrzKSkTcHXaqK+a3oBC7v9gdytcmMlAthitJGl697ybNNI=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773924141; c=relaxed/simple;
-	bh=8mUk3J4caU39+Xbghv6vMlOjyiB/5jaXvQkP8TjtM50=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=I2ar9+kgxotNK+FHRxrpyzlyNMBsyJW1ItLjRlfhOOeFBM07uOYoj+/Lqrr7dbzRdLjoEK/tIz5EksXp5sKgYge93L9BCZwkO9vD+ie2onF+h7BhPWa7VWuvfpX0SlY50244C/dYo7bOWZaGGnXRC8LgYNHYqumElGHqzSsLo6g=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=a83/2N47; dkim=pass (1024-bit key) header.d=mediateko365.onmicrosoft.com header.i=@mediateko365.onmicrosoft.com header.b=fy3loVYa; arc=fail smtp.client-ip=210.61.82.184
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 18B7F3D3492;
+	Thu, 19 Mar 2026 12:52:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1773924755; cv=none; b=jOIU9yTWT+GnpZT92iE3svYT1zk+AwO3exk7ah89EFBDoZM2AmBdMVxE0Ed+2ccHVV5U97RIEzUWjIiQTwWngk9fG/zhCjmE6V5TtjCaK7PXT5KE0z4Ltbby3F4iNTKs6CHjaUgXAQREf2owWuQ4XOAVrJkCJib+T1AQRUJajeM=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1773924755; c=relaxed/simple;
+	bh=jA7diFAaatzjClu0BNNjaXH84miUw/aL+tXzTcfiSyY=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=L+v+sUPhqp7WzQlVSkngWBHURtLdXi+iSALx8mCKy+c38B1z9U6vZK3MafCmB13WXSmzwfoHZhqTjhxtzf+OeVgYhkfOlwUVO/odjG0rVVJ3jBEY5AgvFs1KrcXhrmWtyGQNhCGXnYa1c55676688xZ3/wJE6yExDTQZqgCLYMA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Udm/5szm; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="a83/2N47";
-	dkim=pass (1024-bit key) header.d=mediateko365.onmicrosoft.com header.i=@mediateko365.onmicrosoft.com header.b="fy3loVYa"
-X-UUID: 0f570b6e239111f1a39cd589f645bc18-20260319
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=MIME-Version:Content-Transfer-Encoding:Content-ID:Content-Type:In-Reply-To:References:Message-ID:Date:Subject:CC:To:From; bh=8mUk3J4caU39+Xbghv6vMlOjyiB/5jaXvQkP8TjtM50=;
-	b=a83/2N47Vq0kj1EMsvO/JQK8bEcsFMinVNc42bVE/vRic6U5Tox8NYhkQmgHDS8Rac1eGLtOqSqWlGtbcT+keVdsqW7qfbjVSiU41uOcThkas4X2bvz2H8F+d7O2Y1QgGn4OxSHGKEQfqJWvZpL23UFijHthkl3hefdEMiP0y54=;
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.12,REQID:c54734b1-8d72-4803-b8a7-598d317d0a2c,IP:0,U
-	RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
-	release,TS:0
-X-CID-META: VersionHash:e7bac3a,CLOUDID:cfadaf4c-9183-487b-8624-e74f2dd98990,B
-	ulkID:nil,BulkQuantity:0,Recheck:0,SF:80|81|82|83|102|110|111|836|888|898,
-	TC:-5,Content:0|15|50,EDM:-3,IP:nil,URL:0,File:130,RT:0,Bulk:nil,QS:nil,BE
-	C:-1,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
-X-CID-BVR: 2,SSN|SDN
-X-CID-BAS: 2,SSN|SDN,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR
-X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: 0f570b6e239111f1a39cd589f645bc18-20260319
-Received: from mtkmbs14n1.mediatek.inc [(172.21.101.75)] by mailgw02.mediatek.com
-	(envelope-from <peter.wang@mediatek.com>)
-	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 29533794; Thu, 19 Mar 2026 20:42:15 +0800
-Received: from mtkmbs10n1.mediatek.inc (172.21.101.34) by
- mtkmbs13n1.mediatek.inc (172.21.101.193) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.29; Thu, 19 Mar 2026 20:42:14 +0800
-Received: from SG2PR04CU009.outbound.protection.outlook.com (172.21.101.237)
- by mtkmbs10n1.mediatek.inc (172.21.101.34) with Microsoft SMTP Server id
- 15.2.2562.29 via Frontend Transport; Thu, 19 Mar 2026 20:42:14 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=JpC06f798OcNIL5ByQYoX8yHbDph8YDcSO+YdM28Q/JimWYrrPCtNVstu26yi8T+9P+u183dqkMGnvhTaXEYsm0dPgTIN3VNlcxNMGgq5eww1AYjg6Uo4CrpaAl5GqcEUgsPKtMDgifq118v+51w3haKVJtgRqTnbqRac+cK2N5paVcHwVZiWHlAbzwo8Md6NLJwdklZSm6jylFKVWirU4vw8hNgnyihB5vGgYMO735PZgLV+xCPAGhbEknAODkg/aLCJj+4ea2/TsNj+9v3sLaEit8YcFfSsQc8mMwbKOIFEmQRn3+hj7i14BtErCT0FZscIrY2R8mpv+ndc7v0+Q==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=8mUk3J4caU39+Xbghv6vMlOjyiB/5jaXvQkP8TjtM50=;
- b=hY790KnsGBPtGG2/n4vVm0LVH+KIB9x7RwiS3coBsw19sydPen8sGky+kFnnOC0m14s4lIvKADZxu6QCYPd4znlheXBC581Et7IDDbdFlgOSaz3obI6u9kbdl7pWpFawICG4hYU8otH60usYhWtey2C3vZoYAvyRibR/hS1di1ZaFVfoOv84ImhdugjQAlQVcxjJWYZZ2hD0q18xyuoM2skzDZDpK8+/+62SbweoMM7f3n+y9MOaFPQmunbdNu5k2DkNBPZmme3snHARp5tYUEjt3xaaq9hiYsXZLiiu3Hra7bc4KUfIbbXS3AOC8FWNjUnAMBSnN2X1wUe9Z+OK2Q==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=mediatek.com; dmarc=pass action=none header.from=mediatek.com;
- dkim=pass header.d=mediatek.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=mediateko365.onmicrosoft.com; s=selector2-mediateko365-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=8mUk3J4caU39+Xbghv6vMlOjyiB/5jaXvQkP8TjtM50=;
- b=fy3loVYawbkN6U64dltAdo44WOSWh12kKDhYW0U8Ma2zulLcd9LOWedgZJj6l9ydzQC66HGEjMcncy327hwaK0wrxQUXIZTnub41Knak/1Ya6deq2KzG+0XgXdCAODhftRTeres3bkTGm/LJzWE9uZi/NKd5pzOkkM2mbTxlk8U=
-Received: from PSAPR03MB5605.apcprd03.prod.outlook.com (2603:1096:301:66::6)
- by TYZPR03MB8648.apcprd03.prod.outlook.com (2603:1096:405:b3::10) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9723.19; Thu, 19 Mar
- 2026 12:42:11 +0000
-Received: from PSAPR03MB5605.apcprd03.prod.outlook.com
- ([fe80::165:d36a:3f76:2925]) by PSAPR03MB5605.apcprd03.prod.outlook.com
- ([fe80::165:d36a:3f76:2925%4]) with mapi id 15.20.9723.018; Thu, 19 Mar 2026
- 12:42:11 +0000
-From: =?utf-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= <peter.wang@mediatek.com>
-To: "beanhuo@micron.com" <beanhuo@micron.com>, "mani@kernel.org"
-	<mani@kernel.org>, "can.guo@oss.qualcomm.com" <can.guo@oss.qualcomm.com>,
-	"avri.altman@wdc.com" <avri.altman@wdc.com>, "bvanassche@acm.org"
-	<bvanassche@acm.org>, "martin.petersen@oracle.com"
-	<martin.petersen@oracle.com>
-CC: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-	"adrian.hunter@intel.com" <adrian.hunter@intel.com>,
-	"alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
-	"James.Bottomley@HansenPartnership.com"
-	<James.Bottomley@HansenPartnership.com>, "quic_nguyenb@quicinc.com"
-	<quic_nguyenb@quicinc.com>, "linux-kernel@vger.kernel.org"
-	<linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v3 04/12] scsi: ufs: core: Add support for TX Equalization
-Thread-Topic: [PATCH v3 04/12] scsi: ufs: core: Add support for TX
- Equalization
-Thread-Index: AQHcrw5m3AJ+eCzqYEGMTPJE+YMrfLWyVjsAgAAJRgCAAAOuAIAAXY6AgAKphoCAAHM8gA==
-Date: Thu, 19 Mar 2026 12:42:11 +0000
-Message-ID: <ab94f19d6fbe8f987da118d2b84d45aa506d2be4.camel@mediatek.com>
-References: <20260308151409.3779137-1-can.guo@oss.qualcomm.com>
-	 <20260308151409.3779137-5-can.guo@oss.qualcomm.com>
-	 <42587e16218f1c51dbcbe6bb1639a843e10bcd80.camel@mediatek.com>
-	 <fa2a97fd-e17d-4314-b5a7-011b6b16a622@oss.qualcomm.com>
-	 <fb56d5f1-2b53-4627-ab7a-03db13cd76fd@oss.qualcomm.com>
-	 <ead714be9dbe88ac66b3ce586498f7ffd734e328.camel@mediatek.com>
-	 <6e2f03ee-6cde-48ea-9f43-6b911117fe4b@oss.qualcomm.com>
-In-Reply-To: <6e2f03ee-6cde-48ea-9f43-6b911117fe4b@oss.qualcomm.com>
-Accept-Language: zh-TW, en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=mediatek.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: PSAPR03MB5605:EE_|TYZPR03MB8648:EE_
-x-ms-office365-filtering-correlation-id: e1818a6b-2673-47bc-82b6-08de85b4f0ee
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;ARA:13230040|366016|7416014|376014|1800799024|56012099003|18002099003|22082099003|38070700021;
-x-microsoft-antispam-message-info: TPHkWIMORhl132t4IZcFf9sExdURMU3kgmXSf4D2pf8/B4N2oxSxThrg+texWFKdjCZcOtdHkrlDc2YWH2kMHVnYhL2qh32NvsuV4PqY3KrwY5SEHNJsuTY2Euc8gylIFSh0jFtdH68KodBJhzpc6tn2gttsfhZVEr5MBuotK6YU5xuvmC+Hdb4rfDV7J/TetbOI8QudJNXMXNah8G5KeQlNGmUH0plI55bWjFcxHO3FAYmfoyMU7iHzTtgrjCds6xg12aiRGcQs1EkrSq5EHSs6/VHopsRe3ljAYarMHo7CKn3r/7EelUmgnXnu0ZtZdgXHgLOLU3SvGK1NucZNWVE5bleT/OyUDgsLDDbxJs3J71aPBAxqIZKDJ1jp8C94e3FxSsLJzM7MVBCbzfBAdd30LXiiSSGFwffr2iKv/p7xUXOVv9jUdZbVtdjvd8SxmFKAdNkNPJemVOd8mKZVDuUc/+baao1H9LBeggyNxnfQE1Jtlccnoq8/FPyc25o/4nCa4Y8N3Bk83h++aqKsl0CRIapvhUzZFcyo+oitdaa6l7u/Po/6lG2l0t0Qb3QyMYqTVQzV5DaUYbmJt6ZSvoEqJQx2Mkkzkcr3erNS1ybmXryNUsX6Vak4TbMRrSwgM87Bgzcyvxm+V6eLsmZSUpw/kaXDGP68wJDQrzWRw1yhfHtHG7ogCsu3PoedpkmLeB9wb/HO3CmD+vGyp19SMgd0fuD+xbPjd+x9OP0VIMEqas447Dq2PRnqNHGZJ5Y03N8qKHlGMz8M6yA+JtdBxiv4CN9YkfgffCvFPrRzPVw=
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PSAPR03MB5605.apcprd03.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(7416014)(376014)(1800799024)(56012099003)(18002099003)(22082099003)(38070700021);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?utf-8?B?ZlFBUFRwQy90RTZWb1psY1U3ajQ2elhIYndBM3hjQ1pJRnIvRkgvN1VNYnpD?=
- =?utf-8?B?SURtQkxpQ2lzSmJKd1RNV1NabEMvL0lkVTJDZWFmL1NzMithZ1pZMXlKR0ls?=
- =?utf-8?B?cTcrTE1pb3hXdzR6cUhpakh0NnZHRDhTUzVPMzVSQVd4Z2k3cEQ2VVhJK2ZI?=
- =?utf-8?B?c2p1UEdzQzEzT1V5eWZCRlc2YlVaMnpCQVdrMkxwbWdXTlYrTGRlSFNuNzNN?=
- =?utf-8?B?UnRodFNKS0J0RjhoTFhHYXdlZ3pnZ1RPWFF3WE80Rk14S20yMXI4ZnBPUlZv?=
- =?utf-8?B?ZVBoVTJoRXJNemZyd3IrbEFrWS9ySW5nV05lQjBCQzRJam9GemFUM00wVFBF?=
- =?utf-8?B?S3o3TDFqc2N5QmJzNTRQNFF5WHZmOFQ3dXpZdmgxeDkxVkZLbUJyWC84NXQw?=
- =?utf-8?B?MXp5MU5lWnhpQVF4cTRsNXpNcUhXMlh0MzYzZ0hvOGR4UFNJZnh1NGMyVzIw?=
- =?utf-8?B?ZjVKenBpWmUxdE53aUJDakpvU3Buc2srUzVvaXhDekVYNjhSNmFFazhMUlZE?=
- =?utf-8?B?NUp0QWxYbml5Y25xNmFPWEdrZWdueFRxblhvSG1RRWd4bjJNdXVDZHJPZm42?=
- =?utf-8?B?MjBhcXliVFhsdUlIZ3Y1cU5rRDBtdGI0b0RwNXQyWW1vVDZiSndLQWJxVTBn?=
- =?utf-8?B?S3RDN1RUOEYyWFlNV0FyVXRzeFlmQnBNMXpYRThjSW9uY1dlQ0pUWnVkRkpp?=
- =?utf-8?B?TGVpT3dLTlFEMFg3WVAxenB4bGw5c3p4eERhZG1JdkI3a2RBN2VIQ29EVG5T?=
- =?utf-8?B?RGo1VE80L0Z3M2lSSUdEVzBERXpiR1Q5bWR5YjVFWG1NZnJZcHl5elhaWlJQ?=
- =?utf-8?B?TjNqSVM3R2o5dEpkWkNPcFZzZXliT1daNExibXhpVGVqNXBUR3EyVUtNemFJ?=
- =?utf-8?B?bVdQUlhUc0hpL1huQkZyWDY4K3FLTFNTcGNVdnhEd3ZKdGhMZTZ3ZGxTMkFS?=
- =?utf-8?B?UkNodjNndlVXSU1UTkdNN0I2REVSNUs1WWNhaklwdW5VdUlWM3BiNkpjRTgv?=
- =?utf-8?B?Uld0dmlBNXMyYW0vTEJ3ZDdWL0UyRHpGU0Y4dW44NWdNeGc2bHNYbFkyckE5?=
- =?utf-8?B?MHE1RE9IZy9lVzg4ZzMyeGdDaGpnRkQrQm83SGV1WWpRU3BXSTZWVWhoek8y?=
- =?utf-8?B?Z2pJakd3ZGNRekhrNFUxSS9PWUVRaUplL1ErNG54dFNEZVRsaDVKTlJMUk9T?=
- =?utf-8?B?RXMwSExsbTZnRUNjYmk3TjJKakw5VE1ocHMzMTVsNUUyRUFuMFZOMDdpcVU1?=
- =?utf-8?B?eDMvMnVva3k1TFIzWWkzb2x0ckVOa3MwcXlBaDZkQm5Na3JnQVV5VjkvVXdt?=
- =?utf-8?B?NVZhT2lEOGJTUFJPNE1Qb0NVQ1FUT0pYRGNEcCszUWFwVVkwMWNsdmRnM1BC?=
- =?utf-8?B?eWxSdFFTT2RUay9pd3ZoNVNVUUVDamNhMXQxdDUrWnVyM0t4V1dGVkg2aGxS?=
- =?utf-8?B?aEVUWkZRQmRpR1VNa2RWT1JMK2dvWElaQldDcDJUMlhCNXZkcWpOZnY2c2NK?=
- =?utf-8?B?V3k0T0hTZ3ROTTFOQ2hJM3B3ZGIwQkNVK25kU21NYjRaNG5XOWdQTEVHcDBz?=
- =?utf-8?B?UThYQi8vQ1UycUg2R0hYdmg3c2k2ZGtjZTF1ZlFwNUUvTE1DOW1GS3FvYXBK?=
- =?utf-8?B?THlJUlNKSU52QS94NU5PSVcyQWNuaUZtUUtzOEtScG9UQ1VuVUQ0T2U3T3lW?=
- =?utf-8?B?TndSRVlnamI1SUliYUpxV3Z0Lys0ckgvL1FRSlRwUHJXYU0xYTZhTUtDTDdT?=
- =?utf-8?B?RXFtbEx2QTgwSnNoVHQxWXBTVlJxQytWTnRNS1huQkluSDBOL3ZjaTZGQ25E?=
- =?utf-8?B?bHJ6dzdlZjVnVE5DeU1hWGdWRGlQS0NYL3NFUzI2ZEdyallKbWFqRy9wOUQ1?=
- =?utf-8?B?bVZEWmFqeTBBa3Qza3RqbEVWQVhpN3NPNU9BbUkwN0d6V3BZQWpncWpDQ2JS?=
- =?utf-8?B?VTNpNk1nSFFXNWRLbStPanozSHBmS3dBU2NiOGY0K3QzaytWR0I1WHh0UndN?=
- =?utf-8?B?OG9NYlp4aisvNFRKNFg2dWh2d2dCd2VXdnZYM2RCS2t3K28xSERaUVd0VHBY?=
- =?utf-8?B?bGQvMThPNGcvakhjNWxkbmVQdHdQL0ZJb1FQQ3R2MnZWMkZLSkh1K1FIUDhK?=
- =?utf-8?B?V0V5VGVUem1JS0N2S09XY3AvODVuOEJjSlMzeDRHRlhwaGY5c1NSeUZkazlQ?=
- =?utf-8?B?b2VEbGhMU0lNQmNOU3V2cllFSjZmZ1FpRTNhenlaM3h2U2oyN1I3bVp1TjVB?=
- =?utf-8?B?QmRKTFFBV1pEZFZmaXkvYnI2ZjlxY2k3c1dNa2JucDdTSmpKYUdaWkkxVHhG?=
- =?utf-8?B?cGNocTZ5UFhmSCtKMDVIVU5TWHdBZ1hLUUhHQWZnNDQvTm5qelBjekZyNjh2?=
- =?utf-8?Q?VARuO4kJaCGTMY1I=3D?=
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <5A1EC759E018014781872A0F70B04576@apcprd03.prod.outlook.com>
-Content-Transfer-Encoding: base64
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Udm/5szm"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A9282C19424;
+	Thu, 19 Mar 2026 12:52:25 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1773924755;
+	bh=jA7diFAaatzjClu0BNNjaXH84miUw/aL+tXzTcfiSyY=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=Udm/5szmcmrn1FQPUv6e/j0SN6gP++q+sDVLk95f5h2PMysLxA/Z+vmQxnocUccUn
+	 NuBv89GwjGw+atxJn1J0so9qkU5Fz40p+PTENxR41hcO8d78y7WoL7d68u7RJwiVoU
+	 24b8F9r9Rglgs2jG81B2Ku5fqywDVKhnmPJe34SHQaQbe0jVM5wnV7X8Yl87k20mNN
+	 uLVYl3OTVyKbPcX2UWMxSpOwWjfeL17ZUhqEmwTrU9V9I6dAEZqrK0WhNYjr1Zk1rv
+	 FL2a3cllmUIkPZSTj7CNTbJNtleLxEuRoC6olnUM1WEiLl3YJslQyYkYq6xD3FW/z0
+	 rvKJyE92if+Dg==
+Date: Thu, 19 Mar 2026 12:52:22 +0000
+From: "Lorenzo Stoakes (Oracle)" <ljs@kernel.org>
+To: Joshua Hahn <joshua.hahnjy@gmail.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, 
+	Clemens Ladisch <clemens@ladisch.de>, Arnd Bergmann <arnd@arndb.de>, 
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "K . Y . Srinivasan" <kys@microsoft.com>, 
+	Haiyang Zhang <haiyangz@microsoft.com>, Wei Liu <wei.liu@kernel.org>, Dexuan Cui <decui@microsoft.com>, 
+	Long Li <longli@microsoft.com>, Alexander Shishkin <alexander.shishkin@linux.intel.com>, 
+	Maxime Coquelin <mcoquelin.stm32@gmail.com>, Alexandre Torgue <alexandre.torgue@foss.st.com>, 
+	Miquel Raynal <miquel.raynal@bootlin.com>, Richard Weinberger <richard@nod.at>, 
+	Vignesh Raghavendra <vigneshr@ti.com>, Bodo Stroesser <bostroesser@gmail.com>, 
+	"Martin K . Petersen" <martin.petersen@oracle.com>, David Howells <dhowells@redhat.com>, 
+	Marc Dionne <marc.dionne@auristor.com>, Alexander Viro <viro@zeniv.linux.org.uk>, 
+	Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>, David Hildenbrand <david@kernel.org>, 
+	"Liam R . Howlett" <Liam.Howlett@oracle.com>, Vlastimil Babka <vbabka@kernel.org>, 
+	Mike Rapoport <rppt@kernel.org>, Suren Baghdasaryan <surenb@google.com>, 
+	Michal Hocko <mhocko@suse.com>, Jann Horn <jannh@google.com>, Pedro Falcato <pfalcato@suse.de>, 
+	linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, linux-hyperv@vger.kernel.org, 
+	linux-stm32@st-md-mailman.stormreply.com, linux-arm-kernel@lists.infradead.org, 
+	linux-mtd@lists.infradead.org, linux-staging@lists.linux.dev, linux-scsi@vger.kernel.org, 
+	target-devel@vger.kernel.org, linux-afs@lists.infradead.org, linux-fsdevel@vger.kernel.org, 
+	linux-mm@kvack.org, Ryan Roberts <ryan.roberts@arm.com>
+Subject: Re: [PATCH v2 12/16] mm: allow handling of stacked mmap_prepare
+ hooks in more drivers
+Message-ID: <caf19e7e-e8dc-4409-8655-f734279b0c45@lucifer.local>
+References: <72750af6906fd96fb6f18e83ac3e694cf357a2c1.1773695307.git.ljs@kernel.org>
+ <20260318210845.2591228-1-joshua.hahnjy@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Exchange-RoutingPolicyChecked: cjigvf3+5CHA8Hy7galY6QC5bZh8VFEcoAFHn4iMX6WTt5UGmqxKf/qBETl7h0VJQCqg15/me8aQE5bJpvsUXob6Yjq7GsjgsmIlQa9iGSvsNyNpxfjYWrzQG/k8HiNOAK/LHN0VMm4MlKinYpGFr61EwvZ+YioHnln/ryl+1UomSeyZH29HV0ZghrgzMZVYnjxc8jx9teqaeMqjx5XIC6WKydIiFxxnmd0fYEIH4lgF4/KtyJ9g9/BaPiBynoR/yyfR4GH370ffLAArgvSZTRgxQlq6GQah3NPjGHan4/nnprOzLlMYTSdVzStAFgy1yf7Dxm+yj+XhaeWnPRmHig==
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: PSAPR03MB5605.apcprd03.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: e1818a6b-2673-47bc-82b6-08de85b4f0ee
-X-MS-Exchange-CrossTenant-originalarrivaltime: 19 Mar 2026 12:42:11.5908
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: a7687ede-7a6b-4ef6-bace-642f677fbe31
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: 3xvtBIxFkyQsx8RShHUn2vZYV+fheIT8r7Tr66Ftd2v1WIK2PQ6klOreAsuCwYW+ymDCqc3aSdB13iWC5IvIIQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: TYZPR03MB8648
-X-MTK: N
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260318210845.2591228-1-joshua.hahnjy@gmail.com>
 
-T24gVGh1LCAyMDI2LTAzLTE5IGF0IDEzOjQ5ICswODAwLCBDYW4gR3VvIHdyb3RlOg0KPiBTdXJl
-LCBmb3IgdGhlIGxhbmVzIHRvby4gQnV0IEkgd2lsbCBzdGlsbCBrZWVwIEZPTSByZWNvcmRzIGFz
-IHUxNiwNCj4gYmVjYXVzZSB3ZQ0KPiBuZWVkIHRvIGluaXRpYWxpemUgaXQgdG8gYSBkZWZhdWx0
-IHZhbHVlIG90aGVyIHRoYW4gMHgwIHRvIDB4RkYgc3VjaA0KPiB0aGF0IHdlDQo+IGNhbiBkaWZm
-ZXJlbnRpYXRlIGEgcmVhbCBGT00gdmFsdWUgKHVuaXQgOCwgcmVhZCBmcm9tIFJYX0ZPTSkgZnJv
-bQ0KPiB0aGUNCj4gZGVmYXVsdCBvbmUuDQo+IA0KPiBUaGFua3MsDQo+IENhbiBHdW8uDQo+IA0K
-DQpIaSBDYW4sDQoNCkl0IHNlZW1zIGtlZXBpbmcgVUlOVDE2IGlzIG9ubHkgZm9yIGR1bXBpbmcg
-dGhpcyBsaW5lLg0KCWlmIChmb20gPT0gMHhGRkZGRkZGRikNCgkJc2VxX3ByaW50ZihzLCAiJThz
-JXMiLCAiLSIsICIgIik7DQoNCmlmIHRoZSBkZWZhdWx0IHNjYW4gY292ZXJzIGFsbCBzdXBwb3J0
-ZWQgcHJlc2hvb3QgYW5kDQpkZWVtcGhhc2lzIHZhbHVlcywgc2hvdWxkIHRoZSBGT00gdmFsdWUg
-YWx3YXlzIGJlIHNldCBiYXNlZA0Kb24gdGhlIGFjdHVhbCBoYXJkd2FyZSByZWFkaW5nIGFuZCB0
-aHVzIGJ5cGFzcyB0aGUgaW5pdGlhbCANCnZhbHVlIGNoZWNrIGZvciBGT00/DQpGdXJ0aGVybW9y
-ZSwgaWYgdXNlX3R4ZXFfcHJlc2V0cyBpcyB0cnVlLCBjb3VsZCB5b3Ugc2ltcGx5DQpkdW1wIG9u
-bHkgOCB2YWx1ZXMgYW5kIGJ5cGFzcyB0aGUgY2hlY2sgaWYgRk9NIGlzIGF0IGl0cyANCmluaXRp
-YWwgdmFsdWU/DQoNClRoYW5rcy4NClBldGVyDQoNCg==
+On Wed, Mar 18, 2026 at 02:08:45PM -0700, Joshua Hahn wrote:
+> On Mon, 16 Mar 2026 21:12:08 +0000 "Lorenzo Stoakes (Oracle)" <ljs@kernel.org> wrote:
+>
+> > While the conversion of mmap hooks to mmap_prepare is underway, we wil
+> > encounter situations where mmap hooks need to invoke nested mmap_prepare
+> > hooks.
+> >
+> > The nesting of mmap hooks is termed 'stacking'.  In order to flexibly
+> > facilitate the conversion of custom mmap hooks in drivers which stack, we
+> > must split up the existing compat_vma_mapped() function into two separate
+> > functions:
+> >
+> > * compat_set_desc_from_vma() - This allows the setting of a vm_area_desc
+> >   object's fields to the relevant fields of a VMA.
+>
+> Hello Lorenzo, I hope you are doing well!
+>
+> Thank you for this patch. I was developing on top of mm-new today and had
+> an error that I think was caused by this patch. I want to preface this by
+> saying that I am not at all familiar with this area of the code, so please
+> do forgive me if I've misinterpreted the crash and mistakenly pointed
+> at this commit : -)
+>
+> Here is the crash:
+>
+> [    1.083795] kernel tried to execute NX-protected page - exploit attempt? (uid: 0)
+> [    1.083883] BUG: unable to handle page fault for address: ffa00000048efbb8
+> [    1.083957] #PF: supervisor instruction fetch in kernel mode
+> [    1.084030] #PF: error_code(0x0011) - permissions violation
+> [    1.084086] PGD 100000067 P4D 10035f067 PUD 100364067 PMD 441ed9067 PTE 80000004466a3163
+> [    1.084162] Oops: Oops: 0011 [#1] SMP
+> [    1.084218] CPU: 0 UID: 0 PID: 305 Comm: mkdir Tainted: G        W   E       7.0.0-rc4-virtme-00442-ge53de5a0302f-dirty #85 PREEMPTLAZY
+>
+> As you can see, it's on a QEMU instance. I don't think this makes a difference
+> in the crash, though.
+>
+> [    1.084321] Tainted: [W]=WARN, [E]=UNSIGNED_MODULE
+> [    1.084369] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.16.3-5.el9 11/05/2023
+> [    1.084450] RIP: 0010:0xffa00000048efbb8
+> [    1.084489] Code: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 <40> 12 0e 00 01 00 11 ff d0 fa 8e 04 00 00 a0 ff 80 33 51 02 01 00
+> [    1.084642] RSP: 0018:ffa00000048ef998 EFLAGS: 00010286
+> [    1.084692] RAX: ffa00000048efbb8 RBX: ff11000102512cc0 RCX: 000000000000000d
+> [    1.084766] RDX: ffffffffa06247d0 RSI: ffa00000048efa18 RDI: ff11000102512cc0
+> [    1.084826] RBP: ffa00000048ef9c8 R08: 0000000000000000 R09: 0000000000000007
+> [    1.084889] R10: ff110001047d1f08 R11: 00007effdc3d0fff R12: ff110001047d3b00
+> [    1.084954] R13: ff11000446cae600 R14: ff110001024efe00 R15: ff11000102510a80
+> [    1.085021] FS:  0000000000000000(0000) GS:ff110004aae72000(0000) knlGS:0000000000000000
+> [    1.085083] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> [    1.085136] CR2: ffa00000048efbb8 CR3: 0000000102667001 CR4: 0000000000771ef0
+> [    1.085201] PKRU: 55555554
+> [    1.085228] Call Trace:
+> [    1.085248]  <TASK>
+> [    1.085274]  ? __compat_vma_mmap+0x8e/0x130
+> [    1.085318]  ? compat_vma_mmap+0x76/0x80
+> [    1.085354]  ? mas_alloc_nodes+0xb2/0x110
+> [    1.085390]  ? backing_file_mmap+0xc3/0xf0
+> [    1.085426]  ? ovl_mmap+0x41/0x50
+> [    1.085463]  ? ovl_mmap+0x50/0x50
+> [    1.085499]  ? __mmap_region+0x7e8/0x1100
+> [    1.085539]  ? do_mmap+0x49f/0x5e0
+> [    1.085573]  ? vm_mmap_pgoff+0xef/0x1e0
+> [    1.085609]  ? ksys_mmap_pgoff+0x15c/0x1f0
+> [    1.085647]  ? do_syscall_64+0xab/0x980
+> [    1.085684]  ? entry_SYSCALL_64_after_hwframe+0x4b/0x53
+> [    1.085730]  </TASK>
+> [    1.085770] Modules linked in: virtio_mmio(E) 9pnet_virtio(E) 9p(E) 9pnet(E) netfs(E)
+> [    1.085838] CR2: ffa00000048efbb8
+> [    1.085874] ---[ end trace 0000000000000000 ]---
+> [    1.085875] kernel tried to execute NX-protected page - exploit attempt? (uid: 0)
+> [    1.085918] RIP: 0010:0xffa00000048efbb8
+> [    1.085921] Code: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 <40> 12 0e 00 01 00 11 ff d0 fa 8e 04 00 00 a0 ff 80 33 51 02 01 00
+> [    1.085988] BUG: unable to handle page fault for address: ffa00000048f7bb8
+> [    1.086026] RSP: 0018:ffa00000048ef998 EFLAGS: 00010286
+> [    1.086166] #PF: supervisor instruction fetch in kernel mode
+> [    1.086221]
+> [    1.086267] #PF: error_code(0x0011) - permissions violation
+> [    1.086321] RAX: ffa00000048efbb8 RBX: ff11000102512cc0 RCX: 000000000000000d
+> [    1.086348] PGD 100000067
+> [    1.086394] RDX: ffffffffa06247d0 RSI: ffa00000048efa18 RDI: ff11000102512cc0
+> [    1.086459] P4D 10035f067
+> [    1.086486] RBP: ffa00000048ef9c8 R08: 0000000000000000 R09: 0000000000000007
+> [    1.086550] PUD 100364067
+> [    1.086577] R10: ff110001047d1f08 R11: 00007effdc3d0fff R12: ff110001047d3b00
+> [    1.086641] PMD 441ed9067
+> [    1.086668] R13: ff11000446cae600 R14: ff110001024efe00 R15: ff11000102510a80
+> [    1.086731] PTE 80000004433d3163
+> [    1.086764] FS:  0000000000000000(0000) GS:ff110004aae72000(0000) knlGS:0000000000000000
+> [    1.086829]
+> [    1.086868] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> [    1.086931] Oops: Oops: 0011 [#2] SMP
+> [    1.086958] CR2: ffa00000048efbb8 CR3: 0000000102667001 CR4: 0000000000771ef0
+> [    1.087015] CPU: 29 UID: 0 PID: 306 Comm: mount Tainted: G      D W   E       7.0.0-rc4-virtme-00442-ge53de5a0302f-dirty #85 PREEMPTLAZY
+> [    1.087050] PKRU: 55555554
+> [    1.087115] Tainted: [D]=DIE, [W]=WARN, [E]=UNSIGNED_MODULE
+> [    1.087207] Kernel panic - not syncing: Fatal exception
+> [    2.158392] Shutting down cpus with NMI
+> [    2.158629] Kernel Offset: disabled
+> [    2.158668] ---[ end Kernel panic - not syncing: Fatal exception ]---
+>
+> It crashes at compat_vma_mmap, and here is what I think could be the
+> potential crash path:
+>
+> - compat_vma_mmap() creates struct vm_area_desc desc;
+>   - compat_set_desc_from_vma Doesn't initialize the struct, but instead
+>     modifies independent fields. I think this is where the behavior
+>     diverges, since before we would use the C initializer and uninitialized
+
+Ah yeah you're right I'll fix that up!
+
+>     variables would be set to 0 (including ommitted ones, like
+>     action.success_hook or action.error_hook). But action.type = MMAP_NOTHING
+>   - desc.action.success_hook remains uninitialized in vfs_mmap_prepare
+>   - mmap_action_complete()
+>     - Here, We've set action.type to be MMAP_NOTHING, so we have err = 0
+>     - mmap_action_finish(action, vma, 0)
+>       - And here, since err == 0, we check action->success_hook (which has
+>         garbage, therefore it's nonzero) and call action->success_hook(vma)
+>
+> And I think action->success_hook(vma) where success_hook is uninitialized
+> stack garbage gets me to where I am.
+>
+> Again, I'm not too familiar with this area of the kernel, this is just
+> based on the quick digging that I did. And aplogies again if I'm missing
+> something ; -) I do think that the uninitialized members could be a problem
+> though.
+>
+> Thank you, I hope you have a great day Lorenzo!
+> Joshua
+
+Thanks for the report and analysis, much appreciated, hope you have a great
+day too :)
+
+Cheers, Lorenzo
