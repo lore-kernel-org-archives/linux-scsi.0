@@ -1,112 +1,228 @@
-Received: from lamorak.hansenpartnership.com (lamorak.hansenpartnership.com [198.37.111.173])
+Received: from AM0PR02CU008.outbound.protection.outlook.com (mail-westeuropeazon11013003.outbound.protection.outlook.com [52.101.72.3])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E5C5737C101;
-	Thu, 19 Mar 2026 21:04:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.37.111.173
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773954246; cv=none; b=KeI3GUQFJXMD2ct8WdertUeXhlSFtQ8BZO6FJx+XrAJ+KzCjkvIpJTgnp8q6pqhh6KO3VMPgWAd1zbIwv7PoR205lWwP+UgmUzYvEE5dTOrcAk8zCCeFB3+VIIrROujZtExKWURCub9EZ0sbN6sPeV97iFGhY4ivx+4FwLyc4FM=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773954246; c=relaxed/simple;
-	bh=vfWu6uCM5YqK7QKzQWqb5e4t8p/DbyJZGTtBrLGjuTw=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=N2OgUEwF7NAF15Er+H83piUBfDrPQrliww2rsz+h8kHCbBGUM/tCR/X1QR++IUbwVUAqjTdzC+X82uqkojwCjuam7/YWjnmFt1+Kvy0Xoh81jB8w3KeGZxfksRSfWQRg1REmnrcN9+Jn4ayjo2CX6QAGAeKp5e6OaRDmx9Oxy8U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com; spf=pass smtp.mailfrom=HansenPartnership.com; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=iX4OHsPI; arc=none smtp.client-ip=198.37.111.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=HansenPartnership.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C4B6E29BD91;
+	Thu, 19 Mar 2026 22:32:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.72.3
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1773959573; cv=fail; b=EdXM4spo9bNTxBGqrn/8DZuDC9sNrXutFCwNF7l5WC9STK+EPmG1rmB+LazBGJBDF/+GX6gDwlYurPE69MlbKpZgXUs9eS8H5Yhmrvb4cq/TAkFW2qaajyVMcbf452zaO+pSKSUNUTeuzpeZZdjlgSoSc7S4SmqIneTjmGjM1Xw=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1773959573; c=relaxed/simple;
+	bh=ekH7md/3BJ11+vzlKRKzkQMljkIz9ct4npkxuiYfTXQ=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=pXB7aFUhx9D76w444ofmIjsVPH9JeN+Z2y+67GFTR8DswzNdF4B9fVSkKq+JotcDpofcZOpdqbWIo2jvbqTN/qknzETTNwMS2rOYWH48fSied233oFwCXhZ3hqZ1ElCoIm6dZUhJp0moY+mC/knGD6LT7FW07gWcgJ06HKeg5fA=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=WPGK3avT; arc=fail smtp.client-ip=52.101.72.3
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="iX4OHsPI"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-	d=hansenpartnership.com; s=20151216; t=1773954242;
-	bh=vfWu6uCM5YqK7QKzQWqb5e4t8p/DbyJZGTtBrLGjuTw=;
-	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
-	b=iX4OHsPIULcS8fvVhHAtGBATwp/UDi0ojFQaJ7Gh1Din5SX0ebBulu4an4iqKpcr5
-	 isNiZMYYNGg5EuEODn0DqDHHQ7YoQjysMTpXZHPekwRxcd0XLHcXFvr+Cz2loq8L80
-	 DV4RJldTDvNKPAlbrTIezcudiyp1kMhXBk9a+sm0=
-Received: from [IPv6:2601:5c4:4300:d341::a774] (unknown [IPv6:2601:5c4:4300:d341::a774])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by lamorak.hansenpartnership.com (Postfix) with ESMTPSA id 791041C039F;
-	Thu, 19 Mar 2026 17:04:02 -0400 (EDT)
-Message-ID: <bd3120c2cddce94182354b71c90c693ea9c7cb62.camel@HansenPartnership.com>
-Subject: Re: [PATCH v4] scsi: sas: skip opt_sectors when DMA reports no real
- optimization hint
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-To: "Ionut Nechita (Wind River)" <ionut.nechita@windriver.com>, 
-	dlemoal@kernel.org
-Cc: ahuang12@lenovo.com, axboe@kernel.dk, hch@lst.de, ionut_n2001@yahoo.com,
-  john.g.garry@oracle.com, linux-kernel@vger.kernel.org, 
- linux-scsi@vger.kernel.org, m.szyprowski@samsung.com,
- martin.petersen@oracle.com,  robin.murphy@arm.com, sunlightlinux@gmail.com
-Date: Thu, 19 Mar 2026 17:04:01 -0400
-In-Reply-To: <20260319204333.17432-1-ionut.nechita@windriver.com>
-References: <6a78fcaa-7a3e-423f-b6f5-84cd66a3c88f@kernel.org>
-	 <20260319204333.17432-1-ionut.nechita@windriver.com>
-Autocrypt: addr=James.Bottomley@HansenPartnership.com;
- prefer-encrypt=mutual;
- keydata=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
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.50.3 
+	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="WPGK3avT"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=eXIisY8sJtwnV4659apnzDZjoFQg6xaYbA2PFpbDbgo0fdAvNRoyZ3ZB/AusJb5nLwvcnZmruLuIFHAPjaw6Fm14OKhrD/h0jUAwJ7kjaeMF23MBrJ6F04bDO7VXGMbS8si9bkk+qfI9lYj1DQKHfLvImsD/bCNA7U8bVc7A7AX0i2f5fEXNuLYu3oWrVC6gBRPM6WiPo29Hae/2DE+y3QTgzwt7snD2IXPz8JBublfbEL7m/zD/FQAFczIToFGdOrWC0l1rxLpx8Eqk5zdUqqwMhOod3+lT3qjF/055blmIh9Yva89kBeO90/vQtREPIhglzy2d8MqTfSSvOJlXtw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=sp/GfWK69gwrQc5CRDy0/bt/Jc9/I2kE1t3OvSA1dPY=;
+ b=EHWvJjo66cfZqMUwTwEqcXTAnD6h2NgRvoYSsRSLntRlshzGic6/wxNzVzmp1wAJbFtQr5PsGsg/2/22uQq/farjMLSR6nUgXznDaIxobTBSWwJTTQGnlUmPxxzUoGDNnIwpxbGvElh/7AhmrWeEywjkT84RcggH9cJx1q2QsobF8XV6jlFjaiMV3Vm2X/Oe+oKcs0yBOskxrQhrsZjr46i7Mk8ViYkiHxKPcV+ecLOMJ8469SpgiRD3VTMxXo3n1C4MV7BJ5j1lJ/3bEuEJnEd0CrsK3ttMTWwXaN3uQ9tji2JoWQiAVa8Cw1hEf2gid0f0GslZCM+ToDYu+e81Lw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
+ header.d=nxp.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=sp/GfWK69gwrQc5CRDy0/bt/Jc9/I2kE1t3OvSA1dPY=;
+ b=WPGK3avTA/eqX8LldGuG8vZk+h2hhjkZiXsXi9flwaHeTrkWggIIp+jFtRsJMfexhNQrzs72MhZLpa1G7iH7V+3bAfm1F8++YkOu493ULseFjXMIOId8pHUC36l1jtexjHz/yc95tL+po9NFQ8VyygVUAlTCi+eGwVNsFv2cZJszSOkE6uCxdUXkuRx7nR796vKsHu+J5lETNOi3snouN3JorepwILvKoOkFodi3juU4jNQAleTthWUAXJaMw2OxfCBZ9SfNW8c/oVm2NRHnX8dA/IPmtyHCK49u/+bYxr7KxlqFvqNbtt6mQM11O5eKav8ryQUjplHwZA5pKpfS9A==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nxp.com;
+Received: from AM9PR04MB8585.eurprd04.prod.outlook.com (2603:10a6:20b:438::13)
+ by GV4PR04MB11355.eurprd04.prod.outlook.com (2603:10a6:150:296::16) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9723.19; Thu, 19 Mar
+ 2026 22:32:42 +0000
+Received: from AM9PR04MB8585.eurprd04.prod.outlook.com
+ ([fe80::f010:fca8:7ef:62f4]) by AM9PR04MB8585.eurprd04.prod.outlook.com
+ ([fe80::f010:fca8:7ef:62f4%4]) with mapi id 15.20.9723.018; Thu, 19 Mar 2026
+ 22:32:40 +0000
+From: Vladimir Oltean <vladimir.oltean@nxp.com>
+To: linux-phy@lists.infradead.org
+Cc: Vinod Koul <vkoul@kernel.org>,
+	Neil Armstrong <neil.armstrong@linaro.org>,
+	dri-devel@lists.freedesktop.org,
+	freedreno@lists.freedesktop.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-arm-msm@vger.kernel.org,
+	linux-can@vger.kernel.org,
+	linux-gpio@vger.kernel.org,
+	linux-ide@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-media@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-renesas-soc@vger.kernel.org,
+	linux-riscv@lists.infradead.org,
+	linux-rockchip@lists.infradead.org,
+	linux-samsung-soc@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	linux-sunxi@lists.linux.dev,
+	linux-tegra@vger.kernel.org,
+	linux-usb@vger.kernel.org,
+	netdev@vger.kernel.org,
+	spacemit@lists.linux.dev,
+	UNGLinuxDriver@microchip.com,
+	Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>
+Subject: [PATCH v5 phy-next 01/27] ata: add <linux/pm_runtime.h> where missing
+Date: Fri, 20 Mar 2026 00:32:15 +0200
+Message-ID: <20260319223241.1351137-2-vladimir.oltean@nxp.com>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20260319223241.1351137-1-vladimir.oltean@nxp.com>
+References: <20260319223241.1351137-1-vladimir.oltean@nxp.com>
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: WA2P291CA0045.POLP291.PROD.OUTLOOK.COM
+ (2603:10a6:1d0:1f::19) To AM9PR04MB8585.eurprd04.prod.outlook.com
+ (2603:10a6:20b:438::13)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: AM9PR04MB8585:EE_|GV4PR04MB11355:EE_
+X-MS-Office365-Filtering-Correlation-Id: f991486c-b6e7-4470-c894-08de86076de7
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|19092799006|366016|10070799003|1800799024|376014|7416014|22082099003|56012099003|18002099003;
+X-Microsoft-Antispam-Message-Info:
+	ni/LtzVP003250LRDeQc7k67Fn3qKn8coAQ1u9g1wB8sHb0nY8ZhoJlMoqMdOih+c9eyO2I70xQALUFqSyzKBoqZVjAhaXGWZVek3xR8FAHRf7+mA0fuo/uarmZIfXWa5kZeVuw35Mpxt65Dk/6FM0W2tk8LXL7xF8RyT5N5LO6/1v1nR1E15FnhAq3OQx7kL3FyvhucTgFrFAqCL/W+t9nJ6X3qLYPp5b9q6pxzwJgON3Ew3dE9L916L8F/X6LKWcs9HdN3RXuRpZ99zOKgZWa9Fd+IEnEewiZ3pyzW5NnUHVD3ot4Gf0oAvhfmFMlEqB14K6HsrOFy3bk0fu4cnLWypa1krDt3YWT8na5QsDZePkUKxQCmDp5AFSRgk88H0iAkzprdAbSD9EyfTmi+qyuQp3LX46s0GG7g3B7/tKxig7wNkCh4fdjHYusrAU1P+jLJqp7/hlZKUiMB/GLV3Y7WdU8KnzML0jb3CKAgRJ4nQRR0yVGnlHR6iPc3jiK6eClRbAH4ngJCZE23O2Xo7yJr5YTRNGi6gNnsHzH0biUH2jbmOzdldqFfE6KgQrW2m0Sh3AxHCg0G+LZFdWhkz1lcxlSK3FIsDW49YeS51jVMrbpCM0ajrGEB/JXD7cqffRciZAgoqX+HiCRUtp+GkRTMjk1iKoUw/DIbwpwXy4ffGmLmbqhA8segJ2v4eB7e42QRomb9iiyIK40f/tx8XdqcD9mRuRrRx6QbHewLXRI=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9PR04MB8585.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(19092799006)(366016)(10070799003)(1800799024)(376014)(7416014)(22082099003)(56012099003)(18002099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 2
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?TsDZdn1D9lJJru6e+E/MtjMvE3BsC/eSk1iHJraQFWQFbOEM/tTYR4MD8wgM?=
+ =?us-ascii?Q?mvVbPgEBddKJSVylxqhj0P7CHxQnpc3LeSzApeg2iJCBfEfgSzAJtFaWhQip?=
+ =?us-ascii?Q?dOnk23E/rccNHpxm44b6SsqPsa6kHZt8JQc/Th3GJGDcHbUOsfw9CmLPa341?=
+ =?us-ascii?Q?2PrUp79l+UpM/cK94LfVzp6Tsk5/uvuE0hkA1JDLDJbRsSXIp2uOjQB6ynwl?=
+ =?us-ascii?Q?HSt6LOZd024xghJ4koihHSSrTsiguK2h7fAU4eROXobPLFn7kp3crXvy6XQz?=
+ =?us-ascii?Q?MGSN7sUEOBVVk5a5xDLMulNFUwWmz0DAX2qJsgVA/BOq+h/gmguBCm02HLMV?=
+ =?us-ascii?Q?2lI3k2PtLSushKx86VeGrAVMzp0mD5kuHU3VRRnh8KpuqLcBnIAhgJrXhMbe?=
+ =?us-ascii?Q?+0bEwqOgdeTY0U5nqWwQF2tz4yRN/K3Ch21zMSTYM0UBMh6EuyK9KnMQaf4v?=
+ =?us-ascii?Q?ITStG1BV0UNA0ntzpSwI/6yDHA5eFhP4xs3zsn8tP9g8rDpdZAEQ1z5s6ja3?=
+ =?us-ascii?Q?keLHdKzJzsp7S21YeaTTSRu/HHoeXHDA6TbjbYDzh1OUd6oP9uXWJdR/CWJr?=
+ =?us-ascii?Q?JU1iO6S4t1nT7PMRUIMPcvfbFcJrswB6oZCgzZDtZNrGf0gCI6h+muNMEzhe?=
+ =?us-ascii?Q?bIUhITd2SMKUhmQ0A8dR1wPI1WaVXGk+swGXYaafG/+cpsBBGGwyUnmSW2Xj?=
+ =?us-ascii?Q?j8m0cNJUbUlb+fuNf8DMVi1CRuIBrklewGualrhFpVVyOn2+Mpv2gmA6XrFd?=
+ =?us-ascii?Q?iZFBa1uDzRcggBtSYBpPpSnT9hZrsRU1YhFNxGBBzU+CzsCYBIIIkK+yIGK9?=
+ =?us-ascii?Q?L4iVbuGfwDAm8XaAet8yoPnGZjoRmyzHRLfQ+Ui2HOhsOCGwooVodj5RZCfD?=
+ =?us-ascii?Q?lKVsdCo5qvYXWQN23cvzNd33ocrCsLXOeOaeQ96o6B+s0EZYsHKpTU8zNt2w?=
+ =?us-ascii?Q?7rZ1NJSvlnZyc27igscO0vOPhKuAzljadIjmhd8Izf4lCXCceLDiAb1jXdQL?=
+ =?us-ascii?Q?0yLY/CumKl2uR6MF8EJ2/Y+14VxkZwR3mMczRSncp/gIcVdKOcF9DZx1N42S?=
+ =?us-ascii?Q?zLqT805lVMW/aQ1/p2uPrnUUjaZlUPVKD/8E8uKPtrUXrN+f2L3AB6xf1UCI?=
+ =?us-ascii?Q?ZErQq38iy7P3OU8VuYLvjh2rFmVCR7Urcjf7nwjK17yCJ8qz9Qdy1D0vyL1k?=
+ =?us-ascii?Q?DWJGgaaWLkLWNEhYZK5dHzgURsPzSDHYElSZL2xv1k+jXBfaXDPdHp5p03V9?=
+ =?us-ascii?Q?ijCdmd7miFxuvqg/GPaAfK9hnfl+g1LqoJu/zQfTM3ZPYVYCXkvESosasjc/?=
+ =?us-ascii?Q?lzMGSHN9clGnya4yNhkJRpvypO/kzD+Sc80A7OOlv618NqM6LJmPaD5PrXE+?=
+ =?us-ascii?Q?bMO7d07FzDfX6fCx/Oy3YPchH9jckG/AC/Q1TUdUbCxxkRYXxeWKU5DyJsZM?=
+ =?us-ascii?Q?+/LbwtZRHHoqZ5IQfBO6cehp340Awy7EU44q8vaX04+vbASVAyeP8V5ZHlni?=
+ =?us-ascii?Q?rrqeIsP0tOQSi2L7vtsuF9f0fgVk/UQ8kNPWGTjDDQTV5t2y0b6MtXc/MzyW?=
+ =?us-ascii?Q?VHV7G1WagDQ4qJ5+AmH9t3mqNphQaE6cl0e4o0wSaBRrw7SOOEu29xg5EPF7?=
+ =?us-ascii?Q?0nGZbU9phe9FdWyAiIUk3lIQ/dFzjhd0lS0XT6T4cT27G4YxZwUiElXZFeFZ?=
+ =?us-ascii?Q?Pjv6e/gWLxudnHUAUAkEji6sO/G80B3hGwr2xnjwnQLn5AWn0mJA4escT/rD?=
+ =?us-ascii?Q?/jlehz+b0JK3NUdtsr01e/frs8CwwcCctMxQGLAiy0M37hlN+ME+XxFPajiD?=
+X-MS-Exchange-AntiSpam-MessageData-1: ZlSXl+TlgibzFXdBloOHE0hap3gXQcttSbo=
+X-OriginatorOrg: nxp.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: f991486c-b6e7-4470-c894-08de86076de7
+X-MS-Exchange-CrossTenant-AuthSource: AM9PR04MB8585.eurprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 19 Mar 2026 22:32:40.1130
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: HqOrMr9EcZHrILstsJfktmVS8cGgWeUlvtIjyQ6ztgqudmoF1tlGF3mCxYrtPdGTLasGUBrZTX0Md2eXImNwRg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: GV4PR04MB11355
 
-On Thu, 2026-03-19 at 22:43 +0200, Ionut Nechita (Wind River) wrote:
-> On Wed, 19 Mar 2026 11:07:00 +0000, Damien Le Moal wrote:
-> > Why return 0 ? This is a valid case, so this should get through the
-> > alignment below.
->=20
-> Hi Damien,
->=20
-> Thanks for the review.
->=20
-> The opt =3D=3D max case is specifically the bug this patch fixes.
->=20
-> When the IOMMU is disabled or in passthrough mode and no DMA ops
-> provide an opt_mapping_size callback, dma_opt_mapping_size() falls
-> back to min(SIZE_MAX, dma_max_mapping_size()), which equals
-> dma_max_mapping_size().=C2=A0 So opt =3D=3D max.
->=20
-> If we let that value through, rounddown_pow_of_two() produces a
-> huge power-of-two, and min_t() caps it at max_sectors (32767).
-> That gives opt_sectors =3D 32767, which is exactly the bogus value
-> that breaks mkfs.xfs:
->=20
-> =C2=A0 swidth =3D 16773120 / 4096 =3D 4095
-> =C2=A0 sunit=C2=A0 =3D 8192 / 4096=C2=A0=C2=A0=C2=A0=C2=A0 =3D 2
-> =C2=A0 4095 % 2 !=3D 0=C2=A0 ->=C2=A0 "SB stripe unit sanity check failed=
-"
+It appears that libahci.c, ahci.c as well as the ahci_brcm, ahci_ceva
+and ahci_qoriq drivers are using runtime PM operations without including
+<linux/pm_runtime.h>. This header is somehow being indirectly provided
+by <linux/phy/phy.h>, which would like to drop it (none of the functions
+it exports need it).
 
-So if max_sectors is usually 32767 and this breaks xfs why the final
-line:
+Signed-off-by: Vladimir Oltean <vladimir.oltean@nxp.com>
+Acked-by: Damien Le Moal <dlemoal@kernel.org>
+---
+Cc: Damien Le Moal <dlemoal@kernel.org>
+Cc: Niklas Cassel <cassel@kernel.org>
 
-> +	return min_t(unsigned int, opt >> SECTOR_SHIFT,
-> max_sectors);
+v2->v5: none
+v1->v2: collect tag
+---
+ drivers/ata/ahci.c       | 1 +
+ drivers/ata/ahci_brcm.c  | 1 +
+ drivers/ata/ahci_ceva.c  | 1 +
+ drivers/ata/ahci_qoriq.c | 1 +
+ drivers/ata/libahci.c    | 1 +
+ 5 files changed, 5 insertions(+)
 
-because there are surely situations where the above max_sectors=20
-(32767) comes back as the minimum or are you assuming opt >>
-SECTOR_SHIFT is always less than max_sectors, in which case there's no
-need for min_t?
-
-Additionally, I note that the new AI code review:
-
-https://sashiko.dev/#/patchset/20260319083954.21056-1-ionut.nechita%40windr=
-iver.com
-
-Worries that if opt comes back as its don't care zero value then
-rounddown_pow_of_2(opt) returns a bogus value.
-
-Regards,
-
-James
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 931d0081169b..aa3c4949c4ab 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -26,6 +26,7 @@
+ #include <linux/device.h>
+ #include <linux/dmi.h>
+ #include <linux/gfp.h>
++#include <linux/pm_runtime.h>
+ #include <scsi/scsi_host.h>
+ #include <scsi/scsi_cmnd.h>
+ #include <linux/libata.h>
+diff --git a/drivers/ata/ahci_brcm.c b/drivers/ata/ahci_brcm.c
+index 29be74fedcf0..48460e515722 100644
+--- a/drivers/ata/ahci_brcm.c
++++ b/drivers/ata/ahci_brcm.c
+@@ -16,6 +16,7 @@
+ #include <linux/module.h>
+ #include <linux/of.h>
+ #include <linux/platform_device.h>
++#include <linux/pm_runtime.h>
+ #include <linux/reset.h>
+ #include <linux/string.h>
+ 
+diff --git a/drivers/ata/ahci_ceva.c b/drivers/ata/ahci_ceva.c
+index 2d6a08c23d6a..3938bf378341 100644
+--- a/drivers/ata/ahci_ceva.c
++++ b/drivers/ata/ahci_ceva.c
+@@ -12,6 +12,7 @@
+ #include <linux/module.h>
+ #include <linux/of.h>
+ #include <linux/platform_device.h>
++#include <linux/pm_runtime.h>
+ #include <linux/reset.h>
+ #include "ahci.h"
+ 
+diff --git a/drivers/ata/ahci_qoriq.c b/drivers/ata/ahci_qoriq.c
+index 0dec1a17e5b1..409152bfefb6 100644
+--- a/drivers/ata/ahci_qoriq.c
++++ b/drivers/ata/ahci_qoriq.c
+@@ -14,6 +14,7 @@
+ #include <linux/device.h>
+ #include <linux/of.h>
+ #include <linux/platform_device.h>
++#include <linux/pm_runtime.h>
+ #include <linux/libata.h>
+ #include "ahci.h"
+ 
+diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+index c79abdfcd7a9..e0de4703a4f2 100644
+--- a/drivers/ata/libahci.c
++++ b/drivers/ata/libahci.c
+@@ -30,6 +30,7 @@
+ #include <scsi/scsi_cmnd.h>
+ #include <linux/libata.h>
+ #include <linux/pci.h>
++#include <linux/pm_runtime.h>
+ #include "ahci.h"
+ #include "libata.h"
+ 
+-- 
+2.43.0
 
