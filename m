@@ -1,109 +1,243 @@
-Received: from mail-ot1-f48.google.com (mail-ot1-f48.google.com [209.85.210.48])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 60E55393DE9
-	for <linux-scsi@vger.kernel.org>; Thu, 19 Mar 2026 17:39:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.48
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 486A13F54BB;
+	Thu, 19 Mar 2026 18:23:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773941954; cv=none; b=kZ3LDFvTV24uzJjDK/6/A4bB17SezhflnK8OJ0gIcUiBNlsvETgLcKf1G800HZv5H2kobhDr0LtCp8Kga/hk5FswyOabUTm81fWPXa6DSDIwekdqo6e7N7kF11U+QF04rD1gSarb4syxFk99iyhMAaQvlC5dOrhmA1ITtP3nCxo=
+	t=1773944626; cv=none; b=FmJ3ii+JIkHEcvXurph+JohLY3yF1CHdfxvYPRuyo25afSy2fxqwmNrs05ZSAA2yhZ5PN3qsU4t1uEwpUeNC12mi8cEHaHtEhRev3joXHpHXEsKmiO852qOy/wlfASqavjlexEUNybElvkQTakh6cK0E/0lzaJQT5GR83gbKPVA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773941954; c=relaxed/simple;
-	bh=QDL3G+W4MxqSqEX9M6mr8fifEWbh4rxP6OX32NsjZRw=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=i+aiaFuKxi4BQeRqrTFFTG+BNLv02wxxywM2OTFFokzfZ2sINkZA63PzklhlZSAZH/e1dVQnceUiPpIz6c/s+3WudOdUEAFytbMllDCyxmp91HuO+OVSG2J/ZGTzvUItqdu8LNPlLEcTePJFhLCcHaM/7VDF+gExPDzvadmYZo0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b=hzYU80kQ; arc=none smtp.client-ip=209.85.210.48
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
+	s=arc-20240116; t=1773944626; c=relaxed/simple;
+	bh=hUq23NX3AUF/Z/nd3f+apZh8oyr5ochA07r37x4M5ug=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=crSc7Aw7r7JIT/ZiNnr668ajpKW72n52AGVSbVou2UcYrv+ZNsxIYTEl+koYQLAVYSr0uV+c7Z/FMyNQ4tqQipKxGWbwSC7DDGmNTfTUtbQQbBE2qDVzyW5zdAUGliEIcUIAP+B0UUU7uPBJA4aDGomoEgdyO4+2XSkeD+97ozQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=k72tqnwu; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b="hzYU80kQ"
-Received: by mail-ot1-f48.google.com with SMTP id 46e09a7af769-7d76a331ebbso541686a34.0
-        for <linux-scsi@vger.kernel.org>; Thu, 19 Mar 2026 10:39:06 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1773941946; x=1774546746; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:date:message-id:subject
-         :references:in-reply-to:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=yokKrrzIKLchH2dWQCsaIIGzoszKxTOlL174aQT4Xac=;
-        b=hzYU80kQ55rAjPYIBJjYt2k7x/qcoaq98rydImdj0ntZ8xP+I5/hnqpgp6TNQCBfyW
-         YTxABpXqLpMATAViAj0jel842tdTw57pNlFsYklpxZTUN3eYcYrQh8mK1phE5tqpqTil
-         PdT+qulm2/2UfOQ6gF9t34M7z1O5Ard2aOQfqldHFlOV13jbr4n/DLJIB84hOkgrjo4B
-         Jv/f8t/6PZrcSDYcG+du3D24KwDqgEJ5+xV1hywhXIKSp0bkWkTNeIwYUcNF+wLulpzz
-         U+ZeOcp0NE5SrNf4TBg/rVzpw1U526a38X5zgbVF/a/0/EixJM7PapTyXey6b6Hzow0j
-         ZOJw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1773941946; x=1774546746;
-        h=content-transfer-encoding:mime-version:date:message-id:subject
-         :references:in-reply-to:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=yokKrrzIKLchH2dWQCsaIIGzoszKxTOlL174aQT4Xac=;
-        b=oCSM+pUxYqMQUlfGM7ouZkPhYkyptFnRFfcW+7gZt8hB7VTf3F3i+C3+3o2js/T7k1
-         TjAf5S2OG2L8Ox7YKISpptiaWzpgqSgstptxG6kaCf/uTAufYLtXQl6lMmaV+9bUEcM0
-         1Z9poqJafuq9bmLEV22d3D4T9FjudK8u0K1dVfkrrbE6UKU4nJ0tQw6aB/RxPZbl9OP1
-         8xjW+Kd+uhOITsCQxsTdtx7TgkLpnrtaLhk+3YzG9neaJweUDacUkbEFya4ryJqvCCXK
-         V0HUmUV9oK4S11auuWIuP78btlIb0pqFIZBem2kbgwvgZ4aUM1tIVOPVH8Ed4nJoTfr6
-         Juew==
-X-Forwarded-Encrypted: i=1; AJvYcCX5jaq/0nf0TM2954znx03op6n1Irl7HbFwg+vdpaOUUesukIk2KKN5E9kTXyxYhIt7er27Vfl89+sD@vger.kernel.org
-X-Gm-Message-State: AOJu0YwO2PeLZAi9TMIfbC5T2R8yG0Lk6Oyj0sOo3VxMEkO2tIClSlKa
-	omTApqiNwkL/wDHMyssiXdRpKjBjFg2Had1usT0cp8+GtJEEBOahg//9IFBgkPLMdig=
-X-Gm-Gg: ATEYQzxHYFG5P2MMJSamoud0syd8CizmgBhk7WUDhtFOzIBCERxFCC09tW77X7qM9wK
-	pb9YCkwjeDRNG0oBUsacuQZc6yas5P/1qcpaE4NlY+G8A3Iae7NqUjRkPNtEl+zQ8CSNwv4mOqr
-	8dOey06SV4462gqFoGV5f/96nyZB2DyIq4yarDBnKsgHpaXtCyNsB5Uyi8xdbewYoLTP16zkPyQ
-	8vXhS9OGrL/2fLluNBSft44rNcG+ZIVk80Iqa2h7K6hFVfMF5g76fKNr048ggD164vu4zsr83xG
-	+6S+6L1FfJCkEBtrnlYy9Hv8qgeGOPJwwRBE1qRI762kJRV0st2TnueZHTh0kAek9GAUEqBZGqm
-	HU+BUpflKIQqtmB+I8EjhkPtGGj+Gd/Qso2684Cz7KVn/cF/19KtSQDYyrDVafmhOc4POhNUM67
-	c8tNl+noqTEu5RP1WnBLga+P41Qidu9ygRZaWOtj466mpKvgqb6omSLu7E9gxlJTlm4AK0/UXsr
-	04=
-X-Received: by 2002:a05:6830:91b:b0:7d7:d4eb:b593 with SMTP id 46e09a7af769-7d7eb028ddemr23688a34.30.1773941945770;
-        Thu, 19 Mar 2026 10:39:05 -0700 (PDT)
-Received: from [127.0.0.1] ([96.43.243.2])
-        by smtp.gmail.com with ESMTPSA id 46e09a7af769-7d7eac1747csm73349a34.8.2026.03.19.10.39.04
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 19 Mar 2026 10:39:04 -0700 (PDT)
-From: Jens Axboe <axboe@kernel.dk>
-To: fujita.tomonori@lab.ntt.co.jp, James.Bottomley@HansenPartnership.com, 
- martin.petersen@oracle.com, Yang Xiuwei <yangxiuwei@kylinos.cn>
-Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, 
- bvanassche@acm.org
-In-Reply-To: <20260317072226.2598233-1-yangxiuwei@kylinos.cn>
-References: <20260317072226.2598233-1-yangxiuwei@kylinos.cn>
-Subject: Re: [PATCH v8 0/3] bsg: add io_uring command support for SCSI
- passthrough
-Message-Id: <177394194400.204924.4064617540444301186.b4-ty@kernel.dk>
-Date: Thu, 19 Mar 2026 11:39:04 -0600
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="k72tqnwu"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3AF4EC19424;
+	Thu, 19 Mar 2026 18:23:45 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1773944625;
+	bh=hUq23NX3AUF/Z/nd3f+apZh8oyr5ochA07r37x4M5ug=;
+	h=From:To:Cc:Subject:Date:From;
+	b=k72tqnwuSjAIoaoFYpnmAJc5NqF2RHzpf2m0/2v5FHjqFYrvF9hFpFABSV0ibMtjI
+	 v5ABOEragkIvhSQcUDiYsI2HJhw45Kwl3+zk237y/4tjTATs5TdNmP3sOChEeowL0j
+	 aF2jYijp2yjfKoeeFK5r4Blr/10cTIPfZxwMhCmDiuBv8H7oliqmyrAE8CKe2gk/Df
+	 hif2oRVLCDoEd+7O09ruZk1Sqb3i4NACbtkHiyNTqml2Yjk84myr5XNmRq67QmIQvh
+	 5rosWsQJMLdf0p2r46AtulRsJmHTQ5LCq29emURnbAQO3W3H4Een9shDvkQqdUHUth
+	 LEQrKOSjYWzGw==
+From: "Lorenzo Stoakes (Oracle)" <ljs@kernel.org>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Jonathan Corbet <corbet@lwn.net>,
+	Clemens Ladisch <clemens@ladisch.de>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"K . Y . Srinivasan" <kys@microsoft.com>,
+	Haiyang Zhang <haiyangz@microsoft.com>,
+	Wei Liu <wei.liu@kernel.org>,
+	Dexuan Cui <decui@microsoft.com>,
+	Long Li <longli@microsoft.com>,
+	Alexander Shishkin <alexander.shishkin@linux.intel.com>,
+	Maxime Coquelin <mcoquelin.stm32@gmail.com>,
+	Alexandre Torgue <alexandre.torgue@foss.st.com>,
+	Miquel Raynal <miquel.raynal@bootlin.com>,
+	Richard Weinberger <richard@nod.at>,
+	Vignesh Raghavendra <vigneshr@ti.com>,
+	Bodo Stroesser <bostroesser@gmail.com>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	David Howells <dhowells@redhat.com>,
+	Marc Dionne <marc.dionne@auristor.com>,
+	Alexander Viro <viro@zeniv.linux.org.uk>,
+	Christian Brauner <brauner@kernel.org>,
+	Jan Kara <jack@suse.cz>,
+	David Hildenbrand <david@kernel.org>,
+	"Liam R . Howlett" <Liam.Howlett@oracle.com>,
+	Vlastimil Babka <vbabka@kernel.org>,
+	Mike Rapoport <rppt@kernel.org>,
+	Suren Baghdasaryan <surenb@google.com>,
+	Michal Hocko <mhocko@suse.com>,
+	Jann Horn <jannh@google.com>,
+	Pedro Falcato <pfalcato@suse.de>,
+	linux-kernel@vger.kernel.org,
+	linux-doc@vger.kernel.org,
+	linux-hyperv@vger.kernel.org,
+	linux-stm32@st-md-mailman.stormreply.com,
+	linux-arm-kernel@lists.infradead.org,
+	linux-mtd@lists.infradead.org,
+	linux-staging@lists.linux.dev,
+	linux-scsi@vger.kernel.org,
+	target-devel@vger.kernel.org,
+	linux-afs@lists.infradead.org,
+	linux-fsdevel@vger.kernel.org,
+	linux-mm@kvack.org,
+	Ryan Roberts <ryan.roberts@arm.com>
+Subject: [PATCH v3 00/16] mm: expand mmap_prepare functionality and usage
+Date: Thu, 19 Mar 2026 18:23:24 +0000
+Message-ID: <cover.1773944114.git.ljs@kernel.org>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.14.3
+Content-Transfer-Encoding: 8bit
+
+This series expands the mmap_prepare functionality, which is intended to
+replace the deprecated f_op->mmap hook which has been the source of bugs
+and security issues for some time.
+
+This series starts with some cleanup of existing mmap_prepare logic, then
+adds documentation for the mmap_prepare call to make it easier for
+filesystem and driver writers to understand how it works.
+
+It then importantly adds a vm_ops->mapped hook, a key feature that was
+missing from mmap_prepare previously - this is invoked when a driver which
+specifies mmap_prepare has successfully been mapped but not merged with
+another VMA.
+
+mmap_prepare is invoked prior to a merge being attempted, so you cannot
+manipulate state such as reference counts as if it were a new mapping.
+
+The vm_ops->mapped hook allows a driver to perform tasks required at this
+stage, and provides symmetry against subsequent vm_ops->open,close calls.
+
+The series uses this to correct the afs implementation which wrongly
+manipulated reference count at mmap_prepare time.
+
+It then adds an mmap_prepare equivalent of vm_iomap_memory() -
+mmap_action_simple_ioremap(), then uses this to update a number of drivers.
+
+It then splits out the mmap_prepare compatibility layer (which allows for
+invocation of mmap_prepare hooks in an mmap() hook) in such a way as to
+allow for more incremental implementation of mmap_prepare hooks.
+
+It then uses this to extend mmap_prepare usage in drivers.
+
+Finally it adds an mmap_prepare equivalent of vm_map_pages(), which lays
+the foundation for future work which will extend mmap_prepare to DMA
+coherent mappings.
 
 
-On Tue, 17 Mar 2026 15:22:23 +0800, Yang Xiuwei wrote:
-> This series adds io_uring command support to the BSG SCSI passthrough path.
-> 
-> The goal is to allow userspace to submit SCSI passthrough commands via
-> IORING_OP_URING_CMD, in addition to the existing sg_io interface.
-> The io_uring path mirrors the existing BSG behaviour: it currently only
-> supports BSG_PROTOCOL_SCSI + BSG_SUB_PROTOCOL_SCSI_CMD and does not
-> support BIDI transfers.
-> 
-> [...]
+v3:
+* Propagated tags (thanks Suren, Richard!)
+* Updated 12/16 to correctly clear the vm_area_desc data structure in
+  set_desc_from_vma() as per Joshua Hahn (thanks! :)
+* Fixed type in 12/16 as per Suren (cheers!)
+* Fixed up 6/16 to use mmap_action_ioremap_full() in simple_ioremap_prepare() as
+  suggested by Suren.
+* Also fixed up 6/16 to call io_remap_pfn_range_prepare() direct rather than
+  mmap_action_prepare() as per Suren.
+* Also fixed up 6/16 to pass vm_len rather than vm_[start, end] to
+  __simple_ioremap_prep() as per Suren (thanks for all the above! :)
+* Fixed issue in rmap lock being held - we were referencing a vma->vm_file after
+  the VMA was unmapped, so UAF. Avoid that. Also do_munmap() relies on rmap lock
+  NOT being held or may deadlock, so extend functionality to ensure we drop it
+  when it is held on error paths.
+* Updated 'area' -> 'vma' variable in 3/16 in VMA test dup.h.
+* Fixed up reference to __compat_vma_mmap() in 12/16 commit message.
+* Updated 1/16 to no longer duplicatively apply io_remap_pfn_range_pfn().
+* Updated 1/16 to delegate I/O remap complete to remap complete logic.
+* Fixed various typos in 12/16.
+* Fixed stale comment typos in 13/16.
+* Fixed commit msg and comment typos in 14/16.
+* Removed accidental sneak peak to future functionality in 15/16 commit message
+  :).
+* Fixed up field names to be identical in VMA tests + mm_types.h in 6/16,
+  15/16.
 
-Applied, thanks!
+v2:
+* Rebased on
+  https://lore.kernel.org/all/cover.1773665966.git.ljs@kernel.org/ to make
+  Andrew's life easier :)
+* Folded all interim fixes into series (thanks Randy for many doc fixes!))
+* As per Suren, removed a comment about allocations too small to fail.
+* As per Randy, fixed up typo in documentation for vm_area_desc.
+* Fixed mmap_action_prepare() not returning if invalid action->type
+  specified, as updated from Andrew's interim fix (thanks!) and also
+  reported by kernel test bot.
+* Updated mmap_action_prepare() and specific prepare functions to only
+  pass vm_area_desc parameter as per Suren.
+* Fixed up whitespace as per Suren.
+* Updated vm_op->open comment in vm_operations_struct to reference forking
+  as per Suren.
+* Added a commit to check that input range is within VMA on remap as per
+  Suren (this also covers I/O remap and all other cases already asserted).
+* Updated AFS to not incorrectly reference count on mmap prepare as per
+  Usama.
+* Also updated various static AFS functions to be consistent with each
+  other.
+* Updated AFS commit message to reflect mmap_prepare being before any VMA
+  merging as per Suren.
+* Updated __compat_vma_mapped() to check for NULL vm_ops as per Usama.
+* Updated __compat_vma_mapped() to not reference an unmapped VMA's fields
+  as per Usama.
+* Updated __vma_check_mmap_hook() to check for NULL vm_ops as per Usama.
+* Dropped comment about preferring mmap_prepare as seems overly confusing,
+  as per Suren.
+* Updated the mmap lock assert in unmap_vma_locked() to a write lock assert
+  as per Suren.
+* Copied vm_ops->open comment over to VMA tests in appropriate patch as per
+  Suren.
+* Updated mmap_prepare documentation to reflect the fact that no resources
+  should be allocated upon mmap_prepare.
+* Updated mmap_prepare documentation to reference the vm_ops->mapped
+  callback.
+* Fixed stray markdown '## How to use' in documentation.
+* Fixed bug reported by kernel test bot re: overlooked
+  vma_desc_test_flags() -> vma_desc_test() in MTD driver for nommu.
+https://lore.kernel.org/linux-mm/cover.1773695307.git.ljs@kernel.org/
 
-[1/3] bsg: add bsg_uring_cmd uapi structure
-      commit: 7da9261bab0a82bdbc4aafd2ad4bc3529b7cb772
-[2/3] bsg: add io_uring command support to generic layer
-      commit: a1e97ce80d9f41d0bb83951d758ff6fe49f3de60
-[3/3] scsi: bsg: add io_uring passthrough handler
-      commit: 7b6d3255e7f8c6df2d21504c47808e3ce84649ac
+v1:
+https://lore.kernel.org/linux-mm/cover.1773346620.git.ljs@kernel.org/
 
-Best regards,
--- 
-Jens Axboe
+Lorenzo Stoakes (Oracle) (16):
+  mm: various small mmap_prepare cleanups
+  mm: add documentation for the mmap_prepare file operation callback
+  mm: document vm_operations_struct->open the same as close()
+  mm: add vm_ops->mapped hook
+  fs: afs: correctly drop reference count on mapping failure
+  mm: add mmap_action_simple_ioremap()
+  misc: open-dice: replace deprecated mmap hook with mmap_prepare
+  hpet: replace deprecated mmap hook with mmap_prepare
+  mtdchar: replace deprecated mmap hook with mmap_prepare, clean up
+  stm: replace deprecated mmap hook with mmap_prepare
+  staging: vme_user: replace deprecated mmap hook with mmap_prepare
+  mm: allow handling of stacked mmap_prepare hooks in more drivers
+  drivers: hv: vmbus: replace deprecated mmap hook with mmap_prepare
+  uio: replace deprecated mmap hook with mmap_prepare in uio_info
+  mm: add mmap_action_map_kernel_pages[_full]()
+  mm: on remap assert that input range within the proposed VMA
 
+ Documentation/driver-api/vme.rst           |   2 +-
+ Documentation/filesystems/index.rst        |   1 +
+ Documentation/filesystems/mmap_prepare.rst | 168 ++++++++++++++
+ drivers/char/hpet.c                        |  12 +-
+ drivers/hv/hyperv_vmbus.h                  |   4 +-
+ drivers/hv/vmbus_drv.c                     |  31 ++-
+ drivers/hwtracing/stm/core.c               |  31 ++-
+ drivers/misc/open-dice.c                   |  19 +-
+ drivers/mtd/mtdchar.c                      |  21 +-
+ drivers/staging/vme_user/vme.c             |  20 +-
+ drivers/staging/vme_user/vme.h             |   2 +-
+ drivers/staging/vme_user/vme_user.c        |  51 +++--
+ drivers/target/target_core_user.c          |  26 ++-
+ drivers/uio/uio.c                          |  10 +-
+ drivers/uio/uio_hv_generic.c               |  11 +-
+ fs/afs/file.c                              |  36 ++-
+ include/linux/fs.h                         |  14 +-
+ include/linux/hyperv.h                     |   4 +-
+ include/linux/mm.h                         | 159 ++++++++++++-
+ include/linux/mm_types.h                   |  17 +-
+ include/linux/uio_driver.h                 |   4 +-
+ mm/internal.h                              |  41 ++--
+ mm/memory.c                                | 175 ++++++++++----
+ mm/util.c                                  | 251 ++++++++++++++-------
+ mm/vma.c                                   |  53 +++--
+ mm/vma.h                                   |   2 +-
+ tools/testing/vma/include/dup.h            | 152 ++++++++++---
+ tools/testing/vma/include/stubs.h          |   9 +-
+ 28 files changed, 990 insertions(+), 336 deletions(-)
+ create mode 100644 Documentation/filesystems/mmap_prepare.rst
 
-
+--
+2.53.0
