@@ -1,86 +1,86 @@
 Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4EC2128CF77
-	for <linux-scsi@vger.kernel.org>; Thu, 19 Mar 2026 05:36:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E525B37C0E5
+	for <linux-scsi@vger.kernel.org>; Thu, 19 Mar 2026 05:42:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773898586; cv=none; b=Hnu2oYKDy2A5cWJDSPkqq0Kxbyi3uJzZO4BibNhbafozUZrsxONkTykNrbW5iAqddDHCrm3xiAeIITd+07p7wWtakmm/qHt/xHVSd72N8YLn/hjy+RQwTF9ArBkBDneAQ0tpGFe/n3BpRN26EFQTfzRa0PZk1zsfBA2TKfvZqZU=
+	t=1773898938; cv=none; b=mA84ARngpOpelkflWFjCuVTigyimtO02hnlAUEAgXv0VPG0povB1Y76PEb8ywcgL+muvcnnXDH/WTFW8prxoxsOqw8wxc+xQvHl2PimCfp+yekrk//TymIjTppOlTDzBymDBNdAvsfae2Wsr/+2SEQf4vRqLJFkvq3KknlUj4lk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773898586; c=relaxed/simple;
-	bh=SK7gP3AdRB2weRwhUuhaO5iljg38WO1Y1+ShrFidEb8=;
+	s=arc-20240116; t=1773898938; c=relaxed/simple;
+	bh=Env9dqP/aHkb5Su4ovq0HDnEj7fbeLxcbgP6xerY6A0=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=J+/E9JbCf1Sh2HK1uK2L5qB1jzceu1/e3cag/wctcZIKyf8r/Ah3Q7PjGgrABsGKm99A20+I2UL7uRcEtjCmaoy04+svDWq++4vLl+BIpETqoxzpfafQ4zkDQZ2ZA8JQ7e0EdbMQbLHSzispIyQmZX6OvKv22Q0KQKiQ1HK22QM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=hMlKPRU8; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=cJevdxLe; arc=none smtp.client-ip=205.220.180.131
+	 In-Reply-To:Content-Type; b=Ef6yGoA2vKEVt7PSLWAU0hfHkjUlOSZNE7QDTnSteO2I54+w4musFL/7APkbPzPHVainjXHW3mxlgV8zTy9QfBOuJzRhZUE5q6C9NAPKpQZBSUHDp6v3T1xQWaHlokLyAvRNMlrpVaIT0KKC7ZYCj5RSghVlcxbg4WSiFIK5WJw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=FaoEoIcf; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=YRmDAK7w; arc=none smtp.client-ip=205.220.180.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="hMlKPRU8";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="cJevdxLe"
-Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 62J5XN7L1369776
-	for <linux-scsi@vger.kernel.org>; Thu, 19 Mar 2026 05:36:24 GMT
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="FaoEoIcf";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="YRmDAK7w"
+Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 62J5XtIK1802752
+	for <linux-scsi@vger.kernel.org>; Thu, 19 Mar 2026 05:42:15 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
 	cc:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	a+6eVRTkI5BP0q9Hzgp+FpLtQ3rpJVvxCo062+FaU84=; b=hMlKPRU8a8PGc+hK
-	Q1XF3agKNfoO02GGtokawDrQHwhSuwkGgwni1/30hGZZx0Ymaky9tfllw4A8i0pT
-	NPLDnIevrpEAmdRfiZri+itYhm3jx/l5XDQAdwaqQGCbuZS15mOLctBBQwjYVJ3l
-	FVkyE4sxyw/yT7cL0s8tmBod0OJTd9WJgh3IEM6tfNtRVOaklAPRCL3tQ3S8noKP
-	iUU9gB5ET0UtqKmesODdS04Iqb02UvGmTuV62+qOawxzwm5FEFLQdDMDI8wWr5u3
-	PpIA1drBlIqSt1LRg1Ltt8KqDFX1Taze7KwPzIUww5A4qnm/EkRt9V9cArtw9nhm
-	awQvtA==
-Received: from mail-pl1-f197.google.com (mail-pl1-f197.google.com [209.85.214.197])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4d0akxg2w8-1
+	5gjmsGsOfj0yQUWzeGx/ne5JG6lmq+6y6xPSztX/m4c=; b=FaoEoIcfwQPRfSOU
+	hMeZEDfMqlS++zcxqMHW8jVSaw/Pwza0eTLCQvYx/Zxd3sI3QxoJbMJwLhCt67/C
+	whDMLocrFYrU2I6gKPmdsrGiqXsQ+z3UQud8h6U3kNHGFvMOn9iDoAEuPRx1MrI+
+	FrHRGUH4kOdTBFeWH4zMHJJ1ON76qriJ2KSZvq9Bsp+CBTxXrrY1r+zRplRzpHY/
+	vOaQ2s+HRhxX3Sj92+kLRHWhoq+HBqEcWVvI/Ngqt0QDC8uoJXC3pPAkSvZrv4D9
+	N42CNh9HWGPePRmg+RNYQtlj7IrX/BhI8thSWMQvrZUzY8E4cahEAqfVZ/Dx1i86
+	O8Nvng==
+Received: from mail-pl1-f200.google.com (mail-pl1-f200.google.com [209.85.214.200])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4cyscb3rbu-1
 	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Thu, 19 Mar 2026 05:36:23 +0000 (GMT)
-Received: by mail-pl1-f197.google.com with SMTP id d9443c01a7336-2b051befbb8so11611525ad.2
-        for <linux-scsi@vger.kernel.org>; Wed, 18 Mar 2026 22:36:23 -0700 (PDT)
+	for <linux-scsi@vger.kernel.org>; Thu, 19 Mar 2026 05:42:15 +0000 (GMT)
+Received: by mail-pl1-f200.google.com with SMTP id d9443c01a7336-2b04293b16cso26463185ad.3
+        for <linux-scsi@vger.kernel.org>; Wed, 18 Mar 2026 22:42:15 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1773898583; x=1774503383; darn=vger.kernel.org;
+        d=oss.qualcomm.com; s=google; t=1773898935; x=1774503735; darn=vger.kernel.org;
         h=content-transfer-encoding:in-reply-to:from:content-language
          :references:cc:to:subject:user-agent:mime-version:date:message-id
          :from:to:cc:subject:date:message-id:reply-to;
-        bh=a+6eVRTkI5BP0q9Hzgp+FpLtQ3rpJVvxCo062+FaU84=;
-        b=cJevdxLexZel1s841LHlG1jLE9zKUhtfYcgsGCFzalcqEusZLHKIVU3IsifrqaNOKA
-         CDH6lL5VB5IKt2ElMJQXj9l72H1MEwVrjdwVRRvQ/+sURmtOVq+NEw+YdO6U4wMfsGky
-         tVLuu5Bcm+lRawH6UlhFGwJ9BrdirGNf9tt19w5KYADRBW0G29q/GTDeKerYefcysCSX
-         QNJHDo5Gxs2nhxqUvWl0MjIBBdLwg226oKeyS1AlW//fW2ustO5xy8mo7UonC7tSLkeF
-         2qtj5jzfcLs5f0W8K3+wX16+UAGUaynn2E6eSXcoJCPd5vPyMFAR+Ze2En9+B1j6706H
-         bynw==
+        bh=5gjmsGsOfj0yQUWzeGx/ne5JG6lmq+6y6xPSztX/m4c=;
+        b=YRmDAK7wjaTpr1suJfSg2mxsnGudAYYJX9DKdNTL5vUcTQWB7oEukSCdWHZkz/9tK4
+         K6seg8Itrg2gFFp9m0DqNDDa+0vvdx6wdA5hgxmVcPV4cIFcNmWYA5R7LMCwdZWlIp8q
+         PgN8HcPKbSwcXGKvzcX3AJ3+YyQGIooYGB5gAIIRl6Fs99eXESYrKPjbWoZqb9rwVTkt
+         eyl78Zz5WiaaYdAQ8jEN9uDHWltRKdAl17xb61f+zNk7bHi+ROVhqB4dCRcStm9tb7Bf
+         Y+iT1GpD5e7qYnpa92AoqiZF41v3AM09pwdjDjkQrIpbYXoJ7AKZ3s0S5Ec9J/C8uYbQ
+         wG0w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1773898583; x=1774503383;
+        d=1e100.net; s=20251104; t=1773898935; x=1774503735;
         h=content-transfer-encoding:in-reply-to:from:content-language
          :references:cc:to:subject:user-agent:mime-version:date:message-id
          :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=a+6eVRTkI5BP0q9Hzgp+FpLtQ3rpJVvxCo062+FaU84=;
-        b=jBNlXlpXwpPmOlMAtOCKXC6ZltUJ8fUDrBUZh9a/I7lsi8KKw35/UHeBE//nUd401n
-         6ru1AcVwNsXV2q4svWUh5+++r+Unw2gn9wxwEv9CxqZOo296jprnnYoU0oKHErcKVln+
-         7paQzLQqC6E2VD8aW7rMpTE7+Oiwo0MI4SNycy8RkYjTRy2oxVr1vvSf8999UbTK9mkQ
-         eL2+jjq1DBpipx8NWjKJMEcaiO8v6kMn//M+Sxg/anKIPa6G2RzEgx1G+x8LD0oSw+Dc
-         XlG1J5O8FMCBJxWK673iiT9prSZr2DLJARNd6+jwmj0lJA+t2d2QzDYbTQnqlFtt2ZWe
-         w/ow==
-X-Gm-Message-State: AOJu0Yzbsi/4huHWwKtZjtIT2ZeiUswhWWM0HNMzFj2QsAYwclFcpSvH
-	7xj6NKJHiMJ73pECtLmqBql7upBodeVow1S9yKPyKKkJkqgu+biEh4xcNJwyBRWOyxuBnk/5NY1
-	m4PpFBJQq0ImQlG99bIaNHKcBcyPNKTl/8+sGHmHVUES3XPriXH8oLTjvvN4dFFxDd4OWfTkY
-X-Gm-Gg: ATEYQzy1HS4bTOUjQKxxIT5MvzuJRFkN4aiIE+pdSrVjqN5+ChfOWJLnG214jnGVrJS
-	oB3tGyUmrUTNIEwyHtVxldoIAlOlI7V6SpExGNX1F3/pN64RDNuGpmADYZ7VCIsmheuc+76a8pC
-	kX1R9XqsxdO9q2hZX/bz0VT9bnOwJBEfrQ810leADAnWapgsaIlS0zqVuH4WmXLcSpwUDXBe4qn
-	IFRo6ZL4MIFNV1tMEo9roCn9HgsGGJYLd1z/HnaBUXR365GybS6Hq5/rNveVvbyBEe2O+e92Rl7
-	PE3p1BM68ZCLTcD3sgjVYHxcFQsDCN2RVKIc3YV8SB3Xj0gl1W2WBM7M1ZpPabhnAlvxqAXUSaj
-	YlvrRc82+OpfbihSHHC9aD3xh7mNqPfsK+pUNPEFo0xhxk58LXRg48TTj1wc0/PciGBQVmzpFy9
-	d+JyyYSS7y5w==
-X-Received: by 2002:a17:903:1109:b0:2b0:61f8:9f01 with SMTP id d9443c01a7336-2b06e3e18famr55996295ad.44.1773898582799;
-        Wed, 18 Mar 2026 22:36:22 -0700 (PDT)
-X-Received: by 2002:a17:903:1109:b0:2b0:61f8:9f01 with SMTP id d9443c01a7336-2b06e3e18famr55996035ad.44.1773898582319;
-        Wed, 18 Mar 2026 22:36:22 -0700 (PDT)
+        bh=5gjmsGsOfj0yQUWzeGx/ne5JG6lmq+6y6xPSztX/m4c=;
+        b=UfTgxhv8UHdf3OmUipXHnNV+Zcpz/nbzM2LyeBkp5OD0edzbMGaM6oQIHJfv2PSeYm
+         nKt8HXQmUZ18ls7YTTBgU4MrWjpfCCiaKHHxpGZi0emFyp/qXmYcporjKGbFey8A2i36
+         APV5U9WXEhHx4QWlChcX0TaKl+AfUkxJYjJkRi+/m/Brt8XNblHtYJ+rK3plgAB094df
+         TJ34VZieNGVIyXw13znV0fuIuU5Yg/DWY3BcQwskUEPvsoUZpPx10mEoiZw51us/xbt2
+         SPL7j3th3zCLG6Do58UB6dXwEsH/ZhSzpDHhkmvkTYOc0+eJAWTSfY+WS/u8NN2/s+7w
+         lldw==
+X-Gm-Message-State: AOJu0Yw/FczD3rNFSq4VJsBt+NKmBxY4vCbG71OjyjI6396vsqgw40NJ
+	vawrsv7ChYhYngpT7MhhofsECpsO/OnZ7DSZZL0kGQW0V5Rzxvr2sTlCAMypZAUIl8zpSQzJ8Hc
+	WCG/2/D2a7igdtDHsaCG/UNzA9TDZWShrE787VhI7r9nPuMrGk7VT4GZZ8ykS1PNo
+X-Gm-Gg: ATEYQzwdE8VrObLJtHucwTe3Ei6ax56Xl8OfhMGKiPs8MjNIA81VziqFTHIudIMRIsF
+	4kMjDOFlI8YH22w82DtAnhyr1ZReLYp9m5hG1Q2DOz4MC1Ido5FIAULlmG4v9Zl66YEKhiVBgXW
+	j007nB0I0oWN2OBACSUfbYf4aTUS6V68bnqeg+uGRlKOYgjARxHUT9CY/16e2NmfqO17ZFLeuJy
+	+tkN0n3PDQn7MgwzyfmKwQ3Nqw+ElaEuhBpGRqvuVkWLIRoRI0ZMvuc+TzCENXNBYPLCu9v7m5Y
+	7pVZT6rLsKZ4I10g+5aGJe5SEyDqCn3QHpXc0p4OVPAhgQBv85aq5X3pT7hKB+gS21Lbkjt86Hv
+	NcRpS3+Wl3UMtasJ77Ah6eY6maUPVST0uTjKSyC4ybCrxGB9rPF7lNIMyEOQhC2oE928e1CwNy7
+	PAS8O4sLNNJA==
+X-Received: by 2002:a17:903:2ca:b0:2b0:603e:e147 with SMTP id d9443c01a7336-2b06e357e90mr62221915ad.22.1773898934694;
+        Wed, 18 Mar 2026 22:42:14 -0700 (PDT)
+X-Received: by 2002:a17:903:2ca:b0:2b0:603e:e147 with SMTP id d9443c01a7336-2b06e357e90mr62221605ad.22.1773898934237;
+        Wed, 18 Mar 2026 22:42:14 -0700 (PDT)
 Received: from [10.133.33.84] (tpe-colo-wan-fw-bordernet.qualcomm.com. [103.229.16.4])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2b07a508f00sm9565725ad.80.2026.03.18.22.36.19
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2b06e61cacbsm44735525ad.72.2026.03.18.22.42.11
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 18 Mar 2026 22:36:21 -0700 (PDT)
-Message-ID: <910ef3e2-76e5-493e-808c-73132d939864@oss.qualcomm.com>
-Date: Thu, 19 Mar 2026 13:36:15 +0800
+        Wed, 18 Mar 2026 22:42:13 -0700 (PDT)
+Message-ID: <05c818c9-8be7-4680-9902-1ae56f374fc7@oss.qualcomm.com>
+Date: Thu, 19 Mar 2026 13:42:10 +0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -88,14 +88,13 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 07/12] scsi: ufs: core: Add support to refresh TX
- Equalization via debugfs
+Subject: Re: [PATCH v3 04/12] scsi: ufs: core: Add support for TX Equalization
 To: =?UTF-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= <peter.wang@mediatek.com>,
         "beanhuo@micron.com" <beanhuo@micron.com>,
         "mani@kernel.org"
  <mani@kernel.org>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
         "avri.altman@wdc.com" <avri.altman@wdc.com>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
         "martin.petersen@oracle.com" <martin.petersen@oracle.com>
 Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
         "adrian.hunter@intel.com" <adrian.hunter@intel.com>,
@@ -105,74 +104,116 @@ Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
         "quic_nguyenb@quicinc.com" <quic_nguyenb@quicinc.com>,
         "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 References: <20260308151409.3779137-1-can.guo@oss.qualcomm.com>
- <20260308151409.3779137-8-can.guo@oss.qualcomm.com>
- <bf64badf-161b-421a-a9e6-76e6679d5c9d@acm.org>
- <d537b40f-70d4-42f3-bed6-616da2489950@oss.qualcomm.com>
- <c9df8dcb-4711-4678-8759-c0c72b5d5f8b@acm.org>
- <af0553d67deb4ece5e16041747f4999d2c95852e.camel@mediatek.com>
+ <20260308151409.3779137-5-can.guo@oss.qualcomm.com>
+ <42587e16218f1c51dbcbe6bb1639a843e10bcd80.camel@mediatek.com>
+ <fa2a97fd-e17d-4314-b5a7-011b6b16a622@oss.qualcomm.com>
+ <1318f77eca87a01815214e7fb0178281871c9b1f.camel@mediatek.com>
 Content-Language: en-US
 From: Can Guo <can.guo@oss.qualcomm.com>
-In-Reply-To: <af0553d67deb4ece5e16041747f4999d2c95852e.camel@mediatek.com>
+In-Reply-To: <1318f77eca87a01815214e7fb0178281871c9b1f.camel@mediatek.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzE5MDA0MCBTYWx0ZWRfXwcxlQS6xsPCf
- 0wVdzGC8QJ/MfBvHcJSFnYGZQCxiJPShW26Hsj0cVZCen8BODCcnTzfL64yZuYqgh4VGp5d/Byz
- S4KM2mhPmO8cdtuE9ZclmpiTyRk1BUiFvKkdqGRBTemVDFgX+xrgKSqB6hwZgVnewcaDctQrjSE
- WnjmohvIVGNTrg+hHMozsFFOa3v5UckJg6SCHzYRgJGE59SNkn4IGSXd1OjfzuwUVmQG45489OH
- 4trtxJ18Gzaf5H0IzrvkOZWxCxKZXnBRzXoyKWYP2iP3ZUk7N1rytLa7GihwDoBDXEkL5UtkAkp
- yMnxkrqK7UV+XfojT2bVu/+rUEtFUcbbIqdAntnXqFgGdJTFrpbBsNASoH+zO+/vHfwM8Gv7vVG
- E2byRUqoEwd34IWHqXMkEeSl49ioT/rz2XusL1BhwDyk7PL3YBX0FLf6SV0vhBkkjwEYzYbZYTn
- gp8ly79Ac146XofyFRA==
-X-Proofpoint-GUID: kaQaRIj-8BUnK7-UpQ-iJA__BnPqAVtz
-X-Authority-Analysis: v=2.4 cv=ZeMQ98VA c=1 sm=1 tr=0 ts=69bb8b57 cx=c_pps
- a=cmESyDAEBpBGqyK7t0alAg==:117 a=nuhDOHQX5FNHPW3J6Bj6AA==:17
+X-Proofpoint-ORIG-GUID: gBtrr1NIqd25DrRBzghJGpc3EKWG4rBq
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzE5MDA0MiBTYWx0ZWRfXz7xSCLF2/QDX
+ T3xfHuvTcYwFGAftf6yDbv3CUbcQQw7YU9PEBiAGwOrb0XzMSTXj0GWfnyRjvjnCF/5riQk5MBL
+ GPcMRmZX7JE8FIay17lo+Lan6UzVyadkAsgvQT+jXDaWOKzo9uggdDCNfT+PNn/+4j17sO6D0KN
+ 97I6JbkNX5Ij79uWvw5Dr+NgEuUI5x/yM/8qBzXeWsFuzM2bHqUW2ubrbr52NTTl257JiVknWYc
+ ko0OYz+Jh9wfHlLw2eFkng5iSQJJ++N/fnEdqqeJqzWC+aR64mpJQrCYw+SpBy2DJiCpBqQU15/
+ U9pOoDdJJ2546DDf9RyMOM0Zd+s+QiYFAtmDxGZCnfJYnNZEOsUFb0lVHZhzTIRnwPrC3CzT9pO
+ Ba5JaBtDupwLuIPbNKU94crglfJdlxfl4/mqxHxnJfftDzv6a+6xAqs05XM5cmR347RW6pD1S99
+ oo6pjH9mYGMHTTSg5gg==
+X-Proofpoint-GUID: gBtrr1NIqd25DrRBzghJGpc3EKWG4rBq
+X-Authority-Analysis: v=2.4 cv=PtCergM3 c=1 sm=1 tr=0 ts=69bb8cb7 cx=c_pps
+ a=IZJwPbhc+fLeJZngyXXI0A==:117 a=nuhDOHQX5FNHPW3J6Bj6AA==:17
  a=IkcTkHD0fZMA:10 a=Yq5XynenixoA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=rJkE3RaqiGZ5pbrm-msn:22
- a=lZOxv685zBznO1DyOMIA:9 a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
- a=1OuFwYUASf3TG4hYMiVC:22
-X-Proofpoint-ORIG-GUID: kaQaRIj-8BUnK7-UpQ-iJA__BnPqAVtz
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=3WHJM1ZQz_JShphwDgj5:22
+ a=8fswfkG2DZOyL5G1xN4A:9 a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
+ a=uG9DUKGECoFWVXl0Dc02:22
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
  definitions=2026-03-19_01,2026-03-17_02,2025-10-01_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- lowpriorityscore=0 impostorscore=0 malwarescore=0 priorityscore=1501
- adultscore=0 bulkscore=0 clxscore=1015 spamscore=0 suspectscore=0
- phishscore=0 classifier=typeunknown authscore=0 authtc= authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2603050001
- definitions=main-2603190040
+ phishscore=0 clxscore=1015 priorityscore=1501 bulkscore=0 lowpriorityscore=0
+ malwarescore=0 spamscore=0 adultscore=0 suspectscore=0 impostorscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2603050001 definitions=main-2603190042
 
+Hi Peter,
 
-
-On 3/17/2026 9:05 PM, Peter Wang (王信友) wrote:
+On 3/17/2026 9:08 PM, Peter Wang (王信友) wrote:
 >
-> On Mon, 2026-03-16 at 10:14 -0700, Bart Van Assche wrote:
-> > On 3/14/26 3:45 AM, Can Guo wrote:
-> > > I chose 'refresh' because the code conducts more than just
-> > > retraining of
-> > > TX EQ,
-> > > the code also carries out a Power Mode change after that, and only
-> > > by
-> > > doing a
-> > > Power Mode change, the new (optimal) TX EQ settings are really used
-> > > by
-> > > both Host
-> > > and Device.
+> On Tue, 2026-03-17 at 15:22 +0800, Can Guo wrote:
+> > Here is the consideration:
 > > 
-> > Thanks for the feedback. Not sure what others think but I still think
-> > that "retrain" makes it more clear what happens than "refresh".
+> > 1. Scanning all 64 PreShoot/DeEmphasis combinations cost (much) more
+> > time
+> >    a. This could impact bootup KPI
+> >    b. During TX EQTR, IOs are paused, when one conducts a re-
+> > training,
+> > the IOs could
+> >         be paused for too long.
 > > 
-> > Bart.
 >
-> Hi Can and Bart,
+> Hi Can,
 >
-> I agree with Bart’s opinion.
-I will move back to 'retrain'
+> Yes, it will take some time, but according to the specification,
+> we need to find the best FOM, so the default value should still
+> follow the specification.
+It is just a default value of module parameter , one can change it via boot
+cmdline. But since you have asked it twice, I will change the default 
+value to
+true in next version.
+>
+>
+> > 2. As per our study in the past few months, the optimal/best
+> > combination
+> > is most
+> >      likely within the 8 presets, which is true for both Host TX
+> > lanes
+> > and Device TX lanes.
+> > 
+>
+> Host may be true, but there are so many devices, and new UFS 5.0
+> devices will keep being released in the future. How can we
+> guarantee that the optimal/best combination is most likely
+> within the 8 presets?
+>
+>
+> > 3. Even if sometime the optimal settings which fall out of the 8
+> > presets, they are very
+> >      close to optimal one found within the 8 presets.
+> > 
+>
+> Could you share what led you to this conclusion?
+>  From the scores reported by each vendor, it’s hard for us to
+> determine what a difference of a few points actually means.
+>
+>
+> > So, scanning the 8 presets only is more cost-efficient.
+> > > 
+> > > > +ufshcd_tx_eqtr_result_examine(struct ufshcd_tx_eq_params
+> > > > *old_params,
+> > > > +                             struct ufshcd_tx_eq_params
+> > > > *new_params)
+> > > > +{
+> > > > +       int lane;
+> > > > +
+> > > > +       if (!old_params->is_valid)
+> > > > +               return;
+> > > 
+> > > Is is_valid always false, causing a return here?
+> > It can be valid if we are here (again) because one conducts a re-
+> > training.
+> > > 
+>
+> Then, should this function be moved to [07/12], which supports
+> retraining?
+Sure, I will move in next version.
 
-Thanks for the suggestions.
-
+Thanks,
 Can Guo.
 >
-> Thanks
+> Thanks.
 > Peter
 >
 >
