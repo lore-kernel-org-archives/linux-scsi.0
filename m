@@ -1,323 +1,173 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A0A5B30C354
-	for <linux-scsi@vger.kernel.org>; Thu, 19 Mar 2026 14:12:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 289DB31354D
+	for <linux-scsi@vger.kernel.org>; Thu, 19 Mar 2026 14:13:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773929563; cv=none; b=i7zo1CuVISS0hI2OdATtiLE1Qw9lqwa8jc4ubsBmuWk/lofoVKAESIse0P9D6tDYj9NdpqfECxY5nUR9iLeJHTN7iEAGAV1n2sbyLkxN1Tkz9Or6XAn8DG/MuaPCnIjYzjTkMkkUAs8Q6vAIJZDsRG9AfssoQAGbZONFOljaAs8=
+	t=1773929638; cv=none; b=B7ulg85MvZoGd6ZKljPg8IuEMBb3KdDKD49Z0bAK6gOM6BJazd3hMgRJAic0ADHxVxA0tFHTQBYNVgrHXt4PC76iocq4+4pBWIg1g46B4or+Utf85YnLSo9bWgVIWx98JstnAdSmVdzH5y8DigL6KBC1Q+/CvNAfgq2//WByKUY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773929563; c=relaxed/simple;
-	bh=6mSehbpF+RItZ1Q8Et60jCpZ0rREFfenJveoiK1gS60=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=NfG6rAxOp2xEhxd64wVFEyCUOh/9Kjpj159zZycmBjd7qL6wGqqJLzAQuFo6E5v/ConxFpBkTluHvPw4j7C0ozJihcqTYBYMAVwh9Hi92hBJgM/pu/8NdsQw+HBJdLiAsHJvZ5jJkLg4EIMcG/4Iqkg66+w/99utY7pDJdxcWJk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=RikB2As1; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1773929638; c=relaxed/simple;
+	bh=4zAon2/wL1xkF183JwLxXVvEK05OvlwLI29zwOFhq2E=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=gdX3TClzEJ7puoMJ8pSUzhn2Ungnpk6I+S/rth6U+x8XohFiY6vt6zIPDJpRwjulI7EYLUUJwotUMSnvDkbn2HNgQyizt9snvuOP6BS4TWIckfXGPmJIyC74MZ8XisGdMY1Pl0L9LjTSFUJEhrcNBvov42JnJRSOeR3jBZLpTbI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=qJFdgiFw; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=4jpB79yc; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=OrcSAEzL; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=HXVk5/yP; arc=none smtp.client-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="RikB2As1"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1773929558;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=OQ5/Jf7lfLb4nnTLYmHQMRrsCz1ABsjpH0OOeVo4OKY=;
-	b=RikB2As18LG++aZ5CV5PrzffqTMEAZ3NKbe4R9aixfcKXMv9TKB6jI2dpol0B2Gea6QRik
-	ZNcHpyX/qunr+NcsWxpBjV6kxUd2JJ7bsv0gNZiNskGq7c/xo1RdZSlIzqIg1A9Tskiz4g
-	9x6zYeuHVfb1iOgcKflG6Xc/EzHqloY=
-Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-593-pzCk9WJuMxOC6OKCAGtQGg-1; Thu,
- 19 Mar 2026 10:12:35 -0400
-X-MC-Unique: pzCk9WJuMxOC6OKCAGtQGg-1
-X-Mimecast-MFC-AGG-ID: pzCk9WJuMxOC6OKCAGtQGg_1773929536
-Received: from mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.111])
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="qJFdgiFw";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="4jpB79yc";
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="OrcSAEzL";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="HXVk5/yP"
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id ECAF019560A7;
-	Thu, 19 Mar 2026 14:12:15 +0000 (UTC)
-Received: from fedora-work.redhat.com (unknown [10.22.66.24])
-	by mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id BFC771800576;
-	Thu, 19 Mar 2026 14:12:11 +0000 (UTC)
-From: David Jeffery <djeffery@redhat.com>
-To: linux-kernel@vger.kernel.org,
-	driver-core@lists.linux.dev,
-	linux-pci@vger.kernel.org,
-	linux-scsi@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Danilo Krummrich <dakr@kernel.org>
-Cc: Tarun Sahu <tarunsahu@google.com>,
-	Pasha Tatashin <tatashin@google.com>,
-	=?UTF-8?q?Micha=C5=82=20C=C5=82api=C5=84ski?= <mclapinski@google.com>,
-	Jordan Richards <jordanrichards@google.com>,
-	Ewan Milne <emilne@redhat.com>,
-	John Meneghini <jmeneghi@redhat.com>,
-	"Lombardi, Maurizio" <mlombard@redhat.com>,
-	Stuart Hayes <stuart.w.hayes@gmail.com>,
-	Laurence Oberman <loberman@redhat.com>,
-	Bart Van Assche <bvanassche@acm.org>,
-	Bjorn Helgaas <helgaas@kernel.org>,
-	David Jeffery <djeffery@redhat.com>
-Subject: [PATCH 3/5] driver core: async device shutdown infrastructure
-Date: Thu, 19 Mar 2026 10:11:40 -0400
-Message-ID: <20260319141142.5781-4-djeffery@redhat.com>
-In-Reply-To: <20260319141142.5781-1-djeffery@redhat.com>
-References: <20260319141142.5781-1-djeffery@redhat.com>
+	by smtp-out2.suse.de (Postfix) with ESMTPS id 233AB5BD4B;
+	Thu, 19 Mar 2026 14:13:51 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1773929632; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=4fUFXPph0d+U/6GDmGbgLZ/FXBjYuxpYsgD69WTKZEc=;
+	b=qJFdgiFwZof840urwELAyJUPmqr5R5KSb1T4rwYuc7bb8XNbCm/kv+M5FkrKSBEOM1bZiu
+	/MGyuwm/OFnFKmJm/t/Uz/+GbEcAEAQCMtEWioCbgwKOh4DWZ0qNVZOg9g66xDY+m4U+fD
+	w9Xqoe30eNI+goFz62hSwZMzWorThdA=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1773929632;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=4fUFXPph0d+U/6GDmGbgLZ/FXBjYuxpYsgD69WTKZEc=;
+	b=4jpB79ycXSQsxOkgtV3HKUa6Dm/vQ/wRir8pmFsiYnB6qgK3LbPe12RtulXb4tol7/E3ij
+	faYPra8B4GTfZjDQ==
+Authentication-Results: smtp-out2.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1773929631; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=4fUFXPph0d+U/6GDmGbgLZ/FXBjYuxpYsgD69WTKZEc=;
+	b=OrcSAEzL/6c4UDB40dZmtUkHL2UKN/t418W/3/WLfRE3VUYtttdOTA1LBRs2LexriSZBXr
+	IUCLAcO9QxQoLCNXA0PSitgNb7BC5cuH9t+EXroQLbXGhfbC1mTChSWj64vc6V41FfYy8R
+	mio6pb/J12e+5TPnOnmBoDRex83ce1A=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1773929631;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=4fUFXPph0d+U/6GDmGbgLZ/FXBjYuxpYsgD69WTKZEc=;
+	b=HXVk5/yPJtxIjyky0dtujMNvVHE9KONXRU8D1O6wb4LBxoqwDaKPYOnkGEkCrYDJmYyVOA
+	klxEA++oJw6AsaAw==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 14B714273B;
+	Thu, 19 Mar 2026 14:13:51 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id TmUEBZ8EvGlPZwAAD6G6ig
+	(envelope-from <jack@suse.cz>); Thu, 19 Mar 2026 14:13:51 +0000
+Received: by quack3.suse.cz (Postfix, from userid 1000)
+	id C850FA0B32; Thu, 19 Mar 2026 15:13:46 +0100 (CET)
+Date: Thu, 19 Mar 2026 15:13:46 +0100
+From: Jan Kara <jack@suse.cz>
+To: Philipp Hahn <phahn-oss@avm.de>
+Cc: amd-gfx@lists.freedesktop.org, apparmor@lists.ubuntu.com, 
+	bpf@vger.kernel.org, ceph-devel@vger.kernel.org, cocci@inria.fr, 
+	dm-devel@lists.linux.dev, dri-devel@lists.freedesktop.org, gfs2@lists.linux.dev, 
+	intel-gfx@lists.freedesktop.org, intel-wired-lan@lists.osuosl.org, iommu@lists.linux.dev, 
+	kvm@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
+	linux-block@vger.kernel.org, linux-bluetooth@vger.kernel.org, linux-btrfs@vger.kernel.org, 
+	linux-cifs@vger.kernel.org, linux-clk@vger.kernel.org, linux-erofs@lists.ozlabs.org, 
+	linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-gpio@vger.kernel.org, 
+	linux-hyperv@vger.kernel.org, linux-input@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-leds@vger.kernel.org, linux-media@vger.kernel.org, linux-mips@vger.kernel.org, 
+	linux-mm@kvack.org, linux-modules@vger.kernel.org, linux-mtd@lists.infradead.org, 
+	linux-nfs@vger.kernel.org, linux-omap@vger.kernel.org, linux-phy@lists.infradead.org, 
+	linux-pm@vger.kernel.org, linux-rockchip@lists.infradead.org, linux-s390@vger.kernel.org, 
+	linux-scsi@vger.kernel.org, linux-sctp@vger.kernel.org, 
+	linux-security-module@vger.kernel.org, linux-sh@vger.kernel.org, linux-sound@vger.kernel.org, 
+	linux-stm32@st-md-mailman.stormreply.com, linux-trace-kernel@vger.kernel.org, linux-usb@vger.kernel.org, 
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org, ntfs3@lists.linux.dev, 
+	samba-technical@lists.samba.org, sched-ext@lists.linux.dev, target-devel@vger.kernel.org, 
+	tipc-discussion@lists.sourceforge.net, v9fs@lists.linux.dev, Jan Kara <jack@suse.com>
+Subject: Re: [PATCH 12/61] quota: Prefer IS_ERR_OR_NULL over manual NULL check
+Message-ID: <ol2d7c5z7yfyuwo5tyfxurgqedruhr6bzmuv37bx5phhrmmoyh@4zjspbtexid3>
+References: <20260310-b4-is_err_or_null-v1-0-bd63b656022d@avm.de>
+ <20260310-b4-is_err_or_null-v1-12-bd63b656022d@avm.de>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.111
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260310-b4-is_err_or_null-v1-12-bd63b656022d@avm.de>
+X-Spam-Score: -2.30
+X-Spam-Level: 
+X-Spamd-Result: default: False [-2.30 / 50.00];
+	BAYES_HAM(-3.00)[99.99%];
+	SUSPICIOUS_RECIPS(1.50)[];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	MID_RHS_NOT_FQDN(0.50)[];
+	NEURAL_HAM_SHORT(-0.20)[-0.999];
+	MIME_GOOD(-0.10)[text/plain];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	TO_DN_SOME(0.00)[];
+	ARC_NA(0.00)[];
+	FUZZY_RATELIMITED(0.00)[rspamd.com];
+	MISSING_XM_UA(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	FROM_HAS_DN(0.00)[];
+	RCVD_COUNT_THREE(0.00)[3];
+	TO_MATCH_ENVRCPT_SOME(0.00)[];
+	FROM_EQ_ENVFROM(0.00)[];
+	R_RATELIMIT(0.00)[to_ip_from(RLck44p98ib5bmd95s13xxw3gp)];
+	RCVD_TLS_LAST(0.00)[];
+	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	RCPT_COUNT_GT_50(0.00)[55];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.com:email]
+X-Spam-Flag: NO
 
-Patterned after async suspend, allow devices to mark themselves as wanting
-to perform async shutdown. Devices using async shutdown wait only for their
-dependencies to shutdown before executing their shutdown routine.
+On Tue 10-03-26 12:48:38, Philipp Hahn wrote:
+> Prefer using IS_ERR_OR_NULL() over using IS_ERR() and a manual NULL
+> check.
+> 
+> Change generated with coccinelle.
+> 
+> To: Jan Kara <jack@suse.com>
+> Cc: linux-kernel@vger.kernel.org
+> Signed-off-by: Philipp Hahn <phahn-oss@avm.de>
 
-Sync shutdown devices are shut down one at a time and will only wait for an
-async shutdown device if the async device is a dependency.
+Thanks for the patch but frankly I find the original variant clearer wrt
+what is going on. So I prefer to keep the code as is.
 
-Signed-off-by: David Jeffery <djeffery@redhat.com>
-Signed-off-by: Stuart Hayes <stuart.w.hayes@gmail.com>
-Tested-by: Laurence Oberman <loberman@redhat.com>
----
- drivers/base/base.h    |   2 +
- drivers/base/core.c    | 104 ++++++++++++++++++++++++++++++++++++++++-
- include/linux/device.h |  13 ++++++
- 3 files changed, 118 insertions(+), 1 deletion(-)
+								Honza
 
-diff --git a/drivers/base/base.h b/drivers/base/base.h
-index 79d031d2d845..ea2a039e7907 100644
---- a/drivers/base/base.h
-+++ b/drivers/base/base.h
-@@ -113,6 +113,7 @@ struct driver_type {
-  * @device - pointer back to the struct device that this structure is
-  * associated with.
-  * @driver_type - The type of the bound Rust driver.
-+ * @complete - completion for device shutdown ordering
-  * @dead - This device is currently either in the process of or has been
-  *	removed from the system. Any asynchronous events scheduled for this
-  *	device should exit without taking any action.
-@@ -132,6 +133,7 @@ struct device_private {
- #ifdef CONFIG_RUST
- 	struct driver_type driver_type;
- #endif
-+	struct completion complete;
- 	u8 dead:1;
- };
- #define to_device_private_parent(obj)	\
-diff --git a/drivers/base/core.c b/drivers/base/core.c
-index 2e9094f5c5aa..53568b820a13 100644
---- a/drivers/base/core.c
-+++ b/drivers/base/core.c
-@@ -9,6 +9,7 @@
-  */
- 
- #include <linux/acpi.h>
-+#include <linux/async.h>
- #include <linux/blkdev.h>
- #include <linux/cleanup.h>
- #include <linux/cpufreq.h>
-@@ -37,6 +38,10 @@
- #include "physical_location.h"
- #include "power/power.h"
- 
-+static bool async_shutdown = true;
-+module_param(async_shutdown, bool, 0644);
-+MODULE_PARM_DESC(async_shutdown, "Enable asynchronous device shutdown support");
-+
- /* Device links support. */
- static LIST_HEAD(deferred_sync);
- static unsigned int defer_sync_state_count = 1;
-@@ -3538,6 +3543,7 @@ static int device_private_init(struct device *dev)
- 	klist_init(&dev->p->klist_children, klist_children_get,
- 		   klist_children_put);
- 	INIT_LIST_HEAD(&dev->p->deferred_probe);
-+	init_completion(&dev->p->complete);
- 	return 0;
- }
- 
-@@ -4782,6 +4788,37 @@ int device_change_owner(struct device *dev, kuid_t kuid, kgid_t kgid)
- 	return error;
- }
- 
-+static bool wants_async_shutdown(struct device *dev)
-+{
-+	return async_shutdown && dev->async_shutdown;
-+}
-+
-+static int wait_for_device_shutdown(struct device *dev, void *data)
-+{
-+	bool async = *(bool *)data;
-+
-+	if (async || wants_async_shutdown(dev))
-+		wait_for_completion(&dev->p->complete);
-+
-+	return 0;
-+}
-+
-+static void wait_for_shutdown_dependencies(struct device *dev, bool async)
-+{
-+	struct device_link *link;
-+	int idx;
-+
-+	device_for_each_child(dev, &async, wait_for_device_shutdown);
-+
-+	idx = device_links_read_lock();
-+
-+	dev_for_each_link_to_consumer(link, dev)
-+		if (!device_link_flag_is_sync_state_only(link->flags))
-+			wait_for_device_shutdown(link->consumer, &async);
-+
-+	device_links_read_unlock(idx);
-+}
-+
- static void __shutdown_one_device(struct device *dev)
- {
- 	device_lock(dev);
-@@ -4805,6 +4842,8 @@ static void __shutdown_one_device(struct device *dev)
- 		dev->driver->shutdown(dev);
- 	}
- 
-+	complete_all(&dev->p->complete);
-+
- 	device_unlock(dev);
- }
- 
-@@ -4823,6 +4862,58 @@ static void shutdown_one_device(struct device *dev)
- 	put_device(dev);
- }
- 
-+static void async_shutdown_handler(void *data, async_cookie_t cookie)
-+{
-+	struct device *dev = data;
-+
-+	wait_for_shutdown_dependencies(dev, true);
-+	shutdown_one_device(dev);
-+}
-+
-+static bool shutdown_device_async(struct device *dev)
-+{
-+	if (async_schedule_dev_nocall(async_shutdown_handler, dev))
-+		return true;
-+	return false;
-+}
-+
-+
-+static void early_async_shutdown_devices(void)
-+{
-+	struct device *dev, *next, *needs_put = NULL;
-+
-+	if (!async_shutdown)
-+		return;
-+
-+	spin_lock(&devices_kset->list_lock);
-+
-+	list_for_each_entry_safe_reverse(dev, next, &devices_kset->list,
-+					 kobj.entry) {
-+		if (wants_async_shutdown(dev)) {
-+			get_device(dev->parent);
-+			get_device(dev);
-+
-+			if (shutdown_device_async(dev)) {
-+				list_del_init(&dev->kobj.entry);
-+			} else {
-+				/*
-+				 * async failed, clean up extra references
-+				 * and run from the standard shutdown loop
-+				 */
-+				needs_put = dev;
-+				break;
-+			}
-+		}
-+	}
-+
-+	spin_unlock(&devices_kset->list_lock);
-+
-+	if (needs_put) {
-+		put_device(needs_put->parent);
-+		put_device(needs_put);
-+	}
-+}
-+
- /**
-  * device_shutdown - call ->shutdown() on each device to shutdown.
-  */
-@@ -4835,6 +4926,12 @@ void device_shutdown(void)
- 
- 	cpufreq_suspend();
- 
-+	/*
-+	 * Start async device threads where possible to maximize potential
-+	 * parallelism and minimize false dependency on unrelated sync devices
-+	 */
-+	early_async_shutdown_devices();
-+
- 	spin_lock(&devices_kset->list_lock);
- 	/*
- 	 * Walk the devices list backward, shutting down each in turn.
-@@ -4859,11 +4956,16 @@ void device_shutdown(void)
- 		list_del_init(&dev->kobj.entry);
- 		spin_unlock(&devices_kset->list_lock);
- 
--		shutdown_one_device(dev);
-+		if (!wants_async_shutdown(dev) || !shutdown_device_async(dev)) {
-+			wait_for_shutdown_dependencies(dev, false);
-+			shutdown_one_device(dev);
-+		}
- 
- 		spin_lock(&devices_kset->list_lock);
- 	}
- 	spin_unlock(&devices_kset->list_lock);
-+
-+	async_synchronize_full();
- }
- 
- /*
-diff --git a/include/linux/device.h b/include/linux/device.h
-index 0be95294b6e6..da1db7d235c9 100644
---- a/include/linux/device.h
-+++ b/include/linux/device.h
-@@ -551,6 +551,8 @@ struct device_physical_location {
-  * @dma_skip_sync: DMA sync operations can be skipped for coherent buffers.
-  * @dma_iommu: Device is using default IOMMU implementation for DMA and
-  *		doesn't rely on dma_ops structure.
-+ * @async_shutdown: Device shutdown may be run asynchronously and in parallel
-+ *		to the shutdown of unrelated devices
-  *
-  * At the lowest level, every device in a Linux system is represented by an
-  * instance of struct device. The device structure contains the information
-@@ -669,6 +671,7 @@ struct device {
- #ifdef CONFIG_IOMMU_DMA
- 	bool			dma_iommu:1;
- #endif
-+	bool			async_shutdown:1;
- };
- 
- /**
-@@ -824,6 +827,16 @@ static inline bool device_async_suspend_enabled(struct device *dev)
- 	return !!dev->power.async_suspend;
- }
- 
-+static inline bool device_enable_async_shutdown(struct device *dev)
-+{
-+	return dev->async_shutdown = true;
-+}
-+
-+static inline bool device_async_shutdown_enabled(struct device *dev)
-+{
-+	return !!dev->async_shutdown;
-+}
-+
- static inline bool device_pm_not_required(struct device *dev)
- {
- 	return dev->power.no_pm;
+> ---
+>  fs/quota/quota.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/fs/quota/quota.c b/fs/quota/quota.c
+> index 33bacd70758007129e0375bab44d7431195ec441..2e09fc247d0cf45b9e83a4f8a0be7ea694c8c2a1 100644
+> --- a/fs/quota/quota.c
+> +++ b/fs/quota/quota.c
+> @@ -965,7 +965,7 @@ SYSCALL_DEFINE4(quotactl, unsigned int, cmd, const char __user *, special,
+>  	else
+>  		drop_super_exclusive(sb);
+>  out:
+> -	if (pathp && !IS_ERR(pathp))
+> +	if (!IS_ERR_OR_NULL(pathp))
+>  		path_put(pathp);
+>  	return ret;
+>  }
+> 
+> -- 
+> 2.43.0
+> 
 -- 
-2.53.0
-
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
