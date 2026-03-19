@@ -1,107 +1,111 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.18])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF4C9314A8E;
-	Wed, 18 Mar 2026 23:10:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF2D12DC783;
+	Thu, 19 Mar 2026 03:27:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773875419; cv=none; b=k5W3O+qJ5+s5lW/2aUfGO/5LgQisBwJxTU9xf8FsUAMKlptaRJkEuZ/1Al9cPzGRoP/QDG1q9m7ugJjefzkuZrpwFoGn/yxEoZr1WNJ67IHnAGousg4xgMffRVM8OzoKHo1fLSoeIBIuOeGNemhjsUnH4/5DInjfnmpk0x94O1Q=
+	t=1773890852; cv=none; b=k2LN1CGB3KQM4i2FO/B5JX5S72mdxDN6/ux7F/VTU/O/MVabG4mS9K/ComB8JjrChAre8sAxZIUIHsD6VOqrjjYqqcmbNLOnOcCfEN6IgTz9Z1lIdowgQMONBbNXsubALuMFrcoNpzHygNtTQvtyU9piKFFjDs7V5B+vvlBwCDs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773875419; c=relaxed/simple;
-	bh=95Ql3WVZ8e0qOQZMKgmFQhFFemfGSunBs6ibeA/axrQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=c12mDeAR2zEHC4DrCMY3Rad9cZ8tMpozRF71+/rAO8534tyofqOAZl0hPA3CIf8qP4YG6swKM7I1KgVx7QQiGbHSEUEOIx/Pk7biNj1cJZcIVudgFyQr01AsE1qyljZ+dOqEahjneVX0XGUdFA8ZivoSLEy9T5O3j5HboyXon90=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=DrD6Y/gW; arc=none smtp.client-ip=198.175.65.18
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1773890852; c=relaxed/simple;
+	bh=sRx/e6yBG83MxWAyEYb9aM48iMeWBalueRmbRh5WjdE=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=KqTZLKsBDQlqpqrKy0GdAwTPFIYNJ0rYC1lMdt8R879X913l0r5aEqBdlTBCShMnT5o++EpN0yxnvFiWvJCcThRUDjfO6GNq5LPWJUXVH3tuIoSM7CzaJEOnAScQXwXlf5E9EncapC2MB6lwC+mR1utrBc5MkJim5joUrZOyYn0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=S4EpimIq; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="DrD6Y/gW"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1773875419; x=1805411419;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=95Ql3WVZ8e0qOQZMKgmFQhFFemfGSunBs6ibeA/axrQ=;
-  b=DrD6Y/gWC/rYiFkNpESABdC1nWTKVLQO5GO4oQYeK0l34FqtsS5ox0yV
-   zYIaX1ALaOWsWaH+tLC0HnbUcgzbqF+6u7SHTNHmMUbHQ1cUNioh9zP/U
-   qfHa1xqDn2UZIMbMVnrSkTl0Y4fHgVnRBc1T+K5yPG7eHiHHFLxQdbxut
-   74wBYwTRqTHtBn5QuR/1JptAxOu71QKyMlkx85HYZsBNA6gu/+CUhU9jO
-   EGMHCienlp0gGv9LMCRKB4nptEWT+DairYHB4tUc3h7JA7RziDaDKRP8H
-   iW16myE6Qt/e1pG5lE4e3+FrlqePOiuIcCGRzbo1/dmLBlcexDADm4xGI
-   Q==;
-X-CSE-ConnectionGUID: jm+zbvDBR42edSZ+eXiH0Q==
-X-CSE-MsgGUID: 6IXaOpRWTy20kK6p/eLKUQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11733"; a="74977614"
-X-IronPort-AV: E=Sophos;i="6.23,128,1770624000"; 
-   d="scan'208";a="74977614"
-Received: from orviesa003.jf.intel.com ([10.64.159.143])
-  by orvoesa110.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Mar 2026 16:10:19 -0700
-X-CSE-ConnectionGUID: xz+BYbbPSeiNCchxVoNwjA==
-X-CSE-MsgGUID: z9QQErIISTi2hhaF4QOeTg==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.23,128,1770624000"; 
-   d="scan'208";a="226918699"
-Received: from lkp-server02.sh.intel.com (HELO a51c2a36b9df) ([10.239.97.151])
-  by orviesa003.jf.intel.com with ESMTP; 18 Mar 2026 16:10:15 -0700
-Received: from kbuild by a51c2a36b9df with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1w300R-00000000041-2VZN;
-	Wed, 18 Mar 2026 23:09:23 +0000
-Date: Thu, 19 Mar 2026 07:08:13 +0800
-From: kernel test robot <lkp@intel.com>
-To: John Garry <john.g.garry@oracle.com>, martin.petersen@oracle.com,
-	james.bottomley@hansenpartnership.com, hare@suse.com,
-	bmarzins@redhat.com
-Cc: oe-kbuild-all@lists.linux.dev, jmeneghi@redhat.com,
-	linux-scsi@vger.kernel.org, michael.christie@oracle.com,
-	snitzer@kernel.org, dm-devel@lists.linux.dev,
-	linux-kernel@vger.kernel.org, John Garry <john.g.garry@oracle.com>
-Subject: Re: [PATCH 13/13] scsi: core: Add implicit ALUA support
-Message-ID: <202603190739.QIFfPfdg-lkp@intel.com>
-References: <20260317120703.3702387-14-john.g.garry@oracle.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="S4EpimIq"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AF8E9C19421;
+	Thu, 19 Mar 2026 03:27:28 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1773890851;
+	bh=sRx/e6yBG83MxWAyEYb9aM48iMeWBalueRmbRh5WjdE=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=S4EpimIq4LnMdEYbgP3izMuEMgLIMR+ETM5Wh6j+kDP02xLrAerV6MhJv4MFj6I39
+	 2kgyZxsn0gmWzn+37imwh+VQKkBZroYX5QftmsDHGTm82JmGes8UN+q1FxaBQE8zIu
+	 +lvwv5WWph4ovhxC7IDfRa+sSueronJlgWg8mnBgTPLyoxsVRrk76YkdCySYXjzA2Z
+	 /AVHRIqQL9S5KJtbyCTIVLh6chRQLaZKvql7I98jZV4tlzl6N77Qf9/irBdDap/Vmp
+	 4NZr0fg25um4rTaxxbYDL1cHYrMpLl7kl2hZlK3yAzSbt9ATcyZiO9K0v8oOD+Ol/+
+	 A9zLnT3Fn+F8w==
+Message-ID: <1adabe3e-4497-4e71-b6a0-f3b81df322eb@kernel.org>
+Date: Thu, 19 Mar 2026 12:27:27 +0900
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260317120703.3702387-14-john.g.garry@oracle.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3] scsi: sas: skip opt_sectors when DMA reports no real
+ optimization hint
+To: "Ionut Nechita (Wind River)" <ionut.nechita@windriver.com>,
+ "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: ahuang12@lenovo.com, axboe@kernel.dk, damien.lemoal@opensource.wdc.com,
+ hch@lst.de, iommu@lists.linux.dev, ionut_n2001@yahoo.com,
+ john.g.garry@oracle.com, kbusch@kernel.org, linux-kernel@vger.kernel.org,
+ linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
+ m.szyprowski@samsung.com, robin.murphy@arm.com, sagi@grimberg.me,
+ stable@vger.kernel.org, sunlightlinux@gmail.com
+References: <20260318200532.51232-1-ionut.nechita@windriver.com>
+ <20260318200532.51232-2-ionut.nechita@windriver.com>
+Content-Language: en-US
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <20260318200532.51232-2-ionut.nechita@windriver.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Hi John,
+On 3/19/26 05:05, Ionut Nechita (Wind River) wrote:
+> +static unsigned int sas_dma_opt_sectors(struct device *dma_dev,
+> +					unsigned int max_sectors)
+> +{
+> +	size_t opt = dma_opt_mapping_size(dma_dev);
+> +	unsigned int opt_sectors;
+> +
+> +	if (opt >= dma_max_mapping_size(dma_dev))
+> +		return 0;
 
-kernel test robot noticed the following build errors:
+I really do not understand this one. How can the optimal DMA mapping size be
+larger than the maximum possible DMA size ?
+If that happens, it is a driver bug, we should WARN_ONCE and return
+dma_max_mapping_size(), no ?
 
-[auto build test ERROR on mkp-scsi/for-next]
-[also build test ERROR on jejb-scsi/for-next linus/master v7.0-rc4 next-20260318]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+> +
+> +	opt = rounddown_pow_of_two(opt);
+> +	opt_sectors = opt >> SECTOR_SHIFT;
 
-url:    https://github.com/intel-lab-lkp/linux/commits/John-Garry/scsi-scsi_dh_alua-Delete-alua_port_group/20260318-105207
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git for-next
-patch link:    https://lore.kernel.org/r/20260317120703.3702387-14-john.g.garry%40oracle.com
-patch subject: [PATCH 13/13] scsi: core: Add implicit ALUA support
-config: s390-randconfig-001-20260318 (https://download.01.org/0day-ci/archive/20260319/202603190739.QIFfPfdg-lkp@intel.com/config)
-compiler: s390-linux-gcc (GCC) 11.5.0
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260319/202603190739.QIFfPfdg-lkp@intel.com/reproduce)
+if opt is super large, can this overflow the 32-bits opt_sectors ?
 
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202603190739.QIFfPfdg-lkp@intel.com/
+> +
+> +	return min(opt_sectors, max_sectors);
+> +}
+> +
+>  static int sas_host_setup(struct transport_container *tc, struct device *dev,
+>  			  struct device *cdev)
+>  {
+> @@ -239,10 +268,9 @@ static int sas_host_setup(struct transport_container *tc, struct device *dev,
+>  		dev_printk(KERN_ERR, dev, "fail to a bsg device %d\n",
+>  			   shost->host_no);
+>  
+> -	if (dma_dev->dma_mask) {
+> -		shost->opt_sectors = min_t(unsigned int, shost->max_sectors,
+> -				dma_opt_mapping_size(dma_dev) >> SECTOR_SHIFT);
+> -	}
+> +	if (dma_dev->dma_mask)
+> +		shost->opt_sectors = sas_dma_opt_sectors(dma_dev,
+> +							 shost->max_sectors);
 
-All errors (new ones prefixed by >>, old ones prefixed by <<):
+Splitting the line after the "=" would make this look nicer:
 
->> ERROR: modpost: "scsi_device_alua_rescan" [drivers/scsi/scsi_mod.ko] undefined!
->> ERROR: modpost: "scsi_alua_check_sense" [drivers/scsi/scsi_mod.ko] undefined!
-ERROR: modpost: "scsi_exit_alua" [drivers/scsi/scsi_mod.ko] undefined!
-ERROR: modpost: "scsi_alua_init" [drivers/scsi/scsi_mod.ko] undefined!
-ERROR: modpost: "scsi_alua_sdev_exit" [drivers/scsi/scsi_mod.ko] undefined!
-ERROR: modpost: "scsi_alua_sdev_init" [drivers/scsi/scsi_mod.ko] undefined!
->> ERROR: modpost: "scsi_device_alua_implicit" [drivers/scsi/scsi_mod.ko] undefined!
+	if (dma_dev->dma_mask)
+		shost->opt_sectors =
+			sas_dma_opt_sectors(dma_dev, shost->max_sectors);
+
+>  
+>  	return 0;
+>  }
+
 
 -- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+Damien Le Moal
+Western Digital Research
