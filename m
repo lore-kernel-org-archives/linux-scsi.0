@@ -1,46 +1,46 @@
 Received: from AM0PR02CU008.outbound.protection.outlook.com (mail-westeuropeazon11013003.outbound.protection.outlook.com [52.101.72.3])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC87C407567;
-	Thu, 19 Mar 2026 22:33:06 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7888F4070E9;
+	Thu, 19 Mar 2026 22:33:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.72.3
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773959588; cv=fail; b=NldhHAG/ooPzAjCGwvnrdhd4DCWUciDEdvo8auzRpZ1X/H2600rKmHpmWg6aRKijFhZhP1bAKboE4uqySOakikd8yqxkqhcXfjNAgqZJvNeHKguB9iHVK8xkesguRY7JzmFmSvel2yFbbKUrl0HJ83trQv+jePlRMP56oshkBvs=
+	t=1773959593; cv=fail; b=BtIUw3ULbPKMF9vL4q4xuQKFWihfEIquWAWf9P31kD3Kwco/mXrGQgjH4R/Fd+5uvdD7RdWHDQs0G0w/TNRlS8g3I1vbVEgIQuOuWrbBE3DFpOVlM/phKUZxBDrbCplBskrVZLKA3VYUiBpvehHAvWI+4mEuXaQ5ggZz/bc8iMs=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773959588; c=relaxed/simple;
-	bh=4DOmG32R3SGPIfsRsHDw6qDUZWvc2lump+awYwPpAWY=;
+	s=arc-20240116; t=1773959593; c=relaxed/simple;
+	bh=IJshm2W4EPDnFr9CpmYpgNjK7dzgwZoh4oxjlbLAs8c=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=HCRZ+BL/3Ur8Ed8J77nqO8Dl9SJmQju5x/ZFWRhIg2gSIG2xXLVGMsjEpnWvluY05G0o9e4uCR4czYm2ksNjdJSHsnekVFpXXe/sJeaObUTX/S+aif1CI+9qBqyuaF2YnrmrYzcx/5xcYiancON9yIMJyOF3wjEIrrvmJwqnJZo=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=WDE5qDsN; arc=fail smtp.client-ip=52.101.72.3
+	 Content-Type:MIME-Version; b=u0Sropyj2veUARK1g3N5gysUfvp5shBLcKiLpjTo8oxPNnDsMqlM/1DUCKE267UPriwN5whb5dMYR75VsihFHU0Fhq5egqYCgAu6VcJs/kcw3waBTR7OYzPWZV4JfSfajOO8EjS/qGGeVBESap5IGxUcLwAcKuplXUAgHbu1eUU=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=LmodaY54; arc=fail smtp.client-ip=52.101.72.3
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="WDE5qDsN"
+	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="LmodaY54"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=uec+v4g29ja6kbH6j6+Nv9DD10Nly+WeQdklogJncYPAluPfy8eoWPmwafgo2Kr6RRgaoCu4GiGf2T/M5Ws8VheYpyIqZ4PPYmBid0vyehGw+0AXJp7UnHX4cezhGXQSsj8aOLqwoIhDrNfeQxHt549U/gv/rL8wQVblD+LeM9euRylDd+RdkEOXpJwxQU2ZXszdEX8h/v6XqFwhSnWA2g2akJKxUoo/2RZAt9naBNiGe8W0gezjjeRkwczd+CDq9U2TG8kTmD/glOGgx6PeUNAzfvUW8cKrgZv//I10ehbegTTjsgB+b20/HIq2nP72K6VPBN2ryjwK3jhDu/fFJA==
+ b=EuulYQ7W33CN/TDp5jxjmWjbJwyxuJUO5BCebl7CNfQ756j3adyld+njzOfh9O0KrL5GKzZb2BRKb80ln31fY5vfA1obR9Albo7ABit0m5IzfRyG0n/hCvupKBFZ/mfsRMUdp2krVS4JLbnXiGcMHoCF/7J2gZWI5KCnFFZThIA5MjauDaPTfoGccHVa4TjqF3o7xPrxinkWJe3uWqQ+3lfIE1jq6PpcVGkm36BonEevuVSMZNaiHWUt/bf1XODEWwOjaKLkDJHtryn87IpZnsTH9PbUitofOtFcDsIzfH/dzHY6sgczuuuIiGdU/Sd9hfTNXco65KOdKsAETluSxQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=L40Puna/ceJutoKohahciphIwcdOqo9C8TF6ixTMH7U=;
- b=RQmXM+gjllpgXNv/pAni1b6avZjLT2OP8H0q6lUv8KXr5cDn8SeLFEaorFJsKtjHAD5YoYdrIXoXqzm3NOuqpbReIHPirTe4C8elSApTuk2wU1W9jYcawY7NIZs7SzxedlI8icdjumf1TecPhb4gq+7CArQhVK3VPgtEpKCWilvgbYKu0ptXxGF11Qn9PhXlYsBYy9YbXDq9b11N8s2NABmDv29CUUe3MBiNJtc67ZLJ3Yg4GkJLvvP986tKNZKeephKAFiKjeB0HDC/3PbZpVhKQp+/6ONRTD0/evXtt9elHYj8iG++kyYN7/hQbE9qizbj23/C1wFlJd+OaSyvjQ==
+ bh=Rs3UIyppA5PUh52RF+x00VFzk9rQoxkO5dEjZTtr3xw=;
+ b=VynTGr8BWdiUJCHMxhwLlQbbkVAOvxgY4NDnuLMXAp71T2+Yx+A/FdoDn6WSAL3Za1qGggne+/xi0KoF+KyFpJ6fomEdxLGruT35gYt+/C0cxyVlq7tNuY5g5UiAhb3gAPjPsNK8lOnDzZXRb2e3yGS6VNJi/cluq9KYY3j2YgAPlUAkCR4Gcr8yS002fPUS1OSEsMe9JAs44YGEg4dSMqH6cMiNXv7SqTuy1DFzj2sGXBTmIzZO4TWReiYW/LYK/w4FurToLVOKo23qecTHzg76sby3XM52VTL1LFiwwNNJ3wCUdM6D4xBwpPnibK90K4krKBjnyaYrYjtHnLCeLw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
  header.d=nxp.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=L40Puna/ceJutoKohahciphIwcdOqo9C8TF6ixTMH7U=;
- b=WDE5qDsNGKnzJhDvZYHNQoKv56qh1HvD5ljZgGb3YhxPt8tr/bvbNlm+YylDK7B2mtQTqZEql/OANhj+pRA3Jylov+g7XKqagdEGT5BW9Ou5KSKIhlosXdXd0jsthR8peh+FX+bTriwNwSPbenmo5vX1AlYkddFi4srqDdX7CTP3Z3mr6+Kuh5vJEKeMEYxDEY9eYfgDc+ctZkQbseo7syzuLkEKXd4RedEvP9Hq7F1uSOlPuSQbe1g9YoS7n6DyhLSzqsf8xf/FpFadYYzfnedP3d9ot6Vx8IISpek7mHyIwoc7FyjCurMBDZK8CO+rB51zBcMpyigCC77FiyGCaw==
+ bh=Rs3UIyppA5PUh52RF+x00VFzk9rQoxkO5dEjZTtr3xw=;
+ b=LmodaY54BHZT2PrKT9AuQvLQNRu3nWgpKC085kwAvxlP2AOUEzXllX2qSbjCqBOgKx2UaxxDv4TxX+Yd2bsnsxYQ1KA2AykBDdSjUZdxTqgpSU9zeQP0Oqu6cM96RIJNDSLArT0JWIPwLr34F4jgUibjPZIrcSQBY5CrRpPZg6Uj5UuDnLABdow8exckPGNJ8aIbj9BaB0l3B4AvCEsYh1ThrtQ/CwKwq6pOoVlFAS4YsDlAYqGsKAC16JA8K/PqJR1/RFCU2bpAf6qw4+SWCEpOTUhUWPHJF8e1hZxV6r8S3jPpXXFXsjp/DYjaoceTOmD9C26b8olTKmyTywgi8w==
 Authentication-Results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=nxp.com;
 Received: from AM9PR04MB8585.eurprd04.prod.outlook.com (2603:10a6:20b:438::13)
  by GV4PR04MB11355.eurprd04.prod.outlook.com (2603:10a6:150:296::16) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9723.19; Thu, 19 Mar
- 2026 22:32:46 +0000
+ 2026 22:32:50 +0000
 Received: from AM9PR04MB8585.eurprd04.prod.outlook.com
  ([fe80::f010:fca8:7ef:62f4]) by AM9PR04MB8585.eurprd04.prod.outlook.com
  ([fe80::f010:fca8:7ef:62f4%4]) with mapi id 15.20.9723.018; Thu, 19 Mar 2026
- 22:32:44 +0000
+ 22:32:48 +0000
 From: Vladimir Oltean <vladimir.oltean@nxp.com>
 To: linux-phy@lists.infradead.org
 Cc: Vinod Koul <vkoul@kernel.org>,
@@ -66,23 +66,22 @@ Cc: Vinod Koul <vkoul@kernel.org>,
 	netdev@vger.kernel.org,
 	spacemit@lists.linux.dev,
 	UNGLinuxDriver@microchip.com,
-	Thinh Nguyen <Thinh.Nguyen@synopsys.com>,
-	Peter Chen <peter.chen@kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Frank Li <Frank.Li@nxp.com>,
-	Sascha Hauer <s.hauer@pengutronix.de>,
-	Pengutronix Kernel Team <kernel@pengutronix.de>,
-	Fabio Estevam <festevam@gmail.com>
-Subject: [PATCH v5 phy-next 03/27] usb: add missing headers transitively included by <linux/phy/phy.h>
-Date: Fri, 20 Mar 2026 00:32:17 +0200
-Message-ID: <20260319223241.1351137-4-vladimir.oltean@nxp.com>
+	Geert Uytterhoeven <geert+renesas@glider.be>,
+	=?UTF-8?q?Andr=C3=A9=20Draszik?= <andre.draszik@linaro.org>,
+	Peter Griffin <peter.griffin@linaro.org>,
+	Tudor Ambarus <tudor.ambarus@linaro.org>,
+	Magnus Damm <magnus.damm@gmail.com>,
+	Heiko Stuebner <heiko@sntech.de>
+Subject: [PATCH v5 phy-next 05/27] phy: add <linux/pm_runtime.h> where missing
+Date: Fri, 20 Mar 2026 00:32:19 +0200
+Message-ID: <20260319223241.1351137-6-vladimir.oltean@nxp.com>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20260319223241.1351137-1-vladimir.oltean@nxp.com>
 References: <20260319223241.1351137-1-vladimir.oltean@nxp.com>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: WA0P291CA0020.POLP291.PROD.OUTLOOK.COM
- (2603:10a6:1d0:1::17) To AM9PR04MB8585.eurprd04.prod.outlook.com
+X-ClientProxiedBy: WA2P291CA0044.POLP291.PROD.OUTLOOK.COM
+ (2603:10a6:1d0:1f::20) To AM9PR04MB8585.eurprd04.prod.outlook.com
  (2603:10a6:20b:438::13)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -92,148 +91,251 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
 X-MS-TrafficTypeDiagnostic: AM9PR04MB8585:EE_|GV4PR04MB11355:EE_
-X-MS-Office365-Filtering-Correlation-Id: 4c942184-51af-4b92-3d97-08de86077080
+X-MS-Office365-Filtering-Correlation-Id: f1d43049-1f28-4758-75c6-08de860772e4
+X-LD-Processed: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635,ExtAddr
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|19092799006|366016|10070799003|1800799024|376014|7416014|22082099003|56012099003|18002099003;
+ BCL:0;ARA:13230040|19092799006|366016|10070799003|1800799024|376014|7416014|22082099003|56012099003|18002099003;
 X-Microsoft-Antispam-Message-Info:
-	qqaX0YBQDfnXceMnn4qX/sok8BMOkhBBIdjVbuN9HCIJtuKUDbBswZsXWma08vmmEkv2ePRm8gfqlZ/R7OipgWyPeURPdqirVTEkweUcqRbqykAOTc12jCJSBFh+OW6wUyeP5BIhn+lSt4iCFUHcy5Hl+6NOmM7OhtBCRsxgw2X5abotR+LwzHiTo40hiQ8BKsPCo8OgFzRiQ8YbpqYH+rRWubTqM2PSza9UHQ9Sk3JYj/b180/UYURouswB3sETjGcUxr5kXpN1is7dyJmbD9HX9RtnIdm0Q/xbtJiW4Hthwr0/S5COtAUafRVQUZPjgj0H46M+YoZ158Ld920yCA77ZsGOw6T6yldA3xWe9KlWF9YWi94pvpd8waGSGc0kr/aFp99D967GUoejwIbeDK1WGdo08ozlMUlFb498/mel/3wxN73y3f22hzFIVdoaCoa/rU+o5ahrfcFulrTZ30Dfyx0Hc6tGFIDNkwMhND4d3Ro7oAKaYwYscgpUB/b2g/vKBko05FSWIhOEcl1izmK7mpbC0Ez3j258J1bSqPSKQA+/jiTph8D33G2uRst1hhIaHQyT5GGBUe4cgCLBKCjEGIcv/9E2sb1jdmHTDOazmjekCDfoA6n7C43U8KlE97wELoHmhJvztJF/fkPM2FCnlgfsUFWPx90e7OUFal2Hnd5gX22IM7CP0g8SLjNfXEUbNexkdzYWvLfXgU91DVdDJiSSQucWtPhTI+V89f8=
+ UV+9Og6DqdXfuKTPRRnyKBRpz7+U+qRzGwF/fZF2K9tz8hEuZ91qwQG4jQY4qTHgYyr5htlfYZjIPzC222navIG5wBfbuod5EPpiIGPA72GEbXKECmAYQkPj0YWJ2v6c1R8uHJa8w/qCy67DKL3nFF7o+hRQUD/BVahKbH5Lyvjswg3SqQx2wHIAszJgsXPnJbc00dr81yNgqWTcfkXG+8SWN944HQ+nBq+9i0owdMNbNl88EWLeOgvA2EWnBtLldaPoypjjhMT+e7xRI0jFfckH7y24Qp0ZdtntQuLM376dSfJIhQu8eWGwLVxA4tdvs5JCbdp4nxAZA97unqlaXtOgT/xAlQZsGRmdTbnM/aHHrx3ACARGQbjsUGS+D3wScJO4WOegTBIBlDKoy7RortYXtxUI1FyuBftMed93flpPdEtR4mRO+93zxMP59tLb5eNuyfTyDvf8Kg1MM1CNM7i5l9Gl6HAVdG+oQLqHu9W/LpmaY/TBe0wvsGevAFUx9RmWP1oOsWPaIPIJW7oR9Iq7iwLcTm5w5A1RfOEr1vr6ghxQYtUvQ1vWH2xDWgZ0QszCKxQDjYqGQP8dYY3kllgtZ0DSjQesXWOpycW17SczI0bNj2Vezts449OWpBRZROFeGMaCKMTZaNCA77DzpK+jybyVPk0/PKhgNCS4FF3iRet7mzvUl73HZguaz+SXyJdKVIH3zVO8IBNlOxSGfxtIYxAYwn/vsesf7JxJYOs=
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9PR04MB8585.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(19092799006)(366016)(10070799003)(1800799024)(376014)(7416014)(22082099003)(56012099003)(18002099003);DIR:OUT;SFP:1101;
+ CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9PR04MB8585.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(19092799006)(366016)(10070799003)(1800799024)(376014)(7416014)(22082099003)(56012099003)(18002099003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 2
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?H6wRN3nXdWY9RLX/xvaoNibMBOmq68uLP5KK5kPHWQq6nWJqweBj4Ix8VOO4?=
- =?us-ascii?Q?4AhsxylhtfvHH593sG2rXF9HDGqbznL1iBLDDAnPfuiE/5BpyARwSVSeb9JF?=
- =?us-ascii?Q?PVsYBLVzDjiKzsb9e+VwgOtOcviOEmLXjkxNOMIy2pUnw7FyBkoLB2gXEBeW?=
- =?us-ascii?Q?PC0jlmp/CZJda/Z5pyzsnl/eWi2z+qfpcUCCFrJpwRII5cGu3DHg5ohXiqtD?=
- =?us-ascii?Q?ah9loK2DX6SvhxlbfPHaRJCCjIKqZ1/MvlASXkAZt7IOltrCsOjJZRP9TF+N?=
- =?us-ascii?Q?Zjd0QgvIFyN3nxDein+chloVkh+Dy+GEG8QCwveSbwKjb+9i4IcqLu+9XoeB?=
- =?us-ascii?Q?keUqy8pyXBRYsy9bfISfTSi88jV/IMmju3t0v8XpvDomejFh3Yawk6HnitPz?=
- =?us-ascii?Q?o7cLApaEQFiqGGaXVvx947Dj+x3QVgIOl+B7pXeYujhyYK3TB6BOjb5f/BLz?=
- =?us-ascii?Q?qb5cvI18E/z4UdLg6SMiGeBSebrKUWxBp4bVGBJ0Surr+833c78utD2qua09?=
- =?us-ascii?Q?DZuXoipIe4mEjVvis+lwemIlni5cdBYmabjE1vefjySkYUmmsJr2EPbVMKOq?=
- =?us-ascii?Q?/8wOAnyTN8Mae6IfGFso1BUUuU2joUKAba1RNd/xH99kfNa7DAWEEpW7/MK3?=
- =?us-ascii?Q?OX9K9Rmxn8+1NOX7+PgavmHlzEeUjAfBwhUUv2i3FIZ4vJ+RkwIqE/XAePzN?=
- =?us-ascii?Q?VJpDIh0Z6fkyr3l/gsZUmQ272i+PlBQVIFZLw+2Xp0M9TOMZ/W9q/17o+lFK?=
- =?us-ascii?Q?BW20E5SjNpaoxY+nPOYa7k1DzVMwRjMV/0+1TI0fB3HX4DmOkeUT0AvyEE30?=
- =?us-ascii?Q?CjhzfOSCTDr4zYG0s3MBb2FbHksHj7eERGiPdyssJj22HtU4LtOvZxSKbUTb?=
- =?us-ascii?Q?zzXzKNMDQj1gFAfppaKvCP5BtInbYR+M8uQMtfHRJVN7bFYTKYPtIc4RFb2R?=
- =?us-ascii?Q?zE+IK5h9GKs19Ig/7yyQmgjYcER0GmbQL8Y0aq7nYA7z9xI0dYqFLUBct8OL?=
- =?us-ascii?Q?ESeellYoSsYCfCxFqc8UV85EwLg69YPuJbOzp9HMRMD5nl5uYi4ItNCC2WSg?=
- =?us-ascii?Q?Jub7gRvi75qSeYA1MOQtWZho5AeE4wQqNgCloe8FphqKhxxWEl10UPff2Y02?=
- =?us-ascii?Q?6zMqf78Q3pkN5ufszRQdPncHF0dlnTHJISoeljaNBtshxuuczTkg2sfcAia4?=
- =?us-ascii?Q?SrTHseH1Wxo0t2lOh0K2GktXHueT6By+ofy9sYInTKIUEq7D+koS8kR8BsUm?=
- =?us-ascii?Q?m4iej4qkuo3CfCuyDNKK5B/lKM49SOinEwy8u+WsI3+4cZg42p7I8pAvj1A4?=
- =?us-ascii?Q?U9MiXTFgi5gK9XsA2qJD4OZXuGfLT1uYOGWVgIi5jlCNGX1+NvioZkd4yQWv?=
- =?us-ascii?Q?HPT0rm7EwbVuLfMpl2i86y28beOynsd/9EzBuVRiCViiAEIrSKey06OaexjG?=
- =?us-ascii?Q?r8ADefCMwOmuLCaaz48ctXTu9AkK4i3IWrlZKrbkXtti52NXrZttn81uJB45?=
- =?us-ascii?Q?tf46ROEG+suQbqAuej/iorvk2iJqDhzVVGrbul1ohszzOphwLrv0vf7UbZxS?=
- =?us-ascii?Q?7RDE5mPOX6SdmEUxDlHge3ZxCwar3unZyFqKICNEOYMzVlFNVjGnEkU88o+5?=
- =?us-ascii?Q?tjYVFhxvov8Az41+lglGaNEx0d3Qs6y5ir78s9rA40wS3nQ3oH2t8MxGQYAz?=
- =?us-ascii?Q?cgD0Onxb/TI+xKbnYrsvphQugKPQWMReT/BmsZ4ptLjVBPRifdJvfZUYNoaz?=
- =?us-ascii?Q?rxCQsGXqhx5mgXoH9jPXSLyNawDHLbjdbmuhu8jvlOz6yOMgWQbQjXQ3R+tT?=
-X-MS-Exchange-AntiSpam-MessageData-1: 2zZtkRHdWp32IDpIXapVJLpi6jkQCiL34Wk=
+ =?utf-8?B?dExOSk9CUlc4NytkcHNqd0Y0Y2RnVnFFRUtlUW9qUk4vSUpCS3RtNUE5TDdk?=
+ =?utf-8?B?cmQ2dnZncHFjcnRpQmI2RlFxU2N0bng5ZlNLeEFaYUhyWjhkcUpyQkVhbDBS?=
+ =?utf-8?B?M2tqYjVrMkR6dHhFTVBCNVlBREhSUFJMQ0JLSUhLYW85Y1hrS1FYVDBJanA2?=
+ =?utf-8?B?cFlHc2VqcWtqM3IwNWJlUEMrdEs4dnl4RCtpbmpPZUpNenJ3a1hyS2hVNkxa?=
+ =?utf-8?B?RS9meDZhQS8rSVVIYnhpQThJZHZuUDJrZkg4UFhHR2c4MHBrM09VZDVpbTd6?=
+ =?utf-8?B?SG5PVjRHamZpbmpURjRSTE5kaXZhWUlTZTNoY0prVTVxR21BQXQzNUJOZk1M?=
+ =?utf-8?B?YnZwM09ueHA2Mmp5dFRqR3lseG9TenRFbUZucmZSZWtXWDNPbVJWZGVDM2Ri?=
+ =?utf-8?B?Ym5NYnhsZDBYdHczL0Foc0F3NDBjYkNsY1pBdmhZYmJDWm5ScVZHTUM1M2Fh?=
+ =?utf-8?B?L0JsVTh3aXNsZHBHQ2c2aWwxV1ZNdGkzT2NyR1NpdDVVY2NsYTlKbFZoM3cx?=
+ =?utf-8?B?OFhtNHFzdG9JSDNFMkhteDJLUWxhcVNxdXhQODljU1dtdWNzZG50bFlwdndn?=
+ =?utf-8?B?c0Nyb0pIendTRVRmdlNyRGlhT2YwbHVXTWY2dWgwOFBoc1NGZHZBc0hpc3JN?=
+ =?utf-8?B?dU5XSVV4L3Bac3ExS2hEZGZCeWp6K1N5QUF4SVBaZWhkdkExWFdYTDZ5SzBL?=
+ =?utf-8?B?eDVCTVdRUm83SlpaVExBTHdrUmE1MGhaU1ZNeGFLYkIvOTdOTWN4NFBOd3hv?=
+ =?utf-8?B?bHFGVEFDNUdXeFYvNnZGL0FpblJHcUoxRkVEa2x4M1lNU3hJQWhwS2J6MXRL?=
+ =?utf-8?B?M2VwQzd4SXVXTjRmRUNJY2ZCMFlvRU1qWG4rV1F6N2tFTmRXV2dOMkVvZG5v?=
+ =?utf-8?B?UTdiL25DeGZuN3cwRDhrRVRGdDlLV0I2Rjl4KzlQaHY0a0dldldwVVdqbmYy?=
+ =?utf-8?B?VGN3SVFqdVREeXFxMWMxNFp4WmlTV2plQWNxTGNJQytwa2xsRDZ0Y2h5Z3pP?=
+ =?utf-8?B?ek5za0ZxS1UzSzFoZjc4b09sQ1pLY2VsNU1aSzJ4N3ZWeFliUkl2cFY3bkth?=
+ =?utf-8?B?V09rZGhBWk9jZmFjNU5Kbis4blZXdzdvckhSRm1rTFNBQzNXa1R6Vy84YkxQ?=
+ =?utf-8?B?dHpadnBSbSt5TTc2S1VndVpoYlBsaHRPSzhZSmVNNUIxS2dsbm5Canpyd1Fy?=
+ =?utf-8?B?bXVlSXViTWt2dHQ0eGhoZnE1aXRsOWMrZzZNRGl6elc4N2xWNGwwUTIxV0Fv?=
+ =?utf-8?B?Ri85dGpvQ1R4Lzg3U1VFcjRHUXY3WjRNRmtPWXQ4ay9Oc1gyV0U5MXI3bklj?=
+ =?utf-8?B?cDJuRTFLcnpPZmFKQm5OYUhCcGFkQklpei91dms5aUdNandXdFNSSC8yTmRj?=
+ =?utf-8?B?M3RvajhvZ2R0cGp3ZGlKQWZ1eTRFSnkzQ2VmN0Q0TnNvWFpxcDhQdS9vdlhV?=
+ =?utf-8?B?dWx6OUxPWCt1RS95WjZ2c2pURWhEZlRnYUg2Z3cvdGlTcEZPclZoRkZTeWls?=
+ =?utf-8?B?eWo5bGcrREM5U1IzRFdac1RrcmhWa2cvT1ZIdW1JRm1iNXRod3ZVeld6Qmsr?=
+ =?utf-8?B?MWxQQTZPR2dxWEJHVVNSeGdTTTVyT0wxdkNsNHlzV2xndmZFQ0VVMnNTd2FL?=
+ =?utf-8?B?ZURjR0lFblVqR3czSWx0MUw5TG0rU1RtN20yb01iQUh5R09VV0U5N1NCNENv?=
+ =?utf-8?B?clpBVEc3bTRZeGxvc0ErdlhCdS8yZzBOZlJRRHFGYTdaUkE0NkFySXNGWXlH?=
+ =?utf-8?B?Sk1UZkJGYnpIQ1lsU01RMXAwbnNvUEVtQjU0aDFKZGpqQWsydTdvUS9vbENu?=
+ =?utf-8?B?SlpyNHNCanlJcXRZTWxTc1ArVFNlblpITjZRWkVRZUVLd1NyNE5odmlTajdV?=
+ =?utf-8?B?THZNeDhEV0VCK253dDAyVkQ4MFZPa2NTT1FCcmtCeGxtejNIbzhGUnM2OEpt?=
+ =?utf-8?B?dS9uY3RYL2J3NGpYMFRJUHFCS2xiRDJnT1FRTVZYdGYva3NYR3pEMG5ZV1hI?=
+ =?utf-8?B?aEJWY1ZQNG4xM2xCRnFKS2llYnYxRGMwdmI3VFRjb0VGMUE4ekpRSlA1L2Z2?=
+ =?utf-8?B?NTk1dDNxK2dQdUZKc1pSbWhrdFJYeVZEVGZUdm8wanhGS1dtY1lNOGR6TlRS?=
+ =?utf-8?B?cHdsTktOb0haOHFLaFFuaDFKd2JYSEZBK3N5Qk01bzFBZnRnaTNJNU9lRGNo?=
+ =?utf-8?B?SDd5WDI2dnBZOE5SR01vUjBsK1Fnd0VWUElsQ0JDOFZZcHNDMlpWOFdRNmtC?=
+ =?utf-8?B?WGdXY1dPeGRnQWxiekZCc3pzWjNUMjVVYXVWeHVNR1JHZzlIdnYxYmdqTnBl?=
+ =?utf-8?B?SzNBaW5PazlYM2FCa2RralcyZHhadGY1dktHQTBPYW82cFRBMW9jNmFpNmVk?=
+ =?utf-8?Q?syiAPbVuWK3c3Afp28yZHOEnn1/0tsK7JsjWOmaUIytwX?=
+X-MS-Exchange-AntiSpam-MessageData-1: wjwwsAfnU2w4osPajGUkiyRVda7dUhdNs5w=
 X-OriginatorOrg: nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 4c942184-51af-4b92-3d97-08de86077080
+X-MS-Exchange-CrossTenant-Network-Message-Id: f1d43049-1f28-4758-75c6-08de860772e4
 X-MS-Exchange-CrossTenant-AuthSource: AM9PR04MB8585.eurprd04.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 19 Mar 2026 22:32:44.4530
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 19 Mar 2026 22:32:48.6019
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: E4lRCFw1V/f01LMDQ5ICN1OE4KbTbsxC1VmfiYo0j0LqTNcz6b2Dh3u3hFBHCocRspabMAqAf7kyFAZ3AS/DhA==
+X-MS-Exchange-CrossTenant-UserPrincipalName: XyrC/9ufsrr7aRP6bqd4sqkKEoczmGRoa7YvZ4zEkUkD51BpSNCeZDfcYlyFVutuiEmeu/kp36hPKkkgISaN+Q==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: GV4PR04MB11355
 
-The chipidea ci_hdrc_imx driver uses regulator consumer API like
-regulator_enable() but does not include <linux/regulator/consumer.h>.
+It appears that the phy-mapphone-mdm6600, phy-qcom-snps-femto-v2,
+phy-rcar-gen3-pcie, r8a779f0-ether-serdes and phy-rockchip-typec drivers
+call runtime PM operations without including the proper header.
 
-The core USB HCD driver calls invalidate_kernel_vmap_range() and
-flush_kernel_vmap_range(), but does not include <linux/highmem.h>.
-
-The DWC3 gadget driver calls:
-- device_property_present()
-- device_property_count_u8()
-- device_property_read_u8_array()
-but does not include <linux/property.h>
-
-The dwc3-generic-plat driver uses of_device_get_match_data() but does
-not include <linux/of.h>.
-
-In all these cases, the necessary includes were still provided somehow,
-directly or indirectly, through <linux/phy/phy.h>. The latter header
-wants to drop those includes, so fill in the required headers to avoid
-any breakage.
+This was provided by <linux/phy/phy.h> but no function exported by this
+header directly needs it. So we need to drop it from there, and fix up
+drivers that used to depend on that.
 
 Signed-off-by: Vladimir Oltean <vladimir.oltean@nxp.com>
-Acked-by: Thinh Nguyen <Thinh.Nguyen@synopsys.com> # dwc3
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be> # renesas
+Reviewed-by: André Draszik <andre.draszik@linaro.org> # google
 ---
-Cc: Peter Chen <peter.chen@kernel.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Frank Li <Frank.Li@nxp.com>
-Cc: Sascha Hauer <s.hauer@pengutronix.de>
-Cc: Pengutronix Kernel Team <kernel@pengutronix.de>
-Cc: Fabio Estevam <festevam@gmail.com>
-Cc: Thinh Nguyen <Thinh.Nguyen@synopsys.com>
+Cc: Peter Griffin <peter.griffin@linaro.org>
+Cc: "André Draszik" <andre.draszik@linaro.org>
+Cc: Tudor Ambarus <tudor.ambarus@linaro.org>
+Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+Cc: Magnus Damm <magnus.damm@gmail.com>
+Cc: Heiko Stuebner <heiko@sntech.de>
 
 v2->v5: none
-v1->v2: collect tag
+v1->v2: collect tags
 ---
- drivers/usb/chipidea/ci_hdrc_imx.c   | 1 +
- drivers/usb/core/hcd.c               | 1 +
- drivers/usb/dwc3/dwc3-generic-plat.c | 1 +
- drivers/usb/dwc3/gadget.c            | 1 +
- 4 files changed, 4 insertions(+)
+ drivers/phy/motorola/phy-mapphone-mdm6600.c    | 1 +
+ drivers/phy/phy-google-usb.c                   | 1 +
+ drivers/phy/qualcomm/phy-qcom-qmp-combo.c      | 1 +
+ drivers/phy/qualcomm/phy-qcom-qmp-usb-legacy.c | 1 +
+ drivers/phy/qualcomm/phy-qcom-qmp-usb.c        | 1 +
+ drivers/phy/qualcomm/phy-qcom-qmp-usbc.c       | 1 +
+ drivers/phy/qualcomm/phy-qcom-qusb2.c          | 1 +
+ drivers/phy/qualcomm/phy-qcom-snps-femto-v2.c  | 1 +
+ drivers/phy/renesas/phy-rcar-gen3-pcie.c       | 1 +
+ drivers/phy/renesas/r8a779f0-ether-serdes.c    | 1 +
+ drivers/phy/rockchip/phy-rockchip-typec.c      | 1 +
+ drivers/phy/ti/phy-tusb1210.c                  | 1 +
+ 12 files changed, 12 insertions(+)
 
-diff --git a/drivers/usb/chipidea/ci_hdrc_imx.c b/drivers/usb/chipidea/ci_hdrc_imx.c
-index 56d2ba824a0b..0a21d7cc5f5a 100644
---- a/drivers/usb/chipidea/ci_hdrc_imx.c
-+++ b/drivers/usb/chipidea/ci_hdrc_imx.c
+diff --git a/drivers/phy/motorola/phy-mapphone-mdm6600.c b/drivers/phy/motorola/phy-mapphone-mdm6600.c
+index fd0e0cd1c1cf..ce1dad8c438d 100644
+--- a/drivers/phy/motorola/phy-mapphone-mdm6600.c
++++ b/drivers/phy/motorola/phy-mapphone-mdm6600.c
 @@ -17,6 +17,7 @@
- #include <linux/clk.h>
+ #include <linux/of_platform.h>
+ #include <linux/phy/phy.h>
  #include <linux/pinctrl/consumer.h>
- #include <linux/pm_qos.h>
-+#include <linux/regulator/consumer.h>
++#include <linux/pm_runtime.h>
  
- #include "ci.h"
- #include "ci_hdrc_imx.h"
-diff --git a/drivers/usb/core/hcd.c b/drivers/usb/core/hcd.c
-index dee842ea6931..7a3261f72463 100644
---- a/drivers/usb/core/hcd.c
-+++ b/drivers/usb/core/hcd.c
-@@ -10,6 +10,7 @@
-  */
- 
- #include <linux/bcd.h>
-+#include <linux/highmem.h>
- #include <linux/module.h>
- #include <linux/version.h>
- #include <linux/kernel.h>
-diff --git a/drivers/usb/dwc3/dwc3-generic-plat.c b/drivers/usb/dwc3/dwc3-generic-plat.c
-index e846844e0023..2ee1bb9d7199 100644
---- a/drivers/usb/dwc3/dwc3-generic-plat.c
-+++ b/drivers/usb/dwc3/dwc3-generic-plat.c
-@@ -8,6 +8,7 @@
-  */
- 
- #include <linux/clk.h>
-+#include <linux/of.h>
+ #define PHY_MDM6600_PHY_DELAY_MS	4000	/* PHY enable 2.2s to 3.5s */
+ #define PHY_MDM6600_ENABLED_DELAY_MS	8000	/* 8s more total for MDM6600 */
+diff --git a/drivers/phy/phy-google-usb.c b/drivers/phy/phy-google-usb.c
+index ab20bc20f19e..48cfa2e28347 100644
+--- a/drivers/phy/phy-google-usb.c
++++ b/drivers/phy/phy-google-usb.c
+@@ -16,6 +16,7 @@
+ #include <linux/of.h>
+ #include <linux/phy/phy.h>
  #include <linux/platform_device.h>
- #include <linux/reset.h>
++#include <linux/pm_runtime.h>
  #include <linux/regmap.h>
-diff --git a/drivers/usb/dwc3/gadget.c b/drivers/usb/dwc3/gadget.c
-index 0a688904ce8c..d06171af6870 100644
---- a/drivers/usb/dwc3/gadget.c
-+++ b/drivers/usb/dwc3/gadget.c
-@@ -10,6 +10,7 @@
- 
- #include <linux/kernel.h>
- #include <linux/delay.h>
-+#include <linux/property.h>
- #include <linux/slab.h>
- #include <linux/spinlock.h>
+ #include <linux/reset.h>
+ #include <linux/usb/typec_mux.h>
+diff --git a/drivers/phy/qualcomm/phy-qcom-qmp-combo.c b/drivers/phy/qualcomm/phy-qcom-qmp-combo.c
+index 93f1aa10d400..b9ea7d058e93 100644
+--- a/drivers/phy/qualcomm/phy-qcom-qmp-combo.c
++++ b/drivers/phy/qualcomm/phy-qcom-qmp-combo.c
+@@ -16,6 +16,7 @@
+ #include <linux/of_graph.h>
+ #include <linux/phy/phy.h>
  #include <linux/platform_device.h>
++#include <linux/pm_runtime.h>
+ #include <linux/regulator/consumer.h>
+ #include <linux/reset.h>
+ #include <linux/slab.h>
+diff --git a/drivers/phy/qualcomm/phy-qcom-qmp-usb-legacy.c b/drivers/phy/qualcomm/phy-qcom-qmp-usb-legacy.c
+index 8bf951b0490c..2bd5862c5ba8 100644
+--- a/drivers/phy/qualcomm/phy-qcom-qmp-usb-legacy.c
++++ b/drivers/phy/qualcomm/phy-qcom-qmp-usb-legacy.c
+@@ -16,6 +16,7 @@
+ #include <linux/of_address.h>
+ #include <linux/phy/phy.h>
+ #include <linux/platform_device.h>
++#include <linux/pm_runtime.h>
+ #include <linux/regulator/consumer.h>
+ #include <linux/reset.h>
+ #include <linux/slab.h>
+diff --git a/drivers/phy/qualcomm/phy-qcom-qmp-usb.c b/drivers/phy/qualcomm/phy-qcom-qmp-usb.c
+index b0ecd5ba2464..d88b8a415e85 100644
+--- a/drivers/phy/qualcomm/phy-qcom-qmp-usb.c
++++ b/drivers/phy/qualcomm/phy-qcom-qmp-usb.c
+@@ -15,6 +15,7 @@
+ #include <linux/of_address.h>
+ #include <linux/phy/phy.h>
+ #include <linux/platform_device.h>
++#include <linux/pm_runtime.h>
+ #include <linux/regulator/consumer.h>
+ #include <linux/reset.h>
+ #include <linux/slab.h>
+diff --git a/drivers/phy/qualcomm/phy-qcom-qmp-usbc.c b/drivers/phy/qualcomm/phy-qcom-qmp-usbc.c
+index c342479a3798..f62e1f6ecc07 100644
+--- a/drivers/phy/qualcomm/phy-qcom-qmp-usbc.c
++++ b/drivers/phy/qualcomm/phy-qcom-qmp-usbc.c
+@@ -16,6 +16,7 @@
+ #include <linux/of_address.h>
+ #include <linux/phy/phy.h>
+ #include <linux/platform_device.h>
++#include <linux/pm_runtime.h>
+ #include <linux/regmap.h>
+ #include <linux/regulator/consumer.h>
+ #include <linux/reset.h>
+diff --git a/drivers/phy/qualcomm/phy-qcom-qusb2.c b/drivers/phy/qualcomm/phy-qcom-qusb2.c
+index eb93015be841..191040f6d60f 100644
+--- a/drivers/phy/qualcomm/phy-qcom-qusb2.c
++++ b/drivers/phy/qualcomm/phy-qcom-qusb2.c
+@@ -14,6 +14,7 @@
+ #include <linux/of.h>
+ #include <linux/phy/phy.h>
+ #include <linux/platform_device.h>
++#include <linux/pm_runtime.h>
+ #include <linux/regmap.h>
+ #include <linux/regulator/consumer.h>
+ #include <linux/reset.h>
+diff --git a/drivers/phy/qualcomm/phy-qcom-snps-femto-v2.c b/drivers/phy/qualcomm/phy-qcom-snps-femto-v2.c
+index eb0b0f61d98e..8915fa250e81 100644
+--- a/drivers/phy/qualcomm/phy-qcom-snps-femto-v2.c
++++ b/drivers/phy/qualcomm/phy-qcom-snps-femto-v2.c
+@@ -12,6 +12,7 @@
+ #include <linux/of.h>
+ #include <linux/phy/phy.h>
+ #include <linux/platform_device.h>
++#include <linux/pm_runtime.h>
+ #include <linux/regmap.h>
+ #include <linux/regulator/consumer.h>
+ #include <linux/reset.h>
+diff --git a/drivers/phy/renesas/phy-rcar-gen3-pcie.c b/drivers/phy/renesas/phy-rcar-gen3-pcie.c
+index c0e5a4ac82de..3e2cf59ad480 100644
+--- a/drivers/phy/renesas/phy-rcar-gen3-pcie.c
++++ b/drivers/phy/renesas/phy-rcar-gen3-pcie.c
+@@ -11,6 +11,7 @@
+ #include <linux/of.h>
+ #include <linux/phy/phy.h>
+ #include <linux/platform_device.h>
++#include <linux/pm_runtime.h>
+ #include <linux/spinlock.h>
+ 
+ #define PHY_CTRL		0x4000		/* R8A77980 only */
+diff --git a/drivers/phy/renesas/r8a779f0-ether-serdes.c b/drivers/phy/renesas/r8a779f0-ether-serdes.c
+index 8a6b6f366fe3..c34427ac4fdb 100644
+--- a/drivers/phy/renesas/r8a779f0-ether-serdes.c
++++ b/drivers/phy/renesas/r8a779f0-ether-serdes.c
+@@ -12,6 +12,7 @@
+ #include <linux/phy.h>
+ #include <linux/phy/phy.h>
+ #include <linux/platform_device.h>
++#include <linux/pm_runtime.h>
+ #include <linux/reset.h>
+ 
+ #define R8A779F0_ETH_SERDES_NUM			3
+diff --git a/drivers/phy/rockchip/phy-rockchip-typec.c b/drivers/phy/rockchip/phy-rockchip-typec.c
+index d9701b6106d5..0a318ccf1bbf 100644
+--- a/drivers/phy/rockchip/phy-rockchip-typec.c
++++ b/drivers/phy/rockchip/phy-rockchip-typec.c
+@@ -49,6 +49,7 @@
+ #include <linux/of_address.h>
+ #include <linux/of_platform.h>
+ #include <linux/platform_device.h>
++#include <linux/pm_runtime.h>
+ #include <linux/regmap.h>
+ #include <linux/reset.h>
+ 
+diff --git a/drivers/phy/ti/phy-tusb1210.c b/drivers/phy/ti/phy-tusb1210.c
+index c3ae9d7948d7..b7080403e649 100644
+--- a/drivers/phy/ti/phy-tusb1210.c
++++ b/drivers/phy/ti/phy-tusb1210.c
+@@ -13,6 +13,7 @@
+ #include <linux/ulpi/regs.h>
+ #include <linux/gpio/consumer.h>
+ #include <linux/phy/ulpi_phy.h>
++#include <linux/pm_runtime.h>
+ #include <linux/power_supply.h>
+ #include <linux/property.h>
+ #include <linux/workqueue.h>
 -- 
 2.43.0
 
