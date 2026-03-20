@@ -1,213 +1,198 @@
-Received: from AS8PR04CU009.outbound.protection.outlook.com (mail-westeuropeazon11011009.outbound.protection.outlook.com [52.101.70.9])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-yx1-f53.google.com (mail-yx1-f53.google.com [74.125.224.53])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7339E43C059;
-	Thu, 19 Mar 2026 22:33:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.70.9
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773959630; cv=fail; b=ZkONCv9vqbSxUDeNulARTDXr/u/QElUl++BAhN6nWbO9zxubyW+IkMejNHUA3evAjExQLP2X/T6ii1wUySW/VhQUfXjsBVg5XmHAQ3yV+rL8MFVMzQgrGz5riUe6uNNxvV9eXe5OPMRT2NL5v8e3vA7Sp+Hjbl6iRg7yGmJ7S7U=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773959630; c=relaxed/simple;
-	bh=HTyUfTulqVq0RDztEicQ2jQX626WgoFiGnMbc1Rx85Y=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=bNqun2yifAzi2pXj5lOTavsM9Uc8TiF9E9cl+xMvsg4H/LbTO/7tyP+tFZmrdQky4wZtMDihAff2byQ9+bCTljbSUd7IUY7W+jqHA0IuO+17hZkUHE6SbGzVAbgqc0UxvJJ5aTwKC822Ifv9u/fg5w6RhbfxxUVVNLludNiyipE=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=XR37Amug; arc=fail smtp.client-ip=52.101.70.9
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 612F62594B9
+	for <linux-scsi@vger.kernel.org>; Fri, 20 Mar 2026 01:10:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.224.53
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1773969018; cv=none; b=LQLPMCQWKhTw880aYgPFI6vFpRsG/ORXQAaG8EDP2WFn8AV7M3fvv4u7GvmiDitLD5ajpCA5l2nRwKeva1HxdKGTVxqjsOYV4+WUJJ7FDKKdzmza/WZ8Vy1w5nW2USZURlck+dch6KpvbQLFT89TpqcyrK3J5D+Y7da0a87xf04=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1773969018; c=relaxed/simple;
+	bh=27JPzjJMDDgjf2qMis3eedxFTyNiAGX6kPcAnzP2/20=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=OlIcH6cWKezBQEt3zIOm7C1+LfgifL6WEGjjO8DYx5+mxAIGXjzN/lp/puQqvAB3k5NqBm36vzlZ0E1kGFoiQAJChjkE/6PudkeJFPuOGnVjBxedjGTDZcCG1L8Be2gQ3zSBDpEw0o673p6AiEo9nWlhM24RmS7WxPbVerXoMfA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=kmZlfiPd; arc=none smtp.client-ip=74.125.224.53
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="XR37Amug"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=cIdjFHDsL/47QAmjqErULxqRFrl1iUTpaJKDoor8L8OFSLN3Bn1+WgCtSX+VP2ZzIwk1KnwrpoLxzrQtVcR4lqZaerFesihKrOQVVlSHs7Sjz0/mGuy1EbsZ/ru7nzYKHH/US2fh7vXp5LyYHRbJMCwBGMRjFwzgsOJyXlExZl3tg7xZl++5yt/GCxB/8gb+bwfqDpIrmxVgYnn2Y818v2R4e9MlhLPfHdzQJyHDFy9iaj3+fD4DfFZqtPYBndK7EwadGa7btJ0tKKMlyL6Sbsz36AugI8lnI3QXo16k4yvAkDEMLeEl36XCUy7t77djORloZLTjBJpjEvHtKLhslw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=tpcMpOj7EkX9LGxVXmbfajSEtxU0/+RWcEpKRZTsXRM=;
- b=v3mTn7XrNbHbVWFn7HQyZCPKiIGC+BYCoOx6zsZYiqr6pZTiH0YGF/VjIEACwkg8nENRAdsVRUf7gnQxU/bagK/HEmxOdv5hAYrxW8elH/SgDGU2uYCbtLo0qp1cIDY7kNxcuCkc7zJZRGVOhiXGfaBVRkpSHQjTUc41FYfhEy7QE0OtqfLW7jbN/jsHKAIKRLT1OfLV+YqigyqILhzE8D5bEKdSsk+yMIZvhiZQ4tdcQjKkC4i+drgF4ARDq4508LU4MMC74BMI9vN8en7flM0m92oXhCUeDgWin0o81wXcM6kmxkv6UHY6cZ7tGkgiKInsAGVuU3tLuARNATGv4Q==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
- header.d=nxp.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=tpcMpOj7EkX9LGxVXmbfajSEtxU0/+RWcEpKRZTsXRM=;
- b=XR37Amug1oBl7LRouxRGD4KTPSHo9KXfZShSAtusBNIPsCz2u2Lfw4QqSsumqP8kSGIJC0+9aJDZmMtKFS2hJE34FSmdyWWM5pKT4GX/AmwvWTPYNrypnAmsWv0v78T4Aej6dmcWmPVS02IVUYCjho4/7ugzqaA/D+auuIjSQnQcj8UzYPeM00PpaSPdW0wY7tylJBaEnwWeBEKrkq2R6vWW/sJlfp8XFTHnZly1OrPVljQfCrOSPoaKVIIKCxMCyRoBLusQJHa7g292NWDN2BQ0d+QB8dY6mziXt15D9G+IRJuGY+tAigJUj3JEViaZMNAdohPIarNcdkZpVkl+ZA==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nxp.com;
-Received: from AM9PR04MB8585.eurprd04.prod.outlook.com (2603:10a6:20b:438::13)
- by PAXPR04MB8079.eurprd04.prod.outlook.com (2603:10a6:102:1cc::12) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9723.19; Thu, 19 Mar
- 2026 22:33:40 +0000
-Received: from AM9PR04MB8585.eurprd04.prod.outlook.com
- ([fe80::f010:fca8:7ef:62f4]) by AM9PR04MB8585.eurprd04.prod.outlook.com
- ([fe80::f010:fca8:7ef:62f4%4]) with mapi id 15.20.9723.018; Thu, 19 Mar 2026
- 22:33:35 +0000
-From: Vladimir Oltean <vladimir.oltean@nxp.com>
-To: linux-phy@lists.infradead.org
-Cc: Vinod Koul <vkoul@kernel.org>,
-	Neil Armstrong <neil.armstrong@linaro.org>,
-	dri-devel@lists.freedesktop.org,
-	freedreno@lists.freedesktop.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-arm-msm@vger.kernel.org,
-	linux-can@vger.kernel.org,
-	linux-gpio@vger.kernel.org,
-	linux-ide@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-media@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	linux-renesas-soc@vger.kernel.org,
-	linux-riscv@lists.infradead.org,
-	linux-rockchip@lists.infradead.org,
-	linux-samsung-soc@vger.kernel.org,
-	linux-scsi@vger.kernel.org,
-	linux-sunxi@lists.linux.dev,
-	linux-tegra@vger.kernel.org,
-	linux-usb@vger.kernel.org,
-	netdev@vger.kernel.org,
-	spacemit@lists.linux.dev,
-	UNGLinuxDriver@microchip.com,
-	Joe Perches <joe@perches.com>
-Subject: [PATCH v5 phy-next 27/27] MAINTAINERS: add regexes for linux-phy
-Date: Fri, 20 Mar 2026 00:32:41 +0200
-Message-ID: <20260319223241.1351137-28-vladimir.oltean@nxp.com>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20260319223241.1351137-1-vladimir.oltean@nxp.com>
-References: <20260319223241.1351137-1-vladimir.oltean@nxp.com>
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: VI1PR0502CA0015.eurprd05.prod.outlook.com
- (2603:10a6:803:1::28) To AM9PR04MB8585.eurprd04.prod.outlook.com
- (2603:10a6:20b:438::13)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="kmZlfiPd"
+Received: by mail-yx1-f53.google.com with SMTP id 956f58d0204a3-64ea5b45673so1098500d50.0
+        for <linux-scsi@vger.kernel.org>; Thu, 19 Mar 2026 18:10:17 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1773969016; x=1774573816; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=qdP8K3+cAzx0ganXl8vq/PIp0ujTWW+NWr7suf1Oel0=;
+        b=kmZlfiPdODOCvSU3eIci9NvNQzSPXDG0VOJinngreh/sycfaobk1/gN6c24bKbGk59
+         GUuCkxe3zL7On+7dEWrf/kgfgxgbVJOvh1PLekF8opDHCRhWvsw6V7PRMrC9w8t01cbl
+         q2lgoNCY9ajBXG3WXser4o4KH59xPbwJA9wG5bbKnXfA0XFbJ+5zEe07frfc8jFm2D6z
+         p4i5XPyruwbw2Td57o4542JOnEmIDemPdV+/IVrenwmFl3q9JqZ8eCYdjicmEJLKHN97
+         51p6oHqHs9sTno4SypOBM1ozb6vw70B6Ns8+bT1rJIQuNvH+dfZYDAkVO/NsdvqVHiyn
+         bf/w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1773969016; x=1774573816;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=qdP8K3+cAzx0ganXl8vq/PIp0ujTWW+NWr7suf1Oel0=;
+        b=GIlT6TU7aVftbW76kIn8IcSFNtDkpHdYttoKm7bIOxE0gKqHtCH+5m7yb+l5Wj117Y
+         0qJU57Q+k8uonJeB1HXlA5Tke9c8Ae935zpWTHRDPrA7FnisKD2tF+OUDCFvoaRmNIAP
+         /dWAUlsibWdkbbt/1s2stXehhMd7WOd7LMoBwgUKgBK9nMtbgYyoNupt59DRpyQ4CFHL
+         /wlkCZ9474d5EpeMBd1rVTFLo6AL1LnSKYaGaSEAyK9pkrSgGZJY1OiRS24o4ETMZMmp
+         8y/qbxwGhIU7Pp/WEF/9iTsQMKML6V/MmB9K6OdYA2BdMKRET5/7rTQpBQZ5AIl8kmSW
+         3CWw==
+X-Gm-Message-State: AOJu0YxGRrjzjmcoGSTG71tHaf7bqo/c+/gWzVMfD8kmH10uKKLE33I3
+	7snPCZWf88pz/HgBtq2zHHLHyaWweMq+Amv0+X3h6v4ColWpabMMjQBn24lmRkU7
+X-Gm-Gg: ATEYQzzFbVqmjjzr5Fm8LDD/EUsNXcAE9UFUHwkNNRBnX39QhBQizCKKnTgT5mKmvoz
+	YuTkNO9L90FQ7MxJYmYF4ssD2JOtP2n7dSAl/YqxUxBQxCgTGKBsUX9X2Vhtku1KJ5MnVXBixFM
+	14DDoKkowrkeYtUZwEZqFIcA4Rgxp3M+Z619xtp9Knu2IPA/b06h69zGaqHi5uJksk+hBARrJCJ
+	RpQoV6ms4iQBMQR6a99OpgJw20PHdOtWJWlZZxvC9A1YLH0JwwK7XKdsP/iDaVdI4tcjHbQV8hq
+	SBIKbI+szNj26GGGiUNd6VokcWj3ObpJ8VuLrBrOmnkBaQ29CJq2v1pE72aRM7pfEuAP0AOjaIX
+	JSAiUoSv1EY68n3Cg+GoWnVP1jNqDe2galKKpZhU3k6S9AD5dYlEAXXonC70cAEcwiuiRKC+Z56
+	j0+8f5xW2sbw6/ChM+Pnt7jc9Jq5JgqAfV9FJEsOIdjyLj3W1HBLfpSi0=
+X-Received: by 2002:a05:690e:e11:b0:64a:db29:5e61 with SMTP id 956f58d0204a3-64eaacd241fmr1049059d50.32.1773969016093;
+        Thu, 19 Mar 2026 18:10:16 -0700 (PDT)
+Received: from ryzen ([2601:644:8000:5b5d::8bd])
+        by smtp.gmail.com with ESMTPSA id 956f58d0204a3-64eabd44121sm515493d50.1.2026.03.19.18.10.14
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 19 Mar 2026 18:10:15 -0700 (PDT)
+From: Rosen Penev <rosenp@gmail.com>
+To: linux-scsi@vger.kernel.org
+Cc: Ketan Mukadam <ketan.mukadam@broadcom.com>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Kees Cook <kees@kernel.org>,
+	"Gustavo A. R. Silva" <gustavoars@kernel.org>,
+	linux-kernel@vger.kernel.org (open list),
+	linux-hardening@vger.kernel.org (open list:KERNEL HARDENING (not covered by other areas):Keyword:\b__counted_by(_le|_be)?\b)
+Subject: [PATCH] scsi: be2iscsi: kzalloc + kcalloc to kzalloc_flex
+Date: Thu, 19 Mar 2026 18:09:57 -0700
+Message-ID: <20260320010957.32355-1-rosenp@gmail.com>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: AM9PR04MB8585:EE_|PAXPR04MB8079:EE_
-X-MS-Office365-Filtering-Correlation-Id: 3f155316-cf66-48a7-2bfe-08de86078eb6
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|366016|7416014|376014|19092799006|10070799003|1800799024|56012099003|18002099003|22082099003;
-X-Microsoft-Antispam-Message-Info:
-	+upsZRuFux+K3Za4MDzyFPN1x5rH+PJrh420M2R5VGJDNHHr/TdCnsGLKHLyEtWu85S6TIRNB6dP965mPlJti5Ot5gC0tUieELO7VcwWoono3n4M8gWs71YxBwrPDyyocXXoL5B4CzkjwD8aqFeE/BCda42h3uu6Zfi1YKiomCMG2pC9t8gsPj3y4obYVXTbCUaybzIgsfQrwTrH3qk6hRcW+TRFxHRY9Jy/IAoVFjbAC5m9hBe2o33XVCvwiz+bxZk0wEq1rNl5b8UQfytQKsUKfXoy8ym0WeTvskCooZCjmpNEWG8P/mdEVNec+rmUN1i8RK79yU8nbWhNrnWk2aeCHyCq/g6W+Vxqqua7W2IZo56ybJTlEaoch1M4g11WEJVMcbunuDQnGU+FMvq30q8ZyQ5YP7/+HoNSIQkdU9W7HVJLMY/RLfOmVQ2upoYN5v/hmXpKszgaOlc/9m6FRNOY1xLLnBuwyuV0SVcuXlDiFv8Mqi9QxeRQUbIyoKhV6YZSziEwXwS602yoFLjhBRzrzm6pGV+sqp9rSApQ3VlAGgCqSoNnhwZjlkoZCJqv0JIEbxxmoX/f7FCtR9vxL7MLMC6wVqsEfTX1Sd3Y1Eo0/5Up2e7LFTwHSt5HlkmnIOqM3sObvp4e3lQmpcI0+pkTRcuSZ1BAnumXwDD47bA/Efxp5YR+vToivywgPPVyGqJh6bXNVXBtjaQw9xkYgCkq38t+bd5wIK0e9ZI/O6c=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9PR04MB8585.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(7416014)(376014)(19092799006)(10070799003)(1800799024)(56012099003)(18002099003)(22082099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 2
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?BUVxklfbXaPgcEUOwJHmNzwgNVpQMJ3Tqzg/1ywEUGc3bclL5aimK7VkU3g3?=
- =?us-ascii?Q?4QPDOoFP9yx+GXcqI+fOLgWazng47f3Q0TDxNltke0/a0Pf8ACsrLfjxI3p0?=
- =?us-ascii?Q?4aCY9QVWpaH5dpUpBms6GwLQ/cktcQwnsMJKnN140zviitd+axivyual8q0a?=
- =?us-ascii?Q?iHUT2sk7+t9429mwAnx12CSzhnS2fIVnYJ5G+ixY/AuRSFoL8wyBuFTjiEkP?=
- =?us-ascii?Q?nwcY11OxLEjLgmMi811PZRc0ZKQFUVfVpJ5h8E0jCPCmQ8JsVoxXyHo7scI1?=
- =?us-ascii?Q?w/qJUq1FIxBuUva6riTzu77upXzaX4cOUWF+iHdasK+kpaULK55rguJTx7xC?=
- =?us-ascii?Q?6D7HKw3slmoABvFXg24+4QCOFMhMFwzSADBvDmTHpKuq15MPaJ5XFCWO+vNk?=
- =?us-ascii?Q?o8Wlnqv9xC893TsXZgYq5iqIRWwQWAUmxiZs0XACRL6AN2I9dJpMObF7vqTh?=
- =?us-ascii?Q?FMqPvBXse6L8uSncgjcEHaw8cq0aoWWA/gdkfYhvSGWEVnozF/vswl/Jt/7t?=
- =?us-ascii?Q?cn1BVIDhyitpYxxaRP162DYBPBrf5h1EtR+tkcaNxPpDkDMtJSj1cUDCOATL?=
- =?us-ascii?Q?GT4mWUpVygfPxCNncu6uhglg0LeQ0w4FxLNShUUThiqFn4fuSSM66VVztDtD?=
- =?us-ascii?Q?lOFKCurqZjx6wkfVF2VvAQ7YJ64QJ/wXmcF2h7xESFf/Zzhv/DdYgAqWwgiF?=
- =?us-ascii?Q?w+0K5E7LhEvmhc59XDMZboa1PvADHW+Dg4u+O1U1d5qRzlNmj7fOlyC4YNA0?=
- =?us-ascii?Q?vydq0OV/a4wZsdbrpmPpdNfeXxASJqnYHs7vX9yrE5AXcty8zOYTQ7qVyccN?=
- =?us-ascii?Q?yQCa7SBCdbrUr4NGsIoHlD7Db/u4jOunyxOVh/cWSojmp677WoLb6f+0nRiO?=
- =?us-ascii?Q?i4mnSI+vTABesd562KICBi7Jzm7ruwpWF/0NVZCFcg1dha4yVHkbMcdggYOj?=
- =?us-ascii?Q?Eh9NoiE0t0GYazL39Uw/Pz/ovZOAipQTRwZoeMPHhsAopVbSqTL1NVbZk1Q/?=
- =?us-ascii?Q?U99tBcj33n54ILo19pHdguESni1xCugMi7Eo5PW0rIyG4B/GIdwPzop+m6T3?=
- =?us-ascii?Q?ZT2gtILwCBbgKxHXS+RrhHtiwGUHFfj49FesomuEOC4d0jNFEwlgy1xZ9Dut?=
- =?us-ascii?Q?iT7mPlkNuyQh2dJ7pNDt3b2qXs3tkA5ESIjXxMq0ZC2HHCr6LIe7/soUnp/i?=
- =?us-ascii?Q?ZDFvaDxDbB5pgKyavHq+RL59moCp5Deb3L2iKUJdx8phW/4I4f1k29v4mAYN?=
- =?us-ascii?Q?ipE6bL2DlT4YoneKFLwJVohBEPZQTIgW+pQnb6fKUvI71eseCzKzbx4HsB74?=
- =?us-ascii?Q?9JfiKeRhxfr3tQrlHqhysihL3x0tAC3GEjnHWBzcEshfugwj1LiFqEkF9Yxn?=
- =?us-ascii?Q?sqnASDUel/SaL1rhVpdeyja0kuODHZKDIUPBThNrYwVfww7I47n7ff/mZr+o?=
- =?us-ascii?Q?wZI7EliTSWTGVcmAQIVCunkD4gNkqK4I2w6cURu1bH820QjeOU+fjDMaefnM?=
- =?us-ascii?Q?M4HdmGKkvcrDOUXRInNmeurSmTyUvKbVUoMSyYrC3MwEL72YW2LCfmoRQVu9?=
- =?us-ascii?Q?H0uxt9DxQ/2OAKqZwO0bRwY7FsIi85avDAMuU1QI2nBMEssW98iM2k68J4lS?=
- =?us-ascii?Q?qJUlkJwceOYz74dpNHV8HUELMT0dO1R9Z4urfPkOcLNxQ3vyL7PbcwP4jwPO?=
- =?us-ascii?Q?zD94jdZwFxDyzHuji38Dh/ojguNjTzRDpGB6n9cW7yfkC6IFChJy1dgGPLRc?=
- =?us-ascii?Q?OyIrsYaSTtWQ9sU24iD7QqwkVmDpwiVX6M3HEt1fCwoy/yNNJYdrWkC9dvDk?=
-X-MS-Exchange-AntiSpam-MessageData-1: wMK5jLXYNFIEB3Caef+8LcEsblTw55zklXQ=
-X-OriginatorOrg: nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 3f155316-cf66-48a7-2bfe-08de86078eb6
-X-MS-Exchange-CrossTenant-AuthSource: AM9PR04MB8585.eurprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 19 Mar 2026 22:33:35.1356
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 9Ya2j59DNYhEX2w7Y1AEtqKr/jDEBKWp8+4i4QMDCW8wm9ElNvrA4nVUDpopY9cW1EJhnjWjZAYNw+lsw2zAEA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PAXPR04MB8079
+Content-Transfer-Encoding: 8bit
 
-Some pragmatic shortcuts are being taken by PHY consumer driver authors,
-which put a burden on the framework. A lot of these can be caught during
-review.
+Simplifies allocation by using a flexible array member
 
-Make sure the linux-phy list is copied on as many keywords that regexes
-can reasonably catch.
+Added __counted_by for extra runtime analysis.
 
-Some considerations that led to this solution and not a simpler one:
-- Consumers may be located anywhere, and their file naming provides no
-  indication whatsoever that they are PHY API consumers.
-- The network PHY API has similarly sounding API: phy_start(),
-  phy_connect(), etc. Similarly, matching on "phy" would hit
-  phys_addr_t, "cryptography", etc.
-- The header files themselves need attention to avoid matching on
-  include/linux/phy.h (network PHY), include/linux/usb/phy.h,
-  drivers/net/vendor/device/phy.h, etc.
-- At least for a transitional period, I suppose developers will still
-  try to add PHY providers outside the subsystem (which is discouraged).
-
-So I used \b to try to match on actual word boundaries and I went for
-listing all markers of PHY API use as they may appear in patch contexts.
-
-Bit rot is a valid concern. I will add a test to the build automation
-that newly introduced struct and function names in include/linux/phy.h,
-include/linux/phy-props.h and drivers/phy/phy-provider.h are matched by
-the MAINTAINERS entry K: patterns.
-
-The keyword patterns were written with great help from Joe Perches
-<joe@perches.com>.
-
-Signed-off-by: Vladimir Oltean <vladimir.oltean@nxp.com>
+Signed-off-by: Rosen Penev <rosenp@gmail.com>
 ---
-Cc: Joe Perches <joe@perches.com>
+ drivers/scsi/be2iscsi/be_main.c | 27 ++-------------------------
+ drivers/scsi/be2iscsi/be_main.h |  4 ++--
+ 2 files changed, 4 insertions(+), 27 deletions(-)
 
-v3->v5: none
-v2->v3:
-- escape forward slash in linux/phy/phy.h in regex pattern:
-  https://lore.kernel.org/linux-phy/9fd14d166e860f26febfbc9061a6dcae6a166961.camel@perches.com/
-v1->v2:
-- split into multiple regex patterns
-- use matching-only (insted of capturing) regex patterns
-- adjust commit message to reflect the Q&A from v1
----
- MAINTAINERS | 11 +++++++++++
- 1 file changed, 11 insertions(+)
-
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 55af015174a5..cd920f14abde 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -10713,6 +10713,17 @@ F:	Documentation/devicetree/bindings/phy/
- F:	drivers/phy/
- F:	include/dt-bindings/phy/
- F:	include/linux/phy/
-+K:	(?:linux\/phy\/phy\.h|phy-props\.h|phy-provider\.h)
-+K:	\b(?:__)?(?:devm_)?(?:of_)?phy_(?:create|destroy|provider_(?:un)?register)\b
-+K:	\bphy_(?:create|remove)_lookup\b
-+K:	\bphy_(?:get|set)_drvdata\b
-+K:	\b(?:devm_)?(?:of_)?phy_(?:optional_)?(?:get|put)(?:_by_index)?\b
-+K:	\bphy_pm_runtime_(?:get|put)(?:_sync)?\b
-+K:	\bphy_(?:init|exit|power_(?:on|off))\b
-+K:	\bphy_(?:get|set)_(?:mode(?:_ext)?|media|speed|bus_width|max_link_rate)\b
-+K:	\bphy_(?:reset|configure|validate|calibrate)\b
-+K:	\bphy_notify_(?:connect|disconnect|state)\b
-+K:	\bstruct\s+phy(?:_ops|_attrs|_lookup|_provider)?\b
+diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
+index fd18d4d3d219..782a21af01a3 100644
+--- a/drivers/scsi/be2iscsi/be_main.c
++++ b/drivers/scsi/be2iscsi/be_main.c
+@@ -2470,22 +2470,15 @@ static int beiscsi_alloc_mem(struct beiscsi_hba *phba)
+ 	struct mem_array *mem_arr, *mem_arr_orig;
+ 	unsigned int i, j, alloc_size, curr_alloc_size;
  
- GENERIC PINCTRL I2C DEMULTIPLEXER DRIVER
- M:	Wolfram Sang <wsa+renesas@sang-engineering.com>
+-	phba->phwi_ctrlr = kzalloc(phba->params.hwi_ws_sz, GFP_KERNEL);
++	phba->phwi_ctrlr = kzalloc_flex(*phba->phwi_ctrlr, wrb_context, phba->params.cxns_per_ctrl);
+ 	if (!phba->phwi_ctrlr)
+ 		return -ENOMEM;
+ 
+ 	/* Allocate memory for wrb_context */
+ 	phwi_ctrlr = phba->phwi_ctrlr;
+-	phwi_ctrlr->wrb_context = kzalloc_objs(struct hwi_wrb_context,
+-					       phba->params.cxns_per_ctrl);
+-	if (!phwi_ctrlr->wrb_context) {
+-		kfree(phba->phwi_ctrlr);
+-		return -ENOMEM;
+-	}
+ 
+ 	phba->init_mem = kzalloc_objs(*mem_descr, SE_MEM_MAX);
+ 	if (!phba->init_mem) {
+-		kfree(phwi_ctrlr->wrb_context);
+ 		kfree(phba->phwi_ctrlr);
+ 		return -ENOMEM;
+ 	}
+@@ -2493,7 +2486,6 @@ static int beiscsi_alloc_mem(struct beiscsi_hba *phba)
+ 	mem_arr_orig = kmalloc_objs(*mem_arr_orig, BEISCSI_MAX_FRAGS_INIT);
+ 	if (!mem_arr_orig) {
+ 		kfree(phba->init_mem);
+-		kfree(phwi_ctrlr->wrb_context);
+ 		kfree(phba->phwi_ctrlr);
+ 		return -ENOMEM;
+ 	}
+@@ -3992,25 +3984,12 @@ static int hba_setup_cid_tbls(struct beiscsi_hba *phba)
+ 
+ 	for (ulp_num = 0; ulp_num < BEISCSI_ULP_COUNT; ulp_num++) {
+ 		if (test_bit(ulp_num, (void *)&phba->fw_config.ulp_supported)) {
+-			ptr_cid_info = kzalloc_obj(struct ulp_cid_info);
+-
++			ptr_cid_info = kzalloc_flex(*ptr_cid_info, cid_array, BEISCSI_GET_CID_COUNT(phba, ulp_num));
+ 			if (!ptr_cid_info) {
+ 				ret = -ENOMEM;
+ 				goto free_memory;
+ 			}
+ 
+-			/* Allocate memory for CID array */
+-			ptr_cid_info->cid_array =
+-				kcalloc(BEISCSI_GET_CID_COUNT(phba, ulp_num),
+-					sizeof(*ptr_cid_info->cid_array),
+-					GFP_KERNEL);
+-			if (!ptr_cid_info->cid_array) {
+-				kfree(ptr_cid_info);
+-				ptr_cid_info = NULL;
+-				ret = -ENOMEM;
+-
+-				goto free_memory;
+-			}
+ 			ptr_cid_info->avlbl_cids = BEISCSI_GET_CID_COUNT(
+ 						   phba, ulp_num);
+ 
+@@ -4061,7 +4040,6 @@ static int hba_setup_cid_tbls(struct beiscsi_hba *phba)
+ 			ptr_cid_info = phba->cid_array_info[ulp_num];
+ 
+ 			if (ptr_cid_info) {
+-				kfree(ptr_cid_info->cid_array);
+ 				kfree(ptr_cid_info);
+ 				phba->cid_array_info[ulp_num] = NULL;
+ 			}
+@@ -4175,7 +4153,6 @@ static void beiscsi_cleanup_port(struct beiscsi_hba *phba)
+ 			ptr_cid_info = phba->cid_array_info[ulp_num];
+ 
+ 			if (ptr_cid_info) {
+-				kfree(ptr_cid_info->cid_array);
+ 				kfree(ptr_cid_info);
+ 				phba->cid_array_info[ulp_num] = NULL;
+ 			}
+diff --git a/drivers/scsi/be2iscsi/be_main.h b/drivers/scsi/be2iscsi/be_main.h
+index 71c95d144560..77c9b1a1a488 100644
+--- a/drivers/scsi/be2iscsi/be_main.h
++++ b/drivers/scsi/be2iscsi/be_main.h
+@@ -241,10 +241,10 @@ struct hwi_wrb_context {
+ };
+ 
+ struct ulp_cid_info {
+-	unsigned short *cid_array;
+ 	unsigned short avlbl_cids;
+ 	unsigned short cid_alloc;
+ 	unsigned short cid_free;
++	unsigned short cid_array[] __counted_by(avlbl_cids);
+ };
+ 
+ #include "be.h"
+@@ -968,10 +968,10 @@ struct be_ring {
+ };
+ 
+ struct hwi_controller {
+-	struct hwi_wrb_context *wrb_context;
+ 	struct be_ring default_pdu_hdr[BEISCSI_ULP_COUNT];
+ 	struct be_ring default_pdu_data[BEISCSI_ULP_COUNT];
+ 	struct hwi_context_memory *phwi_ctxt;
++	struct hwi_wrb_context wrb_context[];
+ };
+ 
+ enum hwh_type_enum {
 -- 
-2.43.0
+2.53.0
 
