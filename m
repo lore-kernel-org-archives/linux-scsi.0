@@ -1,71 +1,70 @@
-Received: from mail-yw1-f175.google.com (mail-yw1-f175.google.com [209.85.128.175])
+Received: from mail-yw1-f180.google.com (mail-yw1-f180.google.com [209.85.128.180])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 95DEF231829
-	for <linux-scsi@vger.kernel.org>; Fri, 20 Mar 2026 04:12:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.175
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F10851FECAB
+	for <linux-scsi@vger.kernel.org>; Fri, 20 Mar 2026 04:18:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.180
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773979926; cv=none; b=sbs726izU/j90++yu9DEoiJ4256ZVhMtOWJ+VfMDNvHnbU3NjDbujZ9PbfG9zroYVi0nHJT0gHxYm6y4M/80WGAksuOORngR7Jog5Umk8MLS4jJxsWGJl9eBGyR+U/ScrBCSFvERsVSnCMqb9k5j/JXr3oan8XLoeVDX4+hMPzg=
+	t=1773980304; cv=none; b=UQ8akOzzqSkFuIgbFBqbvUKGLsUwW0j4txAg6YuIPMEttrOmByYjv33Ajo+fjpwcEmR6TU4YyQVCUn2D2doJwcqjP1TPHmDzhNQJ6FepQ54YUT72+u1tK22rH0Y11V9SASmwc+ug4xdpDYOkZtoo8D2cEOjBs1XReoaK9lffIrU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773979926; c=relaxed/simple;
-	bh=cKZ9DA8d7AqMDYmuVI90xfeG8zhHCOGpAlGVK6XL3Nw=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Qg50ZGMSO67AKAfHDT/AIoSD8/yNOcPd/Lqc8bgzeGEuM9bRWvmc55uG4HNapl7jwxNmM9NJ91RxtITeUUJHXWoFXrMlR3dwb0mQ6Z+4j4Hqlj63ah8k5jid+YdmyFIQ4bQmaGABDbTcArZYXcEFQ+TiAH1B5/0s/3GZQdphxlA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=SJIazOiv; arc=none smtp.client-ip=209.85.128.175
+	s=arc-20240116; t=1773980304; c=relaxed/simple;
+	bh=ER5vK4+NTw2y05vI8zpF+Yhy3gyTmavPIyw0rJSITHE=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=L3HKCW35HEiz0ifmUCKtpSK9MDkyzIrna2a/BlyzQQw/tLt3RKFVSDzfWL++LqTkJJiB3cubKf9A5IGHoOh39OdYZPZv7qpinKPRCm9Wgn8yI2m4LXeCMUx2neM17tI1XKlf9XT3+IRCyCzhHsDh+DTeiNHgxOypfFtuq3lo9vE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=NNalC5Z8; arc=none smtp.client-ip=209.85.128.180
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="SJIazOiv"
-Received: by mail-yw1-f175.google.com with SMTP id 00721157ae682-794719afcd4so12277337b3.1
-        for <linux-scsi@vger.kernel.org>; Thu, 19 Mar 2026 21:12:05 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="NNalC5Z8"
+Received: by mail-yw1-f180.google.com with SMTP id 00721157ae682-79a75818937so2130797b3.2
+        for <linux-scsi@vger.kernel.org>; Thu, 19 Mar 2026 21:18:22 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1773979924; x=1774584724; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1773980301; x=1774585101; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=QfUjsYd7dbRw2uqaXUlO8/PTLsP2ayWwRNJQy8iJQ8Y=;
-        b=SJIazOivsFRTZtr9cJTGqVb5ZgVCT7nrlN+pKrR7XJQ1oBzUVKFlixGg14X36AJidC
-         DLRhKpdtfddj6hcgPCA3aiJiqbawE+QhiyrigMH2bpA84FcUqUycy6pFSf9mQF22PDPY
-         rxdCTVI1QJ99sxBQE1P6ZZ6crLhwLW62q8Igk2EtrLwJxVhGH7loy1TN59Tz64xXCREz
-         niK5hVlBnryL+leKeC19AjjS/j4VRst1c2Xy9gz6PesFm1YxSJRI/h3uQGS15DUJfK9f
-         n2lKP3FHIUu674DQhVIbq1SaxKJ44RtGXZpSVOHkRWfTxQQmacoK68fvBShqvZhoOVqY
-         72pQ==
+        bh=qGshJ8AiMplsM5THsVdJSa3m8dAqKP3aABE+cxU81cg=;
+        b=NNalC5Z8EpfLPYb0TPv6bX7Mnc0OWdJ1z8bCFy0jfV0fMdN24M+rkjByyzd4yfiwLj
+         3DVbbiG0cmyTuCH4IdGzU60LpGNmMdyKy5OBih9m/SaSSKQ/tHt2lflSV0EjRrxdqaGG
+         UdhITODHvwA/52c6kuQXxMn6jwcdsJnRKEr0qMILq1Fe6rD6zEmtSmnSA8zRdkIGbK3z
+         GHkcWGGNaTJNzfDZ0Z2hXS2kddcyd2rxMX6kkWEm2e8W30hSfm0ReyDzCBfK0xlsOzXg
+         k1d3fCJdiTqQLviXCp4PnYcTHuk5jjjjahEVi21MhhdTgE40FgLEXmWgUklcs52JSKCE
+         +ZmA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1773979924; x=1774584724;
+        d=1e100.net; s=20251104; t=1773980301; x=1774585101;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=QfUjsYd7dbRw2uqaXUlO8/PTLsP2ayWwRNJQy8iJQ8Y=;
-        b=bCO1vQQbaGF1+OIG0bANtAmxW9FNnfaa7eMRlPyejHYpUJ4WrRimLWemje7gEZPHNK
-         h5fImc9k4pKkDRnYJBCqgMN4akfbA6nYuv4m6EO26+2ByiRlyvsGr2CZXmKblWHGqKQ9
-         SpR0xHubvBzGkqDqLGaNofoAqQfw/SPeOFALh33alPAvNgsJVq+iyaRAcTEwwZNwpyhD
-         EO7AfvBboCVRjW7cfoz9fnxczIkEszWV+QeLe1VbL2QX8KRZe/s7aphBh2UtShjOU93x
-         6ziOzyNNGjP3aYyD4PGATKXN5+AP7iOxvasybPh9/bHrgMS2OHR8JIauDyE2KgUWTz4M
-         a1FA==
-X-Gm-Message-State: AOJu0YxTY13nqTP7zSBcpZoxNVtYLkIZX1dTJnB71KebcKMay/w87X8B
-	wLKFFGGxHOdg7zhH/iVXH9S/IzngxW21Wc/DW2wTxdK0PXaIgBaU36XB3ThCxSqK
-X-Gm-Gg: ATEYQzy9d5dGAr0wcf4nO8/Ue78SSo7AVVlCG/Lz1m3Js9fH9MIaWVjbPvSUd1bppOT
-	jmwPpSEL4Ceh/r8Qc/um1kEpfo6FsgELPhUZYDraVZsxr4DsyQj4/OIsssTcDFlwnOK/QoPpkGe
-	NTwJIiqmVR332hZ4iGPhToUrCc2KfjH9wu5JwzCeWLAh9W6gYN7bk/xBTGyXmgPlSFHGdB/BOWZ
-	9SvFeO8ziKD4ioMpeGjVVuMgc96ELVqS//0tLyYUHAAThD8VDTRV0VtRsmwII+C9jtsVYft1xmW
-	j2zc4E9Z3Dso5y6lU2EsollDQJoIKB1P/PpNDXqVAzzq0CmdBRNNWNrrO1MbtOoG3OOMOgAz5Ok
-	yp9PTAJzNItN96xGFvMKVraSu8GR+khgXLzH7OeOZaAMFoKvz53WfGZHtOb+i4mdes/Kcl9gnfI
-	ILLJfrTydu0NVDQMq62ap2yRikzwNKssXzuPkKInW2GLakHSMkx4HUvYU=
-X-Received: by 2002:a05:690c:1a:b0:79a:67a0:adeb with SMTP id 00721157ae682-79a90c26448mr17621307b3.50.1773979924411;
-        Thu, 19 Mar 2026 21:12:04 -0700 (PDT)
+        bh=qGshJ8AiMplsM5THsVdJSa3m8dAqKP3aABE+cxU81cg=;
+        b=FXZIlhQ8QrbC/SvYFOrSLBOxdnfhtbwUe+YSio392g7HmcZAYUTXDTWTU8aE5V08kM
+         EX4w2ruu5XKBhFppayj6Kaog3B1x+zuUz+gkE0oeQwonvWbdleunoMFVj4mQ/V/7RIhH
+         dyn4Q8Te1xbktMv4aNr1peIOAUvVbZpK842KmhVFq8Jt+n/VUKGqk5rikenfMfUZRtfu
+         Nlp66+d/eEJSXZpG4hHZgUI3wQfCMB/xRqneT1EKnM74f+Vj/Yc6jTp6QQgRwihNlRMQ
+         crpsmUuZQklZrks/IvQ8jg4/wQlWPiNneT8w+TgmefEJf5TLKQBscwk0Sn5dUDnBwjx1
+         iA8w==
+X-Gm-Message-State: AOJu0Yw6eOlBuKRvM09B6WiXsfxkutUKQB7j+tHVg3t0u2HfoYi3MICN
+	dppY+0+Dj+lm3T7Rh13H7WolPtmS4/8SmV5fQtodOi8jx8dRSrJkn0u2xsCNxvvp
+X-Gm-Gg: ATEYQzyuCZIjkJi1QhgBcYS/PdimIT5Q0ZWgubilk3Z5pCxTvMvVtj2tIvSn9cwwX8j
+	4EatIqaVMnQizLnzIlcpwL2fGz2WZa7kj2sKMP0ftdK89xObs1gawEruGhTv3scShTUTEYnbN6N
+	n8L802sUcXbSWMchewremCL4pblZsjgW1AUDzMMnD0lM8amvWGB4b8RfjS4GDAzjvYCZ1PU9m27
+	ePRVoqB5F0feq8O2nw1vxFZycwPMNr+WmD03GomsdyflIZyfzZD1xuMO1MYl41WR1Pfk1OL00JD
+	20ZN63nGnTADI/yIlhRIaGR8fWPbccR2RbcCVvrihtnyyKKvKsYjH9gPHjX7sHYKEkyb5UHPLws
+	9FSRhH19SBE6/vufBuTwMsFmGhNiNhi7m2uXVLVgvcLmx11m/EPInqet39xcfI3q+6EKDuciQ33
+	1+wU3Xtidi0sTP8T/DN9m2no2cho7sp8eyTIOrNwQBGModdbTgtx00coI=
+X-Received: by 2002:a05:690c:101:b0:798:1b2d:4bb7 with SMTP id 00721157ae682-79a90af1892mr16526087b3.25.1773980301475;
+        Thu, 19 Mar 2026 21:18:21 -0700 (PDT)
 Received: from ryzen ([2601:644:8000:5b5d::8bd])
-        by smtp.gmail.com with ESMTPSA id 956f58d0204a3-64eabe7e343sm719089d50.11.2026.03.19.21.12.02
+        by smtp.gmail.com with ESMTPSA id 00721157ae682-79a905b9f55sm9225657b3.45.2026.03.19.21.18.19
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 19 Mar 2026 21:12:03 -0700 (PDT)
+        Thu, 19 Mar 2026 21:18:20 -0700 (PDT)
 From: Rosen Penev <rosenp@gmail.com>
 To: linux-scsi@vger.kernel.org
-Cc: Saurav Kashyap <skashyap@marvell.com>,
-	Javed Hasan <jhasan@marvell.com>,
-	GR-QLogic-Storage-Upstream@marvell.com (maintainer:BROADCOM BNX2FC 10 GIGABIT FCOE DRIVER),
+Cc: Don Brace <don.brace@microchip.com>,
 	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
 	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	storagedev@microchip.com (open list:HEWLETT-PACKARD SMART ARRAY RAID DRIVER (hpsa)),
 	linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH] scsi: bx2fc: use kzalloc_flex
-Date: Thu, 19 Mar 2026 21:11:46 -0700
-Message-ID: <20260320041146.46873-1-rosenp@gmail.com>
+Subject: [PATCH] scsi: hpsa: kzalloc + kcalloc to kzalloc_flex
+Date: Thu, 19 Mar 2026 21:18:02 -0700
+Message-ID: <20260320041802.47611-1-rosenp@gmail.com>
 X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -75,82 +74,85 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Avoid calculating sizes manually.
+Simplifies allocation and freeing the struct.
 
-Switch to flexible array member so that it works properly.
+Removed hpda_free_ctlr_info as it's now just a single kfree.
 
 Signed-off-by: Rosen Penev <rosenp@gmail.com>
 ---
- drivers/scsi/bnx2fc/bnx2fc.h    |  2 +-
- drivers/scsi/bnx2fc/bnx2fc_io.c | 14 +++-----------
- 2 files changed, 4 insertions(+), 12 deletions(-)
+ drivers/scsi/hpsa.c | 17 +++--------------
+ drivers/scsi/hpsa.h |  2 +-
+ 2 files changed, 4 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/scsi/bnx2fc/bnx2fc.h b/drivers/scsi/bnx2fc/bnx2fc.h
-index 8c8968ec8cb4..30d8b563db0c 100644
---- a/drivers/scsi/bnx2fc/bnx2fc.h
-+++ b/drivers/scsi/bnx2fc/bnx2fc.h
-@@ -281,7 +281,7 @@ struct bnx2fc_cmd_mgr {
- 	struct list_head *free_list;
- 	spinlock_t *free_list_lock;
- 	struct io_bdt **io_bdt_pool;
--	struct bnx2fc_cmd **cmds;
-+	struct bnx2fc_cmd *cmds[];
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index a1b116cd4723..608c45f4f749 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -8621,25 +8621,14 @@ static struct workqueue_struct *hpsa_create_controller_wq(struct ctlr_info *h,
+ 	return wq;
+ }
+ 
+-static void hpda_free_ctlr_info(struct ctlr_info *h)
+-{
+-	kfree(h->reply_map);
+-	kfree(h);
+-}
+-
+ static struct ctlr_info *hpda_alloc_ctlr_info(void)
+ {
+ 	struct ctlr_info *h;
+ 
+-	h = kzalloc_obj(*h);
++	h = kzalloc_flex(*h, reply_map, nr_cpu_ids, GFP_KERNEL);
+ 	if (!h)
+ 		return NULL;
+ 
+-	h->reply_map = kcalloc(nr_cpu_ids, sizeof(*h->reply_map), GFP_KERNEL);
+-	if (!h->reply_map) {
+-		kfree(h);
+-		return NULL;
+-	}
+ 	return h;
+ }
+ 
+@@ -8909,7 +8898,7 @@ static int hpsa_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 		destroy_workqueue(h->monitor_ctlr_wq);
+ 		h->monitor_ctlr_wq = NULL;
+ 	}
+-	hpda_free_ctlr_info(h);
++	kfree(h);
+ 	return rc;
+ }
+ 
+@@ -9093,7 +9082,7 @@ static void hpsa_remove_one(struct pci_dev *pdev)
+ 	free_percpu(h->lockup_detected);		/* init_one 2 */
+ 	h->lockup_detected = NULL;			/* init_one 2 */
+ 
+-	hpda_free_ctlr_info(h);				/* init_one 1 */
++	kfree(h);					/* init_one 1 */
+ }
+ 
+ static int __maybe_unused hpsa_suspend(
+diff --git a/drivers/scsi/hpsa.h b/drivers/scsi/hpsa.h
+index 99b0750850b2..935c2e1a840d 100644
+--- a/drivers/scsi/hpsa.h
++++ b/drivers/scsi/hpsa.h
+@@ -162,7 +162,6 @@ struct bmic_controller_parameters {
+ #pragma pack()
+ 
+ struct ctlr_info {
+-	unsigned int *reply_map;
+ 	int	ctlr;
+ 	char	devname[8];
+ 	char    *product_name;
+@@ -311,6 +310,7 @@ struct ctlr_info {
+ 	u8 reset_in_progress;
+ 	struct hpsa_sas_node *sas_host;
+ 	spinlock_t reset_lock;
++	unsigned int reply_map[];
  };
  
- struct bnx2fc_rport {
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_io.c b/drivers/scsi/bnx2fc/bnx2fc_io.c
-index 9c7a541a4523..dd1c4b3232e1 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_io.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_io.c
-@@ -213,8 +213,6 @@ struct bnx2fc_cmd_mgr *bnx2fc_cmd_mgr_alloc(struct bnx2fc_hba *hba)
- 	struct bnx2fc_cmd_mgr *cmgr;
- 	struct io_bdt *bdt_info;
- 	struct bnx2fc_cmd *io_req;
--	size_t len;
--	u32 mem_size;
- 	u16 xid;
- 	int i;
- 	int num_ios, num_pri_ios;
-@@ -231,10 +229,8 @@ struct bnx2fc_cmd_mgr *bnx2fc_cmd_mgr_alloc(struct bnx2fc_hba *hba)
- 	BNX2FC_MISC_DBG("min xid 0x%x, max xid 0x%x\n", min_xid, max_xid);
- 
- 	num_ios = max_xid - min_xid + 1;
--	len = (num_ios * (sizeof(struct bnx2fc_cmd *)));
--	len += sizeof(struct bnx2fc_cmd_mgr);
- 
--	cmgr = kzalloc(len, GFP_KERNEL);
-+	cmgr = kzalloc_flex(*cmgr, cmds, num_ios);
- 	if (!cmgr) {
- 		printk(KERN_ERR PFX "failed to alloc cmgr\n");
- 		return NULL;
-@@ -255,8 +251,6 @@ struct bnx2fc_cmd_mgr *bnx2fc_cmd_mgr_alloc(struct bnx2fc_hba *hba)
- 		goto mem_err;
- 	}
- 
--	cmgr->cmds = (struct bnx2fc_cmd **)(cmgr + 1);
--
- 	for (i = 0; i < arr_sz; i++)  {
- 		INIT_LIST_HEAD(&cmgr->free_list[i]);
- 		spin_lock_init(&cmgr->free_list_lock[i]);
-@@ -292,16 +286,14 @@ struct bnx2fc_cmd_mgr *bnx2fc_cmd_mgr_alloc(struct bnx2fc_hba *hba)
- 	}
- 
- 	/* Allocate pool of io_bdts - one for each bnx2fc_cmd */
--	mem_size = num_ios * sizeof(struct io_bdt *);
--	cmgr->io_bdt_pool = kzalloc(mem_size, GFP_KERNEL);
-+	cmgr->io_bdt_pool = kzalloc_objs(struct io_bdt *, num_ios);
- 	if (!cmgr->io_bdt_pool) {
- 		printk(KERN_ERR PFX "failed to alloc io_bdt_pool\n");
- 		goto mem_err;
- 	}
- 
--	mem_size = sizeof(struct io_bdt);
- 	for (i = 0; i < num_ios; i++) {
--		cmgr->io_bdt_pool[i] = kmalloc(mem_size, GFP_KERNEL);
-+		cmgr->io_bdt_pool[i] = kmalloc_obj(struct io_bdt);
- 		if (!cmgr->io_bdt_pool[i]) {
- 			printk(KERN_ERR PFX "failed to alloc "
- 				"io_bdt_pool[%d]\n", i);
+ struct offline_device_entry {
 -- 
 2.53.0
 
