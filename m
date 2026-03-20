@@ -1,87 +1,167 @@
-Received: from mail-qv1-f46.google.com (mail-qv1-f46.google.com [209.85.219.46])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 543DF29ACF6
-	for <linux-scsi@vger.kernel.org>; Fri, 20 Mar 2026 20:48:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.46
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D15502E6CA6;
+	Fri, 20 Mar 2026 21:08:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774039738; cv=none; b=jbJodLSaW5Gqvmom3FF4FuRnSS0nYdfJbJgUgkPIPr56lahjsYUaD8ULoHoSVUcHgXjMEqRUwKBrGf5KATXqQgHFOrIh7tEEfZtdqJ8ZSXEkB4Nvp38ZvUkxiPf3hHNJDyawJ+ir4ADbgg64vIV1ndye4QgcNncceSy3FcaXH00=
+	t=1774040903; cv=none; b=MWqzcwCdDjslScYWKaAlCWYg4FbD9dIIOt9fumyJ6ez9Nyx/qzSZY1TJ6QoELSLc6c5TzW3cRADfKyWblFw4kYPxPulpElks+xlbnFD+tMGp5gSVGgYYJpud5MIZ7ugHhcJ7uUuN15FPcfHaXJqiFVhXMx+HaPdXqGNcoXkcFvI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774039738; c=relaxed/simple;
-	bh=Eo8mcJx96u8VH4jn7nXN0WzI3pTAqmoosY5GMUzgLRE=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=G4Fp9JEgmu3meLaAMPRlzgANCRt48gDW0G3DbtJFC6hAWYbukymWTc0SKsA9DGF9ruRbIgYipeaI3ygWHNPeHzSjCwp8flD4q+4lwCdwoTZE12YNHdUAm2IWa/MgdA5Iw4tflJ7Thm6dejBwVesv8sL46IC3W9n0Twnj3M4a/7k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Afc9lio7; arc=none smtp.client-ip=209.85.219.46
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1774040903; c=relaxed/simple;
+	bh=u0zdmPIhkicnjjaekGwGuaSnl24uNp/SD6pTY4tTyoI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=A6BGGSrG9/BXqjmalSf6WATIL+CQggZXnY21NICBtZQMVgEkjwS0XfV1dwIyqImk88F64N9FVvs6I18BaV7BesdGk9hbkkENtKZAxY8ogWwOvZR5dydhF7Q/lpvpb74U9c4bSEE/KOseskDU3YbDc5AzAQH+aIGwQ8F01OJwpMw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qC8HBmDJ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Afc9lio7"
-Received: by mail-qv1-f46.google.com with SMTP id 6a1803df08f44-899ed41208fso14315006d6.1
-        for <linux-scsi@vger.kernel.org>; Fri, 20 Mar 2026 13:48:57 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1774039736; x=1774644536; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=Eo8mcJx96u8VH4jn7nXN0WzI3pTAqmoosY5GMUzgLRE=;
-        b=Afc9lio7uWThpB9fQcOrenMU96PgvimVM+exIDFTq6pbibE6LGnaXWDCIRvd0MFTul
-         AWhLe/RAwyxWNou3zGpIJ8GDpf6RayBzchsYnknz/p6i/tTjH8z6Ndbfnx4RtORlbxbp
-         znyEHAY1pTDjcnl9Rr3fc7uEhQ2dXg4O4J1e0/XMp0whjf/kbf4Y+mayfERRwnDfCo0J
-         arbAK8DORiRjLV+ZzGx5xh6ygpPHNxplZY1qxXeKqd+pjyt8z5MgUNPcm6V2uqT1KJ7z
-         KI2OChBkrauV3ur5hqdsyOR4G3R9YpvaARHDpoIZucprFFHWQBWgzWWJfX/oFVsbCQ1p
-         qiWg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1774039736; x=1774644536;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=Eo8mcJx96u8VH4jn7nXN0WzI3pTAqmoosY5GMUzgLRE=;
-        b=iY9MCgT0VY4q62hMCmzAviZChiPgkC564S8VisEZAzKwkaSoNulZLTG+rqrZ5bpum9
-         ZfsblK4dmD8PUFlzbPjsKpYyu11SCusBV7KSGceeB7o9MIKXDRjj7j2iVC6vjMxfMzW3
-         TZoUH210vUUwHvqx30Hi9lq93RTCttHTeTFxSmWegfNxRuUX7zCqnoX3Zk1RS8pbqYzf
-         NcAF+KJHrs8Krz9p5kO9vDkndieTfSP3OevZwaBVn0Tuj6GI0e19wfQkoJTBw3TL7j5V
-         2JuXLmCEgVkpkxZ1WuDjpqZhFO6nAXCfXqsORgA48oO8gtoyWV3W7B25CR71ECDAKK1R
-         XiSw==
-X-Gm-Message-State: AOJu0YwbB7axvjD/NFOWdSo2nAsyPG759rTwAX7gmDzoLo9ahzR0dmQA
-	IK0HqJ9vJwM/JJX+AbTfF4E6FmDsTaEETzqyvLBgxAJbeeoIzgRMXWdl
-X-Gm-Gg: ATEYQzwOiZ0V98aOp/hK0oc8iKOUg4SJMeoExOD8wzl3BHFq/f4iz2B9345u4rHhiPQ
-	3RMAd0Z6hr7uf8gL+l59GDYJ1REEY3N5e3qBQF9zUrqp9Ic55lLCkpX/lwxO+7w4VQUKo1TPjb1
-	i0sXiTUiwlniyOkTqswxuymqSUuARL96zSP3NQ2KjbNqzpd1HkuW6KibATDn36EDW/gvecPgqfs
-	dI5Zdf3dTEDEdVNZHuXv0W5hndKHD5V5U644YQ3Vj+QlMbTE08kJMq2A8xcWoK63iEKxsDU3B29
-	ZZKH0ZYY0YFkxIXFJx8jqLi3iV62lX9JJnyu3xCCowEXoWQUWZT98yl2DoF6EVceEv6dX0GM0qj
-	nsv61htg3JJjxTo1II8tARs3eVSf0z3EXvV3JZTZZzZLCIPxDwmaskFR2ZLbBr6Xwv01lkUl8Dx
-	aaZ7Dmi66zx6z9QGrQPA1UHd+0x9oKaFi5CQ5xd2xHMz215NVV3tFOHwisYoARR02T4ZFdzhXhR
-	g==
-X-Received: by 2002:a05:6214:5e08:b0:89c:8681:36fa with SMTP id 6a1803df08f44-89c86814fffmr56368476d6.32.1774039736232;
-        Fri, 20 Mar 2026 13:48:56 -0700 (PDT)
-Received: from [10.69.77.173] ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-89c8521311esm29456526d6.7.2026.03.20.13.48.55
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 20 Mar 2026 13:48:56 -0700 (PDT)
-Message-ID: <398a792b-ca68-4339-8af1-fddd0e3daf51@gmail.com>
-Date: Fri, 20 Mar 2026 13:48:27 -0700
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qC8HBmDJ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 84E28C4CEF7;
+	Fri, 20 Mar 2026 21:08:15 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1774040903;
+	bh=u0zdmPIhkicnjjaekGwGuaSnl24uNp/SD6pTY4tTyoI=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=qC8HBmDJbc3QTlANvhaLjcn0O5ay5GqzDEvYHXsOkZQejTAbOkx+bkEo+ki3/IcqS
+	 2zxeTAiPAA/ZnIrs1vWkKIH1qQM6hWWWHXeyTtkY/GTcJVwCwrNv3c5QnInC7yBUEZ
+	 Emq3X5gGUqXLf66MStAVqC5m2WCTfSbnlpAHXDlhTtb1Ap6h4AtLg1EuCVIYnM3U2k
+	 9XYMGV8lFcVQ3Ofo63x/aFk8UD8Gt0FgB8ThIniVMGJGtCnjMclwn9hpHtv2VORGXx
+	 vrpZQBmOIITR6wCUusRaEbZoc8REFtZupMT7Shny3yqCThx6DNBFOpK9/XXBVuE7o9
+	 ZHBuzLHK9WgAw==
+Date: Fri, 20 Mar 2026 14:08:12 -0700
+From: Nathan Chancellor <nathan@kernel.org>
+To: "Lorenzo Stoakes (Oracle)" <ljs@kernel.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Clemens Ladisch <clemens@ladisch.de>, Arnd Bergmann <arnd@arndb.de>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"K . Y . Srinivasan" <kys@microsoft.com>,
+	Haiyang Zhang <haiyangz@microsoft.com>,
+	Wei Liu <wei.liu@kernel.org>, Dexuan Cui <decui@microsoft.com>,
+	Long Li <longli@microsoft.com>,
+	Alexander Shishkin <alexander.shishkin@linux.intel.com>,
+	Maxime Coquelin <mcoquelin.stm32@gmail.com>,
+	Alexandre Torgue <alexandre.torgue@foss.st.com>,
+	Miquel Raynal <miquel.raynal@bootlin.com>,
+	Richard Weinberger <richard@nod.at>,
+	Vignesh Raghavendra <vigneshr@ti.com>,
+	Bodo Stroesser <bostroesser@gmail.com>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	David Howells <dhowells@redhat.com>,
+	Marc Dionne <marc.dionne@auristor.com>,
+	Alexander Viro <viro@zeniv.linux.org.uk>,
+	Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>,
+	David Hildenbrand <david@kernel.org>,
+	"Liam R . Howlett" <Liam.Howlett@oracle.com>,
+	Vlastimil Babka <vbabka@kernel.org>,
+	Mike Rapoport <rppt@kernel.org>,
+	Suren Baghdasaryan <surenb@google.com>,
+	Michal Hocko <mhocko@suse.com>, Jann Horn <jannh@google.com>,
+	Pedro Falcato <pfalcato@suse.de>, linux-kernel@vger.kernel.org,
+	linux-doc@vger.kernel.org, linux-hyperv@vger.kernel.org,
+	linux-stm32@st-md-mailman.stormreply.com,
+	linux-arm-kernel@lists.infradead.org, linux-mtd@lists.infradead.org,
+	linux-staging@lists.linux.dev, linux-scsi@vger.kernel.org,
+	target-devel@vger.kernel.org, linux-afs@lists.infradead.org,
+	linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
+	Ryan Roberts <ryan.roberts@arm.com>
+Subject: Re: [PATCH v3 15/16] mm: add mmap_action_map_kernel_pages[_full]()
+Message-ID: <20260320210812.GA3988975@ax162>
+References: <cover.1773944114.git.ljs@kernel.org>
+ <54ff3670662e10a66ce0c1a13c0ae93b99a5f201.1773944114.git.ljs@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi: lpfc: Use the crc32c() function
-To: Eric Biggers <ebiggers@kernel.org>,
- "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
- "Martin K . Petersen" <martin.petersen@oracle.com>,
- Justin Tee <justin.tee@broadcom.com>, Paul Ely <paul.ely@broadcom.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20260316223631.72361-1-ebiggers@kernel.org>
-Content-Language: en-US
-From: Justin Tee <justintee8345@gmail.com>
-In-Reply-To: <20260316223631.72361-1-ebiggers@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <54ff3670662e10a66ce0c1a13c0ae93b99a5f201.1773944114.git.ljs@kernel.org>
 
-Reviewed-by: Justin Tee <justin.tee@broadcom.com>
+Hi Lorenzo,
 
-Regards,
-Justin
+On Thu, Mar 19, 2026 at 06:23:39PM +0000, Lorenzo Stoakes (Oracle) wrote:
+> A user can invoke mmap_action_map_kernel_pages() to specify that the
+> mapping should map kernel pages starting from desc->start of a specified
+> number of pages specified in an array.
+> 
+> In order to implement this, adjust mmap_action_prepare() to be able to
+> return an error code, as it makes sense to assert that the specified
+> parameters are valid as quickly as possible as well as updating the VMA
+> flags to include VMA_MIXEDMAP_BIT as necessary.
+> 
+> This provides an mmap_prepare equivalent of vm_insert_pages().  We
+> additionally update the existing vm_insert_pages() code to use
+> range_in_vma() and add a new range_in_vma_desc() helper function for the
+> mmap_prepare case, sharing the code between the two in range_is_subset().
+> 
+> We add both mmap_action_map_kernel_pages() and
+> mmap_action_map_kernel_pages_full() to allow for both partial and full VMA
+> mappings.
+> 
+> We update the documentation to reflect the new features.
+> 
+> Finally, we update the VMA tests accordingly to reflect the changes.
+> 
+> Reviewed-by: Suren Baghdasaryan <surenb@google.com>
+> Signed-off-by: Lorenzo Stoakes (Oracle) <ljs@kernel.org>
+...
+> diff --git a/mm/util.c b/mm/util.c
+> index 8cf59267a9ac..682d0d24e1c6 100644
+> --- a/mm/util.c
+> +++ b/mm/util.c
+> @@ -1446,6 +1446,8 @@ int mmap_action_prepare(struct vm_area_desc *desc)
+>  		return io_remap_pfn_range_prepare(desc);
+>  	case MMAP_SIMPLE_IO_REMAP:
+>  		return simple_ioremap_prepare(desc);
+> +	case MMAP_MAP_KERNEL_PAGES:
+> +		return map_kernel_pages_prepare(desc);
+>  	}
+>  
+>  	WARN_ON_ONCE(1);
+> @@ -1476,6 +1478,9 @@ int mmap_action_complete(struct vm_area_struct *vma,
+>  	case MMAP_REMAP_PFN:
+>  		err = remap_pfn_range_complete(vma, action);
+>  		break;
+> +	case MMAP_MAP_KERNEL_PAGES:
+> +		err = map_kernel_pages_complete(vma, action);
+> +		break;
+>  	case MMAP_IO_REMAP_PFN:
+>  	case MMAP_SIMPLE_IO_REMAP:
+>  		/* Should have been delegated. */
+> @@ -1497,6 +1502,7 @@ int mmap_action_prepare(struct vm_area_desc *desc)
+>  	case MMAP_REMAP_PFN:
+>  	case MMAP_IO_REMAP_PFN:
+>  	case MMAP_SIMPLE_IO_REMAP:
+> +	case MMAP_MAP_KERNEL_PAGES:
+>  		WARN_ON_ONCE(1); /* nommu cannot handle these. */
+>  		break;
+>  	}
+
+Not sure if it has been reported/addressed yet but it looks like
+mmap_action_complete() was missed here, as pointed out by clang:
+
+  $ make -skj"$(nproc)" ARCH=arm LLVM=1 mrproper allnoconfig mm/util.o
+  mm/util.c:1520:10: warning: enumeration value 'MMAP_MAP_KERNEL_PAGES' not handled in switch [-Wswitch]
+   1520 |         switch (action->type) {
+        |                 ^~~~~~~~~~~~
+
+I assume
+
+diff --git a/mm/util.c b/mm/util.c
+index 682d0d24e1c6..c41c119a5a74 100644
+--- a/mm/util.c
++++ b/mm/util.c
+@@ -1523,6 +1523,7 @@ int mmap_action_complete(struct vm_area_struct *vma,
+ 	case MMAP_REMAP_PFN:
+ 	case MMAP_IO_REMAP_PFN:
+ 	case MMAP_SIMPLE_IO_REMAP:
++	case MMAP_MAP_KERNEL_PAGES:
+ 		WARN_ON_ONCE(1); /* nommu cannot handle this. */
+ 
+ 		err = -EINVAL;
+--
+
+should be the fix?
+
+Cheers,
+Nathan
