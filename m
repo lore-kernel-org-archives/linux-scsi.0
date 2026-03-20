@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F12283D301E;
-	Fri, 20 Mar 2026 17:23:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1D7C72C11E4;
+	Fri, 20 Mar 2026 17:30:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774027440; cv=none; b=jV2z/EjEIfEY5LAxzXLoXVDy+d08SShku8HuZWQNn6VoVv/OCGbf7tPwqgMN2g7aJXAkt49rZAUyGC586rz85EznqRbvjzgD9YKWU4aCzbB35JWrEoEDY5cEgyQb6aDhVnI6nKiX43oxsYM7KCSQLlNkDHXgDTb0VCGFakpNUik=
+	t=1774027819; cv=none; b=AavvgRV7qfyud2IHesGSAAHn2+ORAu1JNmmtWHFgRtNdiQZPfTZNAfMDvc1yjmPIAUlBxZPokKYTUTS9MVUN+MVgQ8E3em+txEpgP5EbYGIi/b8sS6rJsjA36PfqQJ4t+BwGJ4d81MSsdfCHYz/z5uvNBMY0v1X61lG9t0Pro8c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774027440; c=relaxed/simple;
-	bh=lkMH+Fs61pHyUrN0N7PA7Smmgeamo1Ed8V7OOsLNBN8=;
+	s=arc-20240116; t=1774027819; c=relaxed/simple;
+	bh=cn49vooa6zI1bK7Ne2keDKeM7S0Q3DYN+gFeecdr7S8=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=i06Pi6kqFXTMqP0VgwRayALNC8dDkr1txrae51sJomqGD9EKGmP4gsfD95oalIdyYL69WJK5RmiWpeJiiDTJWKPokVKxl9nw9xHpOuzCn3+valAA6aMt9ejW4hQvcpP46HXkBQZjDDnugHm8v3jtU/qusWspDtK6Ro3Wa9c7joQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ATswcWl7; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=ZebkNFUEgKi8vhX/2UiH4FdPlFV+UDDaCZQoSMJrm7JZVQRhFdVevU4HUGrGRDwB1Hzb1s2ISloQ3auTaH1gxeOvlv+AgKmOA1vuWUKUM2LTO7umpidmvCfZWQ6ZctlLPnBQvXcBRqFljmnk3uq97jRCuNWDT/gqnWIQrGJ3ETE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=k3SpwwTm; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ATswcWl7"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 952EDC4CEF7;
-	Fri, 20 Mar 2026 17:23:51 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="k3SpwwTm"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2DD94C4CEF7;
+	Fri, 20 Mar 2026 17:30:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1774027439;
-	bh=lkMH+Fs61pHyUrN0N7PA7Smmgeamo1Ed8V7OOsLNBN8=;
+	s=k20201202; t=1774027818;
+	bh=cn49vooa6zI1bK7Ne2keDKeM7S0Q3DYN+gFeecdr7S8=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=ATswcWl7MXWHHj389gFxOlECgcgQeJYv1wKqdExtZHqinVM8C1iUlLVry9OwlEG+s
-	 hQm57r7Pk+ZpJ3t0nw1/vvLOsQgKwispPEvcju2E9P/9JEP3v3yKvGkvycL7b0J2eK
-	 ezcqS/hxxM9fVO52XT/cmWkPIx24fW0C1LS9PL8IDJR6j8X/JoZ8s36B+4wxYvx/7M
-	 P98bC7b6fLvX4lzSxnJYRzQmThW9ckw1V9os4pxuNV73Z4BucD39QRODtyzANsRpNK
-	 4W1hTmWPTL9W0bOriXcoFpQK+v+c1Mbp60aVI67dnQEaAkyxZ6w2Qp0mXlzveN3nC0
-	 CSmw5tCHpFg1g==
-Message-ID: <b917813f-78fb-4c31-913c-5e343c52cab7@kernel.org>
-Date: Fri, 20 Mar 2026 18:23:49 +0100
+	b=k3SpwwTm3+LqCjrQj7miOUpofGNKZgHYqEQFraeDhPNVkXfECxvLW8Zobe+NTCg+G
+	 i7xlPNhvtTYeO7xTUc3PKqRzid15IRNPdH4YUSohCwce42VZkVlfUBCOYco/sVD2et
+	 vxE3mFh096D4OSX2GQRa+4bRuL3WZDLWUKtjGXNpv90+4RK+i5qV9A834ZJ9lkzev7
+	 lahhfRWQ33ItmIvlrTAdoDUipL3iLC6ZC/fkTuxcE0ZVmjxz+jG3WsJOCgw84oKjof
+	 B8nLkrNSu+NEYlk9zV6lwNjmYwBOeq57KIpkyhjcIZtOPDWfA1AJwLaP+3IsTjxXfR
+	 z+df8M86zwjVg==
+Message-ID: <ea8a46ab-3ae5-447b-96c1-37b58619edd3@kernel.org>
+Date: Fri, 20 Mar 2026 18:30:08 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,8 +35,8 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 02/16] mm: add documentation for the mmap_prepare file
- operation callback
+Subject: Re: [PATCH v3 03/16] mm: document vm_operations_struct->open the same
+ as close()
 Content-Language: en-US
 To: "Lorenzo Stoakes (Oracle)" <ljs@kernel.org>,
  Andrew Morton <akpm@linux-foundation.org>
@@ -67,22 +67,18 @@ Cc: Jonathan Corbet <corbet@lwn.net>, Clemens Ladisch <clemens@ladisch.de>,
  linux-afs@lists.infradead.org, linux-fsdevel@vger.kernel.org,
  linux-mm@kvack.org, Ryan Roberts <ryan.roberts@arm.com>
 References: <cover.1773944114.git.ljs@kernel.org>
- <172ef809d9976b067bba4cd9d2b78410c6c6d03d.1773944114.git.ljs@kernel.org>
+ <808919eaae0b682ec631301b3c06d85c62ba428d.1773944114.git.ljs@kernel.org>
 From: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
-In-Reply-To: <172ef809d9976b067bba4cd9d2b78410c6c6d03d.1773944114.git.ljs@kernel.org>
+In-Reply-To: <808919eaae0b682ec631301b3c06d85c62ba428d.1773944114.git.ljs@kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 On 3/19/26 19:23, Lorenzo Stoakes (Oracle) wrote:
-> This documentation makes it easier for a driver/file system implementer to
-> correctly use this callback.
+> Describe when the operation is invoked and the context in which it is
+> invoked, matching the description already added for vm_op->close().
 > 
-> It covers the fundamentals, whilst intentionally leaving the less lovely
-> possible actions one might take undocumented (for instance - the
-> success_hook, error_hook fields in mmap_action).
-> 
-> The document also covers the new VMA flags implementation which is the
-> only one which will work correctly with mmap_prepare.
+> While we're here, update all outdated references to an 'area' field for
+> VMAs to the more consistent 'vma'.
 > 
 > Signed-off-by: Lorenzo Stoakes (Oracle) <ljs@kernel.org>
 
