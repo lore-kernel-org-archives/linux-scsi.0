@@ -1,134 +1,108 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C768236EAB1
-	for <linux-scsi@vger.kernel.org>; Fri, 20 Mar 2026 11:14:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E12B03CF66D;
+	Fri, 20 Mar 2026 17:10:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774005247; cv=none; b=Uaq9/YEhIIkAZmO0qJoO3jw4NnHs18QM969IFROdYfgD9XbkFJItS5Nrvi8J2crxyDS9W03OxUkKw0fh8aZp27NbSwqnFz23Se6r4wp3K9bu8ivfMVxqJUphPHVsJd3PaOf1GZ6kRAPt03pigUI6tbpy7ZE0t+NonuK/I8rrUZg=
+	t=1774026625; cv=none; b=FpOYb1rdRbgqcbH5eD6O7a0o/UWmWdgU0RDuxxs61WvT7rJS6VHzcWRKPDa797gca8aAH+ylX5BOWHBO/LzEAAYcU88HRMxgiNnUnGL1Omwg98Y/5bZwwlCn2ZkOucTXV2pcTAOpcl5YxXKceZn6BiapgQ2MQwX/LTnLVKPnlzo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774005247; c=relaxed/simple;
-	bh=1hj72cRPqwqfvLjJnaBh/cOjWaZYnOWHm71Pw/s74CY=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=eo1Aej2FbEuy1lpD6YjhES+5AqWzAWR7VBiPegf3Q5f/HtfXJEyZflYTBU48D3vMcwZa6ca71CDqgAZslsGGKo/8xIeCcYGfVOz4beLF5SfXAI3GjdOunpHKwYNb2L1TtRLs8F9lMTjTwSVzQJ/hLY2bL2K51rA4HfPV9cq1T1c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=GPwdNdDi; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1774026625; c=relaxed/simple;
+	bh=r+p0YZoMVI7AcM9fsFhpiDTl7RR8STO6srhIbYMdrEs=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=FuOVgvRfyrpQDCfRxlJCkGvyPM0XM5v5tOOI6sbEkS0AcEgyH51QHC49D+gVkFiNnJsZW5kKrykgNjfNqCTVDZBdbGFh26yG1clMD1GR3VHjhRPRTnHn38H1i2vDKy8mixVObQbT9m1wsd4r1mSvQXVOtbsylJy/A2+EjfT2eA0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bXKnbe/Z; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="GPwdNdDi"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1774005244;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=3NQZznosVl48MCXOoUyc53RSVU44S4P9FpUYqwm8D6Y=;
-	b=GPwdNdDi0hIxB+Q3+lyJoRIn58pDs3eazpa6TUpKEV16eLO0swCjUjU16qQHhg2vmJz5+w
-	+CpMeUPLR9Pk+xnzoPcoXZBuTE530v+ToCpUSTnEKlUtJIn/x96LHMUN9NOZHuhx8FoVBI
-	yJoBU1YuJQG+URHbFk3BW/TfDlEPsfg=
-Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-74-wjq3BzQaN8eowOVq2MuslA-1; Fri,
- 20 Mar 2026 07:14:01 -0400
-X-MC-Unique: wjq3BzQaN8eowOVq2MuslA-1
-X-Mimecast-MFC-AGG-ID: wjq3BzQaN8eowOVq2MuslA_1774005240
-Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 905BF180049D;
-	Fri, 20 Mar 2026 11:13:59 +0000 (UTC)
-Received: from localhost (unknown [10.44.33.200])
-	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 3719A1955F21;
-	Fri, 20 Mar 2026 11:13:57 +0000 (UTC)
-Date: Fri, 20 Mar 2026 07:13:54 -0400
-From: Stefan Hajnoczi <stefanha@redhat.com>
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Joshua Daley <jdaley@linux.ibm.com>, linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, virtualization@lists.linux.dev,
-	mst@redhat.com, jasowang@redhat.com, pbonzini@redhat.com,
-	eperezma@redhat.com, James.Bottomley@hansenpartnership.com,
-	mjrosato@linux.ibm.com, farman@linux.ibm.com, frankja@linux.ibm.com
-Subject: Re: [PATCH v3 0/3] scsi: virtio_scsi: move INIT_WORK calls to
- virtscsi_init
-Message-ID: <20260320111354.GA227028@fedora>
-References: <20260316153341.2062278-1-jdaley@linux.ibm.com>
- <yq14imbkzxr.fsf@ca-mkp.ca.oracle.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bXKnbe/Z"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 920B9C19425;
+	Fri, 20 Mar 2026 17:10:16 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1774026624;
+	bh=r+p0YZoMVI7AcM9fsFhpiDTl7RR8STO6srhIbYMdrEs=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=bXKnbe/ZTMZYKmKswyp7UUNW73CC8ocNdqBGJpBjO2IEcg9klGYzKBTbn7wS6145o
+	 bDx6yp6E9EoRlfZ1nChN/6xzDyc02EPnVKbzAT5MkJBM1x9r0U7ISiFB9ZK42TeeEV
+	 NPQS0N+PInTeLONogYKmUybb5i5U5KXxX1g3XFI6v4Zk+gmrInpHhro/V78ZwgDZBl
+	 PDIKv//vs1fkzlQQJXNTgc0NCf5mfA5lg8S5iRTjU72SybGYa8zUxK1T+5C/DsgByO
+	 n+gWOBmyWdE+bwHdB8VdEbJ4rsjPU2AaNHeRHUcpRTiT8ZcyJgwkIBZUDTaCXbxgBy
+	 oLeo5Gj5w1IGw==
+Message-ID: <e3ecf76a-4490-415d-9d52-dae478ad43d7@kernel.org>
+Date: Fri, 20 Mar 2026 18:10:14 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-	protocol="application/pgp-signature"; boundary="uagbqTySvoIPF7sU"
-Content-Disposition: inline
-In-Reply-To: <yq14imbkzxr.fsf@ca-mkp.ca.oracle.com>
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3 01/16] mm: various small mmap_prepare cleanups
+Content-Language: en-US
+To: "Lorenzo Stoakes (Oracle)" <ljs@kernel.org>,
+ Andrew Morton <akpm@linux-foundation.org>
+Cc: Jonathan Corbet <corbet@lwn.net>, Clemens Ladisch <clemens@ladisch.de>,
+ Arnd Bergmann <arnd@arndb.de>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ "K . Y . Srinivasan" <kys@microsoft.com>,
+ Haiyang Zhang <haiyangz@microsoft.com>, Wei Liu <wei.liu@kernel.org>,
+ Dexuan Cui <decui@microsoft.com>, Long Li <longli@microsoft.com>,
+ Alexander Shishkin <alexander.shishkin@linux.intel.com>,
+ Maxime Coquelin <mcoquelin.stm32@gmail.com>,
+ Alexandre Torgue <alexandre.torgue@foss.st.com>,
+ Miquel Raynal <miquel.raynal@bootlin.com>,
+ Richard Weinberger <richard@nod.at>, Vignesh Raghavendra <vigneshr@ti.com>,
+ Bodo Stroesser <bostroesser@gmail.com>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>,
+ David Howells <dhowells@redhat.com>, Marc Dionne <marc.dionne@auristor.com>,
+ Alexander Viro <viro@zeniv.linux.org.uk>,
+ Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>,
+ David Hildenbrand <david@kernel.org>,
+ "Liam R . Howlett" <Liam.Howlett@oracle.com>, Mike Rapoport
+ <rppt@kernel.org>, Suren Baghdasaryan <surenb@google.com>,
+ Michal Hocko <mhocko@suse.com>, Jann Horn <jannh@google.com>,
+ Pedro Falcato <pfalcato@suse.de>, linux-kernel@vger.kernel.org,
+ linux-doc@vger.kernel.org, linux-hyperv@vger.kernel.org,
+ linux-stm32@st-md-mailman.stormreply.com,
+ linux-arm-kernel@lists.infradead.org, linux-mtd@lists.infradead.org,
+ linux-staging@lists.linux.dev, linux-scsi@vger.kernel.org,
+ target-devel@vger.kernel.org, linux-afs@lists.infradead.org,
+ linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
+ Ryan Roberts <ryan.roberts@arm.com>
+References: <cover.1773944114.git.ljs@kernel.org>
+ <498a579bfbcbb8b0e4a9c39243b4454347f03a46.1773944114.git.ljs@kernel.org>
+From: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
+In-Reply-To: <498a579bfbcbb8b0e4a9c39243b4454347f03a46.1773944114.git.ljs@kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
+On 3/19/26 19:23, Lorenzo Stoakes (Oracle) wrote:
+> Rather than passing arbitrary fields, pass a vm_area_desc pointer to mmap
+> prepare functions to mmap prepare, and an action and vma pointer to mmap
+> complete in order to put all the action-specific logic in the function
+> actually doing the work.
+> 
+> Additionally, allow mmap prepare functions to return an error so we can
+> error out as soon as possible if there is something logically incorrect in
+> the input.
+> 
+> Update remap_pfn_range_prepare() to properly check the input range for the
+> CoW case.
+> 
+> Also remove io_remap_pfn_range_complete(), as we can simply set up the
+> fields correctly in io_remap_pfn_range_prepare() and use
+> remap_pfn_range_complete() for this.
+> 
+> While we're here, make remap_pfn_range_prepare_vma() a little neater, and
+> pass mmap_action directly to call_action_complete().
+> 
+> Then, update compat_vma_mmap() to perform its logic directly, as
+> __compat_vma_map() is not used by anything so we don't need to export it.
+> 
+> Also update compat_vma_mmap() to use vfs_mmap_prepare() rather than
+> calling the mmap_prepare op directly.
+> 
+> Finally, update the VMA userland tests to reflect the changes.
+> 
+> Signed-off-by: Lorenzo Stoakes (Oracle) <ljs@kernel.org>
 
---uagbqTySvoIPF7sU
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-On Thu, Mar 19, 2026 at 10:19:00PM -0400, Martin K. Petersen wrote:
-> > This patch avoids a kernel warning that may occur if a virtio_scsi
-> > controller is detached immediately following a disk detach. See the
-> > commit message for details. The following are instructions to
-> > produce the warning (without the proposed patch).
->=20
-> A few issues were flagged. Please review:
->=20
->   https://sashiko.dev/#/patchset/20260316153341.2062278-1-jdaley%40linux.=
-ibm.com
-
-Hi Joshua,
-I am responding to the following sashiko review comment (haven't figured
-out a way to reply in the web UI or via direct email to sashiko). I feel
-responsible for this one since I suggested the change that sashiko is
-questioning. I haven't looked at the other review comments, please
-triage them yourself.
-
-=46rom Sashiko:
-> Does this code violate the virtio-scsi specification?
->
-> The specification mandates that a driver must not place buffers into the
-> event virtqueue if neither VIRTIO_SCSI_F_HOTPLUG nor VIRTIO_SCSI_F_CHANGE
-> has been negotiated.
->
-> By completely removing the VIRTIO_SCSI_F_HOTPLUG check without expanding =
-it
-> to check for VIRTIO_SCSI_F_CHANGE, could this unconditionally populate the
-> event queue and cause strict implementations to reject the buffers or
-> transition the device into a broken state?
-
-No, this is a hallucination. The spec does not mandate that a driver
-must not place buffers into the event virtqueue when neither
-VIRTIO_SCSI_F_HOTPLUG nor VIRTIO_SCSI_F_CHANGE has been negotiated:
-https://docs.oasis-open.org/virtio/virtio/v1.4/virtio-v1.4.html#x1-4510006
-
-The event virtqueue still serves a purpose when both
-VIRTIO_SCSI_F_HOTPLUG and VIRTIO_SCSI_F_CHANGE are not negotiated. For
-example, see "Asynchronous notification subscription" and the
-VIRTIO_SCSI_T_ASYNC_NOTIFY event type.
-
-Stefan
-
---uagbqTySvoIPF7sU
-Content-Type: application/pgp-signature; name=signature.asc
-
------BEGIN PGP SIGNATURE-----
-
-iQEzBAEBCgAdFiEEhpWov9P5fNqsNXdanKSrs4Grc8gFAmm9K/IACgkQnKSrs4Gr
-c8i3aAf+NF/UZTnAHGOBAx2EqnAXxT3SWR5a9K3rGuKzj4HOYpkhHfyad0jaWDM9
-NVcAk3kH8Lywbca/je3kbfJDUfoNPTs840drpeBh89s2GRhKLDKxL8GLam8XYCg6
-l35OzwEWtCowWpBGyoZ73sLUXniRFdQHhtWyMYyMv4jjwgyWTJdOXCU8pXtL6lPV
-XjvV6KaUB8d9yfuELeT78uXAXUDTgkTMH9t45NHsxtX+fbcECyGUhtz+6cRlOohl
-Xosbeg5ZP6loPqUU3HpfMqb5BlgVyNRrybYQ7dZAkJ90tCzN61DsXRMInpUaHuaz
-ZWGl5ilkQxcE41/JX0t/qMhJrLCkQg==
-=JMnL
------END PGP SIGNATURE-----
-
---uagbqTySvoIPF7sU--
+Acked-by: Vlastimil Babka (SUSE) <vbabka@kernel.org>
 
