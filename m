@@ -1,167 +1,91 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D15502E6CA6;
-	Fri, 20 Mar 2026 21:08:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 542AD2C08D4;
+	Fri, 20 Mar 2026 21:56:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774040903; cv=none; b=MWqzcwCdDjslScYWKaAlCWYg4FbD9dIIOt9fumyJ6ez9Nyx/qzSZY1TJ6QoELSLc6c5TzW3cRADfKyWblFw4kYPxPulpElks+xlbnFD+tMGp5gSVGgYYJpud5MIZ7ugHhcJ7uUuN15FPcfHaXJqiFVhXMx+HaPdXqGNcoXkcFvI=
+	t=1774043771; cv=none; b=RMUd1YCnOHYjlR3BlAt3ZdfItLSalJQPUrQ2Jeu1CGNzTZWmjVQimo8koko8XBz3vPmH7u4YbErHm5p9yjUAHIvJyIG6rhN6Db0RtIyGYzYYKjNQUPew+1bu0vEuzmxjYGo5I/e7EPIxsOPMPVHTc4aF9qzDyTRpkzl2Qk7oVkA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774040903; c=relaxed/simple;
-	bh=u0zdmPIhkicnjjaekGwGuaSnl24uNp/SD6pTY4tTyoI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=A6BGGSrG9/BXqjmalSf6WATIL+CQggZXnY21NICBtZQMVgEkjwS0XfV1dwIyqImk88F64N9FVvs6I18BaV7BesdGk9hbkkENtKZAxY8ogWwOvZR5dydhF7Q/lpvpb74U9c4bSEE/KOseskDU3YbDc5AzAQH+aIGwQ8F01OJwpMw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qC8HBmDJ; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1774043771; c=relaxed/simple;
+	bh=/Rf2eakh5ZeaAaheFJYAVxm4fy6YqH2KFkakWRjpmuM=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=CuG8hQBLU1NK5TdKjW46N4YdNXBKqqv8jiFy1dxdmbUHKgnNwNNL7rivjMNJZ/YVLMX/xBddbgw/bCeRlaohlGp7Vomj0g5cpk1Dw/v+3OhgS5swWZEFjyACh+XQQTn1vUF/GqJjcwEZWYBIDehebjDCWo1mkyC0rsA29Rl840s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=OmBP6vwm; arc=none smtp.client-ip=192.198.163.14
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qC8HBmDJ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 84E28C4CEF7;
-	Fri, 20 Mar 2026 21:08:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1774040903;
-	bh=u0zdmPIhkicnjjaekGwGuaSnl24uNp/SD6pTY4tTyoI=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=qC8HBmDJbc3QTlANvhaLjcn0O5ay5GqzDEvYHXsOkZQejTAbOkx+bkEo+ki3/IcqS
-	 2zxeTAiPAA/ZnIrs1vWkKIH1qQM6hWWWHXeyTtkY/GTcJVwCwrNv3c5QnInC7yBUEZ
-	 Emq3X5gGUqXLf66MStAVqC5m2WCTfSbnlpAHXDlhTtb1Ap6h4AtLg1EuCVIYnM3U2k
-	 9XYMGV8lFcVQ3Ofo63x/aFk8UD8Gt0FgB8ThIniVMGJGtCnjMclwn9hpHtv2VORGXx
-	 vrpZQBmOIITR6wCUusRaEbZoc8REFtZupMT7Shny3yqCThx6DNBFOpK9/XXBVuE7o9
-	 ZHBuzLHK9WgAw==
-Date: Fri, 20 Mar 2026 14:08:12 -0700
-From: Nathan Chancellor <nathan@kernel.org>
-To: "Lorenzo Stoakes (Oracle)" <ljs@kernel.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Clemens Ladisch <clemens@ladisch.de>, Arnd Bergmann <arnd@arndb.de>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"K . Y . Srinivasan" <kys@microsoft.com>,
-	Haiyang Zhang <haiyangz@microsoft.com>,
-	Wei Liu <wei.liu@kernel.org>, Dexuan Cui <decui@microsoft.com>,
-	Long Li <longli@microsoft.com>,
-	Alexander Shishkin <alexander.shishkin@linux.intel.com>,
-	Maxime Coquelin <mcoquelin.stm32@gmail.com>,
-	Alexandre Torgue <alexandre.torgue@foss.st.com>,
-	Miquel Raynal <miquel.raynal@bootlin.com>,
-	Richard Weinberger <richard@nod.at>,
-	Vignesh Raghavendra <vigneshr@ti.com>,
-	Bodo Stroesser <bostroesser@gmail.com>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	David Howells <dhowells@redhat.com>,
-	Marc Dionne <marc.dionne@auristor.com>,
-	Alexander Viro <viro@zeniv.linux.org.uk>,
-	Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>,
-	David Hildenbrand <david@kernel.org>,
-	"Liam R . Howlett" <Liam.Howlett@oracle.com>,
-	Vlastimil Babka <vbabka@kernel.org>,
-	Mike Rapoport <rppt@kernel.org>,
-	Suren Baghdasaryan <surenb@google.com>,
-	Michal Hocko <mhocko@suse.com>, Jann Horn <jannh@google.com>,
-	Pedro Falcato <pfalcato@suse.de>, linux-kernel@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-hyperv@vger.kernel.org,
-	linux-stm32@st-md-mailman.stormreply.com,
-	linux-arm-kernel@lists.infradead.org, linux-mtd@lists.infradead.org,
-	linux-staging@lists.linux.dev, linux-scsi@vger.kernel.org,
-	target-devel@vger.kernel.org, linux-afs@lists.infradead.org,
-	linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
-	Ryan Roberts <ryan.roberts@arm.com>
-Subject: Re: [PATCH v3 15/16] mm: add mmap_action_map_kernel_pages[_full]()
-Message-ID: <20260320210812.GA3988975@ax162>
-References: <cover.1773944114.git.ljs@kernel.org>
- <54ff3670662e10a66ce0c1a13c0ae93b99a5f201.1773944114.git.ljs@kernel.org>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="OmBP6vwm"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1774043770; x=1805579770;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=/Rf2eakh5ZeaAaheFJYAVxm4fy6YqH2KFkakWRjpmuM=;
+  b=OmBP6vwmwkW+kjZbjRMjAh5HF8o+bsC4ksMXj8MicvWjyp1kWdAWj60l
+   PDJwG8EGusvSqI9pFqX0cf3pX5N+A7awzLGB+OkWjKyfYR+vVuig8UXas
+   80lSMxr/ZE7rPETxELLMHZUla/uD6Dvq7FRlGhVRdxn4DCwBzrIAsFuvZ
+   gIaQetj75a/G36vjR1liM0xw2HwD1ekfTOE5uaQLhCWZV4KGgsVwi20nQ
+   XIOQXHtBuViN0vYzpIdKTM1F9RURTcKjufAPb/j+pUM8/ut0p7fY0n2kH
+   tEwnW5kkyotN6T2/mA6UYQpDm+/TSTlUrEx52SW523DoPyyqwyXPutToh
+   A==;
+X-CSE-ConnectionGUID: EGf0mmyaTFyRzyawpNS1Qg==
+X-CSE-MsgGUID: m4Jo797vRBahNsNGrTlUzQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11735"; a="75206238"
+X-IronPort-AV: E=Sophos;i="6.23,132,1770624000"; 
+   d="scan'208";a="75206238"
+Received: from fmviesa008.fm.intel.com ([10.60.135.148])
+  by fmvoesa108.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Mar 2026 14:56:10 -0700
+X-CSE-ConnectionGUID: RKkVuXzFSeeUmx+o2YwLYw==
+X-CSE-MsgGUID: Kp0B0jduSwCPwqIM2VlfoA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.23,132,1770624000"; 
+   d="scan'208";a="220732837"
+Received: from black.igk.intel.com ([10.91.253.5])
+  by fmviesa008.fm.intel.com with ESMTP; 20 Mar 2026 14:56:07 -0700
+Received: by black.igk.intel.com (Postfix, from userid 1003)
+	id DB47195; Fri, 20 Mar 2026 22:56:06 +0100 (CET)
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Shawn Lin <shawn.lin@rock-chips.com>,
+	linux-scsi@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-rockchip@lists.infradead.org,
+	linux-kernel@vger.kernel.org
+Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Heiko Stuebner <heiko@sntech.de>,
+	Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v1 1/1] scsi: ufs: rockchip: Drop unused include
+Date: Fri, 20 Mar 2026 22:56:06 +0100
+Message-ID: <20260320215606.3236516-1-andriy.shevchenko@linux.intel.com>
+X-Mailer: git-send-email 2.50.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <54ff3670662e10a66ce0c1a13c0ae93b99a5f201.1773944114.git.ljs@kernel.org>
+Content-Transfer-Encoding: 8bit
 
-Hi Lorenzo,
+This driver includes the legacy header <linux/gpio.h> but does
+not use any symbols from it. Drop the inclusion.
 
-On Thu, Mar 19, 2026 at 06:23:39PM +0000, Lorenzo Stoakes (Oracle) wrote:
-> A user can invoke mmap_action_map_kernel_pages() to specify that the
-> mapping should map kernel pages starting from desc->start of a specified
-> number of pages specified in an array.
-> 
-> In order to implement this, adjust mmap_action_prepare() to be able to
-> return an error code, as it makes sense to assert that the specified
-> parameters are valid as quickly as possible as well as updating the VMA
-> flags to include VMA_MIXEDMAP_BIT as necessary.
-> 
-> This provides an mmap_prepare equivalent of vm_insert_pages().  We
-> additionally update the existing vm_insert_pages() code to use
-> range_in_vma() and add a new range_in_vma_desc() helper function for the
-> mmap_prepare case, sharing the code between the two in range_is_subset().
-> 
-> We add both mmap_action_map_kernel_pages() and
-> mmap_action_map_kernel_pages_full() to allow for both partial and full VMA
-> mappings.
-> 
-> We update the documentation to reflect the new features.
-> 
-> Finally, we update the VMA tests accordingly to reflect the changes.
-> 
-> Reviewed-by: Suren Baghdasaryan <surenb@google.com>
-> Signed-off-by: Lorenzo Stoakes (Oracle) <ljs@kernel.org>
-...
-> diff --git a/mm/util.c b/mm/util.c
-> index 8cf59267a9ac..682d0d24e1c6 100644
-> --- a/mm/util.c
-> +++ b/mm/util.c
-> @@ -1446,6 +1446,8 @@ int mmap_action_prepare(struct vm_area_desc *desc)
->  		return io_remap_pfn_range_prepare(desc);
->  	case MMAP_SIMPLE_IO_REMAP:
->  		return simple_ioremap_prepare(desc);
-> +	case MMAP_MAP_KERNEL_PAGES:
-> +		return map_kernel_pages_prepare(desc);
->  	}
->  
->  	WARN_ON_ONCE(1);
-> @@ -1476,6 +1478,9 @@ int mmap_action_complete(struct vm_area_struct *vma,
->  	case MMAP_REMAP_PFN:
->  		err = remap_pfn_range_complete(vma, action);
->  		break;
-> +	case MMAP_MAP_KERNEL_PAGES:
-> +		err = map_kernel_pages_complete(vma, action);
-> +		break;
->  	case MMAP_IO_REMAP_PFN:
->  	case MMAP_SIMPLE_IO_REMAP:
->  		/* Should have been delegated. */
-> @@ -1497,6 +1502,7 @@ int mmap_action_prepare(struct vm_area_desc *desc)
->  	case MMAP_REMAP_PFN:
->  	case MMAP_IO_REMAP_PFN:
->  	case MMAP_SIMPLE_IO_REMAP:
-> +	case MMAP_MAP_KERNEL_PAGES:
->  		WARN_ON_ONCE(1); /* nommu cannot handle these. */
->  		break;
->  	}
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+---
+ drivers/ufs/host/ufs-rockchip.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-Not sure if it has been reported/addressed yet but it looks like
-mmap_action_complete() was missed here, as pointed out by clang:
-
-  $ make -skj"$(nproc)" ARCH=arm LLVM=1 mrproper allnoconfig mm/util.o
-  mm/util.c:1520:10: warning: enumeration value 'MMAP_MAP_KERNEL_PAGES' not handled in switch [-Wswitch]
-   1520 |         switch (action->type) {
-        |                 ^~~~~~~~~~~~
-
-I assume
-
-diff --git a/mm/util.c b/mm/util.c
-index 682d0d24e1c6..c41c119a5a74 100644
---- a/mm/util.c
-+++ b/mm/util.c
-@@ -1523,6 +1523,7 @@ int mmap_action_complete(struct vm_area_struct *vma,
- 	case MMAP_REMAP_PFN:
- 	case MMAP_IO_REMAP_PFN:
- 	case MMAP_SIMPLE_IO_REMAP:
-+	case MMAP_MAP_KERNEL_PAGES:
- 		WARN_ON_ONCE(1); /* nommu cannot handle this. */
+diff --git a/drivers/ufs/host/ufs-rockchip.c b/drivers/ufs/host/ufs-rockchip.c
+index 7fff34513a60..bac68f238e1c 100644
+--- a/drivers/ufs/host/ufs-rockchip.c
++++ b/drivers/ufs/host/ufs-rockchip.c
+@@ -6,7 +6,6 @@
+  */
  
- 		err = -EINVAL;
---
+ #include <linux/clk.h>
+-#include <linux/gpio.h>
+ #include <linux/gpio/consumer.h>
+ #include <linux/mfd/syscon.h>
+ #include <linux/of.h>
+-- 
+2.50.1
 
-should be the fix?
-
-Cheers,
-Nathan
