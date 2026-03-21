@@ -1,57 +1,55 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.11])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.10])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 404B6258CCC
-	for <linux-scsi@vger.kernel.org>; Sat, 21 Mar 2026 11:51:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 28B5A277C81
+	for <linux-scsi@vger.kernel.org>; Sat, 21 Mar 2026 16:28:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.10
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774093897; cv=none; b=oxGOuzhmJJhhIftzXorOsJ5BcYHPo2GO0DiteRaUDUknvwpXXMOiS+8F0JU+YMSSbA/N59wZh2bxX1NFHmAPSlTsF1UQnBebt1Rk5mOEtmk++klbIBrUsVxWbElPaJQX02QsGEP7P2DUGW8UUiAvK5pMtykt4MpQiqoIUlexsrw=
+	t=1774110487; cv=none; b=bEGgCZDLt1D9h899pWG/QZEDg3UtQRnGYRlmIyx7RCTn+6f2DJk/r6UNywvRnOQe31Cv/D7u3lCMdV3dEbGgBYh7QbgOj2Fq2MFMYoBhcqd/hF9zme5rK8AMILEcdi9D0fzFo1XJEgIGsEFPNb1JtBYtidCG/sbiVcN5Gu6ntmg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774093897; c=relaxed/simple;
-	bh=Yv0BVFkGNmJ9ua8E+w6+QdxL713qSqpWDAvXxedRvvE=;
+	s=arc-20240116; t=1774110487; c=relaxed/simple;
+	bh=bKSvlpGzvWl1NJW8wpKKGfnGcydapXBYhvh6GOGoIdg=;
 	h=Date:From:To:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ffIECOOvREmo6NrQSu5AJXn8POaHfWhj+ieF0JwGkToOwrzkLqLqhg1cYDNd14AwaCsCICKldVioM513gdwbgktluhqdFWVvMjrjAak084sNGe3FbHVb05ZOefcs6tLbk8uA/RBsaO50uH0xq7UehRkrI+J1wI29LRGdGvuJRBA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=j7+yv7E3; arc=none smtp.client-ip=198.175.65.11
+	 Content-Type:Content-Disposition:In-Reply-To; b=kMxVwfMfsU73J+R1RGZp3Bry59GU09xUumTiqd+8GcKjSa3NEkMEfzpYOCAb9bUFP4jIbH8XrXsO4jZsiQF2+f46+zW857K7bdqJmIwpPchRGlRYlSGQwhTh0Cv+uvDifbH6r//DDHkQV8kI17ggXfEZBpDLL6n/oIXIgRfvIlw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=H+7nTWvd; arc=none smtp.client-ip=198.175.65.10
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="j7+yv7E3"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="H+7nTWvd"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1774093895; x=1805629895;
+  t=1774110487; x=1805646487;
   h=date:from:to:subject:message-id:references:mime-version:
    in-reply-to;
-  bh=Yv0BVFkGNmJ9ua8E+w6+QdxL713qSqpWDAvXxedRvvE=;
-  b=j7+yv7E30dfjlxMhRCrSBHkgsQeNzEar9VsyFKJWraqyK8YD9AjCMUIi
-   0E0pLETpeACTmlNSuvGhU8lThqF8ZVNtJNW4Z9wRzqSGZoMM5Y5j1lbh0
-   iwOu/mzGQwnkiJ9MxvGffoLfiLvRVPZxvZfSopGv33Bs2V/BbMoz8SG8i
-   lZKnw7n2DOxRIwfuQfOZd2S+xxsocmmAaGjS9KfVqwTZD2OlbDgL+OLDA
-   b0DH/0xDAMybcpvrWjTQ9aQanVuagRoYfpbnTJX5s4q8vx3uJJn//54hh
-   U7PdzkLT45iFh5L+sFBcsnVG8X6VJiOXJMLDvoZGaPLfUXmDp4R4Hp88w
-   Q==;
-X-CSE-ConnectionGUID: 10Lo2f9iSMuAoMszVoTwVA==
-X-CSE-MsgGUID: M71OubogS4ipUL4h+7m9cw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11735"; a="85480589"
+  bh=bKSvlpGzvWl1NJW8wpKKGfnGcydapXBYhvh6GOGoIdg=;
+  b=H+7nTWvdQmKkPtA6qFrPmaCLUnxkdMdXXyZqTyA2WAYHocWJXL6Lnfej
+   RdCDGFxpum6vfo6Fi03lwLwjLsuEp4MmNQYmeY1BFtJGGwGfgMyCEmSGz
+   DumvnIigTkKeG6GNW6RmevGf4SKalc+AcISSDTtnSvmyZZw/IeVawTFH3
+   DZ9qRJgDbnZKv0l7yAF/VMrTXU5Cj/Vb53kM0Akd5cfTjU6v6JHFTxRov
+   1UQGUdaFMxkSuMPi3gOTvvNZfHWorevZ8pDz0/vGfctv8A3vvzFXCckzu
+   PMvh58DhSRtOa7zlQO1U0Xnke4VLS9j2q0GV+nJ77IJAg5NBhOyRb2q5g
+   A==;
+X-CSE-ConnectionGUID: ShG6GQytRh2c3lorYN57VQ==
+X-CSE-MsgGUID: cYzSfQ8sQXGFOE84CvZUwA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11736"; a="92554878"
 X-IronPort-AV: E=Sophos;i="6.23,133,1770624000"; 
-   d="scan'208";a="85480589"
-Received: from orviesa004.jf.intel.com ([10.64.159.144])
-  by orvoesa103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Mar 2026 04:51:34 -0700
-X-CSE-ConnectionGUID: UvAtHzaaT+SikY9iVRMKlw==
-X-CSE-MsgGUID: dOYCuEvoREeJYF0OdzPiXQ==
+   d="scan'208";a="92554878"
+Received: from fmviesa003.fm.intel.com ([10.60.135.143])
+  by orvoesa102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Mar 2026 09:28:06 -0700
+X-CSE-ConnectionGUID: D7kzaytGTPCATEuTZr76Og==
+X-CSE-MsgGUID: yonfhxevS/GN97XTGiWsCw==
 X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.23,133,1770624000"; 
-   d="scan'208";a="228037395"
-Received: from igk-lkp-server01.igk.intel.com (HELO 9958d990ccf2) ([10.211.93.152])
-  by orviesa004.jf.intel.com with ESMTP; 21 Mar 2026 04:51:33 -0700
-Received: from kbuild by 9958d990ccf2 with local (Exim 4.98.2)
+Received: from lkp-server02.sh.intel.com (HELO d7fefbca0d04) ([10.239.97.151])
+  by fmviesa003.fm.intel.com with ESMTP; 21 Mar 2026 09:28:04 -0700
+Received: from kbuild by d7fefbca0d04 with local (Exim 4.98.2)
 	(envelope-from <lkp@intel.com>)
-	id 1w3ura-0000000066L-2X8m;
-	Sat, 21 Mar 2026 11:51:30 +0000
-Date: Sat, 21 Mar 2026 12:50:36 +0100
+	id 1w3zBB-0000000011N-3ikd;
+	Sat, 21 Mar 2026 16:28:01 +0000
+Date: Sun, 22 Mar 2026 00:27:52 +0800
 From: kernel test robot <lkp@intel.com>
 To: Rosen Penev <rosenp@gmail.com>, linux-scsi@vger.kernel.org
 Subject: Re: [PATCH] scsi: be2iscsi: kzalloc + kcalloc to kzalloc_flex
-Message-ID: <202603211230.849vqwiI-lkp@intel.com>
+Message-ID: <202603220006.d4ATnciA-lkp@intel.com>
 References: <20260320010957.32355-1-rosenp@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -68,8 +66,7 @@ Hi Rosen,
 kernel test robot noticed the following build warnings:
 
 [auto build test WARNING on jejb-scsi/for-next]
-[also build test WARNING on mkp-scsi/for-next next-20260320]
-[cannot apply to linus/master v6.16-rc1]
+[also build test WARNING on mkp-scsi/for-next linus/master v7.0-rc4 next-20260320]
 [If your patch is applied to the wrong git tree, kindly drop us a note.
 And when submitting patch, we suggest to use '--base' as documented in
 https://git-scm.com/docs/git-format-patch#_base_tree_information]
@@ -78,21 +75,21 @@ url:    https://github.com/intel-lab-lkp/linux/commits/Rosen-Penev/scsi-be2iscsi
 base:   https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git for-next
 patch link:    https://lore.kernel.org/r/20260320010957.32355-1-rosenp%40gmail.com
 patch subject: [PATCH] scsi: be2iscsi: kzalloc + kcalloc to kzalloc_flex
-config: x86_64-kexec (https://download.01.org/0day-ci/archive/20260321/202603211230.849vqwiI-lkp@intel.com/config)
-compiler: clang version 20.1.8 (https://github.com/llvm/llvm-project 87f0227cb60147a26a1eeb4fb06e3b505e9c7261)
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260321/202603211230.849vqwiI-lkp@intel.com/reproduce)
+config: x86_64-rhel-9.4-ltp (https://download.01.org/0day-ci/archive/20260322/202603220006.d4ATnciA-lkp@intel.com/config)
+compiler: gcc-14 (Debian 14.2.0-19) 14.2.0
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260322/202603220006.d4ATnciA-lkp@intel.com/reproduce)
 
 If you fix the issue in a separate patch/commit (i.e. not just a new version of
 the same patch/commit), kindly add following tags
 | Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202603211230.849vqwiI-lkp@intel.com/
+| Closes: https://lore.kernel.org/oe-kbuild-all/202603220006.d4ATnciA-lkp@intel.com/
 
 All warnings (new ones prefixed by >>):
 
->> drivers/scsi/be2iscsi/be_main.c:2468:25: warning: variable 'phwi_ctrlr' set but not used [-Wunused-but-set-variable]
+   drivers/scsi/be2iscsi/be_main.c: In function 'beiscsi_alloc_mem':
+>> drivers/scsi/be2iscsi/be_main.c:2468:32: warning: variable 'phwi_ctrlr' set but not used [-Wunused-but-set-variable]
     2468 |         struct hwi_controller *phwi_ctrlr;
-         |                                ^
-   1 warning generated.
+         |                                ^~~~~~~~~~
 
 
 vim +/phwi_ctrlr +2468 drivers/scsi/be2iscsi/be_main.c
