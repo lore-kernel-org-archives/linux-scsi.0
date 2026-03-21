@@ -1,65 +1,80 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 14ED22E11C7;
-	Sat, 21 Mar 2026 03:11:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7AA002D97A6;
+	Sat, 21 Mar 2026 03:11:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774062678; cv=none; b=mmdPcyUs/vKmC+8FAljSXMgF3zX6ycmcQak1nZa1g/9CSbms59rSH7Doi5Xu3qR9Cltbzgw7jYYwXEwakGfAfHSRBoimKEShwof/uDpKHYKhXzcXsDzPNygVXXZnJsQCmikAnAC5ksJjPlkCiq0ailfjegwY9oRw2gujKKbpe4w=
+	t=1774062678; cv=none; b=QU3ipnIs9KJ3wv1aIv8SnT9lpNf+kxOUghjUiRYeLI4cW2fzN/Lpw1UwjvYBuAJKE/MPSCIEQNYxGSvChUxyKWp22WSKAyuCNxbS1vVYtKhy2JVqJyuwrNFeNGj0ZW6qB7wfcHCmLOLZHpT+BXbLIqBz9uMKt61+PcF2iwzJWV0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1774062678; c=relaxed/simple;
-	bh=V9tz+HCryQ/+iSEa8Z2qSlhEljIQa/btQQExNY5B1mg=;
+	bh=nETTaf1U73M0FCWUpHdayqSwzkcZm4qdZ7OeEDDoYBw=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=ivnDxe5xfsXf6ry6kXHsDE7gcIEdm84rMPNlf7Z65A+YaLcim7QW7Y+IJxkqDfDNGG4lVJ4YlYqr0djVk3L0uKTZifRZ05G6+o74/FKo7Bnu7Zui0YY105HScxI/GS0wLaqfurEq0SOWafPhksi921yEbCb92QYYj44INhvLrgc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=nV1zR8An; arc=none smtp.client-ip=205.220.168.131
+	 MIME-Version; b=ICG7M8B/mcaPbPpDZZUy94WazgMTChDEQgaS/oqc2bu4vJZKc5LD63GDmNbSn8d6tYyZ+Q+tV1AF+1CI0Akn3eibrKY+d6dpCLJZvPUjW+wQSxuCK9b0/AZ5UWyLEQ/jqtrFYBYRIu9LDF0Z+l6RcX39TPec0+TcaZEps1n2xEc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=IWkC8bjF; arc=none smtp.client-ip=205.220.180.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="nV1zR8An"
-Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 62L0i0CA3207498;
-	Sat, 21 Mar 2026 03:10:59 GMT
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="IWkC8bjF"
+Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 62L1Ggvn050675;
+	Sat, 21 Mar 2026 03:10:37 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
 	cc:content-transfer-encoding:date:from:in-reply-to:message-id
-	:mime-version:references:subject:to; s=qcppdkim1; bh=B4AJOihl9Jr
-	FvYQOfMQ3PPwI/8qgq07dEcOrBiq9V8Q=; b=nV1zR8AnJKtfJOIPheRrWSHHxkT
-	gkI4mhYLBgVtMWdFl+LZAOUnxKWB3eloauBGtI8qlRdrniFTeE2pWYArB3V59/Vi
-	R2eM8J7iYVWeLEa/4yTXiBgzNMCiBDe1U5R7MTgW46OoLEvh74FCoEl8wlnE1blf
-	XDWUPQSJJdXVka74r4z7GnLluPV6F5RJv2mGXQTL9YzQnQbKQ/Jl9lltDVy9PW5v
-	rSwlfpyjU/+0314G4y6LqmhG6dbNQGgGt6rhS0Tkcp3xU6zywRpfS79V8Ly5Za4x
-	DcY9CLm2RCOfE2CpfgYezt6DYQBUPpF8YtQ2vMhGEoMfG+PacsMaZflCj2g==
-Received: from nalasppmta04.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4d1h1e061g-1
+	:mime-version:references:subject:to; s=qcppdkim1; bh=Lrf38SGeQgW
+	RI8VBvILQ9iCq2EKMByfyij1bjFBr21s=; b=IWkC8bjFj4TrXyO+oDwNDXFH29/
+	fkFldMJdfpnaUbdGsuCqec2zzm7LzemmxSc8BEDTLIzJp547gi1NkquGYu9pMUMf
+	N9VlBMz59/t2utuXgJB0WcSvw4DgrV/6cyicQY1L0r4ITNffFuWnlf296/O3BtUZ
+	KWfKec191GOhqKvl7j8f8PyU2bJnJxq/Va0H7900pCKGw70PkkGvb0VGN7ZZ15/P
+	N/+8PcoDZURRXAcsZoINapA+vQVhBsa50fmc1irEASOMKMkbNpT5EiK6POWJBbUt
+	xB4KtuF9pscUOPmTx2DhDseF0V9NzrEI37Q0TSJVR9gykZkdF37YnzkzKpg==
+Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4d1evr0cby-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Sat, 21 Mar 2026 03:10:59 +0000 (GMT)
-Received: from pps.filterd (NALASPPMTA04.qualcomm.com [127.0.0.1])
-	by NALASPPMTA04.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTP id 62L3AwFi017674;
-	Sat, 21 Mar 2026 03:10:58 GMT
+	Sat, 21 Mar 2026 03:10:37 +0000 (GMT)
+Received: from pps.filterd (NALASPPMTA01.qualcomm.com [127.0.0.1])
+	by NALASPPMTA01.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTP id 62L3AacW029147;
+	Sat, 21 Mar 2026 03:10:36 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-	by NALASPPMTA04.qualcomm.com (PPS) with ESMTPS id 4d05k3awqp-1
+	by NALASPPMTA01.qualcomm.com (PPS) with ESMTPS id 4d0tph0xwr-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Sat, 21 Mar 2026 03:10:58 +0000
-Received: from NALASPPMTA04.qualcomm.com (NALASPPMTA04.qualcomm.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 62L3Awd4017668;
-	Sat, 21 Mar 2026 03:10:58 GMT
+	Sat, 21 Mar 2026 03:10:36 +0000
+Received: from NALASPPMTA01.qualcomm.com (NALASPPMTA01.qualcomm.com [127.0.0.1])
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 62L3AZux029139;
+	Sat, 21 Mar 2026 03:10:36 GMT
 Received: from hu-devc-lv-u22-c.qualcomm.com (hu-cang-lv.qualcomm.com [10.81.25.255])
-	by NALASPPMTA04.qualcomm.com (PPS) with ESMTPS id 62L3AwO2017666
+	by NALASPPMTA01.qualcomm.com (PPS) with ESMTPS id 62L3AZpv029135
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Sat, 21 Mar 2026 03:10:58 +0000
+	Sat, 21 Mar 2026 03:10:35 +0000
 Received: by hu-devc-lv-u22-c.qualcomm.com (Postfix, from userid 359480)
-	id 4C8435A8; Fri, 20 Mar 2026 20:10:58 -0700 (PDT)
+	id 90C0B5A8; Fri, 20 Mar 2026 20:10:35 -0700 (PDT)
 From: Can Guo <can.guo@oss.qualcomm.com>
 To: avri.altman@wdc.com, bvanassche@acm.org, beanhuo@micron.com,
         peter.wang@mediatek.com, martin.petersen@oracle.com, mani@kernel.org
 Cc: linux-scsi@vger.kernel.org, Can Guo <can.guo@oss.qualcomm.com>,
         Alim Akhtar <alim.akhtar@samsung.com>,
         "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+        Sai Krishna Potthuri <sai.krishna.potthuri@amd.com>,
+        Ajay Neeli <ajay.neeli@amd.com>,
+        Peter Griffin <peter.griffin@linaro.org>,
+        Krzysztof Kozlowski <krzk@kernel.org>,
+        Chaotian Jing <chaotian.jing@mediatek.com>,
+        Stanley Jhu <chu.stanley@gmail.com>, Orson Zhai <orsonzhai@gmail.com>,
+        Baolin Wang <baolin.wang@linux.alibaba.com>,
+        Chunyan Zhang <zhang.lyra@gmail.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
         "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
         Adrian Hunter <adrian.hunter@intel.com>,
-        linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH v4 04/12] scsi: ufs: core: Add support for TX Equalization
-Date: Fri, 20 Mar 2026 20:10:13 -0700
-Message-Id: <20260321031021.1722459-5-can.guo@oss.qualcomm.com>
+        Archana Patni <archana.patni@intel.com>,
+        linux-kernel@vger.kernel.org (open list),
+        linux-samsung-soc@vger.kernel.org (open list:UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER...),
+        linux-arm-kernel@lists.infradead.org (moderated list:ARM/SAMSUNG S3C, S5P AND EXYNOS ARM ARCHITECTURES),
+        linux-mediatek@lists.infradead.org (moderated list:UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER...),
+        linux-arm-msm@vger.kernel.org (open list:UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER...)
+Subject: [PATCH v4 01/12] scsi: ufs: core: Introduce a new ufshcd vops negotiate_pwr_mode()
+Date: Fri, 20 Mar 2026 20:10:10 -0700
+Message-Id: <20260321031021.1722459-2-can.guo@oss.qualcomm.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20260321031021.1722459-1-can.guo@oss.qualcomm.com>
 References: <20260321031021.1722459-1-can.guo@oss.qualcomm.com>
@@ -74,1823 +89,595 @@ X-QCInternal: smtphost
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: PXJfsTFavOokf2OXYSWVwDTOhjomYD_4
-X-Authority-Analysis: v=2.4 cv=epXSD4pX c=1 sm=1 tr=0 ts=69be0c43 cx=c_pps
+X-Proofpoint-ORIG-GUID: iRWD2egEx7r7PBfgORhlyCMt4Nkqx0Uv
+X-Authority-Analysis: v=2.4 cv=Xur3+FF9 c=1 sm=1 tr=0 ts=69be0c2d cx=c_pps
  a=ouPCqIW2jiPt+lZRy3xVPw==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
  a=Yq5XynenixoA:10 a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22
- a=eoimf2acIAo5FJnRuUoq:22 a=EUspDBNiAAAA:8 a=ufAJUjbdAAAA:8
- a=peLwTRnrCxS4aL57SlYA:9 a=rB1ygNaI0PWiOa_UD5GD:22
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzIxMDAyNCBTYWx0ZWRfX1dwZ0Z5yI2a4
- OytLtio7Raqy5iVybXltAI1zRX4kRe9MD2bgOuecawbYvlihx9PVTgVoPLRKQbV5vqZO4rnWdDL
- UyukT3TjyRWU1/5sap0RPAS0HMyeQArtA8pgyUxF33Df/MCDlef5SzsSix4t32edQ4HKE4T6ygr
- 8zFnvFtdHeSogGWkFRX5sggMOQoTjy9VwF+qaMFDUgdMC+dEfNei23D9lCsfEXM0CQ5qrW9bSH3
- 5AM/9BvnaOaC+cbHokJxi++98gjJ+DqffIuIAluq9HoFeZJfEoHaxWVD0uwxfQ797G8ugCrEw+j
- dFQQXHla6nQIxx12YrkgDkrkz9dpQuP0PoYtHT4M7XtOXsw7DOIklq9YVqx2POCTSB0/SkAlMaY
- XPmmBmuXCtqeVTMgq4edsciCY70+MHWlfvPTvxTWucC7/9iUrH5tRlBxlEhq43F3lD6q7n6yUqR
- NqL4myB4Ip9H+W2lF9Q==
-X-Proofpoint-GUID: PXJfsTFavOokf2OXYSWVwDTOhjomYD_4
+ a=yx91gb_oNiZeI1HMLzn7:22 a=EUspDBNiAAAA:8 a=X2XqvsTP97Ls3wiON34A:9
+X-Proofpoint-GUID: iRWD2egEx7r7PBfgORhlyCMt4Nkqx0Uv
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzIxMDAyNCBTYWx0ZWRfX2Ji1DfzDJ9Su
+ p/YPNFSbf6kADockxVNgRpBG76/L/BWYV2pvbSSHU35XyzmwFsUR1RwY28QAId4utqqRvlrvloh
+ sJQG1pw+7g64fswx3/ch+r4I5v8ZW5LO6BTx+KWRPqoyd8suo5zkNxWo/4xJSCcUxRntMNbzMM4
+ /UpEm4U0V9PSOCEEMmaK38fZSAxwuHBIGrgXMlUWYkuvidhwqc0SceTgxGZkQPQH3K/IcwH+VYV
+ XzGjeWBSHnkKlZ78dtDDHBS8VmO3rAF/dBw1d72RmFtKl5YQ6oCVmR6TD2Qlf87siD0wOAXLH4Z
+ E3jqViZwNAu1Bb0cF2YHzIcaiI5jHs8EBhN2S4qmqKN432x8Bj3tbfNGsOWf2KNLQ4n/SCB+K/E
+ vCMv2bgWcqQ0sRLzmMiEQwx4n/40yd3XYFt2/0uQZDcm4XNgkxfo+/TzugGLFmFaSV+/FCuGZbh
+ Ctj9HVlhd/jDNricl2A==
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
  definitions=2026-03-21_01,2026-03-20_02,2025-10-01_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- impostorscore=0 malwarescore=0 spamscore=0 phishscore=0 lowpriorityscore=0
- priorityscore=1501 bulkscore=0 clxscore=1015 adultscore=0 suspectscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2603050001 definitions=main-2603210024
+ priorityscore=1501 impostorscore=0 lowpriorityscore=0 clxscore=1015
+ phishscore=0 malwarescore=0 bulkscore=0 spamscore=0 adultscore=0
+ suspectscore=0 classifier=typeunknown authscore=0 authtc= authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2603050001
+ definitions=main-2603210024
 
-MIPI Unipro3.0 introduced PA_TxEQGnSetting and PA_PreCodeEn attributes for
-TX Equalization and Pre-Coding. It is Host Software's responsibility to
-configure these attributes for both host and device before initiating
-Power Mode Change to High-Speed Gears.
+Most vendor specific implemenations of vops pwr_change_notify(PRE_CHANGE)
+are fulfilling two things at once:
+- Vendor specific target power mode negotiation
+- Vendor specific power mode change preparation
 
-MIPI Unipro3.0 also introduced TX Equalization Training (EQTR) to identify
-optimal TX Equalization settings for use by both Host's and Device's
-UniPro. TX EQTR shall be initiated from the most reliable High-Speed Gear
-(HS-G1) targeting High-Speed Gears (HS-G4 to HS-G6).
+When TX Equalization is added into consideration, before power mode change
+to a target power mode, TX Equalization Training (EQTR) needs be done for
+that target power mode. In addition, UFSHCI spec requires to start TX EQTR
+from HS-G1 (the most reliable High Speed Gear).
 
-Implement TX Equalization configuration and TX EQTR procedure as defined
-in UFSHCI v5.0 specification. The TX EQTR procedure determines the optimal
-TX Equalization settings by iterating through all possible PreShoot and
-DeEmphasis combinations and selecting the best combinations for both Host
-and Device based on Figure of Merit (FOM) evaluation.
+Adding TX EQTR before pwr_change_notify(PRE_CHANGE) is not applicable
+because we don't know the negotiated power mode yet.
+
+Adding TX EQTR post pwr_change_notify(PRE_CHANGE) is inappropriate
+because pwr_change_notify(PRE_CHANGE) has finished preparation for a power
+mode change to negotiated power mode, yet we are changing power mode to
+HS-G1 for TX EQTR.
+
+Add a new vops negotiate_pwr_mode() so that vendor specific power mode
+negotiation can be fulfilled in its vendor specific implementations.
+Later on, TX EQTR can be added post vops negotiate_pwr_mode() and before
+vops pwr_change_notify(PRE_CHANGE).
 
 Signed-off-by: Can Guo <can.guo@oss.qualcomm.com>
 ---
- drivers/ufs/core/Makefile      |    2 +-
- drivers/ufs/core/ufs-txeq.c    | 1197 ++++++++++++++++++++++++++++++++
- drivers/ufs/core/ufshcd-priv.h |   38 +
- drivers/ufs/core/ufshcd.c      |   50 +-
- include/ufs/ufshcd.h           |  135 ++++
- include/ufs/unipro.h           |  114 ++-
- 6 files changed, 1527 insertions(+), 9 deletions(-)
- create mode 100644 drivers/ufs/core/ufs-txeq.c
+ drivers/ufs/core/ufshcd-priv.h     | 14 +++++-
+ drivers/ufs/core/ufshcd.c          | 70 ++++++++++++++++++++++++------
+ drivers/ufs/host/ufs-amd-versal2.c |  3 --
+ drivers/ufs/host/ufs-exynos.c      | 34 +++++++--------
+ drivers/ufs/host/ufs-hisi.c        | 23 +++++-----
+ drivers/ufs/host/ufs-mediatek.c    | 40 ++++++++---------
+ drivers/ufs/host/ufs-qcom.c        | 24 +++++-----
+ drivers/ufs/host/ufs-sprd.c        |  3 --
+ drivers/ufs/host/ufshcd-pci.c      |  6 +--
+ include/ufs/ufshcd.h               | 17 +++++---
+ 10 files changed, 143 insertions(+), 91 deletions(-)
 
-diff --git a/drivers/ufs/core/Makefile b/drivers/ufs/core/Makefile
-index 51e1867e524e..ce7d16d2cf35 100644
---- a/drivers/ufs/core/Makefile
-+++ b/drivers/ufs/core/Makefile
-@@ -1,7 +1,7 @@
- # SPDX-License-Identifier: GPL-2.0
- 
- obj-$(CONFIG_SCSI_UFSHCD)		+= ufshcd-core.o
--ufshcd-core-y				+= ufshcd.o ufs-sysfs.o ufs-mcq.o
-+ufshcd-core-y				+= ufshcd.o ufs-sysfs.o ufs-mcq.o ufs-txeq.o
- ufshcd-core-$(CONFIG_RPMB)		+= ufs-rpmb.o
- ufshcd-core-$(CONFIG_DEBUG_FS)		+= ufs-debugfs.o
- ufshcd-core-$(CONFIG_SCSI_UFS_BSG)	+= ufs_bsg.o
-diff --git a/drivers/ufs/core/ufs-txeq.c b/drivers/ufs/core/ufs-txeq.c
-new file mode 100644
-index 000000000000..90ee54363519
---- /dev/null
-+++ b/drivers/ufs/core/ufs-txeq.c
-@@ -0,0 +1,1197 @@
-+// SPDX-License-Identifier: GPL-2.0-only
-+/*
-+ * Copyright (C) 2026 Qualcomm Technologies, Inc.
-+ *
-+ * Author:
-+ *	Can Guo <can.guo@oss.qualcomm.com>
-+ */
-+
-+#include <linux/bitops.h>
-+#include <linux/delay.h>
-+#include <linux/errno.h>
-+#include <linux/kernel.h>
-+#include <ufs/ufshcd.h>
-+#include <ufs/unipro.h>
-+#include "ufshcd-priv.h"
-+
-+static bool use_adaptive_txeq;
-+module_param(use_adaptive_txeq, bool, 0644);
-+MODULE_PARM_DESC(use_adaptive_txeq, "Find and apply optimal TX Equalization settings before changing Power Mode (default: false)");
-+
-+static int txeq_gear_set(const char *val, const struct kernel_param *kp)
-+{
-+	return param_set_uint_minmax(val, kp, UFS_HS_G1, UFS_HS_GEAR_MAX);
-+}
-+
-+static const struct kernel_param_ops txeq_gear_ops = {
-+	.set = txeq_gear_set,
-+	.get = param_get_uint,
-+};
-+
-+static unsigned int adaptive_txeq_gear = UFS_HS_G6;
-+module_param_cb(adaptive_txeq_gear, &txeq_gear_ops, &adaptive_txeq_gear, 0644);
-+MODULE_PARM_DESC(adaptive_txeq_gear, "For HS-Gear[n] and above, adaptive txeq shall be used");
-+
-+static bool use_txeq_presets;
-+module_param(use_txeq_presets, bool, 0644);
-+MODULE_PARM_DESC(use_txeq_presets, "Use only the 8 TX Equalization Presets (pre-defined Pre-Shoot & De-Emphasis combinations) for TX EQTR (default: false)");
-+
-+static bool txeq_presets_selected[UFS_TX_EQ_PRESET_MAX] = {[0 ... (UFS_TX_EQ_PRESET_MAX - 1)] = 1};
-+module_param_array(txeq_presets_selected, bool, NULL, 0644);
-+MODULE_PARM_DESC(txeq_presets_selected, "Use only the selected Presets out of the 8 TX Equalization Presets for TX EQTR");
-+
-+/*
-+ * ufs_tx_eq_preset - Table of minimum required list of presets.
-+ *
-+ * A HS-G6 capable M-TX shall support the presets defined in M-PHY v6.0 spec.
-+ * Preset	Pre-Shoot(dB)	De-Emphasis(dB)
-+ * P0		0.0		0.0
-+ * P1		0.0		0.8
-+ * P2		0.0		1.6
-+ * P3		0.8		0.0
-+ * P4		1.6		0.0
-+ * P5		0.8		0.8
-+ * P6		0.8		1.6
-+ * P7		1.6		0.8
-+ */
-+static const struct __ufs_tx_eq_preset {
-+	u8 preshoot;
-+	u8 deemphasis;
-+} ufs_tx_eq_preset[UFS_TX_EQ_PRESET_MAX] = {
-+	[UFS_TX_EQ_PRESET_P0] = {UFS_TX_HS_PRESHOOT_DB_0P0, UFS_TX_HS_DEEMPHASIS_DB_0P0},
-+	[UFS_TX_EQ_PRESET_P1] = {UFS_TX_HS_PRESHOOT_DB_0P0, UFS_TX_HS_DEEMPHASIS_DB_0P8},
-+	[UFS_TX_EQ_PRESET_P2] = {UFS_TX_HS_PRESHOOT_DB_0P0, UFS_TX_HS_DEEMPHASIS_DB_1P6},
-+	[UFS_TX_EQ_PRESET_P3] = {UFS_TX_HS_PRESHOOT_DB_0P8, UFS_TX_HS_DEEMPHASIS_DB_0P0},
-+	[UFS_TX_EQ_PRESET_P4] = {UFS_TX_HS_PRESHOOT_DB_1P6, UFS_TX_HS_DEEMPHASIS_DB_0P0},
-+	[UFS_TX_EQ_PRESET_P5] = {UFS_TX_HS_PRESHOOT_DB_0P8, UFS_TX_HS_DEEMPHASIS_DB_0P8},
-+	[UFS_TX_EQ_PRESET_P6] = {UFS_TX_HS_PRESHOOT_DB_0P8, UFS_TX_HS_DEEMPHASIS_DB_1P6},
-+	[UFS_TX_EQ_PRESET_P7] = {UFS_TX_HS_PRESHOOT_DB_1P6, UFS_TX_HS_DEEMPHASIS_DB_0P8},
-+};
-+
-+/*
-+ * pa_peer_rx_adapt_initial - Table of UniPro PA_PeerRxHSGnAdaptInitial
-+ * attribute IDs for High Speed (HS) Gears.
-+ *
-+ * This table maps HS Gears to their respective UniPro PA_PeerRxHSGnAdaptInitial
-+ * attribute IDs. Entries for Gears 1-3 are 0 (unsupported).
-+ */
-+static const u32 pa_peer_rx_adapt_initial[UFS_HS_GEAR_MAX] = {
-+	0,
-+	0,
-+	0,
-+	PA_PEERRXHSG4ADAPTINITIAL,
-+	PA_PEERRXHSG5ADAPTINITIAL,
-+	PA_PEERRXHSG6ADAPTINITIALL0L3
-+};
-+
-+/*
-+ * rx_adapt_initial_cap - Table of M-PHY RX_HS_Gn_ADAPT_INITIAL_Capability
-+ * attribute IDs for High Speed (HS) Gears.
-+ *
-+ * This table maps HS Gears to their respective M-PHY
-+ * RX_HS_Gn_ADAPT_INITIAL_Capability attribute IDs. Entries for Gears 1-3 are 0
-+ * (unsupported).
-+ */
-+static const u32 rx_adapt_initial_cap[UFS_HS_GEAR_MAX] = {
-+	0,
-+	0,
-+	0,
-+	RX_HS_G4_ADAPT_INITIAL_CAP,
-+	RX_HS_G5_ADAPT_INITIAL_CAP,
-+	RX_HS_G6_ADAPT_INITIAL_CAP
-+};
-+
-+/*
-+ * pa_tx_eq_setting - Table of UniPro PA_TxEQGnSetting attribute IDs for High
-+ * Speed (HS) Gears.
-+ *
-+ * This table maps HS Gears to their respective UniPro PA_TxEQGnSetting
-+ * attribute IDs.
-+ */
-+static const u32 pa_tx_eq_setting[UFS_HS_GEAR_MAX] = {
-+	PA_TXEQG1SETTING,
-+	PA_TXEQG2SETTING,
-+	PA_TXEQG3SETTING,
-+	PA_TXEQG4SETTING,
-+	PA_TXEQG5SETTING,
-+	PA_TXEQG6SETTING
-+};
-+
-+/**
-+ * ufshcd_configure_precoding - Configure Pre-Coding for all active lanes
-+ * @hba: per adapter instance
-+ * @params: TX EQ parameters data structure
-+ *
-+ * Bit[7] in RX_FOM indicates that the receiver needs to enable Pre-Coding when
-+ * set. Pre-Coding must be enabled on both the transmitter and receiver to
-+ * ensure proper operation.
-+ *
-+ * Returns 0 on success, non-zero error code otherwise
-+ */
-+static int ufshcd_configure_precoding(struct ufs_hba *hba,
-+				      struct ufshcd_tx_eq_params *params)
-+{
-+	struct ufs_pa_layer_attr *pwr_info = &hba->max_pwr_info.info;
-+	u32 local_precode_en = 0;
-+	u32 peer_precode_en = 0;
-+	int lane, ret;
-+
-+	/* Enable Pre-Coding for Host's TX & Device's RX pair */
-+	for (lane = 0; lane < pwr_info->lane_tx; lane++) {
-+		if (params->host[lane].precode_en) {
-+			local_precode_en |= PRECODEEN_TX_BIT(lane);
-+			peer_precode_en |= PRECODEEN_RX_BIT(lane);
-+		}
-+	}
-+
-+	/* Enable Pre-Coding for Device's TX & Host's RX pair */
-+	for (lane = 0; lane < pwr_info->lane_rx; lane++) {
-+		if (params->device[lane].precode_en) {
-+			peer_precode_en |= PRECODEEN_TX_BIT(lane);
-+			local_precode_en |= PRECODEEN_RX_BIT(lane);
-+		}
-+	}
-+
-+	if (!local_precode_en && !peer_precode_en) {
-+		dev_dbg(hba->dev, "Pre-Coding is not required for Host and Device\n");
-+		return 0;
-+	}
-+
-+	/* Set local PA_PreCodeEn */
-+	ret = ufshcd_dme_set(hba, UIC_ARG_MIB(PA_PRECODEEN), local_precode_en);
-+	if (ret) {
-+		dev_err(hba->dev, "Failed to set local PA_PreCodeEn: %d\n", ret);
-+		return ret;
-+	}
-+
-+	/* Set peer PA_PreCodeEn */
-+	ret = ufshcd_dme_peer_set(hba, UIC_ARG_MIB(PA_PRECODEEN), peer_precode_en);
-+	if (ret) {
-+		dev_err(hba->dev, "Failed to set peer PA_PreCodeEn: %d\n", ret);
-+		return ret;
-+	}
-+
-+	dev_dbg(hba->dev, "Local PA_PreCodeEn: 0x%02x, Peer PA_PreCodeEn: 0x%02x\n",
-+		local_precode_en, peer_precode_en);
-+
-+	return 0;
-+}
-+
-+void ufshcd_print_tx_eq_params(struct ufs_hba *hba)
-+{
-+	struct ufs_pa_layer_attr *pwr_info = &hba->max_pwr_info.info;
-+	struct ufshcd_tx_eq_params *params;
-+	u32 gear = hba->pwr_info.gear_tx;
-+	int lane;
-+
-+	if (!ufshcd_is_tx_eq_supported(hba))
-+		return;
-+
-+	if (gear < UFS_HS_G1 || gear > UFS_HS_GEAR_MAX)
-+		return;
-+
-+	params = &hba->tx_eq_params[gear - 1];
-+	if (!params->is_valid || !params->is_applied)
-+		return;
-+
-+	for (lane = 0; lane < pwr_info->lane_tx; lane++)
-+		dev_dbg(hba->dev, "Host TX Lane %d: PreShoot %u, DeEmphasis %u, FOM %u, PreCodeEn %d\n",
-+			lane, params->host[lane].preshoot,
-+			params->host[lane].deemphasis,
-+			params->host[lane].fom_val,
-+			params->host[lane].precode_en);
-+
-+	for (lane = 0; lane < pwr_info->lane_rx; lane++)
-+		dev_dbg(hba->dev, "Device TX Lane %d: PreShoot %u, DeEmphasis %u, FOM %u, PreCodeEn %d\n",
-+			lane, params->device[lane].preshoot,
-+			params->device[lane].deemphasis,
-+			params->device[lane].fom_val,
-+			params->device[lane].precode_en);
-+}
-+
-+static inline u32
-+ufshcd_compose_tx_eq_setting(struct ufshcd_tx_eq_settings *settings,
-+			     int num_lanes)
-+{
-+	u32 setting = 0;
-+	int lane;
-+
-+	for (lane = 0; lane < num_lanes; lane++, settings++) {
-+		setting |= TX_HS_PRESHOOT_BITS(lane, settings->preshoot);
-+		setting |= TX_HS_DEEMPHASIS_BITS(lane, settings->deemphasis);
-+	}
-+
-+	return setting;
-+}
-+
-+/**
-+ * ufshcd_apply_tx_eq_settings - Apply TX Equalization settings for target gear
-+ * @hba: per adapter instance
-+ * @params: TX EQ parameters data structure
-+ * @gear: target gear
-+ *
-+ * Returns 0 on success, negative error code otherwise
-+ */
-+static int ufshcd_apply_tx_eq_settings(struct ufs_hba *hba,
-+				       struct ufshcd_tx_eq_params *params,
-+				       u32 gear)
-+{
-+	struct ufs_pa_layer_attr *pwr_info = &hba->max_pwr_info.info;
-+	u32 setting;
-+	int ret;
-+
-+	/* Compose settings for Host's TX Lanes */
-+	setting = ufshcd_compose_tx_eq_setting(params->host, pwr_info->lane_tx);
-+	ret = ufshcd_dme_set(hba, UIC_ARG_MIB(pa_tx_eq_setting[gear - 1]), setting);
-+	if (ret)
-+		return ret;
-+
-+	/* Compose settings for Device's TX Lanes */
-+	setting = ufshcd_compose_tx_eq_setting(params->device, pwr_info->lane_rx);
-+	ret = ufshcd_dme_peer_set(hba, UIC_ARG_MIB(pa_tx_eq_setting[gear - 1]), setting);
-+	if (ret)
-+		return ret;
-+
-+	/* Configure Pre-Coding */
-+	if (gear >= UFS_HS_G6) {
-+		ret = ufshcd_configure_precoding(hba, params);
-+		if (ret) {
-+			dev_err(hba->dev, "Failed to configure pre-coding: %d\n", ret);
-+			return ret;
-+		}
-+	}
-+
-+	return 0;
-+}
-+
-+/**
-+ * ufshcd_evaluate_tx_eqtr_fom - Evaluate TX EQTR FOM results
-+ * @hba: per adapter instance
-+ * @pwr_mode: target power mode containing gear and rate information
-+ * @eqtr_data: TX EQTR data structure
-+ * @h_iter: host TX EQTR iterator data structure
-+ * @d_iter: device TX EQTR iterator data structure
-+ *
-+ * Evaluate TX EQTR FOM results, update host and device TX EQTR data accordingy
-+ * if FOM have been improved compared to previous iteration, and record TX EQTR
-+ * FOM results.
-+ */
-+static void ufshcd_evaluate_tx_eqtr_fom(struct ufs_hba *hba,
-+					struct ufs_pa_layer_attr *pwr_mode,
-+					struct ufshcd_tx_eqtr_data *eqtr_data,
-+					struct tx_eqtr_iter *h_iter,
-+					struct tx_eqtr_iter *d_iter)
-+{
-+	u8 preshoot, deemphasis, fom_value;
-+	bool precode_en;
-+	int lane;
-+
-+	for (lane = 0; h_iter->is_updated && lane < pwr_mode->lane_tx; lane++) {
-+		preshoot = h_iter->preshoot;
-+		deemphasis = h_iter->deemphasis;
-+		fom_value = h_iter->fom[lane] & RX_FOM_VALUE_MASK;
-+		precode_en = h_iter->fom[lane] & RX_FOM_PRECODING_EN_BIT;
-+
-+		/* Record host TX EQTR FOM */
-+		eqtr_data->host_fom[lane][preshoot][deemphasis] = h_iter->fom[lane];
-+
-+		/* Check if FOM has been improved for host's TX Lanes */
-+		if (fom_value > eqtr_data->host[lane].fom_val) {
-+			eqtr_data->host[lane].preshoot = preshoot;
-+			eqtr_data->host[lane].deemphasis = deemphasis;
-+			eqtr_data->host[lane].fom_val = fom_value;
-+			eqtr_data->host[lane].precode_en = precode_en;
-+		}
-+
-+		dev_dbg(hba->dev, "TX EQTR: Host TX Lane %d: PreShoot %u, DeEmphasis %u, FOM value %u, PreCodeEn %d\n",
-+			lane, preshoot, deemphasis, fom_value, precode_en);
-+	}
-+
-+	for (lane = 0; d_iter->is_updated && lane < pwr_mode->lane_rx; lane++) {
-+		preshoot = d_iter->preshoot;
-+		deemphasis = d_iter->deemphasis;
-+		fom_value = d_iter->fom[lane] & RX_FOM_VALUE_MASK;
-+		precode_en = d_iter->fom[lane] & RX_FOM_PRECODING_EN_BIT;
-+
-+		/* Record device TX EQTR FOM */
-+		eqtr_data->device_fom[lane][preshoot][deemphasis] = d_iter->fom[lane];
-+
-+		/* Check if FOM has been improved for Device's TX Lanes */
-+		if (fom_value > eqtr_data->device[lane].fom_val) {
-+			eqtr_data->device[lane].preshoot = preshoot;
-+			eqtr_data->device[lane].deemphasis = deemphasis;
-+			eqtr_data->device[lane].fom_val = fom_value;
-+			eqtr_data->device[lane].precode_en = precode_en;
-+		}
-+
-+		dev_dbg(hba->dev, "TX EQTR: Device TX Lane %d: PreShoot %u, DeEmphasis %u, FOM value %u, PreCodeEn %d\n",
-+			lane, preshoot, deemphasis, fom_value, precode_en);
-+	}
-+}
-+
-+/**
-+ * ufshcd_get_rx_fom - Get Figure of Merit (FOM) for both sides
-+ * @hba: per adapter instance
-+ * @pwr_mode: target power mode containing gear and rate information
-+ * @h_iter: host TX EQTR iterator data structure
-+ * @d_iter: device TX EQTR iterator data structure
-+ *
-+ * Returns 0 on success, negative error code otherwise
-+ */
-+static int ufshcd_get_rx_fom(struct ufs_hba *hba,
-+			     struct ufs_pa_layer_attr *pwr_mode,
-+			     struct tx_eqtr_iter *h_iter,
-+			     struct tx_eqtr_iter *d_iter)
-+{
-+	int lane, ret;
-+	u32 fom;
-+
-+	/* Get FOM of host's TX lanes from device's RX_FOM. */
-+	for (lane = 0; lane < pwr_mode->lane_tx; lane++) {
-+		ret = ufshcd_dme_peer_get(hba, UIC_ARG_MIB_SEL(RX_FOM,
-+					  UIC_ARG_MPHY_RX_GEN_SEL_INDEX(lane)),
-+					  &fom);
-+		if (ret)
-+			return ret;
-+
-+		h_iter->fom[lane] = (u8)fom;
-+	}
-+
-+	/* Get FOM of device's TX lanes from host's RX_FOM. */
-+	for (lane = 0; lane < pwr_mode->lane_rx; lane++) {
-+		ret = ufshcd_dme_get(hba, UIC_ARG_MIB_SEL(RX_FOM,
-+				     UIC_ARG_MPHY_RX_GEN_SEL_INDEX(lane)),
-+				     &fom);
-+		if (ret)
-+			return ret;
-+
-+		d_iter->fom[lane] = (u8)fom;
-+	}
-+
-+	ret = ufshcd_vops_get_rx_fom(hba, pwr_mode, h_iter, d_iter);
-+	if (ret)
-+		dev_err(hba->dev, "Failed to get FOM via vops: %d\n", ret);
-+
-+	return ret;
-+}
-+
-+static bool ufshcd_is_txeq_preset_selected(u8 preshoot, u8 deemphasis)
-+{
-+	int i;
-+
-+	for (i = 0; i < UFS_TX_EQ_PRESET_MAX; i++) {
-+		if (!txeq_presets_selected[i])
-+			continue;
-+
-+		if (preshoot == ufs_tx_eq_preset[i].preshoot &&
-+		    deemphasis == ufs_tx_eq_preset[i].deemphasis)
-+			return true;
-+	}
-+
-+	return false;
-+}
-+
-+/**
-+ * tx_eqtr_iter_try_update - Try to update a TX EQTR iterator
-+ * @iter: TX EQTR iterator data structure
-+ * @preshoot: PreShoot value
-+ * @deemphasis: DeEmphasis value
-+ *
-+ * This function validates whether the provided PreShoot and DeEmphasis
-+ * combination can be used or not. If yes, it updates the TX EQTR iterator with
-+ * the provided PreShoot and DeEmphasis, it also sets the is_updated flag
-+ * to indicate the iterator has been updated.
-+ */
-+static void tx_eqtr_iter_try_update(struct tx_eqtr_iter *iter,
-+				    u8 preshoot, u8 deemphasis)
-+{
-+	if (!test_bit(preshoot, &iter->preshoot_bitmap) ||
-+	    !test_bit(deemphasis, &iter->deemphasis_bitmap) ||
-+	    (use_txeq_presets && !ufshcd_is_txeq_preset_selected(preshoot, deemphasis))) {
-+		iter->is_updated = false;
-+		return;
-+	}
-+
-+	iter->preshoot = preshoot;
-+	iter->deemphasis = deemphasis;
-+	iter->is_updated = true;
-+}
-+
-+/**
-+ * tx_eqtr_iter_update() - Update host and deviceTX EQTR iterators
-+ * @preshoot: PreShoot value
-+ * @deemphasis: DeEmphasis value
-+ * @h_iter: Host TX EQTR iterator data structure
-+ * @d_iter: Device TX EQTR iterator data structure
-+ *
-+ * Updates host and device TX Equalization training iterators with the
-+ * provided PreShoot and DeEmphasis.
-+ *
-+ * Return: true if host and/or device TX Equalization training iterator has
-+ * been updated to the provided PreShoot and DeEmphasis, false otherwise.
-+ */
-+static bool tx_eqtr_iter_update(u8 preshoot, u8 deemphasis,
-+				struct tx_eqtr_iter *h_iter,
-+				struct tx_eqtr_iter *d_iter)
-+{
-+	tx_eqtr_iter_try_update(h_iter, preshoot, deemphasis);
-+	tx_eqtr_iter_try_update(d_iter, preshoot, deemphasis);
-+
-+	return h_iter->is_updated || d_iter->is_updated;
-+}
-+
-+/**
-+ * ufshcd_tx_eqtr_iter_init - Initialize host and device TX EQTR iterators
-+ * @hba: per adapter instance
-+ * @h_iter: host TX EQTR iterator data structure
-+ * @d_iter: device TX EQTR iterator data structure
-+ *
-+ * This function initializes the TX EQTR iterator structures for both host and
-+ * device by reading their TX equalization capabilities. The capabilities are
-+ * cached in the hba structure to avoid redundant DME operations in subsequent
-+ * calls. In the TX EQTR procedure, the iterator structures are updated by
-+ * tx_eqtr_iter_update() to systematically iterate through supported TX
-+ * Equalization setting combinations.
-+ *
-+ * Returns 0 on success, negative error code otherwise
-+ */
-+static int ufshcd_tx_eqtr_iter_init(struct ufs_hba *hba,
-+				    struct tx_eqtr_iter *h_iter,
-+				    struct tx_eqtr_iter *d_iter)
-+{
-+	u32 cap;
-+	int ret;
-+
-+	if (!hba->host_preshoot_cap) {
-+		ret = ufshcd_dme_get(hba, UIC_ARG_MIB(TX_HS_PRESHOOT_SETTING_CAP), &cap);
-+		if (ret)
-+			return ret;
-+
-+		hba->host_preshoot_cap = cap & TX_EQTR_CAP_MASK;
-+	}
-+
-+	if (!hba->host_deemphasis_cap) {
-+		ret = ufshcd_dme_get(hba, UIC_ARG_MIB(TX_HS_DEEMPHASIS_SETTING_CAP), &cap);
-+		if (ret)
-+			return ret;
-+
-+		hba->host_deemphasis_cap = cap & TX_EQTR_CAP_MASK;
-+	}
-+
-+	if (!hba->device_preshoot_cap) {
-+		ret = ufshcd_dme_peer_get(hba, UIC_ARG_MIB(TX_HS_PRESHOOT_SETTING_CAP), &cap);
-+		if (ret)
-+			return ret;
-+
-+		hba->device_preshoot_cap = cap & TX_EQTR_CAP_MASK;
-+	}
-+
-+	if (!hba->device_deemphasis_cap) {
-+		ret = ufshcd_dme_peer_get(hba, UIC_ARG_MIB(TX_HS_DEEMPHASIS_SETTING_CAP), &cap);
-+		if (ret)
-+			return ret;
-+
-+		hba->device_deemphasis_cap = cap & TX_EQTR_CAP_MASK;
-+	}
-+
-+	/*
-+	 * Support PreShoot & DeEmphasis of value 0 is mandatory, hence they are
-+	 * not reflected in PreShoot/DeEmphasis capabilities. Left shift the
-+	 * capability bitmap by 1 and set bit[0] to reflect value 0 is
-+	 * supported, such that test_bit() can be used later for convenience.
-+	 */
-+	h_iter->preshoot_bitmap = (hba->host_preshoot_cap << 0x1) | 0x1;
-+	h_iter->deemphasis_bitmap = (hba->host_deemphasis_cap << 0x1) | 0x1;
-+	d_iter->preshoot_bitmap = (hba->device_preshoot_cap << 0x1) | 0x1;
-+	d_iter->deemphasis_bitmap = (hba->device_deemphasis_cap << 0x1) | 0x1;
-+
-+	return 0;
-+}
-+
-+/**
-+ * adapt_cap_to_t_adapt - Calculate TAdapt from adapt capability
-+ * @adapt_cap: Adapt capability
-+ *
-+ * For NRZ:
-+ *   IF (ADAPT_range = FINE)
-+ *     TADAPT = 650 x (ADAPT_length + 1)
-+ *   ELSE (IF ADAPT_range = COARSE)
-+ *     TADAPT = 650 x 2^ADAPT_length
-+ *
-+ * Returns calculated TAdapt value in term of Unit Intervals (UI)
-+ */
-+static inline u64 adapt_cap_to_t_adapt(u32 adapt_cap)
-+{
-+	u64 tadapt;
-+	u8 adapt_length = adapt_cap & ADAPT_LENGTH_MASK;
-+
-+	if (!IS_ADAPT_RANGE_COARSE(adapt_cap))
-+		tadapt = TADAPT_FACTOR * (adapt_length + 1);
-+	else
-+		tadapt = TADAPT_FACTOR * (1 << adapt_length);
-+
-+	return tadapt;
-+}
-+
-+/**
-+ * adapt_cap_to_t_adapt_l0l3 - Calculate TAdapt_L0_L3 from adapt capability
-+ * @adapt_cap: Adapt capability
-+ *
-+ * For PAM-4:
-+ *   IF (ADAPT_range = FINE)
-+ *     TADAPT_L0_L3 = 2^9 x ADAPT_length
-+ *   ELSE IF (ADAPT_range = COARSE)
-+ *     TADAPT_L0_L3 = 2^9 x (2^ADAPT_length)
-+ *
-+ * Returns calculated TAdapt value in term of Unit Intervals (UI)
-+ */
-+static inline u64 adapt_cap_to_t_adapt_l0l3(u32 adapt_cap)
-+{
-+	u64 tadapt;
-+	u8 adapt_length = adapt_cap & ADAPT_LENGTH_MASK;
-+
-+	if (!IS_ADAPT_RANGE_COARSE(adapt_cap))
-+		tadapt = TADAPT_L0L3_FACTOR * adapt_length;
-+	else
-+		tadapt = TADAPT_L0L3_FACTOR * (1 << adapt_length);
-+
-+	return tadapt;
-+}
-+
-+/**
-+ * adapt_cap_to_t_adapt_l0l1l2l3 - Calculate TAdapt_L0_L1_L2_L3 from adapt capability
-+ * @adapt_cap: Adapt capability
-+ *
-+ * For PAM-4:
-+ *   IF (ADAPT_range_L0_L1_L2_L3 = FINE)
-+ *     TADAPT_L0_L1_L2_L3 = 2^15 x (ADAPT_length_L0_L1_L2_L3 + 1)
-+ *   ELSE IF (ADAPT_range_L0_L1_L2_L3 = COARSE)
-+ *     TADAPT_L0_L1_L2_L3 = 2^15 x 2^ADAPT_length_L0_L1_L2_L3
-+ *
-+ * Returns calculated TAdapt value in term of Unit Intervals (UI)
-+ */
-+static inline u64 adapt_cap_to_t_adapt_l0l1l2l3(u32 adapt_cap)
-+{
-+	u64 tadapt;
-+	u8 adapt_length = adapt_cap & ADAPT_LENGTH_MASK;
-+
-+	if (!IS_ADAPT_RANGE_COARSE(adapt_cap))
-+		tadapt = TADAPT_L0L1L2L3_FACTOR * (adapt_length + 1);
-+	else
-+		tadapt = TADAPT_L0L1L2L3_FACTOR * (1 << adapt_length);
-+
-+	return tadapt;
-+}
-+
-+/**
-+ * ufshcd_setup_tx_eqtr_adapt_length - Setup TX adapt length for EQTR
-+ * @hba: per adapter instance
-+ * @params: TX EQ parameters data structure
-+ * @gear: target gear for EQTR
-+ *
-+ * This function determines and configures the proper TX adapt length (TAdapt)
-+ * for the TX EQTR procedure based on the target gear and RX adapt capabilities
-+ * of both host and device.
-+ *
-+ * Guidelines from MIPI UniPro v3.0 spec - select the minimum Adapt Length for
-+ * the Equalization Training procedure based on the following conditions:
-+ *
-+ * If the target High-Speed Gear n is HS-G4 or HS-G5:
-+ *  PA_TxAdaptLength_EQTR[7:0] >= Max (10us, RX_HS_Gn_ADAPT_INITIAL_Capability,
-+ *					PA_PeerRxHsGnAdaptInitial)
-+ *  PA_TxAdaptLength_EQTR[7:0] shall be shorter than PACP_REQUEST_TIMER (10ms)
-+ *  PA_TxAdaptLength_EQTR[15:8] is not relevant for HS-G4 and HS-G5. This field
-+ *  is set to 255 (reserved value).
-+ *
-+ * If the target High-Speed Gear n is HS-G6:
-+ *  PA_TxAdapthLength_EQTR >= 10us
-+ *  PA_TxAdapthLength_EQTR[7:0] >= Max (RX_HS_G6_ADAPT_INITIAL_Capability,
-+ *					PA_PeerRxHsG6AdaptInitialL0L3)
-+ *  PA_TxAdapthLength_EQTR[15:8] >= Max (RX_HS_G6_ADAPT_INITIAL_L0_L1_L2_L3_Capability,
-+ *					PA_PeerRxHsG6AdaptInitialL0L1L2L3)
-+ * PA_TxAdaptLength_EQTR shall be shorter than PACP_REQUEST_TIMER value of 10ms.
-+ *
-+ * Since adapt capabilities encode both range (fine/coarse) and length values,
-+ * direct comparison is not possible. This function converts adapt capabilities
-+ * to actual time durations in Unit Intervals (UI) using the Adapt time
-+ * calculation formular in M-PHY v6.0 spec (Table 8), then selects the maximum
-+ * to ensure both host and device use adequate TX adapt length.
-+ *
-+ * Returns 0 on success, negative error code otherwise
-+ */
-+static int ufshcd_setup_tx_eqtr_adapt_length(struct ufs_hba *hba,
-+					     struct ufshcd_tx_eq_params *params,
-+					     u32 gear)
-+{
-+	u32 adapt_eqtr;
-+	int ret;
-+
-+	if (gear == UFS_HS_G4 || gear == UFS_HS_G5) {
-+		u64 t_adapt, t_adapt_local, t_adapt_peer;
-+		u32 adapt_cap_local, adapt_cap_peer, adapt_length;
-+
-+		ret = ufshcd_dme_get(hba, UIC_ARG_MIB_SEL(rx_adapt_initial_cap[gear - 1],
-+				     UIC_ARG_MPHY_RX_GEN_SEL_INDEX(0)),
-+				     &adapt_cap_local);
-+		if (ret)
-+			return ret;
-+
-+		if (adapt_cap_local > ADAPT_LENGTH_MAX) {
-+			dev_err(hba->dev, "local RX_HS_G%u_ADAPT_INITIAL_CAP (0x%x) exceeds MAX\n",
-+				gear, adapt_cap_local);
-+			return -EINVAL;
-+		}
-+
-+		ret = ufshcd_dme_get(hba, UIC_ARG_MIB(pa_peer_rx_adapt_initial[gear - 1]),
-+				     &adapt_cap_peer);
-+		if (ret)
-+			return ret;
-+
-+		if (adapt_cap_peer > ADAPT_LENGTH_MAX) {
-+			dev_err(hba->dev, "local RX_HS_G%u_ADAPT_INITIAL_CAP (0x%x) exceeds MAX\n",
-+				gear, adapt_cap_peer);
-+			return -EINVAL;
-+		}
-+
-+		t_adapt_local = adapt_cap_to_t_adapt(adapt_cap_local);
-+		t_adapt_peer = adapt_cap_to_t_adapt(adapt_cap_peer);
-+		t_adapt = max(t_adapt_local, t_adapt_peer);
-+
-+		dev_dbg(hba->dev, "local RX_HS_G%u_ADAPT_INITIAL_CAP = 0x%x\n",
-+			gear, adapt_cap_local);
-+		dev_dbg(hba->dev, "peer RX_HS_G%u_ADAPT_INITIAL_CAP = 0x%x\n",
-+			gear, adapt_cap_peer);
-+		dev_dbg(hba->dev, "t_adapt_local = %llu UI, t_adapt_peer = %llu UI\n",
-+			t_adapt_local, t_adapt_peer);
-+		dev_dbg(hba->dev, "TAdapt %llu UI selected for TX EQTR\n",
-+			t_adapt);
-+
-+		adapt_length = (t_adapt_local >= t_adapt_peer) ?
-+			       adapt_cap_local : adapt_cap_peer;
-+
-+		if (gear == UFS_HS_G4 && t_adapt < TX_EQTR_HS_G4_MIN_T_ADAPT) {
-+			dev_dbg(hba->dev, "TAdapt %llu UI is too short for TX EQTR for HS-G%u, use default Adapt 0x%x\n",
-+				t_adapt, gear, TX_EQTR_HS_G4_ADAPT_DEFAULT);
-+			adapt_length = TX_EQTR_HS_G4_ADAPT_DEFAULT;
-+		} else if (gear == UFS_HS_G5 && t_adapt < TX_EQTR_HS_G5_MIN_T_ADAPT) {
-+			dev_dbg(hba->dev, "TAdapt %llu UI is too short for TX EQTR for HS-G%u, use default Adapt 0x%x\n",
-+				t_adapt, gear, TX_EQTR_HS_G5_ADAPT_DEFAULT);
-+			adapt_length = TX_EQTR_HS_G5_ADAPT_DEFAULT;
-+		}
-+
-+		adapt_eqtr = adapt_length |
-+			     (TX_EQTR_ADAPT_RESERVED << TX_EQTR_ADAPT_LENGTH_L0L1L2L3_SHIFT);
-+	} else if (gear == UFS_HS_G6) {
-+		u64 t_adapt, t_adapt_l0l3, t_adapt_l0l3_local, t_adapt_l0l3_peer;
-+		u64 t_adapt_l0l1l2l3, t_adapt_l0l1l2l3_local, t_adapt_l0l1l2l3_peer;
-+		u32 adapt_l0l3_cap_local, adapt_l0l3_cap_peer, adapt_length_l0l3;
-+		u32 adapt_l0l1l2l3_cap_local, adapt_l0l1l2l3_cap_peer, adapt_length_l0l1l2l3;
-+
-+		ret = ufshcd_dme_get(hba, UIC_ARG_MIB_SEL(rx_adapt_initial_cap[gear - 1],
-+				     UIC_ARG_MPHY_RX_GEN_SEL_INDEX(0)),
-+				     &adapt_l0l3_cap_local);
-+		if (ret)
-+			return ret;
-+
-+		if (adapt_l0l3_cap_local > ADAPT_L0L3_LENGTH_MAX) {
-+			dev_err(hba->dev, "local RX_HS_G%u_ADAPT_INITIAL_CAP (0x%x) exceeds MAX\n",
-+				gear, adapt_l0l3_cap_local);
-+			return -EINVAL;
-+		}
-+
-+		ret = ufshcd_dme_get(hba, UIC_ARG_MIB(pa_peer_rx_adapt_initial[gear - 1]),
-+				     &adapt_l0l3_cap_peer);
-+		if (ret)
-+			return ret;
-+
-+		if (adapt_l0l3_cap_peer > ADAPT_L0L3_LENGTH_MAX) {
-+			dev_err(hba->dev, "peer RX_HS_G%u_ADAPT_INITIAL_CAP (0x%x) exceeds MAX\n",
-+				gear, adapt_l0l3_cap_peer);
-+			return -EINVAL;
-+		}
-+
-+		t_adapt_l0l3_local = adapt_cap_to_t_adapt_l0l3(adapt_l0l3_cap_local);
-+		t_adapt_l0l3_peer = adapt_cap_to_t_adapt_l0l3(adapt_l0l3_cap_peer);
-+
-+		dev_dbg(hba->dev, "local RX_HS_G%u_ADAPT_INITIAL_CAP = 0x%x\n",
-+			gear, adapt_l0l3_cap_local);
-+		dev_dbg(hba->dev, "peer RX_HS_G%u_ADAPT_INITIAL_CAP = 0x%x\n",
-+			gear, adapt_l0l3_cap_peer);
-+		dev_dbg(hba->dev, "t_adapt_l0l3_local = %llu UI, t_adapt_l0l3_peer = %llu UI\n",
-+			t_adapt_l0l3_local, t_adapt_l0l3_peer);
-+
-+		ret = ufshcd_dme_get(hba, UIC_ARG_MIB_SEL(RX_HS_G6_ADAPT_INITIAL_L0L1L2L3_CAP,
-+				     UIC_ARG_MPHY_RX_GEN_SEL_INDEX(0)),
-+				     &adapt_l0l1l2l3_cap_local);
-+		if (ret)
-+			return ret;
-+
-+		if (adapt_l0l1l2l3_cap_local > ADAPT_L0L1L2L3_LENGTH_MAX) {
-+			dev_err(hba->dev, "local RX_HS_G%u_ADAPT_INITIAL_L0L1L2L3_CAP (0x%x) exceeds MAX\n",
-+				gear, adapt_l0l1l2l3_cap_local);
-+			return -EINVAL;
-+		}
-+
-+		ret = ufshcd_dme_get(hba, UIC_ARG_MIB(PA_PEERRXHSG6ADAPTINITIALL0L1L2L3),
-+				     &adapt_l0l1l2l3_cap_peer);
-+		if (ret)
-+			return ret;
-+
-+		if (adapt_l0l1l2l3_cap_peer > ADAPT_L0L1L2L3_LENGTH_MAX) {
-+			dev_err(hba->dev, "peer RX_HS_G%u_ADAPT_INITIAL_L0L1L2L3_CAP (0x%x) exceeds MAX\n",
-+				gear, adapt_l0l1l2l3_cap_peer);
-+			return -EINVAL;
-+		}
-+
-+		t_adapt_l0l1l2l3_local = adapt_cap_to_t_adapt_l0l1l2l3(adapt_l0l1l2l3_cap_local);
-+		t_adapt_l0l1l2l3_peer = adapt_cap_to_t_adapt_l0l1l2l3(adapt_l0l1l2l3_cap_peer);
-+
-+		dev_dbg(hba->dev, "local RX_HS_G%u_ADAPT_INITIAL_L0L1L2L3_CAP = 0x%x\n",
-+			gear, adapt_l0l1l2l3_cap_local);
-+		dev_dbg(hba->dev, "peer RX_HS_G%u_ADAPT_INITIAL_L0L1L2L3_CAP = 0x%x\n",
-+			gear, adapt_l0l1l2l3_cap_peer);
-+		dev_dbg(hba->dev, "t_adapt_l0l1l2l3_local = %llu UI, t_adapt_l0l1l2l3_peer = %llu UI\n",
-+			t_adapt_l0l1l2l3_local, t_adapt_l0l1l2l3_peer);
-+
-+		t_adapt_l0l1l2l3 = max(t_adapt_l0l1l2l3_local, t_adapt_l0l1l2l3_peer);
-+		t_adapt_l0l3 = max(t_adapt_l0l3_local, t_adapt_l0l3_peer);
-+		t_adapt = t_adapt_l0l3 + t_adapt_l0l1l2l3;
-+
-+		dev_dbg(hba->dev, "TAdapt %llu PAM-4 UI selected for TX EQTR\n",
-+			t_adapt);
-+
-+		adapt_length_l0l3 = (t_adapt_l0l3_local >= t_adapt_l0l3_peer) ?
-+				    adapt_l0l3_cap_local : adapt_l0l3_cap_peer;
-+		adapt_length_l0l1l2l3 = (t_adapt_l0l1l2l3_local >= t_adapt_l0l1l2l3_peer) ?
-+					adapt_l0l1l2l3_cap_local : adapt_l0l1l2l3_cap_peer;
-+
-+		if (t_adapt < TX_EQTR_HS_G6_MIN_T_ADAPT) {
-+			dev_dbg(hba->dev, "TAdapt %llu UI is too short for TX EQTR for HS-G%u, use default Adapt 0x%x\n",
-+				t_adapt, gear, TX_EQTR_HS_G6_ADAPT_DEFAULT);
-+			adapt_length_l0l3 = TX_EQTR_HS_G6_ADAPT_DEFAULT;
-+		}
-+
-+		adapt_eqtr = adapt_length_l0l3 |
-+			     (adapt_length_l0l1l2l3 << TX_EQTR_ADAPT_LENGTH_L0L1L2L3_SHIFT);
-+	} else {
-+		return -EINVAL;
-+	}
-+
-+	ret = ufshcd_dme_set(hba, UIC_ARG_MIB(PA_TXADAPTLENGTH_EQTR), adapt_eqtr);
-+	if (ret)
-+		dev_err(hba->dev, "Failed to set adapt length for TX EQTR: %d\n", ret);
-+	else
-+		dev_dbg(hba->dev, "PA_TXADAPTLENGTH_EQTR configured to 0x%08x\n", adapt_eqtr);
-+
-+	return ret;
-+}
-+
-+/**
-+ * ufshcd_compose_tx_eqtr_setting - Compose TX EQTR setting
-+ * @iter: TX EQTR iterator data structure
-+ * @num_lanes: number of active lanes
-+ *
-+ * Returns composed TX EQTR setting, same setting is used for all active lanes
-+ */
-+static inline u32 ufshcd_compose_tx_eqtr_setting(struct tx_eqtr_iter *iter,
-+						 int num_lanes)
-+{
-+	u32 setting = 0;
-+	int lane;
-+
-+	for (lane = 0; lane < num_lanes; lane++) {
-+		setting |= TX_HS_PRESHOOT_BITS(lane, iter->preshoot);
-+		setting |= TX_HS_DEEMPHASIS_BITS(lane, iter->deemphasis);
-+	}
-+
-+	return setting;
-+}
-+
-+/**
-+ * ufshcd_apply_tx_eqtr_settings - Apply TX EQTR setting
-+ * @hba: per adapter instance
-+ * @pwr_mode: target power mode containing gear and rate information
-+ * @h_iter: host TX EQTR iterator data structure
-+ * @d_iter: device TX EQTR iterator data structure
-+ *
-+ * Returns 0 on success, negative error code otherwise
-+ */
-+static int ufshcd_apply_tx_eqtr_settings(struct ufs_hba *hba,
-+					 struct ufs_pa_layer_attr *pwr_mode,
-+					 struct tx_eqtr_iter *h_iter,
-+					 struct tx_eqtr_iter *d_iter)
-+{
-+	u32 setting;
-+	int ret;
-+
-+	setting = ufshcd_compose_tx_eqtr_setting(h_iter, pwr_mode->lane_tx);
-+	ret = ufshcd_dme_set(hba, UIC_ARG_MIB(PA_TXEQTRSETTING), setting);
-+	if (ret)
-+		return ret;
-+
-+	setting = ufshcd_compose_tx_eqtr_setting(d_iter, pwr_mode->lane_rx);
-+	ret = ufshcd_dme_set(hba, UIC_ARG_MIB(PA_PEERTXEQTRSETTING), setting);
-+	if (ret)
-+		return ret;
-+
-+	ret = ufshcd_vops_apply_tx_eqtr_settings(hba, pwr_mode, h_iter, d_iter);
-+
-+	return ret;
-+}
-+
-+/**
-+ * ufshcd_update_tx_eq_params - Update TX Equalization params
-+ * @params: TX EQ parameters data structure
-+ * @eqtr_data: TX EQTR data structure
-+ *
-+ * Update TX Equalization params using results from TX EQTR data.
-+ */
-+static inline void
-+ufshcd_update_tx_eq_params(struct ufshcd_tx_eq_params *params,
-+			   struct ufshcd_tx_eqtr_data *eqtr_data)
-+{
-+	struct ufshcd_tx_eqtr_record *rec = params->eqtr_record;
-+
-+	memcpy(params->host, eqtr_data->host, sizeof(params->host));
-+	memcpy(params->device, eqtr_data->device, sizeof(params->device));
-+
-+	if (!rec)
-+		return;
-+
-+	memcpy(rec->host_fom, eqtr_data->host_fom, sizeof(rec->host_fom));
-+	memcpy(rec->device_fom, eqtr_data->device_fom, sizeof(rec->device_fom));
-+	rec->last_record_ts = ktime_get();
-+	rec->last_record_index++;
-+}
-+
-+/**
-+ * __ufshcd_tx_eqtr - TX Equalization Training (EQTR) procedure
-+ * @hba: per adapter instance
-+ * @params: TX EQ parameters data structure
-+ * @pwr_mode: target power mode containing gear and rate information
-+ *
-+ * This function implements the complete TX EQTR procedure as defined in UFSHCI
-+ * v5.0 specification. It iterates through all possible combinations of PreShoot
-+ * and DeEmphasis settings to find the optimal TX Equalization settings for all
-+ * active lanes.
-+ *
-+ * Returns 0 on success, negative error code otherwise
-+ */
-+static int __ufshcd_tx_eqtr(struct ufs_hba *hba,
-+			    struct ufshcd_tx_eq_params *params,
-+			    struct ufs_pa_layer_attr *pwr_mode)
-+{
-+	struct ufshcd_tx_eqtr_data *eqtr_data  __free(kfree) =
-+		kzalloc(sizeof(*eqtr_data), GFP_KERNEL);
-+	struct tx_eqtr_iter h_iter = {};
-+	struct tx_eqtr_iter d_iter = {};
-+	u32 gear = pwr_mode->gear_tx;
-+	u8 preshoot, deemphasis;
-+	ktime_t start;
-+	int ret;
-+
-+	if (!eqtr_data)
-+		return -ENOMEM;
-+
-+	dev_info(hba->dev, "Start TX EQTR procedure for HS-G%u, Rate-%s, RX Lanes: %u, TX Lanes: %u\n",
-+		 gear, ufs_hs_rate_to_str(pwr_mode->hs_rate),
-+		 pwr_mode->lane_rx, pwr_mode->lane_tx);
-+
-+	start = ktime_get();
-+
-+	/* Step 1 - Determine the TX Adapt Length for EQTR */
-+	ret = ufshcd_setup_tx_eqtr_adapt_length(hba, params, gear);
-+	if (ret) {
-+		dev_err(hba->dev, "Failed to setup TX EQTR Adaptation length: %d\n", ret);
-+		return ret;
-+	}
-+
-+	/* Step 2 - Determine TX Equalization setting capabilities */
-+	ret = ufshcd_tx_eqtr_iter_init(hba, &h_iter, &d_iter);
-+	if (ret) {
-+		dev_err(hba->dev, "Failed to init TX EQTR data: %d\n", ret);
-+		return ret;
-+	}
-+
-+	/* TX EQTR main loop */
-+	for (preshoot = 0; preshoot < TX_HS_NUM_PRESHOOT; preshoot++) {
-+		for (deemphasis = 0; deemphasis < TX_HS_NUM_DEEMPHASIS; deemphasis++) {
-+			if (!tx_eqtr_iter_update(preshoot, deemphasis, &h_iter, &d_iter))
-+				continue;
-+
-+			/* Step 3 - Apply TX EQTR settings */
-+			ret = ufshcd_apply_tx_eqtr_settings(hba, pwr_mode, &h_iter, &d_iter);
-+			if (ret) {
-+				dev_err(hba->dev, "Failed to apply TX EQTR settings (PreShoot %u, DeEmphasis %u): %d\n",
-+					preshoot, deemphasis, ret);
-+				return ret;
-+			}
-+
-+			/* Step 4 - Trigger UIC TX EQTR */
-+			ret = ufshcd_uic_tx_eqtr(hba, gear);
-+			if (ret) {
-+				dev_err(hba->dev, "Failed to trigger UIC TX EQTR for target gear %u: %d\n",
-+					gear, ret);
-+				return ret;
-+			}
-+
-+			/* Step 5 - Get FOM */
-+			ret = ufshcd_get_rx_fom(hba, pwr_mode, &h_iter, &d_iter);
-+			if (ret) {
-+				dev_err(hba->dev, "Failed to get RX_FOM: %d\n",
-+					ret);
-+				return ret;
-+			}
-+
-+			ufshcd_evaluate_tx_eqtr_fom(hba, pwr_mode, eqtr_data, &h_iter, &d_iter);
-+		}
-+	}
-+
-+	dev_info(hba->dev, "TX EQTR procedure completed! Time elapsed: %llu ms\n",
-+		 ktime_to_ms(ktime_sub(ktime_get(), start)));
-+
-+	ufshcd_update_tx_eq_params(params, eqtr_data);
-+
-+	return ret;
-+}
-+
-+/**
-+ * ufshcd_tx_eqtr_prepare - Prepare UFS link for TX EQTR procedure
-+ * @hba: per adapter instance
-+ * @pwr_mode: target power mode containing gear and rate
-+ *
-+ * This function prepares the UFS link for TX Equalization Training (EQTR) by
-+ * establishing the proper initial conditions required by the EQTR procedure.
-+ * It ensures that EQTR starts from the most reliable Power Mode (HS-G1) with
-+ * all connected lanes activated and sets host TX HS Adapt Type to INITIAL.
-+ *
-+ * Returns 0 on successful preparation, negative error code on failure
-+ */
-+static int ufshcd_tx_eqtr_prepare(struct ufs_hba *hba,
-+				  struct ufs_pa_layer_attr *pwr_mode)
-+{
-+	struct ufs_pa_layer_attr pwr_mode_hs_g1 = {
-+		/* TX EQTR shall be initiated from the most reliable HS-G1 */
-+		.gear_rx = UFS_HS_G1,
-+		.gear_tx = UFS_HS_G1,
-+		.lane_rx = pwr_mode->lane_rx,
-+		.lane_tx = pwr_mode->lane_tx,
-+		.pwr_rx = FAST_MODE,
-+		.pwr_tx = FAST_MODE,
-+		/* Use the target power mode's HS rate */
-+		.hs_rate = pwr_mode->hs_rate,
-+	};
-+	u32 rate = pwr_mode->hs_rate;
-+	int ret;
-+
-+	/* Change power mode to HS-G1, activate all connected lanes. */
-+	ret = ufshcd_change_power_mode(hba, &pwr_mode_hs_g1,
-+				       UFSHCD_PMC_POLICY_DONT_FORCE);
-+	if (ret) {
-+		dev_err(hba->dev, "TX EQTR: Failed to change power mode to HS-G1, Rate-%s: %d\n",
-+			ufs_hs_rate_to_str(rate), ret);
-+		return ret;
-+	}
-+
-+	ret = ufshcd_dme_set(hba, UIC_ARG_MIB(PA_TXHSADAPTTYPE),
-+			     PA_INITIAL_ADAPT);
-+	if (ret)
-+		dev_err(hba->dev, "TX EQTR: Failed to set Host Adapt type to INITIAL: %d\n",
-+			ret);
-+
-+	return ret;
-+}
-+
-+static void ufshcd_tx_eqtr_unprepare(struct ufs_hba *hba,
-+				     struct ufs_pa_layer_attr *pwr_mode)
-+{
-+	int err;
-+
-+	if (pwr_mode->pwr_rx == SLOWAUTO_MODE || pwr_mode->hs_rate == 0)
-+		return;
-+
-+	err = ufshcd_change_power_mode(hba, pwr_mode,
-+				       UFSHCD_PMC_POLICY_DONT_FORCE);
-+	if (err)
-+		dev_err(hba->dev, "%s: Failed to restore Power Mode: %d\n",
-+			__func__, err);
-+}
-+
-+/**
-+ * ufshcd_tx_eqtr - Perform TX EQTR procedures with vops callbacks
-+ * @hba: per adapter instance
-+ * @params: TX EQ parameters data structure to populate
-+ * @pwr_mode: target power mode containing gear and rate information
-+ *
-+ * This is the main entry point for performing TX Equalization Training (EQTR)
-+ * procedure as defined in UFSCHI v5.0 specification. It serves as a wrapper
-+ * around __ufshcd_tx_eqtr() to provide vops support through the variant
-+ * operations framework.
-+ *
-+ * Returns 0 on success, negative error code on failure
-+ */
-+static int ufshcd_tx_eqtr(struct ufs_hba *hba,
-+			  struct ufshcd_tx_eq_params *params,
-+			  struct ufs_pa_layer_attr *pwr_mode)
-+{
-+	struct ufs_pa_layer_attr old_pwr_info;
-+	u32 gear = pwr_mode->gear_tx;
-+	int ret;
-+
-+	if (gear < UFS_HS_G4 || gear > UFS_HS_G6) {
-+		dev_err(hba->dev, "TX EQTR is not implemented for HS-G%u\n",
-+			gear);
-+		return -EINVAL;
-+	}
-+
-+	if (!params->eqtr_record) {
-+		params->eqtr_record = devm_kzalloc(hba->dev,
-+						   sizeof(*params->eqtr_record),
-+						   GFP_KERNEL);
-+		if (!params->eqtr_record)
-+			return -ENOMEM;
-+	}
-+
-+	memcpy(&old_pwr_info, &hba->pwr_info, sizeof(struct ufs_pa_layer_attr));
-+
-+	ret = ufshcd_tx_eqtr_prepare(hba, pwr_mode);
-+	if (ret) {
-+		dev_err(hba->dev, "Failed to prepare TX EQTR: %d\n", ret);
-+		goto out;
-+	}
-+
-+	ret = ufshcd_vops_tx_eqtr_notify(hba, PRE_CHANGE, pwr_mode);
-+	if (ret)
-+		goto out;
-+
-+	ret = __ufshcd_tx_eqtr(hba, params, pwr_mode);
-+	if (ret)
-+		goto out;
-+
-+	ret = ufshcd_vops_tx_eqtr_notify(hba, POST_CHANGE, pwr_mode);
-+
-+out:
-+	if (ret)
-+		ufshcd_tx_eqtr_unprepare(hba, &old_pwr_info);
-+
-+	return ret;
-+}
-+
-+/**
-+ * ufshcd_config_tx_eq_settings - Configure TX Equalization settings
-+ * @hba: per adapter instance
-+ * @pwr_mode: target power mode containing gear and rate information
-+ *
-+ * This function finds and sets the TX Equalization settings for the given
-+ * target power mode.
-+ *
-+ * Returns 0 on success, error code otherwise
-+ */
-+int ufshcd_config_tx_eq_settings(struct ufs_hba *hba,
-+				 struct ufs_pa_layer_attr *pwr_mode)
-+{
-+	struct ufshcd_tx_eq_params *params;
-+	u32 gear, rate;
-+
-+	if (!ufshcd_is_tx_eq_supported(hba) || !use_adaptive_txeq)
-+		return 0;
-+
-+	if (!hba->max_pwr_info.is_valid) {
-+		dev_err(hba->dev, "Max power info is invalid\n");
-+		return -EINVAL;
-+	}
-+
-+	if (!pwr_mode) {
-+		dev_err(hba->dev, "Target power mode is NULL\n");
-+		return -EINVAL;
-+	}
-+
-+	gear = pwr_mode->gear_tx;
-+	rate = pwr_mode->hs_rate;
-+	params = &hba->tx_eq_params[gear - 1];
-+
-+	if (gear < UFS_HS_G1 || gear > UFS_HS_GEAR_MAX) {
-+		dev_err(hba->dev, "Invalid HS-Gear (%u) for TX Equalization\n",
-+			gear);
-+		return -EINVAL;
-+	} else if (gear < adaptive_txeq_gear) {
-+		return 0;
-+	}
-+
-+	if (rate != PA_HS_MODE_A && rate != PA_HS_MODE_B) {
-+		dev_err(hba->dev, "Invalid HS-Rate (%u) for TX Equalization\n",
-+			rate);
-+		return -EINVAL;
-+	}
-+
-+	/* TX EQTR is supported for HS-G4 and higher Gears */
-+	if (gear < UFS_HS_G4)
-+		goto apply_tx_eq_settings;
-+
-+	if (!params->is_valid) {
-+		int ret;
-+
-+		ret = ufshcd_tx_eqtr(hba, params, pwr_mode);
-+		if (ret) {
-+			dev_err(hba->dev, "Failed to train TX Equalization for HS-G%u, Rate-%s: %d\n",
-+				gear, ufs_hs_rate_to_str(rate), ret);
-+			return ret;
-+		}
-+
-+		/* Mark TX Equalization settings as valid */
-+		params->is_valid = true;
-+		params->is_applied = false;
-+	}
-+
-+apply_tx_eq_settings:
-+	if (params->is_valid && !params->is_applied) {
-+		int ret;
-+
-+		ret = ufshcd_apply_tx_eq_settings(hba, params, gear);
-+		if (ret) {
-+			dev_err(hba->dev, "Failed to apply TX Equalization settings for HS-G%u, Rate-%s: %d\n",
-+				gear, ufs_hs_rate_to_str(rate), ret);
-+			return ret;
-+		}
-+
-+		params->is_applied = true;
-+	}
-+
-+	return 0;
-+}
-+
-+/**
-+ * ufshcd_apply_valid_tx_eq_settings - Apply valid TX Equalization settings
-+ * @hba: per-adapter instance
-+ *
-+ * This function iterates through all supported High-Speed (HS) gears and
-+ * applies valid TX Equalization settings to both Host and Device.
-+ */
-+void ufshcd_apply_valid_tx_eq_settings(struct ufs_hba *hba)
-+{
-+	struct ufshcd_tx_eq_params *params;
-+	int gear, err;
-+
-+	if (!ufshcd_is_tx_eq_supported(hba))
-+		return;
-+
-+	if (!hba->max_pwr_info.is_valid) {
-+		dev_err(hba->dev, "Max power info is invalid, cannot apply TX Equalization settings\n");
-+		return;
-+	}
-+
-+	for (gear = UFS_HS_G1; gear <= UFS_HS_GEAR_MAX; gear++) {
-+		params = &hba->tx_eq_params[gear - 1];
-+
-+		if (params->is_valid) {
-+			err = ufshcd_apply_tx_eq_settings(hba, params, gear);
-+			if (err) {
-+				params->is_applied = false;
-+				dev_err(hba->dev, "Failed to apply TX Equalization settings for HS-G%u: %d\n",
-+					gear, err);
-+			} else {
-+				params->is_applied = true;
-+			}
-+		}
-+	}
-+}
 diff --git a/drivers/ufs/core/ufshcd-priv.h b/drivers/ufs/core/ufshcd-priv.h
-index 3b6958d9297a..20ec8d8ac0a4 100644
+index 7d6d19361af9..3b6958d9297a 100644
 --- a/drivers/ufs/core/ufshcd-priv.h
 +++ b/drivers/ufs/core/ufshcd-priv.h
-@@ -103,6 +103,12 @@ int ufshcd_exec_raw_upiu_cmd(struct ufs_hba *hba,
- int ufshcd_wb_toggle(struct ufs_hba *hba, bool enable);
- int ufshcd_read_device_lvl_exception_id(struct ufs_hba *hba, u64 *exception_id);
- 
-+int ufshcd_uic_tx_eqtr(struct ufs_hba *hba, int gear);
-+void ufshcd_apply_valid_tx_eq_settings(struct ufs_hba *hba);
-+int ufshcd_config_tx_eq_settings(struct ufs_hba *hba,
-+				 struct ufs_pa_layer_attr *pwr_mode);
-+void ufshcd_print_tx_eq_params(struct ufs_hba *hba);
-+
- /* Wrapper functions for safely calling variant operations */
- static inline const char *ufshcd_get_var_name(struct ufs_hba *hba)
- {
-@@ -297,6 +303,38 @@ static inline u32 ufshcd_vops_freq_to_gear_speed(struct ufs_hba *hba, unsigned l
+@@ -167,14 +167,24 @@ static inline int ufshcd_vops_link_startup_notify(struct ufs_hba *hba,
  	return 0;
  }
  
-+static inline int ufshcd_vops_get_rx_fom(struct ufs_hba *hba,
-+					 struct ufs_pa_layer_attr *pwr_mode,
-+					 struct tx_eqtr_iter *h_iter,
-+					 struct tx_eqtr_iter *d_iter)
++static inline int ufshcd_vops_negotiate_pwr_mode(struct ufs_hba *hba,
++						 const struct ufs_pa_layer_attr *dev_max_params,
++						 struct ufs_pa_layer_attr *dev_req_params)
 +{
-+	if (hba->vops && hba->vops->get_rx_fom)
-+		return hba->vops->get_rx_fom(hba, pwr_mode, h_iter, d_iter);
++	if (hba->vops && hba->vops->negotiate_pwr_mode)
++		return hba->vops->negotiate_pwr_mode(hba, dev_max_params,
++					dev_req_params);
 +
-+	return 0;
++	return -ENOTSUPP;
 +}
 +
-+static inline int ufshcd_vops_apply_tx_eqtr_settings(struct ufs_hba *hba,
-+						     struct ufs_pa_layer_attr *pwr_mode,
-+						     struct tx_eqtr_iter *h_iter,
-+						     struct tx_eqtr_iter *d_iter)
-+{
-+	if (hba->vops && hba->vops->apply_tx_eqtr_settings)
-+		return hba->vops->apply_tx_eqtr_settings(hba, pwr_mode, h_iter, d_iter);
-+
-+	return 0;
-+}
-+
-+static inline int ufshcd_vops_tx_eqtr_notify(struct ufs_hba *hba,
-+					     enum ufs_notify_change_status status,
-+					     struct ufs_pa_layer_attr *pwr_mode)
-+{
-+	if (hba->vops && hba->vops->tx_eqtr_notify)
-+		return hba->vops->tx_eqtr_notify(hba, status, pwr_mode);
-+
-+	return 0;
-+}
-+
- extern const struct ufs_pm_lvl_states ufs_pm_lvl_states[];
+ static inline int ufshcd_vops_pwr_change_notify(struct ufs_hba *hba,
+ 				enum ufs_notify_change_status status,
+-				const struct ufs_pa_layer_attr *dev_max_params,
+ 				struct ufs_pa_layer_attr *dev_req_params)
+ {
+ 	if (hba->vops && hba->vops->pwr_change_notify)
+ 		return hba->vops->pwr_change_notify(hba, status,
+-					dev_max_params, dev_req_params);
++					dev_req_params);
  
- /**
+ 	return -ENOTSUPP;
+ }
 diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 64220e3aa86e..d9da4f3c1f14 100644
+index 8349fe2090db..91b5d5b02d22 100644
 --- a/drivers/ufs/core/ufshcd.c
 +++ b/drivers/ufs/core/ufshcd.c
-@@ -4342,16 +4342,18 @@ static int ufshcd_uic_pwr_ctrl(struct ufs_hba *hba, struct uic_command *cmd)
- 	ret = __ufshcd_send_uic_cmd(hba, cmd);
- 	if (ret) {
- 		dev_err(hba->dev,
--			"pwr ctrl cmd 0x%x with mode 0x%x uic error %d\n",
--			cmd->command, cmd->argument3, ret);
-+			"pwr ctrl cmd 0x%x with (MIBattribute 0x%x, mode 0x%x) uic error %d\n",
-+			cmd->command, UIC_GET_ATTR_ID(cmd->argument1),
-+			cmd->argument3, ret);
- 		goto out;
- 	}
+@@ -335,8 +335,6 @@ static void ufshcd_suspend_clkscaling(struct ufs_hba *hba);
+ static int ufshcd_scale_clks(struct ufs_hba *hba, unsigned long freq,
+ 			     bool scale_up);
+ static irqreturn_t ufshcd_intr(int irq, void *__hba);
+-static int ufshcd_change_power_mode(struct ufs_hba *hba,
+-			     struct ufs_pa_layer_attr *pwr_mode);
+ static int ufshcd_setup_hba_vreg(struct ufs_hba *hba, bool on);
+ static int ufshcd_setup_vreg(struct ufs_hba *hba, bool on);
+ static inline int ufshcd_config_vreg_hpm(struct ufs_hba *hba,
+@@ -4662,8 +4660,26 @@ static int ufshcd_get_max_pwr_mode(struct ufs_hba *hba)
+ 	return 0;
+ }
  
- 	if (!wait_for_completion_timeout(hba->uic_async_done,
- 					 msecs_to_jiffies(uic_cmd_timeout))) {
- 		dev_err(hba->dev,
--			"pwr ctrl cmd 0x%x with mode 0x%x completion timeout\n",
--			cmd->command, cmd->argument3);
-+			"pwr ctrl cmd 0x%x with (MIBattribute 0x%x, mode 0x%x) completion timeout\n",
-+			cmd->command, UIC_GET_ATTR_ID(cmd->argument1),
-+			cmd->argument3);
+-static int ufshcd_change_power_mode(struct ufs_hba *hba,
+-			     struct ufs_pa_layer_attr *pwr_mode)
++/**
++ * ufshcd_dme_change_power_mode() - UniPro DME Power Mode change sequence
++ * @hba: per-adapter instance
++ * @pwr_mode: pointer to the target power mode (gear/lane) attributes
++ *
++ * This function handles the low-level DME (Device Management Entity)
++ * configuration required to transition the UFS link to a new power mode. It
++ * performs the following steps:
++ * 1. Checks if the requested mode matches the current state.
++ * 2. Sets M-PHY and UniPro attributes including Gear (PA_RXGEAR/TXGEAR),
++ *    Lanes, Termination, and HS Series (PA_HSSERIES).
++ * 3. Configures default UniPro timeout values (DL_FC0, etc.) unless
++ *    explicitly skipped via quirks.
++ * 4. Triggers the actual hardware mode change via ufshcd_uic_change_pwr_mode().
++ * 5. Updates the HBA's cached power information on success.
++ *
++ * Return: 0 on success, non-zero error code on failure.
++ */
++static int ufshcd_dme_change_power_mode(struct ufs_hba *hba,
++					struct ufs_pa_layer_attr *pwr_mode)
+ {
+ 	int ret;
  
- 		if (!cmd->cmd_active) {
- 			dev_err(hba->dev, "%s: Power Mode Change operation has been completed, go check UPMCRS\n",
-@@ -4367,14 +4369,16 @@ static int ufshcd_uic_pwr_ctrl(struct ufs_hba *hba, struct uic_command *cmd)
- 	status = ufshcd_get_upmcrs(hba);
- 	if (status != PWR_LOCAL) {
- 		dev_err(hba->dev,
--			"pwr ctrl cmd 0x%x failed, host upmcrs:0x%x\n",
--			cmd->command, status);
-+			"pwr ctrl cmd 0x%x with (MIBattribute 0x%x, mode 0x%x) failed, host upmcrs:0x%x\n",
-+			cmd->command, UIC_GET_ATTR_ID(cmd->argument1),
-+			cmd->argument3, status);
- 		ret = (status != PWR_OK) ? status : -1;
- 	}
- out:
- 	if (ret) {
- 		ufshcd_print_host_state(hba);
- 		ufshcd_print_pwr_info(hba);
-+		ufshcd_print_tx_eq_params(hba);
- 		ufshcd_print_evt_hist(hba);
- 	}
- 
-@@ -4400,6 +4404,29 @@ static int ufshcd_uic_pwr_ctrl(struct ufs_hba *hba, struct uic_command *cmd)
+@@ -4747,6 +4763,34 @@ static int ufshcd_change_power_mode(struct ufs_hba *hba,
  	return ret;
  }
  
 +/**
-+ * ufshcd_uic_tx_eqtr - Perform UIC TX Equalization Training
-+ * @hba: per adapter instance
-+ * @gear: target gear for EQTR
++ * ufshcd_change_power_mode() - Change UFS Link Power Mode
++ * @hba: per-adapter instance
++ * @pwr_mode: pointer to the target power mode (gear/lane) attributes
 + *
-+ * Returns 0 on success, negative error code otherwise
++ * This function handles the high-level sequence for changing the UFS link
++ * power mode. It triggers vendor-specific pre-change notification,
++ * executes the DME (Device Management Entity) power mode change sequence,
++ * and, upon success, triggers vendor-specific post-change notification.
++ *
++ * Return: 0 on success, non-zero error code on failure.
 + */
-+int ufshcd_uic_tx_eqtr(struct ufs_hba *hba, int gear)
++int ufshcd_change_power_mode(struct ufs_hba *hba,
++			     struct ufs_pa_layer_attr *pwr_mode)
 +{
-+	struct uic_command uic_cmd = {
-+		.command = UIC_CMD_DME_SET,
-+		.argument1 = UIC_ARG_MIB(PA_EQTR_GEAR),
-+		.argument3 = gear,
-+	};
 +	int ret;
 +
-+	ufshcd_hold(hba);
-+	ret = ufshcd_uic_pwr_ctrl(hba, &uic_cmd);
-+	ufshcd_release(hba);
++	ufshcd_vops_pwr_change_notify(hba, PRE_CHANGE, pwr_mode);
++
++	ret = ufshcd_dme_change_power_mode(hba, pwr_mode);
++
++	if (!ret)
++		ufshcd_vops_pwr_change_notify(hba, POST_CHANGE, pwr_mode);
 +
 +	return ret;
 +}
++EXPORT_SYMBOL_GPL(ufshcd_change_power_mode);
 +
  /**
-  * ufshcd_send_bsg_uic_cmd - Send UIC commands requested via BSG layer and retrieve the result
-  * @hba: per adapter instance
-@@ -4823,6 +4850,12 @@ int ufshcd_config_pwr_mode(struct ufs_hba *hba,
- 		memcpy(&final_params, desired_pwr_mode, sizeof(final_params));
- 	}
+  * ufshcd_config_pwr_mode - configure a new power mode
+  * @hba: per-adapter instance
+@@ -4760,19 +4804,17 @@ int ufshcd_config_pwr_mode(struct ufs_hba *hba,
+ 	struct ufs_pa_layer_attr final_params = { 0 };
+ 	int ret;
  
-+	ret = ufshcd_config_tx_eq_settings(hba, &final_params);
-+	if (ret)
-+		dev_warn(hba->dev, "Failed to configure TX Equalization for HS-G%u, Rate-%s: %d\n",
-+			 final_params.gear_tx,
-+			 ufs_hs_rate_to_str(final_params.hs_rate), ret);
-+
- 	return ufshcd_change_power_mode(hba, &final_params, pmc_policy);
+-	ret = ufshcd_vops_pwr_change_notify(hba, PRE_CHANGE,
+-					desired_pwr_mode, &final_params);
++	ret = ufshcd_vops_negotiate_pwr_mode(hba, desired_pwr_mode,
++					     &final_params);
++	if (ret) {
++		if (ret != -ENOTSUPP)
++			dev_err(hba->dev, "Failed to negotiate power mode: %d, use desired as is\n",
++				ret);
+ 
+-	if (ret)
+ 		memcpy(&final_params, desired_pwr_mode, sizeof(final_params));
++	}
+ 
+-	ret = ufshcd_change_power_mode(hba, &final_params);
+-
+-	if (!ret)
+-		ufshcd_vops_pwr_change_notify(hba, POST_CHANGE, NULL,
+-					&final_params);
+-
+-	return ret;
++	return ufshcd_change_power_mode(hba, &final_params);
  }
  EXPORT_SYMBOL_GPL(ufshcd_config_pwr_mode);
-@@ -6822,6 +6855,7 @@ static void ufshcd_err_handler(struct work_struct *work)
- 		spin_unlock_irqrestore(hba->host->host_lock, flags);
- 		ufshcd_print_host_state(hba);
- 		ufshcd_print_pwr_info(hba);
-+		ufshcd_print_tx_eq_params(hba);
- 		ufshcd_print_evt_hist(hba);
- 		ufshcd_print_tmrs(hba, hba->outstanding_tasks);
- 		ufshcd_print_trs_all(hba, pr_prdt);
-@@ -7085,6 +7119,7 @@ static irqreturn_t ufshcd_check_errors(struct ufs_hba *hba, u32 intr_status)
- 			ufshcd_dump_regs(hba, 0, UFSHCI_REG_SPACE_SIZE,
- 					 "host_regs: ");
- 			ufshcd_print_pwr_info(hba);
-+			ufshcd_print_tx_eq_params(hba);
- 		}
- 		ufshcd_schedule_eh_work(hba);
- 		retval |= IRQ_HANDLED;
-@@ -7866,6 +7901,7 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
- 		ufshcd_print_evt_hist(hba);
- 		ufshcd_print_host_state(hba);
- 		ufshcd_print_pwr_info(hba);
-+		ufshcd_print_tx_eq_params(hba);
- 		ufshcd_print_tr(hba, cmd, true);
- 	} else {
- 		ufshcd_print_tr(hba, cmd, false);
-@@ -8843,6 +8879,8 @@ static void ufshcd_tune_unipro_params(struct ufs_hba *hba)
  
- 	if (hba->dev_quirks & UFS_DEVICE_QUIRK_PA_HIBER8TIME)
- 		ufshcd_quirk_override_pa_h8time(hba);
-+
-+	ufshcd_apply_valid_tx_eq_settings(hba);
+diff --git a/drivers/ufs/host/ufs-amd-versal2.c b/drivers/ufs/host/ufs-amd-versal2.c
+index 40543db621a1..52031b7256fd 100644
+--- a/drivers/ufs/host/ufs-amd-versal2.c
++++ b/drivers/ufs/host/ufs-amd-versal2.c
+@@ -443,7 +443,6 @@ static int ufs_versal2_phy_ratesel(struct ufs_hba *hba, u32 activelanes, u32 rx_
  }
  
- static void ufshcd_clear_dbg_ufs_stats(struct ufs_hba *hba)
+ static int ufs_versal2_pwr_change_notify(struct ufs_hba *hba, enum ufs_notify_change_status status,
+-					 const struct ufs_pa_layer_attr *dev_max_params,
+ 					 struct ufs_pa_layer_attr *dev_req_params)
+ {
+ 	struct ufs_versal2_host *host = ufshcd_get_variant(hba);
+@@ -451,8 +450,6 @@ static int ufs_versal2_pwr_change_notify(struct ufs_hba *hba, enum ufs_notify_ch
+ 	int ret = 0;
+ 
+ 	if (status == PRE_CHANGE) {
+-		memcpy(dev_req_params, dev_max_params, sizeof(struct ufs_pa_layer_attr));
+-
+ 		/* If it is not a calibrated part, switch PWRMODE to SLOW_MODE */
+ 		if (!host->attcompval0 && !host->attcompval1 && !host->ctlecompval0 &&
+ 		    !host->ctlecompval1) {
+diff --git a/drivers/ufs/host/ufs-exynos.c b/drivers/ufs/host/ufs-exynos.c
+index 76fee3a79c77..77a6c8e44485 100644
+--- a/drivers/ufs/host/ufs-exynos.c
++++ b/drivers/ufs/host/ufs-exynos.c
+@@ -818,12 +818,10 @@ static u32 exynos_ufs_get_hs_gear(struct ufs_hba *hba)
+ }
+ 
+ static int exynos_ufs_pre_pwr_mode(struct ufs_hba *hba,
+-				const struct ufs_pa_layer_attr *dev_max_params,
+ 				struct ufs_pa_layer_attr *dev_req_params)
+ {
+ 	struct exynos_ufs *ufs = ufshcd_get_variant(hba);
+ 	struct phy *generic_phy = ufs->phy;
+-	struct ufs_host_params host_params;
+ 	int ret;
+ 
+ 	if (!dev_req_params) {
+@@ -832,18 +830,6 @@ static int exynos_ufs_pre_pwr_mode(struct ufs_hba *hba,
+ 		goto out;
+ 	}
+ 
+-	ufshcd_init_host_params(&host_params);
+-
+-	/* This driver only support symmetric gear setting e.g. hs_tx_gear == hs_rx_gear */
+-	host_params.hs_tx_gear = exynos_ufs_get_hs_gear(hba);
+-	host_params.hs_rx_gear = exynos_ufs_get_hs_gear(hba);
+-
+-	ret = ufshcd_negotiate_pwr_params(&host_params, dev_max_params, dev_req_params);
+-	if (ret) {
+-		pr_err("%s: failed to determine capabilities\n", __func__);
+-		goto out;
+-	}
+-
+ 	if (ufs->drv_data->pre_pwr_change)
+ 		ufs->drv_data->pre_pwr_change(ufs, dev_req_params);
+ 
+@@ -1677,17 +1663,30 @@ static int exynos_ufs_link_startup_notify(struct ufs_hba *hba,
+ 	return ret;
+ }
+ 
++static int exynos_ufs_negotiate_pwr_mode(struct ufs_hba *hba,
++					 const struct ufs_pa_layer_attr *dev_max_params,
++					 struct ufs_pa_layer_attr *dev_req_params)
++{
++	struct ufs_host_params host_params;
++
++	ufshcd_init_host_params(&host_params);
++
++	/* This driver only support symmetric gear setting e.g. hs_tx_gear == hs_rx_gear */
++	host_params.hs_tx_gear = exynos_ufs_get_hs_gear(hba);
++	host_params.hs_rx_gear = exynos_ufs_get_hs_gear(hba);
++
++	return ufshcd_negotiate_pwr_params(&host_params, dev_max_params, dev_req_params);
++}
++
+ static int exynos_ufs_pwr_change_notify(struct ufs_hba *hba,
+ 				enum ufs_notify_change_status status,
+-				const struct ufs_pa_layer_attr *dev_max_params,
+ 				struct ufs_pa_layer_attr *dev_req_params)
+ {
+ 	int ret = 0;
+ 
+ 	switch (status) {
+ 	case PRE_CHANGE:
+-		ret = exynos_ufs_pre_pwr_mode(hba, dev_max_params,
+-					      dev_req_params);
++		ret = exynos_ufs_pre_pwr_mode(hba, dev_req_params);
+ 		break;
+ 	case POST_CHANGE:
+ 		ret = exynos_ufs_post_pwr_mode(hba, dev_req_params);
+@@ -2015,6 +2014,7 @@ static const struct ufs_hba_variant_ops ufs_hba_exynos_ops = {
+ 	.exit				= exynos_ufs_exit,
+ 	.hce_enable_notify		= exynos_ufs_hce_enable_notify,
+ 	.link_startup_notify		= exynos_ufs_link_startup_notify,
++	.negotiate_pwr_mode		= exynos_ufs_negotiate_pwr_mode,
+ 	.pwr_change_notify		= exynos_ufs_pwr_change_notify,
+ 	.setup_clocks			= exynos_ufs_setup_clocks,
+ 	.setup_xfer_req			= exynos_ufs_specify_nexus_t_xfer_req,
+diff --git a/drivers/ufs/host/ufs-hisi.c b/drivers/ufs/host/ufs-hisi.c
+index 6f2e6bf31225..993e20ac211d 100644
+--- a/drivers/ufs/host/ufs-hisi.c
++++ b/drivers/ufs/host/ufs-hisi.c
+@@ -298,6 +298,17 @@ static void ufs_hisi_set_dev_cap(struct ufs_host_params *host_params)
+ 	ufshcd_init_host_params(host_params);
+ }
+ 
++static int ufs_hisi_negotiate_pwr_mode(struct ufs_hba *hba,
++				       const struct ufs_pa_layer_attr *dev_max_params,
++				       struct ufs_pa_layer_attr *dev_req_params)
++{
++	struct ufs_host_params host_params;
++
++	ufs_hisi_set_dev_cap(&host_params);
++
++	return ufshcd_negotiate_pwr_params(&host_params, dev_max_params, dev_req_params);
++}
++
+ static void ufs_hisi_pwr_change_pre_change(struct ufs_hba *hba)
+ {
+ 	struct ufs_hisi_host *host = ufshcd_get_variant(hba);
+@@ -362,10 +373,8 @@ static void ufs_hisi_pwr_change_pre_change(struct ufs_hba *hba)
+ 
+ static int ufs_hisi_pwr_change_notify(struct ufs_hba *hba,
+ 				enum ufs_notify_change_status status,
+-				const struct ufs_pa_layer_attr *dev_max_params,
+ 				struct ufs_pa_layer_attr *dev_req_params)
+ {
+-	struct ufs_host_params host_params;
+ 	int ret = 0;
+ 
+ 	if (!dev_req_params) {
+@@ -377,14 +386,6 @@ static int ufs_hisi_pwr_change_notify(struct ufs_hba *hba,
+ 
+ 	switch (status) {
+ 	case PRE_CHANGE:
+-		ufs_hisi_set_dev_cap(&host_params);
+-		ret = ufshcd_negotiate_pwr_params(&host_params, dev_max_params, dev_req_params);
+-		if (ret) {
+-			dev_err(hba->dev,
+-			    "%s: failed to determine capabilities\n", __func__);
+-			goto out;
+-		}
+-
+ 		ufs_hisi_pwr_change_pre_change(hba);
+ 		break;
+ 	case POST_CHANGE:
+@@ -543,6 +544,7 @@ static const struct ufs_hba_variant_ops ufs_hba_hi3660_vops = {
+ 	.name = "hi3660",
+ 	.init = ufs_hi3660_init,
+ 	.link_startup_notify = ufs_hisi_link_startup_notify,
++	.negotiate_pwr_mode = ufs_hisi_negotiate_pwr_mode,
+ 	.pwr_change_notify = ufs_hisi_pwr_change_notify,
+ 	.suspend = ufs_hisi_suspend,
+ 	.resume = ufs_hisi_resume,
+@@ -552,6 +554,7 @@ static const struct ufs_hba_variant_ops ufs_hba_hi3670_vops = {
+ 	.name = "hi3670",
+ 	.init = ufs_hi3670_init,
+ 	.link_startup_notify = ufs_hisi_link_startup_notify,
++	.negotiate_pwr_mode = ufs_hisi_negotiate_pwr_mode,
+ 	.pwr_change_notify = ufs_hisi_pwr_change_notify,
+ 	.suspend = ufs_hisi_suspend,
+ 	.resume = ufs_hisi_resume,
+diff --git a/drivers/ufs/host/ufs-mediatek.c b/drivers/ufs/host/ufs-mediatek.c
+index 05892b9ac528..7b45cf0428af 100644
+--- a/drivers/ufs/host/ufs-mediatek.c
++++ b/drivers/ufs/host/ufs-mediatek.c
+@@ -1317,6 +1317,23 @@ static int ufs_mtk_init(struct ufs_hba *hba)
+ 	return err;
+ }
+ 
++static int ufs_mtk_negotiate_pwr_mode(struct ufs_hba *hba,
++				      const struct ufs_pa_layer_attr *dev_max_params,
++				      struct ufs_pa_layer_attr *dev_req_params)
++{
++	struct ufs_host_params host_params;
++
++	ufshcd_init_host_params(&host_params);
++	host_params.hs_rx_gear = UFS_HS_G5;
++	host_params.hs_tx_gear = UFS_HS_G5;
++
++	if (dev_max_params->pwr_rx == SLOW_MODE ||
++	    dev_max_params->pwr_tx == SLOW_MODE)
++		host_params.desired_working_mode = UFS_PWM_MODE;
++
++	return ufshcd_negotiate_pwr_params(&host_params, dev_max_params, dev_req_params);
++}
++
+ static bool ufs_mtk_pmc_via_fastauto(struct ufs_hba *hba,
+ 				     struct ufs_pa_layer_attr *dev_req_params)
+ {
+@@ -1372,26 +1389,10 @@ static void ufs_mtk_adjust_sync_length(struct ufs_hba *hba)
+ }
+ 
+ static int ufs_mtk_pre_pwr_change(struct ufs_hba *hba,
+-				const struct ufs_pa_layer_attr *dev_max_params,
+ 				struct ufs_pa_layer_attr *dev_req_params)
+ {
+ 	struct ufs_mtk_host *host = ufshcd_get_variant(hba);
+-	struct ufs_host_params host_params;
+-	int ret;
+-
+-	ufshcd_init_host_params(&host_params);
+-	host_params.hs_rx_gear = UFS_HS_G5;
+-	host_params.hs_tx_gear = UFS_HS_G5;
+-
+-	if (dev_max_params->pwr_rx == SLOW_MODE ||
+-	    dev_max_params->pwr_tx == SLOW_MODE)
+-		host_params.desired_working_mode = UFS_PWM_MODE;
+-
+-	ret = ufshcd_negotiate_pwr_params(&host_params, dev_max_params, dev_req_params);
+-	if (ret) {
+-		pr_info("%s: failed to determine capabilities\n",
+-			__func__);
+-	}
++	int ret = 0;
+ 
+ 	if (ufs_mtk_pmc_via_fastauto(hba, dev_req_params)) {
+ 		ufs_mtk_adjust_sync_length(hba);
+@@ -1503,7 +1504,6 @@ static int ufs_mtk_auto_hibern8_disable(struct ufs_hba *hba)
+ 
+ static int ufs_mtk_pwr_change_notify(struct ufs_hba *hba,
+ 				enum ufs_notify_change_status stage,
+-				const struct ufs_pa_layer_attr *dev_max_params,
+ 				struct ufs_pa_layer_attr *dev_req_params)
+ {
+ 	int ret = 0;
+@@ -1515,8 +1515,7 @@ static int ufs_mtk_pwr_change_notify(struct ufs_hba *hba,
+ 			reg = ufshcd_readl(hba, REG_AUTO_HIBERNATE_IDLE_TIMER);
+ 			ufs_mtk_auto_hibern8_disable(hba);
+ 		}
+-		ret = ufs_mtk_pre_pwr_change(hba, dev_max_params,
+-					     dev_req_params);
++		ret = ufs_mtk_pre_pwr_change(hba, dev_req_params);
+ 		break;
+ 	case POST_CHANGE:
+ 		if (ufshcd_is_auto_hibern8_supported(hba))
+@@ -2318,6 +2317,7 @@ static const struct ufs_hba_variant_ops ufs_hba_mtk_vops = {
+ 	.setup_clocks        = ufs_mtk_setup_clocks,
+ 	.hce_enable_notify   = ufs_mtk_hce_enable_notify,
+ 	.link_startup_notify = ufs_mtk_link_startup_notify,
++	.negotiate_pwr_mode  = ufs_mtk_negotiate_pwr_mode,
+ 	.pwr_change_notify   = ufs_mtk_pwr_change_notify,
+ 	.apply_dev_quirks    = ufs_mtk_apply_dev_quirks,
+ 	.fixup_dev_quirks    = ufs_mtk_fixup_dev_quirks,
+diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+index 375fd24ba458..cdc769886e82 100644
+--- a/drivers/ufs/host/ufs-qcom.c
++++ b/drivers/ufs/host/ufs-qcom.c
+@@ -966,13 +966,21 @@ static void ufs_qcom_set_tx_hs_equalizer(struct ufs_hba *hba, u32 gear, u32 tx_l
+ 	}
+ }
+ 
+-static int ufs_qcom_pwr_change_notify(struct ufs_hba *hba,
+-				enum ufs_notify_change_status status,
+-				const struct ufs_pa_layer_attr *dev_max_params,
+-				struct ufs_pa_layer_attr *dev_req_params)
++static int ufs_qcom_negotiate_pwr_mode(struct ufs_hba *hba,
++				       const struct ufs_pa_layer_attr *dev_max_params,
++				       struct ufs_pa_layer_attr *dev_req_params)
+ {
+ 	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+ 	struct ufs_host_params *host_params = &host->host_params;
++
++	return ufshcd_negotiate_pwr_params(host_params, dev_max_params, dev_req_params);
++}
++
++static int ufs_qcom_pwr_change_notify(struct ufs_hba *hba,
++				      enum ufs_notify_change_status status,
++				      struct ufs_pa_layer_attr *dev_req_params)
++{
++	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+ 	int ret = 0;
+ 
+ 	if (!dev_req_params) {
+@@ -982,13 +990,6 @@ static int ufs_qcom_pwr_change_notify(struct ufs_hba *hba,
+ 
+ 	switch (status) {
+ 	case PRE_CHANGE:
+-		ret = ufshcd_negotiate_pwr_params(host_params, dev_max_params, dev_req_params);
+-		if (ret) {
+-			dev_err(hba->dev, "%s: failed to determine capabilities\n",
+-					__func__);
+-			return ret;
+-		}
+-
+ 		/*
+ 		 * During UFS driver probe, always update the PHY gear to match the negotiated
+ 		 * gear, so that, if quirk UFSHCD_QUIRK_REINIT_AFTER_MAX_GEAR_SWITCH is enabled,
+@@ -2341,6 +2342,7 @@ static const struct ufs_hba_variant_ops ufs_hba_qcom_vops = {
+ 	.setup_clocks           = ufs_qcom_setup_clocks,
+ 	.hce_enable_notify      = ufs_qcom_hce_enable_notify,
+ 	.link_startup_notify    = ufs_qcom_link_startup_notify,
++	.negotiate_pwr_mode	= ufs_qcom_negotiate_pwr_mode,
+ 	.pwr_change_notify	= ufs_qcom_pwr_change_notify,
+ 	.apply_dev_quirks	= ufs_qcom_apply_dev_quirks,
+ 	.fixup_dev_quirks       = ufs_qcom_fixup_dev_quirks,
+diff --git a/drivers/ufs/host/ufs-sprd.c b/drivers/ufs/host/ufs-sprd.c
+index 65bd8fb96b99..a5e8c591bead 100644
+--- a/drivers/ufs/host/ufs-sprd.c
++++ b/drivers/ufs/host/ufs-sprd.c
+@@ -161,14 +161,11 @@ static int ufs_sprd_common_init(struct ufs_hba *hba)
+ 
+ static int sprd_ufs_pwr_change_notify(struct ufs_hba *hba,
+ 				enum ufs_notify_change_status status,
+-				const struct ufs_pa_layer_attr *dev_max_params,
+ 				struct ufs_pa_layer_attr *dev_req_params)
+ {
+ 	struct ufs_sprd_host *host = ufshcd_get_variant(hba);
+ 
+ 	if (status == PRE_CHANGE) {
+-		memcpy(dev_req_params, dev_max_params,
+-			sizeof(struct ufs_pa_layer_attr));
+ 		if (host->unipro_ver >= UFS_UNIPRO_VER_1_8)
+ 			ufshcd_dme_configure_adapt(hba, dev_req_params->gear_tx,
+ 						   PA_INITIAL_ADAPT);
+diff --git a/drivers/ufs/host/ufshcd-pci.c b/drivers/ufs/host/ufshcd-pci.c
+index 5f65dfad1a71..8a4f2381a32e 100644
+--- a/drivers/ufs/host/ufshcd-pci.c
++++ b/drivers/ufs/host/ufshcd-pci.c
+@@ -145,7 +145,7 @@ static int ufs_intel_set_lanes(struct ufs_hba *hba, u32 lanes)
+ 
+ 	pwr_info.lane_rx = lanes;
+ 	pwr_info.lane_tx = lanes;
+-	ret = ufshcd_config_pwr_mode(hba, &pwr_info);
++	ret = ufshcd_change_power_mode(hba, &pwr_info);
+ 	if (ret)
+ 		dev_err(hba->dev, "%s: Setting %u lanes, err = %d\n",
+ 			__func__, lanes, ret);
+@@ -154,17 +154,15 @@ static int ufs_intel_set_lanes(struct ufs_hba *hba, u32 lanes)
+ 
+ static int ufs_intel_lkf_pwr_change_notify(struct ufs_hba *hba,
+ 				enum ufs_notify_change_status status,
+-				const struct ufs_pa_layer_attr *dev_max_params,
+ 				struct ufs_pa_layer_attr *dev_req_params)
+ {
+ 	int err = 0;
+ 
+ 	switch (status) {
+ 	case PRE_CHANGE:
+-		if (ufshcd_is_hs_mode(dev_max_params) &&
++		if (ufshcd_is_hs_mode(dev_req_params) &&
+ 		    (hba->pwr_info.lane_rx != 2 || hba->pwr_info.lane_tx != 2))
+ 			ufs_intel_set_lanes(hba, 2);
+-		memcpy(dev_req_params, dev_max_params, sizeof(*dev_req_params));
+ 		break;
+ 	case POST_CHANGE:
+ 		if (ufshcd_is_hs_mode(dev_req_params)) {
 diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-index 16facaee3e77..35b1288327d0 100644
+index 8563b6648976..51c2555bea73 100644
 --- a/include/ufs/ufshcd.h
 +++ b/include/ufs/ufshcd.h
-@@ -287,6 +287,84 @@ struct ufs_pwr_mode_info {
- 	struct ufs_pa_layer_attr info;
- };
- 
-+#define UFS_MAX_LANES	2
-+
-+/**
-+ * struct tx_eqtr_iter - TX Equalization Training iterator
-+ * @preshoot_bitmap: PreShoot bitmap
-+ * @deemphasis_bitmap: DeEmphasis bitmap
-+ * @preshoot: PreShoot value
-+ * @deemphasis: DeEmphasis value
-+ * @fom: Figure-of-Merit read out from RX_FOM
-+ * @is_updated: Flag to indicate if updated since previous iteration
-+ */
-+struct tx_eqtr_iter {
-+	unsigned long preshoot_bitmap;
-+	unsigned long deemphasis_bitmap;
-+	u8 preshoot;
-+	u8 deemphasis;
-+	u8 fom[UFS_MAX_LANES];
-+	bool is_updated;
-+};
-+
-+/**
-+ * struct ufshcd_tx_eq_settings - TX Equalization settings
-+ * @preshoot: PreShoot value
-+ * @deemphasis: DeEmphasis value
-+ * @fom_val: Figure-of-Merit value read out from RX_FOM (Bit[6:0])
-+ * @precode_en: Flag to indicate whether need to enable pre-coding
-+ */
-+struct ufshcd_tx_eq_settings {
-+	u8 preshoot;
-+	u8 deemphasis;
-+	u8 fom_val;
-+	bool precode_en;
-+};
-+
-+/**
-+ * struct ufshcd_tx_eqtr_data - Data used during TX Equalization Training procedure
-+ * @host: Optimal TX EQ settings identified for host TX Lanes during TX EQTR
-+ * @device: Optimal TX EQ settings identified for device TX Lanes during TX EQTR
-+ * @host_fom: Host TX EQTR FOM record
-+ * @device_fom: Device TX EQTR FOM record
-+ */
-+struct ufshcd_tx_eqtr_data {
-+	struct ufshcd_tx_eq_settings host[UFS_MAX_LANES];
-+	struct ufshcd_tx_eq_settings device[UFS_MAX_LANES];
-+	u8 host_fom[UFS_MAX_LANES][TX_HS_NUM_PRESHOOT][TX_HS_NUM_DEEMPHASIS];
-+	u8 device_fom[UFS_MAX_LANES][TX_HS_NUM_PRESHOOT][TX_HS_NUM_DEEMPHASIS];
-+};
-+
-+/**
-+ * struct ufshcd_tx_eqtr_record - TX Equalization Training record
-+ * @host_fom: Host TX EQTR FOM record
-+ * @device_fom: Device TX EQTR FOM record
-+ * @last_record_ts: Timestamp of the most recent TX EQTR record
-+ * @last_record_index: Index of the most recent TX EQTR record
-+ */
-+struct ufshcd_tx_eqtr_record {
-+	u8 host_fom[UFS_MAX_LANES][TX_HS_NUM_PRESHOOT][TX_HS_NUM_DEEMPHASIS];
-+	u8 device_fom[UFS_MAX_LANES][TX_HS_NUM_PRESHOOT][TX_HS_NUM_DEEMPHASIS];
-+	ktime_t last_record_ts;
-+	u16 last_record_index;
-+};
-+
-+/**
-+ * struct ufshcd_tx_eq_params - TX Equalization parameters structure
-+ * @host: TX EQ settings for host TX Lanes
-+ * @device: TX EQ settings for device TX Lanes
-+ * @eqtr_record: Pointer to TX EQTR record
-+ * @is_valid: True if parameter contains valid TX Equalization settings
-+ * @is_applied: True if settings have been applied to UniPro of both sides
-+ */
-+struct ufshcd_tx_eq_params {
-+	struct ufshcd_tx_eq_settings host[UFS_MAX_LANES];
-+	struct ufshcd_tx_eq_settings device[UFS_MAX_LANES];
-+	struct ufshcd_tx_eqtr_record *eqtr_record;
-+	bool is_valid;
-+	bool is_applied;
-+};
-+
- /**
-  * struct ufs_hba_variant_ops - variant specific callbacks
-  * @name: variant name
-@@ -330,6 +408,11 @@ struct ufs_pwr_mode_info {
-  * @config_esi: called to config Event Specific Interrupt
-  * @config_scsi_dev: called to configure SCSI device parameters
-  * @freq_to_gear_speed: called to map clock frequency to the max supported gear speed
-+ * @apply_tx_eqtr_settings: called to apply settings for TX Equalization
-+ *	Training settings.
-+ * @get_rx_fom: called to get Figure of Merit (FOM) value.
-+ * @tx_eqtr_notify: called before and after TX Equalization Training procedure
-+ *	to allow platform vendor specific configs to take place.
-  */
- struct ufs_hba_variant_ops {
- 	const char *name;
-@@ -381,6 +464,17 @@ struct ufs_hba_variant_ops {
- 	int	(*config_esi)(struct ufs_hba *hba);
- 	void	(*config_scsi_dev)(struct scsi_device *sdev);
- 	u32	(*freq_to_gear_speed)(struct ufs_hba *hba, unsigned long freq);
-+	int	(*get_rx_fom)(struct ufs_hba *hba,
-+			      struct ufs_pa_layer_attr *pwr_mode,
-+			      struct tx_eqtr_iter *h_iter,
-+			      struct tx_eqtr_iter *d_iter);
-+	int	(*apply_tx_eqtr_settings)(struct ufs_hba *hba,
-+					  struct ufs_pa_layer_attr *pwr_mode,
-+					  struct tx_eqtr_iter *h_iter,
-+					  struct tx_eqtr_iter *d_iter);
-+	int	(*tx_eqtr_notify)(struct ufs_hba *hba,
-+				  enum ufs_notify_change_status status,
-+				  struct ufs_pa_layer_attr *pwr_mode);
- };
- 
- /* clock gating state  */
-@@ -779,6 +873,13 @@ enum ufshcd_caps {
- 	 * WriteBooster when scaling the clock down.
- 	 */
- 	UFSHCD_CAP_WB_WITH_CLK_SCALING			= 1 << 12,
-+
-+	/*
-+	 * This capability allows the host controller driver to apply TX
-+	 * Equalization settings discovered from UFS attributes, variant
-+	 * specific operations and TX Equaliztion Training procedure.
-+	 */
-+	UFSHCD_CAP_TX_EQUALIZATION			= 1 << 13,
- };
- 
- struct ufs_hba_variant_params {
-@@ -955,6 +1056,15 @@ enum ufshcd_mcq_opr {
-  * @dev_lvl_exception_count: count of device level exceptions since last reset
-  * @dev_lvl_exception_id: vendor specific information about the device level exception event.
-  * @rpmbs: list of OP-TEE RPMB devices (one per RPMB region)
-+ * @host_preshoot_cap: a bitfield to indicate supported PreShoot dBs of host's TX lanes, cache of
-+ *	host M-PHY TX_HS_PreShoot_Setting_Capability Attribute (ID 0x15)
-+ * @host_deemphasis_cap: a bitfield to indicate supported DeEmphasis dBs of host's TX lanes, cache
-+ *	of host M-PHY TX_HS_DeEmphasis_Setting_Capability Attribute (ID 0x12)
-+ * @device_preshoot_cap: a bitfield to indicate supported PreShoot dBs of device's TX lanes, cache
-+ *	of device M-PHY TX_HS_PreShoot_Setting_Capability Attribute (ID 0x15)
-+ * @device_deemphasis_cap: a bitfield to indicate supported DeEmphasis dBs of device's TX lanes,
-+ *	cache of device M-PHY TX_HS_DeEmphasis_Setting_Capability Attribute (ID 0x12)
-+ * @tx_eq_params: TX Equalization settings
-  */
- struct ufs_hba {
- 	void __iomem *mmio_base;
-@@ -1128,6 +1238,12 @@ struct ufs_hba {
- 	u64 dev_lvl_exception_id;
- 	u32 vcc_off_delay_us;
- 	struct list_head rpmbs;
-+
-+	u8 host_preshoot_cap;
-+	u8 host_deemphasis_cap;
-+	u8 device_preshoot_cap;
-+	u8 device_deemphasis_cap;
-+	struct ufshcd_tx_eq_params tx_eq_params[UFS_HS_GEAR_MAX];
- };
- 
- /**
-@@ -1272,6 +1388,13 @@ static inline bool ufshcd_enable_wb_if_scaling_up(struct ufs_hba *hba)
- 	return hba->caps & UFSHCD_CAP_WB_WITH_CLK_SCALING;
- }
- 
-+static inline bool ufshcd_is_tx_eq_supported(struct ufs_hba *hba)
-+{
-+	return hba->caps & UFSHCD_CAP_TX_EQUALIZATION &&
-+	       hba->ufs_version >= ufshci_version(5, 0) &&
-+	       hba->dev_info.wspecversion >= 0x500;
-+}
-+
- #define ufsmcq_writel(hba, val, reg)	\
- 	writel((val), (hba)->mcq_base + (reg))
- #define ufsmcq_readl(hba, reg)	\
-@@ -1287,6 +1410,18 @@ static inline bool ufshcd_enable_wb_if_scaling_up(struct ufs_hba *hba)
- #define ufshcd_readl(hba, reg)	\
- 	readl((hba)->mmio_base + (reg))
- 
-+static inline const char *ufs_hs_rate_to_str(enum ufs_hs_gear_rate rate)
-+{
-+	switch (rate) {
-+	case PA_HS_MODE_A:
-+		return "A";
-+	case PA_HS_MODE_B:
-+		return "B";
-+	default:
-+		return "Unknown";
-+	}
-+}
-+
- /**
-  * ufshcd_rmwl - perform read/modify/write for a controller register
-  * @hba: per adapter instance
-diff --git a/include/ufs/unipro.h b/include/ufs/unipro.h
-index 71a5f643400c..4aa592130b4e 100644
---- a/include/ufs/unipro.h
-+++ b/include/ufs/unipro.h
-@@ -10,6 +10,8 @@
-  * M-TX Configuration Attributes
-  */
- #define TX_HIBERN8TIME_CAPABILITY		0x000F
-+#define TX_HS_DEEMPHASIS_SETTING_CAP		0x0012
-+#define TX_HS_PRESHOOT_SETTING_CAP		0x0015
- #define TX_MODE					0x0021
- #define TX_HSRATE_SERIES			0x0022
- #define TX_HSGEAR				0x0023
-@@ -38,6 +40,9 @@
- /*
-  * M-RX Configuration Attributes
-  */
-+#define RX_HS_G5_ADAPT_INITIAL_CAP		0x0074
-+#define RX_HS_G6_ADAPT_INITIAL_CAP		0x007B
-+#define RX_HS_G6_ADAPT_INITIAL_L0L1L2L3_CAP	0x007D
- #define RX_HS_G1_SYNC_LENGTH_CAP		0x008B
- #define RX_HS_G1_PREP_LENGTH_CAP		0x008C
- #define RX_MIN_ACTIVATETIME_CAPABILITY		0x008F
-@@ -50,6 +55,7 @@
- #define RX_HIBERN8TIME_CAP			0x0092
- #define RX_ADV_HIBERN8TIME_CAP			0x0099
- #define RX_ADV_MIN_ACTIVATETIME_CAP		0x009A
-+#define RX_HS_G4_ADAPT_INITIAL_CAP		0x009F
- #define RX_MODE					0x00A1
- #define RX_HSRATE_SERIES			0x00A2
- #define RX_HSGEAR				0x00A3
-@@ -64,6 +70,7 @@
- #define CFGRXCDR8				0x00BA
- #define CFGRXOVR8				0x00BD
- #define CFGRXOVR6				0x00BF
-+#define RX_FOM					0x00C2
- #define RXDIRECTCTRL2				0x00C7
- #define CFGRXOVR4				0x00E9
- #define RX_REFCLKFREQ				0x00EB
-@@ -73,7 +80,6 @@
- #define ENARXDIRECTCFG3				0x00F3
- #define ENARXDIRECTCFG2				0x00F4
- 
--
- #define is_mphy_tx_attr(attr)			(attr < RX_MODE)
- #define RX_ADV_FINE_GRAN_STEP(x)		((((x) & 0x3) << 1) | 0x1)
- #define SYNC_LEN_FINE(x)			((x) & 0x3F)
-@@ -99,6 +105,18 @@
- 
- #define UNIPRO_CB_OFFSET(x)			(0x8000 | x)
- 
-+#define ADAPT_LENGTH_MASK			0x7F
-+#define ADAPT_RANGE_BIT				BIT(7)
-+#define IS_ADAPT_RANGE_COARSE(x)		((x) & ADAPT_RANGE_BIT)
-+
-+/* Adapt definitions */
-+#define ADAPT_LENGTH_MAX			0x91
-+#define ADAPT_L0L3_LENGTH_MAX			0x90
-+#define ADAPT_L0L1L2L3_LENGTH_MAX		0x8C
-+#define TADAPT_FACTOR				650
-+#define TADAPT_L0L3_FACTOR			(1 << 9)
-+#define TADAPT_L0L1L2L3_FACTOR			(1 << 15)
-+
- /*
-  * PHY Adapter attributes
-  */
-@@ -164,10 +182,26 @@
- #define PA_PACPERRORCOUNT	0x15C1
- #define PA_PHYTESTCONTROL	0x15C2
- #define PA_TXHSG4SYNCLENGTH	0x15D0
-+#define PA_PEERRXHSG4ADAPTINITIAL		0x15D3
- #define PA_TXHSADAPTTYPE	0x15D4
- #define PA_TXHSG5SYNCLENGTH	0x15D6
-+#define PA_PEERRXHSG5ADAPTINITIAL		0x15D9
-+#define PA_PEERRXHSG6ADAPTREFRESHL0L1L2L3	0x15DE
-+#define PA_PEERRXHSG6ADAPTINITIALL0L3		0x15DF
-+#define PA_PEERRXHSG6ADAPTINITIALL0L1L2L3	0x15E0
-+#define PA_TXEQG1SETTING			0x15E1
-+#define PA_TXEQG2SETTING			0x15E2
-+#define PA_TXEQG3SETTING			0x15E3
-+#define PA_TXEQG4SETTING			0x15E4
-+#define PA_TXEQG5SETTING			0x15E5
-+#define PA_TXEQG6SETTING			0x15E6
-+#define PA_TXEQTRSETTING			0x15E7
-+#define PA_PEERTXEQTRSETTING			0x15E8
-+#define PA_PRECODEEN				0x15E9
-+#define PA_EQTR_GEAR				0x15EA
-+#define PA_TXADAPTLENGTH_EQTR			0x15EB
- 
--/* Adpat type for PA_TXHSADAPTTYPE attribute */
-+/* Adapt type for PA_TXHSADAPTTYPE attribute */
- #define PA_REFRESH_ADAPT       0x00
- #define PA_INITIAL_ADAPT       0x01
- #define PA_NO_ADAPT            0x03
-@@ -187,6 +221,82 @@
- /* PHY Adapter Protocol Constants */
- #define PA_MAXDATALANES	4
- 
-+/*
-+ * TX EQTR's minimum TAdapt should not be less than 10us.
-+ * This value is rounded up into the nearest Unit Intervals (UI)
-+ */
-+#define TX_EQTR_HS_G4_MIN_T_ADAPT		166400
-+#define TX_EQTR_HS_G5_MIN_T_ADAPT		332800
-+#define TX_EQTR_HS_G6_MIN_T_ADAPT		262144
-+
-+#define TX_EQTR_HS_G4_ADAPT_DEFAULT		0x88
-+#define TX_EQTR_HS_G5_ADAPT_DEFAULT		0x89
-+#define TX_EQTR_HS_G6_ADAPT_DEFAULT		0x89
-+
-+#define TX_EQTR_CAP_MASK			0x7F
-+
-+#define TX_EQTR_ADAPT_LENGTH_L0L1L2L3_SHIFT	8
-+#define TX_EQTR_ADAPT_RESERVED			0xFF
-+
-+#define TX_HS_NUM_PRESHOOT			8
-+#define TX_HS_NUM_DEEMPHASIS			8
-+#define TX_HS_PRESHOOT_SHIFT			4
-+#define TX_HS_DEEMPHASIS_SHIFT			4
-+#define TX_HS_PRESHOOT_OFFSET			0
-+#define TX_HS_DEEMPHASIS_OFFSET			16
-+
-+#define TX_HS_PRESHOOT_LANE_SHIFT(lane) \
-+	(TX_HS_PRESHOOT_OFFSET + (lane) * TX_HS_PRESHOOT_SHIFT)
-+#define TX_HS_DEEMPHASIS_LANE_SHIFT(lane) \
-+	(TX_HS_DEEMPHASIS_OFFSET + (lane) * TX_HS_DEEMPHASIS_SHIFT)
-+
-+#define TX_HS_PRESHOOT_BITS(lane, val) \
-+	((val) << TX_HS_PRESHOOT_LANE_SHIFT(lane))
-+#define TX_HS_DEEMPHASIS_BITS(lane, val) \
-+	((val) << TX_HS_DEEMPHASIS_LANE_SHIFT(lane))
-+
-+#define RX_FOM_VALUE_MASK			0x7F
-+#define RX_FOM_PRECODING_EN_BIT			BIT(7)
-+
-+#define PRECODEEN_TX_OFFSET			0
-+#define PRECODEEN_RX_OFFSET			4
-+#define PRECODEEN_TX_BIT(lane)		(1 << (PRECODEEN_TX_OFFSET + (lane)))
-+#define PRECODEEN_RX_BIT(lane)		(1 << (PRECODEEN_RX_OFFSET + (lane)))
-+
-+enum ufs_tx_eq_preset {
-+	UFS_TX_EQ_PRESET_P0,
-+	UFS_TX_EQ_PRESET_P1,
-+	UFS_TX_EQ_PRESET_P2,
-+	UFS_TX_EQ_PRESET_P3,
-+	UFS_TX_EQ_PRESET_P4,
-+	UFS_TX_EQ_PRESET_P5,
-+	UFS_TX_EQ_PRESET_P6,
-+	UFS_TX_EQ_PRESET_P7,
-+	UFS_TX_EQ_PRESET_MAX,
-+};
-+
-+enum ufs_tx_hs_preshoot {
-+	UFS_TX_HS_PRESHOOT_DB_0P0,
-+	UFS_TX_HS_PRESHOOT_DB_0P4,
-+	UFS_TX_HS_PRESHOOT_DB_0P8,
-+	UFS_TX_HS_PRESHOOT_DB_1P2,
-+	UFS_TX_HS_PRESHOOT_DB_1P6,
-+	UFS_TX_HS_PRESHOOT_DB_2P5,
-+	UFS_TX_HS_PRESHOOT_DB_3P5,
-+	UFS_TX_HS_PRESHOOT_DB_4P7,
-+};
-+
-+enum ufs_tx_hs_deemphasis {
-+	UFS_TX_HS_DEEMPHASIS_DB_0P0,
-+	UFS_TX_HS_DEEMPHASIS_DB_0P8,
-+	UFS_TX_HS_DEEMPHASIS_DB_1P6,
-+	UFS_TX_HS_DEEMPHASIS_DB_2P5,
-+	UFS_TX_HS_DEEMPHASIS_DB_3P5,
-+	UFS_TX_HS_DEEMPHASIS_DB_4P7,
-+	UFS_TX_HS_DEEMPHASIS_DB_6P0,
-+	UFS_TX_HS_DEEMPHASIS_DB_7P6,
-+};
-+
- #define DL_FC0ProtectionTimeOutVal_Default	8191
- #define DL_TC0ReplayTimeOutVal_Default		65535
- #define DL_AFC0ReqTimeOutVal_Default		32767
+@@ -302,11 +302,10 @@ struct ufs_pwr_mode_info {
+  *                     variant specific Uni-Pro initialization.
+  * @link_startup_notify: called before and after Link startup is carried out
+  *                       to allow variant specific Uni-Pro initialization.
++ * @negotiate_pwr_mode: called to negotiate power mode.
+  * @pwr_change_notify: called before and after a power mode change
+  *			is carried out to allow vendor spesific capabilities
+- *			to be set. PRE_CHANGE can modify final_params based
+- *			on desired_pwr_mode, but POST_CHANGE must not alter
+- *			the final_params parameter
++ *			to be set.
+  * @setup_xfer_req: called before any transfer request is issued
+  *                  to set some things
+  * @setup_task_mgmt: called before any task management request is issued
+@@ -347,10 +346,12 @@ struct ufs_hba_variant_ops {
+ 				     enum ufs_notify_change_status);
+ 	int	(*link_startup_notify)(struct ufs_hba *,
+ 				       enum ufs_notify_change_status);
+-	int	(*pwr_change_notify)(struct ufs_hba *,
+-			enum ufs_notify_change_status status,
+-			const struct ufs_pa_layer_attr *desired_pwr_mode,
+-			struct ufs_pa_layer_attr *final_params);
++	int	(*negotiate_pwr_mode)(struct ufs_hba *hba,
++				      const struct ufs_pa_layer_attr *desired_pwr_mode,
++				      struct ufs_pa_layer_attr *final_params);
++	int	(*pwr_change_notify)(struct ufs_hba *hba,
++				     enum ufs_notify_change_status status,
++				     struct ufs_pa_layer_attr *final_params);
+ 	void	(*setup_xfer_req)(struct ufs_hba *hba, int tag,
+ 				  bool is_scsi_cmd);
+ 	void	(*setup_task_mgmt)(struct ufs_hba *, int, u8);
+@@ -1361,6 +1362,8 @@ extern int ufshcd_dme_set_attr(struct ufs_hba *hba, u32 attr_sel,
+ 			       u8 attr_set, u32 mib_val, u8 peer);
+ extern int ufshcd_dme_get_attr(struct ufs_hba *hba, u32 attr_sel,
+ 			       u32 *mib_val, u8 peer);
++extern int ufshcd_change_power_mode(struct ufs_hba *hba,
++				    struct ufs_pa_layer_attr *pwr_mode);
+ extern int ufshcd_config_pwr_mode(struct ufs_hba *hba,
+ 			struct ufs_pa_layer_attr *desired_pwr_mode);
+ extern int ufshcd_uic_change_pwr_mode(struct ufs_hba *hba, u8 mode);
 -- 
 2.34.1
 
