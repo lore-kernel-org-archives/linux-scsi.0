@@ -1,43 +1,41 @@
-Received: from smtpbgeu2.qq.com (smtpbgeu2.qq.com [18.194.254.142])
+Received: from smtpbgjp3.qq.com (smtpbgjp3.qq.com [54.92.39.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C69FF369985;
-	Sat, 21 Mar 2026 10:59:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=18.194.254.142
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C9C162989B5;
+	Sat, 21 Mar 2026 10:59:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=54.92.39.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774090756; cv=none; b=kLMApqht2KKFoQNq6HmSBIbcvJmpTc5xnmZINpbcg1RUzDpQal58WwxF4tZrJD9eJMGIf5ZCHPwDWNKVvfffsO+qt/1eYUao+pHZ/kA9RIWHp1uWgyZZhToxNXLSg1XevbZR/gTJi7RW/JZxOQbAP3B3Kjp7O98HFZ2LrMb3TX4=
+	t=1774090799; cv=none; b=EQLddfTXwiWL05KiIIOmxQ6u+PhgCwUchcWbtU07gBLFjmWo7ZvxT0j+xnFneGk0ePFBOsROKaAlf6aTGjOcsCWFA83rGou12RYChU8c49CbYy+6JiGkGxILjWhlaI7HVhv4zFGJpeu7ENCOOFgxVjRMeOy2bhrXLqsciLZGEZc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774090756; c=relaxed/simple;
-	bh=9bxq/g7yOvNBGI8aEcT53+Sb7wb38f1rPYvFAI3t1H8=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=Kz0nMr0U32J9RGdc9TtYrUiTALnPAU+8iZv/Cr7Ss2/jdUhseENbUOXNTtq+DP+zc/tL4i4oFZd04AjlNI9ziU4vsadq/tapFopdQ7rFt0aB/jP0yJcVim6HSYx/2cQVtXCPaJjEUumLmHtyQFEIis6H+lM6slU3Vp9lzWMC2/0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=smail.nju.edu.cn; spf=pass smtp.mailfrom=smail.nju.edu.cn; dkim=pass (1024-bit key) header.d=smail.nju.edu.cn header.i=@smail.nju.edu.cn header.b=3TK0i+2p; arc=none smtp.client-ip=18.194.254.142
+	s=arc-20240116; t=1774090799; c=relaxed/simple;
+	bh=F/o5F4tSnn6uxfLYVTYPdJ2YYSc1K03L66VRzHznNMw=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=omd1Ir1ROUhBM4DpzPM6OF3TpxlYdpSOPe/tL4kTKGLc3LhwsqeRxXQAH5/2wENDN3ldFLlS+AV37tgeYUK9b620rMHXnpTjLfKxbMfs2+XG6WLHIzMOIX3zgth7iF81aHTQcw1bwp1k1UpG0omV2symPkWcqAKk1IuRVzOm1+8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=smail.nju.edu.cn; spf=pass smtp.mailfrom=smail.nju.edu.cn; dkim=pass (1024-bit key) header.d=smail.nju.edu.cn header.i=@smail.nju.edu.cn header.b=E7rLpvR/; arc=none smtp.client-ip=54.92.39.34
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=smail.nju.edu.cn
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=smail.nju.edu.cn
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=smail.nju.edu.cn header.i=@smail.nju.edu.cn header.b="3TK0i+2p"
+	dkim=pass (1024-bit key) header.d=smail.nju.edu.cn header.i=@smail.nju.edu.cn header.b="E7rLpvR/"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=smail.nju.edu.cn;
-	s=iohv2404; t=1774090751;
-	bh=VgB5yvKL9jWXDpmNk27VpCqTFyPSfPmJHs0D+WXgb3U=;
+	s=iohv2404; t=1774090759;
+	bh=AHBzfH9ITH/SlgbFgG1zKhvDKe5/EItbp98C1HysHIU=;
 	h=From:To:Subject:Date:Message-Id:MIME-Version;
-	b=3TK0i+2pJNpM1PSZDLZk7gNcmdJheufqkiAdO+FsLpPzM/L50kAsdCCN9kUwzIQn0
-	 ZjYXOgegnJrmYZ4K0El1qEVwHDHn1/MYqpRj9d1MEgAwaaT8Us7TFloDytUPg1KIDc
-	 IpE3RjWbJhvxbWVEtVTwBULtKOOxfrWrd+2tJy08=
-X-QQ-mid: zesmtpgz8t1774090747t24fe09db
-X-QQ-Originating-IP: W3JAkyEoNGgs/ffoNxQVpgQk0SCl1GkR3HxJrkrZLgs=
+	b=E7rLpvR/YfFL9MpaP9y2iq3NMXJvaLiuTsU+MJHrizXIjHZtaputtbF9tNaIwYyGH
+	 toHc8ppso5P8zFWjOA26HgrGIuUsiR6n9aDoDFqm85thXvbRiGBKm48Qed7+bO46nm
+	 CTU2Y3o0msWrWlG+APw/rMJEZJAfYhMBJQ1o8Jhk=
+X-QQ-mid: esmtpgz10t1774090752t414764ed
+X-QQ-Originating-IP: A4r9p/RJwcvQH5cI67Pm4o6xQQKjqigxxiZdP1PjT3g=
 Received: from localhost.localdomain ( [116.172.93.199])
 	by bizesmtp.qq.com (ESMTP) with 
-	id ; Sat, 21 Mar 2026 18:59:05 +0800 (CST)
+	id ; Sat, 21 Mar 2026 18:59:10 +0800 (CST)
 X-QQ-SSF: 0000000000000000000000000000000
 X-QQ-GoodBg: 0
-X-BIZMAIL-ID: 9495204049230802472
-EX-QQ-RecipientCnt: 13
+X-BIZMAIL-ID: 16487684211841182525
+EX-QQ-RecipientCnt: 11
 From: Kexin Sun <kexinsun@smail.nju.edu.cn>
-To: lduncan@suse.com,
-	cleech@redhat.com,
-	michael.christie@oracle.com,
+To: justin.tee@broadcom.com,
+	paul.ely@broadcom.com,
 	James.Bottomley@HansenPartnership.com,
 	martin.petersen@oracle.com,
-	open-iscsi@googlegroups.com,
 	linux-scsi@vger.kernel.org,
 	linux-kernel@vger.kernel.org
 Cc: julia.lawall@inria.fr,
@@ -45,9 +43,9 @@ Cc: julia.lawall@inria.fr,
 	kexinsun@smail.nju.edu.cn,
 	yunbolyu@smu.edu.sg,
 	ratnadiraw@smu.edu.sg
-Subject: [PATCH] scsi: iscsi_tcp: update outdated comment for renamed iscsi_conn_set_callbacks()
-Date: Sat, 21 Mar 2026 18:59:04 +0800
-Message-Id: <20260321105904.7726-1-kexinsun@smail.nju.edu.cn>
+Subject: [PATCH] scsi: lpfc: update outdated comment for renamed lpfc_freenode()
+Date: Sat, 21 Mar 2026 18:59:09 +0800
+Message-Id: <20260321105909.7804-1-kexinsun@smail.nju.edu.cn>
 X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -57,52 +55,64 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-QQ-SENDSIZE: 520
-Feedback-ID: zesmtpgz:smail.nju.edu.cn:qybglogicsvrgz:qybglogicsvrgz5b-0
-X-QQ-XMAILINFO: MAlUHnGeA8XKToyLYZNgiGqxN12K5+qhm0yGEnX/YBmKHl8mxNy+GeMp
-	XZMz0ASFozR3cdMOjQSv/r9+MY4QOxBczx0KG/DbtSPlSZMDRTQQ/hAaOzoPITsi4M7rpsv
-	WoP62YxxRUuFY8i8jy/qYTbW/cLbVrhy6IuKGmGxf1mu0qFAY7ELJwLQXAbXq00Gf+NA9mS
-	I9WT8ojlZOUr8tE9e+bxm+ozDsibTpyobzV/mFGUOgRCwbqp6xXhskeqpv+Ff/7CJxHjU8d
-	gg0WLV6CAQ1juj0DUI1+5aNi/myVt1pi49dP7LzFfJuAmKmc7WHcFD6uKT7lYskrqtSwc3v
-	5dWMJaDU/epzsEnzXdGPsuof0C2+T9g9aNN+3kbKW1mDb0/t/uyp88sTH6c5RCC4YR642uD
-	+VokG0QzJ3Pl58IrGqZgg/JtIo631BWfRNx8p5Agshf8fFjQpS+7HIK7XogykQHHvS1+k31
-	UnZ8PF652MRSgIpyNgbHspvxanaDF5Av1wHFUyZ3hYzi4hBat77evY442QmkDAxOYUI14Xv
-	8HAMId378iq0ggbiK+c48YgPc6jGwtdD/iijCx2Iu6fuFSbmDreH+r6sphBuyfqh2Pqrlnu
-	qM/LiOMEh2h7zSivFm+HqqLpni14ics1B3mwTxyWMfhrK3nSzm0ygyIGOb0wZInvFiIYi9Y
-	DKkemiiG6PKzjtNZaCiRJ7GFPyWSI5CgEbV21gmqLW+OXazj0roK2Mkp85A4mG+Q9MAlojc
-	ZzQ/wPvzHUYlmF8KgDdyK+92POACqIjXQAM6wV2hXFWT/OYJK6AkKzqXgIRZtTiyyi7mYF6
-	eQY3qwpoK/psLXcK/0FJ2m0szA8Qtua/I0lCuzsuG6aDrwyRlwuWy6aMhkZEANW0mDp42ST
-	h6hbnWDULugz/bb7wf2i/PKs9taATfmbU+meskrUNXxg+cNZ73w2iEPvHNf0cv/0VCU3wIb
-	+uinJVU0x2SsduiHKlIuis07VEtLIBUP3NVpgMVM5ZRIHKO6hpNR4dDlS9OJdeFj+rgNHXR
-	elJWrnF+1J/3XTUdQa6yQ9Mj8T5JYvgMxbh5BXDl9JaTx2WORxxqYcaypB0HHh39EqyNVO0
-	9Kq4jIioLFzMHwljkVXWoE=
-X-QQ-XMRINFO: MPJ6Tf5t3I/ylTmHUqvI8+Wpn+Gzalws3A==
+Feedback-ID: esmtpgz:smail.nju.edu.cn:qybglogicsvrgz:qybglogicsvrgz5b-0
+X-QQ-XMAILINFO: OW8T3r1JWOoKTkjIF8ZRjX5M1mxSg7r9MgosrIVaffV2z0xZmevGoK0v
+	YSV3YW6nN3wBX4sN1wFe1hryOVrVFYe8tZt/HcghO3S6B2NJaclI0noaiWyEEA8EsDRUuTp
+	GbR1IY+j35RqdIxeQ+60/l2lVtmjPPV3IG8DN14/0Swpv01Qy+2efw0ahvdzAaLUDQiPxYW
+	GUJmD2Xp+S8z7BwPfNfvJzl9PmZGAQcbv1jzqgH4z05QublqGkVkzsPdeaz8nzs/rlfur0P
+	RoVvwkAsNx8Gyo+x4KrNgBo7xyczwpJRX1ZUIGaM3Ed2fhXuw97XYXtvmLh2kzSCr5jWp/e
+	SHKdG/R+9PLECdj6mlsRK5yWiAj8picNfHl116LB529RbDUSFCLFKcfcVTCxa2R9S+qjzy5
+	d9C6dGgqaUsTqz7/UFEqhcEhg81xUO7XgxskLuc7YQQYeCs/Ad69H+ar/N+Jck5Od3kVfB1
+	fFj/1BLsRrN8MkBcrz+6PA6WFcU84SnjKo8iXyf+iaHrtq0O+hrJkSxBFZyd8IYOFuKcfo9
+	ZgOVqzVwm8ts9bwhFsrhE0hnXU3sA9VFE5BR7TAL2iqHgiXccn/Pzg9Ff6HrFMC2n4SXYdl
+	ejwNs6uURh45Cesu357poh0rFsbvMQtwHv5CS1czOywTdzhUlI26sJw2NMNRxTnnPOb1WdI
+	LJsnb4gFbdpAp/i6yqp8Q2Wn15f49L/wr0yItUJN7QtYDcHwMxRW24GXcEaji/+lIqGnX2T
+	+HY0NOQP8n1N69TtIqMra468NHsaTz8bYp56+ujDHK0UXxT1xpb+c9SoSA1HsqaKjuCX1UY
+	SuyxN5LEfeL1pCMobTUaJkD+CJEy1nAwmKbHwe3UcnNZxsGH+ChMvyZf/zlURou3Og1VhBC
+	76YK/GmtoMOEgfC6xNCE5DmFoefZi/sZfmsDbGS7vcBliCe9mRhxZforZKBd6LKKRKDRj4L
+	/5H8r7vWZ+xcI6vX4vMDUBCBZsW+afVKHwmd2z1plJNnjKEp3m0Kf8m+eZmLV/Cjn59o0/d
+	/87qfKPIQnH6ZNuKNcW9hfbqlE2pKxVEFXXwMrhlsKxtoSz1ULPhJ+rCcIT/+1sHExAQRnL
+	AXh2WZunBBgAuWDjilWFBg=
+X-QQ-XMRINFO: NI4Ajvh11aEjEMj13RCX7UuhPEoou2bs1g==
 X-QQ-RECHKSPAM: 0
 
-The function iscsi_conn_set_callbacks() was renamed to
-iscsi_sw_tcp_conn_set_callbacks() by commit 38e1a8f5479d
-("[SCSI] iscsi_tcp: hook iscsi_tcp into new libiscsi_tcp
-module").  Update the stale reference in
-iscsi_sw_tcp_conn_restore_callbacks().
+The function lpfc_freenode() was renamed to
+lpfc_cleanup_node() by commit 685f0bf7afe0 ("[SCSI] lpfc
+8.1.12 : Collapse discovery lists to a single node list"),
+and commit a70e63eee1c1 ("scsi: lpfc: Fix NPIV Fabric Node
+reference counting") later removed the lpfc_unreg_rpi() call
+from lpfc_cleanup_node().  Remove the now-inaccurate
+"called from lpfc_freenode()" sentence and reflow the
+remaining comment text for lpfc_unreg_rpi().
 
 Assisted-by: unnamed:deepseek-v3.2 coccinelle
 Signed-off-by: Kexin Sun <kexinsun@smail.nju.edu.cn>
 ---
- drivers/scsi/iscsi_tcp.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/lpfc/lpfc_hbadisc.c | 11 +++++------
+ 1 file changed, 5 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
-index 7b4fe0e6afb2..9260b1c9b0e0 100644
---- a/drivers/scsi/iscsi_tcp.c
-+++ b/drivers/scsi/iscsi_tcp.c
-@@ -267,7 +267,7 @@ iscsi_sw_tcp_conn_restore_callbacks(struct iscsi_conn *conn)
- 	struct iscsi_sw_tcp_conn *tcp_sw_conn = tcp_conn->dd_data;
- 	struct sock *sk = tcp_sw_conn->sock->sk;
+diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
+index 8aaf05d7bb0a..ac2a0b5b0034 100644
+--- a/drivers/scsi/lpfc/lpfc_hbadisc.c
++++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
+@@ -5228,12 +5228,11 @@ lpfc_set_unreg_login_mbx_cmpl(struct lpfc_hba *phba, struct lpfc_vport *vport,
  
--	/* restore socket callbacks, see also: iscsi_conn_set_callbacks() */
-+	/* restore socket callbacks, see also: iscsi_sw_tcp_conn_set_callbacks() */
- 	write_lock_bh(&sk->sk_callback_lock);
- 	sk->sk_user_data    = NULL;
- 	sk->sk_data_ready   = tcp_sw_conn->old_data_ready;
+ /*
+  * Free rpi associated with LPFC_NODELIST entry.
+- * This routine is called from lpfc_freenode(), when we are removing
+- * a LPFC_NODELIST entry. It is also called if the driver initiates a
+- * LOGO that completes successfully, and we are waiting to PLOGI back
+- * to the remote NPort. In addition, it is called after we receive
+- * and unsolicated ELS cmd, send back a rsp, the rsp completes and
+- * we are waiting to PLOGI back to the remote NPort.
++ * This routine is called if the driver initiates a LOGO that completes
++ * successfully, and we are waiting to PLOGI back to the remote NPort.
++ * In addition, it is called after we receive and unsolicated ELS cmd,
++ * send back a rsp, the rsp completes and we are waiting to PLOGI back
++ * to the remote NPort.
+  */
+ int
+ lpfc_unreg_rpi(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
 -- 
 2.25.1
 
