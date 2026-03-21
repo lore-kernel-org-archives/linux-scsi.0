@@ -1,62 +1,62 @@
-Received: from mail-pf1-f180.google.com (mail-pf1-f180.google.com [209.85.210.180])
+Received: from mail-pg1-f178.google.com (mail-pg1-f178.google.com [209.85.215.178])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1A3F031E826
-	for <linux-scsi@vger.kernel.org>; Sat, 21 Mar 2026 19:17:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.180
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 550F0324B1C
+	for <linux-scsi@vger.kernel.org>; Sat, 21 Mar 2026 19:17:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.178
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774120664; cv=none; b=TvyzMRAYoTiZ0qSB3vMAgjHWz8PhFSNrI/8v+4EBYRWVKfEJWYxWbK7496EKnUw1WtAhIdiP2/46UUXY3E86a7EFF47HhaxXGrzLcWl7v0AsLXNB2hWLtAVLTuqGHhtJ7Ehu9bAP3y/otqRboPQfR4nLwVwjoQ2BvuyRV/Fi2f8=
+	t=1774120665; cv=none; b=powWtPZS05YGnM9Jto8jdQaQVLm961oHmh7javP/Cy50ojZ4zy8/RYRLY4GLCBSJOvrkJ4qh0LhyU6w3pBQKuMjSK5rMTEJkRBDbfSLE5Rt2teqzbWsyyxljq432k/OKJV3y+m4TMWO4KLur2D9SvjV+U3vxsNYL6IZjE+btowM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774120664; c=relaxed/simple;
-	bh=AQohWIPdx6o7olSCZG8FkfZL18WDcqfud6RonHxb344=;
+	s=arc-20240116; t=1774120665; c=relaxed/simple;
+	bh=Tsse4Ly6NtzSSlkCNrQss5DdsY0MgmF7zlxq5rnNN2c=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=iR/LVxziAY9pUDwh5EvZOHo74inOsU0VCRMl4BPCNJ5GwqxzXh1buvc3bXQyaPFYxctaeLupXtaA7qvg62GVdVLiEOnlkfl94TpPj1y2hv03TyYMf1ujJlzQousA3RsxEuUdfZrQZF2G6e6vuV1jIvbuHzXaEz7RJL06Z/rLfSQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=DHWtSNRF; arc=none smtp.client-ip=209.85.210.180
+	 MIME-Version; b=lTVrp0jX9sWP1nFXF2CEu/opvBM/Cu141cPgb3gya71ihNqb94csPRa8e+eV4GKZp07bFiV6KXIee3wrvPBlca4ZBJXQbmiWVBadH+UhRdf9FTYrAcwRyUFA3Wb7gST4t7sADxyVloqctlOgXVA6f5nyJfqMdiH5rzeuUcl3r8Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=UBueko6P; arc=none smtp.client-ip=209.85.215.178
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="DHWtSNRF"
-Received: by mail-pf1-f180.google.com with SMTP id d2e1a72fcca58-82c2239140aso479324b3a.0
-        for <linux-scsi@vger.kernel.org>; Sat, 21 Mar 2026 12:17:42 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="UBueko6P"
+Received: by mail-pg1-f178.google.com with SMTP id 41be03b00d2f7-c742723c863so1769687a12.0
+        for <linux-scsi@vger.kernel.org>; Sat, 21 Mar 2026 12:17:44 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1774120662; x=1774725462; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1774120663; x=1774725463; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=WfhTSNbMCa18G8KLItlOBWL7f74p2rCgKRxLJUa+eaQ=;
-        b=DHWtSNRFHGjX50z+QniAoDPqz3RJHnWyX+fvi24jWqQoRdPJGeBV40JQeYmrEDIsJV
-         hWhkr//qbZn4xVW1b1/NpSa9B76KJxMMGxtWvr8bPUPQPT2e2UEP/Jyk7RnOK2koETwe
-         Yu6XxaFj5TzmgscUUDa/EMwflgYLz7hx/M8zYwkhUPFvBnsXwUqJtAnPpaTCP5V4t+rk
-         hdvPXBXLNElww/zb48UEaugRRQHY+PrMfpW0FYawA+fVk0pHzKH5lqk7hgIGHVr9Ntx1
-         v4/WetbnMcPkWrexwDbEbkJxkshwCu7n13550/zVXzR5beBWDn5h9h052+5newXdGXNE
-         B7UA==
+        bh=UicmcSJjTDj6d4okbgLa8FdzILWgq4+BDig2MAnvOJo=;
+        b=UBueko6P1cy2f+uu6nsD8Hict8QEqkxYZIbMk3BGpsfzSxiEGSc++IfyxRyZPnJpAl
+         bvEJpBV3QCwzqeznbulR8liI60t6dY+ZgQH3c/wMe8LPZp0Yyarp9UXevxeJqWBt8li6
+         /+7xitXg1MbCKycfkipM+mw/GU6lw+JwIP8RWzNP2ISA1IAUJp1h+Oly8dKM12zjcRhf
+         goHRIRtJ1fTChsYr/6/kXkWW8T0tNkNtCziqR7uwQQhQRLyfnEOlys2XjirNMkL9L3j3
+         xSZUlp/x79AX85QQz7M5U2VRme6xpVvITUnAHQXLksihMy+V0ZcePZlECwkKeM+0907S
+         tZtQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1774120662; x=1774725462;
+        d=1e100.net; s=20251104; t=1774120663; x=1774725463;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to;
-        bh=WfhTSNbMCa18G8KLItlOBWL7f74p2rCgKRxLJUa+eaQ=;
-        b=s6heyDcVsoZKA2vHyZvyoRbNOr2UDyZLaDEpCdintat4lj49QzD6FeboxEypYpDw7r
-         ElfxcW3P+7Niu0NadGc7LLKDH+v0y3Yd9GzHQ/mcPILScP7U1NxtMY0MPXNSq04q58FA
-         5j7wdTZVCfK58jgTOLPMw2RtJQ3Dhk67gkmYLI9wHIjS4X+ilDc96WLEhoGwC4FLW4QE
-         3vUY9FbON8AEJpA9Wm2ukMlD+3rZicHtUsun6BOsVd7cRlUxNumU7Lti0+4DGgjDZ7WD
-         1sYDMzznLKmZoDhaI74Dvidk+wL1M96NT6Ld8oSr2uZSye+E4HSGUYot+naLOOEoDZNG
-         Rwpg==
-X-Gm-Message-State: AOJu0YxtP5m+p/MhHwZD+04HcjEkcFAlB11mYge++ZalGiiiONB/sXhc
-	ygWa2rWQ3l1KLmEQUXJACArYakpsCRqNRs8qugBT4QbMsxLxSVJPG9rNydlpyvHv
-X-Gm-Gg: ATEYQzwN9t56HwktdmntSdy9QnO3lX5LFg/AGOAKqBOzA3Mqa63Khpb9jB+nN9Gdedb
-	ZlzmoJ79Kg5Sz+lzAvqvFL7g8jtpbTpLeGGFOqCpzSdWcQUL3lRFnDdmqVZAcLlDOU3oE16bBhG
-	W6vJnMXP1AGD98kTOWOIFsNKO4kah7eVS6MMOWG1lO0ISzzr9X7DtGNcYGMoly0djTrxGGgd+MB
-	R25zhUZEzcQCveTM+ipT391eh4zgxjBTzfBvti6XCNIwZtQnevRcuWd7NojjnkU5qfux+ChRMSH
-	5Y8U/0MC44FxvJCWF/OHBltI+MnTrbiOg/2eSJHrqiQwq069OMMKTgtV8zwXRylTg6qyHSDkQOr
-	arhoU9KCzKWVkdyp/PX4pFVAYBSuMR0ZlmhQ1K+PTtgyCDnvvlhG+Ub8vvHIfXHLH781CqBhnW6
-	PcAJHurgodZ3qXDfmpT04KTrCOzw0jIerrNDnc1pVGSl5LeH4/94cC3ZU=
-X-Received: by 2002:a05:6a21:9981:b0:39b:c469:6c81 with SMTP id adf61e73a8af0-39bceb20ca0mr6375833637.33.1774120661821;
-        Sat, 21 Mar 2026 12:17:41 -0700 (PDT)
+        bh=UicmcSJjTDj6d4okbgLa8FdzILWgq4+BDig2MAnvOJo=;
+        b=p9mJ20jpx+CBbtLtMt1L5XXEf4ML31Q8cHS5SFzb10eO773HkK4adRqCgwsRo7ps90
+         JSMb6yNV/InwXvxFeacPYp4Qpyg3Lg2oSGnGKjAkYyw5CjL1nHkKMEuCGaxIBP9u+sbU
+         GGfbW88i144TCAsvztts1chIxHxc5PA9V1p7dCYPEeOj87m2pvvNhGyn+nxEnMsedWTh
+         QPKmN55vCZL7ZceElkjiKO9bHIwKVfBNOhu+xZUX7bpwJowloQDBrHN1lkVclyf3gXug
+         kDD5+f7oYmVwNux9jqSz8whBO1HXD+DUBi006nCn+am6BTCw4GDBv7IvpNvd0Tym3dGx
+         z/Zg==
+X-Gm-Message-State: AOJu0Yw0U7U80FyKerYhrpgu/5K5+tOhrybbGG1BF/cfG85HcRA70QeK
+	VwzyWK38M4FTUyBZhclBcSlwT5jmDTQ8Md9c+COYCIAHSrDdNj7PTdEvwMNEleqA
+X-Gm-Gg: ATEYQzzixo61Q87h41Bsq5ZDx3sAuYJ4k/EhB07+kP4w27mtA5zmqbvy74zdLzhp4/v
+	qOPf6wi8kOrM2W5uoEqYRQBy18ouT1CTV5HK19imk7ri+Lp6rn10Bwbd3vM+PkE7jZckNOwTruD
+	l1dBQMnlKKgP2SrZXfpGlAgz8KBGpZHzDbN0cPd6y7WFUc+ZV6YG+K0MDQZcAmFPLuHH1rsFSck
+	FxincsyRaxp3lvMMpu8RnX/EB2SEoZXnc+mTZHea+qNwSM0zfVGcdaGu2ObIeQHNf4ccyBRl7cJ
+	bI8QaqhB3uJTyNrYRH9nGJdNPw99mAivxC/0relYiIBOUHY7BQG7JRMTJIP57HzvLe0E7reZ5d2
+	RN0PsLVHCV4j76wPVfS7+W34rvrIt3a+ioAu30QdWQujcLf5vkhGXxS3zV5YTy9938n3zXdOyn3
+	Uk5DZ0yVIBhjB0dMkLHQxgF/ps2u9me2roajVP0/zUI1bVDcY1KqtnoNw=
+X-Received: by 2002:a05:6a20:1586:b0:398:9466:2ee8 with SMTP id adf61e73a8af0-39bce97c801mr6500384637.7.1774120663259;
+        Sat, 21 Mar 2026 12:17:43 -0700 (PDT)
 Received: from ryzen ([2601:644:8000:5b5d::8bd])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-c74443cc9edsm4319968a12.23.2026.03.21.12.17.40
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-c74443cc9edsm4319968a12.23.2026.03.21.12.17.41
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 21 Mar 2026 12:17:41 -0700 (PDT)
+        Sat, 21 Mar 2026 12:17:42 -0700 (PDT)
 From: Rosen Penev <rosenp@gmail.com>
 To: linux-scsi@vger.kernel.org
 Cc: Ketan Mukadam <ketan.mukadam@broadcom.com>,
@@ -66,9 +66,9 @@ Cc: Ketan Mukadam <ketan.mukadam@broadcom.com>,
 	"Gustavo A. R. Silva" <gustavoars@kernel.org>,
 	linux-kernel@vger.kernel.org (open list),
 	linux-hardening@vger.kernel.org (open list:KERNEL HARDENING (not covered by other areas):Keyword:\b__counted_by(_le|_be)?\b)
-Subject: [PATCH 1/2] scsi: be2iscsi: simplify cid_array allocation
-Date: Sat, 21 Mar 2026 12:17:21 -0700
-Message-ID: <20260321191722.19235-2-rosenp@gmail.com>
+Subject: [PATCH 2/2] scsi: be2iscsi: simplify hwi_controller allocation
+Date: Sat, 21 Mar 2026 12:17:22 -0700
+Message-ID: <20260321191722.19235-3-rosenp@gmail.com>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260321191722.19235-1-rosenp@gmail.com>
 References: <20260321191722.19235-1-rosenp@gmail.com>
@@ -80,81 +80,88 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Use kzalloc_flex to allocate cid_array to allocate cid_array as part of
-the overall struct.
-
-Add __counted_by for extra runtime analysis.
+Use a flexible array member to allocate and free hwi_controller once
+using kzalloc_flex.
 
 Signed-off-by: Rosen Penev <rosenp@gmail.com>
 ---
- drivers/scsi/be2iscsi/be_main.c | 17 ++---------------
+ drivers/scsi/be2iscsi/be_main.c | 16 +---------------
  drivers/scsi/be2iscsi/be_main.h |  2 +-
- 2 files changed, 3 insertions(+), 16 deletions(-)
+ 2 files changed, 2 insertions(+), 16 deletions(-)
 
 diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-index fd18d4d3d219..aa5320535c1f 100644
+index aa5320535c1f..799063000e77 100644
 --- a/drivers/scsi/be2iscsi/be_main.c
 +++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -3992,25 +3992,14 @@ static int hba_setup_cid_tbls(struct beiscsi_hba *phba)
+@@ -2465,27 +2465,16 @@ static void beiscsi_find_mem_req(struct beiscsi_hba *phba)
+ static int beiscsi_alloc_mem(struct beiscsi_hba *phba)
+ {
+ 	dma_addr_t bus_add;
+-	struct hwi_controller *phwi_ctrlr;
+ 	struct be_mem_descriptor *mem_descr;
+ 	struct mem_array *mem_arr, *mem_arr_orig;
+ 	unsigned int i, j, alloc_size, curr_alloc_size;
  
- 	for (ulp_num = 0; ulp_num < BEISCSI_ULP_COUNT; ulp_num++) {
- 		if (test_bit(ulp_num, (void *)&phba->fw_config.ulp_supported)) {
--			ptr_cid_info = kzalloc_obj(struct ulp_cid_info);
-+			ptr_cid_info = kzalloc_flex(*ptr_cid_info, cid_array,
-+						    BEISCSI_GET_CID_COUNT(phba, ulp_num));
+-	phba->phwi_ctrlr = kzalloc(phba->params.hwi_ws_sz, GFP_KERNEL);
++	phba->phwi_ctrlr = kzalloc_flex(*phba->phwi_ctrlr, wrb_context, phba->params.cxns_per_ctrl);
+ 	if (!phba->phwi_ctrlr)
+ 		return -ENOMEM;
  
- 			if (!ptr_cid_info) {
- 				ret = -ENOMEM;
- 				goto free_memory;
- 			}
- 
--			/* Allocate memory for CID array */
--			ptr_cid_info->cid_array =
--				kcalloc(BEISCSI_GET_CID_COUNT(phba, ulp_num),
--					sizeof(*ptr_cid_info->cid_array),
--					GFP_KERNEL);
--			if (!ptr_cid_info->cid_array) {
--				kfree(ptr_cid_info);
--				ptr_cid_info = NULL;
--				ret = -ENOMEM;
+-	/* Allocate memory for wrb_context */
+-	phwi_ctrlr = phba->phwi_ctrlr;
+-	phwi_ctrlr->wrb_context = kzalloc_objs(struct hwi_wrb_context,
+-					       phba->params.cxns_per_ctrl);
+-	if (!phwi_ctrlr->wrb_context) {
+-		kfree(phba->phwi_ctrlr);
+-		return -ENOMEM;
+-	}
 -
--				goto free_memory;
--			}
- 			ptr_cid_info->avlbl_cids = BEISCSI_GET_CID_COUNT(
- 						   phba, ulp_num);
+ 	phba->init_mem = kzalloc_objs(*mem_descr, SE_MEM_MAX);
+ 	if (!phba->init_mem) {
+-		kfree(phwi_ctrlr->wrb_context);
+ 		kfree(phba->phwi_ctrlr);
+ 		return -ENOMEM;
+ 	}
+@@ -2493,7 +2482,6 @@ static int beiscsi_alloc_mem(struct beiscsi_hba *phba)
+ 	mem_arr_orig = kmalloc_objs(*mem_arr_orig, BEISCSI_MAX_FRAGS_INIT);
+ 	if (!mem_arr_orig) {
+ 		kfree(phba->init_mem);
+-		kfree(phwi_ctrlr->wrb_context);
+ 		kfree(phba->phwi_ctrlr);
+ 		return -ENOMEM;
+ 	}
+@@ -2568,7 +2556,6 @@ static int beiscsi_alloc_mem(struct beiscsi_hba *phba)
+ 	}
+ 	kfree(mem_arr_orig);
+ 	kfree(phba->init_mem);
+-	kfree(phba->phwi_ctrlr->wrb_context);
+ 	kfree(phba->phwi_ctrlr);
+ 	return -ENOMEM;
+ }
+@@ -3874,7 +3861,6 @@ static void beiscsi_free_mem(struct beiscsi_hba *phba)
+ 		mem_descr++;
+ 	}
+ 	kfree(phba->init_mem);
+-	kfree(phba->phwi_ctrlr->wrb_context);
+ 	kfree(phba->phwi_ctrlr);
+ }
  
-@@ -4061,7 +4050,6 @@ static int hba_setup_cid_tbls(struct beiscsi_hba *phba)
- 			ptr_cid_info = phba->cid_array_info[ulp_num];
- 
- 			if (ptr_cid_info) {
--				kfree(ptr_cid_info->cid_array);
- 				kfree(ptr_cid_info);
- 				phba->cid_array_info[ulp_num] = NULL;
- 			}
-@@ -4175,7 +4163,6 @@ static void beiscsi_cleanup_port(struct beiscsi_hba *phba)
- 			ptr_cid_info = phba->cid_array_info[ulp_num];
- 
- 			if (ptr_cid_info) {
--				kfree(ptr_cid_info->cid_array);
- 				kfree(ptr_cid_info);
- 				phba->cid_array_info[ulp_num] = NULL;
- 			}
 diff --git a/drivers/scsi/be2iscsi/be_main.h b/drivers/scsi/be2iscsi/be_main.h
-index 71c95d144560..b5f8e746deab 100644
+index b5f8e746deab..77c9b1a1a488 100644
 --- a/drivers/scsi/be2iscsi/be_main.h
 +++ b/drivers/scsi/be2iscsi/be_main.h
-@@ -241,10 +241,10 @@ struct hwi_wrb_context {
+@@ -968,10 +968,10 @@ struct be_ring {
  };
  
- struct ulp_cid_info {
--	unsigned short *cid_array;
- 	unsigned short avlbl_cids;
- 	unsigned short cid_alloc;
- 	unsigned short cid_free;
-+	unsigned short cid_array[] __counted_by(avlbl_cids);
+ struct hwi_controller {
+-	struct hwi_wrb_context *wrb_context;
+ 	struct be_ring default_pdu_hdr[BEISCSI_ULP_COUNT];
+ 	struct be_ring default_pdu_data[BEISCSI_ULP_COUNT];
+ 	struct hwi_context_memory *phwi_ctxt;
++	struct hwi_wrb_context wrb_context[];
  };
  
- #include "be.h"
+ enum hwh_type_enum {
 -- 
 2.53.0
 
