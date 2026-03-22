@@ -1,117 +1,142 @@
-Received: from mo4-p02-ob.smtp.rzone.de (mo4-p02-ob.smtp.rzone.de [85.215.255.81])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E8547363C4C;
-	Sun, 22 Mar 2026 14:32:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=85.215.255.81
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774189954; cv=pass; b=QaTR/h60hu4VQM5/HMi86fpMlVxwlwdFMT9AGBl4sKjxu7g9ie5TAl2+hKCtSPu3bEDoiXSua4WL6ScVjTdF4QCjc4i8Pd3KwtrmAERK4eKw5RFiQi41qxk0Dax4CgqLLKXoONILfq6X/51JlE9osjvdz3V2dUeBNdkJu47IFfU=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774189954; c=relaxed/simple;
-	bh=5l729nS0YFNDB3fHMgEmFAmSpMdBzF8vWXtGimhx66o=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=tV1WavPj840hZrt2i6NVPeVlPjVEjenS9aO/IgEyKhFothAvuA2WQYElfH3m5tAt4mR3cInOYfYeLSJVdohjqrreSD+oseHZdjGDKjdAC0K/XduiRvaVdsQJbsfzSedZndRJ6IfS9KItERXe0JjFdn7MsaRBOKbXV7hCiNAcIeQ=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iokpp.de; spf=none smtp.mailfrom=iokpp.de; dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.b=K5Ch7e1l; dkim=permerror (0-bit key) header.d=iokpp.de header.i=@iokpp.de header.b=thQbkbgJ; arc=pass smtp.client-ip=85.215.255.81
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iokpp.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=iokpp.de
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF83F3290CB
+	for <linux-scsi@vger.kernel.org>; Sun, 22 Mar 2026 17:37:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1774201052; cv=none; b=WdFFciPJMnKi86K7JyHrAOciPcqcYLp6184TOJE5Wbu0C0RfNqZb/3xuoeSGd2z7gk9lDmHLe+iwp3ETBde2OOLnR5M2dla+3it61NkfIxGa6vgGkWhE+P4+MKHb/a9DljIVb0NK3x/BDC7VUmZ2YqzTTa87G0OjvB/RTv8NsIE=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1774201052; c=relaxed/simple;
+	bh=TTu4lJgxhibuurTZpqUttxTI7sCGbIC0nTImyM9/vks=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=B6uI90kkPS/KxXGQVUJ3DZUYXudPgw15pWBhWREAEGXv1iCfbYufO4mHFxK4QFVX+Q0s8rTqBnXCLveOis2ILMGKRkq2TxjiROQxxro3JzltTV4PNHFKSKbTXYe1ucYFd+ilkm53ZIeQI3/s231+Xa8VPCrR6njWqvRdfjEF1j0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=W+nvV5EU; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.b="K5Ch7e1l";
-	dkim=permerror (0-bit key) header.d=iokpp.de header.i=@iokpp.de header.b="thQbkbgJ"
-ARC-Seal: i=1; a=rsa-sha256; t=1774189588; cv=none;
-    d=strato.com; s=strato-dkim-0002;
-    b=iPeOmyluq8MblkFmtyE/WsnfxpS2w20vpdvLreA5x7vi08hgVf/63yCKDJG50AcZuk
-    PLXa6HdBft5g74IQfYUM7cMhzO6llxW3ukRMpWTGJSMbUJ8a6q81fRSDt9Wg3uKrLOMe
-    g56kHgcd8BSpw1UUdjlEsQtuqaBJO1L5ovYgFUa9LL7VUt55oXJln6VUOrpH+5Qhm/K/
-    elP9wkTDkuHbqOZTVDFA/T8vy007CxJaLVPl6rMWYAjuTLVE5C3HHAKgJPLuj32UJlYi
-    HFZXWIy4dx3k8Joe7Hbjrwz+kJdnTEoQpwQfT1onfkWBSMxRl2/Y1nBaGN3mJtHrUYvQ
-    680A==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; t=1774189588;
-    s=strato-dkim-0002; d=strato.com;
-    h=References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Cc:Date:
-    From:Subject:Sender;
-    bh=5l729nS0YFNDB3fHMgEmFAmSpMdBzF8vWXtGimhx66o=;
-    b=W/P22oQUm6/Mu702Wt+wsjR5Is930qQ0qhrCdL+WC7sVfgYriXDShDn/6KdRVrepOw
-    d2E3h/DBJVuBLkFcdt+0GNpPiTeQdt9gDf/LG/vMJmxvyBBEOdxmAoz4eY5lZG47u0K+
-    e3NTh1jLPNQ3kHTtsIetJeNZ0AANWhk9sg+gk39p6RscnBr7JMGtBrYGLXK0VC+m1+Ix
-    YD9qdSeQzGfxoxxE2Vr3YDiAFT7kPMe7OY7nJdhwPPUsMnHDtZJjO0mRN42rIPBH4pUP
-    Gx283hc48lwlZAWW8Xs5j/icneef7JxPdtRbeUA4OLg59kkfHv0x29UVDhfWDsxSyWyS
-    7tvg==
-ARC-Authentication-Results: i=1; strato.com;
-    arc=none;
-    dkim=none
-X-RZG-CLASS-ID: mo02
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1774189588;
-    s=strato-dkim-0002; d=iokpp.de;
-    h=References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Cc:Date:
-    From:Subject:Sender;
-    bh=5l729nS0YFNDB3fHMgEmFAmSpMdBzF8vWXtGimhx66o=;
-    b=K5Ch7e1lZWD8aL1vVHVYqXPUjHIwqXkYs313aNhzN+VO1LmKAlBIjDHIp5GJBV/ygx
-    g3z5ulgHksveUhSmE6VZsEAnjkigBXwBneM81BkxI4ch/oZkbtRpJjPnGZBzb5kyR102
-    jwYXs2oPd/sCRqMjsQ8kujHqw2zBezmkgPljx5NTCnd1mpYuc9B+MxoqN2Fw5k4umul8
-    i5oyVukdj1OAKrsaxbNLrhc+1jvCUC9ZM+xpIiQJz5G5ZceLi78Xsx15k3ZlRUv+VLvZ
-    oOqvSva0qnQaIY/YPTQh4/qC8JEfazZQwz4xcvSgFowxbZtpexdi4BgJ648s0q3yjTmO
-    y/Eg==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; t=1774189588;
-    s=strato-dkim-0003; d=iokpp.de;
-    h=References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Cc:Date:
-    From:Subject:Sender;
-    bh=5l729nS0YFNDB3fHMgEmFAmSpMdBzF8vWXtGimhx66o=;
-    b=thQbkbgJIvw3RXZubBgrPew/ib0m+X9BVpNjaplKSZVJ0sL5zB3i3UQw/rTrFOqtYP
-    DGuB8qyq4pRKObUwKyAw==
-X-RZG-AUTH: ":LmkFe0i9dN8c2t4QQyGBB/NDXvjDB6pBSe9tgBDSDt0V0zNriHg+YfT0rGeZpN+2uZ9u6NXwc+xxSp1B7gPOmqAfDJALLZE="
-Received: from p200300c58739f14ca91b8693d570ac68.dip0.t-ipconnect.de
-    by smtp.strato.de (RZmta 55.0.1 AUTH)
-    with ESMTPSA id z7934522MEQRNxk
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256 bits))
-	(Client did not present a certificate);
-    Sun, 22 Mar 2026 15:26:27 +0100 (CET)
-Message-ID: <652ce6ac83e1703b720a0402849e4d516abf0f25.camel@iokpp.de>
-Subject: Re: [PATCH v4 04/12] scsi: ufs: core: Add support for TX
- Equalization
-From: Bean Huo <beanhuo@iokpp.de>
-To: Can Guo <can.guo@oss.qualcomm.com>, avri.altman@wdc.com,
- bvanassche@acm.org,  beanhuo@micron.com, peter.wang@mediatek.com,
- martin.petersen@oracle.com,  mani@kernel.org
-Cc: linux-scsi@vger.kernel.org, Alim Akhtar <alim.akhtar@samsung.com>, 
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, "Bao D.
- Nguyen" <quic_nguyenb@quicinc.com>, Adrian Hunter
- <adrian.hunter@intel.com>, open list <linux-kernel@vger.kernel.org>
-Date: Sun, 22 Mar 2026 15:26:27 +0100
-In-Reply-To: <69a998190901b3ec63899fd89de087db9f99382a.camel@iokpp.de>
-References: <20260321031021.1722459-1-can.guo@oss.qualcomm.com>
-	 <20260321031021.1722459-5-can.guo@oss.qualcomm.com>
-	 <69a998190901b3ec63899fd89de087db9f99382a.camel@iokpp.de>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: base64
-User-Agent: Evolution 3.44.4-0ubuntu2.1 
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="W+nvV5EU"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1774201050;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=wn9HwJ53vQerMx3CLkFtUxg5VipN/z4E4a1AwUACaF8=;
+	b=W+nvV5EUxGJOjzv4/hN0NmkT01RWyiE3qckjnpGm8F1IkLfeo87mhlqukYh49e+WFshypb
+	xZTbXf9t8PV5J9fvWUFyMsuZdx9ost3ym/qxanI2RvGEjmhgDZhTakipdQYt8tXUpysxoL
+	+Z2m4fPeAfNfWPkNk7sl+hkFHe1g5X4=
+Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-689-hcCwQwlBPXO-v9YsJqOzgw-1; Sun,
+ 22 Mar 2026 13:37:27 -0400
+X-MC-Unique: hcCwQwlBPXO-v9YsJqOzgw-1
+X-Mimecast-MFC-AGG-ID: hcCwQwlBPXO-v9YsJqOzgw_1774201045
+Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 35AE11800464;
+	Sun, 22 Mar 2026 17:37:25 +0000 (UTC)
+Received: from bmarzins-01.fast.eng.rdu2.dc.redhat.com (bmarzins-01.fast.eng.rdu2.dc.redhat.com [10.6.23.12])
+	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 397241955D71;
+	Sun, 22 Mar 2026 17:37:24 +0000 (UTC)
+Received: from bmarzins-01.fast.eng.rdu2.dc.redhat.com (localhost [127.0.0.1])
+	by bmarzins-01.fast.eng.rdu2.dc.redhat.com (8.18.1/8.17.1) with ESMTPS id 62MHbMDs990852
+	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
+	Sun, 22 Mar 2026 13:37:22 -0400
+Received: (from bmarzins@localhost)
+	by bmarzins-01.fast.eng.rdu2.dc.redhat.com (8.18.1/8.18.1/Submit) id 62MHbMte990851;
+	Sun, 22 Mar 2026 13:37:22 -0400
+Date: Sun, 22 Mar 2026 13:37:22 -0400
+From: Benjamin Marzinski <bmarzins@redhat.com>
+To: John Garry <john.g.garry@oracle.com>
+Cc: martin.petersen@oracle.com, james.bottomley@hansenpartnership.com,
+        hare@suse.com, jmeneghi@redhat.com, linux-scsi@vger.kernel.org,
+        michael.christie@oracle.com, snitzer@kernel.org,
+        dm-devel@lists.linux.dev, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 00/13] scsi: Core ALUA driver
+Message-ID: <acAo0hr4BxXueQFM@redhat.com>
+References: <20260317120703.3702387-1-john.g.garry@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260317120703.3702387-1-john.g.garry@oracle.com>
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
 
-T24gU3VuLCAyMDI2LTAzLTIyIGF0IDEwOjQ4ICswMTAwLCBCZWFuIEh1byB3cm90ZToKPiA+ICvC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgZGV2X2VycihoYmEt
-PmRldiwgIkZhaWxlZCB0byB0cmFpbiBUWCBFcXVhbGl6YXRpb24KPiA+IGZvcgo+ID4gSFMtRyV1
-LCBSYXRlLSVzOiAlZFxuIiwKPiA+ICvCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoGdlYXIsIHVmc19oc19yYXRlX3RvX3N0cihyYXRl
-KSwgcmV0KTsKPiA+ICvCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
-oMKgcmV0dXJuIHJldDsKPiA+ICvCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqB9Cj4gPiAr
-Cj4gPiArwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgLyogTWFyayBUWCBFcXVhbGl6YXRp
-b24gc2V0dGluZ3MgYXMgdmFsaWQgKi8KPiA+ICvCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqBwYXJhbXMtPmlzX3ZhbGlkID0gdHJ1ZTsKPiA+ICvCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
-oMKgwqBwYXJhbXMtPmlzX2FwcGxpZWQgPSBmYWxzZTsKPiAKPiBhZnRlciBlcXRyIGNvbXBsZXRl
-cyBoZXJlLCB0aGUgdHJhaW5lZCBzZXR0aW5ncyBhcmUgb25seSBrZXB0IGluIG1lbW9yeS4gVUZT
-Cj4gNS4wCj4gaW50cm9kdWNlZCBxVHhFUUduU2V0dGluZ3MgYW5kIHdUeEVRR25TZXR0aW5nc0V4
-dCBhcyBwZXJzaXN0ZW50IGRldmljZQo+IGF0dHJpYnV0ZXMgZm9yIHN0b3Jpbmcgb3B0aW1hbCBU
-WCBFUSByZXN1bHRzIGFjcm9zcyBwb3dlciBjeWNsZXMuIHNob3VsZCB3ZQo+IHdyaXRlIGJhY2sg
-dG8gdGhlc2UgYXR0cmlidXRlcyBhZnRlciB0cmFpbmluZywgYW5kIHJlYWQgdGhlbSBvbiBuZXh0
-IGJvb3QgdG8KPiBza2lwIEVRVFIgaWYgdmFsaWQgc2V0dGluZ3MgYWxyZWFkeSBleGlzdD8gVGhh
-dCB3b3VsZCBzYXZlIHRoZSB0cmFpbmluZwo+IG92ZXJoZWFkCj4gb24gZXZlcnkgYm9vdD8KCgpJ
-IHNhdyB5b3VyIG5leHQgc2VjdGlvbiBwcm9wZXJseSBwb3NpdGlvbnMgcVR4RVFHblNldHRpbmdz
-L3dUeEVRR25TZXR0aW5nc0V4dApwZXJzaXN0ZW50IHN0b3JhZ2UgYXMgYSBmb2xsb3ctdXAgc2Vy
-aWVzIGluIGNvdmVyLWxldHRlciwgeW91IGNhbiBpZ25vcmUgdGhpcywKbGV0J3MgYWRkcmVzcyBp
-dCBuZXh0IGZvbGxvd2luZyBwYXRjaC4KCktpbmQgcmVnYXJkcywKQmVhbgogCj4gCj4gS2luZCBy
-ZWdhcmRzLAo+IEJlYW4KCg==
+On Tue, Mar 17, 2026 at 12:06:50PM +0000, John Garry wrote:
+> Following on the back of the ALUA support for native SCSI multipath
+> proposal at [0], this is an attempt to move to a SCSI core ALUA driver.
+> 
+> Essentially this series move the bulk of the ALUA handling from
+> scsi_dh_alua.c to a core driver. We still need to support ALUA for DH, so
+> the scsi_dh_alua.c is still responsible for driving ALUA support and the
+> SCSI core ALUA driver just provides a set of library functions for that.
+> 
+> The SCSI core ALUA driver also provides implicit ALUA support for no DH,
+> like when we would be native SCSI multipath.
+> 
+> This series is just really an RFC quality work and its purpose is
+> to decide on the direction of ALUA support for native SCSI multipath.
+> 
+> I think that this work is a real regression possibility for
+> dm-multipath, so we need to be careful.
+
+At the risk of showing just how limited my SCSI knowledge is, I need to
+ask, Is any of this actually necessary to get native scsi multipath
+working with Implicit ALUA?
+
+If the goal is to limit this to IMPLICT ALUA only, I was expecting that
+you could just leave the scsi_dh_alua code completely alone. If native
+scsi multipathing didn't disable the device handler, it seemed that this
+would basically just work. With the device handler attached, when the
+array updates the ALUA state, that should, at least I believe, trigger a
+unit attention that will fire off a RTPG command. That should update the
+sdev->access_state, which the multipath code could use to pick the
+correct path. Right? What am I missing here? Is this just a parallel
+exercise to overhaul the ALUA code?
+
+-Ben
+
+> 
+> [0] https://lore.kernel.org/linux-scsi/20260310114925.1222263-1-john.g.garry@oracle.com/T/#m9c054433076812dff464d0e3b50a00620cfe0af1
+> 
+> John Garry (13):
+>   scsi: scsi_dh_alua: Delete alua_port_group
+>   scsi: alua: Create a core ALUA driver
+>   scsi: alua: Add scsi_alua_rtpg()
+>   scsi: alua: Add scsi_alua_stpg()
+>   scsi: alua: Add scsi_alua_tur()
+>   scsi: alua: Add scsi_alua_rtpg_run()
+>   scsi: alua: Add scsi_alua_stpg_run()
+>   scsi: alua: Add scsi_alua_check_tpgs()
+>   scsi: alua: Add scsi_alua_handle_state_transition()
+>   scsi: alua: Add scsi_alua_prep_fn()
+>   scsi: alua: Add scsi_device_alua_implicit()
+>   scsi: scsi_dh_alua: Switch to use core support
+>   scsi: core: Add implicit ALUA support
+> 
+>  drivers/scsi/Kconfig                       |   10 +-
+>  drivers/scsi/Makefile                      |    1 +
+>  drivers/scsi/device_handler/Kconfig        |    1 +
+>  drivers/scsi/device_handler/scsi_dh_alua.c | 1003 ++------------------
+>  drivers/scsi/scsi.c                        |    7 +
+>  drivers/scsi/scsi_alua.c                   |  748 +++++++++++++++
+>  drivers/scsi/scsi_error.c                  |    7 +
+>  drivers/scsi/scsi_lib.c                    |    7 +
+>  drivers/scsi/scsi_scan.c                   |    6 +
+>  drivers/scsi/scsi_sysfs.c                  |    7 +-
+>  include/scsi/scsi_alua.h                   |  103 ++
+>  include/scsi/scsi_device.h                 |    1 +
+>  12 files changed, 977 insertions(+), 924 deletions(-)
+>  create mode 100644 drivers/scsi/scsi_alua.c
+>  create mode 100644 include/scsi/scsi_alua.h
+> 
+> -- 
+> 2.43.5
 
