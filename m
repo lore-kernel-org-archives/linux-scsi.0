@@ -1,119 +1,147 @@
-Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
+Received: from AM0PR83CU005.outbound.protection.outlook.com (mail-westeuropeazon11010054.outbound.protection.outlook.com [52.101.69.54])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 522653E1201
-	for <linux-scsi@vger.kernel.org>; Mon, 23 Mar 2026 20:31:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.16
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774297892; cv=none; b=FRAF9NNuSNTNBsmD8sp4l4LkwlaJJMmQ7icRiaiDapC+JXZAKjsbzETuXrfNsaPh4qf3tEdBQiXiyNEfXFkw5hzvUhnjHxwcuC2qH4Z1ZStZOCtkQIjufzb8WZBt1fWtK4Q1ualj+TfCwf4DKTEIEBuCaReKYtfUEcbFuLg1S2g=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774297892; c=relaxed/simple;
-	bh=tRhwh8mUrVabdxHEqWdfBZT1CrDf0Gh8/7yumGqL9Qw=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=bjg7D0HL0KAw2q3fSiXBjb7W4L9BHWkZZC/bjk/XCwhsmsoIb6hGNnsC0qUAcDKEBV8V2HneSdEUMjs9ppWbT/2rarqEYXEZV6LeVJ3HzwFTsJauL3WgcYCu002v8EDzx7RwDiBOBqQXvtH/lZgQhERqqJ5lZtNQznMDTaTCKTM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=3Ide9p8t; arc=none smtp.client-ip=199.89.1.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D8702381B0E;
+	Mon, 23 Mar 2026 22:42:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.69.54
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1774305725; cv=fail; b=p23L+CMCrLhTTZPpOrp29jcn8yvaV9XlgnapEMzWbTIj848ez5AlIqDz+9+9qXLBvaifRbvuDV5j0tdedH8eLcqVsAMZzV2nA8znpMwkic25A+SxoYxBmyDxxAteesDQ3srcs2Npck/RcZDsIX7s+18K0pcgd215VVEz3a4/Cm4=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1774305725; c=relaxed/simple;
+	bh=OnPWJJpMfukX61AFwAcYGXDDLyIPpG0UtWajnhyiVHk=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=e32H5UO+kERF1nwWMOZUBg2HNJaMYTQ4VZDG+tzjut4kZGmkewCIRJnV/jbAVnEWKqZnaQaxXJQOk2SlDyv7sEwZJOR4MJdVfrniyIVkOyHfSIAX7pvKBnCjedTuoJgyDaVI1n7JH8kI7lMwJxOg3wpWKQ0n6ype8b1Z4w9Bs38=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=bcQ+Ul7W; arc=fail smtp.client-ip=52.101.69.54
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="3Ide9p8t"
-Received: from localhost (localhost [127.0.0.1])
-	by 013.lax.mailroute.net (Postfix) with ESMTP id 4fflFG6ZcSzlfddn;
-	Mon, 23 Mar 2026 20:31:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:mime-version:x-mailer:message-id:date
-	:date:subject:subject:from:from:received:received; s=mr01; t=
-	1774297886; x=1776889887; bh=NGtAcygivo6M9R5Di4GVTFXGceblXjNRL9E
-	EHECVPCc=; b=3Ide9p8t7DZdJDnCnmferYvjYTE07vwdjYIQlbzheckqJOzqUzJ
-	nZIuYVUlaXa6FKHLIC9QGuUltVgFLy9mTx2/I6j2HMCTdAfDeARf4iibrr/GgrJ4
-	Nvf93dqE08I1rPSDK8qI7mF7wo8r2z91xcpgnN1hrY14OuZQTWK7ngg2osX88I46
-	O24XtOIX4BXyGamcTOYcwn/rLzBZmRuoDX8kC63cxYZK4JYJKy5p2njAx/7MG6sm
-	uPX6yVLgV5Z/d8GNXcr/rgveALGCBIEJQ+eUWD4Rwv9qzfJ/uZVQNzzhie1Mas6X
-	PaijuHJCc+ShtCn9w3YloPuqo/gmgis46Bg==
-X-Virus-Scanned: by MailRoute
-Received: from 013.lax.mailroute.net ([127.0.0.1])
- by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id JZmE_nlFR4qU; Mon, 23 Mar 2026 20:31:26 +0000 (UTC)
-Received: from bvanassche.mtv.corp.google.com (unknown [104.135.180.219])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4fflF935F0zlfl6N;
-	Mon, 23 Mar 2026 20:31:25 +0000 (UTC)
-From: Bart Van Assche <bvanassche@acm.org>
-To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org,
-	Bart Van Assche <bvanassche@acm.org>,
-	John Garry <john.g.garry@oracle.com>,
-	Doug Gilbert <dgilbert@interlog.com>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-Subject: [PATCH] scsi_debug: Support configuring the maximum segment size
-Date: Mon, 23 Mar 2026 13:31:16 -0700
-Message-ID: <20260323203117.1248925-1-bvanassche@acm.org>
-X-Mailer: git-send-email 2.53.0.983.g0bb29b3bc5-goog
+	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="bcQ+Ul7W"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=vEC/VOclQf68OGMyxx8k0ErnssgaHCMV8vZ3ZbxPby/8oaawCB6SM7sTVY01lHyt27GhnDecGVsqazVICrB10RJQgcBemqJIsdts+lIPRii6QrA3T4Q/zzcJ2hgMmR7++XMtBn9U8VbiAtgO+j8/HYJeseNmVU496N1TURYvfssYoSGFOY4fiAby9UMQqTyPO5D/5E4o2TiFIEgV4cOVBJuENPd1lnnv/x+gFVmB0AtKuzpiDNH6dOH3R/ADSNAfntcbsnFSyQis3INC8FB/CWGnouGO50UmSKqreIdNyyGWlWQZELVGAEnYz6gefg3Vhj6aKHCHfpv8L2Sqpxtmug==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=OnPWJJpMfukX61AFwAcYGXDDLyIPpG0UtWajnhyiVHk=;
+ b=TCN3LpB62HUmjAIMqX8IDF83Za6iRyee5b/YVYNezX4k5C70uzFEs83PzoGEK/iuxjalKBFEN9ZICHgu83vyT3KQ5DeBHZpnHq1q3sUZr4JBtDeD0jel6U4rpxYV7/YKL8m7Qaa4LYB+S487xq7YCz3DhGqIaB38zKo5swcTQWTmI8O8TxX5R1YwvL5eiW+Rv7JtXve05wFEkIXQ3wdKZo0XzyT/+ee92M0p6L2T0AfNLu2YpEMTpxTDaORfYtUrG7AyYgoCXZaL8qhGgCzinVtFYNzASw4CVTVrEm5hGMxQYHMpP+l7xTwqTyVF+4w/L1osx8OXG+IPxLX2kJjvQQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
+ header.d=nxp.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=OnPWJJpMfukX61AFwAcYGXDDLyIPpG0UtWajnhyiVHk=;
+ b=bcQ+Ul7WyyTlPY2BifoIe1Ev51k8C6E/KWxuaPH9ruGgt+axhPQkOl/H9HO5G9eWo90tQunhHoyI38u4Wc7yhhrzdwuJefmkCwCTNt/mp/xB5Otk9yum7ZwJgB4Z8jlfczkJ3yqIvZ2PixHvDlu0ckTOwOxabcryWBoupdxIVeIPavnw8OzJVYjSx6f1S+HI5ogZyHXhHH67FpKKOf2N2oBxGk1kZSJzyIdyw0P0Yd641TOcYtpCgTv+QqQpCenI17JlPGspXi72P3l0H/M+/ddL/WfMX2Vpbm7cohILZmBY9+leN3qvCkl4mL/8NdO/OC7zazDzsJXB3EazfT35lQ==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nxp.com;
+Received: from AM9PR04MB8585.eurprd04.prod.outlook.com (2603:10a6:20b:438::13)
+ by PA2PR04MB10376.eurprd04.prod.outlook.com (2603:10a6:102:421::9) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9723.25; Mon, 23 Mar
+ 2026 22:41:31 +0000
+Received: from AM9PR04MB8585.eurprd04.prod.outlook.com
+ ([fe80::f010:fca8:7ef:62f4]) by AM9PR04MB8585.eurprd04.prod.outlook.com
+ ([fe80::f010:fca8:7ef:62f4%4]) with mapi id 15.20.9723.030; Mon, 23 Mar 2026
+ 22:41:36 +0000
+Date: Tue, 24 Mar 2026 00:41:55 +0200
+From: Vladimir Oltean <vladimir.oltean@nxp.com>
+To: Alim Akhtar <alim.akhtar@samsung.com>
+Cc: "'Martin K. Petersen'" <martin.petersen@oracle.com>,
+	linux-phy@lists.infradead.org, 'Vinod Koul' <vkoul@kernel.org>,
+	'Neil Armstrong' <neil.armstrong@linaro.org>,
+	dri-devel@lists.freedesktop.org, freedreno@lists.freedesktop.org,
+	linux-arm-kernel@lists.infradead.org, linux-arm-msm@vger.kernel.org,
+	linux-can@vger.kernel.org, linux-gpio@vger.kernel.org,
+	linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-media@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-renesas-soc@vger.kernel.org, linux-riscv@lists.infradead.org,
+	linux-rockchip@lists.infradead.org,
+	linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org,
+	linux-sunxi@lists.linux.dev, linux-tegra@vger.kernel.org,
+	linux-usb@vger.kernel.org, netdev@vger.kernel.org,
+	spacemit@lists.linux.dev, UNGLinuxDriver@microchip.com,
+	'Bart Van Assche' <bvanassche@acm.org>,
+	'Peter Griffin' <peter.griffin@linaro.org>,
+	"'James E.J. Bottomley'" <James.Bottomley@HansenPartnership.com>,
+	'Krzysztof Kozlowski' <krzk@kernel.org>,
+	'Chanho Park' <chanho61.park@samsung.com>
+Subject: Re: [PATCH v5 phy-next 09/27] scsi: ufs: exynos: stop poking into
+ struct phy guts
+Message-ID: <20260323224155.5vx6kqnu4q7y6tz2@skbuf>
+References: <20260319223241.1351137-1-vladimir.oltean@nxp.com>
+ <20260319223241.1351137-10-vladimir.oltean@nxp.com>
+ <yq1a4w3l04g.fsf@ca-mkp.ca.oracle.com>
+ <CGME20260323115859epcas5p10177db12a2e8aee9578271ff1411137b@epcas5p1.samsung.com>
+ <20260323115848.ghdu4sbk75tvggfb@skbuf>
+ <1891546521.01774280282025.JavaMail.epsvc@epcpadp2new>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1891546521.01774280282025.JavaMail.epsvc@epcpadp2new>
+X-ClientProxiedBy: VI1PR09CA0145.eurprd09.prod.outlook.com
+ (2603:10a6:803:12c::29) To AM9PR04MB8585.eurprd04.prod.outlook.com
+ (2603:10a6:20b:438::13)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: AM9PR04MB8585:EE_|PA2PR04MB10376:EE_
+X-MS-Office365-Filtering-Correlation-Id: 7cf01aa1-a350-499b-4bdf-08de892d5769
+X-LD-Processed: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635,ExtAddr
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+ BCL:0;ARA:13230040|366016|10070799003|1800799024|19092799006|7416014|376014|22082099003|56012099003|18002099003;
+X-Microsoft-Antispam-Message-Info:
+ U41ZxIpbwkq6sJwBugn1woWYjg8p/rAc1o7U0C4JAclVBH9hEghR4UT9+azy9yfEmklHvqPXrmA7RkPgRx7mECmcCkGZl3SJxPPFIkU2H1dfQQzNPGzR2Xv1eoTWLraK7SoqsaLyoVLgqI6IapOeKYPO2KqToUbuGFRVqbB+UTjP8S8vALr1TZYkPw3oOocBIWa89W0pPc8pA0MI6sIq/xF8tfEo91oTeP4DhH9Wcy0TJQTkgN/PGq7nd7H0jGuYNIRUHfxs4WyckI3wZGSzHwddiMhl/6LMkz+8uxOe30qNRzrr4giBX8RgNwj3jcjeLusBG4SXTn+OGrjUvBhrsC3PfKdfG5V5GhJdRo65ccI+QBVRB0AdPME3O+zpeRAuDszh+ozXHt0L5C1Uk4HNpjHwV7ikqVUwvlJ3AM8SWT96XvlaTSUDYpnsp5MUcvpOxQ03nCOTzpFCkoqjXSTjRrS7ARXU6s/yllTFnFXDa3bDVbWwJkSFTy9oC2Kn38wuHVheY05VgrULzz5Z6TMUg5orrqs17z/hMczlHa40dUbmKxCc2Hj++GiGJLWHhRPT6+JkizCyX1ZV7u1Mcif3FBa9arKxYu5dp105HXOeCQMcVaBPmktXIb4SUux2dBJ1emK3s2EUaap97Ekw+PED1+r/ZcC/m2JgriJv/6dglyDAik3H8DQ1eaiCzKBqAgGjxvwcMABXmgCSWPZr41XPjuVzbRu8AGY20uVHUZufjQg=
+X-Forefront-Antispam-Report:
+ CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9PR04MB8585.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(10070799003)(1800799024)(19092799006)(7416014)(376014)(22082099003)(56012099003)(18002099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 2
+X-MS-Exchange-AntiSpam-MessageData-0:
+ =?us-ascii?Q?0TVCxG5sfXlpq1mETN2UUIKgXF+JAISatRz6N1xi0hQormOkJD2nmkwvzkW1?=
+ =?us-ascii?Q?GHG2ACQnJdyzgoi7AfobGdr2GmW6dY5eEkOGvWlWEjkAAvvapPC3V5Hjg6ly?=
+ =?us-ascii?Q?257RQvJy50Nh+9CBXIpF4ucW8iptDxdHkC5Qc42Zt+3kfvbVvpVeXu+cd0y/?=
+ =?us-ascii?Q?TT8GV3Eq//GIEI07y/tHuNtcnBszsYxT76C64bCVFDdWzgDrb8eZfSiTlZKl?=
+ =?us-ascii?Q?Mp0MQmdQgA2OpyuRsWthziyMVthJuYbNA70ZSQFSUpEVC11XB+X/Dtqq/6uT?=
+ =?us-ascii?Q?n13coWj8PevmcK8LlAejz75jH5bLxQso9g2L6plVugEbumIDHsqBSN5tIgWO?=
+ =?us-ascii?Q?ZCDh/CclblDgzYVIW3kWVsDzd4IsJkC9aaibJxVbXmb1R4rZ30MxpZQgivSM?=
+ =?us-ascii?Q?xAte9W3t8vNY7BR5yEBN57zvi0wS0umzMrEqGm7NYszymvemo2C2mkef4ZuP?=
+ =?us-ascii?Q?uhb6nG4wRuEY7HzoILLOo3Dv8jVKgNQrHy+eruY7P7e9SPWc1bNyu2ijebMu?=
+ =?us-ascii?Q?t1yBwHpgUqsG2DcVWccF0cNk/kss+EnCVcIZ2PJBB0sQGSvmdr50JEQ7VGGw?=
+ =?us-ascii?Q?wCHrlkW6z4EufNfStrO8dUjKcZu+52TXOMwAkQZY1xOST8z1ejrIBfHv8y21?=
+ =?us-ascii?Q?SBwAWcGglwY8DmBto58G7wUK7uY0NzlFxy2LtyXH3JPF6lRegGRDMnUXfTeL?=
+ =?us-ascii?Q?mhyMMKZYmF/9/WLTM6hWn89OiKBTUd2HNBDvxPw3dmtUacfiL6510VGhMQ/n?=
+ =?us-ascii?Q?kqNfS/SZMjk28QV/khs+pQ8J6VTL44MzQuKbhNzZbd6IX8PE1n1cTk+HX5f4?=
+ =?us-ascii?Q?euS2bV4yoRzT82Hv5EAUld0cfz/KB+bZ5GByLniRHGdcijpM3zXp6ISHH1XW?=
+ =?us-ascii?Q?Jf/tZXukVHRrvZrRvoD29S4G/M2gJtdkIYjIshW4Vx8o9hFab3PFpNSVZl9x?=
+ =?us-ascii?Q?12tgoUx9ZKp2pECKAok9qgjLOa3y/6VHFn0VSybGl8jCp1eiSF/kYQg69+AO?=
+ =?us-ascii?Q?yR0epQt07YLTZWWfVvF+xuN7L31ghpcVCjUvsKWJM1C0Zpx/yKM20qMwwCmJ?=
+ =?us-ascii?Q?8yeBKQxKb90065jSH81o9DN3W6a5WoDByoE28kUqpj/zLuF6Gs0lZVQk2mnh?=
+ =?us-ascii?Q?Mmr1lr2vAsrEV3Dp7wclHHXBy6D3cqVFpgcRc/UIf83wNNKVrBUraQWHc3Ii?=
+ =?us-ascii?Q?eK/gRKflVxZZ1pOHAZYd02V5JOWkN5/sRxpmFLdPU7KOthL/8s/L51XiIZfA?=
+ =?us-ascii?Q?j1PP9/ntBObCw3y5nUBDzTGzv9Q7W7TvX7YP6D01pyIn9w2xbXP7Bo1PF+e5?=
+ =?us-ascii?Q?cOgV3/4qcJ6JfFFh3iUbmQbo+aFrQ+tNUMj77eTJ21McMF+ntZkHmwG8fuA/?=
+ =?us-ascii?Q?VPuRjAg3C1PLHPKn/IrEsvDISeTBNToD0RSOrsG9YDiyAM8il+BAokLEykfV?=
+ =?us-ascii?Q?E9d1cEzA5tPBl5x7r7tOyAQf7+jgTVTmBcgRLkkWm0Gmh147ugx1SSavsd5F?=
+ =?us-ascii?Q?R4dcTbWdg0NEQnNWv2CMIc80gccXiVZQSwHY62/5dqaBT6fe8r76/xzvGtzh?=
+ =?us-ascii?Q?pyc3kuE48DXVgGQKnR6TqDbugUGMvFT5D2g9scugUir5PWyiJ9XSuH9bsNjA?=
+ =?us-ascii?Q?6BYZefF74g5c+VqfXraNxaAsnQarzBO0fI0cb9XWv1NPgcXGOUhKXSs6bWPa?=
+ =?us-ascii?Q?Z+frSdtMmePtKKa1gZ12PCyZW0DFUePTMsjAAFP6WUEUxWUVmCMG9gmuewcx?=
+ =?us-ascii?Q?zWx0ihgBLV5wddrzdlSrX2Lmv2+9IDI+lnzsSTlemYh95yj0HRk68xf9GNrC?=
+X-MS-Exchange-AntiSpam-MessageData-1: 7t0SISdxYT2pFMbEXyoY+GuzV5YPKyMP3n8=
+X-OriginatorOrg: nxp.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 7cf01aa1-a350-499b-4bdf-08de892d5769
+X-MS-Exchange-CrossTenant-AuthSource: AM9PR04MB8585.eurprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 23 Mar 2026 22:41:36.8488
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: mErGdwGcJOUBf17JGSORAgKN1SLrIHLYD+CNuyd2rAkYspxlXfRU6rm0qWQJx8cozbQksDeKC4gMYOIsvZIhRQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PA2PR04MB10376
 
-Add a kernel module parameter for configuring the maximum segment size.
-This patch enables testing SCSI support for segments smaller than the
-page size. A test that uses this functionality is available here:
-https://lore.kernel.org/linux-block/20260323200751.1238583-1-bvanassche@a=
-cm.org/
+On Mon, Mar 23, 2026 at 06:05:36PM +0530, Alim Akhtar wrote:
+> Will review and possibly test on one of the board later tonight
 
-Cc: John Garry <john.g.garry@oracle.com>
-Cc: Doug Gilbert <dgilbert@interlog.com>
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
----
- drivers/scsi/scsi_debug.c | 4 ++++
- 1 file changed, 4 insertions(+)
-
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 1515495fd9ea..641cc0e01dfc 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -915,6 +915,7 @@ static int sdebug_host_max_queue;	/* per host */
- static int sdebug_lowest_aligned =3D DEF_LOWEST_ALIGNED;
- static int sdebug_max_luns =3D DEF_MAX_LUNS;
- static int sdebug_max_queue =3D SDEBUG_CANQUEUE;	/* per submit queue */
-+static unsigned int sdebug_max_segment_size =3D BLK_MAX_SEGMENT_SIZE;
- static unsigned int sdebug_medium_error_start =3D OPT_MEDIUM_ERR_ADDR;
- static int sdebug_medium_error_count =3D OPT_MEDIUM_ERR_NUM;
- static int sdebug_ndelay =3D DEF_NDELAY;	/* if > 0 then unit is nanoseco=
-nds */
-@@ -7366,6 +7367,7 @@ module_param_named(lowest_aligned, sdebug_lowest_al=
-igned, int, S_IRUGO);
- module_param_named(lun_format, sdebug_lun_am_i, int, S_IRUGO | S_IWUSR);
- module_param_named(max_luns, sdebug_max_luns, int, S_IRUGO | S_IWUSR);
- module_param_named(max_queue, sdebug_max_queue, int, S_IRUGO | S_IWUSR);
-+module_param_named(max_segment_size, sdebug_max_segment_size, uint, S_IR=
-UGO);
- module_param_named(medium_error_count, sdebug_medium_error_count, int,
- 		   S_IRUGO | S_IWUSR);
- module_param_named(medium_error_start, sdebug_medium_error_start, int,
-@@ -7449,6 +7451,7 @@ MODULE_PARM_DESC(lowest_aligned, "lowest aligned lb=
-a (def=3D0)");
- MODULE_PARM_DESC(lun_format, "LUN format: 0->peripheral (def); 1 --> fla=
-t address method");
- MODULE_PARM_DESC(max_luns, "number of LUNs per target to simulate(def=3D=
-1)");
- MODULE_PARM_DESC(max_queue, "max number of queued commands (1 to max(def=
-))");
-+MODULE_PARM_DESC(max_segment_size, "max bytes in a single segment");
- MODULE_PARM_DESC(medium_error_count, "count of sectors to return follow =
-on MEDIUM error");
- MODULE_PARM_DESC(medium_error_start, "starting sector number to return M=
-EDIUM error");
- MODULE_PARM_DESC(ndelay, "response delay in nanoseconds (def=3D0 -> igno=
-re)");
-@@ -9566,6 +9569,7 @@ static int sdebug_driver_probe(struct device *dev)
- 	}
- 	hpnt->can_queue =3D sdebug_max_queue;
- 	hpnt->cmd_per_lun =3D sdebug_max_queue;
-+	hpnt->max_segment_size =3D sdebug_max_segment_size;
- 	if (!sdebug_clustering)
- 		hpnt->dma_boundary =3D PAGE_SIZE - 1;
-=20
+Ok, in that case I'll wait. Thanks.
