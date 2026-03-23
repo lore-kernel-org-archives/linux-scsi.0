@@ -1,364 +1,251 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from SN4PR2101CU001.outbound.protection.outlook.com (mail-southcentralusazolkn19012069.outbound.protection.outlook.com [52.103.14.69])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D624954654
-	for <linux-scsi@vger.kernel.org>; Mon, 23 Mar 2026 01:58:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774231135; cv=none; b=ZMSr1AcDqCLFigZfOY1a4kffG/LOp3NB8zkQfnk9gkT/A3c91+ep3iDkiuhbdBuVUE7uDWnHhOHvxB2t05zIxTCcp4WBaRKIo9YU2Z3LYzWig8M1FPWpudptrbml2GMkc9f3KzqCJG/DZPc4aN0luOslg8E1+cmVdkXaYwZFBOY=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774231135; c=relaxed/simple;
-	bh=61Dq36XY87M1JZcZvZL+tMAXXJ4ZA4Rhxvjq+Lqz3Nc=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=H+Iu5JFEeFhBLGr9fJFkfBoBl9SZU74q+ytlOiuIXy90pFCPIlJ7N8adAZgmFwa6SKK/Zdn2A+ESTO/5XxZyf8zq3jCmAxULRayixNhimDXus67nLXYQzcEATHae9di2GER2jFi3stwWqHP9RagCCpEfHBSUq53I4GUNDXrl3Qo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=FRcNI1+9; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BACEF7404E;
+	Mon, 23 Mar 2026 04:16:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.103.14.69
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1774239386; cv=fail; b=XC/cnD2V2nyvlZQ0DCiopsGzUq2Ihvo+wmGBdnE6gR/fWrAPD+rUWvrnz9gD0urItOP6lz3SsMency5ZZTTojceuWTgwqlO5cLMHdm7zD7rETKvn34a5806igfRAHnwowxjVV7Pu+ly1+WFMm0IVhw/ibRD812ubYq70Qv9xk4c=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1774239386; c=relaxed/simple;
+	bh=BP+bJA2nIZOCZ7m0hQAVim18REWMxqa25vfPNyn7X2Q=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=KDe5htSwekqOhhRZoHHJIZ3gHSNE5qHuRtXPRs38W933/OZYQNtjj5Kta80kyCLEUESCr6zeVAiIzaWoa3jIBuK8FYxddT9p4+JgjUFyTtv3sEdlO87dFLlAkw8BL82aQpGBLDJGmwEJ0P0yi06YnoCJud3BeVPt+3hV9RD9CVw=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=outlook.com; spf=pass smtp.mailfrom=outlook.com; dkim=pass (2048-bit key) header.d=outlook.com header.i=@outlook.com header.b=hkdGdBl4; arc=fail smtp.client-ip=52.103.14.69
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=outlook.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=outlook.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="FRcNI1+9"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1774231133;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=+FaKjvgSlxh5v5V3BgfcZvMURWE5LbSpzWyWRWOSIag=;
-	b=FRcNI1+9GpxBglXvtn8M4tpuCaHtGoK4ka1jaASPxbLMOP+hVUvZMu8gr37xL5DfBTHPfP
-	GILa0uaP9UhM+1fpjIqLPz4fmyC/v6eTshCdtzDS+V4t65lxvR+5n71OV/fn75Rj8Eoru/
-	tnSjt08NUuEjAo8MseMzml/ZX/Utac8=
-Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-169-NrTY-ooFOC-FLtdw8gwv2Q-1; Sun,
- 22 Mar 2026 21:58:49 -0400
-X-MC-Unique: NrTY-ooFOC-FLtdw8gwv2Q-1
-X-Mimecast-MFC-AGG-ID: NrTY-ooFOC-FLtdw8gwv2Q_1774231127
-Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 4FE0F18005B3;
-	Mon, 23 Mar 2026 01:58:47 +0000 (UTC)
-Received: from bmarzins-01.fast.eng.rdu2.dc.redhat.com (bmarzins-01.fast.eng.rdu2.dc.redhat.com [10.6.23.12])
-	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id D9B4119560B7;
-	Mon, 23 Mar 2026 01:58:46 +0000 (UTC)
-Received: from bmarzins-01.fast.eng.rdu2.dc.redhat.com (localhost [127.0.0.1])
-	by bmarzins-01.fast.eng.rdu2.dc.redhat.com (8.18.1/8.17.1) with ESMTPS id 62N1wjs21003473
-	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
-	Sun, 22 Mar 2026 21:58:45 -0400
-Received: (from bmarzins@localhost)
-	by bmarzins-01.fast.eng.rdu2.dc.redhat.com (8.18.1/8.18.1/Submit) id 62N1wjit1003472;
-	Sun, 22 Mar 2026 21:58:45 -0400
-Date: Sun, 22 Mar 2026 21:58:45 -0400
-From: Benjamin Marzinski <bmarzins@redhat.com>
-To: John Garry <john.g.garry@oracle.com>
-Cc: martin.petersen@oracle.com, james.bottomley@hansenpartnership.com,
-        hare@suse.com, jmeneghi@redhat.com, linux-scsi@vger.kernel.org,
-        michael.christie@oracle.com, snitzer@kernel.org,
-        dm-devel@lists.linux.dev, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 13/13] scsi: core: Add implicit ALUA support
-Message-ID: <acCeVabspYFjQHPu@redhat.com>
-References: <20260317120703.3702387-1-john.g.garry@oracle.com>
- <20260317120703.3702387-14-john.g.garry@oracle.com>
+	dkim=pass (2048-bit key) header.d=outlook.com header.i=@outlook.com header.b="hkdGdBl4"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=dCfOTcVkN+MJK3Jh06UvxjDCUc5A+5aFISjcZJogegWIqsoBoAxYW7++ud2uy0UlKhplHciU6TdfVSuDs2FdQkwQlEL3zYsqQw10VJMAtZH78t3ANVViCgkdasQQirKUuIIU0wi8KyeGq20fP9JLbdpkTSNNgDaBLJmlN3La9MaRjjerdBJnxk/ZpHTCCpThQrpb1Jp+Pwr5UtaMw/ePvbzzLkLpHXNdO3PXke6shBQBsjOmM8e3+W3zVcVL/F+j1lSXMCP87rDr3+Ja6vLcLMqoHpyfvWpuJS8uuGamU4E6A3ccx8wzgQHqfwUrAbPUCXmbG6y0FoAlXHcgq8O23Q==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=LCvlBXZ99NDG5pUFS9gt2G6Z2/x0v6v15bYfZuhB25U=;
+ b=d9YM24qG78WxbUeoehMX2UN9+YpL7gRbqhFyN9lVphDvbyL+Q9QmLLysGN2xxlGVqfTjAUbU4L+talLB0ww12wh46CJtENV+B8wY51IOAhO247MoW8UW2mo/rs40Rt7tU45VYTez1zAvTSEMfxh7Cxerq+ZKR6mCr3CoYMXD34IVk6fRUCCrWjbWyiwPpkXcxY2hhu/X1JdpbEAdcqa+IssjvxMab/uFJb1DuT4C1NLsirEqNd2/13HYh8QDVE0fr3DXxSHwwQtFHKsLOU7GAp1snrdXN2tv40c0nXZh64kPhHxw7kuUAjDQv4CWVEvjw2Bf5tbLQbpTpHOfAze66g==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
+ dkim=none; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=outlook.com;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=LCvlBXZ99NDG5pUFS9gt2G6Z2/x0v6v15bYfZuhB25U=;
+ b=hkdGdBl4GhpKB4eBfHmXOjRFGtlCoLErRHJ3nFK7ly5al1EUpRTQUQ4xXVjZH5Q3Khffc1y8yhyWNYBs+jzN/4aJQsaDLdKKAu6NMgBMT6xJHD0tFplc7xCQS0VKnXkzoU8pMRHxFYAEfGwDg/UJHCb7Qe7Vyoickj7I/o80/WPAMAqXcGcU+xQRM3wOsrXhYupAzfWeyVwF6LYyIP3hJBts9aSr+qB48wCwWAna6oXFI1qGMeG8YkYA9UOSwSULSVHUjKeI/ZUIoZV5kKTLMZXQekpInERU9SbCK2SIIFG2y753n6U9s5bc6EkbWSSYfK+ygfqmqLFPLkJ6cRTcgQ==
+Received: from SN6PR02MB4157.namprd02.prod.outlook.com (2603:10b6:805:33::23)
+ by IA0PR02MB9193.namprd02.prod.outlook.com (2603:10b6:208:43a::21) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9723.25; Mon, 23 Mar
+ 2026 04:16:20 +0000
+Received: from SN6PR02MB4157.namprd02.prod.outlook.com
+ ([fe80::900:1ccf:2b1e:52b6]) by SN6PR02MB4157.namprd02.prod.outlook.com
+ ([fe80::900:1ccf:2b1e:52b6%6]) with mapi id 15.20.9723.018; Mon, 23 Mar 2026
+ 04:16:20 +0000
+From: Michael Kelley <mhklinux@outlook.com>
+To: Long Li <longli@microsoft.com>, "Lorenzo Stoakes (Oracle)"
+	<ljs@kernel.org>, Andrew Morton <akpm@linux-foundation.org>
+CC: Jonathan Corbet <corbet@lwn.net>, Clemens Ladisch <clemens@ladisch.de>,
+	Arnd Bergmann <arnd@arndb.de>, Greg Kroah-Hartman
+	<gregkh@linuxfoundation.org>, "K . Y . Srinivasan" <kys@microsoft.com>,
+	Haiyang Zhang <haiyangz@microsoft.com>, Wei Liu <wei.liu@kernel.org>, Dexuan
+ Cui <decui@microsoft.com>, Alexander Shishkin
+	<alexander.shishkin@linux.intel.com>, Maxime Coquelin
+	<mcoquelin.stm32@gmail.com>, Alexandre Torgue <alexandre.torgue@foss.st.com>,
+	Miquel Raynal <miquel.raynal@bootlin.com>, Richard Weinberger
+	<richard@nod.at>, Vignesh Raghavendra <vigneshr@ti.com>, Bodo Stroesser
+	<bostroesser@gmail.com>, "Martin K . Petersen" <martin.petersen@oracle.com>,
+	David Howells <dhowells@redhat.com>, Marc Dionne <marc.dionne@auristor.com>,
+	Alexander Viro <viro@zeniv.linux.org.uk>, Christian Brauner
+	<brauner@kernel.org>, Jan Kara <jack@suse.cz>, David Hildenbrand
+	<david@kernel.org>, "Liam R . Howlett" <Liam.Howlett@oracle.com>, Vlastimil
+ Babka <vbabka@kernel.org>, Mike Rapoport <rppt@kernel.org>, Suren
+ Baghdasaryan <surenb@google.com>, Michal Hocko <mhocko@suse.com>, Jann Horn
+	<jannh@google.com>, Pedro Falcato <pfalcato@suse.de>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	"linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
+	"linux-stm32@st-md-mailman.stormreply.com"
+	<linux-stm32@st-md-mailman.stormreply.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>, "linux-mtd@lists.infradead.org"
+	<linux-mtd@lists.infradead.org>, "linux-staging@lists.linux.dev"
+	<linux-staging@lists.linux.dev>, "linux-scsi@vger.kernel.org"
+	<linux-scsi@vger.kernel.org>, "target-devel@vger.kernel.org"
+	<target-devel@vger.kernel.org>, "linux-afs@lists.infradead.org"
+	<linux-afs@lists.infradead.org>, "linux-fsdevel@vger.kernel.org"
+	<linux-fsdevel@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>,
+	Ryan Roberts <ryan.roberts@arm.com>
+Subject: RE: [PATCH v4 18/21] drivers: hv: vmbus: replace deprecated mmap hook
+ with mmap_prepare
+Thread-Topic: [PATCH v4 18/21] drivers: hv: vmbus: replace deprecated mmap
+ hook with mmap_prepare
+Thread-Index: AQJN0rqm5S7tosaoM3nkaYB8eJypuAGlwE9MtMwd4aA=
+Date: Mon, 23 Mar 2026 04:16:20 +0000
+Message-ID:
+ <SN6PR02MB41573DF211DA2469D7FFE892D44BA@SN6PR02MB4157.namprd02.prod.outlook.com>
+References: <cover.1774045440.git.ljs@kernel.org>
+ <05467cb62267d750e5c770147517d4df0246cda6.1774045440.git.ljs@kernel.org>
+In-Reply-To:
+ <05467cb62267d750e5c770147517d4df0246cda6.1774045440.git.ljs@kernel.org>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: SN6PR02MB4157:EE_|IA0PR02MB9193:EE_
+x-ms-office365-filtering-correlation-id: 39a7b7e5-fd47-45ff-0fe0-08de8892f01f
+x-microsoft-antispam:
+ BCL:0;ARA:14566002|461199028|31061999003|13091999003|19110799012|8060799015|8062599012|37011999003|15080799012|12121999013|3412199025|440099028|102099032|40105399003|41105399003|53005399003;
+x-microsoft-antispam-message-info:
+ =?us-ascii?Q?/N3H04TX5bQahuSHyUaieq8RAF4eEp0DeU+m1gxuxPYqKo05Rg5bEthYXy0N?=
+ =?us-ascii?Q?7SH4HlohLeS6InvGttrjB4SxysDESZLPBoQWfq1pWOWy8V0RwCCEjYRyroMM?=
+ =?us-ascii?Q?PiWCMUEwQdoQ2TLCfacF5D5JPl5FfMWhTCjfOmnuJ/XJqM2HhZfJJTCCdP/s?=
+ =?us-ascii?Q?mtCJwE/7NlQ1YQBHAsToPL3VKQ//bY73JrFHJAg04TFtTxnVsuYkwaMkaWQ5?=
+ =?us-ascii?Q?CjUUcz8WwXXvJ2OrkvZDAxrcu/CsAS+QypPLO+l2y6tER5FdizzmttuZ+RhD?=
+ =?us-ascii?Q?vGzzgKeyNib5W5I1Jvqo2LSp9K7+EVQlnLuVvlE+q8Vwi5KiM0cP/1WL4vcl?=
+ =?us-ascii?Q?1iFsRh3nMwOMWFNhMVAw4mfIpB/P7NpVPHcaTb18aL01uAuik7JWV1cw0Hk6?=
+ =?us-ascii?Q?jHImw/whHJn4lEh8QQZl/kJHUZWrxNIGMXH8e3pLjMsF4yZJJHfbnwO6ti0G?=
+ =?us-ascii?Q?fZ2LNG8NCyjQpvHfdOENae8alVB4aqAsrX18h2QLJVjGrCQSvprRgUVMZKGG?=
+ =?us-ascii?Q?Oz5G5hw4YCBiRWG0E8UXiKVOnGvk/Tgk2P6wBEEdZ71L1sTSu3cAWHcrmHE/?=
+ =?us-ascii?Q?0XGrG/GnnnTmgOM1g1WYEQ68kJBpKBn1vyxZkF63sWG+b1l5ysyjUwbFzLOv?=
+ =?us-ascii?Q?ypEv74WbTjJ2SPsrZAZxD2N4IqYbvIq0ZNbroUGEKJNd8LGY6YwHjkHRwxwv?=
+ =?us-ascii?Q?NiKKDVYdcKXUf61EB0AKbHXPBq0Eg+b76UpRtHbmbjdIBWfrTUVoo47QXzJU?=
+ =?us-ascii?Q?CPMgw3HHhTFXHztdrE1aWtJeiMRbyC/PRiIGxf2atZatkjfe5A+pArLRqnb2?=
+ =?us-ascii?Q?fnK7OkffAlcRzD+lkYY14VQG7uew80QoDEVx5mXYq1qBYX+3v8q5qanYVj0C?=
+ =?us-ascii?Q?Vpb1FgEwlpgCV13XnGRc6lqclLC5MtsW8kzGgbxMcWyT4LYpKq6WpJtvnpaz?=
+ =?us-ascii?Q?HgfFhxUq62jDj6JgzEMEhx7fUrD3V0J6fCfVchBE26lg3WgveIQBCYcK1qEz?=
+ =?us-ascii?Q?7bA8gm2IeSLoxeicTkzr1/AzKieOvz+rWKmNOyDMaJ7wmGc=3D?=
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0:
+ =?us-ascii?Q?pAMnP1LvvhF6KDwQuSIFbjHW8GgI+vXR6DbPhPgwY7SHNdHVXCQ9HaN3O2lo?=
+ =?us-ascii?Q?HCs2smjpU0aA6wKe89W5KOYn7KnlqqvDpej/UGUbpFK6dToRKGXKbWQWmvZ6?=
+ =?us-ascii?Q?NlQfqGQbgtrVCNczIH2pMIFB7AYgVIGAttry3EdFXRS8nuozl/sWJdCJOzZn?=
+ =?us-ascii?Q?TkyDp6mpsaLiXS3/1nJLjfZw94prMwcak27DqlV0HDRYBu9aDnTG3hzT41r/?=
+ =?us-ascii?Q?P5mjl4A+bGyp5SSG/h4g6+5VRc9QADCNkq4mSuw0rmINiM5BIiPhqtAv9FG4?=
+ =?us-ascii?Q?R/yoiwHjTwrjNf12DhFLgq4pedb/rrhvQTd8ggKIAUdpg7PaAfBooBPoh9YL?=
+ =?us-ascii?Q?7OmoCBbOGozkr0ysbUr1C1b+zmCB/2Es32Iq2m5lk8LVZB9Gm6ag0DlYxufH?=
+ =?us-ascii?Q?U9dPHDHSFSVFT8PWzB4aB5rIVseQKu0ki7jlUvkPovmqJcZU/D8tQhmIvbw7?=
+ =?us-ascii?Q?VBpfOln/+y9OU+idyZmvLe4CZ0hUq81M525qlghOvgy+VlQVBmWfxBJqHjCC?=
+ =?us-ascii?Q?zLQC1BW0oSL06F3LsHA2843eMJlIJXFuustI7ZoAAlZicR/qgM0d12P7lSmE?=
+ =?us-ascii?Q?zlIJHXS3TFjHV4S+dc/eyEiYVo59KSeiC01WcJMD/8iKrjs3iNmEBMU8yGwk?=
+ =?us-ascii?Q?dPqfwplnl4VashuIWIlUh6RDbomjJsbDV7DdWVODh07HelgIsQaNIaCv+2Cn?=
+ =?us-ascii?Q?MgCGrxrnbOAOpbMv+0njzuL1fjySU8OC8PsdeNzLJWaacuQrk55yFar9WSUP?=
+ =?us-ascii?Q?V9f5oMNkQQr5IwEhiHNg6mGSmnVgWvof/vALd5y/VzeO8nPtoRXfw6uXxBDf?=
+ =?us-ascii?Q?usv5O748XBNIuvGWHd54GcnwUC2qnRlemQBMN/cL9LIvL9tbnh5PBKJKJ6P1?=
+ =?us-ascii?Q?JDcGYxLcW8fxNyXXyS+FDHrGYW8bz+Q4BlkHrIvxm3qgeoHeSOebN6aA9qTB?=
+ =?us-ascii?Q?0pjNBiXu/OJSrn7w9sJHWG1uys2agIEeHFVTSU1jXb0INe2GkG/MbX6dvC7f?=
+ =?us-ascii?Q?T+nqZ3S7mwWAQzv/pK/aiNwEPVXWC/0bMgSfXTGSFE2Kq3hRu7pL9R5B4I89?=
+ =?us-ascii?Q?rPGPtLKHpG6YW+fSuVD6zzvp7anVQAmcRKM3zfEsI2XBr03XegxQdtxuximM?=
+ =?us-ascii?Q?PUXExKxk8G+thuLDCWkertAMsb8HJNm4yv+2cF9tb1b8a124oLTvj2S6hpsh?=
+ =?us-ascii?Q?Bf3EFX2CrQUjHdRfZKlKSSAxkujLMJK3AtLx3Q17IPA40QdOFXwQLutI7yxA?=
+ =?us-ascii?Q?tFnogOlM9DijqvgOCL8YqXBy9Qr1uY2SFQLb0iaixSXbWow7+fu6Lwl1C4dD?=
+ =?us-ascii?Q?HneraP9k0fQ3+IOA4qLCFgZgNR34FAktHImiSbpDkodftG+5+JAh9ZEFtX+n?=
+ =?us-ascii?Q?4qbj2yA=3D?=
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260317120703.3702387-14-john.g.garry@oracle.com>
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
+X-OriginatorOrg: outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: SN6PR02MB4157.namprd02.prod.outlook.com
+X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg: 00000000-0000-0000-0000-000000000000
+X-MS-Exchange-CrossTenant-Network-Message-Id: 39a7b7e5-fd47-45ff-0fe0-08de8892f01f
+X-MS-Exchange-CrossTenant-originalarrivaltime: 23 Mar 2026 04:16:20.7940
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
+X-MS-Exchange-CrossTenant-rms-persistedconsumerorg: 00000000-0000-0000-0000-000000000000
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA0PR02MB9193
 
-On Tue, Mar 17, 2026 at 12:07:03PM +0000, John Garry wrote:
-> For when no device handler is used, add ALUA support.
-> 
-> This will be equivalent to when native SCSI multipathing is used.
-> 
-> Essentially all the same handling is available as DH alua driver for
-> rescan, request prep, sense handling.
-> 
-> Signed-off-by: John Garry <john.g.garry@oracle.com>
+From: Lorenzo Stoakes (Oracle) <ljs@kernel.org> Sent: Friday, March 20, 202=
+6 3:40 PM
+>=20
+> The f_op->mmap interface is deprecated, so update the vmbus driver to use
+> its successor, mmap_prepare.
+>=20
+> This updates all callbacks which referenced the function pointer
+> hv_mmap_ring_buffer to instead reference hv_mmap_prepare_ring_buffer,
+> utilising the newly introduced compat_set_desc_from_vma() and
+> __compat_vma_mmap() to be able to implement this change.
+>=20
+> The UIO HV generic driver is the only user of hv_create_ring_sysfs(),
+> which is the only function which references
+> vmbus_channel->mmap_prepare_ring_buffer which, in turn, is the only
+> external interface to hv_mmap_prepare_ring_buffer.
+>=20
+> This patch therefore updates this caller to use mmap_prepare instead,
+> which also previously used vm_iomap_memory(), so this change replaces it
+> with its mmap_prepare equivalent, mmap_action_simple_ioremap().
+>=20
+> Signed-off-by: Lorenzo Stoakes (Oracle) <ljs@kernel.org>
 > ---
->  drivers/scsi/scsi_alua.c  | 93 +++++++++++++++++++++++++++++++++++++++
->  drivers/scsi/scsi_error.c |  7 +++
->  drivers/scsi/scsi_lib.c   |  7 +++
->  drivers/scsi/scsi_scan.c  |  2 +
->  drivers/scsi/scsi_sysfs.c |  4 +-
->  include/scsi/scsi_alua.h  | 14 ++++++
->  6 files changed, 126 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/scsi_alua.c b/drivers/scsi/scsi_alua.c
-> index d3fcd887e5018..ee0229b1a9d12 100644
-> --- a/drivers/scsi/scsi_alua.c
-> +++ b/drivers/scsi/scsi_alua.c
-> @@ -562,6 +562,90 @@ int scsi_alua_stpg_run(struct scsi_device *sdev, bool optimize)
->  }
->  EXPORT_SYMBOL_GPL(scsi_alua_stpg_run);
->  
-> +enum scsi_disposition scsi_alua_check_sense(struct scsi_device *sdev,
-> +					      struct scsi_sense_hdr *sense_hdr)
+>  drivers/hv/hyperv_vmbus.h    |  4 ++--
+>  drivers/hv/vmbus_drv.c       | 31 +++++++++++++++++++------------
+>  drivers/uio/uio_hv_generic.c | 11 ++++++-----
+>  include/linux/hyperv.h       |  4 ++--
+>  4 files changed, 29 insertions(+), 21 deletions(-)
+>=20
 
-This seems like it should be shareable with scsi_dh_alua as well.  In
-might need to take a function to call for rescanning and have
-alua_check_sense() be a wrapper around it, but since the force argument
-to alua_check() is now always set to true in scsi_dh_alua, it's
-unnecessary, so both it and scsi_device_alua_rescan() can have the
-same arguments.
+There are two mmap() code paths in the Hyper-V UIO code. One path is
+to mmap() the file descriptor for /dev/uio<n>, and the other is to mmap()
+the "ring" entry under /sys/devices/vmbus/devices/<uuid>. The former is
+done by uio_mmap(), and the latter by hv_uio_ring_mmap_prepare().
 
-> +{
-> +	switch (sense_hdr->sense_key) {
-> +	case NOT_READY:
-> +		if (sense_hdr->asc == 0x04 && sense_hdr->ascq == 0x0a) {
-> +			/*
-> +			 * LUN Not Accessible - ALUA state transition
-> +			 */
-> +			scsi_alua_handle_state_transition(sdev);
-> +			return NEEDS_RETRY;
-> +		}
-> +		break;
-> +	case UNIT_ATTENTION:
-> +		if (sense_hdr->asc == 0x04 && sense_hdr->ascq == 0x0a) {
-> +			/*
-> +			 * LUN Not Accessible - ALUA state transition
-> +			 */
-> +			scsi_alua_handle_state_transition(sdev);
-> +			return NEEDS_RETRY;
-> +		}
-> +		if (sense_hdr->asc == 0x29 && sense_hdr->ascq == 0x00) {
-> +			/*
-> +			 * Power On, Reset, or Bus Device Reset.
-> +			 * Might have obscured a state transition,
-> +			 * so schedule a recheck.
-> +			 */
-> +			scsi_device_alua_rescan(sdev);
-> +			return ADD_TO_MLQUEUE;
-> +		}
-> +		if (sense_hdr->asc == 0x29 && sense_hdr->ascq == 0x04)
-> +			/*
-> +			 * Device internal reset
-> +			 */
-> +			return ADD_TO_MLQUEUE;
-> +		if (sense_hdr->asc == 0x2a && sense_hdr->ascq == 0x01)
-> +			/*
-> +			 * Mode Parameters Changed
-> +			 */
-> +			return ADD_TO_MLQUEUE;
-> +		if (sense_hdr->asc == 0x2a && sense_hdr->ascq == 0x06) {
-> +			/*
-> +			 * ALUA state changed
-> +			 */
-> +			scsi_device_alua_rescan(sdev);
-> +			return ADD_TO_MLQUEUE;
-> +		}
-> +		if (sense_hdr->asc == 0x2a && sense_hdr->ascq == 0x07) {
-> +			/*
-> +			 * Implicit ALUA state transition failed
-> +			 */
-> +			scsi_device_alua_rescan(sdev);
-> +			return ADD_TO_MLQUEUE;
-> +		}
-> +		if (sense_hdr->asc == 0x3f && sense_hdr->ascq == 0x03)
-> +			/*
-> +			 * Inquiry data has changed
-> +			 */
-> +			return ADD_TO_MLQUEUE;
-> +		if (sense_hdr->asc == 0x3f && sense_hdr->ascq == 0x0e)
-> +			/*
-> +			 * REPORTED_LUNS_DATA_HAS_CHANGED is reported
-> +			 * when switching controllers on targets like
-> +			 * Intel Multi-Flex. We can just retry.
-> +			 */
-> +			return ADD_TO_MLQUEUE;
-> +		break;
-> +	}
-> +
-> +	return SCSI_RETURN_NOT_HANDLED;
-> +}
-> +
-> +static void alua_rtpg_work(struct work_struct *work)
-> +{
-> +	struct alua_data *alua =
-> +		container_of(work, struct alua_data, work.work);
-> +	int ret;
-> +
-> +	ret = scsi_alua_rtpg_run(alua->sdev);
-> +
-> +	if (ret == -EAGAIN)
-> +		queue_delayed_work(kalua_wq, &alua->work, alua->interval * HZ);
-> +}
-> +
->  int scsi_alua_sdev_init(struct scsi_device *sdev)
->  {
->  	int rel_port, ret, tpgs;
-> @@ -591,6 +675,7 @@ int scsi_alua_sdev_init(struct scsi_device *sdev)
->  		goto out_free_data;
->  	}
->  
-> +	INIT_DELAYED_WORK(&sdev->alua->work, alua_rtpg_work);
->  	sdev->alua->sdev = sdev;
->  	sdev->alua->tpgs = tpgs;
->  	spin_lock_init(&sdev->alua->lock);
-> @@ -638,6 +723,14 @@ bool scsi_device_alua_implicit(struct scsi_device *sdev)
->  	return sdev->alua->tpgs & TPGS_MODE_IMPLICIT;
->  }
->  
-> +void scsi_device_alua_rescan(struct scsi_device *sdev)
-> +{
-> +	struct alua_data *alua = sdev->alua;
-> +
-> +	queue_delayed_work(kalua_wq, &alua->work,
-> +				msecs_to_jiffies(ALUA_RTPG_DELAY_MSECS));
+I tested both these paths using a combination of two methods in a
+x86/x64 VM on Hyper-V:
 
-This code doesn't support triggering a new rtpg while the current one is
-running.  I'll leave it to people with more scsi expertise to say how
-important that is, but the scsi_dh_alua code now will always trigger a
-new rtpg in this case (or at least it would, with the issues from patch
-12 fixed).
+1) Using the fcopy daemon, which maps the ring buffer for the primary
+channel and sends/receives messages with the Hyper-V host. This
+method tests only the 1st path because the fcopy daemon doesn't create
+any subchannels that would use the "ring" entry.
 
--Ben
+2) Using a custom-built test program. This program doesn't communicate
+with the Hyper-V host, but allows mostly verifying both code paths for the
+primary channel. As a sanity check, it verifies that the two mmaps are
+mapping the same memory, as expected.
 
-> +}
-> +
->  int scsi_alua_init(void)
->  {
->  	kalua_wq = alloc_workqueue("kalua", WQ_MEM_RECLAIM | WQ_PERCPU, 0);
-> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-> index 147127fb4db9c..a542e7a85a24d 100644
-> --- a/drivers/scsi/scsi_error.c
-> +++ b/drivers/scsi/scsi_error.c
-> @@ -29,6 +29,7 @@
->  #include <linux/jiffies.h>
->  
->  #include <scsi/scsi.h>
-> +#include <scsi/scsi_alua.h>
->  #include <scsi/scsi_cmnd.h>
->  #include <scsi/scsi_dbg.h>
->  #include <scsi/scsi_device.h>
-> @@ -578,6 +579,12 @@ enum scsi_disposition scsi_check_sense(struct scsi_cmnd *scmd)
->  		if (rc != SCSI_RETURN_NOT_HANDLED)
->  			return rc;
->  		/* handler does not care. Drop down to default handling */
-> +	} else if (scsi_device_alua_implicit(sdev)) {
-> +		enum scsi_disposition rc;
-> +
-> +		rc = scsi_alua_check_sense(sdev, &sshdr);
-> +		if (rc != SCSI_RETURN_NOT_HANDLED)
-> +			return rc;
->  	}
->  
->  	if (scmd->cmnd[0] == TEST_UNIT_READY &&
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index d3a8cd4166f92..e5bcee555ea10 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -26,6 +26,7 @@
->  #include <linux/unaligned.h>
->  
->  #include <scsi/scsi.h>
-> +#include <scsi/scsi_alua.h>
->  #include <scsi/scsi_cmnd.h>
->  #include <scsi/scsi_dbg.h>
->  #include <scsi/scsi_device.h>
-> @@ -1719,6 +1720,12 @@ static blk_status_t scsi_prepare_cmd(struct request *req)
->  	if (sdev->handler && sdev->handler->prep_fn) {
->  		blk_status_t ret = sdev->handler->prep_fn(sdev, req);
->  
-> +		if (ret != BLK_STS_OK)
-> +			return ret;
-> +	} else if (scsi_device_alua_implicit(sdev)) {
-> +		/* We should be able to make this common for ALUA DH as well */
-> +		blk_status_t ret = scsi_alua_prep_fn(sdev, req);
-> +
->  		if (ret != BLK_STS_OK)
->  			return ret;
->  	}
-> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-> index 3af64d1231445..73caf83bd1097 100644
-> --- a/drivers/scsi/scsi_scan.c
-> +++ b/drivers/scsi/scsi_scan.c
-> @@ -1744,6 +1744,8 @@ int scsi_rescan_device(struct scsi_device *sdev)
->  
->  	if (sdev->handler && sdev->handler->rescan)
->  		sdev->handler->rescan(sdev);
-> +	else if (scsi_device_alua_implicit(sdev))
-> +		scsi_device_alua_rescan(sdev);
->  
->  	if (dev->driver && try_module_get(dev->driver->owner)) {
->  		struct scsi_driver *drv = to_scsi_driver(dev->driver);
-> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-> index 6c4c3c22f6acf..71a9613898cfc 100644
-> --- a/drivers/scsi/scsi_sysfs.c
-> +++ b/drivers/scsi/scsi_sysfs.c
-> @@ -1152,7 +1152,7 @@ sdev_show_access_state(struct device *dev,
->  	unsigned char access_state;
->  	const char *access_state_name;
->  
-> -	if (!sdev->handler)
-> +	if (!sdev->handler && !scsi_device_alua_implicit(sdev))
->  		return -EINVAL;
->  
->  	access_state = (sdev->access_state & SCSI_ACCESS_STATE_MASK);
-> @@ -1409,6 +1409,8 @@ int scsi_sysfs_add_sdev(struct scsi_device *sdev)
->  	scsi_autopm_get_device(sdev);
->  
->  	scsi_dh_add_device(sdev);
-> +	if (!sdev->handler && scsi_device_alua_implicit(sdev))
-> +		scsi_device_alua_rescan(sdev);
->  
->  	error = device_add(&sdev->sdev_gendev);
->  	if (error) {
-> diff --git a/include/scsi/scsi_alua.h b/include/scsi/scsi_alua.h
-> index 2d5db944f75b7..8e506d1d66cce 100644
-> --- a/include/scsi/scsi_alua.h
-> +++ b/include/scsi/scsi_alua.h
-> @@ -24,6 +24,7 @@ struct alua_data {
->  	unsigned char		transition_tmo;
->  	unsigned long		expiry;
->  	unsigned long		interval;
-> +	struct delayed_work	work;
->  	struct scsi_device	*sdev;
->  	spinlock_t		lock;
->  };
-> @@ -35,11 +36,15 @@ void scsi_alua_handle_state_transition(struct scsi_device *sdev);
->  
->  int scsi_alua_check_tpgs(struct scsi_device *sdev);
->  
-> +enum scsi_disposition scsi_alua_check_sense(struct scsi_device *sdev,
-> +				struct scsi_sense_hdr *sense_hdr);
-> +
->  int scsi_alua_rtpg_run(struct scsi_device *sdev);
->  int scsi_alua_stpg_run(struct scsi_device *sdev, bool optimize);
->  
->  blk_status_t scsi_alua_prep_fn(struct scsi_device *sdev, struct request *req);
->  
-> +void scsi_device_alua_rescan(struct scsi_device *sdev);
->  bool scsi_device_alua_implicit(struct scsi_device *sdev);
->  
->  int scsi_alua_init(void);
-> @@ -53,6 +58,12 @@ static inline int scsi_alua_check_tpgs(struct scsi_device *sdev)
->  {
->  	return 0;
->  }
-> +static inline
-> +enum scsi_disposition scsi_alua_check_sense(struct scsi_device *sdev,
-> +				struct scsi_sense_hdr *sense_hdr)
-> +{
-> +	return SCSI_RETURN_NOT_HANDLED;
-> +}
->  static inline int scsi_alua_rtpg_run(struct scsi_device *sdev)
->  {
->  	return 0;
-> @@ -66,6 +77,9 @@ blk_status_t scsi_alua_prep_fn(struct scsi_device *sdev, struct request *req)
->  {
->  	return BLK_STS_OK;
->  }
-> +static inline void scsi_device_alua_rescan(struct scsi_device *sdev)
-> +{
-> +}
->  static inline bool scsi_device_alua_implicit(struct scsi_device *sdev)
->  {
->  	return false;
-> -- 
-> 2.43.5
+As such,
 
+Reviewed-by: Michael Kelley <mhklinux@outlook.com>
+Tested-by: Michael Kelley <mhklinux@outlook.com>
+
+The most robust test would be to run DPDK networking against
+UIO, as it would communicate with the Hyper-V host and use
+multiple subchannels that resulting in mmap'ing the "ring"
+entry under /sys.
+
+@Long Li -- I'll leave it to your discretion as to whether you want
+to test DPDK against these mmap() changes.
+
+I've noted one minor issue below.
+
+[snip]
+
+--- a/include/linux/hyperv.h
++++ b/include/linux/hyperv.h
+@@ -1015,8 +1015,8 @@ struct vmbus_channel {
+ 	/* The max size of a packet on this channel */
+ 	u32 max_pkt_size;
+=20
+-	/* function to mmap ring buffer memory to the channel's sysfs ring attrib=
+ute */
+-	int (*mmap_ring_buffer)(struct vmbus_channel *channel, struct vm_area_str=
+uct *vma);
++	/* function to mmap_prepare ring buffer memory to the channel's sysfs rin=
+g attribute */
+
+Changing the comment from "mmap ring buffer" to "mmap_prepare ring buffer"
+produces awkward wording since "mmap" is used here as a verb.  It might be =
+better
+to just leave the comment unchanged.
+
+Michael
+
+
++	int (*mmap_prepare_ring_buffer)(struct vmbus_channel *channel, struct vm_=
+area_desc *desc);
+=20
+ 	/* boolean to control visibility of sysfs for ring buffer */
+ 	bool ring_sysfs_visible;
