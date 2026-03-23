@@ -1,163 +1,229 @@
-Received: from mail-qk1-f178.google.com (mail-qk1-f178.google.com [209.85.222.178])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6E24D3BED2A
-	for <linux-scsi@vger.kernel.org>; Mon, 23 Mar 2026 16:01:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.178
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2AE373BB9F6
+	for <linux-scsi@vger.kernel.org>; Mon, 23 Mar 2026 16:15:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774281695; cv=none; b=Lhulc3Ge9bCfkpUE4KUE7V5aeYBaleVzkijwIlJ6TrqcUM0+3oY6JuhVmg4rqLdzTmg2cFW4xd321+bsl726rYSUyvXSSv5YW3sEUn2XcJoekd7YufhkjZFPJhZt6rgI6MewffT0o5LY15w8FSve26hg8W96xLtgR1bqd73bQXk=
+	t=1774282522; cv=none; b=GCMjiA1fh0H8XyXzT0kuSxyk2fwzsZ3agTGTwTPFntSvKb0xL074EQL+whUoDLYeKzWA2T8yqg59gLitNUvnkeNtmtNpM8sAIK5/24iej+vL5zWaBBIbV3zrqyl3xOIUuRMLd4vEMGHEpQauplmIinsbcH/DEerFoG9GFgIxEa8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774281695; c=relaxed/simple;
-	bh=fyBJF0Rb3ojGG3W0enZR4zW94KIveEVLAnTki7iglOs=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Rgm7AXkJFmuFu2ntCH1MZYSRYl9ppg3V8iCaYeH1QgGtiq8hjPgt7a3flT36SmhCB3GO8TgoFJBWKlwRmyV3MNN1tkDjwMiykAPMziodxeBrFIibnFgPy30wAcyuddL/MgR9JCc5JIUxfwOOI7FkdXNgdWuyHnQ6dbOTyWY/Q0o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=bitbyteword.org; spf=pass smtp.mailfrom=bitbyteword.org; dkim=pass (2048-bit key) header.d=bitbyteword.org header.i=@bitbyteword.org header.b=Pnam4xV6; arc=none smtp.client-ip=209.85.222.178
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=bitbyteword.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bitbyteword.org
+	s=arc-20240116; t=1774282522; c=relaxed/simple;
+	bh=DFmxd8hbyc/vuoVJkNWh1WOouE4sQePh6EJjH2B4/5w=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=PZfWQndotSn0rx58Ir0mbsQ5Uwft4M2QuB7gNgJRHmDB8UQ8qC6gGNpHbKjI54Pv8o66SP0l9GOGplxVrgaZo/RgQTLpw1I05PovjbpVi8p8k6taBR2GrePaxx5Ca2HhRfQa2AfdXgOKiVJ90ThYbcG56w5umQZPjOsUMK/KX/k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=ZPmSPK0j; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bitbyteword.org header.i=@bitbyteword.org header.b="Pnam4xV6"
-Received: by mail-qk1-f178.google.com with SMTP id af79cd13be357-8cd71fb9f06so19343785a.2
-        for <linux-scsi@vger.kernel.org>; Mon, 23 Mar 2026 09:01:34 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bitbyteword.org; s=google; t=1774281693; x=1774886493; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=7MJV3zFq/rwr+CUp0wh8JYL6rs7Ri2408vNUrLWuymw=;
-        b=Pnam4xV6CjXEf/mK5NR+ZGus3/5VLgXXqQaofXV/G1FN+qBfwATWeVMRoBLYXeBGuf
-         CP2JeCCGMCOZXqdmda2tnihSorDqrU1S11yeOizpwhAf69RJdf8Gp3doCRoKJZPngJCK
-         ZOE7DWBYlaFQ4uS7xCFd6UntkxKhZud9amqiJq0IWdaf/YppFezMkWG9sHq2kpwYoYU7
-         Xhmjna5X6AtrcLe5w2PoVhEDNQrjoKbf8YAwyi9CQv2k2vx+GeTlbbC4TI7Jd/wUXWst
-         JB77WNC2kvD8SljQ/MJBW0Q1llkjBdkIkC6LByYeueWbfJispTGUtw8X+9ZWyM36ppX4
-         zTVw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1774281693; x=1774886493;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=7MJV3zFq/rwr+CUp0wh8JYL6rs7Ri2408vNUrLWuymw=;
-        b=oqTS882jpzDR4muqnzjnRqkfjLnowrwd86gwugqLH0GRE1XWRV5tWVQK/gmifze3a8
-         a9rlngCWI3YprOllTvNxGOrGVphBH7PNdSqgSHk4rJgfeCagxl+VVoqvchtQHFOfMNOy
-         TZDnmzDzB3WhNJM+HTgQ7eAqbbe7jJ2TCRbeN13Zfq3suVzmX1isP/G1D/nzfQwwx+Rq
-         9U96B4ddEUWCil99KBTNswNTe/QYivLDN37Dk/13FTpvNtrN8eE7sDpJ4/2sBOHwHd7F
-         jHrMA3NoF5wPGAvBVf29qSpSDEjCUDdGw5GCCONwSaLZY1RcheL9pR7TjQGqzrkPjlkR
-         HHnA==
-X-Forwarded-Encrypted: i=1; AJvYcCXyXCIEJ+OoDA9SUemkZNd1FrrowctUkrMEzwaJ3prcfC5uT5xzTYXiGDbz2VR30lahE0+E3Pni85ik@vger.kernel.org
-X-Gm-Message-State: AOJu0YxGqmBWs/9WJ6gS371YwSAXgOVaTLGXFKwpTPJd7dHuDUKIcEUl
-	OPMlc+Ltg3O4vQvX+FvK1eUjlxD0Jk0ZrBI7uqpGs390szhOfIbBSbOH6/ARYkIktZA=
-X-Gm-Gg: ATEYQzy8v9GvOjfBdy6NWOAFKjKNuD3sBC5yCklpXSa19nQV6fptHdc1bpu00mkhxFb
-	HvbZkFAeWRyfwMpW17xyku8DayVR9sSlKpAbCuOFp+3th4/8cZcK3RqtF0Xa1vigxACnm7c0uE4
-	Wwr7y57AkaYnK0cL0Zanu1dXenLTT/Pm7obDw7e2lmVBEXSmeiChqW+TOlfHsp3XX9kEUxwH2dA
-	fWg2Pa/P59hG2BzPV6B852S1jfdwaIr3+0P5eAJGYvHqtPwwmcjygHJBU5en0fYZli080yMfwC3
-	tlMtbGYKW/3Gyy8JGc4KgzePjKU4myZlqQdHOavAVAKuEgFUKgBC15EEyvLN6jXLPuEdvUaYGgy
-	RrFDeoh+CYTA6HlHQ8FgoPcfPdwGxhkwvefDFJ7FKznPyGD0akLLmmZSpjpAkSwHgxaItrpLlu4
-	SusDp9oSJ6luh59ntFEb/UVlAtYs3KwkDCm/ULoNp4kTHLLTnZhDGZVj3StFxJNMyBQQ==
-X-Received: by 2002:a05:620a:f13:b0:8c7:a84:d0e4 with SMTP id af79cd13be357-8cfc7e9d63dmr1972995485a.24.1774281693191;
-        Mon, 23 Mar 2026 09:01:33 -0700 (PDT)
-Received: from vinmini.lan (c-73-143-21-186.hsd1.vt.comcast.net. [73.143.21.186])
-        by smtp.gmail.com with ESMTPSA id af79cd13be357-8cfc9088df1sm843364185a.25.2026.03.23.09.01.32
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 23 Mar 2026 09:01:32 -0700 (PDT)
-From: "Vineeth Pillai (Google)" <vineeth@bitbyteword.org>
-To: 
-Cc: "Vineeth Pillai (Google)" <vineeth@bitbyteword.org>,
-	Steven Rostedt <rostedt@goodmis.org>,
-	Peter Zijlstra <peterz@infradead.org>,
-	Alim Akhtar <alim.akhtar@samsung.com>,
-	Avri Altman <avri.altman@wdc.com>,
-	Bart Van Assche <bvanassche@acm.org>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Peter Wang <peter.wang@mediatek.com>,
-	Bean Huo <beanhuo@micron.com>,
-	Adrian Hunter <adrian.hunter@intel.com>,
-	"Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-trace-kernel@vger.kernel.org
-Subject: [PATCH v2 14/19] scsi: ufs: Use trace_call__##name() at guarded tracepoint call sites
-Date: Mon, 23 Mar 2026 12:00:33 -0400
-Message-ID: <20260323160052.17528-15-vineeth@bitbyteword.org>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260323160052.17528-1-vineeth@bitbyteword.org>
-References: <20260323160052.17528-1-vineeth@bitbyteword.org>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ZPmSPK0j"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1774282520;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=NYZ/E4Fge0/3/UpAgI4LqmFmyC6lJLMbnjcheApcim4=;
+	b=ZPmSPK0j9grLGjuMisNPF59WQP7RsMXLq+lBZnrKdjoJcSLzIcyRe5uJqTLW4ijF/QhdXy
+	kbG4m40HIR1nttZjuw1HWhfxhATkUr5cfnNwGk71/rQ/EsqzVXSrL2HoPTh64T6bSZTr4m
+	tok3en7vSDCPmRZ83STNF9uUEupAfiE=
+Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-328-1E1OCjhuMgKTEe7uhnblag-1; Mon,
+ 23 Mar 2026 12:15:14 -0400
+X-MC-Unique: 1E1OCjhuMgKTEe7uhnblag-1
+X-Mimecast-MFC-AGG-ID: 1E1OCjhuMgKTEe7uhnblag_1774282512
+Received: from mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.4])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 6D68C1955BCE;
+	Mon, 23 Mar 2026 16:15:12 +0000 (UTC)
+Received: from bmarzins-01.fast.eng.rdu2.dc.redhat.com (bmarzins-01.fast.eng.rdu2.dc.redhat.com [10.6.23.12])
+	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id EB8ED30002EE;
+	Mon, 23 Mar 2026 16:15:11 +0000 (UTC)
+Received: from bmarzins-01.fast.eng.rdu2.dc.redhat.com (localhost [127.0.0.1])
+	by bmarzins-01.fast.eng.rdu2.dc.redhat.com (8.18.1/8.17.1) with ESMTPS id 62NGFAYx1025027
+	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
+	Mon, 23 Mar 2026 12:15:10 -0400
+Received: (from bmarzins@localhost)
+	by bmarzins-01.fast.eng.rdu2.dc.redhat.com (8.18.1/8.18.1/Submit) id 62NGFAbM1025026;
+	Mon, 23 Mar 2026 12:15:10 -0400
+Date: Mon, 23 Mar 2026 12:15:10 -0400
+From: Benjamin Marzinski <bmarzins@redhat.com>
+To: John Garry <john.g.garry@oracle.com>
+Cc: martin.petersen@oracle.com, james.bottomley@hansenpartnership.com,
+        hare@suse.com, jmeneghi@redhat.com, linux-scsi@vger.kernel.org,
+        michael.christie@oracle.com, snitzer@kernel.org,
+        dm-devel@lists.linux.dev, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 01/13] scsi: scsi_dh_alua: Delete alua_port_group
+Message-ID: <acFnDlO6b4SzFq90@redhat.com>
+References: <20260317120703.3702387-1-john.g.garry@oracle.com>
+ <20260317120703.3702387-2-john.g.garry@oracle.com>
+ <acCEmFgVgxr8qx39@redhat.com>
+ <470edb84-1621-41e4-b172-91f9388a813b@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <470edb84-1621-41e4-b172-91f9388a813b@oracle.com>
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.4
 
-Replace trace_foo() with the new trace_call__foo() at sites already
-guarded by trace_foo_enabled(), avoiding a redundant
-static_branch_unlikely() re-evaluation inside the tracepoint.
-trace_call__foo() calls the tracepoint callbacks directly without
-utilizing the static branch again.
+On Mon, Mar 23, 2026 at 10:33:12AM +0000, John Garry wrote:
+> On 23/03/2026 00:08, Benjamin Marzinski wrote:
+> > >       k += off, desc += off) {
+> > > -		u16 group_id = get_unaligned_be16(&desc[2]);
+> > > -
+> > > -		spin_lock_irqsave(&port_group_lock, flags);
+> > > -		tmp_pg = alua_find_get_pg(pg->device_id_str, pg->device_id_len,
+> > > -					  group_id);
+> > > -		spin_unlock_irqrestore(&port_group_lock, flags);
+> > > -		if (tmp_pg) {
+> > > -			if (spin_trylock_irqsave(&tmp_pg->lock, flags)) {
+> > > -				if ((tmp_pg == pg) ||
+> > > -				    !(tmp_pg->flags & ALUA_PG_RUNNING)) {
+> > > -					struct alua_dh_data *h;
+> > > -
+> > > -					tmp_pg->state = desc[0] & 0x0f;
+> > > -					tmp_pg->pref = desc[0] >> 7;
+> > > -					rcu_read_lock();
+> > > -					list_for_each_entry_rcu(h,
+> > > -						&tmp_pg->dh_list, node) {
+> > > -						if (!h->sdev)
+> > > -							continue;
+> > > -						h->sdev->access_state = desc[0];
+> > > -					}
+> > > -					rcu_read_unlock();
+> > > -				}
+> > > -				if (tmp_pg == pg)
+> > > -					tmp_pg->valid_states = desc[1];
+> > > -				spin_unlock_irqrestore(&tmp_pg->lock, flags);
+> > > -			}
+> > > -			kref_put(&tmp_pg->kref, release_port_group);
+> > > +		u16 group_id_desc = get_unaligned_be16(&desc[2]);
+> > > +
+> > > +		spin_lock_irqsave(&h->lock, flags);
+> > > +		if (group_id_desc == group_id) {
+> > > +			h->group_id = group_id;
+> > > +			WRITE_ONCE(h->state, desc[0] & 0x0f);
+> > > +			h->pref = desc[0] >> 7;
+> > > +			WRITE_ONCE(sdev->access_state, desc[0]);
+> > > +			h->valid_states = desc[1];
+> > instead of alua_rtpg() updating the access_state all of the devices in
+> > all the port groups, and the state and pref of all the port groups. It
+> > now just sets these for one device. It seems like it's wasting a lot of
+> > information that it used to use. For instance, now when a scsi command
+> > returns a unit attention that the ALUA state has changed, it won't get
+> > updated on all the devices, just the one that got the unit attention.
+> 
+> The fabric should then trigger this PG info update be re-scanned
+> per-path/sdev (and not just a single sdev in the PG). From testing with a
+> linux target, this is what happens - a UA is triggered per path when I
+> changed the PG access state.
+> 
+> > 
+> > >   		}
+> > > +		spin_unlock_irqrestore(&h->lock, flags);
+> > >   		off = 8 + (desc[7] * 4);
+> > >   	}
+> > >    skip_rtpg:
+> > > -	spin_lock_irqsave(&pg->lock, flags);
+> > > +	spin_lock_irqsave(&h->lock, flags);
+> > >   	if (transitioning_sense)
+> > > -		pg->state = SCSI_ACCESS_STATE_TRANSITIONING;
+> > > +		h->state = SCSI_ACCESS_STATE_TRANSITIONING;
+> 
+> ...
+> 
+> > > -
+> > >   static void alua_rtpg_work(struct work_struct *work)
+> > >   {
+> > > -	struct alua_port_group *pg =
+> > > -		container_of(work, struct alua_port_group, rtpg_work.work);
+> > > -	struct scsi_device *sdev, *prev_sdev = NULL;
+> > > +	struct alua_dh_data *h =
+> > > +		container_of(work, struct alua_dh_data, rtpg_work.work);
+> > > +	struct scsi_device *sdev = h->sdev;
+> > >   	LIST_HEAD(qdata_list);
+> > >   	int err = SCSI_DH_OK;
+> > >   	struct alua_queue_data *qdata, *tmp;
+> > > -	struct alua_dh_data *h;
+> > >   	unsigned long flags;
+> > > -	spin_lock_irqsave(&pg->lock, flags);
+> > > -	sdev = pg->rtpg_sdev;
+> > > -	if (!sdev) {
+> > > -		WARN_ON(pg->flags & ALUA_PG_RUN_RTPG);
+> > > -		WARN_ON(pg->flags & ALUA_PG_RUN_STPG);
+> > > -		spin_unlock_irqrestore(&pg->lock, flags);
+> > > -		kref_put(&pg->kref, release_port_group);
+> > > -		return;
+> > > -	}
+> > > -	pg->flags |= ALUA_PG_RUNNING;
+> > > -	if (pg->flags & ALUA_PG_RUN_RTPG) {
+> > > -		int state = pg->state;
+> > > +	spin_lock_irqsave(&h->lock, flags);
+> > > +	h->flags |= ALUA_PG_RUNNING;
+> > > +	if (h->flags & ALUA_PG_RUN_RTPG) {
+> > > +		int state = h->state;
+> > > -		pg->flags &= ~ALUA_PG_RUN_RTPG;
+> > > -		spin_unlock_irqrestore(&pg->lock, flags);
+> > > +		h->flags &= ~ALUA_PG_RUN_RTPG;
+> > > +		spin_unlock_irqrestore(&h->lock, flags);
+> > >   		if (state == SCSI_ACCESS_STATE_TRANSITIONING) {
+> > >   			if (alua_tur(sdev) == SCSI_DH_RETRY) {
+> > > -				spin_lock_irqsave(&pg->lock, flags);
+> > > -				pg->flags &= ~ALUA_PG_RUNNING;
+> > > -				pg->flags |= ALUA_PG_RUN_RTPG;
+> > > -				if (!pg->interval)
+> > > -					pg->interval = ALUA_RTPG_RETRY_DELAY;
+> > > -				spin_unlock_irqrestore(&pg->lock, flags);
+> > > -				queue_delayed_work(kaluad_wq, &pg->rtpg_work,
+> > > -						   pg->interval * HZ);
+> > > +				spin_lock_irqsave(&h->lock, flags);
+> > > +				h->flags &= ~ALUA_PG_RUNNING;
+> > > +				h->flags |= ALUA_PG_RUN_RTPG;
+> > > +				if (!h->interval)
+> > > +					h->interval = ALUA_RTPG_RETRY_DELAY;
+> > > +				spin_unlock_irqrestore(&h->lock, flags);
+> > > +				queue_delayed_work(kaluad_wq, &h->rtpg_work,
+> > > +						   h->interval * HZ);
+> > >   				return;
+> > >   			}
+> > >   			/* Send RTPG on failure or if TUR indicates SUCCESS */
+> > >   		}
+> > > -		err = alua_rtpg(sdev, pg);
+> > > -		spin_lock_irqsave(&pg->lock, flags);
+> > > +		err = alua_rtpg(sdev);
+> > > +		spin_lock_irqsave(&h->lock, flags);
+> > > -		/* If RTPG failed on the current device, try using another */
+> > > -		if (err == SCSI_DH_RES_TEMP_UNAVAIL &&
+> > > -		    (prev_sdev = alua_rtpg_select_sdev(pg)))
+> > > -			err = SCSI_DH_IMM_RETRY;
+> > Previously, if the rtpg failed on a device, another device would be
+> > tried, and the unusable device's alua state would get updated, along
+> > with all the other device's states.
+> 
+> Where specifically are you referring to here please?
 
-Suggested-by: Steven Rostedt <rostedt@goodmis.org>
-Suggested-by: Peter Zijlstra <peterz@infradead.org>
-Signed-off-by: Vineeth Pillai (Google) <vineeth@bitbyteword.org>
-Assisted-by: Claude:claude-sonnet-4-6
----
- drivers/ufs/core/ufshcd.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+The removed code above here calls alua_rtpg_select_sdev() to select a
+new device to retry the rtpg on, and returns with SCSI_DH_IMM_RETRY, to
+retrigger the rtpg on that device. If the rtpg completed on any device,
+it would update the state on all the devices. But if we are depending
+each device issuing its own rtp to update its state, what happens to
+the devices that can't complete the rtpg? I assume the correct answer is
+to give them some failed state.
+ 
+-Ben
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 899e663fea6e8..b27bde8ea7555 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -422,7 +422,7 @@ static void ufshcd_add_cmd_upiu_trace(struct ufs_hba *hba,
- 	else
- 		header = &lrb->ucd_rsp_ptr->header;
- 
--	trace_ufshcd_upiu(hba, str_t, header, &rq->sc.cdb,
-+	trace_call__ufshcd_upiu(hba, str_t, header, &rq->sc.cdb,
- 			  UFS_TSF_CDB);
- }
- 
-@@ -433,7 +433,7 @@ static void ufshcd_add_query_upiu_trace(struct ufs_hba *hba,
- 	if (!trace_ufshcd_upiu_enabled())
- 		return;
- 
--	trace_ufshcd_upiu(hba, str_t, &rq_rsp->header,
-+	trace_call__ufshcd_upiu(hba, str_t, &rq_rsp->header,
- 			  &rq_rsp->qr, UFS_TSF_OSF);
- }
- 
-@@ -446,12 +446,12 @@ static void ufshcd_add_tm_upiu_trace(struct ufs_hba *hba, unsigned int tag,
- 		return;
- 
- 	if (str_t == UFS_TM_SEND)
--		trace_ufshcd_upiu(hba, str_t,
-+		trace_call__ufshcd_upiu(hba, str_t,
- 				  &descp->upiu_req.req_header,
- 				  &descp->upiu_req.input_param1,
- 				  UFS_TSF_TM_INPUT);
- 	else
--		trace_ufshcd_upiu(hba, str_t,
-+		trace_call__ufshcd_upiu(hba, str_t,
- 				  &descp->upiu_rsp.rsp_header,
- 				  &descp->upiu_rsp.output_param1,
- 				  UFS_TSF_TM_OUTPUT);
-@@ -471,7 +471,7 @@ static void ufshcd_add_uic_command_trace(struct ufs_hba *hba,
- 	else
- 		cmd = ufshcd_readl(hba, REG_UIC_COMMAND);
- 
--	trace_ufshcd_uic_command(hba, str_t, cmd,
-+	trace_call__ufshcd_uic_command(hba, str_t, cmd,
- 				 ufshcd_readl(hba, REG_UIC_COMMAND_ARG_1),
- 				 ufshcd_readl(hba, REG_UIC_COMMAND_ARG_2),
- 				 ufshcd_readl(hba, REG_UIC_COMMAND_ARG_3));
-@@ -523,7 +523,7 @@ static void ufshcd_add_command_trace(struct ufs_hba *hba, struct scsi_cmnd *cmd,
- 	} else {
- 		doorbell = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
- 	}
--	trace_ufshcd_command(cmd->device, hba, str_t, tag, doorbell, hwq_id,
-+	trace_call__ufshcd_command(cmd->device, hba, str_t, tag, doorbell, hwq_id,
- 			     transfer_len, intr, lba, opcode, group_id);
- }
- 
--- 
-2.53.0
+> > Now I don't see how a failed device
+> > gets its state updated.
+> 
+> AFAICS, I am only not omitted how we iterate through the devices per-PG, as
+> now we just do this work for all paths/scsi devices.
+> 
+> Thanks,
+> John
 
