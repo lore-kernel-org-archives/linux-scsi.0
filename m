@@ -1,251 +1,170 @@
-Received: from SN4PR2101CU001.outbound.protection.outlook.com (mail-southcentralusazolkn19012069.outbound.protection.outlook.com [52.103.14.69])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BACEF7404E;
-	Mon, 23 Mar 2026 04:16:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.103.14.69
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774239386; cv=fail; b=XC/cnD2V2nyvlZQ0DCiopsGzUq2Ihvo+wmGBdnE6gR/fWrAPD+rUWvrnz9gD0urItOP6lz3SsMency5ZZTTojceuWTgwqlO5cLMHdm7zD7rETKvn34a5806igfRAHnwowxjVV7Pu+ly1+WFMm0IVhw/ibRD812ubYq70Qv9xk4c=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774239386; c=relaxed/simple;
-	bh=BP+bJA2nIZOCZ7m0hQAVim18REWMxqa25vfPNyn7X2Q=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=KDe5htSwekqOhhRZoHHJIZ3gHSNE5qHuRtXPRs38W933/OZYQNtjj5Kta80kyCLEUESCr6zeVAiIzaWoa3jIBuK8FYxddT9p4+JgjUFyTtv3sEdlO87dFLlAkw8BL82aQpGBLDJGmwEJ0P0yi06YnoCJud3BeVPt+3hV9RD9CVw=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=outlook.com; spf=pass smtp.mailfrom=outlook.com; dkim=pass (2048-bit key) header.d=outlook.com header.i=@outlook.com header.b=hkdGdBl4; arc=fail smtp.client-ip=52.103.14.69
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=outlook.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=outlook.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4EA80B672
+	for <linux-scsi@vger.kernel.org>; Mon, 23 Mar 2026 06:05:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1774245958; cv=none; b=jEHBnYYugvyJVWo637Uqx1empHARM+3VOfTq1G7IiPNyy1VThl7nKfPZc5tCjgZZAq+NlOXez1FiJqqGrCF1ZfDWQx9vdemzskjOWWZNL3UUMlJ59q8HhkVi28AoY60+iJtCswORXVGYCM/RMHkypaw/33VsX9/WUk1ZzkJYLYE=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1774245958; c=relaxed/simple;
+	bh=X6jm4KTiRkbHi1dA1yIDfVkI9Ydf0i5jJ6kgGd/ES2M=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Wt87vxlPuOg8lC7e4ldm42lvICMfJ5r3sBTd24TD9vhOeiF1t3HUM2n8pObBPyeoLImdCeJfP/Qz42hcHyQ+JVH/HEyrnn5gS/ZCNPuQLTvlr29qmomrkCezjhwd3TqRFRC6dOFrGz/YoQtUc62mLtl7ZXzGDlcFP08uxLiHjkI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=E2H5cS8P; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=df9cB9cu; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=outlook.com header.i=@outlook.com header.b="hkdGdBl4"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=dCfOTcVkN+MJK3Jh06UvxjDCUc5A+5aFISjcZJogegWIqsoBoAxYW7++ud2uy0UlKhplHciU6TdfVSuDs2FdQkwQlEL3zYsqQw10VJMAtZH78t3ANVViCgkdasQQirKUuIIU0wi8KyeGq20fP9JLbdpkTSNNgDaBLJmlN3La9MaRjjerdBJnxk/ZpHTCCpThQrpb1Jp+Pwr5UtaMw/ePvbzzLkLpHXNdO3PXke6shBQBsjOmM8e3+W3zVcVL/F+j1lSXMCP87rDr3+Ja6vLcLMqoHpyfvWpuJS8uuGamU4E6A3ccx8wzgQHqfwUrAbPUCXmbG6y0FoAlXHcgq8O23Q==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=LCvlBXZ99NDG5pUFS9gt2G6Z2/x0v6v15bYfZuhB25U=;
- b=d9YM24qG78WxbUeoehMX2UN9+YpL7gRbqhFyN9lVphDvbyL+Q9QmLLysGN2xxlGVqfTjAUbU4L+talLB0ww12wh46CJtENV+B8wY51IOAhO247MoW8UW2mo/rs40Rt7tU45VYTez1zAvTSEMfxh7Cxerq+ZKR6mCr3CoYMXD34IVk6fRUCCrWjbWyiwPpkXcxY2hhu/X1JdpbEAdcqa+IssjvxMab/uFJb1DuT4C1NLsirEqNd2/13HYh8QDVE0fr3DXxSHwwQtFHKsLOU7GAp1snrdXN2tv40c0nXZh64kPhHxw7kuUAjDQv4CWVEvjw2Bf5tbLQbpTpHOfAze66g==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
- dkim=none; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=outlook.com;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=LCvlBXZ99NDG5pUFS9gt2G6Z2/x0v6v15bYfZuhB25U=;
- b=hkdGdBl4GhpKB4eBfHmXOjRFGtlCoLErRHJ3nFK7ly5al1EUpRTQUQ4xXVjZH5Q3Khffc1y8yhyWNYBs+jzN/4aJQsaDLdKKAu6NMgBMT6xJHD0tFplc7xCQS0VKnXkzoU8pMRHxFYAEfGwDg/UJHCb7Qe7Vyoickj7I/o80/WPAMAqXcGcU+xQRM3wOsrXhYupAzfWeyVwF6LYyIP3hJBts9aSr+qB48wCwWAna6oXFI1qGMeG8YkYA9UOSwSULSVHUjKeI/ZUIoZV5kKTLMZXQekpInERU9SbCK2SIIFG2y753n6U9s5bc6EkbWSSYfK+ygfqmqLFPLkJ6cRTcgQ==
-Received: from SN6PR02MB4157.namprd02.prod.outlook.com (2603:10b6:805:33::23)
- by IA0PR02MB9193.namprd02.prod.outlook.com (2603:10b6:208:43a::21) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9723.25; Mon, 23 Mar
- 2026 04:16:20 +0000
-Received: from SN6PR02MB4157.namprd02.prod.outlook.com
- ([fe80::900:1ccf:2b1e:52b6]) by SN6PR02MB4157.namprd02.prod.outlook.com
- ([fe80::900:1ccf:2b1e:52b6%6]) with mapi id 15.20.9723.018; Mon, 23 Mar 2026
- 04:16:20 +0000
-From: Michael Kelley <mhklinux@outlook.com>
-To: Long Li <longli@microsoft.com>, "Lorenzo Stoakes (Oracle)"
-	<ljs@kernel.org>, Andrew Morton <akpm@linux-foundation.org>
-CC: Jonathan Corbet <corbet@lwn.net>, Clemens Ladisch <clemens@ladisch.de>,
-	Arnd Bergmann <arnd@arndb.de>, Greg Kroah-Hartman
-	<gregkh@linuxfoundation.org>, "K . Y . Srinivasan" <kys@microsoft.com>,
-	Haiyang Zhang <haiyangz@microsoft.com>, Wei Liu <wei.liu@kernel.org>, Dexuan
- Cui <decui@microsoft.com>, Alexander Shishkin
-	<alexander.shishkin@linux.intel.com>, Maxime Coquelin
-	<mcoquelin.stm32@gmail.com>, Alexandre Torgue <alexandre.torgue@foss.st.com>,
-	Miquel Raynal <miquel.raynal@bootlin.com>, Richard Weinberger
-	<richard@nod.at>, Vignesh Raghavendra <vigneshr@ti.com>, Bodo Stroesser
-	<bostroesser@gmail.com>, "Martin K . Petersen" <martin.petersen@oracle.com>,
-	David Howells <dhowells@redhat.com>, Marc Dionne <marc.dionne@auristor.com>,
-	Alexander Viro <viro@zeniv.linux.org.uk>, Christian Brauner
-	<brauner@kernel.org>, Jan Kara <jack@suse.cz>, David Hildenbrand
-	<david@kernel.org>, "Liam R . Howlett" <Liam.Howlett@oracle.com>, Vlastimil
- Babka <vbabka@kernel.org>, Mike Rapoport <rppt@kernel.org>, Suren
- Baghdasaryan <surenb@google.com>, Michal Hocko <mhocko@suse.com>, Jann Horn
-	<jannh@google.com>, Pedro Falcato <pfalcato@suse.de>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	"linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
-	"linux-stm32@st-md-mailman.stormreply.com"
-	<linux-stm32@st-md-mailman.stormreply.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>, "linux-mtd@lists.infradead.org"
-	<linux-mtd@lists.infradead.org>, "linux-staging@lists.linux.dev"
-	<linux-staging@lists.linux.dev>, "linux-scsi@vger.kernel.org"
-	<linux-scsi@vger.kernel.org>, "target-devel@vger.kernel.org"
-	<target-devel@vger.kernel.org>, "linux-afs@lists.infradead.org"
-	<linux-afs@lists.infradead.org>, "linux-fsdevel@vger.kernel.org"
-	<linux-fsdevel@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>,
-	Ryan Roberts <ryan.roberts@arm.com>
-Subject: RE: [PATCH v4 18/21] drivers: hv: vmbus: replace deprecated mmap hook
- with mmap_prepare
-Thread-Topic: [PATCH v4 18/21] drivers: hv: vmbus: replace deprecated mmap
- hook with mmap_prepare
-Thread-Index: AQJN0rqm5S7tosaoM3nkaYB8eJypuAGlwE9MtMwd4aA=
-Date: Mon, 23 Mar 2026 04:16:20 +0000
-Message-ID:
- <SN6PR02MB41573DF211DA2469D7FFE892D44BA@SN6PR02MB4157.namprd02.prod.outlook.com>
-References: <cover.1774045440.git.ljs@kernel.org>
- <05467cb62267d750e5c770147517d4df0246cda6.1774045440.git.ljs@kernel.org>
-In-Reply-To:
- <05467cb62267d750e5c770147517d4df0246cda6.1774045440.git.ljs@kernel.org>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: SN6PR02MB4157:EE_|IA0PR02MB9193:EE_
-x-ms-office365-filtering-correlation-id: 39a7b7e5-fd47-45ff-0fe0-08de8892f01f
-x-microsoft-antispam:
- BCL:0;ARA:14566002|461199028|31061999003|13091999003|19110799012|8060799015|8062599012|37011999003|15080799012|12121999013|3412199025|440099028|102099032|40105399003|41105399003|53005399003;
-x-microsoft-antispam-message-info:
- =?us-ascii?Q?/N3H04TX5bQahuSHyUaieq8RAF4eEp0DeU+m1gxuxPYqKo05Rg5bEthYXy0N?=
- =?us-ascii?Q?7SH4HlohLeS6InvGttrjB4SxysDESZLPBoQWfq1pWOWy8V0RwCCEjYRyroMM?=
- =?us-ascii?Q?PiWCMUEwQdoQ2TLCfacF5D5JPl5FfMWhTCjfOmnuJ/XJqM2HhZfJJTCCdP/s?=
- =?us-ascii?Q?mtCJwE/7NlQ1YQBHAsToPL3VKQ//bY73JrFHJAg04TFtTxnVsuYkwaMkaWQ5?=
- =?us-ascii?Q?CjUUcz8WwXXvJ2OrkvZDAxrcu/CsAS+QypPLO+l2y6tER5FdizzmttuZ+RhD?=
- =?us-ascii?Q?vGzzgKeyNib5W5I1Jvqo2LSp9K7+EVQlnLuVvlE+q8Vwi5KiM0cP/1WL4vcl?=
- =?us-ascii?Q?1iFsRh3nMwOMWFNhMVAw4mfIpB/P7NpVPHcaTb18aL01uAuik7JWV1cw0Hk6?=
- =?us-ascii?Q?jHImw/whHJn4lEh8QQZl/kJHUZWrxNIGMXH8e3pLjMsF4yZJJHfbnwO6ti0G?=
- =?us-ascii?Q?fZ2LNG8NCyjQpvHfdOENae8alVB4aqAsrX18h2QLJVjGrCQSvprRgUVMZKGG?=
- =?us-ascii?Q?Oz5G5hw4YCBiRWG0E8UXiKVOnGvk/Tgk2P6wBEEdZ71L1sTSu3cAWHcrmHE/?=
- =?us-ascii?Q?0XGrG/GnnnTmgOM1g1WYEQ68kJBpKBn1vyxZkF63sWG+b1l5ysyjUwbFzLOv?=
- =?us-ascii?Q?ypEv74WbTjJ2SPsrZAZxD2N4IqYbvIq0ZNbroUGEKJNd8LGY6YwHjkHRwxwv?=
- =?us-ascii?Q?NiKKDVYdcKXUf61EB0AKbHXPBq0Eg+b76UpRtHbmbjdIBWfrTUVoo47QXzJU?=
- =?us-ascii?Q?CPMgw3HHhTFXHztdrE1aWtJeiMRbyC/PRiIGxf2atZatkjfe5A+pArLRqnb2?=
- =?us-ascii?Q?fnK7OkffAlcRzD+lkYY14VQG7uew80QoDEVx5mXYq1qBYX+3v8q5qanYVj0C?=
- =?us-ascii?Q?Vpb1FgEwlpgCV13XnGRc6lqclLC5MtsW8kzGgbxMcWyT4LYpKq6WpJtvnpaz?=
- =?us-ascii?Q?HgfFhxUq62jDj6JgzEMEhx7fUrD3V0J6fCfVchBE26lg3WgveIQBCYcK1qEz?=
- =?us-ascii?Q?7bA8gm2IeSLoxeicTkzr1/AzKieOvz+rWKmNOyDMaJ7wmGc=3D?=
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?us-ascii?Q?pAMnP1LvvhF6KDwQuSIFbjHW8GgI+vXR6DbPhPgwY7SHNdHVXCQ9HaN3O2lo?=
- =?us-ascii?Q?HCs2smjpU0aA6wKe89W5KOYn7KnlqqvDpej/UGUbpFK6dToRKGXKbWQWmvZ6?=
- =?us-ascii?Q?NlQfqGQbgtrVCNczIH2pMIFB7AYgVIGAttry3EdFXRS8nuozl/sWJdCJOzZn?=
- =?us-ascii?Q?TkyDp6mpsaLiXS3/1nJLjfZw94prMwcak27DqlV0HDRYBu9aDnTG3hzT41r/?=
- =?us-ascii?Q?P5mjl4A+bGyp5SSG/h4g6+5VRc9QADCNkq4mSuw0rmINiM5BIiPhqtAv9FG4?=
- =?us-ascii?Q?R/yoiwHjTwrjNf12DhFLgq4pedb/rrhvQTd8ggKIAUdpg7PaAfBooBPoh9YL?=
- =?us-ascii?Q?7OmoCBbOGozkr0ysbUr1C1b+zmCB/2Es32Iq2m5lk8LVZB9Gm6ag0DlYxufH?=
- =?us-ascii?Q?U9dPHDHSFSVFT8PWzB4aB5rIVseQKu0ki7jlUvkPovmqJcZU/D8tQhmIvbw7?=
- =?us-ascii?Q?VBpfOln/+y9OU+idyZmvLe4CZ0hUq81M525qlghOvgy+VlQVBmWfxBJqHjCC?=
- =?us-ascii?Q?zLQC1BW0oSL06F3LsHA2843eMJlIJXFuustI7ZoAAlZicR/qgM0d12P7lSmE?=
- =?us-ascii?Q?zlIJHXS3TFjHV4S+dc/eyEiYVo59KSeiC01WcJMD/8iKrjs3iNmEBMU8yGwk?=
- =?us-ascii?Q?dPqfwplnl4VashuIWIlUh6RDbomjJsbDV7DdWVODh07HelgIsQaNIaCv+2Cn?=
- =?us-ascii?Q?MgCGrxrnbOAOpbMv+0njzuL1fjySU8OC8PsdeNzLJWaacuQrk55yFar9WSUP?=
- =?us-ascii?Q?V9f5oMNkQQr5IwEhiHNg6mGSmnVgWvof/vALd5y/VzeO8nPtoRXfw6uXxBDf?=
- =?us-ascii?Q?usv5O748XBNIuvGWHd54GcnwUC2qnRlemQBMN/cL9LIvL9tbnh5PBKJKJ6P1?=
- =?us-ascii?Q?JDcGYxLcW8fxNyXXyS+FDHrGYW8bz+Q4BlkHrIvxm3qgeoHeSOebN6aA9qTB?=
- =?us-ascii?Q?0pjNBiXu/OJSrn7w9sJHWG1uys2agIEeHFVTSU1jXb0INe2GkG/MbX6dvC7f?=
- =?us-ascii?Q?T+nqZ3S7mwWAQzv/pK/aiNwEPVXWC/0bMgSfXTGSFE2Kq3hRu7pL9R5B4I89?=
- =?us-ascii?Q?rPGPtLKHpG6YW+fSuVD6zzvp7anVQAmcRKM3zfEsI2XBr03XegxQdtxuximM?=
- =?us-ascii?Q?PUXExKxk8G+thuLDCWkertAMsb8HJNm4yv+2cF9tb1b8a124oLTvj2S6hpsh?=
- =?us-ascii?Q?Bf3EFX2CrQUjHdRfZKlKSSAxkujLMJK3AtLx3Q17IPA40QdOFXwQLutI7yxA?=
- =?us-ascii?Q?tFnogOlM9DijqvgOCL8YqXBy9Qr1uY2SFQLb0iaixSXbWow7+fu6Lwl1C4dD?=
- =?us-ascii?Q?HneraP9k0fQ3+IOA4qLCFgZgNR34FAktHImiSbpDkodftG+5+JAh9ZEFtX+n?=
- =?us-ascii?Q?4qbj2yA=3D?=
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="E2H5cS8P";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="df9cB9cu"
+Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 62N424Y81586212
+	for <linux-scsi@vger.kernel.org>; Mon, 23 Mar 2026 06:05:56 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	VcVMAS/+scRv5IRNW01edaqPJBewwvfBt1i/PmT7i4w=; b=E2H5cS8Pn08nyb7x
+	o9+G8CAPVqJL5ekrrUfPRl4rifq/A7afYT+dPHqTzZq9hCVYbOAUy1pl4ITcwnFm
+	tzvIXM+o1A+ohjWP7etu5GD4aXhdst/m31bFb/fTinlOpJKxHW66p74w+ZYtSWV4
+	64vxyrk6uwi4biwv3jaW0HLYAvnqIAqkC1GM5E5tmNnkCOgyhsXLFy/B7ss/yUOe
+	Jif7W2oUmf8xavZezXWJu/2lmawDdoqFR+L6m0LmolXH6O+jH8kh9JVSmfvNHow0
+	pRe5E9ldxrD5v50iaXODUiuqr51OGExyZgdos2S37oYjqF1tf1vl6oqiwjttjeFt
+	casnhw==
+Received: from mail-pf1-f199.google.com (mail-pf1-f199.google.com [209.85.210.199])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4d1jng3y9c-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Mon, 23 Mar 2026 06:05:56 +0000 (GMT)
+Received: by mail-pf1-f199.google.com with SMTP id d2e1a72fcca58-829ba0e63e8so2243422b3a.2
+        for <linux-scsi@vger.kernel.org>; Sun, 22 Mar 2026 23:05:56 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1774245955; x=1774850755; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=VcVMAS/+scRv5IRNW01edaqPJBewwvfBt1i/PmT7i4w=;
+        b=df9cB9cuaUTR9yMGO1tEQouH1uveWT50qdPk8iD5kSWOQoEESZvpGjqlqTYs1ZoDqW
+         Z8wFazRy1zBPUVsUZIPEFjKKPkqEX5N8/o2lkuvEAGLP+zndXNhfMbmaAgQFHwCAD7Ny
+         N6JddXSO+AsKS2PRGHkBzdXlhENPtFwkgpT6IdMnE7oK7JS/mdyHFTqqf7tLZGQ7St54
+         7KizC3y9wVcDUOtmbokHuwe0H9a9IZ7BG326eZ3XNLN2tzxKvWXSuVA+IwPQJnFkLOsi
+         5Nzv1EWoi1iH2f0der2fEMVf7Ngpx2OZoS1Z+ms8Ysv5mSIAyCnQKp/64p7Ri/i5U0j2
+         9AZQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1774245955; x=1774850755;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=VcVMAS/+scRv5IRNW01edaqPJBewwvfBt1i/PmT7i4w=;
+        b=I3VbU76/Ebtq3A9qR/4B8sBMVBp8t+P+OaT3CLSgSs+gTJD1nMvZCR0tdoyqbpVPyA
+         Q7mmBHpWEPj2vO0mSaPpjYRQxZ8Apx2RH5JbbwUYrBOlNF9KPZsq7f2sB6HhzRb+VDrw
+         T3qnR6+X+OQvKd/ur1RzgtTtD23UH+HcET5EnlaSSgv7qLUfTwIfEU2R4yXTWHiFyOtM
+         +9+HK8wZWRZx52FjQ/UUGx+Uo1nM0nSx1kqB0+wbaBa8XfKcyH8olwQEv0PEg9sNFrlR
+         W+hpriI/KtihyA9qxoOLGl7ROQ/NAH2XGG6vmA+hMF2qlz4am9S1weEkMQo7Np8Zjgol
+         ZwnQ==
+X-Gm-Message-State: AOJu0YwDx+JW49VBhToZIWZTEc/LJn16LJbOubtT/pZW3S22CRjwyQaD
+	q/GcLuEXjpmTNVeVNT9ouQd371yZTO2uNxbOeSGftWS1hSPwUL4euvsg4jx4qjHRYnB97UD9zcF
+	Ny6GzfHFJohihtuR+b72rMwmv8IvpqlUpUYXZAZZ5PgxkGFPnDTe/b+XRfZUYSaCr
+X-Gm-Gg: ATEYQzz64HJxsCfBXpZ4bJCe+OZ8xnmgxFfrSZx97Ax3Uel9EPGws8BWvjEeLdTcbtO
+	/Zxx8KWISC9V3nsyqmCXb9NzLn0zaypPxF1Bl9JpNB36HU6FJb82lgbEiekl6tm/IprPJNiXg5l
+	Futsx/9Rj8bhPh6y+Avg6USXYs3XLU54zyAgO136Kb7NkcyZwrS/bHWS/TefosAiyI4hF08Kbcw
+	UKg4WnNkpWxKhNvAVmoalgWcl5eu+LEDyvp+0dLv9lGTri5SdIHYbWHTgit8u+7d4VTba6zXzF2
+	4VgNAybMpZ7LoOzqCKGUf+hfYP4zVi3tW3zcpcVtxlD7hEQeOI+lmH88E3ByQ+ZibHsGGbivZK/
+	eJVdchCA/gxYcO/v97mrSTl+opnSYcMvasIrV6XQ6cWW3amdvQ7DwdDwb2MUNDx3gwoXdiiMCfh
+	+G0d7p/2wRqsw=
+X-Received: by 2002:a05:6a00:a803:b0:82c:251c:4df2 with SMTP id d2e1a72fcca58-82c251c6a1amr6766307b3a.11.1774245955184;
+        Sun, 22 Mar 2026 23:05:55 -0700 (PDT)
+X-Received: by 2002:a05:6a00:a803:b0:82c:251c:4df2 with SMTP id d2e1a72fcca58-82c251c6a1amr6766281b3a.11.1774245954650;
+        Sun, 22 Mar 2026 23:05:54 -0700 (PDT)
+Received: from [10.133.33.145] (tpe-colo-wan-fw-bordernet.qualcomm.com. [103.229.16.4])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-82b0409b455sm8313948b3a.28.2026.03.22.23.05.51
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sun, 22 Mar 2026 23:05:54 -0700 (PDT)
+Message-ID: <011ee5ba-9516-44f8-9ad5-67bbe5d49d19@oss.qualcomm.com>
+Date: Mon, 23 Mar 2026 14:05:47 +0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-OriginatorOrg: outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: SN6PR02MB4157.namprd02.prod.outlook.com
-X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg: 00000000-0000-0000-0000-000000000000
-X-MS-Exchange-CrossTenant-Network-Message-Id: 39a7b7e5-fd47-45ff-0fe0-08de8892f01f
-X-MS-Exchange-CrossTenant-originalarrivaltime: 23 Mar 2026 04:16:20.7940
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
-X-MS-Exchange-CrossTenant-rms-persistedconsumerorg: 00000000-0000-0000-0000-000000000000
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA0PR02MB9193
-
-From: Lorenzo Stoakes (Oracle) <ljs@kernel.org> Sent: Friday, March 20, 202=
-6 3:40 PM
->=20
-> The f_op->mmap interface is deprecated, so update the vmbus driver to use
-> its successor, mmap_prepare.
->=20
-> This updates all callbacks which referenced the function pointer
-> hv_mmap_ring_buffer to instead reference hv_mmap_prepare_ring_buffer,
-> utilising the newly introduced compat_set_desc_from_vma() and
-> __compat_vma_mmap() to be able to implement this change.
->=20
-> The UIO HV generic driver is the only user of hv_create_ring_sysfs(),
-> which is the only function which references
-> vmbus_channel->mmap_prepare_ring_buffer which, in turn, is the only
-> external interface to hv_mmap_prepare_ring_buffer.
->=20
-> This patch therefore updates this caller to use mmap_prepare instead,
-> which also previously used vm_iomap_memory(), so this change replaces it
-> with its mmap_prepare equivalent, mmap_action_simple_ioremap().
->=20
-> Signed-off-by: Lorenzo Stoakes (Oracle) <ljs@kernel.org>
-> ---
->  drivers/hv/hyperv_vmbus.h    |  4 ++--
->  drivers/hv/vmbus_drv.c       | 31 +++++++++++++++++++------------
->  drivers/uio/uio_hv_generic.c | 11 ++++++-----
->  include/linux/hyperv.h       |  4 ++--
->  4 files changed, 29 insertions(+), 21 deletions(-)
->=20
-
-There are two mmap() code paths in the Hyper-V UIO code. One path is
-to mmap() the file descriptor for /dev/uio<n>, and the other is to mmap()
-the "ring" entry under /sys/devices/vmbus/devices/<uuid>. The former is
-done by uio_mmap(), and the latter by hv_uio_ring_mmap_prepare().
-
-I tested both these paths using a combination of two methods in a
-x86/x64 VM on Hyper-V:
-
-1) Using the fcopy daemon, which maps the ring buffer for the primary
-channel and sends/receives messages with the Hyper-V host. This
-method tests only the 1st path because the fcopy daemon doesn't create
-any subchannels that would use the "ring" entry.
-
-2) Using a custom-built test program. This program doesn't communicate
-with the Hyper-V host, but allows mostly verifying both code paths for the
-primary channel. As a sanity check, it verifies that the two mmaps are
-mapping the same memory, as expected.
-
-As such,
-
-Reviewed-by: Michael Kelley <mhklinux@outlook.com>
-Tested-by: Michael Kelley <mhklinux@outlook.com>
-
-The most robust test would be to run DPDK networking against
-UIO, as it would communicate with the Hyper-V host and use
-multiple subchannels that resulting in mmap'ing the "ring"
-entry under /sys.
-
-@Long Li -- I'll leave it to your discretion as to whether you want
-to test DPDK against these mmap() changes.
-
-I've noted one minor issue below.
-
-[snip]
-
---- a/include/linux/hyperv.h
-+++ b/include/linux/hyperv.h
-@@ -1015,8 +1015,8 @@ struct vmbus_channel {
- 	/* The max size of a packet on this channel */
- 	u32 max_pkt_size;
-=20
--	/* function to mmap ring buffer memory to the channel's sysfs ring attrib=
-ute */
--	int (*mmap_ring_buffer)(struct vmbus_channel *channel, struct vm_area_str=
-uct *vma);
-+	/* function to mmap_prepare ring buffer memory to the channel's sysfs rin=
-g attribute */
-
-Changing the comment from "mmap ring buffer" to "mmap_prepare ring buffer"
-produces awkward wording since "mmap" is used here as a verb.  It might be =
-better
-to just leave the comment unchanged.
-
-Michael
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v4 04/12] scsi: ufs: core: Add support for TX Equalization
+To: Bean Huo <beanhuo@iokpp.de>, avri.altman@wdc.com, bvanassche@acm.org,
+        beanhuo@micron.com, peter.wang@mediatek.com,
+        martin.petersen@oracle.com, mani@kernel.org
+Cc: linux-scsi@vger.kernel.org, Alim Akhtar <alim.akhtar@samsung.com>,
+        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+        "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        open list <linux-kernel@vger.kernel.org>
+References: <20260321031021.1722459-1-can.guo@oss.qualcomm.com>
+ <20260321031021.1722459-5-can.guo@oss.qualcomm.com>
+ <69a998190901b3ec63899fd89de087db9f99382a.camel@iokpp.de>
+ <652ce6ac83e1703b720a0402849e4d516abf0f25.camel@iokpp.de>
+Content-Language: en-US
+From: Can Guo <can.guo@oss.qualcomm.com>
+In-Reply-To: <652ce6ac83e1703b720a0402849e4d516abf0f25.camel@iokpp.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-GUID: iu6Xodx-BrkgBMi4v6gS6uf2ydAXrcRz
+X-Authority-Analysis: v=2.4 cv=Q63fIo2a c=1 sm=1 tr=0 ts=69c0d844 cx=c_pps
+ a=WW5sKcV1LcKqjgzy2JUPuA==:117 a=nuhDOHQX5FNHPW3J6Bj6AA==:17
+ a=IkcTkHD0fZMA:10 a=Yq5XynenixoA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=ZpdpYltYx_vBUK5n70dp:22
+ a=JCywkKAKIASltTFmSr8A:9 a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
+ a=OpyuDcXvxspvyRM73sMx:22
+X-Proofpoint-ORIG-GUID: iu6Xodx-BrkgBMi4v6gS6uf2ydAXrcRz
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzIzMDA0NCBTYWx0ZWRfXwIcEX3mDdOrx
+ ECglZgelrkUmeNsSXDV1y5ZpuhvJQLJkXTK16ez5DdEpGuWwi7/ExAlJZBfyEjpfqPYOosHoL3o
+ 36Hr9QFNWLe1zHhnJrOJI0VdWDTV6k5cb93kza8Z0Wa3OETq5H5qwh7ukGGmeUIj8l6XHJzQdHN
+ P7LEYK+n7DeSaaMfovr/ep/OxFXrKT3a5rEEMPqQKK8RbqUdN1pj9lUWT/2kkfnMMxZixL9NFGb
+ ydX2xKc4WK1TMEPCOwTZtcMOc0vTwPUIMhXgByXZqYNhnQLXvtR2TYACTbK53Xqo9d4pPtGzGBi
+ SJxgXEsfeqwSl3E60txisY5hsQLWBwl9v1AyDoBl4NN6O/Zyqes2c0bRCXS0xDj8QKttw5dDte2
+ ox//IJ0rhIwONRdFaVvEQsH85lB6EGRMxS/35khqt3nMrAA3E5+gx8hhCZI7EDN7yWN8A+f4tSf
+ WM3sTshlmOr0Nu1rGlA==
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-03-23_02,2026-03-20_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ clxscore=1015 impostorscore=0 priorityscore=1501 bulkscore=0 spamscore=0
+ malwarescore=0 adultscore=0 phishscore=0 lowpriorityscore=0 suspectscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2603050001 definitions=main-2603230044
 
 
-+	int (*mmap_prepare_ring_buffer)(struct vmbus_channel *channel, struct vm_=
-area_desc *desc);
-=20
- 	/* boolean to control visibility of sysfs for ring buffer */
- 	bool ring_sysfs_visible;
+
+On 3/22/2026 10:26 PM, Bean Huo wrote:
+> On Sun, 2026-03-22 at 10:48 +0100, Bean Huo wrote:
+>>> +                       dev_err(hba->dev, "Failed to train TX Equalization
+>>> for
+>>> HS-G%u, Rate-%s: %d\n",
+>>> +                               gear, ufs_hs_rate_to_str(rate), ret);
+>>> +                       return ret;
+>>> +               }
+>>> +
+>>> +               /* Mark TX Equalization settings as valid */
+>>> +               params->is_valid = true;
+>>> +               params->is_applied = false;
+>> after eqtr completes here, the trained settings are only kept in memory. UFS
+>> 5.0
+>> introduced qTxEQGnSettings and wTxEQGnSettingsExt as persistent device
+>> attributes for storing optimal TX EQ results across power cycles. should we
+>> write back to these attributes after training, and read them on next boot to
+>> skip EQTR if valid settings already exist? That would save the training
+>> overhead
+>> on every boot?
+>
+> I saw your next section properly positions qTxEQGnSettings/wTxEQGnSettingsExt
+> persistent storage as a follow-up series in cover-letter, you can ignore this,
+> let's address it next following patch.
+You are welcome, Sir!
+
+Thanks,
+Can Guo.
+>
+> Kind regards,
+> Bean
+>   
+>> Kind regards,
+>> Bean
+
