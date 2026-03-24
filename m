@@ -1,195 +1,84 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from lamorak.hansenpartnership.com (lamorak.hansenpartnership.com [198.37.111.173])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7888E3F54BD
-	for <linux-scsi@vger.kernel.org>; Tue, 24 Mar 2026 12:32:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B23843DF016;
+	Tue, 24 Mar 2026 13:50:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.37.111.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774355575; cv=none; b=cNJu/9ikeu2sRgBDbdAbq7b7QtMZMbn3yMJLzyVm6SRMOKu21H94YHQDARWSQpkRfzInH5Ajm5wA0xmdGUHOgIogMmyFg6r+1I243Z2FQMTJpj+bj/6BDMoMmelI0caiZW637oaEXnPLsWPL7cDpAbIhxCJnoc+la1EBYrFMwn0=
+	t=1774360224; cv=none; b=nfjomyTxpy+ZCK3w2paFFbCo+T9/q+A+97F0YewN7fuVov9nxq4BMC0B+4LlcDUzDnuD8wdSUDGC/9Vv8Gh33aouoy/9QZ0eg5ABvashd4Whu4kJeQYLwvFZjQ6jWqWbU10CuOPIW5kfJKHxdiUpy+0TzbOucqVNPRiKguvYgc8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774355575; c=relaxed/simple;
-	bh=K+62/RY1VqDt8d7ZbBqBcK+vgSO+rSU5Shy+fhN5Djs=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=JJsV8+LvPJpZXHVNlNGnEQiOvDF2zq1RreFqHZe47UkcETBSJtIy+7zLNRz5SXL4BQH5UXXds3TRLyqTINegrFQViUZnKTmgQ1tEwTiDpwKt0ImsttyXyXiZMeDzXM6KEYPMscUFf3kmr8xvfI1dkPFTccCr0aWMobmUNs2pzpg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=J2KjtTBR; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=RVSsXbnE; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	s=arc-20240116; t=1774360224; c=relaxed/simple;
+	bh=6vO5EQTkz20RKl1I8omEFsbmhTJujefsOsOiVGeH7bI=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=bWUj7T3QzdPcHDxv5jVcXNsyxP6lnRDXQ6IrNPLQ958j3y72Zn/P5fW0bIiqLaVdohy579kffTao9It7rD4u8t93f1FEFo0mLjvFIyQBm6qcWSXLN+b+jVDMCHRyL4YBelnJX4G65jIqZwPvOHupu9KM8xay7woEW4E0nQ3rETQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com; spf=pass smtp.mailfrom=HansenPartnership.com; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=K44KouzB; arc=none smtp.client-ip=198.37.111.173
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=HansenPartnership.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="J2KjtTBR";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="RVSsXbnE"
-Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 62O9dp0A1762212
-	for <linux-scsi@vger.kernel.org>; Tue, 24 Mar 2026 12:32:50 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	SFSY807vxOyGgTezoYLzQbN/077d0T02CNYv84Cish4=; b=J2KjtTBRra5gAVm5
-	eissekn4TC5/MK4BRy00pqXUARBbM8QYwLHOkyxIbSios7VXxnnxHPZ3i1pRwm2K
-	PQZff4y3+RPEe9ht7zBOb0tgJUOHy7pD8ESpAyOXVgdMPFri9S6Z70abOnRLQXtt
-	Qel8A81Mi2StWqoyrf4+5G5eKTY+AkpG+FneMsoK4Bs2Xp6StI58KFpBCMYAcZrk
-	dHLv9P33fN7nLJLK0TsXyg+WFFgFYBhQDfX0K1XggVNN8qPV3c2lK45CUIrikLzM
-	ViNUPalLvVB1hQ/Fqjf/u0KVgigdkLVrTSv7qAXITp0ozE2wnuGLwtemAIQevTIH
-	86BQZw==
-Received: from mail-pl1-f198.google.com (mail-pl1-f198.google.com [209.85.214.198])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4d36f0cfyy-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Tue, 24 Mar 2026 12:32:50 +0000 (GMT)
-Received: by mail-pl1-f198.google.com with SMTP id d9443c01a7336-2aeb90532f6so25611355ad.0
-        for <linux-scsi@vger.kernel.org>; Tue, 24 Mar 2026 05:32:50 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1774355570; x=1774960370; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=SFSY807vxOyGgTezoYLzQbN/077d0T02CNYv84Cish4=;
-        b=RVSsXbnE6UML1g8S9yd/Ed0BGwMs610svkkkD48ooWM4vv3QCpuZIamK/iUFUMTzgX
-         9RqyRtW2ZR8D/88Jfu9CXsJS9MOenYBZdZXV2RGS6oXnWauZYInw9UOFU75FoTCa6W+e
-         grb5/Pek+KOxsYUBSqqvu+lJ3GYNMa0psD2lFeOS/YyZzi6J5bMOrKFZhtORES3ApjZm
-         IOewUOl/YbjPtp/v/VwX/6NKjtO8FN9E6ECokO/5g/aB1s0TF5CfPo+4wWECwpl6U6sZ
-         idxFx1F7PTnhf2NHujjWetwYWrKahIbFUT+Orri/0iBwCPJeu03k1+B50p+j5Gb+Ir2y
-         MHbw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1774355570; x=1774960370;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=SFSY807vxOyGgTezoYLzQbN/077d0T02CNYv84Cish4=;
-        b=Klkwv7Y3WbhKJb/DcyXfXowH0qaOJYdU/FJ2VYsYSs5nO1nKdyy4UbWYPmzk9I1ipv
-         2oRWVp0YYFkRYTAM2HHOdMTAdr5Fhb9fXrnENOdf3LwqDcVYdTTCcGqNcmHpobFRWXJW
-         KGJxQJ81ZsxoHMzJcSCnBS2+JLv026wy9MLfXEkwAJRChE5HdBr548Z/LFjVIgs6eJBs
-         xhgrxlaM7fRgjXxBr+V0SwQ5FjE54ZAAPkh7yo5lkBj1krh6yEPGdpUwvfwW7geyVShD
-         FBb2pbQmJLQqWrP59dbkE5zMKNnZ5Ia50vuCN9o0LJgHOodZKNLBbpKtK3wtEtTwhz5T
-         ldnA==
-X-Gm-Message-State: AOJu0Yw+ySTt08r4nwaoiZcG2HokuGcYGcGQP9JU7eDaCjH1SJBrNxf4
-	SlZzFxNaYEI2yeTfws020bWdTEGc8tfEQTrhb02OGfSHoMC6OBNI02lCUhimV2OAkjb8AydmFOK
-	ILfqZiJcvTxLtEUk+M5tf2A5/rhKr3VEey7YBJusduleUdAFIB+xji68YpJniyn80
-X-Gm-Gg: ATEYQzyILJxwLa12Ub9Cy0n8BgJzs07152iCbke87XmcwWBJ0L2ezaYpwo4SpiYnXKS
-	dFjNQhmybErb/3lp0gL0wN9e905ooi22Kz6Hz2FRnY/tSRiPmFla6qddOz95QHFHANDMimfHAuD
-	1nRMib/fUxWidlrXoMWEpcr3WhzQBfQ5zzNxi3/4mwQ6mwinqH8vIk6Lc7acEj/47VhUh9cpZaI
-	qFBhn+CKl5Lcewj53rci5mkR7MLNo7dcBlhiIQZnBPid3BZUK2vWS+IKMmOiw6rvE2ulR9DBfRP
-	XVysgY2DQ6uci/XDDG7T6YNst4dyQGB5IVp1NRCrhiW5fN2u2PiQfsqjbno5JuV3i5c4z1N9oq7
-	w4W7Spu1CFuTvCyxDr0la6NJfUEigJhaLUK0sm8YQOQb6luAhabvljN4O/hnFOjkIecbYZMCNYt
-	9oJIUTr1VpnUg=
-X-Received: by 2002:a17:903:b0e:b0:2b0:4b3a:9b49 with SMTP id d9443c01a7336-2b082820d55mr143990435ad.51.1774355569551;
-        Tue, 24 Mar 2026 05:32:49 -0700 (PDT)
-X-Received: by 2002:a17:903:b0e:b0:2b0:4b3a:9b49 with SMTP id d9443c01a7336-2b082820d55mr143990185ad.51.1774355569032;
-        Tue, 24 Mar 2026 05:32:49 -0700 (PDT)
-Received: from [10.133.33.145] (tpe-colo-wan-fw-bordernet.qualcomm.com. [103.229.16.4])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2b0af3008eesm1053265ad.67.2026.03.24.05.32.43
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 24 Mar 2026 05:32:48 -0700 (PDT)
-Message-ID: <3913b65a-85da-4951-a3a1-1316f4e9e9bd@oss.qualcomm.com>
-Date: Tue, 24 Mar 2026 20:32:39 +0800
+	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="K44KouzB"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+	d=hansenpartnership.com; s=20151216; t=1774360220;
+	bh=6vO5EQTkz20RKl1I8omEFsbmhTJujefsOsOiVGeH7bI=;
+	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
+	b=K44KouzBS7JIpM5rKzjdQbFFsmT7S6piTT19qE7QXdzTTz2ZMpJhzIcvDtmEc86KB
+	 NX9/PKFst4WCMkJUAR78PwQZLBpaxiLiksrxtiXBB/u69vt6UmSHbEIizprxDRMF98
+	 6GeiTh5aKN1OD/dhC/Npa7dYSCEZHJza41DEeUtc=
+Received: from lingrow.int.hansenpartnership.com (unknown [IPv6:2601:5c4:4300:d341::a774])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by lamorak.hansenpartnership.com (Postfix) with ESMTPSA id 309501C01A3;
+	Tue, 24 Mar 2026 09:50:20 -0400 (EDT)
+Message-ID: <1f224ade5e006b0e94ac8c46549e3b52cf330dc2.camel@HansenPartnership.com>
+Subject: Re: [PATCH] scsi: megaraid_sas: validate dynamic RAID map
+ descriptor element counts
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+To: Pengpeng Hou <pengpeng@iscas.ac.cn>, kashyap.desai@broadcom.com, 
+	sumit.saxena@broadcom.com, shivasharan.srikanteshwara@broadcom.com, 
+	chandrakanth.patil@broadcom.com, martin.petersen@oracle.com
+Cc: megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, 
+	linux-kernel@vger.kernel.org
+Date: Tue, 24 Mar 2026 09:50:19 -0400
+In-Reply-To: <20260324085201.75176-1-pengpeng@iscas.ac.cn>
+References: <20260324085201.75176-1-pengpeng@iscas.ac.cn>
+Autocrypt: addr=James.Bottomley@HansenPartnership.com;
+ prefer-encrypt=mutual;
+ keydata=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
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.50.3 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4 04/12] scsi: ufs: core: Add support for TX Equalization
-To: =?UTF-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= <peter.wang@mediatek.com>,
-        "beanhuo@micron.com" <beanhuo@micron.com>,
-        "mani@kernel.org"
- <mani@kernel.org>,
-        "avri.altman@wdc.com" <avri.altman@wdc.com>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "adrian.hunter@intel.com" <adrian.hunter@intel.com>,
-        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
-        "James.Bottomley@HansenPartnership.com"
- <James.Bottomley@HansenPartnership.com>,
-        "quic_nguyenb@quicinc.com" <quic_nguyenb@quicinc.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-References: <20260321031021.1722459-1-can.guo@oss.qualcomm.com>
- <20260321031021.1722459-5-can.guo@oss.qualcomm.com>
- <bf904a137c1a3b8f6ec0dd712e15611155ce3e11.camel@mediatek.com>
- <1a038159-c847-4e58-a60c-cd5ecabeeed9@oss.qualcomm.com>
- <67dbc2869e68a29d5eed452f0db74acd2021c3e3.camel@mediatek.com>
-Content-Language: en-US
-From: Can Guo <can.guo@oss.qualcomm.com>
-In-Reply-To: <67dbc2869e68a29d5eed452f0db74acd2021c3e3.camel@mediatek.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Authority-Analysis: v=2.4 cv=b+q/I9Gx c=1 sm=1 tr=0 ts=69c28472 cx=c_pps
- a=MTSHoo12Qbhz2p7MsH1ifg==:117 a=nuhDOHQX5FNHPW3J6Bj6AA==:17
- a=IkcTkHD0fZMA:10 a=Yq5XynenixoA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=ZpdpYltYx_vBUK5n70dp:22
- a=lZOxv685zBznO1DyOMIA:9 a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
- a=GvdueXVYPmCkWapjIL-Q:22
-X-Proofpoint-ORIG-GUID: onOIasCndBeYNtFMcxp5X1mEQngyBhHW
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzI0MDA5OSBTYWx0ZWRfXykChrOOw5qo2
- vMP2qMui2ysBure4nJR+YPcVJ3QDQTC3dkXOcFcql3vhZz7sIQtd4New37mW8ophdpS85EK9Jv5
- ySBZE0Z2lyAdKth/twoAvRkHKDh4eicgGe5iMMW663Hswrd+IkcXlSad5f3MW+DC/TgMLBC9jL9
- ygPJZ3CoMRzvp+0FIhsJaDm1vGGn/PmzFsGduPYqn5f53Yq273+9VxHmki48ICevReS+IoWhMXu
- 961rkVirvoznVdzw2TNIZoHGsTQ1lIZq3cRCt5H7r5PiVSuH7AeXIw/BYHZbdmzBbznHEn9qNM2
- aeVxXAKDlH/JluFnf+yJ+d7I5dT6IE3TgdTeNky5fHG4ZM1diaV23ldBFw/PQQsO5moDjr2oX2Z
- v+3yrpkqdGICz8oA506WMaJZ3VnqIalMB+JG/MVfT+quwQ/hTtw30irwRotRoeHb8CD2AQmxYY0
- 0fg3oH5bSceHnH/0GfA==
-X-Proofpoint-GUID: onOIasCndBeYNtFMcxp5X1mEQngyBhHW
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-03-24_02,2026-03-23_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- priorityscore=1501 lowpriorityscore=0 impostorscore=0 adultscore=0
- malwarescore=0 bulkscore=0 suspectscore=0 phishscore=0 clxscore=1015
- spamscore=0 classifier=typeunknown authscore=0 authtc= authcc= route=outbound
- adjust=0 reason=mlx scancount=1 engine=8.22.0-2603050001
- definitions=main-2603240099
 
+On Tue, 2026-03-24 at 16:52 +0800, Pengpeng Hou wrote:
+> MR_PopulateDrvRaidMap() uses raid_map_desc_elements from the
+> firmware's dynamic RAID map to drive memcpy() sizes and array-copy
+> loops into the driver-owned devHndlInfo[], ldTgtIdToLd[], arMapInfo[]
+> and ldSpanMap[] buffers. Those destinations are fixed-size arrays,
+> but the descriptor element counts are currently trusted without
+> checking that they fit the corresponding driver map arrays.
 
+The values for the array sizes come from the driver headers, which are
+supposed to be in sync with the firmware.  They're also pretty huge
+(mostly 512) so what makes you think there's an actual problem here?
 
-On 3/24/2026 7:54 PM, Peter Wang (王信友) wrote:
->
-> On Tue, 2026-03-24 at 18:09 +0800, Can Guo wrote:
-> > > > +       params = &hba->tx_eq_params[gear - 1];
-> > > > +
-> > > > +       if (gear < UFS_HS_G1 || gear > UFS_HS_GEAR_MAX) {
-> > > > +               dev_err(hba->dev, "Invalid HS-Gear (%u) for TX
-> > > > Equalization\n",
-> > > > +                       gear);
-> > > > +               return -EINVAL;
-> > > > +       } else if (gear < adaptive_txeq_gear) {
-> > > > +               return 0;
-> > > > +       }
-> > > > 
-> > > 
-> > > "gear" should be checked before use?
-> > I don't understand this comment.
-> > 
->
-> Hi Can,
->
-> I mean that gear is used here:
-> params = &hba->tx_eq_params[gear - 1];
-> If gear is 0, it could be dangerous if params is used.
->
-> Therefore, we should move this line after the following check:
-> if (gear < UFS_HS_G1 || gear > UFS_HS_GEAR_MAX) {
->     ...
-> }
-You are right...
-Let me address it in next version.
+> Reject dynamic RAID map descriptors whose element counts exceed the
+> destination array capacities before copying them into the driver map.
 
-Thanks,
-Can Guo.
->
-> Thanks.
-> Peter
->
->
-> ************* MEDIATEK Confidentiality Notice ********************
-> The information contained in this e-mail message (including any
-> attachments) may be confidential, proprietary, privileged, or otherwise
-> exempt from disclosure under applicable laws. It is intended to be
-> conveyed only to the designated recipient(s). Any use, dissemination,
-> distribution, printing, retaining or copying of this e-mail (including its
-> attachments) by unintended recipient(s) is strictly prohibited and may
-> be unlawful. If you are not an intended recipient of this e-mail, or believe
-> that you have received this e-mail in error, please notify the sender
-> immediately (by replying to this e-mail), delete any and all copies of
-> this e-mail (including any attachments) from your system, and do not
-> disclose the content of this e-mail to any other person. Thank you!
+Even assuming there was some way the firmware and the driver could get
+out of sync over the maximum, wouldn't the best thing we could do be to
+warn and truncate?
+
+Regards,
+
+James
 
