@@ -1,106 +1,156 @@
-Received: from lamorak.hansenpartnership.com (lamorak.hansenpartnership.com [198.37.111.173])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3DFD33AEF25;
-	Wed, 25 Mar 2026 12:55:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.37.111.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C6C273D47AE
+	for <linux-scsi@vger.kernel.org>; Wed, 25 Mar 2026 12:57:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774443328; cv=none; b=gADSw183VFkGhLOBOtXIf67bDBxXggQ9wJBk7DMWdh1/umTbSnqGqXtxDxcVj7WEdwT8RZ2DG4txSQOwTu964xVhagZs5zId0kpgqOwEatFp1UNsKO4wb6PUuJ96xHEWhEixrt8Z9OOo+aijvlfVWC1FUZzvmEjV9HktjpzM7o0=
+	t=1774443453; cv=none; b=Ts7FxyIIZDBtc/5aHF+jH0zEyVvsz0W83slz8ipejecbLUofnDYLOelfSIqAVe8ubi2l0k7ZEDfZmKi1JgVzgypJ1WAqVn3locjNEXUMcVjcY/y3gb+8VuY4rVaxGXAs4lJfnljxAOBuQo9ZYZao3Bi2/w0O6lkNa55TlWrdWIw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774443328; c=relaxed/simple;
-	bh=xuMl3UoS3aOxv4qE5F07TLtKnKENGm0oucmpqx5ls94=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=Y1HfcfS+ldb4uPgYfsEiEGG+TStCofGfg/2v+6QUjVlMU7RtwNJd2aFBK9NvNT/mvTyHFAVXypCJD2kOUJ2KpTg2WLuzMcC0vhL35NmcsMxgXIUzbb0/8hPA4T6BxI0/+KAJase9yCH/kgEsQ227UjhhSq+gguNNMsw0gbCWZYc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com; spf=pass smtp.mailfrom=HansenPartnership.com; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=U+LqXPVD; arc=none smtp.client-ip=198.37.111.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=HansenPartnership.com
+	s=arc-20240116; t=1774443453; c=relaxed/simple;
+	bh=Ton7OXeU/OGHbpaFMxjuPdZ7xpVrD9m4vETwWgal5OM=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=P5tcea2G/ALAoPmL/P/pp/cT/0b5H06XrU3hyalcnnauexSG7Ksw6mLyIFgOq13NlLM/9XDljtn7gq+SwK9msRnl8EOxlGKmjnWVa35ZR3VTGpH43AXb7rk0FPJRQ5j/0LaMA/mk+vWd49pr6X7ylMxbJcpOGSbfWlAw8UGBxLU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=p5ETOsTf; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=SHkh235G; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="U+LqXPVD"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-	d=hansenpartnership.com; s=20151216; t=1774443324;
-	bh=xuMl3UoS3aOxv4qE5F07TLtKnKENGm0oucmpqx5ls94=;
-	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
-	b=U+LqXPVDABJd0y5snMvnaRbwEGY1wL8T8o/wBoLZRMExTPLUuLL/ptv1v9wCPxExB
-	 ADWb2fYpZ3mnMnqWHOnBkNUbav36K14WRv2veGrvF/IEytN4mOs21MQ2XueOVIzMrL
-	 OeXVcmyfx54ij/Q6/FmTFbEm2vhdS5wkTsoQpe4I=
-Received: from [IPv6:2601:5c4:4300:d341::a774] (unknown [IPv6:2601:5c4:4300:d341::a774])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by lamorak.hansenpartnership.com (Postfix) with ESMTPSA id BEF4E1C02AB;
-	Wed, 25 Mar 2026 08:55:24 -0400 (EDT)
-Message-ID: <f9cd34054a5fe11abb269ad708b4267d73ace99d.camel@HansenPartnership.com>
-Subject: Re: [PATCH 1/1] CD-ROM: Additional LBA bound check
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-To: Felix Busch <felix.busch1@gmx.net>, phil@philpotter.co.uk, 
-	martin.petersen@oracle.com
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-Date: Wed, 25 Mar 2026 08:55:24 -0400
-In-Reply-To: <20260325074401.6530-1-felix.busch1@gmx.net>
-References: <20260325065335.7783-1-felix.busch1@gmx.net>
-	 <20260325074401.6530-1-felix.busch1@gmx.net>
-Autocrypt: addr=James.Bottomley@HansenPartnership.com;
- prefer-encrypt=mutual;
- keydata=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
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.50.3 
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="p5ETOsTf";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="SHkh235G"
+Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 62PBGdxk1626601
+	for <linux-scsi@vger.kernel.org>; Wed, 25 Mar 2026 12:57:31 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	Yh8YD1fe3q6lkUTUbwyQJcm9o7uQqNCFZM2t39dKUzM=; b=p5ETOsTfWmUVZVfl
+	0Uc+mxIM/uGruS00KaZoCe8YlqrhNP7if8zoffLbEnWqlFvPGCAv0vE/xc7r6bFS
+	Iw0/k/O6372oS5ziqufglczIPHkJgDyci+D9+Qvgzc5aTOdW0/WNYQa/TFjKHgem
+	Cq8iA+a+HS+g2wGMc3QwFtTMcDTDlv80zjtoZeNYqtToRWlT8ZUF7G/QK/7sz6cf
+	91K5Rx7Qh1A9zZrlXyIlxRAa0mvd7yDCZLuW4D44wdi79T20jvwwFxU/TbKXiwz1
+	4sWhPGvAzM17k7MMlw+bKzJc0IHKNi6/aayEe3TOZM5CQoqX7sNhP50FDgAuaQPi
+	lTAflw==
+Received: from mail-pf1-f198.google.com (mail-pf1-f198.google.com [209.85.210.198])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4d489whst1-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Wed, 25 Mar 2026 12:57:30 +0000 (GMT)
+Received: by mail-pf1-f198.google.com with SMTP id d2e1a72fcca58-82a855dc82aso4779278b3a.2
+        for <linux-scsi@vger.kernel.org>; Wed, 25 Mar 2026 05:57:30 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1774443450; x=1775048250; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=Yh8YD1fe3q6lkUTUbwyQJcm9o7uQqNCFZM2t39dKUzM=;
+        b=SHkh235GxTXEVEq5KA4W8nXUS9haK8LmkmM+yXLUyoFSkAeVRpW2k1fbuwCxJabMR2
+         I3gHZeaBWhXcSH9+QieGpYlAfTdFMunB2Z34TdlVfi2h4Dhf/6w0u+sCzvyoi885VwFK
+         UjtYTtgiwWANJd54MsoHxGdNS5Qbg4Dye8OZhJ8gLBGOAfPAnsV/iw88cyyNMVwaBN2R
+         h1DIN4mghRaFvVMT33UU4XPNosa1oCJWjvTjjLnfhoZzhY2+b5mkmHfzBvHxnATVZsm/
+         lV9W9xhvkPEoOtvobFfZ4LKkTBUBrBRahZ7lThWz+HsAqW0pXRo1TmTQ8GLU/9mzbtkS
+         M6hw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1774443450; x=1775048250;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=Yh8YD1fe3q6lkUTUbwyQJcm9o7uQqNCFZM2t39dKUzM=;
+        b=KbGp9eE+oXcsYzed9/7vREKBbdep6gqRXNaOOVl3xa8tRzXmEA7Jmkafq74ZyXRFBx
+         lUMSEK/LxysmsiOTdM0tyqeLX5ZdrDFa3EKlUTSV216aCktqXp+H7mVv0KhDSspxMZ5K
+         odqUA+TpIkGrnpSOcLWnS7DrHceA7ExQGDoWpBjQ8fTzVILzWXo9YkiYrdblCy43+ONs
+         sUjd3edn/mG0V1kt640zVeSLcOX2HOYp9MC5P6C3LpxdPb2mQNVznNfEz4NgSJxWH7we
+         BtPAONEgzegr7k6fNqyjfVy/tFy+EOAi6xBDBimwzo/azx72EP4w3cBuY+HXotybWqGD
+         nfGA==
+X-Forwarded-Encrypted: i=1; AJvYcCU+Nw9BU9oBw3A6PwUDAve2cpfZRvs2zjkGYWgv/f+zIYoGJP03jC+64RZZQODxvL/mQvXvAmNSa/nJ@vger.kernel.org
+X-Gm-Message-State: AOJu0YwLS1SXl0nX9dB22QQj4EpEcMfHYvY3nNB7rXZABc+ILGJ9KKPy
+	P8+pglFMWH3XWwM9ZXP75BnmMdbg1WItazWPQGhdtDErFyG0zjFrawqB5iBd0dGdJ78021rlh8x
+	B4pJUsKIt/xbEZ2fqPsTbFpZseVqaJkmrpqh0IC7fnX3kRgFiMX4zMkDtJMpf71pjheGQiJEL
+X-Gm-Gg: ATEYQzxn/jswPpkiKEPdyJC42VtKtUGKbT3src+6QauOaqOfkBbvw4qHVe2qXqNaqo5
+	4y4ZfN4b+C90K5ZS3CUSXL5PPOSswkxlPJ1ySjWaUCWN8d8fm4UmILzY5A7qsVh9l/PYqPUIpeK
+	K0g4GcVclsnEeUNNlfC0qWnNU2AtnA/J5Qhulqyd5grYU8zA4gj5ccTCg5zuBkDiXAoDsL8P00A
+	sA702jLRtXt+7DExVu1xISVex1AKu4VhYa9VkZ6DHop5quzg3vC4zXTxDzsGU3DQXYty5nUVeNW
+	oTYuh2hApMedHo8Hx8fvAi0ZDdnOop1dDEgt8fC0zGnfNTw9BphP4+iSLjunlun0OgA5tqWelei
+	PSNFm4dqF4B5UNJ/7dyogLiPHiV5fyR3Jg3Q2
+X-Received: by 2002:aa7:88c7:0:b0:81f:3afe:281e with SMTP id d2e1a72fcca58-82c6de8c9damr3447038b3a.3.1774443449589;
+        Wed, 25 Mar 2026 05:57:29 -0700 (PDT)
+X-Received: by 2002:aa7:88c7:0:b0:81f:3afe:281e with SMTP id d2e1a72fcca58-82c6de8c9damr3446996b3a.3.1774443449089;
+        Wed, 25 Mar 2026 05:57:29 -0700 (PDT)
+Received: from work ([120.60.74.210])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-82c66487634sm4699158b3a.29.2026.03.25.05.57.26
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 25 Mar 2026 05:57:28 -0700 (PDT)
+Date: Wed, 25 Mar 2026 18:27:24 +0530
+From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+To: Vladimir Oltean <vladimir.oltean@nxp.com>
+Cc: James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com,
+        linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] scsi: ufs: qcom: Drop the PHY power_count check
+Message-ID: <vv7uzpybgyea7qmwryslxgfv445d5o5bx7wqgfjxxggechowwx@zi3g66yxgmzz>
+References: <20260325120122.265973-1-manivannan.sadhasivam@oss.qualcomm.com>
+ <20260325122922.wzihturkkfpr73qn@skbuf>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260325122922.wzihturkkfpr73qn@skbuf>
+X-Proofpoint-GUID: ZOTHJ2Byl4uSZlVJ5SA-kqgFC2VU0iCp
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzI1MDA5MiBTYWx0ZWRfX+bJiqKqZ5+i/
+ qWmt/Lv1Oic1jGI2DMPjQXJUN7HHxmx16ijk0DAIIWr5C9HktATlDovMWwsZhAjF+2bGPcfQRNI
+ Mhdv7ZDO2mS3MZ41CaTnkOsKVHRYDM/ZI11iKPEJaPLI4g2h8GcrJ0WIyLTjt2qBmL3FekwSY6V
+ bv8el7klug+QQD1WcLvv/1uL1Kh9WbDRIXvOlgwnovdIhtu6YAAgE/q33N8y2+Gf2DEhSPAjohR
+ WrdSYfe6YNCurb/x3y7Hhu+aoMm7a8dN0Q64Mg8VcEt7RxhWBRu+XfYo1yNCcgIchWe1XThW3MG
+ FJnVix0SDYZC/cOPXuJ8sfZbs8cUYnyFUFxXGPb33myrJerGyIY6r4dh50KQ1Wv2vEekCxsrTyY
+ qBF+D2GcT1DwqZDqg8JTX/OxFG9Gu+ApDBd3zNdpzgXQ+v6Jv1PxQCN1BbZoUuc9ovqKefVePl5
+ 53Gp1wzI9Gj/e1hpLBw==
+X-Authority-Analysis: v=2.4 cv=e/gLiKp/ c=1 sm=1 tr=0 ts=69c3dbba cx=c_pps
+ a=m5Vt/hrsBiPMCU0y4gIsQw==:117 a=DfnuZq+CPLWApegUcJV09w==:17
+ a=IkcTkHD0fZMA:10 a=Yq5XynenixoA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=gowsoOTTUOVcmtlkKump:22
+ a=8sJpPIWwF3nvvNpkCuQA:9 a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
+ a=IoOABgeZipijB_acs4fv:22
+X-Proofpoint-ORIG-GUID: ZOTHJ2Byl4uSZlVJ5SA-kqgFC2VU0iCp
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-03-25_04,2026-03-24_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ lowpriorityscore=0 bulkscore=0 clxscore=1015 impostorscore=0 adultscore=0
+ suspectscore=0 malwarescore=0 spamscore=0 priorityscore=1501 phishscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2603050001 definitions=main-2603250092
 
-On Wed, 2026-03-25 at 08:44 +0100, Felix Busch wrote:
-[...]
-> mmc_ioctl_cdrom_read_data(struct cdrom_device_info *cdi,
-> =C2=A0	if (copy_from_user(&msf, (struct cdrom_msf __user *)arg,
-> sizeof(msf)))
-> =C2=A0		return -EFAULT;
-> =C2=A0	lba =3D msf_to_lba(msf.cdmsf_min0, msf.cdmsf_sec0,
-> msf.cdmsf_frame0);
-> -	/* FIXME: we need upper bound checking, too!! */
-> -	if (lba < 0)
-> +	nr_blocks =3D cdo->get_capacity(cdi);
+On Wed, Mar 25, 2026 at 02:29:22PM +0200, Vladimir Oltean wrote:
+> On Wed, Mar 25, 2026 at 05:31:22PM +0530, Manivannan Sadhasivam wrote:
+> > phy_power_off() can safely be called even when PHY is not powered on. So
+> > drop the PHY power_count check.
+> 
+> Sorry, do you mind writing a more elaborate explanation _why_ you think
+> that phy_power_off() can safely be called even when the PHY is not
+> powered on? If 0, the power_count would become negative after
+> phy_power_off(), and a subsequent phy_power_on() would merely bump it
+> back to 0, thereby not calling into the driver's qmp_ufs_power_on().
+> If there is a regulator assigned to phy->pwr, this would see a call to
+> regulator_disable() with no prior call having been made to regulator_enable().
+> At the very least you'd want to explain in the commit message why that
+> is something to be desired, so as to give reviewers confidence that
+> conscientious thought has been given to the change.
 
-Since you only give sr.c a get_capacity method, doesn't this crash for
-every other CD backend?
+Sorry, I just rushed through it. So far in my tests, phy_power_on() gets called
+first, before phy_power_off() in ufs_qcom_power_up_sequence(), so I mistakenly
+thought that the clk, regulator disable APIs will silently bail out if not
+enabled earlier. But I was wrong as they will just scream out loudly with
+WARN() and that's too bad.
 
-[...]
+Though I couldn't trigger that in my tests, I'm still not 100% sure about that.
+So let's drop this patch and proceed with your state tracking patch instead.
 
-> @@ -782,7 +792,7 @@ static int get_sectorsize(struct scsi_cd *cd)
-> =C2=A0			sector_size =3D 2048;
-> =C2=A0			fallthrough;
-> =C2=A0		case 2048:
-> -			cd->capacity *=3D 4;
-> +			//cd->capacity *=3D 4;
-> =C2=A0			fallthrough;
+Apologies for the noise!
 
-You mentioned this in the cover letter.  It's because of the
-		set_capacity(cd->disk, cd->capacity); below.  The block layer always spea=
-ks512bytesectorsforcapacities.Sothiswillbeabreakingchangeforlargesectordevi=
-cesbecausethey'llappearfourtimessmallertotheblocklayer.
+- Mani
 
-I suppose I'm also a bit hazy about the actual justification.  Today if
-you send an over capacity request via the ioctl, you'll get an error
-from the device.  If we apply the patch you'll get a -EINVAL instead.=20
-So you get an error in both cases (i.e. the macro behaviour doesn't
-change, so it's hard to justify why we need the patch) but a different
-one, which might confuse some tools ... have you checked?
-
-The cover letter says "improve execution performance" but I can't see
-how introducing an indirect call into the read path can do that.  I
-can't actually see why you need an indirect call since the capacity
-doesn't change except if the device is writeable and rewritten.
-
-Regards,
-
-James
-
-
+-- 
+மணிவண்ணன் சதாசிவம்
