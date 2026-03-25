@@ -1,37 +1,38 @@
-Received: from mout.gmx.net (mout.gmx.net [212.227.17.22])
+Received: from mout.gmx.net (mout.gmx.net [212.227.15.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 799A32EBB86;
-	Wed, 25 Mar 2026 06:54:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.227.17.22
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F441379EDF;
+	Wed, 25 Mar 2026 07:44:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.227.15.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774421678; cv=none; b=IT+lgyVZeQeppFkcRSlVt4zlTemcoq3VLwvdLEcV5r3CP6FItkx1siVNjbOHYWxPChQHjNdH7qZlgJvZGFIKJOjjILipHviAPlh8xIAVwWiSEvko4NN8A2NMARLpj2h0WxeZJBcwpxJvwEePmdtLkugMDLZWZZ6+aFZ+vpbDNik=
+	t=1774424700; cv=none; b=YfiXfTHxw8P+MV+zEJnLyu3KsLJrKaKvVDo1dM/DtnlkgYLhWNu78Es2DTfnSDkU8Te/xgpLYj7CxCJGfq1uF77JJMOg4/ywlPMgydldwTfFu5WC8kmzEESh11pI9p7W6EcTunqu1Km08ZyWeMuo4Wfnrd7LBSMdPRZzAR6loSw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774421678; c=relaxed/simple;
-	bh=7yrgxLgcofjYfXPB0dzHihqRPi878IL1CHOcBcZqNw0=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=TXwI46Hy10G208pvzVhUj2F5ol+nb83z+UoniIWF8F0AbjiGSaaKivJBHoBJvoVL2HArf67zsvZAutjvw2cRd2JYnTph3OrL00Nb4vMdGgOySxHEGI6A2/sdVSggLqaqXYphj+/RfmfgytKjSw73gK5mqGi/J08fOkvkfzAv3Tw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=gmx.net; spf=pass smtp.mailfrom=gmx.net; dkim=pass (2048-bit key) header.d=gmx.net header.i=felix.busch1@gmx.net header.b=tIhlwlqK; arc=none smtp.client-ip=212.227.17.22
+	s=arc-20240116; t=1774424700; c=relaxed/simple;
+	bh=TU/OFqzjt4dvTkCR4pHt2wjtA/+vw6HgDiM6NHHMtpI=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=BeP0eZxAKglhXtNuIDAEBggQ54YK3OMCUzoS2M1PT5plCsTXV321Jj3zxHB4N9xLPV4pCEygUVlM088m9Flibg1sWs1OgchXnoFCeeaxzyeiUwZ8F4wTUTrsQ82VHYLTnRQDHa0zXl95mmRBE6sXQ/hV7f+qPMsJh5M5MKWcSSE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=gmx.net; spf=pass smtp.mailfrom=gmx.net; dkim=pass (2048-bit key) header.d=gmx.net header.i=felix.busch1@gmx.net header.b=js1k9bRA; arc=none smtp.client-ip=212.227.15.18
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=gmx.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmx.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmx.net header.i=felix.busch1@gmx.net header.b="tIhlwlqK"
+	dkim=pass (2048-bit key) header.d=gmx.net header.i=felix.busch1@gmx.net header.b="js1k9bRA"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmx.net;
-	s=s31663417; t=1774421674; x=1775026474; i=felix.busch1@gmx.net;
-	bh=NyX+n5c4AwJMEgI1t6DOX5kHXsJWOkKh7nPsI/m0jFI=;
-	h=X-UI-Sender-Class:From:To:Cc:Subject:Date:Message-ID:
-	 MIME-Version:Content-Type:Content-Transfer-Encoding:cc:
+	s=s31663417; t=1774424690; x=1775029490; i=felix.busch1@gmx.net;
+	bh=NYtmW0+encGN9QePloZpAsaAIeYVTNXZPqT7gpTAWzM=;
+	h=X-UI-Sender-Class:From:To:Cc:Subject:Date:Message-ID:In-Reply-To:
+	 References:MIME-Version:Content-Transfer-Encoding:cc:
 	 content-transfer-encoding:content-type:date:from:message-id:
 	 mime-version:reply-to:subject:to;
-	b=tIhlwlqK0ZmV6X09n7N12YvTi3eerMW4g1iVfhuKMKczwR3IwicHFjiIdjRjxnqP
-	 dtBMBWpzbav7v72jcOtDdAZtb9Qyyh0jVMqJ+n8r6hz3J8oiz9li1KHSvIP3SW5CY
-	 AK/n7fh0K/srvZTF/GCrB/yk9qjiy0kDkZjFe5R+RpfCDg2sqfVwgeVvRNnZCVhvE
-	 SnvYk7DEI5pYGjMZY8a3iCJro6RUEcwTjGKl3UBaraG+o1md/vx8o/HQpzqJxk4pb
-	 PFfbroV+IMrlvJ+XIYS+C8vaXuH7qKdNicDvaCsGQM8jUK5fA67iZWBNf5rvevPjw
-	 /kBwWu11vbLJsZrEHQ==
+	b=js1k9bRA/exduZMJ3KISIJ9QZSwAkKtXffNczslyaQ2oU+xSKMyVj8R4XsgK9gPs
+	 lHyI1l36zSkrwqRl7oqmHCdc5cxf7CJu6jV+zBwVEtbzKrX6R/WoLtjkdRLVFGJ84
+	 yh1lNVmZjLECp0bjQxPCX0nY1GYfA//WyedHuqoAOujtDfX1H1WLvRGoukhDKZxNe
+	 wFyh0M8HJCGHvcnPy2NJV7LvteFjCxQuDJxz8QzFMPDJZIc+meGIVBB+8vskt47hB
+	 X94bCprd4tcZ1kz6kny1aW5uHA0RM/JyZaCpW34hhMAvD9dK0yKBi1ob2HX+n/NPc
+	 3NjXh9c9jq7FyowRWg==
 X-UI-Sender-Class: 724b4f7f-cbec-4199-ad4e-598c01a50d3a
-Received: from client.hidden.invalid by mail.gmx.net (mrgmx104
- [212.227.17.168]) with ESMTPSA (Nemesis) id 1N6KYb-1vTbwh0OZV-00y4rO; Wed, 25
- Mar 2026 07:54:34 +0100
+Received: from client.hidden.invalid by mail.gmx.net (mrgmx004
+ [212.227.17.190]) with ESMTPSA (Nemesis) id 1MLzFr-1vnV3L0zHl-00Oep8; Wed, 25
+ Mar 2026 08:44:50 +0100
 From: Felix Busch <felix.busch1@gmx.net>
 To: phil@philpotter.co.uk,
 	James.Bottomley@HansenPartnership.com,
@@ -39,161 +40,201 @@ To: phil@philpotter.co.uk,
 Cc: linux-kernel@vger.kernel.org,
 	linux-scsi@vger.kernel.org,
 	Felix Busch <felix.busch1@gmx.net>
-Subject: [PATCH 0/1] *** CD-ROM: LBA bound check in mmc_ioctl_cdrom_read_data ***
-Date: Wed, 25 Mar 2026 07:53:34 +0100
-Message-ID: <20260325065335.7783-1-felix.busch1@gmx.net>
+Subject: [PATCH 1/1] CD-ROM: Additional LBA bound check
+Date: Wed, 25 Mar 2026 08:44:01 +0100
+Message-ID: <20260325074401.6530-1-felix.busch1@gmx.net>
 X-Mailer: git-send-email 2.53.0
+In-Reply-To: <20260325065335.7783-1-felix.busch1@gmx.net>
+References: <20260325065335.7783-1-felix.busch1@gmx.net>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-X-Provags-ID: V03:K1:OPs73uUpOk40Aw94CSWc7nHworUIEg5BqFSuMVSYcjZshFDDMjj
- sVsVAqFdgtkCSFQdM5YbeFvNCoxktNJiBqmCWFOfMzVRJtcH1duSLKqMyPQ6EuHVC2tIx13
- 9EwJnORtc994pWMsdnVbUoc+RJbd/w7FLeLFJTc09/PRPm3aBZDARIFXMkRLOUsgcxHFwvo
- C2hEeo0Ixo84zpWOcgrTQ==
+X-Provags-ID: V03:K1:t90Lp0noiEB9UPn3AP2M8D6tcFcHZgBJKjXKrk4zDhYUpGySjFy
+ IWbFQuO/Pl1mJuZTfSSiyDP3GBN7yiUb0R4Exw+IqPozBS60DrlRMusrDadhtXOhfu5mcZF
+ csSB8+iijVcJXtgcUGWiVWfuDxJR+fA1kl8TIxuHOl66pfi4NEjVmyRljDcbxjrv7LM7Gss
+ DN2Hal+69HyyqzYLwvVGw==
 X-Spam-Flag: NO
-UI-OutboundReport: notjunk:1;M01:P0:rpTGaBuh/3I=;bAaLkDbcc+qxcvFnnTRLVE4EjOn
- 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
+UI-OutboundReport: notjunk:1;M01:P0:pFO+QfcGHAc=;zdao84UdwXEFeBFe70W2Qw7d/Ty
+ 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
 
-This introduces an upper-bound check for the Logical Block Address (LBA) i=
-n mmc_ioctl_cdrom_read_data=20
-within the CD-ROM driver. The change is motivated by two main reasons: fir=
-st, there is currently no=20
-upper-bound check in place; second, adding this check can help improve exe=
-cution performance.
+Upper bound check for the logical block address
+in mmc_ioctl_cdrom_read_data() of the CD-ROM driver.
+This prevents trying to read a block when the LBA is
+greater than the number of available blocks.
 
-There has already been a prior discussion on this topic about this check i=
-n mmc_ioctl_cdrom_read_data,=20
-but this patch follows a slight different approach, due a missunderstading=
- in the SCSI-2=20
-documentation. (https://www.staff.uni-mainz.de/tacke/scsi/SCSI2-14.html)
+Signed-off-by: Felix Busch <felix.busch1@gmx.net>
+=2D--
+ drivers/cdrom/cdrom.c |  7 +++++--
+ drivers/scsi/sr.c     | 12 +++++++++++-
+ include/linux/cdrom.h |  2 ++
+ 3 files changed, 18 insertions(+), 3 deletions(-)
 
-Blocks are addressed here using a zero-based integer index. Therefore, it =
-should be possible to check,=20
-that the LBA falls within the range 0 to N =E2=88=92 1, where N represents=
- the total number of available blocks.
-
-To get the number of blocks in mmc_ioctl_cdrom_read_data, a small inline f=
-unction
-has been added to access the capacity field of the scsi_cd struct, which a=
-lready contains the
-size in blocks available on the CD-ROM. The main reason for this addition =
-is, that
-it might be more performant accessing the value there, rather than recalcu=
-lating the number=20
-of blocks again in mmc_ioctl_cdrom_read_data. Maybe there's another possib=
-ility of doing that,=20
-which I'm not aware of yet.
-
-While examining the CD-ROM capacity, I noticed, that get_sectorsize change=
-s the capacity value
-by multiplying the current set value with four.
-```
-cd->capacity *=3D 4;
-```
-On the tested CD-ROM hardware, keeping this multiplication resulted in an =
-incorrect CD-ROM capacity being reported.
-With the line disabled, the capacity appears to be accurate. However, I'm =
-not 100% sure whether this adjustment
-may affect other hardware that rely on the original behavior.
-
-One benefit of having an upper bound check for the LBA might be the execut=
-ion duration of mmc_ioctl_cdrom_read_data.
-With this check applied, mmc_ioctl_cdrom_read_data took an average of 0.22=
-17 milliseconds, compared to 6.006 milliseconds
-without the check. This performance improvement was observed specifically =
-when the LBA exceeded the number of available
-blocks, and the CD-ROM contained actual written data.
-
-Thank you for your time.
-
-Felix Busch (1):
-CD-ROM: Additional LBA bound check
-
-drivers/cdrom/cdrom.c |  7 +++++--
-drivers/scsi/sr.c     | 12 +++++++++++-
-include/linux/cdrom.h |  2 ++
-3 files changed, 18 insertions(+), 3 deletions(-)
-
+diff --git a/drivers/cdrom/cdrom.c b/drivers/cdrom/cdrom.c
+index fc049612d6dc..cc0a6c0ae9e7 100644
+=2D-- a/drivers/cdrom/cdrom.c
++++ b/drivers/cdrom/cdrom.c
+@@ -2926,6 +2926,8 @@ static noinline int mmc_ioctl_cdrom_read_data(struct=
+ cdrom_device_info *cdi,
+ {
+ 	struct scsi_sense_hdr sshdr;
+ 	struct cdrom_msf msf;
++	const struct cdrom_device_ops *cdo =3D cdi->ops;
++	u64 nr_blocks;
+ 	int blocksize =3D 0, format =3D 0, lba;
+ 	int ret;
+=20
+@@ -2944,8 +2946,9 @@ static noinline int mmc_ioctl_cdrom_read_data(struct=
+ cdrom_device_info *cdi,
+ 	if (copy_from_user(&msf, (struct cdrom_msf __user *)arg, sizeof(msf)))
+ 		return -EFAULT;
+ 	lba =3D msf_to_lba(msf.cdmsf_min0, msf.cdmsf_sec0, msf.cdmsf_frame0);
+-	/* FIXME: we need upper bound checking, too!! */
+-	if (lba < 0)
++	nr_blocks =3D cdo->get_capacity(cdi);
++	/* Lower and upper bound check for logical block address. */
++	if ((lba < 0) || (lba > nr_blocks - 1))
+ 		return -EINVAL;
+=20
+ 	cgc->buffer =3D kzalloc(blocksize, GFP_KERNEL);
+diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
+index 7adb2573f50d..a056c72341c4 100644
+=2D-- a/drivers/scsi/sr.c
++++ b/drivers/scsi/sr.c
+@@ -120,6 +120,8 @@ static int sr_packet(struct cdrom_device_info *, struc=
+t packet_command *);
+ static int sr_read_cdda_bpc(struct cdrom_device_info *cdi, void __user *u=
+buf,
+ 		u32 lba, u32 nr, u8 *last_sense);
+=20
++static u64 sr_get_nr_blocks(struct cdrom_device_info *cdi);
++
+ static const struct cdrom_device_ops sr_dops =3D {
+ 	.open			=3D sr_open,
+ 	.release	 	=3D sr_release,
+@@ -134,6 +136,7 @@ static const struct cdrom_device_ops sr_dops =3D {
+ 	.audio_ioctl		=3D sr_audio_ioctl,
+ 	.generic_packet		=3D sr_packet,
+ 	.read_cdda_bpc		=3D sr_read_cdda_bpc,
++	.get_capacity		=3D sr_get_nr_blocks,
+ 	.capability		=3D SR_CAPABILITIES,
+ };
+=20
+@@ -142,6 +145,13 @@ static inline struct scsi_cd *scsi_cd(struct gendisk =
+*disk)
+ 	return disk->private_data;
+ }
+=20
++static inline u64 sr_get_nr_blocks(struct cdrom_device_info *cdi)
++{
++	struct scsi_cd *cd =3D scsi_cd(cdi->disk);
++
++	return cd->capacity;
++}
++
+ static int sr_runtime_suspend(struct device *dev)
+ {
+ 	struct scsi_cd *cd =3D dev_get_drvdata(dev);
+@@ -782,7 +792,7 @@ static int get_sectorsize(struct scsi_cd *cd)
+ 			sector_size =3D 2048;
+ 			fallthrough;
+ 		case 2048:
+-			cd->capacity *=3D 4;
++			//cd->capacity *=3D 4;
+ 			fallthrough;
+ 		case 512:
+ 			break;
+diff --git a/include/linux/cdrom.h b/include/linux/cdrom.h
+index b907e6c2307d..406e6f4a55bb 100644
+=2D-- a/include/linux/cdrom.h
++++ b/include/linux/cdrom.h
+@@ -91,6 +91,8 @@ struct cdrom_device_ops {
+ 			       struct packet_command *);
+ 	int (*read_cdda_bpc)(struct cdrom_device_info *cdi, void __user *ubuf,
+ 			       u32 lba, u32 nframes, u8 *last_sense);
++	/* Get size in blocks */
++	u64 (*get_capacity)(struct cdrom_device_info *cdi);
+ /* driver specifications */
+ 	const int capability;   /* capability flags */
+ };
 =2D-=20
 2.53.0
 
