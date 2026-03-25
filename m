@@ -1,123 +1,106 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-dl1-f41.google.com (mail-dl1-f41.google.com [74.125.82.41])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 155DC3A63EB;
-	Wed, 25 Mar 2026 14:13:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C7472BE7D1
+	for <linux-scsi@vger.kernel.org>; Wed, 25 Mar 2026 15:15:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.41
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774448000; cv=none; b=ov0TKir5/ohee+hllg5tLVHwEcq4iYUbaAXtFph1M7JjNE6FRtzC7aD9BbwmdPa8+/x+lcqxQEYKd1nP8nlgJCUKTI0wHDIIFepRSsyujvE9sTpeetRtQETTp8VPt4tHKWtrpJFCydUAmrGJZLfVkrFhpy2HZ7zxAL+l6qg1XVg=
+	t=1774451724; cv=none; b=WUneBA+TC2X1PTFf6IBtCZZLxMoj0bfYllYsNn65jnbcqerxYK0KwlscC/TS3LdcptFNYuAEHVyFEkLQHiBhYBmBwjFOrjo0ZwC7uMLfT3QH899Pe8Wx197pn3Mc1lqENtyP4mNXO1QE4xeis6KxL246slEN6NWsQEGsPSimtUQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774448000; c=relaxed/simple;
-	bh=O4KR79NA3w5wXHTjCgl3Y/eCUkwrrxsmxAb2QYX2GZc=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=opr6kouaeVF+z1GK4JEthZkM4BqFIEaUdFdyIc8uGXNloSOd/gcRQ/VnD+Ulvs8MWUUXgjZWfK5IVHrnHMYa7cXIp8ONh2goLvYK3jdNolmqtE/v34K4uv3uENpyGMTYrToseGI5vJGBKAaKG+1l3Lrws9PJtI4Rqsk86K4xnyw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=THeeRJa+; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1774451724; c=relaxed/simple;
+	bh=rzE1gLTO6zGUYTp6p5u2QWMK2Vx18lZCE9BT58MW540=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=emTdnqd3CvYMxR1Mi0N2xTiny0JGBOweGdRiNGLB7MZM/Rqhq/rltdYpDxcQDo2/L2/H392if6ij7AFI2rH4yhaZj3L4fyWHNqGBaAZF8kVqbzuS0af2fKDWjgyCY70b9nIlPTXTPK5SmenS8f+YLpSTpOV3njmrHlASrRJlIUo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=purestorage.com; spf=fail smtp.mailfrom=purestorage.com; dkim=pass (2048-bit key) header.d=purestorage.com header.i=@purestorage.com header.b=PlDM0jCc; arc=none smtp.client-ip=74.125.82.41
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=purestorage.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=purestorage.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="THeeRJa+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A2230C116C6;
-	Wed, 25 Mar 2026 14:13:11 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1774447999;
-	bh=O4KR79NA3w5wXHTjCgl3Y/eCUkwrrxsmxAb2QYX2GZc=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=THeeRJa+fvQrbUlWi1AzdB4xesJwfM/iMX3IW08X/F2tnmO2Sq9kSk/X2JbnvBwo+
-	 iPnryERXRmcoJKHw/RDO7vBm9UnM6P4u2a/TcWW6nfb0TUYORcveAXebJPr293zK4g
-	 +Ias1QKlEaBi/7zTZtA8JdEJ1rJD+alcOdsXxMvOub3PzN5vN6Q+XGM1CXkMhPMjr2
-	 Csb2YPWXjwzAvXrWoN0WUbuDkR+1/J4hY4VMkUm1BHPU75vVOYy14wxbfq7tTP5S66
-	 vlraXxz0FCKhIq2kJIQumHP3qwlqv9CrN5md/W0QopKDjxp/BTGH75Ssk1SU3JAold
-	 B+q4e2Bddgs5Q==
-Message-ID: <92042416-251e-43bf-b5a7-cfa9c826d020@kernel.org>
-Date: Wed, 25 Mar 2026 15:13:09 +0100
+	dkim=pass (2048-bit key) header.d=purestorage.com header.i=@purestorage.com header.b="PlDM0jCc"
+Received: by mail-dl1-f41.google.com with SMTP id a92af1059eb24-12a71ade78cso3242514c88.0
+        for <linux-scsi@vger.kernel.org>; Wed, 25 Mar 2026 08:15:23 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=purestorage.com; s=google2022; t=1774451722; x=1775056522; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=l7XC/XueJjEED5mEKGtofARfVp5jK0YMd5G18Mcoqus=;
+        b=PlDM0jCc0mpFUGpFy9jHqmb3aDdkhnuZtBz7M2C7m9xfk52F92LHz/zEInl5Ho4HQS
+         G238rurJIVC82cmL8XpDAyuBgnjpg5S8Un6GUkNBl8cyf91D+eThHjPObdYFDgURAZyx
+         tHbWmlgUSOQlHZn6cebWR+EhBaemuw3T2tRkHHyU+LWkDTToVDjblznDYErIqFCfTaqr
+         ZboZYMxEF05wJu5xNe1S5QH474NW1tIK1JnIHjMCS722m4SyIZDNUCxI69fmRglKzjcc
+         w7DxVQfEswEGWo2L/n6Ri3TlIbjQj3XPybYjlD6fosWmKkPSI7afiCYNpxj5mbaZ7NAA
+         mHFw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1774451722; x=1775056522;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=l7XC/XueJjEED5mEKGtofARfVp5jK0YMd5G18Mcoqus=;
+        b=mr1oAecc9MMvqmIJ/VTk4KwOuwcBWWm4u6DK6tIXQ22VQazcz5HueUo69FnU/LupSJ
+         8cCWgCnWMjbbuaOSx4pXW2P1taWBMcLR0w8WinubZrzXH9kXZAU6OMnqJIpDL2NMzY7J
+         15LsesK836vAWrqXlnJDdnUt+PZPUvfNPLLxPkZjr19U5tR8ILFzeMMLit08miF1xFmL
+         p728lut/HLTUjDLINtcA4gpnbjiDuBwreIVPc8vtgUJNAqs7OGP2ZYT1gGzaImmAkv46
+         csNMSaZhImijKoioRz94qRdMyM4vOAyw1y/HfHN4kkTXfAqi/0PfFJH1sMobRntBnzoR
+         sy/Q==
+X-Gm-Message-State: AOJu0YxwU8mng6NERJllcvxA3vRMKF6vX4q1xeFgAHQx1mJvVwuNnO8r
+	WMTfsgbuR/ooYBsiTP0wfZNywcpuAlKoaAKBu5zE/c+qGWkBqqoldxuwGPQtTEF+3qiSHyl+yfo
+	TjY4j0Uj9OL4NX8cjyOXISy9nPr39xm/zAvtWlpjxSYN2x9NvkoB9b/axmG1toXu9fDc5tI61x6
+	nBgjuyqXSxUvodfqpuKA+UuOgVVKat61XrpwtTSRcwty5NOYk=
+X-Gm-Gg: ATEYQzxSO+dMLWlzl2lOJhl2NC+bJoxJDxVBh7najvJ2gGioMRuoenXupuPMiFn5zLf
+	IaxHEPUyg12BY9dsyIo7+NEyj5RXNLZp/OQYCG5ax/429anJOrGw4obHqbtYbGaNL3+OMH3dtpX
+	XU1Cw0gJFc3Rwo4nPeC+p3ZMFpNWeO+RtaGy3w559f/ryVRvBmCKyAy4iyerBVh7QE1+2+Mtxh+
+	Ytutnq7g5epOdBkgtgOrm8fhLDBsNcGzR5RvlQRtTK9tK8RnzF6fRqMdzrckwmVB2Kejm0lMyYB
+	PUL+OtCsw7fjyK6LCOgAbhS6yIeZE5DJ6oJb+fBM/U9Okd3KWIOuKZC4jGKLwJz+maqHrnKp8Ag
+	wbTb+g9ScDEh5z+pJM6DBsi/brUkGun6mNrWneMqGnlCcbSXcglJUvW7TQkmNZftPs9yweekv4g
+	Qs3if+4OcMKo/W+BNDg0rBBSEEq9lwzNWeA+iEek54esxuDf4e6MClmoMa/aJcyvRjgVidnGd46
+	3/fkSTK2Cewh7LtuqcPQvbg4t9mpNHfI8axsbBxJZQk8ufuIKutWi4=
+X-Received: by 2002:a05:7022:6ba0:b0:128:dab3:f528 with SMTP id a92af1059eb24-12a96e49010mr1864700c88.8.1774451721706;
+        Wed, 25 Mar 2026 08:15:21 -0700 (PDT)
+Received: from brian--MacBookPro18.purestorage.com ([136.226.65.81])
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-12aa7274231sm46740c88.8.2026.03.25.08.15.20
+        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
+        Wed, 25 Mar 2026 08:15:21 -0700 (PDT)
+From: Brian Bunker <brian@purestorage.com>
+To: linux-scsi@vger.kernel.org,
+	hare@suse.com
+Cc: Brian Bunker <brian@purestorage.com>
+Subject: [PATCH v2 0/1] scsi: scsi_dh_alua: use device timeout instead of constant
+Date: Wed, 25 Mar 2026 08:15:14 -0700
+Message-ID: <20260325151515.18688-1-brian@purestorage.com>
+X-Mailer: git-send-email 2.52.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4 19/21] uio: replace deprecated mmap hook with
- mmap_prepare in uio_info
-Content-Language: en-US
-To: "Lorenzo Stoakes (Oracle)" <ljs@kernel.org>,
- Andrew Morton <akpm@linux-foundation.org>
-Cc: Jonathan Corbet <corbet@lwn.net>, Clemens Ladisch <clemens@ladisch.de>,
- Arnd Bergmann <arnd@arndb.de>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- "K . Y . Srinivasan" <kys@microsoft.com>,
- Haiyang Zhang <haiyangz@microsoft.com>, Wei Liu <wei.liu@kernel.org>,
- Dexuan Cui <decui@microsoft.com>, Long Li <longli@microsoft.com>,
- Alexander Shishkin <alexander.shishkin@linux.intel.com>,
- Maxime Coquelin <mcoquelin.stm32@gmail.com>,
- Alexandre Torgue <alexandre.torgue@foss.st.com>,
- Miquel Raynal <miquel.raynal@bootlin.com>,
- Richard Weinberger <richard@nod.at>, Vignesh Raghavendra <vigneshr@ti.com>,
- Bodo Stroesser <bostroesser@gmail.com>,
- "Martin K . Petersen" <martin.petersen@oracle.com>,
- David Howells <dhowells@redhat.com>, Marc Dionne <marc.dionne@auristor.com>,
- Alexander Viro <viro@zeniv.linux.org.uk>,
- Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>,
- David Hildenbrand <david@kernel.org>,
- "Liam R . Howlett" <Liam.Howlett@oracle.com>, Mike Rapoport
- <rppt@kernel.org>, Suren Baghdasaryan <surenb@google.com>,
- Michal Hocko <mhocko@suse.com>, Jann Horn <jannh@google.com>,
- Pedro Falcato <pfalcato@suse.de>, linux-kernel@vger.kernel.org,
- linux-doc@vger.kernel.org, linux-hyperv@vger.kernel.org,
- linux-stm32@st-md-mailman.stormreply.com,
- linux-arm-kernel@lists.infradead.org, linux-mtd@lists.infradead.org,
- linux-staging@lists.linux.dev, linux-scsi@vger.kernel.org,
- target-devel@vger.kernel.org, linux-afs@lists.infradead.org,
- linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
- Ryan Roberts <ryan.roberts@arm.com>
-References: <cover.1774045440.git.ljs@kernel.org>
- <157583e4477705b496896c7acd4ac88a937b8fa6.1774045440.git.ljs@kernel.org>
-From: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
-In-Reply-To: <157583e4477705b496896c7acd4ac88a937b8fa6.1774045440.git.ljs@kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On 3/20/26 23:39, Lorenzo Stoakes (Oracle) wrote:
-> The f_op->mmap interface is deprecated, so update uio_info to use its
-> successor, mmap_prepare.
-> 
-> Therefore, replace the uio_info->mmap hook with a new
-> uio_info->mmap_prepare hook, and update its one user, target_core_user,
-> to both specify this new mmap_prepare hook and also to use the new
-> vm_ops->mapped() hook to continue to maintain a correct udev->kref
-> refcount.
-> 
-> Then update uio_mmap() to utilise the mmap_prepare compatibility layer to
-> invoke this callback from the uio mmap invocation.
-> 
-> Signed-off-by: Lorenzo Stoakes (Oracle) <ljs@kernel.org>
+This patch changes the ALUA device handler to use the SCSI device's
+configured timeout (rq_timeout) instead of the hardcoded 60-second
+ALUA_FAILOVER_TIMEOUT constant. This allows administrators to control
+ALUA-related timeouts via the standard SCSI device timeout sysfs
+interface (/sys/block/sdX/device/timeout).
 
-Acked-by: Vlastimil Babka (SUSE) <vbabka@kernel.org>
+Changes in v2:
+- Added READ_ONCE() when accessing sdev->request_queue->rq_timeout
+  since this value can be modified dynamically by userspace via sysfs
+- Added fallback to ALUA_FAILOVER_TIMEOUT if rq_timeout is 0, using
+  the ?: operator, to handle any edge cases where the timeout might
+  be uninitialized (though sysfs store functions reject 0)
+- Retained ALUA_FAILOVER_TIMEOUT constant as the fallback value
 
-> ---
->  drivers/target/target_core_user.c | 26 ++++++++++++++++++--------
->  drivers/uio/uio.c                 | 10 ++++++++--
->  include/linux/uio_driver.h        |  4 ++--
->  3 files changed, 28 insertions(+), 12 deletions(-)
-> 
-> diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
-> index af95531ddd35..edc2afd5f4ee 100644
-> --- a/drivers/target/target_core_user.c
-> +++ b/drivers/target/target_core_user.c
-> @@ -1860,6 +1860,17 @@ static struct page *tcmu_try_get_data_page(struct tcmu_dev *udev, uint32_t dpi)
->  	return NULL;
->  }
->  
-> +static int tcmu_vma_mapped(unsigned long start, unsigned long end, pgoff_t pgoff,
-> +			   const struct file *file, void **vm_private_data)
-> +{
-> +	struct tcmu_dev *udev = *vm_private_data;
-> +
-> +	pr_debug("vma_mapped\n");
+Regarding dynamic changes to rq_timeout: this is acceptable because
+each SCSI command reads the current timeout when issued. If an admin
+changes the timeout mid-operation, subsequent commands will use the
+new value. This is actually desirable as it allows administrators to
+adjust timeouts on the fly during problematic failovers without
+reloading modules.
 
-This looked like testing leftover at first, but it matches
-tcmu_vma_open()/close() (in case anyone else wonders).
+Brian Bunker (1):
+  scsi: scsi_dh_alua: use the device timeout rather than a constant
 
-> +
-> +	kref_get(&udev->kref);
-> +	return 0;
-> +}
-> +
+ drivers/scsi/device_handler/scsi_dh_alua.c | 12 +++++++-----
+ 1 file changed, 7 insertions(+), 5 deletions(-)
+
+-- 
+2.50.1 (Apple Git-155)
+
