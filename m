@@ -1,103 +1,148 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f177.google.com (mail-pf1-f177.google.com [209.85.210.177])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 75FA13195EF
-	for <linux-scsi@vger.kernel.org>; Thu, 26 Mar 2026 14:01:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 09BD2313534
+	for <linux-scsi@vger.kernel.org>; Thu, 26 Mar 2026 14:01:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.177
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774533667; cv=none; b=GKGo4zHdHStY0BvXAXqKJ44uybIm38L7Gnx836WScozv9mhlw/beysQGEPBiHDLnt/Hcq4UWW2Eq5KKtIRD42dWT5cMF4BxlGjly3uFlL7edZ1LklwifS5uty2rwrFunFIBnRCU5Zy8JiChg13kWi5fp25iL2SO1fFp3zzVbwjM=
+	t=1774533684; cv=none; b=s+TL3Bf7Osb67uKRf506bc0LJ75/2ATJjkcl/XbN4DqvaZCUCQosv21u+KKVwzMQ9/eZbR57yijgpNJr4TgIIvMbl0L8W4NYbJWqowxS3seVKQgv/hR7ODci4OL0ZnDL6anmDXxhQA+ybZoOx1hquTC+LTRBxhinuwkgRKHjOCE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774533667; c=relaxed/simple;
-	bh=2mozpB23xgxEgyUwDhXixVLTNPE3PHOSyUJqmiA/eTE=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=kAIMP1uWcbOtAVqPJmhpoFQ5m68TBOa1HPKGJPebu1k/XOSnLWfWw6fwwfrrYzBiPOWDlFLLAl0Oe8Ni9DdUly+XcRHvAAVkS6GqkZEYWxJFkyBeDilmmL33d2SH7UDCB0Hjt1dK/HJGPokYIvCH6dQvp5jdwyKEwrwxzVuovEc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=A+UXU7uq; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1774533684; c=relaxed/simple;
+	bh=zV4BTAK25VN6mTe+kd7900YWMIJutukIQQdSIEYQDy4=;
+	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
+	 In-Reply-To:Content-Type; b=ky/PIOrxcKn8jVm0W2c08frIUfUYDBVdNCXDtKI31dqIe0mQFTLIH6/4i/GeV7UzN2NxnSwHkXjMp71mzTm/WMHRVnexm4ikmdY2DEWBdSAqPxg0yiK0Flj2phNdh/O81RIHmrwiwG8/0Uaw8QWRnQ9tMSa5rk2imHaCK4zZmVw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=eSKxrEhw; arc=none smtp.client-ip=209.85.210.177
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="A+UXU7uq"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1774533665;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=W2N+36ApuMSHi+1WUWLxSakyItlIL+cUiW4jI9AwkuI=;
-	b=A+UXU7uq0+DdTjt2sWMLtULQMgX2C53iXYGuTrdAPs543RNvP+Gl5zi6HsJKFHWmYmFrDS
-	DDJ7XuRFqDQ7LN+vc3exQ1N+DXMfwIOQgmTf2hOSRJ2Cwfwt5mAfDh7ngd7WCojtyqt/fH
-	EnOLzXhQ/GVQWnc+ZvSk29SXLrvQALs=
-Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-400-mFuruvTIN2KTmyAB8GxLAQ-1; Thu,
- 26 Mar 2026 10:01:00 -0400
-X-MC-Unique: mFuruvTIN2KTmyAB8GxLAQ-1
-X-Mimecast-MFC-AGG-ID: mFuruvTIN2KTmyAB8GxLAQ_1774533657
-Received: from mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.111])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id C88FA1944EBE;
-	Thu, 26 Mar 2026 14:00:56 +0000 (UTC)
-Received: from localhost (unknown [10.44.35.38])
-	by mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id A0C74180035F;
-	Thu, 26 Mar 2026 14:00:55 +0000 (UTC)
-Date: Thu, 26 Mar 2026 10:00:53 -0400
-From: Stefan Hajnoczi <stefanha@redhat.com>
-To: Joshua Daley <jdaley@linux.ibm.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	virtualization@lists.linux.dev, mst@redhat.com, jasowang@redhat.com,
-	pbonzini@redhat.com, eperezma@redhat.com,
-	James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com,
-	mjrosato@linux.ibm.com, farman@linux.ibm.com, frankja@linux.ibm.com
-Subject: Re: [PATCH v4 2/2] scsi: virtio_scsi: kick event_list unconditionally
-Message-ID: <20260326140053.GD758087@fedora>
-References: <20260325180857.3675854-1-jdaley@linux.ibm.com>
- <20260325180857.3675854-3-jdaley@linux.ibm.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="eSKxrEhw"
+Received: by mail-pf1-f177.google.com with SMTP id d2e1a72fcca58-82a07738118so618830b3a.0
+        for <linux-scsi@vger.kernel.org>; Thu, 26 Mar 2026 07:01:22 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1774533682; x=1775138482; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:content-language:references
+         :cc:to:from:subject:user-agent:mime-version:date:message-id:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=ygd3w9l/HpfiWp0ONN6CYNRkzO9t4Tq7Hl8hMcjf9H0=;
+        b=eSKxrEhwf1uSEuoz8YqEz2+5mR13TV1Fr/U1yhLi1zhmSfbXsmqqI28avX5+yhCAmJ
+         jXpgdetEHMBQXYpGvdL75K12lvcnREauu7RLKHhsHh8fuXOSSRvba2w21i/hZWbhsLNN
+         zV3S9V+UySQAV9wg/t4vouwkK+IXK9faEXK4r7wKh594TM6Z9/2LVn3zo8R7buRpviPZ
+         YTRbbdJk4cJqIFwhChe9TKFzghHlIjKvX/UqJq0+0Ub45vptXxJ9mX/bOFg0Ifq/am77
+         dPw/ZppqJdUM9dHfnahTXzIBD9vKhAQGmskL/CHmEv1aH4UJ8YiwUUI4zEa9aLbrgRwf
+         Wpvg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1774533682; x=1775138482;
+        h=content-transfer-encoding:in-reply-to:content-language:references
+         :cc:to:from:subject:user-agent:mime-version:date:message-id:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=ygd3w9l/HpfiWp0ONN6CYNRkzO9t4Tq7Hl8hMcjf9H0=;
+        b=chLUTzJMOiAbljwR/eMmThfZvIe5Z775jDzO+5N87sfQuHRxSJV9EUMi/aRju2fLLm
+         X41+hLfLReIgUOu0SQQs3pKIeIT0DELHhOHzf38csplu3/PQdMa6BCqe/XBsOzIG3QTe
+         aNK9CKskZ9w/tI6Wwpx7hgS9kCLKoGycUOtVtH0at22LXxl1+d2NTFp1sgyL5eskYlLE
+         cFbAkaxWGeB0kMpsPnNZockcx0clwSKHF5Om5lKLRpJhW1lfFMlg+X7sdwreMREn2D+w
+         zFiyt0bD1KiF//oSm6kgqavwvMXfPKowDR4VQ/OIprXFqGTz/Ki0jDFyGBwmQQ+mPjjI
+         jrKA==
+X-Forwarded-Encrypted: i=1; AJvYcCUv7w7Bn3T2U3fyiMYmDUEkuqWPhlEjWinvWzbi8b3LwacsTZXdj1NNC8OQa37jZunLMwMyhzP7eELr@vger.kernel.org
+X-Gm-Message-State: AOJu0YzuPG1zDWQYOPclwH1ncOmys8H1D8gBkZsowzQdmM6gNP/vt0VV
+	fWgDiFFV38WzxlBuFNAh7CMUaSOZk2oNGp2Wv7InfcBQ9OR0AKhl93pV
+X-Gm-Gg: ATEYQzxpAvvnYOoruNwYuwkvQ2ZvvI1nBtOL3EpPNHyOqUNeehPPsHuJ8oF6z/Rol+a
+	A0fn+RJKpX+z9o7GifAGXMFXSJQ9jDley4xLZMkMnBKVtTRdGoLYXtdXlWUK3Bu7DF2E3SRIh5j
+	dmsQ4+hXf1KLyz2Z05VpBXEtRrVXM93VFaBbV9TcaBewHPLatOvKN+uHW2RkBNteZPlxQMFEaAK
+	5I+ixexvzZE1r0HbqvqZ0PxDX5PvB1/zkWLLV1jIyRaCKi5nsAlbbalqU2ACy2ujkmWHMX5IUnD
+	iZW9/aexVBqc4Ts7mTxhWQrJkMcsonfSg42ieTczjBran//SbJ6NFCFNWe6VEnQjMHt70dEdpj2
+	XBn7YdXDVFSvgPf7Yz/7hLISXJhTj9l0VkglK886E7JGbGauM/PscCM63OkEEvxX7tmxKHMlXD0
+	xmflp+bxkrDVPU1zziPFe1rQ1l2vuGsP0aNnXSDlHlTA==
+X-Received: by 2002:a05:6a00:414e:b0:82c:693c:20d with SMTP id d2e1a72fcca58-82c6e1659admr7549573b3a.60.1774533681909;
+        Thu, 26 Mar 2026 07:01:21 -0700 (PDT)
+Received: from [192.168.0.106] ([103.216.213.160])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-82c7d3bf324sm3551504b3a.40.2026.03.26.07.01.18
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 26 Mar 2026 07:01:21 -0700 (PDT)
+Message-ID: <721ccd4a-109e-4e80-9116-9d116536e9dd@gmail.com>
+Date: Thu, 26 Mar 2026 19:31:15 +0530
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-	protocol="application/pgp-signature"; boundary="ROB/BNDoRVfOr6T6"
-Content-Disposition: inline
-In-Reply-To: <20260325180857.3675854-3-jdaley@linux.ibm.com>
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.111
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] scsi: buslogic: replace strcpy() with strscpy()
+From: Atharv Dubey <atharvd440@gmail.com>
+To: Mauro Carvalho Chehab <mchehab@kernel.org>,
+ Khalid Aziz <khalid@gonehiking.org>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-media@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-scsi@vger.kernel.org
+References: <20260314-strcpy-v1-1-0b38691fe11e@gmail.com>
+ <44b1f4b2-69d8-423a-8ab2-8de7b2fa84ee@gmail.com>
+Content-Language: en-US
+In-Reply-To: <44b1f4b2-69d8-423a-8ab2-8de7b2fa84ee@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
+A Gentle Reminder for Reviewing the patch
 
---ROB/BNDoRVfOr6T6
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Regards,
+Atharv
 
-On Wed, Mar 25, 2026 at 07:08:57PM +0100, Joshua Daley wrote:
-> The event_list processes non-hotplug events (such as LUN capacity
-> changes), so remove the conditions that guard the initial kicks in
-> _probe() and _restore(), as well as the work cancellation in _remove().
->=20
-> Suggested-by: Stefan Hajnoczi <stefanha@redhat.com>
-> Signed-off-by: Joshua Daley <jdaley@linux.ibm.com>
-> ---
->  drivers/scsi/virtio_scsi.c | 15 ++++++---------
->  1 file changed, 6 insertions(+), 9 deletions(-)
-
-Reviewed-by: Stefan Hajnoczi <stefanha@redhat.com>
-
---ROB/BNDoRVfOr6T6
-Content-Type: application/pgp-signature; name=signature.asc
-
------BEGIN PGP SIGNATURE-----
-
-iQEzBAEBCgAdFiEEhpWov9P5fNqsNXdanKSrs4Grc8gFAmnFPBUACgkQnKSrs4Gr
-c8g0PggAvSdvyn8Ma+AMVolR9NiFo7iRzrCdSwC8eGmbMzlqsttbbNn8/0PE1b3S
-qSsvt6pdsiLyYNbmVU2b6Paip/NpVRBn7QOAJ94fn20ecszGYq6uLJarvvnd+Eo7
-ppcWySqpZb+pqbi6wbZ9rv9ChjDII4MTYa5nEA4CMrLSTmI7Rv5ZMtv+u7F4ZRAG
-zZtvEKHv8s1kOwhcptfMhPO/boRDuh+qD/9uLRWpXhiQUesRCHD5HTLoDxVD+8A9
-qJmcH96tc94zGIIiqsiUAR+aTSTR/tzwixmDDWu0BW1SzMcwFCLQZYcfxQiSBhOi
-UBzSkoFFkm8TPWNukeo+YS8lZUsRlg==
-=gCH1
------END PGP SIGNATURE-----
-
---ROB/BNDoRVfOr6T6--
-
+On 3/19/26 20:13, Atharv Dubey wrote:
+> A Gentle Reminder for reviewing the patch.
+>
+> Thanks,
+> Atharv
+>
+> On 3/14/26 01:58, Atharv Dubey wrote:
+>> strcpy() is deprecated as it does not perform bounds checking[1].
+>> Using it can risk buffer overflows if the source string exceeds
+>> the destination.
+>>
+>> Replace occurrences of strcpy() with the safer strscpy() where
+>> the size of buffer is being checked.
+>>
+>> Compile tested.
+>>
+>> [1] Documentation/process/deprecated.rst
+>>
+>> Signed-off-by: Atharv Dubey <atharvd440@gmail.com>
+>> ---
+>>   drivers/scsi/BusLogic.c | 6 +++---
+>>   1 file changed, 3 insertions(+), 3 deletions(-)
+>>
+>> diff --git a/drivers/scsi/BusLogic.c b/drivers/scsi/BusLogic.c
+>> index da6599ae3d0d..c070f3b8197e 100644
+>> --- a/drivers/scsi/BusLogic.c
+>> +++ b/drivers/scsi/BusLogic.c
+>> @@ -1262,7 +1262,7 @@ static bool __init blogic_rdconfig(struct 
+>> blogic_adapter *adapter)
+>>           for (i = 0; i < sizeof(fpinfo->model); i++)
+>>               *tgt++ = fpinfo->model[i];
+>>           *tgt++ = '\0';
+>> -        strcpy(adapter->fw_ver, FLASHPOINT_FW_VER);
+>> +        strscpy(adapter->fw_ver, FLASHPOINT_FW_VER);
+>>           adapter->scsi_id = fpinfo->scsi_id;
+>>           adapter->ext_trans_enable = fpinfo->ext_trans_enable;
+>>           adapter->parity = fpinfo->parity;
+>> @@ -3451,12 +3451,12 @@ static void blogic_msg(enum blogic_msglevel 
+>> msglevel, char *fmt,
+>>       va_end(args);
+>>       if (msglevel == BLOGIC_ANNOUNCE_LEVEL) {
+>>           static int msglines = 0;
+>> -        strcpy(&adapter->msgbuf[adapter->msgbuflen], buf);
+>> +        strscpy(&adapter->msgbuf[adapter->msgbuflen], buf);
+>>           adapter->msgbuflen += len;
+>>           if (++msglines <= 2)
+>>               printk("%sscsi: %s", blogic_msglevelmap[msglevel], buf);
+>>       } else if (msglevel == BLOGIC_INFO_LEVEL) {
+>> -        strcpy(&adapter->msgbuf[adapter->msgbuflen], buf);
+>> +        strscpy(&adapter->msgbuf[adapter->msgbuflen], buf);
+>>           adapter->msgbuflen += len;
+>>           if (begin) {
+>>               if (buf[0] != '\n' || len > 1)
+>>
+>> ---
+>> base-commit: 173b959a8bb814f55660f7c34ddedd4e75c203d2
+>> change-id: 20260314-strcpy-da7093836551
+>>
+>> Best regards,
