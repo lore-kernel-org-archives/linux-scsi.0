@@ -1,131 +1,132 @@
-Received: from mta-01.yadro.com (mta-01.yadro.com [195.3.219.148])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C3CBA3B8D40;
-	Thu, 26 Mar 2026 12:22:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.3.219.148
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AFBD12F5498
+	for <linux-scsi@vger.kernel.org>; Thu, 26 Mar 2026 14:00:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774527745; cv=none; b=FCVjdl1f0KqONwPGG5SWc/Tn7t9TcX12UgXOozjyQxYb4lqxeRk3+5beUQnvmKpmw8Kxqye9rUGh2zhAvdBSG9V0dk29yXLDGf3VRAsoSjKuQvWXU8QPTtGiNWpalkDB0ivAdrflAdWdPx8wenCwkjL8aULKgq2OvdUQfyha+yQ=
+	t=1774533651; cv=none; b=LvR9PnurFiYCUABIybVmqLreTYENBtJbpOL/BUm0EYxaXecqF94rY4ogjl9uDEjktUbGFkl0pmVWOXa4f15KgD3mdxgPJ2jZOhGO4QRr61cQmFpHkep78q46jWnGrGLLqy6wVHGflFRdWzI25t+rn0QjwmvkrqeAxwNjTqWvcq4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774527745; c=relaxed/simple;
-	bh=15VocTy4o/xxlpnNhqf5BJlz3r0bfkqXV7wtOp/ELIk=;
-	h=Date:From:To:CC:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=EvQ3s2ZmTzO1tc3sOwo8/gdHbcBEhkZBT7DFCHgYUMnjxtVvkA141S1LlZDCXu71pJF08DEAWlNJxTZK7eM8Sqpkuo7zYcwvSyj4gTZrIXz1ECU3Re6W/PezMh38AxM1tS+Lc7cZmngoCdHWchA1abRmpav98rzHqKvmLn7CJSc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=yadro.com; spf=pass smtp.mailfrom=yadro.com; dkim=pass (2048-bit key) header.d=yadro.com header.i=@yadro.com header.b=jhpEcI7Q; dkim=pass (2048-bit key) header.d=yadro.com header.i=@yadro.com header.b=RDYGKP4e; arc=none smtp.client-ip=195.3.219.148
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=yadro.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=yadro.com
+	s=arc-20240116; t=1774533651; c=relaxed/simple;
+	bh=KTRKonfGUd97+mpSwvoA/3Jmlf8IN1wJ4LosLVYKkrE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=mWGLxu5rt3zB3Zjr1RRuLq/2jq2W9OnKUYxsd1PYrDjzrFMWNYv8ocxDHMPnXys/ltDnTcL1d7d9jdToIvF5VIASBvbqaKqqvhtaAcxk2Z12YtnVz5WZDM1bb0wscCBn9X/Mp46KShMyLVwv/q3fId6bhW70buxqJ3MuBKI7X4Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=ODWxKMoP; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=yadro.com header.i=@yadro.com header.b="jhpEcI7Q";
-	dkim=pass (2048-bit key) header.d=yadro.com header.i=@yadro.com header.b="RDYGKP4e"
-Received: from mta-01.yadro.com (localhost [127.0.0.1])
-	by mta-01.yadro.com (Postfix) with ESMTP id A2D6220015;
-	Thu, 26 Mar 2026 15:16:16 +0300 (MSK)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mta-01.yadro.com A2D6220015
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yadro.com; s=mta-02;
-	t=1774527376; bh=FoOP4qebKTXWnvFydCw2Y595nhFLe9ikCfHLVPx27xw=;
-	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type:From;
-	b=jhpEcI7QocnF2J04QrRuhpoS8iR/oHwMDscv3q9kcfPe1ieXmaC48auTaOWOXn0Db
-	 tLtvCxU7Zspf03LH8Q+6dY8iBI7nXowPfnnzsRTCl1q76bg/PoDt0z9vPr4eLuEsiE
-	 N+9m96IrEfzVyr8hRdfYOCl460ljUO49p4W6xhH9vyDrs2S7Bid78hTaw9onkZoT2r
-	 mcz1Y025w9g/JzSbms66+2ry2p7umolyeLgKaT8eLmmScVGSZGwc2e5vysu+SdQtgo
-	 6VjPdNB19W32LE/oBGlxmMXbkYMelqGCGTRVz52ycLn2oe/mbsjG9Nu1pIDA/hhabh
-	 sjNw4rd9mm9Mg==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yadro.com; s=mta-03;
-	t=1774527376; bh=FoOP4qebKTXWnvFydCw2Y595nhFLe9ikCfHLVPx27xw=;
-	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type:From;
-	b=RDYGKP4ey2GS5JcEEyDTwXN57JkdWmhc+Asf9nzcKJBA0yvUJBC6AAIL6QIYdYjcz
-	 gpsO6K5IfNz9F6IzZuGgnFcPzQdISre9iNQeblpcBRswktSBhSFTByEqywugw/BojK
-	 +Lp9dO0rgvrmDEndb1SbWhMWG5EU50+nFRkNlFFrJcPStPPGaTp3moYctPOivXFIR+
-	 pobZtfSCcUsOXjmnGKX035oWD62J3X7AqJtQvprNDIgoV9mKXO2FIzkqUlf17rjjTd
-	 BxYTYnTzqTHsyGCyEjJDEzARlA4BJTQQl3BUHFMi1vaMyVMEYrJpCH4Iq8EKxlGA6t
-	 9yA4yD8IlOsaQ==
-Received: from RTM-EXCH-06.corp.yadro.com (unknown [10.34.9.206])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ODWxKMoP"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1774533643;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=3ud6/uRMMbQ6RHbdjTkyUxh57Nx1jsGx4SxZ5+YkVoU=;
+	b=ODWxKMoPGH2AKX0trIY+YjkpbUyIz316kC7HMVtAGIXeRpksJKE+IojvrmkbZVckX1o03Q
+	KNwbbSmJwL885KVDodqMcZdXXq10Zg61Fx3TDAgBjK+8SP01T3MJUSXoszrCZIqUVCOFj3
+	LWWya67AmZ2fjskbcQjMJguYy2bcdzQ=
+Received: from mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-124-U6nCzDQ8OTKuAhhnq91FsA-1; Thu,
+ 26 Mar 2026 10:00:40 -0400
+X-MC-Unique: U6nCzDQ8OTKuAhhnq91FsA-1
+X-Mimecast-MFC-AGG-ID: U6nCzDQ8OTKuAhhnq91FsA_1774533638
+Received: from mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.93])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mta-01.yadro.com (Postfix) with ESMTPS;
-	Thu, 26 Mar 2026 15:16:13 +0300 (MSK)
-Received: from yadro.com (10.34.9.247) by RTM-EXCH-06.corp.yadro.com
- (10.34.9.206) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.35; Thu, 26 Mar
- 2026 15:16:14 +0300
-Date: Thu, 26 Mar 2026 15:16:14 +0300
-From: Dmitry Bogdanov <d.bogdanov@yadro.com>
-To: Daniil Dulov <d.dulov@aladdin.ru>
-CC: Nilesh Javali <njavali@marvell.com>,
-	<GR-QLogic-Storage-Upstream@marvell.com>, "James E.J. Bottomley"
-	<James.Bottomley@HansenPartnership.com>, "Martin K. Petersen"
-	<martin.petersen@oracle.com>, Tony Battersby <tonyb@cybernetics.com>,
-	<linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<lvc-project@linuxtesting.org>, <stable@vger.kernel.org>
-Subject: Re: [PATCH] scsi: qla2xxx: Check if target mode enabled in case of
- task management commands
-Message-ID: <20260326121614.GA31733@yadro.com>
-References: <20260326094249.1366353-1-d.dulov@aladdin.ru>
+	by mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id EEBF619560B4;
+	Thu, 26 Mar 2026 14:00:37 +0000 (UTC)
+Received: from localhost (unknown [10.44.35.38])
+	by mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 65F9218001FE;
+	Thu, 26 Mar 2026 14:00:36 +0000 (UTC)
+Date: Thu, 26 Mar 2026 10:00:33 -0400
+From: Stefan Hajnoczi <stefanha@redhat.com>
+To: Joshua Daley <jdaley@linux.ibm.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	virtualization@lists.linux.dev, mst@redhat.com, jasowang@redhat.com,
+	pbonzini@redhat.com, eperezma@redhat.com,
+	James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com,
+	mjrosato@linux.ibm.com, farman@linux.ibm.com, frankja@linux.ibm.com
+Subject: Re: [PATCH v4 1/2] scsi: virtio_scsi: move INIT_WORK calls to
+ virtscsi_probe
+Message-ID: <20260326140033.GC758087@fedora>
+References: <20260325180857.3675854-1-jdaley@linux.ibm.com>
+ <20260325180857.3675854-2-jdaley@linux.ibm.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="eEXDPCt21ng7yGj2"
 Content-Disposition: inline
-In-Reply-To: <20260326094249.1366353-1-d.dulov@aladdin.ru>
-X-ClientProxiedBy: RTM-EXCH-01.corp.yadro.com (10.34.9.201) To
- RTM-EXCH-06.corp.yadro.com (10.34.9.206)
-X-KSMG-AntiPhishing: NotDetected, bases: 2026/03/26 12:00:00
-X-KSMG-AntiSpam-Interceptor-Info: not scanned
-X-KSMG-AntiSpam-Status: not scanned, disabled by settings
-X-KSMG-AntiVirus: Kaspersky Secure Mail Gateway, version 2.1.1.8310, bases: 2026/03/26 09:27:00 #28335688
-X-KSMG-AntiVirus-Status: NotDetected, skipped
-X-KSMG-KATA-Status: Not Scanned
-X-KSMG-LinksScanning: NotDetected, bases: 2026/03/26 12:00:00
-X-KSMG-Message-Action: skipped
-X-KSMG-Rule-ID: 5
+In-Reply-To: <20260325180857.3675854-2-jdaley@linux.ibm.com>
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.93
 
-On Thu, Mar 26, 2026 at 12:42:49PM +0300, Daniil Dulov wrote:
-> 
-> TYPE_TGT_TMCMD are not being skipped now, but tgt_ops are dereferenced
-> in qlt_free_ul_cmd() without checking if target mode is enabled. However,
-> it is possible that commands requiring target mode to be enabled are
 
-Is is really possible? TYPE_TGT_TMCMD is allocated using tgt_ops
-pointer. So at creation time tgt_ops was a valid.
+--eEXDPCt21ng7yGj2
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-> received while target mode is disabled as it is seen in TYPE_TGT_CMD case.
-
-That condition in TYPE_TGT_CMD is also some legacy leftover.
-
-Race condition when tgt_ops might be get nulled during HBA reset was fixed in
-https://lore.kernel.org/all/20210415203554.27890-1-d.bogdanov@yadro.com/
-
-> To fix the issue check if target mode is enabled in TYPE_TGT_TMCMD
-> case as well.
-> 
-> Fixes: d46c69a087aa ("scsi: qla2xxx: Clear cmds after chip reset")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Daniil Dulov <d.dulov@aladdin.ru>
+On Wed, Mar 25, 2026 at 07:08:56PM +0100, Joshua Daley wrote:
+> The last step of virtscsi_handle_event is to call virtscsi_kick_event,
+> which calls INIT_WORK on it's own work item. INIT_WORK resets the
+> work item's data bits to 0.
+>=20
+> If this occurs while the work item is being flushed by
+> cancel_work_sync, then kernel/workqueue.c/work_offqd_enable triggers a
+> kernel warning, as it expects the "disable" bit to be 1:
+>=20
+> [   21.450115] workqueue: work disable count underflowed
+> [   21.450117] WARNING: CPU: 1 PID: 56 at kernel/workqueue.c:4328 enable_=
+work+0x10a/0x120
+> ...
+> [   21.450171] Call Trace:
+> [   21.450173]  [<000003db2e5bdc3e>] enable_work+0x10e/0x120
+> [   21.450176] ([<000003db2e5bdc3a>] enable_work+0x10a/0x120)
+> [   21.450178]  [<000003db2e5bdd86>] cancel_work_sync+0x86/0xa0
+> [   21.450181]  [<000003daae97d9e4>] virtscsi_remove+0xb4/0xd0 [virtio_sc=
+si]
+> [   21.450184]  [<000003db2ef3b5ca>] virtio_dev_remove+0x6a/0xd0
+> [   21.450186]  [<000003db2ef9106c>] device_release_driver_internal+0x1ac=
+/0x260
+> [   21.450190]  [<000003db2ef8edc8>] bus_remove_device+0xf8/0x190
+> [   21.450192]  [<000003db2ef88d72>] device_del+0x142/0x340
+> [   21.450194]  [<000003db2ef88fa0>] device_unregister+0x30/0xa0
+> [   21.450196]  [<000003db2ef3b2fa>] unregister_virtio_device+0x2a/0x40
+>=20
+> This warning may occur if a controller is detached immediately
+> following a disk detach.
+>=20
+> Move the INIT_WORK call to prevent this. Don't re-init event list
+> work items in virtscsi_kick_event, init them only once in
+> virtscsi_probe instead.
+>=20
+> Signed-off-by: Joshua Daley <jdaley@linux.ibm.com>
 > ---
->  drivers/scsi/qla2xxx/qla_os.c | 7 +++++++
->  1 file changed, 7 insertions(+)
-> 
-> diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-> index 72b1c28e4dae..e81ef3629aaa 100644
-> --- a/drivers/scsi/qla2xxx/qla_os.c
-> +++ b/drivers/scsi/qla2xxx/qla_os.c
-> @@ -1890,6 +1890,13 @@ __qla2x00_abort_all_cmds(struct qla_qpair *qp, int res)
->                                 }
->                                 break;
->                         case TYPE_TGT_TMCMD:
-> +                               if (!vha->hw->tgt.tgt_ops || !tgt ||
-> +                                   qla_ini_mode_enabled(vha)) {
-> +                                       ql_dbg(ql_dbg_tgt_mgt, vha, 0xf004,
-> +                                           "HOST-ABORT-HNDLR: dpc_flags=%lx. Target mode disabled\n",
-> +                                           vha->dpc_flags);
-> +                                       continue;
-> +                               }
->                                 /*
->                                  * Currently, only ABTS response gets on the
->                                  * outstanding_cmds[]
-> --
-> 2.34.1
-> 
+>  drivers/scsi/virtio_scsi.c | 7 ++++---
+>  1 file changed, 4 insertions(+), 3 deletions(-)
+
+Reviewed-by: Stefan Hajnoczi <stefanha@redhat.com>
+
+--eEXDPCt21ng7yGj2
+Content-Type: application/pgp-signature; name=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAEBCgAdFiEEhpWov9P5fNqsNXdanKSrs4Grc8gFAmnFPAEACgkQnKSrs4Gr
+c8ia4wgAjrcxhvgueCwsnWGTkhwdMBqfQEa1muDZVm/1qybWRGO57sKFCJYIXKUK
+DXEhC+1QCvYa/iQqCM97Hlwblh3WLqyC9A3/cASQl82JXlIs6y2I6dYRB8MEitDx
+HODAgaWGsqztA9wUqgIqdaKNfjELlkiNK9k6eiJJLs2kgnGTwNi0OVYYiGBTCITN
+iM6oqt5Tiv9WSoawqJa+PQYSfwWWp/p5zabehccx+ilTtByt43i6EhcLHtdhF5CL
++XvBMVBHlIDQwZmxEliEB8LxZpiOuC+BXXhqi00dyOWBozq2N7XeQ9dqTWSajG2X
+2azsqUjcbU2/kanG86drSlg220M8iA==
+=Jv78
+-----END PGP SIGNATURE-----
+
+--eEXDPCt21ng7yGj2--
+
