@@ -1,42 +1,42 @@
 Received: from outbound.easymail.ca (outbound.easymail.ca [64.68.200.34])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 0E6E8372EF8
-	for <linux-scsi@vger.kernel.org>; Thu, 26 Mar 2026 20:57:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id B31A82F39C7
+	for <linux-scsi@vger.kernel.org>; Thu, 26 Mar 2026 20:59:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=64.68.200.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774558643; cv=none; b=lHxkczA27slnNoAjRThPwhTGEQWTRXZLz2UgrSe4Nf32bZTPqeQ+tMU3OMlyv3MsD2R2ZxpfuJnllik5ssFyWoB7apZ2pyEaYVwCERAUkyCh7nftdaE6l7AWqfj2KYrOnQRAWmzyOXYznOSaxYWDVZzdghSP9nIYO6jAtbcnhao=
+	t=1774558770; cv=none; b=RDvvbGVnxRo1+1TUV+JK9uaghlPlwlEjWoxFTBkj5iztCaS0tnQibo8FwF75YDqoFKNZrX7t2bVWzK30nWM5Hvxj2/krK75UlYVVvppJx3+VKfhR/9p5lDqD2cpttPFrFn8Lb7PYMZoOrUkINSPn4zQYc89fXP7ALzrUUZsbtP8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774558643; c=relaxed/simple;
-	bh=++HZ8/3R3i1ExJlHYbSNefwcRBJ6udfdeRbid/U/nZA=;
+	s=arc-20240116; t=1774558770; c=relaxed/simple;
+	bh=jziiH1efX54c24mXW3ypoxdMvvr9IC56VyCU9e8kbaY=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=EqzJCDKU9+pE4TXMTvF26Wk+YQNk6qv2bVp5YavS4PKWhEtdFZcAqre3/O2CN0jH3g1vMaurg3pvp+nSu1+JaT5Vd0r/Dxw7XudQUa9yHBrACzbsrvWAHxwlCiDnZVvZLy3HXIKloAw64HNg9b7Uk9itG1TsSTngsDX4qtlwudA=
+	 In-Reply-To:Content-Type; b=LlohMmZcDTSv/k8LtFY/dfRzaoEaMMzIlIwL/fRaWYPo6kNz383I5I4LLxYhBr6Dma6p0Y7dlGjU8BthEBZDcYZ0vyUyBG02pc3a3sgzEsJfmBT6HxILyG5J0bPHFywf0TQpQgyENkzDwgOg0feNzAbKilUt/vqS6jynV23omS4=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=gonehiking.org; spf=pass smtp.mailfrom=gonehiking.org; arc=none smtp.client-ip=64.68.200.34
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=gonehiking.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gonehiking.org
 Received: from esv2.easydns.net (pco.easydns.net [64.68.203.197])
-	by outbound.easymail.ca (Postfix) with ESMTP id 544BD20D6C
-	for <linux-scsi@vger.kernel.org>; Thu, 26 Mar 2026 20:50:46 +0000 (UTC)
+	by outbound.easymail.ca (Postfix) with ESMTP id 3FAD620C80
+	for <linux-scsi@vger.kernel.org>; Thu, 26 Mar 2026 20:59:28 +0000 (UTC)
 X-Envelope-From: <khalid@gonehiking.org>
-Received: from mailout.easymail.ca (unknown [10.5.10.139])
+Received: from mailout.easymail.ca (unknown [10.5.10.137])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by esv2.easydns.net (Postfix) with ESMTPS id 4fhbX14fsNzHfpK;
-	Thu, 26 Mar 2026 16:50:41 -0400 (EDT)
+	by esv2.easydns.net (Postfix) with ESMTPS id 4fhbk246X9zHhns;
+	Thu, 26 Mar 2026 16:59:22 -0400 (EDT)
 Received: from localhost (localhost [127.0.0.1])
-	by mailout.easymail.ca (Postfix) with ESMTP id 98A0E641A1;
-	Thu, 26 Mar 2026 20:50:41 +0000 (UTC)
-X-Virus-Scanned: Debian amavisd-new at emo09-pco.easydns.vpn
+	by mailout.easymail.ca (Postfix) with ESMTP id 7DAC96432A;
+	Thu, 26 Mar 2026 20:59:22 +0000 (UTC)
+X-Virus-Scanned: Debian amavisd-new at emo07-pco.easydns.vpn
 Received: from mailout.easymail.ca ([127.0.0.1])
-	by localhost (emo09-pco.easydns.vpn [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id yCIaqzUeYUDN; Thu, 26 Mar 2026 20:50:41 +0000 (UTC)
+	by localhost (emo07-pco.easydns.vpn [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id UzIV5EnMiQYJ; Thu, 26 Mar 2026 20:59:22 +0000 (UTC)
 Received: from mail.gonehiking.org (unknown [38.175.187.108])
-	by mailout.easymail.ca (Postfix) with ESMTPA id 3FF456419E;
-	Thu, 26 Mar 2026 20:50:41 +0000 (UTC)
+	by mailout.easymail.ca (Postfix) with ESMTPA id E3232641EE;
+	Thu, 26 Mar 2026 20:59:21 +0000 (UTC)
 Received: from [192.168.1.4] (rhapsody.internal [192.168.1.4])
-	by mail.gonehiking.org (Postfix) with ESMTP id E2C5A7EB48;
-	Thu, 26 Mar 2026 14:50:40 -0600 (MDT)
-Message-ID: <e9e262ca-d3ef-4d76-8d8a-15be59b92910@gonehiking.org>
-Date: Thu, 26 Mar 2026 14:50:40 -0600
+	by mail.gonehiking.org (Postfix) with ESMTP id 66BE47EB48;
+	Thu, 26 Mar 2026 14:59:21 -0600 (MDT)
+Message-ID: <adf25720-70d9-429d-8da2-a3f2916976bf@gonehiking.org>
+Date: Thu, 26 Mar 2026 14:59:21 -0600
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -45,13 +45,14 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
 Reply-To: khalid@gonehiking.org
-Subject: Re: [PATCH 05/36] scsi: BusLogic: Introduce a local variable
+Subject: Re: [PATCH 06/36] scsi: BusLogic: Prepare for enabling lock context
+ analysis
 To: Bart Van Assche <bvanassche@acm.org>,
  "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org,
  "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
 References: <20260312211636.3245119-1-bvanassche@acm.org>
- <20260312211636.3245119-6-bvanassche@acm.org>
+ <20260312211636.3245119-7-bvanassche@acm.org>
 From: Khalid Aziz <khalid@gonehiking.org>
 Content-Language: en-US
 Autocrypt: addr=khalid@gonehiking.org; keydata=
@@ -96,64 +97,46 @@ Autocrypt: addr=khalid@gonehiking.org; keydata=
  E1CNnmSCtgX15U67Grz03Hp9O29Dlg2XFGr9rK46Caph3seP5dBFjvPXIEC2lmyRDFPmw4yw
  KQczTkg+QRkC4j/CEFXw0EkwR8tDAPW/NVnWr/KSnR/qzdA4RRuevLSK0SYSouLQr4IoxAuj
  nniu8LClUU5YxbF57rmw5bPlMrBNhO5arD8/b/XxLx/4jGQrcYM+VrMKALwKvPfj20mB6A==
-In-Reply-To: <20260312211636.3245119-6-bvanassche@acm.org>
+In-Reply-To: <20260312211636.3245119-7-bvanassche@acm.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 X-edns-Libra-ESVA-Information: Please contact easyDNS for more information
-X-edns-Libra-ESVA-ID: 4fhbX14fsNzHfpK
+X-edns-Libra-ESVA-ID: 4fhbk246X9zHhns
 X-edns-Libra-ESVA: No virus found
 X-edns-Libra-ESVA-SpamScore: ss
 X-edns-Libra-ESVA-From: khalid@gonehiking.org
-X-edns-Libra-ESVA-Watermark: 1775163041.97305@KCMsaCHnkAuTpL/oo7xSUQ
+X-edns-Libra-ESVA-Watermark: 1775163562.89279@oqcB+a088DeMdr1LFTsGdw
 
 On 3/12/26 3:15 PM, Bart Van Assche wrote:
-> Introduce a new local variable to prepare for thread-safety analysis. No
-> functionality has been changed.
+> Document locking requirements with __must_hold().
 > 
 > Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 > ---
->   drivers/scsi/BusLogic.c | 9 +++++----
->   1 file changed, 5 insertions(+), 4 deletions(-)
+>   drivers/scsi/BusLogic.c | 2 ++
+>   1 file changed, 2 insertions(+)
 > 
 > diff --git a/drivers/scsi/BusLogic.c b/drivers/scsi/BusLogic.c
-> index 5304d2febd63..e3790ff24e56 100644
+> index e3790ff24e56..bb5a63baf897 100644
 > --- a/drivers/scsi/BusLogic.c
 > +++ b/drivers/scsi/BusLogic.c
-> @@ -2886,6 +2886,7 @@ static enum scsi_qc_status blogic_qcmd_lck(struct scsi_cmnd *command)
->   	struct blogic_tgt_flags *tgt_flags =
->   		&adapter->tgt_flags[command->device->id];
->   	struct blogic_tgt_stats *tgt_stats = adapter->tgt_stats;
-> +	struct Scsi_Host *const shost = command->device->host;
->   	unsigned char *cdb = command->cmnd;
->   	int cdblen = command->cmd_len;
->   	int tgt_id = command->device->id;
-> @@ -2915,9 +2916,9 @@ static enum scsi_qc_status blogic_qcmd_lck(struct scsi_cmnd *command)
->   	 */
->   	ccb = blogic_alloc_ccb(adapter);
->   	if (ccb == NULL) {
-> -		spin_unlock_irq(adapter->scsi_host->host_lock);
-> +		spin_unlock_irq(shost->host_lock);
->   		blogic_delay(1);
-> -		spin_lock_irq(adapter->scsi_host->host_lock);
-> +		spin_lock_irq(shost->host_lock);
->   		ccb = blogic_alloc_ccb(adapter);
->   		if (ccb == NULL) {
->   			command->result = DID_ERROR << 16;
-> @@ -3062,10 +3063,10 @@ static enum scsi_qc_status blogic_qcmd_lck(struct scsi_cmnd *command)
->   		   be initiated soon.
->   		 */
->   		if (!blogic_write_outbox(adapter, BLOGIC_MBOX_START, ccb)) {
-> -			spin_unlock_irq(adapter->scsi_host->host_lock);
-> +			spin_unlock_irq(shost->host_lock);
->   			blogic_warn("Unable to write Outgoing Mailbox - Pausing for 1 second\n", adapter);
->   			blogic_delay(1);
-> -			spin_lock_irq(adapter->scsi_host->host_lock);
-> +			spin_lock_irq(shost->host_lock);
->   			if (!blogic_write_outbox(adapter, BLOGIC_MBOX_START,
->   						ccb)) {
->   				blogic_warn("Still unable to write Outgoing Mailbox - Host Adapter Dead?\n", adapter);
+> @@ -2879,6 +2879,7 @@ static int blogic_hostreset(struct scsi_cmnd *SCpnt)
+>   */
+>   
+>   static enum scsi_qc_status blogic_qcmd_lck(struct scsi_cmnd *command)
+> +	__must_hold(command->device->host->host_lock)
+>   {
+>   	void (*comp_cb)(struct scsi_cmnd *) = scsi_done;
+>   	struct blogic_adapter *adapter =
+> @@ -3183,6 +3184,7 @@ static int blogic_abort(struct scsi_cmnd *command)
+>   */
+>   
+>   static int blogic_resetadapter(struct blogic_adapter *adapter, bool hard_reset)
+> +	__must_hold(adapter->scsi_host->host_lock)
+>   {
+>   	struct blogic_ccb *ccb;
+>   	int tgt_id;
 
-Looks fine to me.
+Looks good to me.
 
 Acked-by: Khalid Aziz <khalid@gonehiking.org>
 
