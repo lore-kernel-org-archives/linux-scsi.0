@@ -1,144 +1,243 @@
-Received: from outbound.easymail.ca (outbound.easymail.ca [64.68.200.34])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id B31A82F39C7
-	for <linux-scsi@vger.kernel.org>; Thu, 26 Mar 2026 20:59:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=64.68.200.34
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774558770; cv=none; b=RDvvbGVnxRo1+1TUV+JK9uaghlPlwlEjWoxFTBkj5iztCaS0tnQibo8FwF75YDqoFKNZrX7t2bVWzK30nWM5Hvxj2/krK75UlYVVvppJx3+VKfhR/9p5lDqD2cpttPFrFn8Lb7PYMZoOrUkINSPn4zQYc89fXP7ALzrUUZsbtP8=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774558770; c=relaxed/simple;
-	bh=jziiH1efX54c24mXW3ypoxdMvvr9IC56VyCU9e8kbaY=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=LlohMmZcDTSv/k8LtFY/dfRzaoEaMMzIlIwL/fRaWYPo6kNz383I5I4LLxYhBr6Dma6p0Y7dlGjU8BthEBZDcYZ0vyUyBG02pc3a3sgzEsJfmBT6HxILyG5J0bPHFywf0TQpQgyENkzDwgOg0feNzAbKilUt/vqS6jynV23omS4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=gonehiking.org; spf=pass smtp.mailfrom=gonehiking.org; arc=none smtp.client-ip=64.68.200.34
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=gonehiking.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gonehiking.org
-Received: from esv2.easydns.net (pco.easydns.net [64.68.203.197])
-	by outbound.easymail.ca (Postfix) with ESMTP id 3FAD620C80
-	for <linux-scsi@vger.kernel.org>; Thu, 26 Mar 2026 20:59:28 +0000 (UTC)
-X-Envelope-From: <khalid@gonehiking.org>
-Received: from mailout.easymail.ca (unknown [10.5.10.137])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+Received: from mail-lj1-f172.google.com (mail-lj1-f172.google.com [209.85.208.172])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by esv2.easydns.net (Postfix) with ESMTPS id 4fhbk246X9zHhns;
-	Thu, 26 Mar 2026 16:59:22 -0400 (EDT)
-Received: from localhost (localhost [127.0.0.1])
-	by mailout.easymail.ca (Postfix) with ESMTP id 7DAC96432A;
-	Thu, 26 Mar 2026 20:59:22 +0000 (UTC)
-X-Virus-Scanned: Debian amavisd-new at emo07-pco.easydns.vpn
-Received: from mailout.easymail.ca ([127.0.0.1])
-	by localhost (emo07-pco.easydns.vpn [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id UzIV5EnMiQYJ; Thu, 26 Mar 2026 20:59:22 +0000 (UTC)
-Received: from mail.gonehiking.org (unknown [38.175.187.108])
-	by mailout.easymail.ca (Postfix) with ESMTPA id E3232641EE;
-	Thu, 26 Mar 2026 20:59:21 +0000 (UTC)
-Received: from [192.168.1.4] (rhapsody.internal [192.168.1.4])
-	by mail.gonehiking.org (Postfix) with ESMTP id 66BE47EB48;
-	Thu, 26 Mar 2026 14:59:21 -0600 (MDT)
-Message-ID: <adf25720-70d9-429d-8da2-a3f2916976bf@gonehiking.org>
-Date: Thu, 26 Mar 2026 14:59:21 -0600
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 431C9149C6F
+	for <linux-scsi@vger.kernel.org>; Fri, 27 Mar 2026 00:12:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.172
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1774570358; cv=pass; b=h+wVxAr5DG2WB1iHntsrFHT0m79UElvQ/PmcNUcVJh8Bd0rVBRxpIDWbsjp+zKedggURRO248JXA54Rnemv82otkfjeaKwSsDHgS5KEkRu1cATj1gWWBVLbx3wz/F8DUdFf68PB8nwGyGsuafSEV6VgWrWeBYTq3n6tlloC7Iko=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1774570358; c=relaxed/simple;
+	bh=hssH0q7DMIT8Y5t3csTv9BiOdey3S75Gos+3lTu5ReY=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=I8Jju1vx62Zly+UDYcGY3Df8yEYq4yU3w2p/C334Q0OUYXzOlhvgIj374R/hs1RlIXPPSzbz6p+8+4/ozv65T0uKV+mtu1bN4dBEqVwqfWrbQ3x8+IglCvzA7qX6smpKzuasyF70sKFPeEMHL+HpLygZ2FseiwCK631umHXh/9s=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=purestorage.com; spf=fail smtp.mailfrom=purestorage.com; dkim=pass (2048-bit key) header.d=purestorage.com header.i=@purestorage.com header.b=dq4qjDqQ; arc=pass smtp.client-ip=209.85.208.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=purestorage.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=purestorage.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=purestorage.com header.i=@purestorage.com header.b="dq4qjDqQ"
+Received: by mail-lj1-f172.google.com with SMTP id 38308e7fff4ca-38ad12fb595so24572431fa.0
+        for <linux-scsi@vger.kernel.org>; Thu, 26 Mar 2026 17:12:35 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1774570354; cv=none;
+        d=google.com; s=arc-20240605;
+        b=bHF0ZOh5fgkGb+ZAn5SeA+pwWw6GPpKmFonjbNEwAiEd24jZkTMTspM+7tUsYfmvL4
+         +Bhp98AS13naZn5EsAdaP1AEGCrFgzm+QqGCFBkp9DKcWeu/Ji+/hyaFwoLBk9z56asI
+         6zmtGOOO3+0X3iyck0W0K7g4JzJOiK8NZyLVKQJBMIktn9l4i6UlZRAZGATNVgiVraY9
+         VomJ0VNG55oUk4BsXO0iRoV3H0HndhsTgsLJWQCQ4TCsKcmuYX5wr2cEEbq8iZ/zn3FX
+         BZn+rrt4HPltgiTWQWvZkCj+coevhpMkNARy1DCmXbKUbbQJHABhYLh2c+f02Z9NGttX
+         raUQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=78t28iVjVygg0JEa51rXAbxZZ9nyGQycl0kuR3QBdmo=;
+        fh=ZUOvmiUb//8eIwNP6NhlxVzC0si1CgBLrcqAOjtKI0Y=;
+        b=eebmE5cMlohfGK7PS+zh1HCk6kOFAJcsnmw7kTjQ1dH4EgzcMXcwVejXjfGWqi0fYV
+         74h3geDZLMrnLQZ7npt/vJaiuikJkKEOmcpzj45BKMLuJnLn/rQvSCkoGgNnFz9sTVuA
+         ekXNgXnl4GSLZ5mS1lxQLfZ2VloeHnhfhsTDv9ACPxazKtp7hKbQtLrh3IKrCZPOxMdm
+         RVjmCK0Kk04fW9FG80YQzJejqw+Ff4S3Yht7dTqICSWpSDvdAdYNngFVvc0aZtkT+Tlp
+         xJUAMPu2e8RUvUeASFU7gsmH5Ay96oA9M+CFkmctFL59BEq1t3bEcywMeXkF69D24vBb
+         ZfVA==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=purestorage.com; s=google2022; t=1774570354; x=1775175154; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=78t28iVjVygg0JEa51rXAbxZZ9nyGQycl0kuR3QBdmo=;
+        b=dq4qjDqQeeYScOILlV7E42NdkagLlDkolo+hKLBp8pIxIOOAZ5YESDdKtaP+h97qQA
+         eBPJQ2eewPzGFfdW5Dy9c+VIsgt3rxXizbHz+VqpBEKchc74XE0cALcKAq+5INK8BpRh
+         G1sMqGHcSlAXF9yEqwEkgeh0Yy+hj+9+3Z+GuHeXBYy49I3rUhFzmGeUD851X3qkD1tu
+         vkW8D+QCMWWRgulaTy26UygUVzNQBbddGv38QLlFjSDmI7YHsAgcIriJY95xW+4QdnUU
+         5eXdsZtkOlylkdI04QCZNABi+3hi7gnqwbSWKz2QQpqSAiR+DoB/JXjLUQ7/8rDaZZyY
+         wGnw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1774570354; x=1775175154;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=78t28iVjVygg0JEa51rXAbxZZ9nyGQycl0kuR3QBdmo=;
+        b=Zit/yFj2HJJppbJWPhZoScKDifgibO+tA/x6S+IBKZ58QoYr5laOHJ/tgGfzRqPSKK
+         Et9RQgx8K8dTTRYXBcHoNDFTCKu4UbPfrjedLVJXcb4SLZbdwJYWnt+BR47XGLc4D8pI
+         BhRp01LBRfx7oOriQ4hZ5wV+OImkLJ3+AKdR8ooeqz8bdDWYpYd8dFfFeiBdjm1ZWnlo
+         0IGGsZnCiXsvX+dGFCd4AUUSPlpKW55E8AyOUq0/L+UYN0GL1Q1oZDcIkov01eHWgaMY
+         X9vs6MynTi1O/aCMOo4AT7xT6Iq62I/xIym19U1kr9Nljj8hkTc7eevV/XXFzHYIK2fO
+         nMsA==
+X-Gm-Message-State: AOJu0YzBrGzAIUSwk9trYJ2gtotaoSR0XoA/h5EDqLAU0ETg1/MHAlzt
+	aNl8sQENz5bVkRqJmad0IYeTav+S7HLtqCMHvoDs+eNn/pseKd2i0XcblF6i9YHHPrORvvHqWcW
+	sJBmH4FvyawrnJAOknXvowj3346c0u1wfz1pGorRfVw==
+X-Gm-Gg: ATEYQzz3qBMzyZztC2csyJi/jy7p7SbQJFjy8CSNTlmUazKqjlZvKTS7LiiCKB2U2Ry
+	Vwxe8+RLkrzQfxkQakHjrQqcIpxdsIZcQy56VTfFO6wurWjyWVPIEKRYNt7Cq2z47UnsNoJyTrq
+	xJLMaDuQm4v6yRzagkOlnJVBE4GitrzYo/bNL2W4Z1kPNJv5ayWaAE4D785CLC36vpV5rQi8lvp
+	B7rBnfzePkWwGL6Nct8t6BY+sDPmDE//u0GvLozOzoDuVeBDjYQAF1XW2fiXIvEp5ReSQo2208C
+	nLC/+XCPu5IrkCtMu28yMprw1GMlD2ltE7nWEsLp2wlJQzlrMtuwCFGcwFOICiggxza1NVVVvJ1
+	rDFqEnQtZL1cLTX/ARdibiLt5o7njTF/d
+X-Received: by 2002:a2e:9616:0:b0:38b:e005:7fa0 with SMTP id
+ 38308e7fff4ca-38c6537beb4mr9162711fa.4.1774570354174; Thu, 26 Mar 2026
+ 17:12:34 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Reply-To: khalid@gonehiking.org
-Subject: Re: [PATCH 06/36] scsi: BusLogic: Prepare for enabling lock context
- analysis
-To: Bart Van Assche <bvanassche@acm.org>,
- "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-References: <20260312211636.3245119-1-bvanassche@acm.org>
- <20260312211636.3245119-7-bvanassche@acm.org>
-From: Khalid Aziz <khalid@gonehiking.org>
-Content-Language: en-US
-Autocrypt: addr=khalid@gonehiking.org; keydata=
- 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
-In-Reply-To: <20260312211636.3245119-7-bvanassche@acm.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-edns-Libra-ESVA-Information: Please contact easyDNS for more information
-X-edns-Libra-ESVA-ID: 4fhbk246X9zHhns
-X-edns-Libra-ESVA: No virus found
-X-edns-Libra-ESVA-SpamScore: ss
-X-edns-Libra-ESVA-From: khalid@gonehiking.org
-X-edns-Libra-ESVA-Watermark: 1775163562.89279@oqcB+a088DeMdr1LFTsGdw
+References: <20260325151515.18688-1-brian@purestorage.com> <20260325151515.18688-2-brian@purestorage.com>
+ <e5a8a8a0-9e1e-44c1-9db5-5ee6b8ba867f@suse.com>
+In-Reply-To: <e5a8a8a0-9e1e-44c1-9db5-5ee6b8ba867f@suse.com>
+From: Brian Bunker <brian@purestorage.com>
+Date: Thu, 26 Mar 2026 17:12:23 -0700
+X-Gm-Features: AQROBzCkNTl47iVRzlyUyAuTKvm0PG3goOS9XpTcAMAAQP9bIZFigVcE3zP8Zy8
+Message-ID: <CAHZQxyL-SrVwAg7PKbTAO60y5wE4KEoLt=282oata3kZr_Aqig@mail.gmail.com>
+Subject: Re: [PATCH v2] scsi: scsi_dh_alua: use the device timeout rather than
+ a constant
+To: Hannes Reinecke <hare@suse.com>
+Cc: linux-scsi@vger.kernel.org, Krishna Kant <krishna.kant@purestorage.com>, 
+	Riya Savla <rsavla@purestorage.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On 3/12/26 3:15 PM, Bart Van Assche wrote:
-> Document locking requirements with __must_hold().
-> 
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-> ---
->   drivers/scsi/BusLogic.c | 2 ++
->   1 file changed, 2 insertions(+)
-> 
-> diff --git a/drivers/scsi/BusLogic.c b/drivers/scsi/BusLogic.c
-> index e3790ff24e56..bb5a63baf897 100644
-> --- a/drivers/scsi/BusLogic.c
-> +++ b/drivers/scsi/BusLogic.c
-> @@ -2879,6 +2879,7 @@ static int blogic_hostreset(struct scsi_cmnd *SCpnt)
->   */
->   
->   static enum scsi_qc_status blogic_qcmd_lck(struct scsi_cmnd *command)
-> +	__must_hold(command->device->host->host_lock)
->   {
->   	void (*comp_cb)(struct scsi_cmnd *) = scsi_done;
->   	struct blogic_adapter *adapter =
-> @@ -3183,6 +3184,7 @@ static int blogic_abort(struct scsi_cmnd *command)
->   */
->   
->   static int blogic_resetadapter(struct blogic_adapter *adapter, bool hard_reset)
-> +	__must_hold(adapter->scsi_host->host_lock)
->   {
->   	struct blogic_ccb *ccb;
->   	int tgt_id;
+On Thu, Mar 26, 2026 at 3:22=E2=80=AFAM Hannes Reinecke <hare@suse.com> wro=
+te:
+>
+> On 3/25/26 16:15, Brian Bunker wrote:
+> > Instead of using a constant for timeouts, use the timeout of the SCSI
+> > device itself. There are reasons why someone might want to extend
+> > the SCSI timeout and having the constant out of sync can lead to
+> > early timeouts.
+> >
+> > Signed-off-by: Krishna Kant <krishna.kant@purestorage.com>
+> > Signed-off-by: Riya Savla <rsavla@purestorage.com>
+> > Signed-off-by: Brian Bunker <brian@purestorage.com>
+> > ---
+> >   drivers/scsi/device_handler/scsi_dh_alua.c | 12 +++++++-----
+> >   1 file changed, 7 insertions(+), 5 deletions(-)
+> >
+> > diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/=
+device_handler/scsi_dh_alua.c
+> > index efb08b9b145a..a4ee67109548 100644
+> > --- a/drivers/scsi/device_handler/scsi_dh_alua.c
+> > +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
+> > @@ -143,7 +143,7 @@ static int submit_rtpg(struct scsi_device *sdev, un=
+signed char *buff,
+> >       put_unaligned_be32(bufflen, &cdb[6]);
+> >
+> >       return scsi_execute_cmd(sdev, cdb, opf, buff, bufflen,
+> > -                             ALUA_FAILOVER_TIMEOUT * HZ,
+> > +                             READ_ONCE(sdev->request_queue->rq_timeout=
+) ?: ALUA_FAILOVER_TIMEOUT * HZ,
+> >                               ALUA_FAILOVER_RETRIES, &exec_args);
+> >   }
+> >
+> > @@ -178,7 +178,7 @@ static int submit_stpg(struct scsi_device *sdev, in=
+t group_id,
+> >       put_unaligned_be32(stpg_len, &cdb[6]);
+> >
+> >       return scsi_execute_cmd(sdev, cdb, opf, stpg_data,
+> > -                             stpg_len, ALUA_FAILOVER_TIMEOUT * HZ,
+> > +                             stpg_len, READ_ONCE(sdev->request_queue->=
+rq_timeout) ?: ALUA_FAILOVER_TIMEOUT * HZ,
+> >                               ALUA_FAILOVER_RETRIES, &exec_args);
+> >   }
+> >
+> > @@ -512,7 +512,7 @@ static int alua_tur(struct scsi_device *sdev)
+> >       struct scsi_sense_hdr sense_hdr;
+> >       int retval;
+> >
+> > -     retval =3D scsi_test_unit_ready(sdev, ALUA_FAILOVER_TIMEOUT * HZ,
+> > +     retval =3D scsi_test_unit_ready(sdev, READ_ONCE(sdev->request_que=
+ue->rq_timeout) ?: ALUA_FAILOVER_TIMEOUT * HZ,
+> >                                     ALUA_FAILOVER_RETRIES, &sense_hdr);
+> >       if ((sense_hdr.sense_key =3D=3D NOT_READY ||
+> >            sense_hdr.sense_key =3D=3D UNIT_ATTENTION) &&
+> > @@ -552,7 +552,8 @@ static int alua_rtpg(struct scsi_device *sdev, stru=
+ct alua_port_group *pg)
+> >       valid_states_old =3D pg->valid_states;
+> >
+> >       if (!pg->expiry) {
+> > -             unsigned long transition_tmo =3D ALUA_FAILOVER_TIMEOUT * =
+HZ;
+> > +             unsigned long transition_tmo =3D min(READ_ONCE(sdev->requ=
+est_queue->rq_timeout) ?: ALUA_FAILOVER_TIMEOUT * HZ,
+> > +                                                (unsigned long)U8_MAX =
+* HZ);
+> >
+> >               if (pg->transition_tmo)
+> >                       transition_tmo =3D pg->transition_tmo * HZ;
+> > @@ -664,7 +665,8 @@ static int alua_rtpg(struct scsi_device *sdev, stru=
+ct alua_port_group *pg)
+> >       if ((buff[4] & RTPG_FMT_MASK) =3D=3D RTPG_FMT_EXT_HDR && buff[5] =
+!=3D 0)
+> >               pg->transition_tmo =3D buff[5];
+> >       else
+> > -             pg->transition_tmo =3D ALUA_FAILOVER_TIMEOUT;
+> > +             pg->transition_tmo =3D min((READ_ONCE(sdev->request_queue=
+->rq_timeout) ?: ALUA_FAILOVER_TIMEOUT * HZ) / HZ,
+> > +                                      (unsigned long)U8_MAX);
+> >
+> >       if (orig_transition_tmo !=3D pg->transition_tmo) {
+> >               sdev_printk(KERN_INFO, sdev,
+>
+> Weelll ... The transition timeout is _vastly_ different from the device
+> command timeout. While the latter tends to be rather small (ie in the
+> seconds range), the former can take _really_ long time.
+> Ask you competitors, they regularly require tens of _minuntes_ here.
+>
+> Having is settable is a good idea, but not to the command timeout.
+The SCSI path timeout represents a contract between the initiator and
+the target. Storage vendors provide recommended path timeout values
+for their arrays as a best practice, and administrators are expected to
+configure these values accordingly. This timeout value reflects what the
+target vendor has determined is the appropriate maximum time to wait for
+any operation on that path, accounting for the target's internal processing=
+,
+failover capabilities, and expected behavior under various conditions.
 
-Looks good to me.
+When the implicit transition timeout honors this same path timeout, it simp=
+ly
+extends that existing contract to cover ALUA state transitions. The
+target vendor
+whoever recommended a 30-second or 60-second path timeout did so with full
+knowledge of their array's behavior, including how long implicit
+transitions might
+take. If their array requires longer transitions than the recommended
+path timeout allows, that is a deficiency in their recommendation, not
+in the use
+of it as a default.
 
-Acked-by: Khalid Aziz <khalid@gonehiking.org>
+The SCSI SPC specification itself constrains the implicit transition
+timeout to a single byte in the RTPG extended header, limiting it to
+255 seconds. The
+kernel's data structure reflects this with an unsigned char for
+transition_tmo. If the
+specification authors believed implicit transitions could legitimately
+require tens of
+minutes, they would have allocated more than one byte for this field.
+Beyond the spec and
+data structure constraints, when the implicit transition timer expires
+the port group
+state is forced to STANDBY and new commands fail immediately.
+Supporting tens of minutes is not
+possible with the current implementation regardless of the default chosen. =
+Using
+the path timeout as the default creates consistency with the broader
+timeout contract that already exists between the initiator and the
+target, rather than
+introducing a separate arbitrary value that may conflict with the
+administrator's I/O expectations
+behavior on that path.
+>
+> Cheers,
+>
+> Hannes
+> --
+> Dr. Hannes Reinecke                  Kernel Storage Architect
+> hare@suse.com                               +49 911 74053 688
+> SUSE Software Solutions GmbH, Frankenstr. 146, 90461 N=C3=BCrnberg
+> HRB 36809 (AG N=C3=BCrnberg), GF: I. Totev, A. McDonald, W. Knoblich
 
---
-Khalid
+Thanks,
+Brian
+--=20
+Brian Bunker
+PURE Storage, Inc.
+brian@purestorage.com
