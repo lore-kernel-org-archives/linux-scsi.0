@@ -1,39 +1,55 @@
-Received: from mail-244105.protonmail.ch (mail-244105.protonmail.ch [109.224.244.105])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8E00133E35B
-	for <linux-scsi@vger.kernel.org>; Fri, 27 Mar 2026 03:36:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=109.224.244.105
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8F1A12BE7BB;
+	Fri, 27 Mar 2026 06:53:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774582618; cv=none; b=cUNOerp7OwyyaUdb94A5OthYG7IzUYKo/EVRuoHOjzB0xNeO/Oa2ajxR4yIrsCawuw0hGKEd0uh/KXtHXbifzUAlofBPzLYA54os4p9ffXzrUS102ToYFyystaPrdU1MAvM6aWbvAJ1SonqHfSgE1OeoVLmV183npObbIGIZg+0=
+	t=1774594384; cv=none; b=ESnt93odZ5ccH6QecTRpZez+pzGT89aWC5NqsSD8Fhcz/j3N18YOpxXVT0+bixAVPmssGaNK2zDc0HvmLkXEMzWwqty9HsdNmXprVtVgMdG2+G+T5L5RQWwWNWpCSTFW4enPEy2xpyRC3lru1cdjUBoELDq43oS19HqYbTfoCEg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774582618; c=relaxed/simple;
-	bh=MBxCmdmDQpACVDLMLvDvdaQ0SmC/FskylOBF0/RKBDg=;
-	h=Date:To:From:Cc:Subject:Message-ID:MIME-Version:Content-Type; b=FbWTGiSMAIdig0cgT23xNeI0EwTQvcQN/jo6D6mKpCQaclNNFFfDoxYP/RNjQpoFV6q7x/iND5qh46g4ruBRwwTcYU/zHqFKx2yaC9EB0Q5jRkNZSgcUgvmJVGQFuGo9YG/oCtHIKgyVP3e2Dgr0Z0vzGT+TLrv9UvtlALBJNbE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=magik.net; spf=pass smtp.mailfrom=magik.net; dkim=pass (2048-bit key) header.d=magik.net header.i=@magik.net header.b=Gin7KAui; arc=none smtp.client-ip=109.224.244.105
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=magik.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=magik.net
+	s=arc-20240116; t=1774594384; c=relaxed/simple;
+	bh=+6taD/KYX6s6aOGsQO53ivGa0KI2dG/K2GEdTZ29IxI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=maY8VjJ4M8ub7rY6gutpF8eIFQyvtYi1+++x2DcJwHGfOX0f41dZIGa/Utm0EM31BBTovbZ3+CXl08C+ydUVpxWWk/i4kcyZ5hKkqJpgD7zVyXn0oEDR9CpUbgRk9lHRqxSD+owzeafQuMEczQJ88UbSl9Lvv+cLesXXTneo4VM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=uM9tWBQS; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=magik.net header.i=@magik.net header.b="Gin7KAui"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=magik.net;
-	s=protonmail; t=1774581642; x=1774840842;
-	bh=fWr2FU/P5rejCm6ZNq8tQtdq71aMGtKLRZrF2iLVlO8=;
-	h=Date:To:From:Cc:Subject:Message-ID:Feedback-ID:From:To:Cc:Date:
-	 Subject:Reply-To:Feedback-ID:Message-ID:BIMI-Selector;
-	b=Gin7KAuicMm9w5eDenUy6sdN1UhAS+mrMK/6ickmuIZzh2iBx4AQAb2q/s/MWTLW+
-	 LWVLi5EkikL9IjugXDff2MJU6OoZJP3KBw9MsWHXD+wdzxFD+uR4tVgbLopjO60WCo
-	 aXFlk2aEKp35Qb9cGTiwzB7+cdUV15wQVCo+GxV030+dmrjL5tR48fFvqN1gAJCNfN
-	 tIbut0SohxD7f3UaWowcHjFkGrgSHTJCIgEgCJHfkU/ciCov5V5s1FBNBO0/PzMV6Y
-	 jhd5hGQ5RGnOw1Gckq2cNo3SC1B6yMBn6JrGV25cS7bUtHob3Kmsgtl7LA3oSmggg8
-	 LCWmUlg2MMFIA==
-Date: Fri, 27 Mar 2026 03:20:36 +0000
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-From: me@magik.net
-Cc: Kashyap Desai <kashyap.desai@broadcom.com>, Sumit Saxena <sumit.saxena@broadcom.com>, Shivasharan S <shivasharan.srikanteshwara@broadcom.com>, Chandrakanth patil <chandrakanth.patil@broadcom.com>, "megaraidlinux.pdl@broadcom.com" <megaraidlinux.pdl@broadcom.com>, "regressions@lists.linux.dev" <regressions@lists.linux.dev>
-Subject: [PATCH] scsi: megaraid_sas: fix PRP list out-of-bounds write
-Message-ID: <GPhsSM0vkgyIrs0DIZ62qeUZX7X4RxwQXVKiuvMx-lHQVSPDxpztUyQOGS0xikqvJ-Z94hMV-dW_5KN_0CX2hsfV7kTf_t0MTf6vdAAaSEc=@magik.net>
-Feedback-ID: 68610942:user:proton
-X-Pm-Message-ID: 3b5355a5d6a35a1fbe69b791698367a181598161
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uM9tWBQS"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5247EC19423;
+	Fri, 27 Mar 2026 06:52:55 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1774594383;
+	bh=+6taD/KYX6s6aOGsQO53ivGa0KI2dG/K2GEdTZ29IxI=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=uM9tWBQSBzeOskmqaDM0QvWoV4jUNiC4DsBlIKIFg7In21qbXcrgvL+npIdvVsRu4
+	 qrE69iQ+kiDSqXlcivHy16z+fEY80xVdn90vInQTF9nPU0Nfe7+PBampXS2wO/gG+p
+	 NgAISEoCyX1+VSpZjmfa/Wk2xePLkgGitS5duT/iqLt2Xz6gmhtYoyq/3bAsUtsGq+
+	 2OtE88H/kNHCxHKSKe13LzCtkcFHYUQtieBVLEZ/RgfH2fMVrGZXCU2jVD0wDWvbDI
+	 /UHVNy1S2RfsSIT/lKpdHdy0Vk/hccjI1KCqeAffyJ+BOUCNvP4IiTCz7QCM5HVlUz
+	 YXDRsPrcv0reg==
+Date: Fri, 27 Mar 2026 12:22:46 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Vladimir Oltean <vladimir.oltean@nxp.com>
+Cc: linux-phy@lists.infradead.org, Vinod Koul <vkoul@kernel.org>, 
+	Neil Armstrong <neil.armstrong@linaro.org>, dri-devel@lists.freedesktop.org, freedreno@lists.freedesktop.org, 
+	linux-arm-kernel@lists.infradead.org, linux-arm-msm@vger.kernel.org, linux-can@vger.kernel.org, 
+	linux-gpio@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-media@vger.kernel.org, linux-pci@vger.kernel.org, linux-renesas-soc@vger.kernel.org, 
+	linux-riscv@lists.infradead.org, linux-rockchip@lists.infradead.org, 
+	linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org, linux-sunxi@lists.linux.dev, 
+	linux-tegra@vger.kernel.org, linux-usb@vger.kernel.org, netdev@vger.kernel.org, 
+	spacemit@lists.linux.dev, UNGLinuxDriver@microchip.com, 
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, 
+	Nitin Rawat <quic_nitirawa@quicinc.com>
+Subject: Re: [PATCH v5 phy-next 10/27] scsi: ufs: qcom: keep parallel track
+ of PHY power state
+Message-ID: <gq4sswslkjaoe5hhxe2mz6z57uiumotqknkryadvfsstj4srx4@qgenqekgrqv4>
+References: <20260319223241.1351137-1-vladimir.oltean@nxp.com>
+ <20260319223241.1351137-11-vladimir.oltean@nxp.com>
+ <ezrcjjwtg5n76w4m65l27szu5mywx66ti3xuprkfcp3x6quvbf@2rew4zrnnbt2>
+ <20260325114309.3k7xkfrffpxp5xq4@skbuf>
+ <vu3cxpynr5mu2fzkrtmjcwijc5jz323wlnbc3r7lp2wxqmhydx@z5xhgf4myw2d>
+ <20260325115731.genmq2yew2p4dvbs@skbuf>
+ <20260326080444.gbesciaa5zwvcgoy@skbuf>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -41,97 +57,71 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260326080444.gbesciaa5zwvcgoy@skbuf>
 
-megasas_make_prp_nvme() builds NVMe PRP lists in cmd->sg_frame,
-which is a DMA-pool allocation sized by instance->max_chain_frame_sz.
+On Thu, Mar 26, 2026 at 10:04:44AM +0200, Vladimir Oltean wrote:
+> On Wed, Mar 25, 2026 at 01:57:31PM +0200, Vladimir Oltean wrote:
+> > On Wed, Mar 25, 2026 at 05:21:14PM +0530, Manivannan Sadhasivam wrote:
+> > > I believe I added the power_count check for phy_exit(). But since that got
+> > > moved, the check becomes no longer necessary.
+> > 
+> > FYI, the power_count keeps track of the balance of phy_power_on() and
+> > phy_power_off() calls, whereas it is the init_count keeps track of
+> > phy_init() and phy_exit() calls. They are only related to the extent
+> > that you must respect the phy_init() -> phy_power_on() -> phy_power_off()
+> > -> phy_exit() sequence. But in any case, both should be considered
+> > PHY-internal fields. The "Order of API calls" section from
+> > Documentation/driver-api/phy/phy.rst mentions the order that I just
+> > described above, and consumers should just ensure they follow that.
+> 
+> Ok, so we can close this topic of "checking the power_count not needed"
+> by linking to the conversation which spun off here:
+> https://lore.kernel.org/lkml/20260325120122.265973-1-manivannan.sadhasivam@oss.qualcomm.com/
+> 
 
-On the affected controller, max_chain_frame_sz is 4096 bytes. The
-function stores 64-bit PRP entries in that buffer and, at each PRP-list
-page boundary, uses the last slot for a chain pointer to the next page.
+Sure.
 
-When ptr_sgl reaches offset 4088, the code stores the chain pointer
-there, increments ptr_sgl, and then writes the next PRP entry at offset
-4096, past the end of the allocation.
+> Mani, I spent some more time to figure out what's really going on with
+> this unexpected phy_power_off() call. Do you think you could
+> regression-test the patch attached?
+> 
 
-On an affected system this reproduces reliably on 6.19.10 during normal
-I/O to an NVMe device behind a MegaRAID SAS39xx controller:
+I tested the patch. But it fails ufs_qcom_power_up_sequence() if PHY was already
+powered on:
 
-  BUG: unable to handle page fault for address: ff76d0e56380c000
-  #PF: supervisor write access in kernel mode
-  #PF: error_code(0x0002) - not-present page
-  RIP: 0010:megasas_make_prp_nvme.isra.0+0x12f/0x220 [megaraid_sas]
-  RAX: 0000000000000200
+[   31.513321] qcom-qmp-ufs-phy 1d87000.phy: phy initialization timed-out
+[   31.513335] ufshcd-qcom 1d84000.ufshc: Failed to calibrate PHY: -110
+[   31.565273] ufshcd-qcom 1d84000.ufshc: Enabling the controller failed
 
-RAX=3D0x200 indicates the fault happens at the 512th 8-byte slot, i.e.
-exactly the 4096-byte boundary of the chain frame.
+Funny thing is, it didn't affect the functionality since the UFS core retries
+ufshcd_hba_enable() and in the error path of ufs_qcom_power_up_sequence(),
+phy_power_off() gets called and that causes the next try to succeed. So it is
+evident that, if PHY was already powered ON, it should be powered off before
+ufs_qcom_phy_power_on(). And due to the UFS driver design,
+ufs_qcom_power_up_sequence() can get called multiple times. So we cannot just
+remove phy_power_off().
 
-Fix this by checking that the chain frame still has room before writing:
+Below diff on top of your patch fixes the issue:
 
-- the page-boundary chain pointer plus at least one following PRP entry
-- each PRP entry itself
-
-If either check fails, return false and let the caller use the existing
-IEEE SGL fallback path.
-
-Tested on:
-- ASUS ESC8000A-E13
-- 2x AMD EPYC 9335
-- Broadcom MegaRAID 9560-16i / SAS39xx
-- KIOXIA 14TB NVMe behind the controller
-
-Before this patch, 6.19.10 crashed repeatedly during boot and normal
-disk I/O. After applying it, the system boots cleanly and completes 4GB
-direct-I/O reads without crashes.
-
-Cc: stable@vger.kernel.org
-Signed-off-by: Lukasz Magiera <me@magik.net>
----
- drivers/scsi/megaraid/megaraid_sas_fusion.c | 19 +++++++++++++++++++
- 1 file changed, 19 insertions(+)
-
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/meg=
-araid/megaraid_sas_fusion.c
-index 4e498a6..29fa7f1 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-@@ -2225,6 +2225,18 @@ megasas_make_prp_nvme(struct megasas_instance *insta=
-nce, struct scsi_cmnd *scmd,
- =09=09/* Put PRP pointer due to page boundary*/
- =09=09page_mask_result =3D (uintptr_t)(ptr_sgl + 1) & page_mask;
- =09=09if (unlikely(!page_mask_result)) {
-+=09=09=09/*
-+=09=09=09 * Bounds check: if the chain frame buffer cannot
-+=09=09=09 * fit the chain pointer plus at least one more
-+=09=09=09 * PRP entry, bail out to IEEE SGL fallback.
-+=09=09=09 * This prevents writing past the end of the
-+=09=09=09 * DMA-allocated chain frame buffer.
-+=09=09=09 */
-+=09=09=09if ((num_prp_in_chain + 2) * sizeof(u64) >
-+=09=09=09    instance->max_chain_frame_sz) {
-+=09=09=09=09build_prp =3D false;
-+=09=09=09=09break;
-+=09=09=09}
- =09=09=09scmd_printk(KERN_NOTICE,
- =09=09=09=09    scmd, "page boundary ptr_sgl: 0x%p\n",
- =09=09=09=09    ptr_sgl);
-@@ -2234,6 +2246,13 @@ megasas_make_prp_nvme(struct megasas_instance *insta=
-nce, struct scsi_cmnd *scmd,
- =09=09=09num_prp_in_chain++;
- =09=09}
-=20
-+=09=09/* Bounds check: ensure space for this PRP entry */
-+=09=09if ((num_prp_in_chain + 1) * sizeof(u64) >
-+=09=09    instance->max_chain_frame_sz) {
-+=09=09=09build_prp =3D false;
-+=09=09=09break;
-+=09=09}
+```
+diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+index ed067247d72a..2c9fe03f349e 100644
+--- a/drivers/ufs/host/ufs-qcom.c
++++ b/drivers/ufs/host/ufs-qcom.c
+@@ -567,6 +567,8 @@ static int ufs_qcom_power_up_sequence(struct ufs_hba *hba)
+        if (ret)
+                return ret;
+ 
++       ufs_qcom_phy_power_off(host);
 +
- =09=09*ptr_sgl =3D cpu_to_le64(sge_addr);
- =09=09ptr_sgl++;
- =09=09ptr_sgl_phys +=3D 8;
---=20
-2.43.0
+        ret = ufs_qcom_phy_set_gear(host, mode);
+        if (ret) {
+                dev_err(hba->dev, "%s: phy_set_mode_ext() failed, ret = %d\n",
+```
 
+- Mani
 
-
+-- 
+மணிவண்ணன் சதாசிவம்
