@@ -1,39 +1,52 @@
-Received: from cstnet.cn (smtp21.cstnet.cn [159.226.251.21])
-	(using TLSv1.2 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+Received: from sender-of-o57.zoho.eu (sender-of-o57.zoho.eu [136.143.169.57])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3A8B927442;
-	Sun, 29 Mar 2026 03:16:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.226.251.21
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774754182; cv=none; b=GBhrhwFMps3j3xaR7Ib4pJrUPsruv3vJwbryeJEUiD/GboYWtTpwCum8w298ZSQIbT+Rc+7XfWOh5yxquhQASdP8KZctMIUYkQha0BhwuNTVsopCXac3PSOcZHOYE8RXxVoKdP5mlRW04dcdC7okbq4sN+wColBm9RKw4ipyBlU=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774754182; c=relaxed/simple;
-	bh=kxI31Q6x/h6gFBTpOFUYOBNbqQwFfLhXRao4rZoUv40=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=S6DZZcpdZFF3h7DJJrYwGvbY0ZvpzEKk9KGmUpDU5p1SuaM62iRWXXujeCvpFoIDXmM0It0EnqmBgg4G4W2bWJhBjKPQkuMBnToRD6yZJxhOr1xvpbpKIxEhosRGAOeDLc0qS90JHYSEuW3SLEsZFKPZWrfw8/ZJDAfOlgVOo70=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn; spf=pass smtp.mailfrom=iscas.ac.cn; arc=none smtp.client-ip=159.226.251.21
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iscas.ac.cn
-Received: from localhost.localdomain (unknown [111.196.245.197])
-	by APP-01 (Coremail) with SMTP id qwCowABXAW37l8hppOd8Cw--.811S2;
-	Sun, 29 Mar 2026 11:09:47 +0800 (CST)
-From: Pengpeng Hou <pengpeng@iscas.ac.cn>
-To: don.brace@microchip.com,
-	James.Bottomley@HansenPartnership.com,
-	martin.petersen@oracle.com
-Cc: elliott@hp.com,
-	kevin.barnett@pmcs.com,
-	JBottomley@Odin.com,
-	thenzl@redhat.com,
-	scott.teel@pmcs.com,
-	hare@Suse.de,
-	storagedev@microchip.com,
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B8F3F292B44;
+	Sun, 29 Mar 2026 18:35:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=136.143.169.57
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1774809346; cv=pass; b=CkJcEPGobOH3aieuyF+i6Y6QcyRfBxuQFTXYz4Mtw9YVrcSdYJI4bswWWNL8vb2CIDDjRytnpM032WoytyD03foQamhZBuCq0OrskVIgkPyprdnKaMJr1dU+37XXJvNcaa+YZ5qmBNKUVR1iIg6rVXMbPT/2OoMVmc2VDq1UY4c=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1774809346; c=relaxed/simple;
+	bh=KluLD3an1m/I8Sen+H17GNazb32lFETpVx6pJs3U9ME=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=d1aG2cAl4qiUbsgvE3qh2JBIYxBIqGXM47g3iVntF1iv+2p81c6ETN/t6SaUyMAOhqmpNT7hHaqBMlreT/R2aS/h5MnAS6epqbwrkdH7AGwuPduvQauwvS3dFIL66JCj1syrKkhhXNBEFPQqyhGbFsqD+kEt4UlL8TNoIk9ou80=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=objecting.org; spf=pass smtp.mailfrom=objecting.org; dkim=pass (1024-bit key) header.d=objecting.org header.i=objecting@objecting.org header.b=eDwXr71O; arc=pass smtp.client-ip=136.143.169.57
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=objecting.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=objecting.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=objecting.org header.i=objecting@objecting.org header.b="eDwXr71O"
+ARC-Seal: i=1; a=rsa-sha256; t=1774809319; cv=none; 
+	d=zohomail.eu; s=zohoarc; 
+	b=Xlgf/zP4Zhg3LL2LW0Op0TSG9Nm5hWiYheaXbjH+NN/hGPyHIfgMoGfZZZah/tnsF5l4Cu/8qfuz4T6HOnNF76dpJmUjvAoKaRUDibX+B3W9bVvmZr7/PT604iSnNfIuUkVDzf0T+u7oXwgUrRnWVHshJiCqVa821ZETXecFUU8=
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.eu; s=zohoarc; 
+	t=1774809319; h=Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:MIME-Version:Message-ID:Subject:Subject:To:To:Message-Id:Reply-To; 
+	bh=P5Yc396NflXhsxNKiiVfi/eLQprdlVd89Ih6i/8GNks=; 
+	b=bG/FJSMztF6SpPZb6xQdBynzPuetwgETeOxzOrtwn244Tz8snqCW4dwV3wttPa9Bp8USDDdR14pm2sdYfcRnIE9AMnIUUC87iHH7I3Z9+iBMGg99jlFcpQQoQo68UOFps+IRAuhX8uLBbGPDdIHWfpIqYh+6pXLW727i4JNNIMA=
+ARC-Authentication-Results: i=1; mx.zohomail.eu;
+	dkim=pass  header.i=objecting.org;
+	spf=pass  smtp.mailfrom=objecting@objecting.org;
+	dmarc=pass header.from=<objecting@objecting.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1774809319;
+	s=zmail; d=objecting.org; i=objecting@objecting.org;
+	h=From:From:To:To:Cc:Cc:Subject:Subject:Date:Date:Message-Id:Message-Id:MIME-Version:Content-Transfer-Encoding:Reply-To;
+	bh=P5Yc396NflXhsxNKiiVfi/eLQprdlVd89Ih6i/8GNks=;
+	b=eDwXr71OS+h9uUzgbiwPai8/lq8kFoAy6Ev9E75kzC3IiI/JQKgkS3AXVyYXXurl
+	mb6YTEABYN8aXRY68gKXLp9NRouzpEcj9Brvje6XJ0k3cxS0i/rmbpENATZQGLwORbG
+	fI7KtmgmlRg+hp4AAfnSCLxjroRMscxnoLrfriHA=
+Received: by mx.zoho.eu with SMTPS id 17748093160311013.9868925616536;
+	Sun, 29 Mar 2026 20:35:16 +0200 (CEST)
+From: Josh Law <objecting@objecting.org>
+To: Manivannan Sadhasivam <mani@kernel.org>,
+	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-arm-msm@vger.kernel.org,
 	linux-scsi@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	pengpeng@iscas.ac.cn
-Subject: [PATCH] scsi: hpsa: use bounded formatting for controller and IRQ names
-Date: Sun, 29 Mar 2026 11:09:47 +0800
-Message-ID: <20260329030947.32427-1-pengpeng@iscas.ac.cn>
-X-Mailer: git-send-email 2.50.1
+	Josh Law <objecting@objecting.org>
+Subject: [PATCH] scsi: ufs: qcom: stop ignoring hibern8 exit failures
+Date: Sun, 29 Mar 2026 18:35:14 +0000
+Message-Id: <20260329183514.133412-1-objecting@objecting.org>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -41,104 +54,34 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:qwCowABXAW37l8hppOd8Cw--.811S2
-X-Coremail-Antispam: 1UD129KBjvJXoWxCrWxCw1rJry3Jw43Cr47CFg_yoW5AFW7p3
-	y3XFWagrs7Kr12g39Ivw1UZr4fC395Ja47Kr4Dtas7ZFn7uryYvF4rCry8XFZ7GrWxZr4Y
-	kF45XFyUG3WUGrJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUU9214x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26ryj6F1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26F4j
-	6r4UJwA2z4x0Y4vEx4A2jsIE14v26F4UJVW0owA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Cr
-	1j6rxdM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj
-	6xIIjxv20xvE14v26r126r1DMcIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr
-	0_Gr1lF7xvr2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7M4IIrI8v6xkF7I0E
-	8cxan2IY04v7MxkF7I0En4kS14v26r1q6r43MxAIw28IcxkI7VAKI48JMxC20s026xCaFV
-	Cjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWl
-	x4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1I6r
-	4UMIIF0xvE2Ix0cI8IcVCY1x0267AKxVWxJVW8Jr1lIxAIcVCF04k26cxKx2IYs7xG6r1j
-	6r1xMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYx
-	BIdaVFxhVjvjDU0xZFpf9x0JUL0edUUUUU=
-X-CM-SenderInfo: pshqw1xhqjqxpvfd2hldfou0/
+X-ZohoMailClient: External
 
-hpsa stores the controller name in h->devname[8] and derives fixed
-16-byte interrupt names from it with sprintf(). Once host_no reaches
-four digits, h->devname no longer fits and the derived IRQ names then
-build on top of that already overlong string.
+Right now, we're blindly returning success even if waking the link fails during clock scaling. This is a mess because the core then tries to send SCSI commands to a dead link, causing huge timeouts.
 
-Switch these name builders to scnprintf() so they stay inside the fixed buffers.
+Just return the actual error so the core can catch the failure and roll back properly.
 
-Fixes: 2946e82bdd76 ("hpsa: use scsi host_no as hpsa controller number")
-Fixes: 8b47004a5512 ("hpsa: add interrupt number to /proc/interrupts interrupt name")
-Signed-off-by: Pengpeng Hou <pengpeng@iscas.ac.cn>
+Signed-off-by: Josh Law <objecting@objecting.org>
 ---
- drivers/scsi/hpsa.c | 31 ++++++++++++++++---------------
- 1 file changed, 16 insertions(+), 15 deletions(-)
+ drivers/ufs/host/ufs-qcom.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index a1b116cd4723..479abb23c536 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -8100,16 +8100,16 @@ static int hpsa_request_irqs(struct ctlr_info *h,
- 	if (h->intr_mode == PERF_MODE_INT && h->msix_vectors > 0) {
- 		/* If performant mode and MSI-X, use multiple reply queues */
- 		for (i = 0; i < h->msix_vectors; i++) {
--			sprintf(h->intrname[i], "%s-msix%d", h->devname, i);
-+			scnprintf(h->intrname[i], sizeof(h->intrname[i]),
-+				  "%s-msix%d", h->devname, i);
- 			rc = request_irq(pci_irq_vector(h->pdev, i), msixhandler,
--					0, h->intrname[i],
--					&h->q[i]);
-+					 0, h->intrname[i], &h->q[i]);
- 			if (rc) {
- 				int j;
- 
- 				dev_err(&h->pdev->dev,
- 					"failed to get irq %d for %s\n",
--				       pci_irq_vector(h->pdev, i), h->devname);
-+					pci_irq_vector(h->pdev, i), h->devname);
- 				for (j = 0; j < i; j++) {
- 					free_irq(pci_irq_vector(h->pdev, j), &h->q[j]);
- 					h->q[j] = 0;
-@@ -8122,19 +8122,19 @@ static int hpsa_request_irqs(struct ctlr_info *h,
- 	} else {
- 		/* Use single reply pool */
- 		if (h->msix_vectors > 0 || h->pdev->msi_enabled) {
--			sprintf(h->intrname[0], "%s-msi%s", h->devname,
--				h->msix_vectors ? "x" : "");
-+			scnprintf(h->intrname[0], sizeof(h->intrname[0]),
-+				  "%s-msi%s", h->devname,
-+				  h->msix_vectors ? "x" : "");
- 			rc = request_irq(pci_irq_vector(h->pdev, irq_vector),
--				msixhandler, 0,
--				h->intrname[0],
--				&h->q[h->intr_mode]);
-+					 msixhandler, 0, h->intrname[0],
-+					 &h->q[h->intr_mode]);
- 		} else {
--			sprintf(h->intrname[h->intr_mode],
--				"%s-intx", h->devname);
-+			scnprintf(h->intrname[h->intr_mode],
-+				  sizeof(h->intrname[h->intr_mode]),
-+				  "%s-intx", h->devname);
- 			rc = request_irq(pci_irq_vector(h->pdev, irq_vector),
--				intxhandler, IRQF_SHARED,
--				h->intrname[0],
--				&h->q[h->intr_mode]);
-+					 intxhandler, IRQF_SHARED,
-+					 h->intrname[0], &h->q[h->intr_mode]);
+diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+index 375fd24ba458..5d33a921a22f 100644
+--- a/drivers/ufs/host/ufs-qcom.c
++++ b/drivers/ufs/host/ufs-qcom.c
+@@ -1750,10 +1750,10 @@ static int ufs_qcom_clk_scale_notify(struct ufs_hba *hba, bool scale_up,
  		}
+ 
+ 		ufs_qcom_icc_update_bw(host);
+-		ufshcd_uic_hibern8_exit(hba);
++		err = ufshcd_uic_hibern8_exit(hba);
  	}
- 	if (rc) {
-@@ -8715,7 +8715,8 @@ static int hpsa_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	if (rc)
- 		goto clean2_5;	/* pci, lu, aer/h */
  
--	sprintf(h->devname, HPSA "%d", h->scsi_host->host_no);
-+	scnprintf(h->devname, sizeof(h->devname), HPSA "%d",
-+		  h->scsi_host->host_no);
- 	h->ctlr = number_of_controllers;
- 	number_of_controllers++;
+-	return 0;
++	return err;
+ }
  
+ static void ufs_qcom_enable_test_bus(struct ufs_qcom_host *host)
 -- 
-2.50.1 (Apple Git-155)
+2.34.1
 
