@@ -1,104 +1,179 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E49962D6E7B;
-	Mon, 30 Mar 2026 07:46:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E76053ACF00;
+	Mon, 30 Mar 2026 08:08:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.187
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774856809; cv=none; b=NS3naNlZ/bhuy8gfu2PygJN2srgMIUqMUKhr/Fk3DsNytoIrSCYkHIX5LHiyZLGXUQqszcSa5zLGZa1zZlfI5fvQ9JWhpdx2QyfAvrL88mV94VoqkNG86A3aSJe8/1dckSJXlBEUZkBt5Z0ArITr/W4rUUsD4CS1tL0zem7Omnw=
+	t=1774858098; cv=none; b=UpgAxZRL3An56umRr2aKP+OBjrjWAotDzVfWpja+3v9B5pEiS8+hVcVH5pISggBupF+DKzeD/XYyywGDh4qUP2K6SSPetQmMCwfjkH7NHTKhdipELvvW1n8XhFhpyHEhDziGZmSuGDTg2nBhJVgQPzHK80hDkmrAJWarfh0KI18=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774856809; c=relaxed/simple;
-	bh=ghPMMaOs1vHHMlZDGjnn18LwdDGKcYb2NY7IWNpAhCk=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=nuko7REaZiwle3GC61cvwxzgU0GqG/91lNpXomUtfLB6jxGh4UrV63pggrCGCy8GO+oIgESjl73pUPM58NpugKVkKFCxH0K1BowhyIes09GqnFB+gMriVJmvcT1T93fd2afuWRR5pDMrTFqVOk/xNDJrCJatgKQto9rRdVl1gYA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KBf3WXKt; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1774858098; c=relaxed/simple;
+	bh=t+nqG3/wCiqQu0s2NJPkLZKR4MAaFxSdDwVtifL1beQ=;
+	h=Message-ID:Date:MIME-Version:Subject:From:To:CC:References:
+	 In-Reply-To:Content-Type; b=nZsuJW4U9WeXxZ7nQxAu54b0cTAONFuy2L4sQKag9Djrrd5EA+TG/7zQM+XfjAdh/wPDCI8t2bXn33RAjaURbk/GziSeryfZ9Rx9A2deUERFmULm4fCvrx9bU77dGDxaGQN0BV5ppPKazQ2HjXN1yNwdF273hLrmZZsdBdnONNY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=FXEU/3zQ; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=FXEU/3zQ; arc=none smtp.client-ip=45.249.212.187
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KBf3WXKt"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D6ED2C4CEF7;
-	Mon, 30 Mar 2026 07:46:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1774856808;
-	bh=ghPMMaOs1vHHMlZDGjnn18LwdDGKcYb2NY7IWNpAhCk=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=KBf3WXKtalhQ095oMSAnLt/b5D6E72wI6uRrIbR/dbsF4kLiBXx79+IMV3aaFlovn
-	 qSs4cM7tfTlATuA17WKD56APp31DkM39pEDjuRMF/uVgejlarPyLyg1PJBq2jhquBE
-	 RMzSFSwvvXB82HA9nICqPKjkUxMCSmx/gTMjjfDEJOFk3QYk+j4Zp+UojK1PtyhdcH
-	 FhVqIp+0o6zb5paUfFARx6OvCFHlISAwb1S3bbI9tF0gtOQ/BkWrTVDNhT4H4r8/IB
-	 1HCbdsCJdN77HBu6mz3GMDDm5y4ghYFxtLQWO9EsTMb7+m1f1CIw8EYdaedalPTIIl
-	 CkmrbWIv2QO2A==
-Message-ID: <56b8460c-228c-4775-8359-e80735b2ba22@kernel.org>
-Date: Mon, 30 Mar 2026 09:46:44 +0200
+	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="FXEU/3zQ";
+	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="FXEU/3zQ"
+dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=wxpkmpYiPR7j4fcuhkyeN2M7Pm8HCN1zSEDOb1WvCk4=;
+	b=FXEU/3zQOX/lHrxHLT3aLJd+wpE5BYr/Vt+QNV147jJLH7DPe3a/vpf1strxhuEvUqAsBO8Zy
+	ma16WAR1NkTtgjnYJYmXXAgMBSbyAksffrfTj4MK5qU2ikV5COrJhBPPM9p58TymBuit6o/+/Cv
+	r3uX3KuTZC13B82RUM9tAFg=
+Received: from canpmsgout10.his.huawei.com (unknown [172.19.92.130])
+	by szxga01-in.huawei.com (SkyGuard) with ESMTPS id 4fkkQ72KNhz1BFwm;
+	Mon, 30 Mar 2026 16:07:59 +0800 (CST)
+dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=wxpkmpYiPR7j4fcuhkyeN2M7Pm8HCN1zSEDOb1WvCk4=;
+	b=FXEU/3zQOX/lHrxHLT3aLJd+wpE5BYr/Vt+QNV147jJLH7DPe3a/vpf1strxhuEvUqAsBO8Zy
+	ma16WAR1NkTtgjnYJYmXXAgMBSbyAksffrfTj4MK5qU2ikV5COrJhBPPM9p58TymBuit6o/+/Cv
+	r3uX3KuTZC13B82RUM9tAFg=
+Received: from mail.maildlp.com (unknown [172.19.163.15])
+	by canpmsgout10.his.huawei.com (SkyGuard) with ESMTPS id 4fkkHB5Rdtz1K9hw;
+	Mon, 30 Mar 2026 16:01:58 +0800 (CST)
+Received: from kwepemj200013.china.huawei.com (unknown [7.202.194.25])
+	by mail.maildlp.com (Postfix) with ESMTPS id 0CB034056E;
+	Mon, 30 Mar 2026 16:08:05 +0800 (CST)
+Received: from [10.174.179.155] (10.174.179.155) by
+ kwepemj200013.china.huawei.com (7.202.194.25) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.11; Mon, 30 Mar 2026 16:08:03 +0800
+Message-ID: <7fa459e1-d957-4dea-8694-fd5f8866b092@huawei.com>
+Date: Mon, 30 Mar 2026 16:08:03 +0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi: ufs: qcom: stop ignoring hibern8 exit failures
-To: Josh Law <objecting@objecting.org>,
- Manivannan Sadhasivam <mani@kernel.org>,
- "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
- "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
- linux-kernel@vger.kernel.org
-References: <20260329183514.133412-1-objecting@objecting.org>
-From: Krzysztof Kozlowski <krzk@kernel.org>
-Content-Language: en-US
-Autocrypt: addr=krzk@kernel.org; keydata=
- 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 a/A=
-In-Reply-To: <20260329183514.133412-1-objecting@objecting.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+User-Agent: =?UTF-8?B?TW96aWxsYSBUaHVuZGVyYmlyZCDmtYvor5XniYg=?=
+Subject: Re: [REGRESSION?] scsi: sas: wildcard user scan may iterate over huge
+ max_id
+From: Li Lingfeng <lilingfeng3@huawei.com>
+To: <ranjan.kumar@broadcom.com>
+CC: <linux-scsi@vger.kernel.org>, <jejb@linux.ibm.com>,
+	<martin.petersen@oracle.com>, "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>, <rajsekhar.chundru@broadcom.com>,
+	<sathya.prakash@broadcom.com>, <sumit.saxena@broadcom.com>,
+	<chandrakanth.patil@broadcom.com>, <prayas.patel@broadcom.com>, yangerkun
+	<yangerkun@huawei.com>, "zhangyi (F)" <yi.zhang@huawei.com>, Hou Tao
+	<houtao1@huawei.com>, "chengzhihao1@huawei.com" <chengzhihao1@huawei.com>,
+	<jiangjianjun3@h-partners.com>, <yuancan@huawei.com>
+References: <773ba972-433b-44b4-89d2-295bd9f5de38@huawei.com>
+In-Reply-To: <773ba972-433b-44b4-89d2-295bd9f5de38@huawei.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: kwepems200002.china.huawei.com (7.221.188.68) To
+ kwepemj200013.china.huawei.com (7.202.194.25)
 
-On 29/03/2026 20:35, Josh Law wrote:
-> Right now, we're blindly returning success even if waking the link fails during clock scaling. This is a mess because the core then tries to send SCSI commands to a dead link, causing huge timeouts.
-> 
-> Just return the actual error so the core can catch the failure and roll back properly.
+Hi,
 
-NAK, you were asked way too many times for the same and you just ignore
-people's feedback.
+I have one more question after looking at the SAS scan paths a bit more.
 
-Best regards,
-Krzysztof
+What caught my attention is that sas_rphy_add() and the old
+sas_user_scan() seemed to follow the same scanning model:
+
+   - scan via channel 0
+   - use rphy->scsi_target_id as the target id
+
+For example, sas_rphy_add() does:
+
+   scsi_scan_target(&rphy->dev, 0, rphy->scsi_target_id, lun,
+                    SCSI_SCAN_INITIAL);
+
+So before this change, these two paths looked consistent to me.
+
+Now sas_user_scan() has moved to a different model for the extra channels,
+while sas_rphy_add() still uses the original one. This makes me wonder
+whether these two paths are expected to stay consistent, and if so, which
+direction is actually intended.
+
+Should sas_rphy_add() also be changed to follow the new sas_user_scan()
+behavior? Or is sas_rphy_add() a hint that sas_user_scan() should remain
+aligned with the original rphy-based scan model instead?
+
+I am not very familiar with the intended SCSI/SAS scanning design here,
+so this may be a naive question. I just wanted to check whether the
+current inconsistency between sas_rphy_add() and sas_user_scan() is
+expected, or whether one of them should be adjusted so that both follow
+the same model again.
+
+Any clarification would be greatly appreciated.
+
+Thanks,
+Lingfeng.
+
+在 2026/3/28 10:28, Li Lingfeng 写道:
+> Hi,
+>
+> I think commit 37c4e72b0651 ("scsi: Fix sas_user_scan() to handle 
+> wildcard
+> and multi-channel scans") may introduce a regression for wildcard 
+> scans on
+> some SAS hosts.
+>
+> Userspace trigger:
+>
+>   echo "- - -" > /sys/class/scsi_host/host0/scan
+>
+> results in:
+>
+>   channel = SCAN_WILD_CARD
+>   id      = SCAN_WILD_CARD
+>   lun     = SCAN_WILD_CARD
+>
+> Before this commit, sas_user_scan() iterated sas_host->rphy_list and 
+> called
+> scsi_scan_target() for matching rphys. In effect, scanning was limited to
+> channel 0 and to target ids present in sas_host->rphy_list.
+>
+> After this commit, sas_user_scan() does:
+>
+>   - scan channel 0 via scan_channel_zero()
+>   - scan channels 1..shost->max_channel via scsi_scan_host_selected()
+>
+> When id == SCAN_WILD_CARD, the latter path goes through
+> scsi_scan_channel(), which iterates ids from 0 to shost->max_id.
+>
+> This looks problematic for drivers that use a very large max_id. For
+> example, smartpqi sets:
+>
+>   shost->max_id = ~0;
+>
+> In that case, a wildcard scan may end up iterating from id 0 to ~0 in
+> scsi_scan_channel(). In my testing/analysis, this makes the scan take a
+> very long time, and the id-space walk itself does not seem meaningful for
+> this SAS transport scan path.
+>
+> So while the commit fixes incomplete wildcard channel handling, it also
+> appears to expand the id scan range from:
+>
+>   sas_host->rphy_list target ids
+>
+> to:
+>
+>   0..shost->max_id
+>
+> for the additional channels.
+>
+> It seems to me that wildcard SAS scans should probably remain bounded by
+> transport-discovered SAS targets, instead of falling back to a host-wide
+> id enumeration for the extra channels. One possible direction may be to
+> avoid calling scsi_scan_host_selected() with id == SCAN_WILD_CARD from
+> sas_user_scan(), or otherwise constrain the id range in a transport-aware
+> way.
+>
+> Am I understanding this correctly? If so, what would be the preferred way
+> to address this? I would appreciate feedback on whether this is 
+> considered
+> a real regression, and on the best fix direction.
+>
+> Thanks,
+> Lingfeng.
+>
