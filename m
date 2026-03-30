@@ -1,211 +1,393 @@
-Received: from mail-wm1-f48.google.com (mail-wm1-f48.google.com [209.85.128.48])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from LO2P265CU024.outbound.protection.outlook.com (mail-uksouthazon11021116.outbound.protection.outlook.com [52.101.95.116])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 93BFA3A6B8B
-	for <linux-scsi@vger.kernel.org>; Mon, 30 Mar 2026 21:49:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.48
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774907361; cv=none; b=oUiEZBFdxlnccTENYr7OttJWH3lJZFe+0ipENM8LXBa9rNMetriyfEv3y1AakmHJa4S7WEgAdM1PqUfYrz1/xCn6zqXw1pSixlF/csxjyio4fQvjgeEaiph/dV0cYYpJr88QqH4wJRJbMWSNUR/Efa2pwTINN4pjucInFLl8n0E=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774907361; c=relaxed/simple;
-	bh=OQEN2V1zf5XX4OmThoVCUFjgNAjn/1RVXrg71cZAxBQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=sqXRBQn/M8WunkAieARqXlneNMZibtOzGFLWPnQmRVr8KZGso+TIhwkyL5GSuKUojFYXDY5APRmdvUbOaGXHzjak3HxdFHhdrIhcZEZG7RyZFPcfJCujarSwiwm1x2k4nFfv9AqTC9TW32hfQc2p5eMMyGtYOrtTEGHg9YYt0j8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=philpotter.co.uk; spf=pass smtp.mailfrom=philpotter.co.uk; dkim=pass (2048-bit key) header.d=philpotter-co-uk.20230601.gappssmtp.com header.i=@philpotter-co-uk.20230601.gappssmtp.com header.b=IBV5Asfe; arc=none smtp.client-ip=209.85.128.48
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=philpotter.co.uk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=philpotter.co.uk
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=philpotter-co-uk.20230601.gappssmtp.com header.i=@philpotter-co-uk.20230601.gappssmtp.com header.b="IBV5Asfe"
-Received: by mail-wm1-f48.google.com with SMTP id 5b1f17b1804b1-4853e1ce427so62015055e9.3
-        for <linux-scsi@vger.kernel.org>; Mon, 30 Mar 2026 14:49:19 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=philpotter-co-uk.20230601.gappssmtp.com; s=20230601; t=1774907358; x=1775512158; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=iCtJw/YgoH39kldsewaUagjUei5D9Up/aGMmGXTIykc=;
-        b=IBV5AsfeD1xJjHb3hUQ23H6HNZH+qUQ0LLqFofaEjDCzMWxMtDaRZ6EZMeJxTKI4Qq
-         Etjg9JNhN2/JlFZW0npsvuQpSMc+9asur2KXBNDfp0Tw4s9yklcQfDg4ZTYQQwx+MCJ7
-         zGtAxPNp4GWx8GT3IghoUGw4qdgdjZn+8sX2ZAWOQjqdlWx7ViCdR5g2xHR9p47UF00x
-         jabF+DQDqIKI37QnpTp2/ygbBycSEiszCYNX9nOK0iDwqaG/6br/lv4+CeW3VQqRLfO4
-         LvoXEVfr1KaJaX4fgirpuz8f5bs3D6SS8eNcDHI7dgBF62DEMUPDVBgY5nxqklMBK//e
-         M97g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1774907358; x=1775512158;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=iCtJw/YgoH39kldsewaUagjUei5D9Up/aGMmGXTIykc=;
-        b=kfes0VWE4HCoR3zBqbRH0nbAbQX+qk5B0LVbms2IqDGk3+JWNCY3D8D2S0u6eTsXLY
-         TeTXJ9XL1uqwUnf61K+Jtcqcri58CnClWi6ujLWFzda9hezgtWKFmCnKuPcX88YALfcN
-         Fttvzg8HqOVcEDDxBPYb4Ain0zwor716ZqOsyB2jUt8lfmxguI5WQiEwynLANJHXN704
-         pteZOIqkN1ScLElpTNz/WeTJhMBmDxXOY0oaK76HP/dneTW8qwRxSOFmPBahA5Wn26n6
-         rBmrRurKe6z+ndFEyA5OoYVkUUzDJ9pBZjXGheljqAQeT3h7HmU6ey+mTHTVxlBHVgFH
-         LzAw==
-X-Forwarded-Encrypted: i=1; AJvYcCW2DZ/34uQLFOaS23b/AVFkKOUMeyIY3JJ3kzG/2uuqANHcy+Y7meMNYNfELlagjkGzlPO332R/ugKf@vger.kernel.org
-X-Gm-Message-State: AOJu0YyvRK7fP8xAGKheGDNuQNOG4I88ZeyBGwal0/U4vvYy8YNsnXHE
-	j5sdS7USg8OTZoTG2aDxJgXJ9Ci+vwBzzBb1ys3pMxNc9M5bNrvsMgrAFZC0CzfgEfA=
-X-Gm-Gg: ATEYQzwUlM9xRzNSf1/zyTWAK9V49cIBsplstEFCfVPOx4Ps/zhH+X9eeEKkN4mMtu1
-	mSos0Q8b4nuhx3rhlCWNUsuMRtg8GDR5XYW+Y06wiL1U+7yKhFx1zrG15pRnTorlrwc7aX8+1pg
-	UnfDAiNA3VSVFwgPeb1foWrkjevglAoi3SakTHX4BVb8kHCLSrYONu6C74v4QtDc3utqmaWTH5z
-	HpbPiijfenLWtxQbQb3ieYZqn8rub3cagl2PpYj1CwZg55zphpfzIabWy8i02OMgRbWHdyW3zcz
-	QMYgboTDabndaWZpwQ0ke31ABHSTqn++Z3+SOOUbq8EDtXgn5dM48+WD2DDL4MB+2OsX4WzrDYX
-	YKQMlRmwDMeDkBdp60gRADedxf+jMG7pMGqFwTV8+5AeMc9WWSkZw3AmtmwEcMXIM+SKKHwbRJI
-	ek2GVwqETQZjCAGBmzirLZat/stKoYy+Mby5hlS/6xjQAk6CdSi6mAYtuDw2RJdKWKiw7RMNcXD
-	k7F0KcoTw==
-X-Received: by 2002:a05:600c:6092:b0:485:30d4:6b9e with SMTP id 5b1f17b1804b1-48727ef0284mr265075275e9.21.1774907357735;
-        Mon, 30 Mar 2026 14:49:17 -0700 (PDT)
-Received: from equinox (2.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.6.1.f.d.0.b.8.0.1.0.0.2.ip6.arpa. [2001:8b0:df16::2])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4873ab203e9sm113117135e9.0.2026.03.30.14.49.16
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 30 Mar 2026 14:49:17 -0700 (PDT)
-Date: Mon, 30 Mar 2026 22:49:15 +0100
-From: Phillip Potter <phil@philpotter.co.uk>
-To: Felix Busch <felix.busch1@gmx.net>
-Cc: James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com,
-	phil@philpotter.co.uk, linux-kernel@vger.kernel.org,
-	linux-scsi@vger.kernel.org
-Subject: Re: [PATCH 1/1] CD-ROM: Additional LBA bound check
-Message-ID: <acrv2_GCdJC5C0qE@equinox>
-References: <20260325065335.7783-1-felix.busch1@gmx.net>
- <20260325074401.6530-1-felix.busch1@gmx.net>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB86037FF55;
+	Mon, 30 Mar 2026 22:10:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.95.116
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1774908657; cv=fail; b=ejIBzZLu/nba9UqKPf2Uz4RYU+P22zfrQr7BzqhMieBskH1V96Y0Z2HbQnkUnEabmmNh0y0Y1f/lk8Y2t0dvVCmM5IyD6zxTtsM6zvUSaOCpVGozy0jF4wbrd6EfzCxKxLKeeFv91rpFvLd6zQJC+KV3pI6VtsXGso7gDRL3LnM=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1774908657; c=relaxed/simple;
+	bh=DMJFiBTKtddWBlgaxaUsCu4b7LqkrVTrfb6QhIPXUgE=;
+	h=From:To:Cc:Subject:Date:Message-ID:Content-Type:MIME-Version; b=pZCcYts3jcaEPLdyQ2Oqp0qIGgnC+Mnz5fUOe1ii2KrfXVl/0b4zQ7HV7meeCrzpWOFfJEBCuShs0U5MUzUgsGfVQs5lxmguEY7Aq3gkN6rwr8jBKJPd/a75+3roTdOaN3FxahUcUAc9KKHxBq8m5H+I0s+nXnQe5CCOgTsYElI=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=atomlin.com; spf=pass smtp.mailfrom=atomlin.com; arc=fail smtp.client-ip=52.101.95.116
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=atomlin.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=atomlin.com
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=qw1K5OrtND//2Pjssr28cmOrWAo9Nriv+W7ArCuGfchTzUi+7vG7hW8tPCzn1WCMsU3Wnff2jw7JkY4GB3tG89KRmOPyL4OfK1ff20rexU609VsBLwO4gLOMy6vXh27crDYMYQRxz+kR2yWacZI1Tx6pimlHqOtMeincteZA/hvmzxBF05oAQQMZ3Xm2iSVeQnJRgdn4TCTosmge8kRI3FY0q1GffRH/E/PZb4247y2NyniKYbFHkV+utQWK6EgIdpIcci80VDxpV/pQPUxNEXtoJwUZKJprU07e62TvHfsS4l3rIWPcZ/MVzSPbNo2096byojAL9zxlhb/DN1mkaA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=3xJtbUfW2Fe0OQJhgqS4E/F7ql25rZ2tG3fGDEQHq4I=;
+ b=gusAxLOY4dxKNZ9jVpoJv69yhSY+LYLY6I9Koagc9BgGw+Cpro+QJ9hqSh8SoEB8q9YKBMbco+0hRjp7YU++EQOZnBTBCleZZirxKFcAsfQDn32IXS6k3vKuQ3zGIHl/9RA9FkjGG/3gArbEAfEY8iXZoIH/+lBdSwdlVriYNXKkvNcBEsGu4uO+qSOV6WS9TyfGW6GIcvT6rCjvrOq3T5duRtY3Wa7y91DL/tIFrnBegM3pEQRNiKpg/XrlZ3L6hjR0jiqPNtho/gHUS541G6qt2eLWBhEYkAsEMjqViUfgxPATEh4U+OsllxDQ01yFeJjQ6ryeIb1NCLFoyT2QSA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=atomlin.com; dmarc=pass action=none header.from=atomlin.com;
+ dkim=pass header.d=atomlin.com; arc=none
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=atomlin.com;
+Received: from CWLP123MB3523.GBRP123.PROD.OUTLOOK.COM (2603:10a6:400:70::10)
+ by CWLP123MB6512.GBRP123.PROD.OUTLOOK.COM (2603:10a6:400:186::5) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9745.28; Mon, 30 Mar
+ 2026 22:10:50 +0000
+Received: from CWLP123MB3523.GBRP123.PROD.OUTLOOK.COM
+ ([fe80::de8e:2e4f:6c6:f3bf]) by CWLP123MB3523.GBRP123.PROD.OUTLOOK.COM
+ ([fe80::de8e:2e4f:6c6:f3bf%2]) with mapi id 15.20.9745.022; Mon, 30 Mar 2026
+ 22:10:50 +0000
+From: Aaron Tomlin <atomlin@atomlin.com>
+To: axboe@kernel.dk,
+	kbusch@kernel.org,
+	hch@lst.de,
+	sagi@grimberg.me,
+	mst@redhat.com
+Cc: atomlin@atomlin.com,
+	aacraid@microsemi.com,
+	James.Bottomley@HansenPartnership.com,
+	martin.petersen@oracle.com,
+	liyihang9@h-partners.com,
+	kashyap.desai@broadcom.com,
+	sumit.saxena@broadcom.com,
+	shivasharan.srikanteshwara@broadcom.com,
+	chandrakanth.patil@broadcom.com,
+	sathya.prakash@broadcom.com,
+	sreekanth.reddy@broadcom.com,
+	suganath-prabu.subramani@broadcom.com,
+	ranjan.kumar@broadcom.com,
+	jinpu.wang@cloud.ionos.com,
+	tglx@kernel.org,
+	mingo@redhat.com,
+	peterz@infradead.org,
+	juri.lelli@redhat.com,
+	vincent.guittot@linaro.org,
+	akpm@linux-foundation.org,
+	maz@kernel.org,
+	ruanjinjie@huawei.com,
+	bigeasy@linutronix.de,
+	yphbchou0911@gmail.com,
+	wagi@kernel.org,
+	frederic@kernel.org,
+	longman@redhat.com,
+	chenridong@huawei.com,
+	hare@suse.de,
+	kch@nvidia.com,
+	ming.lei@redhat.com,
+	steve@abita.co,
+	sean@ashe.io,
+	chjohnst@gmail.com,
+	neelx@suse.com,
+	mproche@gmail.com,
+	linux-block@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	virtualization@lists.linux.dev,
+	linux-nvme@lists.infradead.org,
+	linux-scsi@vger.kernel.org,
+	megaraidlinux.pdl@broadcom.com,
+	mpi3mr-linuxdrv.pdl@broadcom.com,
+	MPT-FusionLinux.pdl@broadcom.com
+Subject: [PATCH v9 00/13] blk: honor isolcpus configuration
+Date: Mon, 30 Mar 2026 18:10:34 -0400
+Message-ID: <20260330221047.630206-1-atomlin@atomlin.com>
+X-Mailer: git-send-email 2.51.0
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: BN9PR03CA0049.namprd03.prod.outlook.com
+ (2603:10b6:408:fb::24) To CWLP123MB3523.GBRP123.PROD.OUTLOOK.COM
+ (2603:10a6:400:70::10)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260325074401.6530-1-felix.busch1@gmx.net>
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: CWLP123MB3523:EE_|CWLP123MB6512:EE_
+X-MS-Office365-Filtering-Correlation-Id: 91e521d6-fee4-4f50-985a-08de8ea933d6
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|1800799024|376014|7416014|366016|56012099003|18002099003;
+X-Microsoft-Antispam-Message-Info:
+	xMt6uD6uTU+T+PGzOMSu8rSxpt4BdwGaQjJ4SxVe4TKdGLzxqb7gc4pvH903ozALFxf+zzO6rKRHnZb1gUoDGWNluQMXNhU43dHDXvL8VmDK86P2TbD992qBSB9DZ8fcUe1XEHAeWME6nI5iSdob8EC0TL0b99aVvBno9L4eeEbq0mg63ntSG4KFzd0TXE9/BJaFvF7hUY+W3UA3dQYjZAVIa3wpKe3m4Nd+kKLOik33MGmAEkplZOrAGJrt6gBfRnsNE//DLw9b+lFceyzrmr2fsG/hI6Uo7QWxk7fticYb2utWFrVvmm6Oo5i5bfaL6u8NXjesnPEHIh54Bmzf68/766ORkqTEQzFJFRQ/5HjC6WaO4GvhCLR8XWUKv0r1IMx5hUmseHpHf/nOloGnXD1kz2233rxzl/AQ1hooaWIzmOAPda2zwh6+ClRpQn59VoZB/28QBDpRA3y4O20k3WY+vRoxUwxATKtp82G8Bzcebi6Ctk1hwP15nCfhEkGNYHb5aaDywarsS/QS3Dt1u6JprwqIZ8hzUCTNCUASiP81kPaWUAPoOmQf/pE/Q1uO4K6/rcFQwS9ItHrs/aqniDTK3Rif3aQNs+ae6QDCSuSluWGILLRq/AAzLqtC24rtEcZYw1DFlJIIiJAAxzRFYyBSBtVg35iA4FnIDjHqngijzMMp2uP/L3r9vOZH7br/
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CWLP123MB3523.GBRP123.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(376014)(7416014)(366016)(56012099003)(18002099003);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?E+DIgTesYfyv2wVDhT4cs8r7FJIPNvtIrz7WEYqutdYmr0ZJlZT14V2SkRdJ?=
+ =?us-ascii?Q?b98TaP12A0s6JJ7ed+kbJaQW89hH3V0F8fuBljaiW48xf1c+60XgEUdraU4s?=
+ =?us-ascii?Q?o/M+xHZFzIULlukXs36dDvNcF6XUhWoAm+PW48aZ6r25NXNbZ6FrtRrT6lGF?=
+ =?us-ascii?Q?rB46n/fx6t35Q5VRuDqxnhXB6NJX+QEB/mDHIUpFNBjICAaWVEI2ZFlNo/fp?=
+ =?us-ascii?Q?FI6zLUN8n7ZazUfLNTaAKAceWoEj7W1KXxPDOMrEEdi8YA3Ya99QRhIN47+t?=
+ =?us-ascii?Q?gbJy/7dGi5tInerkVsnkdt6fMsAdpYaSWg08lglkmFK6G3ANdttzA2XkscU6?=
+ =?us-ascii?Q?FjEiFGEZ/GXKYnPRDBwhX3pAXFvQvNsX+c6CaO855x708PaJh6oWyXl+xaJI?=
+ =?us-ascii?Q?oJhjqZnjJzkceMcULfecbiSA14C99LxNGtZ7tGuv6erEWh84fJzN5CEZoqig?=
+ =?us-ascii?Q?Fdt9vhfdlPUjOyFyW7Pgmjivu1aGp94IQ+9uso6Z4NQEi6hfl3AHfznGpRUJ?=
+ =?us-ascii?Q?yZNsTalIzP8j5GIitzqCQMDGkZXoKUnhGdMl1c6GykNlUOD/WPUzkt5+onFs?=
+ =?us-ascii?Q?5+Mv1MAQxb4BHJ7VAMD0rDX0mswOF0bJdtE6/IE9tC7CEbHrWqVU61eDgTvp?=
+ =?us-ascii?Q?DmIDG/fr/ZkzxKAX42drXi4KHjHJ8snMOoX3rHCVN97kJXj5HQPAnaQzCYBQ?=
+ =?us-ascii?Q?7YN6di/Gz1gopLNo8w3CXS+76qUqWauCJhUBgKxKKUnPL2Au0QpJsCPMa/XC?=
+ =?us-ascii?Q?qEcukCb0Nrk7F8xBETVdaltgC7baZztQ6UzKsf02kKM1MJ+LieyLMOgAEjH5?=
+ =?us-ascii?Q?BxHFpl73q+JLMcLxY/3QwCZ/tde/L3zZTcl8RuUsvLiX3FAHy+oy7tI+vNOu?=
+ =?us-ascii?Q?hAWVJXFXJi3UraEVOh0NeBpjvjzN4wCNGgcTW0p0uoQL4PsdAQ7MTRZ9dUcZ?=
+ =?us-ascii?Q?qvsngwdXy40chBU4uuuO0D4a6hDh9rr7gw8cRf55XDVirYzUEBwprI04GjLf?=
+ =?us-ascii?Q?zQ8T8LPeAlpPLiC9CkqUFLnmqW48QT9uXJThtlB09WWZKaFXgO8sxcj3XdqL?=
+ =?us-ascii?Q?0b6gwW0CDLo7GDyb3743gy4uRoKYBLZJXUz94eMiDMC7F3X7mCUjn/DrChDa?=
+ =?us-ascii?Q?oO11FbC1ebn8zqzM7RFf6NuZHk4ZbAB1PPytfO1k3kR4SbUAwbhC7CdEHuyv?=
+ =?us-ascii?Q?S8v0qOIiI7ZpNFcKANimGFLP+J1eZ4XWsqmpOM0BtU6+QZIlYda6KtO1l65R?=
+ =?us-ascii?Q?3frYTvmQ06hTRsHTsP1PhEBmtteRgw0211A8lbUgBWpX9WIIRLRCfDOueds4?=
+ =?us-ascii?Q?bYLGtfrG/rOPoWdN3kx9B7+QzgpMNR3E77GwtiLKV7Gx59os3tQdFfu6Lc8z?=
+ =?us-ascii?Q?XwW4DW8ZG0kLCtARmot+6eES13lkg82etdIK6kssDHN4vEQfds9zFI5aH4ki?=
+ =?us-ascii?Q?1OdNapEy6f7dDays9MdheSGyQRjuOcAoL1w4ISMd/ANXuv1QDBJuicHrlK06?=
+ =?us-ascii?Q?hWwOBZVsBfbZd/YuF6jJyfak6q1JcwXEbrf5SmGu6LSL4nmXFyFANCpZTj2V?=
+ =?us-ascii?Q?QXMmi/ubdg3WFyRrNmDcNlfD0LNPa2NfGLMxp+C4TIpMP1Hkg/WxE5GfesVA?=
+ =?us-ascii?Q?XBj6H1PnQWBrWFOfZ7s89j9KJn/UBKMSNekj3ZM7UpiC+AqEDZ5m8kYQOXRO?=
+ =?us-ascii?Q?HKxhaazXyPmvb66yS+7QOeOiKLsH512yu2FbcCeDJxsrTXBO9b5i0Rw70Ylx?=
+ =?us-ascii?Q?1ocC2vWMew=3D=3D?=
+X-OriginatorOrg: atomlin.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 91e521d6-fee4-4f50-985a-08de8ea933d6
+X-MS-Exchange-CrossTenant-AuthSource: CWLP123MB3523.GBRP123.PROD.OUTLOOK.COM
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 30 Mar 2026 22:10:50.5850
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: e6a32402-7d7b-4830-9a2b-76945bbbcb57
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: 9hEX5+no/N11wtDhCLdCgPVl/HqP8eT7qlZg96GYx4hF22cWd7SUvAXEDCnFKqyj45g/aVUFPX8wfMGNv+Lekg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CWLP123MB6512
 
-Hi Felix,
+Hi Jens, Keith, Christoph, Sagi, Michael,
 
-Nice to hear from you again, hope you're well. Apologies for me taking a
-few days to reply, I've had a a fair amount on at work.
+I have decided to drive this series forward on behalf of Daniel Wagner, the
+original author. This iteration addresses the outstanding architectural and
+concurrency concerns raised during the previous review cycle, and the series
+has been rebased on v7.0-rc5-509-g545475aebc2a.
 
-On Wed, Mar 25, 2026 at 08:44:01AM +0100, Felix Busch wrote:
-> Upper bound check for the logical block address
-> in mmc_ioctl_cdrom_read_data() of the CD-ROM driver.
-> This prevents trying to read a block when the LBA is
-> greater than the number of available blocks.
-> 
-> Signed-off-by: Felix Busch <felix.busch1@gmx.net>
-> ---
->  drivers/cdrom/cdrom.c |  7 +++++--
->  drivers/scsi/sr.c     | 12 +++++++++++-
->  include/linux/cdrom.h |  2 ++
->  3 files changed, 18 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/cdrom/cdrom.c b/drivers/cdrom/cdrom.c
-> index fc049612d6dc..cc0a6c0ae9e7 100644
-> --- a/drivers/cdrom/cdrom.c
-> +++ b/drivers/cdrom/cdrom.c
-> @@ -2926,6 +2926,8 @@ static noinline int mmc_ioctl_cdrom_read_data(struct cdrom_device_info *cdi,
->  {
->  	struct scsi_sense_hdr sshdr;
->  	struct cdrom_msf msf;
-> +	const struct cdrom_device_ops *cdo = cdi->ops;
-> +	u64 nr_blocks;
->  	int blocksize = 0, format = 0, lba;
->  	int ret;
->  
-> @@ -2944,8 +2946,9 @@ static noinline int mmc_ioctl_cdrom_read_data(struct cdrom_device_info *cdi,
->  	if (copy_from_user(&msf, (struct cdrom_msf __user *)arg, sizeof(msf)))
->  		return -EFAULT;
->  	lba = msf_to_lba(msf.cdmsf_min0, msf.cdmsf_sec0, msf.cdmsf_frame0);
-> -	/* FIXME: we need upper bound checking, too!! */
-> -	if (lba < 0)
-> +	nr_blocks = cdo->get_capacity(cdi);
+Building upon prior iterations, this series introduces critical
+architectural refinements to the mapping and affinity spreading algorithms
+to guarantee thread safety and resilience against concurrent CPU-hotplug
+operations. Previously, the block layer relied on a shared global static
+mask (i.e., blk_hk_online_mask), which proved vulnerable to race conditions
+during rapid hotplug events. This vulnerability was recently highlighted by
+the kernel test robot, which encountered a NULL pointer dereference during
+rcutorture (cpuhotplug) stress testing due to concurrent mask modification.
 
-This (as with other function pointers that are part of cdrom_device_ops,
-should be checked first to see if it's initialised? (it is for sr.c of course,
-but what about others?)
+To resolve this, the architecture has been fundamentally hardened. The
+global static state has been eradicated. Instead, the IRQ affinity core now
+employs a newly introduced irq_spread_hk_filter(), which safely intersects
+the natively calculated affinity mask with the HK_TYPE_IO_QUEUE mask.
+Crucially, this is achieved using a local, hotplug-safe snapshot via
+data_race(cpu_online_mask). This approach circumvents the hotplug lock
+deadlocks previously identified by Thomas Gleixner, whilst explicitly
+avoiding CONFIG_CPUMASK_OFFSTACK stack bloat hazards on high-core-count
+systems. A robust fallback mechanism guarantees that should an interrupt
+vector be assigned exclusively to isolated cores, it is safely re-routed to
+the system's online housekeeping CPUs.
 
-> +	/* Lower and upper bound check for logical block address. */
-> +	if ((lba < 0) || (lba > nr_blocks - 1))
->  		return -EINVAL;
+Please let me know your thoughts.
 
-The point James makes about the return value now being different (as it
-would previously have been an error from the device itself) is a good
-one. This is probably the hardest question to answer in terms of which
-software may or may not break.
 
->  
->  	cgc->buffer = kzalloc(blocksize, GFP_KERNEL);
-> diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
-> index 7adb2573f50d..a056c72341c4 100644
-> --- a/drivers/scsi/sr.c
-> +++ b/drivers/scsi/sr.c
-> @@ -120,6 +120,8 @@ static int sr_packet(struct cdrom_device_info *, struct packet_command *);
->  static int sr_read_cdda_bpc(struct cdrom_device_info *cdi, void __user *ubuf,
->  		u32 lba, u32 nr, u8 *last_sense);
->  
-> +static u64 sr_get_nr_blocks(struct cdrom_device_info *cdi);
-> +
->  static const struct cdrom_device_ops sr_dops = {
->  	.open			= sr_open,
->  	.release	 	= sr_release,
-> @@ -134,6 +136,7 @@ static const struct cdrom_device_ops sr_dops = {
->  	.audio_ioctl		= sr_audio_ioctl,
->  	.generic_packet		= sr_packet,
->  	.read_cdda_bpc		= sr_read_cdda_bpc,
-> +	.get_capacity		= sr_get_nr_blocks,
->  	.capability		= SR_CAPABILITIES,
->  };
->  
-> @@ -142,6 +145,13 @@ static inline struct scsi_cd *scsi_cd(struct gendisk *disk)
->  	return disk->private_data;
->  }
->  
-> +static inline u64 sr_get_nr_blocks(struct cdrom_device_info *cdi)
-> +{
-> +	struct scsi_cd *cd = scsi_cd(cdi->disk);
-> +
-> +	return cd->capacity;
-> +}
-> +
->  static int sr_runtime_suspend(struct device *dev)
->  {
->  	struct scsi_cd *cd = dev_get_drvdata(dev);
-> @@ -782,7 +792,7 @@ static int get_sectorsize(struct scsi_cd *cd)
->  			sector_size = 2048;
->  			fallthrough;
->  		case 2048:
-> -			cd->capacity *= 4;
-> +			//cd->capacity *= 4;
+Changes in v9:
+ - Added "Reviewed-by:" tags
 
-This is here for a reason, it should not be commented out. I may not
-have worded it clearly in my response to your previous patch, but this
-is the kind of thing I was talking about before.
+ - Introduced irq_spread_hk_filter() to safely restrict managed IRQ
+   affinity to housekeeping CPUs (Thomas Gleixner)
 
->  			fallthrough;
->  		case 512:
->  			break;
-> diff --git a/include/linux/cdrom.h b/include/linux/cdrom.h
-> index b907e6c2307d..406e6f4a55bb 100644
-> --- a/include/linux/cdrom.h
-> +++ b/include/linux/cdrom.h
-> @@ -91,6 +91,8 @@ struct cdrom_device_ops {
->  			       struct packet_command *);
->  	int (*read_cdda_bpc)(struct cdrom_device_info *cdi, void __user *ubuf,
->  			       u32 lba, u32 nframes, u8 *last_sense);
-> +	/* Get size in blocks */
-> +	u64 (*get_capacity)(struct cdrom_device_info *cdi);
+ - Removed the unsafe global static variable blk_hk_online_mask from
+   blk-mq-cpumap.c and blk-mq.c. blk_mq_online_queue_affinity() now returns
+   a stable pointer, delegating safe intersection to the callers to prevent
+   concurrent modification races (Thomas Gleixner, Hannes Reinecke)
 
-I notice we only define an implementation of this for sr.c? At a glance,
-it's also possible to trigger this code from the GD-ROM driver, unless
-I'm missing something?
+ - Resolved BUG: kernel NULL pointer dereference in __blk_mq_all_tag_iter
+   reported by the kernel test robot during cpuhotplug rcutorture stress
+   testing
 
->  /* driver specifications */
->  	const int capability;   /* capability flags */
->  };
-> -- 
-> 2.53.0
->
+ - Linked to v8: https://lore.kernel.org/lkml/20250905-isolcpus-io-queues-v8-0-885984c5daca@kernel.org/
 
-I take your point about avoiding the read entirely, and I see what you
-mean there. That said, I'm not sure this is necessary given the
-potential dangers.
+Changes in v8:
 
-Regards,
-Phil
+ - Added commit 524f5eea4bbe ("lib/group_cpus: remove !SMP code")
+
+ - Merged the new mapping logic directly into the existing function to
+   avoid special casing
+
+ - Refined the group_mask_cpus_evenly() implementation with the following
+   updates:
+
+   - Corrected the function name typo (changed group_masks_cpus_evenly to
+     group_mask_cpus_evenly)
+
+   - Updated the documentation comment to accurately reflect the function's
+     behavior
+
+   - Renamed the cpu_mask argument to mask for consistency
+
+ - Added a new patch for aacraid to include the missing number of queues
+   calculation
+
+ - Restricted updates to only affect SCSI drivers that support
+   PCI_IRQ_AFFINITY and do not utilize nvme-fabrics
+
+ - Removed the __free cleanup attribute usage for cpumask_var_t allocations
+   due to compatibility issues
+
+ - Updated the documentation to explicitly highlight the limitations
+   surrounding CPU offlining
+
+ - Collected accumulated Reviewed-by and Acked-by tags
+
+ - Linked to v7: https://patch.msgid.link/20250702-isolcpus-io-queues-v7-0-557aa7eacce4@kernel.org
+
+Changes in v7:
+
+ - Sent out the first part of the series independently:
+   https://lore.kernel.org/all/20250617-isolcpus-queue-counters-v1-0-13923686b54b@kernel.org/
+
+ - Added comprehensive kernel command-line documentation
+
+ - Added validation logic to ensure the resulting CPU-to-queue mapping is
+   fully operational
+
+ - Rewrote the isolcpus mapping code to properly account for active
+   hardware contexts (hctx)
+
+ - Introduced blk_mq_map_hk_irq_queues, which utilizes the mask retrieved
+   from irq_get_affinity()
+
+ - Refactored blk_mq_map_hk_queues to require the caller to explicitly test
+   for HK_TYPE_MANAGED_IRQ
+
+ - Linked to v6: https://patch.msgid.link/20250424-isolcpus-io-queues-v6-0-9a53a870ca1f@kernel.org
+
+Changes in v6:
+
+ - Reintroduced the io_queue type for the isolcpus kernel parameter
+
+ - Prevented the offlining of a housekeeping CPU if an isolated CPU is
+   still present, upgrading this behavior from a simple warning to a hard
+   restriction
+
+ - Linked to v5: https://lore.kernel.org/r/20250110-isolcpus-io-queues-v5-0-0e4f118680b0@kernel.org
+
+Changes in v5:
+
+ - Rebased the series onto the latest for-6.14/block branch.
+
+ - Updated the documentation regarding the managed_irq parameters
+
+ - Reworded the commit message for "blk-mq: issue warning when offlining
+   hctx with online isolcpus" for better clarity
+
+ - Split the input and output parameters in the patch "lib/group_cpus: let
+   group_cpu_evenly return number of groups"
+
+ - Dropped the patch "sched/isolation: document HK_TYPE housekeeping
+   option"
+
+ - Linked to v4: https://lore.kernel.org/r/20241217-isolcpus-io-queues-v4-0-5d355fbb1e14@kernel.org
+
+Changes in v4:
+
+ - Added the patch "blk-mq: issue warning when offlining hctx with online
+   isolcpus"
+
+ - Fixed the check in group_cpus_evenly(); the condition now properly uses
+   housekeeping_enabled() instead of cpumask_weight(), as the latter always
+   returns a valid mask
+
+ - Dropped the Fixes: tag from "lib/group_cpus.c: honor housekeeping config
+   when grouping CPUs"
+
+ - Fixed an overlong line warning in the patch "scsi: use block layer
+   helpers to calculate num of queues"
+
+ - Dropped the patch "sched/isolation: Add io_queue housekeeping option" in
+   favor of simply documenting the housekeeping hk_type enum
+
+ - Added the patch "lib/group_cpus: let group_cpu_evenly return number of
+   groups"
+
+ - Collected accumulated Reviewed-by and Acked-by tags
+
+ - Split the patchset by moving foundational changes into a separate
+   preparation series:
+   https://lore.kernel.org/linux-nvme/20241202-refactor-blk-affinity-helpers-v6-0-27211e9c2cd5@kernel.org/
+
+ - Linked to v3: https://lore.kernel.org/r/20240806-isolcpus-io-queues-v3-0-da0eecfeaf8b@suse.de
+
+Changes in v3:
+
+ - Integrated patches from Ming Lei
+   (https://lore.kernel.org/all/20210709081005.421340-1-ming.lei@redhat.com/):
+   "virtio: add APIs for retrieving vq affinity" and "blk-mq: introduce
+   blk_mq_dev_map_queues"
+
+ - Replaced all instances of blk_mq_pci_map_queues and
+   blk_mq_virtio_map_queues with the new unified blk_mq_dev_map_queues
+
+ - Updated and expanded the helper functions used for calculating the
+   number of queues
+
+ - Added the CPU-to-hctx mapping function specifically to support the
+   isolcpus=io_queue parameter
+
+ - Documented the hk_type enum and the newly introduced isolcpus=io_queue
+   parameter
+
+ - Added the patch "scsi: pm8001: do not overwrite PCI queue mapping"
+
+ - Linked to v2: https://lore.kernel.org/r/20240627-isolcpus-io-queues-v2-0-26a32e3c4f75@suse.de
+
+Changes in v2:
+
+ - Updated the feature documentation for clarity and completeness
+
+ - Split the blk/nvme-pci patch into smaller, logical commits
+
+ - Dropped the HK_TYPE_IO_QUEUE macro in favor of reusing
+   HK_TYPE_MANAGED_IRQ
+
+ - Linked to v1: https://lore.kernel.org/r/20240621-isolcpus-io-queues-v1-0-8b169bf41083@suse.de
+
+
+Aaron Tomlin (1):
+  genirq/affinity: Restrict managed IRQ affinity to housekeeping CPUs
+
+Daniel Wagner (12):
+  scsi: aacraid: use block layer helpers to calculate num of queues
+  lib/group_cpus: remove dead !SMP code
+  lib/group_cpus: Add group_mask_cpus_evenly()
+  genirq/affinity: Add cpumask to struct irq_affinity
+  blk-mq: add blk_mq_{online|possible}_queue_affinity
+  nvme-pci: use block layer helpers to constrain queue affinity
+  scsi: Use block layer helpers to constrain queue affinity
+  virtio: blk/scsi: use block layer helpers to constrain queue affinity
+  isolation: Introduce io_queue isolcpus type
+  blk-mq: use hk cpus only when isolcpus=io_queue is enabled
+  blk-mq: prevent offlining hk CPUs with associated online isolated CPUs
+  docs: add io_queue flag to isolcpus
+
+ .../admin-guide/kernel-parameters.txt         |  22 +-
+ block/blk-mq-cpumap.c                         | 201 ++++++++++++++++--
+ block/blk-mq.c                                |  42 ++++
+ drivers/block/virtio_blk.c                    |   4 +-
+ drivers/nvme/host/pci.c                       |   1 +
+ drivers/scsi/aacraid/comminit.c               |   3 +-
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c        |   1 +
+ drivers/scsi/megaraid/megaraid_sas_base.c     |   5 +-
+ drivers/scsi/mpi3mr/mpi3mr_fw.c               |   6 +-
+ drivers/scsi/mpt3sas/mpt3sas_base.c           |   5 +-
+ drivers/scsi/pm8001/pm8001_init.c             |   1 +
+ drivers/scsi/virtio_scsi.c                    |   5 +-
+ include/linux/blk-mq.h                        |   2 +
+ include/linux/group_cpus.h                    |   3 +
+ include/linux/interrupt.h                     |  16 +-
+ include/linux/sched/isolation.h               |   1 +
+ kernel/irq/affinity.c                         |  38 +++-
+ kernel/sched/isolation.c                      |   7 +
+ lib/group_cpus.c                              |  65 ++++--
+ 19 files changed, 379 insertions(+), 49 deletions(-)
+
+
+base-commit: 545475aebc2a2e8df14fadc911a7a2d03ddd6a1f
+-- 
+2.51.0
+
