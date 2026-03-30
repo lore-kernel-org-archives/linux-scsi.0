@@ -1,52 +1,42 @@
-Received: from sender-of-o57.zoho.eu (sender-of-o57.zoho.eu [136.143.169.57])
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.3])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B8F3F292B44;
-	Sun, 29 Mar 2026 18:35:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=136.143.169.57
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774809346; cv=pass; b=CkJcEPGobOH3aieuyF+i6Y6QcyRfBxuQFTXYz4Mtw9YVrcSdYJI4bswWWNL8vb2CIDDjRytnpM032WoytyD03foQamhZBuCq0OrskVIgkPyprdnKaMJr1dU+37XXJvNcaa+YZ5qmBNKUVR1iIg6rVXMbPT/2OoMVmc2VDq1UY4c=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774809346; c=relaxed/simple;
-	bh=KluLD3an1m/I8Sen+H17GNazb32lFETpVx6pJs3U9ME=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=d1aG2cAl4qiUbsgvE3qh2JBIYxBIqGXM47g3iVntF1iv+2p81c6ETN/t6SaUyMAOhqmpNT7hHaqBMlreT/R2aS/h5MnAS6epqbwrkdH7AGwuPduvQauwvS3dFIL66JCj1syrKkhhXNBEFPQqyhGbFsqD+kEt4UlL8TNoIk9ou80=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=objecting.org; spf=pass smtp.mailfrom=objecting.org; dkim=pass (1024-bit key) header.d=objecting.org header.i=objecting@objecting.org header.b=eDwXr71O; arc=pass smtp.client-ip=136.143.169.57
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=objecting.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=objecting.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B0C7175A94;
+	Mon, 30 Mar 2026 01:50:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.3
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1774835451; cv=none; b=JvzYrUwl0sYkkOQA0K+NIt3YDYBN9Q+2xGoMH+b+o1Fn9+7eRpSRvkgEhsrqpG+ACwb2LNq7QPGWkObgycJoB5Xx5KwiD6cAvMbHG1c1D1SwOd8knt/fsy8eNxYx7Fla4BhUQHFHppMziPjeQ7nA+F7K0eUKYDX2N3PIWH8qqBY=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1774835451; c=relaxed/simple;
+	bh=ixolLrzbUpURqHptEtvef9b4lOdNhT+Rdvm7+Wzk7oI=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=H9fGqnnpVxIvYfwYputrgCl2vZotg9vtxHblmhI7H3fVKJU4f6c3ZchzEKtbQoGwOW5wP3P2FyQ97ChSU9IJS+BfvoZKxeFZyynBNhXOQAheTzU9uaqAyCiyYH4xe+WZWmFvxgcTCJhBO9p+PIbiIR8Q4ZO+HcBgUeGz68zaehw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=d5nwJ4ET; arc=none smtp.client-ip=117.135.210.3
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=objecting.org header.i=objecting@objecting.org header.b="eDwXr71O"
-ARC-Seal: i=1; a=rsa-sha256; t=1774809319; cv=none; 
-	d=zohomail.eu; s=zohoarc; 
-	b=Xlgf/zP4Zhg3LL2LW0Op0TSG9Nm5hWiYheaXbjH+NN/hGPyHIfgMoGfZZZah/tnsF5l4Cu/8qfuz4T6HOnNF76dpJmUjvAoKaRUDibX+B3W9bVvmZr7/PT604iSnNfIuUkVDzf0T+u7oXwgUrRnWVHshJiCqVa821ZETXecFUU8=
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.eu; s=zohoarc; 
-	t=1774809319; h=Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:MIME-Version:Message-ID:Subject:Subject:To:To:Message-Id:Reply-To; 
-	bh=P5Yc396NflXhsxNKiiVfi/eLQprdlVd89Ih6i/8GNks=; 
-	b=bG/FJSMztF6SpPZb6xQdBynzPuetwgETeOxzOrtwn244Tz8snqCW4dwV3wttPa9Bp8USDDdR14pm2sdYfcRnIE9AMnIUUC87iHH7I3Z9+iBMGg99jlFcpQQoQo68UOFps+IRAuhX8uLBbGPDdIHWfpIqYh+6pXLW727i4JNNIMA=
-ARC-Authentication-Results: i=1; mx.zohomail.eu;
-	dkim=pass  header.i=objecting.org;
-	spf=pass  smtp.mailfrom=objecting@objecting.org;
-	dmarc=pass header.from=<objecting@objecting.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1774809319;
-	s=zmail; d=objecting.org; i=objecting@objecting.org;
-	h=From:From:To:To:Cc:Cc:Subject:Subject:Date:Date:Message-Id:Message-Id:MIME-Version:Content-Transfer-Encoding:Reply-To;
-	bh=P5Yc396NflXhsxNKiiVfi/eLQprdlVd89Ih6i/8GNks=;
-	b=eDwXr71OS+h9uUzgbiwPai8/lq8kFoAy6Ev9E75kzC3IiI/JQKgkS3AXVyYXXurl
-	mb6YTEABYN8aXRY68gKXLp9NRouzpEcj9Brvje6XJ0k3cxS0i/rmbpENATZQGLwORbG
-	fI7KtmgmlRg+hp4AAfnSCLxjroRMscxnoLrfriHA=
-Received: by mx.zoho.eu with SMTPS id 17748093160311013.9868925616536;
-	Sun, 29 Mar 2026 20:35:16 +0200 (CEST)
-From: Josh Law <objecting@objecting.org>
-To: Manivannan Sadhasivam <mani@kernel.org>,
-	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="d5nwJ4ET"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=NE
+	ibGSjdedDB2R09UgpFcazFFhoARzqkN4HerJmT4qc=; b=d5nwJ4ETho8JxC7O5k
+	DZjech+vSWq+RCUoQjp88dhvQ7nEJDuSBUGNVAtSt54eRvlEspNUonPkWkfIJ9TK
+	VKlE4dEMfcRt4Lv7qzROffSECnQIEbKCFyKMeFlXMwvED5M/rHmujhGlZjYDPeqt
+	g4kotpPI7GK4rQ7iEm25bkt3I=
+Received: from localhost.localdomain (unknown [])
+	by gzga-smtp-mtada-g0-0 (Coremail) with SMTP id _____wBXIKzC1slpl0wrCA--.20436S2;
+	Mon, 30 Mar 2026 09:49:56 +0800 (CST)
+From: Yang Xiuwei <yangxiuwei@kylinos.cn>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>,
 	"Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-arm-msm@vger.kernel.org,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Josh Law <objecting@objecting.org>
-Subject: [PATCH] scsi: ufs: qcom: stop ignoring hibern8 exit failures
-Date: Sun, 29 Mar 2026 18:35:14 +0000
-Message-Id: <20260329183514.133412-1-objecting@objecting.org>
-X-Mailer: git-send-email 2.34.1
+Cc: linux-scsi@vger.kernel.org,
+	Ming Lei <ming.lei@redhat.com>,
+	Bart Van Assche <bvanassche@acm.org>,
+	John Garry <john.g.garry@oracle.com>,
+	stable@vger.kernel.org,
+	Yang Xiuwei <yangxiuwei@kylinos.cn>
+Subject: [PATCH v3] scsi: sd: fix missing put_disk() when device_add(&disk_dev) fails
+Date: Mon, 30 Mar 2026 09:49:52 +0800
+Message-Id: <20260330014952.152776-1-yangxiuwei@kylinos.cn>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -54,34 +44,42 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-ZohoMailClient: External
+X-CM-TRANSID:_____wBXIKzC1slpl0wrCA--.20436S2
+X-Coremail-Antispam: 1Uf129KBjvdXoWrury5KF48tFWDAFW3KF1DAwb_yoWDurX_Cw
+	1jvwn7Xr4UAr1xtF1fGr4avrWvgrnFgrWrur48tF93A3yYgr9IvFykCw1Yy3W8WwsFvF18
+	Xwn0vw4kJw4UJjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+	9fnUUvcSsGvfC2KfnxnUUI43ZEXa7IU189NPUUUUU==
+Sender: yangxiuwei2025@163.com
+X-CM-SenderInfo: p1dqw55lxzvxisqskqqrwthudrp/xtbCwgSzRGnJ1sSd2QAA3H
 
-Right now, we're blindly returning success even if waking the link fails during clock scaling. This is a mess because the core then tries to send SCSI commands to a dead link, causing huge timeouts.
+If device_add(&sdkp->disk_dev) fails, put_device() runs
+scsi_disk_release(), which frees the scsi_disk but leaves the gendisk
+referenced. The device_add_disk() error path in sd_probe() calls
+put_disk(gd); call put_disk(gd) here to mirror that cleanup.
 
-Just return the actual error so the core can catch the failure and roll back properly.
-
-Signed-off-by: Josh Law <objecting@objecting.org>
+Fixes: 265dfe8ebbab ("scsi: sd: Free scsi_disk device via put_device()")
+Cc: stable@vger.kernel.org
+Reviewed-by: John Garry <john.g.garry@oracle.com>
+Signed-off-by: Yang Xiuwei <yangxiuwei@kylinos.cn>
 ---
- drivers/ufs/host/ufs-qcom.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+v2: Add Fixes: and Cc: stable; add a short note on how the issue was found.
+v3: Commit message and subject refined per review; add Reviewed-by from John Garry.
 
-diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-index 375fd24ba458..5d33a921a22f 100644
---- a/drivers/ufs/host/ufs-qcom.c
-+++ b/drivers/ufs/host/ufs-qcom.c
-@@ -1750,10 +1750,10 @@ static int ufs_qcom_clk_scale_notify(struct ufs_hba *hba, bool scale_up,
- 		}
- 
- 		ufs_qcom_icc_update_bw(host);
--		ufshcd_uic_hibern8_exit(hba);
-+		err = ufshcd_uic_hibern8_exit(hba);
+ drivers/scsi/sd.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 628a1d0a74ba..aba22060fcd5 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -4018,6 +4018,7 @@ static int sd_probe(struct scsi_device *sdp)
+ 	error = device_add(&sdkp->disk_dev);
+ 	if (error) {
+ 		put_device(&sdkp->disk_dev);
++		put_disk(gd);
+ 		goto out;
  	}
  
--	return 0;
-+	return err;
- }
- 
- static void ufs_qcom_enable_test_bus(struct ufs_qcom_host *host)
 -- 
-2.34.1
+2.25.1
 
