@@ -1,103 +1,127 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f49.google.com (mail-wm1-f49.google.com [209.85.128.49])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 27F933CB2C1;
-	Mon, 30 Mar 2026 13:19:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B77EC3C5DA6
+	for <linux-scsi@vger.kernel.org>; Mon, 30 Mar 2026 13:34:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.49
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774876779; cv=none; b=iC6Z+f9vUDJGhnQEI6pFAKCev70FDQpEhE6Rfp5k/d6YW0R5187fvLM7C1qvexzChkHuslwWH2kQ2KVCvrLXByiateEJD5OVu44FuIY89o3kI2zCn9OJDpLDGjzD9wMFapnQOmSTIzczW3UOGWBXU6dp2uB/WFQpYQLSLiksF2A=
+	t=1774877678; cv=none; b=XRk1pIk4MiILCy1bPVwOLJqb12FrDn5ACbUqcomZTBLOcgjdm/ilbfPxn662P2zxeG5Pb4FuPag/34wRtADP7CG1d22TnDoQtZDVYTKpwQEPj4u2kA3gVLD90HpAZ69kN+c1puda2i8AyIqPTyCOzx5BGMAo+WR8IgxMt6vk5CU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774876779; c=relaxed/simple;
-	bh=Xt08PXymCs4YwVjpcynOD9Y9BtXPNMqPh7FYH0XBhoM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=jSLUfO0b69FtNA9etvnl0F5C3ppVy/YPwK7/aBk3LeGZKJFBmgwOs2Bz4vEy+uXRKcFvXXBnQ4WvkbKzs9mU+UPTEaYRA3wWu0d/hnOs/by8LWqoN/zAXR/H4i+9JXhRFg4kV71kZnUsnOzKFl6NWhcN6wCgr8j/r4Ztli+jI/c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=tQMNoMlj; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1774877678; c=relaxed/simple;
+	bh=SMm/MalzvwZOuWvtsnqIE4P63pybRiqqI03IrNEAzd0=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=gDvg+C5Px5o3Vy+tR6OlcWu8cTtVUNsVCeL2DB8iURREnKqJNB1hA6eSUBOmTSGnTvDbeLlxsAet5QubtizC7gL2r4ZoGQYZMtpJwCYMZySanKcy3XLDiWrwH4347FQrb/8j0VY8SaMVAB7uSxMQsovUCUWcjg37tj5/V2lf7AI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=iM4blTxb; arc=none smtp.client-ip=209.85.128.49
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="tQMNoMlj"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DCF4BC4CEF7;
-	Mon, 30 Mar 2026 13:19:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-	s=korg; t=1774876778;
-	bh=Xt08PXymCs4YwVjpcynOD9Y9BtXPNMqPh7FYH0XBhoM=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=tQMNoMlj1NRnTs9ZoEczeHKRYMoX5a+Z2tQ+dI8ELcy1g1k55rFExNZj/XJUrwar7
-	 syT3h7GHUTt1HRLmW4etNkE+JZlDSQ76EMLxJi+sqnm7V23ANlSN1JjmuPnvi/36Sz
-	 W+Qoa8hF1tyo5SxMJWYeOAqcIeqXyclLnV4HabqQ=
-Date: Mon, 30 Mar 2026 15:19:35 +0200
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Vladimir Oltean <vladimir.oltean@nxp.com>
-Cc: linux-phy@lists.infradead.org, Vinod Koul <vkoul@kernel.org>,
-	Neil Armstrong <neil.armstrong@linaro.org>,
-	dri-devel@lists.freedesktop.org, freedreno@lists.freedesktop.org,
-	linux-arm-kernel@lists.infradead.org, linux-arm-msm@vger.kernel.org,
-	linux-can@vger.kernel.org, linux-gpio@vger.kernel.org,
-	linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-media@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-renesas-soc@vger.kernel.org, linux-riscv@lists.infradead.org,
-	linux-rockchip@lists.infradead.org,
-	linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org,
-	linux-sunxi@lists.linux.dev, linux-tegra@vger.kernel.org,
-	linux-usb@vger.kernel.org, netdev@vger.kernel.org,
-	spacemit@lists.linux.dev, UNGLinuxDriver@microchip.com,
-	Thinh Nguyen <Thinh.Nguyen@synopsys.com>,
-	Peter Chen <peter.chen@kernel.org>, Frank Li <Frank.Li@nxp.com>,
-	Sascha Hauer <s.hauer@pengutronix.de>,
-	Pengutronix Kernel Team <kernel@pengutronix.de>,
-	Fabio Estevam <festevam@gmail.com>
-Subject: Re: [PATCH v6 phy-next 03/28] usb: add missing headers transitively
- included by <linux/phy/phy.h>
-Message-ID: <2026033028-squint-yield-4c23@gregkh>
-References: <20260327184706.1600329-1-vladimir.oltean@nxp.com>
- <20260327184706.1600329-4-vladimir.oltean@nxp.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="iM4blTxb"
+Received: by mail-wm1-f49.google.com with SMTP id 5b1f17b1804b1-486b96760easo49637475e9.2
+        for <linux-scsi@vger.kernel.org>; Mon, 30 Mar 2026 06:34:36 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1774877675; x=1775482475; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=OO2vG9yiybjnLZsgJDrpUYIdHTE0h5TlRhucZVQXxNQ=;
+        b=iM4blTxbOzoTrsor3ntwIh79hhxWZ0V3IdPoO9Ht5Ttd9oPdedp62zfdpitRiMCTjf
+         L/klI/gCdcQ3/4NpPNKXy79qE3urQO6mAZ0iF3o6sNwes7u+7HWH7VAPJ48Yd2zfLm9m
+         /n53JudmyAcSZz/GLBgT6aHMZLlrg9xXsVijQDLcZU3scIP6ZGzfo2rxIRbBEzt58u23
+         dHF/lM3l8NpNFLUxQoIzEeLo5ioq30Z3ZoCnwwX3xEB9ISNrtsa6tqVoJQriMgBbxnvF
+         gfcM1sUC9FjhMfd0onshYU6JYvbZ6GDV6SMsLo5KIUMGpTYgHPgU+jazNcvPs0cB+LGu
+         UKZA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1774877675; x=1775482475;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=OO2vG9yiybjnLZsgJDrpUYIdHTE0h5TlRhucZVQXxNQ=;
+        b=l0jr8xb9rlVLTOHcuvzUAONLrwWdEYv2LsuUFvl1kO9Oi0/hladMXGL4UaS4MiYljA
+         vZ0NvMprByMPHKkW1aFazFdr/wG8V4ZnZfnUCjA5uSLLwfrFsP7ImPnkZX1/IFHoZDBw
+         sI6+mWa8rFtcPKClLjuE2LRivJSoML6fe+tXle90dY4DFL0hpSR1e7EeBnMlnJPdiWKq
+         S7xI9ZkVnWmapFRUElRGBvj5ewqkxqH3WfPT+/A9YcDdv8BvSbFRGIWeYFGJpe5fCtzi
+         iGKglf5Nrftc05IIq5amLxZaRXMSEpCk77so+FjHrTeb7S29EwGprHcChwaA5qMZIVuP
+         uovg==
+X-Gm-Message-State: AOJu0YwjRbfJCQeFcji3WVoUfReRPdlNRQCgaQ2OyVhiKLu8ij2Y8pZ0
+	vvpvcOeT6KLSrsNP7JcOpVTcmWHqzgVNCjP6D5Os8+J6uH516TBe1GZwz0Mawvyz
+X-Gm-Gg: ATEYQzzQou3V2YU4XSBgMHL/7k1jqTaHZ5JAk+yU7LV/Dva7dOv3ujKTDy9C0iWzXsE
+	fWNEpSH4OC5UwSDH8HBPoJh4d2FGuqPfXjCd7Dv9CJrBkRvNKp92VvuQKl5HGnrSxXtY0AD7F8x
+	uXQwO8bYx3uFzRMuozZO1d20/cw6Du1Dta83zCSPjRdhCcj4xFe1/5jgA9pf5VmYV2/qQcQqj/B
+	0nwHLs6rItwc7AjGzNQRoj7RECerGF4STTVa4eRvTvhfvsG6MBGGDu/IvhDE9DxJANsKsZ+V4+H
+	yx5ix6ePPm+kyWLpAQcOiA/oBSDCwFHcFnofGYMFIbmEDFA4QoWOtuHZx+3snc6Vx+Fl6Ryaj5C
+	oEuWQVVANBDKYAs+AV//+wsCEQCMPjdP5+eOXN0z3m5ad1oZacp3mz8oHTMyMSpxFPwLXj2AqiP
+	7ixc7D7UKvEgireSf+abUuLM6k8KG0/pE7ExyzOusdAW49/J4sVHDuqwqYuMqyRU26mG8Z7/Cef
+	yWZuIdzQge54xtw8RD6O3JkOjOCjxXQT28e7YxqJ7R1V6/qhwrIIA+8uMwGpVTIAwPD+C9z6V2y
+	ZCvOcmhMUhvLIhAkuxez
+X-Received: by 2002:a05:600c:4e02:b0:485:3b9e:caa7 with SMTP id 5b1f17b1804b1-48727edf669mr201561995e9.23.1774877674488;
+        Mon, 30 Mar 2026 06:34:34 -0700 (PDT)
+Received: from particle-0df3-d360 (2a02-1810-950a-eb00-f9cf-2393-cb7f-6fd9.ip6.access.telenet.be. [2a02:1810:950a:eb00:f9cf:2393:cb7f:6fd9])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4873881c195sm53843005e9.9.2026.03.30.06.34.33
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 30 Mar 2026 06:34:33 -0700 (PDT)
+From: Daan De Meyer <daan.j.demeyer@gmail.com>
+X-Google-Original-From: Daan De Meyer <daan@amutable.com>
+To: linux-scsi@vger.kernel.org
+Cc: James.Bottomley@HansenPartnership.com,
+	martin.petersen@oracle.com,
+	Daan De Meyer <daan@amutable.com>,
+	Daan De Meyer <daan.j.demeyer@gmail.com>
+Subject: [PATCH] scsi: sr: exclude CDC_MRW_W and CDC_RAM from writeable check
+Date: Mon, 30 Mar 2026 13:34:03 +0000
+Message-ID: <20260330133403.796330-1-daan@amutable.com>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260327184706.1600329-4-vladimir.oltean@nxp.com>
+Content-Transfer-Encoding: 8bit
 
-On Fri, Mar 27, 2026 at 08:46:41PM +0200, Vladimir Oltean wrote:
-> The chipidea ci_hdrc_imx driver uses regulator consumer API like
-> regulator_enable() but does not include <linux/regulator/consumer.h>.
-> 
-> The core USB HCD driver calls invalidate_kernel_vmap_range() and
-> flush_kernel_vmap_range(), but does not include <linux/highmem.h>.
-> 
-> The DWC3 gadget driver calls:
-> - device_property_present()
-> - device_property_count_u8()
-> - device_property_read_u8_array()
-> but does not include <linux/property.h>
-> 
-> The dwc3-generic-plat driver uses of_device_get_match_data() but does
-> not include <linux/of.h>.
-> 
-> In all these cases, the necessary includes were still provided somehow,
-> directly or indirectly, through <linux/phy/phy.h>. The latter header
-> wants to drop those includes, so fill in the required headers to avoid
-> any breakage.
-> 
-> Signed-off-by: Vladimir Oltean <vladimir.oltean@nxp.com>
-> Acked-by: Thinh Nguyen <Thinh.Nguyen@synopsys.com> # dwc3
-> ---
-> Cc: Peter Chen <peter.chen@kernel.org>
-> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> Cc: Frank Li <Frank.Li@nxp.com>
-> Cc: Sascha Hauer <s.hauer@pengutronix.de>
-> Cc: Pengutronix Kernel Team <kernel@pengutronix.de>
-> Cc: Fabio Estevam <festevam@gmail.com>
-> Cc: Thinh Nguyen <Thinh.Nguyen@synopsys.com>
-> 
-> v2->v6: none
-> v1->v2: collect tag
-> ---
->  drivers/usb/chipidea/ci_hdrc_imx.c   | 1 +
->  drivers/usb/core/hcd.c               | 1 +
->  drivers/usb/dwc3/dwc3-generic-plat.c | 1 +
->  drivers/usb/dwc3/gadget.c            | 1 +
->  4 files changed, 4 insertions(+)
+The writeable check in get_capabilities() includes CDC_MRW_W and
+CDC_RAM in its bitmask, but these capabilities are not determined from
+the MODE SENSE capabilities page. They require the SCSI GET
+CONFIGURATION command, which is only issued later by cdrom_open_write()
+at device open time.
 
-Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Since cdi.mask is initialized to zero (all capabilities assumed
+present), CDC_MRW_W and CDC_RAM are left unmasked by default. This
+makes the writeable check always true when MODE SENSE succeeds,
+regardless of the drive's actual write capabilities as reported in the
+capabilities page.
+
+Fix this by only checking CDC_DVD_RAM and CDC_CD_RW in the writeable
+condition, as these are the write capabilities actually determined from
+the MODE SENSE capabilities page. CDC_MRW_W and CDC_RAM will continue
+to be evaluated by cdrom_open_write() at open time via GET
+CONFIGURATION.
+
+Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
+Signed-off-by: Daan De Meyer <daan.j.demeyer@gmail.com>
+---
+ drivers/scsi/sr.c | 10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
+index 8ed002f82e36..0a6413b77dd3 100644
+--- a/drivers/scsi/sr.c
++++ b/drivers/scsi/sr.c
+@@ -901,10 +901,14 @@ static int get_capabilities(struct scsi_cd *cd)
+ 		cd->cdi.mask |= CDC_CLOSE_TRAY; */
+ 
+ 	/*
+-	 * if DVD-RAM, MRW-W or CD-RW, we are randomly writable
++	 * Check if the drive has write capabilities. Only consider
++	 * capabilities that are determined from the MODE SENSE capabilities
++	 * page here. CDC_MRW_W (MRW writing) and CDC_RAM (random writable)
++	 * require the SCSI GET CONFIGURATION command to determine, which
++	 * is issued later by cdrom_open_write() at device open time.
+ 	 */
+-	if ((cd->cdi.mask & (CDC_DVD_RAM | CDC_MRW_W | CDC_RAM | CDC_CD_RW)) !=
+-			(CDC_DVD_RAM | CDC_MRW_W | CDC_RAM | CDC_CD_RW)) {
++	if ((cd->cdi.mask & (CDC_DVD_RAM | CDC_CD_RW)) !=
++			(CDC_DVD_RAM | CDC_CD_RW)) {
+ 		cd->writeable = 1;
+ 	}
+ 
+-- 
+2.53.0
+
