@@ -1,147 +1,127 @@
-Received: from lamorak.hansenpartnership.com (lamorak.hansenpartnership.com [198.37.111.173])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr1-f42.google.com (mail-wr1-f42.google.com [209.85.221.42])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA73830171C;
-	Mon, 30 Mar 2026 12:18:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.37.111.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A7C7F53E0B
+	for <linux-scsi@vger.kernel.org>; Mon, 30 Mar 2026 12:21:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774873103; cv=none; b=t1UYBd3LHEFM6UUJL+xMds4+K9UcAPDkLhPP0cSPAVKbwQGgWfo15WUjDHvG0jvcn/3esQAJY6UhWC+r1SlY64+vIaRCJxg1DRwVQ/0d4b7eirrWDGzOH31jCoDzQIcypWixjdnhj+WnJm2se+vvffXrzPg6n38K63Dk2oV6VX0=
+	t=1774873311; cv=none; b=WLSWpvEAjGc21afxx6R9zN7SE0a/kEHpUdEPgN4Lt9WkafzyIxB3uQVzN4l0xjgYV9EBAeOTOLjOW17tXG0W4dOpdCMnhW0079dO2HbvGvSimf3oRBFkMSE13y9wCin42r9ZxpyMmDgWTqr+gCcnLk0k763erK8wfZF7crp+AwA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774873103; c=relaxed/simple;
-	bh=l24qvhucqSZftunj/xupNMkcT9IXk60xXBB6c8Bom2Q=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=ZRQaMC7hqyhklsQRPiwYDuMqw/vFe6txYsBBn9qK+2UWRb31cp+DjptI7DWpUuaxdC2OIoftCMyokz4N3qYQFCqef5Y/flTI24mLLK+YSgXHhFQzkmCBFvxRqM6vDjUZTdROLWxsdWOxQKZMIb+Ry+fUPZMG7HPPllNRFjI74lE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com; spf=pass smtp.mailfrom=HansenPartnership.com; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=S/NKuWLb; arc=none smtp.client-ip=198.37.111.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=HansenPartnership.com
+	s=arc-20240116; t=1774873311; c=relaxed/simple;
+	bh=zBP8PO5fui9P8/Sb7HKAcwIrDDCoVoXn++3myaEcMQ4=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Y10DUkwxdw57EY42egcfCZ6UGWr2SG2W9kbVFp9AkF0jts383FEoHSi8K7w5+nLkwgs0Jw4YwZVOpsC/3IwQnG8DH6t2wG/Ik4cLz1G8TxfDXouzwE/hExPsOG5GHPemF9kj3zm+vOA9AUOF/ZM83boZP6K+xMlpFYVdhiBLXDs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Z+eb3WVF; arc=none smtp.client-ip=209.85.221.42
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="S/NKuWLb"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-	d=hansenpartnership.com; s=20151216; t=1774873100;
-	bh=l24qvhucqSZftunj/xupNMkcT9IXk60xXBB6c8Bom2Q=;
-	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
-	b=S/NKuWLbm4K7R6MscWkEruBbxeggCidI/vt0+4t9hI9/XXn6Kdx+973CmaLLEEENM
-	 tp2dPdm9UE2Bgp8R/I6+Gum/tWWuqh3W2rlC7DOib2BLfj5ecH+gsL1PSfzjCsaZKr
-	 AqfIzek0LOKn/U6hVbt4h+SfJWOfWj/P80oJQ5g4=
-Received: from lingrow.int.hansenpartnership.com (unknown [IPv6:2601:5c4:4300:d341::db7])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by lamorak.hansenpartnership.com (Postfix) with ESMTPSA id EED2F1C01D1;
-	Mon, 30 Mar 2026 08:18:19 -0400 (EDT)
-Message-ID: <04995d30c4d11af2e60a1497938031172a5fb332.camel@HansenPartnership.com>
-Subject: Re: [REGRESSION?] scsi: sas: wildcard user scan may iterate over
- huge max_id
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-To: Li Lingfeng <lilingfeng3@huawei.com>, ranjan.kumar@broadcom.com
-Cc: linux-scsi@vger.kernel.org, jejb@linux.ibm.com,
- martin.petersen@oracle.com,  "linux-kernel@vger.kernel.org"
- <linux-kernel@vger.kernel.org>, rajsekhar.chundru@broadcom.com, 
- sathya.prakash@broadcom.com, sumit.saxena@broadcom.com, 
- chandrakanth.patil@broadcom.com, prayas.patel@broadcom.com, yangerkun
- <yangerkun@huawei.com>, "zhangyi (F)" <yi.zhang@huawei.com>, Hou Tao
- <houtao1@huawei.com>, "chengzhihao1@huawei.com" <chengzhihao1@huawei.com>, 
- jiangjianjun3@h-partners.com, yuancan@huawei.com
-Date: Mon, 30 Mar 2026 08:18:19 -0400
-In-Reply-To: <773ba972-433b-44b4-89d2-295bd9f5de38@huawei.com>
-References: <773ba972-433b-44b4-89d2-295bd9f5de38@huawei.com>
-Autocrypt: addr=James.Bottomley@HansenPartnership.com;
- prefer-encrypt=mutual;
- keydata=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
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.50.3 
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Z+eb3WVF"
+Received: by mail-wr1-f42.google.com with SMTP id ffacd0b85a97d-43ccda008cdso1317731f8f.0
+        for <linux-scsi@vger.kernel.org>; Mon, 30 Mar 2026 05:21:48 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1774873306; x=1775478106; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=AfVs7uJYqazPiIYHhRqhNoID8aAr9DmOFHGu1EF3k3U=;
+        b=Z+eb3WVFFmwbo/dEZuiq8xfKQiK7ec8nisd/yZqvv/l4Ul6O84kTrcK70ybRemrIDd
+         5KOdIDIAWI6qt1oxKDlprBuy7g7vcx4s8OWIjropR0KX9mTa8cHNTPKivzlUrSlXydyb
+         u8eXoLawP76bIV5F+9x9mrDYs+87xJs+b6Qpnst5z7LrMFXpiWsmmOHH3Dcw/W1G5MFo
+         l1ZqM75WCfgDw8m4z7q9FC/T7CxbV81guKAE6PPpnbX7FHMXzIEqcPH3ewIfl3Mhm5jr
+         mAOMHa1EtY0MzcOgsH6Xmo7eNSK2bEu0kMCKCLwTxucFakVuIjnpsyf8re3ct2cHfdEO
+         cuWA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1774873306; x=1775478106;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=AfVs7uJYqazPiIYHhRqhNoID8aAr9DmOFHGu1EF3k3U=;
+        b=MtzYs6lpB5i6vxuDVlBrqOdLv7VeJ/1OK5L5H54E2AJkk955+4XRl9e6c0CIfz+SQq
+         s2fPjqSpvpVr8nru1C7+CE0E+hqyA2JWDGIvbw9adTJwujp34TmGx5gUYqyFTWzlh2jZ
+         NSJfcq4dxCSUADHgIFIMIzPWZJQF6zNzcx8eMd7Xiqdop5L9NIVp2HJ4sDuX0sbVpAKi
+         vgFgF4sf7TvVxERpXac6I4jiWkttEAxx/IW6MlM8unBujfxmbK9Wh1JeeB4GVd0nSv7z
+         nIym4s30GsUH5thgDHNI/vXR4kATyQ/3YlgwH4eUoOPTjKkxeJ8T7f9T7iYiCjU6+0KK
+         W0nw==
+X-Gm-Message-State: AOJu0Yw9uhm05hjFQ492AtfVvTsUc4ex9Q/PvaWTq3kaXOULYnleux3C
+	aD1dezVdGMp6qYq5XhOaMhmbcb4i2tmQV0u9yupS4VE6oIOYgi4GTR1Ld6EqirJm
+X-Gm-Gg: ATEYQzzmuQ7UvlDGi4t5NWPkJObF6MHWNinYPk+g/nJt0DgwpGo9saC5CrhuV4+Q5ps
+	5z55+3kXdEMaASVre9di35dltar+CrQnMseWhWetJxA/QQ5CmOWEQPE64q9/yK1CPwPRUFsj2Il
+	Sudich76jBN8J819eZXpeX7XGfX5HlaHAPjfvgTavOOZsNTe6my7sWBI4R1vgOeb3Jz3HNm2gOJ
+	En38/qYvMQ1+ipqpG1+TDrIxlLLEnHrawz/hqAs17GfzttuJpMJ6v1ZYwTOpbRxDBROuBOWB6Ny
+	tMIsqHzSHl9sIuFfeTJtRmHf+ivehjAUcQCauIArsZjkuUGl44kZur+cyaCxN1nxV7uRKt0oaqf
+	Cp5cg4ThFOpoNYFyreORIfZltGUODodgOuTys49vzvG9ALPFdFGiGJqCfbwB7ohvSi/pbflLJY1
+	Uk6fQNjO617J3gwsu50Jiw5WxlmMX/SI+lcT8Z93l/0yDixSnXBBvwAYaw3uG/STH5kUxs1R7XK
+	VsU6mCSelmT+SFJIjb4JiWad8KGH1Hay4pAAYoyFpudqCpOWntar/fUJm99uy28G9ekm3WpvVYB
+	LMb6M3Jtw2Z9Cilk0YiN
+X-Received: by 2002:a5d:5d8a:0:b0:43c:fac5:d382 with SMTP id ffacd0b85a97d-43cfac5d3cdmr8226181f8f.12.1774873306344;
+        Mon, 30 Mar 2026 05:21:46 -0700 (PDT)
+Received: from particle-0df3-d360 (2a02-1810-950a-eb00-f9cf-2393-cb7f-6fd9.ip6.access.telenet.be. [2a02:1810:950a:eb00:f9cf:2393:cb7f:6fd9])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-43cf2580194sm17243443f8f.37.2026.03.30.05.21.45
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 30 Mar 2026 05:21:45 -0700 (PDT)
+From: Daan De Meyer <daan.j.demeyer@gmail.com>
+X-Google-Original-From: Daan De Meyer <daan@amutable.com>
+To: linux-scsi@vger.kernel.org
+Cc: James.Bottomley@HansenPartnership.com,
+	martin.petersen@oracle.com,
+	Daan De Meyer <daan@amutable.com>,
+	Daan De Meyer <daan.j.demeyer@gmail.com>
+Subject: [PATCH] scsi: sr: propagate read-only status to block layer via set_disk_ro()
+Date: Mon, 30 Mar 2026 12:21:24 +0000
+Message-ID: <20260330122124.755083-1-daan@amutable.com>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-On Sat, 2026-03-28 at 10:28 +0800, Li Lingfeng wrote:
-> Hi,
->=20
-> I think commit 37c4e72b0651 ("scsi: Fix sas_user_scan() to handle
-> wildcard and multi-channel scans") may introduce a regression for
-> wildcard scans on some SAS hosts.
->=20
-> Userspace trigger:
->=20
-> =C2=A0=C2=A0 echo "- - -" > /sys/class/scsi_host/host0/scan
->=20
-> results in:
->=20
-> =C2=A0=C2=A0 channel =3D SCAN_WILD_CARD
-> =C2=A0=C2=A0 id=C2=A0 =C2=A0 =C2=A0 =3D SCAN_WILD_CARD
-> =C2=A0=C2=A0 lun=C2=A0 =C2=A0 =C2=A0=3D SCAN_WILD_CARD
->=20
-> Before this commit, sas_user_scan() iterated sas_host->rphy_list and
-> called scsi_scan_target() for matching rphys. In effect, scanning was
-> limited to channel 0 and to target ids present in sas_host-
-> >rphy_list.
->=20
-> After this commit, sas_user_scan() does:
->=20
-> =C2=A0=C2=A0 - scan channel 0 via scan_channel_zero()
-> =C2=A0=C2=A0 - scan channels 1..shost->max_channel via
-> scsi_scan_host_selected()
->=20
-> When id =3D=3D SCAN_WILD_CARD, the latter path goes through
-> scsi_scan_channel(), which iterates ids from 0 to shost->max_id.
->=20
-> This looks problematic for drivers that use a very large max_id. For
-> example, smartpqi sets:
->=20
-> =C2=A0=C2=A0 shost->max_id =3D ~0;
->=20
-> In that case, a wildcard scan may end up iterating from id 0 to ~0 in
-> scsi_scan_channel(). In my testing/analysis, this makes the scan take
-> a very long time, and the id-space walk itself does not seem
-> meaningful for this SAS transport scan path.
->=20
-> So while the commit fixes incomplete wildcard channel handling, it
-> also appears to expand the id scan range from:
->=20
-> =C2=A0=C2=A0 sas_host->rphy_list target ids
->=20
-> to:
->=20
-> =C2=A0=C2=A0 0..shost->max_id
->=20
-> for the additional channels.
->=20
-> It seems to me that wildcard SAS scans should probably remain bounded
-> by transport-discovered SAS targets, instead of falling back to a
-> host-wide id enumeration for the extra channels. One possible
-> direction may be to avoid calling scsi_scan_host_selected() with id
-> =3D=3D SCAN_WILD_CARD from sas_user_scan(), or otherwise constrain the id
-> range in a transport-aware way.
->=20
-> Am I understanding this correctly? If so, what would be the preferred
-> way to address this? I would appreciate feedback on whether this is
-> considered a real regression, and on the best fix direction.
+The sr driver tracks whether a CD-ROM drive supports writing via the
+cd->writeable flag, which is determined from the drive's MODE SENSE
+capabilities page (page 0x2A). When the drive does not report any write
+capabilities (CD-RW, DVD-RAM, MRW-W, etc.), writeable remains 0 and
+write requests are rejected in sr_init_command().
 
-In the case of smartpqi, it isn't designed to be user scanned, I think.
-So, as you say, it would take a long time to scan one channel.  Since
-it sets max_channels to 3, it would only take 4 times longer which
-hardly constitutes a regression.
+However, this information is never propagated to the block layer via
+set_disk_ro(). As a result, BLKROGET on a CD-ROM device always returns
+0 (writable), even when the drive has no write capabilities and writes
+will inevitably fail. This causes problems for userspace that relies on
+BLKROGET to determine whether a block device is read-only, for example:
 
-Doing serial scans is very scsi-2 so most discoverable device fabrics
-don't bother and get the default settings for the scan max_channels
-(which is zero).  The only devices that seem to care about this at all
-are fat firmware devices that bundle RAID or other capabilities by re-
-purposing channels and they seem to be the ones that want this
-behaviour:
+ - systemd's loop device setup uses BLKROGET to decide whether to create
+   a loop device with LO_FLAGS_READ_ONLY. Without the read-only flag,
+   writes pass through the loop device to the CD-ROM and fail with I/O
+   errors.
 
-https://lore.kernel.org/linux-scsi/CAFdVvOwjy+2ORJ6uJkspiLTPF05481U7gcS4Qoh=
-FOFGPqAs8ig@mail.gmail.com/
+ - systemd-fsck checks BLKROGET to decide whether to run fsck in
+   no-repair mode (-n). Without the read-only flag, fsck attempts writes
+   that produce I/O errors.
 
-Regards,
+This is in contrast to the sd driver (SCSI disks), which has called
+set_disk_ro() based on the MODE SENSE Write Protect bit since before
+the beginning of the git history.
 
-James
+Fix this by calling set_disk_ro(disk, !cd->writeable) in sr_probe()
+after get_capabilities() has determined the drive's write support.
+
+Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
+Signed-off-by: Daan De Meyer <daan.j.demeyer@gmail.com>
+---
+ drivers/scsi/sr.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
+index 7adb2573f50d..8ed002f82e36 100644
+--- a/drivers/scsi/sr.c
++++ b/drivers/scsi/sr.c
+@@ -684,6 +684,7 @@ static int sr_probe(struct scsi_device *sdev)
+ 	sr_vendor_init(cd);
+ 
+ 	set_capacity(disk, cd->capacity);
++	set_disk_ro(disk, !cd->writeable);
+ 	disk->private_data = cd;
+ 
+ 	if (register_cdrom(disk, &cd->cdi))
+-- 
+2.53.0
 
