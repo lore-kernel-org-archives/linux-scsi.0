@@ -1,71 +1,71 @@
-Received: from mail-qv1-f45.google.com (mail-qv1-f45.google.com [209.85.219.45])
+Received: from mail-qv1-f54.google.com (mail-qv1-f54.google.com [209.85.219.54])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 57CC12D46CE
-	for <linux-scsi@vger.kernel.org>; Tue, 31 Mar 2026 20:23:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.45
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 45FCA3590A9
+	for <linux-scsi@vger.kernel.org>; Tue, 31 Mar 2026 20:23:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.54
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774988594; cv=none; b=pLt4ggaSrv+58HHcwcKPYdTzYnCyLW5OqNQx/Prs4f9mmMNygQrWYqECakGVfndy6L52iya7pQUajnR2MBsUx3XMdolVvMrzbB3zOnBW9s/2XVrta7tVomy3uW2b937hZbbHas6SF0rjCNnHOwjdxoru+624BLhw+/DDBj8Nl0M=
+	t=1774988595; cv=none; b=X32IrARJAWEeU1Rpnx0FAgu6b7D407bNAo8koYKTtofNl1GT6JS+S3wnci3CjrCIPj/gfGnjHNNut/98QizA3obuw1siI/Szd4tngvjWS28iQicaElv4pQTx8wUm84sDmf5GEcOYKmVpxAJG0THNReFR9sdFynWw5Q5rwLaraKw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774988594; c=relaxed/simple;
-	bh=mXoJk1WXOUnq9MS8Ng0qOAfeNZ0+rPxUJo/Da60hhNM=;
+	s=arc-20240116; t=1774988595; c=relaxed/simple;
+	bh=saT+/5DWY4yZcdZjnVC39+My3k+qHuFTIE2C1Q/Q++Q=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=PKoGL85AQAuKoyKG9WcsfgQJiLXkxzVqZGMQ/fh8Lt+6vcYPM3PCP2kzuv0XxqlvkQJGFnXMVQas9Qkxaw5vP9pjVLIb4TRgE9xgbBbgwxBGppoQuXeiKK1DDz0josTM1aWUrJ2oYMSdXuiwZanyhPrq0kFTCvR2QdG//wKdBWM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Qcge2m5Y; arc=none smtp.client-ip=209.85.219.45
+	 MIME-Version; b=KPODvWOzc1Mvd9JqbTcFVFA8H6WjLQp5mpumJ5ykLZNiEjAvNmFrkTJ5yp618BZUPFTTAI3qGqv2qeOajHbFT5oDjbx6FyosHJtNDyGI39OELQe6cT15FVj+Sl/0851+6hDESYPyerKYKhotzH0L0dkhRkLZdp5ilONx2ctIsL4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=QQ5wFXNc; arc=none smtp.client-ip=209.85.219.54
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Qcge2m5Y"
-Received: by mail-qv1-f45.google.com with SMTP id 6a1803df08f44-8a032383008so46393006d6.1
-        for <linux-scsi@vger.kernel.org>; Tue, 31 Mar 2026 13:23:12 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="QQ5wFXNc"
+Received: by mail-qv1-f54.google.com with SMTP id 6a1803df08f44-8a016799d2cso38522156d6.1
+        for <linux-scsi@vger.kernel.org>; Tue, 31 Mar 2026 13:23:14 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1774988591; x=1775593391; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1774988593; x=1775593393; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=q4z0tHKJEn7SCBCALxiXeKOsOGMmNWaaIlP6NvxQq5s=;
-        b=Qcge2m5YQfwZO6DWN/7A4AYeZTvJHi8sETuUblPTQvgfJFzEqwDhEfftCooQcGETm6
-         2NdFgs8RC7IvzmeVjrzT6Y36uADC9St58kezwSkMDXKNMpwEX+HoHqQxFVSRWX4TEyKs
-         jlGjoAwQRjdwAx4Tlm6ONG4ghzgPFQGUjdGYWc/ge84zioy8mJXoqx0dKWgvINd4yJVG
-         qzKR+LYD0Go8kFSsIepVBVaSRAEXDAYy1p88wh2DOn8oMysvOIWCUxo5+DWuE9tH4lVT
-         up7drra/ku5nczQI1dWQF20AFXTXAodqIirD9wpjtv1ZQiy1PH52f9QoGHAAbKDmiDNw
-         qYFw==
+        bh=04Exlu3o2HeehVhNJ4vyP5GGhi8AWOiwn112dweg9HI=;
+        b=QQ5wFXNcpGmv4yniCWFNr1AuGuxblDttu52EWQy8GXfrPqhB3cbq2GS5uUHiygaJ4B
+         mpf9cwuiNQVwctP6SNmtJuZje1fvmi+YiC0mKDOVmMqhqEvWUAL4qKXa1WBV66jCouXL
+         Ddvd3H/biBmfXI1Y+dCfBhi8kvNpLcfyucMyDb0Lbx6IyAlqGwxoCXep2o/dg98mFUmQ
+         gKEQGann0mvomYeZNIkQ9H1hFHYcAzvfe6/1ZOqPLVn3czI5O/4RnfebiKxGDSC++c45
+         Vo7m2m29h1WsPOf5fAyunmRuMxYygNVhVyVOiJ/ZXUb5xbkyPkLjK48EqKmLpg2Dy5Bc
+         7fdQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1774988591; x=1775593391;
+        d=1e100.net; s=20251104; t=1774988593; x=1775593393;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to;
-        bh=q4z0tHKJEn7SCBCALxiXeKOsOGMmNWaaIlP6NvxQq5s=;
-        b=X0l1UUHJCabiNIj5AoqEMeGZKwn7spKcdHwCaiP36E5JYSLSX923dlqYUp3pW02Zrr
-         tPI1cPr8mlJesWs1SXKZAWr3kM5DragYAPf5kSPKK+uyZ6si7miNX0R6L+PI2NwPqZ4u
-         SW+ur8FcTi7j9AMANJXX8kW6TYSgrlckRRcZ/aPRco8cv5ZloYo8Nhje3y2gOHxuPcTK
-         qhEBXisll+lMM+7J/DLpXa+V2bpUDti/wVMCXGSN9ebYL7YYqaJvW9bmvSUvuJ6CLMOM
-         6xp38M34VBXiL9j4WZOtslLb/2oocKciEAMWxuxudTIdtS3DL70ZgunS25qMks0tuVgz
-         RvnQ==
-X-Gm-Message-State: AOJu0YyZUybrGGLiOpCoMeeI5+VRQLzDAEfG1m8D62vD8sAVMFAB+jeu
-	9c0LoFpGLvHcEgZVAEHCQOWOqC04ou9fGn/nmu1mbRSdU2xI0oW3bvVMzNeC1g==
-X-Gm-Gg: ATEYQzztAVxz62IwjUcFHDEfP37TZJChcp07E+UR3lVih/PiEJsW7Cv8IKlJuWBmelF
-	mA82s1bfVLRPSXOaaZeHcADcMee89rBAgI5CpC2bd2kMu59cwptKnciTROwNgQ2fMHs9MjdCvLw
-	RyXNmkoazWHSmb2Kn6R0KMSolSnnBJW49qhNVrT5HNCRARUqvqkydc0xttWRVbtYdq1XBZjzqQ9
-	ezDPXNVTg4i0QShFTCR0SjUxPvRPFL1kr60O4OnPCNSa/RiJ+XjNWtHwiZOiSJcMRJzu9xhkSNy
-	98YpxQ26/C7zRpHVGTPIv/Jt+EOakJHAR1f3O2VZg+l302fXmydooXwVVHpkW33GELSgOkR2Geq
-	ffDtuuHTllQZ844yoyoLEHZoO2MNrsEQrlaCaJX23bpFeaEHCSDSbQhd0glOa0ALCQwEiFnM2e9
-	UhoKNijueuTsOCDPS1rxDKiUrWvw9xrmRLbFNAB8luhiNf6+5kuEsbJeL17H/KpGd12qyiIstyH
-	KKLj9Xm23NIZWOZLeuE9tRGLihtAE4BcggekoyKKT8=
-X-Received: by 2002:a05:6214:601b:b0:8a1:f18d:1b with SMTP id 6a1803df08f44-8a439e8aa0amr14268706d6.49.1774988591114;
-        Tue, 31 Mar 2026 13:23:11 -0700 (PDT)
+        bh=04Exlu3o2HeehVhNJ4vyP5GGhi8AWOiwn112dweg9HI=;
+        b=NHjoTHGCxvWE6AtU/BvjeyZDxJoHM/ze2wki9KBTillBUhlLn6xojuWQb/BfpGEMXG
+         vwss/6GfPIjxdpb+nXLHvA2p1+FnqLy6BorbMJ5cKJFiKAS0LdIeyucPLOiUUGRwF4Xb
+         nBX9CNQ4AK91cdUfVk8uQLweEpPXXzikYI8EsgLcwIrMf9u4zvsegqkoW18wUcvbQQ86
+         9hi5WAfMVLT4rX1FW1yL7BSBP3N/xE6x0EV49e6BrT1YyaCmbfPx/GWJgwW/kxYMsREi
+         nvv2MbphycV43aUBFBplhSguAVB73hSEQozaMBht5DzcJ8USN2zts4s1RbVnGfzhTwoB
+         qqOA==
+X-Gm-Message-State: AOJu0YxwcH9ywABh1Ek92ueFbil0lp6kN3seEfjxz6cpssTpH8Ks0krY
+	Pz1mSPzgKuymUALnoeO4PUVezSrkXOCzJBd207fAT3UxPdz92ZGcO6LINRKgAg==
+X-Gm-Gg: ATEYQzxoyz6K8uthEuFAbTp1WsXIOeQZaznVlgxyXeS9/roTuWHD/bMliQGLUEboBsk
+	66K44U6AkYEE2Ic8Pqvn0sayZpmD3SQIvEUTawrHuUN7TuwFFxpFBBDcU6Oqp2ZC8AXp4BLdNq7
+	7Zgu4C5+mj1of7UsJ8Qd568Jo/XtFlrHnV2lGBVz0qsMdnrTtNBg/HkzHiqRz/dkea8ZvAvWnx2
+	y1lUMdXfUYmoDrdwmlrGGNdKPJ6ld9qgFmIKbUrsGHI8pJT6JD+pXV5H6cMfVrFIKwSTFSIV6TJ
+	cOecOc5gOqn8sBHxYVOlpE6h1bwhT1yfFl2w2Z1WFVqeUsspIkfDMzv2VAjKtvQtWC0ZKfhrcBD
+	YIz9ze6mp+3Qkc6AOrcxR3/Uh8TOTVbFH0RWsvCdVAvMZAYwOq0j44dHGBxPWsnJ3H2SruInMu/
+	4FtY9Oz0y5umf5G4AGCkYY0gKNecG4hnN4JgNNO/+OC1iBQd9kJxLZWrT2jTO/Toub0lXyXYNtZ
+	sMWlmOLmxGM8AJZsZxxH5IJpduG+BGHABmkjF9t9mI=
+X-Received: by 2002:a05:6214:5184:b0:89c:cb57:6214 with SMTP id 6a1803df08f44-8a43ab47dccmr14485876d6.50.1774988592900;
+        Tue, 31 Mar 2026 13:23:12 -0700 (PDT)
 Received: from dhcp-10-231-55-133.dhcp.broadcom.net ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-89ecf865ccesm96685616d6.39.2026.03.31.13.23.10
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-89ecf865ccesm96685616d6.39.2026.03.31.13.23.12
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 31 Mar 2026 13:23:10 -0700 (PDT)
+        Tue, 31 Mar 2026 13:23:12 -0700 (PDT)
 From: Justin Tee <justintee8345@gmail.com>
 To: linux-scsi@vger.kernel.org
 Cc: jsmart833426@gmail.com,
 	justin.tee@broadcom.com,
 	Justin Tee <justintee8345@gmail.com>
-Subject: [PATCH 06/10] lpfc: Update construction of SGL when XPSGL is enabled
-Date: Tue, 31 Mar 2026 13:59:24 -0700
-Message-Id: <20260331205928.119833-7-justintee8345@gmail.com>
+Subject: [PATCH 07/10] lpfc: Check ASIC_ID register to aid diagnostics during failed fw updates
+Date: Tue, 31 Mar 2026 13:59:25 -0700
+Message-Id: <20260331205928.119833-8-justintee8345@gmail.com>
 X-Mailer: git-send-email 2.38.0
 In-Reply-To: <20260331205928.119833-1-justintee8345@gmail.com>
 References: <20260331205928.119833-1-justintee8345@gmail.com>
@@ -77,367 +77,140 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The construction of SGLs is updated to safeguard ASIC boundary
-requirements when using XPSGL.
-
-The LSP type SGE is used to notify where a continuing SGL resides.
-Typically, this means that the LSP is the last SGE in an SGL because the
-current SGL has reached its maximum size and the LSP is used to refer to
-the next follow up SGL.  Due to ASIC boundary requirements, there is a need
-to ensure a 4 KB boundary is not crossed.  Thus, for a maximum size of 256
-byte SGLs or 16 SGEs, this means restricting the LSP to being the 12th SGE
-for the very first SGL that is used for pre-registration.  If additional
-SGEs are needed, the LSP will be the last SGE position within that follow
-up SGL as was previously implemented.
+When WRITE_OBJECT mailbox command fails during firmware update, the
+lpfc_log_write_firmware_error routine is used to log and parse commonly
+found error codes.  Update this routine to also include ASIC_ID register
+checks for notifying users of incompatible images.
 
 Signed-off-by: Justin Tee <justintee8345@gmail.com>
 ---
- drivers/scsi/lpfc/lpfc_nvme.c |  30 ++++++----
- drivers/scsi/lpfc/lpfc_scsi.c | 103 ++++++++++++++++++++++------------
- 2 files changed, 87 insertions(+), 46 deletions(-)
+ drivers/scsi/lpfc/lpfc_hw4.h  | 20 ++++++++++++++++++--
+ drivers/scsi/lpfc/lpfc_init.c | 19 ++++++++++++++++++-
+ drivers/scsi/lpfc/lpfc_sli4.h |  1 +
+ 3 files changed, 37 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_nvme.c b/drivers/scsi/lpfc/lpfc_nvme.c
-index 81b8fe69f2bc..71714ea390d9 100644
---- a/drivers/scsi/lpfc/lpfc_nvme.c
-+++ b/drivers/scsi/lpfc/lpfc_nvme.c
-@@ -1339,7 +1339,7 @@ lpfc_nvme_prep_io_dma(struct lpfc_vport *vport,
- 	dma_addr_t physaddr = 0;
- 	uint32_t dma_len = 0;
- 	uint32_t dma_offset = 0;
--	int nseg, i, j;
-+	int nseg, i, j, k;
- 	bool lsp_just_set = false;
+diff --git a/drivers/scsi/lpfc/lpfc_hw4.h b/drivers/scsi/lpfc/lpfc_hw4.h
+index 0e11701b0881..f91bde4a6c38 100644
+--- a/drivers/scsi/lpfc/lpfc_hw4.h
++++ b/drivers/scsi/lpfc/lpfc_hw4.h
+@@ -100,7 +100,8 @@ struct lpfc_sli_intf {
+ #define lpfc_sli_intf_sli_family_MASK		0x0000000F
+ #define lpfc_sli_intf_sli_family_WORD		word0
+ #define LPFC_SLI_INTF_FAMILY_BE2	0x0
+-#define LPFC_SLI_INTF_FAMILY_BE3	0x1
++#define LPFC_SLI_INTF_ASIC_ID		0x1	/* Refer to ASIC_ID register */
++#define LPFC_SLI_INTF_FAMILY_BE3	0x3
+ #define LPFC_SLI_INTF_FAMILY_LNCR_A0	0xa
+ #define LPFC_SLI_INTF_FAMILY_LNCR_B0	0xb
+ #define LPFC_SLI_INTF_FAMILY_G6		0xc
+@@ -118,6 +119,17 @@ struct lpfc_sli_intf {
+ #define LPFC_SLI_INTF_IF_TYPE_VIRT	1
+ };
  
- 	/* Fix up the command and response DMA stuff. */
-@@ -1379,6 +1379,9 @@ lpfc_nvme_prep_io_dma(struct lpfc_vport *vport,
- 
- 		/* for tracking the segment boundaries */
- 		j = 2;
-+		k = 5;
-+		if (unlikely(!phba->cfg_xpsgl))
-+			k = 1;
- 		for (i = 0; i < nseg; i++) {
- 			if (data_sg == NULL) {
- 				lpfc_printf_log(phba, KERN_ERR, LOG_TRACE_EVENT,
-@@ -1397,9 +1400,8 @@ lpfc_nvme_prep_io_dma(struct lpfc_vport *vport,
- 				bf_set(lpfc_sli4_sge_last, sgl, 0);
- 
- 				/* expand the segment */
--				if (!lsp_just_set &&
--				    !((j + 1) % phba->border_sge_num) &&
--				    ((nseg - 1) != i)) {
-+				if (!lsp_just_set && (nseg != (i + k)) &&
-+				    !((j + k) % phba->border_sge_num)) {
- 					/* set LSP type */
- 					bf_set(lpfc_sli4_sge_type, sgl,
- 					       LPFC_SGE_TYPE_LSP);
-@@ -1422,8 +1424,8 @@ lpfc_nvme_prep_io_dma(struct lpfc_vport *vport,
- 				}
- 			}
- 
--			if (!(bf_get(lpfc_sli4_sge_type, sgl) &
--				     LPFC_SGE_TYPE_LSP)) {
-+			if (bf_get(lpfc_sli4_sge_type, sgl) !=
-+			    LPFC_SGE_TYPE_LSP) {
- 				if ((nseg - 1) == i)
- 					bf_set(lpfc_sli4_sge_last, sgl, 1);
- 
-@@ -1444,19 +1446,25 @@ lpfc_nvme_prep_io_dma(struct lpfc_vport *vport,
- 				sgl++;
- 
- 				lsp_just_set = false;
-+				j++;
- 			} else {
- 				sgl->word2 = cpu_to_le32(sgl->word2);
--
--				sgl->sge_len = cpu_to_le32(
--						     phba->cfg_sg_dma_buf_size);
-+				/* will remaining SGEs fill the next SGL? */
-+				if ((nseg - i) < phba->border_sge_num)
-+					sgl->sge_len =
-+						cpu_to_le32((nseg - i) *
-+								sizeof(*sgl));
-+				else
-+					sgl->sge_len =
-+						cpu_to_le32(phba->cfg_sg_dma_buf_size);
- 
- 				sgl = (struct sli4_sge *)sgl_xtra->dma_sgl;
- 				i = i - 1;
- 
- 				lsp_just_set = true;
-+				j += k;
-+				k = 1;
- 			}
--
--			j++;
- 		}
- 	} else {
- 		lpfc_ncmd->seg_cnt = 0;
-diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
-index f11f2c29db89..1dce33b79beb 100644
---- a/drivers/scsi/lpfc/lpfc_scsi.c
-+++ b/drivers/scsi/lpfc/lpfc_scsi.c
-@@ -1938,7 +1938,7 @@ lpfc_bg_setup_sgl(struct lpfc_hba *phba, struct scsi_cmnd *sc,
- 	uint32_t dma_len;
- 	uint32_t dma_offset = 0;
- 	struct sli4_hybrid_sgl *sgl_xtra = NULL;
--	int j;
-+	int j, k;
- 	bool lsp_just_set = false;
- 
- 	status  = lpfc_sc_to_bg_opcodes(phba, sc, &txop, &rxop);
-@@ -2001,13 +2001,16 @@ lpfc_bg_setup_sgl(struct lpfc_hba *phba, struct scsi_cmnd *sc,
- 	/* assumption: caller has already run dma_map_sg on command data */
- 	sgde = scsi_sglist(sc);
- 	j = 3;
-+	k = 5;
-+	if (unlikely(!phba->cfg_xpsgl))
-+		k = 1;
- 	for (i = 0; i < datasegcnt; i++) {
- 		/* clear it */
- 		sgl->word2 = 0;
- 
--		/* do we need to expand the segment */
--		if (!lsp_just_set && !((j + 1) % phba->border_sge_num) &&
--		    ((datasegcnt - 1) != i)) {
-+		/* do we need to expand the segment? */
-+		if (!lsp_just_set && (datasegcnt != (i + k)) &&
-+		    !((j + k) % phba->border_sge_num)) {
- 			/* set LSP type */
- 			bf_set(lpfc_sli4_sge_type, sgl, LPFC_SGE_TYPE_LSP);
- 
-@@ -2026,7 +2029,7 @@ lpfc_bg_setup_sgl(struct lpfc_hba *phba, struct scsi_cmnd *sc,
- 			bf_set(lpfc_sli4_sge_type, sgl, LPFC_SGE_TYPE_DATA);
- 		}
- 
--		if (!(bf_get(lpfc_sli4_sge_type, sgl) & LPFC_SGE_TYPE_LSP)) {
-+		if (bf_get(lpfc_sli4_sge_type, sgl) != LPFC_SGE_TYPE_LSP) {
- 			if ((datasegcnt - 1) == i)
- 				bf_set(lpfc_sli4_sge_last, sgl, 1);
- 			physaddr = sg_dma_address(sgde);
-@@ -2043,20 +2046,23 @@ lpfc_bg_setup_sgl(struct lpfc_hba *phba, struct scsi_cmnd *sc,
- 
- 			sgl++;
- 			num_sge++;
-+			j++;
- 			lsp_just_set = false;
--
- 		} else {
- 			sgl->word2 = cpu_to_le32(sgl->word2);
--			sgl->sge_len = cpu_to_le32(phba->cfg_sg_dma_buf_size);
--
-+			/* will remaining SGEs fill the next SGL? */
-+			if ((datasegcnt - i) < phba->border_sge_num)
-+				sgl->sge_len = cpu_to_le32((datasegcnt - i) *
-+								sizeof(*sgl));
-+			else
-+				sgl->sge_len =
-+					cpu_to_le32(phba->cfg_sg_dma_buf_size);
- 			sgl = (struct sli4_sge *)sgl_xtra->dma_sgl;
- 			i = i - 1;
--
-+			j += k;
- 			lsp_just_set = true;
-+			k = 1;
- 		}
--
--		j++;
--
- 	}
- 
- out:
-@@ -2109,6 +2115,7 @@ lpfc_bg_setup_sgl_prot(struct lpfc_hba *phba, struct scsi_cmnd *sc,
- 	struct scatterlist *sgde = NULL; /* s/g data entry */
- 	struct scatterlist *sgpe = NULL; /* s/g prot entry */
- 	struct sli4_sge_diseed *diseed = NULL;
-+	struct sli4_sge_le *lsp_sgl = NULL;
- 	dma_addr_t dataphysaddr, protphysaddr;
- 	unsigned short curr_prot = 0;
- 	unsigned int split_offset;
-@@ -2125,8 +2132,8 @@ lpfc_bg_setup_sgl_prot(struct lpfc_hba *phba, struct scsi_cmnd *sc,
- 	uint32_t rc;
- #endif
- 	uint32_t checking = 1;
--	uint32_t dma_offset = 0, num_sge = 0;
--	int j = 2;
-+	uint32_t dma_offset = 0, num_sge = 0, lsp_len;
-+	int j = 2, k = 4;
- 	struct sli4_hybrid_sgl *sgl_xtra = NULL;
- 
- 	sgpe = scsi_prot_sglist(sc);
-@@ -2157,6 +2164,8 @@ lpfc_bg_setup_sgl_prot(struct lpfc_hba *phba, struct scsi_cmnd *sc,
- 	}
- #endif
- 
-+	if (unlikely(!phba->cfg_xpsgl))
-+		k = 0;
- 	split_offset = 0;
- 	do {
- 		/* Check to see if we ran out of space */
-@@ -2164,10 +2173,10 @@ lpfc_bg_setup_sgl_prot(struct lpfc_hba *phba, struct scsi_cmnd *sc,
- 		    !(phba->cfg_xpsgl))
- 			return num_sge + 3;
- 
--		/* DISEED and DIF have to be together */
--		if (!((j + 1) % phba->border_sge_num) ||
--		    !((j + 2) % phba->border_sge_num) ||
--		    !((j + 3) % phba->border_sge_num)) {
-+		/* DISEED and DIF have to be together  */
-+		if (!((j + k + 1) % phba->border_sge_num) ||
-+		    !((j + k + 2) % phba->border_sge_num) ||
-+		    !((j + k + 3) % phba->border_sge_num)) {
- 			sgl->word2 = 0;
- 
- 			/* set LSP type */
-@@ -2186,9 +2195,18 @@ lpfc_bg_setup_sgl_prot(struct lpfc_hba *phba, struct scsi_cmnd *sc,
- 
- 			sgl->word2 = cpu_to_le32(sgl->word2);
- 			sgl->sge_len = cpu_to_le32(phba->cfg_sg_dma_buf_size);
-+			if (lsp_sgl) {
-+				j++;
-+				if (j % phba->border_sge_num) {
-+					lsp_len = j * (sizeof(*sgl));
-+					lsp_sgl->sge_len = cpu_to_le32(lsp_len);
-+				}
-+			}
-+			lsp_sgl = (struct sli4_sge_le *)sgl;
- 
- 			sgl = (struct sli4_sge *)sgl_xtra->dma_sgl;
- 			j = 0;
-+			k = 0;
- 		}
- 
- 		/* setup DISEED with what we have */
-@@ -2291,7 +2309,7 @@ lpfc_bg_setup_sgl_prot(struct lpfc_hba *phba, struct scsi_cmnd *sc,
- 				return 0;
- 			}
- 
--			if (!((j + 1) % phba->border_sge_num)) {
-+			if (!((j + k + 1) % phba->border_sge_num)) {
- 				sgl->word2 = 0;
- 
- 				/* set LSP type */
-@@ -2313,8 +2331,11 @@ lpfc_bg_setup_sgl_prot(struct lpfc_hba *phba, struct scsi_cmnd *sc,
- 				sgl->word2 = cpu_to_le32(sgl->word2);
- 				sgl->sge_len = cpu_to_le32(
- 						     phba->cfg_sg_dma_buf_size);
-+				lsp_sgl = (struct sli4_sge_le *)sgl;
- 
- 				sgl = (struct sli4_sge *)sgl_xtra->dma_sgl;
-+				j = 0;
-+				k = 0;
- 			} else {
- 				dataphysaddr = sg_dma_address(sgde) +
- 								   split_offset;
-@@ -2362,11 +2383,9 @@ lpfc_bg_setup_sgl_prot(struct lpfc_hba *phba, struct scsi_cmnd *sc,
- 
- 				/* Move to the next s/g segment if possible */
- 				sgde = sg_next(sgde);
--
- 				sgl++;
-+				j++;
- 			}
--
--			j++;
- 		}
- 
- 		if (protgroup_offset) {
-@@ -2381,6 +2400,14 @@ lpfc_bg_setup_sgl_prot(struct lpfc_hba *phba, struct scsi_cmnd *sc,
- 			sgl--;
- 			bf_set(lpfc_sli4_sge_last, sgl, 1);
- 			alldone = 1;
++struct lpfc_asic_id {
++	u32 word0;
++#define lpfc_asic_id_gen_num_SHIFT	8
++#define lpfc_asic_id_gen_num_MASK	0x000000FF
++#define lpfc_asic_id_gen_num_WORD	word0
++#define LPFC_SLI_INTF_FAMILY_G8		0x10
++#define lpfc_asic_id_rev_num_SHIFT	0
++#define lpfc_asic_id_rev_num_MASK	0x000000FF
++#define lpfc_asic_id_rev_num_WORD	word0
++};
 +
-+			/* Reset length in previous LSP where necessary */
-+			if (lsp_sgl) {
-+				if (j % phba->border_sge_num) {
-+					lsp_len = j * (sizeof(*sgl));
-+					lsp_sgl->sge_len = cpu_to_le32(lsp_len);
-+				}
-+			}
- 		} else if (curr_prot < protcnt) {
- 			/* advance to next prot buffer */
- 			sgpe = sg_next(sgpe);
-@@ -2392,7 +2419,6 @@ lpfc_bg_setup_sgl_prot(struct lpfc_hba *phba, struct scsi_cmnd *sc,
- 			lpfc_printf_log(phba, KERN_ERR, LOG_TRACE_EVENT,
- 					"9085 BLKGRD: bug in %s\n", __func__);
- 		}
--
- 	} while (!alldone);
+ #define LPFC_SLI4_MBX_EMBED	true
+ #define LPFC_SLI4_MBX_NEMBED	false
  
- out:
-@@ -3056,7 +3082,7 @@ lpfc_scsi_prep_dma_buf_s4(struct lpfc_hba *phba, struct lpfc_io_buf *lpfc_cmd)
- 	dma_addr_t physaddr;
- 	uint32_t dma_len;
- 	uint32_t dma_offset = 0;
--	int nseg, i, j;
-+	int nseg, i, j, k;
- 	bool lsp_just_set = false;
- 	struct sli4_hybrid_sgl *sgl_xtra = NULL;
+@@ -624,6 +636,10 @@ struct lpfc_register {
  
-@@ -3111,6 +3137,9 @@ lpfc_scsi_prep_dma_buf_s4(struct lpfc_hba *phba, struct lpfc_io_buf *lpfc_cmd)
- 		/* for tracking segment boundaries */
- 		sgel = scsi_sglist(scsi_cmnd);
- 		j = 2;
-+		k = 5;
-+		if (unlikely(!phba->cfg_xpsgl))
-+			k = 1;
- 		for (i = 0; i < nseg; i++) {
- 			sgl->word2 = 0;
- 			if (nseg == 1) {
-@@ -3121,9 +3150,8 @@ lpfc_scsi_prep_dma_buf_s4(struct lpfc_hba *phba, struct lpfc_io_buf *lpfc_cmd)
- 				bf_set(lpfc_sli4_sge_last, sgl, 0);
+ #define LPFC_PORT_SEM_UE_RECOVERABLE    0xE000
+ #define LPFC_PORT_SEM_MASK		0xF000
++
++/* The following are config space register offsets */
++#define LPFC_ASIC_ID_OFFSET		0x0308
++
+ /* The following BAR0 Registers apply to SLI4 if_type 0 UCNAs. */
+ #define LPFC_UERR_STATUS_HI		0x00A4
+ #define LPFC_UERR_STATUS_LO		0x00A0
+@@ -632,7 +648,6 @@ struct lpfc_register {
  
- 				/* do we need to expand the segment */
--				if (!lsp_just_set &&
--				    !((j + 1) % phba->border_sge_num) &&
--				    ((nseg - 1) != i)) {
-+				if (!lsp_just_set && (nseg != (i + k)) &&
-+				    !((j + k) % phba->border_sge_num)) {
- 					/* set LSP type */
- 					bf_set(lpfc_sli4_sge_type, sgl,
- 					       LPFC_SGE_TYPE_LSP);
-@@ -3147,8 +3175,8 @@ lpfc_scsi_prep_dma_buf_s4(struct lpfc_hba *phba, struct lpfc_io_buf *lpfc_cmd)
- 				}
- 			}
+ /* The following BAR0 register sets are defined for if_type 0 and 2 UCNAs. */
+ #define LPFC_SLI_INTF			0x0058
+-#define LPFC_SLI_ASIC_VER		0x009C
  
--			if (!(bf_get(lpfc_sli4_sge_type, sgl) &
--				     LPFC_SGE_TYPE_LSP)) {
-+			if (bf_get(lpfc_sli4_sge_type, sgl) !=
-+			    LPFC_SGE_TYPE_LSP) {
- 				if ((nseg - 1) == i)
- 					bf_set(lpfc_sli4_sge_last, sgl, 1);
+ #define LPFC_CTL_PORT_SEM_OFFSET	0x400
+ #define lpfc_port_smphr_perr_SHIFT	31
+@@ -4965,6 +4980,7 @@ union lpfc_wqe128 {
+ #define MAGIC_NUMBER_G6 0xFEAA0003
+ #define MAGIC_NUMBER_G7 0xFEAA0005
+ #define MAGIC_NUMBER_G7P 0xFEAA0020
++#define MAGIC_NUMBER_G8 0xFEAA0070
  
-@@ -3168,19 +3196,24 @@ lpfc_scsi_prep_dma_buf_s4(struct lpfc_hba *phba, struct lpfc_io_buf *lpfc_cmd)
+ struct lpfc_grp_hdr {
+ 	uint32_t size;
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index 8e5f00e6abe0..fd6b48e46a69 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -11793,6 +11793,7 @@ lpfc_sli4_pci_mem_setup(struct lpfc_hba *phba)
+ 	unsigned long bar0map_len, bar1map_len, bar2map_len;
+ 	int error;
+ 	uint32_t if_type;
++	u8 sli_family;
  
- 				sgl++;
- 				lsp_just_set = false;
--
-+				j++;
- 			} else {
- 				sgl->word2 = cpu_to_le32(sgl->word2);
--				sgl->sge_len = cpu_to_le32(
--						     phba->cfg_sg_dma_buf_size);
--
-+				/* will remaining SGEs fill the next SGL? */
-+				if ((nseg - i) < phba->border_sge_num)
-+					sgl->sge_len =
-+						cpu_to_le32((nseg - i) *
-+								sizeof(*sgl));
-+				else
-+					sgl->sge_len =
-+						cpu_to_le32(phba->cfg_sg_dma_buf_size);
- 				sgl = (struct sli4_sge *)sgl_xtra->dma_sgl;
- 				i = i - 1;
+ 	if (!pdev)
+ 		return -ENODEV;
+@@ -11823,6 +11824,14 @@ lpfc_sli4_pci_mem_setup(struct lpfc_hba *phba)
+ 		return -ENODEV;
+ 	}
  
- 				lsp_just_set = true;
-+				j += k;
-+				k = 1;
- 			}
--
--			j++;
- 		}
- 	} else {
- 		sgl += 1;
++	/* Check if ASIC_ID register should be read */
++	sli_family = bf_get(lpfc_sli_intf_sli_family, &phba->sli4_hba.sli_intf);
++	if (sli_family == LPFC_SLI_INTF_ASIC_ID) {
++		if (pci_read_config_dword(pdev, LPFC_ASIC_ID_OFFSET,
++					  &phba->sli4_hba.asic_id.word0))
++			return -ENODEV;
++	}
++
+ 	if_type = bf_get(lpfc_sli_intf_if_type, &phba->sli4_hba.sli_intf);
+ 	/*
+ 	 * Get the bus address of SLI4 device Bar regions and the
+@@ -14480,6 +14489,12 @@ lpfc_log_write_firmware_error(struct lpfc_hba *phba, uint32_t offset,
+ 	u8 sli_family;
+ 
+ 	sli_family = bf_get(lpfc_sli_intf_sli_family, &phba->sli4_hba.sli_intf);
++
++	/* Refer to ASIC_ID register case */
++	if (sli_family == LPFC_SLI_INTF_ASIC_ID)
++		sli_family = bf_get(lpfc_asic_id_gen_num,
++				    &phba->sli4_hba.asic_id);
++
+ 	/* Three cases:  (1) FW was not supported on the detected adapter.
+ 	 * (2) FW update has been locked out administratively.
+ 	 * (3) Some other error during FW update.
+@@ -14492,7 +14507,9 @@ lpfc_log_write_firmware_error(struct lpfc_hba *phba, uint32_t offset,
+ 	    (sli_family == LPFC_SLI_INTF_FAMILY_G7 &&
+ 	     magic_number != MAGIC_NUMBER_G7) ||
+ 	    (sli_family == LPFC_SLI_INTF_FAMILY_G7P &&
+-	     magic_number != MAGIC_NUMBER_G7P)) {
++	     magic_number != MAGIC_NUMBER_G7P) ||
++	    (sli_family == LPFC_SLI_INTF_FAMILY_G8 &&
++	     magic_number != MAGIC_NUMBER_G8)) {
+ 		lpfc_printf_log(phba, KERN_ERR, LOG_TRACE_EVENT,
+ 				"3030 This firmware version is not supported on"
+ 				" this HBA model. Device:%x Magic:%x Type:%x "
+diff --git a/drivers/scsi/lpfc/lpfc_sli4.h b/drivers/scsi/lpfc/lpfc_sli4.h
+index 0aa105cab125..036760702ecc 100644
+--- a/drivers/scsi/lpfc/lpfc_sli4.h
++++ b/drivers/scsi/lpfc/lpfc_sli4.h
+@@ -838,6 +838,7 @@ struct lpfc_sli4_hba {
+ 	uint32_t ue_to_sr;
+ 	uint32_t ue_to_rp;
+ 	struct lpfc_register sli_intf;
++	struct lpfc_register asic_id;
+ 	struct lpfc_pc_sli4_params pc_sli4_params;
+ 	struct lpfc_bbscn_params bbscn_params;
+ 	struct lpfc_hba_eq_hdl *hba_eq_hdl; /* HBA per-WQ handle */
 -- 
 2.38.0
 
