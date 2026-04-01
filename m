@@ -1,54 +1,54 @@
 Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6167D347FD7
-	for <linux-scsi@vger.kernel.org>; Wed,  1 Apr 2026 20:25:26 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C2F730C62D
+	for <linux-scsi@vger.kernel.org>; Wed,  1 Apr 2026 20:25:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775075127; cv=none; b=iYE9BQ7hMTIkcuvClBBfUioCkhJd4WRHVe0glfcSyiAcQH54yTuRS+PliOXWdG9bRQrMbQ5ts+cGyWyLm1Bmtx/RboHWBGrwwaNw3uw28WtCI+9lN4VZYkrno0p9BxjXJtqjLAZdZ+jZa5hdNt/uqkEy9VWgg9uXas6qlgsqwqo=
+	t=1775075131; cv=none; b=Gi/GrIu3s4/XX8wr9vLMy5a29+gsVIhFzlWmz2H7VUq5LU3mPt3/TqzaZd475Vaaf3utbNW1EmieJqOLANmUIR8QoFtUpE+tL00jccENiXVe4oFR3oovbdGsQ1HBROOKn5cDa/jCG1NJJXvZM9IBfs6oDuH3tVzOSta/MRmYdGI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775075127; c=relaxed/simple;
-	bh=ser4ilFxJF0g9QQS5nuM3NMiMHJnJ0lQKDA1IwaOaE4=;
+	s=arc-20240116; t=1775075131; c=relaxed/simple;
+	bh=ataI7wDo6bSbWca2NF+sD1As2u1mzdbkwPJSOTHgovM=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=qTnfNUwBBDDJNNpGx1bkI9K6OqzdD+1JP2Octgf5Pu6yW0C55bGrh8wYqJOQHyJK+g5DS4DHCK49bek1UpnaQIpDWy4mALYIgoQ1IuDQq7NV9i0ZKk9272cHYqgzKAfITEGcVVXDCFq0j3d01Uqq6KLUTGPoIR26HWPnO1lNDv4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=YSobZrkT; arc=none smtp.client-ip=199.89.1.14
+	 MIME-Version; b=FtodiFDRkVB25xrtcN+H0Dd3u6y172XdF79qRVAwopgMeDMSpnZtlmO0NoZpNF+cw3JzMgmrEsNLS0iktw8fdGaBeFbgnMbEE/Lk8jtX7UhSRt+nKicmx/DAB7QDCsJ0P8eHJ4V5YjdlO3cDGgYclnj1gdIiJjqm6Roe1zqnifs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=tPqkGofw; arc=none smtp.client-ip=199.89.1.14
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="YSobZrkT"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="tPqkGofw"
 Received: from localhost (localhost [127.0.0.1])
-	by 011.lax.mailroute.net (Postfix) with ESMTP id 4fmGh56yQMz1XM6JH;
-	Wed,  1 Apr 2026 20:25:25 +0000 (UTC)
+	by 011.lax.mailroute.net (Postfix) with ESMTP id 4fmGh96qvLz1XM6JH;
+	Wed,  1 Apr 2026 20:25:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:mime-version:references:in-reply-to
 	:x-mailer:message-id:date:date:subject:subject:from:from
-	:received:received; s=mr01; t=1775075123; x=1777667124; bh=ser4i
-	lFxJF0g9QQS5nuM3NMiMHJnJ0lQKDA1IwaOaE4=; b=YSobZrkTVys54+I/AvNFO
-	aKhzGQeUgvpvuI9K3MpslGlDoiQugqIqfQJH0+Oig6UU6WNlbjbfL6GepLq+0p4z
-	HQirsoY0aL3gAaUxSX2khgOlkQ9KwdOJCHPzN4aHiX59QWYHqaxNJspKlPb3cznB
-	w+N5WYeDRDzP0/tJAaOqXKSddTh1G3N4tZPTmU2QIc83qkdz6U+giG2kAbj1GlYO
-	hkY0fiZxzANqdoTpWGEQV20EKbUqkXNQclEJu5ZuP/rhag4jtJqPUIfe7D026gGw
-	yH2PhFvoQvkn0eN4Gn8jBh4d4w7O18J/C2BkWP24/UNTwhhI9n8FqNBH3WXftB99
-	Q==
+	:received:received; s=mr01; t=1775075127; x=1777667128; bh=uCiKI
+	Q5deaPkurwdRaLFng4dSedPz6I71GPkUaES9m4=; b=tPqkGofwzDJt5JmtxbBVj
+	8E463nWaDsXbxrLiNwzyh8JD9sU/GJDtaCW3kLJ2Z9/Yk6m9yuo3dRPTdcJ3b7Rb
+	cn52+REwPbllKmvYz8d08z4/Rk6c+dFkoBSqHmIP43aUSwOIWmrelwkkrFjjHhiS
+	4Q+DTuVSaT4v1P10y1+X0uzv7I2QoUg2/Wfz8ugza36Xu2W5ZOtNDTd2xOt0hJTt
+	01mGhfUnbCE47V1HTv6SHpMcANFs0nZ+3G4muUK60mTlluq2qKSRAfOUM+BFKktL
+	jPDHIFVSYsf5qKT9Wuq4OUSDTQiOhh1Nzl73u7/utHCNqnVufXx1M3dPK9kDTh6G
+	g==
 X-Virus-Scanned: by MailRoute
 Received: from 011.lax.mailroute.net ([127.0.0.1])
  by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id pCu0mobF5cO2; Wed,  1 Apr 2026 20:25:23 +0000 (UTC)
+ id Ppdcri8Xfa1u; Wed,  1 Apr 2026 20:25:27 +0000 (UTC)
 Received: from bvanassche.mtv.corp.google.com (unknown [104.135.180.219])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4fmGh25ctRz1XM31H;
-	Wed,  1 Apr 2026 20:25:22 +0000 (UTC)
+	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4fmGh64cGBz1XM31H;
+	Wed,  1 Apr 2026 20:25:26 +0000 (UTC)
 From: Bart Van Assche <bvanassche@acm.org>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org,
 	Bart Van Assche <bvanassche@acm.org>,
 	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-Subject: [PATCH 2/3] ufs: core: Remove an include directive from ufshcd-crypto.h
-Date: Wed,  1 Apr 2026 13:25:00 -0700
-Message-ID: <20260401202506.1445324-3-bvanassche@acm.org>
+Subject: [PATCH 3/3] ufs: core: Make the header files self-contained
+Date: Wed,  1 Apr 2026 13:25:01 -0700
+Message-ID: <20260401202506.1445324-4-bvanassche@acm.org>
 X-Mailer: git-send-email 2.53.0.1185.g05d4b7b318-goog
 In-Reply-To: <20260401202506.1445324-1-bvanassche@acm.org>
 References: <20260401202506.1445324-1-bvanassche@acm.org>
@@ -60,26 +60,42 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 
-Nothing in the ufshcd-crypto.h header file depends on the ufshcd-priv.h
-header file. Hence, stop including that header file. This include
-directive was introduced by commit 4bc26113c603 ("scsi: ufs: Split the
-ufshcd.h header file").
+Add the include directives and forward declarations that are missing
+from the UFS core header files. This prevents compilation failures if
+include directives are reordered.
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/ufs/core/ufshcd-crypto.h | 1 -
- 1 file changed, 1 deletion(-)
+ drivers/ufs/core/ufs-debugfs.h         | 3 +++
+ drivers/ufs/core/ufs-fault-injection.h | 2 ++
+ 2 files changed, 5 insertions(+)
 
-diff --git a/drivers/ufs/core/ufshcd-crypto.h b/drivers/ufs/core/ufshcd-c=
-rypto.h
-index c148a5194378..8f66db94e179 100644
---- a/drivers/ufs/core/ufshcd-crypto.h
-+++ b/drivers/ufs/core/ufshcd-crypto.h
-@@ -8,7 +8,6 @@
+diff --git a/drivers/ufs/core/ufs-debugfs.h b/drivers/ufs/core/ufs-debugf=
+s.h
+index 97548a3f90eb..e5bba9671862 100644
+--- a/drivers/ufs/core/ufs-debugfs.h
++++ b/drivers/ufs/core/ufs-debugfs.h
+@@ -5,6 +5,9 @@
+ #ifndef __UFS_DEBUGFS_H__
+ #define __UFS_DEBUGFS_H__
 =20
- #include <scsi/scsi_cmnd.h>
- #include <ufs/ufshcd.h>
--#include "ufshcd-priv.h"
- #include <ufs/ufshci.h>
++#include <linux/init.h>
++#include <linux/types.h>
++
+ struct ufs_hba;
 =20
- #ifdef CONFIG_SCSI_UFS_CRYPTO
+ #ifdef CONFIG_DEBUG_FS
+diff --git a/drivers/ufs/core/ufs-fault-injection.h b/drivers/ufs/core/uf=
+s-fault-injection.h
+index 996a35769781..d0c870e19f0e 100644
+--- a/drivers/ufs/core/ufs-fault-injection.h
++++ b/drivers/ufs/core/ufs-fault-injection.h
+@@ -6,6 +6,8 @@
+ #include <linux/kconfig.h>
+ #include <linux/types.h>
+=20
++struct ufs_hba;
++
+ #ifdef CONFIG_SCSI_UFS_FAULT_INJECTION
+ void ufs_fault_inject_hba_init(struct ufs_hba *hba);
+ bool ufs_trigger_eh(struct ufs_hba *hba);
