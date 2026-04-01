@@ -1,101 +1,121 @@
-Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail.ispras.ru (mail.ispras.ru [83.149.199.84])
+	(using TLSv1.2 with cipher DHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C2F730C62D
-	for <linux-scsi@vger.kernel.org>; Wed,  1 Apr 2026 20:25:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.14
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 495DA37C935;
+	Wed,  1 Apr 2026 20:46:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=83.149.199.84
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775075131; cv=none; b=Gi/GrIu3s4/XX8wr9vLMy5a29+gsVIhFzlWmz2H7VUq5LU3mPt3/TqzaZd475Vaaf3utbNW1EmieJqOLANmUIR8QoFtUpE+tL00jccENiXVe4oFR3oovbdGsQ1HBROOKn5cDa/jCG1NJJXvZM9IBfs6oDuH3tVzOSta/MRmYdGI=
+	t=1775076362; cv=none; b=PAZBwn5TEAJAQzleBHVpz5tufhynSRh7g2Jat3YEh+uuoQRws+u3BdFC27FxSmR0hNMDloWpiSuRHY7gmn0nC1rmoBwE3jzRsOkj7JvLWzJhXL/+kQ4KSmdirYqV7JNndORSdjD5BAZbREdxKa0jbv89m9dwzXccNT53+a5/e/E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775075131; c=relaxed/simple;
-	bh=ataI7wDo6bSbWca2NF+sD1As2u1mzdbkwPJSOTHgovM=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=FtodiFDRkVB25xrtcN+H0Dd3u6y172XdF79qRVAwopgMeDMSpnZtlmO0NoZpNF+cw3JzMgmrEsNLS0iktw8fdGaBeFbgnMbEE/Lk8jtX7UhSRt+nKicmx/DAB7QDCsJ0P8eHJ4V5YjdlO3cDGgYclnj1gdIiJjqm6Roe1zqnifs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=tPqkGofw; arc=none smtp.client-ip=199.89.1.14
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1775076362; c=relaxed/simple;
+	bh=PnadoJZ2TluITYj2qQtgiYK2s1CHLRGKtL3HYGaw3qI=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=NXqYSQa3zl8j7aJKDARBHheuySCayck+zgiIufcLCUixXTZiOWhKhrQRiNYCpy/kK8CEMo12C4cSAyTTWoMM0QUhjyc7FjHS6zNqjt5BA2ZCyU70chfZn5sD9bnQb/zHRq0xk1gEeaZBe0jhpWqgUGndoVtgzQxcP4khz/Hg8qU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ispras.ru; spf=pass smtp.mailfrom=ispras.ru; dkim=pass (1024-bit key) header.d=ispras.ru header.i=@ispras.ru header.b=i7DBaSK7; arc=none smtp.client-ip=83.149.199.84
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ispras.ru
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ispras.ru
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="tPqkGofw"
-Received: from localhost (localhost [127.0.0.1])
-	by 011.lax.mailroute.net (Postfix) with ESMTP id 4fmGh96qvLz1XM6JH;
-	Wed,  1 Apr 2026 20:25:29 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:mime-version:references:in-reply-to
-	:x-mailer:message-id:date:date:subject:subject:from:from
-	:received:received; s=mr01; t=1775075127; x=1777667128; bh=uCiKI
-	Q5deaPkurwdRaLFng4dSedPz6I71GPkUaES9m4=; b=tPqkGofwzDJt5JmtxbBVj
-	8E463nWaDsXbxrLiNwzyh8JD9sU/GJDtaCW3kLJ2Z9/Yk6m9yuo3dRPTdcJ3b7Rb
-	cn52+REwPbllKmvYz8d08z4/Rk6c+dFkoBSqHmIP43aUSwOIWmrelwkkrFjjHhiS
-	4Q+DTuVSaT4v1P10y1+X0uzv7I2QoUg2/Wfz8ugza36Xu2W5ZOtNDTd2xOt0hJTt
-	01mGhfUnbCE47V1HTv6SHpMcANFs0nZ+3G4muUK60mTlluq2qKSRAfOUM+BFKktL
-	jPDHIFVSYsf5qKT9Wuq4OUSDTQiOhh1Nzl73u7/utHCNqnVufXx1M3dPK9kDTh6G
-	g==
-X-Virus-Scanned: by MailRoute
-Received: from 011.lax.mailroute.net ([127.0.0.1])
- by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id Ppdcri8Xfa1u; Wed,  1 Apr 2026 20:25:27 +0000 (UTC)
-Received: from bvanassche.mtv.corp.google.com (unknown [104.135.180.219])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4fmGh64cGBz1XM31H;
-	Wed,  1 Apr 2026 20:25:26 +0000 (UTC)
-From: Bart Van Assche <bvanassche@acm.org>
-To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org,
-	Bart Van Assche <bvanassche@acm.org>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-Subject: [PATCH 3/3] ufs: core: Make the header files self-contained
-Date: Wed,  1 Apr 2026 13:25:01 -0700
-Message-ID: <20260401202506.1445324-4-bvanassche@acm.org>
-X-Mailer: git-send-email 2.53.0.1185.g05d4b7b318-goog
-In-Reply-To: <20260401202506.1445324-1-bvanassche@acm.org>
-References: <20260401202506.1445324-1-bvanassche@acm.org>
+	dkim=pass (1024-bit key) header.d=ispras.ru header.i=@ispras.ru header.b="i7DBaSK7"
+Received: from localhost (unknown [10.10.165.9])
+	by mail.ispras.ru (Postfix) with ESMTPSA id 70C5D4077929;
+	Wed,  1 Apr 2026 20:45:57 +0000 (UTC)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail.ispras.ru 70C5D4077929
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ispras.ru;
+	s=default; t=1775076357;
+	bh=YECgA1W4XiOu+H+V0hPI++cSywV+2xeI4LnbCk8QRLE=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=i7DBaSK7MEMLzy87dC5qHlcQ93SYuEV6yJqTixIYcNJ1p9nCSDtLw1Z3hl8r7+DnU
+	 /CvrNpMt1BEO98BehFHFa/byL7S5z7i1crJOk95P9u2BgPkbx8e8592n9n6F+xWtU+
+	 e8zFXYqrDaK8Mq2lxFQsNxD1fzxrRX7CuMZ2P0vI=
+Date: Wed, 1 Apr 2026 23:45:57 +0300
+From: Fedor Pchelkin <pchelkin@ispras.ru>
+To: "Heyne, Maximilian" <mheyne@amazon.de>, Christoph Hellwig <hch@lst.de>
+Cc: Sagi Grimberg <sagi@grimberg.me>, 
+	"stable@vger.kernel.org" <stable@vger.kernel.org>, Sven Peter <sven@svenpeter.dev>, 
+	Chaitanya Kulkarni <kch@nvidia.com>, Keith Busch <kbusch@kernel.org>, Jens Axboe <axboe@kernel.dk>, 
+	Hector Martin <marcan@marcan.st>, Alyssa Rosenzweig <alyssa@rosenzweig.io>, 
+	"James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, 
+	Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>, 
+	Bart Van Assche <bvanassche@acm.org>, Sasha Levin <sashal@kernel.org>, 
+	Peter Wang <peter.wang@mediatek.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
+	Seunghui Lee <sh043.lee@samsung.com>, Sanjeev Yadav <sanjeev.y@mediatek.com>, 
+	Wonkon Kim <wkon.kim@samsung.com>, Brian Kao <powenkao@google.com>, Hannes Reinecke <hare@suse.de>, 
+	Ming Lei <ming.lei@redhat.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, 
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "asahi@lists.linux.dev" <asahi@lists.linux.dev>, 
+	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, 
+	"linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Subject: Re: [PATCH 6.1.y 5/8] nvme-apple: remove an extra queue reference
+Message-ID: <20260401232116-53765a086f3855a30962fb81-pchelkin@ispras>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <20260401-pliny-ashley-ff03a0b6@mheyne-amazon>
 
-Add the include directives and forward declarations that are missing
-from the UFS core header files. This prevents compilation failures if
-include directives are reordered.
+Hello,
 
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
----
- drivers/ufs/core/ufs-debugfs.h         | 3 +++
- drivers/ufs/core/ufs-fault-injection.h | 2 ++
- 2 files changed, 5 insertions(+)
+"Heyne, Maximilian" <mheyne@amazon.de> wrote:
+> From: Christoph Hellwig <hch@lst.de>
+> 
+> [ Upstream commit 941f7298c70c7668416e7845fa76eb72c07d966b ]
+> 
+> Now that blk_mq_destroy_queue does not release the queue reference, there
+> is no need for a second admin queue reference to be held by the
+> apple_nvme structure.
 
-diff --git a/drivers/ufs/core/ufs-debugfs.h b/drivers/ufs/core/ufs-debugf=
-s.h
-index 97548a3f90eb..e5bba9671862 100644
---- a/drivers/ufs/core/ufs-debugfs.h
-+++ b/drivers/ufs/core/ufs-debugfs.h
-@@ -5,6 +5,9 @@
- #ifndef __UFS_DEBUGFS_H__
- #define __UFS_DEBUGFS_H__
-=20
-+#include <linux/init.h>
-+#include <linux/types.h>
-+
- struct ufs_hba;
-=20
- #ifdef CONFIG_DEBUG_FS
-diff --git a/drivers/ufs/core/ufs-fault-injection.h b/drivers/ufs/core/uf=
-s-fault-injection.h
-index 996a35769781..d0c870e19f0e 100644
---- a/drivers/ufs/core/ufs-fault-injection.h
-+++ b/drivers/ufs/core/ufs-fault-injection.h
-@@ -6,6 +6,8 @@
- #include <linux/kconfig.h>
- #include <linux/types.h>
-=20
-+struct ufs_hba;
-+
- #ifdef CONFIG_SCSI_UFS_FAULT_INJECTION
- void ufs_fault_inject_hba_init(struct ufs_hba *hba);
- bool ufs_trigger_eh(struct ufs_hba *hba);
+This patch is probably buggy in upstream.  It removes extra reference
+->get, but doesn't remove the corresponding ->put which is located
+inside apple_nvme_free_ctrl().
+
+I'm reporting here currently just for the heads up - was looking at the
+same nvme regression problem at 6.1.y, found this thread, and the
+nvme-apple changes appeared suspicious.
+
+nvme-apple patch is not required to fix the regression (this also holds
+true for [PATCH 6.1.y 3/8] scsi: remove an extra queue reference).  Maybe
+they shouldn't go to stable.
+
+That said, the other part of the backport series FWIW looks good to me,
+and I've also verified it resolves the 6.1.y regression.
+
+Thanks.
+
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Reviewed-by: Sagi Grimberg <sagi@grimberg.me>
+> Reviewed-by: Sven Peter <sven@svenpeter.dev>
+> Reviewed-by: Chaitanya Kulkarni <kch@nvidia.com>
+> Reviewed-by: Keith Busch <kbusch@kernel.org>
+> Link: https://lore.kernel.org/r/20221018135720.670094-5-hch@lst.de
+> Signed-off-by: Jens Axboe <axboe@kernel.dk>
+> Signed-off-by: Maximilian Heyne <mheyne@amazon.de>
+> ---
+>  drivers/nvme/host/apple.c | 9 ---------
+>  1 file changed, 9 deletions(-)
+> 
+> diff --git a/drivers/nvme/host/apple.c b/drivers/nvme/host/apple.c
+> index c5fc293c22123..c84ebfcfdeb88 100644
+> --- a/drivers/nvme/host/apple.c
+> +++ b/drivers/nvme/host/apple.c
+> @@ -1507,15 +1507,6 @@ static int apple_nvme_probe(struct platform_device *pdev)
+>  		goto put_dev;
+>  	}
+>  
+> -	if (!blk_get_queue(anv->ctrl.admin_q)) {
+> -		nvme_start_admin_queue(&anv->ctrl);
+> -		blk_mq_destroy_queue(anv->ctrl.admin_q);
+> -		blk_put_queue(anv->ctrl.admin_q);
+> -		anv->ctrl.admin_q = NULL;
+> -		ret = -ENODEV;
+> -		goto put_dev;
+> -	}
+> -
+>  	nvme_reset_ctrl(&anv->ctrl);
+>  	async_schedule(apple_nvme_async_probe, anv);
+>  
+> -- 
+> 2.50.1
