@@ -1,74 +1,102 @@
-Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B41B83D566D;
-	Wed,  1 Apr 2026 15:56:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.14
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C526B472765
+	for <linux-scsi@vger.kernel.org>; Wed,  1 Apr 2026 17:09:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775058972; cv=none; b=sJ1qxMknbp5uud/wLEDeK+VCaMhC5tOkGupzFEf02M0UG8Lz58UnXwS2HisSfy3QtzLKJ120s4czbvEXFWh4HSP9rW/2jLZMi/Q/kOEmFXR9MNVHhDwmVqgIAodz5Ph7fGuOwMWO9f/af75OThoPs3PPTcWiDNlQYK4K5Ek3rmU=
+	t=1775063363; cv=none; b=i01I3U8e1DtTukbw4D24rx4GG+tzYgHJkf+sjcDE5RzCsYU/p/O/Csd9FtjjQNGTL/dj9VVpbBVXWkedMu7C7T2vHnEGlA8t8gx0Q+zhNkx0D4SaE+PqTXJ4xBJt3pf5pFVJeL1ipULNeRDmIJcHUeEZyn6t5D44IH/JQcMyAOk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775058972; c=relaxed/simple;
-	bh=Nyoh+HfiRGymWn6IRSwvuq+bJzMVZ8NetVmR+Z7H8qA=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=H5VCsvSepFqws8qnzfn0C+/LKs+WLJ6WSH5muuVAiRxLf9Nk/9ofFk9ZDf/GmqWOJ03cSkpUwGXrYO8vT7vbPMROPYGvWlmDJNXk6yal/34+4X/MbsPhgStq3dwnTCke/f0wqiwIVd+tpZRVo/chbJbPseo/4etrYDL9+jP6C7w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=gBO50yV2; arc=none smtp.client-ip=199.89.1.14
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1775063363; c=relaxed/simple;
+	bh=UrlrL3JrdlkwweCdRKeXD8MoN74BHicvKbtfVaI7CU8=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=WjYekBBpswoSabYLkiawGM7hrqqksONyb78bgOj49njIKq6RAl+K37kzlYUbavMf+HiMf3crMy18mlr4zoJ+YanATkWWYi2IhJUv3YFfVNacuHo5qmEgOjGiRGfolYw5xktLJ+QUzDS9E9eBGEysCj/jAr4YMaCaiy4g2CDpT9k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=GUX052K/; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="gBO50yV2"
-Received: from localhost (localhost [127.0.0.1])
-	by 011.lax.mailroute.net (Postfix) with ESMTP id 4fm8jR32slz1XM6J9;
-	Wed,  1 Apr 2026 15:56:11 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1775058968; x=1777650969; bh=Nyoh+HfiRGymWn6IRSwvuq+b
-	JzMVZ8NetVmR+Z7H8qA=; b=gBO50yV2rO0JDEqI8zqtf+7XXdmOrceTWHR0RSZ5
-	Hc6aohUc+CNJkbnoJf/FT8lcZmkzAR0iTah5G82NcsVDp93D8AHOR8GS2+2Sb6Zk
-	TW93U+OrQGy8ZoRd3H4ca9RvrwxGxODumLbl8h1a92gb4p2Yn1EJ718XSe/Unejr
-	qfDosMommwuIFWkfKJ2D46ytb6RPlqulhmNdwnIqaJeUq0YhzXkAxvTB5raoEHGT
-	U7Xl0Snz+rkb+Qbc8O63JDwHNZM7EZRGbrmvPRlxeO4D8Q5jejQH8jweayPbXg/0
-	43w4FI1MVYhvQHV7z1oZTFRLCEdby2v1fqd8mWYI14dHIA==
-X-Virus-Scanned: by MailRoute
-Received: from 011.lax.mailroute.net ([127.0.0.1])
- by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id 0SZuz2kLQDX2; Wed,  1 Apr 2026 15:56:08 +0000 (UTC)
-Received: from [100.119.48.131] (unknown [104.135.180.219])
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="GUX052K/"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1775063360;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=UrlrL3JrdlkwweCdRKeXD8MoN74BHicvKbtfVaI7CU8=;
+	b=GUX052K/4r/a60YyKEVtJP2Q/RfQrt6nO/CwTFiGPxU7ecKPyQ3S6eZKtE2LyWPh3pxMkC
+	/WahkNIQrkaHubTDVXxcSItXyLY9OU3WverdzzbTceD/76sIGdKLjB5nUE7/0bamttpDhp
+	zk9Cxd4XEVD1qZfSNg/TneBZYiZ0yig=
+Received: from mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-564-7vDLrfpHP1qNdvQbawMPrg-1; Wed,
+ 01 Apr 2026 13:09:17 -0400
+X-MC-Unique: 7vDLrfpHP1qNdvQbawMPrg-1
+X-Mimecast-MFC-AGG-ID: 7vDLrfpHP1qNdvQbawMPrg_1775063356
+Received: from mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.4])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4fm8jL5lwnz1XM5kW;
-	Wed,  1 Apr 2026 15:56:06 +0000 (UTC)
-Message-ID: <9c556370-5e85-4cb6-8f4d-c0361467b2f3@acm.org>
-Date: Wed, 1 Apr 2026 08:56:05 -0700
+	by mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 354BE19560B1;
+	Wed,  1 Apr 2026 17:09:16 +0000 (UTC)
+Received: from localhost (unknown [10.44.32.12])
+	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 599CE30001A2;
+	Wed,  1 Apr 2026 17:09:14 +0000 (UTC)
+Date: Wed, 1 Apr 2026 13:09:12 -0400
+From: Stefan Hajnoczi <stefanha@redhat.com>
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: target-devel@vger.kernel.org,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: LIO PERSISTENT RESERVE OUT PREEMPT spec compliance
+Message-ID: <20260401170912.GA329795@fedora>
+References: <20260401124626.GA266484@fedora>
+ <9c556370-5e85-4cb6-8f4d-c0361467b2f3@acm.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: LIO PERSISTENT RESERVE OUT PREEMPT spec compliance
-To: Stefan Hajnoczi <stefanha@redhat.com>, target-devel@vger.kernel.org,
- "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20260401124626.GA266484@fedora>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20260401124626.GA266484@fedora>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="zejTu4YnJbD2u5vy"
+Content-Disposition: inline
+In-Reply-To: <9c556370-5e85-4cb6-8f4d-c0361467b2f3@acm.org>
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.4
 
-On 4/1/26 5:46 AM, Stefan Hajnoczi wrote:
-> Thoughts?
 
-There is a persistent reservation compliance test suite in libiscsi.
-SCST passes that test suite if I remember correctly. It would be great
-if LIO would pass the tests from that test suite too. See also
-https://github.com/sahlberg/libiscsi
+--zejTu4YnJbD2u5vy
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Thanks,
+On Wed, Apr 01, 2026 at 08:56:05AM -0700, Bart Van Assche wrote:
+> On 4/1/26 5:46 AM, Stefan Hajnoczi wrote:
+> > Thoughts?
+>=20
+> There is a persistent reservation compliance test suite in libiscsi.
+> SCST passes that test suite if I remember correctly. It would be great
+> if LIO would pass the tests from that test suite too. See also
+> https://github.com/sahlberg/libiscsi
 
-Bart.
+Hi Bart,
+Thanks for sharing the libiscsi test suite.
+
+Stefan
+
+--zejTu4YnJbD2u5vy
+Content-Type: application/pgp-signature; name=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAEBCgAdFiEEhpWov9P5fNqsNXdanKSrs4Grc8gFAmnNUTgACgkQnKSrs4Gr
+c8gonQgAxceD3FeX/z3kfqUOYoYBEqUF3P21CdFZSUbSUITCwWPeb5E1wsj8S+Db
+poFnup1JfMTUkQ+A1TmzhYmRx8IaNGxZ5EbAVjAfQ+qgIlv88mrEgTeMkIS4zXEZ
+anyp24UttTQZMen+vC8NjpP+IOlyaN126jThPtxHgZU62Xilk/GroxYlxhl4cWMA
+taahgqZGOomHYfr4FwAg/0oOiOMRuFKiDVn3khKXxH4bSbp9zsRtqaZLQcE/TKnK
+tXHKw6NXi5c07C3LAAWssnaRGfNN9quP5kYYrlfbkDpmRfnhx5Gwi2+cwfImCSpA
+2t+Y7/2TU0pz8FcmD7vpOo/kpieFzA==
+=w7w/
+-----END PGP SIGNATURE-----
+
+--zejTu4YnJbD2u5vy--
+
