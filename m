@@ -1,40 +1,40 @@
-Received: from LO3P265CU004.outbound.protection.outlook.com (mail-uksouthazon11020088.outbound.protection.outlook.com [52.101.196.88])
+Received: from LO3P265CU004.outbound.protection.outlook.com (mail-uksouthazon11020139.outbound.protection.outlook.com [52.101.196.139])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 05E80392819;
-	Wed,  1 Apr 2026 22:23:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.196.88
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BBD6B39D6C3;
+	Wed,  1 Apr 2026 22:23:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.196.139
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775082235; cv=fail; b=M11b+goqZAgBxIlQKfRoeBtV8AJ375Vs/xuBI6+BMC2etb9UAD9gbHT+Rhh7BLcczIx/pozATXLXrZDGU2zn75J9jk8fXHC01BuzElNCuyFhH7hbl/1hMulQcIN6pAHMi5CiTfted1Acfurqu3vw1Yn3oe/oHTc8mrECfYIet9M=
+	t=1775082251; cv=fail; b=MjIDsjX64wYY4xA7kW9wl7g6T6ohS+COnQje52WuuqmZvOtzmrfoQLMF/9bL8qXJou8s6hNCKNezSZS1GdirlQztzyZYPxGFMCYS1T5yiTIzfIhu25+nTZWjN/Lb0SAP/hvsHU1oQOjU0E4lgySy1gIQ5nL7uhFq83DyCA683Pc=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775082235; c=relaxed/simple;
-	bh=mAZzEtiDp2k8X7T7NcLNFzRHJnp1HJ9EU2jjPZq6Ahs=;
+	s=arc-20240116; t=1775082251; c=relaxed/simple;
+	bh=Ocfz3QWh53aSW58jo4FdFAyN3l/bZ0RDahDBiSlVUNM=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=GHx27tEL3DusfH9hpWbxxmDZJH4l34B9gBtd5+Pbp6rIjBPOMo/SXuSnZ0zmz4yjT2EiVU7M2pwCiUPuRaehSexCeQO1b+AVAQWtbv4rHoq8qPEre6lFFNYr2V6a+G4Srce4O+rfrRLP5rgZJ7q3yO6cVr3Yi04UGDPQINLzKOE=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=atomlin.com; spf=pass smtp.mailfrom=atomlin.com; arc=fail smtp.client-ip=52.101.196.88
+	 Content-Type:MIME-Version; b=Ca9kH2ekPcQt8H9vIZogiuJYq1TD5kTeKrjxThjjZHQEq5Ueuc6EhnmFAX7OrH6jczGUjERVr+IReExc+sO78jCUJFO99ELahdRcCm3cnDdnzU83TJ2PAw3C1Hf9o7m+kSR9zHNMyKhcd59neg3A8K4ObGmkz5vQ5YGI2+0nPA8=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=atomlin.com; spf=pass smtp.mailfrom=atomlin.com; arc=fail smtp.client-ip=52.101.196.139
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=atomlin.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=atomlin.com
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=uAjrgoR7GgVF3MF69OzaC+B2hZDt/TU0MgNOB1eydK3CpBsVgjryj3AFBgm4Z0hMmU/BqP7DmxmFdSdVgVGxhmc69hxY6JYL5hvQAze06wEVQyyBhOxbW4s5t0ff6JDoqo4zqiqVrr5M8Qmptr55Y9YOsTCltFSQHTjmm3fOCAWFKnDXGdhWubwniXX1BGlePVRpgm+bVpqQxatfnr2zgAiLPWQnP8YtXbFRwUcZoU9VXzIaP3vgIBiv+1MupIdgDvONwFD2rgDRfgZhD04eY+CWNCGMLIa8BhNFRSSZ1GgmUGxE1gNT1Cz+YddROQLn2kpomkRh+1OEy1dMaNpMeQ==
+ b=R+AAFP9AaRPtIZhQARyOIxyGcZ94AGsY3TcSHpVerRegWLAWVSyG+49vcc8xoOfy/HIkbeYEkzOWg6qhPg/gxKl4UfCVvAnhA2awlIx28bFaKbkvxzINHRJD4sqrkGsSiWluoj3QzWOpiS804uaTHJzVinOlfhzSuuMFFfNMQVlB7B7SflESrVGN5O72xCIc9OwHqvJViDGnFQtpgHhMltT+BW4Ff6fz3NXnsLCi/MhA2s67oiMdHQ8dbp8icXwPbWll2w4E3evnsz5eeezQz/phz9ufb9PMJnnJSdmf6uF4Ks1BTpEkPVRhN/D5QVQ1wuaNrGf2cTvwr1JS1/I6HA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=wKKCp62NMexRNS60zS/mIQGlXVrUGwa3gshRWaDYRhQ=;
- b=vHGt7DUIc13QFW7LOYeBsVtvlyLJRhuNk6Fah3DoWqRAcxwvlVYUPngZtNBLXdLo2eMZFo4fHa8So1S7Xa0Z436wm4zzlXJc+r9l5vmzKf5pVd7wF9o0iFpl7PzTohuqch2hPmbotFZ8riw47zatz+CbjwIAG8iEuNscaDwx2SQ5U1uecBmK2BqWgNma6Udqrri0TwL5DGIZ4HCG0T1GD0k0zuYS9QD0M5XH5scTEseu+i0Lrn1ijw9bv5dkfSfY8ErLxNAkkL2Np2BHuqZpdv0ba3csKCd+tvQ5Xizt1JNebrl2iZ1t81eRAN7lr3R1zPj0FC3fz6Z+SsNT+u/kSA==
+ bh=i2JdaUkdYqJZv+sWSdGzZFDC8CSZMUcYmPlzykcGGng=;
+ b=stThIkB4wV3mHSpcUCfp1q6FlwHDo854w3f68s0qVVTQX24gbBZdg+yyPvVwrghGNKTpxEvJfxq/PA62wfHQJDrbicCUrIbWGsuXCX7hts400CrI3KLphcZDWUiBeIUI7EndQJl97+R4KExanMzOHqVqXc05ncz2kg3Vgwgel9QSTHRhI6CFkmYPNyU4LDLht5CPp3Xmhh8KkPcfNbVYlAPjijflCpogJsD9M9Oj5DhURkWRnNngKhXsfu01z+wIN9HA0OIYlzgxUhYPFPt2C0keCmZDwfJsveD15/8gRHbwSkMPotu3RwoUERHcOW5EtqzcoyLd953L3WsBhB7vbQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=atomlin.com; dmarc=pass action=none header.from=atomlin.com;
  dkim=pass header.d=atomlin.com; arc=none
 Authentication-Results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=atomlin.com;
 Received: from CWLP123MB3523.GBRP123.PROD.OUTLOOK.COM (2603:10a6:400:70::10)
- by CW1P123MB7844.GBRP123.PROD.OUTLOOK.COM (2603:10a6:400:212::21) with
+ by CWLP123MB2964.GBRP123.PROD.OUTLOOK.COM (2603:10a6:400:58::11) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9745.28; Wed, 1 Apr
- 2026 22:23:32 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9745.24; Wed, 1 Apr
+ 2026 22:23:47 +0000
 Received: from CWLP123MB3523.GBRP123.PROD.OUTLOOK.COM
  ([fe80::de8e:2e4f:6c6:f3bf]) by CWLP123MB3523.GBRP123.PROD.OUTLOOK.COM
  ([fe80::de8e:2e4f:6c6:f3bf%2]) with mapi id 15.20.9769.016; Wed, 1 Apr 2026
- 22:23:32 +0000
+ 22:23:47 +0000
 From: Aaron Tomlin <atomlin@atomlin.com>
 To: axboe@kernel.dk,
 	kbusch@kernel.org,
@@ -85,16 +85,16 @@ Cc: atomlin@atomlin.com,
 	megaraidlinux.pdl@broadcom.com,
 	mpi3mr-linuxdrv.pdl@broadcom.com,
 	MPT-FusionLinux.pdl@broadcom.com
-Subject: [PATCH v10 05/13] blk-mq: add blk_mq_{online|possible}_queue_affinity
-Date: Wed,  1 Apr 2026 18:23:04 -0400
-Message-ID: <20260401222312.772334-6-atomlin@atomlin.com>
+Subject: [PATCH v10 09/13] isolation: Introduce io_queue isolcpus type
+Date: Wed,  1 Apr 2026 18:23:08 -0400
+Message-ID: <20260401222312.772334-10-atomlin@atomlin.com>
 X-Mailer: git-send-email 2.51.0
 In-Reply-To: <20260401222312.772334-1-atomlin@atomlin.com>
 References: <20260401222312.772334-1-atomlin@atomlin.com>
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-ClientProxiedBy: BN9PR03CA0747.namprd03.prod.outlook.com
- (2603:10b6:408:110::32) To CWLP123MB3523.GBRP123.PROD.OUTLOOK.COM
+X-ClientProxiedBy: BN9PR03CA0557.namprd03.prod.outlook.com
+ (2603:10b6:408:138::22) To CWLP123MB3523.GBRP123.PROD.OUTLOOK.COM
  (2603:10a6:400:70::10)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -103,129 +103,117 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CWLP123MB3523:EE_|CW1P123MB7844:EE_
-X-MS-Office365-Filtering-Correlation-Id: ae5d703a-0095-480b-f84c-08de903d4efb
+X-MS-TrafficTypeDiagnostic: CWLP123MB3523:EE_|CWLP123MB2964:EE_
+X-MS-Office365-Filtering-Correlation-Id: aafac445-66a8-46da-01fa-08de903d57e0
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|7416014|376014|366016|56012099003|18002099003|22082099003;
+	BCL:0;ARA:13230040|376014|7416014|1800799024|366016|56012099003|18002099003|22082099003;
 X-Microsoft-Antispam-Message-Info:
-	Tsen79tqGALlqNoqGo70EG2fMNbL9yQ6WC9K2XO3Jv4hn7b9c8V4I840aFm6r4ng3gP/M0+D6oIA2BkreBDOC+UCCxrs65iAIJoIrf1UYyEhB1ISI5Nao2BGbxAohGIAK0xni6MXe7zx7klOoLR/C3brg4+0dixv7tdE7dgqaEMNZ93+/bxi2VIRu1J50EnMl4EU1JeJCpt5en+Lhv1xWiycm1htw4kub+9wAC989RTts7rCgHIasaPVhQYcNA5myCocav1wrOHeRh61esEyPmGa2RR8kNI3ayF7XjUw7iNUzWCGA8mWV/DOPXiUwYGD4+LpeguTc36q+A+HQxm0wCHmR7NI8d5KM1CE1Di/XPXo3Vrp9IsuUPPTV4Q4GJE1LwP8+0k9fBaz2/Tf4X7TCy3GneBnJtu+C+tu8aIYyQSptYVW1NerkjtmWUZjkY+c+pQPLLVIUo9anbqNAvuP90OPB1M7YcWIFAe+mA7ZVgAFAeWjuJjho3wLXiQmxFdTKtYjbAzKFG8qeJNRDIv0pGsRlUmwiCYc+LIQg8qCXeVxomjg/2up7ZueVpoSMxN0s/V1yCBv09yy81lQi783cX82efffUJuq9hiqi9cS9lD36lisT81HzomLclgkNpoNHfB49fph2dYrDlz4Pp8Z50/TbBID/S+NgW8fjgSmP/dppJn31ssr2W9r3cx9K8GxC3ImxkBA9In9fMp1vFVZ1UfbDGilzGqNaNPnJej2H+o=
+	Mqeuvgp7rOYrbQKQGwCeu22guAcv0deGDEXsNh4QGpBDd/A7eraGFnhg0gHcoGMZy1t35NK5JcuwUXvcHQlFpPsRxV+U7RsetrlkbRYlt70YaGVKqJyYseksTUHiKxpNwA+bSx9SFFFuvGskUOimABYNozzyqQWKuFFocJbz/mi9JqGSrE9yw/YJ65a4lVQ4lC+7uQLNlAOc5Cv6sp4Kvoz2SIcpl3aMbVwFwAjENcbBqBV3CcgMK29buW5azwPHm4Ul84QzfLmSyHr4zWpiVATk6isbgKLs5Z9fIKBhZIvVizfI6qwbBh2FKtCG720eKgBymjUu7nAN9LtCpW46Y04dPasxascvJdz5aqEWIcDKGPNLaPVEVqPkB+v7teHK0ZYKCNGrsiszQMDYc4WAaDmSB0jE3HyR+/V+rOyFDyufVYgjEAlg40uWlF2Aw6uskcaT6sR0SbYHEV7XLT8mNV/eGG8zTKPz7pikO0w488LU+QrFOwONHVMkjMEjGoEQoEIr7LF4iu0E7lC+fo7Avvo2AduCD0gv3zXRgZampRa0KLf4mGDsPQdvUTxwlDXgtWSXE6qWPwIfDb7nCakWSU9RqkZLrW57os7mJwcFNGflbueVr/tm2hbcuJsddZQ8QgjEEXQZfE+7hqleXbzo1qH3chBsR1uZs3V839Pc4w05H/iJAr2C9U0fGGlystc8NCQvSBMlOOHJyNRN9quc7a5qw+C0OKQtki9+TBKEG1Q=
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CWLP123MB3523.GBRP123.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(7416014)(376014)(366016)(56012099003)(18002099003)(22082099003);DIR:OUT;SFP:1102;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CWLP123MB3523.GBRP123.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(376014)(7416014)(1800799024)(366016)(56012099003)(18002099003)(22082099003);DIR:OUT;SFP:1102;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?5xFKhE/U/pnSy4OnIkAOrta1j10uqYzSbxEbmz0xqlvDpVZRr0jhz9CMwoAt?=
- =?us-ascii?Q?W//cZOV/MRODYF2xLW8/vMElVFp7sqqKb51AGnaTHs6N2NOsM2Y7lLEuxboO?=
- =?us-ascii?Q?JHDcB08QTvmT5Z+YZPrgTSz3z/7k+tdF0Urq9IPHX0/F6baVnCUQhLdaxYDL?=
- =?us-ascii?Q?iIwBZyoseUcZHHiVkNvux1Wwl0DMY4iKvNlnzDdcU6zhIqEPtJ/5ewyh/JBc?=
- =?us-ascii?Q?wI+F9yc9J54Co49Rm7SMeoLs5IoD6DOIPWDFFE6n8aDH+qRDbQH9GgtKnr5q?=
- =?us-ascii?Q?dCLkNFqEBc2tuKRn9wuONkU5C6xFKwBPjYCA58ErmMFMPZjuq0MSl4O01Nfw?=
- =?us-ascii?Q?9aDuaMhibwEh9SfNeVnwolCQQhjURRjYbkBpPcHPIv7mVU9+2ALGt2ULpHNx?=
- =?us-ascii?Q?hxHTfYvC9Fd71lr6ljSpPPNPEX3DQH1bm8tVt3ZMccx+BSGJgeUR+PKaO/KL?=
- =?us-ascii?Q?LtGwXUpabWnje1QqqTV7sTW6vxNbeJPYTLiGVzNo70asQqHfPZqAxOuYtppA?=
- =?us-ascii?Q?wFgB1wc4qnwLpZZ2CDMgqALHZIpf/jqxwzGOi1lzKTGA9Qi2KbleAUELAWIR?=
- =?us-ascii?Q?eBSIrqjz2zVPDgJCEwKTiyfRUFlKk54LQ3s/tfHxX+BQiX7fSEAjIYXRJni3?=
- =?us-ascii?Q?F2cuD/ajtZGFyrJAyadajw2HX7pSIMa64ar9AiPw2W/envip1TpA2zNnTEho?=
- =?us-ascii?Q?99Lq74ggzTDk8338rbvGdTPzzbOIAgSTL8Y8kovrPFpV4bOAjs3F5PNNF1VT?=
- =?us-ascii?Q?bQxxxxGov0e71iVkvtsZGZdsNkpD9njKYYkCwirlwsbwOJj+9ctLfi1b0ueH?=
- =?us-ascii?Q?4odZpMCQn5yLbukVoDYS55IiRWmbxADObH/tn05Cqs6eBA56KFj98dFj8bIJ?=
- =?us-ascii?Q?0CDttuim6HSysb2XeDoPkqOFDTyJMtA/M9zXvsS2kPOhklRKnCHfeNz97VFH?=
- =?us-ascii?Q?MJxujtGMBi0TDKjp8zyBydjIcV2rP6vjcjKLKQd/kHEbaeal1n+R4gojDhkv?=
- =?us-ascii?Q?B6EfSQZ8g0YtcgVNNBv1SvCq4sNlzQWj67SMXl+SdjeWPI3ihboTR1clVxDN?=
- =?us-ascii?Q?HcnwqiS5GTRXXqAr+GE0zeg2Q3Q1jBwgsxORkW4/RNF8O824lnpCUxrs/FDx?=
- =?us-ascii?Q?xdjjCIKJhsbUVTSijMEM4uzBUooUad2KWF/QK+kr6sMVFTjOLJmXYTNoAHeY?=
- =?us-ascii?Q?NPWBWaleaTTrwJxswy1pZ2H7xkb/RBRqRc3WCMg4DLIahwXy4S99PhLgpfWj?=
- =?us-ascii?Q?bXVe+zEy++wAE7fXqVwimgMYvKnUtCS0b7o36ruyTvjm+AHJ8oXbJOJf1lYc?=
- =?us-ascii?Q?YZrx78mmw+0cNGlXAoiR3EVYFgtAK1B8tQGBWv6KQHPsR/wLlc7r9JUhy/8V?=
- =?us-ascii?Q?2mV64pglAeBcRB6WxhE4Cg2vAbpvgzMGHO9I9q8UskXY2YEX7rQ30OH/NaVQ?=
- =?us-ascii?Q?cqutiL6ohx1ZNAX42BrT3GOfQdvEJTPBhnozjviZqhYWeGQexMS98lybt0wx?=
- =?us-ascii?Q?fP/KUK4oZm+871YpqA5s/4Cg5IfaBwnF3lGCAh4DAB8KCCqN+qDoR1fIbW8e?=
- =?us-ascii?Q?b79bRCAB+I/fbIIy8XtUKdgIyShxwa6RBYBAtAOHgLm6GD9dX6eIBAUEK1Xv?=
- =?us-ascii?Q?44t4vdSv+n2hnA5BJ3AGWG9HAhIyqx50YeLEXS1qzKRMYxlNaUmpLP238u8K?=
- =?us-ascii?Q?c+PWI6ijuQ7bJ52BSoa6CcWBaODSN/QVSisEumB9d06W3JIbk2Dx/rfafx/e?=
- =?us-ascii?Q?kpIdPP+RqA=3D=3D?=
+	=?us-ascii?Q?UmyLSqP3MhMI/WgvhOh0wOp6DmVfifGSedX37piHChswRridYT+P3JI5Jwu+?=
+ =?us-ascii?Q?QercyGpqn36NskHsTqhV/3T67pu/z7wMc312KeksRe3YSzwf1654VVXl8AOZ?=
+ =?us-ascii?Q?AaVeXwIegdlYjjhreH26VymqlJ/UAYakkaLBwpDe01G9A4r6CSMdUScqZBLm?=
+ =?us-ascii?Q?qnxF66fluw86ImSFkHd/eRNfp/HF9PobUPW/Wf6sND8RzzMXc8D0loAiPR6k?=
+ =?us-ascii?Q?rff0S2m4qIdGrQbbprCL0KYhS/twKfNDZlxzKZN1bWnsBjtQ7CHE9XXHevzv?=
+ =?us-ascii?Q?U/YymSzmMLJTjIsZ330vKLBe84XYlltOzUEdrEpRQEzxDTgwH/g8BmJI1a6l?=
+ =?us-ascii?Q?S9HCFZXEjllJw3eFqNpbLCOolocLAfq8YW8C2cACVwCLdXBD6IryDdoF0g5r?=
+ =?us-ascii?Q?XqcxAA38sl4dIAc118rFkU9eGYBAnsEmyjUj+/Yot/pN4tl5B0ZR6t3rpfcW?=
+ =?us-ascii?Q?gdT1wG3jG3rN2zyIL+SRuikCRqW4xLlpLKr11c2OwzdREN30z5HBtK9i+AgC?=
+ =?us-ascii?Q?wufv0GB4/Qq7CScnZuhzuGbaby58p6Qwy8hP92Hf9Ul/SfG2nd5QG/G6snRp?=
+ =?us-ascii?Q?UDidyrGtvAtjsmZRxcAh7DyH5YesViEFIRWgYeMXmY+yBFcp/rZPgtOHq2FA?=
+ =?us-ascii?Q?wply87Q85o6iTnNV0we7JxT7NvcPWFoDWW8iErL0iy66kFHNILelSsj2UUme?=
+ =?us-ascii?Q?KHofWVUumFt2KhOVjDU8iFyw7qtFwRgSbWhlFlamNqYiE+LU/Of5/fseyNbL?=
+ =?us-ascii?Q?joYJJ+6aSq4fPkfooo4j9dMMwCp7lQKVaGK2pYrDqfgwKFgZSI/PKaLIMJPG?=
+ =?us-ascii?Q?rurbrHly3Xs/CRX6mlSsC3B7chW0npcdwxwUOQcEmIicBrluNq7GH+u/MVq4?=
+ =?us-ascii?Q?EOALAe/O18YcEyBB91jeWdysY/hgzSPTBy0zPc/EhA3yWT/sbMVZ8ie7UFHV?=
+ =?us-ascii?Q?VxbLTRl7IWwlc1xr5tVdh9ggJhrMHvPD8XcduoTMF663avGRsi6JsxnRSekP?=
+ =?us-ascii?Q?xghvk/BiBgPnXSbIsIqaN4gmHMC1cCmukueO4yTHeGrfd+fzov+jvMQaLsOC?=
+ =?us-ascii?Q?w0PUfFSwmh50ssLVJInocuEZD2xKTdfumDK1ZNCUEYKiIEkgCAlwXFq25RZW?=
+ =?us-ascii?Q?X3aQWopcUd5uiZdFGYvBIeAMhEStFC1DRu/ECcKW8mY9Km6si8Foj9cpaxNv?=
+ =?us-ascii?Q?0BN1adqfARZSzJXHr5qVvkiqmrYY35dA0xAHEJNw7MR9tY8Xii9GgXgpWkfn?=
+ =?us-ascii?Q?AHOgBkwBSAuhMcNy5/4gRBz2feBbG+0jBAv9vax3vE+dGZ8uKDeFURkgZ+3I?=
+ =?us-ascii?Q?FINL2LEbwhfXeVDKlYxlKOhBxTUZnhja0iozdUmGj9i4OyRFZSSUJhpJze9C?=
+ =?us-ascii?Q?uK/XaNlScD9bGdKQ61r1U2N9pv85Hj5k1tnYV12QNv7V0/dK4CacFUszlQ6I?=
+ =?us-ascii?Q?Ix5ZQ3HkBcOTzyOrCBrrN6+83xxR/pA/04Ckbcwpm/+15YfFSY9QzhLyXO2n?=
+ =?us-ascii?Q?uTTLy0ecsJd2whw52vgvLeTM1CqHw1YPUUrLMI2eMsUxtIc3+CylchnV7FAk?=
+ =?us-ascii?Q?HZ7uBghovZ5zA1fo5DHgMBFD/fi77kCO8jnkCFqx3kzvLWgVBx4m9myitgYP?=
+ =?us-ascii?Q?ncFqBb9ZEJroUlXXZJZXzvGkqsbcWO6aVZ4IiwCPBMePuoLFUIdL4m4CXTjy?=
+ =?us-ascii?Q?silF6MTIhquj2Cd9/ID3M3FRpbgXUqBpah9i24hKM8iBszVZifZtIW04MEzP?=
+ =?us-ascii?Q?63CDCYKPRQ=3D=3D?=
 X-OriginatorOrg: atomlin.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: ae5d703a-0095-480b-f84c-08de903d4efb
+X-MS-Exchange-CrossTenant-Network-Message-Id: aafac445-66a8-46da-01fa-08de903d57e0
 X-MS-Exchange-CrossTenant-AuthSource: CWLP123MB3523.GBRP123.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 01 Apr 2026 22:23:32.7518
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 01 Apr 2026 22:23:47.5862
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: e6a32402-7d7b-4830-9a2b-76945bbbcb57
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: kVXKwTy499ywrV5mUdS+Usb7B9Yr9Fo9tF86/z9nIXnHsYfQk5uud6mRT2e6vlB4RSLRrySm6Z/vEtop1bftJw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CW1P123MB7844
+X-MS-Exchange-CrossTenant-UserPrincipalName: 7wWlBsHLA7Varpq2n3FWpDu30yRCV8CxOabWCDJ4epj/AnA/RT8j3auczMa8YqFTsrjTAyX8ywxmFH98C15csA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CWLP123MB2964
 
 From: Daniel Wagner <wagi@kernel.org>
 
-Introduce blk_mq_{online|possible}_queue_affinity, which returns the
-queue-to-CPU mapping constraints defined by the block layer. This allows
-other subsystems (e.g., IRQ affinity setup) to respect block layer
-requirements.
+Multiqueue drivers spread I/O queues across all CPUs for optimal
+performance. However, these drivers are not aware of CPU isolation
+requirements and will distribute queues without considering the isolcpus
+configuration.
 
-It is necessary to provide versions for both the online and possible CPU
-masks because some drivers want to spread their I/O queues only across
-online CPUs, while others prefer to use all possible CPUs. And the mask
-used needs to match with the number of queues requested
-(see blk_num_{online|possible}_queues).
+Introduce a new isolcpus mask that allows users to define which CPUs
+should have I/O queues assigned. This is similar to managed_irq, but
+intended for drivers that do not use the managed IRQ infrastructure
 
 Reviewed-by: Hannes Reinecke <hare@suse.de>
+Reviewed-by: Aaron Tomlin <atomlin@atomlin.com>
 Signed-off-by: Daniel Wagner <wagi@kernel.org>
 Signed-off-by: Aaron Tomlin <atomlin@atomlin.com>
 ---
- block/blk-mq-cpumap.c  | 24 ++++++++++++++++++++++++
- include/linux/blk-mq.h |  2 ++
- 2 files changed, 26 insertions(+)
+ include/linux/sched/isolation.h | 1 +
+ kernel/sched/isolation.c        | 7 +++++++
+ 2 files changed, 8 insertions(+)
 
-diff --git a/block/blk-mq-cpumap.c b/block/blk-mq-cpumap.c
-index 705da074ad6c..8244ecf87835 100644
---- a/block/blk-mq-cpumap.c
-+++ b/block/blk-mq-cpumap.c
-@@ -26,6 +26,30 @@ static unsigned int blk_mq_num_queues(const struct cpumask *mask,
- 	return min_not_zero(num, max_queues);
- }
+diff --git a/include/linux/sched/isolation.h b/include/linux/sched/isolation.h
+index dc3975ff1b2e..7b266fc2a405 100644
+--- a/include/linux/sched/isolation.h
++++ b/include/linux/sched/isolation.h
+@@ -18,6 +18,7 @@ enum hk_type {
+ 	HK_TYPE_MANAGED_IRQ,
+ 	/* Inverse of boot-time nohz_full= or isolcpus=nohz arguments */
+ 	HK_TYPE_KERNEL_NOISE,
++	HK_TYPE_IO_QUEUE,
+ 	HK_TYPE_MAX,
  
-+/**
-+ * blk_mq_possible_queue_affinity - Return block layer queue affinity
-+ *
-+ * Returns an affinity mask that represents the queue-to-CPU mapping
-+ * requested by the block layer based on possible CPUs.
-+ */
-+const struct cpumask *blk_mq_possible_queue_affinity(void)
-+{
-+	return cpu_possible_mask;
-+}
-+EXPORT_SYMBOL_GPL(blk_mq_possible_queue_affinity);
-+
-+/**
-+ * blk_mq_online_queue_affinity - Return block layer queue affinity
-+ *
-+ * Returns an affinity mask that represents the queue-to-CPU mapping
-+ * requested by the block layer based on online CPUs.
-+ */
-+const struct cpumask *blk_mq_online_queue_affinity(void)
-+{
-+	return cpu_online_mask;
-+}
-+EXPORT_SYMBOL_GPL(blk_mq_online_queue_affinity);
-+
- /**
-  * blk_mq_num_possible_queues - Calc nr of queues for multiqueue devices
-  * @max_queues:	The maximum number of queues the hardware/driver
-diff --git a/include/linux/blk-mq.h b/include/linux/blk-mq.h
-index 18a2388ba581..ebc45557aee8 100644
---- a/include/linux/blk-mq.h
-+++ b/include/linux/blk-mq.h
-@@ -969,6 +969,8 @@ int blk_mq_freeze_queue_wait_timeout(struct request_queue *q,
- void blk_mq_unfreeze_queue_non_owner(struct request_queue *q);
- void blk_freeze_queue_start_non_owner(struct request_queue *q);
+ 	/*
+diff --git a/kernel/sched/isolation.c b/kernel/sched/isolation.c
+index ef152d401fe2..3406e3024fd4 100644
+--- a/kernel/sched/isolation.c
++++ b/kernel/sched/isolation.c
+@@ -16,6 +16,7 @@ enum hk_flags {
+ 	HK_FLAG_DOMAIN		= BIT(HK_TYPE_DOMAIN),
+ 	HK_FLAG_MANAGED_IRQ	= BIT(HK_TYPE_MANAGED_IRQ),
+ 	HK_FLAG_KERNEL_NOISE	= BIT(HK_TYPE_KERNEL_NOISE),
++	HK_FLAG_IO_QUEUE	= BIT(HK_TYPE_IO_QUEUE),
+ };
  
-+const struct cpumask *blk_mq_possible_queue_affinity(void);
-+const struct cpumask *blk_mq_online_queue_affinity(void);
- unsigned int blk_mq_num_possible_queues(unsigned int max_queues);
- unsigned int blk_mq_num_online_queues(unsigned int max_queues);
- void blk_mq_map_queues(struct blk_mq_queue_map *qmap);
+ DEFINE_STATIC_KEY_FALSE(housekeeping_overridden);
+@@ -340,6 +341,12 @@ static int __init housekeeping_isolcpus_setup(char *str)
+ 			continue;
+ 		}
+ 
++		if (!strncmp(str, "io_queue,", 9)) {
++			str += 9;
++			flags |= HK_FLAG_IO_QUEUE;
++			continue;
++		}
++
+ 		/*
+ 		 * Skip unknown sub-parameter and validate that it is not
+ 		 * containing an invalid character.
 -- 
 2.51.0
 
