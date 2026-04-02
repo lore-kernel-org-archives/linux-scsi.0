@@ -1,203 +1,152 @@
-Received: from iad-out-010.esa.us-east-1.outbound.mail-perimeter.amazon.com (iad-out-010.esa.us-east-1.outbound.mail-perimeter.amazon.com [34.197.254.9])
+Received: from mail-4318.protonmail.ch (mail-4318.protonmail.ch [185.70.43.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1D15F3E51D1;
-	Thu,  2 Apr 2026 12:32:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=34.197.254.9
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E6D430100D
+	for <linux-scsi@vger.kernel.org>; Thu,  2 Apr 2026 13:25:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.70.43.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775133130; cv=none; b=gUAmpfk9F9uxAl1+/eRI1fe1DYgsRPBu6avXygg1fbGO+1rsBjwWueZl7c9bVaGL0xaySvUdX9C/w4Eb22xgelnyYn73QH/JJxVcNnA2DnBBLxDPlMW3CW6v2LmEtrHqq78gXdc1d0bFEq6FAszQ+xZzpQRXv4JiCqGVso5744c=
+	t=1775136358; cv=none; b=BxYP9DFMTJUusnHH0rPsRHUOJ1z2pZhgeSDiZfq6v2Mzk3SYJUuI+Vm933w3uRJ9H1dlz+GKO3bo/+OEuqZn1S6yJ5a9+k2P0f5c9SY9QcOVoa3xZBRV6EucBYWyZPb+ZmmRpjEzxUjCa5ez28e339hXVmJ61syTVcQAUNRdMEI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775133130; c=relaxed/simple;
-	bh=aDYtmSvd0EEN3gRzBnxf/nlkESwF4ea02ohRXl6ElJc=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=KqC3rvJqECPr4IDyxfz0a9lkSGyq37WnYLdWOgxPBmpGXVprkUc580ff3E0O5nDCCyF/8Tn5+qfxZheXYSLXuL0H/lgSHU8IOFCHmmOw4dXXVxAIFnsT6s+7K5VaYH/nWIr6aVLsavLqQa2x+6qXd1AQ+lk43osHH1n7eFPGt14=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.de; spf=pass smtp.mailfrom=amazon.de; dkim=pass (2048-bit key) header.d=amazon.de header.i=@amazon.de header.b=TLJNze09; arc=none smtp.client-ip=34.197.254.9
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=amazon.de
+	s=arc-20240116; t=1775136358; c=relaxed/simple;
+	bh=7AU+FKoONfTmb40hDy0wKxmE/m8Em6282YuFBtlwBss=;
+	h=Date:To:From:Cc:Subject:Message-ID:MIME-Version:Content-Type; b=Hxo83bXmI24SjFbirdPvlo0x1Yd3lrG8lFdu3lOHNmH+iEIF7fBZJu8Ftr0d7J/9u+CahvHcw6vIr/Eo8DEUCaVm7JdC+GMA0s5p/dzaPHDBmcOKujQd8aMzjjFZvT4V6SkxD0Bl9Swhb2EzH/KeZMq47vhIvt0q6LAssTK9o94=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=danielfernau.com; spf=pass smtp.mailfrom=danielfernau.com; dkim=pass (2048-bit key) header.d=danielfernau.com header.i=@danielfernau.com header.b=GelOC/SL; arc=none smtp.client-ip=185.70.43.18
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=danielfernau.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=danielfernau.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=amazon.de header.i=@amazon.de header.b="TLJNze09"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=amazon.de; i=@amazon.de; q=dns/txt; s=amazoncorp2;
-  t=1775133125; x=1806669125;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-id:mime-version:
-   content-transfer-encoding;
-  bh=6w3HUVHSmjm01LKzbzqMd/c0WGfyb9c7ge6p63vHYQI=;
-  b=TLJNze09s90omXNwh/EVneUqNcRFVos12lrBVwuckpj9mjeoIw8krJk5
-   0ggvx4lKPUQ5Q9HDmfTRZpfkfAvpzX2r8rDa78d85sZsjASqwS1pCvYoE
-   SBXeygTpvn2Qbqe1NCC30sBzasFu4OKifydxG+NuwiXsVT2MLDmvTZD08
-   4xBKFyoYPsLjnwHwo289oFCga7x65r3Fh6r02wkgIU35FOfhFQipxvnjQ
-   wmsQZdB4f30IKsOyAnpdw2Y9tZs6XTWbImWxuhOF8zrRdaUVTpv5P31LM
-   khAR66KtXQiVA/KkSfAolQHHgqW3G24AZYDak4oAX6nqdnw1V/ctpoO/t
-   g==;
-X-CSE-ConnectionGUID: DdekA+7kT0eMkTYJA1rRng==
-X-CSE-MsgGUID: /6glz+8BSwe83yXe9ZoY8A==
-X-IronPort-AV: E=Sophos;i="6.23,155,1770595200"; 
-   d="scan'208";a="15095409"
-Received: from ip-10-4-10-75.ec2.internal (HELO smtpout.naws.us-east-1.prod.farcaster.email.amazon.dev) ([10.4.10.75])
-  by internal-iad-out-010.esa.us-east-1.outbound.mail-perimeter.amazon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Apr 2026 12:32:00 +0000
-Received: from EX19MTAUEC002.ant.amazon.com [72.21.196.66:23526]
- by smtpin.naws.us-east-1.prod.farcaster.email.amazon.dev [10.0.8.197:2525] with esmtp (Farcaster)
- id aa9e9018-8b88-44d4-9916-7172c14268fc; Thu, 2 Apr 2026 12:32:00 +0000 (UTC)
-X-Farcaster-Flow-ID: aa9e9018-8b88-44d4-9916-7172c14268fc
-Received: from EX19D012UEC003.ant.amazon.com (10.252.135.160) by
- EX19MTAUEC002.ant.amazon.com (10.252.135.253) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.37;
- Thu, 2 Apr 2026 12:32:00 +0000
-Received: from EX19D012UEC003.ant.amazon.com (10.252.135.160) by
- EX19D012UEC003.ant.amazon.com (10.252.135.160) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.37;
- Thu, 2 Apr 2026 12:31:59 +0000
-Received: from EX19D012UEC003.ant.amazon.com ([fe80::67ea:859:1e17:25a9]) by
- EX19D012UEC003.ant.amazon.com ([fe80::67ea:859:1e17:25a9%3]) with mapi id
- 15.02.2562.037; Thu, 2 Apr 2026 12:31:59 +0000
-From: "Heyne, Maximilian" <mheyne@amazon.de>
-To: Fedor Pchelkin <pchelkin@ispras.ru>
-CC: Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>,
-	"stable@vger.kernel.org" <stable@vger.kernel.org>, Sven Peter
-	<sven@svenpeter.dev>, Chaitanya Kulkarni <kch@nvidia.com>, Keith Busch
-	<kbusch@kernel.org>, Jens Axboe <axboe@kernel.dk>, Hector Martin
-	<marcan@marcan.st>, Alyssa Rosenzweig <alyssa@rosenzweig.io>, "James E.J.
- Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen"
-	<martin.petersen@oracle.com>, Alim Akhtar <alim.akhtar@samsung.com>, "Avri
- Altman" <avri.altman@wdc.com>, Bart Van Assche <bvanassche@acm.org>, "Sasha
- Levin" <sashal@kernel.org>, Peter Wang <peter.wang@mediatek.com>, "Greg
- Kroah-Hartman" <gregkh@linuxfoundation.org>, Seunghui Lee
-	<sh043.lee@samsung.com>, Sanjeev Yadav <sanjeev.y@mediatek.com>, Wonkon Kim
-	<wkon.kim@samsung.com>, Brian Kao <powenkao@google.com>, Hannes Reinecke
-	<hare@suse.de>, Ming Lei <ming.lei@redhat.com>, "linux-block@vger.kernel.org"
-	<linux-block@vger.kernel.org>, "linux-kernel@vger.kernel.org"
-	<linux-kernel@vger.kernel.org>, "asahi@lists.linux.dev"
-	<asahi@lists.linux.dev>, "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>, "linux-nvme@lists.infradead.org"
-	<linux-nvme@lists.infradead.org>, "linux-scsi@vger.kernel.org"
-	<linux-scsi@vger.kernel.org>
-Subject: Re: [PATCH 6.1.y 5/8] nvme-apple: remove an extra queue reference
-Thread-Topic: [PATCH 6.1.y 5/8] nvme-apple: remove an extra queue reference
-Thread-Index: AQHcwpyzTCv4ZXIhp0SsQfFW9ZSeHw==
-Date: Thu, 2 Apr 2026 12:31:59 +0000
-Message-ID: <20260402-anti-cuba-1ea02cea@mheyne-amazon>
-References: <20260401-pliny-ashley-ff03a0b6@mheyne-amazon>
- <20260401232116-53765a086f3855a30962fb81-pchelkin@ispras>
-In-Reply-To: <20260401232116-53765a086f3855a30962fb81-pchelkin@ispras>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <772100EB31401D4090226323D02A6503@amazon.com>
+	dkim=pass (2048-bit key) header.d=danielfernau.com header.i=@danielfernau.com header.b="GelOC/SL"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=danielfernau.com;
+	s=protonmail3; t=1775136353; x=1775395553;
+	bh=7AU+FKoONfTmb40hDy0wKxmE/m8Em6282YuFBtlwBss=;
+	h=Date:To:From:Cc:Subject:Message-ID:Feedback-ID:From:To:Cc:Date:
+	 Subject:Reply-To:Feedback-ID:Message-ID:BIMI-Selector;
+	b=GelOC/SLv4K/Wq/gx+6HMwF6lH0XNSD7bK0C0T2MSbD9zZSebLTkrDUV054cKzkEy
+	 mww2KKSM+kYBAoRWe0fMKw4SJHh9nej2Pj0hUJgTQgmuMQ9hsVTcO/wmD1ERe3unQM
+	 3qCSoeP120liPnBgbK1E4N9pLMTIq3H1cpsr9XigHWyWgX1rMxtZgRro2M3SuXUNhx
+	 51mTI/GvQ/c5OvULrXrwSeWS61HhUho+mABeC4dEUFK2xYkIvqDGNvUCeKt/kszFl4
+	 b5MegpjivS0FtEoxEAX2l16IMcnisj9qEnaGv5D8ICIByUNXk8gNh4Qd83fjY6bq5t
+	 mg2onIrWCJS2A==
+Date: Thu, 02 Apr 2026 13:25:47 +0000
+To: Thorsten Leemhuis <regressions@leemhuis.info>
+From: Daniel Fernau <mail@danielfernau.com>
+Cc: me@magik.net, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Kashyap Desai <kashyap.desai@broadcom.com>, Sumit Saxena <sumit.saxena@broadcom.com>, Shivasharan S <shivasharan.srikanteshwara@broadcom.com>, Chandrakanth patil <chandrakanth.patil@broadcom.com>, "megaraidlinux.pdl@broadcom.com" <megaraidlinux.pdl@broadcom.com>, "regressions@lists.linux.dev" <regressions@lists.linux.dev>
+Subject: Re: [PATCH] scsi: megaraid_sas: fix PRP list out-of-bounds write
+Message-ID: <0CFE3F49-179D-4735-86E2-B6C1EE2FDD2A@danielfernau.com>
+Feedback-ID: 131378921:user:proton
+X-Pm-Message-ID: 38d0655639a30ced2910d7fa174ed482641caf73
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: multipart/mixed;
+ boundary="b1=_VnoCgvPB31RNdhK6S5U8UITsliC7PM0qQ7ugdRORc"
+
+--b1=_VnoCgvPB31RNdhK6S5U8UITsliC7PM0qQ7ugdRORc
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, Apr 01, 2026 at 11:45:57PM +0300, Fedor Pchelkin wrote:
-> Hello,
-> =
+I tested this on an HPE MR416i-o Gen11 with 6.17.13-2-pve and can
+reproduce the crash reliably with large direct-I/O through Ceph.
 
-> "Heyne, Maximilian" <mheyne@amazon.de> wrote:
-> > From: Christoph Hellwig <hch@lst.de>
-> > =
+I also rebuilt and loaded the posted patched megaraid_sas module on that
+system and verified that the patched module was actually in use after
+reboot (module path, hash, srcversion, and vermagic all matched the test
+build).
 
-> > [ Upstream commit 941f7298c70c7668416e7845fa76eb72c07d966b ]
-> > =
+With the patch loaded, the crash still occurs for my reproducer, but the
+failure mode appears to have changed.
 
-> > Now that blk_mq_destroy_queue does not release the queue reference, the=
-re
-> > is no need for a second admin queue reference to be held by the
-> > apple_nvme structure.
-> =
+Before the patch, I was hitting the PRP-list boundary condition, with
+the driver logging:
 
-> This patch is probably buggy in upstream.  It removes extra reference
-> ->get, but doesn't remove the corresponding ->put which is located
-> inside apple_nvme_free_ctrl().
+=C2=A0 page boundary ptr_sgl: ...
 
-Now I'm seeing this as well. Has the same problem as the pci driver in
-6.1 where blk_put_queue is called from nvme_free_ctrl() and again from
-apple_nvme_free_ctrl(). Thank you for catching this. I don't have the
-hardware to test this.
+and then faulting in the PRP construction path.
 
-Are you going to send a fix upstream? It's looks to be broken on master,
-too.
+With the patch loaded, addr2line now resolves the fault into
+megasas_make_prp_nvme() at the SG-advance path:
 
-> =
+=C2=A0 megasas_make_prp_nvme()
+=C2=A0 =C2=A0 drivers/scsi/megaraid/megaraid_sas_fusion.c:2271
 
-> I'm reporting here currently just for the heads up - was looking at the
-> same nvme regression problem at 6.1.y, found this thread, and the
-> nvme-apple changes appeared suspicious.
-> =
+which corresponds to:
 
-> nvme-apple patch is not required to fix the regression (this also holds
-> true for [PATCH 6.1.y 3/8] scsi: remove an extra queue reference).  Maybe
-> they shouldn't go to stable.
+=C2=A0 sg_scmd =3D sg_next(sg_scmd);
+=C2=A0 sge_addr =3D sg_dma_address(sg_scmd);
+=C2=A0 sge_len =3D sg_dma_len(sg_scmd);
 
-I think, I'll send a v2 of the patch set without these 2 patches. It's
-probably easier for Greg to apply.
+The relevant disassembly also lines up with that sequence. So at least on
+my hardware and workload, the current bounds-check patch is not
+sufficient by itself. It looks like there is an additional unsafe path
+when advancing to the next SG entry and dereferencing it.
 
-> =
+In other words, the posted patch may address the PRP-frame boundary
+write, but my reproducer still reaches another failure in
+megasas_make_prp_nvme() afterwards.
 
-> That said, the other part of the backport series FWIW looks good to me,
-> and I've also verified it resolves the 6.1.y regression.
+I am going to investigate this further over the next few days, including
+whether an additional guard is needed around sg_next() / sg_dma_address()
+/ sg_dma_len() in the PRP builder, and I will report back with results.
 
-You may leave a Tested-by if you want ;-)
+For reference, this is on an HPE MR416i-o Gen11, and I can still
+reproduce it with the patched module definitely loaded.
 
-> =
 
-> Thanks.
-> =
-
-> > =
-
-> > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> > Reviewed-by: Sagi Grimberg <sagi@grimberg.me>
-> > Reviewed-by: Sven Peter <sven@svenpeter.dev>
-> > Reviewed-by: Chaitanya Kulkarni <kch@nvidia.com>
-> > Reviewed-by: Keith Busch <kbusch@kernel.org>
-> > Link: https://lore.kernel.org/r/20221018135720.670094-5-hch@lst.de
-> > Signed-off-by: Jens Axboe <axboe@kernel.dk>
-> > Signed-off-by: Maximilian Heyne <mheyne@amazon.de>
-> > ---
-> >  drivers/nvme/host/apple.c | 9 ---------
-> >  1 file changed, 9 deletions(-)
-> > =
-
-> > diff --git a/drivers/nvme/host/apple.c b/drivers/nvme/host/apple.c
-> > index c5fc293c22123..c84ebfcfdeb88 100644
-> > --- a/drivers/nvme/host/apple.c
-> > +++ b/drivers/nvme/host/apple.c
-> > @@ -1507,15 +1507,6 @@ static int apple_nvme_probe(struct platform_devi=
-ce *pdev)
-> >  		goto put_dev;
-> >  	}
-> >  =
-
-> > -	if (!blk_get_queue(anv->ctrl.admin_q)) {
-> > -		nvme_start_admin_queue(&anv->ctrl);
-> > -		blk_mq_destroy_queue(anv->ctrl.admin_q);
-> > -		blk_put_queue(anv->ctrl.admin_q);
-> > -		anv->ctrl.admin_q =3D NULL;
-> > -		ret =3D -ENODEV;
-> > -		goto put_dev;
-> > -	}
-> > -
-> >  	nvme_reset_ctrl(&anv->ctrl);
-> >  	async_schedule(apple_nvme_async_probe, anv);
-> >  =
-
-> > -- =
-
-> > 2.50.1
+Best,
+Daniel
 
 
 
-Amazon Web Services Development Center Germany GmbH
-Tamara-Danz-Str. 13
-10243 Berlin
-Geschaeftsfuehrung: Christof Hellmis, Andreas Stieger
-Eingetragen am Amtsgericht Charlottenburg unter HRB 257764 B
-Sitz: Berlin
-Ust-ID: DE 365 538 597
+
+
+> On Apr 1, 2026, at 9:02=E2=80=AFAM, Thorsten Leemhuis <regressions@leemhu=
+is.info> wrote:
+>=20
+> On 3/27/26 04:20, me@magik.net wrote:
+>=20
+> > megasas_make_prp_nvme() builds NVMe PRP lists in cmd->sg_frame,
+> > which is a DMA-pool allocation sized by instance->max_chain_frame_sz.
+> > [...]
+> > Before this patch, 6.19.10 crashed repeatedly during boot and normal
+> > disk I/O. After applying it, the system boots cleanly and completes 4GB
+> > direct-I/O reads without crashes.
+> >=20
+> > Cc: stable@vger.kernel.org
+> > Signed-off-by: Lukasz Magiera <me@magik.net>
+>=20
+>=20
+> You CCed the regression list, but this lacks a Fixes: tag, which makes
+> me wonder: what change caused the problem? That tag would also help the
+> stable team to see where this needs to be applied, so it most likely is
+> needed.
+>=20
+>=20
+> > [...]
+>=20
+>=20
+> Ciao, Thorsten
+--b1=_VnoCgvPB31RNdhK6S5U8UITsliC7PM0qQ7ugdRORc
+Content-Type: application/pgp-keys; name="publickey - mail@danielfernau.com - 0x618592AD.asc"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="publickey - mail@danielfernau.com - 0x618592AD.asc"
+
+LS0tLS1CRUdJTiBQR1AgUFVCTElDIEtFWSBCTE9DSy0tLS0tCgp4ak1FWjRqZlloWUpLd1lCQkFI
+YVJ3OEJBUWRBR1VmZEF2NVpDUEgxNHVVOFNhLzM2dFB1ZDVYOWdTNkYKckd6aTM3L01jRmJOTFcx
+aGFXeEFaR0Z1YVdWc1ptVnlibUYxTG1OdmJTQThiV0ZwYkVCa1lXNXBaV3htClpYSnVZWFV1WTI5
+dFBzTEFFUVFURmdvQWd3V0NaNGpmWWdNTENRY0prRThWYiszcXJNdVpSUlFBQUFBQQpBQndBSUhO
+aGJIUkFibTkwWVhScGIyNXpMbTl3Wlc1d1ozQnFjeTV2Y21lS0RSZE9maFk1Mzl2UXA5aTIKYW9u
+dlAwNGJPUER5bzZLQ2w5T0VqcUFPblFNVkNnZ0VGZ0FDQVFJWkFRS2JBd0llQVJZaEJHR0ZrcTBI
+CjVFYkYxZ1pnUzA4VmIrM3FyTXVaQUFEclNnRUEvTlRjRTE3WWFYbE5qaXZMZ3lLME9XMitmN2dV
+TDlsQwpKRkF5M3RwSVVPSUJBT0F0UkN6ejlhYW5PMU5aYWRpSHFLNDZLTGVINktjM3hIS0NQaWJD
+ZVBVSnpqZ0UKWjRqZlloSUtLd1lCQkFHWFZRRUZBUUVIUU5WMkV6K2ZPbWJFUWx2SlJEM204VFI5
+SlhyMHNibm1Md2ZDCnQzeEVBV0V0QXdFSUI4SytCQmdXQ2dCd0JZSm5pTjlpQ1pCUEZXL3Q2cXpM
+bVVVVUFBQUFBQUFjQUNCegpZV3gwUUc1dmRHRjBhVzl1Y3k1dmNHVnVjR2R3YW5NdWIzSm5rVU5H
+UkE4SzJTNWhoZnliTUI1VWlOZksKUER4a0N3dVZtY3VvbW4xU0lzY0Ntd3dXSVFSaGhaS3RCK1JH
+eGRZR1lFdFBGVy90NnF6TG1RQUFnT1FBCi9pOUpGL3hPeEJVTHhjV2ozbG1PaDZLUUVkUFhkTnJm
+aVkxNklmSUNDRG9HQVFDODdnOWYyUTUrY25rOAo5WjdETld3cUtWcGdSWExVVVE5KzBRdDBRMnAx
+REE9PQo9aVhPbAotLS0tLUVORCBQR1AgUFVCTElDIEtFWSBCTE9DSy0tLS0tCg==
+
+--b1=_VnoCgvPB31RNdhK6S5U8UITsliC7PM0qQ7ugdRORc--
 
