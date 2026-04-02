@@ -1,138 +1,179 @@
-Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 504A73C3C1E
-	for <linux-scsi@vger.kernel.org>; Thu,  2 Apr 2026 17:14:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.14
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D0EF7370D75
+	for <linux-scsi@vger.kernel.org>; Thu,  2 Apr 2026 18:04:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775150077; cv=none; b=Y4y7FxQumT19nPvyryNnLYNTxyt+89V239bnxCHkeAlvkD3dq6aQK7QiAH4CbHFvNmptbe1MdeLtv0tc3pOkUFY1okYrX/0ES5Qdxt+ol2mY6kqR15E1mZPRc3iCPGkHVNVEdhpdt/ofm1YLZe69dhOKGIi+EASyIv/x/g5Tun0=
+	t=1775153055; cv=none; b=josAXeSZ6MI3P6sScZ1rbQ5MggU0N7jL6X5V6d5UT5dp8RMZEPgRn9QKX47QC5OBNRnK9Wds4l8w23HmcbOJWAGelzJM+Px2g5rNK7EfASYXTekHxp6kQHzQQ+/t3b+pYGyloWE/Vd6O8sDmOh6AmTOkhDc0i9M6nrprpY7Kzns=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775150077; c=relaxed/simple;
-	bh=QWne1j+v+jIhqnxmUvQ+UcmNGqb+WNuTuuxuuiWFfcM=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Fx4V+t7qtmBCM4i6hjLZHyIvqsE9HhzDXBOyrkaxpO1WmPmE3MkVUFZvc+cfhZ8S+1UWoyu6+BK/e0FH2FQq7GAHZaCQ7WxDgLpoWgcw0JqB/dRWp3q59xCwQP4xY6x5pRjwD2tsH5vnRIZ2zEQlkN5ivCldvR8x3NqMfs4Khco=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=M/U8efY7; arc=none smtp.client-ip=199.89.1.14
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1775153055; c=relaxed/simple;
+	bh=F4DsrgIwCXh1HXEg5g9pfI4vm/MPlqNk9kwFD7OT3bE=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=DQLbQ4uaWYY0MQg1DguELDrakOroPsEsnvdKx7/ZrNsqZW38JBJMKkUJeiZVftVuh/gGQjQy2D1h0rtppktAM1Pr4ZaqC8ZRY6C5XvO7o801jn/NZdO1b1yKEEWQ9PBKD2Hur5BcC6cTKZg05KHYoiO8v/2PK8p2VBa3lz31nAI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=il1dJTWi; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="M/U8efY7"
-Received: from localhost (localhost [127.0.0.1])
-	by 011.lax.mailroute.net (Postfix) with ESMTP id 4fmpPK6Q7Lz1XM6Jb;
-	Thu,  2 Apr 2026 17:14:29 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:mime-version:references:in-reply-to
-	:x-mailer:message-id:date:date:subject:subject:from:from
-	:received:received; s=mr01; t=1775150061; x=1777742062; bh=i5Toa
-	KazAuQcQ2err7ibxsYWSeVlfkfFhsdu1Pfkt7I=; b=M/U8efY7aneuMUA1ulhxo
-	Jvd0a9D9pjV7BXABDwIuiBEKXAJVrY4azK6AbzwtaEjk28/6fldlDxjS8tV8uciL
-	fcE1TVWJSf2Wzv9cMqpjs04USD9xjaipctjGB2bgb60vlXaZwPW0jI8RRngb0UcF
-	sEzXLjhk002UI0Gi+JpvYT+9GgQ4o1YRy8Img1eqMomsIS7u88zfgC8E//Rvxzl8
-	WUvVhnP1jj6iwr5Dvb4P5pAJEv6vI6PZe9MiqtU8mE3sICM+Gck++u37kcwwYo/3
-	9/HH+dddJpPd1SxpmvApRDdMEdN6apclBxCdW6d/8aLgvqJT8MacnzL4x35th5vJ
-	Q==
-X-Virus-Scanned: by MailRoute
-Received: from 011.lax.mailroute.net ([127.0.0.1])
- by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id 7E_z0VxHeLfg; Thu,  2 Apr 2026 17:14:21 +0000 (UTC)
-Received: from bvanassche.mtv.corp.google.com (unknown [104.135.180.219])
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="il1dJTWi"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1775153052;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=h7yOigxXZpZsVMssh+mLEedTpd1BlUZc6Kc/zzGuCvY=;
+	b=il1dJTWirRg13EJnJEXqu9/VT8qdEL/Vvz1fPAvj68gNCZX0DPw8OvPEoTRoz8FdiaSjuF
+	uV15AhCBSueOSMhPkycVgdJJcuBDM81kkUbPcYairqXMg2+SvDaNTww9nLAg/HoerUepsU
+	MGeMslceN77OJvaWLaPSfHU4hi29KF4=
+Received: from mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-610-bafMvKWtM46D7vCCfgvvrA-1; Thu,
+ 02 Apr 2026 14:04:08 -0400
+X-MC-Unique: bafMvKWtM46D7vCCfgvvrA-1
+X-Mimecast-MFC-AGG-ID: bafMvKWtM46D7vCCfgvvrA_1775153047
+Received: from mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.4])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4fmpP61kB9z1XM6JQ;
-	Thu,  2 Apr 2026 17:14:17 +0000 (UTC)
-From: Bart Van Assche <bvanassche@acm.org>
-To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org,
+	by mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 37F28195609F;
+	Thu,  2 Apr 2026 18:04:07 +0000 (UTC)
+Received: from localhost (unknown [10.44.32.37])
+	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 20B1C30030D1;
+	Thu,  2 Apr 2026 18:04:05 +0000 (UTC)
+From: Stefan Hajnoczi <stefanha@redhat.com>
+To: target-devel@vger.kernel.org
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>,
+	linux-scsi@vger.kernel.org,
 	Bart Van Assche <bvanassche@acm.org>,
-	Peter Wang <peter.wang@mediatek.com>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
-	vamshi gajjela <vamshigajjela@google.com>,
-	Alok Tiwari <alok.a.tiwari@oracle.com>,
-	Chenyuan Yang <chenyuan0y@gmail.com>,
-	"ping.gao" <ping.gao@samsung.com>
-Subject: [PATCH v2 1/2] ufs: core: Introduce ufshcd_mcq_poll_n_cqe_lock()
-Date: Thu,  2 Apr 2026 10:14:01 -0700
-Message-ID: <20260402171404.3008494-2-bvanassche@acm.org>
-X-Mailer: git-send-email 2.53.0.1213.gd9a14994de-goog
-In-Reply-To: <20260402171404.3008494-1-bvanassche@acm.org>
-References: <20260402171404.3008494-1-bvanassche@acm.org>
+	linux-kernel@vger.kernel.org,
+	Stefan Hajnoczi <stefanha@redhat.com>,
+	Maurizio Lombardi <mlombard@redhat.com>,
+	Dmitry Bogdanov <d.bogdanov@yadro.com>
+Subject: [PATCH] scsi: target: don't validate ignored fields in PROUT PREEMPT
+Date: Thu,  2 Apr 2026 14:03:42 -0400
+Message-ID: <20260402180342.126583-1-stefanha@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.4
 
-Introduce a new function for processing completions that accepts an
-upper limit for the number of completions to poll. Tell
-ufshcd_mcq_poll_cqe_lock() to poll at most hwq->max_entries. This is
-sufficient to poll all pending completions since there are never more
-than hwq->max_entries - 1 completions on a completion queue. This patch
-prepares for reducing the interrupt latency.
+The PERSISTENT RESERVE OUT command's PREEMPT service action provides two
+different functions: 1. preempting persistent reservations and 2.
+removing registrations. In the latter case the spec says:
 
-Reviewed-by: Peter Wang <peter.wang@mediatek.com>
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+  b) ignore the contents of the SCOPE field and the TYPE field;
+
+The code currently validates the SCOPE and TYPE fields even when PREEMPT
+is called to remove registrations.
+
+This patch achieves spec compliance by validating the SCOPE and TYPE
+fields only when they will actually be used.
+
+To confirm my interpretation of the specification I tested against HPE
+3PAR storage and found the TYPE field is indeed ignored in this case.
+
+Cc: Maurizio Lombardi <mlombard@redhat.com>
+Cc: Dmitry Bogdanov <d.bogdanov@yadro.com>
+Signed-off-by: Stefan Hajnoczi <stefanha@redhat.com>
 ---
- drivers/ufs/core/ufs-mcq.c | 14 +++++++++++---
- include/ufs/ufshcd.h       |  3 +++
- 2 files changed, 14 insertions(+), 3 deletions(-)
+ drivers/target/target_core_pr.c | 59 ++++++++++++++++++---------------
+ 1 file changed, 32 insertions(+), 27 deletions(-)
 
-diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
-index 1b3062577945..e6081b97ed74 100644
---- a/drivers/ufs/core/ufs-mcq.c
-+++ b/drivers/ufs/core/ufs-mcq.c
-@@ -340,15 +340,16 @@ void ufshcd_mcq_compl_all_cqes_lock(struct ufs_hba =
-*hba,
- 	spin_unlock_irqrestore(&hwq->cq_lock, flags);
+diff --git a/drivers/target/target_core_pr.c b/drivers/target/target_core_pr.c
+index f88e63aefcd84..11790f2c5d80f 100644
+--- a/drivers/target/target_core_pr.c
++++ b/drivers/target/target_core_pr.c
+@@ -2809,7 +2809,7 @@ static void core_scsi3_release_preempt_and_abort(
  }
-=20
--unsigned long ufshcd_mcq_poll_cqe_lock(struct ufs_hba *hba,
--				       struct ufs_hw_queue *hwq)
-+unsigned long ufshcd_mcq_poll_n_cqe_lock(struct ufs_hba *hba,
-+					 struct ufs_hw_queue *hwq,
-+					 unsigned int max_compl)
+ 
+ static sense_reason_t
+-core_scsi3_pro_preempt(struct se_cmd *cmd, int type, int scope, u64 res_key,
++core_scsi3_emulate_pro_preempt(struct se_cmd *cmd, int type, int scope, u64 res_key,
+ 		u64 sa_res_key, enum preempt_type preempt_type)
  {
- 	unsigned long completed_reqs =3D 0;
- 	unsigned long flags;
-=20
- 	spin_lock_irqsave(&hwq->cq_lock, flags);
- 	ufshcd_mcq_update_cq_tail_slot(hwq);
--	while (!ufshcd_mcq_is_cq_empty(hwq)) {
-+	while (!ufshcd_mcq_is_cq_empty(hwq) && completed_reqs < max_compl) {
- 		ufshcd_mcq_process_cqe(hba, hwq);
- 		ufshcd_mcq_inc_cq_head_slot(hwq);
- 		completed_reqs++;
-@@ -360,6 +361,13 @@ unsigned long ufshcd_mcq_poll_cqe_lock(struct ufs_hb=
-a *hba,
-=20
- 	return completed_reqs;
- }
-+EXPORT_SYMBOL_GPL(ufshcd_mcq_poll_n_cqe_lock);
+ 	struct se_device *dev = cmd->se_dev;
+@@ -2838,11 +2838,6 @@ core_scsi3_pro_preempt(struct se_cmd *cmd, int type, int scope, u64 res_key,
+ 		core_scsi3_put_pr_reg(pr_reg_n);
+ 		return TCM_RESERVATION_CONFLICT;
+ 	}
+-	if (scope != PR_SCOPE_LU_SCOPE) {
+-		pr_err("SPC-3 PR: Illegal SCOPE: 0x%02x\n", scope);
+-		core_scsi3_put_pr_reg(pr_reg_n);
+-		return TCM_INVALID_PARAMETER_LIST;
+-	}
+ 
+ 	spin_lock(&dev->dev_reservation_lock);
+ 	pr_res_holder = dev->dev_pr_res_holder;
+@@ -2856,6 +2851,37 @@ core_scsi3_pro_preempt(struct se_cmd *cmd, int type, int scope, u64 res_key,
+ 		core_scsi3_put_pr_reg(pr_reg_n);
+ 		return TCM_INVALID_PARAMETER_LIST;
+ 	}
 +
-+unsigned long ufshcd_mcq_poll_cqe_lock(struct ufs_hba *hba,
-+				       struct ufs_hw_queue *hwq)
-+{
-+	return ufshcd_mcq_poll_n_cqe_lock(hba, hwq, hwq->max_entries);
-+}
- EXPORT_SYMBOL_GPL(ufshcd_mcq_poll_cqe_lock);
-=20
- void ufshcd_mcq_make_queues_operational(struct ufs_hba *hba)
-diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-index cfbc75d8df83..aa5f9b31ea86 100644
---- a/include/ufs/ufshcd.h
-+++ b/include/ufs/ufshcd.h
-@@ -1475,6 +1475,9 @@ void ufshcd_mcq_config_mac(struct ufs_hba *hba, u32=
- max_active_cmds);
- unsigned int ufshcd_mcq_queue_cfg_addr(struct ufs_hba *hba);
- u32 ufshcd_mcq_read_cqis(struct ufs_hba *hba, int i);
- void ufshcd_mcq_write_cqis(struct ufs_hba *hba, u32 val, int i);
-+unsigned long ufshcd_mcq_poll_n_cqe_lock(struct ufs_hba *hba,
-+					 struct ufs_hw_queue *hwq,
-+					 unsigned int max_compl);
- unsigned long ufshcd_mcq_poll_cqe_lock(struct ufs_hba *hba,
- 					 struct ufs_hw_queue *hwq);
- void ufshcd_mcq_make_queues_operational(struct ufs_hba *hba);
++	/* Validate TYPE and SCOPE fields if they will be used */
++	if (pr_res_holder &&
++	    (pr_res_holder->pr_res_key == sa_res_key ||
++	     (all_reg && !sa_res_key))) {
++		switch (type) {
++		case PR_TYPE_WRITE_EXCLUSIVE:
++		case PR_TYPE_EXCLUSIVE_ACCESS:
++		case PR_TYPE_WRITE_EXCLUSIVE_REGONLY:
++		case PR_TYPE_EXCLUSIVE_ACCESS_REGONLY:
++		case PR_TYPE_WRITE_EXCLUSIVE_ALLREG:
++		case PR_TYPE_EXCLUSIVE_ACCESS_ALLREG:
++			break;
++		default:
++			pr_err("SPC-3 PR: Unknown Service Action PREEMPT%s"
++				" Type: 0x%02x\n",
++				(preempt_type == PREEMPT_AND_ABORT) ?
++				"_AND_ABORT" : "", type);
++			spin_unlock(&dev->dev_reservation_lock);
++			core_scsi3_put_pr_reg(pr_reg_n);
++			return TCM_INVALID_CDB_FIELD;
++		}
++
++		if (scope != PR_SCOPE_LU_SCOPE) {
++			pr_err("SPC-3 PR: Illegal SCOPE: 0x%02x\n", scope);
++			spin_unlock(&dev->dev_reservation_lock);
++			core_scsi3_put_pr_reg(pr_reg_n);
++			return TCM_INVALID_PARAMETER_LIST;
++		}
++	}
++
+ 	/*
+ 	 * From spc4r17, section 5.7.11.4.4 Removing Registrations:
+ 	 *
+@@ -3118,27 +3144,6 @@ core_scsi3_pro_preempt(struct se_cmd *cmd, int type, int scope, u64 res_key,
+ 	return 0;
+ }
+ 
+-static sense_reason_t
+-core_scsi3_emulate_pro_preempt(struct se_cmd *cmd, int type, int scope,
+-		u64 res_key, u64 sa_res_key, enum preempt_type preempt_type)
+-{
+-	switch (type) {
+-	case PR_TYPE_WRITE_EXCLUSIVE:
+-	case PR_TYPE_EXCLUSIVE_ACCESS:
+-	case PR_TYPE_WRITE_EXCLUSIVE_REGONLY:
+-	case PR_TYPE_EXCLUSIVE_ACCESS_REGONLY:
+-	case PR_TYPE_WRITE_EXCLUSIVE_ALLREG:
+-	case PR_TYPE_EXCLUSIVE_ACCESS_ALLREG:
+-		return core_scsi3_pro_preempt(cmd, type, scope, res_key,
+-					      sa_res_key, preempt_type);
+-	default:
+-		pr_err("SPC-3 PR: Unknown Service Action PREEMPT%s"
+-			" Type: 0x%02x\n", (preempt_type == PREEMPT_AND_ABORT) ? "_AND_ABORT" : "", type);
+-		return TCM_INVALID_CDB_FIELD;
+-	}
+-}
+-
+-
+ static sense_reason_t
+ core_scsi3_emulate_pro_register_and_move(struct se_cmd *cmd, u64 res_key,
+ 		u64 sa_res_key, int aptpl, int unreg)
+-- 
+2.53.0
+
