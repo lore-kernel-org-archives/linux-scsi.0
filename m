@@ -1,83 +1,83 @@
-Received: from iad-out-006.esa.us-east-1.outbound.mail-perimeter.amazon.com (iad-out-006.esa.us-east-1.outbound.mail-perimeter.amazon.com [3.216.221.67])
+Received: from iad-out-001.esa.us-east-1.outbound.mail-perimeter.amazon.com (iad-out-001.esa.us-east-1.outbound.mail-perimeter.amazon.com [107.22.191.150])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 681C13E9595;
-	Thu,  2 Apr 2026 13:57:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=3.216.221.67
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB9CF3EAC7D;
+	Thu,  2 Apr 2026 13:57:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=107.22.191.150
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775138245; cv=none; b=C4nXIQuBZHKLOmmCLL/4ru88A2PgQj/rKppQOmg9gw5A96cHIErHU6m+EwK1ZntYZh1klY6J9yDEzwKZVJzwCvVsQuULScyfiZfBUkZ6tIlZ8mfDipeNxD0n7dhdIUDFoXJRafcr7/GolO9rrIVteg47QwGnuO6Zjamp8hffUV0=
+	t=1775138246; cv=none; b=l8L7+Mh1LLrLOBnr3vb3CfB8QYkCjWPaBNoZu6V4uX7T+7YK93F0dCoiFFlhGRPJbmPaLbpUFf06qDWQgx9krFpVdqLsEEsJ6uL3smn0Ccz+VhzCEjDiiVIkgQdD4ZRfrbj6lBo/9qWBmp978m7bdguU7mFBKQApQNVYQ59R9mo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775138245; c=relaxed/simple;
-	bh=Qrk8GSV96kDDkq1+0VAMC53OBa1WpEWTZeLl1slKnmA=;
+	s=arc-20240116; t=1775138246; c=relaxed/simple;
+	bh=JG2Mv9KfI7xkq43R9tTrX6gyZeNUTJ68NxGSnZETtNU=;
 	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=Ud7HhjDgGVpJuFKC1PhYkv0esCkVbqi8EX3yfcw9y5TvQPDu9KC/FfFShJE38+28PIjb4sHySyUOgk0YcNU7XrhmSC7wBBopnctcGh466GG2DxeVjIixeMGft5fhaOqF0faLawp8xxixqJVfapX7JdRboeqOWkEZK5SQqiNFG0Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.de; spf=pass smtp.mailfrom=amazon.de; dkim=pass (2048-bit key) header.d=amazon.de header.i=@amazon.de header.b=Eev2BELo; arc=none smtp.client-ip=3.216.221.67
+	 Content-Type:MIME-Version; b=P08VRjxl6lHJhyA0wVhmqkXUEtdcTTIeES54Yc+NnkPkvXUW9xBdkPY/ivOzkefgBNQRNnD/eMROn1pZva5BZU8mz/tFZl/5pq8/A9gHeCih3tsffgnuzlItIahImFpp11EdIwb2i2WlNsABcgyI80Fyvew52X4LsgqBBrk3DIQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.de; spf=pass smtp.mailfrom=amazon.de; dkim=pass (2048-bit key) header.d=amazon.de header.i=@amazon.de header.b=tlghinag; arc=none smtp.client-ip=107.22.191.150
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=amazon.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=amazon.de header.i=@amazon.de header.b="Eev2BELo"
+	dkim=pass (2048-bit key) header.d=amazon.de header.i=@amazon.de header.b="tlghinag"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
   d=amazon.de; i=@amazon.de; q=dns/txt; s=amazoncorp2;
-  t=1775138243; x=1806674243;
+  t=1775138245; x=1806674245;
   h=from:to:cc:subject:date:message-id:references:
    in-reply-to:mime-version:content-transfer-encoding;
-  bh=yyrWPY5Ev1YqXQNI936Pi4tZz7GWIXsbdLr6GEho4RU=;
-  b=Eev2BELoZcSDLvIKBqGYG7n5LTYfqeSvYf36uoWCgDn62EBA+V0SeLYz
-   WHoIF8GDPBLpwO0AIPSkOqTWac1CvmEeH7npNYrBDEURdh5CB6ITwrD/N
-   IjG2E0FntkM645CgLsGwI1vVqW7dgAMrT+NEI5G9lyDcDUCmgkBR+UYVU
-   7gJPnKSVo/S1bfXS/yCkUfHIueOtL4YrJyXOv8GYQsivJF9tQkaKakrGI
-   fX6nIw1QB1hMZW8SFUVKWD2imbZSspGgY61Ohi190zAqBJY79tDl9qsUZ
-   E3ddWYWMAqlSASfaum0xK8cRk6eY9F9ROxY2yKBDHxEfFsZR6iLyDNzRI
+  bh=uP5c6JzjwZwnGCsqflyTr1RQBZf98/zHqoDjD1LVIe8=;
+  b=tlghinagVkaxpxVfZfAxysM9soN/XJ5BPs+HhdvtQM1zd9O65z+5bYki
+   0nWPnNYPBoupnADfdJ8AkGHMN4cvdtEGHiL9Otst9UM0YeLot7Lh01wSC
+   0bntyFUvbmSQblrs9USBk1DFRBC8ImWJf4Dyj0EbHGL4GwvQx+yZycgca
+   7L0R1YTjB+AfCxfrWPXYvoGuVmUokD+sAAyKIfOZ09rQwm2bU+uoNwOzC
+   SkFWyYg1qx/nkaMTSyLnlBACcH5eaBTko75NDyvimaeMGOei+7eS7mvPN
+   fF8Mw8HKvfOLWhBOQBfqUa6dWZaS6fxdcaBbrljNTqTyBS7ivNQMJFVGP
    w==;
-X-CSE-ConnectionGUID: cCuUAN+OQB2K6u5cvFpdWA==
-X-CSE-MsgGUID: CBI+7n0xSMyKsLNmLVjrTA==
+X-CSE-ConnectionGUID: NdtHOC2/QUC71siKA+aOaw==
+X-CSE-MsgGUID: rByC0p3/S0qrlGbYKmvOyw==
 X-IronPort-AV: E=Sophos;i="6.23,155,1770595200"; 
-   d="scan'208";a="15383184"
-Received: from ip-10-4-17-41.ec2.internal (HELO smtpout.naws.us-east-1.prod.farcaster.email.amazon.dev) ([10.4.17.41])
-  by internal-iad-out-006.esa.us-east-1.outbound.mail-perimeter.amazon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Apr 2026 13:57:19 +0000
-Received: from EX19MTAUEB002.ant.amazon.com [52.94.133.143:5141]
- by smtpin.naws.us-east-1.prod.farcaster.email.amazon.dev [10.0.39.103:2525] with esmtp (Farcaster)
- id 68d3bac5-7a3e-4487-90d4-822c0b579f99; Thu, 2 Apr 2026 13:57:19 +0000 (UTC)
-X-Farcaster-Flow-ID: 68d3bac5-7a3e-4487-90d4-822c0b579f99
-Received: from EX19D012UEC002.ant.amazon.com (10.252.135.254) by
+   d="scan'208";a="14926256"
+Received: from ip-10-4-22-235.ec2.internal (HELO smtpout.naws.us-east-1.prod.farcaster.email.amazon.dev) ([10.4.22.235])
+  by internal-iad-out-001.esa.us-east-1.outbound.mail-perimeter.amazon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Apr 2026 13:57:20 +0000
+Received: from EX19MTAUEB002.ant.amazon.com [52.94.133.143:22502]
+ by smtpin.naws.us-east-1.prod.farcaster.email.amazon.dev [10.0.17.255:2525] with esmtp (Farcaster)
+ id 31a3c434-4697-4e89-8051-95e7f182a31b; Thu, 2 Apr 2026 13:57:20 +0000 (UTC)
+X-Farcaster-Flow-ID: 31a3c434-4697-4e89-8051-95e7f182a31b
+Received: from EX19D012UEC004.ant.amazon.com (10.252.135.219) by
  EX19MTAUEB002.ant.amazon.com (10.252.135.47) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.37;
- Thu, 2 Apr 2026 13:57:18 +0000
+ Thu, 2 Apr 2026 13:57:20 +0000
 Received: from EX19D012UEC003.ant.amazon.com (10.252.135.160) by
- EX19D012UEC002.ant.amazon.com (10.252.135.254) with Microsoft SMTP Server
+ EX19D012UEC004.ant.amazon.com (10.252.135.219) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.37;
- Thu, 2 Apr 2026 13:57:18 +0000
+ Thu, 2 Apr 2026 13:57:20 +0000
 Received: from EX19D012UEC003.ant.amazon.com ([fe80::67ea:859:1e17:25a9]) by
  EX19D012UEC003.ant.amazon.com ([fe80::67ea:859:1e17:25a9%3]) with mapi id
- 15.02.2562.037; Thu, 2 Apr 2026 13:57:18 +0000
+ 15.02.2562.037; Thu, 2 Apr 2026 13:57:20 +0000
 From: "Heyne, Maximilian" <mheyne@amazon.de>
 To: "stable@vger.kernel.org" <stable@vger.kernel.org>
-CC: "Heyne, Maximilian" <mheyne@amazon.de>, Christoph Hellwig <hch@lst.de>,
-	Keith Busch <kbusch@kernel.org>, Sagi Grimberg <sagi@grimberg.me>, "Chaitanya
- Kulkarni" <kch@nvidia.com>, Jens Axboe <axboe@kernel.dk>, Hector Martin
+CC: "Heyne, Maximilian" <mheyne@amazon.de>, Keith Busch <kbusch@kernel.org>,
+	Casey Chen <cachen@purestorage.com>, Christoph Hellwig <hch@lst.de>, "Hannes
+ Reinecke" <hare@suse.de>, Ming Lei <ming.lei@redhat.com>, Chaitanya Kulkarni
+	<kch@nvidia.com>, Jens Axboe <axboe@kernel.dk>, Hector Martin
 	<marcan@marcan.st>, Sven Peter <sven@svenpeter.dev>, Alyssa Rosenzweig
-	<alyssa@rosenzweig.io>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin
- K. Petersen" <martin.petersen@oracle.com>, Alim Akhtar
-	<alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>, Bart Van Assche
-	<bvanassche@acm.org>, Sasha Levin <sashal@kernel.org>, Peter Wang
-	<peter.wang@mediatek.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Thomas Yen <thomasyen@google.com>, Brian Kao <powenkao@google.com>, "Sanjeev
- Yadav" <sanjeev.y@mediatek.com>, Wonkon Kim <wkon.kim@samsung.com>, "Seunghui
- Lee" <sh043.lee@samsung.com>, Ming Lei <ming.lei@redhat.com>, Hannes Reinecke
-	<hare@suse.de>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"asahi@lists.linux.dev" <asahi@lists.linux.dev>,
-	"linux-arm-kernel@lists.infradead.org"
+	<alyssa@rosenzweig.io>, Sagi Grimberg <sagi@grimberg.me>, "James E.J.
+ Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen"
+	<martin.petersen@oracle.com>, Alim Akhtar <alim.akhtar@samsung.com>, "Avri
+ Altman" <avri.altman@wdc.com>, Bart Van Assche <bvanassche@acm.org>, "Sasha
+ Levin" <sashal@kernel.org>, Peter Wang <peter.wang@mediatek.com>, "Greg
+ Kroah-Hartman" <gregkh@linuxfoundation.org>, Thomas Yen
+	<thomasyen@google.com>, Bean Huo <beanhuo@micron.com>, Seunghwan Baek
+	<sh8267.baek@samsung.com>, Brian Kao <powenkao@google.com>, Seunghui Lee
+	<sh043.lee@samsung.com>, Sanjeev Yadav <sanjeev.y@mediatek.com>, Wonkon Kim
+	<wkon.kim@samsung.com>, "linux-block@vger.kernel.org"
+	<linux-block@vger.kernel.org>, "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>, "asahi@lists.linux.dev"
+	<asahi@lists.linux.dev>, "linux-arm-kernel@lists.infradead.org"
 	<linux-arm-kernel@lists.infradead.org>, "linux-nvme@lists.infradead.org"
 	<linux-nvme@lists.infradead.org>, "linux-scsi@vger.kernel.org"
 	<linux-scsi@vger.kernel.org>
-Subject: [PATCH 6.1.y v2 4/6] nvme-pci: put the admin queue in
- nvme_dev_remove_admin
-Thread-Topic: [PATCH 6.1.y v2 4/6] nvme-pci: put the admin queue in
- nvme_dev_remove_admin
-Thread-Index: AQHcwqieIRJTxL3DvEmKk95Z3tjcyQ==
-Date: Thu, 2 Apr 2026 13:57:18 +0000
-Message-ID: <20260402-kemp-dime-b84f5127@mheyne-amazon>
+Subject: [PATCH 6.1.y v2 5/6] nvme: fix admin request_queue lifetime
+Thread-Topic: [PATCH 6.1.y v2 5/6] nvme: fix admin request_queue lifetime
+Thread-Index: AQHcwqifs3Nc8vl5p0q1jggWcESD2A==
+Date: Thu, 2 Apr 2026 13:57:19 +0000
+Message-ID: <20260402-sloth-visible-3c249ba7@mheyne-amazon>
 References: <20260402-moral-jockey-f072379b@mheyne-amazon>
 In-Reply-To: <20260402-moral-jockey-f072379b@mheyne-amazon>
 Accept-Language: en-US
@@ -93,50 +93,118 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 
-From: Christoph Hellwig <hch@lst.de>
+From: Keith Busch <kbusch@kernel.org>
 
-[ Upstream commit 96ef1be53663a9343dffcf106e2f1b59da4b8799 ]
+[ Upstream commit 03b3bcd319b3ab5182bc9aaa0421351572c78ac0]
 
-Once the controller is shutdown no one can access the admin queue.  Tear
-it down in nvme_dev_remove_admin, which matches the flow in the other
-drivers.
+The namespaces can access the controller's admin request_queue, and
+stale references on the namespaces may exist after tearing down the
+controller. Ensure the admin request_queue is active by moving the
+controller's 'put' to after all controller references have been released
+to ensure no one is can access the request_queue. This fixes a reported
+use-after-free bug:
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Keith Busch <kbusch@kernel.org>
-Reviewed-by: Sagi Grimberg <sagi@grimberg.me>
+  BUG: KASAN: slab-use-after-free in blk_queue_enter+0x41c/0x4a0
+  Read of size 8 at addr ffff88c0a53819f8 by task nvme/3287
+  CPU: 67 UID: 0 PID: 3287 Comm: nvme Tainted: G            E       6.13.2-=
+ga1582f1a031e #15
+  Tainted: [E]=3DUNSIGNED_MODULE
+  Hardware name: Jabil /EGS 2S MB1, BIOS 1.00 06/18/2025
+  Call Trace:
+   <TASK>
+   dump_stack_lvl+0x4f/0x60
+   print_report+0xc4/0x620
+   ? _raw_spin_lock_irqsave+0x70/0xb0
+   ? _raw_read_unlock_irqrestore+0x30/0x30
+   ? blk_queue_enter+0x41c/0x4a0
+   kasan_report+0xab/0xe0
+   ? blk_queue_enter+0x41c/0x4a0
+   blk_queue_enter+0x41c/0x4a0
+   ? __irq_work_queue_local+0x75/0x1d0
+   ? blk_queue_start_drain+0x70/0x70
+   ? irq_work_queue+0x18/0x20
+   ? vprintk_emit.part.0+0x1cc/0x350
+   ? wake_up_klogd_work_func+0x60/0x60
+   blk_mq_alloc_request+0x2b7/0x6b0
+   ? __blk_mq_alloc_requests+0x1060/0x1060
+   ? __switch_to+0x5b7/0x1060
+   nvme_submit_user_cmd+0xa9/0x330
+   nvme_user_cmd.isra.0+0x240/0x3f0
+   ? force_sigsegv+0xe0/0xe0
+   ? nvme_user_cmd64+0x400/0x400
+   ? vfs_fileattr_set+0x9b0/0x9b0
+   ? cgroup_update_frozen_flag+0x24/0x1c0
+   ? cgroup_leave_frozen+0x204/0x330
+   ? nvme_ioctl+0x7c/0x2c0
+   blkdev_ioctl+0x1a8/0x4d0
+   ? blkdev_common_ioctl+0x1930/0x1930
+   ? fdget+0x54/0x380
+   __x64_sys_ioctl+0x129/0x190
+   do_syscall_64+0x5b/0x160
+   entry_SYSCALL_64_after_hwframe+0x4b/0x53
+  RIP: 0033:0x7f765f703b0b
+  Code: ff ff ff 85 c0 79 9b 49 c7 c4 ff ff ff ff 5b 5d 4c 89 e0 41 5c c3 6=
+6 0f 1f 84 00 00 00 00 00 f3 0f 1e fa b8 10 00 00 00 0f 05 <48> 3d 01 f0 ff=
+ ff 73 01 c3 48 8b 0d dd 52 0f 00 f7 d8 64 89 01 48
+  RSP: 002b:00007ffe2cefe808 EFLAGS: 00000202 ORIG_RAX: 0000000000000010
+  RAX: ffffffffffffffda RBX: 00007ffe2cefe860 RCX: 00007f765f703b0b
+  RDX: 00007ffe2cefe860 RSI: 00000000c0484e41 RDI: 0000000000000003
+  RBP: 0000000000000000 R08: 0000000000000003 R09: 0000000000000000
+  R10: 00007f765f611d50 R11: 0000000000000202 R12: 0000000000000003
+  R13: 00000000c0484e41 R14: 0000000000000001 R15: 00007ffe2cefea60
+   </TASK>
+
+Reported-by: Casey Chen <cachen@purestorage.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Hannes Reinecke <hare@suse.de>
+Reviewed-by: Ming Lei <ming.lei@redhat.com>
 Reviewed-by: Chaitanya Kulkarni <kch@nvidia.com>
-Tested-by Gerd Bayer <gbayer@linxu.ibm.com>
-Stable-dep-of: 03b3bcd319b3 ("nvme: fix admin request_queue lifetime")
-[ Context change due to missing commit 94cc781f69f4 ("nvme: move OPAL
-  setup from PCIe to core")]
+Signed-off-by: Keith Busch <kbusch@kernel.org>
+[ Because we're missing commit 0da7feaa5913 ("nvme-pci: use the tagset
+  alloc/free helpers") we need to additionally remove the blk_put_queue
+  from nvme_dev_remove_admin in pci.c to properly fix the UAF ]
 Signed-off-by: Maximilian Heyne <mheyne@amazon.de>
 ---
- drivers/nvme/host/pci.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/nvme/host/core.c | 3 ++-
+ drivers/nvme/host/pci.c  | 1 -
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/nvme/host/core.c b/drivers/nvme/host/core.c
+index 044e1a9c099b3..f17318f6c82b0 100644
+--- a/drivers/nvme/host/core.c
++++ b/drivers/nvme/host/core.c
+@@ -5043,7 +5043,6 @@ EXPORT_SYMBOL_GPL(nvme_alloc_admin_tag_set);
+ void nvme_remove_admin_tag_set(struct nvme_ctrl *ctrl)
+ {
+ 	blk_mq_destroy_queue(ctrl->admin_q);
+-	blk_put_queue(ctrl->admin_q);
+ 	if (ctrl->ops->flags & NVME_F_FABRICS) {
+ 		blk_mq_destroy_queue(ctrl->fabrics_q);
+ 		blk_put_queue(ctrl->fabrics_q);
+@@ -5186,6 +5185,8 @@ static void nvme_free_ctrl(struct device *dev)
+ 		container_of(dev, struct nvme_ctrl, ctrl_device);
+ 	struct nvme_subsystem *subsys =3D ctrl->subsys;
+ =
+
++	if (ctrl->admin_q)
++		blk_put_queue(ctrl->admin_q);
+ 	if (!subsys || ctrl->instance !=3D subsys->instance)
+ 		ida_free(&nvme_instance_ida, ctrl->instance);
+ =
 
 diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
-index 13c0098939ec0..38732c0c28bbb 100644
+index 38732c0c28bbb..e8b7b0004086c 100644
 --- a/drivers/nvme/host/pci.c
 +++ b/drivers/nvme/host/pci.c
-@@ -1782,6 +1782,7 @@ static void nvme_dev_remove_admin(struct nvme_dev *de=
+@@ -1782,7 +1782,6 @@ static void nvme_dev_remove_admin(struct nvme_dev *de=
 v)
  		 */
  		nvme_start_admin_queue(&dev->ctrl);
  		blk_mq_destroy_queue(dev->ctrl.admin_q);
-+		blk_put_queue(dev->ctrl.admin_q);
+-		blk_put_queue(dev->ctrl.admin_q);
  		blk_mq_free_tag_set(&dev->admin_tagset);
  	}
  }
-@@ -2831,8 +2832,6 @@ static void nvme_pci_free_ctrl(struct nvme_ctrl *ctrl)
- =
-
- 	nvme_dbbuf_dma_free(dev);
- 	nvme_free_tagset(dev);
--	if (dev->ctrl.admin_q)
--		blk_put_queue(dev->ctrl.admin_q);
- 	free_opal_dev(dev->ctrl.opal_dev);
- 	mempool_destroy(dev->iod_mempool);
- 	put_device(dev->dev);
 -- =
 
 2.50.1
