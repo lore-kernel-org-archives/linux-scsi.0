@@ -1,167 +1,203 @@
-Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
+Received: from iad-out-010.esa.us-east-1.outbound.mail-perimeter.amazon.com (iad-out-010.esa.us-east-1.outbound.mail-perimeter.amazon.com [34.197.254.9])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 444073750A7;
-	Thu,  2 Apr 2026 09:09:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=193.142.43.55
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1D15F3E51D1;
+	Thu,  2 Apr 2026 12:32:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=34.197.254.9
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775120986; cv=none; b=ny8ZI4m5RBTZKvSFtG6kgGhEhlmUQLGslxe7FacW3tUwrF1msyKH0h0WTnyXojBxlbXOnL7vavGvIocI0L/z9PzK0fP+up0uifohS9I9SIWL9V4w0oiA2sPvuoiShWVP4g0Y0UcUBCWX7Tf10Kfqzm1r7vMENwOZkld7C3ngCZg=
+	t=1775133130; cv=none; b=gUAmpfk9F9uxAl1+/eRI1fe1DYgsRPBu6avXygg1fbGO+1rsBjwWueZl7c9bVaGL0xaySvUdX9C/w4Eb22xgelnyYn73QH/JJxVcNnA2DnBBLxDPlMW3CW6v2LmEtrHqq78gXdc1d0bFEq6FAszQ+xZzpQRXv4JiCqGVso5744c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775120986; c=relaxed/simple;
-	bh=TuGik8RXHnYMOBFzZzJ8Z1EDIzIDUfS6hJtG0TBgUfg=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=c4xWkYc3k5d9MnE855FKFcaFZbCZ/K3qCUCZrymcCWJa/QnCXhM5sD9M2hR9zmMVZv+SdLbnWDkR22xuAGc410Cu3CyT9kdfylWWQMvS9UYrJglp5tQcBO4zbWNCPjIkeiE7Rn4cbZdthVfUdvyu8VxPqYHmwxSpnmdRvJqGr90=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de; spf=pass smtp.mailfrom=linutronix.de; dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=odde0n62; dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=jWPcQeev; arc=none smtp.client-ip=193.142.43.55
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linutronix.de
+	s=arc-20240116; t=1775133130; c=relaxed/simple;
+	bh=aDYtmSvd0EEN3gRzBnxf/nlkESwF4ea02ohRXl6ElJc=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=KqC3rvJqECPr4IDyxfz0a9lkSGyq37WnYLdWOgxPBmpGXVprkUc580ff3E0O5nDCCyF/8Tn5+qfxZheXYSLXuL0H/lgSHU8IOFCHmmOw4dXXVxAIFnsT6s+7K5VaYH/nWIr6aVLsavLqQa2x+6qXd1AQ+lk43osHH1n7eFPGt14=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.de; spf=pass smtp.mailfrom=amazon.de; dkim=pass (2048-bit key) header.d=amazon.de header.i=@amazon.de header.b=TLJNze09; arc=none smtp.client-ip=34.197.254.9
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=amazon.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="odde0n62";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="jWPcQeev"
-Date: Thu, 2 Apr 2026 11:09:40 +0200
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020; t=1775120983;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=fwrBn0MM36ml3NMuCzWd/m89P37wcag8vmF/9UbXMcQ=;
-	b=odde0n62hjn9LZuq2B/dNwt9vUJZXCyajd+XWvOnXWmMaFGfXUE69bDf4leWPam241E+Uo
-	+t41Oorwn99laL8GawIlMBvyPAbCTIGh0H2AUKz00FIWozPRG019it7jkX8/Ire+WLTsc+
-	MGkmMskasKYO/5jh4zdm0Wc6bePiqfI/eNq2qyPIjv8eEvy984XIYnxDEKDs9rnmXk1o0w
-	pa2PYrA1InqHqmCkp/yzbOh8y1YPrIPL9sWcgxzyrS4uoVYs81UxfG3u+yPmEHirc/pDRo
-	jHZqmkz992BIVJYTKebOathyOPxUjscWc4RX4+zhXMHAcUsxLoHvYJo8zu+hMA==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020e; t=1775120983;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=fwrBn0MM36ml3NMuCzWd/m89P37wcag8vmF/9UbXMcQ=;
-	b=jWPcQeevqgP+QitjhXQzSifCfojusGMWduLoSkX24XZKzhrOV1MXsOOvAlCQ9Xy22O+9/K
-	7W5PFVNeWP3iKtBw==
-From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-To: Aaron Tomlin <atomlin@atomlin.com>
-Cc: axboe@kernel.dk, kbusch@kernel.org, hch@lst.de, sagi@grimberg.me,
-	mst@redhat.com, aacraid@microsemi.com,
-	James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com,
-	liyihang9@h-partners.com, kashyap.desai@broadcom.com,
-	sumit.saxena@broadcom.com, shivasharan.srikanteshwara@broadcom.com,
-	chandrakanth.patil@broadcom.com, sathya.prakash@broadcom.com,
-	sreekanth.reddy@broadcom.com, suganath-prabu.subramani@broadcom.com,
-	ranjan.kumar@broadcom.com, jinpu.wang@cloud.ionos.com,
-	tglx@kernel.org, mingo@redhat.com, peterz@infradead.org,
-	juri.lelli@redhat.com, vincent.guittot@linaro.org,
-	akpm@linux-foundation.org, maz@kernel.org, ruanjinjie@huawei.com,
-	yphbchou0911@gmail.com, wagi@kernel.org, frederic@kernel.org,
-	longman@redhat.com, chenridong@huawei.com, hare@suse.de,
-	kch@nvidia.com, ming.lei@redhat.com, steve@abita.co, sean@ashe.io,
-	chjohnst@gmail.com, neelx@suse.com, mproche@gmail.com,
-	linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-	virtualization@lists.linux.dev, linux-nvme@lists.infradead.org,
-	linux-scsi@vger.kernel.org, megaraidlinux.pdl@broadcom.com,
-	mpi3mr-linuxdrv.pdl@broadcom.com, MPT-FusionLinux.pdl@broadcom.com
-Subject: Re: [PATCH v9 09/13] isolation: Introduce io_queue isolcpus type
-Message-ID: <20260402090940.5j0WmVX_@linutronix.de>
-References: <20260330221047.630206-1-atomlin@atomlin.com>
- <20260330221047.630206-10-atomlin@atomlin.com>
- <20260401124947.-d4D5Cr-@linutronix.de>
- <c7phvlvohdn2ksc2jymxk5foolwlqaqq2jzcdv7oic4uzomh3j@yjimbwcnnst3>
+	dkim=pass (2048-bit key) header.d=amazon.de header.i=@amazon.de header.b="TLJNze09"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+  d=amazon.de; i=@amazon.de; q=dns/txt; s=amazoncorp2;
+  t=1775133125; x=1806669125;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-id:mime-version:
+   content-transfer-encoding;
+  bh=6w3HUVHSmjm01LKzbzqMd/c0WGfyb9c7ge6p63vHYQI=;
+  b=TLJNze09s90omXNwh/EVneUqNcRFVos12lrBVwuckpj9mjeoIw8krJk5
+   0ggvx4lKPUQ5Q9HDmfTRZpfkfAvpzX2r8rDa78d85sZsjASqwS1pCvYoE
+   SBXeygTpvn2Qbqe1NCC30sBzasFu4OKifydxG+NuwiXsVT2MLDmvTZD08
+   4xBKFyoYPsLjnwHwo289oFCga7x65r3Fh6r02wkgIU35FOfhFQipxvnjQ
+   wmsQZdB4f30IKsOyAnpdw2Y9tZs6XTWbImWxuhOF8zrRdaUVTpv5P31LM
+   khAR66KtXQiVA/KkSfAolQHHgqW3G24AZYDak4oAX6nqdnw1V/ctpoO/t
+   g==;
+X-CSE-ConnectionGUID: DdekA+7kT0eMkTYJA1rRng==
+X-CSE-MsgGUID: /6glz+8BSwe83yXe9ZoY8A==
+X-IronPort-AV: E=Sophos;i="6.23,155,1770595200"; 
+   d="scan'208";a="15095409"
+Received: from ip-10-4-10-75.ec2.internal (HELO smtpout.naws.us-east-1.prod.farcaster.email.amazon.dev) ([10.4.10.75])
+  by internal-iad-out-010.esa.us-east-1.outbound.mail-perimeter.amazon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Apr 2026 12:32:00 +0000
+Received: from EX19MTAUEC002.ant.amazon.com [72.21.196.66:23526]
+ by smtpin.naws.us-east-1.prod.farcaster.email.amazon.dev [10.0.8.197:2525] with esmtp (Farcaster)
+ id aa9e9018-8b88-44d4-9916-7172c14268fc; Thu, 2 Apr 2026 12:32:00 +0000 (UTC)
+X-Farcaster-Flow-ID: aa9e9018-8b88-44d4-9916-7172c14268fc
+Received: from EX19D012UEC003.ant.amazon.com (10.252.135.160) by
+ EX19MTAUEC002.ant.amazon.com (10.252.135.253) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.37;
+ Thu, 2 Apr 2026 12:32:00 +0000
+Received: from EX19D012UEC003.ant.amazon.com (10.252.135.160) by
+ EX19D012UEC003.ant.amazon.com (10.252.135.160) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.37;
+ Thu, 2 Apr 2026 12:31:59 +0000
+Received: from EX19D012UEC003.ant.amazon.com ([fe80::67ea:859:1e17:25a9]) by
+ EX19D012UEC003.ant.amazon.com ([fe80::67ea:859:1e17:25a9%3]) with mapi id
+ 15.02.2562.037; Thu, 2 Apr 2026 12:31:59 +0000
+From: "Heyne, Maximilian" <mheyne@amazon.de>
+To: Fedor Pchelkin <pchelkin@ispras.ru>
+CC: Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>,
+	"stable@vger.kernel.org" <stable@vger.kernel.org>, Sven Peter
+	<sven@svenpeter.dev>, Chaitanya Kulkarni <kch@nvidia.com>, Keith Busch
+	<kbusch@kernel.org>, Jens Axboe <axboe@kernel.dk>, Hector Martin
+	<marcan@marcan.st>, Alyssa Rosenzweig <alyssa@rosenzweig.io>, "James E.J.
+ Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen"
+	<martin.petersen@oracle.com>, Alim Akhtar <alim.akhtar@samsung.com>, "Avri
+ Altman" <avri.altman@wdc.com>, Bart Van Assche <bvanassche@acm.org>, "Sasha
+ Levin" <sashal@kernel.org>, Peter Wang <peter.wang@mediatek.com>, "Greg
+ Kroah-Hartman" <gregkh@linuxfoundation.org>, Seunghui Lee
+	<sh043.lee@samsung.com>, Sanjeev Yadav <sanjeev.y@mediatek.com>, Wonkon Kim
+	<wkon.kim@samsung.com>, Brian Kao <powenkao@google.com>, Hannes Reinecke
+	<hare@suse.de>, Ming Lei <ming.lei@redhat.com>, "linux-block@vger.kernel.org"
+	<linux-block@vger.kernel.org>, "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>, "asahi@lists.linux.dev"
+	<asahi@lists.linux.dev>, "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>, "linux-nvme@lists.infradead.org"
+	<linux-nvme@lists.infradead.org>, "linux-scsi@vger.kernel.org"
+	<linux-scsi@vger.kernel.org>
+Subject: Re: [PATCH 6.1.y 5/8] nvme-apple: remove an extra queue reference
+Thread-Topic: [PATCH 6.1.y 5/8] nvme-apple: remove an extra queue reference
+Thread-Index: AQHcwpyzTCv4ZXIhp0SsQfFW9ZSeHw==
+Date: Thu, 2 Apr 2026 12:31:59 +0000
+Message-ID: <20260402-anti-cuba-1ea02cea@mheyne-amazon>
+References: <20260401-pliny-ashley-ff03a0b6@mheyne-amazon>
+ <20260401232116-53765a086f3855a30962fb81-pchelkin@ispras>
+In-Reply-To: <20260401232116-53765a086f3855a30962fb81-pchelkin@ispras>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <772100EB31401D4090226323D02A6503@amazon.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <c7phvlvohdn2ksc2jymxk5foolwlqaqq2jzcdv7oic4uzomh3j@yjimbwcnnst3>
+Content-Transfer-Encoding: quoted-printable
 
-On 2026-04-01 16:58:22 [-0400], Aaron Tomlin wrote:
-> Hi Sebastian,
-Hi,
+On Wed, Apr 01, 2026 at 11:45:57PM +0300, Fedor Pchelkin wrote:
+> Hello,
+> =
 
-> Thank you for taking the time to document the "managed_irq" behaviour; it
-> is immensely helpful. You raise a highly pertinent point regarding the
-> potential proliferation of "isolcpus=" flags. It is certainly a situation
-> that must be managed carefully to prevent every subsystem from demanding
-> its own bit.
-> 
-> To clarify the reasoning behind introducing "io_queue" rather than strictly
-> relying on managed_irq:
-> 
-> The managed_irq flag belongs firmly to the interrupt subsystem. It dictates
-> whether a CPU is eligible to receive hardware interrupts whose affinity is
-> managed by the kernel. Whilst many modern block drivers use managed IRQs,
-> the block layer multi-queue mapping encompasses far more than just
-> interrupt routing. It maps logical queues to CPUs to handle I/O submission,
-> software queues, and crucially, poll queues, which do not utilise
-> interrupts at all. Furthermore, there are specific drivers that do not use
-> the managed IRQ infrastructure but still rely on the block layer for queue
-> distribution.
+> "Heyne, Maximilian" <mheyne@amazon.de> wrote:
+> > From: Christoph Hellwig <hch@lst.de>
+> > =
 
-Could you tell block which queue maps to which CPU at /sys/block/$$/mq/
-level? Then you have one queue going to one CPU.
-Then the drive could request one or more interrupts managed or not. For
-managed you could specify a CPU mask which you desire to occupy.
-You have the case where
-- you have more queues than CPUs
-  - use all of them
-  - use less
-- less queues than CPUs
-  - mapped a queue to more than once CPU in case it goes down or becomes
-    not available
-  - mapped to one CPU
+> > [ Upstream commit 941f7298c70c7668416e7845fa76eb72c07d966b ]
+> > =
 
-Ideally you solve this at one level so that the device(s) can request
-less queues than CPUs if told so without patching each and every driver.
+> > Now that blk_mq_destroy_queue does not release the queue reference, the=
+re
+> > is no need for a second admin queue reference to be held by the
+> > apple_nvme structure.
+> =
 
-This should give you the freedom to isolate CPUs, decide at boot time
-which CPUs get I/O queues assigned. At run time you can tell which
-queues go to which CPUs. If you shutdown a queue, the interrupt remains
-but does not get any I/O requests assigned so no problem. If the CPU
-goes down, same thing.
+> This patch is probably buggy in upstream.  It removes extra reference
+> ->get, but doesn't remove the corresponding ->put which is located
+> inside apple_nvme_free_ctrl().
 
-I am trying to come up with a design here which I haven't found so far.
-But I might be late to the party and everyone else is fully aware.
+Now I'm seeing this as well. Has the same problem as the pci driver in
+6.1 where blk_put_queue is called from nvme_free_ctrl() and again from
+apple_nvme_free_ctrl(). Thank you for catching this. I don't have the
+hardware to test this.
 
-> If managed_irq were solely relied upon, the IRQ subsystem would
-> successfully keep hardware interrupts off the isolated CPUs, but the block
+Are you going to send a fix upstream? It's looks to be broken on master,
+too.
 
-The managed_irqs can't be influence by userland. The CPUs are auto
-distributed.
+> =
 
-> layer would still blindly map polling queues or non-managed queues to those
-> same isolated CPUs. This would force isolated CPUs to process I/O
-> submissions or handle polling tasks, thereby breaking the strict isolation.
-> 
-> Regarding the point about the networking subsystem, it is a very valid
-> comparison. If the networking layer wishes to respect isolcpus in the
-> future, adding a net flag would indeed exacerbate the bit proliferation.
+> I'm reporting here currently just for the heads up - was looking at the
+> same nvme regression problem at 6.1.y, found this thread, and the
+> nvme-apple changes appeared suspicious.
+> =
 
-Networking could also have different cases like adding a RX filter and
-having HW putting packet based on it in a dedicated queue. But also in
-this case I would like to have the freedome to decide which isolated
-CPUs should receive interrupts/ traffic and which don't.
+> nvme-apple patch is not required to fix the regression (this also holds
+> true for [PATCH 6.1.y 3/8] scsi: remove an extra queue reference).  Maybe
+> they shouldn't go to stable.
 
-> For the present time, retaining io_queue seems the most prudent approach to
-> ensure that block queue mapping remains semantically distinct from
-> interrupt delivery. This provides an immediate and clean architectural
-> boundary. However, if the consensus amongst the maintainers suggests that
-> this is too granular, alternative approaches could certainly be considered
-> for the future. For instance, a broader, more generic flag could be
-> introduced to encompass both block and future networking queue mappings.
-> Alternatively, if semantic conflation is deemed acceptable, the existing
-> managed_irq housekeeping mask could simply be overloaded within the block
-> layer to restrict all queue mappings.
-> 
-> Keeping the current separation appears to be the cleanest solution for this
-> series, but your thoughts, and those of the wider community, on potentially
-> migrating to a consolidated generic flag in the future would be very much
-> welcomed.
+I think, I'll send a v2 of the patch set without these 2 patches. It's
+probably easier for Greg to apply.
 
-I just don't like introducing yet another boot argument, making it a
-boot constraint while in my naive view this could be managed at some
-degree via sysfs as suggested above.
+> =
 
-> 
-> Kind regards,
+> That said, the other part of the backport series FWIW looks good to me,
+> and I've also verified it resolves the 6.1.y regression.
 
-Sebastian
+You may leave a Tested-by if you want ;-)
+
+> =
+
+> Thanks.
+> =
+
+> > =
+
+> > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> > Reviewed-by: Sagi Grimberg <sagi@grimberg.me>
+> > Reviewed-by: Sven Peter <sven@svenpeter.dev>
+> > Reviewed-by: Chaitanya Kulkarni <kch@nvidia.com>
+> > Reviewed-by: Keith Busch <kbusch@kernel.org>
+> > Link: https://lore.kernel.org/r/20221018135720.670094-5-hch@lst.de
+> > Signed-off-by: Jens Axboe <axboe@kernel.dk>
+> > Signed-off-by: Maximilian Heyne <mheyne@amazon.de>
+> > ---
+> >  drivers/nvme/host/apple.c | 9 ---------
+> >  1 file changed, 9 deletions(-)
+> > =
+
+> > diff --git a/drivers/nvme/host/apple.c b/drivers/nvme/host/apple.c
+> > index c5fc293c22123..c84ebfcfdeb88 100644
+> > --- a/drivers/nvme/host/apple.c
+> > +++ b/drivers/nvme/host/apple.c
+> > @@ -1507,15 +1507,6 @@ static int apple_nvme_probe(struct platform_devi=
+ce *pdev)
+> >  		goto put_dev;
+> >  	}
+> >  =
+
+> > -	if (!blk_get_queue(anv->ctrl.admin_q)) {
+> > -		nvme_start_admin_queue(&anv->ctrl);
+> > -		blk_mq_destroy_queue(anv->ctrl.admin_q);
+> > -		blk_put_queue(anv->ctrl.admin_q);
+> > -		anv->ctrl.admin_q =3D NULL;
+> > -		ret =3D -ENODEV;
+> > -		goto put_dev;
+> > -	}
+> > -
+> >  	nvme_reset_ctrl(&anv->ctrl);
+> >  	async_schedule(apple_nvme_async_probe, anv);
+> >  =
+
+> > -- =
+
+> > 2.50.1
+
+
+
+Amazon Web Services Development Center Germany GmbH
+Tamara-Danz-Str. 13
+10243 Berlin
+Geschaeftsfuehrung: Christof Hellmis, Andreas Stieger
+Eingetragen am Amtsgericht Charlottenburg unter HRB 257764 B
+Sitz: Berlin
+Ust-ID: DE 365 538 597
+
