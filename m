@@ -1,84 +1,89 @@
-Received: from mail-pj1-f99.google.com (mail-pj1-f99.google.com [209.85.216.99])
+Received: from mail-qt1-f225.google.com (mail-qt1-f225.google.com [209.85.160.225])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 03B9226C3A2
-	for <linux-scsi@vger.kernel.org>; Thu,  2 Apr 2026 07:17:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.99
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A56D2362143
+	for <linux-scsi@vger.kernel.org>; Thu,  2 Apr 2026 07:17:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.225
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775114236; cv=none; b=pIIeT7bu6y/Ncm0+zDSlqsWV3TxN9dVie4g4fx7KMzG0E5xf0slRRDL4KfTYA86EJza28HaboEZxDxXlMkPKDMTnaKY9LVxMnFMYSRNPXWCmD8TOzST41j4WRruRg+ALFrHEjiUWdjCgbsDMMSMIDkq6CkgMtz67U4CaqlDyKPk=
+	t=1775114249; cv=none; b=gbgzrMkfblNIfq3lcP4B7VAdLvcdYGqbBp+xp5Hyzdo4ZiIL6jTZkQwiuYC22v9SLzSeR/o4yE7oHyVJyOjarEiA+6iDaUyXQokzSLj0agir2L0faqIO07U10TSpWMlG4+ON9T/NyC/QOggbPItv0nAg4VYUHwZdCim/5FqIns0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775114236; c=relaxed/simple;
-	bh=SlVs8jIJZ4AW7Wxo9yxSZjpREVYQTXUK4KKxeJVHWVo=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=c7KZHHszzb9FXIFXtT6MVlAX+M0X7ftSNIYRf6JaIfbGPJJRvTvUg/oUauwNoIH4vk21lxOtXlxMKuzNZrhH2JJMA11H+5RtE9vlFVczZ7t8rXG3Io6BEfSC4iU/7XHVSAmYIHlSipqQ02AF4/AW+7aunfuzrBF4a5KEsvl6iFw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=Tx5JVxYi; arc=none smtp.client-ip=209.85.216.99
+	s=arc-20240116; t=1775114249; c=relaxed/simple;
+	bh=2R2GMZ73Yol7gtDOUlrMhMWsyLM7lFI5nI31CwQKusQ=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=PF8XX0FPpUjIT4rLQotAkDPIPw0QAjNXKboqPakYzBXNcjo/lyoWLKnbc7V48leJdcBy/C5jGNTLRF94cJFiWcfrJEtgZlNaXYsuKnLpkbRWfztiqisNkHDi8o5YPmba+7IUYWjoO5j8YyJcC2jVGNmOkOxeYAIAZoecb7Ct6is=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=iFIL3vyT; arc=none smtp.client-ip=209.85.160.225
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="Tx5JVxYi"
-Received: by mail-pj1-f99.google.com with SMTP id 98e67ed59e1d1-3567e2b4159so348854a91.0
-        for <linux-scsi@vger.kernel.org>; Thu, 02 Apr 2026 00:17:14 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="iFIL3vyT"
+Received: by mail-qt1-f225.google.com with SMTP id d75a77b69052e-50b3488fb31so25958451cf.1
+        for <linux-scsi@vger.kernel.org>; Thu, 02 Apr 2026 00:17:28 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1775114234; x=1775719034;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:dkim-signature:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=X1nvpVvk17JfQ+DD3OmsLO1BM+aJTjprL5lAoSdl9sw=;
-        b=MOp3Vd3PC2ZVjWlwCzJbUEvXdSlK88+PfQqZjj6wxKbCilAg6M9DLFUjA5jCnO6esW
-         dOxeRWtKrCLuyFBBVU/LRQ6/uJspUOGNtL8pXQiOCZN4AS/R4JCfKzTqWpNv5Hz8WLnH
-         KhyflHk8SFOBktv9rO6VOpVHoa0aG8K9jstdlOP1AS7SeC4OEnzZuw+qUosBJTdhrxOH
-         JSMFdykOBYUnD7AhHXDlDGGv0xfkn9zRQ8bZa2mRooOmjzFRMosWP1pHt5RSuCBIfC64
-         2PSfmybPAP+KF0nNi6uIhYecuLMJab3rRGN5xi1vQo6juNUNhO3eOcn3PmZQ7eiPilPP
-         fMig==
-X-Gm-Message-State: AOJu0YzoN+kzc9zlPNLiBRNI3rrL2G0JfziCZXH1Pt/D25pqBZlTBQd6
-	qXGqNFGihpAZvTy8lv6QOomiqwDPP1KnnLxyuYw66MUmyJ7WTEgTQ25u/zdXsgpjZIWkie1IdVD
-	yS7UZVuaEJATBTXGTs6PjzyNqHij4o4pbaumc4cbSkaIOn75T5ucsr3XaXNSiyCKYyhnQARvNwC
-	xz4FjbKv/2pKjamqWGI0Y3t3g4fxHzcQuc6cCMHS7kniLdvHyQebqC+m9bboEBayKU842HY0V2B
-	UW7XbDZhE4Fzt9U1n8=
-X-Gm-Gg: AeBDievWIbz1oe9zqRgwZXubBJf7CzdanbFoMcojZ7d8tYNiKfdFV/Mr11UwPvDoScM
-	EpPsDpk37NQ1pAex8NdXFLTsAp9xIEqlXoRRoOkbycsgGzz0vxKrGkRSMLRq5a9onClb15WrDN7
-	Fw4FLuH8g18jpOv/vOZsnab/jCQZ2x5SCoXSi/MX8UIsjcKKEzPuTqYwxo3mnZguzzb1u5S/3yV
-	fQAzbjIEfh4SgOigxWXeYilDIx2275bULI7u6xDIDSPI0y7ewP1CpI899lOexRR+9/y3oOAsSR7
-	gZr732yxYfNPDC1lEyfuy5dh59ROYTVL1zOljV3wThYwBCFAhHpg1/ntRo0kVZU9V61fE/QyVKE
-	AKxYSzbARWhD+sNGBQrd0Zbj8JYV5cn/rUjZrOWJtoN1KAyqp0y6pVFr7txpmOYhcXfzsavHxEp
-	/nRCilgoirGQZBA5/oFohivaA4AyGPCJhJl621sQG8fSg6kmqR8qT6F8dvcbk=
-X-Received: by 2002:a17:90b:1d02:b0:35b:9896:cbcd with SMTP id 98e67ed59e1d1-35dc6f66f0amr5758872a91.27.1775114234322;
-        Thu, 02 Apr 2026 00:17:14 -0700 (PDT)
-Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-118.dlp.protect.broadcom.com. [144.49.247.118])
-        by smtp-relay.gmail.com with ESMTPS id 98e67ed59e1d1-35dd36a3524sm169344a91.5.2026.04.02.00.17.13
+        d=1e100.net; s=20251104; t=1775114247; x=1775719047;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:dkim-signature:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=goIi9ZqVO3x7phHT0vr2LplFt4y4whfau7BpPAyCJ1w=;
+        b=mt8vWJH9emqK2JNcejmCkyrLbqjVmWauFEWz/aYdHueflmHztvzmIq7CxxJygbJal9
+         j5HU2LocRa0ktnXQiyQ9h395mSvsr1nb0yEUsUtOd3bkTeIYeJcG+2Se8CA0H6hsy+HJ
+         Rghqd1DfN7IW9jIUb1wmAs5o4ivZ4eaTQku6dWiYj5Mqa/6wwaQz7XpvrmBlWx2y80zG
+         5tUD0VGhL7d0D17rY6T1wMgF17pyy6RIkoiEjo/cSPiGC21zS3cOPjVW7RJJfV7THHrb
+         fPTtEwXWvUtGhqgzX3YwNUhPajQWfjM7AU8yI0nLlE1TKnEJqMsIkhM7oxdcvu4bmOE9
+         CSXQ==
+X-Gm-Message-State: AOJu0Yz4mKdnppGOK09VFJLP0WofCNyHkc7fTQdkVon3pKRqDxFz7PvC
+	nmGSHXP1rFfDp8vmFDh6TSY/3TEu394kqsH8vz2QtZ5ibrwoR+ee6aYOA28vkHb8uupcPdKpkVj
+	SRp6vH85ZH1oKULJswlxIR3I9Z5URddguWPxcEDJniy703oMTVUVC7Q3FZ78/c/rRm6mvXOjVFE
+	UzACP9TWDHg/BBIlF3vzVmaCtittdEYuH7sefYj9I6A6lZulYfp6VtOW9bP4CNlEKDKeC5Vdt6Y
+	Gr0zdtl/nPIrxO+VFY=
+X-Gm-Gg: ATEYQzwWquXQiYffHaA/K6gUbALIRTQPYGcKHirSSsdfmITt2EA36wlzAVph0YNMzSK
+	errNeesQlhCQZOtMR2h0726eVydwgCNqg9r1NiiDfgVTEA1ImYXm8j6tjKViMojda5JwT1VdaCN
+	nL0dmMZRUferzR7CYw14yXa+YBcIk0BZWa5uVaDxdGchZP+csP8RcFfBpoc/uqsMWoD/eODrSwq
+	enj3QngkY1ogQ9otVlyX0KVpj4Q0MWD9vOjeuZr1NRHH7Xcb5WIRwbQ4n6dRSy+gomwtTmveYFR
+	grxOfx8X+2xpQ1HoydqyrFC2ZnnGFilatTKprRvFjLUWMmfYrDQ3IYXYd0qFTZmkUDXI9VXQJcE
+	wbtf+oemfQeO4NqO1deJWX/jBQ6JsG14VuIbc6sh5E2yYZjZ13siHTBMrbHH/DmO5W4Zxw9Y95s
+	dfkY6EytlzI0/ZXzIAokdBb6dsDofnnr1quH03cKyY+Zb74R0Ug13PevWG
+X-Received: by 2002:a05:622a:835b:b0:50b:3128:9916 with SMTP id d75a77b69052e-50d4fac4c65mr11716981cf.18.1775114247500;
+        Thu, 02 Apr 2026 00:17:27 -0700 (PDT)
+Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-15.dlp.protect.broadcom.com. [144.49.247.15])
+        by smtp-relay.gmail.com with ESMTPS id d75a77b69052e-50d4aec58d0sm1461271cf.0.2026.04.02.00.17.27
         for <linux-scsi@vger.kernel.org>
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 02 Apr 2026 00:17:14 -0700 (PDT)
+        Thu, 02 Apr 2026 00:17:27 -0700 (PDT)
 X-Relaying-Domain: broadcom.com
 X-CFilter-Loop: Reflected
-Received: by mail-pl1-f200.google.com with SMTP id d9443c01a7336-2b0be75dfd4so6356135ad.1
-        for <linux-scsi@vger.kernel.org>; Thu, 02 Apr 2026 00:17:13 -0700 (PDT)
+Received: by mail-pl1-f200.google.com with SMTP id d9443c01a7336-2b2489af602so5923295ad.1
+        for <linux-scsi@vger.kernel.org>; Thu, 02 Apr 2026 00:17:26 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1775114232; x=1775719032; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=X1nvpVvk17JfQ+DD3OmsLO1BM+aJTjprL5lAoSdl9sw=;
-        b=Tx5JVxYixENut1zM61o1baMJ4WDWPqMSUKRqmZAtw03xbVMNSlH1ZlBNlKAg7OSAx9
-         Oux+let+Ubiw2unSTisLOgun40T9lYF5wlI9fBkU7lx5wlXXrLFqrjI6NIfA9rdg2iQP
-         jPJkVMvWaLcSFxh/5lfqauuDXhEpXGq5kOw3s=
-X-Received: by 2002:a17:903:384f:b0:2b2:57ee:c04e with SMTP id d9443c01a7336-2b269add3fcmr67138325ad.18.1775114232144;
-        Thu, 02 Apr 2026 00:17:12 -0700 (PDT)
-X-Received: by 2002:a17:903:384f:b0:2b2:57ee:c04e with SMTP id d9443c01a7336-2b269add3fcmr67138025ad.18.1775114231667;
-        Thu, 02 Apr 2026 00:17:11 -0700 (PDT)
+        d=broadcom.com; s=google; t=1775114246; x=1775719046; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=goIi9ZqVO3x7phHT0vr2LplFt4y4whfau7BpPAyCJ1w=;
+        b=iFIL3vyTUGzbnnVslATYFihJ8ZiA+7vr9plfccVTKwUJW7GkQx9auV6fSwNsjAhobk
+         Rq9b6PCD2ERrtwPdpf12JUnANe3oPi05qgcURpRHyClkY5CeMYb6Hkts7w15PHE6D07+
+         fOjrnfIc2Fwu1QcUScPBuxuhPWqfNQtbvr1uQ=
+X-Received: by 2002:a17:903:1b4e:b0:2b0:51be:f9d7 with SMTP id d9443c01a7336-2b277e2cdb1mr13499535ad.18.1775114245732;
+        Thu, 02 Apr 2026 00:17:25 -0700 (PDT)
+X-Received: by 2002:a17:903:1b4e:b0:2b0:51be:f9d7 with SMTP id d9443c01a7336-2b277e2cdb1mr13499295ad.18.1775114245334;
+        Thu, 02 Apr 2026 00:17:25 -0700 (PDT)
 Received: from sumit_ws.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2b27477c54bsm24612825ad.27.2026.04.02.00.17.08
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2b27477c54bsm24612825ad.27.2026.04.02.00.17.22
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 02 Apr 2026 00:17:10 -0700 (PDT)
+        Thu, 02 Apr 2026 00:17:24 -0700 (PDT)
 From: Sumit Saxena <sumit.saxena@broadcom.com>
 To: martin.petersen@oracle.com,
 	axboe@kernel.dk
 Cc: linux-scsi@vger.kernel.org,
 	linux-block@vger.kernel.org,
 	mpi3mr-linuxdrv.pdl@broadcom.com,
+	James Rizzo <james.rizzo@broadcom.com>,
 	Sumit Saxena <sumit.saxena@broadcom.com>
-Subject: [PATCH 0/3] scsi/block: NUMA-local allocations and false-sharing fixes
-Date: Thu,  2 Apr 2026 13:16:34 +0530
-Message-ID: <20260402074637.92417-1-sumit.saxena@broadcom.com>
+Subject: [PATCH 1/3] scsi: use NUMA-local allocation for sdev and starget
+Date: Thu,  2 Apr 2026 13:16:35 +0530
+Message-ID: <20260402074637.92417-2-sumit.saxena@broadcom.com>
 X-Mailer: git-send-email 2.43.7
+In-Reply-To: <20260402074637.92417-1-sumit.saxena@broadcom.com>
+References: <20260402074637.92417-1-sumit.saxena@broadcom.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -88,59 +93,54 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
 
-This series contains three performance improvements targeting the SCSI
-and block layers on multi-socket NUMA systems.
+From: James Rizzo <james.rizzo@broadcom.com>
 
-On multi-socket NUMA systems we observed extreme I/O throughput variance
-of 50-60% between runs.  This series identifies and fixes two root causes:
-cross-node memory accesses due to NUMA-unaware allocations in the scan
-path, and false sharing between hot atomic counters in
-struct request_queue and struct scsi_device.
+Allocate scsi_device and scsi_target on the same NUMA node as the host
+adapter's DMA device to improve memory locality and reduce cross-node
+traffic.
 
-The first patch makes the SCSI scan path allocate scsi_device and
-scsi_target on the NUMA node of the host adapter.
+Signed-off-by: James Rizzo <james.rizzo@broadcom.com>
+Signed-off-by: Sumit Saxena <sumit.saxena@broadcom.com>
+---
+ drivers/scsi/scsi_scan.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
-The second patch addresses false sharing in struct request_queue.
-This patch touches include/linux/blkdev.h, so needs review from
-linux-block, an Acked-by from the block maintainer is requested before
-merging via the SCSI tree.
-
-The third patch addresses a false-sharing problem in struct
-scsi_device.
-
-Performance notes:
-
-Tested on a dual-socket NUMA system with an mpi3mr HBA, running fio
-(random read, 4K, QD 64, 16 jobs, 60s, direct I/O). 
-IOPS figures are in KIOPS (thousands of IOPS):
-
-  Configuration                    Avg KIOPS   Range (KIOPS)   Spread
-  Baseline                         6,255       4,200 - 6,700   ~37%
-  Baseline + patches 2-3 (align)   6,653       6,000 - 7,000   ~15%
-  Baseline + all patches (1-3)     6,649       6,400 - 7,000    ~9%
-
-Key findings:
-  - Cacheline alignment patches (2-3) raise average IOPS by ~6% and
-    cut throughput spread from ~37% to ~15%.
-  - Adding the NUMA allocation patch (1) further tightens the spread
-    to ~9% with negligible impact on average throughput.
-  - The combined effect reduces the observed 50-60% run-to-run variance
-    to under 10%, significantly improving workload predictability.
-
-No functional regressions observed.
-
-This patch series is based on Martin's for-next tree.
-
-James Rizzo (3):
-  scsi: use NUMA-local allocation for sdev and starget
-  block: align nr_active_requests_shared_tags to avoid cache line
-    contention
-  scsi: align scsi_device iodone_cnt to avoid cache line contention
-
- drivers/scsi/scsi_scan.c   | 9 ++++++---
- include/linux/blkdev.h     | 4 +++-
- include/scsi/scsi_device.h | 4 +++-
- 3 files changed, 12 insertions(+), 5 deletions(-)
-
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index efcaf85ff699..b98c5b7d8018 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -34,6 +34,7 @@
+ #include <linux/kthread.h>
+ #include <linux/spinlock.h>
+ #include <linux/async.h>
++#include <linux/topology.h>
+ #include <linux/slab.h>
+ #include <linux/unaligned.h>
+ 
+@@ -286,9 +287,10 @@ static struct scsi_device *scsi_alloc_sdev(struct scsi_target *starget,
+ 	int display_failure_msg = 1, ret;
+ 	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
+ 	struct queue_limits lim;
++	int node = dev_to_node(shost->dma_dev);
+ 
+-	sdev = kzalloc(sizeof(*sdev) + shost->transportt->device_size,
+-		       GFP_KERNEL);
++	sdev = kzalloc_node(sizeof(*sdev) + shost->transportt->device_size,
++		       GFP_KERNEL, node);
+ 	if (!sdev)
+ 		goto out;
+ 
+@@ -504,8 +506,9 @@ static struct scsi_target *scsi_alloc_target(struct device *parent,
+ 	struct scsi_target *starget;
+ 	struct scsi_target *found_target;
+ 	int error, ref_got;
++	int node = dev_to_node(shost->dma_dev);
+ 
+-	starget = kzalloc(size, GFP_KERNEL);
++	starget = kzalloc_node(size, GFP_KERNEL, node);
+ 	if (!starget) {
+ 		printk(KERN_ERR "%s: allocation failure\n", __func__);
+ 		return NULL;
 -- 
 2.43.7
+
