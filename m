@@ -1,179 +1,143 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D0EF7370D75
-	for <linux-scsi@vger.kernel.org>; Thu,  2 Apr 2026 18:04:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE26D386C1C
+	for <linux-scsi@vger.kernel.org>; Thu,  2 Apr 2026 23:25:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775153055; cv=none; b=josAXeSZ6MI3P6sScZ1rbQ5MggU0N7jL6X5V6d5UT5dp8RMZEPgRn9QKX47QC5OBNRnK9Wds4l8w23HmcbOJWAGelzJM+Px2g5rNK7EfASYXTekHxp6kQHzQQ+/t3b+pYGyloWE/Vd6O8sDmOh6AmTOkhDc0i9M6nrprpY7Kzns=
+	t=1775172308; cv=none; b=k71z5e1GMa6F7SmtnPNLSxrb4fZopwpczqpD4rxFyBD0f2ryYpeIsXCgwefgN+awrA3IQr4ER/WlUOPqkf8sO7GwEDJ5rgukzuam0qAOC/kVdAM5kjmtNyMH+R/YClXD/hDFgI2dmitwa8cFqd1DNWrputtM2k1zN9QcVySqjjk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775153055; c=relaxed/simple;
-	bh=F4DsrgIwCXh1HXEg5g9pfI4vm/MPlqNk9kwFD7OT3bE=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=DQLbQ4uaWYY0MQg1DguELDrakOroPsEsnvdKx7/ZrNsqZW38JBJMKkUJeiZVftVuh/gGQjQy2D1h0rtppktAM1Pr4ZaqC8ZRY6C5XvO7o801jn/NZdO1b1yKEEWQ9PBKD2Hur5BcC6cTKZg05KHYoiO8v/2PK8p2VBa3lz31nAI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=il1dJTWi; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1775172308; c=relaxed/simple;
+	bh=m7Y9x5hmK/1mAYjJkK1dYeKybym7hWpayHvUvPY01bc=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Zfd+66WkQfimnvRs4EclCNC+spVad+6zrSpRkehirilrSycj8l+XWA4ksGPFkOIOjgO0W+b+/fC4Ueuor4sKfoFe8hv1Xtm+SMJW4eDvQf2PgzqC/3hHool8TfHSpdfsUEepk9BP8MGP4Q+n3gOuE81sgQ+lGt7e5wsUcicyzEA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jJ3K7bET; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="il1dJTWi"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1775153052;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=h7yOigxXZpZsVMssh+mLEedTpd1BlUZc6Kc/zzGuCvY=;
-	b=il1dJTWirRg13EJnJEXqu9/VT8qdEL/Vvz1fPAvj68gNCZX0DPw8OvPEoTRoz8FdiaSjuF
-	uV15AhCBSueOSMhPkycVgdJJcuBDM81kkUbPcYairqXMg2+SvDaNTww9nLAg/HoerUepsU
-	MGeMslceN77OJvaWLaPSfHU4hi29KF4=
-Received: from mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-610-bafMvKWtM46D7vCCfgvvrA-1; Thu,
- 02 Apr 2026 14:04:08 -0400
-X-MC-Unique: bafMvKWtM46D7vCCfgvvrA-1
-X-Mimecast-MFC-AGG-ID: bafMvKWtM46D7vCCfgvvrA_1775153047
-Received: from mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.4])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 37F28195609F;
-	Thu,  2 Apr 2026 18:04:07 +0000 (UTC)
-Received: from localhost (unknown [10.44.32.37])
-	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 20B1C30030D1;
-	Thu,  2 Apr 2026 18:04:05 +0000 (UTC)
-From: Stefan Hajnoczi <stefanha@redhat.com>
-To: target-devel@vger.kernel.org
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>,
-	linux-scsi@vger.kernel.org,
-	Bart Van Assche <bvanassche@acm.org>,
-	linux-kernel@vger.kernel.org,
-	Stefan Hajnoczi <stefanha@redhat.com>,
-	Maurizio Lombardi <mlombard@redhat.com>,
-	Dmitry Bogdanov <d.bogdanov@yadro.com>
-Subject: [PATCH] scsi: target: don't validate ignored fields in PROUT PREEMPT
-Date: Thu,  2 Apr 2026 14:03:42 -0400
-Message-ID: <20260402180342.126583-1-stefanha@redhat.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jJ3K7bET"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EE1BDC19424;
+	Thu,  2 Apr 2026 23:25:06 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1775172308;
+	bh=m7Y9x5hmK/1mAYjJkK1dYeKybym7hWpayHvUvPY01bc=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=jJ3K7bETKt8+vVWurtVfd8gbshIbBofM+VTtFSuQ4NldVVCsI69dDCcy2oCNQ8RPt
+	 p84zgmYl/h6gDXju81DHZJv9NsNUqGnQ3DMcO75pC6wvaJmnE7r/JZouP913QuEjHR
+	 V6Qu7SpT60al34ymsaHjAYbZQ+3x6E9u9j2nN1Slp+9T1uZIxRoKTMqWFtkgLzZcJn
+	 cL4bn9f8LZLntHeCuu7TTQwprGW2Ms9h/NFJXMWORXiD48extg/M1DNSlhLqk7eXIx
+	 4mdD6pnYKAm3W4dID3Pxo34tIsi9Sa69W09t+P4vU8pEsr0NKC+TaLpPUIQ5zhRMX4
+	 THp6IAaRmY0fQ==
+Message-ID: <8198c919-1f4d-4d18-925b-f6c0e80d8b3e@kernel.org>
+Date: Fri, 3 Apr 2026 08:25:04 +0900
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.4
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2] block: Increase BLK_DEF_MAX_SECTORS_CAP
+To: Keith Busch <kbusch@kernel.org>, Friedrich Weber <f.weber@proxmox.com>
+Cc: Mira Limbeck <m.limbeck@proxmox.com>, hch@lst.de,
+ martin.petersen@oracle.com, Sathya Prakash <sathya.prakash@broadcom.com>,
+ Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+ Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>,
+ Ranjan Kumar <ranjan.kumar@broadcom.com>,
+ linux-scsi <linux-scsi@vger.kernel.org>
+References: <20250618060045.37593-1-dlemoal@kernel.org>
+ <291f78bf-4b4a-40dd-867d-053b36c564b3@proxmox.com>
+ <ff5e2877-840b-4eb6-b449-bb64fb2e4097@kernel.org>
+ <ac2256a0-25ce-4453-8c47-04cb7716d46a@proxmox.com>
+ <7a0cfc66-3131-4b94-87f2-cbb96595ebb6@kernel.org>
+ <9bf5286c-bac7-4cb7-9bfe-f47195e18b79@proxmox.com>
+ <ac6FVPT3ZCDoVtb7@kbusch-mbp>
+Content-Language: en-US
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <ac6FVPT3ZCDoVtb7@kbusch-mbp>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-The PERSISTENT RESERVE OUT command's PREEMPT service action provides two
-different functions: 1. preempting persistent reservations and 2.
-removing registrations. In the latter case the spec says:
+On 4/3/26 00:03, Keith Busch wrote:
+> On Thu, Apr 02, 2026 at 04:33:47PM +0200, Friedrich Weber wrote:
+>> We only have limited access to the test machine, so testing this is not
+>> trivial. If I understand correctly, there is a lead pointing in the direction
+>> of mpt3sas [1], so I'd postpone this test for now. But if needed, we're happy
+>> to look into it.
+> 
+> Yeah, the mpt3sas driver isn't using an appropriate sized buffer for
+> nvme prp handling. The easy option is just force the block layer to
+> split requests so the driver never sees anything bigger than what it can
+> currently handle. This should do it. I don't have any such device to
+> test on, though.
+> 
+> ---
+> diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+> index 6ff7885572942..c76f5b958c56f 100644
+> --- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+> +++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+> @@ -2739,7 +2739,10 @@ scsih_sdev_configure(struct scsi_device *sdev, struct queue_limits *lim)
+>  				pcie_device->connector_name);
+>  
+>  		if (pcie_device->nvme_mdts)
+> -			lim->max_hw_sectors = pcie_device->nvme_mdts / 512;
+> +			lim->max_hw_sectors = min(pcie_device->nvme_mdts / 512,
+> +						(SZ_2M / 512) - 8);
+> +		else
+> +			lim->max_hw_sectors = (SZ_2M / 512) - 8;
 
-  b) ignore the contents of the SCOPE field and the TYPE field;
+(note: redirecting this to linux-scsi since this is clearly not a block layer issue)
 
-The code currently validates the SCOPE and TYPE fields even when PREEMPT
-is called to remove registrations.
+Keith,
 
-This patch achieves spec compliance by validating the SCOPE and TYPE
-fields only when they will actually be used.
+Thanks for this. But where do you see that the DMA pool size is 2M ?
+Looking at the code, it seems that ioc->pcie_sgl_dma_pool is created using
+_base_allocate_pcie_sgl_pool() with a size that is calculated as:
 
-To confirm my interpretation of the specification I tested against HPE
-3PAR storage and found the TYPE field is indeed ignored in this case.
+        /*
+         * The number of NVMe page sized blocks needed is:
+         *     (((sg_tablesize * 8) - 1) / (page_size - 8)) + 1
+         * ((sg_tablesize * 8) - 1) is the max PRP's minus the first PRP entry
+         * that is placed in the main message frame.  8 is the size of each PRP
+         * entry or PRP list pointer entry.  8 is subtracted from page_size
+         * because of the PRP list pointer entry at the end of a page, so this
+         * is not counted as a PRP entry.  The 1 added page is a round up.
+         *
+         * To avoid allocation failures due to the amount of memory that could
+         * be required for NVMe PRP's, only each set of NVMe blocks will be
+         * contiguous, so a new set is allocated for each possible I/O.
+         */
 
-Cc: Maurizio Lombardi <mlombard@redhat.com>
-Cc: Dmitry Bogdanov <d.bogdanov@yadro.com>
-Signed-off-by: Stefan Hajnoczi <stefanha@redhat.com>
----
- drivers/target/target_core_pr.c | 59 ++++++++++++++++++---------------
- 1 file changed, 32 insertions(+), 27 deletions(-)
+        ioc->chains_per_prp_buffer = 0;
+        if (ioc->facts.ProtocolFlags & MPI2_IOCFACTS_PROTOCOL_NVME_DEVICES) {
+                nvme_blocks_needed =
+                        (ioc->shost->sg_tablesize * NVME_PRP_SIZE) - 1;
+                nvme_blocks_needed /= (ioc->page_size - NVME_PRP_SIZE);
+                nvme_blocks_needed++;
 
-diff --git a/drivers/target/target_core_pr.c b/drivers/target/target_core_pr.c
-index f88e63aefcd84..11790f2c5d80f 100644
---- a/drivers/target/target_core_pr.c
-+++ b/drivers/target/target_core_pr.c
-@@ -2809,7 +2809,7 @@ static void core_scsi3_release_preempt_and_abort(
- }
- 
- static sense_reason_t
--core_scsi3_pro_preempt(struct se_cmd *cmd, int type, int scope, u64 res_key,
-+core_scsi3_emulate_pro_preempt(struct se_cmd *cmd, int type, int scope, u64 res_key,
- 		u64 sa_res_key, enum preempt_type preempt_type)
- {
- 	struct se_device *dev = cmd->se_dev;
-@@ -2838,11 +2838,6 @@ core_scsi3_pro_preempt(struct se_cmd *cmd, int type, int scope, u64 res_key,
- 		core_scsi3_put_pr_reg(pr_reg_n);
- 		return TCM_RESERVATION_CONFLICT;
- 	}
--	if (scope != PR_SCOPE_LU_SCOPE) {
--		pr_err("SPC-3 PR: Illegal SCOPE: 0x%02x\n", scope);
--		core_scsi3_put_pr_reg(pr_reg_n);
--		return TCM_INVALID_PARAMETER_LIST;
--	}
- 
- 	spin_lock(&dev->dev_reservation_lock);
- 	pr_res_holder = dev->dev_pr_res_holder;
-@@ -2856,6 +2851,37 @@ core_scsi3_pro_preempt(struct se_cmd *cmd, int type, int scope, u64 res_key,
- 		core_scsi3_put_pr_reg(pr_reg_n);
- 		return TCM_INVALID_PARAMETER_LIST;
- 	}
-+
-+	/* Validate TYPE and SCOPE fields if they will be used */
-+	if (pr_res_holder &&
-+	    (pr_res_holder->pr_res_key == sa_res_key ||
-+	     (all_reg && !sa_res_key))) {
-+		switch (type) {
-+		case PR_TYPE_WRITE_EXCLUSIVE:
-+		case PR_TYPE_EXCLUSIVE_ACCESS:
-+		case PR_TYPE_WRITE_EXCLUSIVE_REGONLY:
-+		case PR_TYPE_EXCLUSIVE_ACCESS_REGONLY:
-+		case PR_TYPE_WRITE_EXCLUSIVE_ALLREG:
-+		case PR_TYPE_EXCLUSIVE_ACCESS_ALLREG:
-+			break;
-+		default:
-+			pr_err("SPC-3 PR: Unknown Service Action PREEMPT%s"
-+				" Type: 0x%02x\n",
-+				(preempt_type == PREEMPT_AND_ABORT) ?
-+				"_AND_ABORT" : "", type);
-+			spin_unlock(&dev->dev_reservation_lock);
-+			core_scsi3_put_pr_reg(pr_reg_n);
-+			return TCM_INVALID_CDB_FIELD;
-+		}
-+
-+		if (scope != PR_SCOPE_LU_SCOPE) {
-+			pr_err("SPC-3 PR: Illegal SCOPE: 0x%02x\n", scope);
-+			spin_unlock(&dev->dev_reservation_lock);
-+			core_scsi3_put_pr_reg(pr_reg_n);
-+			return TCM_INVALID_PARAMETER_LIST;
-+		}
-+	}
-+
- 	/*
- 	 * From spc4r17, section 5.7.11.4.4 Removing Registrations:
- 	 *
-@@ -3118,27 +3144,6 @@ core_scsi3_pro_preempt(struct se_cmd *cmd, int type, int scope, u64 res_key,
- 	return 0;
- }
- 
--static sense_reason_t
--core_scsi3_emulate_pro_preempt(struct se_cmd *cmd, int type, int scope,
--		u64 res_key, u64 sa_res_key, enum preempt_type preempt_type)
--{
--	switch (type) {
--	case PR_TYPE_WRITE_EXCLUSIVE:
--	case PR_TYPE_EXCLUSIVE_ACCESS:
--	case PR_TYPE_WRITE_EXCLUSIVE_REGONLY:
--	case PR_TYPE_EXCLUSIVE_ACCESS_REGONLY:
--	case PR_TYPE_WRITE_EXCLUSIVE_ALLREG:
--	case PR_TYPE_EXCLUSIVE_ACCESS_ALLREG:
--		return core_scsi3_pro_preempt(cmd, type, scope, res_key,
--					      sa_res_key, preempt_type);
--	default:
--		pr_err("SPC-3 PR: Unknown Service Action PREEMPT%s"
--			" Type: 0x%02x\n", (preempt_type == PREEMPT_AND_ABORT) ? "_AND_ABORT" : "", type);
--		return TCM_INVALID_CDB_FIELD;
--	}
--}
--
--
- static sense_reason_t
- core_scsi3_emulate_pro_register_and_move(struct se_cmd *cmd, u64 res_key,
- 		u64 sa_res_key, int aptpl, int unreg)
+                sz = sizeof(struct pcie_sg_list) * ioc->scsiio_depth;
+                ioc->pcie_sg_lookup = kzalloc(sz, GFP_KERNEL);
+                if (!ioc->pcie_sg_lookup) {
+                        ioc_info(ioc, "PCIe SGL lookup: kzalloc failed\n");
+                        goto out;
+                }
+                sz = nvme_blocks_needed * ioc->page_size;
+                rc = _base_allocate_pcie_sgl_pool(ioc, sz);
+                if (rc == -ENOMEM)
+                        return -ENOMEM;
+                else if (rc == -EAGAIN)
+                        goto try_32bit_dma;
+                total_sz += sz * ioc->scsiio_depth;
+        }
+
+in _base_allocate_memory_pools().
+
+What am I missing here ?
+
+
+Broadcom people,
+
+Please help fix your driver.
+
 -- 
-2.53.0
-
+Damien Le Moal
+Western Digital Research
