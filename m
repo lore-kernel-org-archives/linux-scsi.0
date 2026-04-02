@@ -1,126 +1,103 @@
 Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8AB7922FE0A
-	for <linux-scsi@vger.kernel.org>; Thu,  2 Apr 2026 15:33:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DEBEA336897;
+	Thu,  2 Apr 2026 15:54:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775144039; cv=none; b=lhUlYAR6pAXBdVsVTo++FwImq0f+BD+GXt5ABOWvBxhwxNLu9h6ss/Y2dIBwVsP7SImYbl/VveFne1vLIMPLxbXjB06WvN1Vi2n1sOeTPEAwY89yEwF1AJJHRxWJFhHqmV+J+0kZZxifaRCQExfv0i8Q/wbMxSrMmnZgtnYEYAY=
+	t=1775145294; cv=none; b=k0GU1wg8fMGcQEDSEI+Em/UUMYICgMEAYQ1U1Vxa4PIPv+2sVBxNtL30NI133YcTTeziv4soW/+PyvSfG7jsku/sNPFiu1zIe+V0X6mKFNFLwZjGoYBWCFlxPTV8Pi24u+u/mOG6EarqC5hrvr3q6BBWM1qxpHcM52iqIpqbp5g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775144039; c=relaxed/simple;
-	bh=O3bx/xfLS7R1LedwOP5IMpfS+KihL2lmi6k8bwOJF4I=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=gHGBRkSLIdGw0Hg25FfGaDXSd/rsrhurlC5lgBLphOSUOLLC0s1RGblN02nmyzk7ogEhNKI+n9pg0oh4wrV0uMZJFBCdTzHKWTqZVpP2aDUn9SbIR4oFSck7hj0TiM4pOk7+YbSIp+cNWFamLLoIK3xqpoboZTP9njU5rgUda0o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=m9n8xBVW; arc=none smtp.client-ip=199.89.1.14
+	s=arc-20240116; t=1775145294; c=relaxed/simple;
+	bh=kh8+U9wib/r/kSZpMPatsqZZU9dR45diAh+/NPWagKE=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=C9Re0SRibu84+KK4kjPW+PhXqMGf8Yg7WoYJHUFXuBQmY+mx82gAfI/QjJOJL9MHUHK4njjcJzQ1wbOD8pNbLcuyNjvzv/YGdMTx3TbOVtJ15FLi6GW0KeLsiKFy4g+SppDbh4fQUHT2CKTlp5fYRDFMemIe6wOid7AUF+ofxTg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=nzhfG5OO; arc=none smtp.client-ip=199.89.1.14
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="m9n8xBVW"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="nzhfG5OO"
 Received: from localhost (localhost [127.0.0.1])
-	by 011.lax.mailroute.net (Postfix) with ESMTP id 4fmm9L0Xnwz1XM0p5;
-	Thu,  2 Apr 2026 15:33:58 +0000 (UTC)
+	by 011.lax.mailroute.net (Postfix) with ESMTP id 4fmmdS30w3z1XM6JJ;
+	Thu,  2 Apr 2026 15:54:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:mime-version:x-mailer:message-id:date
-	:date:subject:subject:from:from:received:received; s=mr01; t=
-	1775144034; x=1777736035; bh=IcpqhweVZCmII5uLWVF8vzv00IUQ5HEB4XP
-	mNQ7u+V4=; b=m9n8xBVWoYiZHhiQAJutFVZBCzWGCOnxAibh7/fvJuDklB+lyXD
-	vaNFLdZ50Oltv812DwlBN1a5YZHS+kB6sBMoWPUi0zRQmvqvPM8xxQ2lMfuwles8
-	iSca2+Mp7aUIIVpYr06CWVfTgoahi1rGYjRZvavLG/b0uQ2QexhEwOdPwySedcal
-	6hNuyrZZXLLqxB2MdN0dCovQzqFjzo+s8kf284al8/8pK7HjYaHqSJth1117oj/a
-	jJawLYLLh5hcHz8kXMPd+DcZykrHK7iHp4AV+XoFF9tZPbB14I2IX6t5zH92nn7X
-	0GDLupQwkOJCsfFhhAv526KFqYybfy3J8SQ==
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1775145288; x=1777737289; bh=k9M+oVcP3Fs/A3qoYFfeTASR
+	7MSRMG1Txy+seJJENJk=; b=nzhfG5OOHiLxr8S6hh3tGVy4v4mDtv2KPvPo08sU
+	STO8ia3TP5L9oJoBfAF6Bjo3RByxzf+/MRm6tA+sTcEWS6gRS7fc12zk/7BID1lN
+	ACpq8rJI71cAj7b6U2jtkifwP+I72KpkgMWWjc1DySta76HNChLxoIj0Lt8Sw7JS
+	BG3CfXpPrzj/dHFIEjfKiXi8Cwqux+oPYCFWJ/2SleIk/VILBLTO4Td4JZ/l7QHe
+	uU2elkL2SE3bxI12Fb1tJvdDknlBfF1Z3gl0MoJ9LGw91q/9sCQiCyit01iTqtel
+	e/MBNS4wMTo8/KVNQ2VAMVcfbBfZs8KikFLw5vbWg6YZAw==
 X-Virus-Scanned: by MailRoute
 Received: from 011.lax.mailroute.net ([127.0.0.1])
  by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id L3gd2-ZG7DUK; Thu,  2 Apr 2026 15:33:54 +0000 (UTC)
-Received: from bvanassche.mtv.corp.google.com (unknown [104.135.180.219])
+ id 5swGIE0tdVpI; Thu,  2 Apr 2026 15:54:48 +0000 (UTC)
+Received: from [100.119.48.131] (unknown [104.135.180.219])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4fmm9D3sTtz1XMG4X;
-	Thu,  2 Apr 2026 15:33:52 +0000 (UTC)
-From: Bart Van Assche <bvanassche@acm.org>
-To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org,
-	Bart Van Assche <bvanassche@acm.org>,
-	Hannes Reinecke <hare@suse.com>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-Subject: [PATCH] scsi: aic7xxx: Fix compiler warnings triggered by user space code
-Date: Thu,  2 Apr 2026 08:33:33 -0700
-Message-ID: <20260402153341.2909184-1-bvanassche@acm.org>
-X-Mailer: git-send-email 2.53.0.1185.g05d4b7b318-goog
+	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4fmmdK734bz1XMFwb;
+	Thu,  2 Apr 2026 15:54:45 +0000 (UTC)
+Message-ID: <1d0d35fe-5e9d-44b7-9dcd-48289f9d9f53@acm.org>
+Date: Thu, 2 Apr 2026 08:54:44 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 2/3] block: align nr_active_requests_shared_tags to avoid
+ cache line contention
+To: Sumit Saxena <sumit.saxena@broadcom.com>, martin.petersen@oracle.com,
+ axboe@kernel.dk
+Cc: linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
+ mpi3mr-linuxdrv.pdl@broadcom.com, James Rizzo <james.rizzo@broadcom.com>
+References: <20260402074637.92417-1-sumit.saxena@broadcom.com>
+ <20260402074637.92417-3-sumit.saxena@broadcom.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20260402074637.92417-3-sumit.saxena@broadcom.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Fix the following compiler warnings:
+On 4/2/26 12:46 AM, Sumit Saxena wrote:
+> From: James Rizzo <james.rizzo@broadcom.com>
+> 
+> Place nr_active_requests_shared_tags on its own cache line so it does not
+> share a cache line with nr_requests and other hot fields, avoiding
+> significant performance hits from false sharing on some CPU architectures.
+> 
+> Signed-off-by: James Rizzo <james.rizzo@broadcom.com>
+> Signed-off-by: Sumit Saxena <sumit.saxena@broadcom.com>
+> ---
+>   include/linux/blkdev.h | 4 +++-
+>   1 file changed, 3 insertions(+), 1 deletion(-)
+> 
+> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+> index d463b9b5a0a5..7ed566c81c1b 100644
+> --- a/include/linux/blkdev.h
+> +++ b/include/linux/blkdev.h
+> @@ -561,7 +561,9 @@ struct request_queue {
+>   	struct timer_list	timeout;
+>   	struct work_struct	timeout_work;
+>   
+> -	atomic_t		nr_active_requests_shared_tags;
+> +	/* ensure nr_active_requests_shared_tags and nr_requests are on different cache lines
+> +	   to avoid significant performance hits on cache line contention on some CPU architectures */
+> +	atomic_t		nr_active_requests_shared_tags ____cacheline_aligned_in_smp;
+>   
+>   	struct blk_mq_tags	*sched_shared_tags;
+>   
 
-aicasm_gram.y:1107:24: warning: comparison of different enumeration types
-      ('scope_type' and 'enum yytokentype') [-Wenum-compare]
- 1107 |                  || last_scope->type =3D=3D T_ELSE) {
-      |                     ~~~~~~~~~~~~~~~~ ^  ~~~~~~
-aicasm_scan.l:392:14: warning: using the result of an assignment as a con=
-dition
-      without parentheses [-Wparentheses]
-  392 |                                 while (c =3D *yptr++) {
-      |                                        ~~^~~~~~~~~
-aicasm_macro_scan.l:153:1: warning: non-void function does not return a v=
-alue
-      [-Wreturn-type]
-  153 | }
-      | ^
+A possible alternative is this patch that removes
+nr_active_requests_shared_tags:
 
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
----
- drivers/scsi/aic7xxx/aicasm/aicasm.h      | 2 +-
- drivers/scsi/aic7xxx/aicasm/aicasm_gram.y | 2 +-
- drivers/scsi/aic7xxx/aicasm/aicasm_scan.l | 2 +-
- 3 files changed, 3 insertions(+), 3 deletions(-)
+https://lore.kernel.org/linux-block/20240529213921.3166462-1-bvanassche@acm.org/
 
-diff --git a/drivers/scsi/aic7xxx/aicasm/aicasm.h b/drivers/scsi/aic7xxx/=
-aicasm/aicasm.h
-index 716a2aefc925..f290b50c6475 100644
---- a/drivers/scsi/aic7xxx/aicasm/aicasm.h
-+++ b/drivers/scsi/aic7xxx/aicasm/aicasm.h
-@@ -82,7 +82,7 @@ extern int   src_mode;
- extern int   dst_mode;
- struct symbol;
-=20
--void stop(const char *errstring, int err_code);
-+void __attribute__((noreturn)) stop(const char *errstring, int err_code)=
-;
- void include_file(char *file_name, include_type type);
- void expand_macro(struct symbol *macro_symbol);
- struct instruction *seq_alloc(void);
-diff --git a/drivers/scsi/aic7xxx/aicasm/aicasm_gram.y b/drivers/scsi/aic=
-7xxx/aicasm/aicasm_gram.y
-index b1c9ce477cbd..f6dbb9855daa 100644
---- a/drivers/scsi/aic7xxx/aicasm/aicasm_gram.y
-+++ b/drivers/scsi/aic7xxx/aicasm/aicasm_gram.y
-@@ -1104,7 +1104,7 @@ conditional:
- 		last_scope =3D TAILQ_LAST(&scope_context->inner_scope,
- 					scope_tailq);
- 		if (last_scope =3D=3D NULL
--		 || last_scope->type =3D=3D T_ELSE) {
-+		 || last_scope->type =3D=3D (int)T_ELSE) {
-=20
- 			stop("'else if' without leading 'if'", EX_DATAERR);
- 			/* NOTREACHED */
-diff --git a/drivers/scsi/aic7xxx/aicasm/aicasm_scan.l b/drivers/scsi/aic=
-7xxx/aicasm/aicasm_scan.l
-index fc7e6c58148d..c0d92cf5f9b5 100644
---- a/drivers/scsi/aic7xxx/aicasm/aicasm_scan.l
-+++ b/drivers/scsi/aic7xxx/aicasm/aicasm_scan.l
-@@ -389,7 +389,7 @@ nop			{ return T_NOP; }
- 				char c;
-=20
- 				yptr =3D yytext;
--				while (c =3D *yptr++) {
-+				while ((c =3D *yptr++)) {
- 					/*
- 					 * Strip carriage returns.
- 					 */
+Thanks,
+
+Bart.
