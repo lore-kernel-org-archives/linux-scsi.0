@@ -1,101 +1,87 @@
-Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
+Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D24E03EDAA2;
-	Thu,  2 Apr 2026 15:58:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5CDD93E5EFB
+	for <linux-scsi@vger.kernel.org>; Thu,  2 Apr 2026 17:14:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775145542; cv=none; b=pSpch07rPdrebk65Ls5fBppC0hkH3lJdb0mWLC9ukWG+w8WlmFuK9QnKA0L9KocmHJuZzWphLjZ0k0nZISpt3uyDKfT1xQNGZX12ZNLy2ttACI9/FD/upnS0iWOTnAK2y40KoMIrF7WmruVy1mjHnOC5mXSfQuw+v6iblXgFywo=
+	t=1775150070; cv=none; b=bhm7dCxEkm9ibnhMdRrjC8icMHpaYDRGq/qZPT+N5gYqobvy7NtLng5wTVw2fKhm3ncvvP6mIemk7NJRp6uz61hWgOlxGbdJMC8y3Mt5xr1GOqQtdFRhxrJW3VrigF54Y6jjLUVfBcvzu1jqoV3ChGjgbHSdd9WIN5QKrGBHD4o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775145542; c=relaxed/simple;
-	bh=zynPblNX9L58TOxMGYvGCOFTI0aFili2wwrBvB/P/8I=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=LhMw+eU4GLLO+WrqnUJgLMvWX0sDPnaTohf/Lf5B2um/dwp/cBJIzBjlIVAauEf4ulamhaJdDhNUhxh08lxVGzhzGdVLP3xR38KHgeuymQMUaeB5iawcvy1BMKkUX+8whZxGhvcjzD6E4TuGk9aIt4Ztxml62cVHzC391UrTUuA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=e2zuwvar; arc=none smtp.client-ip=199.89.1.16
+	s=arc-20240116; t=1775150070; c=relaxed/simple;
+	bh=RoP1zGCDU8m8loXful8Rcx2brlNSJyTAmvzN6yBjd0I=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=rxkaRTboxSeDgEdDcbpjbT7WHXujXB/WejvjSRg1KFu/YsvIXfCVSjjszn71HbiOTCYIJ+jaZTvdUnHyeI47xJHytSLOlrWYKbwupQkdlk0gnxTiDy+xVjHq7dek5E3oC6cAxn5X0519gABPJKGE312SaVjCWin2Ould76CIEQk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=g+iVc+EW; arc=none smtp.client-ip=199.89.1.14
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="e2zuwvar"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="g+iVc+EW"
 Received: from localhost (localhost [127.0.0.1])
-	by 013.lax.mailroute.net (Postfix) with ESMTP id 4fmmkB31rpzlfvqC;
-	Thu,  2 Apr 2026 15:58:58 +0000 (UTC)
+	by 011.lax.mailroute.net (Postfix) with ESMTP id 4fmpP63NNMz1XM6JX;
+	Thu,  2 Apr 2026 17:14:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1775145534; x=1777737535; bh=R5R9nbvY7fSoLU03i5BEPe1r
-	38HHMw0mj0T8TG98QMo=; b=e2zuwvarzCZdzfH4hP31TXBr8tY/6yPDaBmgCAD/
-	wjl2GLQQXNfKSYWSYqhhSdXvs+ykwg7BSbAzAxsYOndfNAvLegxxkY69mBZ+vTFr
-	dauHKb/f5uYLrpQCgqQraiHFKi1vF0E+n9AzHdLgB1ypIO5jAck24V1a0PUj771U
-	rZ7YnLC/iSeSpmf3DY09JxBGPTUUmbMZA5aA69m2W6bftfE29EBOwr+PUPJT8YbZ
-	TmIf42WfnUNY2W0R12IwOnmQzmOW0bhQiw+kIvbkek+fsqXOrqnZm/an877ZJVU5
-	tdBAgYNoOvwoAWkP88kA6mR/qIGM+j0NkXhjniG9Rp2NWA==
+	content-transfer-encoding:mime-version:x-mailer:message-id:date
+	:date:subject:subject:from:from:received:received; s=mr01; t=
+	1775150056; x=1777742057; bh=INtLxnaz235+D82BNhzknrQ9Go4rp33YsHQ
+	qAOyeu8M=; b=g+iVc+EW6A782t7LoT/XMyaEh/P8Cv5D8xCY3Kjd3xjHIyGYCUu
+	PHNi9yGerDTlzOmV6YECsmFR/eKsXLHxV0TSxYTveKMxkUDP9davvUy8tgaHi3O0
+	QqRmvEB762imv3UQRbLjxvHJcCMtoVtlSDUXdQAGUwvOU16z+BpgmmHODknREOH1
+	Jt6RqfDjl32hb8amJurO7OpGF98pqG0CqNsszE7FnhoUtdOOkL9lViTHBPt34+T2
+	cVL+2jR4s/pWMDKu1zEh3yB15zkBdpeMCPASpYVHCL8tQ5rlLuxKDas8ydPrmoBA
+	jv8p73xI1QPb6k51qDn6+QSBl9L08iVk4xw==
 X-Virus-Scanned: by MailRoute
-Received: from 013.lax.mailroute.net ([127.0.0.1])
- by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id cMatIIXUEUY5; Thu,  2 Apr 2026 15:58:54 +0000 (UTC)
-Received: from [100.119.48.131] (unknown [104.135.180.219])
+Received: from 011.lax.mailroute.net ([127.0.0.1])
+ by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id NWKUzGdxNm3O; Thu,  2 Apr 2026 17:14:16 +0000 (UTC)
+Received: from bvanassche.mtv.corp.google.com (unknown [104.135.180.219])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4fmmk36859zlfvq7;
-	Thu,  2 Apr 2026 15:58:51 +0000 (UTC)
-Message-ID: <fd582bae-a090-48d4-a4eb-b2db6c10c26c@acm.org>
-Date: Thu, 2 Apr 2026 08:58:50 -0700
+	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4fmpP34R03z1XMFjY;
+	Thu,  2 Apr 2026 17:14:15 +0000 (UTC)
+From: Bart Van Assche <bvanassche@acm.org>
+To: "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org,
+	Bart Van Assche <bvanassche@acm.org>
+Subject: [PATCH v2 0/2] ufs-qcom: Reduce interrupt latency
+Date: Thu,  2 Apr 2026 10:14:00 -0700
+Message-ID: <20260402171404.3008494-1-bvanassche@acm.org>
+X-Mailer: git-send-email 2.53.0.1213.gd9a14994de-goog
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 3/3] scsi: align scsi_device iodone_cnt to avoid cache
- line contention
-To: Sumit Saxena <sumit.saxena@broadcom.com>, martin.petersen@oracle.com,
- axboe@kernel.dk
-Cc: linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
- mpi3mr-linuxdrv.pdl@broadcom.com, James Rizzo <james.rizzo@broadcom.com>
-References: <20260402074637.92417-1-sumit.saxena@broadcom.com>
- <20260402074637.92417-4-sumit.saxena@broadcom.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20260402074637.92417-4-sumit.saxena@broadcom.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: quoted-printable
 
-On 4/2/26 12:46 AM, Sumit Saxena wrote:
-> From: James Rizzo <james.rizzo@broadcom.com>
-> 
-> Place iodone_cnt on its own cache line so it does not share a cache line
-> with iorequest_cnt, avoiding significant performance hits from false
-> sharing when request and completion paths update these counters on some
-> CPU architectures.
-> 
-> Signed-off-by: James Rizzo <james.rizzo@broadcom.com>
-> Signed-off-by: Sumit Saxena <sumit.saxena@broadcom.com>
-> ---
->   include/scsi/scsi_device.h | 4 +++-
->   1 file changed, 3 insertions(+), 1 deletion(-)
-> 
-> diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-> index 9c2a7bbe5891..86c2a3a6b206 100644
-> --- a/include/scsi/scsi_device.h
-> +++ b/include/scsi/scsi_device.h
-> @@ -272,7 +272,9 @@ struct scsi_device {
->   #define SCSI_DEFAULT_DEVICE_BLOCKED	3
->   
->   	atomic_t iorequest_cnt;
-> -	atomic_t iodone_cnt;
-> +	/* ensure iorequest_cnt and iodone_cnt are on different cache lines to avoid significant
-> +	   performance hits on cache line contention on some CPU architectures */
-> +	atomic_t iodone_cnt ____cacheline_aligned_in_smp;
->   	atomic_t ioerr_cnt;
->   	atomic_t iotmo_cnt;
+Hi Martin,
 
-Has it been considered to change both iorequest_cnt and iodone_cnt into
-per-cpu counters?
+On Android systems it is important to keep the time spent in interrupts s=
+hort.
+This keeps the user interface responsive and prevents audio stuttering. H=
+ence
+this patch series to reduce the time spent in the UFS interrupt handler. =
+Please
+consider this patch series for the next merge window after test results h=
+ave
+been shared by Qualcomm.
 
 Thanks,
 
 Bart.
+
+Changes compared to v1:
+ - Dropped the ufshcd_mcq_compl_all_cqes_lock() changes.
+ - Renamed ufshcd_mcq_poll_cqe_lock_n() into ufshcd_mcq_poll_n_cqe_lock()=
+.
+
+Bart Van Assche (2):
+  ufs: core: Introduce ufshcd_mcq_poll_n_cqe_lock()
+  ufs: qcom: Reduce interrupt latency
+
+ drivers/ufs/core/ufs-mcq.c  | 14 +++++++++++---
+ drivers/ufs/host/ufs-qcom.c | 33 +++++++++++++++++++++++++++++----
+ include/ufs/ufshcd.h        |  3 +++
+ 3 files changed, 43 insertions(+), 7 deletions(-)
+
