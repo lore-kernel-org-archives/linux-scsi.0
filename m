@@ -1,108 +1,95 @@
-Received: from mail-wr1-f43.google.com (mail-wr1-f43.google.com [209.85.221.43])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 50AC03B8D6A
-	for <linux-scsi@vger.kernel.org>; Fri,  3 Apr 2026 13:31:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.43
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 88E8D3242CF
+	for <linux-scsi@vger.kernel.org>; Fri,  3 Apr 2026 13:51:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775223075; cv=none; b=AO4U3BGR0GLuascdflztGxVq5eyYrFhVXBfKI40LQN2XzCQyi65mg8G41299E4idMqDOys5ol/tONprfxV9q6pskCpRA0i7E0b8OpqskKFvrV6/S8DSr9XL+UWPYxJHxzvQvckViK2Y2SrQRG5uL0s2tRTJmmTDVX2a924l+2a0=
+	t=1775224293; cv=none; b=eyfzBMAKjFmZ0UR6Ffr7bVt/q9ZFfMH52itQNqx+rDnJxssxiRy9ly8T3JLZNMfo8jZMCE6ThfLMBcgzDVb7Sp5oI9hh44pzQgvWChbOrSy3RzcxtaA8CrrNQ29+ptVD+kWAYbHtbRGGcJaDazuvuoX4HsV28mqGXBALMMDbGmY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775223075; c=relaxed/simple;
-	bh=tJuMjaXtSH2+B3CUI/9NTtAwb1Puf/ZSFJ6qth9ByG0=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=MEQysdh3aejgyEzDinVR5SmTS4AL81rczpTs0vSniQxGxyVSnfYF3VKpSunWu07+fyixt1N7akjndGxqVfD1ohWCUZf9yhXwGiz5Dsq7eSmcIwrRMJ9vXElRj5fkbY+VpU1nmsks1kmPMcwfo7mQ+mqJQz8Q4YniPYRrqa8+5Z0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=tuxon.dev; spf=pass smtp.mailfrom=tuxon.dev; dkim=pass (2048-bit key) header.d=tuxon.dev header.i=@tuxon.dev header.b=G4c45SjU; arc=none smtp.client-ip=209.85.221.43
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=tuxon.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=tuxon.dev
+	s=arc-20240116; t=1775224293; c=relaxed/simple;
+	bh=ZUac92GPjEQgmONd7jpf7rHg2XaitqU6XgWriuw8/nQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=UQOYdCD405azbqpasaACAMiQZcZgCN7FLbd1oKKK/bTynMOZYMoiaOvNZWlKddTf6/JA1FSPjN3/XKO39Qj+XsDVAtZk0CkVvdnwyxBwWqzvZfOEaLBqvkbZQpyKyD2swFxncPI+hvtpui7U75i1vWZccHpRsf8SxD83oAVYnUk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=olgk4pjA; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=tuxon.dev header.i=@tuxon.dev header.b="G4c45SjU"
-Received: by mail-wr1-f43.google.com with SMTP id ffacd0b85a97d-43cf3ee0fc1so2136401f8f.1
-        for <linux-scsi@vger.kernel.org>; Fri, 03 Apr 2026 06:31:14 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=tuxon.dev; s=google; t=1775223073; x=1775827873; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=06EtJYGQ6LYfDafCpTEDml6o3YzqQAzc59XOjIa4iLc=;
-        b=G4c45SjUkt5XNL+S4y9FisFunVEaAJ3nOzPJfmRFuun94cQJ0IXcrRKhgIOf4aaYlV
-         dHuN7zm39V/qpfP7jPWCrydvoTn7cP8weWecBH/MtqNC8Kr+6SCYiLO1yhXxdHImsZlV
-         mL9sUMM68DB8Hk9Rr+rtibFl6tMnQpyla916NQZFP8Ha1WiRsVvsVXRBAOsh3qzHQoCz
-         pJzg4Ob3L0ZAUZQF7noXz35yrRF7+42ioOTBTK+icONPcsvvLdJMz7Av1ov8rTQ1Liqg
-         CQMZQmQe0RqIMv26ArVlllg8+PEXv8eBqH2Ry7+LTSchSM5VUhmRLatMIWitMHHHiNWR
-         WB0A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1775223073; x=1775827873;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=06EtJYGQ6LYfDafCpTEDml6o3YzqQAzc59XOjIa4iLc=;
-        b=ACzaHRE3FLtf0JJUtjFnpyL+THSP8P6SCn6c/FpW0EnAxhKrLIDi5CppprOxUWNyGr
-         BeBJPwe9xL81GAqAOuRyuN1PqMcYTePhF9ut07pIerohZVcf0fjifGaeNGZHzf4akZQS
-         oUwPX14Fu4Wbx1JopwiVTguKhIjZrqo6mY6vO/GyCnKt7yLtnqpYm1Aw5AdQ5/tzyF9K
-         dAEujuRxR84ZvosVII/HFAQos8kYne+hwB6jBKKu8uXjkQwmjAGGZCsCEmrYjF9qn/ht
-         S5caCRhGsY09edT3WPQXopRIIkvGzCnONKqfKTuJGnJnGtJDfhoXwHCq8ZITkjfV38Bq
-         qVig==
-X-Forwarded-Encrypted: i=1; AJvYcCV8XDC20FrHPzjW751syR0Q9r/qoSfNM2S6l6qF1Iwn9nhabAhZFl5vyDTgyB9S4GXKQlGvyuYVRh3w@vger.kernel.org
-X-Gm-Message-State: AOJu0YyIQHGfzC//Ab4FPKsJAeX5UxjdjVUWtxnUVv3YEnsXCuv5Z1/3
-	QM/ZtD+X6FEDfWYJ2qtCsRO4wIV7m/vGuBejfLTKoiyRL6+LWyDPyh+zdmLoltTPNIg=
-X-Gm-Gg: AeBDievAZHKBTd8q5Di9ueZAT//9QJUBKLYbWf4zwNkpH5mIFo+YEdsvxKRND7SQw0i
-	H0VfW7WbnAhTJF8gV0iAJEgP2DdwTG+zbOxlbDjok6jjc7FJ3q3OM9BC0ZWn4vCpwk2Unuq8d0C
-	LwkooA5qHJpOkL6TnRTWsJdi8SNGyZb7ZIklfdC6DKa9hSaFVtyHi9qwPWGshoVeKNCs24kvy5b
-	D5IPKBf9am5psE/CvVHXVDCEvk8i0lnaZb9JdRjHktDFzfa+Fe3HoCe29qIasXpf8zU/lUP/W+K
-	LUFaQVc9APjK/KN7wrQ7JSdnJw8Aid9eP2xbqidKKynYnhyDD+3RUfx5GexOuMYOAuCc66hudA5
-	XrEwUo3fajz0nEt3kvous6rhkkSCjp4F8dTKlttGjXTSage91vImEhtFhmDZR2faKHaGb77Pshj
-	64CKPE17KD/a9GXVq+QOn6mE7o36qKRAYQDBHaEAWLjRv5zzCyUw+L
-X-Received: by 2002:a05:6000:1446:b0:43d:160:c226 with SMTP id ffacd0b85a97d-43d290f737bmr5210902f8f.24.1775223072608;
-        Fri, 03 Apr 2026 06:31:12 -0700 (PDT)
-Received: from claudiu-X670E-Pro-RS.. ([82.78.167.248])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-43d1e4f1a99sm17897406f8f.32.2026.04.03.06.31.11
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 03 Apr 2026 06:31:12 -0700 (PDT)
-From: Claudiu <claudiu.beznea@tuxon.dev>
-X-Google-Original-From: Claudiu <claudiu.beznea.uj@bp.renesas.com>
-To: sathya.prakash@broadcom.com,
-	kashyap.desai@broadcom.com,
-	sumit.saxena@broadcom.com,
-	sreekanth.reddy@broadcom.com,
-	James.Bottomley@HansenPartnership.com,
-	martin.petersen@oracle.com
-Cc: claudiu.beznea@tuxon.dev,
-	mpi3mr-linuxdrv.pdl@broadcom.com,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
-Subject: [PATCH] scsi: mpi3mr: Fix typo
-Date: Fri,  3 Apr 2026 16:31:09 +0300
-Message-ID: <20260403133109.2744351-1-claudiu.beznea.uj@bp.renesas.com>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="olgk4pjA"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 21627C4CEF7;
+	Fri,  3 Apr 2026 13:51:32 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1775224292;
+	bh=ZUac92GPjEQgmONd7jpf7rHg2XaitqU6XgWriuw8/nQ=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=olgk4pjAzJ08A6WfwBTRNCnqCA6KcxySVoveM72txfRl/Kv1tjNB4ZHnUzlQ55Ys5
+	 fgjjCtSajjeHSgxaNuj0IXSORVSezh04V5HA+OF6XTee3ilAOkUCvlY5bEbzeHONSv
+	 4VNpg3nz6jdSwvGkxnfJvgEh8zjPqKd2ssjJhhptsp/cJYH4Zsp5Uawt4+DPIwKnOB
+	 vpp80i4wSI38yxSsTY+fHZO7EPSNjYr5G3JxVZIvzoI/ZtslSQHYLeWEP5eRHaAnPd
+	 esyVQF+Z8i1hBGgH2eMyNzCeVjNl2MCalI8ePsjmiy5bRVX6l5NhSNAA+p+UX+NrnZ
+	 YNZ8XbGReno8w==
+Date: Fri, 3 Apr 2026 07:51:30 -0600
+From: Keith Busch <kbusch@kernel.org>
+To: Damien Le Moal <dlemoal@kernel.org>
+Cc: Friedrich Weber <f.weber@proxmox.com>,
+	Mira Limbeck <m.limbeck@proxmox.com>, hch@lst.de,
+	martin.petersen@oracle.com,
+	Sathya Prakash <sathya.prakash@broadcom.com>,
+	Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+	Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>,
+	Ranjan Kumar <ranjan.kumar@broadcom.com>,
+	linux-scsi <linux-scsi@vger.kernel.org>
+Subject: Re: [PATCH v2] block: Increase BLK_DEF_MAX_SECTORS_CAP
+Message-ID: <ac_F4nIj6vVm9c42@kbusch-mbp>
+References: <20250618060045.37593-1-dlemoal@kernel.org>
+ <291f78bf-4b4a-40dd-867d-053b36c564b3@proxmox.com>
+ <ff5e2877-840b-4eb6-b449-bb64fb2e4097@kernel.org>
+ <ac2256a0-25ce-4453-8c47-04cb7716d46a@proxmox.com>
+ <7a0cfc66-3131-4b94-87f2-cbb96595ebb6@kernel.org>
+ <9bf5286c-bac7-4cb7-9bfe-f47195e18b79@proxmox.com>
+ <ac6FVPT3ZCDoVtb7@kbusch-mbp>
+ <8198c919-1f4d-4d18-925b-f6c0e80d8b3e@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <8198c919-1f4d-4d18-925b-f6c0e80d8b3e@kernel.org>
 
-From: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+On Fri, Apr 03, 2026 at 08:25:04AM +0900, Damien Le Moal wrote:
+> Thanks for this. But where do you see that the DMA pool size is 2M ?
 
-Fix typo in "synchronize".
+It's not that the DMA pool size is 2M. NVMe PRP can describe 2M of data
+with 4k worth of PRP entries.
 
-Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
----
- drivers/scsi/mpi3mr/mpi3mr_fw.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+I was thinking it's the "page_size", assuming it was 4k, but I misread
+the argument order:
 
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-index c744210cc901..fe7af82357f9 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-@@ -2699,7 +2699,7 @@ void mpi3mr_check_rh_fault_ioc(struct mpi3mr_ioc *mrioc, u32 reason_code)
-  * mpi3mr_sync_timestamp - Issue time stamp sync request
-  * @mrioc: Adapter reference
-  *
-- * Issue IO unit control MPI request to synchornize firmware
-+ * Issue IO unit control MPI request to synchronize firmware
-  * timestamp with host time.
-  *
-  * Return: 0 on success, non-zero on failure.
--- 
-2.43.0
+        ioc->pcie_sgl_dma_pool =
+            dma_pool_create("PCIe SGL pool", &ioc->pdev->dev, sz,
+            ioc->page_size, 0);
 
+The dma element size is whatever "sz" is, and ioc->page_size is just the
+alignment. It still doesn't seem like it's big enough, though.
+
+The function _base_build_nvme_prp() takes a pointer to the pcie_sgl that
+was allocated from that pool and writes the prp entries to it without
+doing chaining PRP elements from the end of the list, so it looks like
+it just overruns it if you have a large transfer.
+
+> Looking at the code, it seems that ioc->pcie_sgl_dma_pool is created using
+> _base_allocate_pcie_sgl_pool() with a size that is calculated as:
+> 
+>         /*
+>          * The number of NVMe page sized blocks needed is:
+>          *     (((sg_tablesize * 8) - 1) / (page_size - 8)) + 1
+>          * ((sg_tablesize * 8) - 1) is the max PRP's minus the first PRP entry
+>          * that is placed in the main message frame.  8 is the size of each PRP
+>          * entry or PRP list pointer entry.  8 is subtracted from page_size
+>          * because of the PRP list pointer entry at the end of a page, so this
+>          * is not counted as a PRP entry.  The 1 added page is a round up.
+
+This doesn't sound right because sg_tablesize refers to a scatterlist
+that may contain multi-page entries, but nvme PRP's need a single entry
+per page, so it's too low when you have contiguous memory.
