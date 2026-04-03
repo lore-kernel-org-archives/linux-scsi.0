@@ -1,207 +1,147 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 43E862FD69A
-	for <linux-scsi@vger.kernel.org>; Fri,  3 Apr 2026 02:07:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9838E3033F7
+	for <linux-scsi@vger.kernel.org>; Fri,  3 Apr 2026 02:31:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775182032; cv=none; b=fasfJdAbkilMRNXHRHX2mlHksahpv0SGYj5fSKrpxfFBz30XeOC0NQmnwDG2L0T8UZzx0VVTGkKU9P50SW736vIW3ZpRH4NNaXWqt5ACYZrHQ8EInfgzxIbDq1tOCLqR9XLR8WKXtJSZEzD/xJ/+5v+A0yEb4d0mSm9FH5yYILc=
+	t=1775183464; cv=none; b=ueScX7A40FLzj+3WxHHv1vJClkacQyUqKNyruCtFRqBQjusgNgaMsASJaex8JTcb7/8kSXFtGxecfZHxFqlbx/w+Vyj9eQbjkmGfyCle7ddi3sFQiBWcnF45JoJfF0LSuHZOl+UeIDDKj1F09hboGCY4x7e4WPPp3w9pq4UmmdM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775182032; c=relaxed/simple;
-	bh=yX3yrqKfdjHZ5+bhkOgIYXObKMBAJOzlUL6uBfxD4hM=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=iwEx2HBvt9p4PwCJ5hcfot+mB3M6cxoUDFOOX0vouTe3KMKHb7sjFdS28+LqaOxBwPi4Lh/Djqlaf4he/z0aF53SWXTeAKqiXdGeVljr0tfXwn9EaVOOT9twOD3x4AWFXz0rgFTNlDHnAgnD14r8MjPMRjkSo/IV1LpT/UfVFHk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=V/12OSmP; arc=none smtp.client-ip=170.10.129.124
+	s=arc-20240116; t=1775183464; c=relaxed/simple;
+	bh=nYwV1LUq6KG6Ao2Tmp47YT7ArzKmyrKv2lE+QHJL8dw=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=FpCt3uYTulK5oXP8rmEeeSZJCj2yBX1EpFYM2sZFbU4R4g/nw4s8RL/ArUqUzmSUV+IDcmMVhG7F5HiZt457C+jFQpM9RhvDHmnouCBbZWE81Xd9lbuYo2fNEKCUHfG+zPt7OiF37ZLDZI0cAHsUzJx9Ogjt03qaN5TyssMv9nI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=jGRLT7V3; arc=none smtp.client-ip=170.10.133.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="V/12OSmP"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="jGRLT7V3"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1775182030;
+	s=mimecast20190719; t=1775183461;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=XI1xXgPK4qrsri5D11iFWDjO9+OFx1xcFnxElX9OeLk=;
-	b=V/12OSmPQm8Ci8KftL9qJ2qNbUmIW5/TF6yrH2d9MCR8A/jaeH4K6pu+syREg1Tn3foWBC
-	os3tqp88/CQ0OqBorRDbqd+xR8HkaE4M1FVCwzgoPR/YCecH/EjXGAaQi54ki+u1JEEKHZ
-	s/07SQGxXc63Dl+BQ8JpAuZYjwq0tDg=
+	bh=Hk3l4sJZ8VQmwKxYtifv90rkgr2B19mqHbHCn7fohLk=;
+	b=jGRLT7V3/NLR1GINb4nzQiCCKMQUBgnyCiurwMlZ7oi9fMs0LnJvymM8L0p8h9JC9po47A
+	+50uNP383ilZQpOb04O+mk12YNXd4Y4qjA7HSvAKhYS4/xJ3KU5rey/tg97n1g/IR4g0zX
+	s+3RPuwxqT1NiYmRZH0DULNHzWueMk0=
 Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
  (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-81-Ds1gYEDpN-CyU9aUId0YKg-1; Thu,
- 02 Apr 2026 22:07:06 -0400
-X-MC-Unique: Ds1gYEDpN-CyU9aUId0YKg-1
-X-Mimecast-MFC-AGG-ID: Ds1gYEDpN-CyU9aUId0YKg_1775182021
-Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-460-rCXx2cJTP-Klv46VrVi2tw-1; Thu,
+ 02 Apr 2026 22:30:59 -0400
+X-MC-Unique: rCXx2cJTP-Klv46VrVi2tw-1
+X-Mimecast-MFC-AGG-ID: rCXx2cJTP-Klv46VrVi2tw_1775183455
+Received: from mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.111])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id EE06C1800283;
-	Fri,  3 Apr 2026 02:06:59 +0000 (UTC)
-Received: from [10.22.88.243] (unknown [10.22.88.243])
-	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id D57F519792E0;
-	Fri,  3 Apr 2026 02:06:51 +0000 (UTC)
-Message-ID: <c6189740-b741-41e5-a9f6-d09e1ddb86ec@redhat.com>
-Date: Thu, 2 Apr 2026 22:06:51 -0400
+	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 752D518005B0;
+	Fri,  3 Apr 2026 02:30:53 +0000 (UTC)
+Received: from fedora (unknown [10.72.116.83])
+	by mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 3908A1801A52;
+	Fri,  3 Apr 2026 02:30:30 +0000 (UTC)
+Date: Fri, 3 Apr 2026 10:30:26 +0800
+From: Ming Lei <ming.lei@redhat.com>
+To: Aaron Tomlin <atomlin@atomlin.com>
+Cc: axboe@kernel.dk, kbusch@kernel.org, hch@lst.de, sagi@grimberg.me,
+	mst@redhat.com, aacraid@microsemi.com,
+	James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com,
+	liyihang9@h-partners.com, kashyap.desai@broadcom.com,
+	sumit.saxena@broadcom.com, shivasharan.srikanteshwara@broadcom.com,
+	chandrakanth.patil@broadcom.com, sathya.prakash@broadcom.com,
+	sreekanth.reddy@broadcom.com, suganath-prabu.subramani@broadcom.com,
+	ranjan.kumar@broadcom.com, jinpu.wang@cloud.ionos.com,
+	tglx@kernel.org, mingo@redhat.com, peterz@infradead.org,
+	juri.lelli@redhat.com, vincent.guittot@linaro.org,
+	akpm@linux-foundation.org, maz@kernel.org, ruanjinjie@huawei.com,
+	bigeasy@linutronix.de, yphbchou0911@gmail.com, wagi@kernel.org,
+	frederic@kernel.org, longman@redhat.com, chenridong@huawei.com,
+	hare@suse.de, kch@nvidia.com, steve@abita.co, sean@ashe.io,
+	chjohnst@gmail.com, neelx@suse.com, mproche@gmail.com,
+	linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+	virtualization@lists.linux.dev, linux-nvme@lists.infradead.org,
+	linux-scsi@vger.kernel.org, megaraidlinux.pdl@broadcom.com,
+	mpi3mr-linuxdrv.pdl@broadcom.com, MPT-FusionLinux.pdl@broadcom.com
+Subject: Re: [PATCH v10 13/13] docs: add io_queue flag to isolcpus
+Message-ID: <ac8l-w8ERG1YN2Wm@fedora>
+References: <20260401222312.772334-1-atomlin@atomlin.com>
+ <20260401222312.772334-14-atomlin@atomlin.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v10 10/13] blk-mq: use hk cpus only when isolcpus=io_queue
- is enabled
-To: Aaron Tomlin <atomlin@atomlin.com>, axboe@kernel.dk, kbusch@kernel.org,
- hch@lst.de, sagi@grimberg.me, mst@redhat.com
-Cc: aacraid@microsemi.com, James.Bottomley@HansenPartnership.com,
- martin.petersen@oracle.com, liyihang9@h-partners.com,
- kashyap.desai@broadcom.com, sumit.saxena@broadcom.com,
- shivasharan.srikanteshwara@broadcom.com, chandrakanth.patil@broadcom.com,
- sathya.prakash@broadcom.com, sreekanth.reddy@broadcom.com,
- suganath-prabu.subramani@broadcom.com, ranjan.kumar@broadcom.com,
- jinpu.wang@cloud.ionos.com, tglx@kernel.org, mingo@redhat.com,
- peterz@infradead.org, juri.lelli@redhat.com, vincent.guittot@linaro.org,
- akpm@linux-foundation.org, maz@kernel.org, ruanjinjie@huawei.com,
- bigeasy@linutronix.de, yphbchou0911@gmail.com, wagi@kernel.org,
- frederic@kernel.org, chenridong@huawei.com, hare@suse.de, kch@nvidia.com,
- ming.lei@redhat.com, steve@abita.co, sean@ashe.io, chjohnst@gmail.com,
- neelx@suse.com, mproche@gmail.com, linux-block@vger.kernel.org,
- linux-kernel@vger.kernel.org, virtualization@lists.linux.dev,
- linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
- megaraidlinux.pdl@broadcom.com, mpi3mr-linuxdrv.pdl@broadcom.com,
- MPT-FusionLinux.pdl@broadcom.com
-References: <20260401222312.772334-1-atomlin@atomlin.com>
- <20260401222312.772334-11-atomlin@atomlin.com>
-Content-Language: en-US
-From: Waiman Long <longman@redhat.com>
-In-Reply-To: <20260401222312.772334-11-atomlin@atomlin.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260401222312.772334-14-atomlin@atomlin.com>
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.111
 
-On 4/1/26 6:23 PM, Aaron Tomlin wrote:
+On Wed, Apr 01, 2026 at 06:23:12PM -0400, Aaron Tomlin wrote:
 > From: Daniel Wagner <wagi@kernel.org>
->
-> Extend the capabilities of the generic CPU to hardware queue (hctx)
-> mapping code, so it maps houskeeping CPUs and isolated CPUs to the
-> hardware queues evenly.
->
-> A hctx is only operational when there is at least one online
-> housekeeping CPU assigned (aka active_hctx). Thus, check the final
-> mapping that there is no hctx which has only offline housekeeing CPU and
-> online isolated CPUs.
->
-> Example mapping result:
->
->    16 online CPUs
->
->    isolcpus=io_queue,2-3,6-7,12-13
->
-> Queue mapping:
->          hctx0: default 0 2
->          hctx1: default 1 3
->          hctx2: default 4 6
->          hctx3: default 5 7
->          hctx4: default 8 12
->          hctx5: default 9 13
->          hctx6: default 10
->          hctx7: default 11
->          hctx8: default 14
->          hctx9: default 15
->
-> IRQ mapping:
->          irq 42 affinity 0 effective 0  nvme0q0
->          irq 43 affinity 0 effective 0  nvme0q1
->          irq 44 affinity 1 effective 1  nvme0q2
->          irq 45 affinity 4 effective 4  nvme0q3
->          irq 46 affinity 5 effective 5  nvme0q4
->          irq 47 affinity 8 effective 8  nvme0q5
->          irq 48 affinity 9 effective 9  nvme0q6
->          irq 49 affinity 10 effective 10  nvme0q7
->          irq 50 affinity 11 effective 11  nvme0q8
->          irq 51 affinity 14 effective 14  nvme0q9
->          irq 52 affinity 15 effective 15  nvme0q10
->
-> A corner case is when the number of online CPUs and present CPUs
-> differ and the driver asks for less queues than online CPUs, e.g.
->
->    8 online CPUs, 16 possible CPUs
->
->    isolcpus=io_queue,2-3,6-7,12-13
->    virtio_blk.num_request_queues=2
->
-> Queue mapping:
->          hctx0: default 0 1 2 3 4 5 6 7 8 12 13
->          hctx1: default 9 10 11 14 15
->
-> IRQ mapping
->          irq 27 affinity 0 effective 0 virtio0-config
->          irq 28 affinity 0-1,4-5,8 effective 5 virtio0-req.0
->          irq 29 affinity 9-11,14-15 effective 0 virtio0-req.1
->
-> Noteworthy is that for the normal/default configuration (!isoclpus) the
-> mapping will change for systems which have non hyperthreading CPUs. The
-> main assignment loop will completely rely that group_mask_cpus_evenly to
-> do the right thing. The old code would distribute the CPUs linearly over
-> the hardware context:
->
-> queue mapping for /dev/nvme0n1
->          hctx0: default 0 8
->          hctx1: default 1 9
->          hctx2: default 2 10
->          hctx3: default 3 11
->          hctx4: default 4 12
->          hctx5: default 5 13
->          hctx6: default 6 14
->          hctx7: default 7 15
->
-> The assign each hardware context the map generated by the
-> group_mask_cpus_evenly function:
->
-> queue mapping for /dev/nvme0n1
->          hctx0: default 0 1
->          hctx1: default 2 3
->          hctx2: default 4 5
->          hctx3: default 6 7
->          hctx4: default 8 9
->          hctx5: default 10 11
->          hctx6: default 12 13
->          hctx7: default 14 15
->
-> In case of hyperthreading CPUs, the resulting map stays the same.
->
+> 
+> The io_queue flag informs multiqueue device drivers where to place
+> hardware queues. Document this new flag in the isolcpus
+> command-line argument description.
+> 
+> Reviewed-by: Aaron Tomlin <atomlin@atomlin.com>
+> Reviewed-by: Hannes Reinecke <hare@suse.de>
 > Signed-off-by: Daniel Wagner <wagi@kernel.org>
-> [atomlin: Fixed absolute vs. relative hardware queue index mix-up in
->   blk_mq_map_queues and validation checks; fixed typographical errors.]
 > Signed-off-by: Aaron Tomlin <atomlin@atomlin.com>
 > ---
->   block/blk-mq-cpumap.c | 175 +++++++++++++++++++++++++++++++++++++-----
->   1 file changed, 157 insertions(+), 18 deletions(-)
->
-> diff --git a/block/blk-mq-cpumap.c b/block/blk-mq-cpumap.c
-> index 8244ecf87835..8d09af49a142 100644
-> --- a/block/blk-mq-cpumap.c
-> +++ b/block/blk-mq-cpumap.c
-> @@ -22,7 +22,18 @@ static unsigned int blk_mq_num_queues(const struct cpumask *mask,
->   {
->   	unsigned int num;
->   
-> -	num = cpumask_weight(mask);
-> +	if (housekeeping_enabled(HK_TYPE_IO_QUEUE)) {
-> +		const struct cpumask *hk_mask;
-> +		struct cpumask avail_mask;
-> +
-> +		hk_mask = housekeeping_cpumask(HK_TYPE_IO_QUEUE);
-> +		cpumask_and(&avail_mask, mask, hk_mask);
-> +
-> +		num = cpumask_weight(&avail_mask);
+>  .../admin-guide/kernel-parameters.txt         | 22 ++++++++++++++++++-
+>  1 file changed, 21 insertions(+), 1 deletion(-)
+> 
+> diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
+> index 03a550630644..9ed7c3ecd158 100644
+> --- a/Documentation/admin-guide/kernel-parameters.txt
+> +++ b/Documentation/admin-guide/kernel-parameters.txt
+> @@ -2816,7 +2816,6 @@ Kernel parameters
+>  			  "number of CPUs in system - 1".
+>  
+>  			managed_irq
+> -
+>  			  Isolate from being targeted by managed interrupts
+>  			  which have an interrupt mask containing isolated
+>  			  CPUs. The affinity of managed interrupts is
+> @@ -2839,6 +2838,27 @@ Kernel parameters
+>  			  housekeeping CPUs has no influence on those
+>  			  queues.
+>  
+> +			io_queue
+> +			  Isolate from I/O queue work caused by multiqueue
+> +			  device drivers. Restrict the placement of
+> +			  queues to housekeeping CPUs only, ensuring that
+> +			  all I/O work is processed by a housekeeping CPU.
 
-As said before by Ming Lei, struct cpumask can be rather big in size if 
-NR_CPUS is large. I will suggest using cpumask_weight_and() instead 
-which will eliminate the need of the local variables.
+All these can be supported by `managed_irq` already, please document the thing
+which `io_queue` solves, and `managed_irq` can't cover, so user can know
+how to choose between the two command lines.
 
-Cheers,
-Longman
+`Restrict the placement of queues to housekeeping CPUs only` looks totally
+stale, please see patch 10, in which isolated CPUs are spread too.
+
+> +
+> +			  The io_queue configuration takes precedence
+> +			  over managed_irq. When io_queue is used,
+> +			  managed_irq placement constrains have no
+> +			  effect.
+> +
+> +			  Note: Offlining housekeeping CPUS which serve
+> +			  isolated CPUs will be rejected. Isolated CPUs
+> +			  need to be offlined before offlining the
+> +			  housekeeping CPUs.
+> +
+> +			  Note: When an isolated CPU issues an I/O request,
+> +			  it is forwarded to a housekeeping CPU. This will
+> +			  trigger a software interrupt on the completion
+> +			  path.
+
+`io_queue` doesn't touch io completion code path, which is more
+implementation details, so not sure if the above Note is needed.
+
+
+Thanks,
+Ming
 
