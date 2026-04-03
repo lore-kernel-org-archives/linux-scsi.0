@@ -1,110 +1,207 @@
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5F0D6349B15;
-	Fri,  3 Apr 2026 02:06:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.177.32
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 43E862FD69A
+	for <linux-scsi@vger.kernel.org>; Fri,  3 Apr 2026 02:07:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775182013; cv=none; b=qeI08e4eVI+61/Ljlc1EgEeQmdZuKN7zXfmzOTEvUEZE8fYFyZgDcGkz0nJwCCg6lqZEVUTcbbwQF0nwe+bZMwh0QGuJnGG5rS4B0FgZAp2SZKqkXjmQ/F0l6riAoA4nymy5atILulYfre09s+ae/uYXjRSzNAhawfHc1MKj1+U=
+	t=1775182032; cv=none; b=fasfJdAbkilMRNXHRHX2mlHksahpv0SGYj5fSKrpxfFBz30XeOC0NQmnwDG2L0T8UZzx0VVTGkKU9P50SW736vIW3ZpRH4NNaXWqt5ACYZrHQ8EInfgzxIbDq1tOCLqR9XLR8WKXtJSZEzD/xJ/+5v+A0yEb4d0mSm9FH5yYILc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775182013; c=relaxed/simple;
-	bh=Vo34Uc1lQORoW1XqU8BYBX9pGGMwq80NL8/RQVTj9pA=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=ZZ3xoUJ05tv0cPIZBkphxxH2N/0U/+CoPMmBtCY0tJHCyhhCZvHmLgWbGKr/nEN+zfa+iMn2IOFy4O2CXl8r4qlNu6VXY/FJKbKrqxY7LKUFR+3PhSEXQsaht3RuYEWRAPCWqNb5hz5D/Gabi1jxs+qSaQs0y8PPC5l7ZiIcU70=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=RlgBosKL; arc=none smtp.client-ip=205.220.177.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+	s=arc-20240116; t=1775182032; c=relaxed/simple;
+	bh=yX3yrqKfdjHZ5+bhkOgIYXObKMBAJOzlUL6uBfxD4hM=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=iwEx2HBvt9p4PwCJ5hcfot+mB3M6cxoUDFOOX0vouTe3KMKHb7sjFdS28+LqaOxBwPi4Lh/Djqlaf4he/z0aF53SWXTeAKqiXdGeVljr0tfXwn9EaVOOT9twOD3x4AWFXz0rgFTNlDHnAgnD14r8MjPMRjkSo/IV1LpT/UfVFHk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=V/12OSmP; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="RlgBosKL"
-Received: from pps.filterd (m0333520.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 632FBoWH001805;
-	Fri, 3 Apr 2026 02:05:47 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=
-	corp-2025-04-25; bh=UlqMwyFN4jGry2f/H7eMah//0aISrIxSYI+TEU9pX2U=; b=
-	RlgBosKLt/CmQB11EV+T3gb3IVRM10iK+ED+VOkW6USx83qLhptvzW2RH9adhdZC
-	+JFMRSOCkUDq/rVYitd1PK8nWNwib0XEbEO2Se6Pa5bYCTFHZG8LQO/9E4WDzpQl
-	k8KFf3ZbWXQ0jFNApVTSF5mUf6/x5lBIBldEFsPHKv0S3kmIFuHm6ureVFn3ms3c
-	J+FkLsRXxjhRa4GcdMnhTbOtPPIvA0T25JsPag7p2E4/YfHMXek7QP3wN2QDL2JI
-	eNBg6Y7TqqmyB6q2Y7v23zNNwnEuxaiSb6AgcTg8VMu365LJrYmIjWmhIRT55v6C
-	ekuz8VOMsmQGY8MYNt3ZnQ==
-Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.appoci.oracle.com [138.1.37.129])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4d671b1gvt-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Fri, 03 Apr 2026 02:05:47 +0000 (GMT)
-Received: from pps.filterd (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 6330n19t029083;
-	Fri, 3 Apr 2026 02:05:46 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 4d65eddp5v-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Fri, 03 Apr 2026 02:05:46 +0000
-Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 63325cqj017364;
-	Fri, 3 Apr 2026 02:05:45 GMT
-Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 4d65eddp33-7;
-	Fri, 03 Apr 2026 02:05:45 +0000
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-To: lduncan@suse.com, cleech@redhat.com, michael.christie@oracle.com,
-        James.Bottomley@HansenPartnership.com, open-iscsi@googlegroups.com,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Kexin Sun <kexinsun@smail.nju.edu.cn>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, julia.lawall@inria.fr,
-        xutong.ma@inria.fr, yunbolyu@smu.edu.sg, ratnadiraw@smu.edu.sg
-Subject: Re: [PATCH] scsi: iscsi_tcp: update outdated comment for renamed iscsi_conn_set_callbacks()
-Date: Thu,  2 Apr 2026 22:05:30 -0400
-Message-ID: <177517593450.3522679.10454991872090765767.b4-ty@oracle.com>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260321105904.7726-1-kexinsun@smail.nju.edu.cn>
-References: <20260321105904.7726-1-kexinsun@smail.nju.edu.cn>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="V/12OSmP"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1775182030;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=XI1xXgPK4qrsri5D11iFWDjO9+OFx1xcFnxElX9OeLk=;
+	b=V/12OSmPQm8Ci8KftL9qJ2qNbUmIW5/TF6yrH2d9MCR8A/jaeH4K6pu+syREg1Tn3foWBC
+	os3tqp88/CQ0OqBorRDbqd+xR8HkaE4M1FVCwzgoPR/YCecH/EjXGAaQi54ki+u1JEEKHZ
+	s/07SQGxXc63Dl+BQ8JpAuZYjwq0tDg=
+Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-81-Ds1gYEDpN-CyU9aUId0YKg-1; Thu,
+ 02 Apr 2026 22:07:06 -0400
+X-MC-Unique: Ds1gYEDpN-CyU9aUId0YKg-1
+X-Mimecast-MFC-AGG-ID: Ds1gYEDpN-CyU9aUId0YKg_1775182021
+Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id EE06C1800283;
+	Fri,  3 Apr 2026 02:06:59 +0000 (UTC)
+Received: from [10.22.88.243] (unknown [10.22.88.243])
+	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id D57F519792E0;
+	Fri,  3 Apr 2026 02:06:51 +0000 (UTC)
+Message-ID: <c6189740-b741-41e5-a9f6-d09e1ddb86ec@redhat.com>
+Date: Thu, 2 Apr 2026 22:06:51 -0400
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-04-02_04,2026-04-02_05,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 bulkscore=0 spamscore=0
- malwarescore=0 mlxlogscore=739 phishscore=0 suspectscore=0 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2603050001
- definitions=main-2604030017
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNDAzMDAxNyBTYWx0ZWRfX/8Z3ej5bftxQ
- gL4sS/7uAMLA5DcdGTsfC6viDamt6c4fApf2jCqFR0Fv0oVIC1mhuHqqpnD++QP3E7wEmXtccMV
- LliOB31Z8elG6g+eUDy4COAS5SBTbyrDm/X6mQuH3xQ9B4OZkAq1C8EokxV6txyQGjyVDJpf9I3
- tsSmYVBVAuy3jX0M/6LghmXcpOWXfSAmkcgVsqgraFB9XHVdZvqLABCMnBqXoaNleI/oFvOzpFN
- Te3fjghKKQtwRgy2AWXbtcTf3utAJoVKjw1nKGfuIdfmdWPqOCU2rasccJYwg3L1vETxAetkj0y
- xI6+5p8/6rpftWTzLjexHSkkfbp94r6vy6blTo0HD6UCIcDHfIQ7AzWkivKkJpbpNNCGO34It5u
- S/opQ9Jz2ZoO3553m4B1eUwahjbp8IF09Uz22L8+TPRSEKmwtHvA2nLhoTCggQWnHZ+DsH7qGm5
- RNnQjGzLuPsAqE8cuTA==
-X-Authority-Analysis: v=2.4 cv=PJkCOPqC c=1 sm=1 tr=0 ts=69cf207b b=1 cx=c_pps
- a=WeWmnZmh0fydH62SvGsd2A==:117 a=WeWmnZmh0fydH62SvGsd2A==:17
- a=IkcTkHD0fZMA:10 a=A5OVakUREuEA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=jiCTI4zE5U7BLdzWsZGv:22 a=BqU2WV_vvsyTyxaotp0D:22 a=VwQbUJbxAAAA:8
- a=6LU6Rs01mCspBcRghAAA:9 a=QEXdDO2ut3YA:10
-X-Proofpoint-GUID: 3vJ3996LYGz0MKWCEbKm_7t-UVLfoZxg
-X-Proofpoint-ORIG-GUID: 3vJ3996LYGz0MKWCEbKm_7t-UVLfoZxg
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v10 10/13] blk-mq: use hk cpus only when isolcpus=io_queue
+ is enabled
+To: Aaron Tomlin <atomlin@atomlin.com>, axboe@kernel.dk, kbusch@kernel.org,
+ hch@lst.de, sagi@grimberg.me, mst@redhat.com
+Cc: aacraid@microsemi.com, James.Bottomley@HansenPartnership.com,
+ martin.petersen@oracle.com, liyihang9@h-partners.com,
+ kashyap.desai@broadcom.com, sumit.saxena@broadcom.com,
+ shivasharan.srikanteshwara@broadcom.com, chandrakanth.patil@broadcom.com,
+ sathya.prakash@broadcom.com, sreekanth.reddy@broadcom.com,
+ suganath-prabu.subramani@broadcom.com, ranjan.kumar@broadcom.com,
+ jinpu.wang@cloud.ionos.com, tglx@kernel.org, mingo@redhat.com,
+ peterz@infradead.org, juri.lelli@redhat.com, vincent.guittot@linaro.org,
+ akpm@linux-foundation.org, maz@kernel.org, ruanjinjie@huawei.com,
+ bigeasy@linutronix.de, yphbchou0911@gmail.com, wagi@kernel.org,
+ frederic@kernel.org, chenridong@huawei.com, hare@suse.de, kch@nvidia.com,
+ ming.lei@redhat.com, steve@abita.co, sean@ashe.io, chjohnst@gmail.com,
+ neelx@suse.com, mproche@gmail.com, linux-block@vger.kernel.org,
+ linux-kernel@vger.kernel.org, virtualization@lists.linux.dev,
+ linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
+ megaraidlinux.pdl@broadcom.com, mpi3mr-linuxdrv.pdl@broadcom.com,
+ MPT-FusionLinux.pdl@broadcom.com
+References: <20260401222312.772334-1-atomlin@atomlin.com>
+ <20260401222312.772334-11-atomlin@atomlin.com>
+Content-Language: en-US
+From: Waiman Long <longman@redhat.com>
+In-Reply-To: <20260401222312.772334-11-atomlin@atomlin.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
 
-On Sat, 21 Mar 2026 18:59:04 +0800, Kexin Sun wrote:
+On 4/1/26 6:23 PM, Aaron Tomlin wrote:
+> From: Daniel Wagner <wagi@kernel.org>
+>
+> Extend the capabilities of the generic CPU to hardware queue (hctx)
+> mapping code, so it maps houskeeping CPUs and isolated CPUs to the
+> hardware queues evenly.
+>
+> A hctx is only operational when there is at least one online
+> housekeeping CPU assigned (aka active_hctx). Thus, check the final
+> mapping that there is no hctx which has only offline housekeeing CPU and
+> online isolated CPUs.
+>
+> Example mapping result:
+>
+>    16 online CPUs
+>
+>    isolcpus=io_queue,2-3,6-7,12-13
+>
+> Queue mapping:
+>          hctx0: default 0 2
+>          hctx1: default 1 3
+>          hctx2: default 4 6
+>          hctx3: default 5 7
+>          hctx4: default 8 12
+>          hctx5: default 9 13
+>          hctx6: default 10
+>          hctx7: default 11
+>          hctx8: default 14
+>          hctx9: default 15
+>
+> IRQ mapping:
+>          irq 42 affinity 0 effective 0  nvme0q0
+>          irq 43 affinity 0 effective 0  nvme0q1
+>          irq 44 affinity 1 effective 1  nvme0q2
+>          irq 45 affinity 4 effective 4  nvme0q3
+>          irq 46 affinity 5 effective 5  nvme0q4
+>          irq 47 affinity 8 effective 8  nvme0q5
+>          irq 48 affinity 9 effective 9  nvme0q6
+>          irq 49 affinity 10 effective 10  nvme0q7
+>          irq 50 affinity 11 effective 11  nvme0q8
+>          irq 51 affinity 14 effective 14  nvme0q9
+>          irq 52 affinity 15 effective 15  nvme0q10
+>
+> A corner case is when the number of online CPUs and present CPUs
+> differ and the driver asks for less queues than online CPUs, e.g.
+>
+>    8 online CPUs, 16 possible CPUs
+>
+>    isolcpus=io_queue,2-3,6-7,12-13
+>    virtio_blk.num_request_queues=2
+>
+> Queue mapping:
+>          hctx0: default 0 1 2 3 4 5 6 7 8 12 13
+>          hctx1: default 9 10 11 14 15
+>
+> IRQ mapping
+>          irq 27 affinity 0 effective 0 virtio0-config
+>          irq 28 affinity 0-1,4-5,8 effective 5 virtio0-req.0
+>          irq 29 affinity 9-11,14-15 effective 0 virtio0-req.1
+>
+> Noteworthy is that for the normal/default configuration (!isoclpus) the
+> mapping will change for systems which have non hyperthreading CPUs. The
+> main assignment loop will completely rely that group_mask_cpus_evenly to
+> do the right thing. The old code would distribute the CPUs linearly over
+> the hardware context:
+>
+> queue mapping for /dev/nvme0n1
+>          hctx0: default 0 8
+>          hctx1: default 1 9
+>          hctx2: default 2 10
+>          hctx3: default 3 11
+>          hctx4: default 4 12
+>          hctx5: default 5 13
+>          hctx6: default 6 14
+>          hctx7: default 7 15
+>
+> The assign each hardware context the map generated by the
+> group_mask_cpus_evenly function:
+>
+> queue mapping for /dev/nvme0n1
+>          hctx0: default 0 1
+>          hctx1: default 2 3
+>          hctx2: default 4 5
+>          hctx3: default 6 7
+>          hctx4: default 8 9
+>          hctx5: default 10 11
+>          hctx6: default 12 13
+>          hctx7: default 14 15
+>
+> In case of hyperthreading CPUs, the resulting map stays the same.
+>
+> Signed-off-by: Daniel Wagner <wagi@kernel.org>
+> [atomlin: Fixed absolute vs. relative hardware queue index mix-up in
+>   blk_mq_map_queues and validation checks; fixed typographical errors.]
+> Signed-off-by: Aaron Tomlin <atomlin@atomlin.com>
+> ---
+>   block/blk-mq-cpumap.c | 175 +++++++++++++++++++++++++++++++++++++-----
+>   1 file changed, 157 insertions(+), 18 deletions(-)
+>
+> diff --git a/block/blk-mq-cpumap.c b/block/blk-mq-cpumap.c
+> index 8244ecf87835..8d09af49a142 100644
+> --- a/block/blk-mq-cpumap.c
+> +++ b/block/blk-mq-cpumap.c
+> @@ -22,7 +22,18 @@ static unsigned int blk_mq_num_queues(const struct cpumask *mask,
+>   {
+>   	unsigned int num;
+>   
+> -	num = cpumask_weight(mask);
+> +	if (housekeeping_enabled(HK_TYPE_IO_QUEUE)) {
+> +		const struct cpumask *hk_mask;
+> +		struct cpumask avail_mask;
+> +
+> +		hk_mask = housekeeping_cpumask(HK_TYPE_IO_QUEUE);
+> +		cpumask_and(&avail_mask, mask, hk_mask);
+> +
+> +		num = cpumask_weight(&avail_mask);
 
-> The function iscsi_conn_set_callbacks() was renamed to
-> iscsi_sw_tcp_conn_set_callbacks() by commit 38e1a8f5479d
-> ("[SCSI] iscsi_tcp: hook iscsi_tcp into new libiscsi_tcp
-> module").  Update the stale reference in
-> iscsi_sw_tcp_conn_restore_callbacks().
-> 
-> 
-> [...]
+As said before by Ming Lei, struct cpumask can be rather big in size if 
+NR_CPUS is large. I will suggest using cpumask_weight_and() instead 
+which will eliminate the need of the local variables.
 
-Applied to 7.1/scsi-queue, thanks!
+Cheers,
+Longman
 
-[1/1] scsi: iscsi_tcp: update outdated comment for renamed iscsi_conn_set_callbacks()
-      https://git.kernel.org/mkp/scsi/c/5b44c3757ca3
-
--- 
-Martin K. Petersen
