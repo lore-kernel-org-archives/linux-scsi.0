@@ -1,100 +1,106 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from ste-pvt-msa2.bahnhof.se (ste-pvt-msa2.bahnhof.se [213.80.101.71])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B10BC366569;
-	Fri,  3 Apr 2026 18:41:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E41B73BE14A
+	for <linux-scsi@vger.kernel.org>; Fri,  3 Apr 2026 18:52:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.80.101.71
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775241716; cv=none; b=UyzCy/TI8ciaW0TBrYt3qTHSpOj+3gVBcMIDdxPzg6CdmCWdciii2IyHCrlVk298weMJUrLOzOtmuo7zyeCd3O4z+ELQXkQuc2YAmmlC0uIKUPYMw5Xp3uOX5oUg0wkFP7f4LI+/eBzVsU1Yw8vNrrtsMGbcX7EgYtqfLF3+L5s=
+	t=1775242350; cv=none; b=CKf62dUi/NpR3gcoAzC3p0HX6RPS4uA9sOP+/jlE/eXyEGv7LdD4gCDwdtdE+e7TLXWMdTY5D8YSD1xyZz2aG08GCAOqVL6+1YUEc5RIOYKIpuyit0E5THrlAgyAj7+amRarDumVusHJxlPZNW6RZUKM9Pg0bJfutnKACdMdgcg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775241716; c=relaxed/simple;
-	bh=LTpgvjDTvnDYR+cwlogUnudh7Wf9ZpTOUqEltp/6TDk=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=XBK9gJ0lHMrQAr10lBUefSLP1fP8JYpLv9sq++qj60+jQb+EPppGqbX7bDaowkxVFv7A/78ixM77FSU/l+iD6ni+hldlJBhiLczdETOdMTzrRJpFk/RRnEXg5ShTvDLYhjsnvvGNx5mEB4kODhsu1twl+A8DR3mH/F5cYCsKLeE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dLyl0dpk; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1775242350; c=relaxed/simple;
+	bh=mPImerMNP/V/hDzMHF4+rRjBc2sReGFodKUvFDXAVCc=;
+	h=Message-ID:Date:MIME-Version:To:From:Subject:Content-Type; b=lIySToOZw7SSCz9YgT6aPRWhmfhoRk8xCU0C99+3D/My2XYOIXnSn9OUZLcmzHlfUsy196q3zKs34myvyQdenF8eK419Xf8zdMI6M3YE9U+dNIfMDaAlzqfyj94IvCi+0KN/o7TFjjFIOSMl1dm0UJCNcnLansJPGjL0UadlV84=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=bahnhof.se; spf=pass smtp.mailfrom=bahnhof.se; dkim=pass (2048-bit key) header.d=bahnhof.se header.i=@bahnhof.se header.b=liNwHbKg; arc=none smtp.client-ip=213.80.101.71
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=bahnhof.se
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bahnhof.se
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dLyl0dpk"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 36831C19424;
-	Fri,  3 Apr 2026 18:41:56 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1775241716;
-	bh=LTpgvjDTvnDYR+cwlogUnudh7Wf9ZpTOUqEltp/6TDk=;
-	h=From:Date:Subject:To:Cc:Reply-To:From;
-	b=dLyl0dpkgPdKBNOKg7g5Jryo7KCjWZm4SjLw4fbFkzkNH6ptDd0DIZ91dbWFsR4Py
-	 PN5dOtV2NTbekMqKWvlhuiV4yXeKhqHQ/dh3TaFD0S0UJdecF3fko1UOowXaEnN1ri
-	 TVpF+QbWHg3nDdBQHv5BShlcBHas9RqreQ3AQvJKQ3hlFRVce0u5Iao12VHZzczoYc
-	 qs7Arp6BRbgKlg+iqV1aMja69wWqFDaZ/qMZBJVWS0OxGFKem1ZtB17v/j8P7OQBK2
-	 Jh6kUqBprdTpcQ4WMbx77oHcv6GVe/oTeoRKfop8f7bdiLyVoi/Y6sBiqquJFwMNPt
-	 WWqN+RVVTZWjw==
-Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 28437E85389;
-	Fri,  3 Apr 2026 18:41:56 +0000 (UTC)
-From: Aaron Kling via B4 Relay <devnull+webgeek1234.gmail.com@kernel.org>
-Date: Fri, 03 Apr 2026 13:41:34 -0500
-Subject: [PATCH] scsi: ufs: core: Disable timestamp for Kioxia
- THGJFJT0E25BAIP
+	dkim=pass (2048-bit key) header.d=bahnhof.se header.i=@bahnhof.se header.b="liNwHbKg"
+Received: from localhost (localhost [127.0.0.1])
+	by ste-pvt-msa2.bahnhof.se (Postfix) with ESMTP id 76C103F387
+	for <linux-scsi@vger.kernel.org>; Fri,  3 Apr 2026 20:52:16 +0200 (CEST)
+X-Virus-Scanned: Debian amavisd-new at bahnhof.se
+X-Spam-Flag: NO
+X-Spam-Score: -2.1
+X-Spam-Level:
+Authentication-Results: ste-pvt-msa2.bahnhof.se (amavisd-new);
+	dkim=pass (2048-bit key) header.d=bahnhof.se
+Received: from ste-pvt-msa2.bahnhof.se ([127.0.0.1])
+	by localhost (ste-pvt-msa2.bahnhof.se [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id 4ThvLa99sW3Y for <linux-scsi@vger.kernel.org>;
+	Fri,  3 Apr 2026 20:52:15 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bahnhof.se;
+	s=default; t=1775242335;
+	bh=hR+4hnYf1hEslcVggSMkYSqgUSzZvFlhmqv+sXl9pm4=;
+	h=Date:To:From:Subject:From;
+	b=liNwHbKgmjvd4ZSVFAtZlWDJZbXG14gdF1auzhvxIiQtvcBWUJ5nSSIONiOfyyWvR
+	 Mc9EGFngY9GFVXpMgWSKmtgQStZJslEXyAEy0pCsTSeEVI5m9Rrpx28NCpwM/LeH+D
+	 kQHeJqRgp8Kj9gwXGAOZ/VJBzFs5XiKK/aXOZkCtBpkZay+fNxI7uXbSUTNoLZ9jLB
+	 4qrrwsL8aTrlUFq0Tvj+DyyTeynx/LsL9T1ucLSc1go4BfK5TekYenGlZ1bCw6HbpU
+	 Mva/4MtidY2mEb97Zb0Aa5jiPmJw020sxFZvX2JKTPsnWnLGfG/a8nO9zvy9AgCLAo
+	 Zs8Pl9SEzxRZQ==
+Received: 
+	by ste-pvt-msa2.bahnhof.se (Postfix) with ESMTPA id 55FB63F314
+	for <linux-scsi@vger.kernel.org>; Fri,  3 Apr 2026 20:52:15 +0200 (CEST)
+Message-ID: <b8c4c8f8-2b7b-4e35-a750-cff8b50c295e@bahnhof.se>
+Date: Fri, 3 Apr 2026 20:52:15 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20260403-thgjfjt0e25baip-no-timestamp-v1-1-1ddb34225133@gmail.com>
-X-B4-Tracking: v=1; b=H4sIAAAAAAAC/x3MQQqAIBAAwK/EnlvYLCP6SnSwWmuDTFQiiP6ed
- JzLPBA5CEfoiwcCXxLldBlVWcC8GbcyypINilRLDdWYtnW3eyJWejLi0Z2Y5OCYzOGRukrZdtY
- NaYJc+MBW7r8fxvf9AJ3FIpJuAAAA
-X-Change-ID: 20260403-thgjfjt0e25baip-no-timestamp-0812f6c54050
-To: Alim Akhtar <alim.akhtar@samsung.com>, 
- Avri Altman <avri.altman@wdc.com>, Bart Van Assche <bvanassche@acm.org>, 
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
- "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, 
- Aaron Kling <webgeek1234@gmail.com>
-X-Mailer: b4 0.14.2
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1775241715; l=1083;
- i=webgeek1234@gmail.com; s=20250217; h=from:subject:message-id;
- bh=VUWuY9f9Hf6f2pny+U0MoADHfXbA8keKg9Eblgl1y5k=;
- b=RhJw/4rmpQ5Akk2QQ3JjlxqANiUNTcI3QnhkiLfcK03EJdB3bLDkejInolM+3NpMe20krQo+r
- z78hc0/WO6eAOGXdDwL93vYaGr+aZPWaCXgJWI36IW47PTXLugwZ8T7
-X-Developer-Key: i=webgeek1234@gmail.com; a=ed25519;
- pk=TQwd6q26txw7bkK7B8qtI/kcAohZc7bHHGSD7domdrU=
-X-Endpoint-Received: by B4 Relay for webgeek1234@gmail.com/20250217 with
- auth_id=342
-X-Original-From: Aaron Kling <webgeek1234@gmail.com>
-Reply-To: webgeek1234@gmail.com
+User-Agent: Mozilla Thunderbird
+Content-Language: en-US
+To: linux-scsi@vger.kernel.org
+From: Johan Gill <johan.gill@bahnhof.se>
+Subject: How to handle StarTech adapter
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-From: Aaron Kling <webgeek1234@gmail.com>
+Hello, I was directed here from linux-usb, so here goes:
 
-Kioxia has another product that does not support the qTimestamp
-attribute.
+I got a USB-SATA adapter from StarTech 
+(https://www.startech.com/en-se/hdd/usb312sat3cb). It is more stable 
+than my previous adapter (which was some JMicron-based thing) and is 
+running on full speed AFAICS.
 
-Signed-off-by: Aaron Kling <webgeek1234@gmail.com>
----
- drivers/ufs/core/ufshcd.c | 3 +++
- 1 file changed, 3 insertions(+)
+lsusb says "Bus 002 Device 002: ID 14b0:0207 StarTech.com Ltd. 
+SKC6002048G" with my Kingston KC600 connected.
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 5c3518f1f97c7f85854b66bf87c86d00b539fba6..4805e40ed4d78cd4b0c07cda0df6bb0f7e172cb1 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -315,6 +315,9 @@ static const struct ufs_dev_quirk ufs_fixups[] = {
- 	{ .wmanufacturerid = UFS_VENDOR_TOSHIBA,
- 	  .model = "THGLF2G9D8KBADG",
- 	  .quirk = UFS_DEVICE_QUIRK_PA_TACTIVATE },
-+	{ .wmanufacturerid = UFS_VENDOR_TOSHIBA,
-+	  .model = "THGJFJT0E25BAIP",
-+	  .quirk = UFS_DEVICE_QUIRK_NO_TIMESTAMP_SUPPORT },
- 	{ .wmanufacturerid = UFS_VENDOR_TOSHIBA,
- 	  .model = "THGJFJT1E45BATP",
- 	  .quirk = UFS_DEVICE_QUIRK_NO_TIMESTAMP_SUPPORT },
 
----
-base-commit: 2febe6e6ee6e34c7754eff3c4d81aa7b0dcb7979
-change-id: 20260403-thgjfjt0e25baip-no-timestamp-0812f6c54050
+However, there is one problem: I cannot run fstrim without custom udev 
+rules, although the adapter is documented as supporting TRIM. With a 
+custom udev rule to allow it I have run fstrim twice this far, and 
+smartctl with -t short reports no errors.
 
-Best regards,
--- 
-Aaron Kling <webgeek1234@gmail.com>
+The cause turned out to be that lbpme is not set, so the other VPD 
+information is not considered.
+
+[johan@Corner linux]$ sudo sg_readcap -16 /dev/sda
+Read Capacity results:
+    Protection: prot_en=0, p_type=0, p_i_exponent=0
+    Logical block provisioning: lbpme=0, lbprz=0
+    Last LBA=4000797359 (0xee7752af), Number of logical blocks=4000797360
+    Logical block length=512 bytes
+    Logical blocks per physical block exponent=3 [so physical block 
+length=4096 bytes]
+    Lowest aligned LBA=0
+Hence:
+    Device size: 2048408248320 bytes, 1953514.3 MiB, 2048.41 GB, 2.05 TB
+
+[johan@Corner linux]$ sudo sg_vpd -p lbpv /dev/sda
+Logical block provisioning VPD page (SBC)
+   LBPU=1
+   LBPWS=0
+   LBPWS10=0
+   LBPRZ=0x0
+   ANC_SUP=0
+   DP=0
+   Minimum percentage: 0 [not reported]
+   Provisioning type: not known or fully provisioned
+   Threshold percentage: 0 [percentages not supported]
+
+Would this be sufficient to have a quirk for this case? Let me know if 
+you need anything else from me.
 
 
