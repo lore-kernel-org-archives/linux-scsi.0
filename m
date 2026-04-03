@@ -1,67 +1,66 @@
 Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4002826ACC;
-	Fri,  3 Apr 2026 02:06:32 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 983AD26ACC;
+	Fri,  3 Apr 2026 02:06:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.177.32
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775181994; cv=none; b=up6mnOVQi6AH83j4OoOJpdnXMRnDTpZHVzSGzt3HjEQWIArpbA+lr0gcZ0rd2LwK7mptfMHpN/UxIOwbni6JvBKKshpJ0tP8r/C/MpN7jh5RUWFtEY4kHIeFG9bw8llwBiNnNYaUhjTKuSWWmN9OM13Pvf18Rbbe8NHWjB1ofBU=
+	t=1775182000; cv=none; b=PNv1/KR3wQ1iJTifgCnPEqc+nOZWf4Vyo7r11AhrGB1ppZoR2tfN0HjvPX/sZyEOVLIrRWal4tfPOnEF2NIxgPPVdfwXrCjmz3SWR08HPdMMw3DgMUSJnsqHvC3Xz1+OLh3r8VzBQnul6tL42lSdcWmxHBLLse9GYFETkzqm6eE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775181994; c=relaxed/simple;
-	bh=1W4tjBqf5BvAuPYHUBY1miuc02LtiNRpTu/6mPCNpFs=;
+	s=arc-20240116; t=1775182000; c=relaxed/simple;
+	bh=i7V6VkLPQDqZm8NpuP1aa073qQ2nQvu0ms+PknJS9r4=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=NWuLA0T3MQ2K8Y+LU2DI5e5DvMOCEHqxZBuETReWRTJdqf/EUn2nae0XVnY/rujQPEupWbiqEBGajzOxM6bVw2UrS/1Iivwd3+LKVwf14n9wqIG7jyqf9lIK/x8BMpiRxnvH3gG09jPV41uoGEDOf/qMa7uotHbMK/ifs3wA78o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=JwAu2icc; arc=none smtp.client-ip=205.220.177.32
+	 MIME-Version:Content-Type; b=AtyAkZqPVl0V7FAEKJOXHzPp3BVXp3EJb+IDCDaYYNTcpWscx4WY/gVm0exMlKtNDIYm6+J6OWPWGdpw5ITkAQSeb8NvnBcL+JCMRW2PrNCfOXewRbkW2ciQLBHr8o1OPoFslMbvidso3Trm/udHUG27y+4ZtdDlweZl/ez2cOA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=Qt+9uZ1u; arc=none smtp.client-ip=205.220.177.32
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="JwAu2icc"
-Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 632Nfkuu3751116;
-	Fri, 3 Apr 2026 02:05:42 GMT
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Qt+9uZ1u"
+Received: from pps.filterd (m0333520.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6330GC2Z1380163;
+	Fri, 3 Apr 2026 02:05:43 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
 	:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=
-	corp-2025-04-25; bh=rQA2c0EYdpJ+hfmV5uQX+x/eS6J7CMXiAI3R4R8GMgo=; b=
-	JwAu2icc0n6otSL+QqMZH5ABHWLK9A7283OEQ5PVe7yypXNAqsE+PFIQaSfmrhSj
-	ID2PdIsPjlE2Zmw3PfXvJaaikdFvc7YJJKldLN1Rjm16cTScllGtbv//5/exSb2+
-	KFhF0kwn7doxpCWVF9RJc167atndvButy3HpgX4oki5NRFGsfA1UqGaS85RDgS+/
-	VbD5NQQhNdoWYHRD/jzZYaUc/a85Dmt0uROlSa+WXvRqZFin/Vko+nQrS06SUh5J
-	dmnR7vieBaFFq3/7lhh1NQ9gAC62iusyRqHi4UlBkSJ3yHKoy1ePlURlHmu6d8Z8
-	5DrLmQfJvIden05Jr8Bl3w==
+	corp-2025-04-25; bh=JuU4KWiApf0ZUp6VJ9psnuq1pPNAcv7FH3S1uYvgc+M=; b=
+	Qt+9uZ1u/LHo+bGtDpN2v9Zed05JNtsSBBB4ocolh0+Hcx/687h8RJkoVDR6XWwX
+	7PxIeDQwZcCajaStb2ljMKnHhg2T2UZEHisLgsTB8kzx892bx2hjTBVbofEQt2Qh
+	GHjPKwtJW12eCl5IeGwfr4vrGzUX2lMrTSJq6JQyfXs5IR+Z6RHl+/O8gSlfQKOU
+	sk/KVypXcEKQOewPSELXyvRXdw1SozqpbtAwhE6mi+uesCIBoF19iZneL/UJpmC1
+	q3f9mqKyJscv4fKScHnsKiXNxHYRAksDgxgI29yEO7OLaPbm6Xa4KXYBO/OZwv9A
+	rIUmFix3T6ug3/SHFFoaaA==
 Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.appoci.oracle.com [138.1.37.129])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4d65s11gad-1
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4d671b1gvq-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Fri, 03 Apr 2026 02:05:41 +0000 (GMT)
+	Fri, 03 Apr 2026 02:05:42 +0000 (GMT)
 Received: from pps.filterd (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 6330mRh9029210;
-	Fri, 3 Apr 2026 02:05:40 GMT
+	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 6331Kig9028961;
+	Fri, 3 Apr 2026 02:05:42 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 4d65eddp4e-1
+	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 4d65eddp4r-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Fri, 03 Apr 2026 02:05:40 +0000
+	Fri, 03 Apr 2026 02:05:41 +0000
 Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 63325cqZ017364;
-	Fri, 3 Apr 2026 02:05:39 GMT
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 63325cqb017364;
+	Fri, 3 Apr 2026 02:05:41 GMT
 Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 4d65eddp33-2;
-	Fri, 03 Apr 2026 02:05:39 +0000
+	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 4d65eddp33-3;
+	Fri, 03 Apr 2026 02:05:41 +0000
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-To: Bradley Grove <linuxdrivers@attotech.com>,
-        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-        Nathan Chancellor <nathan@kernel.org>, Arnd Bergmann <arnd@kernel.org>
+To: avri.altman@wdc.com, bvanassche@acm.org, beanhuo@micron.com,
+        peter.wang@mediatek.com, mani@kernel.org,
+        Can Guo <can.guo@oss.qualcomm.com>
 Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Nick Desaulniers <nick.desaulniers+lkml@gmail.com>,
-        Bill Wendling <morbo@google.com>,
-        Justin Stitt <justinstitt@google.com>, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, llvm@lists.linux.dev
-Subject: Re: [PATCH] scsi: esas2r: fix __printf annotation on esas2r_log_master()
-Date: Thu,  2 Apr 2026 22:05:25 -0400
-Message-ID: <177517593428.3522679.17660227397593974614.b4-ty@oracle.com>
+        linux-scsi@vger.kernel.org, Matthias Brugger <matthias.bgg@gmail.com>,
+        AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
+        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org
+Subject: Re: [PATCH v5 00/12] scsi: ufs: Add TX Equalization support for UFS 5.0
+Date: Thu,  2 Apr 2026 22:05:26 -0400
+Message-ID: <177517593459.3522679.17128283878850153356.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260323100027.1975646-1-arnd@kernel.org>
-References: <20260323100027.1975646-1-arnd@kernel.org>
+In-Reply-To: <20260325152154.1604082-1-can.guo@oss.qualcomm.com>
+References: <20260325152154.1604082-1-can.guo@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -74,42 +73,66 @@ X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
  definitions=2026-04-02_04,2026-04-02_05,2025-10-01_01
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 bulkscore=0 spamscore=0
- malwarescore=0 mlxlogscore=922 phishscore=0 suspectscore=0 adultscore=0
+ malwarescore=0 mlxlogscore=999 phishscore=0 suspectscore=0 adultscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2603050001
  definitions=main-2604030017
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNDAzMDAxNyBTYWx0ZWRfXwv8RfEZpLQAQ
- quzNcEj4OrMFeAn/SsGJUGoocuftV47wFqTntziCWMlEPLWJkUgu5n85i7W77hOpgGNDYgvC2f7
- 5mBuKQ0ta6Dj3YVZAXyRC1xE2mL8drv+vgInImuzzVXgXs7yEt0UZodqkBkXq68oJ3/63TPSmZZ
- /O2YDttwtqyYOlT1ak+Lazm3SzLlJi2b58Daimm8l7iaUSyduZNPUVlBA6jJ5XcUaFT3fqgeUbZ
- KjFSrV9pwMzvrhWHB6NOGgLODHgKPOaE20luE3+GNO24cW0WI0QryUIrSt/aONhac2x9KLYocou
- mXRFvApPFr6IhhvlUxqM4eiZnks4fLYCrbOoVgYIx1UHgLfe4KuLridQt0aHflVCnsOLrr8AJHs
- WuZjNqzk8trpQHJzq0HnZJ2W0EOrlg2OrSe9Mb6HWAyP5hJyyS7AucmbD+/9ymYlPvw1DSovpol
- im7+XQ01Fwa5yp9hn/g==
-X-Proofpoint-ORIG-GUID: CWRzmXaqJyZyhxzv4bgjpd97QZMjIkz4
-X-Authority-Analysis: v=2.4 cv=BvOQAIX5 c=1 sm=1 tr=0 ts=69cf2075 b=1 cx=c_pps
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNDAzMDAxNyBTYWx0ZWRfX1LBiQhOsYASj
+ d3H2snTfATbPOEWZg2HG1tt7/4T05EXo6LV9feS5OwUWTg9/TPUFuBZwMOd4Mo2K0RiRPDDxkqP
+ 8CVDlhXM4D4w+Cenl0eGd7Fly88H4BubUJyn/NL2+LCyPi9qgNO6Z5QylQcfp//xeCvqvmGTFuC
+ 4ed74nuW9ruFeUQoEZ1C696AmvDcf9Wcj7a2feizDRouxswMEU4mKU9MMqyhAAHcrZKsvd9d0zP
+ zDOEC0kknYdUFcuxqVHXejyJ0FM7Blp79ONYlwPS33o/B/8yyC6Tym11GoS7uwXfBImVWwZiR3K
+ eee13D0Ypm0e7zVrvudZuoOepSxSLGYcgJDwMwSa4FAmJLb3qumlAXYF/MiVQ4D1wuwEyvz2Uoa
+ ozEiIqkLDlrmXKZ2FFo0FiULZWxafzSvHrWhrAWAJIHXoraP9TqfqkRU5hudSrcB83FYZepIWSw
+ fQldEsdhH7i8u7HnPZw==
+X-Authority-Analysis: v=2.4 cv=PJkCOPqC c=1 sm=1 tr=0 ts=69cf2076 b=1 cx=c_pps
  a=WeWmnZmh0fydH62SvGsd2A==:117 a=WeWmnZmh0fydH62SvGsd2A==:17
  a=IkcTkHD0fZMA:10 a=A5OVakUREuEA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=jiCTI4zE5U7BLdzWsZGv:22 a=o5oIOnhZENCTenyL_yNV:22 a=VwQbUJbxAAAA:8
- a=Er6j1MMAQklbVYpzFGkA:9 a=QEXdDO2ut3YA:10
-X-Proofpoint-GUID: CWRzmXaqJyZyhxzv4bgjpd97QZMjIkz4
+ a=jiCTI4zE5U7BLdzWsZGv:22 a=BqU2WV_vvsyTyxaotp0D:22 a=VwQbUJbxAAAA:8
+ a=EuvOurwuZNnj9x5cPKIA:9 a=QEXdDO2ut3YA:10
+X-Proofpoint-GUID: J3hC8jPB2XAMZ05DyGFme7bAbVHCETjW
+X-Proofpoint-ORIG-GUID: J3hC8jPB2XAMZ05DyGFme7bAbVHCETjW
 
-On Mon, 23 Mar 2026 10:57:39 +0100, Arnd Bergmann wrote:
+On Wed, 25 Mar 2026 08:21:42 -0700, Can Guo wrote:
 
-> clang-22 started warning about functions that take printf format strings:
+> The UFS v5.0 and UFSHCI v5.0 standards have published, introducing support
+> for HS-G6 (46.6 Gbps per lane) through the new UniPro V3.0 interconnect
+> layer and M-PHY V6.0 physical layer specifications. To achieve reliable
+> operation at these higher speeds, UniPro V3.0 introduces TX Equalization
+> and Pre-Coding mechanisms that are essential for signal integrity.
 > 
-> drivers/scsi/esas2r/esas2r_log.c:160:50: error: diagnostic behavior may be improved by adding the 'format(printf, 3, 0)' attribute to the declaration of 'esas2r_log_master' [-Werror,-Wmissing-format-attribute]
->   121 |                 retval = vsnprintf(buffer, buflen, format, args);
->       |                                                                ^
-> drivers/scsi/esas2r/esas2r_log.c:121:12: note: 'esas2r_log_master' declared here
->   121 | static int esas2r_log_master(const long level,
->       |            ^
+> This patch series implements TX Equalization support in the UFS core
+> driver as specified in UFSHCI v5.0, along with the necessary vendor
+> operations and a reference implementation for Qualcomm UFS host
+> controllers.
 > 
 > [...]
 
 Applied to 7.1/scsi-queue, thanks!
 
-[1/1] scsi: esas2r: fix __printf annotation on esas2r_log_master()
-      https://git.kernel.org/mkp/scsi/c/67557418905b
+[01/12] scsi: ufs: core: Introduce a new ufshcd vops negotiate_pwr_mode()
+        https://git.kernel.org/mkp/scsi/c/d3eba21c7170
+[02/12] scsi: ufs: core: Pass force_pmc to ufshcd_config_pwr_mode() as a parameter
+        https://git.kernel.org/mkp/scsi/c/c91c83671642
+[03/12] scsi: ufs: core: Add UFS_HS_G6 and UFS_HS_GEAR_MAX to enum ufs_hs_gear_tag
+        https://git.kernel.org/mkp/scsi/c/6669ab18c223
+[04/12] scsi: ufs: core: Add support for TX Equalization
+        https://git.kernel.org/mkp/scsi/c/03e5d38e2f98
+[05/12] scsi: ufs: core: Add debugfs entries for TX Equalization params
+        https://git.kernel.org/mkp/scsi/c/10c40143f369
+[06/12] scsi: ufs: core: Add helpers to pause and resume command processing
+        https://git.kernel.org/mkp/scsi/c/dc5dcac53278
+[07/12] scsi: ufs: core: Add support to retrain TX Equalization via debugfs
+        https://git.kernel.org/mkp/scsi/c/adbabdcf0db0
+[08/12] scsi: ufs: ufs-qcom: Fixup PAM-4 TX L0_L1_L2_L3 adaptation pattern length
+        https://git.kernel.org/mkp/scsi/c/53c94067efa2
+[09/12] scsi: ufs: ufs-qcom: Implement vops tx_eqtr_notify()
+        https://git.kernel.org/mkp/scsi/c/385b95893e79
+[10/12] scsi: ufs: ufs-qcom: Implement vops get_rx_fom()
+        https://git.kernel.org/mkp/scsi/c/26605db7604d
+[11/12] scsi: ufs: ufs-qcom: Implement vops apply_tx_eqtr_settings()
+        https://git.kernel.org/mkp/scsi/c/16cbdc830877
+[12/12] scsi: ufs: ufs-qcom: Enable TX Equalization
+        https://git.kernel.org/mkp/scsi/c/57b7943fd87f
 
 -- 
 Martin K. Petersen
