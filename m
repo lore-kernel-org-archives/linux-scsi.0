@@ -1,247 +1,247 @@
-Received: from CH5PR02CU005.outbound.protection.outlook.com (mail-northcentralusazon11022098.outbound.protection.outlook.com [40.107.200.98])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 05D723815FE;
-	Tue,  7 Apr 2026 22:30:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.200.98
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775601041; cv=fail; b=eVvOn0UogWRR76SH7zdgGgeGHy8cRbn5+pNeFw/5ESCm7GyT3VVYibS5PzNdHk7LCpzkSXV+Lx8Z/kCOAYCdzXVNOwUMoe/LcI8yPEbPjQO/kvRkv9nMa1vftVd/l9J2Dacywf0o4BQo3dfXOZxK9YEtQrvy8Nx1W0eFiLjSL50=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775601041; c=relaxed/simple;
-	bh=GPsLMp8rHowmDP/biDnkxGhVcv39cdycDCYMLH1JwyE=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=QF0H/QQGalrSASgtVavqBezncrkR2YM/z0PMSf8OINvt2IE0myznvK4GpsuYmilULhEEOdBmxy3jPZzpTjqNJYoxIxB7ek8XD6U11HUiYAw2bwvQbiuYnO8+s7wRS0MS/Dig4fx8pNwSZbxVgZWD2wf9N5D5z2C1fFfVC8vAbeo=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=microsoft.com; spf=pass smtp.mailfrom=microsoft.com; dkim=pass (1024-bit key) header.d=microsoft.com header.i=@microsoft.com header.b=f3IIjmpn; arc=fail smtp.client-ip=40.107.200.98
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=microsoft.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=microsoft.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DACC71FF7C7
+	for <linux-scsi@vger.kernel.org>; Tue,  7 Apr 2026 23:45:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1775605540; cv=none; b=MXJFP9jwhUbwvDLpqGVV2EDoe3UI5SJQXsNGmS38Ut54JIW1RLmRCbTD2gh8vqxV9TfNqAh8+ig9QIiMquuVEDj4xyTQdxU0oHlfAaF9kTubNcCu3IHTGs+VWUw+UCMqx5rpgT/vAb2oskVEhukkk0iNMnfAm9jjTSN/SBoGIj4=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1775605540; c=relaxed/simple;
+	bh=5RiwWyfTRmY+ICHwSz2ehVlihQE4jCeKt9H823nu7G0=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=KblZsj8Jmd9cbDtgb0NOxNuLM/vZvvZNC3p1qUjH2P/vLtaqY0pC0f20F78BmeRXBZcgBqpbr4J3BUGsCqE0JBG78cphn61G78TQ0rjtzeDLL3FD9wJKZ35a2UA7hFEyevqgDX1N+kNiuVldBHeYii7Kpu+sMQKDm7zoh/ggoSo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=FgJGOP/F; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=BUq0QN6N; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=microsoft.com header.i=@microsoft.com header.b="f3IIjmpn"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=aVp6dJ85o7wWYrMo6+zQCTdSTjeODWYamOl/03USC7hr3ewMG0Jcf2PSO0C4gqM6Ft4NZkxRoxUR8Jv2jFNs2/UyfI2SIdbNSYOPFO94rZmwMnpXguBBAJmgd+4rqtWrxIM8eyq3iCr/NHuep5RWpnzNuTdBhOuGmLdejVR0i1wb7/gJvIVXfKbEbaqGB+CcPUqaTNH58slYR0AiU+4k85oFtUUbOEvuw4DguUP+JCriWieIlWVWIT8xMR7stEChppmtHq3Pn5KOtZ1stmN0puZf9926ohCwikJ9PqIK7i2UwVv9kwC0lnxramTsgSuS+f0xph62LntIj4fHN7H57w==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=/tL44mKtDMOI6h8VJy3z2i/7lIKi6YO7ocFqSa6SEiE=;
- b=cA44rMDewC709jKLUdKjuc+HzYlLAZ4OmGoDL0nQ9gA4Z2cTBcvSft6wE3BEExx43/CmP2wY4PB8hN2IUgFXgHbSDAmr8r8v5f6lI40pGy6VlGTTdZo03+gvZgeK3Oj59nAUmBQ+5QniquWRtKTKArnX7xKJH/mcYl+dvct57ngKmJl52giLmeTIuoxQXdQq8dqktnSD1yLImPhNeEBHJyCASdTtd7eKpslAt4LZ3Kai3wg9DhPjdsmvcKwfah3drRObqG3vi53JWh9O0nvm0tBhYJ0OEhl8E0arICEpMtHO2zvWe9FVcNcpHfYhV5ylW732/+KoYWa21IC3Xa6Nuw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=microsoft.com; dmarc=pass action=none
- header.from=microsoft.com; dkim=pass header.d=microsoft.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=/tL44mKtDMOI6h8VJy3z2i/7lIKi6YO7ocFqSa6SEiE=;
- b=f3IIjmpnmPVsXrMOwg/Cug1NzchsIJWkBYD2rNLq7tO2Wqv16zlReh2xiA1ZxnUwEV9By+XZ/e4bgIbIT2SyjbDdZ7p7J2SG3l2W1gxT+BtTk6ZR3HuiKyfqftDtkwHKB2WdxjSHFMYxBQjwNqK7xP7HC/EU4yTXw1aVCDVmF4A=
-Received: from SA1PR21MB6683.namprd21.prod.outlook.com (2603:10b6:806:4a4::6)
- by SA3PR21MB5745.namprd21.prod.outlook.com (2603:10b6:806:498::8) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9791.7; Tue, 7 Apr
- 2026 22:30:37 +0000
-Received: from SA1PR21MB6683.namprd21.prod.outlook.com
- ([fe80::879f:eec1:ca0e:d219]) by SA1PR21MB6683.namprd21.prod.outlook.com
- ([fe80::879f:eec1:ca0e:d219%3]) with mapi id 15.20.9791.012; Tue, 7 Apr 2026
- 22:30:36 +0000
-From: Long Li <longli@microsoft.com>
-To: Li Tian <litian@redhat.com>, "linux-scsi@vger.kernel.org"
-	<linux-scsi@vger.kernel.org>
-CC: KY Srinivasan <kys@microsoft.com>, Haiyang Zhang <haiyangz@microsoft.com>,
-	Wei Liu <wei.liu@kernel.org>, Dexuan Cui <DECUI@microsoft.com>, "James E.J.
- Bottomley" <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen"
-	<martin.petersen@oracle.com>, "linux-hyperv@vger.kernel.org"
-	<linux-hyperv@vger.kernel.org>, "linux-kernel@vger.kernel.org"
-	<linux-kernel@vger.kernel.org>
-Subject: RE: [EXTERNAL] [PATCH] scsi: storvsc: Handle PERSISTENT_RESERVE_IN
- truncation for Hyper-V vFC
-Thread-Topic: [EXTERNAL] [PATCH] scsi: storvsc: Handle PERSISTENT_RESERVE_IN
- truncation for Hyper-V vFC
-Thread-Index: AQHcxWhI8ttXnTruHESVQfojh1VAHrXUMWcQ
-Date: Tue, 7 Apr 2026 22:30:36 +0000
-Message-ID:
- <SA1PR21MB6683ABEAC8B490387658B7C7CE5AA@SA1PR21MB6683.namprd21.prod.outlook.com>
-References: <20260406015344.12566-1-litian@redhat.com>
-In-Reply-To: <20260406015344.12566-1-litian@redhat.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-msip_labels:
- MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ActionId=b5dbd833-e995-43eb-9eda-b36a5453e844;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ContentBits=0;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Enabled=true;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Method=Standard;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Name=Internal;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SetDate=2026-04-07T22:30:17Z;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SiteId=72f988bf-86f1-41af-91ab-2d7cd011db47;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Tag=10,
- 3, 0, 1;
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=microsoft.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: SA1PR21MB6683:EE_|SA3PR21MB5745:EE_
-x-ms-office365-filtering-correlation-id: c6137615-9af0-4c19-06d5-08de94f54a59
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam:
- BCL:0;ARA:13230040|1800799024|366016|376014|38070700021|22082099003|18002099003|56012099003;
-x-microsoft-antispam-message-info:
- qIjc/CYD5svn1GiH8dBjpCEXZpQcsoE8qFbDGc5DzKv40HnvenQGtEL/hW6VG367+PviatDl4lXn2GQVm2pzmJD24LUVIqa1+FDJNKy1lf7JjhTksXrZ8PedZXTLAqy2krrDGjMaiDg9KQpuAESMvmkJbgHkJoVpjpAk1iS9UVPDp/Ooa0o0INbtxLGybvMrmSLJ2JXBRHK+IcuOcsNMRqewKOOCKEKTCj6as9Nfa8WBogqhTtEl335+sT6YS6mL7sUIW/Kk8I8KNPwiOjb3sqhJGDhT/AOWZ0LapfuTXos1s8udKJ97gUI4woC3agHrDzBpYHIIyJjwrUnOf32HlKJGDRXq8d0ALKpWD+PDTAGR+cufwSvfxBmt/vT/2HFwOw5AI7O3+JaxXxDeRYfhgFso50IAsWkboErGICWVUWejZv9M1YoMzGEyWSjG9qQJgpMkokBV8u4rIYSNL21OXJ59d1BN3R8BRSqekDOH/VWcthGNz8h4XExrn6J6m/TxlYajcGMfRM99z1qQokaiKBkp+nNUiqXcQGlaKHwct+AJIOjmkFMRqt6/DzjMd35Bg8Ll1TsAC08RkdAIfqhZPqJafSDOo2CgxwB3YhCuSq1De4ZZAwDaa0SdIw/43fLrT+DgyOBFdKFXcwdziZYzMcUO7CikKr3rMKdPWctigV9eFm/wi0OzXyjcU5gd2697QleRnSTu7vp8CdnHjyaqOdFhsG4Xcv17FV4ts4jF8ODkgWMRofMuuETOl819S2ux+9WJHdBTsGd2uzOP4r75qe4qZOSufsrUi7sU2Nm6Q40=
-x-forefront-antispam-report:
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA1PR21MB6683.namprd21.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(376014)(38070700021)(22082099003)(18002099003)(56012099003);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?us-ascii?Q?GjG+2LSE1acNm8nzFTu11Pe5fGUWgA0uNJno512DlYgYZWDW9ttRYtfrnU8y?=
- =?us-ascii?Q?2DRwj+inBOTLohEciXr8ycwFQJuxCT4loNF5XK0/F3/jF3lRSrw9vnkIIQru?=
- =?us-ascii?Q?bvwMbtjRfovUk8lZwhkuyVrO5VLUX30BpDRzqFq2FEVuVNhgVH8sp/n4CPS3?=
- =?us-ascii?Q?Zw0dtO9gbDNnSK7gqv0u0z+sVIzGPRoJw4iDfnQw3GWZDCWsCv9wiiMZDDbe?=
- =?us-ascii?Q?jAHU3BSRB0BpqSt9H/61V4oVJHuW0z1Bf82jfTL+dwsJ1vSzzO3Jhjerz6/Z?=
- =?us-ascii?Q?FUdGIvD4WEla2gSnFs6dYURhYdoOFh2TSeeTZtwTdVnHdAewSS4fVTRFJL+l?=
- =?us-ascii?Q?ecMiEWGmpEMNhiDQydUJYmI293b2AKGBtOM8XG0PkriOahBCenVfoMiMeuYL?=
- =?us-ascii?Q?z7fU+ssS3vgkiuNmYlhwBA3PrHjvmfAQKGZXceUBzOn5+9h2bmDdj+2Q55aR?=
- =?us-ascii?Q?R8A9B26f6UeC/GtRWDww6F5wKd9jUMQoiVeeS5q7zIlgVzDweISltxmmVf0A?=
- =?us-ascii?Q?APTP+vtofGHLmIpXAqPlFRhwYmiKtw72+9P4ckQ7gEO1ksxHNXjTWVAS+l7W?=
- =?us-ascii?Q?wZt4tWb45uWXKP/xXDJ3BI+B6CISvtKKi4htwcQuODSckCDHPuBKGqBwKna2?=
- =?us-ascii?Q?JBT+2eq3LaUyQbHOs5T0y5UGyBNZX+xpFyTVsoC5oNEOwfDE/b4CEd0RMKG7?=
- =?us-ascii?Q?Iv1S/fwwTIbxddfa1+dugvOav8TIHgln7UWSP8ITTbJwAryJhTTyS6dIxnJt?=
- =?us-ascii?Q?hbeosf00L4+FlLYlF5mcOQIHZI+AOFATem8Vn4j1b58yGEFdL4/CEYG1Wi0p?=
- =?us-ascii?Q?1Zy/G45+GhRqEhBEkUCLUYWc8EtTUw/gCh6w56xIvZ4tglpTmt+ypIwMsDNt?=
- =?us-ascii?Q?QQo77eRa+UdpZ1RxRkbXbmuDdQppO9DYy87s97fNJ4B5OY07ZbDiNVxjC66n?=
- =?us-ascii?Q?cMjR27XwqMhmf8rUkqqrLxco4xVMKp83UAyqu8DsbhbqrQ6TktCOZHYwYJbj?=
- =?us-ascii?Q?Fb+oE5pX8DB4k7tz6zt8WDuTASaYUHvnsbYsFhZyeeLnB5POe7DcfyPdAMXv?=
- =?us-ascii?Q?gbkLoUZW4hHrAGUHv+XwqzJMR3rtjcmevTtaEaO3XaSPaMZ79SJJ2qeyVh4C?=
- =?us-ascii?Q?eTLPAdXkbfLKyNKBSxeCvWS5ZmZv6erVbqm/ZSVhvKw9A+xRpfpJYeTSliF3?=
- =?us-ascii?Q?iN3pMm9dkWRC0BLDRJhfy/gU+uRJkdaXVDWnJF1uI94EsH5O4gn6wEZngxy1?=
- =?us-ascii?Q?9vk47+BeiW02oJTLdBwBcmegYcMMLFROznBGokXjTE0CKzW1lgSR8T1nXwtN?=
- =?us-ascii?Q?Uv2CYYCQ1WpM5aXi1Wfc2BwREfhyJ55df6ySotDTBo6mkfhyO243e76zcST5?=
- =?us-ascii?Q?XMQLoJqEVzVTvSN00YLNXdL8wd3bWFJGpzhZEGZhNBbCUcSWpI6xUqzhsnm3?=
- =?us-ascii?Q?8bo+1aXd0ZTIC9V4SdQpEvF2UewdPHn13hjeq3qsShf8CEJ9xgYeO/RmNqha?=
- =?us-ascii?Q?81ya63TbMvBlrZGiuV/irRZPF+ScTIGkKUeZHW/L5TjGW+y1TF91vA5PBlc9?=
- =?us-ascii?Q?RWcrfvKh/uCQ+gdAltpBHOquHGj9bK6EEykCD6pf0HR2FrBa1TvK8ugpI8gb?=
- =?us-ascii?Q?feqNbvanRFsTaxgK3IM2w200gEUhKZVbvZHAr2EN7J2L/vbs5iAdF0koPa3U?=
- =?us-ascii?Q?P0kHMep6stgOuH7niAS9H4YKmlhdhtZMXvVBMdEebDYqhOm+?=
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="FgJGOP/F";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="BUq0QN6N"
+Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 637J76kN263766
+	for <linux-scsi@vger.kernel.org>; Tue, 7 Apr 2026 23:45:38 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-type:date:from:in-reply-to:message-id:mime-version
+	:references:subject:to; s=qcppdkim1; bh=dqnafUrvON7HZA8zHAS3PedH
+	DWzr2LNEiDtUvABj9vA=; b=FgJGOP/FAFMePg582rzGfkWLseQ3HPEe2HxcpqK0
+	CZAp+I6li1p/cEviB05ZplP1eggT5wEd72FQ+V2HU/20KPuzOmr37kDdiuEKNybu
+	ERepe6f0imAUDZMGgNH5LCXxfXffA+fj94vYPby7H4K+fv46wHHoItMtCu3zotTA
+	RZMxYP77GGgnM8D3e+K4BOCdNfpW1uaYKLMKh6X0z96Q9DjTlfxNoy6awkHo0mr/
+	/5+uQVLVYjJ2FSrwk4TZXmbVNUVfn9LNzm2Ca3yQ02RbPjDbQrK8kov642ZUKSQi
+	8FGwLxiIZ9ozPzI8xypEmP+yDbDs0KDiF3PYKXokeKNVQw==
+Received: from mail-pf1-f200.google.com (mail-pf1-f200.google.com [209.85.210.200])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4dd7t20qbg-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Tue, 07 Apr 2026 23:45:37 +0000 (GMT)
+Received: by mail-pf1-f200.google.com with SMTP id d2e1a72fcca58-8230d6d54a5so235036b3a.1
+        for <linux-scsi@vger.kernel.org>; Tue, 07 Apr 2026 16:45:37 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1775605537; x=1776210337; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=dqnafUrvON7HZA8zHAS3PedHDWzr2LNEiDtUvABj9vA=;
+        b=BUq0QN6NGNaEtOFTJ60Z3IUYXKMxqmv8B3BnqPIToIu18AVm61ALy30H5JgXlo9F0M
+         WyKYtjh8Md4n5WJgJz3WrDMaxg/YyL+ozjhN6DtBu2LL/nt5aRwYDKtei8+Kgnkh/Px3
+         yI5QTd6XNK8KX+K287wT/dXt/yuNHE0TFd+3zsclFjVlIoyjPlnKVuqNx/uduBvIIiGn
+         gRf9Vy+sLKJIwznybmSOz5qUE9Up3fBhFtHKnM19ydjHHaTu2iDG57a0aXrTJEiiy1lB
+         n3/odQmaKtCJTFw3VdVFEVZYuF7Tluyz4XTLbelshqVDVZbfCIam97IU8PqmLr1u5Qci
+         C1Qw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1775605537; x=1776210337;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=dqnafUrvON7HZA8zHAS3PedHDWzr2LNEiDtUvABj9vA=;
+        b=gpV/DYCIYQF2d60NEk5RG7FO499lBh5SDSmajKBp2D03Nba0EWwdZI8j+FySuAUfHy
+         liS0hXuFalbDms0eno3X6nWXF50q8loGjtwIBHrMaLlh0b7DJBjhCQcG1gG3VbmLxAbc
+         DK5RLy8auzr8X8X3cX8aw3Y8MJL8XJ3HfcuEkud/c/o+ObKeS1FiZwDGeUavnJI7tC5U
+         nuViKaf+DJerHUkqy7sy1RODfiJ7nemvf4AewxKWZpGVe9BRzoLoPbCRaUqZTkqEvZCx
+         Xr5wvy/SodQPg0u63DiKX2qtaKICu2oNG5UKeGv9EnvDF6aKSEmcWDZIgqjmfz68YWpn
+         hM7g==
+X-Forwarded-Encrypted: i=1; AJvYcCV/qlwgEMXOCUNQSX+j8LVjZxEP4lTsWqKuvaBtqgdMeDDhDBTKl1eaoaAGtM18IhoeA1Tiuq6I+QWs@vger.kernel.org
+X-Gm-Message-State: AOJu0YwtFgccI0trntZwoyUjinOs/3BDsNQ9+vmTPy6lcWXVnPh2lC0g
+	2Wupf4KRPNdxXYKLHsuTqcJiaMGTxlc6Gp7Iq3HhrcVG/n54Lzl9tgawekBTXTDLSN+SUbcH69f
+	bxkiCZawplw8JNXzH3vT4d2jvWmEoqNzIvvPh/oQmvUDlB77Hvh0zxN6sfAJ0Yw1m
+X-Gm-Gg: AeBDiesPt0YUE6gpxV41Rm5NKDr+7Y3gJv/afSYNx0grtIQ+hS+I9SkaTSHn6RCcUkz
+	Ks784145n3pEMkSU7VfuTExEpMMKRhj9n+kLzPms+FOeKrCwVVDAKqlAsXtYjJZPq/7zeNFH8xL
+	0c3aP9RE616gt//hYkC8HcSf7yj8vBzvpWY4Qu/Yo+PkypfbhVu8K8gU6nsv0eDHm81Lvkk0Hhu
+	CfZZCOFn587Uj4BkDen82tUfUxc3pUjXqgBhKnRDeSmPGsAmP1tzIOSWo87FwsYt6mtMCm5EWub
+	lIF7eRy9wskOMc8DjEbkL4iPVrHKED38z+X634ECnmRSzlm6e7qqQobEJpfvKm3USfF59Gh/QXT
+	IpIstRbSiEh1p0DbK8Jl9yybihCWrASPgLlaKgDsN5wYzD1m+RET5PlnMTvQ=
+X-Received: by 2002:a05:6a00:896:b0:827:26b6:c11f with SMTP id d2e1a72fcca58-82d003b275fmr19984162b3a.31.1775605537141;
+        Tue, 07 Apr 2026 16:45:37 -0700 (PDT)
+X-Received: by 2002:a05:6a00:896:b0:827:26b6:c11f with SMTP id d2e1a72fcca58-82d003b275fmr19984129b3a.31.1775605536479;
+        Tue, 07 Apr 2026 16:45:36 -0700 (PDT)
+Received: from hu-arakshit-hyd.qualcomm.com ([202.46.22.19])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-82cf9b3baffsm18939943b3a.14.2026.04.07.16.45.31
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 07 Apr 2026 16:45:36 -0700 (PDT)
+Date: Wed, 8 Apr 2026 05:15:28 +0530
+From: Abhinaba Rakshit <abhinaba.rakshit@oss.qualcomm.com>
+To: Harshal Dev <harshal.dev@oss.qualcomm.com>
+Cc: Herbert Xu <herbert@gondor.apana.org.au>,
+        "David S. Miller" <davem@davemloft.net>, Rob Herring <robh@kernel.org>,
+        Krzysztof Kozlowski <krzk+dt@kernel.org>,
+        Conor Dooley <conor+dt@kernel.org>,
+        Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio <konradybcio@kernel.org>,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Neeraj Soni <neeraj.soni@oss.qualcomm.com>,
+        linux-arm-msm@vger.kernel.org, linux-crypto@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-scsi@vger.kernel.org
+Subject: Re: [PATCH v7 1/3] soc: qcom: ice: Add OPP-based clock scaling
+ support for ICE
+Message-ID: <adWXGB8QshGguuXC@hu-arakshit-hyd.qualcomm.com>
+References: <20260302-enable-ufs-ice-clock-scaling-v7-0-669b96ecadd8@oss.qualcomm.com>
+ <20260302-enable-ufs-ice-clock-scaling-v7-1-669b96ecadd8@oss.qualcomm.com>
+ <a616c056-f9aa-420c-a543-7f1539e9e886@oss.qualcomm.com>
+ <ac/L6y5B+6SyTNuE@hu-arakshit-hyd.qualcomm.com>
+ <0375e235-0b8a-458c-a797-d5b341dc60b9@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-OriginatorOrg: microsoft.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: SA1PR21MB6683.namprd21.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: c6137615-9af0-4c19-06d5-08de94f54a59
-X-MS-Exchange-CrossTenant-originalarrivaltime: 07 Apr 2026 22:30:36.8195
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 72f988bf-86f1-41af-91ab-2d7cd011db47
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: Uo4cG8NdJpjZDWHq9b0/9yZTlBm7BdmmnNCQq3oOJVJ7b+9WVoqrtSztuUeigLg2sAWJVdutvloK7zRY6guXjw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA3PR21MB5745
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <0375e235-0b8a-458c-a797-d5b341dc60b9@oss.qualcomm.com>
+X-Authority-Analysis: v=2.4 cv=De0nbPtW c=1 sm=1 tr=0 ts=69d59721 cx=c_pps
+ a=mDZGXZTwRPZaeRUbqKGCBw==:117 a=fChuTYTh2wq5r3m49p7fHw==:17
+ a=kj9zAlcOel0A:10 a=A5OVakUREuEA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=yOCtJkima9RkubShWh1s:22
+ a=VwQbUJbxAAAA:8 a=CkLZM6L_lappvOHulz4A:9 a=CjuIK1q_8ugA:10
+ a=zc0IvFSfCIW2DFIPzwfm:22
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNDA3MDIxOCBTYWx0ZWRfX1d150qwY5FvI
+ F30bG4SNZk6eLDNggJg2idF5KxTVnoRZY7/MU07RgaRPyDU5j1uJNXqH2hoss5dqHWkmPMmrT6k
+ FT4IlDIZwpARwuhy/OIm5Yof7KlnacuqhnesoKHp+2PWjPzk3EyUTMY2wG7zmHmRD6J2efdjHOW
+ wAv69vXlPTx+ODTtur8Y7RrskTfH8affaT3+DupDCE1qGAHWRvY/33lJjCM6K3kwqLGP3EnzOWg
+ ySiayiBxwz2pv/vbpdlVRbJSxTk0f0r8mq/0y4WxIEUiN4SqAT1GwT0IaN0nYD23aKuwPtb5Kdk
+ 1er44tQ1glEC7RmyltALLHwb41aNQQ55LFM+DV0TvJC0raCDb0+CVDCSaEj1dMeYz6AFjK13HNg
+ A55Uhmd2AT+rT/4/XRldzkMJDKJXQ+GU9pamZTZeEZEJdJ35xzZR+PnW2VBXnwBPIvvsOooJ0Be
+ Z36BDD8EF450vbJWDKw==
+X-Proofpoint-ORIG-GUID: fXefqLHgD1KcazbEKQpJhVprFuL3FfhW
+X-Proofpoint-GUID: fXefqLHgD1KcazbEKQpJhVprFuL3FfhW
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-04-07_05,2026-04-07_05,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ spamscore=0 clxscore=1015 bulkscore=0 phishscore=0 priorityscore=1501
+ malwarescore=0 lowpriorityscore=0 suspectscore=0 impostorscore=0 adultscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2604010000 definitions=main-2604070218
 
+On Fri, Apr 03, 2026 at 10:50:29PM +0530, Harshal Dev wrote:
+> >>> +{
+> >>> +	unsigned long ice_freq = target_freq;
+> >>> +	struct dev_pm_opp *opp;
+> >>> +	int ret;
+> >>> +
+> >>> +	if (!ice->has_opp)
+> >>> +		return -EOPNOTSUPP;
+> >>> +
+> 
+> [...]
+> 
+> >>> +
+> >>>  static struct qcom_ice *qcom_ice_create(struct device *dev,
+> >>> -					void __iomem *base)
+> >>> +					void __iomem *base,
+> >>> +					bool is_legacy_binding)
+> >>
+> >> You don't need to introduce is_legacy_binding.
+> >>
+> >> Since you only need to add the OPP table when this function gets called from ICE probe,
+> >> you should not touch this function. Instead, you should call devm_pm_opp_of_add_table()
+> >> in ICE probe before calling qcom_ice_create() then once qcom_ice_create() is success, you
+> >> can store the clk rate in the returned qcom_ice *engine ptr by calling clk_get_rate().
+> > 
+> > This was added as part of the review comment from Krzysztof:
+> > https://lore.kernel.org/all/20260128-daft-seriema-of-promotion-c50eb5@quoll/
+> >  
+> > While I agree moving this to qcom_ice_probe would be more cleaner without needing
+> > to change the API, most of our initializing code for driver by parsing the DT node
+> > happens through qcom_ice_create, which keeps qcom_ice_probe much simpler.
+> > Please let me know, if you think otherwise. 
+> >
+> 
+> Seems like a suggestion from Krzysztof and not something based on strong opinion. Again,
+> you can choose to do this if you spin a v8, I feel it's cleaner.
 
+This comment raises an important design point around whether the OPP table
+should be registered in qcom_ice_create versus qcom_ice_probe.
+I agree that moving OPP-table registration to qcom_ice_probe would be a cleaner and
+more maintainable approach. Doing so avoids the need to distinguish between legacy and
+non-legacy bindings at the API level, and keeps qcom_ice_create reusable for both cases.
+This also aligns well with the intent of qcom_ice_create, which should focus purely
+on common/basic hardware initialization.
 
-> -----Original Message-----
-> From: Li Tian <litian@redhat.com>
-> Sent: Sunday, April 5, 2026 6:54 PM
-> To: linux-scsi@vger.kernel.org
-> Cc: Li Tian <litian@redhat.com>; KY Srinivasan <kys@microsoft.com>; Haiya=
-ng
-> Zhang <haiyangz@microsoft.com>; Wei Liu <wei.liu@kernel.org>; Dexuan Cui
-> <DECUI@microsoft.com>; Long Li <longli@microsoft.com>; James E.J. Bottoml=
-ey
-> <James.Bottomley@HansenPartnership.com>; Martin K. Petersen
-> <martin.petersen@oracle.com>; linux-hyperv@vger.kernel.org; linux-
-> kernel@vger.kernel.org
-> Subject: [EXTERNAL] [PATCH] scsi: storvsc: Handle PERSISTENT_RESERVE_IN
-> truncation for Hyper-V vFC
->=20
-> The storvsc driver has become stricter in handling SRB status codes retur=
-ned by
-> the Hyper-V host. When using Virtual Fibre Channel (vFC) passthrough, the=
- host
-> may return SRB_STATUS_DATA_OVERRUN for PERSISTENT_RESERVE_IN
-> commands if the allocation length in the CDB does not match the host's ex=
-pected
-> response size.
->=20
-> Currently, this status is treated as a fatal error, propagating
-> Host_status=3D0x07 [DID_ERROR] to the SCSI mid-layer. This causes userspa=
-ce
-> storage utilities (such as sg_persist) to fail with transport errors, eve=
-n when the
-> host has actually returned the requested reservation data in the buffer.
->=20
-> Refactor the existing command-specific workarounds into a new helper func=
-tion,
-> storvsc_host_mishandles_cmd(), and add PERSISTENT_RESERVE_IN to the list =
-of
-> commands where SRB status errors should be suppressed for vFC devices. Th=
-is
-> ensures that the SCSI mid-layer processes the returned data buffer instea=
-d of
-> terminating the command.
->=20
-> Signed-off-by: Li Tian <litian@redhat.com>
+Additionally, qcom_ice_create currently has no dependency on the OPP table being
+registered beforehand. Clock scaling is a performance optimization and does not
+impose a hard requirement for ICE operation or enablement.
+From that perspective, there is no technical necessity for OPP registration to
+occur within qcom_ice_create.
+Ack, will update it in v8 patchset.
+   
+> > Also, I don't see any reason for moving the clk_get_rate() logic to qcom_ice_probe
+> > though as it will not be set on legacy targets in that case.
+> 
+> I thought only new DT nodes will be specifying the OPP table requiring us to store the
+> clk rate and restore later. If legacy DT nodes also possess the OPP table, then ignore
+> this comment.
 
-Reviewed-by: Long Li <longli@microsoft.com>
+No, clk_rate is not needed for legacy bindings. It is only needed for DVFS operation
+across suspend resume cycles.
+Hence, its value makes sense only for non-legacy bindings.
+It shoud not be faked for legacy bindings as clk rates can also be scaled from
+storage driver in-case of legacy bindings.
+Ack, will update in patchset v8.
 
+> > 
+> >>>  {
+> >>>  	struct qcom_ice *engine;
+> >>> +	int err;
+> >>>  
+> >>>  	if (!qcom_scm_is_available())
+> >>>  		return ERR_PTR(-EPROBE_DEFER);
+> >>> @@ -584,6 +640,26 @@ static struct qcom_ice *qcom_ice_create(struct device *dev,
+> >>>  	if (IS_ERR(engine->core_clk))
+> >>>  		return ERR_CAST(engine->core_clk);
+> >>>  
+> >>> +	/*
+> >>> +	 * Register the OPP table only when ICE is described as a standalone
+> >>> +	 * device node. Older platforms place ICE inside the storage controller
+> >>> +	 * node, so they don't need an OPP table here, as they are handled in
+> >>> +	 * storage controller.
+> >>> +	 */
+> >>> +	if (!is_legacy_binding) {
+> >>> +		/* OPP table is optional */
+> >>> +		err = devm_pm_opp_of_add_table(dev);
+> >>> +		if (err && err != -ENODEV) {
+> >>> +			dev_err(dev, "Invalid OPP table in Device tree\n");
+> >>> +			return ERR_PTR(err);
+> >>> +		}
+> >>> +		engine->has_opp = (err == 0);
+> >>
+> >> Let's keep it readable and simple. engine->has_opps = true; here and false in error handle above.
+> > 
+> > Well there are 3 cases to it:
+> > 
+> > 1. err == 0 which implies devm_pm_opp_of_add_table is successful and we can set engine->has_opp =true.
+> > 2. err == -ENODEV which implies there is no opp table in the DT node.
+> >    In that case, we don't fail the driver simply go ahead and log in the check below.
+> >    This is done since OPP-table is optional.
+> > 3. err == any other error code. Something very wrong happened with devm_pm_opp_of_add_table
+> >    and driver should fail.
+> > 
+> > Hence, we have the condition (err == 0) for setting has_opp flag.
+> 
+> My suggestion is you either explain this in concise comments or simplify the assignment of has_opp
+> to make it obvious.
 
-> ---
->  drivers/scsi/storvsc_drv.c | 32 +++++++++++++++++++++-----------
->  1 file changed, 21 insertions(+), 11 deletions(-)
->=20
-> diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c inde=
-x
-> ae1abab97835..6977ca8a0658 100644
-> --- a/drivers/scsi/storvsc_drv.c
-> +++ b/drivers/scsi/storvsc_drv.c
-> @@ -1131,6 +1131,26 @@ static void storvsc_command_completion(struct
-> storvsc_cmd_request *cmd_request,
->  		kfree(payload);
->  }
->=20
-> +/*
-> + * The current SCSI handling on the host side does not correctly handle:
-> + * INQUIRY with page code 0x80, MODE_SENSE / MODE_SENSE_10 with
-> cmd[2]
-> +=3D=3D 0x1c,
-> + * and (for FC) MAINTENANCE_IN / PERSISTENT_RESERVE_IN passthrough.
-> + */
-> +static bool storvsc_host_mishandles_cmd(u8 opcode, struct hv_device
-> +*device) {
-> +	switch (opcode) {
-> +	case INQUIRY:
-> +	case MODE_SENSE:
-> +	case MODE_SENSE_10:
-> +		return true;
-> +	case MAINTENANCE_IN:
-> +	case PERSISTENT_RESERVE_IN:
-> +		return hv_dev_is_fc(device);
-> +	default:
-> +		return false;
-> +	}
-> +}
-> +
->  static void storvsc_on_io_completion(struct storvsc_device *stor_device,
->  				  struct vstor_packet *vstor_packet,
->  				  struct storvsc_cmd_request *request) @@ -
-> 1141,22 +1161,12 @@ static void storvsc_on_io_completion(struct
-> storvsc_device *stor_device,
->  	stor_pkt =3D &request->vstor_packet;
->=20
->  	/*
-> -	 * The current SCSI handling on the host side does
-> -	 * not correctly handle:
-> -	 * INQUIRY command with page code parameter set to 0x80
-> -	 * MODE_SENSE and MODE_SENSE_10 command with cmd[2] =3D=3D 0x1c
-> -	 * MAINTENANCE_IN is not supported by HyperV FC passthrough
-> -	 *
->  	 * Setup srb and scsi status so this won't be fatal.
->  	 * We do this so we can distinguish truly fatal failues
->  	 * (srb status =3D=3D 0x4) and off-line the device in that case.
->  	 */
->=20
-> -	if ((stor_pkt->vm_srb.cdb[0] =3D=3D INQUIRY) ||
-> -	   (stor_pkt->vm_srb.cdb[0] =3D=3D MODE_SENSE) ||
-> -	   (stor_pkt->vm_srb.cdb[0] =3D=3D MODE_SENSE_10) ||
-> -	   (stor_pkt->vm_srb.cdb[0] =3D=3D MAINTENANCE_IN &&
-> -	   hv_dev_is_fc(device))) {
-> +	if (storvsc_host_mishandles_cmd(stor_pkt->vm_srb.cdb[0], device)) {
->  		vstor_packet->vm_srb.scsi_status =3D 0;
->  		vstor_packet->vm_srb.srb_status =3D SRB_STATUS_SUCCESS;
->  	}
-> --
-> 2.53.0
+Sure, will add appropriate comment here.
 
+Abhinaba Rakshit
