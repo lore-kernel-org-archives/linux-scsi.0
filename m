@@ -1,206 +1,125 @@
-Received: from mail-pj1-f47.google.com (mail-pj1-f47.google.com [209.85.216.47])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mail.crpt.ru (mail.crpt.ru [91.236.205.1])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C21A3264C1
-	for <linux-scsi@vger.kernel.org>; Wed,  8 Apr 2026 07:31:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.47
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D35673803D6;
+	Wed,  8 Apr 2026 10:14:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.236.205.1
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775633474; cv=none; b=LQz6trJTbmPSyof8hsmdy5PP1yo2pvBQPdK1R+WD8KT2FVq66oPF0X9MJlvbG5/us7+vVSqRWzWtABQQhDEzVxcU/pOTxDnOSJRM/9iWAtoM0D2oeBi3NkfnZ+U2H+wfVWa6/WkGkqWCJz3t4+CsKCYlGEybHvFIm7LrJkSMzjo=
+	t=1775643285; cv=none; b=gXbQEHjCgyhTe4V83JBzqbFdohLSeMYE0O0+x0X7HfYKcgR6y4aQU4ixUWRrbhGKCmcVhcmsqS5hgD42thlcPseT4YtuV3hArEtq0qfNkKLSOloF8C005FqBx3Ey44rKPR74KjRETe8CetyDjwTBY+YVUlxcwpR4ZS4SGOsobnE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775633474; c=relaxed/simple;
-	bh=ytB53dNuSiSNA7KpLGzUUg37w5+LYWgYBJoL01WyyRo=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=RiVQFd3hg3KVAJAH35KltzXSiLq64GhPqhCjWR8x3cMsq1srv2xBoRq3npBUy4ZL4xQ8fAdyiLubpdv91soKp4ZqyWs7uBlKkvGKBdpXicqNowDXzd47V9u2yt/pPea0P/u0tyz2h8fZNFcmDCYcUIJh9QCamQ4kt8aNjlbT1ms=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=FfeVMJoV; arc=none smtp.client-ip=209.85.216.47
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1775643285; c=relaxed/simple;
+	bh=IoYyZ/SI4yknpZ6vZ7pjbrZPFU9T+KTqEsLZBCK1sDQ=;
+	h=From:To:CC:Subject:Date:Message-ID:Content-Type:MIME-Version; b=Wj68q2Q6c0OHDWZ65bUzpqPjqCjtXNbrAGCJ4ybhDi9aflOOWJF3kfT6S7TAAgjt34equQAbPTql3LyWIpJ+KR7Y/eZOZMSavCk/noeKTuOcMPYp0p2Ajc2iOrdtd6jHS83BQLsE8+kCvdRiPpcJ0wV59k8gx+yQEVRbyzxlwWI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=crpt.ru; spf=pass smtp.mailfrom=crpt.ru; dkim=pass (2048-bit key) header.d=crpt.ru header.i=@crpt.ru header.b=jhb9a01/; arc=none smtp.client-ip=91.236.205.1
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=crpt.ru
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=crpt.ru
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="FfeVMJoV"
-Received: by mail-pj1-f47.google.com with SMTP id 98e67ed59e1d1-35d971fb6f1so5108422a91.0
-        for <linux-scsi@vger.kernel.org>; Wed, 08 Apr 2026 00:31:13 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1775633473; x=1776238273; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=MlstBpIKOzxoAPZSb6mPVzZ0DWzq15OlHmrRs8yLD0g=;
-        b=FfeVMJoVmXRXMd10eUsz9UGYLuRl6HB/Tzs+JPJUXLpoQHQToZ/0RrLoslvTL7SbD6
-         dzp8nivx7L0qElkCJOEFtNYGZ/t9Om+B/hBE0dcq+Ip9tRN36WcX1oGwiAV1+b9l9x7P
-         fF1QVrxD/QYlhHvAtLzUZ/B/LSh8dmf6DFSWWtTH/L5BzTeD99Ycb5EnvvWyFNbdLt5D
-         tg10V9FrYTY+kBhWs7Q2hz284hUfxJzqZQX0O06yqouFSe8rfSYndI4ZkzsR88P61LSp
-         5KFbaKyQrauKTfxl43/ZoAZNaHOi6iAEN4wGbEx7ioBxldhkpX9uA6LGFMsTL2deInN2
-         /U7Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1775633473; x=1776238273;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=MlstBpIKOzxoAPZSb6mPVzZ0DWzq15OlHmrRs8yLD0g=;
-        b=qO5nJCEybW6ZzIkDSUVmS69yofpfCr6HZouJX73QZ5CTuN48h1PwBiN0sEnXGTy9CX
-         4CrOc6DiQlTGHvtgv/DVjBgO5Gc1Bjv2tcb3cbSzVMvBmuL19zyg+yNRXVV4IJCPmJW4
-         +KzXddGqke5dM43D4zrZAAPGm1/+D4wZnhsLBWclFFS9hkUpd+ZbX0HtD2XzF2GvJsrX
-         2xcJ8ZtMuz+6tdCQygLtgoXMe8248T8gt5bAcJifFGXn5m/KHDd0G6GxOvkdW+rNNUC7
-         3vMYd6qsBgJx1/R87XshGM6cOXHjQ1P/sJAZpYQEudjOonMn3orglXAEq6XkSpYO49p5
-         N46w==
-X-Forwarded-Encrypted: i=1; AJvYcCXWmDX0lLW210UUp2qke+PgwRznSwpbJUf+OQYl4AtsPF35jlNQuxDlUInAMGdCWv3bZFOdg50swZVl@vger.kernel.org
-X-Gm-Message-State: AOJu0YzwJau643dUxUr4OOdLccUOU+anhuASnv4L0rpA01vGJZGwomPs
-	ind3bcD3oqIMNb+C1AZi8yoTDj1R5MKhxBYhzsc5TEgsXUDwU74yksll
-X-Gm-Gg: AeBDietfN+y/aOr4OGmmq5sCEdXRZ35aBH4Ld2eXh2EICl8vjZJ2PR4MPAINqvkN7CY
-	CvaP5VaUbIxFnaR1xDxSQOS8biXhPrSlbMYpyu1rIZXPeVNvNjZOmK5GJibpm96jHQGiugHw9lD
-	UWi36KOM/CJztPXp0zFYrmNTK43jWmL8kJ0jbBJ1pfb0A+X/k/rFG2LfiOAWsjBQdW3OqAo1C18
-	Lpxfh6epGIbcnLZAH+/OvXrkzfFUF8At3EgOgHuw7jhPHNz1GZKXB1ys5N9N2+Cd6AejSVmUUB9
-	gq0DMji3B/XqSMbsOsL6PQiH2vgyDe3N0AAaI4iGvsTJzaqusSXyZSaRwjg9TvA1JGVePx6l1Sh
-	OySI6gYa89M0w2aihdWIJF4TvQKlta7p4Kq19fR3J5naKbwflD7fG+cel8YMrcTTBB5530zDb4k
-	/NPxur39dxJNBq6LVFZmsETyW9pT6Z6e6uYKKbyH+ei56u7vw=
-X-Received: by 2002:a17:903:1a28:b0:2b0:c90f:44b2 with SMTP id d9443c01a7336-2b28173548amr214128665ad.12.1775633472474;
-        Wed, 08 Apr 2026 00:31:12 -0700 (PDT)
-Received: from ubuntu-Virtual-Machine.mshome.net ([104.43.2.13])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2b2ae05991bsm47105515ad.70.2026.04.08.00.31.09
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 08 Apr 2026 00:31:12 -0700 (PDT)
-From: Tianyu Lan <ltykernel@gmail.com>
-X-Google-Original-From: Tianyu Lan <tiala@microsoft.com>
-To: kys@microsoft.com,
-	haiyangz@microsoft.com,
-	wei.liu@kernel.org,
-	decui@microsoft.com,
-	longli@microsoft.com,
-	James.Bottomley@HansenPartnership.com,
-	martin.petersen@oracle.com,
-	apais@microsoft.com
-Cc: Tianyu Lan <tiala@microsoft.com>,
-	linux-hyperv@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-scsi@vger.kernel.org,
-	vdso@hexbites.dev,
-	mhklinux@outlook.com
-Subject: [PATCH] x86/VMBus: Confidential VMBus for dynamic DMA transfers
-Date: Wed,  8 Apr 2026 03:31:05 -0400
-Message-Id: <20260408073105.272255-1-tiala@microsoft.com>
-X-Mailer: git-send-email 2.25.1
+	dkim=pass (2048-bit key) header.d=crpt.ru header.i=@crpt.ru header.b="jhb9a01/"
+From: =?koi8-r?B?98HUz9LP0MnOIOHOxNLFyg==?= <a.vatoropin@crpt.ru>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+CC: =?koi8-r?B?98HUz9LP0MnOIOHOxNLFyg==?= <a.vatoropin@crpt.ru>, "Roman
+ Bolshakov" <r.bolshakov@yadro.com>, David Disseldorp <ddiss@suse.de>,
+	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+	"target-devel@vger.kernel.org" <target-devel@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"lvc-project@linuxtesting.org" <lvc-project@linuxtesting.org>
+Subject: [PATCH] scsi: target: Add a check to prevent the use of a NULL
+ pointer
+Thread-Topic: [PATCH] scsi: target: Add a check to prevent the use of a NULL
+ pointer
+Thread-Index: AQHcx0B3zaxAFxbBMk6qmv5jGMLGsw==
+Date: Wed, 8 Apr 2026 10:14:20 +0000
+Message-ID: <20260408101400.8373-1-a.vatoropin@crpt.ru>
+Accept-Language: ru-RU, en-US
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+x-kse-serverinfo: EX1.crpt.local, 9
+x-kse-antivirus-interceptor-info: scan successful
+x-kse-antivirus-info: Clean, bases: 4/7/2026 9:01:00 PM
+x-kse-attachment-filter-triggered-rules: Clean
+x-kse-attachment-filter-triggered-filters: Clean
+x-kse-bulkmessagesfiltering-scan-result: protection disabled
+Content-Type: text/plain; charset="koi8-r"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; d=crpt.ru; s=crpt.ru; c=relaxed/relaxed;
+ h=from:to:cc:subject:date:message-id:content-type:mime-version;
+ bh=IqgtREMNwY7ZBwZB4NCZwdKeHpqQmhXD9Z3z/VQGaGs=;
+ b=jhb9a01/s3gYcBtd6BYgSbsz0r8hovHRTesym7kupJXXTzXglqkMAUGTQWdGPvdMU9Dl40jmVCkB
+	6zS5W+/Stmf06tQ5jEXlkia/GfKd48/4qMbS9HqcoSLvmCRTPrWMGb8D0Z7syEdQgzm/XumTTEW9
+	T4+GngbM6UbVBCQlpVkF9aZaV7faBaCwt0u6iv3FykHuna57dDPl66jVyekCx7pS1lk8K7of6qVJ
+	gozDZqqpZm6tZRWfeI+GIE+/g0N039JFV0lY86kihOy3VhYW/ZJh6PTHd0co/dU9y8uSOL6L7Vnr
+	dh1y2PTR1lTqYpyVXTmWc725BVlfQhB7iajv9g==
 
-Hyper-V provides Confidential VMBus to communicate between
-device model and device guest driver via encrypted/private
-memory in Confidential VM. The device model is in OpenHCL
-(https://openvmm.dev/guide/user_guide/openhcl.html) that
-plays the paravisor role.
+From: Andrey Vatoropin <a.vatoropin@crpt.ru>
 
-For a VMBus device, there are two communication methods to
-talk with Host/Hypervisor. 1) VMBUS Ring buffer 2) Dynamic
-DMA transfer.
+Some functions accept a string input parameter, which is then passed to
+strscpy(). If strscpy() returns zero the (len > 0) branch is not taken and
+`stripped` remains NULL. The subsequent check (len < 0 || len >
+INQUIRY_VENDOR_LEN) does not catch this case, allowing a NULL `stripped`
+pointer to be passed to target_check_inquiry_data().
 
-The Confidential VMBus Ring buffer has been upstreamed by
-Roman Kisel(commit 6802d8af47d1).
+Therefore, the existing checks are insufficient to prevent the use of a
+NULL pointer when an empty string is passed.
 
-The dynamic DMA transition of VMBus device normally goes
-through DMA core and it uses SWIOTLB as bounce buffer in
-a CoCo VM.
+Add exclusion of zero-length strings to avoid dereferencing a NULL
+`stripped` pointer.
 
-The Confidential VMBus device can do DMA directly to
-private/encrypted memory. Because the swiotlb is decrypted
-memory, the DMA transfer must not be bounced through the
-swiotlb, so as to preserve confidentiality. This is different
-from the default for Linux CoCo VMs, so not use DMA(SWIOTLB)
-API in VMBus driver when confidential dynamic DMA transfers
-capability is present.
-
-Signed-off-by: Tianyu Lan <tiala@microsoft.com>
+Found by Linux Verification Center (linuxtesting.org) with SVACE.
+      =20
+Fixes: 54a6f3f6a43c ("scsi: target: add device vendor_id configfs attribute=
+")
+Signed-off-by: Andrey Vatoropin <a.vatoropin@crpt.ru>
 ---
- drivers/scsi/storvsc_drv.c | 28 +++++++++++++++++++++-------
- include/linux/hyperv.h     |  1 +
- 2 files changed, 22 insertions(+), 7 deletions(-)
+ drivers/target/target_core_configfs.c | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
 
-diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-index ae1abab97835..79b7611518b7 100644
---- a/drivers/scsi/storvsc_drv.c
-+++ b/drivers/scsi/storvsc_drv.c
-@@ -1316,7 +1316,8 @@ static void storvsc_on_channel_callback(void *context)
- 					continue;
- 				}
- 				request = (struct storvsc_cmd_request *)scsi_cmd_priv(scmnd);
--				scsi_dma_unmap(scmnd);
-+				if (!device->co_external_memory)
-+					scsi_dma_unmap(scmnd);
- 			}
- 
- 			storvsc_on_receive(stor_device, packet, request);
-@@ -1339,6 +1340,8 @@ static int storvsc_connect_to_vsp(struct hv_device *device, u32 ring_size,
- 
- 	device->channel->max_pkt_size = STORVSC_MAX_PKT_SIZE;
- 	device->channel->next_request_id_callback = storvsc_next_request_id;
-+	if (device->channel->co_external_memory)
-+		device->co_external_memory = true;
- 
- 	ret = vmbus_open(device->channel,
- 			 ring_size,
-@@ -1805,7 +1808,7 @@ static enum scsi_qc_status storvsc_queuecommand(struct Scsi_Host *host,
- 		unsigned long offset_in_hvpg = offset_in_hvpage(sgl->offset);
- 		unsigned int hvpg_count = HVPFN_UP(offset_in_hvpg + length);
- 		struct scatterlist *sg;
--		unsigned long hvpfn, hvpfns_to_add;
-+		unsigned long hvpfn, hvpfns_to_add, hvpgoff;
- 		int j, i = 0, sg_count;
- 
- 		payload_sz = (hvpg_count * sizeof(u64) +
-@@ -1821,7 +1824,11 @@ static enum scsi_qc_status storvsc_queuecommand(struct Scsi_Host *host,
- 		payload->range.len = length;
- 		payload->range.offset = offset_in_hvpg;
- 
--		sg_count = scsi_dma_map(scmnd);
-+		if (dev->co_external_memory)
-+			sg_count = scsi_sg_count(scmnd);
-+		else
-+			sg_count = scsi_dma_map(scmnd);
-+
- 		if (sg_count < 0) {
- 			ret = SCSI_MLQUEUE_DEVICE_BUSY;
- 			goto err_free_payload;
-@@ -1836,9 +1843,16 @@ static enum scsi_qc_status storvsc_queuecommand(struct Scsi_Host *host,
- 			 * Such offsets are handled even on other than the first
- 			 * sgl entry, provided they are a multiple of PAGE_SIZE.
- 			 */
--			hvpfn = HVPFN_DOWN(sg_dma_address(sg));
--			hvpfns_to_add = HVPFN_UP(sg_dma_address(sg) +
--						 sg_dma_len(sg)) - hvpfn;
-+			if (dev->co_external_memory) {
-+				hvpgoff = HVPFN_DOWN(sg->offset);
-+				hvpfn = page_to_hvpfn(sg_page(sg)) + hvpgoff;
-+				hvpfns_to_add =	HVPFN_UP(sg->offset + sg->length) -
-+							hvpgoff;
-+			} else {
-+				hvpfn = HVPFN_DOWN(sg_dma_address(sg));
-+				hvpfns_to_add = HVPFN_UP(sg_dma_address(sg) +
-+							 sg_dma_len(sg)) - hvpfn;
-+			}
- 
- 			/*
- 			 * Fill the next portion of the PFN array with
-@@ -1860,7 +1874,7 @@ static enum scsi_qc_status storvsc_queuecommand(struct Scsi_Host *host,
- 	ret = storvsc_do_io(dev, cmd_request, smp_processor_id());
- 	migrate_enable();
- 
--	if (ret)
-+	if (ret && (!dev->co_external_memory))
- 		scsi_dma_unmap(scmnd);
- 
- 	if (ret == -EAGAIN) {
-diff --git a/include/linux/hyperv.h b/include/linux/hyperv.h
-index dfc516c1c719..bcb143766d6e 100644
---- a/include/linux/hyperv.h
-+++ b/include/linux/hyperv.h
-@@ -1285,6 +1285,7 @@ struct hv_device {
- 
- 	/* place holder to keep track of the dir for hv device in debugfs */
- 	struct dentry *debug_dir;
-+	bool co_external_memory;
- 
- };
- 
--- 
-2.50.1
-
+diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_=
+core_configfs.c
+index a1c91d4515bc..3aaa2b931009 100644
+--- a/drivers/target/target_core_configfs.c
++++ b/drivers/target/target_core_configfs.c
+@@ -1455,6 +1455,10 @@ static ssize_t target_wwn_vendor_id_store(struct con=
+fig_item *item,
+ 			"\n");
+ 		return -EOVERFLOW;
+ 	}
++	if (len =3D=3D 0) {
++		pr_err("Emulated T10 Vendor Identification equals zero.\n");
++		return -EINVAL;
++	}
+=20
+ 	ret =3D target_check_inquiry_data(stripped);
+=20
+@@ -1511,6 +1515,10 @@ static ssize_t target_wwn_product_id_store(struct co=
+nfig_item *item,
+ 			"\n");
+ 		return -EOVERFLOW;
+ 	}
++	if (len =3D=3D 0) {
++		pr_err("Emulated T10 Vendor equals zero.\n");
++		return -EINVAL;
++	}
+=20
+ 	ret =3D target_check_inquiry_data(stripped);
+=20
+@@ -1567,6 +1575,10 @@ static ssize_t target_wwn_revision_store(struct conf=
+ig_item *item,
+ 			"\n");
+ 		return -EOVERFLOW;
+ 	}
++	if (len =3D=3D 0) {
++		pr_err("Emulated T10 Revision equals zero.\n");
++		return -EINVAL;
++	}
+=20
+ 	ret =3D target_check_inquiry_data(stripped);
+=20
+--=20
+2.43.0
