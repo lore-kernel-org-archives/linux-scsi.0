@@ -1,261 +1,254 @@
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7DCA339023C;
-	Thu,  9 Apr 2026 15:12:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775747562; cv=none; b=RYNHV3JkdQLwhXtaGaYxbm/4+KKD1UeO9rXtCUBEOcI+NxGHXsMrNZ44TAsg+RaYCPNCXSMkyN4fWoDADBzJEh6xEcD+2ojdNl4MNzYZL2bLF2trXTHZCGDqUtQM9NBxrXaWUpFGVY3Ox/zMKlYtIcKALb7zeoEaBjM/5GypOWo=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775747562; c=relaxed/simple;
-	bh=rGbzVDzF1yt8J5Sp6HUHxfIRq18J2KwZYDj1oplSebM=;
-	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:Content-Type; b=Y/VhCnAkMdTA3QT6wySJZ0ziLhiXyRi4zmg1GcxSlCXS3nj7nMdptPnFH+FGI/cPtrcJ/YBjiyYpaknOJlL9n0IMG2kTpiTeUjFCRDIfuOtz/9gfcUu9wWXGEd/n/nxml3ez9Cjkznj8Oy1Ne1kBwYBG7FsrjWiXApmomAiuvps=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=KiNvSfOX; arc=none smtp.client-ip=148.163.156.1
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 127263382DE;
+	Thu,  9 Apr 2026 15:21:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.177.32
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1775748090; cv=fail; b=CUPG158XP8mx5mLeTZKFe6InbR7F+pQzDo+RfMSMZ6owH1lmMIPMdjB3XjlcancKA45ebZByA7F+SFFIXQ6SRuChEGvTZ97HA/UnAOFX2hm3ZJJH31+SQZD40pUZnPQwnEIIqaX4VnDpEGpKygEZWyJNuYUHhXXuNlw5VWdvoRI=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1775748090; c=relaxed/simple;
+	bh=intBT66HCFdasEr/Z6st/HiE+hTm9hBtFzRL9qOGj7U=;
+	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
+	 Content-Type:MIME-Version; b=T312dPEtwz/JvZQ6pFbjob6pDWUA4xILTaVJpUVTY23bNe8ghZ342j+cAFOb8XA2Tx/xHjcXD9lMxl/iHue1u89QM+2kKidAartrA7dxgdmKzy1udWcxCIBaliHL4OEbHzaUbPk+el+zOnsLDhYF7Chqr4c9lk5tDb/L8qsPcmM=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=opOZI/4r; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=fdSZWy1C; arc=fail smtp.client-ip=205.220.177.32
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="KiNvSfOX"
-Received: from pps.filterd (m0356517.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 639BxmOU2302913;
-	Thu, 9 Apr 2026 15:12:38 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-transfer-encoding:content-type:date:from:message-id
-	:mime-version:subject:to; s=pp1; bh=uv3SxdrQvJ/R0R2bE+Pz5mKeq5X0
-	1XmrcYpltusqVMU=; b=KiNvSfOXhCWVqWHOK2rmQjc6TeJVv4S9E3ea3S+O8YC0
-	VxSEM+xC+0KGIbY3wfNQN8+84VboinJPPU0mdBWqju1hiypWgH7ieDfLr0TDxQKy
-	WUfql18wSbV135qEVlvzcDpyuTwlpq1mNIdXPNQaufzF85mIVrxpKsMPkzcKUVpN
-	UuvLk4liIZ9HIrB170VV0NemyAnskEID/75Q3ar00ID4brD/b+1lxJMOj1Qvf5H6
-	ntPMa2sbblTS7GNdK7pQCJOcnRX7LnzEXHF8bSE6dDyXLOTOKVv4VadiBetRVUyF
-	7DEWCdTbp2OBZuSZv9oMYHoHf3ZW39Wvu3e4Kduhnw==
-Received: from ppma22.wdc07v.mail.ibm.com (5c.69.3da9.ip4.static.sl-reverse.com [169.61.105.92])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4dcn2fnmam-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 09 Apr 2026 15:12:37 +0000 (GMT)
-Received: from pps.filterd (ppma22.wdc07v.mail.ibm.com [127.0.0.1])
-	by ppma22.wdc07v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 639Cu2a0007924;
-	Thu, 9 Apr 2026 15:12:36 GMT
-Received: from smtprelay06.wdc07v.mail.ibm.com ([172.16.1.73])
-	by ppma22.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4dcmg2m3ug-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 09 Apr 2026 15:12:36 +0000
-Received: from smtpav05.wdc07v.mail.ibm.com (smtpav05.wdc07v.mail.ibm.com [10.39.53.232])
-	by smtprelay06.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 639FCag321693036
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Thu, 9 Apr 2026 15:12:36 GMT
-Received: from smtpav05.wdc07v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 611E858053;
-	Thu,  9 Apr 2026 15:12:36 +0000 (GMT)
-Received: from smtpav05.wdc07v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id D241F58043;
-	Thu,  9 Apr 2026 15:12:35 +0000 (GMT)
-Received: from [9.61.156.97] (unknown [9.61.156.97])
-	by smtpav05.wdc07v.mail.ibm.com (Postfix) with ESMTP;
-	Thu,  9 Apr 2026 15:12:35 +0000 (GMT)
-Message-ID: <e16406ec-d4d6-4783-b79c-5c00263c133c@linux.ibm.com>
-Date: Thu, 9 Apr 2026 10:12:35 -0500
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="opOZI/4r";
+	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="fdSZWy1C"
+Received: from pps.filterd (m0333520.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 639DYDJU588153;
+	Thu, 9 Apr 2026 15:21:02 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=
+	corp-2025-04-25; bh=uG6tdBgk2uaS9CIIj8U1k6+8O8sTL6sGOYH32Rs+CRs=; b=
+	opOZI/4r/IdSPQDBUAaBiaMn8necm6HCgBCy0pTJDXvG56ZTPuzfEN4e2oK/x9CY
+	fwbnLlVWxlSRNa2DRda+1Cx37L2fZ2naf9ykm+MLJzV0457c2ikbcZ7Z443Ww44b
+	aPWP5+aVDbOLc3copzbjN91/e78ZEOCLMu/9VMnGZRrUslnv1xTFESYSS+KWIsNi
+	Sks1SX+U2UpUJyJpVPh5C95fwrql6kT3mn2mynrQoNBukbNaydlvDqyV3EiW9ZXO
+	ftP848t63IPQiA4/Ingiav9PjyxGYSB+xAfH8Pp8UH0FaCX5NY9UukxS05gmH5wC
+	IR3fRmg69h2xlKoe+GOdfw==
+Received: from iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta02.appoci.oracle.com [147.154.18.20])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4dcmqbq0gf-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Thu, 09 Apr 2026 15:21:01 +0000 (GMT)
+Received: from pps.filterd (iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 639EJT3T006997;
+	Thu, 9 Apr 2026 15:21:01 GMT
+Received: from bn8pr05cu002.outbound.protection.outlook.com (mail-eastus2azon11011003.outbound.protection.outlook.com [52.101.57.3])
+	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 4dcmembg2q-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Thu, 09 Apr 2026 15:21:01 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=pVDsVapxn+h3yAqNIxJffx0h862qgoFx0Hh2fY2Fzj+KG811qJVc6jtXMqj9K9NkojVvY7ys5uU2uYnmK5w1WQlRjnmPNVnV/0c7WPiPON6qhAIXpT07Bw/3cKbjuj6JjqtKlz13gwGx0tFXhzLOWqFFO8vVp+AG4QUvDr/3HSjEJh7adYocPlRs1fvQHjLXzBuP73Qr64TPrifK+Wpm1V4BjMONwgITiS3dmTG3f7vCWJILLIpo80vDngYoWg4ENithtxYOJBLyLKLl309GcUG4eUqFCwAvJGh9M5l4rvJb3SKMITOHOScltOg6Dme5xX4cLJc/3o1sBUonuzGokA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=uG6tdBgk2uaS9CIIj8U1k6+8O8sTL6sGOYH32Rs+CRs=;
+ b=VQQLWo3Rwxa0YiG+mN5V0H10Zz3K27KdoU3Tbi8PC+0NzQUsYLGhILfa0y5XkI/58Iw0lqlSAlx7cMtB/WL3L9jR3xTIIDzEoUcAJNnditDkVdPvdE4Vq+wesjlnPUHoJDZpg38K7ou2bXLxHxfPjRruvkz/vlbs+yuPYy06JHzcCeP2ob/Q0MBG4c5xTpwyqqXA5dDF6MgVUh9mwHn0U9/WczGLAoTF78j5x2RLTsnChBj28UdYjSb0b2RkHg7j+vu+k245qqCI9k+Eq0fbzpMB72aB2oEkFkf4foIzYeXxv60fypGHas/juTXgXa2Ro6XYDsqh+JHQuJvWS0QjNw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=uG6tdBgk2uaS9CIIj8U1k6+8O8sTL6sGOYH32Rs+CRs=;
+ b=fdSZWy1C49p6L6flh+jgBIuqSh4ve03bZL62FLcpA8qkAQ85MAqQ2efkdmAktNFwKdXKNQnZFsg43NreJyvbpd7XRLUblp9Hk1a/rPXxqT5Ml9iAL9pBK2u1Yp0ibzknaIELPaWBrc2UWO/l/jTfTMZCJWT3AhrnX0v9ZSNSrOI=
+Received: from DS4PPFEAFA21C69.namprd10.prod.outlook.com
+ (2603:10b6:f:fc00::d54) by CH2PR10MB4214.namprd10.prod.outlook.com
+ (2603:10b6:610:a6::21) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9769.21; Thu, 9 Apr
+ 2026 15:20:57 +0000
+Received: from DS4PPFEAFA21C69.namprd10.prod.outlook.com
+ ([fe80::5266:1601:5598:3f0a]) by DS4PPFEAFA21C69.namprd10.prod.outlook.com
+ ([fe80::5266:1601:5598:3f0a%5]) with mapi id 15.20.9769.018; Thu, 9 Apr 2026
+ 15:20:57 +0000
+Message-ID: <c2b838cd-ba4a-4ac9-98ca-677ca40859b1@oracle.com>
+Date: Thu, 9 Apr 2026 16:20:52 +0100
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 11/13] libmultipath: Add support for block device IOCTL
+To: Benjamin Marzinski <bmarzins@redhat.com>
+Cc: hch@lst.de, kbusch@kernel.org, sagi@grimberg.me, axboe@fb.com,
+        martin.petersen@oracle.com, james.bottomley@hansenpartnership.com,
+        hare@suse.com, jmeneghi@redhat.com, linux-nvme@lists.infradead.org,
+        linux-scsi@vger.kernel.org, michael.christie@oracle.com,
+        snitzer@kernel.org, dm-devel@lists.linux.dev,
+        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20260225153225.1031169-1-john.g.garry@oracle.com>
+ <20260225153225.1031169-12-john.g.garry@oracle.com>
+ <aaH18HKCMdjuUhUh@redhat.com>
+Content-Language: en-US
+From: John Garry <john.g.garry@oracle.com>
+Organization: Oracle Corporation
+In-Reply-To: <aaH18HKCMdjuUhUh@redhat.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: LO4P123CA0467.GBRP123.PROD.OUTLOOK.COM
+ (2603:10a6:600:1aa::22) To DS4PPFEAFA21C69.namprd10.prod.outlook.com
+ (2603:10b6:f:fc00::d54)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-From: Kyle Mahlkuch <kmahlkuc@linux.ibm.com>
-Subject: [PATCH 3/3] scsi: fc_transport: vport and rport cleanup
- synchronization
-To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        paul.ely@broadcom.com
-Cc: thinhtr@linux.ibm.com
-Content-Language: en-US
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNDA5MDEzNSBTYWx0ZWRfX0jsssrJth1Uz
- H7xRGniwZJyLC0CAsQJTaa3fMJlr1piUOec+2qhTIan0nBeI1dcM78Q6fdYXjuzvKvLIsCKTvWs
- tAisn6z/ISkShmlzTMbMzrTVBTHoyZhUWIuo3jaljU1KH4/vCGqEUtEjC7beCEa+hW7V9aRbPul
- hhHobUmZMFoo4upLJMfKnsn/o4rK67dqltNcAv7LvHwBskh5QsvjGDORskxFCAf5DP0VanEh3Lo
- rUS1ah7PpNUuXylE6GbDipN3ZccxyRMwE/c+z2kI7sBaWLh8QohWDZkIHPrgV2z3SkZ5IUaO9ZJ
- 6rxsBt3+FNmMlCFGr15VBVR4HlZHgaoNwiAjq0LGwFOlsUmukrHGYRZpYH73vv1O2ElkmAYkGXM
- hD9T6XhY3ApJHsb1+5LAh/XdfsEqnzn4XGHEgnPnyWhBfnASK154lDWzpveBB+BoPYJFBr1BO7g
- a0f+ktqWWG/l4NCHgrQ==
-X-Authority-Analysis: v=2.4 cv=FsY1OWrq c=1 sm=1 tr=0 ts=69d7c1e5 cx=c_pps
- a=5BHTudwdYE3Te8bg5FgnPg==:117 a=5BHTudwdYE3Te8bg5FgnPg==:17
- a=IkcTkHD0fZMA:10 a=A5OVakUREuEA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=RnoormkPH1_aCDwRdu11:22 a=U7nrCbtTmkRpXpFmAIza:22 a=VnNF1IyMAAAA:8
- a=22Kss3EB1pa1Nrv1dqcA:9 a=QEXdDO2ut3YA:10
-X-Proofpoint-ORIG-GUID: aDd_-Ky-p2Z9yF49ukj68WwYtmVMfNCB
-X-Proofpoint-GUID: aDd_-Ky-p2Z9yF49ukj68WwYtmVMfNCB
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DS4PPFEAFA21C69:EE_|CH2PR10MB4214:EE_
+X-MS-Office365-Filtering-Correlation-Id: a3f20f58-7759-4cc3-5972-08de964b993a
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|1800799024|366016|376014|7416014|56012099003|22082099003|18002099003;
+X-Microsoft-Antispam-Message-Info:
+	gF4vH4ghccM+WzefK+t1taDD7sq/tAMByagLxpJ5M4W8dwPlHg6BBly6eyT5JRftyoxqfEgbtG755Zyitwy63TIUPxovMWNBYk19/xi7tCTfywIS/2oDemokzeT15qLYQT9mY3lH0lC68dJ/rWd6lEok6uheauGlVUwBKDG7ZoRvKIkGKFhLnmUmNkKxuRG5Hr3Odjy7T/eHq/76Ji1JaIn1xF52wukPxQvKUFOuZceUzZYx8jj0c9fekvppFXLYkwdQSIXR3+Vn58PG5CoELGSZTJEtHHSWbhbQ7csMWWJw7o8Cuug2ZEbxDYD2jPpNckTgsdNB1WWBFWjVYd5VZCAJo5C3UCO/XWzd+8zSvnvuaTmXky8gNqTc8dK+wLbhH9jMOEPw/zHHmR3jHLnuWD7ciYos+IVufctAFfqA+5LLhcJa6XmLHzfoId6G3d/fzCS9AiS41Orvgs/s18xtfxLwLcrPve9y65fqRiT5R+x3c3kGLRy/ypeDiryi4Fg8xzXKOPPAb7aHJa4UBE4vfOKMEGK6xCRuAiz/D09Mbx//qts2pP8g+IwlcfSGv6HGwfJ0TIz4TeuqafvdqlqEOgPXlhS9nSHPsa3SDytmBsG7t1Uc88bRtYQMlmwwh5oWDvIgpCK2e04sL6IelxVlX4Bej+PZ3gihaomxVYPRxG9TD9T3kusmlJfb0LvvGXk9tb4rV/0fNT5i4DQFyFDWSizRYUKpNwUKyYRnbIokc14=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DS4PPFEAFA21C69.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(376014)(7416014)(56012099003)(22082099003)(18002099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?RHltcm5jWWZPTWlnSW9QT3dDYjZGNXFmY1lqL2thbmVSUDNZM0NJMXpYMmN3?=
+ =?utf-8?B?VE5mUUFmNjBISTM2MzJORkF4THhIVWNtMk9EaTdRdGgvN2Q5NTV2cDBVaTgw?=
+ =?utf-8?B?N29LcWIxMWxLSyt0dld6ZjV3dVFmNkdKalU4VURkNndhUFk0cUZMam1TUlNu?=
+ =?utf-8?B?Q2JtcGZBUFBOeHM4ZVQxN0VmUzg2ZjArSFlua080dlFCY1hRNUFBd3RBMUJY?=
+ =?utf-8?B?WW9VYk9LVHA3bURYQ2g1MlBxQ244aWxNVG8yaDYzVzZqd0JMZG1tenlCZ1NU?=
+ =?utf-8?B?cEFHL05PVzUvaTl0ZmsvTmFBRFEyRkVmQWw5TE4zK2g4cDJZNmptV2MrZXo1?=
+ =?utf-8?B?RFovbXhQck9KTGdDOHhPMVVWR01TZkl4OExTTjRiYmxMTGdSTU9QQmJHaE1J?=
+ =?utf-8?B?NDlxandFOVA3Y1FRbkRKc1dNMjk2eThRbEZWOUlVVGNRa2Q3eEpPMkVvVjNu?=
+ =?utf-8?B?Z3FEYUtCa2U0Nk1DbTU0MEkzdHB0M3JTUEtOVGVLTHhzUVVBOXJPck5DdEVY?=
+ =?utf-8?B?U3hlbityazZ5U0xiUDQrVnhBRUQzNC9hRkhkYXhhSmtYQ0w0SkpJRnJEaEVX?=
+ =?utf-8?B?WkJtOXJwbklnUlZzZ2JXU3JLeThXU3V3TTVYODFiNzliRlY5N1JVeHF6M1ZU?=
+ =?utf-8?B?eVFlcEtFakpCclNpblpDWmh4V2JsZHBwVWtqL3k5UXg1TmQxb3M1bStEUnNL?=
+ =?utf-8?B?VTBUYkNvTFJaOUtNZzdiakRXUUZHM244QnNyK081cms4VTRUcWNEaU5OK0Ju?=
+ =?utf-8?B?T3F5UzB6UVJlVEZVeXZTOHVwSURvV1h3bkRnNGI3Y3N4UXllMkdVNTZZaUJU?=
+ =?utf-8?B?SFlQdnk2M1o1UUhGMXp4WFBzaW5BNlVuNlpHNFdnb2t6bWFFcDAxeHNlTW5y?=
+ =?utf-8?B?U1o2dWVFTVN1aHo2cmp4SW5uVk9lNXJUUXI5ZTRyejhxYlQwcFUwVWl6UFlE?=
+ =?utf-8?B?R0FZTTE5dDgwV0p6UzkxZ05kRGdUQmhtdnJ0Ymx5enRhMHZIRm1vY2M3eW83?=
+ =?utf-8?B?eFJJTW9UaSt1OFlWVWRzN0d4SW5yQXlGVmdObmlvNGIrS3dJSzhKZDlnWFQ2?=
+ =?utf-8?B?dFJ0aW4xemhwRnk5Q25FYXFPZVVrMWNMZEo0Nlc5bmtYT3RISnFNSFNVc2Jw?=
+ =?utf-8?B?bVFIeS80VnduNzFLem01RmlhOWtzUTRiQXZrZkl1QTNWZXVKTVBYWVR5VFJG?=
+ =?utf-8?B?V05jcTZTQzVaZDRwQU42UElJeDFXV1ZHejFjd09DenExOHlBcnNHVXk1WS9B?=
+ =?utf-8?B?WWNyMXBsZGNuOG93UkhnVU5XL0VMNHNrTUF6eHNDNDFaU0tiV3ZJcWU1WndD?=
+ =?utf-8?B?aGhUYThFeGZRMVNqU20xWlZ4ZnFkeXlQOGdZSnkxQm1WRVFtNFEwS2xRQ3dn?=
+ =?utf-8?B?WmZ0RHN2d2JWRlNOYW5WWFN2WENtWjMzNmd1THVFRDZDZzVKT3VmWDk5UHlN?=
+ =?utf-8?B?YUZKdms4NGdJOCsxM05YdnF4M0NFL2RrSGFSbHoxSnNpcjUyb09JbTQzQXpY?=
+ =?utf-8?B?ZTZETUFlSjNqVVYzT3IvWCszY2NBSnl6SHVRTVZtNnZDNVdCbno5Nm9Ccjkx?=
+ =?utf-8?B?VG5qQnF4dE1CVHlyUjdLYVhPd3BvcmRVQkwvY292Yk93VHRDNDBMNjBpOU1Z?=
+ =?utf-8?B?L21KdmwxeUxRUjNIbzFTbnBiYzNqck1OeUdlSW1NcU5LeW1DYlFKRmFZZXUy?=
+ =?utf-8?B?Z25FNjNvaUttd0hTZzFBNDR1Z1VETlZkVUdYL1BHRXFGc2phd2dNY0N3SmR5?=
+ =?utf-8?B?QUEwc3Y4SDB2bTBtMDdMUk45NThPZnN1bTIvRm43NDJaR3VoWVd2RVl6K29s?=
+ =?utf-8?B?SXVCSXNhNW9nYmFjb0RLOHB4dmRZcXdUSXFZbVVLUitLOXl4STNkdHl4RUlC?=
+ =?utf-8?B?ZTZ5eTBhQys1a0JhWnhnVytwRmJ4NnZTNXljMXl4WEQvejZFV2xnYVBMa2tl?=
+ =?utf-8?B?NW1idUtzQ2c1UVVERjNwa0hpYTkxbGtsUHQvZXBTN08wVFdEZmdBcWc3MlY4?=
+ =?utf-8?B?L0Z2RGdSQ2MvMkZZaDI2d0Vmdm9SSTQ5Umo3bFMzdGJpa3FmUFRpejl4ckFC?=
+ =?utf-8?B?NUFzQ28wdWsrU2lMR09KNkpFUmo1aytxNEpCaFBXYjR0UWhIdElvSExpS1Rh?=
+ =?utf-8?B?T2NlVGpXSkFXb1pKZ3hpQ3NzbDFCZzRGUUVPRU9qd2lJZmZ0cXVyMWNuRHlT?=
+ =?utf-8?B?SGgxUGRTeEU0UndKUUtWQXNIdXZEd21zWkEvY0tkMXFZd3dpVjhkVUZTRnRX?=
+ =?utf-8?B?VE55TUlPR0NJVkt5RkNMaHdKcU5nRS9wSlpVNW1CSFN4cTViZFFuN0xjOW03?=
+ =?utf-8?B?bWNkaVNOd25PTGxHYXVYcGVDNDR4MXpwcUsvYkM5T1JPMU1ldjY4Zz09?=
+X-Exchange-RoutingPolicyChecked:
+	IY/9CI0ya8QAwGk+F66ywCa5S0gm8wo74yAJp94ZcJQls1Mbg4JE8kkfHVKq2AmX2kmaDLK/DyA9OwkzdMp/DEjbRSP8Ark+YffD5TJlp2B3k5gU4OrbxoJ/mybOX2WYpa59eeRCHB4wHnh8O2AlxU5C2T9UirBlXqvMsPFn9Q+bo5REGAvoVd4L8IPinrKWl3LISstpt70xmAz9kk2juz4s/QnSa+DBCjxvC44mVHTiBlRE+iBX0DWmN2BSpyM6TsPIkoMqX48U5cc3uUn7zgsgLsiq1hQF1oSbnkIW08ALSuCfytTUFrcWX3KsWD0vCwBnothOtpFLAyNDOzkwyQ==
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
+	LJ/LwHJrB4m++woGJx7x9LjUfRi/6Bqnm7QX9Cn/X0f504uLWp5T/DCPbOR0DO7TQm/j99zVPKknPlpNgSPiTCJXhAlfsI7Cuvmp57pYyXs5JOGwwSdos52v3IhbmSZmBIIHB9I+wwWwyXGctEWtomHeIxLn7M5cDxHATXzb39oim+SbvRnEfgoXBY79lmZyayCf8PLW4BzTSgcTtr69xZE17vgyps2jcTZk4fPQJQ/P1gELKr7xFDDBz6IHOrXepaKJeNBqQ1QICkMdRBR2HhpblR2zOShVdtvz6eQay7WHSqY9bnmtLdnV8WDR7CgCLlA+LRYd/u6ueoT6+SMdozB9nigETVDTf7MiO6E1NISm++Q30jfmWnv4S4R6vI5cTIPt15lRUpnDtD4t/amyHl73LNeMHF1L27cIWjgvgRV5aC+i3rcrqMvAqKv3v8Br10uBQdCkQQd60TSs7wPT6yAPmAJW2QsIe724187H1FUgMxyJ6FnEkpw/aBgwMCV1hgg+a2aLxDG9wkHZw9g/1Ld/ZfN0Aypub6/GNr/qHkxCmTtn3hbWSW9k5eexBlO1p1tk6Vm7rI0R7VeBLKMoF9iUIyf5mydkKJxTLC9/VnU=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: a3f20f58-7759-4cc3-5972-08de964b993a
+X-MS-Exchange-CrossTenant-AuthSource: DS4PPFEAFA21C69.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 09 Apr 2026 15:20:57.3950
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: vWWttCpbVr6OAzrb7UpY6pQB93UNblzhKMMAWEapJa9wOJaDcMems2r0FdAICc1hsfnW5L6IZypS4V6RRZAM6A==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH2PR10MB4214
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
  definitions=2026-04-09_04,2026-04-09_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- bulkscore=0 priorityscore=1501 impostorscore=0 spamscore=0 phishscore=0
- lowpriorityscore=0 clxscore=1011 adultscore=0 malwarescore=0 suspectscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2604010000 definitions=main-2604090135
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 spamscore=0 phishscore=0
+ suspectscore=0 malwarescore=0 mlxscore=0 mlxlogscore=999 bulkscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2604010000
+ definitions=main-2604090140
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNDA5MDE0MCBTYWx0ZWRfX2UQs6lFUuD17
+ rkQn46HEB1l2qGdyvRNpLQ0B2B0Y2Fn8Ort1ldww2egZb4ZAJezDhV4XEk18ljb/hp/lx3lDS3q
+ kZJ5UAGzlp1WCQYuECcw8JzV9YPrsOrvooZZFDTNFNyf2xxKzTTcBfHsszbg84ck+F5bd0TNHzW
+ kDz31tsktwkwNA0fkPY3RNVy2ENmaz1HipwAdZkOieWpQEw9UwvJQOkZ+UQf+MqQTaJ27mUirOy
+ OLtluOv8/dMgv4MIvOrV47IGd1368+gVEcDtgXR3Grgva2vyWxJCtcZqdHn4rvFLlkGtTT8tbvQ
+ v37dEgGU42S3fSnVxlsPz74At9F9Q1UGB6w9c5LB6w4L+Ncd+fTQh/F2kdu8ZzqsBMH28/+17Vd
+ AUGhjJ6H0Qb9vMISuHPnT93n3j9frgOcOKPLLjXxR+53OKTQNm8ikBnDAuRF1vO59NkIh5yADkd
+ y4yQEIXs4D9ea8wDMKvg1Pbuu7sqrzPU9rT3F0sA=
+X-Proofpoint-ORIG-GUID: 1LJVH_QLf51C4m2rLLzYcLP1mgDrPGki
+X-Proofpoint-GUID: 1LJVH_QLf51C4m2rLLzYcLP1mgDrPGki
+X-Authority-Analysis: v=2.4 cv=KO1qylFo c=1 sm=1 tr=0 ts=69d7c3dd b=1 cx=c_pps
+ a=e1sVV491RgrpLwSTMOnk8w==:117 a=e1sVV491RgrpLwSTMOnk8w==:17
+ a=6eWqkTHjU83fiwn7nKZWdM+Sl24=:19 a=z/mQ4Ysz8XfWz/Q5cLBRGdckG28=:19
+ a=lCpzRmAYbLLaTzLvsPZ7Mbvzbb8=:19 a=xqWC_Br6kY4A:10 a=IkcTkHD0fZMA:10
+ a=A5OVakUREuEA:10 a=GoEa3M9JfhUA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=jiCTI4zE5U7BLdzWsZGv:22 a=BqU2WV_vvsyTyxaotp0D:22 a=C_tuc-koSl-OxiWdQSIA:9
+ a=QEXdDO2ut3YA:10 cc=ntf awl=host:13825
 
-Imporve synchronization and cleanup logic in the fc_remove_host() and
-fc_rport_final_delete() to prevent use-after-free conditions during
-host removal
+On 27/02/2026 19:52, Benjamin Marzinski wrote:
+>> diff --git a/include/linux/multipath.h b/include/linux/multipath.h
+>> index 3846ea8cfd319..40dda6a914c5f 100644
+>> --- a/include/linux/multipath.h
+>> +++ b/include/linux/multipath.h
+>> @@ -72,6 +72,9 @@ struct mpath_head_template {
+>>   	bool (*is_disabled)(struct mpath_device *);
+>>   	bool (*is_optimized)(struct mpath_device *);
+>>   	enum mpath_access_state (*get_access_state)(struct mpath_device *);
+>> +	int (*bdev_ioctl)(struct block_device *bdev, struct mpath_device *,
+>> +			blk_mode_t mode, unsigned int cmd, unsigned long arg,
+>> +			int srcu_idx);
+> I don't know that this API is going to work out. SCSI persistent
+> reservations need access to all the mpath_devices, not just one, and
+> they are commonly handled via SG_IO ioctls. Unless you want to disallow
+> SCSI persistent reservations via SG_IO, you need to be able to detect
+> them, and handle them using the persistent reservation code with the
+> mpath_head.
 
-Vport cleanup:
-   - Mark all vports with FC_VPORT_DELETING under lock
-   - Cancel all vport work synchronously before removing from the list
-   - Synchronous deletion with fc_vport_terminate()
+I'm just coming back to this ... so I am thinking of not supporting PR 
+for scsi initially - like you mentioned, scsi pr has lots of nuances.
 
-Rport cleanup, applied to rports and rport_binding
-   - Mark all rport with FC_PORTSTATE_DELETED under lock
-   - Cancel all timers and work synchronously before removing from the list
-   - Call fc_rport_final_delete() synchronously instead of queuing
+I am thinking of something like this:
 
-fc_rport_final_delete():
-   - Calling cancel_delayed_work_sync() for any outstanding delayed work
-   - Clear FC_RPORT_DEVLOSS_PENDING under lock
-   - Flushing all pending work completes before destruction
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index ded9cb8c57ea..c82adfc6871c 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1295,6 +1295,12 @@ static blk_status_t scsi_setup_scsi_cmnd(struct 
+scsi_device *sdev,
+  {
+  	struct scsi_cmnd *cmd = blk_mq_rq_to_pdu(req);
 
-Signed-off-by: Thinh Tran <thinhtr@linux.ibm.com>
-Signed-off-by: Kyle Mahlkuch <kmahlkuc@linux.ibm.com>
----
-  drivers/scsi/scsi_transport_fc.c | 85 ++++++++++++++++++++++++--------
-  1 file changed, 64 insertions(+), 21 deletions(-)
-
-diff --git a/drivers/scsi/scsi_transport_fc.c 
-b/drivers/scsi/scsi_transport_fc.c
-index 123b22b52640..0adb9330befc 100644
---- a/drivers/scsi/scsi_transport_fc.c
-+++ b/drivers/scsi/scsi_transport_fc.c
-@@ -39,6 +39,7 @@ static void fc_li_stats_update(u16 event_type,
-  static void fc_delivery_stats_update(u32 reason_code,
-  				     struct fc_fpin_stats *stats);
-  static void fc_cn_stats_update(u16 event_type, struct fc_fpin_stats 
-*stats);
-+static void fc_rport_final_delete(struct work_struct *work);
-
-  /*
-   * Module Parameters
-@@ -2883,31 +2884,71 @@ fc_remove_host(struct Scsi_Host *shost)
-  	struct fc_host_attrs *fc_host = shost_to_fc_host(shost);
-  	unsigned long flags;
-
--	spin_lock_irqsave(shost->host_lock, flags);
--
-  	/* Remove any vports */
-+	/* Mark FC_VPORT_DELETING for now */
-+	spin_lock_irqsave(shost->host_lock, flags);
-  	list_for_each_entry_safe(vport, next_vport, &fc_host->vports, peers) {
-  		vport->flags |= FC_VPORT_DELETING;
--		fc_queue_work(shost, &vport->vport_delete_work);
-+	}
-+	spin_unlock_irqrestore(shost->host_lock, flags);
-+
-+	/*
-+	 * remove all vport works synchronously BEFORE removing from list.
-+	 * This prevents use-after-free when timers fire.
-+	 */
-+	list_for_each_entry_safe(vport, next_vport, &fc_host->vports, peers) {
-+		/* Cancel any pending work/timers */
-+		cancel_work_sync(&vport->vport_delete_work);
-+		/* Now safe to do synchronous deletion */
-+		fc_vport_terminate(vport);
-  	}
-
-  	/* Remove any remote ports */
-+	/* Mark rports and rport_bindings with FC_PORTSTATE_DELETED for now */
-+	spin_lock_irqsave(shost->host_lock, flags);
-  	list_for_each_entry_safe(rport, next_rport,
-  			&fc_host->rports, peers) {
--		list_del(&rport->peers);
-  		rport->port_state = FC_PORTSTATE_DELETED;
--		fc_queue_work(shost, &rport->rport_delete_work);
-  	}
-
-  	list_for_each_entry_safe(rport, next_rport,
-  			&fc_host->rport_bindings, peers) {
--		list_del(&rport->peers);
-  		rport->port_state = FC_PORTSTATE_DELETED;
--		fc_queue_work(shost, &rport->rport_delete_work);
-  	}
--
-  	spin_unlock_irqrestore(shost->host_lock, flags);
-
-+	list_for_each_entry_safe(rport, next_rport,
-+			&fc_host->rports, peers) {
-+		/* Cancel ALL timers and work before removing from list */
-+		cancel_delayed_work_sync(&rport->fail_io_work);
-+		cancel_delayed_work_sync(&rport->dev_loss_work);
-+		cancel_work_sync(&rport->scan_work);
-+		cancel_work_sync(&rport->stgt_delete_work);
-+
-+		spin_lock_irqsave(shost->host_lock, flags);
-+		list_del(&rport->peers);
-+		spin_unlock_irqrestore(shost->host_lock, flags);
-+
-+		/* Now safe to do final deletion synchronously */
-+		fc_rport_final_delete(&rport->rport_delete_work);
++	if (sdev->scsi_mpath_dev) {
++		blk_status_t ret = scsi_mpath_setup_scsi_cmnd(cmd);
++		if (ret)
++			return ret;
 +	}
 +
-+	list_for_each_entry_safe(rport, next_rport,
-+			&fc_host->rport_bindings, peers) {
-+		/* Cancel ALL timers and work before removing from list */
-+		cancel_delayed_work_sync(&rport->fail_io_work);
-+		cancel_delayed_work_sync(&rport->dev_loss_work);
-+		cancel_work_sync(&rport->scan_work);
-+		cancel_work_sync(&rport->stgt_delete_work);
-+
-+		spin_lock_irqsave(shost->host_lock, flags);
-+		list_del(&rport->peers);
-+		spin_unlock_irqrestore(shost->host_lock, flags);
-+
-+		/* Now safe to do final deletion synchronously */
-+		fc_rport_final_delete(&rport->rport_delete_work);
-+	}
-+
-  	/* flush all scan work items */
-  	scsi_flush_work(shost);
-
-@@ -2983,21 +3024,22 @@ fc_rport_final_delete(struct work_struct *work)
-  		scsi_flush_work(shost);
-
   	/*
--	 * Cancel any outstanding timers. These should really exist
--	 * only when rmmod'ing the LLDD and we're asking for
--	 * immediate termination of the rports
-+	 * Cancel any outstanding delayed work synchronously.
-+	 * This must be done BEFORE taking spinlock and BEFORE
-+	 * any state changes, as cancel_delayed_work_sync() can sleep.
-+	 *
-+	 * These timers should only exist when rmmod'ing the LLDD
-+	 * and we're asking for immediate termination of rports.
-+	 */
-+	cancel_delayed_work_sync(&rport->fail_io_work);
-+	cancel_delayed_work_sync(&rport->dev_loss_work);
-+	cancel_work_sync(&rport->scan_work);
-+	/*
-+	 * Now safe to clear the flag under spinlock since all
-+	 * async work has been cancelled.
-  	 */
-  	spin_lock_irqsave(shost->host_lock, flags);
--	if (rport->flags & FC_RPORT_DEVLOSS_PENDING) {
--		spin_unlock_irqrestore(shost->host_lock, flags);
--		if (!cancel_delayed_work(&rport->fail_io_work))
--			fc_flush_devloss(shost, rport);
--		if (!cancel_delayed_work(&rport->dev_loss_work))
--			fc_flush_devloss(shost, rport);
--		cancel_work_sync(&rport->scan_work);
--		spin_lock_irqsave(shost->host_lock, flags);
--		rport->flags &= ~FC_RPORT_DEVLOSS_PENDING;
--	}
-+	rport->flags &= ~FC_RPORT_DEVLOSS_PENDING;
-  	spin_unlock_irqrestore(shost->host_lock, flags);
+  	 * Passthrough requests may transfer data, in which case they must
+  	 * a bio attached to them.  Or they might contain a SCSI command
+diff --git a/drivers/scsi/scsi_multipath.c b/drivers/scsi/scsi_multipath.c
+index 1489c7e97916..1daa62361dac 100644
+--- a/drivers/scsi/scsi_multipath.c
++++ b/drivers/scsi/scsi_multipath.c
+@@ -280,6 +280,18 @@ static int scsi_multipath_sdev_init(struct 
+scsi_device *sdev)
+  	return 0;
+  }
 
-  	/* Delete SCSI target and sdevs */
-@@ -3027,6 +3069,7 @@ fc_rport_final_delete(struct work_struct *work)
-  	if (rport->devloss_work_q) {
-  		work_q = rport->devloss_work_q;
-  		rport->devloss_work_q = NULL;
-+		flush_workqueue(work_q);
-  		destroy_workqueue(work_q);
-  	}
++
++blk_status_t scsi_mpath_setup_scsi_cmnd(struct scsi_cmnd *scmd)
++{
++	switch (scmd->cmnd[0]) {
++	/* Special handling required which is not yet supported */
++	case PERSISTENT_RESERVE_IN:
++	case PERSISTENT_RESERVE_OUT:
++		return BLK_STS_NOTSUPP;
++	}
++	return BLK_STS_OK;
++}
++
 
--- 
-2.52.0
+Which should catch SG_IO PR-related commands.
