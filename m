@@ -1,58 +1,58 @@
 Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C6443BFE3C;
-	Thu,  9 Apr 2026 15:12:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E4A62E0925;
+	Thu,  9 Apr 2026 15:12:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775747533; cv=none; b=os7PKfLAceGh6400EvC7PdxZVo0El61RZ537+SZ7nlLR1PZo1xuI+iX5dgV47gQX/uDTXuOB7SprJGeVGSrw3UhghTIqhdP2WrkwXXZH021VVcnQCzEWSeRDKSKtPhDbVtssKV/tXJhvHuRld5kxw3fbBeci0QY2N+1/AiqcIg8=
+	t=1775747546; cv=none; b=CAzkDq0lIEMhJG1LgU0hmrLAc86nwtXEZZNoTmYF05S5pAlsELYwIC7S+eoZDKZ4A7T5JavN1G73O4vvpCi5rNv6zTihHQ05KYN5Zw7oEYPHRpDH5fFbHGxeUpBN1RdiKRUht9PEeP88EtWSSqelLDhZprdDWZdvRe9V60fWmQA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775747533; c=relaxed/simple;
-	bh=U4ddSgYUvrVZgHCOTXZVHGuW5Oxc5B3dd9+pKMvljA0=;
-	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:Content-Type; b=oaucSA6HElmgZZZAHNse9UAbqDUeeMsXbCk4CNULeh/SdgGFqMxFaBaZOE/b2eMGFdgQR66ZokVFhtGqqTGy03FYcqpqRx1YampmWmkgxOYcAy4Km+HzWN+GCZGV8EEz7hlzmD0tbMtBr2vIHVPWE8CRBe3ADsFavSLRI7V8zX0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=oq8JJZeY; arc=none smtp.client-ip=148.163.158.5
+	s=arc-20240116; t=1775747546; c=relaxed/simple;
+	bh=CnV8MyJLR48Ex2lAFPfPQbqzqKgYYJ6egGR505ddHq4=;
+	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:Content-Type; b=ekMsxx8AiVNLAWvT6X5WPhLrqO1zSs5PHTgtHWzYUNGjoNZQsOPJXlio3LUUg4e/wpasD7dJxAzmVL+OJPFiSRlf5ncehVkO8uBlQl/gblCvQJ1PIcPj656F+M6wmJYct36SdfMzdw7FVitr2bHyNwbCLKJNN31kV6A4q2ynnyI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=AzC/0qRE; arc=none smtp.client-ip=148.163.158.5
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="oq8JJZeY"
-Received: from pps.filterd (m0356516.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 639Al4OW2326338;
-	Thu, 9 Apr 2026 15:12:10 GMT
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="AzC/0qRE"
+Received: from pps.filterd (m0353725.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 639AKXiu2210127;
+	Thu, 9 Apr 2026 15:12:24 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
 	:content-transfer-encoding:content-type:date:from:message-id
-	:mime-version:subject:to; s=pp1; bh=ISxKajPxGm9uKk0nh3JFY9C3tOtj
-	rKy/4mGFq6LwO5E=; b=oq8JJZeYRTkQjz4fIB35y73JwXLQley4nZMwS3cVn0A+
-	9pSsktG3mr6gfXSUVm5Cu41F6t5ONGvtfve++vI5si67eVEG6tvnSp7eNQpvPrOM
-	fQVJ/KsGb49h3NBCEKmTlfjvcxYFahMp4FErHjKxnvc9tEsLY7tQ0rCVj1AacFm2
-	Np7k5468cYAyzFjbkdhdTWHCHeJG99nbu4xg3rYKhlR+j2kNapkCW8GHXiW6IquY
-	NFUaDsyg+4VYQhE/B34keWBRk0nf9y544g3kW7mpjT40N+xs/yUsVJBM7m+oqDh8
-	I0m7aiU+3kQmlmPimw4jXkw+mXGsuJZSxuHvjqM1Ew==
-Received: from ppma12.dal12v.mail.ibm.com (dc.9e.1632.ip4.static.sl-reverse.com [50.22.158.220])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4dcn2kmqq9-1
+	:mime-version:subject:to; s=pp1; bh=W2xq41ZBnYUshroKfZ3BHqm5TUWM
+	a3g7CHyCApanZKs=; b=AzC/0qREDwbURyMLpIoX5wpP39oqPxBlvGtoRttC4T61
+	uZr4Trys6jWDjTmvNE4cKK3W86noNT41SjP5PjlciewAcEWNyjtEHpOmTdLpkWyN
+	It/JRlnaGZHPUcZOWV6cOTmXreUkNgu/vNb+Yhw4POWjVIjqBUaIVVZVkAnwb+Ka
+	6M7JyWaOAjTKHjKiyre2Qo08XfdFBXifjH+Lsx9iGvR8fQoQwZbjeFr2F+nzdZCA
+	BSWDsCZtAKbkJSHg3vxpMGmAa+HSQ0RLK8a27brLTUkN7JkYur4Sb3c64Hsu6j02
+	hyPFP9y5ME6QzA6VAO3c6zZIXxHiT9nEAnVilt97cg==
+Received: from ppma22.wdc07v.mail.ibm.com (5c.69.3da9.ip4.static.sl-reverse.com [169.61.105.92])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4dcn2hmqgw-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 09 Apr 2026 15:12:10 +0000 (GMT)
-Received: from pps.filterd (ppma12.dal12v.mail.ibm.com [127.0.0.1])
-	by ppma12.dal12v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 639CURKR026642;
-	Thu, 9 Apr 2026 15:12:09 GMT
+	Thu, 09 Apr 2026 15:12:23 +0000 (GMT)
+Received: from pps.filterd (ppma22.wdc07v.mail.ibm.com [127.0.0.1])
+	by ppma22.wdc07v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 639CTbNs007892;
+	Thu, 9 Apr 2026 15:12:23 GMT
 Received: from smtprelay05.wdc07v.mail.ibm.com ([172.16.1.72])
-	by ppma12.dal12v.mail.ibm.com (PPS) with ESMTPS id 4dcmg842ah-1
+	by ppma22.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4dcmg2m3sn-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 09 Apr 2026 15:12:09 +0000
+	Thu, 09 Apr 2026 15:12:23 +0000
 Received: from smtpav05.wdc07v.mail.ibm.com (smtpav05.wdc07v.mail.ibm.com [10.39.53.232])
-	by smtprelay05.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 639FC9Mn53215658
+	by smtprelay05.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 639FCMcb16188146
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Thu, 9 Apr 2026 15:12:09 GMT
+	Thu, 9 Apr 2026 15:12:22 GMT
 Received: from smtpav05.wdc07v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 1300A5805F;
-	Thu,  9 Apr 2026 15:12:09 +0000 (GMT)
+	by IMSVA (Postfix) with ESMTP id CB8D358059;
+	Thu,  9 Apr 2026 15:12:22 +0000 (GMT)
 Received: from smtpav05.wdc07v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 6A09358043;
-	Thu,  9 Apr 2026 15:12:08 +0000 (GMT)
+	by IMSVA (Postfix) with ESMTP id 3818058053;
+	Thu,  9 Apr 2026 15:12:22 +0000 (GMT)
 Received: from [9.61.156.97] (unknown [9.61.156.97])
 	by smtpav05.wdc07v.mail.ibm.com (Postfix) with ESMTP;
-	Thu,  9 Apr 2026 15:12:08 +0000 (GMT)
-Message-ID: <1c8a764c-fce1-4ce1-b797-47ac328cf3f2@linux.ibm.com>
-Date: Thu, 9 Apr 2026 10:12:07 -0500
+	Thu,  9 Apr 2026 15:12:22 +0000 (GMT)
+Message-ID: <f4f4e9a7-e3bd-4cc5-a3df-829b981ae836@linux.ibm.com>
+Date: Thu, 9 Apr 2026 10:12:21 -0500
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -61,7 +61,7 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
 From: Kyle Mahlkuch <kmahlkuc@linux.ibm.com>
-Subject: [PATCH 1/3] scsi: lpfc: Fix race conditions in ELS retry handling
+Subject: [PATCH 2/3] scsi: fc_transport: Fix TOCTOU races and workqueue
 To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
         paul.ely@broadcom.com
 Cc: thinhtr@linux.ibm.com
@@ -69,149 +69,150 @@ Content-Language: en-US
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 X-TM-AS-GCONF: 00
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNDA5MDEzNSBTYWx0ZWRfXxxiv6vKG9h3C
- dJ3QO0bmdaWP3f61gu1xDNURjw0xwuPUkc2Ol5btgBFKK2REkv87MG+akW3MLM+W0gJlCGEIrII
- Dmpnhe4HRx2nQbBOnYEm1uV76AE2nVev/1Cidb5WhI7/OZaXNSgM2TwlmLQz4lnQZ4L2RheMJM/
- Edc17jcmIN4aFtim4e16t0nxe8OiZFrU8/DgR0QB7OY7WERKCC1Itj0DEZnFe5GhqWcMey2hTiZ
- rxrTrBj7TPlKD0+0/K2JjUrIcduaI/k2DoF2BLTNHqFpNx6yNALFgED0xV8lj7cFOn7Gw05cxmP
- IzcrsRtru2e+myyklOSMSvEp5a+DlOaX0n56/sVZLhgVM9oPL7qIsXuge5rUlemfMKirIHp7wY0
- KYrcOP0G17okkxt1q32eObn3GsOHUtI2WyDIh+UvhneoButObTUyrBxdJNPxKT75xnlMn7o04wF
- EJYNvHBeAKPi8Wn82VQ==
-X-Proofpoint-ORIG-GUID: h2-VXbOlNdQBrzDMi1oUx3f6ncF48mVN
-X-Authority-Analysis: v=2.4 cv=e9k2j6p/ c=1 sm=1 tr=0 ts=69d7c1ca cx=c_pps
- a=bLidbwmWQ0KltjZqbj+ezA==:117 a=bLidbwmWQ0KltjZqbj+ezA==:17
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNDA5MDEzNSBTYWx0ZWRfX9IM4Hcd1+TqU
+ dsqMToPYiEW32KFKkEmCDdhPt62uaW+eAlYAyPFk1GwWHeqO9R4tLhREcrC/GC4Lxve6LHx8Lan
+ BH9QIOqUBA08x2Xnjgvfh1IkDsaNgtCuUxIA0K5PvINYI3p0O2Gn9cXKAcYKZYjDZ2mQISLKs0c
+ EgR/Kv/4JjIjOplOxLf/+cqJkvkvAxGAkC+V+m2EwV7Sw/DWdPNjd2ZInOvYS60eh9kHcTUohOn
+ gaMbg3np4ZPSlT0HEeCnWZzxrsqJo+Jd/PJ4b92CeUVAxNhaACUg9jyWuQE08Ujhp2AJQqWrZ2f
+ bLl59PAEUuisz6GFzred5+Bvo9l2a3YFOK6k/RNKihNd/sU0b0ZTtmktQhNrwZnvoEJOe3iP/DI
+ leeWhI5uQNFRjbzTT3nJb0AtD0InpAcGT+mm3JMdlQVVcycXTNhhCF9nfk/qdkadUuNUhKGtUh6
+ PrjpdSrg9G0xiuhUCzQ==
+X-Proofpoint-GUID: ZqgBtRjBlSFbO0vUPkvtEotygqFh8NH2
+X-Authority-Analysis: v=2.4 cv=a/wAM0SF c=1 sm=1 tr=0 ts=69d7c1d7 cx=c_pps
+ a=5BHTudwdYE3Te8bg5FgnPg==:117 a=5BHTudwdYE3Te8bg5FgnPg==:17
  a=IkcTkHD0fZMA:10 a=A5OVakUREuEA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=RnoormkPH1_aCDwRdu11:22 a=Y2IxJ9c9Rs8Kov3niI8_:22 a=VnNF1IyMAAAA:8
- a=MNJAjjf2JKIQIniOXnMA:9 a=QEXdDO2ut3YA:10
-X-Proofpoint-GUID: h2-VXbOlNdQBrzDMi1oUx3f6ncF48mVN
+ a=RnoormkPH1_aCDwRdu11:22 a=V8glGbnc2Ofi9Qvn3v5h:22 a=VnNF1IyMAAAA:8
+ a=3GqcNcJgD4XTNdKLspMA:9 a=QEXdDO2ut3YA:10
+X-Proofpoint-ORIG-GUID: ZqgBtRjBlSFbO0vUPkvtEotygqFh8NH2
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
  definitions=2026-04-09_04,2026-04-09_02,2025-10-01_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- clxscore=1011 impostorscore=0 malwarescore=0 suspectscore=0 spamscore=0
- bulkscore=0 adultscore=0 priorityscore=1501 phishscore=0 lowpriorityscore=0
+ bulkscore=0 clxscore=1011 spamscore=0 impostorscore=0 priorityscore=1501
+ phishscore=0 lowpriorityscore=0 adultscore=0 malwarescore=0 suspectscore=0
  classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
  reason=mlx scancount=1 engine=8.22.0-2604010000 definitions=main-2604090135
 
-This patch addresses critical race conditions in the lpfc driver's ELS
-retry event handling that can lead to a use-after-free.
+Fix the TOCTOU races in workqueue access, use READ_ONCE() in
+fc_queue_work(), fc_flush_work(), fc_queue_devloss_work(), and
+fc_flush_devloss().
 
-The primary issue is a TOCTOU (Time-of-Check to Tim-of-Use) race in the
-lpfc_cancel_retry_delay_tmo(), where the NLP_DELAY_TMO flag is cleared
-before acquiring the lock to check if the retry event is queued, and the
-worker lpfc_els_retry_delay_handler(). This create a window where the
-timer can be rescheduled and fire, causing both the cancel path and the
-worker thread to release the same reference, resulting in a double-put
-and use-after-free.
-
-Fixes the primary TOCTOU race by
-  - moving the flag check inside section protected by hbalock
-  - Add a NULL checking in the work handler to gracefully handle cases
-    where the event payload has been consumed by the cancel path
+The workqueue destruction in fc_remove_host() uses WRITE_ONCE() to set
+the pointer to NULL to prevents new work, flushing the work queued
+before NULL, then safely destroying it.
 
 Signed-off-by: Thinh Tran <thinhtr@linux.ibm.com>
 Signed-off-by: Kyle Mahlkuch <kmahlkuc@linux.ibm.com>
 ---
-  drivers/scsi/lpfc/lpfc_els.c     | 48 +++++++++++++++++++++++++-------
-  drivers/scsi/lpfc/lpfc_hbadisc.c |  9 ++++++
-  2 files changed, 47 insertions(+), 10 deletions(-)
+  drivers/scsi/scsi_transport_fc.c | 36 ++++++++++++++++++++++----------
+  1 file changed, 25 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-index b71db7d7d747..ccc0734f5daa 100644
---- a/drivers/scsi/lpfc/lpfc_els.c
-+++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -4329,18 +4329,40 @@ lpfc_issue_els_edc(struct lpfc_vport *vport, 
-uint8_t retry)
-  void
-  lpfc_cancel_retry_delay_tmo(struct lpfc_vport *vport, struct 
-lpfc_nodelist *nlp)
+diff --git a/drivers/scsi/scsi_transport_fc.c 
+b/drivers/scsi/scsi_transport_fc.c
+index 3a821afee9bc..123b22b52640 100644
+--- a/drivers/scsi/scsi_transport_fc.c
++++ b/drivers/scsi/scsi_transport_fc.c
+@@ -2774,16 +2774,18 @@ EXPORT_SYMBOL(fc_release_transport);
+  static int
+  fc_queue_work(struct Scsi_Host *shost, struct work_struct *work)
   {
--    struct lpfc_work_evt *evtp;
-+    struct lpfc_hba *phba = vport->phba;
-+    struct lpfc_work_evt *evtp = &nlp->els_retry_evt;
-+    struct lpfc_nodelist *arg_ndlp = NULL;
-+    unsigned long flags;
+-	if (unlikely(!fc_host_work_q(shost))) {
++	struct workqueue_struct *wq = READ_ONCE(fc_host_work_q(shost));
++
++	if (unlikely(!wq)) {
+  		printk(KERN_ERR
+  			"ERROR: FC host '%s' attempted to queue work, "
+  			"when no workqueue created.\n", shost->hostt->name);
+  		dump_stack();
+-
+  		return -EINVAL;
+  	}
 
--    if (!test_and_clear_bit(NLP_DELAY_TMO, &nlp->nlp_flag))
-+    /*
-+     * Check and clear NLP_DELAY_TMO flag inside critical section to
-+     * prevent TOCTOU race with timer rescheduling. If retry event is
-+     * queued, remove it and consume its payload to prevent double-put.
-+     * This protects against concurrent execution with 
-lpfc_work_list_done()
-+     * which may be processing this event. The event holds a reference to
-+     * the nodelist that must be released exactly once.
-+     */
-+    spin_lock_irqsave(&phba->hbalock, flags);
-+    if (!test_and_clear_bit(NLP_DELAY_TMO, &nlp->nlp_flag)) {
-+        spin_unlock_irqrestore(&phba->hbalock, flags);
-          return;
-+    }
-+
-+    if (!list_empty(&evtp->evt_listp)) {
-+        list_del_init(&evtp->evt_listp);
-+        arg_ndlp = (struct lpfc_nodelist *)evtp->evt_arg1;
-+        evtp->evt_arg1 = NULL;
-+    }
-+    spin_unlock_irqrestore(&phba->hbalock, flags);
-+
-+    /* Delete timer and clear state outside the lock */
-      timer_delete_sync(&nlp->nlp_delayfunc);
-      nlp->nlp_last_elscmd = 0;
--    if (!list_empty(&nlp->els_retry_evt.evt_listp)) {
--        list_del_init(&nlp->els_retry_evt.evt_listp);
--        /* Decrement nlp reference count held for the delayed retry */
--        evtp = &nlp->els_retry_evt;
--        lpfc_nlp_put((struct lpfc_nodelist *)evtp->evt_arg1);
--    }
-+
-+    /* Drop the event-held reference */
-+    if (arg_ndlp)
-+        lpfc_nlp_put(arg_ndlp);
-+
-      if (test_and_clear_bit(NLP_NPR_2B_DISC, &nlp->nlp_flag)) {
-          if (vport->num_disc_nodes) {
-              if (vport->port_state < LPFC_VPORT_READY) {
-@@ -4422,10 +4444,16 @@ lpfc_els_retry_delay_handler(struct 
-lpfc_nodelist *ndlp)
-      spin_lock_irq(&ndlp->lock);
-      cmd = ndlp->nlp_last_elscmd;
-      ndlp->nlp_last_elscmd = 0;
--    spin_unlock_irq(&ndlp->lock);
+-	return queue_work(fc_host_work_q(shost), work);
++	/* Use local copy to prevent TOCTOU race */
++	return queue_work(wq, work);
+  }
 
--    if (!test_and_clear_bit(NLP_DELAY_TMO, &ndlp->nlp_flag))
-+    /*
-+     * Check and clear NLP_DELAY_TMO flag inside critical section to
-+         * prevent TOCTOU race with lpfc_cancel_retry_delay_tmo()
-+     */
-+    if (!test_and_clear_bit(NLP_DELAY_TMO, &ndlp->nlp_flag)) {
-+        spin_unlock_irq(&ndlp->lock);
-          return;
-+    }
-+    spin_unlock_irq(&ndlp->lock);
+  /**
+@@ -2793,7 +2795,9 @@ fc_queue_work(struct Scsi_Host *shost, struct 
+work_struct *work)
+  static void
+  fc_flush_work(struct Scsi_Host *shost)
+  {
+-	if (!fc_host_work_q(shost)) {
++	struct workqueue_struct *wq = READ_ONCE(fc_host_work_q(shost));
++
++	if (!wq) {
+  		printk(KERN_ERR
+  			"ERROR: FC host '%s' attempted to flush work, "
+  			"when no workqueue created.\n", shost->hostt->name);
+@@ -2801,7 +2805,8 @@ fc_flush_work(struct Scsi_Host *shost)
+  		return;
+  	}
 
-      /*
-       * If a discovery event readded nlp_delayfunc after timer
-diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c 
-b/drivers/scsi/lpfc/lpfc_hbadisc.c
-index 43d246c5c049..e318e3f5aa7c 100644
---- a/drivers/scsi/lpfc/lpfc_hbadisc.c
-+++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
-@@ -846,6 +846,15 @@ lpfc_work_list_done(struct lpfc_hba *phba)
-          switch (evtp->evt) {
-          case LPFC_EVT_ELS_RETRY:
-              ndlp = (struct lpfc_nodelist *) (evtp->evt_arg1);
-+            /*
-+            * Consume the payload to prevent reuse or double-put.
-+            * evt_arg1 was populated when event was queued.
-+            */
-+            evtp->evt_arg1 = NULL;
-+            if (!ndlp) {
-+                /* Event already consumed by cancel path */
-+                break;
-+            }
-              if (!hba_pci_err) {
-                  lpfc_els_retry_delay_handler(ndlp);
-                  free_evt = 0; /* evt is part of ndlp */
+-	flush_workqueue(fc_host_work_q(shost));
++	/* Use local copy to prevent TOCTOU race */
++	flush_workqueue(wq);
+  }
+
+  /**
+@@ -2818,16 +2823,18 @@ static int
+  fc_queue_devloss_work(struct Scsi_Host *shost, struct fc_rport *rport,
+  		      struct delayed_work *work, unsigned long delay)
+  {
+-	if (unlikely(!rport->devloss_work_q)) {
++	struct workqueue_struct *wq = READ_ONCE(rport->devloss_work_q);
++
++	if (unlikely(!wq)) {
+  		printk(KERN_ERR
+  			"ERROR: FC host '%s' attempted to queue work, "
+  			"when no workqueue created.\n", shost->hostt->name);
+  		dump_stack();
+-
+  		return -EINVAL;
+  	}
+
+-	return queue_delayed_work(rport->devloss_work_q, work, delay);
++	/* Use local copy to prevent TOCTOU race */
++	return queue_delayed_work(wq, work, delay);
+  }
+
+  /**
+@@ -2838,7 +2845,9 @@ fc_queue_devloss_work(struct Scsi_Host *shost, 
+struct fc_rport *rport,
+  static void
+  fc_flush_devloss(struct Scsi_Host *shost, struct fc_rport *rport)
+  {
+-	if (unlikely(!rport->devloss_work_q)) {
++	struct workqueue_struct *wq = READ_ONCE(rport->devloss_work_q);
++
++	if (unlikely(!wq)) {
+  		printk(KERN_ERR
+  			"ERROR: FC host '%s' attempted to flush work, "
+  			"when no workqueue created.\n", shost->hostt->name);
+@@ -2846,7 +2855,7 @@ fc_flush_devloss(struct Scsi_Host *shost, struct 
+fc_rport *rport)
+  		return;
+  	}
+
+-	flush_workqueue(rport->devloss_work_q);
++	flush_workqueue(wq);
+  }
+
+
+@@ -2905,7 +2914,12 @@ fc_remove_host(struct Scsi_Host *shost)
+  	/* flush all stgt delete, and rport delete work items, then kill it  */
+  	if (fc_host->work_q) {
+  		work_q = fc_host->work_q;
+-		fc_host->work_q = NULL;
++		/* Prevent new work from being queued by setting work_q to NULL */
++		WRITE_ONCE(fc_host->work_q, NULL);
++		/* Ensures NULL is visible to other CPUs before flush */
++		smp_mb();
++		/* Flush any work that was queued before NULL assignment */
++		flush_workqueue(work_q);
+  		destroy_workqueue(work_q);
+  	}
+  }
 -- 
 2.52.0
