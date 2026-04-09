@@ -1,148 +1,166 @@
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+Received: from mta-01.yadro.com (mta-01.yadro.com [195.3.219.148])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6E42215CD7E;
-	Thu,  9 Apr 2026 06:38:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B230242D89;
+	Thu,  9 Apr 2026 09:32:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.3.219.148
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775716699; cv=none; b=XGSAbz+k8XZvvwn0DHTADo9lafeYdnASTj0u6K2Y6uqtBDQY7RL1mCY+u5XAqo+Zt3psEB16NQMIPNiqKau858eW6TYjrUjTX0rqmEAp0nC/82Ng1T4rqkODJsPeu2xYTcWrndmp2SrsovvAHIrrJYBPqtM0WWuigF7Bo2bgWCQ=
+	t=1775727138; cv=none; b=WdnRax07M7w1pCWkhFZs90zMdvd9Ay5TKYB8n+tiQrhGK27mQXhywz1xwH4BBAMaSmE3umRTJ8czYEiV3CLxkXa1OZTCrJJUqmbxGVPnKD+JH6ApEQom4yPp5cCgLqpLexwFUBpszHcYn4HmBJZ/8frLFjWTuMwFsaJ5k100K1I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775716699; c=relaxed/simple;
-	bh=HpHC1U+Xcdp6b1MczAs0Dx4aAMHkPSk3tRwK/vZUTog=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=GjAIUSf3ZTbrUC2Xod2NSJP/hHmmDHVo5+Njm9BqZpjysB8Q+9s3zLae+BHnSoC9/7x41HTBOlKoE6jh38w/WGrKKBhq8xRvNgTx2EY2jNUFt7x5OySg67Ci/hU2rm/9JCtbZDN/Gepi8U/oKR/03OaCThyaLrt11IKyCL59C+s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=SrxVuGy3; arc=none smtp.client-ip=148.163.156.1
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	s=arc-20240116; t=1775727138; c=relaxed/simple;
+	bh=4I2hbFVPDgIbdKcpWGKHICWSswjqPRxlZWU0x2S/vgk=;
+	h=Date:From:To:CC:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=qpgwrt8HIx86l4cuwV/YSQrRCyIH9KYIhj0sqbpHrPn5ZtJeV6L0yzzViKjxqiGbloDnnEDc9QIp7bkWdGOiRGZPTXUNY6U4LPsyCSCmJoBkOcyoqCjvBjMQ/3BrMIlzCf/lfhNgadF1Oi53pY8IoHVnjQ8hvt1Xb73ZYk7BrkA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=yadro.com; spf=pass smtp.mailfrom=yadro.com; dkim=pass (2048-bit key) header.d=yadro.com header.i=@yadro.com header.b=xdkT9mPj; dkim=pass (2048-bit key) header.d=yadro.com header.i=@yadro.com header.b=A/wqktW9; arc=none smtp.client-ip=195.3.219.148
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=yadro.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=yadro.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="SrxVuGy3"
-Received: from pps.filterd (m0360083.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 638NFUrR665439;
-	Thu, 9 Apr 2026 06:37:51 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=pp1; bh=b0dEBK
-	YkoDMME7nEkhgrR/yUhnHdtdm3xnurIwXVQyc=; b=SrxVuGy3iXYZ8oSGCG9y5+
-	cW+OqNWQbLcIW79IQm6DI5kiYc7gcOpWIIE/hBjGprg16b0OFfX4FBr2QwUOCv1q
-	Hc+cf/2rfk7XJdUVwECyeCqbCHAkAA+xE+dyaMt1rzu1NNPCOPynMV4v1SmfNTWb
-	N+W7dZtt22o7PYUxLouayC4XGm5WXqQS88HmRuuMlu1uizmGvumBo8TPO0YIsEMq
-	Y6LfW/MUAcxDx51mLFEX8No4vAywfkrOiVAfRTiqtt4h0cw1tkQEOMTw+5Dm8Wm+
-	ORErl1J6+RwrhM4VvorsRlw7uQE3vEc4P5Z4RkRmdgAOnmlnEu7+qIKTVKVGnZIw
-	==
-Received: from ppma23.wdc07v.mail.ibm.com (5d.69.3da9.ip4.static.sl-reverse.com [169.61.105.93])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4dcn2ebmvc-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 09 Apr 2026 06:37:51 +0000 (GMT)
-Received: from pps.filterd (ppma23.wdc07v.mail.ibm.com [127.0.0.1])
-	by ppma23.wdc07v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 6392KXYu013824;
-	Thu, 9 Apr 2026 06:37:50 GMT
-Received: from smtprelay02.dal12v.mail.ibm.com ([172.16.1.4])
-	by ppma23.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4dcmf4agb5-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 09 Apr 2026 06:37:50 +0000
-Received: from smtpav04.dal12v.mail.ibm.com (smtpav04.dal12v.mail.ibm.com [10.241.53.103])
-	by smtprelay02.dal12v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 6396bn1g31851160
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Thu, 9 Apr 2026 06:37:49 GMT
-Received: from smtpav04.dal12v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 9F67A5805A;
-	Thu,  9 Apr 2026 06:37:49 +0000 (GMT)
-Received: from smtpav04.dal12v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 0412D58052;
-	Thu,  9 Apr 2026 06:37:44 +0000 (GMT)
-Received: from [9.123.2.203] (unknown [9.123.2.203])
-	by smtpav04.dal12v.mail.ibm.com (Postfix) with ESMTP;
-	Thu,  9 Apr 2026 06:37:43 +0000 (GMT)
-Message-ID: <79725a83-3dc1-4398-ac86-c3e317e0e107@linux.ibm.com>
-Date: Thu, 9 Apr 2026 12:07:42 +0530
+	dkim=pass (2048-bit key) header.d=yadro.com header.i=@yadro.com header.b="xdkT9mPj";
+	dkim=pass (2048-bit key) header.d=yadro.com header.i=@yadro.com header.b="A/wqktW9"
+Received: from mta-01.yadro.com (localhost [127.0.0.1])
+	by mta-01.yadro.com (Postfix) with ESMTP id 701DC20002;
+	Thu,  9 Apr 2026 12:31:52 +0300 (MSK)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mta-01.yadro.com 701DC20002
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yadro.com; s=mta-02;
+	t=1775727112; bh=CaijfPOWPMeAVWc1tGnKZr7iCZ1kjxhZMCIoyWZse0o=;
+	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type:From;
+	b=xdkT9mPj8qvUpUmdlTTTpw61Gt29YSprbwKbWWpe264zWhiRlFOar7HsAFq6sY8vB
+	 2SKJbwk1pbZVevkYExNNubvUy1niGa5z3E20xA2pprPqwbVuJQwbHPUiLmkeSPMBG6
+	 F20pcHPEJaLTOtecSr7oaOdJGDzKvMnyKsL06lBD19syNMIpuXmH9VOKJqix3R/9qV
+	 uiQNl+2TICbuMeJxA8/aApqU7WPpv7X4gOxv1LC3Dua1hRpcMu8TTDq5tpL4n48X+9
+	 OxY0TSRYchtUbVO+bthI4h8AUpBNIjF5Ll+JzjWPVSOCatPPCXAlifX0b17SSKW/Mo
+	 uYeSNFQ413yng==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yadro.com; s=mta-03;
+	t=1775727112; bh=CaijfPOWPMeAVWc1tGnKZr7iCZ1kjxhZMCIoyWZse0o=;
+	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type:From;
+	b=A/wqktW9OuAG3wVQ4kxTaZjhZ2H8NAe6fSl+hNnn8zdcHwwN8VFgeVtibHXLQmU0r
+	 F4lofBLK47YwoMReVH2H6RVXDL6FYh9SbxoZA3DzOOLFkIGyUeNtYCDCVIQAM6NivW
+	 igdCM7PtkQ/TCi0uB78+8YQM1aeLI83Rmj3U/NRxmAPz9zVUslv8HRmYU3/pNAg4JL
+	 XKR6DGYy4U8KwmIxXJOXS0b4ITVedUZstyFDWHvheOdTJOgKdPOUEHPiEy2/upvvKN
+	 sykz4fnmqcUdM8pU7q1D3FSOSxBTR4hnqCtOsrHaBqAmizs8lKRnqbAY2dT2l6d1fl
+	 HgcSoKIiXnySQ==
+Received: from RTM-EXCH-06.corp.yadro.com (unknown [10.34.9.206])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by mta-01.yadro.com (Postfix) with ESMTPS;
+	Thu,  9 Apr 2026 12:31:50 +0300 (MSK)
+Received: from yadro.com (10.34.9.247) by RTM-EXCH-06.corp.yadro.com
+ (10.34.9.206) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.35; Thu, 9 Apr
+ 2026 12:31:59 +0300
+Date: Thu, 9 Apr 2026 12:31:59 +0300
+From: Dmitry Bogdanov <d.bogdanov@yadro.com>
+To: <carlos.bilbao@kernel.org>
+CC: <bilbao@vt.edu>, <martin.petersen@oracle.com>, <kees@kernel.org>,
+	<linux-kernel@vger.kernel.org>, <linux-scsi@vger.kernel.org>
+Subject: Re: [PATCH v2] scsi: target: iscsi: reject invalid size Extended CDB
+ AHS
+Message-ID: <20260409093159.GA902@yadro.com>
+References: <20260404014429.115807-1-carlos.bilbao@kernel.org>
+ <20260409024253.34926-1-carlos.bilbao@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 07/13] libmultipath: Add delayed removal support
-To: John Garry <john.g.garry@oracle.com>, Hannes Reinecke <hare@suse.de>,
-        hch@lst.de, kbusch@kernel.org, sagi@grimberg.me, axboe@fb.com,
-        martin.petersen@oracle.com, james.bottomley@hansenpartnership.com,
-        hare@suse.com
-Cc: jmeneghi@redhat.com, linux-nvme@lists.infradead.org,
-        linux-scsi@vger.kernel.org, michael.christie@oracle.com,
-        snitzer@kernel.org, bmarzins@redhat.com, dm-devel@lists.linux.dev,
-        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20260225153225.1031169-1-john.g.garry@oracle.com>
- <20260225153225.1031169-8-john.g.garry@oracle.com>
- <bc006d17-22b6-49d5-9e04-02eab7dab729@linux.ibm.com>
- <74eb1f9b-265e-4264-9575-177de6c924a0@oracle.com>
- <6d7a4076-a4ad-4185-8e82-8e27d704d20e@suse.de>
- <c5334a6b-8089-4ee5-abd3-8340133db29a@oracle.com>
-Content-Language: en-US
-From: Nilay Shroff <nilay@linux.ibm.com>
-In-Reply-To: <c5334a6b-8089-4ee5-abd3-8340133db29a@oracle.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-ORIG-GUID: ryGWzV-kxtfoOaaEQla0XCXQw7DbbbdA
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNDA5MDA1NCBTYWx0ZWRfX5XcfgdUgYwDD
- KkdwNvKclumlzdnlNHFpblTJb8dLXPGm773qOMgfkjCHTJKrOq+0harj3CiJH40ATmFzw7lNjG6
- V0W+Y/K5QLt+3nYWuHhQh+jqQMAsx2yQoo+5XinxIxmmxP2LMzJwPuKJXIrQMJ0xlxUREey6HSG
- rDMzHiKuRHJA7j6yn93sNlJ29f0Shih1NLSM3qY5IW3xMNDhzGZEH/+ekS2R0HN4UMXQWdL5I7c
- rzg/IXWZUYe9XGyfVV2UbjvOvtCI+xVtRuHqpOLPMQqIbBWIgvueGIC+I3OvXn/wmcDyqoZQgz7
- hS7aC+k/3HsM+GmjB0ZxjFsIsGUAInm3nsaSti4sWLGb0rAAgxTC2EKkT9JColBhvm+xME+vvXZ
- a54OJmHYfdrTjRvbS+U0uAghg3N+HGO6d2dD4aDVGIZx4aZjbtSa+fBk5me3hyOgj8xjrTPhUen
- ohNzoEVtbumSVvvhFJg==
-X-Authority-Analysis: v=2.4 cv=Cfw4Irrl c=1 sm=1 tr=0 ts=69d7493f cx=c_pps
- a=3Bg1Hr4SwmMryq2xdFQyZA==:117 a=3Bg1Hr4SwmMryq2xdFQyZA==:17
- a=IkcTkHD0fZMA:10 a=A5OVakUREuEA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=RnoormkPH1_aCDwRdu11:22 a=iQ6ETzBq9ecOQQE5vZCe:22 a=qGyuYsBrm1yEalbM7ekA:9
- a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
-X-Proofpoint-GUID: ryGWzV-kxtfoOaaEQla0XCXQw7DbbbdA
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-04-09_01,2026-04-08_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- malwarescore=0 phishscore=0 clxscore=1011 adultscore=0 suspectscore=0
- priorityscore=1501 impostorscore=0 bulkscore=0 spamscore=0 lowpriorityscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2604010000 definitions=main-2604090054
+Content-Type: text/plain; charset="us-ascii"
+Content-Disposition: inline
+In-Reply-To: <20260409024253.34926-1-carlos.bilbao@kernel.org>
+X-ClientProxiedBy: RTM-EXCH-05.corp.yadro.com (10.34.9.205) To
+ RTM-EXCH-06.corp.yadro.com (10.34.9.206)
+X-KSMG-AntiPhishing: NotDetected
+X-KSMG-AntiSpam-Interceptor-Info: not scanned
+X-KSMG-AntiSpam-Status: not scanned, disabled by settings
+X-KSMG-AntiVirus: Kaspersky Secure Mail Gateway, version 2.1.1.8310, bases: 2026/04/09 08:27:00 #28381071
+X-KSMG-AntiVirus-Status: NotDetected, skipped
+X-KSMG-KATA-Status: Not Scanned
+X-KSMG-LinksScanning: NotDetected
+X-KSMG-Message-Action: skipped
+X-KSMG-Rule-ID: 5
 
-On 4/8/26 9:58 PM, John Garry wrote:
-> On 08/04/2026 16:41, Hannes Reinecke wrote:
->> On 4/8/26 13:28, John Garry wrote:
->>> On 02/03/2026 12:41, Nilay Shroff wrote:
->>>>> +
->>>>>   void mpath_add_sysfs_link(struct mpath_disk *mpath_disk)
->>>>>   {
->>>>>       struct mpath_head *mpath_head = mpath_disk->mpath_head;
->>>>> @@ -793,6 +868,8 @@ struct mpath_head *mpath_alloc_head(void)
->>>>>       mutex_init(&mpath_head->lock);
->>>>>       kref_init(&mpath_head->ref);
->>>>> +    mpath_head->delayed_removal_secs = 0;
->>>>> +
->>>>>       INIT_WORK(&mpath_head->requeue_work, mpath_requeue_work);
->>>>>       spin_lock_init(&mpath_head->requeue_lock);
->>>>>       bio_list_init(&mpath_head->requeue_list);
->>>>
->>>> I think we also need to initialize ->drv_module here.
->>>
->>> Hi Nilay,
->>>
->>> I am just coming back to this now. About NVMe multipath delayed disk removal, did you consider a blktests testcase to cover it? I might look at it if I have a chance (and it makes sense to do so).
->>>
->>
->> That look patently like the 'queue_if_no_path' feature from dm- multipath. Any chance of reconciling these two?
+On Wed, Apr 08, 2026 at 07:42:53PM -0700, carlos.bilbao@kernel.org wrote:
 > 
-> You mean a common blktests testcase, right?
+> From: Carlos Bilbao <carlos.bilbao@kernel.org>
 > 
-> For NVMe, that test would:
-> a. try to remove NVMe ko when we have the delayed removal active
-> b. ensure that we can queue for no path
+> If ecdb_ahdr->ahslength is zero, two bugs follow:
 > 
-> I suppose that a common testcase could be possible (with dm mpath), but doesn't dm have its own testsuite?
+>   kmalloc(be16_to_cpu(ecdb_ahdr->ahslength) + 15, ...)
 > 
-Yes, I'd add a blktest for 'queue_if_no_path' feature. But as we know we have
-separate test suite for dm under blktests, I'd first target nvme testcase and
-then later add another testcase for dm-multipath.
-Thanks,
---Nilay
+> allocates 15 bytes, but the immediately following memcpy writes
+> ISCSI_CDB_SIZE (16) bytes into it, a one-byte heap overflow. Also:
+> 
+>   memcpy(cdb + ISCSI_CDB_SIZE, ecdb_ahdr->ecdb,
+>            be16_to_cpu(ecdb_ahdr->ahslength) - 1);
+> 
+> (u16)0 - 1 promotes to (int)-1 which converts to SIZE_MAX as size_t,
+> causing a massive out-of-bounds write.
+> 
+> Reject ahslength == 0 with ISCSI_REASON_PROTOCOL_ERROR before the kmalloc.
+> Also reject ahslength values that exceed the actual AHS buffer advertised.
+> 
+> Changes in v2:
+> 
+> - Add bounds check: ahslength must not exceed (hdr->hlength * 4) - 3.
+> - Replace opaque ahslength + 15 with explicit cdb_length variable.
+> 
+> Fixes: 8f1f7d297bce ("scsi: target: iscsi: Add support for extended CDB AHS")
+> Signed-off-by: Carlos Bilbao (Lambda) <carlos.bilbao@kernel.org>
+
+Reviewed-by: Dmitry Bogdanov <d.bogdanov@yadro.com>
+
+> ---
+>  drivers/target/iscsi/iscsi_target.c | 23 +++++++++++++++++++----
+>  1 file changed, 19 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
+> index e80449f6ce15..1a492965ebdf 100644
+> --- a/drivers/target/iscsi/iscsi_target.c
+> +++ b/drivers/target/iscsi/iscsi_target.c
+> @@ -1100,6 +1100,8 @@ int iscsit_setup_scsi_cmd(struct iscsit_conn *conn, struct iscsit_cmd *cmd,
+>         cdb = hdr->cdb;
+> 
+>         if (hdr->hlength) {
+> +               u16 ahslength;
+> +
+>                 ecdb_ahdr = (struct iscsi_ecdb_ahdr *) (hdr + 1);
+>                 if (ecdb_ahdr->ahstype != ISCSI_AHSTYPE_CDB) {
+>                         pr_err("Additional Header Segment type %d not supported!\n",
+> @@ -1108,14 +1110,27 @@ int iscsit_setup_scsi_cmd(struct iscsit_conn *conn, struct iscsit_cmd *cmd,
+>                                 ISCSI_REASON_CMD_NOT_SUPPORTED, buf);
+>                 }
+> 
+> -               cdb = kmalloc(be16_to_cpu(ecdb_ahdr->ahslength) + 15,
+> -                             GFP_KERNEL);
+> +               ahslength = be16_to_cpu(ecdb_ahdr->ahslength);
+> +               if (!ahslength) {
+> +                       pr_err("Extended CDB AHS with zero length, protocol error.\n");
+> +                       return iscsit_add_reject_cmd(cmd,
+> +                               ISCSI_REASON_PROTOCOL_ERROR, buf);
+> +               }
+> +               if (ahslength > (hdr->hlength * 4) - 3) {
+> +                       pr_err("Extended CDB AHS length %u exceeds available buffer.\n",
+> +                              ahslength);
+> +                       return iscsit_add_reject_cmd(cmd,
+> +                               ISCSI_REASON_PROTOCOL_ERROR, buf);
+> +               }
+> +
+> +               u16 cdb_length = ahslength - 1 + ISCSI_CDB_SIZE;
+
+AFAIK, a variable declarationis allowed to be in the beginning of code block only.
+
+> +
+> +               cdb = kmalloc(cdb_length, GFP_KERNEL);
+>                 if (cdb == NULL)
+>                         return iscsit_add_reject_cmd(cmd,
+>                                 ISCSI_REASON_BOOKMARK_NO_RESOURCES, buf);
+>                 memcpy(cdb, hdr->cdb, ISCSI_CDB_SIZE);
+> -               memcpy(cdb + ISCSI_CDB_SIZE, ecdb_ahdr->ecdb,
+> -                      be16_to_cpu(ecdb_ahdr->ahslength) - 1);
+> +               memcpy(cdb + ISCSI_CDB_SIZE, ecdb_ahdr->ecdb, cdb_length - ISCSI_CDB_SIZE);
+>         }
+> 
+>         data_direction = (hdr->flags & ISCSI_FLAG_CMD_WRITE) ? DMA_TO_DEVICE :
+> --
+> 2.43.0
+> 
