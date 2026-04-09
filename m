@@ -1,250 +1,217 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4119735C1BC
-	for <linux-scsi@vger.kernel.org>; Thu,  9 Apr 2026 15:00:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=170.10.129.124
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775746827; cv=pass; b=M7P2DoUHkbrqzjecmIlcCp0BSxdUkpXA52zokb8YlWo8XzDrv/yujfIypcPTglGGIwsGjYSjImBQDlWsLRiSGjI8KrRCb4A+h9uQRKKn9+mJTUorh/rvUufXc6rrhOPoRMDRR0hD3cYSW/KVAIVrKvJw2hHdrRxY9RavDmQ5+Mc=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775746827; c=relaxed/simple;
-	bh=A6WjcZkzB7y/uOYAw/eN9Tj+j1b6o0TUODV7Nvp2H68=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=sYYYVPYkWTKyMhh9WSNZBJ/fSvLdkjJfI6kQu7JvRXklRPUPdz9qofIbV+UWxh0wolR7nUzXl3Jd8T0hk9KWciTs1d1RwhTyTYfbBkjgdSyyoNKOOv2mgG7hefjpLgNb3hjvz47KEyhkv/fTd0rrqr9iDIpxXlJG8jaaTt46j2Y=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=hwedqR/p; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=Q+mbWEQo; arc=pass smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C6443BFE3C;
+	Thu,  9 Apr 2026 15:12:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1775747533; cv=none; b=os7PKfLAceGh6400EvC7PdxZVo0El61RZ537+SZ7nlLR1PZo1xuI+iX5dgV47gQX/uDTXuOB7SprJGeVGSrw3UhghTIqhdP2WrkwXXZH021VVcnQCzEWSeRDKSKtPhDbVtssKV/tXJhvHuRld5kxw3fbBeci0QY2N+1/AiqcIg8=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1775747533; c=relaxed/simple;
+	bh=U4ddSgYUvrVZgHCOTXZVHGuW5Oxc5B3dd9+pKMvljA0=;
+	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:Content-Type; b=oaucSA6HElmgZZZAHNse9UAbqDUeeMsXbCk4CNULeh/SdgGFqMxFaBaZOE/b2eMGFdgQR66ZokVFhtGqqTGy03FYcqpqRx1YampmWmkgxOYcAy4Km+HzWN+GCZGV8EEz7hlzmD0tbMtBr2vIHVPWE8CRBe3ADsFavSLRI7V8zX0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=oq8JJZeY; arc=none smtp.client-ip=148.163.158.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="hwedqR/p";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="Q+mbWEQo"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1775746825;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=cf9B6qVrP1bgRDKEPgwYFOrfy8peSUb1Uft91wqXmNg=;
-	b=hwedqR/p0O6y1rp/HU8TxNQ9sgPH8BN/KEAnvhOVFj5L5Gmmni3nuLNiT8Dyi1XDhAThTX
-	AvupUWhj4WPz5ZUmD1AjOTsj5ueqD854UxMDMM9fdtq+oQYrbsAR5lNvIEo3oL41zQAsrK
-	cy66/CIeRnDjIOUmyaquAKSbLsTw+7s=
-Received: from mail-vs1-f71.google.com (mail-vs1-f71.google.com
- [209.85.217.71]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-163-6VbS9ziQNAyDQiP1ivrWpw-1; Thu, 09 Apr 2026 11:00:24 -0400
-X-MC-Unique: 6VbS9ziQNAyDQiP1ivrWpw-1
-X-Mimecast-MFC-AGG-ID: 6VbS9ziQNAyDQiP1ivrWpw_1775746823
-Received: by mail-vs1-f71.google.com with SMTP id ada2fe7eead31-60521f54387so340374137.1
-        for <linux-scsi@vger.kernel.org>; Thu, 09 Apr 2026 08:00:23 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1775746823; cv=none;
-        d=google.com; s=arc-20240605;
-        b=Mru81sODy5IByzAEIJdmwdq/7H8JkQH6odpc4yYFtUf1ORbBcF+bFF18+0MteWe++E
-         IoXf3LMIhNFMEfj8xUuRFMBw2cVFm4jHa96rT1V3DfZwe9uYoXANdh9Y/wjWJ90t7dW6
-         qhBu1HRPvFnKFjWti/eHKLVRx4TGMFkX7NHbgB8abjmBqflAuRjxK9chzK02+MqZ6nEr
-         FroFgWjPlOqoJ5pZIavUNwWdNmAAtT/fH8erPQ3ZKDDhR/NviLmSQoKMo8SjsSGgY0PJ
-         YHKirQhDXZ2G4Pl266PYiAWkfe8MPIWSBI29PB+uvpibNurLGYboyP9tIrhJWzKHwx4m
-         ow3g==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=cf9B6qVrP1bgRDKEPgwYFOrfy8peSUb1Uft91wqXmNg=;
-        fh=fRA9KLSONbQuIL+KRL13JSJD0YNmMPGX0FF34fpCd9Q=;
-        b=GyNqyN+sRiBXSQMl1pxR025PojwVlnvsDaKCsq2f/eZHJNAj8/wUMC0+VNf9pEvuSJ
-         yMyDASRT6vyo9v1cSJehrAP3hCbyOhyeWabfEn3CZp6ylyWOnSxHMWv799EUZYi8gHkz
-         1JjlPhJPK2QD5+ikIHimfcjaYUpJDzonoV49uydbCbWSaw9lIsvUeJpDKBYneZJVfo6x
-         ew52Z9qukpwenSKTfWCHmBfuxlxwaOUv8PiQfSxvLkoNCveotjsIt7m0EuNbdj6ok9g2
-         JwiTmYtmbLLfkcyZ9aSjSadnyaL9fmFAr4zKQT0oq7J4L/7bkpSdydjJnTbkIwNLbC82
-         qr6g==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1775746823; x=1776351623; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=cf9B6qVrP1bgRDKEPgwYFOrfy8peSUb1Uft91wqXmNg=;
-        b=Q+mbWEQofehPMNn9Tn4fMyXnlZQo4SEJb6PdYCQxpwA2WQFX07aRMK17b9Cl7x8iBi
-         5IDlZi7uCkzS+bhQW633HNjma4tmHfkB6829+x5X7A4gf7GhFLilIqTI47b1/vpnbjiC
-         +e+o6gFSLo0DQhcF0+BSr1CihwErulFgs7odKi2tFKFO5aOnjMJ2T4a62iKtgjunArBT
-         S15pKPOA3V6wKROCsPKQoGwyo6/g6oZoHHYpmZDz/rl4lBMqIhNTXr4vc4UIj5mqfriZ
-         pmSV6edAtLmtucC8SLjZ0JgLfMpqTdsGxLFTjjIZ2BpM8rMCH6NvkCdryBRXsKfqdcZW
-         yiGA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1775746823; x=1776351623;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=cf9B6qVrP1bgRDKEPgwYFOrfy8peSUb1Uft91wqXmNg=;
-        b=P1YeXp5aeJl/UBIWmkBpECoLCVkJlercVCH2TlUp0fmspN+Fr+FdE6w0hBqy+ShAB1
-         M5spKPeqxFCEFW4XC4WFjSE8Y8Lze+SfGYVeB97VCTjjUedoP4rtNtfShDZ/LOkUjtef
-         2+eXwo9ONoMBo8TH+bEEkmH7KWQL2rnBihJenzOocEGOI9gGenvpe+NtdS2zQeCewp5+
-         7FgvRCbIgDZK73nn/U9BNy6bsvjXHebHkfro6KMOuweau8RGBCSHZ4agHagxwmBhjLSe
-         Zh10tfn5+1bHrxon9LmAX9j83QvGyyTIDsew9IzqVrlLKsRsF/0/YlIdCBRHCcWhXMMj
-         bK0g==
-X-Forwarded-Encrypted: i=1; AJvYcCWVGAzf73KUhdlfnGX63RcjtHLae724F7a2jY8JWPCmK3s8P9hGRkyI0wtRQDS1/esPsRyK+3Ahvw3O@vger.kernel.org
-X-Gm-Message-State: AOJu0YwIexeW4BuirGF+CawMmlmZnzqV3oAUb56xdF/j51gtoVnzNN1g
-	XBcylEYA99NfYcLvGHGoYL2wCeEd4UJGBnP4609CiGZcY/DeYrT3lG7/pDxPYpjcRUOh8MANla6
-	tKiyJQclgDZ7aANEb2K8oeJT8GibENuv/ubGZ7m/tPSMvacMoUEHPefmgnemCnrG6SEx56i8z+x
-	cSJnJ/N0vIlQ//+P/bI2bJDdi4rpm0Q4Ug4w7/5A==
-X-Gm-Gg: AeBDiesvii4tE2E46YNXGqquSD7ZtnTvXNwpi2w+X2Xxt+TR6T2jV9YTRQ2HJHgqLMz
-	Q+hmaI9LtQ/rpay6aTFYQ/sd+ojlRvDO7em3tau8pa11VNqsDHf4xvd67NPwV6GI3GIks8jFJhE
-	4O/9Z/ul/68Dn3D0s7ml2F4IFBrtGQBC8pTmBGK7yCZIuRHyT5TmnZ9s7BoaYacV2uz8pEJCW4q
-	Q0HwNFa7ZAYf6LZyRJmk1b0+AfuGCs6sHqZ+Bo=
-X-Received: by 2002:a67:e713:0:b0:608:1b6e:f4dc with SMTP id ada2fe7eead31-6081b6ef921mr2784469137.11.1775746823170;
-        Thu, 09 Apr 2026 08:00:23 -0700 (PDT)
-X-Received: by 2002:a67:e713:0:b0:608:1b6e:f4dc with SMTP id
- ada2fe7eead31-6081b6ef921mr2784399137.11.1775746822118; Thu, 09 Apr 2026
- 08:00:22 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="oq8JJZeY"
+Received: from pps.filterd (m0356516.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 639Al4OW2326338;
+	Thu, 9 Apr 2026 15:12:10 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-transfer-encoding:content-type:date:from:message-id
+	:mime-version:subject:to; s=pp1; bh=ISxKajPxGm9uKk0nh3JFY9C3tOtj
+	rKy/4mGFq6LwO5E=; b=oq8JJZeYRTkQjz4fIB35y73JwXLQley4nZMwS3cVn0A+
+	9pSsktG3mr6gfXSUVm5Cu41F6t5ONGvtfve++vI5si67eVEG6tvnSp7eNQpvPrOM
+	fQVJ/KsGb49h3NBCEKmTlfjvcxYFahMp4FErHjKxnvc9tEsLY7tQ0rCVj1AacFm2
+	Np7k5468cYAyzFjbkdhdTWHCHeJG99nbu4xg3rYKhlR+j2kNapkCW8GHXiW6IquY
+	NFUaDsyg+4VYQhE/B34keWBRk0nf9y544g3kW7mpjT40N+xs/yUsVJBM7m+oqDh8
+	I0m7aiU+3kQmlmPimw4jXkw+mXGsuJZSxuHvjqM1Ew==
+Received: from ppma12.dal12v.mail.ibm.com (dc.9e.1632.ip4.static.sl-reverse.com [50.22.158.220])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4dcn2kmqq9-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 09 Apr 2026 15:12:10 +0000 (GMT)
+Received: from pps.filterd (ppma12.dal12v.mail.ibm.com [127.0.0.1])
+	by ppma12.dal12v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 639CURKR026642;
+	Thu, 9 Apr 2026 15:12:09 GMT
+Received: from smtprelay05.wdc07v.mail.ibm.com ([172.16.1.72])
+	by ppma12.dal12v.mail.ibm.com (PPS) with ESMTPS id 4dcmg842ah-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 09 Apr 2026 15:12:09 +0000
+Received: from smtpav05.wdc07v.mail.ibm.com (smtpav05.wdc07v.mail.ibm.com [10.39.53.232])
+	by smtprelay05.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 639FC9Mn53215658
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Thu, 9 Apr 2026 15:12:09 GMT
+Received: from smtpav05.wdc07v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 1300A5805F;
+	Thu,  9 Apr 2026 15:12:09 +0000 (GMT)
+Received: from smtpav05.wdc07v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 6A09358043;
+	Thu,  9 Apr 2026 15:12:08 +0000 (GMT)
+Received: from [9.61.156.97] (unknown [9.61.156.97])
+	by smtpav05.wdc07v.mail.ibm.com (Postfix) with ESMTP;
+	Thu,  9 Apr 2026 15:12:08 +0000 (GMT)
+Message-ID: <1c8a764c-fce1-4ce1-b797-47ac328cf3f2@linux.ibm.com>
+Date: Thu, 9 Apr 2026 10:12:07 -0500
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260401222312.772334-1-atomlin@atomlin.com> <20260401222312.772334-14-atomlin@atomlin.com>
- <ac8l-w8ERG1YN2Wm@fedora> <nxe24ixebb4lm2d5w4aubhtwr23df6mumqd663axj35oswdiyv@amtqhtsidyr4>
- <adMoon3Zf6gO-UbA@fedora> <zawhqvn53mcp4wf7axsmuq4cg73upxs5h2zgrfta5dpat3sfy4@zctfbz2ttz5m>
-In-Reply-To: <zawhqvn53mcp4wf7axsmuq4cg73upxs5h2zgrfta5dpat3sfy4@zctfbz2ttz5m>
-From: Ming Lei <ming.lei@redhat.com>
-Date: Thu, 9 Apr 2026 23:00:09 +0800
-X-Gm-Features: AQROBzBGMQxEgwdm4UZJAa6NOKwn3RLk5aSwu5C0sv3kx4PGZQZHIp5V15VSUxk
-Message-ID: <CAFj5m9JE5e4DRGbzQFxDdZWU76ZPQ3G+C9JpLu0mhTB6aesZ9g@mail.gmail.com>
-Subject: Re: [PATCH v10 13/13] docs: add io_queue flag to isolcpus
-To: Aaron Tomlin <atomlin@atomlin.com>
-Cc: axboe@kernel.dk, kbusch@kernel.org, hch@lst.de, sagi@grimberg.me, 
-	mst@redhat.com, aacraid@microsemi.com, James.Bottomley@hansenpartnership.com, 
-	martin.petersen@oracle.com, liyihang9@h-partners.com, 
-	kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, 
-	shivasharan.srikanteshwara@broadcom.com, chandrakanth.patil@broadcom.com, 
-	sathya.prakash@broadcom.com, sreekanth.reddy@broadcom.com, 
-	suganath-prabu.subramani@broadcom.com, ranjan.kumar@broadcom.com, 
-	jinpu.wang@cloud.ionos.com, tglx@kernel.org, mingo@redhat.com, 
-	peterz@infradead.org, juri.lelli@redhat.com, vincent.guittot@linaro.org, 
-	akpm@linux-foundation.org, maz@kernel.org, ruanjinjie@huawei.com, 
-	bigeasy@linutronix.de, yphbchou0911@gmail.com, wagi@kernel.org, 
-	frederic@kernel.org, longman@redhat.com, chenridong@huawei.com, hare@suse.de, 
-	kch@nvidia.com, steve@abita.co, sean@ashe.io, chjohnst@gmail.com, 
-	neelx@suse.com, mproche@gmail.com, linux-block@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, virtualization@lists.linux.dev, 
-	linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org, 
-	megaraidlinux.pdl@broadcom.com, mpi3mr-linuxdrv.pdl@broadcom.com, 
-	MPT-FusionLinux.pdl@broadcom.com, "Lei, Ming" <tom.leiming@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+From: Kyle Mahlkuch <kmahlkuc@linux.ibm.com>
+Subject: [PATCH 1/3] scsi: lpfc: Fix race conditions in ELS retry handling
+To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        paul.ely@broadcom.com
+Cc: thinhtr@linux.ibm.com
+Content-Language: en-US
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNDA5MDEzNSBTYWx0ZWRfXxxiv6vKG9h3C
+ dJ3QO0bmdaWP3f61gu1xDNURjw0xwuPUkc2Ol5btgBFKK2REkv87MG+akW3MLM+W0gJlCGEIrII
+ Dmpnhe4HRx2nQbBOnYEm1uV76AE2nVev/1Cidb5WhI7/OZaXNSgM2TwlmLQz4lnQZ4L2RheMJM/
+ Edc17jcmIN4aFtim4e16t0nxe8OiZFrU8/DgR0QB7OY7WERKCC1Itj0DEZnFe5GhqWcMey2hTiZ
+ rxrTrBj7TPlKD0+0/K2JjUrIcduaI/k2DoF2BLTNHqFpNx6yNALFgED0xV8lj7cFOn7Gw05cxmP
+ IzcrsRtru2e+myyklOSMSvEp5a+DlOaX0n56/sVZLhgVM9oPL7qIsXuge5rUlemfMKirIHp7wY0
+ KYrcOP0G17okkxt1q32eObn3GsOHUtI2WyDIh+UvhneoButObTUyrBxdJNPxKT75xnlMn7o04wF
+ EJYNvHBeAKPi8Wn82VQ==
+X-Proofpoint-ORIG-GUID: h2-VXbOlNdQBrzDMi1oUx3f6ncF48mVN
+X-Authority-Analysis: v=2.4 cv=e9k2j6p/ c=1 sm=1 tr=0 ts=69d7c1ca cx=c_pps
+ a=bLidbwmWQ0KltjZqbj+ezA==:117 a=bLidbwmWQ0KltjZqbj+ezA==:17
+ a=IkcTkHD0fZMA:10 a=A5OVakUREuEA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=RnoormkPH1_aCDwRdu11:22 a=Y2IxJ9c9Rs8Kov3niI8_:22 a=VnNF1IyMAAAA:8
+ a=MNJAjjf2JKIQIniOXnMA:9 a=QEXdDO2ut3YA:10
+X-Proofpoint-GUID: h2-VXbOlNdQBrzDMi1oUx3f6ncF48mVN
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-04-09_04,2026-04-09_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ clxscore=1011 impostorscore=0 malwarescore=0 suspectscore=0 spamscore=0
+ bulkscore=0 adultscore=0 priorityscore=1501 phishscore=0 lowpriorityscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2604010000 definitions=main-2604090135
 
-On Wed, Apr 8, 2026 at 11:58=E2=80=AFPM Aaron Tomlin <atomlin@atomlin.com> =
-wrote:
->
-> On Mon, Apr 06, 2026 at 11:29:38AM +0800, Ming Lei wrote:
-> > I don't think there is such breaking isolation thing. For iopoll, if
-> > applications won't submit polled IO on isolated CPUs, everything is jus=
-t
-> > fine. If they do it, IO may be reaped from isolated CPUs, that is just =
-their
-> > choice, anything is wrong?
->
-> Hi Ming,
->
-> Thank you for your follow up. You make a fair point regarding polling
-> queues and application choice; if an application explicitly binds to an
-> isolated CPU and submits polled operations, it is indeed actively electin=
-g
-> to utilise that core and accept the resulting behaviour.
->
-> However, the architectural challenge arises from how the kernel handles
-> these queues structurally when the application does not explicitly make
-> that choice. Because poll queues never utilise interrupts, they are
-> completely invisible to the managed interrupt subsystem.
->
-> If we were to rely exclusively on the managed irq flag, the block layer
-> would blindly map these non interrupt driven polling queues to isolated
-> CPUs. If a general background storage operation were then routed to
-> that queue, the isolated core would be forced to spin actively in a tight
+This patch addresses critical race conditions in the lpfc driver's ELS
+retry event handling that can lead to a use-after-free.
 
-How can the isolated core be scheduled for running polling task?
+The primary issue is a TOCTOU (Time-of-Check to Tim-of-Use) race in the
+lpfc_cancel_retry_delay_tmo(), where the NLP_DELAY_TMO flag is cleared
+before acquiring the lock to check if the retry event is queued, and the
+worker lpfc_els_retry_delay_handler(). This create a window where the
+timer can be rescheduled and fire, causing both the cancel path and the
+worker thread to release the same reference, resulting in a double-put
+and use-after-free.
 
-Who triggered it?
+Fixes the primary TOCTOU race by
+  - moving the flag check inside section protected by hbalock
+  - Add a NULL checking in the work handler to gracefully handle cases
+    where the event payload has been consumed by the cancel path
 
-> loop waiting for the hardware completion. This would completely monopolis=
-e
-> the core and destroy any real time isolation guarantees without the user
-> space application ever having requested it.
+Signed-off-by: Thinh Tran <thinhtr@linux.ibm.com>
+Signed-off-by: Kyle Mahlkuch <kmahlkuc@linux.ibm.com>
+---
+  drivers/scsi/lpfc/lpfc_els.c     | 48 +++++++++++++++++++++++++-------
+  drivers/scsi/lpfc/lpfc_hbadisc.c |  9 ++++++
+  2 files changed, 47 insertions(+), 10 deletions(-)
 
-No.
+diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+index b71db7d7d747..ccc0734f5daa 100644
+--- a/drivers/scsi/lpfc/lpfc_els.c
++++ b/drivers/scsi/lpfc/lpfc_els.c
+@@ -4329,18 +4329,40 @@ lpfc_issue_els_edc(struct lpfc_vport *vport, 
+uint8_t retry)
+  void
+  lpfc_cancel_retry_delay_tmo(struct lpfc_vport *vport, struct 
+lpfc_nodelist *nlp)
+  {
+-    struct lpfc_work_evt *evtp;
++    struct lpfc_hba *phba = vport->phba;
++    struct lpfc_work_evt *evtp = &nlp->els_retry_evt;
++    struct lpfc_nodelist *arg_ndlp = NULL;
++    unsigned long flags;
 
-IOPOLL queue doesn't have interrupt, and the ->poll() is only run from
-the submission context.  So if you don't submitted polled IO on isolated
-CPU cores, everything is just fine.  This is simpler than irq IO actually.
+-    if (!test_and_clear_bit(NLP_DELAY_TMO, &nlp->nlp_flag))
++    /*
++     * Check and clear NLP_DELAY_TMO flag inside critical section to
++     * prevent TOCTOU race with timer rescheduling. If retry event is
++     * queued, remove it and consume its payload to prevent double-put.
++     * This protects against concurrent execution with 
+lpfc_work_list_done()
++     * which may be processing this event. The event holds a reference to
++     * the nodelist that must be released exactly once.
++     */
++    spin_lock_irqsave(&phba->hbalock, flags);
++    if (!test_and_clear_bit(NLP_DELAY_TMO, &nlp->nlp_flag)) {
++        spin_unlock_irqrestore(&phba->hbalock, flags);
+          return;
++    }
++
++    if (!list_empty(&evtp->evt_listp)) {
++        list_del_init(&evtp->evt_listp);
++        arg_ndlp = (struct lpfc_nodelist *)evtp->evt_arg1;
++        evtp->evt_arg1 = NULL;
++    }
++    spin_unlock_irqrestore(&phba->hbalock, flags);
++
++    /* Delete timer and clear state outside the lock */
+      timer_delete_sync(&nlp->nlp_delayfunc);
+      nlp->nlp_last_elscmd = 0;
+-    if (!list_empty(&nlp->els_retry_evt.evt_listp)) {
+-        list_del_init(&nlp->els_retry_evt.evt_listp);
+-        /* Decrement nlp reference count held for the delayed retry */
+-        evtp = &nlp->els_retry_evt;
+-        lpfc_nlp_put((struct lpfc_nodelist *)evtp->evt_arg1);
+-    }
++
++    /* Drop the event-held reference */
++    if (arg_ndlp)
++        lpfc_nlp_put(arg_ndlp);
++
+      if (test_and_clear_bit(NLP_NPR_2B_DISC, &nlp->nlp_flag)) {
+          if (vport->num_disc_nodes) {
+              if (vport->port_state < LPFC_VPORT_READY) {
+@@ -4422,10 +4444,16 @@ lpfc_els_retry_delay_handler(struct 
+lpfc_nodelist *ndlp)
+      spin_lock_irq(&ndlp->lock);
+      cmd = ndlp->nlp_last_elscmd;
+      ndlp->nlp_last_elscmd = 0;
+-    spin_unlock_irq(&ndlp->lock);
 
->
-> This illustrates precisely why the io queue flag is a mechanical necessit=
-y.
-> Its primary objective is to act as a comprehensive block layer isolation
-> boundary. It structurally restricts both hardware queue placement and
-> managed interrupt affinity strictly to housekeeping CPUs, ensuring that n=
-o
-> storage queue operations of any kind are mapped to an isolated CPU.
->
-> To achieve this reliably, this series expands the struct irq affinity
-> structure to incorporate a new CPU mask [1]. This mask is explicitly set =
-to
-> the result of blk mq online queue affinity. By passing this housekeeping
-> mask directly through the interrupt affinity parameters, we ensure that t=
-he
-> native affinity calculation is strictly bounded to non isolated CPUs from
-> the moment the device probes.
->
-> This structural enhancement allows device drivers to seamlessly inherit t=
-he
-> isolation constraints without requiring bespoke, driver specific logic. A
-> clear example of this application can be seen in the modifications to the
-> Broadcom MPI3 Storage Controller [2]. By leveraging the expanded struct i=
-rq
-> affinity, the driver guarantees that its queues and corresponding managed
-> interrupts are perfectly aligned with the system housekeeping
-> configuration, completely avoiding the isolated CPUs during allocation.
->
-> [1]: https://lore.kernel.org/lkml/20260401222312.772334-5-atomlin@atomlin=
-.com/
-> [2]: https://lore.kernel.org/lkml/20260401222312.772334-8-atomlin@atomlin=
-.com/
->
-> I hope this better illustrates the mechanical necessity of the io_queue
-> flag and the corresponding changes to the interrupt affinity structures.
+-    if (!test_and_clear_bit(NLP_DELAY_TMO, &ndlp->nlp_flag))
++    /*
++     * Check and clear NLP_DELAY_TMO flag inside critical section to
++         * prevent TOCTOU race with lpfc_cancel_retry_delay_tmo()
++     */
++    if (!test_and_clear_bit(NLP_DELAY_TMO, &ndlp->nlp_flag)) {
++        spin_unlock_irq(&ndlp->lock);
+          return;
++    }
++    spin_unlock_irq(&ndlp->lock);
 
-Can you share one example in which managed irq can't address?
-
->
-> > > Every logical CPU, including the isolated ones, must logically map to=
- a
-> > > hardware context in order to submit input and output requests, saying=
- they
-> > > are completely restricted is indeed stale and technically inaccurate.=
- The
-> > > isolation mechanism actually ensures that the hardware contexts thems=
-elves
-> > > are serviced by the housekeeping CPUs, while the isolated CPUs are si=
-mply
-> > > mapped onto these housekeeping queues for submission purposes. I will
-> > > rewrite this paragraph to accurately reflect this topology, ensuring =
-it
-> > > aligns perfectly with the behaviour introduced in patch 10.
-> >
-> > I am not sure if the above words is helpful from administrator viewpoin=
-t about
-> > the two kernel parameters.
-> >
-> > IMO, only two differences from this viewpoint:
-> >
-> > 1) `io_queue` may reduce nr_hw_queues
-> >
-> > 2) when application submits IO from isolated CPUs, `io_queue` can compl=
-ete
-> > IO from housekeeping CPUs.
->
-> Acknowledged.
-
-Are there other major differences besides the two mentioned above?
-
-Thanks,
-Ming
-
+      /*
+       * If a discovery event readded nlp_delayfunc after timer
+diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c 
+b/drivers/scsi/lpfc/lpfc_hbadisc.c
+index 43d246c5c049..e318e3f5aa7c 100644
+--- a/drivers/scsi/lpfc/lpfc_hbadisc.c
++++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
+@@ -846,6 +846,15 @@ lpfc_work_list_done(struct lpfc_hba *phba)
+          switch (evtp->evt) {
+          case LPFC_EVT_ELS_RETRY:
+              ndlp = (struct lpfc_nodelist *) (evtp->evt_arg1);
++            /*
++            * Consume the payload to prevent reuse or double-put.
++            * evt_arg1 was populated when event was queued.
++            */
++            evtp->evt_arg1 = NULL;
++            if (!ndlp) {
++                /* Event already consumed by cancel path */
++                break;
++            }
+              if (!hba_pci_err) {
+                  lpfc_els_retry_delay_handler(ndlp);
+                  free_evt = 0; /* evt is part of ndlp */
+-- 
+2.52.0
