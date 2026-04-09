@@ -1,94 +1,94 @@
-Received: from mail-dl1-f97.google.com (mail-dl1-f97.google.com [74.125.82.97])
+Received: from mail-yw1-f227.google.com (mail-yw1-f227.google.com [209.85.128.227])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D79A30BF69
-	for <linux-scsi@vger.kernel.org>; Thu,  9 Apr 2026 06:14:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.82.97
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4CD302E06E6
+	for <linux-scsi@vger.kernel.org>; Thu,  9 Apr 2026 06:17:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.128.227
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775715253; cv=pass; b=ewnKEKcSVmXv2CFX7+9/RFPZvPfGdjSKPQtobqpcvy+3IBvoDZltFUX/kFHj8cdPc20cMuYjZyneOTJLbqOgt5vuAF28rgOFuEdWzvdKQYMJiH7ZwrfmAu8IHTtpgKJZlqw6Kb7aE5bG08PvI9y8ReA9xeh9ATImg+uIhOcYdT4=
+	t=1775715478; cv=pass; b=NJE1iYhWNoiB2RXxBSDac5/KlrN4eHsgB4v1bQ24yBx5qVj6lJDuPV0BBtjP9kOKV3Hx9zdm7EVA9wDTB7Ncfot2m8RsQUgOnkfXU5ytujh4oW7aJbtGzb+jAPTQ8ZPmi08cCTuqwmXkug63MXC+K6uy77QpGT2kYQE21gBZpME=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775715253; c=relaxed/simple;
-	bh=osluSe/+gtxp0BwQiUZqR0JmeGsM+j7SxsiF+4WV+CI=;
+	s=arc-20240116; t=1775715478; c=relaxed/simple;
+	bh=rS8Hd3jwYXjVSWStDrYuOpd8W926zGes8grqOSYi+ug=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=NVoe6FpQI3jy5HahhXkjkALD1RPLnMcLBR8uXkNVxB9HPxPYrFdIAayRsT85KgevhY+9Bpc1Hzx4KtUDVxal5UtZNyQuE3EDXUDmzIp555HWh9RIQuAk0gUB9g4VFthBkklQuC2GT+WRSc7gDGw5JREmyxGh1M/GT0Cr+B//lss=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=gEUR2qfT; arc=pass smtp.client-ip=74.125.82.97
+	 To:Cc:Content-Type; b=rnWHCJQxxvkU6BvBfNieOp7qL8zGZWQ9dQ5Ob6l7XRS16XjcrhGqzltWie95q/V8Vu7dU9S1VnEUrJf33K7rUp/NKxnQuMGB3N+tNxtOFGI65WXNhLjcCDY/ZS6IFSxRF4kScq7NusYreESYn9vACVAEUZ9SZOppoXnkb0QK6Dk=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=U/4nOvZ9; arc=pass smtp.client-ip=209.85.128.227
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="gEUR2qfT"
-Received: by mail-dl1-f97.google.com with SMTP id a92af1059eb24-12c2575ff49so359241c88.1
-        for <linux-scsi@vger.kernel.org>; Wed, 08 Apr 2026 23:14:12 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="U/4nOvZ9"
+Received: by mail-yw1-f227.google.com with SMTP id 00721157ae682-79d991c7b6aso5087997b3.2
+        for <linux-scsi@vger.kernel.org>; Wed, 08 Apr 2026 23:17:57 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1775715251; x=1776320051;
+        d=1e100.net; s=20251104; t=1775715476; x=1776320276;
         h=cc:to:subject:message-id:date:from:in-reply-to:references
          :mime-version:dkim-signature:x-gm-gg:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=osluSe/+gtxp0BwQiUZqR0JmeGsM+j7SxsiF+4WV+CI=;
-        b=SKn6LQP3f6ToZ+MxSBSwN7V9tTlU5yecrafATUMbmf2BIj/o3fDRlSBaIdUqP7Zey8
-         KzLm2LphuGCUrCbILeE8TT6e/8FajqGzRvVp54UrOk6+y1dJtYI8tAgqaaUsPgKNUej/
-         osW11eHsKx60bmAnfGSh+F8yqJzXT3/zL8VXCJZkEBy2/Fi8DTqEFxiIua32tEFgDGpU
-         TfAekG0uWCJoddIRRMoVigcupqcbZYqk4Dd/owa1nbW80G9TsqjHziO4FIRY56xadmT/
-         2Fqtenanauk6gvlN14pQJjllHPDNwJbKayBqR7vSBDzMxM+uqihMawMk55vXln/H4Uy6
-         OmEA==
-X-Forwarded-Encrypted: i=2; AJvYcCViVsaHVgKBpfE+83OOaCe2LwpFkMxKcLaDrewsh57luamEGgza5ATzQMSzHrpvxSEe8ABUEW2vSXOK@vger.kernel.org
-X-Gm-Message-State: AOJu0YzBJ1dGs0SjvpIe9sJBVJmglKFLfXR9AhRzqQqVgUdhzozeglqk
-	cTQYSOhtnzbljyphUGshPrDv1D4dU+lMVcWBPfEKz1GRE+2kbc0C+Qb8EnJylmAdPxofViyNMS0
-	1WLFqm4XAhoIZshvL1D2nM8WxH6j3nxLWevz4UJzYzGm4lHz72cY4t+kBTAPKuJxYaCKkHhO/rF
-	yCkoAgil/CI9Go/Mpx4tmmXEw+/EPSxsQw3tIKyxEFcM0jEKYxs32ncQyprAd5RKaBFEzL/oIJ0
-	cCTIpSwu9DEfsZX
-X-Gm-Gg: AeBDievvK6hVMqenEZIpLGXujNPk7Ksdj31GIW1zuIOjbABJwm4pEXRMVU6BcpqNsnB
-	LZEkS86X3jCOxV42EirR3TjB7FyqGLHT/tWB3xY172/8zMxHGAjebF5L70h/xQoSJh7Wqb2XPMY
-	6m5Ph6HMhmU5npeLhxo5C0C0+9UQJwSN19XINURwhWN+g6BLoZJy09o78sFF1Itc79uACYvBfVh
-	EpJvURWEznZ5PyvmyflAvHL06bmDAo3Li50HD72xPc3hWKqLTvRl8J61SizSkDwPMSv2IyUc2xC
-	BQFyBnuLnqYA68xodRlQM9YPSsUgTBZ+1yL56kZBcryaakWU/Op21V8vY/irQ4C5uAZ0dzfUcvC
-	ipacvPav1zJw23uI/J8mjuWBX/kPI7E+1glDGv3EvY4RkH4G5mKOcTf2HHtFBByIHleLCFf0xDY
-	uD10ITH+hRzwPBomgszwmzPzhXi8b48LtDm20L2nIdms36wD7Ay/axSODV
-X-Received: by 2002:a05:7022:6713:b0:122:153:d161 with SMTP id a92af1059eb24-12bfb745308mr13378542c88.17.1775715251286;
-        Wed, 08 Apr 2026 23:14:11 -0700 (PDT)
-Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-24.dlp.protect.broadcom.com. [144.49.247.24])
-        by smtp-relay.gmail.com with ESMTPS id a92af1059eb24-12c028eab4csm1022653c88.3.2026.04.08.23.14.10
+        bh=rS8Hd3jwYXjVSWStDrYuOpd8W926zGes8grqOSYi+ug=;
+        b=LAM51/q+QiyJ6s8BW9oYxjpOAbWu7aNz4h6FpTb0DIWqkgZqKBu2w7LHVwwGNsVKfA
+         gY5ZCXzqXdFiU2m0uaUvgX0wdQnWa74k41571l44b1GkTHSZsJjrqhPSDMlfLQbiw1Vg
+         aWvDlfHeAuVodyEe/crOk5JEkiXv4SQuXW/uJAy68EjLv5ibcxy561iCsIU+U9eG9KqZ
+         fNrOYCCJDJnxJXKcGrkoWi9SahENWbaJqzfCd81lIpoW4pIW+cIhZ9KC0/0TDUAHZR58
+         qiHJlEEyvlSPECZ8NHGE1Q/Q8/yn9fW5FwCCmrXM0BNzwtPZSTNrl5ONBk7LmDlzmpoa
+         cGow==
+X-Forwarded-Encrypted: i=2; AJvYcCXWYzQzofAP5rROGqkxqc72pz6KZtyyXijwP8EX0m67HOvrhvm7Hima4s6BzOO/nbGEBgYAYx/hZbyc@vger.kernel.org
+X-Gm-Message-State: AOJu0YxClCFJXH7BGKvTwyFuLyH5nFc6cC0uUQvKo2Vwb/kyjGmRTY/d
+	TEbxDIp8xfZLUAQ5FKY3SRxEQbjDZ/Id3bfShaJJS4ThXaXZXAULUoAoGYnm7gY9q2Qw9dYKE+M
+	NJSXuTrN7TLZnKXIGcNiLjad1MRK+kI3MWGwNKfmycTrRt2BN4n/5TYbHc4gLIXLPHlEeEGgQ54
+	hU2qLFhiH0AJcWYXwtMRapuo1hoilsU9wycjhkH/o/H6lgLj1j8Ze+GHpSrfhnkjzA7K4Z2F4BA
+	unhwfsYSeidq/zE
+X-Gm-Gg: AeBDietSGQRDaamH185AX7u/eu46owVHtqCr2LklIbEJ3CKeijuPAkUiZU5YAFHI8Qu
+	R0qjFB122KprMk7+myVOZFJsK8/2TOJoe15skkF1pRSAyZld88J1WGPpAOiGNDUkxsAZ6PwkQiO
+	zrvargaTaQZ5WiAWkh9zp5QibCwCj3OuZ6hupExVC1RFQbCMbuQDihefCcEaGRGuklZETUPVJUL
+	B9mdfQcAS80ldmkaU2Qe+B4tO1SxOekt0H9lg81MTs+ZsC77HYHZ5V8neoi5IGrwcnxtrjM3jVy
+	R66/Eb1jCJpnv5j7MbtdjoZ2wUyRFZnnmEEGKNZiOKSh9K0TbQJAuorTV8iQAuM55zyYygB/1E5
+	kQInb4W2RYkP6J3LBuKma2PahTtwlMmSu6nQDtNKFcJdRyiAy2pEUFyRLH7RHs4ko9mWqX3tZfz
+	sIPYlRcHTJoKlfw5mhEJ3IBlxjMhouNg/5RFYiRy5hDlQq+rmsCsYYjXnA
+X-Received: by 2002:a05:690c:dd6:b0:79b:cf31:9767 with SMTP id 00721157ae682-7a4d2ff0c6bmr232993257b3.3.1775715476214;
+        Wed, 08 Apr 2026 23:17:56 -0700 (PDT)
+Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-29.dlp.protect.broadcom.com. [144.49.247.29])
+        by smtp-relay.gmail.com with ESMTPS id 00721157ae682-7a37080af8dsm16854247b3.19.2026.04.08.23.17.54
         for <linux-scsi@vger.kernel.org>
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 08 Apr 2026 23:14:11 -0700 (PDT)
+        Wed, 08 Apr 2026 23:17:56 -0700 (PDT)
 X-Relaying-Domain: broadcom.com
 X-CFilter-Loop: Reflected
-Received: by mail-lf1-f69.google.com with SMTP id 2adb3069b0e04-5a277331b57so533705e87.1
-        for <linux-scsi@vger.kernel.org>; Wed, 08 Apr 2026 23:14:10 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1775715249; cv=none;
+Received: by mail-lf1-f69.google.com with SMTP id 2adb3069b0e04-5a2c9141ed4so259748e87.0
+        for <linux-scsi@vger.kernel.org>; Wed, 08 Apr 2026 23:17:54 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1775715473; cv=none;
         d=google.com; s=arc-20240605;
-        b=QEAtZMMNvB8mAYwhOQzTFsNnC9Wlo6aKWD+yAF2uUPmNBzRmi30kTzZ1iL5wgwOjHc
-         4y8MkkudwF1SUihaVUbBI5r/CVr+l6SdEdyUlEm9furC+bGYNPcQhBXrX5YJTgWeC/l6
-         PdWqj/dRq1V0mJv8zx3do8DIN7rX/o32L1ny5MmIg7FifJg0Ny0er1jNGCuGUpIBJp/U
-         7rjfwk2Xd3KhrzYDxTxHh7RlW6D2Rk7/T30BJWTqZb3HpNOSH5Gm2sK9QQMbZ3aPah+H
-         bCltrbFOml6fDVMBPKElZWK8A9Olfh4pqgjJPO8xGMxXt4KwAAT3Sduw4/Dz5kaJe7kQ
-         ouQA==
+        b=f59+Jlr9VnklhrOnzedV7aeJw6F+r1Y94+fU3RuNJvSPzkPaEex8RH1h2MuGw8gp4V
+         5x2b7RxL2IlTJ8uUjVkIjcXFiUUPMw60jnIQkdkyXW9Sbqab40Cp2pfWfx3zAvksJ7Zi
+         m0H7WSHEjO/1qqhhnY500W5nIlnWbGDY8Jvv6eW5xfrFW0chDK4/yFwOHHngGvdSzo+X
+         EQ7r17PlOT7TA9zzftnzPG0c6jcUiqLENcuAqlMauuKT8/3QL48OyLTpvHxHy72tTNmx
+         C1C05sL9bGHURBulUbMD03NWLYIW6naHst6imI6ReCej9Ulr6bI4dgOFmJ00QvhXQm/C
+         HzEQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
         h=cc:to:subject:message-id:date:from:in-reply-to:references
          :mime-version:dkim-signature;
-        bh=osluSe/+gtxp0BwQiUZqR0JmeGsM+j7SxsiF+4WV+CI=;
-        fh=FNq7JqXaxxKlQ8tZjTrJ0tkIqtkwrCJelSYMtXT2Cwk=;
-        b=F5dNwIdhrUww0IQBFmbeshVWMVr7fdEEGOU5M+Yz16W2V8lbULgWIpB+8TryTO2h6o
-         5e5s9e9fpgBnye6sOliyoUQb1XtHWnvbqmU6IwYdvSzZX55daXodIdrv+6kBzL+fb2Z5
-         fSTSokuMQjqtuDIX5SzHmAY6hyEH/npqeHkPwoXCiO4HQFp00/0nQVbFTJSdApfxk48Q
-         5YRC3RmZWhEjjScMnBAkzvQB/mOJyNaRjeFHNRq8Sx+3aWgrqMAT6o6raPhYDF0npesj
-         m3BZnvVfrf6ZstPD4zDCEd3SqxDn/yYwLZVr3VTaQdxgmnsF5v+NFPHD6qzrUXZpN+P9
-         GzTA==;
+        bh=rS8Hd3jwYXjVSWStDrYuOpd8W926zGes8grqOSYi+ug=;
+        fh=kRK8kit2fecpXKltSnihduoB51sKHXoxf3xOjbTSfyQ=;
+        b=Pcy9XdoQ5CCfv23LX8WMF6i6eeB1MGZXFDYtZTCttTw4bt7q23d6yJVZz69G43pLpL
+         avzIp2LiPS3aP1e5mGYRPkomCTkew9/SI6e4G4JIzAbvfhgPhhz9O3nJtqJJWiJdB7OW
+         tPTixv4LTzrMXQp/YNaocoMdb/dA/uwvTkBvAh6H9Ra0Zr9QDen9hY7Np7lw8qo/ojB/
+         UhLmj+Den3jQRya7Fx6wGfChSIoMNXm+hUkjftBn0soJkVyhRXHrskQWyhydlb8AX6YE
+         4YhL9iOEEDerFIczEz+jVTEeApJWTAz3espCbweK6bX1l2iv3SHBAsj27iqqgmrp2dHj
+         f8Yg==;
         darn=vger.kernel.org
 ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1775715249; x=1776320049; darn=vger.kernel.org;
+        d=broadcom.com; s=google; t=1775715473; x=1776320273; darn=vger.kernel.org;
         h=cc:to:subject:message-id:date:from:in-reply-to:references
          :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=osluSe/+gtxp0BwQiUZqR0JmeGsM+j7SxsiF+4WV+CI=;
-        b=gEUR2qfTMOP/555TmDNoLw7GbcEA/WYwSH460aNPY/pJoOMxwPJfuukUVQb0WswXgo
-         csl3sU3CLVqOABJtMYzUjpG+Q00N2PA1MZEkpTMFTJIMwuEvcPSYHoBfIHP67GiN+/fE
-         JZprhqxIRXYqWm6Zpwel3FFEXOJJKFhcmOLck=
-X-Forwarded-Encrypted: i=1; AJvYcCWcCZAxJPJmMRMjdyf7Njwzqu8l74zPdDYjNMhgiyHg36hyJkMycGt9BviKyXGipodEkmQK/X7nixBr@vger.kernel.org
-X-Received: by 2002:a05:6512:3408:b0:5a3:d1d0:543d with SMTP id 2adb3069b0e04-5a3d1d055femr7496206e87.27.1775715248874;
-        Wed, 08 Apr 2026 23:14:08 -0700 (PDT)
-X-Received: by 2002:a05:6512:3408:b0:5a3:d1d0:543d with SMTP id
- 2adb3069b0e04-5a3d1d055femr7496193e87.27.1775715248294; Wed, 08 Apr 2026
- 23:14:08 -0700 (PDT)
+        bh=rS8Hd3jwYXjVSWStDrYuOpd8W926zGes8grqOSYi+ug=;
+        b=U/4nOvZ9i0kDw4nIdbYnC3XU08jtxZ5Gc/B9Pd884HAcvFyqji2RK17KxsoNKLCfFL
+         a44DulU6vWTotG41K7fq+T/FJOH9vLNkHgCkopp6PlAVOwZFGvdciH2kC0cgD11kBwBx
+         o6qqx/HgK0tX37UVLdn5CfebtIynCqp0EkkPY=
+X-Forwarded-Encrypted: i=1; AJvYcCUotNGflu4pm23PUyEattigKVy7sOA3og8aaX/zJV1i4fWHPCHMVOz0+Vi3c3dYtmiogZ5NUTmzPiAi@vger.kernel.org
+X-Received: by 2002:a05:6512:39c4:b0:5a0:f95a:1602 with SMTP id 2adb3069b0e04-5a3e7a1b3abmr728033e87.17.1775715473542;
+        Wed, 08 Apr 2026 23:17:53 -0700 (PDT)
+X-Received: by 2002:a05:6512:39c4:b0:5a0:f95a:1602 with SMTP id
+ 2adb3069b0e04-5a3e7a1b3abmr728014e87.17.1775715472968; Wed, 08 Apr 2026
+ 23:17:52 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -96,35 +96,35 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 References: <20260402074637.92417-1-sumit.saxena@broadcom.com>
- <20260402074637.92417-3-sumit.saxena@broadcom.com> <1d0d35fe-5e9d-44b7-9dcd-48289f9d9f53@acm.org>
-In-Reply-To: <1d0d35fe-5e9d-44b7-9dcd-48289f9d9f53@acm.org>
+ <20260402074637.92417-4-sumit.saxena@broadcom.com> <fd582bae-a090-48d4-a4eb-b2db6c10c26c@acm.org>
+In-Reply-To: <fd582bae-a090-48d4-a4eb-b2db6c10c26c@acm.org>
 From: Sumit Saxena <sumit.saxena@broadcom.com>
-Date: Thu, 9 Apr 2026 11:43:42 +0530
-X-Gm-Features: AQROBzCVjmKw5QHlEaQJks9SwSAuJmE0_wfvSzYRI3X6FIYaKsKaSGMO2VQiGqw
-Message-ID: <CAL2rwxrU=pW9yhXGGh_Vd67OdSHp4tDGDxQtxcE=GZvfYb4j3w@mail.gmail.com>
-Subject: Re: [PATCH 2/3] block: align nr_active_requests_shared_tags to avoid
- cache line contention
+Date: Thu, 9 Apr 2026 11:47:26 +0530
+X-Gm-Features: AQROBzDUquBm5kMJ6J7syFlVbc5mzRztWCArYbjMRZL4e7qdDMCJme1mb4poIFc
+Message-ID: <CAL2rwxryLK1_kna6Ho4EFoSMxzJgfznZkU-6NgUACczP_GV79Q@mail.gmail.com>
+Subject: Re: [PATCH 3/3] scsi: align scsi_device iodone_cnt to avoid cache
+ line contention
 To: Bart Van Assche <bvanassche@acm.org>
 Cc: martin.petersen@oracle.com, axboe@kernel.dk, linux-scsi@vger.kernel.org, 
 	linux-block@vger.kernel.org, mpi3mr-linuxdrv.pdl@broadcom.com, 
 	James Rizzo <james.rizzo@broadcom.com>
 X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-	boundary="000000000000a7a57d064f00ec11"
+	boundary="0000000000000c00f6064f00fae2"
 
---000000000000a7a57d064f00ec11
+--0000000000000c00f6064f00fae2
 Content-Type: text/plain; charset="UTF-8"
 
-> A possible alternative is this patch that removes
-> nr_active_requests_shared_tags:
->
-> https://lore.kernel.org/linux-block/20240529213921.3166462-1-bvanassche@acm.org/
-Sorry for the late reply. Let me test with your patch.
+> Has it been considered to change both iorequest_cnt and iodone_cnt into
+> per-cpu counters?
+We're testing with per-cpu counters, initial results look good. Once
+the testing is complete,
+I will post the next version.
 
 Thanks,
 Sumit
 
---000000000000a7a57d064f00ec11
+--0000000000000c00f6064f00fae2
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -217,13 +217,13 @@ dYm4Ph9QYI0sm+Xitx8MkdOJtq5mcPWowGi8UiCgkOidv4ki1SA0wptfquUhbfS9b2M3XUHCEIUX
 4ECvIjR3f+E0NbBIfPccWfYUaDLvo2qhLYS3KQbhKdXcJ83ha17mbVNZbDDo9upNcLO/oPyDbCNF
 J6UpXZmis1wnCynhK4kQfwFhW7H+MYICVzCCAlMCAQEwYjBSMQswCQYDVQQGEwJCRTEZMBcGA1UE
 ChMQR2xvYmFsU2lnbiBudi1zYTEoMCYGA1UEAxMfR2xvYmFsU2lnbiBHQ0MgUjYgU01JTUUgQ0Eg
-MjAyMwIMdI2Nfq/Vk8dzZMUnMA0GCWCGSAFlAwQCAQUAoIHHMC8GCSqGSIb3DQEJBDEiBCC5g+Ru
-SZduGCUX3w1NFAYVk9axkv6EyptltRtbS+4ScDAYBgkqhkiG9w0BCQMxCwYJKoZIhvcNAQcBMBwG
-CSqGSIb3DQEJBTEPFw0yNjA0MDkwNjE0MDlaMFwGCSqGSIb3DQEJDzFPME0wCwYJYIZIAWUDBAEq
+MjAyMwIMdI2Nfq/Vk8dzZMUnMA0GCWCGSAFlAwQCAQUAoIHHMC8GCSqGSIb3DQEJBDEiBCCOIq1q
+zWts6fUqqIlaUKTHtNH1yGnQG90NUWlIst8FLDAYBgkqhkiG9w0BCQMxCwYJKoZIhvcNAQcBMBwG
+CSqGSIb3DQEJBTEPFw0yNjA0MDkwNjE3NTNaMFwGCSqGSIb3DQEJDzFPME0wCwYJYIZIAWUDBAEq
 MAsGCWCGSAFlAwQBFjALBglghkgBZQMEAQIwCgYIKoZIhvcNAwcwCwYJKoZIhvcNAQEHMAsGCWCG
-SAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQBGrGCvsAps332SgXjzwKL7pCpKEsgql2mXacMG1Zd5
-zayn32vq811td8yQXJX3WAlO1h+1Buj428LhdjjTkDB4+GZiABEY5QQCghrSFhicYbBE0HqEFDY2
-JpJoTALqIoKck2JsBPZnmpUXaWuIZyiIZyLEa8546opemJdiNUnef1QCUftr2fDvjEI7OZaZIDIn
-uHV7xUGghYVZxKXvlve0NRjMU7fEOcDCSfFGXi057KnYHK1uvORh9sIADXBn0tUlLbki2E6m5UKi
-5g7XpSKJZCl91bAoX85IxDX1r0EWbb/JSoD1khmo+tNDqGDBDAGwWzw52hxEeF/nfnd4TJVJ
---000000000000a7a57d064f00ec11--
+SAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQCfk4edYgzjs74uNdMkE3M/HHCNJC5g1uLPzTwDKIBu
+0PzhB8MQ9vaSVs8ODVEVNvpV6e92pd4PwEWWKz63mOwxTrmOGjwTVrNr3xkpfUVY9KxDyCCykJuj
+eyeH1A/iw53g4Q+yugbXjunxRAp9tYf9gMSEjnD43NIC0gEeoQY3CUN4EF5Ecr9BSTM055N2GZOr
+ACb+p/LNB/u1UKQx2VGF2/skd3/dG2AUulv/YGklo/A46O/rzHVJn8E+PGVS3Mb4cY8GV/PUI7xz
+eVGUtEN7HOZkBFp+LUzrIRoH643Rq+j7xmM1k6G7t/0raxZP+RuvTSiFmGxTUMLxdO2g/HCW
+--0000000000000c00f6064f00fae2--
