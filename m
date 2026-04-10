@@ -1,33 +1,60 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 25CEC17A305;
-	Fri, 10 Apr 2026 04:11:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 28328278161;
+	Fri, 10 Apr 2026 07:07:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775794286; cv=none; b=Rken19M+pFYavgMpGl1WPq4Nu2CQwo9ztPNtXvgcZu0ZrsWm7SslKf28NIj2/VhCG8zg1kRPUyLXmIBYF6N/adqvKB38yZsEJ4VPS/10jvChT5CI8Swl4PgxXT4UykzBXVZpyExF755K52BnZDEG+V3PBsQiLyNvmQRpf4PPFF8=
+	t=1775804827; cv=none; b=jeyK8ATCEiqLpbtX6R4cVObUzW6ajhdINT1JUMUiw8gigddCyQqrE40ut9D4Q9TK+O+g3zucD0nyyJ81lNR9nsEMqgfyLBfip0zyjPhhzZkI4bMOJbkxCasox6UKPmvltVRBk37yqTS4vxVojPTa/vnW8yNK7Z+e9P5VXvjHFIU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775794286; c=relaxed/simple;
-	bh=Qd/ywiFU9cRxI8M0dPCWFKVaalapG3CitltszcMmn3c=;
+	s=arc-20240116; t=1775804827; c=relaxed/simple;
+	bh=7924LyPz+7XslcATVmHCF21cqIc92A+jvphY+OSRdjA=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=W8bFnIK8sm2/oUGTbDKQgvVfuDdss8meBrTqNICqjcaA7/GGwOjmG6v9QKnFptHU1D39JDEkzI6eu2/GucRB2uWguWxsHvq+ECQT9mYCey0bSoFmAGukdbSxkhpWRhBOV0sOpCvX2UdXziC2sgMHdhVYw5RfNWU+s6wox6LTdOE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AsfhrjIh; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=okuzFOPN5MQPWInMdlV6S9TRnPlFNl1d/6Hl+PNNHw0BNcHj4buwFBrODkop1Ca8BMDKYxMoeNZnyI+hRVtLqY+twlHFH/XMd6YuW2zWKe6tEIOoaKxO1Sq6NXa0l1nQ36pejGaq16c7gg9PVOGt5KhPqNj3BtYgcXpypdUpK4Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=IY3mkX2W; arc=none smtp.client-ip=148.163.158.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AsfhrjIh"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 50E74C19421;
-	Fri, 10 Apr 2026 04:11:24 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1775794285;
-	bh=Qd/ywiFU9cRxI8M0dPCWFKVaalapG3CitltszcMmn3c=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=AsfhrjIhSeUrqM8njDxuDY//OsFcDRrT0GusxqQypXcZzujTpIXb4G7L/xxU0kRPE
-	 LxosffhfKxmZmfk1Ht/sVsZ4kLd/H+gXaSYNJtn93e1vRB1Z9x0s1+jJv/tJDIpLaW
-	 fUVvlFje2Fo40RMFp4psNncRl4ORryRfpjY3d6a1kt6XwgPq0jJLiv/ITCwIr/EFrt
-	 aKkYamrHdZ26jfbcDXLBJlQnH/TEAciVp1mB28TzHW8s2KHplbDnPyrqb2hME+Hw0I
-	 YO7eT7jOBU2StL78w6prA1eORnbZpEVaeowh7fC/Vc/JNAYRMBA1TP78B5Oa1ZCDZL
-	 +iy94uFsgpRxA==
-Message-ID: <eec3bbd3-5503-423b-bb3e-22657026d573@kernel.org>
-Date: Fri, 10 Apr 2026 06:11:22 +0200
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="IY3mkX2W"
+Received: from pps.filterd (m0353725.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 639Gd0Fv773967;
+	Fri, 10 Apr 2026 07:06:41 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=pp1; bh=jjdWvt
+	z81DpzP/9ibBKHCS6i67LOXAZzB1JC038nklg=; b=IY3mkX2WeyMQTbT8hnVZaJ
+	rN0zYlL6adx4Jb2VYc69NL1EpGgbHt42QIRbp+M6O1KY/Xw17Y9fJFBXZcwLcZRF
+	YN791fdNvGK5vzTf9aYuNQEEeCtIMyn2ZrjfnHfGjGWRodbBuN+ePco25bfl4OEo
+	/hS8G//fXCMsmTVa45AjhIi2PZi9JIMMk7x1iQMwigCc8mHF4idgg9rUM4MtFGbX
+	yk0bWsQSBkXsvjR1RXaUsgsnRVS7q4C4ZLT0KXuHaA/LYm92rFViMeff5khQJJTk
+	+9Q8A8fYudYZU3mHCnU0D3XZFx3m2PFgYHKTfX1NYcycNvFO0+rIzIKpb1Ii50DA
+	==
+Received: from ppma23.wdc07v.mail.ibm.com (5d.69.3da9.ip4.static.sl-reverse.com [169.61.105.93])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4dcn2hqpaa-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 10 Apr 2026 07:06:41 +0000 (GMT)
+Received: from pps.filterd (ppma23.wdc07v.mail.ibm.com [127.0.0.1])
+	by ppma23.wdc07v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 63A2ejTN013844;
+	Fri, 10 Apr 2026 07:06:41 GMT
+Received: from smtprelay02.wdc07v.mail.ibm.com ([172.16.1.69])
+	by ppma23.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4dcmf4eypm-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 10 Apr 2026 07:06:41 +0000
+Received: from smtpav04.wdc07v.mail.ibm.com (smtpav04.wdc07v.mail.ibm.com [10.39.53.231])
+	by smtprelay02.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 63A76e1t31261422
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Fri, 10 Apr 2026 07:06:40 GMT
+Received: from smtpav04.wdc07v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 9363658052;
+	Fri, 10 Apr 2026 07:06:40 +0000 (GMT)
+Received: from smtpav04.wdc07v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id B83B65805E;
+	Fri, 10 Apr 2026 07:06:33 +0000 (GMT)
+Received: from [9.39.26.31] (unknown [9.39.26.31])
+	by smtpav04.wdc07v.mail.ibm.com (Postfix) with ESMTP;
+	Fri, 10 Apr 2026 07:06:33 +0000 (GMT)
+Message-ID: <da2bfbb0-70ef-4c3a-a235-1343b4a02489@linux.ibm.com>
+Date: Fri, 10 Apr 2026 12:36:31 +0530
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,90 +62,172 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v1] mpt3sas: Limit NVMe request size to 2 MiB
-To: Ranjan Kumar <ranjan.kumar@broadcom.com>, linux-scsi@vger.kernel.org,
- martin.petersen@oracle.com
-Cc: sathya.prakash@broadcom.com, chandrakanth.patil@broadcom.com,
- stable@vger.kernel.org, Mira Limbeck <m.limbeck@proxmox.com>,
- Keith Busch <kbusch@kernel.org>
-References: <20260409184217.32992-1-ranjan.kumar@broadcom.com>
+Subject: Re: [PATCH 07/13] libmultipath: Add delayed removal support
+To: John Garry <john.g.garry@oracle.com>, Hannes Reinecke <hare@suse.de>,
+        hch@lst.de, kbusch@kernel.org, sagi@grimberg.me, axboe@fb.com,
+        martin.petersen@oracle.com, james.bottomley@hansenpartnership.com,
+        hare@suse.com
+Cc: jmeneghi@redhat.com, linux-nvme@lists.infradead.org,
+        linux-scsi@vger.kernel.org, michael.christie@oracle.com,
+        snitzer@kernel.org, bmarzins@redhat.com, dm-devel@lists.linux.dev,
+        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20260225153225.1031169-1-john.g.garry@oracle.com>
+ <20260225153225.1031169-8-john.g.garry@oracle.com>
+ <bc006d17-22b6-49d5-9e04-02eab7dab729@linux.ibm.com>
+ <74eb1f9b-265e-4264-9575-177de6c924a0@oracle.com>
+ <6d7a4076-a4ad-4185-8e82-8e27d704d20e@suse.de>
+ <c5334a6b-8089-4ee5-abd3-8340133db29a@oracle.com>
+ <79725a83-3dc1-4398-ac86-c3e317e0e107@linux.ibm.com>
+ <ccfc867c-e744-42a2-9b22-47245a6c06d7@oracle.com>
 Content-Language: en-US
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <20260409184217.32992-1-ranjan.kumar@broadcom.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+From: Nilay Shroff <nilay@linux.ibm.com>
+In-Reply-To: <ccfc867c-e744-42a2-9b22-47245a6c06d7@oracle.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNDEwMDA2MSBTYWx0ZWRfX3atOYmuSqHgA
+ 83ISnRFcZNQmY4UX6drZl8sj9IRocDy/eLf2LMo/pdmrYODFzDVlBNwjCEuNzwTKblBhdFha22I
+ zOz74ImcGcc8CyAY4tk19mFAxQFWZXtYrrlp0z8LijDUhh0FyCG7p2nAUOIxp+Eyb25ldQEi7nV
+ S+m2xqT8kJ2PkLW6FnVPKW5fI8KIhZ8G4Fgq/kUSLao/I6kreU+VJcPrH3Ey17eosJGS/d01CFw
+ VxBRPoycpV79PSwXaJyFdDh1oPgKmfskOb/Eh8J5v1v7sQGiI3B1P7OlYJmwpShcSIE5LlAbRbT
+ 5+5YZSrogzEKU17slYtXS4JnkrZ/FM6RQdh4ikELC1co56qN/QtVa4u87JbebHP6PZZ69bk1lcy
+ FBT1DFQl9YlyBsRB/4pgSVwWkFtoEBSSaaRJ9rcXyfN5YnSj+kU0kHeIPgaemG+Yx1EIb1RvDpH
+ Ehv6WC85ViFsFuNQXDw==
+X-Proofpoint-GUID: 9fyxScA-pcIiFl_bT5Yynx1JEic1pTK3
+X-Authority-Analysis: v=2.4 cv=a/wAM0SF c=1 sm=1 tr=0 ts=69d8a181 cx=c_pps
+ a=3Bg1Hr4SwmMryq2xdFQyZA==:117 a=3Bg1Hr4SwmMryq2xdFQyZA==:17
+ a=IkcTkHD0fZMA:10 a=A5OVakUREuEA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=RnoormkPH1_aCDwRdu11:22 a=V8glGbnc2Ofi9Qvn3v5h:22 a=hYD4mLzqdKOEPKpwNsQA:9
+ a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
+X-Proofpoint-ORIG-GUID: 9fyxScA-pcIiFl_bT5Yynx1JEic1pTK3
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-04-10_02,2026-04-09_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ bulkscore=0 clxscore=1015 spamscore=0 impostorscore=0 priorityscore=1501
+ phishscore=0 lowpriorityscore=0 adultscore=0 malwarescore=0 suspectscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2604010000 definitions=main-2604100061
 
-On 2026/04/09 20:42, Ranjan Kumar wrote:
-> Some firmware reports NVMe maximum transfer sizes that follow the drive
-> capability. When those values are very large, the block layer may build
-> I/O that this driver cannot handle, which can cause a kernel oops.
+On 4/9/26 6:30 PM, John Garry wrote:
+> On 09/04/2026 07:37, Nilay Shroff wrote:
+>>>
+>>> You mean a common blktests testcase, right?
+>>>
+>>> For NVMe, that test would:
+>>> a. try to remove NVMe ko when we have the delayed removal active
+>>> b. ensure that we can queue for no path
+>>>
+>>> I suppose that a common testcase could be possible (with dm mpath), but doesn't dm have its own testsuite?
+>>>
+>> Yes, I'd add a blktest for 'queue_if_no_path' feature. But as we know we have
+>> separate test suite for dm under blktests, I'd first target nvme testcase and
+>> then later add another testcase for dm-multipath.
 > 
-> When an NVMe device is set up, cap how large a single transfer may be
-> to the smaller of the firmware-reported limit and roughly two mebibytes
-> with a small margin. If no valid limit is reported, apply the same
-> upper bound.
+> Testing a. is a challenge to be effective, as we would typically not be able to remove the nvme modules anyway due to many other references.
 > 
-> Cc: stable@vger.kernel.org
-> Fixes: 9b8b84879d4a ("block: Increase BLK_DEF_MAX_SECTORS_CAP")
-> Reported-by: Mira Limbeck <m.limbeck@proxmox.com>
-> Closes: https://lore.kernel.org/r/291f78bf-4b4a-40dd-867d-053b36c564b3@proxmox.com
-> Link: https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=9b8b84879d4a
-> Suggested-by: Keith Busch <kbusch@kernel.org> 
-> Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
-> ---
->  drivers/scsi/mpt3sas/mpt3sas_scsih.c | 12 +++++++++++-
->  1 file changed, 11 insertions(+), 1 deletion(-)
+> For b, how about something like the following:
 > 
-> diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-> index 6ff788557294..b6abc83d8121 100644
-> --- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-> +++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-> @@ -54,6 +54,7 @@
->  #include <linux/interrupt.h>
->  #include <linux/raid_class.h>
->  #include <linux/unaligned.h>
-> +#include <linux/sizes.h>
->  
->  #include "mpt3sas_base.h"
->  
-> @@ -2738,8 +2739,17 @@ scsih_sdev_configure(struct scsi_device *sdev, struct queue_limits *lim)
->  				pcie_device->enclosure_level,
->  				pcie_device->connector_name);
->  
-> +		/*
-> +		 * Firmware may report NVMe MDTS from the drive; values above
-> +		 * what the driver can handle can cause a kernel oops. Cap queue
-> +		 * I/O in sectors to min(MDTS, 2 MiB - 4096 B).
-> +		 */
+> set_conditions() {
+>      _set_nvme_trtype "$@"
+> }
+> 
+> _delayed_nvme_reconnect_ctrl() {
+>      sleep 2
+>      _nvme_connect_subsys
+> }
+> 
+> test() {
+>      echo "Running ${TEST_NAME}"
+> 
+>      _setup_nvmet
+> 
+>      local nvmedev
+>      local ns
+>      local bytes_written
+> 
+>      _nvmet_target_setup
+>      _nvme_connect_subsys
+> 
+>      # Part a: Ensure writes fail when no path returns
+>      nvmedev=$(_find_nvme_dev "${def_subsysnqn}")
+>      ns=$(_find_nvme_ns "${def_subsys_uuid}")
+>      echo 10 > "/sys/block/"$ns"/delayed_removal_secs"
+>      bytes_written=$(run_xfs_io_pwritev2 /dev/"$ns" 4096)
+>      if [ "$bytes_written" != 4096 ]; then
+>          echo "could not write successfully initially"
+>      fi
+>      sleep 1
+>      _nvme_disconnect_ctrl "${nvmedev}"
+>      sleep 1
+>      ns=$(_find_nvme_ns "${def_subsys_uuid}")
+>      if [[ "${ns}" = "" ]]; then
+>          echo "could not find ns after disconnect"
+>      fi
+>      bytes_written=$(run_xfs_io_pwritev2 /dev/"$ns" 4096)
+>      if [ "$bytes_written" == 4096 ]; then
+>          echo "wrote successfully after disconnect"
+>      fi
+>      sleep 10
+>      ns=$(_find_nvme_ns "${def_subsys_uuid}")
+>      if [[ !"${ns}" = "" ]]; then
+>          echo "found ns after delayed removal"
+>      fi
+> 
+>      #echo "now part 2"
+>      # Part b: Ensure writes work for intermittent disconnect
+>      _nvme_connect_subsys
+> 
+>      nvmedev=$(_find_nvme_dev "${def_subsysnqn}")
+>      ns=$(_find_nvme_ns "${def_subsys_uuid}")
+>      echo 10 > "/sys/block/"$ns"/delayed_removal_secs"
+>      bytes_written=$(run_xfs_io_pwritev2 /dev/"$ns" 4096)
+>      if [ "$bytes_written" != 4096 ]; then
+>          echo "could not write successfully initially"
+>      fi
+>      sleep 1
+>      _nvme_disconnect_ctrl "${nvmedev}"
+>      sleep 1
+>      ns=$(_find_nvme_ns "${def_subsys_uuid}")
+>      if [[ "${ns}" = "" ]]; then
+>          echo "could not find ns after disconnect"
+>      fi
+>      _delayed_nvme_reconnect_ctrl &
+>      sleep 1
+>      bytes_written=$(run_xfs_io_pwritev2 /dev/"$ns" 4096)
+>      if [ "$bytes_written" != 4096 ]; then
+>          echo "could not write successfully with reconnect"
+>      fi
 
-This comment has some grammar issues and is really hard to parse/understand.
+It seems there may be a race here if we attempt to write to $ns before
+the reconnect has completed in _delayed_nvme_reconnect_ctrl.
 
->  		if (pcie_device->nvme_mdts)
-> -			lim->max_hw_sectors = pcie_device->nvme_mdts / 512;
-> +			lim->max_hw_sectors = min_t(u32,
-> +					pcie_device->nvme_mdts / 512,
-> +					(SZ_2M / 512) - 8);
-> +		else
-> +			lim->max_hw_sectors = (SZ_2M / 512) - 8;
+If the intention is simply to verify that the controller reconnect occurs
+within the delayed removal window and test pwrite, then it may be sufficient
+to:
+- perform the reconnect, and
+- then validate the write (pwrite) afterwards.
 
-I am very confused here: SZ_2MB assumes that you have an SSD with a minimum page
-size of 4K, which can fit 4K / 8 = 512 PRP entries, each referencing 4K (one
-page), so a maximum of 2MiB. However, if I am not mistaken, there is nothing in
-nvme specs that forces the MPS field to be 0 (which leads to a page size of 4K).
-So this seems incorrect to me, even though that will probably work for the vast
-majority of SSDs out there, some exotic ones will not be correctly supported.
+In that case, we could either:
+- run _delayed_nvme_reconnect_ctrl in the foreground, or
+- open-code the reconnect directly in the script before issuing the write.
 
-Keith ? Am I missing something here ?
+>      sleep 10
+>      ns=$(_find_nvme_ns "${def_subsys_uuid}")
+>      if [[ "${ns}" = "" ]]; then
+>          echo "could not find ns after delayed reconnect"
+>      fi
+> 
+>      # Final tidy-up
+>      echo 0 > /sys/block/"$ns"/delayed_removal_secs
+>      nvmedev=$(_find_nvme_dev "${def_subsysnqn}")
+>      _nvme_disconnect_ctrl "${nvmedev}"
+>      _nvmet_target_cleanup
+> 
+>      echo "Test complete"
+> }
 
-Or do we simply do not care about SSDs with a minimum page size > 4K having
-their maximum command size truncated ?
+Otherwise overall this looks good to me.
 
->  
->  		pcie_device_put(pcie_device);
->  		spin_unlock_irqrestore(&ioc->pcie_device_lock, flags);
-
-
--- 
-Damien Le Moal
-Western Digital Research
+Thanks,
+--Nilay
