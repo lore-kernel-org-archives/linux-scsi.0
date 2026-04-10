@@ -1,210 +1,179 @@
-Received: from mail-pj1-f52.google.com (mail-pj1-f52.google.com [209.85.216.52])
+Received: from mail-dy1-f179.google.com (mail-dy1-f179.google.com [74.125.82.179])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6DE432F39B5
-	for <linux-scsi@vger.kernel.org>; Fri, 10 Apr 2026 02:44:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 44C5027A10F
+	for <linux-scsi@vger.kernel.org>; Fri, 10 Apr 2026 02:49:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775789077; cv=none; b=O+LoWeshLoKUsYXd/I32Z41haO63JhNDW4Le0TlZE5sTDLog35UEZI73v0JJItl8c2MwLjt6dTJIi04CZ5AKjY8ESMXkhaDU1yU4vFV4GxXXY4D4tbfwPuA4DtSkyeRLkZelntbgGrSX0eAyx5pOQDYI7VLpeVUH6voZnd9kJyc=
+	t=1775789346; cv=none; b=g5/UGvYxDADK7Mk83oCrz/Bss3yrPGOgDkuk9Ks5S+6tSgbSkRW6bBY+vcpH9Xz8nu5Qz5g5+wVC4bttVQabp8xlUw/L8iIwSmecO2Wk7gzOB1XS6j5yohjlzV5avKH9fOo4fcOwGAOpZkeOFHW3Rj0axTvMHhff3/usZrIz3I0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775789077; c=relaxed/simple;
-	bh=TPe+unbB39v2p3g34Bl3H0+CW+J9BRBNX3aGbJ25L2g=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=mnwYeAsW+JWBz9Uf6abYPHeyIxgilQfzaGubnMbxM3F/hbcs8RqSClDNiUWvrfWgjurh/arhez6MBR0ik7SB/ep59yKF2IEItJAqSFREgtlc0uPUtzHta9XbxxW7HaOUjL1IaKK3tdcDHlC17zeKWWFHHY+uWymILWD3d3HYhLI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=g0XP0+bz; arc=none smtp.client-ip=209.85.216.52
+	s=arc-20240116; t=1775789346; c=relaxed/simple;
+	bh=cQjuki/Yk1C6dbCuO7bJfbNeuJ8X13UPKlOALnbuc+E=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=hAsdCSvc9603PKPrQBFfaTq4c2LTYQ1TV4KSx5tS/BYbWFGwpjekH6CIzVZt03YMpvO+6buxnXu3OMbtFutHIqKu8zjvEPqZWWsTRZ3lH2L5x6KoOTY5ONGQ4e/v/D6oi1vyOXqo8aliDwjnHyTFgKOWUivRg8fWsGDCGBeWj+k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=JI+QYUmb; arc=none smtp.client-ip=74.125.82.179
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="g0XP0+bz"
-Received: by mail-pj1-f52.google.com with SMTP id 98e67ed59e1d1-35d9c7bf9a1so1584501a91.3
-        for <linux-scsi@vger.kernel.org>; Thu, 09 Apr 2026 19:44:36 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="JI+QYUmb"
+Received: by mail-dy1-f179.google.com with SMTP id 5a478bee46e88-2cfd69b564dso2176947eec.0
+        for <linux-scsi@vger.kernel.org>; Thu, 09 Apr 2026 19:49:05 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1775789076; x=1776393876; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=6Y42v4l6XRa4Mc3bL0tysYnB0VcDZSP2r5rXfsoOeKc=;
-        b=g0XP0+bzuy61RG2po8R5vKlOVHv0clDoj+/ZwgrwwhS5pTdXq7pp4VzEgx3zXuVbe7
-         U8PvcoAAZen6o/8ywrK92mvNm9ZXBxsYkJxLrDnPeU6rZ4ChWa3PiZcFdatcBIsibaY1
-         E33AdtHTG7ymxjzMmM0VscfhAsYirikwyqWue0nkjnYzPmILu6M9EOUuLqbE82pVPqOB
-         aCuLOv2ya6ht1QllIPYGLwLiby/g6mOvgj2+/hCnKLh+P0hy0gdgKRWJ+FDnidAPWNBO
-         yP+cHdKsRRX558uHciNLl/hMrkZXGA345cRxxOOx+H89FixUOwmXgQqeK8x6bsm2v8Oh
-         l/2g==
+        d=gmail.com; s=20251104; t=1775789344; x=1776394144; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=JUwhPfOrcjiFviv0ScZUu0fmnLZYAthVYSSnbSs4M1g=;
+        b=JI+QYUmbEErWRaKtaIdmOhcFyY2HQq3N77Qt4zX+y6FMAU2n0VBHvnU2fSEiq6RQ4l
+         7tl+BhyyO6V3yqVdc+qX/Ah4bhpV3/VIwKNLzPZ8hX5PDNdU9kwp+LM8dd/Ux05OhG3K
+         IoBqez1xa92+VwyJer9AuGuOs4L/BIu4EfMkk6yfkmAZ9jOoiEM59ngytV/I9PB+QqAu
+         Sxxy/AxObi6uE8QtJeSabavNkaoj4Am74tVuFA1uo95cjxUU/bBzs3DK8gwI7j97fPZk
+         +F50HHWuljHiH1IP/lzuzPJD1xQV+o90RQRdmw+BvrOy4hgmKS8COLvLANOK1vWlq2rK
+         dN3Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1775789076; x=1776393876;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=6Y42v4l6XRa4Mc3bL0tysYnB0VcDZSP2r5rXfsoOeKc=;
-        b=iz/2j8UaFzp1I0/ff+Vd2pYgKLgD8AvgKBI66qvtMYY5FZ/JnJfO1VaCs+boM7j2Nm
-         CkZsoeLRuXz/f0mD1J9PnbxWo3INg5W1uJjthP4JD+T75dJa+5YemSD3/CFTGlG2MS9y
-         2LaxZaAEwENVM69UCidgQZfOUlNWyWb4PaVdrcxEatsK5Nq9t2qH8q4vim0fXbutI3np
-         F1oq/t/cRjYs3SQGh4lyIJLnTdj7/PWdspWQdrs/xhkxW1RKmIhJ4hIZhZi9YmXWErEx
-         QTk7oz76KUREDgZMeCmxwaEcNkfAX0PRkvnbb3Ezz0Pisj7agesRRhs/8ZDsdK326hzJ
-         s02g==
-X-Forwarded-Encrypted: i=1; AJvYcCWF2Xp8C90qfRx8Y1j7g9GRJswd6SiNUVArBoUf5ktk+e6DmJgWu7nLFTOzYHAJkue9YXcx39sj/QVP@vger.kernel.org
-X-Gm-Message-State: AOJu0YzJwSlYmuJcBCIb8SfLnTD3gsPlBtjTJhLDBllUvNqJihiAdYil
-	ZAV0se1Wfh0PYhNVfoOk6i+oDzeA2YMvDtiBQzCG7dWVlZx2lnb+4awU
-X-Gm-Gg: AeBDieum0qn+nh+1iFGrqICUxgx9t4yLPS1qNu4KO0Bx6X1zYC0cpuNMqakN3wgSSPV
-	uX5q1M0r8V04XLwOXmFbD4cX3beoi5XbNyA/LtH5a9AQGlOA99s0fg4TMSLhaMltQPIF7V/YXPZ
-	MDVpts4Y4h7+5jo9ELLFMbAz+PsMdG4VT4iboNuTQoUNMppPuq3p86XmymwLx7Iyhk5TKpS+/nG
-	yKgNTsvpl+GPNByXL3hQxiaTgWHp9K0Ez8MKvS77NHvPwSjLVvG4e1H79+MCqb2qYQpplXqR45t
-	Q4ZwgnNxa2WrQZBpujyRlYYimQlWAO414gXKtiJl7Ao+M4NC8yyCJ7uOCuybKrfMb5plEDDvQHs
-	mmZoRMmVbKHTdHop4v4t0AhEWxuoGf61l21rjzJKKxCxFFjUssPQXzxbyw+D07lZGRFieTZI/cP
-	zLmmkGQmLbROVcpTRhC/A0fG4bVP3v6DIDCZKE3b2fki3CMYvJtZFm
-X-Received: by 2002:a17:90a:e7ca:b0:359:974a:3d65 with SMTP id 98e67ed59e1d1-35e4285280dmr1485690a91.16.1775789075530;
-        Thu, 09 Apr 2026 19:44:35 -0700 (PDT)
-Received: from fedora ([2001:250:3c1e:503:ffff:ffff:74aa:4903])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-35e35156445sm4526177a91.14.2026.04.09.19.44.18
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 09 Apr 2026 19:44:34 -0700 (PDT)
-Date: Fri, 10 Apr 2026 10:44:15 +0800
-From: Ming Lei <tom.leiming@gmail.com>
-To: Aaron Tomlin <atomlin@atomlin.com>
-Cc: Ming Lei <ming.lei@redhat.com>, axboe@kernel.dk, kbusch@kernel.org,
-	hch@lst.de, sagi@grimberg.me, mst@redhat.com, aacraid@microsemi.com,
-	James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com,
-	liyihang9@h-partners.com, kashyap.desai@broadcom.com,
-	sumit.saxena@broadcom.com, shivasharan.srikanteshwara@broadcom.com,
-	chandrakanth.patil@broadcom.com, sathya.prakash@broadcom.com,
-	sreekanth.reddy@broadcom.com, suganath-prabu.subramani@broadcom.com,
-	ranjan.kumar@broadcom.com, jinpu.wang@cloud.ionos.com,
-	tglx@kernel.org, mingo@redhat.com, peterz@infradead.org,
-	juri.lelli@redhat.com, vincent.guittot@linaro.org,
-	akpm@linux-foundation.org, maz@kernel.org, ruanjinjie@huawei.com,
-	bigeasy@linutronix.de, yphbchou0911@gmail.com, wagi@kernel.org,
-	frederic@kernel.org, longman@redhat.com, chenridong@huawei.com,
-	hare@suse.de, kch@nvidia.com, steve@abita.co, sean@ashe.io,
-	chjohnst@gmail.com, neelx@suse.com, mproche@gmail.com,
-	linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-	virtualization@lists.linux.dev, linux-nvme@lists.infradead.org,
-	linux-scsi@vger.kernel.org, megaraidlinux.pdl@broadcom.com,
-	mpi3mr-linuxdrv.pdl@broadcom.com, MPT-FusionLinux.pdl@broadcom.com
-Subject: Re: [PATCH v10 13/13] docs: add io_queue flag to isolcpus
-Message-ID: <adhj_w11cpMfeEgN@fedora>
-References: <20260401222312.772334-1-atomlin@atomlin.com>
- <20260401222312.772334-14-atomlin@atomlin.com>
- <ac8l-w8ERG1YN2Wm@fedora>
- <nxe24ixebb4lm2d5w4aubhtwr23df6mumqd663axj35oswdiyv@amtqhtsidyr4>
- <adMoon3Zf6gO-UbA@fedora>
- <zawhqvn53mcp4wf7axsmuq4cg73upxs5h2zgrfta5dpat3sfy4@zctfbz2ttz5m>
- <CAFj5m9JE5e4DRGbzQFxDdZWU76ZPQ3G+C9JpLu0mhTB6aesZ9g@mail.gmail.com>
- <a566smu6morqeefqal23eek4ibezfuiwhs774xtxhyyclpbtsx@uzzwgbzmwdjd>
+        d=1e100.net; s=20251104; t=1775789344; x=1776394144;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=JUwhPfOrcjiFviv0ScZUu0fmnLZYAthVYSSnbSs4M1g=;
+        b=J4Hu8LQNNNqpP8jSIpw3M+yTgcGc5m5RMZCsAaowqT1kTh7nUgd2V6UeLka4lKsGxc
+         LqEC7iGZo/Cn3jWWkffcVkXGNKZkEHHJ/Wkk0LipZCQc/0UspmTJCcqcR9Vpjf81/XNH
+         v2AjfcnkFaC4fBhNDFqwrkIOF/AGIcD2t0GQFrZRe2INnEfZvuaVng4wBjTJgGa9h4fs
+         XYx0B5yhnkzghtkyUt7Fc/4t+3KrhvU6aiq9sSmkvB8h27dPeklrehQZ6ExF4lqVmUqq
+         Ryo8wFotyyKaL5Of3JVDtvwuHEHUizsf1tHGOCI1J7FuIz/MyTHBA4NEv/b5aqjQtkOM
+         rMqw==
+X-Forwarded-Encrypted: i=1; AJvYcCX7RoPJvXh16KRDOTcMqJKM5KasqOKAJZRx50VKy7TrpQsxby/vmk9aP3SorrwA+qo6ordQZLcEVSwz@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw4j8GRJ/H5AwR39k2zBGpmf6wwJbrqJcnpYRlkBmGH3+aip6uC
+	x5L2wWrSCCveE455KR6yYm4TemOc0jbbAOErL8VFt3AYWT7aEg1PsD+C
+X-Gm-Gg: AeBDietVS0I+sCxQ3ro4iFQ1Ld4o3ye0z4lQ2xenZkQsOlktrVGWP/8oA02cWGmkNwq
+	PqIHCfEMEpr8Tr7zRdx6Ca78BPNduxOOwuhXneThEprFLE7COHzKp6/iKSGhyXGMwUzFNH2kN2p
+	GCAEn0JAmh7pXsYuqU3HuURpY3z8phB3Yyt5ADB1OJ8M5Ls4JhhDRCEyaniFxIO9X3VkQSCzgz8
+	dc437TbVW/dn7bIQ3naGB6n2DCK+xKzEKFw9jKw/3hvLHjdJK97j8j+ZqUDIxdUoLhB20gaHOPz
+	1kwK40FECLXCX67vGS7JerOhbE4IyVsONzTSA+p/n0ydEp3XtyNuqeKaJZDYkx1ulEDHc9pefkq
+	/7ezQ26DncB/W/NPiVmye6gWefTT8BHy/oAfVQeYvurVH6C+cz5LBV1tjNdE9C0RfAJCDCGDoZB
+	q591XJ4U7NIoFQPZs7RZwgt8pnq2lBrjDvDQU7yj5J
+X-Received: by 2002:a05:7300:320a:b0:2c5:b23e:48a6 with SMTP id 5a478bee46e88-2d5888a1ae6mr996018eec.23.1775789344121;
+        Thu, 09 Apr 2026 19:49:04 -0700 (PDT)
+Received: from [192.168.86.23] ([136.25.189.61])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-2d55f5c6b10sm2400912eec.5.2026.04.09.19.49.03
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 09 Apr 2026 19:49:03 -0700 (PDT)
+Message-ID: <0657bd66-43df-43b0-97d0-16288595e229@gmail.com>
+Date: Thu, 9 Apr 2026 19:49:01 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <a566smu6morqeefqal23eek4ibezfuiwhs774xtxhyyclpbtsx@uzzwgbzmwdjd>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2] scsi: target: iscsi: reject invalid size Extended CDB
+ AHS
+To: Dmitry Bogdanov <d.bogdanov@yadro.com>, carlos.bilbao@kernel.org
+Cc: bilbao@vt.edu, martin.petersen@oracle.com, kees@kernel.org,
+ linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+References: <20260404014429.115807-1-carlos.bilbao@kernel.org>
+ <20260409024253.34926-1-carlos.bilbao@kernel.org>
+ <20260409093159.GA902@yadro.com>
+Content-Language: en-US
+From: Carlos Bilbao <carlos.bilbao.osdev@gmail.com>
+In-Reply-To: <20260409093159.GA902@yadro.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Thu, Apr 09, 2026 at 09:45:04PM -0400, Aaron Tomlin wrote:
-> On Thu, Apr 09, 2026 at 11:00:09PM +0800, Ming Lei wrote:
-> > How can the isolated core be scheduled for running polling task?
-> > 
-> > Who triggered it?
-> > 
-> > > loop waiting for the hardware completion. This would completely monopolise
-> > > the core and destroy any real time isolation guarantees without the user
-> > > space application ever having requested it.
-> > 
-> > No.
-> > 
-> > IOPOLL queue doesn't have interrupt, and the ->poll() is only run from
-> > the submission context.  So if you don't submitted polled IO on isolated
-> > CPU cores, everything is just fine.  This is simpler than irq IO actually.
-> 
-> Yes, you are entirely correct. The ->iopoll() is indeed executed strictly
-> within the submission context. In the example below, the file operations
-> iopoll callback is iocb_bio_iopoll():
-> 
->       // file->f_op->iopoll(&rw->kiocb, iob, poll_flags)
->       iocb_bio_iopoll(&rw->kiocb, iob, poll_flags)
->       {
->         struct bio *bio
-> 
->         bio = READ_ONCE(kiocb->private)
->         if (bio)
->           bio_poll(bio, iob, flags)
->             if (queue_is_mq(q))
->               blk_mq_poll(q, cookie, iob, flags)
->               {
->                 if (!blk_mq_can_poll(q))
->                   return 0
-> 
->                 blk_hctx_poll(q, q->queue_hw_ctx[cookie], iob, flags)
->                 {
->                     int ret
-> 
->                     do {
->                         ret = q->mq_ops->poll(hctx, iob)
->                         if (ret > 0)
->                             return ret
->                         if (task_sigpending(current))
->                             return 1
->                         if (ret < 0 || (flags & BLK_POLL_ONESHOT))
->                             break
->                         cpu_relax()
->                     } while (!need_resched())
-> 
->                     return 0
->                 }
->               }
-> 
-> If an application on an isolated CPU does not explicitly submit a polled
-> I/O request, it will not poll. Thank you for correcting me on this.
+Hello,
 
-Great, you finally get the point.
+On 4/9/26 02:31, Dmitry Bogdanov wrote:
+> On Wed, Apr 08, 2026 at 07:42:53PM -0700, carlos.bilbao@kernel.org wrote:
+>> From: Carlos Bilbao <carlos.bilbao@kernel.org>
+>>
+>> If ecdb_ahdr->ahslength is zero, two bugs follow:
+>>
+>>    kmalloc(be16_to_cpu(ecdb_ahdr->ahslength) + 15, ...)
+>>
+>> allocates 15 bytes, but the immediately following memcpy writes
+>> ISCSI_CDB_SIZE (16) bytes into it, a one-byte heap overflow. Also:
+>>
+>>    memcpy(cdb + ISCSI_CDB_SIZE, ecdb_ahdr->ecdb,
+>>             be16_to_cpu(ecdb_ahdr->ahslength) - 1);
+>>
+>> (u16)0 - 1 promotes to (int)-1 which converts to SIZE_MAX as size_t,
+>> causing a massive out-of-bounds write.
+>>
+>> Reject ahslength == 0 with ISCSI_REASON_PROTOCOL_ERROR before the kmalloc.
+>> Also reject ahslength values that exceed the actual AHS buffer advertised.
+>>
+>> Changes in v2:
+>>
+>> - Add bounds check: ahslength must not exceed (hdr->hlength * 4) - 3.
+>> - Replace opaque ahslength + 15 with explicit cdb_length variable.
+>>
+>> Fixes: 8f1f7d297bce ("scsi: target: iscsi: Add support for extended CDB AHS")
+>> Signed-off-by: Carlos Bilbao (Lambda) <carlos.bilbao@kernel.org>
+> Reviewed-by: Dmitry Bogdanov <d.bogdanov@yadro.com>
+>
+>> ---
+>>   drivers/target/iscsi/iscsi_target.c | 23 +++++++++++++++++++----
+>>   1 file changed, 19 insertions(+), 4 deletions(-)
+>>
+>> diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
+>> index e80449f6ce15..1a492965ebdf 100644
+>> --- a/drivers/target/iscsi/iscsi_target.c
+>> +++ b/drivers/target/iscsi/iscsi_target.c
+>> @@ -1100,6 +1100,8 @@ int iscsit_setup_scsi_cmd(struct iscsit_conn *conn, struct iscsit_cmd *cmd,
+>>          cdb = hdr->cdb;
+>>
+>>          if (hdr->hlength) {
+>> +               u16 ahslength;
+>> +
+>>                  ecdb_ahdr = (struct iscsi_ecdb_ahdr *) (hdr + 1);
+>>                  if (ecdb_ahdr->ahstype != ISCSI_AHSTYPE_CDB) {
+>>                          pr_err("Additional Header Segment type %d not supported!\n",
+>> @@ -1108,14 +1110,27 @@ int iscsit_setup_scsi_cmd(struct iscsit_conn *conn, struct iscsit_cmd *cmd,
+>>                                  ISCSI_REASON_CMD_NOT_SUPPORTED, buf);
+>>                  }
+>>
+>> -               cdb = kmalloc(be16_to_cpu(ecdb_ahdr->ahslength) + 15,
+>> -                             GFP_KERNEL);
+>> +               ahslength = be16_to_cpu(ecdb_ahdr->ahslength);
+>> +               if (!ahslength) {
+>> +                       pr_err("Extended CDB AHS with zero length, protocol error.\n");
+>> +                       return iscsit_add_reject_cmd(cmd,
+>> +                               ISCSI_REASON_PROTOCOL_ERROR, buf);
+>> +               }
+>> +               if (ahslength > (hdr->hlength * 4) - 3) {
+>> +                       pr_err("Extended CDB AHS length %u exceeds available buffer.\n",
+>> +                              ahslength);
+>> +                       return iscsit_add_reject_cmd(cmd,
+>> +                               ISCSI_REASON_PROTOCOL_ERROR, buf);
+>> +               }
+>> +
+>> +               u16 cdb_length = ahslength - 1 + ISCSI_CDB_SIZE;
+> AFAIK, a variable declarationis allowed to be in the beginning of code block only.
 
-> 
-> > Can you share one example in which managed irq can't address?
-> 
-> Without io_queue, the block layer maps isolated CPUs to these queues, and
-> the device will fire unmanaged interrupts that can freely land on isolated
 
-For unmanaged interrupts, user can set irq affinity on housekeeping cpus
-from /proc or kernel command line.
+You're absolutely right, happy to send v3 if the maintainer prefers.
 
-Why is unmanaged interrupts involved with this patchset?
 
-> CPUs, thereby breaking isolation. By applying the constraint via io_queue
-> at the block layer, we restrict the hardware queue count and map the
-> isolated CPUs to the housekeeping queues, ensuring isolation is maintained
-> regardless of whether the driver uses managed interrupts.
-> 
-> Does the above help?
-
-As I mentioned, managed irq already covers it:
-
-- typically application submits IO from housekeeping CPUs, which is mapped
-  to one hardware, which effective interrupt affinity excludes isolated
-  CPUs if possible.
-
-I'd suggest to share some real problems you found instead of something
-imaginary.
-
-> 
-> > > >
-> > > > IMO, only two differences from this viewpoint:
-> > > >
-> > > > 1) `io_queue` may reduce nr_hw_queues
-> > > >
-> > > > 2) when application submits IO from isolated CPUs, `io_queue` can complete
-> > > > IO from housekeeping CPUs.
-> > >
-> > > Acknowledged.
-> > 
-> > Are there other major differences besides the two mentioned above?
-> 
-> I believe the above is sufficient. Please let me know your thoughts.
-
-Both two are small improvement, not bug fixes. However the user has to pay
-the cost of potential failing of offlining CPU. Not mention the little 
-complicated change: `19 files changed, 378 insertions(+), 48 deletions(-)`
-
-But I won't object if you can update the commit log/kernel command line
-doc and fix the issue found in review.
+>
+>> +
+>> +               cdb = kmalloc(cdb_length, GFP_KERNEL);
+>>                  if (cdb == NULL)
+>>                          return iscsit_add_reject_cmd(cmd,
+>>                                  ISCSI_REASON_BOOKMARK_NO_RESOURCES, buf);
+>>                  memcpy(cdb, hdr->cdb, ISCSI_CDB_SIZE);
+>> -               memcpy(cdb + ISCSI_CDB_SIZE, ecdb_ahdr->ecdb,
+>> -                      be16_to_cpu(ecdb_ahdr->ahslength) - 1);
+>> +               memcpy(cdb + ISCSI_CDB_SIZE, ecdb_ahdr->ecdb, cdb_length - ISCSI_CDB_SIZE);
+>>          }
+>>
+>>          data_direction = (hdr->flags & ISCSI_FLAG_CMD_WRITE) ? DMA_TO_DEVICE :
+>> --
+>> 2.43.0
+>>
 
 Thanks,
-Ming
+
+Carlos
+
