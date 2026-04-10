@@ -1,94 +1,83 @@
-Received: from outgoing.mit.edu (outgoing-auth-1.mit.edu [18.9.28.11])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 062A23E9F7D
-	for <linux-scsi@vger.kernel.org>; Fri, 10 Apr 2026 15:20:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=18.9.28.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5936A3E3160;
+	Fri, 10 Apr 2026 16:51:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775834454; cv=none; b=Sd1EQl9EGV54+udXxXEDgNOob1hz28PFKIv4zl0TxKM6wax6TM1pWMEQ/GQeh3QHm0v9gPEWvG9F+0oQGGma2BEMTAIZVA2y2jjFJy7jDKIAbG0qfKHjBfBoBfERRw2PrTRQbuT6/QxP9yqwwEla7YOCgzHwE3xFv9lDo8/JM6g=
+	t=1775839908; cv=none; b=hw6r2ePL08hgpuMdEAJmoDq/PbeLmRkZ6BcxtgGMBlBQeIf9ChaAI6dFeCrb9Dl//EvLQqeLMW/K1oYMYnqMGQQv/YRudVXJ2cAdBnejKonorSF/D0FWqww6ZN5LEE9Cl6UCAG4v5fhSnCmEewPXaytcrp74ZzozR/rZUtLOYSI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775834454; c=relaxed/simple;
-	bh=2PJcapuxUWWHQgHKuYh+AB0Bg9+uWPE8WWtuj/kl/pY=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=DaEez431eTSCbXRjEG0Vvs5BNy1fumA10oV9bxOY/RpzaGkAqNhKWz5C2YJ8/kfe3M6vrPy9+in69I5MTqSEctkGXsq1d2yTa5vt9J3yAXo4BnyeKZlHpEF01VAk2KHGdQqRLQi3zlZCVOhyW1PinBAB58tdUhsNgZjqDfC23LQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mit.edu; spf=pass smtp.mailfrom=mit.edu; dkim=pass (2048-bit key) header.d=mit.edu header.i=@mit.edu header.b=VM9pR3FU; arc=none smtp.client-ip=18.9.28.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mit.edu
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mit.edu
+	s=arc-20240116; t=1775839908; c=relaxed/simple;
+	bh=NQfGQ1DrLGSYbEP7ZD609eRpMsqCIGzMff2uyo3WNVI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=gHtnx17x6oALA/+hDOB9ZdtllZOl3riGp9cwIsjyQd14QhtIYYg78rPiDdb3+iR8+KuiVcxJ34n8RIEW0P1Au74WLbWkKu2CeQc02X22XoTX3U3WrsCYknXpx5JegZ/wJCk0aenPYEdz6DBdHeEk1JSGp/DSpYnEXONWG7gS08c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=o+A3PRtU; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=mit.edu header.i=@mit.edu header.b="VM9pR3FU"
-Received: from trampoline.thunk.org (pool-173-48-116-90.bstnma.fios.verizon.net [173.48.116.90])
-	(authenticated bits=0)
-        (User authenticated as tytso@ATHENA.MIT.EDU)
-	by outgoing.mit.edu (8.14.7/8.12.4) with ESMTP id 63AFIonm015842
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 10 Apr 2026 11:18:51 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mit.edu; s=outgoing;
-	t=1775834338; bh=eTlXD+fEi5OyNbu4TxRTwpDmEzFd2ThBwniicSqJG9M=;
-	h=From:Subject:Date:Message-ID:MIME-Version:Content-Type;
-	b=VM9pR3FUqiyu4dGQLYjxtn5fwtIzfU7ySZMp0abbH18xV6/gDABRi9uB743lXz8hh
-	 DLg+D58JGiw6cmfTe96qrNZsfI1LrX8CH4Z4SZsryjUI4LnJNSYnME68kmTAWN0bac
-	 +APmObxjmRctPfSGmHJbriSXfrkN55pWYIbiVRfu2y0ECqpOPHSJun6K+BHM+LkVI2
-	 DM7T+QYmlRWbU/sqPlO03FdXluf2F9iRmmuiDmCsbPLwL4U9izV2zs90P/AyWnNi7/
-	 WJE2W3FtW9KojAgen2wKI5w3YJJGh4CS8IuF5T47bMgUta6WPQzUW9F7QaunmIRgXz
-	 enYXQQPwNnobw==
-Received: by trampoline.thunk.org (Postfix, from userid 15806)
-	id 0D7462E00E1; Fri, 10 Apr 2026 11:18:48 -0400 (EDT)
-From: "Theodore Ts'o" <tytso@mit.edu>
-To: amd-gfx@lists.freedesktop.org, apparmor@lists.ubuntu.com,
-        bpf@vger.kernel.org, ceph-devel@vger.kernel.org, cocci@inria.fr,
-        dm-devel@lists.linux.dev, dri-devel@lists.freedesktop.org,
-        gfs2@lists.linux.dev, intel-gfx@lists.freedesktop.org,
-        intel-wired-lan@lists.osuosl.org, iommu@lists.linux.dev,
-        kvm@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-block@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-        linux-btrfs@vger.kernel.org, linux-cifs@vger.kernel.org,
-        linux-clk@vger.kernel.org, linux-erofs@lists.ozlabs.org,
-        linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-gpio@vger.kernel.org, linux-hyperv@vger.kernel.org,
-        linux-input@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-leds@vger.kernel.org, linux-media@vger.kernel.org,
-        linux-mips@vger.kernel.org, linux-mm@kvack.org,
-        linux-modules@vger.kernel.org, linux-mtd@lists.infradead.org,
-        linux-nfs@vger.kernel.org, linux-omap@vger.kernel.org,
-        linux-phy@lists.infradead.org, linux-pm@vger.kernel.org,
-        linux-rockchip@lists.infradead.org, linux-s390@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-sctp@vger.kernel.org,
-        linux-security-module@vger.kernel.org, linux-sh@vger.kernel.org,
-        linux-sound@vger.kernel.org, linux-stm32@st-md-mailman.stormreply.com,
-        linux-trace-kernel@vger.kernel.org, linux-usb@vger.kernel.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        ntfs3@lists.linux.dev, samba-technical@lists.samba.org,
-        sched-ext@lists.linux.dev, target-devel@vger.kernel.org,
-        tipc-discussion@lists.sourceforge.net, v9fs@lists.linux.dev,
-        Philipp Hahn <phahn-oss@avm.de>
-Cc: "Theodore Ts'o" <tytso@mit.edu>, Andreas Dilger <adilger.kernel@dilger.ca>
-Subject: Re: [PATCH 04/61] ext4: Prefer IS_ERR_OR_NULL over manual NULL check
-Date: Fri, 10 Apr 2026 11:18:40 -0400
-Message-ID: <177583430870.2758959.6171961359325912353.b4-ty@b4>
-X-Mailer: git-send-email 2.51.0
-In-Reply-To: <20260310-b4-is_err_or_null-v1-4-bd63b656022d@avm.de>
-References: <20260310-b4-is_err_or_null-v1-4-bd63b656022d@avm.de>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="o+A3PRtU"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 05C52C19421;
+	Fri, 10 Apr 2026 16:51:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1775839907;
+	bh=NQfGQ1DrLGSYbEP7ZD609eRpMsqCIGzMff2uyo3WNVI=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=o+A3PRtUgea3IQiAC27/t8SEo6+EkHm3jAffV6MNTmZI+rFHVKnUVNAttnK6S+GV5
+	 mav0o7GUg3Y8mgKmWnmxTOLU09kBRtNWZdDnPHb5r0m9aG1cODLRVT2E7/agJYhijs
+	 jOsiKnc+XRRbBHOv587KtIL6tAAn6ybohfTZWoJ1jd6Ru1Hmf/OZeaDkr39eF75ftD
+	 Ul16rJkDp0IBT5MwZIP/EIJlmnEQ/RCcsHhGLoacDhJa7sYGnM1/xP/zYpavAX2swV
+	 wR/uoEaB6aGpzXI33upO6wUnHYPXRz3Lfb5N9nnZnrnaVllQiLxuWzEMSfQNM/lnCi
+	 n9mrojpQpICXQ==
+Date: Fri, 10 Apr 2026 10:51:45 -0600
+From: Keith Busch <kbusch@kernel.org>
+To: Damien Le Moal <dlemoal@kernel.org>
+Cc: Ranjan Kumar <ranjan.kumar@broadcom.com>, linux-scsi@vger.kernel.org,
+	martin.petersen@oracle.com, sathya.prakash@broadcom.com,
+	chandrakanth.patil@broadcom.com, stable@vger.kernel.org,
+	Mira Limbeck <m.limbeck@proxmox.com>
+Subject: Re: [PATCH v1] mpt3sas: Limit NVMe request size to 2 MiB
+Message-ID: <adkqob9VZ-G6mrsW@kbusch-mbp>
+References: <20260409184217.32992-1-ranjan.kumar@broadcom.com>
+ <eec3bbd3-5503-423b-bb3e-22657026d573@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <eec3bbd3-5503-423b-bb3e-22657026d573@kernel.org>
 
-
-On Tue, 10 Mar 2026 12:48:30 +0100, Philipp Hahn wrote:
-> Prefer using IS_ERR_OR_NULL() over using IS_ERR() and a manual NULL
-> check.
+On Fri, Apr 10, 2026 at 06:11:22AM +0200, Damien Le Moal wrote:
+> On 2026/04/09 20:42, Ranjan Kumar wrote:
 > 
-> Change generated with coccinelle.
+> >  		if (pcie_device->nvme_mdts)
+> > -			lim->max_hw_sectors = pcie_device->nvme_mdts / 512;
+> > +			lim->max_hw_sectors = min_t(u32,
+> > +					pcie_device->nvme_mdts / 512,
+> > +					(SZ_2M / 512) - 8);
+> > +		else
+> > +			lim->max_hw_sectors = (SZ_2M / 512) - 8;
+> 
+> I am very confused here: SZ_2MB assumes that you have an SSD with a minimum page
+> size of 4K, which can fit 4K / 8 = 512 PRP entries, each referencing 4K (one
+> page), so a maximum of 2MiB. However, if I am not mistaken, there is nothing in
+> nvme specs that forces the MPS field to be 0 (which leads to a page size of 4K).
+>
+> So this seems incorrect to me, even though that will probably work for the vast
+> majority of SSDs out there, some exotic ones will not be correctly supported.
+> 
+> Keith ? Am I missing something here ?
+> 
+> Or do we simply do not care about SSDs with a minimum page size > 4K having
+> their maximum command size truncated ?
 
-Applied, thanks!
+Spec doesn't require it, but industry converged on that as always being
+the minimum supported page size. The nvme driver rejects any device that
+doesn't support 4k pages because they can't be reliably supported on a
+lot of archs, even ones with larger page sizes. So it should be a safe
+assumption that everyone supports 4k since no on is complaining. :)
 
-[04/61] ext4: Prefer IS_ERR_OR_NULL over manual NULL check
-        commit: 1d749e110277ce4103f27bd60d6181e52c0cc1e3
-
-Best regards,
--- 
-Theodore Ts'o <tytso@mit.edu>
+On the patch, I initially left the "- 8" in the calculation to account
+for page offsets. But it's not necessary because that gets absorbed in
+PRP1 within the command, so we'd have at most 512 entries in the PRP
+list for a 2M transfer.
