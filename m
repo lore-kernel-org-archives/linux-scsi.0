@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BEBFF1D0DEE;
-	Sun, 12 Apr 2026 07:18:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 490DE28C869;
+	Sun, 12 Apr 2026 07:25:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775978331; cv=none; b=tVeXt/+G1zMkfSgWzXvAjgQLzie2P0CCHpCutKHAXzDoVUMD096FWeLKusGzH4eMdxO+RpqLPrWrt4VK+oFxvoz2cmITbC4UX8BWBV/Vo7/aG8vhfb+YdifrFEsGD0JVt9OTOR8GsvfKFe5pLV0QqUSxQpRD62f2KocGVixo4Uk=
+	t=1775978756; cv=none; b=G4N4I9qqKWLgj/76h0rmoasiGkZ7LduMxSH7cARS2fPntywm/AoIHwqiuab0cpjKu+pGlvwu/H1a5AJZNGZE/HlSSH/ooTYjq+HHvO0qeJD9TrhAcdw9Bwr7v1N4N0q3oz209tklGZiekBV4u4USd3tYsDYqZngEeNihYCrqslk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775978331; c=relaxed/simple;
-	bh=M2q6fVN26ughkEGfu20rE5cnyO5lzYFas6acWBvvtds=;
+	s=arc-20240116; t=1775978756; c=relaxed/simple;
+	bh=0WbEcNq/78bW8NvZHsxdK3QJE/W0As0Y7hwTYFhizPc=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=W9VM7QSVZNkoQgstgfu18JsPkzCYfyJjOIAnrr9IbjweB0ALzEdp4Ta0xCKxbQjj8DImmtdIBoW4BPibIG0eCmctCaDE6dCsUzkLL3zSR8Yhc43XYWvJ2ylr3KVW4b7NjSldamNYfUdKr2yztDz1uwdlODytSmpBot82xyFFsis=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=m10z6pAI; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=AbN6iqgLpCXvMgZcxdlBwgMWJ550HzbkeJv36ADQYUB+qQgJQjQNFOHHFSbSo0aklTL2S8FY2c+swTPEAD4T+tnq61lxNDntEkGXZ/Luwr3yA8emsUIll4rLRp90ohw97ox9prXHlGt+PuyAmBWBAciOaskIElk/R7xDymhh4Ag=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=f6Cj3A44; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="m10z6pAI"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3FD04C2BCB1;
-	Sun, 12 Apr 2026 07:18:49 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="f6Cj3A44"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 689AEC19424;
+	Sun, 12 Apr 2026 07:25:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1775978331;
-	bh=M2q6fVN26ughkEGfu20rE5cnyO5lzYFas6acWBvvtds=;
+	s=k20201202; t=1775978756;
+	bh=0WbEcNq/78bW8NvZHsxdK3QJE/W0As0Y7hwTYFhizPc=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=m10z6pAIDKUMcDbcp5f4XhPXIRl7mPw33d5PTtWLXcfB4CQJWt6KkRoBn93u3L1pN
-	 9SXswhN6HFY+wNxKD3fYjBdS2U72KXQJu9kpX0dXiVg6mBiCScRynZHAM2AqJCtKj+
-	 spbHZCuKuuHAHSpTt/rMT6aOTmnSImQovYQBL6zf7kCkH2lV21+JUphA42rLp1jEr1
-	 xxOQwP0dSsEBFN3mms0QjSaOBnDVCPWZAaXKiG4IS3wiQenKBQOysFuQ504WUGO7yZ
-	 9ElHeT8+iCOzu0mpH4Mbo2SDWs2bZJXYQSRWAaw2UBwZNleB+lIPA3R3eXDYRSJvCY
-	 Yhfguv4VsEbCA==
-Message-ID: <52c6b77a-bb2b-423d-98b7-cb1bbf606bfb@kernel.org>
-Date: Sun, 12 Apr 2026 09:18:47 +0200
+	b=f6Cj3A44PSduP4qRxwo/j53MfDweQIGckUH9tCmHk9KAmZxYa7hoRoq0vekgdU6I/
+	 xcrEdKAa4fcREppS9vWETzKN70Sr0ljWJsvTOcJkXZlrH/H8JMy2OEPqZlfzOFndmb
+	 7M25JgeyHzlE5YObCnJ17o2Rz6Uay32EiXWbKbliKAczFIDZIj1XX/SrKkjdx171d+
+	 Ilrm/gjuzet1kF9+XCSzfs+HMUoVJNMwfGhB6bG6TjMd+iIic6sC60opqZ2NhaXCjm
+	 98/RfAfgKf9LA1oBxLBh8QVhdf65UvkvedeQ9RyVoP3kms28Fw1FI7pljr7AHJAFEI
+	 EisnMzIPQVKMQ==
+Message-ID: <7b526c07-ef87-424d-acae-6875f62d6f65@kernel.org>
+Date: Sun, 12 Apr 2026 09:25:52 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,99 +35,58 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2] mpt3sas: Limit NVMe request size to 2 MiB
-To: Ranjan Kumar <ranjan.kumar@broadcom.com>, linux-scsi@vger.kernel.org,
- martin.petersen@oracle.com
-Cc: sathya.prakash@broadcom.com, chandrakanth.patil@broadcom.com,
- stable@vger.kernel.org, Mira Limbeck <m.limbeck@proxmox.com>,
- Keith Busch <kbusch@kernel.org>
-References: <20260411080006.50010-1-ranjan.kumar@broadcom.com>
- <20260411080006.50010-2-ranjan.kumar@broadcom.com>
+Subject: Re: [PATCH 1/3] scsi: scsi_devinfo: add COMPAQ PD-1 multi-LUN ATAPI
+ device quirk
+To: Phil Pemberton <philpem@philpem.me.uk>, cassel@kernel.org,
+ James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+References: <20260409210559.155864-1-philpem@philpem.me.uk>
+ <20260409210559.155864-2-philpem@philpem.me.uk>
 Content-Language: en-US
 From: Damien Le Moal <dlemoal@kernel.org>
 Organization: Western Digital Research
-In-Reply-To: <20260411080006.50010-2-ranjan.kumar@broadcom.com>
+In-Reply-To: <20260409210559.155864-2-philpem@philpem.me.uk>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 4/11/26 10:00, Ranjan Kumar wrote:
-> Some firmware reports NVMe maximum transfer sizes that follow the drive
-> capability. When those values are very large, the block layer may build
-> I/O that this driver cannot handle, which can cause a kernel oops.
+On 4/9/26 23:05, Phil Pemberton wrote:
+> The Compaq-branded variant of the Panasonic/Matsushita LF-1195C PD/CD
+> combo drive is a multi-LUN ATAPI device that exposes the CD-ROM on
+> LUN 0 and a PD optical drive on LUN 1.
 > 
-> When an NVMe device is set up, cap how large a single transfer may be
-> to the smaller of the firmware-reported limit and roughly two mebibytes
-> with a small margin. If no valid limit is reported, apply the same
-> upper bound.
+> An entry already exists for the "MATSHITA PD-1" variant with OEM
+> firmware.
+> 
+> Add the Compaq-branded variant with the same BLIST_FORCELUN |
+> BLIST_SINGLELUN flags so that additional LUNs are scanned and commands
+> are serialised, matching the existing entries.
 
-What margin ? I do not see any...
+Hmmm, since the following patches actually enable multi-LUN scanning, it feels
+like this patch should come last in the series.
 
 > 
-> Cc: stable@vger.kernel.org
-> Fixes: 9b8b84879d4a ("block: Increase BLK_DEF_MAX_SECTORS_CAP")
-> Reported-by: Mira Limbeck <m.limbeck@proxmox.com>
-> Closes: https://lore.kernel.org/r/291f78bf-4b4a-40dd-867d-053b36c564b3@proxmox.com
-> Link: https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=9b8b84879d4a
-> Suggested-by: Keith Busch <kbusch@kernel.org>
-> Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
+> Assisted-by: Claude:claude-opus-4-6
+
+Let's stay neutral vis-a-vis commercial software/tools and drop this please.
+
+> Signed-off-by: Phil Pemberton <philpem@philpem.me.uk>
 > ---
->  drivers/scsi/mpt3sas/mpt3sas_scsih.c | 13 +++++++++++--
->  1 file changed, 11 insertions(+), 2 deletions(-)
+>  drivers/scsi/scsi_devinfo.c | 1 +
+>  1 file changed, 1 insertion(+)
 > 
-> diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-> index 6ff788557294..fca9d6722fc8 100644
-> --- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-> +++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-> @@ -54,6 +54,7 @@
->  #include <linux/interrupt.h>
->  #include <linux/raid_class.h>
->  #include <linux/unaligned.h>
-> +#include <linux/sizes.h>
->  
->  #include "mpt3sas_base.h"
->  
-> @@ -2737,9 +2738,17 @@ scsih_sdev_configure(struct scsi_device *sdev, struct queue_limits *lim)
->  				"connector name( %s)\n", ds,
->  				pcie_device->enclosure_level,
->  				pcie_device->connector_name);
-> -
-
-Spurious whiteline change. The white line is nice before the big block below.
-
-> +		/*
-> +		 * Firmware may report large NVMe MDTS values on some ASICs.
-
-What ASICs ? The SSD controller or the HBA controller ? Also, does the HBA
-firmware change the MDTS ? Or does it report the SSD reported MDTS as is ? If it
-is the former, then an explanation would be nice. If it is the latter, instead
-of "Firmware may report" I suggest "The NVMe device controller may report"
-
-> +		 * Limit max_hw_sectors to the smaller of the reported MDTS
-> +		 * and 2 MiB to avoid issuing I/O the driver cannot handle.
-
-Without any explanations, 2MiB appears to be a "magic" value here. There is a
-clear explanation for it with the 4K device page size that can fit 512 PRP
-entries each pointing to one 4K page. So let's state that.
-
-> +		 */
->  		if (pcie_device->nvme_mdts)
-> -			lim->max_hw_sectors = pcie_device->nvme_mdts / 512;
-> +			lim->max_hw_sectors = min_t(u32,
-> +					pcie_device->nvme_mdts / 512,
-> +					(SZ_2M / 512));
-> +		else
-> +			lim->max_hw_sectors = (SZ_2M / 512);
-
-		lim->max_hw_sectors = SZ_2M >> SECTOR_SHIFT;
-		if (pcie_device->nvme_mdts)
-			lim->max_hw_sectors = min_t(u32, lim->max_hw_sectors,
-					pcie_device->nvme_mdts >> SECTOR_SHIFT);
-
-is I think a bit nicer.		
-
->  
->  		pcie_device_put(pcie_device);
->  		spin_unlock_irqrestore(&ioc->pcie_device_lock, flags);
+> diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
+> index 68a992494b12..06b211b93567 100644
+> --- a/drivers/scsi/scsi_devinfo.c
+> +++ b/drivers/scsi/scsi_devinfo.c
+> @@ -150,6 +150,7 @@ static struct {
+>  	{"COMPAQ", "MSA1000", NULL, BLIST_SPARSELUN | BLIST_NOSTARTONADD},
+>  	{"COMPAQ", "MSA1000 VOLUME", NULL, BLIST_SPARSELUN | BLIST_NOSTARTONADD},
+>  	{"COMPAQ", "HSV110", NULL, BLIST_REPORTLUN2 | BLIST_NOSTARTONADD},
+> +	{"COMPAQ", "PD-1", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
+>  	{"DDN", "SAN DataDirector", "*", BLIST_SPARSELUN},
+>  	{"DEC", "HSG80", NULL, BLIST_REPORTLUN2 | BLIST_NOSTARTONADD},
+>  	{"DELL", "PV660F", NULL, BLIST_SPARSELUN},
 
 
 -- 
