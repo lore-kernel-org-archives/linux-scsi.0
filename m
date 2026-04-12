@@ -1,222 +1,135 @@
-Received: from mail-ed1-f50.google.com (mail-ed1-f50.google.com [209.85.208.50])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 872A819D065
-	for <linux-scsi@vger.kernel.org>; Sat, 11 Apr 2026 12:52:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.50
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BEBFF1D0DEE;
+	Sun, 12 Apr 2026 07:18:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775911950; cv=none; b=NVYET2xSKr5Zeggz2itEd2bZv+/l150iThSsWfvRtLCYvtd+lpRiPN1qZcUzxkRs17gXl1Qy4MCXVOMqC+1W7ed24nuPNNCJoCUv+fPtOLWJw+qWtI2enjDhGYm1Fyd52aevv4W3iJ1SQ0WvbXOtdUTV5ihpbRm6oiNXOWH06vM=
+	t=1775978331; cv=none; b=tVeXt/+G1zMkfSgWzXvAjgQLzie2P0CCHpCutKHAXzDoVUMD096FWeLKusGzH4eMdxO+RpqLPrWrt4VK+oFxvoz2cmITbC4UX8BWBV/Vo7/aG8vhfb+YdifrFEsGD0JVt9OTOR8GsvfKFe5pLV0QqUSxQpRD62f2KocGVixo4Uk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775911950; c=relaxed/simple;
-	bh=ZDCD7TMmMBU4ptro5VqHZHIwf1F5zUtyaHM3OL4FbJw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=m560d/hJ6znEeL7kIaPkrynozsdDBukbDbZ0kkrLCglGNtj3DWfk0HkU3VrWYrGdGPNuxWc1rZ1QitSXTd0MkjMRHnlWrP4dvvXHUMGi/pdECZA51N1f+Xrj3kBrbGJb0F+El1c+xKSa/b7bBWAp1s6x1m/dhNORDiinGDnk4Qw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=pFCokfhI; arc=none smtp.client-ip=209.85.208.50
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1775978331; c=relaxed/simple;
+	bh=M2q6fVN26ughkEGfu20rE5cnyO5lzYFas6acWBvvtds=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=W9VM7QSVZNkoQgstgfu18JsPkzCYfyJjOIAnrr9IbjweB0ALzEdp4Ta0xCKxbQjj8DImmtdIBoW4BPibIG0eCmctCaDE6dCsUzkLL3zSR8Yhc43XYWvJ2ylr3KVW4b7NjSldamNYfUdKr2yztDz1uwdlODytSmpBot82xyFFsis=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=m10z6pAI; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="pFCokfhI"
-Received: by mail-ed1-f50.google.com with SMTP id 4fb4d7f45d1cf-66e129e457dso2949829a12.1
-        for <linux-scsi@vger.kernel.org>; Sat, 11 Apr 2026 05:52:28 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1775911947; x=1776516747; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=HzOvPiW8ztwbs3wF3jjs1dxbj2pwYigEFa9b+mMyiMw=;
-        b=pFCokfhIH/w+o6IWXQGA9Ktp74Gk0G8BjS9gd0qxZMOQ5IIuc8sE+TABUr8B8f8NYy
-         k3umcXQDUaTtyvkD011r1ECSSIfLL23C+P2r0754onmIDTs3cmb7Lvxew8CKDfejnGdf
-         uxAYSgMTuBmnu7RD3Cdr74gH+EyNLp278Zozme12NKgVC6o12HTEd4r8LXGoWv5UxAFa
-         UPXRVC3jewbJtEiFsLxGgoc9n+C+5tAvnU2sdLTzQvg/ABotZRZ3wfk3w0H+cNm0x6Wt
-         Liv9JoNO6GhAkyRPxv/pMWBL0m1IA9oJgrEPT1PQPG5rWP5FELJCWmwj5xgTn2Du6OuN
-         VSaw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1775911947; x=1776516747;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=HzOvPiW8ztwbs3wF3jjs1dxbj2pwYigEFa9b+mMyiMw=;
-        b=nt9t//jBmqPYU4vIiTK17PLVQKPYSrnJ3GEWv4KFFwK+35/nSKk7DpeKozsZwHqjoi
-         VQNy24DQMGj6THwYXNQngbyZU7XI8irtU9EEkoboSEtOFFxpSnSOC8FE0F0xDtHtriLJ
-         ELVgV0oMTX2VKsPtUWSjCLqIurBqh30NWUVXeLcpmQ99SPL2Spj9+cNuMZwtqXRVSW3B
-         Qr9IwXb7KRhJ7aA5I2WWyuVkPkmBfbEvHSGZNw4Z4ceDSgCRPmJgXUhn5oger4VkGLmC
-         WkpRV3t4oxm0kk0Y5yQKbymizbb1nBarpXYmTkRQz4hRkeYXVeNUtyBJgU4MIVvK1XJf
-         jNiw==
-X-Forwarded-Encrypted: i=1; AJvYcCXD5j8JIKpymrdM6RHzQ9QsdiA1tTUtQCaB7hJejRfWeWebm4zcF6MBXwD1AMp6JIMM2oxDAozj2HlW@vger.kernel.org
-X-Gm-Message-State: AOJu0YyljHZdzH6q8H1qAyR6SfIJZz5rglBRpCYbJhIV3aVvKoDEkIUe
-	mcKJKetjx7Qs4FObkXhU2ij/IAX5ZM1wM9R5mNBXbh3aY0Yt5tSRaHxY
-X-Gm-Gg: AeBDievjwSYxrwjqvqyDPU9IR3sEfXM+CJZv9Vo5bpldshNIkvOaoSEz3olo+YyeAIu
-	vdzU3SjSomP1pWOFBOes29lPZFNg2KjIsuVBCNekpGCSriveoyCSiS2nEwGYokFuu6Z0nTnzuRe
-	2tWmTn16mcm1+BSyKttUqylQNh9JqYBCnJv3NANvuk2VVY7imlk9ltm+/rKrMVuwqEg9Xd+y6jk
-	RDAgnQFdYM/XM1T1r9nUD+zA/3AfWiW4ebRIZ7eJJ01kqoq8EoeXiPMBn3vV4g+6Hnpn3DmQVii
-	nwsQ7ATdsulrWYoc2WXorw9cXskftmZjRlZyKm5kk1Lmi/kMmLFR75EzsHhye+BGx/MOvlTa0So
-	ESTjWmgy+6FU6yMSu8cZu3tHmKRqv9ikK4xThBkxgCGqXn5vgukOkRMmKfiJn7kniq72RvVLSs2
-	xtEHKaafstRLMD0+uW1sumSBWrAsxdQVPzRqK+Gs/OuHIuqfSWAUO+hiTSFNyglyDIqxLcy5xT5
-	/UL3He2
-X-Received: by 2002:a17:907:8b98:b0:b87:d09c:1825 with SMTP id a640c23a62f3a-b9d72792c0cmr382274666b.13.1775911946574;
-        Sat, 11 Apr 2026 05:52:26 -0700 (PDT)
-Received: from fedora (185-147-214-8.mad.as62651.net. [185.147.214.8])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-b9d6e7f1e87sm159883666b.61.2026.04.11.05.52.05
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 11 Apr 2026 05:52:25 -0700 (PDT)
-Date: Sat, 11 Apr 2026 20:52:00 +0800
-From: Ming Lei <tom.leiming@gmail.com>
-To: Aaron Tomlin <atomlin@atomlin.com>
-Cc: Ming Lei <ming.lei@redhat.com>, axboe@kernel.dk, kbusch@kernel.org,
-	hch@lst.de, sagi@grimberg.me, mst@redhat.com, aacraid@microsemi.com,
-	James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com,
-	liyihang9@h-partners.com, kashyap.desai@broadcom.com,
-	sumit.saxena@broadcom.com, shivasharan.srikanteshwara@broadcom.com,
-	chandrakanth.patil@broadcom.com, sathya.prakash@broadcom.com,
-	sreekanth.reddy@broadcom.com, suganath-prabu.subramani@broadcom.com,
-	ranjan.kumar@broadcom.com, jinpu.wang@cloud.ionos.com,
-	tglx@kernel.org, mingo@redhat.com, peterz@infradead.org,
-	juri.lelli@redhat.com, vincent.guittot@linaro.org,
-	akpm@linux-foundation.org, maz@kernel.org, ruanjinjie@huawei.com,
-	bigeasy@linutronix.de, yphbchou0911@gmail.com, wagi@kernel.org,
-	frederic@kernel.org, longman@redhat.com, chenridong@huawei.com,
-	hare@suse.de, kch@nvidia.com, steve@abita.co, sean@ashe.io,
-	chjohnst@gmail.com, neelx@suse.com, mproche@gmail.com,
-	linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-	virtualization@lists.linux.dev, linux-nvme@lists.infradead.org,
-	linux-scsi@vger.kernel.org, megaraidlinux.pdl@broadcom.com,
-	mpi3mr-linuxdrv.pdl@broadcom.com, MPT-FusionLinux.pdl@broadcom.com
-Subject: Re: [PATCH v10 13/13] docs: add io_queue flag to isolcpus
-Message-ID: <adpD8M8cNu3IZzEL@fedora>
-References: <20260401222312.772334-1-atomlin@atomlin.com>
- <20260401222312.772334-14-atomlin@atomlin.com>
- <ac8l-w8ERG1YN2Wm@fedora>
- <nxe24ixebb4lm2d5w4aubhtwr23df6mumqd663axj35oswdiyv@amtqhtsidyr4>
- <adMoon3Zf6gO-UbA@fedora>
- <zawhqvn53mcp4wf7axsmuq4cg73upxs5h2zgrfta5dpat3sfy4@zctfbz2ttz5m>
- <CAFj5m9JE5e4DRGbzQFxDdZWU76ZPQ3G+C9JpLu0mhTB6aesZ9g@mail.gmail.com>
- <a566smu6morqeefqal23eek4ibezfuiwhs774xtxhyyclpbtsx@uzzwgbzmwdjd>
- <adhj_w11cpMfeEgN@fedora>
- <dzpxscrhibmi5okkozf5jfull4dcajgpctldvdyfcjgmpeetk5@tkeyqouyabzy>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="m10z6pAI"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3FD04C2BCB1;
+	Sun, 12 Apr 2026 07:18:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1775978331;
+	bh=M2q6fVN26ughkEGfu20rE5cnyO5lzYFas6acWBvvtds=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=m10z6pAIDKUMcDbcp5f4XhPXIRl7mPw33d5PTtWLXcfB4CQJWt6KkRoBn93u3L1pN
+	 9SXswhN6HFY+wNxKD3fYjBdS2U72KXQJu9kpX0dXiVg6mBiCScRynZHAM2AqJCtKj+
+	 spbHZCuKuuHAHSpTt/rMT6aOTmnSImQovYQBL6zf7kCkH2lV21+JUphA42rLp1jEr1
+	 xxOQwP0dSsEBFN3mms0QjSaOBnDVCPWZAaXKiG4IS3wiQenKBQOysFuQ504WUGO7yZ
+	 9ElHeT8+iCOzu0mpH4Mbo2SDWs2bZJXYQSRWAaw2UBwZNleB+lIPA3R3eXDYRSJvCY
+	 Yhfguv4VsEbCA==
+Message-ID: <52c6b77a-bb2b-423d-98b7-cb1bbf606bfb@kernel.org>
+Date: Sun, 12 Apr 2026 09:18:47 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <dzpxscrhibmi5okkozf5jfull4dcajgpctldvdyfcjgmpeetk5@tkeyqouyabzy>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2] mpt3sas: Limit NVMe request size to 2 MiB
+To: Ranjan Kumar <ranjan.kumar@broadcom.com>, linux-scsi@vger.kernel.org,
+ martin.petersen@oracle.com
+Cc: sathya.prakash@broadcom.com, chandrakanth.patil@broadcom.com,
+ stable@vger.kernel.org, Mira Limbeck <m.limbeck@proxmox.com>,
+ Keith Busch <kbusch@kernel.org>
+References: <20260411080006.50010-1-ranjan.kumar@broadcom.com>
+ <20260411080006.50010-2-ranjan.kumar@broadcom.com>
+Content-Language: en-US
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <20260411080006.50010-2-ranjan.kumar@broadcom.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Fri, Apr 10, 2026 at 03:31:22PM -0400, Aaron Tomlin wrote:
-> On Fri, Apr 10, 2026 at 10:44:15AM +0800, Ming Lei wrote:
-> > For unmanaged interrupts, user can set irq affinity on housekeeping cpus
-> > from /proc or kernel command line.
-> > 
-> > Why is unmanaged interrupts involved with this patchset?
+On 4/11/26 10:00, Ranjan Kumar wrote:
+> Some firmware reports NVMe maximum transfer sizes that follow the drive
+> capability. When those values are very large, the block layer may build
+> I/O that this driver cannot handle, which can cause a kernel oops.
 > 
-> Thank you for your continued engagement and for ultimately supporting the
-> progression of this series.
-> 
-> To clarify the handling of unmanaged interrupts, while it is entirely true
-> that an administrator could attempt to manually configure "irqaffinity=" or
-> via procfs after the fact, this series actively address unmanaged interrupts.
-> 
-> > > CPUs, thereby breaking isolation. By applying the constraint via io_queue
-> > > at the block layer, we restrict the hardware queue count and map the
-> > > isolated CPUs to the housekeeping queues, ensuring isolation is maintained
-> > > regardless of whether the driver uses managed interrupts.
-> > > 
-> > > Does the above help?
-> > 
-> > As I mentioned, managed irq already covers it:
-> > 
-> > - typically application submits IO from housekeeping CPUs, which is mapped
-> >   to one hardware, which effective interrupt affinity excludes isolated
-> >   CPUs if possible.
-> > 
-> > I'd suggest to share some real problems you found instead of something
-> > imaginary.
-> 
-> If we trace how mpi3mr sets up its ISRs, it relies heavily on the core
-> grouping logic:
-> 
-> mpi3mr_setup_isr
-> {
->   unsigned int irq_flags = PCI_IRQ_MSIX
-> 
->   struct irq_affinity desc = { .pre_vectors =  1, .post_vectors = 1, }
-> 
->   pci_alloc_irq_vectors_affinity(mrioc->pdev, min_vec,
->                                  max_vectors, irq_flags, &desc)
->   {
->     if (flags & PCI_IRQ_MSIX) {
->       // affd != NULL
->       __pci_enable_msix_range(dev, NULL, min_vecs, max_vecs, affd, flags)
->       {
-> 
->         for (;;) {
-> 
->           msix_capability_init(dev, entries, nvec, affd)
->           {
->             msix_setup_interrupts(dev, entries, nvec, affd)
->             {
->               // affd
->               irq_create_affinity_masks(nvec, affd)
->               {
->                 for (i = 0, usedvecs = 0; i < affd->nr_sets; i++) {
->                   unsigned int nr_masks, this_vecs = affd->set_size[i]
->                   struct cpumask *result = group_cpus_evenly(this_vecs,
->                                                              &nr_masks)
->                   if (!result) {
->                     kfree(masks)
->                     return NULL
->                   }
-> 
->                   for (int j = 0; j < nr_masks; j++)
->                     cpumask_copy(&masks[curvec + j].mask, &result[j])
->                   kfree(result);
-> 
->                   curvec += nr_masks
->                   usedvecs += nr_masks
->                 }
->               }
->             }
->           }
->         }
->       }
->     }
->   }
-> }
-> 
-> The critical issue lies at the invocation of group_cpus_evenly(). Without
-> this patchset, the core logic lacks the necessary constraints to respect
-> CPU isolation. It is entirely possible, and indeed happens in practice, for
-> an isolated CPU to be assigned to a CPU mask group.
+> When an NVMe device is set up, cap how large a single transfer may be
+> to the smaller of the firmware-reported limit and roughly two mebibytes
+> with a small margin. If no valid limit is reported, apply the same
+> upper bound.
 
-It is one bug report? No, because it doesn't show any trouble from user
-viewpoint.
-
-Sebastian explains/shows how "isolcpus=managed_irq" works perfectly in the
-following link:
-
-https://lore.kernel.org/all/20260401110232.ET5RxZfl@linutronix.de/
-
-You have reviewed it...
-
-What matters is that IO won't interrupt isolated CPU.
+What margin ? I do not see any...
 
 > 
-> The newer implementation of irq_create_affinity_masks() introduced by this
-> series resolves this. It considers the new CPU mask added to the IRQ
-> affinity descriptor. When group_mask_cpus_evenly() is called, this mask is
-> evaluated [1], guaranteeing that isolated CPUs are entirely excluded from
-> the mask groups.
+> Cc: stable@vger.kernel.org
+> Fixes: 9b8b84879d4a ("block: Increase BLK_DEF_MAX_SECTORS_CAP")
+> Reported-by: Mira Limbeck <m.limbeck@proxmox.com>
+> Closes: https://lore.kernel.org/r/291f78bf-4b4a-40dd-867d-053b36c564b3@proxmox.com
+> Link: https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=9b8b84879d4a
+> Suggested-by: Keith Busch <kbusch@kernel.org>
+> Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
+> ---
+>  drivers/scsi/mpt3sas/mpt3sas_scsih.c | 13 +++++++++++--
+>  1 file changed, 11 insertions(+), 2 deletions(-)
 > 
-> [1]: https://lore.kernel.org/lkml/20260401222312.772334-8-atomlin@atomlin.com/
+> diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+> index 6ff788557294..fca9d6722fc8 100644
+> --- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+> +++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+> @@ -54,6 +54,7 @@
+>  #include <linux/interrupt.h>
+>  #include <linux/raid_class.h>
+>  #include <linux/unaligned.h>
+> +#include <linux/sizes.h>
+>  
+>  #include "mpt3sas_base.h"
+>  
+> @@ -2737,9 +2738,17 @@ scsih_sdev_configure(struct scsi_device *sdev, struct queue_limits *lim)
+>  				"connector name( %s)\n", ds,
+>  				pcie_device->enclosure_level,
+>  				pcie_device->connector_name);
+> -
 
-Not at all.
+Spurious whiteline change. The white line is nice before the big block below.
 
-isolated CPU is still included in each group's cpu mask, please see patch
-9:
+> +		/*
+> +		 * Firmware may report large NVMe MDTS values on some ASICs.
 
-https://lore.kernel.org/linux-block/20260401222312.772334-1-atomlin@atomlin.com/T/#m59df0689ef144f5361535ce59c9ed5923d6e21d5
+What ASICs ? The SSD controller or the HBA controller ? Also, does the HBA
+firmware change the MDTS ? Or does it report the SSD reported MDTS as is ? If it
+is the former, then an explanation would be nice. If it is the latter, instead
+of "Firmware may report" I suggest "The NVMe device controller may report"
+
+> +		 * Limit max_hw_sectors to the smaller of the reported MDTS
+> +		 * and 2 MiB to avoid issuing I/O the driver cannot handle.
+
+Without any explanations, 2MiB appears to be a "magic" value here. There is a
+clear explanation for it with the 4K device page size that can fit 512 PRP
+entries each pointing to one 4K page. So let's state that.
+
+> +		 */
+>  		if (pcie_device->nvme_mdts)
+> -			lim->max_hw_sectors = pcie_device->nvme_mdts / 512;
+> +			lim->max_hw_sectors = min_t(u32,
+> +					pcie_device->nvme_mdts / 512,
+> +					(SZ_2M / 512));
+> +		else
+> +			lim->max_hw_sectors = (SZ_2M / 512);
+
+		lim->max_hw_sectors = SZ_2M >> SECTOR_SHIFT;
+		if (pcie_device->nvme_mdts)
+			lim->max_hw_sectors = min_t(u32, lim->max_hw_sectors,
+					pcie_device->nvme_mdts >> SECTOR_SHIFT);
+
+is I think a bit nicer.		
+
+>  
+>  		pcie_device_put(pcie_device);
+>  		spin_unlock_irqrestore(&ioc->pcie_device_lock, flags);
 
 
-
-Thanks, 
-Ming
+-- 
+Damien Le Moal
+Western Digital Research
