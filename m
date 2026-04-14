@@ -1,65 +1,63 @@
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 379782D8391;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DA2992773CA;
 	Tue, 14 Apr 2026 02:19:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.177.32
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.165.32
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776133181; cv=none; b=h/uPIYIQBBeAMFbXoDC+3tVrKT8cIAn+Ez7SD93ou+1f9/6O4ZYeOEpPQQAum7tjKzzwuWOcIyfugePcLBHZ0TrmoyNIfPnIh2EgWVZcZTNvqFnyk+CzFdPi/6nfNtUa9ceyXzy4PG9bwiITLF9WVkd4Us8eeCCA0b78Y3WwqW8=
+	t=1776133182; cv=none; b=CYAKuZFJNDOTKEltqmZgI6a+GkA6Cw4kyxRX5lP426Feb7k18q//XcPNnD7wSsoWCZcjhXwtEX/+CEO59DExdisLJTemopSTYzy0sJXsvTvrfFLdRnoQ/rDq28xO/fLGdTfEkVcoPjtyXcZBmvjtUzaX3XF2xcfVv+7OmRGP9EA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776133181; c=relaxed/simple;
-	bh=ctYxeHeCXx0MmjSPKTDBbXUkgF0WOywVtMxtE82nmx4=;
+	s=arc-20240116; t=1776133182; c=relaxed/simple;
+	bh=J988FrqOfj37DtaHq5A3tApusV+EG20CdTTupQyPVxU=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=KfIqp4os6T6FDGcruYomuZKpRPJO0sDUy3XCJRI0dyYZG6dcmnIH1aZUQACXM/uIBWOCJsaL4BrQjxsvPGEmm3cWZtFkoLz/QLBKmIRN3Z5yU6Qi46En4L/KHCrGvIXIrBswbkb3Qk24hMEkyWDxrRjI3wHIeu1tXQ+seNkY5V0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=VIcZE44g; arc=none smtp.client-ip=205.220.177.32
+	 MIME-Version:Content-Type; b=EqYv1z7abBkwaahw4uSf30SvHcXtIdHserLMuLJd5MuvbEDw/EWs+xdvlLO3vgYMPWVB56Wtpio8tN/DTrtBOlKYDLl8WeVfGN4XkdEhMQEScbsn+8PqggxSgELtvnS2X66iHFhgpELJU6ODLZgN8lpf9d691tWEi4DohcSHMaY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=GuuqPOzZ; arc=none smtp.client-ip=205.220.165.32
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="VIcZE44g"
-Received: from pps.filterd (m0333520.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 63DLBSCf3230114;
-	Tue, 14 Apr 2026 02:19:34 GMT
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="GuuqPOzZ"
+Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 63E0hE1I229106;
+	Tue, 14 Apr 2026 02:19:32 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
 	:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=
-	corp-2025-04-25; bh=B5bbZER/wFLjYOM4UoRPVtRCv9VUypQx/xXXnUGqY6E=; b=
-	VIcZE44gAIoAM0+PHExdVKfNz9w1sVtnGD1wfZh1wKkGTM4AzrA7NXyqm8OCJlVV
-	5eS5il1WrVbl2PzyDyTQbGmzTYSlHi0gcHYa6kcJMnicfkWhQhWQNeCGE9bFHGHa
-	zdq2rgPhNLRkEznAmaV+aQ2jhJLPs6exSrZKPsy0vzVpXNAcJ9zZuvxo5GbJR0gf
-	MFwlRVDwIrpCnmeMceQdcNxASq8AIPJXULjymseQWX+/Zcje+JquL07fkBxCTMpu
-	zwrfizuaIjH/M7epZzWTW2+uBvvXn7wOgiuGHV9jdMdRfNQ9TBRV91U1XmZSi8YP
-	fPRpb/dGHZptHa3K5/5aVg==
+	corp-2025-04-25; bh=3I1dNO+Z2/bWkprC8/rg65abK71JbiLKPYM39la8XwI=; b=
+	GuuqPOzZntoZrMRZGAv4c8qYMDv8AtyTnK7qolS6C4uNEOMfHrqdGV8eGdX11/yk
+	W9lrgYSjF/E0eyC6QiXcgnY054pY5aDlFQWE3dOwpJwmLSvok8kPKqgpAfENk0tz
+	XFttxnwfzLPFcU0uut5ceupnuCY8BkhvE6sk87fJyjQB8qmBvd18cSzICfMKIcXI
+	uWspmWP9kI8EATXCVeyf0MSK+pynS0WbkCOX1qEfKKyuHwVxgkhAPn6Fyi2aLqyN
+	fAiAkwvUkxoYXRmHrOXJYasjfVGnBk1FpNn7qzi+i3JbcTy7QErpJ3dcjJhWR2EJ
+	gU2uOe2u+mrx6/JSbxnvEA==
 Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.appoci.oracle.com [138.1.114.2])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4dh8678amb-1
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4dh85q8bd2-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 14 Apr 2026 02:19:34 +0000 (GMT)
-Received: from pps.filterd (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.7/8.18.1.7) with ESMTP id 63E2EK1u023605;
-	Tue, 14 Apr 2026 02:19:33 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 4dh7nj0nu7-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 14 Apr 2026 02:19:33 +0000 (GMT)
-Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by pps.reinject (8.18.1.12/8.18.1.12) with ESMTP id 63E2JTjj036955;
-	Tue, 14 Apr 2026 02:19:33 GMT
-Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 4dh7nj0nr0-5;
 	Tue, 14 Apr 2026 02:19:32 +0000 (GMT)
+Received: from pps.filterd (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.7/8.18.1.7) with ESMTP id 63E2EKhs023619;
+	Tue, 14 Apr 2026 02:19:31 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 4dh7nj0nsq-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Tue, 14 Apr 2026 02:19:31 +0000 (GMT)
+Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+	by pps.reinject (8.18.1.12/8.18.1.12) with ESMTP id 63E2JTje036955;
+	Tue, 14 Apr 2026 02:19:30 GMT
+Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
+	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 4dh7nj0nr0-3;
+	Tue, 14 Apr 2026 02:19:30 +0000 (GMT)
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-To: linux-scsi@vger.kernel.org, Li Tian <litian@redhat.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "K. Y. Srinivasan" <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>, Wei Liu <wei.liu@kernel.org>,
-        Dexuan Cui <decui@microsoft.com>, Long Li <longli@microsoft.com>,
+To: John Garry <john.g.garry@oracle.com>, Jason Yan <yanaijie@huawei.com>,
         "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-        linux-hyperv@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] scsi: storvsc: Handle PERSISTENT_RESERVE_IN truncation for Hyper-V vFC
-Date: Mon, 13 Apr 2026 22:19:19 -0400
-Message-ID: <177595422515.3963380.12816099064749411625.b4-ty@oracle.com>
+        =?UTF-8?q?Thomas=20Wei=C3=9Fschuh?= <linux@weissschuh.net>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] scsi: libsas: Delete unused to_dom_device() and to_dev_attr()
+Date: Mon, 13 Apr 2026 22:19:17 -0400
+Message-ID: <177595422519.3963380.11566205898261844197.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260406015344.12566-1-litian@redhat.com>
-References: <20260406015344.12566-1-litian@redhat.com>
+In-Reply-To: <20260408-libsas-cleanup-v1-1-826325bbc0ba@weissschuh.net>
+References: <20260408-libsas-cleanup-v1-1-826325bbc0ba@weissschuh.net>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -72,40 +70,36 @@ X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
  definitions=2026-04-13_03,2026-04-13_04,2025-10-01_01
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0
- malwarescore=0 phishscore=0 mlxscore=0 mlxlogscore=928 spamscore=0
+ malwarescore=0 phishscore=0 mlxscore=0 mlxlogscore=871 spamscore=0
  lowpriorityscore=0 adultscore=0 suspectscore=0 classifier=spam adjust=0
  reason=mlx scancount=1 engine=8.19.0-2604070000 definitions=main-2604140019
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNDE0MDAyMCBTYWx0ZWRfX9WwuEAygOX6j
- iWqDd7mg51mj9UsJ2USb/WAwN/OegaRpk7RHBwLHAlm3JOb+QSGB121gr07o0nsZ5QhlEn0nuH6
- 5LtkmBGmthvFFVtae64XgKpMg+UtVsigPvcd9RyDC0t6sNeKP6tx06bMmxrJ0RGm72RY0/UxrnP
- wcFOu+FP7ZOX1GxjTdNUl24VKNZJ2TZrGy0O0G1XWBPfGnkYB2ce1FcGQx5bVG3LReddr21OE2/
- j2X834DaVpfW0/SAVHelB7o8BRBO7nicDkzGIoZOpwovqB9m5MFhyH6zPEtDSf+zN4P9HO+jWbG
- qQhQ38muJfdTgL++C+giB6I/0VOma1RLRWNG6AO+mh1LXRWwSEyN3nC1oFgkNXEmAuAtG8b5lmV
- iByV+hPlw3tK7b8kb/gdLa3d+YRhsyQoM37CoxeklTARQGURldYLguxGxPEioGV9/tZiRz+HQaP
- LHDOFF7wqeuXL9bWh3A==
-X-Authority-Analysis: v=2.4 cv=cbjiaHDM c=1 sm=1 tr=0 ts=69dda436 cx=c_pps
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNDE0MDAyMCBTYWx0ZWRfX0UZf3Gm2mV9L
+ WNsQSzapN4Lrd9P2KnUPZPx8Or9eZa09DrK7jfVsDcTuoaAVi8FqTFMgDVzF4+5bNfIUk5ns5aj
+ /CGvw6tsghQqv2yIriu0qQ3Z5jZecL7yYqtbSpIPYS7ptC4QDep1RXgJfK8MjLwOwJfYrFsiFHH
+ am/CARAfbi7zsDFNwNTE6orJgZT2KQuHnQVeeF4kBYFCi0V0mshO2XbedHXu4CQHIMRaRp8maam
+ vZkUtGIrVlLtChwk5Lx6OLwrhFr3aj+9m1D0nKFBcWooxp/GAjQlJc86Iz11rSeUYEYA4sasLHw
+ ca+erQdaSuqLgcvZPfSYptinVEKSXPy5Z8tOzoXDahv7foLaz8j22PjgQPQmvbEwBJTv0KZu0nx
+ Ere7FBvVsxMy2/CAx5RRbobxVyL2inm3h0N7W9LwnpVWeSyBPGHTBDXOdiPjm4GJfnpKUNyRCtF
+ bx9A2i/2xFt/lYhPCAg==
+X-Proofpoint-GUID: z31RJ4OQXbkz2XrgiHw77Pj6VvFC-Ob2
+X-Authority-Analysis: v=2.4 cv=V49NF+ni c=1 sm=1 tr=0 ts=69dda434 cx=c_pps
  a=XiAAW1AwiKB2Y8Wsi+sD2Q==:117 a=XiAAW1AwiKB2Y8Wsi+sD2Q==:17
  a=IkcTkHD0fZMA:10 a=A5OVakUREuEA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=jiCTI4zE5U7BLdzWsZGv:22 a=BqU2WV_vvsyTyxaotp0D:22 a=VwQbUJbxAAAA:8
- a=MGqCHUhnxNDYM6HRG4EA:9 a=QEXdDO2ut3YA:10
-X-Proofpoint-GUID: 5vKsTLy64ks2V8VtUbr4s3SrWj_1O6WB
-X-Proofpoint-ORIG-GUID: 5vKsTLy64ks2V8VtUbr4s3SrWj_1O6WB
+ a=jiCTI4zE5U7BLdzWsZGv:22 a=RD47p0oAkeU5bO7t-o6f:22 a=VwQbUJbxAAAA:8
+ a=rnqhmTZGhccT-vtqXCwA:9 a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
+X-Proofpoint-ORIG-GUID: z31RJ4OQXbkz2XrgiHw77Pj6VvFC-Ob2
 
-On Mon, 06 Apr 2026 09:53:44 +0800, Li Tian wrote:
+On Wed, 08 Apr 2026 20:28:00 +0200, Thomas Weißschuh wrote:
 
-> The storvsc driver has become stricter in handling
-> SRB status codes returned by the Hyper-V host. When using Virtual
-> Fibre Channel (vFC) passthrough, the host may return
-> SRB_STATUS_DATA_OVERRUN for PERSISTENT_RESERVE_IN commands if the
-> allocation length in the CDB does not match the host's expected
-> response size.
+> These macros are unused and to_dev_attr() will conflict with an upcoming
+> centralization of general attribute macros.
 > 
-> [...]
+> 
 
 Applied to 7.1/scsi-queue, thanks!
 
-[1/1] scsi: storvsc: Handle PERSISTENT_RESERVE_IN truncation for Hyper-V vFC
-      https://git.kernel.org/mkp/scsi/c/9cf351b289fb
+[1/1] scsi: libsas: Delete unused to_dom_device() and to_dev_attr()
+      https://git.kernel.org/mkp/scsi/c/1a2f61970a63
 
 -- 
 Martin K. Petersen
