@@ -1,132 +1,136 @@
-Received: from outboundhk.mxmail.xiaomi.com (outboundhk.mxmail.xiaomi.com [118.143.206.90])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 8F92D883F
-	for <linux-scsi@vger.kernel.org>; Tue, 14 Apr 2026 03:37:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=118.143.206.90
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B39C1883F;
+	Tue, 14 Apr 2026 03:42:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776137852; cv=none; b=R77OJAVQzRgQBHFu9/goCzHN4+0yynmHqdfWsBc/dsEF6zBDQFr74GCf4wQa3IwssJZkdQ3vKkPB1OKn2FKFSWjWksniBd+acak72hbVih87Ydzx5cyE/KUHba2y+w6HLdSCFZMkeNpBsIxkTGbrWQgy4g8h0EJkeWKYUfWIoeA=
+	t=1776138123; cv=none; b=E9oxqsVEW6T9XeXsTYTJBPU5sHyXTVIVllCagDyavFg1rXl0GGTQok9csgxmK9snzRoWi64sFoYrA3oZQln/GbLjeXp4yOi+8yGZEyA6Ps3U2eTw6jJXSbtaUy49jBGOtgwfAfLEezS/2XEGfhPsBp0pziHTa3oMm5zRv5Nv2RI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776137852; c=relaxed/simple;
-	bh=9XuOP0cOc605cfCd9cpV1sznXz1ITn2hbyUPql1TOXQ=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=uNwlZ61VXf8vKodRZ9QMUhrTdYQOGUJb0gYce7hYRKndS2kiEgFmqbASKf++RnleWeORZifRNvyTIRxPN9X3sXoiNe3dysT21+hTQUuZ9b9blO6Kg24cA47Ezj7JRUStj4h6Z/8Y+8mXqgILOLG279yl3/SwE/0nGXJy62Y7NMU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=xiaomi.com; spf=pass smtp.mailfrom=xiaomi.com; arc=none smtp.client-ip=118.143.206.90
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=xiaomi.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=xiaomi.com
-X-CSE-ConnectionGUID: 0sEfiXkIRfuZdhTs63NwcA==
-X-CSE-MsgGUID: l9x3FBTvSzG0Fg5i4LN2JQ==
-X-IronPort-AV: E=Sophos;i="6.23,178,1770566400"; 
-   d="scan'208";a="146539484"
-From: Wang Shuaiwei <wangshuaiwei1@xiaomi.com>
-To: Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>,
-	Bart Van Assche <bvanassche@acm.org>, "James E . J . Bottomley"
-	<James.Bottomley@HansenPartnership.com>, "Martin K . Petersen"
-	<martin.petersen@oracle.com>, Peter Wang <peter.wang@mediatek.com>, Bean Huo
-	<beanhuo@micron.com>, Adrian Hunter <adrian.hunter@intel.com>
-CC: <linux-scsi@vger.kernel.org>, <wanghui33@xiaomi.com>, Wang Shuaiwei
-	<wangshuaiwei1@xiaomi.com>
-Subject: [PATCH v2] scsi: ufs: core: Fix bRefClkFreq write failure in HS-LSS mode
-Date: Tue, 14 Apr 2026 11:37:18 +0800
-Message-ID: <20260414033718.1459540-1-wangshuaiwei1@xiaomi.com>
-X-Mailer: git-send-email 2.43.0
+	s=arc-20240116; t=1776138123; c=relaxed/simple;
+	bh=rY7XcsPyF3jFewQ9LxEIm+aB5VWwdH7DKF2onv6Szsc=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=s/UceKA3JxzMOTwxh2JEO6jYuOGP0WhDQZsAKuH0xF0m2y5uUiypDx39pPJODR9L1PIvKMXaanQ09sjUo3na8sVrhT6FPtspCFAysg1UJq7Y4RIXdAOoeSL1CVCa2hc1JzdasBBb5EfLfxcambXshJyw2ymVLhjKnKKO8zbgirI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iLkwfRiu; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iLkwfRiu"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A6D85C2BCAF;
+	Tue, 14 Apr 2026 03:42:01 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1776138123;
+	bh=rY7XcsPyF3jFewQ9LxEIm+aB5VWwdH7DKF2onv6Szsc=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=iLkwfRiuXNItENLo3b/p/gU+HS8IPSKl/2vLJrbm2jn0UIzUoZsOkH7lH7Apf5PT2
+	 cWihrljaIo1cbiGepaTNPGYBHfvLttP6Z1bJ5HaTcY82Ax1tzYbqOLNVuojVX7dm1b
+	 +evL4qoPQjviEv0tb/+w4eNKRw2LXsgecJ9YLvCqgbIfksA/oI68M4xZPPAsKtBbBx
+	 qEf4g0Xr787l3WNTQkG4hWYjTwgu9lumSPU6yxQhcSyBFagMWvBDs6M1zzNm+hTQMm
+	 nQhkkIpvq6XgD/kb7NTzY1RlD0RgT6hnfmyPzeZ7yR3YNx9KWYkpM2xcn0gPrt2/i6
+	 6FZzAAfApfhsA==
+Message-ID: <5ecd8d50-d7dc-43a3-b157-8717c6fc02d4@kernel.org>
+Date: Tue, 14 Apr 2026 05:41:59 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: BJ-MBX02.mioffice.cn (10.237.8.122) To bj-mbx11.mioffice.cn
- (10.237.8.131)
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3] mpt3sas: Limit NVMe request size to 2 MiB
+To: David Laight <david.laight.linux@gmail.com>,
+ Ranjan Kumar <ranjan.kumar@broadcom.com>
+Cc: linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
+ sathya.prakash@broadcom.com, chandrakanth.patil@broadcom.com,
+ stable@vger.kernel.org, Mira Limbeck <m.limbeck@proxmox.com>,
+ Keith Busch <kbusch@kernel.org>
+References: <20260413180003.76489-1-ranjan.kumar@broadcom.com>
+ <20260413213335.4010d8f2@pumpkin>
+Content-Language: en-US
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <20260413213335.4010d8f2@pumpkin>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-According to the UFS spec, the bRefClkFreq attribute can only be written
-when both sub-links are in LS-MODE. However, in HS LSS mode with
-resetmode = HS_MODE, if the UFS device's default bRefClkFreq value
-differs from the host controller's dev_ref_clk_freq setting, the
-write operation will fail.
+On 2026/04/13 22:33, David Laight wrote:
+> On Mon, 13 Apr 2026 23:30:03 +0530
+> Ranjan Kumar <ranjan.kumar@broadcom.com> wrote:
+> 
+>> The HBA firmware reports NVMe MDTS values based on the underlying drive
+>> capability. However, due to the 4K PRP page size and a limit of
+>> 512 entries, the driver supports a maximum I/O transfer size of 2 MiB.
+>>
+>> Limit max_hw_sectors to the smaller of the reported MDTS and the
+>> 2 MiB driver limit to prevent issuing oversized I/O that may lead
+>> to a kernel oops.
+>>
+>> Cc: stable@vger.kernel.org
+>> Fixes: 9b8b84879d4a ("block: Increase BLK_DEF_MAX_SECTORS_CAP")
+>> Reported-by: Mira Limbeck <m.limbeck@proxmox.com>
+>> Closes: https://lore.kernel.org/r/291f78bf-4b4a-40dd-867d-053b36c564b3@proxmox.com
+>> Link: https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=9b8b84879d4a
+>> Suggested-by: Keith Busch <kbusch@kernel.org>
+>> Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
+>> ---
+>>  drivers/scsi/mpt3sas/mpt3sas_scsih.c | 14 +++++++++++++-
+>>  1 file changed, 13 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+>> index 6ff788557294..44dd439e6f17 100644
+>> --- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+>> +++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+>> @@ -2738,8 +2738,20 @@ scsih_sdev_configure(struct scsi_device *sdev, struct queue_limits *lim)
+>>  				pcie_device->enclosure_level,
+>>  				pcie_device->connector_name);
+>>  
+>> +		/*
+>> +		 * The HBA firmware passes the NVMe drive's MDTS
+>> +		 * (Maximum Data Transfer Size) up to the driver. However,
+>> +		 * the driver hardcodes a 4K page size for the PRP list,
+>                                              ^ buffer ? 
+>> +		 * accommodating at most 512 entries. This strictly limits
+>> +		 * the maximum supported NVMe I/O transfer to 2 MiB.
+> 
+> Doesn't that make max_fw_entries 4096/8.
 
-To fix this issue, introduce ufshcd_get_op_mode() function to detect
-the current link operational mode. Call ufshcd_set_dev_ref_clk() only
-when both sub-links are in LS-MODE to ensure the attribute can be
-written successfully.
+What is max_fw_entries ?
+What the above explains is that a single NVMe page (4K) can store 512 (4096/8)
+PRP entries, each pointing at a 4K nvme page, so 512*4096=2M maximum size.
 
-Signed-off-by: Wang Shuaiwei <wangshuaiwei1@xiaomi.com>
----
+> Assuming 4096 byte sectors the longest transfer is then 4096/8*4096.
 
-v1->v2:
-- modify the coding style
+Yes, that's the SZ_2M Bytes.
 
-v1: https://lore.kernel.org/linux-scsi/20260413091126.1219552-1-wangshuaiwei1@xiaomi.com/
----
- drivers/ufs/core/ufshcd.c | 29 +++++++++++++++++++++++++++--
- include/ufs/unipro.h      |  5 +++++
- 2 files changed, 32 insertions(+), 2 deletions(-)
+> So none of this has anything to to with SECTOR_SHIFT.
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 9ceb6d6d479d..da38e97a199e 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -9103,6 +9103,30 @@ static void ufshcd_config_mcq(struct ufs_hba *hba)
- 		 hba->nutrs);
- }
- 
-+/**
-+ * ufshcd_get_op_mode - get UFS operating mode.
-+ * @hba: per-adapter instance
-+ *
-+ * Use the PA_PWRMODE value to represent the operating mode of UFS.
-+ *
-+ */
-+static enum ufs_op_mode ufshcd_get_op_mode(struct ufs_hba *hba)
-+{
-+	u32 mode;
-+	u8 rx_mode;
-+	u8 tx_mode;
-+
-+	ufshcd_dme_get(hba, UIC_ARG_MIB(PA_PWRMODE), &mode);
-+	rx_mode = (mode >> PWRMODE_RX_OFFSET) & PWRMODE_MASK;
-+	tx_mode = mode & PWRMODE_MASK;
-+
-+	if ((rx_mode == SLOW_MODE || rx_mode == SLOWAUTO_MODE) &&
-+	    (tx_mode == SLOW_MODE || tx_mode == SLOWAUTO_MODE))
-+		return LS_MODE;
-+
-+	return HS_MODE;
-+}
-+
- static int ufshcd_post_device_init(struct ufs_hba *hba)
- {
- 	int ret;
-@@ -9119,11 +9143,12 @@ static int ufshcd_post_device_init(struct ufs_hba *hba)
- 		return 0;
- 
- 	/*
--	 * Set the right value to bRefClkFreq before attempting to
-+	 * Set the right value to bRefClkFreq in LS_MODE before attempting to
- 	 * switch to HS gears.
- 	 */
--	if (hba->dev_ref_clk_freq != REF_CLK_FREQ_INVAL)
-+	if (ufshcd_get_op_mode(hba) == LS_MODE && hba->dev_ref_clk_freq != REF_CLK_FREQ_INVAL)
- 		ufshcd_set_dev_ref_clk(hba);
-+
- 	/* Gear up to HS gear. */
- 	ret = ufshcd_config_pwr_mode(hba, &hba->max_pwr_info.info);
- 	if (ret) {
-diff --git a/include/ufs/unipro.h b/include/ufs/unipro.h
-index 59de737490ca..3858ed13b2f3 100644
---- a/include/ufs/unipro.h
-+++ b/include/ufs/unipro.h
-@@ -198,6 +198,11 @@
- #define DME_LocalTC0ReplayTimeOutVal		0xD042
- #define DME_LocalAFC0ReqTimeOutVal		0xD043
- 
-+enum ufs_op_mode {
-+	LS_MODE = 1,
-+	HS_MODE = 2,
-+};
-+
- /* PA power modes */
- enum ufs_pa_pwr_mode {
- 	FAST_MODE	= 1,
+Apparently, nvme_mdts is in bytes, even though the documentation in
+mpt3sas_base.h does not mention anything about its unit. So yes, we need a
+SECTOR_SHIFT to convert that to 512B sectors unit.
+
+> 
+>> +		 *
+>> +		 * Cap max_hw_sectors to the smaller of the drive's reported
+>> +		 * MDTS or the 2 MiB driver limit to prevent kernel oopses.
+>> +		 */
+>> +		lim->max_hw_sectors = SZ_2M >> SECTOR_SHIFT;
+>>  		if (pcie_device->nvme_mdts)
+>> -			lim->max_hw_sectors = pcie_device->nvme_mdts / 512;
+>> +			lim->max_hw_sectors = min_t(u32, lim->max_hw_sectors,
+>> +					pcie_device->nvme_mdts >> SECTOR_SHIFT);
+> 
+> Why min_t() ?
+
+max_hw_sectors is unsigned int and nvme_mdts is u32. Not sure if that bothers
+min(). Worth trying.
+
+> 
+> David
+> 
+>>  
+>>  		pcie_device_put(pcie_device);
+>>  		spin_unlock_irqrestore(&ioc->pcie_device_lock, flags);
+> 
+
+
 -- 
-2.43.0
-
+Damien Le Moal
+Western Digital Research
