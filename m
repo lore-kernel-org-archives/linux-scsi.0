@@ -1,140 +1,109 @@
-Received: from mail-wm1-f53.google.com (mail-wm1-f53.google.com [209.85.128.53])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C492214A9B
-	for <linux-scsi@vger.kernel.org>; Mon, 13 Apr 2026 20:33:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.53
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A83025EF9C;
+	Tue, 14 Apr 2026 02:19:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.165.32
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776112420; cv=none; b=DotF1qtApGzcXa6A46Qyd+B6JuRm05IZzo/DUN7gMaDadIEfqZqsQnIsFPZV2+qVn1kL+SBTE/QXUIKHGAExlTeDkjrE6hQ0P+twSfV7Njr58aMNm67n2yDx/V5O7Ok5KHF3S9qeK2AoDeb5ZpXSl4apn4WLTaV10Caf6rwNdQw=
+	t=1776133175; cv=none; b=GL/kuW48EijvZvFeNqymYlbEjqi34UOPb7qzKxfJPbSair+/uS1NO9TM7k6pJA7FOVQo+AQcTmbBKgaSlMHXhgKyTTTK3xfaCaq+4ukwure0JvC+5lwzxuOlhZjNjcxIPnLXWEcXbyy7rr/Sce0BX5OqVHzXW6+VSIYK6VfjmMk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776112420; c=relaxed/simple;
-	bh=wCqaI7WVpGD8I/LJUMoulVK455m9fusXv6dkUgKAC9M=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=dtcbr3mw94h7seITqipniiVtkC10Mj2DqRYDZuUFnpjs2yutBM92wK4iW2dlQcuiL/kwpUnh+fcecGuZvF+rcyuo3JRbMqkKooxUvIYXdMW6EY2JYUse0W6kZZIxHkyy7Hy6UAideYHe4+guqtnq6hAUrV23QcsrwIvWnNQtsDY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=DlRkrghO; arc=none smtp.client-ip=209.85.128.53
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1776133175; c=relaxed/simple;
+	bh=XY+z507e4fk5BQpmikDUss4cL6L7pvvwxKegbAN/5Tc=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=KLEPGNpdhNEPnCvnlktA+7AFPmA54garW63g3kU6TZOcazor5WMFtUuKUQfJWomX5reSsTqb261pqpKETB1t1nC5cTrG4KUDxr+SKD+32FaFofvP/tr1K2MiUMKJvU9bCVPIsqLxsZL5fNBDzdNIYXa/jiGfOSKQhsbmJRE+ld4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=Gx5ipQbG; arc=none smtp.client-ip=205.220.165.32
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="DlRkrghO"
-Received: by mail-wm1-f53.google.com with SMTP id 5b1f17b1804b1-48334ee0aeaso46384615e9.1
-        for <linux-scsi@vger.kernel.org>; Mon, 13 Apr 2026 13:33:38 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1776112417; x=1776717217; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:subject:cc:to:from:date:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=bPkPEzfI7VUAH2K97iljvYM+ya7M355aVFHm/wT39nw=;
-        b=DlRkrghO8S9EA5bIcigTBdgRXUPpW0eGzEROQZ8ZeSLBbazSMwVzLxjm77mE8zNQCs
-         Jr/TKc3uQhgqcFR6AeF7IUlzPm1tRINyJe34do4WxDVqvfidvTScpL2m+BNpOdokfwPk
-         AmvpoXKtgwPFyG5AMcAVVj/1XV84rjbhjPXdErYKMdkDFc27WKIEwckKvhgQFq77Y37C
-         +zgQZprMLWcxlUhPG3YErmvGMGLvEaMonNGm681Aad6X5wLsZyK0QREdka/aZa4hgoRF
-         /mNicJvhqjnk3bFKYYRVvjL+Jwl0V2/WUVzcr++Cd7fiT7844I2nMF7rymoGNVqYcTE1
-         dbtw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1776112417; x=1776717217;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=bPkPEzfI7VUAH2K97iljvYM+ya7M355aVFHm/wT39nw=;
-        b=LprH+ZAhS5hIIjVn6PJv21AduQEh4j9DKrIUzOkCb7hZeKf3u166HCohZdQaYoaTm6
-         tEI25vOHPYZ2NmrGyS/NhWnx5kiKt8DgpEUim5MettW4IVM+msnWzPKlwOF/HfVx8oEv
-         9biEJI7aWlkRpLAAiMoSamKJqL1cnymfUVfWIhlL1SNHYcXowzoEmjP5jYKchWnYYvYZ
-         XuCG1h1+tV0f9mJdUHB3cySbaQpZmzM24OkJJI0yUkoBU8PjftUdOaxd/NxIEft/P2Eg
-         1811GYD7xKim5sRFSfoYkIM8arSXuPYv9iiM6YZsxAC7Fpr0agJ8MzdMY4THLK8ACDyi
-         50YA==
-X-Gm-Message-State: AOJu0YxShZCbv/zTNH6nNJcRew5K9QRdH2p5HL0Ko3bjHwskz7AIznd+
-	xf5RYEfh0+yhbArrGgEvuBcjnYZU+8IaD7yczwpNTJ4K5oCfsQsWhP4r
-X-Gm-Gg: AeBDieurfXMkgrhqPlKPhbdUwCB3BzUt42Iq8zNw+HPMX4sbWOfQdhMgrdqKDsAVXee
-	RXfRnR22A4Ov66hoC5K8K5ddAOWwp9UVND9OQ32249yA72V1xMv97/E9dP6RyiaTDhDNe5cba9k
-	vwmfqiS3Sz2edN/ZNxg9dNl718Hzu7UyuE/oFztZMjk+d7jOpdptvKkiR9XDXvqorrFM6Yt0eXy
-	tz+ss6rBVzh1mO9gV1lKC7rYYbyA9SCDYYIeUzm6/KoKZywlt47dJTsceUICJH1sj0cysfgCAwk
-	rPCDkLDpGqN0xIHGZAkSca/DJxFqNAO9WkeoCcuSh2GlgpfAkU8eVyy1R1CuehaOw/2szL4yIIJ
-	iWj/mclIhP/wXjDJ9wQEnA07MKgs3EjVcE8UBtnoMoO8gH7Zx6l6udr7+p9Ke7gA0uz950lSiPn
-	49Ayc1QvjSim0M0eBmyWXNMSoVQQeLR7WhvscCIWdxWwPqX/K6WDGO1eN84TfaHLEQ
-X-Received: by 2002:a5d:5d83:0:b0:43d:30af:a173 with SMTP id ffacd0b85a97d-43d64259b7emr21409425f8f.5.1776112416875;
-        Mon, 13 Apr 2026 13:33:36 -0700 (PDT)
-Received: from pumpkin (82-69-66-36.dsl.in-addr.zen.co.uk. [82.69.66.36])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-43d63e5062fsm34336337f8f.31.2026.04.13.13.33.36
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 13 Apr 2026 13:33:36 -0700 (PDT)
-Date: Mon, 13 Apr 2026 21:33:35 +0100
-From: David Laight <david.laight.linux@gmail.com>
-To: Ranjan Kumar <ranjan.kumar@broadcom.com>
-Cc: linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
- sathya.prakash@broadcom.com, chandrakanth.patil@broadcom.com,
- dlemoal@kernel.org, stable@vger.kernel.org, Mira Limbeck
- <m.limbeck@proxmox.com>, Keith Busch <kbusch@kernel.org>
-Subject: Re: [PATCH v3] mpt3sas: Limit NVMe request size to 2 MiB
-Message-ID: <20260413213335.4010d8f2@pumpkin>
-In-Reply-To: <20260413180003.76489-1-ranjan.kumar@broadcom.com>
-References: <20260413180003.76489-1-ranjan.kumar@broadcom.com>
-X-Mailer: Claws Mail 4.1.1 (GTK 3.24.38; arm-unknown-linux-gnueabihf)
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Gx5ipQbG"
+Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 63DLETW53851331;
+	Tue, 14 Apr 2026 02:19:31 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=
+	corp-2025-04-25; bh=GzkZCIT8bQRvayh4Hw0lMdnOXy2MQwutxZmDeZNrohw=; b=
+	Gx5ipQbGHDirzOHaYYguZElrILukXr4QmI1bdKqbdQ5Pl4ebv2oZtlwxs+27sQCG
+	tcIedNCc1WkLMBGkPWwQHHS5Vhb5AWmInlzb6lsFqnkjwChHOtYdJwTtmPsqxJt5
+	mbwNY6USA0VvMvYfWwpqEQHHvykn/u+A5mlaZtnnvPvaB8YIjiNFCk6/qX23mnEK
+	EMCyjADW0fqOJjznj+MVXKei+CHxSIugSsIRV/v/TcukayHmduSLB0oAcjRkz8S4
+	5x67wdXwRkIU+fcS9o7Mmu43REb4EyJ5cLWRVtfX8IQrd4QnXjTp7kIQBpLYfk8G
+	tbsyuaydG8SC9idmwCydiw==
+Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.appoci.oracle.com [138.1.114.2])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4dh87m8ag3-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Tue, 14 Apr 2026 02:19:31 +0000 (GMT)
+Received: from pps.filterd (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.7/8.18.1.7) with ESMTP id 63E2EJq5023532;
+	Tue, 14 Apr 2026 02:19:30 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 4dh7nj0ns7-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Tue, 14 Apr 2026 02:19:30 +0000 (GMT)
+Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+	by pps.reinject (8.18.1.12/8.18.1.12) with ESMTP id 63E2JTjd036955;
+	Tue, 14 Apr 2026 02:19:30 GMT
+Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
+	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 4dh7nj0nr0-2;
+	Tue, 14 Apr 2026 02:19:29 +0000 (GMT)
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+To: linux-scsi@vger.kernel.org,
+        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+        Eric Biggers <ebiggers@kernel.org>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] scsi: iscsi_tcp: Remove unneeded selections of CRYPTO and CRYPTO_MD5
+Date: Mon, 13 Apr 2026 22:19:16 -0400
+Message-ID: <177595422510.3963380.2387618551172566258.b4-ty@oracle.com>
+X-Mailer: git-send-email 2.53.0
+In-Reply-To: <20260404203003.33738-1-ebiggers@kernel.org>
+References: <20260404203003.33738-1-ebiggers@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-04-13_03,2026-04-13_04,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0
+ malwarescore=0 phishscore=0 mlxscore=0 mlxlogscore=866 spamscore=0
+ lowpriorityscore=0 adultscore=0 suspectscore=0 classifier=spam adjust=0
+ reason=mlx scancount=1 engine=8.19.0-2604070000 definitions=main-2604140019
+X-Authority-Analysis: v=2.4 cv=JKYLdcKb c=1 sm=1 tr=0 ts=69dda433 cx=c_pps
+ a=XiAAW1AwiKB2Y8Wsi+sD2Q==:117 a=XiAAW1AwiKB2Y8Wsi+sD2Q==:17
+ a=IkcTkHD0fZMA:10 a=A5OVakUREuEA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=jiCTI4zE5U7BLdzWsZGv:22 a=7Gl3-_t3PgB9XO-mQDs3:22 a=VwQbUJbxAAAA:8
+ a=GCFWr-IWmwxHsq0_GSEA:9 a=QEXdDO2ut3YA:10 a=0lgtpPvCYYIA:10
+X-Proofpoint-ORIG-GUID: Rw8XG_HQ4wu_buWrahayxPpi80bqcw58
+X-Proofpoint-GUID: Rw8XG_HQ4wu_buWrahayxPpi80bqcw58
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNDE0MDAyMCBTYWx0ZWRfXyLOZtcprATq5
+ 8WqNc38PAyBCI3KbigtsBZdfZSW0NNVA2ZGQV+2Zjtfci3MXtEwD3hTs1SNhR2qaibOmu8D9L09
+ 9oyVHWNrVMfsR+ZUvKsNGkZEf+9pI2lo97ov64jXMxHiY2YoTAXLatKcgB/EmCCwtr7QPFAy0PM
+ tbOVFE9oGO/B9gNjvybJACiGY/PjZ2KHk4QzFGB+lk7fwCyu35rYOCNJE8DhoVUuiXs/mo1qD2+
+ FWJWmUvLnJex8zA75qPv83Xv+RHflXntgvj2NFDcrnsvE92QdDoRhgM31VRqoXXD/6M0bpQC/ye
+ WY+2GgliXrHMlwlgHqQ6eXDgr/e2LmNwUuO9bL8Vg7D+hxhxnTayjYZrsmOqgwU58Mk2jviBavy
+ D/p82JakthLaB06RY1ROc1NjLQp7oaVj2EYIEKumbivQWGrhIt/HFUfO5GWwad2AcHpg2CvDJ1H
+ 7EuVY+QZG9NzAhmQgsQ==
 
-On Mon, 13 Apr 2026 23:30:03 +0530
-Ranjan Kumar <ranjan.kumar@broadcom.com> wrote:
+On Sat, 04 Apr 2026 13:30:03 -0700, Eric Biggers wrote:
 
-> The HBA firmware reports NVMe MDTS values based on the underlying drive
-> capability. However, due to the 4K PRP page size and a limit of
-> 512 entries, the driver supports a maximum I/O transfer size of 2 MiB.
+> As far as I can tell, CRYPTO_MD5 has been unnecessary here ever since it
+> was added by commit c899e4ef96f0 ("[SCSI] open-iscsi/linux-iscsi-5
+> Initiator: Kconfig update") in 2005.
 > 
-> Limit max_hw_sectors to the smaller of the reported MDTS and the
-> 2 MiB driver limit to prevent issuing oversized I/O that may lead
-> to a kernel oops.
+> CRYPTO was needed until commit 92186c1455a2 ("scsi: iscsi_tcp: Switch to
+> using the crc32c library"), but is no longer needed.
 > 
-> Cc: stable@vger.kernel.org
-> Fixes: 9b8b84879d4a ("block: Increase BLK_DEF_MAX_SECTORS_CAP")
-> Reported-by: Mira Limbeck <m.limbeck@proxmox.com>
-> Closes: https://lore.kernel.org/r/291f78bf-4b4a-40dd-867d-053b36c564b3@proxmox.com
-> Link: https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=9b8b84879d4a
-> Suggested-by: Keith Busch <kbusch@kernel.org>
-> Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
-> ---
->  drivers/scsi/mpt3sas/mpt3sas_scsih.c | 14 +++++++++++++-
->  1 file changed, 13 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-> index 6ff788557294..44dd439e6f17 100644
-> --- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-> +++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-> @@ -2738,8 +2738,20 @@ scsih_sdev_configure(struct scsi_device *sdev, struct queue_limits *lim)
->  				pcie_device->enclosure_level,
->  				pcie_device->connector_name);
->  
-> +		/*
-> +		 * The HBA firmware passes the NVMe drive's MDTS
-> +		 * (Maximum Data Transfer Size) up to the driver. However,
-> +		 * the driver hardcodes a 4K page size for the PRP list,
-                                             ^ buffer ? 
-> +		 * accommodating at most 512 entries. This strictly limits
-> +		 * the maximum supported NVMe I/O transfer to 2 MiB.
+> [...]
 
-Doesn't that make max_fw_entries 4096/8.
-Assuming 4096 byte sectors the longest transfer is then 4096/8*4096.
-So none of this has anything to to with SECTOR_SHIFT.
+Applied to 7.1/scsi-queue, thanks!
 
-> +		 *
-> +		 * Cap max_hw_sectors to the smaller of the drive's reported
-> +		 * MDTS or the 2 MiB driver limit to prevent kernel oopses.
-> +		 */
-> +		lim->max_hw_sectors = SZ_2M >> SECTOR_SHIFT;
->  		if (pcie_device->nvme_mdts)
-> -			lim->max_hw_sectors = pcie_device->nvme_mdts / 512;
-> +			lim->max_hw_sectors = min_t(u32, lim->max_hw_sectors,
-> +					pcie_device->nvme_mdts >> SECTOR_SHIFT);
+[1/1] scsi: iscsi_tcp: Remove unneeded selections of CRYPTO and CRYPTO_MD5
+      https://git.kernel.org/mkp/scsi/c/7aa0f56d4b48
 
-Why min_t() ?
-
-David
-
->  
->  		pcie_device_put(pcie_device);
->  		spin_unlock_irqrestore(&ioc->pcie_device_lock, flags);
-
+-- 
+Martin K. Petersen
