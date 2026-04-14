@@ -1,71 +1,78 @@
-Received: from mail-dy1-f180.google.com (mail-dy1-f180.google.com [74.125.82.180])
+Received: from mail-dy1-f177.google.com (mail-dy1-f177.google.com [74.125.82.177])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B3D564
-	for <linux-scsi@vger.kernel.org>; Tue, 14 Apr 2026 18:27:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.180
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 15DD7239085
+	for <linux-scsi@vger.kernel.org>; Tue, 14 Apr 2026 18:27:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.177
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776191276; cv=none; b=Ve4Fi/2IIbkUWTEFypi5tHulVAgSuJG/QZ9/QBuqO71Ytd6JfJyHwY+pv+Hzvb/Q5CbAsq/C6ib+OQfnlQBcgi74Ldp4FkceE9J6fZOBgEM3iX+exKsVRJHSp4il/vk+rcJKY3CoS16IB8TY2fAhmP3gF3p+abv5LFjpfGTDhKg=
+	t=1776191279; cv=none; b=Ol+a/6xW20nZBgCf6D4WjCenJDdSA5J3lSm2rq0WVap7ZQo4t7s1vVFdLTFeD4BjpD2oNU5DzNyhChDCTK39bwv0nbx8lxB1Rlyr6/Qlh+LCK9w6vmmQ52+FywBLY7x+yJWX55Ew6Y7lmc9O+46HVy0ojC/j1flE8MhbytUa2Gw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776191276; c=relaxed/simple;
-	bh=GBH9XKDPiCh46F8M2/HZODnwDQDwS2/ykoBsfui0D+w=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=hXVfSQiwXPiUlJfC7lLfd5BU7XY+U2RwTGC6z4M6bSF7tXp0RlVrIQOYjF6PndocF7EDaFHgsrwN17QIS91yWweuMV+sQssoqG2xsIlC7va4acZ9gxpz9oUYFI3/OEVTl3HnPPb6FUQOct8hcpIbf9vNPZzv1K4UQCFBKEZIFSc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=purestorage.com; spf=fail smtp.mailfrom=purestorage.com; dkim=pass (2048-bit key) header.d=purestorage.com header.i=@purestorage.com header.b=dJKH14Pu; arc=none smtp.client-ip=74.125.82.180
+	s=arc-20240116; t=1776191279; c=relaxed/simple;
+	bh=8gwCerpFoANTyeFIg6zJ5hdhDyEcsr7Ud7TvbBYHiuY=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=LdC70J1LG2Z9RH1Zzk54Cg5v0oU99aHkUcYI9hgKG0NG+a2ZaihestWRprZrVBxH2czavACJTFjI1egT5SK1Yi7Fid3VSa7FCaEMqlAloU7fptkiZoW1cKo7IwQB/jMdGCigIh/aKKiqOWmN6LCTpKFE3bDNkxsd3wEXhgqViWk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=purestorage.com; spf=fail smtp.mailfrom=purestorage.com; dkim=pass (2048-bit key) header.d=purestorage.com header.i=@purestorage.com header.b=Z/CRzHWU; arc=none smtp.client-ip=74.125.82.177
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=purestorage.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=purestorage.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=purestorage.com header.i=@purestorage.com header.b="dJKH14Pu"
-Received: by mail-dy1-f180.google.com with SMTP id 5a478bee46e88-2d96243c91fso4331167eec.1
-        for <linux-scsi@vger.kernel.org>; Tue, 14 Apr 2026 11:27:55 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=purestorage.com header.i=@purestorage.com header.b="Z/CRzHWU"
+Received: by mail-dy1-f177.google.com with SMTP id 5a478bee46e88-2c15849aa2cso6838934eec.0
+        for <linux-scsi@vger.kernel.org>; Tue, 14 Apr 2026 11:27:57 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=purestorage.com; s=google2022; t=1776191274; x=1776796074; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=netVJOmyOdXKjOl0WnRqogzYsAyFf7P7QgQREMM3OAs=;
-        b=dJKH14PuGbOt9eTFig9Fk8K/mAT1Bu6hUqZlqkpz2/snRUbmJO8cdaABc7cBjtgfYl
-         7UIrAKp0F8kJMXvxVwcEkYmDYRPekagR+RxdbNUBI/QI5hON3oTH8gfApvvZhbkEZ3wf
-         PtfJC5LE7QFh/bzmJAW+xLchGfsZhX6RG02bwwWtJvsxJttXB1hOrI0MM4MWKJNBk/+s
-         W7E5eRw3SgeXWEsRqqq9ezCFaw/iA93TohAGwi+OSL1RNTW0rfNyL/x9+6Xlt0aldYNm
-         9nNYG5GEXVRx9YAZuD6kZT8a0MZdmHDNDeJimYD2YHC0Ka04AbF4NNZSUcthrpcCyaRl
-         JEUg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1776191274; x=1776796074;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=purestorage.com; s=google2022; t=1776191277; x=1776796077; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=netVJOmyOdXKjOl0WnRqogzYsAyFf7P7QgQREMM3OAs=;
-        b=fpt86zJ/KEmfn+vhnqDLSK9+aakAutdSVNex8hcV2tbT8N3OOhh2NhUVFbZqn5pZua
-         zzmSZLl+6eSLuIKZXmFs/kPmFdaS1JFZSTiPmRbDhbSc5WrSz+9NMIVZK7nVCcGSbgAs
-         lna1hNO0F0gNBSqK848Qk9dyq2/T3o/8seMKsTrJ+Zooj32mxtX2bq+w9bCBYIZbdFrJ
-         DsrNsMxaPv+q2L9lXAnsp0dOTE20K0+apscOtpmohV4p5k5LvWPm48NYiw8NmqDDu6Bn
-         LOQGrsBKJIKE1xfrGdbl2K9TyrvlXQ8m3tmhVUpA1O3yChKZw3m22m4q43v7pCZ+UeC2
-         iW1w==
-X-Forwarded-Encrypted: i=1; AFNElJ8CVKsEi+0pnnyfQIZteNeBg18q0xVC34bcEDXmH3GSIH4ws2NHcOuXQ+5xUlrsguibwnX/nyJ1sDSz@vger.kernel.org
-X-Gm-Message-State: AOJu0YzvZQZmcIPwAStTcK5HwZ4KoaB9f6N3LQ12oRg7dTXa8IoOxBvW
-	h/G47u5cnMjD+RBg4EkXnCE3m/l/hRq/WXLiIzl1S5LNw+IHofE7DhIRiIzzBS6QjIw=
-X-Gm-Gg: AeBDiev7va0J8Nw3n1MMEwiRX9GCeEhDsP7izEGOYY3TpqygsP8uO4woj/I77WpLhoi
-	59OGxlqkaSPRhbdDYAR8KK8iufBPcRZ7Ry1Ljg73b2vLjkYc23xhx9JKqR5ifCxAv3yDzkL/Pgk
-	Ah1Yk+NqLqs6R90nV1xrPh4aYvwqukUER5tOBZolQQKyc/Ze8XzQUcHJmHq9ur762Cd0GJmNckT
-	3MefUphqnNccUOeboXh0iiLHvA1a4SLdb/CZiD5dfxt+fgK6kKGNo1H3khoNOxEnudZIAUTAY/Z
-	abPfoga/KANtmqyOKMH4k0CLsHrEcUPHHjJ9gcWP8v13WMkI3296fUXh+39ZhV8OGhWWjUT2OE5
-	9aROytDcaPVA6JrjpeTCfUxhOBhjrWB0x8sGOUA7AJtaTBF8LYw/Dvt4WHSNwb2RkQ1urnlT6G1
-	t4AEQed78uVBu2z2A3loyffVJ5fqBZgZ5foAc19ZGA9VWXrez/guIgyTObyaNUJc5kjZ3+J6xFF
-	NW1Sk0tFY/kYpPuDqihKo/g926AzZkmtEU1/IE6az6yULZQT75wLt5473l0cqloKTdUFiYzcguX
-	QroDpqOtVXzZMOElOedxKPOw7D2DbxzLFaA=
-X-Received: by 2002:a05:7300:d4ce:b0:2dd:5641:ef2 with SMTP id 5a478bee46e88-2dd5641154bmr1611809eec.25.1776191274441;
-        Tue, 14 Apr 2026 11:27:54 -0700 (PDT)
+        bh=8if9N+gBLKffFrczesRiajZLxzzDbxrq8j+fE/A/OJI=;
+        b=Z/CRzHWUI42Q5DN47rlPZxdJzmVIfYu0NZ8GNRziaELG3O2OfdYcOyx4VLT7VCOzFq
+         DQ7/JRQTW93bkwK9tTK4ZS5xSXXh1ABLLKZcs9HkSpZuVAoYCrUarQ71KGqZO1mCBb+7
+         Ds34YZevNtvULcyr4VxcUF6ovuggS4WJC5zis0wzy2KFw6hM4/XWUBxFHzWXcUpKPhtn
+         9qS8M9u+JxFnF9aopyJG3bcSh5CbGytQAgRyDnP+liWs5fJZjFcyH4dyAt6JgU5Kn8X6
+         9qi6EyjrqkVd/wnF/9CMYwm7t/X3+qX9a9fCUvkMwbxfu+Ob7haKEZtXJngAljSXq/t6
+         DBdw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1776191277; x=1776796077;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=8if9N+gBLKffFrczesRiajZLxzzDbxrq8j+fE/A/OJI=;
+        b=KvozSkAWTFCibBcomHYbRW3v53hEBfP+LDnjPr2IesTGmDMGEkgDBhHSPv9xBcOFm9
+         cJ5lAa7y2cmv/Fv6NkEMABus3pluP0V/JvxfLNxkqr/ucSo72xwppYwFat09Qv8SZMJJ
+         aK0692c7jj8+o6r+i6u2lHmc/CBGqPHpdyDBge/MkASSkueIha65cRcz2IheE/rgjWwm
+         LphecKYnyyi/saQVxuKWZiMF462JUBCDtyPth1oxNaAwJ/jSOD6FGElSdEUFaMckaoIV
+         elxVy7ueJUCfzrzDGOlFgsmEsW2YsQ3Adl9BNtwg2tabv9Db/rLn1R1+FPG2smk3CiA9
+         6dYA==
+X-Forwarded-Encrypted: i=1; AFNElJ8x5YFBQz/v0yY4K5aftwJfUDyEU71Ps9l1xldiCLINhmZOrIu0l/trlyTHl4BCch4nwLqdAkppRwxE@vger.kernel.org
+X-Gm-Message-State: AOJu0YwDklIxbROVe3Gfq69BJ8B2fftVmO58O+SwooegKVXeifOcFlYF
+	XQKDSo5KM76bcvl+Doy8v2FBMcHn9UeKmQrB701lfg8Xq9+t6IC7Y6RsAhok13tzE7i/j2eCCqL
+	PxxNH
+X-Gm-Gg: AeBDieuy2fyLF5sW8V07OAZiZrXWzctBsPwFsmm7Faggp0D31L94XqzXfKgXan9XeXi
+	ciqx18zM/tZBJfgsXOvjdvYc57VECLg37Gy50IcB5KrrOmttNJxw4vOBIVREV/hdFw9TtUUDGDa
+	HGO+Xotha7HlW05t1N4Hup6vGlS2rwW4pebpHOmE5s0W+SgTsbpk9ltkh5w0IwOO1YzTNkwbINX
+	UbBB3eVwRI2oFF3T0pFsi1SjGodl+uJLhQGe+n2KBmloaljPYGAStnfb/rC4D9YRp+wtDHdMFQt
+	WAMk8Nzc/axfVrRKdn6fz4Jn2po//ZxP8UPw2bFiEzG3tv8UjDZ+Mn+d43sNfUFQhSYU1bGEhE2
+	uSbLFGqfNRJLtqNuQ7a3iz+7Bco8Fih9limnv8BYxiBSA7Zhwh/nWbyNoQ1yoTudTRyoF/haR4N
+	HpL13p9rWyL3C6m33sNERmIS7cABd1pNuMmbRYeNqwifufYbTojdQBqsmqmNxv8nK+Sb/61tSON
+	06ku8y/RCyOGBcCu6i930NpDQZm5B1qhzWrQJXZefBSXbpK/q7GZZtdluIBf09IH4lUT01fR6hU
+	8xiF7xSULphS2vmCkoyYSEI15ApcLEZg+jE=
+X-Received: by 2002:a05:7300:dc88:b0:2d8:c484:6b6c with SMTP id 5a478bee46e88-2d8c4846f3cmr4738799eec.25.1776191277068;
+        Tue, 14 Apr 2026 11:27:57 -0700 (PDT)
 Received: from brian--MacBookPro18.purestorage.com ([136.226.65.104])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-2d561bde70csm25813550eec.15.2026.04.14.11.27.53
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-2d561bde70csm25813550eec.15.2026.04.14.11.27.55
         (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
-        Tue, 14 Apr 2026 11:27:53 -0700 (PDT)
+        Tue, 14 Apr 2026 11:27:56 -0700 (PDT)
 From: Brian Bunker <brian@purestorage.com>
 To: hare@suse.de,
 	linux-scsi@vger.kernel.org
-Cc: Brian Bunker <brian@purestorage.com>
-Subject: [PATCH v3 0/1] scsi: scsi_dh_alua: increase default ALUA timeout to maximum spec value
-Date: Tue, 14 Apr 2026 11:27:47 -0700
-Message-ID: <20260414182748.39776-1-brian@purestorage.com>
+Cc: Brian Bunker <brian@purestorage.com>,
+	Krishna Kant <krishna.kant@purestorage.com>,
+	Riya Savla <rsavla@purestorage.com>
+Subject: [PATCH v3 1/1] scsi: scsi_dh_alua: increase default ALUA timeout to maximum spec value
+Date: Tue, 14 Apr 2026 11:27:48 -0700
+Message-ID: <20260414182748.39776-2-brian@purestorage.com>
 X-Mailer: git-send-email 2.52.0
+In-Reply-To: <20260414182748.39776-1-brian@purestorage.com>
+References: <20260414182748.39776-1-brian@purestorage.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -74,31 +81,39 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The ALUA handler already maps a 0 value (no implicit transition timeout
-provided by the target) to the ALUA_FAILOVER_TIMEOUT constant. This
-means the kernel is already saying it won't accept an infinite
-transition time - it substitutes a finite default instead.
+The ALUA handler maps a 0 value (no implicit transition timeout provided
+by the target) to the ALUA_FAILOVER_TIMEOUT constant, currently 60
+seconds. This means the kernel already does not accept an infinite
+transition time.
 
-It has been suggested that some arrays may take tens of minutes to
-complete transitions, but even today those would be broken by the
-current 0-to-60-second translation. The kernel currently caps this.
+However, 60 seconds is insufficient for some arrays that may take
+longer to complete ALUA transitions. Since the highest value allowed
+by the SCSI specification for the implicit transition timeout is a
+single byte (255 seconds), change the default to U8_MAX. This way,
+when a target does not provide an explicit transition timeout, we
+default to the maximum value the spec allows rather than an arbitrary
+60 second limit.
 
-The SCSI specification allows the implicit transition timeout to be
-specified as a single byte, meaning the maximum explicit value is 255
-seconds. This patch simply changes the default from an arbitrary 60
-seconds to U8_MAX (255), the highest value that could be explicitly
-provided by the target per the spec.
-
-This is a minimal, safe change: we're not removing the cap, just
-raising the default to match what the spec allows.
-
-Brian Bunker (1):
-  scsi: scsi_dh_alua: increase default ALUA timeout to maximum spec
-    value
-
+Signed-off-by: Krishna Kant <krishna.kant@purestorage.com>
+Signed-off-by: Riya Savla <rsavla@purestorage.com>
+Signed-off-by: Brian Bunker <brian@purestorage.com>
+---
  drivers/scsi/device_handler/scsi_dh_alua.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
+diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
+index efb08b9b145a1..8ef1eecf9f9c3 100644
+--- a/drivers/scsi/device_handler/scsi_dh_alua.c
++++ b/drivers/scsi/device_handler/scsi_dh_alua.c
+@@ -37,7 +37,7 @@
+ #define TPGS_MODE_EXPLICIT		0x2
+ 
+ #define ALUA_RTPG_SIZE			128
+-#define ALUA_FAILOVER_TIMEOUT		60
++#define ALUA_FAILOVER_TIMEOUT		U8_MAX
+ #define ALUA_FAILOVER_RETRIES		5
+ #define ALUA_RTPG_DELAY_MSECS		5
+ #define ALUA_RTPG_RETRY_DELAY		2
 -- 
 2.50.1 (Apple Git-155)
 
