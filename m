@@ -1,327 +1,104 @@
-Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-dy1-f180.google.com (mail-dy1-f180.google.com [74.125.82.180])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 281F9FC0A
-	for <linux-scsi@vger.kernel.org>; Tue, 14 Apr 2026 16:38:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.14
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B3D564
+	for <linux-scsi@vger.kernel.org>; Tue, 14 Apr 2026 18:27:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.180
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776184693; cv=none; b=QL5et3T2tbJz76jLnIDShWBf7bqwRJnkDx2c5otPMocii1ziQ+xRBcMUzbw7WvAfIenIxJ+P1iln9/45Ce3aIS/h4Ip4RhxBxHB3h0B+odd7Pis/ZPsm0gJXMDPvc8/SSq1ygRtXabztKNLMO6yZtW8cJz2LoNNiOsGBGgnQRLs=
+	t=1776191276; cv=none; b=Ve4Fi/2IIbkUWTEFypi5tHulVAgSuJG/QZ9/QBuqO71Ytd6JfJyHwY+pv+Hzvb/Q5CbAsq/C6ib+OQfnlQBcgi74Ldp4FkceE9J6fZOBgEM3iX+exKsVRJHSp4il/vk+rcJKY3CoS16IB8TY2fAhmP3gF3p+abv5LFjpfGTDhKg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776184693; c=relaxed/simple;
-	bh=hzFhGAptWJ4+cGmCkn3Eqela6TXPOJmyjZlc0q/YsGQ=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=ok3y/5sWSULhv+Wb8y1Xa6SxLrISRQWsdAtwmRPr+FrsqA1z7cwLemuOQumlQw+8yRbocLr7vMp3eE2B3lLAtX9ytBNFzOC6joS+yrsyDbbgukE32zc3n9ZunNf9M/vmoyqSymMC+F7pE5gRSwxXyOnM8wXoT9H9AQ7T4iw7bCo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=3uschHvt; arc=none smtp.client-ip=199.89.1.14
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1776191276; c=relaxed/simple;
+	bh=GBH9XKDPiCh46F8M2/HZODnwDQDwS2/ykoBsfui0D+w=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=hXVfSQiwXPiUlJfC7lLfd5BU7XY+U2RwTGC6z4M6bSF7tXp0RlVrIQOYjF6PndocF7EDaFHgsrwN17QIS91yWweuMV+sQssoqG2xsIlC7va4acZ9gxpz9oUYFI3/OEVTl3HnPPb6FUQOct8hcpIbf9vNPZzv1K4UQCFBKEZIFSc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=purestorage.com; spf=fail smtp.mailfrom=purestorage.com; dkim=pass (2048-bit key) header.d=purestorage.com header.i=@purestorage.com header.b=dJKH14Pu; arc=none smtp.client-ip=74.125.82.180
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=purestorage.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=purestorage.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="3uschHvt"
-Received: from localhost (localhost [127.0.0.1])
-	by 011.lax.mailroute.net (Postfix) with ESMTP id 4fw91v4GKyz1XM6Jf;
-	Tue, 14 Apr 2026 16:38:11 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1776184686; x=1778776687; bh=S4F1d6slOMtYDwvyv6A1JBON
-	aq8o23yGe+2G7yj0ZGI=; b=3uschHvt3z4ZmXD60PXpUaKCmEXeTay3ViYLs4fv
-	gQKni8fcxvRVnLg/PPJ6Sy+Qe6B80kZ+O0HNyRx38weVQRlcTIHyoQUiC/vWmV7+
-	htBqtXL/Qm6UWQESCbuHdGTIdm3okNHjDih6u1JSR8rG8vb3XlvlsfxtCB4Dtx00
-	zGlTQPoWu9PTPlkcsadPMmCc+8PwG2lTPq0kV/TxvFS11TrkWnZhHE5cS1DYDCfB
-	gP4+QZk/F/umVCKcU9rOugFZouUE2koXsskhF4+5Nj76vK6khIWis/MR0fvQU4mm
-	dSV1se+EAilGcpuMxMymxmsyy5ytzZHmcFgRYGt1sKYvaA==
-X-Virus-Scanned: by MailRoute
-Received: from 011.lax.mailroute.net ([127.0.0.1])
- by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id cPh1bYX8maQh; Tue, 14 Apr 2026 16:38:06 +0000 (UTC)
-Received: from [100.119.48.131] (unknown [104.135.180.219])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4fw91n3sJlz1XM5kt;
-	Tue, 14 Apr 2026 16:38:05 +0000 (UTC)
-Message-ID: <da1c23ea-5635-4872-b448-33f71219abc0@acm.org>
-Date: Tue, 14 Apr 2026 09:38:04 -0700
+	dkim=pass (2048-bit key) header.d=purestorage.com header.i=@purestorage.com header.b="dJKH14Pu"
+Received: by mail-dy1-f180.google.com with SMTP id 5a478bee46e88-2d96243c91fso4331167eec.1
+        for <linux-scsi@vger.kernel.org>; Tue, 14 Apr 2026 11:27:55 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=purestorage.com; s=google2022; t=1776191274; x=1776796074; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=netVJOmyOdXKjOl0WnRqogzYsAyFf7P7QgQREMM3OAs=;
+        b=dJKH14PuGbOt9eTFig9Fk8K/mAT1Bu6hUqZlqkpz2/snRUbmJO8cdaABc7cBjtgfYl
+         7UIrAKp0F8kJMXvxVwcEkYmDYRPekagR+RxdbNUBI/QI5hON3oTH8gfApvvZhbkEZ3wf
+         PtfJC5LE7QFh/bzmJAW+xLchGfsZhX6RG02bwwWtJvsxJttXB1hOrI0MM4MWKJNBk/+s
+         W7E5eRw3SgeXWEsRqqq9ezCFaw/iA93TohAGwi+OSL1RNTW0rfNyL/x9+6Xlt0aldYNm
+         9nNYG5GEXVRx9YAZuD6kZT8a0MZdmHDNDeJimYD2YHC0Ka04AbF4NNZSUcthrpcCyaRl
+         JEUg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1776191274; x=1776796074;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=netVJOmyOdXKjOl0WnRqogzYsAyFf7P7QgQREMM3OAs=;
+        b=fpt86zJ/KEmfn+vhnqDLSK9+aakAutdSVNex8hcV2tbT8N3OOhh2NhUVFbZqn5pZua
+         zzmSZLl+6eSLuIKZXmFs/kPmFdaS1JFZSTiPmRbDhbSc5WrSz+9NMIVZK7nVCcGSbgAs
+         lna1hNO0F0gNBSqK848Qk9dyq2/T3o/8seMKsTrJ+Zooj32mxtX2bq+w9bCBYIZbdFrJ
+         DsrNsMxaPv+q2L9lXAnsp0dOTE20K0+apscOtpmohV4p5k5LvWPm48NYiw8NmqDDu6Bn
+         LOQGrsBKJIKE1xfrGdbl2K9TyrvlXQ8m3tmhVUpA1O3yChKZw3m22m4q43v7pCZ+UeC2
+         iW1w==
+X-Forwarded-Encrypted: i=1; AFNElJ8CVKsEi+0pnnyfQIZteNeBg18q0xVC34bcEDXmH3GSIH4ws2NHcOuXQ+5xUlrsguibwnX/nyJ1sDSz@vger.kernel.org
+X-Gm-Message-State: AOJu0YzvZQZmcIPwAStTcK5HwZ4KoaB9f6N3LQ12oRg7dTXa8IoOxBvW
+	h/G47u5cnMjD+RBg4EkXnCE3m/l/hRq/WXLiIzl1S5LNw+IHofE7DhIRiIzzBS6QjIw=
+X-Gm-Gg: AeBDiev7va0J8Nw3n1MMEwiRX9GCeEhDsP7izEGOYY3TpqygsP8uO4woj/I77WpLhoi
+	59OGxlqkaSPRhbdDYAR8KK8iufBPcRZ7Ry1Ljg73b2vLjkYc23xhx9JKqR5ifCxAv3yDzkL/Pgk
+	Ah1Yk+NqLqs6R90nV1xrPh4aYvwqukUER5tOBZolQQKyc/Ze8XzQUcHJmHq9ur762Cd0GJmNckT
+	3MefUphqnNccUOeboXh0iiLHvA1a4SLdb/CZiD5dfxt+fgK6kKGNo1H3khoNOxEnudZIAUTAY/Z
+	abPfoga/KANtmqyOKMH4k0CLsHrEcUPHHjJ9gcWP8v13WMkI3296fUXh+39ZhV8OGhWWjUT2OE5
+	9aROytDcaPVA6JrjpeTCfUxhOBhjrWB0x8sGOUA7AJtaTBF8LYw/Dvt4WHSNwb2RkQ1urnlT6G1
+	t4AEQed78uVBu2z2A3loyffVJ5fqBZgZ5foAc19ZGA9VWXrez/guIgyTObyaNUJc5kjZ3+J6xFF
+	NW1Sk0tFY/kYpPuDqihKo/g926AzZkmtEU1/IE6az6yULZQT75wLt5473l0cqloKTdUFiYzcguX
+	QroDpqOtVXzZMOElOedxKPOw7D2DbxzLFaA=
+X-Received: by 2002:a05:7300:d4ce:b0:2dd:5641:ef2 with SMTP id 5a478bee46e88-2dd5641154bmr1611809eec.25.1776191274441;
+        Tue, 14 Apr 2026 11:27:54 -0700 (PDT)
+Received: from brian--MacBookPro18.purestorage.com ([136.226.65.104])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-2d561bde70csm25813550eec.15.2026.04.14.11.27.53
+        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
+        Tue, 14 Apr 2026 11:27:53 -0700 (PDT)
+From: Brian Bunker <brian@purestorage.com>
+To: hare@suse.de,
+	linux-scsi@vger.kernel.org
+Cc: Brian Bunker <brian@purestorage.com>
+Subject: [PATCH v3 0/1] scsi: scsi_dh_alua: increase default ALUA timeout to maximum spec value
+Date: Tue, 14 Apr 2026 11:27:47 -0700
+Message-ID: <20260414182748.39776-1-brian@purestorage.com>
+X-Mailer: git-send-email 2.52.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi: smartpqi silence a recursive lock warning
-To: Tomas Henzl <thenzl@redhat.com>, linux-scsi@vger.kernel.org
-Cc: Don.Brace@microchip.com
-References: <20260414124118.23661-1-thenzl@redhat.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20260414124118.23661-1-thenzl@redhat.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On 4/14/26 5:41 AM, Tomas Henzl wrote:
-> On systems with multiple controllers debug kernel shows
-> WARNING: possible recursive locking detected
-> during shutdown.
-> Each controller does have its own ctrl_info (and mutex)
-> and that isn't correctly recognized by debug kernel.
-> Supress the warning by releasing the mutex at the end of pqi_shutdown.
-> 
-> Signed-off-by: Tomas Henzl <thenzl@redhat.com>
-> ---
->   drivers/scsi/smartpqi/smartpqi_init.c | 1 +
->   1 file changed, 1 insertion(+)
-> 
-> diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-> index b4ed991976d0..2026ac645d6a 100644
-> --- a/drivers/scsi/smartpqi/smartpqi_init.c
-> +++ b/drivers/scsi/smartpqi/smartpqi_init.c
-> @@ -9427,6 +9427,7 @@ static void pqi_shutdown(struct pci_dev *pci_dev)
->   
->   	pqi_crash_if_pending_command(ctrl_info);
->   	pqi_reset(ctrl_info);
-> +	pqi_ctrl_unblock_device_reset(ctrl_info);
->   }
->   
->   static void pqi_process_lockup_action_param(void)
+The ALUA handler already maps a 0 value (no implicit transition timeout
+provided by the target) to the ALUA_FAILOVER_TIMEOUT constant. This
+means the kernel is already saying it won't accept an infinite
+transition time - it substitutes a finite default instead.
 
-This patch looks fine to me but the description not. I think this patch
-fixes a real bug rather than only suppressing a lockdep complaint.
+It has been suggested that some arrays may take tens of minutes to
+complete transitions, but even today those would be broken by the
+current 0-to-60-second translation. The kernel currently caps this.
 
-Additionally, all uses of mutexes in the entire driver probably should
-be reviewed. Here are other questionable constructs in this driver I
-know of:
-- pqi_ofa_memory_alloc_worker() locks &ctrl_info->ofa_mutex but doesn't
-   unlock it. This mutex probably gets unlocked from the context of
-   another thread, something that is not allowed.
-- There is code in this driver that calls
-   mutex_is_locked(&ctrl_info->ofa_mutex) (pqi_ofa_in_progress()) and
-   next calls mutex_unlock(&ctrl_info->ofa_mutex) without checking
-   whether the mutex_lock() call happened by the same thread that calls
-   mutex_unlock().
+The SCSI specification allows the implicit transition timeout to be
+specified as a single byte, meaning the maximum explicit value is 255
+seconds. This patch simply changes the default from an arbitrary 60
+seconds to U8_MAX (255), the highest value that could be explicitly
+provided by the target per the spec.
 
-All the __acquire() and __release() statements in the patch below should
-be reviewed.
+This is a minimal, safe change: we're not removing the cap, just
+raising the default to match what the spec allows.
 
-Thanks,
+Brian Bunker (1):
+  scsi: scsi_dh_alua: increase default ALUA timeout to maximum spec
+    value
 
-Bart.
+ drivers/scsi/device_handler/scsi_dh_alua.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-
-diff --git a/drivers/scsi/smartpqi/Makefile b/drivers/scsi/smartpqi/Makefile
-index 28985e508b5c..71db5cd96284 100644
---- a/drivers/scsi/smartpqi/Makefile
-+++ b/drivers/scsi/smartpqi/Makefile
-@@ -1,3 +1,6 @@
-  # SPDX-License-Identifier: GPL-2.0
-+
-+CONTEXT_ANALYSIS := y
-+
-  obj-$(CONFIG_SCSI_SMARTPQI) += smartpqi.o
-  smartpqi-objs := smartpqi_init.o smartpqi_sis.o smartpqi_sas_transport.o
-diff --git a/drivers/scsi/smartpqi/smartpqi_init.c 
-b/drivers/scsi/smartpqi/smartpqi_init.c
-index b4ed991976d0..f99eef39ede4 100644
---- a/drivers/scsi/smartpqi/smartpqi_init.c
-+++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -306,12 +306,14 @@ static inline void 
-pqi_save_fw_triage_setting(struct pqi_ctrl_info *ctrl_info, b
-  }
-
-  static inline void pqi_ctrl_block_scan(struct pqi_ctrl_info *ctrl_info)
-+	__acquires(ctrl_info->scan_mutex)
-  {
-  	ctrl_info->scan_blocked = true;
-  	mutex_lock(&ctrl_info->scan_mutex);
-  }
-
-  static inline void pqi_ctrl_unblock_scan(struct pqi_ctrl_info *ctrl_info)
-+	__releases(ctrl_info->scan_mutex)
-  {
-  	ctrl_info->scan_blocked = false;
-  	mutex_unlock(&ctrl_info->scan_mutex);
-@@ -323,11 +325,13 @@ static inline bool pqi_ctrl_scan_blocked(struct 
-pqi_ctrl_info *ctrl_info)
-  }
-
-  static inline void pqi_ctrl_block_device_reset(struct pqi_ctrl_info 
-*ctrl_info)
-+	__acquires(ctrl_info->lun_reset_mutex)
-  {
-  	mutex_lock(&ctrl_info->lun_reset_mutex);
-  }
-
-  static inline void pqi_ctrl_unblock_device_reset(struct pqi_ctrl_info 
-*ctrl_info)
-+	__releases(ctrl_info->lun_reset_mutex)
-  {
-  	mutex_unlock(&ctrl_info->lun_reset_mutex);
-  }
-@@ -430,11 +434,13 @@ static inline bool pqi_device_offline(struct 
-pqi_scsi_dev *device)
-  }
-
-  static inline void pqi_ctrl_ofa_start(struct pqi_ctrl_info *ctrl_info)
-+	__acquires(ctrl_info->ofa_mutex)
-  {
-  	mutex_lock(&ctrl_info->ofa_mutex);
-  }
-
-  static inline void pqi_ctrl_ofa_done(struct pqi_ctrl_info *ctrl_info)
-+	__releases(ctrl_info->ofa_mutex)
-  {
-  	mutex_unlock(&ctrl_info->ofa_mutex);
-  }
-@@ -2299,6 +2305,7 @@ static void pqi_update_device_list(struct 
-pqi_ctrl_info *ctrl_info,
-  	 * requests before removal.
-  	 */
-  	if (pqi_ofa_in_progress(ctrl_info)) {
-+		__acquire(&ctrl_info->lun_reset_mutex);
-  		list_for_each_entry_safe(device, next, &delete_list, delete_list_entry)
-  			if (pqi_is_device_added(device))
-  				pqi_device_remove_start(device);
-@@ -3661,6 +3668,8 @@ static void pqi_process_soft_reset(struct 
-pqi_ctrl_info *ctrl_info)
-  		pqi_save_ctrl_mode(ctrl_info, SIS_MODE);
-  		rc = pqi_ofa_ctrl_restart(ctrl_info, delay_secs);
-  		pqi_host_free_buffer(ctrl_info, &ctrl_info->ofa_memory);
-+		/* What guarantees that &ctrl_info->ofa_mutex is held here? */
-+		__acquire(&ctrl_info->ofa_mutex);
-  		pqi_ctrl_ofa_done(ctrl_info);
-  		dev_info(&ctrl_info->pci_dev->dev,
-  				"Online Firmware Activation: %s\n",
-@@ -3672,6 +3681,8 @@ static void pqi_process_soft_reset(struct 
-pqi_ctrl_info *ctrl_info)
-  		if (ctrl_info->soft_reset_handshake_supported)
-  			pqi_clear_soft_reset_status(ctrl_info);
-  		pqi_host_free_buffer(ctrl_info, &ctrl_info->ofa_memory);
-+		/* What guarantees that &ctrl_info->ofa_mutex is held here? */
-+		__acquire(&ctrl_info->ofa_mutex);
-  		pqi_ctrl_ofa_done(ctrl_info);
-  		pqi_ofa_ctrl_unquiesce(ctrl_info);
-  		break;
-@@ -3682,6 +3693,8 @@ static void pqi_process_soft_reset(struct 
-pqi_ctrl_info *ctrl_info)
-  			"unexpected Online Firmware Activation reset status: 0x%x\n",
-  			reset_status);
-  		pqi_host_free_buffer(ctrl_info, &ctrl_info->ofa_memory);
-+		/* What guarantees that &ctrl_info->ofa_mutex is held here? */
-+		__acquire(&ctrl_info->ofa_mutex);
-  		pqi_ctrl_ofa_done(ctrl_info);
-  		pqi_ofa_ctrl_unquiesce(ctrl_info);
-  		pqi_take_ctrl_offline(ctrl_info, PQI_OFA_RESPONSE_TIMEOUT);
-@@ -3698,6 +3711,8 @@ static void pqi_ofa_memory_alloc_worker(struct 
-work_struct *work)
-  	pqi_ctrl_ofa_start(ctrl_info);
-  	pqi_host_setup_buffer(ctrl_info, &ctrl_info->ofa_memory, 
-ctrl_info->ofa_bytes_requested, ctrl_info->ofa_bytes_requested);
-  	pqi_host_memory_update(ctrl_info, &ctrl_info->ofa_memory, 
-PQI_VENDOR_GENERAL_OFA_MEMORY_UPDATE);
-+	/* This function acquires &ctrl_info->ofa_mutex and doesn't release it. */
-+	__release(&ctrl_info->ofa_mutex);
-  }
-
-  static void pqi_ofa_quiesce_worker(struct work_struct *work)
-@@ -3738,6 +3753,8 @@ static bool pqi_ofa_process_event(struct 
-pqi_ctrl_info *ctrl_info,
-  			"received Online Firmware Activation cancel request: reason: %u\n",
-  			ctrl_info->ofa_cancel_reason);
-  		pqi_host_free_buffer(ctrl_info, &ctrl_info->ofa_memory);
-+		/* What guarantees that &ctrl_info->ofa_mutex is held here? */
-+		__acquire(&ctrl_info->ofa_mutex);
-  		pqi_ctrl_ofa_done(ctrl_info);
-  		break;
-  	default:
-@@ -8726,6 +8743,7 @@ static int pqi_ctrl_init_resume(struct 
-pqi_ctrl_info *ctrl_info)
-  	}
-
-  	if (pqi_ofa_in_progress(ctrl_info)) {
-+		__acquire(&ctrl_info->scan_mutex);
-  		pqi_ctrl_unblock_scan(ctrl_info);
-  		if (ctrl_info->ctrl_logging_supported) {
-  			if (!ctrl_info->ctrl_log_memory.host_memory)
-@@ -8938,6 +8956,8 @@ static void pqi_remove_ctrl(struct pqi_ctrl_info 
-*ctrl_info)
-  }
-
-  static void pqi_ofa_ctrl_quiesce(struct pqi_ctrl_info *ctrl_info)
-+	__acquires(&ctrl_info->scan_mutex)
-+	__acquires(&ctrl_info->lun_reset_mutex)
-  {
-  	pqi_ctrl_block_scan(ctrl_info);
-  	pqi_scsi_block_requests(ctrl_info);
-@@ -8948,6 +8968,8 @@ static void pqi_ofa_ctrl_quiesce(struct 
-pqi_ctrl_info *ctrl_info)
-  }
-
-  static void pqi_ofa_ctrl_unquiesce(struct pqi_ctrl_info *ctrl_info)
-+	__releases(&ctrl_info->lun_reset_mutex)
-+	__releases(&ctrl_info->scan_mutex)
-  {
-  	pqi_start_heartbeat_timer(ctrl_info);
-  	pqi_ctrl_unblock_requests(ctrl_info);
-@@ -9410,6 +9432,7 @@ static void pqi_shutdown(struct pci_dev *pci_dev)
-  	pqi_ctrl_block_device_reset(ctrl_info);
-  	pqi_ctrl_block_requests(ctrl_info);
-  	pqi_ctrl_wait_until_quiesced(ctrl_info);
-+	__release(&ctrl_info->lun_reset_mutex);
-
-  	if (system_state == SYSTEM_RESTART)
-  		shutdown_event = RESTART;
-@@ -9486,6 +9509,8 @@ static inline enum bmic_flush_cache_shutdown_event 
-pqi_get_flush_cache_shutdown_
-  }
-
-  static int pqi_suspend_or_freeze(struct device *dev, bool suspend)
-+	__acquires(&((struct pqi_ctrl_info 
-*)pci_get_drvdata(to_pci_dev(dev)))->scan_mutex)
-+	__acquires(&((struct pqi_ctrl_info 
-*)pci_get_drvdata(to_pci_dev(dev)))->lun_reset_mutex)
-  {
-  	struct pci_dev *pci_dev;
-  	struct pqi_ctrl_info *ctrl_info;
-@@ -9519,11 +9544,15 @@ static int pqi_suspend_or_freeze(struct device 
-*dev, bool suspend)
-  }
-
-  static __maybe_unused int pqi_suspend(struct device *dev)
-+	__acquires(&((struct pqi_ctrl_info 
-*)pci_get_drvdata(to_pci_dev(dev)))->scan_mutex)
-+	__acquires(&((struct pqi_ctrl_info 
-*)pci_get_drvdata(to_pci_dev(dev)))->lun_reset_mutex)
-  {
-  	return pqi_suspend_or_freeze(dev, true);
-  }
-
-  static int pqi_resume_or_restore(struct device *dev)
-+	__cond_releases(0, &((struct pqi_ctrl_info 
-*)pci_get_drvdata(to_pci_dev(dev)))->lun_reset_mutex)
-+	__cond_releases(0, &((struct pqi_ctrl_info 
-*)pci_get_drvdata(to_pci_dev(dev)))->scan_mutex)
-  {
-  	int rc;
-  	struct pci_dev *pci_dev;
-@@ -9547,11 +9576,15 @@ static int pqi_resume_or_restore(struct device *dev)
-  }
-
-  static int pqi_freeze(struct device *dev)
-+	__acquires(&((struct pqi_ctrl_info 
-*)pci_get_drvdata(to_pci_dev(dev)))->scan_mutex)
-+	__acquires(&((struct pqi_ctrl_info 
-*)pci_get_drvdata(to_pci_dev(dev)))->lun_reset_mutex)
-  {
-  	return pqi_suspend_or_freeze(dev, false);
-  }
-
-  static int pqi_thaw(struct device *dev)
-+	__cond_releases(0, &((struct pqi_ctrl_info 
-*)pci_get_drvdata(to_pci_dev(dev)))->lun_reset_mutex)
-+	__cond_releases(0, &((struct pqi_ctrl_info 
-*)pci_get_drvdata(to_pci_dev(dev)))->scan_mutex)
-  {
-  	int rc;
-  	struct pci_dev *pci_dev;
+-- 
+2.50.1 (Apple Git-155)
 
