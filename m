@@ -1,143 +1,147 @@
-Received: from mail-pl1-f227.google.com (mail-pl1-f227.google.com [209.85.214.227])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4FE433D9048
-	for <linux-scsi@vger.kernel.org>; Tue, 14 Apr 2026 11:15:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.227
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3D5B03D6CC4;
+	Tue, 14 Apr 2026 11:44:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776165307; cv=none; b=ugdPERP+iKbctN9aElZ7k+5BZT0uNtWEE5c5c2WlMK/mJ0pCtcsw8TNp4z0QKweq8sKUpCCZxwhHmt701ny5n26kqit+qWfOYzU5a5Egge1Ho7sandSC/4ACYZK10r7st/NORJ3MnPm0H1bc8J3Die+FZp4HLozePCfTR+rnftY=
+	t=1776167043; cv=none; b=fHPYePnmKu1BhvmG6OYoI0ZZnoF7aM9SmFggdDeWNSquT1M8Xe5aCCAbb5S8p/PSldATg+11TBfEn/8ye7rfHDfsLW8HCgCF+MWSeEwQ1KNSCg4VKZ/MtYNDDd0ZwsQ32Cyb+sg1ovHozEZAfWr5+mNPU4beOh22LEA4MmUZ6NA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776165307; c=relaxed/simple;
-	bh=iXwYiToNDzVFSYqHR9hmBiK6ONF7EQLGiFPMcdUmh20=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=aOaURW9v52i5TTchtHQi+dU1JkKBeCfZzgfdD7zzB1vWNqOATKODScsa7Jh+4KrN33sMLj2M7yATgO5UCHBY2zQxKUSx4pC27Rj/QIENJKan8/Wuo02md2yhEMfTs06Y1atarqB6UraS7ELigBFEwV5jkzCJez1AviCQTTAYg5Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=hbcH5sjM; arc=none smtp.client-ip=209.85.214.227
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
+	s=arc-20240116; t=1776167043; c=relaxed/simple;
+	bh=f0Q18mx1UM+P+bOxo8gVE5wPOBGWiRBc7blhcclIEVE=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=dP63x9HCfi19lp7kBP38kLa6xpsIhaxZJiXEHdVorOhnE8sEKh4+QxOsJ/Xs4iHnQJZ03rcbUxL3N/s2HLjQLQIGqkEGn1AZoHMQRqD/M/gFgrVzTHud12LpTIRArr5AME3I5AGQ3j4LsTqOmRk+/wDpxDg3zERK4CTRF+UCkJ4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=ni5OsnV4; arc=none smtp.client-ip=148.163.156.1
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="hbcH5sjM"
-Received: by mail-pl1-f227.google.com with SMTP id d9443c01a7336-2b45cb89f7eso14336355ad.0
-        for <linux-scsi@vger.kernel.org>; Tue, 14 Apr 2026 04:15:06 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1776165306; x=1776770106;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:dkim-signature:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=wBJhofTzUvusJZHQm/kAL1AM7X3RPqZ3DbYLT/nOXsE=;
-        b=bTRhhEsFOb5FsMViwdYYQJ7fMyYnRaiCh5Sm6puHYiYaKf6Lm/JtFRispQWYQs6ANp
-         J6VTqF7KCS9scLXZs0fmWqGaqSjMKcvbYebpev9pLA+yaK64Kr52IMcfSuZwJIDa6lJg
-         x+Lfvv/FtNM1jR+4md/ibfIKMrhsBTXxYkWDoMV2qlTgkQysGn8Q5272d5cw//MG3Ecg
-         chrGY8a+C/nr10fSmHdAzdM16ftpTf6v2+9OItB4RgIjh73a3APrL2KQkY5f4q0HCFR3
-         +M00ySGfhzFc7i+Qf9ai93Y7Ukjs4cnLPHjaOGBA+0MgO2qbHRBJNXCD3ys3iqFF6ogI
-         HOEQ==
-X-Gm-Message-State: AOJu0YxmZrOM0bNR9idX7mtJhFjBLAt0/QCLUwZjLEQ0PLG3VneatROn
-	wl1vXfswzaHCT1Oj6lqcqDURyYOUiAO97ATvvm52uIXPmTAxdeAdjJKvM3yNrocotlkfueOlCsf
-	4BT1upzTfxPJVowLfSJvkbEHHMz8lqHops9gyuKAuojjhLAxkEA2qh+kc0oZR/+bMYYD1SEHzoJ
-	yxcj1hldS6EPWsaS114E1zvj0w4DKOSpWSvsEeATiiuMi1GfTSF3tP2BGOKO1ntF6q910m7j3X5
-	rNciwkwHoq/hTrg
-X-Gm-Gg: AeBDiescVl0wKkC8RlZ99PyuE/u+l2GNirrMWQzYBvYfYXxUaAyMeQcSHzURsEPJTPo
-	xuieNT4/JNxPnzYOYE3Ybx4q8zpb72poAXWuLO6/MqPEfD8E8gRgNEgXrm75MX79uU7Q2+vedlY
-	vfIYYATqYPljbsyxDyQi52VzLBGtmhq7hXGnTGUZ30JJMrcMfoAafh1jLwwCWQLDPSr3wWC9SqZ
-	ZDFOIlcaZLzABjzK2N0OVd/lfFzKd18uxdPYDVktElcR/y41QKUSMVU72qPV6XOrZetKvNR9DL4
-	plTk3CbnMXGxfCVQtLd+SCzsp/S3GpU1iShzGp1DQiVxl2yFpqVHzpcYsgkfRTIribsmf2WOhxH
-	53ZOaSHNvb9Xg3Y5hS+782R7L/bFLQwpDfw4upqbYQP3SfJvZ/f/87RD/PKkf6mFX9xuRwhlR1R
-	tvfm6TxdIxaSjwqIyaz6nD0j4SzI0u9/k7EtYj/s5DsDpYKZzBXsH9VtBk
-X-Received: by 2002:a17:902:a70e:b0:2b2:65db:8c5f with SMTP id d9443c01a7336-2b2d5a1cbfemr116475325ad.27.1776165305564;
-        Tue, 14 Apr 2026 04:15:05 -0700 (PDT)
-Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-15.dlp.protect.broadcom.com. [144.49.247.15])
-        by smtp-relay.gmail.com with ESMTPS id d9443c01a7336-2b2d4f364b0sm10505935ad.45.2026.04.14.04.15.05
-        for <linux-scsi@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 14 Apr 2026 04:15:05 -0700 (PDT)
-X-Relaying-Domain: broadcom.com
-X-CFilter-Loop: Reflected
-Received: by mail-pl1-f197.google.com with SMTP id d9443c01a7336-2adef9d486bso49996065ad.2
-        for <linux-scsi@vger.kernel.org>; Tue, 14 Apr 2026 04:15:04 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1776165303; x=1776770103; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=wBJhofTzUvusJZHQm/kAL1AM7X3RPqZ3DbYLT/nOXsE=;
-        b=hbcH5sjMI3mmIYvVY+VS5AkLpZVYzJyYbHdCrQ/VdaRh68eUpMQ95urFeglLG3k4gP
-         h0WNr9ztb2oAirpT0wzQBjwzqDNxRedqRqRNyPTat2UmKwDA8I+p2mMpA/TKFNC1nEYI
-         b4psyxFt68tuw4gtAepLLJSq78ciPAXk7Kp7E=
-X-Received: by 2002:a17:903:2acb:b0:2b2:527d:103 with SMTP id d9443c01a7336-2b2d5a5dcc0mr160781355ad.43.1776165303054;
-        Tue, 14 Apr 2026 04:15:03 -0700 (PDT)
-X-Received: by 2002:a17:903:2acb:b0:2b2:527d:103 with SMTP id d9443c01a7336-2b2d5a5dcc0mr160780975ad.43.1776165302502;
-        Tue, 14 Apr 2026 04:15:02 -0700 (PDT)
-Received: from localhost.localdomain ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2b2d4f39ccbsm179722255ad.77.2026.04.14.04.14.58
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 14 Apr 2026 04:15:01 -0700 (PDT)
-From: Ranjan Kumar <ranjan.kumar@broadcom.com>
-To: linux-scsi@vger.kernel.org,
-	martin.petersen@oracle.com
-Cc: sathya.prakash@broadcom.com,
-	chandrakanth.patil@broadcom.com,
-	dlemoal@kernel.org,
-	david.laight.linux@gmail.com,
-	Ranjan Kumar <ranjan.kumar@broadcom.com>,
-	stable@vger.kernel.org,
-	Mira Limbeck <m.limbeck@proxmox.com>,
-	Keith Busch <kbusch@kernel.org>
-Subject: [PATCH v4] mpt3sas: Limit NVMe request size to 2 MiB
-Date: Tue, 14 Apr 2026 16:38:11 +0530
-Message-ID: <20260414110811.85156-1-ranjan.kumar@broadcom.com>
-X-Mailer: git-send-email 2.47.3
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="ni5OsnV4"
+Received: from pps.filterd (m0353729.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 63DLJCoU1844154;
+	Tue, 14 Apr 2026 11:43:34 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=pp1; bh=UFZhnE
+	97tWp4SlXf9g9qO9WSyADp8kccRJlgHM1Km8E=; b=ni5OsnV4krvqOjLRreP/Zh
+	+wVlHTfF6sJyJovIEgpc0WxKYo4+yD27Citmjt0oX8pDsL/I4a0N76eFMewGL/e9
+	0THpI5djmDGIFQrMBSfe/7JSyJy2hHAYpKBV2VaLJD7VjXX9CT7+kQJGQvVtTpiZ
+	n7XGQTM8j5xSXe1lgarJltPKu/7pyF+jWtd6xFRXj+jL+WjvJW3TTk3Qfhycc7MP
+	cDsEm4IeOu/cLLBAZtcndCrc5leBvK5r1xDUzycMU6f7CndxQaQQ5Jyx6idh/D6i
+	EF28GnZQ9eXdTbwpt20uvKxfkcSx5JRue/1iGgac+v74X9jb+nac4/U4+YN3CQhg
+	==
+Received: from ppma13.dal12v.mail.ibm.com (dd.9e.1632.ip4.static.sl-reverse.com [50.22.158.221])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4dh89mjfce-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 14 Apr 2026 11:43:34 +0000 (GMT)
+Received: from pps.filterd (ppma13.dal12v.mail.ibm.com [127.0.0.1])
+	by ppma13.dal12v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 63EAxlQk025837;
+	Tue, 14 Apr 2026 11:43:33 GMT
+Received: from smtprelay01.wdc07v.mail.ibm.com ([172.16.1.68])
+	by ppma13.dal12v.mail.ibm.com (PPS) with ESMTPS id 4dg2ujh309-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 14 Apr 2026 11:43:33 +0000
+Received: from smtpav03.wdc07v.mail.ibm.com (smtpav03.wdc07v.mail.ibm.com [10.39.53.230])
+	by smtprelay01.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 63EBhWgw1901506
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Tue, 14 Apr 2026 11:43:32 GMT
+Received: from smtpav03.wdc07v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id C8E035805C;
+	Tue, 14 Apr 2026 11:43:32 +0000 (GMT)
+Received: from smtpav03.wdc07v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 1C20758054;
+	Tue, 14 Apr 2026 11:43:27 +0000 (GMT)
+Received: from [9.123.7.57] (unknown [9.123.7.57])
+	by smtpav03.wdc07v.mail.ibm.com (Postfix) with ESMTP;
+	Tue, 14 Apr 2026 11:43:26 +0000 (GMT)
+Message-ID: <6dc8e0d7-9b2b-4867-9df7-6853f4b2fa05@linux.ibm.com>
+Date: Tue, 14 Apr 2026 17:13:25 +0530
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 03/13] libmultipath: Add path selection support
+To: John Garry <john.g.garry@oracle.com>, hch@lst.de, kbusch@kernel.org,
+        sagi@grimberg.me, axboe@fb.com, martin.petersen@oracle.com,
+        james.bottomley@hansenpartnership.com, hare@suse.com
+Cc: jmeneghi@redhat.com, linux-nvme@lists.infradead.org,
+        linux-scsi@vger.kernel.org, michael.christie@oracle.com,
+        snitzer@kernel.org, bmarzins@redhat.com, dm-devel@lists.linux.dev,
+        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20260225153225.1031169-1-john.g.garry@oracle.com>
+ <20260225153225.1031169-4-john.g.garry@oracle.com>
+ <775dd360-ea41-4e27-9690-e0633e0522d7@linux.ibm.com>
+ <f9fb6d73-9b90-4c11-ae1f-3f2e76773d7f@oracle.com>
+ <bb4df6e1-cd83-4a73-af67-f83c543d6e6c@linux.ibm.com>
+ <bfd8c2c2-65f7-44f0-a4ec-01158e249505@oracle.com>
+ <02288590-486e-4243-8352-c756c6879629@linux.ibm.com>
+ <bc18ad6f-10b1-4a28-b88d-aed5754b968d@oracle.com>
+Content-Language: en-US
+From: Nilay Shroff <nilay@linux.ibm.com>
+In-Reply-To: <bc18ad6f-10b1-4a28-b88d-aed5754b968d@oracle.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNDE0MDEwNSBTYWx0ZWRfX9GlfcrJ7KBTF
+ vWdYuZJHd8LLB2ky2gnHwTb4ELHi6MRrPUem9uKxukVqu4ceKex4ouhd/VFDQVbWaOX1KEqO2Hm
+ QYfY2CTE7S/l/gExCh5V2hePcU0D+KiVOsGaDeKrpnE+Ld9D1sSHyKccm5sjrfgaHwLxJ8baMgz
+ n8bgS6ptd9z+Vpu4913FKBfawlsq2fB1JRgLD9oo+C6SZCk3x7OHeLCOox7WB1zKNdyQAi6J4A/
+ /I4lT1/QIc15zrtShDcLFXafw+VzQMARcAKXw/hzjeKGrYqKLwl3ZxXFZwtagU948dH35DbMG5P
+ 1gMVCTaXf8QRL+oD6RN6iJZt6iKKT1RuIBLuzNyG8gDq33nN/kvzlTqNF1DiuHk104ruk9kTB4j
+ ydfjmgc+MJIftfNYefAs0vaBFo0CktfR8BqccgB+0+hbzO51ZGoGheazwi/Fm0Qurfs0MfrYHaT
+ kXcxJDjwI2LL0qDuuXA==
+X-Authority-Analysis: v=2.4 cv=eJ4jSnp1 c=1 sm=1 tr=0 ts=69de2866 cx=c_pps
+ a=AfN7/Ok6k8XGzOShvHwTGQ==:117 a=AfN7/Ok6k8XGzOShvHwTGQ==:17
+ a=IkcTkHD0fZMA:10 a=A5OVakUREuEA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=RnoormkPH1_aCDwRdu11:22 a=uAbxVGIbfxUO_5tXvNgY:22 a=VwQbUJbxAAAA:8
+ a=20KFwNOVAAAA:8 a=WhhBK_UWijzhm2niL2sA:9 a=QEXdDO2ut3YA:10
+X-Proofpoint-GUID: bwK6Oi9SGOSjV63HEJ0kuPcQqRbyTopC
+X-Proofpoint-ORIG-GUID: bwK6Oi9SGOSjV63HEJ0kuPcQqRbyTopC
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-04-14_03,2026-04-13_04,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ malwarescore=0 lowpriorityscore=0 adultscore=0 priorityscore=1501
+ clxscore=1015 bulkscore=0 suspectscore=0 spamscore=0 impostorscore=0
+ phishscore=0 classifier=typeunknown authscore=0 authtc= authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2604070000
+ definitions=main-2604140105
 
-The HBA firmware reports NVMe MDTS values based on the underlying drive
-capability. However, because the driver allocates a fixed 4K buffer for
-the PRP list, accommodating at most 512 entries, the driver supports a
-maximum I/O transfer size of 2 MiB.
+On 4/14/26 3:33 PM, John Garry wrote:
+> Hi Nilay,
+> 
+>>>
+>>> I think so, but we will need scsi to maintain such a count internally to support this policy. And for NVMe we will need some abstraction to lookup the per-controller QD for a mpath_device.
+>>>
+>> This raises another question regarding the current framework. From what I can see, all NVMe multipath I/O policies are currently supported for SCSI as well. Going forward, if we introduce a new I/O policy for NVMe that does not make sense for SCSI, how can we ensure that the new policy is supported only for NVMe and not for SCSI? Conversely, we may also want to introduce a policy that is relevant only for SCSI but not for NVMe.
+>>
+>> With the current framework, it seems difficult to restrict a policy to a specific transport. It appears that all policies are implicitly shared between NVMe and SCSI.
+>>
+>> Would it make sense to introduce some abstraction for I/O policies in the framework so that a given policy can be implemented and exposed only for the relevant transport (e.g., NVMe-only or SCSI-only), rather than requiring it to be supported by both?
+> 
+> I am just coming back to this now....
+> 
+> about the queue-depth iopolicy, why is depth per controller and not per NS (path)? The following does not mention:
+> 
+> https://lore.kernel.org/linux-nvme/20240625122605.857462-3-jmeneghi@redhat.com/
+> 
+> Is the idea that some controller may have another NS attached and have traffic there, and we need to account according to this also?
+> 
+Yes, the idea is that congestion should be evaluated at the controller level rather than per-namespace.
+In NVMe, multiple namespaces can be attached to the same controller, and all of them share the same
+transport path and I/O queue resources (submission and completion queues). As a result, any contention
+or congestion is fundamentally observed at the controller, and not at an individual namespace.
 
-Limit max_hw_sectors to the smaller of the reported MDTS and the
-2 MiB driver limit to prevent issuing oversized I/O that may lead
-to a kernel oops.
+If we were to track queue depth per namespace, it could give a misleading view of the actual load on
+the underlying path, since multiple namespaces may be contributing to the same set of queues. In contrast,
+tracking queue depth per controller provides a more accurate representation of the total outstanding I/O
+and the level of congestion on that path.
 
-Cc: stable@vger.kernel.org
-Fixes: 9b8b84879d4a ("block: Increase BLK_DEF_MAX_SECTORS_CAP")
-Reported-by: Mira Limbeck <m.limbeck@proxmox.com>
-Closes: https://lore.kernel.org/r/291f78bf-4b4a-40dd-867d-053b36c564b3@proxmox.com
-Link: https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=9b8b84879d4a
-Suggested-by: Keith Busch <kbusch@kernel.org>
-Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
----
- drivers/scsi/mpt3sas/mpt3sas_scsih.c | 14 +++++++++++++-
- 1 file changed, 13 insertions(+), 1 deletion(-)
+In a multipath configuration, this allows us to compare controllers directly. For example, if one controller
+has a lower queue depth than another, it is likely experiencing less contention and may offer lower latency,
+making it a better candidate for forwarding I/O.
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index 6ff788557294..12caffeed3a0 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -2738,8 +2738,20 @@ scsih_sdev_configure(struct scsi_device *sdev, struct queue_limits *lim)
- 				pcie_device->enclosure_level,
- 				pcie_device->connector_name);
- 
-+		/*
-+		 * The HBA firmware passes the NVMe drive's MDTS
-+		 * (Maximum Data Transfer Size) up to the driver. However,
-+		 * the driver hardcodes a 4K buffer size for the PRP list,
-+		 * accommodating at most 512 entries. This strictly limits
-+		 * the maximum supported NVMe I/O transfer to 2 MiB.
-+		 *
-+		 * Cap max_hw_sectors to the smaller of the drive's reported
-+		 * MDTS or the 2 MiB driver limit to prevent kernel oopses.
-+		 */
-+		lim->max_hw_sectors = SZ_2M >> SECTOR_SHIFT;
- 		if (pcie_device->nvme_mdts)
--			lim->max_hw_sectors = pcie_device->nvme_mdts / 512;
-+			lim->max_hw_sectors = min(lim->max_hw_sectors,
-+					pcie_device->nvme_mdts >> SECTOR_SHIFT);
- 
- 		pcie_device_put(pcie_device);
- 		spin_unlock_irqrestore(&ioc->pcie_device_lock, flags);
--- 
-2.47.3
-
+Thanks,
+--Nilay
