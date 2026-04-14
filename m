@@ -1,33 +1,32 @@
-Received: from outboundhk.mxmail.xiaomi.com (outboundhk.mxmail.xiaomi.com [207.226.244.123])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 37B75275AE4
-	for <linux-scsi@vger.kernel.org>; Tue, 14 Apr 2026 03:32:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=207.226.244.123
+Received: from outboundhk.mxmail.xiaomi.com (outboundhk.mxmail.xiaomi.com [118.143.206.90])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 8F92D883F
+	for <linux-scsi@vger.kernel.org>; Tue, 14 Apr 2026 03:37:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=118.143.206.90
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776137551; cv=none; b=h+7oS8ZKsYTQHFJHqJCnKY6zl4X4E8g/YVO5xmsWG6J16eFEpAXwXZKBpGVEgD7L7BdGX/wEoJG8QAOzFGZ+/lay5nmT/xkMI4+0p7db06OnVnrzJ6B+FfVBl5LlEmt5sCHpNo07r6gBkjW4wR+XBf4Gsb00QvFx6yZs9AU93xk=
+	t=1776137852; cv=none; b=R77OJAVQzRgQBHFu9/goCzHN4+0yynmHqdfWsBc/dsEF6zBDQFr74GCf4wQa3IwssJZkdQ3vKkPB1OKn2FKFSWjWksniBd+acak72hbVih87Ydzx5cyE/KUHba2y+w6HLdSCFZMkeNpBsIxkTGbrWQgy4g8h0EJkeWKYUfWIoeA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776137551; c=relaxed/simple;
-	bh=bwgMACwiXb9QBX/GUscwZSjtI4EHWUgYIvGymEG61YA=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=TOHQN3B95iYASfrUkHw7chLB9mU0IR53c3ab8dsuxCmhzql6X2KeyojGPLpIyVE/4iC3cOpUtmta6UH+JhDie1aXLEEw6RqGOdTLXe1yOXCHvSDufuiKw+QqajXAVrFmVSGFjsLMk8cl/e+ta3xxw2h13PKkLyWZOx0zZsxZSSY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=xiaomi.com; spf=pass smtp.mailfrom=xiaomi.com; arc=none smtp.client-ip=207.226.244.123
+	s=arc-20240116; t=1776137852; c=relaxed/simple;
+	bh=9XuOP0cOc605cfCd9cpV1sznXz1ITn2hbyUPql1TOXQ=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=uNwlZ61VXf8vKodRZ9QMUhrTdYQOGUJb0gYce7hYRKndS2kiEgFmqbASKf++RnleWeORZifRNvyTIRxPN9X3sXoiNe3dysT21+hTQUuZ9b9blO6Kg24cA47Ezj7JRUStj4h6Z/8Y+8mXqgILOLG279yl3/SwE/0nGXJy62Y7NMU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=xiaomi.com; spf=pass smtp.mailfrom=xiaomi.com; arc=none smtp.client-ip=118.143.206.90
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=xiaomi.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=xiaomi.com
-X-CSE-ConnectionGUID: O/L4Ksf5SxmEL2P3HmsyUQ==
-X-CSE-MsgGUID: +HHw3vkLS8GXHy6fc9EEMQ==
+X-CSE-ConnectionGUID: 0sEfiXkIRfuZdhTs63NwcA==
+X-CSE-MsgGUID: l9x3FBTvSzG0Fg5i4LN2JQ==
 X-IronPort-AV: E=Sophos;i="6.23,178,1770566400"; 
-   d="scan'208";a="172727058"
+   d="scan'208";a="146539484"
 From: Wang Shuaiwei <wangshuaiwei1@xiaomi.com>
-To: <bvanassche@acm.org>
-CC: <James.Bottomley@HansenPartnership.com>, <adrian.hunter@intel.com>,
-	<alim.akhtar@samsung.com>, <avri.altman@wdc.com>, <beanhuo@micron.com>,
-	<linux-scsi@vger.kernel.org>, <martin.petersen@oracle.com>,
-	<peter.wang@mediatek.com>, <wanghui33@xiaomi.com>, <wangshuaiwei1@xiaomi.com>
-Subject: Re: [PATCH] scsi: ufs: core: Fix bRefClkFreq write failure in HS-LSS mode
-Date: Tue, 14 Apr 2026 11:32:25 +0800
-Message-ID: <20260414033225.1454960-1-wangshuaiwei1@xiaomi.com>
+To: Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>,
+	Bart Van Assche <bvanassche@acm.org>, "James E . J . Bottomley"
+	<James.Bottomley@HansenPartnership.com>, "Martin K . Petersen"
+	<martin.petersen@oracle.com>, Peter Wang <peter.wang@mediatek.com>, Bean Huo
+	<beanhuo@micron.com>, Adrian Hunter <adrian.hunter@intel.com>
+CC: <linux-scsi@vger.kernel.org>, <wanghui33@xiaomi.com>, Wang Shuaiwei
+	<wangshuaiwei1@xiaomi.com>
+Subject: [PATCH v2] scsi: ufs: core: Fix bRefClkFreq write failure in HS-LSS mode
+Date: Tue, 14 Apr 2026 11:37:18 +0800
+Message-ID: <20260414033718.1459540-1-wangshuaiwei1@xiaomi.com>
 X-Mailer: git-send-email 2.43.0
-In-Reply-To: <b8f882ae-ddce-4ab5-8c8a-28efdc31bee5@acm.org>
-References: <b8f882ae-ddce-4ab5-8c8a-28efdc31bee5@acm.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -36,23 +35,98 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-ClientProxiedBy: BJ-MBX03.mioffice.cn (10.237.8.123) To bj-mbx11.mioffice.cn
+X-ClientProxiedBy: BJ-MBX02.mioffice.cn (10.237.8.122) To bj-mbx11.mioffice.cn
  (10.237.8.131)
 
-On Mon, 13 Apr 2026 08:46:48 -0700, Bart Van Assche wrote:
-> On 4/13/26 2:11 AM, Wang Shuaiwei wrote:
-> > +	if ((SLOW_MODE == rx_mode || SLOWAUTO_MODE == rx_mode) &&
-> > +	    (SLOW_MODE == tx_mode || SLOWAUTO_MODE == tx_mode))
-> > +		return LS_MODE;
-> 
-> A stylistic comment: please follow the coding style that is used
-> elsewhere in the Linux kernel. In this case, that means no Yoda
-> conditions. As an example, "SLOW_MODE == rx_mode" should be changed into
-> "rx_mode == SLOW_MODE".
+According to the UFS spec, the bRefClkFreq attribute can only be written
+when both sub-links are in LS-MODE. However, in HS LSS mode with
+resetmode = HS_MODE, if the UFS device's default bRefClkFreq value
+differs from the host controller's dev_ref_clk_freq setting, the
+write operation will fail.
 
-Hi Bart,
+To fix this issue, introduce ufshcd_get_op_mode() function to detect
+the current link operational mode. Call ufshcd_set_dev_ref_clk() only
+when both sub-links are in LS-MODE to ensure the attribute can be
+written successfully.
 
-I will modify the coding style in the next version.
+Signed-off-by: Wang Shuaiwei <wangshuaiwei1@xiaomi.com>
+---
 
-Thanks,
-Wang Shuaiwei.
+v1->v2:
+- modify the coding style
+
+v1: https://lore.kernel.org/linux-scsi/20260413091126.1219552-1-wangshuaiwei1@xiaomi.com/
+---
+ drivers/ufs/core/ufshcd.c | 29 +++++++++++++++++++++++++++--
+ include/ufs/unipro.h      |  5 +++++
+ 2 files changed, 32 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 9ceb6d6d479d..da38e97a199e 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -9103,6 +9103,30 @@ static void ufshcd_config_mcq(struct ufs_hba *hba)
+ 		 hba->nutrs);
+ }
+ 
++/**
++ * ufshcd_get_op_mode - get UFS operating mode.
++ * @hba: per-adapter instance
++ *
++ * Use the PA_PWRMODE value to represent the operating mode of UFS.
++ *
++ */
++static enum ufs_op_mode ufshcd_get_op_mode(struct ufs_hba *hba)
++{
++	u32 mode;
++	u8 rx_mode;
++	u8 tx_mode;
++
++	ufshcd_dme_get(hba, UIC_ARG_MIB(PA_PWRMODE), &mode);
++	rx_mode = (mode >> PWRMODE_RX_OFFSET) & PWRMODE_MASK;
++	tx_mode = mode & PWRMODE_MASK;
++
++	if ((rx_mode == SLOW_MODE || rx_mode == SLOWAUTO_MODE) &&
++	    (tx_mode == SLOW_MODE || tx_mode == SLOWAUTO_MODE))
++		return LS_MODE;
++
++	return HS_MODE;
++}
++
+ static int ufshcd_post_device_init(struct ufs_hba *hba)
+ {
+ 	int ret;
+@@ -9119,11 +9143,12 @@ static int ufshcd_post_device_init(struct ufs_hba *hba)
+ 		return 0;
+ 
+ 	/*
+-	 * Set the right value to bRefClkFreq before attempting to
++	 * Set the right value to bRefClkFreq in LS_MODE before attempting to
+ 	 * switch to HS gears.
+ 	 */
+-	if (hba->dev_ref_clk_freq != REF_CLK_FREQ_INVAL)
++	if (ufshcd_get_op_mode(hba) == LS_MODE && hba->dev_ref_clk_freq != REF_CLK_FREQ_INVAL)
+ 		ufshcd_set_dev_ref_clk(hba);
++
+ 	/* Gear up to HS gear. */
+ 	ret = ufshcd_config_pwr_mode(hba, &hba->max_pwr_info.info);
+ 	if (ret) {
+diff --git a/include/ufs/unipro.h b/include/ufs/unipro.h
+index 59de737490ca..3858ed13b2f3 100644
+--- a/include/ufs/unipro.h
++++ b/include/ufs/unipro.h
+@@ -198,6 +198,11 @@
+ #define DME_LocalTC0ReplayTimeOutVal		0xD042
+ #define DME_LocalAFC0ReqTimeOutVal		0xD043
+ 
++enum ufs_op_mode {
++	LS_MODE = 1,
++	HS_MODE = 2,
++};
++
+ /* PA power modes */
+ enum ufs_pa_pwr_mode {
+ 	FAST_MODE	= 1,
+-- 
+2.43.0
+
