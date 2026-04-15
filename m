@@ -1,101 +1,116 @@
-Received: from proxmox-new.maurer-it.com (proxmox-new.maurer-it.com [94.136.29.106])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f46.google.com (mail-wm1-f46.google.com [209.85.128.46])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A52C31AF31;
-	Wed, 15 Apr 2026 17:43:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=94.136.29.106
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9739136E46F
+	for <linux-scsi@vger.kernel.org>; Wed, 15 Apr 2026 20:49:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.46
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776275022; cv=none; b=aKrYIbtO8zKHODJ4XPiYzxOd8d8s8jyx0cxSVhX6l/19yYnHBwWK8/kyC49APwuTUZvPBjCwy/Lrf0TIhmZDjE/2AEWkkY7oDjAcxz9QrpDyryt89POG4+CCV3FRGfvMCaQhtxmtaq/UBPASy2uf78UIsRubvjd0ow1Wy38xE7w=
+	t=1776286147; cv=none; b=nYDZzQuQFWZHrF6O3WRADHEJVvIOxFe/JkTY91SWRjDXmQJn9BNZ8XVpoTUdxf+LyGv4KhqRmoyo46V4ke6KwhKE7KZLTmEDY0XwK3aa2tY1FvaBoSnMNk303WwSlJNtca8rUM174M5PngP0Th+Ga2hDPxlIhrv0EikIh3qFE0w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776275022; c=relaxed/simple;
-	bh=/3zEDoYFYX455X/Av9FJo5SyA5HyQk+/indW93haVN0=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=hp9JLWCyCgoQxM5HkxgtswCVhVkKgqf/I4uTGkg6AIJ0rR6P96Mtwt2/gPugOmFmQ5KdeICT/s03UVToCcvTrQ+elQZ5LfgbOWsp91pmMQ2TykJTxlGZQgv0M7B+3UH2JBe8nOy6jBaWnYY560jjyJ+/RvZBKmA1vez2irReGB4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=proxmox.com; spf=pass smtp.mailfrom=proxmox.com; arc=none smtp.client-ip=94.136.29.106
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=proxmox.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=proxmox.com
-Received: from proxmox-new.maurer-it.com (localhost.localdomain [127.0.0.1])
-	by proxmox-new.maurer-it.com (Proxmox) with ESMTP id E6A6487457;
-	Wed, 15 Apr 2026 19:43:31 +0200 (CEST)
-Message-ID: <596fba41-38be-47bb-b436-bc74b7237816@proxmox.com>
-Date: Wed, 15 Apr 2026 19:43:30 +0200
+	s=arc-20240116; t=1776286147; c=relaxed/simple;
+	bh=bHrXc70QxC7t533dxErnfdbB5KmqcTasB15Dj3VyMz8=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=HXBDCh6CYH7Y3vK1zhJtEbTQLOpcdXyzkIMvwP2DNB9SyBnNbOHZ7BIIrx7QYG4I3uPopvaxkyIdIjs+/OrdC6oqYzcYGzWwP5VPE0AFS+7qqKBmAkmXBx/t/ZGQBHBR68OTFTjvq6HNGl1QxDt2epTNY3e3PpdSk1u5hGR4F3s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=IXbn5m1r; arc=none smtp.client-ip=209.85.128.46
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="IXbn5m1r"
+Received: by mail-wm1-f46.google.com with SMTP id 5b1f17b1804b1-488afb0427eso85651215e9.1
+        for <linux-scsi@vger.kernel.org>; Wed, 15 Apr 2026 13:49:05 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=suse.com; s=google; t=1776286144; x=1776890944; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=jh4nXPsrZyvEb8I65JwFvNZZMLaz52+Yx5lfUeSZXfE=;
+        b=IXbn5m1rgHdtMWuTnzOSl0Mpb0gW6lMV9JH4rgccPhLhcIDedK6ffDDXuKDuaEGZdH
+         xesOGw2L7qh9v5knItkIUXry4tqaWCJ5MicPAhNDmbltErghYGA7VTSdOWTpKUIA/VEk
+         qVjglBSn4ScxQyZTDU41+S3LyUv2WAWt/9iaeBqrdomApw7lLbQ+wkESQsN7iMjAfHM6
+         BvF7C7J0dxqaexK8k9Qxl/0rKeqlPL0AXVGYBXW82D38Pnp1FIQj5XCLfCxue/6xPhLu
+         wrnFAjqDPkVs9wWv8njNCEquU3M5kmSeERPkDkWDKBtuQJDzYsMdln9FG+usAwX3mWqZ
+         Gzng==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1776286144; x=1776890944;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=jh4nXPsrZyvEb8I65JwFvNZZMLaz52+Yx5lfUeSZXfE=;
+        b=hGfsAtlOHIa1pCfbzPTlUm17wRfxy53I8xpgYT3RwupANPKP4XKg0hjA7jcg6WsFXY
+         mTsZNZ79BXsgrQI+BuR8XsRQieihF4tp0Kl+KYfZj/GQ24aazhNQpS/8vKNmvL9zqc2X
+         PeVMkBzITtYn9hrVEy3H7Rt7RKDzJ4s+9FTQ06WB2RopSijANGXVk9Zi/of8Pp9mX9bJ
+         q91dJcNClsZt7jMBtuTHqZr1+PJopH0lH4fBpu5BDO1gzvLF5TJY1qsQL4FvKjRKG9C2
+         Qxwu09aCNR8exIwstzlrqn0bo1yVQySpN3sVI297zT8pvPVpDRvUviXnFq3Vw/z559wX
+         uEZA==
+X-Gm-Message-State: AOJu0YzBq1fGNsmUD78tt7jc5QCvb4PrUigxG8qKMhLSg5TzNHLBPaXG
+	2qyD1MFBPjdNeZ76yjSSqIFWGss0vbE4vBUMgwKYHxpZHcjonzYObMCuM8gmpKWLJJw=
+X-Gm-Gg: AeBDiesqfQcykZF+Bn9t6B9GyqcuH8VNcbsDTOxEQBGkYRQpe74iAXyq+ZQVRNxCDnT
+	iYoCUQHXzHxb4mSCUAZkr+eBKyzHi1vYmm4Ymv6/PF9QoZNfugHDKKNUks/efLgfNcIL9n+EE/5
+	YT7d7IxYW8K3BWGHO0I9zNl+mq8kaUv3NIBUiQKOPzJq4R7HcGWryJD9iJWiM4HF2UwIoSt/FXu
+	Q9cwUF4zu7WTT3VmksqEuhSvKtcN8mR8CDVXcuWKv0vFFv2vLcROTXlc6aomxtPTVn/Ddapk+5J
+	v006PCZn8GM3uiYzs+dbWGqIcsNhJknzPYzVcb4Me3RbYTGnyuZaA1iwnEKZrldkfinNx6Tj8fC
+	FFKwiGWCZYzIzLDEgOELiweOjTttb1bnbqL6tEkCT/JbyEJ86O+ecPmNxyMYsNue5gV01CTU+VH
+	2gFEGOBMmM0UNrEFBk1DzAaBOumAYeuseINI/LfCX5zDyx7Gw51zP2mv0T0u/YlrGnkuTMZtqKU
+	oPRm/umSkmqr1YWRGigBwUj
+X-Received: by 2002:a05:6000:4283:b0:43d:d037:d59c with SMTP id ffacd0b85a97d-43dd037d5dfmr14516924f8f.16.1776286143888;
+        Wed, 15 Apr 2026 13:49:03 -0700 (PDT)
+Received: from localhost (p200300de374a06005c73df0aad605173.dip0.t-ipconnect.de. [2003:de:374a:600:5c73:df0a:ad60:5173])
+        by smtp.gmail.com with UTF8SMTPSA id ffacd0b85a97d-43ead33d670sm8326978f8f.2.2026.04.15.13.49.02
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 15 Apr 2026 13:49:03 -0700 (PDT)
+From: Martin Wilck <martin.wilck@suse.com>
+X-Google-Original-From: Martin Wilck <mwilck@suse.com>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>,
+	Christoph Hellwig <hch@lst.de>,
+	Don Brace <don.brace@microchip.com>
+Cc: linux-scsi@vger.kernel.org,
+	Hannes Reinecke <hare@suse.de>,
+	Lee Duncan <lduncan@suse.com>,
+	Martin Wilck <mwilck@suse.com>
+Subject: [PATCH 0/2] Fix SAS wildcard scan on smartpqi and other controllers
+Date: Wed, 15 Apr 2026 22:48:48 +0200
+Message-ID: <20260415204850.799431-1-mwilck@suse.com>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4] mpt3sas: Limit NVMe request size to 2 MiB
-To: Ranjan Kumar <ranjan.kumar@broadcom.com>, linux-scsi@vger.kernel.org,
- martin.petersen@oracle.com
-Cc: sathya.prakash@broadcom.com, chandrakanth.patil@broadcom.com,
- dlemoal@kernel.org, david.laight.linux@gmail.com, stable@vger.kernel.org,
- Keith Busch <kbusch@kernel.org>, Friedrich Weber <f.weber@proxmox.com>
-References: <20260414110811.85156-1-ranjan.kumar@broadcom.com>
-Content-Language: en-US
-From: Mira Limbeck <m.limbeck@proxmox.com>
-In-Reply-To: <20260414110811.85156-1-ranjan.kumar@broadcom.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-Bm-Milter-Handled: 55990f41-d878-4baa-be0a-ee34c49e34d2
-X-Bm-Transport-Timestamp: 1776274933153
+Content-Transfer-Encoding: 8bit
 
-On 4/14/26 1:13 PM, Ranjan Kumar wrote:
-> The HBA firmware reports NVMe MDTS values based on the underlying drive
-> capability. However, because the driver allocates a fixed 4K buffer for
-> the PRP list, accommodating at most 512 entries, the driver supports a
-> maximum I/O transfer size of 2 MiB.
-> 
-> Limit max_hw_sectors to the smaller of the reported MDTS and the
-> 2 MiB driver limit to prevent issuing oversized I/O that may lead
-> to a kernel oops.
-> 
-> Cc: stable@vger.kernel.org
-> Fixes: 9b8b84879d4a ("block: Increase BLK_DEF_MAX_SECTORS_CAP")
-> Reported-by: Mira Limbeck <m.limbeck@proxmox.com>
-> Closes: https://lore.kernel.org/r/291f78bf-4b4a-40dd-867d-053b36c564b3@proxmox.com
-> Link: https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=9b8b84879d4a
-> Suggested-by: Keith Busch <kbusch@kernel.org>
-> Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
-> ---
->  drivers/scsi/mpt3sas/mpt3sas_scsih.c | 14 +++++++++++++-
->  1 file changed, 13 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-> index 6ff788557294..12caffeed3a0 100644
-> --- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-> +++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-> @@ -2738,8 +2738,20 @@ scsih_sdev_configure(struct scsi_device *sdev, struct queue_limits *lim)
->  				pcie_device->enclosure_level,
->  				pcie_device->connector_name);
->  
-> +		/*
-> +		 * The HBA firmware passes the NVMe drive's MDTS
-> +		 * (Maximum Data Transfer Size) up to the driver. However,
-> +		 * the driver hardcodes a 4K buffer size for the PRP list,
-> +		 * accommodating at most 512 entries. This strictly limits
-> +		 * the maximum supported NVMe I/O transfer to 2 MiB.
-> +		 *
-> +		 * Cap max_hw_sectors to the smaller of the drive's reported
-> +		 * MDTS or the 2 MiB driver limit to prevent kernel oopses.
-> +		 */
-> +		lim->max_hw_sectors = SZ_2M >> SECTOR_SHIFT;
->  		if (pcie_device->nvme_mdts)
-> -			lim->max_hw_sectors = pcie_device->nvme_mdts / 512;
-> +			lim->max_hw_sectors = min(lim->max_hw_sectors,
-> +					pcie_device->nvme_mdts >> SECTOR_SHIFT);
->  
->  		pcie_device_put(pcie_device);
->  		spin_unlock_irqrestore(&ioc->pcie_device_lock, flags);
+commit 37c4e72b0651 ("scsi: Fix sas_user_scan() to handle wildcard and
+multi-channel scans") modified the way SAS drivers handle the common way of
+rescanning SCSI devices using "echo - - - >/sys/class/scsi_host/host$N/scan".
+Before this patch, SAS drivers would only scan channel 0 for this "wildcard
+scan" scenario; after this patch, it would scan all channels up to
+shost->max_channel.
 
-Thank you for providing this patch.
+This can cause massive resource usage for some drivers, as the driver needs to
+send an INQUIRY to LUN 0 to every supported ID and e.g. smartpqi sets
+shost->max_id to 0xffffffff. These INQUIRYs mostly fail, but the kernel needs
+to set up queues, tag sets, etc. before sending the INQUIRY. Also, some SAS
+drivers assign special meaning to SCSI channels such as channel 0 for physical
+and channel 1 for logical devices, and thus don't support "normal" SCSI
+scanning of these channels anyway.
 
-We tested it on our test machine on top of 7.0-rc7.
-Without the patch, we saw the same call traces as before. With this patch applied no such call traces were logged.
-So looks like it fixes the issue in our case.
+With smartpqi and hisi_sas, actual kernel crashes due to resource exhaustion
+have been observed.
 
-I can't say much to the patch itself, but I can provide a tested-by.
+A lot of SAS drivers, including the affected ones, provide scan_start() and
+scan_finished() functions that offer custom, firmware-assisted scanning
+functionality specific for the driver in question. The idea of this patch set
+is to map the "wildcard scan" to this driver-specific scanning procedure if
+the driver provides one.
 
-Tested-by: Mira Limbeck <m.limbeck@proxmox.com>
+The first patch is a minor fix for smartpqi to make pqi_scan_finished() work.
+
+Martin Wilck (2):
+  scsi: smartpqi: use shost_to_hba() in pqi_scan_finished()
+  scsi: sas_user_scan: use scan_start if available
+
+ drivers/scsi/scsi_transport_sas.c     | 26 ++++++++++++++++++++++++++
+ drivers/scsi/smartpqi/smartpqi_init.c |  2 +-
+ 2 files changed, 27 insertions(+), 1 deletion(-)
+
+-- 
+2.51.0
 
