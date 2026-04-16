@@ -1,194 +1,133 @@
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 532A133F595
-	for <linux-scsi@vger.kernel.org>; Thu, 16 Apr 2026 09:51:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B5A7378D95;
+	Thu, 16 Apr 2026 11:12:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776333068; cv=none; b=F9XWU447Jcs5QY2sZg9dz27Qp37dotXBsgTAwwv5oSP638VVgW9hnUa0cqwTh9lH4xhOluaOP06wNTBGEJZ5RyMl40jgv7xCdTSBP0dawFIYXSf6/yowdjVJQPdP5f6z+Y4fLXuH/HkQ4c8lhqfFmfdrUUZ4CG/kRRzdg7AlFIg=
+	t=1776337959; cv=none; b=M1rJ+5oMkY7osr8OgzqHyHoesH9qXz0WGHFrQlX/t5afrJXOAX8bXt60PX82DPZ66TyJcPQiWPwx7VcMwacWuP9mVe3bbYK8NaRpXVezXOnzZtggu7P6W9T5gmmWSZNzJksH8UIT7k01SY+bKxkI3yfqSnn6UtZQo5SmC9Atkio=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776333068; c=relaxed/simple;
-	bh=GY+VciEXeY9KyLOq+bVVRV42Ofo9foFB9+0GcVcBoP0=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=GnMEiFUl8VgI0sGeriYrbvltoyZ5b7AX9clKdYS3+B3yqS0k3JSYYlUP0Y0XoXne085o/tf4Ix0B3oa58wSu2MBlQ5FenLzHgwuytFEDt6UBxpqhIumqbGqe085/oUwXiif4bsYENjfl439rsK3N95SoPTr95BatnnBIUAbVzUI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; arc=none smtp.client-ip=195.135.223.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id AA5A55BD00;
-	Thu, 16 Apr 2026 09:51:05 +0000 (UTC)
-Authentication-Results: smtp-out2.suse.de;
-	none
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 558474BECD;
-	Thu, 16 Apr 2026 09:51:05 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id KrbREwmx4GnDAQAAD6G6ig
-	(envelope-from <mwilck@suse.com>); Thu, 16 Apr 2026 09:51:05 +0000
-Message-ID: <84dd73f38214c2ff593a9f86d46d2100e111329a.camel@suse.com>
-Subject: Re: [PATCH 2/2] scsi: sas_user_scan: use scan_start if available
-From: Martin Wilck <mwilck@suse.com>
-To: Hannes Reinecke <hare@suse.de>, "Martin K. Petersen"
-	 <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Don Brace
-	 <don.brace@microchip.com>
-Cc: linux-scsi@vger.kernel.org, Lee Duncan <lduncan@suse.com>, 
-	storagedev@microchip.com, Ranjan Kumar <ranjan.kumar@broadcom.com>, Sathya
- Prakash Veerichetty <sathya.prakash@broadcom.com>, Kashyap Desai
- <kashyap.desai@broadcom.com>, Sumit Saxena	 <sumit.saxena@broadcom.com>,
- mpi3mr-linuxdrv.pdl@broadcom.com, 	MPT-FusionLinux.pdl@broadcom.com, Yihang
- Li <liyihang9@h-partners.com>, Jack Wang <jinpu.wang@cloud.ionos.com>, John
- Garry <john.g.garry@oracle.com>
-Date: Thu, 16 Apr 2026 11:51:04 +0200
-In-Reply-To: <e8843bfe-b4cb-4639-977e-a278f4578887@suse.de>
-References: <20260415204850.799431-1-mwilck@suse.com>
-	 <20260415204850.799431-3-mwilck@suse.com>
-	 <e8843bfe-b4cb-4639-977e-a278f4578887@suse.de>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.60.0 
+	s=arc-20240116; t=1776337959; c=relaxed/simple;
+	bh=1WqbQj66VpX2vwbzG11jliipQo7f1Ab/bkioXw1QT0s=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=bfkpLhQAEW28OaRKwbANcZ2N5CPmPRxRXPLwWgu4EiFMAl+eCnoMmTbM69ZpwhfMJlWKzDgzprd6F+fiu6I14PzoJUobE6gT5ugrv2RWUgLF0q0i/yF9muaT+9h3+6tQB+BJ+oTs12Zmk/ROm2ldB84N2E3OB9PhINIG87rRU1w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TWJwQfPd; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TWJwQfPd"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F2E30C2BCAF;
+	Thu, 16 Apr 2026 11:12:35 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1776337959;
+	bh=1WqbQj66VpX2vwbzG11jliipQo7f1Ab/bkioXw1QT0s=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=TWJwQfPd2fiYl3NnM/xHgUwtOwS/MIXwd+Y4GcCclBkmr53Q+m6GwV5sypZUYWnEV
+	 +QlWA9t4VGBnme9lwbq5GPqjCK1U4L0QKaXv1DMC8+dC3nz+KF8KGNC5GgQaTD7Iw4
+	 zyG8Dszyq3GhgL765nOTkOMcBabA3ubhDVj2NzO/Ts1cHe8NpnmE0bSsJaX8KnnzD2
+	 klQQUSRgYcacopFyAOTkmM8KpMtODBVZKXcqpD/znnIZ/gKVNyidusN/J+GeYrsFWT
+	 s0GghAutqNBwOs+8BR6KTJvYpKs68v1Kqpe/aekyNZYRKRepBoLQ030hebXC7AlDYi
+	 2zRVmH9babR9A==
+Date: Thu, 16 Apr 2026 16:42:31 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: palash.kambar@oss.qualcomm.com
+Cc: James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com, 
+	bvanassche@acm.org, shawn.lin@rock-chips.com, linux-arm-msm@vger.kernel.org, 
+	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, nitin.rawat@oss.qualcomm.com
+Subject: Re: [PATCH V3 1/2] ufs: core: Configure only active lanes during link
+Message-ID: <i6mbqvrhw2aggbrofp2p6kdhf3jfo4qdmpu72mhhkuqay4i3ua@hcnezixc2vhl>
+References: <20260414093135.660725-1-palash.kambar@oss.qualcomm.com>
+ <20260414093135.660725-2-palash.kambar@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Rspamd-Pre-Result: action=no action;
-	module=replies;
-	Message is reply to one we originated
-X-Rspamd-Queue-Id: AA5A55BD00
-X-Rspamd-Pre-Result: action=no action;
-	module=replies;
-	Message is reply to one we originated
-X-Rspamd-Action: no action
-X-Spam-Score: -4.00
-X-Spam-Level: 
-X-Spam-Flag: NO
-X-Spamd-Result: default: False [-4.00 / 50.00];
-	REPLY(-4.00)[]
-X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260414093135.660725-2-palash.kambar@oss.qualcomm.com>
 
-On Thu, 2026-04-16 at 08:04 +0200, Hannes Reinecke wrote:
-> On 4/15/26 22:48, Martin Wilck wrote:
-> > Since 37c4e72b0651 ("scsi: Fix sas_user_scan() to handle wildcard
-> > and
-> > multi-channel scans"), a wildcard scan on a SAS host scans all
-> > channels.
-> > This can cause excessive resource usage and even system freeze with
-> > some controllers, e.g. smartpqi. smartpqi and other drivers provide
-> > the scan_start() and scan_finished() methods to scan devices
-> > efficiently. Instead of blindly scanning every device, use these
-> > methods to do the wildcard scan when available.
-> >=20
-> > Fixes: 37c4e72b0651 ("scsi: Fix sas_user_scan() to handle wildcard
-> > and multi-channel scans")
-> > Signed-off-by: Martin Wilck <mwilck@suse.com>
-> > Cc: Don Brace <don.brace@microchip.com>
-> > Cc: storagedev@microchip.com
-> > Cc: Ranjan Kumar <ranjan.kumar@broadcom.com>
-> > Cc: Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>
-> > Cc: Kashyap Desai <kashyap.desai@broadcom.com>
-> > Cc: Sumit Saxena <sumit.saxena@broadcom.com>
-> > Cc: mpi3mr-linuxdrv.pdl@broadcom.com
-> > Cc: MPT-FusionLinux.pdl@broadcom.com
-> > Cc: Yihang Li <liyihang9@h-partners.com>
-> > Cc: Jack Wang <jinpu.wang@cloud.ionos.com>
-> > Cc: John Garry <john.g.garry@oracle.com>
-> >=20
-> > ----
-> > This patch has been tested successfully with smartpqi, but it would
-> > affect other drivers that provide scan_start(), and we don't have
-> > hardware to test them all. Affected drivers are aic94xx, hisi_sas,
-> > hpsa, isci, mpi3mr, mpt3sas, mvsas, pm8001, and smartpqi.
-> > I cc'd the maintainers of these drivers above.
-> > ---
-> > =C2=A0 drivers/scsi/scsi_transport_sas.c | 26 +++++++++++++++++++++++++=
-+
-> > =C2=A0 1 file changed, 26 insertions(+)
-> >=20
-> > diff --git a/drivers/scsi/scsi_transport_sas.c
-> > b/drivers/scsi/scsi_transport_sas.c
-> > index 1341270..2231609d 100644
-> > --- a/drivers/scsi/scsi_transport_sas.c
-> > +++ b/drivers/scsi/scsi_transport_sas.c
-> > @@ -31,6 +31,7 @@
-> > =C2=A0 #include <linux/string.h>
-> > =C2=A0 #include <linux/blkdev.h>
-> > =C2=A0 #include <linux/bsg.h>
-> > +#include <linux/delay.h>
-> > =C2=A0=20
-> > =C2=A0 #include <scsi/scsi.h>
-> > =C2=A0 #include <scsi/scsi_cmnd.h>
-> > @@ -1702,6 +1703,26 @@ static void scan_channel_zero(struct
-> > Scsi_Host *shost, uint id, u64 lun)
-> > =C2=A0=C2=A0	}
-> > =C2=A0 }
-> > =C2=A0=20
-> > +/*
-> > + * For wildcard scans on hosts that provide a scan_start method,
-> > + * use that instead of blindly scanning everything.
-> > + */
-> > +static int sas_user_scan_with_scan_start(struct Scsi_Host *shost)
-> > +{
-> > +	unsigned long start;
-> > +
-> > +	if (!shost->hostt->scan_finished || !shost->hostt-
-> > >scan_start)
-> > +		return 1;
-> > +
-> Technically 'scan_start' is optional (cf do_scsi_scan_host()), so it
-> would be better to just check for 'scan_finished'.
+On Tue, Apr 14, 2026 at 03:01:34PM +0530, palash.kambar@oss.qualcomm.com wrote:
+> From: Palash Kambar <palash.kambar@oss.qualcomm.com>
+> 
+> The number of connected lanes detected during UFS link startup can be
+> fewer than the lanes specified in the device tree. The current driver
+> logic attempts to configure all lanes defined in the device tree,
+> regardless of their actual availability. This mismatch may cause
+> failures during power mode changes.
+> 
+> Hence, Add a check during link startup to ensure that only the lanes
+> actually discovered are considered valid. If a mismatch is detected,
+> fail the initialization early, preventing the driver from entering
+> an unsupported configuration that could cause power mode transition
+> failures.
+> 
+> Signed-off-by: Palash Kambar <palash.kambar@oss.qualcomm.com>
+> ---
+>  drivers/ufs/core/ufshcd.c | 37 +++++++++++++++++++++++++++++++++++++
+>  1 file changed, 37 insertions(+)
+> 
+> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+> index 31950fc51a4c..754bf4df3016 100644
+> --- a/drivers/ufs/core/ufshcd.c
+> +++ b/drivers/ufs/core/ufshcd.c
+> @@ -5035,6 +5035,38 @@ void ufshcd_update_evt_hist(struct ufs_hba *hba, u32 id, u32 val)
+>  }
+>  EXPORT_SYMBOL_GPL(ufshcd_update_evt_hist);
+>  
+> +static int ufshcd_validate_link_params(struct ufs_hba *hba)
+> +{
+> +	int ret;
+> +	int val;
 
-That's why I chose to check for `scan_start`. I wanted to activate this
-code path only for those drivers that provide both functions.=C2=A0
+ret, val
 
-I have to say I don't quite understand in which scenario it makes sense
-to check for the scan being finished without starting it beforehand.
-Perhaps it works at driver load / boot time, but in the current use
-case I have no clue how it would. Somehow we need to tell the driver
-that it must trigger probing when the user writes to the "scan" sysfs
-attribute.
+> +
+> +	ret = ufshcd_dme_get(hba, UIC_ARG_MIB(PA_CONNECTEDTXDATALANES),
+> +			     &val);
+> +	if (ret)
+> +		goto out;
+> +
+> +	if (val != hba->lanes_per_direction) {
+> +		dev_err(hba->dev, "Tx lane mismatch [config,reported] [%d,%d]\n",
+> +			hba->lanes_per_direction, val);
+> +		ret = -ENOLINK;
+> +		goto out;
+> +	}
+> +
+> +	ret = ufshcd_dme_get(hba, UIC_ARG_MIB(PA_CONNECTEDRXDATALANES),
+> +			     &val);
+> +	if (ret)
+> +		goto out;
+> +
+> +	if (val != hba->lanes_per_direction) {
+> +		dev_err(hba->dev, "Rx lane mismatch [config,reported] [%d,%d]\n",
+> +			hba->lanes_per_direction, val);
+> +		ret = -ENOLINK;
 
->=20
-> > +	start =3D jiffies;
-> > +	shost->hostt->scan_start(shost);
-> > +
-> > +	while (!shost->hostt->scan_finished(shost, jiffies -
-> > start))
-> > +		msleep(10);
-> > +
-> > +	return 0;
-> > +}
-> > +
-> > =C2=A0 /*
-> > =C2=A0=C2=A0 * SCSI scan helper
-> > =C2=A0=C2=A0 */
-> > @@ -1721,6 +1742,11 @@ static int sas_user_scan(struct Scsi_Host
-> > *shost, uint channel,
-> > =C2=A0=C2=A0		break;
-> > =C2=A0=20
-> > =C2=A0=C2=A0	case SCAN_WILD_CARD:
-> > +
-> > +		if (id =3D=3D SCAN_WILD_CARD && lun =3D=3D SCAN_WILD_CARD
-> > +			&& !sas_user_scan_with_scan_start(shost))
-> > +			return 0;
-> > +
-> > =C2=A0=C2=A0		mutex_lock(&sas_host->lock);
-> > =C2=A0=C2=A0		scan_channel_zero(shost, id, lun);
-> > =C2=A0=C2=A0		mutex_unlock(&sas_host->lock);
->=20
-> Wouldn't it be better to export do_scsi_scan_host() and call it
-> here, seeing that it's doing exactly the same thing?
+		goto out;
 
-Sure, I can do that if it's preferred. But currently my function does
-not do exactly the same thing, so I'd need to refactor
-do_scsi_scan_host() slightly.
+> +	}
+> +
 
-Thanks,
-Martin
+return 0;
+
+> +out:
+> +	return ret;
+> +}
+> +
+>  /**
+>   * ufshcd_link_startup - Initialize unipro link startup
+>   * @hba: per adapter instance
+> @@ -5108,6 +5140,11 @@ static int ufshcd_link_startup(struct ufs_hba *hba)
+>  			goto out;
+>  	}
+>  
+> +	/* Check successfully detected lanes */
+
+Drop the comment.
+
+- Mani
+
+-- 
+மணிவண்ணன் சதாசிவம்
