@@ -1,26 +1,26 @@
 Received: from CWXP265CU010.outbound.protection.outlook.com (mail-ukwestazon11022129.outbound.protection.outlook.com [52.101.101.129])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 447D139D6DD;
-	Thu, 16 Apr 2026 19:30:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2395D3E1D15;
+	Thu, 16 Apr 2026 19:30:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.101.129
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776367816; cv=fail; b=NUNpZiDiegpZE0yhOVUJjpYWuCre3/J7DcMbNGV6LYPwjx/zY3TbQ9kmRjw4rkc9psozR4Psw8aJyLLZqNDVyD+NxA/10i7NOkidegWsyu+PXTxLceVODs4UA7CUKJBGAnAbcNp4x8tKw0pWMlyHHB4bLZvydO9b6D2mdbJemSM=
+	t=1776367820; cv=fail; b=VUx9mVYB1PrLMLPZ4rpmvzuP3fw/auSHluruNS0f8wpjfxUpAaafjwQh7ESgrsOYQpSQZK3SUAEU7RNqtZq88yk2icuBHgvf7iyFNeLsJi7bIEhjcCopPlCDzDA4PLIc53otvXGEJ0zlGlbi6JKUDybZnSOB8xMLr09WPOQtE9w=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776367816; c=relaxed/simple;
-	bh=LhqXVQbhS0qUuxUgkARbjJwJPNSSQ0om0dBDJhBUTM4=;
+	s=arc-20240116; t=1776367820; c=relaxed/simple;
+	bh=oxbsR5R8tYQy3vf2d+Vifp3R6D6zdLlLHhXbPrxNwsk=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=BLs52rRQxWb9/9ko/IO3GbOxwNBblhStz8DCWBoBR/3sMp0kZB9HOrUzp0dovblGvw0N7oWX+H0WeBKoWCwqNCBh1qhCuZzWVJ6UE465a011Tq0li9P4NGHK2nOwMlBa58PY5pqB3E+YoyYjzPBYLuaN8WC2QYX2k6odf1JhgTc=
+	 Content-Type:MIME-Version; b=h70uqtJGeC28krHlDWDL8UvDAcAS3bT72af4sXuZ+v3BpClZpQ184dsCocylCooBgZz/prTfMiTmMi8s/1B+PZkin66M1dDx0OnfaJiTS8Q6NK/kokVN6LBPb8w+BB24C2Ol6ELDMtsbjKRtJ/++L8b3Gl7qXgnoiDCP6axTpxg=
 ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=atomlin.com; spf=pass smtp.mailfrom=atomlin.com; arc=fail smtp.client-ip=52.101.101.129
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=atomlin.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=atomlin.com
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=yLyrTHiMgKAegd3saQc9FJOxbR+tOOeoxk6RmLqoYXwIB24slE5EqCToec7JOmABB7WIH61GYC6VhlxczhEViHWR9gFV2qy6iFvErXyJnv1EgBncRutqiQBj2b+OFLmDcFGlWjKKEI9d1jjZGA3QtZqpsRZIknAm6AarxtOZNx66dKzQVGSMzJw99GDMF750AjaCKtxi4zxOVhVZAxXa3CVZ7XgoL/2BdRvTi4kp2rrYrDmIHUoBKmCgbFlxnvNk1yXbvD4H8pbvHQWVtjDGnn7ddz7RgbCpeqJC8m3bDYNM4Hl5rRrv/w7WMYqKKSs+m2d0di+pb5mBkVBfm+ExhQ==
+ b=sr07im3o4BUSVaK+CfH8k03Ff99161mVPeEFOmSPoExO5vZJtqbtVTRJAVeHaSSibFRBu0B8bw3NVho+2tByXBC9sUf6XCYF7QBKbRJrcKRWb703U0pw4dvXN7yP/r1Mjl67+LTky863FSg4DQTCH+P+fQ/AP5NxhkAY8z5wxJPK7OGum4iy9NzRSQbokJNe33uJm8l9dBO2XuJ6nUfT1PErMcQGDkDEjzkbE7a0kGyhrmNagkPr8xMv3Vayt+kLYbaaatp2PmQq+MmFbTvxCJlCfVMpe5AXAwgi0BMXSEB2g6RJAjATWQbZUGTa8L0O4lbvG+ie25exAwftOurZdg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=7w4S0Z3T6wNBB72YJiGmTd9PC8pdIC2EN9E7yxwOg5g=;
- b=IuG4lQ+/d3/MMiZGWRIemRyn/w/+b+De479cYws+qY4tOGbSfA06RuHzcfYwgvJGBzaWXjY2jikWYCD6C5LpytuJy2yZ3d95Vu/8x8dKBeR0ZTc5yKM0FuRv4V8nS1erI6Bdtu3qcxA4xwoAoblAf4PBxfCYRcE6QBzqOuA4x6f0lYkZBcJvbkq7lAzUPFBPc/CWy1Jzak5qlzZ6ZnYR0R/wgGL92znDn21XS8uJ694NySD29Ra6Mw3iXjNrpVRuyXSpe5dVDLNECwBWP5k2DCJjEU4E+sROSMTEhXURp0pdUdsavDm1OMXFF2LNj+R+/keC73FOWLJtjR1NTcDDsg==
+ bh=qqSF314polVFAIPTU2KDWDbVzzJqEQuz17txnEwwgb8=;
+ b=FnYQ2CH5K+NU31a4qch0eQuaEhHwAKIeiZ7UuOjwKYbG1zAptOw41NSalJ66FssC9CRLw7VNZSsqCFm+gtr02hdz91Nrz2Grqzd/0YjtokYXo5TQomchGg3u/8afS/MGM9XeLJrHEBnNMsmGHT3bsxXAZLR/GGdWKSf+ERtRSTudGglWQRBI1fjIGLyteAZK7bsmjzxj/1ZrpjcwtMr8BqFgJjhr+HQ31lkliHfoNao2mbMtwTG2jA7aQIf+gn6Lzl1aTnrU5BRQQnutDOmfNWfIDNCmxdmPpiZK4bqhotXaAv6S8OWge0+7f96ry6LUDpK0zxt5XLqWHQMS/HhoAA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=atomlin.com; dmarc=pass action=none header.from=atomlin.com;
  dkim=pass header.d=atomlin.com; arc=none
@@ -30,11 +30,11 @@ Received: from CWLP123MB3523.GBRP123.PROD.OUTLOOK.COM (2603:10a6:400:70::10)
  by CWXP123MB4039.GBRP123.PROD.OUTLOOK.COM (2603:10a6:400:c5::11) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9818.25; Thu, 16 Apr
- 2026 19:30:10 +0000
+ 2026 19:30:14 +0000
 Received: from CWLP123MB3523.GBRP123.PROD.OUTLOOK.COM
  ([fe80::de8e:2e4f:6c6:f3bf]) by CWLP123MB3523.GBRP123.PROD.OUTLOOK.COM
  ([fe80::de8e:2e4f:6c6:f3bf%2]) with mapi id 15.20.9769.046; Thu, 16 Apr 2026
- 19:30:10 +0000
+ 19:30:14 +0000
 From: Aaron Tomlin <atomlin@atomlin.com>
 To: axboe@kernel.dk,
 	kbusch@kernel.org,
@@ -87,16 +87,16 @@ Cc: atomlin@atomlin.com,
 	megaraidlinux.pdl@broadcom.com,
 	mpi3mr-linuxdrv.pdl@broadcom.com,
 	MPT-FusionLinux.pdl@broadcom.com
-Subject: [PATCH v11 06/13] nvme-pci: use block layer helpers to constrain queue affinity
-Date: Thu, 16 Apr 2026 15:29:35 -0400
-Message-ID: <20260416192942.1243421-7-atomlin@atomlin.com>
+Subject: [PATCH v11 07/13] scsi: Use block layer helpers to constrain queue affinity
+Date: Thu, 16 Apr 2026 15:29:36 -0400
+Message-ID: <20260416192942.1243421-8-atomlin@atomlin.com>
 X-Mailer: git-send-email 2.51.0
 In-Reply-To: <20260416192942.1243421-1-atomlin@atomlin.com>
 References: <20260416192942.1243421-1-atomlin@atomlin.com>
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-ClientProxiedBy: BN9PR03CA0755.namprd03.prod.outlook.com
- (2603:10b6:408:13a::10) To CWLP123MB3523.GBRP123.PROD.OUTLOOK.COM
+X-ClientProxiedBy: BL1P221CA0036.NAMP221.PROD.OUTLOOK.COM
+ (2603:10b6:208:5b5::6) To CWLP123MB3523.GBRP123.PROD.OUTLOOK.COM
  (2603:10a6:400:70::10)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -106,86 +106,157 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
 X-MS-TrafficTypeDiagnostic: CWLP123MB3523:EE_|CWXP123MB4039:EE_
-X-MS-Office365-Filtering-Correlation-Id: 685075c6-322e-4328-17bb-08de9bee92fd
+X-MS-Office365-Filtering-Correlation-Id: 631203ea-a459-48ad-daac-08de9bee952b
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
 	BCL:0;ARA:13230040|1800799024|7416014|376014|366016|56012099003|18002099003|22082099003;
 X-Microsoft-Antispam-Message-Info:
-	0fnF5USjswGcB5AmfhETrgG3ZaInspHGNz8njGGNJAFecu0SeDMJ43A10OURjm9+KhPybtG/yVWuNjyPawowQepH2yrFfoN9GzTTDcZDXtONFIPua8zTgiUsv4T9MozhJNDWS+6nC9MvOIBxiTGGyA247X8V59S60nZ9poeQz0FJoX7eR2d4dlMM13h6UBuFRPiEHBd6ztXYXhYPCeldigPu1QajhwNPIupz1Du4ioKYFBvMJdSd5Oh0j/IU1QWQU2DMZqQMa0558b7Gn5dpz8BvH/c5yv3xS/5hhXhkkCMMfeOrLbXapXl6LV+yNGuzuWRxn9w9DCxPqH4ARmlrJSAsUosqTRQQJRvKd9AjOeFtaCxCBeThuCbtzPTYgmZLQoVKtUqNyrD4jMnQpYY3lUzMQz5/SrmpJyKZpytVfNf31MfyyRp7o+TYyovmEY3WlO3Q2GhNyTRZ+aMzV3RHVMZJCSN5TgKkYk6GeN9Rhod7UCxCAj9Ua+TQIfAIxKV82DMCprmGd2C7SeOH2TL2Ja65/oECCP5Qmewueq9iAsxBfawvzzFFfxAjaCW8b1ZPS4NvNUSuhsEnJLxkxFfLdz9EKUDyBnADJdau9se9PUrUoIWKXcqHsupDr0Lf3O4nudHwph6t24FjYnIgu7C/obyMEusjjFTlJ5XkMuriu/M77uciVnannl7SU1wjvLY7KulUzb0kXuONV3t/xyMfcczm3beOC38sZlLjR4uRU84=
+	kZzgDzqmpNoVLcvWRTqOtSJ8+8NbmTmhzwAhtx0Ji6cqPKqTYYKan37CwvQO8jYHzs18zRE2HsfXKjdKCnHK7jyI1lcgBPV1PQmGzQpAl4Lnh2rBUUvqIEv3SuocCBj0/PhAXTpnsJxxmzh5evz83WL8gcV3zKKLc1VpfsogWHwhgu57dugGSqNXkH6/Bi1hMZnMJHOCgkkJLcyM7sAYJMRw6brXkvwqzTlxxgblAXfQtv0MkFcCT8DccVCi2vifzwIIQXbD5K53md2laoro2dQ0ilLDkN2c5t5KpE4dXEhxPZ73toOmvuOCV3yu0btDFdVv2V0N+feeE7Of0jceGmEePCs/pF+kRMU9WsBq5xFse9ae9DwIIW2Tl7J1QFJe3dGjMCeKwukGuM01htVhaSNw2C09N+/qTvHYC7q1uEpsoGmmyWqSei7Wme63oWcCwd/bSH7L9lDzUwVfOa75x2M5IZwwPKghx3+n5CLrG//g5dchU7jDBM+nIBUDY881JOjhcGBi66HwzIx8gCb5HlB6C1qGrCe2rGGZq1GILXEyiyRKpTjPi6nIlNSs/OQPbRpgaLcYcJ7hdY0EKbcrwQ/+lEkgq0f1YxcwxFhzvYYbBg95oSbf7xqoEfqfnjI5NW//G72cuv+KWjT/FZx2YajY/bceHYZikdckIqOLvwQdaM+K9tAbNO3yD2jAWEfI9kPkBmXvYxSKAilRcj9pywKn/5c1zHrQ0sIGKsTwU2Y=
 X-Forefront-Antispam-Report:
 	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CWLP123MB3523.GBRP123.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(7416014)(376014)(366016)(56012099003)(18002099003)(22082099003);DIR:OUT;SFP:1102;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?Vr0FFfaA734BvcJAt6nR0nPBJ2K7jwKlEZ+pM+gC/dNlLnQaOy6WKGfZnhJo?=
- =?us-ascii?Q?eutT3kc7OKPdpVJ4Bu9UH5UwcabM5AwaV1IQVswL4DwPvg9M4TkgFDbK/esD?=
- =?us-ascii?Q?+M6v8d4SLXTErr0QoSq2G5aoGQpc8fpnOY0X02hFdWfc+P3GscwGlK0raZwP?=
- =?us-ascii?Q?zCaM7HeDRJY0Kys+4J6tqRAVeVnB6x+RgCu7RPZBMobt/3XWVEl0SiRkVe3C?=
- =?us-ascii?Q?zxkAjpMLLjgbll6pWneiBOKoi0fqmJY1i4kLlPKtT00JOaKIhfNigBq0Kpz9?=
- =?us-ascii?Q?esaIrnHPZQlyzXioalZDdOAN6x63vCYrO1P8Ny5cwp3d5zrBfuZGMhaujMDS?=
- =?us-ascii?Q?JSBDnuRo8DvR837TQDvR21QahxqsApDTpmRvsDPog6M2Z+RvXDnlgIVwC4fH?=
- =?us-ascii?Q?kUa5veOYxXYzm6ADu5LW3K+KOdA2oV4VHLbLKvcHxZ3rgOdi/+cawcheptVU?=
- =?us-ascii?Q?UFW749kx9igvSfPrSzuklGjKhB3tW/IEQyNNmDNQdRhqydA3dAdFuoAbcpkm?=
- =?us-ascii?Q?H3XLKzPQfEDr75dCVCtZhyNBPOrX6qrHw4A6b5FjG0ek4P9YXLiEN1WirGyo?=
- =?us-ascii?Q?ZoZgnJY6XhBsB1ZfLnFU3Q+JPI845lXDmZr5sJDCJwKesXxIZvs/TC22WKDe?=
- =?us-ascii?Q?Cp3Arn2jFSy/o8/nzm8mO1VNF7dhDayvaHuQh6HCCWIduGs9f5Y9MO+fVk93?=
- =?us-ascii?Q?cx3iDw0ifP5ucNIrQfWZKY3uKccOBjiqmRuUk13ABn78gd2OtYdTivHEB17S?=
- =?us-ascii?Q?RgDPRmrwD1SHlndm6UdfLAWS9V+0KHOlSTvh3m9B/2WjWYbUUIRWaQOm0SZY?=
- =?us-ascii?Q?W3wsX+hS+gx2O01habXml5eGns36Of1JP24s7U8rMObvdmpPsdSVxFn/Bl6x?=
- =?us-ascii?Q?2dOlihF9HpszAcaVTuu/c0gRe/1+6w6py2QjxPOmcMUuzNrap9knBsmDrmNy?=
- =?us-ascii?Q?oqn2MoLfAz7lv+zDN+BKY04faUD/8ilCTzm5arTYbLSeGbC6IewCQRCOMQ+u?=
- =?us-ascii?Q?IrUDk8Ey42N+lDPs9C6CihnTbw7CqmNy+h62C4nuStnpBwcTkECvFhgaGU17?=
- =?us-ascii?Q?04z5Lv4YL+WLc4ha2bhqf4WJms69Uh08M0EDEpJaaZeDbirl+y5kDSxyDZwx?=
- =?us-ascii?Q?ob2SndyuO51sXtFLgPjT1C7tG9f85jXkcTchPWZ88QA0Afz7/VJe13kNH6Lg?=
- =?us-ascii?Q?MRLg/TmU4BN/MRrgYucjhWX/PeCEopzh/kY4aaLXD0qOirhw7FA7h69fuL3G?=
- =?us-ascii?Q?kICSsqG5JzZ/UVA1ZSvFJU/UXGFq29JeRWJu4ln9VsvMDka7UI/KtpAw8t6W?=
- =?us-ascii?Q?HaOxXuK35sY5/93kk4hh/vqCfyjmbXuEq2mr8C7vnlvCJTvmbX1tZSg2CpPv?=
- =?us-ascii?Q?c7/gCv86T1rhkc6YwK8oFRH5HZofSdd5BcYjBNUfcnkhM/X9rDUwsjQGBL3H?=
- =?us-ascii?Q?UCUuFW/12R6nDakxwvcH9yxTzzKtUc8x4zVrdtQi5TJXiKa10b61k1G9Hfr3?=
- =?us-ascii?Q?6mg2J/NTOTCyZfNw0eeQ9mg80bRTfb/VEMhhq61iGzYp5USYfK/Pjw6Ike9/?=
- =?us-ascii?Q?mtIeTmtGPrRV1pN6QiQ6B8S5dfBCa1Wf5tGq9t1+j+kTVzXlp+M8HyefFEGp?=
- =?us-ascii?Q?aCWT9geDL4mBllIH05Dks+DJ9g6HOa6Kr/35hxxs2Jg9isLceeASLi3rouDM?=
- =?us-ascii?Q?c7IpP6p1ypWrGQyROni4BLDymQNPVbOG5SdlEH06cpv3O/L0hHJKX3dYUtXv?=
- =?us-ascii?Q?Wpo+2gskGg=3D=3D?=
+	=?us-ascii?Q?d2Ms0R3IDYufVExt/miocAab6CFznf/W/n7JHBg0Sq7au0zyOYe2QLh7GTwo?=
+ =?us-ascii?Q?uK4Uqi4XPB5c2ZhbUGlqgk8LrZQppSBxeyOKZ8Nq91aaG7yKB02fhZFbBKdb?=
+ =?us-ascii?Q?lVf4xMZhZfrp3qhC1bTziBkwykTYf5O7AxAHJ3wRPqZxTCNnOQXwPLPm1siF?=
+ =?us-ascii?Q?5N2+oZuP9Tqgh1cDF1+emykAyO8WYtQ8aF8i44tGzscfN8LeeUkA70ugPqYH?=
+ =?us-ascii?Q?nSAnOU6Ghgp38JSyi2MXlhId4B21x+dF8+UFSV9AX8B8UCM/g3zen5gqk+Ut?=
+ =?us-ascii?Q?APVG3BUrsaMWSPZjeuLEm434pvrbc4bLZTQx4jsRp8UcIzLp5aIcUZKSjLDp?=
+ =?us-ascii?Q?wKydzmHc3zmjXngo5nzqiNjWYU7wK7m2L43vMzG6QLGsqDmY3RzQyCV7WIqy?=
+ =?us-ascii?Q?CvEVrHwNMnkNxemeeqaroNwcAehbr9o0REtiWCe6i0cyQwh0o6ykLEpB5929?=
+ =?us-ascii?Q?Vj04PHsKwuUEXcfIjuPdSWZt+N2mw4BxlbttS24MWwZA+ZVCaMF1bZiO47kU?=
+ =?us-ascii?Q?8QiXlmKcZSERQe6MMleofWb79RiZwYWcAg4B2+Nn8nVKWdaNIkA9j/nJcYT7?=
+ =?us-ascii?Q?808uwiYBNy5MvH2z3YtsHAvVviGd05wg74qJG0Hft8ET4TDnLQJT6bwoN/Ww?=
+ =?us-ascii?Q?etZHITmYJ7tKrXxT42iXDxepvotGxJ8NJVVpum8fNtBhXf3ycZD8czVvVSOk?=
+ =?us-ascii?Q?pPcVuS4NMqKemqzlBgKTCOcBmOXo/XpqZ9lFnvOrlygh9UUN/Mlj4PuLvJOn?=
+ =?us-ascii?Q?G7xMuC7oMwNA0gyDVwRf85+Vj99KWbSuaVEE75qJl+Meg9xUfMkSxhrdcrlE?=
+ =?us-ascii?Q?BdRl1vv7Oukv5odjAHDilf4uPwjy9VzLlIIpRViah+aid8wOLeWHCPzjfXCw?=
+ =?us-ascii?Q?FxbkRMAPwjku/4T7TkfM9ZlVnLrPma2ufc1TPxfSczPWZ6/a/Qi4vP8Rs8XT?=
+ =?us-ascii?Q?G3oYIuKIYSFis+BI9qdRm2uQAz/GwtdfcCqWfS1LB9htggaJmxUJmAuxx42w?=
+ =?us-ascii?Q?2uhexwjllzUfp3tZcRitfuX0u2l+q40gF3Ez+qqn3uRybdOl/Wytq/gf0iF2?=
+ =?us-ascii?Q?nsoXGhfK8lPxNzNyRZzR6h/0fdCY1hDS3+20GsuCziIWV4pbJgAEzMoNQgWx?=
+ =?us-ascii?Q?XpZLQjxFg/ugf1FpWXOBKgNL99HAfEpggdeyr0ntKNV2hbNQDhejK8KxAQvV?=
+ =?us-ascii?Q?Kst7T5CcBqVuc/w21+KTYU+Nrw4dMzPl9Ute0BC2gr2qIzfXIw6CqhFmPyPx?=
+ =?us-ascii?Q?PegROzyPYPzjsaEuISuQ0Bo3dYiXqKroZc9foV81t5Vc3h0LiWObRqFz2HUW?=
+ =?us-ascii?Q?abss73qr/yCj8WFum/8nqhcQiQmHz81MdXSQwchV3UFAK380lJS8dRo0OlP4?=
+ =?us-ascii?Q?0tBoj2mHdrc44H9BeteGxzNW+APtKBbvPGowXhiCLKVe1ov7kmcGVLtxfPgZ?=
+ =?us-ascii?Q?9c8eJOk5lrgKsFi/Pk5pM0UWf/20RGVeMt4A2gcAhNchu81KPSe8Q5sTPk2X?=
+ =?us-ascii?Q?x9+xJsSUqcFWpfc3JgCWAhjO05utxhJv1cCORRVvyXq9J8dBipp7RsKCt/9O?=
+ =?us-ascii?Q?Cpv5Hsed98mkgpk4TKbq7GraB+wbAd2TiRpDrkPj8y6CydcffwJVhUv0M12l?=
+ =?us-ascii?Q?Jy9su4TLGRNvunkF7r66jQ1XQMQ+FWoza2boNKzblOxLcucotOHohCK01ab5?=
+ =?us-ascii?Q?F+nc/xbrBTZXUlDu+6m/EWJIY0OPrBAa5PTlasv0BK1MJ7wWzeUye4Z8kEhp?=
+ =?us-ascii?Q?dKUSeewkRg=3D=3D?=
 X-OriginatorOrg: atomlin.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 685075c6-322e-4328-17bb-08de9bee92fd
+X-MS-Exchange-CrossTenant-Network-Message-Id: 631203ea-a459-48ad-daac-08de9bee952b
 X-MS-Exchange-CrossTenant-AuthSource: CWLP123MB3523.GBRP123.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 16 Apr 2026 19:30:10.4983
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 16 Apr 2026 19:30:14.2021
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: e6a32402-7d7b-4830-9a2b-76945bbbcb57
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: A96MEmx95AIgRT1DaXKOiNAfQWYj98JznU+a++fZCVR2nMvWrSusXHv00JYeEksD42JAf5KmRVy0qGXvqfFpGw==
+X-MS-Exchange-CrossTenant-UserPrincipalName: ma5v6yX4k6vAmdLggyU/T0ILSj9D350NW1vdQajv/wjv6+U3e4Gjb3McqpeffPgB5Vef4ggM146pZX2hZXPk/A==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: CWXP123MB4039
 
 From: Daniel Wagner <wagi@kernel.org>
 
 Ensure that IRQ affinity setup also respects the queue-to-CPU mapping
-constraints provided by the block layer. This allows the NVMe driver
+constraints provided by the block layer. This allows the SCSI drivers
 to avoid assigning interrupts to CPUs that the block layer has excluded
 (e.g., isolated CPUs).
+
+Only convert drivers which are already using the
+pci_alloc_irq_vectors_affinity with the PCI_IRQ_AFFINITY flag set.
+Because these drivers are enabled to let the IRQ core code to
+set the affinity. Also don't update qla2xxx because the nvme-fabrics
+code is not ready yet.
 
 Signed-off-by: Daniel Wagner <wagi@kernel.org>
 Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 Signed-off-by: Aaron Tomlin <atomlin@atomlin.com>
 ---
- drivers/nvme/host/pci.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c    | 1 +
+ drivers/scsi/megaraid/megaraid_sas_base.c | 5 ++++-
+ drivers/scsi/mpi3mr/mpi3mr_fw.c           | 6 +++++-
+ drivers/scsi/mpt3sas/mpt3sas_base.c       | 5 ++++-
+ drivers/scsi/pm8001/pm8001_init.c         | 1 +
+ 5 files changed, 15 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
-index db5fc9bf6627..daa041d15d3c 100644
---- a/drivers/nvme/host/pci.c
-+++ b/drivers/nvme/host/pci.c
-@@ -2862,6 +2862,7 @@ static int nvme_setup_irqs(struct nvme_dev *dev, unsigned int nr_io_queues)
- 		.pre_vectors	= 1,
- 		.calc_sets	= nvme_calc_irq_sets,
- 		.priv		= dev,
-+		.mask		= blk_mq_possible_queue_affinity(),
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+index f69efc6494b8..d1f689224e7b 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+@@ -2605,6 +2605,7 @@ static int interrupt_preinit_v3_hw(struct hisi_hba *hisi_hba)
+ 	struct pci_dev *pdev = hisi_hba->pci_dev;
+ 	struct irq_affinity desc = {
+ 		.pre_vectors = BASE_VECTORS_V3_HW,
++		.mask = blk_mq_online_queue_affinity(),
  	};
- 	unsigned int irq_queues, poll_queues;
- 	unsigned int flags = PCI_IRQ_ALL_TYPES | PCI_IRQ_AFFINITY;
+ 
+ 	min_msi = MIN_AFFINE_VECTORS_V3_HW;
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+index ac71ea4898b2..7e2a3c187ee0 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -5925,7 +5925,10 @@ static int
+ __megasas_alloc_irq_vectors(struct megasas_instance *instance)
+ {
+ 	int i, irq_flags;
+-	struct irq_affinity desc = { .pre_vectors = instance->low_latency_index_start };
++	struct irq_affinity desc = {
++		.pre_vectors = instance->low_latency_index_start,
++		.mask = blk_mq_online_queue_affinity(),
++	};
+ 	struct irq_affinity *descp = &desc;
+ 
+ 	irq_flags = PCI_IRQ_MSIX;
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+index c744210cc901..f9b8b3639c64 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+@@ -830,7 +830,11 @@ static int mpi3mr_setup_isr(struct mpi3mr_ioc *mrioc, u8 setup_one)
+ 	int max_vectors, min_vec;
+ 	int retval;
+ 	int i;
+-	struct irq_affinity desc = { .pre_vectors =  1, .post_vectors = 1 };
++	struct irq_affinity desc = {
++		.pre_vectors =  1,
++		.post_vectors = 1,
++		.mask = blk_mq_online_queue_affinity(),
++	};
+ 
+ 	if (mrioc->is_intr_info_set)
+ 		return 0;
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+index 79052f2accbd..91e1622b5b77 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+@@ -3370,7 +3370,10 @@ static int
+ _base_alloc_irq_vectors(struct MPT3SAS_ADAPTER *ioc)
+ {
+ 	int i, irq_flags = PCI_IRQ_MSIX;
+-	struct irq_affinity desc = { .pre_vectors = ioc->high_iops_queues };
++	struct irq_affinity desc = {
++		.pre_vectors = ioc->high_iops_queues,
++		.mask = blk_mq_online_queue_affinity(),
++	};
+ 	struct irq_affinity *descp = &desc;
+ 	/*
+ 	 * Don't allocate msix vectors for poll_queues.
+diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
+index e93ea76b565e..6360fa95bcf4 100644
+--- a/drivers/scsi/pm8001/pm8001_init.c
++++ b/drivers/scsi/pm8001/pm8001_init.c
+@@ -978,6 +978,7 @@ static u32 pm8001_setup_msix(struct pm8001_hba_info *pm8001_ha)
+ 		 */
+ 		struct irq_affinity desc = {
+ 			.pre_vectors = 1,
++			.mask = blk_mq_online_queue_affinity(),
+ 		};
+ 		rc = pci_alloc_irq_vectors_affinity(
+ 				pm8001_ha->pdev, 2, PM8001_MAX_MSIX_VEC,
 -- 
 2.51.0
 
