@@ -1,26 +1,26 @@
 Received: from CWXP265CU008.outbound.protection.outlook.com (mail-ukwestazon11020117.outbound.protection.outlook.com [52.101.195.117])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 206C63976A1;
-	Thu, 16 Apr 2026 19:30:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 15A923E4C97;
+	Thu, 16 Apr 2026 19:30:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.195.117
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776367834; cv=fail; b=gaGqVEgUuvouhir8C1WkQq8CFJ1nH/wxcDgI0q6BI3xvO2Sf/RTH///bZcjRCUt3ojseI9Trnow52RADqWpQ2TfqA6BWVqEJZPkgYG+Rm1gBdGB+BkozrShvIITct3UkT471qHzaOOul/EihkrV6sZhS5OU+cu52nUg8FmmpHkM=
+	t=1776367837; cv=fail; b=TcwW4BF23a1Q9E59HFbzrIhmEj88pSW0sgumiqRb3tmGc0dDIC2Zdvu8yi6MSf3YlopRG6lrh6G1Myd2cJR3znqVzaVeVR2cwktHeJSEkPlBDIMsPQQnOTun8Q35iIp329MJvpHVeqnp3oUAaQ9bLACdUssYvv+QHktUMPQEvnU=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776367834; c=relaxed/simple;
-	bh=BbcA0NMwKLLRwpfrWSfbTBNx4JJZLTZIW2PVdByU5uI=;
+	s=arc-20240116; t=1776367837; c=relaxed/simple;
+	bh=bcUH3KnZ1DmH0ZWKH3HjO9G7CV1Jb/cmjlxZWzgQaWk=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=OX5e0FZQdypn+n3YHdaaHQI4tw7U4lNQXMM57SCRM8/XWZGGqpHyvgSUyL5xv7uFed4t/IxHpBQgJp7gqHCC305Dh+jko+9tR6pLL+h/8NTdxSFmJQz3pWWzC4bcSCkxNkjA5ar39Ijpng4EOhnOMVbDYsOpj2KRP+jgIWJXOds=
+	 Content-Type:MIME-Version; b=dOrkeWPm0E1pQ3qzwnfGM+OWaq3ENoXNDD9ARnTlgFFhues4lOP5d8xSxLmIJNjVEQoSxvxJNfbRqqVjZkow3WH7D7xFL/VuKFwT7C8Q2uvwey/4wa+129FwUeWeOaDytuq40PQJEZcHud8bi65VHiyH5KjFE83zpmvD/VkQQNg=
 ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=atomlin.com; spf=pass smtp.mailfrom=atomlin.com; arc=fail smtp.client-ip=52.101.195.117
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=atomlin.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=atomlin.com
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=lkWvkR7uBkbuSwvUht8cedsLIhPjc/XIbDnxFI4/fWQYmxVrDgaQjBPQ/sgUd96h0d9MrN1PexfLlVsSaEZQWhAt7jaO3JKeLBk5PDq3UxkPQCJe9ibXthooxf4/aZEBgoGa/3STzMhYtpLhRKcEVM0jwiJhqyDE5qY3A2pSBE+6p3ZyKWcDJtsgqiy6Ddu0EmB8HN1dQyMUCvQx7amKZORBODafkwOUQrJH2g4MVSH841ucKKYoevfDBGuD3ge9u8WZFalMMOHGfgW91N23/yCfQcTw1Xgy2ZOi+VqwAbV7gIVfgGBaXDzRo4YXweXnUt8Uy2qfyOnNQaJViJtcmg==
+ b=JqBGDSSdSi8ZzSd/3f7OTd9ZCzOdO/gJd9qfWzJTFfXuRaeYVeazJHnmiZ2L16ERtrlejWznsdCxJ9Nbzbkp1XWiXuHLXsCb0Kdc9TjiLgTAVwOBLioefVFiVWcpPhoRUfiN1h4KY3Ji/hMr980B25hcXZfV3ocrKP5oH3hPkmGEYTikhekVcTZgaj0cK9ey6Hnq3NuxYmJPQLtAhmAb3EdBbZcXV7Ors87Jc4lUmVfW+d/d6nNYFPPtl9UVKAdEM5M4YXSBh+ocjz6mxAwDx5FgAa1UsPMb/Fuws6c9gMY/BmLilMdfiE5ObTHibAWIlcvfQrANNlOsOppkXeASyg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=VEbXocv90EEQQkMDABahd6vYZwcvOoK0laAAb5WiV4I=;
- b=wDm6cnv3L189AqpmhnHZblmEOnG32g7ygDqWfKjeRPJnvHzUQb0gcOzvIvRigB7biMbvjqOCvTId19mL7JQJT1g78hYGQF1cYcmd6meJyaXcSmdeg0preBiClGyavqmcrkefrHD/00vN78F32nl97Sp/f6h29dEJdyLop+ZsgR+615F6K9Giq/UuvAhlI8y1zTFG6+x7j4nKXnJNlReiF2kj/EImyIdg4EAkjfYbe3vPsJlUozXwZIEoEhuElL5o3TrT1YDkprP5dF3zGTPCNpG65Yu8ZZbC4zJjK0/+c3br+b7NE5a3DPl4DXuIsNR5YPF4R81n0zkOQUvtUi7a4g==
+ bh=s3/rFEB6dAccZu2+1v4B3AdJ8UtYGZSvYj6yRg4EG7U=;
+ b=Q9s3rzx4vGQDKccZrV8ex6OvGiL/ObXQ4jahopedSOngggaivT1rcCZZTKsrOn6T3ArIehdT87lITUoqhrOrtDzv3sFACc66MtM39x61S4btJHFvPKTnC7tOftkZ1YCqHdSC/UG5lLp7n0oYHajKZkaTOBcEh01XiCaez+5umXohDZl/wlm054Y2x7keu2sNWJl8ykdr7ocg4V8MWeFJZiMBXssV5HKUxOVTIup35SVgipvk8WeMtEXuJ5oWcP+P1zu2/EXqQA8r2tLiiCGRZ/3xEh7DSe5maVwak5Qlz5PwX2kiF7H5hAkUliwI4LvcH9yBHK5xQyD+2le8jJyXZw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=atomlin.com; dmarc=pass action=none header.from=atomlin.com;
  dkim=pass header.d=atomlin.com; arc=none
@@ -30,11 +30,11 @@ Received: from CWLP123MB3523.GBRP123.PROD.OUTLOOK.COM (2603:10a6:400:70::10)
  by CWXP123MB4039.GBRP123.PROD.OUTLOOK.COM (2603:10a6:400:c5::11) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9818.25; Thu, 16 Apr
- 2026 19:30:26 +0000
+ 2026 19:30:29 +0000
 Received: from CWLP123MB3523.GBRP123.PROD.OUTLOOK.COM
  ([fe80::de8e:2e4f:6c6:f3bf]) by CWLP123MB3523.GBRP123.PROD.OUTLOOK.COM
  ([fe80::de8e:2e4f:6c6:f3bf%2]) with mapi id 15.20.9769.046; Thu, 16 Apr 2026
- 19:30:26 +0000
+ 19:30:29 +0000
 From: Aaron Tomlin <atomlin@atomlin.com>
 To: axboe@kernel.dk,
 	kbusch@kernel.org,
@@ -87,16 +87,16 @@ Cc: atomlin@atomlin.com,
 	megaraidlinux.pdl@broadcom.com,
 	mpi3mr-linuxdrv.pdl@broadcom.com,
 	MPT-FusionLinux.pdl@broadcom.com
-Subject: [PATCH v11 10/13] blk-mq: use hk cpus only when isolcpus=io_queue is enabled
-Date: Thu, 16 Apr 2026 15:29:39 -0400
-Message-ID: <20260416192942.1243421-11-atomlin@atomlin.com>
+Subject: [PATCH v11 11/13] blk-mq: prevent offlining hk CPUs with associated online isolated CPUs
+Date: Thu, 16 Apr 2026 15:29:40 -0400
+Message-ID: <20260416192942.1243421-12-atomlin@atomlin.com>
 X-Mailer: git-send-email 2.51.0
 In-Reply-To: <20260416192942.1243421-1-atomlin@atomlin.com>
 References: <20260416192942.1243421-1-atomlin@atomlin.com>
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-ClientProxiedBy: BL1PR13CA0186.namprd13.prod.outlook.com
- (2603:10b6:208:2be::11) To CWLP123MB3523.GBRP123.PROD.OUTLOOK.COM
+X-ClientProxiedBy: MN0PR03CA0011.namprd03.prod.outlook.com
+ (2603:10b6:208:52f::13) To CWLP123MB3523.GBRP123.PROD.OUTLOOK.COM
  (2603:10a6:400:70::10)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -106,404 +106,138 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
 X-MS-TrafficTypeDiagnostic: CWLP123MB3523:EE_|CWXP123MB4039:EE_
-X-MS-Office365-Filtering-Correlation-Id: c7c9f814-9b80-49bc-c44a-08de9bee9c15
+X-MS-Office365-Filtering-Correlation-Id: 2b6cbac8-3e99-4850-2b71-08de9bee9e4d
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
 	BCL:0;ARA:13230040|1800799024|7416014|376014|366016|56012099003|18002099003|22082099003;
 X-Microsoft-Antispam-Message-Info:
-	01xA/uLM6HqHYPLcQtj/hUTurQXKl3T3ltj7OoB9kXh04IxeQarZvMbZjrLWwPuADRVUnLxK5j1RzivxjJsJR+n789wyQlQOOIBX6HcupYUc3ZJ/Fq0fnWvk7wkoHLCuhl92Gwu1/BJkAVv/Nk9lWucR/uLDliumtdq47v9bk/eQzGm72V4HgzU5JW/YHfmbBRm5sNppBGgJks+FmdImYgyN+qu/+TRC8bE6sGiBaCOOfk4V18fYrbpo9XPX0CIulUsTRxneAWa4Y2uO5FPp7z3+gtp84NG0jxhgovQeliYr0uqoL14f4Bk4jQfD5uejRi4yK9iO1LiYesZw6AMOTwi4yILAresF0VkNHLwIwGhNleO16YK07EwZ36E9A7d+jlD8obj/70yWJW8W9mrFko2UA5V98UyXhILs9oecqhN4hJo1XgO3PkBDRqov8Yc2+cCwnvcUMSN7OWydwQEelZgDz63fyWBBkkaUrK4o4K7ue4tK4D5gvlS6y9IXZ4/gRmglXV1tp3pcwWydAx4lT2NZ2eijFsxVQIb5rKqb8eHXBCWPS3QJIbSG93sDuee1EVZtva2QbaUc9xYbP0N0J0cRJ7ogq0heSB5DD+gKGHTcri/dlfSisJsE95FomfvhhIeEqfqbNGonOnsZdItVxNbp99Z9g9ayFZMP5a1+F4sDLvqvMIQdbzz36aNsrzFj1bZ6WKtaobmZIyNva1HeJFd3eUhfVTzal9jFYzWWASU=
+	2XJRgWiiUNl5mTEn577swcPtNHh46gzG647OeTkL7qtUYQmRTA6BGLClncSRSFMkgBkPX+0Kvjsin6DnsKOWxa458lFEJgw5zjS7Fn00w5vB2J0OaKLdrekyIHSaMSPFECKF+a/iE6Nm46wWSnVGfq09GSvVOTJWrwsQN5i6QPzyMDZmACggKtOwx8eY6UuCbjfOB2R5i3g5ZqoFwPpy3i/tn/1d7ku1ziP0Tx9q5rs+nxxPIZqE/LgUjccscGWrDgXLN3djP8w9HNTnpDAkt5506KBJYyzjVM7aWbeCfQTaPud9I/SOakTggiLf6QDIQP5qqZumHN7iV1kRhCfyx0BFB9W9ZoVtrYFx8WXrXiwfC7T4Fi6mP8r2zN6S/DLtJClKK3Gn30koN8u3rsMEWZodJl+b9EtfPl7xoNImsBfBqAVO6B798QhwuxRCIYTZozIhzl3SLkLZnC42lr8cl4iRbulr/J8d8VbaKGsXVAtng8mD5BylFdisjL6pT0V5B0s6TyvSBcxDqRACaNWgM01aWAYo8FFtE8wyWk4QZexKqs9KQTKT3OgRpKcEI4So7Yd6IocLlgx0bsL4O2EAGtlKIp78NJC+vbrKmord63dNEzWAmRvFrJ4mA/74LIQHOHBrwmSn/Rk4C62M8OqEFq4+ugbdgdD2zEzKB85h2vH46w78s0/8LVubzwWtUK4qAFYjSsda9uDNph2sxV4/KxFbjWWdjqhVxA7hrS3j7pA=
 X-Forefront-Antispam-Report:
 	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CWLP123MB3523.GBRP123.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(7416014)(376014)(366016)(56012099003)(18002099003)(22082099003);DIR:OUT;SFP:1102;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?T+NURHIF0HhLKgcqQ75KIJlPDAidb0ihLqDRQCO4YYhRqzlQzUBlRib9pXEF?=
- =?us-ascii?Q?V8zC7VrbLEJg1Y78SsNHBtczyV7id27oyD60iezt0f4hqbiIwkRlE2CxStba?=
- =?us-ascii?Q?QqTU2MnZM6+C9v97IplVgKQS6MVaVI3r+Y5g51UpaxuOfsddvW7tuCFlcyMb?=
- =?us-ascii?Q?/p/qgIYGbB67oBVe0BZk7/wocdmoi79UjpHD6XRbiYJ86p+W1nfNJAetWC2i?=
- =?us-ascii?Q?Coa992lgwPOQK70WSSmuvTheb9Kk0TAu5JKA4nvqRRyOz2IMeazizhQ6CNXM?=
- =?us-ascii?Q?w2yS6Mg9EL6E8dLl6V1pGsHAwj5LrNQP+BhcKamPW5h81IfI9njFehaCSWxU?=
- =?us-ascii?Q?S+RPamVnyszYEIyQ1qgB1wSrZyv6nM/hQKJZlw1ApEUHki/OaCzuY9at9+du?=
- =?us-ascii?Q?ykQHCvTnpqAwXj3ej3b+vPrSlmbT2UrF3ZcKuStdMVnLVkl4d5khIAcGeB+I?=
- =?us-ascii?Q?rUhkiwDSUIJHXb4SEu0qbbXWVjZVFV4sLOfObTlnEfEh9klIePgIEDHtaooT?=
- =?us-ascii?Q?HmcabmWzjbw1OSpj3uAvrvCp5YChCX6hexnVhiYP0k8+otEHawc1HDVTylMg?=
- =?us-ascii?Q?4mR41TzQ75dzn9iTz7v2CjlcjGIhNN4w334skyaSxRolyZhwIohF38x+cgpT?=
- =?us-ascii?Q?gucUmjFpm2PuXhMcQX/tjOVuwmLWZZ6olMjSkXvXPRfJ1dyFACAHGBfMe73K?=
- =?us-ascii?Q?ZRm6JuqO3nvxGTCJacChWlLDimEPZ2Ru/kJDvMJt3G1XdVXi0MrpAcHqKlA2?=
- =?us-ascii?Q?j0fv/uHDOMqJyfHN174zD47cEQiNasmWP9i6ZErhwq6dr1IffmI/IG3mIxi+?=
- =?us-ascii?Q?Ed12KnYITMpH5j0615p5ojE4TjXUuLbfT2FZGVS4coJYFduhz8oZLA2akskO?=
- =?us-ascii?Q?0IzsNT2+QQyPETVEDPQbC9+BKaq32Thp1rQxOW8bMVFhIvjZgJqaCQhQQFh6?=
- =?us-ascii?Q?n97rfuF35Lx4cixUbUj0esMsPQh6DOw7GBWQ+aQq8I/knxEj3WZDJBgyvqB7?=
- =?us-ascii?Q?zNn6i8dpY0q9GmUpX3BdgU6kF3Naw2yWS26IcHFhBSD9qAWIkbZL4KuQMaOl?=
- =?us-ascii?Q?NpJ7pPfafHWBNAwgnF0evQED9k/ySo2XBLgZYesCy/k6ewrd4bBAtg6zcxSe?=
- =?us-ascii?Q?Ff9OKopMUJ+VD3JSD69S0DEykItf0VEdIUpnecke2+Q6sIx0rtWn1/w1gzL/?=
- =?us-ascii?Q?NCrqx2uGQyt+CmIdbIrdhl2CV/lG0jaqSTo/FWFfN63/SYYir4WOx2iOo2hU?=
- =?us-ascii?Q?J9fzHpZnFUMB+Ng3hMrJ+uP7QzgwuE33kqtxUmYF1K3JDuf6vU1cAuNc8I2H?=
- =?us-ascii?Q?HFW6/ixhcaC1wfronssvNjRB/npt4b63wwAA0ut5B+Q27s1qxbuNd+nNrzcG?=
- =?us-ascii?Q?rOM1LeCf3LsSUBCdjD68eb2hagiqhuPVKpu40CF3cUWNKs7ApyNC3UQyi7Qh?=
- =?us-ascii?Q?QGm5J06CcYoewgw4gT+U9pMmkGjY4iceBEj1YZ/Cv2mMLt6VYx1uO1BENLPV?=
- =?us-ascii?Q?5iBuDYxWX1CBeqY3IDc7LyQrxttWdZbAv1zl4DA/tjEMAkELiVJfeLobz/dM?=
- =?us-ascii?Q?N68QymmDvkYgW4MwozW0QmvIxu5+i9vvCFmFt69Ketd5/eWX+CyFbPx1O2ib?=
- =?us-ascii?Q?9lCYpGzYGOPcV9qCYS0ErHZHIr/Bo6Ya5t/o0saaC1LgA1ygsQrBgiWJJyHb?=
- =?us-ascii?Q?5woBtBZ1B0BAzK9sZXm3HNp4ilNGKxk5hmf8KwYPLfkWU5HU4RT2yy/HmdkE?=
- =?us-ascii?Q?7sNx4Rqs9Q=3D=3D?=
+	=?us-ascii?Q?+vYYZ8x6XR4w8TXcyISFG5cfQ6Apmf/K2P8yJrH9Ob41lmLS7LBIJdKtbKha?=
+ =?us-ascii?Q?ZtVANuOOm2qmZgWVlQYJq/d/Pa/NCCXiaY+ybO6kQ3DPc9bo5lqow7wLncpN?=
+ =?us-ascii?Q?WrJ1U9uyqQ/4zp65jT9D6dAH9FC0AnM0jJhVBDdpc42dOtQ2qplxUvfgCNGI?=
+ =?us-ascii?Q?6A5J4wLYK0yKQpfBJF0fL5SA4iT8IfDN9LCmmy7vggKCdQaiEyOok6bPKCJG?=
+ =?us-ascii?Q?FHo5T9zpi9Lz4KJGIXDOR3sMMgRe1XPm1K3KzGTTFm0O1M3Dt0HrGxceOLhK?=
+ =?us-ascii?Q?3IRyzukL2wvy+XR5sYJFwzJlYksG5yu6LIn+cLaCiWq3fAZKTo1dUEHK0zQU?=
+ =?us-ascii?Q?OtZ9qs+mJHH0DT4XpjTkYWD1wp7i8ePe5LcaUWviF/B1IBtMUo6QtCadK0BA?=
+ =?us-ascii?Q?+nAlxtJIukZZgtclr5q0mBB/5FVuB1g4+OPdxGgJSt0i1yaVSL940gGenDZX?=
+ =?us-ascii?Q?258T03n0K6WfptQx1ljwORuIbNBCQhGJN3tBJtUAxKfrh7YNbpJOJym43cWR?=
+ =?us-ascii?Q?aRSDci10hN4MdcM4yEGDQch+yUUp5FOzyd0yFSoHcJbAdfqGT/9PbK8goPIz?=
+ =?us-ascii?Q?Tn/gZ6p/bbkOmHQHN0JQZGDQN2w+u38VVGlrIMfv9jT9rEyq39E1/1/R82Jt?=
+ =?us-ascii?Q?Mh1yiO3jc1qC0WY6O/xSoGVV7NVXlfjRkcE7h4KcYq2wHofd4OZKDVOXhErI?=
+ =?us-ascii?Q?rkxslrzGcqCUTKBJbFLv3Nmn4Y8fZKjyeyjBRxdp8O9Da87Lnhtq1no2u4jq?=
+ =?us-ascii?Q?sRdPKk31zDt0C+WLWPdG+JA722F9F+KWno5iO5sPU7bE7bj+NISsMCsxYxY6?=
+ =?us-ascii?Q?nf3ome2jD90sD8+5XtbyQRcFVwXPfd78xuoOzCSX1BmxA0SuL8cpBbOehox+?=
+ =?us-ascii?Q?BDyX1YLK45EKrqzIV//QZrvCmu6DUAOgQL/8fPvF8KfyGp52e6xqDOepw1b2?=
+ =?us-ascii?Q?4z1ARLSgBdXzfAk++9Mqv3S72GwT3Ypl7cHqRaNAtsy27JK+lVlfqMVahS1w?=
+ =?us-ascii?Q?UiXTWPtDyUQxiEtPgSlIDkGZ8iY7JBEt9o8r81GDbdEL1mG/YNt6P76uNufz?=
+ =?us-ascii?Q?CowZSjROvPrCZ1OqdeQIPKrjkfGFM7HgNkFIIEUNHb2tnOh5yy/y8ih+y3+v?=
+ =?us-ascii?Q?4u3kmmLVC41SK7ylJWtGuC3QZHFqEMAMHpHOwE3gHmHDKCsIUCITTWG3CMEB?=
+ =?us-ascii?Q?F2p3VM5EX0X3NPOWbMAXewN28emM62g0zHolxthhD+DoG9HSgZiYHAGKS9sX?=
+ =?us-ascii?Q?DnJYH/DTsbIVB1TKeZSEqQzTbN6p5oLy9epAygssY5VeLjjvEQ6FW0HgIDL1?=
+ =?us-ascii?Q?YKiQ5lsPMQ2PnxpQ35jcsL/yuXLIG74eP5gPqJ4u58FDrRiAiDrv99cKOU7E?=
+ =?us-ascii?Q?uWZ1SmJ+JuZqiWQlqW13gdR5iSSK+mWMolN+/KVEPB42dPR1jqf3UepLjNg/?=
+ =?us-ascii?Q?8O+VMLx4y/W9zXe7k/eJK9qsf+VYZUswRgdL+TPUsiJiiLeao4v7O477ipPD?=
+ =?us-ascii?Q?XcNoVxq8LqvgY0THzhJIUNCKbaVFC+CTLQKyE9UhZ1U/jN6CxPTjv8VtZRdh?=
+ =?us-ascii?Q?YOwfk51v/Lp50HpB0AAjmHoyorbXcaNLM+vr5b7KX3njosVHilnPMOCTN4Yy?=
+ =?us-ascii?Q?PbMPJUGUZMai7qDtU94Ud+r3VOobu+4VrqS/fcx3w4zenlT4eNO1F6Arhjf+?=
+ =?us-ascii?Q?94xhU9fEmRDPPyEAhRT+NO5t2M1K4l9JSSsth+P6IENSuCtZ090N6fje97lD?=
+ =?us-ascii?Q?/U7ruKX3Pw=3D=3D?=
 X-OriginatorOrg: atomlin.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: c7c9f814-9b80-49bc-c44a-08de9bee9c15
+X-MS-Exchange-CrossTenant-Network-Message-Id: 2b6cbac8-3e99-4850-2b71-08de9bee9e4d
 X-MS-Exchange-CrossTenant-AuthSource: CWLP123MB3523.GBRP123.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 16 Apr 2026 19:30:25.8951
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 16 Apr 2026 19:30:29.5602
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: e6a32402-7d7b-4830-9a2b-76945bbbcb57
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: VEcb8ML4Gx61rimEzRjj3Smkz2/rLyXfvBdfKuJEG2czKqEtRzLqoIOR0dIfRden1ShPmht7+QvJNgsWRM6Tpg==
+X-MS-Exchange-CrossTenant-UserPrincipalName: GKHUPdRdCdX5iafjjKCcUnoG/TNS8wDIbgcxQEabYu1YlihptIFOYnmCSMvuAayn1sU7yZIU51gvA4Ov/3ISbQ==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: CWXP123MB4039
 
 From: Daniel Wagner <wagi@kernel.org>
 
-Extend the capabilities of the generic CPU to hardware queue (hctx)
-mapping code, so it maps houskeeping CPUs and isolated CPUs to the
-hardware queues evenly.
+When isolcpus=io_queue is enabled, and the last housekeeping CPU for a
+given hctx goes offline, there would be no CPU left to handle I/O. To
+prevent I/O stalls, prevent offlining housekeeping CPUs that are still
+serving isolated CPUs.
 
-A hctx is only operational when there is at least one online
-housekeeping CPU assigned (aka active_hctx). Thus, check the final
-mapping that there is no hctx which has only offline housekeeing CPU and
-online isolated CPUs.
-
-Example mapping result:
-
-  16 online CPUs
-
-  isolcpus=io_queue,2-3,6-7,12-13
-
-Queue mapping:
-        hctx0: default 0 2
-        hctx1: default 1 3
-        hctx2: default 4 6
-        hctx3: default 5 7
-        hctx4: default 8 12
-        hctx5: default 9 13
-        hctx6: default 10
-        hctx7: default 11
-        hctx8: default 14
-        hctx9: default 15
-
-IRQ mapping:
-        irq 42 affinity 0 effective 0  nvme0q0
-        irq 43 affinity 0 effective 0  nvme0q1
-        irq 44 affinity 1 effective 1  nvme0q2
-        irq 45 affinity 4 effective 4  nvme0q3
-        irq 46 affinity 5 effective 5  nvme0q4
-        irq 47 affinity 8 effective 8  nvme0q5
-        irq 48 affinity 9 effective 9  nvme0q6
-        irq 49 affinity 10 effective 10  nvme0q7
-        irq 50 affinity 11 effective 11  nvme0q8
-        irq 51 affinity 14 effective 14  nvme0q9
-        irq 52 affinity 15 effective 15  nvme0q10
-
-A corner case is when the number of online CPUs and present CPUs
-differ and the driver asks for less queues than online CPUs, e.g.
-
-  8 online CPUs, 16 possible CPUs
-
-  isolcpus=io_queue,2-3,6-7,12-13
-  virtio_blk.num_request_queues=2
-
-Queue mapping:
-        hctx0: default 0 1 2 3 4 5 6 7 8 12 13
-        hctx1: default 9 10 11 14 15
-
-IRQ mapping
-        irq 27 affinity 0 effective 0 virtio0-config
-        irq 28 affinity 0-1,4-5,8 effective 5 virtio0-req.0
-        irq 29 affinity 9-11,14-15 effective 0 virtio0-req.1
-
-Noteworthy is that for the normal/default configuration (!isoclpus) the
-mapping will change for systems which have non hyperthreading CPUs. The
-main assignment loop will completely rely that group_mask_cpus_evenly to
-do the right thing. The old code would distribute the CPUs linearly over
-the hardware context:
-
-queue mapping for /dev/nvme0n1
-        hctx0: default 0 8
-        hctx1: default 1 9
-        hctx2: default 2 10
-        hctx3: default 3 11
-        hctx4: default 4 12
-        hctx5: default 5 13
-        hctx6: default 6 14
-        hctx7: default 7 15
-
-The assign each hardware context the map generated by the
-group_mask_cpus_evenly function:
-
-queue mapping for /dev/nvme0n1
-        hctx0: default 0 1
-        hctx1: default 2 3
-        hctx2: default 4 5
-        hctx3: default 6 7
-        hctx4: default 8 9
-        hctx5: default 10 11
-        hctx6: default 12 13
-        hctx7: default 14 15
-
-In case of hyperthreading CPUs, the resulting map stays the same.
+When isolcpus=io_queue is enabled and the last housekeeping CPU
+for a given hctx goes offline, no CPU would be left to handle I/O.
+To prevent I/O stalls, disallow offlining housekeeping CPUs that are
+still serving isolated CPUs.
 
 Signed-off-by: Daniel Wagner <wagi@kernel.org>
-[atomlin:
-    - Fixed absolute vs. relative hardware queue index mix-up in
-      blk_mq_map_queues and validation checks; fixed typographical
-      errors
-    - Reduced stack frame size of blk_mq_num_queues()]
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 Signed-off-by: Aaron Tomlin <atomlin@atomlin.com>
 ---
- block/blk-mq-cpumap.c | 168 +++++++++++++++++++++++++++++++++++++-----
- 1 file changed, 150 insertions(+), 18 deletions(-)
+ block/blk-mq.c | 42 ++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 42 insertions(+)
 
-diff --git a/block/blk-mq-cpumap.c b/block/blk-mq-cpumap.c
-index 8244ecf87835..f7c5f52f3b35 100644
---- a/block/blk-mq-cpumap.c
-+++ b/block/blk-mq-cpumap.c
-@@ -22,7 +22,11 @@ static unsigned int blk_mq_num_queues(const struct cpumask *mask,
- {
- 	unsigned int num;
- 
--	num = cpumask_weight(mask);
-+	if (housekeeping_enabled(HK_TYPE_IO_QUEUE))
-+		num = cpumask_weight_and(mask, housekeeping_cpumask(HK_TYPE_IO_QUEUE));
-+	else
-+		num = cpumask_weight(mask);
-+
- 	return min_not_zero(num, max_queues);
+diff --git a/block/blk-mq.c b/block/blk-mq.c
+index 4c5c16cce4f8..4257d5b26641 100644
+--- a/block/blk-mq.c
++++ b/block/blk-mq.c
+@@ -3720,6 +3720,43 @@ static bool blk_mq_hctx_has_requests(struct blk_mq_hw_ctx *hctx)
+ 	return data.has_rq;
  }
  
-@@ -31,9 +35,13 @@ static unsigned int blk_mq_num_queues(const struct cpumask *mask,
-  *
-  * Returns an affinity mask that represents the queue-to-CPU mapping
-  * requested by the block layer based on possible CPUs.
-+ * This helper takes isolcpus settings into account.
-  */
- const struct cpumask *blk_mq_possible_queue_affinity(void)
- {
-+	if (housekeeping_enabled(HK_TYPE_IO_QUEUE))
-+		return housekeeping_cpumask(HK_TYPE_IO_QUEUE);
-+
- 	return cpu_possible_mask;
- }
- EXPORT_SYMBOL_GPL(blk_mq_possible_queue_affinity);
-@@ -46,6 +54,14 @@ EXPORT_SYMBOL_GPL(blk_mq_possible_queue_affinity);
-  */
- const struct cpumask *blk_mq_online_queue_affinity(void)
- {
-+	/*
-+	 * Return the stable housekeeping mask if enabled. Callers (e.g.,
-+	 * the IRQ affinity core) are responsible for safely intersecting
-+	 * this with a local snapshot of the online mask.
-+	 */
-+	if (housekeeping_enabled(HK_TYPE_IO_QUEUE))
-+		return housekeeping_cpumask(HK_TYPE_IO_QUEUE);
-+
- 	return cpu_online_mask;
- }
- EXPORT_SYMBOL_GPL(blk_mq_online_queue_affinity);
-@@ -57,7 +73,8 @@ EXPORT_SYMBOL_GPL(blk_mq_online_queue_affinity);
-  *		ignored.
-  *
-  * Calculates the number of queues to be used for a multiqueue
-- * device based on the number of possible CPUs.
-+ * device based on the number of possible CPUs. This helper
-+ * takes isolcpus settings into account.
-  */
- unsigned int blk_mq_num_possible_queues(unsigned int max_queues)
- {
-@@ -72,7 +89,8 @@ EXPORT_SYMBOL_GPL(blk_mq_num_possible_queues);
-  *		ignored.
-  *
-  * Calculates the number of queues to be used for a multiqueue
-- * device based on the number of online CPUs.
-+ * device based on the number of online CPUs. This helper
-+ * takes isolcpus settings into account.
-  */
- unsigned int blk_mq_num_online_queues(unsigned int max_queues)
- {
-@@ -80,23 +98,104 @@ unsigned int blk_mq_num_online_queues(unsigned int max_queues)
- }
- EXPORT_SYMBOL_GPL(blk_mq_num_online_queues);
- 
-+static bool blk_mq_validate(struct blk_mq_queue_map *qmap,
-+			    const struct cpumask *active_hctx)
++static bool blk_mq_hctx_can_offline_hk_cpu(struct blk_mq_hw_ctx *hctx,
++					   unsigned int this_cpu)
 +{
-+	/*
-+	 * Verify if the mapping is usable when housekeeping
-+	 * configuration is enabled
-+	 */
++	const struct cpumask *hk_mask = housekeeping_cpumask(HK_TYPE_IO_QUEUE);
 +
-+	for (int queue = 0; queue < qmap->nr_queues; queue++) {
-+		int cpu;
++	for (int i = 0; i < hctx->nr_ctx; i++) {
++		struct blk_mq_ctx *ctx = hctx->ctxs[i];
 +
-+		if (cpumask_test_cpu(queue, active_hctx)) {
-+			/*
-+			 * This hctx has at least one online CPU thus it
-+			 * is able to serve any assigned isolated CPU.
-+			 */
++		if (ctx->cpu == this_cpu)
 +			continue;
-+		}
 +
 +		/*
-+		 * There is no housekeeping online CPU for this hctx, all
-+		 * good as long as all non-housekeeping CPUs are also
-+		 * offline.
++		 * Check if this context has at least one online
++		 * housekeeping CPU; in this case the hardware context is
++		 * usable.
 +		 */
-+		for_each_online_cpu(cpu) {
-+			if (qmap->mq_map[cpu] != qmap->queue_offset + queue)
-+				continue;
++		if (cpumask_test_cpu(ctx->cpu, hk_mask) &&
++		    cpu_online(ctx->cpu))
++			break;
 +
-+			pr_warn("Unable to create a usable CPU-to-queue mapping with the given constraints\n");
-+			return false;
-+		}
++		/*
++		 * The context doesn't have any online housekeeping CPUs,
++		 * but there might be an online isolated CPU mapped to
++		 * it.
++		 */
++		if (cpu_is_offline(ctx->cpu))
++			continue;
++
++		pr_warn("%s: trying to offline hctx%d but there is still an online isolcpu CPU %d mapped to it\n",
++			hctx->queue->disk->disk_name,
++			hctx->queue_num, ctx->cpu);
++		return false;
 +	}
 +
 +	return true;
 +}
 +
-+static void blk_mq_map_fallback(struct blk_mq_queue_map *qmap)
-+{
-+	unsigned int cpu;
-+
-+	/*
-+	 * Map all CPUs to the first hctx to ensure at least one online
-+	 * CPU is serving it.
-+	 */
-+	for_each_possible_cpu(cpu)
-+		qmap->mq_map[cpu] = 0;
-+}
-+
- void blk_mq_map_queues(struct blk_mq_queue_map *qmap)
+ static bool blk_mq_hctx_has_online_cpu(struct blk_mq_hw_ctx *hctx,
+ 		unsigned int this_cpu)
  {
--	const struct cpumask *masks;
-+	struct cpumask *masks __free(kfree) = NULL;
-+	const struct cpumask *constraint;
- 	unsigned int queue, cpu, nr_masks;
-+	cpumask_var_t active_hctx;
+@@ -3752,6 +3789,11 @@ static int blk_mq_hctx_notify_offline(unsigned int cpu, struct hlist_node *node)
+ 			struct blk_mq_hw_ctx, cpuhp_online);
+ 	int ret = 0;
  
--	masks = group_cpus_evenly(qmap->nr_queues, &nr_masks);
--	if (!masks) {
--		for_each_possible_cpu(cpu)
--			qmap->mq_map[cpu] = qmap->queue_offset;
--		return;
--	}
-+	if (!zalloc_cpumask_var(&active_hctx, GFP_KERNEL))
-+		goto fallback;
-+
-+	if (housekeeping_enabled(HK_TYPE_IO_QUEUE))
-+		constraint = housekeeping_cpumask(HK_TYPE_IO_QUEUE);
-+	else
-+		constraint = cpu_possible_mask;
-+
-+	/* Map CPUs to the hardware contexts (hctx) */
-+	masks = group_mask_cpus_evenly(qmap->nr_queues, constraint, &nr_masks);
-+	if (!masks)
-+		goto free_fallback;
- 
- 	for (queue = 0; queue < qmap->nr_queues; queue++) {
--		for_each_cpu(cpu, &masks[queue % nr_masks])
-+		unsigned int idx = (qmap->queue_offset + queue) % nr_masks;
-+
-+		for_each_cpu(cpu, &masks[idx]) {
- 			qmap->mq_map[cpu] = qmap->queue_offset + queue;
-+
-+			if (cpu_online(cpu))
-+				cpumask_set_cpu(queue, active_hctx);
-+		}
- 	}
--	kfree(masks);
-+
-+	/* Map any unassigned CPU evenly to the hardware contexts (hctx) */
-+	queue = cpumask_first(active_hctx);
-+	for_each_cpu_andnot(cpu, cpu_possible_mask, constraint) {
-+		qmap->mq_map[cpu] = qmap->queue_offset + queue;
-+		queue = cpumask_next_wrap(queue, active_hctx);
++	if (housekeeping_enabled(HK_TYPE_IO_QUEUE)) {
++		if (!blk_mq_hctx_can_offline_hk_cpu(hctx, cpu))
++			return -EINVAL;
 +	}
 +
-+	if (!blk_mq_validate(qmap, active_hctx))
-+		goto free_fallback;
-+
-+	free_cpumask_var(active_hctx);
-+
-+	return;
-+
-+free_fallback:
-+	free_cpumask_var(active_hctx);
-+
-+fallback:
-+	blk_mq_map_fallback(qmap);
- }
- EXPORT_SYMBOL_GPL(blk_mq_map_queues);
+ 	if (!hctx->nr_ctx || blk_mq_hctx_has_online_cpu(hctx, cpu))
+ 		return 0;
  
-@@ -133,24 +232,57 @@ void blk_mq_map_hw_queues(struct blk_mq_queue_map *qmap,
- 			  struct device *dev, unsigned int offset)
- 
- {
--	const struct cpumask *mask;
-+	cpumask_var_t active_hctx, mask;
- 	unsigned int queue, cpu;
- 
- 	if (!dev->bus->irq_get_affinity)
- 		goto fallback;
- 
-+	if (!zalloc_cpumask_var(&active_hctx, GFP_KERNEL))
-+		goto fallback;
-+
-+	if (!zalloc_cpumask_var(&mask, GFP_KERNEL)) {
-+		free_cpumask_var(active_hctx);
-+		goto fallback;
-+	}
-+
-+	/* Map CPUs to the hardware contexts (hctx) */
- 	for (queue = 0; queue < qmap->nr_queues; queue++) {
--		mask = dev->bus->irq_get_affinity(dev, queue + offset);
--		if (!mask)
--			goto fallback;
-+		const struct cpumask *affinity_mask;
- 
--		for_each_cpu(cpu, mask)
-+		affinity_mask = dev->bus->irq_get_affinity(dev, offset + queue);
-+		if (!affinity_mask)
-+			goto free_fallback;
-+
-+		for_each_cpu(cpu, affinity_mask) {
- 			qmap->mq_map[cpu] = qmap->queue_offset + queue;
-+
-+			cpumask_set_cpu(cpu, mask);
-+			if (cpu_online(cpu))
-+				cpumask_set_cpu(queue, active_hctx);
-+		}
- 	}
- 
-+	/* Map any unassigned CPU evenly to the hardware contexts (hctx) */
-+	queue = cpumask_first(active_hctx);
-+	for_each_cpu_andnot(cpu, cpu_possible_mask, mask) {
-+		qmap->mq_map[cpu] = qmap->queue_offset + queue;
-+		queue = cpumask_next_wrap(queue, active_hctx);
-+	}
-+
-+	if (!blk_mq_validate(qmap, active_hctx))
-+		goto free_fallback;
-+
-+	free_cpumask_var(active_hctx);
-+	free_cpumask_var(mask);
-+
- 	return;
- 
-+free_fallback:
-+	free_cpumask_var(active_hctx);
-+	free_cpumask_var(mask);
-+
- fallback:
--	blk_mq_map_queues(qmap);
-+	blk_mq_map_fallback(qmap);
- }
- EXPORT_SYMBOL_GPL(blk_mq_map_hw_queues);
 -- 
 2.51.0
 
