@@ -1,78 +1,75 @@
-Received: from mail-dl1-f47.google.com (mail-dl1-f47.google.com [74.125.82.47])
+Received: from mail-pl1-f175.google.com (mail-pl1-f175.google.com [209.85.214.175])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 10E26264614
-	for <linux-scsi@vger.kernel.org>; Thu, 16 Apr 2026 16:55:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.47
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D1E1E311C2D
+	for <linux-scsi@vger.kernel.org>; Thu, 16 Apr 2026 16:59:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.175
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776358525; cv=none; b=s4EQ5UMtuk9VWWs/mHW4JgARfoghnkM9hKz4Wli2e+arB9BUJvV1aFIa1twV3F5LctVLf8HPyf66yZbg9kFRFHp9VVlU0XaJLbEvk3qMT02TEB6cP6FtDpd7wuIGVC7bPuKGDdHRgqy6cY8PBOheHkt4KnZRp9XCnH71CpwF7QE=
+	t=1776358789; cv=none; b=ILqnd4qZFffQ2QOvYfls22QnBX2ehsWmqDxoCpNuRsr0AHyfsZQ+neOUjJvvFge0C1zt4VEWluWJTvpibq9ubuv1kTIQO7vT1bBvy2UQvSPwNC9xcaYrOpXGJ6F5FmoYA/gIoyz27YL4D2MgCtmamA3sh3M9qos917OIWG/AH+A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776358525; c=relaxed/simple;
-	bh=tx8O6vQLcp37viM+vOfgjXLEh+FOD+ofSxJ7tOBqZPQ=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=S8Pc4ACXosDi+9ArjjrhA9dR34M/fWOVDWho1+VKQGulPmVMsaOMmIWDWQDGsU9K2CbWqHprawVDnNEQ+k/XdXIRzVfa5IZh+zk4wLtGLS5YvcHPm1lj6TqE/M1144q254c8K6H1x65fm7JnZ2QcV3rMU56WNaZnu3krq/vo/zQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=purestorage.com; spf=fail smtp.mailfrom=purestorage.com; dkim=pass (2048-bit key) header.d=purestorage.com header.i=@purestorage.com header.b=aQls8S8J; arc=none smtp.client-ip=74.125.82.47
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=purestorage.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=purestorage.com
+	s=arc-20240116; t=1776358789; c=relaxed/simple;
+	bh=1LP+9Y9TG4oK4f0ZkbP0a0/ld5plxckV7HRW4ZFOBCc=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=u2zcRUIRmJ1Nyp37Yp99AzeRKl/MpLG1NpM/m+HtBBdVGEJ5euS3FBeClUOTi2L+E6I2UsnOg+UmAzquqlOkn+/JFUKEDuOdwYZ/3tffHBOYr6AYb8OAORgOgQhqNpnoQcMeBUNq9zjbPn/MJxOtS0SuGakn8KTjDefP4HJkVYU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=j8Nktlp8; arc=none smtp.client-ip=209.85.214.175
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=purestorage.com header.i=@purestorage.com header.b="aQls8S8J"
-Received: by mail-dl1-f47.google.com with SMTP id a92af1059eb24-12713e56abdso602326c88.1
-        for <linux-scsi@vger.kernel.org>; Thu, 16 Apr 2026 09:55:23 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="j8Nktlp8"
+Received: by mail-pl1-f175.google.com with SMTP id d9443c01a7336-2b2589c26e3so73845295ad.1
+        for <linux-scsi@vger.kernel.org>; Thu, 16 Apr 2026 09:59:48 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=purestorage.com; s=google2022; t=1776358523; x=1776963323; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=Nd/mW1t//0OSanwooqmtd3lxZe9tbhkFE314DXn8KBI=;
-        b=aQls8S8J85qj/M12LfapcPXvUEXPUZ0Pz+mJI0cqCsnmR8rjRKQAFXmLPPWnum6kQd
-         lPYjunRO63I4bdCOu1yGloRfkKN9HVEhQFaytYodGQ8LLt+AJh5T/0U/TOeV9PGPyqyj
-         v91MPeZPJosyRchZh1Dz3lSAQn5QQ+pPvgI/B2emfhQhmZE8c67YxhcNNFJy9B0jcG3B
-         h7RxXjEkZk/vOWZ+dua4sxAwCRzD2/su+UcLeorDOITGd5QTKlOVBuu/KI7pAa0iMM+T
-         m8xySXKlqyLo/0ULbnyK2S0Gjy3/IHqhDaGEWX6dOceEVlfueEwqfquq4DYu+Tng2BLm
-         Woxg==
+        d=gmail.com; s=20251104; t=1776358788; x=1776963588; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=VksxkcPuGa1fBZOzll7HizxJVJENQAeYC1HuFM93zwo=;
+        b=j8Nktlp8PDB+71AU24VxK0+bQ7JFQw1NN2DJ77fCnHzUsS7MD1/qHkPdISdIxOTC/F
+         06HaMbyI5T2LxgB1pyCMVUKwozkahynsMRFxTp/1V9JjMgAgMkOK2/kr1yHud8vDERc3
+         HXFkiKxHOsKVzsDGpKBLJzm2Hp7x8XROIjGVaxxrhs731GavfEsG/tgtYEw9yU4GX5U+
+         hZF/hBxt1WugNXw1A8aAjOZncAlPpuTs9pB4iwDsrS4dhESIEFA6bl5eyfcmbDEGsdfL
+         sHqDOB1nlcvJWE/wwPa1+jtKqRPwRllS6FQcNAg+6sqaDq8cDQGTVqKekKvsqbieT7qv
+         oHqg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1776358523; x=1776963323;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=Nd/mW1t//0OSanwooqmtd3lxZe9tbhkFE314DXn8KBI=;
-        b=GnZwrpVU2/iHeFU57SrtRkAdS1FpJQ9lzAAmlhHLJG2YlqBjt33tnWNaAcwSNBXOHI
-         N8BbojZMLCdQ8vDHmma8ujiFSo0QJJCjguXh+G0O3EqPElZCEH1M84DyicFrVCj6jz9i
-         U3RJ2QogjlAp1pJokciXRwPmNltLEWgrEaxgV7Y5N3dNR5lLopznrgnUnC+77e+eCUyz
-         96vTCys/d1Re/HxEGbdJClUJORzw4qEiKFvSVPNzKmnkKXBqGk3mZ8qAYRns3rCHueDl
-         1CKBj5QiN0mprHaXnOKbobXZX4uQ+uu1Q6NyCScFRYloC620Co4tVmniC0iUEGf6T+X6
-         QLgQ==
-X-Gm-Message-State: AOJu0YzpbX+vVGIZiuiEpSJzZFLGkTLk7Ha5TrEPXwyeRkRj3ABD1KpB
-	bUY9rkzN4is9CNtQ4552xoF3nwR6tZgU73ddijwJXo1y0tKcL+qn7NBJpIPjkymIxJmZHxh51UD
-	ExQNTK+cULYOTjDIHlRRJWAV8bUpTE30UOMN2TdR7ZgVpLmBZ4zPyT3N0e/vziODJ8ccyKkJPc+
-	W8DUmag9dxMM08ArFmyxKmzukfhmVJjGmrZT45OB/OAozY1lA=
-X-Gm-Gg: AeBDievtHzF1XXnNiaON3TsV2VgNe1Yj2v2W39+vno451V80K7aSoD79NAhf/pfAeN+
-	dR6S5RxKH2ciRnyWr2vMdsknhoKjn9P1Lbfsnzjlq1nF0oq7J3BaXR8LFLKeIF5ouJNFsr3C7Ma
-	AGknUgi7RmlPt95ITMxUDyvjASAQLHmYAtZNoeyprqi4ZuSx3MPENd6qHdBJZ5hWsvHmOaA9vpe
-	aF2BYiYhpx679Ux9L2k2v2XxFXmo9hZOoUCguVMqm/+3iL1Dz4rkyCMqE6uAKlhxXaVjLGS7Dcb
-	21XY1WRuiBxNwv2S6GjrdYow/DgdXkEap3Ve/OLNkyjZvjNVRQOja2p7bF1bHQwSAR9Lwvuhu93
-	kkz6peOnOq1drd1w+RbvB3di5lBC88VmU///cj1JoZw+MIPq9hieWF12h1WYnQOUYKzQSZ71kMk
-	FYcEBi4aHjOqyjuwwWnT+hrOIondqaVS7UUbg9jUSokJW++AuadUDmvWjZmkRAgREo7TjR+UH+1
-	NbNfftRjSfaokOVx3pb7xNF9UoHTtAcmFIrfaoJwE5Z/CP2KGkQ9uknSFQ9wWRNbOiPwthenOoo
-	g9bb1T4DCsgF2fEcfzRTXWHR0ic6LQK8HTQ=
-X-Received: by 2002:a05:7022:220d:b0:12c:f77:f087 with SMTP id a92af1059eb24-12c63123e38mr2120943c88.12.1776358522458;
-        Thu, 16 Apr 2026 09:55:22 -0700 (PDT)
-Received: from brian--MacBookPro18.purestorage.com ([136.226.65.113])
-        by smtp.gmail.com with ESMTPSA id a92af1059eb24-12c5e6b6a05sm7461733c88.14.2026.04.16.09.55.18
-        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
-        Thu, 16 Apr 2026 09:55:21 -0700 (PDT)
-From: Brian Bunker <brian@purestorage.com>
-To: linux-scsi@vger.kernel.org,
-	hare@suse.de
-Cc: Brian Bunker <brian@purestorage.com>,
-	Krishna Kant <krishna.kant@purestorage.com>,
-	Riya Savla <rsavla@purestorage.com>
-Subject: [PATCH v4] scsi: scsi_dh_alua: increase default ALUA timeout to maximum spec value
-Date: Thu, 16 Apr 2026 09:55:12 -0700
-Message-ID: <20260416165512.26497-2-brian@purestorage.com>
-X-Mailer: git-send-email 2.52.0
-In-Reply-To: <20260416165512.26497-1-brian@purestorage.com>
-References: <20260416165512.26497-1-brian@purestorage.com>
+        d=1e100.net; s=20251104; t=1776358788; x=1776963588;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=VksxkcPuGa1fBZOzll7HizxJVJENQAeYC1HuFM93zwo=;
+        b=Oe+tEYtI7dB8foCw4n4l8SzCHh/rAtjuK0FziYrWmscvb3WjzDvCPEPDJUZhb4Mfhg
+         7wQFSDyjmGQmTM0+iFkzEFeyc+qWdvKIGYtx0OTfxcTfgkuT43HWZQ0Pb0JcoCbNlDvq
+         r8w5oBxaXNO/Yu7WdXmQobZrWMEMoGmxZ0jEB/M2ktS/WdnJt2PLmxXyM+DglMKIar+x
+         dcyrhkgjN2AybLLHwqesryfD468jBM3lvdruQODSLHe/k4A8/ikj0/UKwMYifYtRGBkV
+         xqDX0D8CTojFjnFbYZWpXJD5L9Zv/sH/Ukuoai1KB2W8tX4119cx86aMt8QyLZ1LG52g
+         BURw==
+X-Forwarded-Encrypted: i=1; AFNElJ8QTNhNFqszKMY1hhJeuuiLVSLqM6IXpsKUCTmYN4ZNivQwpUek6RS/WNmTdAukuPxCWK2xBFi40PXw@vger.kernel.org
+X-Gm-Message-State: AOJu0Yx6di5hORJLHfoeKLB6l2L7S8RZCyocy1SGVm1fCS3p/Xc28rTK
+	j2cWH4KoIzrDf4gYODVwfbCzHUG9d0v4b81mJlH51umKkxxJ6kazFur2
+X-Gm-Gg: AeBDievIRevJBEezme08I8LQcbNgnd10xvM4KQLbTAjcDW/WYxHb90Zos5s8IuD5xP3
+	KA6eTHLL4OT2eiq/c7ZMlKwztm2lU4gYpL8XCJBDVBmmX+1QcQqdBOrW3kl1KAi5ijKEcHGlgeB
+	pUYhL+tp7RAF7rxfzw6cvbGYR81FpIv0UZs7+ibjynvWghI1nN/hcTWugDaDGHbVESsP5fqnLyl
+	LP3iVBmqTrX2RGAKqUKg8WvY4+agJJUaNdio9RtNeW9n11AEudHk9qB6of4tISm13WuH5ChmUIg
+	49ZiNHqADSREFqeCaJwpKjQdlfHz/GauhdeXuRblMebE9b0ApQXTb/q6cKyx+G1sCOL7djbAeoa
+	6nHOKngHaCubRuvH3t6w8HESiBb/ct1BluiUJKoIhjexvoyyzYDjNv6Hw+sS0JkKeBykPjVwxUw
+	uXDgcY4rG6YCDNLPfWqQRvAurIjuxMX5wkydQAxnQeDw==
+X-Received: by 2002:a17:902:b588:b0:2b2:4c92:c389 with SMTP id d9443c01a7336-2b2d5a6e445mr206661275ad.34.1776358788087;
+        Thu, 16 Apr 2026 09:59:48 -0700 (PDT)
+Received: from lgs.. ([223.80.110.69])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2b4780f0428sm59683665ad.9.2026.04.16.09.59.44
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 16 Apr 2026 09:59:47 -0700 (PDT)
+From: Guangshuo Li <lgs201920130244@gmail.com>
+To: Matthew Wilcox <willy@infradead.org>,
+	Hannes Reinecke <hare@suse.com>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	James Bottomley <James.Bottomley@SteelEye.com>,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Cc: Guangshuo Li <lgs201920130244@gmail.com>,
+	stable@vger.kernel.org
+Subject: [PATCH] [SCSI] advansys: fix host resource leak in EISA probe error path
+Date: Fri, 17 Apr 2026 00:59:35 +0800
+Message-ID: <20260416165935.3958686-1-lgs201920130244@gmail.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -81,39 +78,49 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The ALUA handler maps a 0 value (no implicit transition timeout provided
-by the target) to the ALUA_FAILOVER_TIMEOUT constant, currently 60
-seconds. This means the kernel already does not accept an infinite
-transition time.
+A manual code audit found that advansys_eisa_probe() frees saved
+Scsi_Host objects directly in its error path.
 
-However, 60 seconds is insufficient for some arrays that may take
-longer to complete ALUA transitions. Since the highest value allowed
-by the SCSI specification for the implicit transition timeout is a
-single byte (255 seconds), change the default to 255. This way,
-when a target does not provide an explicit transition timeout, we
-default to the maximum value the spec allows rather than an arbitrary
-60 second limit.
+Those hosts have already been successfully initialized by
+advansys_board_found(), so freeing them directly bypasses the normal
+teardown path and leaks host resources such as IRQs, DMA or MMIO
+resources, and the Scsi_Host release path.
 
-Signed-off-by: Krishna Kant <krishna.kant@purestorage.com>
-Signed-off-by: Riya Savla <rsavla@purestorage.com>
-Signed-off-by: Brian Bunker <brian@purestorage.com>
+Fix this by releasing the saved hosts with advansys_release() and
+dropping their corresponding I/O regions before freeing the probe data.
+
+Fixes: d361db483241 ("[SCSI] advansys: Sort out irq number mess")
+Cc: stable@vger.kernel.org
+Signed-off-by: Guangshuo Li <lgs201920130244@gmail.com>
 ---
- drivers/scsi/device_handler/scsi_dh_alua.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/advansys.c | 14 +++++++++++---
+ 1 file changed, 11 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
-index efb08b9b145a1..80ab0ff921d43 100644
---- a/drivers/scsi/device_handler/scsi_dh_alua.c
-+++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-@@ -37,7 +37,7 @@
- #define TPGS_MODE_EXPLICIT		0x2
+diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
+index fcf059bf41e8..022a8190ae31 100644
+--- a/drivers/scsi/advansys.c
++++ b/drivers/scsi/advansys.c
+@@ -11373,9 +11373,17 @@ static int advansys_eisa_probe(struct device *dev)
+ 	return 0;
  
- #define ALUA_RTPG_SIZE			128
--#define ALUA_FAILOVER_TIMEOUT		60
-+#define ALUA_FAILOVER_TIMEOUT		255	/* max 255 (8-bit value) */
- #define ALUA_FAILOVER_RETRIES		5
- #define ALUA_RTPG_DELAY_MSECS		5
- #define ALUA_RTPG_RETRY_DELAY		2
+  free_data:
+-	kfree(data->host[0]);
+-	kfree(data->host[1]);
+-	kfree(data);
++	for (i = 0; i < 2; i++) {
++		struct Scsi_Host *shost = data->host[i];
++		int ioport;
++
++		if (!shost)
++			continue;
++
++		ioport = shost->io_port;
++		advansys_release(shost);
++		release_region(ioport, ASC_IOADR_GAP);
++	}
+  fail:
+ 	return err;
+ }
 -- 
-2.50.1 (Apple Git-155)
+2.43.0
 
