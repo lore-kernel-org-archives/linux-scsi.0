@@ -1,25 +1,26 @@
 Received: from CWXP265CU010.outbound.protection.outlook.com (mail-ukwestazon11022129.outbound.protection.outlook.com [52.101.101.129])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 719E139B49C;
-	Thu, 16 Apr 2026 19:29:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B2C13A783F;
+	Thu, 16 Apr 2026 19:29:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.101.129
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776367793; cv=fail; b=FALYheQ/ZW9sbVu6PZNU7mHA25rME2GgHpY7XvmKIthw9hz/xzOCPYdUDj7neg6cg1urBMXvuoRD+2I7ohQCjPb7eyqTKF9q4p3LtTqOAeor4gmsyRTMU4Kjjcb40Lqeh4O0jIKqonasTjMSF8C5IraTOq/k5h+h1osi1psIqAI=
+	t=1776367797; cv=fail; b=ua/TZXDSWFCbQrvViR32fqGwS5XKI0GAzJs8M0Cmy91U2oR3kl8U6CSdraFx1Ram/AR4B6EXdjpIGiV9ZO42p/U4T05f8cpuEALdwgZnj77hJ1N6dRuuxNXMYVvz60Pi1yawK4z/q/EUqRNVL4giZEHnobcrmpvcEpGWHHKdLWg=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776367793; c=relaxed/simple;
-	bh=o3/kBy/u9QGN6sRyLmzDbx/QfYUEPoUQBdXRlz67/J8=;
-	h=From:To:Cc:Subject:Date:Message-ID:Content-Type:MIME-Version; b=ZyCW5t854tX8+Myt3P138E2BiTdeMEYI7Kf7TjR360XZ3kmuFG8vJJP82JrrYN53unH5vQjik7DnJuYoWAB7UWkqZYbGBAUe7IqPcAsg2o9MNhkJZvTdr9QHFpJjMFjcgl0BIUh4SVX4QyvfQVfXpvQ1jFZup3oWgdvnjmxnxFk=
+	s=arc-20240116; t=1776367797; c=relaxed/simple;
+	bh=ZmC6aXtPRP05ZtCX03B+lneBACYLp/Gf8ZNsdQvr29E=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=fWqCtXjvqPiE2vKBSo0FnsbJipcrpINE6KrAg0BS1JNVu5HQMdk/fnstSXBKdggZkg9ElXXM8varhKmrtUYzpHmqxNuvavCGP1vRaINO62jqs47KGEe5MyOVlUnwcjG01GqhyZipBvk7P/OMXot5kMBbk6q4MRvF/Yu+SNahL5Y=
 ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=atomlin.com; spf=pass smtp.mailfrom=atomlin.com; arc=fail smtp.client-ip=52.101.101.129
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=atomlin.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=atomlin.com
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=whPTBJySndArXAKhdAhq0AMEfTlqMEvv0POJfqhUPr4LdwjdZcEMB/BMLp/PQRSBwKfwAp0khtL9YP5Fe9tAwxu5M/xR5KiO8ZnskWQ12UIn49m/gUC1iLZEzhGUwtsjJcxQmc7UCpj4JRE2BPDoj2jgKcr25xOsidTNbbvTNixtS3HS+Kriq7u5mYWVNgQEnhte22VXVzuetR9Q80sakuon0c3HtGiNV3UOhH/9p7jiIgnYum37ukzqoUmll4jhEnWCGmyZPdnYnIxOkhQ2bZau2JfnkGrasP/SqJJp1CSXYKt12xawxKzZi4Gc72i51ZmaAko0ImOVbOgAmsvuiA==
+ b=TCVKArScU/Obd9ed4jDlzSKaDHvfpRppHOfkNLzjBkI6Xs8yWhkM/TDgBy6vXz0oFTkRoPqfXE56LDXljUrXQWO2Xf0a0UsI7jtl0kjCKDZ12CioG4KOpvw1/r4EwzDaLRdME8PVaMNunMS5xDocbhzCzf+A9t38iZ0XyAVcnUaQDjcsr1Hx+WP2WFFvmD9aYCK2OEwNDsSGb5aEnHkoobSh917hE+aPDWHU4uIk+p0hebbz3LCRvWtAhC6Su43k/1j9LHMw49hdkX0Mj8qJw6xLvNV5AeJeqNsq2gZp1hPD0150f873aRKV5xuEBVpAwRctElAuBZnMcStRDONAWw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=ESo+oMx9LcJmyd1KXHbhrTUp6XFjjlsLTUknC2P9Hng=;
- b=jP+td9CjKy39BxPUacjXFVVaMVKe1a/9oG7R4xDvwXwHUADEx+5u04pKUoo+R+fH9KvwuqA0+p/b2v8CVqy653Utz8udSg2v7aA8lJd8Ba8nUr+aUcLAtxNdAGqBj8R84uTQuX94rHwgr8VJs7pbxmAi9FrK4ZGvlYRwoNNdAeWd3AhE36YalYMb96JnL00Rm65bg7fY/iwnSfYYcS+y3lAmyAWjCOnL/P/cCs9PdLqYG4iIU0ioAkDTD9lxCL6zj9Ta9dvz0yxpQQzinm9MuxFReDtOtlWZ9gvRZ7+/3Jn5pZrWDGl7OGmCuQnr362UxBmCei33Wm7R13B84SBY4Q==
+ bh=ee9AYLriQVkhiQVnDInfi9nP0h08/1jbZ3RuojyHH9c=;
+ b=wa7hYyJvRV881NexY6v9bbGvaj+XRcXEMdzQR8D1qmJnf7xyTyCoTLuFC2nuP+Bx6fkqrvPj8yA/Rj0E4nZvxTF9942J43Zm8+1+5MYxw5Cg98LB/Or8cno5QANAJgjC/0tDKkEgk5LEYfHEvJoUAhugn8KfjjwczLrNISkL1466o42lObZ1meeHl7vWcw+kVcP2oRdweAIP3UL6HcyfAf5B7EP5Y5C/fxI4/xUShYowG2VgZe/8jfi+EoF8OkfQn3CEE3OIY/soV6dZZXEf1RWEXlFhgrpiM+kZU3asq2eF+6Gbjhpdte2y4pVIWfy0VevqEjQ/wAlCN/Y1hQWBAA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=atomlin.com; dmarc=pass action=none header.from=atomlin.com;
  dkim=pass header.d=atomlin.com; arc=none
@@ -29,11 +30,11 @@ Received: from CWLP123MB3523.GBRP123.PROD.OUTLOOK.COM (2603:10a6:400:70::10)
  by CWXP123MB4039.GBRP123.PROD.OUTLOOK.COM (2603:10a6:400:c5::11) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9818.25; Thu, 16 Apr
- 2026 19:29:46 +0000
+ 2026 19:29:50 +0000
 Received: from CWLP123MB3523.GBRP123.PROD.OUTLOOK.COM
  ([fe80::de8e:2e4f:6c6:f3bf]) by CWLP123MB3523.GBRP123.PROD.OUTLOOK.COM
  ([fe80::de8e:2e4f:6c6:f3bf%2]) with mapi id 15.20.9769.046; Thu, 16 Apr 2026
- 19:29:46 +0000
+ 19:29:50 +0000
 From: Aaron Tomlin <atomlin@atomlin.com>
 To: axboe@kernel.dk,
 	kbusch@kernel.org,
@@ -86,14 +87,16 @@ Cc: atomlin@atomlin.com,
 	megaraidlinux.pdl@broadcom.com,
 	mpi3mr-linuxdrv.pdl@broadcom.com,
 	MPT-FusionLinux.pdl@broadcom.com
-Subject: [PATCH v11 00/13] blk: honor isolcpus configuration
-Date: Thu, 16 Apr 2026 15:29:29 -0400
-Message-ID: <20260416192942.1243421-1-atomlin@atomlin.com>
+Subject: [PATCH v11 01/13] scsi: aacraid: use block layer helpers to calculate num of queues
+Date: Thu, 16 Apr 2026 15:29:30 -0400
+Message-ID: <20260416192942.1243421-2-atomlin@atomlin.com>
 X-Mailer: git-send-email 2.51.0
+In-Reply-To: <20260416192942.1243421-1-atomlin@atomlin.com>
+References: <20260416192942.1243421-1-atomlin@atomlin.com>
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-ClientProxiedBy: BL1PR13CA0093.namprd13.prod.outlook.com
- (2603:10b6:208:2b9::8) To CWLP123MB3523.GBRP123.PROD.OUTLOOK.COM
+X-ClientProxiedBy: BLAPR03CA0143.namprd03.prod.outlook.com
+ (2603:10b6:208:32e::28) To CWLP123MB3523.GBRP123.PROD.OUTLOOK.COM
  (2603:10a6:400:70::10)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -103,149 +106,92 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
 X-MS-TrafficTypeDiagnostic: CWLP123MB3523:EE_|CWXP123MB4039:EE_
-X-MS-Office365-Filtering-Correlation-Id: 55d8b175-25a1-4cc9-177e-08de9bee843a
+X-MS-Office365-Filtering-Correlation-Id: 6ebbfbac-1c47-4964-1a5b-08de9bee870e
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|7416014|376014|366016|56012099003|18002099003|20046099003;
+	BCL:0;ARA:13230040|1800799024|7416014|376014|366016|56012099003|18002099003|22082099003;
 X-Microsoft-Antispam-Message-Info:
-	eSRvUIGFt9dw4rG8qpmsbVORKjN0bPNhWNLsuR3g4KVh+MTskWlruSS96FJ8KKiHdKQG+uJj6k8CHowAVscKdkSMi7M8SVCiBBaJ+Z0Wmxpexqzj9iph23q/5gXa+/DvpYrk8WeGrGw/vVGbu7ySmCI35x4d+UB54dx/bVMqV7MIL7YwOuz7iE0OF74naxiJsp8e7n1PgDHJiEsbefUkBlv9tWsoIrLNv/xYR0eZiRKOCYkmEz1c8Ei3GD1UfGvNeo2L1ys1gKESdH0meTrIi1hUVxM/V9BRkRKp9gA7yWl/+SkNrc/8hmBndD066yUOl/mSKexz++KbfB01CsLWqhBLvkJB7qE87Fq+UOvymKJMogtPDVYB26mng1MneaMI2ep0XARpME+pxFCAzIVGqlx+EdCd4tnuYru2CZC6z/sJ6afiB6G6YOl9Tec+8L+Ihxgg++iTn5I2HFUTfGgap+4FYkEZzOmHeauqBAPP8aBU+qK9Q1udG+l3RFuEbk8fTgnCc74svh91lsBajsQvl45lWMZ+NHYR8Kg5DNqdxQTZe9FkF7+OkN5lM5zvZBeVUGKHg+97t2hgRHL+GAZLNzTXNbeMLBsWH0zY19xYsQGCd760v3fzGkHOZfLjIPWrNDtBNNMaFLju1a6D5hgV108/CMZRMWIysaHR7eBAgBrWRiR2z27U3PF+AHqJY5IuVoUjeMSN5hA9mOO/lWILGEIzoS3eKhGUvlU8NiQY0Ek=
+	B4ieU48D+QZ05UTlr/ax25V+96iUXH+FUphK7cGdqFdu6sD0f/xrJxLrSLJuFOogsI2cENRRydGM7nCsTdMZCYnsYgVoAHP8sP8SS/USZbPsQNhM10glBls7eaV248Cr4ilk6/QkdDIbomfSoXif8LNjdMVOK9p4AlwNGj2WDQPlvPm1UdJPAUA42brh9fEZGErDswaso0eawBfgHrWFi3P9YFWztteiXz1TtXliVL+033VMNJFLO+QJvt18SeqXwnvwXURtptoS4D1lnRqp7JZHdypFmUMN2wsNVmNdaHDLW9EXO7uNOpzn/VKgtphqmCCKYJvmQJs/7k3c0QM7eTC8BjVy8wxs1VvE8cM5OF6dwVIR69rA99wacjVNiS5yZuN0Z/34dNwkCwQiFi6f7sx6cI5FC3J07KCcg34dccVPsD5s37M/2sIAzTqFG/+H/edWz6otkkcZS4thqwYxRNbHm3tDYfwUYfflU7iOQJiJKechOF1R0A7GTugj4SSU9G+jSPuBu6bZfaVpPKbhtP7uCxkmTi9mM3MJDDI+JkOXna4mbIMp2S0i2EgzMa6AbUvID90UEywVnw26smOLTswzoe2IcvslQ5zR1w1HIC5dCKkHFsn8CCzPO8wthwQIxSdGM67YmhA5pJVDLDaJoFPT1B35Pr7mdtIyUn4i7IYvJ5TWBguNVm8T2K6I5q3ZlkYtmVbtLfM3xq48dX3hXyUZ97ZVPh5W/UIdjUDM2wY=
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CWLP123MB3523.GBRP123.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(7416014)(376014)(366016)(56012099003)(18002099003)(20046099003);DIR:OUT;SFP:1102;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CWLP123MB3523.GBRP123.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(7416014)(376014)(366016)(56012099003)(18002099003)(22082099003);DIR:OUT;SFP:1102;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?6J+PeGCOkNCWKp1Blf74dQxGG2gC+qKPuGasIukuLVGkbV1q73DalIiqo7Ps?=
- =?us-ascii?Q?PhwmRJxfq1hqOO/hEWXZ69mkea7J/GQTH7aD+qt5fmmBpaOZg1L+nChYox4U?=
- =?us-ascii?Q?N/xyfdEjHkGgACVpg7/cIQ6ucunmoGLQgAc4Zp/SQS/4hZY6Q7w5TSPXGmqA?=
- =?us-ascii?Q?t6VfDUy0HUG0GWVom0WZlQ3aLyPmgW3bysN8uLxyp28TX5IBHyF7jTrIUpsY?=
- =?us-ascii?Q?1rndb5d5K8a7XyeK8bSHSSINJZ7g1h7tS57pf44a0+qzylkp3fPBPMWK4iQ9?=
- =?us-ascii?Q?fQ6r8bSVi7OuwHi1IIutvW9OwIxxk+t79wrZiFjNW9fuM/IBIiIyFPPNTups?=
- =?us-ascii?Q?pl1QeS2BJlLUP5kx/9lzxHXj4IfquIP2rOFqfr4Dyx2D8EdItDsqfrubbG42?=
- =?us-ascii?Q?KedsI5X+O8l/BGsuyQrjvgZzHxqgQ7msNNB657xleQuUiuFzOC20qPiXZPRk?=
- =?us-ascii?Q?EPWAOpj29lks7BWkwz5ixKpkU+6X2tM3b8fy2FCXsO1iHmqfZ3IQQpJSb7cs?=
- =?us-ascii?Q?slVEhh8akDuMJ18wh4kr5jNE7WZvduRF6pWuJgju9b73rSFpdCx4ufuM45Fj?=
- =?us-ascii?Q?DLjpfkxFQSly6qUpPfE1lojd9FFc59K6STU2ZLSvfZKxxpXU5hfekjSUzXxo?=
- =?us-ascii?Q?Xta/12Lg+jbQ/c0xlBjeXsSmjdGZ2/utxhxb5T1BdF+xnSXgAf48pJe3Iddt?=
- =?us-ascii?Q?7UtGQUbUzH/oe7BojHoD72AOdfvWzbjRY6OLXQ+69c95fTHAZ0BAzBUHne6P?=
- =?us-ascii?Q?7Y1aq3PPx+7wFEU0EoTKCQOulDiUMsdJv+KgWu2iSdfxl0LEgJARQmZeQ8Or?=
- =?us-ascii?Q?yJ34PtGtHqM2t0Jdh9Dh3UveTl9l3XYyUZdUvMQLcWP67zbvhTMbN8rYIcx6?=
- =?us-ascii?Q?4uBHP80mCSJ2S5eXhoWVpnZdDgf8WJXPa1KysFT2aq36TeSpUi7r7I380eTN?=
- =?us-ascii?Q?u3vsdYVR2/SeIryHI5Kc4A9KBj1bNuUSy7HgLmKuKthz4sJB53A6cFPKr0wo?=
- =?us-ascii?Q?mESPM66XmQudVmvkwW0FZITmevBxGmeGhhwliHqoIKEPBWoVYOJssPfw/aK0?=
- =?us-ascii?Q?7XIoD7dzOSVMPz9eH/SRTGhziC/LiveDiv8qTrJ5NvkEhiSstM6IvrCrEy2P?=
- =?us-ascii?Q?20GeyL/Cae+UIlU5+nB5ch/cYF/I1FcYgV+wy+SUNcLfY3162Ozi0kzXs1UO?=
- =?us-ascii?Q?aW6JBmQEuVjTClLpd1ymoFqzc7kgy7kihu5RBgVjZXw7umQ2JIfHp68dVMHL?=
- =?us-ascii?Q?E7ox7WPgT+ptIGfFRXRRiuWJzdRigR0bOj52qbTkMTuydNqyI0MROOPklAgx?=
- =?us-ascii?Q?KXH21Q129Z+b4/s1EfNCAmEm3AD7Hm1LGTsoE04E7i1gGL7OvPlKLP3Lz6G/?=
- =?us-ascii?Q?Regqu+vD+C7p5zPpw2N2PhcJkzJ6R+V2LxQCAZNDyBYOZIoW3T1Vj32nbcrY?=
- =?us-ascii?Q?WpQPSz0AP2Ej8kDLAURIm1LHBL1HCoAPJO7SlDQcTy5/Hn2Fr1OJfihwhMV1?=
- =?us-ascii?Q?GxV9RjZmUIfu8ig8LmKV+fEcvFsQ/avMvcAe1NgSTqr0GlwqRLBsaIBh97V+?=
- =?us-ascii?Q?p+j8WXdrossfmyluAq0/eoJQhzYB7CucnU9VydEexy30aYakfkyh+her2v3L?=
- =?us-ascii?Q?6P4BXXvQ+rl+3MugPfBJI+p2KOkWgTo5Damw6GDJ50USfBWOCh9NrBpM9fN6?=
- =?us-ascii?Q?Qris/u68LqO+DxfurbjPtMFyUirnx7F/bQcF7JKQWIWPsp/B2pJz8MK+Bm8q?=
- =?us-ascii?Q?tr/puWZWmQ=3D=3D?=
+	=?us-ascii?Q?1QNQpS/n/0OcniBzRBKEfK2CzXU6mBzSBnuAqzfuJhdBxzYTmRg17GPAcIOO?=
+ =?us-ascii?Q?EJ8Viq10V/hCkTAKfEy3QipeTrRKA6rMCEq7vAEC+n/im2KcHramU3uNPlVa?=
+ =?us-ascii?Q?ksMAo2DZgSwivjfec9ksZu1drZOsr38HyjwpXpvQAxPLzZ77VxTdyQBQMDlU?=
+ =?us-ascii?Q?9ZpGnktOXXIOuNHcTsvJI06ZaG7v4RRFG0rA+vpdDuisZOHNNY/FVdjiF2Ao?=
+ =?us-ascii?Q?z4ea7j+5kqyj2YIq4Zpxu7D83GjLQSlL8y6+qBhL1SQeHs8TVUWBxUgvZB8i?=
+ =?us-ascii?Q?gG73HlDgN23ebriTIBRSctw2YLVlYtNndJKSQqRhxJLWlXvz+LllOKSyF+Jc?=
+ =?us-ascii?Q?ItiJPy+vgrXFQGBRdp6TSTmmtM4Jn2QBRpduL8uVJXhci22tUPZBfzHEGJdy?=
+ =?us-ascii?Q?R6cd4qOpGr3QWCTvqowmDk45CCUyMZGLlJw1UwUtnQJDsHc5CduSFHtI6kaH?=
+ =?us-ascii?Q?Ax9fjkcPsYL4wqqPlL7u8MXrgeN7buZ2AkMmuUXJ9igao7hrTyxI500D953t?=
+ =?us-ascii?Q?4h3dw9lUMTxKrSld8fBjacsIIwRZa/pfvA19o0oHcoYotJEgiTb9SZYh+JRC?=
+ =?us-ascii?Q?Yla69QG0B/CLtbY0ocX4aqmDQp44ms2evt2aL7hjj/cSsfV8iXHOi4lz51Sc?=
+ =?us-ascii?Q?3Eow1KWcD8gcOr5WaCIuY/LXUxcitCv1pIapfCQTOK7C6tYvkCMpuIGekORU?=
+ =?us-ascii?Q?8BwPKNP267nfou4ngpWtx18K1IB9I1wYUY1o+RvH94kgNTtWvlF0pwvvIH7C?=
+ =?us-ascii?Q?ovhBDr1QnWkLK2nLPhM0BQ3tE+zblZALFZEHz/Q58fyubzHwjbrMwmA90tBr?=
+ =?us-ascii?Q?aMdnYR+HBHHSO85gbpG9caM5CqFHxDcjKxQrhJjDhxtO0MvgUonHF9LyiC7W?=
+ =?us-ascii?Q?RxXfKEyPQroEFKR8HgmDEYfuR3mgPuIDSL8Q2TlglUII8k2OnQ455Y0x2iSk?=
+ =?us-ascii?Q?yw8zcfDeGOnoZ7zSuKcIgm7rZR/9+pehKs3ejTk4XkYvtgDLqHAStrz3CU2c?=
+ =?us-ascii?Q?tXz/aEJuMmiICd824BcV4Fp0Kd0PGhB4t7KRzOWQBHiOZFmGO259Q7oJSx1x?=
+ =?us-ascii?Q?LQIoQWTzmykRmQsx/5kPamLRZeIXCBccjTlshagB+Zj2AG7laQho1k94n6Mh?=
+ =?us-ascii?Q?TNUP8wuJeWIkp0d5X4ojws5euv36uB3w9kgvQQ1YFWAFCtLHsOcZU+J2B/4E?=
+ =?us-ascii?Q?lX6dBXFE946DQAThi4TS5KqM4Rfw9p13ca1X7xjKeF7eLMw9Yk3IrbeL3Z98?=
+ =?us-ascii?Q?2i94a4Ob1Wmij2A1AGlJj5diHmEHBrnr+v5kb+5dvM6KFqP7imk6xU/wjnMN?=
+ =?us-ascii?Q?HaHA6UCX9DsI7XEegA96sUxv4zTBrQhhQIyftDxqnH6E1oD/zigshsxcuUkp?=
+ =?us-ascii?Q?JNNmBHihSAZ75DFeB36hhiHEna1tuxxMKOKW3WMIy25ayiZq+LhaAjGT5dSX?=
+ =?us-ascii?Q?QZQzX7/Xv80ePHXGojdiT0O7Mq8ztURYxwkbqoEh6NrWNQSUpI7r00CmE9SY?=
+ =?us-ascii?Q?LagpA861+l2ksxj8Og9yO6Dv3c62DHFgapmRwz/wqyLl4CFCsiwCfFjsqE/J?=
+ =?us-ascii?Q?YI+cbZfImd3G8rq7yp1dUQkxOfSmgZDfAzvhefr6IGLI39O5s2Vq8b9ToqSN?=
+ =?us-ascii?Q?WmJrgWBn7tz7i0aKrjk/8lcAw/2/TdyAb2LO+fVyCcHpUZ30rkd1jcnMQ3Y2?=
+ =?us-ascii?Q?a6stnnxO6w7iIv9YxnaAAMsMKogbXnn9B10OtE8ev8dJJLQ4L/tizrNT6MaB?=
+ =?us-ascii?Q?qDXk/doRZw=3D=3D?=
 X-OriginatorOrg: atomlin.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 55d8b175-25a1-4cc9-177e-08de9bee843a
+X-MS-Exchange-CrossTenant-Network-Message-Id: 6ebbfbac-1c47-4964-1a5b-08de9bee870e
 X-MS-Exchange-CrossTenant-AuthSource: CWLP123MB3523.GBRP123.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 16 Apr 2026 19:29:46.3408
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 16 Apr 2026 19:29:50.4719
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: e6a32402-7d7b-4830-9a2b-76945bbbcb57
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: BN/dZFIkixie6FgU2FtvfALc1dWnoT6V8OtxgyPyi6sZgsXIwXpgyzs2++xS4Rl5dI9FYkHU2lgKHh4iOSjBkg==
+X-MS-Exchange-CrossTenant-UserPrincipalName: rkDxy4MzsTvkkwjDjRka6BVm2EYoqFBF2HLNOUU37y7jAiAwxBEb4pOoO361+xK3Xm9MM8TJi4gRC//Ay8g/+A==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: CWXP123MB4039
 
-Hi,
+From: Daniel Wagner <wagi@kernel.org>
 
-I have decided to drive this series forward on behalf of Daniel Wagner, the
-original author. This iteration addresses the outstanding architectural and
-concurrency concerns raised during the previous review cycle, and the series
-has been rebased on v7.0-rc5-509-g545475aebc2a.
+The calculation of the upper limit for queues does not depend solely on
+the number of online CPUs; for example, the isolcpus kernel
+command-line option must also be considered.
 
-Building upon prior iterations, this series introduces critical
-architectural refinements to the mapping and affinity spreading algorithms
-to guarantee thread safety and resilience against concurrent CPU-hotplug
-operations. Previously, the block layer relied on a shared global static
-mask (i.e., blk_hk_online_mask), which proved vulnerable to race conditions
-during rapid hotplug events. This vulnerability was recently highlighted by
-the kernel test robot, which encountered a NULL pointer dereference during
-rcutorture (cpuhotplug) stress testing due to concurrent mask modification.
+To account for this, the block layer provides a helper function to
+retrieve the maximum number of queues. Use it to set an appropriate
+upper queue number limit.
 
-To resolve this, the architecture has been fundamentally hardened. The
-global static state has been eradicated. Instead, the IRQ affinity core now
-employs a newly introduced irq_spread_hk_filter(), which safely intersects
-the natively calculated affinity mask with the HK_TYPE_IO_QUEUE mask.
-Crucially, this is achieved using a local, hotplug-safe snapshot via
-data_race(cpu_online_mask). This approach circumvents the hotplug lock
-deadlocks previously identified by Thomas Gleixner, while explicitly
-avoiding CONFIG_CPUMASK_OFFSTACK stack bloat hazards on high-core-count
-systems. A robust fallback mechanism guarantees that should an interrupt
-vector be assigned exclusively to isolated cores, it is safely re-routed to
-the system's online housekeeping CPUs.
+Fixes: 94970cfb5f10 ("scsi: use block layer helpers to calculate num of queues")
+Signed-off-by: Daniel Wagner <wagi@kernel.org>
+Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
+Reviewed-by: Hannes Reinecke <hare@suse.de>
+Signed-off-by: Aaron Tomlin <atomlin@atomlin.com>
+---
+ drivers/scsi/aacraid/comminit.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-Following rigorous testing of multiple queue maps (such as NVMe poll
-queues) alongside isolated CPUs, the tenth iteration resolved a critical
-page fault regression. The multi-queue mapping logic has been corrected to
-strictly maintain absolute hardware queue indices, ensuring faultless queue
-initialisation and preventing out-of-bounds memory access.
-
-Furthermore, following feedback from Ming Lei, the administrative
-documentation for isolcpus=io_queue has undergone a comprehensive overhaul
-to reflect this architectural reality. Previous iterations lacked the
-required technical precision regarding subsystem impact. The expanded
-kernel-parameters.txt now explicitly details that this parameter applies
-strictly to managed IRQs. It thoroughly documents how the block layer
-intercepts multiqueue allocation to match the housekeeping mask, actively
-preventing MSI-X vector exhaustion on massive topologies and forcing queue
-sharing. Most importantly, it cements the structural guarantee: while an
-application on an isolated CPU may freely submit I/O, the hardware
-completion interrupt is strictly and safely offloaded to a housekeeping
-core.
-
-Please let me know your thoughts.
-
-
-Aaron Tomlin (1):
-  genirq/affinity: Restrict managed IRQ affinity to housekeeping CPUs
-
-Daniel Wagner (12):
-  scsi: aacraid: use block layer helpers to calculate num of queues
-  lib/group_cpus: remove dead !SMP code
-  lib/group_cpus: Add group_mask_cpus_evenly()
-  genirq/affinity: Add cpumask to struct irq_affinity
-  blk-mq: add blk_mq_{online|possible}_queue_affinity
-  nvme-pci: use block layer helpers to constrain queue affinity
-  scsi: Use block layer helpers to constrain queue affinity
-  virtio: blk/scsi: use block layer helpers to constrain queue affinity
-  isolation: Introduce io_queue isolcpus type
-  blk-mq: use hk cpus only when isolcpus=io_queue is enabled
-  blk-mq: prevent offlining hk CPUs with associated online isolated CPUs
-  docs: add io_queue flag to isolcpus
-
- .../admin-guide/kernel-parameters.txt         |  30 ++-
- block/blk-mq-cpumap.c                         | 192 ++++++++++++++++--
- block/blk-mq.c                                |  42 ++++
- drivers/block/virtio_blk.c                    |   4 +-
- drivers/nvme/host/pci.c                       |   1 +
- drivers/scsi/aacraid/comminit.c               |   3 +-
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c        |   1 +
- drivers/scsi/megaraid/megaraid_sas_base.c     |   5 +-
- drivers/scsi/mpi3mr/mpi3mr_fw.c               |   6 +-
- drivers/scsi/mpt3sas/mpt3sas_base.c           |   5 +-
- drivers/scsi/pm8001/pm8001_init.c             |   1 +
- drivers/scsi/virtio_scsi.c                    |   5 +-
- include/linux/blk-mq.h                        |   2 +
- include/linux/group_cpus.h                    |   3 +
- include/linux/interrupt.h                     |  16 +-
- include/linux/sched/isolation.h               |   1 +
- kernel/irq/affinity.c                         |  38 +++-
- kernel/sched/isolation.c                      |   7 +
- lib/group_cpus.c                              |  65 ++++--
- 19 files changed, 379 insertions(+), 48 deletions(-)
-
-
-base-commit: 3cd8b194bf3428dfa53120fee47e827a7c495815
+diff --git a/drivers/scsi/aacraid/comminit.c b/drivers/scsi/aacraid/comminit.c
+index 9bd3f5b868bc..ec165b57182d 100644
+--- a/drivers/scsi/aacraid/comminit.c
++++ b/drivers/scsi/aacraid/comminit.c
+@@ -469,8 +469,7 @@ void aac_define_int_mode(struct aac_dev *dev)
+ 	}
+ 
+ 	/* Don't bother allocating more MSI-X vectors than cpus */
+-	msi_count = min(dev->max_msix,
+-		(unsigned int)num_online_cpus());
++	msi_count = blk_mq_num_online_queues(dev->max_msix);
+ 
+ 	dev->max_msix = msi_count;
+ 
 -- 
 2.51.0
 
