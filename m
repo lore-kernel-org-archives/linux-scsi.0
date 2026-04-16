@@ -1,72 +1,46 @@
-Received: from canpmsgout10.his.huawei.com (canpmsgout10.his.huawei.com [113.46.200.225])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1AF3A13B58C
-	for <linux-scsi@vger.kernel.org>; Thu, 16 Apr 2026 02:31:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.225
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A6512364E96;
+	Thu, 16 Apr 2026 05:19:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776306723; cv=none; b=uK4eKqa+FKweuvaBNwMMMEpKP2ELeFUBPIg2IMm3Y2uZVLOh3YEuw2LXz+ziY7a+JfzMwk9g41khv2YTUvVaZkvQ065aOI8b2Lcdhi4QQq0mKbscw5pJa2Bsg+jB8EG0xVVODVe/nGOPK0h4yL3pWrTEkw/4fmZ36EVmVB7tNHU=
+	t=1776316776; cv=none; b=QGH2XcZayy6H/IE2m8fgi9oNVNp8xf+vEafcFWcaseimDhmR/LiOIfGCGKa4A+56QJ3lzNNx5qhNO0fGt6JSBtGcRAYl2xDv81O5POhVCLXIRZi0RBA/hibKObOxVNrKsIwZCe0eejx4L2qZ/9Mq7mvn7Dl5haGBQhLTbVxDvvg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776306723; c=relaxed/simple;
-	bh=LksDHZ1RqF5dT0TM0ril2pWkgDoY6j2Orq1gUZn8NPA=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=I2cnqbI9WT8+fpP8uEw1He4AWe7gC6e4sTjV58WoVx8QS5EvMJp0UymGo52ikH3OtS4zhQcPydUPbkwd0pzYKdmrN3MttkLhYp5ORFKr8YJjWqLRT75qyAIvdqDuYS43obPWtg01EQHyJiSatp+8Mx+HtRyRPETIYPswNIJTnv8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=h-partners.com; dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b=JLUld/Bg; arc=none smtp.client-ip=113.46.200.225
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=h-partners.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b="JLUld/Bg"
-dkim-signature: v=1; a=rsa-sha256; d=h-partners.com; s=dkim;
-	c=relaxed/relaxed; q=dns/txt;
-	h=From;
-	bh=vR3IxBqeYZYnkjgCUsvrGkSJshJxOVzoPva9OeduYdY=;
-	b=JLUld/BgyDoSXe2fxZ6DqkwQpt78d2C1F4G8tooAeb1HrLWdqJgNrtcnHUhgFnDe39+xgRF0C
-	PhVX3KMQHZvny/669M8CRCk2U5CmMng2RNL+zxljwqu98L/YtwKzsPAI6LR5VOQFlEFjWa6nxSa
-	gQDIcWCV7DdoKWNYi4QF6rE=
-Received: from mail.maildlp.com (unknown [172.19.162.92])
-	by canpmsgout10.his.huawei.com (SkyGuard) with ESMTPS id 4fx21C1Lhmz1K9Wn;
-	Thu, 16 Apr 2026 10:25:35 +0800 (CST)
-Received: from kwepemk500001.china.huawei.com (unknown [7.202.194.86])
-	by mail.maildlp.com (Postfix) with ESMTPS id 9D9C740562;
-	Thu, 16 Apr 2026 10:31:51 +0800 (CST)
-Received: from localhost.localdomain (10.50.159.234) by
- kwepemk500001.china.huawei.com (7.202.194.86) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.11; Thu, 16 Apr 2026 10:31:50 +0800
-From: JiangJianJun <jiangjianjun3@huawei.com>
-To: <john.g.garry@oracle.com>
-CC: <bvanassche@acm.org>, <james.bottomley@hansenpartnership.com>,
-	<jiangjianjun3@huawei.com>, <linux-scsi@vger.kernel.org>,
-	<martin.petersen@oracle.com>
-Subject: Re: [PATCH RFT 0/6] scsi_debug: fake timeout handling improvements
-Date: Thu, 16 Apr 2026 10:30:56 +0800
-Message-ID: <20260416023056.3366514-1-jiangjianjun3@huawei.com>
-X-Mailer: git-send-email 2.33.0
-In-Reply-To: <53fcb929-2f19-4702-80f1-1aa059b308fb@oracle.com>
-References: <53fcb929-2f19-4702-80f1-1aa059b308fb@oracle.com>
+	s=arc-20240116; t=1776316776; c=relaxed/simple;
+	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=dBgie/HIlf0Y69Sp7c3KI3f89SPk5uJ6u5gKTReEFjdIqB48OyahOWNc9XIRL3XnY7UypBtWMCHbHUmOG9yhbwMfbnm4aJB0f2Df2K2/7MOnSLIgTPXuR8aBgggyuot8UqXiz2/x6w9Vx/Fj603ptcY2kWTWtcSDI/WpK3lbkn4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id E7ED26732A; Thu, 16 Apr 2026 07:19:31 +0200 (CEST)
+Date: Thu, 16 Apr 2026 07:19:31 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: Caleb Sander Mateos <csander@purestorage.com>
+Cc: Jens Axboe <axboe@kernel.dk>, Sagi Grimberg <sagi@grimberg.me>,
+	Chaitanya Kulkarni <kch@nvidia.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Anuj Gupta <anuj20.g@samsung.com>, linux-block@vger.kernel.org,
+	linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
+	target-devel@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 1/6] block: use integrity interval instead of sector
+ as seed
+Message-ID: <20260416051931.GA14950@lst.de>
+References: <20260416002214.2048150-1-csander@purestorage.com> <20260416002214.2048150-2-csander@purestorage.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: kwepems200001.china.huawei.com (7.221.188.67) To
- kwepemk500001.china.huawei.com (7.202.194.86)
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260416002214.2048150-2-csander@purestorage.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
->> 
->> John,
->> 
->>> Can you please consider picking up the first 3 patches in this series?
->> 
->> Patches 1-3 applied to 6.20/scsi-staging, thanks!
->> 
->
->Thanks
->
->@JiangJianJun, can you please check the other patches?
+Looks good:
 
-Sorry for sending this email late.
-That's great! I have checked the func, thanks!
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
