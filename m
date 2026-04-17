@@ -1,67 +1,109 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC0A536165C;
-	Fri, 17 Apr 2026 07:55:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A0863368B6
+	for <linux-scsi@vger.kernel.org>; Fri, 17 Apr 2026 11:58:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776412511; cv=none; b=pETitB/E6VNTC9AajDSUvCI3kY1mEdgpUcxaSFdT7n1WGBwSC4pytw/+ZwpOAZ5wLO4ISuFZOp/04UJAuWDKfwpPKIr20Etita0dhDcGzYAewjyUIFVndlvfzDh67OXEsFhl0R9rjkbsBRfAL+S6NIKpZUSKyBeuNj8HOt5p+BU=
+	t=1776427100; cv=none; b=t9zXuesSWOErJ/Pn2fgZN9EduR9qKlTbvb0P72I/EIBThPApN+hVL9Fp70Ch+VDUkyWMEfrKR9kjuWUfIjdlfcj2ZFZz8SEzvDQ/fiqbqQnZ/BbXG+OeZmlt1JezckIfhQf3GlHTRhM90szmGEuDqzBjpKDLfOLHHi2PpbYcF7g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776412511; c=relaxed/simple;
-	bh=ajAVELCEaERjQo6lioB7t9fK+z3PTGZsW7P6NLKstqc=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=qWnS2Cr43wAgK655d4ZAAYF8nBxZXYNrY+m5Elqd0MtJjuGkkMg2Fcz6xBDpw4FNTZwjJvp28Z93osURmIjp7XQRYntGylQ37y4necPicKbkYVXvo8u8KJ86KmX+7CPWmX4bC67NDh6wMbyoXxCJn+Q0wRJ2EAriJWzMhsthy18=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 7A4CF68CFE; Fri, 17 Apr 2026 09:55:07 +0200 (CEST)
-Date: Fri, 17 Apr 2026 09:55:07 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: Caleb Sander Mateos <csander@purestorage.com>
-Cc: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-	Sagi Grimberg <sagi@grimberg.me>,
-	Chaitanya Kulkarni <kch@nvidia.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Anuj Gupta <anuj20.g@samsung.com>, linux-block@vger.kernel.org,
-	linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
-	target-devel@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v2 6/6] blk-integrity: avoid sector_t in
- bip_{get,set}_seed()
-Message-ID: <20260417075507.GD31524@lst.de>
-References: <20260416002214.2048150-1-csander@purestorage.com> <20260416002214.2048150-7-csander@purestorage.com> <20260416052325.GE14950@lst.de> <CADUfDZpbOhO9BUW_mFZYh9-UZU26_o3rFGBffNTpepk0ogJhZw@mail.gmail.com>
+	s=arc-20240116; t=1776427100; c=relaxed/simple;
+	bh=AInRQBnQ/YZQeTI74gewBGmfDMTkKnIh/m+dn4GfF98=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version:Content-Type:
+	 References; b=r3eb7b+tR+1pZZ7oEs9JBzwp6eYJL/MpDzXBZmjMasZRzYnBpDjYRPbjfl7dcuitA9yY0OrExkZwWA3T0kGjL4UnJjzoTya71WAzRqGwTsfaRMO5GZbvwlHDbZUUmKKTI+1DXjZLObepcUXDquddyEWlHfch0JT7VNCZRfjTyaI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=ezjUUEt2; arc=none smtp.client-ip=203.254.224.34
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="ezjUUEt2"
+Received: from epcas5p4.samsung.com (unknown [182.195.41.42])
+	by mailout4.samsung.com (KnoxPortal) with ESMTP id 20260417115816epoutp0407cf45f2d10a1bc8661fa2f2ddd1cf47~nIwgub5pY3274832748epoutp04Y
+	for <linux-scsi@vger.kernel.org>; Fri, 17 Apr 2026 11:58:16 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20260417115816epoutp0407cf45f2d10a1bc8661fa2f2ddd1cf47~nIwgub5pY3274832748epoutp04Y
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1776427096;
+	bh=iR31O3jFN8Z6FI7niZtsdXUfGMGP5z7RAKAyfUfD5rk=;
+	h=From:To:Cc:Subject:Date:References:From;
+	b=ezjUUEt2m1lOk0MuZjl3V4h4NUvidpa0yg768JwPJvEwqEw7O3uJfcv4Qy7GCyXoN
+	 X6tdKAXAMILjz2Lpu3jx/jloPBVg2kbA8Lqj5o7JzIFHTfMmEz4FuYS2nvKTwKTJ++
+	 Z8iuEQicJS2GVRfyRrBkGEuEbU6pg5hFwAC2SArQ=
+Received: from epsnrtp02.localdomain (unknown [182.195.42.154]) by
+	epcas5p3.samsung.com (KnoxPortal) with ESMTPS id
+	20260417115815epcas5p37d35940fccf6778b79000a1e988e155c~nIwgQQozj2038220382epcas5p3U;
+	Fri, 17 Apr 2026 11:58:15 +0000 (GMT)
+Received: from epcas5p3.samsung.com (unknown [182.195.38.90]) by
+	epsnrtp02.localdomain (Postfix) with ESMTP id 4fxtgV41d5z2SSKZ; Fri, 17 Apr
+	2026 11:58:14 +0000 (GMT)
+Received: from epsmtip2.samsung.com (unknown [182.195.34.31]) by
+	epcas5p4.samsung.com (KnoxPortal) with ESMTPA id
+	20260417115813epcas5p40234b872c221ce28981b17e42ca48139~nIweg_REp1715017150epcas5p4X;
+	Fri, 17 Apr 2026 11:58:13 +0000 (GMT)
+Received: from bose.samsungds.net (unknown [107.108.83.9]) by
+	epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
+	20260417115809epsmtip220bab86acb93e11cdea6f4e8effbd76f~nIwa6WK8f0861308613epsmtip2S;
+	Fri, 17 Apr 2026 11:58:09 +0000 (GMT)
+From: Alim Akhtar <alim.akhtar@samsung.com>
+To: avri.altman@wdc.com, bvanassche@acm.org, robh@kernel.org,
+	martin.petersen@oracle.com, krzk+dt@kernel.org
+Cc: sowon.na@samsung.com, peter.griffin@linaro.org,
+	linux-scsi@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-samsung-soc@vger.kernel.org, linux-kernel@vger.kernel.org, Alim Akhtar
+	<alim.akhtar@samsung.com>
+Subject: [PATCH v2 0/4] add ufs support for Exynosautov920 SoC
+Date: Fri, 17 Apr 2026 17:44:48 +0530
+Message-Id: <20260417121452.827054-1-alim.akhtar@samsung.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CADUfDZpbOhO9BUW_mFZYh9-UZU26_o3rFGBffNTpepk0ogJhZw@mail.gmail.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+Content-Transfer-Encoding: 8bit
+X-CMS-MailID: 20260417115813epcas5p40234b872c221ce28981b17e42ca48139
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+CMS-TYPE: 105P
+cpgsPolicy: CPGSC10-543,Y
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20260417115813epcas5p40234b872c221ce28981b17e42ca48139
+References: <CGME20260417115813epcas5p40234b872c221ce28981b17e42ca48139@epcas5p4.samsung.com>
 
-On Thu, Apr 16, 2026 at 06:53:05PM -0700, Caleb Sander Mateos wrote:
-> > > +static inline void bip_set_seed(struct bio_integrity_payload *bip,
-> > > +                             const struct blk_integrity *bi,
-> > > +                             const struct bio *bio)
-> > > +{
-> > > +     bip->bip_iter.bi_sector =
-> > > +             bio_integrity_intervals(bi, bio->bi_iter.bi_sector);
-> >
-> > The bip is pointed to by the bio, so we don't need to pass it separately.
-> > Same for struct blk_integrity.
-> 
-> I did consider that, but all callers already have bip and bi in
-> variables that they also use elsewhere. Seemed like it might be
-> slightly more efficient to just pass the precomputed values instead of
-> looking them up again. Not a big deal either way. I'll go ahead and
-> implement your suggestion.
+This series adds ufs driver support for ExynosAutov920,
+ExynosAutov920 has the UFSHCI 3.1 compliant UFS controller.
 
-In general I much prefer API-simplicity over a little bit more
-efficiency unless we can show it makes a difference that matters.
-And given that this is an inline function where compiler tend to
-avoid duplicate dereferences anyway I doubt we'll see a difference
-here.
+ExynosAutov920 has a different mask of UFS sharability from ExynosAutov9,
+so this series provide flexible parameter for the mask.
+
+With this series applied, UFS is functional and basic I/O operations are 
+known to be working.
+
+Changes since v1:
+* collected Acked-by on patch 2/4
+	* This Acked-by from Krzysztof was long back, for now kept it 
+* rebased on linux-next
+* fixed few self review comments
+* split dtsi patch into two, separated out syscon node patch
+
+Link v1:
+https://lore.kernel.org/linux-samsung-soc/20250702013316.2837427-1-sowon.na@samsung.com/
+
+Alim Akhtar (1):
+  arm64: dts: exynosautov920: Add syscon hsi2 node
+
+Sowon Na (3):
+  dt-bindings: ufs: exynos: add ExynosAutov920 compatible string
+  scsi: ufs: exynos: add support for ExynosAutov920 SoC
+  arm64: dts: exynosautov920: enable support for ufs controller
+
+ .../bindings/ufs/samsung,exynos-ufs.yaml      |   1 +
+ .../boot/dts/exynos/exynosautov920-sadk.dts   |   8 ++
+ .../arm64/boot/dts/exynos/exynosautov920.dtsi |  27 +++++
+ drivers/ufs/host/ufs-exynos.c                 | 110 ++++++++++++++++++
+ 4 files changed, 146 insertions(+)
+
+
+base-commit: 452c3b1ea875276105ac90ba474f72b4cd9b77a2
+-- 
+2.34.1
 
