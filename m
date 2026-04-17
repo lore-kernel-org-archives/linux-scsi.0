@@ -1,386 +1,294 @@
-Received: from LO0P265CU003.outbound.protection.outlook.com (mail-uksouthazon11022121.outbound.protection.outlook.com [52.101.96.121])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-oa1-f45.google.com (mail-oa1-f45.google.com [209.85.160.45])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 883653101D8;
-	Thu, 16 Apr 2026 19:38:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.96.121
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 31A2224A047
+	for <linux-scsi@vger.kernel.org>; Fri, 17 Apr 2026 01:53:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.160.45
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776368295; cv=fail; b=u4HdW0/6j1THF8xq2rFtfLCueg3PQ/0e1IPEO8pqTmBuRo4KCL0rld9c8KRrbzRgSr4NsCAbstjNjnMRrDHmyPIQmGR+a3nN4of01rtOI7C6KTw3q/tn8YPdrp9xCDovY4avbgYOsxQXGI1Q+kHGA7tVRBUzrpqUJJYNcWABNAg=
+	t=1776390799; cv=pass; b=uKoURB+e2BeJsMsQOAMxa1lklG8NVQRPZLq+leNM4ZLYdJSjp25S/IwR+Hgj1TZVTNGG1cDLjxSGHAX+KTCI2XKr81Q/2JkB6u9xW2cRAlFp/aZsubnHcjUW7HJKipOF25FyT4X65cLt2mwWm66doRnVmLJ7rvTmdLMHHRShw10=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776368295; c=relaxed/simple;
-	bh=MVLXKhxUC+vkxHpEvcwWtKB/sDYvpYB5eN5bRYHNvbk=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
-	 Content-Disposition:In-Reply-To:MIME-Version; b=Ln6HikUehj9/qBY9htz/qt1Ix4FpUofCfwxPx/Ar47+322jVJFzonwC2reJ1rhMsLtgEl92pbG6XIIbDxctDew/QKZB3I4JpzNUr8nU2w1aCR2MK8FYlFpX7YTPmYI5+vStdkHduEb5+7036sUdWnA0ORF767MdXOLjNwBuO8dA=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=atomlin.com; spf=pass smtp.mailfrom=atomlin.com; arc=fail smtp.client-ip=52.101.96.121
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=atomlin.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=atomlin.com
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=YRPYdDtBiie/TGuxl7mxZHH96wcE80FFEuz9x8Jzf8XTv4GC8TL3Hp/s8MCjx2S8q7pOBpP1+Andk7xnJq4KNZKKVrT7ETK5Hqaye4Ngpw0gPiJZvY0ZEsEYHzAFh4OxzRssq2q6COWgrupeZ8I6jRiFPkgO/KfzJL/wzNNWWYyUu5b6u4zh2HrxZTv8GJaOCrCQshXemjvmpM+lx6EtY6AXVs2XFLr5Ah10l+Ca36Ak7hexZofexdd0t3/KNkO/8uw+yNm1xd5s5PDGKPqUfBw3ONFMKbDoP0xYHSCUs7s6KX/ErtUUUwUnY5C0ifdan5H49rSHN0P2F37ENy82qQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=o/exWZvWADB22UDBgMAH8zKYzLyPy18ulYQKotwGNU0=;
- b=xnaAi+bnApsr729Eley9+jWYCvt9BijK2ERjj5Sb+Jf1lmtMQvqEiq7YoxKCRojuI7s1PmtrrYhxLQpk+lpKSvyRFsjA0ZRegiR8iQrTCW3p+zwCD2NET+87qkf83cIXtkFpc8t2x7d9ntP+0qO2aiPdjQwQjuulW5dD/mzwKVvBnxUY0ZKVHdyq/JLqBetwE26KxcpS6LPZPLVtUPT1YP8mwUQbsEZPeoSlEt/vJzYlNvtRfhzADHXmc5XL6CkrcnwT+6XFwfqE5xKP6Tjp/5lwJ3npUjUTn0A1sKJOgnVMdZ69F+GfTHqWSpl4AXDNyw26QItZ/Pmfnp7yuf9wpA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=atomlin.com; dmarc=pass action=none header.from=atomlin.com;
- dkim=pass header.d=atomlin.com; arc=none
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=atomlin.com;
-Received: from CWLP123MB3523.GBRP123.PROD.OUTLOOK.COM (2603:10a6:400:70::10)
- by CWLP123MB6494.GBRP123.PROD.OUTLOOK.COM (2603:10a6:400:188::5) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9818.25; Thu, 16 Apr
- 2026 19:38:09 +0000
-Received: from CWLP123MB3523.GBRP123.PROD.OUTLOOK.COM
- ([fe80::de8e:2e4f:6c6:f3bf]) by CWLP123MB3523.GBRP123.PROD.OUTLOOK.COM
- ([fe80::de8e:2e4f:6c6:f3bf%2]) with mapi id 15.20.9769.046; Thu, 16 Apr 2026
- 19:38:09 +0000
-Date: Thu, 16 Apr 2026 15:38:06 -0400
-From: Aaron Tomlin <atomlin@atomlin.com>
-To: axboe@kernel.dk, kbusch@kernel.org, hch@lst.de, sagi@grimberg.me, 
-	mst@redhat.com
-Cc: aacraid@microsemi.com, James.Bottomley@hansenpartnership.com, 
-	martin.petersen@oracle.com, liyihang9@h-partners.com, kashyap.desai@broadcom.com, 
-	sumit.saxena@broadcom.com, shivasharan.srikanteshwara@broadcom.com, 
-	chandrakanth.patil@broadcom.com, sathya.prakash@broadcom.com, sreekanth.reddy@broadcom.com, 
-	suganath-prabu.subramani@broadcom.com, ranjan.kumar@broadcom.com, jinpu.wang@cloud.ionos.com, 
-	tglx@kernel.org, mingo@redhat.com, peterz@infradead.org, juri.lelli@redhat.com, 
-	vincent.guittot@linaro.org, akpm@linux-foundation.org, maz@kernel.org, ruanjinjie@huawei.com, 
-	bigeasy@linutronix.de, yphbchou0911@gmail.com, wagi@kernel.org, frederic@kernel.org, 
-	longman@redhat.com, chenridong@huawei.com, hare@suse.de, kch@nvidia.com, 
-	ming.lei@redhat.com, tom.leiming@gmail.com, steve@abita.co, sean@ashe.io, 
-	chjohnst@gmail.com, neelx@suse.com, mproche@gmail.com, nick.lange@gmail.com, 
-	linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, virtualization@lists.linux.dev, 
-	linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org, megaraidlinux.pdl@broadcom.com, 
-	mpi3mr-linuxdrv.pdl@broadcom.com, MPT-FusionLinux.pdl@broadcom.com
-Subject: Re: [PATCH v11 00/13] blk: honor isolcpus configuration
-Message-ID: <rfhc3k7olt3ehtlp7uanwxw25lf2i6u4xkreu4fugt2c5bbmqs@iaufp7biyw4c>
-References: <20260416192942.1243421-1-atomlin@atomlin.com>
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <20260416192942.1243421-1-atomlin@atomlin.com>
-X-ClientProxiedBy: BL0PR05CA0025.namprd05.prod.outlook.com
- (2603:10b6:208:91::35) To CWLP123MB3523.GBRP123.PROD.OUTLOOK.COM
- (2603:10a6:400:70::10)
+	s=arc-20240116; t=1776390799; c=relaxed/simple;
+	bh=kOPxik6cGe9f5V9/eiojkqgQAZA5gmwpTfXIgNGzy6s=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=muLHXe2otJIT9khS+ItdHsOhOppHLaoJPzreNGs/hVqNIjVqZSyAluWgL3qcIuIb86QYU68e6Jkm5nR90blNpwUs++IsUU183StWtNoI0qE+AIn7bBQSBKGuXYgMHDdmtotkNWg87TPfYCTCKTpPqBW+L+g69gKXTNp5rmUhRLM=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=purestorage.com; spf=fail smtp.mailfrom=purestorage.com; dkim=pass (2048-bit key) header.d=purestorage.com header.i=@purestorage.com header.b=GwU6xmwC; arc=pass smtp.client-ip=209.85.160.45
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=purestorage.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=purestorage.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=purestorage.com header.i=@purestorage.com header.b="GwU6xmwC"
+Received: by mail-oa1-f45.google.com with SMTP id 586e51a60fabf-40947c81b31so10650fac.1
+        for <linux-scsi@vger.kernel.org>; Thu, 16 Apr 2026 18:53:18 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1776390797; cv=none;
+        d=google.com; s=arc-20240605;
+        b=dm/lHcyG2qMisbzY+dvtS0iEVyRp2VWypjs9ACkDlbOvE0DWWmtCzGBrK5Lssg2a9r
+         BqWHqBuyudyxXNlRe3m3xUTfRRpMSSi3GGjSDL3C5dVkk1SUgJdHd0QBrVYo3EISaR9c
+         BiVYzUT1iUJ8wCNNaQkrjeKDS9glbRl8iN+gKwMBkPfUa3GUYTB/acN68LNrnIypG0r0
+         7o9DKMbq6NbptJ7IyF3AbGA4g1T/e4DjBqo1LRhm8P2fUwm5v75VcgoKxfZRoPqw7k3c
+         117ja6roR+6GcFPFo59BBOw7wwvcMj0pEwshTmH/jqhRRYn5RJkXAbn9pf70SzSMB36X
+         qrWg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=+KsO1NaX9EqdvAZLJ/Ig7h5Lud7184o3UpmgRp/VzKQ=;
+        fh=ZNSzOCEG1Ym3clGpNEgARLzbziEiVyKlkh3zszynr5o=;
+        b=eZTqxV9gLmHQ5QAKf2FTJ765J129z6V8EuQDp9TEdhfzPm8rbfBSKClD4BcfxN/EPq
+         8JO8nZewM1R3q6cUCgnSkdJbFLiTNAwC/WFYmCGhayKPtfqsHjjenR6hkn/ut96YHPXg
+         VbKir6uc+bjF/0qCG1EvyI6q5dfdCWilKw7PU1sWiZxkEV4lXueLP9vWfFyCfHwXo11+
+         3GNZTXI2jelgW3CE3aKmNXhsX+pqAfiQ71CMbpz8tals6lcTsyiu5mr6FJQBLFW1+YQq
+         GyJUueicI8xsX7HRx1Dnu8Jgbzhv124fAy+D1XesTm+hdAJlZ4VFBltFYu/G0KKKz3aJ
+         riIA==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=purestorage.com; s=google2022; t=1776390797; x=1776995597; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=+KsO1NaX9EqdvAZLJ/Ig7h5Lud7184o3UpmgRp/VzKQ=;
+        b=GwU6xmwCvRkFrguBVDxYY/dZq2a9YCy4ai+T5H7owxALjG17//ep4JHehrP6YAzifb
+         2ogTtmAg4CuNGIpB0cc0vWNM1dsvlL2xdE0DpBJ7W325FC4H5dnYOE2CDXZj/eKAfSJC
+         iE+jlmKMOcQCvnPxJH1o8lYDI4e9ZAShcU01AseNT8CvEGvyl0cy+ZLvNglGxi+/Gth2
+         4GUyCKTDg67W66qR0RVwq0miehQxf8j4gIcpB+mO+gUCZB2dS7/vvR4xqhUlvezX4Ape
+         wlLnCo/vZVAc+v+ywf5N9istG+iM/FpxaQj33/FOXT+FAzDSY9DXcyEg6BRrK+ROoGEr
+         pjxw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1776390797; x=1776995597;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=+KsO1NaX9EqdvAZLJ/Ig7h5Lud7184o3UpmgRp/VzKQ=;
+        b=T/ne9K+Fpm5YHcuA0miLosaMV7GXWudrJfvejI3V2h3iRC+d1+Ah/RgiqAKp0czlYf
+         5VWkg2SEnF4263aSoaAsc3VZc96FSNh8rdzx50HDi0HjAdekJRzju+MqyXfkHCboGwxG
+         qhjIRTaOtUpHjDlR3epvA4JFvyt4+gdypPzjH14TZGvcD9iXLvNKgB4IzpFqsjezA1Zv
+         DhTsmyc0cy1as3RZooZ9WeZ6yIHLY7qtcs51aPjK4WG9nRmFKzODZYBwnz3CHD8TJP6k
+         rnLO9wWxECEB/pBrvxlqBlhZgebQJbh7Rsi565mxG+96aAlDL+/Cpld/LbJacIrpF9a6
+         V5cg==
+X-Forwarded-Encrypted: i=1; AFNElJ8/Be+ohUGsstkPN311pg53SILdTZz5UYy/l1AJ0KUTaY6RhjrrzjYAaAKogMUqoTZZNjMFrneiqqzK@vger.kernel.org
+X-Gm-Message-State: AOJu0YzZgWoRCWpS/1C4ezKruH7st2a1kXd41tWhAXorDa1C0A77JtDF
+	/fvkxj+yBGaJgwbgI2g3npnIA1Fz/CtzT78hUeY4WV5GthZgkZKfJ7YuSr/Fk7UbaGulUrqUxRl
+	rPCg4ZUHm9O8ko4EQlsy3Hs0srpKo19Rj9MWrxmMDMQ==
+X-Gm-Gg: AeBDiesqlM7VPym31O90qA6dhqb/uHcPzaGlZRBTWgqb/j+sILm3rFHfRqbXIaEYb2X
+	xrRI289Ia2c+05wwkR7hYpdqgCYyfuchjyeP8WVEuE0uGglDb7TMBTsNdW/zkqskmYXFqKbx3bn
+	bcF+0blaylctolBMXCxsq73veKnOR3OfVg7nSzbfnimAz/TpHZrg8Y4U2OH+rMFE0AHGMoEtRHl
+	0BSNH7XJZ4lfoHYTiZR9FvO7eNmeOH+quNkHmGIWSkrNn6kd7tGKW61E9+VjPlQqIwIS5XFLHma
+	X1/H8dAsY6ayZh4KJaQ=
+X-Received: by 2002:a05:6871:ea06:b0:423:e2d:bcd5 with SMTP id
+ 586e51a60fabf-42abee7a63fmr242473fac.0.1776390796946; Thu, 16 Apr 2026
+ 18:53:16 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CWLP123MB3523:EE_|CWLP123MB6494:EE_
-X-MS-Office365-Filtering-Correlation-Id: b74171c0-5445-4605-e811-08de9befb0b5
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|366016|7416014|376014|1800799024|18002099003|22082099003|56012099003;
-X-Microsoft-Antispam-Message-Info:
-	FUg1DIBL55NmLLOU6HftQJCkbX1TEn+bh2MBPGXTMf2nnEbdTLmfG4c9nalBltD/J8nnyFXLpGIYy3+jurU4lfis6Dx5ZbUUhh7JcsYR089nkJrLzuRVxtvcaLSEgxoeLiT79rXfuuSS6ZJk39Xm/PaajMk6aFT2REByHmVdFQodgiiq79nvPxn2Hz/4IetcdPEgSSO3+xg6i9unWOvXP7c6ETMOLzHo9VSATuPbyjQDMlq+LO7KlrkTX0yXEmhIijkhPAmXDU8EE7C/bbAavWXsOpxB5YRkeGSUujTSUDOT5SsvZjA1aVTSntL4pQdoT54AQ0Dmf+yG37a3hTUFM2hyKc4Q19OoOzsE2Ewqnd+nHGDLfazMJD9C7nfqUHU9VOr/QZXIf9BwT9/BJYYzW3+4KCJrp8cOqzNiuRF/rdlhr3rA7EakjA7trxlvOwz4DnGOdI+jCTMRqpZnihebfdiXxLCNYd0kbjKtXsevi0Y4cBlhL/bDxB1UWS6pvd3i0MviBvDq08kn3RW4or2BPIxywe1qWzMofUbHYbkmFp2USjd1NgKGkPvCvDsIE5MSHo+Zkka5+ihmaaXtH8GkGP4Wtj1UJDZqav1PozAzMg6lonFGRFc8z9sV9n9YB46Y5uU8HQvzuBM80BQLvizB5lMlF3iUXvy/rq844u7071r5NuWe1KVMr4G3tPzRoQXn
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CWLP123MB3523.GBRP123.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(366016)(7416014)(376014)(1800799024)(18002099003)(22082099003)(56012099003);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?TE1FYUQ3bHJwTGtLU2s2aHBNT1FFdkY1Ni9KM3p2ZEtnUi9XWTV5MWVlM1kv?=
- =?utf-8?B?L2hjamdHc3Y1bDJrOEhqZDBPQlVrbG9iRmZuek9kQndyWDJweit6MFZvVTJH?=
- =?utf-8?B?SGRLUDYwSEhZYmw0VUtOWXpSK2FzVFVUV2V5S0paanFZM0c0Vk1QSXVMaE90?=
- =?utf-8?B?c0xCOTFjVjZqQjQ1eFBMYnBkUVFoMFB1Y3ptUGdvTEtGOGdQMVljSWhJbGxJ?=
- =?utf-8?B?OUpVdWlSUjRyV3o5UHlPNHd0YmtkL201ekJGcUJkOStwRkVGMTZkT1c4ZXB2?=
- =?utf-8?B?SFlnbFd2dW9mUmRmVStPRGFyM3c4V0Y5eXE4eE41THNNcE1Mb3VKeTJQMG8z?=
- =?utf-8?B?aVVCVmhYQy95V0xadlVwZmZDUFlEU2dWbmJ3TW9sUTBGdnFEd2F1dk5zbkt4?=
- =?utf-8?B?Z2FUVVNHa0ZWclJQTzNXbW5RWWNqK0I2WVZYT1RydzNmYVhTZytHQ1M3ZjJY?=
- =?utf-8?B?SzhCWDVKcmRXcm9Lb0g1TWtDYTdGUVA5Vy9ndElIdGZXUDVzWXI0Q2JscVVJ?=
- =?utf-8?B?cWEycDNkVzdtV0hiZjhvU1lhWTlldG1RUmM2L1ZJZ01xZDNVdVhUc2tuQk9z?=
- =?utf-8?B?Q3M1c1hVa0VXQVNvQXhVWUVxdlEyUUxIVTMzZ0pHT3dvOWwyUktwYWRhZENt?=
- =?utf-8?B?a2NkK2YzS3dBanpvQ1JlYVBVN2hobFp3NW9lbHZESnlDaWw0UW9kMUFuNmRo?=
- =?utf-8?B?ZWk3QWYveEM0OTk2eWpzbDRpRkxRNlBaQW14M2Jrei9uT1JQTlBFczhRYzZ4?=
- =?utf-8?B?elpCMUpWeEpxRVpFako0N3F3U2gzS1J3NXAxanpLdVZSMDFuUnNZTnVwdUhh?=
- =?utf-8?B?VTEvRVRJK1FpSC9LU1h2aTV6WldNYUZ5ckhIdkdZNXcrOVU2TWdaVVUzMUhP?=
- =?utf-8?B?WFREUENhYmNwZVMvVUVaQmZIdUFhWGliLzdXaXNjUFlVZmhrWnNXZnNaNzI0?=
- =?utf-8?B?eEEzTmdjSGpSekpvK3d6M2I1RG5nTlNsb2hiKzAzeGlSakJLbC9FMFpQN1RS?=
- =?utf-8?B?Q21PSjlpNEV1aUt3WmhqcU9lS2RWeE5KK0lqNUJtSi9KK3pVQWVqclpWSE9i?=
- =?utf-8?B?Y0JzejNFSmU0dGoyUkEwMUFkMUtJa01SK25NWS95QjF6SWppeTg3RXdPNGxE?=
- =?utf-8?B?SEhvMHUvYWJGck5sTWFQamYwYXR3SVJIZU1ZV3g0UVU3M0wyNjErS0JqTVFa?=
- =?utf-8?B?a2trVWVDdVpoZGg5bk1lOTQ4a1NGdUdNNGUwNGVUUUU2THpkQ3Jpem1HcTBM?=
- =?utf-8?B?RVVPZkFoVUZmSnNWeEhjTWJnWTU2dGlPam0xdFZwVEE4Uld5b254UytKUW5q?=
- =?utf-8?B?SWFzYzFLSVIza2ZLUkpMRm5yVGVtZm5nWmY3aFIrTkRuMmJPQWhRbVNrN1g4?=
- =?utf-8?B?d043c2t1WFpZY2VhcExPZnZZYkFwRk1WVUZ2bGlvT2tsRk1qL2lPZktCRFpG?=
- =?utf-8?B?Qm8rRjhpR0UwU1lnVHJiYkxwdU9FRWJHRk1rK1hiYmtDNnQxWjVFR2lRWnFr?=
- =?utf-8?B?akcwYUl3d0ZhYmsvR05kUktPdWZaOFJ0NWxVQnFLQnJYNVB2b3BGSTFydDEz?=
- =?utf-8?B?dXAxUlFSTE5yb0lpMU1ua3hZblFRd2xndzN4ZXlRRGtuTi9KYkNYdDcvRkZL?=
- =?utf-8?B?RU9lUXdaOFJTUlBNc0pPTFUvQzIzRmtMdUdWMjMzQTMwZG91R2xWWk9GWkdJ?=
- =?utf-8?B?Vi9nMStaTTZUclI0OGtTWUJsWmVCRE05YkVNbEVZNFdsZzgzOVhlTGVWOXJU?=
- =?utf-8?B?ZGVwSXFRTGsyMk1tWGtJalhNV1JwTDJ4TVR3dWR0SGUyaFEvSXlYcWdOSlor?=
- =?utf-8?B?WE1mNFMvRkZ6OE1LdFVxcE5SMXNkZm5rdjM3aWtyRjkzdHNqalJxb001RjV0?=
- =?utf-8?B?OXg3QTcwRHFKK1V6eEJmVyttOTQySjFaNUsvZFRCaitsRTBXdmI4RzRtRlFM?=
- =?utf-8?B?NzBjaDZXdGt5bDhmeFc2ZW82TDhEMS9OMi8vQmNETjNHM1RrR05HTFNwSHJG?=
- =?utf-8?B?Q1dFdUpKdGgrb285UWVoeHFOQWo1Qmp2VWxIZDNGV0RhQU1nVkp6aUVTT21N?=
- =?utf-8?B?YTNDNGlWQnBCa0k4a0kzVUNOd080cVBXTjliamtVQ3QvWUdRMlBHaDhUdmw4?=
- =?utf-8?B?cng0elQ0RlVlczdsUmZ4OVVURlJ1WjZlcnkvMExsMlZTb25jRzBqZm8rMlkz?=
- =?utf-8?B?Tzl5dStOcWNBeW9nQm9RNUp5RkFUM2YvblJsbSs1OE43YVdDR3RUL2tEdVJI?=
- =?utf-8?B?VzBMVkdUdGVHTm95VnR6dkJxanJXbW1ITUZBbEZ4eERRQ1NNT2p3cmRCS250?=
- =?utf-8?B?VllVbTRoMTJJQzV4dGR4MzFicjVYekpHTytOTndXVjdzSTJncEJMdz09?=
-X-OriginatorOrg: atomlin.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: b74171c0-5445-4605-e811-08de9befb0b5
-X-MS-Exchange-CrossTenant-AuthSource: CWLP123MB3523.GBRP123.PROD.OUTLOOK.COM
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 16 Apr 2026 19:38:09.8705
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: e6a32402-7d7b-4830-9a2b-76945bbbcb57
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: zyZ0DEG/ifnkp4qz/+QX1evN6Wj751DzAGlNJpxyoWre4esKIZoBmrATRfM/mLf5lb3dONkBESgtgTZSVD54yQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CWLP123MB6494
-
-On Thu, Apr 16, 2026 at 03:29:29PM -0400, Aaron Tomlin wrote:
-> Please let me know your thoughts.
-
-My apologies, I neglected to include the changelog.
-
-Changes in v11:
-
- - Completely rewrote the isolcpus=io_queue documentation in
-   Documentation/admin-guide/kernel-parameters.txt to clarify its exclusive
-   application to managed IRQs, queue allocation limits, vector exhaustion
-   prevention, and hardware interrupt routing (Ming Lei)
-
- - Fixed a stack frame bloat issue by avoiding the on-stack declaration of
-   struct cpumask (Waiman Long)
-
- - Linked to v10: https://lore.kernel.org/linux-nvme/20260401222312.772334-1-atomlin@atomlin.com/
-
-Changes in v10:
-
- - Fixed a page fault regression encountered when initialising secondary
-   queue maps (e.g., NVMe poll queues). Restored the qmap->queue_offset to
-   the mq_map assignment to ensure CPUs are strictly mapped to absolute
-   hardware indices (Keith Busch)
-
- - Corrected the active_hctx tracker to utilise relative queue indices,
-   preventing out-of-bounds mask assignments
-
- - Fixed the blk_mq_validate() sanity check to properly evaluate absolute
-   queue indices against the offset-adjusted loop index
-
- - Corrected typographical errors within block/blk-mq-cpumap.c
-   (Keith Busch)
-
- - Clarified the commit message regarding the removal of the !SMP fallback
-   code, explicitly noting that the core scheduler now mandates SMP
-   unconditionally (Sebastian Andrzej Siewior)
-
- - Added missing "Signed-off-by:" tags to properly record the patch series
-   chain of custody
-
- - Linked to v9: https://lore.kernel.org/lkml/20260330221047.630206-1-atomlin@atomlin.com/
-
-Changes in v9:
-
- - Added "Reviewed-by:" tags
-
- - Introduced irq_spread_hk_filter() to safely restrict managed IRQ
-   affinity to housekeeping CPUs (Thomas Gleixner)
-
- - Removed the unsafe global static variable blk_hk_online_mask from
-   blk-mq-cpumap.c and blk-mq.c. blk_mq_online_queue_affinity() now returns
-   a stable pointer, delegating safe intersection to the callers to prevent
-   concurrent modification races (Thomas Gleixner, Hannes Reinecke)
-
- - Resolved BUG: kernel NULL pointer dereference in __blk_mq_all_tag_iter
-   reported by the kernel test robot during cpuhotplug rcutorture stress
-   testing
-
- - Linked to v8: https://lore.kernel.org/lkml/20250905-isolcpus-io-queues-v8-0-885984c5daca@kernel.org/
-
-Changes in v8:
-
- - Added commit 524f5eea4bbe ("lib/group_cpus: remove !SMP code")
-
- - Merged the new mapping logic directly into the existing function to
-   avoid special casing
-
- - Refined the group_mask_cpus_evenly() implementation with the following
-   updates:
-
-   - Corrected the function name typo (changed group_masks_cpus_evenly to
-     group_mask_cpus_evenly)
-
-   - Updated the documentation comment to accurately reflect the function's
-     behavior
-
-   - Renamed the cpu_mask argument to mask for consistency
-
- - Added a new patch for aacraid to include the missing number of queues
-   calculation
-
- - Restricted updates to only affect SCSI drivers that support
-   PCI_IRQ_AFFINITY and do not utilize nvme-fabrics
-
- - Removed the __free cleanup attribute usage for cpumask_var_t allocations
-   due to compatibility issues
-
- - Updated the documentation to explicitly highlight the limitations
-   surrounding CPU offlining
-
- - Collected accumulated Reviewed-by and Acked-by tags
-
- - Linked to v7: https://patch.msgid.link/20250702-isolcpus-io-queues-v7-0-557aa7eacce4@kernel.org
-
-Changes in v7:
-
- - Sent out the first part of the series independently:
-   https://lore.kernel.org/all/20250617-isolcpus-queue-counters-v1-0-13923686b54b@kernel.org/
-
- - Added comprehensive kernel command-line documentation
-
- - Added validation logic to ensure the resulting CPU-to-queue mapping is
-   fully operational
-
- - Rewrote the isolcpus mapping code to properly account for active
-   hardware contexts (hctx)
-
- - Introduced blk_mq_map_hk_irq_queues, which utilizes the mask retrieved
-   from irq_get_affinity()
-
- - Refactored blk_mq_map_hk_queues to require the caller to explicitly test
-   for HK_TYPE_MANAGED_IRQ
-
- - Linked to v6: https://patch.msgid.link/20250424-isolcpus-io-queues-v6-0-9a53a870ca1f@kernel.org
-
-Changes in v6:
-
- - Reintroduced the io_queue type for the isolcpus kernel parameter
-
- - Prevented the offlining of a housekeeping CPU if an isolated CPU is
-   still present, upgrading this behavior from a simple warning to a hard
-   restriction
-
- - Linked to v5: https://lore.kernel.org/r/20250110-isolcpus-io-queues-v5-0-0e4f118680b0@kernel.org
-
-Changes in v5:
-
- - Rebased the series onto the latest for-6.14/block branch.
-
- - Updated the documentation regarding the managed_irq parameters
-
- - Reworded the commit message for "blk-mq: issue warning when offlining
-   hctx with online isolcpus" for better clarity
-
- - Split the input and output parameters in the patch "lib/group_cpus: let
-   group_cpu_evenly return number of groups"
-
- - Dropped the patch "sched/isolation: document HK_TYPE housekeeping
-   option"
-
- - Linked to v4: https://lore.kernel.org/r/20241217-isolcpus-io-queues-v4-0-5d355fbb1e14@kernel.org
-
-Changes in v4:
-
- - Added the patch "blk-mq: issue warning when offlining hctx with online
-   isolcpus"
-
- - Fixed the check in group_cpus_evenly(); the condition now properly uses
-   housekeeping_enabled() instead of cpumask_weight(), as the latter always
-   returns a valid mask
-
- - Dropped the Fixes: tag from "lib/group_cpus.c: honor housekeeping config
-   when grouping CPUs"
-
- - Fixed an overlong line warning in the patch "scsi: use block layer
-   helpers to calculate num of queues"
-
- - Dropped the patch "sched/isolation: Add io_queue housekeeping option" in
-   favor of simply documenting the housekeeping hk_type enum
-
- - Added the patch "lib/group_cpus: let group_cpu_evenly return number of
-   groups"
-
- - Collected accumulated Reviewed-by and Acked-by tags
-
- - Split the patchset by moving foundational changes into a separate
-   preparation series:
-   https://lore.kernel.org/linux-nvme/20241202-refactor-blk-affinity-helpers-v6-0-27211e9c2cd5@kernel.org/
-
- - Linked to v3: https://lore.kernel.org/r/20240806-isolcpus-io-queues-v3-0-da0eecfeaf8b@suse.de
-
-Changes in v3:
-
- - Integrated patches from Ming Lei
-   (https://lore.kernel.org/all/20210709081005.421340-1-ming.lei@redhat.com/):
-   "virtio: add APIs for retrieving vq affinity" and "blk-mq: introduce
-   blk_mq_dev_map_queues"
-
- - Replaced all instances of blk_mq_pci_map_queues and
-   blk_mq_virtio_map_queues with the new unified blk_mq_dev_map_queues
-
- - Updated and expanded the helper functions used for calculating the
-   number of queues
-
- - Added the CPU-to-hctx mapping function specifically to support the
-   isolcpus=io_queue parameter
-
- - Documented the hk_type enum and the newly introduced isolcpus=io_queue
-   parameter
-
- - Added the patch "scsi: pm8001: do not overwrite PCI queue mapping"
-
- - Linked to v2: https://lore.kernel.org/r/20240627-isolcpus-io-queues-v2-0-26a32e3c4f75@suse.de
-
-Changes in v2:
-
- - Updated the feature documentation for clarity and completeness
-
- - Split the blk/nvme-pci patch into smaller, logical commits
-
- - Dropped the HK_TYPE_IO_QUEUE macro in favor of reusing
-   HK_TYPE_MANAGED_IRQ
-
- - Linked to v1: https://lore.kernel.org/r/20240621-isolcpus-io-queues-v1-0-8b169bf41083@suse.de
-
-> 
-> Aaron Tomlin (1):
->   genirq/affinity: Restrict managed IRQ affinity to housekeeping CPUs
-> 
-> Daniel Wagner (12):
->   scsi: aacraid: use block layer helpers to calculate num of queues
->   lib/group_cpus: remove dead !SMP code
->   lib/group_cpus: Add group_mask_cpus_evenly()
->   genirq/affinity: Add cpumask to struct irq_affinity
->   blk-mq: add blk_mq_{online|possible}_queue_affinity
->   nvme-pci: use block layer helpers to constrain queue affinity
->   scsi: Use block layer helpers to constrain queue affinity
->   virtio: blk/scsi: use block layer helpers to constrain queue affinity
->   isolation: Introduce io_queue isolcpus type
->   blk-mq: use hk cpus only when isolcpus=io_queue is enabled
->   blk-mq: prevent offlining hk CPUs with associated online isolated CPUs
->   docs: add io_queue flag to isolcpus
-> 
->  .../admin-guide/kernel-parameters.txt         |  30 ++-
->  block/blk-mq-cpumap.c                         | 192 ++++++++++++++++--
->  block/blk-mq.c                                |  42 ++++
->  drivers/block/virtio_blk.c                    |   4 +-
->  drivers/nvme/host/pci.c                       |   1 +
->  drivers/scsi/aacraid/comminit.c               |   3 +-
->  drivers/scsi/hisi_sas/hisi_sas_v3_hw.c        |   1 +
->  drivers/scsi/megaraid/megaraid_sas_base.c     |   5 +-
->  drivers/scsi/mpi3mr/mpi3mr_fw.c               |   6 +-
->  drivers/scsi/mpt3sas/mpt3sas_base.c           |   5 +-
->  drivers/scsi/pm8001/pm8001_init.c             |   1 +
->  drivers/scsi/virtio_scsi.c                    |   5 +-
->  include/linux/blk-mq.h                        |   2 +
->  include/linux/group_cpus.h                    |   3 +
->  include/linux/interrupt.h                     |  16 +-
->  include/linux/sched/isolation.h               |   1 +
->  kernel/irq/affinity.c                         |  38 +++-
->  kernel/sched/isolation.c                      |   7 +
->  lib/group_cpus.c                              |  65 ++++--
->  19 files changed, 379 insertions(+), 48 deletions(-)
-> 
-> 
-> base-commit: 3cd8b194bf3428dfa53120fee47e827a7c495815
-> -- 
-> 2.51.0
-> 
-
--- 
-Aaron Tomlin
+References: <20260416002214.2048150-1-csander@purestorage.com>
+ <20260416002214.2048150-7-csander@purestorage.com> <20260416052325.GE14950@lst.de>
+In-Reply-To: <20260416052325.GE14950@lst.de>
+From: Caleb Sander Mateos <csander@purestorage.com>
+Date: Thu, 16 Apr 2026 18:53:05 -0700
+X-Gm-Features: AQROBzCPGHONvWMncmYhZ1NMXp33B6ERld-DgLK_KyRg3_SVXkVvrIxlwuDEnA0
+Message-ID: <CADUfDZpbOhO9BUW_mFZYh9-UZU26_o3rFGBffNTpepk0ogJhZw@mail.gmail.com>
+Subject: Re: [PATCH v2 6/6] blk-integrity: avoid sector_t in bip_{get,set}_seed()
+To: Christoph Hellwig <hch@lst.de>
+Cc: Jens Axboe <axboe@kernel.dk>, Sagi Grimberg <sagi@grimberg.me>, 
+	Chaitanya Kulkarni <kch@nvidia.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, 
+	Anuj Gupta <anuj20.g@samsung.com>, linux-block@vger.kernel.org, 
+	linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org, 
+	target-devel@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	Christoph Hellwig <hch@infradead.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+On Wed, Apr 15, 2026 at 10:23=E2=80=AFPM Christoph Hellwig <hch@lst.de> wro=
+te:
+>
+> On Wed, Apr 15, 2026 at 06:22:14PM -0600, Caleb Sander Mateos wrote:
+> > bip_set_seed() and big_get_seed() take/return a sector_t value that's
+> > actually an integrity interval number. This is confusing, so pass
+> > struct blk_integrity and struct bio instead to bip_set_seed() and
+> > convert the bio's device address to integrity intervals.
+> >
+> > Open-code the access to bip->bip_iter.bi_sector in the one caller of
+> > bip_set_seed() that doesn't use the bio device address for the seed.
+> > Open-code bip_get_seed() in its one caller.
+> >
+> > Add a comment to struct bvec_iter's bi_sector field explaining its
+> > alternate use for bip_iter.
+> >
+> > Signed-off-by: Caleb Sander Mateos <csander@purestorage.com>
+> > Suggested-by: Christoph Hellwig <hch@infradead.org>
+> > ---
+> >  block/bio-integrity.c               |  5 ++---
+> >  block/t10-pi.c                      |  2 +-
+> >  drivers/nvme/target/io-cmd-bdev.c   |  3 +--
+> >  drivers/target/target_core_iblock.c |  3 +--
+> >  include/linux/bio-integrity.h       | 11 -----------
+> >  include/linux/blk-integrity.h       | 14 ++++++++++++++
+> >  include/linux/bvec.h                |  1 +
+> >  7 files changed, 20 insertions(+), 19 deletions(-)
+> >
+> > diff --git a/block/bio-integrity.c b/block/bio-integrity.c
+> > index 3ad6a6799f17..e9ae5db99f64 100644
+> > --- a/block/bio-integrity.c
+> > +++ b/block/bio-integrity.c
+> > @@ -103,13 +103,12 @@ void bio_integrity_free_buf(struct bio_integrity_=
+payload *bip)
+> >
+> >  void bio_integrity_setup_default(struct bio *bio)
+> >  {
+> >       struct blk_integrity *bi =3D blk_get_integrity(bio->bi_bdev->bd_d=
+isk);
+> >       struct bio_integrity_payload *bip =3D bio_integrity(bio);
+> > -     u64 seed =3D bio->bi_iter.bi_sector >> (bi->interval_exp - SECTOR=
+_SHIFT);
+> >
+> > -     bip_set_seed(bip, seed);
+> > +     bip_set_seed(bip, bi, bio);
+> >
+> >       if (bi->csum_type) {
+> >               bip->bip_flags |=3D BIP_CHECK_GUARD;
+> >               if (bi->csum_type =3D=3D BLK_INTEGRITY_CSUM_IP)
+> >                       bip->bip_flags |=3D BIP_IP_CHECKSUM;
+> > @@ -472,11 +471,11 @@ int bio_integrity_map_iter(struct bio *bio, struc=
+t uio_meta *meta)
+> >
+> >       it.count =3D integrity_bytes;
+> >       ret =3D bio_integrity_map_user(bio, &it);
+> >       if (!ret) {
+> >               bio_uio_meta_to_bip(bio, meta);
+> > -             bip_set_seed(bio_integrity(bio), meta->seed);
+> > +             bio_integrity(bio)->bip_iter.bi_sector =3D meta->seed;
+> >               iov_iter_advance(&meta->iter, integrity_bytes);
+> >               meta->seed +=3D bio_integrity_intervals(bi, bio_sectors(b=
+io));
+> >       }
+> >       return ret;
+> >  }
+> > diff --git a/block/t10-pi.c b/block/t10-pi.c
+> > index 787950dec50a..71367fd082bd 100644
+> > --- a/block/t10-pi.c
+> > +++ b/block/t10-pi.c
+> > @@ -510,11 +510,11 @@ static void blk_reftag_remap_prepare(struct blk_i=
+ntegrity *bi,
+> >  static void __blk_reftag_remap(struct bio *bio, struct blk_integrity *=
+bi,
+> >                              unsigned *intervals, u64 *ref, bool prep)
+> >  {
+> >       struct bio_integrity_payload *bip =3D bio_integrity(bio);
+> >       struct bvec_iter iter =3D bip->bip_iter;
+> > -     u64 virt =3D bip_get_seed(bip);
+> > +     u64 virt =3D bip->bip_iter.bi_sector;
+> >       union pi_tuple *ptuple;
+> >       union pi_tuple tuple;
+> >
+> >       if (prep && bip->bip_flags & BIP_MAPPED_INTEGRITY) {
+> >               *ref +=3D bio->bi_iter.bi_size >> bi->interval_exp;
+> > diff --git a/drivers/nvme/target/io-cmd-bdev.c b/drivers/nvme/target/io=
+-cmd-bdev.c
+> > index f2d9e8901df4..2c4b312f2f55 100644
+> > --- a/drivers/nvme/target/io-cmd-bdev.c
+> > +++ b/drivers/nvme/target/io-cmd-bdev.c
+> > @@ -218,12 +218,11 @@ static int nvmet_bdev_alloc_bip(struct nvmet_req =
+*req, struct bio *bio,
+> >               pr_err("Unable to allocate bio_integrity_payload\n");
+> >               return PTR_ERR(bip);
+> >       }
+> >
+> >       /* virtual start sector must be in integrity interval units */
+> > -     bip_set_seed(bip, bio->bi_iter.bi_sector >>
+> > -                  (bi->interval_exp - SECTOR_SHIFT));
+> > +     bip_set_seed(bip, bi, bio);
+> >
+> >       resid =3D bio_integrity_bytes(bi, bio_sectors(bio));
+> >       while (resid > 0 && sg_miter_next(miter)) {
+> >               len =3D min_t(size_t, miter->length, resid);
+> >               rc =3D bio_integrity_add_page(bio, miter->page, len,
+> > diff --git a/drivers/target/target_core_iblock.c b/drivers/target/targe=
+t_core_iblock.c
+> > index 1087d1d17c36..4e0fa91a08fd 100644
+> > --- a/drivers/target/target_core_iblock.c
+> > +++ b/drivers/target/target_core_iblock.c
+> > @@ -706,12 +706,11 @@ iblock_alloc_bip(struct se_cmd *cmd, struct bio *=
+bio,
+> >               pr_err("Unable to allocate bio_integrity_payload\n");
+> >               return PTR_ERR(bip);
+> >       }
+> >
+> >       /* virtual start sector must be in integrity interval units */
+> > -     bip_set_seed(bip, bio->bi_iter.bi_sector >>
+> > -                               (bi->interval_exp - SECTOR_SHIFT));
+> > +     bip_set_seed(bip, bi, bio);
+> >
+> >       pr_debug("IBLOCK BIP Size: %u Sector: %llu\n", bip->bip_iter.bi_s=
+ize,
+> >                (unsigned long long)bip->bip_iter.bi_sector);
+> >
+> >       resid =3D bio_integrity_bytes(bi, bio_sectors(bio));
+> > diff --git a/include/linux/bio-integrity.h b/include/linux/bio-integrit=
+y.h
+> > index af5178434ec6..edcd0855abba 100644
+> > --- a/include/linux/bio-integrity.h
+> > +++ b/include/linux/bio-integrity.h
+> > @@ -56,21 +56,10 @@ static inline bool bio_integrity_flagged(struct bio=
+ *bio, enum bip_flags flag)
+> >               return bip->bip_flags & flag;
+> >
+> >       return false;
+> >  }
+> >
+> > -static inline sector_t bip_get_seed(struct bio_integrity_payload *bip)
+> > -{
+> > -     return bip->bip_iter.bi_sector;
+> > -}
+> > -
+> > -static inline void bip_set_seed(struct bio_integrity_payload *bip,
+> > -                             sector_t seed)
+> > -{
+> > -     bip->bip_iter.bi_sector =3D seed;
+> > -}
+> > -
+> >  void bio_integrity_init(struct bio *bio, struct bio_integrity_payload =
+*bip,
+> >               struct bio_vec *bvecs, unsigned int nr_vecs);
+> >  struct bio_integrity_payload *bio_integrity_alloc(struct bio *bio, gfp=
+_t gfp,
+> >               unsigned int nr);
+> >  int bio_integrity_add_page(struct bio *bio, struct page *page, unsigne=
+d int len,
+> > diff --git a/include/linux/blk-integrity.h b/include/linux/blk-integrit=
+y.h
+> > index 825d777c078b..3a2e55e809c5 100644
+> > --- a/include/linux/blk-integrity.h
+> > +++ b/include/linux/blk-integrity.h
+> > @@ -85,10 +85,24 @@ static inline unsigned int bio_integrity_bytes(stru=
+ct blk_integrity *bi,
+> >                                              unsigned int sectors)
+> >  {
+> >       return bio_integrity_intervals(bi, sectors) * bi->metadata_size;
+> >  }
+> >
+> > +/**
+> > + * bip_set_seed - Set bip reference tag seed from bio device address
+> > + * @bip:     struct bio_integrity_payload whose ref tag seed to set
+> > + * @bi:              struct blk_integrity profile for device
+> > + * @bio:     struct bio whose device address to use for the ref tag se=
+ed
+> > + */
+> > +static inline void bip_set_seed(struct bio_integrity_payload *bip,
+> > +                             const struct blk_integrity *bi,
+> > +                             const struct bio *bio)
+> > +{
+> > +     bip->bip_iter.bi_sector =3D
+> > +             bio_integrity_intervals(bi, bio->bi_iter.bi_sector);
+>
+> The bip is pointed to by the bio, so we don't need to pass it separately.
+> Same for struct blk_integrity.
+
+I did consider that, but all callers already have bip and bi in
+variables that they also use elsewhere. Seemed like it might be
+slightly more efficient to just pass the precomputed values instead of
+looking them up again. Not a big deal either way. I'll go ahead and
+implement your suggestion.
+
+Thanks,
+Caleb
