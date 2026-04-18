@@ -1,171 +1,110 @@
-Received: from mail-pj1-f43.google.com (mail-pj1-f43.google.com [209.85.216.43])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from relay.hostedemail.com (smtprelay0011.hostedemail.com [216.40.44.11])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B9B7377017
-	for <linux-scsi@vger.kernel.org>; Sat, 18 Apr 2026 13:30:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.43
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DCFDD28B7DB;
+	Sat, 18 Apr 2026 23:05:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=216.40.44.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776519023; cv=none; b=QmxmpZZu18G9DCThoNqFaoHsJAE4on9zf1PjE83KYIWeWF1pOf/Ais/UBawzVNfObnSSIxXKmm9LZ7LlN0SKaQSII3SR4DCsnKlVey+cHBJ3utfABbFWaRymV6B+1n2fDXyOZnUcNrmSFMLI4HH08T2i77I877SORTHK1vipUpI=
+	t=1776553544; cv=none; b=rJ2nZZTF0Xm/mnnQrtMSkPhrJt6isVsW6SmiaInSCfut+mx5fM7bq/4s5R1ZIGsFMvaSC+9Jegs6HVcDHoA6TgEltelucw+iFn8Au+mMwRHPqibld/tM/QduRkIFknB+xmT+dY1+8aK665/ad9+20dHPqxQJIMio/sO6Ik0p2OY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776519023; c=relaxed/simple;
-	bh=qZvlNuK8tH4BDyFywnoaGtb4DYHdxKKSUg7PjuGMihs=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=KSOFlLxAQ5hoe4sjdUolUekExD3V/wrisNY5il0KTEO1WRYQsd3UrojnID61ZTABjocMUQ2H0vQnkYRMsL8n2M78ghKLxrTYF2CiFgMQRaZo+UdA5c4c4jsZbmV9gC42Yhsp2gsnu1FpqylIfOTfN8ILIUGtxrSl8FLxY87J+UA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=snu.ac.kr; spf=pass smtp.mailfrom=snu.ac.kr; dkim=pass (1024-bit key) header.d=snu.ac.kr header.i=@snu.ac.kr header.b=uD7y9f7+; arc=none smtp.client-ip=209.85.216.43
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=snu.ac.kr
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=snu.ac.kr
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=snu.ac.kr header.i=@snu.ac.kr header.b="uD7y9f7+"
-Received: by mail-pj1-f43.google.com with SMTP id 98e67ed59e1d1-35da9c0c007so1599495a91.2
-        for <linux-scsi@vger.kernel.org>; Sat, 18 Apr 2026 06:30:21 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=snu.ac.kr; s=google; t=1776519020; x=1777123820; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=QOsocMkxtjKD9j9zvFgGCM2TULz401mQWwIAVfMJ00Q=;
-        b=uD7y9f7+FN3iScyGlJiTniaRz+hw6/gkMxSY5CpK+kF6zfzlTfiE5P9gMeVp8m5FKG
-         q9CIyrqxBZO7mV/cHNRXshKgLRW5Ih3JM9rczlROi5mR94Ol+CkvIE7daHh+v/bIwfMc
-         AyBogQavbe01NxbxChCgD3RdQrex7Iu9oWkHY=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1776519020; x=1777123820;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=QOsocMkxtjKD9j9zvFgGCM2TULz401mQWwIAVfMJ00Q=;
-        b=plgiDLSDZUPOiWStAKODpRmIJiqe2jKOO31I/QpNcsXzGL/jl5vxs14XfvFkHYWVmY
-         q9QRERGYQVQp+T9PPlLwF1i4+OpTXiPAn0mOzBuvYK7Z8qxSedEj23lqBmgjZyl/zimT
-         /tnUuO4U88eG46ldGPwHeLkOIgxQMitl7lT7jVV1PMj/YaZyy7RHrg3C7Kk2bXzIOr4I
-         UBc0uvqC62W1r3Ntm6OLnepkmtA9WH6cPYqAb6ox/iXwOufNaJnG1QjoVaqzJTujRIKU
-         Jec1WmPMSzZI0LWO/725AQutprnOs/T96lERMK8pSuduxuwFklkSwBjf3tf/t2xkLrLi
-         GOSg==
-X-Forwarded-Encrypted: i=1; AFNElJ+zH3WubnpEKwgKB+J2XFhZ7abDSICVBkiRxFPXwfH8j9LQypGWqC82lanNYLdVamSC2BTt01CAL63l@vger.kernel.org
-X-Gm-Message-State: AOJu0Ywoq/WCroycNcn7SyL+cySlU2azdsoaVcVUW73SLBKlNHjoqKr5
-	YJP13q347E88RTkc0q+pemkqj8fQUhYvyepmfItvvGBsafUxMjBKc+rSQ8Vizu/VMQ8=
-X-Gm-Gg: AeBDievH930EJL0p0plOuGqSp3HW4Ul6mDM4sczmYIfcSYDnvbIPF+hzAKgjvihNLx0
-	puBq+4swuZRkBIlS4KDqAoTqh8CySUky+lYdF6Q0K+OYpPS3weOp24s23mODnVxJYNgvt4wIbzG
-	abwfNFpXqGh74cTldS5hZKJudqe7EfPHMu3/cDrc21wbnsrFBLqN7ubBR5GLiyAWb8r8ADlP9Cy
-	KVAWEEZ517ZCAAOKSZbmCl4qFJoFz3OP3mkHQZn8+7uA0+mNuaXplJ1rsn4PBctcoQvUw0mTIfL
-	mrAAF77qd9y0k3EPdGtgJ+Pe7XVZM/cWtIXpL4+f6awNwkTnDI//KJvE7aWqIbBjjikp93ROgpn
-	SXU5be33ZNy5uF+uFKcjSJmZROPrn8hWw/Ag5FsxoEcx1Amx8ZZB12LzMbwEWVKYbhKd4yPCw8o
-	Lcj2XvUsJHvccoKWaIlBGe7hjGNFmR345wEeVa9YdAT3ljM8VQzWsewrEgafx2kvsN11fE+A==
-X-Received: by 2002:a17:90a:da83:b0:35b:9ab6:1d4b with SMTP id 98e67ed59e1d1-3614048e368mr7488746a91.20.1776519020536;
-        Sat, 18 Apr 2026 06:30:20 -0700 (PDT)
-Received: from nunu.. (nunu.snu.ac.kr. [147.46.112.82])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3614195a9fbsm6843001a91.11.2026.04.18.06.30.18
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 18 Apr 2026 06:30:20 -0700 (PDT)
-From: Sangyun Kim <sangyun.kim@snu.ac.kr>
-To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
-	Duoming Zhou <duoming@zju.edu.cn>,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH 2/2] scsi: mvsas: fix iterator use-after-free in mvs_free() wq drain loop
-Date: Sat, 18 Apr 2026 22:30:03 +0900
-Message-Id: <20260418133003.2462460-3-sangyun.kim@snu.ac.kr>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20260418133003.2462460-1-sangyun.kim@snu.ac.kr>
-References: <20260418133003.2462460-1-sangyun.kim@snu.ac.kr>
+	s=arc-20240116; t=1776553544; c=relaxed/simple;
+	bh=3gjC89xnGxxB+QjjXVBM8oQx83vQETJQ/FYuJTiiO18=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=omedgi07McyVfk0Q+HIWV+a9F1cd3qJu6h1d+99LDTkvzyGAdp2ZKYAzvyloj0L64td14PgbyMpkj4DU6VD9t1hdCBW64ag9nhpwGjMA8es9OTkMrbz+pZFgxEwpGyopHjBQZSU+YPADKsreNjSfgpLC1k3ctAVN9G2Olws6H7g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=goodmis.org; spf=pass smtp.mailfrom=goodmis.org; arc=none smtp.client-ip=216.40.44.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=goodmis.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=goodmis.org
+Received: from omf17.hostedemail.com (a10.router.float.18 [10.200.18.1])
+	by unirelay01.hostedemail.com (Postfix) with ESMTP id 3A610E4C26;
+	Sat, 18 Apr 2026 23:05:34 +0000 (UTC)
+Received: from [HIDDEN] (Authenticated sender: rostedt@goodmis.org) by omf17.hostedemail.com (Postfix) with ESMTPA id D63C017;
+	Sat, 18 Apr 2026 23:05:02 +0000 (UTC)
+Date: Sat, 18 Apr 2026 19:04:56 -0400
+From: Steven Rostedt <rostedt@goodmis.org>
+To: "Vineeth Pillai (Google)" <vineeth@bitbyteword.org>
+Cc: Peter Zijlstra <peterz@infradead.org>, Dmitry Ilvokhin <d@ilvokhin.com>,
+ Masami Hiramatsu <mhiramat@kernel.org>, Mathieu Desnoyers
+ <mathieu.desnoyers@efficios.com>, Ingo Molnar <mingo@redhat.com>, Jens
+ Axboe <axboe@kernel.dk>, io-uring@vger.kernel.org, "David S. Miller"
+ <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, Jakub Kicinski
+ <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, Alexei Starovoitov
+ <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, Marcelo Ricardo
+ Leitner <marcelo.leitner@gmail.com>, Xin Long <lucien.xin@gmail.com>, Jon
+ Maloy <jmaloy@redhat.com>, Aaron Conole <aconole@redhat.com>, Eelco
+ Chaudron <echaudro@redhat.com>, Ilya Maximets <i.maximets@ovn.org>,
+ netdev@vger.kernel.org, bpf@vger.kernel.org, linux-sctp@vger.kernel.org,
+ tipc-discussion@lists.sourceforge.net, dev@openvswitch.org, Jiri Pirko
+ <jiri@resnulli.us>, Oded Gabbay <ogabbay@kernel.org>, Koby Elbaz
+ <koby.elbaz@intel.com>, dri-devel@lists.freedesktop.org, "Rafael J.
+ Wysocki" <rafael@kernel.org>, Viresh Kumar <viresh.kumar@linaro.org>,
+ "Gautham R. Shenoy" <gautham.shenoy@amd.com>, Huang Rui
+ <ray.huang@amd.com>, Mario Limonciello <mario.limonciello@amd.com>, Len
+ Brown <lenb@kernel.org>, Srinivas Pandruvada
+ <srinivas.pandruvada@linux.intel.com>, linux-pm@vger.kernel.org, MyungJoo
+ Ham <myungjoo.ham@samsung.com>, Kyungmin Park <kyungmin.park@samsung.com>,
+ Chanwoo Choi <cw00.choi@samsung.com>, Christian =?UTF-8?B?S8O2bmln?=
+ <christian.koenig@amd.com>, Sumit Semwal <sumit.semwal@linaro.org>,
+ linaro-mm-sig@lists.linaro.org, Eddie James <eajames@linux.ibm.com>, Andrew
+ Jeffery <andrew@codeconstruct.com.au>, Joel Stanley <joel@jms.id.au>,
+ linux-fsi@lists.ozlabs.org, David Airlie <airlied@gmail.com>, Simona Vetter
+ <simona@ffwll.ch>, Alex Deucher <alexander.deucher@amd.com>, Danilo
+ Krummrich <dakr@kernel.org>, Matthew Brost <matthew.brost@intel.com>,
+ Philipp Stanner <phasta@kernel.org>, Harry Wentland
+ <harry.wentland@amd.com>, Leo Li <sunpeng.li@amd.com>,
+ amd-gfx@lists.freedesktop.org, Jiri Kosina <jikos@kernel.org>, Benjamin
+ Tissoires <bentiss@kernel.org>, linux-input@vger.kernel.org, Wolfram Sang
+ <wsa+renesas@sang-engineering.com>, linux-i2c@vger.kernel.org, Mark Brown
+ <broonie@kernel.org>, Michael Hennerich <michael.hennerich@analog.com>,
+ Nuno =?UTF-8?B?U8Oh?= <nuno.sa@analog.com>, linux-spi@vger.kernel.org,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, "Martin K.
+ Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Chris
+ Mason <clm@fb.com>, David Sterba <dsterba@suse.com>,
+ linux-btrfs@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>, Andrew
+ Morton <akpm@linux-foundation.org>, SeongJae Park <sj@kernel.org>,
+ linux-mm@kvack.org, Borislav Petkov <bp@alien8.de>, Dave Hansen
+ <dave.hansen@linux.intel.com>, x86@kernel.org,
+ linux-trace-kernel@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 00/19] tracepoint: Avoid double static_branch
+ evaluation at guarded call sites
+Message-ID: <20260418190456.631df6f3@fedora>
+In-Reply-To: <20260323160052.17528-1-vineeth@bitbyteword.org>
+References: <20260323160052.17528-1-vineeth@bitbyteword.org>
+X-Mailer: Claws Mail 4.3.1 (GTK 3.24.52; x86_64-redhat-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+X-Stat-Signature: 14j39sducs3tg3aey13ys76m4wq4pf1a
+X-Rspamd-Server: rspamout02
+X-Rspamd-Queue-Id: D63C017
+X-Session-Marker: 726F737465647440676F6F646D69732E6F7267
+X-Session-ID: U2FsdGVkX18uI1/Yo7/rI1+CwnTJAuzOiDhDTcHCmFM=
+X-HE-Tag: 1776553502-227936
+X-HE-Meta: U2FsdGVkX19V5aRBuQVgNrwFYqJny3DiV29cPCLORtmFjnJgNsHv2iodpq+DK7eFwvzFvhgzZ+I=
 
-mvs_free() walks mvi->wq_list with list_for_each_entry() and calls
-cancel_delayed_work_sync(&mwq->work_q) for each element.  If the
-callback for the current node is already executing, the sync wait
-allows mvs_work_queue() to remove its own list entry and kfree() the
-mvs_wq:
+On Mon, 23 Mar 2026 12:00:19 -0400
+"Vineeth Pillai (Google)" <vineeth@bitbyteword.org> wrote:
 
-  list_del(&mwq->entry);
-  spin_unlock_irqrestore(&mvi->lock, flags);
-  kfree(mwq);
+>   if (trace_foo_enabled() && cond)
+>       trace_call__foo(args);   /* calls __do_trace_foo() directly */
 
-When cancel_delayed_work_sync() returns, list_for_each_entry() in
-mvs_free() advances with list_next_entry(mwq, entry), which reads
-mwq->entry.next from the already-freed node.  This is a read
-use-after-free in the remove path.
+Hi Vineeth,
 
-Switching the iterator to list_for_each_entry_safe() is not enough,
-because any saved "next" cursor can itself be freed by its own
-callback once cancel_delayed_work_sync() drops mvi->lock.
+Could you rebase this series on top of 7.1-rc1 when it comes out?
+Several of these patches were accepted already. Obviously drop those.
+They were the patches that added the feature, and any where the
+maintainer acked the patch.
 
-Drain wq_list one entry at a time under mvi->lock:
+Now that the feature has been accepted, if you post the patch series
+again after 7.1-rc1 with all the patches that haven't been accepted
+yet, then the maintainers can simply take them directly. As the feature
+is now accepted, there's no dependency on it, and they don't need to go
+through the tracing tree.
 
- - mvs_free() uses list_first_entry() + list_del_init() to detach
-   the head, drops the lock, calls cancel_delayed_work_sync(), then
-   kfree()s the entry, and retakes the lock for the next iteration.
+Thanks,
 
- - mvs_work_queue() checks list_empty(&mwq->entry) under mvi->lock
-   before doing its own list_del_init() + kfree().  If mvs_free()
-   has already detached the entry, the callback skips the final
-   free and teardown owns it.
-
-This gives teardown and the callback a single-owner rule for the
-struct mvs_wq free.
-
-Fixes: 60cd16a3b743 ("scsi: mvsas: Fix use-after-free bugs in mvs_work_queue")
-Signed-off-by: Sangyun Kim <sangyun.kim@snu.ac.kr>
----
- drivers/scsi/mvsas/mv_init.c | 11 ++++++++++-
- drivers/scsi/mvsas/mv_sas.c  | 10 +++++++---
- 2 files changed, 17 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/scsi/mvsas/mv_init.c b/drivers/scsi/mvsas/mv_init.c
-index 0c9c62c25987..c32f645deef3 100644
---- a/drivers/scsi/mvsas/mv_init.c
-+++ b/drivers/scsi/mvsas/mv_init.c
-@@ -85,6 +85,7 @@ static void mvs_phy_init(struct mvs_info *mvi, int phy_id)
- static void mvs_free(struct mvs_info *mvi)
- {
- 	struct mvs_wq *mwq;
-+	unsigned long flags;
- 	int slot_nr;
- 
- 	if (!mvi)
-@@ -120,8 +121,16 @@ static void mvs_free(struct mvs_info *mvi)
- 		dma_free_coherent(mvi->dev, TRASH_BUCKET_SIZE,
- 				  mvi->bulk_buffer1, mvi->bulk_buffer_dma1);
- 
--	list_for_each_entry(mwq, &mvi->wq_list, entry)
-+	spin_lock_irqsave(&mvi->lock, flags);
-+	while (!list_empty(&mvi->wq_list)) {
-+		mwq = list_first_entry(&mvi->wq_list, struct mvs_wq, entry);
-+		list_del_init(&mwq->entry);
-+		spin_unlock_irqrestore(&mvi->lock, flags);
- 		cancel_delayed_work_sync(&mwq->work_q);
-+		kfree(mwq);
-+		spin_lock_irqsave(&mvi->lock, flags);
-+	}
-+	spin_unlock_irqrestore(&mvi->lock, flags);
- 	MVS_CHIP_DISP->chip_iounmap(mvi);
- 	if (mvi->shost)
- 		scsi_host_put(mvi->shost);
-diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.c
-index 359226e80eae..7df6964a76e8 100644
---- a/drivers/scsi/mvsas/mv_sas.c
-+++ b/drivers/scsi/mvsas/mv_sas.c
-@@ -1729,9 +1729,13 @@ static void mvs_work_queue(struct work_struct *work)
- 				PORTE_BROADCAST_RCVD, GFP_ATOMIC);
- 		mv_dprintk("phy%d Got Broadcast Change\n", phy_no);
- 	}
--	list_del(&mwq->entry);
--	spin_unlock_irqrestore(&mvi->lock, flags);
--	kfree(mwq);
-+	if (!list_empty(&mwq->entry)) {
-+		list_del_init(&mwq->entry);
-+		spin_unlock_irqrestore(&mvi->lock, flags);
-+		kfree(mwq);
-+	} else {
-+		spin_unlock_irqrestore(&mvi->lock, flags);
-+	}
- }
- 
- static int mvs_handle_event(struct mvs_info *mvi, void *data, int handler)
--- 
-2.34.1
-
+-- Steve
