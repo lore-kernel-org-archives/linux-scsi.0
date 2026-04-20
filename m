@@ -1,286 +1,159 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+Received: from mail-dy1-f227.google.com (mail-dy1-f227.google.com [74.125.82.227])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 190C4344D83
-	for <linux-scsi@vger.kernel.org>; Mon, 20 Apr 2026 11:01:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 492E339DBE2
+	for <linux-scsi@vger.kernel.org>; Mon, 20 Apr 2026 11:09:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.227
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776682889; cv=none; b=gNiNcBSpzUZVlzfIOkb8zkMEH+SzsT5o5vMWVHnU2XIsPbdEpBX8u0Yfwk2Jfj6dNc4Ihh3MWA6tYval9cnbYOlshQocho+Y8m1muT3x54UdYmMScIHjLQ0WKgK6X3wbGVkKLpo3NOboI0SvO2SX3JY2Pw5H2UacamcDaJ79pHU=
+	t=1776683376; cv=none; b=Wa/b9H2I2ZH1kyliIPE84lLFMrWvq/E9X89FfHwUDUJz9zrh/hGnZapTIAmmcGxBA4VHoBLuFlu4wAlcuvu65nq1FlZ4/xaoAyu4ssp5X04U6YzU4YNCBZsWGEnCI52Kh8q8w2ESq1SltRGfQBRrqxJIom+WamWTnLPdGEPHwyo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776682889; c=relaxed/simple;
-	bh=6qtJglX76vLEtjUsCoyA4jM8K4jh6BjLd4xjLMJzmTw=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=W77tnnDsBd+P+A1ABgkRp4hMh7w9mjGa5cu7h4e9NcOEp7nRQv3UXdsIe3/upgHWFsap8XR+6jK85GAojj6FhSjjX4X0OZafGbPgTXdXfEWPCoJjevFLy3SD5Tr1Jbi48yOf7bGVT0N2+JM+X9QC4zyNREkZ1Z3DfOw6yxEOQJQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b=Q5GRnD9o; dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b=HyKNX0n0; arc=none smtp.client-ip=195.135.223.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+	s=arc-20240116; t=1776683376; c=relaxed/simple;
+	bh=BqiatpiZK82yHpofKxSogwomIgLQIYYScdESQkvH10E=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=oKWwlHc7T+pqi1BHWS/ZHfKt/B+tjbt7JrCQkO+QJGmN3Ml4aq/+/bAzy7/JZLpIc092GAQ/MMW1in/R0zbrJ4mn2256q3B43Y3SP7eT03iGDmUlvMzs8vIuiwH2tpmd4cQlALjuAiDKzx7MMnDqQmfikrvcNZLi33SIZ6I8xuM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=BT99HENN; arc=none smtp.client-ip=74.125.82.227
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b="Q5GRnD9o";
-	dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b="HyKNX0n0"
-Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id 55DE06A7D6;
-	Mon, 20 Apr 2026 11:01:24 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-	t=1776682885; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=AQ9+alQMnlcHpCF0APIDTzNW0NXm3sz0kECDOCjkMEk=;
-	b=Q5GRnD9oijwLtsNp70TbaIb2NiRyBIP1j9IkVL/Nv7IYmhqJlEknzKefWihjP/tvWGG/s7
-	qru3cjANpIJDiaIKGzUZnr6bArGwiyAiblfbxCuikTiUwISf4+vQtflQ7BX3qGAw0HoLzS
-	eVPW9HyawePpE8ZzuunldmtduCA+2mI=
-Authentication-Results: smtp-out1.suse.de;
-	none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-	t=1776682884; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=AQ9+alQMnlcHpCF0APIDTzNW0NXm3sz0kECDOCjkMEk=;
-	b=HyKNX0n0eby6LSrRi/q2xT48x07OHgD+wLZWNzqZ8WMp2GoKY8HLF06OnhOhdNB4/Ypao6
-	w8u/iLpwI/QPdBHjwacjTzLS+L8j/YjYgb1u8alQvq+UIEfxubnCeHRWSpj4vSxTm/SULp
-	draEWk3nvWc5hHnUVGBI8h68I8/aHsc=
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id F3199593AE;
-	Mon, 20 Apr 2026 11:01:23 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id 3mJFOoMH5mmGIgAAD6G6ig
-	(envelope-from <mwilck@suse.com>); Mon, 20 Apr 2026 11:01:23 +0000
-Message-ID: <b5f393cbaad0677129878415dd7864a8683d23d9.camel@suse.com>
-Subject: Re: [PATCH 2/2] scsi: sas_user_scan: use scan_start if available
-From: Martin Wilck <mwilck@suse.com>
-To: Hannes Reinecke <hare@suse.de>, "Martin K. Petersen"
-	 <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Don Brace
-	 <don.brace@microchip.com>
-Cc: linux-scsi@vger.kernel.org, Lee Duncan <lduncan@suse.com>, 
-	storagedev@microchip.com, Ranjan Kumar <ranjan.kumar@broadcom.com>, Sathya
- Prakash Veerichetty <sathya.prakash@broadcom.com>, Kashyap Desai
- <kashyap.desai@broadcom.com>, Sumit Saxena	 <sumit.saxena@broadcom.com>,
- mpi3mr-linuxdrv.pdl@broadcom.com, 	MPT-FusionLinux.pdl@broadcom.com, Yihang
- Li <liyihang9@h-partners.com>, Jack Wang <jinpu.wang@cloud.ionos.com>, John
- Garry <john.g.garry@oracle.com>
-Date: Mon, 20 Apr 2026 13:01:23 +0200
-In-Reply-To: <abdf7c80-7cf4-489f-a105-5f0c4b6e206b@suse.de>
-References: <20260415204850.799431-1-mwilck@suse.com>
-	 <20260415204850.799431-3-mwilck@suse.com>
-	 <e8843bfe-b4cb-4639-977e-a278f4578887@suse.de>
-	 <84dd73f38214c2ff593a9f86d46d2100e111329a.camel@suse.com>
-	 <abdf7c80-7cf4-489f-a105-5f0c4b6e206b@suse.de>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.60.0 
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="BT99HENN"
+Received: by mail-dy1-f227.google.com with SMTP id 5a478bee46e88-2d832f2f44cso2914526eec.0
+        for <linux-scsi@vger.kernel.org>; Mon, 20 Apr 2026 04:09:30 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1776683367; x=1777288167;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:dkim-signature:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=nqaMgTOsYO0gFcKZhql6upDj4RcuT3QIXW9T6oujAMo=;
+        b=mPYR18HApkCa6Wa5xeGfWYWXWFJ4XiFEgu+DUSBdTQrcGJTJ9ya2GKJt2kT2F4K2Ws
+         HSueDF5TmcLkVOjjKqayApD46XaKQGdhl+V59fQC+s+VFxkpREtaH066SIbwrW0p+9oH
+         +Mxb542g0BTXpxbRRjo2BdE9DAh6Aae2/sNtwAJTSKER+xdy+/Pnt5wWjfA/zPLoFPrw
+         7bu/WM+EJQdvBYGrE/F4dll3DjP1hMUiXknxOza9xiKrsFvSDjcUds1FMJZi0fo3gF3F
+         mgilKss6WHOKcXhrl6kP2rCo2DYhB02Wtke5wcaAmM3PhnqNhRNVq9DAUcCWNagnW68A
+         Dlog==
+X-Gm-Message-State: AOJu0YzhNvWgZlgrvNRwgPS3/uof8FyI9wSikaTVpbJc3aSEEJxyPWlM
+	q03Yqmt8OpQUdN3GUpcVudvmSJ5po9JUpGXXQYMMOPHQMpHB5mLZ90XqNRUy5eg7NBXN8Bquhuj
+	CoehHMAjvKrn0vvzQ3E/jeEA/LS/iEv8XyKd0GITU+Z96qvjbukEtRKJTCjK71AJtNlPIWpf/Bc
+	0xeKjPhSfYRKItiCZY7B+k3zZ1985MMPMHkS1Vm5G5pJikv9EQh76jFKwnXkBivT17wq5spbIzG
+	kDcpqmZAhYietKT
+X-Gm-Gg: AeBDieur7Td/L9VmqWJthzZlJIdnloRLJwbmcZnug9njfsHjjO97fttcMlxDeTNAYk4
+	y8iF1E4ENVvPrNubIDKvmEJ9bLoPFjjlaUEwu1ZupzLULrefX9IL8ffzMImhKnrWeOAXxDUe3ad
+	DlV2CVrkZkNNwFnYiQS6xeWjcEeKX+dfdXIGOERcZo8LXYVnqJ5FkEuxFwDI35YqGYhC2GpQkDx
+	RkrGESVp25OhZUfIepa0uzzZ8LyWTGdjG/JutUVvw4a1I4An5uqs/RXvwcp+tMEVdUGPYT4w+DX
+	JNyy/BsJprvwF7v19mY/4lk0chdYLWdJdXNTmfk66gjhmbJ7/7FfjCv34EQUqeENkiDklG747mq
+	JQb6497/Xkgy1m1NdIXLg28q2MjOu0QOtrLStIPpEfyFXzNr1LulGpimKky6YpPg0LwafQIXVpJ
+	dvW3mQtSgyyjVJ8cZewyNgqOqC9UgksUJ8AwV5xbpe34gNmv5ZB0RCRn3ZIcc8o8Z152I=
+X-Received: by 2002:a05:7300:5728:b0:2cf:28e8:d784 with SMTP id 5a478bee46e88-2e478a3314cmr6385268eec.19.1776683366952;
+        Mon, 20 Apr 2026 04:09:26 -0700 (PDT)
+Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-24.dlp.protect.broadcom.com. [144.49.247.24])
+        by smtp-relay.gmail.com with ESMTPS id 5a478bee46e88-2e53ccce7c9sm659482eec.29.2026.04.20.04.09.26
+        for <linux-scsi@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Mon, 20 Apr 2026 04:09:26 -0700 (PDT)
+X-Relaying-Domain: broadcom.com
+X-CFilter-Loop: Reflected
+Received: by mail-pl1-f198.google.com with SMTP id d9443c01a7336-2b242062308so50521115ad.2
+        for <linux-scsi@vger.kernel.org>; Mon, 20 Apr 2026 04:09:25 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google; t=1776683364; x=1777288164; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=nqaMgTOsYO0gFcKZhql6upDj4RcuT3QIXW9T6oujAMo=;
+        b=BT99HENNdkFPbqIX+H9FN3Yq2y/j9D0lnFMcRO9dWco5nCNgWgKqxOgE9PNfedzQF0
+         qfHUdJjgIphk21frDtTblu7/VQSFhq4mbm5jK0JxbJWbhzx9Wn8LTQOcCRCkDfNX1Sea
+         gFB4i0fr+ty7KYsJLV1VSJjdjEvkATsGIjxGo=
+X-Received: by 2002:a17:903:1d2:b0:2b2:41a9:8e10 with SMTP id d9443c01a7336-2b5f9f4e110mr143585555ad.23.1776683364389;
+        Mon, 20 Apr 2026 04:09:24 -0700 (PDT)
+X-Received: by 2002:a17:903:1d2:b0:2b2:41a9:8e10 with SMTP id d9443c01a7336-2b5f9f4e110mr143585245ad.23.1776683363864;
+        Mon, 20 Apr 2026 04:09:23 -0700 (PDT)
+Received: from sumit_ws.dhcp.broadcom.net ([192.19.234.250])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2b5faa1739fsm103115415ad.22.2026.04.20.04.09.21
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 20 Apr 2026 04:09:23 -0700 (PDT)
+From: Sumit Saxena <sumit.saxena@broadcom.com>
+To: martin.petersen@oracle.com,
+	axboe@kernel.dk
+Cc: linux-scsi@vger.kernel.org,
+	linux-block@vger.kernel.org,
+	mpi3mr-linuxdrv.pdl@broadcom.com,
+	Sumit Saxena <sumit.saxena@broadcom.com>
+Subject: [PATCH v2 0/3] scsi/block: NUMA-local scan allocations, shared-tag path cleanup, and SCSI I/O counters
+Date: Mon, 20 Apr 2026 17:08:36 +0530
+Message-ID: <20260420113846.1401374-1-sumit.saxena@broadcom.com>
+X-Mailer: git-send-email 2.43.7
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Spam-Score: -4.30
-X-Spam-Level: 
-X-Spamd-Result: default: False [-4.30 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	NEURAL_HAM_SHORT(-0.20)[-0.999];
-	MIME_GOOD(-0.10)[text/plain];
-	FUZZY_RATELIMITED(0.00)[rspamd.com];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	ARC_NA(0.00)[];
-	RCPT_COUNT_TWELVE(0.00)[16];
-	MID_RHS_MATCH_FROM(0.00)[];
-	RCVD_TLS_ALL(0.00)[];
-	DKIM_SIGNED(0.00)[suse.com:s=susede1];
-	FROM_EQ_ENVFROM(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	TO_DN_SOME(0.00)[];
-	RCVD_COUNT_TWO(0.00)[2];
-	URIBL_BLOCKED(0.00)[imap1.dmz-prg2.suse.org:helo,oracle.com:email,microchip.com:email,suse.com:mid,suse.com:email,ionos.com:email,broadcom.com:email,h-partners.com:email];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[microchip.com:email,suse.com:mid,suse.com:email,imap1.dmz-prg2.suse.org:helo,ionos.com:email,h-partners.com:email,oracle.com:email,broadcom.com:email]
-X-Spam-Flag: NO
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
 
-On Mon, 2026-04-20 at 12:35 +0200, Hannes Reinecke wrote:
-> On 4/16/26 11:51, Martin Wilck wrote:
-> > On Thu, 2026-04-16 at 08:04 +0200, Hannes Reinecke wrote:
-> > > On 4/15/26 22:48, Martin Wilck wrote:
-> > > > Since 37c4e72b0651 ("scsi: Fix sas_user_scan() to handle
-> > > > wildcard
-> > > > and
-> > > > multi-channel scans"), a wildcard scan on a SAS host scans all
-> > > > channels.
-> > > > This can cause excessive resource usage and even system freeze
-> > > > with
-> > > > some controllers, e.g. smartpqi. smartpqi and other drivers
-> > > > provide
-> > > > the scan_start() and scan_finished() methods to scan devices
-> > > > efficiently. Instead of blindly scanning every device, use
-> > > > these
-> > > > methods to do the wildcard scan when available.
-> > > >=20
-> > > > Fixes: 37c4e72b0651 ("scsi: Fix sas_user_scan() to handle
-> > > > wildcard
-> > > > and multi-channel scans")
-> > > > Signed-off-by: Martin Wilck <mwilck@suse.com>
-> > > > Cc: Don Brace <don.brace@microchip.com>
-> > > > Cc: storagedev@microchip.com
-> > > > Cc: Ranjan Kumar <ranjan.kumar@broadcom.com>
-> > > > Cc: Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>
-> > > > Cc: Kashyap Desai <kashyap.desai@broadcom.com>
-> > > > Cc: Sumit Saxena <sumit.saxena@broadcom.com>
-> > > > Cc: mpi3mr-linuxdrv.pdl@broadcom.com
-> > > > Cc: MPT-FusionLinux.pdl@broadcom.com
-> > > > Cc: Yihang Li <liyihang9@h-partners.com>
-> > > > Cc: Jack Wang <jinpu.wang@cloud.ionos.com>
-> > > > Cc: John Garry <john.g.garry@oracle.com>
-> > > >=20
-> > > > ----
-> > > > This patch has been tested successfully with smartpqi, but it
-> > > > would
-> > > > affect other drivers that provide scan_start(), and we don't
-> > > > have
-> > > > hardware to test them all. Affected drivers are aic94xx,
-> > > > hisi_sas,
-> > > > hpsa, isci, mpi3mr, mpt3sas, mvsas, pm8001, and smartpqi.
-> > > > I cc'd the maintainers of these drivers above.
-> > > > ---
-> > > > =C2=A0=C2=A0 drivers/scsi/scsi_transport_sas.c | 26
-> > > > ++++++++++++++++++++++++++
-> > > > =C2=A0=C2=A0 1 file changed, 26 insertions(+)
-> > > >=20
-> > > > diff --git a/drivers/scsi/scsi_transport_sas.c
-> > > > b/drivers/scsi/scsi_transport_sas.c
-> > > > index 1341270..2231609d 100644
-> > > > --- a/drivers/scsi/scsi_transport_sas.c
-> > > > +++ b/drivers/scsi/scsi_transport_sas.c
-> > > > @@ -31,6 +31,7 @@
-> > > > =C2=A0=C2=A0 #include <linux/string.h>
-> > > > =C2=A0=C2=A0 #include <linux/blkdev.h>
-> > > > =C2=A0=C2=A0 #include <linux/bsg.h>
-> > > > +#include <linux/delay.h>
-> > > > =C2=A0=C2=A0=20
-> > > > =C2=A0=C2=A0 #include <scsi/scsi.h>
-> > > > =C2=A0=C2=A0 #include <scsi/scsi_cmnd.h>
-> > > > @@ -1702,6 +1703,26 @@ static void scan_channel_zero(struct
-> > > > Scsi_Host *shost, uint id, u64 lun)
-> > > > =C2=A0=C2=A0=C2=A0	}
-> > > > =C2=A0=C2=A0 }
-> > > > =C2=A0=C2=A0=20
-> > > > +/*
-> > > > + * For wildcard scans on hosts that provide a scan_start
-> > > > method,
-> > > > + * use that instead of blindly scanning everything.
-> > > > + */
-> > > > +static int sas_user_scan_with_scan_start(struct Scsi_Host
-> > > > *shost)
-> > > > +{
-> > > > +	unsigned long start;
-> > > > +
-> > > > +	if (!shost->hostt->scan_finished || !shost->hostt-
-> > > > > scan_start)
-> > > > +		return 1;
-> > > > +
-> > > Technically 'scan_start' is optional (cf do_scsi_scan_host()), so
-> > > it
-> > > would be better to just check for 'scan_finished'.
-> >=20
-> > That's why I chose to check for `scan_start`. I wanted to activate
-> > this
-> > code path only for those drivers that provide both functions.
-> >=20
-> > I have to say I don't quite understand in which scenario it makes
-> > sense
-> > to check for the scan being finished without starting it
-> > beforehand.
-> > Perhaps it works at driver load / boot time, but in the current use
-> > case I have no clue how it would. Somehow we need to tell the
-> > driver
-> > that it must trigger probing when the user writes to the "scan"
-> > sysfs
-> > attribute.
-> >=20
-> The point here is not whether the functions have been called, but
-> rather
-> whether these function (callbacks) _exist_.
+This series contains three performance improvements targeting the SCSI
+and block layers on multi-socket NUMA and heavily loaded SMP systems.
 
-Sure.=20
+On multi-socket NUMA systems we observed extreme I/O throughput variance
+of 50-60% between runs.  This series identifies and fixes two root causes:
+cross-node memory accesses due to NUMA-unaware allocations in the scan
+path, and false sharing between hot atomic counters in struct request_queue
+and struct scsi_device.
 
-> Technically it's possible to have a driver which just provides as=20
-> 'scan_finished' callback but not 'scan_start' callback.
-> Some drivers (like ipr or ibmvfc) have their own automatic probing,
-> so
-> 'scan_start' is pointless, and 'scan_finished' merely waits for the
-> internal probing to finish.
+Performance notes:
 
-Right. Automatic probing in these drivers will (I suppose) be started
-at driver load time, and possibly on some external event, like an RSCN.
+Tested on a dual-socket NUMA system (2x 32-core, 256 GB/socket) with
+an mpi3mr HBA, running fio (random read, 4K, QD 64, 16 jobs, 60 s,
+direct I/O).  IOPS figures are in KIOPS (thousands of IOPS):
 
-But the user expects something to happen when she executes=C2=A0
-"echo - - - > .../scan". Thus I need a method to tell the driver that
-it should (re)start probing. If no scan_start() callback exists, simply
-waiting for scan_finished() will in the best case be a no-op with no
-probing having happened, and in the worst case hang forever.=20
+  Configuration                    Avg KIOPS   Range (KIOPS)   Spread
+  Baseline                         6,255       4,200 - 6,700   ~37%
+  Baseline + all patches           7,350       7,000 - 7,700    ~10%
 
-Therefore, for these drivers, I can't replace the current wildcard
-scanning algorithm by an approach using just scan_finished().
+Key findings:
 
-Perhaps it's possible to add patches on top that implement scan_start()
-for those drivers that currently provide scan_finished() but not
-scan_start()1. But that's a different topic. This patch changes
-behavior of quite a few drivers already, and I'd rather not add even
-more.
+These patches combinedly reduces the observed 50-60% run-to-run variance
+to under 10%, significantly improving workload predictability and
+improves IOPs by 16-18%.
 
-> (I think :-)
->=20
-> > >=20
-> > > > +	start =3D jiffies;
-> > > > +	shost->hostt->scan_start(shost);
-> > > > +
-> > > > +	while (!shost->hostt->scan_finished(shost, jiffies -
-> > > > start))
-> > > > +		msleep(10);
-> > > > +
-> > > > +	return 0;
-> > > > +}
-> > > > +
-> > > > =C2=A0=C2=A0 /*
-> > > > =C2=A0=C2=A0=C2=A0 * SCSI scan helper
-> > > > =C2=A0=C2=A0=C2=A0 */
-> > > > @@ -1721,6 +1742,11 @@ static int sas_user_scan(struct
-> > > > Scsi_Host
-> > > > *shost, uint channel,
-> > > > =C2=A0=C2=A0=C2=A0		break;
-> > > > =C2=A0=C2=A0=20
-> > > > =C2=A0=C2=A0=C2=A0	case SCAN_WILD_CARD:
-> > > > +
-> > > > +		if (id =3D=3D SCAN_WILD_CARD && lun =3D=3D
-> > > > SCAN_WILD_CARD
-> > > > +			&&
-> > > > !sas_user_scan_with_scan_start(shost))
-> > > > +			return 0;
-> > > > +
-> > > > =C2=A0=C2=A0=C2=A0		mutex_lock(&sas_host->lock);
-> > > > =C2=A0=C2=A0=C2=A0		scan_channel_zero(shost, id, lun);
-> > > > =C2=A0=C2=A0=C2=A0		mutex_unlock(&sas_host->lock);
-> > >=20
-> > > Wouldn't it be better to export do_scsi_scan_host() and call it
-> > > here, seeing that it's doing exactly the same thing?
-> >=20
-> > Sure, I can do that if it's preferred. But currently my function
-> > does
-> > not do exactly the same thing, so I'd need to refactor
-> > do_scsi_scan_host() slightly.
-> >=20
-> Please do, just to make clear where the differences are.
-> (And to show future reviewers that we _did_ think about it :).
+No functional regressions observed.
 
-Ok, will do.
+This patch series is based on Martin's for-next tree.
 
-Thanks,
-Martin
+Changes in v2
+--------------
+
+  Patch 1 — Same functional goal as v1 patch 1: NUMA-local scsi_device /
+  scsi_target allocations in the scan path so steady-state I/O does not
+  habitually touch remote memory when the host has a fixed DMA/NUMA
+  affinity.
+
+  Patch 2 — Replaces v1’s ____cacheline_aligned_in_smp on
+  nr_active_requests_shared_tags with shared tags removal work done by
+  Bart Van Assche [1], rebased for the current tree; it removes the
+  atomic counter- nr_active_request_shared_tags that motivated the v1
+  false-sharing workaround and, in our testing, improves IOPS on the order
+  of roughly 16–18% for the shared-tag workload exercised.
+  This patch touches include/linux/blkdev.h, so needs review from
+  linux-block@vger.kernel.org; an Acked-by from the block maintainer is
+  requested before merging via the SCSI tree.
+
+  Patch 3 — Replaces v1’s cache-line padding of iodone_cnt with
+  percpu_counter for both iorequest_cnt and iodone_cnt, so submission and
+  completion paths mostly update CPU-local state instead of bouncing a
+  single cache line, without inflating struct scsi_device for SMP
+  alignment.
+
+[1]: https://lore.kernel.org/linux-block/20240529213921.3166462-1-bvanassche@acm.org/
+
+James Rizzo (1):
+  scsi: scan: allocate sdev and starget on the NUMA node of the host adapter
+
+Bart Van Assche (1):
+  block: drop shared-tag fairness throttling
+
+Sumit Saxena (1):
+  scsi: use percpu counters for iorequest_cnt and iodone_cnt
+
+ 12 files changed, 68 insertions(+), 145 deletions(-)
+
+---
+2.43.7
