@@ -1,412 +1,97 @@
-Received: from lamorak.hansenpartnership.com (lamorak.hansenpartnership.com [198.37.111.173])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-yw1-f170.google.com (mail-yw1-f170.google.com [209.85.128.170])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EE1043D9020;
-	Tue, 21 Apr 2026 15:13:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.37.111.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D21A23D8906
+	for <linux-scsi@vger.kernel.org>; Tue, 21 Apr 2026 15:21:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.170
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776784437; cv=none; b=qc5RAFQ3kMxttEr96r98xREE3lSv6NBhTlgi7QoZB1pJR4D+fd9xcw/9q1ntx9RgcMnCYdr6THTzoR11xSkTpMTnBsqzGvTby+yhh/cqVipcWPyUjWdj4lV0qt3+XFVEs4E7/2tNW76mYI1ELvPC5YLFl24fjRjO826WGZjZudo=
+	t=1776784880; cv=none; b=GO45InbYe7CPOxsS9V8vLdVm2f6uLWejiJFYO5EgV1mya+ffno6C+t9dplHqrii4cLLeSEnDx16XiC6jHT7q9/yywxchN11Jun45hdKCn0BZHT+4IwcEkVCSYnTPadMRUEllk+x9DosMD4Rit+IpnPkTezQc5r7wPgk/IJj+DuA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776784437; c=relaxed/simple;
-	bh=/dKbBf4bcRUjbZmMEQ0ttmg/fF48dwiAAYo8i86BI7Y=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=PGmdUs8mLYFnoflLUXoZTKFBNBJ7n93VGMu3o0LDqOVAYMEyvDPMQM/MA9PWo3XZarN7V4bBlXg7o1d80xSQJ+/IR+Fy4rU+kkhbgZsriHK19pL94BOxSjrxw4RHPJrTZHzNQe++/Cl/OB8EM7r7mKoGw49kc/kjyqkl0Tl8lbs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com; spf=pass smtp.mailfrom=HansenPartnership.com; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=tcbGApB+; arc=none smtp.client-ip=198.37.111.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=HansenPartnership.com
+	s=arc-20240116; t=1776784880; c=relaxed/simple;
+	bh=Kyk3+wNQNdoAB6SWDPZsFu2inFstrAooXQvG3g3opEo=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=PNjxfDu/M8NvageAZmO/bv3stM52eBytft+k3jxJ1XujgdjHYxt2/pDJBASrYVx4tm8j3P+nYupoJSQ+2uQ4mXY2qJqTS+xTs/TE8vD1volv9DB6pJOjnwIOeDg0Pu9P0eDc++24zSG0g3uXc9AbERWmQ2tQuzOGubV5qIKPhzQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=soleen.com; spf=pass smtp.mailfrom=soleen.com; dkim=pass (2048-bit key) header.d=soleen.com header.i=@soleen.com header.b=PnE3rtHZ; arc=none smtp.client-ip=209.85.128.170
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=soleen.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=soleen.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="tcbGApB+"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-	d=hansenpartnership.com; s=20151216; t=1776784435;
-	bh=/dKbBf4bcRUjbZmMEQ0ttmg/fF48dwiAAYo8i86BI7Y=;
-	h=From:To:Subject:Date:Message-ID:From;
-	b=tcbGApB+cHO2G41XuNtew0hfpKi352QZTJzLJRqihyns4Rx/xvcEuH0gKo6BwkXD+
-	 1A16mTAwAhy6bwk8fPNxkiRUI/pOBK/h4cZTzSiFljxLPevxNcgP2V+AdOLmCEdwf6
-	 /SFxNbxADJL2J3mqD7zKCw1QU/NByc9dx1AEjy68=
-Received: from lingrow.int.hansenpartnership.com (unknown [153.66.160.227])
-	by lamorak.hansenpartnership.com (Postfix) with ESMTP id E81321C0133;
-	Tue, 21 Apr 2026 11:13:54 -0400 (EDT)
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-To: Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>
-Subject: [GIT PULL v2] SCSI updates for the 7.0+ merge window
-Date: Tue, 21 Apr 2026 11:13:43 -0400
-Message-ID: <20260421151345.9937-1-James.Bottomley@HansenPartnership.com>
-X-Mailer: git-send-email 2.51.0
+	dkim=pass (2048-bit key) header.d=soleen.com header.i=@soleen.com header.b="PnE3rtHZ"
+Received: by mail-yw1-f170.google.com with SMTP id 00721157ae682-7986e538decso42206777b3.1
+        for <linux-scsi@vger.kernel.org>; Tue, 21 Apr 2026 08:21:18 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=soleen.com; s=google; t=1776784878; x=1777389678; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=Y+B+8NSAggTlzgSEBNF7JVWtV7yl/tiBwRJ1+ICjPNI=;
+        b=PnE3rtHZrkUDAAshE5K4db3xIHy0sqcovsfzAj/DRChCNXuPebUBoBNXfXqcjFhFm3
+         HLTvCJdHlNG7yoZf0qNnBI7jPr0Ey/FmdTV+xnXQRVcgNJBqxdnu7hlV0pXQLq3+C8iK
+         Cuo5zVZWuyxOcY9CNEw1egJrCY17MQlvieQgDjnPiYyo1ERorB91YVkBTDSSrgZV/f7g
+         z5OciUO1IM7Y9fjnTqp9LJphwAELTieaqHjHkjjXHyPsiNt5y+RrDfnG2bVBbsdarZlq
+         VnTeA3xbvVX8Ub388Z2BKLpI1CBGYMiPeIz9Yycv49hD3fOsQooCy4HIZ6f9jDynE3f6
+         qjWg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1776784878; x=1777389678;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=Y+B+8NSAggTlzgSEBNF7JVWtV7yl/tiBwRJ1+ICjPNI=;
+        b=n+OOgBnU0Vjk2LycF5pWOWvrkSUqhBTXVKEzYibBFtJ2iiz0Qpj7JqylpXoWjBbpXw
+         ZsjYjnYBCT/WxERhFGAQtsJiSNacabMZECN/5ux3FKj3ijKbTnlUxWpYDnSYvBNp7/Ne
+         E69lWkPs1CXkOm8olU4S2WVydaiggly0llR1JScmLteMZ/qoPZeoVOEwum19e22nAnXT
+         8hCABHzzkV8x9bE3ntLt1MucgALAXPsAIqiTHpFRqrit41tvrbn4F/2kV/5u2wBw0GkX
+         Sue7eo6KTPy2R48VC1KMIFrI15+v2ELQieakagZuT/21HJkSwWOpzWXslcPOuY8ex4e6
+         M5ag==
+X-Forwarded-Encrypted: i=1; AFNElJ/Wfukf8D/eNUyuvvNtd8bv0s61PXSNPMgzTNOg3Kd8pvHPmdtV69LJMQRnU0qC+1JuU+2wGa8VRWQE@vger.kernel.org
+X-Gm-Message-State: AOJu0YzRs02cQ8bzmXxCV4XS5vyg3jILMvoQ6hsSTA56Eqkh72vGw8F/
+	Oeg85suyR86dFsQNuf1Q89eyDnCunXbZUi1d/PEqFmTljjZJbmon9Fs9DFqk9Hd7lwdSWSQRSw+
+	jAB8i
+X-Gm-Gg: AeBDiesXHa04vGMgTk3kKmwk8gqCJSkYNHFWxLiuYRs/bqHbS+GB6kiyF1Lo9YGKLIX
+	+YCJapCUPsx/X4bW9N6jmjNbDX3Nn/ZQszHw3EF2YAsUfjWEYjjVyq4Hz9MGC0HvqsKU1DtGpCK
+	3RdI4goVbwD7H8NUPBicflsnjjb9D8hU4qgralOUybukzb8V5PU2AgUa85cFmTCkvrZ5feLbj4X
+	yEbUUrtMHXJI3eZRjEklfR7J+kHb66hvdv7z/IwCzC1JJYPJKONw9s3xOdbXo7pgF598AFqOqNy
+	GdfCS61OuSuIu/PAv239vGNIrh0Dn93w8dPRvgiazV3a3FJqPAPnL7wa/pnrnhjJxn0Go5zf2vv
+	g4HUvAT4rXak6PL3eALIuZKk8ktM8fQaV9UzR2FtWWpOzQ8gq3L+ZVpxJ1XwxRILKd8ewHKLOAk
+	85WeOwSnXUozF4QmVLBxTmsUgndCpBtAcifqjBZ+sjv1nvNCIg1hJFSBSp0gzljoS26kSpAH9gd
+	Gs4e1Dv1g6b/y6BfZEV8sLMcI2PuQ5+WwdVLjOL
+X-Received: by 2002:a05:690c:f14:b0:7ba:f677:8c32 with SMTP id 00721157ae682-7baf67794c3mr66413557b3.15.1776784877840;
+        Tue, 21 Apr 2026 08:21:17 -0700 (PDT)
+Received: from google.com (57.233.150.34.bc.googleusercontent.com. [34.150.233.57])
+        by smtp.gmail.com with ESMTPSA id 00721157ae682-7b9ee9b293fsm56526037b3.40.2026.04.21.08.21.16
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 21 Apr 2026 08:21:17 -0700 (PDT)
+Date: Tue, 21 Apr 2026 11:21:15 -0400
+From: Pasha Tatashin <pasha.tatashin@soleen.com>
+To: David Jeffery <djeffery@redhat.com>
+Cc: linux-kernel@vger.kernel.org, driver-core@lists.linux.dev, 
+	linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org, 
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>, 
+	Danilo Krummrich <dakr@kernel.org>, Tarun Sahu <tarunsahu@google.com>, 
+	Pasha Tatashin <tatashin@google.com>, =?utf-8?B?TWljaGHFgiBDxYJhcGnFhHNraQ==?= <mclapinski@google.com>, 
+	Jordan Richards <jordanrichards@google.com>, Ewan Milne <emilne@redhat.com>, 
+	John Meneghini <jmeneghi@redhat.com>, "Lombardi, Maurizio" <mlombard@redhat.com>, 
+	Stuart Hayes <stuart.w.hayes@gmail.com>, Laurence Oberman <loberman@redhat.com>, 
+	Bart Van Assche <bvanassche@acm.org>, Bjorn Helgaas <helgaas@kernel.org>, 
+	"Martin K . Petersen" <martin.petersen@oracle.com>, John Garry <john.g.garry@oracle.com>
+Subject: Re: [PATCH 5/5] scsi: Enable async shutdown support
+Message-ID: <aeeV1e4j4ok9_iQz@google.com>
+References: <20260420152608.6244-1-djeffery@redhat.com>
+ <20260420152608.6244-6-djeffery@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-
-Usual driver updates (ufs, lpfc, fnic, target, mpi3mr).  The
-substantive core changes are adding a 'serial' sysfs attribute and
-getting sd to support > PAGE_SIZE sectors.
-
-[v2 with tag actually created]
-
-The patch is available here:
-
-git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-misc
-
-The short changelog is:
-
-Aaron Kling (1):
-      scsi: ufs: core: Disable timestamp for Kioxia THGJFJT0E25BAIP
-
-Abel Vesa (1):
-      scsi: ufs: qcom: dt-bindings: Document the Eliza UFS controller
-
-Adrian Hunter (1):
-      scsi: ufs: ufs-pci: Add support for Intel Nova Lake
-
-Alexey Charkov (1):
-      scsi: ufs: core: Fix RPMB region size detection for UFS 2.2
-
-Andy Shevchenko (1):
-      scsi: ufs: rockchip: Drop unused include
-
-Arnd Bergmann (1):
-      scsi: esas2r: Fix __printf annotation on esas2r_log_master()
-
-Bart Van Assche (6):
-      scsi: ufs: core: Make the header files self-contained
-      scsi: ufs: core: Remove an include directive from ufshcd-crypto.h
-      scsi: ufs: core: Add a comment block above ufshcd_mcq_compl_all_cqes_lock()
-      scsi: aic7xxx: Fix compiler warnings triggered by user space code
-      scsi: megaraid_sas: Protect more code with instance->reset_mutex
-      scsi: fnic: Make fnic_queuecommand() easier to analyze
-
-Can Guo (13):
-      scsi: ufs: ufs-qcom: Enable TX Equalization
-      scsi: ufs: ufs-qcom: Implement vops apply_tx_eqtr_settings()
-      scsi: ufs: ufs-qcom: Implement vops get_rx_fom()
-      scsi: ufs: ufs-qcom: Implement vops tx_eqtr_notify()
-      scsi: ufs: ufs-qcom: Fixup PAM-4 TX L0_L1_L2_L3 adaptation pattern length
-      scsi: ufs: core: Add support to retrain TX Equalization via debugfs
-      scsi: ufs: core: Add helpers to pause and resume command processing
-      scsi: ufs: core: Add debugfs entries for TX Equalization params
-      scsi: ufs: core: Add support for TX Equalization
-      scsi: ufs: core: Add UFS_HS_G6 and UFS_HS_GEAR_MAX to enum ufs_hs_gear_tag
-      scsi: ufs: core: Pass force_pmc to ufshcd_config_pwr_mode() as a parameter
-      scsi: ufs: core: Introduce a new ufshcd vops negotiate_pwr_mode()
-      scsi: ufs: core: Add support to notify userspace of UniPro QoS events
-
-Chaohai Chen (1):
-      scsi: core: Drop using the host_lock to protect async_scan race condition
-
-Claudiu Beznea (1):
-      scsi: mpi3mr: Fix typo
-
-Colin Ian King (1):
-      scsi: ufs: ufs-qcom: Fix spelling mistake "retore" -> "restore"
-
-Dave Marquardt (1):
-      scsi: fc: Fix typo in fc_els.h
-
-Ed Tsai (2):
-      scsi: ufs: host: mediatek: Add VCC on delay for stability
-      scsi: ufs: core: Add quirks for VCC ramp-up delay
-
-Eric Biggers (2):
-      scsi: iscsi_tcp: Remove unneeded selections of CRYPTO and CRYPTO_MD5
-      scsi: lpfc: Use the crc32c() function
-
-Florian Fuchs (1):
-      scsi: devinfo: Add BLIST_SKIP_IO_HINTS for Iomega ZIP
-
-Greg Kroah-Hartman (1):
-      scsi: ses: Handle positive SCSI error from ses_recv_diag()
-
-Igor Pylypiv (1):
-      scsi: core: Add 'serial' sysfs attribute for SCSI/SATA
-
-Jan Kiszka (1):
-      scsi: storvsc: Fix scheduling while atomic on PREEMPT_RT
-
-Josef Bacik (1):
-      scsi: target: tcm_loop: Drain commands in target_reset handler
-
-Joshua Daley (2):
-      scsi: virtio_scsi: Kick event_list unconditionally
-      scsi: virtio_scsi: Move INIT_WORK calls to virtscsi_probe()
-
-Junrui Luo (1):
-      scsi: target: core: Fix integer overflow in UNMAP bounds check
-
-Junxiao Bi (2):
-      scsi: core: Fix error handling for scsi_alloc_sdev()
-      scsi: core: Fix refcount leak for tagset_refcnt
-
-Justin Tee (23):
-      scsi: lpfc: Update lpfc version to 15.0.0.0
-      scsi: lpfc: Add PCI ID support for LPe42100 series adapters
-      scsi: lpfc: Introduce 128G link speed selection and support
-      scsi: lpfc: Check ASIC_ID register to aid diagnostics during failed fw updates
-      scsi: lpfc: Update construction of SGL when XPSGL is enabled
-      scsi: lpfc: Remove deprecated PBDE feature
-      scsi: lpfc: Add REG_VFI mailbox cmd error handling
-      scsi: lpfc: Log MCQE contents for mbox commands with no context
-      scsi: lpfc: Select mailbox rq_create cmd version based on SLI4 if_type
-      scsi: lpfc: Break out of IRQ affinity assignment when mask reaches nr_cpu_ids
-      scsi: lpfc: Update lpfc version to 14.4.0.14
-      scsi: lpfc: Update copyright year string for 2026
-      scsi: lpfc: Restrict first burst to non-FCoE and SLI4 adapters only
-      scsi: lpfc: Update class of service bit field to 3 bits for WQE submissions
-      scsi: lpfc: Add clean up of aborted NVMe commands during PCI fcn reset
-      scsi: lpfc: Fix incorrect txcmplq_cnt during cleanup in lpfc_sli_abort_ring()
-      scsi: lpfc: Cleanup error exit paths in lpfc_fdmi_cmd() and associated messages
-      scsi: lpfc: Remove unnecessary ndlp kref get in lpfc_check_nlp_post_devloss
-      scsi: lpfc: Reduce pointer chasing when accessing vmid_flag
-      scsi: lpfc: Use min_t() instead of min() in lpfc_sli4_driver_resource_setup
-      scsi: lpfc: Add log messages to fabric login error labels
-      scsi: lpfc: Log discarded and insufficient RQE buffer events
-      scsi: lpfc: Update log message when ndlp kref get is unsuccessful
-
-Karan Tilak Kumar (6):
-      scsi: fnic: Bump up version number
-      scsi: fnic: Refactor in_remove flag and call to fnic_fcpio_reset()
-      scsi: fnic: Rename fnic_scsi_fcpio_reset()
-      scsi: fnic: Do not use GFP_ZERO for mempools
-      scsi: fnic: Use mempool for receive frames
-      scsi: snic: MAINTAINERS: Update snic maintainers
-
-Kees Cook (1):
-      scsi: target: Replace strncpy() with strscpy() in VPD dump functions
-
-Kexin Sun (2):
-      scsi: iscsi_tcp: update outdated comment for renamed iscsi_conn_set_callbacks()
-      scsi: lpfc: Update outdated comment for renamed lpfc_freenode()
-
-Li RongQing (1):
-      scsi: qla2xxx: Use nr_cpu_ids instead of NR_CPUS for qp_cpu_map allocation
-
-Li Tian (1):
-      scsi: storvsc: Handle PERSISTENT_RESERVE_IN truncation for Hyper-V vFC
-
-Luca Weiss (1):
-      scsi: ufs: qcom,sc7180-ufshc: dt-bindings: Document the Milos UFS Controller
-
-Mathias Krause (1):
-      scsi: lpfc: Properly set WC for DPP mapping
-
-Mike Christie (5):
-      scsi: target: core: Fix complete_type use
-      scsi: vhost-scsi: Report direction completion support
-      scsi: target: Allow userspace to set the completion type
-      scsi: target: Use driver completion preference by default
-      scsi: target: Add support for completing commands from backend context
-
-Nilesh Javali (1):
-      scsi: qla2xxx: Add support to report MPI FW state
-
-Pengpeng Hou (1):
-      scsi: hpsa: Enlarge controller and IRQ name buffers
-
-Peter Wang (6):
-      scsi: ufs: core: Avoid IRQ thread wakeup during active UIC command
-      scsi: ufs: core: Support UFSHCI 4.1 CQ entry tag
-      scsi: ufs: core: Add debug log for MCQ command timeout
-      scsi: ufs: core: Add debug log for UIC command timeout
-      scsi: ufs: core: Move link recovery for hibern8 exit failure to wl_resume
-      scsi: ufs: core: Fix possible NULL pointer dereference in ufshcd_add_command_trace()
-
-Pradeep P V K (1):
-      scsi: ufs: qcom,sc7180-ufshc: dt-bindings: Add UFSHC compatible for x1e80100
-
-Prithvi Tambewagh (1):
-      scsi: target: Fix recursive locking in __configfs_open_file()
-
-Randy Dunlap (1):
-      scsi: lpfc: ELIMINATE kernel-doc warnings in lpfc.h
-
-Ranjan Kumar (5):
-      scsi: mpi3mr: Add retry mechanism for IOC shutdown with timeout reset
-      scsi: mpi3mr: Add queue-full tracking for operational request queues
-      scsi: mpi3mr: Reset controller on invalid I/O completion
-      scsi: mpi3mr: Clear reset history on ready and recheck state after timeout
-      scsi: mpi3mr: Add NULL checks when resetting request and reply queues
-
-Salomon Dushimirimana (1):
-      scsi: pm8001: Fix use-after-free in pm8001_queue_command()
-
-Shawn Lin (1):
-      scsi: ufs: rockchip,rk3576-ufshc: dt-bindings: Add new mphy reset item
-
-Stefan Hajnoczi (1):
-      scsi: target: Don't validate ignored fields in PROUT PREEMPT
-
-Swarna Prabhu (1):
-      scsi: sd: Enable sector size > PAGE_SIZE in SCSI sd driver
-
-Thinh Nguyen (1):
-      scsi: target: file: Use kzalloc_flex for aio_cmd
-
-Thomas Fourier (1):
-      scsi: snic: Remove unused linkstatus
-
-Thomas Weißschuh (1):
-      scsi: libsas: Delete unused to_dom_device() and to_dev_attr()
-
-Thorsten Blum (1):
-      scsi: BusLogic: Replace deprecated strcpy() + strcat() in blogic_rdconfig()
-
-Tomas Henzl (1):
-      scsi: ses: Fix devices attaching to different hosts
-
-Tyllis Xu (1):
-      scsi: ibmvfc: Fix OOB access in ibmvfc_discover_targets_done()
-
-Vladimir Riabchun (1):
-      scsi: qla2xxx: Completely fix fcport double free
-
-Wang Shuaiwei (1):
-      scsi: ufs: core: Fix SError in ufshcd_rtc_work() during UFS suspend
-
-Won Jung (1):
-      scsi: ufs: core: Reset urgent_bkops_lvl to allow runtime PM power mode
-
-Xingui Yang (1):
-      scsi: hisi_sas: Fix NULL pointer exception during user_scan()
-
-Yang Erkun (3):
-      scsi: sg: Remove deprecated sg-big-buff
-      scsi: sg: Resolve soft lockup issue when opening /dev/sgX
-      scsi: sg: Fix sysctl sg-big-buff register during sg_init()
-
-Yang Xiuwei (1):
-      scsi: sd: fix missing put_disk() when device_add(&disk_dev) fails
-
-Yihang Li (3):
-      scsi: scsi_transport_sas: Fix the maximum channel scanning issue
-      scsi: hisi_sas: Fix the risk of overflow in bitwise logical operations
-      scsi: hisi_sas: Correct printing format issues
-
-vamshi gajjela (1):
-      scsi: ufs: core: Handle MCQ IAG events
-
-wangshuaiwei (1):
-      scsi: ufs: core: Fix shift out of bounds when MAXQ=32
-
-And the diffstat:
-
- Documentation/ABI/testing/sysfs-driver-ufs         |   23 +
- .../devicetree/bindings/ufs/qcom,sc7180-ufshc.yaml |   38 +-
- .../devicetree/bindings/ufs/qcom,sm8650-ufshc.yaml |   14 +
- .../bindings/ufs/rockchip,rk3576-ufshc.yaml        |    7 +-
- MAINTAINERS                                        |    1 +
- drivers/infiniband/ulp/srpt/ib_srpt.c              |    1 +
- drivers/scsi/BusLogic.c                            |    4 +-
- drivers/scsi/Kconfig                               |    3 +-
- drivers/scsi/aic7xxx/aicasm/aicasm.h               |    2 +-
- drivers/scsi/aic7xxx/aicasm/aicasm_gram.y          |    2 +-
- drivers/scsi/aic7xxx/aicasm/aicasm_scan.l          |    2 +-
- drivers/scsi/elx/efct/efct_lio.c                   |    2 +
- drivers/scsi/esas2r/esas2r_log.c                   |   14 +-
- drivers/scsi/fnic/fdls_disc.c                      |    4 +-
- drivers/scsi/fnic/fip.c                            |    2 +-
- drivers/scsi/fnic/fnic.h                           |    7 +-
- drivers/scsi/fnic/fnic_fcs.c                       |  112 +-
- drivers/scsi/fnic/fnic_fdls.h                      |    2 +-
- drivers/scsi/fnic/fnic_main.c                      |   28 +-
- drivers/scsi/fnic/fnic_scsi.c                      |   70 +-
- drivers/scsi/hisi_sas/hisi_sas_main.c              |    4 +-
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c             |   14 +-
- drivers/scsi/hpsa.h                                |    4 +-
- drivers/scsi/ibmvscsi/ibmvfc.c                     |    3 +-
- drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c           |    1 +
- drivers/scsi/iscsi_tcp.c                           |    2 +-
- drivers/scsi/lpfc/lpfc.h                           |   22 +-
- drivers/scsi/lpfc/lpfc_attr.c                      |   27 +-
- drivers/scsi/lpfc/lpfc_crtn.h                      |    5 +-
- drivers/scsi/lpfc/lpfc_ct.c                        |   13 +-
- drivers/scsi/lpfc/lpfc_disc.h                      |    5 +-
- drivers/scsi/lpfc/lpfc_els.c                       |   54 +-
- drivers/scsi/lpfc/lpfc_hbadisc.c                   |   44 +-
- drivers/scsi/lpfc/lpfc_hw.h                        |    3 +-
- drivers/scsi/lpfc/lpfc_hw4.h                       |   37 +-
- drivers/scsi/lpfc/lpfc_ids.h                       |    4 +-
- drivers/scsi/lpfc/lpfc_init.c                      |  119 +-
- drivers/scsi/lpfc/lpfc_mbox.c                      |    7 +-
- drivers/scsi/lpfc/lpfc_nportdisc.c                 |   38 +-
- drivers/scsi/lpfc/lpfc_nvme.c                      |  106 +-
- drivers/scsi/lpfc/lpfc_nvmet.c                     |   37 +-
- drivers/scsi/lpfc/lpfc_scsi.c                      |  147 ++-
- drivers/scsi/lpfc/lpfc_sli.c                       |  146 +--
- drivers/scsi/lpfc/lpfc_sli4.h                      |    9 +-
- drivers/scsi/lpfc/lpfc_version.h                   |    6 +-
- drivers/scsi/megaraid/megaraid_sas_base.c          |   15 +-
- drivers/scsi/mpi3mr/mpi3mr.h                       |   16 +
- drivers/scsi/mpi3mr/mpi3mr_fw.c                    |  101 +-
- drivers/scsi/mpi3mr/mpi3mr_os.c                    |   11 +-
- drivers/scsi/pm8001/pm8001_sas.c                   |    5 +-
- drivers/scsi/qla2xxx/qla_attr.c                    |   62 +-
- drivers/scsi/qla2xxx/qla_init.c                    |    2 +-
- drivers/scsi/qla2xxx/qla_inline.h                  |    2 +-
- drivers/scsi/qla2xxx/qla_iocb.c                    |    2 -
- drivers/scsi/qla2xxx/qla_mbx.c                     |    9 +
- drivers/scsi/qla2xxx/tcm_qla2xxx.c                 |    2 +
- drivers/scsi/scsi_devinfo.c                        |    2 +-
- drivers/scsi/scsi_lib.c                            |   47 +
- drivers/scsi/scsi_scan.c                           |   17 +-
- drivers/scsi/scsi_sysfs.c                          |   16 +
- drivers/scsi/scsi_transport_sas.c                  |    2 +-
- drivers/scsi/sd.c                                  |   81 +-
- drivers/scsi/ses.c                                 |    7 +-
- drivers/scsi/sg.c                                  |   88 +-
- drivers/scsi/snic/vnic_dev.c                       |    9 -
- drivers/scsi/storvsc_drv.c                         |   37 +-
- drivers/scsi/virtio_scsi.c                         |   14 +-
- drivers/target/iscsi/iscsi_target_configfs.c       |    1 +
- drivers/target/loopback/tcm_loop.c                 |   53 +-
- drivers/target/sbp/sbp_target.c                    |    1 +
- drivers/target/target_core_configfs.c              |   37 +-
- drivers/target/target_core_device.c                |    1 +
- drivers/target/target_core_fabric_configfs.c       |   24 +
- drivers/target/target_core_file.c                  |    2 +-
- drivers/target/target_core_pr.c                    |   59 +-
- drivers/target/target_core_sbc.c                   |    3 +-
- drivers/target/target_core_transport.c             |   68 +-
- drivers/target/tcm_fc/tfc_conf.c                   |    1 +
- drivers/ufs/core/Makefile                          |    2 +-
- drivers/ufs/core/ufs-debugfs.c                     |  290 +++++
- drivers/ufs/core/ufs-debugfs.h                     |    3 +
- drivers/ufs/core/ufs-fault-injection.h             |    2 +
- drivers/ufs/core/ufs-mcq.c                         |   30 +-
- drivers/ufs/core/ufs-sysfs.c                       |   30 +
- drivers/ufs/core/ufs-txeq.c                        | 1293 ++++++++++++++++++++
- drivers/ufs/core/ufshcd-crypto.h                   |    1 -
- drivers/ufs/core/ufshcd-priv.h                     |   61 +-
- drivers/ufs/core/ufshcd.c                          |  307 ++++-
- drivers/ufs/host/ufs-amd-versal2.c                 |    3 -
- drivers/ufs/host/ufs-exynos.c                      |   34 +-
- drivers/ufs/host/ufs-hisi.c                        |   23 +-
- drivers/ufs/host/ufs-mediatek.c                    |   51 +-
- drivers/ufs/host/ufs-mediatek.h                    |    4 +
- drivers/ufs/host/ufs-qcom.c                        |  591 ++++++++-
- drivers/ufs/host/ufs-qcom.h                        |   42 +
- drivers/ufs/host/ufs-rockchip.c                    |    1 -
- drivers/ufs/host/ufs-sprd.c                        |    3 -
- drivers/ufs/host/ufshcd-pci.c                      |    8 +-
- drivers/usb/gadget/function/f_tcm.c                |    1 +
- drivers/vhost/scsi.c                               |    2 +
- drivers/xen/xen-scsiback.c                         |    1 +
- include/scsi/libsas.h                              |    4 -
- include/scsi/scsi_device.h                         |    1 +
- include/scsi/scsi_host.h                           |    7 +-
- include/target/target_core_base.h                  |   10 +
- include/target/target_core_fabric.h                |   12 +-
- include/uapi/scsi/fc/fc_els.h                      |    2 +-
- include/ufs/ufshcd.h                               |  189 ++-
- include/ufs/ufshci.h                               |    3 +
- include/ufs/unipro.h                               |  141 ++-
- 110 files changed, 4244 insertions(+), 900 deletions(-)
- create mode 100644 drivers/ufs/core/ufs-txeq.c
-
-Regards,
-
-James
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260420152608.6244-6-djeffery@redhat.com>
+
+On 04-20 11:26, David Jeffery wrote:
+> Like scsi's async suspend support, allow scsi devices to be shut down
+> asynchronously to reduce system shutdown time.
+> 
+> Signed-off-by: David Jeffery <djeffery@redhat.com>
+> Signed-off-by: Stuart Hayes <stuart.w.hayes@gmail.com>
+> Tested-by: Laurence Oberman <loberman@redhat.com>
+
+Reviewed-by: Pasha Tatashin <pasha.tatashin@soleen.com> 
