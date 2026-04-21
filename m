@@ -1,84 +1,412 @@
 Received: from lamorak.hansenpartnership.com (lamorak.hansenpartnership.com [198.37.111.173])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D146D2BF3E2;
-	Tue, 21 Apr 2026 15:12:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EE1043D9020;
+	Tue, 21 Apr 2026 15:13:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.37.111.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776784341; cv=none; b=CWwhr3r4oM+OPz9Ix0yQ9VldKebZVMT59yIv/sIdXcuS9DP050kG4HnS6NhjppaLM0wBTQ9Kv7nCsXABixEMRH4e0esvpvxtUD3E4lLCB7EKRyg310P4jOn9tlOboF9EdGv2SCPB7ss9a7dKSoMjYYV9UTScwiKuTF5EEzhCh70=
+	t=1776784437; cv=none; b=qc5RAFQ3kMxttEr96r98xREE3lSv6NBhTlgi7QoZB1pJR4D+fd9xcw/9q1ntx9RgcMnCYdr6THTzoR11xSkTpMTnBsqzGvTby+yhh/cqVipcWPyUjWdj4lV0qt3+XFVEs4E7/2tNW76mYI1ELvPC5YLFl24fjRjO826WGZjZudo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776784341; c=relaxed/simple;
-	bh=Sso3Ix5ENXkgXuYhLng8kRWdNB0HZ0S8Um/YTQnDV7U=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=ghgWCDXm6Q2B3wclyt5iF7nqGB4Cbm3w07vRARWALsYGgc1/gYcygD8dCy+FACozvCB/Ik4t8GhQDC+fq6f0XDdztclUlvKtYyEkKjnz4LbArYKvZGYwzCKnIGsp2kIn0ohC4Zg/Zr7XHpFEpKlWTAKwSgf8UdoYeR6y2q/1S64=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com; spf=pass smtp.mailfrom=HansenPartnership.com; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=eAAkx1a7; arc=none smtp.client-ip=198.37.111.173
+	s=arc-20240116; t=1776784437; c=relaxed/simple;
+	bh=/dKbBf4bcRUjbZmMEQ0ttmg/fF48dwiAAYo8i86BI7Y=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=PGmdUs8mLYFnoflLUXoZTKFBNBJ7n93VGMu3o0LDqOVAYMEyvDPMQM/MA9PWo3XZarN7V4bBlXg7o1d80xSQJ+/IR+Fy4rU+kkhbgZsriHK19pL94BOxSjrxw4RHPJrTZHzNQe++/Cl/OB8EM7r7mKoGw49kc/kjyqkl0Tl8lbs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com; spf=pass smtp.mailfrom=HansenPartnership.com; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=tcbGApB+; arc=none smtp.client-ip=198.37.111.173
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=HansenPartnership.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="eAAkx1a7"
+	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="tcbGApB+"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-	d=hansenpartnership.com; s=20151216; t=1776784338;
-	bh=Sso3Ix5ENXkgXuYhLng8kRWdNB0HZ0S8Um/YTQnDV7U=;
-	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
-	b=eAAkx1a7JE4wDGxRWXwOCINjX1xapnjAj7WJY5AxLMaD+te1S6/k7qjK/uUdu/PGZ
-	 Zk6Q+WezMxtIUdZd1fRA1pes9GrNukMygMl0SeLvaMiVp6pkrx5PdFQmg8RL2klCtI
-	 nlS8aTfrUhVU1IHvnqHICZAuIcIIAOjYmIUKS+HI=
-Received: from lingrow.int.hansenpartnership.com (unknown [IPv6:2601:5c4:4300:d341::a774])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by lamorak.hansenpartnership.com (Postfix) with ESMTPSA id 925D41C0129;
-	Tue, 21 Apr 2026 11:12:18 -0400 (EDT)
-Message-ID: <974e69d718697d74f763f3792528f2452f157171.camel@HansenPartnership.com>
-Subject: Re: [GIT PULL] SCSI updates for the 7.0+ merge window
+	d=hansenpartnership.com; s=20151216; t=1776784435;
+	bh=/dKbBf4bcRUjbZmMEQ0ttmg/fF48dwiAAYo8i86BI7Y=;
+	h=From:To:Subject:Date:Message-ID:From;
+	b=tcbGApB+cHO2G41XuNtew0hfpKi352QZTJzLJRqihyns4Rx/xvcEuH0gKo6BwkXD+
+	 1A16mTAwAhy6bwk8fPNxkiRUI/pOBK/h4cZTzSiFljxLPevxNcgP2V+AdOLmCEdwf6
+	 /SFxNbxADJL2J3mqD7zKCw1QU/NByc9dx1AEjy68=
+Received: from lingrow.int.hansenpartnership.com (unknown [153.66.160.227])
+	by lamorak.hansenpartnership.com (Postfix) with ESMTP id E81321C0133;
+	Tue, 21 Apr 2026 11:13:54 -0400 (EDT)
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-scsi
-	 <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
-Date: Tue, 21 Apr 2026 11:12:17 -0400
-In-Reply-To: <CAHk-=wgW9wRVQ29zBjDXvLPZV2F_qTwf7D=uQV4ZmbvbmGOT2g@mail.gmail.com>
-References: <20260420165721.21651-1-James.Bottomley@HansenPartnership.com>
-	 <CAHk-=wgW9wRVQ29zBjDXvLPZV2F_qTwf7D=uQV4ZmbvbmGOT2g@mail.gmail.com>
-Autocrypt: addr=James.Bottomley@HansenPartnership.com;
- prefer-encrypt=mutual;
- keydata=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
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.50.3 
+To: Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>
+Subject: [GIT PULL v2] SCSI updates for the 7.0+ merge window
+Date: Tue, 21 Apr 2026 11:13:43 -0400
+Message-ID: <20260421151345.9937-1-James.Bottomley@HansenPartnership.com>
+X-Mailer: git-send-email 2.51.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-On Tue, 2026-04-21 at 08:06 -0700, Linus Torvalds wrote:
-> On Mon, 20 Apr 2026 at 09:57, James Bottomley
-> <James.Bottomley@hansenpartnership.com> wrote:
-> >=20
-> > The patch is available here:
-> >=20
-> > git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-
-> > misc
->=20
-> Nope, nothing there. That tag is from the 7.0 merge window.
+Usual driver updates (ufs, lpfc, fnic, target, mpi3mr).  The
+substantive core changes are adding a 'serial' sysfs attribute and
+getting sd to support > PAGE_SIZE sectors.
 
-Sorry about that.  I tripped over an evolution bug last week, which is
-why this was sent with git-send-email and that disrupted my usual flow.
-I've updated the tag now.
+[v2 with tag actually created]
 
-> And you didn't use a proper full git pull-request, so I don't know
-> what SHA1 you expected top-of-tree to be in case it's there with a
-> different name, and I'm not going to start guessing.
+The patch is available here:
 
-I'll send a v2 pull request so the bot email magic also works.
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-misc
+
+The short changelog is:
+
+Aaron Kling (1):
+      scsi: ufs: core: Disable timestamp for Kioxia THGJFJT0E25BAIP
+
+Abel Vesa (1):
+      scsi: ufs: qcom: dt-bindings: Document the Eliza UFS controller
+
+Adrian Hunter (1):
+      scsi: ufs: ufs-pci: Add support for Intel Nova Lake
+
+Alexey Charkov (1):
+      scsi: ufs: core: Fix RPMB region size detection for UFS 2.2
+
+Andy Shevchenko (1):
+      scsi: ufs: rockchip: Drop unused include
+
+Arnd Bergmann (1):
+      scsi: esas2r: Fix __printf annotation on esas2r_log_master()
+
+Bart Van Assche (6):
+      scsi: ufs: core: Make the header files self-contained
+      scsi: ufs: core: Remove an include directive from ufshcd-crypto.h
+      scsi: ufs: core: Add a comment block above ufshcd_mcq_compl_all_cqes_lock()
+      scsi: aic7xxx: Fix compiler warnings triggered by user space code
+      scsi: megaraid_sas: Protect more code with instance->reset_mutex
+      scsi: fnic: Make fnic_queuecommand() easier to analyze
+
+Can Guo (13):
+      scsi: ufs: ufs-qcom: Enable TX Equalization
+      scsi: ufs: ufs-qcom: Implement vops apply_tx_eqtr_settings()
+      scsi: ufs: ufs-qcom: Implement vops get_rx_fom()
+      scsi: ufs: ufs-qcom: Implement vops tx_eqtr_notify()
+      scsi: ufs: ufs-qcom: Fixup PAM-4 TX L0_L1_L2_L3 adaptation pattern length
+      scsi: ufs: core: Add support to retrain TX Equalization via debugfs
+      scsi: ufs: core: Add helpers to pause and resume command processing
+      scsi: ufs: core: Add debugfs entries for TX Equalization params
+      scsi: ufs: core: Add support for TX Equalization
+      scsi: ufs: core: Add UFS_HS_G6 and UFS_HS_GEAR_MAX to enum ufs_hs_gear_tag
+      scsi: ufs: core: Pass force_pmc to ufshcd_config_pwr_mode() as a parameter
+      scsi: ufs: core: Introduce a new ufshcd vops negotiate_pwr_mode()
+      scsi: ufs: core: Add support to notify userspace of UniPro QoS events
+
+Chaohai Chen (1):
+      scsi: core: Drop using the host_lock to protect async_scan race condition
+
+Claudiu Beznea (1):
+      scsi: mpi3mr: Fix typo
+
+Colin Ian King (1):
+      scsi: ufs: ufs-qcom: Fix spelling mistake "retore" -> "restore"
+
+Dave Marquardt (1):
+      scsi: fc: Fix typo in fc_els.h
+
+Ed Tsai (2):
+      scsi: ufs: host: mediatek: Add VCC on delay for stability
+      scsi: ufs: core: Add quirks for VCC ramp-up delay
+
+Eric Biggers (2):
+      scsi: iscsi_tcp: Remove unneeded selections of CRYPTO and CRYPTO_MD5
+      scsi: lpfc: Use the crc32c() function
+
+Florian Fuchs (1):
+      scsi: devinfo: Add BLIST_SKIP_IO_HINTS for Iomega ZIP
+
+Greg Kroah-Hartman (1):
+      scsi: ses: Handle positive SCSI error from ses_recv_diag()
+
+Igor Pylypiv (1):
+      scsi: core: Add 'serial' sysfs attribute for SCSI/SATA
+
+Jan Kiszka (1):
+      scsi: storvsc: Fix scheduling while atomic on PREEMPT_RT
+
+Josef Bacik (1):
+      scsi: target: tcm_loop: Drain commands in target_reset handler
+
+Joshua Daley (2):
+      scsi: virtio_scsi: Kick event_list unconditionally
+      scsi: virtio_scsi: Move INIT_WORK calls to virtscsi_probe()
+
+Junrui Luo (1):
+      scsi: target: core: Fix integer overflow in UNMAP bounds check
+
+Junxiao Bi (2):
+      scsi: core: Fix error handling for scsi_alloc_sdev()
+      scsi: core: Fix refcount leak for tagset_refcnt
+
+Justin Tee (23):
+      scsi: lpfc: Update lpfc version to 15.0.0.0
+      scsi: lpfc: Add PCI ID support for LPe42100 series adapters
+      scsi: lpfc: Introduce 128G link speed selection and support
+      scsi: lpfc: Check ASIC_ID register to aid diagnostics during failed fw updates
+      scsi: lpfc: Update construction of SGL when XPSGL is enabled
+      scsi: lpfc: Remove deprecated PBDE feature
+      scsi: lpfc: Add REG_VFI mailbox cmd error handling
+      scsi: lpfc: Log MCQE contents for mbox commands with no context
+      scsi: lpfc: Select mailbox rq_create cmd version based on SLI4 if_type
+      scsi: lpfc: Break out of IRQ affinity assignment when mask reaches nr_cpu_ids
+      scsi: lpfc: Update lpfc version to 14.4.0.14
+      scsi: lpfc: Update copyright year string for 2026
+      scsi: lpfc: Restrict first burst to non-FCoE and SLI4 adapters only
+      scsi: lpfc: Update class of service bit field to 3 bits for WQE submissions
+      scsi: lpfc: Add clean up of aborted NVMe commands during PCI fcn reset
+      scsi: lpfc: Fix incorrect txcmplq_cnt during cleanup in lpfc_sli_abort_ring()
+      scsi: lpfc: Cleanup error exit paths in lpfc_fdmi_cmd() and associated messages
+      scsi: lpfc: Remove unnecessary ndlp kref get in lpfc_check_nlp_post_devloss
+      scsi: lpfc: Reduce pointer chasing when accessing vmid_flag
+      scsi: lpfc: Use min_t() instead of min() in lpfc_sli4_driver_resource_setup
+      scsi: lpfc: Add log messages to fabric login error labels
+      scsi: lpfc: Log discarded and insufficient RQE buffer events
+      scsi: lpfc: Update log message when ndlp kref get is unsuccessful
+
+Karan Tilak Kumar (6):
+      scsi: fnic: Bump up version number
+      scsi: fnic: Refactor in_remove flag and call to fnic_fcpio_reset()
+      scsi: fnic: Rename fnic_scsi_fcpio_reset()
+      scsi: fnic: Do not use GFP_ZERO for mempools
+      scsi: fnic: Use mempool for receive frames
+      scsi: snic: MAINTAINERS: Update snic maintainers
+
+Kees Cook (1):
+      scsi: target: Replace strncpy() with strscpy() in VPD dump functions
+
+Kexin Sun (2):
+      scsi: iscsi_tcp: update outdated comment for renamed iscsi_conn_set_callbacks()
+      scsi: lpfc: Update outdated comment for renamed lpfc_freenode()
+
+Li RongQing (1):
+      scsi: qla2xxx: Use nr_cpu_ids instead of NR_CPUS for qp_cpu_map allocation
+
+Li Tian (1):
+      scsi: storvsc: Handle PERSISTENT_RESERVE_IN truncation for Hyper-V vFC
+
+Luca Weiss (1):
+      scsi: ufs: qcom,sc7180-ufshc: dt-bindings: Document the Milos UFS Controller
+
+Mathias Krause (1):
+      scsi: lpfc: Properly set WC for DPP mapping
+
+Mike Christie (5):
+      scsi: target: core: Fix complete_type use
+      scsi: vhost-scsi: Report direction completion support
+      scsi: target: Allow userspace to set the completion type
+      scsi: target: Use driver completion preference by default
+      scsi: target: Add support for completing commands from backend context
+
+Nilesh Javali (1):
+      scsi: qla2xxx: Add support to report MPI FW state
+
+Pengpeng Hou (1):
+      scsi: hpsa: Enlarge controller and IRQ name buffers
+
+Peter Wang (6):
+      scsi: ufs: core: Avoid IRQ thread wakeup during active UIC command
+      scsi: ufs: core: Support UFSHCI 4.1 CQ entry tag
+      scsi: ufs: core: Add debug log for MCQ command timeout
+      scsi: ufs: core: Add debug log for UIC command timeout
+      scsi: ufs: core: Move link recovery for hibern8 exit failure to wl_resume
+      scsi: ufs: core: Fix possible NULL pointer dereference in ufshcd_add_command_trace()
+
+Pradeep P V K (1):
+      scsi: ufs: qcom,sc7180-ufshc: dt-bindings: Add UFSHC compatible for x1e80100
+
+Prithvi Tambewagh (1):
+      scsi: target: Fix recursive locking in __configfs_open_file()
+
+Randy Dunlap (1):
+      scsi: lpfc: ELIMINATE kernel-doc warnings in lpfc.h
+
+Ranjan Kumar (5):
+      scsi: mpi3mr: Add retry mechanism for IOC shutdown with timeout reset
+      scsi: mpi3mr: Add queue-full tracking for operational request queues
+      scsi: mpi3mr: Reset controller on invalid I/O completion
+      scsi: mpi3mr: Clear reset history on ready and recheck state after timeout
+      scsi: mpi3mr: Add NULL checks when resetting request and reply queues
+
+Salomon Dushimirimana (1):
+      scsi: pm8001: Fix use-after-free in pm8001_queue_command()
+
+Shawn Lin (1):
+      scsi: ufs: rockchip,rk3576-ufshc: dt-bindings: Add new mphy reset item
+
+Stefan Hajnoczi (1):
+      scsi: target: Don't validate ignored fields in PROUT PREEMPT
+
+Swarna Prabhu (1):
+      scsi: sd: Enable sector size > PAGE_SIZE in SCSI sd driver
+
+Thinh Nguyen (1):
+      scsi: target: file: Use kzalloc_flex for aio_cmd
+
+Thomas Fourier (1):
+      scsi: snic: Remove unused linkstatus
+
+Thomas Weißschuh (1):
+      scsi: libsas: Delete unused to_dom_device() and to_dev_attr()
+
+Thorsten Blum (1):
+      scsi: BusLogic: Replace deprecated strcpy() + strcat() in blogic_rdconfig()
+
+Tomas Henzl (1):
+      scsi: ses: Fix devices attaching to different hosts
+
+Tyllis Xu (1):
+      scsi: ibmvfc: Fix OOB access in ibmvfc_discover_targets_done()
+
+Vladimir Riabchun (1):
+      scsi: qla2xxx: Completely fix fcport double free
+
+Wang Shuaiwei (1):
+      scsi: ufs: core: Fix SError in ufshcd_rtc_work() during UFS suspend
+
+Won Jung (1):
+      scsi: ufs: core: Reset urgent_bkops_lvl to allow runtime PM power mode
+
+Xingui Yang (1):
+      scsi: hisi_sas: Fix NULL pointer exception during user_scan()
+
+Yang Erkun (3):
+      scsi: sg: Remove deprecated sg-big-buff
+      scsi: sg: Resolve soft lockup issue when opening /dev/sgX
+      scsi: sg: Fix sysctl sg-big-buff register during sg_init()
+
+Yang Xiuwei (1):
+      scsi: sd: fix missing put_disk() when device_add(&disk_dev) fails
+
+Yihang Li (3):
+      scsi: scsi_transport_sas: Fix the maximum channel scanning issue
+      scsi: hisi_sas: Fix the risk of overflow in bitwise logical operations
+      scsi: hisi_sas: Correct printing format issues
+
+vamshi gajjela (1):
+      scsi: ufs: core: Handle MCQ IAG events
+
+wangshuaiwei (1):
+      scsi: ufs: core: Fix shift out of bounds when MAXQ=32
+
+And the diffstat:
+
+ Documentation/ABI/testing/sysfs-driver-ufs         |   23 +
+ .../devicetree/bindings/ufs/qcom,sc7180-ufshc.yaml |   38 +-
+ .../devicetree/bindings/ufs/qcom,sm8650-ufshc.yaml |   14 +
+ .../bindings/ufs/rockchip,rk3576-ufshc.yaml        |    7 +-
+ MAINTAINERS                                        |    1 +
+ drivers/infiniband/ulp/srpt/ib_srpt.c              |    1 +
+ drivers/scsi/BusLogic.c                            |    4 +-
+ drivers/scsi/Kconfig                               |    3 +-
+ drivers/scsi/aic7xxx/aicasm/aicasm.h               |    2 +-
+ drivers/scsi/aic7xxx/aicasm/aicasm_gram.y          |    2 +-
+ drivers/scsi/aic7xxx/aicasm/aicasm_scan.l          |    2 +-
+ drivers/scsi/elx/efct/efct_lio.c                   |    2 +
+ drivers/scsi/esas2r/esas2r_log.c                   |   14 +-
+ drivers/scsi/fnic/fdls_disc.c                      |    4 +-
+ drivers/scsi/fnic/fip.c                            |    2 +-
+ drivers/scsi/fnic/fnic.h                           |    7 +-
+ drivers/scsi/fnic/fnic_fcs.c                       |  112 +-
+ drivers/scsi/fnic/fnic_fdls.h                      |    2 +-
+ drivers/scsi/fnic/fnic_main.c                      |   28 +-
+ drivers/scsi/fnic/fnic_scsi.c                      |   70 +-
+ drivers/scsi/hisi_sas/hisi_sas_main.c              |    4 +-
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c             |   14 +-
+ drivers/scsi/hpsa.h                                |    4 +-
+ drivers/scsi/ibmvscsi/ibmvfc.c                     |    3 +-
+ drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c           |    1 +
+ drivers/scsi/iscsi_tcp.c                           |    2 +-
+ drivers/scsi/lpfc/lpfc.h                           |   22 +-
+ drivers/scsi/lpfc/lpfc_attr.c                      |   27 +-
+ drivers/scsi/lpfc/lpfc_crtn.h                      |    5 +-
+ drivers/scsi/lpfc/lpfc_ct.c                        |   13 +-
+ drivers/scsi/lpfc/lpfc_disc.h                      |    5 +-
+ drivers/scsi/lpfc/lpfc_els.c                       |   54 +-
+ drivers/scsi/lpfc/lpfc_hbadisc.c                   |   44 +-
+ drivers/scsi/lpfc/lpfc_hw.h                        |    3 +-
+ drivers/scsi/lpfc/lpfc_hw4.h                       |   37 +-
+ drivers/scsi/lpfc/lpfc_ids.h                       |    4 +-
+ drivers/scsi/lpfc/lpfc_init.c                      |  119 +-
+ drivers/scsi/lpfc/lpfc_mbox.c                      |    7 +-
+ drivers/scsi/lpfc/lpfc_nportdisc.c                 |   38 +-
+ drivers/scsi/lpfc/lpfc_nvme.c                      |  106 +-
+ drivers/scsi/lpfc/lpfc_nvmet.c                     |   37 +-
+ drivers/scsi/lpfc/lpfc_scsi.c                      |  147 ++-
+ drivers/scsi/lpfc/lpfc_sli.c                       |  146 +--
+ drivers/scsi/lpfc/lpfc_sli4.h                      |    9 +-
+ drivers/scsi/lpfc/lpfc_version.h                   |    6 +-
+ drivers/scsi/megaraid/megaraid_sas_base.c          |   15 +-
+ drivers/scsi/mpi3mr/mpi3mr.h                       |   16 +
+ drivers/scsi/mpi3mr/mpi3mr_fw.c                    |  101 +-
+ drivers/scsi/mpi3mr/mpi3mr_os.c                    |   11 +-
+ drivers/scsi/pm8001/pm8001_sas.c                   |    5 +-
+ drivers/scsi/qla2xxx/qla_attr.c                    |   62 +-
+ drivers/scsi/qla2xxx/qla_init.c                    |    2 +-
+ drivers/scsi/qla2xxx/qla_inline.h                  |    2 +-
+ drivers/scsi/qla2xxx/qla_iocb.c                    |    2 -
+ drivers/scsi/qla2xxx/qla_mbx.c                     |    9 +
+ drivers/scsi/qla2xxx/tcm_qla2xxx.c                 |    2 +
+ drivers/scsi/scsi_devinfo.c                        |    2 +-
+ drivers/scsi/scsi_lib.c                            |   47 +
+ drivers/scsi/scsi_scan.c                           |   17 +-
+ drivers/scsi/scsi_sysfs.c                          |   16 +
+ drivers/scsi/scsi_transport_sas.c                  |    2 +-
+ drivers/scsi/sd.c                                  |   81 +-
+ drivers/scsi/ses.c                                 |    7 +-
+ drivers/scsi/sg.c                                  |   88 +-
+ drivers/scsi/snic/vnic_dev.c                       |    9 -
+ drivers/scsi/storvsc_drv.c                         |   37 +-
+ drivers/scsi/virtio_scsi.c                         |   14 +-
+ drivers/target/iscsi/iscsi_target_configfs.c       |    1 +
+ drivers/target/loopback/tcm_loop.c                 |   53 +-
+ drivers/target/sbp/sbp_target.c                    |    1 +
+ drivers/target/target_core_configfs.c              |   37 +-
+ drivers/target/target_core_device.c                |    1 +
+ drivers/target/target_core_fabric_configfs.c       |   24 +
+ drivers/target/target_core_file.c                  |    2 +-
+ drivers/target/target_core_pr.c                    |   59 +-
+ drivers/target/target_core_sbc.c                   |    3 +-
+ drivers/target/target_core_transport.c             |   68 +-
+ drivers/target/tcm_fc/tfc_conf.c                   |    1 +
+ drivers/ufs/core/Makefile                          |    2 +-
+ drivers/ufs/core/ufs-debugfs.c                     |  290 +++++
+ drivers/ufs/core/ufs-debugfs.h                     |    3 +
+ drivers/ufs/core/ufs-fault-injection.h             |    2 +
+ drivers/ufs/core/ufs-mcq.c                         |   30 +-
+ drivers/ufs/core/ufs-sysfs.c                       |   30 +
+ drivers/ufs/core/ufs-txeq.c                        | 1293 ++++++++++++++++++++
+ drivers/ufs/core/ufshcd-crypto.h                   |    1 -
+ drivers/ufs/core/ufshcd-priv.h                     |   61 +-
+ drivers/ufs/core/ufshcd.c                          |  307 ++++-
+ drivers/ufs/host/ufs-amd-versal2.c                 |    3 -
+ drivers/ufs/host/ufs-exynos.c                      |   34 +-
+ drivers/ufs/host/ufs-hisi.c                        |   23 +-
+ drivers/ufs/host/ufs-mediatek.c                    |   51 +-
+ drivers/ufs/host/ufs-mediatek.h                    |    4 +
+ drivers/ufs/host/ufs-qcom.c                        |  591 ++++++++-
+ drivers/ufs/host/ufs-qcom.h                        |   42 +
+ drivers/ufs/host/ufs-rockchip.c                    |    1 -
+ drivers/ufs/host/ufs-sprd.c                        |    3 -
+ drivers/ufs/host/ufshcd-pci.c                      |    8 +-
+ drivers/usb/gadget/function/f_tcm.c                |    1 +
+ drivers/vhost/scsi.c                               |    2 +
+ drivers/xen/xen-scsiback.c                         |    1 +
+ include/scsi/libsas.h                              |    4 -
+ include/scsi/scsi_device.h                         |    1 +
+ include/scsi/scsi_host.h                           |    7 +-
+ include/target/target_core_base.h                  |   10 +
+ include/target/target_core_fabric.h                |   12 +-
+ include/uapi/scsi/fc/fc_els.h                      |    2 +-
+ include/ufs/ufshcd.h                               |  189 ++-
+ include/ufs/ufshci.h                               |    3 +
+ include/ufs/unipro.h                               |  141 ++-
+ 110 files changed, 4244 insertions(+), 900 deletions(-)
+ create mode 100644 drivers/ufs/core/ufs-txeq.c
 
 Regards,
 
 James
-
