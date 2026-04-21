@@ -1,97 +1,108 @@
-Received: from mail-yw1-f170.google.com (mail-yw1-f170.google.com [209.85.128.170])
+Received: from mail-ed1-f42.google.com (mail-ed1-f42.google.com [209.85.208.42])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D21A23D8906
-	for <linux-scsi@vger.kernel.org>; Tue, 21 Apr 2026 15:21:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.170
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DFCBB3BED02
+	for <linux-scsi@vger.kernel.org>; Tue, 21 Apr 2026 15:27:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776784880; cv=none; b=GO45InbYe7CPOxsS9V8vLdVm2f6uLWejiJFYO5EgV1mya+ffno6C+t9dplHqrii4cLLeSEnDx16XiC6jHT7q9/yywxchN11Jun45hdKCn0BZHT+4IwcEkVCSYnTPadMRUEllk+x9DosMD4Rit+IpnPkTezQc5r7wPgk/IJj+DuA=
+	t=1776785227; cv=none; b=oxYIRE4N3d4gW9cXdVuMxwQgXecH7LdNHk/+itXR+oIPq/7kiVArm8ryaMpx1SReDgi6wnXb7CD1NhoU38VMgeLlGx86cOmy8C+9T+ZIjlYLeW5ffsvKKFgXCGfOClv/ikDgift9lu98vIe+MvDRrAqQDlseYuZFXoIqsvaWP3k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776784880; c=relaxed/simple;
-	bh=Kyk3+wNQNdoAB6SWDPZsFu2inFstrAooXQvG3g3opEo=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=PNjxfDu/M8NvageAZmO/bv3stM52eBytft+k3jxJ1XujgdjHYxt2/pDJBASrYVx4tm8j3P+nYupoJSQ+2uQ4mXY2qJqTS+xTs/TE8vD1volv9DB6pJOjnwIOeDg0Pu9P0eDc++24zSG0g3uXc9AbERWmQ2tQuzOGubV5qIKPhzQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=soleen.com; spf=pass smtp.mailfrom=soleen.com; dkim=pass (2048-bit key) header.d=soleen.com header.i=@soleen.com header.b=PnE3rtHZ; arc=none smtp.client-ip=209.85.128.170
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=soleen.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=soleen.com
+	s=arc-20240116; t=1776785227; c=relaxed/simple;
+	bh=HMQenH1XkBU7W8b8BUsn8zSyD2GXaNftksjdRhjw2Ng=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=O3wubr5bAlvUjU+Shhxy1EGAH8ioKf3HLd8/zpukixHitKDz38Bi+wB9Y6f8PEfGFG9lEPSo7L4RidbaACWgbIKaHh3SWO3p/SQZENpZ6aFAz4rOMabiB8pbS5Qwn2CMqngR72hixZiO2qnmt6J2GcvHTFhA0K6tKrdB9ui1XuE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-foundation.org; spf=pass smtp.mailfrom=linuxfoundation.org; dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b=H5+GtLNy; arc=none smtp.client-ip=209.85.208.42
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-foundation.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linuxfoundation.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=soleen.com header.i=@soleen.com header.b="PnE3rtHZ"
-Received: by mail-yw1-f170.google.com with SMTP id 00721157ae682-7986e538decso42206777b3.1
-        for <linux-scsi@vger.kernel.org>; Tue, 21 Apr 2026 08:21:18 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="H5+GtLNy"
+Received: by mail-ed1-f42.google.com with SMTP id 4fb4d7f45d1cf-672645dbfeaso4803681a12.0
+        for <linux-scsi@vger.kernel.org>; Tue, 21 Apr 2026 08:27:05 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=soleen.com; s=google; t=1776784878; x=1777389678; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=Y+B+8NSAggTlzgSEBNF7JVWtV7yl/tiBwRJ1+ICjPNI=;
-        b=PnE3rtHZrkUDAAshE5K4db3xIHy0sqcovsfzAj/DRChCNXuPebUBoBNXfXqcjFhFm3
-         HLTvCJdHlNG7yoZf0qNnBI7jPr0Ey/FmdTV+xnXQRVcgNJBqxdnu7hlV0pXQLq3+C8iK
-         Cuo5zVZWuyxOcY9CNEw1egJrCY17MQlvieQgDjnPiYyo1ERorB91YVkBTDSSrgZV/f7g
-         z5OciUO1IM7Y9fjnTqp9LJphwAELTieaqHjHkjjXHyPsiNt5y+RrDfnG2bVBbsdarZlq
-         VnTeA3xbvVX8Ub388Z2BKLpI1CBGYMiPeIz9Yycv49hD3fOsQooCy4HIZ6f9jDynE3f6
-         qjWg==
+        d=linux-foundation.org; s=google; t=1776785224; x=1777390024; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=UweZUsDEXgdSj2j31HIN4OOcmnrK4eK14ZZCg44tHU8=;
+        b=H5+GtLNyk3VekCRfXYA5Y/5XReuKFLSxbBwhm0jOn/zOlHH1YX5nsoBD1tCU1fO6TP
+         YMihtcssgyf9Rr6Fil/PjBsQAxlO4NwDcgWScQOIwncdl3Rrz8rtOi8CM4UYwInuANBf
+         s7PmMD5dS6WhdRvSNYP6DBSi21F8uqIpzXz7Q=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1776784878; x=1777389678;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=Y+B+8NSAggTlzgSEBNF7JVWtV7yl/tiBwRJ1+ICjPNI=;
-        b=n+OOgBnU0Vjk2LycF5pWOWvrkSUqhBTXVKEzYibBFtJ2iiz0Qpj7JqylpXoWjBbpXw
-         ZsjYjnYBCT/WxERhFGAQtsJiSNacabMZECN/5ux3FKj3ijKbTnlUxWpYDnSYvBNp7/Ne
-         E69lWkPs1CXkOm8olU4S2WVydaiggly0llR1JScmLteMZ/qoPZeoVOEwum19e22nAnXT
-         8hCABHzzkV8x9bE3ntLt1MucgALAXPsAIqiTHpFRqrit41tvrbn4F/2kV/5u2wBw0GkX
-         Sue7eo6KTPy2R48VC1KMIFrI15+v2ELQieakagZuT/21HJkSwWOpzWXslcPOuY8ex4e6
-         M5ag==
-X-Forwarded-Encrypted: i=1; AFNElJ/Wfukf8D/eNUyuvvNtd8bv0s61PXSNPMgzTNOg3Kd8pvHPmdtV69LJMQRnU0qC+1JuU+2wGa8VRWQE@vger.kernel.org
-X-Gm-Message-State: AOJu0YzRs02cQ8bzmXxCV4XS5vyg3jILMvoQ6hsSTA56Eqkh72vGw8F/
-	Oeg85suyR86dFsQNuf1Q89eyDnCunXbZUi1d/PEqFmTljjZJbmon9Fs9DFqk9Hd7lwdSWSQRSw+
-	jAB8i
-X-Gm-Gg: AeBDiesXHa04vGMgTk3kKmwk8gqCJSkYNHFWxLiuYRs/bqHbS+GB6kiyF1Lo9YGKLIX
-	+YCJapCUPsx/X4bW9N6jmjNbDX3Nn/ZQszHw3EF2YAsUfjWEYjjVyq4Hz9MGC0HvqsKU1DtGpCK
-	3RdI4goVbwD7H8NUPBicflsnjjb9D8hU4qgralOUybukzb8V5PU2AgUa85cFmTCkvrZ5feLbj4X
-	yEbUUrtMHXJI3eZRjEklfR7J+kHb66hvdv7z/IwCzC1JJYPJKONw9s3xOdbXo7pgF598AFqOqNy
-	GdfCS61OuSuIu/PAv239vGNIrh0Dn93w8dPRvgiazV3a3FJqPAPnL7wa/pnrnhjJxn0Go5zf2vv
-	g4HUvAT4rXak6PL3eALIuZKk8ktM8fQaV9UzR2FtWWpOzQ8gq3L+ZVpxJ1XwxRILKd8ewHKLOAk
-	85WeOwSnXUozF4QmVLBxTmsUgndCpBtAcifqjBZ+sjv1nvNCIg1hJFSBSp0gzljoS26kSpAH9gd
-	Gs4e1Dv1g6b/y6BfZEV8sLMcI2PuQ5+WwdVLjOL
-X-Received: by 2002:a05:690c:f14:b0:7ba:f677:8c32 with SMTP id 00721157ae682-7baf67794c3mr66413557b3.15.1776784877840;
-        Tue, 21 Apr 2026 08:21:17 -0700 (PDT)
-Received: from google.com (57.233.150.34.bc.googleusercontent.com. [34.150.233.57])
-        by smtp.gmail.com with ESMTPSA id 00721157ae682-7b9ee9b293fsm56526037b3.40.2026.04.21.08.21.16
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 21 Apr 2026 08:21:17 -0700 (PDT)
-Date: Tue, 21 Apr 2026 11:21:15 -0400
-From: Pasha Tatashin <pasha.tatashin@soleen.com>
-To: David Jeffery <djeffery@redhat.com>
-Cc: linux-kernel@vger.kernel.org, driver-core@lists.linux.dev, 
-	linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org, 
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>, 
-	Danilo Krummrich <dakr@kernel.org>, Tarun Sahu <tarunsahu@google.com>, 
-	Pasha Tatashin <tatashin@google.com>, =?utf-8?B?TWljaGHFgiBDxYJhcGnFhHNraQ==?= <mclapinski@google.com>, 
-	Jordan Richards <jordanrichards@google.com>, Ewan Milne <emilne@redhat.com>, 
-	John Meneghini <jmeneghi@redhat.com>, "Lombardi, Maurizio" <mlombard@redhat.com>, 
-	Stuart Hayes <stuart.w.hayes@gmail.com>, Laurence Oberman <loberman@redhat.com>, 
-	Bart Van Assche <bvanassche@acm.org>, Bjorn Helgaas <helgaas@kernel.org>, 
-	"Martin K . Petersen" <martin.petersen@oracle.com>, John Garry <john.g.garry@oracle.com>
-Subject: Re: [PATCH 5/5] scsi: Enable async shutdown support
-Message-ID: <aeeV1e4j4ok9_iQz@google.com>
-References: <20260420152608.6244-1-djeffery@redhat.com>
- <20260420152608.6244-6-djeffery@redhat.com>
+        d=1e100.net; s=20251104; t=1776785224; x=1777390024;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=UweZUsDEXgdSj2j31HIN4OOcmnrK4eK14ZZCg44tHU8=;
+        b=DLdVvpgXl3a1IQPnUCokYerLLqdLbEWMA32lmII4pizGGctX6lIaxOZMPvtrwOcCvG
+         dK9uJhZXbNTIhe1kYRMd/aR0fUTqv0csvweAXFBtEVnehOboc2kDB/vaXGo6pzirWd3j
+         cO0V25YO+SBuEHSjJGTB136HHdZe/JBb6K52DCrGOm0ukCyMSCRtKZvDSiKdEkByBxak
+         ibZzdHYPQZKtInUs32uwDzR+1sYGYW9LAQeOuNHwfo4wvb1HKU/ojnOaONZiwU0/DDa0
+         kO1HgdnLVZBhISKTEFfkoGlQTiqg395rdKoHg5RkP66QvH0I4ROZZoNtmPh18JyZbC+0
+         MiBg==
+X-Forwarded-Encrypted: i=1; AFNElJ8UqXTTcNUWPoGyYeWCuFLLk4anGYVu2sOsgFMY76q/+rYvcuVRSD55KFe10DAi835gzVJ2zbK3ETc2@vger.kernel.org
+X-Gm-Message-State: AOJu0YwUg6QjLAw2j86mYDIQSC/m3KsRHufB3X7oRrf93t/4NjNvRwa7
+	M31Qk6b5i90/nIhGdRX0y3UDOgGRno8Jx0Q0z2XyduAgJWteIShqO+wWdWYQqNAjf83V0gUcFW9
+	8hT+UTe8=
+X-Gm-Gg: AeBDiesv3S/A1VvrRMPr6/eunP//1ddYSqO+3edljv+dO914ReQ5rAiij9ZM0kgkVr1
+	t0VgrHR9XSNoOARdeiMdz6So8p3Tlxon1o1gggNR7Z7W4QD3FZjSDNl2fo2cBQzZLn9jcrkLI9H
+	+y3S43MLU6rbm/AzecWpmLD+R/Vg10uVcLcUjQPGP1Z0N9uCYFW9QdyfgT+3XHKgK6qmRpnTdAM
+	5Fc+UPLT0qdanXlzXURM3prx7fEVCTPgK3fPKnGEhDDAC3Pj209+6doxUB6yjI+4YBDp13KZIi8
+	g0JST++9lUrmuuhGDDEtmS8A/l1WigqdSa85A5002TrE8GL87bnnceRkCqJlWmosG7VNzk7HxgA
+	WNweIjSvKfdj2WIfg0WN5IWGRqzA4eGHDcoLvrzO/ATHPU71+VTRdjaPMIUJ5qiDxwTJq/3zoqs
+	GM/eKbaw8exfwZ5NAB1gzff75SpGKbNCy0mkTiGLKOJ8vmhyQHj1iI7P2+wtG62/8GbuU99VDMQ
+	7MS0HqoZnw=
+X-Received: by 2002:a17:907:d0a:b0:b9e:345b:a900 with SMTP id a640c23a62f3a-ba41a72ffe3mr843708566b.31.1776785223789;
+        Tue, 21 Apr 2026 08:27:03 -0700 (PDT)
+Received: from mail-ed1-f46.google.com (mail-ed1-f46.google.com. [209.85.208.46])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-ba454d1c38csm450423766b.41.2026.04.21.08.27.03
+        for <linux-scsi@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 21 Apr 2026 08:27:03 -0700 (PDT)
+Received: by mail-ed1-f46.google.com with SMTP id 4fb4d7f45d1cf-670f6ae9c7dso5981576a12.2
+        for <linux-scsi@vger.kernel.org>; Tue, 21 Apr 2026 08:27:03 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AFNElJ+xN7chBWyZOZ57CoOCbOywwyyBbpv4KJ9E8NXj0PQ2IACwKOmtBkyiRx9RvZbqptowZV4nhnxKad4o@vger.kernel.org
+X-Received: by 2002:aa7:c492:0:b0:676:989f:ec4b with SMTP id
+ 4fb4d7f45d1cf-676989fedb4mr1844972a12.5.1776785223151; Tue, 21 Apr 2026
+ 08:27:03 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260420152608.6244-6-djeffery@redhat.com>
+References: <20260421151345.9937-1-James.Bottomley@HansenPartnership.com>
+In-Reply-To: <20260421151345.9937-1-James.Bottomley@HansenPartnership.com>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Date: Tue, 21 Apr 2026 08:26:46 -0700
+X-Gmail-Original-Message-ID: <CAHk-=wh6ujpfmEufVOW928pW6xb00_tew5+9L88LL_xyZpBpJA@mail.gmail.com>
+X-Gm-Features: AQROBzBIBA1h4RrA0bG31BSqWD8X-3WCa0UDU2Zei3rwul5LVKaUHZ38TfI-CTM
+Message-ID: <CAHk-=wh6ujpfmEufVOW928pW6xb00_tew5+9L88LL_xyZpBpJA@mail.gmail.com>
+Subject: Re: [GIT PULL v2] SCSI updates for the 7.0+ merge window
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, 
+	linux-kernel <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 
-On 04-20 11:26, David Jeffery wrote:
-> Like scsi's async suspend support, allow scsi devices to be shut down
-> asynchronously to reduce system shutdown time.
-> 
-> Signed-off-by: David Jeffery <djeffery@redhat.com>
-> Signed-off-by: Stuart Hayes <stuart.w.hayes@gmail.com>
-> Tested-by: Laurence Oberman <loberman@redhat.com>
+On Tue, 21 Apr 2026 at 08:13, James Bottomley
+<James.Bottomley@hansenpartnership.com> wrote:
+>
+> The patch is available here:
+>
+> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-misc
 
-Reviewed-by: Pasha Tatashin <pasha.tatashin@soleen.com> 
+Ok, it worked now, but I'd still prefer to see the full "real" git
+pull-request that also talks about exactly which commit ID I'm
+supposed to get, with verbiage like
+
+   for you to fetch changes up to
+   070ec6f691411f27e7a743841bdfb0bf604fbce2
+
+   scsi: target: Don't validate ignored fields in PROUT PREEMPT
+
+in the message.
+
+I do note that you've used your own script forever, but it ends up
+mattering exactly for the "oh, something went wrong" kinds of
+situations, where I can use the commit ID to then look things up with
+"git ls-remote" to try to figure out what happened.
+
+              Linus
