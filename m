@@ -1,61 +1,63 @@
-Received: from mail-wm1-f48.google.com (mail-wm1-f48.google.com [209.85.128.48])
+Received: from mail-wm1-f52.google.com (mail-wm1-f52.google.com [209.85.128.52])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 773E42264A9
-	for <linux-scsi@vger.kernel.org>; Tue, 21 Apr 2026 20:20:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.48
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B8FDB34DCFF
+	for <linux-scsi@vger.kernel.org>; Tue, 21 Apr 2026 20:20:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776802835; cv=none; b=eQ4I+/MuLJjS9votAlsJSwpY+yMAHxPzPhZ0cuzUqfRaW6Nzc97/fNfmWLL4XD3lUn/nkS6hBtVYAmzB6GhhS9IpXyU2t9719ZCqGKtP/wDHIHJdVw6IQHyhS4PsxfEn4Fz8FBh/hiNQHxh+aH9OaE9xP5wSnRM1ou6rgxzbmlA=
+	t=1776802837; cv=none; b=YXNHtZMtjns7RRlJVVq5dESo+918IEOdpFedcTKXDOrbRbNZduuN4Eqe4faLLAKwtzD0UI8YaRHDihi//dmJd5QnjGxS7FzWY2ZaKP6VFn4HDfujV+pW/4nDszuQXO0SoESFgPzysvupJEwHEI4qkev4tXD5QKRYas1Vxm+ZrYg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776802835; c=relaxed/simple;
-	bh=XDVPBTdCs3OUX362+JD01VeIENTWj2pufietE4OlKTg=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=k2s6Sva9M9nc4FRqucAYlg4QuKWMNVpradeg9obIk7HAMFaSgKbWySxyacFhES5YdoK7JDdzk0aWqB/zlmhQuT/CnqcvAxSJVNvV4dM2jWy5/8xsykl9WHqjXhpha+3xuksW9leBGbK3wSIiy2owOqtIPcCqEG15M8UUdpYLWoU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=Tvy5lTjQ; arc=none smtp.client-ip=209.85.128.48
+	s=arc-20240116; t=1776802837; c=relaxed/simple;
+	bh=45XAOuz0OqwNn6boAX9lmria/vzaaZB2g94/HwMz0IE=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=F5/+MOZ3rJs3lT5vPJeazdon4xYXGrJ9UUx9DHcj1OQeJEHiIh4ZyPDymJWy+TrEIHhM8u54hmLrOI/uYP0eCEVI8rdVE11JkKnLO7aHVBAzAdeaWhmG4Crmshzf9iLInujOPfefK8ICCVzPHhuxNNpaA7zCMJQkFUEjKBA6Yhc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=KjqLFL/c; arc=none smtp.client-ip=209.85.128.52
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="Tvy5lTjQ"
-Received: by mail-wm1-f48.google.com with SMTP id 5b1f17b1804b1-488af96f6b2so59744595e9.0
-        for <linux-scsi@vger.kernel.org>; Tue, 21 Apr 2026 13:20:34 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="KjqLFL/c"
+Received: by mail-wm1-f52.google.com with SMTP id 5b1f17b1804b1-488ad135063so40059025e9.0
+        for <linux-scsi@vger.kernel.org>; Tue, 21 Apr 2026 13:20:35 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1776802833; x=1777407633; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=4InyHXPJBPo6rmqToNaN50jvmsKveAu/nD+dC1zAHOk=;
-        b=Tvy5lTjQbw2dGu3bcPL0bU5azEV9T0jEi+3duBhaUXA2bpNZ/I8B0fbYSsiQVnuNcX
-         xAW3aA4Nr67V95BRGK2/DMcF6BUB8/lktKsvj2Ew0cYHb8KwyxAx55oWpjSKCnAErFs3
-         zNuKJbBsKHG/ZKDrS9sZ/9cTWG7jQpQQQ+TJEMFL9Y/raXuiMZfdjR9ZHjm8IORHLHNF
-         eYs3RZD9shbzsJ7S+Dn/wTIcBwHexN3Qe6jrhIQgpdSM5etic58IJmON+g2ZQ8Dl0INd
-         RHOE5BOubp89Zse64VA7PHQCoXf5/EeynCq7n1z9KPczyeamjcyIYhl+GdeUuzQaddBM
-         CSmw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1776802833; x=1777407633;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=suse.com; s=google; t=1776802834; x=1777407634; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=4InyHXPJBPo6rmqToNaN50jvmsKveAu/nD+dC1zAHOk=;
-        b=qAiJcY64K1pp5wIJLYqwncrrrNDGTPMk/dEkwmSt4cCAM7e2UFZTC5XPyT4Dqu2jT0
-         /+lsIBJZgpuNV9Vt1+24+HUwF0PtdJFuKGyhtHHdYHiUxppuLIVToJgjMvxg9ixkjGNo
-         /UcAXeFTMuckSkaIG1GivSMXmlLyOKLvG+DphpRXGGLt7cA4W7BikQdRd96NvFB1Bp+f
-         JNbuDUHTeqzxCxPGt4K6ehJXko6SM4onJQdhGUo/V4Q4hqFZ7BOi8tV5enPxD9I58F9e
-         F8h4ksAUGD1mQWA9G+XnXsouhvaXvyQ8bRpPRjYkpeVA0tMsF4KgbIt7iyqJ+qZf+Ca+
-         tsjw==
-X-Gm-Message-State: AOJu0YwwJWwQ8pE9qmp2jEF8FDxPU3ZqeFjPooFGJXLw62exWO62daFj
-	vYDF2aGykFNaCltY/+ePysRO92JMRFwnzz+9fRdpgr/1DzfxnIEk9fsRY2QjqyfMGWQ=
-X-Gm-Gg: AeBDieuXpfFsj1OOBU7JKOz0P7DRjL1cqLZbpS0gVDDIo93Wti/ogFx9viRRjI32ZrQ
-	jg5IH3XM+yQZfDlFxWOiC1CtOLvxYmtPJuvH+qQ/wG5m/iyWFh8w4BvjQQgGDtGDx9DAIGUZ9t7
-	HD0H4irY+v83yhn51KNC1ZfSxMq/yaPiT5wmUquSwPWMvj70CfeHWy5jSamgl75qYM2M5igPkEn
-	AUwmOecrLaTfETfpu+dkv34a0IIejjz5dbh2SXz+QdxANCJ7ZDti3jjRUxj17jx+sOMYVY1firv
-	06o/FFnLaE4rdGF6z60BNrVGGU4UoJYf0+4DvJ6d14iD7pTmK1N+G083LqlBNEoRddZkjHQcW8G
-	qQpL+s7qXqK5mlOrR7yTAQLW9bzSxtlRNWbvv8SoibsAe0z3o+S6nRk4w0DS8kbsrf0bX38h9Kw
-	YWwmI8uDvr7UyYB+axy+F6Xum06gYpbG+5sfUeY8cjLlhcPZZ9BwohFMYK620TOq7LnnszgHeY/
-	WNX0YiF7txBfcxvLCqXVwLT
-X-Received: by 2002:a05:600c:4ec6:b0:489:1f98:71e3 with SMTP id 5b1f17b1804b1-4891f987487mr128372835e9.28.1776802832699;
-        Tue, 21 Apr 2026 13:20:32 -0700 (PDT)
+        bh=61W3FDen/JDgh3XHK5UZj5HtIe9MHjg+PhurMbllz2Y=;
+        b=KjqLFL/c9xf9acawTx4C+83P4d57AfPEVh9t9g/2neMThAWkgEbfBkDy1ClKhyoc3H
+         wshlerDeqfW3VBZhTe++GU2vk+JTVBpl5d5wMfJZfV3cQWUSqIRQJJYvlrzj2ojNPUSL
+         Zm1Fq4e5LHr2AO2zwlZlQpnlORCHrI9yWN3kMAffHUt3Hz2vBOluckM8Fnc/tDCdL7AS
+         Ea+5ph+wg/wfa/bW+d+4bJEzWjlZNpeuArbbbhMm9JCrHpRHib59NDjZfR2o0kmGGbIO
+         2lmZuM+2coogOcWyOOMYiuLjZiXZNPRRWGnnCs82XrKPRkEbFChvPqSASURb0uBop11W
+         Pxog==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1776802834; x=1777407634;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=61W3FDen/JDgh3XHK5UZj5HtIe9MHjg+PhurMbllz2Y=;
+        b=IWrmP6Yd7rdidzVWjlpQmMuJpdutbj9oBQbqMmmN5wz38/BKUXnnImZDE1rSCF/xHZ
+         Es7fGKBQsQGRs+uEmKMtpEuumE0oWvGwxT9KU92s5E8+fyEAuVJcJzw2SpGi1trMwXj6
+         NOkVe7oX7qz/7OW1QBprYXf3uq6CX3KLdI3kd6qdpVxHnWBtV+hw99BZNQrhyjukwohk
+         Nkw4Z1RNAtpTCVULQkSus+5SSrtkSnouwzolMpcK7RQMIm0qPZmRnVs1KsZOsTay1/Zz
+         uNR1gJGOx3HmZJJyjYB8F7VSap6e0yEJYzgj5V6Lk9bthgav+/+LMH12x7TWQ2UFGo5u
+         ml5A==
+X-Gm-Message-State: AOJu0YwH4rN0cB8ZB7QqxZL61WGCLmEgWFhfMGSI44whkBIzlgRAhSKp
+	Grtet/14wOUAn3rwnaS77GljupAUSkiUr7x/0AMVoZVNqcJcnvNCXCrYWgwJehRKcCg=
+X-Gm-Gg: AeBDievSgRrmULqu+QmZWVGPaMu2MUU1OligacUWZJQjpOFQT90GjbY99D0InILpxoz
+	x8hAQ8lE3tT1SBNtuyhkteNWCjKM4D7dFzZpRuzQ5jZ07a6iyniA9UG6WEvvddXWOPDBG2ov8Py
+	VK3AKvRmAZ+fGKAHykAQmizBo3MK6ERhRl+XdhfgsTX23uO/OmSLHSSarWk57WTAqYMB6PNvgyZ
+	WsfEwGB6RTSnv6m37976pgTPacW/zK8WjpF5TLQ2nNhMjsVWcotJwTSWeqZvE20aAqp71BOX2UO
+	RFwTe7uVENyfmnQjW4UnOrLa0doY9AGeXq9zuLKWgoz8Zj0YdnRBMsUPtNoT6y8mgymLdFtQcNt
+	uVbgZAXDt28IyeO5Vu+Mr6/oGHcshs4FX5E9eqR3uQWVulHzP4iLpFZdx7Dz9YF7YKzyrkNSYos
+	63ippCDthNvTM3LHP5B5TLdPkafB9L4oh2zMd6A57Pz03CjUMyLbuUpRZx1kOL1dLnCVFLkV18N
+	3ev70N1csZE/CbPx85ImS91
+X-Received: by 2002:a05:600c:628c:b0:48a:52d4:888c with SMTP id 5b1f17b1804b1-48a52d48985mr104909355e9.3.1776802834191;
+        Tue, 21 Apr 2026 13:20:34 -0700 (PDT)
 Received: from localhost (p200300de374a06005c73df0aad605173.dip0.t-ipconnect.de. [2003:de:374a:600:5c73:df0a:ad60:5173])
-        by smtp.gmail.com with UTF8SMTPSA id 5b1f17b1804b1-4891bb3d121sm306442795e9.14.2026.04.21.13.20.31
+        by smtp.gmail.com with UTF8SMTPSA id 5b1f17b1804b1-488fb78d1bcsm171910825e9.5.2026.04.21.13.20.33
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 21 Apr 2026 13:20:32 -0700 (PDT)
+        Tue, 21 Apr 2026 13:20:33 -0700 (PDT)
 From: Martin Wilck <martin.wilck@suse.com>
 X-Google-Original-From: Martin Wilck <mwilck@suse.com>
 To: "Martin K. Petersen" <martin.petersen@oracle.com>,
@@ -64,11 +66,15 @@ To: "Martin K. Petersen" <martin.petersen@oracle.com>,
 Cc: linux-scsi@vger.kernel.org,
 	Hannes Reinecke <hare@suse.de>,
 	Lee Duncan <lduncan@suse.com>,
-	Martin Wilck <mwilck@suse.com>
-Subject: [PATCH v2 0/2] Fix SAS wildcard scan on smartpqi and other controllers
-Date: Tue, 21 Apr 2026 22:20:16 +0200
-Message-ID: <20260421202018.511388-1-mwilck@suse.com>
+	Martin Wilck <mwilck@suse.com>,
+	storagedev@microchip.com,
+	stable@vger.kernel.org
+Subject: [PATCH v2 1/2] scsi: smartpqi: use shost_to_hba() in pqi_scan_finished()
+Date: Tue, 21 Apr 2026 22:20:17 +0200
+Message-ID: <20260421202018.511388-2-mwilck@suse.com>
 X-Mailer: git-send-email 2.53.0
+In-Reply-To: <20260421202018.511388-1-mwilck@suse.com>
+References: <20260421202018.511388-1-mwilck@suse.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -77,47 +83,36 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-commit 37c4e72b0651 ("scsi: Fix sas_user_scan() to handle wildcard and
-multi-channel scans") modified the way SAS drivers handle the common way of
-rescanning SCSI devices using "echo - - - >/sys/class/scsi_host/host$N/scan".
-Before this patch, SAS drivers would only scan channel 0 for this "wildcard
-scan" scenario; after this patch, it would scan all channels up to
-shost->max_channel.
+shost_to_hba() is used everywhere except to obtain pqi_ctrl_info
+from shosti, except in pqi_scan_finished(), where shost_priv() is used.
+This causes one pointer dereference to be missed, as shost->hostdata
+is a pointer in smartpqi. Fix it.
 
-This can cause massive resource usage for some drivers, as the driver needs to
-send an INQUIRY to LUN 0 to every supported ID and e.g. smartpqi sets
-shost->max_id to 0xffffffff. These INQUIRYs mostly fail, but the kernel needs
-to set up queues, tag sets, etc. before sending the INQUIRY. Also, some SAS
-drivers assign special meaning to SCSI channels such as channel 0 for physical
-and channel 1 for logical devices, and thus don't support "normal" SCSI
-scanning of these channels anyway.
+Fixes: 6c223761eb54 ("smartpqi: initial commit of Microsemi smartpqi driver")
+Signed-off-by: Martin Wilck <mwilck@suse.com>
+Cc: Don Brace <don.brace@microchip.com>
+Cc: storagedev@microchip.com
+Cc: stable@vger.kernel.org
+Reviewed-by: Don Brace <don.brace@microchip.com>
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-With smartpqi and hisi_sas, actual kernel crashes due to resource exhaustion
-have been observed.
+---
+ drivers/scsi/smartpqi/smartpqi_init.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-A lot of SAS drivers, including the affected ones, provide scan_start() and
-scan_finished() functions that offer custom, firmware-assisted scanning
-functionality specific for the driver in question. The idea of this patch set
-is to map the "wildcard scan" to this driver-specific scanning procedure if
-the driver provides one.
-
-The first patch is a minor fix for smartpqi to make pqi_scan_finished() work.
-
-Changes v1 -> v2:
-
-- export and call do_scsi_scan_host() instead of duplicating its code
-  (Hannes Reinecke)
-
-Martin Wilck (2):
-  scsi: smartpqi: use shost_to_hba() in pqi_scan_finished()
-  scsi: sas_user_scan: use scan_start if available
-
- drivers/scsi/scsi_scan.c              |  3 ++-
- drivers/scsi/scsi_transport_sas.c     | 19 +++++++++++++++++++
- drivers/scsi/smartpqi/smartpqi_init.c |  2 +-
- include/scsi/scsi_host.h              |  1 +
- 4 files changed, 23 insertions(+), 2 deletions(-)
-
+diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
+index b4ed991976d0..65ff50982978 100644
+--- a/drivers/scsi/smartpqi/smartpqi_init.c
++++ b/drivers/scsi/smartpqi/smartpqi_init.c
+@@ -2642,7 +2642,7 @@ static int pqi_scan_finished(struct Scsi_Host *shost,
+ {
+ 	struct pqi_ctrl_info *ctrl_info;
+ 
+-	ctrl_info = shost_priv(shost);
++	ctrl_info = shost_to_hba(shost);
+ 
+ 	return !mutex_is_locked(&ctrl_info->scan_mutex);
+ }
 -- 
 2.53.0
 
