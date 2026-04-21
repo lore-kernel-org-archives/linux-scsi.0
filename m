@@ -1,191 +1,245 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from esa3.hgst.iphmx.com (esa3.hgst.iphmx.com [216.71.153.141])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 215DB37EFFB
-	for <linux-scsi@vger.kernel.org>; Tue, 21 Apr 2026 06:10:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776751812; cv=none; b=I5SGZ6egpy1q4KYRzzwGMgpSOr/knYXiZRWe0jpwAdiqe304AaqjeFS/BrZcBs94Pqkt0AzhwbpLGsZb8L+BmWoVTnvB7rqa7OCdGPj+5KOm2b46zuGGb9mCRmT+d829y4QTomXHdBJ/7/NG5tYqcB31iA61kEf+d8T5chZcx4Y=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776751812; c=relaxed/simple;
-	bh=DU09t4e01tb2Dg5oxA0hYoS2Sw4H3Q/MxB4hZIBL86c=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=kiFE3hTsA29f+I3eNXFbEXQzx6EPQX5/t001vWr+WF7wj4FzXiOWYJ/cPj+QKJLdPPpTFidMKBQJem3pNdsFGWiEY5/pGMBfIhhb9guX7UQ4pOZt8ThCRFz6Ayiv8Cew5afWU3DN0wRNVxszz1TWiIN4aFZyIvFTAUFnvPVMrFw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=Ss0fIIkU; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=FbQU6f8P; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 76B122772D;
+	Tue, 21 Apr 2026 06:19:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=216.71.153.141
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1776752378; cv=fail; b=qYhidB/7sVY5NKhp2P1dKYG3QCIbvnJxczmM/Y0Pkx11F1lnpbwVa5zcf+H7Q/ErTD2xNBP17nF7BM0zz1DXrYfTnQ9mQR5XWBMwy2fiFhOeOZOA7DlAC7qsy0ZpoCqR2Zyb9ovn26I/REPJqF+BLwdjIqewrFopqF1kzAJTKrc=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1776752378; c=relaxed/simple;
+	bh=0JHeLH+ASxR1DEb5ncGUCI71ez8nNbqmHmX9VKss+10=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=HusHutrmG99DcLvEin3Wk8FO1jH3lca295GgfYtnJSpoBpKa8VmcrYJDN83BR8GXLOZvfHyqXWTQSNEIU3Z89ktGKr+mE2uBHqCwbsTbx8NumIbhUNhkkDycsG0PIQj6KIjBkI1H30rquF5RQZtXdOLiRM/SVu1IxkQZgYIzLLw=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=Rw0cSEPD; dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b=ffxVspYf; arc=fail smtp.client-ip=216.71.153.141
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="Ss0fIIkU";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="FbQU6f8P"
-Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 63L3Pf8q4168293
-	for <linux-scsi@vger.kernel.org>; Tue, 21 Apr 2026 06:10:10 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-type:date:from:in-reply-to:message-id:mime-version
-	:references:subject:to; s=qcppdkim1; bh=1guwVUsMIMD/Wpv/IcScqQdd
-	RIpEXoJdanKvBpB1ZJ0=; b=Ss0fIIkU1dxb5Xy/z/S+TipJ0qapF+MW2z9RlxuI
-	seJUYFSYlo7RfNQIndELCdlXAo1Yd9KlKN58BlvPXYli0tHPDRUnU0j6tz1JMRDB
-	qZvE1oDA9TTDSum0vF6ztWcUdvSSFEHahRBX0eVMV38DUk41RhLEVOYJz6iqxU+y
-	WBHh7ytR25fEZZYhI4bpvYJxJr6ueOhVxwqE9qK5841XW/tBqVwUQQR+ob2A1gsR
-	ew66n2e2nNYC5JWPni11CRrl4u99iZClicgK7oKxD3UM6PD4+wQSR3bKVwYMZrHd
-	WFQOVVY/rcvr63ZaGTSQ7mtU3V72eVjC0OI1p9lmpNbBIw==
-Received: from mail-pg1-f200.google.com (mail-pg1-f200.google.com [209.85.215.200])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4dp1au0hey-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Tue, 21 Apr 2026 06:10:10 +0000 (GMT)
-Received: by mail-pg1-f200.google.com with SMTP id 41be03b00d2f7-c797efdaa9cso1539238a12.3
-        for <linux-scsi@vger.kernel.org>; Mon, 20 Apr 2026 23:10:10 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="Rw0cSEPD";
+	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="ffxVspYf"
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1776752375; x=1808288375;
+  h=date:from:to:cc:subject:message-id:references:
+   content-transfer-encoding:in-reply-to:mime-version;
+  bh=0JHeLH+ASxR1DEb5ncGUCI71ez8nNbqmHmX9VKss+10=;
+  b=Rw0cSEPDiKRK7hupXXrkeDJG9GEFIr8E3tN2E6F5FmOd1gSXbHPEFnr0
+   U9k4Xr9Nj0zQCuQiRbrmQd6xDS+ZfaXnZ1k6LrALcnzevY09E2F+GhTHP
+   WBeiuULY0dJOrGSL6Buw21hSqk6aIE9fasnhzurXdox3Ic9MPzYkRNVa/
+   XGq407hvfiI++ezk8noTAiyBOxUSkTM3SCBpRqb0FSWKVRAWpcw+Dr4Zz
+   fG0/Joc/4+OsjrB7ejXgLMvvCSItQ/8QpEBSBhDb+PlDxv/vLItkNbsWw
+   F88lEglmzdguNi8p4JqbpBs+gi+kEvUpc9HASwFj3ijdyfb8L9WiG1Ir3
+   g==;
+X-CSE-ConnectionGUID: 3kVdtP63RkypaQqlmsOStw==
+X-CSE-MsgGUID: Gvp/sku7RrqA9aCy5XdIHg==
+X-IronPort-AV: E=Sophos;i="6.23,191,1770566400"; 
+   d="scan'208";a="145350666"
+Received: from mail-westus3azon11012011.outbound.protection.outlook.com (HELO PH8PR06CU001.outbound.protection.outlook.com) ([40.107.209.11])
+  by ob1.hgst.iphmx.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 21 Apr 2026 14:19:27 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=M2Sd/N9qfVtEP1j7mxM2rycA7Ylp5KFElxlGt+HUnaxm8Xhrm5cco9ZNak7U/PlSXiPKNsrDb6GrjAhiCMROJcC4iiprix17rMlhjUGaF/q4F2O/j8WgckFX1uICwoh7GCoImvfytbTEhud9l8Dpb5yZUuDySeSFUU9lqbACdTvBhbCfKeNYSrEAFim7iC6xx+R9uDfYm5lTW8j8D9RKa9kr+/9E6Tcze9lwgw5onVI1pQfKJG8/TpF1L321zux0ogPxNztZdYAN3d3YJom0wiQpEd5Wfchhkajk7mmf0sn2jOcxnDTj2WKWs6WRAfqNPUx48A6z85/Ixn/5ypgDMw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=A7xRne7pOz/7VS7n2Ox6uw7bTByXCX90HjIcYrnlwWg=;
+ b=cz51VdjtMCAgKm3G8K84oeqwJDbG5IcEhQoIlJm2/PcTwh6xK/zZ2IEVrO7B5d5a70nZzT3EnmrdefRRD85SbEyUsBtCdtVbI7v7A5ai3dpREaOQjhhTG4uQI4oBfydOY+sDHO4m9mEu3+whQqNNxQkiea4UVm/FgmgKLZAxn0j8WRq/kn/w/sH2uctlAmnhfcLn/iLKqnhy5s6Qi/a/cpU8WYoeDXdG/ZhK58ufDuk69L8KrDFRCJuYslyQaXruo9faoEBbzD0XUM5fX0SyhOIB5U0gA0lrGESvrxwP3Ku+qHSi8BA82eXPXwrqKdyoB6bfmHqSkIX+q4Il9mZGyA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1776751810; x=1777356610; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=1guwVUsMIMD/Wpv/IcScqQddRIpEXoJdanKvBpB1ZJ0=;
-        b=FbQU6f8PZ8kFklrctX65ahrHIsvl9OvXziHclG+3ZOAe8LZhEUA99ih0fk/CzJ75Vj
-         n9QHQ977Igr1ywGo3Ui2OcL3h37IAYiWu0mFMM5L4YdmERGnpKbFZrZBH/7J+ayd8DPt
-         n8w6byR896bujnERBnctK8hT+RHufNs3o3LjdV6/lSFyWrUmPD8fIz/kZZeiCHdnUCvV
-         +nwom1XvpkResTWolzobFZ78CKyQg8AYzoWRyqSf6uE3BvJC4yHkdFt0ElIsueVEQKjP
-         DyMSiQWcPLvPkrI/+uentf1klBgepkqvpDN7cY7LdLMUzD7DCrch9S9BZWdnwuaTRhWA
-         DSzA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1776751810; x=1777356610;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=1guwVUsMIMD/Wpv/IcScqQddRIpEXoJdanKvBpB1ZJ0=;
-        b=Shz00iqn89NiW9L81L0GTv+W4d5tw3nrd8bEGd9IGvcSu6oxGZJKC4XMyqfryWa3Bw
-         Y03b/jJ7/G0mQnKBNYIzW88ZvmXL3PhhM5As8FpK0PAO7p1HLeXnAuKSDscHDIwrY7Gd
-         KFLLukpSH7hfhWe3D528bgp51CuFyMfDO+iDL20CBYgYG5TFoSDmGOOjCw27yAajAC/P
-         AFAWII3hlMyDMDTsFWf76IGFUmPyOOa26wJ6Cw3AqrNrZnLFHG4BCl924H3NnF4cPI/6
-         dUzuA3m9PJnYHGWLzlnc3nGHVYtrQJGihVDOOVN0FpD+AhrY/3fd6zu/HNe2SYlTULzL
-         3sAw==
-X-Forwarded-Encrypted: i=1; AFNElJ/l5OWWlQgrEklOcVwnKh3hqqnAyzg5PzYwG2gUZp1ikbJQe8hA7l9FVh4tA1bqAdjvVVbA4YbTa8Y6@vger.kernel.org
-X-Gm-Message-State: AOJu0YzUZqGfzaLUQ2GK5WpZKNnnVJll/ZL/0bpxSFOyeRYCuQqvoFxw
-	1Z/7D3DFKnXuQtB+q7pSaFuLMZ6MHPpy0ZKzdqdRrDPfg0UaWBUAznyCgiWjRV/f5vkPSAb4gD9
-	cIO8L5JWdJKiK+C9b/1yCQxdjEOq+FWWv419K0m0reSnUNb+EX44bY9Ms/g5qG46v
-X-Gm-Gg: AeBDiescKmFtpJ60GmDeD9NtOTZHbBs3GjkpqbRgPOCzFTSAlP2o95y93Dgzi+7wa47
-	UByap9gZA4sXpIQpNNcFmwDNEyK9wupEQ3YVeGd1S6hHHDg4kagDdSBuIdPta9HfrKJvn5/3Fzi
-	26PUT+iJVD9nIaSPjjRXBj6Toc4rzGgwGYwp/+iqyfa7sza5nrfUzJ/yOZE2SikpBCM5yXnZXkU
-	YFe0hxPn/uG8rVIsz3yeAhAJHu6BbsFvD2ZEUE3FzJhQa2PGKpMTm7pireluCAyg076bOQJwmfD
-	ERcqUTxvMZEMN9n9L2o59pisBflXKIAOVHMg5+gycMth3Nu8CapS/nzRQacnnrSRK2Xlc14ekCs
-	BMweUUUuoX0NsMwNzlw/zWjrggZ5By2WLuaTfYMfUweZHz5rg+g/aJtuG/Vw7rJdOFQX3Iw==
-X-Received: by 2002:a05:6a00:1c9e:b0:82f:6b6f:13ec with SMTP id d2e1a72fcca58-82f8c9427b4mr15422853b3a.34.1776751809491;
-        Mon, 20 Apr 2026 23:10:09 -0700 (PDT)
-X-Received: by 2002:a05:6a00:1c9e:b0:82f:6b6f:13ec with SMTP id d2e1a72fcca58-82f8c9427b4mr15422812b3a.34.1776751808982;
-        Mon, 20 Apr 2026 23:10:08 -0700 (PDT)
-Received: from hu-arakshit-hyd.qualcomm.com ([202.46.22.19])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-82f8ebe68ebsm13905438b3a.47.2026.04.20.23.10.03
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 20 Apr 2026 23:10:08 -0700 (PDT)
-Date: Tue, 21 Apr 2026 11:40:00 +0530
-From: Abhinaba Rakshit <abhinaba.rakshit@oss.qualcomm.com>
-To: Harshal Dev <harshal.dev@oss.qualcomm.com>
-Cc: Bjorn Andersson <andersson@kernel.org>,
-        Konrad Dybcio <konradybcio@kernel.org>,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        Neeraj Soni <neeraj.soni@oss.qualcomm.com>,
-        Kuldeep Singh <kuldeep.singh@oss.qualcomm.com>,
-        Rob Herring <robh@kernel.org>,
-        Krzysztof Kozlowski <krzk+dt@kernel.org>,
-        Conor Dooley <conor+dt@kernel.org>, linux-arm-msm@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-mmc@vger.kernel.org, devicetree@vger.kernel.org,
-        Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
-Subject: Re: [PATCH v8 3/5] mmc: sdhci-msm: Set ICE clk to TURBO at sdhci ICE
- init
-Message-ID: <aecUuK5nF/hjV8tX@hu-arakshit-hyd.qualcomm.com>
-References: <20260409-enable-ice-clock-scaling-v8-0-ca1129798606@oss.qualcomm.com>
- <20260409-enable-ice-clock-scaling-v8-3-ca1129798606@oss.qualcomm.com>
- <a432b2c2-475e-4833-9225-801990cb2d34@oss.qualcomm.com>
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=A7xRne7pOz/7VS7n2Ox6uw7bTByXCX90HjIcYrnlwWg=;
+ b=ffxVspYfWkbF4IQfFZd4m5PG1TK/592ut3ViQuZS7kJ/m2kgFwHG0uzLe04qZG+7l20hPJMY7Mw/bGdOaV3QQv0vkNwX40qVyUtPu0K5MToRoQGZbnyM10UcEGc6vacD9P0CbJv7am8GGyI/j/jqmH+IVmQj3mrDZhHG70IxT0A=
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=wdc.com;
+Received: from SN7PR04MB8532.namprd04.prod.outlook.com (2603:10b6:806:350::6)
+ by LV3PR04MB9465.namprd04.prod.outlook.com (2603:10b6:408:285::11) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9846.16; Tue, 21 Apr
+ 2026 06:19:27 +0000
+Received: from SN7PR04MB8532.namprd04.prod.outlook.com
+ ([fe80::ce42:7775:2df8:8729]) by SN7PR04MB8532.namprd04.prod.outlook.com
+ ([fe80::ce42:7775:2df8:8729%6]) with mapi id 15.20.9818.033; Tue, 21 Apr 2026
+ 06:19:25 +0000
+Date: Tue, 21 Apr 2026 15:19:12 +0900
+From: Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
+To: Nilay Shroff <nilay@linux.ibm.com>
+Cc: Daniel Wagner <dwagner@suse.de>, 
+	Chaitanya Kulkarni <chaitanyak@nvidia.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, 
+	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, 
+	"linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>, 
+	"lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, Bart Van Assche <bvanassche@acm.org>, 
+	Hannes Reinecke <hare@suse.de>, hch <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, 
+	"sagi@grimberg.me" <sagi@grimberg.me>, "tytso@mit.edu" <tytso@mit.edu>, 
+	Johannes Thumshirn <Johannes.Thumshirn@wdc.com>, Christian Brauner <brauner@kernel.org>, 
+	"Martin K. Petersen" <martin.petersen@oracle.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, 
+	Javier =?utf-8?B?R29uesOhbGV6?= <javier@javigon.com>, "willy@infradead.org" <willy@infradead.org>, 
+	Jan Kara <jack@suse.cz>, "amir73il@gmail.com" <amir73il@gmail.com>, 
+	"vbabka@suse.cz" <vbabka@suse.cz>, Damien Le Moal <dlemoal@kernel.org>
+Subject: Re: [LSF/MM/BPF ATTEND][LSF/MM/BPF TOPIC] : blktests: status,
+ expansion plan for the storage stack test framework
+Message-ID: <aecTw6IYs1fo26EX@shinmob>
+References: <31a2a4c2-8c33-429a-a2b1-e1f3a0e90d72@nvidia.com>
+ <459953fa-5330-4eb1-a1b4-7683b04e3d45@flourine.local>
+ <aY77ogf5nATlJUg_@shinmob>
+ <901f4daf-3226-416f-8741-dd15573e736b@linux.ibm.com>
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <901f4daf-3226-416f-8741-dd15573e736b@linux.ibm.com>
+X-ClientProxiedBy: TYCPR01CA0155.jpnprd01.prod.outlook.com
+ (2603:1096:400:2b1::17) To SN7PR04MB8532.namprd04.prod.outlook.com
+ (2603:10b6:806:350::6)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <a432b2c2-475e-4833-9225-801990cb2d34@oss.qualcomm.com>
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNDIxMDA1NyBTYWx0ZWRfXyeZLW2jvEOvw
- zB9kqk8skubwzdZUU9cLlgpOBbnTfcMlYPM8BUOZcWbt7+Nl1dLqUY1Roscf1WKKGhebUqcHqzI
- IhyPbbdjHAcboxLJS3W3UVupR+jgr6/EvStQbAHcXdb02GHHQn+el51NiyfRmvpMLBFxKE2fMb2
- n0CQbb5lvmuwOxm51RpZI5hDZhK76hzeqzMYl5KUH/hGQWTDANZ+5m+7fhHhqgtXYC7Pr1usu0E
- bdcXfiyQmwStXD6lEC8pLBU3105m4l0UQX1oGBt617ahOPKP1Ez16DjynR9LE2evUauI49nCpR6
- tOdlGxPW9KjHesDOKYlYnBmDESdqkME/NGZ2qTIUj1uVPUMbwTAwiLksKcNgH6iNa7WfB+j5QFV
- ENxot7HIwTyUxPZiGO4ev03ah1pYZuc4f73jlPryqp1k5JuVc+YACDoTCv/7Epzuqm/KR75HU9N
- IRMP1Q1PqHdD6wN2w9Q==
-X-Authority-Analysis: v=2.4 cv=F9JnsKhN c=1 sm=1 tr=0 ts=69e714c2 cx=c_pps
- a=oF/VQ+ItUULfLr/lQ2/icg==:117 a=fChuTYTh2wq5r3m49p7fHw==:17
- a=kj9zAlcOel0A:10 a=A5OVakUREuEA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=eoimf2acIAo5FJnRuUoq:22
- a=EUspDBNiAAAA:8 a=ciROkYvXyXDSqN8Q_VUA:9 a=CjuIK1q_8ugA:10
- a=3WC7DwWrALyhR5TkjVHa:22
-X-Proofpoint-GUID: YDMTw3lyFCZeIU4hV6e752XKcv7gfH-I
-X-Proofpoint-ORIG-GUID: YDMTw3lyFCZeIU4hV6e752XKcv7gfH-I
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-04-21_01,2026-04-20_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- priorityscore=1501 impostorscore=0 clxscore=1015 suspectscore=0
- lowpriorityscore=0 spamscore=0 phishscore=0 adultscore=0 malwarescore=0
- bulkscore=0 classifier=typeunknown authscore=0 authtc= authcc= route=outbound
- adjust=0 reason=mlx scancount=1 engine=8.22.0-2604070000
- definitions=main-2604210057
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: SN7PR04MB8532:EE_|LV3PR04MB9465:EE_
+X-MS-Office365-Filtering-Correlation-Id: 30972d5c-c00c-43bd-6e9f-08de9f6deda8
+WDCIPOUTBOUND: EOP-TRUE
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|1800799024|366016|376014|19092799006|7416014|22082099003|18002099003|56012099003;
+X-Microsoft-Antispam-Message-Info:
+	rhDD9fJHCAwjVB8nr2Y2IPd1Jc3Zdq91vdcvlKVj2aq2nykyh4vsSr2e1LesIL1z1aJp+dZFQRKjj/Q0j8jY/Hk7T7c8C2/re8D3WlzRa90hKwqDQpUFpA+ULoyro3JXInSFHNs3RFaRQqVB8jRJ5LxLGfr3AT9XKpFHtIOhUSUspMo+L98Ow8LbPaU/kjkFzCeuDWQZdLZvaUCYOWi8uPCbspJfoSXFQcr2FPGNx3DmQbqPjt5g0Z9hYNeB0/jCy1T00DEOIl6e/AnfR6P+POu500dnJoVfdokWY3YqXiaGdpDWgY/3pRoTqzIbXnRtWIVN5Ql20whc5oDtyDuajBQ4S2SBHejwoSX5xImjltTgk2Xg81Sb3jb+i5Xcis5HaFwPOvtak9wL00CPPAU6iVpZ6pACurZoiEzO7J5WqfPgNCmtFGrWTe9o+bX899QCqAhDYfgnzLuiMXfMJ/Vb5tn1zPtka+lW1PQdmz5ekuxez4FWvmdihPytX0GvffyBjwtpLaPSfONrw475nYgElZdMsrhVEOqWGI3O6k+J4JxF5f/4J578sh39ZX+iBynNCie0P/jiIqAt9j+yI9Ns6zd92Pn83AgExIfe69tsOROOW9uQMIcbJCpYVQmt23v0XSOIyWaSdIV0vIv8hEOenhGU9JgZbqWo5+t2F7N44KkEYAw0XWXrDi8c9LPAfsrs5AZ3izE+PFZ6OIimQrnf4ER+TpdFqD/pSk7MEdZMjq/vNsMjDMKkRKlEd4hUYkEj
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN7PR04MB8532.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(376014)(19092799006)(7416014)(22082099003)(18002099003)(56012099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?KzV6QmQ2cjNZQ2VnWEwrL2ZIQStTQmV4LzdnU1Q3SzhRNUhkc3BJSHAzUEc1?=
+ =?utf-8?B?Y0VaK05xYXFDeVQxSUwzcVJncUJFZWZCKzFsYytwaHhka01wTFJENmRDYVVX?=
+ =?utf-8?B?a0RwRTJzT1FUZE5yZkxGWUFmNVR1cXJlWW9OVXZ4VHIrTG1ZdmN5d2lHVjU5?=
+ =?utf-8?B?Mk1TMXVZZGRDNkVmRWNNTHBMU1BxWGJPak8wQmFSRnBING0wdE91WmpOelFp?=
+ =?utf-8?B?RGVHS0duakJ1NWpLS09mRjV6ZktuYlhhWG96UnA3K0FoWUxaN1U3NGNacGEv?=
+ =?utf-8?B?YldlakVFbm5VaWR3UXduaUl5KzZ4aktUS1k0OEtWdzMvdzZranViR1htZGxD?=
+ =?utf-8?B?TDJUUnBYZHJVK08vcUhESEgycTJuQS9CTkIyQTlaRXlIS2RPOFNSZDlWZmdq?=
+ =?utf-8?B?NEN1NzkyRHZKSGpBSXlIUUdLMzNBMXdUcnJVa015a2hBNG5xZ2hwRlNuYW9U?=
+ =?utf-8?B?RUw4M08zOVhlU1RudTNCSlcyVmtnTXZvTjF4d0xCdloweUQ2TVNmeVdlNHpn?=
+ =?utf-8?B?MERmVER6Vk93TEdRM1YvZ3d2K2NaTVE1NFBQbXUxQnJwN3NQTXVPZzdGSUZp?=
+ =?utf-8?B?OEJ1cGhUYm5Sc1A0algyRjJncXd6QWlCNVRHRlBMcTdJbzVYcC8xZ0VDYTF4?=
+ =?utf-8?B?VklKVnlhNmVITlpDR01naVR3Z2VxeGs0OXRCaG5WVllqaEZrQ1JLSWFoRWhD?=
+ =?utf-8?B?L2JVR1luMzJrSkJ4aDgxL0FRdVVMU0IwRzVtZEZBZTF0KzJFcFBDalZ6WE1P?=
+ =?utf-8?B?TnNlUE1JZlhGYjNKVCtFNmh1MXVpeXdPSDREdkZxT0k3NkJkMWhDYWxqbWM4?=
+ =?utf-8?B?OVJOaVJMK1hSbkFOQkJ4d1VaU2V2NVVxRElIRmZZOFVSaEd5Nit5VElWZjhP?=
+ =?utf-8?B?TENQZnp6YnRmaVgvenpjNGpjQnh0dEQ2b3BZYmhheWZwZG5Ld3F0T25WSjlX?=
+ =?utf-8?B?TXJkM2VLTE9EWGM0MDJGN1VVdUZhTDJCTGR4aFEwZ1FiOUtaWjM5L2hyOVFM?=
+ =?utf-8?B?TzBTUXY2M1B4WlB6M3dpaTZjSWRDQUlKbFVZOUo4TXEwWGhDUVp3VEhRYWRD?=
+ =?utf-8?B?M2lISjZrSmcvTXAxZ2w0SmVkSzltbFZVblZLMkxTZE9FNW1ScHFxRHFGTUNK?=
+ =?utf-8?B?RUY4UzVhL1dtVCtNTmpCZWlxU0dtQm5rTE5DbHo5eTJqaTFNQUVXRmh3Wjgz?=
+ =?utf-8?B?eUROVU9uVU85NEY4aWdOWlFzYmdJT2FHMktGN3Exd2p5cWxyNWt5bG9IcUlT?=
+ =?utf-8?B?WExnMHNXbDd2T0pZaHZJWTBRSGw5S25ST0lNVm8zOW5kRGtDbTRjV05neUw5?=
+ =?utf-8?B?OEFUQ1pNUnR0czE5b2VnOGlhMDZqcWtHL3hPZnJlRXlQZWtDa3FjWlFWQVla?=
+ =?utf-8?B?REg2aHVjbS9BMW5oNW1qSlEyeEVseDE3TFhsQmlveU43My9MTXRnTUlxa2Ni?=
+ =?utf-8?B?M1NNbi9rQm9Ua0tVMUxOVnFiUE9pMlNqWFNSZlgrWDVtZC80YllhcHp3bkhh?=
+ =?utf-8?B?SEsrbVJ2eDRPNTdIdXhQVmhOWU9jRFRWUytyNmgreWFMbHFqa3Y4bFpEYXBN?=
+ =?utf-8?B?UFhBaTF3Z3NhVTZtb0tmNGRXbCtEclNOZnBvaVRKVFpXRjJuTGtBd2ZYVzhi?=
+ =?utf-8?B?eWNhalFONXhtUlorN3BBQjVBOTl3NmlvTDdvR3ZsY3kvYmMwNVBDa0hqSW9s?=
+ =?utf-8?B?bXROZGZLUU5aOWRLZ2NZbmozNVI0N2pTVktuZkU5VXNxYmJnMFB2T1lndUZ0?=
+ =?utf-8?B?UEZQU2QrVmFkVlVsSVh2VkdCOVVOd1M2L2tzTU5jUktvV3NHOGNUcE5ITGhU?=
+ =?utf-8?B?NldhT2VuNFQybG9JRTJKVUxqMGNUS3VKcnZ3UjkxZU1EajNoMkFTd05iUkxK?=
+ =?utf-8?B?V3I5R0lsN2dwK1NEdnMxSmVpTjlWb1llalo0UHhSczhzNnV5MlRodGJ1QVJ0?=
+ =?utf-8?B?NVZ0TW4xbEg0SE42ckZ0SysyYzlVblJBMXBDSWh4enFTR3NzTTB1ODRjTE1T?=
+ =?utf-8?B?dUo4RUp6UkQ5RjFMdTBxbHRnQzBseUR3ck1zNnZNakJxVUJ1RmtMTVVTRFJx?=
+ =?utf-8?B?dnFodXoxekFVOC9vQnV0UyszeDVIMERmUUQzODNGRUoxZmphK3BUUk9CYUo3?=
+ =?utf-8?B?K0R3bHFFUUJBUkRtK0p4V3NWWW02ZDltODl5S3pJeXZSWSt2b0lFeWx2bVEz?=
+ =?utf-8?B?T0JlZmFyQ1dHRklIUEQ3WVhTZkxNMnZnY0dCV0FkRktXTnlWc29OTnVOYzJY?=
+ =?utf-8?B?NG5vZ1htRWlSbERXMnhHMmNjc041Nm5rbnNxSG13MllWakxXMEU3RHBBRmFu?=
+ =?utf-8?B?TUFFMnhkZWozM1dZNjk5blEreEhsb1ExbkxlRHZxWGMrS2R2aFE0czVqWFNF?=
+ =?utf-8?Q?DdrrWKoU6s1F3sEY=3D?=
+X-Exchange-RoutingPolicyChecked:
+	DoB1/F68UlpW7J85GILIOOLFfwYADOF7HvSGbej9xcrTYtPCp7uTu0LpBBVMfkbw1c5QCOptUVoxwa8/9zwmmYZ5UAHHmpuKxeOFJpmZROCcTcKTcWrEn+wnkQVpXM/oBfUzOwQpQFAPD1PS/G+AzsF2ehqhP0TtVMewQOjhMyYpEsxI1L+IssGyPJg0fnwS46rbi7/o2fZMVCjLOZlnVPyfODOLFMyJsK1hCLSC3dbqN9cupJYwE3QzDuWqrNlgbhgg1ikYf8H4bAZc5qGBSg4Dd6owLu6+QBPdVAJBiH+7xnAe56lLjAZeYtu1sNAl8xC/NksRh9Fb6RFRgigvag==
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
+	qOXDjZY9fP/zdOOpxbyEftAYyYSRzv/UM88O5IvuUxE/XwAGoU46MmDY90jvJ4iZB9UjLq/R/BypQicStAWPsk0W/Oa3NWOlZerPzQfG7J39XV9OLCcE5gl8oVDzSL+qCbuZ4I9sba+6G8gXInpFaNFYfqV0Um0NUtf1tWQ73I4x3lvBlElIlrRNzf696FPk6HtrmOwAllcguhrQqnGBgFSY/+PNUhLTy93mUZxfhpuWXmoibKytiidfjgwOmBRgBo7x+c2QoiptHtKZgPBjZDScP4bk8e6gRsHj74WuygWatHQcnoN2eTrQ1umTM+57R0c90Alunkvf34G8wJcAj1FFE6mV07JPlNVuV2jgkAV3Rx2MNFim2MS4928nFq1Z7Tkob2m0ouvVYJ6wkd6sB2BsQpsmkr5RiAj3G1nHtoi8xcq0zOVLk1MNzR20XfObS4ZzrXlQ54xgtbx0lgBRIy3rj3jYgzWP+RmU6t3Z0tmmm4wd19rHSScPXSHHCZBAxdwW31TuMeM7mR1kNeALfVGOoSN5IEdjwOjBXg8Kw6S+gZldjagBrzSsq+jVrhNX/gEgPQQgTk+Y+dfe7xA0dgZimFBwofKuohTaO7gj8YZr2Qn2GttI4oC3yzn3Uw2L
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 30972d5c-c00c-43bd-6e9f-08de9f6deda8
+X-MS-Exchange-CrossTenant-AuthSource: SN7PR04MB8532.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 21 Apr 2026 06:19:23.0238
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: 1AZD8aBf6qoltFduApXfM6Iqf1yhlwvKKp4bQ8OOgkkr6ET/MN34oputUKnLuu15mGiZNN0dHPG/hkYy/0AkQGXZWFX3zVKnRANPaeiUrFg=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: LV3PR04MB9465
 
-On Fri, Apr 17, 2026 at 06:59:42PM +0530, Harshal Dev wrote:
+On Feb 16, 2026 / 00:08, Nilay Shroff wrote:
 > 
 > 
-> On 4/9/2026 5:14 PM, Abhinaba Rakshit wrote:
-> > MMC controller lacks a clock scaling mechanism, unlike the UFS
-> > controller. By default, the MMC controller is set to TURBO mode
-> > during probe, but the ICE clock remains at XO frequency,
-> > leading to read/write performance degradation on eMMC.
+> On 2/13/26 4:53 PM, Shinichiro Kawasaki wrote:
+> > On Feb 12, 2026 / 08:52, Daniel Wagner wrote:
+> >> On Wed, Feb 11, 2026 at 08:35:30PM +0000, Chaitanya Kulkarni wrote:
+> >>>    For the storage track at LSFMMBPF2026, I propose a session dedicated to
+> >>>    blktests to discuss expansion plan and CI integration progress.
+> >>
+> >> Thanks for proposing this topic.
 > > 
-> > To address this, set the ICE clock to TURBO during sdhci_msm_ice_init
-> > to align it with the controller clock. This ensures consistent
-> > performance and avoids mismatches between the controller
-> > and ICE clock frequencies.
+> > Chaitanya, my thank also goes to you.
 > > 
-> > For platforms where ICE is represented as a separate device,
-> > use the OPP framework to vote for TURBO mode, maintaining
-> > proper voltage and power domain constraints.
+> Yes thanks for proposing this!
+> 
+> >> Just a few random topics which come to mind we could discuss:
+> >>
+> >> - blktests has gain a bit of traction and some folks run on regular
+> >>   basis these tests. Can we gather feedback from them, what is working
+> >>   good, what is not? Are there feature wishes?
 > > 
-> > Reviewed-by: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
-> > Signed-off-by: Abhinaba Rakshit <abhinaba.rakshit@oss.qualcomm.com>
-> > ---
-> >  drivers/mmc/host/sdhci-msm.c | 24 ++++++++++++++++++++++++
-> >  1 file changed, 24 insertions(+)
+> > Good topic, I also would like to hear about it.
 > > 
+> One improvement I’d like to highlight is related to how blktests are executed
+> today. So far, we’ve been running blktests serially, but if it's possible to 
+> run tests in parallel to improve test turnaround time and make large-scale or
+> CI-based testing more efficient? For instance, adding parallel_safe Tags: Marking tests
+> that don't modify global kernel state so they can be safely offloaded to parallel
+> workers. Marking parallel_safe tags would allow the runner to distinguish:
 > 
-> [...]
+> Safe Tests: Tests that only perform I/O on a specific, non-shared device or 
+> check static kernel parameters.
 > 
-> >  
-> >  static const struct blk_crypto_ll_ops sdhci_msm_crypto_ops; /* forward decl */
-> > +static int sdhci_msm_ice_scale_clk(struct sdhci_msm_host *msm_host, unsigned long target_freq,
-> > +				   bool round_ceil); /* forward decl */
-> >  
-> >  static int sdhci_msm_ice_init(struct sdhci_msm_host *msm_host,
-> >  			      struct cqhci_host *cq_host)
-> > @@ -1964,6 +1966,11 @@ static int sdhci_msm_ice_init(struct sdhci_msm_host *msm_host,
-> >  	}
-> >  
-> >  	mmc->caps2 |= MMC_CAP2_CRYPTO;
-> > +
-> > +	err = sdhci_msm_ice_scale_clk(msm_host, INT_MAX, false);
+> Unsafe Tests: Tests that reload kernel modules, modify global /sys or /proc entries,
+> or require exclusive access to specific hardware addresses.
 > 
-> The 2nd parameter is an unsigned long, do you really want to pass INT_MAX here? I would go with
-> UINT_MAX. But still, why go with such a high value? Do we not have an upper bound for the clk
-> frequency that we know we can't ever exceed for any target across OPP tables? If not, then maybe
-> UINT_MAX is best we can do here.
+> Yes adding parallel execution support shall require framework/design changes.
 
-Ack.
-The scaling functions along with the OPP-helpers clamps the requested frequency to the
-maximum supported rate based on the clock/OPP table, so any sufficiently large value serves
-the purpose here.
-Frequencies are better represented as unsigned long values hence, will update it with
-something ULONG_MAX in the next patchset.
+Hi Nilay, thanks for the idea. I understand that shorter test time will make CI
+cycles faster and improve the development efficiency.
 
-Abhinaba Rakshit
+Said that, the safe/unsafe testing idea may not be enough. I think majority of
+test case does kernel module set up using null_blk, scsi_debug, or nvme target
+drivers. Then I foresee the majority of the test cases will be "unsafe", and
+cannot be run in parallel.
+
+Also, parallel runs on single system will affect dmesg or kmemleak checking.
+We cannot tell which run caused a dmesg message or a memory leak.
+
+For the runtime reduction by parallel runs, I guess blktests run on VMs might be
+the good approach as Haris pointed out. Anyway, this topic will need more
+discussion.
+
+[...]
+
+> >  4. Long standing failures make test result reports dirty
+> >     - I feel lockdep WARNs are tend to be left unfixed rather long period.
+> >       How can we gather effort to fix them?
+> 
+> I agree regarding lockdep; recently we did see quite a few lockdep splats.
+> That said, I believe the number has dropped significantly and only a small
+> set remains. From what I can tell, most of the outstanding lockdep issues
+> are related to fs-reclaim paths recursing into the block layer while the
+> queue is frozen. We should be able to resolve most of these soon, or at
+> least before the conference. If anything is still outstanding after that,
+> we can discuss it during the conference and work toward addressing it as
+> quickly as possible.
+
+Taking this chance, I'd like to express my appreciation for the effort to
+resolve the lockdep issues. It is great that a number of lockdeps are already
+fixed. Said that, two lockdep issues are still observed with v7.0 kernel at
+nvme/005 and nbd/002 [1]. I would like to gather attentions to the failures.
+
+[1] https://lore.kernel.org/linux-block/ynmi72x5wt5ooljjafebhcarit3pvu6axkslqenikb2p5txe57@ldytqa2t4i2x/
+
