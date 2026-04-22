@@ -1,132 +1,168 @@
-Received: from mail-oa1-f54.google.com (mail-oa1-f54.google.com [209.85.160.54])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 07EF33CF047
-	for <linux-scsi@vger.kernel.org>; Wed, 22 Apr 2026 11:44:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.160.54
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776858296; cv=pass; b=ZySO0bxhStjV9h06fZSXVOaieNLcNPHAiQzVWdmjZAdIfaBNbBD2zG5UW+64QSis4V43slzYEEH7mcdAgrE8atUpoc0n8B0sLP4ymmc0lRq05toCtb21D5Sdkli9alLN8j6M5jSArg4PCxcrx/kbiFoEXrWmtf426h4t8GG47tk=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776858296; c=relaxed/simple;
-	bh=qFil1a71cRmcPqBTgFbC/PBLK3Bx7xQMbbPa9YfzOg4=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=JloUTV9V8aWgey/QxdA49puASDWdHCHvCVIp7Emf5Shp5mtw5Da83mOj9/3YDmmnLeXjf1yhPeca0qXRBrAwmcGxiuB/x78X7WvcdE7GOpLDoCty7XgXl5IvHiBK/41Hfu+s3SRbmMBKgh6+KVtLPnkxeJoI59oaZD3Mov9B0ns=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=oNSrdPF2; arc=pass smtp.client-ip=209.85.160.54
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ECC1839F195
+	for <linux-scsi@vger.kernel.org>; Wed, 22 Apr 2026 11:49:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1776858591; cv=none; b=IHCy3aoRyCeP2U+CQrr2FYvzJk7NEuEhPGmt3FlGvYcmRWdH0XIRDycBHu1cjv5AN8LfyniyhKaQ1EG9pceNaKo4Y2lfKIcq2mx0GsjC1OsBGL6FfU0GV0jlHoInkT/+qCGVkUMJDpdI82byopAncNWKuLpktqeFUsHDNndEnlo=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1776858591; c=relaxed/simple;
+	bh=ZMaK0X40FEFlzwhWQ7WxGRU+7OKoGklGGBSI0TMpP2o=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=KYaZFtFCczf6pSk0exNfZ8HgbGPKEhlX0aEVvmI8sAu19bouk+3DoV3cNYxPWFngNfpfCexhN16DEOgNFvr1mh19w5XH2wUpSZngqdJi0K+PiJAeL+uB+Xk1NsW1fySaH0jct+1KlA1SvPssbZctUYZZ3QTeZXj+nF6rVXHtINg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=RCkyuxSN; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=gf5QhpIo; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="oNSrdPF2"
-Received: by mail-oa1-f54.google.com with SMTP id 586e51a60fabf-41c4d660b19so1425104fac.1
-        for <linux-scsi@vger.kernel.org>; Wed, 22 Apr 2026 04:44:54 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1776858294; cv=none;
-        d=google.com; s=arc-20240605;
-        b=TIvTPnjSXgZ/iC0VZToV3ZH35ZyUvwI+52r3S2oouYKIOpll6iaIuRQRvu8cDzoEVs
-         SwJSgLz2z9qdfmy8Xb8eTgIiSDCkW3ka+ajIfaxbjh8/8k9gDMt48u8jpDStc0G/7Gxh
-         F6BP/IplOV4i3jOEkylG5R6gBcTQicTDFNPs4Uo1u58UNoByjQ0m3fWjDScMcMLtnvRC
-         WnkiBF4Kn3CA8YGCLOiXD6RdJfD3Rhds2wmX7LUbx4f7eCSLVY47wirK7rCdXezKHvVg
-         t+zSBci4eg0WYTh/ADV15kyzPe8OIeePe1RztWYHltBg+zZLBPNemep7SseDsadgS6x1
-         au/A==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:dkim-signature;
-        bh=qFil1a71cRmcPqBTgFbC/PBLK3Bx7xQMbbPa9YfzOg4=;
-        fh=rzLiX0iFRlHgw10BSVM8PvEDWa3UoZ3gMhTs2PG+oJg=;
-        b=g0ff2Szy2R5Bl5xWYEdbQQ+9PnKNOai9bXWPa+pFesHt1iwQDAAWnjp1dNj+Inu+Yc
-         TmYuFY6fH7f/TRQhOVHhQUxd0dwRYJqupVPGQtfR4ohdsLJWcaHDKDaQzJOvbjtqtK29
-         D2lp4ukFPXyw8fA/5DWVZV48sAMfiuljtguHPFKuQmqZ2MEuOyLCQEPA7pCD8YDndjzx
-         iU8oFLH13tbW5mh7PM7yipX0t2dyVCjTgL8oFkpMSnW32sZBQw2enRDifMBSmewgQmEh
-         oX/n2Ug4dAgu9qx4AhHjI4LnF20t5QEjmLUPBfKG3iqi6u08GidLBy+eJ1ZFxbuuK/me
-         Cmww==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="RCkyuxSN";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="gf5QhpIo"
+Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 63MBXP4U3730717
+	for <linux-scsi@vger.kernel.org>; Wed, 22 Apr 2026 11:49:49 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:date:from:message-id:mime-version
+	:subject:to; s=qcppdkim1; bh=kjmyJu474LRd6KvQaKEAhntZ2nGNadIY1Ew
+	xUoVlISs=; b=RCkyuxSNqLeYSuqhyOsdUYsbxVhh8M6Yvwh2eCS2EbdysAECvi5
+	pE5rppjpEtNQ23btwNZ/S+bTjEpTJTaMukid1qvzVFSxf2BPFi1qu9sEpP3N/tHO
+	d97HP7jfx5TOjpekAYGLOJ/f8YCkk9r5hqKQHj7+Jkl0KM/XuaSGBoqCGRYyZPca
+	CteoROIoUqj3mkwWabNjZX/0315dAewB1I3B3q3gduwpnXXqw1Q0Y+J6Er1U5klu
+	RMl7BvNrzW/YqR9enkuszGIn5wKylz1IL78FRpHQOqBRHyRtjMMVJCEBZCOtREtl
+	Hcf+hNsNcDOR6Vrj1MhjoMsoLsITbTZjvWQ==
+Received: from mail-pl1-f200.google.com (mail-pl1-f200.google.com [209.85.214.200])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4dpenfu4fk-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Wed, 22 Apr 2026 11:49:48 +0000 (GMT)
+Received: by mail-pl1-f200.google.com with SMTP id d9443c01a7336-2b4654f9bb6so56442505ad.2
+        for <linux-scsi@vger.kernel.org>; Wed, 22 Apr 2026 04:49:48 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1776858294; x=1777463094; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=qFil1a71cRmcPqBTgFbC/PBLK3Bx7xQMbbPa9YfzOg4=;
-        b=oNSrdPF20EEJC1EGPnJeR0uJUQ21yOeJP2cQV6oN+rMnmzSu7DH/z8dNA4zI+sAX/G
-         GSF/IV4S/vAMCEPKXLKsmt9tlzhQLBxLu05WV18GVeSSuaw3DRWQrwGu0bR8X6KhyXge
-         FqhREIwlrh+pq1N34/f+43hMLlrHF95NMOr1dQ/TKiWGxTVdVTJKWeuNUuiJeeGJuWbX
-         gzZiL1asqUdBJjp25A39zNTrhlyCT6wF6wIXjybG2yTE1O6zSJQ0QKxoxRlBI/KlszLV
-         EiL4/dpD7NPbLUcYSjJyIX0blwEK9d2C8AeLT+SruT0vUJSXs4uXBlPb/Z0ju4K41iyY
-         xqxQ==
+        d=oss.qualcomm.com; s=google; t=1776858588; x=1777463388; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=kjmyJu474LRd6KvQaKEAhntZ2nGNadIY1EwxUoVlISs=;
+        b=gf5QhpIoQLkmJ72QxqipLpmdMK3HjvMmLxWHCcNFqqDtOgtK/jbq7KfSZt41z8QM06
+         yv8E5RciHWT5KeVl6FjuF6XY0g+jvtnk6uAlvbItvLzMCRcIxWcKWNq2F28ivoJKiXvn
+         O+RO28l1DZHxtSU6q8d9ufbw/p+fnlj0ppDrGdPj2JMphMh/twj1M87Kmz3dMQAB6i95
+         MfKtWyigt992KgEapRFnL8mhbc94MzVlbmQKrkxf8v52fC9QRl8blQOFyTqatwMfxHXK
+         A7wnfDsBZt8bwDiKYCYGnyylY5QnIvCBIbH58BcJpRnlS+Nup649xWQ7Z7xX6WuCwh5Y
+         RRCw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1776858294; x=1777463094;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=1e100.net; s=20251104; t=1776858588; x=1777463388;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=qFil1a71cRmcPqBTgFbC/PBLK3Bx7xQMbbPa9YfzOg4=;
-        b=UqMTwCFHctH9Nq+oXUobeEP8OtpcRGzXnzviDeIBAhj2zgyuKImXm3NcH0qBSj8LLQ
-         thpt1RwvYeBtxJVxi5eckRaJKPGnTddd0PRV97jmfeFLfv6Pw6qxpyszeCjkZCFGkDU2
-         xPC6qf4w0LzLcQDIxdmfmd6S2qI3lFC9getLyATVGxrwP/57dXhMs/aEOAi7rM9dRqNE
-         gupTn2X7qHx+pGaOcq+EFhfvgqpU9hW44wT6FQ3FKKl6X9vq86UcZXbhs6Gm7/GTji7S
-         2K8R8DvRCvOPSM+6cAfAd8YuBGJ6deUZROPmzfVr/JCLXJAu9pC+hz7lQ7Pvehn5N28h
-         Iypg==
-X-Gm-Message-State: AOJu0YxZcBLhveALmz5rPR1l2fcVqVjZpKx7fhmbHNmP0ZGoTk5iD/kZ
-	9XCreosiGpj+QZWwPYjXbjKb9oMZo/Z6M+dXohyLh7L8SbdVE2T1molyIVBIG6Rntha76queYI4
-	vPRYZhRZEiXFUEkrh+C7Rot9+RmmWQPjQ1qUB
-X-Gm-Gg: AeBDiesAgeyB/igYCw4BYsDuiofPEK0rbwqPYTdAC/Srdmc2hZ6roux2VLkm3V5oSWb
-	Zl/6LC2MGSgg8AQ7ZbEsWKj6novGVZa6t7uhWNZztYiLML5zmkjncpo5tHBB2b3yyIEAATDpwCL
-	IefgwFEuEk0yxRoG6Hp0OamzhrXwX1PFv3uD0j0oInUQNt0Fhzu5fGF1oMLSfdOF7t1FcYV0mUJ
-	aMPID2OwuG3negXrxmyLZcI14gVDBgNjnWZDJBKWy7vRu4MJ8joojM1iwpNue0n5IouW/XSVu8w
-	bqYbJpvL/nqIQtSEOUqASllmVITyq7z7OZZmlR65RRrQMCuvNi9th8m7dRxO+n9YeQMA/fXnkgZ
-	TJkeuJLMudoM1eq0X8Tt5y/uMFTvdFIsQuTg=
-X-Received: by 2002:a05:6870:788d:b0:417:3cc0:8dc9 with SMTP id
- 586e51a60fabf-42aded1cc8cmr12369248fac.24.1776858293887; Wed, 22 Apr 2026
- 04:44:53 -0700 (PDT)
+        bh=kjmyJu474LRd6KvQaKEAhntZ2nGNadIY1EwxUoVlISs=;
+        b=ZlRZQwTuYYeENsRQzIT/Ld7aoK5kM7o4VIQmsom9L0v8nlpnwvIi/aVmycdbajlmWr
+         acClURG2ax98OAQF3u03vfGUYF2hn5AIes2Na8ya1NpG6eZHlOLoNp3tAWpxiY7JWtXG
+         su6aAYS9qFYT9WgdygAyhDqp3UYAN9K1so0uAXnLuZXjTQ9Yc72JsrZnS7jpGe+wU9up
+         PLRLXkVMz2cqxOyRnAu36abW+/QwL6NPwJW92KJ5ei6H+k7tshXtz6XcbDHGVcEJmdOy
+         9EfpmPXw+PehT4E+MizyE2a/2ML9jY1z/87RtJxiykgSsrV/IlWyEKUNoPNT0gzBYWNj
+         urXA==
+X-Forwarded-Encrypted: i=1; AFNElJ80gyXwTnDNYOlsiDTfpJzDQNhb0yyO0CnR2/8ThMxdG97gsyHr/0x9S4RxagsjCY7SyGLkKAJ36vFO@vger.kernel.org
+X-Gm-Message-State: AOJu0Yz287P7VjLGS7UCmyXIPhMWj7FGbIq+0TF3Q5pW3UgJmHYzocOH
+	qknMe+nMUOVbDaccU+xEYJaRJokk/txXQwXePBe/43j0pDRnB600o3YOuwr/76bJKJx34PyzkyO
+	zi8DQOpP6b99QW6n/BiR+RVwwquWG+TTNuriz2zZejY6kb8t+sQI+KxwzxqxtSa0U
+X-Gm-Gg: AeBDieuZqUlc4wg3vgG8prNMnNkC0XzxCe2dg0JUQWBEDSi8I5KwA3Fz7vkYRBaVhIX
+	0/vxTbRCJDDr4EAuZJahk7swZz2TNWMR+aIsSRxCmzYe7Sx8y3dIU8irtkJ6C8bVJxOKQBrpLG1
+	p5P6eURPKJH5/DTr+92/46nVqfqPXDWOhY+4TUYSgjDHc0slBVUjE/ZEaSk51idNAzuCktsbmqB
+	91Px3soVuePqGRFApYbYxHz6fFy7/aqkJq4QS1RqomhaKCzr/ewQbyq2yuJ9mW7lK5pqKaxyKLU
+	nlB1m1qneNVUYtUDOOYfmYVjdrzFuq4Q5AcCR/X8orfGumMu+tkEOzXIcQxIUOuqvmBQEYPgM3D
+	ANjfuXRTPqkQtQiUmMQFu4YpJVNFyOmlqYg75TrvpECeMMysr1RQtyED0fp4lwSB+
+X-Received: by 2002:a17:902:868a:b0:2b0:4579:ae6 with SMTP id d9443c01a7336-2b5f9fe1e73mr163777445ad.38.1776858587743;
+        Wed, 22 Apr 2026 04:49:47 -0700 (PDT)
+X-Received: by 2002:a17:902:868a:b0:2b0:4579:ae6 with SMTP id d9443c01a7336-2b5f9fe1e73mr163777185ad.38.1776858587278;
+        Wed, 22 Apr 2026 04:49:47 -0700 (PDT)
+Received: from hu-pkambar-hyd.qualcomm.com ([202.46.22.19])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2b5faa34ea7sm163047125ad.34.2026.04.22.04.49.43
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 22 Apr 2026 04:49:46 -0700 (PDT)
+From: palash.kambar@oss.qualcomm.com
+To: mani@kernel.org, James.Bottomley@HansenPartnership.com,
+        martin.petersen@oracle.com
+Cc: linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, shawn.lin@rock-chips.com,
+        bvanassche@acm.org, nitin.rawat@oss.qualcomm.com,
+        Palash Kambar <palash.kambar@oss.qualcomm.com>
+Subject: [PATCH V5 0/2] Add post change sequence for link start notify
+Date: Wed, 22 Apr 2026 17:19:37 +0530
+Message-Id: <20260422114939.2901925-1-palash.kambar@oss.qualcomm.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260415065110.3496246-2-daan@amutable.com> <yq1eck7lq27.fsf@ca-mkp.ca.oracle.com>
-In-Reply-To: <yq1eck7lq27.fsf@ca-mkp.ca.oracle.com>
-From: Daan De Meyer <daan.j.demeyer@gmail.com>
-Date: Wed, 22 Apr 2026 13:44:42 +0200
-X-Gm-Features: AQROBzC0EuJbwXzs_LYysCCRdzN7gefBYAZhr1DCZh71rUfjTaZXHOUUg3i38tg
-Message-ID: <CAO8sHckA37kkL6YSF3GZ4nVxCE0cp_G4=PT-QxFhenPxnZ9Qzg@mail.gmail.com>
-Subject: Re: [PATCH RESEND] scsi: sr: exclude CDC_MRW_W and CDC_RAM from
- writeable check
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@hansenpartnership.com, 
-	Daan De Meyer <daan@amutable.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-GUID: HD4mjFoYF7nbUh1W3VBm7QgSfEq7KkZD
+X-Authority-Analysis: v=2.4 cv=YJuvDxGx c=1 sm=1 tr=0 ts=69e8b5dc cx=c_pps
+ a=IZJwPbhc+fLeJZngyXXI0A==:117 a=fChuTYTh2wq5r3m49p7fHw==:17
+ a=A5OVakUREuEA:10 a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=u7WPNUs3qKkmUXheDGA7:22 a=ZpdpYltYx_vBUK5n70dp:22 a=EUspDBNiAAAA:8
+ a=rbNoiXgGD7Sd92Kb1yEA:9 a=uG9DUKGECoFWVXl0Dc02:22
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNDIyMDExMyBTYWx0ZWRfX4S8ce5i/qlHT
+ 3l3QAIgcaNbyVzylgtSlPuVVVQ0WtZsLQxIV0/vU97SQAQpgB9A/H8aL74AqPKbvb9MHx+2VLFJ
+ PdPtqelPxau+zdbXRifY+68+XNAN7S+PQRiy+hObv3boxhKhLT+FuJeuJQyZayVq6gkIcxgey2R
+ dVAUa+xXyMimTLIrz7OGUlkElJA94BEvfaXnnRTdsJI5iemMpF2p0xizsXhm3yAeCPXj+lvwYpp
+ 0xkVr2GpDdYJnhGrDIs72LeK67+DLmYx2KfJvKD/vM9wlmRd8DzOdjWn6QUdeTg5gL4i2J0cgFe
+ WvRyfdgGqTKr2rSzv5bb2d5j1PUA7UHgsi1rI2q0C7F5OYXFVJG8gwVobQJGx+96kn3HurGTB83
+ DqwIDGlyq8QcfPzHItImbGdGqd+7jLvAS17sWvwTueJmN6/KdmjmTrz3g6DASX2I6Whzo6SvRjl
+ A5XxcP3Tk0SEHq/f2sw==
+X-Proofpoint-ORIG-GUID: HD4mjFoYF7nbUh1W3VBm7QgSfEq7KkZD
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-04-22_01,2026-04-21_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ clxscore=1015 phishscore=0 lowpriorityscore=0 adultscore=0 spamscore=0
+ malwarescore=0 impostorscore=0 priorityscore=1501 bulkscore=0 suspectscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2604200000 definitions=main-2604220113
 
-Martin,
+From: Palash Kambar <palash.kambar@oss.qualcomm.com>
 
-> My preference would be to defer setting the device writable state until
-> after GET CONFIGURATION has been called in cdrom.c.
+This patch series introduces two updates to the UFS subsystem aimed at
+improving link stability and power efficiency on platforms using the
+Qualcomm UFS host controller.
 
-This doesn't quite work because that means BLKROGET would return
-read-only for writable cd-rom devices until someone tried to open them
-RDWR which seems unintuitive. I've sent a v2
-(https://lore.kernel.org/linux-scsi/20260422113206.246267-1-daan@amutable.com/T/#u)
-that instead moves the GET CONFIGURATION probe earlier before we call
-register_cdrom() so that set_disk_ro() can be called inside
-register_cdrom() based on the mask.
+During link startup, the number of connected TX/RX lanes discovered may be
+fewer than the lanes specified in the device tree. The current UFS core
+driver configures all DT-defined lanes unconditionally, which can lead to
+mismatches during power mode changes. Patch 1/2 ensures to fail on this.
 
-Daan
+Additionally, certain Qualcomm platforms support Auto Hibern8 (AH8), where
+the UFS controller autonomously de-asserts clk_req signals to the GCC
+during Hibern8 state. Enabling this mechanism allows the clock controller
+to gate unused clocks, providing meaningful power savings. Patch 2/2 adds
+support for enabling this feature as recommended by the Hardware
+Programming Guidelines.
 
-On Wed, 22 Apr 2026 at 04:01, Martin K. Petersen
-<martin.petersen@oracle.com> wrote:
->
->
-> Daan,
->
-> > The writeable check in get_capabilities() includes CDC_MRW_W and
-> > CDC_RAM in its bitmask, but these capabilities are not determined from
-> > the MODE SENSE capabilities page. They require the SCSI GET
-> > CONFIGURATION command, which is only issued later by
-> > cdrom_open_write() at device open time.
->
-> Reviewing this involved quite a bit of digging through ancient specs...
->
-> I don't particularly like how that decision process is split between
-> sr.c and cdrom.c.
->
-> My preference would be to defer setting the device writable state until
-> after GET CONFIGURATION has been called in cdrom.c.
->
-> --
-> Martin K. Petersen
+---
+changes from V1
+1) Addressed Shawn Lin's comments to fix comment to connected lanes.
+2) Addressed Bart's comments to remove warning and trigger failure
+   incase of lane mismatch.
+
+changes from V2:
+1) Addressed Shawn's comments to fix commit text.
+2) Addressed Bart's comments to remove variable initializations and
+   indentation fix.
+
+changes from V3:
+1) Addressed Manivannan's comments to remove extra comment and return
+   logic.
+
+changes from V4:
+1) Addressed Manivannan's comments to fix indentation and return
+   handling.
+
+Palash Kambar (2):
+  ufs: core: Configure only active lanes during link
+  ufs: ufs-qcom: Enable Auto Hibern8 clock request support
+
+ drivers/ufs/core/ufshcd.c   | 35 +++++++++++++++++++++++++++++++++++
+ drivers/ufs/host/ufs-qcom.c | 10 ++++++++++
+ drivers/ufs/host/ufs-qcom.h | 11 +++++++++++
+ 3 files changed, 56 insertions(+)
+
+-- 
+2.34.1
+
