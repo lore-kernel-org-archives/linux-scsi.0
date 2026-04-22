@@ -1,119 +1,106 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 86916223DE7;
-	Wed, 22 Apr 2026 16:08:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 13A362FF65F;
+	Wed, 22 Apr 2026 16:12:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776874081; cv=none; b=uaf1tUiGhODVjUMUamV0AM/vqBvZrUcBDb4TSZZT15HzlL034OMsfqS3i2pvgMTGvzd88ZBvCwUqxltwdgvRAsJC2ol5lLUkOOLRfyAWou93EpUiW0Y5Tdltnve0O1IHZCV5+80lxmq9DCMx3dgxEukxwVCOV/9Rc3spoIwhWO0=
+	t=1776874343; cv=none; b=gBAwt7K1WREXjayTUhEjdzl3hnpA2Hgk05R7FqFB3qQVEHjPu4r6VKzA0Lz6wGI9yWNCkr9QSYbgCeHMak+97dVOEOscw+bvkrsiq+pNnATfNOG65Rmntu/VzgZ60x4bi5W9h/koLA9xFO+w/WPVZy/1VLzY1LYx0b1ke1y/Li0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776874081; c=relaxed/simple;
-	bh=VqHvIq4YLcnoBaLcjXcjBeQp30kEHXPChjhpfAKdOpE=;
+	s=arc-20240116; t=1776874343; c=relaxed/simple;
+	bh=TZYnqAuMQONfQUBkdrhbVRyOzRizyFfMXehRIG2dacE=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=d0skVJJuR/kUYPy2GUW4JLjxIvmDePIVJHrfjGare/92axqp0Nsby16YPdqmSMUHM6KsppqnLCfyTqG5eKbm4z/hTYoMbqX8egXq1JELAxamm8IshrrgQJodrJMiA104NuWUsafXj9C7sUqmSKKGoZFmDmHKqk8PJMdDp2WHAm8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qk/CmxwQ; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=Qoh0s+9GklN27OKW5F0NmdDuaRZ8XUjG/uY/n6ESGEpRd3zGrjimsAINzR/c+hTadgV2jscreSTWeScGQFzVZMH+xGiiMW0SI2tsEKqtpxUu1qc8aiNlRTNF0G+sjQZXrJ60RSKMBcMZPRLGl3+uV6BYvxE9xGW3a/0sWnHLuFc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bHISloUa; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qk/CmxwQ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 180D6C19425;
-	Wed, 22 Apr 2026 16:07:57 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bHISloUa"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 16D35C19425;
+	Wed, 22 Apr 2026 16:12:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1776874081;
-	bh=VqHvIq4YLcnoBaLcjXcjBeQp30kEHXPChjhpfAKdOpE=;
+	s=k20201202; t=1776874342;
+	bh=TZYnqAuMQONfQUBkdrhbVRyOzRizyFfMXehRIG2dacE=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=qk/CmxwQPVGiJz1nPNeqAAVdGUCrrg55svk0uUKzNz12MNEG7/AZR68ZsAxrz0RiB
-	 xG/nfHSm74Q/VYtx0CLU4+SBmQOR1F1PO8SghTolQ5+jvMJRu/dTLKrSDgQMHNWewL
-	 ihvmMrCftQxTPCMDJa+1gxxwZfyWbYWpBvUTx/WIQAXq0netbqr7Y8iorqMt4VIvPg
-	 sz4GBtm+oO0Ho5ifi+tJgkaF+at7qZRr03bF0cJce59cIyl/7nRao1jnYY5u0db6Si
-	 kh6fQTaR7zgka3vpi7gIHETOxDLimqqVNmgYF9xGgDUvdPQucADsXyO3xnIH6Mn2Nw
-	 8yMgeKJ0H8Idg==
-Date: Wed, 22 Apr 2026 17:07:55 +0100
-From: Conor Dooley <conor@kernel.org>
-To: Minda Chen <minda.chen@starfivetech.com>
-Cc: Alim Akhtar <alim.akhtar@samsung.com>,
-	Avri Altman <avri.altman@wdc.com>,
-	Bart Van Assche <bvanassche@acm.org>,
-	Sai Krishna Potthuri <sai.krishna.potthuri@amd.com>,
-	Ajay Neeli <ajay.neeli@amd.com>,
-	"James E . J . Bottomley" <James.Bottomley@hansenpartnership.com>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	Pedro Sousa <pedrom.sousa@synopsys.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Subject: Re: [PATCH v1 1/3] scsi: ufs: dt-bindings: starfive: Add UFS Host
- Controller for JHB100 soc
-Message-ID: <20260422-tighten-baritone-bc216c670275@spud>
-References: <20260421091215.120632-1-minda.chen@starfivetech.com>
- <20260421091215.120632-2-minda.chen@starfivetech.com>
- <20260421-appetite-vowel-ce0837f5625b@spud>
- <SH0PR01MB08588CCE01874CEC5FBEF0D4E62D2@SH0PR01MB0858.CHNPR01.prod.partner.outlook.cn>
+	b=bHISloUaOKkygHwIfZtXscLkyPdmAh0VN3l1QPbaSyFqGw7us5/59cj5RtmCrrFGJ
+	 euoTFhJFPrWzjiCF3liYm7ukPi+HI6OItEhG2YuKQHV8KKrztfqmVHsQ0jNg+c5+iI
+	 BNknI8fWtyki2mokKx2rUmKiZZf+WoH6rh5AHQ44IAMpj5I0VuHivEqcZNNDFPPbfI
+	 BEKMwE2dEwCGvpROsyxl+1v8lz4pB347wiZDY9JTdlzblq37zsIGiNW9Uvb2QhvJNv
+	 tucodMbOjOGqiracGxI9GGFjRxdovBrh1zoI7lnXYhVxPd0cnNRTCzl9GW+ndtdBAX
+	 KEwyt9slDBWTA==
+Date: Wed, 22 Apr 2026 21:42:11 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: palash.kambar@oss.qualcomm.com
+Cc: James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com, 
+	linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	shawn.lin@rock-chips.com, bvanassche@acm.org, nitin.rawat@oss.qualcomm.com
+Subject: Re: [PATCH V5 0/2] Add post change sequence for link start notify
+Message-ID: <anieqjzuel6lnrjfkckalb5p7u43d73tttapif5nwkjor57bnt@k7wzwkln4bmt>
+References: <20260422114939.2901925-1-palash.kambar@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-	protocol="application/pgp-signature"; boundary="sJ5MKeWHqe7LrEf3"
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <SH0PR01MB08588CCE01874CEC5FBEF0D4E62D2@SH0PR01MB0858.CHNPR01.prod.partner.outlook.cn>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260422114939.2901925-1-palash.kambar@oss.qualcomm.com>
 
+On Wed, Apr 22, 2026 at 05:19:37PM +0530, palash.kambar@oss.qualcomm.com wrote:
+> From: Palash Kambar <palash.kambar@oss.qualcomm.com>
+> 
+> This patch series introduces two updates to the UFS subsystem aimed at
+> improving link stability and power efficiency on platforms using the
+> Qualcomm UFS host controller.
+> 
+> During link startup, the number of connected TX/RX lanes discovered may be
+> fewer than the lanes specified in the device tree. The current UFS core
+> driver configures all DT-defined lanes unconditionally, which can lead to
+> mismatches during power mode changes. Patch 1/2 ensures to fail on this.
+> 
+> Additionally, certain Qualcomm platforms support Auto Hibern8 (AH8), where
+> the UFS controller autonomously de-asserts clk_req signals to the GCC
+> during Hibern8 state. Enabling this mechanism allows the clock controller
+> to gate unused clocks, providing meaningful power savings. Patch 2/2 adds
+> support for enabling this feature as recommended by the Hardware
+> Programming Guidelines.
+> 
+> ---
+> changes from V1
+> 1) Addressed Shawn Lin's comments to fix comment to connected lanes.
+> 2) Addressed Bart's comments to remove warning and trigger failure
+>    incase of lane mismatch.
+> 
+> changes from V2:
+> 1) Addressed Shawn's comments to fix commit text.
+> 2) Addressed Bart's comments to remove variable initializations and
+>    indentation fix.
+> 
+> changes from V3:
+> 1) Addressed Manivannan's comments to remove extra comment and return
+>    logic.
+> 
+> changes from V4:
+> 1) Addressed Manivannan's comments to fix indentation and return
+>    handling.
 
---sJ5MKeWHqe7LrEf3
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+And you dropped all tags given in v3 :(
 
-On Wed, Apr 22, 2026 at 11:04:22AM +0000, Minda Chen wrote:
->=20
->=20
-> >=20
-> > On Tue, Apr 21, 2026 at 05:12:13PM +0800, Minda Chen wrote:
-> > > Add devicetree document for UFS Host Controller StarFive JHB100 SoC.
-> > > The UFS controller is based on the Synopsys DesignWare UFS controller.
-> > >
-> > > Signed-off-by: Minda Chen <minda.chen@starfivetech.com>
-> > > ---
-> > >  .../devicetree/bindings/ufs/starfive,ufs.yaml | 76 +++++++++++++++++=
-++
-> > >  MAINTAINERS                                   |  5 ++
-> > >  2 files changed, 81 insertions(+)
-> > >  create mode 100644
-> > > Documentation/devicetree/bindings/ufs/starfive,ufs.yaml
-> > >
-> > > diff --git a/Documentation/devicetree/bindings/ufs/starfive,ufs.yaml
-> > > b/Documentation/devicetree/bindings/ufs/starfive,ufs.yaml
-> > > new file mode 100644
-> > > index 000000000000..c408973dd0ce
-> > > --- /dev/null
-> > > +++ b/Documentation/devicetree/bindings/ufs/starfive,ufs.yaml
-> >=20
-> > Filename should be starfive,jhb100-ufs.
-> >=20
-> Thanks. Conor. I see some vendors's dt-binding doc without IC name
-> because ufs host controller registers are standard. So I think if we(Star=
-Five) change
-> IP vendor will still using the same driver files and dt doc. =20
+- Mani
 
-Other than lack of oversight or age of the bindings, there's no real
-reason for filenames not matching the compatible. UFS isn't special
-here.
+> 
+> Palash Kambar (2):
+>   ufs: core: Configure only active lanes during link
+>   ufs: ufs-qcom: Enable Auto Hibern8 clock request support
+> 
+>  drivers/ufs/core/ufshcd.c   | 35 +++++++++++++++++++++++++++++++++++
+>  drivers/ufs/host/ufs-qcom.c | 10 ++++++++++
+>  drivers/ufs/host/ufs-qcom.h | 11 +++++++++++
+>  3 files changed, 56 insertions(+)
+> 
+> -- 
+> 2.34.1
+> 
 
-> If the scsi UFS maintainer no comments to this I will change this.
-
---sJ5MKeWHqe7LrEf3
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iHUEABYKAB0WIQRh246EGq/8RLhDjO14tDGHoIJi0gUCaejyWwAKCRB4tDGHoIJi
-0q6KAQDwVEx/MZiyLnbXpok/zxt7rCs8XfVvQ1CedHhQZeaJNAEAgyQyONAgAn8q
-S3A/nD16WM25/6QTLE//peQCSZPA+wg=
-=Ge0L
------END PGP SIGNATURE-----
-
---sJ5MKeWHqe7LrEf3--
+-- 
+மணிவண்ணன் சதாசிவம்
