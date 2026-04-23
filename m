@@ -1,194 +1,320 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.3])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A67C11E89C
-	for <linux-scsi@vger.kernel.org>; Thu, 23 Apr 2026 05:59:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C91592F6596;
+	Thu, 23 Apr 2026 07:29:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.3
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776923990; cv=none; b=RSxqCzCr/F2VusxzqQLjxvm1jBkYYhtl6BSu0Au3kHBz57reyJEMLvCcPztWDqk9ShLSnwLDECBR/KmphL0mAhVWTBSubdI/13MQxWVnW1OUlyGKMDbIZ8Vzzme2I/PzzTcQrKejWi30/2GiWC4FN2/en/mg3UoM15Xk3ih9w6g=
+	t=1776929402; cv=none; b=T+9pILRXR07mYZ6637DsSqZ10Ef1d+ySVSOlX5U001doFGh29WLByuR3AjoslhXjwJEdm7W8rBOxU+6EoePITgC/bIQqwtIcUUhPmX73CYkc5JSL25Q45wZ3g/E0ro3yssdlTr0SULe3/CQ9b1jCwH4y2zZHMJEAUi8WZA1dyco=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776923990; c=relaxed/simple;
-	bh=8bFKWayiOD8BO35QIE783r7n0Cddq+lbSeqnN278Nuc=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=BjKAGSVtFmIPO0gRdLzxA14UH9nUXtPQkwvNLWwnhutZ7X13RUAnWzh54n8oeeRdShfQqcNLa8JP6ipFsvpcTQWTEEEf7wpHkMiyF5FPWjbUR7RS/QW6KKQ+8wTIVxig8HyK7mxZxKnZ838VTKreE92G/cMgXUshUZrteWRCRfw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=hlwPNmMF; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=XsUWpkk8; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	s=arc-20240116; t=1776929402; c=relaxed/simple;
+	bh=yo8fG/qXz7Jdmem42yieCkMHYPxwpZndyUqM+3OyGVc=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version:Content-Type; b=XPde4SM/ipKsD3yvK61DEGturXWUlBkBHtRWTVwOx65adit3YBGpoLuQb+KgO57KxmMQZxIk7CKJrJlTGOKEwfOQi181IEuExQRhyoYfD7LuPwbsMxbOe/168Esw+eYfJygPtthB9PdCERQm4kX3zXHRRFgmndwIJuqsYViZIdQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=bS9B5PlZ; arc=none smtp.client-ip=117.135.210.3
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="hlwPNmMF";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="XsUWpkk8"
-Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 63N59S5F2630088
-	for <linux-scsi@vger.kernel.org>; Thu, 23 Apr 2026 05:59:48 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:date:from:in-reply-to:message-id
-	:mime-version:references:subject:to; s=qcppdkim1; bh=G/YQ77xR2B2
-	MXHan+TOEUNPPbNxu6iwvshjfvxmP7Bg=; b=hlwPNmMFCnpXU6+x4RXcvqp5M4D
-	jqj0zosxJxuUtOfg4J3ORFSsXd6V6IgPFBwwIS/V9LBkhSRTHgcIF4+X8YMA277g
-	xV3CvXYpOfY6FfptYZS0Niz1CANCejKkNViazA/WoexrFkFB4JSkNB492w9BZ4C6
-	IwUuJ8zQc6JDKxTz0OXbFtbx3reaEPuW3UEJYdNaVWm3D0Zos8JZvX+0U36LvGZB
-	BAtdXejnAjG2wl2Bs5CS5ZVxOCUZ0E3rkBxO6jhGqTe1eRy74VCFizT2gSheIBkg
-	rJ8Z+c1fxEdIKMGG8AhDNoTOq41WxuCqp+0D8yDJzToPXRlzCdGYIX01vmw==
-Received: from mail-pj1-f72.google.com (mail-pj1-f72.google.com [209.85.216.72])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4dq35ra00n-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Thu, 23 Apr 2026 05:59:48 +0000 (GMT)
-Received: by mail-pj1-f72.google.com with SMTP id 98e67ed59e1d1-35daf3d3030so6698576a91.1
-        for <linux-scsi@vger.kernel.org>; Wed, 22 Apr 2026 22:59:48 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1776923988; x=1777528788; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=G/YQ77xR2B2MXHan+TOEUNPPbNxu6iwvshjfvxmP7Bg=;
-        b=XsUWpkk8i6Q9xIZNjW9B7gH2nOtOBwW3ugYXdgLWrf7hAZ3p9kB04r/YbB0zaXBUwn
-         kq7Y/V8YaYFPPEbJ7fPk+Rsij9KYxXJv4juJa6cDGdLdBC3vC9Cq5iBFGCw7gOuXT7KH
-         OGTpHUXAdxIfhhHPFgXMG9o/qGWo/J5h+CrZYErNMvPZv2FvQjwncuWdXBGj1hbFwM83
-         E0wp+U7tGZKakZHietMVTIg15mlYVwSwC2SgSSQJYB/hFMupHxv4qlQbvyGArnKGb8IQ
-         FV/osBarLDPUrVsvqWrxFEHLOynFbU3OhM4RoXmqjP9kOzKcLqcY5oAITdzGegWYB+Zt
-         fVrA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1776923988; x=1777528788;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=G/YQ77xR2B2MXHan+TOEUNPPbNxu6iwvshjfvxmP7Bg=;
-        b=qt4JPK8Bo3twlxLkJRQOS+KnwGPZJkx1l/vFk2G2frGYWtRAhx95A74tpkyXGJjCUT
-         qgM9C5IzJep4LSgo+ysRdwir2v91Fc0jpbb6A1I4s9EPrdUyvP6cy24Ms/XGlcqqC9Wv
-         IKFCdmWvtRpOEEakEdRIgFSJ8wM4Ph5KGVdq8FBTfWgDXzDvFh1cZkmDkDtcGNoIewBG
-         /HVKI1ei6wodPC+vYJYQK7q0GoV+eWPNhN4HlNDM7SoHfbvM8YI+3v34boeNX8iJjVok
-         AY3mre2VIgfJRPwi6uDccxB49g+Ojrxwgowf0pYL6/meEB8fsZ8QvHf6QDjeHa9Z6XLf
-         Ittw==
-X-Forwarded-Encrypted: i=1; AFNElJ+Wwc7YEYZjO3LHk7LNmfq64MkT2F1sGVFpAcNCM8FqT4undoPX+lnIRnmMMWIowz4SRrB5CVwud/RF@vger.kernel.org
-X-Gm-Message-State: AOJu0Yx5Doy5a4yq3LSxSVa0qTRlyTrBNitWoVNBBZ077Tr2w7kz5/QL
-	n6+Vh/eb9/EMwzKNGhoV6on8vftPqxrN5XxVXuFQP0t8jDfd5M82ZsWfTWYRr30ic20RJ8VCDsR
-	G7+1S5R81cnyg07zbCwlF4yZDrBEMZsKX5R+rDq+gQM4+Gjd9kYvlob9V9r6bALWl
-X-Gm-Gg: AeBDiesIVzQQE/OncNgkPPEoerHFve3gkn+H6rL0nI9wmLlq9CuUDLwYeldL3wxa9z6
-	Rb4rt8SogVZl4/AMKBBN/PL23wVYQC8HXGGwEyDqCkx0UKtLvt568YDo0MRnuB8T3FOEBFVI+Yc
-	cf/AA8RA218Rhj7wVMQTRxFdx65fN0KXICk0ffxj5U87Tnyjlz0ylyRjAn2SAeAyMC9SZpUd2m1
-	xGo/G1JJft9pWki2t8vQXxp1fyvXLLT7alvVQ72mt9kEdJ4cGvFF4D7zcZUMDU5dSnLYX+R6nLm
-	YCMZsDEoUglOOP9ifGnYcdcFxWBTf2NpIM4PyLLMnv4bTIcPBV1H+FxBdhQU2GztvBins8qnOba
-	pBXvan8uJ02RqR2Vio8ox1Z6hMNCTlJ6eXaAp4nOlhbDowdEpVR7DObXrQbKWOdGQ
-X-Received: by 2002:a17:90b:33c7:b0:35e:577a:73a9 with SMTP id 98e67ed59e1d1-361404ae4e1mr27534198a91.26.1776923987689;
-        Wed, 22 Apr 2026 22:59:47 -0700 (PDT)
-X-Received: by 2002:a17:90b:33c7:b0:35e:577a:73a9 with SMTP id 98e67ed59e1d1-361404ae4e1mr27534140a91.26.1776923986748;
-        Wed, 22 Apr 2026 22:59:46 -0700 (PDT)
-Received: from hu-pkambar-hyd.qualcomm.com ([202.46.22.19])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-361418c3944sm23461841a91.8.2026.04.22.22.59.43
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 22 Apr 2026 22:59:46 -0700 (PDT)
-From: palash.kambar@oss.qualcomm.com
-To: mani@kernel.org, James.Bottomley@HansenPartnership.com,
-        martin.petersen@oracle.com
-Cc: linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, bvanassche@acm.org,
-        shawn.lin@rock-chips.com, nitin.rawat@oss.qualcomm.com,
-        Palash Kambar <palash.kambar@oss.qualcomm.com>
-Subject: [PATCH V6 2/2] ufs: ufs-qcom: Enable Auto Hibern8 clock request support
-Date: Thu, 23 Apr 2026 11:29:14 +0530
-Message-Id: <20260423055914.3566684-3-palash.kambar@oss.qualcomm.com>
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="bS9B5PlZ"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version:
+	Content-Type; bh=ZqmFIZQNzLju/LPLC25sB/+v3To0tZhI3EY/5leSH8E=;
+	b=bS9B5PlZMRciiod03TuWp04VXfwLIu3Pd85DNgPwbkBibmCh8ZAVl9iMLQMGmv
+	hPJYZo7UzWGZHEsZuHr9ud0C25/Fsx7zCzaoNIAqrdcgKQ9rbpvSMRkwnt/9yNed
+	hTsUh4JbEWS+GwPQ7+wA+SU+ljUlm9Ix0mxaSAIiL9W2o=
+Received: from pek-lpg-core5.wrs.com (unknown [])
+	by gzga-smtp-mtada-g1-3 (Coremail) with SMTP id _____wD3_9wVyulpx2gVBQ--.33882S2;
+	Thu, 23 Apr 2026 15:28:22 +0800 (CST)
+From: Robert Garcia <rob_garcia@163.com>
+To: stable@vger.kernel.org,
+	=?UTF-8?q?Andr=C3=A9=20Draszik?= <andre.draszik@linaro.org>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
+	Robert Garcia <rob_garcia@163.com>,
+	Bean Huo <beanhuo@micron.com>,
+	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+	Eric Biggers <ebiggers@kernel.org>,
+	Alim Akhtar <alim.akhtar@samsung.com>,
+	Avri Altman <avri.altman@wdc.com>,
+	Bart Van Assche <bvanassche@acm.org>,
+	"James E . J . Bottomley" <jejb@linux.ibm.com>,
+	Sasha Levin <sashal@kernel.org>,
+	Peter Wang <peter.wang@mediatek.com>,
+	Wang Shuaiwei <wangshuaiwei1@xiaomi.com>,
+	Eric Biggers <ebiggers@google.com>,
+	Manish Pandey <quic_mapa@quicinc.com>,
+	Brian Kao <powenkao@google.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Adrian Hunter <adrian.hunter@intel.com>,
+	Archana Patni <archana.patni@intel.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Jens Axboe <axboe@kernel.dk>,
+	Ulf Hansson <ulf.hansson@linaro.org>,
+	Mike Snitzer <snitzer@redhat.com>,
+	Satya Tangirala <satyat@google.com>,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 6.1.y] scsi: ufs: core: Fix use-after free in init error and remove paths
+Date: Thu, 23 Apr 2026 15:28:21 +0800
+Message-Id: <20260423072821.3454022-1-rob_garcia@163.com>
 X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20260423055914.3566684-1-palash.kambar@oss.qualcomm.com>
-References: <20260423055914.3566684-1-palash.kambar@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNDIzMDA1MyBTYWx0ZWRfX0cJI0TtCWxeq
- Xuvkc67TN5EVxbIOtONGS47NGPu0eLb1ZF9skXuyTcKBdC8KzmH216qol63ZL9q1H/TYQuMzZwP
- BzFmZ17gPFsHjIrZmI2Yw1oU9nIaSnb5t2a8W2GR9k+YmH0tDiv1NJdqKAmkoMSCm76RG6ia50W
- UfS0Mtk0fRiOm8YlxdGAzsUDDkoFeH1bdtpJZk31WhK9J6yvfBuJwyvC+F2ekOnIG8L/chmQvt7
- OLiL76CGBG0aFwkuVawPM4eECoUWd4IZL17nFsuZUdZyRgX6KxWGrHLn5tyCoz0ox73VQkAEfzj
- xQbxWEUzDalD1mKxTGT2vsH4gVgR7oqjSTSs1d8X2ZR2z2MRZfyuTAhRp9nfiJwf/t6T0UOIwUc
- XCr1PFnQRsKc30iJ756Cx4AQ+0ut9xW00PLWQL2YxeWq7gM8DwrlTw/N3oLg9jI1Vi0nnkoT+Nc
- SlRh/HynHUHyTHX/uNQ==
-X-Proofpoint-ORIG-GUID: nOiIQDz7sE5FnDfXAkrcjfarfFlEaTEa
-X-Proofpoint-GUID: nOiIQDz7sE5FnDfXAkrcjfarfFlEaTEa
-X-Authority-Analysis: v=2.4 cv=f5J4wuyM c=1 sm=1 tr=0 ts=69e9b554 cx=c_pps
- a=RP+M6JBNLl+fLTcSJhASfg==:117 a=fChuTYTh2wq5r3m49p7fHw==:17
- a=A5OVakUREuEA:10 a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=u7WPNUs3qKkmUXheDGA7:22 a=ZpdpYltYx_vBUK5n70dp:22 a=EUspDBNiAAAA:8
- a=VwQbUJbxAAAA:8 a=gce-7N_bzMkFAa6Kq10A:9 a=iS9zxrgQBfv6-_F4QbHw:22
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-04-23_01,2026-04-21_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- bulkscore=0 priorityscore=1501 phishscore=0 adultscore=0 malwarescore=0
- spamscore=0 suspectscore=0 impostorscore=0 lowpriorityscore=0 clxscore=1015
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2604200000 definitions=main-2604230053
+X-CM-TRANSID:_____wD3_9wVyulpx2gVBQ--.33882S2
+X-Coremail-Antispam: 1Uf129KBjvJXoWxtw13XFWfGw4DWryDKrWkCrg_yoW3uFykpF
+	WYqay5Ar4kGr42gr1UJw48CFyrKw4xG345GrZ2934ruw1jkFn3Xa4vyF109F15GFZxZ3WU
+	XFWjyw48u3W7XaDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0zRewZ7UUUUU=
+X-CM-SenderInfo: 5uresw5dufxti6rwjhhfrp/xtbDAReM92npyhdG-gAA3I
 
-From: Palash Kambar <palash.kambar@oss.qualcomm.com>
+From: André Draszik <andre.draszik@linaro.org>
 
-On platforms that support Auto Hibern8 (AH8), the UFS controller can
-autonomously de-assert clk_req signals to the Global Clock Controller
-when entering the Hibern8 state. This allows Global Clock Controller
-(GCC) to gate unused clocks, improving power efficiency.
+[ Upstream commit f8fb2403ddebb5eea0033d90d9daae4c88749ada ]
 
-Enable the Clock Request feature by setting the UFS_HW_CLK_CTRL_EN
-bit in the UFS_AH8_CFG register, as recommended in the Hardware
-Programming Guidelines.
+devm_blk_crypto_profile_init() registers a cleanup handler to run when
+the associated (platform-) device is being released. For UFS, the
+crypto private data and pointers are stored as part of the ufs_hba's
+data structure 'struct ufs_hba::crypto_profile'. This structure is
+allocated as part of the underlying ufshcd and therefore Scsi_host
+allocation.
 
-Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
-Signed-off-by: Palash Kambar <palash.kambar@oss.qualcomm.com>
+During driver release or during error handling in ufshcd_pltfrm_init(),
+this structure is released as part of ufshcd_dealloc_host() before the
+(platform-) device associated with the crypto call above is released.
+Once this device is released, the crypto cleanup code will run, using
+the just-released 'struct ufs_hba::crypto_profile'. This causes a
+use-after-free situation:
+
+  Call trace:
+   kfree+0x60/0x2d8 (P)
+   kvfree+0x44/0x60
+   blk_crypto_profile_destroy_callback+0x28/0x70
+   devm_action_release+0x1c/0x30
+   release_nodes+0x6c/0x108
+   devres_release_all+0x98/0x100
+   device_unbind_cleanup+0x20/0x70
+   really_probe+0x218/0x2d0
+
+In other words, the initialisation code flow is:
+
+  platform-device probe
+    ufshcd_pltfrm_init()
+      ufshcd_alloc_host()
+        scsi_host_alloc()
+          allocation of struct ufs_hba
+          creation of scsi-host devices
+    devm_blk_crypto_profile_init()
+      devm registration of cleanup handler using platform-device
+
+and during error handling of ufshcd_pltfrm_init() or during driver
+removal:
+
+  ufshcd_dealloc_host()
+    scsi_host_put()
+      put_device(scsi-host)
+        release of struct ufs_hba
+  put_device(platform-device)
+    crypto cleanup handler
+
+To fix this use-after free, change ufshcd_alloc_host() to register a
+devres action to automatically cleanup the underlying SCSI device on
+ufshcd destruction, without requiring explicit calls to
+ufshcd_dealloc_host(). This way:
+
+    * the crypto profile and all other ufs_hba-owned resources are
+      destroyed before SCSI (as they've been registered after)
+    * a memleak is plugged in tc-dwc-g210-pci.c remove() as a
+      side-effect
+    * EXPORT_SYMBOL_GPL(ufshcd_dealloc_host) can be removed fully as
+      it's not needed anymore
+    * no future drivers using ufshcd_alloc_host() could ever forget
+      adding the cleanup
+
+Fixes: cb77cb5abe1f ("blk-crypto: rename blk_keyslot_manager to blk_crypto_profile")
+Fixes: d76d9d7d1009 ("scsi: ufs: use devm_blk_ksm_init()")
+Cc: stable@vger.kernel.org
+Signed-off-by: André Draszik <andre.draszik@linaro.org>
+Link: https://lore.kernel.org/r/20250124-ufshcd-fix-v4-1-c5d0144aae59@linaro.org
+Reviewed-by: Bean Huo <beanhuo@micron.com>
+Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Acked-by: Eric Biggers <ebiggers@kernel.org>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+[ Delete modifications about ufshcd_parse_operating_points() for it's added from
+commit 72208ebe181e3("scsi: ufs: core: Add support for parsing OPP")
+and that in ufshcd_pltfrm_remove() for it's added from commit
+897df60c16d54("scsi: ufs: pltfrm: Dellocate HBA during ufshcd_pltfrm_remove()"). ]
+Signed-off-by: Robert Garcia <rob_garcia@163.com>
 ---
- drivers/ufs/host/ufs-qcom.c | 10 ++++++++++
- drivers/ufs/host/ufs-qcom.h | 11 +++++++++++
- 2 files changed, 21 insertions(+)
+ drivers/ufs/core/ufshcd.c        | 31 +++++++++++++++++++++----------
+ drivers/ufs/host/ufshcd-pci.c    |  2 --
+ drivers/ufs/host/ufshcd-pltfrm.c | 25 ++++++++-----------------
+ include/ufs/ufshcd.h             |  1 -
+ 4 files changed, 29 insertions(+), 30 deletions(-)
 
-diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-index 8ebee0cc5313..ed4c531e1fb2 100644
---- a/drivers/ufs/host/ufs-qcom.c
-+++ b/drivers/ufs/host/ufs-qcom.c
-@@ -683,6 +683,13 @@ static int ufs_qcom_cfg_timers(struct ufs_hba *hba, bool is_pre_scale_up, unsign
- 	return 0;
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index a39ffc62d88a..f8f64b8f111c 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -9661,16 +9661,6 @@ void ufshcd_remove(struct ufs_hba *hba)
+ }
+ EXPORT_SYMBOL_GPL(ufshcd_remove);
+ 
+-/**
+- * ufshcd_dealloc_host - deallocate Host Bus Adapter (HBA)
+- * @hba: pointer to Host Bus Adapter (HBA)
+- */
+-void ufshcd_dealloc_host(struct ufs_hba *hba)
+-{
+-	scsi_host_put(hba->host);
+-}
+-EXPORT_SYMBOL_GPL(ufshcd_dealloc_host);
+-
+ /**
+  * ufshcd_set_dma_mask - Set dma mask based on the controller
+  *			 addressing capability
+@@ -9689,11 +9679,25 @@ static int ufshcd_set_dma_mask(struct ufs_hba *hba)
+ 	return dma_set_mask_and_coherent(hba->dev, DMA_BIT_MASK(32));
  }
  
-+static void ufs_qcom_link_startup_post_change(struct ufs_hba *hba)
++/**
++ * ufshcd_devres_release - devres cleanup handler, invoked during release of
++ *			   hba->dev
++ * @host: pointer to SCSI host
++ */
++static void ufshcd_devres_release(void *host)
 +{
-+	if (ufshcd_is_auto_hibern8_supported(hba))
-+		ufshcd_rmwl(hba, UFS_HW_CLK_CTRL_EN, UFS_HW_CLK_CTRL_EN,
-+			    UFS_AH8_CFG);
++	scsi_host_put(host);
 +}
 +
- static int ufs_qcom_link_startup_notify(struct ufs_hba *hba,
- 					enum ufs_notify_change_status status)
- {
-@@ -708,6 +715,9 @@ static int ufs_qcom_link_startup_notify(struct ufs_hba *hba,
- 		 */
- 		err = ufshcd_disable_host_tx_lcc(hba);
- 
-+		break;
-+	case POST_CHANGE:
-+		ufs_qcom_link_startup_post_change(hba);
- 		break;
- 	default:
- 		break;
-diff --git a/drivers/ufs/host/ufs-qcom.h b/drivers/ufs/host/ufs-qcom.h
-index 380d02333d38..f19def37c86f 100644
---- a/drivers/ufs/host/ufs-qcom.h
-+++ b/drivers/ufs/host/ufs-qcom.h
-@@ -228,6 +228,17 @@ enum {
+ /**
+  * ufshcd_alloc_host - allocate Host Bus Adapter (HBA)
+  * @dev: pointer to device handle
+  * @hba_handle: driver private handle
+  * Returns 0 on success, non-zero value on failure
++ *
++ * NOTE: There is no corresponding ufshcd_dealloc_host() because this function
++ * keeps track of its allocations using devres and deallocates everything on
++ * device removal automatically.
   */
- #define NUM_TX_R1W1 13
+ int ufshcd_alloc_host(struct device *dev, struct ufs_hba **hba_handle)
+ {
+@@ -9715,6 +9719,13 @@ int ufshcd_alloc_host(struct device *dev, struct ufs_hba **hba_handle)
+ 		err = -ENOMEM;
+ 		goto out_error;
+ 	}
++
++	err = devm_add_action_or_reset(dev, ufshcd_devres_release,
++				       host);
++	if (err)
++		return dev_err_probe(dev, err,
++				     "failed to add ufshcd dealloc action\n");
++
+ 	host->nr_maps = HCTX_TYPE_POLL + 1;
+ 	hba = shost_priv(host);
+ 	hba->host = host;
+diff --git a/drivers/ufs/host/ufshcd-pci.c b/drivers/ufs/host/ufshcd-pci.c
+index 9d4b0bda0819..9efe0ad9da8f 100644
+--- a/drivers/ufs/host/ufshcd-pci.c
++++ b/drivers/ufs/host/ufshcd-pci.c
+@@ -629,7 +629,6 @@ static void ufshcd_pci_remove(struct pci_dev *pdev)
+ 	pm_runtime_forbid(&pdev->dev);
+ 	pm_runtime_get_noresume(&pdev->dev);
+ 	ufshcd_remove(hba);
+-	ufshcd_dealloc_host(hba);
+ }
  
-+/* bit definitions for UFS_AH8_CFG register */
-+#define CC_UFS_SYS_CLK_REQ_EN          BIT(2)
-+#define CC_UFS_ICE_CORE_CLK_REQ_EN     BIT(3)
-+#define CC_UFS_UNIPRO_CORE_CLK_REQ_EN  BIT(4)
-+#define CC_UFS_AUXCLK_REQ_EN           BIT(5)
-+
-+#define UFS_HW_CLK_CTRL_EN	(CC_UFS_SYS_CLK_REQ_EN |\
-+				CC_UFS_ICE_CORE_CLK_REQ_EN |\
-+				CC_UFS_UNIPRO_CORE_CLK_REQ_EN |\
-+				CC_UFS_AUXCLK_REQ_EN)
-+
- static inline void
- ufs_qcom_get_controller_revision(struct ufs_hba *hba,
- 				 u8 *major, u16 *minor, u16 *step)
+ /**
+@@ -674,7 +673,6 @@ ufshcd_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	err = ufshcd_init(hba, mmio_base, pdev->irq);
+ 	if (err) {
+ 		dev_err(&pdev->dev, "Initialization failed\n");
+-		ufshcd_dealloc_host(hba);
+ 		return err;
+ 	}
+ 
+diff --git a/drivers/ufs/host/ufshcd-pltfrm.c b/drivers/ufs/host/ufshcd-pltfrm.c
+index 5739ff007828..44668edc3224 100644
+--- a/drivers/ufs/host/ufshcd-pltfrm.c
++++ b/drivers/ufs/host/ufshcd-pltfrm.c
+@@ -343,21 +343,17 @@ int ufshcd_pltfrm_init(struct platform_device *pdev,
+ 	struct device *dev = &pdev->dev;
+ 
+ 	mmio_base = devm_platform_ioremap_resource(pdev, 0);
+-	if (IS_ERR(mmio_base)) {
+-		err = PTR_ERR(mmio_base);
+-		goto out;
+-	}
++	if (IS_ERR(mmio_base))
++		return PTR_ERR(mmio_base);
+ 
+ 	irq = platform_get_irq(pdev, 0);
+-	if (irq < 0) {
+-		err = irq;
+-		goto out;
+-	}
++	if (irq < 0)
++		return irq;
+ 
+ 	err = ufshcd_alloc_host(dev, &hba);
+ 	if (err) {
+ 		dev_err(dev, "Allocation failed\n");
+-		goto out;
++		return err;
+ 	}
+ 
+ 	hba->vops = vops;
+@@ -366,13 +362,13 @@ int ufshcd_pltfrm_init(struct platform_device *pdev,
+ 	if (err) {
+ 		dev_err(dev, "%s: clock parse failed %d\n",
+ 				__func__, err);
+-		goto dealloc_host;
++		return err;
+ 	}
+ 	err = ufshcd_parse_regulator_info(hba);
+ 	if (err) {
+ 		dev_err(dev, "%s: regulator init failed %d\n",
+ 				__func__, err);
+-		goto dealloc_host;
++		return err;
+ 	}
+ 
+ 	ufshcd_init_lanes_per_dir(hba);
+@@ -380,18 +376,13 @@ int ufshcd_pltfrm_init(struct platform_device *pdev,
+ 	err = ufshcd_init(hba, mmio_base, irq);
+ 	if (err) {
+ 		dev_err(dev, "Initialization failed\n");
+-		goto dealloc_host;
++		return err;
+ 	}
+ 
+ 	pm_runtime_set_active(dev);
+ 	pm_runtime_enable(dev);
+ 
+ 	return 0;
+-
+-dealloc_host:
+-	ufshcd_dealloc_host(hba);
+-out:
+-	return err;
+ }
+ EXPORT_SYMBOL_GPL(ufshcd_pltfrm_init);
+ 
+diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
+index 54bcbfe66163..db93a86e57ff 100644
+--- a/include/ufs/ufshcd.h
++++ b/include/ufs/ufshcd.h
+@@ -1063,7 +1063,6 @@ static inline void ufshcd_rmwl(struct ufs_hba *hba, u32 mask, u32 val, u32 reg)
+ }
+ 
+ int ufshcd_alloc_host(struct device *, struct ufs_hba **);
+-void ufshcd_dealloc_host(struct ufs_hba *);
+ int ufshcd_hba_enable(struct ufs_hba *hba);
+ int ufshcd_init(struct ufs_hba *, void __iomem *, unsigned int);
+ int ufshcd_link_recovery(struct ufs_hba *hba);
 -- 
 2.34.1
 
