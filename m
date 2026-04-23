@@ -1,142 +1,173 @@
-Received: from mail-wm1-f50.google.com (mail-wm1-f50.google.com [209.85.128.50])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from esa.hc4959-67.iphmx.com (esa.hc4959-67.iphmx.com [139.138.35.140])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 40A3834B183
-	for <linux-scsi@vger.kernel.org>; Thu, 23 Apr 2026 21:06:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.50
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776978378; cv=none; b=avGz7BT4a58dpOrVCtED/yYLH3AeFab8YGNbJzDlbIhHTeJtI5TQI2jfVv/WYV7Ehm81l4+hHr5pRshxZQZHiU6qMKk+u9G0QUItCt4Ye7o6dt4/NVJPpEhFtfNmS07nn9xhwleb7kBMJ2vO2pjEIrl06LsDOFhfDGpsan03wLc=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776978378; c=relaxed/simple;
-	bh=0FwnoU7crsng8ZdY1lihmMOcw4yZIHGTIaj/iUR76Zo=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=At4IXIMPzm8jNZIIBMEoO4FzF11zD/GksckKy5sxV1iRWiCBQJbOm5j7PCd/4dYpk3MAO0A+fg+zJmZ0mczoZXfmCxvCh15AT2b4Nwnry9ESrnRwiT8fwKgefgtCo9CAiDOLJvNbmNCk6hgqgn0JyrkB9intrxEjTchTbyCafh4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=philpotter.co.uk; spf=pass smtp.mailfrom=philpotter.co.uk; dkim=pass (2048-bit key) header.d=philpotter-co-uk.20251104.gappssmtp.com header.i=@philpotter-co-uk.20251104.gappssmtp.com header.b=LqyluZUJ; arc=none smtp.client-ip=209.85.128.50
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=philpotter.co.uk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=philpotter.co.uk
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D0240357A5E;
+	Thu, 23 Apr 2026 21:18:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=139.138.35.140
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1776979103; cv=fail; b=SLAOt5GgZq593LHO5Y2ejSIm+TIcXxJ4QbXunlg4eO89C3+ZnWwi9PKKMuynx+Ql7G+RtBEUN87necQPcZKR1NR9fSU+HppCM9OuCt2IoChww3mVxFuX0KgDnhcT05FbE75Qr5eOPgFeGdWEYf6lmdohkMolDqw109DJlEUhiO0=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1776979103; c=relaxed/simple;
+	bh=D+ddLEWJQBqa3uCcBQVAiPw0d6APCIVyEF+JFAZkcMM=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=uxeFwgawf9UW2hzHr0cnqi3aPyJcH5swEOYuNwabsPDiOQoNj4wAqtXaOZ63INragkZ8D2Xenus17mfdfIHN2zZj4rDwdp2IiEJWUuMvhmTzitmrpuJqfrXNmhClG776ySxdL3ji4t36GYXYnZ3fGweWznJEOO7yq8UUvrAftGw=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=seagate.com; spf=pass smtp.mailfrom=seagate.com; dkim=pass (1024-bit key) header.d=seagate.com header.i=@seagate.com header.b=KH5gKTR0; dkim=pass (1024-bit key) header.d=seagate.com header.i=@seagate.com header.b=PJzuF3l2; arc=fail smtp.client-ip=139.138.35.140
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=seagate.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=seagate.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=philpotter-co-uk.20251104.gappssmtp.com header.i=@philpotter-co-uk.20251104.gappssmtp.com header.b="LqyluZUJ"
-Received: by mail-wm1-f50.google.com with SMTP id 5b1f17b1804b1-4891e86fabeso67092125e9.1
-        for <linux-scsi@vger.kernel.org>; Thu, 23 Apr 2026 14:06:17 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=seagate.com header.i=@seagate.com header.b="KH5gKTR0";
+	dkim=pass (1024-bit key) header.d=seagate.com header.i=@seagate.com header.b="PJzuF3l2"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=philpotter-co-uk.20251104.gappssmtp.com; s=20251104; t=1776978376; x=1777583176; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=9oEVVbYJJp7mcAvHLiflerbUEp4PM9+aREz5+ZVnbHk=;
-        b=LqyluZUJs3rOa2H72QmgULEYCpeLS3M9tPk/IwwqOLBpexwm33lPc2mv3fuj1ZSlhL
-         /uruXMAVSD37FJ+7rugnSSrxJx71OA3ovtUatCCOUEyKAFCo8yifrvIljpzU+HWJ/DN4
-         8oVNnfVUeX7SkD9HhlP32mDjzhvrKIoTVAptCiZ9YbDJ71abMlg09JgF3R0rcyPc1lLk
-         A7jKDTSxop/b0neYPCbZa3bRQDY1bqWI0Z0o64nwB9AaC5PXfpGBEqmCdxVXVK/DRNTm
-         hjxCUJYHN8gwzYHtugKBsi+b+MXWcbqNkM/fgUy0D0S6eH7fasVl3oav4MC3Zo19mvER
-         8qjQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1776978376; x=1777583176;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=9oEVVbYJJp7mcAvHLiflerbUEp4PM9+aREz5+ZVnbHk=;
-        b=fKvgtg4ytyFjJt8fr1F1ncATqHqgxPrehvMcUkyQq68yoHD4vMt1BWb39qsiZ/QKm+
-         gsv24Osx3ZrZzueMDUXeqKzlOZOCRqR4JC0G456GdaJcAjScqekD6xrWFoQL4ZYGy7+m
-         tEdIqgkU0Wf0GpccCR2mJc5nOr39AXYchA5Zc4b973jRHRFB8TSnekT/5rjkQzORqHAc
-         PyDZqcPPGw/9f+W6Lg0HE/Hc1GBCb1YZE2Ahwt7zikadVMdUwmBbgySWgzSM/DrQ8p2I
-         GDYja+mnzm/oGMwiwqdttoqhjcQY511BSZeO6+spM1F5u6qyigdH5/cySF1jedFDfLD5
-         FnVw==
-X-Forwarded-Encrypted: i=1; AFNElJ8/f12tALZa5ZEGMOG+Tw9teYb3P6RUL5jK9jx/CbzLlQ5GyYDLxxOYgz1jVXEt9HDAsuGVX0tiW/EN@vger.kernel.org
-X-Gm-Message-State: AOJu0YxUCg96nq8ItMCNUxq73XsKoB2vyeDzPQeR45hH4G8r9tZk6djj
-	w6Q3IhbveqteTllIg1FGx7N30VDM5RGkPgTvZnioC+4LtP6xmYhv211owfiqVeY599Y=
-X-Gm-Gg: AeBDiet1r0blgSScoY4yKdM9zHp/vm7wAwB4nE2cRgDLBYEDbkyTdgMf5GTTZLwo+EY
-	ZwdQ37FaFZqtM18U/8jvzAzfnKIld5pLxfrrAIE6T5QTRRcJIf1PtwTkvNjqTHhPKNg7A+5VjDJ
-	xEz6quSsEupzFSAVnSZebOqTH6Q7+yOeaUr7ibuzDraUnhiZUIaRGtDtzreTOZtPlFL0xOzFtQH
-	HrDCJUdrjpwR3ZRSKuGi77ztVwO75hz2lnX0pw9KR9Fb70zr5J8yEku0OtovWx8dlQ8WlLlbWFy
-	Dkb+pbLedDHxH8GyLFMYE2I13RNXi7bQdz/2bJsKFlYs5bP0jIGOwJAgWsRoZSJGr7Xde5Rj7om
-	kmp4LSpu9eAEF64gr7E5s844XXPxDrAObhPMWoLY3uI87Gd0Z5Fe7kmIbsvTJpKFqbWHXV17olk
-	vTIPKxBqmGz8vVt6alFBBVTNNt9//EULVZkThUDfwMaYwdh135mgro6fkQ1zKegAM9WF5BZ+i69
-	p4zmDcNGA4zBqBvAA8ydqTDbroPD7w=
-X-Received: by 2002:a05:600c:a105:b0:485:3a03:ceca with SMTP id 5b1f17b1804b1-488fb7826femr289011485e9.23.1776978375112;
-        Thu, 23 Apr 2026 14:06:15 -0700 (PDT)
-Received: from equinox (2.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.6.1.f.d.0.b.8.0.1.0.0.2.ip6.arpa. [2001:8b0:df16::2])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-488ffad20f2sm268386685e9.0.2026.04.23.14.06.14
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 23 Apr 2026 14:06:14 -0700 (PDT)
-Date: Thu, 23 Apr 2026 22:06:12 +0100
-From: Phillip Potter <phil@philpotter.co.uk>
-To: Daan De Meyer <daan.j.demeyer@gmail.com>
-Cc: martin.petersen@oracle.com, James.Bottomley@hansenpartnership.com,
-	axboe@kernel.dk, linux-scsi@vger.kernel.org,
-	linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Daan De Meyer <daan@amutable.com>
-Subject: Re: [PATCH v2] cdrom, scsi: sr: propagate read-only status to block
- layer via set_disk_ro()
-Message-ID: <aeqJxCKP6nm4iZDQ@equinox>
-References: <20260330133403.796330-1-daan@amutable.com>
- <20260422113206.246267-1-daan@amutable.com>
+  d=seagate.com; i=@seagate.com; q=dns/txt; s=stxiport;
+  t=1776979101; x=1808515101;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=I2OMoKjYs4Ciq1M4moPVwI2IEJzEb6etnPWwUK6YDQQ=;
+  b=KH5gKTR0RX7qfnC+yh6bn24hLJqFr6hTEenjtTNNOyTu5oC2eWB4YRyJ
+   x5fxNCDUrcEOlE/mT6s3loXlTg+jWc8c1uDOvCON4lmdPeV3rDDSXQil5
+   Eb9o1Jv+9tvtbSwrodbuNE2yEFaycYuZKA5FKXyc0khRHuFzZI/YUPUk9
+   s=;
+X-CSE-ConnectionGUID: O1ogCDIUSVGnLx4sqfvGJw==
+X-CSE-MsgGUID: e4843UIZTAqwTrMAxn5fyA==
+Received: from mail-bn1pr07cu00300.outbound.protection.outlook.com (HELO BN1PR07CU003.outbound.protection.outlook.com) ([40.93.12.0])
+  by ob1.hc4959-67.iphmx.com with ESMTP/TLS/TLS_AES_256_GCM_SHA384; 23 Apr 2026 14:18:20 -0700
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=IjWXVECBPRCCEXiW1jVerIF7Ck5Vyn0YyBifX4PLoSfJVYr7GLfooLiJnS1MjLLv1XQnP1Q+vqhx56fqVQAx6PLGzRi3xYN+EQZaEL1AgD/pLm9cdIqoXLMJIUl+j7KRGBZ5wBmAXqtTmiXtG/omKBYZspeJV0UTQESJs4htvzcKGAERxgzYBXsnBnCaX4pTrRjtrzgcSQSFAg2CThzMtuLb8Xmii5CCC0ZwRdqWqAxMnhnCk0hGICOvHVNE3v/hZGCFi2B8rXLEcw4yvxWwRcYMRlKk0tBprTeXlqZLNjePwRndEfKsH1Xdt5k/cz18jP9JkiVDRlPoBXGKXzyybg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=I2OMoKjYs4Ciq1M4moPVwI2IEJzEb6etnPWwUK6YDQQ=;
+ b=U6UnGhW/R4LrLmHZ84wqVcfVnykK7Z1NzI9r1Kjz4MoizAHQ5v1r0cA4ZO9goP2IWxcGJXlwLcDHO5+6hAJ5F2gAF+1WMlMrvmRdjMQxJBGRHZXYUzntIcgpKOA9YQlumoEiZHfsr762v+z9pttZFImlEkvoJARkBs391M4lXHO9bvDjS04X5YzKARXNdxBgvnuAFrOr2DQsTm25UV5MwHigBP886uq5Cfyzbcc0gse6OTxSfy1SY1/0OxeemFyBJvdQxPQt40Y31+UdJFexQcZVn9M1T4Vh0Qd7rOk/xJZFS+r8u8FG3SGguHOgFm2NI/JANorssR8iIqMNbWRhFQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=softfail (sender ip
+ is 134.204.222.53) smtp.rcpttodomain=vger.kernel.org
+ smtp.mailfrom=seagate.com; dmarc=fail (p=reject sp=reject pct=100)
+ action=oreject header.from=seagate.com; dkim=none (message not signed);
+ arc=none (0)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=seagate.com;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=I2OMoKjYs4Ciq1M4moPVwI2IEJzEb6etnPWwUK6YDQQ=;
+ b=PJzuF3l2S1nUInP4bO7nZ2jekB4wvdDCMJeasFw+IRkHEDnCKvGHd9WGglZcZINT4XQ6/91kpiV5LhuIEGoZ8Evprm+eADVzLGerreOpcYiy/kkePeX4/2yBJN+iNzqM0YJqJix0i+kYBr4z5347tUvSir+4rCWup0HL0fSTGgg=
+Received: from BN0PR03CA0020.namprd03.prod.outlook.com (2603:10b6:408:e6::25)
+ by SA1PR20MB6961.namprd20.prod.outlook.com (2603:10b6:806:3a6::21) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9846.18; Thu, 23 Apr
+ 2026 21:18:07 +0000
+Received: from BN1PEPF00004689.namprd05.prod.outlook.com
+ (2603:10b6:408:e6:cafe::3c) by BN0PR03CA0020.outlook.office365.com
+ (2603:10b6:408:e6::25) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.20.9791.48 via Frontend Transport; Thu,
+ 23 Apr 2026 21:18:06 +0000
+X-MS-Exchange-Authentication-Results: spf=softfail (sender IP is
+ 134.204.222.53) smtp.mailfrom=seagate.com; dkim=none (message not signed)
+ header.d=none;dmarc=fail action=oreject header.from=seagate.com;
+Received: from lcopzesaa002.seagate.com (134.204.222.53) by
+ BN1PEPF00004689.mail.protection.outlook.com (10.167.243.134) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.9846.18 via Frontend Transport; Thu, 23 Apr 2026 21:18:05 +0000
+X-CSE-ConnectionGUID: GLkdoqV1QySn+80G9EiywQ==
+X-CSE-MsgGUID: G9CzFx6UQQGc/FO2cgoRKg==
+Received: from lcopiesaa01a.seagate.com ([10.230.120.56])
+  by lcopzesaa002.seagate.com with ESMTP; 23 Apr 2026 14:24:55 -0700
+X-CSE-ConnectionGUID: 5xhDlmNMTA6Gt1VLkBkCFg==
+X-CSE-MsgGUID: nxqHuINqToqueIF3JiOsoA==
+X-IronPort-AV: E=Sophos;i="6.23,195,1770624000"; 
+   d="scan'208";a="737543"
+STX-Internal-Secure-Mailhost: TRUE
+Received: from nick-desk-ubuntu24.colo.seagate.com ([10.230.88.139])
+  by lcopiesaa01a.seagate.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Apr 2026 14:18:05 -0700
+From: Nick Spooner <nicholas.spooner@seagate.com>
+To: James.Bottomley@HansenPartnership.com,
+	martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Nick Spooner <nicholas.spooner@seagate.com>
+Subject: [PATCH] scsi: sd: Use string_choices to fix Coccinelle warnings
+Date: Thu, 23 Apr 2026 15:16:44 -0600
+Message-ID: <20260423211644.3481898-1-nicholas.spooner@seagate.com>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260422113206.246267-1-daan@amutable.com>
+Content-Transfer-Encoding: 8bit
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: BN1PEPF00004689:EE_|SA1PR20MB6961:EE_
+Content-Type: text/plain
+X-MS-Office365-Filtering-Correlation-Id: 5853a3cd-d6b9-486a-3e6e-08dea17dcfb1
+STX-Hosted-IronPort-Oubound: True
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|376014|1800799024|82310400026|36860700016|18002099003|56012099003;
+X-Microsoft-Antispam-Message-Info:
+	AlvP7fT0nyavMLdVUHrFZeBEi2ZO9rSdlVbpfXt34IEi/V9eifexgwFKTiSwBPU1y28R51BIh0sgNbl+Kk2WoVw52P4JygGxVyY/ooYJWluaLE/K3WbRq0ITtVhuaS4NTWo95/6jmX+tkyauSXNWKZoBjT4gVJP/k+DCM9SWQA/5tr9U0nMuYMDVxIKb+nG5RuIqJCAzhZwlS/zao0G3COunKSDirugp9/IcQdnMZ4+HXy+YBOkl45E3RB3DiyoeMo0B2sNYV6qad8RB7n5TwTy/pUj9T4/5kmy7acvJgOqG1oX2a/GG9EU1aVMM6oRRySNG1RGW96ZtyeZqWM925u9z/RhpjMvNhfTQvrrYN4pTQUHMTs66C1swTw9GDiQuUSOUk8WVqcXv0XuWKGxxt9t48G4SADmqv/ncndmqDRgvMdAzq1JstTKGCnURCITcrmfTtzztlDJRiVseGdSlQr1i/amToRNrtPYWWkKCGWT4sdd2SjtVU2HI6E14s8XItsr5T0cceW285i8+ykk1du0yPpWnEkiqTerPeu/aLu6sTk1hwE3/ghQECpjFnhmTrqKHAcHarWQlYAY4C1oDgJx70WNLTOLnAYJxC7MFGdg0BNNEBH7R1D7LVPg5Ezr8ts/88zkQTwD6l78o+RF5UA8Ck/tjyO5eK4gNK9g03jPZz085HT0fhoziamVHK/s4IeoQxRTtYvqoaTju5s+m6mhjMfRnUmwGhD4b3sKLBZZaFcnPpFsUr80a9BhaQzzyTiEbZEbHiyN/Kbeo04uMtw==
+X-Forefront-Antispam-Report:
+	CIP:134.204.222.53;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:lcopzesaa002.seagate.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(376014)(1800799024)(82310400026)(36860700016)(18002099003)(56012099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	u8PA35tJLHHzC/O+uA++uSUwWO3IXqBqJXK5/gYp+VRIG6Gan27ggMy6XD7wqmE9Iu0QKNoGHzKd81QVoEUUUUcNgM4XF0gxFgofSDdV7VZ/IcKe38cHBPW8nKWsEiRZypMBhmbpoA9v+5Ix0FS6N0qHjkZC6e+8MNcEdfb9/vwrr7CtzLiEzCc0K9Y18XvNudne/WbY4bs41MGhVvZNuAwwsJY+MA4qvCZSSQp7a/lNfn0OeukZ1vesmmI4l5H6oQPoVJLS923rXrc7SDiNaLLBO63KAYQ4ouUCw0l/3ydNQhzwDTyEH6kky2ysJLvbnXJgYNfTw1TOTqupmIsMj2e+oLe/QjYrf/S+f3P13ilZTZbxLXRHIq54Lg8bfh28yNJMYka/0gRiESkIs74YUaX8SdgWDJgDvNnqKcwK6mPXJAB6s3iXmcWSZv5IaCxi
+X-Exchange-RoutingPolicyChecked:
+	RIDlmv3Bz0lHSSEDGU1Gz51LINiOCUxovwZJAqYcym5E4S452W5FUhVxzKqqcz+uapocY1GvUboCWSVGvg04v/An+JqVMy/FSix0g5g6A8v01dooB0le5GXNBzXy3YWTIPeVDVdaa3SBtYYc6BHZyFins/+O4wWeN51HtChBfAe9XTnqsqS4cfcWgvzUOOxoY0HH0dfVrSveiaQEa0GZbro72R+0LtC5t/rBRwCBEiSxONjkvHZ/7UDN+NqrsWajYQKKeaK7dLn/JfFF8YUXdcy0wiFwHvOvVeVqRFl2t/50EPcVuuoAEagQOx3wgE08MwY+SchJxUHoEg560CRraA==
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
+	i7dOrk9CY24k7ImBQgeNTn2h4wxTFAdDwDlg76JcVXWzlwRiM8EyBPz/pMwO+Om0gr/ry7YT9//4uNCpaBSeyV2Soa6k7/xz0TYROMOVbXcXVa9XT48JER70r8mOCtzcdFBqtEe681PajScWCj/Iy/a/SLMuK4mJgMBye7dzSnDC8ZMBibHXQDmVFEnm4MEI1CSaU+kusC5sVo/HgheVf/AoF99/GouKyhPPPurbtwm4gQlzBiuda9dV3G9ZAH9HcHUDVNoO1ai+VtEcoUw8NI3sgi2o2Du+GQ92OpyDFL9WSatXpIaYHowcgP+hI3VaVOxc33OWcUqdGSH3dglKfj6FgYiSOIRjfUc8XpCudx6/PxGx+XrXbuU0wnt01i2GWmxsleK2NcgUwNTnnvjhj8s7CTpnpriiTwc8Ggy+u1JKHyEOobyfXErjwSA8KcW4/zk7d0qYtlJHLWwGNCIHwON4IHFf6cCxYDTC3YOBhriZ5kjGhb/hNeRW8pwugQUwg61+c1rmQn0nb7RD/74n9RLCEuS97rEEv7p0fhn67NsEknTpTh9LhlzQppMzBwd73iP7XZQos+GsqSNnFuANLhY/vVzXgPYyBNhVOlPgS3V/wW55jfX2P6RIpZYGD6wy
+X-OriginatorOrg: seagate.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 23 Apr 2026 21:18:05.8139
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 5853a3cd-d6b9-486a-3e6e-08dea17dcfb1
+X-MS-Exchange-CrossTenant-Id: d466216a-c643-434a-9c2e-057448c17cbe
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=d466216a-c643-434a-9c2e-057448c17cbe;Ip=[134.204.222.53];Helo=[lcopzesaa002.seagate.com]
+X-MS-Exchange-CrossTenant-AuthSource:
+	BN1PEPF00004689.namprd05.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA1PR20MB6961
 
-On Wed, Apr 22, 2026 at 11:32:06AM +0000, Daan De Meyer wrote:
-> The cdrom core never calls set_disk_ro() for a registered device, so
-> BLKROGET on a CD-ROM device always returns 0 (writable), even when the
-> drive has no write capabilities and writes will inevitably fail. This
-> causes problems for userspace that relies on BLKROGET to determine
-> whether a block device is read-only. For example, systemd's loop device
-> setup uses BLKROGET to decide whether to create a loop device with
-> LO_FLAGS_READ_ONLY. Without the read-only flag, writes pass through the
-> loop device to the CD-ROM and fail with I/O errors. systemd-fsck
-> similarly checks BLKROGET to decide whether to run fsck in no-repair
-> mode (-n).
-> 
-> The write-capability bits in cdi->mask come from two different sources:
-> CDC_DVD_RAM and CDC_CD_RW are populated by the driver from the MODE
-> SENSE capabilities page (page 0x2A) before register_cdrom() is called,
-> while CDC_MRW_W and CDC_RAM require the MMC GET CONFIGURATION command
-> and were only probed by cdrom_open_write() at device open time. This
-> meant that any attempt to compute the writable state from the full
-> mask at probe time was incorrect, because the GET CONFIGURATION bits
-> were still unset (and cdi->mask is initialized such that capabilities
-> are assumed present).
-> 
-> Fix this by factoring the GET CONFIGURATION probing out of
-> cdrom_open_write() into a new exported helper,
-> cdrom_probe_write_features(), and having sr call it from sr_probe()
-> right after get_capabilities() has populated the MODE SENSE bits.
-> register_cdrom() then calls set_disk_ro() based on the full
-> write-capability mask (CDC_DVD_RAM | CDC_MRW_W | CDC_RAM | CDC_CD_RW)
-> so the block layer reflects the drive's actual write support. The
-> feature queries used (CDF_MRW and CDF_RWRT via GET CONFIGURATION with
-> RT=00) report drive-level capabilities that are persistent across
-> media, so a single probe before register_cdrom() is sufficient and the
-> redundant probe at open time is dropped.
-> 
-> With set_disk_ro() now accurate, the long-vestigial cd->writeable flag
-> in sr can go: get_capabilities() used to set cd->writeable based on
-> the same four mask bits, but because CDC_MRW_W and CDC_RAM default to
-> "capability present" in cdi->mask and aren't touched by MODE SENSE,
-> the condition that gated cd->writeable was always true, making it
-> unconditionally 1. Replace the corresponding gate in sr_init_command()
-> with get_disk_ro(cd->disk), which turns a previously no-op check into
-> a real one and also catches kernel-internal bio writers that bypass
-> blkdev_write_iter()'s bdev_read_only() check.
-> 
-> The sd driver (SCSI disks) does not have this problem because it
-> checks the MODE SENSE Write Protect bit and calls set_disk_ro()
-> accordingly. The sr driver cannot use the same approach because the
-> MMC specification does not define the WP bit in the MODE SENSE
-> device-specific parameter byte for CD-ROM devices.
-> 
-> Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
-> Signed-off-by: Daan De Meyer <daan@amutable.com>
+Fixes the following Coccinelle warnings reported by string_choices.cocci:
 
-Hi Daan,
+	opportunity for str_enabled_disabled(sdkp -> WCE)
+	opportunity for str_on_off(sdkp -> write_prot)
 
-Thank you for the patch. I will properly review it and build test etc.
-this weekend and come back to you, hope that's ok.
+Signed-off-by: Nick Spooner <nicholas.spooner@seagate.com>
+---
+ drivers/scsi/sd.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-Regards,
-Phil
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index adc3fa55ca2c..dd284647ed64 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -50,6 +50,7 @@
+ #include <linux/rw_hint.h>
+ #include <linux/major.h>
+ #include <linux/mutex.h>
++#include <linux/string_choices.h>
+ #include <linux/string_helpers.h>
+ #include <linux/slab.h>
+ #include <linux/sed-opal.h>
+@@ -3084,7 +3085,7 @@ sd_read_write_protect_flag(struct scsi_disk *sdkp, unsigned char *buffer)
+ 		set_disk_ro(sdkp->disk, sdkp->write_prot);
+ 		if (sdkp->first_scan || old_wp != sdkp->write_prot) {
+ 			sd_printk(KERN_NOTICE, sdkp, "Write Protect is %s\n",
+-				  sdkp->write_prot ? "on" : "off");
++				  str_on_off(sdkp->write_prot));
+ 			sd_printk(KERN_DEBUG, sdkp, "Mode Sense: %4ph\n", buffer);
+ 		}
+ 	}
+@@ -3235,8 +3236,8 @@ sd_read_cache_type(struct scsi_disk *sdkp, unsigned char *buffer)
+ 		    old_rcd != sdkp->RCD || old_dpofua != sdkp->DPOFUA)
+ 			sd_printk(KERN_NOTICE, sdkp,
+ 				  "Write cache: %s, read cache: %s, %s\n",
+-				  sdkp->WCE ? "enabled" : "disabled",
+-				  sdkp->RCD ? "disabled" : "enabled",
++				  str_enabled_disabled(sdkp->WCE),
++				  str_disabled_enabled(sdkp->RCD),
+ 				  sdkp->DPOFUA ? "supports DPO and FUA"
+ 				  : "doesn't support DPO or FUA");
+ 
+-- 
+2.53.0
+
