@@ -1,80 +1,80 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 403DB37C93A
-	for <linux-scsi@vger.kernel.org>; Thu, 23 Apr 2026 10:32:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 119B5386552
+	for <linux-scsi@vger.kernel.org>; Thu, 23 Apr 2026 11:03:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776940335; cv=none; b=j4tfDnQy1pCUwW/IQtU3QTCDd6391dDewfx2hpHr3BvxbSpU9D//0sasfQfbpnULoZkbPXauzJCkEF10KH12SzIvSYOeoDCbe7qXYH0D3K7wuVYKhPldlzM3/CwYA6afyoA4Or7UdHZffJ1E1C4vLz9Fu+8k11h+erhPNb42cqY=
+	t=1776942200; cv=none; b=QQkkaOqmksy1XP3X21YmEaeO4bdsBnswUFxsguugtRDturNWQtBKvLVK8SFcRXf6QP1JwFQdsf1WJyS0mxiaLNkACbBXsbikFCHNRXZWIQkd6C9OcjjAzNGQPmJReieoXdAmCD2Eg3z33zK28XI+jK49I2iAM97SUVL5OfmkHpc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776940335; c=relaxed/simple;
-	bh=jazL6SWfXa88LqvnS25KHp16ujLSD+9oZjDHoEXpKfw=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=WZPRfb9Mtunz+Dd1uoLVCUtVgERF6z0x2v3dIZoh0NrMDL+GYMep50DM6Gf1jJ2raj0kgMQ/6Qi9eUQVt8+4TkeY9fA2jLingr8WCUkJ5+FI6TeUlBXtjRcDdtyFegI/i/0Vb1WVY1sAVOqlZswBUozrHZn+9KxcEBYhI5lqVww=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=qMUWITHh; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=F6nw+bkv; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=qMUWITHh; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=F6nw+bkv; arc=none smtp.client-ip=195.135.223.130
+	s=arc-20240116; t=1776942200; c=relaxed/simple;
+	bh=vCyn6ularYPgMK+JZIAFAVkpBaAqrjoWjndiPa6yQbQ=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=t6os1ut+ixO40t2O5i7OB8fLIiNW4AGlblyxVa+/bTBlknuIN1IKv4sqbRL2tw2fYULFYzH+UnaCv+k8+e8pzHhPjtdt6nbH+ZcvnkHkv7zThcRvu0WEngf0JlDmoXvLCl6ukWW9ojWUMblsLwG0LjpHtjKt3AOLLGWZxlOhGPw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=MXX1xtTB; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=FFnNSYk7; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=MXX1xtTB; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=FFnNSYk7; arc=none smtp.client-ip=195.135.223.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="qMUWITHh";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="F6nw+bkv";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="qMUWITHh";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="F6nw+bkv"
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="MXX1xtTB";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="FFnNSYk7";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="MXX1xtTB";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="FFnNSYk7"
 Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id 717E66A83A;
-	Thu, 23 Apr 2026 10:32:07 +0000 (UTC)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id 514415BD79;
+	Thu, 23 Apr 2026 11:03:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1776940327; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	t=1776942197; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=+Y1CelddMwmsUPtrfyGtDqdrxRTsmdur6hdG7YN2XVo=;
-	b=qMUWITHhDmGglclsDUzjlEWci3asJjzOj9u6m+2L2hsezB+cEF9SoI5ivhg9UxcpBsbvli
-	w8nULU+QabqvM65qJmZZvJwXDnXOQgi7OGITH4Hj5/VVEW2LLaA4kye4eQLO6qxmd01DUZ
-	buT/9kDquhJUv5+3mTD2hMpumpgHLD8=
+	bh=yUJmH9rrYLiFteZFFzLNOgJG8T6aIo4w+/SpsRFCnsI=;
+	b=MXX1xtTBsOQx3LyP0h3J/mtXCpw5wNwRLSWfB6vhqiF7y6fIfqURPegOEYkn8ab4K+QyVt
+	B+SYCDJZ5DpopwH8A9mXf5WA3x8X0Tw7X/a29jCC9TMbRkZOr5WyKrSFqoQlTDznjS5GDY
+	0EeE80aRxj7NMI3cJtOjWy3siAYmruY=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1776940327;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	s=susede2_ed25519; t=1776942197;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=+Y1CelddMwmsUPtrfyGtDqdrxRTsmdur6hdG7YN2XVo=;
-	b=F6nw+bkvE9dgklUyjLgbPExq7QEwxM/IeiJrTVb5MPTmAIFSCBP92ZFECK0Xx+zGbdAm4o
-	9snjovgT91qdraBw==
-Authentication-Results: smtp-out1.suse.de;
+	bh=yUJmH9rrYLiFteZFFzLNOgJG8T6aIo4w+/SpsRFCnsI=;
+	b=FFnNSYk7GSTX0tuQ0A15nlY3z6SjuAHv2Erc7lCW+yBaCLBawrnt6ygxNXTH8E1vVNmvXI
+	9o0hAOztoOJuoxBg==
+Authentication-Results: smtp-out2.suse.de;
 	none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1776940327; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	t=1776942197; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=+Y1CelddMwmsUPtrfyGtDqdrxRTsmdur6hdG7YN2XVo=;
-	b=qMUWITHhDmGglclsDUzjlEWci3asJjzOj9u6m+2L2hsezB+cEF9SoI5ivhg9UxcpBsbvli
-	w8nULU+QabqvM65qJmZZvJwXDnXOQgi7OGITH4Hj5/VVEW2LLaA4kye4eQLO6qxmd01DUZ
-	buT/9kDquhJUv5+3mTD2hMpumpgHLD8=
+	bh=yUJmH9rrYLiFteZFFzLNOgJG8T6aIo4w+/SpsRFCnsI=;
+	b=MXX1xtTBsOQx3LyP0h3J/mtXCpw5wNwRLSWfB6vhqiF7y6fIfqURPegOEYkn8ab4K+QyVt
+	B+SYCDJZ5DpopwH8A9mXf5WA3x8X0Tw7X/a29jCC9TMbRkZOr5WyKrSFqoQlTDznjS5GDY
+	0EeE80aRxj7NMI3cJtOjWy3siAYmruY=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1776940327;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	s=susede2_ed25519; t=1776942197;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=+Y1CelddMwmsUPtrfyGtDqdrxRTsmdur6hdG7YN2XVo=;
-	b=F6nw+bkvE9dgklUyjLgbPExq7QEwxM/IeiJrTVb5MPTmAIFSCBP92ZFECK0Xx+zGbdAm4o
-	9snjovgT91qdraBw==
+	bh=yUJmH9rrYLiFteZFFzLNOgJG8T6aIo4w+/SpsRFCnsI=;
+	b=FFnNSYk7GSTX0tuQ0A15nlY3z6SjuAHv2Erc7lCW+yBaCLBawrnt6ygxNXTH8E1vVNmvXI
+	9o0hAOztoOJuoxBg==
 Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 326B04B327;
-	Thu, 23 Apr 2026 10:32:07 +0000 (UTC)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 37948593A3;
+	Thu, 23 Apr 2026 11:03:17 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
 	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id n5PJCyf16WnWdAAAD6G6ig
-	(envelope-from <hare@suse.de>); Thu, 23 Apr 2026 10:32:07 +0000
-Message-ID: <3c57a174-ce83-43cd-a46b-d0eea752deda@suse.de>
-Date: Thu, 23 Apr 2026 12:32:06 +0200
+	id cZ0bDXX86WnaFAAAD6G6ig
+	(envelope-from <hare@suse.de>); Thu, 23 Apr 2026 11:03:17 +0000
+Message-ID: <cb5255ef-ae53-46c7-8039-b1fff655883d@suse.de>
+Date: Thu, 23 Apr 2026 13:03:16 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -82,24 +82,25 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 3/4] scsi: Support scsi_devices without a device wide
- limit
-To: John Garry <john.g.garry@oracle.com>,
- Mike Christie <michael.christie@oracle.com>, martin.petersen@oracle.com,
- linux-scsi@vger.kernel.org, james.bottomley@hansenpartnership.com,
- virtualization@lists.linux.dev, mst@redhat.com, pbonzini@redhat.com,
- stefanha@redhat.com, eperezma@redhat.com
-References: <20260417230751.117836-1-michael.christie@oracle.com>
- <20260417230751.117836-4-michael.christie@oracle.com>
- <448302b1-3950-4e6d-ae8b-337cad09f3fe@suse.de>
- <65e78d0c-23a5-4702-9946-60b83532a61b@oracle.com>
+Subject: Re: [PATCH v2 1/5] ata: libata-scsi: add atapi_max_lun module
+ parameter
+To: Phil Pemberton <philpem@philpem.me.uk>,
+ Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>
+Cc: "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>,
+ linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+References: <20260420122321.4161027-1-philpem@philpem.me.uk>
+ <20260420122321.4161027-2-philpem@philpem.me.uk>
 Content-Language: en-US
 From: Hannes Reinecke <hare@suse.de>
-In-Reply-To: <65e78d0c-23a5-4702-9946-60b83532a61b@oracle.com>
+In-Reply-To: <20260420122321.4161027-2-philpem@philpem.me.uk>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
+X-Spam-Score: -4.30
+X-Spam-Level: 
 X-Spamd-Result: default: False [-4.30 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
+	BAYES_HAM(-3.00)[99.99%];
 	NEURAL_HAM_LONG(-1.00)[-1.000];
 	NEURAL_HAM_SHORT(-0.20)[-1.000];
 	MIME_GOOD(-0.10)[text/plain];
@@ -107,7 +108,7 @@ X-Spamd-Result: default: False [-4.30 / 50.00];
 	FUZZY_RATELIMITED(0.00)[rspamd.com];
 	ARC_NA(0.00)[];
 	MIME_TRACE(0.00)[0:+];
-	RCPT_COUNT_SEVEN(0.00)[10];
+	RCPT_COUNT_SEVEN(0.00)[8];
 	MID_RHS_MATCH_FROM(0.00)[];
 	RCVD_TLS_ALL(0.00)[];
 	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
@@ -118,36 +119,33 @@ X-Spamd-Result: default: False [-4.30 / 50.00];
 	RCVD_COUNT_TWO(0.00)[2];
 	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,suse.de:mid,suse.de:email]
 X-Spam-Flag: NO
-X-Spam-Score: -4.30
-X-Spam-Level: 
 
-On 4/23/26 12:02, John Garry wrote:
-> On 22/04/2026 14:15, Hannes Reinecke wrote:
->>> --- a/drivers/scsi/scsi_scan.c
->>> +++ b/drivers/scsi/scsi_scan.c
->>> @@ -352,18 +352,20 @@ static struct scsi_device 
->>> *scsi_alloc_sdev(struct scsi_target *starget,
->>>       if (scsi_device_is_pseudo_dev(sdev))
->>>           return sdev;
->>> -    depth = sdev->host->cmd_per_lun ?: 1;
->>> +    if (sdev->host->cmd_per_lun != SCSI_UNLIMITED_CMD_PER_LUN) {
->>> +        depth = sdev->host->cmd_per_lun ?: 1;
->> Why don't we use a simple flag in the host (or host template) to
->> indicate that cmd_per_lun should be ignored?
->> I'm not in favour of using magic values for a setting which
->> otherwise is a limit.
->> Look to dev_loss_tmo as a bad example ...
+On 4/20/26 14:23, Phil Pemberton wrote:
+> Until now libata has hard-coded shost->max_lun = 1 for every ATA host,
+> so the SCSI layer never scans past LUN 0.  This blocks support for
+> the small handful of multi-LUN ATAPI devices (Panasonic LF-1195C and
+> COMPAQ PD-1 PD/CD combos export CD on LUN 0 and PD on LUN 1; old
+> Nakamichi MJ-x.y CD changers expose one LUN per disc slot, up to 7).
 > 
-> I think it's better to not have a flag and also keep cmd_per_lun, as 
-> then we need to sanitize one vs the other. As mentioned in the cover 
-> letter response, cmd_per_lun could be got rid off / reworked.
+> Introduce a libata module parameter, atapi_max_lun, that controls the
+> upper bound of the per-host SCSI LUN scan.  Default is 1, preserving
+> current behaviour exactly: out-of-the-box only LUN 0 is scanned.
+> Range is clamped to 1..ATAPI_MAX_LUN (8, the SCSI-2 ceiling).
 > 
-> Personally I also dislike how the scsi budget code checks for a budget 
-> map being non-NULL (which is for reserved scsi devices, which doesn't 
-> need a per-sdev budget map).
-
-Let's see if we can schedule a session at LSF; I really would like to
-get this one sorted out.
+> Subsequent patches gate actual LUN>0 probing on BLIST_FORCELUN, so a
+> device must both be on the SCSI device list (or carry the appropriate
+> quirk) and run on a host whose atapi_max_lun has been raised before
+> any extra LUNs are scanned.
+> 
+> Signed-off-by: Phil Pemberton <philpem@philpem.me.uk>
+> ---
+>   drivers/ata/libata-core.c | 5 +++++
+>   drivers/ata/libata-scsi.c | 2 +-
+>   drivers/ata/libata.h      | 1 +
+>   include/linux/libata.h    | 1 +
+>   4 files changed, 8 insertions(+), 1 deletion(-)
+> 
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
 Cheers,
 
