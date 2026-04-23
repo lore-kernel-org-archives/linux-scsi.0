@@ -1,86 +1,86 @@
 Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D7183876D2
-	for <linux-scsi@vger.kernel.org>; Thu, 23 Apr 2026 12:59:10 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6770F282F27
+	for <linux-scsi@vger.kernel.org>; Thu, 23 Apr 2026 13:31:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776949151; cv=none; b=K+kWKsIkVNd+9HzV7sXnl35jjl+sk2r65/HflxyC0TLYVOHiPd9+VI6cydK10jx4NNiPAJsFgNxxUKcT6oxRMWdcKx0qd4r+vllaN70dd/imoquZ4zFnWBk7jXnTMSbKjGAnbEP23t6dNPTkbXkUOKS8/63ssc7Bhq54p1QuHRo=
+	t=1776951067; cv=none; b=DYDipJi7xT7uelEbVoLo9W9OhvBT/AH2CSVxr+oFbkrVmxOBDVG4t0gpVXpBgJET4BWidhz1aFG19fHKqhm10knqrU3pgjGCS+Bqbd+tKelCmrLBTaatjO3mARXl/qjp5YKar55Q7TlscqzG4o/y0wiGk7COLZU8DMLTAU3kxC0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776949151; c=relaxed/simple;
-	bh=OsI1m7bmguFYLsOilvXfOIKS7Ehn5i/JY54eFqXkK7U=;
+	s=arc-20240116; t=1776951067; c=relaxed/simple;
+	bh=NxyTznSOVHDs+31Eml1fvnVenk68OjaS9nMMo6W2nbY=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=DchkYpUs/N5fhJhn3ohfvOPGmO5flxAeYlB1zBdKGRPlVwS8QzStioCd3QOXwCS3Kwa1MaGv/lOn8VJIebGe2dy89BRxiKCEWCf+OD51PhimHxP4ivwaNADE5WdC9WF4H3RGckdGuDNolJPJEjYlNwPrnlnCcJiO/QrRsMpLHHg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=IZkaP6OV; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=MrAiu++4; arc=none smtp.client-ip=205.220.180.131
+	 In-Reply-To:Content-Type; b=k/uivfoefzHxyYou+mEGnpAfY0iPDPEsU8IhLD1IBHfM8v/QCAfUR9CLLKB+zLCtiEdAuLpzPhh7R9PGPvrcVg45GBevX47N0ZYi+krzKW2HE59lH4TVtUcJLkj/yYCwBMR42UvnPgFGRXhfVdxiRmudkuJTPWHqUeuiM5Xw0uo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=BR50L+kk; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=K9JqfEn1; arc=none smtp.client-ip=205.220.180.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="IZkaP6OV";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="MrAiu++4"
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="BR50L+kk";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="K9JqfEn1"
 Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 63N8uOLZ1565871
-	for <linux-scsi@vger.kernel.org>; Thu, 23 Apr 2026 12:59:09 GMT
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 63N8uNsH1565720
+	for <linux-scsi@vger.kernel.org>; Thu, 23 Apr 2026 13:31:05 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
 	cc:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	bv9bbK3CKQV4FRe3nxG0ooKvJtI+iyyOSwnESk6M1pQ=; b=IZkaP6OVsVbNMI52
-	6Zu5pQTF4POab3jMfmKbS2z0fWqdwQktsDw8oPstJOp/TWMQsZFQaGaDDnn0Spvi
-	TB9jCwBXMVsdbAQxY0XDfXkv2eRX/fNHF9j6zIUoXgILUqJFzGGailjlsRX6PirO
-	Nk0piNxfu74byXz9mAgn4cii47l9IcMjlcjSF40X9vozX5AF9aAQcnEiVlovLSc0
-	PS6b7ExhK/3G61iwson7Bo3O4zQSnWnDfbKkJdHhfINgdchVmeGgOpBcgQ0zU17W
-	+0a5j3vQFJ0JGFM3WSPKR5e6z9qxCYe8T1wl/f3nL9NwACpxPWQwGOXRrVK1no/3
-	AtqCUw==
-Received: from mail-pl1-f197.google.com (mail-pl1-f197.google.com [209.85.214.197])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4dq16wv41e-1
+	B2IrW4zJMm2y1QlRpdD4guuu/pN7EnUqJhKoxq7TncE=; b=BR50L+kkjLO0IEy/
+	VkbWsD6ZsB9CBu1l7/M9Iira0e7JdLvJBB5WNOXs8DvsIoey4/29xLzCAlE9TKPx
+	hTNoJBP2v/Qj+z/O12BU+tEXY+XID7VXfj7KGSa5CIeCSEW2TkLQktswvNWhSyvh
+	HT6XILpn/BU2CIgZROC+qfv6JVlw90mjU000YbbGTrn2XgdZwaHraHIveapRxByS
+	QSiCdNaT2ARKJyzOq0rWFStWHuBzccnNRzvlzQreGNSrtJxvi2nb1h98Z2dUBgIc
+	LZjMk5rAmCfPmiLGUIonEBCyilw98bSuhYZJ/Yt2uZosHdvzXr22yQy9bEtp3zKj
+	dxpm6A==
+Received: from mail-pf1-f200.google.com (mail-pf1-f200.google.com [209.85.210.200])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4dq16wv7hm-1
 	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Thu, 23 Apr 2026 12:59:09 +0000 (GMT)
-Received: by mail-pl1-f197.google.com with SMTP id d9443c01a7336-2b24e9b4d82so68637055ad.1
-        for <linux-scsi@vger.kernel.org>; Thu, 23 Apr 2026 05:59:08 -0700 (PDT)
+	for <linux-scsi@vger.kernel.org>; Thu, 23 Apr 2026 13:31:05 +0000 (GMT)
+Received: by mail-pf1-f200.google.com with SMTP id d2e1a72fcca58-82f0e12d375so4000962b3a.1
+        for <linux-scsi@vger.kernel.org>; Thu, 23 Apr 2026 06:31:05 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1776949148; x=1777553948; darn=vger.kernel.org;
+        d=oss.qualcomm.com; s=google; t=1776951064; x=1777555864; darn=vger.kernel.org;
         h=content-transfer-encoding:in-reply-to:from:content-language
          :references:cc:to:subject:user-agent:mime-version:date:message-id
          :from:to:cc:subject:date:message-id:reply-to;
-        bh=bv9bbK3CKQV4FRe3nxG0ooKvJtI+iyyOSwnESk6M1pQ=;
-        b=MrAiu++40049P9P/pxcZ3PBkeiZemGnyRkEv4NR0eA7JIhHUHF6pzBxHBqcFCECw+w
-         q6ZKRZA/jlWr1XtKtti+9g2EyCTwOc7OsFu0/iN7s4KvpVBdK6LbKN3V4EvWSoyhszdK
-         mTOy18KDwdYlwBtNpDujupYZQ+H/1335dxq4HlTwRVPStLLqBdFgp85QSwz6csZjTQkG
-         d4aEkp2raPVActLgmtYDqDGPPaqmsAJAFU+h1ZD/7624bIldEbGFv//W/H5ym849JxYK
-         q+beTIyr1xjg9Q2+jaoMpFpBbEUGsY2NHM/EFbTJfk7D5i00ezhvNpYK8pNDTwxlaTkM
-         nqiA==
+        bh=B2IrW4zJMm2y1QlRpdD4guuu/pN7EnUqJhKoxq7TncE=;
+        b=K9JqfEn1mraVWNOjUBAmcBtaHfcAQs8OaqhOXdvFblTXTv1mViEuTL0TVEK7hEOhf4
+         Sn8JUpI5RQkqJZAehyMujHu5xD6mS5JxsyLwzQ3KaiUyXVW8ORpT034PsUxkKpMZV1EL
+         g9NoC9qPG3ph3XuZZdSYt4Qtsd+eYOpZIVWnB7uxvpXB61ZOuOjQcyW2FJsS41yhrBi5
+         XVNcfcXg2ZiWpgoGE5tFvYhqaMNVqWn8O8q+IIY7xuIzie4g1AB5T7aKyiL2cYy3zd0C
+         Ep57zHG84ylUjtnNmyoZ99ghP+YCTs4gPwIn5kih/OYPtrsjKdIsXDUEG5icY6u5ppNY
+         3RgQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1776949148; x=1777553948;
+        d=1e100.net; s=20251104; t=1776951064; x=1777555864;
         h=content-transfer-encoding:in-reply-to:from:content-language
          :references:cc:to:subject:user-agent:mime-version:date:message-id
          :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=bv9bbK3CKQV4FRe3nxG0ooKvJtI+iyyOSwnESk6M1pQ=;
-        b=e520ydP9zPWG58beEVdS8x5LAB2i2DqOp+K4Tod/ctTCH+2nv0dttPnMSl9DfWKfqG
-         HDNqwWh4YwvcVqjXfX/XJ5qesYM3vnjr8lYbvznUxSQX+5tuUhhdj4XprRVwZXVuAQmv
-         btd8dFHIVzE7dNGlKUK5dc9wAXiyFwcIau+hqlGdGo/v1qnt1p8g+1Ah+qgdbCCVMpgm
-         5NkgOXEEIxddO8wq+YGUGF9BzT8QwKpz8XR9uB8bSszWVUcR6HWBHGMM1lghZhpoQAHf
-         iqRIdW8CchEhDODmfKQ1C+qyOuinACBHR4haA6dF0MDbKO7Bn2ZvuyNYybFRCReK33Oo
-         cp3g==
-X-Gm-Message-State: AOJu0YxS8jPSrU+YYDFIbgzgdjDoXN3NtdhMRzZ4jGCDqW8cuEmP69SC
-	ypzV2bJ4/oYLzcjfBZInxfAPimT0FKyWYgyXTc8qaomORTQctJEzVLgtvhsd+lKpAQ8OQemwLuJ
-	hgPsJpHTw4R/kxvicU2RW+MKtpFPXcDk4ulGF6cV5+4C5Zw2ooKU4NvY1ka1y1EqQ
-X-Gm-Gg: AeBDiesd80oqEkqdP8/d2aePhPH5oWgh6mC0BMyNSJCbtLUuXkAGopPqxRB/CWpsFja
-	UyAWzcqMLsWkE5aGgmkSCcHQ8MnQx5+1qi4vealDArLpoXf/oENhiyMidb/4dY9kgrDNw3NkqDb
-	WaVa+eXKN8ESMHq86S/+w0d938uvVEPaULI2BYCOw5GRNC4+jhahFPnynAgU7usD1T93K+V5RtB
-	bIAIA4ShpQ6sIRYBJW87uvwpoV4zA+fgC8QuY55E5bzGKEkZjZGVMjHJw95qmjp1SR1t1jzaoP4
-	bj2HBR5irJc1sXdCaTZVAI3PILQLGhlmhq7vDR7es+JG2fs0XiECMJS1GW1XkUS5KRPgSJjQRTi
-	bpbFWozmylQhgbMeKh9MFmL5weixexY9l/gRmzkUFK9fuAnoG6fckUooknRU5hCKSEmXF2u8IkA
-	C66AHlQ4ksbJciCFzdVyVg
-X-Received: by 2002:a17:903:3d4c:b0:2ae:cd8c:bd04 with SMTP id d9443c01a7336-2b5f9dff810mr171174755ad.10.1776949147879;
-        Thu, 23 Apr 2026 05:59:07 -0700 (PDT)
-X-Received: by 2002:a17:903:3d4c:b0:2ae:cd8c:bd04 with SMTP id d9443c01a7336-2b5f9dff810mr171174425ad.10.1776949147410;
-        Thu, 23 Apr 2026 05:59:07 -0700 (PDT)
+        bh=B2IrW4zJMm2y1QlRpdD4guuu/pN7EnUqJhKoxq7TncE=;
+        b=QtBx0yTfB9k4KQWFwQTOeOgc7tMjHyhWL9BNpN5xSbSDArlXoAeMoNDgtp78hZio4B
+         6P2O81NtKwbpaSfQBG9kCfEbBFAxkFHMl6IxD0uENxPvZ1UmzaZ8OyIC4Z2/HCsyMUKZ
+         IsMn8kEvF0boG/AXYZdFH0R9hJiYk8TCH4ox95wDm1AWC4wTJ2k208z1p+BUtU1u2PE7
+         AD0S/mFoJ5V92p+2I32LkNAcfr1CuQgFGWK9RuvLZS/hfoMF/M+LApJh0z429U4VuaZy
+         TSiREz88ZMROvNw6tJh0YkAeX/QXIXk5vmafADy7kaAOXwbQ1cxTJPg0q8NnAJKBseN5
+         x2vQ==
+X-Gm-Message-State: AOJu0Yz/TV4uDe6Ma8sEtx2EeUXiSWSbxSewaiOn89FwfDc8tE9au1s0
+	RuwbMjOcN4m/Ciphw+7QDJSIFd1ALeDcVBzuHjeiNtiBXWZ14Hqbh7JhZP7BhRy5JJdiMNBcKpc
+	7tWKY0Pr5gryL5uPOhRc7DeUu61SUsYqmSQhI7CtLGvYElX2Gv8nLkc7NZpYLn4Gl
+X-Gm-Gg: AeBDieuJvmvXv3l1c+699BISNZQU/hZSpj0MnlVUppiNImSJq7oUTDPjSYZbkPb1pCk
+	G3ugSaAfAVCjcuX6y3BsdMLqTtLXBqNJXvxkAEkDZamZYhbaDLideWfVgubv/XQjAVwjfRSXKgp
+	KMmWzZPnqU8POweE0qKBwgPnuGRzn4Ch0ox01UlcCWzxSGyf7k4VWGOca6y1aA+pXhu6D7sHbMw
+	giUdOT/Xofy1bhtFbUnl67e1hnHFL4xf2dFNCHjqqhxDEp6S59Ncv0et6e1SVPzejVteI+m61YI
+	ihWvXMhMPVZFCAIPaclOoNHuMGC0x/YGsQreCA0efVwot88bZIEaq6iamDZWX0Nl7d1IOQQZjfd
+	ElUyw4E6fjuNHQkMqJS/+C4LMThAK4153zuoQ/l4X9QcQRJjflm+T/iarIH/Quup8IwkeE0eiY7
+	y7biEZ/vL6/1koNrEe73a2
+X-Received: by 2002:a05:6a00:8714:b0:82f:be7d:5fc0 with SMTP id d2e1a72fcca58-82fbe7d61c8mr12499514b3a.39.1776951064335;
+        Thu, 23 Apr 2026 06:31:04 -0700 (PDT)
+X-Received: by 2002:a05:6a00:8714:b0:82f:be7d:5fc0 with SMTP id d2e1a72fcca58-82fbe7d61c8mr12499448b3a.39.1776951063667;
+        Thu, 23 Apr 2026 06:31:03 -0700 (PDT)
 Received: from [10.133.33.37] (tpe-colo-wan-fw-bordernet.qualcomm.com. [103.229.16.4])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2b5fab0cd18sm208610625ad.45.2026.04.23.05.59.02
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-82f8e9fcea9sm25531703b3a.23.2026.04.23.06.30.58
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 23 Apr 2026 05:59:07 -0700 (PDT)
-Message-ID: <8dc34d3e-65e8-429d-9f68-b4cbd0d4b789@oss.qualcomm.com>
-Date: Thu, 23 Apr 2026 20:59:01 +0800
+        Thu, 23 Apr 2026 06:31:03 -0700 (PDT)
+Message-ID: <a7e2d542-0453-4c14-afbd-c073a6565d02@oss.qualcomm.com>
+Date: Thu, 23 Apr 2026 21:30:56 +0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -90,7 +90,7 @@ MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
 Subject: Re: [PATCH 1/2] scsi: ufs: core: Introduce function
  ufshcd_query_attr_qword()
-To: Bart Van Assche <bvanassche@acm.org>, avri.altman@wdc.com,
+To: Bean Huo <beanhuo@iokpp.de>, avri.altman@wdc.com, bvanassche@acm.org,
         beanhuo@micron.com, peter.wang@mediatek.com,
         martin.petersen@oracle.com, mani@kernel.org
 Cc: linux-scsi@vger.kernel.org, Alim Akhtar <alim.akhtar@samsung.com>,
@@ -99,35 +99,34 @@ Cc: linux-scsi@vger.kernel.org, Alim Akhtar <alim.akhtar@samsung.com>,
         Daniel Lee <chullee@google.com>,
         Ram Kumar Dwivedi <ram.dwivedi@oss.qualcomm.com>,
         Huan Tang <tanghuan@vivo.com>, Liu Song <liu.song13@zte.com.cn>,
-        Bean Huo <huobean@gmail.com>,
         vamshi gajjela <vamshigajjela@google.com>,
         "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
         Adrian Hunter <adrian.hunter@intel.com>,
         open list <linux-kernel@vger.kernel.org>
 References: <20260419135229.1036926-1-can.guo@oss.qualcomm.com>
  <20260419135229.1036926-2-can.guo@oss.qualcomm.com>
- <316c8b28-9e93-4d14-b6d6-e8d593b8627c@acm.org>
+ <dab22e8ea2b47207e8e4a9264f0421f959891fca.camel@iokpp.de>
 Content-Language: en-US
 From: Can Guo <can.guo@oss.qualcomm.com>
-In-Reply-To: <316c8b28-9e93-4d14-b6d6-e8d593b8627c@acm.org>
+In-Reply-To: <dab22e8ea2b47207e8e4a9264f0421f959891fca.camel@iokpp.de>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNDIzMDEyOCBTYWx0ZWRfX1PBoVlEg/uC9
- qod8uyKsm3JuxuAj+L7GWIRrY0/jXU4axgUw+088xERe9M6xqF1vi84CN9hLPhj0PtJ3c47ZgJo
- VnObHIL1WZk5EL1CLDn7NroikA+VXqnaGNI5jnzxQHtx38yk1y8/bMRGkkAGLgRNr4gD+fH9TEA
- l7isJWcy4HQBnX28/i7DeNPs3w0k4IwUVg7cw5H1O3ctq08XGhfeFoi5HHlNB2lIxc+2Cgynomb
- mUp3UgBg8/ltyRjv9k4Hkekl6YLHmL+LvytDhn6n1JICPZF1zfyI+NQivI6s+S+w7yfNypghycf
- TYGZKncOeAmTw0yNvPumHwERrQ3HXXBUF5l2bbl6jjkWtzBwO7NTV9zFwReYFdJpHyxh2cj0J2h
- mZga3XHB/yu4Bq93uWlpaGSjZGHYrFggOBOre7KBcRHQ/MZ3ipmGDjaYCL5G2FAz+BbUED+ebow
- BZYpyoFuNJyl6CR9kmQ==
-X-Authority-Analysis: v=2.4 cv=dL+WXuZb c=1 sm=1 tr=0 ts=69ea179d cx=c_pps
- a=cmESyDAEBpBGqyK7t0alAg==:117 a=nuhDOHQX5FNHPW3J6Bj6AA==:17
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNDIzMDEzNCBTYWx0ZWRfX5vshq3Oh01VK
+ M5I8tyPIsRdtbiwCkaPo5Q/Ba1YN9EYhX6PD0ooe0IaBVp08jBdkem/Fc+fDHJyjylcibwVH3HC
+ 9wNHf9OVF2eJxgpcAYOiyZ2HRgAuzhEDvWkGvVJ8Tt5o4ZKYGiCpe/RZdbeMVOjmraRRa2clZbB
+ bgIia5XDQqPcmN5sZavkMGeAkcwmyJwH0X/ztqFp/Xr5UH694igjWBOMnd3wq6LAefmGNa17X5G
+ CvkP8/iJtCzCQstVsuDA9iWAkGyu+WP88P1hqNOZApgUCs8H2nhwdT7/Tt01zmlrPptDfRKSqLp
+ P8YcTF+M3Nm3QpYMGpdhhzRzY2QfvUnHvg5GYsXEDev0Jc0TCk1iTSxD/Ilo3EvoMJ/c5nbf5rg
+ +gCt5jung/Du5PZitrc1soWCBc09Uba/Ei8Acdf049HCuHFP3Xsl+uXxILiVKF7qBTJMKesJ1w3
+ kvaNGZSuO5htqr/F04Q==
+X-Authority-Analysis: v=2.4 cv=dL+WXuZb c=1 sm=1 tr=0 ts=69ea1f19 cx=c_pps
+ a=mDZGXZTwRPZaeRUbqKGCBw==:117 a=nuhDOHQX5FNHPW3J6Bj6AA==:17
  a=IkcTkHD0fZMA:10 a=A5OVakUREuEA:10 a=s4-Qcg_JpJYA:10
  a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=_glEPmIy2e8OvE2BGh3C:22
- a=V8bx_qqBVzzULFL9Z2sA:9 a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
- a=zZCYzV9kfG8A:10 a=1OuFwYUASf3TG4hYMiVC:22
-X-Proofpoint-GUID: Z3TIZMExsUsN8HMZnTnpcJnRCTMuKgtT
-X-Proofpoint-ORIG-GUID: Z3TIZMExsUsN8HMZnTnpcJnRCTMuKgtT
+ a=1dNXFKBvIBPViYih24wA:9 a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
+ a=zc0IvFSfCIW2DFIPzwfm:22
+X-Proofpoint-GUID: B8LUQex9fW93KF_oxZYOHjFwb2UcPgpZ
+X-Proofpoint-ORIG-GUID: B8LUQex9fW93KF_oxZYOHjFwb2UcPgpZ
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
  definitions=2026-04-23_03,2026-04-21_02,2025-10-01_01
@@ -135,24 +134,70 @@ X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
  impostorscore=0 bulkscore=0 spamscore=0 priorityscore=1501 malwarescore=0
  adultscore=0 clxscore=1015 suspectscore=0 lowpriorityscore=0 phishscore=0
  classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2604200000 definitions=main-2604230128
+ reason=mlx scancount=1 engine=8.22.0-2604200000 definitions=main-2604230134
 
 
 
-On 4/21/2026 12:58 AM, Bart Van Assche wrote:
-> On 4/19/26 6:52 AM, Can Guo wrote:
->> +static inline bool ufshcd_is_qword_attrs(enum attr_idn idn)
->> +{
->> +    return idn == QUERY_ATTR_IDN_TIMESTAMP ||
->> +           idn == QUERY_ATTR_IDN_DEV_LVL_EXCEPTION_ID;
->> +}
+On 4/21/2026 6:04 AM, Bean Huo wrote:
+> Can,
 >
-> Please change "ufshcd_is_qword_attrs()" into "ufshcd_is_qword_attr()".
-Done.
 >
+> On Sun, 2026-04-19 at 06:52 -0700, Can Guo wrote:
+>>   static int wb_read_resize_attrs(struct ufs_hba *hba,
+>>                          enum attr_idn idn, u32 *attr_val)
+>>   {
+>> @@ -1736,6 +1747,7 @@ static ssize_t _name##_show(struct device
+>> *dev,                           \
+>>          struct device_attribute *attr, char *buf)                       \
+>>   {                                                                      \
+>>          struct ufs_hba *hba = dev_get_drvdata(dev);                     \
+>> +       u64
+>> qword_value;                                                        \
+> u64 qword_value __maybe_unused;
+>
+>
+>>          u32 value;                                                      \
+>>          int ret;                                                        \
+>>          u8 index = 0;                                                   \
+>> @@ -1748,14 +1760,24 @@ static ssize_t _name##_show(struct device
+>> *dev,                         \
+>>          if (ufshcd_is_wb_attrs(QUERY_ATTR_IDN##_uname))                 \
+>>                  index = ufshcd_wb_get_query_index(hba);                 \
+>>          ufshcd_rpm_get_sync(hba);                                       \
+>> -       ret = ufshcd_query_attr(hba, UPIU_QUERY_OPCODE_READ_ATTR,       \
+>> -               QUERY_ATTR_IDN##_uname, index, 0, &value);              \
+>> +       if (ufshcd_is_qword_attrs(QUERY_ATTR_IDN##_uname))              \
+>> +               ret = ufshcd_query_attr_qword(hba,                      \
+>> +                       UPIU_QUERY_OPCODE_READ_ATTR,                    \
+>> +                       QUERY_ATTR_IDN##_uname,                         \
+>> +                       index, 0,
+>> &qword_value);                                \
+>> +       else                                                            \
+>> +               ret = ufshcd_query_attr(hba,                            \
+>> +                       UPIU_QUERY_OPCODE_READ_ATTR,                    \
+>> +                       QUERY_ATTR_IDN##_uname, index, 0, &value);      \
+>>          ufshcd_rpm_put_sync(hba);                                       \
+>>          if (ret) {                                                      \
+>>                  ret = -EINVAL;                                          \
+>>                  goto out;                                               \
+>>          }                                                               \
+>> -       ret = sysfs_emit(buf, "0x%08X\n", value);                       \
+>> +       if (ufshcd_is_qword_attrs(QUERY_ATTR_IDN##_uname))               \
+>> +               ret = sysfs_emit(buf, "0x%016llX\n",
+>> qword_value);              \
+>> +       else                                                            \
+>> +               ret = sysfs_emit(buf, "0x%08X\n", value);               \
+>>   out:                                                                   \
+>>          up(&hba->host_sem);                                             \
+>>          return ret;                                                     \
+>>
+> ...
+>
+>
+>>   
 >> +/**
->> + * ufshcd_query_attr_qword - API function of sending query requests 
->> for quad-word attributes
+>> + * ufshcd_query_attr_qword - API function of sending query requests for quad-
+>> word attributes
 >> + * @hba: per-adapter instance
 >> + * @opcode: attribute opcode
 >> + * @idn: attribute idn to access
@@ -162,17 +207,70 @@ Done.
 >> + *
 >> + * Return: 0 for success, non-zero in case of failure.
 >> + */
->
-> The word "API" is uncommon in the first line of kernel-doc headers.
-> Please remove it.
-Done.
+>> +int ufshcd_query_attr_qword(struct ufs_hba *hba, enum query_opcode opcode,
+>> +                           enum attr_idn idn, u8 index, u8 sel, u64
+>> *attr_val)
+>> +{
+>> +       struct utp_upiu_query_v4_0 *upiu_req;
+>> +       struct utp_upiu_query_v4_0 *upiu_resp;
+>> +       struct ufs_query_req *request = NULL;
+>> +       struct ufs_query_res *response = NULL;
+>> +       int err;
+>> +
+>> +       if (!attr_val) {
+>> +               dev_err(hba->dev, "%s: attribute value required for opcode
+>> 0x%x\n",
+>> +                       __func__, opcode);
+>> +               return -EINVAL;
+>> +       }
+>> +
+>> +       ufshcd_dev_man_lock(hba);
+>> +
+>> +       ufshcd_init_query(hba, &request, &response, opcode, idn, index, sel);
+>> +
+>> +       switch (opcode) {
+>> +       case UPIU_QUERY_OPCODE_WRITE_ATTR:
+>> +               request->query_func = UPIU_QUERY_FUNC_STANDARD_WRITE_REQUEST;
+>> +               upiu_req = (struct utp_upiu_query_v4_0 *)&request->upiu_req;
+>> +               put_unaligned_be64(*attr_val, &upiu_req->osf3);
+>> +               break;
+>> +       case UPIU_QUERY_OPCODE_READ_ATTR:
+>> +               request->query_func = UPIU_QUERY_FUNC_STANDARD_READ_REQUEST;
+>> +               break;
+>> +       default:
+>> +               dev_err(hba->dev, "%s: Expected query attr opcode but got =
+>> 0x%.2x\n",
+>> +                       __func__, opcode);
+>> +               err = -EINVAL;
+>> +               goto out_unlock;
+>> +       }
+>> +
+>> +       err = ufshcd_exec_dev_cmd(hba, DEV_CMD_TYPE_QUERY, dev_cmd_timeout);
+>> +       if (err) {
+>> +               dev_err(hba->dev, "%s: opcode 0x%.2x for idn %d failed, index
+>> %d, selector %d, err = %d\n",
+>> +                       __func__, opcode, idn, index, sel, err);
+>> +               goto out_unlock;
+>> +       }
+>> +
+>> +       upiu_resp = (struct utp_upiu_query_v4_0 *)response;
+>> +       *attr_val = get_unaligned_be64(&upiu_resp->osf3);
+>> +
+>> +out_unlock:
+>> +       ufshcd_dev_man_unlock(hba);
+>> +       return err;
+>> +}
+>> +
+> this needs a wrapper for retry?  In ufshcd_extract_tx_eq_settings_attrs(), the
+> 32-bit dTxEQGnSettingsExt read uses ufshcd_query_attr_retry(), but the 64-bit
+> qTxEQGnSettings read uses bare ufshcd_query_attr_qword() with no retries.
+I will use the non-retry version in ufs_txeq.c to be symmetrical, 
+because I don't really need
+retry - retry never helped in real cases.
 
 Thanks,
 Can Guo.
 >
-> Otherwise this patch looks good to me.
->
-> Thanks,
->
-> Bart.
+> Kind regards,
+> Bean
 
