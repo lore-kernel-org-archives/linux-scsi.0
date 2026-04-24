@@ -1,117 +1,133 @@
-Received: from mail-yw1-f171.google.com (mail-yw1-f171.google.com [209.85.128.171])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mailout2.samsung.com (mailout2.samsung.com [203.254.224.25])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD7F534A767
-	for <linux-scsi@vger.kernel.org>; Fri, 24 Apr 2026 07:39:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.128.171
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777016376; cv=pass; b=NyMNXNPQOi4/KitoIcODhKpZEYaIVaF/z44zPPV86ELIh9bEvEacFlnw/7nohZ02n9wQU3+47TcYo4zHRO8tqjDiBJmzDM0OF41Rm7PRqiAB690gXof9rAvTU7NoEgSNZ++H6ODAokrQrJWN2F3M9BQ1+X+C1Ky+xbyWABhyR6M=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777016376; c=relaxed/simple;
-	bh=qDuYQzqb/cSu2m3WynZ6dgFZPBUfe4a5MWzL9PmgB5Q=;
-	h=MIME-Version:From:Date:Message-ID:Subject:To:Cc:Content-Type; b=IQXFBp45jafXhXROHns+Zk34GsFeBL8uJVBXgB8aOmRXWZhDorOplalmWO7aKjLneOZSdvmvlfDkmJ3rbEq9AEGxNQiwh7jjoY5sAzwniEXHhlRPwGJ+KtAVP8r2Q+i8rnKblWdPqVtvkbufaURhjE1dkavbcaJNNn6ndSJ7DXE=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=LwALhCUH; arc=pass smtp.client-ip=209.85.128.171
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C76F348866
+	for <linux-scsi@vger.kernel.org>; Fri, 24 Apr 2026 09:52:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.25
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1777024351; cv=none; b=khzOKXfL+yfwuu5PcIC6/gHe8r6So8VrM7/y5D1Icqu93woeMjrHKaBrqKmW+vih5sLrhe/QHK2Fv3tJHuB5bydK05GcHfUAR+KnmA349g6P95tI8yq3GlPIAaxZuhTWNBfgM2P9C8QgIF4pymEkOHK1uG8oC0mVJgsDUDslUF0=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1777024351; c=relaxed/simple;
+	bh=7+nwNe0hubPEq2tWT6cJD5lGdELFJsocZFhWYUVObOo=;
+	h=From:To:Cc:In-Reply-To:Subject:Date:Message-ID:MIME-Version:
+	 Content-Type:References; b=lmiCnLm5wy1UsXdYxUgb5l8ME4+Zfl94cgRyjBM6BNiXhNfQnWFpMJP4Fyet6qZgyqp9Fkbg02bQJIiMa6i8fr2KPsYWbdXbKIeUXTr7xqOMdeDbPNNLynoi05H4GGx5R7oykr6s9F+xHgCnVIdFDS4IuRp16MIDNu8z5EIExOw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=RxWygvqZ; arc=none smtp.client-ip=203.254.224.25
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="LwALhCUH"
-Received: by mail-yw1-f171.google.com with SMTP id 00721157ae682-79495b1aaa7so75546787b3.1
-        for <linux-scsi@vger.kernel.org>; Fri, 24 Apr 2026 00:39:31 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1777016369; cv=none;
-        d=google.com; s=arc-20240605;
-        b=cl7yaSeTvaCJ9zYij5xO5LrX1LCPxFUlbkOl93S6hHwIPUjLBevWDj1Epv4Xw4n1iN
-         edKaECjoP6/i572rpb3Hsrv1jDQHK3IT6+RzeoIgg7XBWXR31AI1qXNdOXCElzaOytfJ
-         RpK08zCpwiANCuKEZ/ILeCWj1XZfZviZrztwuPFJDMLmUyDXK1zZozyVmM6c9OFuglOc
-         88nIHURkPLHCiXEd27kQy5cEzpYqkOA4i4ntYKLzvz2b2MJeyhVjm6O2rVpF4IhsS8G3
-         UN2vUD+w0R4gP2Pl7APF3tIGBIGH3phImmvuuUoERe+3kYHCLCgWTZNy7LtbbFjvGjSX
-         nfQg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=cc:to:subject:message-id:date:from:mime-version:dkim-signature;
-        bh=pH3vJyfUSUjMh69MtzR5ppjRqhjUf9sBN9iYzux6Aqg=;
-        fh=oozdZYA9rwlXhLIET563mvtazbrnDJ0YfXw0DoPLoBs=;
-        b=WnN3gc8LV3C8V2CVdt5xk4FS41V0AT9of4as6k6xSbaCmE9PgwnI75LQiV6JG11xZl
-         1exz30TrP6e19mro2h7oDHKKWtH7nQZGWLxZSgrgnTy9h/gEUXE0I9KnKIEc48RXa9ik
-         i89JqStBQmtp+rV/UGBl+WyIaX8SDvLU/9jzpff347+aBNLC/lcfhJu3vYnhby1n0eRh
-         qrczB+4B0H3e0PglEdGXonBARMZfK8GoJlmpEn6Ia8YVAlaaAFCAMOeGDh2BFWEubb6l
-         1c1TLHVI31B6dh+3tQtC4XOoDxdSA/Qve68S859iien8WI2eARnbR0vaemZaEKNsTMqH
-         /YBQ==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1777016369; x=1777621169; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:mime-version:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=pH3vJyfUSUjMh69MtzR5ppjRqhjUf9sBN9iYzux6Aqg=;
-        b=LwALhCUH62EVMOJDxkbyyhH7IjYWek/Ssx8ldB1q+SCXzl0yco/3Hc2ulu6m/f5QfS
-         vKaomOw7He6oG6CiJ8RAY4SwahWSeYqWit0BO26heZ7xsNlJGXrlZ/aSpMjoqavY8AdH
-         559JZO2oNA+COeFNkj2t5CKvdL10x37Y2H00a5GGh10w+8Bx6hAnAUB7kr3DTebKF/U5
-         b1xXc0rQK6GeXOs120X6VJfs61Dluv+c4u5UaL7DUV1janUjwvoNbQd0tdNRK+nMYRq9
-         P/hwsFvtj4bglFhJTG2QwMYn5vwjFySGQAPvn2LO5ioFds0lvPTJv5GMjKzOeqrD7sde
-         ydPw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1777016369; x=1777621169;
-        h=cc:to:subject:message-id:date:from:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=pH3vJyfUSUjMh69MtzR5ppjRqhjUf9sBN9iYzux6Aqg=;
-        b=L48fFPGUVDHSuWa2JrXd1r5qMM/OUHMbYRewNHggZgAyBP0O70tDkkhc/Xw1qp1U8B
-         kZN6K+8EKVrBB3M0WUlL4He5JOsjaV/za6zYrCIijBnzbd8TUDLihsxM9C1Qu5tVTrid
-         q3QrHRhJghPqvzhn1ZOM+xJS6OTXWTw3YAdtglXOk5A8Ld8+FdfYbjv/hFZ12RPrDa/b
-         QfudEATaEoIqYXoauJsskUvDgQE651wwctxDYvoo+WqoyelltntM3nWcmFiPWSRFPeHU
-         mPzQZLLY9edqpg40cyzE63QSzmOGK5fKeQ61MaMUXL1Y9vrhD/XaqmqgyLq2l57Va7AN
-         ugdg==
-X-Gm-Message-State: AOJu0YwUt8HnipkG8x6hyxyNSoA+JCa4FE3s5Q4HPmQktTDGGM/yxm07
-	WfnOZ2xu4MslQwuhTLjeI/xt2xAfijF+jzVTOXUzjfnxrTwHm3Dd+BbdgNLKSpXoOA8S/Z0I/4f
-	mLr6FJYaf93P2Wa6WDC/56w6AuUEwNGrzqupUZug=
-X-Gm-Gg: AeBDietPV0Zu2/ba2hGJqeNA+HXeJwmH2lWwYIqCnKdEe4Y7r9CvPkF9OJ0SZXAXauv
-	tn6bskNv+M24HMlBXxCuIgp4+ewluee11Q60OeJkB81HUcjpD1ZMo07sSgQdx5nwmLSBMHjoXLQ
-	cwq5tDTphJx7SJo1Ifrt8HtESpWKeiZGApymBjyRuPMZje2yh3N6xgPXWDiQ0NWqobxfJU6G+0Q
-	OCKcvv5FItAwmRfXEXA2PqY7oNIEVV8WipXCC5rLdgrdAs1kb0WpjMhEuUtOqLXKOBCLXU8YP3r
-	faC2q0jydQQ9nzmxJO8G
-X-Received: by 2002:a05:690c:6987:b0:7ba:e113:9628 with SMTP id
- 00721157ae682-7bae113a323mr238458667b3.30.1777016369500; Fri, 24 Apr 2026
- 00:39:29 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="RxWygvqZ"
+Received: from epcas5p4.samsung.com (unknown [182.195.41.42])
+	by mailout2.samsung.com (KnoxPortal) with ESMTP id 20260424095218epoutp02aae5bb22a6448ac2ca7760d5bb218aa7~pQjh9uTK70701507015epoutp02e
+	for <linux-scsi@vger.kernel.org>; Fri, 24 Apr 2026 09:52:18 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20260424095218epoutp02aae5bb22a6448ac2ca7760d5bb218aa7~pQjh9uTK70701507015epoutp02e
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1777024338;
+	bh=7+nwNe0hubPEq2tWT6cJD5lGdELFJsocZFhWYUVObOo=;
+	h=From:To:Cc:In-Reply-To:Subject:Date:References:From;
+	b=RxWygvqZ91MbmEivtdDYymY/GcSy4zP1uQl7oJMHSd+cKKFiu1TvCJ4AmR7peNSV0
+	 +6P+YnnwzXy0N8XbjgB92Poe7piO+x9JLm9Dm3FbqF0kXJ57w/uwkKaVP/CLmXHwUF
+	 SSp5oUZDfxvFSvXtu/XOYcP0rqXM+xUBpHmXvuSA=
+Received: from epsnrtp04.localdomain (unknown [182.195.42.156]) by
+	epcas5p2.samsung.com (KnoxPortal) with ESMTPS id
+	20260424095217epcas5p2f0cf8cb26a0976167a98fbf6b8dcf11a~pQjhTUF821838618386epcas5p2B;
+	Fri, 24 Apr 2026 09:52:17 +0000 (GMT)
+Received: from epcas5p1.samsung.com (unknown [182.195.38.89]) by
+	epsnrtp04.localdomain (Postfix) with ESMTP id 4g27Xw28BCz6B9m7; Fri, 24 Apr
+	2026 09:52:16 +0000 (GMT)
+Received: from epsmtip2.samsung.com (unknown [182.195.34.31]) by
+	epcas5p2.samsung.com (KnoxPortal) with ESMTPA id
+	20260424095215epcas5p291a4e6a42b1390cb9c21560e5c22ef57~pQjfotDis1732717327epcas5p2I;
+	Fri, 24 Apr 2026 09:52:15 +0000 (GMT)
+Received: from INBRO002756 (unknown [107.122.3.168]) by epsmtip2.samsung.com
+	(KnoxPortal) with ESMTPA id
+	20260424095213epsmtip25c4683e24d4e19f2bbdcfac925c538d6~pQjdrfLIu1913119131epsmtip2Y;
+	Fri, 24 Apr 2026 09:52:13 +0000 (GMT)
+From: "Alim Akhtar" <alim.akhtar@samsung.com>
+To: "'Krzysztof Kozlowski'" <krzk@kernel.org>, <avri.altman@wdc.com>,
+	<bvanassche@acm.org>, <robh@kernel.org>, <martin.petersen@oracle.com>,
+	<krzk+dt@kernel.org>
+Cc: <sowon.na@samsung.com>, <peter.griffin@linaro.org>,
+	<linux-scsi@vger.kernel.org>, <devicetree@vger.kernel.org>,
+	<linux-samsung-soc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	"'Krzysztof	Kozlowski'" <krzysztof.kozlowski@linaro.org>
+In-Reply-To: <f1a829c6-a612-4334-b6fc-993c51cc90de@kernel.org>
+Subject: RE: [PATCH v2 2/4] dt-bindings: ufs: exynos: add ExynosAutov920
+ compatible string
+Date: Fri, 24 Apr 2026 15:22:12 +0530
+Message-ID: <31a201dcd3d0$08164dd0$1842e970$@samsung.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-From: Ginger <ginger.jzllee@gmail.com>
-Date: Fri, 24 Apr 2026 15:39:19 +0800
-X-Gm-Features: AQROBzBrz47Fek1AkJY5V_425WsRHOSRo6qcDVEvJyYSZEUoZOMfGXV8smqknSQ
-Message-ID: <CAGp+u1YowPuP2HsAjnK0Q93tz9qcpVWU=OR2LtJWa+_uuz=zBQ@mail.gmail.com>
-Subject: [bug report] potential deadlock bug in 'drivers/scsi/hisi_sas/hisi_sas_v1_hw.c',
- between 'cq_interrupt_v1_hw()' and 'hisi_sas_slot_index_alloc()'
-To: liyihang9@h-partners.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Mailer: Microsoft Outlook 16.0
+Thread-Index: AQGOvTbkBrgGLxEZFB5FxnehV1lv0gFmXzAQAmEqbtkC/V4hngLthV3ktjyR8kA=
+Content-Language: en-us
+X-CMS-MailID: 20260424095215epcas5p291a4e6a42b1390cb9c21560e5c22ef57
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+CMS-TYPE: 105P
+cpgsPolicy: CPGSC10-543,Y
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20260417115842epcas5p1fb06d6f1663b97b1eae3aafaa6a3de0b
+References: <20260417121452.827054-1-alim.akhtar@samsung.com>
+	<CGME20260417115842epcas5p1fb06d6f1663b97b1eae3aafaa6a3de0b@epcas5p1.samsung.com>
+	<20260417121452.827054-3-alim.akhtar@samsung.com>
+	<27b401dcce62$03bd3280$0b379780$@samsung.com>
+	<f1a829c6-a612-4334-b6fc-993c51cc90de@kernel.org>
 
-Dear Linux kernel maintainers,
 
-My research-based static analyzer found a potential deadlock bug
-within the 'drivers/scsi/hisi_sas' subsystem, more specifically, in
-'drivers/scsi/hisi_sas/hisi_sas_v1_hw.c' and
-'drivers/scsi/hisi_sas/hisi_sas_main.c'.
-This deadlock potentially occurs with the involvement of hard irq.
 
-Kernel version: long-term kernel v6.18.9
+> -----Original Message-----
+> From: Krzysztof Kozlowski <krzk=40kernel.org>
+> Sent: Friday, April 17, 2026 6:25 PM
+> To: Alim Akhtar <alim.akhtar=40samsung.com>; avri.altman=40wdc.com;
+> bvanassche=40acm.org; robh=40kernel.org; martin.petersen=40oracle.com;
+> krzk+dt=40kernel.org
+> Cc: sowon.na=40samsung.com; peter.griffin=40linaro.org; linux-
+> scsi=40vger.kernel.org; devicetree=40vger.kernel.org; linux-samsung-
+> soc=40vger.kernel.org; linux-kernel=40vger.kernel.org; 'Krzysztof Kozlows=
+ki'
+> <krzysztof.kozlowski=40linaro.org>
+> Subject: Re: =5BPATCH v2 2/4=5D dt-bindings: ufs: exynos: add ExynosAutov=
+920
+> compatible string
+>=20
+> On 17/04/2026 14:02, Alim Akhtar wrote:
+> >
+> >
+> >> -----Original Message-----
+> >> From: Alim Akhtar <alim.akhtar=40samsung.com>
+> >> Sent: Friday, April 17, 2026 5:45 PM
+> >> To: avri.altman=40wdc.com; bvanassche=40acm.org; robh=40kernel.org;
+> >> martin.petersen=40oracle.com; krzk+dt=40kernel.org
+> >> Cc: sowon.na=40samsung.com; peter.griffin=40linaro.org; linux-
+> >> scsi=40vger.kernel.org; devicetree=40vger.kernel.org; linux-samsung-
+> >> soc=40vger.kernel.org; linux-kernel=40vger.kernel.org; Krzysztof
+> >> Kozlowski <krzysztof.kozlowski=40linaro.org>; Alim Akhtar
+> >> <alim.akhtar=40samsung.com>
+> >> Subject: =5BPATCH v2 2/4=5D dt-bindings: ufs: exynos: add ExynosAutov9=
+20
+> >> compatible string
+> >>
+> >> From: Sowon Na <sowon.na=40samsung.com>
+> >>
+> >> Add samsung,exynosautov920-ufs compatible for ExynosAutov920 SoC.
+> >>
+> >> Acked-by: Krzysztof Kozlowski <krzysztof.kozlowski=40linaro.org>
+> > Just noticed that this email is no longer valid, In case there is a re-=
+spin, will
+> correct this.
+> > Sorry for the noise.
+>=20
+> The ack can stay wild email, it's fine. It still gives the credit to prev=
+ious
+> employer.
+>=20
+Thanks Krzysztof for clarification.=20
 
-Potential concurrent triggering executions:
-T0:
-cq_interrupt_v1_hw[t1]
-        --> spin_lock(&hisi_hba->lock); [t2]
+> Best regards,
+> Krzysztof
 
-T1:
-hisi_sas_slot_index_alloc
-    --> spin_lock(&hisi_hba->lock); [t0]
-
-T1 does not disable hardware irqs in acquiring the spin lock. If T0
-(i.e., the hard irq context) occurs after T1 acquires the lock and
-both happen within the same CPU, then T0 will not proceed because it
-cannot hold the spin lock that has already been possessed by T1, yet
-T1 cannot proceed because the hard irq runs disables preempts.
-
-Thank you for your time and consideration.
-
-Best regards,
-Ginger
