@@ -1,46 +1,46 @@
 Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE11F330D24;
-	Fri, 24 Apr 2026 22:42:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0BF3B3FBED4;
+	Fri, 24 Apr 2026 22:42:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777070567; cv=none; b=qJMp78/X51Ejkep7DZZCrQeZ/9futp/JKapJUHFf49KS0H9vPoUA3U/FyMQ1oBppnL/vKrZaAGRzLG7xzH4kHzs9BJrHbgXmOxk+4sAlnZXW7h2PMPmRFwMwaOzbItZV+NDFO6mds35d9cH6g7GNi/l8qHQugAnyP6vld18K3tQ=
+	t=1777070571; cv=none; b=Vh+RHhA8MfWqBpu90cKG/4Nzhui1mOyvzuedN53ieGIR7YWJLwCtLHz3xRtP+Z8KgMbQBKugMBfqixBGbY8f8KuZzTeNF+IRjM6F/US+2rvz2jI8vhHB2WHHdK5g55eAtfDUZIt/ugUbSKtFzoWmIMEhvM+1bf92fcYIh1TF2/Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777070567; c=relaxed/simple;
-	bh=3IkZRUXtSIAk+tN6lJ+0t5TMx88Z2orI1Eqq38jxCEU=;
+	s=arc-20240116; t=1777070571; c=relaxed/simple;
+	bh=VmHREFg0sP5iGKWhsxQ0gnkojEOXLrvU96kmREemGyM=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Mujka9T2ks9RprUEOaRWzljGn+kRu4Dn4Ww/TfuSLRwkTdiq6+JsfJY+8SqxPlLx9pJm93P9uF/gHUEefYqhYlh1G4X6a2IX4Y8swxSRi8dSrMrFsJ11ndPz5Bh5WC/Rm4ANUe72TIipBCHbFQqAVFcFWXnAztlVltbLU2UVnGU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=ffyEo62/; arc=none smtp.client-ip=199.89.1.14
+	 MIME-Version; b=biPt9ZdNOyj/h5zCaxpYXfSTSK1q0ZYx42Vvoin8gFPtEHWyPFW/j7MI2lTW4LE1TIlAJnxwss0CAxQeZJ41pZR9NDkd1pXpdj5qWndd6EtOLkdM1xgahXAf9I1/QPOlehF/1BklMTPEybelB8BDxWTjfcZTN9OccxfSju+Dl6A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=mJJt0tAd; arc=none smtp.client-ip=199.89.1.14
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="ffyEo62/"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="mJJt0tAd"
 Received: from localhost (localhost [127.0.0.1])
-	by 011.lax.mailroute.net (Postfix) with ESMTP id 4g2Sdr0DGRz1XLDnV;
-	Fri, 24 Apr 2026 22:42:40 +0000 (UTC)
+	by 011.lax.mailroute.net (Postfix) with ESMTP id 4g2Sdt2sj6z1XLHYm;
+	Fri, 24 Apr 2026 22:42:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:mime-version:references:in-reply-to
 	:x-mailer:message-id:date:date:subject:subject:from:from
-	:received:received; s=mr01; t=1777070556; x=1779662557; bh=RSzpF
-	oKs2c7iGR0jCRAU1YHjT5r/vjcUwHf2IThLqYs=; b=ffyEo62/oTvAV704uqzub
-	GlthaD3P5kWyMM7zpkK3sQKEHpfQS3cED/+Trbn4ajDw8zZQVM91kmT8wnSWqdZH
-	sJvcTxJso25JolGhttrDpHLlkJM4T6RpAQDkD55JAe67X3CKt0dtNHT4MUXrSYsn
-	9pyZJdCVOUQYZOmLg09y6LiVmCD4TF/n+H6+DVd4eO6iCHGrmyLP8Kd7QDEgej7z
-	4ChPrxxOA2sOr16SAyGyJpL/4cLJdwz8mGB1ZK9EVPfPMtJQfYusH8UXDifH+dIZ
-	w6Jxv32nEyp8XGQWy84KclXqVwjh2bYVj4sQn7XQ3VxgMNeKqkOmYlJTSiAMYTBI
-	A==
+	:received:received; s=mr01; t=1777070558; x=1779662559; bh=hn5gt
+	/kr7QDgHfqk6BJtfvqJ62o4kkrmwOKTA2D2kLY=; b=mJJt0tAd9F+e7XezCKlu+
+	cMif01CMnok1UpTVdunNApamb3sxfj5lSTzixS/6imv6K6BFtWSWD6L3OVydV10h
+	Y/QJy6zIp0IrelzGTzpXolfFjgUKEzXMzEDPUc77tlirppNFgYcP2gjGUufP5XJ9
+	CcUfmNrZ14Dmh3N7kBdVenvCJOmCHvTlbTL9hW/67TBWNYNbpCfc5ImgOgVJg+tm
+	+4wcm/I5aYg0N+JkbjByHd5CqEY12WTCYbkCdvvGApLYBBKvPHtiIvDRzEtVGXjK
+	6bt8RMxSpNaEhZiKJcL38rYWDqcx0kTAjg7OSi1kcx3XxckhOiteClSqViXO3tlZ
+	Q==
 X-Virus-Scanned: by MailRoute
 Received: from 011.lax.mailroute.net ([127.0.0.1])
  by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id 91GQYhTGq13t; Fri, 24 Apr 2026 22:42:36 +0000 (UTC)
+ id x6VTYr4bWKdD; Fri, 24 Apr 2026 22:42:38 +0000 (UTC)
 Received: from bvanassche.mtv.corp.google.com (unknown [104.135.180.219])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4g2Sdk6Lpdz1XQmtn;
-	Fri, 24 Apr 2026 22:42:34 +0000 (UTC)
+	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4g2Sdm63KVz1XLF2r;
+	Fri, 24 Apr 2026 22:42:36 +0000 (UTC)
 From: Bart Van Assche <bvanassche@acm.org>
 To: Jens Axboe <axboe@kernel.dk>
 Cc: linux-block@vger.kernel.org,
@@ -49,9 +49,9 @@ Cc: linux-block@vger.kernel.org,
 	Christoph Hellwig <hch@lst.de>,
 	Nitesh Shetty <nj.shetty@samsung.com>,
 	Bart Van Assche <bvanassche@acm.org>
-Subject: [PATCH 10/12] dm: Add support for copy offloading
-Date: Fri, 24 Apr 2026 15:41:59 -0700
-Message-ID: <20260424224201.1949243-11-bvanassche@acm.org>
+Subject: [PATCH 11/12] dm-linear: Enable copy offloading
+Date: Fri, 24 Apr 2026 15:42:00 -0700
+Message-ID: <20260424224201.1949243-12-bvanassche@acm.org>
 X-Mailer: git-send-email 2.54.0.rc2.544.gc7ae2d5bb8-goog
 In-Reply-To: <20260424224201.1949243-1-bvanassche@acm.org>
 References: <20260424224201.1949243-1-bvanassche@acm.org>
@@ -63,32 +63,38 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 
-In dm_calculate_queue_limits(), clear the copy offload limits if the
-device mapper driver does not support copy offloading. This is necessary
-since blk_set_stacking_limits() sets the copy offload limits to their
-maximum.
+Set BLK_FEAT_STACKING_COPY_OFFL and max_copy_hw_sectors to enable copy
+offloading.
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/md/dm-table.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
+ drivers/md/dm-linear.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/drivers/md/dm-table.c b/drivers/md/dm-table.c
-index dc2eff6b739d..888c5bdca5f1 100644
---- a/drivers/md/dm-table.c
-+++ b/drivers/md/dm-table.c
-@@ -1816,6 +1816,14 @@ int dm_calculate_queue_limits(struct dm_table *t,
- 			return -EINVAL;
+diff --git a/drivers/md/dm-linear.c b/drivers/md/dm-linear.c
+index 38c17846deb0..3de8bf5f11fb 100644
+--- a/drivers/md/dm-linear.c
++++ b/drivers/md/dm-linear.c
+@@ -119,6 +119,11 @@ static void linear_status(struct dm_target *ti, stat=
+us_type_t type,
+ 	}
+ }
 =20
- combine_limits:
-+		if (!(ti_limits.features & BLK_FEAT_STACKING_COPY_OFFL)) {
-+			ti_limits.max_copy_hw_sectors =3D 0;
-+			ti_limits.max_copy_src_segments =3D 0;
-+			ti_limits.max_copy_dst_segments =3D 0;
-+			ti_limits.max_user_copy_sectors =3D 0;
-+			ti_limits.max_copy_sectors =3D 0;
-+		}
++static void linear_io_hints(struct dm_target *ti, struct queue_limits *l=
+imits)
++{
++	limits->features |=3D BLK_FEAT_STACKING_COPY_OFFL;
++}
 +
- 		/*
- 		 * Merge this target's queue limits into the overall limits
- 		 * for the table.
+ static int linear_prepare_ioctl(struct dm_target *ti, struct block_devic=
+e **bdev,
+ 				unsigned int cmd, unsigned long arg,
+ 				bool *forward)
+@@ -211,6 +216,7 @@ static struct target_type linear_target =3D {
+ 	.dtr    =3D linear_dtr,
+ 	.map    =3D linear_map,
+ 	.status =3D linear_status,
++	.io_hints =3D linear_io_hints,
+ 	.prepare_ioctl =3D linear_prepare_ioctl,
+ 	.iterate_devices =3D linear_iterate_devices,
+ 	.direct_access =3D linear_dax_direct_access,
