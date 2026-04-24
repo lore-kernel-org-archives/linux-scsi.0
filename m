@@ -1,163 +1,155 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+Received: from mail-ej1-f47.google.com (mail-ej1-f47.google.com [209.85.218.47])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 729B333985
-	for <linux-scsi@vger.kernel.org>; Fri, 24 Apr 2026 05:45:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777009535; cv=none; b=TtT3a3Q8uaaz6Q73z3IwL0d0WBqKWsd7K+U3wPzolOVTsvBhKxUuE+6kc5VYe4V1bxY5x8pGatuwDgXydy4YV0OIEYrLD0B+uGpAgLru/z0D/+ycGJ/P3+t88TNQ/JrgIn9NaQEEvP2cTXbIh7cIDy56evCNuZqdLjKAJwHKQ9o=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777009535; c=relaxed/simple;
-	bh=HgQKvX/MQiImjdres3zV+GZ6STzueo6KF1Knoj4qF+8=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=d+CyL79uU7iFo6cUkOaVzYZO8USDIq03F7G036w7M3BK0eNnWw6UOtD316mO6VNiJR8kt8CEBBmLWHw0JExrc6noyJ9XmA9Y+8zl4UbmMLqpZkFfE267EqOrAMKfYU3NrhSqMgHS+AvXE+PCcuctvVwCJ/a4YtEGciYjwIDqA8o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=FGNwJbQE; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=i1JgatN3; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=FGNwJbQE; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=i1JgatN3; arc=none smtp.client-ip=195.135.223.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B257A18DB35
+	for <linux-scsi@vger.kernel.org>; Fri, 24 Apr 2026 06:00:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.218.47
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1777010443; cv=pass; b=k1dts0CHVOLoCObWPW31LrNJouAfdrrCyb+AWPe0DN9Swjohz4ZCr2FDBEend3Q8DmeirGX9XzxpdOQSHN4jBkOddZmNHJYzY10ghPFkzVX6CEStu1aKnPhetF3ozoVUpc7xyTeIHZb8w7rtW7BptK1cw5RTpKrHewhx0omQxnU=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1777010443; c=relaxed/simple;
+	bh=47+fEWej/SPazFwb2bx6i6bA+YnOTBp01O/lgG5e/4c=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=fdxzVhfiDRgkCS5OdZ8ZmCzGUIKPVflyOYV+vK9V3UiRH0lu67xsTVGd/GH4TFClprDilFhG6XlgV1OAnMDFu4xx2EgWwF5fvBjhIYT9ujJbP1YtFqz34BpOojpK3TXUdmhsoYjCIyGuefJ5Tx03OfHZ9A73zFubhaVstReTas8=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=ionos.com; spf=pass smtp.mailfrom=ionos.com; dkim=pass (2048-bit key) header.d=ionos.com header.i=@ionos.com header.b=VNLGnCOL; arc=pass smtp.client-ip=209.85.218.47
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=ionos.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ionos.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="FGNwJbQE";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="i1JgatN3";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="FGNwJbQE";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="i1JgatN3"
-Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id AC5916A864;
-	Fri, 24 Apr 2026 05:45:32 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1777009532; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=CQhgHGnANf2ouu43yT8/qCH+4ivxi8mRrhInrUB9nCw=;
-	b=FGNwJbQEUnSZN4qWY5opFLLCTFE9t498f3qPtgcRzZE1duOl9d95UKwglTUXmUp6FdlXKW
-	SwPAiBgxlI2oJMBGLc/31vTxhQME+epQKlKfY+UXvAKHQ8ujHKn2mLKZbI8YitE9EFX/pY
-	TJHqlzvLbk2IuTCN5MQMKelDgEja3e0=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1777009532;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=CQhgHGnANf2ouu43yT8/qCH+4ivxi8mRrhInrUB9nCw=;
-	b=i1JgatN3a084/kua+VsTDEwrbzadmNNcs+5EfXFziFeVnKqVGtig4Db1S4rpEJK83sVOXK
-	WKRavIzZQ3Z3THBw==
-Authentication-Results: smtp-out1.suse.de;
-	none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1777009532; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=CQhgHGnANf2ouu43yT8/qCH+4ivxi8mRrhInrUB9nCw=;
-	b=FGNwJbQEUnSZN4qWY5opFLLCTFE9t498f3qPtgcRzZE1duOl9d95UKwglTUXmUp6FdlXKW
-	SwPAiBgxlI2oJMBGLc/31vTxhQME+epQKlKfY+UXvAKHQ8ujHKn2mLKZbI8YitE9EFX/pY
-	TJHqlzvLbk2IuTCN5MQMKelDgEja3e0=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1777009532;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=CQhgHGnANf2ouu43yT8/qCH+4ivxi8mRrhInrUB9nCw=;
-	b=i1JgatN3a084/kua+VsTDEwrbzadmNNcs+5EfXFziFeVnKqVGtig4Db1S4rpEJK83sVOXK
-	WKRavIzZQ3Z3THBw==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 47677593AE;
-	Fri, 24 Apr 2026 05:45:32 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id cvVAEHwD62mFYwAAD6G6ig
-	(envelope-from <hare@suse.de>); Fri, 24 Apr 2026 05:45:32 +0000
-Message-ID: <ba82106e-ee68-43e2-93da-bb215fc26acc@suse.de>
-Date: Fri, 24 Apr 2026 07:45:31 +0200
+	dkim=pass (2048-bit key) header.d=ionos.com header.i=@ionos.com header.b="VNLGnCOL"
+Received: by mail-ej1-f47.google.com with SMTP id a640c23a62f3a-b9c7b2ecf04so125471366b.3
+        for <linux-scsi@vger.kernel.org>; Thu, 23 Apr 2026 23:00:41 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1777010440; cv=none;
+        d=google.com; s=arc-20240605;
+        b=ab8DbBTQ1Do79ER9inmAFoAAgBqxJpifbVp3LCNjzRCVOgmFAKJ1M+X7jQqmOJXh6m
+         Ypq7HjiLOp2WxHgym8H+6dLLWzk9TZ9dm4kEkrXFKD3sawrEne2VW6WAEe8aO7HBhSNo
+         dsyEFBsaG7nqC16KPQNIRgcqf5s7Rqhq5pQMNY3sde5G+PmwfG2BKZuuTkmj0IE1ozLb
+         vFHbbwR6y1GWRG9yHPnDrJc3EMO4fRWq3pXG4/ObOsxDXt00b3aFNtAqUJR2fqxhAQs5
+         EH8vfKPlHkPfBAv8iV7g0PPgnAJ2N9Hb2aulkjps4WN2om6RhG9cMY6HXZ5iEpIsIFRH
+         vsIQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=8PshLiRG7065i8PHlCp/QU3acwVHNiiTlweYHpZl1ao=;
+        fh=06py22iYVd1fNASj789UF+v/OIiqsJdwFN76UVMP8uI=;
+        b=Abz5rk9an8Xszk2YbljslxmCqnOCseIfJgDNg+zLJfrmKvarDxBkZ6SYBuM0Y/UxbK
+         AobWX/IkKOAf9fHkP7QHb6/i8psuuF8mOzqn88npll6689+dWL+qgEDukMXgpsRGnD3Y
+         eFKhqpGzAjMwgy05BKFnEpghv5k4eTm9IljXfhxapX+GhIgEUUHgKVYiVzn7+xMEdPxo
+         JZnP8bsKo3DuKusRGYgh9xTZnQy3MHeMsXhbcpngnDWeY3x+Mo/NAVqNZ8QSQYjtIKQd
+         S2WjzaX0oxe/ZxWVzi/xJ/N6wgrc42p7MlkRggF4VNNnfol7OOaJheU/354OKTSgQqlk
+         JsuA==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ionos.com; s=google; t=1777010440; x=1777615240; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=8PshLiRG7065i8PHlCp/QU3acwVHNiiTlweYHpZl1ao=;
+        b=VNLGnCOLsgoyPm02XMvgBoTmFDvKzlEYao3gEZTNLyAqO13l17O8T3LsEQJRV6oZMf
+         w2LFqbAzMPYp8x0E2QTVcTcdDpDkV+hfGEQfja85jhdHCg1aEJsrlyCjWh+sT5jujXTV
+         Vdq2C6KwuxrivJMm7ShBiOEr83ha3es4yAX50BUcok6iPOR6LA+16e6lisqHi7j4sm6h
+         ov68O/LOowJclJpDjcuiTxfskdgu/9M+kLGIReyyji26/csOq9Y67QTSSNXCsUCsA+Op
+         bcsoczxeicS8s3hAf4Vlr+PDm/BnVcpM/WY9PyQtwZlvt8rQ5pZqxEir2x1fQfb9Hkyn
+         KaVA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1777010440; x=1777615240;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=8PshLiRG7065i8PHlCp/QU3acwVHNiiTlweYHpZl1ao=;
+        b=K3ZYeeMIo3LtjWiDGuzMg9KOZmH3gnoZNIyEigI45bHPOj+R9UsTMWISlWvpVnQDft
+         fE2OVb/blkevfQE8OYgsjbp8yegGOPuRsqP47I2I6Rfxsbi0nkZIAJiHEHIvZqv0f8ej
+         eHChSl+0q39v3QU5V/Jt4r8feD6EekDTt269KpoI2TlfZ1PluQguC/v/UroB2BbkmGIP
+         nNt/pUc0p1vVyZji0rtVoit4vM0ROd7vQ8sQtoGmUs4DkR7jghXrYdDF6AFwsKfFfTZF
+         JLYDiYu9TOgUf5WegMn2Gm0iaKh/W+ASIWt/+E6dp1hPufrpGVWJ1OCcjsn0uelG6XSZ
+         0EDQ==
+X-Forwarded-Encrypted: i=1; AFNElJ9kbBRh3WH7ZxDQd80BrKjqwvKWk/omm0Y3kndaWN2rVHeFQBsZnxqU2wJvqWRGIS6W27+ql/8cAjVH@vger.kernel.org
+X-Gm-Message-State: AOJu0YyYnG1K0LFhbla7y8wQSFKrNc88pMNpMSfOQyMsgUQ9dRtVWvk5
+	Jq3skM39QHHT8zX3PA4XKLvDrYolTgt6E5qQWsDxm86WeKLhumxewNePEhg6BwiIlB4EY+MuIpy
+	lQnx/q0Wm1vtLlJMqstafJfuC7qZEOBq9F/IaQauSGg==
+X-Gm-Gg: AeBDiesXDmR4LhZ6xncoWaFOaDbwS/adNPihBupieUK+GMzYyq7Cf489HBHjtFN1LhZ
+	tQhufMc4Qq+5KnHD1ulsc4Ntpse++IlHl2fv3zKtABvfp5sXO1CjXlggM7E/vFi8jYXis0LPjyd
+	UL5aF90A41OZsxGI/IJPtTzUGe6VHbk/PvFXDtM47cyxQIHtMMuOrOVqRX2/UXfTS5dXcEKZwGB
+	wAVijvVIb82OFBQOmx5zwabZ/e6dJ5bSyY7niVubhz84JcYQ2i919iH+s3qbpaffERHGc0zbAQr
+	MsFmrufkeirrLSoFqYhdOqqM0rrDBEXqs2RAOZedhYVtwgE21yA=
+X-Received: by 2002:a17:907:3e8a:b0:ba2:a0a2:6f8c with SMTP id
+ a640c23a62f3a-ba4154d92fdmr703485266b.0.1777010439897; Thu, 23 Apr 2026
+ 23:00:39 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 0/4] scsi: Support devices that don't have a cmd_per_lun
- limit
-To: Bart Van Assche <bvanassche@acm.org>,
- Mike Christie <michael.christie@oracle.com>,
- Stefan Hajnoczi <stefanha@redhat.com>
-Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
- james.bottomley@hansenpartnership.com, virtualization@lists.linux.dev,
- mst@redhat.com, pbonzini@redhat.com, eperezma@redhat.com
-References: <20260417230751.117836-1-michael.christie@oracle.com>
- <20260420173352.GB405461@fedora>
- <603eee86-9914-4ac8-b937-a38922e69a45@oracle.com>
- <9ce439b8-4e56-4a8c-8ef9-d8d9e93ab77a@suse.de>
- <39585b28-64d8-42a4-afab-a88ca1eb83b6@acm.org>
-Content-Language: en-US
-From: Hannes Reinecke <hare@suse.de>
-In-Reply-To: <39585b28-64d8-42a4-afab-a88ca1eb83b6@acm.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Spam-Score: -4.30
-X-Spam-Level: 
-X-Spamd-Result: default: False [-4.30 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	NEURAL_HAM_SHORT(-0.20)[-0.999];
-	MIME_GOOD(-0.10)[text/plain];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	FUZZY_RATELIMITED(0.00)[rspamd.com];
-	ARC_NA(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	RCPT_COUNT_SEVEN(0.00)[10];
-	MID_RHS_MATCH_FROM(0.00)[];
-	RCVD_TLS_ALL(0.00)[];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	FROM_HAS_DN(0.00)[];
-	TO_DN_SOME(0.00)[];
-	FROM_EQ_ENVFROM(0.00)[];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	RCVD_COUNT_TWO(0.00)[2];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:mid,suse.de:email,imap1.dmz-prg2.suse.org:helo]
-X-Spam-Flag: NO
+References: <20260421212218.433963-1-sagar.biradar@microchip.com> <66414927-481a-4464-8a3d-d6d77ab1aefb@kernel.org>
+In-Reply-To: <66414927-481a-4464-8a3d-d6d77ab1aefb@kernel.org>
+From: Jinpu Wang <jinpu.wang@ionos.com>
+Date: Fri, 24 Apr 2026 08:00:27 +0200
+X-Gm-Features: AQROBzCqqvZTzC3ZruKyzhYMgsZVz1eDaE7vzpWo1FooqpOWX_GKiWyL7bzvFgE
+Message-ID: <CAMGffEmirEUEy75ZULdXFE13WLMnciWLa_YsLQOyF0r6TArzPw@mail.gmail.com>
+Subject: Re: [PATCH] scsi: pm8001: add MODULE_AUTHOR entries for new contributors
+To: Damien Le Moal <dlemoal@kernel.org>
+Cc: Sagar Biradar <sagar.biradar@microchip.com>, 
+	"Martin K. Petersen" <martin.petersen@oracle.com>, 
+	James Bottomley <James.Bottomley@hansenpartnership.com>, 
+	linux-scsi <linux-scsi@vger.kernel.org>, stable@vger.kernel.org, 
+	Don Brace <don.brace@microchip.com>, Raja VS <raja.vs@microchip.com>, 
+	Kumar Meiyappan <kumar.meiyappan@microchip.com>, 
+	Abhinav Kuchibhotla <abhinav.kuchibhotla@microchip.com>, 
+	Uday kumar Bagam <udaykumar.bagam@microchip.com>, Advait Churi <advait.churi@microchip.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On 4/23/26 18:40, Bart Van Assche wrote:
-> On 4/23/26 2:45 AM, Hannes Reinecke wrote:
->> Ideally I would kill cmd_per_lun.
->> This really is a poor man's fairness algorithm (sole purpose is to
->> avoid starvation with many luns), and we really should look at if
->> we cannot replace it with tagsets.
-> 
-> Hmm ... isn't cmd_per_lun essential since the introduction of scsi-mq?
-> Without a host-wide tagset, and with n hardware queues,
-> blk_mq_alloc_tag_set() allocates (number of hardware queues) *
-> (shost->can_queue + shost->nr_reserved_cmds) requests. Each request
-> maps to one SCSI command. Setting cmd_per_lun to shost->can_queue may
-> be essential to avoid BUSY responses from a SCSI device. Here is an
-> example from the ib_srp driver (there are many more SCSI LLDs that
-> follow this pattern):
-> * During connection establishment, the SCSI target reports the
->    maximum queue depth it supports. This response is used to initialize
->    can_queue and cmd_per_lun.
-> * Multiple hardware queues are allocated, all supporting can_queue
->    commands.
-> * cmd_per_lun is set to can_queue to avoid BUSY responses from the SCSI
->    target. My experience is that for high performance SCSI targets even
->    1% BUSY responses cause a significant performance drop.
-> 
-My point being that cmd_per_lun is a single setting, and is extremely
-imprecise. At the same time we already have fine-grained request QoS
-available by virtue of tagsets.
-Seems like we need to have a 'device_tagset' setting, too.
-Hmm.
-
-Cheers,
-
-Hannes
--- 
-Dr. Hannes Reinecke                  Kernel Storage Architect
-hare@suse.de                                +49 911 74053 688
-SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
-HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
+On Fri, Apr 24, 2026 at 4:35=E2=80=AFAM Damien Le Moal <dlemoal@kernel.org>=
+ wrote:
+>
+> On 4/22/26 06:22, Sagar Biradar wrote:
+> > Add MODULE_AUTHOR declarations for the developers who have
+> > been actively working on the pm8001/pm80xx driver in recent years.
+> >
+> > This helps properly credit the people involved in the ongoing
+> > maintenance and the current upstreaming effort.
+> >
+> > Signed-off-by: Sagar Biradar <sagar.biradar@microchip.com>
+>
+> Well, if you go there, then you are really missing *a lot* of people.
+> Just run:
+>
+> git shortlog -n -s -- drivers/scsi/pm8001
+>
+> and see the ranking by number of commits.
+>
+> So in the end, I really do not see the point of this patch since git log =
+can
+> give a full (and correct) list of contributors.
++1
+>
+> > ---
+> >  drivers/scsi/pm8001/pm8001_init.c | 3 +++
+> >  1 file changed, 3 insertions(+)
+> >
+> > diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm=
+8001_init.c
+> > index e93ea76b565e..487f9bc237ef 100644
+> > --- a/drivers/scsi/pm8001/pm8001_init.c
+> > +++ b/drivers/scsi/pm8001/pm8001_init.c
+> > @@ -1569,6 +1569,9 @@ MODULE_AUTHOR("Jack Wang <jack_wang@usish.com>");
+> >  MODULE_AUTHOR("Anand Kumar Santhanam <AnandKumar.Santhanam@pmcs.com>")=
+;
+> >  MODULE_AUTHOR("Sangeetha Gnanasekaran <Sangeetha.Gnanasekaran@pmcs.com=
+>");
+> >  MODULE_AUTHOR("Nikith Ganigarakoppal <Nikith.Ganigarakoppal@pmcs.com>"=
+);
+> > +MODULE_AUTHOR("Abhinav Kuchibhotla <Abhinav.Kuchibhotla@microchip.com>=
+");
+> > +MODULE_AUTHOR("Kumar Meiyappan <Kumar.Meiyappan@microchip.com>");
+> > +MODULE_AUTHOR("Sagar Biradar <Sagar.Biradar@microchip.com>");
+> >  MODULE_DESCRIPTION(
+> >               "PMC-Sierra PM8001/8006/8081/8088/8089/8074/8076/8077/807=
+0/8072 "
+> >               "SAS/SATA controller driver");
+>
+>
+> --
+> Damien Le Moal
+> Western Digital Research
