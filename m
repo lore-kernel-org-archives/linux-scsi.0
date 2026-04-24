@@ -1,517 +1,202 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from BN8PR05CU002.outbound.protection.outlook.com (mail-eastus2azon11011005.outbound.protection.outlook.com [52.101.57.5])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 354202D8DB5;
-	Fri, 24 Apr 2026 15:15:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777043719; cv=none; b=EfA4dXoJimMUu124+Qm+xgO2Am0srpDr7V5Op7Rl7i2PiqFuxtA9O5gM+Qkshwvb9+3kfmrVK0Gu0EE6Hw+8pBBKfLQUx7lwm8VFZgWJvPYUwwnTYrBLfyqBArYWwDqTRRsPhX3yK55Ouk8srvI39MNxaYoysUMlj2LBHtv341M=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777043719; c=relaxed/simple;
-	bh=bGLrb2UNJbAYTNx/vDHD9CS4yQz+QKxQ1wG+sTvEQTg=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=uYUtnW0aGcDriyKdJp/qCkzgH0q2tPXZS4ePfO5zaFzXQ4zsbOln8M3cqDpOlanlpIWRwBrhSB3det5r/sFgEj10QuHVpezKSjB6Ih4cATyMNygj7S5ffFCN5hsrbQ4s1Ze3Di8qAvpVKBG51uQumWQDS+3F2ig57XkyFNo87j0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=H0dh4rtq; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qualcomm.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD2923FB7FC;
+	Fri, 24 Apr 2026 20:46:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.57.5
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1777063620; cv=fail; b=IDkYSDHGrLEHT4Tnf7bcgguH/sqizHeZ7Y+LnqmKKFS1SjAF+D2KUbiFmIcIDK0gZfJR/4brCzc7yNUkyA2HtSzsggt9q3AGcZwQSsIqD2cPYU1fkdaGcc66gFJteNQB+Lmttl6pUA0jA1UxIYDi33uq7UVYCaKywMZ3qX4R3RA=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1777063620; c=relaxed/simple;
+	bh=BtlS0FKiguAtxp+5jLs9RdWZHt77U2r2ia2rnkKiafY=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=dKapuKT/42A5fBOd5NI/569xd0EwBP804RP9+rpSHUSyXg8521MzhFN+5hTGyOB/kspQj6MAw2/+sVgjt3A/rwlkXtYWOxBDVb3D/Yhu5/tWyx0QzqG+f8bbRKioXDeB/ULWfs9fPTsw3a9JB6NM/LFJ/IwKfa1NF8y8znKyzDc=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=microchip.com; spf=pass smtp.mailfrom=microchip.com; dkim=pass (2048-bit key) header.d=microchip.com header.i=@microchip.com header.b=r0ZtaKsu; arc=fail smtp.client-ip=52.101.57.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=microchip.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=microchip.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="H0dh4rtq"
-Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 63OD6VVs4167719;
-	Fri, 24 Apr 2026 15:14:48 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:date:from:in-reply-to:message-id
-	:mime-version:references:subject:to; s=qcppdkim1; bh=VuUvNNd4sSo
-	4WUS4TBOY5nxYX4CrAEgoExL2Z+0O494=; b=H0dh4rtq9StGpdBhsFvb7lHOMUy
-	0E0T8bMjIAv8o7RYu/arSsWEd3cyBv3eXDf7SLGHhP+MPcI/81+7ssdKzlsZGYgH
-	TseTtpHlJYqTxUnJXA4Q80k+wk7C7S17rj18elF4qrwIsABdJLkLUBvrX5R3DFl9
-	RiqZL7LmKdUt5lEVMM6xsxV5JLrXuhEfEGFRurCvlvUO8TK7qv/arIp6wIef3eIR
-	43RvVr0P7F2RNu9+J7WIA9kpB9O8eN/O9VuS7OYUez+KciwGadMS6zD+ZozIzr81
-	ETM1d0og/NxWZfssA9oLiYfL4Wul5UBe7KTxxFgJWVAygd42STGInWTdHyA==
-Received: from nalasppmta02.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4dr48n1y7a-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 24 Apr 2026 15:14:47 +0000 (GMT)
-Received: from pps.filterd (NALASPPMTA02.qualcomm.com [127.0.0.1])
-	by NALASPPMTA02.qualcomm.com (8.18.1.7/8.18.1.7) with ESMTP id 63OFElsN024089;
-	Fri, 24 Apr 2026 15:14:47 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-	by NALASPPMTA02.qualcomm.com (PPS) with ESMTPS id 4dqnytm4ds-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 24 Apr 2026 15:14:47 +0000 (GMT)
-Received: from NALASPPMTA02.qualcomm.com (NALASPPMTA02.qualcomm.com [127.0.0.1])
-	by pps.reinject (8.18.1.12/8.18.1.12) with ESMTP id 63OFEk9p024084;
-	Fri, 24 Apr 2026 15:14:46 GMT
-Received: from hu-devc-lv-u22-c.qualcomm.com (hu-cang-lv.qualcomm.com [10.81.25.255])
-	by NALASPPMTA02.qualcomm.com (PPS) with ESMTPS id 63OFEkJH024083
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 24 Apr 2026 15:14:46 +0000 (GMT)
-Received: by hu-devc-lv-u22-c.qualcomm.com (Postfix, from userid 359480)
-	id 68EB45D0; Fri, 24 Apr 2026 08:14:46 -0700 (PDT)
-From: Can Guo <can.guo@oss.qualcomm.com>
-To: avri.altman@wdc.com, bvanassche@acm.org, beanhuo@micron.com,
-        peter.wang@mediatek.com, martin.petersen@oracle.com, mani@kernel.org
-Cc: linux-scsi@vger.kernel.org, Can Guo <can.guo@oss.qualcomm.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-        vamshi gajjela <vamshigajjela@google.com>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH v2 2/2] scsi: ufs: core: Add support to retrieve and store TX Equalization settings
-Date: Fri, 24 Apr 2026 08:14:20 -0700
-Message-Id: <20260424151420.111675-3-can.guo@oss.qualcomm.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20260424151420.111675-1-can.guo@oss.qualcomm.com>
-References: <20260424151420.111675-1-can.guo@oss.qualcomm.com>
+	dkim=pass (2048-bit key) header.d=microchip.com header.i=@microchip.com header.b="r0ZtaKsu"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=eB4i5mL6sknpuSlgtQq49y14rbwZ1sPf3zdbKtDo/akdncIMKLgGG2N4U1OWoi48EXkaVXIB5dTIwrg+KjaObd/Vy3QuEbUaIzu/3ct3x/Zk5dHnZknk0T2u9LtAfo9UZWYc055E5hhpzJEIuKKQ851eCst43ZZbqL/tPCla0xB5n6uFBW3uYVXpZGMmdFE3IUlbu1DiFf3nLWqn4FkzMuHQ4gutVCgjZpGrcxJo1j0bg79G07Y9dLDSXXlUiB8oHZHc5SOw75yb2Sp0GollzvB6GN+UCYgpui2BXj3K3gS++qywbmoNL54CLqbusDiU0pHErnb3BiSWgx3TGHTtdw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=BtlS0FKiguAtxp+5jLs9RdWZHt77U2r2ia2rnkKiafY=;
+ b=OhaLmW/8erpqRMOkWHC7lMeKy+LZVFHSZTOmPCiIR96h8wDHpHw9PuMjMVc1Bu6CNssPPoM7xIRYaq0sb8g5tuiyLEDLhcuW051WSOXpE951grRctSzUl2pXA7t+gZhFQAugv1ZA9PqKUJJTgt5u/jD5ObcpUBLt7ewibcqZRYqYB97Ztg6uPRUCA19ad9VzK/eR9YvhQdEmcHYHgfRbPiq4yOsyRVRYwFSFj+MOyTi/HylA7fWRkcBov8QlXZpj/uwqWoskMmWKXXxhLupCKCoFC4vw4dVYEGJXkaGQWxO813bFOtcmcxo7eoZJDl7a76uKGHWRbYGOc3QvQiCOAA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=microchip.com; dmarc=pass action=none
+ header.from=microchip.com; dkim=pass header.d=microchip.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=microchip.com;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=BtlS0FKiguAtxp+5jLs9RdWZHt77U2r2ia2rnkKiafY=;
+ b=r0ZtaKsujCtdZqmxQcX+YLmwHM7w0Gv6aAEAIPjUgewuIPrmy7csjpSnV9mm/jhgiT/6fDW4rXmgkCI56UOlSZVH+kSWsn6Pxk9uG01qXDFqf+kQyMvNPTprAUFLGq1GBuu0iqbbKfPBFEvnuL4kfTo1jQjNL/OVVpPW18QbcmJE3wTcCFvSjpmjZK/ujJ8l6bPqk4Fye+NtDbxQ2OVg4htSgZoWz461HzXmxLalp0p2Wf2k+RaA1ksLboo8yy21YgaFP56dZK3mBmdlUTtB0YPVExlVsqyWfTnFEH0zcwHu1PrdHw6UbVrwt6z2NYIjc2spaaanvxixOFkIOOPSBA==
+Received: from PH7PR11MB7570.namprd11.prod.outlook.com (2603:10b6:510:27a::8)
+ by SJ0PR11MB5101.namprd11.prod.outlook.com (2603:10b6:a03:2dc::18) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9846.21; Fri, 24 Apr
+ 2026 20:46:55 +0000
+Received: from PH7PR11MB7570.namprd11.prod.outlook.com
+ ([fe80::2f1a:88db:3b2a:e6d0]) by PH7PR11MB7570.namprd11.prod.outlook.com
+ ([fe80::2f1a:88db:3b2a:e6d0%5]) with mapi id 15.20.9846.016; Fri, 24 Apr 2026
+ 20:46:54 +0000
+From: <Sagar.Biradar@microchip.com>
+To: <jinpu.wang@ionos.com>, <dlemoal@kernel.org>
+CC: <martin.petersen@oracle.com>, <James.Bottomley@hansenpartnership.com>,
+	<linux-scsi@vger.kernel.org>, <stable@vger.kernel.org>,
+	<Don.Brace@microchip.com>, <Raja.VS@microchip.com>,
+	<Kumar.Meiyappan@microchip.com>, <Abhinav.Kuchibhotla@microchip.com>,
+	<Udaykumar.Bagam@microchip.com>, <Advait.Churi@microchip.com>
+Subject: RE: [PATCH] scsi: pm8001: add MODULE_AUTHOR entries for new
+ contributors
+Thread-Topic: [PATCH] scsi: pm8001: add MODULE_AUTHOR entries for new
+ contributors
+Thread-Index: AQHc0dT2ny8dAprvqEy8wrx0ApvFn7XtglIAgAA5T4CAAPWFIA==
+Date: Fri, 24 Apr 2026 20:46:54 +0000
+Message-ID:
+ <PH7PR11MB7570016CBC1B9F73CB30D950FA2B2@PH7PR11MB7570.namprd11.prod.outlook.com>
+References: <20260421212218.433963-1-sagar.biradar@microchip.com>
+ <66414927-481a-4464-8a3d-d6d77ab1aefb@kernel.org>
+ <CAMGffEmirEUEy75ZULdXFE13WLMnciWLa_YsLQOyF0r6TArzPw@mail.gmail.com>
+In-Reply-To:
+ <CAMGffEmirEUEy75ZULdXFE13WLMnciWLa_YsLQOyF0r6TArzPw@mail.gmail.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=microchip.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: PH7PR11MB7570:EE_|SJ0PR11MB5101:EE_
+x-ms-office365-filtering-correlation-id: 37b1d497-e0a4-4a36-36ee-08dea2429ec4
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam:
+ BCL:0;ARA:13230040|1800799024|376014|366016|18002099003|56012099003|22082099003|38070700021;
+x-microsoft-antispam-message-info:
+ y4z3gvcZh+CVgaz3uH8A+2lD96wKOg/3NeB5pSXuvRJ/ipZFIv2PsgrcCDXD/WMuCi6fwuGpb90ln0fJWm/i35couJklFX3xcsBThsZxXhcIwWPLnEXEAM63UvVMzlu3WJkzKSfzc+v+Vfbnrivo59j4tJDBsGTaYVXn3Zi5+yr5WocHE0j14jC5Q29ujL/Xcf2P/4ZlAaHKRt9tBBXJQLNSgu6HMS7z1RdcuMKY6xBKIMATLrzWfAZpbplMf2xCnCQd/1w+Bpzeofu/c9vsLEVMicl9SOfM9JVJnoT7iAVGhYfx3SiD/CzJVKzGGfPyCk7YEi9pb6QT5hHgOkRIRiZcoP23lKo/S7uyAmLMV+bfWlPhus6B25IqwNnmBAO3TG6uaKUn+WPprlaKL1b8/uHLyQ54VtJK1G1JuTI8yPJ444AA5VpSBMNZishMjZ/tp5v0zhQIUFuSgFmnHmw0mT+P6dLSv64uRGVWsIagSFAzNNBkzPeNY3ZXIemnH2bd3e2CNdyChhm2kTsFC0acXOPp/j9qM614w1xQRbzlcMD5XBO7FZf3nFyOsRBe/zpoFFSUsnr9PwA+1BCVoGtbeV+1HsREWZpfgMpAqrXucGF8cz3bFM1RnY4Uu2tXXsESN/WurAMgKxk+ZQ3XEfSn+eMzmn856I3fgs3STes14c2koLc2PZNb7DQEruYGnTr/RepCqaZ0BZR0NvE/11aKv6tNBa2BlFFvZwhlo5BW7nS+y5caRdVOYJ0y0ve2nnRsAHirmcz6pXThFDO5YMEtNeRi9CfZlHTnU2yEzVVlWIs=
+x-forefront-antispam-report:
+ CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH7PR11MB7570.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(376014)(366016)(18002099003)(56012099003)(22082099003)(38070700021);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0:
+ =?utf-8?B?aEViREIwRTNzVmtkZTZ0NVh6MzJ2TFo3c09QRzFyMUI5VUs4VncyOWtvSnlG?=
+ =?utf-8?B?RFFGSitZdDFDeWVGV3NtbkRRbkVwbzhiWWZaMEZIMnJmU2I3ZVlqMlZNTW5l?=
+ =?utf-8?B?enpSQlBudDZVN3NZTGZsSmlJZFlaY3A4eVBRU2djTGxXdG9ucjVVVlNraGRn?=
+ =?utf-8?B?NVNhdkVpUnhlWSt4LzlUYmt0Z05KZEFKd3k2Wmc0QmVEZmdvU28yRzRlWnlE?=
+ =?utf-8?B?NU1OcU1jZXM5Y1pOWnhIVXBxcjQxc0FId21uZVJKaVBHNlJaVmM3dnE5Y0lS?=
+ =?utf-8?B?TGZpN1ArYXZmQ2htWWtVbmNGK0xteWVpRzdVUWVlbkl3VHlzRjdCN3hoYXVD?=
+ =?utf-8?B?bllob0NHWGZCcG1TdDEzMEZ3V0k5MXNqNWhtLzI1dUp4YmFlVFhxcU1rcWRI?=
+ =?utf-8?B?Tzh0THZsUVVyeDdDQnhLQWIxcVB3ZU5RTDdUYzdjczRRa0tzN1FkeHd3OTBp?=
+ =?utf-8?B?YlRGWUNZYkQxcnpHbFd2bWN0WE5xMEYxVWN6Qk1EVTl0ODBYUmNSQzB3YXhE?=
+ =?utf-8?B?UnU4QVN4WEpua0xEQytWQTFaK252OE9wczgzdm95VURFZ2RlSUpRNitWZHcw?=
+ =?utf-8?B?QzJZM3AvWnN0VVhzQ3d0V3JCdkVyakxVdFZkWG1PN0ZXMy8ySDZTSndGWmcr?=
+ =?utf-8?B?eFZFdzR3N0hzcERXSTlwbmdDQUVwbkY2L3A2SEVHR1htMkhxemRCMnI5T1R4?=
+ =?utf-8?B?QXBzbk9TdXVRQUNLZDhuZnFSRE1LcHhMYTEwRitPMHVyU2V4dlQ1bkdyVnFs?=
+ =?utf-8?B?dW1TRUtvVE9RWjEvbWtaTXVJRUZsK0w2cVpNUFk3cTEzZUZpekZMRWNTNFVV?=
+ =?utf-8?B?TVZBTWM5eGgrOHBqZ2oxdlZMQytNSEZsZ2M5R0pPaWtsQVlyYUgyT3F5ZWNY?=
+ =?utf-8?B?VE5oSHFDSiszaHo0WkxTYXlPZm1iSjA1Nmd5RnlIU25EUnR3YWY0SEVDVHo1?=
+ =?utf-8?B?Qnl6TWxhMGMrRngzUWp4VVVWL2ZCaCsxdFQvT2F6WTUwTFFCTmdFV25QQVFq?=
+ =?utf-8?B?T3VMREx2NGZjU0Mzak56SDZjZURaZEkxd2lCMHQ0QUs5OHZKaXBHWU52WnE1?=
+ =?utf-8?B?ZFhmZURQSnJzZWVGVVZWRHR6OUhEYkpjSUdtS1c0T1c2ZlZaSVVnKzB4am13?=
+ =?utf-8?B?MWJSeEhrRWsxK2RjRDRlTmhPVi8yM3BSVmZTS2xVUUl1WG1FcHlGdG5GSkM2?=
+ =?utf-8?B?amhnNkZRWFFtMW1rczRlQk9ibjhZdWtjMGI0U1dkL3B1Z2VyK2N2ZUk2SDVi?=
+ =?utf-8?B?Zms4eW0zdGZRRFFlN0FoNUlvS1hCMkNyaEl0OFZjaUpkdkRhTGV6WEVSdmZF?=
+ =?utf-8?B?Tkh2eFpXSXpSZm5jc1FVcFVGYjRpOGt3NlFoRi9CVE1FU0RGOUF0UmFNd21G?=
+ =?utf-8?B?VTlmQzhZN0FKZERVWEZhMDJjblZ5SmFBZ1YybVpnWnIxajgrNTdOa0ZlaWx5?=
+ =?utf-8?B?MCtwaVA5SkZLNzVqbUN1Q01PdWl2QUFJSnVWNUE1TTc2bC9hRXEvWG9LRmxa?=
+ =?utf-8?B?V2REcndsL09SUHNva280bmcyc0V0NVdxWkxKNEp6bHI3czh3UXVlRkVIYnIv?=
+ =?utf-8?B?SkdVYnU5anhvcEtpWnptMlNxSVkrYlB5UmdWaVJzeWFJd1VOSStLTVRSMWxM?=
+ =?utf-8?B?S0laTXlMM3RWNHNSNk93a3h3Y2lLc3FxOVhRMHpkUDFmQ2RrbzNmb2IvRkVh?=
+ =?utf-8?B?ZGJsUndNWTFFUGp1WDd3a0FBYTN2UURSMU9SZFZ5VmM5ZlZFS3JnTjBaRWZl?=
+ =?utf-8?B?YW15SmFlMVY1OWJXNGRFK3ZFSFZiME9jS1dweW5ZYUF3Rzl6YlpTVmErY0Vk?=
+ =?utf-8?B?aktmUk1aUlZZamNLMTJ5NlBHZWRqWlVLYWh4U1pONDdRYk9EK2s0K21VNWNh?=
+ =?utf-8?B?Vk9zUnpUcHlHRFFtQk4wWjVuT2taZ2hPY05vd1l1T1hWd3FsMUNmRHlSaWM4?=
+ =?utf-8?B?TXF5N2EzTTVTdVI1akxOcms4OUVjS3Y1WUEvWERXTTBkMEhQYmlXdDhuTGhr?=
+ =?utf-8?B?d3prUUlGNUFCYm5NMDJ4QXIwN3VtdXFuVEdWZEZ5WUxEa2s0STA0bUJjS3Vi?=
+ =?utf-8?B?c2U4bk5QZW9ONVY3THZ6eXpjdmhWaGxDUFJLUWhqVVJsL3ZzcklhYllFMDY0?=
+ =?utf-8?B?YnNhRU05ek0rTTRlZUJzUEhFTE0wdERoN2FkRGdpQ3Z5V09NalRXVkVFZm1K?=
+ =?utf-8?B?eEx3M29IWGVELzJBeEl0aFI0eEh1NS90N20zSEc0c0VXTnFRZThTbUpOY01l?=
+ =?utf-8?B?YTVXUmtucHpYRFFXeGxZbEI2V3VUOHdtNWgvYVpyTFRnMjdkSzNIeEsxTkNP?=
+ =?utf-8?B?RW5uUmFNQjNFNkh0UG1idkVpMkcwYXc5ZUhPVmZ5WVNMOGZkM1hyUT09?=
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-QCInternal: smtphost
-X-QCInternal: smtphost
-X-Proofpoint-GUID: 0Z6opkocUg7oXXckBBOutUG-KHn38f_B
-X-Authority-Analysis: v=2.4 cv=VOjtWdPX c=1 sm=1 tr=0 ts=69eb88e7 cx=c_pps
- a=ouPCqIW2jiPt+lZRy3xVPw==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
- a=A5OVakUREuEA:10 a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22
- a=_K5XuSEh1TEqbUxoQ0s3:22 a=EUspDBNiAAAA:8 a=YnNmJBSnJMXklHoMRTgA:9
-X-Proofpoint-ORIG-GUID: 0Z6opkocUg7oXXckBBOutUG-KHn38f_B
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNDI0MDE0NyBTYWx0ZWRfX9ge49peA41fo
- 24wFxOUBc2NtT+B2fI7DuvuV3rxFLCOOvQMt4qz7kU+AzEjPRjCauWNlh4anqg6w69mODeq8OsL
- KsERP66M/w7Hg1z7wST4FyUC/Y7n4mkVlT3cMccyXFl1Vi15bHa+zL4ry4QGJ4OYY3/VHYF2i/q
- 5Onu2XDlxd412l2a8oyeFRRzeCgiULR7RQjWgrNeXHTYAD/Mey8tX8kgvCBs45QtzMTvvSf7JPc
- 1Om0qhOyA/mt5rMLZ/LsF7BgtJLG6X4YqqN7ETo/oK5VQjVbcYZCW9WvS0FXDzT1Jgk17LijF0x
- E2+4GKZmPccvFEmXQO+XMquxsy+g93m/RgVpGxmCwS6G9Hh9Kp1plGqVAD5nLNBqOrK3Y58uXKm
- 4H+wejzywG3i6H/CnSoVWBaf7L/wzEk2P2maKwCAUHm66VAQw+uE/kf3e2hW0mgmCnyJy/ljfM0
- FP7le+0/L9g8x77QTwQ==
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-04-24_01,2026-04-21_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- phishscore=0 lowpriorityscore=0 impostorscore=0 spamscore=0
- priorityscore=1501 bulkscore=0 suspectscore=0 malwarescore=0 clxscore=1015
- adultscore=0 classifier=typeunknown authscore=0 authtc= authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2604200000
- definitions=main-2604240147
+X-OriginatorOrg: microchip.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: PH7PR11MB7570.namprd11.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 37b1d497-e0a4-4a36-36ee-08dea2429ec4
+X-MS-Exchange-CrossTenant-originalarrivaltime: 24 Apr 2026 20:46:54.8199
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 3f4057f3-b418-4d4e-ba84-d55b4e897d88
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: fXJmTzmyVYrzX5vaqYWN5sw4+QAXCxzR4xwnAQW90+F5HarqONrX+hx4rX2OfuPzq4QsBq0PGFr7+qudyDY57qGdpVkuScR13sopLIvyNEQ=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ0PR11MB5101
 
-Add support for UFS v5.0 JEDEC attributes qTxEQGnSettings and
-wTxEQGnSettingsExt to enable persistent storage and retrieval of
-optimal TX Equalization settings.
-
-This provides a fast-path for TX Equalization by reusing previously
-stored optimal settings, avoiding TX Equalization Training (EQTR)
-procedures during subsequent Power Mode changes.
-
-When no valid TX Equalization settings are found, fall back to full TX
-EQTR procedures and optionally save the results for future use.
-
-The validity of one set of TX Equalization settings is indicated by
-Bit[15] in wTxEQGnSettingsExt.
-
-Signed-off-by: Can Guo <can.guo@oss.qualcomm.com>
----
- drivers/ufs/core/ufs-txeq.c    | 287 +++++++++++++++++++++++++++++++++
- drivers/ufs/core/ufshcd-priv.h |   2 +
- drivers/ufs/core/ufshcd.c      |   5 +
- include/ufs/ufs.h              |   2 +
- include/ufs/ufshcd.h           |   2 +
- 5 files changed, 298 insertions(+)
-
-diff --git a/drivers/ufs/core/ufs-txeq.c b/drivers/ufs/core/ufs-txeq.c
-index b2dc89124353..4b264adfdf49 100644
---- a/drivers/ufs/core/ufs-txeq.c
-+++ b/drivers/ufs/core/ufs-txeq.c
-@@ -14,6 +14,9 @@
- #include <ufs/unipro.h>
- #include "ufshcd-priv.h"
- 
-+#define TX_EQ_SETTING_MASK		0x7
-+#define TX_EQ_SETTINGS_VALID_BIT	BIT(15)
-+
- static bool use_adaptive_txeq;
- module_param(use_adaptive_txeq, bool, 0644);
- MODULE_PARM_DESC(use_adaptive_txeq, "Find and apply optimal TX Equalization settings before changing Power Mode (default: false)");
-@@ -40,6 +43,28 @@ static bool txeq_presets_selected[UFS_TX_EQ_PRESET_MAX] = {[0 ... (UFS_TX_EQ_PRE
- module_param_array(txeq_presets_selected, bool, NULL, 0644);
- MODULE_PARM_DESC(txeq_presets_selected, "Use only the selected Presets out of the 8 TX Equalization Presets for TX EQTR");
- 
-+static int txeq_setting_sel_set(const char *val, const struct kernel_param *kp)
-+{
-+	return param_set_uint_minmax(val, kp, 0, 1);
-+}
-+
-+static const struct kernel_param_ops txeq_setting_sel_ops = {
-+	.set = txeq_setting_sel_set,
-+	.get = param_get_uint,
-+};
-+
-+static unsigned int txeq_setting_sel;
-+module_param_cb(txeq_setting_sel, &txeq_setting_sel_ops, &txeq_setting_sel, 0644);
-+MODULE_PARM_DESC(txeq_setting_sel, "The qTxEQGnSettings and wTxEQGnSettingsExt Attributes selector used to retrieve and store TX Equalization settings");
-+
-+static bool retrieve_txeq_setting = true;
-+module_param(retrieve_txeq_setting, bool, 0644);
-+MODULE_PARM_DESC(retrieve_txeq_setting, "Retrieve TX Equalization settings from qTxEQGnSettings and wTxEQGnSettingsExt Attributes (default: true)");
-+
-+static bool store_txeq_setting = true;
-+module_param(store_txeq_setting, bool, 0644);
-+MODULE_PARM_DESC(store_txeq_setting, "Store the optimal TX Equalization settings to qTxEQGnSettings and wTxEQGnSettingsExt Attributes (default: true)");
-+
- /*
-  * ufs_tx_eq_preset - Table of minimum required list of presets.
-  *
-@@ -117,6 +142,126 @@ static const u32 pa_tx_eq_setting[UFS_HS_GEAR_MAX] = {
- 	PA_TXEQG6SETTING
- };
- 
-+/*
-+ * Decode Device TX Equalization PreShoot value based on qTxEQGnSettings bit assignment:
-+ * bit[3:0]: Device TX Logical LANE 0 PreShoot
-+ * bit[7:4]: Device TX Logical LANE 1 PreShoot
-+ */
-+static inline u8 tx_eq_device_preshoot_decode(u64 eq, u8 lane)
-+{
-+	return (u8)((eq >> (lane * TX_HS_PRESHOOT_SHIFT)) & TX_EQ_SETTING_MASK);
-+}
-+
-+/*
-+ * Decode Device TX Equalization DeEmphasis value based on qTxEQGnSettings bit assignment:
-+ * bit[19:16]: Device TX Logical LANE 0 DeEmphasis
-+ * bit[23:20]: Device TX Logical LANE 1 DeEmphasis
-+ */
-+static inline u8 tx_eq_device_deemphasis_decode(u64 eq, u8 lane)
-+{
-+	return (u8)((eq >> (lane * TX_HS_DEEMPHASIS_SHIFT + 16)) & TX_EQ_SETTING_MASK);
-+}
-+
-+/*
-+ * Decode Host TX Equalization PreShoot value based on qTxEQGnSettings bit assignment:
-+ * bit[35:32]: Host TX Logical LANE 0 PreShoot
-+ * bit[39:36]: Host TX Logical LANE 1 PreShoot
-+ */
-+static inline u8 tx_eq_host_preshoot_decode(u64 eq, u8 lane)
-+{
-+	return (u8)((eq >> (lane * TX_HS_PRESHOOT_SHIFT + 32)) & TX_EQ_SETTING_MASK);
-+}
-+
-+/*
-+ * Decode Host TX Equalization DeEmphasis value based on qTxEQGnSettings bit assignment:
-+ * bit[51:48]: Host TX Logical LANE 0 DeEmphasis
-+ * bit[55:52]: Host TX Logical LANE 1 DeEmphasis
-+ */
-+static inline u8 tx_eq_host_deemphasis_decode(u64 eq, u8 lane)
-+{
-+	return (u8)((eq >> (lane * TX_HS_DEEMPHASIS_SHIFT + 48)) & TX_EQ_SETTING_MASK);
-+}
-+
-+/*
-+ * Decode Device TX precode_en indication based on wTxEQGnSettingsExt bit assignment:
-+ * bit[0]: PreCodeEn for Device TX Logical LANE 0
-+ * bit[1]: PreCodeEn for Device TX Logical LANE 1
-+ */
-+static inline bool tx_eq_device_precode_en_decode(u16 eq_ext, u8 lane)
-+{
-+	return eq_ext & BIT(lane);
-+}
-+
-+/*
-+ * Decode Host TX precode_en indication based on wTxEQGnSettingsExt bit assignment:
-+ * bit[4]: PreCodeEn for Device RX Logical LANE 0
-+ * bit[5]: PreCodeEn for Device RX Logical LANE 1
-+ */
-+static inline bool tx_eq_host_precode_en_decode(u16 eq_ext, u8 lane)
-+{
-+	return eq_ext & BIT(lane + 4);
-+}
-+
-+/*
-+ * Encode Device TX Equalization PreShoot value based on qTxEQGnSettings bit assignment:
-+ * bit[3:0]: Device TX Logical LANE 0 PreShoot
-+ * bit[7:4]: Device TX Logical LANE 1 PreShoot
-+ */
-+static inline u64 tx_eq_device_preshoot_encode(u64 val, u8 lane)
-+{
-+	return (val & TX_EQ_SETTING_MASK) << (lane * TX_HS_PRESHOOT_SHIFT);
-+}
-+
-+/*
-+ * Encode Device TX Equalization DeEmphasis value based on qTxEQGnSettings bit assignment:
-+ * bit[19:16]: Device TX Logical LANE 0 DeEmphasis
-+ * bit[23:20]: Device TX Logical LANE 1 DeEmphasis
-+ */
-+static inline u64 tx_eq_device_deemphasis_encode(u64 val, u8 lane)
-+{
-+	return (val & TX_EQ_SETTING_MASK) << (lane * TX_HS_DEEMPHASIS_SHIFT + 16);
-+}
-+
-+/*
-+ * Encode Host TX Equalization PreShoot value based on qTxEQGnSettings bit assignment:
-+ * bit[35:32]: Host TX Logical LANE 0 PreShoot
-+ * bit[39:36]: Host TX Logical LANE 1 PreShoot
-+ */
-+static inline u64 tx_eq_host_preshoot_encode(u64 val, u8 lane)
-+{
-+	return (val & TX_EQ_SETTING_MASK) << (lane * TX_HS_PRESHOOT_SHIFT + 32);
-+}
-+
-+/*
-+ * Encode Host TX Equalization DeEmphasis value based on qTxEQGnSettings bit assignment:
-+ * bit[51:48]: Host TX Logical LANE 0 DeEmphasis
-+ * bit[55:52]: Host TX Logical LANE 1 DeEmphasis
-+ */
-+static inline u64 tx_eq_host_deemphasis_encode(u64 val, u8 lane)
-+{
-+	return (val & TX_EQ_SETTING_MASK) << (lane * TX_HS_DEEMPHASIS_SHIFT + 48);
-+}
-+
-+/*
-+ * Encode Device precode_en based on wTxEQGnSettingsExt bit assignment:
-+ * bit[0]: PreCodeEn for Device TX Logical LANE 0
-+ * bit[1]: PreCodeEn for Device TX Logical LANE 1
-+ */
-+static inline u16 tx_eq_device_precode_en_encode(bool en, u8 lane)
-+{
-+	return (u16)en << lane;
-+}
-+
-+/*
-+ * Encode Host precode_en based on wTxEQGnSettingsExt bit assignment:
-+ * bit[4]: PreCodeEn for Device RX Logical LANE 0
-+ * bit[5]: PreCodeEn for Device RX Logical LANE 1
-+ */
-+static inline u16 tx_eq_host_precode_en_encode(bool en, u8 lane)
-+{
-+	return (u16)en << (lane + 4);
-+}
-+
- /**
-  * ufshcd_configure_precoding - Configure Pre-Coding for all active lanes
-  * @hba: per adapter instance
-@@ -1164,6 +1309,7 @@ int ufshcd_config_tx_eq_settings(struct ufs_hba *hba,
- 
- 		/* Mark TX Equalization settings as valid */
- 		params->is_valid = true;
-+		params->is_trained = true;
- 		params->is_applied = false;
- 	}
- 
-@@ -1291,3 +1437,144 @@ int ufshcd_retrain_tx_eq(struct ufs_hba *hba, u32 gear)
- 
- 	return ret;
- }
-+
-+/**
-+ * ufshcd_extract_tx_eq_settings_attrs - Extract TX Equalization settings from UFS attributes
-+ * @hba: per adapter instance
-+ * @gear: target gear
-+ *
-+ * This function extracts previously stored TX Equalization settings from UFS
-+ * attributes qTxEQGnSettings and wTxEQGnSettingsExt. These attributes contain
-+ * the optimal TX Equalization parameters (PreShoot, DeEmphasis, and PreCoding
-+ * enable) that were determined during a previous EQTR procedure.
-+ *
-+ * The function reads:
-+ * 1. qTxEQGnSettings (64-bit): Main attribute containing PreShoot and
-+ *    DeEmphasis values for both host and device TX lanes
-+ * 2. wTxEQGnSettingsExt (16-bit): Extended attribute containing PreCoding
-+ *    enable flags and validity indicator
-+ */
-+static void ufshcd_extract_tx_eq_settings_attrs(struct ufs_hba *hba, u8 gear)
-+{
-+	struct ufshcd_tx_eq_params *params;
-+	u32 lane, eq_ext;
-+	int ret;
-+	u64 eq;
-+
-+	ret = ufshcd_query_attr(hba, UPIU_QUERY_OPCODE_READ_ATTR,
-+				QUERY_ATTR_IDN_TX_EQ_GN_SETTINGS_EXT, gear - 1,
-+				(u8)txeq_setting_sel, &eq_ext);
-+	if (ret)
-+		return;
-+
-+	dev_dbg(hba->dev, "%s: HS-G%u wTxEQGnSettingsExt (Selector %u) = 0x%08x\n",
-+		__func__, gear, txeq_setting_sel, eq_ext);
-+
-+	if (!(eq_ext & TX_EQ_SETTINGS_VALID_BIT))
-+		return;
-+
-+	ret = ufshcd_query_attr_qword(hba, UPIU_QUERY_OPCODE_READ_ATTR,
-+				      QUERY_ATTR_IDN_TX_EQ_GN_SETTINGS,
-+				      gear - 1, (u8)txeq_setting_sel, &eq);
-+	if (ret)
-+		return;
-+
-+	dev_dbg(hba->dev, "%s: HS-G%u qTxEQGnSettings (Selector %u) = 0x%016llx\n",
-+		__func__, gear, txeq_setting_sel, eq);
-+
-+	params = &hba->tx_eq_params[gear - 1];
-+
-+	for (lane = 0; lane < UFS_MAX_LANES; lane++) {
-+		params->host[lane].preshoot = tx_eq_host_preshoot_decode(eq, lane);
-+		params->host[lane].deemphasis = tx_eq_host_deemphasis_decode(eq, lane);
-+		params->host[lane].precode_en = tx_eq_host_precode_en_decode(eq_ext, lane);
-+
-+		params->device[lane].preshoot = tx_eq_device_preshoot_decode(eq, lane);
-+		params->device[lane].deemphasis = tx_eq_device_deemphasis_decode(eq, lane);
-+		params->device[lane].precode_en = tx_eq_device_precode_en_decode(eq_ext, lane);
-+	}
-+
-+	params->is_valid = true;
-+}
-+
-+void ufshcd_retrieve_tx_eq_settings(struct ufs_hba *hba)
-+{
-+	u8 gear = (u8)adaptive_txeq_gear;
-+
-+	if (!hba->max_pwr_info.is_valid || !ufshcd_is_tx_eq_supported(hba) ||
-+	    !use_adaptive_txeq || !retrieve_txeq_setting)
-+		return;
-+
-+	for (; gear <= UFS_HS_GEAR_MAX; gear++)
-+		ufshcd_extract_tx_eq_settings_attrs(hba, gear);
-+}
-+
-+/**
-+ * ufshcd_update_tx_eq_settings_attrs - Update TX EQ settings in UFS attributes
-+ * @hba: per adapter instance
-+ * @gear: target gear
-+ *
-+ * This function stores the optimal TX Equalization settings obtained from
-+ * TX EQTR procedure into UFS device attributes for future fast-path retrieval.
-+ * The settings are stored in two complementary attributes:
-+ *
-+ * 1. qTxEQGnSettings (64-bit): Main attribute containing PreShoot and
-+ *    DeEmphasis values for both host and device TX lanes
-+ * 2. wTxEQGnSettingsExt (16-bit): Extended attribute containing PreCoding
-+ *    enable flags and validity indicator
-+ */
-+static void ufshcd_update_tx_eq_settings_attrs(struct ufs_hba *hba, u8 gear)
-+{
-+	struct ufshcd_tx_eq_params *params;
-+	u32 lane, eq_ext = 0;
-+	u64 eq = 0;
-+	int ret;
-+
-+	params = &hba->tx_eq_params[gear - 1];
-+	if (!params->is_valid || !params->is_trained)
-+		return;
-+
-+	for (lane = 0; lane < UFS_MAX_LANES; lane++) {
-+		eq |= tx_eq_host_preshoot_encode((u64)params->host[lane].preshoot, lane);
-+		eq |= tx_eq_host_deemphasis_encode((u64)params->host[lane].deemphasis, lane);
-+		eq_ext |= tx_eq_host_precode_en_encode(params->host[lane].precode_en, lane);
-+
-+		eq |= tx_eq_device_preshoot_encode((u64)params->device[lane].preshoot, lane);
-+		eq |= tx_eq_device_deemphasis_encode((u64)params->device[lane].deemphasis, lane);
-+		eq_ext |= tx_eq_device_precode_en_encode(params->device[lane].precode_en, lane);
-+	}
-+
-+	/* Set validity flag to indicate valid settings are stored */
-+	eq_ext |= TX_EQ_SETTINGS_VALID_BIT;
-+
-+	/* Write qTxEQGnSettings */
-+	ret = ufshcd_query_attr_qword(hba, UPIU_QUERY_OPCODE_WRITE_ATTR,
-+				      QUERY_ATTR_IDN_TX_EQ_GN_SETTINGS,
-+				      gear - 1, (u8)txeq_setting_sel, &eq);
-+	if (ret)
-+		return;
-+
-+	/* Write wTxEQGnSettingsExt */
-+	ret = ufshcd_query_attr(hba, UPIU_QUERY_OPCODE_WRITE_ATTR,
-+				QUERY_ATTR_IDN_TX_EQ_GN_SETTINGS_EXT, gear - 1,
-+				(u8)txeq_setting_sel, &eq_ext);
-+	if (ret)
-+		return;
-+
-+	dev_dbg(hba->dev, "%s: Saved HS-G%u qTxEQGnSettings (Selector %u) = 0x%016llx\n",
-+		__func__, gear, txeq_setting_sel, eq);
-+	dev_dbg(hba->dev, "%s: Saved HS-G%u wTxEQGnSettingsExt (Selector %u) = 0x%08x\n",
-+		__func__, gear, txeq_setting_sel, eq_ext);
-+}
-+
-+void ufshcd_store_tx_eq_settings(struct ufs_hba *hba)
-+{
-+	u8 gear = (u8)adaptive_txeq_gear;
-+
-+	if (!hba->max_pwr_info.is_valid || !ufshcd_is_tx_eq_supported(hba) ||
-+	    !use_adaptive_txeq || !store_txeq_setting)
-+		return;
-+
-+	for (; gear <= UFS_HS_GEAR_MAX; gear++)
-+		ufshcd_update_tx_eq_settings_attrs(hba, gear);
-+}
-diff --git a/drivers/ufs/core/ufshcd-priv.h b/drivers/ufs/core/ufshcd-priv.h
-index ed1adeb22ec6..70f90d97f217 100644
---- a/drivers/ufs/core/ufshcd-priv.h
-+++ b/drivers/ufs/core/ufshcd-priv.h
-@@ -118,6 +118,8 @@ void ufshcd_print_tx_eq_params(struct ufs_hba *hba);
- bool ufshcd_is_txeq_presets_used(struct ufs_hba *hba);
- bool ufshcd_is_txeq_preset_selected(u8 preshoot, u8 deemphasis);
- int ufshcd_retrain_tx_eq(struct ufs_hba *hba, u32 gear);
-+void ufshcd_retrieve_tx_eq_settings(struct ufs_hba *hba);
-+void ufshcd_store_tx_eq_settings(struct ufs_hba *hba);
- 
- /* Wrapper functions for safely calling variant operations */
- static inline const char *ufshcd_get_var_name(struct ufs_hba *hba)
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index c92e0409c793..a6026cc4b2f4 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -9128,6 +9128,8 @@ static int ufshcd_device_params_init(struct ufs_hba *hba)
- 		dev_err(hba->dev,
- 			"%s: Failed getting max supported power mode\n",
- 			__func__);
-+
-+	ufshcd_retrieve_tx_eq_settings(hba);
- out:
- 	return ret;
- }
-@@ -10748,6 +10750,9 @@ static void ufshcd_wl_shutdown(struct scsi_device *sdev)
- 
- 	/* Turn on everything while shutting down */
- 	ufshcd_rpm_get_sync(hba);
-+
-+	ufshcd_store_tx_eq_settings(hba);
-+
- 	scsi_device_quiesce(sdev);
- 	shost_for_each_device(sdev, hba->host) {
- 		if (sdev == hba->ufs_device_wlun)
-diff --git a/include/ufs/ufs.h b/include/ufs/ufs.h
-index 602aa34c9822..0d48e137d66d 100644
---- a/include/ufs/ufs.h
-+++ b/include/ufs/ufs.h
-@@ -191,6 +191,8 @@ enum attr_idn {
- 	QUERY_ATTR_IDN_WB_BUF_RESIZE_HINT	= 0x3C,
- 	QUERY_ATTR_IDN_WB_BUF_RESIZE_EN		= 0x3D,
- 	QUERY_ATTR_IDN_WB_BUF_RESIZE_STATUS	= 0x3E,
-+	QUERY_ATTR_IDN_TX_EQ_GN_SETTINGS        = 0x47,
-+	QUERY_ATTR_IDN_TX_EQ_GN_SETTINGS_EXT    = 0x48,
- };
- 
- /* Descriptor idn for Query requests */
-diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-index cfbc75d8df83..f48d6416e299 100644
---- a/include/ufs/ufshcd.h
-+++ b/include/ufs/ufshcd.h
-@@ -358,6 +358,7 @@ struct ufshcd_tx_eqtr_record {
-  * @eqtr_record: Pointer to TX EQTR record
-  * @is_valid: True if parameter contains valid TX Equalization settings
-  * @is_applied: True if settings have been applied to UniPro of both sides
-+ * @is_trained: True if parameters obtained from TX EQTR procedure
-  */
- struct ufshcd_tx_eq_params {
- 	struct ufshcd_tx_eq_settings host[UFS_MAX_LANES];
-@@ -365,6 +366,7 @@ struct ufshcd_tx_eq_params {
- 	struct ufshcd_tx_eqtr_record *eqtr_record;
- 	bool is_valid;
- 	bool is_applied;
-+	bool is_trained;
- };
- 
- /**
--- 
-2.34.1
-
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogSmlucHUgV2FuZyA8amlu
+cHUud2FuZ0Bpb25vcy5jb20+DQo+IFNlbnQ6IFRodXJzZGF5LCBBcHJpbCAyMywgMjAyNiAxMTow
+MCBQTQ0KPiBUbzogRGFtaWVuIExlIE1vYWwgPGRsZW1vYWxAa2VybmVsLm9yZz4NCj4gQ2M6IFNh
+Z2FyIEJpcmFkYXIgLSBDMzQyNDkgPFNhZ2FyLkJpcmFkYXJAbWljcm9jaGlwLmNvbT47IE1hcnRp
+biBLLiBQZXRlcnNlbg0KPiA8bWFydGluLnBldGVyc2VuQG9yYWNsZS5jb20+OyBKYW1lcyBCb3R0
+b21sZXkNCj4gPEphbWVzLkJvdHRvbWxleUBoYW5zZW5wYXJ0bmVyc2hpcC5jb20+OyBsaW51eC1z
+Y3NpIDxsaW51eC0NCj4gc2NzaUB2Z2VyLmtlcm5lbC5vcmc+OyBzdGFibGVAdmdlci5rZXJuZWwu
+b3JnOyBEb24gQnJhY2UgLSBDMzM3MDYNCj4gPERvbi5CcmFjZUBtaWNyb2NoaXAuY29tPjsgUmFq
+YSBWUyAtIEMzMzUyMiA8UmFqYS5WU0BtaWNyb2NoaXAuY29tPjsNCj4gS3VtYXIgTWVpeWFwcGFu
+IC0gQzYyMDY5IDxLdW1hci5NZWl5YXBwYW5AbWljcm9jaGlwLmNvbT47IEFiaGluYXYNCj4gS3Vj
+aGliaG90bGEgLSBDNzAzMjIgPEFiaGluYXYuS3VjaGliaG90bGFAbWljcm9jaGlwLmNvbT47IFVk
+YXkga3VtYXINCj4gQmFnYW0gLSBDNzQzNzUgPFVkYXlrdW1hci5CYWdhbUBtaWNyb2NoaXAuY29t
+PjsgQWR2YWl0IENodXJpIC0gQzcyNzYzDQo+IDxBZHZhaXQuQ2h1cmlAbWljcm9jaGlwLmNvbT4N
+Cj4gU3ViamVjdDogUmU6IFtQQVRDSF0gc2NzaTogcG04MDAxOiBhZGQgTU9EVUxFX0FVVEhPUiBl
+bnRyaWVzIGZvciBuZXcNCj4gY29udHJpYnV0b3JzDQo+IA0KPiBFWFRFUk5BTCBFTUFJTDogRG8g
+bm90IGNsaWNrIGxpbmtzIG9yIG9wZW4gYXR0YWNobWVudHMgdW5sZXNzIHlvdSBrbm93IHRoZQ0K
+PiBjb250ZW50IGlzIHNhZmUNCj4gDQo+IE9uIEZyaSwgQXByIDI0LCAyMDI2IGF0IDQ6MzXigK9B
+TSBEYW1pZW4gTGUgTW9hbCA8ZGxlbW9hbEBrZXJuZWwub3JnPiB3cm90ZToNCj4gPg0KPiA+IE9u
+IDQvMjIvMjYgMDY6MjIsIFNhZ2FyIEJpcmFkYXIgd3JvdGU6DQo+ID4gPiBBZGQgTU9EVUxFX0FV
+VEhPUiBkZWNsYXJhdGlvbnMgZm9yIHRoZSBkZXZlbG9wZXJzIHdobyBoYXZlDQo+ID4gPiBiZWVu
+IGFjdGl2ZWx5IHdvcmtpbmcgb24gdGhlIHBtODAwMS9wbTgweHggZHJpdmVyIGluIHJlY2VudCB5
+ZWFycy4NCj4gPiA+DQo+ID4gPiBUaGlzIGhlbHBzIHByb3Blcmx5IGNyZWRpdCB0aGUgcGVvcGxl
+IGludm9sdmVkIGluIHRoZSBvbmdvaW5nDQo+ID4gPiBtYWludGVuYW5jZSBhbmQgdGhlIGN1cnJl
+bnQgdXBzdHJlYW1pbmcgZWZmb3J0Lg0KPiA+ID4NCj4gPiA+IFNpZ25lZC1vZmYtYnk6IFNhZ2Fy
+IEJpcmFkYXIgPHNhZ2FyLmJpcmFkYXJAbWljcm9jaGlwLmNvbT4NCj4gPg0KPiA+IFdlbGwsIGlm
+IHlvdSBnbyB0aGVyZSwgdGhlbiB5b3UgYXJlIHJlYWxseSBtaXNzaW5nICphIGxvdCogb2YgcGVv
+cGxlLg0KPiA+IEp1c3QgcnVuOg0KPiA+DQo+ID4gZ2l0IHNob3J0bG9nIC1uIC1zIC0tIGRyaXZl
+cnMvc2NzaS9wbTgwMDENCj4gPg0KPiA+IGFuZCBzZWUgdGhlIHJhbmtpbmcgYnkgbnVtYmVyIG9m
+IGNvbW1pdHMuDQo+ID4NCj4gPiBTbyBpbiB0aGUgZW5kLCBJIHJlYWxseSBkbyBub3Qgc2VlIHRo
+ZSBwb2ludCBvZiB0aGlzIHBhdGNoIHNpbmNlIGdpdCBsb2cgY2FuDQo+ID4gZ2l2ZSBhIGZ1bGwg
+KGFuZCBjb3JyZWN0KSBsaXN0IG9mIGNvbnRyaWJ1dG9ycy4NCj4gKzENCj4gPg0KSGkgRGFtaWVu
+L0ppbnB1LA0KVGhhbmtzIGZvciB5b3VyIHJldmlldyBhbmQgZm9yIHBvaW50aW5nIHRoaXMgb3V0
+LiBJIHZhbHVlIHRoZW0uDQpUaGUgaW50ZW50IHdhcyB0byBtYWtlIHRoZSBjdXJyZW50IE1pY3Jv
+Y2hpcC1zaWRlIHBvaW50cyBvZiBjb250YWN0IGZvciB0aGUgcG04MDAxL3BtODB4eCBkcml2ZXIg
+bW9yZSB2aXNpYmxlLCAgc2luY2UgTWljcm9jaGlwIG93bnMgdGhlIGhhcmR3YXJlIGFuZCB3ZSBw
+bGFuIHRvIHNlbmQgbW9yZSBjaGFuZ2VzIHVwc3RyZWFtLg0KSXQgd2FzIG5vdCBtZWFudCB0byBv
+dmVybG9vayBvciBkaXNwbGFjZSB0aGUgZXhpc3RpbmcgY29udHJpYnV0b3JzLg0KDQpJIG5vdyBz
+ZWUgdGhhdCBNT0RVTEVfQVVUSE9SKCkgaXMgbm90IHRoZSByaWdodCBtZWNoYW5pc20gZm9yIHRo
+aXMgc2luY2UgZ2l0IGhpc3RvcnkgYWxyZWFkeSBjYXB0dXJlcyB0aGUgY29udHJpYnV0b3IgcmVj
+b3JkIGFjY3VyYXRlbHkuIEnigJlsbCBkcm9wIHRoaXMgcGF0Y2guDQoNCldl4oCZbGwgbG9vayBh
+dCBhIE1BSU5UQUlORVJTIHVwZGF0ZSBzZXBhcmF0ZWx5IGlmL3doZW4gYXBwcm9wcmlhdGUuDQpU
+aGFua3MgYWdhaW4NCg0KPiA+ID4gLS0tDQo+ID4gPiAgZHJpdmVycy9zY3NpL3BtODAwMS9wbTgw
+MDFfaW5pdC5jIHwgMyArKysNCj4gPiA+ICAxIGZpbGUgY2hhbmdlZCwgMyBpbnNlcnRpb25zKCsp
+DQo+ID4gPg0KPiA+ID4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9wbTgwMDEvcG04MDAxX2lu
+aXQuYw0KPiBiL2RyaXZlcnMvc2NzaS9wbTgwMDEvcG04MDAxX2luaXQuYw0KPiA+ID4gaW5kZXgg
+ZTkzZWE3NmI1NjVlLi40ODdmOWJjMjM3ZWYgMTAwNjQ0DQo+ID4gPiAtLS0gYS9kcml2ZXJzL3Nj
+c2kvcG04MDAxL3BtODAwMV9pbml0LmMNCj4gPiA+ICsrKyBiL2RyaXZlcnMvc2NzaS9wbTgwMDEv
+cG04MDAxX2luaXQuYw0KPiA+ID4gQEAgLTE1NjksNiArMTU2OSw5IEBAIE1PRFVMRV9BVVRIT1Io
+IkphY2sgV2FuZw0KPiA8amFja193YW5nQHVzaXNoLmNvbT4iKTsNCj4gPiA+ICBNT0RVTEVfQVVU
+SE9SKCJBbmFuZCBLdW1hciBTYW50aGFuYW0NCj4gPEFuYW5kS3VtYXIuU2FudGhhbmFtQHBtY3Mu
+Y29tPiIpOw0KPiA+ID4gIE1PRFVMRV9BVVRIT1IoIlNhbmdlZXRoYSBHbmFuYXNla2FyYW4NCj4g
+PFNhbmdlZXRoYS5HbmFuYXNla2FyYW5AcG1jcy5jb20+Iik7DQo+ID4gPiAgTU9EVUxFX0FVVEhP
+UigiTmlraXRoIEdhbmlnYXJha29wcGFsDQo+IDxOaWtpdGguR2FuaWdhcmFrb3BwYWxAcG1jcy5j
+b20+Iik7DQo+ID4gPiArTU9EVUxFX0FVVEhPUigiQWJoaW5hdiBLdWNoaWJob3RsYQ0KPiA8QWJo
+aW5hdi5LdWNoaWJob3RsYUBtaWNyb2NoaXAuY29tPiIpOw0KPiA+ID4gK01PRFVMRV9BVVRIT1Io
+Ikt1bWFyIE1laXlhcHBhbg0KPiA8S3VtYXIuTWVpeWFwcGFuQG1pY3JvY2hpcC5jb20+Iik7DQo+
+ID4gPiArTU9EVUxFX0FVVEhPUigiU2FnYXIgQmlyYWRhciA8U2FnYXIuQmlyYWRhckBtaWNyb2No
+aXAuY29tPiIpOw0KPiA+ID4gIE1PRFVMRV9ERVNDUklQVElPTigNCj4gPiA+ICAgICAgICAgICAg
+ICAgIlBNQy1TaWVycmENCj4gUE04MDAxLzgwMDYvODA4MS84MDg4LzgwODkvODA3NC84MDc2Lzgw
+NzcvODA3MC84MDcyICINCj4gPiA+ICAgICAgICAgICAgICAgIlNBUy9TQVRBIGNvbnRyb2xsZXIg
+ZHJpdmVyIik7DQo+ID4NCj4gPg0KPiA+IC0tDQo+ID4gRGFtaWVuIExlIE1vYWwNCj4gPiBXZXN0
+ZXJuIERpZ2l0YWwgUmVzZWFyY2gNCg0K
