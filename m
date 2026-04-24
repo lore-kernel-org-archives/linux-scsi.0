@@ -1,46 +1,46 @@
 Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E036F3FE649;
-	Fri, 24 Apr 2026 22:42:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE11F330D24;
+	Fri, 24 Apr 2026 22:42:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777070567; cv=none; b=hgN0qKgTALd7AfowhZH/eue0ZvUCuV5/lzZ9TF6LlKzEcLCQDGGp+GQUA2eDMgaTXG+oslrlfuvqYXmWIJvvDHYqU3f5HzWgF+tZ5KmokqvskyG9SBBkFclYz5s49b5z43daCwgbreIyiOBXvNFcYT0kTEt9piBunVAi/eAnQts=
+	t=1777070567; cv=none; b=qJMp78/X51Ejkep7DZZCrQeZ/9futp/JKapJUHFf49KS0H9vPoUA3U/FyMQ1oBppnL/vKrZaAGRzLG7xzH4kHzs9BJrHbgXmOxk+4sAlnZXW7h2PMPmRFwMwaOzbItZV+NDFO6mds35d9cH6g7GNi/l8qHQugAnyP6vld18K3tQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1777070567; c=relaxed/simple;
-	bh=u7PjJsKO8KitLP+lbLsS9sfKOoKvdG3+FkA78tRgCeI=;
+	bh=3IkZRUXtSIAk+tN6lJ+0t5TMx88Z2orI1Eqq38jxCEU=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=PA3j4/r0IHxhW5xnKAPFUXFYnF++tFTGvsyBcWV0vVXqPyXoaPGkJ6sCEf6tcrDrZdqU9tDaO8IbyY42Vz71WftrTIlHb24wozwu/Q8IOB2ofn5NSzQ4RxI0P/H4XkeaI6ynF7Dmq8tas+qm6vJOJ4cBjkSdTwqQ99arBxCPdWI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=pt4+D8Qj; arc=none smtp.client-ip=199.89.1.14
+	 MIME-Version; b=Mujka9T2ks9RprUEOaRWzljGn+kRu4Dn4Ww/TfuSLRwkTdiq6+JsfJY+8SqxPlLx9pJm93P9uF/gHUEefYqhYlh1G4X6a2IX4Y8swxSRi8dSrMrFsJ11ndPz5Bh5WC/Rm4ANUe72TIipBCHbFQqAVFcFWXnAztlVltbLU2UVnGU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=ffyEo62/; arc=none smtp.client-ip=199.89.1.14
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="pt4+D8Qj"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="ffyEo62/"
 Received: from localhost (localhost [127.0.0.1])
-	by 011.lax.mailroute.net (Postfix) with ESMTP id 4g2Sdl6qHkz1XQmtj;
-	Fri, 24 Apr 2026 22:42:35 +0000 (UTC)
+	by 011.lax.mailroute.net (Postfix) with ESMTP id 4g2Sdr0DGRz1XLDnV;
+	Fri, 24 Apr 2026 22:42:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:mime-version:references:in-reply-to
 	:x-mailer:message-id:date:date:subject:subject:from:from
-	:received:received; s=mr01; t=1777070549; x=1779662550; bh=M4Sn0
-	Uz7C3eCLnaBIcGNIfl1zUDw9GPLIKPhW/M1Vxg=; b=pt4+D8Qj7X6MJ7nHuhssD
-	sYl351Aj1OMODaqbj+TntAA1Lwxb9V/Rqgcafvt3louxmvbrJWhLBKCrnNqFjN+S
-	YBySRkVQ5UqiMliEmod3wt15o7m1cA/39Qb7qqM5+9IkLh9TqXuIKqePk+q1JI8b
-	MEYE49l82YJOnS7WL0jTEN7TCfn9ubfwBHGQY+JNpaJgxKRDS4YnLx2kNZOzSplk
-	Z77yTPnGsU8NjfKygHC2qdBJYv7AU5MuIoah7A6yE/DXvnAL8VollsMS7DIyPnYw
-	t7W79i4s0gziLRp2Tgqve/iwYQ6EzBZcma5HRWskCAxktvtFQhD+G74j8gPoEoz1
-	Q==
+	:received:received; s=mr01; t=1777070556; x=1779662557; bh=RSzpF
+	oKs2c7iGR0jCRAU1YHjT5r/vjcUwHf2IThLqYs=; b=ffyEo62/oTvAV704uqzub
+	GlthaD3P5kWyMM7zpkK3sQKEHpfQS3cED/+Trbn4ajDw8zZQVM91kmT8wnSWqdZH
+	sJvcTxJso25JolGhttrDpHLlkJM4T6RpAQDkD55JAe67X3CKt0dtNHT4MUXrSYsn
+	9pyZJdCVOUQYZOmLg09y6LiVmCD4TF/n+H6+DVd4eO6iCHGrmyLP8Kd7QDEgej7z
+	4ChPrxxOA2sOr16SAyGyJpL/4cLJdwz8mGB1ZK9EVPfPMtJQfYusH8UXDifH+dIZ
+	w6Jxv32nEyp8XGQWy84KclXqVwjh2bYVj4sQn7XQ3VxgMNeKqkOmYlJTSiAMYTBI
+	A==
 X-Virus-Scanned: by MailRoute
 Received: from 011.lax.mailroute.net ([127.0.0.1])
  by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id Sy708VsVJXAT; Fri, 24 Apr 2026 22:42:29 +0000 (UTC)
+ id 91GQYhTGq13t; Fri, 24 Apr 2026 22:42:36 +0000 (UTC)
 Received: from bvanassche.mtv.corp.google.com (unknown [104.135.180.219])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4g2SdX4pb7z1XLHZJ;
-	Fri, 24 Apr 2026 22:42:24 +0000 (UTC)
+	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4g2Sdk6Lpdz1XQmtn;
+	Fri, 24 Apr 2026 22:42:34 +0000 (UTC)
 From: Bart Van Assche <bvanassche@acm.org>
 To: Jens Axboe <axboe@kernel.dk>
 Cc: linux-block@vger.kernel.org,
@@ -48,12 +48,10 @@ Cc: linux-block@vger.kernel.org,
 	linux-nvme@lists.infradead.org,
 	Christoph Hellwig <hch@lst.de>,
 	Nitesh Shetty <nj.shetty@samsung.com>,
-	Bart Van Assche <bvanassche@acm.org>,
-	Anuj Gupta <anuj20.g@samsung.com>,
-	Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 06/12] fs/read_write: Generalize generic_copy_file_checks()
-Date: Fri, 24 Apr 2026 15:41:55 -0700
-Message-ID: <20260424224201.1949243-7-bvanassche@acm.org>
+	Bart Van Assche <bvanassche@acm.org>
+Subject: [PATCH 10/12] dm: Add support for copy offloading
+Date: Fri, 24 Apr 2026 15:41:59 -0700
+Message-ID: <20260424224201.1949243-11-bvanassche@acm.org>
 X-Mailer: git-send-email 2.54.0.rc2.544.gc7ae2d5bb8-goog
 In-Reply-To: <20260424224201.1949243-1-bvanassche@acm.org>
 References: <20260424224201.1949243-1-bvanassche@acm.org>
@@ -65,52 +63,32 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 
-From: Anuj Gupta <anuj20.g@samsung.com>
+In dm_calculate_queue_limits(), clear the copy offload limits if the
+device mapper driver does not support copy offloading. This is necessary
+since blk_set_stacking_limits() sets the copy offload limits to their
+maximum.
 
-Prepare for adding copy_file_range() support for block devices by making
-the following changes:
- - Change file_inode(file) into file->f_mapping->host. Although only one
-   inode is associated with regular files, two inodes are associated
-   with block devices. file->f_mapping->host is the primary block device
-   inode.
- - Change S_ISREG() into S_ISREG() || S_ISBLK().
- - Add an inode->i_mode & S_IFMT check that verifies that source and
-   destination have the same type (block device or regular file).
-
-Reviewed-by: Hannes Reinecke <hare@suse.de>
-Signed-off-by: Anuj Gupta <anuj20.g@samsung.com>
-Signed-off-by: Nitesh Shetty <nj.shetty@samsung.com>
-[ bvanassche: rewrote patch description ]
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- fs/read_write.c | 8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
+ drivers/md/dm-table.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-diff --git a/fs/read_write.c b/fs/read_write.c
-index 50bff7edc91f..d6fba5afff94 100644
---- a/fs/read_write.c
-+++ b/fs/read_write.c
-@@ -1484,8 +1484,8 @@ static int generic_copy_file_checks(struct file *fi=
-le_in, loff_t pos_in,
- 				    struct file *file_out, loff_t pos_out,
- 				    size_t *req_count, unsigned int flags)
- {
--	struct inode *inode_in =3D file_inode(file_in);
--	struct inode *inode_out =3D file_inode(file_out);
-+	struct inode *inode_in =3D file_in->f_mapping->host;
-+	struct inode *inode_out =3D file_out->f_mapping->host;
- 	uint64_t count =3D *req_count;
- 	loff_t size_in;
- 	int ret;
-@@ -1791,7 +1791,9 @@ int generic_file_rw_checks(struct file *file_in, st=
-ruct file *file_out)
- 	/* Don't copy dirs, pipes, sockets... */
- 	if (S_ISDIR(inode_in->i_mode) || S_ISDIR(inode_out->i_mode))
- 		return -EISDIR;
--	if (!S_ISREG(inode_in->i_mode) || !S_ISREG(inode_out->i_mode))
-+	if (!S_ISREG(inode_in->i_mode) && !S_ISBLK(inode_in->i_mode))
-+		return -EINVAL;
-+	if ((inode_in->i_mode & S_IFMT) !=3D (inode_out->i_mode & S_IFMT))
- 		return -EINVAL;
+diff --git a/drivers/md/dm-table.c b/drivers/md/dm-table.c
+index dc2eff6b739d..888c5bdca5f1 100644
+--- a/drivers/md/dm-table.c
++++ b/drivers/md/dm-table.c
+@@ -1816,6 +1816,14 @@ int dm_calculate_queue_limits(struct dm_table *t,
+ 			return -EINVAL;
 =20
- 	if (!(file_in->f_mode & FMODE_READ) ||
+ combine_limits:
++		if (!(ti_limits.features & BLK_FEAT_STACKING_COPY_OFFL)) {
++			ti_limits.max_copy_hw_sectors =3D 0;
++			ti_limits.max_copy_src_segments =3D 0;
++			ti_limits.max_copy_dst_segments =3D 0;
++			ti_limits.max_user_copy_sectors =3D 0;
++			ti_limits.max_copy_sectors =3D 0;
++		}
++
+ 		/*
+ 		 * Merge this target's queue limits into the overall limits
+ 		 * for the table.
