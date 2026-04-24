@@ -1,73 +1,74 @@
-Received: from mail-dy1-f178.google.com (mail-dy1-f178.google.com [74.125.82.178])
+Received: from mail-dy1-f177.google.com (mail-dy1-f177.google.com [74.125.82.177])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0319D339847
-	for <linux-scsi@vger.kernel.org>; Fri, 24 Apr 2026 21:53:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.178
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DDAB03537C6
+	for <linux-scsi@vger.kernel.org>; Fri, 24 Apr 2026 21:53:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.177
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777067625; cv=none; b=eL0HwUE6NtlHno+6BRRw/MYrP42lFCL663TCPkU7rhBKrNuWKq1PxNL05UX9/sT4gDwgDIOIrc1mI83iFof7xt5zlpLezMd+QUiABCPb6jj62aWC4Vrq+cNmtwg5n8OcOt6EgHZgNpnsXBSJFHhpy2IjeeSz4UQXiZy1mUyRKUk=
+	t=1777067626; cv=none; b=GCKBBrTlhsVFVl1x8MUidgLIQvaFIHFApjZWCBTt5kVesj36tv7bjlfTtmo1h66I3uFT2QnzJPxjpDrF1/qfVMj/TQrxmGGco2tUnhmioDlzU1goQmwYjTbBaZquHzDgZGLZ7CVCiUVr+fabF7GhXSKG/hiFpSUUVO3fehVkND8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777067625; c=relaxed/simple;
-	bh=AFyJhxnhzsGCNHgHfgjwU60LlcWLNt867Evg1DLqiuE=;
+	s=arc-20240116; t=1777067626; c=relaxed/simple;
+	bh=CWkwJfEvJKYFSKoY1DhWa14Eivfz0oLNg9NY2vpkZ6E=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=hbjja6Rk1hv1s4XaJyOjW/Ay1rAQrUuJf1uYQTUCQRvhjx1EqaDhQWFk286dlkbJZFFMZq7VKibGhZNxn036Vf/sxZKn3ht/EpdWtN43gdwRnK8R3xW+RM1wGWC5zETBN8LeBdM3a/XjgrKWC1FmTvx4b0KgwS5WG7bVsAH8mnw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=purestorage.com; spf=fail smtp.mailfrom=purestorage.com; dkim=pass (2048-bit key) header.d=purestorage.com header.i=@purestorage.com header.b=RNvFzl9r; arc=none smtp.client-ip=74.125.82.178
+	 MIME-Version; b=FqQyQcTBBB9HxoxiSiibBmR10QGiUgUeKVJYfvxAqUudrZjb/7MrPoem76e6Q8XulKbQi0O17hQikh5Rjgz7yk1mXLd/OVhKCI4lGoJQiNRIisTbSQzP/TucBykQUcIqO/5AtacQVYsktcg+Q4Yr4DxmL3IrGQ3kesSM1k5ea+0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=purestorage.com; spf=fail smtp.mailfrom=purestorage.com; dkim=pass (2048-bit key) header.d=purestorage.com header.i=@purestorage.com header.b=bRCjR18q; arc=none smtp.client-ip=74.125.82.177
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=purestorage.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=purestorage.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=purestorage.com header.i=@purestorage.com header.b="RNvFzl9r"
-Received: by mail-dy1-f178.google.com with SMTP id 5a478bee46e88-2d891442388so13810276eec.0
-        for <linux-scsi@vger.kernel.org>; Fri, 24 Apr 2026 14:53:43 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=purestorage.com header.i=@purestorage.com header.b="bRCjR18q"
+Received: by mail-dy1-f177.google.com with SMTP id 5a478bee46e88-2d868d014a5so8216473eec.1
+        for <linux-scsi@vger.kernel.org>; Fri, 24 Apr 2026 14:53:44 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=purestorage.com; s=google2022; t=1777067623; x=1777672423; darn=vger.kernel.org;
+        d=purestorage.com; s=google2022; t=1777067624; x=1777672424; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=Y6935qPu7M5NbZGZx6tTl1p29+OEVIHZ7LTwlaFJBLA=;
-        b=RNvFzl9rf0dBzTimWJl5oVfd140Hi+Bm4RlKOLL5QyoNzOKdfbM3xbdqQtCKhrORx9
-         ZDt2hQ6Si7IRI3Xtm/+ZwdvJYugSMCw2YMJTizYD8jmH9Ai+zd4kdyBUZh1DpmAHjC/X
-         JC2oSSBt84HNUGQZuoOrzNJbFhQR/6vY0LwnJcSj2lg6aYdOlbRUjrkTNDdMhVpr/pv1
-         UJMESWNTBNmA1groPXvfA1mJb65HNNQeb25wRPcKuyfEg5hP+P8t96s/scPFJMs/lZFZ
-         xN7NrLlTYhiG8W5swPlGvic8RqqHwHJQfpBtsURiBKW45luC43BtjwqzpGtiGgpvizjS
-         4uaQ==
+        bh=/Pf3hvjVift4BVuqG7MdiHNfD88WChbdDshCkNy8k0s=;
+        b=bRCjR18qJtg1qpbRoHfhMKc7HGOLt5NVzvFwO7XLsFAk6a3idMJ4fo2HO4m5o8Yfck
+         31Qn6objn6CgDegrXBRQZoGJpQOL1UQscxIeBdDKiOup2pdGUyL9sFHh3V01xc+2Yhlb
+         v8+4iaDNWfSXpxVcDkqTXWsLIqyOExV0w8ExUFpKtnfsGjUrLiaCPFIux0icz2diTFMG
+         2SUGrgiV0B2lHoSJFlSjRAo3Ql8qYjQG2xPw/9hu3w+2Ge8CY4AE1PQqgghoS6kdxrQN
+         hGnaSfgWhk9s7ad9NXATf0qGdbtMS2o2wFZdiw0mrCPuTcrf24UfgB2ybUDLZ/d/hq8T
+         VyIA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1777067623; x=1777672423;
+        d=1e100.net; s=20251104; t=1777067624; x=1777672424;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to;
-        bh=Y6935qPu7M5NbZGZx6tTl1p29+OEVIHZ7LTwlaFJBLA=;
-        b=OXd7tke5S/fPTCjRdlnOcUNIvMAVL11A2LVwVXy2EJM0syX0CzVh/M+9j2XQqpytO6
-         jXeXKKV/bQ30HcWo63/QD/z4aI3+GiZp02bdf/hstFlOFFzH114tSwnU+peEHkFNa7IR
-         rYK2q+vwWb4FHSlJP4ahF6qqEvLhliLyVKIq01xtBImdoU1YQKwli9JvtGMuveQYkc4K
-         YF/WUeNX39s3V+t4MbVqNNrzVlIL9uCOykX3Q7nWTNCG0XEIJhwB2SZBEIfHatWvRO0u
-         7R3t/RbtQ3lG9oBPFNjjvwY07mnymL5/OarwvWlnXwJSid3xiBgHoxZFdyYclALtQ0PF
-         Rymw==
-X-Forwarded-Encrypted: i=1; AFNElJ/w4kHGJjbpDgMf4+19Lp6wcvZxZzs/V9GPqF21B5xOt3HoKyL0CitEju9AK/KPNrjrzQuQhscx/99Z@vger.kernel.org
-X-Gm-Message-State: AOJu0YwIfNqcvPkFw5GurjeimdXeOAlSdt5hHOyyD7hfXdxv9/gNaeg6
-	2JaAUAvSYhlepwgTWbXuhQ4xEqhXq6AJ/ALpb9xR0eGNzNYkiOVBTPNIfxQ6DfAoQF4=
-X-Gm-Gg: AeBDietK5Fe5dxzXV89y3RqNC1T2jywQeKgmjj4JYQ+EP7NvSM4ffDBKyIWOTaOZCUF
-	ep7yOyZbsUiXDhlTyY7LGNEISjc74bqSZWu9mfn8MRGAPVyJviUWeN4V5CVuv2v524z4GKGh8f1
-	mjG2cW2eHZXGFYFvA+5sxVBU9AlEWrjI88mpv2A9z2Gy6gbN9xRipwsYoRGgiXrKZFXFREeZZWq
-	xi7xGGaQGrK2HZTGRsxTc4iRhdrYqys6OtAuz78tV5ivcht6O1FWawSMA/RODq8NqyE94KIkM62
-	/5BphbSNF4VZ5Igcw9KLmPojb6XXwvv1vanM/WwcV2yeY6ZpnbJPIlk+Ih1R5uyCEnK7MSood7x
-	Ki8b2FeE9nDQiMTIX/kSu+j7pX4TOI8YBcPwaKp1HMX7KhIBQiuKz2MhruOdG+rr1fxhdvCXljK
-	g/wjlh5F4Peh5lOFdYbj6soqFjXOPZgO9LR/P/BYG8hEg9KOg4Tud/N1SjK+YzUSqjlwPhN9nDw
-	KyygwSejwGkVfg3ALjAKJbB1/4sYD6HGTSwgDe0pz9TohUDqsqTgGK3d0w8QzqE1Q9cLJSfo93f
-	x4IW06usYybWL3xKCPd/rzrnFAp326SKG1hUWvmk77JOzQ==
-X-Received: by 2002:a05:7301:3d17:b0:2dd:405f:89b3 with SMTP id 5a478bee46e88-2e4528ce85cmr19190425eec.0.1777067622920;
-        Fri, 24 Apr 2026 14:53:42 -0700 (PDT)
+        bh=/Pf3hvjVift4BVuqG7MdiHNfD88WChbdDshCkNy8k0s=;
+        b=gmhq9sbAK8Lyv+vXrYQhOZanCalu9QDz0AUMqUukUX/lzGaO8rpScRDkqYZI1UzPth
+         PqcnRSbxp07Adqc6w2066THkCt35xQKvP8sTCXJMkUHvqEGzaW+VqgUyyfSUOO4zpTUI
+         Cjtdgtg1l5MY9wFNaoDq5xadwTt/lw45eX09hB3nPF7+zOJen0sucgcTzhySks1Oo598
+         umFGvEf8B9lc+oGrmXTstdYbWZz/pOrSTQWhKKk0vFOBYIvTPAom5aFSzoITQEet3xr7
+         1NiXoFGyWD6YtmocN7O64aB1Jr9cxZMMgscKAnKtZSMKPapDTDsNAdm85MQZgG61N76b
+         /gsw==
+X-Forwarded-Encrypted: i=1; AFNElJ/6yl06TvQC8n6p8E8lf8vZwacPlDHgBM+Jam8nfOf0EUbW0lV0I/oyAwj24wRO22DvPl2oag8Bba+z@vger.kernel.org
+X-Gm-Message-State: AOJu0YwM9CK957iZI+1i8BAjNE69Kq78h5vcBjo5PGEZnjfG6LgzUa05
+	tqGf6GqbGofiq3bGmiRLuWu3cjOId+Z7IlPBxz7JJjwLElIHaoXSCeR0zYUsJAWmsLCCs5Uxwu4
+	/C4KKqPk=
+X-Gm-Gg: AeBDiespCZMXo/fkb+Dkie1SNM981imwiSXdLmwqtwtHLheUg/GubSaAPo2/WWeo+7L
+	EpvLyCiJwdZN8xS6EzhX5OtV+nLdWyoT27k5GWQfSjjilX+bFEgWQSMDBqIVOmkKA/dbyJJw41V
+	KXXENsffIq/KAzTWDC5hkrm55CvI7otFT2mlm9bM6qr/SvDtgs44zxMmKzjyQ0ijN54ZRLrHEuU
+	5X2nLQ4vKWak9J1clmGvt4GaQHtHrPNsi24NMbUVcNOFEKRSJHFZblMqbwkfPvZirv9Cl14Wg6m
+	icBPnm/aTpcf25yFiCbxXi1tEY2RteZ15Ys5S+VLxB7MGZEXLVOZ1q1MDSH/Gr/PQx2gu8IcVoC
+	oUZfKshJriox1V+HkgMd1sQzxLWh7XOeEt5SZhL/qVkhXzmJDOIZr7PspVCjet19f8KYRst463q
+	iVp0u473ahsJvyMHEnO8cNBZr/EJuUqEb8gHJDhMqvLktxtugAB52dO+gpLu2Cr4F24QqWzzTDq
+	LICR5c7azYp5VcLhkktoPbnMsQWdlkcgTkPqQUvkIjF3DcTaRHeo24Nfnj2tQrT/pxxg5hUHo9s
+	J1hTn9mExm/uKV/SUUrdqEg3sOrwu3YhnVs=
+X-Received: by 2002:a05:7300:ac8a:b0:2d9:bc8d:f62a with SMTP id 5a478bee46e88-2e47873aadbmr18016574eec.16.1777067623796;
+        Fri, 24 Apr 2026 14:53:43 -0700 (PDT)
 Received: from brian--MacBookPro18.purestorage.com ([136.226.65.113])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-2e539fa5c38sm33172246eec.5.2026.04.24.14.53.42
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-2e539fa5c38sm33172246eec.5.2026.04.24.14.53.43
         (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
-        Fri, 24 Apr 2026 14:53:42 -0700 (PDT)
+        Fri, 24 Apr 2026 14:53:43 -0700 (PDT)
 From: Brian Bunker <brian@purestorage.com>
 To: hare@suse.de,
 	linux-scsi@vger.kernel.org
 Cc: Brian Bunker <brian@purestorage.com>,
 	Krishna Kant <krishna.kant@purestorage.com>
-Subject: [PATCH 1/6] scsi: Add INQUIRY data field definitions and accessor helpers
-Date: Fri, 24 Apr 2026 14:53:19 -0700
-Message-ID: <20260424215324.99045-2-brian@purestorage.com>
+Subject: [PATCH 2/6] scsi: Protect INQUIRY sysfs attributes with mutex
+Date: Fri, 24 Apr 2026 14:53:20 -0700
+Message-ID: <20260424215324.99045-3-brian@purestorage.com>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260424215324.99045-1-brian@purestorage.com>
 References: <20260424215324.99045-1-brian@purestorage.com>
@@ -79,15 +80,13 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Add well-documented inline functions and macros to parse INQUIRY data
-fields according to SPC-6 section 6.7.2. These helpers provide a
-consistent interface for extracting:
+The vendor, model, rev, and inquiry sysfs attributes read data directly
+from the inquiry buffer. When INQUIRY data can be updated during device
+rescan, these reads must be protected against concurrent updates.
 
-- Peripheral qualifier and device type from byte 0
-- Removable media bit from byte 1
-- Response data format from byte 3
-- Capability flags (WBUS16, SYNC, CMDQUE, SFTRE) from byte 7
-- Vendor, product, and revision strings
+Use the existing inquiry_mutex to protect access to these sysfs
+attributes. This ensures that userspace always sees consistent INQUIRY
+data, even if a rescan is updating the buffer concurrently.
 
 This is preparatory work for adding INQUIRY data update support during
 device rescan operations.
@@ -95,191 +94,103 @@ device rescan operations.
 Signed-off-by: Brian Bunker <brian@purestorage.com>
 Signed-off-by: Krishna Kant <krishna.kant@purestorage.com>
 ---
- include/scsi/scsi.h | 171 ++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 171 insertions(+)
+ drivers/scsi/scsi_sysfs.c | 74 +++++++++++++++++++++++++++++++++++----
+ 1 file changed, 67 insertions(+), 7 deletions(-)
 
-diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
-index 08ac3200b4a4b..8f38d9a884f91 100644
---- a/include/scsi/scsi.h
-+++ b/include/scsi/scsi.h
-@@ -172,6 +172,177 @@ enum scsi_qc_status {
- #define SCSI_INQ_PQ_NOT_CON     0x01
- #define SCSI_INQ_PQ_NOT_CAP     0x03
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index dfc3559e7e04f..c34c69487205f 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -648,9 +648,63 @@ static DEVICE_ATTR(field, S_IRUGO, sdev_show_##field, NULL);
+  */
+ sdev_rd_attr (type, "%d\n");
+ sdev_rd_attr (scsi_level, "%d\n");
+-sdev_rd_attr (vendor, "%.8s\n");
+-sdev_rd_attr (model, "%.16s\n");
+-sdev_rd_attr (rev, "%.4s\n");
++
++/*
++ * Custom show functions for INQUIRY strings that take the inquiry_mutex.
++ * These strings point into the inquiry buffer which can be updated during
++ * device rescan, so we need to protect against concurrent access.
++ */
++static ssize_t
++sdev_show_vendor(struct device *dev, struct device_attribute *attr, char *buf)
++{
++	struct scsi_device *sdev = to_scsi_device(dev);
++	ssize_t ret;
++
++	mutex_lock(&sdev->inquiry_mutex);
++	if (sdev->inquiry)
++		ret = snprintf(buf, 20, "%.*s\n", SCSI_INQ_VENDOR_LEN,
++			       scsi_inq_vendor(sdev->inquiry));
++	else
++		ret = snprintf(buf, 20, "\n");
++	mutex_unlock(&sdev->inquiry_mutex);
++	return ret;
++}
++static DEVICE_ATTR(vendor, S_IRUGO, sdev_show_vendor, NULL);
++
++static ssize_t
++sdev_show_model(struct device *dev, struct device_attribute *attr, char *buf)
++{
++	struct scsi_device *sdev = to_scsi_device(dev);
++	ssize_t ret;
++
++	mutex_lock(&sdev->inquiry_mutex);
++	if (sdev->inquiry)
++		ret = snprintf(buf, 20, "%.*s\n", SCSI_INQ_PRODUCT_LEN,
++			       scsi_inq_product(sdev->inquiry));
++	else
++		ret = snprintf(buf, 20, "\n");
++	mutex_unlock(&sdev->inquiry_mutex);
++	return ret;
++}
++static DEVICE_ATTR(model, S_IRUGO, sdev_show_model, NULL);
++
++static ssize_t
++sdev_show_rev(struct device *dev, struct device_attribute *attr, char *buf)
++{
++	struct scsi_device *sdev = to_scsi_device(dev);
++	ssize_t ret;
++
++	mutex_lock(&sdev->inquiry_mutex);
++	if (sdev->inquiry)
++		ret = snprintf(buf, 20, "%.*s\n", SCSI_INQ_REVISION_LEN,
++			       scsi_inq_revision(sdev->inquiry));
++	else
++		ret = snprintf(buf, 20, "\n");
++	mutex_unlock(&sdev->inquiry_mutex);
++	return ret;
++}
++static DEVICE_ATTR(rev, S_IRUGO, sdev_show_rev, NULL);
++
+ sdev_rd_attr (cdl_supported, "%d\n");
  
-+/*
-+ * INQUIRY data field offsets and lengths
-+ */
-+#define SCSI_INQ_STD_LEN		36	/* Min standard INQ len */
-+#define SCSI_INQ_VENDOR_OFFSET		8
-+#define SCSI_INQ_VENDOR_LEN		8
-+#define SCSI_INQ_PRODUCT_OFFSET		16
-+#define SCSI_INQ_PRODUCT_LEN		16
-+#define SCSI_INQ_REVISION_OFFSET	32
-+#define SCSI_INQ_REVISION_LEN		4
-+
-+/*
-+ * INQUIRY data byte 0 bit masks
-+ */
-+#define SCSI_INQ_PERIPH_QUAL_MASK	0xe0	/* bits 5-7 */
-+#define SCSI_INQ_PERIPH_QUAL_SHIFT	5
-+#define SCSI_INQ_DEVICE_TYPE_MASK	0x1f	/* bits 0-4 */
-+
-+/*
-+ * INQUIRY data byte 1 bit masks
-+ */
-+#define SCSI_INQ_RMB_MASK		0x80	/* bit 7 */
-+
-+/*
-+ * INQUIRY data byte 3 bit masks
-+ */
-+#define SCSI_INQ_RESP_DATA_FMT_MASK	0x0f	/* bits 0-3 */
-+
-+/*
-+ * INQUIRY data byte 7 bit masks
-+ */
-+#define SCSI_INQ_WBUS16			0x20	/* Wide Bus 16 (bit 5) */
-+#define SCSI_INQ_SYNC			0x10	/* Synchronous (bit 4) */
-+#define SCSI_INQ_CMDQUE			0x02	/* Command Queuing (bit 1) */
-+#define SCSI_INQ_SFTRE			0x01	/* Soft Reset (bit 0) */
-+
-+/**
-+ * scsi_inq_periph_qual - Extract peripheral qualifier from byte 0
-+ * @inq_byte0: INQUIRY data byte 0
-+ *
-+ * Returns: Peripheral Qualifier (0-7)
-+ */
-+static inline unsigned char scsi_inq_periph_qual(unsigned char inq_byte0)
-+{
-+	return (inq_byte0 & SCSI_INQ_PERIPH_QUAL_MASK) >>
-+		SCSI_INQ_PERIPH_QUAL_SHIFT;
-+}
-+
-+/**
-+ * scsi_inq_device_type - Extract device type from byte 0
-+ * @inq_byte0: INQUIRY data byte 0
-+ * @lun: Logical Unit Number
-+ *
-+ * Extracts the peripheral device type. For well-known logical units
-+ * (W-LUNs), corrects the type to TYPE_WLUN if device reports wrong type.
-+ *
-+ * Returns: Peripheral Device Type (0-31)
-+ */
-+static inline unsigned char scsi_inq_device_type(unsigned char inq_byte0,
-+						 u64 lun)
-+{
-+	unsigned char type = inq_byte0 & SCSI_INQ_DEVICE_TYPE_MASK;
-+
-+	/*
-+	 * Some devices respond with wrong type for well-known logical
-+	 * units. Force well-known type to enumerate them correctly.
-+	 */
-+	if (scsi_is_wlun(lun) && type != TYPE_WLUN)
-+		type = TYPE_WLUN;
-+
-+	return type;
-+}
-+
-+/**
-+ * scsi_inq_removable - Extract removable media bit from byte 1
-+ * @inq_byte1: INQUIRY data byte 1
-+ *
-+ * Returns: true if removable, false if not
-+ */
-+static inline bool scsi_inq_removable(unsigned char inq_byte1)
-+{
-+	return inq_byte1 & SCSI_INQ_RMB_MASK;
-+}
-+
-+/**
-+ * scsi_inq_resp_data_fmt - Extract response data format from byte 3
-+ * @inq_byte3: INQUIRY data byte 3
-+ *
-+ * Returns: Response Data Format (0-15)
-+ */
-+static inline unsigned char scsi_inq_resp_data_fmt(unsigned char inq_byte3)
-+{
-+	return inq_byte3 & SCSI_INQ_RESP_DATA_FMT_MASK;
-+}
-+
-+/**
-+ * scsi_inq_wbus16 - Check wide bus support from byte 7
-+ * @inq_byte7: INQUIRY data byte 7
-+ *
-+ * Returns: true if 16-bit wide bus supported, false if not
-+ */
-+static inline bool scsi_inq_wbus16(unsigned char inq_byte7)
-+{
-+	return inq_byte7 & SCSI_INQ_WBUS16;
-+}
-+
-+/**
-+ * scsi_inq_sync - Check synchronous transfer support from byte 7
-+ * @inq_byte7: INQUIRY data byte 7
-+ *
-+ * Returns: true if synchronous transfers supported, false if not
-+ */
-+static inline bool scsi_inq_sync(unsigned char inq_byte7)
-+{
-+	return inq_byte7 & SCSI_INQ_SYNC;
-+}
-+
-+/**
-+ * scsi_inq_cmdque - Check command queuing support from byte 7
-+ * @inq_byte7: INQUIRY data byte 7
-+ *
-+ * Returns: true if command queuing supported, false if not
-+ */
-+static inline bool scsi_inq_cmdque(unsigned char inq_byte7)
-+{
-+	return inq_byte7 & SCSI_INQ_CMDQUE;
-+}
-+
-+/**
-+ * scsi_inq_sftre - Check soft reset support from byte 7
-+ * @inq_byte7: INQUIRY data byte 7
-+ *
-+ * Returns: true if soft reset supported, false if not
-+ */
-+static inline bool scsi_inq_sftre(unsigned char inq_byte7)
-+{
-+	return inq_byte7 & SCSI_INQ_SFTRE;
-+}
-+
-+/**
-+ * scsi_inq_vendor - Get pointer to vendor string
-+ * @inq_data: Pointer to INQUIRY data buffer
-+ *
-+ * Returns: Pointer to 8-byte vendor string (not null-terminated)
-+ */
-+static inline const char *scsi_inq_vendor(const unsigned char *inq_data)
-+{
-+	return (const char *)(inq_data + SCSI_INQ_VENDOR_OFFSET);
-+}
-+
-+/**
-+ * scsi_inq_product - Get pointer to product string
-+ * @inq_data: Pointer to INQUIRY data buffer
-+ *
-+ * Returns: Pointer to 16-byte product string (not null-terminated)
-+ */
-+static inline const char *scsi_inq_product(const unsigned char *inq_data)
-+{
-+	return (const char *)(inq_data + SCSI_INQ_PRODUCT_OFFSET);
-+}
-+
-+/**
-+ * scsi_inq_revision - Get pointer to revision string
-+ * @inq_data: Pointer to INQUIRY data buffer
-+ *
-+ * Returns: Pointer to 4-byte revision string (not null-terminated)
-+ */
-+static inline const char *scsi_inq_revision(const unsigned char *inq_data)
-+{
-+	return (const char *)(inq_data + SCSI_INQ_REVISION_OFFSET);
-+}
+ static ssize_t
+@@ -915,12 +969,18 @@ static ssize_t show_inquiry(struct file *filep, struct kobject *kobj,
+ {
+ 	struct device *dev = kobj_to_dev(kobj);
+ 	struct scsi_device *sdev = to_scsi_device(dev);
++	ssize_t ret;
  
- /*
-  * Here are some scsi specific ioctl commands which are sometimes useful.
+-	if (!sdev->inquiry)
+-		return -EINVAL;
++	mutex_lock(&sdev->inquiry_mutex);
++	if (!sdev->inquiry) {
++		ret = -EINVAL;
++	} else {
++		ret = memory_read_from_buffer(buf, count, &off, sdev->inquiry,
++					       sdev->inquiry_len);
++	}
++	mutex_unlock(&sdev->inquiry_mutex);
+ 
+-	return memory_read_from_buffer(buf, count, &off, sdev->inquiry,
+-				       sdev->inquiry_len);
++	return ret;
+ }
+ 
+ static const struct bin_attribute dev_attr_inquiry = {
 -- 
 2.50.1 (Apple Git-155)
 
