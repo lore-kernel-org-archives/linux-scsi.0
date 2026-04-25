@@ -1,59 +1,133 @@
-Received: from canpmsgout04.his.huawei.com (canpmsgout04.his.huawei.com [113.46.200.219])
+Received: from canpmsgout08.his.huawei.com (canpmsgout08.his.huawei.com [113.46.200.223])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6B9991D61BC;
-	Sat, 25 Apr 2026 08:10:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.219
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 88BE12D9796;
+	Sat, 25 Apr 2026 08:21:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.223
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777104609; cv=none; b=Wou/uv4HripL7Rfl4x3bBopMkHG0Cyaoq/bQYiVWiHenmZ+O4BVC3tbPNJh6GpU0kwqhoXgLSKg6u6+Nx/4LwTiw9ADruMLijI08la883nhLvkW10i9LRs4L9vTCJAebq96pgysY4hlRB0VGjX0jZ0EYT5cDFe3wJNW2voAlHyk=
+	t=1777105264; cv=none; b=tyZquhUYwuWcH25ht48tAM/NQj9REwDR1mojgkLQSUU3m4cKxn/JMYNLgwUbuUUqv7bcg560MHg98qbwRKtSK6zHBcO0FYGRVDpGZLtyAbbU1mxSky67zQLkwyKb3nvgbOPVnhVWy7ZXO2oOLlTlKtWiDr/8H57FOjJ05rhnSHw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777104609; c=relaxed/simple;
-	bh=lf/JtkNu147HiPm6/kqPg+j/5DzDDyPGcNwfbB/POWY=;
-	h=Subject:To:References:CC:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=MEB0oofRuM5M5xdrzMwYGkcAlxbujq+u14Lhq/HPKEW2ph2bJMFDOLiWjGwsG4PtGFgX1ZS3Y65MNGtr1O+lO2GudGQuhSWx8JVMnOo0bHWPHQGxHu6rQKhuXcXWqAQpnaRjq9fUsaXa+820W4EPUCadNdBwPoJ0Z74yKoGm6ZY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=h-partners.com; spf=pass smtp.mailfrom=h-partners.com; dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b=BWkjBY2I; arc=none smtp.client-ip=113.46.200.219
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=h-partners.com
+	s=arc-20240116; t=1777105264; c=relaxed/simple;
+	bh=6UADAMxWx5NVSXqfJP5iTRX+yYu5GWnMY2fT3w1njiI=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=bibi+E9XYfTZUlcPnS3C2JDJkqGYbC1cKzDr9W5ViZcCSDYquQsOvQ7giW0+6IQvrUaG3VzJgAUL0gdyhgwb1maWVqV3ZxXzql30nAXc/P552Ebt6YFUhfMv05RtcoGk6r6QFZX6WVQfc+pYFQlFFbl3Ur/m8SUfBqPBdSr2j48=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=h-partners.com; dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b=es/uu9Oy; arc=none smtp.client-ip=113.46.200.223
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=h-partners.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b="BWkjBY2I"
+	dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b="es/uu9Oy"
 dkim-signature: v=1; a=rsa-sha256; d=h-partners.com; s=dkim;
 	c=relaxed/relaxed; q=dns/txt;
 	h=From;
-	bh=lf/JtkNu147HiPm6/kqPg+j/5DzDDyPGcNwfbB/POWY=;
-	b=BWkjBY2IjgSYOG4bFlp8tLo7UuYnREkNHqUgAZjRuQtQ2QZlyHUk/dZ3by1Ic1aUMhfEbYSfl
-	FFmqY3zpEncl45rn7P73Klu3G+PwvbSiol8r6EX20ZCvP16tmmYTJtUZVGUf1qKXfHYsIwZ9ZuF
-	cDijvp9RmNmx142ucnKwP1U=
-Received: from mail.maildlp.com (unknown [172.19.162.197])
-	by canpmsgout04.his.huawei.com (SkyGuard) with ESMTPS id 4g2j536mpFz1prrb;
-	Sat, 25 Apr 2026 16:03:35 +0800 (CST)
+	bh=F8f0amo607sm8HC1NSIcfPhmrSQZVcgS2ugsbjdsjFc=;
+	b=es/uu9OyjTWxxN0PVEnt7yBldb8QEmK1tJ+PDhG22o1QPwjTXOnDaSgxvPFT/qrXayK1LOUna
+	po3jwhG+L1Xc4I4Y7YP9jlsFA0u2SM5lT2h9e2aMkGjM9XzDQ4dsK7x2GOei7wCMYVWTx5/E7C3
+	yUqp0lWJURdJXEnB9PhdK7k=
+Received: from mail.maildlp.com (unknown [172.19.163.127])
+	by canpmsgout08.his.huawei.com (SkyGuard) with ESMTPS id 4g2jKg57qczmV6X;
+	Sat, 25 Apr 2026 16:14:31 +0800 (CST)
 Received: from kwepemh200005.china.huawei.com (unknown [7.202.181.112])
-	by mail.maildlp.com (Postfix) with ESMTPS id 145EE40576;
-	Sat, 25 Apr 2026 16:10:03 +0800 (CST)
-Received: from [10.67.120.126] (10.67.120.126) by
+	by mail.maildlp.com (Postfix) with ESMTPS id 97AFE40572;
+	Sat, 25 Apr 2026 16:20:57 +0800 (CST)
+Received: from localhost.localdomain (10.50.163.32) by
  kwepemh200005.china.huawei.com (7.202.181.112) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.11; Sat, 25 Apr 2026 16:10:02 +0800
-Subject: Re: [PATCH] scsi: hisi_sas: Add slave_destroy interface for v3 hw
-To: Yihang Li <liyihang9@huawei.com>, <martin.petersen@oracle.com>,
-	<James.Bottomley@HansenPartnership.com>
-References: <20260425065218.2655578-1-liyihang9@huawei.com>
+ 15.2.1544.11; Sat, 25 Apr 2026 16:20:57 +0800
+From: Yihang Li <liyihang9@huawei.com>
+To: <martin.petersen@oracle.com>, <James.Bottomley@HansenPartnership.com>
 CC: <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linuxarm@huawei.com>, <liuyonglong@huawei.com>, <prime.zeng@hisilicon.com>
-From: Yihang Li <liyihang9@h-partners.com>
-Message-ID: <e3a2df92-3967-1df0-df0a-7759be700b38@h-partners.com>
-Date: Sat, 25 Apr 2026 16:10:01 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:45.0) Gecko/20100101
- Thunderbird/45.7.1
+	<linuxarm@huawei.com>, <liyihang9@h-partners.com>, <liuyonglong@huawei.com>,
+	<prime.zeng@hisilicon.com>
+Subject: [PATCH v2] scsi: hisi_sas: Add slave_destroy interface for v3 hw
+Date: Sat, 25 Apr 2026 16:20:56 +0800
+Message-ID: <20260425082056.2749910-1-liyihang9@huawei.com>
+X-Mailer: git-send-email 2.33.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20260425065218.2655578-1-liyihang9@huawei.com>
-Content-Type: text/plain; charset="windows-1252"
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: kwepems500001.china.huawei.com (7.221.188.70) To
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: kwepems100002.china.huawei.com (7.221.188.206) To
  kwepemh200005.china.huawei.com (7.202.181.112)
 
-Please ignore this patch.
+WARNING is triggered when executing link reset of remote PHY
+and rmmod SAS driver simultaneously. Following is the WARNING log:
+
+WARNING: CPU: 61 PID: 21818 at drivers/base/core.c:1347 __device_links_no_driver+0xb4/0xc0
+ Call trace:
+  __device_links_no_driver+0xb4/0xc0
+  device_links_driver_cleanup+0xb0/0xfc
+  __device_release_driver+0x198/0x23c
+  device_release_driver+0x38/0x50
+  bus_remove_device+0x130/0x140
+  device_del+0x184/0x434
+  __scsi_remove_device+0x118/0x150
+  scsi_remove_target+0x1bc/0x240
+  sas_rphy_remove+0x90/0x94
+  sas_rphy_delete+0x24/0x3c
+  sas_destruct_devices+0x64/0xa0 [libsas]
+  sas_revalidate_domain+0xe4/0x150 [libsas]
+  process_one_work+0x1e0/0x46c
+  worker_thread+0x15c/0x464
+  kthread+0x160/0x170
+  ret_from_fork+0x10/0x20
+ ---[ end trace 71e059eb58f85d4a ]---
+
+During SAS phy up, link->status is set to DL_STATE_AVAILABLE in
+device_links_driver_bound, then this setting influences
+__device_links_no_driver() before driver rmmod and caused WARNING.
+
+So we add the slave_destroy interface, to make sure link is removed
+after flush workque.
+
+Fixes: 16fd4a7c59170 ("scsi: hisi_sas: Add device link between SCSI devices and hisi_hba")
+Signed-off-by: Yihang Li <liyihang9@huawei.com>
+---
+Changs to v1:
+- Use the latest interface .sdev_destroy
+---
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 12 +++++++++++-
+ 1 file changed, 11 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+index fda07b193137..c7430f7c4048 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+@@ -2977,7 +2977,7 @@ static int sdev_configure_v3_hw(struct scsi_device *sdev,
+ 		return 0;
+ 
+ 	if (!device_link_add(&sdev->sdev_gendev, dev,
+-			     DL_FLAG_PM_RUNTIME | DL_FLAG_RPM_ACTIVE)) {
++			     DL_FLAG_STATELESS | DL_FLAG_PM_RUNTIME | DL_FLAG_RPM_ACTIVE)) {
+ 		if (pm_runtime_enabled(dev)) {
+ 			dev_info(dev, "add device link failed, disable runtime PM for the host\n");
+ 			pm_runtime_disable(dev);
+@@ -2987,6 +2987,15 @@ static int sdev_configure_v3_hw(struct scsi_device *sdev,
+ 	return 0;
+ }
+ 
++static void hisi_sas_sdev_destroy(struct scsi_device *sdev)
++{
++	struct Scsi_Host *shost = dev_to_shost(&sdev->sdev_gendev);
++	struct hisi_hba *hisi_hba = shost_priv(shost);
++	struct device *dev = hisi_hba->dev;
++
++	device_link_remove(&sdev->sdev_gendev, dev);
++}
++
+ static struct attribute *host_v3_hw_attrs[] = {
+ 	&dev_attr_phy_event_threshold.attr,
+ 	&dev_attr_intr_conv_v3_hw.attr,
+@@ -3401,6 +3410,7 @@ static const struct scsi_host_template sht_v3_hw = {
+ 	.sg_tablesize		= HISI_SAS_SGE_PAGE_CNT,
+ 	.sg_prot_tablesize	= HISI_SAS_SGE_PAGE_CNT,
+ 	.sdev_init		= hisi_sas_sdev_init,
++	.sdev_destroy		= hisi_sas_sdev_destroy,
+ 	.shost_groups		= host_v3_hw_groups,
+ 	.sdev_groups		= sdev_groups_v3_hw,
+ 	.tag_alloc_policy_rr	= true,
+-- 
+2.33.0
+
