@@ -1,133 +1,116 @@
-Received: from canpmsgout08.his.huawei.com (canpmsgout08.his.huawei.com [113.46.200.223])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 88BE12D9796;
-	Sat, 25 Apr 2026 08:21:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.223
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B2BD38E12B;
+	Sat, 25 Apr 2026 22:53:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777105264; cv=none; b=tyZquhUYwuWcH25ht48tAM/NQj9REwDR1mojgkLQSUU3m4cKxn/JMYNLgwUbuUUqv7bcg560MHg98qbwRKtSK6zHBcO0FYGRVDpGZLtyAbbU1mxSky67zQLkwyKb3nvgbOPVnhVWy7ZXO2oOLlTlKtWiDr/8H57FOjJ05rhnSHw=
+	t=1777157628; cv=none; b=Liz7alvNxPLjGrN9r5a85BEeYSrU02imJRz3/GJ8lceGw1Hxo6+YFytOA7Ky4LrzCGvUQufvGfzfJSa+pgMlDvd4Pp/iG/Aw5DbYvqFR8GuUnl9FwmBZmDiv1HzWkb4QQ0A623jynb2qM5pAcdYQ3epytb0b/oaBeH/GmY4rRHQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777105264; c=relaxed/simple;
-	bh=6UADAMxWx5NVSXqfJP5iTRX+yYu5GWnMY2fT3w1njiI=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=bibi+E9XYfTZUlcPnS3C2JDJkqGYbC1cKzDr9W5ViZcCSDYquQsOvQ7giW0+6IQvrUaG3VzJgAUL0gdyhgwb1maWVqV3ZxXzql30nAXc/P552Ebt6YFUhfMv05RtcoGk6r6QFZX6WVQfc+pYFQlFFbl3Ur/m8SUfBqPBdSr2j48=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=h-partners.com; dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b=es/uu9Oy; arc=none smtp.client-ip=113.46.200.223
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=h-partners.com
+	s=arc-20240116; t=1777157628; c=relaxed/simple;
+	bh=ZZMakw+7RV0e/1eo3Ip6oN2ri0j16KMh87YL5yJz3+A=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=GP9/li+bhbRN5G/hc2SIJa/YCp5lyJOeJYgGrneWzvbkufxfsU/ughv0WOfXf8ce2yP8l6Chy091z5Uk5vIAi7m26l1TmqBdtG/j6zojPN+vTLKZQg4ksaOBgWINX/KgObpkOPDXHzxAgnscEn/w/9p0nMDdRHG2cI1DkugrxRo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MO9IIW86; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b="es/uu9Oy"
-dkim-signature: v=1; a=rsa-sha256; d=h-partners.com; s=dkim;
-	c=relaxed/relaxed; q=dns/txt;
-	h=From;
-	bh=F8f0amo607sm8HC1NSIcfPhmrSQZVcgS2ugsbjdsjFc=;
-	b=es/uu9OyjTWxxN0PVEnt7yBldb8QEmK1tJ+PDhG22o1QPwjTXOnDaSgxvPFT/qrXayK1LOUna
-	po3jwhG+L1Xc4I4Y7YP9jlsFA0u2SM5lT2h9e2aMkGjM9XzDQ4dsK7x2GOei7wCMYVWTx5/E7C3
-	yUqp0lWJURdJXEnB9PhdK7k=
-Received: from mail.maildlp.com (unknown [172.19.163.127])
-	by canpmsgout08.his.huawei.com (SkyGuard) with ESMTPS id 4g2jKg57qczmV6X;
-	Sat, 25 Apr 2026 16:14:31 +0800 (CST)
-Received: from kwepemh200005.china.huawei.com (unknown [7.202.181.112])
-	by mail.maildlp.com (Postfix) with ESMTPS id 97AFE40572;
-	Sat, 25 Apr 2026 16:20:57 +0800 (CST)
-Received: from localhost.localdomain (10.50.163.32) by
- kwepemh200005.china.huawei.com (7.202.181.112) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.11; Sat, 25 Apr 2026 16:20:57 +0800
-From: Yihang Li <liyihang9@huawei.com>
-To: <martin.petersen@oracle.com>, <James.Bottomley@HansenPartnership.com>
-CC: <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linuxarm@huawei.com>, <liyihang9@h-partners.com>, <liuyonglong@huawei.com>,
-	<prime.zeng@hisilicon.com>
-Subject: [PATCH v2] scsi: hisi_sas: Add slave_destroy interface for v3 hw
-Date: Sat, 25 Apr 2026 16:20:56 +0800
-Message-ID: <20260425082056.2749910-1-liyihang9@huawei.com>
-X-Mailer: git-send-email 2.33.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MO9IIW86"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A4442C2BCB6;
+	Sat, 25 Apr 2026 22:53:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1777157627;
+	bh=ZZMakw+7RV0e/1eo3Ip6oN2ri0j16KMh87YL5yJz3+A=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=MO9IIW86r0DNrb3OrOVPv6Vy82R7i641RrJFF66zHBfpkT/M4MpT+uNzZsnm5F5kN
+	 UeAVREmiklTrXiQLYAELQQQhI6Mb53eAkqLzA4uzoMLjIRsUbdQgM1nmF+8BaN7i9n
+	 cgSFzC07pMykJdYZvFdAE9MFqyISpOyVIUZso8q8MeROQ4sv5EcbK3ec9rtGGn+11W
+	 XoN1nT1T1kfg9FkGeWVwg8vsLsa+WcigvFxA10F4RLrhashQ+CBfrqg0NWUeyWFAs3
+	 81gAzOcjcV+MNLsyOaqcnNS30qywAYHdefIYRe2uuar97V0cXWd0uFB6w4M0UndfUi
+	 CK1Un2JGC/x0Q==
+Message-ID: <e8d237bc-7191-4881-924b-86a34ff0f3b9@kernel.org>
+Date: Sun, 26 Apr 2026 07:53:44 +0900
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: kwepems100002.china.huawei.com (7.221.188.206) To
- kwepemh200005.china.huawei.com (7.202.181.112)
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] ata: libata-sata: retry hardreset when device detected
+ but PHY not established
+To: Xingui Yang <yangxingui@huawei.com>, cassel@kernel.org
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+ liuyonglong@huawei.com, kangfenglong@huawei.com
+References: <20260425060447.1312763-1-yangxingui@huawei.com>
+Content-Language: en-US
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <20260425060447.1312763-1-yangxingui@huawei.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-WARNING is triggered when executing link reset of remote PHY
-and rmmod SAS driver simultaneously. Following is the WARNING log:
+On 4/25/26 15:04, Xingui Yang wrote:
+> When sata_link_hardreset() detects that the link is offline, it currently
+> returns immediately without distinguishing the reason. According to SATA
+> specification, the SStatus register's det filed (bits 0-3) indicates:
+>   - 0x0: No device detected, PHY not communicating
+>   - 0x1: Device detected but PHY communication not established
+>   - 0x3: Device detected and PHY communication established
+> 
+> This patch helps improve device detection reliability and adds a check
+> when the link is offline but det filed shows 0x1, return -EAGAIN to
+> trigger retry, rather than giving up immediately.
+> 
+> Signed-off-by: Xingui Yang <yangxingui@huawei.com>
 
-WARNING: CPU: 61 PID: 21818 at drivers/base/core.c:1347 __device_links_no_driver+0xb4/0xc0
- Call trace:
-  __device_links_no_driver+0xb4/0xc0
-  device_links_driver_cleanup+0xb0/0xfc
-  __device_release_driver+0x198/0x23c
-  device_release_driver+0x38/0x50
-  bus_remove_device+0x130/0x140
-  device_del+0x184/0x434
-  __scsi_remove_device+0x118/0x150
-  scsi_remove_target+0x1bc/0x240
-  sas_rphy_remove+0x90/0x94
-  sas_rphy_delete+0x24/0x3c
-  sas_destruct_devices+0x64/0xa0 [libsas]
-  sas_revalidate_domain+0xe4/0x150 [libsas]
-  process_one_work+0x1e0/0x46c
-  worker_thread+0x15c/0x464
-  kthread+0x160/0x170
-  ret_from_fork+0x10/0x20
- ---[ end trace 71e059eb58f85d4a ]---
+This is a pure ATA patch so please CC the linux-ide list, not the linux-scsi list.
 
-During SAS phy up, link->status is set to DL_STATE_AVAILABLE in
-device_links_driver_bound, then this setting influences
-__device_links_no_driver() before driver rmmod and caused WARNING.
+Also, please check your mail setup: your email was in my Junk folder.
 
-So we add the slave_destroy interface, to make sure link is removed
-after flush workque.
+> ---
+>  drivers/ata/libata-sata.c | 12 +++++++++++-
+>  1 file changed, 11 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/ata/libata-sata.c b/drivers/ata/libata-sata.c
+> index b9d635088f5f..e5bb92c38e38 100644
+> --- a/drivers/ata/libata-sata.c
+> +++ b/drivers/ata/libata-sata.c
+> @@ -667,8 +667,18 @@ int sata_link_hardreset(struct ata_link *link, const unsigned int *timing,
+>  	if (rc)
+>  		goto out;
+>  	/* if link is offline nothing more to do */
+> -	if (ata_phys_link_offline(link))
+> +	if (ata_phys_link_offline(link)) {
 
-Fixes: 16fd4a7c59170 ("scsi: hisi_sas: Add device link between SCSI devices and hisi_hba")
-Signed-off-by: Yihang Li <liyihang9@huawei.com>
----
-Changs to v1:
-- Use the latest interface .sdev_destroy
----
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 12 +++++++++++-
- 1 file changed, 11 insertions(+), 1 deletion(-)
+This is preceeded by a call to sata_link_resume(), which calls
+sata_link_debounce() and that function makes sure that DET is stable. So if
+after that DET still shows that their is no PHY, there is likely a big problem
+with it and it is super slow to be established.
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index fda07b193137..c7430f7c4048 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -2977,7 +2977,7 @@ static int sdev_configure_v3_hw(struct scsi_device *sdev,
- 		return 0;
- 
- 	if (!device_link_add(&sdev->sdev_gendev, dev,
--			     DL_FLAG_PM_RUNTIME | DL_FLAG_RPM_ACTIVE)) {
-+			     DL_FLAG_STATELESS | DL_FLAG_PM_RUNTIME | DL_FLAG_RPM_ACTIVE)) {
- 		if (pm_runtime_enabled(dev)) {
- 			dev_info(dev, "add device link failed, disable runtime PM for the host\n");
- 			pm_runtime_disable(dev);
-@@ -2987,6 +2987,15 @@ static int sdev_configure_v3_hw(struct scsi_device *sdev,
- 	return 0;
- }
- 
-+static void hisi_sas_sdev_destroy(struct scsi_device *sdev)
-+{
-+	struct Scsi_Host *shost = dev_to_shost(&sdev->sdev_gendev);
-+	struct hisi_hba *hisi_hba = shost_priv(shost);
-+	struct device *dev = hisi_hba->dev;
-+
-+	device_link_remove(&sdev->sdev_gendev, dev);
-+}
-+
- static struct attribute *host_v3_hw_attrs[] = {
- 	&dev_attr_phy_event_threshold.attr,
- 	&dev_attr_intr_conv_v3_hw.attr,
-@@ -3401,6 +3410,7 @@ static const struct scsi_host_template sht_v3_hw = {
- 	.sg_tablesize		= HISI_SAS_SGE_PAGE_CNT,
- 	.sg_prot_tablesize	= HISI_SAS_SGE_PAGE_CNT,
- 	.sdev_init		= hisi_sas_sdev_init,
-+	.sdev_destroy		= hisi_sas_sdev_destroy,
- 	.shost_groups		= host_v3_hw_groups,
- 	.sdev_groups		= sdev_groups_v3_hw,
- 	.tag_alloc_policy_rr	= true,
+In this case, I do not think that doing another hardreset is the right thing to
+do. Have you tried increasing the deadline for hardreset ? That deadline is used
+as the limit for the link debounce too.
+
+Do you have a specific controller/device where you see this issue ? What exactly
+is the hardware setup where you see this issue ?
+
+
+
+> +		u32 sstatus;
+> +
+> +		if (sata_scr_read(link, SCR_STATUS, &sstatus) == 0 &&
+> +		    (sstatus & 0xf) == 0x1) {
+> +			ata_link_warn(link, "device detected but PHY not ready (SStatus %X), retrying\n",
+> +				      sstatus);
+> +			rc = -EAGAIN;
+> +		}
+> +
+>  		goto out;
+> +	}
+>  
+>  	/* Link is online.  From this point, -ENODEV too is an error. */
+>  	if (online)
+
+
 -- 
-2.33.0
-
+Damien Le Moal
+Western Digital Research
