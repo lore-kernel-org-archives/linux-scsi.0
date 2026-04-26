@@ -1,37 +1,38 @@
 Received: from nick.sneptech.io (nick.sneptech.io [178.62.38.78])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3E2D837C11A;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E4D3837BE6A;
 	Sun, 26 Apr 2026 19:09:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=178.62.38.78
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777230578; cv=none; b=FuQBhA+cTbwSL75AykvIG48dpYUE6Rrbj1nGYgFQAy0Ff5kn0bsBEhOU2L+agt3vJ5qMJWM8AWv1R/j6MGPGgsu5VRTHZ2Y90tlD5tRIfLjMJwue7wOOmlqQH7je6jwWR2mCk6XWXHLQSNehscv+B68k9RZ1GFSAxAElYyjdFSo=
+	t=1777230580; cv=none; b=d9SlhErFQFWTWs0GETQj/5xPr88yhBp/sQuzN4/BrMEUqgLdV4ozGQriThWHFIP77fAC0Ye8KX66kAcTVu9XMapWMtcvBHF1IRzWHkeFX58nvtNCHZskQj75OQUrrdMbNdMmnoxVvNPN6Iyg/aeWJAxmSKpE7NPvH7xGEwgyN2M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777230578; c=relaxed/simple;
-	bh=w7v77urmj9Myt8HPQQMb8jqREmEgbrUy31DNNSLEPgc=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=RRaaTKMmK9cYAHlC5cEh3vI7/PHyhJEfC5wzx6sVUKfrxm9BSiXbstjKW/9jPxfeUXTAKxKSDZ+YOgCbpzm2SEs/wwqHyY/Ve2KZAof04b0tKspwC5Ih/uRm+ARKFr2YrXo15v5/LxjXfs+d3nlkKlvyDTB7auoqaxRAY6Qdsbk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=philpem.me.uk; spf=pass smtp.mailfrom=philpem.me.uk; dkim=pass (1024-bit key) header.d=philpem.me.uk header.i=@philpem.me.uk header.b=dQ6woGqF; arc=none smtp.client-ip=178.62.38.78
+	s=arc-20240116; t=1777230580; c=relaxed/simple;
+	bh=f+CG9Amv2WmTE/Mh+QJe3KaJuRDqAPb8S1O+7kMivFU=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=YbRn0/Eq4hvEowZC6YK5EWJUrFiv5Lwhajb2RSaV+EJESkeaPRoQuMCsw0zVnrx0SGDLOfNAxKdEqtuKF+Awh6ZUJdmm477N6JhvCvueh1LWbWcRF1nDz+JxFccxR62Vt2kGF8n7OLlRuPsJKZICuEtfh5xECLEuY9kMAmUvFj4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=philpem.me.uk; spf=pass smtp.mailfrom=philpem.me.uk; dkim=pass (1024-bit key) header.d=philpem.me.uk header.i=@philpem.me.uk header.b=a/kAFWmx; arc=none smtp.client-ip=178.62.38.78
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=philpem.me.uk
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=philpem.me.uk
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=philpem.me.uk header.i=@philpem.me.uk header.b="dQ6woGqF"
+	dkim=pass (1024-bit key) header.d=philpem.me.uk header.i=@philpem.me.uk header.b="a/kAFWmx"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=philpem.me.uk;
 	s=mail; t=1777230569;
-	bh=w7v77urmj9Myt8HPQQMb8jqREmEgbrUy31DNNSLEPgc=;
-	h=From:To:Cc:Subject:Date:From;
-	b=dQ6woGqFC+GYYiIrwkb+NTdimevxp4N1N/6EDf/CjMX+vSxlStWSC3uYJ+dncBTk/
-	 lNJUgwKYZ4gvUpxKmkcicZEVM6GzXUtA/BGhof94VJe/ppOxSIxM26m0d0CzqgtJ0j
-	 AEA2mjBEYd20taPeto9xGZ6b+wtX4cR53i2iW6+Y=
+	bh=f+CG9Amv2WmTE/Mh+QJe3KaJuRDqAPb8S1O+7kMivFU=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=a/kAFWmxAI3Z5zTkBrwGhzr7Q9QWP/XGAbI2tiv4ahh3E2bY0v2nx56DuN4oS8Ar1
+	 3iF08x9g6ZbsFRWP9UU3TXHjEQqZqjzLTAegXEf3IVkW9PScMTnjcgEgO04h2S25Ol
+	 LDIg5GANxLDoDm0edCeTjqNmPVXZn65AFysw7Mlw=
 Received: from wolf.philpem.me.uk (81-187-163-148.ip4.reverse-dns.uk [81.187.163.148])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits))
 	(No client certificate requested)
 	(Authenticated sender: mailrelay_wolf@philpem.me.uk)
-	by nick.sneptech.io (Postfix) with ESMTPSA id 54E09BE5D4;
+	by nick.sneptech.io (Postfix) with ESMTPSA id 83174BE5D7;
 	Sun, 26 Apr 2026 19:09:29 +0000 (UTC)
 Received: from cheetah.homenet.philpem.me.uk (cheetah.homenet.philpem.me.uk [10.0.0.32])
-	by wolf.philpem.me.uk (Postfix) with ESMTPSA id E0CF75FADA;
-	Sun, 26 Apr 2026 20:09:28 +0100 (BST)
+	by wolf.philpem.me.uk (Postfix) with ESMTPSA id 314E25FC56;
+	Sun, 26 Apr 2026 20:09:29 +0100 (BST)
 From: Phil Pemberton <philpem@philpem.me.uk>
 To: linux-ide@vger.kernel.org,
 	linux-scsi@vger.kernel.org
@@ -42,198 +43,78 @@ Cc: linux-kernel@vger.kernel.org,
 	"Martin K . Petersen" <martin.petersen@oracle.com>,
 	Hannes Reinecke <hare@suse.de>,
 	Phil Pemberton <philpem@philpem.me.uk>
-Subject: [PATCH v3 0/7] ata: libata-scsi: multi-LUN ATAPI device support
-Date: Sun, 26 Apr 2026 20:09:13 +0100
-Message-ID: <20260426190920.2051289-1-philpem@philpem.me.uk>
+Subject: [PATCH v3 4/7] scsi: add BLIST_NO_LUN_1F blacklist flag
+Date: Sun, 26 Apr 2026 20:09:17 +0100
+Message-ID: <20260426190920.2051289-5-philpem@philpem.me.uk>
 X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20260426190920.2051289-1-philpem@philpem.me.uk>
+References: <20260426190920.2051289-1-philpem@philpem.me.uk>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-Hi all,
+Some multi-LUN devices respond to INQUIRY on unpopulated LUNs with
+PQ=0 / PDT=0x1f instead of the standard PQ=3.  The SCSI scan layer
+normally adds such devices (PQ=0 means "connected"), producing
+spurious "No Device" entries.
 
-This is v3, addressing review feedback from Hannes Reinecke on v2.
+The scsi_target field pdt_1f_for_no_lun already exists to suppress
+this, but was previously only set by the USB UFI driver.
 
-This series gives libata support for ATAPI devices with multiple LUNs,
-such as the Panasonic PD-1 PD/CD combo drive. This exposes both the
-CD-ROM and rewritable PD optical interfaces: CD-ROM as LUN 0 and PD
-as LUN 1.
+Add BLIST_NO_LUN_1F so the flag can be set per-device from
+scsi_devinfo, and wire it up in scsi_add_lun() to set
+starget->pdt_1f_for_no_lun from the blacklist flags.  This runs
+during LUN 0 processing, before the sequential LUN scan probes
+higher LUNs.
 
-libata has never supported multi-LUN ATAPI. This series adds support
-by fixing the following limitations:
+Signed-off-by: Phil Pemberton <philpem@philpem.me.uk>
+---
+ drivers/scsi/scsi_scan.c    | 3 +++
+ include/scsi/scsi_devinfo.h | 6 +++---
+ 2 files changed, 6 insertions(+), 3 deletions(-)
 
-  1. shost->max_lun is hardcoded to 1 in ata_scsi_add_hosts(), preventing
-     the SCSI layer from probing any LUN beyond 0.
-
-  2. __ata_scsi_find_dev() rejects all commands where scsidev->lun != 0,
-     returning NULL and resulting in DID_BAD_TARGET.
-
-  3. The SCSI-2 CDB LUN field (byte 1, bits 7:5) is never populated.
-     ATAPI tunnels SCSI commands over the ATA PACKET interface, and the
-     transport-layer LUN addressing used by SPC-3+ is not available.
-     Older multi-LUN ATAPI devices rely on this CDB field to route
-     commands to the correct LUN.
-
-  4. ata_scsi_scan_host() only calls __scsi_add_device() for LUN 0,
-     never probing additional LUNs even when the SCSI device info table
-     would indicate the device supports them.
-
-  5. dev->sdev is a single pointer, but multi-LUN ATAPI puts multiple
-     sdevs behind one ata_device.  Every call to ata_scsi_dev_config()
-     overwrote the pointer, and ata_scsi_sdev_destroy() tore down the
-     entire ATA device whenever any sdev was destroyed -- so removing a
-     spurious LUN result during scanning would kill the whole port, and
-     the other users of dev->sdev (scsi_remove_device in
-     ata_port_detach(), ACPI uevents, zpodd, media-change notify,
-     suspend/resume rescan) could only ever see one LUN.
-
-Changes from v2:
-
-  - pdt_1f_for_no_lun is no longer set unconditionally for every ATAPI
-    target.  Hannes suggested making this opt-in via the SCSI device
-    info table, so a new BLIST_NO_LUN_1F flag has been added to
-    scsi_devinfo.h, wired in scsi_scan.c, and applied to the COMPAQ
-    PD-1 entry.  Targets that legitimately use PDT 0x1f / PQ 0 for
-    "LUN not present" can now opt in without affecting other ATAPI
-    devices.  This adds two new patches (4/7 and the updated 6/7).
-
-  - Dropped the one-shot dmesg hint that pointed users at
-    libata.atapi_max_lun when a BLIST_FORCELUN device was detected.
-    Hannes felt the kernel should not be advertising its own knobs;
-    the parameter is documented in the relevant patch and that's the
-    expected place for users to discover it.
-
-  - atapi_xlat() now rejects scmd->device->lun >= 8 with
-    AC_ERR_INVALID instead of silently truncating.  The SCSI-2 CDB
-    LUN field is only 3 bits wide, so a request to a LUN outside that
-    range is unrepresentable on the wire and must fail.
-
-  - Patches 1/7 and 2/7 carry Hannes' Reviewed-by tags from v2.
-
-  - Added an optional 7/7 that extends BLIST_NO_LUN_1F to the MATSHITA
-    and NEC OEM-branded PD-1 variants.  See note below.
-
-The series is split as:
-
-  1/7: libata-scsi: add libata.atapi_max_lun module parameter.
-
-  2/7: libata-scsi: convert dev->sdev to a per-LUN array and update
-       every caller.
-
-  3/7: libata-scsi: relax __ata_scsi_find_dev() to accept non-zero LUN
-       for ATAPI devices, and encode the LUN in CDB byte 1 bits 7:5.
-       Reject LUN >= 8 with AC_ERR_INVALID.
-
-  4/7: scsi: add a BLIST_NO_LUN_1F blacklist flag, which sets
-       scsi_target.pdt_1f_for_no_lun for matching devices so that
-       PDT 0x1f / PQ 0 INQUIRY responses are treated as "LUN not
-       present" and silently skipped.
-
-  5/7: libata-scsi: after adding LUN 0, trigger scsi_scan_target() for
-       BLIST_FORCELUN ATAPI devices only.  Single-LUN devices are
-       completely unaffected.
-
-  6/7: scsi_devinfo: add the COMPAQ-branded variant of the PD-1 to the
-       device info table with BLIST_FORCELUN | BLIST_SINGLELUN |
-       BLIST_NO_LUN_1F.  An entry already exists for the Panasonic
-       OEM-branded "MATSHITA PD-1" and the NEC "NEC PD-1 ODX654P".
-
-  7/7: scsi_devinfo: extend BLIST_NO_LUN_1F to the MATSHITA and NEC
-       PD-1 variants for completeness.  This patch is *optional* --
-       it has not been tested on those OEM units (the author only has
-       a COMPAQ unit), but the three variants are the same Panasonic
-       LF-1095/LF-1195 mechanism with the same firmware family, so
-       the quirk is expected to apply equally.  The flag is a no-op
-       on devices that do not return PDT 0x1f / PQ 0 for non-existent
-       LUNs, so the worst case is that it has no effect.  Drop or
-       hold this patch if confirmation on real MATSHITA / NEC
-       hardware is preferred first.
-
-Tested on a Panasonic LF-1195C PD/CD (Compaq branded) attached to an
-ata_piix host on i686, kernel 7.0.0-rc7+, with libata.atapi_max_lun=7.
-Both LUNs enumerate correctly: the CD-ROM as sr0 and the PD as sda.
-Reads from each device succeed against the appropriate media.
-Non-responding LUNs are silently skipped (no spurious "No Device"
-entries in dmesg).  An iHAS124 DVD writer on the same machine
-(single-LUN, no BLIST_FORCELUN entry) is unaffected: only LUN 0 is
-scanned.
-
-If the iHAS124 is scanned regardless, it seems to ignore the LUN
-parameter, and enumerates as eight drives. I expect most standard ATAPI
-devices would behave this way, hence the BLIST_FORCELUN gate.
-
-Two known limitations around media-change detection on multi-LUN
-ATAPI devices with a shared physical media slot (e.g. PD/CD combos
-flagged BLIST_SINGLELUN):
-
-1. The block layer disables in-kernel polling by default
-   (block.events_dfl_poll_msecs defaults to 0).  Without polling,
-   sd_check_events never runs and media insertion on the PD LUN is
-   not detected automatically.  sr_mod is unaffected because it
-   re-reads the TOC on every open.
-
-   Workaround -- either globally via kernel boot parameter:
-
-       block.events_dfl_poll_msecs=2000
-
-   or per-device via udev rule:
-
-       ACTION=="add", KERNEL=="sd*", \
-         ATTRS{vendor}=="COMPAQ  ", ATTRS{model}=="PD-1*", \
-         ATTR{events_poll_msecs}="2000"
-
-   Even with polling enabled the sd path does not always pick up
-   fresh media; `blockdev --rereadpt /dev/sdX` reliably forces a
-   revalidate and proves the libata routing itself is correct.
-
-   A follow-up patch could add a BLIST flag (e.g. BLIST_POLL_EVENTS)
-   to scsi_devinfo and have sd_probe_async() set the per-disk poll
-   interval when the flag is present.  This would be a separate
-   submission to the SCSI list since it touches sd.c.
-
-2. Media-change sense is not propagated across sibling LUNs.  When
-   one LUN reports UNIT ATTENTION (ASC 0x28 or 0x3A), the other LUNs
-   are not notified.  With polling enabled, sd_check_events detects
-   the change independently on each LUN via TUR, so this is mainly a
-   latency issue rather than a functional one.  A follow-up to
-   propagate media-change events to sibling LUNs in
-   atapi_qc_complete is straightforward but deferred to keep this
-   series focused on the LUN-scanning core.
-
-Suspend/resume with multi-LUN ATAPI attached has not yet been tested;
-this is on the list.  ata_scsi_dev_rescan iterates all populated LUN
-slots, and the SCSI layer's host-level suspend tracking already
-serialises port quiesce, so no additional per-LUN suspend counting is
-needed in libata.
-
-Comments and suggestions welcome.
-
-Phil Pemberton (7):
-  ata: libata-scsi: add atapi_max_lun module parameter
-  ata: libata-scsi: convert dev->sdev to per-LUN array
-  ata: libata-scsi: route non-zero LUN commands for multi-LUN ATAPI
-  scsi: add BLIST_NO_LUN_1F blacklist flag
-  ata: libata-scsi: probe additional LUNs for multi-LUN ATAPI devices
-  scsi: scsi_devinfo: add COMPAQ PD-1 multi-LUN ATAPI device quirk
-  scsi: scsi_devinfo: extend BLIST_NO_LUN_1F to MATSHITA and NEC PD-1
-    variants
-
- drivers/ata/libata-acpi.c   |   4 +-
- drivers/ata/libata-core.c   |  15 ++-
- drivers/ata/libata-scsi.c   | 198 +++++++++++++++++++++---------------
- drivers/ata/libata-zpodd.c  |   6 +-
- drivers/ata/libata.h        |   1 +
- drivers/scsi/scsi_devinfo.c |   8 +-
- drivers/scsi/scsi_scan.c    |   3 +
- include/linux/libata.h      |   3 +-
- include/scsi/scsi_devinfo.h |   6 +-
- 9 files changed, 147 insertions(+), 97 deletions(-)
-
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index 7b11bc7de0e3..d3f0540d79a2 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -1070,6 +1070,9 @@ static int scsi_add_lun(struct scsi_device *sdev, unsigned char *inq_result,
+ 
+ 	sdev->sdev_bflags = *bflags;
+ 
++	if (*bflags & BLIST_NO_LUN_1F)
++		sdev->sdev_target->pdt_1f_for_no_lun = 1;
++
+ 	if (scsi_device_is_pseudo_dev(sdev))
+ 		return SCSI_SCAN_LUN_PRESENT;
+ 
+diff --git a/include/scsi/scsi_devinfo.h b/include/scsi/scsi_devinfo.h
+index 1d79a3b536ce..6957b0705510 100644
+--- a/include/scsi/scsi_devinfo.h
++++ b/include/scsi/scsi_devinfo.h
+@@ -34,7 +34,8 @@
+ #define BLIST_NOSTARTONADD	((__force blist_flags_t)(1ULL << 12))
+ /* do not ask for VPD page size first on some broken targets */
+ #define BLIST_NO_VPD_SIZE	((__force blist_flags_t)(1ULL << 13))
+-#define __BLIST_UNUSED_14	((__force blist_flags_t)(1ULL << 14))
++/* PDT 0x1f with PQ 0 means no LUN present (e.g. some ATAPI multi-LUN) */
++#define BLIST_NO_LUN_1F		((__force blist_flags_t)(1ULL << 14))
+ #define __BLIST_UNUSED_15	((__force blist_flags_t)(1ULL << 15))
+ #define __BLIST_UNUSED_16	((__force blist_flags_t)(1ULL << 16))
+ /* try REPORT_LUNS even for SCSI-2 devs (if HBA supports more than 8 LUNs) */
+@@ -77,8 +78,7 @@
+ #define __BLIST_HIGH_UNUSED (~(__BLIST_LAST_USED | \
+ 			       (__force blist_flags_t) \
+ 			       ((__force __u64)__BLIST_LAST_USED - 1ULL)))
+-#define __BLIST_UNUSED_MASK (__BLIST_UNUSED_14 | \
+-			     __BLIST_UNUSED_15 | \
++#define __BLIST_UNUSED_MASK (__BLIST_UNUSED_15 | \
+ 			     __BLIST_UNUSED_16 | \
+ 			     __BLIST_UNUSED_24 | \
+ 			     __BLIST_UNUSED_27 | \
 -- 
 2.43.0
 
