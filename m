@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E99EC171AF;
-	Sun, 26 Apr 2026 23:32:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AFBD1197A7D;
+	Sun, 26 Apr 2026 23:36:27 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777246370; cv=none; b=ONroFe7eo1teXceZPZnxGXvlk6T2qGFchhdJhxdxKNixNa7s1BQmGWYMGn7vlXgSy3mtVVZQnmaDfaqHx2chT9LuFAfAUfFe7yA5obmUholpjTL3mvRqZegdDCnD/867hMsVgQBgPVX8dcxysIptLIwlUagdXVf0q0C6X+Pldxk=
+	t=1777246587; cv=none; b=mS89UpiQbhXltEUpsXA97gJXKKNkEyikWnJlAm2/tuPkiGWJYPp4aN9UfBui+C3NnnVEASQH0fTwvsqM2/oTXa773OfYgojYPB7EiylMZJV1DtKS98BOaNzBn9oFS/Dxt5EDNPi63iR27KjJv72Gq9Q2TEsv91sj5DNoVcb9QDA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777246370; c=relaxed/simple;
-	bh=/SuOV2rHmqnpMQpslog9kFPHe7WYHjbrFMWSRXjCrqw=;
+	s=arc-20240116; t=1777246587; c=relaxed/simple;
+	bh=GKnFhzMFp4+uM9HsmIbQkPLpZ9LXxC2RVfT0Dexphc4=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=XtcKmGl8erjolAgoMp+2SNU1gzBwWitC4tD1WgvBP7tBShw6dVNXtwIV1eipABghyGx1m+e0AjZtHkCH6y8tPA/3hkU+xzlF578ymdMiE5aoZyA7XsRtLa9fBc2vSD0PFi/L5w7cvjH+LRERj+/xvlCh9fZix2nucuz+8DwA1u4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BJqnqsp9; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=HTmRV/N775j0SJfmVULJxyFlzVD5SupwjBuKu8VYwphkhPBm4v6gE2CVdAgfKe6W5rZTkOzDqFdV/K9ojTQaDuK/iCtAWvp7Ufz6z/LI6gf9iKENnw2qCoKH1rL26BlGQQ2GmRqU205DBxarsWu59AIJ/KQPwT40/zThvyYI6MQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BcmohLur; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BJqnqsp9"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 548E5C2BCAF;
-	Sun, 26 Apr 2026 23:32:48 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BcmohLur"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 87B4FC2BCAF;
+	Sun, 26 Apr 2026 23:36:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1777246369;
-	bh=/SuOV2rHmqnpMQpslog9kFPHe7WYHjbrFMWSRXjCrqw=;
+	s=k20201202; t=1777246587;
+	bh=GKnFhzMFp4+uM9HsmIbQkPLpZ9LXxC2RVfT0Dexphc4=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=BJqnqsp9r35D+Jj0J9M4Ek63srMk97KNdWl8LbsqFHZNHzPFI1d8zmwVY6ZMTMgNs
-	 3aSm6MXU+KGmJxpbEpAO7YW+OymzrHVi9q3YggjkZkHVma7XbCj2ffeFggdu4n+gWf
-	 pSm6SjhRiMqW0cbJjzKugVLYVEzoyTk/JuDrp7+z3n2wzQAnsRtJEE25u/rjEiPKED
-	 NjmQ1vHCuH4IMYisRhhNZoined/XcOpVet6zwGLqdlUdFTTor1t6MVhmN0eqmuz9k2
-	 obcUJ8TnuLH+X1vD4qW62OIJpQlagKTVqnAAMYSRmlsBO0/b1tzcWzvmeDraQgN+US
-	 6lv6cj5jCnjTw==
-Message-ID: <38a4a44f-fe8e-4236-8a6e-daff8dd16f48@kernel.org>
-Date: Mon, 27 Apr 2026 08:32:41 +0900
+	b=BcmohLurbJTZkIjseOJr7jyabXKLvDyFg/y+VgSyFkHoTMZSaPi4cTz2BDQsKQcCt
+	 MNdHyaAQjjo5UCXAThElU8B+v1EYKzfXB0vRMF9bnA5DW6fqYeIEUhTXKzowmY4tTa
+	 U17Gr3G8O4xT4i/5N34TBtFZOBKPeM9Ik8HYjHSfLVgha6WohlQ0IG+ouUS8TMUv8S
+	 dk/mufPHWfCOG8odj83tP6Uq4Eo6e1K1mryPcA370cVwqgFlX/x6i1uyu3rz6smmkY
+	 Fzu0iVSb08ZhweUU83TM7CO3SVnJNrDZMF6CuU+PN5UlV7sWnYmkYPacR/Phh64SAu
+	 0yW5hYEa1Djlg==
+Message-ID: <cdd57593-e43f-455e-bd30-f3f89c10b135@kernel.org>
+Date: Mon, 27 Apr 2026 08:36:19 +0900
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,7 +35,8 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 4/7] scsi: add BLIST_NO_LUN_1F blacklist flag
+Subject: Re: [PATCH v3 5/7] ata: libata-scsi: probe additional LUNs for
+ multi-LUN ATAPI devices
 To: Phil Pemberton <philpem@philpem.me.uk>, linux-ide@vger.kernel.org,
  linux-scsi@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org, Niklas Cassel <cassel@kernel.org>,
@@ -43,81 +44,108 @@ Cc: linux-kernel@vger.kernel.org, Niklas Cassel <cassel@kernel.org>,
  "Martin K . Petersen" <martin.petersen@oracle.com>,
  Hannes Reinecke <hare@suse.de>
 References: <20260426190920.2051289-1-philpem@philpem.me.uk>
- <20260426190920.2051289-5-philpem@philpem.me.uk>
+ <20260426190920.2051289-6-philpem@philpem.me.uk>
 Content-Language: en-US
 From: Damien Le Moal <dlemoal@kernel.org>
 Organization: Western Digital Research
-In-Reply-To: <20260426190920.2051289-5-philpem@philpem.me.uk>
+In-Reply-To: <20260426190920.2051289-6-philpem@philpem.me.uk>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 On 4/27/26 4:09 AM, Phil Pemberton wrote:
-> Some multi-LUN devices respond to INQUIRY on unpopulated LUNs with
-> PQ=0 / PDT=0x1f instead of the standard PQ=3.  The SCSI scan layer
-> normally adds such devices (PQ=0 means "connected"), producing
-> spurious "No Device" entries.
+> After LUN 0 is added for an ATAPI device, check its BLIST_FORCELUN
+> flag.  If set, call scsi_scan_target() with SCAN_WILD_CARD to trigger
+> the SCSI layer's built-in sequential LUN scan for that target only.
+> This probes LUNs 1..shost->max_lun, driven by the atapi_max_lun module
+> parameter from patch 1/6.  Devices without BLIST_FORCELUN (the vast
+
+Please remove the mention of patch 1/6. Once the patches are applied, that will
+not mean anything.
+
+> majority of ATAPI devices) are left with only LUN 0 -- no sequential
+> scan is triggered, so single-LUN devices like the iHAS124 DVD writer
+> are completely unaffected.
 > 
-> The scsi_target field pdt_1f_for_no_lun already exists to suppress
-> this, but was previously only set by the USB UFI driver.
-> 
-> Add BLIST_NO_LUN_1F so the flag can be set per-device from
-> scsi_devinfo, and wire it up in scsi_add_lun() to set
-> starget->pdt_1f_for_no_lun from the blacklist flags.  This runs
-> during LUN 0 processing, before the sequential LUN scan probes
-> higher LUNs.
+> Non-responding LUNs (PQ=0/PDT=0x1f) are silently skipped by
+> scsi_probe_and_add_lun() when BLIST_NO_LUN_1F is set on the device
+> via scsi_devinfo (see patch 4/6).
+
+Same thing here.
+
 > 
 > Signed-off-by: Phil Pemberton <philpem@philpem.me.uk>
 > ---
->  drivers/scsi/scsi_scan.c    | 3 +++
->  include/scsi/scsi_devinfo.h | 6 +++---
->  2 files changed, 6 insertions(+), 3 deletions(-)
+>  drivers/ata/libata-scsi.c | 37 ++++++++++++++++++++++++++++---------
+>  1 file changed, 28 insertions(+), 9 deletions(-)
 > 
-> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-> index 7b11bc7de0e3..d3f0540d79a2 100644
-> --- a/drivers/scsi/scsi_scan.c
-> +++ b/drivers/scsi/scsi_scan.c
-> @@ -1070,6 +1070,9 @@ static int scsi_add_lun(struct scsi_device *sdev, unsigned char *inq_result,
+> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+> index 48c7d323d6f9..fc719e3d7d60 100644
+> --- a/drivers/ata/libata-scsi.c
+> +++ b/drivers/ata/libata-scsi.c
+> @@ -26,6 +26,7 @@
+>  #include <scsi/scsi_device.h>
+>  #include <scsi/scsi_tcq.h>
+>  #include <scsi/scsi_transport.h>
+> +#include <scsi/scsi_devinfo.h>
+>  #include <linux/libata.h>
+>  #include <linux/hdreg.h>
+>  #include <linux/uaccess.h>
+> @@ -4700,7 +4701,6 @@ void ata_scsi_scan_host(struct ata_port *ap, int sync)
+>   repeat:
+>  	ata_for_each_link(link, ap, EDGE) {
+>  		ata_for_each_dev(dev, link, ENABLED) {
+> -			struct scsi_device *sdev;
+>  			int channel = 0, id = 0;
 >  
->  	sdev->sdev_bflags = *bflags;
+>  			if (dev->sdev[0])
+> @@ -4711,15 +4711,34 @@ void ata_scsi_scan_host(struct ata_port *ap, int sync)
+>  			else
+>  				channel = link->pmp;
 >  
-> +	if (*bflags & BLIST_NO_LUN_1F)
+> -			sdev = __scsi_add_device(ap->scsi_host, channel, id, 0,
+> -						 NULL);
+> -			if (!IS_ERR(sdev)) {
+> -				dev->sdev[0] = sdev;
+> -				ata_scsi_assign_ofnode(dev, ap);
+> -				scsi_device_put(sdev);
+> -			} else {
+> -				dev->sdev[0] = NULL;
+> +			{
+> +				struct scsi_device *sdev;
 
-Instead of dereferencing again bflags, maybe use sdev->sdev_bflags here ?
-I would also remove the blank line before this if.
+This is not pretty... Please leave the declaration of sdev where it was and
+remove this curly bracket. That will save one level of identation and make the
+code cleaner.
 
-With that, looks OK to me.
-
-Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
-
-> +		sdev->sdev_target->pdt_1f_for_no_lun = 1;
 > +
->  	if (scsi_device_is_pseudo_dev(sdev))
->  		return SCSI_SCAN_LUN_PRESENT;
+> +				sdev = __scsi_add_device(ap->scsi_host,
+> +							 channel, id, 0, NULL);
+> +				if (!IS_ERR(sdev)) {
+> +					/*
+> +					 * For multi-LUN ATAPI (BLIST_FORCELUN),
+> +					 * trigger the sequential LUN scan.
+> +					 * pdt_1f_for_no_lun (set during LUN 0
+> +					 * configure) ensures non-responding LUNs
+> +					 * are silently skipped.  dev->sdev[] is
+> +					 * populated by ata_scsi_dev_config()
+> +					 * during the scan callbacks.
+> +					 */
+> +					if (dev->class == ATA_DEV_ATAPI &&
+> +					    sdev->sdev_bflags & BLIST_FORCELUN)
+> +						scsi_scan_target(
+> +							&ap->scsi_host->shost_gendev,
+> +							channel, id,
+> +							SCAN_WILD_CARD,
+> +							SCSI_SCAN_RESCAN);
+> +					scsi_device_put(sdev);
+> +				}
+>  			}
+> +
+> +			if (dev->sdev[0])
+> +				ata_scsi_assign_ofnode(dev, ap);
+>  		}
+>  	}
 >  
-> diff --git a/include/scsi/scsi_devinfo.h b/include/scsi/scsi_devinfo.h
-> index 1d79a3b536ce..6957b0705510 100644
-> --- a/include/scsi/scsi_devinfo.h
-> +++ b/include/scsi/scsi_devinfo.h
-> @@ -34,7 +34,8 @@
->  #define BLIST_NOSTARTONADD	((__force blist_flags_t)(1ULL << 12))
->  /* do not ask for VPD page size first on some broken targets */
->  #define BLIST_NO_VPD_SIZE	((__force blist_flags_t)(1ULL << 13))
-> -#define __BLIST_UNUSED_14	((__force blist_flags_t)(1ULL << 14))
-> +/* PDT 0x1f with PQ 0 means no LUN present (e.g. some ATAPI multi-LUN) */
-> +#define BLIST_NO_LUN_1F		((__force blist_flags_t)(1ULL << 14))
->  #define __BLIST_UNUSED_15	((__force blist_flags_t)(1ULL << 15))
->  #define __BLIST_UNUSED_16	((__force blist_flags_t)(1ULL << 16))
->  /* try REPORT_LUNS even for SCSI-2 devs (if HBA supports more than 8 LUNs) */
-> @@ -77,8 +78,7 @@
->  #define __BLIST_HIGH_UNUSED (~(__BLIST_LAST_USED | \
->  			       (__force blist_flags_t) \
->  			       ((__force __u64)__BLIST_LAST_USED - 1ULL)))
-> -#define __BLIST_UNUSED_MASK (__BLIST_UNUSED_14 | \
-> -			     __BLIST_UNUSED_15 | \
-> +#define __BLIST_UNUSED_MASK (__BLIST_UNUSED_15 | \
->  			     __BLIST_UNUSED_16 | \
->  			     __BLIST_UNUSED_24 | \
->  			     __BLIST_UNUSED_27 | \
 
 
 -- 
