@@ -1,108 +1,74 @@
-Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
+Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 396BB33F8AD;
-	Mon, 27 Apr 2026 15:34:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=193.142.43.55
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 64A0E29C325;
+	Mon, 27 Apr 2026 15:43:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777304061; cv=none; b=jRWPcqBbY5BuVNu6j1t1BVaR383NaFcTlIGnaN/XywZv8pUGoHkp7hdsfepht4YaKUj955gYMYD3hroSVDNIFCm4qhRDbCGsxNCtzsN8KOk0ZfGpCQqe/gRFOyeFSqiWQyJ5mXwDxt121FMWmAJNcSHejMcg82i/aOeq774fUQA=
+	t=1777304608; cv=none; b=eZu7DIV8avBTiT/U5W9TMT2mIetGb6xul4xUMmGor8TXsfuGDnj+Xxs0/BbvjIpSBODLJYUCIN03oiKTbZDaXgEeHzuVyntwDFokNDElOwYDEx51NoT9UIVOj/u9OXLc54LbpI2BiuEm858V5zgZG7GeAQRV/dxUWd/Y1ZamHTQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777304061; c=relaxed/simple;
-	bh=DBrzjD58zwiSSp3rrazy1da2LaxjT8/v/qQOT7QVvCk=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=YXaoJGi6YN4/yTDBLoRqyiLU/0pdz2ALix3AAsvhTAbYK8I+oPqu4Jy71eDWZmbqyfa4anNNc+62ri0NaxKHOZsY4wwtD3sHpC33CweNTJ7Yb9AcdOO33wu/Wx9gZr3O0InH8YdUKH9SSdlnuubzwpOw8nn9s7qRKwMvZMPRdKU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de; spf=pass smtp.mailfrom=linutronix.de; dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=RRNMynj1; dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=aUDQhXJ3; arc=none smtp.client-ip=193.142.43.55
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linutronix.de
+	s=arc-20240116; t=1777304608; c=relaxed/simple;
+	bh=bo0dzjYtrvdWf19YSaqNgbZbQR8Dz0tHyTrqPTzO1fM=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Ubpg2yPq/F/fmPzoP0l8Edeev7owguuhkX8uFKQe5B5euQojKpqOp8YaT8fjQBy9n/KDnH/bUsFjQDKZ+nezFW9bGVFuumR5EQGD5jH3kVfcCKBf0uAm9aVYVdSOKcc6cQASJs+Cbi+KhREK6CggWkj5vDSUxrV4iwQTDFTQSxM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=G0fCgTE5; arc=none smtp.client-ip=199.89.1.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="RRNMynj1";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="aUDQhXJ3"
-Date: Mon, 27 Apr 2026 17:34:16 +0200
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020; t=1777304058;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=FLa6eYHbGlETXhdKZQov353z3h7xOJzxZI3VwyPyfVI=;
-	b=RRNMynj1Qa0/ZFxqoprrF+lV+59v57PURMlHWXd5zVKQ/++xbkIPxKBPjeEs8yH6/38KK3
-	t9BTF92ohu2bpe7aiZh7Y02xPEG8gBZtQsTNa95rtMtb9z1rGNWO4RNTOmBfqDrmP4RbS7
-	F4gucu6e/dQh0V3DJWL0rg1aP1taN51+lmDOG+CaWQp+io9qKXLZ7Zxk4AGZVvW3XvfMzk
-	wYKkbHSGRljgM5sXqXCUCQv5DYoBhATNtlDCupF/OVXjX9f18HkkaEGSKAh2NgGAvuOXgD
-	ANAb4BjEBVZMhG/LsmITYW7vyL4LxHaLjROA+oF/LBESKOQIGCp3jMeRb8QFUQ==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020e; t=1777304058;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=FLa6eYHbGlETXhdKZQov353z3h7xOJzxZI3VwyPyfVI=;
-	b=aUDQhXJ3cDmA67FdQhP07NpAltG1Pvtpl4MeIYhK8VnCGsvxRPIVhTmJ/QINy4t75BK9B4
-	OwA4EIuBM99DVGAQ==
-From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-To: Aaron Tomlin <atomlin@atomlin.com>
-Cc: axboe@kernel.dk, kbusch@kernel.org, hch@lst.de, sagi@grimberg.me,
-	mst@redhat.com, aacraid@microsemi.com,
-	James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com,
-	liyihang9@h-partners.com, kashyap.desai@broadcom.com,
-	sumit.saxena@broadcom.com, shivasharan.srikanteshwara@broadcom.com,
-	chandrakanth.patil@broadcom.com, sathya.prakash@broadcom.com,
-	sreekanth.reddy@broadcom.com, suganath-prabu.subramani@broadcom.com,
-	ranjan.kumar@broadcom.com, jinpu.wang@cloud.ionos.com,
-	tglx@kernel.org, mingo@redhat.com, peterz@infradead.org,
-	juri.lelli@redhat.com, vincent.guittot@linaro.org,
-	akpm@linux-foundation.org, maz@kernel.org, ruanjinjie@huawei.com,
-	yphbchou0911@gmail.com, wagi@kernel.org, frederic@kernel.org,
-	longman@redhat.com, chenridong@huawei.com, hare@suse.de,
-	kch@nvidia.com, ming.lei@redhat.com, tom.leiming@gmail.com,
-	steve@abita.co, sean@ashe.io, chjohnst@gmail.com, neelx@suse.com,
-	mproche@gmail.com, nick.lange@gmail.com, marco.crivellari@suse.com,
-	linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-	virtualization@lists.linux.dev, linux-nvme@lists.infradead.org,
-	linux-scsi@vger.kernel.org, megaraidlinux.pdl@broadcom.com,
-	mpi3mr-linuxdrv.pdl@broadcom.com, MPT-FusionLinux.pdl@broadcom.com
-Subject: Re: [PATCH v12 05/13] blk-mq: add
- blk_mq_{online|possible}_queue_affinity
-Message-ID: <20260427153416.MeVS8yxF@linutronix.de>
-References: <20260422185215.100929-1-atomlin@atomlin.com>
- <20260422185215.100929-6-atomlin@atomlin.com>
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="G0fCgTE5"
+Received: from localhost (localhost [127.0.0.1])
+	by 013.lax.mailroute.net (Postfix) with ESMTP id 4g47Bd4nnZzlfl5V;
+	Mon, 27 Apr 2026 15:43:21 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1777304598; x=1779896599; bh=hDmLsryRdBaOq6ergwAZFKH/
+	HP1fZNCKKsGnvVjX+oU=; b=G0fCgTE5UU/wXx3p+6YLBozng29ybrxvlI1E8iy1
+	XJ/aNUOQudoTLFw3O3X49ot0iCv0ctt/D/8jENgkB2/gwq7gCF3pD8EbBbe5xpRG
+	9crZsTGxOrX8ESyPzxbKTOKEprzxC283R7eB1u/RRVH98/fSDr0RYELbbKSzb2zx
+	e1I9g/oiv6hZm+vW3wKT3cS5gyV7Mb36NXJNc6VCucO6A9KbrL+il6VYouHrhPeK
+	u+Zx+yXybEE+mwj+6PXB7Lw3qA0q3u73eVbvPFMeIOz+CizxtwVgB+H3j4tk4CDW
+	twera0iWZVWp0eCZ+v539R/7c473RGhr2vc56QjJ/SNxOw==
+X-Virus-Scanned: by MailRoute
+Received: from 013.lax.mailroute.net ([127.0.0.1])
+ by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id EIofrjMLTe_4; Mon, 27 Apr 2026 15:43:18 +0000 (UTC)
+Received: from [100.119.48.131] (unknown [104.135.180.219])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4g47BW4lx0zlfpM9;
+	Mon, 27 Apr 2026 15:43:14 +0000 (UTC)
+Message-ID: <f81746c6-b70c-4410-831d-8f3c3756d76f@acm.org>
+Date: Mon, 27 Apr 2026 08:43:14 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <20260422185215.100929-6-atomlin@atomlin.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] scsi: ufs: qcom: Unify user-visible "Qualcomm" name
+To: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: =Bjorn Andersson <andersson@kernel.org>,
+ Konrad Dybcio <konradybcio@kernel.org>, linux-arm-msm@vger.kernel.org
+References: <20260427070048.18017-2-krzysztof.kozlowski@oss.qualcomm.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20260427070048.18017-2-krzysztof.kozlowski@oss.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On 2026-04-22 14:52:07 [-0400], Aaron Tomlin wrote:
-> From: Daniel Wagner <wagi@kernel.org>
-> 
-> Introduce blk_mq_{online|possible}_queue_affinity, which returns the
-> queue-to-CPU mapping constraints defined by the block layer. This allows
-> other subsystems (e.g., IRQ affinity setup) to respect block layer
-> requirements.
-> 
-> It is necessary to provide versions for both the online and possible CPU
-> masks because some drivers want to spread their I/O queues only across
-> online CPUs, while others prefer to use all possible CPUs. And the mask
-> used needs to match with the number of queues requested
-> (see blk_num_{online|possible}_queues).
+On 4/27/26 12:00 AM, Krzysztof Kozlowski wrote:
+> Various names for Qualcomm as a company are used in user-visible config
+> options: QCOM, Qualcomm and Qualcomm Technologies.  Switch to unified
+> "Qualcomm" so it will be easier for users to identify the options when
+> for example running menuconfig.
 
-Which driver uses cpu_possible_mask? This mask is assigned at boot time
-once the kernel figured how many CPUs are possible based on ACPI or
-whatever the system uses. This mask does not change.
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
 
-I only see drivers/scsi/lpfc/lpfc_init.c using it. Looking at
-cpu_possible_mask might not be the right thing. It is usually the same
-thing as "online" except on system where ACPI thinks that something
-could be added via hotplug _or_ if the admin shuts down a CPU via
-cpuhotplug _or_ boots with less (there a command line option for that). 
-
-In case cpu_possible_mask != cpu_online_mask the intention is to
-allocate memory and setup irqs for the offline CPUs?
-
-> Signed-off-by: Daniel Wagner <wagi@kernel.org>
-> Reviewed-by: Hannes Reinecke <hare@suse.de>
-> Signed-off-by: Aaron Tomlin <atomlin@atomlin.com>
-
-Sebastian
