@@ -1,78 +1,74 @@
-Received: from mail-pf1-f176.google.com (mail-pf1-f176.google.com [209.85.210.176])
+Received: from mail-pf1-f172.google.com (mail-pf1-f172.google.com [209.85.210.172])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A3CCE31D375
-	for <linux-scsi@vger.kernel.org>; Mon, 27 Apr 2026 09:22:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.176
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4CB1739023D
+	for <linux-scsi@vger.kernel.org>; Mon, 27 Apr 2026 09:36:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777281748; cv=none; b=NaTUcRdpbkQ+LoATw1FUnaNS/jzv7sRa0Or7wsncDcTUzKU3Pq8jZ+2x1OfVmmHuUhL6ITO5snirU1OpCBf4a2s3uAdm9W1/xajJR3zML5cF7hslkRM51e5vjEbMaN1JZZXdeyk7TuFXOPjoOv3sZooTpwga2nRj+uluqoIX86c=
+	t=1777282615; cv=none; b=dGmJq3x1eLn5wJ1kA7XFuHHWcFK/oAUQZ5j5tLQ8tWqevOvOto/CXrhazY2MGGJbUHj/i6q9dWtm4pKc9/p7pdZTRpPEsMv6Hvt8fku81t2H48PFjY5g1YCZGu528O0D2s7E/8kNQrZyzxr+HTQvhIt8rGYiUxj4QmXNmX5a9BU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777281748; c=relaxed/simple;
-	bh=BSb64EzeNe+LAdM46kkrVWOCt/FZCzWzgFhyw7921go=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=TDooqBqILk5RemTAAsDbYynovRwwwhqWu8pp6Jzi229Qj55rSrDmPb3QUE683nUKLnTRA6Nwtu2rDz+Hjlao1RfOzUJ4tddIL2b0cJ9XsAwW99HPd9xJKQoUFSNbtl1NxC1FCrL3kG3FAJhp4w4C2PsPBW4IF01i+uOmXsaMBPc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=kXOm7Twv; arc=none smtp.client-ip=209.85.210.176
+	s=arc-20240116; t=1777282615; c=relaxed/simple;
+	bh=8AsHCJTrp6oTPAWoi4XYz5UZQNzkOr1rry65yDMLIek=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=HNyXYpX2A/eb18cOV8jYmDQJtPocAY6+KghNYXNJE3WYhRYesmZ12SlgWs/P4zAhi6Zy0tMgzF1+tboelCNvPHjdikuhhg7eWg85CxZEQJzIOP8c6nU+4P9dy1HAsSbNM+XDK9/mfg/ow+MmA8yS6Mpyztq7gtKDuxX7tieTUTY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=lzUE9KhO; arc=none smtp.client-ip=209.85.210.172
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="kXOm7Twv"
-Received: by mail-pf1-f176.google.com with SMTP id d2e1a72fcca58-82f4a53ae20so7277272b3a.3
-        for <linux-scsi@vger.kernel.org>; Mon, 27 Apr 2026 02:22:27 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="lzUE9KhO"
+Received: by mail-pf1-f172.google.com with SMTP id d2e1a72fcca58-82f8b60e485so4129830b3a.0
+        for <linux-scsi@vger.kernel.org>; Mon, 27 Apr 2026 02:36:54 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1777281747; x=1777886547; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1777282614; x=1777887414; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=wFZBmc0iscSfAT4VB9ZbI38DRL/+YXPqj1yfGMlW+m4=;
-        b=kXOm7TwvUgOcQHjq2B2ixLP51P7p0GEoG9nOepzjYAMPKFTaXJpLBWPVjoOdaabd4D
-         Qjt+W/K38lTf+9UpFJFrN5SMxAs+wMCg9mkJLKBvVJGoXQPWEkHU8FwqM9/A4TpUxYhT
-         n3aUD5XZq9GnfbP7Gxu1unzqm86jaiJhdHYK5YBYqekZMY8WUEtO0B9H5hA0Ojm/9jzl
-         8pEnXm4+HKCK/u4jf8tUAMNFtFUJ9lE46aKP0hl1SWBvpzBKhbyBwU1lV+1d/wyyzKyd
-         VNPvC4LGxgpU+qzB/GQFLZEBybyDAD50vE7T7/akSCWj4b86rQDtEaC/dKuiWmg1hrwc
-         Eahg==
+        bh=v7/9M8ts84ru1FYHlgZaneEVjguv4ZNz/ttVD2wMfr4=;
+        b=lzUE9KhOfOxACVxxuOcyG+POrjsSp9OzDu7iNUQOet2+ydqkp6i/+oBcvbCQiTH7BC
+         /NH7NiwoPJ0JlKR9koa26kvTfB7PbUZgGgoZGaQmK39dwwrCFd/WM20C0/MDoUAng736
+         UZdHI1G4RfR1zQamMgkTo3059mwI43M/WvCgY4dXLhoS/E4c2jVg2OPBU8c4uwmgFhHT
+         ky0ovQOCsJhf1PrS/J6dqhiCQTDPF7AzbU/IJ5BtnnLJP5eqWdW3qMpV+DmOkDGtThPN
+         JzNgM8mxczsaynnK4Fsw7aF3ZrfL5gVuNDkRBQbZSe1Ril1BsjWDzleNTcCWBtR/5o5c
+         EmAQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1777281747; x=1777886547;
+        d=1e100.net; s=20251104; t=1777282614; x=1777887414;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=wFZBmc0iscSfAT4VB9ZbI38DRL/+YXPqj1yfGMlW+m4=;
-        b=QsyOcuOtRLq0ypVSjRgrhOCvC5UgKfuPfFeJX3GEKZfNdn2fK0gv7GdhqDmXJ5PUH1
-         QZvaOmwc6sXvwSrpovA4iP6NrUvaio6Dmfn3bFH2gTpsieGy5WQxBFifT+epiO+kp6lp
-         /SbmpermAELciyoiMFUPk1L8WV+3zM5KxUp43uVAd1dVYEvViFv8ui1T+adg84qWpHQh
-         daP1AC1skygqDDs0xb0ndA8tylgQ9fkfPuRqeprt/qdiw3GXMyGIdLfsCpv/RgBH0+Vb
-         9rBxRkRFZ+P70DcJAw8YYsLiolNGxXe8tAaEO8CMoSn1AFgHcxufUFskGKn9EAkS7BTN
-         HL3Q==
-X-Forwarded-Encrypted: i=1; AFNElJ9Naw8b7SCJDADm+BM/eCKdcLbODghr4lr+v1VdkHO4plItk5DPYdlN4QoELiref3HF59/q92lbgqvk@vger.kernel.org
-X-Gm-Message-State: AOJu0YznabFa5eQXaa0eEtUVdRoolOJhto3LRrWKsxZwdf5IYR7Pny7/
-	YfVDoFrh7oJ7iRB2o7rng3z4tkZ4exNnCV3OkuJ2V0cPsqX0l0zDTO8=
-X-Gm-Gg: AeBDieuAoHK3zU2K9kTCyDtAqDGIeH4fnEsvhJV0IOnnv3rEa6qSfW9ynQmnq2FBWGK
-	GjQjm3OIcef96Zte8tDYK1WZc5zMMHvzVAUl8R608GvhR/REgzfi5eA7Uszp8BTiBP1eMFC4O4w
-	po1Qx303ejZS5qE/+xhfqhqBgINAnAph2lebx0XRfiwWdTjxwEz3+/yD1Az2W0RYxPmjpF8HlrX
-	RTVsKAhELCVBJ3VGiBgOAeexjpfHezHDjz13NXHs8Eq2+jsEqhU1k/B7N9zqn/eJF+WPJq4D1YA
-	5V3AzBLdnUXRIvVxRISoppD06WyT4BNXYHK7cJd+YlI/YcWDivhJmq1uJA/CraJY5DAHC+nbOyk
-	X6NABSvJ22hu+a0Y1+Fxy43968S24iuHEnj4nnNZ7A4gtp8VZ/MyCju1slVMFjqAv9oP3XzamPY
-	XAGbhPmlkQjLkTjwVSZzURGGBrrRX0s2mFE2Cv8WQGoRrw8HNWB7Q5hmDXUYZnzwosONCfDCw9C
-	SCCp600YhWZ0YNA4Tko1HHm/fVxwMFy4VPsxjKLrZLW69c=
-X-Received: by 2002:a05:6a00:4094:b0:82a:955:50d3 with SMTP id d2e1a72fcca58-82f8c937b36mr43641207b3a.45.1777281747016;
-        Mon, 27 Apr 2026 02:22:27 -0700 (PDT)
-Received: from localhost.localdomain ([1.226.165.54])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-82f8e9fbb85sm36364449b3a.22.2026.04.27.02.22.24
-        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
-        Mon, 27 Apr 2026 02:22:26 -0700 (PDT)
-From: "=?UTF-8?q?=EB=B0=95=EB=AA=85=ED=9B=88?=" <mhun512@gmail.com>
-X-Google-Original-From: =?UTF-8?q?=EB=B0=95=EB=AA=85=ED=9B=88?= <pakmyeonghun@bagmyeonghun-ui-MacBookPro.local>
-To: Saurav Kashyap <skashyap@marvell.com>,
-	Javed Hasan <jhasan@marvell.com>,
-	GR-QLogic-Storage-Upstream@marvell.com
-Cc: Myeonghun Pak <mhun512@gmail.com>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+        bh=v7/9M8ts84ru1FYHlgZaneEVjguv4ZNz/ttVD2wMfr4=;
+        b=DeU+W96dXbVDBquLRT+0W+wTsHcVNfltXvfP8Ab/x+wXURCUo4n3wsOoV2UQ4vFbS6
+         Wp5gN7IxyQ2q1uwMeQjfEUpRWh451FnVNSvKhK+XQiyISxrcdgWbvAfqsRqqao9jJX1T
+         zBaaYPPySx+ccX5DQ6FenlpIjGvYVDQWMzr7iOXF/JARDVGR+oRIjglk0welGweOGDE9
+         3FolGw9u5ab67iu27AyTdU8nh+MXQ2DANniLyKIMocwKVY0HHiqLxnrmHLoUagXy8ejw
+         jjav/6AKQ9sKo2hfTaxk98HczdZcibuyOaAubVGiAeENcZiePH1Lc5R0LZnZSIt4IXPf
+         ywKg==
+X-Forwarded-Encrypted: i=1; AFNElJ/1mdxQ1/Gr1esYnRA3GPr8676Qahyu0/gronETHr/vmh+686YEXMNXws2lWwk5T8Ag+zZVWiYeFcLK@vger.kernel.org
+X-Gm-Message-State: AOJu0YyfUfn2rizkqqmgWe7zjUYT12C2V25Eby/IJMD+qQCtAayvC3x0
+	Y91P6lb1gWM8I5qz09vHe31xMyx1PML9whkbEBfVMfDvmGlNMmtK5j8B
+X-Gm-Gg: AeBDiev2GkXLlcEjI4uMaf38tJkJtze/6fZMfZQRPWRDJgVeYk4iBPFAno5heQfxEvj
+	05VBKvVPFgpiEEQ6IcG63wJUiRdynglWRunR12Uuc4T1lFjsRYUxokoQ1TW6fUnM/qRB/D6I88k
+	CmRHLvPZ3HK9TFvkuSbd8wKs3fpADZqZBFFcfVC5mC8LezBJEef7fW3aut+BjBwFyJViE7MiV/+
+	AqjspZr3Md57ekKjAIPC53z5+QXMUobbpamF7hPDvu/gmRm6f6qK5Go8fMahjwFCHJjLqUAjUOf
+	isrzLHvYUKfEZQuVmKdnmcV+Bl3Uo6aaqw1L9gyrAVR4XTxLF0KcW6z7Weus+06/incQaEJ/jkS
+	wB4/z3keYqg6C+TC1WK3nPQkfItZWlwpQcpqAkWTWc2ETJgliJ/cKszCucVLLvxO8sJLCeXiiEX
+	86t5EnDL7AGkT8oPAYxZYNigUfbDoC/1eTvA==
+X-Received: by 2002:a05:6a00:1bc6:b0:82f:1b1b:e166 with SMTP id d2e1a72fcca58-82f8c99159emr44806198b3a.33.1777282613662;
+        Mon, 27 Apr 2026 02:36:53 -0700 (PDT)
+Received: from lgs.. ([112.224.166.245])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-82f8ebb3829sm33248160b3a.31.2026.04.27.02.36.47
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 27 Apr 2026 02:36:53 -0700 (PDT)
+From: Guangshuo Li <lgs201920130244@gmail.com>
+To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
 	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	James Bottomley <James.Bottomley@SteelEye.com>,
+	James Smart <James.Smart@Emulex.Com>,
 	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org,
-	Ijae Kim <ae878000@gmail.com>
-Subject: [PATCH] scsi: qedf: Free exchange manager on probe failure
-Date: Mon, 27 Apr 2026 18:22:14 +0900
-Message-ID: <20260427092220.58365-1-pakmyeonghun@bagmyeonghun-ui-MacBookPro.local>
-X-Mailer: git-send-email 2.47.1
+	linux-kernel@vger.kernel.org
+Cc: Guangshuo Li <lgs201920130244@gmail.com>,
+	stable@vger.kernel.org
+Subject: [PATCH] scsi: scsi_transport_fc: Use put_device() on vport setup failure
+Date: Mon, 27 Apr 2026 17:36:38 +0800
+Message-ID: <20260427093638.328142-1-lgs201920130244@gmail.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -81,67 +77,41 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-From: Myeonghun Pak <mhun512@gmail.com>
+fc_vport_setup() initializes the embedded device with device_initialize().
+After that point, the device is managed by the driver core reference
+counting rules. The initial reference should be dropped with
+put_device().
 
-qedf_lport_setup() allocates a libfc exchange manager that is normally
-released from qedf_remove(). If probe fails after the lport setup has
-completed, the driver core does not call .remove(), so the exchange
-manager and lport stats are left allocated.
+The error path currently releases dev->parent and frees the fc_vport
+directly. This bypasses fc_vport_dev_release(), leaving the embedded
+device lifetime outside the driver core release path.
 
-Release the lport resources from the probe error path and also drop the
-exchange manager if stats allocation fails inside qedf_lport_setup().
+Keep the existing unwind of the transport and fc_host bookkeeping, but
+drop the device reference with put_device(). The release callback will
+release the parent device reference and free the fc_vport object. This
+issue was found by a static analysis tool I am developing.
 
-Fixes: 61d8658b4a43 ("scsi: qedf: Add QLogic FastLinQ offload FCoE driver framework.")
+Fixes: a53eb5e060c0 ("[SCSI] FC Transport support for vports based on NPIV")
 Cc: stable@vger.kernel.org
-Co-developed-by: Ijae Kim <ae878000@gmail.com>
-Signed-off-by: Ijae Kim <ae878000@gmail.com>
-Signed-off-by: Myeonghun Pak <mhun512@gmail.com>
+Signed-off-by: Guangshuo Li <lgs201920130244@gmail.com>
 ---
- drivers/scsi/qedf/qedf_main.c | 10 +++++++++-
- 1 file changed, 9 insertions(+), 1 deletion(-)
+ drivers/scsi/scsi_transport_fc.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/qedf/qedf_main.c b/drivers/scsi/qedf/qedf_main.c
-index da429b3a42..499d42e46c 100644
---- a/drivers/scsi/qedf/qedf_main.c
-+++ b/drivers/scsi/qedf/qedf_main.c
-@@ -1765,8 +1765,10 @@ static int qedf_lport_setup(struct qedf_ctx *qedf)
- 	fc_exch_mgr_alloc(lport, FC_CLASS_3, FCOE_PARAMS_NUM_TASKS,
- 			  0xfffe, NULL);
+diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
+index dce95e361daf..04b754907587 100644
+--- a/drivers/scsi/scsi_transport_fc.c
++++ b/drivers/scsi/scsi_transport_fc.c
+@@ -3982,8 +3982,7 @@ fc_vport_setup(struct Scsi_Host *shost, int channel, struct device *pdev,
+ 	scsi_host_put(shost);			/* for fc_host->vport list */
+ 	fc_host->npiv_vports_inuse--;
+ 	spin_unlock_irqrestore(shost->host_lock, flags);
+-	put_device(dev->parent);
+-	kfree(vport);
++	put_device(dev);
  
--	if (fc_lport_init_stats(lport))
-+	if (fc_lport_init_stats(lport)) {
-+		fc_exch_mgr_free(lport);
- 		return -ENOMEM;
-+	}
- 
- 	/* Finish lport config */
- 	fc_lport_config(lport);
-@@ -3306,6 +3308,7 @@ static int __qedf_probe(struct pci_dev *pdev, int mode)
- 	struct qed_slowpath_params slowpath_params;
- 	struct qed_probe_params qed_params;
- 	u16 retry_cnt = 10;
-+	bool lport_setup = false;
- 
- 	/*
- 	 * When doing error recovery we didn't reap the lport so don't try
-@@ -3625,6 +3628,7 @@ static int __qedf_probe(struct pci_dev *pdev, int mode)
- 			    "qedf_lport_setup failed.\n");
- 			goto err7;
- 		}
-+		lport_setup = true;
- 	}
- 
- 	qedf->timer_work_queue = alloc_workqueue("qedf_%u_timer",
-@@ -3704,6 +3708,10 @@ static int __qedf_probe(struct pci_dev *pdev, int mode)
- 		destroy_workqueue(qedf->ll2_recv_wq);
- 	fc_remove_host(qedf->lport->host);
- 	scsi_remove_host(qedf->lport->host);
-+	if (lport_setup) {
-+		fc_exch_mgr_free(qedf->lport);
-+		fc_lport_free_stats(qedf->lport);
-+	}
- #ifdef CONFIG_DEBUG_FS
- 	qedf_dbg_host_exit(&(qedf->dbg_ctx));
- #endif
+ 	return error;
+ }
 -- 
-2.50.1
+2.43.0
+
