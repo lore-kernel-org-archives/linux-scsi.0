@@ -1,80 +1,80 @@
 Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 34C5130E0F2
-	for <linux-scsi@vger.kernel.org>; Mon, 27 Apr 2026 11:54:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1FB21318BB5
+	for <linux-scsi@vger.kernel.org>; Mon, 27 Apr 2026 11:55:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777290858; cv=none; b=L00Dld+q4dtFlzQoOmyX15oYqSyOPuwB1yLLfjFchUlqH52H2mNOnFigzAvlwRj5H+MyryoVenvv+3F3cYTC+EshQmRDiYut8utCFL0uN9H0Zqzg8WjsLBCWBYIvWmIyKuKZgxg35/xlCanpPy5TSNE503leWVg69BYoyyvRUr0=
+	t=1777290937; cv=none; b=riwUVb99qMbVr37OCAwobz5eC3jY45Z9Oist/LUndANXQtkj3gfCI1VdeP/IflRM/BtlKCNRosQAxzO7cdhUcCFj7c9SL73a99KIYGGHPic9BxgqZh3J9yHA9yJsvszpnQP3z6a9csgwYKNf5K1XQhNhhh3ZOYq8B1RPU56E3Ks=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777290858; c=relaxed/simple;
-	bh=QhdqulxejUEztqHqlXFck49j4ENe2vOY7mmR2dRGNq0=;
+	s=arc-20240116; t=1777290937; c=relaxed/simple;
+	bh=ZP1c4ky3bJXIySKuxipX8ApHDQjQJNDazRF+acMyh4E=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=RSEJwAWmNq4pD/G3gOtcb9azrl42dB3/m+NRSubbb5nt7a7d0Tmm1wtRHos0hDH+w/HAmpiIa1LRiFzEJZVuQ2y70K7maiAFE0CpZTIF9WoJznIbIrjM8JSycxhpex1/egiSh8dgaOhnbxZwSKkiRHXWdcdcMRdNw1SA/Nad9SU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=j6uDjtJz; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=fDgyN16l; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=j6uDjtJz; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=fDgyN16l; arc=none smtp.client-ip=195.135.223.131
+	 In-Reply-To:Content-Type; b=VOiy3SqHc99mY3/XbazJpgav1kiVWoHScFj8Ji3d15zpAluFgphDdTOf54eLI3FooTz4Xy+7K58IUDURdhWA7N5NUvu6Bh82/0A3s/hEjcF8UkrCZTZ/P4vn9MfhZYm2Oxw9R9cUJH9EFYSWyekjpaAOf6shmQc9M3cG/xxfBwo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=oWSX+b78; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=Z5Zzr6DW; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=P7S/VOVi; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=VfeGtbjJ; arc=none smtp.client-ip=195.135.223.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="j6uDjtJz";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="fDgyN16l";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="j6uDjtJz";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="fDgyN16l"
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="oWSX+b78";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="Z5Zzr6DW";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="P7S/VOVi";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="VfeGtbjJ"
 Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id 9B7025BCD2;
-	Mon, 27 Apr 2026 11:54:15 +0000 (UTC)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id 5FE255BCCD;
+	Mon, 27 Apr 2026 11:55:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1777290855; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	t=1777290933; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=cygEz7Hg0EKq8oFQ2rX3PuYk3hTkHwdsO1RP13JbGgQ=;
-	b=j6uDjtJzCHIiuAjVbpZEcipYdLzEgPGp6GvJ3zl4s0E820N9RoEAJtUVLbnwMi7nzXY/oh
-	FqholXxRUdinmFy8qgSgjWaJag5wzYguX7OKSctM8061F74yR9Lun5l22GWhIWFkT4tIvJ
-	NZXOhkMz/raNSgepoTUXYiR4bOvCeQk=
+	bh=swr+kJLdakYoARhnjNVMQ6vKSx0E0Hlgsx2lgeP1Otc=;
+	b=oWSX+b78+HEIpN6yCZye893zAB9kg7JV5hrze71qgcP6vju/yNrU1c45pdQhVrdT+CyYKb
+	tviy/2iXsDU8JCOdSYMQVrzzIFvV10ltQ8oTnH0JRvXjtSC7HCvNUnRrX+eUafMiUlG8ir
+	xyM/YQo0YD3sT0mTTjtUzdrz3r/qEhY=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1777290855;
+	s=susede2_ed25519; t=1777290933;
 	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=cygEz7Hg0EKq8oFQ2rX3PuYk3hTkHwdsO1RP13JbGgQ=;
-	b=fDgyN16l2Rdri4UFPrCOSte7aYz5TMag3UW2wI1xSfPDivaHNbo8qM1zqw30U6XDAXwOP/
-	x+NdWoEqmtb7pABg==
+	bh=swr+kJLdakYoARhnjNVMQ6vKSx0E0Hlgsx2lgeP1Otc=;
+	b=Z5Zzr6DWpOCc5MtaDCGh39Kv92c2lTxzi12MoqIpm08SzwElDiLCbQE9aY9eHqO4a4wgig
+	jK4BjuAKll9hfwDg==
 Authentication-Results: smtp-out2.suse.de;
 	none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1777290855; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	t=1777290932; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=cygEz7Hg0EKq8oFQ2rX3PuYk3hTkHwdsO1RP13JbGgQ=;
-	b=j6uDjtJzCHIiuAjVbpZEcipYdLzEgPGp6GvJ3zl4s0E820N9RoEAJtUVLbnwMi7nzXY/oh
-	FqholXxRUdinmFy8qgSgjWaJag5wzYguX7OKSctM8061F74yR9Lun5l22GWhIWFkT4tIvJ
-	NZXOhkMz/raNSgepoTUXYiR4bOvCeQk=
+	bh=swr+kJLdakYoARhnjNVMQ6vKSx0E0Hlgsx2lgeP1Otc=;
+	b=P7S/VOViO8pKDSQUDThC5S/zA6VgIlxpQsgIJxI43XCvoFcI0FWvVrrplIMhEkAjxRy+wH
+	1E5mpv6ceFeqff1sUpeVG51xuSlR7BKrkQ+/30mgsqrJ6ysTcsXEsRViT6viaQ0qytER3+
+	BxpCp0lcu0KV13lLnNYCNTceScshhsc=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1777290855;
+	s=susede2_ed25519; t=1777290932;
 	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=cygEz7Hg0EKq8oFQ2rX3PuYk3hTkHwdsO1RP13JbGgQ=;
-	b=fDgyN16l2Rdri4UFPrCOSte7aYz5TMag3UW2wI1xSfPDivaHNbo8qM1zqw30U6XDAXwOP/
-	x+NdWoEqmtb7pABg==
+	bh=swr+kJLdakYoARhnjNVMQ6vKSx0E0Hlgsx2lgeP1Otc=;
+	b=VfeGtbjJ1hXtZoFZ1I85gIvtRtIiifVH0UyMTKjphfRRgS9oMB0hpK9/assKJfzsWVKTur
+	NLY+B8xWiJmMcdCw==
 Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 6D141593B0;
-	Mon, 27 Apr 2026 11:54:15 +0000 (UTC)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 4768E593B0;
+	Mon, 27 Apr 2026 11:55:32 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
 	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id T6klGmdO72lzdAAAD6G6ig
-	(envelope-from <hare@suse.de>); Mon, 27 Apr 2026 11:54:15 +0000
-Message-ID: <f654611e-5621-463d-a8be-c963f63f7155@suse.de>
-Date: Mon, 27 Apr 2026 13:54:15 +0200
+	id BCe5ELRO72nedQAAD6G6ig
+	(envelope-from <hare@suse.de>); Mon, 27 Apr 2026 11:55:32 +0000
+Message-ID: <db7414db-ac82-4cf0-a86c-ab54950137ae@suse.de>
+Date: Mon, 27 Apr 2026 13:55:31 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -82,7 +82,8 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 4/7] scsi: add BLIST_NO_LUN_1F blacklist flag
+Subject: Re: [PATCH v3 6/7] scsi: scsi_devinfo: add COMPAQ PD-1 multi-LUN
+ ATAPI device quirk
 To: Phil Pemberton <philpem@philpem.me.uk>, linux-ide@vger.kernel.org,
  linux-scsi@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>,
@@ -90,14 +91,12 @@ Cc: linux-kernel@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>,
  "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
  "Martin K . Petersen" <martin.petersen@oracle.com>
 References: <20260426190920.2051289-1-philpem@philpem.me.uk>
- <20260426190920.2051289-5-philpem@philpem.me.uk>
+ <20260426190920.2051289-7-philpem@philpem.me.uk>
 Content-Language: en-US
 From: Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20260426190920.2051289-5-philpem@philpem.me.uk>
+In-Reply-To: <20260426190920.2051289-7-philpem@philpem.me.uk>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-Spam-Score: -4.30
-X-Spam-Level: 
 X-Spamd-Result: default: False [-4.30 / 50.00];
 	BAYES_HAM(-3.00)[100.00%];
 	NEURAL_HAM_LONG(-1.00)[-1.000];
@@ -116,71 +115,47 @@ X-Spamd-Result: default: False [-4.30 / 50.00];
 	FROM_EQ_ENVFROM(0.00)[];
 	TO_MATCH_ENVRCPT_ALL(0.00)[];
 	RCVD_COUNT_TWO(0.00)[2];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:mid,suse.de:email,imap1.dmz-prg2.suse.org:helo]
+	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,suse.de:mid,suse.de:email,philpem.me.uk:email]
 X-Spam-Flag: NO
+X-Spam-Score: -4.30
+X-Spam-Level: 
 
 On 4/26/26 21:09, Phil Pemberton wrote:
-> Some multi-LUN devices respond to INQUIRY on unpopulated LUNs with
-> PQ=0 / PDT=0x1f instead of the standard PQ=3.  The SCSI scan layer
-> normally adds such devices (PQ=0 means "connected"), producing
-> spurious "No Device" entries.
+> The COMPAQ PD-1 (OEM Panasonic/Matsushita LF-1195C) is a PD/CD combo
+> drive that exposes two ATAPI LUNs: LUN 0 is a CD-ROM (TYPE_ROM),
+> LUN 1 is a 650 MB PD (TYPE_DISK).
 > 
-> The scsi_target field pdt_1f_for_no_lun already exists to suppress
-> this, but was previously only set by the USB UFI driver.
+> Add it to the SCSI device list with:
+>    - BLIST_FORCELUN: tells the SCSI layer to scan past LUN 0
+>    - BLIST_SINGLELUN: serialises commands across the two LUNs, since
+>      the drive has a single transport and cannot handle concurrent
+>      operations on both
+>    - BLIST_NO_LUN_1F: the drive returns PQ=0/PDT=0x1f for unpopulated
+>      LUNs instead of PQ=3; this flag tells scsi_probe_and_add_lun()
+>      to silently skip them
 > 
-> Add BLIST_NO_LUN_1F so the flag can be set per-device from
-> scsi_devinfo, and wire it up in scsi_add_lun() to set
-> starget->pdt_1f_for_no_lun from the blacklist flags.  This runs
-> during LUN 0 processing, before the sequential LUN scan probes
-> higher LUNs.
+> The INQUIRY strings as reported by the device are:
+>    Vendor:  "COMPAQ  " (T10 format, space-padded)
+>    Product: "PD-1"
 > 
 > Signed-off-by: Phil Pemberton <philpem@philpem.me.uk>
 > ---
->   drivers/scsi/scsi_scan.c    | 3 +++
->   include/scsi/scsi_devinfo.h | 6 +++---
->   2 files changed, 6 insertions(+), 3 deletions(-)
+>   drivers/scsi/scsi_devinfo.c | 2 ++
+>   1 file changed, 2 insertions(+)
 > 
-> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-> index 7b11bc7de0e3..d3f0540d79a2 100644
-> --- a/drivers/scsi/scsi_scan.c
-> +++ b/drivers/scsi/scsi_scan.c
-> @@ -1070,6 +1070,9 @@ static int scsi_add_lun(struct scsi_device *sdev, unsigned char *inq_result,
->   
->   	sdev->sdev_bflags = *bflags;
->   
-> +	if (*bflags & BLIST_NO_LUN_1F)
-> +		sdev->sdev_target->pdt_1f_for_no_lun = 1;
-> +
->   	if (scsi_device_is_pseudo_dev(sdev))
->   		return SCSI_SCAN_LUN_PRESENT;
->   
-> diff --git a/include/scsi/scsi_devinfo.h b/include/scsi/scsi_devinfo.h
-> index 1d79a3b536ce..6957b0705510 100644
-> --- a/include/scsi/scsi_devinfo.h
-> +++ b/include/scsi/scsi_devinfo.h
-> @@ -34,7 +34,8 @@
->   #define BLIST_NOSTARTONADD	((__force blist_flags_t)(1ULL << 12))
->   /* do not ask for VPD page size first on some broken targets */
->   #define BLIST_NO_VPD_SIZE	((__force blist_flags_t)(1ULL << 13))
-> -#define __BLIST_UNUSED_14	((__force blist_flags_t)(1ULL << 14))
-> +/* PDT 0x1f with PQ 0 means no LUN present (e.g. some ATAPI multi-LUN) */
-> +#define BLIST_NO_LUN_1F		((__force blist_flags_t)(1ULL << 14))
->   #define __BLIST_UNUSED_15	((__force blist_flags_t)(1ULL << 15))
->   #define __BLIST_UNUSED_16	((__force blist_flags_t)(1ULL << 16))
->   /* try REPORT_LUNS even for SCSI-2 devs (if HBA supports more than 8 LUNs) */
-> @@ -77,8 +78,7 @@
->   #define __BLIST_HIGH_UNUSED (~(__BLIST_LAST_USED | \
->   			       (__force blist_flags_t) \
->   			       ((__force __u64)__BLIST_LAST_USED - 1ULL)))
-> -#define __BLIST_UNUSED_MASK (__BLIST_UNUSED_14 | \
-> -			     __BLIST_UNUSED_15 | \
-> +#define __BLIST_UNUSED_MASK (__BLIST_UNUSED_15 | \
->   			     __BLIST_UNUSED_16 | \
->   			     __BLIST_UNUSED_24 | \
->   			     __BLIST_UNUSED_27 | \
-
-Much better.
-
+> diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
+> index 68a992494b12..bfc2cbd43897 100644
+> --- a/drivers/scsi/scsi_devinfo.c
+> +++ b/drivers/scsi/scsi_devinfo.c
+> @@ -150,6 +150,8 @@ static struct {
+>   	{"COMPAQ", "MSA1000", NULL, BLIST_SPARSELUN | BLIST_NOSTARTONADD},
+>   	{"COMPAQ", "MSA1000 VOLUME", NULL, BLIST_SPARSELUN | BLIST_NOSTARTONADD},
+>   	{"COMPAQ", "HSV110", NULL, BLIST_REPORTLUN2 | BLIST_NOSTARTONADD},
+> +	{"COMPAQ", "PD-1", NULL, BLIST_FORCELUN | BLIST_SINGLELUN |
+> +				 BLIST_NO_LUN_1F},
+>   	{"DDN", "SAN DataDirector", "*", BLIST_SPARSELUN},
+>   	{"DEC", "HSG80", NULL, BLIST_REPORTLUN2 | BLIST_NOSTARTONADD},
+>   	{"DELL", "PV660F", NULL, BLIST_SPARSELUN},
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 
 Cheers,
