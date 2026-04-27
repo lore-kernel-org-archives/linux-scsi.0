@@ -1,109 +1,147 @@
-Received: from mo4-p01-ob.smtp.rzone.de (mo4-p01-ob.smtp.rzone.de [85.215.255.53])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f176.google.com (mail-pf1-f176.google.com [209.85.210.176])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 99BB82C1595;
-	Mon, 27 Apr 2026 08:43:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=85.215.255.53
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777279419; cv=pass; b=GY3vPYSIxzpmM0OurxUb9morJGMGtDzp1SFMpK1HhBJkw8492XVR2zWC/QhW5E6ZjkU1lCqaKQK1teWNzx6XO8TT2WfQt0Yt1Dr2T1wtOYKj5btLSBdkj1NDqRRgGplxR5SEhhehaGbcSW3sz46E0nFO/8V3Zo/aJP/iAOP/Ys4=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777279419; c=relaxed/simple;
-	bh=CPhPRwer5L9xzv0bLcv1GDpPQlt9aRz7qLDAhjenRRI=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=lKmSVKCn2ETNfwiYDuwfExPBRzuJxax8l0mKgINaV+/Is/Bm5Qn0VY5ZekyUL/9S8zsJkbgFZosGHSDLb3im/LspmtM816o2sHRzNQSV0Bg9ufMH4vYnUlUPkNDFToCUnC/QG7RPMxMBH7KxrmyLRmaGns/t/SZqA1BjPRs5JVE=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iokpp.de; spf=none smtp.mailfrom=iokpp.de; dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.b=K0NvXGxy; dkim=permerror (0-bit key) header.d=iokpp.de header.i=@iokpp.de header.b=yuIV86X8; arc=pass smtp.client-ip=85.215.255.53
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iokpp.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=iokpp.de
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A3CCE31D375
+	for <linux-scsi@vger.kernel.org>; Mon, 27 Apr 2026 09:22:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.176
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1777281748; cv=none; b=NaTUcRdpbkQ+LoATw1FUnaNS/jzv7sRa0Or7wsncDcTUzKU3Pq8jZ+2x1OfVmmHuUhL6ITO5snirU1OpCBf4a2s3uAdm9W1/xajJR3zML5cF7hslkRM51e5vjEbMaN1JZZXdeyk7TuFXOPjoOv3sZooTpwga2nRj+uluqoIX86c=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1777281748; c=relaxed/simple;
+	bh=BSb64EzeNe+LAdM46kkrVWOCt/FZCzWzgFhyw7921go=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=TDooqBqILk5RemTAAsDbYynovRwwwhqWu8pp6Jzi229Qj55rSrDmPb3QUE683nUKLnTRA6Nwtu2rDz+Hjlao1RfOzUJ4tddIL2b0cJ9XsAwW99HPd9xJKQoUFSNbtl1NxC1FCrL3kG3FAJhp4w4C2PsPBW4IF01i+uOmXsaMBPc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=kXOm7Twv; arc=none smtp.client-ip=209.85.210.176
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.b="K0NvXGxy";
-	dkim=permerror (0-bit key) header.d=iokpp.de header.i=@iokpp.de header.b="yuIV86X8"
-ARC-Seal: i=1; a=rsa-sha256; t=1777279053; cv=none;
-    d=strato.com; s=strato-dkim-0002;
-    b=VUy6LW7tjYjU0p1TA/dIGAkVNlRcfyGtGk/RbGAORrb9UTKXPexZUGmgkeQLjrfUm5
-    5289gmNFdjfIMtyrlR+pbglLSXMA/Z36dhupWcU4PtdWEwktiepbQ2+QoL7mndz8YVF+
-    lghn8kDN9athOWRQ+YvYwGmZbXIJk8FZ83lsHiwoxB1H2ZxzU4UhfX2DrpQbAirf8/of
-    6tn1OJUje3C8Ga9u2HLMi1V20vrEIbwhDlMUzP3sN0ioWYOW/CAjfWNhCNrsgWWtrKEj
-    pLoJfYgfG2gDoNjyqB2B+9RUYpJrpJLhFWrtTWYj0NuPvv+nw0MDpBJ6O5kBTZDwUkE1
-    tkWg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; t=1777279053;
-    s=strato-dkim-0002; d=strato.com;
-    h=References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Cc:Date:
-    From:Subject:Sender;
-    bh=CPhPRwer5L9xzv0bLcv1GDpPQlt9aRz7qLDAhjenRRI=;
-    b=Mb/l6xlbnWzHWybB05Nv1rOZZM+OasKME7Fa2yunNQ3CTL4Yyi/kg7edgVapIUuFtJ
-    aFZmfWWsFOknmZGzeb3yvD2+28ivTw/psVlAlghXsYEBZ/UVQuK0CCnNL6+nAj5+bVRT
-    M+jpV/pAIPhlb+REkD1lXdGVdajHD1eHZmkc8PPD7fpr3NKygY07E5uTAW7MaBYlr0Z9
-    dcQpVnmuyFrarrnfn8FXi14ptg9ICXetq9yAQsaByJ4h/M+2FgfzSJSNIOo6wRiuEnSl
-    /z4RPza1oSzd30Jcg/zZaD7YKwHmBEXsKCX9Nd4Xl12I7xXWxfJaBCW0SuyTl6zXQk+C
-    PzpA==
-ARC-Authentication-Results: i=1; strato.com;
-    arc=none;
-    dkim=none
-X-RZG-CLASS-ID: mo01
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1777279053;
-    s=strato-dkim-0002; d=iokpp.de;
-    h=References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Cc:Date:
-    From:Subject:Sender;
-    bh=CPhPRwer5L9xzv0bLcv1GDpPQlt9aRz7qLDAhjenRRI=;
-    b=K0NvXGxyNSVZXVJP97vZMYYt/n8jVnjswOb3krSxS783019xZV4xJUljafcwmakFje
-    BNgvRL536oA49w6KqWvOY6iOw5vWSyrtJBhFyskeS2sB6onNjRouRWMK696h5Zq/EUWC
-    rgfnlEy5czUj57BBNKCbuytWX6xv0z3cOhFFUKnU4GDx0XyN4vbTNfOxyCygm7UTNLhd
-    Jfq0mV0chtkIpGeQjXRwaIuZXG0vsvc10XHpjv+H5KORWwbqlZxDW/K7ozZITar5/Lkx
-    WnfKBGkOr9FO52FZcbPKbYJPf9Xx1QZwX6Q5WuSjZumZbnwFjHFdHwekOEGKj8qp/2cG
-    FHtQ==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; t=1777279053;
-    s=strato-dkim-0003; d=iokpp.de;
-    h=References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Cc:Date:
-    From:Subject:Sender;
-    bh=CPhPRwer5L9xzv0bLcv1GDpPQlt9aRz7qLDAhjenRRI=;
-    b=yuIV86X8Qpy1qonNtvVaoW9QSda0DkgGJkoqiWJH9ApX8lCCbv6AL9c4S/zOGcqAwh
-    NBGYIbveDh2zFa5vrxAA==
-X-RZG-AUTH: ":LmkFe0i9dN8c2t4QQyGBB/NDXvjDB6pBSe9tgBDSDt0V0DBslXBtZUxPOub3IZ2k"
-Received: from [10.176.237.185]
-    by smtp.strato.de (RZmta 55.0.1 AUTH)
-    with ESMTPSA id z7934523R8bWibO
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256 bits))
-	(Client did not present a certificate);
-    Mon, 27 Apr 2026 10:37:32 +0200 (CEST)
-Message-ID: <b1e3a3e37b7a5a4e26d429b94b2d3a0a6ea00220.camel@iokpp.de>
-Subject: Re: [PATCH v2 2/2] scsi: ufs: core: Add support to retrieve and
- store TX Equalization settings
-From: Bean Huo <beanhuo@iokpp.de>
-To: Can Guo <can.guo@oss.qualcomm.com>, avri.altman@wdc.com,
- bvanassche@acm.org,  beanhuo@micron.com, peter.wang@mediatek.com,
- martin.petersen@oracle.com,  mani@kernel.org
-Cc: linux-scsi@vger.kernel.org, Alim Akhtar <alim.akhtar@samsung.com>, 
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, vamshi
- gajjela <vamshigajjela@google.com>, "Rafael J. Wysocki"
- <rafael.j.wysocki@intel.com>, Adrian Hunter <adrian.hunter@intel.com>, open
- list <linux-kernel@vger.kernel.org>
-Date: Mon, 27 Apr 2026 10:37:31 +0200
-In-Reply-To: <20260424151420.111675-3-can.guo@oss.qualcomm.com>
-References: <20260424151420.111675-1-can.guo@oss.qualcomm.com>
-	 <20260424151420.111675-3-can.guo@oss.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.44.4-0ubuntu2.1 
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="kXOm7Twv"
+Received: by mail-pf1-f176.google.com with SMTP id d2e1a72fcca58-82f4a53ae20so7277272b3a.3
+        for <linux-scsi@vger.kernel.org>; Mon, 27 Apr 2026 02:22:27 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1777281747; x=1777886547; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=wFZBmc0iscSfAT4VB9ZbI38DRL/+YXPqj1yfGMlW+m4=;
+        b=kXOm7TwvUgOcQHjq2B2ixLP51P7p0GEoG9nOepzjYAMPKFTaXJpLBWPVjoOdaabd4D
+         Qjt+W/K38lTf+9UpFJFrN5SMxAs+wMCg9mkJLKBvVJGoXQPWEkHU8FwqM9/A4TpUxYhT
+         n3aUD5XZq9GnfbP7Gxu1unzqm86jaiJhdHYK5YBYqekZMY8WUEtO0B9H5hA0Ojm/9jzl
+         8pEnXm4+HKCK/u4jf8tUAMNFtFUJ9lE46aKP0hl1SWBvpzBKhbyBwU1lV+1d/wyyzKyd
+         VNPvC4LGxgpU+qzB/GQFLZEBybyDAD50vE7T7/akSCWj4b86rQDtEaC/dKuiWmg1hrwc
+         Eahg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1777281747; x=1777886547;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=wFZBmc0iscSfAT4VB9ZbI38DRL/+YXPqj1yfGMlW+m4=;
+        b=QsyOcuOtRLq0ypVSjRgrhOCvC5UgKfuPfFeJX3GEKZfNdn2fK0gv7GdhqDmXJ5PUH1
+         QZvaOmwc6sXvwSrpovA4iP6NrUvaio6Dmfn3bFH2gTpsieGy5WQxBFifT+epiO+kp6lp
+         /SbmpermAELciyoiMFUPk1L8WV+3zM5KxUp43uVAd1dVYEvViFv8ui1T+adg84qWpHQh
+         daP1AC1skygqDDs0xb0ndA8tylgQ9fkfPuRqeprt/qdiw3GXMyGIdLfsCpv/RgBH0+Vb
+         9rBxRkRFZ+P70DcJAw8YYsLiolNGxXe8tAaEO8CMoSn1AFgHcxufUFskGKn9EAkS7BTN
+         HL3Q==
+X-Forwarded-Encrypted: i=1; AFNElJ9Naw8b7SCJDADm+BM/eCKdcLbODghr4lr+v1VdkHO4plItk5DPYdlN4QoELiref3HF59/q92lbgqvk@vger.kernel.org
+X-Gm-Message-State: AOJu0YznabFa5eQXaa0eEtUVdRoolOJhto3LRrWKsxZwdf5IYR7Pny7/
+	YfVDoFrh7oJ7iRB2o7rng3z4tkZ4exNnCV3OkuJ2V0cPsqX0l0zDTO8=
+X-Gm-Gg: AeBDieuAoHK3zU2K9kTCyDtAqDGIeH4fnEsvhJV0IOnnv3rEa6qSfW9ynQmnq2FBWGK
+	GjQjm3OIcef96Zte8tDYK1WZc5zMMHvzVAUl8R608GvhR/REgzfi5eA7Uszp8BTiBP1eMFC4O4w
+	po1Qx303ejZS5qE/+xhfqhqBgINAnAph2lebx0XRfiwWdTjxwEz3+/yD1Az2W0RYxPmjpF8HlrX
+	RTVsKAhELCVBJ3VGiBgOAeexjpfHezHDjz13NXHs8Eq2+jsEqhU1k/B7N9zqn/eJF+WPJq4D1YA
+	5V3AzBLdnUXRIvVxRISoppD06WyT4BNXYHK7cJd+YlI/YcWDivhJmq1uJA/CraJY5DAHC+nbOyk
+	X6NABSvJ22hu+a0Y1+Fxy43968S24iuHEnj4nnNZ7A4gtp8VZ/MyCju1slVMFjqAv9oP3XzamPY
+	XAGbhPmlkQjLkTjwVSZzURGGBrrRX0s2mFE2Cv8WQGoRrw8HNWB7Q5hmDXUYZnzwosONCfDCw9C
+	SCCp600YhWZ0YNA4Tko1HHm/fVxwMFy4VPsxjKLrZLW69c=
+X-Received: by 2002:a05:6a00:4094:b0:82a:955:50d3 with SMTP id d2e1a72fcca58-82f8c937b36mr43641207b3a.45.1777281747016;
+        Mon, 27 Apr 2026 02:22:27 -0700 (PDT)
+Received: from localhost.localdomain ([1.226.165.54])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-82f8e9fbb85sm36364449b3a.22.2026.04.27.02.22.24
+        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
+        Mon, 27 Apr 2026 02:22:26 -0700 (PDT)
+From: "=?UTF-8?q?=EB=B0=95=EB=AA=85=ED=9B=88?=" <mhun512@gmail.com>
+X-Google-Original-From: =?UTF-8?q?=EB=B0=95=EB=AA=85=ED=9B=88?= <pakmyeonghun@bagmyeonghun-ui-MacBookPro.local>
+To: Saurav Kashyap <skashyap@marvell.com>,
+	Javed Hasan <jhasan@marvell.com>,
+	GR-QLogic-Storage-Upstream@marvell.com
+Cc: Myeonghun Pak <mhun512@gmail.com>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org,
+	Ijae Kim <ae878000@gmail.com>
+Subject: [PATCH] scsi: qedf: Free exchange manager on probe failure
+Date: Mon, 27 Apr 2026 18:22:14 +0900
+Message-ID: <20260427092220.58365-1-pakmyeonghun@bagmyeonghun-ui-MacBookPro.local>
+X-Mailer: git-send-email 2.47.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-On Fri, 2026-04-24 at 08:14 -0700, Can Guo wrote:
-> Add support for UFS v5.0 JEDEC attributes qTxEQGnSettings and
-> wTxEQGnSettingsExt to enable persistent storage and retrieval of
-> optimal TX Equalization settings.
->=20
-> This provides a fast-path for TX Equalization by reusing previously
-> stored optimal settings, avoiding TX Equalization Training (EQTR)
-> procedures during subsequent Power Mode changes.
->=20
-> When no valid TX Equalization settings are found, fall back to full TX
-> EQTR procedures and optionally save the results for future use.
->=20
-> The validity of one set of TX Equalization settings is indicated by
-> Bit[15] in wTxEQGnSettingsExt.
+From: Myeonghun Pak <mhun512@gmail.com>
 
-Reviewed-by: Bean Huo <beanhuo@micron.com>
+qedf_lport_setup() allocates a libfc exchange manager that is normally
+released from qedf_remove(). If probe fails after the lport setup has
+completed, the driver core does not call .remove(), so the exchange
+manager and lport stats are left allocated.
+
+Release the lport resources from the probe error path and also drop the
+exchange manager if stats allocation fails inside qedf_lport_setup().
+
+Fixes: 61d8658b4a43 ("scsi: qedf: Add QLogic FastLinQ offload FCoE driver framework.")
+Cc: stable@vger.kernel.org
+Co-developed-by: Ijae Kim <ae878000@gmail.com>
+Signed-off-by: Ijae Kim <ae878000@gmail.com>
+Signed-off-by: Myeonghun Pak <mhun512@gmail.com>
+---
+ drivers/scsi/qedf/qedf_main.c | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/qedf/qedf_main.c b/drivers/scsi/qedf/qedf_main.c
+index da429b3a42..499d42e46c 100644
+--- a/drivers/scsi/qedf/qedf_main.c
++++ b/drivers/scsi/qedf/qedf_main.c
+@@ -1765,8 +1765,10 @@ static int qedf_lport_setup(struct qedf_ctx *qedf)
+ 	fc_exch_mgr_alloc(lport, FC_CLASS_3, FCOE_PARAMS_NUM_TASKS,
+ 			  0xfffe, NULL);
+ 
+-	if (fc_lport_init_stats(lport))
++	if (fc_lport_init_stats(lport)) {
++		fc_exch_mgr_free(lport);
+ 		return -ENOMEM;
++	}
+ 
+ 	/* Finish lport config */
+ 	fc_lport_config(lport);
+@@ -3306,6 +3308,7 @@ static int __qedf_probe(struct pci_dev *pdev, int mode)
+ 	struct qed_slowpath_params slowpath_params;
+ 	struct qed_probe_params qed_params;
+ 	u16 retry_cnt = 10;
++	bool lport_setup = false;
+ 
+ 	/*
+ 	 * When doing error recovery we didn't reap the lport so don't try
+@@ -3625,6 +3628,7 @@ static int __qedf_probe(struct pci_dev *pdev, int mode)
+ 			    "qedf_lport_setup failed.\n");
+ 			goto err7;
+ 		}
++		lport_setup = true;
+ 	}
+ 
+ 	qedf->timer_work_queue = alloc_workqueue("qedf_%u_timer",
+@@ -3704,6 +3708,10 @@ static int __qedf_probe(struct pci_dev *pdev, int mode)
+ 		destroy_workqueue(qedf->ll2_recv_wq);
+ 	fc_remove_host(qedf->lport->host);
+ 	scsi_remove_host(qedf->lport->host);
++	if (lport_setup) {
++		fc_exch_mgr_free(qedf->lport);
++		fc_lport_free_stats(qedf->lport);
++	}
+ #ifdef CONFIG_DEBUG_FS
+ 	qedf_dbg_host_exit(&(qedf->dbg_ctx));
+ #endif
+-- 
+2.50.1
