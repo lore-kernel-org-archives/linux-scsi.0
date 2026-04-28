@@ -1,168 +1,113 @@
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+Received: from mail-ot1-f42.google.com (mail-ot1-f42.google.com [209.85.210.42])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 957FE3F788E
-	for <linux-scsi@vger.kernel.org>; Tue, 28 Apr 2026 13:08:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 15F6A244685
+	for <linux-scsi@vger.kernel.org>; Tue, 28 Apr 2026 20:39:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777381694; cv=none; b=eru34fzCW2lG9F7sv0A7op9jHz8bBqhSt5H5zwxEOw2QJPyEQCZuhH+TkQVjvxolNrwkQRc4UAsJCjeLMwziypAS7V1gPjGbu7wfg5L+debe+ubb+35aXKx0PgUlRonPCSxXRvVlmn9Lh7vsyL/eWgxvdHu1MdjE3vKinRufYNQ=
+	t=1777408797; cv=none; b=WBpD7T0b+X1+9KBrfuUtrjM+mGQTAKmXkkbsbU+QqNkRnUFJBazm6a3TsQKV8DGksbGQvtLauFzEg+BUnXq4q3RfBsBYnfUB3QAF+C47Q88pdA+Z06UQuqXva3xbyc2f2EOqg79VnWjiFcXPotvUeEveJ4xPqtaslrdD4A9Z1DE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777381694; c=relaxed/simple;
-	bh=v54lbtqgbX4GavD38ynkXgqip7rcSqTMvrGrfyGrDm0=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Eavsd5VWT3rKJpm2qASnvBi5RdxQeTEuxWXIvHiavrRDCkb4ve/jQmMNCL0tStZ/mfQ63c3zOMAKw/xpQh1gqjmWkxJjtatZNLVBqhKID2XPNoZVXpGfus1wWQZAeQEqTWF5lHraDuBYCvyGODeWSKu/FIep3LbbGJx2S+rvAgM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=Jn4mLfqL; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=6EraTIXp; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=q+IWzqzK; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=MbASWYe+; arc=none smtp.client-ip=195.135.223.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+	s=arc-20240116; t=1777408797; c=relaxed/simple;
+	bh=SgcA+exyHXAqIJdItIDbidRJ+F4zZ7AWpIefSP+VdFs=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=RD3cIPlhTNRCFES6OEdviexxbntBR1oGhAjkQFqtuinYliClSw5MO4kRUyoa8pTjiwoojXs94XAyB00lpqbU+WD4SHD/TzQiWwQE0EWjrZSkWBgLfU1sfZbc5jvnosMZ/gjzQ76ReQXr6e/Y8zT4cAxvm5asnhBma6Qm58HGcYg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=LdjgU3IS; arc=none smtp.client-ip=209.85.210.42
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="Jn4mLfqL";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="6EraTIXp";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="q+IWzqzK";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="MbASWYe+"
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id DAD0B5BD2E;
-	Tue, 28 Apr 2026 13:08:11 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1777381692; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=qfHwNudJmxczCvGUPLLuGA5ZXHhapkdWdCgZlnCSfvo=;
-	b=Jn4mLfqL1Yne+LRTncOG/xG6TZ10rCWgJS9tV54YLPXVZY20eEa4GSsxrKSdy5HqeX8S8q
-	yEfPfKKno7m/KehSc1H3MYrfGj19D5YkQfPrM4leWSrk7HbB37bTXpy6Z7Mul5wtKy1sSr
-	uMqhwgWtCnc56h8wfXQ34v9rL2LWl6w=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1777381692;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=qfHwNudJmxczCvGUPLLuGA5ZXHhapkdWdCgZlnCSfvo=;
-	b=6EraTIXpIKWlTiAwZb5Al0nEVUhM3n1R+WKiFZxL413mc7tCusd2r5uB1SnBve4HEmyIZ3
-	Kw5pp+YHhgYY5vCQ==
-Authentication-Results: smtp-out2.suse.de;
-	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=q+IWzqzK;
-	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=MbASWYe+
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1777381691; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=qfHwNudJmxczCvGUPLLuGA5ZXHhapkdWdCgZlnCSfvo=;
-	b=q+IWzqzKmn2cj4UTrE1TJfZ2507WKmlfZ5SjuemF29Ajc8QvC22TI53JNy9ARHYmtIcnrz
-	shC80cTqdwJdCAzB3Td06ddHCljRiQC9BVCFAoltPDpFIW2Kc30xBxTKdcf5p6kSIfbVnV
-	HcS8m4UPFU4B4zjz7+rZvbx9BDyd0ts=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1777381691;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=qfHwNudJmxczCvGUPLLuGA5ZXHhapkdWdCgZlnCSfvo=;
-	b=MbASWYe+cBY5TqwnP9VcBhX+VcZXXGxcLNZXH81VjmLrDZSkCqnLx5xQo2RJoHvKAjLm4V
-	BzCM97vrSFuE62Dw==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id B55F6593B0;
-	Tue, 28 Apr 2026 13:08:11 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id dPbrKzux8GmoVgAAD6G6ig
-	(envelope-from <dwagner@suse.de>); Tue, 28 Apr 2026 13:08:11 +0000
-Date: Tue, 28 Apr 2026 15:08:10 +0200
-From: Daniel Wagner <dwagner@suse.de>
-To: Florian Bezdeka <florian.bezdeka@siemens.com>
-Cc: Aaron Tomlin <atomlin@atomlin.com>, axboe@kernel.dk, kbusch@kernel.org, 
-	hch@lst.de, sagi@grimberg.me, mst@redhat.com, aacraid@microsemi.com, 
-	James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com, liyihang9@h-partners.com, 
-	kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, 
-	shivasharan.srikanteshwara@broadcom.com, chandrakanth.patil@broadcom.com, sathya.prakash@broadcom.com, 
-	sreekanth.reddy@broadcom.com, suganath-prabu.subramani@broadcom.com, ranjan.kumar@broadcom.com, 
-	jinpu.wang@cloud.ionos.com, tglx@kernel.org, mingo@redhat.com, peterz@infradead.org, 
-	juri.lelli@redhat.com, vincent.guittot@linaro.org, akpm@linux-foundation.org, 
-	maz@kernel.org, ruanjinjie@huawei.com, bigeasy@linutronix.de, 
-	yphbchou0911@gmail.com, wagi@kernel.org, frederic@kernel.org, longman@redhat.com, 
-	chenridong@huawei.com, hare@suse.de, kch@nvidia.com, ming.lei@redhat.com, 
-	tom.leiming@gmail.com, steve@abita.co, sean@ashe.io, chjohnst@gmail.com, neelx@suse.com, 
-	mproche@gmail.com, nick.lange@gmail.com, marco.crivellari@suse.com, 
-	linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, virtualization@lists.linux.dev, 
-	linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org, megaraidlinux.pdl@broadcom.com, 
-	mpi3mr-linuxdrv.pdl@broadcom.com, MPT-FusionLinux.pdl@broadcom.com
-Subject: Re: [PATCH v12 00/13] blk: honor isolcpus configuration
-Message-ID: <2d61b1f7-fc06-4fe1-8a6f-cc3a2f114ae1@flourine.local>
-References: <20260422185215.100929-1-atomlin@atomlin.com>
- <e350389a5a635660267a7a13f06529da102a95d8.camel@siemens.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="LdjgU3IS"
+Received: by mail-ot1-f42.google.com with SMTP id 46e09a7af769-7dcd9061b1aso6945620a34.2
+        for <linux-scsi@vger.kernel.org>; Tue, 28 Apr 2026 13:39:55 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1777408795; x=1778013595; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=C+si7lg3A2lMf4zRs+JJ+IUUmngjpZnIXbiZMqlnVc4=;
+        b=LdjgU3ISBuPX4xuNkqFPNE/ZGrFlz26TQ+LI6Nx1bNm0XvAm0mg/yl4QVA8vhY6QGB
+         F6/DwPJSTmtpFKjnVcJV3tTGFt0jJ07/KFsY5RSp0Gv28IYEF3OiNZL4+kTgkXBU5ns3
+         lkUcBzlwkU7XdDWQYZa7+nku3QiWhuGYi+PGVv8t4ktXKwWkL/LrEklHr5xbO8YEUoS7
+         26SRoxW7/UylYtDJfsUoEN/L9cZft1+Z2dVzOGptU07L2SAlFOTTLugnnNuLs/yZSeeu
+         6eNW9hxlHMq5wnTzACYd2HfNYjcwOHsUh1iy3fITgoPVcZ2hvJiYTXJl7kXkD+yDluhe
+         EkMg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1777408795; x=1778013595;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=C+si7lg3A2lMf4zRs+JJ+IUUmngjpZnIXbiZMqlnVc4=;
+        b=VFsj/U1pgwWHXaLj/doHsWwTst63GGz8csviAqpH5B9128ipu9o4LqIsQul1/FNeIs
+         p9BBN3GdqpLQjoQ3qRIyJuKluaibrTWhNLarJLOzu3BclOynunO9Hl1Q9S+eLpeYYdKZ
+         ea0u6ZruMZQud+uudMwvu+U2caPMW00wIjMQHVool4RfPThmDU4hZAbV5Djw4pCe9elA
+         YribX4LfvvuJY/+gZiJFFUIzWmEIj+LmJDPExn1eAZMCgviMS5bHlwPmWQm/12Pai39L
+         hOKitDlXxJgek7pAiw1O21NwklnzSNuv8JLyWEc4gv/FzxeFVm8yuwAAG43wVVVP2VVa
+         CmOw==
+X-Forwarded-Encrypted: i=1; AFNElJ+r1UyLd4uSK20NGN85kOWPm+1nvZhL1sSJjn7KuUtUlTqlzVbMwOaoxB4oCxQaR9V8W4W3t6cRQ3Ck@vger.kernel.org
+X-Gm-Message-State: AOJu0YyVQVLtgIlOfrCsUuWOwDCW9iALXRwpBSA1p6HIb88MRHe04piX
+	QvK6NmKz27xAjqJeeGPuHJbHsjPvJ2PC1vvfZZED2ADFv8sAjIMWFu0R
+X-Gm-Gg: AeBDiesZOtPu271sj+AIjGEUmYw6h7/ZqOoH0Y/46kQkxN0FfjH78dXEvPXzI9/vbE7
+	WsPpeQvGY5ws5DeS6XVCevl0E/mIuT8CfMus96fRABVENO66KhVqeHkH0NBaGwcdMjdO2egnf/6
+	bhE/UKvZY09s6lUISgSwRvVmRUuHx5W6nrpZHzkJxxmWu3jYY+8jWmQMla9zQ/eb2/tn/ca1IY6
+	wKmrXTc+p+RtzC9Z3IJSNlAbranBmxV/fxb12yPAJgzYGroZGewXGdMfQD8M4Y8ILlc40AzHDSW
+	Y97RozxLEIQtbgazA+6QO9kqjRAnIEIQr1C/Z9Do5/R4/7RR/KTY0xSoXysKWJO3+2+g9ce9ZVz
+	323nqHlONkV9LgvVkqcgdkuq2Z+4W8Ysc4aNmKuylUkKzIIXod4G7mAkpdiGHymh31RAeikbSYH
+	TeBJcMBz0u2aGyez0kZo7/CT2gNUbDdQZ4RHJbze57MbYpA3ssMyc8CA==
+X-Received: by 2002:a05:6820:88b:b0:694:6acf:a42d with SMTP id 006d021491bc7-69668490410mr684717eaf.39.1777408795078;
+        Tue, 28 Apr 2026 13:39:55 -0700 (PDT)
+Received: from localhost.localdomain ([143.166.81.254])
+        by smtp.gmail.com with ESMTPSA id 586e51a60fabf-4340e388b97sm233616fac.0.2026.04.28.13.39.54
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 28 Apr 2026 13:39:54 -0700 (PDT)
+From: Stuart Hayes <stuart.w.hayes@gmail.com>
+To: "Martin K . Petersen" <martin.petersen@oracle.com>,
+	linux-scsi@vger.kernel.org,
+	target-devel@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Cc: Stuart Hayes <stuart.w.hayes@gmail.com>
+Subject: [PATCH v2] scsi: target: Allow FUA if no write cache enabled
+Date: Tue, 28 Apr 2026 15:39:38 -0500
+Message-ID: <20260428203938.9738-1-stuart.w.hayes@gmail.com>
+X-Mailer: git-send-email 2.47.3
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <e350389a5a635660267a7a13f06529da102a95d8.camel@siemens.com>
-X-Spamd-Result: default: False [-3.01 / 50.00];
-	BAYES_HAM(-3.00)[99.99%];
-	SUSPICIOUS_RECIPS(1.50)[];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	MIME_GOOD(-0.10)[text/plain];
-	MX_GOOD(-0.01)[];
-	FROM_HAS_DN(0.00)[];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	FUZZY_RATELIMITED(0.00)[rspamd.com];
-	ARC_NA(0.00)[];
-	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	TO_DN_SOME(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	FREEMAIL_CC(0.00)[atomlin.com,kernel.dk,kernel.org,lst.de,grimberg.me,redhat.com,microsemi.com,hansenpartnership.com,oracle.com,h-partners.com,broadcom.com,cloud.ionos.com,infradead.org,linaro.org,linux-foundation.org,huawei.com,linutronix.de,gmail.com,suse.de,nvidia.com,abita.co,ashe.io,suse.com,vger.kernel.org,lists.linux.dev,lists.infradead.org];
-	DKIM_TRACE(0.00)[suse.de:+];
-	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	TO_MATCH_ENVRCPT_SOME(0.00)[];
-	RCPT_COUNT_GT_50(0.00)[53];
-	RCVD_COUNT_TWO(0.00)[2];
-	FROM_EQ_ENVFROM(0.00)[];
-	RCVD_TLS_ALL(0.00)[];
-	DWL_DNSWL_BLOCKED(0.00)[suse.de:dkim];
-	TAGGED_RCPT(0.00)[];
-	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
-	MISSING_XM_UA(0.00)[];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:dkim,flourine.local:mid,imap1.dmz-prg2.suse.org:helo,imap1.dmz-prg2.suse.org:rdns]
-X-Rspamd-Action: no action
-X-Spam-Flag: NO
-X-Spam-Score: -3.01
-X-Spam-Level: 
-X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
-X-Rspamd-Queue-Id: DAD0B5BD2E
+Content-Transfer-Encoding: 8bit
 
-On Mon, Apr 27, 2026 at 12:55:20PM +0200, Florian Bezdeka wrote:
-> This topic reminds me of a discussion started by Tobias [1] some time
-> ago about IRQ spreading of network drivers. The problem was (and still
-> is) that network drivers ignore any CPU isolation when spreading out
-> device IRQs.
-> 
-> In general we have two different CPU isolation mechanisms:
->   - The static one, via isolcpus= cmdline parameter
->   - The dynamic one, via cgroups(v2) cpuset controller
-> 
-> This series is only taking the static "world" into account, right? Are
-> there any plans to honor the CPU isolations configured the dynamic
-> way?
+Modify target_check_fua() to allow FUA support for devices with no write
+cache enabled.
 
-Dynamic configuration would require every driver to fully support
-reconfiguration during runtime. Only a handful of drivers, such as
-nvme-pci, are currently able to handle this.
+Without this patch, accesses with FUA set will be rejected, even though
+they always go directly to the media when there's no write cache.
 
-The first task, teaching a wide range of drivers to honor CPU isolation
-at boot time, is already going to be a significant amount of work.
+This is needed because EDK2 FAT filesystem code sets the FUA bit when
+writing, regardless of whether the device advertises support of DPOFUA. If
+a UEFI pre-boot write fails, the filesystem can become inaccessible until a
+reboot.  This can cause linux installs to iSCSI to be unbootable, because
+some systems have firmware that will try to write a file in a
+vendor-specific directory under /boot/EFI (such as /boot/EFI/Dell) before
+attempting to boot to a UEFI boot entry pointing to a file in the FAT
+filesystem.
 
-> It has been a while since the last investigations on my end. Last time I
-> went through the code, the IRQ core was completely decoupled from the
-> dynamic configuration via cgroups. Are there any plans to fix that gap?
+Signed-off-by: Stuart Hayes <stuart.w.hayes@gmail.com>
+---
+v2: rebased to latest upstream
 
-Which use case are you actually aiming to support? While dynamic
-reconfiguration would be ideal, the amount of work to get there is
-significant. I won't be signing up for it.
+ drivers/target/target_core_transport.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+index fad03a15c969..0e07b224c4d0 100644
+--- a/drivers/target/target_core_transport.c
++++ b/drivers/target/target_core_transport.c
+@@ -3722,5 +3722,6 @@ target_check_wce(struct se_device *dev)
+ bool
+ target_check_fua(struct se_device *dev)
+ {
+-	return target_check_wce(dev) && dev->dev_attrib.emulate_fua_write > 0;
++	/* Allow FUA if there's no write cache */
++	return target_check_wce(dev) ? dev->dev_attrib.emulate_fua_write > 0 : 1;
+ }
+-- 
+2.47.3
+
