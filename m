@@ -1,45 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 446A43FD140;
-	Tue, 28 Apr 2026 10:42:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8879B401484;
+	Tue, 28 Apr 2026 10:42:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777372932; cv=none; b=HNdL7jY7X5/f9YFzNv83F4fPW/vljjLGTfz/JuZ8UCuiMDsl1nCzsT7c8rVjZv98u4DYZjuW9lND7lA6HLonNOVtXe16z0HjaHk/YT1Ma2WmyL3Y2tln4vmzFimG1tqkljV+Hu8wemsPZK1ryyMJD77Zvup5ALdPYSnaLo+mjI0=
+	t=1777372943; cv=none; b=ERY6Gjtyvt2DQ5H4zKfONyYp9SCdUmnsEFej/w57peKFbGEDuYdSYzCq2ru4bmCw4rMfwh8JvniD5uPe12K59CxdTvQdn4ytACP7in3kXM2vAEbFVi/2NlINvmFR5a6SJ49WY3g1P8vGJ3+GcbLr6YVY7nApcrbllzivvcCsTvo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777372932; c=relaxed/simple;
-	bh=iCCgW4S8zxtaNC8rTtz8QyO5SNyyj2MfQZLDbDz9Y+k=;
+	s=arc-20240116; t=1777372943; c=relaxed/simple;
+	bh=gIV688uBFlsXlTT0uLql82n27evJwhecVjf4GCACkks=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=YBImTlNI1t7H7soz+EDl4o3A2DOF5fQ/V80nd+5E02jM0u1DGpJkwDNr34e/YPDOzi4MQSUB/hQ5Kt7q4URqwaF9KxGCR8xfbpALFpcPhMQfcPMJg8Hj/A6w4Q7ovg3jZceaYisk554qINczaDGCrH3LD4RasrnJIC7NE4L/ZRg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pvGs8ih7; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=bupkD06cvU4yrBP5dG25/i5PeJhgqL4aDbBGQPi+ypyW7TUOGSaQTU77WY4ks/wq23wHOkUu+j9sYA7Ecg4S8M2f2yYfItIu5w4g4gH+Vp9cbxOoPPQKxA2Iw17dI8pBJfrSnYwACOfBrjjyOmSwXlH8ecwTHDWqt+bz4xGpDHk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dVjXBWxH; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pvGs8ih7"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C658DC2BCF6;
-	Tue, 28 Apr 2026 10:42:10 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dVjXBWxH"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2FFA5C2BCB8;
+	Tue, 28 Apr 2026 10:42:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1777372931;
-	bh=iCCgW4S8zxtaNC8rTtz8QyO5SNyyj2MfQZLDbDz9Y+k=;
+	s=k20201202; t=1777372943;
+	bh=gIV688uBFlsXlTT0uLql82n27evJwhecVjf4GCACkks=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=pvGs8ih7u9DZqtcuYSBFUdHAzvl0eySDbyxLEQvvlZ+L3KinxHm2ShvyoFykXI0YD
-	 h8nPfKQsc1Pw+Rzr1yuvH2BVDGEp1gxO3YvqQeo4qClHHA68wWRlSWeUK0qGvVyrgb
-	 jnSSonGjsbOwGgNTFoAsdQxUQ2++fEKV7HUqq4nKSsYHyQFh6Zl+H+CCdkZMZQmFyZ
-	 0+ECYHCeXyzeOsHgSaGcHrXZkH5FLIpX/4q2Qa5L6lPy40jM3r1xEp9CgZWQaD5ybB
-	 8nxd73ehDs1U4iHNLQ9jvjvjVYIXURZr6r+taaUn7dtjnPCs4TAyajkhMVuVxn7Jm3
-	 lKATB9M6MBxNw==
+	b=dVjXBWxHm+zHlJoH/blcc+TrCd2An7ZaAYi1h09JpnS7E0Yc8yCmi0/iywi/Uh+d9
+	 VkRhDi9Nfj0yJaKXpyYCW2LQbxDxof+gB8yhoABS7UpFh1IbRrC+4tn2zliy6IXu6A
+	 PR+ggk2oZhSIPjnFPwPF6xsh2TSrp1xWaRT6FWo2yfKbNeHfZTJNr/soaC6fny4PTm
+	 E4aYhfh7pBr/kLPGvBN0QLeyf/YX+ohQwu+HNvs9JhizeQipTXSORL2xGLFaXFbtqX
+	 v+n9z2Q1vxDxoKXq2eTTfeiXtUl79+D//nr8XH5l2HtFxgCY8xGNbriHgH0+u7ehqs
+	 Z1Uubzg5YDSKQ==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
-Cc: Justin Tee <justin.tee@broadcom.com>,
+Cc: Adrian Hunter <adrian.hunter@intel.com>,
+	Bart Van Assche <bvanassche@acm.org>,
 	"Martin K. Petersen" <martin.petersen@oracle.com>,
 	Sasha Levin <sashal@kernel.org>,
-	james.smart@broadcom.com,
-	dick.kennedy@broadcom.com,
 	jejb@linux.ibm.com,
 	linux-scsi@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH AUTOSEL 7.0-6.18] scsi: lpfc: Remove unnecessary ndlp kref get in lpfc_check_nlp_post_devloss
-Date: Tue, 28 Apr 2026 06:40:38 -0400
-Message-ID: <20260428104133.2858589-27-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 7.0-6.18] scsi: ufs: ufs-pci: Add support for Intel Nova Lake
+Date: Tue, 28 Apr 2026 06:40:46 -0400
+Message-ID: <20260428104133.2858589-35-sashal@kernel.org>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260428104133.2858589-1-sashal@kernel.org>
 References: <20260428104133.2858589-1-sashal@kernel.org>
@@ -52,350 +51,301 @@ MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
 X-stable-base: Linux 7.0.2
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-From: Justin Tee <justin.tee@broadcom.com>
+From: Adrian Hunter <adrian.hunter@intel.com>
 
-[ Upstream commit f6bfb8d149336661bb80e62980da9a45b920403c ]
+[ Upstream commit 096cd6b7adf21791827a045d464242d93a6fd54e ]
 
-When NLP_IN_RECOV_POST_DEV_LOSS is set, the initial node reference
-remains held while recovery is in progress.  Taking a reference when
-NLP_IN_RECOV_POST_DEV_LOSS is cleared results in an additional reference
-being held.  This causes an extra reference when cleaning up lpfc_vport
-instances.  Thus, remove the extraneous ndlp kref get in
-lpfc_check_nlp_post_devloss.
+Add PCI ID to support Intel Nova Lake, same as Intel Meteor Lake (MTL).
 
-Signed-off-by: Justin Tee <justin.tee@broadcom.com>
-Link: https://patch.msgid.link/20260212213008.149873-7-justintee8345@gmail.com
+Signed-off-by: Adrian Hunter <adrian.hunter@intel.com>
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Link: https://patch.msgid.link/20260309085815.55216-1-adrian.hunter@intel.com
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
 
 LLM Generated explanations, may be completely bogus:
 
-Based on my thorough investigation, I can now complete my analysis.
+Now I have enough information to complete the analysis.
+
+## Phase 1: Commit Message Forensics
+
+**Step 1.1: Parse Subject Line**
+- Record: subsystem `scsi: ufs: ufs-pci:`, action verb `Add`, summary:
+  "Add support for Intel Nova Lake" — hardware enablement via PCI ID
+
+**Step 1.2: Parse All Commit Message Tags**
+- Record:
+  - Signed-off-by: Adrian Hunter (Intel, author, UFS PCI driver
+    maintainer-level contributor)
+  - Reviewed-by: Bart Van Assche (prolific SCSI/UFS reviewer)
+  - Link: https://patch.msgid.link/20260309085815.55216-1-
+    adrian.hunter@intel.com
+  - Signed-off-by: Martin K. Petersen (SCSI subsystem maintainer)
+  - No `Fixes:` tag, no `Cc: stable` (absence is expected per
+    guidelines)
+  - No `Reported-by:`, no syzbot
+
+**Step 1.3: Analyze Commit Body**
+- Record: The body is one sentence: "Add PCI ID to support Intel Nova
+  Lake, same as Intel Meteor Lake (MTL)." Explicitly states the new
+  platform reuses the existing MTL variant ops. No bug described — this
+  is hardware enablement.
+
+**Step 1.4: Detect Hidden Bug Fixes**
+- Record: Not a hidden bug fix. This is a straightforward new-hardware-
+  enablement PCI ID addition — which is an explicit exception category
+  in the stable rules.
+
+## Phase 2: Diff Analysis
+
+**Step 2.1: Inventory**
+- Record: 1 file changed (`drivers/ufs/host/ufshcd-pci.c`), +1/-0 lines.
+  Scope: single-file, single-line surgical addition. Modified table:
+  `ufshcd_pci_tbl[]`.
+
+**Step 2.2: Code Flow Change**
+- Record: Before: PCI device 0xD335 (INTEL) not matched → driver would
+  not bind. After: PCI device 0xD335 matches and uses
+  `ufs_intel_mtl_hba_vops`. Only affects the specific new device.
+
+**Step 2.3: Bug Mechanism**
+- Record: Category (h) Hardware workarounds — device ID addition. No bug
+  mechanism; enables existing driver logic for a new SKU.
+
+**Step 2.4: Fix Quality**
+- Record: Trivially correct — simply matches the vendor/device pair to
+  an existing, tested vops struct (`ufs_intel_mtl_hba_vops`). Zero
+  regression risk: entries are only evaluated for matching vendor/device
+  PCI IDs, so no non-Nova-Lake system can be affected.
+
+## Phase 3: Git History Investigation
+
+**Step 3.1: Blame**
+- Record: The MTL vops struct `ufs_intel_mtl_hba_vops` was introduced by
+  commit `4049f7acef3eb` ("scsi: ufs: ufs-pci: Add support for Intel
+  MTL", Apr 2022, v5.18), which carried `Cc: stable@vger.kernel.org #
+  v5.15+`. The MTL infrastructure is therefore in every active stable
+  tree (5.15.y and later).
+
+**Step 3.2: Follow Fixes: Tag**
+- Record: No Fixes: tag — N/A. This is an enablement, not a fix.
+
+**Step 3.3: File History / Prerequisites**
+- Record: The surrounding PCI table has accumulated several similar
+  single-line additions: Arrow Lake (`51031cc3f903e`, v6.5), Lunar Lake
+  (`0a07d3c7a1d20`, v6.4), Panther Lake (`bdee2f1dcd84d`, v6.11),
+  Wildcat Lake (`823f95575d854`, 2025). Each is identical in structure:
+  one PCI ID reusing MTL ops. This commit is self-contained and has no
+  prerequisites.
+
+**Step 3.4: Author's Other Commits**
+- Record: Adrian Hunter (Intel) is the long-time author/maintainer of
+  the Intel UFS PCI support code. All past Intel PCI ID additions for
+  this driver are his. Strong authority signal.
+
+**Step 3.5: Dependencies**
+- Record: The only dependency is `ufs_intel_mtl_hba_vops`, which has
+  existed in stable since v5.15+.
+
+## Phase 4: Mailing List Research
+
+**Step 4.1: Find Original Discussion**
+- Record: `b4 dig -c 096cd6b7adf21` matched by patch-id and returned htt
+  ps://lore.kernel.org/all/20260309085815.55216-1-
+  adrian.hunter@intel.com/ (only a single v1, no iterations).
+
+**Step 4.2: Reviewers**
+- Record: Bart Van Assche reviewed (Reviewed-by), Martin K. Petersen
+  applied (SCSI maintainer). Addressed to linux-scsi@vger.kernel.org.
+  Appropriate maintainer chain.
+
+**Step 4.3: Bug Report**
+- Record: No Reported-by/bug report — N/A (enablement).
+
+**Step 4.4: Related Patches**
+- Record: `b4 dig -a` confirmed only v1; no multi-patch series.
+  Standalone.
+
+**Step 4.5: Stable-Specific Discussion**
+- Record: No explicit Cc: stable request in thread, but thread is clean
+  and contains an Reviewed-by from Bart and a clean apply message from
+  Martin. No objections.
+
+## Phase 5: Code Semantic Analysis
+
+**Step 5.1: Functions Modified**
+- Record: No functions modified — only the PCI device ID table
+  `ufshcd_pci_tbl[]`.
+
+**Step 5.2–5.4: Callers / Callees / Call Chain**
+- Record: The table is consumed by the PCI core (`pci_match_id`) for
+  driver binding. Reachability: only when a Nova Lake host with PCI ID
+  8086:D335 is present. With no such device, the added row is dead data.
+
+**Step 5.5: Similar Patterns**
+- Record: Five identical prior commits add single MTL-compatible IDs
+  (MTL itself, ARL, LNL, PTL, WCL). Consistent, well-established
+  pattern.
+
+## Phase 6: Cross-Referencing / Stable Tree Analysis
+
+**Step 6.1: Buggy Code in Stable?**
+- Record: The underlying driver + `ufs_intel_mtl_hba_vops` exist in all
+  active stable trees (5.15.y and later, since v5.18 with Cc: stable #
+  v5.15+).
+
+**Step 6.2: Backport Complications**
+- Record: Trivial clean apply expected — single-line addition to a table
+  that exists in all active stable trees. Minor possibility of context
+  fuzz if the table has slightly fewer entries in older branches (e.g.,
+  pre-Wildcat Lake), but still trivial.
+
+**Step 6.3: Related Fixes Already in Stable?**
+- Record: Panther Lake and Wildcat Lake PCI ID additions already made it
+  to autosel stable branches (per `git branch --contains`), confirming
+  the stable trees routinely accept this class of single-line Intel UFS
+  PCI ID enablement.
+
+## Phase 7: Subsystem Context
+
+**Step 7.1: Subsystem Criticality**
+- Record: `drivers/ufs/host/` — device driver for UFS (Universal Flash
+  Storage). Criticality: IMPORTANT — UFS is the primary storage on
+  modern Intel mobile/client platforms, so without this ID the system's
+  main storage doesn't work at all on Nova Lake.
+
+**Step 7.2: Activity**
+- Record: Actively maintained; multiple commits per release. Mature,
+  stable interfaces.
+
+## Phase 8: Impact and Risk Assessment
+
+**Step 8.1: Affected Users**
+- Record: Users of Intel Nova Lake systems running a stable kernel.
+  Without this patch, the UFS controller simply won't bind → the system
+  cannot use its UFS storage.
+
+**Step 8.2: Trigger Conditions**
+- Record: Universally triggered on Nova Lake hardware at boot/probe. No
+  special conditions. For all other hardware the code is inert.
+
+**Step 8.3: Failure Mode Severity**
+- Record: Without the patch: UFS storage inoperative on Nova Lake. With
+  the patch: storage works. Severity for affected platform: HIGH (no
+  storage = unusable system); for all other systems: zero impact.
+
+**Step 8.4: Benefit / Risk**
+- Record: BENEFIT: High for target hardware users, zero-cost for others.
+  RISK: Essentially zero — only a PCI ID entry with a pointer to an
+  existing, heavily-tested vops struct already in stable. Ratio strongly
+  favors backport.
+
+## Phase 9: Final Synthesis
+
+**Step 9.1: Evidence**
+- FOR: One-line PCI ID addition (exception category #1 in stable rules);
+  reuses existing in-tree and in-stable `ufs_intel_mtl_hba_vops`;
+  reviewed by Bart Van Assche; applied by Martin K. Petersen; obvious
+  correctness; zero regression risk for non-matching hardware; matches
+  the pattern of prior backported Intel UFS PCI ID additions (Arrow
+  Lake, Lunar Lake, Panther Lake, Wildcat Lake).
+- AGAINST: None substantive. No explicit Cc: stable (but that's expected
+  — would not be in review otherwise).
+
+**Step 9.2: Stable Rules Checklist**
+1. Obviously correct and tested? YES — reviewed and applied by the
+   maintainer; trivial addition.
+2. Fixes a real problem for users? YES — UFS storage non-functional on
+   Nova Lake without it.
+3. Important? YES — primary storage on target platform.
+4. Small & contained? YES — 1 line.
+5. No new features/APIs? Correct — no user-visible API or new behavior;
+   enables existing code path for a new device.
+6. Applies to stable? YES — clean apply expected.
+
+**Step 9.3: Exception Category**
+- Record: Falls squarely under Exception Category #1 "NEW DEVICE IDs" —
+  adding a PCI ID to an existing driver where the driver and the reused
+  vops are already in stable.
+
+**Step 9.4: Decision**
+- YES. This is a textbook hardware enablement PCI ID addition that meets
+  the explicit stable rule exception.
 
 ---
 
-## PHASE 1: COMMIT MESSAGE FORENSICS
-
-**Step 1.1: Parse the Subject Line**
-- Record: Subsystem `scsi: lpfc:`, action verb `Remove`, summary:
-  removes an unnecessary `ndlp` kref get in
-  `lpfc_check_nlp_post_devloss` that was leaving an extra reference
-  after device-loss recovery.
-
-**Step 1.2: Parse All Commit Message Tags**
-- Record: `Signed-off-by: Justin Tee <justin.tee@broadcom.com>` (author
-  is a Broadcom lpfc maintainer). `Link: https://patch.msgid.link/202602
-  12213008.149873-7-justintee8345@gmail.com`. `Signed-off-by: Martin K.
-  Petersen <martin.petersen@oracle.com>` (SCSI maintainer). NO `Fixes:`
-  tag, NO `Reported-by:` tag, NO `Cc: stable`, NO `Reviewed-by`.
-
-**Step 1.3: Analyze the Commit Body Text**
-- Record: The commit describes a refcount leak - when
-  `NLP_IN_RECOV_POST_DEV_LOSS` is set, the initial ndlp reference is
-  *still held* (because current `lpfc_dev_loss_tmo_handler` does *not*
-  put in the recovering path anymore). Taking another reference via
-  `lpfc_nlp_get` in the "reverse" path therefore *adds* an extra
-  reference. Symptom: "extra reference when cleaning up lpfc_vport
-  instances". No crash/stack trace given.
-
-**Step 1.4: Detect Hidden Bug Fixes**
-- Record: Subject begins with "Remove unnecessary" (cleanup wording) but
-  commit body explicitly says "extra reference when cleaning up
-  lpfc_vport instances" - this IS a real bug fix for a ref leak (pattern
-  7: reference counting bug).
-
-## PHASE 2: DIFF ANALYSIS
-
-**Step 2.1: Inventory the Changes**
-- Record: One file changed: `drivers/scsi/lpfc/lpfc_hbadisc.c`. One line
-  removed (`lpfc_nlp_get(ndlp);`). Scope: single-function surgical fix.
-
-**Step 2.2: Understand the Code Flow Change**
-- Record: Before - `lpfc_check_nlp_post_devloss` cleared the
-  `NLP_IN_RECOV_POST_DEV_LOSS` flag, cleared `NLP_DROPPED`, then called
-  `lpfc_nlp_get(ndlp)` to "restore" a put supposedly performed in
-  `lpfc_dev_loss_tmo_handler`. After - the get is gone; the flag bits
-  are still cleared; no refcount change is performed.
-
-**Step 2.3: Identify the Bug Mechanism**
-- Record: Category (c) reference counting fix - removing an extra
-  `lpfc_nlp_get()`. The reason the get is wrong: commit `d1a2ef63fc8b3`
-  ("scsi: lpfc: Fix kref imbalance on fabric ndlps from dev_loss_tmo
-  handler", merged in v6.12) added an early `return fcf_inuse;` in the
-  `recovering` branch, so `lpfc_nlp_put(ndlp)` is no longer executed
-  when `NLP_IN_RECOV_POST_DEV_LOSS` is set. The matching `lpfc_nlp_get`
-  in `lpfc_check_nlp_post_devloss` was left behind and now grabs an
-  extra reference every time a fabric ndlp transiently hits dev_loss and
-  recovers.
-
-**Step 2.4: Assess the Fix Quality**
-- Record: Minimal 1-line removal. Obvious correctness - just removes the
-  stale counterpart of a no-longer-happening put. No new regression
-  risk: removing an unbalanced get can only reduce references, it cannot
-  cause a UAF (the ndlp reference held before dev_loss remains held
-  because the put never happens in the recovering path).
-
-## PHASE 3: GIT HISTORY INVESTIGATION
-
-**Step 3.1: Blame the Changed Lines**
-- Record: The `lpfc_nlp_get(ndlp);` being removed was originally
-  introduced by `af984c87293b1` (Oct 2021, v5.17) as part of "scsi:
-  lpfc: Allow fabric node recovery if recovery is in progress before
-  devloss". At that time it was *correct* (paired with a put in the
-  handler). The bug was introduced by `d1a2ef63fc8b3` (Sep 2024, v6.12)
-  "scsi: lpfc: Fix kref imbalance on fabric ndlps from dev_loss_tmo
-  handler", which added the early `return fcf_inuse;` that skips the
-  `lpfc_nlp_put` in the recovering path but left the `lpfc_nlp_get` in
-  `lpfc_check_nlp_post_devloss` dangling.
-
-**Step 3.2: Follow the Fixes: Tag**
-- Record: No `Fixes:` tag given. Based on code analysis, the actual
-  Fixes: target is `d1a2ef63fc8b3`, present in v6.12 and forward.
-
-**Step 3.3: Check File History for Related Changes**
-- Record: Related recent commits: `07caedc6a3887` (Nov 2025) added the
-  `clear_bit(NLP_DROPPED, ...);` to `lpfc_check_nlp_post_devloss`;
-  `3f8f9f16f844a` converted save_flags to bitmask; `e07ac2d2aa5fc`
-  removed unnecessary relocking. This is a standalone patch, part of a
-  13-patch lpfc-14.4.0.14 update series (PATCH 6/13).
-
-**Step 3.4: Check the Author's Other Commits**
-- Record: Justin Tee (Broadcom) is the primary lpfc
-  maintainer/contributor. Wrote `d1a2ef63fc8b3` (which introduced this
-  bug) and has 30+ lpfc commits recently. Subject-matter expert.
-
-**Step 3.5: Check for Dependent/Prerequisite Commits**
-- Record: This fix is completely standalone for trees that contain
-  `d1a2ef63fc8b3` (v6.12+). The only dependency is that the buggy commit
-  is present. Can apply standalone.
-
-## PHASE 4: MAILING LIST AND EXTERNAL RESEARCH
-
-**Step 4.1: Find the Original Patch Discussion**
-- Record: `b4 am` located the patch series at lore.kernel.org. Patch is
-  "PATCH 6/13 lpfc: Remove unnecessary ndlp kref get in
-  lpfc_check_nlp_post_devloss" from series "Update lpfc to revision
-  14.4.0.14" posted 2026-02-12 against Martin's 6.20/scsi-queue tree. No
-  review discussion found on this specific patch (no `Reviewed-by`, no
-  NAKs, no stable suggestions).
-
-**Step 4.2: Check Who Reviewed the Patch**
-- Record: Series is a typical Broadcom/lpfc driver update going through
-  SCSI maintainer Martin K. Petersen. No explicit per-patch review
-  comments retrieved.
-
-**Step 4.3: Search for the Bug Report**
-- Record: No `Reported-by:` tag. The bug was author-discovered via code
-  analysis, not a user report.
-
-**Step 4.4: Check for Related Patches and Series**
-- Record: This is patch 6 of a 13-patch series. Other patches include
-  logging improvements, typecast changes, cleanup of `lpfc_fdmi_cmd`
-  error paths, `txcmplq_cnt` fixes, NVMe abort cleanup on PCI reset, and
-  version bump. This specific patch is self-contained.
-
-**Step 4.5: Check Stable Mailing List History**
-- Record: No prior discussion found.
-
-## PHASE 5: CODE SEMANTIC ANALYSIS
-
-**Step 5.1: Identify Key Functions in the Diff**
-- Record: `lpfc_check_nlp_post_devloss()` only.
-
-**Step 5.2: Trace Callers**
-- Record: Callers verified via grep - 5 total call sites:
-  `lpfc_mbx_cmpl_fc_reg_login`, `lpfc_nlp_reg_node` (in
-  `lpfc_hbadisc.c`), and 3 sites in `lpfc_els.c` around FLOGI handling.
-  These are mainline FC discovery/login completion paths - called
-  routinely during normal operation, particularly after link events.
-
-**Step 5.3: Trace Callees**
-- Record: The function calls `test_and_clear_bit`, `clear_bit`,
-  `lpfc_nlp_get` (being removed), and `lpfc_printf_vlog` (logging). No
-  I/O, no complex state changes.
-
-**Step 5.4: Follow the Call Chain**
-- Record: Reachable from any FC link-bounce/devloss path. Real-world
-  triggered every time a fabric ndlp (Fabric_DID, FDMI_DID,
-  NameServer_DID, Fabric_Cntl_DID) dev_loss_tmo-fires while recovery is
-  still in progress - a common event on FC fabrics.
-
-**Step 5.5: Search for Similar Patterns**
-- Record: N/A - this is a specific function.
-
-## PHASE 6: CROSS-REFERENCING AND STABLE TREE ANALYSIS
-
-**Step 6.1: Does the Buggy Code Exist in Stable Trees?**
-- Record: Verified via `git show
-  <branch>:drivers/scsi/lpfc/lpfc_hbadisc.c`:
-  - stable/linux-6.12.y: HAS BUG - `recovering` path has `return
-    fcf_inuse;` (no put); `lpfc_check_nlp_post_devloss` has
-    `lpfc_nlp_get(ndlp)` (extra ref).
-  - stable/linux-6.17.y, 6.18.y, 6.19.y: HAS BUG - same pattern.
-  - stable/linux-6.6.y: NO BUG - the `recovering` path in 6.6.y does NOT
-    have the early return; the `lpfc_nlp_put(ndlp)` still executes at
-    the end of fabric-node handling, so the `lpfc_nlp_get` correctly
-    balances it. Fix must NOT be backported to 6.6.y.
-
-**Step 6.2: Check for Backport Complications**
-- Record: For 6.18.y and 6.19.y: patch applies cleanly (same surrounding
-  context with `clear_bit(NLP_DROPPED, ...)`). For 6.17.y: needs minor
-  context adjustment (no `clear_bit(NLP_DROPPED, ...)` line above). For
-  6.12.y: function still uses the older `spin_lock_irqsave`/`save_flags
-  &=` form; a manual adjustment (simply removing the
-  `lpfc_nlp_get(ndlp);` line amidst different surrounding context) is
-  needed but trivial.
-
-**Step 6.3: Check If Related Fixes Are Already in Stable**
-- Record: None. Buggy commit `d1a2ef63fc8b3` went into v6.12 directly
-  (not backported). No alternate fix present.
-
-## PHASE 7: SUBSYSTEM AND MAINTAINER CONTEXT
-
-**Step 7.1: Identify the Subsystem and Its Criticality**
-- Record: `drivers/scsi/lpfc/` - Broadcom/Emulex Fibre Channel HBA
-  driver. Criticality: IMPORTANT - used in enterprise storage/SAN
-  setups. Reference leaks in a driver of this size matter to enterprise
-  users running long-lived systems.
-
-**Step 7.2: Assess Subsystem Activity**
-- Record: Actively maintained (regular version bumps, multiple patches
-  per quarter). Justin Tee / Broadcom are responsive maintainers.
-
-## PHASE 8: IMPACT AND RISK ASSESSMENT
-
-**Step 8.1: Determine Who Is Affected**
-- Record: Affected population - users of lpfc-driven FC HBAs running
-  v6.12+ stable kernels who experience fabric link bounces,
-  zoning/fabric reconfiguration, or transient device-loss events on
-  Fabric_DID/FDMI/NameServer/Fabric_Cntl ndlps.
-
-**Step 8.2: Determine the Trigger Conditions**
-- Record: Triggered every time a fabric ndlp enters dev_loss_tmo while
-  still in a recovering discovery state. On busy fabrics with many
-  vports, this can happen repeatedly; each occurrence leaks one ndlp
-  reference.
-
-**Step 8.3: Determine the Failure Mode Severity**
-- Record: Failure mode - ndlp kref leak; ndlp objects cannot be freed
-  during `lpfc_vport` cleanup; potential memory accumulation over time;
-  can cause WARN messages or stuck/hang behavior on vport
-  teardown/module unload. Severity: MEDIUM-HIGH - not an immediate crash
-  or security issue but a persistent resource leak in a commonly-
-  triggered code path in enterprise storage workloads.
-
-**Step 8.4: Calculate Risk-Benefit Ratio**
-- Record: Benefit - fixes a real ref leak introduced by a previous "fix"
-  commit, benefit is MEDIUM-HIGH for lpfc users. Risk - 1-line removal,
-  obvious correctness, no possibility of new UAF since we're only
-  reducing (not adding) puts; risk VERY LOW. Ratio: clearly favorable
-  for backport.
-
-## PHASE 9: FINAL SYNTHESIS
-
-**Step 9.1: Compile Evidence**
-- FOR: Real kref leak bug in common code path; trivially small/obvious
-  fix; author is subsystem maintainer who introduced the original bug;
-  bug confirmed to exist in 6.12.y, 6.17.y, 6.18.y, 6.19.y via direct
-  inspection; code analysis is unambiguous.
-- AGAINST: No `Fixes:`, `Reported-by:`, `Cc: stable`; no user report of
-  symptoms; a similar comment language ("put the initial ref count
-  back") now stale but not updated.
-- UNRESOLVED: Whether this is already in linux-next / scsi-queue for
-  v6.21 (not verified directly, but the cover letter says it targets
-  6.20/scsi-queue so likely on its way to mainline imminently).
-
-**Step 9.2: Apply Stable Rules Checklist**
-1. Obviously correct and tested? YES - trivial to verify by reading the
-   two functions together; author has build/test history.
-2. Fixes real bug affecting users? YES - refcount leak on every fabric-
-   ndlp recovery event.
-3. Important issue? MEDIUM-HIGH (resource leak in enterprise storage
-   driver).
-4. Small and contained? YES - one line removal.
-5. No new features or APIs? YES - pure bug fix.
-6. Applies to stable? YES for 6.12.y (with trivial manual adjustment)
-   and 6.17.y+; must NOT go to 6.6.y and earlier.
-
-**Step 9.3: Check for Exception Categories**
-- N/A - normal bug fix, not a quirk/device ID/DT update/build fix.
-
-**Step 9.4: Decision**
-- This is a genuine reference-counting bug fix for a regression
-  introduced by `d1a2ef63fc8b3` in v6.12. The fix is minimal, obviously
-  correct, and affects a common code path in the lpfc FC driver used by
-  enterprise storage. Risk is essentially zero; benefit prevents a real
-  ref leak. Should be backported to 6.12+ stable trees (NOT to 6.6.y and
-  earlier where the bug does not exist).
-
 ## Verification
 
-- [Phase 1] Parsed tags on the supplied commit message: Signed-off-by
-  Justin Tee / Martin K. Petersen, Link to patch.msgid.link. No
-  Fixes/Reported-by/Cc-stable/Reviewed-by.
-- [Phase 2] Read the diff: single 1-line removal of
-  `lpfc_nlp_get(ndlp);` in `lpfc_check_nlp_post_devloss` within
-  `drivers/scsi/lpfc/lpfc_hbadisc.c`.
-- [Phase 3] `git log -L:lpfc_check_nlp_post_devloss` confirmed the get
-  was introduced in `af984c87293b1` (v5.17) where it was correct (paired
-  with a put).
-- [Phase 3] `git show d1a2ef63fc8b3` - confirmed this commit added the
-  early `return fcf_inuse;` in the recovering branch, breaking the
-  get/put pairing.
-- [Phase 3] `git log --author="Justin Tee"` - confirmed author is active
-  lpfc maintainer.
-- [Phase 3] `git tag --contains d1a2ef63fc8b3` - buggy commit is in
-  v6.12 and beyond.
-- [Phase 4] `b4 am 20260212213008.149873-7-justintee8345@gmail.com` -
-  downloaded the series, confirmed it is patch 6/13 in "Update lpfc to
-  revision 14.4.0.14" against 6.20/scsi-queue. No per-patch review
-  discussion.
-- [Phase 5] `grep lpfc_check_nlp_post_devloss` - 5 callers:
-  `lpfc_mbx_cmpl_fc_reg_login`, `lpfc_nlp_reg_node`, 3 in `lpfc_els.c`
-  FLOGI paths - all routine discovery paths.
-- [Phase 6] `git show stable/linux-6.12.y:...lpfc_hbadisc.c` - confirmed
-  bug exists (function has lpfc_nlp_get, recovering path has `return
-  fcf_inuse;`).
-- [Phase 6] `git show
-  stable/linux-6.17.y/6.18.y/6.19.y:...lpfc_hbadisc.c` - same bug
-  pattern confirmed in each.
-- [Phase 6] `git show stable/linux-6.6.y:...lpfc_hbadisc.c` - confirmed
-  bug does NOT exist (recovering path has no early return; put still
-  fires).
-- [Phase 8] Failure mode: ndlp kref leak on every fabric-ndlp dev_loss
-  recovery event, MEDIUM-HIGH severity.
-- UNVERIFIED: Whether any user has reported hangs/OOM from this specific
-  leak - no such report exists, but the mechanism is clear from code
-  analysis.
-- UNVERIFIED: Exact mainline SHA of the commit (not yet in my local
-  `master`), but the patch content matches what is on lore/in the
-  14.4.0.14 series.
+- [Phase 1] Parsed tags from commit message: Signed-off-by (Adrian
+  Hunter, Martin K. Petersen), Reviewed-by (Bart Van Assche), Link to
+  patch.msgid.link. No Fixes:, no Cc: stable, no Reported-by.
+- [Phase 2] `git show 096cd6b7adf21` confirmed: 1 file, +1/-0 line,
+  single new entry `{ PCI_VDEVICE(INTEL, 0xD335),
+  (kernel_ulong_t)&ufs_intel_mtl_hba_vops }` in `ufshcd_pci_tbl[]`.
+- [Phase 3] `git log -- drivers/ufs/host/ufshcd-pci.c` showed history of
+  prior Intel PCI ID additions (MTL, ADL, ARL, LNL, PTL, WCL).
+- [Phase 3] `git show 4049f7acef3eb` confirmed the MTL support
+  (introducing `ufs_intel_mtl_hba_vops`) carried `Cc:
+  stable@vger.kernel.org # v5.15+`, so the vops exist in every active
+  stable tree.
+- [Phase 3] `git branch --contains 823f95575d854` and `git branch
+  --contains bdee2f1dcd84d` showed Wildcat Lake and Panther Lake PCI ID
+  patches already in `for-greg/*-200` autosel branches — precedent for
+  backporting this exact class of patch.
+- [Phase 3] Read `drivers/ufs/host/ufshcd-pci.c` lines 510–719:
+  confirmed `ufs_intel_mtl_hba_vops` is defined at line 525 and already
+  used by multiple MTL-family device IDs.
+- [Phase 4] `b4 dig -c 096cd6b7adf21`: matched by patch-id to https://lo
+  re.kernel.org/all/20260309085815.55216-1-adrian.hunter@intel.com/.
+- [Phase 4] `b4 dig -c 096cd6b7adf21 -a`: confirmed only v1, no
+  subsequent revisions.
+- [Phase 4] Mbox inspection: Martin K. Petersen applied ("Applied to
+  7.1/scsi-queue"), Bart Van Assche provided Reviewed-by. No NAKs, no
+  objections.
+- [Phase 5] Inspection of `ufshcd_pci_tbl[]` surroundings: no functions
+  modified, only table data; table is consumed by PCI core during driver
+  binding.
+- [Phase 6] Confirmed `ufs_intel_mtl_hba_vops` is present in stable
+  trees via the v5.15+ stable tag on commit 4049f7acef3eb.
+- [Phase 8] Failure mode analysis: without patch, Nova Lake UFS
+  controller does not bind → no storage on that platform; with patch, it
+  binds using the already-in-stable MTL vops. No risk to unrelated
+  systems because the PCI core only dispatches to this driver on
+  matching vendor:device.
+- UNVERIFIED: Did not fetch the lore.kernel.org thread via WebFetch
+  (Anubis challenge page returned); mitigated by reading the thread
+  contents directly from the b4-saved mbox
+  (`/tmp/nova_lake_thread.mbox`), which contains the maintainer apply
+  message and Bart's Reviewed-by.
 
-The fix is small, surgical, and addresses a real regression that exists
-in multiple active stable trees (6.12+). Meets all stable kernel rules.
-The adaptation for 6.12.y requires a trivial manual edit (different
-surrounding context) but the change itself is a single-line removal.
+The commit is a minimal, low-risk, standards-compliant PCI device ID
+addition that enables UFS storage on a new Intel platform and reuses
+infrastructure already in all active stable trees. It fits the explicit
+"Adding PCI/USB/ACPI IDs to existing drivers" exception listed in the
+stable kernel rules, and matches the precedent of prior autosel-ed Intel
+UFS PCI ID additions (Panther Lake, Wildcat Lake).
 
 **YES**
 
- drivers/scsi/lpfc/lpfc_hbadisc.c | 1 -
- 1 file changed, 1 deletion(-)
+ drivers/ufs/host/ufshcd-pci.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
-index 8aaf05d7bb0af..d42b911a0aee1 100644
---- a/drivers/scsi/lpfc/lpfc_hbadisc.c
-+++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
-@@ -425,7 +425,6 @@ lpfc_check_nlp_post_devloss(struct lpfc_vport *vport,
- {
- 	if (test_and_clear_bit(NLP_IN_RECOV_POST_DEV_LOSS, &ndlp->save_flags)) {
- 		clear_bit(NLP_DROPPED, &ndlp->nlp_flag);
--		lpfc_nlp_get(ndlp);
- 		lpfc_printf_vlog(vport, KERN_INFO, LOG_DISCOVERY | LOG_NODE,
- 				 "8438 Devloss timeout reversed on DID x%x "
- 				 "refcnt %d ndlp %p flag x%lx "
+diff --git a/drivers/ufs/host/ufshcd-pci.c b/drivers/ufs/host/ufshcd-pci.c
+index 5f65dfad1a71a..63f6b36b912fc 100644
+--- a/drivers/ufs/host/ufshcd-pci.c
++++ b/drivers/ufs/host/ufshcd-pci.c
+@@ -695,6 +695,7 @@ static const struct pci_device_id ufshcd_pci_tbl[] = {
+ 	{ PCI_VDEVICE(INTEL, 0x7747), (kernel_ulong_t)&ufs_intel_mtl_hba_vops },
+ 	{ PCI_VDEVICE(INTEL, 0xE447), (kernel_ulong_t)&ufs_intel_mtl_hba_vops },
+ 	{ PCI_VDEVICE(INTEL, 0x4D47), (kernel_ulong_t)&ufs_intel_mtl_hba_vops },
++	{ PCI_VDEVICE(INTEL, 0xD335), (kernel_ulong_t)&ufs_intel_mtl_hba_vops },
+ 	{ }	/* terminate list */
+ };
+ 
 -- 
 2.53.0
 
