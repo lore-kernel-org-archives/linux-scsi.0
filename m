@@ -1,50 +1,45 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3B8993FB7DE;
-	Tue, 28 Apr 2026 10:42:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 446A43FD140;
+	Tue, 28 Apr 2026 10:42:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777372925; cv=none; b=tvOZpJGeZ03VJ5cjaGavRgaDv8PZTNwRh3FDffQMYjFwKhbsLXKeDaZtChIPofaHernx3WZ+Nl2AKPWfbNaf4sdlkqLQaDGksYwaWyqGBYAWgvW8gqmU63GFqDqyuFmeQOg3q/CxYEmjPJ5Vkmoo8lRC20DDzBSTpyXEFz+I7co=
+	t=1777372932; cv=none; b=HNdL7jY7X5/f9YFzNv83F4fPW/vljjLGTfz/JuZ8UCuiMDsl1nCzsT7c8rVjZv98u4DYZjuW9lND7lA6HLonNOVtXe16z0HjaHk/YT1Ma2WmyL3Y2tln4vmzFimG1tqkljV+Hu8wemsPZK1ryyMJD77Zvup5ALdPYSnaLo+mjI0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777372925; c=relaxed/simple;
-	bh=vA373YL3h68bLTYYCHuZBVlqlW2rLVoK7vXWdxBy1xU=;
+	s=arc-20240116; t=1777372932; c=relaxed/simple;
+	bh=iCCgW4S8zxtaNC8rTtz8QyO5SNyyj2MfQZLDbDz9Y+k=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=uXfkxw2H30G455Rnh+gzXHtI7NMyTzDCrYd5iXuYi+lukbTVl/ESA5/Hn8FpDCDNJ5PQ5zumn9stlzvLUNL0U/yCc0413rXIHjACL47872leaxB48U2Pav8Ly8GBlKhSAvLU04xcC/Q4jUPeiTHE1F5UTnhHp5KXjt7DdOpc7Zw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gnZDS58u; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=YBImTlNI1t7H7soz+EDl4o3A2DOF5fQ/V80nd+5E02jM0u1DGpJkwDNr34e/YPDOzi4MQSUB/hQ5Kt7q4URqwaF9KxGCR8xfbpALFpcPhMQfcPMJg8Hj/A6w4Q7ovg3jZceaYisk554qINczaDGCrH3LD4RasrnJIC7NE4L/ZRg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pvGs8ih7; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gnZDS58u"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6BB72C2BCC7;
-	Tue, 28 Apr 2026 10:42:03 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pvGs8ih7"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C658DC2BCF6;
+	Tue, 28 Apr 2026 10:42:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1777372924;
-	bh=vA373YL3h68bLTYYCHuZBVlqlW2rLVoK7vXWdxBy1xU=;
+	s=k20201202; t=1777372931;
+	bh=iCCgW4S8zxtaNC8rTtz8QyO5SNyyj2MfQZLDbDz9Y+k=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=gnZDS58u/LHARZgs2R66E1ZNmZHjlFj2/OsJGzjKv3ga+ttcAP55C415QbTAatMxm
-	 eDKquV0mnBjiQGG2yZjX3mqReFlLZiqqyRxZf1xyBRKJKuFl5hV0fxiqPkW6MVQyMr
-	 XHC3MQz7AYSrQaUqPkXFFJswPzaPML+sGYztQWz8YCwVcWC+CdrfAYpb1U02Xw+Eyj
-	 +OqRE/pru4prS0uv3CF5ts+o738uJ5AzGNqzUiXDcQmSc6HGhwqQFGoSHgryNiLE73
-	 FIRMz2KMiUkkFS9S13HUZljwwiLZbosWYtwXvnB4pfHPdC+02Xj+PTXQCBLP8wDwOx
-	 /OMpfR9LNR9Rw==
+	b=pvGs8ih7u9DZqtcuYSBFUdHAzvl0eySDbyxLEQvvlZ+L3KinxHm2ShvyoFykXI0YD
+	 h8nPfKQsc1Pw+Rzr1yuvH2BVDGEp1gxO3YvqQeo4qClHHA68wWRlSWeUK0qGvVyrgb
+	 jnSSonGjsbOwGgNTFoAsdQxUQ2++fEKV7HUqq4nKSsYHyQFh6Zl+H+CCdkZMZQmFyZ
+	 0+ECYHCeXyzeOsHgSaGcHrXZkH5FLIpX/4q2Qa5L6lPy40jM3r1xEp9CgZWQaD5ybB
+	 8nxd73ehDs1U4iHNLQ9jvjvjVYIXURZr6r+taaUn7dtjnPCs4TAyajkhMVuVxn7Jm3
+	 lKATB9M6MBxNw==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
-Cc: Li Tian <litian@redhat.com>,
-	Long Li <longli@microsoft.com>,
-	Laurence Oberman <loberman@redhat.com>,
+Cc: Justin Tee <justin.tee@broadcom.com>,
 	"Martin K. Petersen" <martin.petersen@oracle.com>,
 	Sasha Levin <sashal@kernel.org>,
-	kys@microsoft.com,
-	haiyangz@microsoft.com,
-	wei.liu@kernel.org,
-	decui@microsoft.com,
+	james.smart@broadcom.com,
+	dick.kennedy@broadcom.com,
 	jejb@linux.ibm.com,
-	linux-hyperv@vger.kernel.org,
 	linux-scsi@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH AUTOSEL 7.0-5.10] scsi: storvsc: Handle PERSISTENT_RESERVE_IN truncation for Hyper-V vFC
-Date: Tue, 28 Apr 2026 06:40:33 -0400
-Message-ID: <20260428104133.2858589-22-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 7.0-6.18] scsi: lpfc: Remove unnecessary ndlp kref get in lpfc_check_nlp_post_devloss
+Date: Tue, 28 Apr 2026 06:40:38 -0400
+Message-ID: <20260428104133.2858589-27-sashal@kernel.org>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260428104133.2858589-1-sashal@kernel.org>
 References: <20260428104133.2858589-1-sashal@kernel.org>
@@ -57,418 +52,350 @@ MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
 X-stable-base: Linux 7.0.2
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-From: Li Tian <litian@redhat.com>
+From: Justin Tee <justin.tee@broadcom.com>
 
-[ Upstream commit 9cf351b289fb2be22491fa3964f99126db67aa08 ]
+[ Upstream commit f6bfb8d149336661bb80e62980da9a45b920403c ]
 
-The storvsc driver has become stricter in handling SRB status codes
-returned by the Hyper-V host. When using Virtual Fibre Channel (vFC)
-passthrough, the host may return SRB_STATUS_DATA_OVERRUN for
-PERSISTENT_RESERVE_IN commands if the allocation length in the CDB does
-not match the host's expected response size.
+When NLP_IN_RECOV_POST_DEV_LOSS is set, the initial node reference
+remains held while recovery is in progress.  Taking a reference when
+NLP_IN_RECOV_POST_DEV_LOSS is cleared results in an additional reference
+being held.  This causes an extra reference when cleaning up lpfc_vport
+instances.  Thus, remove the extraneous ndlp kref get in
+lpfc_check_nlp_post_devloss.
 
-Currently, this status is treated as a fatal error, propagating
-Host_status=0x07 [DID_ERROR] to the SCSI mid-layer. This causes
-userspace storage utilities (such as sg_persist) to fail with transport
-errors, even when the host has actually returned the requested
-reservation data in the buffer.
-
-Refactor the existing command-specific workarounds into a new helper
-function, storvsc_host_mishandles_cmd(), and add PERSISTENT_RESERVE_IN
-to the list of commands where SRB status errors should be suppressed for
-vFC devices. This ensures that the SCSI mid-layer processes the returned
-data buffer instead of terminating the command.
-
-Signed-off-by: Li Tian <litian@redhat.com>
-Reviewed-by: Long Li <longli@microsoft.com>
-Reviewed-by: Laurence Oberman <loberman@redhat.com>
-Link: https://patch.msgid.link/20260406015344.12566-1-litian@redhat.com
+Signed-off-by: Justin Tee <justin.tee@broadcom.com>
+Link: https://patch.msgid.link/20260212213008.149873-7-justintee8345@gmail.com
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
 
 LLM Generated explanations, may be completely bogus:
 
-Now I have enough information. Let me synthesize the full analysis.
+Based on my thorough investigation, I can now complete my analysis.
 
 ---
 
-## Phase 1: Commit Message Forensics
+## PHASE 1: COMMIT MESSAGE FORENSICS
 
-**Step 1.1 — Subject line parse**
-Record: Subsystem `scsi: storvsc`, verb "Handle" (bug-fix indicator),
-summary: treat SRB_STATUS_DATA_OVERRUN for PERSISTENT_RESERVE_IN on
-Hyper-V vFC as success instead of DID_ERROR.
+**Step 1.1: Parse the Subject Line**
+- Record: Subsystem `scsi: lpfc:`, action verb `Remove`, summary:
+  removes an unnecessary `ndlp` kref get in
+  `lpfc_check_nlp_post_devloss` that was leaving an extra reference
+  after device-loss recovery.
 
-**Step 1.2 — Tags**
-Record:
-- Signed-off-by: Li Tian (Red Hat, author)
-- Reviewed-by: Long Li (Microsoft, storvsc maintainer/co-maintainer)
-- Reviewed-by: Laurence Oberman (Red Hat, storage expert)
-- Link: patch.msgid.link (lore)
-- Signed-off-by: Martin K. Petersen (SCSI maintainer)
-- No Fixes:, no Cc: stable (expected for manual review candidates)
+**Step 1.2: Parse All Commit Message Tags**
+- Record: `Signed-off-by: Justin Tee <justin.tee@broadcom.com>` (author
+  is a Broadcom lpfc maintainer). `Link: https://patch.msgid.link/202602
+  12213008.149873-7-justintee8345@gmail.com`. `Signed-off-by: Martin K.
+  Petersen <martin.petersen@oracle.com>` (SCSI maintainer). NO `Fixes:`
+  tag, NO `Reported-by:` tag, NO `Cc: stable`, NO `Reviewed-by`.
 
-**Step 1.3 — Body analysis**
-Record: Bug is concrete and user-visible. When the storvsc driver became
-stricter (SRB_STATUS_DATA_OVERRUN treated as error), Hyper-V vFC started
-failing PERSISTENT_RESERVE_IN with `Host_status=0x07 [DID_ERROR]`, which
-causes `sg_persist` and other SCSI-3 PR utilities to fail with transport
-errors even though the reservation data was correctly returned in the
-buffer. Root cause: the host echoes SRB_STATUS_DATA_OVERRUN when the
-CDB's allocation length does not match the host's expected response
-size.
+**Step 1.3: Analyze the Commit Body Text**
+- Record: The commit describes a refcount leak - when
+  `NLP_IN_RECOV_POST_DEV_LOSS` is set, the initial ndlp reference is
+  *still held* (because current `lpfc_dev_loss_tmo_handler` does *not*
+  put in the recovering path anymore). Taking another reference via
+  `lpfc_nlp_get` in the "reverse" path therefore *adds* an extra
+  reference. Symptom: "extra reference when cleaning up lpfc_vport
+  instances". No crash/stack trace given.
 
-**Step 1.4 — Hidden bug-fix detection**
-Record: "Handle ... truncation" = explicit bug fix; the refactor is
-incidental.
+**Step 1.4: Detect Hidden Bug Fixes**
+- Record: Subject begins with "Remove unnecessary" (cleanup wording) but
+  commit body explicitly says "extra reference when cleaning up
+  lpfc_vport instances" - this IS a real bug fix for a ref leak (pattern
+  7: reference counting bug).
 
----
+## PHASE 2: DIFF ANALYSIS
 
-## Phase 2: Diff Analysis
+**Step 2.1: Inventory the Changes**
+- Record: One file changed: `drivers/scsi/lpfc/lpfc_hbadisc.c`. One line
+  removed (`lpfc_nlp_get(ndlp);`). Scope: single-function surgical fix.
 
-**Step 2.1 — Inventory**
-Record: Single file `drivers/scsi/storvsc_drv.c`, +21/-11, scope: one
-new static helper (`storvsc_host_mishandles_cmd`) and a rewrite of one
-`if` expression in `storvsc_on_io_completion`.
+**Step 2.2: Understand the Code Flow Change**
+- Record: Before - `lpfc_check_nlp_post_devloss` cleared the
+  `NLP_IN_RECOV_POST_DEV_LOSS` flag, cleared `NLP_DROPPED`, then called
+  `lpfc_nlp_get(ndlp)` to "restore" a put supposedly performed in
+  `lpfc_dev_loss_tmo_handler`. After - the get is gone; the flag bits
+  are still cleared; no refcount change is performed.
 
-**Step 2.2 — Code flow change**
-Record:
-- BEFORE: `if ((cdb[0]==INQUIRY) || (cdb[0]==MODE_SENSE) ||
-  (cdb[0]==MODE_SENSE_10) || (cdb[0]==MAINTENANCE_IN &&
-  hv_dev_is_fc(device)))` → mask status to success
-- AFTER: `if (storvsc_host_mishandles_cmd(cdb[0], device))` → same mask;
-  helper adds `PERSISTENT_RESERVE_IN` under the FC-gated arm
+**Step 2.3: Identify the Bug Mechanism**
+- Record: Category (c) reference counting fix - removing an extra
+  `lpfc_nlp_get()`. The reason the get is wrong: commit `d1a2ef63fc8b3`
+  ("scsi: lpfc: Fix kref imbalance on fabric ndlps from dev_loss_tmo
+  handler", merged in v6.12) added an early `return fcf_inuse;` in the
+  `recovering` branch, so `lpfc_nlp_put(ndlp)` is no longer executed
+  when `NLP_IN_RECOV_POST_DEV_LOSS` is set. The matching `lpfc_nlp_get`
+  in `lpfc_check_nlp_post_devloss` was left behind and now grabs an
+  extra reference every time a fabric ndlp transiently hits dev_loss and
+  recovers.
 
-**Step 2.3 — Bug mechanism**
-Record: Hardware-workaround / status-filtering bug. Adds
-PERSISTENT_RESERVE_IN to the same whitelist used for MAINTENANCE_IN —
-i.e., commands for which Hyper-V vFC returns SRB_STATUS_DATA_OVERRUN
-despite the data being correct.
+**Step 2.4: Assess the Fix Quality**
+- Record: Minimal 1-line removal. Obvious correctness - just removes the
+  stale counterpart of a no-longer-happening put. No new regression
+  risk: removing an unbalanced get can only reduce references, it cannot
+  cause a UAF (the ndlp reference held before dev_loss remains held
+  because the put never happens in the recovering path).
 
-**Step 2.4 — Fix quality**
-Record: Obviously correct: the new `switch` is semantically identical to
-the old `if` for existing opcodes; it only adds PERSISTENT_RESERVE_IN
-under `hv_dev_is_fc(device)`. Minimal, surgical. Refactor into a helper
-is cosmetic but slightly expands diff; no functional change for non-vFC
-devices or for other opcodes.
+## PHASE 3: GIT HISTORY INVESTIGATION
 
----
+**Step 3.1: Blame the Changed Lines**
+- Record: The `lpfc_nlp_get(ndlp);` being removed was originally
+  introduced by `af984c87293b1` (Oct 2021, v5.17) as part of "scsi:
+  lpfc: Allow fabric node recovery if recovery is in progress before
+  devloss". At that time it was *correct* (paired with a put in the
+  handler). The bug was introduced by `d1a2ef63fc8b3` (Sep 2024, v6.12)
+  "scsi: lpfc: Fix kref imbalance on fabric ndlps from dev_loss_tmo
+  handler", which added the early `return fcf_inuse;` that skips the
+  `lpfc_nlp_put` in the recovering path but left the `lpfc_nlp_get` in
+  `lpfc_check_nlp_post_devloss` dangling.
 
-## Phase 3: Git History Investigation
+**Step 3.2: Follow the Fixes: Tag**
+- Record: No `Fixes:` tag given. Based on code analysis, the actual
+  Fixes: target is `d1a2ef63fc8b3`, present in v6.12 and forward.
 
-**Step 3.1 — Blame**
-Record: The stricter handling of SRB_STATUS_DATA_OVERRUN was introduced
-by commit `812fe6420a6e7` ("scsi: storvsc: Handle additional SRB status
-values"), which went into **v6.6-rc1**. Before that, unknown SRB
-statuses were simply ignored, so the bug did not manifest.
+**Step 3.3: Check File History for Related Changes**
+- Record: Related recent commits: `07caedc6a3887` (Nov 2025) added the
+  `clear_bit(NLP_DROPPED, ...);` to `lpfc_check_nlp_post_devloss`;
+  `3f8f9f16f844a` converted save_flags to bitmask; `e07ac2d2aa5fc`
+  removed unnecessary relocking. This is a standalone patch, part of a
+  13-patch lpfc-14.4.0.14 update series (PATCH 6/13).
 
-**Step 3.2 — Fixes: follow-up**
-Record: There is no Fixes: tag, but the root-cause commit is clearly
-`812fe6420a6e7` (v6.6). That commit IS present in all stable trees from
-6.6.y onward, so the bug it introduced is present in all those trees.
+**Step 3.4: Check the Author's Other Commits**
+- Record: Justin Tee (Broadcom) is the primary lpfc
+  maintainer/contributor. Wrote `d1a2ef63fc8b3` (which introduced this
+  bug) and has 30+ lpfc commits recently. Subject-matter expert.
 
-**Step 3.3 — File history / related commits**
-Record:
-- `b1aee7f034615` ("scsi: storvsc: Do not flag MAINTENANCE_IN return of
-  SRB_STATUS_DATA_OVERRUN as an error", v6.13-rc2, Cathy Avery) —
-  parallel fix for MAINTENANCE_IN/RTPG. **Confirmed via web search this
-  was AUTOSEL'd to 6.6.y stable (`[PATCH AUTOSEL 6.6 17/23]` on lkml).**
-- `9eacec5d18f98` ("scsi: storvsc: Process unsupported MODE_SENSE_10",
-  2026) — also had `Cc: stable@kernel.org` and `Fixes:`.
-- The current commit is effectively "MAINTENANCE_IN fix, part 2" for a
-  different opcode.
+**Step 3.5: Check for Dependent/Prerequisite Commits**
+- Record: This fix is completely standalone for trees that contain
+  `d1a2ef63fc8b3` (v6.12+). The only dependency is that the buggy commit
+  is present. Can apply standalone.
 
-**Step 3.4 — Author context**
-Record: Li Tian (Red Hat) — regular contributor of Hyper-V /
-virtualization fixes. Reviewed by Long Li (Microsoft), who is the
-storvsc maintainer. Strong review signal.
+## PHASE 4: MAILING LIST AND EXTERNAL RESEARCH
 
-**Step 3.5 — Dependencies**
-Record: Uses `hv_dev_is_fc(device)`, `INQUIRY`, `MODE_SENSE`,
-`MODE_SENSE_10`, `MAINTENANCE_IN`, `PERSISTENT_RESERVE_IN`, all of which
-exist in every stable tree 6.6+. Patch is self-contained.
+**Step 4.1: Find the Original Patch Discussion**
+- Record: `b4 am` located the patch series at lore.kernel.org. Patch is
+  "PATCH 6/13 lpfc: Remove unnecessary ndlp kref get in
+  lpfc_check_nlp_post_devloss" from series "Update lpfc to revision
+  14.4.0.14" posted 2026-02-12 against Martin's 6.20/scsi-queue tree. No
+  review discussion found on this specific patch (no `Reviewed-by`, no
+  NAKs, no stable suggestions).
 
----
+**Step 4.2: Check Who Reviewed the Patch**
+- Record: Series is a typical Broadcom/lpfc driver update going through
+  SCSI maintainer Martin K. Petersen. No explicit per-patch review
+  comments retrieved.
 
-## Phase 4: Mailing List and External Research
+**Step 4.3: Search for the Bug Report**
+- Record: No `Reported-by:` tag. The bug was author-discovered via code
+  analysis, not a user report.
 
-**Step 4.1 — b4 dig**
-Record: `b4 dig -c 9cf351b289fb2` matched by patch-id, single series,
-only v1, URL
-`https://lore.kernel.org/all/20260406015344.12566-1-litian@redhat.com`.
-No v2 or further revisions — applied as submitted.
+**Step 4.4: Check for Related Patches and Series**
+- Record: This is patch 6 of a 13-patch series. Other patches include
+  logging improvements, typecast changes, cleanup of `lpfc_fdmi_cmd`
+  error paths, `txcmplq_cnt` fixes, NVMe abort cleanup on PCI reset, and
+  version bump. This specific patch is self-contained.
 
-**Step 4.2 — b4 dig -w**
-Record: Recipients included linux-scsi, linux-hyperv, Microsoft
-maintainers (K. Y. Srinivasan, Haiyang Zhang, Wei Liu, Dexuan Cui, Long
-Li), James Bottomley, and Martin K. Petersen. The right audience
-reviewed it.
+**Step 4.5: Check Stable Mailing List History**
+- Record: No prior discussion found.
 
-**Step 4.3 — Thread contents (saved mbox)**
-Record: Thread contains:
-- Reviewed-by: Long Li: "Reviewed-by: Long Li <longli@microsoft.com>"
-- Reviewed-by: Laurence Oberman: "Looks good, rewrite of how it was done
-  before but will achieve the same behavior we wanted for the new
-  addition for PR. Reviewed-by: Laurence Oberman."
-- Martin K. Petersen applied to 7.1/scsi-staging and later 7.1/scsi-
-  queue.
-No NAKs, no stable-suitability concerns raised. No explicit `Cc: stable`
-nomination, but also no objections.
+## PHASE 5: CODE SEMANTIC ANALYSIS
 
-**Step 4.4 — Series**
-Record: Standalone single-patch series, no dependencies.
+**Step 5.1: Identify Key Functions in the Diff**
+- Record: `lpfc_check_nlp_post_devloss()` only.
 
-**Step 4.5 — Stable list history**
-Record: Could not access lore.kernel.org/stable (bot protection). Web
-search confirms the sibling MAINTENANCE_IN fix `b1aee7f034615` was
-selected by AUTOSEL for 6.6.y, validating the pattern for stable
-backport.
+**Step 5.2: Trace Callers**
+- Record: Callers verified via grep - 5 total call sites:
+  `lpfc_mbx_cmpl_fc_reg_login`, `lpfc_nlp_reg_node` (in
+  `lpfc_hbadisc.c`), and 3 sites in `lpfc_els.c` around FLOGI handling.
+  These are mainline FC discovery/login completion paths - called
+  routinely during normal operation, particularly after link events.
 
----
+**Step 5.3: Trace Callees**
+- Record: The function calls `test_and_clear_bit`, `clear_bit`,
+  `lpfc_nlp_get` (being removed), and `lpfc_printf_vlog` (logging). No
+  I/O, no complex state changes.
 
-## Phase 5: Code Semantic Analysis
+**Step 5.4: Follow the Call Chain**
+- Record: Reachable from any FC link-bounce/devloss path. Real-world
+  triggered every time a fabric ndlp (Fabric_DID, FDMI_DID,
+  NameServer_DID, Fabric_Cntl_DID) dev_loss_tmo-fires while recovery is
+  still in progress - a common event on FC fabrics.
 
-**Step 5.1–5.2 — Callers**
-Record: `storvsc_on_io_completion` is called from `storvsc_on_receive`
-for `VSTOR_OPERATION_COMPLETE_IO`, which is the primary completion path
-for every SCSI command issued through storvsc. Every `sg_persist` or
-other userspace PR issuer for a vFC LUN reaches this code.
+**Step 5.5: Search for Similar Patterns**
+- Record: N/A - this is a specific function.
 
-**Step 5.3 — Callees**
-Record: `hv_dev_is_fc()` is a trivial GUID comparison
-(`HV_SYNTHFC_GUID`); no side effects.
+## PHASE 6: CROSS-REFERENCING AND STABLE TREE ANALYSIS
 
-**Step 5.4 — Reachability**
-Record: Yes, trivially reachable from userspace: `/dev/sgN` ioctl →
-PERSISTENT_RESERVE_IN CDB → storvsc → this completion path. Used by
-`sg_persist`, `multipath`, cluster software.
+**Step 6.1: Does the Buggy Code Exist in Stable Trees?**
+- Record: Verified via `git show
+  <branch>:drivers/scsi/lpfc/lpfc_hbadisc.c`:
+  - stable/linux-6.12.y: HAS BUG - `recovering` path has `return
+    fcf_inuse;` (no put); `lpfc_check_nlp_post_devloss` has
+    `lpfc_nlp_get(ndlp)` (extra ref).
+  - stable/linux-6.17.y, 6.18.y, 6.19.y: HAS BUG - same pattern.
+  - stable/linux-6.6.y: NO BUG - the `recovering` path in 6.6.y does NOT
+    have the early return; the `lpfc_nlp_put(ndlp)` still executes at
+    the end of fabric-node handling, so the `lpfc_nlp_get` correctly
+    balances it. Fix must NOT be backported to 6.6.y.
 
-**Step 5.5 — Similar patterns**
-Record: Same pattern already applied for INQUIRY (pre-2014),
-MODE_SENSE/MODE_SENSE_10 (`9eacec5d18f98`, Cc: stable), and
-MAINTENANCE_IN (`b1aee7f034615`, AUTOSEL to 6.6.y).
+**Step 6.2: Check for Backport Complications**
+- Record: For 6.18.y and 6.19.y: patch applies cleanly (same surrounding
+  context with `clear_bit(NLP_DROPPED, ...)`). For 6.17.y: needs minor
+  context adjustment (no `clear_bit(NLP_DROPPED, ...)` line above). For
+  6.12.y: function still uses the older `spin_lock_irqsave`/`save_flags
+  &=` form; a manual adjustment (simply removing the
+  `lpfc_nlp_get(ndlp);` line amidst different surrounding context) is
+  needed but trivial.
 
----
+**Step 6.3: Check If Related Fixes Are Already in Stable**
+- Record: None. Buggy commit `d1a2ef63fc8b3` went into v6.12 directly
+  (not backported). No alternate fix present.
 
-## Phase 6: Stable Tree Analysis
+## PHASE 7: SUBSYSTEM AND MAINTAINER CONTEXT
 
-**Step 6.1 — Bug presence in stable**
-Record: Stricter SRB_STATUS_DATA_OVERRUN handling (812fe6420a6e7) is in
-v6.6+. Therefore the PERSISTENT_RESERVE_IN regression exists in 6.6.y,
-6.12.y, 6.15.y, 6.18.y and current trees.
+**Step 7.1: Identify the Subsystem and Its Criticality**
+- Record: `drivers/scsi/lpfc/` - Broadcom/Emulex Fibre Channel HBA
+  driver. Criticality: IMPORTANT - used in enterprise storage/SAN
+  setups. Reference leaks in a driver of this size matter to enterprise
+  users running long-lived systems.
 
-**Step 6.2 — Backport complications**
-Record: On stable trees that already have the MAINTENANCE_IN fix
-(`b1aee7f034615`), the diff context matches exactly and should apply
-cleanly with minor refactor. On any tree missing the MAINTENANCE_IN fix,
-the refactor-into-helper form may need trivial adjustment. Given that
-`b1aee7f034615` was AUTOSEL'd to 6.6.y, most 6.6+ stable trees should
-have it.
+**Step 7.2: Assess Subsystem Activity**
+- Record: Actively maintained (regular version bumps, multiple patches
+  per quarter). Justin Tee / Broadcom are responsive maintainers.
 
-**Step 6.3 — Related fixes already in stable**
-Record: `b1aee7f034615` (MAINTENANCE_IN) and `9eacec5d18f98`
-(MODE_SENSE_10) are already in stable. This completes the triad for vFC
-command-mishandle workarounds.
+## PHASE 8: IMPACT AND RISK ASSESSMENT
 
----
+**Step 8.1: Determine Who Is Affected**
+- Record: Affected population - users of lpfc-driven FC HBAs running
+  v6.12+ stable kernels who experience fabric link bounces,
+  zoning/fabric reconfiguration, or transient device-loss events on
+  Fabric_DID/FDMI/NameServer/Fabric_Cntl ndlps.
 
-## Phase 7: Subsystem Context
+**Step 8.2: Determine the Trigger Conditions**
+- Record: Triggered every time a fabric ndlp enters dev_loss_tmo while
+  still in a recovering discovery state. On busy fabrics with many
+  vports, this can happen repeatedly; each occurrence leaks one ndlp
+  reference.
 
-**Step 7.1 — Criticality**
-Record: `drivers/scsi/storvsc_drv.c` — Hyper-V synthetic SCSI/FC driver.
-IMPORTANT (used by every Linux VM running on Hyper-V/Azure that uses vFC
-for storage — enterprise and cloud).
+**Step 8.3: Determine the Failure Mode Severity**
+- Record: Failure mode - ndlp kref leak; ndlp objects cannot be freed
+  during `lpfc_vport` cleanup; potential memory accumulation over time;
+  can cause WARN messages or stuck/hang behavior on vport
+  teardown/module unload. Severity: MEDIUM-HIGH - not an immediate crash
+  or security issue but a persistent resource leak in a commonly-
+  triggered code path in enterprise storage workloads.
 
-**Step 7.2 — Activity**
-Record: Actively maintained; recent commits (MODE_SENSE_10,
-MAINTENANCE_IN, queue/channel work). Not a stale subsystem.
+**Step 8.4: Calculate Risk-Benefit Ratio**
+- Record: Benefit - fixes a real ref leak introduced by a previous "fix"
+  commit, benefit is MEDIUM-HIGH for lpfc users. Risk - 1-line removal,
+  obvious correctness, no possibility of new UAF since we're only
+  reducing (not adding) puts; risk VERY LOW. Ratio: clearly favorable
+  for backport.
 
----
+## PHASE 9: FINAL SYNTHESIS
 
-## Phase 8: Impact and Risk
+**Step 9.1: Compile Evidence**
+- FOR: Real kref leak bug in common code path; trivially small/obvious
+  fix; author is subsystem maintainer who introduced the original bug;
+  bug confirmed to exist in 6.12.y, 6.17.y, 6.18.y, 6.19.y via direct
+  inspection; code analysis is unambiguous.
+- AGAINST: No `Fixes:`, `Reported-by:`, `Cc: stable`; no user report of
+  symptoms; a similar comment language ("put the initial ref count
+  back") now stale but not updated.
+- UNRESOLVED: Whether this is already in linux-next / scsi-queue for
+  v6.21 (not verified directly, but the cover letter says it targets
+  6.20/scsi-queue so likely on its way to mainline imminently).
 
-**Step 8.1 — Affected population**
-Record: Linux VMs on Hyper-V/Azure using vFC passthrough with SCSI-3
-persistent reservations (HA clusters, shared-storage coordination,
-`sg_persist` consumers). Significant enterprise user base; not a niche
-driver.
+**Step 9.2: Apply Stable Rules Checklist**
+1. Obviously correct and tested? YES - trivial to verify by reading the
+   two functions together; author has build/test history.
+2. Fixes real bug affecting users? YES - refcount leak on every fabric-
+   ndlp recovery event.
+3. Important issue? MEDIUM-HIGH (resource leak in enterprise storage
+   driver).
+4. Small and contained? YES - one line removal.
+5. No new features or APIs? YES - pure bug fix.
+6. Applies to stable? YES for 6.12.y (with trivial manual adjustment)
+   and 6.17.y+; must NOT go to 6.6.y and earlier.
 
-**Step 8.2 — Trigger**
-Record: Any userspace call issuing PERSISTENT_RESERVE_IN (service action
-READ_KEYS, READ_RESERVATION, REPORT_CAPABILITIES, READ_FULL_STATUS) to a
-vFC LUN. Reproduces via `sg_persist -k /dev/sdX`. Unprivileged trigger:
-limited by device permissions, but not a kernel-level security issue.
+**Step 9.3: Check for Exception Categories**
+- N/A - normal bug fix, not a quirk/device ID/DT update/build fix.
 
-**Step 8.3 — Failure mode severity**
-Record: User-visible I/O failure (sg_persist returns transport error,
-multipath/cluster software fails to query/modify reservations). Severity
-MEDIUM — no crash, no corruption, but broken functionality that blocks
-clustering on Hyper-V vFC.
+**Step 9.4: Decision**
+- This is a genuine reference-counting bug fix for a regression
+  introduced by `d1a2ef63fc8b3` in v6.12. The fix is minimal, obviously
+  correct, and affects a common code path in the lpfc FC driver used by
+  enterprise storage. Risk is essentially zero; benefit prevents a real
+  ref leak. Should be backported to 6.12+ stable trees (NOT to 6.6.y and
+  earlier where the bug does not exist).
 
-**Step 8.4 — Risk/benefit**
-Record:
-- Benefit: restores working SCSI-3 PR on Hyper-V vFC for all stable
-  users on 6.6+.
-- Risk: very low — change is gated on opcode == PERSISTENT_RESERVE_IN
-  AND device is vFC. Non-vFC storvsc devices and non-PR opcodes are
-  unaffected. The refactor is semantically equivalent for existing
-  cases.
-Ratio: favorable.
+## Verification
 
----
+- [Phase 1] Parsed tags on the supplied commit message: Signed-off-by
+  Justin Tee / Martin K. Petersen, Link to patch.msgid.link. No
+  Fixes/Reported-by/Cc-stable/Reviewed-by.
+- [Phase 2] Read the diff: single 1-line removal of
+  `lpfc_nlp_get(ndlp);` in `lpfc_check_nlp_post_devloss` within
+  `drivers/scsi/lpfc/lpfc_hbadisc.c`.
+- [Phase 3] `git log -L:lpfc_check_nlp_post_devloss` confirmed the get
+  was introduced in `af984c87293b1` (v5.17) where it was correct (paired
+  with a put).
+- [Phase 3] `git show d1a2ef63fc8b3` - confirmed this commit added the
+  early `return fcf_inuse;` in the recovering branch, breaking the
+  get/put pairing.
+- [Phase 3] `git log --author="Justin Tee"` - confirmed author is active
+  lpfc maintainer.
+- [Phase 3] `git tag --contains d1a2ef63fc8b3` - buggy commit is in
+  v6.12 and beyond.
+- [Phase 4] `b4 am 20260212213008.149873-7-justintee8345@gmail.com` -
+  downloaded the series, confirmed it is patch 6/13 in "Update lpfc to
+  revision 14.4.0.14" against 6.20/scsi-queue. No per-patch review
+  discussion.
+- [Phase 5] `grep lpfc_check_nlp_post_devloss` - 5 callers:
+  `lpfc_mbx_cmpl_fc_reg_login`, `lpfc_nlp_reg_node`, 3 in `lpfc_els.c`
+  FLOGI paths - all routine discovery paths.
+- [Phase 6] `git show stable/linux-6.12.y:...lpfc_hbadisc.c` - confirmed
+  bug exists (function has lpfc_nlp_get, recovering path has `return
+  fcf_inuse;`).
+- [Phase 6] `git show
+  stable/linux-6.17.y/6.18.y/6.19.y:...lpfc_hbadisc.c` - same bug
+  pattern confirmed in each.
+- [Phase 6] `git show stable/linux-6.6.y:...lpfc_hbadisc.c` - confirmed
+  bug does NOT exist (recovering path has no early return; put still
+  fires).
+- [Phase 8] Failure mode: ndlp kref leak on every fabric-ndlp dev_loss
+  recovery event, MEDIUM-HIGH severity.
+- UNVERIFIED: Whether any user has reported hangs/OOM from this specific
+  leak - no such report exists, but the mechanism is clear from code
+  analysis.
+- UNVERIFIED: Exact mainline SHA of the commit (not yet in my local
+  `master`), but the patch content matches what is on lore/in the
+  14.4.0.14 series.
 
-## Phase 9: Final Synthesis
-
-**Step 9.1 — Evidence**
-FOR: real user-visible bug (sg_persist failure), subsystem-maintainer +
-independent reviewer sign-off, small single-file diff, follows
-established pattern (MAINTENANCE_IN fix was AUTOSEL'd to 6.6.y), bug
-present in all 6.6+ stable trees, no dependencies, low regression
-surface.
-AGAINST: includes a refactor-into-helper along with the fix (minor
-cosmetic); missing explicit `Cc: stable` tag (but that's expected for
-manually-reviewed candidates and also absent from the already-backported
-MAINTENANCE_IN fix).
-
-**Step 9.2 — Stable rules checklist**
-1. Obviously correct & tested? YES (reviewed by MS + RH; switch is
-   semantically equivalent for existing opcodes).
-2. Fixes a real bug affecting users? YES (sg_persist on vFC).
-3. Important issue? YES — breaks clustering/PR on a widely-used
-   virtualization platform (MEDIUM-HIGH severity).
-4. Small & contained? YES (+21/-11, one file).
-5. No new features/APIs? YES (workaround only).
-6. Applies to stable? YES (clean on 6.13+; likely clean on 6.6.y–6.12.y
-   which already have the sibling MAINTENANCE_IN fix).
-
-**Step 9.3 — Exception category**
-Record: Falls under "hardware workaround / quirk" exception — the host-
-side mishandling is effectively a device bug the driver compensates for.
-
-**Step 9.4 — Decision**
-YES.
-
----
-
-### Verification
-- [Phase 1] Parsed tags via Read of commit message: found 2 Reviewed-by,
-  Link:, Signed-off-by chain. No Fixes/Cc:stable.
-- [Phase 2] `git show 9cf351b289fb2`: confirmed +21/-11, single file,
-  refactor + PERSISTENT_RESERVE_IN addition gated on
-  `hv_dev_is_fc(device)`.
-- [Phase 3] `git log --oneline --grep="MAINTENANCE_IN" --
-  drivers/scsi/storvsc_drv.c`: found sibling fix `b1aee7f034615`.
-- [Phase 3] `git show 812fe6420a6e`: confirmed this is the commit that
-  introduced the stricter handling. `git describe --contains
-  812fe6420a6e` → `v6.6-rc1~11^2~9^2` (v6.6).
-- [Phase 3] `git describe --contains b1aee7f034615` → v6.13-rc2~7^2~1
-  (MAINTENANCE_IN fix landed in v6.13).
-- [Phase 3] `git show 9eacec5d18f98`: confirmed MODE_SENSE_10 handling
-  fix explicitly had `Cc: stable@kernel.org` and `Fixes:` tag (similar
-  hardware-mishandling pattern).
-- [Phase 4] `b4 dig -c 9cf351b289fb2`: matched by patch-id, single
-  version v1, lore URL obtained.
-- [Phase 4] `b4 dig -c 9cf351b289fb2 -a`: only v1 exists (no v2/v3;
-  applied as submitted).
-- [Phase 4] `b4 dig -c 9cf351b289fb2 -w`: correct recipients (Microsoft
-  storvsc maintainers + linux-scsi + linux-hyperv + MKP).
-- [Phase 4] Saved thread to /tmp/thread.mbox and read it: found Long
-  Li's Reviewed-by, Laurence Oberman's Reviewed-by ("Looks good, rewrite
-  of how it was done before..."), and Martin K. Petersen's "Applied to
-  7.1/scsi-queue". No NAKs, no concerns.
-- [Phase 4] WebSearch confirmed `b1aee7f034615` was listed as "[PATCH
-  AUTOSEL 6.6 17/23]" on lkml, validating that the AUTOSEL process
-  already backported the sibling fix.
-- [Phase 5] Grep for `storvsc_on_io_completion`: confirmed it is called
-  from `storvsc_on_receive` on `VSTOR_OPERATION_COMPLETE_IO`, i.e.,
-  every SCSI completion path.
-- [Phase 5] Read `hv_dev_is_fc` (line 1928): trivial GUID match against
-  `HV_SYNTHFC_GUID` — zero side effects.
-- [Phase 6] v6.6 contains 812fe6420a6e (bug root cause is present in
-  6.6.y, 6.12.y, 6.15.y, 6.18.y).
-- [Phase 8] Failure mode: sg_persist returns DID_ERROR even when host
-  returned data; breaks SCSI-3 PR on vFC — MEDIUM severity, broad impact
-  on enterprise Hyper-V users.
-- UNVERIFIED: Could not fetch lore.kernel.org/stable directly (Anubis
-  bot protection), so I could not confirm whether this specific commit
-  is already under stable discussion. This does not change the YES
-  decision; it is based on technical merit.
-- UNVERIFIED: Did not run an actual `git am` against linux-stable
-  branches to confirm clean apply, but the code context (lines 1131–1180
-  in storvsc_drv.c) matches the upstream base `ae1abab97835` (index in
-  diff) and all referenced symbols (`INQUIRY`, `MODE_SENSE_10`,
-  `MAINTENANCE_IN`, `PERSISTENT_RESERVE_IN`, `hv_dev_is_fc`) exist in
-  6.13+ trees with the MAINTENANCE_IN fix already present.
-
-This is a small, well-reviewed hardware-workaround fix for a real user-
-visible regression (sg_persist/SCSI-3 PR broken on Hyper-V vFC since
-v6.6), following an established pattern whose sibling was already
-AUTOSEL'd to stable. Benefit clearly outweighs risk.
+The fix is small, surgical, and addresses a real regression that exists
+in multiple active stable trees (6.12+). Meets all stable kernel rules.
+The adaptation for 6.12.y requires a trivial manual edit (different
+surrounding context) but the change itself is a single-line removal.
 
 **YES**
 
- drivers/scsi/storvsc_drv.c | 32 +++++++++++++++++++++-----------
- 1 file changed, 21 insertions(+), 11 deletions(-)
+ drivers/scsi/lpfc/lpfc_hbadisc.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-index ae1abab97835b..6977ca8a06582 100644
---- a/drivers/scsi/storvsc_drv.c
-+++ b/drivers/scsi/storvsc_drv.c
-@@ -1131,6 +1131,26 @@ static void storvsc_command_completion(struct storvsc_cmd_request *cmd_request,
- 		kfree(payload);
- }
- 
-+/*
-+ * The current SCSI handling on the host side does not correctly handle:
-+ * INQUIRY with page code 0x80, MODE_SENSE / MODE_SENSE_10 with cmd[2] == 0x1c,
-+ * and (for FC) MAINTENANCE_IN / PERSISTENT_RESERVE_IN passthrough.
-+ */
-+static bool storvsc_host_mishandles_cmd(u8 opcode, struct hv_device *device)
-+{
-+	switch (opcode) {
-+	case INQUIRY:
-+	case MODE_SENSE:
-+	case MODE_SENSE_10:
-+		return true;
-+	case MAINTENANCE_IN:
-+	case PERSISTENT_RESERVE_IN:
-+		return hv_dev_is_fc(device);
-+	default:
-+		return false;
-+	}
-+}
-+
- static void storvsc_on_io_completion(struct storvsc_device *stor_device,
- 				  struct vstor_packet *vstor_packet,
- 				  struct storvsc_cmd_request *request)
-@@ -1141,22 +1161,12 @@ static void storvsc_on_io_completion(struct storvsc_device *stor_device,
- 	stor_pkt = &request->vstor_packet;
- 
- 	/*
--	 * The current SCSI handling on the host side does
--	 * not correctly handle:
--	 * INQUIRY command with page code parameter set to 0x80
--	 * MODE_SENSE and MODE_SENSE_10 command with cmd[2] == 0x1c
--	 * MAINTENANCE_IN is not supported by HyperV FC passthrough
--	 *
- 	 * Setup srb and scsi status so this won't be fatal.
- 	 * We do this so we can distinguish truly fatal failues
- 	 * (srb status == 0x4) and off-line the device in that case.
- 	 */
- 
--	if ((stor_pkt->vm_srb.cdb[0] == INQUIRY) ||
--	   (stor_pkt->vm_srb.cdb[0] == MODE_SENSE) ||
--	   (stor_pkt->vm_srb.cdb[0] == MODE_SENSE_10) ||
--	   (stor_pkt->vm_srb.cdb[0] == MAINTENANCE_IN &&
--	   hv_dev_is_fc(device))) {
-+	if (storvsc_host_mishandles_cmd(stor_pkt->vm_srb.cdb[0], device)) {
- 		vstor_packet->vm_srb.scsi_status = 0;
- 		vstor_packet->vm_srb.srb_status = SRB_STATUS_SUCCESS;
- 	}
+diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
+index 8aaf05d7bb0af..d42b911a0aee1 100644
+--- a/drivers/scsi/lpfc/lpfc_hbadisc.c
++++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
+@@ -425,7 +425,6 @@ lpfc_check_nlp_post_devloss(struct lpfc_vport *vport,
+ {
+ 	if (test_and_clear_bit(NLP_IN_RECOV_POST_DEV_LOSS, &ndlp->save_flags)) {
+ 		clear_bit(NLP_DROPPED, &ndlp->nlp_flag);
+-		lpfc_nlp_get(ndlp);
+ 		lpfc_printf_vlog(vport, KERN_INFO, LOG_DISCOVERY | LOG_NODE,
+ 				 "8438 Devloss timeout reversed on DID x%x "
+ 				 "refcnt %d ndlp %p flag x%lx "
 -- 
 2.53.0
 
