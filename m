@@ -1,44 +1,45 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8879B401484;
-	Tue, 28 Apr 2026 10:42:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 325584014AB;
+	Tue, 28 Apr 2026 10:42:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777372943; cv=none; b=ERY6Gjtyvt2DQ5H4zKfONyYp9SCdUmnsEFej/w57peKFbGEDuYdSYzCq2ru4bmCw4rMfwh8JvniD5uPe12K59CxdTvQdn4ytACP7in3kXM2vAEbFVi/2NlINvmFR5a6SJ49WY3g1P8vGJ3+GcbLr6YVY7nApcrbllzivvcCsTvo=
+	t=1777372945; cv=none; b=ihTv7cpbjq/BR5gAFo5OTxACdpyu5G4TSM627fhi55mZxfAzHDDs9Sso9QDPxCbrQsTiUSBJcvqZKGGmZlWa00PQr2mFUcY2PGcbj9uyB23VDcWUHt0XQTn5o9kcuCdPJgPBQtoc2eXb5pAbDCE7/iVfKDck3q0s/zccJgChG7o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777372943; c=relaxed/simple;
-	bh=gIV688uBFlsXlTT0uLql82n27evJwhecVjf4GCACkks=;
+	s=arc-20240116; t=1777372945; c=relaxed/simple;
+	bh=Shg8qwgvf8dpyvINFmXKwb4vpPxg4aSaIXQxsewIftA=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=bupkD06cvU4yrBP5dG25/i5PeJhgqL4aDbBGQPi+ypyW7TUOGSaQTU77WY4ks/wq23wHOkUu+j9sYA7Ecg4S8M2f2yYfItIu5w4g4gH+Vp9cbxOoPPQKxA2Iw17dI8pBJfrSnYwACOfBrjjyOmSwXlH8ecwTHDWqt+bz4xGpDHk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dVjXBWxH; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=nQKRMYcpOYbTkeH4oDBsGItiJM0ea/rjHAb0ANCDokaeeoA29SE1ebB4Tx+6QEyrVOYMpehclK5DYV5e6zmFH5GxikXy270a/5IxGR5SphFe81EPDkXUZBTt9N3Nhjx4nsy4jxLR24mqDutCtZxIlXbWazdd5V5+/jHU1B79XnM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=C3IkiiO0; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dVjXBWxH"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2FFA5C2BCB8;
-	Tue, 28 Apr 2026 10:42:22 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="C3IkiiO0"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7782DC2BCAF;
+	Tue, 28 Apr 2026 10:42:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1777372943;
-	bh=gIV688uBFlsXlTT0uLql82n27evJwhecVjf4GCACkks=;
+	s=k20201202; t=1777372944;
+	bh=Shg8qwgvf8dpyvINFmXKwb4vpPxg4aSaIXQxsewIftA=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=dVjXBWxHm+zHlJoH/blcc+TrCd2An7ZaAYi1h09JpnS7E0Yc8yCmi0/iywi/Uh+d9
-	 VkRhDi9Nfj0yJaKXpyYCW2LQbxDxof+gB8yhoABS7UpFh1IbRrC+4tn2zliy6IXu6A
-	 PR+ggk2oZhSIPjnFPwPF6xsh2TSrp1xWaRT6FWo2yfKbNeHfZTJNr/soaC6fny4PTm
-	 E4aYhfh7pBr/kLPGvBN0QLeyf/YX+ohQwu+HNvs9JhizeQipTXSORL2xGLFaXFbtqX
-	 v+n9z2Q1vxDxoKXq2eTTfeiXtUl79+D//nr8XH5l2HtFxgCY8xGNbriHgH0+u7ehqs
-	 Z1Uubzg5YDSKQ==
+	b=C3IkiiO0f8MGYzh+3T1a4eqeDrxzoW2PoYAxouF9C37poO2UI7YVX/Vp+1o4wlYHq
+	 uior7tQKzGQbuZq+e9+QlEECCcUR4qLBUAA7Rb5wEx/yefDqZXurZNfhWW5EciSBzx
+	 XtN9IPr4mWo1NvvBJVquj/H3fiSWTLBf7IZScwp/V//RGZz1c3Ui8taIJK5OoBGYd9
+	 EnbEyydpfSCoJcL+zFpTMeQ9DfdbbpnTEJkv4k4at9EeFz6BKZfVXrOLeCYkLTB1ZN
+	 P5eWsKJLvUtXiXaVh9tdrpg+ZrSeMCw0SPt4FDgMcfbfG+L2TdPH/DKVoRpZzs9m0j
+	 R7VV5noqQ12fw==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
-Cc: Adrian Hunter <adrian.hunter@intel.com>,
-	Bart Van Assche <bvanassche@acm.org>,
+Cc: Justin Tee <justin.tee@broadcom.com>,
 	"Martin K. Petersen" <martin.petersen@oracle.com>,
 	Sasha Levin <sashal@kernel.org>,
+	james.smart@broadcom.com,
+	dick.kennedy@broadcom.com,
 	jejb@linux.ibm.com,
 	linux-scsi@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH AUTOSEL 7.0-6.18] scsi: ufs: ufs-pci: Add support for Intel Nova Lake
-Date: Tue, 28 Apr 2026 06:40:46 -0400
-Message-ID: <20260428104133.2858589-35-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 7.0-6.1] scsi: lpfc: Fix incorrect txcmplq_cnt during cleanup in lpfc_sli_abort_ring()
+Date: Tue, 28 Apr 2026 06:40:47 -0400
+Message-ID: <20260428104133.2858589-36-sashal@kernel.org>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260428104133.2858589-1-sashal@kernel.org>
 References: <20260428104133.2858589-1-sashal@kernel.org>
@@ -54,298 +55,504 @@ X-stable-base: Linux 7.0.2
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-From: Adrian Hunter <adrian.hunter@intel.com>
+From: Justin Tee <justin.tee@broadcom.com>
 
-[ Upstream commit 096cd6b7adf21791827a045d464242d93a6fd54e ]
+[ Upstream commit 2da10bcaa58a389ca60f8e788180e0dca00739bc ]
 
-Add PCI ID to support Intel Nova Lake, same as Intel Meteor Lake (MTL).
+When a port is offline in lpfc_sli_abort_ring, the phba->txcmplq is
+cleared but the phba->txcmplq_cnt is not reset to zero.  This can
+sometimes result in a phba->txcmplq_cnt that never reaches zero, which
+hangs the cleanup process.
 
-Signed-off-by: Adrian Hunter <adrian.hunter@intel.com>
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
-Link: https://patch.msgid.link/20260309085815.55216-1-adrian.hunter@intel.com
+Update lpfc_sli_abort_ring so that txcmplq_cnt is reset to zero and also
+ensure that the LPFC_IO_ON_TXCMPLQ flag is properly cleared.
+
+Signed-off-by: Justin Tee <justin.tee@broadcom.com>
+Link: https://patch.msgid.link/20260212213008.149873-9-justintee8345@gmail.com
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
 
 LLM Generated explanations, may be completely bogus:
 
-Now I have enough information to complete the analysis.
+Now I have enough information to write a complete analysis.
 
-## Phase 1: Commit Message Forensics
+# Analysis: scsi: lpfc: Fix incorrect txcmplq_cnt during cleanup in
+lpfc_sli_abort_ring()
 
-**Step 1.1: Parse Subject Line**
-- Record: subsystem `scsi: ufs: ufs-pci:`, action verb `Add`, summary:
-  "Add support for Intel Nova Lake" — hardware enablement via PCI ID
+## PHASE 1: COMMIT MESSAGE FORENSICS
 
-**Step 1.2: Parse All Commit Message Tags**
-- Record:
-  - Signed-off-by: Adrian Hunter (Intel, author, UFS PCI driver
-    maintainer-level contributor)
-  - Reviewed-by: Bart Van Assche (prolific SCSI/UFS reviewer)
-  - Link: https://patch.msgid.link/20260309085815.55216-1-
-    adrian.hunter@intel.com
-  - Signed-off-by: Martin K. Petersen (SCSI subsystem maintainer)
-  - No `Fixes:` tag, no `Cc: stable` (absence is expected per
-    guidelines)
-  - No `Reported-by:`, no syzbot
+### Step 1.1: Parse Subject Line
+- Subsystem prefix: `scsi: lpfc:`
+- Action verb: "Fix" (explicit bug fix)
+- Record: SCSI/lpfc driver fix for incorrect `txcmplq_cnt` tracking
+  during cleanup in `lpfc_sli_abort_ring()` (actual function is
+  `lpfc_sli_abort_iocb_ring`)
 
-**Step 1.3: Analyze Commit Body**
-- Record: The body is one sentence: "Add PCI ID to support Intel Nova
-  Lake, same as Intel Meteor Lake (MTL)." Explicitly states the new
-  platform reuses the existing MTL variant ops. No bug described — this
-  is hardware enablement.
+### Step 1.2: Parse Commit Message Tags
+- **Signed-off-by:** Justin Tee (author, Broadcom lpfc maintainer)
+- **Link:** https://patch.msgid.link/20260212213008.149873-9-
+  justintee8345@gmail.com (lore mailing list archive)
+- **Signed-off-by:** Martin K. Petersen (SCSI maintainer)
+- No Fixes: tag (expected for manual review candidates)
+- No Cc: stable (expected for manual review candidates)
+- No Reported-by tags
+- Record: Standard upstream flow through SCSI maintainer; two SOB chain
+  indicating proper review path.
 
-**Step 1.4: Detect Hidden Bug Fixes**
-- Record: Not a hidden bug fix. This is a straightforward new-hardware-
-  enablement PCI ID addition — which is an explicit exception category
-  in the stable rules.
+### Step 1.3: Analyze Commit Body
+- Bug: When port is offline (`pci_channel_offline`), `phba->txcmplq`
+  list is cleared via `list_splice_init()` but `phba->txcmplq_cnt` is
+  NOT reset to zero
+- Symptom: "can sometimes result in a phba->txcmplq_cnt that never
+  reaches zero, which hangs the cleanup process"
+- Fix: Reset `txcmplq_cnt` to zero and clear `LPFC_IO_ON_TXCMPLQ` flag
+  on iocbs
+- Record: Bug causes cleanup hang during PCI channel offline (EEH error
+  recovery); the author clearly understood the root cause
 
-## Phase 2: Diff Analysis
+### Step 1.4: Hidden Bug Fix Detection
+- This is an EXPLICIT bug fix ("Fix incorrect"), not disguised
+- Record: Not a hidden fix; clearly labeled as bug fix
 
-**Step 2.1: Inventory**
-- Record: 1 file changed (`drivers/ufs/host/ufshcd-pci.c`), +1/-0 lines.
-  Scope: single-file, single-line surgical addition. Modified table:
-  `ufshcd_pci_tbl[]`.
+## PHASE 2: DIFF ANALYSIS
 
-**Step 2.2: Code Flow Change**
-- Record: Before: PCI device 0xD335 (INTEL) not matched → driver would
-  not bind. After: PCI device 0xD335 matches and uses
-  `ufs_intel_mtl_hba_vops`. Only affects the specific new device.
+### Step 2.1: Inventory Changes
+- 1 file: `drivers/scsi/lpfc/lpfc_sli.c`
+- Net: -18 lines (24 insertions, 42 deletions)
+- Only function modified: `lpfc_sli_abort_iocb_ring()`
+- Record: Single-file surgical fix with refactoring consolidation
 
-**Step 2.3: Bug Mechanism**
-- Record: Category (h) Hardware workarounds — device ID addition. No bug
-  mechanism; enables existing driver logic for a new SKU.
+### Step 2.2: Code Flow Change
+**BEFORE (offline path, both SLI_REV3 and SLI_REV4):**
+- Held appropriate lock, splice `txcmplq` → local `txcmplq_completions`
+- Did NOT reset `pring->txcmplq_cnt`
+- Did NOT clear `LPFC_IO_ON_TXCMPLQ` flag on each iocb
 
-**Step 2.4: Fix Quality**
-- Record: Trivially correct — simply matches the vendor/device pair to
-  an existing, tested vops struct (`ufs_intel_mtl_hba_vops`). Zero
-  regression risk: entries are only evaluated for matching vendor/device
-  PCI IDs, so no non-Nova-Lake system can be affected.
+**AFTER:**
+- Single `plock` pointer (ring_lock or hbalock based on sli_rev)
+- Consolidated SLI3/SLI4 duplicated blocks into one
+- For offline: clears `LPFC_IO_ON_TXCMPLQ` flag on each iocb, splices to
+  `tx_completions`, **resets `pring->txcmplq_cnt = 0`**
 
-## Phase 3: Git History Investigation
+### Step 2.3: Bug Mechanism
+Classification: **Logic/correctness fix + refactoring**
+- Missing counter reset: `pring->txcmplq_cnt = 0` when list is cleared
+- Missing flag clearing: `iocb->cmd_flag &= ~LPFC_IO_ON_TXCMPLQ`
+- Record: Offline splice path never decremented counter or cleared per-
+  iocb flag, causing stuck counter
 
-**Step 3.1: Blame**
-- Record: The MTL vops struct `ufs_intel_mtl_hba_vops` was introduced by
-  commit `4049f7acef3eb` ("scsi: ufs: ufs-pci: Add support for Intel
-  MTL", Apr 2022, v5.18), which carried `Cc: stable@vger.kernel.org #
-  v5.15+`. The MTL infrastructure is therefore in every active stable
-  tree (5.15.y and later).
+### Step 2.4: Fix Quality
+- Follows identical pattern established in `lpfc_hba_down_post_s4()`
+  lines 4705/4709 and `lpfc_hba_down_post_s3()` lines 4731/4735 which
+  already do both (flag clear + count reset)
+- Refactoring is mechanical - no change in lock semantics (still uses
+  `pring->ring_lock` for SLI4, `phba->hbalock` for SLI3)
+- Same `lpfc_sli_cancel_iocbs()` called on the iocbs as before
+- Record: Fix quality high; pattern matches existing correct code
 
-**Step 3.2: Follow Fixes: Tag**
-- Record: No Fixes: tag — N/A. This is an enablement, not a fix.
+## PHASE 3: GIT HISTORY INVESTIGATION
 
-**Step 3.3: File History / Prerequisites**
-- Record: The surrounding PCI table has accumulated several similar
-  single-line additions: Arrow Lake (`51031cc3f903e`, v6.5), Lunar Lake
-  (`0a07d3c7a1d20`, v6.4), Panther Lake (`bdee2f1dcd84d`, v6.11),
-  Wildcat Lake (`823f95575d854`, 2025). Each is identical in structure:
-  one PCI ID reusing MTL ops. This commit is self-contained and has no
-  prerequisites.
+### Step 3.1: Blame Analysis
+```
+a4691038b4071 (James Smart 2022-03-16) introduced the offline branch
+```
+- Buggy offline handling added in v5.18 (commit `a4691038b4071f` -
+  "scsi: lpfc: Fix unload hang after back to back PCI EEH faults")
+- Record: Bug present since v5.18; code in many stable trees (v5.18,
+  v5.19, v6.0, v6.1.y, v6.6.y, v6.12.y)
 
-**Step 3.4: Author's Other Commits**
-- Record: Adrian Hunter (Intel) is the long-time author/maintainer of
-  the Intel UFS PCI support code. All past Intel PCI ID additions for
-  this driver are his. Strong authority signal.
+### Step 3.2: Follow Fixes: Tag
+- No Fixes: tag present
+- Root cause commit identified via blame: `a4691038b4071f` is in v5.18
+- Record: Original commit a4691038 went into v5.18 and IS present in
+  stable trees
 
-**Step 3.5: Dependencies**
-- Record: The only dependency is `ufs_intel_mtl_hba_vops`, which has
-  existed in stable since v5.15+.
+### Step 3.3: File History
+- `lpfc_sli.c` actively developed; recent commits mostly lpfc version
+  updates
+- No intermediate fix attempts found for `txcmplq_cnt` issue
+- Record: Standalone fix, not part of larger series
 
-## Phase 4: Mailing List Research
+### Step 3.4: Author Context
+- Justin Tee is the primary lpfc maintainer at Broadcom with many
+  commits to this driver
+- Record: Author is subsystem maintainer - strong credibility signal
 
-**Step 4.1: Find Original Discussion**
-- Record: `b4 dig -c 096cd6b7adf21` matched by patch-id and returned htt
-  ps://lore.kernel.org/all/20260309085815.55216-1-
-  adrian.hunter@intel.com/ (only a single v1, no iterations).
+### Step 3.5: Dependencies
+- Self-contained change to one function
+- Uses existing helpers (`list_splice_init`, `lpfc_sli_cancel_iocbs`,
+  `lpfc_sli_issue_abort_iotag`) that exist in all stable trees
+- Record: No dependencies; applies standalone
 
-**Step 4.2: Reviewers**
-- Record: Bart Van Assche reviewed (Reviewed-by), Martin K. Petersen
-  applied (SCSI maintainer). Addressed to linux-scsi@vger.kernel.org.
-  Appropriate maintainer chain.
+## PHASE 4: MAILING LIST RESEARCH
 
-**Step 4.3: Bug Report**
-- Record: No Reported-by/bug report — N/A (enablement).
+### Step 4.1: Find Original Discussion
+- `b4 dig` found: https://lore.kernel.org/all/20260212213008.149873-9-
+  justintee8345@gmail.com/
+- Subject: [PATCH 08/13] lpfc: Fix incorrect txcmplq_cnt during cleanup
+  in lpfc_sli_abort_ring
+- Part of series: "Update lpfc to revision 14.4.0.14"
+- Record: Only v1 submitted; no review feedback or revisions
 
-**Step 4.4: Related Patches**
-- Record: `b4 dig -a` confirmed only v1; no multi-patch series.
-  Standalone.
+### Step 4.2: Reviewers
+- `b4 dig -w` shows: linux-scsi@vger.kernel.org, jsmart833426@gmail.com
+  (James Smart - original lpfc author), justin.tee@broadcom.com
+- Applied by Martin K. Petersen (SCSI maintainer)
+- Record: Proper review through SCSI subsystem
 
-**Step 4.5: Stable-Specific Discussion**
-- Record: No explicit Cc: stable request in thread, but thread is clean
-  and contains an Reviewed-by from Bart and a clean apply message from
-  Martin. No objections.
+### Step 4.3: Bug Report
+- No Reported-by or bug reports linked; found via internal
+  testing/analysis
+- Record: No external bug report
 
-## Phase 5: Code Semantic Analysis
+### Step 4.4: Related Patches
+- Series "Update lpfc to revision 14.4.0.14" contains mix of fixes and
+  improvements
+- This specific patch (08/13) is an independent bug fix
+- Record: Standalone bug fix within larger maintenance series
 
-**Step 5.1: Functions Modified**
-- Record: No functions modified — only the PCI device ID table
-  `ufshcd_pci_tbl[]`.
+### Step 4.5: Stable Mailing List
+- No stable-specific discussion found
+- Not explicitly Cc'd to stable
+- Record: Standard flow, no stable discussion
 
-**Step 5.2–5.4: Callers / Callees / Call Chain**
-- Record: The table is consumed by the PCI core (`pci_match_id`) for
-  driver binding. Reachability: only when a Nova Lake host with PCI ID
-  8086:D335 is present. With no such device, the added row is dead data.
+## PHASE 5: CODE SEMANTIC ANALYSIS
 
-**Step 5.5: Similar Patterns**
-- Record: Five identical prior commits add single MTL-compatible IDs
-  (MTL itself, ARL, LNL, PTL, WCL). Consistent, well-established
-  pattern.
+### Step 5.1: Key Functions
+- Modified: `lpfc_sli_abort_iocb_ring()`
+- Record: Single function modified
 
-## Phase 6: Cross-Referencing / Stable Tree Analysis
+### Step 5.2: Callers
+- `lpfc_sli_abort_iocb_ring` called from:
+  - `lpfc_sli_abort_fcp_rings` (line 4643) — called from EEH/PCI error
+    recovery: `lpfc_sli_prep_dev_for_recover` (line 14285),
+    `lpfc_sli4_prep_dev_for_recover` (line 15105),
+    `lpfc_handle_eratt_s3` at lpfc_init.c:1715 and 1830
+  - `lpfc_sli_hba_iocb_abort` (line 12605) — called from controller
+    fatal error handlers
+  - `lpfc_hba_down_post_s3` (lpfc_init.c:1028 and 1046) — called during
+    HBA shutdown
+- Record: Called from critical error recovery paths and shutdown paths
 
-**Step 6.1: Buggy Code in Stable?**
-- Record: The underlying driver + `ufs_intel_mtl_hba_vops` exist in all
-  active stable trees (5.15.y and later, since v5.18 with Cc: stable #
-  v5.15+).
+### Step 5.3: Callees
+- `lpfc_fabric_abort_hba` - aborts fabric commands
+- `list_splice_init` - moves list elements
+- `lpfc_sli_issue_abort_iotag` - issues ABTS
+- `lpfc_sli_cancel_iocbs` - cancels iocbs on list (calls cmd_cmpl or
+  releases)
+- `lpfc_issue_hb_tmo` - heartbeat timer
+- Record: Standard SLI cleanup primitives
 
-**Step 6.2: Backport Complications**
-- Record: Trivial clean apply expected — single-line addition to a table
-  that exists in all active stable trees. Minor possibility of context
-  fuzz if the table has slightly fewer entries in older branches (e.g.,
-  pre-Wildcat Lake), but still trivial.
+### Step 5.4: Call Chain & Reachability
+- Triggered by PCI EEH (Enhanced Error Handling) errors → common on IBM
+  POWER systems, enterprise PCIe AER environments
+- Also reachable via module unload, HBA controller reset, firmware
+  errors
+- `pci_channel_offline=true` triggers the buggy branch (used in PCI
+  error recovery callbacks)
+- Record: Reachable from real hardware error recovery paths on
+  enterprise systems
 
-**Step 6.3: Related Fixes Already in Stable?**
-- Record: Panther Lake and Wildcat Lake PCI ID additions already made it
-  to autosel stable branches (per `git branch --contains`), confirming
-  the stable trees routinely accept this class of single-line Intel UFS
-  PCI ID enablement.
+### Step 5.5: Similar Patterns
+- `lpfc_hba_down_post_s4()` at line 4700-4709: correctly does flag clear
+  + `txcmplq_cnt = 0`
+- `lpfc_hba_down_post_s3()` at line 4726-4735: correctly does flag clear
+  + `txcmplq_cnt = 0`
+- `__lpfc_nvme_ls_abort_outstanding_reqs`-style code in
+  lpfc_nvme.c:2873-2878: clears flag and decrements `txcmplq_cnt` per-
+  iocb
+- Record: Correct pattern exists elsewhere; this fix brings
+  `lpfc_sli_abort_iocb_ring` into consistency with established codebase
+  patterns
 
-## Phase 7: Subsystem Context
+## PHASE 6: STABLE TREE ANALYSIS
 
-**Step 7.1: Subsystem Criticality**
-- Record: `drivers/ufs/host/` — device driver for UFS (Universal Flash
-  Storage). Criticality: IMPORTANT — UFS is the primary storage on
-  modern Intel mobile/client platforms, so without this ID the system's
-  main storage doesn't work at all on Nova Lake.
+### Step 6.1: Buggy Code in Stable Trees
+- Verified v6.6 has buggy code (same structure, missing txcmplq_cnt
+  reset and flag clear)
+- Verified v6.12 has buggy code
+- Verified v6.1 has buggy code
+- v5.15 did NOT yet have offline branch (introduced v5.18)
+- Record: Bug present in v6.1.y, v6.6.y, v6.12.y, v6.18.y, v6.19.y and
+  other active stable trees derived from v5.18+
 
-**Step 7.2: Activity**
-- Record: Actively maintained; multiple commits per release. Mature,
-  stable interfaces.
+### Step 6.2: Backport Complications
+- Function signature and structure are nearly identical in v6.1 and v6.6
+- The minimal bug fix (adding `txcmplq_cnt = 0` and flag clearing loop)
+  would apply cleanly
+- The full refactor (consolidating plock) may require small adjustments
+  in older trees but is still straightforward
+- Record: Clean apply expected; minor adjustments possible for older
+  trees
 
-## Phase 8: Impact and Risk Assessment
+### Step 6.3: Related Fixes in Stable
+- No prior fix for this specific issue found in stable
+- Record: First fix for this bug
 
-**Step 8.1: Affected Users**
-- Record: Users of Intel Nova Lake systems running a stable kernel.
-  Without this patch, the UFS controller simply won't bind → the system
-  cannot use its UFS storage.
+## PHASE 7: SUBSYSTEM CONTEXT
 
-**Step 8.2: Trigger Conditions**
-- Record: Universally triggered on Nova Lake hardware at boot/probe. No
-  special conditions. For all other hardware the code is inert.
+### Step 7.1: Subsystem Criticality
+- `drivers/scsi/lpfc` - Emulex LightPulse Fibre Channel HBA driver
+- Criticality: IMPORTANT - used widely in enterprise storage (SAN)
+  deployments
+- Common on enterprise servers; fibre channel storage is critical data
+  path
+- Record: IMPORTANT criticality for enterprise SCSI/SAN users
 
-**Step 8.3: Failure Mode Severity**
-- Record: Without the patch: UFS storage inoperative on Nova Lake. With
-  the patch: storage works. Severity for affected platform: HIGH (no
-  storage = unusable system); for all other systems: zero impact.
+### Step 7.2: Activity Level
+- Actively developed by Broadcom team, regular updates
+- Record: Active, well-maintained driver with regular fixes
 
-**Step 8.4: Benefit / Risk**
-- Record: BENEFIT: High for target hardware users, zero-cost for others.
-  RISK: Essentially zero — only a PCI ID entry with a pointer to an
-  existing, heavily-tested vops struct already in stable. Ratio strongly
-  favors backport.
+## PHASE 8: IMPACT AND RISK ASSESSMENT
 
-## Phase 9: Final Synthesis
+### Step 8.1: Affected Population
+- Users of Emulex/Broadcom LightPulse FC HBAs running in
+  enterprise/datacenter environments
+- Especially affected: systems using PCI EEH error recovery (IBM POWER,
+  modern x86 with AER)
+- Record: Enterprise SCSI/FC users; driver-specific
 
-**Step 9.1: Evidence**
-- FOR: One-line PCI ID addition (exception category #1 in stable rules);
-  reuses existing in-tree and in-stable `ufs_intel_mtl_hba_vops`;
-  reviewed by Bart Van Assche; applied by Martin K. Petersen; obvious
-  correctness; zero regression risk for non-matching hardware; matches
-  the pattern of prior backported Intel UFS PCI ID additions (Arrow
-  Lake, Lunar Lake, Panther Lake, Wildcat Lake).
-- AGAINST: None substantive. No explicit Cc: stable (but that's expected
-  — would not be in review otherwise).
+### Step 8.2: Trigger Conditions
+- Primary: PCI channel goes offline (EEH/AER error recovery)
+- Secondary: HBA controller hardware error during operation
+- Cannot be triggered by unprivileged users (kernel-internal error path)
+- Record: Error recovery path; infrequent but occurs on real enterprise
+  hardware faults
 
-**Step 9.2: Stable Rules Checklist**
-1. Obviously correct and tested? YES — reviewed and applied by the
-   maintainer; trivial addition.
-2. Fixes a real problem for users? YES — UFS storage non-functional on
-   Nova Lake without it.
-3. Important? YES — primary storage on target platform.
-4. Small & contained? YES — 1 line.
-5. No new features/APIs? Correct — no user-visible API or new behavior;
-   enables existing code path for a new device.
-6. Applies to stable? YES — clean apply expected.
+### Step 8.3: Failure Mode Severity
+- When triggered, `pring->txcmplq_cnt` remains positive indefinitely
+- `lpfc_nvme_lport_unreg_wait` (lpfc_nvme.c:2252, confirmed) waits for
+  this counter to reach 0
+- Loop indefinitely prints "wait timed out. Pending %d... Renewing"
+  every 10 seconds
+- Effectively **hangs cleanup** (module unload, lport unregistration,
+  recovery completion)
+- Severity: **HIGH** — system task hang during error recovery, affects
+  ability to recover from hardware faults
+- Record: HIGH severity — cleanup hang during EEH recovery
 
-**Step 9.3: Exception Category**
-- Record: Falls squarely under Exception Category #1 "NEW DEVICE IDs" —
-  adding a PCI ID to an existing driver where the driver and the reused
-  vops are already in stable.
+### Step 8.4: Risk-Benefit
+- **Benefit**: Fixes real hang in error recovery path on enterprise
+  systems; aligns with established correct pattern
+- **Risk**: Refactoring increases scope beyond minimum (24+/42- lines)
+  but is clean and functionally equivalent apart from fix; lock usage
+  preserved; no behavior change outside the bug fix
+- Ratio: Favorable — meaningful fix, low regression risk
 
-**Step 9.4: Decision**
-- YES. This is a textbook hardware enablement PCI ID addition that meets
-  the explicit stable rule exception.
+## PHASE 9: FINAL SYNTHESIS
 
----
+### Step 9.1: Evidence Summary
+
+**FOR Backporting:**
+- Explicit bug fix with clear commit message explaining the hang
+- Fix follows established correct pattern in sibling functions
+  (`lpfc_hba_down_post_s3/s4`)
+- Author is subsystem maintainer (Justin Tee at Broadcom)
+- Applied through proper SCSI maintainer (Martin K. Petersen)
+- Bug affects error recovery path → when triggered, causes system hang
+- Reachable via common PCI EEH error recovery
+- Contained to single file, single function
+- Bug present in all active stable trees (v5.18+)
+- No new APIs, no userspace-visible changes
+
+**AGAINST Backporting:**
+- Change is 66 lines in diff (larger than pure minimal fix would be)
+- Refactoring consolidates SLI3/SLI4 paths beyond what's strictly needed
+  for the fix
+- No explicit stable nomination or Cc: stable
+- No Fixes: tag (common for this reviewer workflow, not decisive)
+
+### Step 9.2: Stable Rules Checklist
+1. **Obviously correct**: YES — follows existing pattern in same file
+2. **Fixes real bug**: YES — cleanup hang described
+3. **Important issue**: YES — system hang during error recovery (HIGH
+   severity)
+4. **Small and contained**: MOSTLY — 66 lines, single function, but more
+   than strictly minimal
+5. **No new features/APIs**: YES — pure fix + refactor
+6. **Applies to stable**: YES — expected to apply cleanly to v6.1.y,
+   v6.6.y, v6.12.y, v6.18.y
+
+### Step 9.3: Exception Categories
+- Not a device ID addition
+- Not a pure quirk (though it's a driver fix)
+- Normal bug fix category
+
+### Step 9.4: Decision
+Benefits clearly outweigh risks. The bug is a legitimate system hang on
+a real error recovery path, the fix is well-understood and pattern-
+consistent with existing correct code. The refactoring is clean and
+preserves lock semantics. Enterprise storage users affected by PCI error
+recovery scenarios (IBM POWER, AER-enabled x86) will benefit.
 
 ## Verification
 
-- [Phase 1] Parsed tags from commit message: Signed-off-by (Adrian
-  Hunter, Martin K. Petersen), Reviewed-by (Bart Van Assche), Link to
-  patch.msgid.link. No Fixes:, no Cc: stable, no Reported-by.
-- [Phase 2] `git show 096cd6b7adf21` confirmed: 1 file, +1/-0 line,
-  single new entry `{ PCI_VDEVICE(INTEL, 0xD335),
-  (kernel_ulong_t)&ufs_intel_mtl_hba_vops }` in `ufshcd_pci_tbl[]`.
-- [Phase 3] `git log -- drivers/ufs/host/ufshcd-pci.c` showed history of
-  prior Intel PCI ID additions (MTL, ADL, ARL, LNL, PTL, WCL).
-- [Phase 3] `git show 4049f7acef3eb` confirmed the MTL support
-  (introducing `ufs_intel_mtl_hba_vops`) carried `Cc:
-  stable@vger.kernel.org # v5.15+`, so the vops exist in every active
-  stable tree.
-- [Phase 3] `git branch --contains 823f95575d854` and `git branch
-  --contains bdee2f1dcd84d` showed Wildcat Lake and Panther Lake PCI ID
-  patches already in `for-greg/*-200` autosel branches — precedent for
-  backporting this exact class of patch.
-- [Phase 3] Read `drivers/ufs/host/ufshcd-pci.c` lines 510–719:
-  confirmed `ufs_intel_mtl_hba_vops` is defined at line 525 and already
-  used by multiple MTL-family device IDs.
-- [Phase 4] `b4 dig -c 096cd6b7adf21`: matched by patch-id to https://lo
-  re.kernel.org/all/20260309085815.55216-1-adrian.hunter@intel.com/.
-- [Phase 4] `b4 dig -c 096cd6b7adf21 -a`: confirmed only v1, no
-  subsequent revisions.
-- [Phase 4] Mbox inspection: Martin K. Petersen applied ("Applied to
-  7.1/scsi-queue"), Bart Van Assche provided Reviewed-by. No NAKs, no
-  objections.
-- [Phase 5] Inspection of `ufshcd_pci_tbl[]` surroundings: no functions
-  modified, only table data; table is consumed by PCI core during driver
-  binding.
-- [Phase 6] Confirmed `ufs_intel_mtl_hba_vops` is present in stable
-  trees via the v5.15+ stable tag on commit 4049f7acef3eb.
-- [Phase 8] Failure mode analysis: without patch, Nova Lake UFS
-  controller does not bind → no storage on that platform; with patch, it
-  binds using the already-in-stable MTL vops. No risk to unrelated
-  systems because the PCI core only dispatches to this driver on
-  matching vendor:device.
-- UNVERIFIED: Did not fetch the lore.kernel.org thread via WebFetch
-  (Anubis challenge page returned); mitigated by reading the thread
-  contents directly from the b4-saved mbox
-  (`/tmp/nova_lake_thread.mbox`), which contains the maintainer apply
-  message and Bart's Reviewed-by.
+- **[Phase 1]** Parsed commit message tags: Signed-off-by chain (Justin
+  Tee → Martin K. Petersen), Link: to patch.msgid.link/lore, no Fixes:
+  or Cc: stable (expected)
+- **[Phase 1]** Confirmed author is subsystem maintainer via `git log
+  --author="Justin Tee"` showing many lpfc commits
+- **[Phase 2]** Diff analysis: `git show 2da10bcaa58a3` confirmed 66
+  lines changed in lpfc_sli_abort_iocb_ring, single function
+- **[Phase 2]** Read current buggy code at
+  `drivers/scsi/lpfc/lpfc_sli.c:4571-4631` — confirmed
+  `pring->txcmplq_cnt` never reset in offline path
+- **[Phase 3]** `git blame -L 4577,4630 drivers/scsi/lpfc/lpfc_sli.c` —
+  buggy offline code introduced by `a4691038b4071f` (James Smart,
+  2022-03-16)
+- **[Phase 3]** `git describe --contains a4691038b4071f` →
+  v5.18-rc2~14^2~11^2~20 (buggy code in v5.18+)
+- **[Phase 3]** `git show --stat a4691038b4071f` confirmed original
+  commit was "Fix unload hang after back to back PCI EEH faults"
+- **[Phase 4]** `b4 dig -c 2da10bcaa58a3` found original submission
+  lore.kernel.org/all/20260212213008.149873-9-justintee8345@gmail.com
+- **[Phase 4]** `b4 dig -c 2da10bcaa58a3 -a` showed only v1 version, no
+  revisions
+- **[Phase 4]** `b4 dig -c 2da10bcaa58a3 -w` confirmed linux-
+  scsi@vger.kernel.org and jsmart833426@gmail.com (James Smart) included
+- **[Phase 4]** Read mbox thread /tmp/lpfc_thread.mbox — no reviewer
+  replies on PATCH 08/13; no stable-related discussion (`grep -E
+  "stable|backport" /tmp/lpfc_thread.mbox` returned nothing)
+- **[Phase 5]** `grep txcmplq_cnt` confirmed counter used in
+  lpfc_nvme.c:2252 for wait loop in lpfc_nvme_lport_unreg_wait; also
+  used for watermarks (21704) and busy stats (21634)
+- **[Phase 5]** Read `lpfc_nvme_lport_unreg_wait` at
+  lpfc_nvme.c:2219-2280 — confirmed it loops forever printing "Renewing"
+  if pending (txcmplq_cnt) never hits zero
+- **[Phase 5]** Read lines 4690-4744 of lpfc_sli.c — confirmed identical
+  pattern (flag clear + txcmplq_cnt=0) already exists in
+  `lpfc_hba_down_post_s4` and `lpfc_hba_down_post_s3`
+- **[Phase 5]** Read lpfc_nvme.c:2870-2880 confirmed similar pattern
+  (flag clear + counter decrement) for NVMe LS abort
+- **[Phase 5]** Confirmed callers via `grep lpfc_sli_abort_iocb_ring`
+  and `grep lpfc_sli_abort_fcp_rings|lpfc_sli_hba_iocb_abort` — called
+  from EEH recovery (`lpfc_sli_prep_dev_for_recover`,
+  `lpfc_sli4_prep_dev_for_recover`), error handlers
+  (`lpfc_handle_eratt_s3`), HBA abort
+- **[Phase 5]** Verified `pci_channel_offline(phba->pcidev)` used in
+  line 4582 triggers the buggy branch; it's true during PCI EEH error
+  recovery
+- **[Phase 6]** `git show v6.6:drivers/scsi/lpfc/lpfc_sli.c` confirmed
+  buggy code present in v6.6
+- **[Phase 6]** `git show v6.12:drivers/scsi/lpfc/lpfc_sli.c` confirmed
+  buggy code present in v6.12
+- **[Phase 6]** `git show v6.1:drivers/scsi/lpfc/lpfc_sli.c` confirmed
+  buggy code present in v6.1
+- **[Phase 6]** `git show v5.15:drivers/scsi/lpfc/lpfc_sli.c` confirmed
+  offline branch NOT in v5.15 (bug introduced later in v5.18)
+- **[Phase 7]** Subsystem identified as `drivers/scsi/lpfc` — enterprise
+  FC HBA driver
+- **[Phase 8]** Failure mode confirmed: cleanup path
+  (`lpfc_nvme_lport_unreg_wait`) hangs indefinitely when `txcmplq_cnt`
+  doesn't reach 0
+- **UNVERIFIED**: Could not build the stable trees or execute runtime
+  tests; relied on code structure analysis
+- **UNVERIFIED**: Did not check every stable tree for the exact line-
+  level conflict state (e.g., v5.18.y EOL); only checked v6.1, v6.6,
+  v6.12 tags
 
-The commit is a minimal, low-risk, standards-compliant PCI device ID
-addition that enables UFS storage on a new Intel platform and reuses
-infrastructure already in all active stable trees. It fits the explicit
-"Adding PCI/USB/ACPI IDs to existing drivers" exception listed in the
-stable kernel rules, and matches the precedent of prior autosel-ed Intel
-UFS PCI ID additions (Panther Lake, Wildcat Lake).
+The bug is a real hang in cleanup paths during PCI EEH error recovery on
+enterprise systems using Broadcom Emulex FC HBAs. The fix follows the
+established correct pattern already present in sibling functions in the
+same file. While the change includes refactoring that goes slightly
+beyond the minimal fix, the refactoring is clean and preserves lock
+semantics. The fix has clear technical merit and real user impact on
+enterprise storage environments.
 
 **YES**
 
- drivers/ufs/host/ufshcd-pci.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/scsi/lpfc/lpfc_sli.c | 66 +++++++++++++-----------------------
+ 1 file changed, 24 insertions(+), 42 deletions(-)
 
-diff --git a/drivers/ufs/host/ufshcd-pci.c b/drivers/ufs/host/ufshcd-pci.c
-index 5f65dfad1a71a..63f6b36b912fc 100644
---- a/drivers/ufs/host/ufshcd-pci.c
-+++ b/drivers/ufs/host/ufshcd-pci.c
-@@ -695,6 +695,7 @@ static const struct pci_device_id ufshcd_pci_tbl[] = {
- 	{ PCI_VDEVICE(INTEL, 0x7747), (kernel_ulong_t)&ufs_intel_mtl_hba_vops },
- 	{ PCI_VDEVICE(INTEL, 0xE447), (kernel_ulong_t)&ufs_intel_mtl_hba_vops },
- 	{ PCI_VDEVICE(INTEL, 0x4D47), (kernel_ulong_t)&ufs_intel_mtl_hba_vops },
-+	{ PCI_VDEVICE(INTEL, 0xD335), (kernel_ulong_t)&ufs_intel_mtl_hba_vops },
- 	{ }	/* terminate list */
- };
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index 303523f754b86..ad5b0e60acc5a 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -4572,59 +4572,41 @@ void
+ lpfc_sli_abort_iocb_ring(struct lpfc_hba *phba, struct lpfc_sli_ring *pring)
+ {
+ 	LIST_HEAD(tx_completions);
+-	LIST_HEAD(txcmplq_completions);
++	spinlock_t *plock;		/* for transmit queue access */
+ 	struct lpfc_iocbq *iocb, *next_iocb;
+ 	int offline;
  
+-	if (pring->ringno == LPFC_ELS_RING) {
++	if (phba->sli_rev >= LPFC_SLI_REV4)
++		plock = &pring->ring_lock;
++	else
++		plock = &phba->hbalock;
++
++	if (pring->ringno == LPFC_ELS_RING)
+ 		lpfc_fabric_abort_hba(phba);
+-	}
++
+ 	offline = pci_channel_offline(phba->pcidev);
+ 
+-	/* Error everything on txq and txcmplq
+-	 * First do the txq.
+-	 */
+-	if (phba->sli_rev >= LPFC_SLI_REV4) {
+-		spin_lock_irq(&pring->ring_lock);
+-		list_splice_init(&pring->txq, &tx_completions);
+-		pring->txq_cnt = 0;
++	/* Cancel everything on txq */
++	spin_lock_irq(plock);
++	list_splice_init(&pring->txq, &tx_completions);
++	pring->txq_cnt = 0;
+ 
+-		if (offline) {
+-			list_splice_init(&pring->txcmplq,
+-					 &txcmplq_completions);
+-		} else {
+-			/* Next issue ABTS for everything on the txcmplq */
+-			list_for_each_entry_safe(iocb, next_iocb,
+-						 &pring->txcmplq, list)
+-				lpfc_sli_issue_abort_iotag(phba, pring,
+-							   iocb, NULL);
+-		}
+-		spin_unlock_irq(&pring->ring_lock);
++	if (offline) {
++		/* Cancel everything on txcmplq */
++		list_for_each_entry_safe(iocb, next_iocb, &pring->txcmplq, list)
++			iocb->cmd_flag &= ~LPFC_IO_ON_TXCMPLQ;
++		list_splice_init(&pring->txcmplq, &tx_completions);
++		pring->txcmplq_cnt = 0;
+ 	} else {
+-		spin_lock_irq(&phba->hbalock);
+-		list_splice_init(&pring->txq, &tx_completions);
+-		pring->txq_cnt = 0;
+-
+-		if (offline) {
+-			list_splice_init(&pring->txcmplq, &txcmplq_completions);
+-		} else {
+-			/* Next issue ABTS for everything on the txcmplq */
+-			list_for_each_entry_safe(iocb, next_iocb,
+-						 &pring->txcmplq, list)
+-				lpfc_sli_issue_abort_iotag(phba, pring,
+-							   iocb, NULL);
+-		}
+-		spin_unlock_irq(&phba->hbalock);
++		/* Issue ABTS for everything on the txcmplq */
++		list_for_each_entry_safe(iocb, next_iocb, &pring->txcmplq, list)
++			lpfc_sli_issue_abort_iotag(phba, pring, iocb, NULL);
+ 	}
++	spin_unlock_irq(plock);
+ 
+-	if (offline) {
+-		/* Cancel all the IOCBs from the completions list */
+-		lpfc_sli_cancel_iocbs(phba, &txcmplq_completions,
+-				      IOSTAT_LOCAL_REJECT, IOERR_SLI_ABORTED);
+-	} else {
+-		/* Make sure HBA is alive */
++	if (!offline)
+ 		lpfc_issue_hb_tmo(phba);
+-	}
++
+ 	/* Cancel all the IOCBs from the completions list */
+ 	lpfc_sli_cancel_iocbs(phba, &tx_completions, IOSTAT_LOCAL_REJECT,
+ 			      IOERR_SLI_ABORTED);
 -- 
 2.53.0
 
