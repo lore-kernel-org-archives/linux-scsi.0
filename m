@@ -1,47 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C617406276;
-	Tue, 28 Apr 2026 10:42:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E9F442189A;
+	Tue, 28 Apr 2026 10:42:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777372953; cv=none; b=GFqaKU9ob378/hnA24lMKcf5iD/cHmRXepF67/3EcEprIePNpPEVYwVh1QKJhx8KoHsINDZ+SSgqdum0BYz/IUhLDvN1GxtFeG1jTWY0H29jdFa4d5FQJWnbPU7iywzC68lbywQ5oXHs6AhmUEUIsauUtvZf/UtnevauqRqYW9A=
+	t=1777372974; cv=none; b=HvFuWFlhLbPZ5iZJLmN12XMENvfwYw+bPLy/T3z8PTSTSKbcyYR/2cSE/iwiv0f1QybVolrKhD2COpEFWX6Tmw/8fAS7ds6fnzS1ptvj+B62N9eRUz/v7snNv5uJLCRhhij0vtToNHMeyayWttFkfpWmJbnCkciNbEzpKpsEXjw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777372953; c=relaxed/simple;
-	bh=LPxp90wygznh+iB9GfB3SnpuT09Adhdr/GIGa1RwE/k=;
+	s=arc-20240116; t=1777372974; c=relaxed/simple;
+	bh=vNicz05PIwfMs/DzX4ATEA7r/SFhjcVyFiC7PaDXSG8=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=lor4eJyCXy+l98h2feEY6yViszlsQ5586z87TUt1CO6h+nVU754FhqYyd6VuH/uNIqfHZ5kukTm4TypPYwNxGJXAyPqlZbHQzFhfBLMxTRWd3jIPM82yAd8+gjdgqNlFwIwbqGp4voqEc6+eZx/IzFciqtjkPwa99RSCYU+EMu0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dyy6/nQI; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=KuUGLhPb24I4mP48PQ2KQBNYOH3DoMW7KkHvBW3MPIRmAvD/ynqpT2s7204ej1Z9huEyCN2WKFNW+Bva0zZdbNEdLGhp+ft3i9tCo5VD0m6AEiVLNi8egVK8sKbADPleYh6ZsVV2H1AYgc6IzgieAMnSPTbwtm56S87OGSY1Ekc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=elcYA15j; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dyy6/nQI"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1F8F8C2BCB7;
-	Tue, 28 Apr 2026 10:42:32 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="elcYA15j"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BC5C2C2BCFB;
+	Tue, 28 Apr 2026 10:42:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1777372953;
-	bh=LPxp90wygznh+iB9GfB3SnpuT09Adhdr/GIGa1RwE/k=;
+	s=k20201202; t=1777372973;
+	bh=vNicz05PIwfMs/DzX4ATEA7r/SFhjcVyFiC7PaDXSG8=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=dyy6/nQIahHi3PrlkCaqo7VPNnPUd+x6Tf2Hnz3JXHGJv2YaQzpWxglZAdLLpQxyS
-	 15M36NrwMYfliPNDbmAGTxmG/3CBdqiNOrtae1Wt2RxbnCv9Se9z8UkUfj5ZSBDDmX
-	 CWRMxKMm/ISxJDWduu/QtDrReF73/swRIGMQ2ETr0MOHPG4nYg0Xqkk0dnbUg6aaA1
-	 u8lgWfKE75VJvPb6rFG4Q2A1y0DJbKIQhMJqqYa0PHBjU+IvyAwEXvjxADjQjAU07B
-	 afDxzSIIhljyZIIwg+xOMNlUN+GH/U/ZWIEk2rSufNZmLqrawpDLPtSQ6n94xtCY/t
-	 QdmUlXQ68Phnw==
+	b=elcYA15ju5iF/a0yuLjnRvh0Di5jVXSMXFlELAVQMWwGo7z3IXlxfuA4aSKyIX5f2
+	 R4rGw8Gbowcu+MC/DvnqEVPFGqAZ+mcuRHe0wDwOJLnrcsklnrucPAJH9hdO16Gdpt
+	 KBs00LRgFkIFNopxpAm+LYPDYTSi0opEVIJAFfPH9J/pZhKyaXsp1wvr66dWUV0hQ0
+	 iAomikr98jOCUk5UeZ5RpkF6RvTt+2dqDM3CB0yUDqrmU3BldQhUl5UgckWSvRTIM/
+	 F8oLeYum8iX++LQ5DcjyWe0KtAJj0gK+H81KdH+dNt2OE3D0Cpq7ub2er9nc/RALUW
+	 lFQrmkp2ZOCaA==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
-Cc: Joshua Daley <jdaley@linux.ibm.com>,
-	Stefan Hajnoczi <stefanha@redhat.com>,
+Cc: Aaron Kling <webgeek1234@gmail.com>,
+	Bart Van Assche <bvanassche@acm.org>,
 	"Martin K. Petersen" <martin.petersen@oracle.com>,
 	Sasha Levin <sashal@kernel.org>,
-	mst@redhat.com,
-	jasowang@redhat.com,
 	jejb@linux.ibm.com,
-	virtualization@lists.linux-foundation.org,
 	linux-scsi@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH AUTOSEL 7.0] scsi: virtio_scsi: Move INIT_WORK calls to virtscsi_probe()
-Date: Tue, 28 Apr 2026 06:40:53 -0400
-Message-ID: <20260428104133.2858589-42-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 7.0-6.6] scsi: ufs: core: Disable timestamp for Kioxia THGJFJT0E25BAIP
+Date: Tue, 28 Apr 2026 06:41:06 -0400
+Message-ID: <20260428104133.2858589-55-sashal@kernel.org>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260428104133.2858589-1-sashal@kernel.org>
 References: <20260428104133.2858589-1-sashal@kernel.org>
@@ -57,437 +54,352 @@ X-stable-base: Linux 7.0.2
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-From: Joshua Daley <jdaley@linux.ibm.com>
+From: Aaron Kling <webgeek1234@gmail.com>
 
-[ Upstream commit da3159a3b3fdc05c6bdba2fd4f4802a6718d879a ]
+[ Upstream commit e423f1c7195645e18945fba0bd8f0a32e39286e7 ]
 
-The last step of virtscsi_handle_event() is to call
-virtscsi_kick_event(), which calls INIT_WORK on its own work
-item. INIT_WORK resets the work item's data bits to 0.
+Kioxia has another product that does not support the qTimestamp
+attribute.
 
-If this occurs while the work item is being flushed by
-cancel_work_sync(), then kernel/workqueue.c/work_offqd_enable triggers a
-kernel warning, as it expects the "disable" bit to be 1:
-
-[   21.450115] workqueue: work disable count underflowed
-[   21.450117] WARNING: CPU: 1 PID: 56 at kernel/workqueue.c:4328 enable_work+0x10a/0x120
-...
-[   21.450171] Call Trace:
-[   21.450173]  [<000003db2e5bdc3e>] enable_work+0x10e/0x120
-[   21.450176] ([<000003db2e5bdc3a>] enable_work+0x10a/0x120)
-[   21.450178]  [<000003db2e5bdd86>] cancel_work_sync+0x86/0xa0
-[   21.450181]  [<000003daae97d9e4>] virtscsi_remove+0xb4/0xd0 [virtio_scsi]
-[   21.450184]  [<000003db2ef3b5ca>] virtio_dev_remove+0x6a/0xd0
-[   21.450186]  [<000003db2ef9106c>] device_release_driver_internal+0x1ac/0x260
-[   21.450190]  [<000003db2ef8edc8>] bus_remove_device+0xf8/0x190
-[   21.450192]  [<000003db2ef88d72>] device_del+0x142/0x340
-[   21.450194]  [<000003db2ef88fa0>] device_unregister+0x30/0xa0
-[   21.450196]  [<000003db2ef3b2fa>] unregister_virtio_device+0x2a/0x40
-
-This warning may occur if a controller is detached immediately following
-a disk detach.
-
-Move the INIT_WORK call to prevent this. Don't re-init event list work
-items in virtscsi_kick_event(), init them only once in virtscsi_probe()
-instead.
-
-Signed-off-by: Joshua Daley <jdaley@linux.ibm.com>
-Reviewed-by: Stefan Hajnoczi <stefanha@redhat.com>
-Link: https://patch.msgid.link/20260325180857.3675854-2-jdaley@linux.ibm.com
+Signed-off-by: Aaron Kling <webgeek1234@gmail.com>
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Link: https://patch.msgid.link/20260403-thgjfjt0e25baip-no-timestamp-v1-1-1ddb34225133@gmail.com
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
 
 LLM Generated explanations, may be completely bogus:
 
-Now I have enough information to complete the analysis.
+Based on my investigation, I'll now write up the complete analysis.
 
----
+## Analysis
 
-## PHASE 1: COMMIT MESSAGE FORENSICS
+### PHASE 1: COMMIT MESSAGE FORENSICS
 
-**Step 1.1: Subject Line**
-- Record: `scsi: virtio_scsi` "Move INIT_WORK calls to virtscsi_probe()"
-  — restructures INIT_WORK placement to avoid race with
-  `cancel_work_sync()` during controller removal.
+**Step 1.1: Subject Line Parse**
+- Record: Subsystem = `scsi: ufs: core`; action verb = "Disable"; intent
+  = "Disable timestamp for Kioxia THGJFJT0E25BAIP" — adds a device quirk
+  entry to disable qTimestamp handling for a specific Kioxia UFS device
+  model.
 
-**Step 1.2: Tags**
+**Step 1.2: Commit Message Tags**
 - Record:
-  - `Signed-off-by: Joshua Daley <jdaley@linux.ibm.com>` (author)
-  - `Reviewed-by: Stefan Hajnoczi <stefanha@redhat.com>` (subsystem
-    expert)
-  - `Link: https://patch.msgid.link/20260325180857.3675854-2-
-    jdaley@linux.ibm.com` (mailing list)
-  - `Signed-off-by: Martin K. Petersen` (SCSI maintainer, applied the
-    patch)
-  - No `Fixes:` tag, no `Cc: stable` (expected - this is why review is
-    needed)
-  - No `Reported-by:` but reproduction steps present in cover letter
+  - Author: Aaron Kling <webgeek1234@gmail.com>
+  - Reviewed-by: Bart Van Assche <bvanassche@acm.org> (SCSI/UFS core
+    reviewer who authored the original quirk infrastructure)
+  - Link: https://patch.msgid.link/20260403-thgjfjt0e25baip-no-
+    timestamp-v1-1-1ddb34225133@gmail.com
+  - Signed-off-by: Martin K. Petersen (SCSI maintainer)
+  - No Fixes:, no Reported-by, no Cc: stable. (Absence of stable tag is
+    expected.)
 
-**Step 1.3: Commit Body Analysis**
-- Record: The commit describes a race where:
-  - `virtscsi_handle_event()` (work function) calls
-    `virtscsi_kick_event()` at the end
-  - `virtscsi_kick_event()` calls `INIT_WORK` on the SAME work item that
-    is currently executing
-  - `INIT_WORK` resets work->data bits (including the workqueue disable
-    count) to 0
-  - If this happens while `cancel_work_sync()` is flushing the work,
-    `work_offqd_enable` sees the disable count was cleared and triggers
-    "work disable count underflowed" WARN
-  - Includes a full stack trace on S390; trigger: "controller is
-    detached immediately following a disk detach"
+**Step 1.3: Commit Body**
+- Record: Very short body — "Kioxia has another product that does not
+  support the qTimestamp attribute." The parent commit (fb1f4568346153)
+  introduced `UFS_DEVICE_QUIRK_NO_TIMESTAMP_SUPPORT` to avoid log-error
+  spam when the device rejects the SET_TIMESTAMP query; this commit just
+  adds another affected device model.
 
 **Step 1.4: Hidden Bug Fix Detection**
-- Record: Not hidden - clearly labeled as fixing a warning. Race
-  condition fix disguised as "Move INIT_WORK".
+- Record: This IS effectively a bug fix — on the THGJFJT0E25BAIP, the
+  current kernel calls `ufshcd_set_timestamp_attr()` periodically and at
+  init. The device returns an error, which produces `dev_err()` log spam
+  ("failed to set timestamp %d" / "Failed to update rtc %d"). The quirk
+  bypasses the query entirely. Hidden-fix category: hardware workaround
+  / quirk.
 
-## PHASE 2: DIFF ANALYSIS
+### PHASE 2: DIFF ANALYSIS
 
 **Step 2.1: Inventory**
-- Record: 1 file (`drivers/scsi/virtio_scsi.c`), ~5 net lines added.
-  Changed functions: `virtscsi_kick_event()` (INIT_WORK removed) and
-  `virtscsi_probe()` (INIT_WORK loop added). Single-file surgical fix.
+- Record: 1 file modified (`drivers/ufs/core/ufshcd.c`), +3/-0 lines.
+  One function touched: the static `ufs_fixups[]` table (data-only
+  change). Scope: trivial, surgical.
 
-**Step 2.2: Code Flow**
-- Record:
-  - Before: `INIT_WORK(&event_node->work, virtscsi_handle_event)` called
-    in `virtscsi_kick_event()`, which is invoked from both
-    `virtscsi_kick_event_all()` (at probe/restore time) AND from
-    `virtscsi_handle_event()` itself (re-queueing at end of event
-    handling).
-  - After: `INIT_WORK` called once in `virtscsi_probe()` inside a `for`
-    loop over all 8 event_list entries (guarded by
-    VIRTIO_SCSI_F_HOTPLUG). `virtscsi_kick_event()` no longer resets the
-    work struct state.
-  - Forward declaration of `virtscsi_handle_event` removed (probe is
-    after the definition).
+**Step 2.2: Code Flow Change**
+- Record: Before — only `THGLF2G9C8KBADG`, `THGLF2G9D8KBADG`
+  (PA_TACTIVATE) and `THGJFJT1E45BATP` (NO_TIMESTAMP_SUPPORT) were
+  matched for Toshiba-ID devices. After — `THGJFJT0E25BAIP` is also
+  matched and gets `UFS_DEVICE_QUIRK_NO_TIMESTAMP_SUPPORT` bit set via
+  `ufshcd_fixup_dev_quirks()` at device probe. At runtime
+  `ufshcd_set_timestamp_attr()` exits early (verified
+  `ufshcd.c:8966-8968`).
 
 **Step 2.3: Bug Mechanism**
-- Record: **Race condition fix** (category b from playbook). The issue
-  is that `INIT_WORK` resets all state bits in `work->data` (including
-  the disable count introduced in v6.10 by commit `86898fa6b8cd9`).
-  Internally, `cancel_work_sync()` now calls `__cancel_work_sync(work,
-  0)` → `__cancel_work(work, WORK_CANCEL_DISABLE)` which increments the
-  disable count via `work_offqd_disable()`, then `__flush_work()` waits
-  for the function to complete, then calls `enable_work()` to decrement.
-  If the work function calls `INIT_WORK` during the flush, disable count
-  goes 1→0; later `enable_work()` sees 0 and triggers `WARN_ONCE(true,
-  "workqueue: work disable count underflowed\n")` at
-  `kernel/workqueue.c:4422`.
+- Record: Category (h) — Hardware workaround, device-ID/quirk-table
+  addition. No logic changes, no synchronization change, no refcount
+  change.
 
 **Step 2.4: Fix Quality**
-- Record: Obviously correct. The INIT_WORK was redundant after the first
-  call (work's function pointer doesn't change between kicks). Moving it
-  to probe() eliminates the race. Low regression risk: the work struct
-  state is preserved across kicks (no need to re-init), and it persists
-  through freeze/resume cycles (virtscsi_freeze doesn't cancel work, so
-  state remains intact).
+- Record: Obviously correct. Zero risk for any non-matching device
+  (quirk table is a prefix-match on manufacturer+model, so only the
+  Kioxia THGJFJT0E25BAIP is affected). Cannot regress any other device.
 
-## PHASE 3: GIT HISTORY INVESTIGATION
+### PHASE 3: GIT HISTORY INVESTIGATION
 
-**Step 3.1: Blame of Buggy Code**
-- Record: `INIT_WORK(&event_node->work, virtscsi_handle_event)` in
-  `virtscsi_kick_event()` was introduced by commit `365a715009411`
-  "[SCSI] virtio-scsi: hotplug support for virtio-scsi" (v3.6-rc1,
-  2012). The pattern has existed unchanged for 13+ years in all stable
-  trees.
+**Step 3.1: Blame**
+- Record: The table surrounding the addition was introduced over time;
+  the specifically-referenced quirk
+  `UFS_DEVICE_QUIRK_NO_TIMESTAMP_SUPPORT` was introduced by commit
+  `fb1f4568346153d2f80fdb4ffcfa0cf4fb257d3c` ("scsi: ufs: core: Disable
+  timestamp functionality if not supported", Bart Van Assche,
+  2025-09-09), which also added the first device entry
+  `THGJFJT1E45BATP`.
 
-**Step 3.2: No Fixes: Tag to Follow**
-- Record: No Fixes: tag present. The WARN symptom was enabled by commit
-  `86898fa6b8cd9` "workqueue: Implement disable/enable for (delayed)
-  work items" which landed in **v6.10-rc1**. Before v6.10 the same race
-  existed but did not trigger this specific WARN (cancel_work_sync
-  didn't use the disable count).
+**Step 3.2: Fixes: Tag**
+- Record: No Fixes: tag. Not applicable. The conceptual "Fixes" target
+  is fb1f4568346153, already backported to stable (see Step 6.3).
 
-**Step 3.3: File History**
-- Record: Recent virtio_scsi.c history shows a related commit
-  `2678369e8efe0` "virtio_scsi: fix DMA cacheline issues for events" (by
-  Michael Tsirkin, Dec 2025) which restructured the event buffers. The
-  currently analyzed patch applies cleanly on top of that. No patch
-  dependencies required beyond the usual.
+**Step 3.3: Related File Changes**
+- Record: Recent ufshcd.c traffic is mostly core refactors/fixes. Only
+  two prior NO_TIMESTAMP-related commits (fb1f4568346153 and
+  cb7cc0cfb38cf). This addition is standalone — no series, no
+  prerequisites beyond fb1f4568346153 which already exists in stable.
 
-**Step 3.4: Author Context**
-- Record: Joshua Daley (IBM); this is their first virtio_scsi fix.
-  However, the patch was Reviewed-by Stefan Hajnoczi (original virtio-
-  scsi author at IBM/RedHat and primary reviewer for virtio_scsi), and
-  applied by Martin K. Petersen (SCSI maintainer).
+**Step 3.4: Author**
+- Record: Aaron Kling is a known Tegra/ARM contributor (`git log
+  --author="Aaron Kling"` shows cpufreq, PCI tegra, irqdomain,
+  arm64/tegra DT work). He almost certainly hit this on a Tegra board
+  shipping with the Kioxia THGJFJT0E25BAIP. Reviewed-by comes from the
+  original quirk author (Bart Van Assche) — ideal reviewer.
 
 **Step 3.5: Dependencies**
-- Record: Standalone fix. A second patch in the series (2/2 "kick
-  event_list unconditionally") is independent and addresses a different
-  cleanup - not required for this one to work. This patch doesn't depend
-  on the other.
+- Record: Depends on commit fb1f4568346153 (defines the quirk macro and
+  the dispatch in `ufshcd_set_timestamp_attr()`). Confirmed present in
+  stable — see Phase 6.
 
-## PHASE 4: MAILING LIST AND EXTERNAL RESEARCH
+### PHASE 4: MAILING LIST RESEARCH
 
-**Step 4.1: Patch Discussion**
-- Record: Retrieved full thread via `b4 mbox
-  20260325180857.3675854-2-jdaley@linux.ibm.com`. Series is at v4.
-  Previous versions (v1-v3) had different approaches (INIT_WORK moved to
-  `virtscsi_init()` initially). Changelog notes v4 addresses bisection
-  concerns (by placing this patch first in the series) and
-  suspend/resume concerns (by choosing `virtscsi_probe()` rather than
-  `virtscsi_init()`). **No stable nomination in the thread**, but the
-  patch is clearly framed as a bug fix.
+**Step 4.1: Original Submission**
+- Record: `b4 dig -c e423f1c719564` found the series at
+  https://lore.kernel.org/all/20260403-thgjfjt0e25baip-no-
+  timestamp-v1-1-1ddb34225133@gmail.com/ . Single version (v1), no
+  respins.
 
 **Step 4.2: Reviewers**
-- Record: Cc'd: linux-scsi, linux-kernel, virtualization list, MST,
-  jasowang, pbonzini (QEMU/virtio maintainers), stefanha (virtio-scsi
-  expert), eperezma, Martin Petersen (SCSI maintainer), and multiple IBM
-  S390 engineers (mjrosato, farman, frankja). Stefan Hajnoczi's
-  Reviewed-by tag confirms subsystem expert review.
+- Record: Patch went to Alim Akhtar, Avri Altman, Bart Van Assche, James
+  Bottomley, Martin K. Petersen, linux-scsi. Bart Van Assche explicitly
+  replied with `Reviewed-by:` (he is the author of the quirk
+  infrastructure, so he is the domain expert on this). No NAKs, no
+  concerns raised, no requests for changes. No explicit stable
+  nomination in thread.
 
 **Step 4.3: Bug Report**
-- Record: No syzbot report. The reporter is the author himself running
-  tests on IBM S390 (evidenced by addresses in stack trace
-  `000003db2e5...`). The cover letter documents that the warning is
-  reliably reproducible by adding `msleep(1000)` before INIT_WORK and
-  running `virsh detach-device disk; virsh detach-device controller`.
+- Record: No Reported-by, no external bug report cited. User-facing
+  symptom is log-error spam on boot/resume/periodic RTC update — the
+  kind of thing an engineer notices when bringing up the board and files
+  a patch directly.
 
-**Step 4.4: Related Patches**
-- Record: The series "scsi: virtio_scsi: move INIT_WORK calls to
-  virtscsi_probe" contains 2 patches, both applied by Martin K. Petersen
-  to `7.1/scsi-queue` (`[1/2] da3159a3b3fd` and `[2/2] 0019a3a5756b`).
+**Step 4.4: Series Context**
+- Record: Single standalone patch. Not part of a larger series.
 
-**Step 4.5: Stable-specific Discussion**
-- Record: No explicit stable discussion in the thread. The v4 changelog
-  does not mention stable.
+**Step 4.5: Stable Discussion**
+- Record: No stable-list discussion specific to this commit. The
+  precedent is well-established from the prior patch.
 
-## PHASE 5: CODE SEMANTIC ANALYSIS
+### PHASE 5: CODE SEMANTIC ANALYSIS
 
 **Step 5.1: Key Functions**
-- Record: `virtscsi_kick_event` (INIT_WORK removed), `virtscsi_probe`
-  (INIT_WORK loop added), `virtscsi_handle_event` (forward declaration
-  removed since probe is below it).
+- Record: No function added/modified — only a data entry in the static
+  `ufs_fixups[]` array.
 
-**Step 5.2: Callers of `virtscsi_kick_event`**
-- Record: `virtscsi_kick_event_all()` (called at probe and restore) and
-  `virtscsi_handle_event()` (the work function itself, for re-queueing).
-  `virtscsi_kick_event_all` is called from `virtscsi_probe()` and
-  `virtscsi_restore()`.
+**Step 5.2: Callers**
+- Record: `ufs_fixups[]` is consumed by `ufshcd_fixup_dev_quirks(hba,
+  ufs_fixups)` called from `ufs_fixup_device_setup()` at `ufshcd.c:8666`
+  during normal device probe. Quirk bit
+  (`UFS_DEVICE_QUIRK_NO_TIMESTAMP_SUPPORT`) is consumed at
+  `ufshcd.c:8966-8968` inside `ufshcd_set_timestamp_attr()`, which is
+  called from `ufshcd_add_lus()` (init) and `ufshcd.c:10225` (resume
+  path).
 
 **Step 5.3: Callees**
-- Record: `virtscsi_kick_event` calls `sg_init_one`,
-  `virtqueue_add_inbuf_cache_clean`, `virtqueue_kick`. None of these
-  interact with work struct state.
+- Record: N/A (data entry only).
 
 **Step 5.4: Reachability**
-- Record: The race path is reachable from userspace via standard device
-  hotplug operations (virsh detach-device or equivalent QEMU API calls).
-  Very common in cloud/virt environments.
+- Record: Any boot or resume of a system with this Kioxia UFS storage
+  triggers the code path. Fully reachable, real users.
 
 **Step 5.5: Similar Patterns**
-- Record: The anti-pattern of "calling INIT_WORK from within the work
-  function on its own work_struct" is known to be racy with
-  cancel_work_sync. This is why v6.10+ workqueue added the WARN to
-  detect it.
+- Record: Entire `ufs_fixups[]` table is this pattern. The adjacent
+  entry (THGJFJT1E45BATP) is the exact same fix for a sibling Kioxia
+  product.
 
-## PHASE 6: STABLE TREE ANALYSIS
+### PHASE 6: STABLE TREE ANALYSIS
 
-**Step 6.1: Code in Stable Trees**
-- Record: Verified by reading
-  `remotes/stable/linux-6.6.y:drivers/scsi/virtio_scsi.c` and
-  `linux-6.12.y` — both have the exact same
-  `INIT_WORK(&event_node->work, virtscsi_handle_event)` pattern in
-  `virtscsi_kick_event()` and the same
-  `virtscsi_probe()`/`virtscsi_remove()` structure. Code exists
-  unchanged in all maintained stable trees (back to at least 5.15).
+**Step 6.1: Code Exists in Stable?**
+- Record: `ufshcd_set_timestamp_attr()` exists in all modern stable
+  trees. The `UFS_DEVICE_QUIRK_NO_TIMESTAMP_SUPPORT` macro exists in
+  6.6.y, 6.12.y, 6.18.y (verified by inspecting
+  `include/ufs/ufs_quirks.h` on each branch — macro is defined as `(1 <<
+  13)`). Not present in 6.17.y (EOL) or 6.1.y (infrastructure commit not
+  backported).
 
-**Step 6.2: Backport Difficulty**
-- Record: The patch should apply cleanly or with trivial adjustments.
-  The surrounding code in `virtscsi_probe()` is similar across stable
-  trees, though there was a recent reorganization (`2678369e8efe0`
-  "virtio_scsi: fix DMA cacheline issues for events" in mainline, not in
-  stable). In 6.12.y, `event_node->event` is still an inline struct (not
-  a pointer); the patch's INIT_WORK change is independent of that.
+**Step 6.2: Backport Complications**
+- Record: None. Trivial 3-line text addition to a stable table. Will
+  apply cleanly to 6.6.y, 6.12.y, 6.18.y. Cannot apply to 6.1.y because
+  the quirk macro and `ufshcd_set_timestamp_attr()` gating do not exist
+  there — the patch would be a no-op there anyway.
 
 **Step 6.3: Related Fixes in Stable**
-- Record: No prior fix for this race in stable. The WARN_ONCE at
-  kernel/workqueue.c:4422 was introduced in v6.10 (commit
-  `86898fa6b8cd9`).
+- Record: Parent commit `fb1f4568346153` was backported (by the autosel
+  pipeline) to:
+  - 6.18.y as `fb1f456834615`
+  - 6.12.y as `c6e1e2135d004`
+  - 6.6.y as `88ac95b17a038`
+  This establishes the precedent: the sibling "add Kioxia timestamp
+quirk" patch is already deemed stable-worthy.
 
-## PHASE 7: SUBSYSTEM CONTEXT
+### PHASE 7: SUBSYSTEM CONTEXT
 
-**Step 7.1: Subsystem**
-- Record: `drivers/scsi/virtio_scsi.c` — virtio-scsi driver.
-  Criticality: **IMPORTANT**. Used by essentially every KVM/QEMU-based
-  virtualization stack (including cloud providers using KVM, libvirt,
-  AWS EC2, GCP GCE, OpenStack).
+**Step 7.1: Subsystem / Criticality**
+- Record: drivers/ufs/core — UFS (Universal Flash Storage) subsystem —
+  the primary storage on most modern Android/Tegra/Snapdragon/MediaTek
+  devices. Criticality: IMPORTANT (affects a specific storage device,
+  not universal, but affects real deployed hardware).
 
-**Step 7.2: Subsystem Activity**
-- Record: Moderately active (~20 commits in recent history, many
-  cleanup/refactoring). Core logic unchanged since v3.6.
+**Step 7.2: Activity**
+- Record: Active subsystem with regular fixes landing.
 
-## PHASE 8: IMPACT AND RISK
+### PHASE 8: IMPACT AND RISK
 
-**Step 8.1: Affected Users**
-- Record: All users of virtio-scsi on v6.10+ kernels who perform hotplug
-  operations (disk/controller detach). This is a massive user base in
-  virtualization.
+**Step 8.1: Who Is Affected**
+- Record: Users of devices with Kioxia THGJFJT0E25BAIP UFS storage (a
+  specific hardware quirk — likely used in particular Tegra-based
+  boards, given Aaron Kling's affiliation).
 
 **Step 8.2: Trigger Conditions**
-- Record: Normal administrative workflow: detach a disk, then detach the
-  controller immediately. Reproducible with standard virsh commands. Not
-  privileged-user-triggerable from guest, but a host-side operation.
+- Record: Every boot of an affected system triggers one "failed to set
+  timestamp" dev_err. The periodic RTC update work (`ufshcd_rtc_work()`)
+  also triggers "Failed to update rtc" repeatedly (every
+  `rtc_update_period` ms). Also triggers on resume. No userspace trigger
+  required.
 
-**Step 8.3: Failure Mode**
-- Record: Kernel `WARN_ONCE` with stack trace in dmesg. **Severity:
-  MEDIUM**. Not a crash, not data corruption, not security-relevant.
-  But: user-visible warning that could trigger monitoring alerts, CI
-  failures (many CI systems treat kernel WARN as failure), and user
-  concern. The pre-v6.10 race still exists but without the visible WARN
-  — potentially other subtle effects but not documented.
+**Step 8.3: Failure Mode Severity**
+- Record: LOW severity — the UFS device rejects the query gracefully,
+  nothing crashes, no data is lost. But dev_err output is continuous
+  (RTC update work loop). Severity: LOW (log noise), no functional
+  impact.
 
-**Step 8.4: Risk vs Benefit**
+**Step 8.4: Risk-Benefit**
 - Record:
-  - BENEFIT: Eliminates a user-visible kernel warning in a very common
-    virtualization path. Moderate benefit.
-  - RISK: Very low — 5 net lines, moves a single INIT_WORK call,
-    reviewed by subsystem expert, applied by maintainer. The work struct
-    state is correctly preserved across freeze/resume cycles.
-  - Ratio: Favorable for backporting.
+  - Benefit: Silences dev_err spam on a specific Kioxia product; affects
+    only matching devices.
+  - Risk: Essentially zero. Literal 3-line data entry. Prefix matching
+    in `ufshcd_fixup_dev_quirks()` (`STR_PRFX_EQUAL`) only triggers on
+    Toshiba-manufactured devices whose model starts with
+    "THGJFJT0E25BAIP"; no other device is touched.
+  - Ratio: Favorable.
 
-## PHASE 9: FINAL SYNTHESIS
+### PHASE 9: SYNTHESIS
 
-**Step 9.1: Evidence Summary**
+**Step 9.1: Evidence**
+- FOR: Textbook hardware quirk / device-ID-table addition; explicitly
+  listed as an "IMPORTANT EXCEPTION" for stable; trivial 3-line change;
+  reviewed by the subsystem expert who authored the underlying quirk;
+  the precedent commit adding the same quirk for a different Kioxia
+  model was auto-backported to 6.6.y, 6.12.y, 6.18.y; infrastructure is
+  already present in those trees; zero regression risk to non-matching
+  hardware.
+- AGAINST: Low severity (log noise, not functional); no Reported-by from
+  multiple users.
+- UNRESOLVED: None relevant.
 
-FOR backporting:
-- Real race condition with reproducible user-visible WARN
-- Small, surgical fix (5 net lines)
-- Reviewed by subsystem expert (Stefan Hajnoczi)
-- Applied by SCSI maintainer (Martin K. Petersen)
-- Code pattern identical in all stable trees v6.10+ where the WARN is
-  triggered
-- Common workflow (VM hotplug) triggers this bug
-- Low regression risk
+**Step 9.2: Stable Rules Checklist**
+1. Obviously correct and tested — YES (static data entry, reviewed by
+   core expert)
+2. Fixes a real bug affecting users — YES (produces repeated dev_err on
+   affected hardware)
+3. Important — borderline, but falls into explicitly-allowed
+   quirk/hardware-workaround category
+4. Small and contained — YES (3 lines, one file)
+5. No new features or APIs — YES
+6. Applies to stable — YES to 6.6.y/6.12.y/6.18.y; N/A to 6.1.y
+   (infrastructure missing)
 
-AGAINST backporting:
-- Symptom is WARN, not crash/corruption
-- No explicit Cc: stable nomination
-- No Fixes: tag
-- Race has existed since v3.6 without major user impact reports
-
-**Step 9.2: Stable Rules**
-1. Obviously correct: YES — trivially correct (just relocates INIT_WORK
-   to run once)
-2. Fixes real bug: YES — triggers WARN in v6.10+
-3. Important issue: MEDIUM (WARN, not crash)
-4. Small and contained: YES (5 lines, one file)
-5. No new features: YES
-6. Applies cleanly: YES for recent stable trees
-
-**Step 9.3: Exception Categories**
-- Record: Not an exception category (not device ID, quirk, DT, build, or
-  doc fix). Regular bug fix.
+**Step 9.3: Exception Category**
+- Falls under the "HARDWARE QUIRK / DEVICE-ID ADDITION TO EXISTING
+  DRIVER" exception. This is exactly the pattern the stable rules call
+  out as acceptable.
 
 **Step 9.4: Decision**
-The fix addresses a reproducible race condition with a clear user-
-visible symptom on v6.10+ kernels (6.12, 6.17, 6.18, 6.19 stable trees).
-It has been reviewed by the virtio-scsi expert, applied by the SCSI
-maintainer, and affects a widely-deployed driver (used in virtually all
-KVM/QEMU VMs). The patch is minimal, correct, and low-risk. The symptom
-is only a WARN (not a crash), but it occurs in common hotplug workflows
-and the fix is safe.
-
----
+- This is a tiny hardware-quirk addition that matches a clear precedent
+  already in stable trees. Zero regression risk. Should be backported.
 
 ## Verification
 
-- [Phase 1] Parsed tags: Reviewed-by Stefan Hajnoczi, Link to lore,
-  Signed-off-by Martin K. Petersen; no Fixes/Cc stable tags
-- [Phase 2] Diff analysis: 5 net lines changed in
-  `drivers/scsi/virtio_scsi.c`; INIT_WORK moved from
-  `virtscsi_kick_event` to a loop in `virtscsi_probe` guarded by
-  VIRTIO_SCSI_F_HOTPLUG
-- [Phase 3] `git log -S"INIT_WORK(&event_node->work"`: pattern
-  introduced by `365a715009411` in v3.6-rc1 (2012)
-- [Phase 3] `git describe --contains 365a715009411`: v3.6-rc1, confirmed
-  pattern has been stable for 13+ years
-- [Phase 3] `git log -S"work disable count underflowed"`: WARN
-  introduced by `86898fa6b8cd9` in v6.10-rc1 — this is why the visible
-  symptom only exists v6.10+
-- [Phase 3] Read kernel/workqueue.c lines 4407-4499 to verify
-  `enable_work()`/`__cancel_work_sync()` logic and confirm the race
-  mechanism
-- [Phase 3] Read include/linux/workqueue.h: confirmed `INIT_WORK` →
-  `__INIT_WORK_KEY` → resets `work->data = WORK_DATA_INIT()` (all bits
-  zeroed, clobbering disable count)
-- [Phase 4] `b4 mbox 20260325180857.3675854-2-jdaley@linux.ibm.com`:
-  retrieved full thread (7 messages, 2 reviewers, 1 apply confirmation)
-- [Phase 4] Thread content confirmed: v4 is latest, Reviewed-by tag
-  added, Martin K. Petersen applied to 7.1/scsi-queue
-  (git.kernel.org/mkp/scsi/c/da3159a3b3fd)
-- [Phase 4] No explicit stable nomination in the mailing list discussion
-- [Phase 5] `grep "virtscsi_kick_event\b"`: 3 hits — function
-  definition, call from `virtscsi_kick_event_all()` (probe/restore),
-  call from `virtscsi_handle_event()` (re-queue after event processing)
-- [Phase 6] Read `remotes/stable/linux-6.6.y:drivers/scsi/virtio_scsi.c`
-  and `linux-6.12.y`: confirmed identical `INIT_WORK(&event_node->work,
-  ...)` pattern in `virtscsi_kick_event()`, so fix applies conceptually
-  cleanly
-- [Phase 6] Confirmed via search that recent commit `2678369e8efe0`
-  "virtio_scsi: fix DMA cacheline issues for events" changed the event
-  buffer layout in mainline but doesn't affect the INIT_WORK move
-- [Phase 7] Subsystem: virtio-scsi — widely used in all KVM/QEMU
-  virtualization
-- [Phase 8] Failure mode: `WARN_ONCE` at kernel/workqueue.c:4422, stack
-  trace visible in dmesg; severity MEDIUM (not a
-  crash/corruption/security)
-- UNVERIFIED: Whether the pre-v6.10 race has any user-visible effect
-  beyond the post-v6.10 WARN. The fix is still logically correct for
-  pre-v6.10 but the symptom documentation only covers v6.10+.
-- UNVERIFIED: Whether the fix requires any adjustment for stable trees
-  (the diff in the thread differs slightly from the presented diff —
-  presented diff has a few whitespace/context differences from the v4
-  mailed patch, but the functional change is identical)
+- [Phase 1] Read `git show e423f1c7195645e18945fba0bd8f0a32e39286e7` —
+  confirmed commit details, Reviewed-by: Bart Van Assche, Link tag,
+  Martin K. Petersen SOB.
+- [Phase 2] Read the diff and `ufs_fixups[]` in
+  `drivers/ufs/core/ufshcd.c` (lines 292-322) — confirmed pure data-
+  entry addition, 3 lines, 1 file.
+- [Phase 2] Read `ufshcd_fixup_dev_quirks()` at `ufshcd.c:8430-8448` —
+  confirmed strict manufacturer-ID + prefix model matching so only
+  THGJFJT0E25BAIP-prefix Toshiba devices are affected.
+- [Phase 2] Read `ufshcd_set_timestamp_attr()` at `ufshcd.c:8958-8988` —
+  confirmed gate on `UFS_DEVICE_QUIRK_NO_TIMESTAMP_SUPPORT`.
+- [Phase 3] `git show fb1f4568346153` — confirmed this is the commit
+  introducing the quirk macro and the first Kioxia THGJFJT1E45BATP
+  entry.
+- [Phase 3] `git log --author="Aaron Kling" --oneline -10` — confirmed
+  author is a long-time Tegra contributor.
+- [Phase 4] `b4 dig -c e423f1c719564` — found lore thread
+  https://lore.kernel.org/all/20260403-thgjfjt0e25baip-no-
+  timestamp-v1-1-1ddb34225133@gmail.com/ .
+- [Phase 4] `b4 dig -c e423f1c719564 -a` — confirmed only a v1 exists,
+  no respins.
+- [Phase 4] `b4 dig -c e423f1c719564 -m /tmp/thread_timestamp.mbox` and
+  read mbox — confirmed Bart Van Assche gave Reviewed-by, Martin K.
+  Petersen applied it to 7.1/scsi-staging then 7.1/scsi-queue. No NAKs,
+  no stable discussion, no requested changes.
+- [Phase 5] `grep ufshcd_fixup_dev_quirks` — confirmed `ufs_fixups[]` is
+  consumed during normal device probe at `ufshcd.c:8666`.
+- [Phase 5] Re-read call sites of `ufshcd_set_timestamp_attr` —
+  confirmed called from init (`ufshcd_add_lus`) and resume
+  (`ufshcd.c:10225`).
+- [Phase 6] `git show stable-push/linux-6.18.y:include/ufs/ufs_quirks.h`
+  — confirmed `UFS_DEVICE_QUIRK_NO_TIMESTAMP_SUPPORT (1<<13)` exists.
+- [Phase 6] Same for `stable-push/linux-6.12.y` and `stable-
+  push/linux-6.6.y` — both contain the macro.
+- [Phase 6] Same for `stable-push/linux-6.17.y` and `stable-
+  push/linux-6.1.y` — macro NOT present; either EOL or infrastructure
+  not backported.
+- [Phase 6] `git show stable-
+  push/linux-6.18.y:drivers/ufs/core/ufshcd.c` | grep THGJFJT —
+  confirmed existing `THGJFJT1E45BATP` entry in stable, so the new entry
+  will apply cleanly.
+- [Phase 6] `git log --grep="Disable timestamp functionality" stable-
+  push/linux-6.6.y` — found `88ac95b17a038` (backported by Sasha Levin
+  autosel pipeline, marked `[ Upstream commit fb1f45683461… ]`),
+  confirming the parent/infrastructure commit was deemed stable-worthy.
+- UNVERIFIED: Whether 6.17.y is still receiving updates (treated as EOL
+  based on no matching commit); this does not affect the decision since
+  6.18.y, 6.12.y, 6.6.y are the active targets.
 
-The commit is a small, well-reviewed bug fix for a reproducible race
-condition that triggers a kernel WARN in a widely-deployed driver
-(virtio-scsi used in essentially all KVM/QEMU VMs) on v6.10+ kernels.
-The fix is minimal (5 net lines, one file), obviously correct (the work
-struct doesn't need to be re-initialized on every kick), reviewed by the
-subsystem expert (Stefan Hajnoczi), and applied by the SCSI maintainer.
-Regression risk is very low.
+This commit adds a hardware-specific device quirk entry — a textbook
+stable-tree exception. The fix is three lines, cannot affect other
+hardware, was reviewed by the subsystem expert who wrote the underlying
+quirk, and directly mirrors a sibling commit that is already in
+6.6.y/6.12.y/6.18.y.
 
 **YES**
 
- drivers/scsi/virtio_scsi.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+ drivers/ufs/core/ufshcd.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
-index 0ed8558dad724..64b6c942f5720 100644
---- a/drivers/scsi/virtio_scsi.c
-+++ b/drivers/scsi/virtio_scsi.c
-@@ -233,7 +233,6 @@ static void virtscsi_ctrl_done(struct virtqueue *vq)
- 	virtscsi_vq_done(vscsi, &vscsi->ctrl_vq, virtscsi_complete_free);
- };
- 
--static void virtscsi_handle_event(struct work_struct *work);
- 
- static int virtscsi_kick_event(struct virtio_scsi *vscsi,
- 			       struct virtio_scsi_event_node *event_node)
-@@ -242,7 +241,6 @@ static int virtscsi_kick_event(struct virtio_scsi *vscsi,
- 	struct scatterlist sg;
- 	unsigned long flags;
- 
--	INIT_WORK(&event_node->work, virtscsi_handle_event);
- 	sg_init_one(&sg, event_node->event, sizeof(struct virtio_scsi_event));
- 
- 	spin_lock_irqsave(&vscsi->event_vq.vq_lock, flags);
-@@ -984,8 +982,11 @@ static int virtscsi_probe(struct virtio_device *vdev)
- 
- 	virtio_device_ready(vdev);
- 
--	if (virtio_has_feature(vdev, VIRTIO_SCSI_F_HOTPLUG))
-+	if (virtio_has_feature(vdev, VIRTIO_SCSI_F_HOTPLUG)) {
-+		for (int i = 0; i < VIRTIO_SCSI_EVENT_LEN; i++)
-+			INIT_WORK(&vscsi->event_list[i].work, virtscsi_handle_event);
- 		virtscsi_kick_event_all(vscsi);
-+	}
- 
- 	scsi_scan_host(shost);
- 	return 0;
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 9ceb6d6d479d0..9b77639f04535 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -315,6 +315,9 @@ static const struct ufs_dev_quirk ufs_fixups[] = {
+ 	{ .wmanufacturerid = UFS_VENDOR_TOSHIBA,
+ 	  .model = "THGLF2G9D8KBADG",
+ 	  .quirk = UFS_DEVICE_QUIRK_PA_TACTIVATE },
++	{ .wmanufacturerid = UFS_VENDOR_TOSHIBA,
++	  .model = "THGJFJT0E25BAIP",
++	  .quirk = UFS_DEVICE_QUIRK_NO_TIMESTAMP_SUPPORT },
+ 	{ .wmanufacturerid = UFS_VENDOR_TOSHIBA,
+ 	  .model = "THGJFJT1E45BATP",
+ 	  .quirk = UFS_DEVICE_QUIRK_NO_TIMESTAMP_SUPPORT },
 -- 
 2.53.0
 
