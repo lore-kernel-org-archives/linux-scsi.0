@@ -1,212 +1,180 @@
-Received: from mail-dy1-f175.google.com (mail-dy1-f175.google.com [74.125.82.175])
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D3EB5192B75
-	for <linux-scsi@vger.kernel.org>; Wed, 29 Apr 2026 01:27:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.175
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A04E83A3E60
+	for <linux-scsi@vger.kernel.org>; Wed, 29 Apr 2026 07:15:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777426066; cv=none; b=jl5o3svDfQiC3DktDvHRkss56OGOHlEvfxU/wp8rfB7myj8NPSqFwcW7VjEDCR+/mXSnw5VaLQBuX4u/Q5nAInT+Bli8wdmHGq1I26sq+GSi1ICuy+dU68CW6MXsCAp77SxfeekRidPIx4jciI0ZZnCLd1EzzOmF2DwaPQlTcOQ=
+	t=1777446934; cv=none; b=UsOYtg12SySVRPl2sXiwrXaLnn15AGYSzdKJTIJos7ZeCTYOhDZcRruQW+mzzW9/rNz57GVw97xy8tMjhj8DecUs8XClqBp7WeA+lwobxbPxjFiJq2s9cY2NfwUmTSQS6f9HG4fnMUTfp0N1QepiToZZDvGuAKPX49eRhDLyfIk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777426066; c=relaxed/simple;
-	bh=hBOTzqekCCHETf79nPt9Gl/27YvJCzpO+v/hvydnjLw=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Ec9IN724OBscp/IjK2gzfJFrttGIdUxvRD8N1Po1ZH5LU6UsSypudUOXxtr/g9UaT1WA10aNr8xLZy6hUp+lZZ9xu/eai81AuGw+aJfXyOjj3+VjViqjIVcBR9wxUinAaYjBHShKmCkwU0QkpAhTR/bzKisd+jI71wcfxz9dxsE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=purestorage.com; spf=fail smtp.mailfrom=purestorage.com; dkim=pass (2048-bit key) header.d=purestorage.com header.i=@purestorage.com header.b=fVpfUNl8; arc=none smtp.client-ip=74.125.82.175
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=purestorage.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=purestorage.com
+	s=arc-20240116; t=1777446934; c=relaxed/simple;
+	bh=oxqlNa2/y8qjO9ll8Dvgw+y4W7yKloCRO0IzaMmUHtM=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=p+oVRFQoIBQsVaXPtZGhVpjh+ggnQeIQSWSwHAh6H1bXWuzC3ujkaQ0MLD7KlaZ6KsgB8rhfJs1dDJYIwgLyOaPVt+yrqcQmsmZxsqokMR848enWXU/ioTAuXn08z13GaX0uAeI0NKpjxFvZ9Y2w8WvWV2pWkL8VwiBtwFW0at0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=ui6dLRpP; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=J9qSfKVQ; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=eJAMAc2M; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=82O7nivf; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=purestorage.com header.i=@purestorage.com header.b="fVpfUNl8"
-Received: by mail-dy1-f175.google.com with SMTP id 5a478bee46e88-2dee127b3c5so3098026eec.1
-        for <linux-scsi@vger.kernel.org>; Tue, 28 Apr 2026 18:27:44 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=purestorage.com; s=google2022; t=1777426064; x=1778030864; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=xaFCVspXA9Prc2DTVvXCWvBNdQ3yKJ4mWd9c+nV6Eug=;
-        b=fVpfUNl8hnqzWnj/EB8TisU2bJz/CY9jCZlsvBpLvePyhDXcZ9llm8tVm0IqeE4evt
-         LrIzQea7BftnzZWIEewCaSgqGm8AA6jqVdCaBtgXkt86JXdv7wZgEALsk7kryP047MSF
-         hSe2Slusq0CN/u4RDzN75KZGJXjZAGXK6ET7LdFdENIyGPfzCkgCuJUpYTg342aa2gU7
-         aZL0aUJdIxj1r8lpo5zTOp+votRqTdtY9rlLqi0dNfIhtqKVNd0bxposHQ3bjVINxIOs
-         2w6U3wk+zaoR0BZCKVvVRA/GQaBP1S4IeA8OWkBFqhqF3XPu0b1oMhG/igE/+WOE+uZq
-         OVPQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1777426064; x=1778030864;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=xaFCVspXA9Prc2DTVvXCWvBNdQ3yKJ4mWd9c+nV6Eug=;
-        b=Sl3jFxTb11Itr84mYmeCp+HyDlEmcFZAhbn/MD56KBkZo4MXqhkwo9GmPGmz4o2B5T
-         VgNgYHN9BzUL6vMOqASuF6+lranFMP7m0kqm65bAln1n8m1CsadSDV0CcJefYteGoKM8
-         NWnE37s/xfMzJaAhuC5hno2Dp8/oIPkYLEY+b7G2Rcnpy3Ap0cNU7hKr/cEC1R0D11yK
-         hUEwExJ1OzxdTqT/LaqCHK9bBLTwZDqlW3sa9BRSxeEcRJNPyI8V1f5v9Pi9lwjV1KGV
-         /aI3InxQHkJpVgknR41qEhVY7CuHQuY5WKPcTGdQAl0Eh+WXSmbIxu2Sei6SLayCerDv
-         kIKg==
-X-Gm-Message-State: AOJu0YzW12sXpoGThdZimviGViwiw4B09Fkq2Hk/DSuGRNwJkRp8cEp7
-	AyiKpVL+FU1w8k12dm6TLBtA/MydpESPXtBboxh/wFrKO1LMxbUF1vTqWQ1dfcbeBPFMhkJApTn
-	0BdodBf0cLwgFZ7waN1PT8iDFYtfWYlYBUFaR3PBe6tzGO3ZzZ1DoGvIy0p1+c69xx75kXvAMpJ
-	7SbhgoIQ/2w4JjTuK4g9Ri+Qc4sdl/dtDyW3MnCAgN7z+OpUyNVw==
-X-Gm-Gg: AeBDiesskvsHK9L2pgNlyrw6Yuj68kIplJjBlgEHTtmHbZbUYTaC2VrjRLCKuF4Pu7l
-	YnsBvohJEQhjTCpZoY1uPoJz3vYSN5ur7IV6vZG26VWI1yaBsorWQVAcU1oIbBm5kUEDGTbCChu
-	CpLMWBsOEGyXdS1bvCIyWnAXd2sczjK9ADYQkPoi3boJ/1P199l5QNwmTdmFkvWE6UJdeYBHrUy
-	OMUT4c7TRnXvUC14uuyluXq6lH7TNm7scYIE7+equRphYakR8r57DnY1UZqSkfMfocZznib/I57
-	6FSviNpStaOb7Lbp2uNDseg1d0bOeVSOF8nA7BV2Fo3bwTeX0gUUgL3Uivw6YiBJ6IrNGrP84Vy
-	He5msx0M96vgiXo624G96M6lxsWPY0QK9dOlgYeYKPPruulNw18Dibj6um4rg2FI54NEW3podAh
-	6xsJxvoeSJ9/6Taa/xX+l1Y0TFLqUGjWXmuHQrmA3r/voEEGifz+02YoOEPMTKUtbt0/8ITIJx5
-	xOvnqNsLzHY0JzWEwCoRWT628/Abd+IsEFgfgcAAp/kljsZWs2C6ArR01lB5gjrT9tZ5OyqFwIi
-	7G35ovKebPu9DBarbpAj0sbc4TMEX1NGhXA=
-X-Received: by 2002:a05:7300:238f:b0:2de:6fac:f666 with SMTP id 5a478bee46e88-2ed0a118364mr2696891eec.27.1777426063438;
-        Tue, 28 Apr 2026 18:27:43 -0700 (PDT)
-Received: from brian--MacBookPro18.purestorage.com ([136.226.65.113])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-2ed1c0d8f90sm473449eec.30.2026.04.28.18.27.42
-        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
-        Tue, 28 Apr 2026 18:27:42 -0700 (PDT)
-From: Brian Bunker <brian@purestorage.com>
-To: linux-scsi@vger.kernel.org
-Cc: hare@suse.de,
-	Brian Bunker <brian@purestorage.com>,
-	Krishna Kant <krishna.kant@purestorage.com>
-Subject: [PATCH v2 2/6] scsi: Protect INQUIRY sysfs attributes with mutex
-Date: Tue, 28 Apr 2026 18:27:33 -0700
-Message-ID: <20260429012733.40855-1-brian@purestorage.com>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <0a89cb03-31d6-4f5f-a84c-a838d4d99ab5@suse.de>
-References: <0a89cb03-31d6-4f5f-a84c-a838d4d99ab5@suse.de>
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="ui6dLRpP";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="J9qSfKVQ";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="eJAMAc2M";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="82O7nivf"
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id E8C556A81B;
+	Wed, 29 Apr 2026 07:15:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1777446931; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=v+M0QKmMGibIDIev9gzuqJ8SGIZVpscaEkkEnzze7Wc=;
+	b=ui6dLRpP0xcrWBwX/lfIUf7GD+tHCXC9ln1tqSRB1n8NrRHyVJ6AKpmmNAeWhH6iRugEd5
+	3S77gah2+6FArlg5vnda64lZsz2Mq5sPY+FZBAROh+8h9vvAfepEugpK8BiF8V6rXddZf/
+	haF8w8MPcvG8+8knqxuFX0wfixz100w=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1777446931;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=v+M0QKmMGibIDIev9gzuqJ8SGIZVpscaEkkEnzze7Wc=;
+	b=J9qSfKVQOlRR2e42u2O4sh3a+DpgFA1j7+YzK29qcg8UrDik46lNrQIo7R5/U2TV6VQRBm
+	5zCyXms6rFblBdCA==
+Authentication-Results: smtp-out1.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1777446930; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=v+M0QKmMGibIDIev9gzuqJ8SGIZVpscaEkkEnzze7Wc=;
+	b=eJAMAc2MwcwLKNCUwyEYkSaE7IFXYOGx5bGcZ1lxLylUQIhX4cT0AckPIyeEQqe4rXVwPC
+	cKRGvi5PVjxHEvVj505cu6vSwc0k0zywr8cw3Re+UlIEAvJeDw448mHroWZkF+27q0X39i
+	e2drt+KvUduHzCEd477cR4wf8FiqSfQ=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1777446930;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=v+M0QKmMGibIDIev9gzuqJ8SGIZVpscaEkkEnzze7Wc=;
+	b=82O7nivfzJX0mhE90On+lguBHnjxhhH2VEt66Axh7/exWHmXw29ZVf8rUmCXysZ/WGx5If
+	IqPbYMl5dolfC+DA==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 67944593B0;
+	Wed, 29 Apr 2026 07:15:29 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id eapEFxGw8WkzAwAAD6G6ig
+	(envelope-from <hare@suse.de>); Wed, 29 Apr 2026 07:15:29 +0000
+Message-ID: <3a606788-bd88-4249-bf1c-b0f99cf680e3@suse.de>
+Date: Wed, 29 Apr 2026 09:15:28 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v12 05/13] blk-mq: add
+ blk_mq_{online|possible}_queue_affinity
+To: Daniel Wagner <dwagner@suse.de>,
+ Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Cc: Aaron Tomlin <atomlin@atomlin.com>, axboe@kernel.dk, kbusch@kernel.org,
+ hch@lst.de, sagi@grimberg.me, mst@redhat.com, aacraid@microsemi.com,
+ James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com,
+ liyihang9@h-partners.com, kashyap.desai@broadcom.com,
+ sumit.saxena@broadcom.com, shivasharan.srikanteshwara@broadcom.com,
+ chandrakanth.patil@broadcom.com, sathya.prakash@broadcom.com,
+ sreekanth.reddy@broadcom.com, suganath-prabu.subramani@broadcom.com,
+ ranjan.kumar@broadcom.com, jinpu.wang@cloud.ionos.com, tglx@kernel.org,
+ mingo@redhat.com, peterz@infradead.org, juri.lelli@redhat.com,
+ vincent.guittot@linaro.org, akpm@linux-foundation.org, maz@kernel.org,
+ ruanjinjie@huawei.com, yphbchou0911@gmail.com, wagi@kernel.org,
+ frederic@kernel.org, longman@redhat.com, chenridong@huawei.com,
+ kch@nvidia.com, ming.lei@redhat.com, tom.leiming@gmail.com, steve@abita.co,
+ sean@ashe.io, chjohnst@gmail.com, neelx@suse.com, mproche@gmail.com,
+ nick.lange@gmail.com, marco.crivellari@suse.com,
+ linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+ virtualization@lists.linux.dev, linux-nvme@lists.infradead.org,
+ linux-scsi@vger.kernel.org, megaraidlinux.pdl@broadcom.com,
+ mpi3mr-linuxdrv.pdl@broadcom.com, MPT-FusionLinux.pdl@broadcom.com
+References: <20260422185215.100929-1-atomlin@atomlin.com>
+ <20260422185215.100929-6-atomlin@atomlin.com>
+ <20260427153416.MeVS8yxF@linutronix.de>
+ <c4927a2b-c18d-42ce-8a60-d6d388155671@flourine.local>
+Content-Language: en-US
+From: Hannes Reinecke <hare@suse.de>
+In-Reply-To: <c4927a2b-c18d-42ce-8a60-d6d388155671@flourine.local>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
+X-Spam-Score: -6.80
+X-Spam-Level: 
+X-Spamd-Result: default: False [-6.80 / 50.00];
+	REPLY(-4.00)[];
+	BAYES_HAM(-3.00)[100.00%];
+	SUSPICIOUS_RECIPS(1.50)[];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	RCVD_TLS_ALL(0.00)[];
+	TAGGED_RCPT(0.00)[];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	ARC_NA(0.00)[];
+	FUZZY_RATELIMITED(0.00)[rspamd.com];
+	MIME_TRACE(0.00)[0:+];
+	MID_RHS_MATCH_FROM(0.00)[];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	RCPT_COUNT_GT_50(0.00)[52];
+	FROM_HAS_DN(0.00)[];
+	FREEMAIL_CC(0.00)[atomlin.com,kernel.dk,kernel.org,lst.de,grimberg.me,redhat.com,microsemi.com,hansenpartnership.com,oracle.com,h-partners.com,broadcom.com,cloud.ionos.com,infradead.org,linaro.org,linux-foundation.org,huawei.com,gmail.com,nvidia.com,abita.co,ashe.io,suse.com,vger.kernel.org,lists.linux.dev,lists.infradead.org];
+	TO_DN_SOME(0.00)[];
+	FROM_EQ_ENVFROM(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	TO_MATCH_ENVRCPT_SOME(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,suse.de:mid,suse.de:email]
+X-Spam-Flag: NO
 
-All INQUIRY-derived sysfs attributes (type, scsi_level, vendor, model,
-rev, cdl_supported, and the binary inquiry attribute) read data that
-can be updated during device rescan. These reads must be protected
-against concurrent updates.
+On 4/28/26 14:53, Daniel Wagner wrote:
+> On Mon, Apr 27, 2026 at 05:34:16PM +0200, Sebastian Andrzej Siewior wrote:
+>> Which driver uses cpu_possible_mask? This mask is assigned at boot time
+>> once the kernel figured how many CPUs are possible based on ACPI or
+>> whatever the system uses. This mask does not change.
+>>
+>> I only see drivers/scsi/lpfc/lpfc_init.c using it. Looking at
+>> cpu_possible_mask might not be the right thing. It is usually the same
+>> thing as "online" except on system where ACPI thinks that something
+>> could be added via hotplug _or_ if the admin shuts down a CPU via
+>> cpuhotplug _or_ boots with less (there a command line option for
+>> that).
+> 
+> These HBAs are used on PowerPC which supports lpar (CPUs can be added
+> during runtime) I am told it's properly the only driver which is caring
+> about this type configuration, thus a bit of an odd ball.
+> 
+>> In case cpu_possible_mask != cpu_online_mask the intention is to
+>> allocate memory and setup irqs for the offline CPUs?
+> 
+> I can't answer this. The lpfc driver has several strategies implemented
+> how it spreads its resources.
 
-Use the existing inquiry_mutex to protect access to these sysfs
-attributes. This ensures that userspace always sees consistent INQUIRY
-data, even if a rescan is updating the buffer concurrently.
+The intention is to setup the driver queue affinity only once (knowing 
+that all possible CPUs are handled correctly), avoiding a driver
+reconfiguration on CPU hotplug.
 
-Replace the sdev_rd_attr macro with two new helpers,
-sdev_rd_inquiry_attr_int and sdev_rd_inquiry_attr_str, which generate
-the show functions for INQUIRY-derived integer and string fields and
-take the inquiry_mutex around the field access.
+Not the most efficient one, sure.
 
-This is preparatory work for adding INQUIRY data update support during
-device rescan operations.
+Cheers,
 
-Signed-off-by: Brian Bunker <brian@purestorage.com>
-Signed-off-by: Krishna Kant <krishna.kant@purestorage.com>
----
-v2:
-  - Protect all INQUIRY-derived fields (type, scsi_level, cdl_supported),
-    not just the string fields (vendor, model, rev) and binary inquiry
-    attribute. If we accept that INQUIRY data can change, we cannot assume
-    which fields will change.
-  - Replace the sdev_rd_attr macro with sdev_rd_inquiry_attr_int and
-    sdev_rd_inquiry_attr_str helpers to avoid duplicating the lock/unlock
-    boilerplate across each show function.
-
- drivers/scsi/scsi_sysfs.c | 69 +++++++++++++++++++++++++++++++--------
- 1 file changed, 55 insertions(+), 14 deletions(-)
-
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index dfc3559e7e04f..4a2b89e13b7bf 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -636,22 +636,58 @@ sdev_show_##field (struct device *dev, struct device_attribute *attr,	\
- }									\
- 
- /*
-- * sdev_rd_attr: macro to create a function and attribute variable for a
-- * read only field.
-+ * sdev_rd_inquiry_attr_int: macro to create a function and attribute for a
-+ * read-only INQUIRY-derived integer field. The inquiry_mutex protects
-+ * against concurrent updates during device rescan.
-  */
--#define sdev_rd_attr(field, format_string)				\
--	sdev_show_function(field, format_string)			\
--static DEVICE_ATTR(field, S_IRUGO, sdev_show_##field, NULL);
-+#define sdev_rd_inquiry_attr_int(field)					\
-+static ssize_t								\
-+sdev_show_##field(struct device *dev, struct device_attribute *attr,	\
-+		  char *buf)						\
-+{									\
-+	struct scsi_device *sdev = to_scsi_device(dev);			\
-+	ssize_t ret;							\
-+									\
-+	mutex_lock(&sdev->inquiry_mutex);				\
-+	ret = snprintf(buf, 20, "%d\n", sdev->field);			\
-+	mutex_unlock(&sdev->inquiry_mutex);				\
-+	return ret;							\
-+}									\
-+static DEVICE_ATTR(field, S_IRUGO, sdev_show_##field, NULL)
-+
-+/*
-+ * sdev_rd_inquiry_attr_str: macro to create a function and attribute for a
-+ * read-only INQUIRY-derived string field. The inquiry_mutex protects
-+ * against concurrent updates during device rescan.
-+ */
-+#define sdev_rd_inquiry_attr_str(field, accessor, len)			\
-+static ssize_t								\
-+sdev_show_##field(struct device *dev, struct device_attribute *attr,	\
-+		  char *buf)						\
-+{									\
-+	struct scsi_device *sdev = to_scsi_device(dev);			\
-+	ssize_t ret;							\
-+									\
-+	mutex_lock(&sdev->inquiry_mutex);				\
-+	if (sdev->inquiry)						\
-+		ret = snprintf(buf, 20, "%.*s\n", len,			\
-+			       accessor(sdev->inquiry));		\
-+	else								\
-+		ret = snprintf(buf, 20, "\n");				\
-+	mutex_unlock(&sdev->inquiry_mutex);				\
-+	return ret;							\
-+}									\
-+static DEVICE_ATTR(field, S_IRUGO, sdev_show_##field, NULL)
- 
- /*
-  * Create the actual show/store functions and data structures.
-  */
--sdev_rd_attr (type, "%d\n");
--sdev_rd_attr (scsi_level, "%d\n");
--sdev_rd_attr (vendor, "%.8s\n");
--sdev_rd_attr (model, "%.16s\n");
--sdev_rd_attr (rev, "%.4s\n");
--sdev_rd_attr (cdl_supported, "%d\n");
-+sdev_rd_inquiry_attr_int(type);
-+sdev_rd_inquiry_attr_int(scsi_level);
-+sdev_rd_inquiry_attr_int(cdl_supported);
-+sdev_rd_inquiry_attr_str(vendor, scsi_inq_vendor, SCSI_INQ_VENDOR_LEN);
-+sdev_rd_inquiry_attr_str(model, scsi_inq_product, SCSI_INQ_PRODUCT_LEN);
-+sdev_rd_inquiry_attr_str(rev, scsi_inq_revision, SCSI_INQ_REVISION_LEN);
- 
- static ssize_t
- sdev_show_device_busy(struct device *dev, struct device_attribute *attr,
-@@ -915,12 +951,17 @@ static ssize_t show_inquiry(struct file *filep, struct kobject *kobj,
- {
- 	struct device *dev = kobj_to_dev(kobj);
- 	struct scsi_device *sdev = to_scsi_device(dev);
-+	ssize_t ret;
- 
-+	mutex_lock(&sdev->inquiry_mutex);
- 	if (!sdev->inquiry)
--		return -EINVAL;
-+		ret = -EINVAL;
-+	else
-+		ret = memory_read_from_buffer(buf, count, &off, sdev->inquiry,
-+					       sdev->inquiry_len);
-+	mutex_unlock(&sdev->inquiry_mutex);
- 
--	return memory_read_from_buffer(buf, count, &off, sdev->inquiry,
--				       sdev->inquiry_len);
-+	return ret;
- }
- 
- static const struct bin_attribute dev_attr_inquiry = {
+Hannes
 -- 
-2.50.1 (Apple Git-155)
-
+Dr. Hannes Reinecke                  Kernel Storage Architect
+hare@suse.de                                +49 911 74053 688
+SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
+HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
