@@ -1,199 +1,227 @@
-Received: from mail-dy1-f173.google.com (mail-dy1-f173.google.com [74.125.82.173])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from CWXP265CU008.outbound.protection.outlook.com (mail-ukwestazon11020139.outbound.protection.outlook.com [52.101.195.139])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8F63836BCC9
-	for <linux-scsi@vger.kernel.org>; Wed, 29 Apr 2026 22:49:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.173
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777502989; cv=none; b=OPhwqbYYPmeLzHfocueQIA8ll8svbSkFWMBpmD1mZwZKEnUg6IO+5nYBUcD03YCJtpaKr5uo/WHxlNai2S5p1hWaeBvEERcJGRqtTWW02X79mWkzyb5aRlTzjUo2xxE9xnkya7ctxVc1lWW3H+p5hc6BgIFmSqORQtbRgjU5cTI=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777502989; c=relaxed/simple;
-	bh=IFhEGY9BlOoQONtUkaRerEM6UrLsmOCDKf2/9prRx8g=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=UeDj+aisdKF59FQa6V/Mcqb8DMFhkZ3/c5rAOKwykMo+IEC2+WfJgnWYSH5nneLrgYlDkn4QbE+tYsynMtTjMVXaVeWVEwtnY33TvXOdBmxB8W0F2jO8Xkb2rzcXagGDeSf0aatf2OLOBLEKi9L5oNpVn8F9GvDmx1sRaZIBDXQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=purestorage.com; spf=fail smtp.mailfrom=purestorage.com; dkim=pass (2048-bit key) header.d=purestorage.com header.i=@purestorage.com header.b=QdvCcjAk; arc=none smtp.client-ip=74.125.82.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=purestorage.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=purestorage.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=purestorage.com header.i=@purestorage.com header.b="QdvCcjAk"
-Received: by mail-dy1-f173.google.com with SMTP id 5a478bee46e88-2d891442388so784260eec.0
-        for <linux-scsi@vger.kernel.org>; Wed, 29 Apr 2026 15:49:47 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=purestorage.com; s=google2022; t=1777502986; x=1778107786; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=V4hDdFnXoHRRwpFGqoMHe7UXYI9U7R8RD4qprGz1SYE=;
-        b=QdvCcjAkp/EiXqS6w2g7Aky0L8MyaClFGpVWoZ2FK9dfNmOMRryoMlf3GbJ9oHXJ+v
-         l6M64Ig1Cqm1WzR0E7B+dPnOcOnxwaUv+2QYmcOImC1saZIzQ+utAPpMc4Fg6SkVD+Pt
-         QdDbBujDsPmoXw/fOl8/6oZ3zn5KbxqGzmNkLJRhjzwObamUYsFrH9SOweVr84uSQ3GS
-         YFBKWXE1LdwSGCMc2oDWTFfUm/zv2WgYLv+ltgK0+RH22H4iqdhWFWesnqCV6L9Osm/N
-         CpIT3NzkNFvKmCgXCiqivHdcCse/eIALbUpKg/zvvPA0m9srO19+DsjVHd2Em3PzVeaR
-         uspg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1777502986; x=1778107786;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=V4hDdFnXoHRRwpFGqoMHe7UXYI9U7R8RD4qprGz1SYE=;
-        b=qUcLRlqeZSKhkfxt6pK129+l7Ui1n9pPBt87400kVOrF9tLPa5lfYPWawnLMldxzai
-         3O0yPc+gEg7pUfOxE9nwSUqgyTC5Y4boeRrIw/U8uZCN23j8jl1IcepcTJ3hO+xtbT7t
-         VJaWist/opo4lOOfUQ5meNi5AmUJudXSnYjVudVPX+fTbEIucxIaY/ejunHuySLcs2NZ
-         K0iJDBa/YKOSraZto8mKecZX1SYlPbsNU2lMnlC/vwLWgF74NZrbvPVTCuuz4mbd8/b+
-         1JzNjazbMRnKT2+jq7XIBtp7brIErhZ9dAeZWOY8EiE9zNN2aYv+Mdtfl3xxVqnVBg5L
-         yqQQ==
-X-Gm-Message-State: AOJu0Yx1scrOMS2voRGamZ3IG+B0arNwX1MWJb+bE5j/BUn4AAZTxyft
-	h4gPwjzNH+nbLSdvjajrq47bFLm7migzCkt0f9bW/46mdY/HJJ6pTmrO7cJwR2Njg0WHyJi64vy
-	9rjM6G7aSPLKr67yiOf7X8WsEe2wAF+fYBgfqRVzKj1Es06BoQzzVVZa0Gr0lWDfr+jCtpdqVVp
-	5ULJE1CgNs9/wGmwPr8T2fF6evtTtHEUye5OQvsT8FckXALg21VQ==
-X-Gm-Gg: AeBDiesniCMEzIdXZqEN7f4ugCyLuWsEZIdVrtGLujcyiM73GJHGfuMafAmSi6mMvxn
-	q1PyC7bXkCW7szUI40k27PHlws3xMcQurGa8ndBFUzi/LakZZoTxB2XlXk/+vmLgEgqNnonaJzW
-	m5HWwBYjtMCGHZDoqdbgQGYAPPNFOvI/6/IC74v8ICIoSEToLxWmGLrq+ATQWs4ZgmO03tnffjF
-	3tppwx6Ym/PubjiZqdbCDCCVfdHfcgx8WWYybUwNXpJN600XaD+XODGcZ16FOxZ5+Ep2xPJpzeS
-	MwK2WsyamSkqgGyKx5oqdnbs0XXYwXvRwoMVbTJKdCF8s9EMypPtpjA9jvmmi5yEnCdHvlUoGs6
-	R1hei9yLfxpH7HucphmbXxV/Q8QVJWkURIBE0KnW7GIj8ALFkR40KlhetAu810GlXQzWDbuYs0j
-	gYoGLFv06RELeGJ+TWoj46oa710QANW6fKkywJOhndg84kUpnunVBZPj1L5FNgbr6jbYRSSjjjI
-	BkEi1etS+ncsBJtLYP4tb81hwui6ca1eQ201OCrsJm4Uzyk8Ub8wUV/SurwNgrOb3tyaoVD2PHm
-	8nIFwmcJ+auSj+YSLROG2SouMwTOgCiasxE=
-X-Received: by 2002:a05:7301:19a6:b0:2d9:fa9c:87a9 with SMTP id 5a478bee46e88-2ed3d2bf86amr147820eec.5.1777502986098;
-        Wed, 29 Apr 2026 15:49:46 -0700 (PDT)
-Received: from brian--MacBookPro18.purestorage.com ([136.226.65.113])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-2ed1bf8ddaasm4382609eec.7.2026.04.29.15.49.45
-        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
-        Wed, 29 Apr 2026 15:49:45 -0700 (PDT)
-From: Brian Bunker <brian@purestorage.com>
-To: linux-scsi@vger.kernel.org
-Cc: hare@suse.de,
-	dlemoal@kernel.org,
-	bvanassche@acm.org,
-	Brian Bunker <brian@purestorage.com>,
-	Krishna Kant <krishna.kant@purestorage.com>
-Subject: [PATCH v3 2/6] scsi: Protect INQUIRY sysfs attributes with mutex
-Date: Wed, 29 Apr 2026 15:49:39 -0700
-Message-ID: <20260429224939.77082-1-brian@purestorage.com>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260429012733.40855-1-brian@purestorage.com>
-References: <20260429012733.40855-1-brian@purestorage.com>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 115CE39EF3D;
+	Wed, 29 Apr 2026 23:32:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.195.139
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1777505555; cv=fail; b=YnhRapHbdRUhZcB7sIy0hcPkWv2KbuzauLhhoge01kr3CZ2ODcpHnUUn8xFDZ3MfCCH+Jqkz32w9fDJiLS8B3lVA8DEQfGoih6OOQZTAzIP23kOYGfVSfPYcP1FP4p/jrvw9TNiZgZLqV4fmuZ4klxK0htNvpJBL9T1LRHe2Tu0=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1777505555; c=relaxed/simple;
+	bh=kKc3VjlfIDZ4/nvRZFvy86K8Q3CG0qVg1vTyPrfQlzE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=SXHSPyih1JzOZwqvKtBYOXawMfByVoUuLwugSIsx8s8Cfm0bm/7t4ahUZI9HejTsaOl9oYcrgxCpjxaugWPrhScTPQnKlVal+mMO8T53C9+K5mMu29F4t3NT8uDL/qvMEncMAXDGP5wHswvUNBlDNr+McllWzc73ccuryrrCsrQ=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=atomlin.com; spf=pass smtp.mailfrom=atomlin.com; arc=fail smtp.client-ip=52.101.195.139
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=atomlin.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=atomlin.com
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=x1RK/Y+RpxOLgu57h6O1rjXVyRpCJL2dN+DanlINsspAY/SeErriqkWUOTujlIjGbEB+JtY4gNogUoxxfg6zZCT5DRcvmq0+rrVQzMpN/yjcgVktAGQ7lAs9ACNYtGMFblycE472sBwp5XNp3G+WdsVdMRQsaTn5xoOk7nXe0CY/yqUMnWBcvh9NmOQu+SP9ZFU2o82Pvvo88TnRsw4Syecgt7Oj4ZSqxwCEUq5taTNHw/bnbzcn3j8nObNRH9+AqmqKRNsXC12H7+EOu4728KnOZJKnSZfhPXWhDfWLf4BTIMfBjoefxedT5w/x6t+BNWREjSu2gwJUT7yUE8xJaQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=dawF3b4RaIWUEiy//po8fh6kJaB714rQDtdWg97njKI=;
+ b=lMPxyQqjx3EJbOzNTAZ3+U1Y7uS9U+uP9S8dmXBIm7DGyufjYcGPk2ITKuE0yZ7kHzSVkoyS9sWp4tTDxPJNROB/TEqLeYUFsfaFsMSbQEYxLpR/AdHC/LiheA5VMCxE8GWeO9qODpGi+5JQD0uVT2gPBCTEHd48/1mX/B0wdbutl7RJffS63eNw7u+gDbTqPIAvNj0EYEMVj5tZTff3+dJvgGW87rQp00bxKJSeRpBgi21AgBnhDp8L1ia9fn42WkmXohyVAr7xPvoUm20NpIZZGHYXHxvgBD1c1HkFPiIYJJf0rjGMHcMcR6h4tgFH7i6wm3m0089MU7hX2P6zEA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=atomlin.com; dmarc=pass action=none header.from=atomlin.com;
+ dkim=pass header.d=atomlin.com; arc=none
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=atomlin.com;
+Received: from CWLP123MB3523.GBRP123.PROD.OUTLOOK.COM (2603:10a6:400:70::10)
+ by LO0P123MB6267.GBRP123.PROD.OUTLOOK.COM (2603:10a6:600:264::10) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9870.18; Wed, 29 Apr
+ 2026 23:32:30 +0000
+Received: from CWLP123MB3523.GBRP123.PROD.OUTLOOK.COM
+ ([fe80::de8e:2e4f:6c6:f3bf]) by CWLP123MB3523.GBRP123.PROD.OUTLOOK.COM
+ ([fe80::de8e:2e4f:6c6:f3bf%2]) with mapi id 15.20.9846.025; Wed, 29 Apr 2026
+ 23:32:30 +0000
+Date: Wed, 29 Apr 2026 19:32:26 -0400
+From: Aaron Tomlin <atomlin@atomlin.com>
+To: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Cc: axboe@kernel.dk, kbusch@kernel.org, hch@lst.de, sagi@grimberg.me, 
+	mst@redhat.com, aacraid@microsemi.com, James.Bottomley@hansenpartnership.com, 
+	martin.petersen@oracle.com, liyihang9@h-partners.com, kashyap.desai@broadcom.com, 
+	sumit.saxena@broadcom.com, shivasharan.srikanteshwara@broadcom.com, 
+	chandrakanth.patil@broadcom.com, sathya.prakash@broadcom.com, sreekanth.reddy@broadcom.com, 
+	suganath-prabu.subramani@broadcom.com, ranjan.kumar@broadcom.com, jinpu.wang@cloud.ionos.com, 
+	tglx@kernel.org, mingo@redhat.com, peterz@infradead.org, juri.lelli@redhat.com, 
+	vincent.guittot@linaro.org, akpm@linux-foundation.org, maz@kernel.org, ruanjinjie@huawei.com, 
+	yphbchou0911@gmail.com, wagi@kernel.org, frederic@kernel.org, longman@redhat.com, 
+	chenridong@huawei.com, hare@suse.de, kch@nvidia.com, ming.lei@redhat.com, 
+	tom.leiming@gmail.com, steve@abita.co, sean@ashe.io, chjohnst@gmail.com, neelx@suse.com, 
+	mproche@gmail.com, nick.lange@gmail.com, marco.crivellari@suse.com, 
+	linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, virtualization@lists.linux.dev, 
+	linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org, megaraidlinux.pdl@broadcom.com, 
+	mpi3mr-linuxdrv.pdl@broadcom.com, MPT-FusionLinux.pdl@broadcom.com
+Subject: Re: [PATCH v12 02/13] lib/group_cpus: remove dead !SMP code
+Message-ID: <v2xfjap2dkljbhz77d4437tbxj7tngm2ywiujgelpigvpphecg@nr2qtntp7lyk>
+References: <20260422185215.100929-1-atomlin@atomlin.com>
+ <20260422185215.100929-3-atomlin@atomlin.com>
+ <20260427152104.WTGAesGs@linutronix.de>
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="gjvyk77mxr2rqak6"
+Content-Disposition: inline
+In-Reply-To: <20260427152104.WTGAesGs@linutronix.de>
+X-ClientProxiedBy: BN9PR03CA0114.namprd03.prod.outlook.com
+ (2603:10b6:408:fd::29) To CWLP123MB3523.GBRP123.PROD.OUTLOOK.COM
+ (2603:10a6:400:70::10)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: CWLP123MB3523:EE_|LO0P123MB6267:EE_
+X-MS-Office365-Filtering-Correlation-Id: 03da2b25-01ab-488c-859d-08dea647948e
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|366016|7416014|376014|1800799024|56012099003|22082099003|18002099003;
+X-Microsoft-Antispam-Message-Info:
+	sczNzkK6M0JgCkgd+TFyVmmVS65ofhd3jmI1N7OJgL9NbMnxyez77Vh9C/bg/ut3jQ4FD8G2sT+V+sN67RS2N9gkxaMzPVHsPD7+/AbanRC1pwMyt4F9+U0M1Xpp+VKFJnDIy97kNvkG3kJupdykUrqNFwpAu4yoenv+xHj3oI0UUW9FWGKbA/8u85Nw1vJgDKEbLjV7i6LZ5TEnYfnQq9eUDI1B19GqHm3nt9W9QRFm0mq14OvQ19q72FzDJsfb0/jCtzkvJQx9I+stbuHooyRSGU/Ul48rqG6hZDIPOFZrTky0QRhSK9+MJtMp4C7U9sgiZ60/q1/acHdcz/ncdCyw9th6vu1LYWxfU/lda+mmrsrMQ9cn3HSSYXxjbG70HQ1h6cg34Hl2j+K3azvjLmpN45v/Aw00Gd0rGxavQ4/2pJDZLiqYnIdoGOKiYWspckU1iB1AJmquVpPjIjrMf88nIsiHJqvBxmw/hrLfrQMYiJHTmVB5+u7qGvcQZbwPPU9dcIDRavoUjh7RIFueg7PoSvqpVZi/UayXw3SdfAJxhP6hg++tM80M1ZSXYSHyNAgRJ2LRTZSxaYpi6W7iKc9BNZ5MYnatKE1tXyowvCIa/fRBDH/jcJOVr+u5CMr2Sj1a97pSAZi0TGOnW4VMY/X9giWIZmjsPQcU++iDrMo2g3S+vgTwAxZbZoaav1Q4WhdQFUxWnmUQfi3hMyzCFrwQtGDMYzaZ3btvZuVQ+Eo=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CWLP123MB3523.GBRP123.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(366016)(7416014)(376014)(1800799024)(56012099003)(22082099003)(18002099003);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?NVRrVFFPRG5TaFA4eUVqaFN1akVqSldTcWY5MjVGWC9KSVFqQ3hhT0NEYkhR?=
+ =?utf-8?B?YVo0TlZCOXkzRDJ2RW9yRE9BRjN5c0M0dlhIdlJVZ1FzcGRta0Q2Z1B5TWxH?=
+ =?utf-8?B?YnY5L29WSkE2dUZ6MWtKV3Z4anJaOVoxbGpYRnk5MUpXeTRYVE8rUEVZNzdS?=
+ =?utf-8?B?SHJ3dkpYREd5cmxyOXYvUmRzRm1JeEtBOWpHZHRXelZNdjF1dDRoMmRMbXV6?=
+ =?utf-8?B?UVErdGl0QjNzaGo3VVhSNGxjbmcwNEhNLzZRYkxVcy9kQjRkSldseDR2Y053?=
+ =?utf-8?B?WGx2S2FEL2RCaVhEdnRBUExUK2RCNTN4YnRpaTVKTFhVQ1k4eHpMVHVuWVJw?=
+ =?utf-8?B?bUgvOThrakVJV3hOVE5yZGRJNTVsZkpQZVEvczhmS1JQVlRYKzdyMVpjQ2xn?=
+ =?utf-8?B?TDNjWW40eEsvS003U3dxYzdRS0lOeTd1elQzaUNiRnY1YnlVb0d6SkpmTmZq?=
+ =?utf-8?B?NmdCaXNKQnkyVmw0OHp1c0FJM0RWVkp6Yk8yaUE3RWZHLzZvZ2xtVnNwSlRl?=
+ =?utf-8?B?NW9wOXgwZ3NWSXVEUU9kTnR3dzR6US9zd242dmN0eFc0YXhaMGxKcy93emNn?=
+ =?utf-8?B?YndpaFZEVStaQzgrZTlRNGJaQ1FBSnNxLzVXL215N1pYcGpvSnpSbUFvSmlP?=
+ =?utf-8?B?SExsb3I5K05teHdxclhWSU1vT3Rwd0x2NXNEbVFjL2Q1eTBTNmozMFpRTWVi?=
+ =?utf-8?B?UUVMUFg1VUtvK0RVYlFqY01KcDBNbTlrajk2SVQ5cUVuWHpWaW84S1FsSTZU?=
+ =?utf-8?B?NFlxby9FNEtEaDhsSFFjRjdncXFJNW5EYjU3bUUvaUpYdGJlQWFYODRWK1ZQ?=
+ =?utf-8?B?Q0JaZGVkU1E3TDRvQlZUeXFWZXdISnBwZDRtMWVueUh3MHJMK1QyUEhIMXJG?=
+ =?utf-8?B?ZUlUbThadDVNaWNsTk0vRGRMNnFEYmxCbkpzTjQ3SVRYT0ZrYTBwUTEvYk1q?=
+ =?utf-8?B?TUVlaXFNQUwxRmkra2xrUjlQdXozei84Q28xZ1NKd2k4cXBEblRCOGNXc1Zi?=
+ =?utf-8?B?NFU5QW5TL0xuejIvWk5OeVpzaFpJU3gyU3Z3a1dXY0JlbDdZdW9XMkRMNTFo?=
+ =?utf-8?B?eHhDN05tTTkvaTVPQVAvaVh3anE4cXRWcVRkWUkxNTR1WVlxTTMrMGg2MUQ4?=
+ =?utf-8?B?UG5NSmZVbW9xMHBrVFlyeHJ1bis5dDhRbmhDaVBxcVZRQUZKUHhnWnJlVTQv?=
+ =?utf-8?B?SkpGdWUzUjhlU0F3aURNVVdBRUxIN0lYRHJCekJ5UXZzZmVkWFdNWHJSTEQ4?=
+ =?utf-8?B?dFZhTzBhVE8wK0J1QWFOQlZrTWtGYzFjcytHZmNMVHo0TWFUdk1HbW5IYlRZ?=
+ =?utf-8?B?aE16TU95VWE1STJHVGJtK1pyd1A2WTNtTHM3aE8zTzVINmJYQ0RQYnBnTGVD?=
+ =?utf-8?B?L3k2bnBXdlIyVE0rWDI2VGczV3F2cXlKb08xem9saU9Qem83K3crWG1hTHRH?=
+ =?utf-8?B?c0dHenZ4VVhmTTNjWDIxTHN5V2hTTlNrZkh2MkFROUhOd2puVUJlaWR0KzlW?=
+ =?utf-8?B?TEZGYUY5ZW10bWxiRllqQ2ttMTZrb1JYd3F2ODZuWG5SY3luOFFXT2NYRE84?=
+ =?utf-8?B?dWZBeHlTcTdWV0c5dkxkSGVVY0FjdDFIeWNCVTduRjJhY24xRzBHcDNYZUJZ?=
+ =?utf-8?B?Mk9OcWkrbWN6SmZoeGtzMUFCSmV2SnJJOEVpeG5VZVo5dXFpb0xtMXlmcEd1?=
+ =?utf-8?B?WkpWRWQ2K1RtemVVVi9LWHZNUVdISk9LZzNhRE1zTzdOMm9FcU9XelAvMFRX?=
+ =?utf-8?B?ZW9xWS9hQkxScWZ3NHg3dExIa0dpTFN6NXlhdy9BRHIxUXg4RXBpNE1CdVRj?=
+ =?utf-8?B?eTMyTnlwcXJmQmZTeHcxQjdETVpIcHpiQy9nUnIreENMVlQzTUMvRE0yRXM2?=
+ =?utf-8?B?RU5hUERJU2xVQy8rekFVYTRSUFNmdm56R0MzZ0ZIeEJ0V0FCbXRPcHZrSDZG?=
+ =?utf-8?B?MWRtTEpOTExwT3lDcS93ZkgrUGF2UWZpaGFpcVgxdmVYbmJTTHJLMnA3R1E4?=
+ =?utf-8?B?NGVLRThSMmxkbkUyZEZWaCs1Z24yVXVxVTFkZHczQWZZZG9zRWt6QWZlU1dh?=
+ =?utf-8?B?YktzSHdJMXI0TkJ0TUx1ajM4NTBpZmJtdkw0RXQ2V1ZDWjBVWDBmenpqT3Bw?=
+ =?utf-8?B?Snp2RnBadWNvRHd3c2lsK3E3L3Z1N0orZ0J4cDlmYXNEb2g4dk5JVjJrUWlV?=
+ =?utf-8?B?Vk1Ud2xCTnA4TlJRSDR4VEdPSWdoMkFJZSt1MGUvUExaVUM4aHpTVDFwaE9m?=
+ =?utf-8?B?QTBHQkNRL2k3dWpnN2p0d25qbUZoQ0ZNeFM3TjdEekV6SXFNekMxTW9DVEha?=
+ =?utf-8?B?Qk5ZTEoyVFZZZzJuaUwxT3JNUFFTMlZpaG96d1ROaTdWaTR0WGs5QT09?=
+X-OriginatorOrg: atomlin.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 03da2b25-01ab-488c-859d-08dea647948e
+X-MS-Exchange-CrossTenant-AuthSource: CWLP123MB3523.GBRP123.PROD.OUTLOOK.COM
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 29 Apr 2026 23:32:30.2351
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: e6a32402-7d7b-4830-9a2b-76945bbbcb57
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: DAZArLuWVPQ/VDcsaSI1TNs2ibLgrxNUwi4/lc4PkpOSRjQKK6/t0MAFH/J2c9RRpQtNVVOENyk8iaj2p3lGDQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: LO0P123MB6267
 
-All INQUIRY-derived sysfs attributes (type, scsi_level, vendor, model,
-rev, cdl_supported, and the binary inquiry attribute) read data that
-can be updated during device rescan. These reads must be protected
-against concurrent updates.
+--gjvyk77mxr2rqak6
+Content-Type: text/plain; protected-headers=v1; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+Subject: Re: [PATCH v12 02/13] lib/group_cpus: remove dead !SMP code
+MIME-Version: 1.0
 
-Use the existing inquiry_mutex to protect access to these sysfs
-attributes. This ensures that userspace always sees consistent INQUIRY
-data, even if a rescan is updating the buffer concurrently.
+On Mon, Apr 27, 2026 at 05:21:04PM +0200, Sebastian Andrzej Siewior wrote:
+> On 2026-04-22 14:52:04 [-0400], Aaron Tomlin wrote:
+> > From: Daniel Wagner <wagi@kernel.org>
+> >=20
+> > The support for the !SMP configuration has been removed from the core by
+> > commit cac5cefbade9 ("sched/smp: Make SMP unconditional").
+> >=20
+> > While one can technically still compile a uniprocessor kernel, the core
+> > scheduler now mandates SMP unconditionally, rendering this particular
+> > !SMP fallback handling redundant. Therefore, remove the #ifdef CONFIG_S=
+MP
+> > guards and the fallback logic.
+> >=20
+> > Signed-off-by: Daniel Wagner <wagi@kernel.org>
+> > Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
+> > Reviewed-by: Hannes Reinecke <hare@suse.de>
+> > [atomlin: Updated commit message to clarify !SMP removal context]
+>=20
+> This look unchanged vs previous submission. You could explain why you
+> want to remove the !SMP case. It looks like the !SMP makes things
+> easier ;) I don't know how much of this gets removed because of !SMP
+> code elsewhere.
+>=20
+> The description still does not make sense/ is accurate.
 
-Replace the sdev_rd_attr macro with two new helpers,
-sdev_rd_inquiry_attr_int and sdev_rd_inquiry_attr_str, which generate
-the show functions for INQUIRY-derived integer and string fields and
-take the inquiry_mutex around the field access.
+Hi Sebastian,
 
-This is preparatory work for adding INQUIRY data update support during
-device rescan operations.
+Yes, the !SMP path does make things "easier" and lighter for actual UP
+builds by bypassing the SMP overhead. However, maintaining two separate
+code paths and #ifdef guards for this specific logic adds testing and
+maintenance burden that we'd prefer to drop.
 
-Signed-off-by: Brian Bunker <brian@purestorage.com>
-Signed-off-by: Krishna Kant <krishna.kant@purestorage.com>
----
-v3:
-  - Use sysfs_emit() instead of snprintf() in the new show functions.
-  - Use guard(mutex)() for scoped lock acquisition and drop the local
-    ret variable.
+The reference to the scheduler commit was meant to highlight a
+philosophical alignment-trading a slight performance edge on UP builds in
+exchange for a single, unified code path without #ifdef clutter.
 
-v2:
-  - Protect all INQUIRY-derived fields (type, scsi_level, cdl_supported),
-    not just the string fields (vendor, model, rev) and binary inquiry
-    attribute. If we accept that INQUIRY data can change, we cannot assume
-    which fields will change.
-  - Replace the sdev_rd_attr macro with sdev_rd_inquiry_attr_int and
-    sdev_rd_inquiry_attr_str helpers to avoid duplicating the lock/unlock
-    boilerplate across each show function.
+How about the following:
 
- drivers/scsi/scsi_sysfs.c | 52 ++++++++++++++++++++++++++++++---------
- 1 file changed, 41 insertions(+), 11 deletions(-)
+    The core scheduler recently transitioned to compiling SMP data structur=
+es
+    unconditionally to reduce code complexity (see commit cac5cefbade9
+    "sched/smp: Make SMP unconditional").
 
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index dfc3559e7e04f..9201f1f04d6b4 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -636,22 +636,51 @@ sdev_show_##field (struct device *dev, struct device_attribute *attr,	\
- }									\
- 
- /*
-- * sdev_rd_attr: macro to create a function and attribute variable for a
-- * read only field.
-+ * sdev_rd_inquiry_attr_int: macro to create a function and attribute for a
-+ * read-only INQUIRY-derived integer field. The inquiry_mutex protects
-+ * against concurrent updates during device rescan.
-+ */
-+#define sdev_rd_inquiry_attr_int(field)					\
-+static ssize_t								\
-+sdev_show_##field(struct device *dev, struct device_attribute *attr,	\
-+		  char *buf)						\
-+{									\
-+	struct scsi_device *sdev = to_scsi_device(dev);			\
-+									\
-+	guard(mutex)(&sdev->inquiry_mutex);				\
-+	return sysfs_emit(buf, "%d\n", sdev->field);			\
-+}									\
-+static DEVICE_ATTR(field, S_IRUGO, sdev_show_##field, NULL)
-+
-+/*
-+ * sdev_rd_inquiry_attr_str: macro to create a function and attribute for a
-+ * read-only INQUIRY-derived string field. The inquiry_mutex protects
-+ * against concurrent updates during device rescan.
-  */
--#define sdev_rd_attr(field, format_string)				\
--	sdev_show_function(field, format_string)			\
--static DEVICE_ATTR(field, S_IRUGO, sdev_show_##field, NULL);
-+#define sdev_rd_inquiry_attr_str(field, accessor, len)			\
-+static ssize_t								\
-+sdev_show_##field(struct device *dev, struct device_attribute *attr,	\
-+		  char *buf)						\
-+{									\
-+	struct scsi_device *sdev = to_scsi_device(dev);			\
-+									\
-+	guard(mutex)(&sdev->inquiry_mutex);				\
-+	if (sdev->inquiry)						\
-+		return sysfs_emit(buf, "%.*s\n", len,			\
-+				  accessor(sdev->inquiry));		\
-+	return sysfs_emit(buf, "\n");					\
-+}									\
-+static DEVICE_ATTR(field, S_IRUGO, sdev_show_##field, NULL)
- 
- /*
-  * Create the actual show/store functions and data structures.
-  */
--sdev_rd_attr (type, "%d\n");
--sdev_rd_attr (scsi_level, "%d\n");
--sdev_rd_attr (vendor, "%.8s\n");
--sdev_rd_attr (model, "%.16s\n");
--sdev_rd_attr (rev, "%.4s\n");
--sdev_rd_attr (cdl_supported, "%d\n");
-+sdev_rd_inquiry_attr_int(type);
-+sdev_rd_inquiry_attr_int(scsi_level);
-+sdev_rd_inquiry_attr_int(cdl_supported);
-+sdev_rd_inquiry_attr_str(vendor, scsi_inq_vendor, SCSI_INQ_VENDOR_LEN);
-+sdev_rd_inquiry_attr_str(model, scsi_inq_product, SCSI_INQ_PRODUCT_LEN);
-+sdev_rd_inquiry_attr_str(rev, scsi_inq_revision, SCSI_INQ_REVISION_LEN);
- 
- static ssize_t
- sdev_show_device_busy(struct device *dev, struct device_attribute *attr,
-@@ -916,6 +945,7 @@ static ssize_t show_inquiry(struct file *filep, struct kobject *kobj,
- 	struct device *dev = kobj_to_dev(kobj);
- 	struct scsi_device *sdev = to_scsi_device(dev);
- 
-+	guard(mutex)(&sdev->inquiry_mutex);
- 	if (!sdev->inquiry)
- 		return -EINVAL;
- 
--- 
-2.50.1 (Apple Git-155)
+    In alignment with this philosophy of reducing dual-path maintenance, th=
+is
+    patch removes the #ifdef CONFIG_SMP guards and the dedicated !SMP fallb=
+ack
+    logic here.
 
+    While the !SMP path provided a slightly simpler execution flow for
+    uniprocessor kernels (avoiding SMP-specific overhead), maintaining these
+    separate code paths adds unnecessary complexity and testing burden.
+    Removing these guards simplifies the codebase by standardizing entirely=
+ on
+    the SMP logic, which safely resolves to single-CPU operations on UP
+    configurations.
+
+
+Kind regards,
+--=20
+Aaron Tomlin
+
+--gjvyk77mxr2rqak6
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCgAdFiEEeQaE6/qKljiNHm6b4t6WWBnMd9YFAmnylQYACgkQ4t6WWBnM
+d9YScA/+Jn6xsgpnu2BMvcSxCAa+OL1nEeKhRo2Rb2/KrA8hU6VhV7W5uqt7zG4i
+i2dN2smjUN5Te5DjyqtxK2G2HeyWhJ2ti8RV8Rd7wuXj+/bqOoveFXMuGLb9QnG5
+mQlQRmCkl4sDfbbt7lvCEXM410XqUgu8KiUB4WBqHkxbVgayK8h2Ws3mAe/rp5d/
+ajM62SKUyRmNdYb4dGAUpk4padLVCH6K3FTUn6pTpAgooQg5dR8vwMfDirIKtIdi
+4umSypyCb6jUqoGs9Z+Dr78lyNKfmYPL+C3hN0KDGr+i2LvvD3+ECdkBkqO0fRtF
+yAkqCSYTefDBxRq1MxsU2Ek+G9pnHND9MaVYHNZuebAs3u/wVkTQDnZpdi608pmz
+uPDZeLhdFreO40CZRA1VpEIegIz+3DfpIvbn3hV7NvBYBn+9k1Ug7AJ+ZJqfDU/5
+uzmIBwew6+LenSjZAvMt4vqYf6qJlE+K/2AvCSSoq24AZyMEGRJA5i/o0j3GQxWP
+ojAe+2KmB68BgHVip+FIPqEUrEu//mnmo7MCM8znfwELj6bWyc2Hkxbuu2ys0sl9
+4axtPveOYEBXrmo0264j6wjPdxtCoHJvSYXIxT9F50lr+krjb4JC8cW5fx6t+CCp
++q6GURVDH7FDoLW3wjJ4qZURewKhD1rgdim2uuuVCg1tu3BRDWY=
+=g0hT
+-----END PGP SIGNATURE-----
+
+--gjvyk77mxr2rqak6--
