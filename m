@@ -1,61 +1,55 @@
 Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A62CB47B425
-	for <linux-scsi@vger.kernel.org>; Thu, 30 Apr 2026 18:24:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E05239D6DE
+	for <linux-scsi@vger.kernel.org>; Thu, 30 Apr 2026 18:24:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777573454; cv=none; b=tNZfn1jdI/jojIcuxH5MHH4+QeXEUc90AGSRL/BuzruT2k8xQ4Ni1QNNRlo10x+G5YahbbpECJe06cD+xfNRF63H22hvQt8hWs4wf0i9piHz3GCuBuwQ8bRa3HiSFj091OCIcPSgVpXpsQWqnfXF5c8cOmttDi75k4ZBGOim7k0=
+	t=1777573457; cv=none; b=pemfndFbKjU2kDbUxKk4xt9MlkmotmoCjsKPVjqUwK2VwEgz+LgBI0Kwm4qtAtZZtDi5fjccejQyNq/wEvv4cmOMo4Uj5c6byZR9jlMBDrwEFD09qSCm7tZULUqtmwX2oUuLPnbx+43+0VQhWD9tKrgI1RSRiaS4j3SHPykki6M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777573454; c=relaxed/simple;
-	bh=342vbo+jSWIuvus37ymB6JWKPsI1lGe4DPDO3gcGr4U=;
+	s=arc-20240116; t=1777573457; c=relaxed/simple;
+	bh=hoU1RLin0DNMXMT5udDNLQMX35saEE5M+h2kf04To+k=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=qEm85FQRaX1ygyZXwIqlMC7O0cMu92g+c5byNQZA+WsIU6D5TTFxWJYM+NiFuH9CVkOEotMRk3nX+3U7vawQZM7ULfWNRtJveEGEUj9PZfSRrPMkX3uEke+dH+0aPMJvcQ5T9llutZSBOBQdXgyZqh+caEaXPZc5Dla9ArVLQw4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=kKO2yEKB; arc=none smtp.client-ip=199.89.1.16
+	 MIME-Version; b=kVZGUJLZpBeHsmzeKEC1Rpg+FcB9IVjeL/v2Nm+bOyQOin/3kDGWtnwo3Ce5i6wj5PHC88drXwiDpXP6PMLv3ZImyiAZ/y6poFj02m6VbCHfxcxYkbmtfineZDNL0JiqtPEyV45qVbMxDmAEUIfASyXBb616RhEvpPsydHg3NAI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=3MiP/XnK; arc=none smtp.client-ip=199.89.1.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="kKO2yEKB"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="3MiP/XnK"
 Received: from localhost (localhost [127.0.0.1])
-	by 013.lax.mailroute.net (Postfix) with ESMTP id 4g62cr6ddfzlffts;
-	Thu, 30 Apr 2026 18:24:12 +0000 (UTC)
+	by 013.lax.mailroute.net (Postfix) with ESMTP id 4g62cv620jzm1W1C;
+	Thu, 30 Apr 2026 18:24:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:mime-version:references:in-reply-to
 	:x-mailer:message-id:date:date:subject:subject:from:from
-	:received:received; s=mr01; t=1777573448; x=1780165449; bh=03fq5
-	As8Qpku8FY12z+wW/QDg5KsqYGNC+LpLlFZhEE=; b=kKO2yEKBNxA44VaF1SYik
-	5tcbCOMCZ2HqidHxN7J/KeiL/y3p6Ejjl+Nuvb7BHCVDPkn7WyJkUZ328yjhTIS6
-	R8NAVeO66O76RRLiUYkDpew/U8fcLaemWHpnhM+IsEmXVx8kN1F+SBhY0mV+B/bA
-	QJChDt7d4W5ez5XWBX9olM1/GHz9H0cgdvnuSnWLDmlhCc6cOwYoGEs9q2qz830a
-	MMUkoNhMiffRAZi67z+8jj8HWKEanTDYzEKmz2CUtDB0/j7NdH7am5sNsTOIh9RJ
-	2gt31RyUnHCGbxlOMX0ay3OMD9xxfCZNBaSkxZtizGeME2AQGLo8lmcxeZ8m3kp9
-	A==
+	:received:received; s=mr01; t=1777573453; x=1780165454; bh=ynU3i
+	vhsNTS4KIPvKelbycWkUFCLJkNLlLPqgqH7FE0=; b=3MiP/XnK4W561+cA5hN+/
+	S1J66OuTmJCkAyFo41zb5bbt5qIFk899MxxVufsUPo9icewSNV0GCiA2Qy8uI+1n
+	oKn7JLpZIvqZJxS4xcpykA72RXHeTXSn6Kd/YyJUe5RiEExUMoXp2rRA/31+LRPF
+	04sqS4o9vwm8JiCpDU5z7ute1FOFzattwnhOUHoQE4gAfpRdTXjXKxFW6HTN83HE
+	bILtskgd3DpfLzPcp7U5ZDdCUTQ6vaFh7ZmsAxjf+c6yy+LBpGScDqHf8gk0ZmKy
+	q3S0SOKgGspzei/64yNZEQKXE1KJB9DLWIlr/be6LihsaHOUlkUsU1rmXFuoQh4D
+	g==
 X-Virus-Scanned: by MailRoute
 Received: from 013.lax.mailroute.net ([127.0.0.1])
  by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id Ov-JiAeTdG6i; Thu, 30 Apr 2026 18:24:08 +0000 (UTC)
+ id pSFeWTZPtx19; Thu, 30 Apr 2026 18:24:13 +0000 (UTC)
 Received: from bvanassche.mtv.corp.google.com (unknown [104.135.180.219])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4g62cg6cX0zlfvpH;
-	Thu, 30 Apr 2026 18:24:03 +0000 (UTC)
+	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4g62cr35NSzlfl89;
+	Thu, 30 Apr 2026 18:24:12 +0000 (UTC)
 From: Bart Van Assche <bvanassche@acm.org>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org,
 	Marco Elver <elver@google.com>,
 	Bart Van Assche <bvanassche@acm.org>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	Nathan Chancellor <nathan@kernel.org>,
-	Damien Le Moal <dlemoal@kernel.org>,
-	Jason Yan <yanaijie@huawei.com>,
-	John Garry <john.g.garry@oracle.com>,
-	Niklas Cassel <cassel@kernel.org>,
-	Kees Cook <kees@kernel.org>
-Subject: [PATCH v2 36/56] scsi: libsas: Prepare for enabling lock context analysis
-Date: Thu, 30 Apr 2026 11:20:06 -0700
-Message-ID: <20260430182130.1978347-37-bvanassche@acm.org>
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
+Subject: [PATCH v2 37/56] scsi: libsas: Enable lock context analysis
+Date: Thu, 30 Apr 2026 11:20:07 -0700
+Message-ID: <20260430182130.1978347-38-bvanassche@acm.org>
 X-Mailer: git-send-email 2.54.0.545.g6539524ca2-goog
 In-Reply-To: <20260430182130.1978347-1-bvanassche@acm.org>
 References: <20260430182130.1978347-1-bvanassche@acm.org>
@@ -67,25 +61,21 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 
-Since Clang requires that lock context annotations only refer to
-variables that are visible, modify a __must_hold() annotation.
-
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/libsas/sas_ata.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/libsas/Makefile | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.=
-c
-index 61368e55bf86..2340790c9f6b 100644
---- a/drivers/scsi/libsas/sas_ata.c
-+++ b/drivers/scsi/libsas/sas_ata.c
-@@ -153,7 +153,7 @@ static void sas_ata_task_done(struct sas_task *task)
- }
+diff --git a/drivers/scsi/libsas/Makefile b/drivers/scsi/libsas/Makefile
+index 9dc32736cf21..6f6f1336b438 100644
+--- a/drivers/scsi/libsas/Makefile
++++ b/drivers/scsi/libsas/Makefile
+@@ -6,6 +6,8 @@
+ # Copyright (C) 2005 Luben Tuikov <luben_tuikov@adaptec.com>
+ #
 =20
- static unsigned int sas_ata_qc_issue(struct ata_queued_cmd *qc)
--	__must_hold(ap->lock)
-+	__must_hold(qc->ap->lock)
- {
- 	struct sas_task *task;
- 	struct scatterlist *sg;
++CONTEXT_ANALYSIS :=3D y
++
+ obj-$(CONFIG_SCSI_SAS_LIBSAS) +=3D libsas.o
+ libsas-y +=3D  sas_init.o     \
+ 		sas_phy.o      \
