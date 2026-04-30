@@ -1,59 +1,61 @@
 Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A5955477E43
-	for <linux-scsi@vger.kernel.org>; Thu, 30 Apr 2026 18:24:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 422CD3537FF
+	for <linux-scsi@vger.kernel.org>; Thu, 30 Apr 2026 18:24:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777573472; cv=none; b=tf10Mx2nBgKnyRzkvfNI6mt22zJNPHW/f/qKywslO/1Cq3tho405kETtmtlxG4NnytU27nOU6heY43d8Fs1diaveo28umkbHmlxLt6kt4cRUyXgQf3VK9+ZZgNyOVlbfYWMnyb9ZxS6f6gabbMmU7+deBEd5AgbCqOsC1YmM6Pc=
+	t=1777573485; cv=none; b=JB+jZ5UT4VoEBOppLQzj5suzTL7eCVwkcDL3wPXh1lqqZhbxYuPPrcusVSckishel2ZE2LFr1P/vu1wWdT59k/p7YrsnQu2ibP8qoOezaCMc/LpqCBiVR67dV+sXVtgzPQpfMuWeWraCLOean7H/8/Hf4gip4oiMHh5w1YUqqJE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777573472; c=relaxed/simple;
-	bh=Ai+Z8LgPRtAek8zo60rptsjGvYx+oadFcveQVB+e0iM=;
+	s=arc-20240116; t=1777573485; c=relaxed/simple;
+	bh=rJ4tvIgM50dJNYJUZOv6Jbfn5W/lTP9ETjSf/0zN2TM=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=iTiu/X0kS70JCowWxaoEMfh6gavm2RpbVDHZhaEV05PI7+HkKjd9DbkkUOiVswMtKzKcq+l9EQrTNSG191q6sDHgvmlBdG0T+cCVQXxb73yeW1HqwTueto/Q3TimUImf4uqJ4aCSWHCBnwYCEvkd8+SSWMeeFg9lNo5AKGO8Vfw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=3j6cyDIZ; arc=none smtp.client-ip=199.89.1.16
+	 MIME-Version; b=Zlzp22pJTZJ9NI9zvKH1gfoHI3cPNtj8830Fb1/Trlxtqf9c6mZkLpowEKaBYNagQLw7NnbMJOvzwgeArzPjUMXbzZYFhdaeVghB9rW3LSp7pO634ohs+rodjYc8C+9/9iw2KAaF1yr4Hki8qOXN2Bd5HlSk8/fOixIZi2j8em8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=BwD58tfO; arc=none smtp.client-ip=199.89.1.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="3j6cyDIZ"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="BwD58tfO"
 Received: from localhost (localhost [127.0.0.1])
-	by 013.lax.mailroute.net (Postfix) with ESMTP id 4g62d827TYzlfvpH;
-	Thu, 30 Apr 2026 18:24:28 +0000 (UTC)
+	by 013.lax.mailroute.net (Postfix) with ESMTP id 4g62dR63P9zlh2fq;
+	Thu, 30 Apr 2026 18:24:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:mime-version:references:in-reply-to
 	:x-mailer:message-id:date:date:subject:subject:from:from
-	:received:received; s=mr01; t=1777573460; x=1780165461; bh=XcAnB
-	5JPkLYO8B0NrF2IwY4MYvn379R3G66Moz52924=; b=3j6cyDIZaIM4Xs6vytA4Q
-	sM68ppV3REnTnjJijWW2Eq1Ixo5FKQHZV83DNYlnbA4Ek4REK7SX9aFloDx3x/un
-	iHoFkVXejY1Bf5mK170KDhTwVqALSXtgYZfQsIKUl6PttOchxkeu/8cZH0AKi5yg
-	EHHtWLTT7TGCbDCD1d3baTes4nyXfxspiu+56l/n3x4Q6HZCj2RDFr7mnrcg8p9J
-	wqaK3bQ+jjJ5CpYmOLGE5O09Rjw/nef3c90/Muqdl4Ik8KAF5gZCuFZ4gaozF8go
-	zDrGHZv+43wGW7NYT8BeOuGZKkfAVHvVI2Z+jSQ8VJM0FmSGTjJpVOx0TSmmSP1/
-	Q==
+	:received:received; s=mr01; t=1777573477; x=1780165478; bh=JzvvY
+	7sWq0sW394ARjYdYXMhHd0O8NqLKu+32rkVuiU=; b=BwD58tfONBmUQnIIDuVhN
+	99C2TwSRmornIao8Ti8QMN1KdOTl3xJH0TFFQ2LE+YlGs197sH+gB7QA5YTqmvPJ
+	Eo0ihboYJsuFT4I/T8RJyzR2amslKo11vydACYZdCEee4AJdUmXbHSd/qWAff4Ag
+	fL9lTWt4jy1D9A6soy1S+NrVpSpHlIznH/Z+aH+5xdkSVfvx3HG1v12dmMePKzpl
+	r1McjHyzWygEVf+xMGPOVM2e9nixwzJMDp3TEN984ZVCk8N3J3JVkHI5UNt+qx36
+	L6hwfDwYspjvzl9lRPlpid5RXX4xpoK+QrOLnY8VXhaVogT4xWawH6DEPojISyUv
+	g==
 X-Virus-Scanned: by MailRoute
 Received: from 013.lax.mailroute.net ([127.0.0.1])
  by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id iU7Lb-YP8KtD; Thu, 30 Apr 2026 18:24:20 +0000 (UTC)
+ id PbFwctVusSVu; Thu, 30 Apr 2026 18:24:37 +0000 (UTC)
 Received: from bvanassche.mtv.corp.google.com (unknown [104.135.180.219])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4g62cx6NxYzlfl89;
-	Thu, 30 Apr 2026 18:24:17 +0000 (UTC)
+	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4g62dG3X6RzlfvpH;
+	Thu, 30 Apr 2026 18:24:34 +0000 (UTC)
 From: Bart Van Assche <bvanassche@acm.org>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org,
 	Marco Elver <elver@google.com>,
 	Bart Van Assche <bvanassche@acm.org>,
-	Kashyap Desai <kashyap.desai@broadcom.com>,
-	Sumit Saxena <sumit.saxena@broadcom.com>,
-	Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
-	Chandrakanth patil <chandrakanth.patil@broadcom.com>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-Subject: [PATCH v2 39/56] scsi: megaraid_sas: Prepare for enabling lock context analysis
-Date: Thu, 30 Apr 2026 11:20:09 -0700
-Message-ID: <20260430182130.1978347-40-bvanassche@acm.org>
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	Damien Le Moal <dlemoal@kernel.org>,
+	Thomas Gleixner <tglx@kernel.org>,
+	Ingo Molnar <mingo@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>,
+	Thomas Fourier <fourier.thomas@gmail.com>,
+	Kees Cook <kees@kernel.org>
+Subject: [PATCH v2 42/56] scsi: mvsas: Enable lock context analysis
+Date: Thu, 30 Apr 2026 11:20:12 -0700
+Message-ID: <20260430182130.1978347-43-bvanassche@acm.org>
 X-Mailer: git-send-email 2.54.0.545.g6539524ca2-goog
 In-Reply-To: <20260430182130.1978347-1-bvanassche@acm.org>
 References: <20260430182130.1978347-1-bvanassche@acm.org>
@@ -65,152 +67,91 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 
-Document locking requirements with __must_hold().
+Document locking requirements with __must_hold(). Annotate functions
+that perform conditional locking with __no_context_analysis.
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/megaraid/megaraid_sas.h        |  9 ++++++---
- drivers/scsi/megaraid/megaraid_sas_base.c   | 15 ++++++++++++---
- drivers/scsi/megaraid/megaraid_sas_fusion.c |  2 ++
- 3 files changed, 20 insertions(+), 6 deletions(-)
+ drivers/scsi/mvsas/Makefile | 2 ++
+ drivers/scsi/mvsas/mv_sas.c | 7 +++++++
+ 2 files changed, 9 insertions(+)
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid=
-/megaraid_sas.h
-index 8ee2bfe47571..67713173793a 100644
---- a/drivers/scsi/megaraid/megaraid_sas.h
-+++ b/drivers/scsi/megaraid/megaraid_sas.h
-@@ -2696,15 +2696,18 @@ __le16 get_updated_dev_handle(struct megasas_inst=
-ance *instance,
- 			      struct MR_DRV_RAID_MAP_ALL *drv_map);
- void mr_update_load_balance_params(struct MR_DRV_RAID_MAP_ALL *map,
- 	struct LD_LOAD_BALANCE_INFO *lbInfo);
--int megasas_get_ctrl_info(struct megasas_instance *instance);
-+int megasas_get_ctrl_info(struct megasas_instance *instance)
-+	__must_hold(&instance->reset_mutex);
- /* PD sequence */
- int
- megasas_sync_pd_seq_num(struct megasas_instance *instance, bool pend);
- void megasas_set_dynamic_target_properties(struct scsi_device *sdev,
- 		struct queue_limits *lim, bool is_target_prop);
- int megasas_get_target_prop(struct megasas_instance *instance,
--			    struct scsi_device *sdev);
--void megasas_get_snapdump_properties(struct megasas_instance *instance);
-+			    struct scsi_device *sdev)
-+	__must_hold(&instance->reset_mutex);
-+void megasas_get_snapdump_properties(struct megasas_instance *instance)
-+	__must_hold(&instance->reset_mutex);
+diff --git a/drivers/scsi/mvsas/Makefile b/drivers/scsi/mvsas/Makefile
+index 75849258e898..7f45cca38127 100644
+--- a/drivers/scsi/mvsas/Makefile
++++ b/drivers/scsi/mvsas/Makefile
+@@ -7,6 +7,8 @@
+ # Copyright 2009-2011 Marvell. <yuxiangl@marvell.com>
+ #
 =20
- int megasas_set_crash_dump_params(struct megasas_instance *instance,
- 	u8 crash_buf_state);
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/meg=
-araid/megaraid_sas_base.c
-index ecd365d78ae3..ccefe5841a17 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -132,14 +132,16 @@ MODULE_AUTHOR("megaraidlinux.pdl@broadcom.com");
- MODULE_DESCRIPTION("Broadcom MegaRAID SAS Driver");
++CONTEXT_ANALYSIS :=3D y
++
+ ccflags-$(CONFIG_SCSI_MVSAS_DEBUG) :=3D -DMV_DEBUG
 =20
- int megasas_transition_to_ready(struct megasas_instance *instance, int o=
-cr);
--static int megasas_get_pd_list(struct megasas_instance *instance);
-+static int megasas_get_pd_list(struct megasas_instance *instance)
-+	__must_hold(&instance->reset_mutex);
- static int megasas_ld_list_query(struct megasas_instance *instance,
- 				 u8 query_type);
- static int megasas_issue_init_mfi(struct megasas_instance *instance);
- static int megasas_register_aen(struct megasas_instance *instance,
- 				u32 seq_num, u32 class_locale_word);
- static void megasas_get_pd_info(struct megasas_instance *instance,
--				struct scsi_device *sdev);
-+				struct scsi_device *sdev)
-+	__must_hold(&instance->reset_mutex);
- static void
- megasas_set_ld_removed_by_fw(struct megasas_instance *instance);
+ obj-$(CONFIG_SCSI_MVSAS) +=3D mvsas.o
+diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.c
+index 359226e80eae..f63e0dc1abd2 100644
+--- a/drivers/scsi/mvsas/mv_sas.c
++++ b/drivers/scsi/mvsas/mv_sas.c
+@@ -1055,6 +1055,7 @@ void mvs_update_phyinfo(struct mvs_info *mvi, int i=
+, int get_st)
+ }
 =20
-@@ -229,7 +231,8 @@ megasas_adp_reset_gen2(struct megasas_instance *insta=
-nce,
- 		       struct megasas_register_set __iomem *reg_set);
- static irqreturn_t megasas_isr(int irq, void *devp);
- static u32
--megasas_init_adapter_mfi(struct megasas_instance *instance);
-+megasas_init_adapter_mfi(struct megasas_instance *instance)
-+	__must_hold(&instance->reset_mutex);
- u32
- megasas_build_and_issue_cmd(struct megasas_instance *instance,
- 			    struct scsi_cmnd *scmd);
-@@ -4754,6 +4757,7 @@ megasas_get_pd_list(struct megasas_instance *instan=
-ce)
-  */
- static int
- megasas_get_ld_list(struct megasas_instance *instance)
-+	__must_hold(&instance->reset_mutex)
+ static void mvs_port_notify_formed(struct asd_sas_phy *sas_phy, int lock=
+)
++	__context_unsafe(conditional locking)
  {
- 	int ret =3D 0, ld_index =3D 0, ids =3D 0;
- 	struct megasas_cmd *cmd;
-@@ -4871,6 +4875,7 @@ megasas_get_ld_list(struct megasas_instance *instan=
-ce)
-  */
- static int
- megasas_ld_list_query(struct megasas_instance *instance, u8 query_type)
-+	__must_hold(&instance->reset_mutex)
- {
- 	int ret =3D 0, ld_index =3D 0, ids =3D 0;
- 	struct megasas_cmd *cmd;
-@@ -4993,6 +4998,7 @@ megasas_ld_list_query(struct megasas_instance *inst=
-ance, u8 query_type)
- static int
- megasas_host_device_list_query(struct megasas_instance *instance,
- 			       bool is_probe)
-+	__must_hold(&instance->reset_mutex)
- {
- 	int ret, i, target_id;
- 	struct megasas_cmd *cmd;
-@@ -5874,6 +5880,7 @@ static void megasas_setup_reply_map(struct megasas_=
-instance *instance)
-  */
- static
- int megasas_get_device_list(struct megasas_instance *instance)
-+	__must_hold(&instance->reset_mutex)
- {
- 	if (instance->enable_fw_dev_list) {
- 		if (megasas_host_device_list_query(instance, true))
-@@ -7789,6 +7796,7 @@ megasas_suspend(struct device *dev)
-  */
- static int __maybe_unused
- megasas_resume(struct device *dev)
-+	__must_hold(&((struct megasas_instance *)dev_get_drvdata(dev))->reset_m=
-utex)
- {
- 	int rval;
- 	struct Scsi_Host *host;
-@@ -8765,6 +8773,7 @@ static inline void megasas_remove_scsi_device(struc=
-t scsi_device *sdev)
- static
- int megasas_update_device_list(struct megasas_instance *instance,
- 			       int event_type)
-+	__must_hold(&instance->reset_mutex)
- {
- 	int dcmd_ret;
+ 	struct sas_ha_struct *sas_ha =3D sas_phy->ha;
+ 	struct mvs_info *mvi =3D NULL; int i =3D 0, hi;
+@@ -1153,6 +1154,7 @@ static void mvs_free_dev(struct mvs_device *mvi_dev=
+)
+ }
 =20
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/m=
-egaraid/megaraid_sas_fusion.c
-index 2699e4e09b5b..664bec111474 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-@@ -1792,6 +1792,7 @@ static inline void megasas_free_ioc_init_cmd(struct=
- megasas_instance *instance)
-  */
- static u32
- megasas_init_adapter_fusion(struct megasas_instance *instance)
-+	__must_hold(&instance->reset_mutex)
+ static int mvs_dev_found_notify(struct domain_device *dev, int lock)
++	__context_unsafe(conditional locking)
  {
- 	struct fusion_context *fusion;
- 	u32 scratch_pad_1;
-@@ -4530,6 +4531,7 @@ static int
- megasas_issue_tm(struct megasas_instance *instance, u16 device_handle,
- 	uint channel, uint id, u16 smid_task, u8 type,
- 	struct MR_PRIV_DEVICE *mr_device_priv_data)
-+	__must_hold(&instance->reset_mutex)
+ 	unsigned long flags =3D 0;
+ 	int res =3D 0;
+@@ -1517,6 +1519,7 @@ static int mvs_slot_err(struct mvs_info *mvi, struc=
+t sas_task *task,
+ }
+=20
+ int mvs_slot_complete(struct mvs_info *mvi, u32 rx_desc, u32 flags)
++	__must_hold(&mvi->lock)
  {
- 	struct MR_TASK_MANAGE_REQUEST *mr_request;
- 	struct MPI2_SCSI_TASK_MANAGE_REQUEST *mpi_request;
+ 	u32 slot_idx =3D rx_desc & RXQ_SLOT_MASK;
+ 	struct mvs_slot_info *slot =3D &mvi->slot_info[slot_idx];
+@@ -1644,6 +1647,7 @@ int mvs_slot_complete(struct mvs_info *mvi, u32 rx_=
+desc, u32 flags)
+=20
+ void mvs_do_release_task(struct mvs_info *mvi,
+ 		int phy_no, struct domain_device *dev)
++	__must_hold(&mvi->lock)
+ {
+ 	u32 slot_idx;
+ 	struct mvs_phy *phy;
+@@ -1677,6 +1681,7 @@ void mvs_do_release_task(struct mvs_info *mvi,
+=20
+ void mvs_release_task(struct mvs_info *mvi,
+ 		      struct domain_device *dev)
++	__must_hold(&mvi->lock)
+ {
+ 	int i, phyno[WIDE_PORT_MAX_PHY], num;
+ 	num =3D mvs_find_dev_phyno(dev, phyno);
+@@ -1769,6 +1774,7 @@ static void mvs_sig_time_out(struct timer_list *t)
+ }
+=20
+ void mvs_int_port(struct mvs_info *mvi, int phy_no, u32 events)
++	__must_hold(&mvi->lock)
+ {
+ 	u32 tmp;
+ 	struct mvs_phy *phy =3D &mvi->phy[phy_no];
+@@ -1862,6 +1868,7 @@ void mvs_int_port(struct mvs_info *mvi, int phy_no,=
+ u32 events)
+ }
+=20
+ int mvs_int_rx(struct mvs_info *mvi, bool self_clear)
++	__must_hold(&mvi->lock)
+ {
+ 	u32 rx_prod_idx, rx_desc;
+ 	bool attn =3D false;
