@@ -1,56 +1,56 @@
 Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8753439DBFD
-	for <linux-scsi@vger.kernel.org>; Thu, 30 Apr 2026 18:21:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 29A2047B435
+	for <linux-scsi@vger.kernel.org>; Thu, 30 Apr 2026 18:22:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777573319; cv=none; b=buEEi6uja8K0cvpFe1YmNgzwQVbtI+jTjeh7We+RdjSdg2rno45j5/VpZOYRApbc7aeR9ddScvvk8vd+WyVTb0cIFYmjEMf9zLvGAMOaspXWPMKvwvqFnZr/IXUC2VfxrKyVMOQX6GIrqMpEJBi758SATPsPb+nxNBB12zHXzuk=
+	t=1777573321; cv=none; b=nRyYKFnrskOubWzcwgfun4Mca+VoBfU32RkxktJWc0LBli6eZ0lFe8tigBaTQ1JOyv7iPaqpqb3thsgoEZK75OG9H41+kHrU/OuKMthXATuHvwrMs1OxgzsOpUejvelVkk6PeGOJU+s83GxMzXlYhX7N4/RG+L024Nf+0KVqxNo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777573319; c=relaxed/simple;
-	bh=BEFUE0wd/WCxzB9FTZXAjc7Dl2hHt3xBN5fuTCl02tM=;
+	s=arc-20240116; t=1777573321; c=relaxed/simple;
+	bh=jgHtAUetBAMqIth81WubE/GeJHc2FgmTvEBZmcQhU9o=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=UzQeZvllD/+jHXpX+uZ9lxQ/+ijrNKd2K7cSArv5AB3gB/91zPBrd/PmYlQq3kgJIkrE/JWBx1nT84YnyJEP7xvYUH4W8uuTavldWcVSkyDDZufeeI8YLgkldv5xR64AlL9tRUMKPaRWHICeww7Wup9zaMh1aIHVHQ+SMU3KorY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=poh61nGP; arc=none smtp.client-ip=199.89.1.16
+	 MIME-Version; b=umF44fw3nRLszY9ff2CraEse4+LCMepBZBT6XV1I4aL3AKaqprPbsUDYNCCQxIDASn7RNs0hrlETsVgQuZmn4BMtZwzDHZvLPgGJqJdr2tQsLyeihCImuPTIVAti+ZnOa884grNFr0n9HerqKhAgZG3VxHiEBXWk8+rfkI0+jak=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=YleGXCGe; arc=none smtp.client-ip=199.89.1.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="poh61nGP"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="YleGXCGe"
 Received: from localhost (localhost [127.0.0.1])
-	by 013.lax.mailroute.net (Postfix) with ESMTP id 4g62ZG2GR8zm1W1H;
-	Thu, 30 Apr 2026 18:21:58 +0000 (UTC)
+	by 013.lax.mailroute.net (Postfix) with ESMTP id 4g62ZH5ghLzlkMYB;
+	Thu, 30 Apr 2026 18:21:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:mime-version:references:in-reply-to
 	:x-mailer:message-id:date:date:subject:subject:from:from
-	:received:received; s=mr01; t=1777573313; x=1780165314; bh=nDJRf
-	aKA54k8d0M4ZfC/0SXueKHEa03dY0m/vRSkOXg=; b=poh61nGPktYtHfF3UTtRw
-	QwFtH1Ww00T+hll/L9DUNt4kpA5q8r6Wd7vC4GCkdey2ki97utpjW/uIUxfbpzEh
-	jdgvY9LBfdezWAJMLApSwfNXaEK20P8K3sPrEOMM0R4GN28uITOuot9KxyFQ26na
-	PEIPfO2IWkoZM/DDl7vhQBsu4yv23bDV25LqdOMwLKOWl2qYwkUvOr2LecJItJt9
-	rFX8NmB0rurue3nFvWyCDHA5tzf/niASxwz2+LDPjcF+O1U4uLyPyBzw0hf+VsD1
-	Mykr9OsEARkYyK1QxHGuM/72OZPcCX7GtvnpKcOCsgRgTT3GOIO/Mc6P0oKeJ4rV
-	Q==
+	:received:received; s=mr01; t=1777573316; x=1780165317; bh=XafUO
+	nQWsOIb4/g19CDM1nA0LzU9mACC/txY6BlS2xo=; b=YleGXCGeDlHPJwUanHOei
+	VCMlT8cW8YaxiwmStGlt6FR2A396xmlty+k4PeTtaOFKvBBg7FyimUKkFM1ycj50
+	PlW9oJHrSvGTVOogtfBHPqC/f6bT747hIKC0uzlJpTdIaifA2GqUb0Fy+I++ugCg
+	K/s7wAAMHnCo8EhhmFal96RnzDJeoLLQfevAEKKNJknKXqMkKrK2qk07t08dXdF1
+	KFgyWD3Kq3nGD7QaimbqpZwupSe9wRR/HNvGqlY4VXHQR0y7LfvOpW72dxLqsmaH
+	R5C0BsA869xgL/WV3LZCwFGRn9P9FlXRvCcPX3wkV955Ek9DpFTUcGqEKPaWWU8K
+	g==
 X-Virus-Scanned: by MailRoute
 Received: from 013.lax.mailroute.net ([127.0.0.1])
  by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id tJNFhJ3fKHI0; Thu, 30 Apr 2026 18:21:53 +0000 (UTC)
+ id OkKxUoyLgShO; Thu, 30 Apr 2026 18:21:56 +0000 (UTC)
 Received: from bvanassche.mtv.corp.google.com (unknown [104.135.180.219])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4g62Z74KNJzm1W1f;
-	Thu, 30 Apr 2026 18:21:51 +0000 (UTC)
+	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4g62ZB3xMyzlfftm;
+	Thu, 30 Apr 2026 18:21:54 +0000 (UTC)
 From: Bart Van Assche <bvanassche@acm.org>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org,
 	Marco Elver <elver@google.com>,
 	Bart Van Assche <bvanassche@acm.org>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	Nathan Chancellor <nathan@kernel.org>
-Subject: [PATCH v2 02/56] scsi: scsi_debug: Prepare for enabling lock context analysis
-Date: Thu, 30 Apr 2026 11:19:32 -0700
-Message-ID: <20260430182130.1978347-3-bvanassche@acm.org>
+	Doug Gilbert <dgilbert@interlog.com>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
+Subject: [PATCH v2 03/56] scsi: sg: Prepare for enabling lock context analysis
+Date: Thu, 30 Apr 2026 11:19:33 -0700
+Message-ID: <20260430182130.1978347-4-bvanassche@acm.org>
 X-Mailer: git-send-email 2.54.0.545.g6539524ca2-goog
 In-Reply-To: <20260430182130.1978347-1-bvanassche@acm.org>
 References: <20260430182130.1978347-1-bvanassche@acm.org>
@@ -62,149 +62,24 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 
-Suppress lock context analysis for the functions that perform conditional
-locking to prevent that the Clang thread-safety analyzer complains about
-these functions.
+Annotate open_wait() with __must_hold() since it unlocks and locks a
+mutex.
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/scsi_debug.c | 16 ++++++++++++++++
- 1 file changed, 16 insertions(+)
+ drivers/scsi/sg.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 1515495fd9ea..c4a1582ab1fa 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -4014,6 +4014,7 @@ static inline struct sdeb_store_info *devip2sip(str=
-uct sdebug_dev_info *devip,
+diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+index 2b4b2a1a8e44..ec405cb56a40 100644
+--- a/drivers/scsi/sg.c
++++ b/drivers/scsi/sg.c
+@@ -245,6 +245,7 @@ static int sg_allow_access(struct file *filp, unsigne=
+d char *cmd)
 =20
- static inline void
- sdeb_read_lock(rwlock_t *lock)
-+	__context_unsafe(conditional locking)
+ static int
+ open_wait(Sg_device *sdp, int flags)
++	__must_hold(sdp->open_rel_lock)
  {
- 	if (sdebug_no_rwlock)
- 		__acquire(lock);
-@@ -4023,6 +4024,7 @@ sdeb_read_lock(rwlock_t *lock)
+ 	int retval =3D 0;
 =20
- static inline void
- sdeb_read_unlock(rwlock_t *lock)
-+	__context_unsafe(conditional locking)
- {
- 	if (sdebug_no_rwlock)
- 		__release(lock);
-@@ -4032,6 +4034,7 @@ sdeb_read_unlock(rwlock_t *lock)
-=20
- static inline void
- sdeb_write_lock(rwlock_t *lock)
-+	__context_unsafe(conditional locking)
- {
- 	if (sdebug_no_rwlock)
- 		__acquire(lock);
-@@ -4041,6 +4044,7 @@ sdeb_write_lock(rwlock_t *lock)
-=20
- static inline void
- sdeb_write_unlock(rwlock_t *lock)
-+	__context_unsafe(conditional locking)
- {
- 	if (sdebug_no_rwlock)
- 		__release(lock);
-@@ -4050,6 +4054,7 @@ sdeb_write_unlock(rwlock_t *lock)
-=20
- static inline void
- sdeb_data_read_lock(struct sdeb_store_info *sip)
-+	__context_unsafe(conditional locking)
- {
- 	BUG_ON(!sip);
-=20
-@@ -4058,6 +4063,7 @@ sdeb_data_read_lock(struct sdeb_store_info *sip)
-=20
- static inline void
- sdeb_data_read_unlock(struct sdeb_store_info *sip)
-+	__context_unsafe(conditional locking)
- {
- 	BUG_ON(!sip);
-=20
-@@ -4066,6 +4072,7 @@ sdeb_data_read_unlock(struct sdeb_store_info *sip)
-=20
- static inline void
- sdeb_data_write_lock(struct sdeb_store_info *sip)
-+	__context_unsafe(conditional locking)
- {
- 	BUG_ON(!sip);
-=20
-@@ -4074,6 +4081,7 @@ sdeb_data_write_lock(struct sdeb_store_info *sip)
-=20
- static inline void
- sdeb_data_write_unlock(struct sdeb_store_info *sip)
-+	__context_unsafe(conditional locking)
- {
- 	BUG_ON(!sip);
-=20
-@@ -4082,6 +4090,7 @@ sdeb_data_write_unlock(struct sdeb_store_info *sip)
-=20
- static inline void
- sdeb_data_sector_read_lock(struct sdeb_store_info *sip)
-+	__context_unsafe(conditional locking)
- {
- 	BUG_ON(!sip);
-=20
-@@ -4090,6 +4099,7 @@ sdeb_data_sector_read_lock(struct sdeb_store_info *=
-sip)
-=20
- static inline void
- sdeb_data_sector_read_unlock(struct sdeb_store_info *sip)
-+	__context_unsafe(conditional locking)
- {
- 	BUG_ON(!sip);
-=20
-@@ -4098,6 +4108,7 @@ sdeb_data_sector_read_unlock(struct sdeb_store_info=
- *sip)
-=20
- static inline void
- sdeb_data_sector_write_lock(struct sdeb_store_info *sip)
-+	__context_unsafe(conditional locking)
- {
- 	BUG_ON(!sip);
-=20
-@@ -4106,6 +4117,7 @@ sdeb_data_sector_write_lock(struct sdeb_store_info =
-*sip)
-=20
- static inline void
- sdeb_data_sector_write_unlock(struct sdeb_store_info *sip)
-+	__context_unsafe(conditional locking)
- {
- 	BUG_ON(!sip);
-=20
-@@ -4164,6 +4176,7 @@ sdeb_data_sector_unlock(struct sdeb_store_info *sip=
-, bool do_write)
-=20
- static inline void
- sdeb_meta_read_lock(struct sdeb_store_info *sip)
-+	__context_unsafe(conditional locking)
- {
- 	if (sdebug_no_rwlock) {
- 		if (sip)
-@@ -4180,6 +4193,7 @@ sdeb_meta_read_lock(struct sdeb_store_info *sip)
-=20
- static inline void
- sdeb_meta_read_unlock(struct sdeb_store_info *sip)
-+	__context_unsafe(conditional locking)
- {
- 	if (sdebug_no_rwlock) {
- 		if (sip)
-@@ -4196,6 +4210,7 @@ sdeb_meta_read_unlock(struct sdeb_store_info *sip)
-=20
- static inline void
- sdeb_meta_write_lock(struct sdeb_store_info *sip)
-+	__context_unsafe(conditional locking)
- {
- 	if (sdebug_no_rwlock) {
- 		if (sip)
-@@ -4212,6 +4227,7 @@ sdeb_meta_write_lock(struct sdeb_store_info *sip)
-=20
- static inline void
- sdeb_meta_write_unlock(struct sdeb_store_info *sip)
-+	__context_unsafe(conditional locking)
- {
- 	if (sdebug_no_rwlock) {
- 		if (sip)
