@@ -1,59 +1,59 @@
 Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D834D47A0CB
-	for <linux-scsi@vger.kernel.org>; Thu, 30 Apr 2026 18:24:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE0CE47A0CB
+	for <linux-scsi@vger.kernel.org>; Thu, 30 Apr 2026 18:24:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777573469; cv=none; b=DXyUrzT87dRIe3NAXJQEBFEOm0XJ0hnq0OXf8FDO4UuEcU4A+VrqmPG3RXex2yTldluNS6a2h1rgTgyoqUN9ajjFg7rgLz+zPr6c3wZoBZonrJXf39QiFIVSaYz4isu0+epxhsZG8O7+Jxm3Gc5tx3Yds4ZI5A4rR3Peivt+4WA=
+	t=1777573472; cv=none; b=KAmnka0WriuK5wB16mBh+fDsBJcJq8gZF3QTBgeAiIW1FjT0mymiRu03kKf1qhpDanMhIYn0GCBZ8+o1m6GcCsy7X6Nb8NnQNNtRFprll40EMhRAGWQg1J0kKckx6thZ2TJQdnGEljWvi4straF4WSn88nb10Hj76TjXmudpLlc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777573469; c=relaxed/simple;
-	bh=DmXZG1cfq9Z6xh2EA7NSAPd3Mw/ivsW7C07yq/8f0x0=;
+	s=arc-20240116; t=1777573472; c=relaxed/simple;
+	bh=HJXiUOkdQ9kMnH5DZgevRHU07bWtuzUH67337nbEBYc=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=IwzgQ+jSkrWZH2vgX4pNu20FDuPHn6nAyPs8Bra0mumVsmPmZPNTjUSYU0YqPP3guBvL98qENEs7eR6wU+tPCP/3K7j+V+Hp+AjPW2mXeiKsc1+9m0EwiMwCucBJcFGzibXljyxJklK6oYDpzxtU4PfpeyvAV6DyQl7bPmZk0S0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=JUQKH9xL; arc=none smtp.client-ip=199.89.1.16
+	 MIME-Version; b=DXtzcOxeT/9/a9B6TZlZTXANgJaw5kycQTsOeZ7IWCOktVqLIYmLOGWVgrJGPrZwTmV1PNQkwT1BIlAfAdEO3w0/c3kDFQamP9qgvRVoip8QtIA9tOgMOi5IHe6L7+0+fj0gaRbL2AWjaUSzXxuBxBRBVDmd1GRT5ukx+mLd8EE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=QZ2F8cmb; arc=none smtp.client-ip=199.89.1.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="JUQKH9xL"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="QZ2F8cmb"
 Received: from localhost (localhost [127.0.0.1])
-	by 013.lax.mailroute.net (Postfix) with ESMTP id 4g62d71lqXzlffts;
-	Thu, 30 Apr 2026 18:24:27 +0000 (UTC)
+	by 013.lax.mailroute.net (Postfix) with ESMTP id 4g62dB418Tzlfl89;
+	Thu, 30 Apr 2026 18:24:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:mime-version:references:in-reply-to
 	:x-mailer:message-id:date:date:subject:subject:from:from
-	:received:received; s=mr01; t=1777573463; x=1780165464; bh=mYDY5
-	wLSD/qBDImoW5YNaScbDiQY5dFj+/NZ6SMMItg=; b=JUQKH9xLDDtc5pHl8KEO/
-	6sKLGd7F2pKeFfEgnHVeGmGikc5It+sc9Awkd5Zc0e1wM3sOQR89heDf7cYJntYB
-	q/5LktGHMj0y7f63UaquYGuUMn/YUCHdgQzb7uxhPhu2nZWuMDJJO2SQLm90o+3O
-	I2ixJ9HYKMe50+0CIAAwEg+i/E5WXRRRs4xUjS/e5msFr0iVZuM89o3In2oPMSY9
-	g9e/thXMjbH/xture+NibBXbrexhTJN3PXkw8QIknK4vp7stKQPl/lqIokf/pRvc
-	vAkDanSRRG6dtJej07myWsZHl/KZHGjrvnDN83rjaVGvcTx1Hj91h7Kne+xCAMZp
-	Q==
+	:received:received; s=mr01; t=1777573466; x=1780165467; bh=ZQ37Z
+	OYKscgPlVPKWJotbgx1Eq+4p3gngLj4/iTUK20=; b=QZ2F8cmbz2/NIL6O9z+H2
+	IgqrF8cayM6Q7ONk1y5dHqWY3IBXuaxqclG+7mYRN8p1PqUH81eIrB8RCFqPkiy0
+	VxX7cIv1ttwf6FvzbLixsZ/q2Q690QyucKSDkBTvJiAjLqhTpN+SHbt422RZVYmO
+	EY8XSWB2fSidwqoXf11duutonb38jbfg8IS+57/hmrvHL7DrZh6LpvL5ldWgAfo3
+	XmaiDuiMTWrHpEJzn7bcCnrYr+NwMbXpAHg66CpQXHQX485lw0cbpmFXFvREWiK4
+	yM/wI/5VO0ReQSl2PVvVofD/7V96f7TpRBYAgRXH3bJzQmr5KJnnaDZhlS5lyN1o
+	w==
 X-Virus-Scanned: by MailRoute
 Received: from 013.lax.mailroute.net ([127.0.0.1])
  by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id aI-AWS0g1F7R; Thu, 30 Apr 2026 18:24:23 +0000 (UTC)
+ id qkwSlzJ3IrTA; Thu, 30 Apr 2026 18:24:26 +0000 (UTC)
 Received: from bvanassche.mtv.corp.google.com (unknown [104.135.180.219])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4g62d10Fxlzm1W0c;
-	Thu, 30 Apr 2026 18:24:20 +0000 (UTC)
+	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4g62d41hVtzlfdfc;
+	Thu, 30 Apr 2026 18:24:23 +0000 (UTC)
 From: Bart Van Assche <bvanassche@acm.org>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org,
 	Marco Elver <elver@google.com>,
 	Bart Van Assche <bvanassche@acm.org>,
-	Kashyap Desai <kashyap.desai@broadcom.com>,
-	Sumit Saxena <sumit.saxena@broadcom.com>,
-	Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
-	Chandrakanth patil <chandrakanth.patil@broadcom.com>,
+	Sathya Prakash <sathya.prakash@broadcom.com>,
+	Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+	Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>,
+	Ranjan Kumar <ranjan.kumar@broadcom.com>,
 	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-Subject: [PATCH v2 40/56] scsi: megaraid: Enable lock context analysis
-Date: Thu, 30 Apr 2026 11:20:10 -0700
-Message-ID: <20260430182130.1978347-41-bvanassche@acm.org>
+Subject: [PATCH v2 41/56] scsi: mpt3sas: Enable lock context analysis
+Date: Thu, 30 Apr 2026 11:20:11 -0700
+Message-ID: <20260430182130.1978347-42-bvanassche@acm.org>
 X-Mailer: git-send-email 2.54.0.545.g6539524ca2-goog
 In-Reply-To: <20260430182130.1978347-1-bvanassche@acm.org>
 References: <20260430182130.1978347-1-bvanassche@acm.org>
@@ -67,19 +67,20 @@ Content-Transfer-Encoding: quoted-printable
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/megaraid/Makefile | 3 +++
+ drivers/scsi/mpt3sas/Makefile | 3 +++
  1 file changed, 3 insertions(+)
 
-diff --git a/drivers/scsi/megaraid/Makefile b/drivers/scsi/megaraid/Makef=
-ile
-index 12177e4cae65..9a6976a4dc22 100644
---- a/drivers/scsi/megaraid/Makefile
-+++ b/drivers/scsi/megaraid/Makefile
-@@ -1,4 +1,7 @@
+diff --git a/drivers/scsi/mpt3sas/Makefile b/drivers/scsi/mpt3sas/Makefil=
+e
+index e76d994dbed3..5653baeae26c 100644
+--- a/drivers/scsi/mpt3sas/Makefile
++++ b/drivers/scsi/mpt3sas/Makefile
+@@ -1,5 +1,8 @@
  # SPDX-License-Identifier: GPL-2.0
+ # mpt3sas makefile
 +
 +CONTEXT_ANALYSIS :=3D y
 +
- obj-$(CONFIG_MEGARAID_MM)	+=3D megaraid_mm.o
- obj-$(CONFIG_MEGARAID_MAILBOX)	+=3D megaraid_mbox.o
- obj-$(CONFIG_MEGARAID_SAS)	+=3D megaraid_sas.o
+ obj-$(CONFIG_SCSI_MPT3SAS) +=3D mpt3sas.o
+ mpt3sas-y +=3D  mpt3sas_base.o     \
+ 		mpt3sas_config.o \
