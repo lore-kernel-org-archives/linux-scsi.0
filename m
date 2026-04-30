@@ -1,57 +1,56 @@
 Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1D0A139D6DE
-	for <linux-scsi@vger.kernel.org>; Thu, 30 Apr 2026 18:22:10 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0464B39D6DE
+	for <linux-scsi@vger.kernel.org>; Thu, 30 Apr 2026 18:22:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777573332; cv=none; b=m9U0F33d+/S2ozsJvS2qVkE9m9pwT8bbqLJbdQyyBudwQn6mxNCQYuiqqLA0TAu9J5g1ucqoq6P39xR+ihjchyGCwsheXHE+6FBWXRHCGRTdHTXzAqnXE92S+Y5EhY44CkoXJJv5gIeq2QrsGHnMLEOI1F7iotuV8iHHqbEVfuk=
+	t=1777573335; cv=none; b=EoxBeVmKw1Byjba620GB2At0/2HrSg8RKwl04f0QRBtbrxFi6ooQlrg3a0MyHJ+HxhA/ZxQ3B/FFVUU1npyVU5gGecVzbxZQS8gtgLXPgH6lUhEemvTnjFcEvRjBmnITnM6JaaNpmHZCNtw7PYuuCltRXfLAbM2oV+zJ9Ys4NQk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777573332; c=relaxed/simple;
-	bh=iM8n37gaChXnY6R0qz9AmdgjOGV29aL6mcWE/W4R030=;
+	s=arc-20240116; t=1777573335; c=relaxed/simple;
+	bh=o3S6krafpiKEuIjgRCZIRlSNMEuuYtCewrSu2dGF0mY=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=m4PJvxCdGfFjalkOM/ZfeC1F7oJtJYiLfjYsb835TpBfgMxyQ/A85nNfiZmkB9B874gWPY/i47dpeoQ5PIiW0IklSDkjsPm4YTSnRVL7yq+p5zNiEDA5+OYaP28eCljjsaUm5AASZiCLBbZX9d6A7zAjvZhDVkzowx/mVDOlgWA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=NPWOWgK3; arc=none smtp.client-ip=199.89.1.16
+	 MIME-Version; b=tob8HCyzikJspbnEtc02JoWEpvDokKtPX46ZnM3nF11mW9xFl9TdiIDVwlwMFhTfIZHtTWfdQ4JVwnvP7Z/thqQ4w6Mazj4tX6vRbp4BJahwFJvvZtpcT8X2ZwuA05O/emUeGqq+pjTzey1qyUfzqJV2h1h39XJ3uN4ujILlTq4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=MejFCv/E; arc=none smtp.client-ip=199.89.1.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="NPWOWgK3"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="MejFCv/E"
 Received: from localhost (localhost [127.0.0.1])
-	by 013.lax.mailroute.net (Postfix) with ESMTP id 4g62ZV4nxXzlfdfN;
-	Thu, 30 Apr 2026 18:22:10 +0000 (UTC)
+	by 013.lax.mailroute.net (Postfix) with ESMTP id 4g62ZY4YG3zlfpMB;
+	Thu, 30 Apr 2026 18:22:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:mime-version:references:in-reply-to
 	:x-mailer:message-id:date:date:subject:subject:from:from
-	:received:received; s=mr01; t=1777573327; x=1780165328; bh=IbAMm
-	sJV7UqSrgZRuvJcn4RACkeBQPhXm7nCv/4QU1U=; b=NPWOWgK3qO874h2WjhdEl
-	Cx3dHaX/4l8CplXzUzyqT8LEUc9IABLt54cHYJi1ivfEg9XN9bbFT3cN9B6Yuu/m
-	BUFrbEQovGRUYRlo1/zxTWh9xEnIWgx0+ak9wYFGMhliLUtcmVjYQ21y9Uwhn3bF
-	7F/UbyvCjuty9b74QyMbSfeYmOSU25FbQPea6jxSLg8DsRzRjd3ZPYn5soBoxy0I
-	e8pctVBbqhjLmB5Hrhj6KixEntFsy/xBl9+CFuvHRzwMI9f7PY0ks+ziovwONucE
-	RNoKx6VelU4XZbIHE5IiMsPNjWsyTgQe0n8e4jBpmUgErJvpBg0CoyqUE1dT6jnA
-	Q==
+	:received:received; s=mr01; t=1777573329; x=1780165330; bh=jMfoz
+	ViRj595K7epluumti/P9dpeULRAVVVBNXtF63g=; b=MejFCv/Ev0kU2xl/tjp1B
+	l2auQrA5ZeYL7DfNgtp76JUEZb00hToTqaCu27R/r5wuSUx0jPyHzWk/rzZEzAgw
+	dKzVIP2lfFlYkiW+V6Gsz5M18M85ynObtkdlzFJ9nbjCpaL3h7tIlbkdCYWhDJLa
+	CkZvtne/nD1LZyuNNUAEI00AgXxApEXRkva3Cswk7AryI0EmZv3TCB67rnjEONhV
+	3i1vV3I1nr2uCGh+5EzDAkY6diU49YjVKb5m3j63trJvHrM+DlkYN0DoAI5/xp++
+	J6UCzjf1aFwPHqGqerfKeqhhPYW28mcndUFIsy7gnG2sCGLPsZdcYP3qKaKFjVAY
+	w==
 X-Virus-Scanned: by MailRoute
 Received: from 013.lax.mailroute.net ([127.0.0.1])
  by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id KzAIkTGd0_-2; Thu, 30 Apr 2026 18:22:07 +0000 (UTC)
+ id AHY5FkjqtpMW; Thu, 30 Apr 2026 18:22:09 +0000 (UTC)
 Received: from bvanassche.mtv.corp.google.com (unknown [104.135.180.219])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4g62ZP1SWXzlkMYB;
-	Thu, 30 Apr 2026 18:22:04 +0000 (UTC)
+	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4g62ZS1tgPzlffts;
+	Thu, 30 Apr 2026 18:22:07 +0000 (UTC)
 From: Bart Van Assche <bvanassche@acm.org>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org,
 	Marco Elver <elver@google.com>,
 	Bart Van Assche <bvanassche@acm.org>,
-	Finn Thain <fthain@linux-m68k.org>,
-	Michael Schmitz <schmitzmic@gmail.com>,
+	Adaptec OEM Raid Solutions <aacraid@microsemi.com>,
 	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-Subject: [PATCH v2 07/56] scsi: NCR5380: Prepare for enabling lock context analysis
-Date: Thu, 30 Apr 2026 11:19:37 -0700
-Message-ID: <20260430182130.1978347-8-bvanassche@acm.org>
+Subject: [PATCH v2 08/56] scsi: aacraid: Prepare for enabling lock context analysis
+Date: Thu, 30 Apr 2026 11:19:38 -0700
+Message-ID: <20260430182130.1978347-9-bvanassche@acm.org>
 X-Mailer: git-send-email 2.54.0.545.g6539524ca2-goog
 In-Reply-To: <20260430182130.1978347-1-bvanassche@acm.org>
 References: <20260430182130.1978347-1-bvanassche@acm.org>
@@ -63,36 +62,74 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 
-Expand 'hostdata' in the lock context annotations because 'hostdata' is
-not a function argument.
+Document the aac_send_reset_adapter() locking requirements with
+__must_hold(). Annotate functions that perform conditional locking with
+__no_context_analysis.
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/NCR5380.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/aacraid/Makefile   | 2 ++
+ drivers/scsi/aacraid/commctrl.c | 1 +
+ drivers/scsi/aacraid/commsup.c  | 3 +++
+ 3 files changed, 6 insertions(+)
 
-diff --git a/drivers/scsi/NCR5380.c b/drivers/scsi/NCR5380.c
-index 006dcf981218..029fe6362629 100644
---- a/drivers/scsi/NCR5380.c
-+++ b/drivers/scsi/NCR5380.c
-@@ -961,7 +961,7 @@ static irqreturn_t __maybe_unused NCR5380_intr(int ir=
-q, void *dev_id)
-  */
+diff --git a/drivers/scsi/aacraid/Makefile b/drivers/scsi/aacraid/Makefil=
+e
+index 8f0eec682bb6..415e0ed5ad24 100644
+--- a/drivers/scsi/aacraid/Makefile
++++ b/drivers/scsi/aacraid/Makefile
+@@ -1,6 +1,8 @@
+ # SPDX-License-Identifier: GPL-2.0-only
+ # Adaptec aacraid
 =20
- static bool NCR5380_select(struct Scsi_Host *instance, struct scsi_cmnd =
-*cmd)
--	__releases(&hostdata->lock) __acquires(&hostdata->lock)
-+	__must_hold(&((struct NCR5380_hostdata *)shost_priv(instance))->lock)
- {
- 	struct NCR5380_hostdata *hostdata =3D shost_priv(instance);
- 	unsigned char tmp[3], phase;
-@@ -1657,7 +1657,7 @@ static int NCR5380_transfer_dma(struct Scsi_Host *i=
-nstance,
-  */
++CONTEXT_ANALYSIS :=3D y
++
+ obj-$(CONFIG_SCSI_AACRAID) :=3D aacraid.o
 =20
- static void NCR5380_information_transfer(struct Scsi_Host *instance)
--	__releases(&hostdata->lock) __acquires(&hostdata->lock)
-+	__must_hold(&((struct NCR5380_hostdata *)shost_priv(instance))->lock)
+ aacraid-objs	:=3D linit.o aachba.o commctrl.o comminit.o commsup.o \
+diff --git a/drivers/scsi/aacraid/commctrl.c b/drivers/scsi/aacraid/commc=
+trl.c
+index bd82aeb679ae..77238e610db4 100644
+--- a/drivers/scsi/aacraid/commctrl.c
++++ b/drivers/scsi/aacraid/commctrl.c
+@@ -1043,6 +1043,7 @@ struct aac_reset_iop {
+ };
+=20
+ static int aac_send_reset_adapter(struct aac_dev *dev, void __user *arg)
++	__must_hold(dev->ioctl_mutex)
  {
- 	struct NCR5380_hostdata *hostdata =3D shost_priv(instance);
- 	unsigned char msgout =3D NOP;
+ 	struct aac_reset_iop reset;
+ 	int retval;
+diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsu=
+p.c
+index c4485629f792..fb4d78233c6d 100644
+--- a/drivers/scsi/aacraid/commsup.c
++++ b/drivers/scsi/aacraid/commsup.c
+@@ -475,6 +475,7 @@ int aac_queue_get(struct aac_dev * dev, u32 * index, =
+u32 qid, struct hw_fib * hw
+ int aac_fib_send(u16 command, struct fib *fibptr, unsigned long size,
+ 		int priority, int wait, int reply, fib_callback callback,
+ 		void *callback_data)
++	__context_unsafe(conditional locking)
+ {
+ 	struct aac_dev * dev =3D fibptr->dev;
+ 	struct hw_fib * hw_fib =3D fibptr->hw_fib_va;
+@@ -698,6 +699,7 @@ int aac_fib_send(u16 command, struct fib *fibptr, uns=
+igned long size,
+=20
+ int aac_hba_send(u8 command, struct fib *fibptr, fib_callback callback,
+ 		void *callback_data)
++	__context_unsafe(conditional locking)
+ {
+ 	struct aac_dev *dev =3D fibptr->dev;
+ 	int wait;
+@@ -1466,6 +1468,7 @@ static void aac_schedule_bus_scan(struct aac_dev *a=
+ac)
+ }
+=20
+ static int _aac_reset_adapter(struct aac_dev *aac, int forced, u8 reset_=
+type)
++	__context_unsafe(conditional locking)
+ {
+ 	int index, quirks;
+ 	int retval;
