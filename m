@@ -1,55 +1,57 @@
 Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 389583537FF
-	for <linux-scsi@vger.kernel.org>; Thu, 30 Apr 2026 18:25:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C3283537FF
+	for <linux-scsi@vger.kernel.org>; Thu, 30 Apr 2026 18:25:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777573502; cv=none; b=nC0yx5xWrzmWDWvvstNPhsjdKM9bxIFicr/j/xBG905uEB1UNh6y8X+VoTX3k0Yip6JgbGSQ1NHfr+4j5OuV4foXUxr+2/qRhmX8GlJII6doM6MnXd1/lpONFg04QiDozdPcgWbeL9xcw+HfuxfFfLL245sOMVsQL2BXyC2aTro=
+	t=1777573505; cv=none; b=W5tUFI8ioQpI/Vxbn/lJ4xz0NQBzTh1Y51DaH6cTWxs14QmlHQCSIOEIUV5leXUMx5dqAu7KrM4230ng/CqvdHS+95mR8phkJOq4wrnrA05+nIDfpgAPNckvxtYxgugUZAu5I/R8V5vxzFJ+1jbu5PqNcXHzEpBJlRWEPJsmp58=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777573502; c=relaxed/simple;
-	bh=kHl7sSphHOsgGeWxupepMmhkxZ7SQ2OrcbueWf2HBh0=;
+	s=arc-20240116; t=1777573505; c=relaxed/simple;
+	bh=AEIJBm8svrCL0q2507PpFI8ddgD0mfcjmcNombF3svQ=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=PPLFuLLO8ftqcVONROpvSuYXLX8W5eh17zh+FukpuQxPmLOVPNudMGcarypjEYniUknouIh1xHlzNZej79v7b8mlRTeoBJcRwmrq/rZorQCaMeB/Xblc8v3vMOJKCnvprdb3ItxEcnrXLqOjfpZk8PTizs1MxzG5m54OYzMMG64=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=POO5tYQz; arc=none smtp.client-ip=199.89.1.16
+	 MIME-Version; b=bXuk+J9cVaxBxXvXqOIp4lv5MutI6G0Xu8yeJXe+2dORXSvUwlMDvf4cUO7nMd2h71dxjJ05jarpS0KlHud9NTQsqnvOmXdteLkbjD0RoxJs3tmXtQ5u98FueAhPe2N+jUJAXICRmglSWhtahSdcWJFfnsmIV56CbDft/ZBhiRA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=oaxBKzGq; arc=none smtp.client-ip=199.89.1.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="POO5tYQz"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="oaxBKzGq"
 Received: from localhost (localhost [127.0.0.1])
-	by 013.lax.mailroute.net (Postfix) with ESMTP id 4g62dm5gW0zm1W1V;
-	Thu, 30 Apr 2026 18:25:00 +0000 (UTC)
+	by 013.lax.mailroute.net (Postfix) with ESMTP id 4g62dr1MQDzlfdds;
+	Thu, 30 Apr 2026 18:25:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:mime-version:references:in-reply-to
 	:x-mailer:message-id:date:date:subject:subject:from:from
-	:received:received; s=mr01; t=1777573495; x=1780165496; bh=bxReP
-	mrO/OVhFixH69RjVFKrRh48DU0oMjwoangRZyE=; b=POO5tYQzZ3dewo2Ra4q/8
-	rnJQndD62MhIPCquYKPi6/Go2ea97oMboRoUrN+T/VS1X3hWulFx/ILmoXzaKm1D
-	LY1e/RloDMuTF1uYaItya/xVNhEPercM2px2TEHEE9nROJegForndz7BFVjnHvRR
-	GwTNEQWi7W7bqVHJPJMTotxZ60KyhciAuAlUdFR5u+Oh9qQH1Com16NsZ3+wHunb
-	ZBfrpJRf6ENIDxnJUntsZkFM1IROHk2jWX5Gr4/Ic57zY0/GvvKukRw9kGuDijO6
-	ak85Mq0E/IOusB5BeiYJ/s2VS5KlIbkSjNBEfTzvZo8c2ui+yXnoZ59AoVTtXWHW
-	g==
+	:received:received; s=mr01; t=1777573498; x=1780165499; bh=NLPXf
+	F8nBhGVBt5DG55aqLCGdi8Uayn4RPlO881dBII=; b=oaxBKzGqX70gH1F3ty7/6
+	Bcj6v6rTcrUHrwW6866hqmT2EjsYwpUUtcMHR9CZFvECIryvodSQoSjo9zyYUZox
+	yxxqXXfBfVgup6PBOV81yuI4lPSe/bu7+r/pFlPidZ9/o+yyZcr22RWHaqD4ocIL
+	RXOnkx9f8Of5Un9KMU4VyaMiZOMBh1ZvQKhbAXKpi11ZT/SFCIsAVk+r/8ic5hvv
+	mvs+VaF1nsnLt6XddyiV7oxa0UuWgv7Dr5s9NTKSPzvhIraRr5UdPNj+LPJ5Xepz
+	ulR0ZtWAF7/M9YbS4nVuHZ8/v97bHdqZrZCxryjX+IAKK2omqDLGtlwpEweOhy7L
+	w==
 X-Virus-Scanned: by MailRoute
 Received: from 013.lax.mailroute.net ([127.0.0.1])
  by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id UDVnQgdEPsUN; Thu, 30 Apr 2026 18:24:55 +0000 (UTC)
+ id xhy_f2fuGsNQ; Thu, 30 Apr 2026 18:24:58 +0000 (UTC)
 Received: from bvanassche.mtv.corp.google.com (unknown [104.135.180.219])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4g62dc5w4lzlfdds;
-	Thu, 30 Apr 2026 18:24:52 +0000 (UTC)
+	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4g62dh4mG5zlhpdN;
+	Thu, 30 Apr 2026 18:24:56 +0000 (UTC)
 From: Bart Van Assche <bvanassche@acm.org>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org,
 	Marco Elver <elver@google.com>,
 	Bart Van Assche <bvanassche@acm.org>,
+	Nilesh Javali <njavali@marvell.com>,
+	GR-QLogic-Storage-Upstream@marvell.com,
 	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-Subject: [PATCH v2 47/56] scsi: qla1280: Prepare for enabling lock context analysis
-Date: Thu, 30 Apr 2026 11:20:17 -0700
-Message-ID: <20260430182130.1978347-48-bvanassche@acm.org>
+Subject: [PATCH v2 48/56] scsi: qla2xxx: Enable lock context analysis
+Date: Thu, 30 Apr 2026 11:20:18 -0700
+Message-ID: <20260430182130.1978347-49-bvanassche@acm.org>
 X-Mailer: git-send-email 2.54.0.545.g6539524ca2-goog
 In-Reply-To: <20260430182130.1978347-1-bvanassche@acm.org>
 References: <20260430182130.1978347-1-bvanassche@acm.org>
@@ -61,154 +63,144 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 
-Document locking requirements with __must_hold().
+Make several code blocks with conditional locking compatible with
+thread-safety analysis. Annotate functions that perform conditional
+locking with __no_context_analysis. No functionality has been changed.
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/qla1280.c | 18 ++++++++++++++++++
- 1 file changed, 18 insertions(+)
+ drivers/scsi/qla2xxx/Makefile     |  3 +++
+ drivers/scsi/qla2xxx/qla_nx.c     |  2 ++
+ drivers/scsi/qla2xxx/qla_target.c | 29 ++++++++++++++++++-----------
+ drivers/scsi/qla2xxx/qla_tmpl.c   |  1 +
+ 4 files changed, 24 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/scsi/qla1280.c b/drivers/scsi/qla1280.c
-index cdd6fe002c32..ebc878068684 100644
---- a/drivers/scsi/qla1280.c
-+++ b/drivers/scsi/qla1280.c
-@@ -737,6 +737,7 @@ static void qla1280_mailbox_timeout(struct timer_list=
- *t)
- static int
- _qla1280_wait_for_single_command(struct scsi_qla_host *ha, struct srb *s=
-p,
- 				 struct completion *wait)
-+	__must_hold(ha->host->host_lock)
- {
- 	int	status =3D FAILED;
- 	struct scsi_cmnd *cmd =3D sp->cmd;
-@@ -754,6 +755,7 @@ _qla1280_wait_for_single_command(struct scsi_qla_host=
- *ha, struct srb *sp,
-=20
- static int
- qla1280_wait_for_single_command(struct scsi_qla_host *ha, struct srb *sp=
-)
-+	__must_hold(ha->host->host_lock)
- {
- 	DECLARE_COMPLETION_ONSTACK(wait);
-=20
-@@ -763,6 +765,7 @@ qla1280_wait_for_single_command(struct scsi_qla_host =
-*ha, struct srb *sp)
-=20
- static int
- qla1280_wait_for_pending_commands(struct scsi_qla_host *ha, int bus, int=
- target)
-+	__must_hold(ha->host->host_lock)
- {
- 	int		cnt;
- 	int		status;
-@@ -809,6 +812,7 @@ qla1280_wait_for_pending_commands(struct scsi_qla_hos=
-t *ha, int bus, int target)
-  ***********************************************************************=
-***/
- static int
- qla1280_error_action(struct scsi_cmnd *cmd, enum action action)
-+	__must_hold(cmd->device->host->host_lock)
- {
- 	struct scsi_qla_host *ha;
- 	int bus, target, lun;
-@@ -822,6 +826,10 @@ qla1280_error_action(struct scsi_cmnd *cmd, enum act=
-ion action)
- 	ENTER("qla1280_error_action");
-=20
- 	ha =3D (struct scsi_qla_host *)(CMD_HOST(cmd)->hostdata);
+diff --git a/drivers/scsi/qla2xxx/Makefile b/drivers/scsi/qla2xxx/Makefil=
+e
+index cbc1303e761e..095657510cc3 100644
+--- a/drivers/scsi/qla2xxx/Makefile
++++ b/drivers/scsi/qla2xxx/Makefile
+@@ -1,4 +1,7 @@
+ # SPDX-License-Identifier: GPL-2.0
 +
-+	/* Tell the compiler that ha->host =3D=3D cmd->device->host. */
-+	__assume_ctx_lock(ha->host->host_lock);
++CONTEXT_ANALYSIS :=3D y
 +
- 	sp =3D scsi_cmd_priv(cmd);
- 	bus =3D SCSI_BUS_32(cmd);
- 	target =3D SCSI_TCN_32(cmd);
-@@ -1490,6 +1498,7 @@ qla1280_initialize_adapter(struct scsi_qla_host *ha=
-)
-  */
- static const struct firmware *
- qla1280_request_firmware(struct scsi_qla_host *ha)
-+	__must_hold(ha->host->host_lock)
- {
- 	const struct firmware *fw;
- 	int err;
-@@ -1655,6 +1664,7 @@ qla1280_chip_diag(struct scsi_qla_host *ha)
+ qla2xxx-y :=3D qla_os.o qla_init.o qla_mbx.o qla_iocb.o qla_isr.o qla_gs=
+.o \
+ 		qla_dbg.o qla_sup.o qla_attr.o qla_mid.o qla_dfs.o qla_bsg.o \
+ 		qla_nx.o qla_mr.o qla_nx2.o qla_target.o qla_tmpl.o qla_nvme.o \
+diff --git a/drivers/scsi/qla2xxx/qla_nx.c b/drivers/scsi/qla2xxx/qla_nx.=
+c
+index 298c060c1292..1950583c5734 100644
+--- a/drivers/scsi/qla2xxx/qla_nx.c
++++ b/drivers/scsi/qla2xxx/qla_nx.c
+@@ -431,6 +431,7 @@ static int qla82xx_crb_win_lock(struct qla_hw_data *h=
+a)
 =20
- static int
- qla1280_load_firmware_pio(struct scsi_qla_host *ha)
-+	__must_hold(ha->host->host_lock)
+ int
+ qla82xx_wr_32(struct qla_hw_data *ha, ulong off_in, u32 data)
++	__context_unsafe(conditional locking)
  {
- 	/* enter with host_lock acquired */
+ 	void __iomem *off;
+ 	unsigned long flags =3D 0;
+@@ -461,6 +462,7 @@ qla82xx_wr_32(struct qla_hw_data *ha, ulong off_in, u=
+32 data)
 =20
-@@ -1705,6 +1715,7 @@ qla1280_load_firmware_pio(struct scsi_qla_host *ha)
- #define DUMP_IT_BACK 0		/* for debug of RISC loading */
- static int
- qla1280_load_firmware_dma(struct scsi_qla_host *ha)
-+	__must_hold(ha->host->host_lock)
+ int
+ qla82xx_rd_32(struct qla_hw_data *ha, ulong off_in)
++	__context_unsafe(conditional locking)
  {
- 	/* enter with host_lock acquired */
- 	const struct firmware *fw;
-@@ -1844,6 +1855,7 @@ qla1280_start_firmware(struct scsi_qla_host *ha)
+ 	void __iomem *off;
+ 	unsigned long flags =3D 0;
+diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla=
+_target.c
+index e47da45e93a0..687ffd4bfdce 100644
+--- a/drivers/scsi/qla2xxx/qla_target.c
++++ b/drivers/scsi/qla2xxx/qla_target.c
+@@ -383,11 +383,13 @@ static bool qlt_24xx_atio_pkt_all_vps(struct scsi_q=
+la_host *vha,
+ 			    vha->vp_idx, entry->vp_index);
+ 			break;
+ 		}
+-		if (!ha_locked)
++		if (!ha_locked) {
+ 			spin_lock_irqsave(&host->hw->hardware_lock, flags);
+-		qlt_24xx_handle_abts(host, (struct abts_recv_from_24xx *)atio);
+-		if (!ha_locked)
++			qlt_24xx_handle_abts(host, (struct abts_recv_from_24xx *)atio);
+ 			spin_unlock_irqrestore(&host->hw->hardware_lock, flags);
++		} else {
++			qlt_24xx_handle_abts(host, (struct abts_recv_from_24xx *)atio);
++		}
+ 		break;
+ 	}
 =20
- static int
- qla1280_load_firmware(struct scsi_qla_host *ha)
-+	__must_hold(ha->host->host_lock)
- {
- 	/* enter with host_lock taken */
- 	int err;
-@@ -2413,6 +2425,7 @@ qla1280_nv_write(struct scsi_qla_host *ha, uint16_t=
- data)
+@@ -3774,6 +3776,7 @@ static int __qlt_send_term_exchange(struct qla_qpai=
+r *qpair,
   */
- static int
- qla1280_mailbox_command(struct scsi_qla_host *ha, uint8_t mr, uint16_t *=
-mb)
-+	__must_hold(ha->host->host_lock)
+ void qlt_send_term_exchange(struct qla_qpair *qpair,
+ 	struct qla_tgt_cmd *cmd, struct atio_from_isp *atio, int ha_locked)
++	__context_unsafe(conditional locking)
  {
- 	struct device_reg __iomem *reg =3D ha->iobase;
- 	int status =3D 0;
-@@ -2538,6 +2551,7 @@ qla1280_poll(struct scsi_qla_host *ha)
-  */
- static int
- qla1280_bus_reset(struct scsi_qla_host *ha, int bus)
-+	__must_hold(ha->host->host_lock)
+ 	struct scsi_qla_host *vha;
+ 	unsigned long flags =3D 0;
+@@ -6727,11 +6730,13 @@ qlt_chk_qfull_thresh_hold(struct scsi_qla_host *v=
+ha, struct qla_qpair *qpair,
+ 	if (ha->tgt.num_pend_cmds < Q_FULL_THRESH_HOLD(ha))
+ 		return 0;
+=20
+-	if (!ha_locked)
++	if (!ha_locked) {
+ 		spin_lock_irqsave(&ha->hardware_lock, flags);
+-	qlt_send_busy(qpair, atio, qla_sam_status);
+-	if (!ha_locked)
++		qlt_send_busy(qpair, atio, qla_sam_status);
+ 		spin_unlock_irqrestore(&ha->hardware_lock, flags);
++	} else {
++		qlt_send_busy(qpair, atio, qla_sam_status);
++	}
+=20
+ 	return 1;
+ }
+@@ -6740,6 +6745,7 @@ qlt_chk_qfull_thresh_hold(struct scsi_qla_host *vha=
+, struct qla_qpair *qpair,
+ /* called via callback from qla2xxx */
+ static void qlt_24xx_atio_pkt(struct scsi_qla_host *vha,
+ 	struct atio_from_isp *atio, uint8_t ha_locked)
++	__context_unsafe(conditional locking)
  {
- 	uint16_t mb[MAILBOX_REGISTER_COUNT];
- 	uint16_t reset_delay;
-@@ -2598,6 +2612,7 @@ qla1280_bus_reset(struct scsi_qla_host *ha, int bus=
-)
-  */
- static int
- qla1280_device_reset(struct scsi_qla_host *ha, int bus, int target)
-+	__must_hold(ha->host->host_lock)
+ 	struct qla_hw_data *ha =3D vha->hw;
+ 	struct qla_tgt *tgt =3D vha->vha_tgt.qla_tgt;
+@@ -6766,12 +6772,13 @@ static void qlt_24xx_atio_pkt(struct scsi_qla_hos=
+t *vha,
+ 			    "qla_target(%d): ATIO_TYPE7 "
+ 			    "received with UNKNOWN exchange address, "
+ 			    "sending QUEUE_FULL\n", vha->vp_idx);
+-			if (!ha_locked)
++			if (!ha_locked) {
+ 				spin_lock_irqsave(&ha->hardware_lock, flags);
+-			qlt_send_busy(ha->base_qpair, atio, qla_sam_status);
+-			if (!ha_locked)
+-				spin_unlock_irqrestore(&ha->hardware_lock,
+-				    flags);
++				qlt_send_busy(ha->base_qpair, atio, qla_sam_status);
++				spin_unlock_irqrestore(&ha->hardware_lock, flags);
++			} else {
++				qlt_send_busy(ha->base_qpair, atio, qla_sam_status);
++			}
+ 			break;
+ 		}
+=20
+diff --git a/drivers/scsi/qla2xxx/qla_tmpl.c b/drivers/scsi/qla2xxx/qla_t=
+mpl.c
+index b0a74b036cf4..f31bd7aeb8dc 100644
+--- a/drivers/scsi/qla2xxx/qla_tmpl.c
++++ b/drivers/scsi/qla2xxx/qla_tmpl.c
+@@ -1004,6 +1004,7 @@ qla27xx_fwdt_template_valid(void *p)
+=20
+ void
+ qla27xx_mpi_fwdump(scsi_qla_host_t *vha, int hardware_locked)
++	__context_unsafe(conditional locking)
  {
- 	uint16_t mb[MAILBOX_REGISTER_COUNT];
- 	int status;
-@@ -2632,6 +2647,7 @@ qla1280_device_reset(struct scsi_qla_host *ha, int =
-bus, int target)
-  */
- static int
- qla1280_abort_command(struct scsi_qla_host *ha, struct srb * sp, int han=
-dle)
-+	__must_hold(ha->host->host_lock)
- {
- 	uint16_t mb[MAILBOX_REGISTER_COUNT];
- 	unsigned int bus, target, lun;
-@@ -3749,6 +3765,7 @@ qla1280_error_entry(struct scsi_qla_host *ha, struc=
-t response *pkt,
-  */
- static int
- qla1280_abort_isp(struct scsi_qla_host *ha)
-+	__must_hold(ha->host->host_lock)
- {
- 	struct device_reg __iomem *reg =3D ha->iobase;
- 	struct srb *sp;
-@@ -3881,6 +3898,7 @@ qla1280_check_for_dead_scsi_bus(struct scsi_qla_hos=
-t *ha, unsigned int bus)
- static void
- qla1280_get_target_parameters(struct scsi_qla_host *ha,
- 			      struct scsi_device *device)
-+	__must_hold(ha->host->host_lock)
- {
- 	uint16_t mb[MAILBOX_REGISTER_COUNT];
- 	int bus, target, lun;
+ 	ulong flags =3D 0;
+=20
