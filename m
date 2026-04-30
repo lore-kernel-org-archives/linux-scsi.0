@@ -1,313 +1,93 @@
-Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f172.google.com (mail-pf1-f172.google.com [209.85.210.172])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A11263537FF
-	for <linux-scsi@vger.kernel.org>; Thu, 30 Apr 2026 18:26:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8366937BE73
+	for <linux-scsi@vger.kernel.org>; Thu, 30 Apr 2026 21:03:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777573567; cv=none; b=TbrYzrbxwN+7mWiNNr7fhkhYAZpxRXrJmgYOImND89aR2oFU0I/FRgzyEHcDqS0Ti3oO7IGrc3/hWJWwx4iOZn28C6bMdFJNKnASoe8ApKBd4pERrSapu7PugUFXBmvuY0nvjbRcf4Ba6Hwu4kZSWPLkI+LzSdgUpev0Jcr6TR8=
+	t=1777582985; cv=none; b=j3t5rkE9SGGyJplRpioxwmk/hO0WUh4mf16rbk5Lc3EChm05DaxzyjfBVRrO8qrUEemtCxmyJD6lWLZxknQXCsfkqNWVCCvwv+t2pmS/aQ7hJYUJ0epV9YActIUYKHB7wE8MF0s9egl3ryIaj+5bPcU+ENAQsNJOq1ep0s2wyMk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777573567; c=relaxed/simple;
-	bh=9rWhgHR7Qh7Xk1kCaLWP5kSAx8gRiD6qeUptlhxcPzY=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=tg8AaZIx9wbPJ38lBPbY2CE2nHU8VBfLBEzoE0J68lghsEv7Z++++Z5ux0SJQ4iQIQ18Skb4+Nu6chVWrcOaonGhxw89h+a5S0MLZP4XE7XAAcIh8EIugOH+Ar5JyB4DBQgHVPzBvFepW7/EoaCONAIKWdbgNujm04502/yxv9U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=lLedW6Tm; arc=none smtp.client-ip=199.89.1.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1777582985; c=relaxed/simple;
+	bh=lK0vRvzWOSGHsP8Az2h4+v4ZxmaWqeUv//+gTjRmZ/Y=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=uklaxUILbHZjuWvUxBPjAHYeB2L4EcVuDxz1NQlixSr3A04569uutIUhMhUm298JTcwkNrS/KtmSiH8z0OkFD530DbbXrAOslAXCWslaw1lWj9+BQAlFUijwZo+mCsEPHIfuqtCzEsZOZ7SW9PjOJWmVlXGqZmo5MxfUgxiBPr4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Gc4qiaAI; arc=none smtp.client-ip=209.85.210.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="lLedW6Tm"
-Received: from localhost (localhost [127.0.0.1])
-	by 013.lax.mailroute.net (Postfix) with ESMTP id 4g62g131t6zlfvpH;
-	Thu, 30 Apr 2026 18:26:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:mime-version:references:in-reply-to
-	:x-mailer:message-id:date:date:subject:subject:from:from
-	:received:received; s=mr01; t=1777573543; x=1780165544; bh=WPg0O
-	TGqjAzdF/jKdIDRSIFfK8r+0nwHvzP1/99eBcw=; b=lLedW6Tmmpm23u4J2h6g/
-	uikv7bKHhyB2UNGIome8Ekm3Zsp5fUeQKhe7tNt5d7s4GP4I+AHWdfVwJhIE7jNm
-	3pDtes6o/LfOVEQNXSW3pxKLSOYoe3++a1oMjWYTIX3HOCxkHm/PVbolNYFfElYk
-	X8jbdt8meVqdoQhCnDwDN+1lcnFkb65ipXaeBtHeLhR/Caq3C0neduO2CjfylHXy
-	jGSGPfaY+fCDM2ybZptglJv8dyiSpxJhyxY53yQoVZtFVfyjx6li7BSBhtUF7WOO
-	JecDoiJTDDAGjAGF3Md5SzB9QbFQCH+KVx0uC3xVtRZCPzzTdufhnP3eZEDfPVsL
-	w==
-X-Virus-Scanned: by MailRoute
-Received: from 013.lax.mailroute.net ([127.0.0.1])
- by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id BpClUXJfwBr0; Thu, 30 Apr 2026 18:25:43 +0000 (UTC)
-Received: from bvanassche.mtv.corp.google.com (unknown [104.135.180.219])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4g62fW1KGgzlh1Rp;
-	Thu, 30 Apr 2026 18:25:38 +0000 (UTC)
-From: Bart Van Assche <bvanassche@acm.org>
-To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org,
-	Marco Elver <elver@google.com>,
-	Bart Van Assche <bvanassche@acm.org>,
-	Jianzhou Zhao <luckd0g@163.com>,
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Gc4qiaAI"
+Received: by mail-pf1-f172.google.com with SMTP id d2e1a72fcca58-83177129e28so646678b3a.1
+        for <linux-scsi@vger.kernel.org>; Thu, 30 Apr 2026 14:03:04 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1777582983; x=1778187783; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=BVHVujWPl6gS9nLBw1sM2L5O/6px8rvuzNFbmPH9b+4=;
+        b=Gc4qiaAIuLnFDBvwjMQRPOINnEVOqHOdRSF6V0qfun3A8BHAyfibJyeCswXeev0mcA
+         RBLmlGAgFhoEch8hZZp5CLIbYCd6r1Mpvfjo4ZpNKm74247FZHb0dhrUSoy8o2SUZexz
+         xIGs9AFBv6c+JLvIgfz2mvcyMIEX+LXebP++PX0WYI+sLDCOyAuPp3bzfuveYKqwgg7H
+         OV0j+yLB9a0EGhnHlqKxyY5nZQAkb3lli9pNtbup7BUbtE2DlkjMqWsiyWr9Do+e3cd3
+         PI3NVTuKM2ppSW6VNvbkQA032rjfH8EIaBgfd1RIstWsnFGmuJ0LVlySC/B7ievGUZk/
+         r0HQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1777582983; x=1778187783;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=BVHVujWPl6gS9nLBw1sM2L5O/6px8rvuzNFbmPH9b+4=;
+        b=VNRTVsWHsIKyVmEJc0fyxEkJuir/bKgx0J0Eb49SvdIfmOciooTCVwYL9ph0dwwxpV
+         NN+g0GPkEWubC9Hki+Rec5xsr6f4578nuFkZDgHb1OxEndm3gAn7g+SgdO+NohbnbOx/
+         ni9Mb0VtlmdKQpJLd1vTjny815fSS+3Cw2MEVW2g+mHlrmzjLmYlvfjqxEshjxOdd5n4
+         c2/Grit21N4gZ1ErPoUZri9sxQPNIUHMU7PQyglchJV81IDKf1NeuWHSkAUoX88dCxCE
+         jTQ4OwC6RWRfwUx2Oe05ULbqG1eqoSOGfHAqIJxKc82QpLAYQK3XReS5coftaO5ZmivO
+         4SrQ==
+X-Gm-Message-State: AOJu0YywuBYHtm7tBTeddqhGIZa/Sv81Q7O5Wof+bax9PYj73OxNPWud
+	z2IpMDlbLNPl1HfUsIdGckRtIUenv+mErx76moK4U6R+2byaNSfuW9rJZhJ6rA==
+X-Gm-Gg: AeBDievtZtCpupj/d2NF3R9tC3l4hOHhoWcozxvKerUwPK6J2bTXIPkZ5hnF1QVcldK
+	ULSQpTMx/UPvrohbSOjP6XVAjhfo5XsPNBBQAzU/9ZT61pkeHf9Ww1VxgUUE3nwuPeZXRbTRmxr
+	F5e+Ojt8dBko95Fq5dt+zVuBDpjAK/QNIMOznqNQRYu+AOBjcC2G6t1BwRLcwwDAY8E740gU4ls
+	Tg04lTaTyUMuMmw4zIs6RbMDImH7YSGtOjVR2N8mm09pf6t0U1JMIow3U3CJSd5ZWM6Aw4/elzK
+	IlGyrsgNvZ3YKB84ttX02R3rmx4vjT4GOS+fb8qRrYKlOAcqULH8rrabl90gI4zFX+g2P/Y33y1
+	fw8lfsKH81RJ66YafO7lumrtTYwUR8fUjmDPT+feT/TILOR8xikzbcFjo6Dl6EvJATMD9viJ+ij
+	6EdfAeHCVdQmMPmG2ZcLaVMkba/VHXbjbwRKbtcch9I400lfHLdpVXhKX1lhgbPrW4B3Mu+SUqh
+	ds7HIzRe15OPonlqOHzbb0M4mdpajWb2956aOOMuEynDADWsBoECsNe
+X-Received: by 2002:a05:6a00:ab09:b0:824:9bc5:e946 with SMTP id d2e1a72fcca58-834fdd113e1mr5490195b3a.46.1777582983308;
+        Thu, 30 Apr 2026 14:03:03 -0700 (PDT)
+Received: from ryzen ([2601:644:8000:5b5d:7285:c2ff:fe45:8a32])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-83515b4f7c1sm516809b3a.51.2026.04.30.14.03.01
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 30 Apr 2026 14:03:02 -0700 (PDT)
+From: Rosen Penev <rosenp@gmail.com>
+To: linux-scsi@vger.kernel.org
+Cc: Saurav Kashyap <skashyap@marvell.com>,
+	Javed Hasan <jhasan@marvell.com>,
+	GR-QLogic-Storage-Upstream@marvell.com (maintainer:BROADCOM BNX2FC 10 GIGABIT FCOE DRIVER),
 	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	Kashyap Desai <kashyap.desai@broadcom.com>,
-	Sumit Saxena <sumit.saxena@broadcom.com>,
-	Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
-	Chandrakanth patil <chandrakanth.patil@broadcom.com>,
-	Sathya Prakash <sathya.prakash@broadcom.com>,
-	Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-	Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>,
-	Ranjan Kumar <ranjan.kumar@broadcom.com>,
-	Nilesh Javali <njavali@marvell.com>,
-	Manish Rangankar <mrangankar@marvell.com>,
-	GR-QLogic-Storage-Upstream@marvell.com
-Subject: [PATCH v2 56/56] scsi: core: Protect host state changes with the host lock
-Date: Thu, 30 Apr 2026 11:20:26 -0700
-Message-ID: <20260430182130.1978347-57-bvanassche@acm.org>
-X-Mailer: git-send-email 2.54.0.545.g6539524ca2-goog
-In-Reply-To: <20260430182130.1978347-1-bvanassche@acm.org>
-References: <20260430182130.1978347-1-bvanassche@acm.org>
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH 0/3] scsi: bnx2fc: simplify allocation
+Date: Thu, 30 Apr 2026 14:02:42 -0700
+Message-ID: <20260430210245.29840-1-rosenp@gmail.com>
+X-Mailer: git-send-email 2.54.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 
-Some but not all SCSI host state changes are protected with the SCSI
-host lock. Annotate the SCSI host state with __guarded_by(&host_lock),
-protect all SCSI host state changes with the SCSI host lock and use
-READ_ONCE() for all SCSI host state reads. This patch prevents that
-KCSAN complains about data races when accessing the SCSI host state.
+Use flexible array members to combine allocations and simplify freeing.
 
-Reported-by: Jianzhou Zhao <luckd0g@163.com>
-Closes: https://lore.kernel.org/all/36d59d0e.6db0.19cdbeee01b.Coremail.lu=
-ckd0g@163.com/
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
----
- drivers/scsi/hosts.c                      | 13 ++++++++-----
- drivers/scsi/megaraid/megaraid_sas_base.c |  2 +-
- drivers/scsi/mpt3sas/mpt3sas_scsih.c      |  2 +-
- drivers/scsi/qla4xxx/ql4_os.c             |  6 ++----
- drivers/scsi/scsi_lib.c                   |  3 +--
- drivers/scsi/scsi_sysfs.c                 |  7 ++++---
- include/scsi/scsi_host.h                  | 23 ++++++++++++++++-------
- 7 files changed, 33 insertions(+), 23 deletions(-)
+Rosen Penev (3):
+  scsi: bnx2fc: simplify allocation of cmgr
+  scsi: bnx2fc: no double pointer for io_bdt_pool
+  scsi: bnx2fc: tgt_ofld_list to FAM
 
-diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-index e047747d4ecf..7482ae7777c8 100644
---- a/drivers/scsi/hosts.c
-+++ b/drivers/scsi/hosts.c
-@@ -278,7 +278,8 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, s=
-truct device *dev,
- 	if (error)
- 		goto out_disable_runtime_pm;
-=20
--	scsi_host_set_state(shost, SHOST_RUNNING);
-+	scoped_guard(spinlock_irq, shost->host_lock)
-+		scsi_host_set_state(shost, SHOST_RUNNING);
- 	get_device(shost->shost_gendev.parent);
-=20
- 	device_enable_async_suspend(&shost->shost_dev);
-@@ -352,6 +353,7 @@ EXPORT_SYMBOL(scsi_add_host_with_dma);
- static void scsi_host_dev_release(struct device *dev)
- {
- 	struct Scsi_Host *shost =3D dev_to_shost(dev);
-+	enum scsi_host_state host_state =3D scsi_get_host_state(shost);
- 	struct device *parent =3D dev->parent;
-=20
- 	/* Wait for functions invoked through call_rcu(&scmd->rcu, ...) */
-@@ -364,7 +366,7 @@ static void scsi_host_dev_release(struct device *dev)
- 	if (shost->work_q)
- 		destroy_workqueue(shost->work_q);
-=20
--	if (shost->shost_state =3D=3D SHOST_CREATED) {
-+	if (host_state =3D=3D SHOST_CREATED) {
- 		/*
- 		 * Free the shost_dev device name and remove the proc host dir
- 		 * here if scsi_host_{alloc,put}() have been called but neither
-@@ -380,7 +382,7 @@ static void scsi_host_dev_release(struct device *dev)
-=20
- 	ida_free(&host_index_ida, shost->host_no);
-=20
--	if (shost->shost_state !=3D SHOST_CREATED)
-+	if (host_state !=3D SHOST_CREATED)
- 		put_device(parent);
- 	kfree(shost);
- }
-@@ -414,7 +416,8 @@ struct Scsi_Host *scsi_host_alloc(const struct scsi_h=
-ost_template *sht, int priv
-=20
- 	shost->host_lock =3D &shost->default_lock;
- 	spin_lock_init(shost->host_lock);
--	shost->shost_state =3D SHOST_CREATED;
-+	scoped_guard(spinlock_init, shost->host_lock)
-+		shost->shost_state =3D SHOST_CREATED;
- 	INIT_LIST_HEAD(&shost->__devices);
- 	INIT_LIST_HEAD(&shost->__targets);
- 	INIT_LIST_HEAD(&shost->eh_abort_list);
-@@ -600,7 +603,7 @@ EXPORT_SYMBOL(scsi_host_lookup);
-  **/
- struct Scsi_Host *scsi_host_get(struct Scsi_Host *shost)
- {
--	if ((shost->shost_state =3D=3D SHOST_DEL) ||
-+	if (scsi_get_host_state(shost) =3D=3D SHOST_DEL ||
- 		!get_device(&shost->shost_gendev))
- 		return NULL;
- 	return shost;
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/meg=
-araid/megaraid_sas_base.c
-index ccefe5841a17..97a81a86db82 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -3075,7 +3075,7 @@ static int megasas_reset_bus_host(struct scsi_cmnd =
-*scmd)
-=20
- 	scmd_printk(KERN_INFO, scmd,
- 		"SCSI host state: %d  SCSI host busy: %d  FW outstanding: %d\n",
--		scmd->device->host->shost_state,
-+		scsi_get_host_state(scmd->device->host),
- 		scsi_host_busy(scmd->device->host),
- 		atomic_read(&instance->fw_outstanding));
- 	/*
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/=
-mpt3sas_scsih.c
-index 6ff788557294..e40913d2479e 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -5460,7 +5460,7 @@ static enum scsi_qc_status scsih_qcmd(struct Scsi_H=
-ost *shost,
- 	 * Avoid error handling escallation when device is disconnected
- 	 */
- 	if (handle =3D=3D MPT3SAS_INVALID_DEVICE_HANDLE || sas_device_priv_data=
-->block) {
--		if (scmd->device->host->shost_state =3D=3D SHOST_RECOVERY &&
-+		if (scsi_get_host_state(scmd->device->host) =3D=3D SHOST_RECOVERY &&
- 		    scmd->cmnd[0] =3D=3D TEST_UNIT_READY) {
- 			scsi_build_sense(scmd, 0, UNIT_ATTENTION, 0x29, 0x07);
- 			scsi_done(scmd);
-diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.=
-c
-index d598ab4126f8..c9d9fc7c81fb 100644
---- a/drivers/scsi/qla4xxx/ql4_os.c
-+++ b/drivers/scsi/qla4xxx/ql4_os.c
-@@ -9411,11 +9411,9 @@ static int qla4xxx_eh_target_reset(struct scsi_cmn=
-d *cmd)
-  * This routine finds that if reset host is called in EH
-  * scenario or from some application like sg_reset
-  **/
--static int qla4xxx_is_eh_active(struct Scsi_Host *shost)
-+static bool qla4xxx_is_eh_active(struct Scsi_Host *shost)
- {
--	if (shost->shost_state =3D=3D SHOST_RECOVERY)
--		return 1;
--	return 0;
-+	return scsi_get_host_state(shost) =3D=3D SHOST_RECOVERY;
- }
-=20
- /**
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 6e8c7a42603e..5f7580b089e9 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1638,10 +1638,9 @@ static enum scsi_qc_status scsi_dispatch_cmd(struc=
-t scsi_cmnd *cmd)
- 		goto done;
- 	}
-=20
--	if (unlikely(host->shost_state =3D=3D SHOST_DEL)) {
-+	if (scsi_get_host_state(host) =3D=3D SHOST_DEL) {
- 		cmd->result =3D (DID_NO_CONNECT << 16);
- 		goto done;
--
- 	}
-=20
- 	trace_scsi_dispatch_cmd_start(cmd);
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index dfc3559e7e04..9480432f650b 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -214,8 +214,9 @@ store_shost_state(struct device *dev, struct device_a=
-ttribute *attr,
- 	if (!state)
- 		return -EINVAL;
-=20
--	if (scsi_host_set_state(shost, state))
--		return -EINVAL;
-+	scoped_guard(spinlock_irq, shost->host_lock)
-+		if (scsi_host_set_state(shost, state))
-+			return -EINVAL;
- 	return count;
- }
-=20
-@@ -223,7 +224,7 @@ static ssize_t
- show_shost_state(struct device *dev, struct device_attribute *attr, char=
- *buf)
- {
- 	struct Scsi_Host *shost =3D class_to_shost(dev);
--	const char *name =3D scsi_host_state_name(shost->shost_state);
-+	const char *name =3D scsi_host_state_name(scsi_get_host_state(shost));
-=20
- 	if (!name)
- 		return -EINVAL;
-diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-index 2bbe7cb0060b..9841402e8bdf 100644
---- a/include/scsi/scsi_host.h
-+++ b/include/scsi/scsi_host.h
-@@ -729,7 +729,7 @@ struct Scsi_Host {
- 	unsigned int  irq;
- =09
-=20
--	enum scsi_host_state shost_state;
-+	enum scsi_host_state shost_state __guarded_by(&host_lock);
-=20
- 	/* ldm bits */
- 	struct device		shost_gendev, shost_dev;
-@@ -787,11 +787,18 @@ static inline struct Scsi_Host *dev_to_shost(struct=
- device *dev)
- 	return container_of(dev, struct Scsi_Host, shost_gendev);
- }
-=20
-+static inline enum scsi_host_state scsi_get_host_state(struct Scsi_Host =
-*shost)
-+{
-+	return context_unsafe(READ_ONCE(shost->shost_state));
-+}
-+
- static inline int scsi_host_in_recovery(struct Scsi_Host *shost)
- {
--	return shost->shost_state =3D=3D SHOST_RECOVERY ||
--		shost->shost_state =3D=3D SHOST_CANCEL_RECOVERY ||
--		shost->shost_state =3D=3D SHOST_DEL_RECOVERY ||
-+	enum scsi_host_state state =3D scsi_get_host_state(shost);
-+
-+	return state =3D=3D SHOST_RECOVERY ||
-+		state =3D=3D SHOST_CANCEL_RECOVERY ||
-+		state =3D=3D SHOST_DEL_RECOVERY ||
- 		shost->tmf_in_progress;
- }
-=20
-@@ -837,8 +844,9 @@ static inline struct device *scsi_get_device(struct S=
-csi_Host *shost)
-  **/
- static inline int scsi_host_scan_allowed(struct Scsi_Host *shost)
- {
--	return shost->shost_state =3D=3D SHOST_RUNNING ||
--	       shost->shost_state =3D=3D SHOST_RECOVERY;
-+	enum scsi_host_state state =3D scsi_get_host_state(shost);
-+
-+	return state =3D=3D SHOST_RUNNING || state =3D=3D SHOST_RECOVERY;
- }
-=20
- extern void scsi_unblock_requests(struct Scsi_Host *);
-@@ -942,6 +950,7 @@ static inline unsigned char scsi_host_get_guard(struc=
-t Scsi_Host *shost)
- 	return shost->prot_guard_type;
- }
-=20
--extern int scsi_host_set_state(struct Scsi_Host *, enum scsi_host_state)=
-;
-+int scsi_host_set_state(struct Scsi_Host *shost, enum scsi_host_state st=
-ate)
-+	__must_hold(&shost->host_lock);
-=20
- #endif /* _SCSI_SCSI_HOST_H */
+ drivers/scsi/bnx2fc/bnx2fc.h      | 10 ++---
+ drivers/scsi/bnx2fc/bnx2fc_fcoe.c | 14 +-----
+ drivers/scsi/bnx2fc/bnx2fc_io.c   | 73 +++++--------------------------
+ 3 files changed, 18 insertions(+), 79 deletions(-)
+
+--
+2.54.0
+
