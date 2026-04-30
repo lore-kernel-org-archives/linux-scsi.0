@@ -1,57 +1,58 @@
 Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3548339D6DE
-	for <linux-scsi@vger.kernel.org>; Thu, 30 Apr 2026 18:22:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4105B39D6DE
+	for <linux-scsi@vger.kernel.org>; Thu, 30 Apr 2026 18:22:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777573371; cv=none; b=mzNO0M8bW0L0NmTMBPkNYgXEcvhmtTu2KuH1I9xNA8QIC+GhrjIdmqgQPvOiThqeYfumG/5t/A7J/9ycpBRl7DQUMxkvYPc17mbaY6FkahPt6aslkmhvciyugOnpgiyph83nkhXNz8WDmdAOuUlp4YPwUESptSd7gtMnvv9PBd4=
+	t=1777573377; cv=none; b=kecoufFQiYAUnx+GkIM6AhH3wn2zJ7FOz0bchl0iEih/+5GLGM+0B6whQ/hudRxA7y766sYif3pg/9V7lPIDzq7c+wykuH5AMmUInJ+OTYTBFK/NIg6ztJMTVhpe/8mgvBVz24GIyuPsY7gLBvh/oUQPu4lOD/wOXWdvJ9cBk2s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777573371; c=relaxed/simple;
-	bh=cYafpE8Aagw+72f8xp1S4C/uzFasuohihy5Q8yn3QJY=;
+	s=arc-20240116; t=1777573377; c=relaxed/simple;
+	bh=YhRBffoI0/iaDjoJeOhfUVTVCueD+Tzc0x5Kv/bk9E0=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=EFPUg1Q7U5R92NjSnfrix2nwKGuJhY4GK1Fkd+F5avn0ILr+RwAuelHsioduq8ZRjuH04ww5nrKQPZR7mcyvTSb8jjAA0zAzqvCAt1+qL4Nwek3MLEUoMWUE+NgjRzjZ6Yv0fxMZef0MmLgxohmzjBmH+Sfggpz9eUXM0yu/9gQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=SKB9xsvX; arc=none smtp.client-ip=199.89.1.16
+	 MIME-Version; b=Nh53w8Zj/50wpc2E7mYfMa7nINTzaiJ0f1jL8zouZQZ0JB8kIn6JWxXxbw7UWpfSvm+zSju8KHULKv7gaHiEEFdGpaN6IgMgaKZIh6hXAgKjOKQ6UWLoJ75S25ZVP3Fwm0OVpR/rEjB+h8BgZ6mOMhbzhfYGaTthOA764UJKY4M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=nP8Q8GZ3; arc=none smtp.client-ip=199.89.1.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="SKB9xsvX"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="nP8Q8GZ3"
 Received: from localhost (localhost [127.0.0.1])
-	by 013.lax.mailroute.net (Postfix) with ESMTP id 4g62bF65DXzlkQLv;
-	Thu, 30 Apr 2026 18:22:49 +0000 (UTC)
+	by 013.lax.mailroute.net (Postfix) with ESMTP id 4g62bN0J3nzlhH10;
+	Thu, 30 Apr 2026 18:22:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:mime-version:references:in-reply-to
 	:x-mailer:message-id:date:date:subject:subject:from:from
-	:received:received; s=mr01; t=1777573366; x=1780165367; bh=cYafp
-	E8Aagw+72f8xp1S4C/uzFasuohihy5Q8yn3QJY=; b=SKB9xsvXvYoWBh/7LbN16
-	dYdR9NWb3LudAZKUV/B7LER357BCMSicIsGLKD/NkE6dUS6wL9O0/InvUBP+DQuF
-	yOZm+5l9wEAsw/ATdkCUVPsec0jeLUjc6EDsVdxc3mkgi33kZ7QZZowwy5xmI1E8
-	y58e9en8VxVB737QcjN5gLVkynC6rO8sustaN4aW99+FvXo+BY0fHRFfRu5yslQm
-	hPkKthpqRNddl5HaZjblmgRqMJZsp7SPZmNFKLh/0L/DyZ+LH4zM1r+FRuzq63Qj
-	U6AcqJS9pb7+RebubBbuxioJSH5Q+AoXRAIhOD6pbJDLWoaeTNWEUszMTL3lEpk6
+	:received:received; s=mr01; t=1777573369; x=1780165370; bh=rIYz0
+	VXU8Y/pSlvurWLlPwI5HdPyaTg/6SnrQ29rL+I=; b=nP8Q8GZ3PK0D0EhHz2rwu
+	lBNxO3FXMtuB6QXAtp0rKAVvkLXWCW6Dcy2zzlj2vN8+i7S6Iti6mWbEZi8f7C4j
+	12Tb16PtSqQn3fQyN9Tnf8X9fADpn+MhTSww1IH9XeYmPeRgTVQZMGVqjc1KMjGS
+	Eg3hnCaGLbAAWTNhXhyNhuLORA9pjuBVOcRIFQVJZUI0h0swxv/9dMvngLUFO9md
+	DyZAM00+fIzlnJzpsVUoH4g4Aoykzyr3bu+uCx7UWw+ylNG2yx1WFtBaTfm0/1rF
+	Pc9+7B3cwmXSYXUnZLLEeYFjyvc7jxsPRVfSs8C+93FgYaaF0WWt/CkiPKxjwCTB
 	A==
 X-Virus-Scanned: by MailRoute
 Received: from 013.lax.mailroute.net ([127.0.0.1])
  by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id Es_w30ddVNMu; Thu, 30 Apr 2026 18:22:46 +0000 (UTC)
+ id RJtJ0ZWWsEVT; Thu, 30 Apr 2026 18:22:49 +0000 (UTC)
 Received: from bvanassche.mtv.corp.google.com (unknown [104.135.180.219])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4g62b82LlQzlhpdP;
-	Thu, 30 Apr 2026 18:22:44 +0000 (UTC)
+	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4g62bC4RQBzm1W15;
+	Thu, 30 Apr 2026 18:22:47 +0000 (UTC)
 From: Bart Van Assche <bvanassche@acm.org>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org,
 	Marco Elver <elver@google.com>,
 	Bart Van Assche <bvanassche@acm.org>,
-	Anil Gurumurthy <anil.gurumurthy@qlogic.com>,
-	Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>,
+	Saurav Kashyap <skashyap@marvell.com>,
+	Javed Hasan <jhasan@marvell.com>,
+	GR-QLogic-Storage-Upstream@marvell.com,
 	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-Subject: [PATCH v2 18/56] scsi: bfa: Enable lock context analysis
-Date: Thu, 30 Apr 2026 11:19:48 -0700
-Message-ID: <20260430182130.1978347-19-bvanassche@acm.org>
+Subject: [PATCH v2 19/56] scsi: bnx2fc: Enable lock context analysis
+Date: Thu, 30 Apr 2026 11:19:49 -0700
+Message-ID: <20260430182130.1978347-20-bvanassche@acm.org>
 X-Mailer: git-send-email 2.54.0.545.g6539524ca2-goog
 In-Reply-To: <20260430182130.1978347-1-bvanassche@acm.org>
 References: <20260430182130.1978347-1-bvanassche@acm.org>
@@ -63,20 +64,122 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 
+Document the locking requirements with __must_hold(). Inform the
+compiler about aliases for synchronization objects with
+__assume_ctx_lock(). Make the argument names in the definition and the
+declaration of bnx2fc_process_seq_cleanup_compl() consistent.
+
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/bfa/Makefile | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/scsi/bnx2fc/Makefile     | 3 +++
+ drivers/scsi/bnx2fc/bnx2fc.h     | 5 +++--
+ drivers/scsi/bnx2fc/bnx2fc_els.c | 2 ++
+ drivers/scsi/bnx2fc/bnx2fc_hwi.c | 3 +++
+ drivers/scsi/bnx2fc/bnx2fc_io.c  | 6 +++++-
+ 5 files changed, 16 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/bfa/Makefile b/drivers/scsi/bfa/Makefile
-index 442fc3db8f1f..50c16fcfb01c 100644
---- a/drivers/scsi/bfa/Makefile
-+++ b/drivers/scsi/bfa/Makefile
+diff --git a/drivers/scsi/bnx2fc/Makefile b/drivers/scsi/bnx2fc/Makefile
+index 1d72e279a97d..3feb6b4dae64 100644
+--- a/drivers/scsi/bnx2fc/Makefile
++++ b/drivers/scsi/bnx2fc/Makefile
 @@ -1,4 +1,7 @@
- # SPDX-License-Identifier: GPL-2.0
+ # SPDX-License-Identifier: GPL-2.0-only
 +
 +CONTEXT_ANALYSIS :=3D y
 +
- obj-$(CONFIG_SCSI_BFA_FC) :=3D bfa.o
+ obj-$(CONFIG_SCSI_BNX2X_FCOE) +=3D bnx2fc.o
 =20
- bfa-y :=3D bfad.o bfad_im.o bfad_attr.o bfad_debugfs.o bfad_bsg.o
+ bnx2fc-y :=3D bnx2fc_els.o bnx2fc_fcoe.o bnx2fc_hwi.o bnx2fc_io.o bnx2fc=
+_tgt.o \
+diff --git a/drivers/scsi/bnx2fc/bnx2fc.h b/drivers/scsi/bnx2fc/bnx2fc.h
+index 8c8968ec8cb4..566632d7e880 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc.h
++++ b/drivers/scsi/bnx2fc/bnx2fc.h
+@@ -592,9 +592,10 @@ int bnx2fc_send_stat_req(struct bnx2fc_hba *hba);
+ int bnx2fc_post_io_req(struct bnx2fc_rport *tgt, struct bnx2fc_cmd *io_r=
+eq);
+ int bnx2fc_send_rec(struct bnx2fc_cmd *orig_io_req);
+ int bnx2fc_send_srr(struct bnx2fc_cmd *orig_io_req, u32 offset, u8 r_ctl=
+);
+-void bnx2fc_process_seq_cleanup_compl(struct bnx2fc_cmd *seq_clnup_req,
++void bnx2fc_process_seq_cleanup_compl(struct bnx2fc_cmd *seq_clnp_req,
+ 				      struct fcoe_task_ctx_entry *task,
+-				      u8 rx_state);
++				      u8 rx_state)
++	__must_hold(&seq_clnp_req->cb_arg->aborted_io_req->tgt->tgt_lock);
+ int bnx2fc_initiate_seq_cleanup(struct bnx2fc_cmd *orig_io_req, u32 offs=
+et,
+ 				enum fc_rctl r_ctl);
+=20
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_els.c b/drivers/scsi/bnx2fc/bnx2f=
+c_els.c
+index 749e30aaf926..1f333a135879 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_els.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_els.c
+@@ -263,6 +263,7 @@ int bnx2fc_send_rls(struct bnx2fc_rport *tgt, struct =
+fc_frame *fp)
+ }
+=20
+ static void bnx2fc_srr_compl(struct bnx2fc_els_cb_arg *cb_arg)
++	__must_hold(&cb_arg->aborted_io_req->tgt->tgt_lock)
+ {
+ 	struct bnx2fc_mp_req *mp_req;
+ 	struct fc_frame_header *fc_hdr, *fh;
+@@ -373,6 +374,7 @@ static void bnx2fc_srr_compl(struct bnx2fc_els_cb_arg=
+ *cb_arg)
+ }
+=20
+ static void bnx2fc_rec_compl(struct bnx2fc_els_cb_arg *cb_arg)
++	__must_hold(&cb_arg->aborted_io_req->tgt->tgt_lock)
+ {
+ 	struct bnx2fc_cmd *orig_io_req, *new_io_req;
+ 	struct bnx2fc_cmd *rec_req;
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_hwi.c b/drivers/scsi/bnx2fc/bnx2f=
+c_hwi.c
+index a5ecb87d5b2d..a3670c48900b 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_hwi.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_hwi.c
+@@ -880,6 +880,9 @@ void bnx2fc_process_cq_compl(struct bnx2fc_rport *tgt=
+, u16 wqe,
+ 		return;
+ 	}
+=20
++	/* Tell the compiler that there is an alias for tgt->tgt_lock. */
++	__assume_ctx_lock(&io_req->cb_arg->aborted_io_req->tgt->tgt_lock);
++
+ 	/* Timestamp IO completion time */
+ 	cmd_type =3D io_req->cmd_type;
+=20
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_io.c b/drivers/scsi/bnx2fc/bnx2fc=
+_io.c
+index 9c7a541a4523..351c72404b5f 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_io.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_io.c
+@@ -1080,7 +1080,7 @@ int bnx2fc_eh_device_reset(struct scsi_cmnd *sc_cmd=
+)
+ }
+=20
+ static int bnx2fc_abts_cleanup(struct bnx2fc_cmd *io_req)
+-	__must_hold(&tgt->tgt_lock)
++	__must_hold(&io_req->tgt->tgt_lock)
+ {
+ 	struct bnx2fc_rport *tgt =3D io_req->tgt;
+ 	unsigned int time_left;
+@@ -1207,6 +1207,8 @@ int bnx2fc_eh_abort(struct scsi_cmnd *sc_cmd)
+ 		if (cancel_delayed_work(&io_req->timeout_work))
+ 			kref_put(&io_req->refcount,
+ 				 bnx2fc_cmd_release); /* drop timer hold */
++		/* Tell the compiler that io_req->tgt =3D=3D tgt. */
++		__assume_ctx_lock(&io_req->tgt->tgt_lock);
+ 		/*
+ 		 * We don't want to hold off the upper layer timer so simply
+ 		 * cleanup the command and return that I/O was successfully
+@@ -1258,6 +1260,8 @@ int bnx2fc_eh_abort(struct scsi_cmnd *sc_cmd)
+ 		/* Let the scsi-ml try to recover this command */
+ 		printk(KERN_ERR PFX "abort failed, xid =3D 0x%x\n",
+ 		       io_req->xid);
++		/* Tell the compiler that io_req->tgt =3D=3D tgt. */
++		__assume_ctx_lock(&io_req->tgt->tgt_lock);
+ 		/*
+ 		 * Cleanup firmware residuals before returning control back
+ 		 * to SCSI ML.
