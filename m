@@ -1,63 +1,63 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD8BF1D6DA9;
-	Fri,  1 May 2026 13:17:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 22BCE271443;
+	Fri,  1 May 2026 13:17:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777641424; cv=none; b=JLbCEFKXGuuVO2V8Rv8cajqvTfgvYeJLIWPQTgh+htH1eOMUPtdOLlwulPZOcRyM+6OZaaPp8G4KgzJiPpEQRZ3RRDpTmQb+d8xl9v2HvaNDTKIpxI7Rd/CMooco06zo8Eo8FNxfoNPfWVbEx3b2F20PXhtNJyUlf/pzWd6/hkE=
+	t=1777641458; cv=none; b=sCLQCAy1vtDzVsDQNcT5SBspjeDl5Xg4esFKnE1uiqQ50FfOLTQIwizE+woUaL3ldLnxGEPYs5nRhvxgzkCyaBN0DCim1yubv4qrRkFt9yFP5HNlGM2o8ZgXo4m2X4WD59Kh7wfQpLeLVKQcOvZfpgTI/IKrE79uyJfy/vj/XdI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777641424; c=relaxed/simple;
-	bh=PGpejte6GlcGdP8WRBgpjie1sSjhv9wCACl6UpN4lEA=;
+	s=arc-20240116; t=1777641458; c=relaxed/simple;
+	bh=F21DW7zhgeYXDZdQO28lUx/4n6zk4IdiRywRVjUIcp0=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=fn0LwZCY+UNDS/aocn2DkB3P3pMwhBvFr2tpoeBdESJkU4RC1dx/bOA2ghYV6uL4Dj6scJjJ4aEA2Lst6rZJ1UeZmm/xoeDR/R/lPpNh4XfrZQ3zRVJISLZ9Y7CQIPXOaVF3pf+9GVBC5pygwC7XA4VuEcto5SpQWuIeGqYTd4o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=bWts9E12; arc=none smtp.client-ip=205.220.168.131
+	 MIME-Version; b=gGnzKutY4hWILg+8fY0eb6Cofmpg8A/DtR6qkLlVUGUPN0hhkeMUriov8WzbL8+Bz/jWjjF5DqfKsBy8tgy33lrK8L+GJ19yQhpEqkwh9NFD73NsLlSWXfCxmiLRjzi1dIhkOGywyDGeQtaOsiaL2vCpCR5ZD0Itjk7tjSpWu7w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=kcq0uB6U; arc=none smtp.client-ip=205.220.180.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="bWts9E12"
-Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 641AXM542580096;
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="kcq0uB6U"
+Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 641AXKdU3951051;
 	Fri, 1 May 2026 13:16:54 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
 	cc:content-transfer-encoding:date:from:in-reply-to:message-id
-	:mime-version:references:subject:to; s=qcppdkim1; bh=Hffon1I/+q1
-	iD7OTTRowUnNxGvRMCT8yiaQI1DgApfU=; b=bWts9E12ByCd0yARBUm/8GCRnWr
-	ZagR3VGUaNqFKX6cOQRg+KzQjklFycbwl9M8RrBkkRGcdaFF4Jlg9a1Xz1eCGr0U
-	rMshMkTAviQPefLw34LdQ3Uqh3E5ZRic+Qwr+EPHJCnrEuT3VHWwPhz+xOAwwOj8
-	j4aGsbEwbCQ4fFKgvJfd9JZ5H9vYZjvpiF9Yn0bNwF6MWcq0Sat9ox6h30+6q0CE
-	u0Q6aY6Lvn+iLeqtJiA759E8Jf3h2X1uofeF8/EjWdGd1qoy6W0A5oK3LzKoc4Fl
-	6wyfMfqOJpsaXqHdprQiWaygyqo9sSF5hyvy1AWnny0YNae2UrZc71QYYFg==
-Received: from nalasppmta05.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4dvbpwaxq1-1
+	:mime-version:references:subject:to; s=qcppdkim1; bh=CkzKMvBiSpe
+	l+nC8YAqqhb3MZNkFaEVO15jGJXSu1xU=; b=kcq0uB6UedV+LGiisM5E88EtVcE
+	+NKaTdAjE64829r+GXwBUUf6dmGH627jsJ+W+dhxItVeEWioF7pQhjGPk758yrj/
+	3c4oxDMH/4o3tH7DLyn+ATWITKopWFayoFwUivkOxA/qBL2XwvHrUMhTeQ4avZlN
+	Kr37bV8sRrpDb8cQLyzZDHoHUayYWVKpbUTbAke2wz6nVS4vAaWnBoL8Fu4vUyWv
+	lmswhcJJWkxcRmDPdmwQjtOyKjMWjU1jaBBN1g3IHD96W06SBQai17UgORcF7mH5
+	cgFGFQBijvRjxfdhmkpuQbBhdNoXYWcfgoUzEjkd6Gc4/krVOH1TzPR9qsQ==
+Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4dvchkak2t-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
 	Fri, 01 May 2026 13:16:54 +0000 (GMT)
-Received: from pps.filterd (NALASPPMTA05.qualcomm.com [127.0.0.1])
-	by NALASPPMTA05.qualcomm.com (8.18.1.7/8.18.1.7) with ESMTP id 641DGrm0023562;
+Received: from pps.filterd (NALASPPMTA01.qualcomm.com [127.0.0.1])
+	by NALASPPMTA01.qualcomm.com (8.18.1.7/8.18.1.7) with ESMTP id 641DGrah013390;
 	Fri, 1 May 2026 13:16:53 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-	by NALASPPMTA05.qualcomm.com (PPS) with ESMTPS id 4dvgkwmwnr-1
+	by NALASPPMTA01.qualcomm.com (PPS) with ESMTPS id 4du6edmfvj-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
 	Fri, 01 May 2026 13:16:53 +0000 (GMT)
-Received: from NALASPPMTA05.qualcomm.com (NALASPPMTA05.qualcomm.com [127.0.0.1])
-	by pps.reinject (8.18.1.12/8.18.1.12) with ESMTP id 641DGrw9023555;
+Received: from NALASPPMTA01.qualcomm.com (NALASPPMTA01.qualcomm.com [127.0.0.1])
+	by pps.reinject (8.18.1.12/8.18.1.12) with ESMTP id 641DGqV7013379;
 	Fri, 1 May 2026 13:16:53 GMT
 Received: from hu-devc-lv-u22-c.qualcomm.com (hu-cang-lv.qualcomm.com [10.81.25.255])
-	by NALASPPMTA05.qualcomm.com (PPS) with ESMTPS id 641DGrL9023554
+	by NALASPPMTA01.qualcomm.com (PPS) with ESMTPS id 641DGqhd013378
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 01 May 2026 13:16:53 +0000 (GMT)
+	Fri, 01 May 2026 13:16:52 +0000 (GMT)
 Received: by hu-devc-lv-u22-c.qualcomm.com (Postfix, from userid 359480)
-	id 00DC5B46; Fri,  1 May 2026 06:16:52 -0700 (PDT)
+	id B57F05FC; Fri,  1 May 2026 06:16:52 -0700 (PDT)
 From: Can Guo <can.guo@oss.qualcomm.com>
 To: avri.altman@wdc.com, bvanassche@acm.org, beanhuo@micron.com,
         peter.wang@mediatek.com, martin.petersen@oracle.com, mani@kernel.org
 Cc: linux-scsi@vger.kernel.org, Can Guo <can.guo@oss.qualcomm.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
         "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-        linux-arm-msm@vger.kernel.org (open list:UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER...),
         linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH 2/2] scsi: ufs: ufs-qcom: Use quirk EXTENDED_TX_EQTR_ADAPT_LENGTH_L0L1L2L3
-Date: Fri,  1 May 2026 06:16:41 -0700
-Message-Id: <20260501131641.826258-3-can.guo@oss.qualcomm.com>
+Subject: [PATCH 1/2] scsi: ufs: core: Add a quirk for extended TX EQTR Adapt L0L1L2L3 length
+Date: Fri,  1 May 2026 06:16:40 -0700
+Message-Id: <20260501131641.826258-2-can.guo@oss.qualcomm.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20260501131641.826258-1-can.guo@oss.qualcomm.com>
 References: <20260501131641.826258-1-can.guo@oss.qualcomm.com>
@@ -70,51 +70,82 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-QCInternal: smtphost
 X-QCInternal: smtphost
-X-Authority-Analysis: v=2.4 cv=dozrzVg4 c=1 sm=1 tr=0 ts=69f4a7c6 cx=c_pps
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNTAxMDEyOSBTYWx0ZWRfX0MghlTpMR3R1
+ zzfVUabQA6BogoPHhdRLj9lwQcU/0suUJUhGuo9bxaKqaAlZDoPKyc8kNT/PB2dr5fmfmaVltTB
+ TzhLgQH2ihJ/HkbznaB6WeVeWgiA9k6G1VOlPaVDCFGLlYs9m6IR6yDoOX7f3O7HFs6U19jcnCc
+ dgK8UnMnbtVb7pdfdl8om1JI6OkLz/MEh9sFSy1TkkYCWu6RpYxT+BAjksk7zGbW5Zx0QPJNVJW
+ H6yCEmjllmk0tqlCNSSV9Zdo6hFaKWomCyIW16aLm0n8CYgBU4+9/2Qkey7eVth/UQEV1syj9mH
+ CRLltx9bkfnUKXw3I452taSn1QTC07OmB4sUxr/wDtDxZQ4SB2CkNrnXKBCl0FVW7R3mTkiVWxg
+ c4ZovwjaxhfAV+vuXUFtxr2NgMqEFULcMUN0TqQewDuQm0l+fjIj2Gx5SqHOCHh7T9SJTCAfcmW
+ ca0H4a3woe0n4SOly1Q==
+X-Authority-Analysis: v=2.4 cv=Zdkt8MVA c=1 sm=1 tr=0 ts=69f4a7c6 cx=c_pps
  a=ouPCqIW2jiPt+lZRy3xVPw==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
  a=NGcC8JguVDcA:10 a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22
- a=YMgV9FUhrdKAYTUUvYB2:22 a=EUspDBNiAAAA:8 a=c503dEwmYKfehBB8bAQA:9
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNTAxMDEyOSBTYWx0ZWRfX3WlhOzRWwDCi
- MdRrHessaH4KT5x6WA6skY/jlMlT97hv/4hsJFolUDEobs6WcAOKT0fKHMyIE36DKZLGUIfoJti
- VOAetGypn47araPzDc3IzHBhk6Qd0CylbffBvWw5JGO21jCLnIGdDyM7mdCeDC5ssOnpU5fDCiz
- xrKGz6IqFTu4S6tMv/LjMsaJobpgafs9tXmHG1CF1glxklS8YO2OVUGNENE1nEHByn94+lrFDZ1
- tCgUTrBtpRgzDGJcYk7xNm3NKda+s8Z/+/wWGA1V7g9R8e+PHgYLLF2MGmUKF20zpaOUBzVrXDv
- oDJLElQIXxmjfjqxcMWa/SWSL6CDgKnwqsk+e0+Fz2+3MGKI51KXcFr8TQyzbERrxsuzLcO896r
- teI4R3e0uT+IDfa4HvRnZZiBR4q9tqW/tI/01FaHeedTxccOCwTjuLymB0JABpnWf6ONts7wBLQ
- fFt/G+SovfOshJShJGA==
-X-Proofpoint-ORIG-GUID: qxv76GvRekCOpVagmzDm3SlG9QWKL9C_
-X-Proofpoint-GUID: qxv76GvRekCOpVagmzDm3SlG9QWKL9C_
+ a=yx91gb_oNiZeI1HMLzn7:22 a=EUspDBNiAAAA:8 a=K_dlAwRSWhGW3_DjcLgA:9
+X-Proofpoint-ORIG-GUID: riw__3Anw45-2KJWE4-45-oS1XBaeJ4L
+X-Proofpoint-GUID: riw__3Anw45-2KJWE4-45-oS1XBaeJ4L
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
  definitions=2026-05-01_03,2026-04-30_02,2025-10-01_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- spamscore=0 priorityscore=1501 adultscore=0 malwarescore=0 bulkscore=0
- phishscore=0 impostorscore=0 clxscore=1015 suspectscore=0 lowpriorityscore=0
+ phishscore=0 spamscore=0 clxscore=1015 lowpriorityscore=0 impostorscore=0
+ bulkscore=0 suspectscore=0 malwarescore=0 priorityscore=1501 adultscore=0
  classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
  reason=mlx scancount=1 engine=8.22.0-2604200000 definitions=main-2605010129
 
-Use UFSHCD_QUIRK_EXTENDED_TX_EQTR_ADAPT_LENGTH_L0L1L2L3 for UFS Hosts
-HW major version 0x7 & minor version 0x1.
+Add a quirk to support TX Equalization Training (EQTR) using Adapt L0L1L2L3
+length which is larger than what is allowed by M-PHY spec ver 6.0.
 
 Signed-off-by: Can Guo <can.guo@oss.qualcomm.com>
 ---
- drivers/ufs/host/ufs-qcom.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/ufs/core/ufs-txeq.c | 8 ++++++--
+ include/ufs/ufshcd.h        | 7 +++++++
+ 2 files changed, 13 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-index bc037db46624..7b6957ef164b 100644
---- a/drivers/ufs/host/ufs-qcom.c
-+++ b/drivers/ufs/host/ufs-qcom.c
-@@ -1305,6 +1305,9 @@ static void ufs_qcom_advertise_quirks(struct ufs_hba *hba)
- 	if (host->hw_ver.major > 0x3)
- 		hba->quirks |= UFSHCD_QUIRK_REINIT_AFTER_MAX_GEAR_SWITCH;
- 
-+	if (host->hw_ver.major == 0x7 && host->hw_ver.minor == 0x1)
-+		hba->quirks |= UFSHCD_QUIRK_EXTENDED_TX_EQTR_ADAPT_LENGTH_L0L1L2L3;
+diff --git a/drivers/ufs/core/ufs-txeq.c b/drivers/ufs/core/ufs-txeq.c
+index b2dc89124353..fe647450a7a1 100644
+--- a/drivers/ufs/core/ufs-txeq.c
++++ b/drivers/ufs/core/ufs-txeq.c
+@@ -740,7 +740,9 @@ static int ufshcd_setup_tx_eqtr_adapt_length(struct ufs_hba *hba,
+ 		if (adapt_l0l1l2l3_cap_local > ADAPT_L0L1L2L3_LENGTH_MAX) {
+ 			dev_err(hba->dev, "local RX_HS_G%u_ADAPT_INITIAL_L0L1L2L3_CAP (0x%x) exceeds MAX\n",
+ 				gear, adapt_l0l1l2l3_cap_local);
+-			return -EINVAL;
 +
- 	if (drvdata && drvdata->quirks)
- 		hba->quirks |= drvdata->quirks;
- }
++			if (!(hba->quirks & UFSHCD_QUIRK_EXTENDED_TX_EQTR_ADAPT_LENGTH_L0L1L2L3))
++				return -EINVAL;
+ 		}
+ 
+ 		ret = ufshcd_dme_get(hba, UIC_ARG_MIB(PA_PEERRXHSG6ADAPTINITIALL0L1L2L3),
+@@ -751,7 +753,9 @@ static int ufshcd_setup_tx_eqtr_adapt_length(struct ufs_hba *hba,
+ 		if (adapt_l0l1l2l3_cap_peer > ADAPT_L0L1L2L3_LENGTH_MAX) {
+ 			dev_err(hba->dev, "peer RX_HS_G%u_ADAPT_INITIAL_L0L1L2L3_CAP (0x%x) exceeds MAX\n",
+ 				gear, adapt_l0l1l2l3_cap_peer);
+-			return -EINVAL;
++
++			if (!(hba->quirks & UFSHCD_QUIRK_EXTENDED_TX_EQTR_ADAPT_LENGTH_L0L1L2L3))
++				return -EINVAL;
+ 		}
+ 
+ 		t_adapt_l0l1l2l3_local = adapt_cap_to_t_adapt_l0l1l2l3(adapt_l0l1l2l3_cap_local);
+diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
+index cfbc75d8df83..7a7c07636cf7 100644
+--- a/include/ufs/ufshcd.h
++++ b/include/ufs/ufshcd.h
+@@ -804,6 +804,13 @@ enum ufshcd_quirks {
+ 	 * delay after enabling VCC to ensure it's stable.
+ 	 */
+ 	UFSHCD_QUIRK_VCC_ON_DELAY			= 1 << 27,
++
++	/*
++	 * This quirk indicates that Host supports TX Equalization Training
++	 * (EQTR) using Adapt L0L1L2L3 length which is larger than what is
++	 * allowed by M-PHY spec ver 6.0.
++	 */
++	UFSHCD_QUIRK_EXTENDED_TX_EQTR_ADAPT_LENGTH_L0L1L2L3	= 1 << 28,
+ };
+ 
+ enum ufshcd_caps {
 -- 
 2.34.1
 
