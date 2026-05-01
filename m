@@ -1,95 +1,106 @@
-Received: from spam.asrmicro.com (asrmicro.com [210.13.118.86])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D72EA3921D8;
-	Fri,  1 May 2026 12:54:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.13.118.86
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D98E114A619
+	for <linux-scsi@vger.kernel.org>; Fri,  1 May 2026 13:17:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777640050; cv=none; b=U/sRXvV4RSRQGCzhzhjKsit/aB0JJwkkzoXJmt3yy8W9NVzjsc4PX/RQW5yEinZYRvQpSnhQsgWsW8mp/WqRU0Akq1MYvM0DGUYgFxwB8vDdUxTLKKrYimSAZ8RdPB9+JA1gz7OFgFROtvNE9pxup/eUwwN/5HCnMNt++sDioCU=
+	t=1777641424; cv=none; b=Tjq0juGG6anvC4XD77MsFrXzsWSpZIkvE37ZHBIJ8z6rbqsE23Yot/Y2rMbbZSYrxYdFWr9RDNrEyg0Uf//q0zFTIowWxKOCTJ2XjzmNSY/yOBwlwmOK4ZZC9+bWNJ+BIx+YEfJ08CaoM8QUP7kZrcS4iEpox3FZEYgdoH6KIp8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777640050; c=relaxed/simple;
-	bh=QVKDAzoQViTfrhogX9yehRfdlLX2M5oovOO97em8QeI=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=TbIPWLeYl1401FKPGX2t/Upl3TMRi2GFuMv7rns3HTOx2alvuLJCLuFI4CY7Jn5FmRB7KNMw4dSHNGBPmzJtrBaG3oNLO+i6mXLZ1kGd6HuJc/+oIhicBaJWYqIrOcMZ56zE/8d6gnXunrKcxG30URq5azSy7ZJmfL04JMrUS54=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=asrmicro.com; spf=pass smtp.mailfrom=asrmicro.com; arc=none smtp.client-ip=210.13.118.86
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=asrmicro.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=asrmicro.com
-Received: from exch03.asrmicro.com (exch03.asrmicro.com [10.1.24.118])
-	by spam.asrmicro.com with ESMTPS id 641CrEAQ063989
-	(version=TLSv1 cipher=ECDHE-RSA-AES256-SHA bits=256 verify=FAIL);
-	Fri, 1 May 2026 20:53:14 +0800 (GMT-8)
-	(envelope-from hongjiefang@asrmicro.com)
-Received: from exch02.asrmicro.com (10.1.24.122) by exch03.asrmicro.com
- (10.1.24.118) with Microsoft SMTP Server (TLS) id 15.0.847.32; Fri, 1 May
- 2026 20:53:19 +0800
-Received: from exch02.asrmicro.com ([::1]) by exch02.asrmicro.com ([::1]) with
- mapi id 15.00.0847.030; Fri, 1 May 2026 20:53:19 +0800
-From: =?utf-8?B?RmFuZyBIb25namllKOaWuea0quadsCk=?= <hongjiefang@asrmicro.com>
-To: Bart Van Assche <bvanassche@acm.org>,
-        "alim.akhtar@samsung.com"
-	<alim.akhtar@samsung.com>,
-        "avri.altman@wdc.com" <avri.altman@wdc.com>,
-        "James.Bottomley@HansenPartnership.com"
-	<James.Bottomley@HansenPartnership.com>,
-        "martin.petersen@oracle.com"
-	<martin.petersen@oracle.com>
-CC: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH v3] scsi: ufs: core: call hibern8 notify when hibern8
- cmd failed
-Thread-Topic: [PATCH v3] scsi: ufs: core: call hibern8 notify when hibern8
- cmd failed
-Thread-Index: AQHc2Mck4hiMRbEbWEeHWuWIforbC7X5H8NA
-Date: Fri, 1 May 2026 12:53:18 +0000
-Message-ID: <0929fb5c93ce47e28e44f15c22cb8e99@exch02.asrmicro.com>
-References: <20260430042212.3712251-1-hongjiefang@asrmicro.com>
- <26d908a7-8f95-4f73-b2bf-78923e55b3e8@acm.org>
-In-Reply-To: <26d908a7-8f95-4f73-b2bf-78923e55b3e8@acm.org>
-Accept-Language: zh-CN, en-US
-Content-Language: zh-CN
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+	s=arc-20240116; t=1777641424; c=relaxed/simple;
+	bh=ivtxJn92+/RNWebSkQ39i2d8G3OBLGKDgGtFBfRe1ug=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=TgVRng/0CnvP1biU7ADxpgeRRCcWgQr76YjRtiyGwthATNAajyPAPHJlDUw+YhIW/mbSRh+QbL3aBxsGHp9CTUaapTGygOALPNtzNIZBF93LNTNAx1VbdkBdniddtS3AgmYz0dRevgQxdBtnMo4xwMkwxGjJSbOh9s11qvan1I4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=fOuvu9Eb; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="fOuvu9Eb"
+Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 641AXDTY3648977;
+	Fri, 1 May 2026 13:16:44 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:date:from:message-id:mime-version
+	:subject:to; s=qcppdkim1; bh=0l0aEk1NRY8IvbWQrvER3GBVFj9Q+/2HkVb
+	QOXfwe+I=; b=fOuvu9Ebh2NgXMNm47ys8aCdrVLgdW8UyqpD0iskfnMWOTeonHl
+	qwqYenk+y4zdbY+jO+vtAb79OAv7f/LNaoEjUzD22pfSDeq759kH4qhUH/236VGA
+	JLxPPdzO1dIkTccfGTy9Vc8kSIz4a5WImgM6O7AmN8qgSJWy//+FTFPAIHxo2L+V
+	3JJhu32uW1Jw1w7ZWgmISo0JQoQT1EGlwY17LKTS7dSw5d9UNWhN0cjtWZ1HuAof
+	cipBm28B7T1VhaD20XrK+LKDrAzfcpZAbAeNHM6/8Hwr4caY5C62syKl9nnfB1Wi
+	RzkweSOQu/PmqfAc6vqfyPwCabAXxMPLYrg==
+Received: from nalasppmta03.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4dvj8m1duu-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 01 May 2026 13:16:44 +0000 (GMT)
+Received: from pps.filterd (NALASPPMTA03.qualcomm.com [127.0.0.1])
+	by NALASPPMTA03.qualcomm.com (8.18.1.7/8.18.1.7) with ESMTP id 641DGhIk010754;
+	Fri, 1 May 2026 13:16:43 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+	by NALASPPMTA03.qualcomm.com (PPS) with ESMTPS id 4dv9q6h9kc-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 01 May 2026 13:16:43 +0000 (GMT)
+Received: from NALASPPMTA03.qualcomm.com (NALASPPMTA03.qualcomm.com [127.0.0.1])
+	by pps.reinject (8.18.1.12/8.18.1.12) with ESMTP id 641DGh7j010749;
+	Fri, 1 May 2026 13:16:43 GMT
+Received: from hu-devc-lv-u22-c.qualcomm.com (hu-cang-lv.qualcomm.com [10.81.25.255])
+	by NALASPPMTA03.qualcomm.com (PPS) with ESMTPS id 641DGhkS010748
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 01 May 2026 13:16:43 +0000 (GMT)
+Received: by hu-devc-lv-u22-c.qualcomm.com (Postfix, from userid 359480)
+	id 772A65FC; Fri,  1 May 2026 06:16:43 -0700 (PDT)
+From: Can Guo <can.guo@oss.qualcomm.com>
+To: avri.altman@wdc.com, bvanassche@acm.org, beanhuo@micron.com,
+        peter.wang@mediatek.com, martin.petersen@oracle.com, mani@kernel.org
+Cc: linux-scsi@vger.kernel.org, Can Guo <can.guo@oss.qualcomm.com>
+Subject: [PATCH 0/2] scsi: ufs: Add quirk EXTENDED_TX_EQTR_ADAPT_LENGTH_L0L1L2L3
+Date: Fri,  1 May 2026 06:16:39 -0700
+Message-Id: <20260501131641.826258-1-can.guo@oss.qualcomm.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-DNSRBL: 
-X-SPAM-SOURCE-CHECK: pass
-X-MAIL:spam.asrmicro.com 641CrEAQ063989
+Content-Transfer-Encoding: 8bit
+X-QCInternal: smtphost
+X-QCInternal: smtphost
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNTAxMDEyOSBTYWx0ZWRfXzgpJwV7mnH1D
+ 3Gb6q+pkRq56sBc0cp2+z/4WJx2N0518q0nU+6XsgZBaOXFwig06+8Wvyg/TZc6ZQdqNpFgFNiZ
+ d6yML++nPz5bQbt1SWtUmd2qzpDLj0ifjTBAgnOTPaZjkAzESkk4HK51KujiczQ9Dy3CEfEYUy9
+ ePvs80KoQZvhd2Yf7xYuhPkmpSbP5kvssABJf1hlbUdl0S3m8KVXvmmGKCXWH6HU9NhtPEJ9aiY
+ DUVghwmSO+QLEhpD5hC37x17TLRNQBJ3Ljso2LMEE2wAak2MAyxFHwQKRFT6iwf6mHyhBe+NYAV
+ XCFLm2v0ITf1mLwaq8imKyBoQs2lU9pPrhrJRbDsKAsnHMDTwuek+l8U/xEOnyJXnTnBjNVEIzl
+ /55zudAPDgoP+pl6cEHatHGMi6Vn1dNJbohkPMn/Rd+LwDYjdkXr5LR9pfVYaMJgeNt1DnSU792
+ JEvWGyf6zUaAoplzNNw==
+X-Proofpoint-GUID: fuKanmotnSoGLa83yDBlY-txKvULs9ez
+X-Proofpoint-ORIG-GUID: fuKanmotnSoGLa83yDBlY-txKvULs9ez
+X-Authority-Analysis: v=2.4 cv=V4ZNF+ni c=1 sm=1 tr=0 ts=69f4a7bc cx=c_pps
+ a=ouPCqIW2jiPt+lZRy3xVPw==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
+ a=NGcC8JguVDcA:10 a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22
+ a=eoimf2acIAo5FJnRuUoq:22 a=wGrgBaBf53O1OKP9xaIA:9
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-05-01_03,2026-04-30_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ malwarescore=0 priorityscore=1501 adultscore=0 spamscore=0 phishscore=0
+ bulkscore=0 clxscore=1015 impostorscore=0 lowpriorityscore=0 suspectscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2604200000 definitions=main-2605010129
 
-PiBGcm9tOiBCYXJ0IFZhbiBBc3NjaGUgW21haWx0bzpidmFuYXNzY2hlQGFjbS5vcmddDQo+IFNl
-bnQ6IEZyaWRheSwgTWF5IDEsIDIwMjYgMTozMSBBTQ0KPiBUbzogRmFuZyBIb25namllICA8aG9u
-Z2ppZWZhbmdAYXNybWljcm8uY29tPjsNCj4gYWxpbS5ha2h0YXJAc2Ftc3VuZy5jb207IGF2cmku
-YWx0bWFuQHdkYy5jb207DQo+IEphbWVzLkJvdHRvbWxleUBIYW5zZW5QYXJ0bmVyc2hpcC5jb207
-IG1hcnRpbi5wZXRlcnNlbkBvcmFjbGUuY29tDQo+IENjOiBsaW51eC1zY3NpQHZnZXIua2VybmVs
-Lm9yZzsgbGludXgta2VybmVsQHZnZXIua2VybmVsLm9yZw0KPiBTdWJqZWN0OiBSZTogW1BBVENI
-IHYzXSBzY3NpOiB1ZnM6IGNvcmU6IGNhbGwgaGliZXJuOCBub3RpZnkgd2hlbiBoaWJlcm44IGNt
-ZA0KPiBmYWlsZWQNCj4gDQo+IE9uIDQvMjkvMjYgOToyMiBQTSwgSG9uZ2ppZSBGYW5nIHdyb3Rl
-Og0KPiA+IGRpZmYgLS1naXQgYS9pbmNsdWRlL3Vmcy91ZnNoY2QuaCBiL2luY2x1ZGUvdWZzL3Vm
-c2hjZC5oDQo+ID4gaW5kZXggODU2M2I2NjQ4OTc2Li40ZjdjNjE5ZGIzMjQgMTAwNjQ0DQo+ID4g
-LS0tIGEvaW5jbHVkZS91ZnMvdWZzaGNkLmgNCj4gPiArKysgYi9pbmNsdWRlL3Vmcy91ZnNoY2Qu
-aA0KPiA+IEBAIC0yNzAsNiArMjcwLDcgQEAgc3RydWN0IHVmc19jbGtfaW5mbyB7DQo+ID4gICBl
-bnVtIHVmc19ub3RpZnlfY2hhbmdlX3N0YXR1cyB7DQo+ID4gICAJUFJFX0NIQU5HRSwNCj4gPiAg
-IAlQT1NUX0NIQU5HRSwNCj4gPiArCVJPTExCQUNLX0NIQU5HRSwNCj4gPiAgIH07DQo+ID4NCj4g
-PiAgIHN0cnVjdCB1ZnNfcGFfbGF5ZXJfYXR0ciB7DQo+IA0KPiBUaGlzIGxvb2tzIGJldHRlciB0
-byBtZSBidXQgdHJpZ2dlcnMgY29tcGlsZXIgd2FybmluZ3M6DQo+IA0KPiBkcml2ZXJzL3Vmcy9o
-b3N0L3Vmcy1leHlub3MuYzoxNjE0OjEwOiBlcnJvcjogZW51bWVyYXRpb24gdmFsdWUNCj4gJ1JP
-TExCQUNLX0NIQU5HRScgbm90IGhhbmRsZWQgaW4gc3dpdGNoIFstV2Vycm9yLC1Xc3dpdGNoXQ0K
-PiAgIDE2MTQgfCAgICAgICAgIHN3aXRjaCAoc3RhdHVzKSB7DQo+ICAgICAgICB8ICAgICAgICAg
-ICAgICAgICBefn5+fn4NCj4gZHJpdmVycy91ZnMvaG9zdC91ZnMtZXh5bm9zLmM6MTY1NDoxMDog
-ZXJyb3I6IGVudW1lcmF0aW9uIHZhbHVlDQo+ICdST0xMQkFDS19DSEFOR0UnIG5vdCBoYW5kbGVk
-IGluIHN3aXRjaCBbLVdlcnJvciwtV3N3aXRjaF0NCj4gICAxNjU0IHwgICAgICAgICBzd2l0Y2gg
-KHN0YXR1cykgew0KPiAgICAgICAgfCAgICAgICAgICAgICAgICAgXn5+fn5+DQo+IGRyaXZlcnMv
-dWZzL2hvc3QvdWZzLWV4eW5vcy5jOjE2ODc6MTA6IGVycm9yOiBlbnVtZXJhdGlvbiB2YWx1ZQ0K
-PiAnUk9MTEJBQ0tfQ0hBTkdFJyBub3QgaGFuZGxlZCBpbiBzd2l0Y2ggWy1XZXJyb3IsLVdzd2l0
-Y2hdDQo+ICAgMTY4NyB8ICAgICAgICAgc3dpdGNoIChzdGF0dXMpIHsNCj4gICAgICAgIHwgICAg
-ICAgICAgICAgICAgIF5+fn5+fg0KPiANCj4gVGhlc2Ugd2FybmluZ3MgY2FuIGJlIHJlcHJvZHVj
-ZWQgb24gYW55IExpbnV4IGRldmVsb3BtZW50IHN5c3RlbSBieQ0KPiBpbnN0YWxsaW5nIENsYW5n
-IGFuZCBieSBydW5uaW5nIHRoZSBmb2xsb3dpbmcgY29tbWFuZDoNCj4gDQo+IGJ1aWxkLXNjc2kt
-ZHJpdmVycyAtYw0KPiANCj4gU2VlIGFsc28gaHR0cHM6Ly9naXRodWIuY29tL2J2YW5hc3NjaGUv
-YnVpbGQtc2NzaS1kcml2ZXJzDQo+IA0KDQpPa2F5LCBJIHdpbGwgZml4IGFuZCB1cGRhdGUgaXQu
-DQoNCj4gVGhhbmtzLA0KPiANCj4gQmFydC4NCg0KQmVzdC4NCg==
+Add a quirk to support TX Equalization Training (EQTR) using Adapt L0L1L2L3
+length which is larger than what is allowed by M-PHY spec ver 6.0.
+
+
+Can Guo (2):
+  scsi: ufs: core: Add a quirk for extended TX EQTR Adapt L0L1L2L3
+    length
+  scsi: ufs: ufs-qcom: Use quirk EXTENDED_TX_EQTR_ADAPT_LENGTH_L0L1L2L3
+
+ drivers/ufs/core/ufs-txeq.c | 8 ++++++--
+ drivers/ufs/host/ufs-qcom.c | 3 +++
+ include/ufs/ufshcd.h        | 7 +++++++
+ 3 files changed, 16 insertions(+), 2 deletions(-)
+
+-- 
+2.34.1
+
