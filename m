@@ -1,226 +1,205 @@
-Received: from aer-iport-5.cisco.com (aer-iport-5.cisco.com [173.38.203.67])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-dy1-f182.google.com (mail-dy1-f182.google.com [74.125.82.182])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 98B333F0AA6
-	for <linux-scsi@vger.kernel.org>; Fri,  1 May 2026 19:09:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=173.38.203.67
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777662582; cv=fail; b=J2iNt52pN2s5VxdSqvX1htAKpCeBAnbylo2BCHvW4La5oX8JVMRtc1BH1+ApfFgrfNDYMc/Y1Gl1oWvD23Iv4vwbEAKVXMGLgTl8DICpcm86a5C/g/JDIqq7Q3hKZz8YFYFPOxr6SGYkmn+BPMxq0bnTSdgbQ8jNUuPtJJr8rtg=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777662582; c=relaxed/simple;
-	bh=3NxPK8o7blyM4WQumdUzpPBJ3eRp/Uinm7dh4LKuBgA=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=MhGKBNEJ++IFE94Egc/upS995GiIXcnWhr4+eBmsr5++bRJgV5BivdKM5zcEGpB6TFiRwZxSe//HDxGVhZvN6+L14M3NUKpY5gGjqhGeL/5lq8CNBigafkE85L75LrQTX0GaAAo0wv8VYH/Il51zlfX/JX1A5GstCaDYdYQAnnQ=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=cisco.com; spf=pass smtp.mailfrom=cisco.com; dkim=pass (2048-bit key) header.d=cisco.com header.i=@cisco.com header.b=KKISwOBz; arc=fail smtp.client-ip=173.38.203.67
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=cisco.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cisco.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D3EB1CA52
+	for <linux-scsi@vger.kernel.org>; Fri,  1 May 2026 22:11:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.182
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1777673518; cv=none; b=dZ53wPawtJgAgw6YPTPojrVXobNrawKl7mBtnpw3+U0HTNur78VRxIz18OZPWq7FjM8edCVtKd/doI4RSVnhKpGhjjzWQwqau5GkL/g1BcWE/3PjO+cHp0kUqk6OCtLW/5scA9zr5+zGA/2eyB0Q1aPFJTwbxlpA+ZHKz1liBAQ=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1777673518; c=relaxed/simple;
+	bh=+4ZlpgT8R20ijFAw1fzroBDxpBHdeNXJhrw1E2656Cc=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=YcWFEXLaDwLxxSnmRUHq1JINOdPDK5w9oFJoG+irytSnEXMQjBYstDwr96kmyagoxJl+kEUcCQehy0YgaZ6rhuY4P4I3tV/TAmiCMchBwaiErw1/S9RLsKfgr3HXy/oioMZS9wU1PrPKij/ikQeo1n60bJbaJvWAZTewzjJPP1g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=purestorage.com; spf=fail smtp.mailfrom=purestorage.com; dkim=pass (2048-bit key) header.d=purestorage.com header.i=@purestorage.com header.b=NFeHZ0qO; arc=none smtp.client-ip=74.125.82.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=purestorage.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=purestorage.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=cisco.com header.i=@cisco.com header.b="KKISwOBz"
+	dkim=pass (2048-bit key) header.d=purestorage.com header.i=@purestorage.com header.b="NFeHZ0qO"
+Received: by mail-dy1-f182.google.com with SMTP id 5a478bee46e88-2ed0a45e970so2819948eec.1
+        for <linux-scsi@vger.kernel.org>; Fri, 01 May 2026 15:11:56 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=cisco.com; i=@cisco.com; l=1231; q=dns/txt;
-  s=iport01; t=1777662579; x=1778872179;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=3NxPK8o7blyM4WQumdUzpPBJ3eRp/Uinm7dh4LKuBgA=;
-  b=KKISwOBz/dApd3KvNvmHeH3peUFCSjOhrcPdMbE+RHoJTfMJayel+yYy
-   keREhdun9ZOjWV2croQ9IEBHh0ADdFYiow93EWvBONxwar3sMskHm02EJ
-   scS/FVgOYFhkcSOYxdeyq+1BpF242sS9u+EFEF8YgTqGc5dZuBRjSux4t
-   n+nkNyjpcxb1TGRLX6XD2NGjTt+CBAjdu46/p6uP1Ho6ueTtKLq8sS0VI
-   WRPOm6MC1h2u0ExYu+WuJTBbrvcx/OjO67Vrd0EUVSUMpe55+MoCRGmmg
-   +kcq6+ylY53i3tbP0mT19DwRt0cGAxHvjz2FRDg0+Ffb2sF37C1gxHp2D
-   A==;
-X-CSE-ConnectionGUID: YixDLomqTc209c0TMFPLsQ==
-X-CSE-MsgGUID: cP//oRYvTbqpe8q14frvzQ==
-X-IPAS-Result: =?us-ascii?q?A0AsAAAI+fRp/9NK/pBaHQEBAQEJARIBBQUBZYEXCAELA?=
- =?us-ascii?q?YFtUxZvgRESSYgjA4RNX4h8nhqBJQNXDwEBAQ0CUQQBAYUGAo0xAiY0CQ4BA?=
- =?us-ascii?q?gQBAQEBAwIDAQEBAQEBAQEBAQELAQEFAQEBAgEHBYEOE4ZchloBAQEBAxJnE?=
- =?us-ascii?q?AIBCBEEAQEvMR0IAgQBDQUIGoVUAwECqA4BgT0Ciip4gTSBAeAkAQsUAYE4A?=
- =?us-ascii?q?YU+gxgBAYQ8gSEZhHonG4FJRIEVQoJoPoRDAoQTgi8EgzCBfo0aUngcA1ksA?=
- =?us-ascii?q?VUTFwsHBYEjQwMqLy0jSwUtHYEjIR0XFR9YGwcFEiEqboEEdCxcGg4hJBFZQ?=
- =?us-ascii?q?jgLSQWBcgKCHhlfIywDTm4DC209NxQbAwSBNQWKWh0Pgi+BDoEAmDuOJaF6C?=
- =?us-ascii?q?oQcog4XqmuZBiKodAIEAgQFAhABAQaBaDw5gSBwFYMiUxkP1nF4PQEBBwIHD?=
- =?us-ascii?q?QMLgWiRfQEB?=
-IronPort-PHdr: A9a23:LfnNiBT71gI0B9g9eEAGlOucJtpso47LVj580XJvo6hFfqLm+IztI
- wmGo/5sl1TOG47c7qEMh+nXtvX4UHcbqdaasX8EeYBRTRJNl8gMngIhDcLEQU32JfLndWo7S
- exJVURu+DewNk09JQ==
-IronPort-Data: A9a23:uiSc3aLfJuwhHhDIFE+RmJQlxSXFcZb7ZxGr2PjKsXjdYENS0zVVm
- 2obUD2HP/jbMTT1edxyaNi18RlT68KBx9FhQVYd+CA2RRqmiyZq6fd1j6vUF3nPRiEWZBs/t
- 63yUvGZcoZsCCSa/kvxWlTYhSEU/bmSQbbhA/LzNCl0RAt1IA8skhsLd9QR2uaEuvDnRVnW0
- T/Oi5eHYgH9hmYtajl8B5+r8XuDgtyj4Fv0gXRmDRx7lAe2v2UYCpsZOZawIxPQKqFIHvS3T
- vr017qw+GXU5X8FUrtJRZ6iLyXm6paLVeS/oiI+t5qK23CulQRuukoPD8fwXG8M49m/c3+d/
- /0W3XC4YV9B0qQhA43xWTEAe811FfUuFLMqvRFTvOTLp3AqfUcAzN1fDVEaGYod49p8Wzkf/
- qQkDR41Sgu60rfeLLKTEoGAh+wqIdOuOMYUvWttiGiBS/0nWpvEBa7N4Le03h9p2pwIR6uCI
- ZVFL2A2NXwsYDUXUrsTIJQ7gfypgHjXeDxDo1XTrq0yi4TW5FEtiOW8aIGOEjCMbc5t2QGfn
- FPYw27gGhxKLYXDxyCb4Ev504cjmgu+Aur+DoaQ8v9snU3W3WcICTUIWlah5/q0kEizX5RYM
- UN8x8Y1haE/7gmvC9L6RRD9+SbCtR8HUN0WGOo/gO2Q9pfpD8+iLjFsZhZKaccts4k9QjlC6
- 7NDt4qB6eBH2FFNdU+gyw==
-IronPort-HdrOrdr: A9a23:AIdwequVSMQNxWv/WSyoeRrY7skCcIAji2hC6mlwRA09TyXGrb
- HMoB1L73/JYWgqOU3IwerwRpVoIUmxyXZ0ibNhW4tKLzOWyVdAS7sSo7cKogeQVBEWmdQtr5
- uIH5IObOEYSGIK8voSgzPIUurIouP3jZxA7N22pxwCPGMaDp2IrT0JdjpzeXcGPTWucKBJb6
- Z0kfA33wZIF05nCfiTNz0uZcSGjdvNk57tfB4BADAayCTmt1mVwY+/OSK1mjMFXR1y4ZpKyw
- X4uj28yrSosvm9xBOZ7GnO8pRQluLmz9tIFOaMhsIWJjiEsHfpWG1mYdK/lQFwhNvqxEchkd
- HKrRtlFd908Wntcma8pgao8xX80R41gkWSi2OwsD/Gm4jUVTg6A81OicZyaR3C8Xctu9l6ze
- Ziw3+ZjZxKFhnN9R6NouQgFisa0nZck0BS19L7vEYvCLf2r4Uh9bD3yXklV6vo2hiKs7zPXt
- MeVv00r8wmAW9yJ0qpzVWHhubcHUgbL1OhXlUIvNCT3nx9mXB0yFZd+ekk901wqa7Uj/J/lr
- v52mMCrsATcicbAJgNdtspUI+5DHfATgnLN3/XKVP7FLsfM3aIsJLv5q4pjdvaMqDg4aFC0K
- gpamko/lIaagbrE4mDzZdL+hfCTCG0Wins0NhX49x8tqfnTLTmPCWfQBR2+vHQ78k3E4neQb
- K+KZhWC/jsIS/nHptIxRT3X91XJWMFWMMYt94nUxaFo97NKIftquvHGcyjaYbFAHIhQCfyE3
- EDVD/8KIFJ6V2qQGbxhFzLV3bkaiXEjNtN+Wjhjp4uIaQ2R/pxW1Iu+CGED+mwWEl/jpA=
-X-Talos-CUID: =?us-ascii?q?9a23=3AU58uymmaFRpwTcC/9TbW93odTXXXOUzc3Fv0JEq?=
- =?us-ascii?q?hNW0zEOyeEWO11ptAiPM7zg=3D=3D?=
-X-Talos-MUID: 9a23:nsKiQgWiIRwc9pbq/DTUw3ZlDvZ23663EE1diMxatdOaJxUlbg==
-X-IronPort-Anti-Spam-Filtered: true
-Received: from aer-l-core-10.cisco.com ([144.254.74.211])
-  by aer-iport-5.cisco.com with ESMTP/TLS/TLS_AES_256_GCM_SHA384; 01 May 2026 19:08:28 +0000
-Received: from rcdn-opgw-1.cisco.com (rcdn-opgw-1.cisco.com [72.163.7.162])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by aer-l-core-10.cisco.com (Postfix) with ESMTPS id E8EC81800033D
-	for <linux-scsi@vger.kernel.org>; Fri,  1 May 2026 19:08:27 +0000 (GMT)
-X-CSE-ConnectionGUID: OXnQzVGcQROZAkf7akA3PA==
-X-CSE-MsgGUID: 2pBCO0ooSQSoboSxtXdaHg==
-Authentication-Results: rcdn-opgw-1.cisco.com; dkim=pass (signature verified) header.i=@cisco.com
-X-IronPort-AV: E=Sophos;i="6.23,210,1770595200"; 
-   d="scan'208";a="56429032"
-Received: from mail-ph0pr07cu00602.outbound.protection.outlook.com (HELO PH0PR07CU006.outbound.protection.outlook.com) ([40.93.23.90])
-  by rcdn-opgw-1.cisco.com with ESMTP/TLS/TLS_AES_256_GCM_SHA384; 01 May 2026 19:08:26 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=m867E3J20IMpoopLuDFfA3o0zjPlxn0Hcds+RhfimLtJObmbtnPLTpZ75S9cEXGpuvPhZ3aShNItVHpWBq8CVhAwmEVxWAVobkWcar2ulpHz3yM6/1JqyzSiqljQkmdbSgV7ns5B/nOAtCXkmY5qfLvkp51TtjIvKSVHYH1LJCpj2yy3WYvp8e3SFI20SZYyYIIJM6dxvYKbh7riaFMOaMp90sDLzT9bUX2IR/i3Npk+G0nnMZyoZaE70NJYHQDUc6HGMtDjKYQHGfTM2Fj0qQx8AYFzyhERQBGQNV2G+LSlY5q2gzp7U9/xNUFew/9mLh2iI0y81yCnoKn1DeWjLA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=3NxPK8o7blyM4WQumdUzpPBJ3eRp/Uinm7dh4LKuBgA=;
- b=kWvu2rJyBUNol8VH41mmssiW1AqK39l987AuFlxyevutsm5tGZloh3OgMq/fFDVIJfP8cVqUrU36dYszQpbYeGI8pi+nChC8CaMRsqs/9ljlotH8V1Axv4jH8VJQkbAFPFVJHrvtwXfJRWpxrVh+XZqWkSlySE9XVey+Lv+d4i1l/3zb88jlPJzsOCfGeGUlBrHI6FD6BaoV999Y1xACqyP0UGBz2/f5+diWoMjRL/LHkfpm/YwBfNzWrlUFRXRfE5FSiVVYQbQfmwQvqxd6ieLCo9gQfymgskjNmgD7FedalEoTAKnhhjWcgLG8SiKODTtMu9QwmUjwcKG9FV/0LQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=cisco.com; dmarc=pass action=none header.from=cisco.com;
- dkim=pass header.d=cisco.com; arc=none
-Received: from DM4PR11MB7277.namprd11.prod.outlook.com (2603:10b6:8:10b::18)
- by IA0PR11MB8303.namprd11.prod.outlook.com (2603:10b6:208:487::9) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9870.20; Fri, 1 May
- 2026 19:08:24 +0000
-Received: from DM4PR11MB7277.namprd11.prod.outlook.com
- ([fe80::5d85:31c6:8031:8603]) by DM4PR11MB7277.namprd11.prod.outlook.com
- ([fe80::5d85:31c6:8031:8603%3]) with mapi id 15.20.9870.020; Fri, 1 May 2026
- 19:08:23 +0000
-From: "Narsimhulu Musini (nmusini)" <nmusini@cisco.com>
-To: Bart Van Assche <bvanassche@acm.org>, "Martin K . Petersen"
-	<martin.petersen@oracle.com>
-CC: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Marco Elver
-	<elver@google.com>, "Karan Tilak Kumar (kartilak)" <kartilak@cisco.com>,
-	"Sesidhar Baddela (sebaddel)" <sebaddel@cisco.com>, "James E.J. Bottomley"
-	<James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH v2 53/56] scsi: snic: Enable lock context analysis
-Thread-Topic: [PATCH v2 53/56] scsi: snic: Enable lock context analysis
-Thread-Index: AQHc2M7BsihIztXxuUCQyIsKZtkpGbX5ifvr
-Date: Fri, 1 May 2026 19:08:23 +0000
-Message-ID:
- <DM4PR11MB727798421B172D7CFAA425D4AB322@DM4PR11MB7277.namprd11.prod.outlook.com>
-References: <20260430182130.1978347-1-bvanassche@acm.org>
- <20260430182130.1978347-54-bvanassche@acm.org>
-In-Reply-To: <20260430182130.1978347-54-bvanassche@acm.org>
-Accept-Language: en-GB, en-US
-Content-Language: en-GB
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-msip_labels:
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: DM4PR11MB7277:EE_|IA0PR11MB8303:EE_
-x-ms-office365-filtering-correlation-id: f7c05fad-dbd4-4615-4b4d-08dea7b5045f
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam:
- BCL:0;ARA:13230040|1800799024|376014|366016|38070700021|18002099003|22082099003|56012099003;
-x-microsoft-antispam-message-info:
- 5SLBNYjc78hIpigLFEWY/LQelKEmXsn5CkiZJrie+kRCEvL60+yn9NbSXAO77UfgRmZIktmlVRTynHi8kWhq1Zw3s2/4XmUQZs8t6+HNX6N+Nc6S6pXeKBezYpJnOzrUd+wsJGNy8kXFN5rdDnjqVt3elrFUO/385I4yfbXx2v6I8+JVh2UmAycWan9EFNjm+xmXf8ZjrcnrzJzZwV+IIl1rKBD7t5PCpc2gklk0NQ4wwMS/klyT94nbk/Oz8JW0jGcVC1K+yrzV1gOqnr3uN4Q/rzRc0SrdP3RYHUNmrT5JcDJDWj9PpmdhjqHcLN6c01ekDzlb/5Zl1aUkYkzbG2oLphUp18VfTNhp4vlMEBXAopkiOp5uYsqvh+YgVhMCrIMWoJRKNXCUkdmPyySeytF5tIF8mLumpswssG7EvzMPJQRQYzfWtY5vbw7Yd4H9lBcoT82gAFiWHmBe2+dFLMZhCJShh+XzSNsh1glMcD7cHJIzo3QFdAKrqchKgG3MC7AIohPdOGsnL/Gg6yxcjBcjEaRb7gJAwFGPYOLMTqG7kHc0uyz9dolvCmageo+bZiTjcv2aiZdmvMkxuEWrfF6bexVa11n+H5L1K+MHLvqPg8WdV5S0idh1xFRqUcqVFWLeJ70HAB16tJtKQ5J1XA4pCFsnXo4Dk/kTHOiS+D2/lKr7j5hHJ01yU7u+XL1MjmF2CO6FqVLSO/H4WvVbamCTfw2bqMY3b2wKfsQ9V+kaFpKMHRJUJYDxiVWdPXye
-x-forefront-antispam-report:
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM4PR11MB7277.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(376014)(366016)(38070700021)(18002099003)(22082099003)(56012099003);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?iso-8859-1?Q?ylcuj0pYEd97QCpUf+ZXRyt/9NfU7rHuWVev1U8XYlw6vp6aZZGtsWu3vC?=
- =?iso-8859-1?Q?UOYG/xomSINuIESEfrFY+6Y5hmShr8inmd9K/TlEXfZW1PqKLJgt6/Ezuq?=
- =?iso-8859-1?Q?4t6orf6toMuVNpuka4FPnf1R9J8QVNYGwe/a0Esn1Ttg24vtV4JrO3yxbG?=
- =?iso-8859-1?Q?s7TyI8QQeUclRat8GGJoj98dqa3+5pGRIYGrZipdcjSKFM612EyR5jfHo0?=
- =?iso-8859-1?Q?uX9YJrG9MIjxTRcE3V3Ib9zRF6HkpeAVltXn1QpIKHZr0LuoWKO++FA1Se?=
- =?iso-8859-1?Q?a2skYzA7lWfmh6gZ0mBspo6ohi6Pithxo5sQh52cjdnih214PKmT0Epf4W?=
- =?iso-8859-1?Q?mFTO7WBF7q6uWX5aMZU41yp3DKtkGS77tQxA/I15/fyQl348zE6rLd18Mh?=
- =?iso-8859-1?Q?LVPhdt6GJEEw0kk2sx6KtlQ0rzROTWGxDQMn4VLF0LhdauYuJFIPNnNFqW?=
- =?iso-8859-1?Q?4gRid5r74QivGXVLySpRIaJTVizWjvCkXvEE7MIbtJHuXYOAizraWkYTRN?=
- =?iso-8859-1?Q?krfZ8t6Iz6CuKfbrcuf4K5D9dnTH45QiSRDNMBPhP9NmHCOcMrz7I2nAGg?=
- =?iso-8859-1?Q?SwV7h+Oohb+tFqO7N9B0Hii7ce7NZiKYePtAQ+67UcZEn7U8BL1uyupa6b?=
- =?iso-8859-1?Q?ImuwJbPkp78e2wfUS9Wat1UkHr54txvzpuoms92ap8fyDQKI2YOl2LLSdi?=
- =?iso-8859-1?Q?wi/Q0B2c29jJtUUHz2GcWEZqFP3cFJumkl+WbwPdaOLXf6i4QiKJ6Xa89c?=
- =?iso-8859-1?Q?myWRfKiWCWIyByGFcty+COQlqOveTQgDg1Sj57vf309Z1+nH8iKr+3LH6i?=
- =?iso-8859-1?Q?3zUMQhvc+328vYmJlaPtFs2ruMBQqA67nxPNRO6uChGFBXOf0rELFi5mUw?=
- =?iso-8859-1?Q?2xEN4IbeSvj4FWsCqZLIbzPpmYXHtp0VxITtdN0zoVIK3dxtSFMPGTsMu0?=
- =?iso-8859-1?Q?cssQ15ubQOF52VM/3RXGL3EgR8/iRvGk9UcWck1Zo+ekOtgJDMniRUq6Wv?=
- =?iso-8859-1?Q?5xLXnnbG2SwHy4j2jpqtbypJ26Q6Q5dO+4JQgd+JgVWQ9dfcVEkj6D2y0h?=
- =?iso-8859-1?Q?Tnvb9YsRIQTju7EVHAIpvJlOIlLCL04ezjMbzvhQponOOvT2GH19Rvl3sq?=
- =?iso-8859-1?Q?JH+UpeuA++E0lPB+93taTkrvC8TXU0uvcj5UcWq6xwpmnEF5PbbidR2FFB?=
- =?iso-8859-1?Q?8dJhYK9eHSKU3OPRP2pgUZ0oho+e9ex4JjEgkwNc3+2yZWCymQr2UvAZ+0?=
- =?iso-8859-1?Q?GeaailUqXmTmQ7acV4LYKDB8qAee7hRE9J0z92gHZ/tJKmQ3N7JuAc06uj?=
- =?iso-8859-1?Q?O0E1TzexWgBJIKVQWQeosSL/AuGeAu2tcHy43d2CEUdU+awMl5eUjX8YAb?=
- =?iso-8859-1?Q?yras8m14TXrvCVxEjnGH3+lS0oUiaObodRmTDby1FrQC1yAeJzC3lt2ZAF?=
- =?iso-8859-1?Q?1d/0pcldRHEJTxKJRmHIqY35mZNztL43vQYJO0jJU3j3aQfOOhE+zG8CAl?=
- =?iso-8859-1?Q?TboI1nMGaChCIDg/y+d+PcacRRpjholw8SdpsYM5ve7sZvkolu0cxwphzb?=
- =?iso-8859-1?Q?YEloOgFqiM3QSsz1DnM+qg8NGfTxl2FvDEKTBhHgD62JkBpVbQ0vXQDfbr?=
- =?iso-8859-1?Q?CzjRto624AYtVyDnYlyIINXPxnfElEU73J/Fu+ae5BooNiUhPV8G3DhLwA?=
- =?iso-8859-1?Q?MSYWB5ZJB4Voxs1ihAsevjH434wy4XANassjGHS5x4hBnTuHeCSRgT1hmn?=
- =?iso-8859-1?Q?AunnTsbWSbAkbeJ8iZQ1Zv8SUQL/fLEW07PyPbmlNzr0Rq?=
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+        d=purestorage.com; s=google2022; t=1777673516; x=1778278316; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=gXNaGtwFexhaykDXVu0PxSFbRsBy2jU/mOwMTjOwYeg=;
+        b=NFeHZ0qOjlvr2naYivBSbG+D5j4ESXsjuzlKyrR9XOOAdHds/hbTKZoFOIReHmU2C3
+         mNowBHhcu7a2sBnuFRY5zCs8MjMhWDQxK5Rcn/b4OYkAzCx+SX9ZOLG12DtVX8bEFlwX
+         ORi2jgPh8xkDqw+QvSA5Gb8vxqWPnxZN0EIWHSK8tXXqmEggJ0iMkRnoQHvm25YN99MX
+         oaaVummBobBk6+cn1tDdOk+wVk7ZAzqdLkZROUAqGq2mOK8kLczLk0iOmTGsCcPofOew
+         uWf57OqNGZkA/u6W4cNLomE8SI5jZ81iFi71YgU1PpRb4ChYLgP0tgx+FWl+e6s6bHtk
+         J3NA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1777673516; x=1778278316;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=gXNaGtwFexhaykDXVu0PxSFbRsBy2jU/mOwMTjOwYeg=;
+        b=YAfDe6n8iYKfC833hDiW3E4mEawYrzcgymKuwODUZi4vydhkkprFaKYrWVUEZRcJTd
+         0P949GMVaLBkSH+of0dM7v6+8XCleYDB7MqWI8+VqU2OR7d31/ozY5E+IPreTiL0dG5n
+         a9tXuYg/fwdiXDE3AHu5M7QcBsW6wxtkYXFulk5dYJb97x1APKjdFm1IinhUeg8FY+Ge
+         D+/I7R/wk+aqxrg1s5RsWtntIkDsfaL6eNBcYX3pNwJDX6MSmDZDDHkEE35ZYJzx+eAc
+         WzcCF0V7Vy5ldoq7SRgCZA7fRsirWEblbOU00Gazp4tBXJrX2exkGQlEVkteyHTtnaAV
+         JYHw==
+X-Forwarded-Encrypted: i=1; AFNElJ9G93P+YSPaGJXQ5EFBNwRT5oMU3WobmcO2x0qefet3y62oe2CveHorCZchPJnvr1pQs74woHKmKOGP@vger.kernel.org
+X-Gm-Message-State: AOJu0YxpFuk2mSm44h+8TlUKv9FnbDPLvsAsOqZp20iE4yPPecRRp48w
+	fAabVq3LW6MO6zyKdpH1TkKI/64wjVaUa+Yk19jMmnwLw7ffpdbeSvNGDVBWDaoj76E=
+X-Gm-Gg: AeBDievjYA66EKOtxtRtpfU9+9fp4O5nfx1D/Qwc+ETL9IOc/DsTpNhme1nhT/tUcQj
+	HCwSsZsV1+xH8iIwHZGxjVIz6uNFjT1jp7XM2CPrH16x8eUWYZLF0JracCney3Lngwa5m2Fk1bs
+	bkJ1nxPDaBk/YlowB1Mu8LpheUs1ls+jVPXu3okgT2XLTiw1V2DvB55PieNpZpg2qTy7ewYMJDs
+	CTu//+rstExNFoIGCM9m22/LPR7iXxO0oz+DeHDnwnpgJtrrupLkX5v3kPVAZcrXr8k2oP3WnpF
+	570j/eCiR6wUjnqzp0hyXkgL/akBEqkxSd+H0Id+VNkW1eX0jCdYtSHrhjkcC8UQ3C2OysowoUj
+	prUI/NmWOTQZ1LNXMDc4hqI4t+KdTHqMQOdKoLPzclOXWf/nO3ud5lEoSO0KIsHiPaIQjLkr6DU
+	rBo3A68MzqMWELniVAVI1cvEPdN0rtYDrljwPnGqtnj61PLJT20HZyrsZUXMYU3PQGMJJWqdyiP
+	ITNbtQlIo5D/ibQLXZAMNtCokDzSnbcVB/8u8jUySYlVDCCCaoX0XNsjtxI/8PkVVPWhfBnR3wM
+	E3I5JCjUxWk+2OU53+XtB02n4kN557KhSg==
+X-Received: by 2002:a05:7300:a494:b0:2ed:e12:3768 with SMTP id 5a478bee46e88-2efba4a84f7mr447727eec.30.1777673515765;
+        Fri, 01 May 2026 15:11:55 -0700 (PDT)
+Received: from brian--MacBookPro18.purestorage.com ([136.226.65.98])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-2ee3889d611sm7729032eec.1.2026.05.01.15.11.54
+        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
+        Fri, 01 May 2026 15:11:55 -0700 (PDT)
+From: Brian Bunker <brian@purestorage.com>
+To: bvanassche@acm.org
+Cc: hare@suse.de,
+	linux-scsi@vger.kernel.org,
+	krishna.kant@purestorage.com
+Subject: Re: [PATCH v3 2/6] scsi: Protect INQUIRY sysfs attributes with mutex
+Date: Fri,  1 May 2026 15:11:26 -0700
+Message-ID: <20260501221153.90440-1-brian@purestorage.com>
+X-Mailer: git-send-email 2.53.0
+In-Reply-To: <cc6d3238-5574-4a0a-ba3a-2660687ec292@acm.org>
+References: <cc6d3238-5574-4a0a-ba3a-2660687ec292@acm.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Exchange-RoutingPolicyChecked:
-	inFzAQ0jwTatt9VFWOkhyx4XwV7rZMIO7+TBnQKUHWfyO1dHksDd3REqNRjRS/pzKZMKtS6kH6ILJrCfZ+7LQ1AQmmA69YFKrptVLDzNoBKqdajZV35EbODkIxhCFJ44RGjHvNkSl0QgbM1EvwJdYadarv4RLh6QoFBCwOOwiu/pJTJF2o3407QDgA8eaQ6DbQ9InX4VIlEQg8SDLiNxvHuTsJkwLTczpuAMm2SXQC8ng2MCTc7+lkZRBsQUCy9rBFLwy3sy+0QJlQK5vA1LjHZA0Qi3kMpdwlI6NPZZhIGOl9O3VScYMU/kR47EajFCK2L/kvw3tJG8t5DcSfFNNg==
-X-OriginatorOrg: cisco.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: DM4PR11MB7277.namprd11.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: f7c05fad-dbd4-4615-4b4d-08dea7b5045f
-X-MS-Exchange-CrossTenant-originalarrivaltime: 01 May 2026 19:08:23.7211
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 5ae1af62-9505-4097-a69a-c1553ef7840e
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: O15W2BoF5BeGhKo0hiPJGjAAm3X/QrhVhfWnMzh50md16RKcilCyN/CXekYgd2A74MqjffO4ffCey8zu14XJEg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA0PR11MB8303
-X-Outbound-Client-TLS: ANONYMOUS;rcdn-opgw-1.cisco.com [72.163.7.162];TLSv1.3;TLS_AES_256_GCM_SHA384;256
-X-Outbound-SMTP-Client: 72.163.7.162, rcdn-opgw-1.cisco.com
-X-Outbound-Node: aer-l-core-10.cisco.com
+Content-Transfer-Encoding: 8bit
 
-=0A=
-=0A=
-________________________________________=0A=
-From:=A0Bart Van Assche <bvanassche@acm.org>=0A=
-Sent:=A030 April 2026 11:20 AM=0A=
-To:=A0Martin K . Petersen <martin.petersen@oracle.com>=0A=
-Cc:=A0linux-scsi@vger.kernel.org <linux-scsi@vger.kernel.org>; Marco Elver =
-<elver@google.com>; Bart Van Assche <bvanassche@acm.org>; Karan Tilak Kumar=
- (kartilak) <kartilak@cisco.com>; Narsimhulu Musini (nmusini) <nmusini@cisc=
-o.com>; Sesidhar Baddela (sebaddel) <sebaddel@cisco.com>; James E.J. Bottom=
-ley <James.Bottomley@HansenPartnership.com>=0A=
-Subject:=A0[PATCH v2 53/56] scsi: snic: Enable lock context analysis=0A=
-=A0=0A=
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>=0A=
-Acked-by: Narsimhulu Musini <nmusini@cisco.com>=0A=
----=0A=
-=A0drivers/scsi/snic/Makefile | 3 +++=0A=
-=A01 file changed, 3 insertions(+)=0A=
-=0A=
-diff --git a/drivers/scsi/snic/Makefile b/drivers/scsi/snic/Makefile=0A=
-index 41546e3cb701..b12563cb174d 100644=0A=
---- a/drivers/scsi/snic/Makefile=0A=
-+++ b/drivers/scsi/snic/Makefile=0A=
-@@ -1,4 +1,7 @@=0A=
-=A0# SPDX-License-Identifier: GPL-2.0=0A=
-+=0A=
-+CONTEXT_ANALYSIS :=3D y=0A=
-+=0A=
-=A0obj-$(CONFIG_SCSI_SNIC) +=3D snic.o=0A=
-=A0=0A=
-=A0snic-y :=3D \=
+Bart, Hannes,
+
+Before I respin, I'd like to get your alignment on the API design.
+
+Hannes, in your review of the earlier single-patch version of this
+work last year, you wrote:
+
+> +	sdev->vendor = (char *)(sdev->inquiry + 8);
+> +	sdev->model = (char *)(sdev->inquiry + 16);
+> +	sdev->rev = (char *)(sdev->inquiry + 32);
+>
+> I really hate these.
+> Can't we replace them with accessor functions and drop the pointers?
+
+That's the direction I want to take. Bart's feedback on v3 2/6 then
+pushed back specifically on accessor functions that hand out pointers
+to character data which is not '\0' terminated, and suggested that
+sdev_show_##field() could take an offset and length instead.
+
+Those two pieces of feedback converge: drop the cached pointers, but
+don't replace them with anything that exposes a pointer to
+non-NUL-terminated bytes. Before I respin around that, I want to make
+sure I have the scope of Bart's objection right.
+
+To help frame it, I audited every call site in the tree that touches
+sdev->vendor, sdev->model, or sdev->rev - both the direct field name
+and the alias forms callers actually use (cp->device->vendor,
+cd->device->vendor, scsidp->vendor, ch->dt[elem]->vendor, SDp->vendor,
+STp->device->..., etc.). For each hit I checked two failure modes:
+
+  - bare "%s" in a format string (the qla2xxx pattern); and
+  - NUL-assuming string functions (strlen, strcpy, strcat, strdup,
+    strstr, strchr, strrchr, strcmp, strcasecmp, strscpy, strlcpy).
+
+Result, across all three fields:
+
+  Site                                              Field(s)   NUL-term?
+  --------------------------------------------------  ---------  ----
+  drivers/hwmon/drivetemp.c            (strncmp)       model       no
+  drivers/scsi/aacraid/linit.c         (strncmp)       vendor      no
+  drivers/scsi/advansys.c              (strncmp)       vendor      no
+  drivers/scsi/scsi_dh.c               (strncmp)       v, m        no
+  drivers/scsi/scsi_proc.c             (bounded loop)  v, m, r     no
+  drivers/scsi/scsi_scan.c             (strncmp/%.Ns)  v, m, r     no
+  drivers/scsi/sg.c                    (%8.8s)         v, m, r     no
+  drivers/scsi/sr_vendor.c             (strncmp)       v, m        no
+  drivers/scsi/scsi_sysfs.c            (%.Ns)          v, m, r     no
+  drivers/scsi/st.c                    (strncmp)       v, m, r     no
+  drivers/scsi/ch.c                    (%8.8s)         v, m, r     no
+  drivers/scsi/storvsc_drv.c           (strncmp)       vendor      no
+  drivers/target/target_core_pscsi.c   (snprintf %.Ns) v, m, r     no
+  drivers/scsi/qla2xxx/qla_isr.c:3664  ("%s")          vendor      YES
+
+Of 18 distinct call sites, 17 are bounded by either an explicit
+length or a precision specifier. Exactly one - qla2xxx - passes
+cp->device->vendor to a "%s" format, which walks past the 8-byte
+vendor field into the model field until it finds a NUL byte. That's
+a real over-read today.
+
+I also checked every strlen/strcpy/strcat/etc. call site in the tree
+and confirmed none of them runs on sdev->vendor / sdev->model /
+sdev->rev directly. The two scsi_dh.c and st.c sites that look like
+they might (strncmp(sdev->vendor, blacklist->vendor,
+strlen(blacklist->vendor))) actually call strlen on the blacklist
+entry, which is a NUL-terminated literal - the strncmp is bounded by
+that length on the sdev side. Safe.
+
+So there are no NUL-termination misuses on model or rev anywhere in
+the tree, and exactly one on vendor (qla2xxx).
+
+That means the work has two motivations that are worth separating:
+
+  (a) qla2xxx is a bug today and worth fixing on its own with a
+      Fixes: tag, independent of any larger refactoring.
+
+  (b) The remaining 17 sites work today but only because each author
+      knew the field is space-padded with no terminator. The
+      conversion series doesn't fix bugs at those sites; it removes
+      the opportunity for the next person to write "%s" somewhere and
+      reintroduce a qla2xxx-class bug, and it's preparatory for
+      INQUIRY refresh on rescan (where the buffer can be reallocated
+      and a raw pointer into it becomes a UAF risk).
+
+For (b), I had been heading toward an API built around copy-out and
+match helpers - i.e. nothing in the public API hands back a pointer
+to non-NUL-terminated bytes:
+
+  size_t scsi_device_vendor(struct scsi_device *sdev,
+                            char *buf, size_t len);
+  size_t scsi_device_model(struct scsi_device *sdev,
+                           char *buf, size_t len);
+  size_t scsi_device_rev(struct scsi_device *sdev,
+                         char *buf, size_t len);
+
+  bool   scsi_device_vendor_match(struct scsi_device *sdev,
+                                  const char *prefix);
+  bool   scsi_device_model_match(struct scsi_device *sdev,
+                                 const char *prefix);
+  bool   scsi_device_rev_match(struct scsi_device *sdev,
+                               const char *prefix);
+
+The copy helpers take a caller buffer, copy the field, and
+NUL-terminate. The match helpers take a NUL-terminated prefix string
+from the caller and do a bounded comparison against the
+(non-terminated) field bytes. The earlier scsi_inq_vendor() /
+scsi_inq_product() / scsi_inq_revision() helpers that returned a
+const char * into the inquiry buffer have been dropped.
+
+A few questions before I respin:
+
+  1. Bart, does the copy-out / match API above address the "no
+     accessors for non-NUL-terminated data" concern, or is the
+     objection broader?
+
+  2. Hannes, would you prefer the conversion patches and the
+     removal of sdev->vendor / sdev->model / sdev->rev to land as
+     one series, or split into two - conversions first, removal as a
+     follow-up once the conversions have settled?
+
+I'd rather get your input on the API before sending another
+12+ patch respin.
+
+Thanks,
+Brian
