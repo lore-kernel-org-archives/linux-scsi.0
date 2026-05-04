@@ -1,230 +1,241 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9458C37C10F
-	for <linux-scsi@vger.kernel.org>; Mon,  4 May 2026 12:55:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 972E91C68F
+	for <linux-scsi@vger.kernel.org>; Mon,  4 May 2026 16:58:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777899355; cv=none; b=DAmFyV2toAxKbRb5zyX8jDv2znDZQ1Mq9tfoNIpd90nYTSvjzLU24Ohvrv02AIyRDgZ4v1JFN1rZGYKsCvbObQW3NhKajcb+aCTwg4nvXO582mK5QWQFYgvKsBoPtUQ8OsewnN95MwZsVR0+B6jAJSPRSiVb7lG1b50XRdbnEqA=
+	t=1777913933; cv=none; b=ch5aejTUeGWQoXrY3/DLFtmSjpeMfkuPKOjq/PuZ7nOKJj0cOiFWntGAm6kIQELT6Ge1IRxyZsHsGhHFHATejK0I5e6rq1noNfwuOd1crtwHVn+k6cRNP0BX/NtrfWcSPP8pLGLNoTep3+rRRbHBxz4watQEs/BGSLNQuOox3zQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777899355; c=relaxed/simple;
-	bh=jdMfO+wVnXO8QtbdIYQW9kPgqzpCibK0jcuCZrC9udA=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=bkBSD6O7JoTHf5I2EHow7RMmvUdnMQtNnUopaXBkssrTGIbjW83eL1v76bGcxb9gtBcsynmqAiZ9quljHw5sUY2ZtdmPCR1R6oCk+lVgmRCdhaq09mS6VdnKTQWI/rzQnW2o021Gw+L0iN4SBzgfP/P9wvCoXNXbRMY5kFgpihc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=Hesuz5Jh; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=MpHaXl57; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	s=arc-20240116; t=1777913933; c=relaxed/simple;
+	bh=F86q7Gjfro5WoJfqOqtAo/NBfc7hvrt0ezhD6y3lvs8=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=VuTEkDhIjhgR2OYn3Q1WzmGVY7dX7fI4/ms0JuCRzmeABHdjh0rgWZ4KMCe3pv/v/30MLnPo5bUS2+9M4gwubeG01uivpDyb/JKGA5Hn0J7EEkyWRwv+sCy6wm1w41qRLoB0HWAtVC8G7ZVsV55Exx1rz++SFu430VPbkkeOqzk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b=KlYAsjp9; dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b=KlYAsjp9; arc=none smtp.client-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="Hesuz5Jh";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="MpHaXl57"
-Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 644B49L34128668
-	for <linux-scsi@vger.kernel.org>; Mon, 4 May 2026 12:55:52 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	puGm2x20jalWEH3pSnTKZBC2VvUqLgjVbRrcGWaj4m4=; b=Hesuz5Jhgvh16Eib
-	fe6XMFBOmmAL58ZYoKgC//G9Z7eKM+cBm8WKX+4ki8G8oOAis1GoEVnAzjy47H9T
-	XHvE+UzJFoFynW6lZQGsX6fvN67Z0wBaa3OV71KjkkuBzxGxjsuCxRqlvFnHYTvR
-	+MjMci0gdE3UXr2iyGlJLMoTaiwmacyWEjO7Mm1IRg1bZIvi3J80z5EdEEoaYYlQ
-	41HjqG/uPe0hi7B4Lv0BmaZ30TTCCM4ZnOcvdj9gJ0cjUKkoTrJgr8801u+a9lIg
-	57oEA5Y2ebaEkfjkzEskzXdtu2jHbsH1XmdVm9IG8tjUzwC9Mzr1j4f/Vt8cDwkX
-	G76xkQ==
-Received: from mail-pl1-f199.google.com (mail-pl1-f199.google.com [209.85.214.199])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4dxsdw0euu-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Mon, 04 May 2026 12:55:52 +0000 (GMT)
-Received: by mail-pl1-f199.google.com with SMTP id d9443c01a7336-2b4678c6171so39773055ad.1
-        for <linux-scsi@vger.kernel.org>; Mon, 04 May 2026 05:55:52 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1777899352; x=1778504152; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=puGm2x20jalWEH3pSnTKZBC2VvUqLgjVbRrcGWaj4m4=;
-        b=MpHaXl571hNsCIo63kQj+7JWJgLV/wZhmsUjKIAXIlo/5N91EMqm6qUo619pJ7unpd
-         TjnhnQLfgFcogqAkiFJqhg36RMkc7FH+4hrNmUxklFCZNJi2/+MsJIp+JIslYz6FuFuu
-         hI+Xg7p8tFNyvhkGgfNg3HBsJaHkxRPG9altVlwdV5pZId3yMs9qeRz/YiWW2I8IQPpJ
-         bZ5qRxYH5iLPWyk1RunUOZ2kG00E0bD3Yz8nJcCoYnFK9RajttDp0hnMV0MJcYk1BSi8
-         8NcyesDSUNb/4CD1EQ8h6owiehjnux0b4gEzR9GkhhfdMjn7SIXflBkWwrDpEnRQIm72
-         cJoQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1777899352; x=1778504152;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=puGm2x20jalWEH3pSnTKZBC2VvUqLgjVbRrcGWaj4m4=;
-        b=CdbJ+iQzZEMORizKR8hrZOzy+KR/HiES1JCPotVdxsU+XXlgVqmY32sQ0bPFkEJAZo
-         wJnwZJpiUZnTLk0DjOlZPFRBTXXbiEQVxwrtOygXDxJNsJLQEJBewbTWSXqSgBYssFeZ
-         qQeO8ntxV+L19O3avwkHw2xQM2GXIVVRWx6BlLsywm7Wfzp9fMb5YPIR1861uuC/NzO9
-         yS//q9lD4SLea5pSwKAiRF9ftTrT/uvejUOsuJnRiFQUH/6HnNTeu+31GTv1fqGNJZuK
-         GUTXDEclogoH9Mz+hXB0AXqq9x2vQBq37klyJtqhTYiDpXsu5BM7FpboH6CJnEZQaMsV
-         yDhg==
-X-Gm-Message-State: AOJu0YwO4ByKcNfZsS0bHMOK5VlCmRNfaPcSOfKL5LNiUYwEdkxNQRmC
-	tU2mS5zDR9V9eBvVhAJxoCMVnaELZ7jvqq5H/2VU2Lzy36wlcSuzO7fyex9thQV9Z0RrV/ZhXEu
-	O1ESuD3BwCVTO+CMV+pdhUfJvJURgm3UiS/pWcJ5cZW38b0x5/pZ7Jtta3leoJmHp
-X-Gm-Gg: AeBDiesxwTWCWeuo1wguPa0ivmfmpBPmVc0fvl5cvLEw+MvKx1wFVfuCrPiIdcTva82
-	+P80X6QUllu7ftHFVkDa7tFAhyYOCqJXyAesQsS9FEK2zHM7FfPz9XCYtKwHPKRlEcjS5CvPmez
-	xQjf1Q9/dJjFGnBqtJXV3MvVs1qQU3YDVXfjTXYB5ShWsZqmCeqKk2ZX0kUqASMWBtC6nEBtmtw
-	95KT4JZjNCrJGGKj8Sv5qGW5gAkmY50uOfBrJ8aOXRGeqFkhui2GggvdsD027wMYW9yg7s8OKik
-	7Novq1L3BA852HlWE/ej9GmN6bDygoFiXc/uUZwNL09sgyHeF1mdvmNGwyOygFpNj5ktrKW/tPG
-	1DrqFcF/M+liiOxee7xDDiws2tTCtn7QrqJvm9DA5oQC6p9tuDskMEdRwUcH0RjwyJR2rKAG2bZ
-	aDCPsaHagxbkBNaKt8TpfZGg==
-X-Received: by 2002:a17:903:1b4f:b0:2b4:5986:cd80 with SMTP id d9443c01a7336-2b9f2812383mr95668755ad.26.1777899351439;
-        Mon, 04 May 2026 05:55:51 -0700 (PDT)
-X-Received: by 2002:a17:903:1b4f:b0:2b4:5986:cd80 with SMTP id d9443c01a7336-2b9f2812383mr95668525ad.26.1777899350893;
-        Mon, 04 May 2026 05:55:50 -0700 (PDT)
-Received: from [10.133.33.164] (tpe-colo-wan-fw-bordernet.qualcomm.com. [103.229.16.4])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2b9caa7e855sm99778495ad.10.2026.05.04.05.55.47
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 04 May 2026 05:55:50 -0700 (PDT)
-Message-ID: <8a1cf09d-7293-464e-b581-5337f4087593@oss.qualcomm.com>
-Date: Mon, 4 May 2026 20:55:25 +0800
+	dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b="KlYAsjp9";
+	dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b="KlYAsjp9"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id AE8D35C8D0;
+	Mon,  4 May 2026 16:58:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+	t=1777913929; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=6K3DIcPFTaITC7M0Q6pncxGWN0WaOImZcHg3fMDJ6Jc=;
+	b=KlYAsjp98z42NMyfy4wmyZNjwiIxG9M7W34aE3zPMreyCAVC4Lgo5u3YjQogFph4roYz8P
+	vYY1uTCSHW/IMDrmo61a5ijgS6x7sswmfEuwOrd/r7RDoVC4yvLhTPPBZqLajHNC8MtAE1
+	73bSqZ58knPT+SDMTyeljLm775v8BHg=
+Authentication-Results: smtp-out2.suse.de;
+	dkim=pass header.d=suse.com header.s=susede1 header.b=KlYAsjp9
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+	t=1777913929; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=6K3DIcPFTaITC7M0Q6pncxGWN0WaOImZcHg3fMDJ6Jc=;
+	b=KlYAsjp98z42NMyfy4wmyZNjwiIxG9M7W34aE3zPMreyCAVC4Lgo5u3YjQogFph4roYz8P
+	vYY1uTCSHW/IMDrmo61a5ijgS6x7sswmfEuwOrd/r7RDoVC4yvLhTPPBZqLajHNC8MtAE1
+	73bSqZ58knPT+SDMTyeljLm775v8BHg=
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 70A6F593A3;
+	Mon,  4 May 2026 16:58:49 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id WrFrGknQ+GntcAAAD6G6ig
+	(envelope-from <mwilck@suse.com>); Mon, 04 May 2026 16:58:49 +0000
+Message-ID: <61b4da9dcbee8fd71d1ecb2cfdca5c2408528bd7.camel@suse.com>
+Subject: Re: [PATCH v2 0/2] Fix SAS wildcard scan on smartpqi and other
+ controllers
+From: Martin Wilck <mwilck@suse.com>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>, Ranjan Kumar
+	 <ranjan.kumar@broadcom.com>, Don Brace <don.brace@microchip.com>, Hannes
+ Reinecke <hare@suse.de>
+Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, Lee Duncan
+	 <lduncan@suse.com>, Yihang Li <liyihang9@h-partners.com>, Jack Wang
+	 <jinpu.wang@cloud.ionos.com>, John Garry <john.g.garry@oracle.com>
+Date: Mon, 04 May 2026 18:58:48 +0200
+In-Reply-To: <yq1y0i4csyi.fsf@ca-mkp.ca.oracle.com>
+References: <20260421202018.511388-1-mwilck@suse.com>
+	 <yq1y0i4csyi.fsf@ca-mkp.ca.oracle.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.60.1 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 1/2] scsi: ufs: core: Add a quirk for extended TX EQTR
- Adapt L0L1L2L3 length
-To: =?UTF-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= <peter.wang@mediatek.com>,
-        "beanhuo@micron.com" <beanhuo@micron.com>,
-        "mani@kernel.org"
- <mani@kernel.org>,
-        "avri.altman@wdc.com" <avri.altman@wdc.com>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
-        "James.Bottomley@HansenPartnership.com"
- <James.Bottomley@HansenPartnership.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-References: <20260501131641.826258-1-can.guo@oss.qualcomm.com>
- <20260501131641.826258-2-can.guo@oss.qualcomm.com>
- <a173bb1733968d41690f8472d13b95028c8975c5.camel@mediatek.com>
-Content-Language: en-US
-From: Can Guo <can.guo@oss.qualcomm.com>
-In-Reply-To: <a173bb1733968d41690f8472d13b95028c8975c5.camel@mediatek.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Authority-Analysis: v=2.4 cv=a7AAM0SF c=1 sm=1 tr=0 ts=69f89758 cx=c_pps
- a=JL+w9abYAAE89/QcEU+0QA==:117 a=nuhDOHQX5FNHPW3J6Bj6AA==:17
- a=IkcTkHD0fZMA:10 a=NGcC8JguVDcA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=gowsoOTTUOVcmtlkKump:22
- a=kDnxYmXqCbPNdaTBimYA:9 a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
- a=324X-CrmTo6CU4MGRt3R:22
-X-Proofpoint-GUID: 0YZSfd9-7Kyj_Joa3uDOFZwTysQOrThe
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNTA0MDEzNyBTYWx0ZWRfX+P6DoiBU86Xa
- tPket1SrBaLelaZsLcCQU2ORQ1EidKrGaGf7Xa0BTfY7lkReFz6lWkYd0nnCd9eYCcdKwq/JX5O
- XamP/aM/CxcnUPw/5RNw1+pf5otgoEtYl77b159wzMVbpx9OtXo2+rsEoWv5iRnFwDuGOcKWcYm
- 4c13fHXPLBqVFmtX7M61WcX/Ou5OexghSMPCpsU7yePun6ndjwHi3oFuZYEvXjQ+K/k7dRZR/YN
- mmooTIjnTlHpJR15E7CEab9W8OOfpI6QNzqM1W0ar503o9TVysKTPsyDeWrfw8RbQq0ouQWrE8R
- aWc/Lb5YK6y6xUPc6gqrfydmvZb/DgKqKI8N13uxrrUfDY6hTolUPXhmRHmS4vx1sTFWpqOffQH
- AmlTFuqd2dB2u/XvwES+0GAwWF5unfjhtgVlgBM/VyOcwrSTOehc0bXo/VwH8z2j/0pefI3Zpo0
- GaW3rtEjUWntwLSM1Hg==
-X-Proofpoint-ORIG-GUID: 0YZSfd9-7Kyj_Joa3uDOFZwTysQOrThe
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-05-04_04,2026-04-30_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- lowpriorityscore=0 phishscore=0 spamscore=0 adultscore=0 clxscore=1015
- suspectscore=0 priorityscore=1501 malwarescore=0 impostorscore=0 bulkscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2604200000 definitions=main-2605040137
+X-Spam-Level: 
+X-Rspamd-Action: no action
+X-Spamd-Result: default: False [-3.51 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	R_DKIM_ALLOW(-0.20)[suse.com:s=susede1];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	MX_GOOD(-0.01)[];
+	FUZZY_RATELIMITED(0.00)[rspamd.com];
+	RCVD_TLS_ALL(0.00)[];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	ARC_NA(0.00)[];
+	TO_DN_SOME(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
+	MID_RHS_MATCH_FROM(0.00)[];
+	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	RCVD_COUNT_TWO(0.00)[2];
+	FROM_EQ_ENVFROM(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	RCPT_COUNT_SEVEN(0.00)[10];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[sashiko.dev:url,imap1.dmz-prg2.suse.org:rdns,imap1.dmz-prg2.suse.org:helo];
+	DNSWL_BLOCKED(0.00)[2a07:de40:b281:104:10:150:64:97:from,2a07:de40:b281:106:10:150:64:167:received];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	DKIM_SIGNED(0.00)[suse.com:s=susede1];
+	DKIM_TRACE(0.00)[suse.com:+]
+X-Rspamd-Queue-Id: AE8D35C8D0
+X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
+X-Spam-Flag: NO
+X-Spam-Score: -3.51
 
+Hi Martin, Ranjan, Don, Hannes, all,
 
-On 5/4/2026 5:19 PM, Peter Wang (王信友) wrote:
->
-> On Fri, 2026-05-01 at 06:16 -0700, Can Guo wrote:
-> > 
-> > diff --git a/drivers/ufs/core/ufs-txeq.c b/drivers/ufs/core/ufs-
-> > txeq.c
-> > index b2dc89124353..fe647450a7a1 100644
-> > --- a/drivers/ufs/core/ufs-txeq.c
-> > +++ b/drivers/ufs/core/ufs-txeq.c
-> > @@ -740,7 +740,9 @@ static int
-> > ufshcd_setup_tx_eqtr_adapt_length(struct ufs_hba *hba,
-> >                 if (adapt_l0l1l2l3_cap_local >
-> > ADAPT_L0L1L2L3_LENGTH_MAX) {
-> >                         dev_err(hba->dev, "local
-> > RX_HS_G%u_ADAPT_INITIAL_L0L1L2L3_CAP (0x%x) exceeds MAX\n",
-> >                                 gear, adapt_l0l1l2l3_cap_local);
-> > -                       return -EINVAL;
-> > +
-> > +                       if (!(hba->quirks &
-> > UFSHCD_QUIRK_EXTENDED_TX_EQTR_ADAPT_LENGTH_L0L1L2L3))
-> > +                               return -EINVAL;
-> >                 }
-> > 
-> >                 ret = ufshcd_dme_get(hba,
-> > UIC_ARG_MIB(PA_PEERRXHSG6ADAPTINITIALL0L1L2L3),
-> > @@ -751,7 +753,9 @@ static int
-> > ufshcd_setup_tx_eqtr_adapt_length(struct ufs_hba *hba,
-> >                 if (adapt_l0l1l2l3_cap_peer >
-> > ADAPT_L0L1L2L3_LENGTH_MAX) {
-> >                         dev_err(hba->dev, "peer
-> > RX_HS_G%u_ADAPT_INITIAL_L0L1L2L3_CAP (0x%x) exceeds MAX\n",
-> >                                 gear, adapt_l0l1l2l3_cap_peer);
-> > -                       return -EINVAL;
-> > +
-> > +                       if (!(hba->quirks &
-> > UFSHCD_QUIRK_EXTENDED_TX_EQTR_ADAPT_LENGTH_L0L1L2L3))
-> > +                               return -EINVAL;
-> > 
->
-> Hi Can,
->
-> The quirk UFSHCD_QUIRK_EXTENDED_TX_EQTR_ADAPT_LENGTH_L0L1L2L3
-> is defined as a host quirk, but it appears to be used for the
-> device (peer) in this context. Is this usage wrong or intended?
-Hi Peter,
+I need some advice / guidance.
 
-Thanks for raising this; it is a good question. And I had spent quite 
-some time
-on this one trying to make it as simple as possible...
+TL;DR:
 
-Firstly, it is intended. In TX EQTR flow, the host software programs a Adapt
-Length value to PA_TXADAPTLENGTH_EQTR and initiates TX EQTR procedure.
-With this quirk enabled, the host software is allowed (by Host HW) to 
-continue
-TX EQTR even with a value which is above the spec max, so the Host software
-can attempt an extended (out-of-spec) value.
+- Does it make sense to pursue the idea of this patch by adding proper
+locking and making some additional amendments?
+- Otherwise, can we revert 37c4e72b0651 and find a different solution
+for rescanning NVMe drives on mpt3sas and mpi3mr?
 
-Then the outcome is naturally determined by the peer device:
-1. If the device tolerates the extended value, TX EQTR succeeds.
-2. If the device does not, TX EQTR fails as part of normal EQTR behavior.
+Long version:
 
-So the quirk is intentionally host-only.
+Thanks for the link with the Gemini review. My current approach is
+arguably too simplistic.
 
-A separate device quirk could be added, but for this path it would be 
-redundant
-and would increase maintenance burden (for tracking a list of such 
-devices) without
-changing the outcome.
+The question is, then, what to do about 37c4e72b0651 ("scsi: Fix
+sas_user_scan() to handle wildcard and multi-channel scans"). As a
+matter of fact, this commit introduces severe regressions (system
+stall) at least for smartpqi and hisi_sas.=C2=A0
 
-I hope I have answered your question and you can understand my 
-considerations.
+Looking back at the discussion about this commit [2], it was submitted
+to fix scanning of NVMe drives, which mpt3sas and mpi3mr may present as
+SCSI targets in a certain mode of operation, in which these drivers use
+the channel number to distinguish NVMe and SCSI devices from each
+other. This use of the channel number is inconsistent with how other
+SAS drivers use it. Therefore this commit broke SAS scanning for other
+drivers. The obvious fix would  be to revert 37c4e72b0651. This is
+actually what we (SUSE) have done in our downstream kernel so far.
+
+This would mean that Broadcom would need to come up with a different
+way to handle the scanning for mpt3sas and mpi3mr in "Tri-mode".
+
+Other than that: I still believe that the general idea of using
+scan_start() and scan_finished() not only for the initial host adapter
+scan but also for rescan operations is reasonable.=C2=A0After all, a "dumb"
+wildcard scan doesn't make a lot of sense for drivers "which find their
+own targets", for which scan_start() and scan_finished were introduced
+in 1aa8fab2acf1 ("[SCSI] Make scsi_scan_host work for drivers which
+find their own targets").
+
+But the issues pointed out by Gemini are real, and while I could fix
+the locking, the problem that some drivers may reinitialize the
+hardware in scan_start() is tricky. Some detailed replies on Gemini's
+review are appended below.
 
 Thanks,
-Can Guo.
->
-> Thanks
-> Peter
->
->
-> ************* MEDIATEK Confidentiality Notice ********************
-> The information contained in this e-mail message (including any
-> attachments) may be confidential, proprietary, privileged, or otherwise
-> exempt from disclosure under applicable laws. It is intended to be
-> conveyed only to the designated recipient(s). Any use, dissemination,
-> distribution, printing, retaining or copying of this e-mail (including its
-> attachments) by unintended recipient(s) is strictly prohibited and may
-> be unlawful. If you are not an intended recipient of this e-mail, or believe
-> that you have received this e-mail in error, please notify the sender
-> immediately (by replying to this e-mail), delete any and all copies of
-> this e-mail (including any attachments) from your system, and do not
-> disclose the content of this e-mail to any other person. Thank you!
+Martin
 
+[1] https://sashiko.dev/#/patchset/20260421202018.511388-1-mwilck%40suse.co=
+m
+[2] https://lore.kernel.org/linux-scsi/CAFdVvOwjy+2ORJ6uJkspiLTPF05481U7gcS=
+4QohFOFGPqAs8ig@mail.gmail.com/
+
+On Thu, 2026-04-30 at 12:30 -0400, Martin K. Petersen wrote:
+>=20
+> https://sashiko.dev/#/patchset/20260421202018.511388-1-mwilck%40suse.com
+
+
+P.S: Detailed replies to Gemini's review:
+
+> Does bypassing scsi_scan_host_selected() here skip necessary power
+> management and serialization steps?
+>=20
+> Typically, wildcard scans go through scsi_scan_host_selected(), which
+> secures the host adapter via scsi_autopm_get_host(), checks
+> scsi_host_scan_allowed(), and takes shost->scan_mutex.
+>
+> By calling do_scsi_scan_host() directly, it appears scan_start()
+could be
+> invoked while the host adapter is runtime-suspended, which might lead
+to
+> hardware faults.
+
+The call to scsi_scan_host_selected() was introduced in commit
+37c4e72b0651, which my patch is intended to fix; before that commit,
+scan_mutex was not taken in the sas_user_scan() code path. It's still
+explicitly not taken for the important case of scanning channel 0;
+sas_user_scan() takes only sas_host->lock, which protects just the rphy
+list.
+
+So yes, sas_user_scan_with_scan_start() code path should acquire the
+scan_mutex. I suppose that the mutex should be acquired in
+sas_user_scan(), actually.
+
+> Also, without holding scan_mutex and checking
+scsi_host_scan_allowed(),
+> is there a race condition if a sysfs scan is triggered concurrently
+with
+> driver removal? If scsi_remove_host() tears down the host
+asynchronously,
+> the while loop in do_scsi_scan_host() might poll shost->hostt-
+>scan_finished()
+> after the driver module has unloaded, potentially causing a use-
+after-free.
+
+True. Taking the scan_mutex should fix this.
+
+> Similarly, multiple concurrent sysfs writes could execute
+scan_start()
+> simultaneously without scan_mutex protection. Can this corrupt
+internal
+> driver state?
+
+Right. Again, this can be fixed by taking scan_mutex.
+
+> Additionally, is it safe to repurpose scan_start() for runtime sysfs
+> scans?
+>=20
+> Historically, shost->hostt->scan_start() seems to be used exclusively
+> for one-time asynchronous boot initialization in do_scan_async().
+>=20
+> Many SAS drivers might implement this as a hardware initialization
+routine
+> that resets physical links.
+>=20
+> If exposed to a runtime userspace sysfs trigger, could this
+unintentionally
+> bounce active SAS links, drop active I/O, or cause controller hangs
+for
+> drivers that assume scan_start() is only used during boot?
+
+This is not the case for smartpqi, but other drivers (e.g. hisi_sas)
+actually seem to enable PHYs in the scan_start() code path. Not sure
+how this can be fixed in general. AFAICS it would require thorough
+understanding of the hardware / firmware of all affected drivers, which
+I don't have.
+
+Would it make sense pass a flag to scan_start() indicating whether we
+initiate a first-time scan or a rescan, and skip the hardware
+initialization in the latter case?
