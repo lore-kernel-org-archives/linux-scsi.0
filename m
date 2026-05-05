@@ -1,89 +1,110 @@
-Received: from AM0PR02CU008.outbound.protection.outlook.com (mail-westeuropeazon11013037.outbound.protection.outlook.com [52.101.72.37])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 722AF3E9F76;
-	Tue,  5 May 2026 10:06:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.72.37
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C255D3AD51F;
+	Tue,  5 May 2026 10:06:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=198.175.65.16
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777975564; cv=fail; b=VXcU7yq3TtZ2N8kObVa1dpAnvxHls/oRkyxj7PDhk+MA0zbUs1Qxmv4YyWurscuF5uU7veBmNsN6lZGI5qhfQ0BvtchSHOPAl6//glvw0pgWCQejdrwlA0xNuc6DGh/rjXK/wsv8QY8/xeOq9B5MWXI5Zstjk7h1ekLO1XhBfiI=
+	t=1777975566; cv=fail; b=EodxA8Tt0ZFeQq9SzYhRPTQYDxapaW2q7XhqWI9kOPF4GZ5Sd/Zm3K01KlFTApyXKj3g2mA4iQ/ccUJLzRgaK/HR9jjV+zw25P9bug3N2ztWfMRg2VFHREbQHk5psz6HqzsytbkY/f691DUdE3yUWvNkCEjOzjLygc60jz+DpsY=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777975564; c=relaxed/simple;
-	bh=1ljUqg4XIpjbgvqs6EjZdgMNIa8yruZPMzdYaC7BEqc=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=ArWPuwxHoINjTXhv+2f6+08aFzMPFxyLJn7ZEMViyBSlZbh8Qtc/jif5SzK+QbwIDnzHOQkwdgTB2QzBQ2c3gEyU5PdPfuD22/pOfDdw/17UWj8iP7fcksfFv+th6cr2fmI2oeFkRWJWahajoDPazA2kBYtCUyF2sUK4mIgJhXU=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=U5D2L6/e; arc=fail smtp.client-ip=52.101.72.37
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
+	s=arc-20240116; t=1777975566; c=relaxed/simple;
+	bh=W6GTsAIFlDpzJ0tF0E60g+0oezCQYYJxsv2/K2x1Im0=;
+	h=Message-ID:Date:Subject:From:To:CC:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=hQrg8pUwtJICqdjBfdJfMEw2pVheiEFTCTAT3yUYGj9JDTmDzNdoen48A9yo9wB6KY/pCRpWWsDjOppvKtXVQKAMudqh+4u3H1j/Z9Ef7OJ1/DT14qbCCXzX5ESBkYy3aoAaGnENK/LcYw0t/t8QdtHPHMjDah1k5kk+fwuVKGE=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=jmLXrMPD; arc=fail smtp.client-ip=198.175.65.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="U5D2L6/e"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="jmLXrMPD"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1777975564; x=1809511564;
+  h=message-id:date:subject:from:to:cc:references:
+   in-reply-to:content-transfer-encoding:mime-version;
+  bh=W6GTsAIFlDpzJ0tF0E60g+0oezCQYYJxsv2/K2x1Im0=;
+  b=jmLXrMPD4pa44ABL6eu/mvvZoqnspVdcETYxGs3skjHrDaidIi3usOrn
+   +7jaZEgmVgvbF99tdiTuUs65v5umv4KpW0fFz9pGwKFmCNUbqDHdoZR4r
+   1udYe9HyJhIJcwr2CYiO/qxRgurepcGeZ5hz2HuleAhdsulyFriQ8Qxkx
+   1W4RkaDYOrSCxEet27cNIY7a9lxz8kzTC1V4edQiEAulHyVCtmmt/AwB2
+   avEjdU86YVQICC2q38qgBGeTLffDgFoHoay4N0F2GvCqUiO8YkFpGjECg
+   g3vJCVN1JOvq1Ep1EHRgXNMV6OOpXDMa11o+eIUyFX0Zbvik1a4JkPsdF
+   Q==;
+X-CSE-ConnectionGUID: PTjbLDCrSmK0NORCnMfduQ==
+X-CSE-MsgGUID: mTX10RvDTMKPtlDJEXZWzw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11776"; a="79030946"
+X-IronPort-AV: E=Sophos;i="6.23,217,1770624000"; 
+   d="scan'208";a="79030946"
+Received: from fmviesa003.fm.intel.com ([10.60.135.143])
+  by orvoesa108.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 May 2026 03:06:04 -0700
+X-CSE-ConnectionGUID: 1pbByNl0TdS4fmxjBpEJ0w==
+X-CSE-MsgGUID: BOxLr4LQSDqdzH75buTqyg==
+X-ExtLoop1: 1
+Received: from orsmsx902.amr.corp.intel.com ([10.22.229.24])
+  by fmviesa003.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 May 2026 03:06:02 -0700
+Received: from ORSMSX901.amr.corp.intel.com (10.22.229.23) by
+ ORSMSX902.amr.corp.intel.com (10.22.229.24) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.37; Tue, 5 May 2026 03:06:02 -0700
+Received: from ORSEDG902.ED.cps.intel.com (10.7.248.12) by
+ ORSMSX901.amr.corp.intel.com (10.22.229.23) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.37 via Frontend Transport; Tue, 5 May 2026 03:06:02 -0700
+Received: from CY3PR05CU001.outbound.protection.outlook.com (40.93.201.5) by
+ edgegateway.intel.com (134.134.137.112) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.37; Tue, 5 May 2026 03:06:02 -0700
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=cuh/Mmxb8dnkO1aWr5frqQFscVRlJccapKlT9wq1WVaLtTZMesthm4a3+36HXWlnTEaFdAj90ymCpH339Hghp6yzoMD600dR4IWcSd3x5K3A4iHKW/gGD6h9Z6gZkDpNTqjqriLsE23KJbsOH0HxbJdSYnPWEJpBegQlravEbYr7uCjUgsKS8UgFxNgG0K93Se8zn3SsuCmscaN7riO62mlG8G5LQes6KWZXF9ZkLnrbTIb/DytKQ1Bu9v34BB4/am++S/ZkLdHP8hAxmbDK+5Zu9wiXxE6CxwPep421CkUIJyb2ylwdZA2xuNcZgVJFxiYXnhGJbKkPgGzBWowyvQ==
+ b=JbNzP/EJUDCXF9i5vG1B8F7dOXg2g5IcoNpdl+YRAJnQswZGpRslluv4NKASq4ley7pSWZKO/xgrI31fjQMUlBM5dTV3oCrthvbmMf9joWBTfxLfCfqH/YqIERxOce3GFNqLvoxXKNG2ZNBqRmsM17j7o0+B4O5iHEYJlggUQShfho23FC/jf5H+MDvT/gXVQL+HHDgAIqYt60jPSa4+Fjok8LXX0MnBpKEm1uvS6/R4FtTicLodm4qCVE2/anLtfR3IzfDVviLXHdKb1rS4yPSNGJeP47Y259pdDDU/lS/hUmecA1H1ffAecfHEBG608ksmKPAJZum7USXVWQzqcw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=+h4UJ0BCnmpUdlD+n1nGOTWl4jBit4VSNE5zBKBHCQ4=;
- b=AIOBEHhY/dJ080+y7cgu4zBmB/jI9fjRw9FxIiPewP4He8aU5YNrTu4JVoqCWeec75RGozkqLU5OYCMnI2WUNUYNHO79dHB8Klcp2N0hK89bwBKkprDn9zP25madKLNKviMC56rcsS/WfuauwDTehRBpyBXiheS8xOx5ImoHw/06X31Mxnr9kRtV0WJXiUsDiV3JwVYAnrn0wkExy3n0sY9WCMUVEoVXnFzcfFy8toMi8ZvzczPM/DKJZNChgVcgtRSYs/XsVndi6yDJS9o9nQL6VKLp5j5VFkTMQNXATIx1NHV1jawypmZh2wwbC9iclB1awya1ccs55RQrMUfQtQ==
+ bh=miIRr8IAH6HlqaZZSE3NrkeCpysA5RVi37vQ3maz8jY=;
+ b=gWFtO+PUZtA8be4rk3jmc1LuF1fxeH3nqpkNI3AfoHw0Wolt2g4gzUb1J0A6x/RJp0UlP4mkVKQburyLgO2sRYRkw4ayQj0Dsl8b/+vakdCuM8lAUQj5b7f9f0x7kS8shaoIJ6MC463R3EmjfvrT37RigzCfb8K+/DrmxouPJXTDuoT08FqbWIpDi2bvvOhsc/3C5Si/a8KBaFvSGR8TOaQh6y/beRCqqxSu5SKNGJeOewvsvnXf2fjMXaDV9SZWWa2Hcmjub5IegamoUKvtePba52N57A6FIv45wZj03frkhWjMmg3rOVUSV4psGXoH5HR/5UXZ3IxkO4WAxrEa0A==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
- header.d=nxp.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=+h4UJ0BCnmpUdlD+n1nGOTWl4jBit4VSNE5zBKBHCQ4=;
- b=U5D2L6/eqeScK7+Nu1tqU5ilxwdr0RotO2dFaNbjrf8/TrtqoRUESHHsThrfUphS5uCaKFZoM9xvCoPtJTamugf0axC5xkJKS18+RmTnywx0ExDoQY+bsPTi/cT3kdbNckgdwuOxO/msuczT8qAjJbzpcGBo6DiMJk2kee6NMqrysWkMme+91So2iVpbBhgqkuWSCdxTENPTW7v7W/W8nqXSf08lBwE8KLer9keOMuB87Y7OPn0OjxD1Ec6jlN2P8kHBjtdkVE7Tp3dPt1aowN1aeTtuWT0uL3npiFuGAT3/+MV5xlzEtfgYJ3goDwF/81UYE9Jtnsc0uNvpGaG5WA==
+ smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
+ dkim=pass header.d=intel.com; arc=none
 Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nxp.com;
-Received: from AM9PR04MB8585.eurprd04.prod.outlook.com (2603:10a6:20b:438::13)
- by DB9PR04MB8363.eurprd04.prod.outlook.com (2603:10a6:10:24b::11) with
+ header.d=none;dmarc=none action=none header.from=intel.com;
+Received: from IA1PR11MB7198.namprd11.prod.outlook.com (2603:10b6:208:419::15)
+ by SN7PR11MB8041.namprd11.prod.outlook.com (2603:10b6:806:2ec::22) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9846.26; Tue, 5 May
- 2026 10:05:54 +0000
-Received: from AM9PR04MB8585.eurprd04.prod.outlook.com
- ([fe80::f010:fca8:7ef:62f4]) by AM9PR04MB8585.eurprd04.prod.outlook.com
- ([fe80::f010:fca8:7ef:62f4%4]) with mapi id 15.20.9870.023; Tue, 5 May 2026
- 10:05:53 +0000
-From: Vladimir Oltean <vladimir.oltean@nxp.com>
-To: linux-phy@lists.infradead.org
-Cc: Vinod Koul <vkoul@kernel.org>,
-	Neil Armstrong <neil.armstrong@linaro.org>,
-	dri-devel@lists.freedesktop.org,
-	freedreno@lists.freedesktop.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-arm-msm@vger.kernel.org,
-	linux-can@vger.kernel.org,
-	linux-gpio@vger.kernel.org,
-	linux-ide@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-media@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	linux-renesas-soc@vger.kernel.org,
-	linux-riscv@lists.infradead.org,
-	linux-rockchip@lists.infradead.org,
-	linux-samsung-soc@vger.kernel.org,
-	linux-scsi@vger.kernel.org,
-	linux-sunxi@lists.linux.dev,
-	linux-tegra@vger.kernel.org,
-	linux-usb@vger.kernel.org,
-	netdev@vger.kernel.org,
-	spacemit@lists.linux.dev,
-	UNGLinuxDriver@microchip.com,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Vignesh Raghavendra <vigneshr@ti.com>,
-	Siddharth Vadapalli <s-vadapalli@ti.com>
-Subject: [PATCH v8 phy-next 09/31] PCI: Remove device links to PHY
-Date: Tue,  5 May 2026 13:05:01 +0300
-Message-Id: <20260505100523.1922388-10-vladimir.oltean@nxp.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20260505100523.1922388-1-vladimir.oltean@nxp.com>
-References: <20260505100523.1922388-1-vladimir.oltean@nxp.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: FR4P281CA0079.DEUP281.PROD.OUTLOOK.COM
- (2603:10a6:d10:cd::9) To AM9PR04MB8585.eurprd04.prod.outlook.com
- (2603:10a6:20b:438::13)
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9870.25; Tue, 5 May
+ 2026 10:05:59 +0000
+Received: from IA1PR11MB7198.namprd11.prod.outlook.com
+ ([fe80::2c4e:e92a:4fa:a456]) by IA1PR11MB7198.namprd11.prod.outlook.com
+ ([fe80::2c4e:e92a:4fa:a456%3]) with mapi id 15.20.9870.023; Tue, 5 May 2026
+ 10:05:59 +0000
+Message-ID: <e0a93b90-5e9e-4856-bc4a-60547282420b@intel.com>
+Date: Tue, 5 May 2026 13:05:51 +0300
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v8 3/5] mmc: sdhci-msm: Set ICE clk to TURBO at sdhci ICE
+ init
+From: Adrian Hunter <adrian.hunter@intel.com>
+To: Abhinaba Rakshit <abhinaba.rakshit@oss.qualcomm.com>, Bjorn Andersson
+	<andersson@kernel.org>, Konrad Dybcio <konradybcio@kernel.org>, "Manivannan
+ Sadhasivam" <mani@kernel.org>, "James E.J. Bottomley"
+	<James.Bottomley@HansenPartnership.com>, "Martin K. Petersen"
+	<martin.petersen@oracle.com>, Ulf Hansson <ulf.hansson@linaro.org>, "Neeraj
+ Soni" <neeraj.soni@oss.qualcomm.com>, Harshal Dev
+	<harshal.dev@oss.qualcomm.com>, Kuldeep Singh
+	<kuldeep.singh@oss.qualcomm.com>, Rob Herring <robh@kernel.org>, "Krzysztof
+ Kozlowski" <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>
+CC: <linux-arm-msm@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-scsi@vger.kernel.org>, <linux-mmc@vger.kernel.org>,
+	<devicetree@vger.kernel.org>, Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
+References: <20260409-enable-ice-clock-scaling-v8-0-ca1129798606@oss.qualcomm.com>
+ <20260409-enable-ice-clock-scaling-v8-3-ca1129798606@oss.qualcomm.com>
+ <5ebaeea1-215b-415b-9333-02705ac305f5@intel.com>
+Content-Language: en-US
+Organization: Intel Finland Oy, Registered Address: c/o Alberga Business Park,
+ 6 krs, Bertel Jungin Aukio 5, 02600 Espoo, Business Identity Code: 0357606 -
+ 4, Domiciled in Helsinki
+In-Reply-To: <5ebaeea1-215b-415b-9333-02705ac305f5@intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: DUZPR01CA0001.eurprd01.prod.exchangelabs.com
+ (2603:10a6:10:3c3::10) To IA1PR11MB7198.namprd11.prod.outlook.com
+ (2603:10b6:208:419::15)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -91,364 +112,153 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: AM9PR04MB8585:EE_|DB9PR04MB8363:EE_
-X-MS-Office365-Filtering-Correlation-Id: cef60d58-3980-4f51-46e9-08deaa8de4a7
+X-MS-TrafficTypeDiagnostic: IA1PR11MB7198:EE_|SN7PR11MB8041:EE_
+X-MS-Office365-Filtering-Correlation-Id: 412bab10-63bd-4e77-7b06-08deaa8de773
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|376014|1800799024|19092799006|7416014|366016|22082099003|18002099003|56012099003;
-X-Microsoft-Antispam-Message-Info:
-	kweEMLngJXrC+myHwAtMD8EC8yE55nDuv4BtpqzSGR5yKhXFvXqfLQbJMQQsQzA2Te3oaxtheW0yu3WTxr85iXAxQeRodSbojCp72m95fKTycl/dGP2t0zUs0jew0D+r9cKiR20bD5VsKQ4DB5npzPoQOEjQckQK5ZVPVv8K7jCA68LYzM0VZ2lSFny4H8QitxjkzLHVX+iVZkntldftHgneum1E98Ikl/96+7KFZ4onwxVZxVimjPodY2K8SsiB4SaQsFUGTkiR+Zu4urFHY5Z7RgVvqEUgFk4NIrPKi+DeOVTPme1YusueVs9n6C7ztbw/Z/Rb9udM18eoNsH72zloHWpXDrIg1r0a/wJL1Tfo1DNVj0gh24Y8ybQUxHDhfzQhMBRtuoR6bRgOowHmbYTbHNYm4j7qNMT2PHrK4Du+R1FMRokAg509tO6LT8T7hGtnEGBylu3ovn3+0R14kHRVO3Slu6lkfAEN3H5uPdhlcThTX3csHre6zlMVn+nnIjsLjJ5LgUOJQ3ajexuRHAQmfKvW9PpfjSInwPWtKGRjZBPL/0HyMFIaq8e6+JoqvXb/pRnYiLYJZnN2utkZJqPB8kRwEuUS9G55fb57kYebaQXGGffeqKpJaBYUgF9A0vTAnrmVlwJ0GY8H8tkKD+TTYAgW4JybweqjElts16cYgPw2JuYKA4blyBTf9Kx9
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9PR04MB8585.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(1800799024)(19092799006)(7416014)(366016)(22082099003)(18002099003)(56012099003);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam: BCL:0;ARA:13230040|1800799024|7416014|376014|366016|921020|56012099003|18092099006|22082099003|18002099003;
+X-Microsoft-Antispam-Message-Info: 6ZDEsLhEtEwAU25k8x2ArHr4Bg66NY98xlKc1NvaH7z+ln+r+fWjPFfJnDhBR0J/3QMD6vHMgqgpb357uWHFOy1zKK9iZg08joNKgyUdvGf6JYyGEXXi+TN7UmLiYHjiPCMbwk3duAVzyOy7oPbs/Psx6l1EVJN86QJHQ4ZYgp7VUJGc81ce94Tc4pa0wdsCOoz/hHS9FkSUWOTXMCY7IcWpFp1RqI5I30JRVH9/5OI1f9jgdItGy2QC0A6YDt7lz/gh6vGEa5teAg99+dvsSr89ORSqekkuTEQSrLMubvBh1rLysAViXFVAuTX/2B3qCiXvMYu2wDCkD7NpMNpDtShyEv+GWfKWTNi629Xl4xxzrH9CfXbRb9xP96HC+KrcSCw5vERpgsd1wtxGuodcLybt3ms+9xin/cvcTvFScnBEaVgS0z37RVQnLMQTSAJwMWullzq8Oajd1B9Rr+pIUJ2YZ0380u6qHDRxsc3maBpF3Zp0UbO76+EgwI9Pm+vVnIC+p0tC0e5u5289zIrE3HsllgoZsHROLyPA1LnoltSb6D/qeEhpm783WSD/iuweYTW5wHH/GOhW9ZgFxksn2Rd+mF19nGwNwYdQoA3nFoc+EFkqR23w7axl9E2bZUI1np6PrfPqiOe/WqBGlXeEzJu+9IHs93anXCA2qTb9k4EmA50ncwAM/QsyQX5/EEfiYmN38LZoZJKmkz+NuhYOkNoD19gssJjULXlkfryDtsM=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:IA1PR11MB7198.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(7416014)(376014)(366016)(921020)(56012099003)(18092099006)(22082099003)(18002099003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?OGdzcnhBb1pWMVluc3lRU2J2dFZydE1ZRElHVldsdU15K3V6MFhOc3NWTmVr?=
- =?utf-8?B?VnFrV0tMaEIzYnByQjdYVGw3ekxVQWJYYzZhNmJwM3ArczU1UTk0V2Z2Uktt?=
- =?utf-8?B?NFM3U1YvQU9rL2hBdldobUowbE5udkhvTXpqWEtPbk5ibXV4OE1iaHZIb0tI?=
- =?utf-8?B?Z3pCbFNSMzZJaXZydVFCblhVdHgwRTZPcHFic2lQL1RlUDc1SzdkY1R0T1Js?=
- =?utf-8?B?bFdFaEl1OWJaWXhBdmxhYXpid0xXTWxPSnZBSTlMcmlWVVJJWTFIUE9XRUZP?=
- =?utf-8?B?cWI3MFNiWEx5WTU5VUx5Y0cvOGdBcSs0cFlodVFxUFJLK0FLd1k2VDVnNHJS?=
- =?utf-8?B?N2UwblFWNTQ2ZzI5b2o3MW1oMVZGVVFOaVVzQkF0UVdGQ211OUl4RU0wYzlJ?=
- =?utf-8?B?MmZyNjJ2Nmo3a09UVG5YZkhoZ2l2dTkxN2ZGN2VZS2ducFF3RGNQSkh6VWc2?=
- =?utf-8?B?T1FuYktFdDBMT0VEbnh2NmRvdVIzYVkvVHBuV1FIOS9WWmR0KzUzektRbjIv?=
- =?utf-8?B?VTJJN1ZRd3hjQm8rUFltQjY0RTFzTWE0bU9FQ09ZejQ5YWlyMTVkOTFiRGFi?=
- =?utf-8?B?MlQwM1VmOW43ZnhiVkdmL2RUUS9IRGJjNnJrb1duTjM3cmIrRmExdERDWXpO?=
- =?utf-8?B?ZjBJSGt4ZHkrMC90UFZoaFQwSTNDaDdMUXU2MmV1MDhYYVVuWVdTdTQ1a2ty?=
- =?utf-8?B?d2NJZllvVW9ya05LOXFOeVF4ZENBSGhZK1ZYNjNBOE5ZQVhVcUx3S3NGTm5G?=
- =?utf-8?B?SnRiWUZYZUtobG5CNkFRWFBaa1pxeCtCdVJZTWQ5RVZOUncvYzJxN0FublZV?=
- =?utf-8?B?MUtDM1k4dkdPbWt3UmladjdrTnQrRnFTVG91SUU3Mm5IZVdhYTM0NDNpZm01?=
- =?utf-8?B?V3JoYm1heU81a1VlZVc5alVzN2ljVGlFQzd2OFRycGRneDFCMENhVldtTFZ1?=
- =?utf-8?B?NzlOYkZ3VmplU25OSFF3VlRydFhtTkNKVlArSTVLcmVoSTlxcDBuczBmbWdF?=
- =?utf-8?B?bno2T1hHU21oQlZzQ2V5QjhkVkg2OFhPbGtaaFFhdEtqUmt4QWZVZThVVTN6?=
- =?utf-8?B?NWhPMFBnSHV5NE9XL04zRjVSWG5idnFyUGUwa1FFY0ZBTytjVWw2K1BXRzdq?=
- =?utf-8?B?VGtDQ3ZobjhyQVVnTWVpNk5lSmd4TWpmaGhUbGFNNm5randCRlNya0dUVjRv?=
- =?utf-8?B?NmZSUlVaSWNJeGpIMi9UcFZrUUdMM3NPUDg4akpHQjdQaGN6M3YzYmRKTnlG?=
- =?utf-8?B?Y2lRdS9wNVRMSHVJcVVrSVU1QWNHNE9kZy92RFlqMkRZZzdoNmJnbWUzdEdt?=
- =?utf-8?B?Y29pczZnVW5HODZXZjBrTVI5c2plblVBdmJhcGZFVVd6YmlEMDFSMzFnaE9J?=
- =?utf-8?B?VkdCc0JZWVEzQmpndHZwUnIzT3lMdENDdmd2bUkvTDFqZWV2NjZMYTZ2MnZu?=
- =?utf-8?B?akpQQXdPOW5qZTBKNUQvUUMyd1FuV3dKaUpWbFcyaFhJSDEyMmtNVzVuV1VS?=
- =?utf-8?B?dVRyeWNpTVNBUUp5b1I4N0QxLzZiVXdwZWZuNUxIazJXOTVBQ3lrRWlZZ0Fx?=
- =?utf-8?B?YU1iVG5uYTdwaEtQZitKRkllWnk1Zjl2Rjg0RDJEMXhJdXlSZzZtdXZXMGxE?=
- =?utf-8?B?Nk9Nb2JzZlcvd3ZkWXZjVTVXcDZBRysvVUQ5VUZVajh1QnJETXZyeE5EK1ZT?=
- =?utf-8?B?NmJ5NHJvbE1KZVhxOElyVXlOM0lyVlFuMzVsYStBRW1hRmZRRkRUTEs1M2dy?=
- =?utf-8?B?bjNSQkE0aXQ3OUkzOFhkMjVuOCtzMm1uN2N5RXZkN0J4OVdCekJhdU81UW5x?=
- =?utf-8?B?R1R0NWprR3J4bCtDeXo4M0t6K1FHYVAveGdhV2w4MnZUQUhJaTZpWTVEZjlD?=
- =?utf-8?B?Zm5UMENlRm1vb2Zrd3dQUFlDRkpOMXI3bDVhU2pWRmVuRlhEQ1dBdjJpM1lh?=
- =?utf-8?B?Tm5RWmJyVEVRMEsvUFRzV3RLNDhEelpla2Z5VE9LSy91VHBwSjhlOW94b1hl?=
- =?utf-8?B?ZGlsQkdmcmhlS3k1NHZYUXJIWGpQdmJxOWNVOUE1SU1KVmFqZFphUUhkZFpp?=
- =?utf-8?B?OE9vaUhEY1ArZVo2WG5FN2xvNTZsMjJ2VG1ab3JBS3FmSnRNUjV4aTRlTkRk?=
- =?utf-8?B?RmxBYXlHWXUvcVJ2UTV2azdtWkxOVkNocTlHN2hhL0p3VEswd2huRlJEWnlZ?=
- =?utf-8?B?ZlluUTZTbjZWYmIvZGdZRXV3dzQrczZrNjJOR29tUEFtc0QrbHc5bS9nWm5W?=
- =?utf-8?B?czNxZCtNdGhCakc2WkRnTWRRODBaSEZrYkJrSGhpVHNKL3IvNi81MWYwQ3E2?=
- =?utf-8?B?YWczSFp0ckdpVXd6TG9XTktIY1Jlc0ZPSVIwNUp3dDBNK1J3MW5hdz09?=
-X-OriginatorOrg: nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: cef60d58-3980-4f51-46e9-08deaa8de4a7
-X-MS-Exchange-CrossTenant-AuthSource: AM9PR04MB8585.eurprd04.prod.outlook.com
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?Z2F5V2JHZk1xeTc5MFdkMTBaTDlJWHZaKzF6Zy9hdkxObkdqOS96OU9ta25q?=
+ =?utf-8?B?Y2c5cGUyYkpqL282RzZMTHN3QVhIcHVUUEtkRkJMc0lKYzk0VHRPdlhWTDNZ?=
+ =?utf-8?B?T0RNTGdodWhzWUZYZTdhbUNXT2JrNk9mWW90cHZycHBkR0ZBM2o2cjc4cFNo?=
+ =?utf-8?B?VDJDVENPZE1LWlRRbDNNZy9LNFdoOWFZY2NZdjlMSFVDazV6YU9QNGMrZHN0?=
+ =?utf-8?B?TWRWZVVBc2RqM3Q0emk1QTcwVHpybUNLckY3c1kxWjJ6M3l1alFRRTRuMTMw?=
+ =?utf-8?B?M0ZoVks5RUFmaDhwcXZMSWNxN1ZyM3N6WUhRQ2FuNUlpek11WUZjL0lsdjlo?=
+ =?utf-8?B?b1Q4Uk9ObVhhSjZIYUVpaUFKd3Nxc3RjaDRKYmRZOUtpcU5OWTlBWjFtc0pM?=
+ =?utf-8?B?MUhhOW9FalhFL2lGbTFiZ0pDWUFYNGxXNkVsQ3YvUUJGZ1NHbjhtcFRLVUJz?=
+ =?utf-8?B?OXB4OWlKOEZ2SnlXQ3kxZktnSktWRVRuSmhSejZiR0tOdmVCbUdOWG1HYzRH?=
+ =?utf-8?B?aE4wZFN1S1MzTENMNklkcHdIVmNOc2xOOTFjNmdWdTF4MENOUHE4TmNxV0Qv?=
+ =?utf-8?B?ZU8wOVJRankzMGVwK25wTzlGM1BGUWowanZ3ZjNJUmhaaHNKblppS2pHMnl0?=
+ =?utf-8?B?eFplWmFSZ2g2TXFWaFhsb3NRNkhEWEhVQ09veVprdEpYdHB5aWFYOFhUN2Nz?=
+ =?utf-8?B?eDYzb3hndUptWG8xeUhqa2xEUldVT0dKUzJhYkdQOUFEV0VRVzNQVzNPN2Vj?=
+ =?utf-8?B?QUlORHZRbm9sNVhGaXl0aE4yK2tBQlFsTGZNWVBNMGg4ZDllaU5YWlZnVVdT?=
+ =?utf-8?B?VDBEUmpGekVKVWxMZ1Fkb1paVGZLSVpocnZ4SERYY3pJNUUxVGRTNmNTWk5r?=
+ =?utf-8?B?anZ6VXZ0di9YcVhCZVE1YnE0cFdjVTRSczFSOGoxR1dKNDFGSHFwODJJUzdq?=
+ =?utf-8?B?K1BYU1hHMjkwT1hsczhmUWRjRlE4aG5qNkxkU3NMMUErKzN4N2gxTVVadHJJ?=
+ =?utf-8?B?cnlJYUR5eEN4QWM2YWRIYjlZV3Z1L1BMeTNSMEZGTEJZN0ZETmpmV0lZc2kz?=
+ =?utf-8?B?ODY2bWIrVGw5dEJ3UUhDOFcyTjVtQXUyamp1QkYvcUJaNjIyWE5UNzBkaE5X?=
+ =?utf-8?B?NTFaOTFva2N4WjBOUURFbXhoTjlyYWExN3pkOHlCdlFDemZhKzRjS1AxUlVJ?=
+ =?utf-8?B?SVlOdFp0TExPVXFpSlhoTjRKMnE1SWpGdDVnbVFGQ214eGFXOWlOWVZBNW9C?=
+ =?utf-8?B?MFoveDJWcDAzMlZqK29yenFEVlBYc2lJOUhpajNvV29oL3BtM1hnYWpicE8z?=
+ =?utf-8?B?UnBIZ1gxTitTb05lZFBDa2lRSmpzb2N3eHlWN2liT3BrV3V6VEt6OHhjZWlV?=
+ =?utf-8?B?R2psaGpXME0vTW1yZEphS1NJVVFFY1dLbVdrd2FkQWZyS1Q5akczZTI3d3E3?=
+ =?utf-8?B?UVJvYzdCS0hFTjQxbVhTNkkzK0F2SGxsZTl3NmE3NFJJcSsrVGRsN3VmRDIw?=
+ =?utf-8?B?QXloTlh1OWRvenRTdTJ5UEZaR0JPa3NjSTNpNDhOVlRjbkpiV280bGxVRVB1?=
+ =?utf-8?B?Q1U1Z2JiazJNdVNqL09oT2FVNmt4a2l3THF0VExjcnhJT3ZKcFFGS0ZDSU4z?=
+ =?utf-8?B?V2JCU1pkaGR3aTE2aEkwWDdLbThaOVpSWGhERnlIV0hVd1pmRnpTSGNhS29I?=
+ =?utf-8?B?VEQxOUN4RllGSDg4dWNJNlMxUGRkWXVjYW14UGRoYURtZXl0MmVRNU1kQnBI?=
+ =?utf-8?B?WEFnTERoS3EzbE84Q2xxbFFPTVNUcnhEcWoxSTI2SlFqa1dSakswRG9INURW?=
+ =?utf-8?B?dHM0eE9HTzdycFpnTGVKUFd6NEFNUmZtSXppMDRCVlJFNE1mRSsxOFNNL1Q0?=
+ =?utf-8?B?SlBsWEVLN3E1WGN2TmoybWd1S2k1S1VEem1SYW1OWDdUZ0FPVnhSazNpQy9i?=
+ =?utf-8?B?MXF3TGF5TGlMMC9rQ1J6U2tFR21GcGF4YURTeWVaWHNSNXVxNkRtZVdCY2xl?=
+ =?utf-8?B?UTJuTDNRWFJoY1lFc2psQWpSZUYvNVRpNllXUE94RUVRTWdSNmZEVnUvSjFl?=
+ =?utf-8?B?V29ZbGt1a3ZlOHR1WnFGbFFGSHRBOUw1eFZOS0JmSUJRT3NKbi9jNG1hWGVs?=
+ =?utf-8?B?NmFIaG1rUEtOa0xVWnJoN1djUzRpQjROTlRtaFhPdUtoOU1XOG1rMFcrdDRq?=
+ =?utf-8?B?dWFjR3NtQTBvaFBCaWFRTHB0eVFpK1VBbDkxUGNYOFljdEg5eVdJMTFiaGFP?=
+ =?utf-8?B?aWlreVFFVVNLTVoyYW5pL1FrK2VzbllvRzg0RENpRng4TjlTT25WZG9DSU8x?=
+ =?utf-8?B?bjZ0RlhnSDlWOUgwRlluM3I3Q2Y4cWlScjA4NTJ1TFBqcWRicytDbkJVTDFt?=
+ =?utf-8?Q?GKn29gjKXk4kdh84=3D?=
+X-Exchange-RoutingPolicyChecked: uolWXyrSDqrcIfE1z+TDWMcQTe2tUtbmFUsqEwIdeWKzuo9NmAHAGNMW/BnxuDodUmcNYRpV7ee+B14j0sN6ktBAM/hqRmJa3Hp8NgCM0nU5K6SqjJqtsUA32HTD0exi5IqPkrZa4yjJad8Wu1fCpemi4P8guhi7LncQCWmA2GeBPUTqtat8VnLRyyse6XWE/ZobNmRIxdEwlastPT+I7fpZzaqWEeBqCIFyfRyTfCe+VSfRoE5A3xSGEDxyMxo5af5HrDhITjVevmCzB+GheCdlhX4iZMtApA3rklpxRy0tL19GkaQIEgbHXOR/xzvxBpncaGLr60wCTEz0y9DBxg==
+X-MS-Exchange-CrossTenant-Network-Message-Id: 412bab10-63bd-4e77-7b06-08deaa8de773
+X-MS-Exchange-CrossTenant-AuthSource: IA1PR11MB7198.namprd11.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 May 2026 10:05:53.8432
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 May 2026 10:05:58.5142
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
+X-MS-Exchange-CrossTenant-Id: 46c98d88-e344-4ed4-8496-4ed7712e255d
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: sp3hOfxwbRS87L0nwgVFZOL95U+C9sOtEs1wM7zzvHB7nEV59XOQhYE8iXXWGpnvbSjGQkvDLvNG8B8RV55uaQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DB9PR04MB8363
+X-MS-Exchange-CrossTenant-UserPrincipalName: U0X3mtqxpLcSjTUA0Vem9/v7P0V2asxznymotR62P4bI2r9FyPSA3GdFcCvklh+iOk8DCdAe6YFVdC70RIHu7g==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN7PR11MB8041
+X-OriginatorOrg: intel.com
 
-This is practically a full revert of commit
-7a4db656a635 ("PCI: dra7xx: Create functional dependency between PCIe and PHY")
-and a partial revert of the device link pieces from commits
-dfb80534692d ("PCI: cadence: Add generic PHY support to host and EP drivers")
-49229238ab47 ("PCI: keystone: Cleanup PHY handling")
+On 05/05/2026 13:00, Adrian Hunter wrote:
+> On 09/04/2026 14:44, Abhinaba Rakshit wrote:
+>> MMC controller lacks a clock scaling mechanism, unlike the UFS
+>> controller. By default, the MMC controller is set to TURBO mode
+>> during probe, but the ICE clock remains at XO frequency,
+>> leading to read/write performance degradation on eMMC.
+>>
+>> To address this, set the ICE clock to TURBO during sdhci_msm_ice_init
+>> to align it with the controller clock. This ensures consistent
+>> performance and avoids mismatches between the controller
+>> and ICE clock frequencies.
+>>
+>> For platforms where ICE is represented as a separate device,
+>> use the OPP framework to vote for TURBO mode, maintaining
+>> proper voltage and power domain constraints.
+>>
+>> Reviewed-by: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
+>> Signed-off-by: Abhinaba Rakshit <abhinaba.rakshit@oss.qualcomm.com>
+> 
+> Reviewed-by: Adrian Hunter <adrian.hunter@intel.com>
 
-The trouble with these commits is that they dereference fields inside
-struct phy from a consumer driver, which will become no longer possible.
+Or rather:
 
-Since commit 987351e1ea77 ("phy: core: Add consumer device link
-support") from 2019, the PHY core also adds a device link to order PHY
-provider and consumer suspend/resume operations. All reverted commits
-are from 2017-2018, and what they do should actually be redundant now.
+Acked-by: Adrian Hunter <adrian.hunter@intel.com>
 
-Signed-off-by: Vladimir Oltean <vladimir.oltean@nxp.com>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
----
-Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>
-Cc: "Krzysztof Wilczyński" <kwilczynski@kernel.org>
-Cc: Manivannan Sadhasivam <mani@kernel.org>
-Cc: Rob Herring <robh@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Vignesh Raghavendra <vigneshr@ti.com>
-Cc: Siddharth Vadapalli <s-vadapalli@ti.com>
-
-v7->v8: only context change - "return 0" became "return ret" for
-        cdns_plat_pcie_probe()
-v6->v7: none
-v5->v6: collect tag from Manivannan Sadhasivam
-v3->v5: none
-v2->v3:
-- remove dangling set but unused phy_count local variable in
-  cdns_plat_pcie_probe()
-v1->v2:
-- fully remove struct device link **link from struct cdns_pcie and from
-  cdns_plat_pcie_probe() error path
-- collect tag from Bjorn Helgaas
-- adjust commit title
----
- .../controller/cadence/pcie-cadence-plat.c    |  4 ---
- drivers/pci/controller/cadence/pcie-cadence.c | 16 +---------
- drivers/pci/controller/cadence/pcie-cadence.h |  2 --
- drivers/pci/controller/dwc/pci-dra7xx.c       | 16 ----------
- drivers/pci/controller/dwc/pci-keystone.c     | 31 +++----------------
- 5 files changed, 5 insertions(+), 64 deletions(-)
-
-diff --git a/drivers/pci/controller/cadence/pcie-cadence-plat.c b/drivers/pci/controller/cadence/pcie-cadence-plat.c
-index 8b12a46b5601..6fd16e09e244 100644
---- a/drivers/pci/controller/cadence/pcie-cadence-plat.c
-+++ b/drivers/pci/controller/cadence/pcie-cadence-plat.c
-@@ -41,7 +41,6 @@ static int cdns_plat_pcie_probe(struct platform_device *pdev)
- 	struct pci_host_bridge *bridge;
- 	struct cdns_pcie_ep *ep;
- 	struct cdns_pcie_rc *rc;
--	int phy_count;
- 	bool is_rc;
- 	int ret;
- 
-@@ -122,9 +121,6 @@ static int cdns_plat_pcie_probe(struct platform_device *pdev)
- 	pm_runtime_put_sync(dev);
- 	pm_runtime_disable(dev);
- 	cdns_pcie_disable_phy(cdns_plat_pcie->pcie);
--	phy_count = cdns_plat_pcie->pcie->phy_count;
--	while (phy_count--)
--		device_link_del(cdns_plat_pcie->pcie->link[phy_count]);
- 
- 	return ret;
- }
-diff --git a/drivers/pci/controller/cadence/pcie-cadence.c b/drivers/pci/controller/cadence/pcie-cadence.c
-index a1eada56edba..0ac980249941 100644
---- a/drivers/pci/controller/cadence/pcie-cadence.c
-+++ b/drivers/pci/controller/cadence/pcie-cadence.c
-@@ -222,7 +222,6 @@ int cdns_pcie_init_phy(struct device *dev, struct cdns_pcie *pcie)
- 	struct device_node *np = dev->of_node;
- 	int phy_count;
- 	struct phy **phy;
--	struct device_link **link;
- 	int i;
- 	int ret;
- 	const char *name;
-@@ -238,10 +237,6 @@ int cdns_pcie_init_phy(struct device *dev, struct cdns_pcie *pcie)
- 	if (!phy)
- 		return -ENOMEM;
- 
--	link = devm_kcalloc(dev, phy_count, sizeof(*link), GFP_KERNEL);
--	if (!link)
--		return -ENOMEM;
--
- 	for (i = 0; i < phy_count; i++) {
- 		of_property_read_string_index(np, "phy-names", i, &name);
- 		phy[i] = devm_phy_get(dev, name);
-@@ -249,17 +244,10 @@ int cdns_pcie_init_phy(struct device *dev, struct cdns_pcie *pcie)
- 			ret = PTR_ERR(phy[i]);
- 			goto err_phy;
- 		}
--		link[i] = device_link_add(dev, &phy[i]->dev, DL_FLAG_STATELESS);
--		if (!link[i]) {
--			devm_phy_put(dev, phy[i]);
--			ret = -EINVAL;
--			goto err_phy;
--		}
- 	}
- 
- 	pcie->phy_count = phy_count;
- 	pcie->phy = phy;
--	pcie->link = link;
- 
- 	ret =  cdns_pcie_enable_phy(pcie);
- 	if (ret)
-@@ -268,10 +256,8 @@ int cdns_pcie_init_phy(struct device *dev, struct cdns_pcie *pcie)
- 	return 0;
- 
- err_phy:
--	while (--i >= 0) {
--		device_link_del(link[i]);
-+	while (--i >= 0)
- 		devm_phy_put(dev, phy[i]);
--	}
- 
- 	return ret;
- }
-diff --git a/drivers/pci/controller/cadence/pcie-cadence.h b/drivers/pci/controller/cadence/pcie-cadence.h
-index 574e9cf4d003..232b504b5cf9 100644
---- a/drivers/pci/controller/cadence/pcie-cadence.h
-+++ b/drivers/pci/controller/cadence/pcie-cadence.h
-@@ -82,7 +82,6 @@ struct cdns_plat_pcie_of_data {
-  * @is_rc: tell whether the PCIe controller mode is Root Complex or Endpoint.
-  * @phy_count: number of supported PHY devices
-  * @phy: list of pointers to specific PHY control blocks
-- * @link: list of pointers to corresponding device link representations
-  * @ops: Platform-specific ops to control various inputs from Cadence PCIe
-  *       wrapper
-  * @cdns_pcie_reg_offsets: Register bank offsets for different SoC
-@@ -95,7 +94,6 @@ struct cdns_pcie {
- 	bool			             is_rc;
- 	int			             phy_count;
- 	struct phy		             **phy;
--	struct device_link	             **link;
- 	const  struct cdns_pcie_ops          *ops;
- 	const  struct cdns_plat_pcie_of_data *cdns_pcie_reg_offsets;
- };
-diff --git a/drivers/pci/controller/dwc/pci-dra7xx.c b/drivers/pci/controller/dwc/pci-dra7xx.c
-index cd904659c321..9c1aef4d0bd1 100644
---- a/drivers/pci/controller/dwc/pci-dra7xx.c
-+++ b/drivers/pci/controller/dwc/pci-dra7xx.c
-@@ -9,7 +9,6 @@
- 
- #include <linux/clk.h>
- #include <linux/delay.h>
--#include <linux/device.h>
- #include <linux/err.h>
- #include <linux/interrupt.h>
- #include <linux/irq.h>
-@@ -679,7 +678,6 @@ static int dra7xx_pcie_probe(struct platform_device *pdev)
- 	int i;
- 	int phy_count;
- 	struct phy **phy;
--	struct device_link **link;
- 	void __iomem *base;
- 	struct dw_pcie *pci;
- 	struct dra7xx_pcie *dra7xx;
-@@ -727,10 +725,6 @@ static int dra7xx_pcie_probe(struct platform_device *pdev)
- 	if (!phy)
- 		return -ENOMEM;
- 
--	link = devm_kcalloc(dev, phy_count, sizeof(*link), GFP_KERNEL);
--	if (!link)
--		return -ENOMEM;
--
- 	dra7xx->clk = devm_clk_get_optional(dev, NULL);
- 	if (IS_ERR(dra7xx->clk))
- 		return dev_err_probe(dev, PTR_ERR(dra7xx->clk),
-@@ -745,12 +739,6 @@ static int dra7xx_pcie_probe(struct platform_device *pdev)
- 		phy[i] = devm_phy_get(dev, name);
- 		if (IS_ERR(phy[i]))
- 			return PTR_ERR(phy[i]);
--
--		link[i] = device_link_add(dev, &phy[i]->dev, DL_FLAG_STATELESS);
--		if (!link[i]) {
--			ret = -EINVAL;
--			goto err_link;
--		}
- 	}
- 
- 	dra7xx->base = base;
-@@ -852,10 +840,6 @@ static int dra7xx_pcie_probe(struct platform_device *pdev)
- 	pm_runtime_disable(dev);
- 	dra7xx_pcie_disable_phy(dra7xx);
- 
--err_link:
--	while (--i >= 0)
--		device_link_del(link[i]);
--
- 	return ret;
- }
- 
-diff --git a/drivers/pci/controller/dwc/pci-keystone.c b/drivers/pci/controller/dwc/pci-keystone.c
-index fe4836925c4e..cab9fad212ad 100644
---- a/drivers/pci/controller/dwc/pci-keystone.c
-+++ b/drivers/pci/controller/dwc/pci-keystone.c
-@@ -130,7 +130,6 @@ struct keystone_pcie {
- 	int			num_lanes;
- 	u32			num_viewport;
- 	struct phy		**phy;
--	struct device_link	**link;
- 	struct			device_node *msi_intc_np;
- 	struct irq_domain	*intx_irq_domain;
- 	struct device_node	*np;
-@@ -1130,7 +1129,6 @@ static int ks_pcie_probe(struct platform_device *pdev)
- 	enum dw_pcie_device_mode mode;
- 	struct dw_pcie *pci;
- 	struct keystone_pcie *ks_pcie;
--	struct device_link **link;
- 	struct gpio_desc *gpiod;
- 	struct resource *res;
- 	void __iomem *base;
-@@ -1201,31 +1199,17 @@ static int ks_pcie_probe(struct platform_device *pdev)
- 	if (!phy)
- 		return -ENOMEM;
- 
--	link = devm_kcalloc(dev, num_lanes, sizeof(*link), GFP_KERNEL);
--	if (!link)
--		return -ENOMEM;
--
- 	for (i = 0; i < num_lanes; i++) {
- 		snprintf(name, sizeof(name), "pcie-phy%d", i);
- 		phy[i] = devm_phy_optional_get(dev, name);
- 		if (IS_ERR(phy[i])) {
- 			ret = PTR_ERR(phy[i]);
--			goto err_link;
--		}
--
--		if (!phy[i])
--			continue;
--
--		link[i] = device_link_add(dev, &phy[i]->dev, DL_FLAG_STATELESS);
--		if (!link[i]) {
--			ret = -EINVAL;
--			goto err_link;
-+			goto err;
- 		}
- 	}
- 
- 	ks_pcie->np = np;
- 	ks_pcie->pci = pci;
--	ks_pcie->link = link;
- 	ks_pcie->num_lanes = num_lanes;
- 	ks_pcie->phy = phy;
- 
-@@ -1235,7 +1219,7 @@ static int ks_pcie_probe(struct platform_device *pdev)
- 		ret = PTR_ERR(gpiod);
- 		if (ret != -EPROBE_DEFER)
- 			dev_err(dev, "Failed to get reset GPIO\n");
--		goto err_link;
-+		goto err;
- 	}
- 
- 	/* Obtain references to the PHYs */
-@@ -1250,7 +1234,7 @@ static int ks_pcie_probe(struct platform_device *pdev)
- 
- 	if (ret) {
- 		dev_err(dev, "failed to enable phy\n");
--		goto err_link;
-+		goto err;
- 	}
- 
- 	platform_set_drvdata(pdev, ks_pcie);
-@@ -1337,25 +1321,18 @@ static int ks_pcie_probe(struct platform_device *pdev)
- 	pm_runtime_disable(dev);
- 	ks_pcie_disable_phy(ks_pcie);
- 
--err_link:
--	while (--i >= 0 && link[i])
--		device_link_del(link[i]);
--
-+err:
- 	return ret;
- }
- 
- static void ks_pcie_remove(struct platform_device *pdev)
- {
- 	struct keystone_pcie *ks_pcie = platform_get_drvdata(pdev);
--	struct device_link **link = ks_pcie->link;
--	int num_lanes = ks_pcie->num_lanes;
- 	struct device *dev = &pdev->dev;
- 
- 	pm_runtime_put(dev);
- 	pm_runtime_disable(dev);
- 	ks_pcie_disable_phy(ks_pcie);
--	while (num_lanes--)
--		device_link_del(link[num_lanes]);
- }
- 
- static struct platform_driver ks_pcie_driver = {
--- 
-2.34.1
+> 
+>> ---
+>>  drivers/mmc/host/sdhci-msm.c | 24 ++++++++++++++++++++++++
+>>  1 file changed, 24 insertions(+)
+>>
+>> diff --git a/drivers/mmc/host/sdhci-msm.c b/drivers/mmc/host/sdhci-msm.c
+>> index da356627d9de6a11ed5779bf057fa8eb23c38bc0..32e3f37fe425f66c00290a373e06e8ab6257824e 100644
+>> --- a/drivers/mmc/host/sdhci-msm.c
+>> +++ b/drivers/mmc/host/sdhci-msm.c
+>> @@ -1901,6 +1901,8 @@ static void sdhci_msm_set_clock(struct sdhci_host *host, unsigned int clock)
+>>  #ifdef CONFIG_MMC_CRYPTO
+>>  
+>>  static const struct blk_crypto_ll_ops sdhci_msm_crypto_ops; /* forward decl */
+>> +static int sdhci_msm_ice_scale_clk(struct sdhci_msm_host *msm_host, unsigned long target_freq,
+>> +				   bool round_ceil); /* forward decl */
+>>  
+>>  static int sdhci_msm_ice_init(struct sdhci_msm_host *msm_host,
+>>  			      struct cqhci_host *cq_host)
+>> @@ -1964,6 +1966,11 @@ static int sdhci_msm_ice_init(struct sdhci_msm_host *msm_host,
+>>  	}
+>>  
+>>  	mmc->caps2 |= MMC_CAP2_CRYPTO;
+>> +
+>> +	err = sdhci_msm_ice_scale_clk(msm_host, INT_MAX, false);
+>> +	if (err && err != -EOPNOTSUPP)
+>> +		dev_warn(dev, "Unable to boost ICE clock to TURBO\n");
+>> +
+>>  	return 0;
+>>  }
+>>  
+>> @@ -1989,6 +1996,16 @@ static int sdhci_msm_ice_suspend(struct sdhci_msm_host *msm_host)
+>>  	return 0;
+>>  }
+>>  
+>> +static int sdhci_msm_ice_scale_clk(struct sdhci_msm_host *msm_host,
+>> +				   unsigned long target_freq,
+>> +				   bool round_ceil)
+>> +{
+>> +	if (msm_host->mmc->caps2 & MMC_CAP2_CRYPTO)
+>> +		return qcom_ice_scale_clk(msm_host->ice, target_freq, round_ceil);
+>> +
+>> +	return 0;
+>> +}
+>> +
+>>  static inline struct sdhci_msm_host *
+>>  sdhci_msm_host_from_crypto_profile(struct blk_crypto_profile *profile)
+>>  {
+>> @@ -2114,6 +2131,13 @@ sdhci_msm_ice_suspend(struct sdhci_msm_host *msm_host)
+>>  {
+>>  	return 0;
+>>  }
+>> +
+>> +static inline int
+>> +sdhci_msm_ice_scale_clk(struct sdhci_msm_host *msm_host, unsigned long target_freq,
+>> +			bool round_ceil)
+>> +{
+>> +	return 0;
+>> +}
+>>  #endif /* !CONFIG_MMC_CRYPTO */
+>>  
+>>  /*****************************************************************************\
+>>
+> 
 
