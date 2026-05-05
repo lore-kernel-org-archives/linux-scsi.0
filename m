@@ -1,213 +1,318 @@
-Received: from LO0P265CU003.outbound.protection.outlook.com (mail-uksouthazon11022111.outbound.protection.outlook.com [52.101.96.111])
+Received: from lamorak.hansenpartnership.com (lamorak.hansenpartnership.com [198.37.111.173])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3AC9333B96B;
-	Tue,  5 May 2026 20:55:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.96.111
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778014553; cv=fail; b=u2pZk4qgQemc+pn0jm7zqH9Xks47nxt1WmCgTGdb86b+ehy2I/CNa6SnBmGKvw79CxUH5OlT3JFN+sCi6JhYUHvPMEW021flInIISHhWLdTpqJY19z6ihC/45kyLA4AV5v374H1eFYF3PhP4hXMp/N689OedHtdWlcG45HT0HYM=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778014553; c=relaxed/simple;
-	bh=41fFYxnLgZ1eeOZDJjYNGpWdDN1gJdyw/DHC3XV3OcM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
-	 Content-Disposition:In-Reply-To:MIME-Version; b=ud5uUrHC3d2TrdBNTBBLtCygRYQ0oZhcrKmS8OFX4gOekaYJ0axpCnfLo9Vi0o0ndoUF+jT1RoOGC50QaxcxLNyxwG2LI0q8suqHS343KsGw2kvgSixOtyZGIlZI9LXAWmZieo24SAYjprxJSc9NDFShZI+LfddyD7pr9sDzMKc=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=atomlin.com; spf=pass smtp.mailfrom=atomlin.com; arc=fail smtp.client-ip=52.101.96.111
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=atomlin.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=atomlin.com
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=VsMZ6aOOVo21kopy+9k9OVXyNRhtUKSlVDNmPLkDVai38+2Aom7+jz46jQJI/CueqOvE1ihNbax8ZoXBpPhAbaxAIjR+huSqR/ZBfLjCU/+nkOst7dK2Knfsw6e9Q/MtO/Fx3XAJeCW0mGu/S5DSgwEicKVYGEFMuoML8ag5l4t/t1woS8Xd41mURU37eqptxl88Yfz3Ob57HJ+23lnXo+xmMejde9dEeWKmVPhSJ+uuu/ZCiOe/JXrUWoH351xtYJwRQMwkClJMGbBvZWwHw/VMKSIddf3jOhVmPW7TbroLFboJ0Ifwigx6PVeZo26qArlnPMJLFWsJipV4uA9JGw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=41fFYxnLgZ1eeOZDJjYNGpWdDN1gJdyw/DHC3XV3OcM=;
- b=tnLp4qxXZ4Y6AZrIXovBzioSZOr6eUY6iFtxolRlmHOGq0w5+9UnfNVNRuQWOSh86+tLS5A2HJyz/y4SOJIzZ6Ggpk9zQ5a7IuWC8fuH82ofRF+SXzVz7YNFFErJAONySBVxbiRDPE+WKRCs6Qp0kpiqo3xE9duZT3xxaPybDLuurvw35rlxWtZj/7QASmlMxD3aZYTeZWpWqqmgzmDpmEeDqTGU/rCUCzDgNixheirDmhGDIKAcgvqe5dWSuoWCFNgB2kU3GaphZB6TbksSmgixA/OG8VLekwmGwAE2eVWgQZ/6UvceHxSZQ9EoOTguIA9hH0Iu1l2eXbFLyN4XbA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=atomlin.com; dmarc=pass action=none header.from=atomlin.com;
- dkim=pass header.d=atomlin.com; arc=none
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=atomlin.com;
-Received: from CWLP123MB3523.GBRP123.PROD.OUTLOOK.COM (2603:10a6:400:70::10)
- by LO4P123MB6927.GBRP123.PROD.OUTLOOK.COM (2603:10a6:600:349::8) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9891.15; Tue, 5 May
- 2026 20:55:47 +0000
-Received: from CWLP123MB3523.GBRP123.PROD.OUTLOOK.COM
- ([fe80::de8e:2e4f:6c6:f3bf]) by CWLP123MB3523.GBRP123.PROD.OUTLOOK.COM
- ([fe80::de8e:2e4f:6c6:f3bf%2]) with mapi id 15.20.9846.025; Tue, 5 May 2026
- 20:55:47 +0000
-Date: Tue, 5 May 2026 16:55:44 -0400
-From: Aaron Tomlin <atomlin@atomlin.com>
-To: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Cc: axboe@kernel.dk, kbusch@kernel.org, hch@lst.de, sagi@grimberg.me, 
-	mst@redhat.com, aacraid@microsemi.com, James.Bottomley@hansenpartnership.com, 
-	martin.petersen@oracle.com, liyihang9@h-partners.com, kashyap.desai@broadcom.com, 
-	sumit.saxena@broadcom.com, shivasharan.srikanteshwara@broadcom.com, 
-	chandrakanth.patil@broadcom.com, sathya.prakash@broadcom.com, sreekanth.reddy@broadcom.com, 
-	suganath-prabu.subramani@broadcom.com, ranjan.kumar@broadcom.com, jinpu.wang@cloud.ionos.com, 
-	tglx@kernel.org, mingo@redhat.com, peterz@infradead.org, juri.lelli@redhat.com, 
-	vincent.guittot@linaro.org, akpm@linux-foundation.org, maz@kernel.org, ruanjinjie@huawei.com, 
-	yphbchou0911@gmail.com, wagi@kernel.org, frederic@kernel.org, longman@redhat.com, 
-	chenridong@huawei.com, hare@suse.de, kch@nvidia.com, ming.lei@redhat.com, 
-	tom.leiming@gmail.com, steve@abita.co, sean@ashe.io, chjohnst@gmail.com, neelx@suse.com, 
-	mproche@gmail.com, nick.lange@gmail.com, marco.crivellari@suse.com, 
-	linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, virtualization@lists.linux.dev, 
-	linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org, megaraidlinux.pdl@broadcom.com, 
-	mpi3mr-linuxdrv.pdl@broadcom.com, MPT-FusionLinux.pdl@broadcom.com
-Subject: Re: [PATCH v12 05/13] blk-mq: add
- blk_mq_{online|possible}_queue_affinity
-Message-ID: <upzho73gttte7bb2lggvrugugsypfdoyjrfhpwfs6sthpfvu3p@b7s42t53qtzt>
-References: <20260422185215.100929-1-atomlin@atomlin.com>
- <20260422185215.100929-6-atomlin@atomlin.com>
- <20260427153416.MeVS8yxF@linutronix.de>
-Content-Type: multipart/signed; micalg=pgp-sha512;
-	protocol="application/pgp-signature"; boundary="qbww2g5iwecbyeqm"
-Content-Disposition: inline
-In-Reply-To: <20260427153416.MeVS8yxF@linutronix.de>
-X-ClientProxiedBy: MN2PR18CA0029.namprd18.prod.outlook.com
- (2603:10b6:208:23c::34) To CWLP123MB3523.GBRP123.PROD.OUTLOOK.COM
- (2603:10a6:400:70::10)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1BBE3365A1B;
+	Tue,  5 May 2026 21:23:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.37.111.173
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1778016239; cv=none; b=sp05e35zR5PEGjsLlc4Xr9E01v7iy0Ub0tysO8vvJiiXUhbOhDShMJ4NwEt77re3iot9dP/Srjdh1zIGakxd1s+QPg7OUcd9VjaQgj62XEScvKCGsVF07zDH0aqlstdRjkrAbHQl9DgZCaY3RcLedQuMHavhVBU07mSoFnivgHA=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1778016239; c=relaxed/simple;
+	bh=QL2yQiS4cI2tISEaNRyqIHZzbrOdOw9sEprE9CvXUGo=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=jIxr9SU41jx2flLQJ+RZzuwHcf5II+7yg+PdidqPQfk7BlzkOPIxqPWOiF35AgTWpqvt+WnEOX8lvTL2QYEMB2zytw7x9P8OU4pupaqL+zwDYk4/W7M/2yFpbunwGJDHKkIE2IMCvHhaKGOLNSIQkEYzADj5u9iSUcpaSxbSm7E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com; spf=pass smtp.mailfrom=HansenPartnership.com; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=I4+heM1/; arc=none smtp.client-ip=198.37.111.173
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=HansenPartnership.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="I4+heM1/"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+	d=hansenpartnership.com; s=20151216; t=1778016235;
+	bh=QL2yQiS4cI2tISEaNRyqIHZzbrOdOw9sEprE9CvXUGo=;
+	h=From:To:Subject:Date:Message-ID:From;
+	b=I4+heM1/dte2cMS7FbVRQrOvMv2UX2y3rNz7LZ+XJrg6+w+ZhpP/33B83QjNBJqCL
+	 s1i/QyWO59qFCl9MjFbNnDQIp0G+L5QBDuF67AvVa/MaVptTNDQnUZcWMT+gS25QCz
+	 q4UAO1+7a12CwwzqXrnHzGhh4cIm+2FFSrN0L7XY=
+Received: from lingrow.int.hansenpartnership.com (unknown [153.66.160.227])
+	by lamorak.hansenpartnership.com (Postfix) with ESMTP id B8A631C0340;
+	Tue, 05 May 2026 17:23:55 -0400 (EDT)
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+To: Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>
+Subject: [GIT PULL] SCSI fixes for 7.1-rc2+
+Date: Tue,  5 May 2026 17:23:49 -0400
+Message-ID: <20260505212349.5828-1-James.Bottomley@HansenPartnership.com>
+X-Mailer: git-send-email 2.51.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CWLP123MB3523:EE_|LO4P123MB6927:EE_
-X-MS-Office365-Filtering-Correlation-Id: 5dea50f2-0fa9-4d60-42d1-08deaae8aedd
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|7416014|376014|366016|18002099003|22082099003|56012099003;
-X-Microsoft-Antispam-Message-Info:
-	LATExl51SG5MNplBOPyW0huwjzALO6QAlOl2GLpwt+7F3tJaMQKKtLbX5JlWzg9YJRqVzpzmbrCUwxYjSEv/7xTxuEf8l/qCctZDdmKAZ0DmFt6rm+UGFD1DLmk5NODqFuK6/1lpXubfVUuOaKfiDDL9m0U//EJrwz4Z0+w0XiZcgxok5K9AO58GmlFW7Tj1pNLeg8+Tz5hyRouxOfaPjyO1z6BXQBPYyjFpvmc8bZUODwWHIwzKDmU5z1byzL8Hrt+ssftD3mRvIWISegxNLbnTieDJ5uPp7zxNBDswMygC3fSAf7tPLhh4lq9GywcghBmz4V8LUI2JNSBDuSveFECb7kM0OlUUYEvg6+GPAtbnlwqI4TPoNM9m8ZLWbT+najV760JxRtv756QoNFFtCOKkTBRHL/NJVasxevHjpMgsDviJohjB9HYmXoeZbbKlpZH528+IUyMy5bqkNwvdKhfNOh3ZZDWZteVOeWeTQHivN93u2KI+OaAVdgI9FbfMxTM9YkjFvBpZs/xN/P+AQB5ZEI1lHR5blKfRmEf9RTD5+qy42Ch2YlRtMS8JQlU95S2+b+n6LiH539fOs61NZYjoghaqYogvz7cObzuPNndFVpQQuUJMe5tCISg2Xxzbu/3EyhmZUyAEUELyqsmFt5yt0jM2yhJiHHw/nyQEji//J4LI3TMaf+HqTDB5k76xKKIQwsBImQ89ZDeuP6gzfg==
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CWLP123MB3523.GBRP123.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(7416014)(376014)(366016)(18002099003)(22082099003)(56012099003);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?dmN4TmxtVWR5Ry9CY0tabGJQQ2FPcXlwRkZCTCtEOEJEekJRVVQ2YTNtWTBJ?=
- =?utf-8?B?blpiVzViOWN6WU9KMVFjZW43dUpDYlhFN2dsNlZaU0ZuNm1MdVZkbXd6cHd6?=
- =?utf-8?B?enpMMU9DazA3VXBSQjlxWUtmdHNDcHlrcTIrbHZHaGlkRXhHNWh6ZnRFc0U0?=
- =?utf-8?B?NmpUQW9iL1RsUnl2cm5uRWd2OTd2MnF4VTJmYjRYMi9TQktXVURyMnRtWVlS?=
- =?utf-8?B?S2lydnRlZ1BabG9rZ0Q1eDEwaWRzVmcyTDZ4SlI4bVM3eDZ5cjQ2RzA2WEdT?=
- =?utf-8?B?VWdvSXB6N0cxb2ZENmNVa3B2M3JJanZMWm81R2gxWG0zS0ZhYkE0MDFkTHFj?=
- =?utf-8?B?b1JsYkRjc2ZObDh0NHdyNS83TDBsOEUxMHR5VXJNVHZaQkRHSGZMRjNtNHVh?=
- =?utf-8?B?amlKWWJ5NDh5VGZPQkNWbUdRaUN5L2ZBUGlUak5ZZjFYSTJscnBjQ0V3QU10?=
- =?utf-8?B?K00xL2xmd3laWWg3R1pFNWdhT2JpdTNIdVRMSFFDSHlQajRaM2RMQlBudmlN?=
- =?utf-8?B?WDZudHk4NkFPU1R3UE0zZithWklEZXlqcEE3c01POGxEQUtxblNpUTdnTk9h?=
- =?utf-8?B?RHp2SGRKMmhNQ2krWXhsL20vT2RkT0NERzJPUVhSZzQvTDN1UFFtYUE5YjJX?=
- =?utf-8?B?Wk1MbXV0RVhwTE5scFNrWGxvL0xpRWxJMW93T1ZnVUtQMWVyRDhiYmNGRThH?=
- =?utf-8?B?MlpiRVJLejZXbGpCM2t1WXI3eUpMOGdVODJOTFdwQWF3VmpPWFcrNmpQdmVl?=
- =?utf-8?B?Y3NjTGxrcU54MmZFbktqNnVPZGtnSEZ5MWRiSW5UNGVscEJoMUxPV3pjSlMz?=
- =?utf-8?B?TUZCc2hXVUg2enRGR0pad1lJTmJyS2ZMMkRHaVdlRWFsMVZ4QXBLRGlIZHRM?=
- =?utf-8?B?U3JpWFBGRjlFTlBNenJHbGhMTVNUeHBTcXBQcXp6L0RtRVFjNFZwRUVlUDZF?=
- =?utf-8?B?UFFTWG5JWWFkZTlSekJaZnk5Yk1FaXNJeVZDZTJURkxFdXB5eFA5ZzNPQXZI?=
- =?utf-8?B?M1AwNjlZQzQzNWd2aG85Z1RISDlFNnE4Q2w4WlA4MGpiV0MrQXI5bXUxQm5U?=
- =?utf-8?B?QUpVYUhyR2hDUVBTRHYvV09jd2RVUG9SNDBOMVJVVUFrZzllZVVVdEEvcnhK?=
- =?utf-8?B?MmRUaXY5Rk9RWWtnWHY1djVUZ214Q3c1SlIvN1NnU0piSnJsUmZkNVNOamFU?=
- =?utf-8?B?QzAyWFlnRlcxSVNsc0JjTDFzbUVBS29tL1ErUVArZEV5ODM4SXNxem5vUWNX?=
- =?utf-8?B?MGZTRUM5UnpUUEV2MEQrUmplRy93dGgyWGxER3VSc2EvNTRzNmlySi8wTmtB?=
- =?utf-8?B?MllMV2FVMmlVaytWQnZ1aXplemxneDBWWW5KV0g3b1VSYkhZUGFEZGpPTjRN?=
- =?utf-8?B?NXpHUmNzQ3pFOUZINzlpWUJCRUJoSU8wQ1F0RkZ3aWNaTTJKTi8yNmZYSFRE?=
- =?utf-8?B?RURuNjFQa3FOM0t2Mk14QmY0TElUQm5jMGNOOEJUOTY2bUdPQk9hOEZsbGY3?=
- =?utf-8?B?Ukl1TU03bXFHWSsrb3FScDMzY091Q09yV3pSekc2YVlQeE0rb01kNXNWNjE5?=
- =?utf-8?B?WGYrMmpvRDRXRVpqeE8yazZPZlE5TjBpVHY2MWNxa01PYU0xTkd1cERKY2Fz?=
- =?utf-8?B?VTl4c2hCQjI3REM0L3YyelIvNEFHQldsTkFDNTJSUk9aekNxYStUTWowbnZ4?=
- =?utf-8?B?dHZ3MFJVbGdhV3hiRlZ4cmFvMm56c1JlSVJmbFh2SnhiVVV2QVgxeVJaQWtX?=
- =?utf-8?B?SHhLVzRJcEZ4THRQVXhuS05mSFZ6cC9XOUNwUldYQzBDU0V0bUdBSG1sRmF0?=
- =?utf-8?B?SzE2OEVJK0N0cEhFdGdVcW5hWlg3VE83cGdNNy9pa2FGQVdKOUpMU3RXUG4v?=
- =?utf-8?B?amJrT0lBYjZxajFoamRuNzNPZ1pVOVJVNkpGS1c2T2lobUgyakhFd1pqb0hj?=
- =?utf-8?B?ZG9EQmVJNkZUbXFkeXQrcXFsMHpjMUcxVWRvdnQrSnpzUGlwRTRCSkcyWGpE?=
- =?utf-8?B?WFBGOFFFQmJOcE03VktTR3hyNHhqbVhNL0t1WC9xSDRhR1A2clhxdzExMTkz?=
- =?utf-8?B?Y3YzdG9UalFWeUJVNnRjUytFbVhVYTFCeEhncnpuWEI5eVducGZpNENCYmhK?=
- =?utf-8?B?b0NoMmpadzR1azUvRmVFZ21ubi9XT3ZvME5USnlpd0dYZldaNFBmRktCOEJl?=
- =?utf-8?B?QTVzUWFLbFQ5MVd2MWwvSVM0VEJQWFFHTGR6R05TZDNjTVdsTFdGWUg5b3BI?=
- =?utf-8?B?RjUwaGpiSnRVVEFORXk5ZU0yWm9ZMFcweks3d0Y1eDZRYTE5d3dpZzhuY2Ri?=
- =?utf-8?B?Zkl4WTdkTEdrSFlQTzVjaENGQ2xIVWcyT1F0OFgvZzlVc3pNa056QT09?=
-X-OriginatorOrg: atomlin.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 5dea50f2-0fa9-4d60-42d1-08deaae8aedd
-X-MS-Exchange-CrossTenant-AuthSource: CWLP123MB3523.GBRP123.PROD.OUTLOOK.COM
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 May 2026 20:55:47.8028
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: e6a32402-7d7b-4830-9a2b-76945bbbcb57
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: BsHZ3hkIfsP9A2u8xiS4xGEdP5aST2EYmglCif8SJ2AEWqWz3L+YWXX57KXxgkKISwB1SQ6T6p8rb4gNbJKw9w==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: LO4P123MB6927
+Content-Transfer-Encoding: 8bit
 
---qbww2g5iwecbyeqm
-Content-Type: text/plain; protected-headers=v1; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-Subject: Re: [PATCH v12 05/13] blk-mq: add
- blk_mq_{online|possible}_queue_affinity
-MIME-Version: 1.0
+The following changes since commit 254f49634ee16a731174d2ae34bc50bd5f45e731:
 
-On Mon, Apr 27, 2026 at 05:34:16PM +0200, Sebastian Andrzej Siewior wrote:
-> On 2026-04-22 14:52:07 [-0400], Aaron Tomlin wrote:
-> > From: Daniel Wagner <wagi@kernel.org>
-> >=20
-> > Introduce blk_mq_{online|possible}_queue_affinity, which returns the
-> > queue-to-CPU mapping constraints defined by the block layer. This allows
-> > other subsystems (e.g., IRQ affinity setup) to respect block layer
-> > requirements.
-> >=20
-> > It is necessary to provide versions for both the online and possible CPU
-> > masks because some drivers want to spread their I/O queues only across
-> > online CPUs, while others prefer to use all possible CPUs. And the mask
-> > used needs to match with the number of queues requested
-> > (see blk_num_{online|possible}_queues).
->=20
-> Which driver uses cpu_possible_mask? This mask is assigned at boot time
-> once the kernel figured how many CPUs are possible based on ACPI or
-> whatever the system uses. This mask does not change.
->=20
-> I only see drivers/scsi/lpfc/lpfc_init.c using it. Looking at
-> cpu_possible_mask might not be the right thing. It is usually the same
-> thing as "online" except on system where ACPI thinks that something
-> could be added via hotplug _or_ if the admin shuts down a CPU via
-> cpuhotplug _or_ boots with less (there a command line option for that).=
-=20
->=20
-> In case cpu_possible_mask !=3D cpu_online_mask the intention is to
-> allocate memory and setup irqs for the offline CPUs?
->=20
-> > Signed-off-by: Daniel Wagner <wagi@kernel.org>
-> > Reviewed-by: Hannes Reinecke <hare@suse.de>
-> > Signed-off-by: Aaron Tomlin <atomlin@atomlin.com>
->=20
-Hi Sebastian,
+  Linux 7.1-rc1 (2026-04-26 14:19:00 -0700)
 
-In the next iteration, this patch will be dropped. Moving forward, there
-will be no more consumers of blk_mq_[online|possible]_queue_affinity().
+are available in the Git repository at:
 
-Please see here [1].=20
+  https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git tags/scsi-fixes
 
-[1]: https://lore.kernel.org/lkml/bnklzljfve53m33xdxv4mlu75kqrkpc3xooxgd3pn=
-bvwjst5hr@btomkooj4crh/
+for you to fetch changes up to 98f69975d4c0434ca2e6e8cfa1d8d51647a20593:
 
---=20
-Aaron Tomlin
+  Merge branch '7.1/scsi-queue' into 7.1/scsi-fixes (2026-04-26 21:15:04 -0400)
 
---qbww2g5iwecbyeqm
-Content-Type: application/pgp-signature; name="signature.asc"
+----------------------------------------------------------------
+All in drivers.  The largest change is the ufs one which has to
+introduce a new function to check the power state before doing the
+update and the most widely encountered one is the obvious change to sg
+to not use GFP_ATOMIC.
+----------------------------------------------------------------
+Brian Bunker (1):
+      scsi: scsi_dh_alua: Increase default ALUA timeout to maximum spec value
 
------BEGIN PGP SIGNATURE-----
+Carlos Bilbao (1):
+      scsi: target: iscsi: reject invalid size Extended CDB AHS
 
-iQIzBAEBCgAdFiEEeQaE6/qKljiNHm6b4t6WWBnMd9YFAmn6WUkACgkQ4t6WWBnM
-d9YKxw//W0/II84g4ki/gNO+NG7JDjhXH4flQk3JHnq/LP2KNHjW6qNqYgXunCIn
-pZwht5Ud0yjWcGE8vZWuR69johnOmngbyAZbBOZGml4vc1Vv97M6pHWuNx98ml80
-Ks/A7WJ4LTb04vSC5VxE77x1E7LBQDa75tvt5ZOTER4cXbl+4b5weL9hQbCZLmiO
-keSWH/aPL1gUZznqxnbZQSQk1TFlpah1TOfIFduWUARuKCf8dmuqwzqOfP9hBSuV
-MV71qH14BBbywqAanJYPUfco1fx5F0BSJFKWwhbPjjzono1WNnULWUlWVwDbFyfi
-w44kDZXioOoAjUKPe0xeIkJ4/HDD5zwPoFPEW8oSgv5kE1EpgzjgY+KvDNLktQ40
-AwS+6Lqm55pRw5GCgB9qjbbpgmuyC809uZNhaeGC4YCz7MpiG368o5ZTO97NS8Wm
-1zIfqyimmB2gYe8n8v6FJii5hkdeYUG6gaPIEqxFlFlucCzw6Gw+wu9bTW4Dc55P
-LTjkYWn6RdPLr1rOpC7ohqWCFfAhBHOvaxQvAF/TM4gpyxk7Fi5UhyVvpo1RFUCS
-YBpmKd28jq7COQuBI2CTnkppmCjXp55r3HqpQvEF7t2nBtGmOf53i7i1QpmrnIWv
-NKL5Jmwj3wwCUXINE8ShaifunkSgIzwYdcrO2MBjLQP0XWE/n3M=
-=micW
------END PGP SIGNATURE-----
+Christoph Hellwig (1):
+      scsi: sg: Don't use GFP_ATOMIC in sg_start_req()
 
---qbww2g5iwecbyeqm--
+Greg Kroah-Hartman (1):
+      scsi: target: configfs: Bound snprintf() return in tg_pt_gp_members_show()
+
+Hugo Villeneuve (1):
+      scsi: pmcraid: Fix typo in comments
+
+Martin K. Petersen (1):
+      Merge branch '7.1/scsi-queue' into 7.1/scsi-fixes
+
+Ranjan Kumar (1):
+      scsi: mpt3sas: Limit NVMe request size to 2 MiB
+
+Tomas Henzl (1):
+      scsi: smartpqi: Silence a recursive lock warning
+
+Wang Shuaiwei (1):
+      scsi: ufs: core: Fix bRefClkFreq write failure in HS-LSS mode
+
+Yihang Li (1):
+      scsi: hisi_sas: Fix sparse warnings in prep_ata_v3_hw()
+
+ drivers/scsi/device_handler/scsi_dh_alua.c |  2 +-
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c     |  2 +-
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c       | 14 +++++++++++++-
+ drivers/scsi/pmcraid.h                     |  2 +-
+ drivers/scsi/sg.c                          |  2 +-
+ drivers/scsi/smartpqi/smartpqi_init.c      |  1 +
+ drivers/target/iscsi/iscsi_target.c        | 22 ++++++++++++++++++----
+ drivers/target/target_core_configfs.c      |  2 +-
+ drivers/ufs/core/ufshcd.c                  | 30 ++++++++++++++++++++++++++++--
+ include/ufs/unipro.h                       |  5 +++++
+ 10 files changed, 70 insertions(+), 12 deletions(-)
+
+diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
+index efb08b9b145a..80ab0ff921d4 100644
+--- a/drivers/scsi/device_handler/scsi_dh_alua.c
++++ b/drivers/scsi/device_handler/scsi_dh_alua.c
+@@ -37,7 +37,7 @@
+ #define TPGS_MODE_EXPLICIT		0x2
+ 
+ #define ALUA_RTPG_SIZE			128
+-#define ALUA_FAILOVER_TIMEOUT		60
++#define ALUA_FAILOVER_TIMEOUT		255	/* max 255 (8-bit value) */
+ #define ALUA_FAILOVER_RETRIES		5
+ #define ALUA_RTPG_DELAY_MSECS		5
+ #define ALUA_RTPG_RETRY_DELAY		2
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+index fda07b193137..14d563e82d20 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+@@ -1491,7 +1491,7 @@ static void prep_ata_v3_hw(struct hisi_hba *hisi_hba,
+ 		phy_id = device->phy->identify.phy_identifier;
+ 		hdr->dw0 |= cpu_to_le32((1U << phy_id)
+ 				<< CMD_HDR_PHY_ID_OFF);
+-		hdr->dw0 |= CMD_HDR_FORCE_PHY_MSK;
++		hdr->dw0 |= cpu_to_le32(CMD_HDR_FORCE_PHY_MSK);
+ 		hdr->dw0 |= cpu_to_le32(4U << CMD_HDR_CMD_OFF);
+ 	}
+ 
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index 6ff788557294..12caffeed3a0 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -2738,8 +2738,20 @@ scsih_sdev_configure(struct scsi_device *sdev, struct queue_limits *lim)
+ 				pcie_device->enclosure_level,
+ 				pcie_device->connector_name);
+ 
++		/*
++		 * The HBA firmware passes the NVMe drive's MDTS
++		 * (Maximum Data Transfer Size) up to the driver. However,
++		 * the driver hardcodes a 4K buffer size for the PRP list,
++		 * accommodating at most 512 entries. This strictly limits
++		 * the maximum supported NVMe I/O transfer to 2 MiB.
++		 *
++		 * Cap max_hw_sectors to the smaller of the drive's reported
++		 * MDTS or the 2 MiB driver limit to prevent kernel oopses.
++		 */
++		lim->max_hw_sectors = SZ_2M >> SECTOR_SHIFT;
+ 		if (pcie_device->nvme_mdts)
+-			lim->max_hw_sectors = pcie_device->nvme_mdts / 512;
++			lim->max_hw_sectors = min(lim->max_hw_sectors,
++					pcie_device->nvme_mdts >> SECTOR_SHIFT);
+ 
+ 		pcie_device_put(pcie_device);
+ 		spin_unlock_irqrestore(&ioc->pcie_device_lock, flags);
+diff --git a/drivers/scsi/pmcraid.h b/drivers/scsi/pmcraid.h
+index 9f59930e8b4f..cd059b7599b4 100644
+--- a/drivers/scsi/pmcraid.h
++++ b/drivers/scsi/pmcraid.h
+@@ -657,7 +657,7 @@ struct pmcraid_hostrcb {
+  */
+ struct pmcraid_instance {
+ 	/* Array of allowed-to-be-exposed resources, initialized from
+-	 * Configutation Table, later updated with CCNs
++	 * Configuration Table, later updated with CCNs
+ 	 */
+ 	struct pmcraid_resource_entry *res_entries;
+ 
+diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+index 2b4b2a1a8e44..74cd4e8a61c2 100644
+--- a/drivers/scsi/sg.c
++++ b/drivers/scsi/sg.c
+@@ -1801,7 +1801,7 @@ sg_start_req(Sg_request *srp, unsigned char *cmd)
+ 	}
+ 
+ 	res = blk_rq_map_user_io(rq, md, hp->dxferp, hp->dxfer_len,
+-			GFP_ATOMIC, iov_count, iov_count, 1, rw);
++			GFP_KERNEL, iov_count, iov_count, 1, rw);
+ 	if (!res) {
+ 		srp->bio = rq->bio;
+ 
+diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
+index b4ed991976d0..2026ac645d6a 100644
+--- a/drivers/scsi/smartpqi/smartpqi_init.c
++++ b/drivers/scsi/smartpqi/smartpqi_init.c
+@@ -9427,6 +9427,7 @@ static void pqi_shutdown(struct pci_dev *pci_dev)
+ 
+ 	pqi_crash_if_pending_command(ctrl_info);
+ 	pqi_reset(ctrl_info);
++	pqi_ctrl_unblock_device_reset(ctrl_info);
+ }
+ 
+ static void pqi_process_lockup_action_param(void)
+diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
+index e80449f6ce15..cb832fd523af 100644
+--- a/drivers/target/iscsi/iscsi_target.c
++++ b/drivers/target/iscsi/iscsi_target.c
+@@ -995,6 +995,7 @@ int iscsit_setup_scsi_cmd(struct iscsit_conn *conn, struct iscsit_cmd *cmd,
+ 	int data_direction, payload_length;
+ 	struct iscsi_ecdb_ahdr *ecdb_ahdr;
+ 	struct iscsi_scsi_req *hdr;
++	u16 ahslength, cdb_length;
+ 	int iscsi_task_attr;
+ 	unsigned char *cdb;
+ 	int sam_task_attr;
+@@ -1108,14 +1109,27 @@ int iscsit_setup_scsi_cmd(struct iscsit_conn *conn, struct iscsit_cmd *cmd,
+ 				ISCSI_REASON_CMD_NOT_SUPPORTED, buf);
+ 		}
+ 
+-		cdb = kmalloc(be16_to_cpu(ecdb_ahdr->ahslength) + 15,
+-			      GFP_KERNEL);
++		ahslength = be16_to_cpu(ecdb_ahdr->ahslength);
++		if (!ahslength) {
++			pr_err("Extended CDB AHS with zero length, protocol error.\n");
++			return iscsit_add_reject_cmd(cmd,
++				ISCSI_REASON_PROTOCOL_ERROR, buf);
++		}
++		if (ahslength > (hdr->hlength * 4) - 3) {
++			pr_err("Extended CDB AHS length %u exceeds available PDU buffer.\n",
++			       ahslength);
++			return iscsit_add_reject_cmd(cmd,
++				ISCSI_REASON_PROTOCOL_ERROR, buf);
++		}
++
++		cdb_length = ahslength - 1 + ISCSI_CDB_SIZE;
++
++		cdb = kmalloc(cdb_length, GFP_KERNEL);
+ 		if (cdb == NULL)
+ 			return iscsit_add_reject_cmd(cmd,
+ 				ISCSI_REASON_BOOKMARK_NO_RESOURCES, buf);
+ 		memcpy(cdb, hdr->cdb, ISCSI_CDB_SIZE);
+-		memcpy(cdb + ISCSI_CDB_SIZE, ecdb_ahdr->ecdb,
+-		       be16_to_cpu(ecdb_ahdr->ahslength) - 1);
++		memcpy(cdb + ISCSI_CDB_SIZE, ecdb_ahdr->ecdb, cdb_length - ISCSI_CDB_SIZE);
+ 	}
+ 
+ 	data_direction = (hdr->flags & ISCSI_FLAG_CMD_WRITE) ? DMA_TO_DEVICE :
+diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
+index d93773b3227c..2b19a956007b 100644
+--- a/drivers/target/target_core_configfs.c
++++ b/drivers/target/target_core_configfs.c
+@@ -3249,7 +3249,7 @@ static ssize_t target_tg_pt_gp_members_show(struct config_item *item,
+ 			config_item_name(&lun->lun_group.cg_item));
+ 		cur_len++; /* Extra byte for NULL terminator */
+ 
+-		if ((cur_len + len) > PAGE_SIZE) {
++		if (cur_len > TG_PT_GROUP_NAME_BUF || (cur_len + len) > PAGE_SIZE) {
+ 			pr_warn("Ran out of lu_gp_show_attr"
+ 				"_members buffer\n");
+ 			break;
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 4805e40ed4d7..c3f08957d179 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -9259,6 +9259,30 @@ static void ufshcd_config_mcq(struct ufs_hba *hba)
+ 		 hba->nutrs);
+ }
+ 
++/**
++ * ufshcd_get_op_mode - get UFS operating mode.
++ * @hba: per-adapter instance
++ *
++ * Use the PA_PWRMODE value to represent the operating mode of UFS.
++ *
++ */
++static enum ufs_op_mode ufshcd_get_op_mode(struct ufs_hba *hba)
++{
++	u32 mode;
++	u8 rx_mode;
++	u8 tx_mode;
++
++	ufshcd_dme_get(hba, UIC_ARG_MIB(PA_PWRMODE), &mode);
++	rx_mode = (mode >> PWRMODE_RX_OFFSET) & PWRMODE_MASK;
++	tx_mode = mode & PWRMODE_MASK;
++
++	if ((rx_mode == SLOW_MODE || rx_mode == SLOWAUTO_MODE) &&
++	    (tx_mode == SLOW_MODE || tx_mode == SLOWAUTO_MODE))
++		return LS_MODE;
++
++	return HS_MODE;
++}
++
+ static int ufshcd_post_device_init(struct ufs_hba *hba)
+ {
+ 	int ret;
+@@ -9281,11 +9305,13 @@ static int ufshcd_post_device_init(struct ufs_hba *hba)
+ 		return 0;
+ 
+ 	/*
+-	 * Set the right value to bRefClkFreq before attempting to
++	 * Set the right value to bRefClkFreq in LS_MODE before attempting to
+ 	 * switch to HS gears.
+ 	 */
+-	if (hba->dev_ref_clk_freq != REF_CLK_FREQ_INVAL)
++	if (ufshcd_get_op_mode(hba) == LS_MODE &&
++	    hba->dev_ref_clk_freq != REF_CLK_FREQ_INVAL)
+ 		ufshcd_set_dev_ref_clk(hba);
++
+ 	/* Gear up to HS gear. */
+ 	ret = ufshcd_config_pwr_mode(hba, &hba->max_pwr_info.info,
+ 				     UFSHCD_PMC_POLICY_DONT_FORCE);
+diff --git a/include/ufs/unipro.h b/include/ufs/unipro.h
+index f849a2a101ae..9c168703b104 100644
+--- a/include/ufs/unipro.h
++++ b/include/ufs/unipro.h
+@@ -333,6 +333,11 @@ enum ufs_eom_eye_mask {
+ #define DME_LocalTC0ReplayTimeOutVal		0xD042
+ #define DME_LocalAFC0ReqTimeOutVal		0xD043
+ 
++enum ufs_op_mode {
++	LS_MODE = 1,
++	HS_MODE = 2,
++};
++
+ /* PA power modes */
+ enum ufs_pa_pwr_mode {
+ 	FAST_MODE	= 1,
