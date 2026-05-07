@@ -1,71 +1,75 @@
-Received: from mail-qk1-f172.google.com (mail-qk1-f172.google.com [209.85.222.172])
+Received: from mail-wr1-f52.google.com (mail-wr1-f52.google.com [209.85.221.52])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 666733FBEDE
-	for <linux-scsi@vger.kernel.org>; Thu,  7 May 2026 14:33:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6B79940627E
+	for <linux-scsi@vger.kernel.org>; Thu,  7 May 2026 14:34:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778164400; cv=none; b=Mj3kVZOUCZLncw60SfiQV7/iZ9KwBxMnSjL9KVj1mp3G9XuvtPcNJvWeja6/AyIV8TUZhSBJXnlWvN5HdL94ibCDqO+Mz6PGKH4O4hJ6FmxFlVZUa1FWwoPT2VQV0q/27CKk1bFep0yZ5DqFAFwVLgxOpAq3Cg4rJJ/PiZpCuy0=
+	t=1778164461; cv=none; b=Y8mb/GWQhph/yhOdhH5OO/7wjnDBIGkT1frCkqMSFqhdNkAcmaQlTdnRidwCQ78/f/wlm2Hoy2IpFPxopah/SQXSv1yNYLqBIVzJW6kPT5O05XCnSPh/EuIBDo8NrGpM3iipAwY9/4JGMsI/J5/gMaF5Z+tKnTcPZnTHwmGitf8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778164400; c=relaxed/simple;
-	bh=/n+7llmepQAvJ5J8m7gmaT9JZWY/jvh+7hnDojvXqTw=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=VQMCkcbDoRs0EE3PJky0ljyifvp5BFMZoaN4jnr2mxIJPoy7VGUPFwD9LDkx/AZZPSdG6TfCXNfzaYo99dnLYzHzAdYT04lAWRBTVrKw8utlLMFlRiQhO9i2iuRPAK9S5mTga7QyDdSJB4tj+9p3kvywJ1CTus72A9aiEU7YpWY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=qiMsEF8L; arc=none smtp.client-ip=209.85.222.172
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1778164461; c=relaxed/simple;
+	bh=VQ/Saokh+qNsqoGUrQeMP/hADrgCvykOhkDbj/dG1B8=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=RSPfqsY8Am/G8eEiiu7pFvuqHJJU4xRSzxoarbXYzs7GZhUcO/MXFHUPVh6lIvuzqg6CPLJABdQF86E7uI9B2XtSOyBAhZjlw6WvqBXVDW/0gjvdTxhHG5x8xBe4yll+bWWBGEIZ7JmnIJoyMy+8XoTEVAYP3pYzcSHVkjn841c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=JW9o4x60; arc=none smtp.client-ip=209.85.221.52
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="qiMsEF8L"
-Received: by mail-qk1-f172.google.com with SMTP id af79cd13be357-900fa9f178dso101206785a.1
-        for <linux-scsi@vger.kernel.org>; Thu, 07 May 2026 07:33:19 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="JW9o4x60"
+Received: by mail-wr1-f52.google.com with SMTP id ffacd0b85a97d-4526a8170ceso548641f8f.2
+        for <linux-scsi@vger.kernel.org>; Thu, 07 May 2026 07:34:19 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1778164398; x=1778769198; darn=vger.kernel.org;
+        d=suse.com; s=google; t=1778164458; x=1778769258; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=5kzcSdsCpo5Y3mn41POdySZcZFAGaT53MIAxz0TRGE0=;
-        b=qiMsEF8L1E88iiuA5BvbiIgz8FiS+bFiAP4TF+bxCN5utzEYD0M4/OpGHvpMsOBo8u
-         OEspr1NQCQoVplh+6Uw3fcKghu/ULNj1DOtozo+9PCHS2UQLdWexGIuVRUr5d7LrYGal
-         a/mCmXVfsyUKkrX9w3jSFZeqHwWWzVfDwkAU8kJarTboXO7xiAwus5W0XbFAFZiD9vaC
-         JykfBYLaV7fSg1EyG4LKkh9KjXl1Zw21ClOeOTBeywStGjjerJLQwi/J16xnxdvghj2M
-         vr7AXA5JQ178AqePauHy9qFLiQm09boHMTdvQ+/cJn/byeCkCwD5RJ752SgEqIw6vd3m
-         /ViA==
+        bh=s3j1nccFhQvm0JUf5yUCCDfxuxwWOSInGRVCG3JqpcM=;
+        b=JW9o4x60gxYnyI0GgqKIjGklyqJ0i4RoDo21G8tn6iCvv5/krD92bLSg9EvdDnVnTL
+         UwVCaBNzaN3ochPW6ySwvrqsTCOsfYS1RwWHGsCANkGmXHs1c4bBX8B+y33f/PqyJoKm
+         1IocjAUxJnw1QE+TZQf/BCJMHuduuhXeIbHWdErU0TZrLbd4z747omtGaksRPAKyvz1H
+         OvavtAfu55S81wmekIwvb9xsFi78CYjLwkKSqp2eoZcRNNhgEHcPPmK8/8TUZZlTjBsY
+         LGfzgGglsYs/Y3KhahsfT+ZgOfvsxsoCA4pLX2Uwdnd/cty2DnTZdCytnSfcsmQ1iVUy
+         DoLg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1778164398; x=1778769198;
+        d=1e100.net; s=20251104; t=1778164458; x=1778769258;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=5kzcSdsCpo5Y3mn41POdySZcZFAGaT53MIAxz0TRGE0=;
-        b=MqgghDvJIbtB85OQmBUaRMLlRqQbbPAhyxF8YAtblM7Vr55iiJ36p5XJDlZyEC2SaF
-         EkA5yp7rmSHRxJpgbicjm/o7rmlVbPsuDIeAVnSjIPzdbbLOCAgl1rGAlKs7ozXHmKqa
-         /VzZ3PZPu1CFb7GxOWJL0RUqY5SnZa3kn8h7RCqSzxrPmc31z7eYt88xwRqYAHw4qPJs
-         k9qwkfj7IwyEHWS+UtmgYhDlHAGRSoj3GDpsYffO6WzoT3KV0EDPF6w5O1YpptqegCMW
-         Dx4VhtAdLURyWMXMlOMXQqZ9P2/dhN7V2JGHlp9x2/7FWff5qNomgCPmU0vg3R3FNr7B
-         JvVQ==
-X-Gm-Message-State: AOJu0Ywnzc43Y3dfjBi2RplcOipaKZf93Kfn0c5QWzhIam2mJF5h0nUO
-	U3YntOsjV6OIpjM7tMgwnSQkb9u3p1TJgGv+UDKMhZQLLudb6y+mYwUQ
-X-Gm-Gg: AeBDieujSSnHZpO6z0U/lXSIyp0NtloAOtxtWaouVmnwwDkTYg2M99v/kLA2R4C3rKc
-	2f+qi0jINMC/FBbXeuwDWuWN5SivwpaypOLIm9hDBxHGwWlBFEpOGIswrEJkXtq1OXB2gSBm989
-	VRsVvuTLXghc11wkZM12HYzEqbOhDPpCRlW0yrKXkqrstBAfbGyvd4pOiuneCNBK6+vpbwH9rPY
-	+hSoIFJ3BL5XoarSVZ53nh7QFvw0wTbpPRXGpKYUDsxV+8CRKH0j87EoM/YN+SiypOKLcuB7Kc6
-	/NxyZRS5yL2kK4rC66Whkkf1FiTlxxgEbnqX0fn/5tFFAd/ZOvcgtm3vPDZTEVHfuQ2BVLSXLuk
-	TLlBAkvUzWrlc5s2XK6FfBwuFCQjku1z1A1U9gT7pJXsYKMronxtUUbpdgQWhdxlbpqQ4oXJDEU
-	C+2FwnBLOjOF+lw0RTr5zlOSvbPczRgoVnVQrAe8YOR8VIh+fl219/3xnXy4FMwB2F6gIxi1MOC
-	CS6teNDQ1jWrybmjWCyv9AQaQ==
-X-Received: by 2002:a05:622a:59ce:b0:50f:bd51:f1d2 with SMTP id d75a77b69052e-514621d1bfdmr103573311cf.50.1778164397873;
-        Thu, 07 May 2026 07:33:17 -0700 (PDT)
-Received: from jeremy.kali (srv1619992.hstgr.cloud. [2a02:4780:75:55a3::1])
-        by smtp.gmail.com with ESMTPSA id d75a77b69052e-51040b80a4dsm175420501cf.24.2026.05.07.07.33.17
+        bh=s3j1nccFhQvm0JUf5yUCCDfxuxwWOSInGRVCG3JqpcM=;
+        b=lNJ5xgTHNN98PyoMAYsRDrm1Pp/k//+Xip3IbRKcynNicdI1kcq7/ds7HPvL46Fm9x
+         RuX2yl9xkFm3O5+qwlFoo6uVJF1/3qDNZlRlGFqpTZGJr3QdO1UCPLuBeMTRysZcE48d
+         64VkNoNoqleEmPCl0RWoIVKS3fAHSalXvOAPuqSU3HRUchfYTcU+9o9zoseGnsMX7eT9
+         uKjeplXX/9YwiUsF/bvfkZTFvgBYl9aeBdXavQU8Q4/w3VhsAFSENI0ahPJj33+NKCii
+         6W0UakvV+lWb2zmo1B+pHPT0fXEjzmp4zVPUFqKk4USSKCEl5a694o3azyUACjrlL7WV
+         RmYA==
+X-Forwarded-Encrypted: i=1; AFNElJ8dMBfkt+QCKQDauf7+fT/8egFpNAqwaRO9PNUnibaz0ulmxzZrcGpIC0hbcEHsDhKKuj0CgD+Amc0M@vger.kernel.org
+X-Gm-Message-State: AOJu0Ywvhmcu37CO+JOjag26plDoHNl9qEFkjKX5r9foz16+c7OBlP6l
+	Hq5tjZB+85UwsH8C1n0XwRaRar/Iqnd2wHgO3Bh57hqtl3WHtgY0nPz8qIGmap7kgLs=
+X-Gm-Gg: AeBDievAUufMnkOH5E5op2z2BW/wmGiMwV/SOzur7zjAp8eYKGyc1DFda3rq3usqHrx
+	fHe95ePfZ1nlR58zqjZkd9Lrb7EhZxY652VpemYX884oskue3DV75WYnkIh8EdLruA6yErCIH1f
+	wagsK1pZMxi0UeRXoxCTRvcejlTBfOCWHrIatw3yPEusmKtr/61dh4wixHIPQe7fbW6ScumVtgo
+	6gGxTe1O2ELV90Lt7y66bmphoOQBp+bZmBrNwsrm1ztiB/6M1pZm7jNcfZC8EeMlStp1FCrAi88
+	j4JOTKWTdk9pLfjDP8k038AhdPEdA9tcfrp4bb4RBukjT1wMteGmbGAmFlJ1zSoh4oc7jmNMN9d
+	DxonIjfPDfNK1kOHjvgGThcdy6aEUh2IJhghlb45/z6ny1L9QM7bgNG26z6KBUpAPXSOqDlP/oj
+	109O3BhqcMTZPd1QnOchGO/RIa6k6ximKeNPcZU4yNWUpSlEn2yi/2OwUOqw==
+X-Received: by 2002:a05:6000:200e:b0:43d:7946:bae5 with SMTP id ffacd0b85a97d-4515da96794mr13554195f8f.42.1778164457527;
+        Thu, 07 May 2026 07:34:17 -0700 (PDT)
+Received: from localhost.localdomain ([2a00:6d43:105:c401:e307:1a37:2e76:ce91])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-45054b03df9sm20352362f8f.24.2026.05.07.07.34.16
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 07 May 2026 07:33:17 -0700 (PDT)
-From: "Jeremy Erazo (Devel Group)" <mendozayt13@gmail.com>
-To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org,
-	target-devel@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	"Jeremy Erazo (Devel Group)" <mendozayt13@gmail.com>,
-	stable@vger.kernel.org
-Subject: [PATCH] scsi: target: iscsi: validate ECDB AHS length
-Date: Thu,  7 May 2026 14:25:59 +0000
-Message-ID: <20260507142559.2373177-1-mendozayt13@gmail.com>
+        Thu, 07 May 2026 07:34:17 -0700 (PDT)
+From: Marco Crivellari <marco.crivellari@suse.com>
+To: linux-kernel@vger.kernel.org,
+	linux-scsi@vger.kernel.org
+Cc: Tejun Heo <tj@kernel.org>,
+	Lai Jiangshan <jiangshanlai@gmail.com>,
+	Frederic Weisbecker <frederic@kernel.org>,
+	Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
+	Marco Crivellari <marco.crivellari@suse.com>,
+	Michal Hocko <mhocko@suse.com>,
+	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>
+Subject: [RFC PATCH] scsi: scsi_transport_srp: Move long delayed work on system_dfl_long_wq
+Date: Thu,  7 May 2026 16:34:10 +0200
+Message-ID: <20260507143410.337267-1-marco.crivellari@suse.com>
 X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -76,116 +80,77 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-iscsit_setup_scsi_cmd() processes the Extended-CDB Additional Header
-Segment (AHS) of a SCSI Command PDU without bounding AHSLength,
-despite the long-standing "FIXME; Add checks for AdditionalHeaderSegment"
-comment a few lines above in the same function.
+Currently the code enqueue work items using {queue|mod}_delayed_work(),
+using system_long_wq. This workqueue should be used when long works are
+expected and it is a per-cpu workqueue.
 
-A SCSI Command PDU sent after iSCSI Login with hlength=1,
-ahstype=ISCSI_AHSTYPE_CDB and ahslength=0 reaches:
+The function(s) end up calling __queue_delayed_work(), which set a global
+timer that could fire anywhere, enqueuing the work where the timer fired.
 
-    cdb = kmalloc(0 + 15, GFP_KERNEL);             /* 15-byte alloc  */
-    memcpy(cdb, hdr->cdb, ISCSI_CDB_SIZE);         /* 16 -> 15       */
-    memcpy(cdb + ISCSI_CDB_SIZE, ecdb_ahdr->ecdb,
-           be16_to_cpu(ecdb_ahdr->ahslength) - 1); /* (size_t)-1     */
+Unbound works could benefit from scheduler task placement, to optimize
+performance and power consumption. Long work shouldn't stick to a single
+CPU.
 
-On CONFIG_FORTIFY_SOURCE=y kernels the first memcpy is rejected by
-__fortify_panic() because the declared destination size is 15:
+Recently, a new unbound workqueue specific for long running work has
+been added:
 
-    memcpy: detected buffer overflow: 16 byte write of buffer size 15
-    kernel BUG at lib/string_helpers.c:1044!
-    Oops: invalid opcode: 0000 [#1] SMP KASAN NOPTI
-    RIP: 0010:__fortify_panic+0xd/0xf
-    Call Trace:
-     iscsit_setup_scsi_cmd.cold+0x8c/0x224
-     iscsit_get_rx_pdu+0x9ec/0x1740
-     iscsi_target_rx_thread+0xf7/0x1f0
-     kthread+0x1b4/0x200
-    Kernel panic - not syncing: Fatal exception
+    c116737e972e ("workqueue: Add system_dfl_long_wq for long unbound works")
 
-On kernels without CONFIG_FORTIFY_SOURCE the first memcpy fits in the
-kmalloc-16 slab object and execution reaches the second memcpy whose
-size argument has wrapped to (size_t)-1.
+Since the workqueue work doesn't rely on per-cpu variables, there is no
+obvious reason that justify the use of a per-cpu workqueue. So change
+system_long_wq with system_dfl_long_wq so that the work may benefit from
+scheduler task placement.
 
-Reproduced on Linux 7.0 with a malformed Command PDU sent after a
-completed iSCSI Login.  The trigger is reachable post-Login by any
-initiator that successfully logged in (anonymous on demo-mode targets,
-authenticated on CHAP-protected targets).  No claim of RCE, LPE or
-controlled write is made.
-
-Validate, before any dereference and any allocation:
-
-  - the AHS area received from the socket holds at least the 4-byte
-    iscsi_ecdb_ahdr header,
-  - AHSLength is at least 1 (RFC 7143 §10.2.2.3 minimum for the ECDB
-    AHS, which carries one reserved byte),
-  - the declared AHSLength does not exceed the AHS bytes that were
-    actually received.
-
-Reported-by: Jeremy Erazo (trexnegr0) <mendozayt13@gmail.com>
-Signed-off-by: Jeremy Erazo (Devel Group) <mendozayt13@gmail.com>
-Cc: stable@vger.kernel.org
+Signed-off-by: Marco Crivellari <marco.crivellari@suse.com>
 ---
- drivers/target/iscsi/iscsi_target.c | 33 +++++++++++++++++++++++++----
- 1 file changed, 29 insertions(+), 4 deletions(-)
+ drivers/scsi/scsi_transport_srp.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
-index e80449f6c..de291eb6f 100644
---- a/drivers/target/iscsi/iscsi_target.c
-+++ b/drivers/target/iscsi/iscsi_target.c
-@@ -1100,6 +1100,16 @@ int iscsit_setup_scsi_cmd(struct iscsit_conn *conn, struct iscsit_cmd *cmd,
- 	cdb = hdr->cdb;
+diff --git a/drivers/scsi/scsi_transport_srp.c b/drivers/scsi/scsi_transport_srp.c
+index d71ab5fdb758..a61cbb079ab4 100644
+--- a/drivers/scsi/scsi_transport_srp.c
++++ b/drivers/scsi/scsi_transport_srp.c
+@@ -234,7 +234,7 @@ static ssize_t store_reconnect_delay(struct device *dev,
  
- 	if (hdr->hlength) {
-+		u16 ahslen;
-+		unsigned int ahs_area_bytes = hdr->hlength * 4;
-+
-+		/* The AHS area must hold at least the iscsi_ecdb_ahdr
-+		 * header before any of its fields may be dereferenced.
-+		 */
-+		if (ahs_area_bytes < sizeof(struct iscsi_ecdb_ahdr))
-+			return iscsit_add_reject_cmd(cmd,
-+				ISCSI_REASON_PROTOCOL_ERROR, buf);
-+
- 		ecdb_ahdr = (struct iscsi_ecdb_ahdr *) (hdr + 1);
- 		if (ecdb_ahdr->ahstype != ISCSI_AHSTYPE_CDB) {
- 			pr_err("Additional Header Segment type %d not supported!\n",
-@@ -1108,14 +1118,29 @@ int iscsit_setup_scsi_cmd(struct iscsit_conn *conn, struct iscsit_cmd *cmd,
- 				ISCSI_REASON_CMD_NOT_SUPPORTED, buf);
- 		}
- 
--		cdb = kmalloc(be16_to_cpu(ecdb_ahdr->ahslength) + 15,
--			      GFP_KERNEL);
-+		/* Per RFC 7143 §10.2.2.3 AHSLength counts the bytes of
-+		 * the AHS that follow the AHSType/AHSLength fields; for
-+		 * the ECDB AHS it includes one reserved byte, so the
-+		 * smallest legal value is 1.  Rejecting 0 prevents the
-+		 * "ahslen - 1" memcpy size below from underflowing to
-+		 * (size_t)-1, and ensures the kmalloc(ahslen + 15) below
-+		 * is at least ISCSI_CDB_SIZE (16) so the first memcpy
-+		 * does not overflow.  Also reject any AHSLength larger
-+		 * than the AHS bytes that actually reached us.
-+		 */
-+		ahslen = be16_to_cpu(ecdb_ahdr->ahslength);
-+		if (ahslen < 1 ||
-+		    ahslen - 1 > ahs_area_bytes -
-+				 offsetof(struct iscsi_ecdb_ahdr, ecdb))
-+			return iscsit_add_reject_cmd(cmd,
-+				ISCSI_REASON_PROTOCOL_ERROR, buf);
-+
-+		cdb = kmalloc(ahslen + 15, GFP_KERNEL);
- 		if (cdb == NULL)
- 			return iscsit_add_reject_cmd(cmd,
- 				ISCSI_REASON_BOOKMARK_NO_RESOURCES, buf);
- 		memcpy(cdb, hdr->cdb, ISCSI_CDB_SIZE);
--		memcpy(cdb + ISCSI_CDB_SIZE, ecdb_ahdr->ecdb,
--		       be16_to_cpu(ecdb_ahdr->ahslength) - 1);
-+		memcpy(cdb + ISCSI_CDB_SIZE, ecdb_ahdr->ecdb, ahslen - 1);
+ 	if (rport->reconnect_delay <= 0 && delay > 0 &&
+ 	    rport->state != SRP_RPORT_RUNNING) {
+-		queue_delayed_work(system_long_wq, &rport->reconnect_work,
++		queue_delayed_work(system_dfl_long_wq, &rport->reconnect_work,
+ 				   delay * HZ);
+ 	} else if (delay <= 0) {
+ 		cancel_delayed_work(&rport->reconnect_work);
+@@ -390,7 +390,7 @@ static void srp_reconnect_work(struct work_struct *work)
+ 		delay = rport->reconnect_delay *
+ 			clamp(rport->failed_reconnects - 10, 1, 100);
+ 		if (delay > 0)
+-			queue_delayed_work(system_long_wq,
++			queue_delayed_work(system_dfl_long_wq,
+ 					   &rport->reconnect_work, delay * HZ);
  	}
- 
- 	data_direction = (hdr->flags & ISCSI_FLAG_CMD_WRITE) ? DMA_TO_DEVICE :
-
-base-commit: a293ec25d59dd96309058c70df5a4dd0f889a1e4
+ }
+@@ -474,7 +474,7 @@ static void __srp_start_tl_fail_timers(struct srp_rport *rport)
+ 	if (rport->state == SRP_RPORT_LOST)
+ 		return;
+ 	if (delay > 0)
+-		queue_delayed_work(system_long_wq, &rport->reconnect_work,
++		queue_delayed_work(system_dfl_long_wq, &rport->reconnect_work,
+ 				   1UL * delay * HZ);
+ 	if ((fast_io_fail_tmo >= 0 || dev_loss_tmo >= 0) &&
+ 	    srp_rport_set_state(rport, SRP_RPORT_BLOCKED) == 0) {
+@@ -482,11 +482,11 @@ static void __srp_start_tl_fail_timers(struct srp_rport *rport)
+ 			 rport->state);
+ 		scsi_block_targets(shost, &shost->shost_gendev);
+ 		if (fast_io_fail_tmo >= 0)
+-			queue_delayed_work(system_long_wq,
++			queue_delayed_work(system_dfl_long_wq,
+ 					   &rport->fast_io_fail_work,
+ 					   1UL * fast_io_fail_tmo * HZ);
+ 		if (dev_loss_tmo >= 0)
+-			queue_delayed_work(system_long_wq,
++			queue_delayed_work(system_dfl_long_wq,
+ 					   &rport->dev_loss_work,
+ 					   1UL * dev_loss_tmo * HZ);
+ 	}
 -- 
 2.53.0
 
