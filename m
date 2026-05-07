@@ -1,178 +1,290 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5384C1419A4
-	for <linux-scsi@vger.kernel.org>; Thu,  7 May 2026 01:45:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6EC4D17B505;
+	Thu,  7 May 2026 04:13:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778118318; cv=none; b=P6YptZmczLefbv8Rf6pjwHiKNmCNVjthDlLjph8o5aYWx0dZD0Ae9IbbnijeD9Z+AvhxfRCiJFoZz/SaTZ1D6wZVbjux2GzB+E8xHUBFH4zXAuVcWiyrR77cIrw+DP3bJqmEOho74cMye+1A4liwFVPJAXXCYdn3sN1AKO5kmRQ=
+	t=1778127186; cv=none; b=tUHkwA/TmMO+uwdZhH/wli6UohbVDUJ21RF1ajAwMFWUb0JG3peR5bawUnhDBy6J/v/+0jCemtNG76axOtpKOOgG2clMCj/OEyP5LJbm3zYUAR40LwPQ2rThHn5WHWGM5Thdv7Z+iYdaflgyStcFBPfgWeX+GgAVyNKT907qw20=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778118318; c=relaxed/simple;
-	bh=nn+VuoW/LzPu6eLuBwL/M3i+EzeG+u/cAb5jKSt+Pmw=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=IgkdlccExCIqrtFoPuMn5UkmobJCDqeELAAK7UyLpLI4n4m2v4prev8dkz8254PPsYefbotjX4DLpqoPcfdjO/teFiMMI8uZcRn7r+2/3lPDhMvW2ljhnnN/FvB+Vq47AODpm9yzmzODMFxcGXmVnedRRI8x4ZdFRlC/To0jNjQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=PySSpYPo; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=EmUn3McF; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1778127186; c=relaxed/simple;
+	bh=N4LMA7WfuEi8ZJGbpqJQgInFnu+8SuTLGOOgn4Zi+fc=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=fRAC6rmyUum+fO6E40aZHjx5OIK24KI5bcWTwV3KcLtMld9NUD+okRHv5ofyRzkEq0O8bW3UuNvZYzJM6NC5B/filMk/b4uYZp4qsVZsj0vUYS/YirV1q8jwm0B+3LUstLIkgdI0T6DuimOnfgJFxnxFQd9upffVHIOWTwP+nzM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=FHcxbp83; arc=none smtp.client-ip=148.163.158.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="PySSpYPo";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="EmUn3McF"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1778118315;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=nn+VuoW/LzPu6eLuBwL/M3i+EzeG+u/cAb5jKSt+Pmw=;
-	b=PySSpYPof0aYb4R81Ae+CXxMvEyCbWie/uEPpUaTiPnqF7bh+jYPxP0B/6jLBNqPSwkpsg
-	nbR9KPvCFSVVkxfYI9JvbxL6tbTtLKqy1p0Vue0simCHfpu1ZZTs2SWxHSbYx39tao/eBY
-	zNg9Q0RtAqADo3u2cmP3oq59d+7EJCo=
-Received: from mail-qt1-f197.google.com (mail-qt1-f197.google.com
- [209.85.160.197]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-608-flsf383iMneRzDKbVU7W0w-1; Wed, 06 May 2026 21:45:14 -0400
-X-MC-Unique: flsf383iMneRzDKbVU7W0w-1
-X-Mimecast-MFC-AGG-ID: flsf383iMneRzDKbVU7W0w_1778118313
-Received: by mail-qt1-f197.google.com with SMTP id d75a77b69052e-50df4c130dbso12832231cf.1
-        for <linux-scsi@vger.kernel.org>; Wed, 06 May 2026 18:45:14 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1778118313; x=1778723113; darn=vger.kernel.org;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=nn+VuoW/LzPu6eLuBwL/M3i+EzeG+u/cAb5jKSt+Pmw=;
-        b=EmUn3McFjEK9GK+LB70sHMwg2xljeeoU3Bzmfp5zRdGwU6JG7XgahIqJ7orjkwDhav
-         wB++/WgMJWbylw3G5x65FiAb929LA+R+pqxDSX9o2zztSs08BPWHHbvHuoirQ3EUI65H
-         bADu52fAFSUOxMXqC6rGhoYT/EyzMmOt6NJIkeQxRFAEJMQNyHahDX6tJF8udnLnd7P9
-         IH256Pmk3UDKKex/4KHQ7u7T2d/HGG9GA2MFdEuxtl7xPxbAdnGKcBgP8gxXz4uHi3UM
-         KZ6VqBYVlfFVoIXGRVxZ2rz6KIbX/oc8NwnXYCLDbEJfEgvEewK3jm6tHqGb+EFUg+4n
-         9bow==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1778118313; x=1778723113;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=nn+VuoW/LzPu6eLuBwL/M3i+EzeG+u/cAb5jKSt+Pmw=;
-        b=ADsSP1/KQ1sK98tFHqHYqa/REgo3daN+cb8POaO0TJLTJh2+lOsNjfoNOHv64AUdy+
-         9BNntxMaKNNldmj9Q+gXnOn3KX9NhFEUdWaAL9pCYO+GawKaSB5yZY+HUDANixM94Fk4
-         GKe9mBQMKIMoiRRDfEBxz1lBwBvBWK1Xpxl9JnbnenwEXVpYy866A3cCWBmNGyzQRShn
-         ZXKsIwpEwJTQ/DfopY33f+c/JFw+2h7PPCyOFGF+EVh59lUgWaZ+43SqLmSKaGIfYdq9
-         wqn8jEMvuF0xL88hFbS8MrT1uGEaEl0V4loNhs8SYl9M/5quB5/O+ZSQsramOatQslAY
-         CAIA==
-X-Forwarded-Encrypted: i=1; AFNElJ8tPlhRwsmhoQ7Dw+SbKWpiTCUud8Qo4/VqgFzaIZ3YzxIHLaUjCiOtzzgo8uPR818Mx24r6pp5dIoY@vger.kernel.org
-X-Gm-Message-State: AOJu0YxE4Bffi0+z1HJRMWfK94paOXJ/nnzElDGXcyRNlbyKUZl5UOyr
-	ZF6gQJZLHp0yTorouJ6yx7g4hWVHwvmyFHV8h+Sgxo6rfxa4ggTqMBOWn2FFXTkAnsZQ2+itOE4
-	kWAkn27D2dn6ctOyr8ogAkTOjfPDkKbK+iLCXbQihM1RnQZrnhBWO8fmL8No8ATw=
-X-Gm-Gg: AeBDies3K4RrkPfwzTFUvXw9LKS5xwEgMR3dLiYTm0ELQ3MlQtyRHXcKPZXYc/ZDT77
-	O6q5Tz05rv0KZ9zrrvRspveY0DWG6C181RiU516nuEXicqqmw66TaxUXflJO9iBS+HmpwjhGTTS
-	iXMoxCYAw2bTPxx2lIy9rmjComeg69mLF1fcqGjUA/vczE8zcbsiZYtdCgqCp0bliCT1ivWnNWr
-	sVL1/ppq8Cc46XrUekF78QYQRoZAlQpNZl1OKGVXutOjlvffHdSJCSNrrI2FRXS/AD56Vxo8COM
-	lTQgIF72QnCpuJqqvuKtGmOTXcaTS3Q7HoKbHT/WZz9TUQABp6/yRVjHzu9Vby2uW8+2EDUiKVs
-	4+oPXYfwnRv6rnlwRueSuiQ2goozczQN2WcWsxbIegTfJga5jJbcePISepujDLDYPi8GSjhR8CZ
-	M36Lk=
-X-Received: by 2002:a05:622a:5cd:b0:50f:c133:2dc6 with SMTP id d75a77b69052e-51475c0ff06mr12978331cf.19.1778118313440;
-        Wed, 06 May 2026 18:45:13 -0700 (PDT)
-X-Received: by 2002:a05:622a:5cd:b0:50f:c133:2dc6 with SMTP id d75a77b69052e-51475c0ff06mr12978171cf.19.1778118312849;
-        Wed, 06 May 2026 18:45:12 -0700 (PDT)
-Received: from loberman-thinkpadp16gen3.rmtusma.csb ([2600:6c65:2440:d8c:aa2b:ddff:fe88:da74])
-        by smtp.gmail.com with ESMTPSA id d75a77b69052e-51040908d6bsm163629391cf.7.2026.05.06.18.45.11
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 06 May 2026 18:45:12 -0700 (PDT)
-Message-ID: <9b49bda9e8e3dce89eaf969f452ddd2315c2f953.camel@redhat.com>
-Subject: Re: [PATCH 0/2] scsi: smartpqi: fix PCIe hot reset recovery
-From: Laurence Oberman <loberman@redhat.com>
-To: Mateusz Nowicki <mateusz.nowicki@posteo.net>, don.brace@microchip.com
-Cc: martin.petersen@oracle.com, James.Bottomley@HansenPartnership.com, 
-	storagedev@microchip.com, linux-scsi@vger.kernel.org, 
-	linux-kernel@vger.kernel.org
-Date: Wed, 06 May 2026 21:45:11 -0400
-In-Reply-To: <9624a8d152197522d353ef7bb2b4928d1c6238ae.camel@redhat.com>
-References: <cover.1778075755.git.mateusz.nowicki@posteo.net>
-	 <9624a8d152197522d353ef7bb2b4928d1c6238ae.camel@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.58.3 (3.58.3-1.fc43) 
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="FHcxbp83"
+Received: from pps.filterd (m0353725.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 646MeBRq3352136;
+	Thu, 7 May 2026 04:12:52 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=pp1; bh=7B3DbY
+	WNPoXFy3w37BRL5KJZgewyDYufre5dH/Hqrl0=; b=FHcxbp83vOFdr17wTi06EX
+	g8MgdO04ThtLSucGG8pukfdRwafDiH/IURdgDXyxn6EYHhHgr0wZTiPdz/0iRhvF
+	cKZjiVLl7jvl3UQ2jsmGpGoT4c8fynJvKkpydb7N1Nx/ZxSy9gXLC4Bizt+JQVO3
+	3tr8fMKsIAaos+jK/wgJy1EVrrnOBjVNK3ctN+IKjYF8IsV1PgZNpdqZAbJlgiY4
+	iFJ9SfIkKf79hiGlaGwgBjNtT+ReK3kLQ7tUtv6zRYGQcIVHPN8fZpYyI/iDIPS9
+	e160WN+dYe0jhXYac1abMA4zRq2Ym++h6QSDRrlzz9WOEtLOXxXrSnSN4PsAn8qQ
+	==
+Received: from ppma23.wdc07v.mail.ibm.com (5d.69.3da9.ip4.static.sl-reverse.com [169.61.105.93])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4dw9xxu6hm-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 07 May 2026 04:12:51 +0000 (GMT)
+Received: from pps.filterd (ppma23.wdc07v.mail.ibm.com [127.0.0.1])
+	by ppma23.wdc07v.mail.ibm.com (8.18.1.7/8.18.1.7) with ESMTP id 64749SFM029195;
+	Thu, 7 May 2026 04:12:50 GMT
+Received: from smtprelay05.dal12v.mail.ibm.com ([172.16.1.7])
+	by ppma23.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4dww3h9b1m-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 07 May 2026 04:12:50 +0000 (GMT)
+Received: from smtpav05.dal12v.mail.ibm.com (smtpav05.dal12v.mail.ibm.com [10.241.53.104])
+	by smtprelay05.dal12v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 6474Cnvl32703180
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Thu, 7 May 2026 04:12:49 GMT
+Received: from smtpav05.dal12v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 9CA6F58052;
+	Thu,  7 May 2026 04:12:49 +0000 (GMT)
+Received: from smtpav05.dal12v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id DAA575805D;
+	Thu,  7 May 2026 04:12:48 +0000 (GMT)
+Received: from [9.61.92.155] (unknown [9.61.92.155])
+	by smtpav05.dal12v.mail.ibm.com (Postfix) with ESMTP;
+	Thu,  7 May 2026 04:12:48 +0000 (GMT)
+Message-ID: <291e79ea-d993-45e4-877e-4c25336c3076@linux.ibm.com>
+Date: Wed, 6 May 2026 21:12:48 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 1/5] ibmvfc: add basic FPIN support
+To: davemarq@linux.ibm.com,
+        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Madhavan Srinivasan <maddy@linux.ibm.com>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        Nicholas Piggin <npiggin@gmail.com>,
+        "Christophe Leroy (CS GROUP)" <chleroy@kernel.org>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, Brian King <brking@linux.ibm.com>,
+        Greg Joyce <gjoyce@linux.ibm.com>,
+        Kyle Mahlkuch <kmahlkuc@linux.ibm.com>
+References: <20260408-ibmvfc-fpin-support-v1-0-52b06c464e03@linux.ibm.com>
+ <20260408-ibmvfc-fpin-support-v1-1-52b06c464e03@linux.ibm.com>
+Content-Language: en-US
+From: Tyrel Datwyler <tyreld@linux.ibm.com>
+In-Reply-To: <20260408-ibmvfc-fpin-support-v1-1-52b06c464e03@linux.ibm.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-Reinject: loops=2 maxloops=12
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNTA3MDAzNyBTYWx0ZWRfX1vur6aE3kJrb
+ kgEFBDuPqKP4HB1IBH0bjjX4CcSPhZ4BJHz4BIOzGg0LEP7zQiSU7aDt8n7QbHVKZ1Am1yB42rn
+ gU6gWyahZyskatjsOv/TC2Sxun/8X0wIKEBlyLeT8DxXaut0FM7+6P/WdxfIWJ//kXnbZT5Ysyv
+ MB3M909ijFwT5xSuGFAG5rjilb8bsJkyQxby3FvezNuzw3L+e/Aq5vMJW8wpNs6GVoFddZkvxe7
+ zuAmiI/QYtI5CtSwKQboHjYDPeMmyhpIlIljPZI6axMGwXMllnzPq6ZV/qPXlpdcDAAvFDaTb9K
+ 3xJJp4Jc9MGY2TWmnJ4Qxzpq8hwi0H06uYny/gOAXMh6RrgtO7mxLcUbzhz3a55JSqzrrHM1KUv
+ YnndJJI7X7c/mw6pbPXULobLZZ6X6b100s/QC8D/XW+twBZzGRxbZfu9Yhd67TAb1Ew3gwe/qsW
+ TKQPCd58gPo5ysvsyBw==
+X-Proofpoint-ORIG-GUID: 4HWgafBYg7Nj5wNM11XgzD3ejXPBtzu1
+X-Proofpoint-GUID: royV7bcXZ64_bUMNXxvc37s8R40m6mNA
+X-Authority-Analysis: v=2.4 cv=ctWrVV4i c=1 sm=1 tr=0 ts=69fc1143 cx=c_pps
+ a=3Bg1Hr4SwmMryq2xdFQyZA==:117 a=3Bg1Hr4SwmMryq2xdFQyZA==:17
+ a=IkcTkHD0fZMA:10 a=NGcC8JguVDcA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=RnoormkPH1_aCDwRdu11:22 a=V8glGbnc2Ofi9Qvn3v5h:22 a=VwQbUJbxAAAA:8
+ a=VnNF1IyMAAAA:8 a=1ZkcIFJ3KA0uR8dLXY0A:9 a=QEXdDO2ut3YA:10
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-05-06_02,2026-05-06_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ priorityscore=1501 lowpriorityscore=0 adultscore=0 clxscore=1011
+ suspectscore=0 impostorscore=0 spamscore=0 malwarescore=0 phishscore=0
+ bulkscore=0 classifier=typeunknown authscore=0 authtc= authcc= route=outbound
+ adjust=0 reason=mlx scancount=1 engine=8.22.0-2604200000
+ definitions=main-2605070037
 
-On Wed, 2026-05-06 at 18:21 -0400, Laurence Oberman wrote:
-> On Wed, 2026-05-06 at 14:01 +0000, Mateusz Nowicki wrote:
-> > A PCIe bus reset (e.g. "echo 1 > /sys/bus/pci/devices/<bdf>/reset")
-> > on a
-> > controller without FLR support leaves the HPE SR932i-p Gen10+
-> > unusable
-> > until reboot: smartpqi registers no pci_error_handlers, so the
-> > driver
-> > is not notified, firmware reverts to SIS mode, and all queue
-> > mappings
-> > are dropped while the driver still drives PQI.
-> >=20
-> > Patch 1 adds .reset_prepare / .reset_done reusing
-> > pqi_ofa_ctrl_quiesce() / _unquiesce() / pqi_ctrl_init_resume().
-> >=20
-> > Patch 2 raises SIS_CTRL_READY_RESUME_TIMEOUT_SECS from 90s to 180s,
-> > matching the cold-boot path; without this patch 1 fails at the SIS
-> > ready check because firmware boot after reset takes ~125s on the
-> > SR932i-p Gen10+.
-> >=20
-> > Tested on HPE SR932i-p Gen10+ against Linus' master at
-> > 74fe02ce122a.
-> >=20
-> > Note: the From: header is my Posteo address because my employer's
-> > SMTP
-> > is unavailable for external mailing lists.=C2=A0 The Signed-off-by
-> > carries
-> > the Microchip attribution.
-> >=20
-> > Mateusz Nowicki (2):
-> > =C2=A0 scsi: smartpqi: add pci_error_handlers for bus reset recovery
-> > =C2=A0 scsi: smartpqi: increase SIS ctrl ready resume timeout to 180s
-> >=20
-> > =C2=A0drivers/scsi/smartpqi/smartpqi_init.c | 47
-> > +++++++++++++++++++++++++++
-> > =C2=A0drivers/scsi/smartpqi/smartpqi_sis.c=C2=A0 |=C2=A0 2 +-
-> > =C2=A02 files changed, 48 insertions(+), 1 deletion(-)
-> >=20
-> > --
-> > 2.43.0
-> >=20
-> >=20
-> >=20
-> Hello
->=20
-> I did reproduce this so I am testing the patches as well.
-> They look correct to me, I will reply again after testing with a
-> review.
->=20
-> Thanks
-> Laurence
->=20
->=20
-> [2513778.140012] smartpqi 0000:64:00.0: no heartbeat detected - last
-> heartbeat count: 4207808511
-> [2513778.140031] smartpqi 0000:64:00.0: controller offline: reason
-> code
-> 0x4 (no controller heartbeat detected)
-> [2513778.141346] sd 1:0:0:0: [sda] tag#549 FAILED Result:
-> hostbyte=3DDID_NO_CONNECT driverbyte=3DDRIVER_OK cmd_age=3D18s
-> [2513778.141355] sd 1:0:0:0: [sda] tag#550 FAILED Result:=C2=A0
->=20
-> "xfs_buf_ioend_handle_error+0xd5/0x3f0 [xfs]" at daddr 0x9f78 len 8
-> error 5
-> [2513778.141526] XFS (dm-0): log I/O error -5
->=20
+On 4/8/26 10:07 AM, Dave Marquardt via B4 Relay wrote:
+> From: Dave Marquardt <davemarq@linux.ibm.com>
+> 
+> - Add FPIN event descriptor
+> - Add congestion cleared status
+> - Add code to handle basic FPIN async event
+> - Add KUnit tests
 
-Hello=20
+You need a more detailed description of your changes here for the commit log body.
 
-For the series:
+You will also need a signed off tag from yourself for this to even be merged.
 
-I tested the patches and it recovers with them applied.
-The patches look good.
+https://www.kernel.org/doc/html/latest/process/submitting-patches.html
 
-Tested-by: Laurence Oberman <loberman@redhat.com>
-Reviewed-by: Laurence Oberman <loberman@redhat.com>
+> ---
+>  drivers/scsi/Kconfig                 |  10 ++
+>  drivers/scsi/ibmvscsi/Makefile       |   1 +
+>  drivers/scsi/ibmvscsi/ibmvfc.c       | 189 ++++++++++++++++++++++++++++++++++-
+>  drivers/scsi/ibmvscsi/ibmvfc.h       |   9 ++
+>  drivers/scsi/ibmvscsi/ibmvfc_kunit.c |  95 ++++++++++++++++++
+>  5 files changed, 302 insertions(+), 2 deletions(-)
+
+<snip>
+
+> +static struct fc_els_fpin *
+> +ibmvfc_common_fpin_to_desc(u8 fpin_status, __be64 wwpn, __be16 modifier,
+> +			   __be32 period, __be32 threshold, __be32 event_count)
+> +{
+> +	struct fc_fn_peer_congn_desc *pdesc;
+> +	struct fc_fn_congn_desc *cdesc;
+> +	struct fc_fn_li_desc *ldesc;
+> +	struct fc_els_fpin *fpin;
+> +	size_t size;
+> +
+> +	size = ibmvfc_fpin_size_helper(fpin_status);
+> +	if (size == 0)
+> +		return NULL;
+> +
+> +	fpin = kzalloc(size, GFP_KERNEL);
+
+This appears to be called by ibmvfc_handle_async() with runs in atomic context
+and cannot therefore sleep. This allocation needs to be GFP_ATOMIC. Although
+there is another issue below that might make this moot.
+
+> +	if (fpin == NULL)
+> +		return NULL;
+> +
+> +	fpin->fpin_cmd = ELS_FPIN;
+> +
+> +	switch (fpin_status) {
+> +	case IBMVFC_AE_FPIN_CONGESTION_CLEARED:
+> +	case IBMVFC_AE_FPIN_LINK_CONGESTED:
+> +		fpin->desc_len = cpu_to_be32(sizeof(struct fc_fn_congn_desc));
+> +		cdesc = (struct fc_fn_congn_desc *)fpin->fpin_desc;
+> +		cdesc->desc_tag = cpu_to_be32(ELS_DTAG_CONGESTION);
+> +		cdesc->desc_len = cpu_to_be32(FC_TLV_DESC_LENGTH_FROM_SZ(*cdesc));
+> +		if (fpin_status == IBMVFC_AE_FPIN_CONGESTION_CLEARED)
+> +			cdesc->event_type = cpu_to_be16(FPIN_CONGN_CLEAR);
+> +		else
+> +			cdesc->event_type = cpu_to_be16(FPIN_CONGN_DEVICE_SPEC);
+> +		cdesc->event_modifier = modifier;
+> +		cdesc->event_period = period;
+> +		cdesc->severity = FPIN_CONGN_SEVERITY_WARNING;
+> +		break;
+> +	case IBMVFC_AE_FPIN_PORT_CONGESTED:
+> +	case IBMVFC_AE_FPIN_PORT_CLEARED:
+> +		fpin->desc_len = cpu_to_be32(sizeof(struct fc_fn_peer_congn_desc));
+> +		pdesc = (struct fc_fn_peer_congn_desc *)fpin->fpin_desc;
+> +		pdesc->desc_tag = cpu_to_be32(ELS_DTAG_PEER_CONGEST);
+> +		pdesc->desc_len = cpu_to_be32(FC_TLV_DESC_LENGTH_FROM_SZ(*pdesc));
+> +		if (fpin_status == IBMVFC_AE_FPIN_PORT_CLEARED)
+> +			pdesc->event_type = cpu_to_be16(FPIN_CONGN_CLEAR);
+> +		else
+> +			pdesc->event_type = cpu_to_be16(FPIN_CONGN_DEVICE_SPEC);
+> +		pdesc->event_modifier = modifier;
+> +		pdesc->event_period = period;
+> +		pdesc->detecting_wwpn = cpu_to_be64(0);
+> +		pdesc->attached_wwpn = wwpn;
+> +		pdesc->pname_count = cpu_to_be32(1);
+> +		pdesc->pname_list[0] = wwpn;
+> +		break;
+> +	case IBMVFC_AE_FPIN_PORT_DEGRADED:
+> +		fpin->desc_len = cpu_to_be32(sizeof(struct fc_fn_li_desc));
+> +		ldesc = (struct fc_fn_li_desc *)fpin->fpin_desc;
+> +		ldesc->desc_tag = cpu_to_be32(ELS_DTAG_LNK_INTEGRITY);
+> +		ldesc->desc_len = cpu_to_be32(FC_TLV_DESC_LENGTH_FROM_SZ(*ldesc));
+> +		ldesc->event_type = cpu_to_be16(FPIN_LI_UNKNOWN);
+> +		ldesc->event_modifier = modifier;
+> +		ldesc->event_threshold = threshold;
+> +		ldesc->event_count = event_count;
+> +		ldesc->detecting_wwpn = cpu_to_be64(0);
+> +		ldesc->attached_wwpn = wwpn;
+> +		ldesc->pname_count = cpu_to_be32(1);
+> +		ldesc->pname_list[0] = wwpn;
+> +		break;
+> +	default:
+> +		/* This should be caught above. */
+> +		kfree(fpin);
+> +		fpin = NULL;
+> +		break;
+> +	}
+> +
+> +	return fpin;
+> +}
+> +
+> +/**
+> + * ibmvfc_basic_fpin_to_desc(): allocate and populate a struct fc_els_fpin struct
+> + * containing a descriptor.
+> + * @ibmvfc_fpin: Pointer to async crq
+> + *
+> + * Allocate a struct fc_els_fpin containing a descriptor and populate
+> + * based on data from *ibmvfc_fpin.
+> + *
+> + * Return:
+> + * NULL     - unable to allocate structure
+> + * non-NULL - pointer to populated struct fc_els_fpin
+> + */
+> +static struct fc_els_fpin *
+> +/*XXX*/ibmvfc_basic_fpin_to_desc(struct ibmvfc_async_crq *crq)
+
+What is with this /*XXX*/? I can't find it once I apply the patchset so I assume
+its removed in a later patch, but it should be removed here.
+
+> +{
+> +	return ibmvfc_common_fpin_to_desc(crq->fpin_status, crq->wwpn,
+> +					  cpu_to_be16(0),
+> +					  cpu_to_be32(IBMVFC_FPIN_DEFAULT_EVENT_PERIOD),
+> +					  cpu_to_be32(IBMVFC_FPIN_DEFAULT_EVENT_THRESHOLD),
+> +					  cpu_to_be32(1));
+> +}
+> +
+>  /**
+>   * ibmvfc_handle_async - Handle an async event from the adapter
+>   * @crq:	crq to process
+>   * @vhost:	ibmvfc host struct
+>   *
+>   **/
+> -static void ibmvfc_handle_async(struct ibmvfc_async_crq *crq,
+> -				struct ibmvfc_host *vhost)
+> +VISIBLE_IF_KUNIT void ibmvfc_handle_async(struct ibmvfc_async_crq *crq,
+> +					  struct ibmvfc_host *vhost)
+>  {
+>  	const struct ibmvfc_async_desc *desc = ibmvfc_get_ae_desc(be64_to_cpu(crq->event));
+>  	struct ibmvfc_target *tgt;
+> +	struct fc_els_fpin *fpin;
+>  
+>  	ibmvfc_log(vhost, desc->log_level, "%s event received. scsi_id: %llx, wwpn: %llx,"
+>  		   " node_name: %llx%s\n", desc->desc, be64_to_cpu(crq->scsi_id),
+> @@ -3269,11 +3422,37 @@ static void ibmvfc_handle_async(struct ibmvfc_async_crq *crq,
+>  	case IBMVFC_AE_HALT:
+>  		ibmvfc_link_down(vhost, IBMVFC_HALTED);
+>  		break;
+> +	case IBMVFC_AE_FPIN:
+> +		if (!crq->scsi_id && !crq->wwpn && !crq->node_name)
+> +			break;
+> +		list_for_each_entry(tgt, &vhost->targets, queue) {
+> +			if (crq->scsi_id && cpu_to_be64(tgt->scsi_id) != crq->scsi_id)
+> +				continue;
+> +			if (crq->wwpn && cpu_to_be64(tgt->ids.port_name) != crq->wwpn)
+> +				continue;
+> +			if (crq->node_name && cpu_to_be64(tgt->ids.node_name) != crq->node_name)
+> +				continue;
+> +			if (!tgt->rport)
+> +				continue;
+> +			fpin = ibmvfc_basic_fpin_to_desc(crq);
+> +			if (fpin) {
+> +				fc_host_fpin_rcv(tgt->vhost->host,
+> +						 sizeof(*fpin) +
+> +						       be32_to_cpu(fpin->desc_len),
+> +						 (char *)fpin, 0);
+
+This call to fc_host_fpin_rcv() appears to be problematic as it assumes no locks
+are held, but ibmvfc_handle_async() is called with the scsi host lock held. We
+already do a lot more work than we probaly should in our interrupt handler. I
+think we maybe need to pass the FPIN work off to a workqueue instead to be
+handled in process context instead.
+
+-Tyrel
+
 
