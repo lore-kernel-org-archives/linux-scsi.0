@@ -1,57 +1,57 @@
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 607E8346A0A;
-	Thu,  7 May 2026 22:34:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D92F8340281;
+	Thu,  7 May 2026 22:41:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778193261; cv=none; b=AtzCu+yhdD6Y62R6KbQq7W4yYWxCbmFHEsXq0TQelSQ3WyqH7Cahzm5YxirPDh9XDKiSoDC1sKho68rq1P0PCI6EELIadxWB3qF775+GHVy/jOQYlsxijSbmyRtgviKKMCT71ke8HzSzzze0FLXKSegc4dpztGMRTDxhpxjr+Bc=
+	t=1778193666; cv=none; b=pRt0Ba9D20CwOB7kFWj3ckzveeONBT+XGJEgZBP31YX7rzGfe1HcO6ojSLq62+mdm2GdMW/qJYD7Ap42jfkLXUUJbW4oJg/V0eRN0/5dK59p0uib8k4D0ZHduRSrQDPoz/2x4PxjvxRNfcv1BPfvSbHeLf9C6OeGM3h6Raq6KcQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778193261; c=relaxed/simple;
-	bh=sRIdFtxQbnC4Y2lTbfAg+7SU75pBHX8OPdWAAm4Hpfc=;
+	s=arc-20240116; t=1778193666; c=relaxed/simple;
+	bh=scLmmUCto7BUzx8Z4chAiva/cQdAznDv7VcB3P2lc3s=;
 	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=SdNbhN/qK71D6shqoSZPIPrpEPbh623EsKc+dzpIB7RbyRg10uHcqqySmEfsR1qXm4m++IFaoQw61fMbPAbubpozXDffd9pjPPmcjzA+65Qclnx4U1SZZhKLYinJOoYf+22yBqVauKqa5/UamixiLfTqQNxTHxKB8Kd6P4TOziY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=VaFSv8FP; arc=none smtp.client-ip=148.163.156.1
+	 MIME-Version:Content-Type; b=Cwq6LELuhZFP5+aEE4jHnyksK9ooyo823r0p2sr5/r3XAoaGTy7ILr1Cn9xkCjYtRnja5yiix00DLbO8SWM+Y9vTj2yHi4Z7Tll2m88wlKbobfuLq9Av261qakrJ7PSdWYpcS/E9841DIQwFOaCRE3vQjNB2eTGiR3Wf2bvyFJM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=P43HVx6O; arc=none smtp.client-ip=148.163.158.5
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="VaFSv8FP"
-Received: from pps.filterd (m0353729.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 647HX7x01117863;
-	Thu, 7 May 2026 22:34:08 GMT
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="P43HVx6O"
+Received: from pps.filterd (m0360072.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 647L6Mmm2725335;
+	Thu, 7 May 2026 22:40:44 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
 	:content-type:date:from:in-reply-to:message-id:mime-version
-	:references:subject:to; s=pp1; bh=WZzxH25ekfhKMKa5K7BfzWY/cp6ynN
-	e+fF+Fd2EPhZw=; b=VaFSv8FPGofIlABP+v/hbgB0xGlNYRKU48D890qRTFjLh4
-	QhEgxFiknzpLa2qxDtVwYsX0G3tNrsEke5DItoeBqg3OEnWpqwA9MC9vN4J3GGiK
-	pgmzAeZfcVBFFaX34qQjdOMDNiP1q+E7nFSVaKrBOQ92xjSih2MqPbifzEbV5UIH
-	KScWTxf2VL+ErR8F1z5CvKCNUae8Ble1p0bTWWhIxnh6VMfDYCk5TsC7yC5X4hj2
-	LBpZyp0dsngew19jbgZ6UBPAeFXVNMSI62+bP9VLKfvXkGJijV503YJ2Hlz/DOQ9
-	ZOgIoDhJVkp0+d/hDPZZsHJjLgR6oFmS1naBgbuw==
-Received: from ppma22.wdc07v.mail.ibm.com (5c.69.3da9.ip4.static.sl-reverse.com [169.61.105.92])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4dw9x51280-1
+	:references:subject:to; s=pp1; bh=L0mr9sofZvcYRPXy5sFIxX0oXJ3Qsd
+	B+9ux6RqWW0As=; b=P43HVx6Oink8QPaz+Hjr5yUdK/DVlD/mUJTalE+jlXKJhB
+	wB0ofD5BqR1y9qQq35Yo7/I6KOrpxc2vn8VUhvy4G/EAd+z947lD1AuiebCC+06J
+	MMO8nvDvKPPq7ynKrMnaQSEC5mFQ57MOC6a7wwr7u5o1qfrN6yA+E26TJlbfEPph
+	uimyWO0BJgbJQUh9luIpZMox2vADD/xi0fpKNTVytv6q8YSTM3N2C6XG3TBQcrnN
+	otmJrv/YmbC5Nm+64xrevO2Wk1YTILltQNcXaZXOxX+qihH7Dh4vun7JQr/rcHa2
+	Qu7pS83GMgLNiGzw+PyPut/UACySXPhb8aXLzhUg==
+Received: from ppma11.dal12v.mail.ibm.com (db.9e.1632.ip4.static.sl-reverse.com [50.22.158.219])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4dw9y501e4-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 07 May 2026 22:34:08 +0000 (GMT)
-Received: from pps.filterd (ppma22.wdc07v.mail.ibm.com [127.0.0.1])
-	by ppma22.wdc07v.mail.ibm.com (8.18.1.7/8.18.1.7) with ESMTP id 647MOR6a002625;
-	Thu, 7 May 2026 22:34:06 GMT
-Received: from smtprelay05.wdc07v.mail.ibm.com ([172.16.1.72])
-	by ppma22.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4dwuywdw65-1
+	Thu, 07 May 2026 22:40:44 +0000 (GMT)
+Received: from pps.filterd (ppma11.dal12v.mail.ibm.com [127.0.0.1])
+	by ppma11.dal12v.mail.ibm.com (8.18.1.7/8.18.1.7) with ESMTP id 647MdW06004822;
+	Thu, 7 May 2026 22:40:43 GMT
+Received: from smtprelay02.dal12v.mail.ibm.com ([172.16.1.4])
+	by ppma11.dal12v.mail.ibm.com (PPS) with ESMTPS id 4dwx9ynjx0-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 07 May 2026 22:34:06 +0000 (GMT)
-Received: from smtpav05.dal12v.mail.ibm.com (smtpav05.dal12v.mail.ibm.com [10.241.53.104])
-	by smtprelay05.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 647MY5jo31195814
+	Thu, 07 May 2026 22:40:43 +0000 (GMT)
+Received: from smtpav03.dal12v.mail.ibm.com (smtpav03.dal12v.mail.ibm.com [10.241.53.102])
+	by smtprelay02.dal12v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 647MegXf31130146
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Thu, 7 May 2026 22:34:05 GMT
-Received: from smtpav05.dal12v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 754CA58070;
-	Thu,  7 May 2026 22:34:05 +0000 (GMT)
-Received: from smtpav05.dal12v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 2A2BB58067;
-	Thu,  7 May 2026 22:34:05 +0000 (GMT)
+	Thu, 7 May 2026 22:40:42 GMT
+Received: from smtpav03.dal12v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 44D725803F;
+	Thu,  7 May 2026 22:40:42 +0000 (GMT)
+Received: from smtpav03.dal12v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id E9BCB5805A;
+	Thu,  7 May 2026 22:40:41 +0000 (GMT)
 Received: from d (unknown [9.61.133.117])
-	by smtpav05.dal12v.mail.ibm.com (Postfix) with ESMTPS;
-	Thu,  7 May 2026 22:34:05 +0000 (GMT)
+	by smtpav03.dal12v.mail.ibm.com (Postfix) with ESMTPS;
+	Thu,  7 May 2026 22:40:41 +0000 (GMT)
 From: Dave Marquardt <davemarq@linux.ibm.com>
 To: Tyrel Datwyler <tyreld@linux.ibm.com>
 Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
@@ -70,14 +70,14 @@ Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
         Greg Joyce <gjoyce@linux.ibm.com>,
         Kyle Mahlkuch
  <kmahlkuc@linux.ibm.com>
-Subject: Re: [PATCH 3/5] ibmvfc: make ibmvfc login to fabric
-In-Reply-To: <e8dfa3f2-2b2b-43c0-97a1-6bccb748ca6e@linux.ibm.com> (Tyrel
-	Datwyler's message of "Wed, 6 May 2026 22:03:22 -0700")
+Subject: Re: [PATCH 4/5] ibmvfc: use async sub-queue for FPIN messages
+In-Reply-To: <e59242e4-f353-44eb-ad48-b76a9101d4fb@linux.ibm.com> (Tyrel
+	Datwyler's message of "Wed, 6 May 2026 22:41:26 -0700")
 References: <20260408-ibmvfc-fpin-support-v1-0-52b06c464e03@linux.ibm.com>
-	<20260408-ibmvfc-fpin-support-v1-3-52b06c464e03@linux.ibm.com>
-	<e8dfa3f2-2b2b-43c0-97a1-6bccb748ca6e@linux.ibm.com>
-Date: Thu, 07 May 2026 17:34:04 -0500
-Message-ID: <87ik8yetnn.fsf@linux.ibm.com>
+	<20260408-ibmvfc-fpin-support-v1-4-52b06c464e03@linux.ibm.com>
+	<e59242e4-f353-44eb-ad48-b76a9101d4fb@linux.ibm.com>
+Date: Thu, 07 May 2026 17:40:41 -0500
+Message-ID: <87ecjmetcm.fsf@linux.ibm.com>
 User-Agent: Gnus/5.13 (Gnus v5.13)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -88,276 +88,190 @@ MIME-Version: 1.0
 Content-Type: text/plain
 X-TM-AS-GCONF: 00
 X-Proofpoint-Reinject: loops=2 maxloops=12
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNTA3MDIyNCBTYWx0ZWRfX/iEJpmiydD3z
- 9USB1MeLtL8HdJrj662Sjjg8WHfEgfrrDIuoPcZPz1V1PJ4eWg6q1kowjPLSD+tZl4QysdNXkhW
- ytF1+A3/9YMC/qirGCEd2TopgKBKhSPHl9W3+38wpnC5XSHuYKsHL1l2AcfABrSOz22pRy4vd2I
- ibeSyHArVva6g1Yayux/i87EuF4yriGVtNGYIztC5IfOrF0FffFe45/KU8UCG9o+eZepnKp5lzG
- OXiBRtZampYNcwgQajyK/3BaEsyjiKiMBMFEtQ2ZXZ4pG8jyVzf0VHvR9rWOGdudJSML9BPVwjr
- ebof2cQStcYbd3CpKcC2LCMFJbku9jwgziF78PAk3Z8/rMWpgVnRLWYOfPnMO2ZAzGxrNKq+TMP
- 9cfe5OqGQKeFtlfIYHtXZGg6LHyipXetsK7RAu40xTPgePLe5cU7w1upfxeWp+MBRT4n9/JyuDT
- JEGaM3mOHp7hYELSTWA==
-X-Proofpoint-ORIG-GUID: ryb9euMtB8YuL4Iub4sOcEGQPPRjUSB-
-X-Proofpoint-GUID: VKi16QoGfhSYs2O0RI4y3kZeQTdSSLnU
-X-Authority-Analysis: v=2.4 cv=W7UIkxWk c=1 sm=1 tr=0 ts=69fd1360 cx=c_pps
- a=5BHTudwdYE3Te8bg5FgnPg==:117 a=5BHTudwdYE3Te8bg5FgnPg==:17
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNTA3MDIzMCBTYWx0ZWRfX6XGLpE9CQqdH
+ AFz+SZvSO3mQ911ZDSX09uJrO3CFr5XNiGLkwGakIjBrpQz+pgDS61+jOH2pYxjZA15Ymf/MhSG
+ ZUZGDnQEspLbNjQ2wWA51E6EwHG5HOz6fnB6aNCV0W8NXJTfA2SkhX+0Gc3BtFv6AdMlKB3/pLd
+ LJnBNBBd4LO0T9/VgWn3yhdYTDSwOcLQPuM7YY39g/l4mNeg87todN1jlDFTtqVLpflGCvsj0Ut
+ uoiuroIrXsPxOyJaIG/Zy+QGHUV2t0HtqRWj7DQxTtv0RxAZBKfa4r2fJ+qPSyuSk1SJ9/vDOmx
+ DYV8U9OdrI9LpMMwPzzgVfgf7+R5RE9KvnTu/yGiKCHD+9l/QYVE0Gu3dWAkmhH+LAayi8/ikvS
+ vJJW9lxMldiVI8LkVHQZ7VxZPFColHLyG8K4rN8LV8zl9bPImq2uuAey7Iz0z5Vvn6ni5ZHqnjI
+ rbbBE0i9TVHDvTwySEA==
+X-Authority-Analysis: v=2.4 cv=J4GaKgnS c=1 sm=1 tr=0 ts=69fd14ec cx=c_pps
+ a=aDMHemPKRhS1OARIsFnwRA==:117 a=aDMHemPKRhS1OARIsFnwRA==:17
  a=NGcC8JguVDcA:10 a=VkNPw1HP01LnGYTKEx00:22 a=RnoormkPH1_aCDwRdu11:22
- a=uAbxVGIbfxUO_5tXvNgY:22 a=VnNF1IyMAAAA:8 a=OZBBFSiMX2Yuf86NJtQA:9
+ a=RzCfie-kr_QcCd8fBx8p:22 a=VnNF1IyMAAAA:8 a=POLsQlOSEy6U3WfIj7EA:9
+X-Proofpoint-GUID: dV43-ZDSJ7Av1EtQ41yGi0Aq3JdyXlaB
+X-Proofpoint-ORIG-GUID: mwy1_MVVeNI4wL0crNjR-ibEbh7T3qow
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
  definitions=2026-05-07_02,2026-05-06_01,2025-10-01_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- priorityscore=1501 adultscore=0 lowpriorityscore=0 malwarescore=0
- suspectscore=0 spamscore=0 clxscore=1015 phishscore=0 bulkscore=0
- impostorscore=0 classifier=typeunknown authscore=0 authtc= authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2604200000
- definitions=main-2605070224
+ impostorscore=0 clxscore=1015 malwarescore=0 bulkscore=0 suspectscore=0
+ priorityscore=1501 spamscore=0 phishscore=0 adultscore=0 lowpriorityscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2604200000 definitions=main-2605070230
 
 Tyrel Datwyler <tyreld@linux.ibm.com> writes:
 
 > On 4/8/26 10:07 AM, Dave Marquardt via B4 Relay wrote:
 >> From: Dave Marquardt <davemarq@linux.ibm.com>
 >> 
->> Make ibmvfc login to fabric when NPIV login returns SUPPORT_SCSI or
->> SUPPORT_NVMEOF capabilities.
+>> - allocate async sub-queue
+>> - allocate interrupt and set up handler
+>> - negotiate use of async sub-queue with NPIV (VIOS)
+>> - refactor ibmvfc_basic_fpin_to_desc() and ibmvfc_full_fpin_to_desc()
+>>   into common routine
+>> - add KUnit test to verify async sub-queue is allocated
 >
-> Again better commit log message here and developer sign off tag.
->
+> Again more descriptive commit log message required here. Also, this looks like a
+> lot of things being implmented. Can this be broken into multiple patches? It
+> sure looks like a bunch of functional changes that build on each other.
+
+Yes, I'll break this up into more patches.
+
 >> ---
->>  drivers/scsi/ibmvscsi/ibmvfc.c | 100 ++++++++++++++++++++++++++++++++++++++---
->>  drivers/scsi/ibmvscsi/ibmvfc.h |  20 +++++++++
->>  2 files changed, 115 insertions(+), 5 deletions(-)
+>>  drivers/scsi/ibmvscsi/ibmvfc.c       | 325 ++++++++++++++++++++++++++++++++---
+>>  drivers/scsi/ibmvscsi/ibmvfc.h       |  29 +++-
+>>  drivers/scsi/ibmvscsi/ibmvfc_kunit.c |  52 +++---
+>>  3 files changed, 363 insertions(+), 43 deletions(-)
 >> 
 >> diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
->> index 808301fa452d..803fc3caa14d 100644
+>> index 803fc3caa14d..26e39b367022 100644
 >> --- a/drivers/scsi/ibmvscsi/ibmvfc.c
 >> +++ b/drivers/scsi/ibmvscsi/ibmvfc.c
->> @@ -5205,6 +5205,89 @@ static void ibmvfc_discover_targets(struct ibmvfc_host *vhost)
->>  		ibmvfc_link_down(vhost, IBMVFC_LINK_DEAD);
+>> @@ -1471,6 +1471,13 @@ static void ibmvfc_gather_partition_info(struct ibmvfc_host *vhost)
+>>  	of_node_put(rootdn);
 >>  }
 >>  
->> +static void ibmvfc_fabric_login_done(struct ibmvfc_event *evt)
->> +{
->> +	struct ibmvfc_fabric_login *rsp = &evt->xfer_iu->fabric_login;
->> +	u32 mad_status = be16_to_cpu(rsp->common.status);
->> +	struct ibmvfc_host *vhost = evt->vhost;
->> +	int level = IBMVFC_DEFAULT_LOG_LEVEL;
+>> +static __be64 ibmvfc_npiv_chan_caps[] = {
+>> +	cpu_to_be64(IBMVFC_CAN_USE_CHANNELS | IBMVFC_USE_ASYNC_SUBQ |
+>> +		    IBMVFC_YES_SCSI | IBMVFC_CAN_HANDLE_FPIN),
+>> +	cpu_to_be64(IBMVFC_CAN_USE_CHANNELS),
+>> +};
+>> +#define IBMVFC_NPIV_CHAN_CAPS_SIZE (sizeof(ibmvfc_npiv_chan_caps)/sizeof(__be64))
 >> +
+>
+> I really don't understand what you are doing here? You seem to be definig
+> various sets of capabilities, but how does the driver decide which set to use?
+> As far as I can tell the index is increased and the capabilities decrease each
+> time a transport event is received. This looks like maybe its just a testing hack.
+
+My thought was to deal with an older VIOS that doesn't support the async
+sub-queue and full FPIN. But I suppose the response should just not set the
+appropriate bits. I'll go re-read the NPIV spec and figure out if this
+is actually needed.
+
+>>  /**
+>>   * ibmvfc_set_login_info - Setup info for NPIV login
+>>   * @vhost:	ibmvfc host struct
+>> @@ -1486,6 +1493,8 @@ static void ibmvfc_set_login_info(struct ibmvfc_host *vhost)
+>>  	const char *location;
+>>  	u16 max_cmds;
+>>  
 >> +	ENTER;
 >> +
->> +	switch (mad_status) {
->> +	case IBMVFC_MAD_SUCCESS:
->> +		vhost->logged_in = 1;
->
-> I'm not sure I see the point of setting logged_in here since we already set it
-> in npiv_login_done.
-
-Agreed.
-
->> +		vhost->fabric_capabilities = rsp->capabilities;
->
-> The way this is currently spec'd out there are no linux relevant capabilities
-> coming from fabric login. So, I'm not sure there is a reason to save them at
-> this point.
-
-Okay.
-
->> +		fc_host_port_id(vhost->host) = be64_to_cpu(rsp->nport_id);
->> +		ibmvfc_free_event(evt);
->> +		break;
->> +
->> +	case IBMVFC_MAD_FAILED:
->> +		if (ibmvfc_retry_cmd(be16_to_cpu(rsp->status), be16_to_cpu(rsp->error)))
->> +			level += ibmvfc_retry_host_init(vhost);
+>>  	max_cmds = scsi_qdepth + IBMVFC_NUM_INTERNAL_REQ;
+>>  	if (mq_enabled)
+>>  		max_cmds += (scsi_qdepth + IBMVFC_NUM_INTERNAL_SUBQ_REQ) *
+>> @@ -1509,8 +1518,12 @@ static void ibmvfc_set_login_info(struct ibmvfc_host *vhost)
+>>  		cpu_to_be64(IBMVFC_CAN_MIGRATE | IBMVFC_CAN_SEND_VF_WWPN |
+>>  			    IBMVFC_CAN_USE_NOOP_CMD);
+>>  
+>> -	if (vhost->mq_enabled || vhost->using_channels)
+>> -		login_info->capabilities |= cpu_to_be64(IBMVFC_CAN_USE_CHANNELS);
+>> +	if (vhost->mq_enabled || vhost->using_channels) {
+>> +		if (vhost->login_cap_index >= IBMVFC_NPIV_CHAN_CAPS_SIZE)
+>> +			login_info->capabilities |= cpu_to_be64(IBMVFC_CAN_USE_CHANNELS);
 >> +		else
->> +			ibmvfc_link_down(vhost, IBMVFC_LINK_DEAD);
->> +		ibmvfc_log(vhost, level, "Fabric Login failed: %s (%x:%x)\n",
->> +			   ibmvfc_get_cmd_error(be16_to_cpu(rsp->status), be16_to_cpu(rsp->error)),
->> +						be16_to_cpu(rsp->status), be16_to_cpu(rsp->error));
->> +		ibmvfc_free_event(evt);
->> +		LEAVE;
->> +		return;
->> +
->> +	case IBMVFC_MAD_CRQ_ERROR:
->> +		ibmvfc_retry_host_init(vhost);
->> +		fallthrough;
->> +
->> +	case IBMVFC_MAD_DRIVER_FAILED:
->> +		ibmvfc_free_event(evt);
->> +		LEAVE;
->> +		return;
->> +
->> +	default:
->> +		dev_err(vhost->dev, "Invalid fabric Login response: 0x%x\n", mad_status);
->> +		ibmvfc_link_down(vhost, IBMVFC_LINK_DEAD);
->> +		ibmvfc_free_event(evt);
->> +		LEAVE;
->> +		return;
+>> +			login_info->capabilities |= ibmvfc_npiv_chan_caps[vhost->login_cap_index];
 >> +	}
->> +
->> +	ibmvfc_set_host_action(vhost, IBMVFC_HOST_ACTION_QUERY);
->> +	wake_up(&vhost->work_wait_q);
+>>  
+>>  	login_info->async.va = cpu_to_be64(vhost->async_crq.msg_token);
+>>  	login_info->async.len = cpu_to_be32(async_crq->size *
+>> @@ -1524,6 +1537,8 @@ static void ibmvfc_set_login_info(struct ibmvfc_host *vhost)
+>>  	location = of_get_property(of_node, "ibm,loc-code", NULL);
+>>  	location = location ? location : dev_name(vhost->dev);
+>>  	strscpy(login_info->drc_name, location, sizeof(login_info->drc_name));
 >> +
 >> +	LEAVE;
->> +}
->> +
->> +static void ibmvfc_fabric_login(struct ibmvfc_host *vhost)
->> +{
->> +	struct ibmvfc_fabric_login *mad;
->> +	struct ibmvfc_event *evt = ibmvfc_get_reserved_event(&vhost->crq);
->> +	int level = IBMVFC_DEFAULT_LOG_LEVEL;
->> +
->> +	if (!evt) {
->
-> I think we need to hard reset here or we are dead in the water if there are no
-> events.
-
-I will add a hard reset here.
-
->> +		ibmvfc_log(vhost, level, "Fabric Login failed: no available events\n");
->> +		return;
->> +	}
->> +
->> +	ibmvfc_init_event(evt, ibmvfc_fabric_login_done, IBMVFC_MAD_FORMAT);
->> +	mad = &evt->iu.fabric_login;
->> +	memset(mad, 0, sizeof(*mad));
->> +	if (vhost->scsi_scrqs.protocol == IBMVFC_PROTO_SCSI)
->> +		mad->common.opcode = cpu_to_be32(IBMVFC_FABRIC_LOGIN);
->> +	else if (vhost->scsi_scrqs.protocol == IBMVFC_PROTO_NVME)
->> +		mad->common.opcode = cpu_to_be32(IBMVFC_NVMF_FABRIC_LOGIN);
->
-> The VIOS won't return NVMF support unless we advertise it. So, I think its best
-> to omit any NVMF releveant changes that are spec'd as they aren't being applied
-> in a proper workflow here anyways. If the driver advertised both SCSI and NVMF
-> support the current code would never do a NVMF fabric login as it would never
-> fall through here.
-
-Okay, I'll removed the NVMF changes.
-
->> +	else {
->> +		ibmvfc_log(vhost, level, "Fabric Login failed: unknown protocol\n");
->> +		return;
->> +	}
->> +	mad->common.version = cpu_to_be32(1);
->> +	mad->common.length = cpu_to_be16(sizeof(*mad));
->> +
->> +	ibmvfc_set_host_action(vhost, IBMVFC_HOST_ACTION_INIT_WAIT);
->> +
->> +	if (ibmvfc_send_event(evt, vhost, default_timeout))
->> +		ibmvfc_link_down(vhost, IBMVFC_LINK_DOWN);
->> +}
->> +
->>  static void ibmvfc_channel_setup_done(struct ibmvfc_event *evt)
->>  {
->>  	struct ibmvfc_host *vhost = evt->vhost;
->> @@ -5251,8 +5334,12 @@ static void ibmvfc_channel_setup_done(struct ibmvfc_event *evt)
->>  		return;
->>  	}
->>  
->> -	ibmvfc_set_host_action(vhost, IBMVFC_HOST_ACTION_QUERY);
->> -	wake_up(&vhost->work_wait_q);
->> +	if (ibmvfc_check_caps(vhost, (IBMVFC_SUPPORT_SCSI | IBMVFC_SUPPORT_NVMEOF))) {
->> +		ibmvfc_fabric_login(vhost);
->
-> Again drop the NVMEOF code.
-
-Okay.
-
->> +	} else {
->> +		ibmvfc_set_host_action(vhost, IBMVFC_HOST_ACTION_QUERY);
->> +		wake_up(&vhost->work_wait_q);
->> +	}
 >>  }
 >>  
->>  static void ibmvfc_channel_setup(struct ibmvfc_host *vhost)
->> @@ -5443,9 +5530,12 @@ static void ibmvfc_npiv_login_done(struct ibmvfc_event *evt)
->>  	vhost->host->can_queue = be32_to_cpu(rsp->max_cmds) - IBMVFC_NUM_INTERNAL_REQ;
->>  	vhost->host->max_sectors = npiv_max_sectors;
->>  
->> -	if (ibmvfc_check_caps(vhost, IBMVFC_CAN_SUPPORT_CHANNELS) && vhost->do_enquiry) {
->> -		ibmvfc_channel_enquiry(vhost);
->> -	} else {
->> +	if (ibmvfc_check_caps(vhost, IBMVFC_CAN_SUPPORT_CHANNELS)) {
->> +		if (vhost->do_enquiry)
->> +			ibmvfc_channel_enquiry(vhost);
+>>  /**
+>> @@ -3323,7 +3338,7 @@ ibmvfc_common_fpin_to_desc(u8 fpin_status, __be64 wwpn, __be16 modifier,
+>>   * non-NULL - pointer to populated struct fc_els_fpin
+>>   */
+>>  static struct fc_els_fpin *
+>> -/*XXX*/ibmvfc_basic_fpin_to_desc(struct ibmvfc_async_crq *crq)
 >
-> I'm not sure I understand expanding this code to a second if block as there is
-> no functional change.
-
-Agreed.
-
->> +	} else if (ibmvfc_check_caps(vhost, (IBMVFC_SUPPORT_SCSI | IBMVFC_SUPPORT_NVMEOF)))
->
-> Again drop NVMEOF and NVMF related changes.
+> I mentioned this /*XXX*/ in an earlier patch. This needs to be fixed in that patch.
 
 Yes.
 
->> +		ibmvfc_fabric_login(vhost);
->> +	else {
->>  		vhost->do_enquiry = 0;
->>  		ibmvfc_set_host_action(vhost, IBMVFC_HOST_ACTION_QUERY);
->>  		wake_up(&vhost->work_wait_q);
->> diff --git a/drivers/scsi/ibmvscsi/ibmvfc.h b/drivers/scsi/ibmvscsi/ibmvfc.h
->> index cd0917f70c6d..4f680c5d9558 100644
->> --- a/drivers/scsi/ibmvscsi/ibmvfc.h
->> +++ b/drivers/scsi/ibmvscsi/ibmvfc.h
->> @@ -138,6 +138,8 @@ enum ibmvfc_mad_types {
->>  	IBMVFC_CHANNEL_ENQUIRY	= 0x1000,
->>  	IBMVFC_CHANNEL_SETUP	= 0x2000,
->>  	IBMVFC_CONNECTION_INFO	= 0x4000,
->> +	IBMVFC_FABRIC_LOGIN	= 0x8000,
->> +	IBMVFC_NVMF_FABRIC_LOGIN	= 0x8001,
->>  };
+>> +ibmvfc_basic_fpin_to_desc(struct ibmvfc_async_crq *crq)
+>>  {
+>>  	return ibmvfc_common_fpin_to_desc(crq->fpin_status, crq->wwpn,
+>>  					  cpu_to_be16(0),
+>> @@ -3332,6 +3347,29 @@ static struct fc_els_fpin *
+>>  					  cpu_to_be32(1));
+>>  }
 >>  
->>  struct ibmvfc_mad_common {
->> @@ -227,6 +229,8 @@ struct ibmvfc_npiv_login_resp {
->>  #define IBMVFC_MAD_VERSION_CAP		0x20
->>  #define IBMVFC_HANDLE_VF_WWPN		0x40
->>  #define IBMVFC_CAN_SUPPORT_CHANNELS	0x80
->> +#define IBMVFC_SUPPORT_NVMEOF		0x100
->> +#define IBMVFC_SUPPORT_SCSI		0x200
->>  #define IBMVFC_SUPPORT_NOOP_CMD		0x1000
->>  	__be32 max_cmds;
->>  	__be32 scsi_id_sz;
->> @@ -590,6 +594,19 @@ struct ibmvfc_connection_info {
->>  	__be64 reserved[16];
->>  } __packed __aligned(8);
->>  
->> +struct ibmvfc_fabric_login {
->> +	struct ibmvfc_mad_common common;
->> +	__be64 flags;
->> +#define IBMVFC_STRIP_MERGE	0x1
->> +#define IBMVFC_LINK_COMMANDS	0x2
->> +	__be64 capabilities;
->> +	__be64 nport_id;
->> +	__be16 status;
->> +	__be16 error;
->> +	__be32 pad;
->> +	__be64 reserved[16];
->> +} __packed __aligned(8);
+>> +/**
+>> + * ibmvfc_full_fpin_to_desc(): allocate and populate a struct fc_els_fpin struct
+>> + * containing a descriptor.
+>> + * @ibmvfc_fpin: Pointer to async subq FPIN data
+>> + *
+>> + * Allocate a struct fc_els_fpin containing a descriptor and populate
+>> + * based on data from *ibmvfc_fpin.
+>> + *
+>> + * Return:
+>> + * NULL     - unable to allocate structure
+>> + * non-NULL - pointer to populated struct fc_els_fpin
+>> + */
+>> +static struct fc_els_fpin *
+>> +ibmvfc_full_fpin_to_desc(struct ibmvfc_async_subq *ibmvfc_fpin)
+>> +{
+>> +	return ibmvfc_common_fpin_to_desc(ibmvfc_fpin->fpin_status,
+>> +					  ibmvfc_fpin->wwpn,
+>> +					  cpu_to_be16(0),
+>> +					  cpu_to_be32(IBMVFC_FPIN_DEFAULT_EVENT_PERIOD),
+>> +					  cpu_to_be32(IBMVFC_FPIN_DEFAULT_EVENT_THRESHOLD),
+>> +					  cpu_to_be32(1));
+>> +}
 >> +
->>  struct ibmvfc_trace_start_entry {
->>  	u32 xfer_len;
->>  } __packed;
->> @@ -709,6 +726,7 @@ union ibmvfc_iu {
->>  	struct ibmvfc_channel_enquiry channel_enquiry;
->>  	struct ibmvfc_channel_setup_mad channel_setup;
->>  	struct ibmvfc_connection_info connection_info;
->> +	struct ibmvfc_fabric_login fabric_login;
->>  } __packed __aligned(8);
+>>  /**
+>>   * ibmvfc_handle_async - Handle an async event from the adapter
+>>   * @crq:	crq to process
+>> @@ -3449,6 +3487,120 @@ VISIBLE_IF_KUNIT void ibmvfc_handle_async(struct ibmvfc_async_crq *crq,
+>>  }
+>>  EXPORT_SYMBOL_IF_KUNIT(ibmvfc_handle_async);
 >>  
->>  enum ibmvfc_target_action {
->> @@ -921,6 +939,8 @@ struct ibmvfc_host {
->>  	struct work_struct rport_add_work_q;
->>  	wait_queue_head_t init_wait_q;
->>  	wait_queue_head_t work_wait_q;
->> +	__be64 fabric_capabilities;
->> +	unsigned int login_cap_index;
+>> +VISIBLE_IF_KUNIT void ibmvfc_handle_asyncq(struct ibmvfc_crq *crq_instance,
+>> +					   struct ibmvfc_host *vhost,
+>> +					   struct list_head *evt_doneq)
+>> +{
+>> +	struct ibmvfc_async_subq *crq = (struct ibmvfc_async_subq *)crq_instance;
+>> +	const struct ibmvfc_async_desc *desc = ibmvfc_get_ae_desc(be16_to_cpu(crq->event));
+>> +	struct ibmvfc_target *tgt;
+>> +	struct fc_els_fpin *fpin;
+>> +
+>> +	ibmvfc_log(vhost, desc->log_level,
+>> +		   "%s event received. wwpn: %llx, node_name: %llx%s event 0x%x\n",
+>> +		   desc->desc, be64_to_cpu(crq->wwpn), be64_to_cpu(crq->id.node_name),
+>> +		   ibmvfc_get_link_state(crq->link_state), be16_to_cpu(crq->event));
 >
-> Lets drop these as they serve no purpose for Linux. If the spec changes to
-> introduce capabilites releveant to Linux we can add it then.
+> Was there no way to not copy/paste what looks like basically ibmvfc_handle_async
+> into ibmvfc_handle_asyncq? This is a bunch of unnecessary code bloat. The major
+> difference seems that crq->event is be64 on the standard CRQ and be16 on a
+> sub-crq and accessing certain fields differently.
 
-Okay. You discussed fabric_capabilities. I think login_cap_index isn't
-useful until patch 4 or 5, so I'll drop it from patch 4.
+That's a good idea. I'll see what I can do. Seems like a little
+refactoring should make it work.
+
+> Again I think maybe we need to consider moving all the async work into a workqueue.
+
+My initial thought was to just queue the FPIN processing of
+ibmvfc_handle_asyncq to a work queue to resolve the problem of calling
+fc_host_fpin_rcv from interrupt context, but putting all of this
+processing into a work queue would work too. I'll look into it.
 
 -Dave
-
