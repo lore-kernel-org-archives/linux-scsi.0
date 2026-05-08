@@ -1,118 +1,176 @@
-Received: from mail-ed1-f42.google.com (mail-ed1-f42.google.com [209.85.208.42])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F094137F75E
-	for <linux-scsi@vger.kernel.org>; Fri,  8 May 2026 09:08:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.42
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778231336; cv=pass; b=mWGqEG/HT3XTy2VkHWHVNF5biZc7fuVMY2mPmLqkq8cSvU4YpZPCm8ZQ7eYzJ1LzzNMJBsTeO0zqkhAyVSS+jkjqnmTHBLEFYBjPBPxu5e8NqJepFLjO/Ryao7d1PbEyhRnpM+0wVLzTuazfCsCdN4hgrkFvWJtIi2l34VzpHv8=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778231336; c=relaxed/simple;
-	bh=94w0YpZVYjdenOX1+6NN9zU71Com+qkFKFw9MeOEQw4=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=BjXjeTzlOpwtoMb4J69Ocj4Nbs8/TwgeAXiQapJZAFtao50K9bhnseydAIsqQVgUfE4AVgjsVaD+n+hApvBe2D93Mw2cteJ6Rnj8pb+4OVSusBvXEtqezejPFGBAK6AyjKuBn71d0JFSqEZV/pTPcg27GSXb49LYpWZea3Oy2yg=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=Ab7y2RlC; arc=pass smtp.client-ip=209.85.208.42
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B20B62F8E9C;
+	Fri,  8 May 2026 14:38:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1778251127; cv=none; b=GR2mZlMXX2qACkd2u5ed++Eub8Yz6wCA4gipe3IqDhRD+BcBQMP1tXD2eu7/wNLGsEW+6L7Z19NmTVoh30UHkYjD9n6mpgdd7Xck1pccmiq/sCatfvp7tOOF0E4dzUen3ft9XVt3sjs0O03AfIrNvg+ZBtBYk+BeNPmliUAs1tE=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1778251127; c=relaxed/simple;
+	bh=yGaQ89U095t6+bFprkRGY398feiUFWX6DGYa0bSjfXk=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
+	 MIME-Version:Content-Type; b=oLxxhacS3PvlsBsACtRgwtqK5L4JtG0H9c/z8FcJiY6Aaap8hdtKPKQHZFN31skfusYAsI4oE0fa4VJyfx/tj2vCre5odjwHQFi1p2XrR/Y5mtNKN1UGTgO7ySOMzJBicbMadAI+07NE1aTWlKV7/q0LtB5C0xbaRBgL/Ogid8k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=SISgIlJV; arc=none smtp.client-ip=148.163.158.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="Ab7y2RlC"
-Received: by mail-ed1-f42.google.com with SMTP id 4fb4d7f45d1cf-671588ab0cfso5926a12.1
-        for <linux-scsi@vger.kernel.org>; Fri, 08 May 2026 02:08:54 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1778231333; cv=none;
-        d=google.com; s=arc-20240605;
-        b=AoQbdldT5DhZhdHVClRLHZO1qTZRbXeh9mR/12d5df8xwFegI77oUblXDpcUTVbScC
-         Vo0sxL1Aza4+hjFgIkx/jo0wKGAXblB8f+CkZJEXYQAaQBganuSlnBhsrUpY73SSq5kB
-         oHFic8KYc42v7S/DkzZNWPsv8UzQYx2TnYnxSYkpgtHaGsMsPOTvR21FiEnVQ1BU16ZD
-         wpg5aSLZ+lx1SnbdzVcuW1Jc7BzTZb16ikflI/kXvyFG6NmtJf/fYrVXcDSl8YCOvwLo
-         gqTEWJcxoo7ZmWVtBpZpBJzWTw+ifJbbYDWtBQXtPl9jlHT46VNRvOj+wnFWIRNhYiVm
-         eTcA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=q6KlhDsCCbA+sGxBJibljaCbp18JVPvqTbjbGVM7CSw=;
-        fh=ZsnA0alHkpCPoMw9lK77lf9mBnN+bq7Ryt5fOSpRBzM=;
-        b=d6xm7p3DzNZDsNfq6PLZTuTvNZhIFZlcCn3J0zmvVMih8clH9XooVbsFDmHzwefT1y
-         79xierXWPCzesib+XrIkvdV4k4gzrQEd3BkhcFS/VPg2w8gPdT/ES10GHjX/sSaqrKDI
-         HPdVmZps1WfU9Dqprmj89IHfR/CZDUyk+5xOpPsnCvRd3xt+C/kNX2L9Zab0ej9XEWaG
-         qJtXYQvykwrw1/SZgt442201L78auC6E/67Ich9ZIZHw6kuSEajVPV1BhFdc9eLYLj2B
-         GwBSYCyAv8h6KN5numQTjRxKVEaGsYBpzbE4LxBrSSZbScy4S+V4QY/VWr1fl1ChbGNY
-         Sdew==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1778231333; x=1778836133; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=q6KlhDsCCbA+sGxBJibljaCbp18JVPvqTbjbGVM7CSw=;
-        b=Ab7y2RlCST4S2pgTKpGNX4la4kQfZJlyWRQB0dRwcR+p6a5QEsUG/nFq5+b+KOI2jV
-         UPghOCUma9KYenbVsJR54o4rSUYm9RzNB+hRVyx/+fipUCTbM7cGzhmOJtOhLPu40xdk
-         TBVcOunvbIeJilE7rjkfVf9lW0uamXGiMtxEi4zlxsJFQN60uX04A4xCkPbM+YAx5K1A
-         ycWfW0QxZtCaTTwNFF1J4vo8UjBdO1qIY2ZyeskzX6mk9fiBbhnWKWZmaDfVACunThUf
-         XCl6nwDdjk7LTV5i3yRJgMQ9q6fAn6l2Sshq2qAaOQPsRjDeMSPm2kjV17oajBAmZZSs
-         cD8A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1778231333; x=1778836133;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=q6KlhDsCCbA+sGxBJibljaCbp18JVPvqTbjbGVM7CSw=;
-        b=oOCqeqGUisF2KOKVOLwrUtALEkjUnpODuJndVzOTKgSS8JARYY6JGxq584n7Nmtcx5
-         DVtRDxtnis9d0X9UYJ3CrKFwEWcAkyDtTwRnwMXLVHJ53eoY20rNr035SC+pueSQEb7v
-         grGzrCNZ6HIsNo4KgeVxcmS7NJeib5A3k+SJk0mao72bGHZlaSmp+E1g7Wlv5J8U5raD
-         A+nm+8KtHp3e9FyKZk8J02VFKLIjoZPyX/Zc+1h8BLI4+WAOXUIHaBO6Iuxq4C5Ac/uH
-         TeZJK3baKNFYFG0zkKmVrb9K+UOOHJ84HKDPlXqmokdPRstCo655gQJoJ3WpTRGQfH7X
-         yyQg==
-X-Forwarded-Encrypted: i=1; AFNElJ8geeaY80ii0T8h0yd8NnxOjDkdeTFbAGcsdXXqAY8Ej1sxM8H+enxPAb3mh3YSuZgMaAwjlyJt6YSS@vger.kernel.org
-X-Gm-Message-State: AOJu0YwByIBSZ/ahi8WXYptz0G8oew0aFZQ5k8D+/jwFSaNAIfaof8Se
-	NLvxFiz6WMDOHG54ZQLCi60ndph+IntyaCv1rI2U6RGHNJD9Qizv8ukvtD8iUbIWqdG2utV5dm3
-	L9tZESMer/lIJ1XTkm9d272e2nScG92g0O9XsDEHu
-X-Gm-Gg: Acq92OF/pU85dqcsIA/yqryDfOM+7efMIfka8uJYx+j01OS2fiXQm9f2jEfYxSCy7F8
-	h9mXDFEeS1ydw9Pp5WJpcHcSp/zWVy8VOwRlihLXLPamVmJ8kk+QDnf/Y6u9NzD/Gkzpbjn7Xxf
-	IKV8SoZN8/oozDTR7y71ZL8phJJT0VAoVuds6SGzEJSMWpZ++ZMSha246IvUusoZRNVcskTz+jY
-	zm/pMb3RaF6IHikOGK2J2skCAYLq2xqjasKAHVvzajc7hM+9iFwyjSiLgwEbGXajmmimtkw+y9S
-	8DfaxK2BNsAD9AVTlQ==
-X-Received: by 2002:a05:6402:2b9b:b0:678:93b4:1fd3 with SMTP id
- 4fb4d7f45d1cf-67ec504bd96mr67552a12.6.1778231332759; Fri, 08 May 2026
- 02:08:52 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="SISgIlJV"
+Received: from pps.filterd (m0360072.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6480xjaF2577247;
+	Fri, 8 May 2026 14:38:24 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-type:date:from:in-reply-to:message-id:mime-version
+	:references:subject:to; s=pp1; bh=RXHh4OkTlgVUfYlT8QNRojbDHOMsEu
+	F3j/SgfQCtKj8=; b=SISgIlJVPCq4z3/ByEe/tf8PVKYJDLHDpf2SIs6CcbaJDz
+	JoE1132Vv2OJxRbjZvAZnEBGnEjB0MiyMc9nr9vrKftmMWAsFZ+xZY7uR5htcvzh
+	lXvLgi5aUCCQxU1/XvyDNjKdp6JTn5K93RpS5H8ajpOoiFw0nbCGF99g4WKkSteq
+	yIQrgI9jupnIR8Z2UGO/fx5MJ824qi0kTMpNFYKC2hmqJDmvYR3DSQSMbif2DaxA
+	yXRS6gx7avUeV3uUJbmJAAlNkfvREYPNbccvqd9xCBmJasxlS3vmQ91l1QQ7bl7v
+	eWUOOBGKQdR9FYvjiwFA+xihQPjceA8Nb0bFergQ==
+Received: from ppma12.dal12v.mail.ibm.com (dc.9e.1632.ip4.static.sl-reverse.com [50.22.158.220])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4dw9y52uys-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 08 May 2026 14:38:23 +0000 (GMT)
+Received: from pps.filterd (ppma12.dal12v.mail.ibm.com [127.0.0.1])
+	by ppma12.dal12v.mail.ibm.com (8.18.1.7/8.18.1.7) with ESMTP id 648EOldB003733;
+	Fri, 8 May 2026 14:38:23 GMT
+Received: from smtprelay06.wdc07v.mail.ibm.com ([172.16.1.73])
+	by ppma12.dal12v.mail.ibm.com (PPS) with ESMTPS id 4e10073kwq-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 08 May 2026 14:38:23 +0000 (GMT)
+Received: from smtpav06.dal12v.mail.ibm.com (smtpav06.dal12v.mail.ibm.com [10.241.53.105])
+	by smtprelay06.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 648EcLt21704622
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Fri, 8 May 2026 14:38:21 GMT
+Received: from smtpav06.dal12v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 29BBD58043;
+	Fri,  8 May 2026 14:38:21 +0000 (GMT)
+Received: from smtpav06.dal12v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id E85A758055;
+	Fri,  8 May 2026 14:38:20 +0000 (GMT)
+Received: from d (unknown [9.16.41.19])
+	by smtpav06.dal12v.mail.ibm.com (Postfix) with ESMTPS;
+	Fri,  8 May 2026 14:38:20 +0000 (GMT)
+From: Dave Marquardt <davemarq@linux.ibm.com>
+To: Tyrel Datwyler <tyreld@linux.ibm.com>
+Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+        "Martin
+ K. Petersen" <martin.petersen@oracle.com>,
+        Madhavan Srinivasan
+ <maddy@linux.ibm.com>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        Nicholas
+ Piggin <npiggin@gmail.com>,
+        "Christophe Leroy (CS GROUP)"
+ <chleroy@kernel.org>,
+        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, Brian King
+ <brking@linux.ibm.com>,
+        Greg Joyce <gjoyce@linux.ibm.com>,
+        Kyle Mahlkuch
+ <kmahlkuc@linux.ibm.com>
+Subject: Re: [PATCH 5/5] ibmvfc: handle extended FPIN events
+In-Reply-To: <8ac414a6-b4e9-4fd9-b316-3738b3229664@linux.ibm.com> (Tyrel
+	Datwyler's message of "Wed, 6 May 2026 22:48:08 -0700")
+References: <20260408-ibmvfc-fpin-support-v1-0-52b06c464e03@linux.ibm.com>
+	<20260408-ibmvfc-fpin-support-v1-5-52b06c464e03@linux.ibm.com>
+	<8ac414a6-b4e9-4fd9-b316-3738b3229664@linux.ibm.com>
+Date: Fri, 08 May 2026 09:38:20 -0500
+Message-ID: <87h5oij7ab.fsf@linux.ibm.com>
+User-Agent: Gnus/5.13 (Gnus v5.13)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260424151420.111675-1-can.guo@oss.qualcomm.com>
-In-Reply-To: <20260424151420.111675-1-can.guo@oss.qualcomm.com>
-From: Brian Kao <powenkao@google.com>
-Date: Fri, 8 May 2026 17:08:38 +0800
-X-Gm-Features: AVHnY4LIqzhUM33Lc9nvgwPYliVZYAlT4EhlRo-azUqGcat35M2qLFy1sDt566E
-Message-ID: <CA+=0d2bunGi-Ht+3ZZ3-+E2FfMObU27QCMYX+r_5RqoAEQq5Ew@mail.gmail.com>
-Subject: Re: [PATCH v2 0/2] scsi: ufs: Add persistent TX Equalization settings support
-To: Can Guo <can.guo@oss.qualcomm.com>
-Cc: avri.altman@wdc.com, bvanassche@acm.org, beanhuo@micron.com, 
-	peter.wang@mediatek.com, martin.petersen@oracle.com, mani@kernel.org, 
-	linux-scsi@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain
+X-TM-AS-GCONF: 00
+X-Proofpoint-Reinject: loops=2 maxloops=12
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNTA4MDE1MCBTYWx0ZWRfXw2ZMVzT2JGZX
+ 2wQojrRfs9jwp/xnoGTwxfeVBpIHntydW5nhfGZ0v6gL3ssRV97MBwoT0pjvGIGqm7fwJRR0B2w
+ WiJDHdAhzoofwgZ6YMH0TeH8vFmHmFC7uSAWkfrC+JChJ0zOD6VRAarINWZhDXNwF6Jz2v6XVYw
+ NO28JnMR/PsJZAknSNgGO0wWm1UAMaeconmIPVU9qD8ozpiXyFnlzwQh3GoygfNj8Q6XMaa0JLW
+ CRZLZIcT0+WnzZ8zGXP1AaLLKyi11MWo7RVvCj8SeMff2a2z4I6chS/FdZnlQ57FYluGcrEzgfn
+ 1jvKaYeekBU2VrJhtO0XfjGIUS40lpFpt3CVX8G2mtCmlYvJuZF39SPIjme35hsCwgBxb6psf1O
+ KooD+Yl7FEFRUqM/cIIXpoIp28XsoIdXoKYHLZxmbzW/rgadvuh6qDnKNhlbwM5JqYj1m3kurp2
+ g4fiN4sKUn59F+HoKgg==
+X-Authority-Analysis: v=2.4 cv=J4GaKgnS c=1 sm=1 tr=0 ts=69fdf560 cx=c_pps
+ a=bLidbwmWQ0KltjZqbj+ezA==:117 a=bLidbwmWQ0KltjZqbj+ezA==:17
+ a=NGcC8JguVDcA:10 a=VkNPw1HP01LnGYTKEx00:22 a=RnoormkPH1_aCDwRdu11:22
+ a=RzCfie-kr_QcCd8fBx8p:22 a=VnNF1IyMAAAA:8 a=1SDrLXVDyJUjgw-k9W0A:9
+X-Proofpoint-GUID: 3xP5O9r6Any7I7_jUwvY3TDpNxOIcOTm
+X-Proofpoint-ORIG-GUID: w1j5ox_0X6a8GePy_w6rIt8acBAu323x
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-05-07_02,2026-05-08_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ impostorscore=0 clxscore=1015 malwarescore=0 bulkscore=0 suspectscore=0
+ priorityscore=1501 spamscore=0 phishscore=0 adultscore=0 lowpriorityscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2604200000 definitions=main-2605080150
 
-On Fri, Apr 24, 2026 at 11:18=E2=80=AFPM Can Guo <can.guo@oss.qualcomm.com>=
- wrote:
+Tyrel Datwyler <tyreld@linux.ibm.com> writes:
 
-> 2. Add TX EQ settings persistence flow:
->    - Read stored settings from qTxEQGnSettings & wTxEQGnSettingsExt.
->    - Decode and populate per-gear TX EQ parameters.
->    - Use Bit[15] in wTxEQGnSettingsExt as validity indication.
->    - Store trained settings back to these attributes for future reuse.
+> On 4/8/26 10:07 AM, Dave Marquardt via B4 Relay wrote:
+>> From: Dave Marquardt <davemarq@linux.ibm.com>
+>> 
+>> - negotiate use of extended FPIN events with NPIV (VIOS)
+>> - add code to parse and handle extended FPIN events
+>> - add KUnit test to test extended FPIN event handling
 >
+> Same nit here as the previous 4 patches.
+>
+>> ---
+>>  drivers/scsi/ibmvscsi/ibmvfc.c       | 45 ++++++++++++++---
+>>  drivers/scsi/ibmvscsi/ibmvfc.h       | 31 ++++++++++++
+>>  drivers/scsi/ibmvscsi/ibmvfc_kunit.c | 97 +++++++++++++++++++++++++++++++++---
+>>  3 files changed, 161 insertions(+), 12 deletions(-)
+>> 
+>> diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
+>> index 26e39b367022..5b2b861a34c2 100644
+>> --- a/drivers/scsi/ibmvscsi/ibmvfc.c
+>> +++ b/drivers/scsi/ibmvscsi/ibmvfc.c
+>> @@ -1472,6 +1472,9 @@ static void ibmvfc_gather_partition_info(struct ibmvfc_host *vhost)
+>>  }
+>>  
+>>  static __be64 ibmvfc_npiv_chan_caps[] = {
+>> +	cpu_to_be64(IBMVFC_CAN_USE_CHANNELS | IBMVFC_USE_ASYNC_SUBQ |
+>> +		    IBMVFC_YES_SCSI | IBMVFC_CAN_HANDLE_FPIN |
+>> +		    IBMVFC_CAN_HANDLE_FPIN_EXT),
+>>  	cpu_to_be64(IBMVFC_CAN_USE_CHANNELS | IBMVFC_USE_ASYNC_SUBQ |
+>>  		    IBMVFC_YES_SCSI | IBMVFC_CAN_HANDLE_FPIN),
+>>  	cpu_to_be64(IBMVFC_CAN_USE_CHANNELS),
+>> @@ -3370,6 +3373,28 @@ ibmvfc_full_fpin_to_desc(struct ibmvfc_async_subq *ibmvfc_fpin)
+>>  					  cpu_to_be32(1));
+>>  }
+>>  
+>> +/**
+>> + * ibmvfc_ext_fpin_to_desc(): allocate and populate a struct fc_els_fpin struct
+>> + * containing a descriptor.
+>> + * @ibmvfc_fpin: Pointer to async subq FPIN data
+>> + *
+>> + * Allocate a struct fc_els_fpin containing a descriptor and populate
+>> + * based on data from *ibmvfc_fpin.
+>> + *
+>> + * Return:
+>> + * NULL     - unable to allocate structure
+>> + * non-NULL - pointer to populated struct fc_els_fpin
+>> + */
+>> +static struct fc_els_fpin *
+>> +ibmvfc_ext_fpin_to_desc(struct ibmvfc_async_subq_fpin *ibmvfc_fpin)
+>> +{
+>> +	return ibmvfc_common_fpin_to_desc(ibmvfc_fpin->fpin_status, ibmvfc_fpin->wwpn,
+>> +					  ibmvfc_fpin->fpin_data.event_type_modifier,
+>> +					  ibmvfc_fpin->fpin_data.event_threshold,
+>> +					  ibmvfc_fpin->fpin_data.event_threshold,
+>
+> I see mention of threshold and period previously. Why in this case is it just
+> the threshold value passed for both?
 
-Hi Can Guo
+I'll look into this. There's no obvious period here in ibmvfc_fpin or
+ibmvfc_fpin->fpin_data. It may be more appropriate to use a default
+period.
 
-Is using Bit[15] as a validity indicator reliable here? Since this
-isn't part of the JEDEC standard=E2=80=94which defines bits [15:6] as Reser=
-ved
-for Future Use (RFU)
-Are there plans to propose this validity indicator in a future
-revision of the standard? If so, I would definitely support that
-proposal.
-
-Thanks
+-Dave
