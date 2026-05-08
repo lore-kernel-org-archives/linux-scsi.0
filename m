@@ -1,197 +1,118 @@
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+Received: from mail-ed1-f42.google.com (mail-ed1-f42.google.com [209.85.208.42])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 57F6F3750A9
-	for <linux-scsi@vger.kernel.org>; Fri,  8 May 2026 06:02:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778220140; cv=none; b=U91GOn+cK2Hf/bU+sKXRonTk3miPcvRwg6WJ3Q7C4VSfXxgHq1291MCnXcKW1EHqcYK0rkQ+ppalcsrf9E8cIjJvt0fy7KfNHDY642aQbiZIGBtXxUuZTP8NaZhKYY0UoZGhmRlwKJDFW/yMKsM9iFli7Z3+gAGeED9gP81hBfQ=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778220140; c=relaxed/simple;
-	bh=FGLpgt0TrLuQTT0/E8yZosrOpE5j6cTvj0aALjoi95s=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=XCaX/IdfP+9NWHPfEfjEoy0Dr5QOV1bTg/yDk7OS5XSDXtnuVhPaCw3A3FctvyZ28dW+LJRhj7iPpUS5CmbT34J6jzz0IVZHinY+Pdf4F/DA1YVDQ/2EyNwpFszVvQaT0jn3LmhyxBURP0WIJbtK29rNsbIdfsd3mMj2LQl9na4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=YxtnTZvt; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=rgxH3Etg; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=YxtnTZvt; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=rgxH3Etg; arc=none smtp.client-ip=195.135.223.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F094137F75E
+	for <linux-scsi@vger.kernel.org>; Fri,  8 May 2026 09:08:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.42
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1778231336; cv=pass; b=mWGqEG/HT3XTy2VkHWHVNF5biZc7fuVMY2mPmLqkq8cSvU4YpZPCm8ZQ7eYzJ1LzzNMJBsTeO0zqkhAyVSS+jkjqnmTHBLEFYBjPBPxu5e8NqJepFLjO/Ryao7d1PbEyhRnpM+0wVLzTuazfCsCdN4hgrkFvWJtIi2l34VzpHv8=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1778231336; c=relaxed/simple;
+	bh=94w0YpZVYjdenOX1+6NN9zU71Com+qkFKFw9MeOEQw4=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=BjXjeTzlOpwtoMb4J69Ocj4Nbs8/TwgeAXiQapJZAFtao50K9bhnseydAIsqQVgUfE4AVgjsVaD+n+hApvBe2D93Mw2cteJ6Rnj8pb+4OVSusBvXEtqezejPFGBAK6AyjKuBn71d0JFSqEZV/pTPcg27GSXb49LYpWZea3Oy2yg=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=Ab7y2RlC; arc=pass smtp.client-ip=209.85.208.42
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="YxtnTZvt";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="rgxH3Etg";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="YxtnTZvt";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="rgxH3Etg"
-Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id C43785C4A6;
-	Fri,  8 May 2026 06:02:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1778220124; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=BD8IUVBzx1auoJiaeZ5eqa+yq8ovS0R8vwE4HCgBV/M=;
-	b=YxtnTZvtXxy33LeyVjcavsAUuIwGKwcPVpRtkzRVsRFusMz3znT3fpJRpzc2a+SkCVxeO2
-	ELThfBq4ezODVvtiyZfYL+XzknStgeyb7gegiOaddXE1DMIjovMrFSGdtDj1LijnFNuUqI
-	e9+K54ppUM8fcF64i+F3s0XDb3AjAag=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1778220124;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=BD8IUVBzx1auoJiaeZ5eqa+yq8ovS0R8vwE4HCgBV/M=;
-	b=rgxH3EtgtMAjAJYRhRFv0YVV+Y7ehbKMMo7q8mLqr9ZywvXeMH4AoT6L3piyR9ckTi1Ld7
-	ppGMVp/ec8acE4Dw==
-Authentication-Results: smtp-out2.suse.de;
-	none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1778220124; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=BD8IUVBzx1auoJiaeZ5eqa+yq8ovS0R8vwE4HCgBV/M=;
-	b=YxtnTZvtXxy33LeyVjcavsAUuIwGKwcPVpRtkzRVsRFusMz3znT3fpJRpzc2a+SkCVxeO2
-	ELThfBq4ezODVvtiyZfYL+XzknStgeyb7gegiOaddXE1DMIjovMrFSGdtDj1LijnFNuUqI
-	e9+K54ppUM8fcF64i+F3s0XDb3AjAag=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1778220124;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=BD8IUVBzx1auoJiaeZ5eqa+yq8ovS0R8vwE4HCgBV/M=;
-	b=rgxH3EtgtMAjAJYRhRFv0YVV+Y7ehbKMMo7q8mLqr9ZywvXeMH4AoT6L3piyR9ckTi1Ld7
-	ppGMVp/ec8acE4Dw==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 74A6E593A7;
-	Fri,  8 May 2026 06:02:04 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id sUNNGlx8/WmJPwAAD6G6ig
-	(envelope-from <hare@suse.de>); Fri, 08 May 2026 06:02:04 +0000
-Message-ID: <ea4de81e-4c9b-48d0-bc6d-72f23c7fc831@suse.de>
-Date: Fri, 8 May 2026 08:02:03 +0200
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="Ab7y2RlC"
+Received: by mail-ed1-f42.google.com with SMTP id 4fb4d7f45d1cf-671588ab0cfso5926a12.1
+        for <linux-scsi@vger.kernel.org>; Fri, 08 May 2026 02:08:54 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1778231333; cv=none;
+        d=google.com; s=arc-20240605;
+        b=AoQbdldT5DhZhdHVClRLHZO1qTZRbXeh9mR/12d5df8xwFegI77oUblXDpcUTVbScC
+         Vo0sxL1Aza4+hjFgIkx/jo0wKGAXblB8f+CkZJEXYQAaQBganuSlnBhsrUpY73SSq5kB
+         oHFic8KYc42v7S/DkzZNWPsv8UzQYx2TnYnxSYkpgtHaGsMsPOTvR21FiEnVQ1BU16ZD
+         wpg5aSLZ+lx1SnbdzVcuW1Jc7BzTZb16ikflI/kXvyFG6NmtJf/fYrVXcDSl8YCOvwLo
+         gqTEWJcxoo7ZmWVtBpZpBJzWTw+ifJbbYDWtBQXtPl9jlHT46VNRvOj+wnFWIRNhYiVm
+         eTcA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=q6KlhDsCCbA+sGxBJibljaCbp18JVPvqTbjbGVM7CSw=;
+        fh=ZsnA0alHkpCPoMw9lK77lf9mBnN+bq7Ryt5fOSpRBzM=;
+        b=d6xm7p3DzNZDsNfq6PLZTuTvNZhIFZlcCn3J0zmvVMih8clH9XooVbsFDmHzwefT1y
+         79xierXWPCzesib+XrIkvdV4k4gzrQEd3BkhcFS/VPg2w8gPdT/ES10GHjX/sSaqrKDI
+         HPdVmZps1WfU9Dqprmj89IHfR/CZDUyk+5xOpPsnCvRd3xt+C/kNX2L9Zab0ej9XEWaG
+         qJtXYQvykwrw1/SZgt442201L78auC6E/67Ich9ZIZHw6kuSEajVPV1BhFdc9eLYLj2B
+         GwBSYCyAv8h6KN5numQTjRxKVEaGsYBpzbE4LxBrSSZbScy4S+V4QY/VWr1fl1ChbGNY
+         Sdew==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1778231333; x=1778836133; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=q6KlhDsCCbA+sGxBJibljaCbp18JVPvqTbjbGVM7CSw=;
+        b=Ab7y2RlCST4S2pgTKpGNX4la4kQfZJlyWRQB0dRwcR+p6a5QEsUG/nFq5+b+KOI2jV
+         UPghOCUma9KYenbVsJR54o4rSUYm9RzNB+hRVyx/+fipUCTbM7cGzhmOJtOhLPu40xdk
+         TBVcOunvbIeJilE7rjkfVf9lW0uamXGiMtxEi4zlxsJFQN60uX04A4xCkPbM+YAx5K1A
+         ycWfW0QxZtCaTTwNFF1J4vo8UjBdO1qIY2ZyeskzX6mk9fiBbhnWKWZmaDfVACunThUf
+         XCl6nwDdjk7LTV5i3yRJgMQ9q6fAn6l2Sshq2qAaOQPsRjDeMSPm2kjV17oajBAmZZSs
+         cD8A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1778231333; x=1778836133;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=q6KlhDsCCbA+sGxBJibljaCbp18JVPvqTbjbGVM7CSw=;
+        b=oOCqeqGUisF2KOKVOLwrUtALEkjUnpODuJndVzOTKgSS8JARYY6JGxq584n7Nmtcx5
+         DVtRDxtnis9d0X9UYJ3CrKFwEWcAkyDtTwRnwMXLVHJ53eoY20rNr035SC+pueSQEb7v
+         grGzrCNZ6HIsNo4KgeVxcmS7NJeib5A3k+SJk0mao72bGHZlaSmp+E1g7Wlv5J8U5raD
+         A+nm+8KtHp3e9FyKZk8J02VFKLIjoZPyX/Zc+1h8BLI4+WAOXUIHaBO6Iuxq4C5Ac/uH
+         TeZJK3baKNFYFG0zkKmVrb9K+UOOHJ84HKDPlXqmokdPRstCo655gQJoJ3WpTRGQfH7X
+         yyQg==
+X-Forwarded-Encrypted: i=1; AFNElJ8geeaY80ii0T8h0yd8NnxOjDkdeTFbAGcsdXXqAY8Ej1sxM8H+enxPAb3mh3YSuZgMaAwjlyJt6YSS@vger.kernel.org
+X-Gm-Message-State: AOJu0YwByIBSZ/ahi8WXYptz0G8oew0aFZQ5k8D+/jwFSaNAIfaof8Se
+	NLvxFiz6WMDOHG54ZQLCi60ndph+IntyaCv1rI2U6RGHNJD9Qizv8ukvtD8iUbIWqdG2utV5dm3
+	L9tZESMer/lIJ1XTkm9d272e2nScG92g0O9XsDEHu
+X-Gm-Gg: Acq92OF/pU85dqcsIA/yqryDfOM+7efMIfka8uJYx+j01OS2fiXQm9f2jEfYxSCy7F8
+	h9mXDFEeS1ydw9Pp5WJpcHcSp/zWVy8VOwRlihLXLPamVmJ8kk+QDnf/Y6u9NzD/Gkzpbjn7Xxf
+	IKV8SoZN8/oozDTR7y71ZL8phJJT0VAoVuds6SGzEJSMWpZ++ZMSha246IvUusoZRNVcskTz+jY
+	zm/pMb3RaF6IHikOGK2J2skCAYLq2xqjasKAHVvzajc7hM+9iFwyjSiLgwEbGXajmmimtkw+y9S
+	8DfaxK2BNsAD9AVTlQ==
+X-Received: by 2002:a05:6402:2b9b:b0:678:93b4:1fd3 with SMTP id
+ 4fb4d7f45d1cf-67ec504bd96mr67552a12.6.1778231332759; Fri, 08 May 2026
+ 02:08:52 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 7/7] scsi: scsi_devinfo: extend BLIST_NO_LUN_1F to
- MATSHITA and NEC PD-1 variants
-To: Phil Pemberton <philpem@philpem.me.uk>, linux-ide@vger.kernel.org,
- linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>,
- Niklas Cassel <cassel@kernel.org>,
- "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
- "Martin K . Petersen" <martin.petersen@oracle.com>
-References: <20260426190920.2051289-1-philpem@philpem.me.uk>
- <20260426190920.2051289-8-philpem@philpem.me.uk>
- <c1db6016-9b7d-454b-a4a8-c8f61391c5ae@suse.de>
- <566ea0c5-3d8b-4ce4-8d42-e97ecabe5f9d@philpem.me.uk>
-Content-Language: en-US
-From: Hannes Reinecke <hare@suse.de>
-In-Reply-To: <566ea0c5-3d8b-4ce4-8d42-e97ecabe5f9d@philpem.me.uk>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Spam-Level: 
-X-Spamd-Result: default: False [-4.30 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	FUZZY_RATELIMITED(0.00)[rspamd.com];
-	ARC_NA(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	RCPT_COUNT_SEVEN(0.00)[8];
-	MID_RHS_MATCH_FROM(0.00)[];
-	RCVD_TLS_ALL(0.00)[];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	FROM_HAS_DN(0.00)[];
-	TO_DN_SOME(0.00)[];
-	FROM_EQ_ENVFROM(0.00)[];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	RCVD_COUNT_TWO(0.00)[2];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:mid,suse.de:email]
-X-Spam-Flag: NO
-X-Spam-Score: -4.30
+References: <20260424151420.111675-1-can.guo@oss.qualcomm.com>
+In-Reply-To: <20260424151420.111675-1-can.guo@oss.qualcomm.com>
+From: Brian Kao <powenkao@google.com>
+Date: Fri, 8 May 2026 17:08:38 +0800
+X-Gm-Features: AVHnY4LIqzhUM33Lc9nvgwPYliVZYAlT4EhlRo-azUqGcat35M2qLFy1sDt566E
+Message-ID: <CA+=0d2bunGi-Ht+3ZZ3-+E2FfMObU27QCMYX+r_5RqoAEQq5Ew@mail.gmail.com>
+Subject: Re: [PATCH v2 0/2] scsi: ufs: Add persistent TX Equalization settings support
+To: Can Guo <can.guo@oss.qualcomm.com>
+Cc: avri.altman@wdc.com, bvanassche@acm.org, beanhuo@micron.com, 
+	peter.wang@mediatek.com, martin.petersen@oracle.com, mani@kernel.org, 
+	linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On 5/6/26 02:52, Phil Pemberton wrote:
-> On 27/04/2026 12:56, Hannes Reinecke wrote:
->> On 4/26/26 21:09, Phil Pemberton wrote:
->>> The Panasonic LF-1095/LF-1195 PD/CD combo drive was sold under three
->>> OEM identities: COMPAQ "PD-1", MATSHITA "PD-1", and NEC "PD-1 ODX654P".
->>> All three are the same drive mechanism with the same firmware family,
->>> so they should share the BLIST_NO_LUN_1F quirk that was applied to the
->>> COMPAQ variant: PDT 0x1f / PQ 0 INQUIRY responses on non-existent LUNs
->>> are treated as "LUN not present" rather than as a phantom sdev.
->>>
->>> This patch is offered for completeness.  It has not been tested on the
->>> MATSHITA or NEC variants -- the author only has access to the COMPAQ
->>> unit -- but the drives are functionally identical and the flag is a
->>> no-op on devices that do not exhibit the PDT 0x1f response.  Drop or
->>> hold this patch if confirmation on real hardware is preferred before
->>> extending the quirk.
->>>
->>> Signed-off-by: Phil Pemberton <philpem@philpem.me.uk>
->>> ---
->>>   drivers/scsi/scsi_devinfo.c | 6 ++++--
->>>   1 file changed, 4 insertions(+), 2 deletions(-)
->>>
->>> diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
->>> index bfc2cbd43897..ab1ffa9433b7 100644
->>> --- a/drivers/scsi/scsi_devinfo.c
->>> +++ b/drivers/scsi/scsi_devinfo.c
->>> @@ -201,7 +201,8 @@ static struct {
->>>       {"LASOUND", "CDX7405", "3.10", BLIST_MAX5LUN | BLIST_SINGLELUN},
->>>       {"Marvell", "Console", NULL, BLIST_SKIP_VPD_PAGES},
->>>       {"Marvell", "91xx Config", "1.01", BLIST_SKIP_VPD_PAGES},
->>> -    {"MATSHITA", "PD-1", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
->>> +    {"MATSHITA", "PD-1", NULL, BLIST_FORCELUN | BLIST_SINGLELUN |
->>> +                   BLIST_NO_LUN_1F},
->>>       {"MATSHITA", "DMC-LC5", NULL, BLIST_NOT_LOCKABLE | 
->>> BLIST_INQUIRY_36},
->>>       {"MATSHITA", "DMC-LC40", NULL, BLIST_NOT_LOCKABLE | 
->>> BLIST_INQUIRY_36},
->>>       {"Medion", "Flash XL  MMC/SD", "2.6D", BLIST_FORCELUN},
->>> @@ -212,7 +213,8 @@ static struct {
->>>       {"nCipher", "Fastness Crypto", NULL, BLIST_FORCELUN},
->>>       {"NAKAMICH", "MJ-4.8S", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
->>>       {"NAKAMICH", "MJ-5.16S", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
->>> -    {"NEC", "PD-1 ODX654P", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
->>> +    {"NEC", "PD-1 ODX654P", NULL, BLIST_FORCELUN | BLIST_SINGLELUN |
->>> +                      BLIST_NO_LUN_1F},
->>>       {"NEC", "iStorage", NULL, BLIST_REPORTLUN2},
->>>       {"NRC", "MBR-7", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
->>>       {"NRC", "MBR-7.4", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
->>
->> Any specific reason why this patch is not merged with the previous one?
->> Otherwise:
->>
->> Reviewed-by: Hannes Reinecke <hare@suse.de>
-> 
-> Only that these are optional to the feature work and untested as I don't 
-> have hardware. I believe these drives use the same PD-1 mechanism and 
-> firmware so should behave the same, but I can't prove it.
-> 
-> The intent was to allow the 1-6 set to be merged (as these are tested) 
-> without 7/7 (which is not) to minimise the risk of regressions.
-> 
-So drop it, then.
-We can always add it later once someone shows up who actually has the 
-hardware.
+On Fri, Apr 24, 2026 at 11:18=E2=80=AFPM Can Guo <can.guo@oss.qualcomm.com>=
+ wrote:
 
-Cheers,
+> 2. Add TX EQ settings persistence flow:
+>    - Read stored settings from qTxEQGnSettings & wTxEQGnSettingsExt.
+>    - Decode and populate per-gear TX EQ parameters.
+>    - Use Bit[15] in wTxEQGnSettingsExt as validity indication.
+>    - Store trained settings back to these attributes for future reuse.
+>
 
-Hannes
--- 
-Dr. Hannes Reinecke                  Kernel Storage Architect
-hare@suse.de                                +49 911 74053 688
-SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
-HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
+Hi Can Guo
+
+Is using Bit[15] as a validity indicator reliable here? Since this
+isn't part of the JEDEC standard=E2=80=94which defines bits [15:6] as Reser=
+ved
+for Future Use (RFU)
+Are there plans to propose this validity indicator in a future
+revision of the standard? If so, I would definitely support that
+proposal.
+
+Thanks
