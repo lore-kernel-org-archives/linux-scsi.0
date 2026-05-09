@@ -1,128 +1,133 @@
-Received: from mail-lj1-f176.google.com (mail-lj1-f176.google.com [209.85.208.176])
+Received: from mail-wm1-f42.google.com (mail-wm1-f42.google.com [209.85.128.42])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 08FFA22A817
-	for <linux-scsi@vger.kernel.org>; Sat,  9 May 2026 13:30:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.176
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778333445; cv=pass; b=moSAyVwjDo9iUTbvtL2mB3LBRqiVEUoavp/V0QdomHQJ/ymH3Fo729X3El+4+BRSX3yuvsGaMAZHaTXvCvKloc2inod74U0k7nWLH+darNWSxi1YpvY9XQ+mhLDYQIaDM0IfZH5XjfMPEvQAeRYUdQDJZJ+Nun6JQnzcdG/fhn8=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778333445; c=relaxed/simple;
-	bh=QcOIaSk5dDmm5s+y39FGgiZ4u+KsJqus26X2tMXJtCU=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=f5Sz1NlHmTDClIPIxjpukrN3a8UpkU6at9i2hRLbvQu1aFRDoA/CtHwj1BL8fIpciP/OrCuUOwlKS7hw7wJRD7O/koJ0xvxPqBVaIdSGdWRJqa2JRSXFinJGAfPkE92SMkd9J89OItbEnajVmw0a+ZwjFztgSNlvZJmH5MkOoI0=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=aM2H4Ot4; arc=pass smtp.client-ip=209.85.208.176
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1DD3A15B0EC
+	for <linux-scsi@vger.kernel.org>; Sat,  9 May 2026 17:13:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.42
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1778346795; cv=none; b=t/1tEi1F1X7oDuXa+XAvUycsHeoV9QjLE+NLPfCZlb1ZukvA+vK6mQykZOgLDWVZMcC4SNIUPjgpq+Lz1l+ZZU4dOpmnxYl7RdqMAfqKoO+cLpGZkGzFK9nJDS5Id5eDW8Cf3lDsxz6WEoLHepzEEFVD+PSPoK0wLzwpeEZHSKY=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1778346795; c=relaxed/simple;
+	bh=cz6JrxY2mZcv/ckGZwKXhcfoUtZlEKu6bqMhp7dd/qY=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=g3BiFMAfc6vawsvQWyaXJ0lBr1TwPZPxI/IfINyFZ4wKhVubZsCNY9PNqnapP1DkRou4q21iqupjByKvPdh/BzZbpbn9kDUUtmA2A2pb1foOMvUl/OAnlwu+JD+9WzlXpGteugp4ikHCQmWsLr/zc5q4oRPXDDhqeR1fo0ni4zw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Z2boJGRR; arc=none smtp.client-ip=209.85.128.42
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="aM2H4Ot4"
-Received: by mail-lj1-f176.google.com with SMTP id 38308e7fff4ca-38be5e86918so36641771fa.3
-        for <linux-scsi@vger.kernel.org>; Sat, 09 May 2026 06:30:43 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1778333442; cv=none;
-        d=google.com; s=arc-20240605;
-        b=ixSPTcHvqc4gxZpojFfV0NbOX+6b6v4CvUOCZ3xWn+D06iM5YROfytJMSS2kGbjgwU
-         0NBuz+F6hogZvQeOko1N0pLm5XyYR9kFMZX9nptSka7Kk4mHWY6bbuPhp9t0ecJ5lmHz
-         inoPRGqzszvV/EB8VcvAUuRb8niWFH0r5RxRIFHf0SMHTxopHxMIv9o2FMRzUnli/rPK
-         RqjbH2kjhYf1H/d8/EpiP0VSpja3sDBG3JwGx9SS+j4GLWBD/kVeueweY2lCYnb/+SSo
-         ynrbFIoDALJBX6Lsum9go4an5bIiMLBNAjbXaLIoIqUel/+XdX9Dl7kLSDtg0WoNmApR
-         gUaQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=QcOIaSk5dDmm5s+y39FGgiZ4u+KsJqus26X2tMXJtCU=;
-        fh=IjqEioE8Bx+ytouE98ayWP5aio23s38mZERIsVANpCM=;
-        b=f0eWiKvG5b07CKb5EJl7k+iTTO8pdkrQ+l7RYzDEhAYnhZfVul/OPQwUur7eemUwkU
-         72t9VOzLanm/66NcSnF7fLyey5WatPmsjxNXcZRjq44ENVd2y5PyhT+9+mLOahN56Poi
-         dWZ5CEgS3bKC+02ZE2Bua6wJmbwDjgH1VxQb8X+r9A8EweEJhF7SYIuggmCumDLgtqS5
-         YXpIO0pODml9XnljtRS+u4kEwSBEbmODR6GQTnhdpyvkXEspjMmAG9CWKJbM0Wwp3Mpo
-         jCqaMPgvBkPYNmI95xU6lSpIguSJYqUe9KBpIG+LK/Mul63HCuSwHqmlgiBIsGZZhlmP
-         6+kQ==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Z2boJGRR"
+Received: by mail-wm1-f42.google.com with SMTP id 5b1f17b1804b1-48e72b02bf6so616805e9.3
+        for <linux-scsi@vger.kernel.org>; Sat, 09 May 2026 10:13:13 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1778333442; x=1778938242; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=QcOIaSk5dDmm5s+y39FGgiZ4u+KsJqus26X2tMXJtCU=;
-        b=aM2H4Ot4RepMKYGxtpW9rPk7MpHp6OcNWyK7uoe31CuzcJm/HWIzekeZo7Y/S3yTFD
-         IIR6XSnbACLUWfOvQNIFxIYZp+Kxd2rr8ukDhCr3L4p8fmGKRP5D2eyhUOO8uCNKeyiv
-         qPjOXb72fAM8JY85g6+3/coI3LiYkZw32WlUsgay4LQ+zJikeN3OOsYcRnw4p/sWB73R
-         KrUULlWMTwgrW5m4WQwvS+3IplNEbnewhGLFLVGOKprNUc2seZ1HeRoCNYN3G7tg61JH
-         K7a46JzUuWSttWVtiqwJgLE38OsLzrzQZoxJ7vF2NKFgpDLlEX+ZSrv4BF6Cg/uvYeRc
-         qqRg==
+        d=gmail.com; s=20251104; t=1778346792; x=1778951592; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=QhpVd7na12hAnyObot7grd9UEomYtJgCFXH+/TjsYW0=;
+        b=Z2boJGRRVSl3WUhmblMlqmYUpvbsdlEac3SdkojXUu+lsE3Gz1GDCKq/Z7f+LAkYX0
+         HjCLI2zTDi0gjjrby7lFyOORebiOwHLC83lrpLMZSjwT6eLe+lfi38cWdqCP8+EItYbu
+         MWDUA2hrkFL9rF4KL9UqsBXQiMEdQWsdYB3Rsf9LNQn/257Y5YnK5241cxpiVSaepKUH
+         YAwlDFf8nrXF779dxXZFZbxuaWnMZZ5bM+fuGRQoVCAVB2c0jKJYVIJbxrNWNl7u9jLW
+         00lo//VARe7WKjjN82KziQ7HtRxsZVNSJTzeknlrFWeYksZ598oeybwVveWovrighv+1
+         NbRg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1778333442; x=1778938242;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=QcOIaSk5dDmm5s+y39FGgiZ4u+KsJqus26X2tMXJtCU=;
-        b=e5B8mOV9j2+ctziHHqahmXoIkwDrjJm62N/iJRg0e5MFS7Hx2bKs60LAeW5lX2PrW0
-         vc8HKcgLzwOGEU5WxhaLyR26bmHe7oyPIVAOeo6lMBvzSszG7CwEfIbsIyJAkv0Z/Iwz
-         UurXUpAEdtXsaErCLqQsvytvW/PC0eGPVVx4LqX5IzUAGSyM92bY3SIZAaW22yOkabAC
-         FZdiK2WJmyO7HDiRS/G138qkDz6fRFMRkkvf6xIV7BmQ2hAayIQz+rFj1R30n37073qU
-         JJg/xjhvvReallHKcLYD21ezAw1Z2Ro5taeTvL7jKwWzSC+OMkVEBH75RFd6ct1ykpaz
-         WqYw==
-X-Forwarded-Encrypted: i=1; AFNElJ8n+1OXk++VYYVSN8deoKfvSMSnoAEUtjDLqk5rvE/YaC10152nPI9sScOwF+hXQz293Fco3ZwpRcWp@vger.kernel.org
-X-Gm-Message-State: AOJu0YxULAe32yzn8RnuROFVud/Wum5yqyAcd3jlenKieSn4nvsYPlyv
-	CjgS4thznfQ5pJWSK1SuuFMeDWXP4EuUVi5FeSwx9iPAdSkOAC1s0+ajmcLPhffokSZK2Mst/RH
-	LORPBbZtP88dR9HoxaeaKnOA5UwLwenXkARSn0MXSHQ==
-X-Gm-Gg: Acq92OFn8hK6jHiZSetnLiWsauWh+Q6epNfd44oNN/vvJsCqtxvMhmt1fZa3tAtz+mM
-	XhRuHMc3lT5FJV00x3FrIpgCauMgwUoRn9WXw4HqE5pYlooG9607tkgV4BZErMkJO4ESXqhxvIf
-	6VFlNERFGB55LMSWj+Ca6Z/+5DBGJbjQx6yOBV/L0A11FBzJeDSzSOitR9drwUCnH9V0i687uGu
-	UM6yd4Xw4AeyuSObauUmDfY3Q99JWeVe2FgoHTuLVrtDw+FmLU9iZj3gvjJkjScGHlDAkkCqn5h
-	6h4nVSN9n3v/L5qa63uZOoychWDXcSmSp8qjvN+f
-X-Received: by 2002:a05:6512:6c9:b0:5a8:64c4:38c4 with SMTP id
- 2adb3069b0e04-5a887add250mr6811058e87.8.1778333442267; Sat, 09 May 2026
- 06:30:42 -0700 (PDT)
+        d=1e100.net; s=20251104; t=1778346792; x=1778951592;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=QhpVd7na12hAnyObot7grd9UEomYtJgCFXH+/TjsYW0=;
+        b=cVOL0fjoupv5j89DR8zrEis/BAs8FPJSzyaipKA/7NYTV6omWcP3AgeCpPnoGXP1Hr
+         5fdq9fKxvaMgPI5gMczvHlSPLDBBhV9KywvaXiSAdtxqI1vU+BIuRsbuYSXgt/Wa8RPI
+         gNY66GkJm/+dYJWIA3QpFPr69tFyaT1nBiguO3PRrutpYW98ADzorbV7N8S41uY26W5i
+         k1hOAZWxDMtzsntxwBDxDqssdLXsGtrz13ZyEb6AniSHXUolOF8/2oQKvfa15G6QHor1
+         W33EYr1UCR0Ze3SA4umsF7jwgCHPReLXFiHeRB2/fl4kgoAq+ydlb1EaiMBcXwpkSTjV
+         x4fA==
+X-Forwarded-Encrypted: i=1; AFNElJ8k+sB4EY673oS63cEjYEHNURDzjns+UmMrX2W7Elnk1m+ZEJ6Cl+d29kMEa5TlpOfaoHlmg7P31TOc@vger.kernel.org
+X-Gm-Message-State: AOJu0Yz03epa+6em+3mmFgiN7jPJLIz4LEM19thiSIOYYzeQ+rWrrO+w
+	9LidihMJ0s+3qolqwavg6mgctnYAYM0r4Q7pEf9wam2nhjV+BQVN4m/P
+X-Gm-Gg: Acq92OHENebUb9H0q5lMXIUv69J/+je9DAeRL2rzFXqgCRoNBYsCWkdrV15ON846uxd
+	EYT0QnFhrryghP2tfqUlGv4NMtc24b0a2pXWRo8j0ig/q+CJhh0F5C1KftcwbemabsOnIY5jigZ
+	of3ixTHba2HS5Ceof60WHFCNgIxfkKzls1iVY4WqTKcpDmxLOoytQx8Y9kHl3O5F/v1B1Xn0wun
+	KxbntOZ+UvNR1rWVYXxffirN+SgyogMsfPqyUtEFXGfScN51P4X8Qhzj2O6rfdsAR6tFQjKOwy0
+	0xWf5Vqty+rH5uxraLpgL5+BPZxoMTOUBDwRpXr6ZovBriO+L2skofVTfvJI91dgo/e2pQ+qMlA
+	wYmzxWOHlxdTzc6FqlusTD89Gi8XUVSBYiiHGdvQwMquCt9JSfn3GqzpaFxohtCueKuZG2uZJwc
+	Xwh+Wi5kk6VXW1zopsgbOdOgWwEkkbtWxCX9HYvsMu2edG
+X-Received: by 2002:a05:600c:198c:b0:48a:58e1:6cf7 with SMTP id 5b1f17b1804b1-48e530bf915mr122535745e9.4.1778346792363;
+        Sat, 09 May 2026 10:13:12 -0700 (PDT)
+Received: from localhost.localdomain ([82.215.118.79])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-48e702e715dsm115329635e9.8.2026.05.09.10.13.10
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 09 May 2026 10:13:11 -0700 (PDT)
+From: Stepan Ionichev <sozdayvek@gmail.com>
+To: hare@suse.com
+Cc: James.Bottomley@HansenPartnership.com,
+	martin.petersen@oracle.com,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Stepan Ionichev <sozdayvek@gmail.com>
+Subject: [PATCH] scsi: aic7xxx: avoid NULL deref of cur_column in ahc_print_register()
+Date: Sat,  9 May 2026 14:56:56 +0500
+Message-Id: <20260509095656.7143-1-sozdayvek@gmail.com>
+X-Mailer: git-send-email 2.33.0.windows.2
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260507143410.337267-1-marco.crivellari@suse.com> <b0c7c212-c9d9-48bf-9531-9b99b090d4f0@acm.org>
-In-Reply-To: <b0c7c212-c9d9-48bf-9531-9b99b090d4f0@acm.org>
-From: Marco Crivellari <marco.crivellari@suse.com>
-Date: Sat, 9 May 2026 15:30:31 +0200
-X-Gm-Features: AVHnY4KW5Nm0A2oRi4tWPEOG1h90ZKKyskJSTqFbKprQgNY_v1eF__0nY1h4rCQ
-Message-ID: <CAAofZF4ZcoQF=OTyAu0Z45AgcT+jqG=Hh8m1Xa2kk0n5dHv7Pw@mail.gmail.com>
-Subject: Re: [RFC PATCH] scsi: scsi_transport_srp: Move long delayed work on system_dfl_long_wq
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, 
-	Tejun Heo <tj@kernel.org>, Lai Jiangshan <jiangshanlai@gmail.com>, 
-	Frederic Weisbecker <frederic@kernel.org>, Sebastian Andrzej Siewior <bigeasy@linutronix.de>, 
-	Michal Hocko <mhocko@suse.com>, 
-	"James E . J . Bottomley" <James.Bottomley@hansenpartnership.com>, 
-	"Martin K . Petersen" <martin.petersen@oracle.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 
-On Fri, May 8, 2026 at 6:11=E2=80=AFPM Bart Van Assche <bvanassche@acm.org>=
- wrote:
-> [...]
-> This looks like unnecessary churn to me. The motivation for the
-> introduction of system_dfl_long_wq seems very weak to me. Wouldn't we
-> all be better off if commit c116737e972e would be reverted and if the
-> behavior of system_long_wq would be modified from per-CPU into unbound?
+ahc_print_register() takes an optional 'cur_column' pointer that may
+be NULL.  The function already guards two of its three accesses:
 
-Hello Bart,
+	if (cur_column != NULL && *cur_column >= wrap_point) {
+		printk("\n");
+		*cur_column = 0;
+	}
+	...
+	if (cur_column != NULL)
+		*cur_column += printed;
+	return (printed);
 
-There are not many users of `queue_delayed_work(system_long_wq,...)`, anyho=
-w
-there are API guarantees, so we cannot just change the workqueue used there=
-,
-in my opinion.
+The early-return path taken when 'table' is NULL forgot the guard:
 
-Also, consider that system_long_wq is used by more than just
-queue_delayed_work().
-Approximately, 60 queue_work() users specify system_long_wq, some of them
-may really need to be per-cpu.
+	if (table == NULL) {
+		printed += printk(" ");
+		*cur_column += printed;     /* unconditional deref */
+		return (printed);
+	}
 
-Thanks.
+If a caller passes (cur_column == NULL, table == NULL) the kernel
+NULL-derefs in the early-return path while otherwise doing the right
+thing in the rest of the function.
 
---=20
+smatch flags the inconsistency:
 
-Marco Crivellari
+  drivers/scsi/aic7xxx/aic7xxx_core.c:7067 ahc_print_register() error:
+  we previously assumed 'cur_column' could be null (see line 7060)
 
-SUSE Labs
+Mirror the existing NULL check used at the function's tail before
+updating *cur_column on the early-return path.
+
+No functional change for callers that pass a non-NULL cur_column.
+
+Signed-off-by: Stepan Ionichev <sozdayvek@gmail.com>
+---
+ drivers/scsi/aic7xxx/aic7xxx_core.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/aic7xxx/aic7xxx_core.c b/drivers/scsi/aic7xxx/aic7xxx_core.c
+index b9761f9f0..82eb84afb 100644
+--- a/drivers/scsi/aic7xxx/aic7xxx_core.c
++++ b/drivers/scsi/aic7xxx/aic7xxx_core.c
+@@ -7064,7 +7064,8 @@ ahc_print_register(const ahc_reg_parse_entry_t *table, u_int num_entries,
+ 	printed  = printk("%s[0x%x]", name, value);
+ 	if (table == NULL) {
+ 		printed += printk(" ");
+-		*cur_column += printed;
++		if (cur_column != NULL)
++			*cur_column += printed;
+ 		return (printed);
+ 	}
+ 	printed_mask = 0;
+-- 
+2.43.0
+
