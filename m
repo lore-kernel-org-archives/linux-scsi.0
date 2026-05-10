@@ -1,112 +1,112 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f42.google.com (mail-wm1-f42.google.com [209.85.128.42])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C62E8367F22;
-	Sun, 10 May 2026 12:32:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 180941799F
+	for <linux-scsi@vger.kernel.org>; Sun, 10 May 2026 22:03:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778416322; cv=none; b=P0Dpi5t0Mw8KcI0hC6uSp/t0lBaVPuw/22EcH3v8fVmIsdM+ekrScU6JF1SBtXVum3s0cguryRdU3yoX5evMVVhZ+ae1dt87ADk3JZF4X6sBFpOEmztrH3fvj5ajzzY4lep+B7dXJVYW25QnGJbks4/Ut7tZN0TpuskYI2Hvqf0=
+	t=1778450597; cv=none; b=nw/IjaBC7u4heYnsIyKdFmT/8Bo9bd+wQVJy65mbe9cv/04dR2SQhRZX7HWDiA/OGn9IO6Kvepke5fiv0k6nHTJNwcERLGnt8LkcJJuEh2etV7mbxu7cPLBDxjzRYyMN25c2yJMtDisXWzuFGVNo52z19ZO9rcfOteTgIdZR4w4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778416322; c=relaxed/simple;
-	bh=vl/9MvkiblHAaPuDAQLv8KzOLc/tqBrxBmo1A4yiqGg=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=RlCe/CB9lSUwD4AqdxvhjzK0cK7iXzZYlyHoqDpv6EDRW/mkaOlTwmxXEBMZpFrHdTw6RK4guIQ7cAU0Lsp3IjJmYNXnQA5WVR9HsFH7DtTC8agEksdshfFZhxacQjCsckCItUZiqoGWty2vLNEA6vd4HQzGnAlQ//cxiMeGN4w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EuE7mAu7; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EuE7mAu7"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2D1F2C2BCB8;
-	Sun, 10 May 2026 12:31:52 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778416322;
-	bh=vl/9MvkiblHAaPuDAQLv8KzOLc/tqBrxBmo1A4yiqGg=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
-	b=EuE7mAu7fP8Dnlp3qjz6t9jFXA1pltfOTzAMg5CqOv7HXZtT5upIrGId+YI+PWXDW
-	 IK43iGeb/jMsxErpwgSt0+eGRoyz2AF3eM6sttmHp8x+bGmfY+bDwmMEi3MQYQecCO
-	 RHN4pbiBV0q3wtRwluEJYFlm/9vNIrjtfZIjx1kc4VcBEt2V9LFlZSMoh2fVhQJOqH
-	 Ld2fZvWjXTsB2C80Tda1Pd59Ir41h+qf1tmPnM82KsWsOeW7Prizl60lq5c7SX5Dd0
-	 QZEl2okN//1l9UqYTAs00BWs+WfUDwGrFLZ6XkdJYLhx2EaS/n0R6fbuk/QXWrm+HO
-	 hWPowEnANsCxQ==
-From: Vinod Koul <vkoul@kernel.org>
-To: robin.clark@oss.qualcomm.com, lumag@kernel.org, abhinav.kumar@linux.dev, 
- sean@poorly.run, marijn.suijten@somainline.org, 
- maarten.lankhorst@linux.intel.com, mripard@kernel.org, tzimmermann@suse.de, 
- airlied@gmail.com, simona@ffwll.ch, robh@kernel.org, krzk+dt@kernel.org, 
- conor+dt@kernel.org, quic_mahap@quicinc.com, andersson@kernel.org, 
- konradybcio@kernel.org, mani@kernel.org, 
- James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com, 
- kishon@kernel.org, cros-qcom-dts-watchers@chromium.org, 
- Ritesh Kumar <quic_riteshk@quicinc.com>
-Cc: linux-phy@lists.infradead.org, linux-arm-msm@vger.kernel.org, 
- dri-devel@lists.freedesktop.org, freedreno@lists.freedesktop.org, 
- devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
- linux-scsi@vger.kernel.org, quic_vproddut@quicinc.com
-In-Reply-To: <20260128114853.2543416-1-quic_riteshk@quicinc.com>
-References: <20260128114853.2543416-1-quic_riteshk@quicinc.com>
-Subject: Re: (subset) [PATCH v4 0/2] Add edp reference clock for lemans
-Message-Id: <177841631271.434434.15769354853011852826.b4-ty@kernel.org>
-Date: Sun, 10 May 2026 18:01:52 +0530
+	s=arc-20240116; t=1778450597; c=relaxed/simple;
+	bh=fCqlht/qE5LYYm9uvUbmL1f49xyJZVdgsxDC1qfEkYI=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=o7mOQTBSHL5uHSgwJ48MyHpqWK5SW0mJKWRExUaK4zd3p5Cy1WoQysU9byF0G9MSPMjnhlYpxpgJlEaw2WWunVjx+oIQrbuZeyRUfB0B5iIAG0sy082mVnxb9YFq+SGO7Iar6ESnGnhMdAqgRlDr6dawIIiEKEYdDqrUJomWKus=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=grimberg.me; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.128.42
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=grimberg.me
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Received: by mail-wm1-f42.google.com with SMTP id 5b1f17b1804b1-4890d945eb4so27536505e9.0
+        for <linux-scsi@vger.kernel.org>; Sun, 10 May 2026 15:03:15 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1778450594; x=1779055394;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=7TT88Obqx1AJAzXu0jcEZD6MoC4AHPr3xtkjAGFDve0=;
+        b=UDfBI+z7OhvBRW4y68AWmZvxnXCE6qWyXdxrXpL67yA0Y4iSQheju7ZkTpuwNE9IrA
+         N7QyAIGYY9F7z5Eb0HbxiCrHu/cv6oq8Blykytv+hb+1fEFwE6pNdVHcjNDfBEdMKDAN
+         retjzgErYigpgYGDMFbIpVTiC6i75Z/eOg6Ms+Dt3k/o8nCe7m2A9mG4yn19lHXff11K
+         9kILdIyQNHtpe+naCJjU3JB96PTOzRGnsfr2nZ7PxN2wiDGWvCCDpRKbUUSq5EF9334J
+         ITFndhYp0s1OuJ2luprosIjKnBMHem7oXhXje2RADGpAkRLUSpCK95Tzw8mfBM2RuJ2U
+         vw0Q==
+X-Forwarded-Encrypted: i=1; AFNElJ86KZaK80Auy9SehTk/COivwqAWzDhQrl5nGWIals0OnbpFu4HuxOqZReZEVx8EKRRCKPOLidlR/KYJ@vger.kernel.org
+X-Gm-Message-State: AOJu0YyWwLgnjNu34Zfxb4iEj0FOLayOswkZOX7n2PehcBCKUCCR2k+A
+	TJ/p/G3gNkE7wM5xSETnT4rT/QDTym3MGUkpYRiCsD8UDTVy41ALsxGf
+X-Gm-Gg: Acq92OFXT478/wiJTkBFG26VYUY8th/7Kl9M0HQDxL2lIF5zSh1LnF9oo2wsTOw+Qh7
+	l5DHz8VETv1VGRTPzH64DPx5kJJO4MgQeKLSZaK2emqcBOlAkvaPYp1Oz954qfvvY3aX8FKzR/j
+	60vDZ5qYDOd8SBCzmgTBMooBjkOy8cPakBz56/Bsjrmv3kiZe+NXNedXm6Mz7C8/v2awhuLgA9r
+	9yVIHDkXJx48he3o1nUsYmJ6k7/vAFSpudc2VXiSJA89qQVDMVTZGudAvZ4xn3FtGaZCiEf/hcp
+	serlw5fQq5O0/wKrc9YOoXNyANfM/XzSr25/laPt8uPv7GXcsL/cDerOAZRqOhTLvFNc9iubWTc
+	MK3daOQs7yyxXw2BqjFqsIUSvzJxGVqCygaKjf8+0NovI/Mod0sPGfaCYKp5fsSOwot7+yv0xOw
+	jkAi+anY3LgGpoHXKcBAY=
+X-Received: by 2002:a05:600c:570d:b0:48a:5236:7f38 with SMTP id 5b1f17b1804b1-48e5dfffademr189351075e9.14.1778450594444;
+        Sun, 10 May 2026 15:03:14 -0700 (PDT)
+Received: from [10.100.102.74] ([89.138.75.0])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-45491304505sm21071533f8f.22.2026.05.10.15.03.12
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sun, 10 May 2026 15:03:13 -0700 (PDT)
+Message-ID: <ad0a1191-4928-4700-8c55-4c844a7058e3@grimberg.me>
+Date: Mon, 11 May 2026 01:03:11 +0300
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 00/13] libmultipath: a generic multipath lib for block
+ drivers
+To: John Garry <john.g.garry@oracle.com>, hch@lst.de, kbusch@kernel.org,
+ axboe@fb.com, martin.petersen@oracle.com,
+ james.bottomley@hansenpartnership.com, hare@suse.com, bmarzins@redhat.com,
+ nilay@linux.ibm.com
+Cc: jmeneghi@redhat.com, linux-nvme@lists.infradead.org,
+ linux-scsi@vger.kernel.org, michael.christie@oracle.com, snitzer@kernel.org,
+ dm-devel@lists.linux.dev, linux-kernel@vger.kernel.org
+References: <20260428111105.1778008-1-john.g.garry@oracle.com>
+Content-Language: en-US
+From: Sagi Grimberg <sagi@grimberg.me>
+In-Reply-To: <20260428111105.1778008-1-john.g.garry@oracle.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.13.0
 
 
-On Wed, 28 Jan 2026 17:18:48 +0530, Ritesh Kumar wrote:
-> On lemans chipset, edp reference clock is being voted by ufs mem phy
-> (ufs_mem_phy: phy@1d87000). But after commit 77d2fa54a945
-> ("scsi: ufs: qcom : Refactor phy_power_on/off calls") edp reference
-> clock is getting turned off, leading to below phy poweron failure on
-> lemans edp phy.
-> 
-> [   19.830220] phy phy-aec2a00.phy.10: phy poweron failed --> -110
-> [   19.842112] mdss_0_disp_cc_mdss_dptx0_link_clk status stuck at 'off'
-> [   19.842131] WARNING: CPU: 2 PID: 371 at drivers/clk/qcom/clk-branch.c:87 clk_branch_toggle+0x174/0x18c
-> [   19.984356] Hardware name: Qualcomm QCS9100 Ride (DT)
-> [   19.989548] pstate: 604000c5 (nZCv daIF +PAN -UAO -TCO -DIT -SSBS BTYPE=--)
-> [   19.996697] pc : clk_branch_toggle+0x174/0x18c
-> [   20.001267] lr : clk_branch_toggle+0x174/0x18c
-> [   20.005833] sp : ffff8000863ebbc0
-> [   20.009251] x29: ffff8000863ebbd0 x28: 0000000000000000 x27: 0000000000000000
-> [   20.016579] x26: 0000000000000000 x25: 0000000000000000 x24: 0000000000000001
-> [   20.023915] x23: ffff0000c53de980 x22: 0000000000000001 x21: ffffb4b57fd8d710
-> [   20.031245] x20: ffffb4b5bb238b88 x19: 0000000000000000 x18: ffffffffffff7198
-> [   20.038584] x17: 0000000000000014 x16: ffffb4b5bb1e2330 x15: 0000000000000048
-> [   20.045926] x14: 0000000000000000 x13: ffffb4b5bd386a48 x12: 0000000000000dfb
-> [   20.053263] x11: 00000000000004a9 x10: ffffb4b5bd3e5a20 x9 : ffffb4b5bd386a48
-> [   20.060600] x8 : 00000000ffffefff x7 : ffffb4b5bd3dea48 x6 : 00000000000004a9
-> [   20.067934] x5 : ffff000eb7d38408 x4 : 40000000fffff4a9 x3 : ffff4b58fb2b7000
-> [   20.075269] x2 : 0000000000000000 x1 : 0000000000000000 x0 : ffff000ec4fc3480
-> [   20.082601] Call trace:
-> [   20.085127]  clk_branch_toggle+0x174/0x18c (P)
-> [   20.089705]  clk_branch2_enable+0x1c/0x28
-> [   20.093829]  clk_core_enable+0x6c/0xac
-> [   20.097687]  clk_enable+0x2c/0x4c
-> [   20.101104]  clk_bulk_enable+0x4c/0xd8
-> [   20.104964]  msm_dp_ctrl_enable_mainlink_clocks+0x184/0x24c [msm]
-> [   20.111294]  msm_dp_ctrl_on_link+0xb0/0x400 [msm]
-> [   20.116178]  msm_dp_display_process_hpd_high+0x110/0x190 [msm]
-> [   20.122209]  msm_dp_hpd_plug_handle.isra.0+0xac/0x1c4 [msm]
-> [   20.127983]  hpd_event_thread+0x320/0x5cc [msm]
-> [   20.132680]  kthread+0x12c/0x204
-> [   20.136011]  ret_from_fork+0x10/0x20
-> [   20.139699] ---[ end trace 0000000000000000 ]---
-> [   20.144489] Failed to enable clk 'ctrl_link': -16
-> [   20.149340] [drm:msm_dp_ctrl_enable_mainlink_clocks [msm]] *ERROR* Unable to start link clocks. ret=-16
-> 
-> [...]
 
-Applied, thanks!
+On 28/04/2026 14:10, John Garry wrote:
+> libmultipath: a generic multipath lib for block drivers
 
-[1/2] dt-bindings: phy: qcom-edp: Add reference clock for sa8775p eDP PHY
-      commit: 0cc64561b03d755bba54cbd0cf05e9210ab40a13
+This is very nice John.
 
-Best regards,
--- 
-~Vinod
+>
+> This series introduces libmultipath. It is essentially a refactoring of
+> NVME multipath support, so we can have a common library to also support
+> native SCSI multipath.
+>
+> Much of the code is taken directly from the NVMe multipath code. However,
+> NVMe specifics are removed. A template structure is provided so the driver
+> may provide callbacks for driver specifics, like ANA support for NVMe.
+>
+> Important new structures introduced include:
+>
+> - mpath_head
+> These contain much of the multipath-specific functionality from
+> nvme_ns_head, including a pointer to the gendisk structure and
+> a path SRCU-based array.
 
+I think it should be placed first in its parent struct as it holds the 
+hot-path
+head->srcu and head->list.
 
+>
+> - mpath_device
+> This is the per-path structure, and contains much the same
+> multipath-specific functionality in nvme_ns
+>
+> libmultipath provides functionality for path management, path selection,
+> data path, and failover handling.
+>
+> Since the NVMe driver has some code in the sysfs and ioctl handling
+> which iterate all multipath NSes, functions like mpath_call_for_device()
+> are added to do the same per-path iteration.
+
+very nice, overall seems fairly straight forward.
