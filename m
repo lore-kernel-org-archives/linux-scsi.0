@@ -1,74 +1,104 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA35F2C11E6;
-	Mon, 11 May 2026 21:54:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C176347DD50
+	for <linux-scsi@vger.kernel.org>; Mon, 11 May 2026 22:01:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778536455; cv=none; b=c5HzpyTd05ijEVWRp77+c0jjLn3ErTzJc+hPhRmY/2gYU+pCBjVYGK5G4ssdFbLz8tXrjWovMbxhj3Zb9oBzBUkf4cdPFPxVOLyWivjf9FOWc8sQpncklh9ffitrZ5yZmm5jOz/WqQnTqrC9MTwGzP11qXNL4rOlFKpxOmnRBJA=
+	t=1778536921; cv=none; b=Y8Df9d+miTWR8pNucnBZrPDcGtURoOXmu4P5MNLq67hfig34hQvxnvZXl5OTViOFIggCthEaMhNkn/E09T8MUgejkXevFmJs8AbBrNZkuqJdJTyhLntbYqyeNbFzpotgGzaSsNEd5bBAXYiSkt4iLpQvkyVq9rHJWRfsTsI8UW8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778536455; c=relaxed/simple;
-	bh=RomqOVCJ74bU+jz8D6wGQX7OqLfegoqSF+qw3sa8MCk=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=XZIDkpzLa7SYsD4X+vU4MOxBYp8GfpKwnFxDPOvN1Qp5N9mNmiwDLtfXxSH7XUR6ciVle0zzNLDOAjfdxHj+k0R8/GBzZe++gSeZJ1fbzTaadrde9LfCfqOUZCB7MnIgqgMiGYcuidKLyg0Ry3BXuXo13d/QEUJu604ljQWmrJU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Us4oqDCG; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1778536921; c=relaxed/simple;
+	bh=LKUo826nacjn9jbG9ku8P2AHZ09zHGUYfTBGoVoQ5ZE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=M1THtBilaBDEn8pFgaDVGlh0cCn6SmfZvmR3Cw3fzwLxWe32XhSoRhlpYa/JZA4kdLo3gaQDBh9Pzpku+UI212MNQLJMcvHYGVaL62d4fCfQf54tIkU4xeqD88Ks3PaklxdC4cYgPKtQ1TYhCH/rGloaXykUr/CvgSvAgkqwcfw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=ZEFvwR58; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Us4oqDCG"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DB72CC2BCB0;
-	Mon, 11 May 2026 21:54:13 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778536455;
-	bh=RomqOVCJ74bU+jz8D6wGQX7OqLfegoqSF+qw3sa8MCk=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=Us4oqDCGnv65A5+Y7h5uCsUqyxPpZSgNVDTcHgk4KiVvJ8T/1H4NeZZR3Hn7INP1O
-	 bSkUM4sPXjLamRNTYLrMUHUI6LH09zegpOT6z92a+mM/1PJOxyL7k/PQ9qrerWwHJo
-	 I46d0tXzHeEozot3Mbwy0eG6gMXhE9IQlxQBgnHMLB3zmJVHS0Zhmuk/rKIUFL50o6
-	 Q1sMZFAAQHpIrZI7rVHszB0izhJSl12+0kcPzIJbvReDaxu2Tk66FwRbXx4wc+FmSW
-	 Zqv/sv8raTJJvtlgB5Mqirccae4f53qzzMk35U5wCl1mvzCIN6gMcbUuZyy7EPrd0L
-	 ZkXldJTNemaDQ==
-Message-ID: <1436af33-87d8-4070-ae67-a6a290fc0240@kernel.org>
-Date: Tue, 12 May 2026 06:54:11 +0900
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ZEFvwR58"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1778536917;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=TzxlEOWA/FoJD7waUR3vxUzQPjUa5F0lD4eH+UzouE0=;
+	b=ZEFvwR5862kYeko75bIYUX4bwrc1lO18ItgDPUuvBl0GZu5cfh9DvGWgBxTmlF52FjKxP/
+	d5Sy64j1RyHgI57bxd1nT1e4jHpkE/gyPEI1S1An8Dib8WISlfgRvoNmpcMDqZFofIirrA
+	k7XD0jwIc+CSilOYAy8joFnEhspLSoI=
+Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-615--ehzZgtdPBmOURxhq7HLWw-1; Mon,
+ 11 May 2026 18:01:53 -0400
+X-MC-Unique: -ehzZgtdPBmOURxhq7HLWw-1
+X-Mimecast-MFC-AGG-ID: -ehzZgtdPBmOURxhq7HLWw_1778536912
+Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 73D3318002DC;
+	Mon, 11 May 2026 22:01:51 +0000 (UTC)
+Received: from rhel-developer-toolbox-latest (headnet01.pony-001.prod.iad2.dc.redhat.com [10.2.32.101])
+	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with SMTP id 6F4B519560A2;
+	Mon, 11 May 2026 22:01:49 +0000 (UTC)
+Date: Mon, 11 May 2026 15:01:48 -0700
+From: Chris Leech <cleech@redhat.com>
+To: Wang Yan <wangyan01@kylinos.cn>
+Cc: lduncan@suse.com, michael.christie@oracle.com, 
+	James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com, open-iscsi@googlegroups.com, 
+	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] scsi: libiscsi: fix spelling and format errors
+Message-ID: <20260511-resource-blaming-f423310243b5@redhat.com>
+References: <20260511093030.63542-1-wangyan01@kylinos.cn>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 7/7] scsi: scsi_devinfo: extend BLIST_NO_LUN_1F to
- MATSHITA and NEC PD-1 variants
-To: Hannes Reinecke <hare@suse.de>, Phil Pemberton <philpem@philpem.me.uk>,
- linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, Niklas Cassel <cassel@kernel.org>,
- "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
- "Martin K . Petersen" <martin.petersen@oracle.com>
-References: <20260426190920.2051289-1-philpem@philpem.me.uk>
- <20260426190920.2051289-8-philpem@philpem.me.uk>
- <c1db6016-9b7d-454b-a4a8-c8f61391c5ae@suse.de>
- <566ea0c5-3d8b-4ce4-8d42-e97ecabe5f9d@philpem.me.uk>
- <ea4de81e-4c9b-48d0-bc6d-72f23c7fc831@suse.de>
-Content-Language: en-US
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <ea4de81e-4c9b-48d0-bc6d-72f23c7fc831@suse.de>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260511093030.63542-1-wangyan01@kylinos.cn>
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
 
-On 5/8/26 15:02, Hannes Reinecke wrote:
->> Only that these are optional to the feature work and untested as I don't 
->> have hardware. I believe these drives use the same PD-1 mechanism and 
->> firmware so should behave the same, but I can't prove it.
->>
->> The intent was to allow the 1-6 set to be merged (as these are tested) 
->> without 7/7 (which is not) to minimise the risk of regressions.
->>
-> So drop it, then.
-> We can always add it later once someone shows up who actually has the 
-> hardware.
+On Mon, May 11, 2026 at 05:30:30PM +0800, Wang Yan wrote:
+> Fix two issues in libiscsi.c:
+> - Correct typo "numer" to "number" in iscsi_session_setup() comment
+> - Fix format string "seconds\n." to "seconds.\n" in recv timeout warning
+> 
+> Signed-off-by: Wang Yan <wangyan01@kylinos.cn>
+> ---
 
-I agreee, let's drop this one and patch only once it can be confirmed that the
-change is needed.
+Sure, that looks fine.
 
--- 
-Damien Le Moal
-Western Digital Research
+Reviewed-by: Chris Leech <cleech@redhat.com>
+
+>  drivers/scsi/libiscsi.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+> index 25857d6ed6e8..160f02f2f51d 100644
+> --- a/drivers/scsi/libiscsi.c
+> +++ b/drivers/scsi/libiscsi.c
+> @@ -3012,7 +3012,7 @@ static void iscsi_host_dec_session_cnt(struct Scsi_Host *shost)
+>   * This can be used by software iscsi_transports that allocate
+>   * a session per scsi host.
+>   *
+> - * Callers should set cmds_max to the largest total numer (mgmt + scsi) of
+> + * Callers should set cmds_max to the largest total number (mgmt + scsi) of
+>   * tasks they support. The iscsi layer reserves ISCSI_MGMT_CMDS_MAX tasks
+>   * for nop handling and login/logout requests.
+>   */
+> @@ -3307,7 +3307,7 @@ int iscsi_conn_start(struct iscsi_cls_conn *cls_conn)
+>  
+>  	if (conn->ping_timeout && !conn->recv_timeout) {
+>  		iscsi_conn_printk(KERN_ERR, conn, "invalid recv timeout of "
+> -				  "zero. Using 5 seconds\n.");
+> +				  "zero. Using 5 seconds.\n");
+>  		conn->recv_timeout = 5;
+>  	}
+>  
+> -- 
+> 2.25.1
+> 
+
