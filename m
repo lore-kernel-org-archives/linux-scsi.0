@@ -1,104 +1,222 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C176347DD50
-	for <linux-scsi@vger.kernel.org>; Mon, 11 May 2026 22:01:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 564B14E376F;
+	Mon, 11 May 2026 22:19:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778536921; cv=none; b=Y8Df9d+miTWR8pNucnBZrPDcGtURoOXmu4P5MNLq67hfig34hQvxnvZXl5OTViOFIggCthEaMhNkn/E09T8MUgejkXevFmJs8AbBrNZkuqJdJTyhLntbYqyeNbFzpotgGzaSsNEd5bBAXYiSkt4iLpQvkyVq9rHJWRfsTsI8UW8=
+	t=1778537996; cv=none; b=cgq9cdUBKigdTHwAS0KRNRBcYQYVUrCsQGeo380FEuRoeEJ//Hw/3fk+yv81SVhbHoHfqMM75GZm4rhcTBdnLIR3zQ7YNglqNBiMgZOmvAhRrsm0B34ts7g7RcQFX3/8EuwLWweL877dMMYBJj7HaRsnULyib8XnhkOjU1KDZb4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778536921; c=relaxed/simple;
-	bh=LKUo826nacjn9jbG9ku8P2AHZ09zHGUYfTBGoVoQ5ZE=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=M1THtBilaBDEn8pFgaDVGlh0cCn6SmfZvmR3Cw3fzwLxWe32XhSoRhlpYa/JZA4kdLo3gaQDBh9Pzpku+UI212MNQLJMcvHYGVaL62d4fCfQf54tIkU4xeqD88Ks3PaklxdC4cYgPKtQ1TYhCH/rGloaXykUr/CvgSvAgkqwcfw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=ZEFvwR58; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1778537996; c=relaxed/simple;
+	bh=UVhRiCtsGtIVCO89w0KLFi9gBuY1+5o6JU2fTLcrA9c=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=QvWunirXBp16hM7VzghmohU8FtneN/UkkEr8jvi1GeGAD0bxP+YjlhJ1NzuRsIMHLR6ciqIldJUD9KqkbLSBXb4sNXFdQFWXKSUwK+vb0mfGxobiMXMqwS46gYRz1zuvXCV7OHTgs7ylFqnPAeO+e153HM1Q308KEyu203YHYzs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bLo9m3hx; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ZEFvwR58"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1778536917;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=TzxlEOWA/FoJD7waUR3vxUzQPjUa5F0lD4eH+UzouE0=;
-	b=ZEFvwR5862kYeko75bIYUX4bwrc1lO18ItgDPUuvBl0GZu5cfh9DvGWgBxTmlF52FjKxP/
-	d5Sy64j1RyHgI57bxd1nT1e4jHpkE/gyPEI1S1An8Dib8WISlfgRvoNmpcMDqZFofIirrA
-	k7XD0jwIc+CSilOYAy8joFnEhspLSoI=
-Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-615--ehzZgtdPBmOURxhq7HLWw-1; Mon,
- 11 May 2026 18:01:53 -0400
-X-MC-Unique: -ehzZgtdPBmOURxhq7HLWw-1
-X-Mimecast-MFC-AGG-ID: -ehzZgtdPBmOURxhq7HLWw_1778536912
-Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 73D3318002DC;
-	Mon, 11 May 2026 22:01:51 +0000 (UTC)
-Received: from rhel-developer-toolbox-latest (headnet01.pony-001.prod.iad2.dc.redhat.com [10.2.32.101])
-	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with SMTP id 6F4B519560A2;
-	Mon, 11 May 2026 22:01:49 +0000 (UTC)
-Date: Mon, 11 May 2026 15:01:48 -0700
-From: Chris Leech <cleech@redhat.com>
-To: Wang Yan <wangyan01@kylinos.cn>
-Cc: lduncan@suse.com, michael.christie@oracle.com, 
-	James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com, open-iscsi@googlegroups.com, 
-	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] scsi: libiscsi: fix spelling and format errors
-Message-ID: <20260511-resource-blaming-f423310243b5@redhat.com>
-References: <20260511093030.63542-1-wangyan01@kylinos.cn>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bLo9m3hx"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DCD37C2BCB0;
+	Mon, 11 May 2026 22:19:54 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1778537996;
+	bh=UVhRiCtsGtIVCO89w0KLFi9gBuY1+5o6JU2fTLcrA9c=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=bLo9m3hxsJ66lAfnkLhyuVlYAIKhBEgyAqsORm0HWnB+bqPvjgQhXbRcYs9WiU4rL
+	 4yRmr4UyHd4dQoGJej1eNl9O5MttF/Asodw5CoxAateck9KOgyjpTYIgMniHTZbx82
+	 tmB0cRYwwGFMtqFwhm/EdO8cVK9R5d6c9cJhXC1hGez1wusOiIGHE68h9cx1ZFiNr6
+	 JYcfUVTdw5tMmi0ggQDxEEbUx+XswxMFGg2v6uUQngpExQII2z/WMMygY6b+qEBhs9
+	 XqbwiWuqUgySZINhzrLcaUos+Kn3vbRYoQPb7KAipvKmQfhgpjAq3C7BBtViFxRuJP
+	 fDIRJm+VC5stQ==
+From: Sasha Levin <sashal@kernel.org>
+To: patches@lists.linux.dev,
+	stable@vger.kernel.org
+Cc: Brian Bunker <brian@purestorage.com>,
+	Krishna Kant <krishna.kant@purestorage.com>,
+	Riya Savla <rsavla@purestorage.com>,
+	Hannes Reinecke <hare@suse.de>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Sasha Levin <sashal@kernel.org>,
+	jejb@linux.ibm.com,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH AUTOSEL 7.0-5.10] scsi: scsi_dh_alua: Increase default ALUA timeout to maximum spec value
+Date: Mon, 11 May 2026 18:19:15 -0400
+Message-ID: <20260511221931.2370053-16-sashal@kernel.org>
+X-Mailer: git-send-email 2.53.0
+In-Reply-To: <20260511221931.2370053-1-sashal@kernel.org>
+References: <20260511221931.2370053-1-sashal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260511093030.63542-1-wangyan01@kylinos.cn>
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
+X-stable: review
+X-Patchwork-Hint: Ignore
+X-stable-base: Linux 7.0.6
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-On Mon, May 11, 2026 at 05:30:30PM +0800, Wang Yan wrote:
-> Fix two issues in libiscsi.c:
-> - Correct typo "numer" to "number" in iscsi_session_setup() comment
-> - Fix format string "seconds\n." to "seconds.\n" in recv timeout warning
-> 
-> Signed-off-by: Wang Yan <wangyan01@kylinos.cn>
-> ---
+From: Brian Bunker <brian@purestorage.com>
 
-Sure, that looks fine.
+[ Upstream commit 68c3a65a5a8e85643745fdde02cb63904e165620 ]
 
-Reviewed-by: Chris Leech <cleech@redhat.com>
+The ALUA handler maps a 0 value (no implicit transition timeout provided
+by the target) to the ALUA_FAILOVER_TIMEOUT constant, currently 60
+seconds. This means the kernel already does not accept an infinite
+transition time.
 
->  drivers/scsi/libiscsi.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-> index 25857d6ed6e8..160f02f2f51d 100644
-> --- a/drivers/scsi/libiscsi.c
-> +++ b/drivers/scsi/libiscsi.c
-> @@ -3012,7 +3012,7 @@ static void iscsi_host_dec_session_cnt(struct Scsi_Host *shost)
->   * This can be used by software iscsi_transports that allocate
->   * a session per scsi host.
->   *
-> - * Callers should set cmds_max to the largest total numer (mgmt + scsi) of
-> + * Callers should set cmds_max to the largest total number (mgmt + scsi) of
->   * tasks they support. The iscsi layer reserves ISCSI_MGMT_CMDS_MAX tasks
->   * for nop handling and login/logout requests.
->   */
-> @@ -3307,7 +3307,7 @@ int iscsi_conn_start(struct iscsi_cls_conn *cls_conn)
->  
->  	if (conn->ping_timeout && !conn->recv_timeout) {
->  		iscsi_conn_printk(KERN_ERR, conn, "invalid recv timeout of "
-> -				  "zero. Using 5 seconds\n.");
-> +				  "zero. Using 5 seconds.\n");
->  		conn->recv_timeout = 5;
->  	}
->  
-> -- 
-> 2.25.1
-> 
+However, 60 seconds is insufficient for some arrays that may take longer
+to complete ALUA transitions. Since the highest value allowed by the
+SCSI specification for the implicit transition timeout is a single byte
+(255 seconds), change the default to 255. This way, when a target does
+not provide an explicit transition timeout, we default to the maximum
+value the spec allows rather than an arbitrary 60 second limit.
+
+Co-developed-by: Krishna Kant <krishna.kant@purestorage.com>
+Signed-off-by: Krishna Kant <krishna.kant@purestorage.com>
+Co-developed-by: Riya Savla <rsavla@purestorage.com>
+Signed-off-by: Riya Savla <rsavla@purestorage.com>
+Signed-off-by: Brian Bunker <brian@purestorage.com>
+Reviewed-by: Hannes Reinecke <hare@suse.de>
+Link: https://patch.msgid.link/20260416165512.26497-2-brian@purestorage.com
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+
+LLM Generated explanations, may be completely bogus:
+
+## Analysis Walkthrough
+
+Phase 1 Record: Subsystem is `scsi: scsi_dh_alua`; action is “increase”;
+intent is to raise the default ALUA implicit transition timeout from 60s
+to 255s. Tags verified from commit
+`68c3a65a5a8e85643745fdde02cb63904e165620`: co-developed/SOB by Krishna
+Kant and Riya Savla, SOB by Brian Bunker, `Reviewed-by: Hannes
+Reinecke`, `Link:` to the v4 posting, SOB by Martin K. Petersen. No
+`Fixes:`, `Reported-by:`, `Tested-by:`, or `Cc: stable`. Body describes
+a real behavior problem: targets that omit an explicit ALUA transition
+timeout get capped at 60s, which is too short for some arrays.
+
+Phase 2 Record: One file changed,
+`drivers/scsi/device_handler/scsi_dh_alua.c`, 1 insertion/1 deletion. No
+function body is modified; only `ALUA_FAILOVER_TIMEOUT` changes. The
+macro is used by `submit_rtpg()`, `submit_stpg()`, `alua_tur()`, and
+`alua_rtpg()` for command and transition expiry timing. Before: missing
+target timeout defaults to 60s. After: defaults to 255s. Bug category is
+logic/correctness for storage failover timing. Fix quality is very small
+and obvious; main regression risk is slower failure detection for arrays
+that omit timeout and remain stuck.
+
+Phase 3 Record: `git blame` shows the 60s default came from
+`3588c5a21aef8c` (`[SCSI] scsi_dh_alua: implement 'implied transition
+timeout'`), first contained in `v3.6`. That original commit added the
+implicit transition timeout machinery and made 60s the finite fallback.
+Recent local history shows ALUA-related fixes but no prerequisite for
+this one. Author Brian Bunker previously authored ALUA transition-state
+fix `6056a92ceb2a7`, so this is from a contributor with direct ALUA
+history. No standalone dependency was found.
+
+Phase 4 Record: `b4 dig -c 68c3a65a5a8e8` found the v4 lore submission
+at
+`https://patch.msgid.link/20260416165512.26497-2-brian@purestorage.com`.
+`b4 dig -a` found v3 and v4; v4 is the applied revision. `b4 dig -w`
+shows Brian Bunker, `linux-scsi`, Hannes Reinecke, Krishna Kant, and
+Riya Savla were included. The v4 thread has Hannes’s `Reviewed-by` and
+Martin Petersen’s “Applied to 7.1/scsi-staging”. Earlier v2 discussion
+verified Hannes objected to tying ALUA transition timeout to device
+command timeout, and the patch evolved into the simpler 255s default. I
+found no stable-list discussion.
+
+Phase 5 Record: Modified function list is empty, but impacted code paths
+are the ALUA RTPG/STPG/TUR and transition expiry paths. Call tracing
+verified `alua_rtpg_work()` calls `alua_tur()` and `alua_rtpg()`,
+`alua_activate()` queues RTPG from dm-multipath activation,
+`alua_check_sense()` is invoked from SCSI error handling, and
+`alua_prep_fn()` is called from SCSI request setup. This is reachable
+from SCSI disk/device-handler attach, error handling, and dm-multipath
+path activation. Similar pattern search found the same 60s fallback in
+active stable tags.
+
+Phase 6 Record: The buggy 60s default exists in `v4.14`, `v4.19`,
+`v5.10`, `v5.15`, `v6.1`, `v6.6`, `v6.12`, `v6.16`, `v6.17`, and `v7.0`
+tags in this repo. The exact macro line is present, so backport
+difficulty should be clean or trivial for those trees. `b4 am` also
+reported the v4 patch “applies clean to current tree.” No alternate
+stable fix was found.
+
+Phase 7 Record: Subsystem is SCSI device handler / ALUA multipath
+storage. Criticality is IMPORTANT: it affects systems using ALUA-capable
+SCSI storage, especially enterprise multipath arrays. MAINTAINERS
+verifies SCSI is maintained by James Bottomley and Martin Petersen, and
+the patch was committed by Martin Petersen.
+
+Phase 8 Record: Affected users are config/hardware-specific: ALUA SCSI
+disk users, commonly multipath enterprise storage. Trigger is an ALUA
+transition where the target omits an explicit transition timeout and
+takes more than 60s. Failure mode is premature transition expiry,
+leading `alua_rtpg()` to mark the port group standby and return I/O/path
+failure. Severity is HIGH for affected systems because it can break
+failover or storage availability. Benefit is high for affected storage
+users; risk is low because this is a one-line bounded timeout increase
+and 255s matches the implementation’s `unsigned char`/`buff[5]` timeout
+representation.
+
+Phase 9 Record: Evidence for backporting: real storage failover
+correctness issue, long-lived bug since v3.6, affects many stable trees,
+one-line bounded fix, reviewed by Hannes Reinecke, committed by SCSI
+maintainer Martin Petersen, no new API or feature. Evidence against: no
+formal `Reported-by` or `Tested-by`; behavior may wait longer before
+declaring a nonresponsive target failed. Stable checklist: obviously
+correct yes; real bug yes; important issue yes for storage
+availability/path failure; small and contained yes; no new APIs yes;
+applies to stable trees yes/trivial. Exception category: none, this is
+not a device ID/quirk/build/doc fix.
+
+## Verification
+
+- Phase 1: `git show 68c3a65a5a8e8` verified commit message, tags,
+  author, committer, and one-line diff.
+- Phase 2: `git show` and source read verified only
+  `ALUA_FAILOVER_TIMEOUT` changes from `60` to `255`.
+- Phase 3: `git blame` verified the 60s default came from
+  `3588c5a21aef8c`; `git describe --contains` verified `v3.6` ancestry.
+- Phase 4: `b4 dig`, `b4 dig -a`, `b4 dig -w`, and saved mboxes verified
+  v3/v4 review history, Hannes review, and Martin’s apply note. Direct
+  WebFetch of lore was blocked/timed out; b4 succeeded.
+- Phase 5: `git grep` and file reads verified ALUA call paths through
+  SCSI request setup, SCSI error handling, and dm-multipath activation.
+- Phase 6: `git grep` against stable tags verified the 60s default
+  exists across listed stable releases.
+- Phase 7: `MAINTAINERS` search verified SCSI maintainer/list context.
+- Phase 8: Source inspection verified the failure path: timeout expiry
+  in `alua_rtpg()` changes transitioning state handling to standby/I/O
+  error.
+- Unverified: I did not independently fetch the SCSI SPC text; the “255
+  maximum spec value” claim is supported by the reviewed commit text and
+  by the kernel implementation storing the timeout as a single byte.
+
+This should be backported: it fixes a real ALUA multipath storage
+availability problem with a tiny, bounded, maintainer-reviewed change
+and minimal regression risk.
+
+**YES**
+
+ drivers/scsi/device_handler/scsi_dh_alua.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
+index efb08b9b145a1..80ab0ff921d43 100644
+--- a/drivers/scsi/device_handler/scsi_dh_alua.c
++++ b/drivers/scsi/device_handler/scsi_dh_alua.c
+@@ -37,7 +37,7 @@
+ #define TPGS_MODE_EXPLICIT		0x2
+ 
+ #define ALUA_RTPG_SIZE			128
+-#define ALUA_FAILOVER_TIMEOUT		60
++#define ALUA_FAILOVER_TIMEOUT		255	/* max 255 (8-bit value) */
+ #define ALUA_FAILOVER_RETRIES		5
+ #define ALUA_RTPG_DELAY_MSECS		5
+ #define ALUA_RTPG_RETRY_DELAY		2
+-- 
+2.53.0
 
