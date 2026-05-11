@@ -1,48 +1,33 @@
-Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 133E9382F0F;
-	Mon, 11 May 2026 20:29:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.14
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA35F2C11E6;
+	Mon, 11 May 2026 21:54:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778531358; cv=none; b=OFvPYh8lCH01myfqr01iZliEY6bYdGMrkaJ9N/lOIHduXuoyqfR3xbQR3MZb1Lh+eIQT+W0ujut3BZ3Bt3LkAO/0BXt26BPomQOre3tBbX66RQRZ+bChWLM6yFLXWDIw2AscHlvEP9Gq2N1/0f8hu49FYcB2ZQOpD7Ui7VdPycE=
+	t=1778536455; cv=none; b=c5HzpyTd05ijEVWRp77+c0jjLn3ErTzJc+hPhRmY/2gYU+pCBjVYGK5G4ssdFbLz8tXrjWovMbxhj3Zb9oBzBUkf4cdPFPxVOLyWivjf9FOWc8sQpncklh9ffitrZ5yZmm5jOz/WqQnTqrC9MTwGzP11qXNL4rOlFKpxOmnRBJA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778531358; c=relaxed/simple;
-	bh=ALX1DcuAGZICnqHSwIebe0EVk0XeNlG5pPBY5+BWxLc=;
+	s=arc-20240116; t=1778536455; c=relaxed/simple;
+	bh=RomqOVCJ74bU+jz8D6wGQX7OqLfegoqSF+qw3sa8MCk=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=RpTOm4OnupVtdzJIFL25iriGsx9eR8rQ+QMZ6006VEbWaoAdjVATlmxcIHIOG1u664XIZ/eRVV2gEyrZQt0N6+6oAP1KBwH4VadtApKADjjYHxEOXilRBXMQzCuQbOBYefTmdTN3fp4FLOmT9e2H+Au37FQVJ67TtDPJQeP9oUw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=SmRTOKVQ; arc=none smtp.client-ip=199.89.1.14
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	 In-Reply-To:Content-Type; b=XZIDkpzLa7SYsD4X+vU4MOxBYp8GfpKwnFxDPOvN1Qp5N9mNmiwDLtfXxSH7XUR6ciVle0zzNLDOAjfdxHj+k0R8/GBzZe++gSeZJ1fbzTaadrde9LfCfqOUZCB7MnIgqgMiGYcuidKLyg0Ry3BXuXo13d/QEUJu604ljQWmrJU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Us4oqDCG; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="SmRTOKVQ"
-Received: from localhost (localhost [127.0.0.1])
-	by 011.lax.mailroute.net (Postfix) with ESMTP id 4gDrt444QMz1XM6JN;
-	Mon, 11 May 2026 20:29:16 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1778531354; x=1781123355; bh=ixyrTw49jB4fOP5+j7x5MU7x
-	MLFh4Xqiye4S2vngAuo=; b=SmRTOKVQE0AYblQAzq+DU4WKVLDbmS3Gg3K1cd34
-	unqMSEG+Q3UHIrvQKT+rzZDYkF5L+1F7v3c2UsWAKX+yNyoo6PC35SXEu1h93PMM
-	/7Yfy8w0ON+XroWAGXOctWiR0nQQ+a+btl8epWrqgd7MD2YsJJgpH0W6Tv1BcBGx
-	hbrFme9eWqblBth7NSAO3MLhtf3+fjhamNs1ZF7QPgW75ZgFvODVAow0s0GiQkHw
-	ioN8kju6312bC6kPOOkLHt9nY1e3OveAgZjLHmNmBvxNtbffg0DV658TV6H4YULl
-	KhBcJBJ4I+F5KHUTjERw1HTmJu+YnZtX7akkrHSQjmSWWA==
-X-Virus-Scanned: by MailRoute
-Received: from 011.lax.mailroute.net ([127.0.0.1])
- by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id igrNeGht7vYO; Mon, 11 May 2026 20:29:14 +0000 (UTC)
-Received: from [100.119.48.131] (unknown [104.135.180.219])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4gDrt10p9Lz1XM5kW;
-	Mon, 11 May 2026 20:29:12 +0000 (UTC)
-Message-ID: <2f5230a3-63c5-4513-ad2e-34c2f1b49527@acm.org>
-Date: Mon, 11 May 2026 13:29:12 -0700
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Us4oqDCG"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DB72CC2BCB0;
+	Mon, 11 May 2026 21:54:13 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1778536455;
+	bh=RomqOVCJ74bU+jz8D6wGQX7OqLfegoqSF+qw3sa8MCk=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=Us4oqDCGnv65A5+Y7h5uCsUqyxPpZSgNVDTcHgk4KiVvJ8T/1H4NeZZR3Hn7INP1O
+	 bSkUM4sPXjLamRNTYLrMUHUI6LH09zegpOT6z92a+mM/1PJOxyL7k/PQ9qrerWwHJo
+	 I46d0tXzHeEozot3Mbwy0eG6gMXhE9IQlxQBgnHMLB3zmJVHS0Zhmuk/rKIUFL50o6
+	 Q1sMZFAAQHpIrZI7rVHszB0izhJSl12+0kcPzIJbvReDaxu2Tk66FwRbXx4wc+FmSW
+	 Zqv/sv8raTJJvtlgB5Mqirccae4f53qzzMk35U5wCl1mvzCIN6gMcbUuZyy7EPrd0L
+	 ZkXldJTNemaDQ==
+Message-ID: <1436af33-87d8-4070-ae67-a6a290fc0240@kernel.org>
+Date: Tue, 12 May 2026 06:54:11 +0900
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,20 +35,40 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2] scsi: scsi_scan: Fix typo in comment
-To: Md Shofiqul Islam <shofiqtest@gmail.com>, linux-scsi@vger.kernel.org,
- linux-kernel@vger.kernel.org
-Cc: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
-References: <20260506094504.2235-1-shofiqtest@gmail.com>
+Subject: Re: [PATCH v3 7/7] scsi: scsi_devinfo: extend BLIST_NO_LUN_1F to
+ MATSHITA and NEC PD-1 variants
+To: Hannes Reinecke <hare@suse.de>, Phil Pemberton <philpem@philpem.me.uk>,
+ linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, Niklas Cassel <cassel@kernel.org>,
+ "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>
+References: <20260426190920.2051289-1-philpem@philpem.me.uk>
+ <20260426190920.2051289-8-philpem@philpem.me.uk>
+ <c1db6016-9b7d-454b-a4a8-c8f61391c5ae@suse.de>
+ <566ea0c5-3d8b-4ce4-8d42-e97ecabe5f9d@philpem.me.uk>
+ <ea4de81e-4c9b-48d0-bc6d-72f23c7fc831@suse.de>
 Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20260506094504.2235-1-shofiqtest@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <ea4de81e-4c9b-48d0-bc6d-72f23c7fc831@suse.de>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 5/6/26 2:45 AM, Md Shofiqul Islam wrote:
-> Fix spelling mistake in comment:
->   - initialze -> initialize
+On 5/8/26 15:02, Hannes Reinecke wrote:
+>> Only that these are optional to the feature work and untested as I don't 
+>> have hardware. I believe these drives use the same PD-1 mechanism and 
+>> firmware so should behave the same, but I can't prove it.
+>>
+>> The intent was to allow the 1-6 set to be merged (as these are tested) 
+>> without 7/7 (which is not) to minimise the risk of regressions.
+>>
+> So drop it, then.
+> We can always add it later once someone shows up who actually has the 
+> hardware.
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+I agreee, let's drop this one and patch only once it can be confirmed that the
+change is needed.
 
+-- 
+Damien Le Moal
+Western Digital Research
