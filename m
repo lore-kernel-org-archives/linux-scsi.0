@@ -1,112 +1,169 @@
-Received: from mail-wm1-f42.google.com (mail-wm1-f42.google.com [209.85.128.42])
+Received: from mail-vk1-f176.google.com (mail-vk1-f176.google.com [209.85.221.176])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 180941799F
-	for <linux-scsi@vger.kernel.org>; Sun, 10 May 2026 22:03:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2FFF61CD2C
+	for <linux-scsi@vger.kernel.org>; Mon, 11 May 2026 04:29:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.176
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778450597; cv=none; b=nw/IjaBC7u4heYnsIyKdFmT/8Bo9bd+wQVJy65mbe9cv/04dR2SQhRZX7HWDiA/OGn9IO6Kvepke5fiv0k6nHTJNwcERLGnt8LkcJJuEh2etV7mbxu7cPLBDxjzRYyMN25c2yJMtDisXWzuFGVNo52z19ZO9rcfOteTgIdZR4w4=
+	t=1778473771; cv=none; b=aXDcJ2xEWJuz5277ofMOEx+tZsFiyHlVCzi1gdbPwhQtKm51dQdys5MazonRka5GiIKtpTwEYKiPzDUkwxWYr06uw/4aUHRLlelKMNpzObZSHrn0MI+m1SKHpdSB14ck5TgQeb0ex9WyPdhetgn8arcVKV6LVFcJq0RqPsrmGJU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778450597; c=relaxed/simple;
-	bh=fCqlht/qE5LYYm9uvUbmL1f49xyJZVdgsxDC1qfEkYI=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=o7mOQTBSHL5uHSgwJ48MyHpqWK5SW0mJKWRExUaK4zd3p5Cy1WoQysU9byF0G9MSPMjnhlYpxpgJlEaw2WWunVjx+oIQrbuZeyRUfB0B5iIAG0sy082mVnxb9YFq+SGO7Iar6ESnGnhMdAqgRlDr6dawIIiEKEYdDqrUJomWKus=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=grimberg.me; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.128.42
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=grimberg.me
+	s=arc-20240116; t=1778473771; c=relaxed/simple;
+	bh=8wVbym3Nco5ldXMQUCj1mNUk9+JG/UM3Du25WtqYJdc=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=VpiskCPZvTzY9opRzn5fVQ/R/VjcS8V3CB7Rc1a2QSXn83Ivx6k+VpAVXZqfaalxTpAHHkvT4s9mPKXETA9+8EY5WhCVukz5BJRxz1Nh+yDBhImVipOn4O438LsebrrJyYRqLukPyGYyrIRFbSGJykU006sIS7hpD9ksuaoIDVc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=G6/gxob8; arc=none smtp.client-ip=209.85.221.176
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-wm1-f42.google.com with SMTP id 5b1f17b1804b1-4890d945eb4so27536505e9.0
-        for <linux-scsi@vger.kernel.org>; Sun, 10 May 2026 15:03:15 -0700 (PDT)
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="G6/gxob8"
+Received: by mail-vk1-f176.google.com with SMTP id 71dfb90a1353d-5637886c92aso1779386e0c.0
+        for <linux-scsi@vger.kernel.org>; Sun, 10 May 2026 21:29:30 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1778473769; x=1779078569; darn=vger.kernel.org;
+        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=EG2JTssm3b0KoVPX1o9BEZRYcYiKipSRW2CdGWwAkwY=;
+        b=G6/gxob8sFWNT3dAORrjO/Ss6dcpNwORYsoUiKkqfrBUasvXVgeNCnBVrJsmCNP9t7
+         3B5nQ6PjTQrHwurysqIrqhs8LLHOHAYmUCp5KOUxxPfYWB9iqc8Oh/XtYCoE7ab6BQ6t
+         Eks4cQiXn9fkJdYryl6MPdANS2MSkzaurdR3RUVrTGBuhtviYmM36/8YVD4S0GDcJmWp
+         eB6DqS5cnOjPYB75KGOe/Tahwi4W6/dHpP0WehVSKcDyO7zauJlfyr8RI++sc0wc7huS
+         9JEA0jUuFd90Wgqg9IcVrSb9PryIJZeYk7Cra9j51jFrA6XNEGFzAk25+tfThIHB04jW
+         WfKQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1778450594; x=1779055394;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
+        d=1e100.net; s=20251104; t=1778473769; x=1779078569;
+        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
          :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=7TT88Obqx1AJAzXu0jcEZD6MoC4AHPr3xtkjAGFDve0=;
-        b=UDfBI+z7OhvBRW4y68AWmZvxnXCE6qWyXdxrXpL67yA0Y4iSQheju7ZkTpuwNE9IrA
-         N7QyAIGYY9F7z5Eb0HbxiCrHu/cv6oq8Blykytv+hb+1fEFwE6pNdVHcjNDfBEdMKDAN
-         retjzgErYigpgYGDMFbIpVTiC6i75Z/eOg6Ms+Dt3k/o8nCe7m2A9mG4yn19lHXff11K
-         9kILdIyQNHtpe+naCJjU3JB96PTOzRGnsfr2nZ7PxN2wiDGWvCCDpRKbUUSq5EF9334J
-         ITFndhYp0s1OuJ2luprosIjKnBMHem7oXhXje2RADGpAkRLUSpCK95Tzw8mfBM2RuJ2U
-         vw0Q==
-X-Forwarded-Encrypted: i=1; AFNElJ86KZaK80Auy9SehTk/COivwqAWzDhQrl5nGWIals0OnbpFu4HuxOqZReZEVx8EKRRCKPOLidlR/KYJ@vger.kernel.org
-X-Gm-Message-State: AOJu0YyWwLgnjNu34Zfxb4iEj0FOLayOswkZOX7n2PehcBCKUCCR2k+A
-	TJ/p/G3gNkE7wM5xSETnT4rT/QDTym3MGUkpYRiCsD8UDTVy41ALsxGf
-X-Gm-Gg: Acq92OFXT478/wiJTkBFG26VYUY8th/7Kl9M0HQDxL2lIF5zSh1LnF9oo2wsTOw+Qh7
-	l5DHz8VETv1VGRTPzH64DPx5kJJO4MgQeKLSZaK2emqcBOlAkvaPYp1Oz954qfvvY3aX8FKzR/j
-	60vDZ5qYDOd8SBCzmgTBMooBjkOy8cPakBz56/Bsjrmv3kiZe+NXNedXm6Mz7C8/v2awhuLgA9r
-	9yVIHDkXJx48he3o1nUsYmJ6k7/vAFSpudc2VXiSJA89qQVDMVTZGudAvZ4xn3FtGaZCiEf/hcp
-	serlw5fQq5O0/wKrc9YOoXNyANfM/XzSr25/laPt8uPv7GXcsL/cDerOAZRqOhTLvFNc9iubWTc
-	MK3daOQs7yyxXw2BqjFqsIUSvzJxGVqCygaKjf8+0NovI/Mod0sPGfaCYKp5fsSOwot7+yv0xOw
-	jkAi+anY3LgGpoHXKcBAY=
-X-Received: by 2002:a05:600c:570d:b0:48a:5236:7f38 with SMTP id 5b1f17b1804b1-48e5dfffademr189351075e9.14.1778450594444;
-        Sun, 10 May 2026 15:03:14 -0700 (PDT)
-Received: from [10.100.102.74] ([89.138.75.0])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-45491304505sm21071533f8f.22.2026.05.10.15.03.12
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sun, 10 May 2026 15:03:13 -0700 (PDT)
-Message-ID: <ad0a1191-4928-4700-8c55-4c844a7058e3@grimberg.me>
-Date: Mon, 11 May 2026 01:03:11 +0300
+        bh=EG2JTssm3b0KoVPX1o9BEZRYcYiKipSRW2CdGWwAkwY=;
+        b=EqyMH7qmfmXXREHiD7MqpZA8rOv3EPJxgc3LFLc6Bf6yo2dIo1p7NMPC6axOPv1awB
+         Yh+nBS9jnm8HRNiVy6b3t6uSdeqOiYJS+pQvUnPtkRCBaq1XGnADTtsOBYcn3gYDXeck
+         gdTTSUUBT+xMawCC+A5L/uKUNyq8/v/Njd7avc/IMp1puWvMFUIvqTkj8Mm1pYfOq8BQ
+         xAonp8Qg404qmSV2qsvA+lb2kHMOedf+HT/LhCi2WjzSDD50fGVrFn3eXn74WVpwzt0t
+         OrM5GUSlg6uwfxnmHfhjMk7pTaaQwzYou0t1hcX5LztkgzKy/lZ+KCB7JTaW7kpX+RJd
+         HCtg==
+X-Gm-Message-State: AOJu0YxvEpilGCz/GwUdHIOhbW2oSS9ES2PiDPjXAwr7k3ZgXCyBmT/r
+	uhTGL7mQCyYv2xUXEbWSfZPay8P1//XweLo/D6QwuyeS6UKXZQmAp691
+X-Gm-Gg: Acq92OFpN+998Xk4+t6iy7Ihq1TdVUi7cvVfLhKJ4xwL3F8AWZfq2xVPy6O7YXaa2M7
+	2tay6ebT1LRvJBEhgqHWsDLrwG9N7e7Bc4aHxBxGlXn/jhSiMaDD4DwlNyV4gW2+ocjlVtlUzWM
+	/fDWQvvvPs/D6fInAVNfEdqFF73HNFPZGZpd1Qc632wuSJueGT+3213Wa6/MGnee3xzI06FLfaQ
+	rTAmtnscm4EtDyqtx8FJ4ndom2meNHgdurLO54C3BYMWcTSE1FvalpU7aClVg2lmPB4zgZTWTAK
+	IAwAC+QAOXAA82bnc3HdIiGn1Gtv5DVT8XNGsCdnuvtjfDIP2BK1IGP72QXv+JLnC+WXetmjZI6
+	UNBPcFymjjqfihE5Pwu7Zr03ArBP2TIpx8BqQe3TdwXwlcdP5LpqBV/dwSqb+l/+Zy2FvjsiD5W
+	LKd+lXzrT4eQ3Xdbt/15AZ5zvxn/mK
+X-Received: by 2002:a05:6123:a8:b0:56e:e7b5:17d3 with SMTP id 71dfb90a1353d-575595d06b6mr11556416e0c.8.1778473768980;
+        Sun, 10 May 2026 21:29:28 -0700 (PDT)
+Received: from localhost ([185.141.119.51])
+        by smtp.gmail.com with ESMTPSA id 71dfb90a1353d-57596bbd81bsm3830932e0c.13.2026.05.10.21.29.27
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 10 May 2026 21:29:28 -0700 (PDT)
+Date: Mon, 11 May 2026 07:29:23 +0300
+From: Dan Carpenter <error27@gmail.com>
+To: Mike Christie <michael.christie@oracle.com>
+Cc: linux-scsi@vger.kernel.org
+Subject: [bug report] scsi: sd: Fix sshdr use in sd_spinup_disk
+Message-ID: <agFbI7E6JQwd3wGW@stanley.mountain>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 00/13] libmultipath: a generic multipath lib for block
- drivers
-To: John Garry <john.g.garry@oracle.com>, hch@lst.de, kbusch@kernel.org,
- axboe@fb.com, martin.petersen@oracle.com,
- james.bottomley@hansenpartnership.com, hare@suse.com, bmarzins@redhat.com,
- nilay@linux.ibm.com
-Cc: jmeneghi@redhat.com, linux-nvme@lists.infradead.org,
- linux-scsi@vger.kernel.org, michael.christie@oracle.com, snitzer@kernel.org,
- dm-devel@lists.linux.dev, linux-kernel@vger.kernel.org
-References: <20260428111105.1778008-1-john.g.garry@oracle.com>
-Content-Language: en-US
-From: Sagi Grimberg <sagi@grimberg.me>
-In-Reply-To: <20260428111105.1778008-1-john.g.garry@oracle.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
+Hello Mike Christie,
 
+Commit b4d0c33a32c3 ("scsi: sd: Fix sshdr use in sd_spinup_disk")
+from Oct 4, 2023 (linux-next), leads to the following Smatch static
+checker warning:
 
-On 28/04/2026 14:10, John Garry wrote:
-> libmultipath: a generic multipath lib for block drivers
+	drivers/scsi/sd.c:2525 sd_spinup_disk()
+	warn: kernel error codes cast to unsigned 'the_result'
 
-This is very nice John.
+drivers/scsi/sd.c
+    2474 static void
+    2475 sd_spinup_disk(struct scsi_disk *sdkp)
+    2476 {
+    2477         static const u8 cmd[10] = { TEST_UNIT_READY };
+    2478         unsigned long spintime_expire = 0;
+    2479         int spintime, sense_valid = 0;
+    2480         unsigned int the_result;
+    2481         struct scsi_sense_hdr sshdr;
+    2482         struct scsi_failure failure_defs[] = {
+    2483                 /* Do not retry Medium Not Present */
+    2484                 {
+    2485                         .sense = UNIT_ATTENTION,
+    2486                         .asc = 0x3A,
+    2487                         .ascq = SCMD_FAILURE_ASCQ_ANY,
+    2488                         .result = SAM_STAT_CHECK_CONDITION,
+    2489                 },
+    2490                 {
+    2491                         .sense = NOT_READY,
+    2492                         .asc = 0x3A,
+    2493                         .ascq = SCMD_FAILURE_ASCQ_ANY,
+    2494                         .result = SAM_STAT_CHECK_CONDITION,
+    2495                 },
+    2496                 /* Retry when scsi_status_is_good would return false 3 times */
+    2497                 {
+    2498                         .result = SCMD_FAILURE_STAT_ANY,
+    2499                         .allowed = 3,
+    2500                 },
+    2501                 {}
+    2502         };
+    2503         struct scsi_failures failures = {
+    2504                 .failure_definitions = failure_defs,
+    2505         };
+    2506         const struct scsi_exec_args exec_args = {
+    2507                 .sshdr = &sshdr,
+    2508                 .failures = &failures,
+    2509         };
+    2510 
+    2511         spintime = 0;
+    2512 
+    2513         /* Spin up drives, as required.  Only do this at boot time */
+    2514         /* Spinup needs to be done for module loads too. */
+    2515         do {
+    2516                 bool media_was_present = sdkp->media_present;
+    2517 
+    2518                 scsi_failures_reset_retries(&failures);
+    2519 
+    2520                 the_result = scsi_execute_cmd(sdkp->device, cmd, REQ_OP_DRV_IN,
+    2521                                               NULL, 0, SD_TIMEOUT,
+    2522                                               sdkp->max_retries, &exec_args);
+    2523 
+    2524 
+--> 2525                 if (the_result > 0) {
 
->
-> This series introduces libmultipath. It is essentially a refactoring of
-> NVME multipath support, so we can have a common library to also support
-> native SCSI multipath.
->
-> Much of the code is taken directly from the NVMe multipath code. However,
-> NVMe specifics are removed. A template structure is provided so the driver
-> may provide callbacks for driver specifics, like ANA support for NVMe.
->
-> Important new structures introduced include:
->
-> - mpath_head
-> These contain much of the multipath-specific functionality from
-> nvme_ns_head, including a pointer to the gendisk structure and
-> a path SRCU-based array.
+The scsi_execute_cmd() function returns negative kernel error codes and
+positive SCSI error status codes.  But "the_result" is an unsigned int
+so both negative and positive error codes are > 0.
 
-I think it should be placed first in its parent struct as it holds the 
-hot-path
-head->srcu and head->list.
+    2526                         /*
+    2527                          * If the drive has indicated to us that it doesn't
+    2528                          * have any media in it, don't bother with any more
+    2529                          * polling.
+    2530                          */
+    2531                         if (media_not_present(sdkp, &sshdr)) {
+    2532                                 if (media_was_present)
+    2533                                         sd_printk(KERN_NOTICE, sdkp,
+    2534                                                   "Media removed, stopped polling\n");
+    2535                                 return;
+    2536                         }
+    2537                         sense_valid = scsi_sense_valid(&sshdr);
+    2538                 }
+    2539 
+    2540                 if (!scsi_status_is_check_condition(the_result)) {
+    2541                         /* no sense, TUR either succeeded or failed
+    2542                          * with a status error */
+    2543                         if(!spintime && !scsi_status_is_good(the_result)) {
+    2544                                 sd_print_result(sdkp, "Test Unit Ready failed",
+    2545                                                 the_result);
+    2546                         }
+    2547                         break;
+    2548                 }
+    2549 
 
->
-> - mpath_device
-> This is the per-path structure, and contains much the same
-> multipath-specific functionality in nvme_ns
->
-> libmultipath provides functionality for path management, path selection,
-> data path, and failover handling.
->
-> Since the NVMe driver has some code in the sysfs and ioctl handling
-> which iterate all multipath NSes, functions like mpath_call_for_device()
-> are added to do the same per-path iteration.
+This email is a free service from the Smatch-CI project [smatch.sf.net].
 
-very nice, overall seems fairly straight forward.
+regards,
+dan carpenter
