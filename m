@@ -1,40 +1,40 @@
-Received: from canpmsgout01.his.huawei.com (canpmsgout01.his.huawei.com [113.46.200.216])
+Received: from nick.sneptech.io (nick.sneptech.io [178.62.38.78])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D0868397B08;
-	Tue, 12 May 2026 13:18:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.216
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F51C39060B;
+	Tue, 12 May 2026 15:12:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=178.62.38.78
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778591913; cv=none; b=nPULKLiwxHY8lHZTXaMnLatDlHupn3KrddEcZp9TnyhIkXwVfkdjG0wJ2W+j+yDoZk/6YBRPsh8jsrkXdh43PcRUVbI3WnijW2YkjnvYZhenOjbns7N5M+kaTgMWbeDOnnIlkZUMrDM3y8Cwa0WOmrQojf1XJgOOp0RmFqDvcuc=
+	t=1778598737; cv=none; b=qTqX7ptoAjCNEAF58fuMxnmoQFtN3VTHdUD67s42q22h5P6N/wy/gEFWhe4uWLbBwOaazdeoZpeVeAuDfF5kGk9HQcDP5PpeAlKT2spWnTWaXKxkJyVX6QSi4qNXXTee9UsnFGuicz6RbhHwGVV0FZMaESam6zTfwXTCcqkcezg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778591913; c=relaxed/simple;
-	bh=Uqvi7mTQOjfbF8LvcWgP0J/HCrtQ7KOAxVhybe6+720=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=ivH/pFJ5hj6zZGcYtrZkESytpnRrDiF+QhP0eE1sVA9p337wVz2Xo8CDiVgHlKdQmueVxKnR8odsSAzdBGIxfD9Z5x+5mzSfA4Jofb3Oj3QRSA5aa/Wo9WCGuEdyxj8Wq1g/Bvo6kaW/JIZtZU4r7yIyE4bAHqCDAC8PoKN/Oi4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=vJ16uOdH; arc=none smtp.client-ip=113.46.200.216
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+	s=arc-20240116; t=1778598737; c=relaxed/simple;
+	bh=Wa4dKKiW2Oo3LzEjzTkXopNujWyAkKB4u27BZYXjI7g=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=ajdyLOur+Khx9jEXRWwMPav7dScDw1Qc/7A24UnauD63kPJGZzgN80xm3aakDrlOeCqubz8+gcbACi6+VF9fQ/Lg+F1JIkYVBAjbySIJRmlRz8PyCT6E9sxwgiLLaZeMMcl9J3GLn/C5aAU6tFf/By+sxuXEiajGqvycUeYDe0E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=philpem.me.uk; spf=pass smtp.mailfrom=philpem.me.uk; dkim=pass (1024-bit key) header.d=philpem.me.uk header.i=@philpem.me.uk header.b=aDHGJviI; arc=none smtp.client-ip=178.62.38.78
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=philpem.me.uk
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=philpem.me.uk
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="vJ16uOdH"
-dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
-	c=relaxed/relaxed; q=dns/txt;
-	h=From;
-	bh=31tYX4+VG7i4jQXxMONKUGCq02DhrTsTCvk8PT4+ePE=;
-	b=vJ16uOdHVP3Gs/Vtho4V6WXhq8Gvd0sIOH+OaWgDPifgKM24su00jn/YvWz6OupHBDKDqs2Ji
-	3NByShl1jBl1TdRsDENXytkvQBPUb17GgryIYm6d8h8CFJF8wCheydPERrJC8Ifh7SeTnYZRW30
-	PqACzN6ldiyfpEsDZ1eA7O4=
-Received: from mail.maildlp.com (unknown [172.19.162.144])
-	by canpmsgout01.his.huawei.com (SkyGuard) with ESMTPS id 4gFH5h1Fkgz1T4Mb;
-	Tue, 12 May 2026 21:10:48 +0800 (CST)
-Received: from dggpemf500002.china.huawei.com (unknown [7.185.36.57])
-	by mail.maildlp.com (Postfix) with ESMTPS id 5B17240538;
-	Tue, 12 May 2026 21:18:28 +0800 (CST)
-Received: from [10.174.179.11] (10.174.179.11) by
- dggpemf500002.china.huawei.com (7.185.36.57) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.11; Tue, 12 May 2026 21:18:27 +0800
-Message-ID: <9c4a1438-bd8f-4107-a519-a222e20f5da6@huawei.com>
-Date: Tue, 12 May 2026 21:18:26 +0800
+	dkim=pass (1024-bit key) header.d=philpem.me.uk header.i=@philpem.me.uk header.b="aDHGJviI"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=philpem.me.uk;
+	s=mail; t=1778598728;
+	bh=Wa4dKKiW2Oo3LzEjzTkXopNujWyAkKB4u27BZYXjI7g=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=aDHGJviImheqMsZ8ukTK3iKMIIMEvFow9C/bVe6ybQyFUOAXKd8ki4lYU1nZoW4h6
+	 8GZ4Y/1Fs1lM0TfgJjUD+SXBG5OiZ4nSdDtt3oMcfgMLC7dBESGUl1VBQIN+9sEozX
+	 r5qCwNa6fQ6jwzL0bwpqO67S2kHLHme9CxxkGY/M=
+Received: from wolf.philpem.me.uk (81-187-163-148.ip4.reverse-dns.uk [81.187.163.148])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: mailrelay_wolf@philpem.me.uk)
+	by nick.sneptech.io (Postfix) with ESMTPSA id 62666BD345;
+	Tue, 12 May 2026 15:12:08 +0000 (UTC)
+Received: from [10.0.0.32] (cheetah.homenet.philpem.me.uk [10.0.0.32])
+	by wolf.philpem.me.uk (Postfix) with ESMTPSA id 25F305FADA;
+	Tue, 12 May 2026 16:12:08 +0100 (BST)
+Message-ID: <6223b3e1-9aee-496d-8d56-071263282de9@philpem.me.uk>
+Date: Tue, 12 May 2026 16:12:07 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -42,42 +42,73 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi: libsas: handle linkrate change in
- sas_rediscover_dev
-To: Xingui Yang <yangxingui@huawei.com>, <john.g.garry@oracle.com>,
-	<jejb@linux.ibm.com>, <martin.petersen@oracle.com>
-CC: <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linuxarm@huawei.com>, <liyihang9@h-partners.com>, <liuyonglong@huawei.com>,
-	<kangfenglong@huawei.com>
-References: <20260512071226.2299741-1-yangxingui@huawei.com>
-From: Jason Yan <yanaijie@huawei.com>
-In-Reply-To: <20260512071226.2299741-1-yangxingui@huawei.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: kwepems500002.china.huawei.com (7.221.188.17) To
- dggpemf500002.china.huawei.com (7.185.36.57)
+Subject: Re: [PATCH v4 1/7] ata: libata-scsi: add atapi_max_lun module
+ parameter
+To: Niklas Cassel <cassel@kernel.org>, Damien Le Moal <dlemoal@kernel.org>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
+ linux-kernel@vger.kernel.org,
+ "James E . J . Bottomley" <James.Bottomley@hansenpartnership.com>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>,
+ Hannes Reinecke <hare@suse.de>
+References: <20260506234548.1974603-1-philpem@philpem.me.uk>
+ <20260506234548.1974603-2-philpem@philpem.me.uk>
+ <7f7126d4-0c8d-4f88-9ece-5bbfac2b47c7@kernel.org> <agL6n9aXd84YPgFA@ryzen>
+Content-Language: en-GB
+From: Phil Pemberton <philpem@philpem.me.uk>
+In-Reply-To: <agL6n9aXd84YPgFA@ryzen>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-在 2026/5/12 15:12, Xingui Yang 写道:
-> When a device attached to an expander phy experiences a linkrate change
-> (e.g., due to cable reconnection or negotiation), the current code in
-> sas_rediscover_dev() treats it as "broadcast flutter" and takes no action
-> if the SAS address and device type remain unchanged.
+On 12/05/2026 11:02, Niklas Cassel wrote:
+> On Tue, May 12, 2026 at 10:46:39AM +0900, Damien Le Moal wrote:
+>> On 5/7/26 08:45, Phil Pemberton wrote:
+>>> Until now libata has hard-coded shost->max_lun = 1 for every ATA host,
+>>> so the SCSI layer never scans past LUN 0.  This blocks support for
+>>> the small handful of multi-LUN ATAPI devices (Panasonic LF-1195C and
+>>> COMPAQ PD-1 PD/CD combos export CD on LUN 0 and PD on LUN 1; old
+>>> Nakamichi MJ-x.y CD changers expose one LUN per disc slot, up to 7).
+>>>
+>>> Introduce a libata module parameter, atapi_max_lun, that controls the
+>>> upper bound of the per-host SCSI LUN scan.  Default is 1, preserving
+>>> current behaviour exactly: out-of-the-box only LUN 0 is scanned.
+>>> Range is clamped to 1..ATAPI_MAX_LUN (8, the SCSI-2 ceiling).
+>>>
+>>> Subsequent patches gate actual LUN>0 probing on BLIST_FORCELUN, so a
+>>> device must both be on the SCSI device list (or carry the appropriate
+>>> quirk) and run on a host whose atapi_max_lun has been raised before
+>>> any extra LUNs are scanned.
+>>>
+>>> Reviewed-by: Hannes Reinecke <hare@suse.de>
+>>> Signed-off-by: Phil Pemberton <philpem@philpem.me.uk>
+>>
+>> Looks good, but this does not apply to libata tree for-7.2 / for-next branch.
+>> What is this based on ? Please rebase and resend as I would like to run some tests.
 > 
-> However, for drivers like hisi_sas, the ITCT entry needs to be updated to
-> reflect the new linkrate. Without this update, the hardware continues
-> using stale linkrate information, which can cause performance issues or
-> protocol errors.
-> 
-> This patch introduces a new LLDD callback lldd_dev_info_update() to notify
-> the low-level driver when a device's linkrate changes, allowing the driver
-> to update its hardware structures accordingly.
-> 
-> Additionally, refactor sas_ex_to_ata() to use a new helper function
-> sas_ex_to_dev() which returns any device type attached to an expander phy,
-> improving code reuse.
+> Tip:
+> When using "git format-patch" you can specify --base <SHA1> and
+> then the base SHA1 will be added at the end of the cover-letter.
 
-Could you split this refactor to another patch? This makes it easier to 
-review.
+Thanks for the tip Niklas, I'll do that on the next round.
 
-祝一切顺利
-Jason
+This is the base for the patch set:
+
+commit 3036cd0d3328220a1858b1ab390be8b562774e8a
+Merge: 86782c16a81f 105c42566a55
+Author: Linus Torvalds <torvalds@linux-foundation.org>
+Date:   Tue Apr 7 10:33:49 2026 -0700
+
+     Merge tag 'ata-7.0-final' of 
+git://git.kernel.org/pub/scm/linux/kernel/git/libata/linux
+
+     Pull ata fix from Niklas Cassel:
+
+
+I'm just rebasing it onto for-7.2/for-next and will send shortly.
+
+Damien: Thanks for the offer to test.
+
+Thanks.
+-- 
+Phil.
+philpem@philpem.me.uk
+https://www.philpem.me.uk/
