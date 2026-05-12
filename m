@@ -1,83 +1,140 @@
-Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
+Received: from nick.sneptech.io (nick.sneptech.io [178.62.38.78])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1FD4E3A872A;
-	Tue, 12 May 2026 20:05:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BEF5D3CF04E;
+	Tue, 12 May 2026 20:27:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=178.62.38.78
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778616313; cv=none; b=F5ngcCkxh/HQKZEQty1JUfuzqUpHkomGMnBeoZPaRXPyYjoa4CMUIcYu54BHy+RPTxviECRE99THa65j+DQtYo2afNVjEqXcUgjk+znyyUHV9gYaOVdOHdVcWDWASjcQ5QnSm5Zd1qymHS2T8E47SDsAw2dAmScCmGQfOxagji8=
+	t=1778617657; cv=none; b=adzGeX8GrY8LAMSciZnQVCAxvvYd8aB10WOCr6CdaQVerhftxZt8TwP9ZgHKs/PQpKQs4J2j7zOX86ikc9i8y7P/rmRu8swqwz75qpbBfe+q97DyUYDDTzZQUYhig3fPhZWLja4ak3k2XWByIMtYAdD0xATnfAeUSvA5euJlxAg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778616313; c=relaxed/simple;
-	bh=AZU0ALXZvR8kX9UqFA4Rrpt3xx5uJ2HBs+CvGxfX2y0=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=SznKEBO/z4I7NBR5I26ILiACZS8NTJUktDzFjNQqCTYqMflPPZdycc024i7NXqTgXEgJ7DeHSyyrE2d39FZ0NxTKeQrEBPcH1x0gt7faVjc51pPkrxVvaTkHMS8ZY9zCiwgxDAOo4sfGGcHlyW9Jg7H7ANxqZ3vnHqlDEhCGkpw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=y4VDnTpI; arc=none smtp.client-ip=199.89.1.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1778617657; c=relaxed/simple;
+	bh=x6f8CJNbI915EJ13DABGEvOBY0TFxfB2QN6TGIZA5KE=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=RTTxtJsz36tTau7qpSMs2WAin1fFNTESAm14Fw798tTC4mfricCwAmReQrMwNchkZWUluDcpNIV+bc/4UUFXnrQ8/PQZxQzcazy79jB3tVQTaDdlkmRC0ryH1xotJuDrXkg8nKbCmNKMd0EF5XKjdxTarYcllPIV0ePwX9FgQLk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=philpem.me.uk; spf=pass smtp.mailfrom=philpem.me.uk; dkim=pass (1024-bit key) header.d=philpem.me.uk header.i=@philpem.me.uk header.b=rCBoCd03; arc=none smtp.client-ip=178.62.38.78
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=philpem.me.uk
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=philpem.me.uk
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="y4VDnTpI"
-Received: from localhost (localhost [127.0.0.1])
-	by 013.lax.mailroute.net (Postfix) with ESMTP id 4gFSHq07zhzlfl89;
-	Tue, 12 May 2026 20:05:11 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1778616306; x=1781208307; bh=3QPl8pMWeY141ZF1RwbgGUbx
-	9yPxM3yZBIJcDTiuygk=; b=y4VDnTpIUJQ8XKktrEFb8JONSi7rf2L5SsNAeVIJ
-	NGvKB9fkoXN0QwBKGM/n4/Fn4+6BzfXM3HWmvLxBzlIdbrKsRyfSDV0jZ2MnuaJt
-	RFD4xqm3c2PHONkSkVTJgZnx9De5l+2s4MaLKmLqvlZc5SS8LgNmu+7fK1b8uXJJ
-	iLxQrMEq/cmBVG4GNlPLqal+hHCXsyJIjc89mFazT00ONwhag2dG1i9/fLio5+Dq
-	6Qi1Ab6aX/39TXzJuiS12qIXFFkR6UfO/On/8FFToBsX0zrujyeiunoRvntNu1NN
-	2D9tjgIJwM5IuxluyNpFeKkEQWo1mjS5pJB+b57NVuENlw==
-X-Virus-Scanned: by MailRoute
-Received: from 013.lax.mailroute.net ([127.0.0.1])
- by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id p2PYJdvoaVCq; Tue, 12 May 2026 20:05:06 +0000 (UTC)
-Received: from [100.119.48.131] (unknown [104.135.180.219])
+	dkim=pass (1024-bit key) header.d=philpem.me.uk header.i=@philpem.me.uk header.b="rCBoCd03"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=philpem.me.uk;
+	s=mail; t=1778617653;
+	bh=x6f8CJNbI915EJ13DABGEvOBY0TFxfB2QN6TGIZA5KE=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=rCBoCd03gcBzTTRxW0dDLtoBdqYMn4/6UfZ3vaidNOYjZTO1qlxKJAR7LhHegq/EZ
+	 joxOABv3GfCmqS7j/zJPolrnx6I+rPVG3TMqpIIkE5cX6/6glHXMg27+din2v/uUWi
+	 Sd8aBfyCdEkaKxAj+NHdBJ6X2yu6Qu7bMwbdIHlo=
+Received: from wolf.philpem.me.uk (81-187-163-148.ip4.reverse-dns.uk [81.187.163.148])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits))
 	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4gFSHg6zwXzlfvq4;
-	Tue, 12 May 2026 20:05:03 +0000 (UTC)
-Message-ID: <73fa5a46-bd2d-44cf-8bf5-3ce74e60e324@acm.org>
-Date: Tue, 12 May 2026 13:05:02 -0700
+	(Authenticated sender: mailrelay_wolf@philpem.me.uk)
+	by nick.sneptech.io (Postfix) with ESMTPSA id DB274BD0F8;
+	Tue, 12 May 2026 20:27:33 +0000 (UTC)
+Received: from cheetah.homenet.philpem.me.uk (cheetah.homenet.philpem.me.uk [10.0.0.32])
+	by wolf.philpem.me.uk (Postfix) with ESMTPSA id 805D15FC0F;
+	Tue, 12 May 2026 21:27:33 +0100 (BST)
+From: Phil Pemberton <philpem@philpem.me.uk>
+To: linux-ide@vger.kernel.org,
+	linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org,
+	Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>,
+	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	Hannes Reinecke <hare@suse.de>,
+	Phil Pemberton <philpem@philpem.me.uk>
+Subject: [PATCH v5 1/6] ata: libata-scsi: add atapi_max_lun module parameter
+Date: Tue, 12 May 2026 21:27:23 +0100
+Message-ID: <20260512202728.299414-2-philpem@philpem.me.uk>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20260512202728.299414-1-philpem@philpem.me.uk>
+References: <20260512202728.299414-1-philpem@philpem.me.uk>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 2/2] ufs: ufshcd-pci: Use PCI_VDEVICE and named
- initializers for pci array
-To: =?UTF-8?Q?Uwe_Kleine-K=C3=B6nig_=28The_Capable_Hub=29?=
- <u.kleine-koenig@baylibre.com>,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Adrian Hunter <adrian.hunter@intel.com>,
- Peter Wang <peter.wang@mediatek.com>, Bean Huo <beanhuo@micron.com>,
- Can Guo <can.guo@oss.qualcomm.com>, Archana Patni <archana.patni@intel.com>,
- Markus Schneider-Pargmann <msp@baylibre.com>, linux-scsi@vger.kernel.org,
- linux-kernel@vger.kernel.org
-References: <cover.1777968942.git.u.kleine-koenig@baylibre.com>
- <6cac1c22381f7026edad9854d70833381d14929a.1777968942.git.u.kleine-koenig@baylibre.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <6cac1c22381f7026edad9854d70833381d14929a.1777968942.git.u.kleine-koenig@baylibre.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 
-On 5/5/26 1:28 AM, Uwe Kleine-K=C3=B6nig (The Capable Hub) wrote:
-> The pci_device_id array uses a mixture of ways to initialize
-> ufshcd_pci_tbl[]. List initializers are hard to read unless you memoize=
-d
-                                                                   ^^^^^^
-                                                                memorized
+Until now libata has hard-coded shost->max_lun = 1 for every ATA host,
+so the SCSI layer never scans past LUN 0.  This blocks support for
+the small handful of multi-LUN ATAPI devices (Panasonic LF-1195C and
+COMPAQ PD-1 PD/CD combos export CD on LUN 0 and PD on LUN 1; old
+Nakamichi MJ-x.y CD changers expose one LUN per disc slot, up to 7).
 
-Otherwise this patch looks good to me.
+Introduce a libata module parameter, atapi_max_lun, that controls the
+upper bound of the per-host SCSI LUN scan.  Default is 1, preserving
+current behaviour exactly: out-of-the-box only LUN 0 is scanned.
+Range is clamped to 1..ATAPI_MAX_LUN (8, the SCSI-2 ceiling).
 
-Thanks,
+Subsequent patches gate actual LUN>0 probing on BLIST_FORCELUN, so a
+device must both be on the SCSI device list (or carry the appropriate
+quirk) and run on a host whose atapi_max_lun has been raised before
+any extra LUNs are scanned.
 
-Bart.
+Reviewed-by: Hannes Reinecke <hare@suse.de>
+Signed-off-by: Phil Pemberton <philpem@philpem.me.uk>
+---
+ drivers/ata/libata-core.c | 5 +++++
+ drivers/ata/libata-scsi.c | 2 +-
+ drivers/ata/libata.h      | 1 +
+ include/linux/libata.h    | 1 +
+ 4 files changed, 8 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index e76d15411e2a..4408b1fb48c7 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -122,6 +122,11 @@ int atapi_passthru16 = 1;
+ module_param(atapi_passthru16, int, 0444);
+ MODULE_PARM_DESC(atapi_passthru16, "Enable ATA_16 passthru for ATAPI devices (0=off, 1=on [default])");
+ 
++int atapi_max_lun = 1;
++module_param(atapi_max_lun, int, 0444);
++MODULE_PARM_DESC(atapi_max_lun,
++	"Maximum LUN to scan on ATAPI devices flagged BLIST_FORCELUN (1 [default] .. 7)");
++
+ int libata_fua = 0;
+ module_param_named(fua, libata_fua, int, 0444);
+ MODULE_PARM_DESC(fua, "FUA support (0=off [default], 1=on)");
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index f44612e269a4..32c6a0e497cf 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -4627,7 +4627,7 @@ int ata_scsi_add_hosts(struct ata_host *host, const struct scsi_host_template *s
+ 		shost->transportt = &ata_scsi_transportt;
+ 		shost->unique_id = ap->print_id;
+ 		shost->max_id = 16;
+-		shost->max_lun = 1;
++		shost->max_lun = clamp(atapi_max_lun, 1, ATAPI_MAX_LUN);
+ 		shost->max_channel = 1;
+ 		shost->max_cmd_len = 32;
+ 
+diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
+index b5423b6e97de..96d804d02b99 100644
+--- a/drivers/ata/libata.h
++++ b/drivers/ata/libata.h
+@@ -33,6 +33,7 @@ enum {
+ #define ATA_PORT_TYPE_NAME	"ata_port"
+ 
+ extern int atapi_passthru16;
++extern int atapi_max_lun;
+ extern int libata_fua;
+ extern int libata_noacpi;
+ extern int libata_allow_tpm;
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 5c085ef4eda7..3e33ee30628d 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -131,6 +131,7 @@ enum {
+ 	ATA_SHORT_PAUSE		= 16,
+ 
+ 	ATAPI_MAX_DRAIN		= 16 << 10,
++	ATAPI_MAX_LUN		= 8,	/* SCSI-2 cap (LUN values 0..7) */
+ 
+ 	ATA_ALL_DEVICES		= (1 << ATA_MAX_DEVICES) - 1,
+ 
+-- 
+2.43.0
+
