@@ -1,80 +1,119 @@
-Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 69D56349B1F
-	for <linux-scsi@vger.kernel.org>; Wed, 13 May 2026 17:26:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.14
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4885D4C8FE8
+	for <linux-scsi@vger.kernel.org>; Wed, 13 May 2026 17:36:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778693202; cv=none; b=L2ALv7/TFT8FUYkw1zrwFQh/+xftbQx70Y6iysH6Oi/T4rBkTBpEAa+JwOpYImsLDodIbwKJSTst+8plBZDznyb2Z2UZtVipN+fg2Qp1kLJOpja6ZUhwpm+GiprmgEsbn4aijqJYvCbD07im4bbBCUIxExak4LqPzDRsZKbGKjA=
+	t=1778693803; cv=none; b=YhnRmTp6QmRs6Vg+0J+KGCJLeToRHdZs7EugEA4Jof5kCWrUsDrLXOS37g0DEJIkY40jymErMsCHKBdv3mRQK8iuha8ZVINOuOWK9bGJZZn4l6qZ+lxH+E+QR3r4HKVVjZF7rcTMVpuwOtFU5K8HY8P73gseEsxjn6D0EERVSeQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778693202; c=relaxed/simple;
-	bh=mZ+3IqgVlDYOVDr4xMbrBpT56S0RxalWma33hwp98/E=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=G0b+6D/CZ48h6d7y2W5aFrWMkOo/lIgIHmA/EeJ5ZJQosHdU6WtthmiDUloJJJDhg14aTcWkZ9xxY1AiM9yiiTQsc8fd8TaSKkldl6BoUJQoBOzLanfotx0cwfu9CKCol8x1lP3Eu9WPyCfz0NYbS7TLvcQOzP4vVICiS7NZY4Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=eHM7WCUv; arc=none smtp.client-ip=199.89.1.14
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1778693803; c=relaxed/simple;
+	bh=7Zc+upjxIlRO7YFmkB9Qan7boQAUGy6LsNMtAzQ8t5E=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=I/fWvDASB8DACvrSt8KbrJ+E/CaV9O4NUQCgzf8FHTWUyS3fQD6MiRqg18msm/hqiqtBHLLBdlBnR50ThRaLCgoI3r2F81YYWydf7bBgYebI5pcILcBahQfZA+ctM3xf4COZ7puhiyTRgLOx8PmaSxhUCwbgquO0RXSbuVnKPDo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=b1Mz6Xcy; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="eHM7WCUv"
-Received: from localhost (localhost [127.0.0.1])
-	by 011.lax.mailroute.net (Postfix) with ESMTP id 4gG0kM5QcYz1XM6JX;
-	Wed, 13 May 2026 17:26:35 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1778693191; x=1781285192; bh=PNIvuXxNovbVz4XABZTQq2iD
-	cpbXUYJ37MEM03N31LM=; b=eHM7WCUvP1F+DJdQzoXitKzYJpVPkPPa/gHiH8/C
-	HAyA/y2tMX2RBVKXMWu8OPbj4oMg6x2G701ZV6vII86uSHKhVRkInVJASVJ7Ux0c
-	g/sdggs6pTb/ybI4L/b6AgK7zX/VBdTYUXEsZ/bQsbaXjB1jy7AFAopWH4NJSwIS
-	mLnskQe1PC1taL6jOj9iSy0WvuPsSOQzLZeacxkv4CkR9T5vYjjLgmLDaj8JLIMn
-	7WQ/3JqQuOWPNgQwggodVBzSjWk1IhN6lmLNUwvEqNASGP5tSQW6oAPveRrLQtaP
-	Z+FxvZY3RsTtab+9m6BMBi7U5bDuqbnV+SfwtWwMVUjTew==
-X-Virus-Scanned: by MailRoute
-Received: from 011.lax.mailroute.net ([127.0.0.1])
- by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id WrOA8mzPFuwz; Wed, 13 May 2026 17:26:31 +0000 (UTC)
-Received: from [100.119.48.131] (unknown [104.135.180.219])
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="b1Mz6Xcy"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1778693801;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=knnC5iVZC2Xzfx3qx+OFWZIywu7s0xYRz1hqc1kJb20=;
+	b=b1Mz6XcyKWdUKk4qpq4eTAGMaA7Y9VSJrCsZ0H3/ifuoqzfGwzSnrsv/2Ovi2QhjzZeQHG
+	CJC1rEoTECrlkdOcHQr+GRKjBzBMRqKXHUfT4AiJXRryuXHdMRoDskUQ0eJJaMnf6gV9q7
+	4FqFnK9Walx7DSf3L73SYPaXueOqt8o=
+Received: from mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-96-4YmT2RDJN2uiiYmTVnjcow-1; Wed,
+ 13 May 2026 13:36:38 -0400
+X-MC-Unique: 4YmT2RDJN2uiiYmTVnjcow-1
+X-Mimecast-MFC-AGG-ID: 4YmT2RDJN2uiiYmTVnjcow_1778693797
+Received: from mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.93])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4gG0kG0CqDz1XM6JP;
-	Wed, 13 May 2026 17:26:29 +0000 (UTC)
-Message-ID: <8ca0f49a-ae11-452c-987d-d90cce8376dd@acm.org>
-Date: Wed, 13 May 2026 10:26:29 -0700
+	by mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id F064B195608E;
+	Wed, 13 May 2026 17:36:36 +0000 (UTC)
+Received: from fedora-work.redhat.com (unknown [10.22.81.194])
+	by mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 6982B1800349;
+	Wed, 13 May 2026 17:36:35 +0000 (UTC)
+From: David Jeffery <djeffery@redhat.com>
+To: linux-scsi@vger.kernel.org,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: David Jeffery <djeffery@redhat.com>
+Subject: [PATCH] scsi: core: run queues for all non-SDEV_DEL devices from scsi_run_host_queues
+Date: Wed, 13 May 2026 13:35:51 -0400
+Message-ID: <20260513173552.9222-1-djeffery@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 2/2] scsi: core: Convert inquiry information
-To: Damien Le Moal <dlemoal@kernel.org>,
- "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, Brian Bunker <brian@purestorage.com>,
- Hannes Reinecke <hare@suse.de>, Guenter Roeck <linux@roeck-us.net>,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-References: <20260512194634.58145-1-bvanassche@acm.org>
- <20260512194634.58145-3-bvanassche@acm.org>
- <292bb057-f10e-4af1-b0fe-ca83d4f49d06@kernel.org>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <292bb057-f10e-4af1-b0fe-ca83d4f49d06@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.93
 
-On 5/13/26 1:03 AM, Damien Le Moal wrote:
-> On 5/13/26 04:46, Bart Van Assche wrote:
->> Currently the vendor, model, and revision members of struct scsi_device
->> are pointers to fixed-length strings that are not NUL-terminated.
-> 
-> s/NUL/NULL
-Really? NUL is the correct spelling according to
-https://en.wikipedia.org/wiki/ASCII and also according to any other
-ASCII table I have ever seen.
+While a scsi host is in a recovery state, scsi_mq_requeue_cmd will not set
+the requeue list for a requeued command to be kicked in the future. The
+expectation is a call to scsi_run_host_queues will kick all scsi devices
+once the recovery state is cleared.
 
-Thanks,
+However, scsi_run_host_queues uses shost_for_each_device which uses
+scsi_device_get and so will ignore devices in a partially removed state like
+SDEV_CANCEL. But these devices may also have requeued requests, leaving
+their requests stuck from not being kicked and causing the removal process
+of the device to hang.
 
-Bart.
+scsi_run_host_queues needs to run against more devices than the macro
+shost_for_each_device allows. Instead of using the too limiting
+scsi_device_get state checks, only ignore devices in SDEV_DEL state or
+when unable to acquire a reference. Attempt to run the queues for all other
+devices when scsi_run_host_queues is called.
+
+Fixes: 8b566edbdbfb ("scsi: core: Only kick the requeue list if necessary")
+Signed-off-by: David Jeffery <djeffery@redhat.com>
+---
+ drivers/scsi/scsi_lib.c | 21 +++++++++++++++++++--
+ 1 file changed, 19 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 6e8c7a42603e..bb7281dc3633 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -575,10 +575,27 @@ void scsi_requeue_run_queue(struct work_struct *work)
+ 
+ void scsi_run_host_queues(struct Scsi_Host *shost)
+ {
+-	struct scsi_device *sdev;
++	struct scsi_device *sdev, *prev = NULL;
++	unsigned long flags;
++
++	spin_lock_irqsave(shost->host_lock, flags);
++	__shost_for_each_device(sdev, shost) {
++		if (sdev->sdev_state == SDEV_DEL ||
++		    !get_device(&sdev->sdev_gendev))
++			continue;
++		spin_unlock_irqrestore(shost->host_lock, flags);
+ 
+-	shost_for_each_device(sdev, shost)
++		if (prev)
++			put_device(&prev->sdev_gendev);
+ 		scsi_run_queue(sdev->request_queue);
++
++		prev = sdev;
++
++		spin_lock_irqsave(shost->host_lock, flags);
++	}
++	spin_unlock_irqrestore(shost->host_lock, flags);
++	if (prev)
++		put_device(&prev->sdev_gendev);
+ }
+ 
+ static void scsi_uninit_cmd(struct scsi_cmnd *cmd)
+-- 
+2.53.0
+
