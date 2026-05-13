@@ -1,96 +1,168 @@
-Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B87EA342144
-	for <linux-scsi@vger.kernel.org>; Wed, 13 May 2026 17:49:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.16
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778694587; cv=none; b=rMqVdkk/E9czFzX176r5lSUpWhIKuUrl9y5PbSyiZ7KSuEEmI8s540ozTDfxTsUR7riuhxKNwRSn+UVLCDDwO7UnCYROfaOjk9zoWySwln0UUkcYcEyXJK6MWwXjlTJKFs1/LgE/wD6Jqgmlk1jSsh68A8JOw8u5O5MERcQwiS4=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778694587; c=relaxed/simple;
-	bh=zK+UVbu4JGt/J8NZ8OaXyaJRmmVI5d6dH/UzN/4Huk4=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=IxGNaPeolRZUROzVwSDZnJZ2Zfg84r6qW64gqtWCyGpz7bv1y6/bjXPRZpGYYUaJsQaHv5W5eA+gk57jx7Qnruby89OtqrthcLmBWrfe35r/93T0Gdrso0tYfcwX3MeaUZzsMqSvAsmp0Yb6GTZRTJiewNmZvhc4zPJlFUPIpyA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=CNmmXxML; arc=none smtp.client-ip=199.89.1.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7BF1225B0A4
+	for <linux-scsi@vger.kernel.org>; Wed, 13 May 2026 18:21:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=170.10.129.124
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1778696469; cv=pass; b=aLudI4M4u+U8Ud/HAKSZRzirXGoR++6e5Hn7vrL4ihqsyXlDOqQ3Q6sawpv/0q2nDbJ66Pf+ksVOEydtgNehzhcSeUr4fY1aTZ3/cXw82GvmsIjCXu3AnU6rAh/gOACAZRiSOWKcfuiDipdkUIKLBEbEabaRnx+tOhCebiQO+zk=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1778696469; c=relaxed/simple;
+	bh=uxlj+d6/XwLFTAUya2+1pKDT/d4pxMIdKQKjKpjGw4U=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=eUvH4TK+QxOto8ORfFFv/yNfOMYF2wR7RXWq9ni8WSeuLaDR5DYnRCw5//e50dEKHGAFtJY929AGRYZgCGw3PTgU2zp+ImQPpxACeY73wB/RNU/BPux9XIIMujarJPa8bT52SM3C2PvKJtkSju7eDcdx4DJBC1q/qWOT0VODvLY=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=N2JaMS2Q; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=GEiHs+9g; arc=pass smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="CNmmXxML"
-Received: from localhost (localhost [127.0.0.1])
-	by 013.lax.mailroute.net (Postfix) with ESMTP id 4gG1F61z5LzlgqsP;
-	Wed, 13 May 2026 17:49:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1778694582; x=1781286583; bh=h0oHH9rc0D7vb5A8Ea4IeMLz
-	6HQR3+qCRPCSn2Lufw4=; b=CNmmXxMLCFSlJs5sQ+VNVPS/5D66R+cZgAIY5+ng
-	lHhXBqTJo5QNpN5WYbYIdwArqGsftmPdqoZs4vq26KdW7fPBknJ5AVVU7M8nmMOk
-	hbuSlt9NYuI69Qqb/1SKw/A2JQNw7RN98IP+RPT+14heuqNGazPxjRNXkBf+0ulS
-	9HpTF96rF9ZK20ZLXbpAV0HvthCrp+hpjzaeVENnudy7ienjgX+FXPEbWCBgczR+
-	j+C4v2x1ULZh0tJuRznh5ATFsfIQvbJ35WpRjZ2NhJJz60c0nNG6xtq2Btwyjnfb
-	Dy+vKrB8hO8/tfkEenRebft4S+lb43eOz89oqQJSli/sCw==
-X-Virus-Scanned: by MailRoute
-Received: from 013.lax.mailroute.net ([127.0.0.1])
- by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id 9yfjGFAhTMvL; Wed, 13 May 2026 17:49:42 +0000 (UTC)
-Received: from [100.119.48.131] (unknown [104.135.180.219])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4gG1F06tj0zlfwHM;
-	Wed, 13 May 2026 17:49:40 +0000 (UTC)
-Message-ID: <8b3090fc-0342-4c29-9345-da29ed651fab@acm.org>
-Date: Wed, 13 May 2026 10:49:40 -0700
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="N2JaMS2Q";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="GEiHs+9g"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1778696467;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=tcPz4+77uujpByXTjSSUTkOmlqjy7g/XR5Dvgj/lMZY=;
+	b=N2JaMS2QphDIO74Kyer5RNR2Ykq3k8R83d6qQZpHs+nYcWE+Ir7ujmYtTSUQYW0w6Jdb02
+	ckpRKmioMGt1muMJ/s8ysXfwG6sIRPQxWUBufXgKTNo2IF9AqjVEF1t5BQzTAwO9aGaTNy
+	avA0EdNLorJlp+oKVUazNpM8U17yqk4=
+Received: from mail-ua1-f69.google.com (mail-ua1-f69.google.com
+ [209.85.222.69]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-651-KA1niV43Mt2iGFfS8ROHjA-1; Wed, 13 May 2026 14:21:06 -0400
+X-MC-Unique: KA1niV43Mt2iGFfS8ROHjA-1
+X-Mimecast-MFC-AGG-ID: KA1niV43Mt2iGFfS8ROHjA_1778696465
+Received: by mail-ua1-f69.google.com with SMTP id a1e0cc1a2514c-95cfe3d4c16so10947344241.3
+        for <linux-scsi@vger.kernel.org>; Wed, 13 May 2026 11:21:06 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1778696465; cv=none;
+        d=google.com; s=arc-20240605;
+        b=UhnZvPUjWkWiZobQYAmuBl/bCmip4BI4MJgmyNzIvn1TTCnIaOfhFYayUmT+SGsLnK
+         eeALhDLchlziD1U4z+iBe6JuS5W5gH0cZaXy0zgWHzGXKqpKh8Q767qSJm8q7mo9xjVV
+         W9bwgeMtTIbl325Flq2VzExOlH3IBLcnKNwCJqI5zbPlRHJ6aKBVDbdkT8ioRRnVh4Fa
+         I5Gcq2THSxJD3U+nkW/0EVblhs4YD3aNBjFjicv7ZtSFJvV08QiR/D8z4teayWQImrpH
+         hir+EowauMpFtXfgxDQtAy5glbFQtuCPhTqwfY8e5nAYF819ACs+AaaZJW688F3e3nMJ
+         t48Q==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=tcPz4+77uujpByXTjSSUTkOmlqjy7g/XR5Dvgj/lMZY=;
+        fh=tScm2eAN0HS9mCdl3iBYquTZsazadfL7sZDsu6+Quyk=;
+        b=SVHB8yOnOLP1svcwUE58cA7aaD0607JiVO2I9iacu4LN6idNiLC8t5WPOQ6qlucfI+
+         bq6Dkpro9Jy1f/13odbH7LonWTzqkzNoiDQXrN1IBYdg9efhaqzSj3nysHka/ZZlkSMx
+         8YfkzmFiqLZwgT4JzB/DpTUkvO2gEcN7oIyfRGfzdqh3kInEzcl0MHDWCtq2ZSrGIBJZ
+         0KUgvL4rXeTK6HQszaHbndjHMMUdC3OTOwbN4dQYKKfBqV/0RIshCNkXIlC9E7DVtj5W
+         vxwQ2U8CEAHk2mJ/mC4Gai+RjYjTpeAoM6K/xXRPs1yyCuRlPwvUJ9n5bunhAb3fmb1W
+         qlyA==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=redhat.com; s=google; t=1778696465; x=1779301265; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=tcPz4+77uujpByXTjSSUTkOmlqjy7g/XR5Dvgj/lMZY=;
+        b=GEiHs+9gpuRl2bAhj5JD8xhKVzuNgQHSo+xvE9QTOplAxi0AGo+b7aPOXndFGkl82S
+         TIMVpmsk9vKs8JTkcnQKsGCIl2UoDtcR0m9YbJmKaiFlSabLQ0BKSO2CuPe0E21hm8B4
+         /sEWBaBPI6RXv+3AH3uK5HlreEj+tHL+q1StQeIrquSMpXboO6uyJpva3WAI+QrTDp5K
+         vLOX+sZeWnfxkk7uil2/z56ck83HBBuWhgT7cZ6CZSTr/uI1OWiDY6m1t8l6NEIELBds
+         OqE8RKClWLQGwEPdcTYscVNYq0SkQsYEpz5mXYAeC9++t33/tJ2pC0cJFZIKpyw6j+5M
+         ZZ3Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1778696465; x=1779301265;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=tcPz4+77uujpByXTjSSUTkOmlqjy7g/XR5Dvgj/lMZY=;
+        b=MHmfIoP1cUmVk6oYCiB1P0zd0txcUDj2c8FLy3ePaZlJyu9RvPUeeNn1LGrDf+23Wv
+         4YegimMh4hKhWZTW0lGxcj2Edyi0roGkg/hTaJdwuPx+abt0AmkdtqXTawpkwjhrqiwT
+         FmpD71VRiuSK0M+UfbwiFidE9S9yvjF8rWAITDSvhG175FRnxmwrqe/LjXUq0b1YPwp4
+         oTxWNEQJRwZMcUIwNPGLNdVMEcrOHzN6ootYJzrYmVKs0Pk+QD3YlDTjz1GXX5Wrn1pe
+         DlrCNJWZ31C1tXmYAkh1pON3u1PRd+m4IoVCuThgyO/VeRGafTGb0+Hzg8e3TVTUJxbn
+         KKAg==
+X-Gm-Message-State: AOJu0YwLgQB5gXyub6KUlGUC1LL0kZAps+mox1Awo5XpxXSq26v2oGLT
+	ZeO7XXUcPG0t3gGILaUvgg2c0+SkYZ9L3rKzpxxfsP86coeHbQ93iFHNJDDqi516fnVgdXtSusg
+	vvaMKT/NBKlzJtvfLClMfTrOjfH2hzhb8zANLxas3680fDB9t9mmwcI9PQ22cVdJA/lqch5phAz
+	xRb11iZCI/niGui2qn93vc54vIVaLZySKz0ZXdaw==
+X-Gm-Gg: Acq92OHWMQCF1rBLdMfyjGDK/VJP6IIwq6QG7qe8q0R+5Wmx7bDmvFC/C8pDctZvCQe
+	nLBAmBqAize7g8CdNBWjdTIuJX4WEjRVkWPcCi88zTACF9ZvOhDTTtPgizkBcAbE/5hCc2JHtSS
+	jwTvEX0OgR5zQuw4mqzUXROvVUST83Qn1CYuPaVlIGnpyXMGxgjKPpq7UjI5MtDNmtxkmK4sUdj
+	n8RlXQsiBH3bRIQvXM6d8jg0c7MeZ4L5MREM/aLkVPvi2GEQBKXBEzE4t6U
+X-Received: by 2002:a05:6102:5e8b:b0:633:d7ec:153c with SMTP id ada2fe7eead31-637732e337amr2975821137.3.1778696465580;
+        Wed, 13 May 2026 11:21:05 -0700 (PDT)
+X-Received: by 2002:a05:6102:5e8b:b0:633:d7ec:153c with SMTP id
+ ada2fe7eead31-637732e337amr2975799137.3.1778696465194; Wed, 13 May 2026
+ 11:21:05 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 2/2] scsi: core: Convert inquiry information
-To: James Bottomley <James.Bottomley@HansenPartnership.com>,
- "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, Brian Bunker <brian@purestorage.com>,
- Damien Le Moal <dlemoal@kernel.org>, Hannes Reinecke <hare@suse.de>,
- Guenter Roeck <linux@roeck-us.net>
-References: <20260512194634.58145-1-bvanassche@acm.org>
- <20260512194634.58145-3-bvanassche@acm.org>
- <b9b20ed6506ccd0d525abbd9da1f54c65ba76a8f.camel@HansenPartnership.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <b9b20ed6506ccd0d525abbd9da1f54c65ba76a8f.camel@HansenPartnership.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+References: <20260513173552.9222-1-djeffery@redhat.com> <3442d2e5-de1b-4043-97cb-464feda2623f@acm.org>
+In-Reply-To: <3442d2e5-de1b-4043-97cb-464feda2623f@acm.org>
+From: David Jeffery <djeffery@redhat.com>
+Date: Wed, 13 May 2026 14:20:53 -0400
+X-Gm-Features: AVHnY4JaHmhP0W3rCgR-Gpx7w8iCbHXxEDFh8jughpBs2gOHwqSI9i9mmxRaIwQ
+Message-ID: <CA+-xHTHN-fjkjc6MUdUxR5Uz-ukG_LG3V7TKtf8j5r1gE8uhrw@mail.gmail.com>
+Subject: Re: [PATCH] scsi: core: run queues for all non-SDEV_DEL devices from scsi_run_host_queues
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: linux-scsi@vger.kernel.org, 
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
+	"Martin K. Petersen" <martin.petersen@oracle.com>
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On 5/13/26 5:49 AM, James Bottomley wrote:
-> On Tue, 2026-05-12 at 12:46 -0700, Bart Van Assche wrote:
->> @@ -905,9 +905,9 @@ static int scsi_add_lun(struct scsi_device *sdev,
->> unsigned char *inq_result,
->>  =C2=A0	if (sdev->inquiry =3D=3D NULL)
->>  =C2=A0		return SCSI_SCAN_NO_RESPONSE;
->>  =20
->> -	sdev->vendor =3D (char *) (sdev->inquiry + 8);
->> -	sdev->model =3D (char *) (sdev->inquiry + 16);
->> -	sdev->rev =3D (char *) (sdev->inquiry + 32);
->> +	strscpy(sdev->vendor, sdev->inquiry + 8);
->> +	strscpy(sdev->model, sdev->inquiry + 16);
->> +	strscpy(sdev->rev, sdev->inquiry + 32);
->>  =20
->>  =C2=A0	sdev->is_ata =3D strncmp(sdev->vendor, "ATA=C2=A0=C2=A0=C2=A0=C2=
-=A0 ", 8) =3D=3D 0;
->>  =C2=A0	if (sdev->is_ata) {
->=20
-> If you've gone to all the trouble to lift the lengths out as #defines,
-> shouldn't we do the same with the offsets?
+On Wed, May 13, 2026 at 1:48=E2=80=AFPM Bart Van Assche <bvanassche@acm.org=
+> wrote:
+>
+> On 5/13/26 10:35 AM, David Jeffery wrote:
+> > While a scsi host is in a recovery state, scsi_mq_requeue_cmd will not =
+set
+> > the requeue list for a requeued command to be kicked in the future. The
+> > expectation is a call to scsi_run_host_queues will kick all scsi device=
+s
+> > once the recovery state is cleared.
+> >
+> > However, scsi_run_host_queues uses shost_for_each_device which uses
+> > scsi_device_get and so will ignore devices in a partially removed state=
+ like
+> > SDEV_CANCEL. But these devices may also have requeued requests, leaving
+> > their requests stuck from not being kicked and causing the removal proc=
+ess
+> > of the device to hang.
+> >
+> > scsi_run_host_queues needs to run against more devices than the macro
+> > shost_for_each_device allows. Instead of using the too limiting
+> > scsi_device_get state checks, only ignore devices in SDEV_DEL state or
+> > when unable to acquire a reference. Attempt to run the queues for all o=
+ther
+> > devices when scsi_run_host_queues is called.
+>  From scsi_host.h:
+>
+> static inline int scsi_host_in_recovery(struct Scsi_Host *shost)
+> {
+>         return shost->shost_state =3D=3D SHOST_RECOVERY ||
+>                 shost->shost_state =3D=3D SHOST_CANCEL_RECOVERY ||
+>                 shost->shost_state =3D=3D SHOST_DEL_RECOVERY ||
+>                 shost->tmf_in_progress;
+> }
+>
+> This function returns false for the SDEV_CANCEL state. Hence, even with
+> commit 8b566edbdbfb ("scsi: core: Only kick the requeue list if
+> necessary") applied, the requeue list should still be kicked for SCSI
+> hosts in the SDEV_CANCEL state, isn't it?
 
-Hi James,
+SDEV_CANCEL is a scsi_device state while the scsi_host_in_recovery
+macro is looking only at Scsi_Host state. An SDEV_CANCEL scsi_device
+is unrelated to the scsi_host_in_recovery return value.
 
-I will introduce symbolic names for the offsets in the next version of
-this patch series.
+I will note that looking at scsi_device state in scsi_mq_requeue_cmd
+in addition to the
+scsi_host_in_recovery call does not fix the issue. The scsi_device can
+be in SDEV_RUNNING state at the time of request requeue with the
+attempted removal and transition of the scsi_device to SDEV_CANCEL
+occurring later while error handling is still unfinished.
 
-Thanks,
+David Jeffery
 
-Bart.
