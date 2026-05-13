@@ -1,168 +1,284 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from CH1PR05CU001.outbound.protection.outlook.com (mail-northcentralusazon11020125.outbound.protection.outlook.com [52.101.193.125])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7BF1225B0A4
-	for <linux-scsi@vger.kernel.org>; Wed, 13 May 2026 18:21:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 319D23A48F0;
+	Wed, 13 May 2026 18:30:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.193.125
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778696469; cv=pass; b=aLudI4M4u+U8Ud/HAKSZRzirXGoR++6e5Hn7vrL4ihqsyXlDOqQ3Q6sawpv/0q2nDbJ66Pf+ksVOEydtgNehzhcSeUr4fY1aTZ3/cXw82GvmsIjCXu3AnU6rAh/gOACAZRiSOWKcfuiDipdkUIKLBEbEabaRnx+tOhCebiQO+zk=
+	t=1778697030; cv=fail; b=GzIzK9hQvVdDQrE8LQde2o+kTMEgJ5P1BV4xcVTzq/CQBGKQnkvba8gUXg8dFvnDeXdLMzqCgWVXstuFSP7CVLDAZhZN5Qzjp9A6H0Igwkltv8wyRzeaQx2DUVtk1MBPPiLcLw4VwoPE1AZxvUObeKOIODM6dqvFixcmEw26ZJc=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778696469; c=relaxed/simple;
-	bh=uxlj+d6/XwLFTAUya2+1pKDT/d4pxMIdKQKjKpjGw4U=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=eUvH4TK+QxOto8ORfFFv/yNfOMYF2wR7RXWq9ni8WSeuLaDR5DYnRCw5//e50dEKHGAFtJY929AGRYZgCGw3PTgU2zp+ImQPpxACeY73wB/RNU/BPux9XIIMujarJPa8bT52SM3C2PvKJtkSju7eDcdx4DJBC1q/qWOT0VODvLY=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=N2JaMS2Q; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=GEiHs+9g; arc=pass smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1778697030; c=relaxed/simple;
+	bh=otOUc8Zb8Mi9axtxj83hZtN2J4qiubsHTzPJLev877I=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=X/i0AbZ/PqUnDbz+q23iZ/FyOqfE/amcdvjVXI00l3HAyAZlfk9xEGwHHZ/ZoPiPQioFog9KOxbjROrsGZ3y3FZ9A2w6vyQ9xc+/ixEBlECuhapZleowW9aAvLtzuyNoWxxxPxYlICwYMjPwdN9AVqc+1EkFJgjcI5msGK/s6iw=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=microsoft.com; spf=pass smtp.mailfrom=microsoft.com; dkim=pass (1024-bit key) header.d=microsoft.com header.i=@microsoft.com header.b=DyerB9D6; arc=fail smtp.client-ip=52.101.193.125
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=microsoft.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="N2JaMS2Q";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="GEiHs+9g"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1778696467;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=tcPz4+77uujpByXTjSSUTkOmlqjy7g/XR5Dvgj/lMZY=;
-	b=N2JaMS2QphDIO74Kyer5RNR2Ykq3k8R83d6qQZpHs+nYcWE+Ir7ujmYtTSUQYW0w6Jdb02
-	ckpRKmioMGt1muMJ/s8ysXfwG6sIRPQxWUBufXgKTNo2IF9AqjVEF1t5BQzTAwO9aGaTNy
-	avA0EdNLorJlp+oKVUazNpM8U17yqk4=
-Received: from mail-ua1-f69.google.com (mail-ua1-f69.google.com
- [209.85.222.69]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-651-KA1niV43Mt2iGFfS8ROHjA-1; Wed, 13 May 2026 14:21:06 -0400
-X-MC-Unique: KA1niV43Mt2iGFfS8ROHjA-1
-X-Mimecast-MFC-AGG-ID: KA1niV43Mt2iGFfS8ROHjA_1778696465
-Received: by mail-ua1-f69.google.com with SMTP id a1e0cc1a2514c-95cfe3d4c16so10947344241.3
-        for <linux-scsi@vger.kernel.org>; Wed, 13 May 2026 11:21:06 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1778696465; cv=none;
-        d=google.com; s=arc-20240605;
-        b=UhnZvPUjWkWiZobQYAmuBl/bCmip4BI4MJgmyNzIvn1TTCnIaOfhFYayUmT+SGsLnK
-         eeALhDLchlziD1U4z+iBe6JuS5W5gH0cZaXy0zgWHzGXKqpKh8Q767qSJm8q7mo9xjVV
-         W9bwgeMtTIbl325Flq2VzExOlH3IBLcnKNwCJqI5zbPlRHJ6aKBVDbdkT8ioRRnVh4Fa
-         I5Gcq2THSxJD3U+nkW/0EVblhs4YD3aNBjFjicv7ZtSFJvV08QiR/D8z4teayWQImrpH
-         hir+EowauMpFtXfgxDQtAy5glbFQtuCPhTqwfY8e5nAYF819ACs+AaaZJW688F3e3nMJ
-         t48Q==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=tcPz4+77uujpByXTjSSUTkOmlqjy7g/XR5Dvgj/lMZY=;
-        fh=tScm2eAN0HS9mCdl3iBYquTZsazadfL7sZDsu6+Quyk=;
-        b=SVHB8yOnOLP1svcwUE58cA7aaD0607JiVO2I9iacu4LN6idNiLC8t5WPOQ6qlucfI+
-         bq6Dkpro9Jy1f/13odbH7LonWTzqkzNoiDQXrN1IBYdg9efhaqzSj3nysHka/ZZlkSMx
-         8YfkzmFiqLZwgT4JzB/DpTUkvO2gEcN7oIyfRGfzdqh3kInEzcl0MHDWCtq2ZSrGIBJZ
-         0KUgvL4rXeTK6HQszaHbndjHMMUdC3OTOwbN4dQYKKfBqV/0RIshCNkXIlC9E7DVtj5W
-         vxwQ2U8CEAHk2mJ/mC4Gai+RjYjTpeAoM6K/xXRPs1yyCuRlPwvUJ9n5bunhAb3fmb1W
-         qlyA==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1778696465; x=1779301265; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=tcPz4+77uujpByXTjSSUTkOmlqjy7g/XR5Dvgj/lMZY=;
-        b=GEiHs+9gpuRl2bAhj5JD8xhKVzuNgQHSo+xvE9QTOplAxi0AGo+b7aPOXndFGkl82S
-         TIMVpmsk9vKs8JTkcnQKsGCIl2UoDtcR0m9YbJmKaiFlSabLQ0BKSO2CuPe0E21hm8B4
-         /sEWBaBPI6RXv+3AH3uK5HlreEj+tHL+q1StQeIrquSMpXboO6uyJpva3WAI+QrTDp5K
-         vLOX+sZeWnfxkk7uil2/z56ck83HBBuWhgT7cZ6CZSTr/uI1OWiDY6m1t8l6NEIELBds
-         OqE8RKClWLQGwEPdcTYscVNYq0SkQsYEpz5mXYAeC9++t33/tJ2pC0cJFZIKpyw6j+5M
-         ZZ3Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1778696465; x=1779301265;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=tcPz4+77uujpByXTjSSUTkOmlqjy7g/XR5Dvgj/lMZY=;
-        b=MHmfIoP1cUmVk6oYCiB1P0zd0txcUDj2c8FLy3ePaZlJyu9RvPUeeNn1LGrDf+23Wv
-         4YegimMh4hKhWZTW0lGxcj2Edyi0roGkg/hTaJdwuPx+abt0AmkdtqXTawpkwjhrqiwT
-         FmpD71VRiuSK0M+UfbwiFidE9S9yvjF8rWAITDSvhG175FRnxmwrqe/LjXUq0b1YPwp4
-         oTxWNEQJRwZMcUIwNPGLNdVMEcrOHzN6ootYJzrYmVKs0Pk+QD3YlDTjz1GXX5Wrn1pe
-         DlrCNJWZ31C1tXmYAkh1pON3u1PRd+m4IoVCuThgyO/VeRGafTGb0+Hzg8e3TVTUJxbn
-         KKAg==
-X-Gm-Message-State: AOJu0YwLgQB5gXyub6KUlGUC1LL0kZAps+mox1Awo5XpxXSq26v2oGLT
-	ZeO7XXUcPG0t3gGILaUvgg2c0+SkYZ9L3rKzpxxfsP86coeHbQ93iFHNJDDqi516fnVgdXtSusg
-	vvaMKT/NBKlzJtvfLClMfTrOjfH2hzhb8zANLxas3680fDB9t9mmwcI9PQ22cVdJA/lqch5phAz
-	xRb11iZCI/niGui2qn93vc54vIVaLZySKz0ZXdaw==
-X-Gm-Gg: Acq92OHWMQCF1rBLdMfyjGDK/VJP6IIwq6QG7qe8q0R+5Wmx7bDmvFC/C8pDctZvCQe
-	nLBAmBqAize7g8CdNBWjdTIuJX4WEjRVkWPcCi88zTACF9ZvOhDTTtPgizkBcAbE/5hCc2JHtSS
-	jwTvEX0OgR5zQuw4mqzUXROvVUST83Qn1CYuPaVlIGnpyXMGxgjKPpq7UjI5MtDNmtxkmK4sUdj
-	n8RlXQsiBH3bRIQvXM6d8jg0c7MeZ4L5MREM/aLkVPvi2GEQBKXBEzE4t6U
-X-Received: by 2002:a05:6102:5e8b:b0:633:d7ec:153c with SMTP id ada2fe7eead31-637732e337amr2975821137.3.1778696465580;
-        Wed, 13 May 2026 11:21:05 -0700 (PDT)
-X-Received: by 2002:a05:6102:5e8b:b0:633:d7ec:153c with SMTP id
- ada2fe7eead31-637732e337amr2975799137.3.1778696465194; Wed, 13 May 2026
- 11:21:05 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=microsoft.com header.i=@microsoft.com header.b="DyerB9D6"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=ZSY0gR49QeRcSOYXUa+4NsmJzKlO+CTNhCWa34xhpdYBRLpoc7tjfydrxR34Fh5H69/Ayy2CFr1yo34NzfhymcBPvLfLwxI6rY2bEbjPLB5AR03HNhKqPwvMwv/kGLsG4GEtzDp7a/jKfxsZM1vIgI2D6lSrdJvQID/ksCBK86Iqq+jgB70GZOgx90DiitorvsjeUkVnSpaEvrrG3WkpxQLTyNqfDWKyjMij89+YrlUIp3+eMkaaPoVKlZ7g5wsjpMRPhwtYkEXHIZYtCSrhNZcD9mfsfKhw2dcw/1mHFA3PiIa39gfSkToz8Lgaf1z2w1M7zin9NbUpjU2Ciaa0TA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=0Ulj9K6DnfWLEEtGz185VrhguuTpFktUo9//Hofrp6M=;
+ b=JSzMFqsSSg+/MKC+uGdQHxD7ahR094mDnYsmUF3EArD7XpVZ5z52HWNSNuC42w3xbYZvzStQk99pBFc08lUER5Gt1TFDU7/0kGcDxrdKuczbSNpD3JOAMAxunTFKFkeDNPYc5ndXBOoNulXaFHBPrSAnvQ5F7hp99pFsFi6uMY+zy11s192jG2bjU307Rsip8HMYWUSViJYonY9odkd6SaKrK30osOvkzI7M5i3b1yTenFq4JWM6fOBZY3HQks/GeM/gzBpj//h9MdywdY3ivSvi3YlNjV7VXfhfaoOwYcG5AUBTFf2hYg9/J4FcuOAl1Mo81+nyS9wejnxpBohgXQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=microsoft.com; dmarc=pass action=none
+ header.from=microsoft.com; dkim=pass header.d=microsoft.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=0Ulj9K6DnfWLEEtGz185VrhguuTpFktUo9//Hofrp6M=;
+ b=DyerB9D6DuLaNqCiVsKf7aCreye+wjU9nSKf+GjkenE8GUj+2Em6Mge/gm4Qvo+3BBEjsm+zlmWcyPzzuDeyx6LsBN7HPtD1T3SE0m8fDQD6B8ESUrFm74oaJ59yGIDS/0Ip1rhTkVkbhQRGY+JHuJ4oZskC57jfBEXVqPkLC5Y=
+Received: from SA1PR21MB6683.namprd21.prod.outlook.com (2603:10b6:806:4a4::6)
+ by SA3PR21MB5744.namprd21.prod.outlook.com (2603:10b6:806:499::11) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.48.4; Wed, 13 May 2026
+ 18:30:26 +0000
+Received: from SA1PR21MB6683.namprd21.prod.outlook.com
+ ([fe80::879f:eec1:ca0e:d219]) by SA1PR21MB6683.namprd21.prod.outlook.com
+ ([fe80::879f:eec1:ca0e:d219%6]) with mapi id 15.20.9891.008; Wed, 13 May 2026
+ 18:30:26 +0000
+From: Long Li <longli@microsoft.com>
+To: Tianyu Lan <ltykernel@gmail.com>, KY Srinivasan <kys@microsoft.com>,
+	Haiyang Zhang <haiyangz@microsoft.com>, "wei.liu@kernel.org"
+	<wei.liu@kernel.org>, Dexuan Cui <DECUI@microsoft.com>,
+	"James.Bottomley@HansenPartnership.com"
+	<James.Bottomley@HansenPartnership.com>, "martin.petersen@oracle.com"
+	<martin.petersen@oracle.com>, Allen Pais <apais@microsoft.com>
+CC: Tianyu Lan <Tianyu.Lan@microsoft.com>, "linux-hyperv@vger.kernel.org"
+	<linux-hyperv@vger.kernel.org>, "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org"
+	<linux-scsi@vger.kernel.org>, "vdso@hexbites.dev" <vdso@hexbites.dev>,
+	"mhklinux@outlook.com" <mhklinux@outlook.com>
+Subject: RE: [EXTERNAL] [PATCH] x86/VMBus: Confidential VMBus for dynamic DMA
+ transfers
+Thread-Topic: [EXTERNAL] [PATCH] x86/VMBus: Confidential VMBus for dynamic DMA
+ transfers
+Thread-Index: AQHcxymwZ5mHLuYf1kmcwCM6M0ty37YMfFug
+Date: Wed, 13 May 2026 18:30:25 +0000
+Message-ID:
+ <SA1PR21MB6683C18151A933242F826BCDCE062@SA1PR21MB6683.namprd21.prod.outlook.com>
+References: <20260408073105.272255-1-tiala@microsoft.com>
+In-Reply-To: <20260408073105.272255-1-tiala@microsoft.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+msip_labels:
+ MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ActionId=10059987-fd20-4a3f-91a9-83aaab7ccba5;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ContentBits=0;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Enabled=true;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Method=Standard;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Name=Internal;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SetDate=2026-05-13T18:21:39Z;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SiteId=72f988bf-86f1-41af-91ab-2d7cd011db47;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Tag=10,
+ 3, 0, 1;
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=microsoft.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: SA1PR21MB6683:EE_|SA3PR21MB5744:EE_
+x-ms-office365-filtering-correlation-id: 66e60cd0-f68b-400a-27d7-08deb11db3a1
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam:
+ BCL:0;ARA:13230040|376014|366016|1800799024|18002099003|22082099003|11063799003|38070700021|56012099003|4133799003;
+x-microsoft-antispam-message-info:
+ UxiQd1w13ig6GjFwShmbQBFD/48uSNGvZJDx2bt+P8imx8c1S+s6IuzxuGjYgDhOzNeGuc+du8BrzAmToaRFnFvoy62XAJ9o5GDCEB4BPhJ4j0IoYlP8x57WEq/imfbfTPt8mjVf5pw4CMBhj6ygnVc6sJvR0bgOEjAmMxJWjm1levz9Qj5zoCIsK2mh+sJ9it7X79zELdqrhyQV1cBFJ5D7By0nyhkt6I5/IaBRdFZsykYDU0wdvHCB746ns8GBQaB0M+jMnZlde5HG5kYA5jW+CAMEC1tKa3HZovwJ2YoviFPK1KePSzXGuW/ABpUafj/Lz1v+YwfS06J5As3FLM8nCutc3w1KqrwRpgodsyoxQqkROSFkDDjoGipIw7QPXu6OqJfp0bjy+S+rrn+r6fs8+dyis1csl3uGzoXRSQSIu/41mgOuBMMuXvNYRSRxnOB+/a/BJyJdBN/frHcyipawgPY/wkVAP60VZrLiKPQkOf7AlIuKTW9kvVbcYXlCgZOtwBSPJc5flXXRd2BIyw97KABUKODsAlLBjJG4xrgGgNeM5i0u3AcGQJglKNEOOpwuiiFxZw+QrOPef1b9+vJPrkZQzgRHrZeHic6KDJyk9iPJC+30ONT7GoaqVf5Ap6+HPrUuqSl/FaR02ebf6STjhIfXjgP5dfbX7Oo20oLXQ0IU7r9JSmL5+Lf+hQMWn/N8jfMgairE/fFjEw6U0zjaLUD6hPZGMuzArlFiS3hJEBfjPJGtLIHTzT4nKXq6
+x-forefront-antispam-report:
+ CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA1PR21MB6683.namprd21.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(366016)(1800799024)(18002099003)(22082099003)(11063799003)(38070700021)(56012099003)(4133799003);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0:
+ =?us-ascii?Q?xCVEcD5IdTNFn3Y1dgDJNB3fe32vddLidw/QF1H1Dwxk1Aq37yk/6f9aLADI?=
+ =?us-ascii?Q?vveWCIgjYuXRvXilK/bDwBaOqxwgtNcWzlGCCKNTa7udcjQeji+5OxcJClva?=
+ =?us-ascii?Q?tvqX/Xvg30KN3iYkYzE7ToO9HT1jf9dDkkIhgcidZkgy8DsA4H0aC1jOKV9i?=
+ =?us-ascii?Q?yjLOUQEywmq22FTQRMIH/m6Us39ozO5SapPMETqqZ0g/tIdr2XTQH3zRiCi9?=
+ =?us-ascii?Q?X072NqBZAV+FGUmI82BC7gReJWe4cqmWUSuk50ZyZSY+kCQN+vZLDHf4nu3K?=
+ =?us-ascii?Q?vXuMJVyoQCdCowkbvkjNKorrAdgRaztcrX0oKpyjNi7uXnZ1DPTr9mnp7Sza?=
+ =?us-ascii?Q?Rg+TafVCy02A4uGq/fO40vNSXEAUEZGXK1TyIdh/5GvaWmfqLGL6mBcUhPSa?=
+ =?us-ascii?Q?JnmeC+5vl5aG7mj/hDd7ibwLInorgwudKEckeAbq8KP4p9At5rrYdT9+iZux?=
+ =?us-ascii?Q?u+cOfFYPbeeE5u4mzW4S/Iu9yiUFU3ZGlLl8IfbGkME4gunhTFzER1nDbKdz?=
+ =?us-ascii?Q?bD/CPWjGqeUn/xFnZ9VCmgUVfpgCIfa/N3hTzqCv/+iSMeZAYwtWAhdWm3Uj?=
+ =?us-ascii?Q?G0MQA7W5R53K1zoALZYtn13prUUYU/L2zAXZQFghiKFl3Gz8DUr6zFfwWSGf?=
+ =?us-ascii?Q?xny5p6FXTj/BhZYnT4GrUA9nyexaGn179T2m/F1f04cuG6/UKLtOcqoIptkL?=
+ =?us-ascii?Q?oWBihiKvnZ40iVBrD0pfViZsoqpyzIQdDY8EVNzaSToXp8VVuDDxc0t+IFEk?=
+ =?us-ascii?Q?ez7yHzTAOaU7DnjW4axNHKSeQwbTVW5YPNJVdBvRxrSx3lVqXDSPuGrochHs?=
+ =?us-ascii?Q?QAb3xlMr5pwoGVcoBxbr0O0+omfDTX9xWs7BM0ccJF0YMV8b/PIjEac+7VnR?=
+ =?us-ascii?Q?OLlyEJ7IaRyoOww9ylDFMguj/8um8nbQVciFWid0P8UB+l25PAJFKvo+Rs6H?=
+ =?us-ascii?Q?4grs8F+wyu7wmMXDuJKI+/DnJCfDVpkfY8tbfUMGKFlsLWDJ3vR5h0rKmaU2?=
+ =?us-ascii?Q?P2nPHMFGD6Brrm+bQ1qP6cFsbXVECZJS2psnyQ5VRL8tsKfvbFQvCDVtomur?=
+ =?us-ascii?Q?51vUcOa2Cf5z7T/NwdST3nNntGc5vx/lUidQrC0FauvFgKjrmPDFnOwCtriq?=
+ =?us-ascii?Q?IDVdoc2+ug2CDknX34pK+OkAacJQ/PB8usXB3hADRiEbMTOt/LD2eNDShaLo?=
+ =?us-ascii?Q?X7CkFHvYAvF9b6ObSz/Tgp8psHC+jMQ/hYIHh0BcbtS4suXKP1hFSm5Nwgbc?=
+ =?us-ascii?Q?3jwRZFrelt2K1eilydAVXm+eYaX7DkdlGhwkFfOVRrdpoUTt6mDVGZkbUWeB?=
+ =?us-ascii?Q?jLrtZMCrVHQ4cseaMw30A75/E63JqpVXzeCqAiaOIQ6FTQ1gdvFVMUvx/tcF?=
+ =?us-ascii?Q?zp8MvUkrfroS/VVAZARvetUcmQRy8+hkZTFXVIjRilWAQSrJ8lYZZIioh++B?=
+ =?us-ascii?Q?RG3/SPv4G+6wdLa2DW8S8vATBpvC7fVvWlYnaz6tmsruNUQDGVtEjuwLuw2w?=
+ =?us-ascii?Q?fpxESCdTzL9DIPrz3swjG8vDU9l4P99yemebxCSFDD/qp87tQ6+GhaNOHYE6?=
+ =?us-ascii?Q?E55jjNy2j7D8zVC798dRAmaXCqMy1oYdVdh36l44fs/1OYN4GvKwGkKu7cvo?=
+ =?us-ascii?Q?C3YTZqaQjqGtOcsRF4Xa3W1DTo2K/lqiuuiG6XzjC9cUJUNwXtbYXCiKdotj?=
+ =?us-ascii?Q?/3VpyqVCA89jU3F7Jr7rFpDr9S3YaxgivWdpfQdM0CuXX1Ez?=
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260513173552.9222-1-djeffery@redhat.com> <3442d2e5-de1b-4043-97cb-464feda2623f@acm.org>
-In-Reply-To: <3442d2e5-de1b-4043-97cb-464feda2623f@acm.org>
-From: David Jeffery <djeffery@redhat.com>
-Date: Wed, 13 May 2026 14:20:53 -0400
-X-Gm-Features: AVHnY4JaHmhP0W3rCgR-Gpx7w8iCbHXxEDFh8jughpBs2gOHwqSI9i9mmxRaIwQ
-Message-ID: <CA+-xHTHN-fjkjc6MUdUxR5Uz-ukG_LG3V7TKtf8j5r1gE8uhrw@mail.gmail.com>
-Subject: Re: [PATCH] scsi: core: run queues for all non-SDEV_DEL devices from scsi_run_host_queues
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: linux-scsi@vger.kernel.org, 
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
-	"Martin K. Petersen" <martin.petersen@oracle.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+X-OriginatorOrg: microsoft.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: SA1PR21MB6683.namprd21.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 66e60cd0-f68b-400a-27d7-08deb11db3a1
+X-MS-Exchange-CrossTenant-originalarrivaltime: 13 May 2026 18:30:25.8997
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 72f988bf-86f1-41af-91ab-2d7cd011db47
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: QyM2CcQtBsgRGOwoMHzzVQxz9+uGLBy5+VTaHnli2qlQpG/J5lsRpD3ghB5C4oJs9dpW0s/gw0xoOTyd/K+kYw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA3PR21MB5744
 
-On Wed, May 13, 2026 at 1:48=E2=80=AFPM Bart Van Assche <bvanassche@acm.org=
-> wrote:
->
-> On 5/13/26 10:35 AM, David Jeffery wrote:
-> > While a scsi host is in a recovery state, scsi_mq_requeue_cmd will not =
-set
-> > the requeue list for a requeued command to be kicked in the future. The
-> > expectation is a call to scsi_run_host_queues will kick all scsi device=
-s
-> > once the recovery state is cleared.
-> >
-> > However, scsi_run_host_queues uses shost_for_each_device which uses
-> > scsi_device_get and so will ignore devices in a partially removed state=
- like
-> > SDEV_CANCEL. But these devices may also have requeued requests, leaving
-> > their requests stuck from not being kicked and causing the removal proc=
-ess
-> > of the device to hang.
-> >
-> > scsi_run_host_queues needs to run against more devices than the macro
-> > shost_for_each_device allows. Instead of using the too limiting
-> > scsi_device_get state checks, only ignore devices in SDEV_DEL state or
-> > when unable to acquire a reference. Attempt to run the queues for all o=
-ther
-> > devices when scsi_run_host_queues is called.
->  From scsi_host.h:
->
-> static inline int scsi_host_in_recovery(struct Scsi_Host *shost)
-> {
->         return shost->shost_state =3D=3D SHOST_RECOVERY ||
->                 shost->shost_state =3D=3D SHOST_CANCEL_RECOVERY ||
->                 shost->shost_state =3D=3D SHOST_DEL_RECOVERY ||
->                 shost->tmf_in_progress;
-> }
->
-> This function returns false for the SDEV_CANCEL state. Hence, even with
-> commit 8b566edbdbfb ("scsi: core: Only kick the requeue list if
-> necessary") applied, the requeue list should still be kicked for SCSI
-> hosts in the SDEV_CANCEL state, isn't it?
+> Hyper-V provides Confidential VMBus to communicate between device model
+> and device guest driver via encrypted/private memory in Confidential VM. =
+The
+> device model is in OpenHCL
+> (https://nam06.safelinks.protection.outlook.com/?url=3Dhttps%3A%2F%2Fopen=
+vm
+> m.dev%2Fguide%2Fuser_guide%2Fopenhcl.html&data=3D05%7C02%7Clongli%40mi
+> crosoft.com%7C0ccfea7cda8e4500ae9808de9540d01e%7C72f988bf86f141af91a
+> b2d7cd011db47%7C1%7C0%7C639112302777934798%7CUnknown%7CTWFpbG
+> Zsb3d8eyJFbXB0eU1hcGkiOnRydWUsIlYiOiIwLjAuMDAwMCIsIlAiOiJXaW4zMiIsIk
+> FOIjoiTWFpbCIsIldUIjoyfQ%3D%3D%7C0%7C%7C%7C&sdata=3D5Uc%2FM4ZVgJT1
+> NAq08cIlNtfF5oW4n%2FTj%2Bqg3YqBUeZg%3D&reserved=3D0) that plays the
+> paravisor role.
+>=20
+> For a VMBus device, there are two communication methods to talk with
+> Host/Hypervisor. 1) VMBUS Ring buffer 2) Dynamic DMA transfer.
+>=20
+> The Confidential VMBus Ring buffer has been upstreamed by Roman Kisel(com=
+mit
+> 6802d8af47d1).
+>=20
+> The dynamic DMA transition of VMBus device normally goes through DMA core
+> and it uses SWIOTLB as bounce buffer in a CoCo VM.
+>=20
+> The Confidential VMBus device can do DMA directly to private/encrypted
+> memory. Because the swiotlb is decrypted memory, the DMA transfer must no=
+t
+> be bounced through the swiotlb, so as to preserve confidentiality. This i=
+s different
+> from the default for Linux CoCo VMs, so not use DMA(SWIOTLB) API in VMBus
+> driver when confidential dynamic DMA transfers capability is present.
+>=20
+> Signed-off-by: Tianyu Lan <tiala@microsoft.com>
+> ---
+>  drivers/scsi/storvsc_drv.c | 28 +++++++++++++++++++++-------
+>  include/linux/hyperv.h     |  1 +
+>  2 files changed, 22 insertions(+), 7 deletions(-)
+>=20
+> diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c inde=
+x
+> ae1abab97835..79b7611518b7 100644
+> --- a/drivers/scsi/storvsc_drv.c
+> +++ b/drivers/scsi/storvsc_drv.c
+> @@ -1316,7 +1316,8 @@ static void storvsc_on_channel_callback(void *conte=
+xt)
+>  					continue;
+>  				}
+>  				request =3D (struct storvsc_cmd_request
+> *)scsi_cmd_priv(scmnd);
+> -				scsi_dma_unmap(scmnd);
+> +				if (!device->co_external_memory)
+> +					scsi_dma_unmap(scmnd);
+>  			}
+>=20
+>  			storvsc_on_receive(stor_device, packet, request); @@ -
+> 1339,6 +1340,8 @@ static int storvsc_connect_to_vsp(struct hv_device *dev=
+ice,
+> u32 ring_size,
+>=20
+>  	device->channel->max_pkt_size =3D STORVSC_MAX_PKT_SIZE;
+>  	device->channel->next_request_id_callback =3D storvsc_next_request_id;
+> +	if (device->channel->co_external_memory)
+> +		device->co_external_memory =3D true;
+>=20
+>  	ret =3D vmbus_open(device->channel,
+>  			 ring_size,
+> @@ -1805,7 +1808,7 @@ static enum scsi_qc_status
+> storvsc_queuecommand(struct Scsi_Host *host,
+>  		unsigned long offset_in_hvpg =3D offset_in_hvpage(sgl->offset);
+>  		unsigned int hvpg_count =3D HVPFN_UP(offset_in_hvpg + length);
+>  		struct scatterlist *sg;
+> -		unsigned long hvpfn, hvpfns_to_add;
+> +		unsigned long hvpfn, hvpfns_to_add, hvpgoff;
+>  		int j, i =3D 0, sg_count;
+>=20
+>  		payload_sz =3D (hvpg_count * sizeof(u64) + @@ -1821,7 +1824,11
+> @@ static enum scsi_qc_status storvsc_queuecommand(struct Scsi_Host *host=
+,
+>  		payload->range.len =3D length;
+>  		payload->range.offset =3D offset_in_hvpg;
+>=20
+> -		sg_count =3D scsi_dma_map(scmnd);
+> +		if (dev->co_external_memory)
+> +			sg_count =3D scsi_sg_count(scmnd);
 
-SDEV_CANCEL is a scsi_device state while the scsi_host_in_recovery
-macro is looking only at Scsi_Host state. An SDEV_CANCEL scsi_device
-is unrelated to the scsi_host_in_recovery return value.
+scsi_sg_count() returns unsigned int, sg_count can't be negative. The check=
+ for sg_count < 0 below becomes dead code. Add a comment to say this is exp=
+ected behavior.
 
-I will note that looking at scsi_device state in scsi_mq_requeue_cmd
-in addition to the
-scsi_host_in_recovery call does not fix the issue. The scsi_device can
-be in SDEV_RUNNING state at the time of request requeue with the
-attempted removal and transition of the scsi_device to SDEV_CANCEL
-occurring later while error handling is still unfinished.
+> +		else
+> +			sg_count =3D scsi_dma_map(scmnd);
+> +
+>  		if (sg_count < 0) {
+>  			ret =3D SCSI_MLQUEUE_DEVICE_BUSY;
+>  			goto err_free_payload;
+> @@ -1836,9 +1843,16 @@ static enum scsi_qc_status
+> storvsc_queuecommand(struct Scsi_Host *host,
+>  			 * Such offsets are handled even on other than the first
+>  			 * sgl entry, provided they are a multiple of PAGE_SIZE.
+>  			 */
+> -			hvpfn =3D HVPFN_DOWN(sg_dma_address(sg));
+> -			hvpfns_to_add =3D HVPFN_UP(sg_dma_address(sg) +
+> -						 sg_dma_len(sg)) - hvpfn;
+> +			if (dev->co_external_memory) {
+> +				hvpgoff =3D HVPFN_DOWN(sg->offset);
+> +				hvpfn =3D page_to_hvpfn(sg_page(sg)) + hvpgoff;
+> +				hvpfns_to_add =3D	HVPFN_UP(sg->offset
+> + sg->length) -
+> +							hvpgoff;
+> +			} else {
+> +				hvpfn =3D HVPFN_DOWN(sg_dma_address(sg));
+> +				hvpfns_to_add =3D
+> HVPFN_UP(sg_dma_address(sg) +
+> +							 sg_dma_len(sg)) -
+> hvpfn;
+> +			}
+>=20
+>  			/*
+>  			 * Fill the next portion of the PFN array with @@ -1860,7
+> +1874,7 @@ static enum scsi_qc_status storvsc_queuecommand(struct
+> Scsi_Host *host,
+>  	ret =3D storvsc_do_io(dev, cmd_request, smp_processor_id());
+>  	migrate_enable();
+>=20
+> -	if (ret)
+> +	if (ret && (!dev->co_external_memory))
+>  		scsi_dma_unmap(scmnd);
+>=20
+>  	if (ret =3D=3D -EAGAIN) {
+> diff --git a/include/linux/hyperv.h b/include/linux/hyperv.h index
+> dfc516c1c719..bcb143766d6e 100644
+> --- a/include/linux/hyperv.h
+> +++ b/include/linux/hyperv.h
+> @@ -1285,6 +1285,7 @@ struct hv_device {
+>=20
+>  	/* place holder to keep track of the dir for hv device in debugfs */
+>  	struct dentry *debug_dir;
+> +	bool co_external_memory;
 
-David Jeffery
+You don't need to introduce co_external_memory in hv_device, vmbus_channel =
+already has co_external_memory. Is it possible that you can check the vmbus=
+_channel->co_external_memory directly? If you can remove this,  you can rew=
+ord this patch to " scsi: storvsc: Confidential VMBus for dynamic DMA trans=
+fers".
+
+Thanks,
+Long
+
 
