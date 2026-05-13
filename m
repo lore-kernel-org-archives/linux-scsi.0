@@ -1,48 +1,33 @@
-Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 86DB73AC0DE
-	for <linux-scsi@vger.kernel.org>; Wed, 13 May 2026 21:58:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.14
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF1113CEB89
+	for <linux-scsi@vger.kernel.org>; Wed, 13 May 2026 23:55:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778709499; cv=none; b=Ve1V5B//DdjeKXwr3DazWNgI0QpdG+R4amo/e8X30MDiZfVY6vYnCA6lptv+vsSFgZQSYWb1xBiUQWYrtNYMXX24pKT0PGiceIaNPnheWlLBjCNv+FLsOBQ2Gjw24nJ2Phz1k3BPsolE1ewlBmZYJIP8fVasbTnDHGqfh3IvM+E=
+	t=1778716557; cv=none; b=rSzXwJkM2FJuVDB6pKSKInvUYQ2Iuh2VHuzBEDgfWpIzUeVdmITF16WdpVZ9W2yUw+fEAKWJ7uRKZvNgzGrzKmrVyC+FpuGxC2/7nm3O3BujMSLBS5kft3XeP/QT0ZF/BDlGCHrh1SW0vQWaIizjLWQSJfkTeuo60RBCyDyxdE4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778709499; c=relaxed/simple;
-	bh=3ZGqfX/XJm6+kW/6aoQQ6C67mHI/BjyyP1/qvEhoZ+Y=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=uzTrr116Qe7EOr+Sealedswzpb8RiZWL7nqlKkgiqNERFRgHtvSILYwyZrgghqYKOL3fob7nar8If3KvSGkoMHyepdQuF898MJ/oT03IQE5ZE7JAIxyqalOtndnKJRivNIxhlq1dQ1ewdWH/KTWnNp5J9/YFCuqfeqGEHsYQsH4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=BAT30BIr; arc=none smtp.client-ip=199.89.1.14
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1778716557; c=relaxed/simple;
+	bh=z59uve8YvjCVToQlMNoOfG6IMTf2JZyY74uvxepW2H8=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=l/ztTgHaTV/t4HiC/LFSdvepXn5ALJLBrXV0/c+eZ68jRy30gy8QFiraZl75F1qKrVKS2mpuQozMHzX1HAw4t6xuMLuu8QwBjfZKsRLij1soqALlDRx6uRIGZRQWIKYo6i52ZNrbhhUvYW068xb9oZ/pptFJyoPFwYK+AZgvGaw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=L2CjcKf4; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="BAT30BIr"
-Received: from localhost (localhost [127.0.0.1])
-	by 011.lax.mailroute.net (Postfix) with ESMTP id 4gG6ls40yPz1XM6JX;
-	Wed, 13 May 2026 21:58:17 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1778709495; x=1781301496; bh=04MNijexQ2VdxtfvFtPUEW4g
-	5OZCxL22C4joWuxWeuU=; b=BAT30BIrcBeq243PwSxmn62tWaBsz432HBY3RAO4
-	U5+sn573B7DWDgf7o8W6ErC/UBV7wETi0SOdf+IlNQssG3BGx/qtlBM1IpRYK/oJ
-	Ar6nAIuh3Klsb6snZqyxd0Wv2h5sHNdJLRwqg7xdF0hbk/LclW3duOJix4IevU+5
-	GkpdfHeDHlUfsx82EutVGBNXNRfmbJmNkwmS2qX+YQvlz8oQSU//49KvWluKywC2
-	azAktDKsvM3PdkeEnZHTC3OFlSS5T4J74xFrrCg3Hpob8OIL3FCD1bxzJnTSQkHc
-	V+/WlD009q1nZNFUFfxVSekWeRJoM3plV4GCLFdty8l+6A==
-X-Virus-Scanned: by MailRoute
-Received: from 011.lax.mailroute.net ([127.0.0.1])
- by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id ZoqKnE-aDfN8; Wed, 13 May 2026 21:58:15 +0000 (UTC)
-Received: from [100.119.48.131] (unknown [104.135.180.219])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4gG6lp2yyZz1XM6JP;
-	Wed, 13 May 2026 21:58:14 +0000 (UTC)
-Message-ID: <65a4ac0a-ea6f-4a83-958c-169d4e2a62e8@acm.org>
-Date: Wed, 13 May 2026 14:58:12 -0700
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="L2CjcKf4"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CF472C19425;
+	Wed, 13 May 2026 23:55:55 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1778716556;
+	bh=z59uve8YvjCVToQlMNoOfG6IMTf2JZyY74uvxepW2H8=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=L2CjcKf4Jf1W//wcyjIOpUuuyKT4B59hB9N7oGd/JsdQl416909j7pLzzKEyvDSV9
+	 hCb1cBC36SI0dToO7nxG56Zck3IbiXlsZrkG9XF9yDFp+HhhqCqSh+sIaaI03oh2yj
+	 M3xzc0NWrQgr04r4W9JZVvsuUtS5BxpbmzCA5Fm6dsUc7rL4Fzsl54DOZLtU275MaA
+	 IpDm0uqx18uHcS+oKfSGjwCKhtqAza8tLcWvSDKkoyIVTrT6uHmhXWI+6MNiksjNVz
+	 eJ+TodbXIhH0phmWesd9irFiVxdqrKTHvnAw3qHZwLxq+iVU+WK0j/II6cFB/YyNsD
+	 q8g2jpG8H8m8g==
+Message-ID: <787e03b1-2765-4f31-ab8b-bfbb8bdc7863@kernel.org>
+Date: Thu, 14 May 2026 08:55:46 +0900
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,26 +35,43 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi: core: run queues for all non-SDEV_DEL devices from
- scsi_run_host_queues
-To: David Jeffery <djeffery@redhat.com>, linux-scsi@vger.kernel.org,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>
-References: <20260513173552.9222-1-djeffery@redhat.com>
+Subject: Re: [PATCH 2/2] scsi: core: Convert inquiry information
+To: Guenter Roeck <linux@roeck-us.net>, Bart Van Assche <bvanassche@acm.org>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, Brian Bunker <brian@purestorage.com>,
+ Hannes Reinecke <hare@suse.de>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
+References: <20260512194634.58145-1-bvanassche@acm.org>
+ <20260512194634.58145-3-bvanassche@acm.org>
+ <292bb057-f10e-4af1-b0fe-ca83d4f49d06@kernel.org>
+ <8ca0f49a-ae11-452c-987d-d90cce8376dd@acm.org>
+ <8f801fd4-6a52-438f-8c99-1cfa28b058df@roeck-us.net>
 Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20260513173552.9222-1-djeffery@redhat.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <8f801fd4-6a52-438f-8c99-1cfa28b058df@roeck-us.net>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 5/13/26 10:35 AM, David Jeffery wrote:
-> +		if (sdev->sdev_state == SDEV_DEL ||
-> +		    !get_device(&sdev->sdev_gendev))
-> +			continue;
-A comment would be welcome above this statement that explains that 
-get_device() is called instead of scsi_device_get() because the latter
-skips devices that are in the state SDEV_CANCEL state.
+On 2026/05/14 3:40, Guenter Roeck wrote:
+> On 5/13/26 10:26, Bart Van Assche wrote:
+>> On 5/13/26 1:03 AM, Damien Le Moal wrote:
+>>> On 5/13/26 04:46, Bart Van Assche wrote:
+>>>> Currently the vendor, model, and revision members of struct scsi_device
+>>>> are pointers to fixed-length strings that are not NUL-terminated.
+>>>
+>>> s/NUL/NULL
+>> Really? NUL is the correct spelling according to
+>> https://en.wikipedia.org/wiki/ASCII and also according to any other
+>> ASCII table I have ever seen.
+>>
+> 
+> Maybe the confusion is NULL pointer (or NULL-terminated array)
+> vs. NUL-terminated string ?
 
-Thanks,
+Ah, yes, indeed. Please ignore my comment.
 
-Bart.
+
+-- 
+Damien Le Moal
+Western Digital Research
