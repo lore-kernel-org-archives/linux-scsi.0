@@ -1,81 +1,48 @@
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 40B374C6F17
-	for <linux-scsi@vger.kernel.org>; Wed, 13 May 2026 13:12:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 69D56349B1F
+	for <linux-scsi@vger.kernel.org>; Wed, 13 May 2026 17:26:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778677945; cv=none; b=bfjxEQGGjXwlZLe3WRbhLF2O346H3g6YaFcXpV2cuTDRkfIeq6fQw+hVuoyKD9rAM8A8CYaOy1xD0hyBrxRBLBJtYsNFrjGe2ohJcNbKBZ6cN+sKFdAat2Ys1oMFXz9+e2vHNuq7OGqidPBd4sL/fbZcKnGQtO9l92RO1nHGq+Q=
+	t=1778693202; cv=none; b=L2ALv7/TFT8FUYkw1zrwFQh/+xftbQx70Y6iysH6Oi/T4rBkTBpEAa+JwOpYImsLDodIbwKJSTst+8plBZDznyb2Z2UZtVipN+fg2Qp1kLJOpja6ZUhwpm+GiprmgEsbn4aijqJYvCbD07im4bbBCUIxExak4LqPzDRsZKbGKjA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778677945; c=relaxed/simple;
-	bh=mKslkkPNFADSA80b85jkPLf4uRMlTJwe9KeE4Lx2IeA=;
+	s=arc-20240116; t=1778693202; c=relaxed/simple;
+	bh=mZ+3IqgVlDYOVDr4xMbrBpT56S0RxalWma33hwp98/E=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=hVWTdEUQfN8jL6xSSfTIiYO15qiwvmNWofm5KhfBqKjUT+K0JE7iUgmmknrp0gQAHhD5of7mDsq7C/XvmsXSOSKbwiEdCAcyqWFTiCiYLcdNdiUDa/0g8V4i4re2wyeW2MyHfoZWm1uSvfuMeh6PBPwYQzyoM8V397M8R38fVQI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=CBT7nYFD; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=xS7BT05R; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=CBT7nYFD; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=xS7BT05R; arc=none smtp.client-ip=195.135.223.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+	 In-Reply-To:Content-Type; b=G0b+6D/CZ48h6d7y2W5aFrWMkOo/lIgIHmA/EeJ5ZJQosHdU6WtthmiDUloJJJDhg14aTcWkZ9xxY1AiM9yiiTQsc8fd8TaSKkldl6BoUJQoBOzLanfotx0cwfu9CKCol8x1lP3Eu9WPyCfz0NYbS7TLvcQOzP4vVICiS7NZY4Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=eHM7WCUv; arc=none smtp.client-ip=199.89.1.14
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="CBT7nYFD";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="xS7BT05R";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="CBT7nYFD";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="xS7BT05R"
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="eHM7WCUv"
+Received: from localhost (localhost [127.0.0.1])
+	by 011.lax.mailroute.net (Postfix) with ESMTP id 4gG0kM5QcYz1XM6JX;
+	Wed, 13 May 2026 17:26:35 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1778693191; x=1781285192; bh=PNIvuXxNovbVz4XABZTQq2iD
+	cpbXUYJ37MEM03N31LM=; b=eHM7WCUvP1F+DJdQzoXitKzYJpVPkPPa/gHiH8/C
+	HAyA/y2tMX2RBVKXMWu8OPbj4oMg6x2G701ZV6vII86uSHKhVRkInVJASVJ7Ux0c
+	g/sdggs6pTb/ybI4L/b6AgK7zX/VBdTYUXEsZ/bQsbaXjB1jy7AFAopWH4NJSwIS
+	mLnskQe1PC1taL6jOj9iSy0WvuPsSOQzLZeacxkv4CkR9T5vYjjLgmLDaj8JLIMn
+	7WQ/3JqQuOWPNgQwggodVBzSjWk1IhN6lmLNUwvEqNASGP5tSQW6oAPveRrLQtaP
+	Z+FxvZY3RsTtab+9m6BMBi7U5bDuqbnV+SfwtWwMVUjTew==
+X-Virus-Scanned: by MailRoute
+Received: from 011.lax.mailroute.net ([127.0.0.1])
+ by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id WrOA8mzPFuwz; Wed, 13 May 2026 17:26:31 +0000 (UTC)
+Received: from [100.119.48.131] (unknown [104.135.180.219])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id 72DB775AD1;
-	Wed, 13 May 2026 13:12:22 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1778677942; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=ctFmtGzWh59JzxP4JQBACBn8erEAkWyV6YditMA6vsY=;
-	b=CBT7nYFDs0htpIPnSfcZeT+F/qdkcVXNEcXM8cZABpXUqtWhqIsqKKq18YikYXeM/YIKM/
-	34+weytkrarLC2Vz07vhegjOG8QdHkzQci7NmWvnaM8TcvJMMQA03eCNFgjnMl8A5dUZGv
-	kj6UeU9Hbi+HM5Yz3Ee0H+AJf1QTIw4=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1778677942;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=ctFmtGzWh59JzxP4JQBACBn8erEAkWyV6YditMA6vsY=;
-	b=xS7BT05Ri8ZRGZHmaRv1MM7/lE+JFOQGtZ7Y76dnNn0pLKeRD4Lmf1o4S5O9SU0ahwZK1W
-	W+w2EmbIbjjOXECg==
-Authentication-Results: smtp-out2.suse.de;
-	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=CBT7nYFD;
-	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=xS7BT05R
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1778677942; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=ctFmtGzWh59JzxP4JQBACBn8erEAkWyV6YditMA6vsY=;
-	b=CBT7nYFDs0htpIPnSfcZeT+F/qdkcVXNEcXM8cZABpXUqtWhqIsqKKq18YikYXeM/YIKM/
-	34+weytkrarLC2Vz07vhegjOG8QdHkzQci7NmWvnaM8TcvJMMQA03eCNFgjnMl8A5dUZGv
-	kj6UeU9Hbi+HM5Yz3Ee0H+AJf1QTIw4=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1778677942;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=ctFmtGzWh59JzxP4JQBACBn8erEAkWyV6YditMA6vsY=;
-	b=xS7BT05Ri8ZRGZHmaRv1MM7/lE+JFOQGtZ7Y76dnNn0pLKeRD4Lmf1o4S5O9SU0ahwZK1W
-	W+w2EmbIbjjOXECg==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 47AB8593A9;
-	Wed, 13 May 2026 13:12:22 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id UJPJELZ4BGo5TQAAD6G6ig
-	(envelope-from <hare@suse.de>); Wed, 13 May 2026 13:12:22 +0000
-Message-ID: <48f1b7b5-73ca-4b58-bd59-5e786fba7031@suse.de>
-Date: Wed, 13 May 2026 15:12:21 +0200
+	(Authenticated sender: bvanassche@acm.org)
+	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4gG0kG0CqDz1XM6JP;
+	Wed, 13 May 2026 17:26:29 +0000 (UTC)
+Message-ID: <8ca0f49a-ae11-452c-987d-d90cce8376dd@acm.org>
+Date: Wed, 13 May 2026 10:26:29 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -83,120 +50,31 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5 5/6] ata: libata-scsi: probe additional LUNs for
- multi-LUN ATAPI devices
-To: Phil Pemberton <philpem@philpem.me.uk>, linux-ide@vger.kernel.org,
- linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>,
- Niklas Cassel <cassel@kernel.org>,
- "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+Subject: Re: [PATCH 2/2] scsi: core: Convert inquiry information
+To: Damien Le Moal <dlemoal@kernel.org>,
  "Martin K . Petersen" <martin.petersen@oracle.com>
-References: <20260512202728.299414-1-philpem@philpem.me.uk>
- <20260512202728.299414-6-philpem@philpem.me.uk>
+Cc: linux-scsi@vger.kernel.org, Brian Bunker <brian@purestorage.com>,
+ Hannes Reinecke <hare@suse.de>, Guenter Roeck <linux@roeck-us.net>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
+References: <20260512194634.58145-1-bvanassche@acm.org>
+ <20260512194634.58145-3-bvanassche@acm.org>
+ <292bb057-f10e-4af1-b0fe-ca83d4f49d06@kernel.org>
 Content-Language: en-US
-From: Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20260512202728.299414-6-philpem@philpem.me.uk>
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <292bb057-f10e-4af1-b0fe-ca83d4f49d06@kernel.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Spam-Flag: NO
-X-Spam-Score: -4.51
-X-Rspamd-Action: no action
-X-Spamd-Result: default: False [-4.51 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	MX_GOOD(-0.01)[];
-	FUZZY_RATELIMITED(0.00)[rspamd.com];
-	ARC_NA(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	TO_DN_SOME(0.00)[];
-	RCPT_COUNT_SEVEN(0.00)[8];
-	RCVD_TLS_ALL(0.00)[];
-	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	FROM_EQ_ENVFROM(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	MID_RHS_MATCH_FROM(0.00)[];
-	RCVD_COUNT_TWO(0.00)[2];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[philpem.me.uk:email,imap1.dmz-prg2.suse.org:rdns,imap1.dmz-prg2.suse.org:helo,suse.de:email,suse.de:dkim,suse.de:mid];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	DKIM_TRACE(0.00)[suse.de:+]
-X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
-X-Rspamd-Queue-Id: 72DB775AD1
-X-Spam-Level: 
+Content-Transfer-Encoding: 7bit
 
-On 5/12/26 22:27, Phil Pemberton wrote:
-> After LUN 0 is added for an ATAPI device, check its BLIST_FORCELUN
-> flag.  If set, bump dev->nr_luns to the host's max_lun so the LUN
-> routing in atapi_xlat() accepts the probe INQUIRYs, then call
-> scsi_scan_target() with SCAN_WILD_CARD to trigger the SCSI layer's
-> built-in sequential LUN scan for that target only.  This probes
-> LUNs 1..shost->max_lun, driven by the libata atapi_max_lun module
-> parameter.
+On 5/13/26 1:03 AM, Damien Le Moal wrote:
+> On 5/13/26 04:46, Bart Van Assche wrote:
+>> Currently the vendor, model, and revision members of struct scsi_device
+>> are pointers to fixed-length strings that are not NUL-terminated.
 > 
-> Devices without BLIST_FORCELUN (the vast majority of ATAPI devices)
-> are left with only LUN 0 -- no sequential scan is triggered, so
-> single-LUN devices like the iHAS124 DVD writer are completely
-> unaffected.
-> 
-> Non-responding LUNs (PQ=0/PDT=0x1f) are silently skipped by
-> scsi_probe_and_add_lun() when BLIST_NO_LUN_1F is set on the device
-> via scsi_devinfo.
-> 
-> Signed-off-by: Phil Pemberton <philpem@philpem.me.uk>
-> ---
->   drivers/ata/libata-scsi.c | 27 +++++++++++++++++++++++----
->   1 file changed, 23 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-> index 2d714efc855f..a6f5557014c7 100644
-> --- a/drivers/ata/libata-scsi.c
-> +++ b/drivers/ata/libata-scsi.c
-> @@ -26,6 +26,7 @@
->   #include <scsi/scsi_device.h>
->   #include <scsi/scsi_tcq.h>
->   #include <scsi/scsi_transport.h>
-> +#include <scsi/scsi_devinfo.h>
->   #include <linux/libata.h>
->   #include <linux/hdreg.h>
->   #include <linux/uaccess.h>
-> @@ -4745,12 +4746,30 @@ void ata_scsi_scan_host(struct ata_port *ap, int sync)
->   			sdev = __scsi_add_device(ap->scsi_host, channel, id, 0,
->   						 NULL);
->   			if (!IS_ERR(sdev)) {
-> -				dev->sdev[0] = sdev;
-> -				ata_scsi_assign_ofnode(dev, ap);
-> +				/*
-> +				 * For multi-LUN ATAPI (BLIST_FORCELUN), bump
-> +				 * dev->nr_luns to the host max so the LUN
-> +				 * routing in atapi_xlat() accepts the probe
-> +				 * INQUIRYs to LUN > 0, then trigger the
-> +				 * sequential scan.  pdt_1f_for_no_lun, set
-> +				 * during LUN 0 configure, ensures
-> +				 * non-responding LUNs are silently skipped;
-> +				 * dev->sdev[] is populated by
-> +				 * ata_scsi_dev_config() during the scan.
-> +				 */
-> +				if (dev->class == ATA_DEV_ATAPI &&
-> +				    sdev->sdev_bflags & BLIST_FORCELUN) {
-> +					dev->nr_luns = ap->scsi_host->max_lun;
-> +					scsi_scan_target(
-> +						&ap->scsi_host->shost_gendev,
-> +						channel, id, SCAN_WILD_CARD,
-> +						SCSI_SCAN_RESCAN);
-> +				}
+> s/NUL/NULL
+Really? NUL is the correct spelling according to
+https://en.wikipedia.org/wiki/ASCII and also according to any other
+ASCII table I have ever seen.
 
-Again, nr_luns is not required here.
-We only need to check that host->max_lun does not exceed ATAPI_MAX_LUN.
+Thanks,
 
-Cheers,
-
-Hannes
--- 
-Dr. Hannes Reinecke                  Kernel Storage Architect
-hare@suse.de                                +49 911 74053 688
-SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
-HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
+Bart.
