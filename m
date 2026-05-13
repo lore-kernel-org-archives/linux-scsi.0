@@ -1,85 +1,223 @@
-Received: from lamorak.hansenpartnership.com (lamorak.hansenpartnership.com [198.37.111.173])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF57240758F
-	for <linux-scsi@vger.kernel.org>; Wed, 13 May 2026 12:49:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.37.111.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D2A2286D57
+	for <linux-scsi@vger.kernel.org>; Wed, 13 May 2026 13:07:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778676585; cv=none; b=nYacjhgzNWBM7X1+7Tmgl/vUORirw+ce9eg2zWDYU4nhYnWH1UU3f0hzaG5Xsvv2ZORgt8kxKXDmfd/laee2A7wxqgkFdHqKJVgmIRH4rAET9aYv3yVCuY8dgw9Vrnp8wvRJhKK2axbAE/JCjTr6lcoPqA9/wR2JRdnxZImBz9E=
+	t=1778677665; cv=none; b=bR2NhxeM8uPR6Kjm/P6yfitZlreOT+YgiwIa8zC/lI/j2cC6ELjaogr3AGzMNJPRf6JLlPTgr4Cv3DGNbOlpmrB9loG8ZsWbS9mXuG8rYRUW6K21866xoN9jpRbKSWCux+mmqW+BrW1/v+lEerNfU2xOI4APvkEQ82XZrxsuzUY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778676585; c=relaxed/simple;
-	bh=QY9D6k4bMFqA1uuodeLHm22wFS5WFxKcraIXfFo70mQ=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=ug8b5XrYM92Oebjjny78/ep8cqlsMYjHGQeejkGeJp4rttkesyScYQMsc6dz+52JB+ne6myXzHu68l+g68zGgtLQWk/r7MQBH54HbERFsGFHjFHM1AHllkvY1Vdu04KUp2XJtiESRCfddcl6RYSCaO5nad4ZsGXrnkbwOzGjSsY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com; spf=pass smtp.mailfrom=HansenPartnership.com; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=f0tqOKbX; arc=none smtp.client-ip=198.37.111.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=HansenPartnership.com
+	s=arc-20240116; t=1778677665; c=relaxed/simple;
+	bh=jpJ8jiK9qSPMmtsxq7fGXJiJpUt1/XcLckJgMei7/8c=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=OESIvqxFrt5M0HE5j75glMBcp9LCuc9bGuKT0vrZPBPIhEMjHzIPUAmSszza/0EBua8r112sc5qWbtr0jBHqvJofS56AjjbTT4sfnWxeQQKAjrXyOnJObV2vaZKKBe0e/Vq3NHR6vPMic9x56laEyXTjrgjI0EzAt32B9YQtNwo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=wY+yLra3; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=LD1Z/9m3; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=wY+yLra3; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=LD1Z/9m3; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="f0tqOKbX"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-	d=hansenpartnership.com; s=20151216; t=1778676577;
-	bh=QY9D6k4bMFqA1uuodeLHm22wFS5WFxKcraIXfFo70mQ=;
-	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
-	b=f0tqOKbXnCJaA9f+Jqe0IGOAunoRu4iYFLhY0sjEwlA2WnHIRo1WuOBlJ3c5qfc1Q
-	 Z9PRvz9oWkq3QffU43Mmyi+zlid6SoU8WEqv3hnNvoFd8SSwRBHpFofbgUT+pjGvdg
-	 lbfHEbEavXn7CF7UV2M4tIIQ4kdGaQCLdYCS2+BI=
-Received: from lingrow.int.hansenpartnership.com (unknown [IPv6:2601:5c4:4300:d341::a774])
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="wY+yLra3";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="LD1Z/9m3";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="wY+yLra3";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="LD1Z/9m3"
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by lamorak.hansenpartnership.com (Postfix) with ESMTPSA id 625911C011C;
-	Wed, 13 May 2026 08:49:37 -0400 (EDT)
-Message-ID: <b9b20ed6506ccd0d525abbd9da1f54c65ba76a8f.camel@HansenPartnership.com>
-Subject: Re: [PATCH 2/2] scsi: core: Convert inquiry information
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-To: Bart Van Assche <bvanassche@acm.org>, "Martin K . Petersen"
-	 <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, Brian Bunker <brian@purestorage.com>, Damien
- Le Moal <dlemoal@kernel.org>, Hannes Reinecke <hare@suse.de>, Guenter Roeck
- <linux@roeck-us.net>
-Date: Wed, 13 May 2026 08:49:36 -0400
-In-Reply-To: <20260512194634.58145-3-bvanassche@acm.org>
-References: <20260512194634.58145-1-bvanassche@acm.org>
-	 <20260512194634.58145-3-bvanassche@acm.org>
-Autocrypt: addr=James.Bottomley@HansenPartnership.com;
- prefer-encrypt=mutual;
- keydata=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
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.50.3 
+	by smtp-out1.suse.de (Postfix) with ESMTPS id 38B9D6A9A5;
+	Wed, 13 May 2026 13:07:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1778677661; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=uNWGbcmeBE1N0Cw7hhgmCqKp1+dV7l6/0y+bdpcAjdA=;
+	b=wY+yLra3UZ8MsA44i4RXugSBm3tUf80U//spY1Udhy1v+2x0RfIdrdp78j+AKY7gWMjg2O
+	hxxWvTG3XvqHxP3tSKa6swL9iak2wolIgry+h0YKIYLkxybUK+kYt5VV1RM4SjX3Ml8j+v
+	FFia/VULsiZl1HuxZiEWRqaKzhFygoU=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1778677661;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=uNWGbcmeBE1N0Cw7hhgmCqKp1+dV7l6/0y+bdpcAjdA=;
+	b=LD1Z/9m3L/ZaIqoonfZlgB3lGlWWOhegk1FTsRDh67lVCGGybnsz9XmOk2IPVGSJnEaxue
+	NWb1G6QM5hv1CfCg==
+Authentication-Results: smtp-out1.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1778677661; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=uNWGbcmeBE1N0Cw7hhgmCqKp1+dV7l6/0y+bdpcAjdA=;
+	b=wY+yLra3UZ8MsA44i4RXugSBm3tUf80U//spY1Udhy1v+2x0RfIdrdp78j+AKY7gWMjg2O
+	hxxWvTG3XvqHxP3tSKa6swL9iak2wolIgry+h0YKIYLkxybUK+kYt5VV1RM4SjX3Ml8j+v
+	FFia/VULsiZl1HuxZiEWRqaKzhFygoU=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1778677661;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=uNWGbcmeBE1N0Cw7hhgmCqKp1+dV7l6/0y+bdpcAjdA=;
+	b=LD1Z/9m3L/ZaIqoonfZlgB3lGlWWOhegk1FTsRDh67lVCGGybnsz9XmOk2IPVGSJnEaxue
+	NWb1G6QM5hv1CfCg==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 12023593A9;
+	Wed, 13 May 2026 13:07:41 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id hhX0A513BGrESAAAD6G6ig
+	(envelope-from <hare@suse.de>); Wed, 13 May 2026 13:07:41 +0000
+Message-ID: <3ac8578f-e6c4-4655-ac1e-5e61763ab023@suse.de>
+Date: Wed, 13 May 2026 15:07:40 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v5 2/6] ata: libata-scsi: convert dev->sdev to per-LUN
+ array
+To: Phil Pemberton <philpem@philpem.me.uk>, linux-ide@vger.kernel.org,
+ linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>,
+ Niklas Cassel <cassel@kernel.org>,
+ "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>
+References: <20260512202728.299414-1-philpem@philpem.me.uk>
+ <20260512202728.299414-3-philpem@philpem.me.uk>
+Content-Language: en-US
+From: Hannes Reinecke <hare@suse.de>
+In-Reply-To: <20260512202728.299414-3-philpem@philpem.me.uk>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Spam-Level: 
+X-Spamd-Result: default: False [-4.30 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	MIME_TRACE(0.00)[0:+];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	ARC_NA(0.00)[];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	FUZZY_RATELIMITED(0.00)[rspamd.com];
+	RCVD_TLS_ALL(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	FROM_EQ_ENVFROM(0.00)[];
+	TO_DN_SOME(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	RCPT_COUNT_SEVEN(0.00)[8];
+	MID_RHS_MATCH_FROM(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:mid,suse.de:email,imap1.dmz-prg2.suse.org:helo]
+X-Spam-Flag: NO
+X-Spam-Score: -4.30
 
-On Tue, 2026-05-12 at 12:46 -0700, Bart Van Assche wrote:
-> @@ -905,9 +905,9 @@ static int scsi_add_lun(struct scsi_device *sdev,
-> unsigned char *inq_result,
-> =C2=A0	if (sdev->inquiry =3D=3D NULL)
-> =C2=A0		return SCSI_SCAN_NO_RESPONSE;
-> =C2=A0
-> -	sdev->vendor =3D (char *) (sdev->inquiry + 8);
-> -	sdev->model =3D (char *) (sdev->inquiry + 16);
-> -	sdev->rev =3D (char *) (sdev->inquiry + 32);
-> +	strscpy(sdev->vendor, sdev->inquiry + 8);
-> +	strscpy(sdev->model, sdev->inquiry + 16);
-> +	strscpy(sdev->rev, sdev->inquiry + 32);
-> =C2=A0
-> =C2=A0	sdev->is_ata =3D strncmp(sdev->vendor, "ATA=C2=A0=C2=A0=C2=A0=C2=
-=A0 ", 8) =3D=3D 0;
-> =C2=A0	if (sdev->is_ata) {
+On 5/12/26 22:27, Phil Pemberton wrote:
+> Multi-LUN ATAPI devices (PD/CD combos, CD changers) share a single
+> ata_device but expose multiple scsi_devices.  The previous single
+> dev->sdev pointer could only track one LUN, making all other LUNs
+> invisible to code that operates on sdevs: port detach, suspend/resume,
+> ACPI uevent, ZPODD, media change notification, and EH teardown.
+> 
+> Replace the scalar struct scsi_device *sdev with a fixed-size array
+> dev->sdev[ATAPI_MAX_LUN] indexed by LUN number, where ATAPI_MAX_LUN
+> is 8 (the SCSI-2 ceiling, LUN values 0..7).  Add a companion field
+> dev->nr_luns recording the number of valid entries -- defaults to 1
+> during ata_dev_init() and is bumped during multi-LUN probe -- so the
+> common single-LUN case iterates one slot, not eight.
+> 
+> Add an inline helper ata_dev_scsi_device(dev, lun) that returns
+> dev->sdev[lun] guarded by a WARN_ON_ONCE(lun >= dev->nr_luns) bounds
+> check.  Use it for the hardcoded LUN-0 references in libata-acpi
+> (uevent kobj), libata-zpodd (disk events, wake notify), and the
+> door-lock and OF-node paths in libata-scsi.
+> 
+> Key changes per call site:
+>    - ata_scsi_dev_config:  assign sdev to dev->sdev[sdev->lun]
+>    - ata_scsi_sdev_destroy: clear dev->sdev[sdev->lun]; only trigger
+>      ATA-level detach when LUN 0 is destroyed, since removing a higher
+>      LUN should not tear down the underlying ATA device
+>    - ata_port_detach:  iterate dev->nr_luns slots (high->low)
+>    - ata_scsi_offline_dev:  iterate dev->nr_luns slots
+>    - ata_scsi_remove_dev:  snapshot and remove all LUN slots, then
+>      scsi_remove_device each one outside the lock
+>    - ata_scsi_media_change_notify:  send event to all populated LUNs
+>    - ata_scsi_dev_rescan:  resume and rescan each populated LUN
+>    - ACPI, ZPODD, ofnode, door-lock:  use ata_dev_scsi_device(dev, 0)
+> 
+> For single-LUN devices (the vast majority) only dev->sdev[0] is ever
+> populated and dev->nr_luns stays at 1, so existing call paths see no
+> change in behaviour.
+> 
+> Signed-off-by: Phil Pemberton <philpem@philpem.me.uk>
+> ---
+>   drivers/ata/libata-acpi.c  |   6 +-
+>   drivers/ata/libata-core.c  |  11 ++-
+>   drivers/ata/libata-scsi.c  | 151 +++++++++++++++++++------------------
+>   drivers/ata/libata-zpodd.c |   6 +-
+>   include/linux/libata.h     |  11 ++-
+>   5 files changed, 103 insertions(+), 82 deletions(-)
+> 
+> diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
+> index 4433f626246b..8af35d0b1053 100644
+> --- a/drivers/ata/libata-acpi.c
+> +++ b/drivers/ata/libata-acpi.c
+> @@ -153,8 +153,10 @@ static void ata_acpi_uevent(struct ata_port *ap, struct ata_device *dev,
+>   	char *envp[] = { event_string, NULL };
+>   
+>   	if (dev) {
+> -		if (dev->sdev)
+> -			kobj = &dev->sdev->sdev_gendev.kobj;
+> +		struct scsi_device *sdev = ata_dev_scsi_device(dev, 0);
+> +
+> +		if (sdev)
+> +			kobj = &sdev->sdev_gendev.kobj;
+>   	} else
+>   		kobj = &ap->dev->kobj;
+>   
+> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+> index 4408b1fb48c7..1cb159d9dbc7 100644
+> --- a/drivers/ata/libata-core.c
+> +++ b/drivers/ata/libata-core.c
+> @@ -5564,6 +5564,7 @@ void ata_dev_init(struct ata_device *dev)
+>   	dev->pio_mask = UINT_MAX;
+>   	dev->mwdma_mask = UINT_MAX;
+>   	dev->udma_mask = UINT_MAX;
+> +	dev->nr_luns = 1;
+>   }
+>   
+>   /**
+> @@ -6275,11 +6276,15 @@ static void ata_port_detach(struct ata_port *ap)
+>   	/* Remove scsi devices */
+>   	ata_for_each_link(link, ap, HOST_FIRST) {
+>   		ata_for_each_dev(dev, link, ALL) {
+> -			if (dev->sdev) {
+> +			int lun;
+> +
+> +			for (lun = dev->nr_luns - 1; lun >= 0; lun--) {
+ > +				if (!dev->sdev[lun])> +					continue;
 
-If you've gone to all the trouble to lift the lengths out as #defines,
-shouldn't we do the same with the offsets?
+That looks so weird.
+The 'sdev' array has the size ATAPI_MAX_LUN, so ->nr_luns should
+never be larger than that.
+_And_ you are checking for the pointer directly.
+So why do you have 'dev->nr_luns'?
+Wouldn't it be easier to use ATAPI_MAX_LUN as the upper limit,
+and do away with 'nr_luns' completely?
 
-Regards,
+Cheers,
 
-James
-
+Hannes
+-- 
+Dr. Hannes Reinecke                  Kernel Storage Architect
+hare@suse.de                                +49 911 74053 688
+SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
+HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
