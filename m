@@ -1,165 +1,274 @@
-Received: from mail-dl1-f53.google.com (mail-dl1-f53.google.com [74.125.82.53])
+Received: from mail-dy1-f172.google.com (mail-dy1-f172.google.com [74.125.82.172])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1005C2737E0
-	for <linux-scsi@vger.kernel.org>; Thu, 14 May 2026 01:26:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.53
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778721993; cv=none; b=Yq9r4ABe9RNYQetQUh5gV0aByRptsL3q/igC/7NNJJlka9PJ8j+dhT+amjGLRYR5Qm8KdyQGqlfFkjsgo1yWCOJumMmgEbPROk6vW8jd62ZEgxC05WauSwz00aeczgDbm1yw0efqxdMhxB8WxoF7jJ1bFileYVtGEp0GjQR9ITk=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778721993; c=relaxed/simple;
-	bh=J9t7Y3dCSOWjzc2KZXw6OyJ0fX4LV/SSR6k3ZSG8cP4=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=rNWCseTPVD+TvxIeZ43kss0axIU6t4KMvxPJIZErbmnLE3HRabFRd75EIAx/Zl1/hdTzBfdCaLwa8DzXE6WGxHeZYHfiexSQ9OjX7/8y3TZJJ2kfcIMp8pSWxrp3j8EZOESPeKH/fo+XP80Q4EqARR4cnR+ABRsFXNTdF6nhw+8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=roeck-us.net; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=bmuCmMnR; arc=none smtp.client-ip=74.125.82.53
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=roeck-us.net
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BCB902741B6
+	for <linux-scsi@vger.kernel.org>; Thu, 14 May 2026 02:26:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.82.172
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1778725588; cv=pass; b=JXHwvmBwdOCgZXk1jgLhLmNaCXFEUj4+/FcMFbJThWkZIJBwsuubged1fABAa+MaH5p6EbhR6hqDp0j1caUtLPmpj+mYGnCOsDhk7faTKn+bRLCcl1XeH2I+dudjngQqdoyTyxV7Rg/ZgC0aUufI9b0UdXqEIy5VYDi0yOau2nM=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1778725588; c=relaxed/simple;
+	bh=P4yfmJJT8N6Nt05n/Tl4I4+mKmWwbD9BE0u/XKoXZZk=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=Z+zbLdCxkjeCJwWrHwjkKiUnwh9MaLZ6zdXlatuEKOBcTIY/Ya8IwiHVKPFgBAtJxmllWLUmQy/z4JaLmr4Q2xATK5g9hohkhFrZsdKwPV+z5i3K79epPy1s/CftYh88cG9pO2tuKpKJm7mBCYiZWigkRurn4D2v91+l0n+tvHM=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=IfBPbO3G; arc=pass smtp.client-ip=74.125.82.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="bmuCmMnR"
-Received: by mail-dl1-f53.google.com with SMTP id a92af1059eb24-13354eb66baso3996942c88.1
-        for <linux-scsi@vger.kernel.org>; Wed, 13 May 2026 18:26:31 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="IfBPbO3G"
+Received: by mail-dy1-f172.google.com with SMTP id 5a478bee46e88-30246cfd41aso2146237eec.1
+        for <linux-scsi@vger.kernel.org>; Wed, 13 May 2026 19:26:26 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1778725586; cv=none;
+        d=google.com; s=arc-20240605;
+        b=llr9O9c42xDHPFakTjtG/DdpPVpYOZ7HrycOy7boEAwpDn8GQ2+cx6uyjqpKXmQwOj
+         VXJ/HLhUZogMv5O6hzktVpmOwv//xyPl7V1Zn8diauxQuHvYWoHOqQYAMIac7cK1lUjQ
+         X0dJVpnSei22QOcWP3NWUz0xsM0Vsd6OP3l280mj/LQFvn1xeIPZrjHXw0l4FR0dO992
+         4TBRnAajA/BFglh0P3qo/LjaIzU+Kzw7m3H15CCO3dIj3Gaa+6td30bbfR7qdKu+BsmC
+         ZPC7lUMfY1qrtl+rnesJoHNJuRgZI1fspbquyLLwy2iOYAA5Udg9WVebj1OEUMgvXVOn
+         EGzA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=gV5PMxG5gsDWEMyQs3N9vUcvd4wOJ+6kAS8IQe7BwV0=;
+        fh=N1dAvOosMxZ7jf/AvM1XnoRQftUdnFVCMnDZk2Xr9sc=;
+        b=HE8UU5XZMMdID5rr24l2wUViputOaQ85zSciVh02mht5rmct4AzUBXOYaUUf8e3DQ9
+         1jvr7KWufrVUKYaPWjHGLY1Xwe6ZWCTdWVy/doFg9dEfBUYl0Ovrn93izQIHuigTdNvO
+         /m7J3/fWazFrGGTPqUF7UelTj6OfC76Gimsk/+9dGZwCqax46jPPsEoEDzolYRLEON8X
+         ZTXjzyj6gyvgiU5V1z82FQpj7mlGx5ObZi5oO/QuzN7wL3hZT1dje4dnX7UUiS1btbEo
+         s99IgztiQs9M0BU8oG10CyYJ0/ABzZquo9K5vDACz4rJzE2dw6tOFhTyoVfba8K4lVjl
+         ripw==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1778721991; x=1779326791; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:autocrypt:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:sender:from:to:cc:subject:date:message-id:reply-to;
-        bh=Ow0R4jeXxEVO1Et6duyD4OCmVuya7nxVLjLxDugc27w=;
-        b=bmuCmMnRCXsXCzTsUXubTkLmwO6IPgoPx6FKXObYiqcbmIU+alwIetyAUNv8Xyz7HL
-         dLx5kgPeW24m2bsnMkdbIdxsbR88IqqWXN22MHNtGAUaRZzhxouqHjGYgLrKBmEtYGh4
-         dKvThpsERR55kDN9Yg84Y1zGbEcoEAfjXe5QqWMWHsNO9lwqDMKHTUb/GSZdSskVBCgT
-         bB0fgzImxmTuV3Q2qbc0Y3Ahnr1B1omfNjKEfhsEM1QNAkvRJxv1K42xAyYJi50zNk2N
-         HFp5P7w03QK4aovo9zDu6zrvKRcCSPIDBCqy7cgKiReNQaceSVzqE3/SSh7+m7oYRCNP
-         +/VQ==
+        d=gmail.com; s=20251104; t=1778725586; x=1779330386; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=gV5PMxG5gsDWEMyQs3N9vUcvd4wOJ+6kAS8IQe7BwV0=;
+        b=IfBPbO3GZI0jz/bqGHlgWFW7lov5qJEZs4x2uFJqR2mGgaRHKwb30CgWowkZBSbBEd
+         1TUk4H4XDZdnze+C6BWYfH3uZkfgVzRP9APulzUxpc3yZBGWX48WBUQ57a6bl8Gv8Y+O
+         zlQKWDgY3dIet1exeVSZOk1Qvy7WrWrOtw0Lejr8lR7y906rCKq9HW27sq//MfaAFVzH
+         KHn+AJuQkg+vZTXvXwxSbzdhfxZ2bk9T3ye4mzy/gLkT/usC1a+Cuq5719ZuR4bn8XRw
+         FH6pbM1XVQSi4hHmFtAtZw4qoXUHZ2mIADI5GDaefRd7YTCYyu+3w5rpaLOAYc6A3RMi
+         ww5A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1778721991; x=1779326791;
-        h=content-transfer-encoding:in-reply-to:autocrypt:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:sender:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=Ow0R4jeXxEVO1Et6duyD4OCmVuya7nxVLjLxDugc27w=;
-        b=GPSuMUjlCf12P/khNkCQitX2UQKz3KSxk5Jnfyu6Ikkm2iXmfvVHg3f/l5DCdc/iv+
-         l/cEqD6tuibbW4FUzF67IIVtkvX48rBy3eypa0vhkqK0UlV9G+3+Wgis5MYff9n7ZcL1
-         rb1b07uECIFHG8XyItLeV3a/uT4G63+NdD+h79iWf+ODwsIUOauaRpuvOXi6igMz3SzO
-         5OuHZFtjM4n4VuroCdyl1fjJaHxuoycklq2zkMwyBN0c6MDxT7vTjz6w/F4azBeCNugO
-         zmNf5ehIDjNNqqreTiHj/8W1L/mib+QuzMAYm5CQWjpBnp1rdfotVev1oAdrWdIMfAA/
-         QzfQ==
-X-Forwarded-Encrypted: i=1; AFNElJ/63CBl7RNC+ZJbappktl/7xr4rC+k1C/G6EDqdiC1DMiM/hHMxxYex+/3LEVHDvO9bmFU5e0xXsuni@vger.kernel.org
-X-Gm-Message-State: AOJu0YzuRenkEi79XWMsMFVCaMbY//BNJuUaMACcTt2C699W1RUppTDS
-	SZVchzHAFqJaUMhcNalnvCFcg4ey9rRvuehc/BvJxdor/2lEjB8HZRwV
-X-Gm-Gg: Acq92OEuJXvt/129c/6g6GLdI0pvS9/Nkh2dbTwu5IG6Ph6eNINmVQePHO22Abty89K
-	iHI/maqCTpsCfJbXxIqAx9Bb/5rmHuGnEEKEMzmy9eTqE15Qc43vB2LURbwz5rHyIUmkYhI/TQJ
-	UNihjGHt1bM6dLWFZTaKXCwobbiFAYBtM+rsHA015ZQ+laFvQjRvqgw8KkKDKZsy5fP/3W+TcG1
-	yvxNqHxR9rSDZLW4AtiVQidJg4RTOQY+wMher8R5Nt2NbgHP/4astbrFCk9zf3OPk+gfZ2vu+Bk
-	Kyy/cYIZkhq8PA2x7VkGpATRzFXoW72BkgBbawBnBOWQbqRcPiT2bkFLOPdmQ3cv42DCcQp5t4e
-	UMIOw1whAXZqpeXlfGUhDC2hnuunKhkZfWwwKpr7GVGmzSxJW1l6AcPUb1D8CALNCCMYtBb/AKX
-	c+u8MVe1kgt8Z3qjfH/8mGQUwn3MTqsBo8ZkY8h9K3X8CqglQz+z/doGUFm1Cn6RNBVyqe4Mali
-	+yPCVse8dk=
-X-Received: by 2002:a05:7300:e78d:b0:2fc:9aa8:83da with SMTP id 5a478bee46e88-3011a369aa2mr3335097eec.29.1778721991110;
-        Wed, 13 May 2026 18:26:31 -0700 (PDT)
-Received: from ?IPV6:2600:1700:e321:62f0:da43:aeff:fecc:bfd5? ([2600:1700:e321:62f0:da43:aeff:fecc:bfd5])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-302973bcd0csm1239878eec.24.2026.05.13.18.26.29
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 13 May 2026 18:26:30 -0700 (PDT)
-Sender: Guenter Roeck <groeck7@gmail.com>
-Message-ID: <ab7c7a3a-332a-4316-93de-c6e9b5ca6c62@roeck-us.net>
-Date: Wed, 13 May 2026 18:26:29 -0700
+        d=1e100.net; s=20251104; t=1778725586; x=1779330386;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=gV5PMxG5gsDWEMyQs3N9vUcvd4wOJ+6kAS8IQe7BwV0=;
+        b=Qq9/j0ksN5cxOvbGOlOUFhZWyKIL3MLyacF6mH05zmkv/2Nj4Y1gaglQqrnmdip3Vo
+         TTEJPiwQ7SCiU1BRztOMCGY24Vbn0RNOdMk5m1JgSYJzYfE6+k1oKy7UMx5Q+6qifTue
+         p5gzImhK/oLniUblUsGkbVOp7iiByK7FK19yRbg7IXB8MN6pHAYq4z0dF6goLZ+Q3jue
+         3wTYSObBwIby4OGXAWtpYw4MTOAU+eSFLmgcGId2is6AHfqhQ6Ffc0nzSeGmKv5AQ2vK
+         AnGBrA2JJR7V5XOYD7yZw9kw+7wxUN+OhG57T6NbM71aw79SXRq6vIdjnCoKFagTNzKV
+         LR+A==
+X-Forwarded-Encrypted: i=1; AFNElJ9pH/3grvPZBTUh2yY1IhM3jZWigTmZbn34Jn/cSe6ZD2whKdeYBTEiNP5b73kQ3SFheWT2ERh+MWd2@vger.kernel.org
+X-Gm-Message-State: AOJu0YwwYWUNS9KT9VmyTKPg+w+Mb5q7CcNi2EbvpCxSCJ5+oM0F6DZ4
+	cZ7pB2QTvLRHgsOoHfJKmB4QneBXBREOigYbvfRqQcJa4/F22h0cEN3RLE6RUgnEFU1eVXhPwgO
+	v5IiV4agFT9IA/TyuOsU5VWdt4B2rsjU=
+X-Gm-Gg: Acq92OFjGHCNQAkZ3uGPoDVhaww4WT9jtY0wRkPHbuSmecQOFxTm0mffcXKhu1ZDtag
+	mQwJ5J1ZWydGpgVpzJ1PFXn3ZUTbNmWQFtek0GaVXdxNeJCVIBMfscL20iCn95y2JvTqSR3vjMY
+	ZLfH9twLCnod0SA5y4ZIyx4/QgMo7jzYTOGUZiK4Ab6EzocT6SwQVe5jbbujHI0I4yWkDYo4FiU
+	Qrz78wukEkUP4noIp9nZta+y/u4t7LettkzatMVKw19QkGjqLvMCBINdd1X+KIpOWl5+qQI9GAv
+	35Zl2n8=
+X-Received: by 2002:a05:7301:678d:b0:2ed:e12:3771 with SMTP id
+ 5a478bee46e88-3015631e31emr3268419eec.33.1778725585647; Wed, 13 May 2026
+ 19:26:25 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 2/2] scsi: mpt3sas: add hwmon support
-To: Louis Sautier <sautier.louis@gmail.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
- Sathya Prakash <sathya.prakash@broadcom.com>,
- Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
- Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>,
- Ranjan Kumar <ranjan.kumar@broadcom.com>
-Cc: Jonathan Corbet <corbet@lwn.net>, Shuah Khan <skhan@linuxfoundation.org>,
- MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
- linux-hwmon@vger.kernel.org, linux-doc@vger.kernel.org,
- linux-kernel@vger.kernel.org
-References: <20260512214703.655633-1-sautier.louis@gmail.com>
- <20260512214703.655633-3-sautier.louis@gmail.com>
- <934b475d-1d77-4670-af10-4f3f2ddad61d@roeck-us.net>
- <4e757864-c062-4467-83b4-1e0d08b68b2d@gmail.com>
-Content-Language: en-US
-From: Guenter Roeck <linux@roeck-us.net>
-Autocrypt: addr=linux@roeck-us.net; keydata=
- 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
- np3900V20aS7eD9K8GTU0TGC1pyz6IVJwIE=
-In-Reply-To: <4e757864-c062-4467-83b4-1e0d08b68b2d@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+References: <20260408073105.272255-1-tiala@microsoft.com> <SA1PR21MB6683C18151A933242F826BCDCE062@SA1PR21MB6683.namprd21.prod.outlook.com>
+In-Reply-To: <SA1PR21MB6683C18151A933242F826BCDCE062@SA1PR21MB6683.namprd21.prod.outlook.com>
+From: Tianyu Lan <ltykernel@gmail.com>
+Date: Thu, 14 May 2026 10:26:09 +0800
+X-Gm-Features: AVHnY4IQ9hMDl8gCjETyR0UTT1mOf5ZqHvIB_v00hQBTolu0WBptaTv6w-Q71Nk
+Message-ID: <CAMvTesAjq4qeociH-ct=YHkf+vNnAMwakFUTZdQE2ru4AweCjg@mail.gmail.com>
+Subject: Re: [EXTERNAL] [PATCH] x86/VMBus: Confidential VMBus for dynamic DMA transfers
+To: Long Li <longli@microsoft.com>
+Cc: KY Srinivasan <kys@microsoft.com>, Haiyang Zhang <haiyangz@microsoft.com>, 
+	"wei.liu@kernel.org" <wei.liu@kernel.org>, Dexuan Cui <DECUI@microsoft.com>, 
+	"James.Bottomley@HansenPartnership.com" <James.Bottomley@hansenpartnership.com>, 
+	"martin.petersen@oracle.com" <martin.petersen@oracle.com>, Allen Pais <apais@microsoft.com>, 
+	Tianyu Lan <Tianyu.Lan@microsoft.com>, 
+	"linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>, 
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, 
+	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "vdso@hexbites.dev" <vdso@hexbites.dev>, 
+	"mhklinux@outlook.com" <mhklinux@outlook.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On 5/13/26 18:11, Louis Sautier wrote:
-> On 13/05/2026 05:57, Guenter Roeck wrote:
->>>    Documentation/hwmon/index.rst        |   1 +
->>>    Documentation/hwmon/mpt3sas.rst      |  57 ++++++++
->>
->> This is not appropriate. The description is wrong and misleading.
->> mpt3sas is _not_ a hwmon driver. It is a chip access driver which
->> happens to support hardware monitoring.
->>
->> If this is part of the mpt3sas code and not a separate driver,
->> please keep it there.
->>
->> Thanks,
->> Guenter
-> 
-> Hi,
-> 
-> Sorry about that, I had assumed this directory was also meant to contain
-> documentation for chip drivers that support hardware monitoring.
-> 
+On Thu, May 14, 2026 at 2:30=E2=80=AFAM Long Li <longli@microsoft.com> wrot=
+e:
+>
+> > Hyper-V provides Confidential VMBus to communicate between device model
+> > and device guest driver via encrypted/private memory in Confidential VM=
+. The
+> > device model is in OpenHCL
+> > (https://nam06.safelinks.protection.outlook.com/?url=3Dhttps%3A%2F%2Fop=
+envm
+> > m.dev%2Fguide%2Fuser_guide%2Fopenhcl.html&data=3D05%7C02%7Clongli%40mi
+> > crosoft.com%7C0ccfea7cda8e4500ae9808de9540d01e%7C72f988bf86f141af91a
+> > b2d7cd011db47%7C1%7C0%7C639112302777934798%7CUnknown%7CTWFpbG
+> > Zsb3d8eyJFbXB0eU1hcGkiOnRydWUsIlYiOiIwLjAuMDAwMCIsIlAiOiJXaW4zMiIsIk
+> > FOIjoiTWFpbCIsIldUIjoyfQ%3D%3D%7C0%7C%7C%7C&sdata=3D5Uc%2FM4ZVgJT1
+> > NAq08cIlNtfF5oW4n%2FTj%2Bqg3YqBUeZg%3D&reserved=3D0) that plays the
+> > paravisor role.
+> >
+> > For a VMBus device, there are two communication methods to talk with
+> > Host/Hypervisor. 1) VMBUS Ring buffer 2) Dynamic DMA transfer.
+> >
+> > The Confidential VMBus Ring buffer has been upstreamed by Roman Kisel(c=
+ommit
+> > 6802d8af47d1).
+> >
+> > The dynamic DMA transition of VMBus device normally goes through DMA co=
+re
+> > and it uses SWIOTLB as bounce buffer in a CoCo VM.
+> >
+> > The Confidential VMBus device can do DMA directly to private/encrypted
+> > memory. Because the swiotlb is decrypted memory, the DMA transfer must =
+not
+> > be bounced through the swiotlb, so as to preserve confidentiality. This=
+ is different
+> > from the default for Linux CoCo VMs, so not use DMA(SWIOTLB) API in VMB=
+us
+> > driver when confidential dynamic DMA transfers capability is present.
+> >
+> > Signed-off-by: Tianyu Lan <tiala@microsoft.com>
+> > ---
+> >  drivers/scsi/storvsc_drv.c | 28 +++++++++++++++++++++-------
+> >  include/linux/hyperv.h     |  1 +
+> >  2 files changed, 22 insertions(+), 7 deletions(-)
+> >
+> > diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c in=
+dex
+> > ae1abab97835..79b7611518b7 100644
+> > --- a/drivers/scsi/storvsc_drv.c
+> > +++ b/drivers/scsi/storvsc_drv.c
+> > @@ -1316,7 +1316,8 @@ static void storvsc_on_channel_callback(void *con=
+text)
+> >                                       continue;
+> >                               }
+> >                               request =3D (struct storvsc_cmd_request
+> > *)scsi_cmd_priv(scmnd);
+> > -                             scsi_dma_unmap(scmnd);
+> > +                             if (!device->co_external_memory)
+> > +                                     scsi_dma_unmap(scmnd);
+> >                       }
+> >
+> >                       storvsc_on_receive(stor_device, packet, request);=
+ @@ -
+> > 1339,6 +1340,8 @@ static int storvsc_connect_to_vsp(struct hv_device *d=
+evice,
+> > u32 ring_size,
+> >
+> >       device->channel->max_pkt_size =3D STORVSC_MAX_PKT_SIZE;
+> >       device->channel->next_request_id_callback =3D storvsc_next_reques=
+t_id;
+> > +     if (device->channel->co_external_memory)
+> > +             device->co_external_memory =3D true;
+> >
+> >       ret =3D vmbus_open(device->channel,
+> >                        ring_size,
+> > @@ -1805,7 +1808,7 @@ static enum scsi_qc_status
+> > storvsc_queuecommand(struct Scsi_Host *host,
+> >               unsigned long offset_in_hvpg =3D offset_in_hvpage(sgl->of=
+fset);
+> >               unsigned int hvpg_count =3D HVPFN_UP(offset_in_hvpg + len=
+gth);
+> >               struct scatterlist *sg;
+> > -             unsigned long hvpfn, hvpfns_to_add;
+> > +             unsigned long hvpfn, hvpfns_to_add, hvpgoff;
+> >               int j, i =3D 0, sg_count;
+> >
+> >               payload_sz =3D (hvpg_count * sizeof(u64) + @@ -1821,7 +18=
+24,11
+> > @@ static enum scsi_qc_status storvsc_queuecommand(struct Scsi_Host *ho=
+st,
+> >               payload->range.len =3D length;
+> >               payload->range.offset =3D offset_in_hvpg;
+> >
+> > -             sg_count =3D scsi_dma_map(scmnd);
+> > +             if (dev->co_external_memory)
+> > +                     sg_count =3D scsi_sg_count(scmnd);
+>
+> scsi_sg_count() returns unsigned int, sg_count can't be negative. The che=
+ck for sg_count < 0 below becomes dead code. Add a comment to say this is e=
+xpected behavior.
+>
 
-My recommendation is to implement drivers such as this one as auxiliary drivers.
-Most people don't want to do that. I accept that, but then I don't want to carry
-the documentation either.
+Hi Long:
+     Thanks for your review. Nice catch and will update.
 
-Thanks,
-Guenter
+> > +             else
+> > +                     sg_count =3D scsi_dma_map(scmnd);
+> > +
+> >               if (sg_count < 0) {
+> >                       ret =3D SCSI_MLQUEUE_DEVICE_BUSY;
+> >                       goto err_free_payload;
+> > @@ -1836,9 +1843,16 @@ static enum scsi_qc_status
+> > storvsc_queuecommand(struct Scsi_Host *host,
+> >                        * Such offsets are handled even on other than th=
+e first
+> >                        * sgl entry, provided they are a multiple of PAG=
+E_SIZE.
+> >                        */
+> > -                     hvpfn =3D HVPFN_DOWN(sg_dma_address(sg));
+> > -                     hvpfns_to_add =3D HVPFN_UP(sg_dma_address(sg) +
+> > -                                              sg_dma_len(sg)) - hvpfn;
+> > +                     if (dev->co_external_memory) {
+> > +                             hvpgoff =3D HVPFN_DOWN(sg->offset);
+> > +                             hvpfn =3D page_to_hvpfn(sg_page(sg)) + hv=
+pgoff;
+> > +                             hvpfns_to_add =3D HVPFN_UP(sg->offset
+> > + sg->length) -
+> > +                                                     hvpgoff;
+> > +                     } else {
+> > +                             hvpfn =3D HVPFN_DOWN(sg_dma_address(sg));
+> > +                             hvpfns_to_add =3D
+> > HVPFN_UP(sg_dma_address(sg) +
+> > +                                                      sg_dma_len(sg)) =
+-
+> > hvpfn;
+> > +                     }
+> >
+> >                       /*
+> >                        * Fill the next portion of the PFN array with @@=
+ -1860,7
+> > +1874,7 @@ static enum scsi_qc_status storvsc_queuecommand(struct
+> > Scsi_Host *host,
+> >       ret =3D storvsc_do_io(dev, cmd_request, smp_processor_id());
+> >       migrate_enable();
+> >
+> > -     if (ret)
+> > +     if (ret && (!dev->co_external_memory))
+> >               scsi_dma_unmap(scmnd);
+> >
+> >       if (ret =3D=3D -EAGAIN) {
+> > diff --git a/include/linux/hyperv.h b/include/linux/hyperv.h index
+> > dfc516c1c719..bcb143766d6e 100644
+> > --- a/include/linux/hyperv.h
+> > +++ b/include/linux/hyperv.h
+> > @@ -1285,6 +1285,7 @@ struct hv_device {
+> >
+> >       /* place holder to keep track of the dir for hv device in debugfs=
+ */
+> >       struct dentry *debug_dir;
+> > +     bool co_external_memory;
+>
+> You don't need to introduce co_external_memory in hv_device, vmbus_channe=
+l already has co_external_memory. Is it possible that you can check the vmb=
+us_channel->co_external_memory directly? If you can remove this,  you can r=
+eword this patch to " scsi: storvsc: Confidential VMBus for dynamic DMA tra=
+nsfers".
+>
 
+Good idea. Will update in the next version.
+
+--=20
+Thanks
+Tianyu Lan
