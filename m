@@ -1,33 +1,66 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-lj1-f180.google.com (mail-lj1-f180.google.com [209.85.208.180])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF1113CEB89
-	for <linux-scsi@vger.kernel.org>; Wed, 13 May 2026 23:55:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A01F030B51F
+	for <linux-scsi@vger.kernel.org>; Thu, 14 May 2026 01:11:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.180
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778716557; cv=none; b=rSzXwJkM2FJuVDB6pKSKInvUYQ2Iuh2VHuzBEDgfWpIzUeVdmITF16WdpVZ9W2yUw+fEAKWJ7uRKZvNgzGrzKmrVyC+FpuGxC2/7nm3O3BujMSLBS5kft3XeP/QT0ZF/BDlGCHrh1SW0vQWaIizjLWQSJfkTeuo60RBCyDyxdE4=
+	t=1778721092; cv=none; b=Aw6HCh4NPZBlzXFunaQd0o3PQNtLM6ZCJLRkks1ayEYUiWwPFLad6RXLt+88UG5MO9PL+A1qAJ76hXk/caUrcKSMN9R+AUf5hRyAQEjuznZZprxiXre1M3Is0rxJmtkUmx3ereS4yuZ8XkiL3kMS/jCJzO4JSOuaM6gNGXdqxIU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778716557; c=relaxed/simple;
-	bh=z59uve8YvjCVToQlMNoOfG6IMTf2JZyY74uvxepW2H8=;
+	s=arc-20240116; t=1778721092; c=relaxed/simple;
+	bh=ztkBsso23UpsXKr+O3LFaui6uvG8T0h+LZPrqrbSnbA=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=l/ztTgHaTV/t4HiC/LFSdvepXn5ALJLBrXV0/c+eZ68jRy30gy8QFiraZl75F1qKrVKS2mpuQozMHzX1HAw4t6xuMLuu8QwBjfZKsRLij1soqALlDRx6uRIGZRQWIKYo6i52ZNrbhhUvYW068xb9oZ/pptFJyoPFwYK+AZgvGaw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=L2CjcKf4; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=EzGjPWhAdVK5jW+KsWyX5Uaa8+hhH5mq8IBM7SjrSlhNM/AxEA0W7D8LmAXKLfZyngYZqTTFQeTLC/HVBcbpGTzSpLgOFv6lxYntcgPriGH3EHVG9VTTxwpbMdrWnQUJOlvRHWLyxDru5+DfExTOPmjfj7KOVNtbw3pZJw9sy48=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Gnjmvanl; arc=none smtp.client-ip=209.85.208.180
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="L2CjcKf4"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CF472C19425;
-	Wed, 13 May 2026 23:55:55 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778716556;
-	bh=z59uve8YvjCVToQlMNoOfG6IMTf2JZyY74uvxepW2H8=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=L2CjcKf4Jf1W//wcyjIOpUuuyKT4B59hB9N7oGd/JsdQl416909j7pLzzKEyvDSV9
-	 hCb1cBC36SI0dToO7nxG56Zck3IbiXlsZrkG9XF9yDFp+HhhqCqSh+sIaaI03oh2yj
-	 M3xzc0NWrQgr04r4W9JZVvsuUtS5BxpbmzCA5Fm6dsUc7rL4Fzsl54DOZLtU275MaA
-	 IpDm0uqx18uHcS+oKfSGjwCKhtqAza8tLcWvSDKkoyIVTrT6uHmhXWI+6MNiksjNVz
-	 eJ+TodbXIhH0phmWesd9irFiVxdqrKTHvnAw3qHZwLxq+iVU+WK0j/II6cFB/YyNsD
-	 q8g2jpG8H8m8g==
-Message-ID: <787e03b1-2765-4f31-ab8b-bfbb8bdc7863@kernel.org>
-Date: Thu, 14 May 2026 08:55:46 +0900
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Gnjmvanl"
+Received: by mail-lj1-f180.google.com with SMTP id 38308e7fff4ca-38e7d983f91so71799261fa.2
+        for <linux-scsi@vger.kernel.org>; Wed, 13 May 2026 18:11:30 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1778721089; x=1779325889; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=gPLC8u0hvKKYM/8QgR5AdV8zrX0b253adiqGeSRKT8I=;
+        b=Gnjmvanl+YFBDEZ2g4JNRLlCz3BMG+T8JlQ7GmIJctJCtbuQ45NI0Xfp7m2iOO4Cxv
+         6kdJ2/6xFJR6//jlgwnESZyknd1mcU3OTUTh3Lnl9F3ajuHcpI5U7LMgTS9Hh++pQj9Z
+         OW5zD1RE+xzKCbtlxAZBowidVmH5RZDJHZZL9SLQGpuhK9lKpHNt3U+n5knUOztlnopY
+         FqI1XYqLteGyN1ImwhFe8ddsVfml0TVY9A51UsbjTkdv8bqldYWzLouf/LI840H16hAJ
+         aTot2ioSJTXTdZ7xWYHouBVS6EzyUShg5lal2HMxVLP0iT9UGlI6NVFbydB4V9zSbySd
+         D3Rg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1778721089; x=1779325889;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=gPLC8u0hvKKYM/8QgR5AdV8zrX0b253adiqGeSRKT8I=;
+        b=Aw98Yz5csVMN2yVNRY5uB/PJ4TU14UfqRPWEvT8eMiXxKT/9SpuG/azxf7A4VGME+m
+         1utTRxr1S71YTnZflMSNSh5RDzcCBQd7mXitxsJQ7thbk4Spmgb7gB5WpRoSSdhoX15O
+         H+h7JzUhQyRVKAXQ07lr2kHyLP0/rg45C6PoKJeMR7lm8dEP+d4xywhCklDRPXOWInAA
+         IcvlaM0w/fTHjtVMWtTLo1u3NfT20iHh47abCS+mhPSFDtZuCQnn4vxfWxYUsWsTM70u
+         ZP4RV7a2LA7kCxhEoyLpGZk3Wh0bpLl2MaSDTH4RcHzrPtkUSVXWQx1yK80s763k702h
+         Zn+g==
+X-Forwarded-Encrypted: i=1; AFNElJ8sS+rbSM0yFDYbVDkfa9d//fgvJUhM+RG5XPmCIrj3v04R5e1+5WoxTU7D7eH5AGtQ7UESgOwpQd2L@vger.kernel.org
+X-Gm-Message-State: AOJu0YxuWRz8yNp7deHuy1WfnP9+zHW91wmUpCAqX6C4IQCEvdUXYkyN
+	/7YWd6noRWkfWJquJPMljQlgF/kXEcLi+KVJmItJGR4cH0CT/K5c7Ra5
+X-Gm-Gg: Acq92OER33JRyYtI9Z5blKT5T3D9MP2XMBQlzAeD1XPo4Kpj1w1Sm0dZrTkkP1FAEKa
+	DFUezSuy6u4+rMxJHj0w3j8YrSeBJxOkuSk6YXQKPKG3KbWR13BRvDSoU4cT7TTIQdDZFIXwEbC
+	FVv899fNizsuXZZSqrs8G6oThZQ976vMw+DIs1TJPxSsHPjRcV9uCABErUHmY1l029uTxsE29PG
+	PtkXgGLtgRIkpbfWtW+UGYIvIYk2Xqk9bTHnpIdzsV/kOnsvpxYhPXYWj4DMWJ7GLhL54TNAgyr
+	ay2DKH608626pmibmEuKWsX+TNZwSKcBBZ3Z9+U2Z8iGxI3Po7XrpcqW92veip+I2x68UH277OE
+	hqcAlHGoA/t6XVMJ6ei0OFHl6FEExEL3KQCT6115wAi8r+rqauh3FbGKfPoBpnfNfzzWG1BEMIW
+	ZaIV3KcGzQOZhuOecqueC21YeSDctyXqQ/YJ8MgQ==
+X-Received: by 2002:a05:651c:198e:b0:38d:fca1:4a6c with SMTP id 38308e7fff4ca-3944e9ceea9mr18879511fa.17.1778721088536;
+        Wed, 13 May 2026 18:11:28 -0700 (PDT)
+Received: from localhost ([2001:863:36e:5104:a331:7451:88e0:34ca])
+        by smtp.gmail.com with ESMTPSA id 38308e7fff4ca-3945cab2976sm2330881fa.20.2026.05.13.18.11.25
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 13 May 2026 18:11:28 -0700 (PDT)
+Message-ID: <4e757864-c062-4467-83b4-1e0d08b68b2d@gmail.com>
+Date: Thu, 14 May 2026 03:11:24 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,43 +68,46 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 2/2] scsi: core: Convert inquiry information
-To: Guenter Roeck <linux@roeck-us.net>, Bart Van Assche <bvanassche@acm.org>,
- "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, Brian Bunker <brian@purestorage.com>,
- Hannes Reinecke <hare@suse.de>,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-References: <20260512194634.58145-1-bvanassche@acm.org>
- <20260512194634.58145-3-bvanassche@acm.org>
- <292bb057-f10e-4af1-b0fe-ca83d4f49d06@kernel.org>
- <8ca0f49a-ae11-452c-987d-d90cce8376dd@acm.org>
- <8f801fd4-6a52-438f-8c99-1cfa28b058df@roeck-us.net>
-Content-Language: en-US
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <8f801fd4-6a52-438f-8c99-1cfa28b058df@roeck-us.net>
+Subject: Re: [PATCH 2/2] scsi: mpt3sas: add hwmon support
+To: Guenter Roeck <linux@roeck-us.net>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ Sathya Prakash <sathya.prakash@broadcom.com>,
+ Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+ Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>,
+ Ranjan Kumar <ranjan.kumar@broadcom.com>
+Cc: Jonathan Corbet <corbet@lwn.net>, Shuah Khan <skhan@linuxfoundation.org>,
+ MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
+ linux-hwmon@vger.kernel.org, linux-doc@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+References: <20260512214703.655633-1-sautier.louis@gmail.com>
+ <20260512214703.655633-3-sautier.louis@gmail.com>
+ <934b475d-1d77-4670-af10-4f3f2ddad61d@roeck-us.net>
+Content-Language: en-US-large
+From: Louis Sautier <sautier.louis@gmail.com>
+In-Reply-To: <934b475d-1d77-4670-af10-4f3f2ddad61d@roeck-us.net>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On 2026/05/14 3:40, Guenter Roeck wrote:
-> On 5/13/26 10:26, Bart Van Assche wrote:
->> On 5/13/26 1:03 AM, Damien Le Moal wrote:
->>> On 5/13/26 04:46, Bart Van Assche wrote:
->>>> Currently the vendor, model, and revision members of struct scsi_device
->>>> are pointers to fixed-length strings that are not NUL-terminated.
->>>
->>> s/NUL/NULL
->> Really? NUL is the correct spelling according to
->> https://en.wikipedia.org/wiki/ASCII and also according to any other
->> ASCII table I have ever seen.
->>
+On 13/05/2026 05:57, Guenter Roeck wrote:
+>>   Documentation/hwmon/index.rst        |   1 +
+>>   Documentation/hwmon/mpt3sas.rst      |  57 ++++++++
 > 
-> Maybe the confusion is NULL pointer (or NULL-terminated array)
-> vs. NUL-terminated string ?
+> This is not appropriate. The description is wrong and misleading.
+> mpt3sas is _not_ a hwmon driver. It is a chip access driver which
+> happens to support hardware monitoring.
+> 
+> If this is part of the mpt3sas code and not a separate driver,
+> please keep it there.
+> 
+> Thanks,
+> Guenter
 
-Ah, yes, indeed. Please ignore my comment.
+Hi,
 
+Sorry about that, I had assumed this directory was also meant to contain
+documentation for chip drivers that support hardware monitoring.
 
--- 
-Damien Le Moal
-Western Digital Research
+I will remove the documentation from v2 since there is currently no existing
+mpt3sas page under Documentation/scsi/.
+
