@@ -1,160 +1,231 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 79F491E515
-	for <linux-scsi@vger.kernel.org>; Thu, 14 May 2026 07:58:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2333D3F4127
+	for <linux-scsi@vger.kernel.org>; Thu, 14 May 2026 09:01:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.61.82.184
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778745492; cv=none; b=sw/030MLkmSFh7YFh5E500pq917DfqqGn/B6ETV21g+K2H/WIB2Qe+mWjPQkQZAYkUTL+vYA5JDpNmPX72ZgzZvdgNmLRAgeObxYTLSUHgb1JFkriFXfV4BL6CWGBJG6H/NCx1zRjUuyXJBq5IGrP8Y/EC+O0JN//Ur23bNHNJU=
+	t=1778749295; cv=none; b=VuYZWgncczl1x0OP6Um++7aiXgib0UDDENBNWiFJZqDU+qTiQ3WbUQMpX5015Wz2NuEbbFD8ejFMqYOtLy2jBdvBVwh6w6uEgjZmPeFzTuC763Bfk9GrddwqpgSgBPCBjsp5jNSeHI2Ou29s0MJYpqHtSnzJGYp9xpMIdi86vCA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778745492; c=relaxed/simple;
-	bh=S91ZsN8M/14W1Cf0Mz2i0BwevkgWsYnSSV7xvLUS6Q8=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=hhT+0J5N/wKlxYb76U1osmu5cuj1e8FP/Y9fImkb2qx8unH3F/hGWUGDKggBo7kEDfcuTfgbDblRgZCYobz1RjW8cX4cS3o/sslC489500BD4MxtVR9JzQLQ5OW+BbEUKLII26pvNlnzYjYjgFYI2A0E6kmPGIjm8383lwNgArA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=cdDBMhKR; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=hvbY4ZSS; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1778749295; c=relaxed/simple;
+	bh=mw+if1/wZfhQR+fsSe6lZatuQbGUmbVHH67Ng0SVDCo=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=Ubtr5E6RW8l3Q1OxphZ9rkvVLJQlEEoYiGY6zKawelb3Zcr/eJFYhLFOOOEhAshLIs4DfsUzjhmXxtLZ9KvzTjSbInk6wYl3WEHjUtEaphjxzeBh2ZGtl6DzqXaFibtYf96V9ZP2v2oIvzYEeslotE//52OHVNAoG6B6cO5OsqY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=g95NK8WF; arc=none smtp.client-ip=210.61.82.184
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="cdDBMhKR";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="hvbY4ZSS"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1778745489;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=pCTUHzrRIWVUxvIV/1vG6PkzmjwBpL1hYToIFGA0mv0=;
-	b=cdDBMhKRSmwHlxSQaY8+cM42MW3Y3+98BZBvmUpTJm6YdCXN82ElvXPZ9njSgvlmE5nB9e
-	JkPvNR6OM9DFqBuAf2IllCDQnWuLUyTxEpl/4GFKvLVLdFwrNs8jy7kdyuua9Bj+/IydeO
-	FEbALZ0+LPeP1397umfdQBE3z/jSMUQ=
-Received: from mail-pl1-f200.google.com (mail-pl1-f200.google.com
- [209.85.214.200]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-36-6NZVW4hXO7S7RyP_FWHSMw-1; Thu, 14 May 2026 03:58:07 -0400
-X-MC-Unique: 6NZVW4hXO7S7RyP_FWHSMw-1
-X-Mimecast-MFC-AGG-ID: 6NZVW4hXO7S7RyP_FWHSMw_1778745486
-Received: by mail-pl1-f200.google.com with SMTP id d9443c01a7336-2bd04e4fe3dso53781505ad.3
-        for <linux-scsi@vger.kernel.org>; Thu, 14 May 2026 00:58:07 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1778745486; x=1779350286; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-disposition:mime-version
-         :message-id:subject:cc:to:from:date:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=pCTUHzrRIWVUxvIV/1vG6PkzmjwBpL1hYToIFGA0mv0=;
-        b=hvbY4ZSSd9LrttTWWm5ArtKBzYz0967mwB323/uM7grl6HRwTAkvCJKoyLoJCmWk0Y
-         6qb862xu6mcMaupXgMrX9bv9z8lD3NTuC2v9afVxo9el4sSSqYK/mw7dr1NYJeBRLnGF
-         AfYR3ozlq9BaSO/wyjv15rNMSfnK5zl7Tx7dckYjCfcQF7jlSvncCDHds+SnHUcsHrZ3
-         bmKYOFX/cMn9YR/AAJQ/gsgpNT2NKBLoiJRor6rwKr9E6WNG/Wc2LM+CN+MBIRGb5TrD
-         KkFmj1dfSQGyM7qvGJ50lQOvTG5XIb/EHrF25Sc0JAzKzfWAxI8WzLh8PkagdCAHqaT4
-         nvNw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1778745486; x=1779350286;
-        h=content-transfer-encoding:content-disposition:mime-version
-         :message-id:subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=pCTUHzrRIWVUxvIV/1vG6PkzmjwBpL1hYToIFGA0mv0=;
-        b=KSbiS+LQxvTQkQgzEaUdwyPw976JQC3z+EXbIOOLa+V0U49yU4Y6ticKqlSy8rQiGt
-         O0+vhKw4u1XwO1EBu+fo4Z9kHGqxwBR9b5CTQGK02OlqlgNF/D1ThqL40+H/Y3Qtt4W0
-         PkvuvXx0NCJGUskW+KsXqOgI9daT+quTmaAVJ8nJojwIVtd8ciPwlYDae2L0L6RqF31l
-         mdGvb3cj7dgk8r+KZ997OT2EIgXhuh+tpISAR4kS1lK6cgPXK51UmYrm8he9yfisJ2er
-         akemKVfRZ/0Yxr0mbYDz5oMmhrjXs71ehyZIVUnpMP82Kj/hW8DVqQn0ZRSuEo0Mmcxr
-         CS0A==
-X-Gm-Message-State: AOJu0YxUwtQZeg40PK6+i0fnrv4sdE7l0Ikv06x+frqLohqM1hDL/Lqk
-	eAl3eFvBONObRDTClLsRQE19QNggXZn21oxjRapgIlKdZnrWIDUh6Zu0v0X/X9MRjzkCpZFN7Ga
-	ku8FMnCkyk35nElj9dY7rzH38Szx3n13MHjO/A8xxzlygdmhSFeLjyMh4d2yT5N0U3qhWSUvSHi
-	dfGdycb5MQFL39QJuEnJVx5c6dO02DScFf+bPclUogYIN91A==
-X-Gm-Gg: Acq92OHBEgZBv9ZLt/y1zqW8P30/qyKcYAVd8goTnilCEm87s2BDtdS5ixR2qIywAU7
-	pDpaGYJItDPI1nZT91Rvjy8/hL4ctq7qcizCCpTIYXeWyeD97wBzY92HPXbsgUoWNdT1rclSGYp
-	Hcfc/pxvA+BvUo5sDw0gI0uZ4ghvHe3vKtONpkMZs86t+5RgYNI1Vqqel3ZMZJU1LDhMYi8V0Bk
-	rEK58sb1afq+9j81sGNDlaY6D79Ayzu3raaOJgOvRIw1FfBK5v35snz8lCK4Vvf3O6KZXorKF7S
-	mHDWNo/iQ2+RvmFFQ4LZiyCOAXGoloO6UkTc99m8u29ctytnOI1G35hts3Au37SxazENL8Aw3pF
-	fBZVgoRWQ5Y/dWNIAeMAp4lQPE0lx16Wy5Cqzltf2VhVd2sTc8X4=
-X-Received: by 2002:a17:903:120f:b0:2b2:eaec:c810 with SMTP id d9443c01a7336-2bd2f4f76c1mr66376635ad.8.1778745486328;
-        Thu, 14 May 2026 00:58:06 -0700 (PDT)
-X-Received: by 2002:a17:903:120f:b0:2b2:eaec:c810 with SMTP id d9443c01a7336-2bd2f4f76c1mr66376425ad.8.1778745485753;
-        Thu, 14 May 2026 00:58:05 -0700 (PDT)
-Received: from machine1 ([2401:4900:88fb:5ab3:dad7:3a92:7bfe:7bf5])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2bd5d11d659sm14978635ad.73.2026.05.14.00.58.01
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 14 May 2026 00:58:05 -0700 (PDT)
-Date: Thu, 14 May 2026 13:27:54 +0530
-From: "Milan P. Gandhi" <mgandhi@redhat.com>
-To: linux-scsi@vger.kernel.org,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	James.Bottomley@hansenpartnership.com
-Cc: Kashyap Desai <kashyap.desai@broadcom.com>,
-	Sumit Saxena <sumit.saxena@broadcom.com>,
-	Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
-	Tomas Henzl <thenzl@redhat.com>
-Subject: [PATCH] scsi: megaraid_sas: Fix NULL pointer dereference on firmware
- duplicate completion
-Message-ID: <agWAgtk6rtHqNWb5@machine1>
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="g95NK8WF"
+X-UUID: 7c4868044f7311f1a3561939bc42ff46-20260514
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+	h=Content-Type:Content-Transfer-Encoding:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=1HD9rxwTY1qIhGlY5kodoQ8SagKtKiWqYuGlUGSzJJ0=;
+	b=g95NK8WFRsikCJDh70BgJjTa/fsbNku+jQqvLA2Deg9MXs1Tyd7oDHQpsXlg78n3C7Ry2hTDkhMiuWEQI+GKmUJ37h55w09o7zDL/P/DEvAqWc4isviL4CtGnIVMPPrgF7J26A/PoAQ5HOHrLj7jJ9izmMOnCFUwZl0022vew64=;
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.3.14,REQID:5c052823-142d-4e93-af63-7b2eb8e78d6a,IP:0,U
+	RL:0,TC:0,Content:0,EDM:-20,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTIO
+	N:release,TS:-20
+X-CID-META: VersionHash:9091e75,CLOUDID:80c416f6-8c44-46d7-a1ca-a9bdc4d4a626,B
+	ulkID:nil,BulkQuantity:0,Recheck:0,SF:102|123|836|865|888|898,TC:-5,Conten
+	t:0|15|50,EDM:1,IP:nil,URL:0,File:130,RT:0,Bulk:nil,QS:nil,BEC:-1,COL:0,OS
+	I:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-BVR: 2,SSN|SDN
+X-CID-BAS: 2,SSN|SDN,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR
+X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
+X-UUID: 7c4868044f7311f1a3561939bc42ff46-20260514
+Received: from mtkmbs09n2.mediatek.inc [(172.21.101.94)] by mailgw02.mediatek.com
+	(envelope-from <peter.wang@mediatek.com>)
+	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+	with ESMTP id 293015713; Thu, 14 May 2026 17:01:25 +0800
+Received: from mtkmbs13n2.mediatek.inc (172.21.101.108) by
+ MTKMBS09N2.mediatek.inc (172.21.101.94) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.29; Thu, 14 May 2026 17:01:23 +0800
+Received: from mtksitap99.mediatek.inc (10.233.130.16) by
+ mtkmbs13n2.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
+ 15.2.2562.29 via Frontend Transport; Thu, 14 May 2026 17:01:23 +0800
+From: <peter.wang@mediatek.com>
+To: <linux-scsi@vger.kernel.org>, <martin.petersen@oracle.com>,
+	<avri.altman@sandisk.com>, <alim.akhtar@samsung.com>, <jejb@linux.ibm.com>
+CC: <wsd_upstream@mediatek.com>, <linux-mediatek@lists.infradead.org>,
+	<peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
+	<alice.chao@mediatek.com>, <cc.chou@mediatek.com>,
+	<chaotian.jing@mediatek.com>, <tun-yu.yu@mediatek.com>,
+	<eddie.huang@mediatek.com>, <naomi.chu@mediatek.com>, <ed.tsai@mediatek.com>,
+	<bvanassche@acm.org>, <quic_cang@guicinc.com>, <quic_asutoshd@guicinc.com>,
+	<light.hsieh@mediatek.com>
+Subject: [PATCH v1] ufs: core: decouple CQE processing from spinlock critical section
+Date: Thu, 14 May 2026 16:26:39 +0800
+Message-ID: <20260514082906.58593-1-peter.wang@mediatek.com>
+X-Mailer: git-send-email 2.45.2
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-MTK: N
 
-Add NULL check for scmd_local in the MPI2_FUNCTION_SCSI_IO_REQUEST case
-to handle firmware duplicate/stale completions.
+From: Peter Wang <peter.wang@mediatek.com>
 
-When firmware sends a duplicate completion for a command that was already
-processed and returned to the pool, the driver accesses NULL scmd pointer
-causing a crash.
+Currently, ufshcd_mcq_process_cqe() is called while holding the CQ
+spinlock, which can lead to unnecessary lock contention since CQE
+processing may involve time-consuming operations like completing I/O
+requests and invoking callbacks.
 
-Timeline of the bug:
-1. Command completes normally, megasas_return_cmd_fusion() called
-2. This sets cmd->scmd = NULL and clears io_request with
-   memset(..., 0, ...)
-3. Firmware sends duplicate/stale completion for same SMID (firmware bug)
-4. Driver processes reply descriptor again
-5. Cleared io_request has Function = 0 (MPI2_FUNCTION_SCSI_IO_REQUEST)
-6. Switch statement matches SCSI_IO_REQUEST case by accident
-7. Accesses megasas_priv(NULL scmd)->status → crash at offset 0x228
+Refactor the CQE processing flow to separate the lock-protected queue
+head/tail slot updates from the actual CQE processing:
 
-The offset 0x228 = sizeof(struct scsi_cmnd) 0x220 + offsetof(status) 0x8.
+1. Add a new 'cqe_last_addr' field to 'ufs_hw_queue' to cache the
+   address of the last CQE entry, precomputed during memory allocation
+   in ufshcd_mcq_memory_alloc(). This avoids repeated recalculation
+   during the hot path.
 
-This issue was observed on PERC H330 Mini running firmware 25.5.9.0001
-after 3+ days of heavy I/O load.
+2. Introduce ufshcd_mcq_inc_cqe_addr() helper in ufshcd-priv.h to
+   increment a CQE pointer with wraparound, using 'cqe_last_addr' for
+   boundary checking.
 
-Crash signature:
-  BUG: unable to handle kernel NULL pointer dereference at 0x228
-  RIP: complete_cmd_fusion+0x428
-  Function: megasas_priv(cmd_fusion->scmd)->status
+3. Refactor ufshcd_mcq_process_cqe() to accept a 'struct cq_entry *'
+   directly instead of deriving it from the hardware queue, decoupling
+   it from queue state.
 
-Add defensive check to skip processing when scmd_local is NULL. This
-handles duplicate completions from firmware and prevents accessing
-freed command structures. The check protects all scmd_local uses in
-both the SCSI_IO path and the fallthrough LDIO path.
+4. In both ufshcd_mcq_compl_all_cqes_lock() and
+   ufshcd_mcq_poll_cqe_lock(), snapshot the starting CQE pointer before
+   advancing the head slot under the spinlock, then process the collected
+   CQEs after releasing the lock using the new helper.
 
-Signed-off-by: Milan P. Gandhi <mgandhi@redhat.com>
+This reduces the time spent holding the CQ spinlock to only the
+minimal queue slot management operations, improving concurrency and
+reducing latency under heavy I/O workloads.
+
+Signed-off-by: Peter Wang <peter.wang@mediatek.com>
 ---
- drivers/scsi/megaraid/megaraid_sas_fusion.c | 9 +++++++++
- 1 file changed, 9 insertions(+)
+ drivers/ufs/core/ufs-mcq.c     | 23 ++++++++++++++++++-----
+ drivers/ufs/core/ufshcd-priv.h | 20 ++++++++++++++++++++
+ include/ufs/ufshcd.h           |  1 +
+ 3 files changed, 39 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-index 2699e4e09b5b..056cbe50e19e 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-@@ -3612,6 +3612,15 @@ complete_cmd_fusion(struct megasas_instance *instance, u32 MSIxIndex,
- 			complete(&cmd_fusion->done);
- 			break;
- 		case MPI2_FUNCTION_SCSI_IO_REQUEST:  /*Fast Path IO.*/
-+			/*
-+			 * Firmware can send stale/duplicate completions for
-+			 * commands already returned to the pool. scmd_local
-+			 * would be NULL for such cases. Skip processing to
-+			 * avoid NULL pointer access.
-+			 */
-+			if (!scmd_local)
-+				break;
+diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
+index c1b1d67a1ddc..74a6595f9bda 100644
+--- a/drivers/ufs/core/ufs-mcq.c
++++ b/drivers/ufs/core/ufs-mcq.c
+@@ -248,6 +248,7 @@ int ufshcd_mcq_memory_alloc(struct ufs_hba *hba)
+ 			dev_err(hba->dev, "CQE allocation failed\n");
+ 			return -ENOMEM;
+ 		}
++		hwq->cqe_last_addr = hwq->cqe_base_addr + hwq->max_entries - 1;
+ 	}
+ 
+ 	return 0;
+@@ -307,10 +308,8 @@ static int ufshcd_mcq_get_tag(struct ufs_hba *hba, struct cq_entry *cqe)
+ }
+ 
+ static void ufshcd_mcq_process_cqe(struct ufs_hba *hba,
+-				   struct ufs_hw_queue *hwq)
++			           struct cq_entry *cqe)
+ {
+-	struct cq_entry *cqe = ufshcd_mcq_cur_cqe(hwq);
+-
+ 	if (cqe->command_desc_base_addr) {
+ 		int tag = ufshcd_mcq_get_tag(hba, cqe);
+ 
+@@ -335,10 +334,12 @@ void ufshcd_mcq_compl_all_cqes_lock(struct ufs_hba *hba,
+ {
+ 	unsigned long flags;
+ 	u32 entries = hwq->max_entries;
++	struct cq_entry *cqe;
++	int i;
+ 
+ 	spin_lock_irqsave(&hwq->cq_lock, flags);
++	cqe = ufshcd_mcq_cur_cqe(hwq);
+ 	while (entries > 0) {
+-		ufshcd_mcq_process_cqe(hba, hwq);
+ 		ufshcd_mcq_inc_cq_head_slot(hwq);
+ 		entries--;
+ 	}
+@@ -346,6 +347,11 @@ void ufshcd_mcq_compl_all_cqes_lock(struct ufs_hba *hba,
+ 	ufshcd_mcq_update_cq_tail_slot(hwq);
+ 	hwq->cq_head_slot = hwq->cq_tail_slot;
+ 	spin_unlock_irqrestore(&hwq->cq_lock, flags);
 +
- 			/* Update load balancing info */
- 			if (fusion->load_balance_info &&
- 			    (megasas_priv(cmd_fusion->scmd)->status &
++	for (i = 0; i < hwq->max_entries; i++) {
++		ufshcd_mcq_process_cqe(hba, cqe);
++		cqe = ufshcd_mcq_inc_cqe_addr(hwq, cqe);
++	}
+ }
+ 
+ unsigned long ufshcd_mcq_poll_cqe_lock(struct ufs_hba *hba,
+@@ -353,11 +359,13 @@ unsigned long ufshcd_mcq_poll_cqe_lock(struct ufs_hba *hba,
+ {
+ 	unsigned long completed_reqs = 0;
+ 	unsigned long flags;
++	struct cq_entry *cqe;
++	int i;
+ 
+ 	spin_lock_irqsave(&hwq->cq_lock, flags);
++	cqe = ufshcd_mcq_cur_cqe(hwq);
+ 	ufshcd_mcq_update_cq_tail_slot(hwq);
+ 	while (!ufshcd_mcq_is_cq_empty(hwq)) {
+-		ufshcd_mcq_process_cqe(hba, hwq);
+ 		ufshcd_mcq_inc_cq_head_slot(hwq);
+ 		completed_reqs++;
+ 	}
+@@ -366,6 +374,11 @@ unsigned long ufshcd_mcq_poll_cqe_lock(struct ufs_hba *hba,
+ 		ufshcd_mcq_update_cq_head(hwq);
+ 	spin_unlock_irqrestore(&hwq->cq_lock, flags);
+ 
++	for (i = 0; i < completed_reqs; i++) {
++		ufshcd_mcq_process_cqe(hba, cqe);
++		cqe = ufshcd_mcq_inc_cqe_addr(hwq, cqe);
++	}
++
+ 	return completed_reqs;
+ }
+ EXPORT_SYMBOL_GPL(ufshcd_mcq_poll_cqe_lock);
+diff --git a/drivers/ufs/core/ufshcd-priv.h b/drivers/ufs/core/ufshcd-priv.h
+index 0a72148cb053..6d4d3e726a9a 100644
+--- a/drivers/ufs/core/ufshcd-priv.h
++++ b/drivers/ufs/core/ufshcd-priv.h
+@@ -440,6 +440,26 @@ static inline struct scsi_cmnd *ufshcd_tag_to_cmd(struct ufs_hba *hba, u32 tag)
+ 	return blk_mq_rq_to_pdu(rq);
+ }
+ 
++/**
++ * ufshcd_mcq_inc_cqe_addr - increment CQE pointer with wraparound
++ * @hwq: pointer to the hardware queue
++ * @cqe: current CQE pointer to increment
++ *
++ * Increments the CQE pointer to the next entry. If the pointer
++ * exceeds the last entry, it wraps around to the base address.
++ *
++ * Returns: pointer to the next cq_entry
++ */
++static inline struct cq_entry *ufshcd_mcq_inc_cqe_addr(struct ufs_hw_queue *q,
++	struct cq_entry *cqe)
++{
++        cqe++;
++        if (cqe > q->cqe_last_addr)
++                cqe = q->cqe_base_addr;
++
++        return cqe;
++}
++
+ static inline void ufshcd_inc_sq_tail(struct ufs_hw_queue *q)
+ 	__must_hold(&q->sq_lock)
+ {
+diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
+index cfbc75d8df83..1becb38e215e 100644
+--- a/include/ufs/ufshcd.h
++++ b/include/ufs/ufshcd.h
+@@ -1291,6 +1291,7 @@ struct ufs_hw_queue {
+ 	struct utp_transfer_req_desc *sqe_base_addr;
+ 	dma_addr_t sqe_dma_addr;
+ 	struct cq_entry *cqe_base_addr;
++	struct cq_entry *cqe_last_addr;
+ 	dma_addr_t cqe_dma_addr;
+ 	u32 max_entries;
+ 	u32 id;
 -- 
-2.46.2
+2.45.2
 
