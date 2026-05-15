@@ -1,110 +1,132 @@
-Received: from relay.hostedemail.com (smtprelay0014.hostedemail.com [216.40.44.14])
+Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 20C943E2AB5;
-	Fri, 15 May 2026 18:50:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=216.40.44.14
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2023638AC79;
+	Fri, 15 May 2026 19:22:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778871054; cv=none; b=MJDlnZDKSsvCJplG3e+pDAQBKkqK/rypQA4bJO6waWCHOATkKjw12sQ8XXmTY4K8dAc7LARkvfa69S1a2h5CVi+SReV3qp0yGm/dTlhnpP1ckmnKsBn1kOIHA8DtW/CaWBzes3XuAAGDPUzZAXfWDSTx9jca+OybKkumOcQ2iyc=
+	t=1778872923; cv=none; b=uPuVrBopEYtaKecoudwYAemQKxmvLzGc1t/VGOMOhbdn8KqlBcDaPQMboXkP6d4iiCCsy7076pHUdQQQFqdblT6Hp492NNU/dG9BE8BP2HLEJqypg+EmVgbU2wFE7uNjXsCOKLvFSmGWQbPtjjzFt4lxPJWQ5nYJjfEvHUAU+2M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778871054; c=relaxed/simple;
-	bh=Fh5nIpKIEkRcePCEGBEElyMGaMyAieIuHMAMa3JLQKc=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=t30DQhOlqmG0X2yU+SDIAVi8G/NsccL640HhzrNlLzuleGsA7gfqJwRczf0FuDMegc96pzvPBP6an4htCfXE4QOHcl9d5RWOjs+YwXyUipvyuezLDGRGhURmx7j/zdvhFYG4luQByjrFY791ASZm5ii1kILwHEulHQCDP/VWva0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=goodmis.org; spf=pass smtp.mailfrom=goodmis.org; arc=none smtp.client-ip=216.40.44.14
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=goodmis.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=goodmis.org
-Received: from omf03.hostedemail.com (lb01a-stub [10.200.18.249])
-	by unirelay07.hostedemail.com (Postfix) with ESMTP id 80D43160141;
-	Fri, 15 May 2026 18:50:43 +0000 (UTC)
-Received: from [HIDDEN] (Authenticated sender: rostedt@goodmis.org) by omf03.hostedemail.com (Postfix) with ESMTPA id A64386000A;
-	Fri, 15 May 2026 18:50:41 +0000 (UTC)
-Date: Fri, 15 May 2026 14:50:48 -0400
-From: Steven Rostedt <rostedt@goodmis.org>
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: "Vineeth Pillai (Google)" <vineeth@bitbyteword.org>, "James E.J.
- Bottomley" <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen"
- <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org,
- linux-trace-kernel@vger.kernel.org, Peter Zijlstra <peterz@infradead.org>
-Subject: Re: [PATCH v3 08/11] scsi: ufs: Use trace_call__##name() at guarded
- tracepoint call sites
-Message-ID: <20260515145048.1c021bc9@gandalf.local.home>
-In-Reply-To: <9fde73e7-0108-48d7-a1a0-ccc9776beb5c@acm.org>
-References: <20260515135946.2238888-1-vineeth@bitbyteword.org>
-	<9fde73e7-0108-48d7-a1a0-ccc9776beb5c@acm.org>
-X-Mailer: Claws Mail 3.20.0git84 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
+	s=arc-20240116; t=1778872923; c=relaxed/simple;
+	bh=etq7coVtQM47GMB6/iYdcAHANfQZ4Fdv0veJgHeW0RU=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=iVW0dWBikWFHOI1v5hgv1rwbUNW7uu103/Qq9PaiztrjJt9JWMQqN9Uu/KYZg17GslOcVSUf3q1/PCbhY80wbX4gcDl/tcjJ59zeHEQUk0zNCh/RdZY0mPbamLBV4eg+89u2Zla9JPqhcYOZug4wfNkgQoltVEm7vobn13FSfnY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=isujH0tD; arc=none smtp.client-ip=199.89.1.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="isujH0tD"
+Received: from localhost (localhost [127.0.0.1])
+	by 013.lax.mailroute.net (Postfix) with ESMTP id 4gHHBd4JTxzlh2ff;
+	Fri, 15 May 2026 19:22:01 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1778872917; x=1781464918; bh=U0jH4D19p47Ke7XI7nOgdEzt
+	aSYBOtp7vlQaiq3oa54=; b=isujH0tDYwDwVq8Lk52K6qCd0J2zJsHGriOcXnYo
+	YZvT6cFpZA0+eRZ1qHvZe13VbdLGKLgS61qu01jrd1uU/x6YSFzdB+1aA2Crmg+s
+	i4ZQFwp7e11g/iB+MrO0uzLX4dKzgpcMV3WinYteUrL8sJAKpGB6xujXUaSMH79z
+	FSdFSwx81vNmgC+1kQh4Q/s33V9eq82NYCCIaCARrqj7kI26Sg03xhVFnhmYxxTL
+	Aj7e8YqlH++Z4PJ0MYWqY0a6WpUPwT9pxX/zshBMPt1ay1Kddmk+RyivleCnf60z
+	pqJt3w1V5UlMQ+v4jxhI2vokL7e+FU8cs7MqTsYGlERtIA==
+X-Virus-Scanned: by MailRoute
+Received: from 013.lax.mailroute.net ([127.0.0.1])
+ by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id 6NfCh0c8gDXP; Fri, 15 May 2026 19:21:57 +0000 (UTC)
+Received: from [100.119.48.131] (unknown [104.135.180.219])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4gHHBW4y2RzlfvpG;
+	Fri, 15 May 2026 19:21:55 +0000 (UTC)
+Message-ID: <ebdc020e-419d-458a-9211-36f22af0c1d9@acm.org>
+Date: Fri, 15 May 2026 12:21:46 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3 08/11] scsi: ufs: Use trace_call__##name() at guarded
+ tracepoint call sites
+To: Steven Rostedt <rostedt@goodmis.org>
+Cc: "Vineeth Pillai (Google)" <vineeth@bitbyteword.org>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ linux-scsi@vger.kernel.org, linux-trace-kernel@vger.kernel.org,
+ Peter Zijlstra <peterz@infradead.org>
+References: <20260515135946.2238888-1-vineeth@bitbyteword.org>
+ <9fde73e7-0108-48d7-a1a0-ccc9776beb5c@acm.org>
+ <20260515145048.1c021bc9@gandalf.local.home>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20260515145048.1c021bc9@gandalf.local.home>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-Stat-Signature: w5gpk5wojme4p8f8rrjh4175dhuiaho5
-X-Rspamd-Server: rspamout02
-X-Rspamd-Queue-Id: A64386000A
-X-Session-Marker: 726F737465647440676F6F646D69732E6F7267
-X-Session-ID: U2FsdGVkX1/lFLOMhLKhFr6Eb1OV9O9g+yqC6Yty8l0=
-X-HE-Tag: 1778871041-350002
-X-HE-Meta: U2FsdGVkX18KIYL7SUQ2xQVpSH5T5kZIcsMwMPv9mvMpLdospCP7ZQKNVNhMSM3zbIU/H66gjIKgAJ91J1uGh/FiOY2uL9V4kAECr092XuR+LeI8mPmMFvonO1lIUTQjS7VmxX0UV8IygAHXNfTAKMAVriEHSuP6NAkUuQuf9aE6pZNtcQcBYj6ppOsDYGks4SQ6UYIQaXIoU7GBh9I1QXW7jKBDq5wilWYz4nvsVjV7rrPmfTxHmaXUvBU3H825iHtfl/pwiirvSTR7mNDgzbd/+2CKFx4YloTGgvevu7tulZ/a5pBqItyto4hjCcStVQ1WxjxNIGfg8TUZa1oAKRs5YnmOj/fV
 
-On Fri, 15 May 2026 08:27:27 -0700
-Bart Van Assche <bvanassche@acm.org> wrote:
-
-> On 5/15/26 6:59 AM, Vineeth Pillai (Google) wrote:
-> >   static void ufshcd_add_query_upiu_trace(struct ufs_hba *hba,
-> > @@ -432,8 +432,8 @@ static void ufshcd_add_query_upiu_trace(struct ufs_hba *hba,
-> >   	if (!trace_ufshcd_upiu_enabled())
-> >   		return;
-> >   
-> > -	trace_ufshcd_upiu(hba, str_t, &rq_rsp->header,
-> > -			  &rq_rsp->qr, UFS_TSF_OSF);
-> > +	trace_call__ufshcd_upiu(hba, str_t, &rq_rsp->header,
-> > +			       &rq_rsp->qr, UFS_TSF_OSF);
-> >   }  
+On 5/15/26 11:50 AM, Steven Rostedt wrote:
+> On Fri, 15 May 2026 08:27:27 -0700
+> Bart Van Assche <bvanassche@acm.org> wrote:
 > 
-> Instead of making this change, please remove the 
-> trace_ufshcd_upiu_enabled() call because it is redundant.
-
-You mean to remove the ufshcd_add_query_upiu_trace() function and just use
-a tracepoint where it is called?
-
-Makes sense.
-
+>> On 5/15/26 6:59 AM, Vineeth Pillai (Google) wrote:
+>>>    static void ufshcd_add_query_upiu_trace(struct ufs_hba *hba,
+>>> @@ -432,8 +432,8 @@ static void ufshcd_add_query_upiu_trace(struct ufs_hba *hba,
+>>>    	if (!trace_ufshcd_upiu_enabled())
+>>>    		return;
+>>>    
+>>> -	trace_ufshcd_upiu(hba, str_t, &rq_rsp->header,
+>>> -			  &rq_rsp->qr, UFS_TSF_OSF);
+>>> +	trace_call__ufshcd_upiu(hba, str_t, &rq_rsp->header,
+>>> +			       &rq_rsp->qr, UFS_TSF_OSF);
+>>>    }
+>>
+>> Instead of making this change, please remove the
+>> trace_ufshcd_upiu_enabled() call because it is redundant.
 > 
-> >   static void ufshcd_add_tm_upiu_trace(struct ufs_hba *hba, unsigned int tag,
-> > @@ -445,15 +445,15 @@ static void ufshcd_add_tm_upiu_trace(struct ufs_hba *hba, unsigned int tag,
-> >   		return;
-> >   
-> >   	if (str_t == UFS_TM_SEND)
-> > -		trace_ufshcd_upiu(hba, str_t,
-> > -				  &descp->upiu_req.req_header,
-> > -				  &descp->upiu_req.input_param1,
-> > -				  UFS_TSF_TM_INPUT);
-> > +		trace_call__ufshcd_upiu(hba, str_t,
-> > +					&descp->upiu_req.req_header,
-> > +					&descp->upiu_req.input_param1,
-> > +					UFS_TSF_TM_INPUT);
-> >   	else
-> > -		trace_ufshcd_upiu(hba, str_t,
-> > -				  &descp->upiu_rsp.rsp_header,
-> > -				  &descp->upiu_rsp.output_param1,
-> > -				  UFS_TSF_TM_OUTPUT);
-> > +		trace_call__ufshcd_upiu(hba, str_t,
-> > +					&descp->upiu_rsp.rsp_header,
-> > +					&descp->upiu_rsp.output_param1,
-> > +					UFS_TSF_TM_OUTPUT);
-> >   }  
+> You mean to remove the ufshcd_add_query_upiu_trace() function and just use
+> a tracepoint where it is called?
+
+That would be even better.
+
+>>>    static void ufshcd_add_tm_upiu_trace(struct ufs_hba *hba, unsigned int tag,
+>>> @@ -445,15 +445,15 @@ static void ufshcd_add_tm_upiu_trace(struct ufs_hba *hba, unsigned int tag,
+>>>    		return;
+>>>    
+>>>    	if (str_t == UFS_TM_SEND)
+>>> -		trace_ufshcd_upiu(hba, str_t,
+>>> -				  &descp->upiu_req.req_header,
+>>> -				  &descp->upiu_req.input_param1,
+>>> -				  UFS_TSF_TM_INPUT);
+>>> +		trace_call__ufshcd_upiu(hba, str_t,
+>>> +					&descp->upiu_req.req_header,
+>>> +					&descp->upiu_req.input_param1,
+>>> +					UFS_TSF_TM_INPUT);
+>>>    	else
+>>> -		trace_ufshcd_upiu(hba, str_t,
+>>> -				  &descp->upiu_rsp.rsp_header,
+>>> -				  &descp->upiu_rsp.output_param1,
+>>> -				  UFS_TSF_TM_OUTPUT);
+>>> +		trace_call__ufshcd_upiu(hba, str_t,
+>>> +					&descp->upiu_rsp.rsp_header,
+>>> +					&descp->upiu_rsp.output_param1,
+>>> +					UFS_TSF_TM_OUTPUT);
+>>>    }
+>>
+>> Same comment here: I think it would be better to remove the
+>> trace_ufshcd_upiu_enabled() call rather than
+>> changing trace_ufshcd_upiu() into trace_call__ufshcd_upiu().
 > 
-> Same comment here: I think it would be better to remove the 
-> trace_ufshcd_upiu_enabled() call rather than
-> changing trace_ufshcd_upiu() into trace_call__ufshcd_upiu().
+> Well, removing it here would mean placing the if (str == UFS_TM_SEND) into
+> the code and processing it even when tracing is disabled. With the
+> trace_*_enabled() helper, it's all a nop.
 
-Well, removing it here would mean placing the if (str == UFS_TM_SEND) into
-the code and processing it even when tracing is disabled. With the
-trace_*_enabled() helper, it's all a nop.
+The ufshcd_add_tm_upiu_trace() function is only called from the UFS
+error handler and hence is not performance sensitive. The execution of
+an additional if-test in this function is not a concern at all.
 
--- Steve
+Thanks,
 
-
+Bart.
