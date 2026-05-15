@@ -1,229 +1,148 @@
-Received: from mail-lf1-f74.google.com (mail-lf1-f74.google.com [209.85.167.74])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B434347DFA3
-	for <linux-scsi@vger.kernel.org>; Fri, 15 May 2026 12:17:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.74
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A1C3C480DEF;
+	Fri, 15 May 2026 13:46:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778847478; cv=none; b=riuGiF0sIpvOdu9JNdPZeOOA5ARRRV+YetrbIseg9IvCN++KJOvzpkCe8QblgL74Lj4eucmLyiD7nSEc4fE1R6YjX+BSYVqPD0BIupy1O4f7JSAFBQUm6mxINuSvbYbt6rNtY5hFdiRimxdqJdZOAyi+1dwODwaFDg0fABw+ql4=
+	t=1778852791; cv=none; b=OewCGw3xR9EL2tC5g6fc1vC5SXbItU+DAgfQn275IML4l9AqbPMYgwFDwXtuk1n74GafIl6g6KuPaVWkXVNJ+cgMP4J/T5swDmPetf34zmIFnO7/ERh/DVGtc2VSnZ9Q3L0o8ZE9aNOjF2ZpVi4Al4jwQMvuCmQf4cazL0vRfnI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778847478; c=relaxed/simple;
-	bh=F3u/QH/ZhYfqyIB9F98+uK1QXh9jLK2lRsp6iEp0P04=;
-	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
-	 To:Cc:Content-Type; b=Lpi8x+knEuDNNm6Pti9l3q19n8UWM0cupoCznLuD9IqmdZPdrUIpa2Ns3RXNqNOUg8YAyPaDDgRpGsT4aezkP5TJ2FAzybNXImQuOv3ec3wU57eobQhY++qt09LKmqWB9tqnqTPaNbuCejlFzXw4ShUrRyqVmwYsvvkteUMWTUE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--rnj.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=qjH8aBH8; arc=none smtp.client-ip=209.85.167.74
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--rnj.bounces.google.com
+	s=arc-20240116; t=1778852791; c=relaxed/simple;
+	bh=81UqEVkVLTYCPXj4aX2YNEUB7CL7+8kPe84x45UH1Hw=;
+	h=Subject:From:To:Cc:Date:Message-ID:MIME-Version:Content-Type; b=SJb09dSJ5IvZLJ8xLYalyFlSJoc5oKGKCUvFQmYthyhg0ubjciyDIXcYxtivDOL6vJamxkP+muepyjACOTBxpMv8tBcx7+SNjAQ+GQhjyqUbWqFu2EIRMMljbpE8Kb4oqZw6aIeZMRI+0QsviUJjrbWy8W4LSyerd/1OTUaMTq0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=G4NTAM3c; arc=none smtp.client-ip=148.163.158.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="qjH8aBH8"
-Received: by mail-lf1-f74.google.com with SMTP id 2adb3069b0e04-5a858039ddaso5888746e87.2
-        for <linux-scsi@vger.kernel.org>; Fri, 15 May 2026 05:17:55 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1778847474; x=1779452274; darn=vger.kernel.org;
-        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
-         :date:from:to:cc:subject:date:message-id:reply-to;
-        bh=//Plx+YvoT4buEKO1lurHogNmkZC/8PnjF1rYPj5af0=;
-        b=qjH8aBH8IpMtyZbyCmIRjkKwmyCVSXRjcynlFGqAXrDDD+jbyXjh0TqH3C+UnhaSRM
-         FM6O90drlmgClqhce7a82EELHY1WThBk6JYqjAYKEEH3dB0hK/YYfU2ctoi7nV7hMBL6
-         MTNnv8obxHrknGJ3TKZt5/TdjNyfZh+tOrceDQcEpG5eQpHsImTTlvu15IpVfGtDFCIl
-         eMhKWCHUqdWyNfZiFdeXCtScaD31dFNEJWubJxeTi8VoKFUxqbdh0uPirx6pry5+Tkec
-         Qfau5NX3sWNb8XG4PRuc+KtMv1KJhXqHXHku4IXg54rywllhFhxYWuKP/JXXbZ7v2gd4
-         VTsw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1778847474; x=1779452274;
-        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
-         :date:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=//Plx+YvoT4buEKO1lurHogNmkZC/8PnjF1rYPj5af0=;
-        b=RF5fQObbD1apVhko1zrjIPbsk7wkazxx/XC3ao5M4XnICrgBSa0nFI4V9bQ0vzXnFX
-         4xSFeDbrVsrzg5Cs7Avea0BSqeygHDK2gbx63YheGxMrEm9WKG8y0FBcWdC35LVZHHdm
-         fBQf+vBxdHjyZbuqnOrnkJiRTzjR5UCS1OEF2g91mBKyL+//1NbF3kud4WE8bMBpYS/F
-         ByeugdCea1DXOvQkXfhKAHxjhpoCqtbO664RU4ty5vWl/sEo5a2QNc00SEe8uOYMRJkQ
-         RMNU0FROzIQ1xF2xK/faP5cz9jU1cbVJJ3wv1FvuuRa6mPj04Xwi9NNnpPm8fpRDJrhd
-         8tNw==
-X-Forwarded-Encrypted: i=1; AFNElJ8oBq3Woz/DQyQkvoVqNJXYuJwjXLtCq0xqvuYSKiSjQExFVOklRVxT7XCku8nHHwaQDKVQGIFqQDRw@vger.kernel.org
-X-Gm-Message-State: AOJu0Ywnwv3HQCCcpZDtZH4J1HvxH6x9/9D88tuj+GZGaduNvBX7IliO
-	TFCaWq2gxSVBj+ZtxdQJtXL7U+Cp52bBLO7E/UNUmhd4WDuDBYXrkZZ/R9RrYzVOqNBniw==
-X-Received: from ljmk24.prod.google.com ([2002:a2e:a278:0:b0:393:7fb2:6b5a])
- (user=rnj job=prod-delivery.src-stubby-dispatcher) by 2002:a05:6512:1241:b0:5aa:b6a:7a8c
- with SMTP id 2adb3069b0e04-5aa0e7755fbmr993792e87.43.1778847473713; Fri, 15
- May 2026 05:17:53 -0700 (PDT)
-Date: Fri, 15 May 2026 12:15:40 +0000
-In-Reply-To: <20260515-fortify_pm80-v1-0-2863187f6d4b@google.com>
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="G4NTAM3c"
+Received: from pps.filterd (m0353725.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 64FAi3p21093132;
+	Fri, 15 May 2026 13:46:23 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-transfer-encoding:content-type:date:from:message-id
+	:mime-version:subject:to; s=pp1; bh=OYft5ur67gi5+CZcF2zboSkju6tE
+	SX/wLKq25VKxSAM=; b=G4NTAM3c+sML8yOVnBHAHIMl7QHGZb/rmnYcl1oqxkgd
+	JXpJAuYfoH7hU0FhG6OXtJs1dZqTaxgw51ZWaNn2Y3xkFVo3D9fy5oWldf6XVqSp
+	LEgtwrXASzqE+RNr7NesVs2H19UrSvy2g6V3DeOinV9CSfDtPpSbGY4Uk4GzlHWF
+	FSvR+b6OuMh976zDT+XEI0ijx4IIU48wZmM9eQ+ItxIsSAV66vU69YzIxjtoyrxo
+	2sU60vxoBG31Dt+sQdtW0NfrMqtIYXCMCMbycJh4TOzcOHrIC66ZOX974doUhwWx
+	FWfqSKIqwexiPsumkOOcWLzw9Gk0AZLsJcb/Pk2ziA==
+Received: from ppma22.wdc07v.mail.ibm.com (5c.69.3da9.ip4.static.sl-reverse.com [169.61.105.92])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4e5m93baqr-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 15 May 2026 13:46:23 +0000 (GMT)
+Received: from pps.filterd (ppma22.wdc07v.mail.ibm.com [127.0.0.1])
+	by ppma22.wdc07v.mail.ibm.com (8.18.1.7/8.18.1.7) with ESMTP id 64FDdJwo011759;
+	Fri, 15 May 2026 13:46:23 GMT
+Received: from smtprelay03.fra02v.mail.ibm.com ([9.218.2.224])
+	by ppma22.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4e5m3aknwu-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 15 May 2026 13:46:22 +0000 (GMT)
+Received: from smtpav07.fra02v.mail.ibm.com (smtpav07.fra02v.mail.ibm.com [10.20.54.106])
+	by smtprelay03.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 64FDkKfB51511754
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Fri, 15 May 2026 13:46:20 GMT
+Received: from smtpav07.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 5C3C32004D;
+	Fri, 15 May 2026 13:46:20 +0000 (GMT)
+Received: from smtpav07.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id BEB6F20040;
+	Fri, 15 May 2026 13:46:18 +0000 (GMT)
+Received: from [10.88.0.2] (unknown [9.5.7.39])
+	by smtpav07.fra02v.mail.ibm.com (Postfix) with ESMTP;
+	Fri, 15 May 2026 13:46:18 +0000 (GMT)
+Subject: [PATCH] [SCSI] qla2xxx: Handle the INTx not connected while passing
+ through
+From: Shivaprasad G Bhat <sbhat@linux.ibm.com>
+To: njavali@marvell.com, GR-QLogic-Storage-Upstream@marvell.com,
+        James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        alex.williamson@nvidia.com, Kyle.Mahlkuch@ibm.com, sbhat@linux.ibm.com
+Date: Fri, 15 May 2026 13:45:18 +0000
+Message-ID: <177885270578.1573.14283751510936407585.stgit@linux.ibm.com>
+User-Agent: StGit/1.5
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-References: <20260515-fortify_pm80-v1-0-2863187f6d4b@google.com>
-X-Developer-Key: i=rnj@google.com; a=ed25519; pk=QwUkB1OONd7dk9zV4pLRQRehoWHHsLcRZD2QcswqHTc=
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1778847470; l=7156;
- i=rnj@google.com; s=20260515; h=from:subject:message-id; bh=F3u/QH/ZhYfqyIB9F98+uK1QXh9jLK2lRsp6iEp0P04=;
- b=6fmA6McFYcRaDItPhb+fZmQtDIdYKJC3l0wEIBdMC3GU+PulntNIaqMzfJBNuLEiE+BUiOyaF LgexaHhaWuMBtF2+HgskDlz/4jUbUk6vMJzW/BTl8XBm7Mf4vn1oGfQ
-X-Mailer: b4 0.14.3
-Message-ID: <20260515-fortify_pm80-v1-2-2863187f6d4b@google.com>
-Subject: [PATCH 2/2] scsi: pm8001: Match hw_event_resp to HBA data layout
-From: Ronja Meyer <rnj@google.com>
-To: Jack Wang <jinpu.wang@cloud.ionos.com>, 
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
-	"Martin K. Petersen" <martin.petersen@oracle.com>, Tom Peng <tom_peng@usish.com>, 
-	Kevin Ao <aoqingyun@usish.com>, Lindar Liu <lindar_liu@usish.com>, 
-	James Bottomley <James.Bottomley@suse.de>
-Cc: jack wang <jack_wang@usish.com>, linux-scsi@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, Ronja Meyer <rnj@google.com>, stable@vger.kernel.org, 
-	Igor Pylypiv <ipylypiv@google.com>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-GUID: Jbze0d6DuHwYyG3gd86o9fOWMTJwWMkS
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNTE1MDEzOCBTYWx0ZWRfX7aPLQXQnObuC
+ puHPRYM4aIngU5RTfm8gHJB++KgjxQ0Y+laNAbBybwczO5ep7Kk98eQyoqHhcVeubXucsuJimAk
+ h2F6XtbbMjpPaqKMazxe7d76zmkwf1yWHZNxT76rD8T/6gu9mwDozLPNdXjR9WjMMdniZNo+uu3
+ kybzQAu4FGmxZdDzrb4XWPJNeZgWG136e2hLnKBhtYSapMRARUimI2WdGssTGOiyofqkn012pZ9
+ UlS9Uvzw3a3KYe9t1qO2skGhP0Kv+I4Csmp8BJaKmqEr2IcVWZ93XvuQmldPrOaX6nAK3+WTL5p
+ YoDdQgqYJlw14W1rJDQdddO//ETWj26m5U5n3hZ+gs85OB3WBngujzAZo86NISCTQZvree9Bp3/
+ Mo9a4Fr7VvmpkNZvWS93cbfgsgb1DiiYQeZbUJgc/18CUcef/jEGm9UahcIG/362eXyIBzXAmF+
+ 0a+VLb9JYXf+C5xeA3g==
+X-Authority-Analysis: v=2.4 cv=P6UKQCAu c=1 sm=1 tr=0 ts=6a0723af cx=c_pps
+ a=5BHTudwdYE3Te8bg5FgnPg==:117 a=5BHTudwdYE3Te8bg5FgnPg==:17
+ a=IkcTkHD0fZMA:10 a=NGcC8JguVDcA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=RnoormkPH1_aCDwRdu11:22 a=V8glGbnc2Ofi9Qvn3v5h:22 a=VnNF1IyMAAAA:8
+ a=3Wnuu8rudESo8fSp9zUA:9 a=QEXdDO2ut3YA:10
+X-Proofpoint-ORIG-GUID: Jbze0d6DuHwYyG3gd86o9fOWMTJwWMkS
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-05-15_03,2026-05-13_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ spamscore=0 malwarescore=0 bulkscore=0 suspectscore=0 impostorscore=0
+ lowpriorityscore=0 adultscore=0 priorityscore=1501 clxscore=1011 phishscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2605130000 definitions=main-2605150138
 
-Correct the hw_event_resp struct definition to match the layout of data
-sent by the HBA. Remove pointer arithmetics previously required to work
-around incorrect struct definition.
+The PCI_INTERRUPT_PIN reports if the device supports the INTx.
+However, when the device is assigned to a guest via vfio, the
+PCI_INTERRUPT_PIN is set to 0(i.e none) if the line is not
+connected and|or the platform cannot route the interrupt.
 
-Looking at the struct definition before this patch:
-  struct hw_event_resp {
-           [...]
-           struct	sas_identify_frame sas_identify;
-           struct dev_to_host_fis	sata_fis;
-   } __attribute__((packed, aligned(4)));
+In such cases, the guest PCI_INTERRUPT_PIN is 0 and the port
+number becomes -1(255, uint8_t underflow) for qla[25|27|28]xx and
+qla2031 devices. The flt_region_nvram is never set, and subsequently
+the lun detection fails. Below warnings show the NVRAM configuration
+failure.
 
-Previously the memcpy() in hw_event_sata_phy_up() crossed reading
-from the sas_identify struct over into the sata_fis struct. This was
-necessary, because the hw_event_resp struct definition didn't align
-properly with what the HBA actually sent. The member sas_identify right
-before the member sata_fis was 4 bytes too long, causing the first
-4 bytes of the sata_fis to be shifted into the last 4 bytes of
-sas_identify. The code worked around this by subtracting 4 bytes from
-both the sata_fis pointer, as well as sizeof(sas_identify), when they
-were used.
+ []-0073:1: Inconsistent NVRAM checksum=0xffffffc0 id=HCAM version=0x100.
+ []-0074:1: Falling back to functioning (yet invalid -- WWPN) defaults.
+ []-0076:1: NVRAM configuration failed.
 
-FORTIFY_SOURCE detected this deliberate choice to cross struct member
-boundaries as an out-of-bounds read, even though in this case it didn't
-lead to a vulnerability. Hence the following fortify-panic was
-triggered:
+The patch handles the case, and sets the port_no to devfn like
+its done everywhere else.
 
-  kernel BUG at lib/string_helpers.c:1044!
-  RIP: 0010:__fortify_panic+0x9/0x10
-  hw_event_sata_phy_up+0xea/0x120 [pm80xx]
-  process_one_iomb+0x634e/0x6360 [pm80xx]
-  process_oq+0x391/0x430 [pm80xx]
-  pm80xx_chip_isr+0x78/0x100 [pm80xx]
-  tasklet_action_common+0x16a/0x2b0
-  handle_softirqs+0xcd/0x2a0
-  __irq_exit_rcu+0x50/0x100
-  common_interrupt+0x89/0xa0
-
-Furthermore hw_event_resp was 64 bytes before this patch, which is
-4 bytes too long. Messages exchanged between the pm8001 and the host
-kernel can be a maximum of 64 bytes, as defined in iomb_size. The
-message structs defined in pm8001_hwi.h must have a size of 60 bytes,
-in order to leave space for a 4 byte header that implicitly precedes
-each message.
-
-Luckily the code interacting with hw_event_resp doesn't ever seem to
-read or write the last 4 bytes of the struct and doesn't seem to use
-the incorrect size of the struct in a copy operation. Hence it doesn't
-overflow in practice. Further the pm80xx driver was unaffected by this
-bug. While the pm80xx struct was also 64 bytes, the message size on
-pm80xx is 128 bytes. Hence it is able to fit the 68 byte header and
-message without overflowing.
-
-This is not security critical AFAICT.
-
-Cc: stable@vger.kernel.org
-Fixes: dbf9bfe61571 ("[SCSI] pm8001: add SAS/SATA HBA driver")
-Co-developed-by: Igor Pylypiv <ipylypiv@google.com>
-Signed-off-by: Igor Pylypiv <ipylypiv@google.com>
-Signed-off-by: Ronja Meyer <rnj@google.com>
+Reference: commit 2bd42b03ab6b ("vfio/pci: Virtualize zero INTx PIN if no pdev->irq")
+Signed-off-by: Shivaprasad G Bhat <sbhat@linux.ibm.com>
 ---
- drivers/scsi/pm8001/pm8001_hwi.c | 6 +++---
- drivers/scsi/pm8001/pm8001_hwi.h | 2 +-
- drivers/scsi/pm8001/pm80xx_hwi.c | 6 +++---
- drivers/scsi/pm8001/pm80xx_hwi.h | 4 ++--
- 4 files changed, 9 insertions(+), 9 deletions(-)
+ drivers/scsi/qla2xxx/qla_os.c |   15 ++++++++++-----
+ 1 file changed, 10 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
-index fff8d877abb9..e90f2d98d8ed 100644
---- a/drivers/scsi/pm8001/pm8001_hwi.c
-+++ b/drivers/scsi/pm8001/pm8001_hwi.c
-@@ -3164,8 +3164,8 @@ hw_event_sas_phy_up(struct pm8001_hba_info *pm8001_ha, void *piomb)
- 	sas_notify_phy_event(&phy->sas_phy, PHYE_OOB_DONE, GFP_ATOMIC);
- 	spin_lock_irqsave(&phy->sas_phy.frame_rcvd_lock, flags);
- 	memcpy(phy->frame_rcvd, &pPayload->sas_identify,
--		sizeof(struct sas_identify_frame)-4);
--	phy->frame_rcvd_size = sizeof(struct sas_identify_frame) - 4;
-+		sizeof(struct sas_identify_frame_local));
-+	phy->frame_rcvd_size = sizeof(struct sas_identify_frame_local);
- 	pm8001_get_attached_sas_addr(phy, phy->sas_phy.attached_sas_addr);
- 	spin_unlock_irqrestore(&phy->sas_phy.frame_rcvd_lock, flags);
- 	if (pm8001_ha->flags == PM8001F_RUN_TIME)
-@@ -3208,7 +3208,7 @@ hw_event_sata_phy_up(struct pm8001_hba_info *pm8001_ha, void *piomb)
- 	phy->sas_phy.oob_mode = SATA_OOB_MODE;
- 	sas_notify_phy_event(&phy->sas_phy, PHYE_OOB_DONE, GFP_ATOMIC);
- 	spin_lock_irqsave(&phy->sas_phy.frame_rcvd_lock, flags);
--	memcpy(phy->frame_rcvd, ((u8 *)&pPayload->sata_fis - 4),
-+	memcpy(phy->frame_rcvd, &pPayload->sata_fis,
- 		sizeof(struct dev_to_host_fis));
- 	phy->frame_rcvd_size = sizeof(struct dev_to_host_fis);
- 	phy->identify.target_port_protocols = SAS_PROTOCOL_SATA;
-diff --git a/drivers/scsi/pm8001/pm8001_hwi.h b/drivers/scsi/pm8001/pm8001_hwi.h
-index 14b162f93eb8..2b5483989886 100644
---- a/drivers/scsi/pm8001/pm8001_hwi.h
-+++ b/drivers/scsi/pm8001/pm8001_hwi.h
-@@ -326,7 +326,7 @@ struct hw_event_resp {
- 	__le32	lr_evt_status_phyid_portid;
- 	__le32	evt_param;
- 	__le32	npip_portstate;
--	struct sas_identify_frame	sas_identify;
-+	struct	sas_identify_frame_local sas_identify;	/* _local to omit CRC field */
- 	struct dev_to_host_fis	sata_fis;
- } __attribute__((packed, aligned(4)));
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index 72b1c28e4dae..a8d6a0a021f4 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -2803,11 +2803,16 @@ qla2x00_set_isp_flags(struct qla_hw_data *ha)
+ 	else {
+ 		/* Get adapter physical port no from interrupt pin register. */
+ 		pci_read_config_byte(ha->pdev, PCI_INTERRUPT_PIN, &ha->port_no);
+-		if (IS_QLA25XX(ha) || IS_QLA2031(ha) ||
+-		    IS_QLA27XX(ha) || IS_QLA28XX(ha))
+-			ha->port_no--;
+-		else
+-			ha->port_no = !(ha->port_no & 1);
++		if (ha->port_no == 0) {
++			/* None of INT[A|B|C|D], may be virtualized by vfio */
++			ha->port_no = PCI_FUNC(ha->pdev->devfn);
++		} else {
++			if (IS_QLA25XX(ha) || IS_QLA2031(ha) ||
++			    IS_QLA27XX(ha) || IS_QLA28XX(ha))
++				ha->port_no--;
++			else
++				ha->port_no = !(ha->port_no & 1);
++		}
+ 	}
  
-diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
-index 954f307352e6..03293e9b84e6 100644
---- a/drivers/scsi/pm8001/pm80xx_hwi.c
-+++ b/drivers/scsi/pm8001/pm80xx_hwi.c
-@@ -3241,8 +3241,8 @@ hw_event_sas_phy_up(struct pm8001_hba_info *pm8001_ha, void *piomb)
- 	sas_notify_phy_event(&phy->sas_phy, PHYE_OOB_DONE, GFP_ATOMIC);
- 	spin_lock_irqsave(&phy->sas_phy.frame_rcvd_lock, flags);
- 	memcpy(phy->frame_rcvd, &pPayload->sas_identify,
--		sizeof(struct sas_identify_frame)-4);
--	phy->frame_rcvd_size = sizeof(struct sas_identify_frame) - 4;
-+		sizeof(struct sas_identify_frame_local));
-+	phy->frame_rcvd_size = sizeof(struct sas_identify_frame_local);
- 	pm8001_get_attached_sas_addr(phy, phy->sas_phy.attached_sas_addr);
- 	spin_unlock_irqrestore(&phy->sas_phy.frame_rcvd_lock, flags);
- 	if (pm8001_ha->flags == PM8001F_RUN_TIME)
-@@ -3289,7 +3289,7 @@ hw_event_sata_phy_up(struct pm8001_hba_info *pm8001_ha, void *piomb)
- 	phy->sas_phy.oob_mode = SATA_OOB_MODE;
- 	sas_notify_phy_event(&phy->sas_phy, PHYE_OOB_DONE, GFP_ATOMIC);
- 	spin_lock_irqsave(&phy->sas_phy.frame_rcvd_lock, flags);
--	memcpy(phy->frame_rcvd, ((u8 *)&pPayload->sata_fis - 4),
-+	memcpy(phy->frame_rcvd, &pPayload->sata_fis,
- 		sizeof(struct dev_to_host_fis));
- 	phy->frame_rcvd_size = sizeof(struct dev_to_host_fis);
- 	phy->identify.target_port_protocols = SAS_PROTOCOL_SATA;
-diff --git a/drivers/scsi/pm8001/pm80xx_hwi.h b/drivers/scsi/pm8001/pm80xx_hwi.h
-index d8a63b7fed6a..5ccc010a2368 100644
---- a/drivers/scsi/pm8001/pm80xx_hwi.h
-+++ b/drivers/scsi/pm8001/pm80xx_hwi.h
-@@ -351,7 +351,7 @@ struct mpi_msg_hdr {
- struct phy_start_req {
- 	__le32	tag;
- 	__le32	ase_sh_lm_slr_phyid;
--	struct sas_identify_frame_local sas_identify; /* 28 Bytes */
-+	struct	sas_identify_frame_local sas_identify;	/* _local to omit CRC field */
- 	__le32 spasti;
- 	u32	reserved[21];
- } __attribute__((packed, aligned(4)));
-@@ -427,7 +427,7 @@ struct hw_event_resp {
- 	__le32	lr_status_evt_portid;
- 	__le32	evt_param;
- 	__le32	phyid_npip_portstate;
--	struct sas_identify_frame	sas_identify;
-+	struct	sas_identify_frame_local	sas_identify;	/* _local to omit CRC field */
- 	struct dev_to_host_fis	sata_fis;
- } __attribute__((packed, aligned(4)));
- 
+ 	ql_dbg_pci(ql_dbg_init, ha->pdev, 0x000b,
 
--- 
-2.54.0.563.g4f69b47b94-goog
 
