@@ -1,122 +1,280 @@
-Received: from mail-lf1-f44.google.com (mail-lf1-f44.google.com [209.85.167.44])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A80933F0754
-	for <linux-scsi@vger.kernel.org>; Fri, 15 May 2026 07:37:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.167.44
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778830679; cv=pass; b=piPVJCbsfXZwGF8QgyxilsP3Nr+o2ARm/rvQ4e54Klz0HGU/eOhVN6rd6cnyVt0VUj0kkoCXzUXQ+3s3e1IXVcKeYx/RsG5fpJpFzusYsbU4q9d80bRqmIz8N+jPyja310A1TpTBQxOzj5MnF9o/ns+9miAbF4DwBQlxyrR/19U=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778830679; c=relaxed/simple;
-	bh=TYZR3TsoDgZko63s3KlVg1+ej5JnQ2wWkWjfhovF1Z8=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=Oyy6/IOLeVs6Dl6FEYKPX9pWJWyDKUcgP7r3ihyCPU+DCVLU5sENsjgmQb86QKIOargCX7Wa2aALT5oe61JQd+FsKJwk6vVeAGC2ccXznNMBNg+Blz6JW0OKVa5/l8J/k068p0O2KfCrFLthohfzLaQJrVVmp9QorU2zEiao2eg=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=T0+/u0ey; arc=pass smtp.client-ip=209.85.167.44
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B7743F7A8B
+	for <linux-scsi@vger.kernel.org>; Fri, 15 May 2026 08:12:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1778832741; cv=none; b=hEt/Oz7rCyjEls6CokOVw6i+PxCv8NZt09QwCHDorMomkIH1RCcgbCaDGfq6I5TdiEq7VQOFbiYtSaPiNyh2QSPnuEPtHZIEUpTx10zNKxXwbTmcYSks5cPQu6LeInjfe1bLz75YWUoZoTo5AZVyU9RzJnuBgA6ObQDQQyYrmLI=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1778832741; c=relaxed/simple;
+	bh=FktCr/u3rOxg9ueRI8/8hQ2GHcP0pe315k2A5ix3uqM=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=akvF9/8XqC1GX71OWMDw6pmXkd6hU2GmZ5i8x9Vd9jxZrf1+IeCCn1fg2sHsSIOY9tlmit6x6UDCvXxW6iES/eyJh+fJTOqCnHgHD7yTeENQT2b021/fQGGCbDJQDy0VjRbOvo6H/gD0s+VMP+lL2C9w9JL4ZX1G138STSrXky4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=ilaXkHX4; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=VniqRsfv; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="T0+/u0ey"
-Received: by mail-lf1-f44.google.com with SMTP id 2adb3069b0e04-5a8d1f43432so8502495e87.3
-        for <linux-scsi@vger.kernel.org>; Fri, 15 May 2026 00:37:56 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1778830674; cv=none;
-        d=google.com; s=arc-20240605;
-        b=LniDEpsqf2fBFSXRweFccIz1SQIEBv0yk2hMAFTup/xhal+WIFjK3k3u8+3TEcAfVc
-         ukxur8egVFCv3TMKxjwKVHdTwKDnOXeitcAmHV95DnUQd27oRHhPKs9LO4JA//fDKk3c
-         799HD+MVcFz98xU2Ftf2MAv8ZP75QRx0da20sJfnjL90CuhL7JPo+OyOJKFzu5hamrof
-         XOV0Gq4MU+X9p27nFOYwfGkW0Q6AfCX0rQEz4AOOBnSJJthPvF6dCtF+rgBMY6dmvxE3
-         YW5M7s5+WHUJWJ0lv/qwE366JpTIXzC6oj1Xr/5xIjpz61JFTLcfDcqA0LUe/KFZqCTr
-         VaMw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=TYZR3TsoDgZko63s3KlVg1+ej5JnQ2wWkWjfhovF1Z8=;
-        fh=xfBvqOnE0ZARglQfSLRu2+gg7OaHoquWCDQchhwcJwg=;
-        b=KZ6FIn0mJ4wm87lGG76I8E+JFfhqZHLUjywIE14l2M0Z0m5iWFfsKDXoiJULqWpOPD
-         eZ0qnw19/1e5WLki96+98NxLq9Lz1dYEwGM6kyzikq28PkizBvj4ahCjioHx7cY41+U6
-         2qFjiJxUq9RQaOz2kr3BcryAssLH7y7YrUh2Ofz0w5K8bqIKycGzkEBr5ugHhd+HJuj2
-         iZUqW1OaGho6Hz5rFV9Mc/8c889Y+N7iW1zo3M2nE2bAHVuCe8npNYhwj7XxEI3o222r
-         urkXLA0zfDMpyBGvrUMowNGQb1TK2CKjSlY8NsL1zrQW4teow68f7e3/t/bDBXOINUSw
-         eixA==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="ilaXkHX4";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="VniqRsfv"
+Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 64F5HPKx3219672
+	for <linux-scsi@vger.kernel.org>; Fri, 15 May 2026 08:12:19 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	6Nfe5u1E6q+Bw4bVcH5OIoGsa4LydTmUn7m5gJGoe3c=; b=ilaXkHX41Ei6F2Ta
+	UIw4O4gSXWAmwyiJgf4l/DbOSh9J/cajVBX4/d6EXu9oSFFxLYqAq3xFR8cebtAq
+	/RSNipukXLv2jh/C/l/6bNNSBPkqE7IA2N5pkBSI4JuYRzpNgJzqNgZY+NyxYgsU
+	nKaZPmmryJgI6OeWwLCE9pP9IA3TLvln25JmtPKgNupwFPoUiFxMD1/OtvnRbreK
+	L/ncghVQnHnv/ucLdZmfygDZl5tjmDflJZZ//T0dZaq9ikRy8lj+fxOzblUegWEH
+	auyee+mcotTXQ/p0FSgM3dMPDgVXwQBAaYk9YhJfI293bBvyWUmSCheSK5FLVU51
+	Pbh4og==
+Received: from mail-pg1-f199.google.com (mail-pg1-f199.google.com [209.85.215.199])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4e5m1s2a70-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Fri, 15 May 2026 08:12:19 +0000 (GMT)
+Received: by mail-pg1-f199.google.com with SMTP id 41be03b00d2f7-c8271fb4407so6940826a12.2
+        for <linux-scsi@vger.kernel.org>; Fri, 15 May 2026 01:12:18 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1778830674; x=1779435474; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=TYZR3TsoDgZko63s3KlVg1+ej5JnQ2wWkWjfhovF1Z8=;
-        b=T0+/u0eyzrTVZGvRN9wjzl+h7Q/dIhziX40C7gw8kwAqwQDFZl6WpLGNrdUbYd+S+l
-         +PukpOH7OR2H0grLzaG/bBBFEPbI7piyrOpSMv7EQsD9lBtP7Bjkws5tSbVbGNek6hRh
-         xcT5y4yL3rD1z0SkGHDSL3bCNu6qBqq6d6C3ciZKlX/OHwunlWLUpPX0zlCLpxviVvQh
-         LnG6kiqTjQaXpyPfbctt+9lzHyOdzMvPrulWXcvsEjUwVP2nLik0b7YJ2zc1Yj3TKcYC
-         MysuTrcCl7Q9xV61+CuwpvmEgaXQ7pdftaF+8Impf7+Pnr5d9SF0TdLTurdmnQZZNYJh
-         blhA==
+        d=oss.qualcomm.com; s=google; t=1778832738; x=1779437538; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=6Nfe5u1E6q+Bw4bVcH5OIoGsa4LydTmUn7m5gJGoe3c=;
+        b=VniqRsfvzsVizd8c6LJP5+XNKX/j5Y/mqCTv+OPzI1iVtq4/V3qsKn1cYnb6CM34/Z
+         oP/7UTkrxpi2mhak/TAPz91rTilS/wkggXhmWgbZaBmvIX9KVyjA2DSkOrHj++PBxnAO
+         CYsSOjt3guHHwyGY0/omAVi5Z+n77Uqc9g9gYp2hW3qHOhcoPR60aRkn2z2FWdttCXK/
+         bXV+NxLmg//UjlrBw6qg+b0Ur6SYXdz8SReI99qBNwe5bM47XR1WGbzObQeJ9r79uahq
+         oNIML/XsM9uUVZIaptl1o9adbYqVSglAQH2zOiD0QiEMvCK13+HE0JXBv0GS4TqMHlmY
+         Y8AQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1778830674; x=1779435474;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=TYZR3TsoDgZko63s3KlVg1+ej5JnQ2wWkWjfhovF1Z8=;
-        b=CHvhCOMiUl5unEoU9YVlzMqp1VLYfA6uYMJGWNsvK2p7R09oTIFVXBMPBFW4l7ktW1
-         xFXcg8bjwkGJSZNZU3Fyns7jm/HFwTq9xIdIxwhk6zm6MVljsblyeUgkRiui3N64HEM+
-         YEf272+ATGSLhAr7XooMi2LU+a7uBtgpYaQl9eMElXBVJoyTN0MTosmdRzw0vblxAvxB
-         Rj9aOE7xYbyobgE3BMACtCg55UX5vXTOsfApD6+MZ04HrFMTuRAYnQVdAEPxlXGVwP64
-         M3TmoM3cS7ikGiZ1R1qOOcAo1M+0fnB+ZP7M7I/6dIRX0IK4Vj4pAqP/jwOak/aitmtr
-         V7ug==
-X-Forwarded-Encrypted: i=1; AFNElJ/I4TvqAAooHU3uDNuPenaclIiltzm1FKGYoXIa6mapUbahomg6txg2N/J5ZUnQ6f5b1Ked+JoYcpvv@vger.kernel.org
-X-Gm-Message-State: AOJu0Yz35NrjQvsGxZVKa2BpaXb1taDvLq2lVeuV3U0B0ladM2Af7AaG
-	Fk3eh0KVEc+JbdzWz0vOw4jWvVKsRWPTn1YGo16LYm4m57Fpy4Nhtht2WNY/7QIV5dJQ5pF3/G8
-	RJDatrZIlMcgF2nRivrQAZnvfypPb4YIOUvAYQBOcnA==
-X-Gm-Gg: Acq92OEthofhC13r6FibS/n7pz27dhYQgkRHYXbpGU5V46fjqcyfdmLvYDgzvlqBEoy
-	6h8CkFtjxb7hFUrHxO7NUFhvdmatsoaa+00+V5vN+tpacv8nJs7f1YrdzPodj6HSLR3tLSUxeZo
-	XUPNlpeQsbSE10CMWCETStuBazLqAbLO4NcNvVot5jditA/tGHHbn789gh+t8IslAWECQR3ZpFO
-	/SyFiCWKkUphiDyf56Ou4gyBkjGno3QdO0VFO7L7FNY9kRJi5J11MnGDNlwztp9Lxjv96o/2hRU
-	/w2GJUnNqKCRPCDPmasElYlutc/+7S6pg1Zm44rJ
-X-Received: by 2002:a05:6512:33d2:b0:5a8:6d98:df26 with SMTP id
- 2adb3069b0e04-5aa0e614a97mr798048e87.13.1778830673850; Fri, 15 May 2026
- 00:37:53 -0700 (PDT)
+        d=1e100.net; s=20251104; t=1778832738; x=1779437538;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=6Nfe5u1E6q+Bw4bVcH5OIoGsa4LydTmUn7m5gJGoe3c=;
+        b=aCRzXr/GW2Zrfq8iVP9E3xyJ7EVAhq9/HvSaAU8kdQ7zMVgMMKfN76dG1qGeu1vY3R
+         vbjj/ei5SG955+97oJ2MTAhzhMeodroJfBffPSH3v3pZYWNFM9xiozq1IjLAKd5UldOB
+         4Ja8Pqx4HWP0FkZM3801S+yadTF1STwh85GG8BTmq+sNmym1UNgciIljkkNIARZXLxGc
+         PQKj/+YGlmR9uZ/RyhmKGB86LJLPHa8KjOSdTetW9xzPzmXPkapwvWl2tHcwMwhJX1zD
+         GwZ34kILvGcNWnkQJd3j3HwODuUtkHhyQmKNlpt5uzDf/CUT+sTVX2IscnTyhoG4dZsP
+         TOFg==
+X-Gm-Message-State: AOJu0YxyDxnuTKwhck/uiljIgUFZbktqZ1OUNaPPyktRss2vzJ2Iu+4n
+	tTgCppSWVnxcLNS0REyA73DI8x+OHueCJBMvCHOEvMOgok4mWdwoSRs+7I5LBpibzGnYTYMKBZB
+	ZWgsk4qv9+EW7hqVpikeyS/86e/1oG0qaHMkXYr8+gmum+LiwSZco+8AhBZw3CU2p
+X-Gm-Gg: Acq92OGr5dsykjz0kl6xUbD+9IOjyNmYyPl9SmgBZ15Y9el+cr8MhAkma7dFoHKlusD
+	y3wKTSXcsWBjQ/6GgGSPIax25C4nkFX9RX8M7PXS7WWluhNL9KutiYOvu0+whJARDAj8CKbJd3/
+	o85bR0pI9c1n+OkobI3PSPerJdKDEYRrKjpoK7gMeOTHbVeWeva6EgPgtmJ12XQmAjwgjB7717r
+	V3iHsMUmzZ3SMxsU89Yt0FrxWl+rlAflN9NWi1x84xJkpt+0z6gyiBsVh7yxsKFC77iwgSG6dnb
+	uvUhFZxjkOGVvHz+QTPc2UtddWie8wNrVLT+aJzO3R7A/1W2h9Tu/zb7U2e71pdUFwfIkadCgxw
+	sF57YJJx4UrM7AZPA4j/WlAunePXyfR3UYenV/rw5xQt+ZLKkRFSyPptnJAMLTBpWVzLfogT3FW
+	7KUUDc0d4XJg==
+X-Received: by 2002:a05:6a20:7f82:b0:3a2:e26b:2940 with SMTP id adf61e73a8af0-3b22e19b526mr3566627637.0.1778832738023;
+        Fri, 15 May 2026 01:12:18 -0700 (PDT)
+X-Received: by 2002:a05:6a20:7f82:b0:3a2:e26b:2940 with SMTP id adf61e73a8af0-3b22e19b526mr3566570637.0.1778832737404;
+        Fri, 15 May 2026 01:12:17 -0700 (PDT)
+Received: from [10.133.33.62] (tpe-colo-wan-fw-bordernet.qualcomm.com. [103.229.16.4])
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-c82bb102415sm4617352a12.19.2026.05.15.01.12.12
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 15 May 2026 01:12:16 -0700 (PDT)
+Message-ID: <3c54626e-671c-4334-a438-c241886ab8f9@oss.qualcomm.com>
+Date: Fri, 15 May 2026 16:12:10 +0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260507143410.337267-1-marco.crivellari@suse.com> <yq1qznd8mej.fsf@ca-mkp.ca.oracle.com>
-In-Reply-To: <yq1qznd8mej.fsf@ca-mkp.ca.oracle.com>
-From: Marco Crivellari <marco.crivellari@suse.com>
-Date: Fri, 15 May 2026 09:37:42 +0200
-X-Gm-Features: AVHnY4IwQhaV2ubiaP3VHlrB093xLTNTDHTdheqfRxrCs-iqBN9WoaJeNGFmyUo
-Message-ID: <CAAofZF7t4pTi7TerxXZZ6G7xdxAjaWdRGaUMLfMawK8PMQFZ7g@mail.gmail.com>
-Subject: Re: [RFC PATCH] scsi: scsi_transport_srp: Move long delayed work on system_dfl_long_wq
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, 
-	Tejun Heo <tj@kernel.org>, Lai Jiangshan <jiangshanlai@gmail.com>, 
-	Frederic Weisbecker <frederic@kernel.org>, Sebastian Andrzej Siewior <bigeasy@linutronix.de>, 
-	Michal Hocko <mhocko@suse.com>, 
-	"James E . J . Bottomley" <James.Bottomley@hansenpartnership.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 2/2] scsi: ufs: core: Add support for static TX
+ Equalization settings
+To: Bean Huo <beanhuo@iokpp.de>, bvanassche@acm.org, beanhuo@micron.com,
+        peter.wang@mediatek.com, martin.petersen@oracle.com, mani@kernel.org,
+        powenkao@google.com
+Cc: linux-scsi@vger.kernel.org, Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+        Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>,
+        Nitin Rawat <quic_nitirawa@quicinc.com>,
+        open list <linux-kernel@vger.kernel.org>
+References: <20260501134418.863432-1-can.guo@oss.qualcomm.com>
+ <20260501134418.863432-3-can.guo@oss.qualcomm.com>
+ <a0347bb7c1b5902d236855c773d55e0dd9fc19c3.camel@iokpp.de>
+Content-Language: en-US
+From: Can Guo <can.guo@oss.qualcomm.com>
+In-Reply-To: <a0347bb7c1b5902d236855c773d55e0dd9fc19c3.camel@iokpp.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNTE1MDA4MSBTYWx0ZWRfXwP7aYONmg9FQ
+ cWlAffgJi+nbDp/x96X4fjD669EJ5fifuo/3VbHUy52b5gT/5uo4wuGK+TU+J+FhoJdZ9cIT3oV
+ EmFw7ddgKSl6AMJuzK6eKGFAGEQgoV5Sfg6p25+GtW5LowoWj0qq5/Ue9YOEA08gWr/dD4YSS5u
+ /MEO/OuI3m1wP0Q96cciD9aKXUgIGUxfcieaT3u5ehodncA9IdP5J/sEBj2q0KOkoYplAYrB1xt
+ uj/AxzGypVyt6dmESZ7l6CTCrshDjZ8lV8FswB4IjDDVVGRbz8h8WzyrLIbI95YLGOq3mQhF/OS
+ RM3NSh/lQvkAe8ZGqx3b11PBC8CChKlt74ljkYGsd4tJ7aAOLtqmNtqmkGZocsSNKF5L7jo3Bvx
+ 3jE8Tio96Tkr5C40d743vokKe0ajDK879K4JXap8H+R+vlRsqgNnIYUJ5WxhIfwuB9W6iHYkU1W
+ aAlKlY+bMuHC2LIWx4Q==
+X-Proofpoint-GUID: nzgm6wLYzOZ1kM5qkvI6Y7KBO0Y8CCJH
+X-Proofpoint-ORIG-GUID: nzgm6wLYzOZ1kM5qkvI6Y7KBO0Y8CCJH
+X-Authority-Analysis: v=2.4 cv=HJ7z0Itv c=1 sm=1 tr=0 ts=6a06d563 cx=c_pps
+ a=Oh5Dbbf/trHjhBongsHeRQ==:117 a=nuhDOHQX5FNHPW3J6Bj6AA==:17
+ a=IkcTkHD0fZMA:10 a=NGcC8JguVDcA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=gowsoOTTUOVcmtlkKump:22
+ a=VwQbUJbxAAAA:8 a=2mUTFIH5eXoRPtnr5RcA:9 a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
+ a=_Vgx9l1VpLgwpw_dHYaR:22
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-05-15_02,2026-05-13_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ priorityscore=1501 lowpriorityscore=0 suspectscore=0 phishscore=0 spamscore=0
+ clxscore=1015 impostorscore=0 adultscore=0 bulkscore=0 malwarescore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2605130000 definitions=main-2605150081
 
-On Fri, May 15, 2026 at 3:58=E2=80=AFAM Martin K. Petersen
-<martin.petersen@oracle.com> wrote:
+Hi Bean,
+
+On 5/14/2026 9:57 PM, Bean Huo wrote:
+> Can,
 >
 >
-> Marco,
+> Sorry for the late review of this patch. I have several questions:
+Not at all sir.
 >
-> > Currently the code enqueue work items using
-> > {queue|mod}_delayed_work(), using system_long_wq. This workqueue
-> > should be used when long works are expected and it is a per-cpu
-> > workqueue.
 >
-> Applied to 7.2/scsi-staging, thanks!
+> On Fri, 2026-05-01 at 06:44 -0700, Can Guo wrote:
+>> @@ -1297,7 +1297,7 @@ int ufshcd_config_tx_eq_settings(struct ufs_hba *hba,
+>>          }
+>>   
+>>          params = &hba->tx_eq_params[gear - 1];
+>> -       if (!params->is_valid || force_tx_eqtr) {
+>> +       if (!params->is_valid || params->is_static || force_tx_eqtr) {
+> When use_adaptive_txeq is on and params->is_static is true, EQTR will overwrite
+> the static values. That is reasonable since EQTR is more accurate. Is the
+> is_static check really needed here?
+The check of flag is_static is required because we need it to 
+differentiate the static
+(DTS) settings from the settings retrieved from persistent storage:
+
+- If settings are retrieved from persistent storage, TX EQTR should be 
+skipped.
+- If settings are from DTS, TX EQTR should execute anyways to override 
+static settings.
 >
-> --
-> Martin K. Petersen
+>>                  int ret;
+>>   
+>>
+> ...
+>
+>>   
+>>   void ufshcd_retrieve_tx_eq_settings(struct ufs_hba *hba)
+>> diff --git a/drivers/ufs/host/ufshcd-pltfrm.c b/drivers/ufs/host/ufshcd-
+>> pltfrm.c
+>> index c2dafb583cf5..de6302e8c067 100644
+>> --- a/drivers/ufs/host/ufshcd-pltfrm.c
+>> +++ b/drivers/ufs/host/ufshcd-pltfrm.c
+>> @@ -210,6 +210,86 @@ static void ufshcd_init_lanes_per_dir(struct ufs_hba
+>> *hba)
+>>          }
+>>   }
+>>   
+>> +static void ufshcd_parse_static_tx_eq_settings(struct ufs_hba *hba)
+>> +{
+>> +       size_t sz = hba->lanes_per_direction * 2 * TX_EQ_SETTINGS_TUPLE_SZ;
+>> +       u32 settings[UFS_MAX_LANES * 2 * TX_EQ_SETTINGS_TUPLE_SZ];
+>> +       u32 *host_settings, *device_settings;
+>> +       u32 lpd = hba->lanes_per_direction;
+>> +       struct ufshcd_tx_eq_params *params;
+>>
+> ....
+>> +
+>> +               params = &hba->tx_eq_params[gear - 1];
+>> +               host_settings = settings;
+>> +               device_settings = settings + lpd * TX_EQ_SETTINGS_TUPLE_SZ;
+>> +
+>> +               for (lane = 0; lane < lpd; lane++) {
+>> +                       params->host[lane].preshoot = host_settings[0];
+>> +                       params->host[lane].deemphasis = host_settings[1];
+>> +                       params->host[lane].precode_en = host_settings[2];
+>> +                       host_settings += TX_EQ_SETTINGS_TUPLE_SZ;
+>> +
+>> +                       params->device[lane].preshoot = device_settings[0];
+>> +                       params->device[lane].deemphasis = device_settings[1];
+>> +                       params->device[lane].precode_en = device_settings[2];
+>> +                       device_settings += TX_EQ_SETTINGS_TUPLE_SZ;
+>> +               }
+>> +
+>> +               params->is_valid = true;
+>> +               params->is_static = true;
+> I want to confirm I understand the code correctly. Please tell me if I am wrong:
+>
+> 1, When use_adaptive_txeq = 0: static values are used directly as TX EQ for HS-
+> G4 to G6. But ufshcd_config_tx_eq_settings() returns early when
+> use_adaptive_txeq = 0. So which function applies the static values in this
+> case?
+ufshcd_post_device_init()->
+     ufshcd_tune_unipro_params()->
+         ufshcd_apply_valid_tx_eq_settings()
+>
+> 2, when use_adaptive_txeq = 1: static host values are used as the fixed host TX
+> EQ during EQTR. This is because ufs_qcom_get_rx_fom() only sweeps the device
+> side. It reads host values from hba->tx_eq_params[gear-1]->host[]. The static
+> values also work as the per-lane fallback in ufshcd_update_tx_eq_params() when
+> FOM is 0.
+Correct.
+>
+>> +       }
+>> +}
+>> +
+>>   /**
+>>    * ufshcd_parse_clock_min_max_freq  - Parse MIN and MAX clocks freq
+>>    * @hba: per adapter instance
+>> @@ -528,6 +608,8 @@ int ufshcd_pltfrm_init(struct platform_device *pdev,
+>>   
+>>          ufshcd_init_lanes_per_dir(hba);
+>>   
+>> +       ufshcd_parse_static_tx_eq_settings(hba);
+>> +
+>>          err = ufshcd_parse_operating_points(hba);
+>>          if (err) {
+>>                  dev_err(dev, "%s: OPP parse failed %d\n", __func__, err);
+>> diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
+>> index f48d6416e299..2d385d42fcff 100644
+>> --- a/include/ufs/ufshcd.h
+>> +++ b/include/ufs/ufshcd.h
+>> @@ -359,6 +359,7 @@ struct ufshcd_tx_eqtr_record {
+>>    * @is_valid: True if parameter contains valid TX Equalization settings
+>>    * @is_applied: True if settings have been applied to UniPro of both sides
+>>    * @is_trained: True if parameters obtained from TX EQTR procedure
+>> + * @is_static: True if settings are static
+>>    */
+>>   struct ufshcd_tx_eq_params {
+>>          struct ufshcd_tx_eq_settings host[UFS_MAX_LANES];
+>> @@ -367,8 +368,12 @@ struct ufshcd_tx_eq_params {
+>>          bool is_valid;
+>>          bool is_applied;
+>>          bool is_trained;
+>> +       bool is_static;
+> is_static is added next to is_trained, which was added in your "Add persistent
+> TX Equalization settings support" series, That series still has Brian's open
+> question about wTxEQGnSettingsExt Bit[15] being RFU per JESD220H:
+>
+> https://patchwork.kernel.org/project/linux-scsi/cover/20260424151420.111675-1-can.guo@oss.qualcomm.co
+>
+> Is this the reason why "Add persistent..." has not been merged?
+>
+> I'd prefer to wait until that discussion concludes before tagging this one. I
+> hope this is ok for you.
+The persistent patch series has been merged by Martin, we just need to 
+wait for Martin
+to push the branch, then I will upload Patch V2 to address the comment 
+from Conor.
 
-Many thanks!
+Thanks,
+Can Guo.
+>
+> Kind regards,
+> Bean
+>
+>
 
---=20
-
-Marco Crivellari
-
-SUSE Labs
