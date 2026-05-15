@@ -1,99 +1,110 @@
-Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
+Received: from relay.hostedemail.com (smtprelay0014.hostedemail.com [216.40.44.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 82FDD3F39CE
-	for <linux-scsi@vger.kernel.org>; Fri, 15 May 2026 18:20:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 20C943E2AB5;
+	Fri, 15 May 2026 18:50:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=216.40.44.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778869251; cv=none; b=Tzau0Bu1kXRikqRMmsY61s7/UvWakZo7Ym6G+zbbPZzx91nTzLc4S6+anIg6kOCPEx5EHI+GyjVxUKg7eQzhc+UKx0tqoVAFiOxOQ6oB/LWBEXhnGD+o91mmhUvlOKMsDjYSKvaGGzxn/I8ZbxDbLOKSax6vaIJpRM+zsZFp1zY=
+	t=1778871054; cv=none; b=MJDlnZDKSsvCJplG3e+pDAQBKkqK/rypQA4bJO6waWCHOATkKjw12sQ8XXmTY4K8dAc7LARkvfa69S1a2h5CVi+SReV3qp0yGm/dTlhnpP1ckmnKsBn1kOIHA8DtW/CaWBzes3XuAAGDPUzZAXfWDSTx9jca+OybKkumOcQ2iyc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778869251; c=relaxed/simple;
-	bh=qq37aSrrvO74eOeW8bUGRQ9g9PzDz8LFM3pZc9T9Slc=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=AU3PW55hdlN8xtcRMoF3+8yinJxbCzQ4B8CMcxTDMuZJ2+Z9AU6LOd0nqQZ3KafwYLdlvXqduWW8KrxsFRAxpdnSFizP7Cqz3Pybnbsas04P2aqMr2Y88iQNT4Oer0fiM/LjWLc2QIiANHFwIpSoI2Ez0Lm5HXHh9S+ji2fiEnM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=PMuJmiIV; arc=none smtp.client-ip=199.89.1.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="PMuJmiIV"
-Received: from localhost (localhost [127.0.0.1])
-	by 013.lax.mailroute.net (Postfix) with ESMTP id 4gHFr16f60zlh1T8;
-	Fri, 15 May 2026 18:20:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1778869247; x=1781461248; bh=89AUR64Uo70BRyWSwW5e2YKj
-	5SyWbJj2f0k7/w4r/BQ=; b=PMuJmiIV4AoXsYYjGJoww5NsJIPETIkfSU+m0FEi
-	MmrxMzF/+55wA/u58ImgU77SGvx5dcFfdaDltRlKLsejLtUi4WUB8y8+EsjQa+on
-	wQs9Rjn38Ww3KmkbsXmcoGAo1+mHbGd7YtTmwLF5JndPSmDMJrF/X+aekegcZdvV
-	3ioonrdDjLj3VAKCRliYa8V4xF+gkvqd9tiF09OyIYI/rX1ZmY1nwLpHWhmV0Uii
-	5tIUU072R0VUknFQPoYgIJmkp3Uds7a0b41RVKO+q0CR+2iXOflE6luTZ4atK9HU
-	5t9VoFNlwOGjuXW+a2eqK7Sml+ZBylmHM9zREU26nFmcYA==
-X-Virus-Scanned: by MailRoute
-Received: from 013.lax.mailroute.net ([127.0.0.1])
- by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id wqZiDdO19JBQ; Fri, 15 May 2026 18:20:47 +0000 (UTC)
-Received: from [100.119.48.131] (unknown [104.135.180.219])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4gHFqy6k4NzlgwMq;
-	Fri, 15 May 2026 18:20:46 +0000 (UTC)
-Message-ID: <ed7a4268-4ad7-4dbb-a1d9-421ede3538c2@acm.org>
-Date: Fri, 15 May 2026 11:20:45 -0700
+	s=arc-20240116; t=1778871054; c=relaxed/simple;
+	bh=Fh5nIpKIEkRcePCEGBEElyMGaMyAieIuHMAMa3JLQKc=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=t30DQhOlqmG0X2yU+SDIAVi8G/NsccL640HhzrNlLzuleGsA7gfqJwRczf0FuDMegc96pzvPBP6an4htCfXE4QOHcl9d5RWOjs+YwXyUipvyuezLDGRGhURmx7j/zdvhFYG4luQByjrFY791ASZm5ii1kILwHEulHQCDP/VWva0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=goodmis.org; spf=pass smtp.mailfrom=goodmis.org; arc=none smtp.client-ip=216.40.44.14
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=goodmis.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=goodmis.org
+Received: from omf03.hostedemail.com (lb01a-stub [10.200.18.249])
+	by unirelay07.hostedemail.com (Postfix) with ESMTP id 80D43160141;
+	Fri, 15 May 2026 18:50:43 +0000 (UTC)
+Received: from [HIDDEN] (Authenticated sender: rostedt@goodmis.org) by omf03.hostedemail.com (Postfix) with ESMTPA id A64386000A;
+	Fri, 15 May 2026 18:50:41 +0000 (UTC)
+Date: Fri, 15 May 2026 14:50:48 -0400
+From: Steven Rostedt <rostedt@goodmis.org>
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: "Vineeth Pillai (Google)" <vineeth@bitbyteword.org>, "James E.J.
+ Bottomley" <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen"
+ <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org,
+ linux-trace-kernel@vger.kernel.org, Peter Zijlstra <peterz@infradead.org>
+Subject: Re: [PATCH v3 08/11] scsi: ufs: Use trace_call__##name() at guarded
+ tracepoint call sites
+Message-ID: <20260515145048.1c021bc9@gandalf.local.home>
+In-Reply-To: <9fde73e7-0108-48d7-a1a0-ccc9776beb5c@acm.org>
+References: <20260515135946.2238888-1-vineeth@bitbyteword.org>
+	<9fde73e7-0108-48d7-a1a0-ccc9776beb5c@acm.org>
+X-Mailer: Claws Mail 3.20.0git84 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi: core: run queues for all non-SDEV_DEL devices from
- scsi_run_host_queues
-To: David Jeffery <djeffery@redhat.com>
-Cc: linux-scsi@vger.kernel.org,
- "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>
-References: <20260513173552.9222-1-djeffery@redhat.com>
- <65a4ac0a-ea6f-4a83-958c-169d4e2a62e8@acm.org>
- <CA+-xHTHvYtDX+qg_HLhCgnTdrr0q-btGVoY9gb3kwHY_Q4CQTQ@mail.gmail.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <CA+-xHTHvYtDX+qg_HLhCgnTdrr0q-btGVoY9gb3kwHY_Q4CQTQ@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+X-Stat-Signature: w5gpk5wojme4p8f8rrjh4175dhuiaho5
+X-Rspamd-Server: rspamout02
+X-Rspamd-Queue-Id: A64386000A
+X-Session-Marker: 726F737465647440676F6F646D69732E6F7267
+X-Session-ID: U2FsdGVkX1/lFLOMhLKhFr6Eb1OV9O9g+yqC6Yty8l0=
+X-HE-Tag: 1778871041-350002
+X-HE-Meta: U2FsdGVkX18KIYL7SUQ2xQVpSH5T5kZIcsMwMPv9mvMpLdospCP7ZQKNVNhMSM3zbIU/H66gjIKgAJ91J1uGh/FiOY2uL9V4kAECr092XuR+LeI8mPmMFvonO1lIUTQjS7VmxX0UV8IygAHXNfTAKMAVriEHSuP6NAkUuQuf9aE6pZNtcQcBYj6ppOsDYGks4SQ6UYIQaXIoU7GBh9I1QXW7jKBDq5wilWYz4nvsVjV7rrPmfTxHmaXUvBU3H825iHtfl/pwiirvSTR7mNDgzbd/+2CKFx4YloTGgvevu7tulZ/a5pBqItyto4hjCcStVQ1WxjxNIGfg8TUZa1oAKRs5YnmOj/fV
 
-On 5/14/26 10:27 AM, David Jeffery wrote:
-> On Wed, May 13, 2026 at 5:58=E2=80=AFPM Bart Van Assche <bvanassche@acm=
-.org> wrote:
->>
->> On 5/13/26 10:35 AM, David Jeffery wrote:
->>> +             if (sdev->sdev_state =3D=3D SDEV_DEL ||
->>> +                 !get_device(&sdev->sdev_gendev))
->>> +                     continue;
->> A comment would be welcome above this statement that explains that
->> get_device() is called instead of scsi_device_get() because the latter
->> skips devices that are in the state SDEV_CANCEL state.
->>
->=20
-> Would the wording:
->                  /*
->                   * Only skip devices so deep into removal they will ne=
-ver need
->                   * another kick to their queues. Thus scsi_device_get =
-cannot
->                   * be used as it would skip devices in SDEV_CANCEL sta=
-te which
->                   * may need a queue kick.
->                   */
->=20
-> work for you? Thanks for the feedback.
+On Fri, 15 May 2026 08:27:27 -0700
+Bart Van Assche <bvanassche@acm.org> wrote:
 
-How about adding that other similar loops use scsi_device_get() and
-changing "scsi_device_get" into "scsi_device_get()"?
+> On 5/15/26 6:59 AM, Vineeth Pillai (Google) wrote:
+> >   static void ufshcd_add_query_upiu_trace(struct ufs_hba *hba,
+> > @@ -432,8 +432,8 @@ static void ufshcd_add_query_upiu_trace(struct ufs_hba *hba,
+> >   	if (!trace_ufshcd_upiu_enabled())
+> >   		return;
+> >   
+> > -	trace_ufshcd_upiu(hba, str_t, &rq_rsp->header,
+> > -			  &rq_rsp->qr, UFS_TSF_OSF);
+> > +	trace_call__ufshcd_upiu(hba, str_t, &rq_rsp->header,
+> > +			       &rq_rsp->qr, UFS_TSF_OSF);
+> >   }  
+> 
+> Instead of making this change, please remove the 
+> trace_ufshcd_upiu_enabled() call because it is redundant.
 
-Thanks,
+You mean to remove the ufshcd_add_query_upiu_trace() function and just use
+a tracepoint where it is called?
 
-Bart.
+Makes sense.
+
+> 
+> >   static void ufshcd_add_tm_upiu_trace(struct ufs_hba *hba, unsigned int tag,
+> > @@ -445,15 +445,15 @@ static void ufshcd_add_tm_upiu_trace(struct ufs_hba *hba, unsigned int tag,
+> >   		return;
+> >   
+> >   	if (str_t == UFS_TM_SEND)
+> > -		trace_ufshcd_upiu(hba, str_t,
+> > -				  &descp->upiu_req.req_header,
+> > -				  &descp->upiu_req.input_param1,
+> > -				  UFS_TSF_TM_INPUT);
+> > +		trace_call__ufshcd_upiu(hba, str_t,
+> > +					&descp->upiu_req.req_header,
+> > +					&descp->upiu_req.input_param1,
+> > +					UFS_TSF_TM_INPUT);
+> >   	else
+> > -		trace_ufshcd_upiu(hba, str_t,
+> > -				  &descp->upiu_rsp.rsp_header,
+> > -				  &descp->upiu_rsp.output_param1,
+> > -				  UFS_TSF_TM_OUTPUT);
+> > +		trace_call__ufshcd_upiu(hba, str_t,
+> > +					&descp->upiu_rsp.rsp_header,
+> > +					&descp->upiu_rsp.output_param1,
+> > +					UFS_TSF_TM_OUTPUT);
+> >   }  
+> 
+> Same comment here: I think it would be better to remove the 
+> trace_ufshcd_upiu_enabled() call rather than
+> changing trace_ufshcd_upiu() into trace_call__ufshcd_upiu().
+
+Well, removing it here would mean placing the if (str == UFS_TM_SEND) into
+the code and processing it even when tracing is disabled. With the
+trace_*_enabled() helper, it's all a nop.
+
+-- Steve
+
+
