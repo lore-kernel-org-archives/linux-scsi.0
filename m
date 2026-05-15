@@ -1,142 +1,85 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3B7CD38E8B8
-	for <linux-scsi@vger.kernel.org>; Thu, 14 May 2026 17:27:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=170.10.129.124
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778779673; cv=pass; b=XCMx9pztZAy1UdgtOw3LfmlLuUGQusyf8CKhUdWZqPTacdscPziLNFiDWhm0XIHObP+thXRnZzZ/R6ZogY9lKB9t419L/guXshTuqTpLgRX6+II0lhh8F6CtaD117NH4Pm1VTSI7Jx0vJ4cMozPfpMIpgktWrFSqTMiVfBiiqE0=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778779673; c=relaxed/simple;
-	bh=caS0jM/zkOOo/hpfImrJrmrVXT2oeN5fq61ivWwP+h4=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=qkH6vgeUxzmblol8kBUoP7VDM9+1lodXHn0BfoSSYv7dBb2B/0jDbgVNhbc8SK1vqHTPz3vrJGgEGkxczQhCBgudmQVTKNSkYIAiT1NmQsP54TIuIbQev3H6rljkcQMi/HLeTM7pbKmySnpEz8pv02CdBCxiFzbOC598vPlgplk=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Fk/XqdoT; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=EiipPqpy; arc=pass smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 233C6D531;
+	Fri, 15 May 2026 00:24:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1778804675; cv=none; b=pXO0OLETF29GM+uaPNO2aLeepQ0ET86PLttDRY5RMvFK69qVkUNwYNkRUsa39oXR8YNQodlaVQKn/zV6bailH+jIxTWXdrjBq/t25ZvtafDOuNBkLNWHpDvx+B55s1HMlMCfyNXxlPbGnOMWzFTWvhD+8wmfV24ZqeYNoT/niw0=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1778804675; c=relaxed/simple;
+	bh=k4W7/pJA6lvhQOEmxL4Uw4hNh3lzjA73mTSZz6L891g=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=irTtCEXYDjQXWNt01Fpl1FtjmuFsZUexTiOjhqAVbY4sHtgVHYeAFb0DdCrrAfEJAfsopcFrIDhI7JzZe9Zh0ijT5Ij2zQ9u/QxSzpsh1Q8E9Azva5ep/JcvWuotSt0uh9RdU2Cf6gMEadYJLs2xMM6sHen2kC/VPVJ3dPRGppU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tD2BIK9V; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Fk/XqdoT";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="EiipPqpy"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1778779670;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=F2r5nkVMUfAgaFyXQVTDqEsZEP+fOt4UUMQH+KUzU0Y=;
-	b=Fk/XqdoTmSUKbTkyk6bcKiuDxyu01Xgt3SjOByUpEdc4oGG6dObO6d72MnjO3sLRc8ttxJ
-	hqGJXCpynTcEl6teQGGL6vWGu/VUIn4tIKz1+nT4OI2OrzKVcYyE3XiWOASJTqinnElcA9
-	CCvWF024/lVGzlQjue8wOZ27gclYju4=
-Received: from mail-vs1-f70.google.com (mail-vs1-f70.google.com
- [209.85.217.70]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-641-MtHaS6RTMjq6wIbjhQzpsQ-1; Thu, 14 May 2026 13:27:49 -0400
-X-MC-Unique: MtHaS6RTMjq6wIbjhQzpsQ-1
-X-Mimecast-MFC-AGG-ID: MtHaS6RTMjq6wIbjhQzpsQ_1778779669
-Received: by mail-vs1-f70.google.com with SMTP id ada2fe7eead31-6327b45f59dso2766857137.1
-        for <linux-scsi@vger.kernel.org>; Thu, 14 May 2026 10:27:49 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1778779668; cv=none;
-        d=google.com; s=arc-20240605;
-        b=RSHPHiyeci/Q9Ev9wXM9cuqJpJjvuxP/NtAx2sL5bCWYjT4r8nbhbrBlfoTyghlntT
-         KCPKP9dZrq6OME+AVeG9V7t9pWEDSPrkiCtFiPA+zW9UY9gQPFlW2WvSR+sgw7cgFigl
-         yoBl3DlUskK5cut6Ox+HxIIkMBhhoBrmohklCOLPkvY1cYbGlKyFaUCm1eP7HFci/QSn
-         DWMPUkT32Sg+jX/7o/pOBAMnRFUNVzz95z1+uXQeyh1m36Q96sbSKlpziH+wQ4skSCjB
-         ygGGpoKQbvQygOt/RgZ7F8CyiDSWgyrysEwOEqzANUjEBnhaMujcl171O0f4k31Bua4m
-         /fTg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=F2r5nkVMUfAgaFyXQVTDqEsZEP+fOt4UUMQH+KUzU0Y=;
-        fh=tScm2eAN0HS9mCdl3iBYquTZsazadfL7sZDsu6+Quyk=;
-        b=ZDemFn6PzrphyfGEwcwRVdIwtboHe6RITjiK+Hhx2/kK84I4g4PrZAyCfeyjFGTyIK
-         meBs8yTy8DInp7wd3SMTDBfxAje1Hmn3Ohr6nLJbquP4mm2UZDQF775SExnRivD6UTgw
-         S8S3KZP8WDS8SGmD3V7IS6fW1WOdoKHTbzq2NRzpeCNwrp5mk4UgeeLMi7ZmCFuZUitm
-         46hxNHrgKFnoRRfjpWgD0wOS7xuKEdC2xG+nbwZT3TjJbrlgaED0lI1G0902osD6PlH6
-         yMnUie50Fo8McLlHkbIUA9F4E8xkejzd6Z3b7iU7HrU3i2P8Nb9QZUtQkilh+uoO9mrU
-         yTyA==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1778779668; x=1779384468; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=F2r5nkVMUfAgaFyXQVTDqEsZEP+fOt4UUMQH+KUzU0Y=;
-        b=EiipPqpyeBturVjJxCil0T7DEI9AKr9IZ0ItGPeZuKxD1Ne4CLURSqq4QlAI7gw3t3
-         np49AbLoY1zAsG+a4hv72iavDaGtJ6Xon4F0SansOeWSl2wvKToKEmHccmeIlydWt17v
-         th6lExNFrZmyZtsm8MQpXJDUw5TaM29gGNY8wF+/iXls1nLdI2X4LFdsmdFSNUd2i3fO
-         taLVFZ+ohDxzBkP/E4VFfnglKQncJGyXDh1eMatZYmNbAcprhr87l09F/6YeWWwgGvjH
-         5hdYD6hACCVFuzFhOdaw+wqFrHgUsokmh7mR03pvAmd/ZkBzSNuUAyblKSSG/X/kxwp8
-         wuLQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1778779668; x=1779384468;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=F2r5nkVMUfAgaFyXQVTDqEsZEP+fOt4UUMQH+KUzU0Y=;
-        b=Q/ND04e8xa5n7LPFjW3+bG1+7OEgzamRIfIxdZ6hjgcBYqS8XVOmTqo/WTQabia9B5
-         /yPFdd8lwt/r5DRHr9xDfmDSFqDpOM6TrNmti0BQYJK2FXWuQ94a3H4PmcGNWpUTZ74N
-         iwdEbl5lxEzWQgYODEhb0arOgOLpAPtTl20KDaFSCqOQwO+Vj+7lXHDxMXJU5PpnmEQv
-         AZ5FlgM+8TxapYudWR+BiJnPnb3R6taggqVcVf+DcPilSj/CmidF6mLkg6yBgA2db4EK
-         pdF1lgAyKhVkWxJt1+U70rfOK8rrZN67QvHc7EZozH1i6h5kJi0UVZjHzbx7nvUMAYCm
-         rzig==
-X-Gm-Message-State: AOJu0Yy2QxSFFe+T8pm/5JM9BrWept/3VhapFEu3rWdiUyMYBv/kLd/I
-	Aq+19vRHp82AZ991GjUVHD8bSClfaNYwM0Lmzg7xAufO87AXae/e0o3lOALd3PKMvkNjDz6uY5C
-	76kamHIgfiGUSHzFbp0+TIowcWrWLM6XaOKyV3bymUtkE2m3z2tC+SZWxJ/TG+vB7rpTo/0W28b
-	EdZnZvxKjwqqpzFhNsSAeE2BoZSrSsJBKW4kw+Ng==
-X-Gm-Gg: Acq92OED1fb7FDDLit5hyE34p/9bFIuBgWQINySJCp+ZZaFdFbOloywnyWwFQGKeb0d
-	p7Yatg4N5xwP8q16Uh3T8DGtlU0uNh3agwCkCQroUr0IAjX0M6M4a/uJwzU+lq76Y4GoavSIoAy
-	PGgtxeAZQYJWwwev8TbByOrsCjno53nVFSNQ8Yd6U0zjCuL2d8Vi+o7cDfNfzlMe8nIt1oe0/kE
-	LYPLPYEghafkAQX6jI+GLYixejK/b9wlwkCXzgy5j/h5XEjAPoL2BWOE7u4
-X-Received: by 2002:a05:6102:32c1:b0:607:798d:8083 with SMTP id ada2fe7eead31-63a3ee80766mr71653137.15.1778779668588;
-        Thu, 14 May 2026 10:27:48 -0700 (PDT)
-X-Received: by 2002:a05:6102:32c1:b0:607:798d:8083 with SMTP id
- ada2fe7eead31-63a3ee80766mr71637137.15.1778779668149; Thu, 14 May 2026
- 10:27:48 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tD2BIK9V"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B4531C2BCB3;
+	Fri, 15 May 2026 00:24:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1778804674;
+	bh=k4W7/pJA6lvhQOEmxL4Uw4hNh3lzjA73mTSZz6L891g=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=tD2BIK9VBTnBncsoHz8hImJBJ3vlvh7QDgIdEffKwFpWh0uZadfLaadKAdX2eqx3j
+	 1O1Q4tGiZOyD91QPUiLS+AJb1VVGvzk4bkrysSZSuu9T6ccr8NM0SN4/pYGMoPJBHu
+	 AjE5BAOZuSMbBnRBtJ76U8gESt5i/B8vSKtGQYz4c0pOP4YcY6iFBJOxSIpORWYVMs
+	 M88egYe3bRFdeq8/MGmTwPRrsqGlGerf1O8hP7/FhsWbrSLsXRCwbsxnYAHC1uH9Q/
+	 DRVqD9qXy3GZ3FbdGLytphLbGeOSMuoDzi7yZ4mSjK/pWw3PZxhBFqXt+KVXF2IHED
+	 5iWXIx1088evA==
+Date: Thu, 14 May 2026 20:24:33 -0400
+From: Mike Snitzer <snitzer@kernel.org>
+To: John Garry <john.g.garry@oracle.com>
+Cc: hch@lst.de, kbusch@kernel.org, sagi@grimberg.me, axboe@fb.com,
+	martin.petersen@oracle.com, james.bottomley@hansenpartnership.com,
+	hare@suse.com, bmarzins@redhat.com, nilay@linux.ibm.com,
+	jmeneghi@redhat.com, linux-nvme@lists.infradead.org,
+	linux-scsi@vger.kernel.org, michael.christie@oracle.com,
+	dm-devel@lists.linux.dev, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 00/13] libmultipath: a generic multipath lib for block
+ drivers
+Message-ID: <agZnwW64PHRew_5l@kernel.org>
+References: <20260428111105.1778008-1-john.g.garry@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260513173552.9222-1-djeffery@redhat.com> <65a4ac0a-ea6f-4a83-958c-169d4e2a62e8@acm.org>
-In-Reply-To: <65a4ac0a-ea6f-4a83-958c-169d4e2a62e8@acm.org>
-From: David Jeffery <djeffery@redhat.com>
-Date: Thu, 14 May 2026 13:27:35 -0400
-X-Gm-Features: AVHnY4Iuks8Kw79LrepbC7OZX3jkBNxfrKKtKrDKGn8P6k8j_Lv-ztuRMDm5fzU
-Message-ID: <CA+-xHTHvYtDX+qg_HLhCgnTdrr0q-btGVoY9gb3kwHY_Q4CQTQ@mail.gmail.com>
-Subject: Re: [PATCH] scsi: core: run queues for all non-SDEV_DEL devices from scsi_run_host_queues
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: linux-scsi@vger.kernel.org, 
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
-	"Martin K. Petersen" <martin.petersen@oracle.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260428111105.1778008-1-john.g.garry@oracle.com>
 
-On Wed, May 13, 2026 at 5:58=E2=80=AFPM Bart Van Assche <bvanassche@acm.org=
-> wrote:
->
-> On 5/13/26 10:35 AM, David Jeffery wrote:
-> > +             if (sdev->sdev_state =3D=3D SDEV_DEL ||
-> > +                 !get_device(&sdev->sdev_gendev))
-> > +                     continue;
-> A comment would be welcome above this statement that explains that
-> get_device() is called instead of scsi_device_get() because the latter
-> skips devices that are in the state SDEV_CANCEL state.
->
+On Tue, Apr 28, 2026 at 11:10:52AM +0000, John Garry wrote:
+> libmultipath: a generic multipath lib for block drivers
+> 
+> This series introduces libmultipath. It is essentially a refactoring of
+> NVME multipath support, so we can have a common library to also support
+> native SCSI multipath.
+> 
+> Much of the code is taken directly from the NVMe multipath code. However,
+> NVMe specifics are removed. A template structure is provided so the driver
+> may provide callbacks for driver specifics, like ANA support for NVMe.
+> 
+> Important new structures introduced include:
+> 
+> - mpath_head
+> These contain much of the multipath-specific functionality from
+> nvme_ns_head, including a pointer to the gendisk structure and
+> a path SRCU-based array.
+> 
+> - mpath_device
+> This is the per-path structure, and contains much the same
+> multipath-specific functionality in nvme_ns
+> 
+> libmultipath provides functionality for path management, path selection,
+> data path, and failover handling.
+> 
+> Since the NVMe driver has some code in the sysfs and ioctl handling
+> which iterate all multipath NSes, functions like mpath_call_for_device()
+> are added to do the same per-path iteration.
 
-Would the wording:
-                /*
-                 * Only skip devices so deep into removal they will never n=
-eed
-                 * another kick to their queues. Thus scsi_device_get canno=
-t
-                 * be used as it would skip devices in SDEV_CANCEL state wh=
-ich
-                 * may need a queue kick.
-                 */
+To get upstream this library needs an in-tree consumer. So at the end
+of the series, it'd makes sense to include the NVMe and/or SCSI
+changes that uses it.
 
-work for you? Thanks for the feedback.
-
-David Jeffery
-
+Mike
