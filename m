@@ -1,54 +1,53 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 14AC7370D6F
-	for <linux-scsi@vger.kernel.org>; Fri, 15 May 2026 18:10:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0CDE63FDBE9
+	for <linux-scsi@vger.kernel.org>; Fri, 15 May 2026 18:11:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778868620; cv=none; b=rqp9pwpag45Acnejn0PoVwRSaGNGlnikGsv427ZUtLvz+AC0YmtJHT/F5FVPVJEk0gDvetj2b593ZftFp8MhoS0wQPmT1hst/6zS6ws/0zc+1eG4XCPwXiUFbAvXL13C3uejcgs0SkULPv6iGVABvs1g9iM+k7L232sLSIOXHLg=
+	t=1778868701; cv=none; b=EDATSTJm6iUchbTcDecH/ClRPgSU05JKp/mlGRdruU5Amou5oYpIga1ofsnkLRtgKdq8v7+lHy+Hl9HdIrGtcKKSyS2GfpxIKjndJurY1A0mvLeFf5gic1jBrmS1rB9YGz8qlw9nX2THLdzaqx7E7G3hLa8qu4zf0jaRM/gTKIw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778868620; c=relaxed/simple;
-	bh=FJ/DdWgHeigV++xU0VksFlbN48BpQXYeM6cd99G9kmI=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=T57IaxcIM74C0r9yum1DGStsfpsNoo626Z12EcKeOlHaWdkrjQGz/cmfbNtE7RrETTQOaKRhbZkDgZEsxvqBumCJNdJ/+7Rq/S2fRq4JizrfVqM9SX0Ndhqa/X2bYtNxGxwfRAQ+TZouBZelZEBinPa/IBXw2qdlL8P2u52ZaFE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=SfVhRIOb; arc=none smtp.client-ip=170.10.133.124
+	s=arc-20240116; t=1778868701; c=relaxed/simple;
+	bh=+nSim+uEjmcKMrFVB9FVCs46GHarEWqWYDNcoIDf5Gw=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=L8s+qoPZqM8w/dUTGTmdk9WySvvz9j3IPmL5wzYaaOQ27WuTCZe8nXZY9aXZVX2aR6S5WAe0lNtHGCCSM1KS7D/hCsM703/YX/3fRuiJwfAjrBzCjm5k2tKINlpauzZ9ubN3CrWIf/fccoYf+ZCUlKIEXyFyuhIvbgyElwmXRjY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=FX3h1kJf; arc=none smtp.client-ip=170.10.129.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="SfVhRIOb"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="FX3h1kJf"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1778868616;
+	s=mimecast20190719; t=1778868699;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding;
-	bh=0Q67hz8hJmbtUF8sz5dd3zBEylZoCXW8MMSCGJLxixs=;
-	b=SfVhRIObLptFqiGpRVONY8GtccB2uFi+ycJQriJyu72KqdGpHesJ6ql9cCGZT+zlywZ7He
-	S1CcDxPM255+z6h/Fclh2CwZSkfWqnqRgVouXDs0iX/y9eWfBZRS0VVat4Cjh6DrFyZV6a
-	AommEQfhT7QUYe76AYF3BW95EiYk4TE=
-Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+	bh=dGSdcPY6xlPUsoTJzsGBrLigD5YW6u6K1LbAyPtxaps=;
+	b=FX3h1kJfl0o3E9XS1T1PQKI32bS6i9Ph0AfCOa5FOlROHsLaYMkTspClIs10vK9dz1xRP0
+	XrZW+SE4V7Z9euNtAjwW12rwX3P5U7KZiIf0kg1Ixc+pEl/EOtoUFLJCoQUzsTO6temRUw
+	R3AEMDWWweqVj3LcrssOqYbuHXLqVN4=
+Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-86-0oYiplgiMqyCn7OuGQ5IFA-1; Fri,
- 15 May 2026 14:10:13 -0400
-X-MC-Unique: 0oYiplgiMqyCn7OuGQ5IFA-1
-X-Mimecast-MFC-AGG-ID: 0oYiplgiMqyCn7OuGQ5IFA_1778868612
-Received: from mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.4])
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-1-D4ymb76OPyeqXNv0IzNaoA-1; Fri,
+ 15 May 2026 14:11:35 -0400
+X-MC-Unique: D4ymb76OPyeqXNv0IzNaoA-1
+X-Mimecast-MFC-AGG-ID: D4ymb76OPyeqXNv0IzNaoA_1778868694
+Received: from mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.111])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 1A4A319560AA;
-	Fri, 15 May 2026 18:10:12 +0000 (UTC)
+	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id B8A7F18005BB;
+	Fri, 15 May 2026 18:11:34 +0000 (UTC)
 Received: from fedora-work.redhat.com (unknown [10.22.89.30])
-	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 3D12830001A2;
-	Fri, 15 May 2026 18:10:10 +0000 (UTC)
+	by mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 46C181800240;
+	Fri, 15 May 2026 18:11:33 +0000 (UTC)
 From: David Jeffery <djeffery@redhat.com>
 To: linux-scsi@vger.kernel.org,
 	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	"Bart Van Assche" <bvanassche@acm.org>
+	"Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: David Jeffery <djeffery@redhat.com>
-Subject: [PATCH v2] scsi: core: run queues for all non-SDEV_DEL devices from scsi_run_host_queues
-Date: Fri, 15 May 2026 14:09:41 -0400
-Message-ID: <20260515180941.9698-1-djeffery@redhat.com>
+Subject: [PATCH] scsi: core: wake eh reliably when using scsi_schedule_eh
+Date: Fri, 15 May 2026 14:11:12 -0400
+Message-ID: <20260515181112.9758-1-djeffery@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -56,75 +55,117 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.4
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.111
 
-While a scsi host is in a recovery state, scsi_mq_requeue_cmd will not set
-the requeue list for a requeued command to be kicked in the future. The
-expectation is a call to scsi_run_host_queues will kick all scsi devices
-once the recovery state is cleared.
+Drivers which use the scsi_schedule_eh function to run the error handler
+currently risk the error handler thread never waking once all commands are
+timed out or inactive. There is no enforced memory order between setting
+the host into error recovery state and counting busy commands. This can
+result in a race with scsi_dec_host_busy where neither CPU sees both
+conditions of all commands inactive and the host error state to request
+waking the error handler.
 
-However, scsi_run_host_queues uses shost_for_each_device which uses
-scsi_device_get and so will ignore devices in a partially removed state like
-SDEV_CANCEL. But these devices may also have requeued requests, leaving
-their requests stuck from not being kicked and causing the removal process
-of the device to hang.
+To fix this, run the scsi_schedule_eh's scsi_eh_wakeup from a new work item
+which will use rcu to ensure scsi_schedule_eh's call to scsi_host_busy will
+occur after the error state is globally visible and will be seen by any
+current scsi_dec_host_busy callers.
 
-scsi_run_host_queues needs to run against more devices than the macro
-shost_for_each_device allows. Instead of using the too limiting
-scsi_device_get state checks, only ignore devices in SDEV_DEL state or
-when unable to acquire a reference. Attempt to run the queues for all other
-devices when scsi_run_host_queues is called.
-
-Fixes: 8b566edbdbfb ("scsi: core: Only kick the requeue list if necessary")
+Fixes: 6eb045e092ef ("scsi: core: avoid host-wide host_busy counter for scsi
+_mq")
 Signed-off-by: David Jeffery <djeffery@redhat.com>
 ---
+ drivers/scsi/hosts.c      |  2 ++
+ drivers/scsi/scsi_error.c | 22 +++++++++++++++++++++-
+ drivers/scsi/scsi_priv.h  |  1 +
+ include/scsi/scsi_host.h  |  3 +++
+ 4 files changed, 27 insertions(+), 1 deletion(-)
 
-Changes from V1:
-Added a comment on why scsi_device_get cannot be used here.
-
- drivers/scsi/scsi_lib.c | 27 +++++++++++++++++++++++++--
- 1 file changed, 25 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 6e8c7a42603e..1b2809f1a096 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -575,10 +575,33 @@ void scsi_requeue_run_queue(struct work_struct *work)
+diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+index 0cc173e777ae..23cc953f5256 100644
+--- a/drivers/scsi/hosts.c
++++ b/drivers/scsi/hosts.c
+@@ -357,6 +357,7 @@ static void scsi_host_dev_release(struct device *dev)
+ 	/* Wait for functions invoked through call_rcu(&scmd->rcu, ...) */
+ 	rcu_barrier();
  
- void scsi_run_host_queues(struct Scsi_Host *shost)
- {
--	struct scsi_device *sdev;
-+	struct scsi_device *sdev, *prev = NULL;
-+	unsigned long flags;
++	cancel_work_sync(&shost->eh_work);
+ 	if (shost->tmf_work_q)
+ 		destroy_workqueue(shost->tmf_work_q);
+ 	if (shost->ehandler)
+@@ -422,6 +423,7 @@ struct Scsi_Host *scsi_host_alloc(const struct scsi_host_template *sht, int priv
+ 	INIT_LIST_HEAD(&shost->starved_list);
+ 	init_waitqueue_head(&shost->host_wait);
+ 	mutex_init(&shost->scan_mutex);
++	INIT_WORK(&shost->eh_work, scsi_rcu_eh_wakeup);
  
--	shost_for_each_device(sdev, shost)
-+	spin_lock_irqsave(shost->host_lock, flags);
-+	__shost_for_each_device(sdev, shost) {
-+		/*
-+		 * Only skip devices so deep into removal they will never need
-+		 * another kick to their queues. Thus scsi_device_get cannot
-+		 * be used as it would skip devices in SDEV_CANCEL state which
-+		 * may need a queue kick.
-+		 */
-+		if (sdev->sdev_state == SDEV_DEL ||
-+		    !get_device(&sdev->sdev_gendev))
-+			continue;
-+		spin_unlock_irqrestore(shost->host_lock, flags);
-+
-+		if (prev)
-+			put_device(&prev->sdev_gendev);
- 		scsi_run_queue(sdev->request_queue);
-+
-+		prev = sdev;
-+
-+		spin_lock_irqsave(shost->host_lock, flags);
-+	}
-+	spin_unlock_irqrestore(shost->host_lock, flags);
-+	if (prev)
-+		put_device(&prev->sdev_gendev);
+ 	index = ida_alloc(&host_index_ida, GFP_KERNEL);
+ 	if (index < 0) {
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index 147127fb4db9..453a2232452d 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -73,6 +73,26 @@ void scsi_eh_wakeup(struct Scsi_Host *shost, unsigned int busy)
+ 	}
  }
  
- static void scsi_uninit_cmd(struct scsi_cmnd *cmd)
++void scsi_rcu_eh_wakeup(struct work_struct *work)
++{
++	struct Scsi_Host *shost = container_of(work, struct Scsi_Host, eh_work);
++	unsigned long flags;
++	unsigned int busy;
++
++	/*
++	 * Ensure any running scsi_dec_host_busy has completed its rcu section
++	 * so changes to host state and host_eh_scheduled are visible to all
++	 * future calls of scsi_dec_host_busy
++	 */
++	synchronize_rcu();
++
++	busy = scsi_host_busy(shost);
++
++	spin_lock_irqsave(shost->host_lock, flags);
++	scsi_eh_wakeup(shost, busy);
++	spin_unlock_irqrestore(shost->host_lock, flags);
++}
++
+ /**
+  * scsi_schedule_eh - schedule EH for SCSI host
+  * @shost:	SCSI host to invoke error handling on.
+@@ -88,7 +108,7 @@ void scsi_schedule_eh(struct Scsi_Host *shost)
+ 	if (scsi_host_set_state(shost, SHOST_RECOVERY) == 0 ||
+ 	    scsi_host_set_state(shost, SHOST_CANCEL_RECOVERY) == 0) {
+ 		shost->host_eh_scheduled++;
+-		scsi_eh_wakeup(shost, scsi_host_busy(shost));
++		queue_work(shost->tmf_work_q, &shost->eh_work);
+ 	}
+ 
+ 	spin_unlock_irqrestore(shost->host_lock, flags);
+diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
+index 7a193cc04e5b..304e8e79bd91 100644
+--- a/drivers/scsi/scsi_priv.h
++++ b/drivers/scsi/scsi_priv.h
+@@ -91,6 +91,7 @@ extern enum blk_eh_timer_return scsi_timeout(struct request *req);
+ extern int scsi_error_handler(void *host);
+ extern enum scsi_disposition scsi_decide_disposition(struct scsi_cmnd *cmd);
+ extern void scsi_eh_wakeup(struct Scsi_Host *shost, unsigned int busy);
++extern void scsi_rcu_eh_wakeup(struct work_struct *work);
+ extern void scsi_eh_scmd_add(struct scsi_cmnd *);
+ void scsi_eh_ready_devs(struct Scsi_Host *shost,
+ 			struct list_head *work_q,
+diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+index 7e2011830ba4..f6b286fa59f2 100644
+--- a/include/scsi/scsi_host.h
++++ b/include/scsi/scsi_host.h
+@@ -750,6 +750,9 @@ struct Scsi_Host {
+ 	 */
+ 	struct device *dma_dev;
+ 
++	/* Used for an rcu-synchronizing eh wakeup */
++	struct work_struct eh_work;
++
+ 	/* Delay for runtime autosuspend */
+ 	int rpm_autosuspend_delay;
+ 
 -- 
 2.53.0
 
