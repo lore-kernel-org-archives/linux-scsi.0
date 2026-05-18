@@ -1,158 +1,99 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF83448BD52
-	for <linux-scsi@vger.kernel.org>; Mon, 18 May 2026 16:54:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 95A5248BD52
+	for <linux-scsi@vger.kernel.org>; Mon, 18 May 2026 16:54:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779123254; cv=none; b=b/hfxOJoTV6waR7H4EatJFMgENEIhXjtGO2VblGIwqGvuzhyx78njcOyTNK6O5srLdt6rMbsqcmD3GmZAko2z9bfCCgYA+suO3UbqSkCY9sODKSGyTqo3vtgsMSk0Px73PF9j+OwsileCLk1a1Dn4KWZ6lsXK9q90ME8eZfE6cU=
+	t=1779123266; cv=none; b=eUMpMk7ZLcEVPAUCVMjsR2mK2MnqAHvNeyISj6mtW51F2PRbZIgdZ0e+alUGKqlJDiOV4xy0qSdFoxizsFU7P1Z1CddlvbQK+hdYrnKozXBLuImSO2LwG0z+2A3nic4x/WektV1XqTk987ijBe7yyZ4iwQk8WUuEH42OMVm0eD0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779123254; c=relaxed/simple;
-	bh=VNEhOKBhobQqQsoEuqNm9mT3JANz2GEoOzRTHnEsEfk=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=KpSDc5LtjW2+ppi4+0kO9tMBLLctLjB539kbYBqaU1PqHHVrkRYrzAGTfuANArvWOH4DsSaqOKIIYgPpXu97FB0fbF2iXULuaOTJ670QZh9+LI2NXcSJVSTgySKmFQzF5fWlzz2lWkemgvkB9Qfb8ivsRLR+1ug1Rt76YXbnCDI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=UxFBqabT; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=N4Ghzzlh; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	s=arc-20240116; t=1779123266; c=relaxed/simple;
+	bh=kKSWWmiFMOGK7g4Y5dkmbJF+YVc/HIhgy0St/ZUI0zo=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=BNSY2qJNqY1SLTREqTdA0N295VrpnMPjECRpujEIBN7263bqDyiAYpIZfn/WCKA/qKGx+VyPNkvPn6KebVJ2OPsdV1zhSj7EACasRA1CZSpyP9O9jur73FPAONmwqg0jCyLe7kzXv7x9DBr9TcczabTG2IhtZIjcOESZSGgk/Yo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=m5kuR4oK; arc=none smtp.client-ip=199.89.1.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="UxFBqabT";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="N4Ghzzlh"
-Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 64IEnGoQ2975395
-	for <linux-scsi@vger.kernel.org>; Mon, 18 May 2026 16:54:13 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:date:from:in-reply-to:message-id
-	:mime-version:references:subject:to; s=qcppdkim1; bh=lqhBDm7fYqu
-	6MvZpBtGOglNbnbUjw4oExZ0wnZT6Ids=; b=UxFBqabTecW5vlb0rcdi4JEnZdY
-	S2KzrNM3MalVdZP+7TvZsnJ6P7DFYCPv1fpY1NLr1BPBXRANhXP7v10aadNWe8Ej
-	xv9X78RGLQ+xtuIG4ay6gR5TqYsMQpruf5ax4UEF8XO9bgQy1ldytPcJdJoLrHXh
-	3a46lG/I30HxLo4bQBr0Ta6nrFzZ7jRoqW0pNV5V1cXT1rleZB28dyy7s5VcD5bR
-	qbdkiouMHpduyyAFmMV/or7DEopALCJY4DYUa2JOPWFdVkHv+gA7hNa6dMH2wuTD
-	Fr0AzlCS9wwTex20pF1ViOLe7sPFC9gVsH4Ed9m9NPbtLpCsaCAjXQHLxiw==
-Received: from mail-pl1-f199.google.com (mail-pl1-f199.google.com [209.85.214.199])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4e84v48ffy-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Mon, 18 May 2026 16:54:12 +0000 (GMT)
-Received: by mail-pl1-f199.google.com with SMTP id d9443c01a7336-2b9fe2d6793so64766155ad.0
-        for <linux-scsi@vger.kernel.org>; Mon, 18 May 2026 09:54:12 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1779123252; x=1779728052; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=lqhBDm7fYqu6MvZpBtGOglNbnbUjw4oExZ0wnZT6Ids=;
-        b=N4GhzzlhAwB6y+o2Yb6SfVAZb7y0jsE+gHITUoiIIHbL+MjiE7tnX7+Mnqjx5XUlRh
-         lyExfMYMJ4CYXuGKVXuUG6huf5jyIvW0so0UQu15SkE/OmEoQEPlVcPv09ECP2jSta7d
-         vaCe7/Sr8WY2W+cwSmrKdQYpCnFZaR1FAZDnXcqBINuk1atg8Dit1kQQ9Zv3Q8nhdNVE
-         1A6CjMvytW2Zv/RqtqGQh0PdJ/Iv3HFlmMFisjVVmN8wIcVKTBXiYPDnpUVyp5asD8tm
-         fp5z6+dtLXi49YMzGO4yU1WiaNcUC5WvpYfE3H7/6JobaYgQoXijMQD+37iBEH88sRrw
-         nbug==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1779123252; x=1779728052;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=lqhBDm7fYqu6MvZpBtGOglNbnbUjw4oExZ0wnZT6Ids=;
-        b=BujVoYk0uxjAZ6VlaQ8t0dwYIi0zk++5vqkLbk1+kP+k+hM/o8CCy1N16QL5+L98CQ
-         CCQkooRXztDqqn97cL8K6Y9tPPi1wr4cjfc3tGXnUlV3BupGx+ZeKaOJ15RteFLS8cn7
-         KamLCH2lo/a5thD/UuIlgAGV3mEFOpVK/quOYDt7XHzOHXVUwjuD6ImjGNgmWPSq9slD
-         nUs1OToUgQyrScp5eRNhu2uV6/Jxgi5O4jy/Zk6KmPMEOw8/DPRL2AgmAorDpQJV0LsG
-         m7iy7Q7FdqXG+8kuQe+FseGkqrOejrMa2a3H69m5yfT0plZQbjPGWXLr3JvUAGYxLz1L
-         yCew==
-X-Forwarded-Encrypted: i=1; AFNElJ9A/1dpvYoWs2Jz+TovuUeGZ4QyJzwpcavVOTDrQyi5MMVyS4s7cSXxRUxoEUdsQapPchG9z38TMunF@vger.kernel.org
-X-Gm-Message-State: AOJu0YzZdAw7jzFaIXVGlyvw5E1WEIyoeGdqqbzgZIqASTP+wbgBPc7i
-	nxHIwLFBxgScVj+noVB1uIJwNkTs/E8RYtHs39oVgDfCkR1hLR0CIMlx2qAZHpHukD7rXq63QS2
-	3HJRMQmFYVjNRgMKY0ybPXteNUEnjFTU9iV3y/EdN6ZVNpWbNgBqBwRRElKQdPqpr
-X-Gm-Gg: Acq92OGhGAhsM7l0b0eiwQW8FG0k/8ixzGGnHMhDNJ+OaRHJwIv0no2q3kS01lQnxuG
-	M5UN8PBBvGjAuFmwgELPfMeBQPDTNlexDt2nYCOM/kx4pWOBN9TgrW6Ty6U3uHwvhl1x14W1YYG
-	BkCLj4HGfka+NIVmuplGjKRMkCb4PX4HpNJ5x7731VTPhuFusZEbr8AwAvRmilHk/2ehnldqL9t
-	HTVNX9eQ5MT4IeJwr/Pb5QLJf2+ZfQe9U8rBnvrRxKpFtCFszP5goYAL2J20crZkG52ffZswtEP
-	M5MoRcfvA7UAdGK8jcaWzxtN3hIfhPk67MUV0UfY82iAr5zTn5mNcm0X8FTpbjiTT3iVeCmRvrR
-	pT0XbDtfEe2vB8lpeYpKJUxBBB0SjREH89VP1Z3OLeiHxCgx94u7s/g==
-X-Received: by 2002:a17:903:8c4:b0:2bd:8fc0:1198 with SMTP id d9443c01a7336-2bd8fc01303mr150907145ad.5.1779123252193;
-        Mon, 18 May 2026 09:54:12 -0700 (PDT)
-X-Received: by 2002:a17:903:8c4:b0:2bd:8fc0:1198 with SMTP id d9443c01a7336-2bd8fc01303mr150906935ad.5.1779123251728;
-        Mon, 18 May 2026 09:54:11 -0700 (PDT)
-Received: from hu-pkambar-hyd.qualcomm.com ([202.46.22.19])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2bd5bd5fc47sm149971045ad.10.2026.05.18.09.54.06
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 18 May 2026 09:54:11 -0700 (PDT)
-From: palash.kambar@oss.qualcomm.com
-To: vkoul@kernel.org, neil.armstrong@linaro.org, robh@kernel.org,
-        krzk+dt@kernel.org, conor+dt@kernel.org, mani@kernel.org,
-        alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org,
-        andersson@kernel.org, dmitry.baryshkov@oss.qualcomm.com,
-        abel.vesa@oss.qualcomm.com, luca.weiss@fairphone.com
-Cc: linux-arm-msm@vger.kernel.org, linux-phy@lists.infradead.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org,
-        Palash Kambar <palash.kambar@oss.qualcomm.com>
-Subject: [PATCH V1 2/3] dt-bindings: phy: qcom,sc8280xp-qmp-ufs-phy: Document the Hawi UFS controller
-Date: Mon, 18 May 2026 22:23:45 +0530
-Message-Id: <20260518165346.1732548-3-palash.kambar@oss.qualcomm.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20260518165346.1732548-1-palash.kambar@oss.qualcomm.com>
-References: <20260518165346.1732548-1-palash.kambar@oss.qualcomm.com>
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="m5kuR4oK"
+Received: from localhost (localhost [127.0.0.1])
+	by 013.lax.mailroute.net (Postfix) with ESMTP id 4gK3mp01W0zlfl8H;
+	Mon, 18 May 2026 16:54:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1779123255; x=1781715256; bh=kKSWWmiFMOGK7g4Y5dkmbJF+
+	YVc/HIhgy0St/ZUI0zo=; b=m5kuR4oKWmOAi2xYjFSsWGR0hMoWDQCEk4zuhlaz
+	R6dp2ryoY+etm0N4lGDFHhTt5lqIv9wlq5ZHw1SZkjOs29S8ofDW+6CdU001w9C8
+	lekUOywyVHr/21IY4+R/vSfjlf/fHHV0v2rwOL0sZeptgr1zUKG9SNFYTCf4g56o
+	ax7qqjjb8AtEkY/dHc3grmYxeAf+Uw5sG2qoy+pxmodfR5+kfoFezavKuAHIIWay
+	C1dubgjpDGidk53kwWUrd4nJv1Pfd6NJ+ObiwSppZ2+kWVOnhhsKVJiXYIPMZqVe
+	bJtstZVRQUpNE20FFmc10EMnU9rt8zkmL/e0NZppBXXn2Q==
+X-Virus-Scanned: by MailRoute
+Received: from 013.lax.mailroute.net ([127.0.0.1])
+ by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id pJORPpQ2_nGC; Mon, 18 May 2026 16:54:15 +0000 (UTC)
+Received: from [100.119.48.131] (unknown [104.135.180.219])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4gK3mk3zNxzlh1VG;
+	Mon, 18 May 2026 16:54:14 +0000 (UTC)
+Message-ID: <e182c2c5-30db-4bdb-a784-19dd9d0a89f7@acm.org>
+Date: Mon, 18 May 2026 09:54:13 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Authority-Analysis: v=2.4 cv=VJPtWdPX c=1 sm=1 tr=0 ts=6a0b4434 cx=c_pps
- a=JL+w9abYAAE89/QcEU+0QA==:117 a=fChuTYTh2wq5r3m49p7fHw==:17
- a=NGcC8JguVDcA:10 a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=u7WPNUs3qKkmUXheDGA7:22 a=DJpcGTmdVt4CTyJn9g5Z:22 a=EUspDBNiAAAA:8
- a=dkR0I6OD3irOzcp_LXMA:9 a=324X-CrmTo6CU4MGRt3R:22
-X-Proofpoint-ORIG-GUID: TELrQQDsibjBdkoSKYbF_dXp7VrqS1nv
-X-Proofpoint-GUID: TELrQQDsibjBdkoSKYbF_dXp7VrqS1nv
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNTE4MDE2NiBTYWx0ZWRfXwEr/zQ04hsAS
- 2qInQqy042tX5TaVNX+nEwI3bhdaspJ6y05OY/VUwjkug0Sa6qWL8RhhErVyIO0B3pbeCMeIr3Q
- 9/7pfRZmE9h5wASLce0Bso//9AWhLZ9rCwDMUuJURWBlC0rv2XEqSKGiTZYBFR3x89I/5yFTByr
- QRbJ5wxgpchGEMZTtnj8nBr5K6Q0zfGQMckQ6Opsw23EzW8Jfpvc9KvbmXseSoav8n0PMJhY9mx
- o8+r42/La7cNo0Pnz5EneTfQSDfCSFfzXrKr/bcxvQ7flPZeSwZ5Z6fIIdSGwgWVVsla1lXyAMR
- 1lylP+mdDOwfbLIIlCd05OwhniqzFAPZi8xPZMriAKvPXeHW62yRjeLGxEo7XBuk2wduxXQBUTJ
- 7FyqMGjuZwLd5NLVd7tnEY2BZtQuFLX8OxfJvUN2OOM8QUwtT6tfZZ0GGvfp8e2MgkiBGac9ARC
- T09BFp/qHl/NAAoG3pw==
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-05-18_03,2026-05-18_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- priorityscore=1501 impostorscore=0 adultscore=0 malwarescore=0 bulkscore=0
- spamscore=0 suspectscore=0 lowpriorityscore=0 clxscore=1015 phishscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2605130000 definitions=main-2605180166
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v1] ufs: core: decouple CQE processing from spinlock
+ critical section
+To: =?UTF-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= <peter.wang@mediatek.com>,
+ "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+ "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: "quic_asutoshd@guicinc.com" <quic_asutoshd@guicinc.com>
+References: <20260514082906.58593-1-peter.wang@mediatek.com>
+ <382f6d79-c877-4dc8-813b-ee91ac5489f9@acm.org>
+ <3d359319927f808dffa0aef52b03c437f803335e.camel@mediatek.com>
+ <2ed721de-0410-413a-bda1-99b5313b072d@acm.org>
+ <bcbfd7a71f698f6a3dcf627d3ea76c79b9897ccf.camel@mediatek.com>
+ <064b4c51-c3e8-4380-b1a2-ce996078efe8@acm.org>
+ <e02140af260edd8f0391889f7c925378dc79bf10.camel@mediatek.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <e02140af260edd8f0391889f7c925378dc79bf10.camel@mediatek.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: quoted-printable
 
-From: Palash Kambar <palash.kambar@oss.qualcomm.com>
+On 5/18/26 2:26 AM, Peter Wang (=E7=8E=8B=E4=BF=A1=E5=8F=8B) wrote:
+> Since MediaTek does
+> not use the polling queue, CQEs are only processed in the ISR.
+> So, if I just check that it=E2=80=99s not a polling queue, using it
+> this way should avoid the overwrite issue, correct?
+If ufshcd_mcq_poll_cqe_lock() is only called from interrupt context then
+there can't be any contention on hwq->cq_lock and the patch at the start
+of this thread is not necessary, isn't it?
 
-Document the UFS Controller on the Hawi Platform.
+> Yes, I also plan to move the ISR to a threaded ISR.
 
-Signed-off-by: Palash Kambar <palash.kambar@oss.qualcomm.com>
----
- Documentation/devicetree/bindings/ufs/qcom,sm8650-ufshc.yaml | 2 ++
- 1 file changed, 2 insertions(+)
+Moving the ufshcd_mcq_poll_cqe_lock() call from interrupt context to a=20
+kernel thread will negatively affect UFS command completion latency for
+both reads and writes. Are you sure that the higher latency for reads is
+acceptable?
 
-diff --git a/Documentation/devicetree/bindings/ufs/qcom,sm8650-ufshc.yaml b/Documentation/devicetree/bindings/ufs/qcom,sm8650-ufshc.yaml
-index f28641c6e68f..3de00affa4c6 100644
---- a/Documentation/devicetree/bindings/ufs/qcom,sm8650-ufshc.yaml
-+++ b/Documentation/devicetree/bindings/ufs/qcom,sm8650-ufshc.yaml
-@@ -16,6 +16,7 @@ select:
-       contains:
-         enum:
-           - qcom,eliza-ufshc
-+          - qcom,hawi-ufshc
-           - qcom,kaanapali-ufshc
-           - qcom,sm8650-ufshc
-           - qcom,sm8750-ufshc
-@@ -27,6 +28,7 @@ properties:
-     items:
-       - enum:
-           - qcom,eliza-ufshc
-+          - qcom,hawi-ufshc
-           - qcom,kaanapali-ufshc
-           - qcom,sm8650-ufshc
-           - qcom,sm8750-ufshc
--- 
-2.34.1
+> May I ask if there is a planned schedule for applying this
+> patch after further fine-tuning?
 
+There is no schedule yet. The discussion about this patch with the F2FS
+maintainers has just started. Anyway, because of the upstream-first
+policy for the Android kernel, any F2FS patch will be posted on the
+F2FS development mailing list before it gets integrated in the upstream
+kernel and in the Android kernel.
+
+Thanks,
+
+Bart.
