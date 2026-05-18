@@ -1,99 +1,146 @@
-Received: from mail-wm1-f51.google.com (mail-wm1-f51.google.com [209.85.128.51])
+Received: from mail-wr1-f45.google.com (mail-wr1-f45.google.com [209.85.221.45])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B3871380FF2
-	for <linux-scsi@vger.kernel.org>; Mon, 18 May 2026 18:18:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1BE0C381AEB
+	for <linux-scsi@vger.kernel.org>; Mon, 18 May 2026 18:41:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779128293; cv=none; b=ZMq89K/4mf196o+JBK3Ulw5/yAzz++74aMkHRNrR/s1fZq4Tx6OMtMzDOQwR579bO80GRDE/eqryMHsWLIxY+lG5mIWYRTcHLsrZwnhVKIfcKPuwWxlFLxOg1nQCUiDt2rzDkgWMkDFLJTaVRmgc6ezdbLHtHO1hG3Ui+PpZ1mI=
+	t=1779129686; cv=none; b=dQGxc7UtibxsbZlgAcX0vUrg1/02YhSw3checRmcp/E1VyVWEHbHqldn3Gs480QIVO4sQIHFVhylvFPetzx2wKz+OE9jL72bsjTc+3UgBNmctpoeMC1vL/FFzzCafA6tMQLCmONcwEfngvnffqRSynfzYQ24knbRan9/SNIlqso=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779128293; c=relaxed/simple;
-	bh=LQHASLfc/8ST+1AvaJo2ffAiHssKfKIADuKMj+QoUmk=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=KyaEUURSx4T7ZqjTAyaIovHhGGHM61MJzbe/rFfD45ObwSljjC1/lID3mM21wjBrYys/czQ8sCr5UHE38UbqnKeNcsIv//W1gCbnl+J20AYpSW9fVVySja/aFEXztZTZhzxztshsnGb7ARhe7OjGsTEmS4YDppcCMMQkAJZAKOU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=purestorage.com; spf=fail smtp.mailfrom=purestorage.com; dkim=pass (2048-bit key) header.d=purestorage.com header.i=@purestorage.com header.b=S9z2BGaI; arc=none smtp.client-ip=209.85.128.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=purestorage.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=purestorage.com
+	s=arc-20240116; t=1779129686; c=relaxed/simple;
+	bh=OzEYtXnV85GnF+LqOcz5UNsNvTkWQ53yW9dRfFpIzTo=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=ALowmN2c3RPLU0t66KSHP8BaqmYUgJnNAoqNVzZnl5x0XnlYwrAAfTRuGH0F4Vl1khG44w5KWHR1HtZWZAN5ffpi3PxcUgfiMlwRfngA6+kK9M6KBt0TNOj65WwiGfDW2bUSxlNbbHcU/c0YoJRcSXBnIy8/TJzp4bkxpyDJVKY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Jo+j94yS; arc=none smtp.client-ip=209.85.221.45
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=purestorage.com header.i=@purestorage.com header.b="S9z2BGaI"
-Received: by mail-wm1-f51.google.com with SMTP id 5b1f17b1804b1-4891e86fabeso35600485e9.1
-        for <linux-scsi@vger.kernel.org>; Mon, 18 May 2026 11:18:11 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Jo+j94yS"
+Received: by mail-wr1-f45.google.com with SMTP id ffacd0b85a97d-449de065cb3so2533138f8f.2
+        for <linux-scsi@vger.kernel.org>; Mon, 18 May 2026 11:41:24 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=purestorage.com; s=google2022; t=1779128290; x=1779733090; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=4m1g+ATuKbyZilaojQCyLOTppKcy5nuS1r/nHlpDz9o=;
-        b=S9z2BGaIoGT70+9dti6remcxLvWMjQ45gFuIWelr5vFjk0ny0403UxqmQVAlzQOvms
-         iweb2Oiw05MDwGh4M36Kv1NrzYnOif6TiSLlpJu1YWKhbOz8Hs7+RkWDHLIF9jjCYoGd
-         vWJNt5m4OYABFomCJ2Ad+id/kRuisdLxRQn3bEYMbM5ibfMK5Cx+1gIB7T0i4OgSRlnF
-         kvIPydSdkfa2WkPhwW5Y1GXwiv5DOmZjISJ4yexYHJEb7hVX861LvGVRJVAWgv2WU/tz
-         3V3brU+Fvax6jlzMIZatYPK+LGXIrnes/oTW/XZXlyiXIMoK5lEwp8+lN8cqUlMWpDUn
-         Ey8w==
+        d=gmail.com; s=20251104; t=1779129683; x=1779734483; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=U7pmfatTAGCFopvwOxekiavKhWvJwuVBKlcaz6/af+I=;
+        b=Jo+j94ySkMhMW7OIVytFRNRxxPNESIum42HrGU3sfwOrtDF6tfKSasKcheKgfyruhL
+         EkYIriQgzR8e0NrFAe5n3yuUwSqUHN9cRN9foad99O1j4cHnjoWkdhKAVOf5eOoQVdfE
+         qQQpZEMKgYfen1tFlHD97dtCeZVF85YZFIALrGGzBC68PGKkZte9DqDcYGmacElXKtex
+         8JFT+qINcM/zr2yqJCIyISp8Jm8JE2fsDNQ0OMfjWuRqHPLmFylgHYOyjGW/VL7nwYQS
+         uXkoehVWtEn+ZvLKzcSAd+vgJPY4K8QLIzzoeMT/QfovEGFiL58gbGXNWvnmRPlxAchG
+         NKLg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1779128290; x=1779733090;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=4m1g+ATuKbyZilaojQCyLOTppKcy5nuS1r/nHlpDz9o=;
-        b=Y9NsmDU6yrqQCOWLKItIB97YegrsQdZSq4Voy1LVCRKJJYrmbkOciJBOllHO6ojB4Q
-         Ioo9lhrYzFLQ3R4J0DSKVU3BkYdsncwTflVToTQgtV4+ehNQys9feYcYvvlSliyuidKY
-         nF0Gr55itE3MsnxecxG+Y3wvffz0r78n+pC471JL5dmxeJ6gF4112d1WLLp7mc8jNRLb
-         2KRz7sjL76Q5/CK7tecBmaQPzjjoqA/sy5giGAxrhyloq72sGj+P/a/RdJEZXEmVEwhl
-         Jx+P5iWm/EbluaYW0YawbXOsB2wEqM+h+6SeG07/CFfbpVBvKuNjR6/XNcv/wAKsl894
-         CVKw==
-X-Forwarded-Encrypted: i=1; AFNElJ8w6B6VNqOqzMjxojLYckSJBFDUFel6ikdPQLM6ghyAkkv/gx/PrLDigSi64xIAZFuTnDeL+FZBZaFF@vger.kernel.org
-X-Gm-Message-State: AOJu0YwvTn/EsCTJ0AmXhtX86hKB0LCWXcZfE4xLcfKC4zfjeYNSGtOR
-	qbVLRfMng/bJT1Od+dCPBLSGlxpB/rkPVdMJD6snzz2TLzc6YGtg1TKSGO7mfUNon7w=
-X-Gm-Gg: Acq92OEIVuZ1f6AgT711+113K+Hhghsjvhugy99nxkC5ipeStG+xOWxSjLFWB/0IebP
-	aLLNJCrBEvW7/eyVuqUzeJUiz3QLQEI4RxD+LeM3hkfxrWbxRhGDZVDOd/+5ysEZgQUp4p6X+Gn
-	0/vMM6WFBWgGkIYrOoFzDEPGZTCVVZYymWfZI1it1D1+DruK2SvP7w3O/ldfKCNGhLGU7OC1c0v
-	odN2arTk7Thhmj8IaRmfXFn6W4z3NPofULlooWPOToPtw27Q8g9HF+5j5sGG4MhS4dcQTXj9svR
-	C4wLyjCSwT0L7fpH4DqUeOpzg7dXKbpYi0GsMeGOj32E3YUuIaNwkL4mtIbTkZlhJTvzbpaic5E
-	vjtmxuhEN+YfdPO9s4liV6WOEnfln4PzWrNCZQQmTWH1Y13AbCHYflEr0UgIBQElYB8eC3pnfAZ
-	7zBfEAIaw8wghLORyM8fUagnRXUuwXx2ioUuGzlJqr6/vTLAIraMLbpwDvfMLEbJtcLXofiTHaG
-	aie0QKHFs93xwKpHs/c3tam6c0255rNrRfDFrf0iFfpfvA7xAlSQCvEJ5rME5a2eV8FP13iFtJN
-	jF7UdU+eyWzEMWtp+edKXDhA
-X-Received: by 2002:a05:600c:858d:b0:48f:99a9:bbd6 with SMTP id 5b1f17b1804b1-48fe6514d1amr200206795e9.24.1779128289866;
-        Mon, 18 May 2026 11:18:09 -0700 (PDT)
-Received: from brian--MacBookPro18.purestorage.com ([136.226.65.115])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-45d9ed2f738sm38377796f8f.16.2026.05.18.11.18.06
-        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
-        Mon, 18 May 2026 11:18:08 -0700 (PDT)
-From: Brian Bunker <brian@purestorage.com>
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
+        d=1e100.net; s=20251104; t=1779129683; x=1779734483;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=U7pmfatTAGCFopvwOxekiavKhWvJwuVBKlcaz6/af+I=;
+        b=DFhtHpM/cOgRw2lWy4+AS0RYfpx6SDOYWbEekyRUTrWbJ5PAWDEsN9vrGmQ6N9aMsU
+         wXcZL3wfx5GNxou4Cw+pVU9zUvyiZwbFR0Gnao7LHilbfGyb6+V978OWbeaYxIftwZri
+         3n7Llx3lGRQdwiTkHEwPpQ8q+hA4zYhqsFx96e0KZRAQGR6LMuFteDT9PCSft6iLlyI3
+         RiqN/U/1Gf9jhHAk1cC5Hi+AT0u1FyalFS+9c1zluqKFolBJ0nUOimvZdCPBxRuWU+Rt
+         vf6ZwHq0HBlOGddMKnQ4RytN72zBP72TD0gX9SSPJmAKxcmttrXRiXumbM2sTljH7MG5
+         eu+Q==
+X-Forwarded-Encrypted: i=1; AFNElJ+pP0g5Y2rIDDOz8B/RDIfBXxGimTKN3Tbt5jOZbrX5fOyLKq2fJ27xDZr8sBzgFKDgzSy6VK+XxObc@vger.kernel.org
+X-Gm-Message-State: AOJu0YzLJdqkSIAzsC4SI8fpUXZ8PZNl6qOp6DWnyGpEahyq958awSqa
+	SQv8H4kZMjVXViify9a+/C2dUHYeXqC30Q4TYSewDSX/i7U5Ok61/Jqe
+X-Gm-Gg: Acq92OEMBsfm9imfR1HQ1t1AQysXTQzeWgP6oMGwSuEpN0BPGeVn0yb1rJdwhDtKcaU
+	vr43KOPGnzHOQMUPE1Tt+EvH3I71ixh0hz/JVsRupgDlrWEq1aUUEkl7SLxJ7Bx8crg+2ZPLKrU
+	Jv/T9cDMvb/6W2MiYh+XUBQVo+lQ2LU7fUddP9mEt+nOwqa1w7QmElNWJD4FzQMsUH14dt6wuCy
+	dAKo28mFc7tzMglb0hSWMJ9PwJa6sAeLME9a/vh/9I+0Fdaxt6yiBIf1NO5B9EXJ/Wt6O1khY7T
+	0sJXww4F5+9fgl1HHiwr7eIl/rCZpfxmJBNFq0xcMSE7m7/3kDzuOf6oWKFGzmPLEFrCYWmJKLM
+	YZgxhLpbSIm2D3BmRgzqWrGW6tghuFY2nReHbv93sV53uBSLHJKHfelH8UpMf6veUjJe0hqAtCx
+	Tg1t1cunY=
+X-Received: by 2002:a05:6000:2902:b0:45a:e3dd:586b with SMTP id ffacd0b85a97d-45e5c59a269mr26461049f8f.18.1779129683293;
+        Mon, 18 May 2026 11:41:23 -0700 (PDT)
+Received: from localhost ([2603:c027:c000:3cde::f])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-45d9e768c4fsm39305594f8f.8.2026.05.18.11.41.22
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 18 May 2026 11:41:22 -0700 (PDT)
+From: Louis Sautier <sautier.louis@gmail.com>
+To: Sathya Prakash <sathya.prakash@broadcom.com>,
+	Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+	Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>,
+	Ranjan Kumar <ranjan.kumar@broadcom.com>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Guenter Roeck <linux@roeck-us.net>,
+	MPT-FusionLinux.pdl@broadcom.com,
 	linux-scsi@vger.kernel.org,
-	Hannes Reinecke <hare@suse.de>,
-	Damien Le Moal <dlemoal@kernel.org>,
-	Guenter Roeck <linux@roeck-us.net>,
-	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH v2 0/3] Rework the struct scsi_device inquiry information
-Date: Mon, 18 May 2026 11:17:49 -0700
-Message-ID: <20260518181749.28686-1-brian@purestorage.com>
+	linux-hwmon@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH v2 0/2] scsi: mpt3sas: add hwmon support
+Date: Mon, 18 May 2026 20:41:07 +0200
+Message-ID: <20260518184109.770185-1-sautier.louis@gmail.com>
 X-Mailer: git-send-email 2.54.0
-In-Reply-To: <20260515205222.1754621-1-bvanassche@acm.org>
-References: <20260515205222.1754621-1-bvanassche@acm.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-Tested this series on top of v7.1-rc3 on a host attached to a
-Pure FlashArray, with 10 LUNs presented over 4 paths each (40 sd
-nodes total):
+Expose the IOC and board temperature sensors of LSI / Broadcom / Avago
+SAS HBAs that bind to mpt3sas through the hwmon interface. The data
+lives in MPI IO Unit Page 7.
 
-  - Build clean.
-  - SCSI scan completes normally; dmesg clean.
-  - /sys/class/scsi_device/H:C:T:L/device/{vendor,model,rev} are
-    byte-identical to the pre-patch kernel.
-  - Multipath continues to enumerate and bind devices correctly.
+The same fields are exposed by Broadcom's userspace tooling through
+the /dev/mpt[23]ctl ioctl path (typically root-only): IOCTemperature
+and BoardTemperature in lsiutil; ROC and Controller in storcli.
+With this driver, sensors(1) shows them unprivileged:
 
-Tested-by: Brian Bunker <brian@purestorage.com>
+  $ sensors mpt3sas-pci-0200
+  mpt3sas-pci-0200
+  Adapter: PCI adapter
+  IOC:          +42.0°C
 
-Thanks for taking this on.
+v1 -> v2:
+  v1: https://lore.kernel.org/r/20260512214703.655633-1-sautier.louis@gmail.com
+  * Dropped misleading Documentation/hwmon/mpt3sas.rst.
+  * Dropped inaccurate concurrency-wait figure from Testing;
+    corrected empirical data is in the on-list discussion.
 
-Brian
+Testing
+-------
+
+Validated across three Broadcom SAS chip generations. None of the
+cards had a board sensor present, so the testing only covers the
+IOC channel:
+
+  * LSI 9500-8i / SAS3816, SAS-3:
+    - hwmon device registers as "mpt3sas" with only temp1 (IOC) exposed
+    - IOC reading matches `storcli /c0 show temperature` and
+      `lsiutil -p1 -a 25,2,0,0`
+    - rmmod / modprobe cycle goes through the explicit
+      unregister/register paths cleanly
+
+  * LSI 9305-24i / SAS3224, SAS-3: same behaviour.
+
+  * LSI 9211-4i / SAS2004, SAS-2: firmware reports both
+    *TemperatureUnits = NOT_PRESENT, no hwmon device registered
+    (graceful-skip path).
+
+Not verified (no available hardware):
+  * Path with both IOC and board sensors present.
+  * Fahrenheit-units conversion.
+  * Sub-zero readings (signed-cast path).
+
+Louis Sautier (2):
+  scsi: mpt3sas: add IO Unit Page 7 config accessor
+  scsi: mpt3sas: add hwmon support
+
+ drivers/scsi/mpt3sas/Kconfig          |   9 ++
+ drivers/scsi/mpt3sas/Makefile         |   2 +
+ drivers/scsi/mpt3sas/mpt3sas_base.h   |  19 +++
+ drivers/scsi/mpt3sas/mpt3sas_config.c |  36 +++++
+ drivers/scsi/mpt3sas/mpt3sas_hwmon.c  | 200 ++++++++++++++++++++++++++
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c  |   6 +
+ 6 files changed, 272 insertions(+)
+ create mode 100644 drivers/scsi/mpt3sas/mpt3sas_hwmon.c
+
+
+base-commit: 5d6919055dec134de3c40167a490f33c74c12581
+-- 
+2.54.0
+
