@@ -1,184 +1,149 @@
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+Received: from mail-qk1-f171.google.com (mail-qk1-f171.google.com [209.85.222.171])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7439C3815F3
-	for <linux-scsi@vger.kernel.org>; Mon, 18 May 2026 14:40:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB4EB40DFA3
+	for <linux-scsi@vger.kernel.org>; Mon, 18 May 2026 14:43:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779115242; cv=none; b=tJRoFfv/ovISBz718RnZ7SDUP2lAsBVlv/cRVfD3TjOvBv9ujWWAJQdT2w6cJ6T9tuk/AAHhr6rNp8WflqG4Y6kxrSEfVnBfik/PahMna5CNdY1yHhnHF35Qozj9NoTbs+XoUJFWSKlP2PvfUz+qg7WTnxei5EDLLlPBNKwubGY=
+	t=1779115400; cv=none; b=kcTU35sF9+5btQf8g9T4pUVwC1/oB4F2FNpW3G9Bw888xf0zls6/WtzRF1hPaQVMQfFmr2VzaDWDkwV30QTYTRyKTi2IL3UOKc0SSUZraCqbBXmevoQw4julIEIBgXur2lct7vOSthIyjT34E/Rfb3C4RwN2enfrkdFWn7/1kgw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779115242; c=relaxed/simple;
-	bh=GVaBP4oVJyjWY/K0OzRzK2HxtrErElkr7Zh+AbpY6bw=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=OjMQUGF+jgwazZtTQMLtZ28UIdxcN7qvy3+xccgVmreXlrSaDGdJk35a7QNHFknhX8g5Etogi7n8EoEJXzTp6mCanNRIAT12a3ED2H6478yjlD5tCV6llBKemNAVUa/EcDm6PWJcj9HkAkrSGKM9gEb81BgueCyCGf2XGVeo9CQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=KGlxgwB0; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=YYNmdcym; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=KGlxgwB0; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=YYNmdcym; arc=none smtp.client-ip=195.135.223.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+	s=arc-20240116; t=1779115400; c=relaxed/simple;
+	bh=pawwitQNX1nqSOXvK5cq6YVjA4OHhlKXYxE7K5N/7O8=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=okoIUdb2KQJBVTpC8anoJbua63WL1F1+LTkyoQq8P3msMdlkFr1KdHSP0HBqylKBkRpTr5Iiv6mXr6hdOO4kRfpVMAmfvTe7O7bukkV5zciaW14ZhmlK2PMuqU77ZKG+0iz4v1UCWzTcabk/0hiuXP5PcxEbq/gravHv58rg7qE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=jWUd1/GI; arc=none smtp.client-ip=209.85.222.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="KGlxgwB0";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="YYNmdcym";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="KGlxgwB0";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="YYNmdcym"
-Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id B5BA66725B;
-	Mon, 18 May 2026 14:40:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1779115237; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=c/fQRnTtYxxVFuJiDKmaSBAEwcnc6ikm6RUoQyTq4bA=;
-	b=KGlxgwB05uqO/KH4rCC7W+vLoLQyVVqE05by0jFteXaFTOAUWrS/lMxCh1N5+vGhBv+ADl
-	L9CeUJfIRmILAyw/f6LuyoUAkJgWl1O6chMnivk43JWsxG64CCF8wEsgYPQKGgQXsDXwn0
-	rbFiDOAohFM0tHH5LDYl6erGXbegWU0=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1779115237;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=c/fQRnTtYxxVFuJiDKmaSBAEwcnc6ikm6RUoQyTq4bA=;
-	b=YYNmdcymZIwt6f/6heZLQGOfLgKan7Gv3YXhwJ+nxZ+n57CLcu5OUyMNmrWBIQfxNXGmuT
-	JtONyHI771HET/Cw==
-Authentication-Results: smtp-out2.suse.de;
-	none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1779115237; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=c/fQRnTtYxxVFuJiDKmaSBAEwcnc6ikm6RUoQyTq4bA=;
-	b=KGlxgwB05uqO/KH4rCC7W+vLoLQyVVqE05by0jFteXaFTOAUWrS/lMxCh1N5+vGhBv+ADl
-	L9CeUJfIRmILAyw/f6LuyoUAkJgWl1O6chMnivk43JWsxG64CCF8wEsgYPQKGgQXsDXwn0
-	rbFiDOAohFM0tHH5LDYl6erGXbegWU0=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1779115237;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=c/fQRnTtYxxVFuJiDKmaSBAEwcnc6ikm6RUoQyTq4bA=;
-	b=YYNmdcymZIwt6f/6heZLQGOfLgKan7Gv3YXhwJ+nxZ+n57CLcu5OUyMNmrWBIQfxNXGmuT
-	JtONyHI771HET/Cw==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 413D6593A8;
-	Mon, 18 May 2026 14:40:34 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id 7LGZOeIkC2p8FgAAD6G6ig
-	(envelope-from <ddiss@suse.de>); Mon, 18 May 2026 14:40:34 +0000
-Date: Tue, 19 May 2026 00:40:26 +1000
-From: David Disseldorp <ddiss@suse.de>
-To: Alexandru Hossu <hossu.alexandru@gmail.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, Bart Van Assche
- <bvanassche@acm.org>, target-devel@vger.kernel.org,
- linux-scsi@vger.kernel.org, stable@vger.kernel.org
-Subject: Re: [PATCH] scsi: target: iscsi: validate CHAP_R length before
- base64 decode
-Message-ID: <20260519004026.3b7e07a2.ddiss@suse.de>
-In-Reply-To: <20260518121811.385350-1-hossu.alexandru@gmail.com>
-References: <20260518121811.385350-1-hossu.alexandru@gmail.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="jWUd1/GI"
+Received: by mail-qk1-f171.google.com with SMTP id af79cd13be357-90eb7a63a30so149792585a.2
+        for <linux-scsi@vger.kernel.org>; Mon, 18 May 2026 07:43:18 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1779115398; x=1779720198; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=nJ6SCZDA5+huDxSfTFbbVsLJZtzCpNLwdGVSw0TUP5o=;
+        b=jWUd1/GIAUG+wNq6l2X7Is/QSUrYwPZ/po/F2bme5K8iCJA+EmNKBO2n4XqKaNRcZS
+         g/ANoYzL9Ovchl4TzJQNgdmv2pgJiUBQTAhYEy2j/PNYQkMLGs3YeXtYiVncV/5EVGT5
+         pdV/MdXz3i+umtEyJYC5QVIUpvU0s08thgbEuCCQgV2cLR72WtmTKDcyo+YGShvVroUQ
+         3MEX/ZI0Re0vAPdljdi5/k0gKo17NnOKkeuaeFRKQUyp5vbePdhyJmpnJs+v/igwN1xB
+         XcVT3uN3wbzsCPpr/dbVfCfI9wo0q+pCOMjgbqGsLManlt0nPbo8OdqrZZEu7MwIzuOF
+         Y1Aw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1779115398; x=1779720198;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=nJ6SCZDA5+huDxSfTFbbVsLJZtzCpNLwdGVSw0TUP5o=;
+        b=CZruM+lnS8txZYrtLMeNXDcVFHO7G1doWBz+tBvtDUcvGHc9ATzqTdlR76/eWMgCm0
+         EnrtIJB3wZUD7TnLu8FCAtNjrIvOl7IWga+NJ3Qh1AxBTnwNUhI4NfLGVEp2zV7gkDzQ
+         41zbsDs3eAd850+BYARgXzDFN1I7NkzBuH7R/fXbStjVWK/VmtTSYvkPPIOI3lH5Jd0v
+         Qp5+ILtpO0QUfnXbQXp8sAt6fp+8xLg4Jd3FSiQvXzngCj0uL2YodGj4yjDN/aXTp8jS
+         p/EMguuLdiVuRm6YFM3P7pyEAPxPSMhGkKzSIiYlPNjrzih1+CLxPrqYFVIRIZc4BCfg
+         abGQ==
+X-Forwarded-Encrypted: i=1; AFNElJ9LpY2TULPBOWZmRSuizbymm6b1OAhhoU0aM77Wgcc9bvY/ORrYyGup2GxKvGDVayC+1rF1UcuZ+/pP@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw8vt36LxGwewd2uD/g4vEWvFjKth3c/FgsuwKT6GTTte+xMeUF
+	pZLBmEl69sTHou58dx3I111HdH4kXO3kgz2zJHHuVks2XlOHfrfqmYJS2wZpYJXP
+X-Gm-Gg: Acq92OEP+f/HuI8TaT4O8D26unCnEDVYE9kgdek0TvvkDH46y/rgTBVXxRzU3BEh3uG
+	PEmDhT3poEGRaHlKPAJZBXqYjlOUShPYtGKlZaibetnWLpT+DlL48d1bGUFwVJMwy6+yNHc5GBP
+	IYngd1QHLymJbuHavmimxHBszYMwIHHPR41ySFx534puAXHljHdltov8Cq9jHdvwUbG1d6Ak7g8
+	bx7CJaKnFI0Jn8ee+uLAMNO6nCqxHWQNX66CLYzzJmYadIxHYMp9a0DqgpdRwyO6kGqh1lIETrT
+	QtKEqovY5ewMwNWBZ8Y27ZIDjN1zkHX2gIfr/ln5A+eG+N7ld6Ap1puaIPDPOAqdT3XR1CguugC
+	G1E6DCLZydHuEZsqz8AqxOhAboBTSr7re9QR9bzJWf+NqcYa0nIAT4Xf+Om4DbUvBIVG5Kvoi8K
+	g4ug4S3h/IFiKsNQ+qRhmGUEmN/8sk/TfBEretTmGFTgO3dtl64ZtgYaTECIBzzdaup9KaduEQy
+	mN4Y5uXz7XLXZO9xtwwQRkwjhXoL6bi08l4W5mdOGus/h18yQIj+w==
+X-Received: by 2002:a05:620a:3714:b0:8ef:ca26:dcf8 with SMTP id af79cd13be357-911ca3452b6mr2408313185a.0.1779115397525;
+        Mon, 18 May 2026 07:43:17 -0700 (PDT)
+Received: from server0.tail6e7dd.ts.net (c-68-48-65-54.hsd1.mi.comcast.net. [68.48.65.54])
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-8ca36095608sm58044196d6.12.2026.05.18.07.43.16
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 18 May 2026 07:43:17 -0700 (PDT)
+From: Michael Bommarito <michael.bommarito@gmail.com>
+To: Hannes Reinecke <hare@suse.de>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>
+Cc: Robert Love <robert.w.love@intel.com>,
+	Vasu Dev <vasu.dev@intel.com>,
+	Joe Eykholt <jeykholt@cisco.com>,
+	Saurav Kashyap <skashyap@marvell.com>,
+	Javed Hasan <jhasan@marvell.com>,
+	Nilesh Javali <njavali@marvell.com>,
+	Karan Tilak Kumar <kartilak@cisco.com>,
+	Sesidhar Baddela <sebaddel@cisco.com>,
+	Arun Easi <aeasi@cisco.com>,
+	Kees Cook <kees@kernel.org>,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH v2] scsi: fcoe: reject FIP descriptors with zero fip_dlen in CVL walker
+Date: Mon, 18 May 2026 10:43:07 -0400
+Message-ID: <20260518144307.2820961-1-michael.bommarito@gmail.com>
+X-Mailer: git-send-email 2.53.0
+In-Reply-To: <20260518141150.2755252-1-michael.bommarito@gmail.com>
+References: <20260518141150.2755252-1-michael.bommarito@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-X-Spam-Flag: NO
-X-Spam-Score: -1.80
-X-Spamd-Result: default: False [-1.80 / 50.00];
-	BAYES_HAM(-3.00)[99.99%];
-	SUSPICIOUS_RECIPS(1.50)[];
-	MID_CONTAINS_FROM(1.00)[];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	FUZZY_RATELIMITED(0.00)[rspamd.com];
-	FREEMAIL_ENVRCPT(0.00)[gmail.com];
-	MISSING_XM_UA(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	ARC_NA(0.00)[];
-	TO_DN_SOME(0.00)[];
-	TAGGED_RCPT(0.00)[];
-	FREEMAIL_TO(0.00)[gmail.com];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	FROM_EQ_ENVFROM(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	RCPT_COUNT_FIVE(0.00)[6];
-	RCVD_TLS_ALL(0.00)[];
-	RCVD_COUNT_TWO(0.00)[2];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:mid,imap1.dmz-prg2.suse.org:helo]
-X-Spam-Level: 
 
-Hi Alexandru,
+drivers/scsi/fcoe/fcoe_ctlr.c::fcoe_ctlr_recv_clr_vlink() advanced
+the descriptor cursor by an attacker-supplied fip_dlen without
+ever requiring dlen >= sizeof(struct fip_desc) in the default
+branch.  The named descriptor cases (FIP_DT_MAC, FIP_DT_NAME,
+FIP_DT_VN_ID) checked their per-type minimum lengths, but a
+FIP_DT_NON_CRITICAL descriptor (fip_dtype >= 128, which the
+standard requires receivers to silently ignore) skipped that
+check entirely.
 
-Thanks for the report and follow up patch...
+An unauthenticated L2 peer on the FCoE control VLAN could hang
+fcoe_ctlr_recv_work on an fcoe, qedf, or bnx2fc initiator
+indefinitely by emitting one FIP CVL frame whose single
+descriptor had fip_dtype == FIP_DT_NON_CRITICAL and fip_dlen
+== 0: the cursor advanced zero bytes per iteration and the
+loop condition rlen >= sizeof(*desc) stayed true forever,
+blocking every subsequent FIP frame on that controller.
 
-On Mon, 18 May 2026 14:18:11 +0200, Alexandru Hossu wrote:
+Tighten the outer dlen guard to also reject dlen <
+sizeof(struct fip_desc), so a malformed descriptor whose
+length cannot even cover the descriptor header is rejected
+before the switch.  This is the same lower-bound the named
+cases already apply and is the minimum scope that closes the
+loop.
 
-> chap_server_compute_hash() allocates client_digest as
-> kzalloc(chap->digest_size) and then, for BASE64-encoded responses,
-> passes chap_r directly to chap_base64_decode() without checking whether
-> the input length could produce more than digest_size bytes of output.
-> 
-> chap_base64_decode() writes to the destination unconditionally as long
-> as there is input to consume. With MAX_RESPONSE_LENGTH set to 128 and
-> the "0b" prefix stripped by extract_param(), up to 127 base64 characters
-> can reach the decoder. 127 characters decode to 95 bytes. For SHA-256
-> (digest_size=32) this overflows client_digest by 63 bytes; for MD5
-> (digest_size=16) the overflow is 79 bytes.
-> 
-> The length check at line 344 fires after the write has already happened.
-> 
-> The HEX branch in the same switch statement already validates the length
-> up front. Apply the same approach to the BASE64 branch: reject any input
-> whose maximum decoded length exceeds digest_size before calling the
-> decoder.
-> 
-> The formula (digest_size * 4 + 2) / 3 is the ceiling of digest_size *
-> 4/3, i.e. the maximum number of base64 characters that can decode to
-> exactly digest_size bytes.
-> 
-> Fixes: 1e5733883421 ("scsi: target: iscsi: Support base64 in CHAP")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Alexandru Hossu <hossu.alexandru@gmail.com>
-> ---
->  drivers/target/iscsi/iscsi_target_auth.c | 4 ++++
->  1 file changed, 4 insertions(+)
-> 
-> diff --git a/drivers/target/iscsi/iscsi_target_auth.c b/drivers/target/iscsi/iscsi_target_auth.c
-> index c46c69a..653be1a 100644
-> --- a/drivers/target/iscsi/iscsi_target_auth.c
-> +++ b/drivers/target/iscsi/iscsi_target_auth.c
-> @@ -341,6 +341,10 @@ static int chap_server_compute_hash(
->  		}
->  		break;
->  	case BASE64:
-> +		if (strlen(chap_r) > (chap->digest_size * 4 + 2) / 3) {
+Fixes: 97c8389d54b9 ("[SCSI] fcoe, libfcoe: Add support for FIP. FCoE discovery and keep-alive.")
+Cc: stable@vger.kernel.org
+Assisted-by: Claude:claude-opus-4-7
+Signed-off-by: Michael Bommarito <michael.bommarito@gmail.com>
+---
+v2: drop the redundant cover letter shipped with v1.  A
+    single-patch send should not carry a cover; the lead
+    belongs in the commit message, which the patch below
+    already has.  The v1 cover also carried stale drafting-
+    time envelope markers that should have been stripped
+    before send.  Apologies for the noise; please ignore the
+    v1 cover at
+    https://lore.kernel.org/linux-scsi/20260518141150.2755252-1-michael.bommarito@gmail.com/
+    The patch hunk below is byte-identical to v1's 0001.
 
-nit: this could be DIV_ROUND_UP(chap->digest_size * 4, 3) to match
-base64.h BASE64_CHARS(), right?
+ drivers/scsi/fcoe/fcoe_ctlr.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> +			pr_err("Malformed CHAP_R: base64 payload too long\n");
-> +			goto out;
-> +		}
->  		if (chap_base64_decode(client_digest, chap_r, strlen(chap_r)) !=
->  		    chap->digest_size) {
->  			pr_err("Malformed CHAP_R: invalid BASE64\n");
+diff --git a/drivers/scsi/fcoe/fcoe_ctlr.c b/drivers/scsi/fcoe/fcoe_ctlr.c
+index 02cd4410efca7..496ddd45f74da 100644
+--- a/drivers/scsi/fcoe/fcoe_ctlr.c
++++ b/drivers/scsi/fcoe/fcoe_ctlr.c
+@@ -1385,7 +1385,7 @@ static void fcoe_ctlr_recv_clr_vlink(struct fcoe_ctlr *fip,
+ 
+ 	while (rlen >= sizeof(*desc)) {
+ 		dlen = desc->fip_dlen * FIP_BPW;
+-		if (dlen > rlen)
++		if (dlen < sizeof(*desc) || dlen > rlen)
+ 			goto err;
+ 		/* Drop CVL if there are duplicate critical descriptors */
+ 		if ((desc->fip_dtype < 32) &&
+-- 
+2.53.0
 
-The above check doesn't appear to catch undersize base64 CHAP responses,
-unlike the hex path. How does that affect the handshake?
-
-Finally, don't we need a similar check for the mutual CHAP code-path?
-
-Thanks, David
