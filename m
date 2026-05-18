@@ -1,62 +1,64 @@
-Received: from mail-qt1-f171.google.com (mail-qt1-f171.google.com [209.85.160.171])
+Received: from mail-qt1-f180.google.com (mail-qt1-f180.google.com [209.85.160.180])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F9B340757A
-	for <linux-scsi@vger.kernel.org>; Mon, 18 May 2026 14:09:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CBEC236C5AE
+	for <linux-scsi@vger.kernel.org>; Mon, 18 May 2026 14:09:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.180
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779113394; cv=none; b=gGEEach3h7X5FhxzlPDi5udp2iCUeFFoEEd63+O76OJfucIqt0fnqgmij8io+/m2TrA7AOmqoDwvnYTLWILKI10HwAh43gQQOT9grj9SUH+2lJfOcrYNqnsGmOpprAFyZTHcgjyCNKzIL25QGHeUGWWTZZfbW7DiBWQ2ZLp+NG8=
+	t=1779113397; cv=none; b=tOKTaXcVmaqQXIRIzdwnXFdhP8dPpBBJ4k3k66iWaWG6hkTYGogwtmfFtRe4tUItJkZHpPmdkU/6k1R7C1X5yRYHUVhrm/6WtnR8DQLNYsl9FeEqHtb+yo2xAak31FAkgw4yTNnwQAJ+CjoPCqfWbtr8a5R5JoyRWAEqINvx4i4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779113394; c=relaxed/simple;
-	bh=K2tLBVNBgk0XNMFBF2xJopcAe+AHdugRy9lU7EoXCx4=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=uLUOwprAI2gxhTUvWbkKIrjB7dX2cUJr1kT96Q4UdE/tFQ+gjkj3zzsTCMSGYrZsQ/MEaE2F1mHbhe9t8SBqydra8OGg259vaqfu8ga7IHHrPth8FuF4OVi7gGQqUM7iKzFXNJ3c8ByKpWvyIm9I2OSp8/b0CYYdZwD50BCyuPI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ctEO3nOV; arc=none smtp.client-ip=209.85.160.171
+	s=arc-20240116; t=1779113397; c=relaxed/simple;
+	bh=THmElVxW+1xGlC65m3NTKfeXYXU2Nv6oKr1bGetAz/Q=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=pNJuKagNOPcfNXjoQEiHFjzSSw2/JP1j+qOPwmVlAOzefEQzanaOTsgtdEX2bZ5F14RU8dn/Qj/7TzJlxncGS6V1dGArovYMj8y0FzdZlKQusoWpDhPh2AjPBnz2LA8TdJmIAKFpN11sRW72s4sOXl836QEJD5FW0RGCTAAxbfg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=AdQF9M+/; arc=none smtp.client-ip=209.85.160.180
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ctEO3nOV"
-Received: by mail-qt1-f171.google.com with SMTP id d75a77b69052e-50d87610513so31534261cf.3
-        for <linux-scsi@vger.kernel.org>; Mon, 18 May 2026 07:09:52 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="AdQF9M+/"
+Received: by mail-qt1-f180.google.com with SMTP id d75a77b69052e-51306c36c3eso29428691cf.0
+        for <linux-scsi@vger.kernel.org>; Mon, 18 May 2026 07:09:54 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1779113391; x=1779718191; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=u8+qzU0W1zzwMpcEaXSpQvWhLzK3bb5pvFaLvwTKH2A=;
-        b=ctEO3nOVss7TtOxjMsdlS0Iynr31dC3whau7IexcAJw9cJ1IcDT3Zq1sdkcxDxgzpY
-         THw0yZjH7v0cJQG55ddnqzdmFC+DG3C369hGaXgT6ZZfBvSZ3uObG6m1RVyicbsE5p8O
-         vmVyL6r6pk3HPTlPptteppmToxBK1iutota/OdEmkrad+3fN9RdAHlHN7QcmASGSS3d/
-         eZvlrXMFxS9Oj4oXFIMbtDaAeWIS/aBMbUGeU5wXaDzXh8ktlITM3t/xtdZr5Nvd+PyX
-         y6qKHID8LKJCPnTnq0YhgQ1/5lsAUmaeAFJAN8ePPXmDcSaFQOlR4LiCxgo+aLkGLIGG
-         UCig==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1779113391; x=1779718191;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=gmail.com; s=20251104; t=1779113394; x=1779718194; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=u8+qzU0W1zzwMpcEaXSpQvWhLzK3bb5pvFaLvwTKH2A=;
-        b=jbmQXSdBMCCogmItnNs0Lr5UQ/ZmIkkXSo3FmfkNCRYDYgHvmw8szonA7iH84kadd2
-         NjZHxEWVHjEGdxvn2rIKTDYmmJ5EVx6aNovzBOe9fiFN0Hh4A0Tm+yikCHbVROnsXWOV
-         JSKn7gK5XWtGvwtQozy1MWL0rAtsUbJVYoLZUGjYTNRymj/E2r24uhUrSx4fvUIf2iW/
-         jsw6p8m/YpBU5YPif+2Iuu/9cw5u8lNLQoggG9CPIA4UO4eafbpqscl1fvSD89L3k1/m
-         tWwm9ZA56koIJbSjjtgUmgqW8RMR15roPrZACqH7E6XLB97wS36kDLSLYhNrkcywcrjk
-         sk4Q==
-X-Forwarded-Encrypted: i=1; AFNElJ/Kjxu7yyTgN8Kxb5Pg91eA/sABUg/24WyU/R2RA2xYNhC0xvFjkrC3iNDn78Csl4rOicWQrL4sQHuT@vger.kernel.org
-X-Gm-Message-State: AOJu0Yzo4DoiO4Qb9QXobIB8k1owITlKwjG08mfaRqyojvfhDxiz846F
-	P97hWjGHrNaQPmNO17aEozb07lXGX0tTb+Wo3wQMvt4EV3Y3xqDY7DOd
-X-Gm-Gg: Acq92OGKN+LHvM1DFzgn3XFEwONyyTw2oXF/9CnsBMnvqTud5r5gMTvoxs10ZBzZ4rT
-	Zx+wnRKTv0QcTaDCZhATGh2wa4z2rlcWge2wmUHRVMHrrdn8+5FbxQnrpd5Q4bgSvkvwxFcffym
-	oNkdPDirRf9yuqsBX1EuVtKqhQVoOX7yd3FB+lhKHHK7s4v8XtOB1xayn4oE54S8HQnWhnr+fDA
-	zpGc9tW7oDwhqqHMirmdz8I9I+qwUZx4DcBqsj9cJaN0HnHTr1aJ/IKs8FehbyFO4MiEmxHvzt3
-	05F0m01bWwr81h+DunO64I7QOLxZBA7x8VKgqIww8j1fXHNhWnozvEeS/AWBOyiE64mSDzA73bE
-	CqrbMu2Fv9kOD2RvOm2jQ9UsFPhAiGZiynH04O3BhtG/QORk5TBbPADgbuyKWR8rcTwsgaQcy21
-	PswnLH7bOg4EyrMfEoQq6Sxbt3hWQ5yB1zGlvAyq56rwgf6OsuqLGSPvvFZvWKMtrwTA155D83t
-	bbKAtjY7NL7GW6tFRF6tl/dEKoWn0g8Q6g2Nm2r67M=
-X-Received: by 2002:a05:622a:a1b:b0:516:4f76:aebc with SMTP id d75a77b69052e-5165a0072e8mr213950371cf.1.1779113391191;
-        Mon, 18 May 2026 07:09:51 -0700 (PDT)
+        bh=JcCkhUrBAXbdWT6IfHUQo8JZZr8OMY5xmgFkJbZZrG4=;
+        b=AdQF9M+/Q1Mj7bjSWEAqxN1vjgk8Dx8JL9Y1thVf5fl1q5VtTVenWs3TCwdoCgRtVf
+         WQKOSFDzPei2F1kB5FK8G2XyeaeQZj183nEURjRwatEa0LmhG8wEPlYQ+B5PSeuTe/EM
+         4ulL2pqjVrnGYX094Z2R5gAkJE8bVDdjwFKzWSclbEI99/WAA/478p59OyvOyYmCvx9T
+         wOzcXz/DAGAnG50i8hbFH7ozirUCNSthjzPeGGglR3YlOvaCG5USZldUELoPqjlXk/DR
+         tK43/XUXucOgoCxHaqQMD5gc73RnVGP3D6FhC4bTQzjUxpC3TCFzLMXSIzKg/vnTxGJh
+         eCQQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1779113394; x=1779718194;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=JcCkhUrBAXbdWT6IfHUQo8JZZr8OMY5xmgFkJbZZrG4=;
+        b=nkaN2Z48cmq3ScKSYVqM46DviC7QgafwWO47MyYYzMjgD+Y5MbTrTVjwCNSrWJd5y+
+         ha3Y6ZUAVtde0BGFA+u4I2dbsUZSwUS/aci+Y7+8/qexCZtUqeBAnGNC/GS2NYee3uHd
+         wGg+yD6BZ6Uv98XJmgdpv81EmIsOFXNB6XRuo5cDIxRRoAegKahjgJS6ab8/M3ZKivfS
+         EIkRiuUvwlZoogTuLy57tzNF/hOvhYQBosqHEaXAq/cdPYXg9Jbrgu3FCTCT1qOIcWRd
+         oBPiANCWnNDAfbEefxwltd8Xb9uAufyb4OrsKKjWeESCYAHoNu02gkMRNlqRdbtp2ofL
+         qqgQ==
+X-Forwarded-Encrypted: i=1; AFNElJ96d/OBVx4f2HLe0kcq+Oq0W/5gi1pHWextEA5uxhnoIwnAm8zzv2qMDJnbiuyQU6nVCWArHBnPU0ZE@vger.kernel.org
+X-Gm-Message-State: AOJu0Yz+dmLbA42IySgphOyuzWvNDTzfeA9lxkIRRWCXWBl5QWruB9iM
+	Eas5w7bwLwB82t0EkKu9IKuQnobVHA7dhJD0hyfSnuBOWacrENcUxjfz
+X-Gm-Gg: Acq92OEi9jhaTmBDq0FHOdX3OL4QGMkTd+8oo6tM9YVeriJA2xu39QVuniBQhBqckLm
+	43v9NY/OuOirqW/TxXB5L7J9XIIFnsGITk6SpFLcHYTW1p4d6gBpv45i8o8o77EbkYaNEUkobsi
+	oGTPNNmgHa3hfMqkHjYbfWBVPsN18pr38Ft1EhhVgOvrwxbYx7GCMh0d06GyWysf5qKHKKvbp7q
+	rIYX/kHLwwiXmGmav4LGp4q1bZqWf2zFlPV7EYr4zQfgNSkyTDBBX3yM2V5TQk18OibXJHKPyXi
+	7gy96Oo3aCTx4kM7+YehCnQaywZt2EvR5KQx83Gv1lp3osoU3Ub02aSHkoI84YBUA2fAxK9Lfs5
+	eMnTfGDmKPtQEYnRDhHD4A28vGVYw5ZRRcY4JN/JQDCHluX3f0zizjWLXMLuUL7/klyYWjOJ7NW
+	UJ7wqc6o02m7867ZhGXSnV5ZSqiZUAJPDlEk064GnGYYuFH6r10oq+ovRVLI20a0hKafRtM3Kfi
+	D4x/Kr8Xwd9/sMgHojZukSzGNqh+sec5TK7nnlBGTY=
+X-Received: by 2002:a05:622a:5e13:b0:50b:487c:f3d1 with SMTP id d75a77b69052e-5165a0703b6mr201830211cf.3.1779113392898;
+        Mon, 18 May 2026 07:09:52 -0700 (PDT)
 Received: from server0.tail6e7dd.ts.net (c-68-48-65-54.hsd1.mi.comcast.net. [68.48.65.54])
-        by smtp.gmail.com with ESMTPSA id d75a77b69052e-516456888f6sm139477401cf.3.2026.05.18.07.09.49
+        by smtp.gmail.com with ESMTPSA id d75a77b69052e-516456888f6sm139477401cf.3.2026.05.18.07.09.51
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 18 May 2026 07:09:50 -0700 (PDT)
+        Mon, 18 May 2026 07:09:52 -0700 (PDT)
 From: Michael Bommarito <michael.bommarito@gmail.com>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>,
 	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>
@@ -75,85 +77,162 @@ Cc: Nilesh Javali <njavali@marvell.com>,
 	linux-nvme@lists.infradead.org,
 	linux-hardening@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [DRAFT][PATCH] scsi: scsi_transport_fc: widen FPIN pname walker counter to u32
-Date: Mon, 18 May 2026 10:09:44 -0400
-Message-ID: <20260518140945.2751273-1-michael.bommarito@gmail.com>
+Subject: [PATCH] scsi: scsi_transport_fc: widen FPIN pname walker counter to u32
+Date: Mon, 18 May 2026 10:09:45 -0400
+Message-ID: <20260518140945.2751273-2-michael.bommarito@gmail.com>
 X-Mailer: git-send-email 2.53.0
+In-Reply-To: <20260518140945.2751273-1-michael.bommarito@gmail.com>
+References: <20260518140945.2751273-1-michael.bommarito@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Disclosure-Status: DO NOT SEND - patch and patch-discipline artifacts pending
 Content-Transfer-Encoding: 7bit
 
 drivers/scsi/scsi_transport_fc.c::fc_fpin_li_stats_update() and
-fc_fpin_peer_congn_stats_update() walk the on-wire pname_list[]
-with a u8 loop counter against the 32-bit __be32 pname_count
-field, and never bound pname_count by the descriptor body the
-TLV walker already validated.
+fc_fpin_peer_congn_stats_update() walked the on-wire
+pname_list[] with a u8 loop counter against the 32-bit __be32
+pname_count field, and never bounded pname_count by the
+descriptor body the TLV walker already validated.
 
-The two functions are reached on every host running lpfc or
-qla2xxx as soon as the fabric controller (well-known S_ID
-0xFFFFFD on an FC fabric) emits an FPIN ELS for that initiator;
-no host-side capability is required, the fabric is the source.
+A fabric-side FPIN sender (the elected fabric controller, a
+co-tenant N_Port that spoofs S_ID 0xFFFFFD after FLOGI, or a
+compromised switch supervisor) could hang the FC ELS receive
+thread of an lpfc or qla2xxx initiator indefinitely by
+emitting one FPIN ELS frame whose Link-Integrity or
+Peer-Congestion descriptor sets pname_count to 256, because
+the u8 counter rolls over and the loop condition i <
+pname_count stays true for every value i can take.
 
-A pname_count of 256 leaves the u8 condition i < 256 true for
-every value i can take, so the walker never terminates: it
-takes fc_host->rport_lock once per iteration via
-fc_find_rport_by_wwpn() and never releases the calling thread.
-
-Impact: a fabric-side FPIN sender (the elected fabric controller,
-a co-tenant N_Port that spoofs S_ID 0xFFFFFD after FLOGI, or a
-compromised switch supervisor) can hang the FC ELS receive
-thread of an lpfc or qla2xxx initiator indefinitely by emitting
-one FPIN ELS frame whose Link-Integrity or Peer-Congestion
-descriptor sets pname_count to 256, blocking subsequent FPIN,
-RSCN, and multipath-health processing on that HBA function
-until reboot.
-
-Switch i to u32 in both walkers and clamp pname_count against
-the per-descriptor available bytes (desc_len minus the offset
-of pname_list[]) before the loop.  This refuses a malformed
-descriptor that claims more entries than its TLV body can hold,
-and is the minimum scope that covers both walkers.
-
-I reproduced this on a KASAN-enabled x86_64 mainline kernel at
-f0db6484b6ea via an out-of-tree module that allocates a real
-Scsi_Host through the FC transport API (fc_attach_transport(),
-scsi_host_alloc(), scsi_add_host()), builds a 2096-byte FPIN
-payload with pname_count == 256, and calls the exported
-fc_host_fpin_rcv() from a kernel thread.  Without the patch, a
-bounded watchdog timer fires three seconds into the call with
-the kthread still inside fc_find_rport_by_wwpn() (offset
-0x14b/0x2b0 in [scsi_transport_fc]) under
-fc_host_fpin_rcv()+0x4e8.  The patched-kernel A/B run, the
-legitimate pname_count <= 4 regression run, and the checkpatch
-and get_maintainer outputs are pending the final patch draft
-and will be captured before send.  A reproducer is available
-off-list on request.
-
-Two in-tree forwarders reach this code: lpfc passes the full
-hardware-reported payload_len with no software clamp
-(drivers/scsi/lpfc/lpfc_els.c:10830); qla2xxx clamps
-total_bytes to sizeof(item->iocb.iocb) == 64 in
-qla27xx_copy_fpin_pkt (drivers/scsi/qla2xxx/qla_isr.c
-:1170-1171), so qla2xxx delivers at most 64 bytes of FPIN
-payload, but the walker bug fires regardless because the inner
-walker never consults desc_len before reading pname_list[i].
-qedf, bnx2fc, sw-fcoe and bfa do not forward FPIN ELS to
-fc_host_fpin_rcv() in mainline.
-
-The in-flight v10 "fc_els: use 'union fc_tlv_desc'" series from
-Hannes Reinecke and John Meneghini (linux-scsi mid
-20250926000200.837025-2-jmeneghi@redhat.com) touches the same
-file but only changes the descriptor pointer type; the u8 i
-counter is preserved verbatim in v10.  Can rebase on top of
-that series if it lands first, or land this fix standalone
-against current mainline.
+Widen the loop counter to u32 in both walkers and clamp
+pname_count against the per-descriptor available bytes
+(desc_len minus the fixed body that precedes pname_list[])
+before iterating.  A malformed descriptor that claims more
+entries than its TLV body can hold is rejected by the clamp.
 
 Fixes: 3dcfe0de5a97 ("scsi: fc: Parse FPIN packets and update statistics")
 Cc: stable@vger.kernel.org
 Assisted-by: Claude:claude-opus-4-7
 Signed-off-by: Michael Bommarito <michael.bommarito@gmail.com>
+---
+ drivers/scsi/scsi_transport_fc.c | 81 ++++++++++++++++++++------------
+ 1 file changed, 51 insertions(+), 30 deletions(-)
+
+diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
+index dce95e361daf0..cef0c85693fd4 100644
+--- a/drivers/scsi/scsi_transport_fc.c
++++ b/drivers/scsi/scsi_transport_fc.c
+@@ -747,7 +747,7 @@ fc_cn_stats_update(u16 event_type, struct fc_fpin_stats *stats)
+ static void
+ fc_fpin_li_stats_update(struct Scsi_Host *shost, struct fc_tlv_desc *tlv)
+ {
+-	u8 i;
++	u32 i, pname_count, max_count, desc_len;
+ 	struct fc_rport *rport = NULL;
+ 	struct fc_rport *attach_rport = NULL;
+ 	struct fc_host_attrs *fc_host = shost_to_fc_host(shost);
+@@ -764,20 +764,34 @@ fc_fpin_li_stats_update(struct Scsi_Host *shost, struct fc_tlv_desc *tlv)
+ 		fc_li_stats_update(event_type, &attach_rport->fpin_stats);
+ 	}
+ 
+-	if (be32_to_cpu(li_desc->pname_count) > 0) {
+-		for (i = 0;
+-		    i < be32_to_cpu(li_desc->pname_count);
+-		    i++) {
+-			wwpn = be64_to_cpu(li_desc->pname_list[i]);
+-			rport = fc_find_rport_by_wwpn(shost, wwpn);
+-			if (rport &&
+-			    (rport->roles & FC_PORT_ROLE_FCP_TARGET ||
+-			    rport->roles & FC_PORT_ROLE_NVME_TARGET)) {
+-				if (rport == attach_rport)
+-					continue;
+-				fc_li_stats_update(event_type,
+-						   &rport->fpin_stats);
+-			}
++	/*
++	 * Clamp pname_count to the number of pname_list entries
++	 * the descriptor body can actually hold.  desc_len
++	 * excludes the desc_tag/desc_len header (FC_TLV_DESC_HDR_SZ),
++	 * so the bytes available for pname_list[] are
++	 * desc_len - sizeof(fixed fields before pname_list[]).
++	 */
++	pname_count = be32_to_cpu(li_desc->pname_count);
++	desc_len = be32_to_cpu(li_desc->desc_len);
++	if (desc_len < sizeof(*li_desc) - FC_TLV_DESC_HDR_SZ)
++		max_count = 0;
++	else
++		max_count = (desc_len -
++			     (sizeof(*li_desc) - FC_TLV_DESC_HDR_SZ)) /
++			    sizeof(li_desc->pname_list[0]);
++	if (pname_count > max_count)
++		pname_count = max_count;
++
++	for (i = 0; i < pname_count; i++) {
++		wwpn = be64_to_cpu(li_desc->pname_list[i]);
++		rport = fc_find_rport_by_wwpn(shost, wwpn);
++		if (rport &&
++		    (rport->roles & FC_PORT_ROLE_FCP_TARGET ||
++		    rport->roles & FC_PORT_ROLE_NVME_TARGET)) {
++			if (rport == attach_rport)
++				continue;
++			fc_li_stats_update(event_type,
++					   &rport->fpin_stats);
+ 		}
+ 	}
+ 
+@@ -827,7 +841,7 @@ static void
+ fc_fpin_peer_congn_stats_update(struct Scsi_Host *shost,
+ 				struct fc_tlv_desc *tlv)
+ {
+-	u8 i;
++	u32 i, pname_count, max_count, desc_len;
+ 	struct fc_rport *rport = NULL;
+ 	struct fc_rport *attach_rport = NULL;
+ 	struct fc_fn_peer_congn_desc *pc_desc =
+@@ -844,20 +858,27 @@ fc_fpin_peer_congn_stats_update(struct Scsi_Host *shost,
+ 		fc_cn_stats_update(event_type, &attach_rport->fpin_stats);
+ 	}
+ 
+-	if (be32_to_cpu(pc_desc->pname_count) > 0) {
+-		for (i = 0;
+-		    i < be32_to_cpu(pc_desc->pname_count);
+-		    i++) {
+-			wwpn = be64_to_cpu(pc_desc->pname_list[i]);
+-			rport = fc_find_rport_by_wwpn(shost, wwpn);
+-			if (rport &&
+-			    (rport->roles & FC_PORT_ROLE_FCP_TARGET ||
+-			     rport->roles & FC_PORT_ROLE_NVME_TARGET)) {
+-				if (rport == attach_rport)
+-					continue;
+-				fc_cn_stats_update(event_type,
+-						   &rport->fpin_stats);
+-			}
++	pname_count = be32_to_cpu(pc_desc->pname_count);
++	desc_len = be32_to_cpu(pc_desc->desc_len);
++	if (desc_len < sizeof(*pc_desc) - FC_TLV_DESC_HDR_SZ)
++		max_count = 0;
++	else
++		max_count = (desc_len -
++			     (sizeof(*pc_desc) - FC_TLV_DESC_HDR_SZ)) /
++			    sizeof(pc_desc->pname_list[0]);
++	if (pname_count > max_count)
++		pname_count = max_count;
++
++	for (i = 0; i < pname_count; i++) {
++		wwpn = be64_to_cpu(pc_desc->pname_list[i]);
++		rport = fc_find_rport_by_wwpn(shost, wwpn);
++		if (rport &&
++		    (rport->roles & FC_PORT_ROLE_FCP_TARGET ||
++		     rport->roles & FC_PORT_ROLE_NVME_TARGET)) {
++			if (rport == attach_rport)
++				continue;
++			fc_cn_stats_update(event_type,
++					   &rport->fpin_stats);
+ 		}
+ 	}
+ }
+-- 
+2.53.0
+
