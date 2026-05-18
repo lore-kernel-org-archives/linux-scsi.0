@@ -1,127 +1,221 @@
-Received: from mail-ed1-f54.google.com (mail-ed1-f54.google.com [209.85.208.54])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1FA323FA5DC
-	for <linux-scsi@vger.kernel.org>; Mon, 18 May 2026 12:18:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.54
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 61159371045;
+	Mon, 18 May 2026 13:52:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779106717; cv=none; b=VeL4JGEeRKDgEpsom2ViaBIvE9jLs275sTkeyglNSma7JX6M9UOcVnMJ8lplBiGErwmhx0/ncq2vSUUKgfR5BDzIOiyVUhfVaj79SVnPbNnQHT7PRPaUA8SH0U4nUVTZlrBxgP1dDIEIKyDZOQa3pS/EK6Rz9WYF+7U97rXESkw=
+	t=1779112350; cv=none; b=axlOFXxPkvtDZuMQIMgaQAN7ANXtbjD8nqL5wMBZEcmCgaHoUD9DHK3HeOLa3CUGFIYmoFTidON+k+2kdQquWZ88DXGZmInFX2LpPJy0bhdUQ4f06rjoU3BtyNXwqNUECCY0v7XgdJtuiTgwaEQTPiPjb1TqIBSOZ2uyaunKqf0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779106717; c=relaxed/simple;
-	bh=4Uh3eQNG1AzQ8+Z/3G2EaHP2yuu8tI/1ewQgpcXwoSk=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=uyZPOKBl9/267iTbi3F0tM1hVESQpkGWreKeN8B1Iaoc6Fyfik9ybHK39OjzsW108kZOyt81SmagmOlH2yO0brIn5H1EikPNxsXtws5b+qfkjU3K4go5kL778FMPpTA58xcMUAhCozATFEkB0vuqe4REGBlyhd6883nNn3H++Vg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=XNHR5HHi; arc=none smtp.client-ip=209.85.208.54
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1779112350; c=relaxed/simple;
+	bh=07PLMfOB75UjnaWAr0NIiSHUaK1aZsDayIXB2GQZSuM=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=bu0iTrn3KNvgvjL7RIdDa3Gt96Lb6tCSBcOxUQHI2ef0JFGedx86YLIztW2fiREUqjn8FjZEdCt0FqTsxoywuXIimKy2XcGnnnyhuD8DFcVg8Cl8dQxdsf+5oi/lC18lN4eJ0LNbOR9oLjzQlaIoeHiwF9iQPixR4UEUfSdD0Lc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RyMQ3Xpb; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="XNHR5HHi"
-Received: by mail-ed1-f54.google.com with SMTP id 4fb4d7f45d1cf-6804e24803bso5070653a12.1
-        for <linux-scsi@vger.kernel.org>; Mon, 18 May 2026 05:18:35 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1779106714; x=1779711514; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=sUmwK/E8k0/+bmmnitAn3thbhE/x2wsT2IrX01fre1Y=;
-        b=XNHR5HHiAin54LUGTCXqPOGiCVfjzXfUfv9IkxU8pnXfYfY96DkGw8aQG3nXhzEAwj
-         +eczCJmsg+NQNbCg5opZN6BLAJ8SQZYVjg4kVN3Wf/rQtZpVLe4nKk3KC1quH0WTOC5m
-         rzZ1FYohAIrjDCC0Owln6/cl3cL6ctTHJORLoSorM5Cm/lDaPc9eeQJICOx6kR7FgJLf
-         SGTFvW87eXDavUi7+PjVduuhLlVJVSCxyV8cKsCtjnXhFQZJgZMieC4AtaouvRx7eSNh
-         uxVW0kzDTgaZWHkhhxva82iiisMLRiR3Um7WVtEO9fsqzAh+//ByPsopqn3YutA9Wr9O
-         0pSQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1779106714; x=1779711514;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=sUmwK/E8k0/+bmmnitAn3thbhE/x2wsT2IrX01fre1Y=;
-        b=AxRlKbxx+6MGVd/NezB84q7d2dha4h57+Cdsr/KG+DKcKPdqfNAGmcyLFGbkn72rXl
-         RJ7rs3rvb1iBf625AfLFTcs6CGDIQ+wAjYg/hfpg/tzjUqF0RxlQL0acwn13Kwt20eI3
-         zGttkQRup9fEROl2J1EVkZRm8su1XHIXhi+jr1c2nrZq4Ocw/9IUYgmlpZaj3I561z29
-         QEQYgWSmhXId2WhwguQBL7HLQPsHyI+VUXwSjtCOV33Pu45quvsdBMMLr9gjeRb3xsf1
-         SA0lROC2LR9568tTsZSFF2NZNVs2iP2Fpej7F7UohZpuiM3aJrkVkAivy/yyWnX5HcnM
-         P2MA==
-X-Forwarded-Encrypted: i=1; AFNElJ9pway92AcmRDrHn5N9RDwxwJaW1iwMT6ErryWbW4X8VdOOuWtOTe40Ox5wNSUi442LfUhArPyMp1b+@vger.kernel.org
-X-Gm-Message-State: AOJu0Yx5v2FRkRBfpGr0ATge+3F0qmu2cQ561Bb75zr9jhF0HpD2zA72
-	ccvAaHD6sxuSJYAWxhnf0Blb1nz/Y3UOfbRyGHl6bXaIKx7WF2HZMLtr
-X-Gm-Gg: Acq92OFuopliOehdt3wL/cNNHjo2ClEfdNcyzMLIY1TiUbo+uMnoDqN8aKLBCFCOYXi
-	FJiiTv3IdPo6CAWfEL9Q9yW6xdlgGfjB4Jaj9cbMoZYU4V80QobHpt4v8uyE6N+fmvBWKrb1hgY
-	ZDcKE1ikTxf1nZd01PsKyfe8KeuYyPVECJ/TZvxM+tdi0lxhBEV5peV8NTZnCySJ0pwlIb+Vuz2
-	l63lh5GI9ULr/8v0HHPfWdXi7N1lPgCmpQaqxeKn9rdLHSFeYFLWuNcDvJRGl8/FFPNK0817eBB
-	6CD3uibWbcttH9MdQSQGggPjvmVMgvOTXy/dzhW7XNV8SevL6pvuTCtOr8v8ObjTyOtBy+jMac+
-	Q67JjKEfA0dZ7902e0wzZYo/aYnknWU0OYtkDuqLjsTS6FArNwvPpmbsTe5Udvm3p6ob/XDxPQO
-	gcotyFy7LFgvFmE30GIlA0IVsQs4nIgGEVwvB8ghAAVN1UEJ6FC4leMMyyMe2ur906ix44RTdZz
-	QvKKhAbJdt9JOsYDRXqVI9Qy/Lhl6LW0X9cVjkf3MZ54doDBP25qBxNb3AMnFoxunnG0LmUdap1
-	DopAwvTVJtgX9PQ0P5ki4dBnh0Nw
-X-Received: by 2002:a17:906:5189:10b0:bd4:f814:efe8 with SMTP id a640c23a62f3a-bd5177ee44amr557710666b.18.1779106714108;
-        Mon, 18 May 2026 05:18:34 -0700 (PDT)
-Received: from ahossu.localdomain (ip-217-105-56-94.ip.prioritytelecom.net. [217.105.56.94])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-bd4f4c631e2sm547638066b.28.2026.05.18.05.18.33
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 18 May 2026 05:18:33 -0700 (PDT)
-From: Alexandru Hossu <hossu.alexandru@gmail.com>
-To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: Bart Van Assche <bvanassche@acm.org>,
-	target-devel@vger.kernel.org,
-	linux-scsi@vger.kernel.org,
-	hossu.alexandru@gmail.com,
-	stable@vger.kernel.org
-Subject: [PATCH] scsi: target: iscsi: validate CHAP_R length before base64 decode
-Date: Mon, 18 May 2026 14:18:11 +0200
-Message-ID: <20260518121811.385350-1-hossu.alexandru@gmail.com>
-X-Mailer: git-send-email 2.54.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RyMQ3Xpb"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 1EA5FC2BCC7;
+	Mon, 18 May 2026 13:52:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1779112350;
+	bh=07PLMfOB75UjnaWAr0NIiSHUaK1aZsDayIXB2GQZSuM=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
+	b=RyMQ3XpbqSwba+d+/RQaumfR4MO6FdDq+P21ymLBvaSo7CVQgobmRtrCzYBsa/vko
+	 B8dX5prq3P5fuFAEQADAQ+Q71hVEKitpL2KLij6vTcGLm/E8ZgKzopwFYVGXXhDT7n
+	 nmFyid2RcwBY5xdjiR8yG1bepzWFOujlpLsD6VbhEj8Vk0Icoq8Jq3eLfRD1ySgue2
+	 R7LT636kNTgde6u1SzsuAdWCILycLLFNZ5UIIUbU5vtTmtZ5M3XzEWAskYIV3JkCTk
+	 XEUoZaHssfZPiueWvk7kCE+G9yoPPTijjOyiE94kFKoZyz+l3udX870SBHjed6eRj+
+	 dAt2zsjgRy/Og==
+Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 06685CD4F4A;
+	Mon, 18 May 2026 13:52:30 +0000 (UTC)
+From: Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org>
+Date: Mon, 18 May 2026 19:22:17 +0530
+Subject: [PATCH v7 1/5] soc: qcom: ice: Fix race between qcom_ice_probe()
+ and of_qcom_ice_get()
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20260518-qcom-ice-fix-v7-1-2a595382185b@oss.qualcomm.com>
+References: <20260518-qcom-ice-fix-v7-0-2a595382185b@oss.qualcomm.com>
+In-Reply-To: <20260518-qcom-ice-fix-v7-0-2a595382185b@oss.qualcomm.com>
+To: Bjorn Andersson <andersson@kernel.org>, 
+ Konrad Dybcio <konradybcio@kernel.org>, Abel Vesa <abelvesa@kernel.org>, 
+ Adrian Hunter <adrian.hunter@intel.com>, Ulf Hansson <ulfh@kernel.org>, 
+ Manivannan Sadhasivam <mani@kernel.org>, 
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
+ "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ linux-mmc@vger.kernel.org, linux-scsi@vger.kernel.org, 
+ Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>, 
+ Sumit Garg <sumit.garg@oss.qualcomm.com>, stable@vger.kernel.org
+X-Mailer: b4 0.14.3
+X-Developer-Signature: v=1; a=openpgp-sha256; l=5039;
+ i=manivannan.sadhasivam@oss.qualcomm.com; h=from:subject:message-id;
+ bh=TOuPsTKwS69xCvw+bR6CsvRuXrrDoK9uazQUAc0R+fY=;
+ b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBqCxmZCIfritK4cd/YLCe1gVQtYrw7DOmOk5Ee1
+ 1hQp4cW6F2JATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCagsZmQAKCRBVnxHm/pHO
+ 9emgB/4tz6GqENoBNXwIZPk2aXSXSTTKyiQf+OJpltkNvJN13yE6pP3dtU9rGy4X9TFEoA8Z5nA
+ KzpVFWqfFsBGZgcRDXDLdNok0hbs8DMuZuT7F2TFsYZSLcU5PpK9kStIHruu47oz7Ka84x0KiRs
+ PyrV8fKlhzC379R8ack6EMMwRawjQpYpyn5rvzv4xHQNSXINlUt0nk6QMVx1V3fcJcS02E9U9xe
+ 359Bng6ZIjI3wqQcN3iMxgn7QvlJwDLeoistRyEkbweZV8LRNc9wqYgQOMWACNH9kTZQVKvsRr2
+ vcCMS0V/+rsKAu/VgdrWzRzFrRpPPPbeQvs0dz27rY1Q8O2Q
+X-Developer-Key: i=manivannan.sadhasivam@oss.qualcomm.com; a=openpgp;
+ fpr=C668AEC3C3188E4C611465E7488550E901166008
+X-Endpoint-Received: by B4 Relay for
+ manivannan.sadhasivam@oss.qualcomm.com/default with auth_id=461
+X-Original-From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+Reply-To: manivannan.sadhasivam@oss.qualcomm.com
 
-chap_server_compute_hash() allocates client_digest as
-kzalloc(chap->digest_size) and then, for BASE64-encoded responses,
-passes chap_r directly to chap_base64_decode() without checking whether
-the input length could produce more than digest_size bytes of output.
+From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 
-chap_base64_decode() writes to the destination unconditionally as long
-as there is input to consume. With MAX_RESPONSE_LENGTH set to 128 and
-the "0b" prefix stripped by extract_param(), up to 127 base64 characters
-can reach the decoder. 127 characters decode to 95 bytes. For SHA-256
-(digest_size=32) this overflows client_digest by 63 bytes; for MD5
-(digest_size=16) the overflow is 79 bytes.
+The current platform driver design causes probe ordering races with
+consumers (UFS, eMMC) due to ICE's dependency on SCM firmware calls. If ICE
+probe fails (missing ICE SCM or DT registers), devm_of_qcom_ice_get() loops
+with -EPROBE_DEFER, leaving consumers non-functional even when ICE should
+be gracefully disabled. devm_of_qcom_ice_get() doesn't know if the ICE
+driver probe has failed due to above reasons or it is waiting for the SCM
+driver.
 
-The length check at line 344 fires after the write has already happened.
+Moreover, there is no devlink dependency between ICE and consumer drivers
+as 'qcom,ice' is not considered as a DT 'supplier'. So the consumer drivers
+have no idea of when the ICE driver is going to probe.
 
-The HEX branch in the same switch statement already validates the length
-up front. Apply the same approach to the BASE64 branch: reject any input
-whose maximum decoded length exceeds digest_size before calling the
-decoder.
+To address these issues, store the error pointer in a global xarray with
+ice node phandle as a key during probe in addition to the valid ice pointer
+and synchronize both qcom_ice_probe() and of_qcom_ice_get() using a mutex.
 
-The formula (digest_size * 4 + 2) / 3 is the ceiling of digest_size *
-4/3, i.e. the maximum number of base64 characters that can decode to
-exactly digest_size bytes.
+If the xarray entry is NULL, then it implies that the driver is not
+probed yet, so return -EPROBE_DEFER. If it has any error pointer, return
+that error pointer directly. Otherwise, add the devlink as usual and return
+the valid pointer to the consumer.
 
-Fixes: 1e5733883421 ("scsi: target: iscsi: Support base64 in CHAP")
-Cc: stable@vger.kernel.org
-Signed-off-by: Alexandru Hossu <hossu.alexandru@gmail.com>
+Xarray is used instead of platform drvdata, since driver core frees the
+drvdata during probe failure. So it cannot be used to pass the error
+pointer to the consumers.
+
+Note that this change only fixes the standalone ICE DT node bindings and
+not the ones with 'ice' range embedded in the consumer nodes, where there
+is no issue.
+
+Fixes: 2afbf43a4aec ("soc: qcom: Make the Qualcomm UFS/SDCC ICE a dedicated driver")
+Reported-by: Sumit Garg <sumit.garg@oss.qualcomm.com>
+Tested-by: Sumit Garg <sumit.garg@oss.qualcomm.com> # OP-TEE as TZ
+Acked-by: Sumit Garg <sumit.garg@oss.qualcomm.com>
+Cc: stable@vger.kernel.org # 6.4
+Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 ---
- drivers/target/iscsi/iscsi_target_auth.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/soc/qcom/ice.c | 38 +++++++++++++++++++++++++++++++-------
+ 1 file changed, 31 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/target/iscsi/iscsi_target_auth.c b/drivers/target/iscsi/iscsi_target_auth.c
-index c46c69a..653be1a 100644
---- a/drivers/target/iscsi/iscsi_target_auth.c
-+++ b/drivers/target/iscsi/iscsi_target_auth.c
-@@ -341,6 +341,10 @@ static int chap_server_compute_hash(
- 		}
- 		break;
- 	case BASE64:
-+		if (strlen(chap_r) > (chap->digest_size * 4 + 2) / 3) {
-+			pr_err("Malformed CHAP_R: base64 payload too long\n");
-+			goto out;
-+		}
- 		if (chap_base64_decode(client_digest, chap_r, strlen(chap_r)) !=
- 		    chap->digest_size) {
- 			pr_err("Malformed CHAP_R: invalid BASE64\n");
+diff --git a/drivers/soc/qcom/ice.c b/drivers/soc/qcom/ice.c
+index b203bc685cad..91991864b4a3 100644
+--- a/drivers/soc/qcom/ice.c
++++ b/drivers/soc/qcom/ice.c
+@@ -16,6 +16,7 @@
+ #include <linux/of.h>
+ #include <linux/of_platform.h>
+ #include <linux/platform_device.h>
++#include <linux/xarray.h>
+ 
+ #include <linux/firmware/qcom/qcom_scm.h>
+ 
+@@ -113,6 +114,9 @@ struct qcom_ice {
+ 	u8 hwkm_version;
+ };
+ 
++static DEFINE_XARRAY(ice_handles);
++static DEFINE_MUTEX(ice_mutex);
++
+ static bool qcom_ice_check_supported(struct qcom_ice *ice)
+ {
+ 	u32 regval = qcom_ice_readl(ice, QCOM_ICE_REG_VERSION);
+@@ -631,6 +635,8 @@ static struct qcom_ice *of_qcom_ice_get(struct device *dev)
+ 		return qcom_ice_create(&pdev->dev, base);
+ 	}
+ 
++	guard(mutex)(&ice_mutex);
++
+ 	/*
+ 	 * If the consumer node does not provider an 'ice' reg range
+ 	 * (legacy DT binding), then it must at least provide a phandle
+@@ -647,12 +653,13 @@ static struct qcom_ice *of_qcom_ice_get(struct device *dev)
+ 		return ERR_PTR(-EPROBE_DEFER);
+ 	}
+ 
+-	ice = platform_get_drvdata(pdev);
+-	if (!ice) {
+-		dev_err(dev, "Cannot get ice instance from %s\n",
+-			dev_name(&pdev->dev));
++	ice = xa_load(&ice_handles, pdev->dev.of_node->phandle);
++	if (IS_ERR_OR_NULL(ice)) {
+ 		platform_device_put(pdev);
+-		return ERR_PTR(-EPROBE_DEFER);
++		if (!ice)
++			return ERR_PTR(-EPROBE_DEFER);
++		else
++			return ice;
+ 	}
+ 
+ 	link = device_link_add(dev, &pdev->dev, DL_FLAG_AUTOREMOVE_SUPPLIER);
+@@ -716,24 +723,40 @@ EXPORT_SYMBOL_GPL(devm_of_qcom_ice_get);
+ 
+ static int qcom_ice_probe(struct platform_device *pdev)
+ {
++	unsigned long phandle = pdev->dev.of_node->phandle;
+ 	struct qcom_ice *engine;
+ 	void __iomem *base;
+ 
++	guard(mutex)(&ice_mutex);
++
+ 	base = devm_platform_ioremap_resource(pdev, 0);
+ 	if (IS_ERR(base)) {
+ 		dev_warn(&pdev->dev, "ICE registers not found\n");
++		/* Store the error pointer for devm_of_qcom_ice_get() */
++		xa_store(&ice_handles, phandle, (__force void *)base, GFP_KERNEL);
+ 		return PTR_ERR(base);
+ 	}
+ 
+ 	engine = qcom_ice_create(&pdev->dev, base);
+-	if (IS_ERR(engine))
++	if (IS_ERR(engine)) {
++		/* Store the error pointer for devm_of_qcom_ice_get() */
++		xa_store(&ice_handles, phandle, engine, GFP_KERNEL);
+ 		return PTR_ERR(engine);
++	}
+ 
+-	platform_set_drvdata(pdev, engine);
++	xa_store(&ice_handles, phandle, engine, GFP_KERNEL);
+ 
+ 	return 0;
+ }
+ 
++static void qcom_ice_remove(struct platform_device *pdev)
++{
++	unsigned long phandle = pdev->dev.of_node->phandle;
++
++	guard(mutex)(&ice_mutex);
++	xa_store(&ice_handles, phandle, NULL, GFP_KERNEL);
++}
++
+ static const struct of_device_id qcom_ice_of_match_table[] = {
+ 	{ .compatible = "qcom,inline-crypto-engine" },
+ 	{ },
+@@ -742,6 +765,7 @@ MODULE_DEVICE_TABLE(of, qcom_ice_of_match_table);
+ 
+ static struct platform_driver qcom_ice_driver = {
+ 	.probe	= qcom_ice_probe,
++	.remove	= qcom_ice_remove,
+ 	.driver = {
+ 		.name = "qcom-ice",
+ 		.of_match_table = qcom_ice_of_match_table,
+
 -- 
-2.54.0
+2.48.1
+
 
