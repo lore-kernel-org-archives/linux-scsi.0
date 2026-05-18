@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 76E96480DDF;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C84048165A;
 	Mon, 18 May 2026 13:52:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779112350; cv=none; b=m31/nw7Z+z/A0ipPH8vqJcuSs1lKl1oX6kHANbgo0TJo6zcMoh4rSU/ZP2WkYyLApVqT2/N2GAjixeQdFI+TNlDCg7W7Sh4ugKw1dPepAgwLtL/M59rW4g9cYRRnrJellL6y0NrkRPOZEFL3UhcpzylJtR+id3kQFCWjXMW67FQ=
+	t=1779112350; cv=none; b=Z2JjUDO3el3BkcAxovM+p7240gPY6u+nr1Aqam+7sxO5rvlTMh4ics3hyJrg5/Yc+t/OPcV8Iw56GjUto2ZeHDpJtKTaMAdaN41uq8IOHXP6o1yBRzfr/dSnThn3WN9FxLVe1Z9QLBlMrVuhHySwUCBN+w0iiFGIwsRt/g7CivQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1779112350; c=relaxed/simple;
-	bh=9qXOPABVN2c7n9TZ5dpBGQo/RMWfurFgnVCjdPLBspA=;
+	bh=oHTE1zYWukKSlsBoWerN08uSJEDcX8ooTqW72KVewf0=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=SGDrpU7qswTBwJTK6cfna7IzCcdV10i0b25026zltnk3Zm6v0K7zHoJNmjtyEMMy77n6A4LR2+ATLW7UIAC5PgN8cUpzAm5p04wVWxgDYx6ocMCsgsop1W5Byne13+QcoxelN6RH+0+EHt6Wr+Ggzz9lRL13p3gkRUoSVKABugI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BkQwNk5i; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:To:Cc; b=KauqMYA8RhUoSfr9flm66WtW/a4+K9u8MT7BbJKBOxfrVZWM6OWq1Rju5hJhdzpgliB7M+ZU6jregv362zVcYbcK8cRkXq99plvK4cHe/dJ5ijwAZRLUgQxSpYweOib17Z32Op3+2PquT8jWo/s4g9ReZU8lIgkEvdehxiaJS3M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AjpfTpX1; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BkQwNk5i"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 3C6B1C2BCFD;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AjpfTpX1"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 63DA5C2BCFF;
 	Mon, 18 May 2026 13:52:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1779112350;
-	bh=9qXOPABVN2c7n9TZ5dpBGQo/RMWfurFgnVCjdPLBspA=;
+	bh=oHTE1zYWukKSlsBoWerN08uSJEDcX8ooTqW72KVewf0=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=BkQwNk5iIRIL5jzxwL+PucNKuX7dfN8ssyBjlgBD7RwpCrBB2ZgtkC+CuguE+saTe
-	 vNmMh8hU226qpbCao+bx+03k81p62hj1EOyJ5gtcuVnB6+4udQ4iGkQYOVFJH2HSVc
-	 t5ifFY+8CUkM/cbQtVOWDpEnC0oyrcA8hNOxGMq+Up8MfaFWXgBn1Y/6G+cf3Cmx1b
-	 HCG6O2TovD6KZIh37zhxE3BfqVkH1e4uvSSohUWZa4h7o57FfmqHI25qc6IbKUZBbl
-	 rTPI3+Q1Z0dIWhPIby1JB8Zjta2vOMslhnK9AugfOM/6je8dTl4AyuaEu6N1EcSC5f
-	 ne2C+h00DwXAw==
+	b=AjpfTpX1+mWo5HunV9LBA9IGF0p8xvR/qJ2kAfm3LNCtbMaezCvZrSp8aPNo7CxBP
+	 Lu+bwHBcRY7an4eegMJkTOFMY9aSjYKF+LD+gFxJhWIbPwVMI/gD9dgBAWsVBuJCDQ
+	 /199OOhk8y/l/u6I/nN1Wk59aZwJ9WKyC8v+tQlmIfZkqZJ6FXBqybFRqpJSQ++Oi4
+	 6nHJGoMXIcgPr5sLjS9qeXfQZ7L7Og6lnHc1lMYxyJp6LxpzP4Ca2LocThVPRf6gf6
+	 MlQ8X38uVBCj/Lum3W+1rpmQQsgrAE0yMkuY41+mc39RuH+FWwC4pmAffGEdz1khPN
+	 Votvby46G3AwQ==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C851CD4F49;
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 54F1ACD4F52;
 	Mon, 18 May 2026 13:52:30 +0000 (UTC)
 From: Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org>
-Date: Mon, 18 May 2026 19:22:19 +0530
-Subject: [PATCH v7 3/5] soc: qcom: ice: Return proper error codes from
- devm_of_qcom_ice_get() instead of NULL
+Date: Mon, 18 May 2026 19:22:21 +0530
+Subject: [PATCH v7 5/5] scsi: ufs: ufs-qcom: Remove NULL check from
+ devm_of_qcom_ice_get()
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -41,7 +41,7 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260518-qcom-ice-fix-v7-3-2a595382185b@oss.qualcomm.com>
+Message-Id: <20260518-qcom-ice-fix-v7-5-2a595382185b@oss.qualcomm.com>
 References: <20260518-qcom-ice-fix-v7-0-2a595382185b@oss.qualcomm.com>
 In-Reply-To: <20260518-qcom-ice-fix-v7-0-2a595382185b@oss.qualcomm.com>
 To: Bjorn Andersson <andersson@kernel.org>, 
@@ -53,19 +53,19 @@ To: Bjorn Andersson <andersson@kernel.org>,
 Cc: linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org, 
  linux-mmc@vger.kernel.org, linux-scsi@vger.kernel.org, 
  Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>, 
- Sumit Garg <sumit.garg@oss.qualcomm.com>, 
- Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
+ Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>, 
+ Sumit Garg <sumit.garg@oss.qualcomm.com>
 X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2164;
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1234;
  i=manivannan.sadhasivam@oss.qualcomm.com; h=from:subject:message-id;
- bh=zyGMoxK7AI1IRPc+etIM4UZGk/SADTv+9T9KAHweBVw=;
- b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBqCxmahrJ+jerq1LRrZ6VYZmvgG5UhnEKv/cXI2
- yZosNGSuiaJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCagsZmgAKCRBVnxHm/pHO
- 9Z0tB/9plQvFEspGFOSg6Irs68JKzkrKJarNsxOt7OfJEuJZdma3kKqbKgAJpoT0/tgiYGPmvfv
- R6SBenoiC7quwaWVHJtXl7RlPabgRSicuKjzNhX1xprtVU9bnE4u2+/tXfo/6r6KckfOYPbK3Qn
- F/Hf94gisRXwAOeuXUV4ZidhoXWKeIfxTd2PhrLdxGp3DXvRro3gvWgKht2nfvfbxrI8cYiM12y
- 0eKvv+vEbsj6h0nzq0nHEFlqQ+Yhx3m+Xsglh99H8OYxuEzb6tKCqUu6Uo79n5OsuyabKQgouFb
- uLtUGyaMVWGb+ScY7q+RuAIbV/N1+Ls7oYUDQZrP9+L23oYm
+ bh=YkgKjBGLY+AYBAXrlJJJX873KFHUcGeHTh2LU3886Ks=;
+ b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBqCxmbBwMerdItRgmMSGTdMSgoh6ch3aPCMD1UW
+ NgEs/LaDX+JATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCagsZmwAKCRBVnxHm/pHO
+ 9WhSCACrc2TOBJjWpreJbyISJrxaAolOeb62QdYZY+jB30PwkpbACvHGQt89SEn4TByqU2uEnsv
+ YBqs6nc3kewVPRXrXKvv1tbLrj6QgGXeHu9vNCCMJhyMhDaetDQ0Tg1KKFYGr8rr6DrNo+BHE/O
+ e703grIeGKhTYfKR+xGDa+YOpTmr6VP4ixZ+Bn+Wny6l7k95PX6y4Q8KJIY6QTAs/XJe3hknAow
+ PGr3lqqOGDQD5aIzEr37CJmbcRlzG7MSJhHuQaQxTMFLDlNa7p3rfxEQuocp+iVlwsSQC+fjyjc
+ v3k/0xJ0j5Sr1+/MQLITuoUONYxvHk+lABfubhmMOrD6vJ8C
 X-Developer-Key: i=manivannan.sadhasivam@oss.qualcomm.com; a=openpgp;
  fpr=C668AEC3C3188E4C611465E7488550E901166008
 X-Endpoint-Received: by B4 Relay for
@@ -75,61 +75,42 @@ Reply-To: manivannan.sadhasivam@oss.qualcomm.com
 
 From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 
-devm_of_qcom_ice_get() currently returns NULL if ICE SCM is not available
-or "qcom,ice" property is not found in DT. But this confuses the clients
-since NULL doesn't convey the reason for failure. So return proper error
-codes instead of NULL.
+Now since the devm_of_qcom_ice_get() API never returns NULL, remove the
+NULL check and also simplify the error handling.
 
-Reported-by: Sumit Garg <sumit.garg@oss.qualcomm.com>
 Reviewed-by: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
+Acked-by: Martin K. Petersen <martin.petersen@oracle.com> # UFS
 Tested-by: Sumit Garg <sumit.garg@oss.qualcomm.com> # OP-TEE as TZ
 Acked-by: Sumit Garg <sumit.garg@oss.qualcomm.com>
 Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 ---
- drivers/soc/qcom/ice.c | 9 ++++-----
- 1 file changed, 4 insertions(+), 5 deletions(-)
+ drivers/ufs/host/ufs-qcom.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/soc/qcom/ice.c b/drivers/soc/qcom/ice.c
-index 85deb9ea4a68..2b592aa42941 100644
---- a/drivers/soc/qcom/ice.c
-+++ b/drivers/soc/qcom/ice.c
-@@ -563,7 +563,7 @@ static struct qcom_ice *qcom_ice_create(struct device *dev,
+diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+index bc037db46624..9c0973a7ffc3 100644
+--- a/drivers/ufs/host/ufs-qcom.c
++++ b/drivers/ufs/host/ufs-qcom.c
+@@ -177,14 +177,14 @@ static int ufs_qcom_ice_init(struct ufs_qcom_host *host)
+ 	int i;
  
- 	if (!qcom_scm_ice_available()) {
- 		dev_warn(dev, "ICE SCM interface not found\n");
--		return NULL;
-+		return ERR_PTR(-EOPNOTSUPP);
+ 	ice = devm_of_qcom_ice_get(dev);
+-	if (ice == ERR_PTR(-EOPNOTSUPP)) {
++	if (IS_ERR(ice)) {
++		if (ice != ERR_PTR(-EOPNOTSUPP))
++			return PTR_ERR(ice);
++
+ 		dev_warn(dev, "Disabling inline encryption support\n");
+-		ice = NULL;
++		return 0;
  	}
  
- 	engine = devm_kzalloc(dev, sizeof(*engine), GFP_KERNEL);
-@@ -645,7 +645,7 @@ static struct qcom_ice *of_qcom_ice_get(struct device *dev)
- 	struct device_node *node __free(device_node) = of_parse_phandle(dev->of_node,
- 									"qcom,ice", 0);
- 	if (!node)
--		return NULL;
-+		return ERR_PTR(-ENODEV);
+-	if (IS_ERR_OR_NULL(ice))
+-		return PTR_ERR_OR_ZERO(ice);
+-
+ 	host->ice = ice;
  
- 	pdev = of_find_device_by_node(node);
- 	if (!pdev) {
-@@ -698,8 +698,7 @@ static void devm_of_qcom_ice_put(struct device *dev, void *res)
-  * phandle via 'qcom,ice' property to an ICE DT, the ICE instance will already
-  * be created and so this function will return that instead.
-  *
-- * Return: ICE pointer on success, NULL if there is no ICE data provided by the
-- * consumer or ERR_PTR() on error.
-+ * Return: ICE pointer on success, ERR_PTR() on error.
-  */
- struct qcom_ice *devm_of_qcom_ice_get(struct device *dev)
- {
-@@ -710,7 +709,7 @@ struct qcom_ice *devm_of_qcom_ice_get(struct device *dev)
- 		return ERR_PTR(-ENOMEM);
- 
- 	ice = of_qcom_ice_get(dev);
--	if (!IS_ERR_OR_NULL(ice)) {
-+	if (!IS_ERR(ice)) {
- 		*dr = ice;
- 		devres_add(dev, dr);
- 	} else {
+ 	/* Initialize the blk_crypto_profile */
 
 -- 
 2.48.1
