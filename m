@@ -1,81 +1,71 @@
-Received: from mail-wm1-f42.google.com (mail-wm1-f42.google.com [209.85.128.42])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B17CD382F28
-	for <linux-scsi@vger.kernel.org>; Mon, 18 May 2026 18:41:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 929102DC767
+	for <linux-scsi@vger.kernel.org>; Mon, 18 May 2026 19:32:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779129688; cv=none; b=A6uCrL9MqaljM0W3YIAhmHp6Cy3qhB3W5niMKeQpKUNc/FN+mUNzYGLuqbsf4mj65l6EIjWgQS9P5bEVVV0zKpYHqc7nK+KChgV6xp+jbSnTy73+sHWPifiuY26NuGC6LBZGJ3JiXl4DRFNDeEl5CORPf/8Q1B8fP0gMFq5fNg8=
+	t=1779132756; cv=none; b=Pmw3W9BZBYFwE2J6QBvja/6Q4BPUJP4mRek74jIqfhGtrIis5RpAjQtPbD3HdDa0O/rHSsg3diPp8vW6TxsYWn/sHP8wXJAqfu/D/7j1cSIsWGCFqqP1DB6sE4YI3HO21RhsLBxXcLl+waEu5se7dOwMPXn0E+BMIhaZaR1hEsA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779129688; c=relaxed/simple;
-	bh=Bt3my+6l00h9cgScvXgngonjEUgxY/cU8mMorKuK7Cg=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=uVfVTzABrN31YWl/kPid/ih2IAENUr8yHD6pDtDdN+FrVvzwbu/hwy+m/EjY20+nlUVmKmS4XzN/ZAsGHxm2tdmxs3UZEcf7HOdQSip0qCZSvCDpxg5ZlIGdJBh7XdJ/QNVi3akOmH9pZR62kuCYha5bZWyKWbR1JIq2Tji8pbY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=m3ahKnax; arc=none smtp.client-ip=209.85.128.42
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1779132756; c=relaxed/simple;
+	bh=ZM28tokkyaozRN0tI8tYOZA4DdtRMCPT82/z4rmYPmQ=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Q0+82NV+z4YmKa3BSs8VQzKpxzd6hDMwCANzFwI0jReTDkqxtIasIwkqV9ia3tauWN5jmvbx9TJ92go46mgS0F2qWDDIT1Vvf0lxJJlygaO+yjV079ajRPo2Q87xeTSvglCeXNWHqdVYjks/9LVCp4QOzz7QFHEmvDNyjrywXeU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=JSdqr0PD; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="m3ahKnax"
-Received: by mail-wm1-f42.google.com with SMTP id 5b1f17b1804b1-48ff4f8ef0dso30369525e9.3
-        for <linux-scsi@vger.kernel.org>; Mon, 18 May 2026 11:41:25 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1779129684; x=1779734484; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=f8+wQM4a4tsMzXZ7biCKDr40TVU55tRrbtX6KIaXn24=;
-        b=m3ahKnaxaW1Ou8SvREKiHiQ4UNGReS5iZBkWTeovQ66QE9Poyyx3zYwc2C4XrG7k86
-         U8/i6uOdicL96UWoDgGr+ReQxxvRMPYW+5KkclmSqWsaS1IeoOYbeBJXW8kfo6LeG1WM
-         hhzI3pnGs8L67zdyxveQDp4Vj+WogXAhWAO00tOyRm7q9y9LTov1DRHOwtPUNwwb4Gwe
-         BEkPKygmL4S2WzB9XMbb50NvKEJ1Ygvy9tWru6xL65w44vI9QpJOsxL/nMdFArzHrH32
-         OFYyacVT8WYzQ5v5bjvb1km+1+1NWBNDXpE4bLIjbUmkCOTkZxmE4EqPBkbYJTaAkTsE
-         mjug==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1779129684; x=1779734484;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=f8+wQM4a4tsMzXZ7biCKDr40TVU55tRrbtX6KIaXn24=;
-        b=C7fydWEzPhV8VjjBfgCmLvKF84TjmvfmvSwL7IdJjdZmH1WdqT2mSO8AEUGBjRo0IX
-         UZG78Oyuz2yn6Xy3nFTezjSC1IbCbaZo1EXRhe76fz1c1hQDAJ1Ip9sCvsZabUAb4Q0r
-         S5QZEITkF/+EN+H4Tc9STvWXRVBzwbJuQ+YxR5N9HMz0G2q6H+uuf/5lNqlaNe6Ult0M
-         b7cRgU1irc9n0s3o4rNW0ARBDQkOHIOvo3I8Kodm+vD5WBBJe9vF7LJmWUzeygRa04rV
-         7y3ovlF8kKxKkuw6zxYQlBcjveN6G2VBqfN//TdnPsR8Veli5oAOHOmek0pxenYIWmSx
-         hNSw==
-X-Forwarded-Encrypted: i=1; AFNElJ802dVYeD4R5wYDQyeb48Mc60T+faOo15/BlB4KNmhwuEhIe27aDdIrFvG2S6WyYyiHo5cOaSRHQyq1@vger.kernel.org
-X-Gm-Message-State: AOJu0Ywl3LEP3n5zzaQDerc+6mK6rxkMeVmxw28r0FFiNG1+aLqHorNt
-	zhtlO2qkOKsnlpfCPhUD07fKbIIQ2W9p4BQVYa0VqSFIflARuthWO+hH
-X-Gm-Gg: Acq92OHt1DvpEOvJ8Pmkv3eJj0jQPLAmmWtLphVP3eO4Kmmq1Q0/q/hQzbLIiN3h+f2
-	P3HOARbxoS8UPlb3AM53JIdnD5Oj9HVYHMx6+t6way4c5g9xj7qbyVPuLwnuYpzIAZAcKoMpJfu
-	bb7Uj+R6O0f6IVsApmCPylxvobj0WlAbGyPXxjYSBtyquLoZ2ZwLhq/bS8zDnseYlpNJzmy+aJZ
-	6PGLIuphT+Hamx8EG0Fs9x8qly8D0Tju/BrfTKscKotMPicpYN152bzpv5OyEvTKwdMhahGbCCP
-	UN7zaStyWncC/CaJIg4mdq6zuOzhr8IdG8mDpzRqVsBFGhDYlfAtVJ4yq1KVcGxTwcrQLKYdH7O
-	uloYhDwkkKj/nz1lM0em73ZxdRBLtXeRNOJiS6c8KugIzy01drQsMHuwPfHQkn2c6G1CnV3upNv
-	w4hF+5m1s=
-X-Received: by 2002:adf:f784:0:b0:45e:7997:8b82 with SMTP id ffacd0b85a97d-45e79978bfbmr9017983f8f.16.1779129684055;
-        Mon, 18 May 2026 11:41:24 -0700 (PDT)
-Received: from localhost ([2603:c027:c000:3cde::f])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-45d9e768c4fsm39305594f8f.8.2026.05.18.11.41.23
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 18 May 2026 11:41:23 -0700 (PDT)
-From: Louis Sautier <sautier.louis@gmail.com>
-To: Sathya Prakash <sathya.prakash@broadcom.com>,
-	Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-	Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>,
-	Ranjan Kumar <ranjan.kumar@broadcom.com>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Guenter Roeck <linux@roeck-us.net>,
-	MPT-FusionLinux.pdl@broadcom.com,
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="JSdqr0PD"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1779132753;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=k9u89nPBRLU9676XQAfHPzMt/u0IBzghL76syDeURks=;
+	b=JSdqr0PDIBmaRGGNBiJUpH17rSYy8AZckw2MIB59BcUuhawbmobo2AQ4xCuCSVMkY4fGKz
+	ukcp0QQA/t/F4Go7r0y99tNovmxRopn4SCpj+ZVLuddSPEl3OeZhYcOoCUnzw3mUKeUnQe
+	NW8AI6Hk2JNo1FxIy5sALJsZSERX+tQ=
+Received: from mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-425-dQrQi7raN-CF7rP9k1hsMw-1; Mon,
+ 18 May 2026 15:32:30 -0400
+X-MC-Unique: dQrQi7raN-CF7rP9k1hsMw-1
+X-Mimecast-MFC-AGG-ID: dQrQi7raN-CF7rP9k1hsMw_1779132747
+Received: from mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.93])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 71FA8195608E;
+	Mon, 18 May 2026 19:32:27 +0000 (UTC)
+Received: from fedora-work.redhat.com (unknown [10.22.65.152])
+	by mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id D1C98180076B;
+	Mon, 18 May 2026 19:32:21 +0000 (UTC)
+From: David Jeffery <djeffery@redhat.com>
+To: linux-kernel@vger.kernel.org,
+	driver-core@lists.linux.dev,
+	linux-pci@vger.kernel.org,
 	linux-scsi@vger.kernel.org,
-	linux-hwmon@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH v2 1/2] scsi: mpt3sas: add IO Unit Page 7 config accessor
-Date: Mon, 18 May 2026 20:41:08 +0200
-Message-ID: <20260518184109.770185-2-sautier.louis@gmail.com>
-X-Mailer: git-send-email 2.54.0
-In-Reply-To: <20260518184109.770185-1-sautier.louis@gmail.com>
-References: <20260518184109.770185-1-sautier.louis@gmail.com>
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Danilo Krummrich <dakr@kernel.org>
+Cc: Tarun Sahu <tarunsahu@google.com>,
+	Pasha Tatashin <tatashin@google.com>,
+	=?UTF-8?q?Micha=C5=82=20C=C5=82api=C5=84ski?= <mclapinski@google.com>,
+	Jordan Richards <jordanrichards@google.com>,
+	Ewan Milne <emilne@redhat.com>,
+	John Meneghini <jmeneghi@redhat.com>,
+	"Lombardi, Maurizio" <mlombard@redhat.com>,
+	Stuart Hayes <stuart.w.hayes@gmail.com>,
+	Laurence Oberman <loberman@redhat.com>,
+	Bart Van Assche <bvanassche@acm.org>,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	John Garry <john.g.garry@oracle.com>,
+	kexec@lists.infradead.org,
+	David Jeffery <djeffery@redhat.com>
+Subject: [PATCH v16 0/5] shut down devices asynchronously
+Date: Mon, 18 May 2026 15:31:59 -0400
+Message-ID: <20260518193204.14273-1-djeffery@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -83,78 +73,144 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.93
 
-Add mpt3sas_config_get_iounit_pg7(), mirroring the existing iounit
-page accessors. Used by the hwmon driver added in the following patch
-to read the IOC and board temperatures.
+These patches are now rebased against the driver-core tree's driver-core-next
+branch. Please let me know if there is a different tree/branch which would be
+better to use for possible inclusion of these patches.
 
-Assisted-by: Claude:claude-opus-4-7
-Signed-off-by: Louis Sautier <sautier.louis@gmail.com>
----
- drivers/scsi/mpt3sas/mpt3sas_base.h   |  2 ++
- drivers/scsi/mpt3sas/mpt3sas_config.c | 36 +++++++++++++++++++++++++++
- 2 files changed, 38 insertions(+)
+This patchset allows the kernel to shutdown devices asynchronously and
+unrelated async devices to be shut down in parallel to each other.
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
-index d4597d058705..c655742d0dde 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.h
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
-@@ -1904,6 +1904,8 @@ int mpt3sas_config_get_iounit_pg3(struct MPT3SAS_ADAPTER *ioc,
- 	Mpi2ConfigReply_t *mpi_reply, Mpi2IOUnitPage3_t *config_page, u16 sz);
- int mpt3sas_config_set_iounit_pg1(struct MPT3SAS_ADAPTER *ioc, Mpi2ConfigReply_t
- 	*mpi_reply, Mpi2IOUnitPage1_t *config_page);
-+int mpt3sas_config_get_iounit_pg7(struct MPT3SAS_ADAPTER *ioc,
-+	Mpi2ConfigReply_t *mpi_reply, Mpi2IOUnitPage7_t *config_page);
- int mpt3sas_config_get_iounit_pg8(struct MPT3SAS_ADAPTER *ioc, Mpi2ConfigReply_t
- 	*mpi_reply, Mpi2IOUnitPage8_t *config_page);
- int mpt3sas_config_get_sas_iounit_pg1(struct MPT3SAS_ADAPTER *ioc,
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_config.c b/drivers/scsi/mpt3sas/mpt3sas_config.c
-index 45ac853e1289..ef07825046bc 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_config.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_config.c
-@@ -991,6 +991,42 @@ mpt3sas_config_get_iounit_pg3(struct MPT3SAS_ADAPTER *ioc,
- 	return r;
- }
+Only devices which explicitly enable it are shut down asynchronously. The
+default is for a device to be shut down from the synchronous shutdown loop.
+
+This can dramatically reduce system shutdown/reboot time on systems that
+have multiple devices that take many seconds to shut down (like certain
+NVMe drives). On one system tested, the shutdown time went from 11 minutes
+without this patch to 55 seconds with the patch. And on another system from
+80 seconds to 11.
+
+And thank you to everyone who has spent some of their valuable time
+providing reviews, suggestions, criticisms, or tests on the various
+iterations of this patchset.
+
+Changes from V15:
+
+The async_shutdown bit field is converted to a device flags bit
+Convert all patches to use the flag bit accessor macros to set or check if
+  async shutdown should be used
+Added documentation on the kernel parameter to control use of async shutdown
+
+Changes from V14:
+
+Remove unneeded use of '!!' with boolean type
+
+Changes from V13:
+
+Remove duplicate flagging of async shutdown on scsi hosts/targets/devices
+
+Changes from V12:
+
+Only acquire a parent reference if acquiring the parent's lock
+device_enable_async_shutdown should return void
+Minor comment and description cleanups
+
+Changes from V11:
+
+  * Swap the order of the first two patches
+  * Rework conditional parent locking so that lock and unlock no longer use
+    separate conditional checks
+  * Remove an used variable
+  * Comment and description text cleanups
+
+Changes from V10:
+
+Reworked to more closely match the design used for async suspend
+  * No longer uses async subsystem cookies for synchronization
+  * Minimized changes to struct device
+  * Enable async shutdown for pci and scsi devices which support async suspend
+
+Changes from V9:
+
+Address resource and timing issues when spawning a unique async thread
+for every device during shutdown:
+  * Make the asynchronous threads able to shut down multiple devices,
+    instead of spawning a unique thread for every device.
+  * Modify core kernel async code with a custom wake function so it
+    doesn't wake up a thread waiting to synchronize on a cookie until
+    the cookie has reached the desired value, instead of waking up
+    every waiting thread to check the cookie every time an async thread
+    ends.
+
+Changes from V8:
+
+Deal with shutdown hangs resulting when a parent/supplier device is
+  later in the devices_kset list than its children/consumers:
+  * Ignore sync_state_only devlinks for shutdown dependencies
+  * Ignore shutdown_after for devices that don't want async shutdown
+  * Add a sanity check to revert to sync shutdown for any device that
+    would otherwise wait for a child/consumer shutdown that hasn't
+    already been scheduled
+
+Changes from V7:
+
+Do not expose driver async_shutdown_enable in sysfs.
+Wrapped a long line.
+
+Changes from V6:
+
+Removed a sysfs attribute that allowed the async device shutdown to be
+"on" (with driver opt-out), "safe" (driver opt-in), or "off"... what was
+previously "safe" is now the only behavior, so drivers now only need to
+have the option to enable or disable async shutdown.
+
+Changes from V5:
+
+Separated into multiple patches to make review easier.
+Reworked some code to make it more readable
+Made devices wait for consumers to shut down, not just children
+  (suggested by David Jeffery)
+
+Changes from V4:
+
+Change code to use cookies for synchronization rather than async domains
+Allow async shutdown to be disabled via sysfs, and allow driver opt-in or
+  opt-out of async shutdown (when not disabled), with ability to control
+  driver opt-in/opt-out via sysfs
+  
+Changes from V3:
+
+Bug fix (used "parent" not "dev->parent" in device_shutdown)
  
-+/**
-+ * mpt3sas_config_get_iounit_pg7 - obtain iounit page 7
-+ * @ioc: per adapter object
-+ * @mpi_reply: reply mf payload returned from firmware
-+ * @config_page: contents of the config page
-+ * Context: sleep.
-+ *
-+ * Return: 0 for success, non-zero for failure.
-+ */
-+int
-+mpt3sas_config_get_iounit_pg7(struct MPT3SAS_ADAPTER *ioc,
-+	Mpi2ConfigReply_t *mpi_reply, Mpi2IOUnitPage7_t *config_page)
-+{
-+	Mpi2ConfigRequest_t mpi_request;
-+	int r;
-+
-+	memset(&mpi_request, 0, sizeof(Mpi2ConfigRequest_t));
-+	mpi_request.Function = MPI2_FUNCTION_CONFIG;
-+	mpi_request.Action = MPI2_CONFIG_ACTION_PAGE_HEADER;
-+	mpi_request.Header.PageType = MPI2_CONFIG_PAGETYPE_IO_UNIT;
-+	mpi_request.Header.PageNumber = 7;
-+	mpi_request.Header.PageVersion = MPI2_IOUNITPAGE7_PAGEVERSION;
-+	ioc->build_zero_len_sge_mpi(ioc, &mpi_request.PageBufferSGE);
-+	r = _config_request(ioc, &mpi_request, mpi_reply,
-+	    MPT3_CONFIG_PAGE_DEFAULT_TIMEOUT, NULL, 0);
-+	if (r)
-+		goto out;
-+
-+	mpi_request.Action = MPI2_CONFIG_ACTION_PAGE_READ_CURRENT;
-+	r = _config_request(ioc, &mpi_request, mpi_reply,
-+	    MPT3_CONFIG_PAGE_DEFAULT_TIMEOUT, config_page,
-+	    sizeof(*config_page));
-+ out:
-+	return r;
-+}
-+
- /**
-  * mpt3sas_config_get_iounit_pg8 - obtain iounit page 8
-  * @ioc: per adapter object
+Changes from V2:
+ 
+Removed recursive functions to schedule children to be shutdown before
+  parents, since existing device_shutdown loop will already do this
+ 
+Changes from V1:
+
+Rewritten using kernel async code (suggested by Lukas Wunner)
+
+
+Stuart Hayes (2):
+  driver core: separate function to shutdown one device
+  driver core: do not always lock parent in shutdown
+
+David Jeffery (3):
+  driver core: async device shutdown infrastructure
+  PCI: Enable async shutdown support
+  scsi: Enable async shutdown support
+
+ .../admin-guide/kernel-parameters.txt         |  10 +
+ drivers/base/base.h                           |   2 +
+ drivers/base/core.c                           | 180 ++++++++++++++----
+ drivers/pci/probe.c                           |   2 +
+ drivers/scsi/hosts.c                          |   2 +
+ drivers/scsi/scsi_sysfs.c                     |   3 +
+ include/linux/device.h                        |   2 +
+ 7 files changed, 165 insertions(+), 36 deletions(-)
+
 -- 
-2.54.0
+2.53.0
 
