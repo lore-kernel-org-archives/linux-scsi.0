@@ -1,142 +1,86 @@
-Received: from mail-qk1-f180.google.com (mail-qk1-f180.google.com [209.85.222.180])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BABDA20C461
-	for <linux-scsi@vger.kernel.org>; Tue, 19 May 2026 00:51:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.180
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E3804DF59;
+	Tue, 19 May 2026 03:16:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779151871; cv=none; b=H8TDaeKruOZMZ7yOBlHy5N2OkMaWgIRojASRowbXuNKOKjDdMssOLPDOe+yPGlpKOFwk0NkOi5yt/bkA/zjvFZr3/fIRCxBW6WwsST8WB/aq28ta+yulAbSD8TNjBj0CglmMVQwTexNOjzgttGYT4oY0xCeBAhwKkYmSAPpA15k=
+	t=1779160618; cv=none; b=QqDb3kWkI8NTiyi+GeM/q0QLHWzv2MKcm/mEcz55fE/9FYvERWnb/EMpv4cTmMMe7qnUrvxzaYpQqV58lTxm+lcK1xP2JksjjXo95Y9ZZD1F+oWqj1zppl6Q4BdAa48YhMv2SKzyitjcvP8c4WYMwNJxXwTQ7zry3LAOTWROIco=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779151871; c=relaxed/simple;
-	bh=zrbqW5qZ2/PrHRg2tdBFNqFHr7UVkVZdqxEzk/0Ztn8=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=M+qgNj5MBvxBk3QU9njuwBYyM5UrNaBPSmQV0ze61VZpMtsOiOTSMviaTCwcEyJNyTQJtGgx+Ewi8kDw+36FXNUSFVgnp/m8WMCHt/lqGPrx+arnb0BKW3zEZcylUI68GncDiTovgdxs67n7u/pP8NS+Quup5g68kzPmsVN0BHU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=UVZO8MTb; arc=none smtp.client-ip=209.85.222.180
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1779160618; c=relaxed/simple;
+	bh=wgeWKHyHwPdUULwaNcHnUzhB0xsI2UInesE/Ade8vR8=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=oDO4ivb/Jska8egKshV+DXRJsIOnzKPSVmnME1KLMzFCt7PjAPUA8YH2zs0Lut7b/1SVV7CeCpEuuOF4N2MPmwGQdzyOKaQvN6Ee8gMmigvdE2La0gKN0ITEqAdOfwSLr+MCaDNvV9ddhBwQM6vBti3Zlj+YBEg4rhyqW6gGTSI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hvUtDs3o; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="UVZO8MTb"
-Received: by mail-qk1-f180.google.com with SMTP id af79cd13be357-9118b952e2bso510813285a.0
-        for <linux-scsi@vger.kernel.org>; Mon, 18 May 2026 17:51:09 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1779151869; x=1779756669; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=HnqrgYL3NmUNTzmNXdPdscQGE6zaGHL6C9Nt0N58KNM=;
-        b=UVZO8MTbTYLoCi+BrJ/UyYC8FzI5Ks6g8NZhO39QApCnibKcOULunCNbQljHqyRmqM
-         8eV55j0mBoCKGoOMBUi1Ck2fu0/vl5QNrJDu02E12XIGyP9Zd7CRQ2FImvo+vp+Yp1cg
-         DVP6T3ydqBOiUIbN0qs3WTgpsZgZNiYsbC5nHVbXLr5FmilfxKeiEz6TaTufupScZKDO
-         A8aG3rk4EQoMHqhcRQpckVnOj89tkjc50NrdV5W9u1O3AF/Sw5CnKu1z9txNRFj0hhwv
-         jrp/vcA9DoU1ozZlRQ1X696CuC5yoXEPpA3poicdQ8VTf5V781wrq+Nz8R4+dWvMUHcm
-         vPjg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1779151869; x=1779756669;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=HnqrgYL3NmUNTzmNXdPdscQGE6zaGHL6C9Nt0N58KNM=;
-        b=BUx7fXHLNs1nVj/2Sq/pTtXVtlpxryAC3ACQVecIqeIKNATDdQWyzRgRLy4BHDFV+w
-         SF91+KAzOTO6+tbrugsgSk89e4i5Pa+r47mE2/BygaoKWsoq6ljmRpm49gsKxG0kkt85
-         8C3C9KVO0it35Zsd+QbArVkyVCzeQbApuzhwriH1WG/fQWznr3ebsW0XOaZSzAwg1q6M
-         z9X3RH7HgkdO1zl+oWya3c6qNuPOe47RwqE1xoqZUBz08QqNZQv8UMvxUcS7/DwCW8oq
-         r8W3czuxB00B62Q69pPQkV1vtJA8BmCwNKlvIrJQ8Nc9UXDUdV9nl20b2I2mMPo/h8SG
-         cRkA==
-X-Gm-Message-State: AOJu0Yyn/3QVGpV7Tvlyxu5rpUAADQojrixlJVWN6sIkV4M/USgl+jhS
-	qPK583SzmG4PrJVMXZd9AL9gIAD6XZLG2+MotVNDBg8swbPAd+tm0BYUgSOn2966
-X-Gm-Gg: Acq92OHPFdM9tx41nu0I/kz7cKET3Am4FHbx+OKRXvtB76wEOGv4c2zsJbNwXBO0nIC
-	YpzNp2S6oSyOTimKNHEzcYQZHwmrmC6THZ6hIqeY7LwEgKU2o6RTxlm9bcJU6RvJ3iDgPvplc52
-	G9uUKl7CUukm+/WIsRPR4KN1aYBAxwQe3MnyjMs/kb1qpuvjxR1pBy2zBtZ2B3+oabarXJEcvuT
-	22y3fTNm1dPotPuVFfrfyfbT1epQy7u3MDseWxjSlTbJE5Ovx19hC5/ula8p7neGHVQqMtt9/6e
-	zafamOLy9lRTws0ycMqIfhvjdGLBmU+HNURsONd10s06GA28Qtp4oA4344/Pc8qf/BrZrPDk9Fd
-	eJ3vydlftmsxJO1AqsP+U2NB1O2VZYSoQJ0aDXbhPh20byddLcgxx2asOl3TvED2Bs8WWU8JYOX
-	etAQ9cNnk+uiVASOCK+15n3fHgVzmdM9BtFkOe/IgGwAymekKL7bfeST/yCKysRzBqnb2d0subB
-	F9oSU0iAds3Fcfi9CSBrwKMFxdkV8XnyeA=
-X-Received: by 2002:a05:622a:aa08:10b0:509:44c3:5fe7 with SMTP id d75a77b69052e-5165a1e652emr183515141cf.46.1779151868643;
-        Mon, 18 May 2026 17:51:08 -0700 (PDT)
-Received: from ryzen ([2601:644:8000:5b5d:7285:c2ff:fe45:8a32])
-        by smtp.gmail.com with ESMTPSA id d75a77b69052e-516457da48dsm147102541cf.17.2026.05.18.17.51.07
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 18 May 2026 17:51:08 -0700 (PDT)
-From: Rosen Penev <rosenp@gmail.com>
-To: linux-scsi@vger.kernel.org
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>,
-	target-devel@vger.kernel.org (open list:SCSI TARGET SUBSYSTEM),
-	linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH] target: iblock: Use flexible array for per-CPU plugs
-Date: Mon, 18 May 2026 17:50:50 -0700
-Message-ID: <20260519005050.627926-1-rosenp@gmail.com>
-X-Mailer: git-send-email 2.54.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hvUtDs3o"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BB7E9C2BCB7;
+	Tue, 19 May 2026 03:16:55 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1779160616;
+	bh=wgeWKHyHwPdUULwaNcHnUzhB0xsI2UInesE/Ade8vR8=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=hvUtDs3o2ATIqdTXziPEcdvwsaeB6qWnLAlI/6jdhQiiv2eX5BISQTXt3iP8ZN0y3
+	 MLzXN20NVKwhXZNbBN5VyszldSNaiYOU5XO8GKmbkJbqQfRq8lHJcQRJyoYsQ7kEdP
+	 d7e1O1Riw7mxivJoJPNFpuZLrEGv6wORcn31OdD97WBDjXVsRTmRCi8+IJsvX8yan3
+	 oNUDZ6Z9HthqjxvfLtZCqXZOF9NAb5mIxvLUDgvMh9Y68OBaMcz0HPcJtZsX0YDRRJ
+	 kJXBnN/gJzV6ugwQUrJHSlg3Nu5OMzQ8qi+8gltETGWq5/xuvhvgPR8GEEd8WGdZTj
+	 fLvlIdKuS0sTQ==
+From: Bjorn Andersson <andersson@kernel.org>
+To: Konrad Dybcio <konradybcio@kernel.org>,
+	Abel Vesa <abelvesa@kernel.org>,
+	Adrian Hunter <adrian.hunter@intel.com>,
+	Ulf Hansson <ulfh@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+Cc: linux-arm-msm@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-mmc@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	Sumit Garg <sumit.garg@oss.qualcomm.com>,
+	stable@vger.kernel.org,
+	Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
+Subject: Re: [PATCH v7 0/5] soc: qcom: ice: Fix race between qcom_ice_probe() and of_qcom_ice_get()
+Date: Mon, 18 May 2026 22:16:47 -0500
+Message-ID: <177916060479.2063946.5158452853905388333.b4-ty@kernel.org>
+X-Mailer: git-send-email 2.53.0
+In-Reply-To: <20260518-qcom-ice-fix-v7-0-2a595382185b@oss.qualcomm.com>
+References: <20260518-qcom-ice-fix-v7-0-2a595382185b@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 
-Store the per-CPU iblock plug array in the iblock_dev allocation
-instead of allocating it separately.
 
-This keeps the plug storage tied to the iblock device lifetime and
-simplifies the allocation and RCU cleanup paths.
+On Mon, 18 May 2026 19:22:16 +0530, Manivannan Sadhasivam wrote:
+> This series fixes the race betwen qcom_ice_probe() and of_qcom_ice_get()
+> but synchronizing the two APIs and properly propagating the error codes to
+> clients.
+> 
+> Merge Strategy
+> ==============
+> 
+> [...]
 
-Assisted-by: Codex:GPT-5.5
-Signed-off-by: Rosen Penev <rosenp@gmail.com>
----
- drivers/target/target_core_iblock.c | 11 +----------
- drivers/target/target_core_iblock.h |  2 +-
- 2 files changed, 2 insertions(+), 11 deletions(-)
+Applied, thanks!
 
-diff --git a/drivers/target/target_core_iblock.c b/drivers/target/target_core_iblock.c
-index 1087d1d17c36..985197f0df26 100644
---- a/drivers/target/target_core_iblock.c
-+++ b/drivers/target/target_core_iblock.c
-@@ -59,24 +59,16 @@ static struct se_device *iblock_alloc_device(struct se_hba *hba, const char *nam
- {
- 	struct iblock_dev *ib_dev = NULL;
- 
--	ib_dev = kzalloc_obj(struct iblock_dev);
-+	ib_dev = kzalloc_flex(*ib_dev, ibd_plug, nr_cpu_ids);
- 	if (!ib_dev) {
- 		pr_err("Unable to allocate struct iblock_dev\n");
- 		return NULL;
- 	}
- 	ib_dev->ibd_exclusive = true;
- 
--	ib_dev->ibd_plug = kzalloc_objs(*ib_dev->ibd_plug, nr_cpu_ids);
--	if (!ib_dev->ibd_plug)
--		goto free_dev;
--
- 	pr_debug( "IBLOCK: Allocated ib_dev for %s\n", name);
- 
- 	return &ib_dev->dev;
--
--free_dev:
--	kfree(ib_dev);
--	return NULL;
- }
- 
- static bool iblock_configure_unmap(struct se_device *dev)
-@@ -189,7 +181,6 @@ static void iblock_dev_call_rcu(struct rcu_head *p)
- 	struct se_device *dev = container_of(p, struct se_device, rcu_head);
- 	struct iblock_dev *ib_dev = IBLOCK_DEV(dev);
- 
--	kfree(ib_dev->ibd_plug);
- 	kfree(ib_dev);
- }
- 
-diff --git a/drivers/target/target_core_iblock.h b/drivers/target/target_core_iblock.h
-index e2f28a69a11c..849c948368bc 100644
---- a/drivers/target/target_core_iblock.h
-+++ b/drivers/target/target_core_iblock.h
-@@ -35,7 +35,7 @@ struct iblock_dev {
- 	struct file *ibd_bdev_file;
- 	bool ibd_readonly;
- 	bool ibd_exclusive;
--	struct iblock_dev_plug *ibd_plug;
-+	struct iblock_dev_plug ibd_plug[];
- } ____cacheline_aligned;
- 
- #endif /* TARGET_CORE_IBLOCK_H */
+[1/5] soc: qcom: ice: Fix race between qcom_ice_probe() and of_qcom_ice_get()
+      commit: d922113ef91e6e7e8065e9070f349365341ba32e
+[2/5] soc: qcom: ice: Return -ENODEV if the ICE platform device is not found
+      commit: 5a4dc805a80e6fe303d6a4748cd451ea15987ffd
+[3/5] soc: qcom: ice: Return proper error codes from devm_of_qcom_ice_get() instead of NULL
+      commit: b9ab7217dd7d567c50311afa94d6d6746cb77e04
+[4/5] mmc: sdhci-msm: Remove NULL check from devm_of_qcom_ice_get()
+      commit: 2ccbb3fa5cf47d05849cf6722aad1b4cc14df6d9
+[5/5] scsi: ufs: ufs-qcom: Remove NULL check from devm_of_qcom_ice_get()
+      commit: 4ac19b36bf4108706238cbc4f300b17dba8b881e
+
+Best regards,
 -- 
-2.54.0
-
+Bjorn Andersson <andersson@kernel.org>
