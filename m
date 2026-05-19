@@ -1,99 +1,210 @@
-Received: from mail-dy1-f178.google.com (mail-dy1-f178.google.com [74.125.82.178])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 30CB33ACA42
-	for <linux-scsi@vger.kernel.org>; Tue, 19 May 2026 19:53:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.178
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF7C32E7F2C;
+	Tue, 19 May 2026 20:21:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779220437; cv=none; b=d9/F2akRfb1W+pVFmzffHpNhvDQoxoL0a8BB3MKtlc1DFbJ+mdU7nGqTGbv/uMjtoJG3q/zo/U3H1sfNm1JKRfKj62fICX9rJ9VLSe4//y85HWlvm4MB5ZvNSkG3cS3QEWme55G2U4w7L79qqjTRugnheBvdR6vPFT8qCCk8CVM=
+	t=1779222110; cv=none; b=pOFBuDM2xoYBoBYLe8HRaawqFImR1+QAfR/WcdPiETFxIlLmvYV84jGAV1i33piMmTOvY+ED0+LSthTRPNilUZR/SSllsslObyrgEOP0XiQDvIgeJREgUcuyVwWCzID3V/GezWklgoiVUj3yO40v0RnEVlgNEu1KjyoKH0cybLQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779220437; c=relaxed/simple;
-	bh=/yTXDUcSInNPHQIymKXgDkqeJ6bUbDCeIiKyGSieagQ=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=llBYDvds6yFfZ/d4juzf+iZfTwnc9j/5ZhnlVNxRzEoJ1y8gt3gLlBUbIAr4H+bBbXA2HLYbeau5zdhKD6Htpwy9Uy/61d1bp92MC+dwkvokuBs7sDkQWJUuYjyowdOjA/2alkEhisIkCbwxAF2GKNmuZjhBmCOF8hyit9s8/+A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=CUK2cafY; arc=none smtp.client-ip=74.125.82.178
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1779222110; c=relaxed/simple;
+	bh=ubc1l+OcfR5/MPRrLhc6BNL3WpvLkCPcShU5H3ylQrw=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=nDtZw8u0KSr/47hLz5lQpAFlu5Vc/mnIO0CL3+FPYFbima6a6lgy0V1JyBVhmwVBVsvlFCKLE9JcUwz28NO/4jWb1DspjyYLuWhD6SS5EJY5O20oLjOz0bAxoihPF60x0y7JS4Itd89XIkg7YSFBYU0GndxlzF9DrLULBR8hi9Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fqzTgg10; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="CUK2cafY"
-Received: by mail-dy1-f178.google.com with SMTP id 5a478bee46e88-2f0ad52830cso5016182eec.1
-        for <linux-scsi@vger.kernel.org>; Tue, 19 May 2026 12:53:56 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1779220435; x=1779825235; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=LBJpoz9+FDWyOZgmi5e6eowXrSWpVTMQLtjKWJI9K/w=;
-        b=CUK2cafYarBHtR233nBcJ46qJEPUFZpr+AOUBxHFGSxbnGsdnWl0+yPx0xs+V3KPk+
-         uZPg/UfIglkF2sHEMMltqQ7Oa4JlyWMTWmc9aSejgYSdkJ/5fv4EZJNXvhr6VuJfwKC6
-         OwrPj3t9kWpDUuP+ZmDmcyILzK9HBkpAovEn2c6KxYc70uQLnLnInDGxRlJTOybm6OQT
-         nj4i4MC8Da0j2PxS8VPVWmcqvGzMgATm3g+I+zNXWPBLleufCsHnbp0BmZi+9u7aE0jI
-         ijNf/c4qp0/8LYmpzxKGNC7JOPasZoqBxxgdFZyfKXytuulTQ+N/CTWdjYGuvJXqwJ9S
-         ifVg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1779220435; x=1779825235;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=LBJpoz9+FDWyOZgmi5e6eowXrSWpVTMQLtjKWJI9K/w=;
-        b=b3neGBoSwgrDBgocYZi028f+XCRNWZEZd8Zc9xS8FktWQroaYUOeN56/ob5gHFkRkJ
-         +R6y+oYU2dbsQ0CHOgxr1yLlEN9EPtgPfzdn0MSHLjyYf7U64tNiaxSZs7ysTz4FyuHV
-         TkUUDJW0w4hy9h+cfKp7RX/CiKt5D9eE4H5FV7kEjTS79Ne2iShT8RvTmbbRuECKHwGf
-         IEEwUOxbW4WXKMEqscYpK90f+hyvSwBYAGpmmhKLBmQTlo+UDefjxNuSvHAkZ1jQYYha
-         67r5Ox4yioeb0bTR/GwjSTz40ZuWTnHPZ6pOsyOtOJL5heI+6Dh08AXUfl2KJcFWCZVW
-         roAA==
-X-Forwarded-Encrypted: i=1; AFNElJ/UdiUJObw9aU+hRpqeDBrqVj3JwOSZ2RFAJP8QQt0LnqwBjIQWQlOFZ3UJhQxLFwgK9gXv1GLZmMAI@vger.kernel.org
-X-Gm-Message-State: AOJu0YyowFgNJahL2EnAfK+qCRAsgDggaD2jwv/ZxC++/1lNN7duBs8o
-	yGG8Gu+43SqBLVLejp509InrlNhRi5P+WqftVQYJqTdncfWy9RN5ex/Gew5+4YpJ
-X-Gm-Gg: Acq92OEK44i3UKixG5z6OMGqB+NuJ6PzyyhcvP0WfboQfoVGb1thLVAmfgyYtYMxHtv
-	/p5X4VJMpvakyu3rKJ5psV2NDnyM3BbqpxuV7JsBog2K7/J7eG9ll3872B209TDdbETBqa9P+l9
-	VkGL+jMSc8gZ21RHI2l5YsStgByfoclU0PyYavkewHazyjTjrnN9dvkcXc0wa38klFpC+E2OSLy
-	a9Bkv8IQLlUqAg1euH+xbIwBad8q3FScq2WW/FZ796a3IU6/MJt6Yi2qTCPFHqd4fdpg6VbPfzm
-	EqTWYvTfNI2eSOMKlZ9wCAtCOcaPhgGHApSoleSlVLxF+rXVSp1hmFJO8X5CrG7lDgUxjxAl4/3
-	p6PvtenOfNHkj7uEGBEAZEP2GrAPtVR5ztQebkoja3FFBIHAz9W5mY/C+QQWZ+wK3gInDqCsk1P
-	ZZ1p77t9NBdQHVVG84k3wh5gh+BT773d46LDD+4xEViChW24pTYmkDCnKNcz4JMLFkyrg3h8pdt
-	JY0LlS+zhoUzfQ=
-X-Received: by 2002:a05:7300:a94b:b0:2ed:a64:a457 with SMTP id 5a478bee46e88-303986552f6mr9519696eec.20.1779220435225;
-        Tue, 19 May 2026 12:53:55 -0700 (PDT)
-Received: from [10.69.76.71] ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-30296dcb6e9sm20827669eec.16.2026.05.19.12.53.54
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 19 May 2026 12:53:54 -0700 (PDT)
-Message-ID: <67ad1039-b6e7-4507-a9be-12600a5fe385@gmail.com>
-Date: Tue, 19 May 2026 12:52:36 -0700
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fqzTgg10"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5272F1F000E9;
+	Tue, 19 May 2026 20:21:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1779222108;
+	bh=vF0SREBXyGRMringWBzmpzVqc1g/Mlb0KOno9gGckgo=;
+	h=From:To:Cc:Subject:Date;
+	b=fqzTgg10wXZnY6feN5DEUwTaoPQdimbiWZsVPm++3M09NIM8xuKHRoTWHZFv/vyXj
+	 DrlKuI1AlANprHyAjzj3duXgPR+B3F6yd9vi5JTetKRm3nV+6cvaVeRDz8qVBvVVXf
+	 aCL8H6bIGNERYV9RlLlbjLbbcvK+woclQm7F+hFok+P0VRY9b1C2T9vxHcrzwGGB2X
+	 6Nw92aIcVSnvFEVVmbeHbxZOmHjhkzjJ5FfaFEfmmZwYqfqI8yRgguPSWugLOi+5sM
+	 S8BY16LrI3l6PVrlKvXWJE2YPxij+I6PDxR5oIXXPjfLfgRcos8Peeu6mIFEOKMi+Z
+	 fSFS8Y09/OLnw==
+From: Arnd Bergmann <arnd@kernel.org>
+To: Kashyap Desai <kashyap.desai@broadcom.com>,
+	Sumit Saxena <sumit.saxena@broadcom.com>,
+	Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
+	Chandrakanth patil <chandrakanth.patil@broadcom.com>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+	Bart Van Assche <bvanassche@acm.org>,
+	Kees Cook <kees@kernel.org>,
+	megaraidlinux.pdl@broadcom.com,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] scsi: megaraid: reduce stack usage in megaraid_cmm_register()
+Date: Tue, 19 May 2026 22:21:24 +0200
+Message-Id: <20260519202143.1305850-1-arnd@kernel.org>
+X-Mailer: git-send-email 2.39.5
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi: lpfc: fix potential memory leak in
- lpfc_read_object()
-To: Abdun Nihaal <nihaal@cse.iitm.ac.in>
-Cc: justin.tee@broadcom.com, paul.ely@broadcom.com,
- James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com,
- linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
- jsmart2021@gmail.com, stable@vger.kernel.org
-References: <20260519074230.110624-1-nihaal@cse.iitm.ac.in>
-Content-Language: en-US
-From: Justin Tee <justintee8345@gmail.com>
-In-Reply-To: <20260519074230.110624-1-nihaal@cse.iitm.ac.in>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 
-Hi Abdun,
+From: Arnd Bergmann <arnd@arndb.de>
 
- > The memory allocated for sge_array inside lpfc_sli4_config() which is
- > attached to mbox, is not freed in one of the error path in
- > lpfc_read_object(). Fix that by calling lpfc_sli4_mbox_cmd_free()
- > instead of directly freeing the mbox.
+The megaraid_cmm_register() function has a local copy of mraid_mmadp_t on
+the stack that gets copied into the actual structure used at runtime. When
+-fsanitize=thread is enabled, this causes the per-function stack frame
+to grow beyond the warning limit:
 
-I don’t believe this is true because in lpfc_read_object(), 
-lpfc_sli4_config() is called with LPFC_SLI4_MBX_EMBED.  So, sge_array is 
-not kzalloc’ed.  The code as it is today seems already correct without 
-this patch.
+megaraid_mbox.c: In function 'megaraid_cmm_register':
+megaraid_mbox.c:3472:1: error: the frame size of 1312 bytes is larger than 1280 bytes [-Werror=frame-larger-than=]
 
-Regards,
-Justin
+Refactor this by moving the allocation into the caller to
+save the extra on-stack copy of the structure.
+
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ drivers/scsi/megaraid/megaraid_mbox.c | 26 ++++++++++++++---------
+ drivers/scsi/megaraid/megaraid_mm.c   | 30 +++++++--------------------
+ 2 files changed, 24 insertions(+), 32 deletions(-)
+
+diff --git a/drivers/scsi/megaraid/megaraid_mbox.c b/drivers/scsi/megaraid/megaraid_mbox.c
+index 06cf94ee4e36..ce89032a5a74 100644
+--- a/drivers/scsi/megaraid/megaraid_mbox.c
++++ b/drivers/scsi/megaraid/megaraid_mbox.c
+@@ -3396,7 +3396,7 @@ static int
+ megaraid_cmm_register(adapter_t *adapter)
+ {
+ 	mraid_device_t	*raid_dev = ADAP2RAIDDEV(adapter);
+-	mraid_mmadp_t	adp;
++	mraid_mmadp_t	*adp;
+ 	scb_t		*scb;
+ 	mbox_ccb_t	*ccb;
+ 	int		rval;
+@@ -3404,11 +3404,16 @@ megaraid_cmm_register(adapter_t *adapter)
+ 
+ 	// Allocate memory for the base list of scb for management module.
+ 	adapter->uscb_list = kzalloc_objs(scb_t, MBOX_MAX_USER_CMDS);
++	adp = kzalloc_obj(*adp);
+ 
+-	if (adapter->uscb_list == NULL) {
++	if (!adapter->uscb_list || !adp) {
+ 		con_log(CL_ANN, (KERN_WARNING
+ 			"megaraid: out of memory, %s %d\n", __func__,
+ 			__LINE__));
++
++		kfree(adapter->uscb_list);
++		kfree(adp);
++
+ 		return -1;
+ 	}
+ 
+@@ -3452,20 +3457,21 @@ megaraid_cmm_register(adapter_t *adapter)
+ 		list_add_tail(&scb->list, &adapter->uscb_pool);
+ 	}
+ 
+-	adp.unique_id		= adapter->unique_id;
+-	adp.drvr_type		= DRVRTYPE_MBOX;
+-	adp.drvr_data		= (unsigned long)adapter;
+-	adp.pdev		= adapter->pdev;
+-	adp.issue_uioc		= megaraid_mbox_mm_handler;
+-	adp.timeout		= MBOX_RESET_WAIT + MBOX_RESET_EXT_WAIT;
+-	adp.max_kioc		= MBOX_MAX_USER_CMDS;
++	adp->unique_id		= adapter->unique_id;
++	adp->drvr_type		= DRVRTYPE_MBOX;
++	adp->drvr_data		= (unsigned long)adapter;
++	adp->pdev		= adapter->pdev;
++	adp->issue_uioc		= megaraid_mbox_mm_handler;
++	adp->timeout		= MBOX_RESET_WAIT + MBOX_RESET_EXT_WAIT;
++	adp->max_kioc		= MBOX_MAX_USER_CMDS;
+ 
+-	if ((rval = mraid_mm_register_adp(&adp)) != 0) {
++	if ((rval = mraid_mm_register_adp(adp)) != 0) {
+ 
+ 		con_log(CL_ANN, (KERN_WARNING
+ 			"megaraid mbox: did not register with CMM\n"));
+ 
+ 		kfree(adapter->uscb_list);
++		kfree(adp);
+ 	}
+ 
+ 	return rval;
+diff --git a/drivers/scsi/megaraid/megaraid_mm.c b/drivers/scsi/megaraid/megaraid_mm.c
+index 538da0e98131..60db48dc8f3a 100644
+--- a/drivers/scsi/megaraid/megaraid_mm.c
++++ b/drivers/scsi/megaraid/megaraid_mm.c
+@@ -898,42 +898,28 @@ hinfo_to_cinfo(mraid_hba_info_t *hinfo, mcontroller_t *cinfo)
+ 
+ /**
+  * mraid_mm_register_adp - Registration routine for low level drivers
+- * @lld_adp	: Adapter object
++ * @adapter	: Adapter object
+  */
+ int
+-mraid_mm_register_adp(mraid_mmadp_t *lld_adp)
++mraid_mm_register_adp(mraid_mmadp_t *adapter)
+ {
+-	mraid_mmadp_t	*adapter;
+ 	mbox64_t	*mbox_list;
+ 	uioc_t		*kioc;
+ 	uint32_t	rval;
+ 	int		i;
+ 
+ 
+-	if (lld_adp->drvr_type != DRVRTYPE_MBOX)
++	if (adapter->drvr_type != DRVRTYPE_MBOX)
+ 		return (-EINVAL);
+ 
+-	adapter = kzalloc_obj(mraid_mmadp_t);
+-
+-	if (!adapter)
+-		return -ENOMEM;
+-
+-
+-	adapter->unique_id	= lld_adp->unique_id;
+-	adapter->drvr_type	= lld_adp->drvr_type;
+-	adapter->drvr_data	= lld_adp->drvr_data;
+-	adapter->pdev		= lld_adp->pdev;
+-	adapter->issue_uioc	= lld_adp->issue_uioc;
+-	adapter->timeout	= lld_adp->timeout;
+-	adapter->max_kioc	= lld_adp->max_kioc;
+ 	adapter->quiescent	= 1;
+ 
+ 	/*
+ 	 * Allocate single blocks of memory for all required kiocs,
+ 	 * mailboxes and passthru structures.
+ 	 */
+-	adapter->kioc_list	= kmalloc_objs(uioc_t, lld_adp->max_kioc);
+-	adapter->mbox_list	= kmalloc_objs(mbox64_t, lld_adp->max_kioc);
++	adapter->kioc_list	= kmalloc_objs(uioc_t, adapter->max_kioc);
++	adapter->mbox_list	= kmalloc_objs(mbox64_t, adapter->max_kioc);
+ 	adapter->pthru_dma_pool = dma_pool_create("megaraid mm pthru pool",
+ 						&adapter->pdev->dev,
+ 						sizeof(mraid_passthru_t),
+@@ -956,11 +942,11 @@ mraid_mm_register_adp(mraid_mmadp_t *lld_adp)
+ 	 */
+ 	INIT_LIST_HEAD(&adapter->kioc_pool);
+ 	spin_lock_init(&adapter->kioc_pool_lock);
+-	sema_init(&adapter->kioc_semaphore, lld_adp->max_kioc);
++	sema_init(&adapter->kioc_semaphore, adapter->max_kioc);
+ 
+ 	mbox_list	= (mbox64_t *)adapter->mbox_list;
+ 
+-	for (i = 0; i < lld_adp->max_kioc; i++) {
++	for (i = 0; i < adapter->max_kioc; i++) {
+ 
+ 		kioc		= adapter->kioc_list + i;
+ 		kioc->cmdbuf	= (uint64_t)(unsigned long)(mbox_list + i);
+@@ -997,7 +983,7 @@ mraid_mm_register_adp(mraid_mmadp_t *lld_adp)
+ 
+ pthru_dma_pool_error:
+ 
+-	for (i = 0; i < lld_adp->max_kioc; i++) {
++	for (i = 0; i < adapter->max_kioc; i++) {
+ 		kioc = adapter->kioc_list + i;
+ 		if (kioc->pthru32) {
+ 			dma_pool_free(adapter->pthru_dma_pool, kioc->pthru32,
+-- 
+2.39.5
+
