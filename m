@@ -1,61 +1,59 @@
 Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 094C53E7171
-	for <linux-scsi@vger.kernel.org>; Tue, 19 May 2026 21:22:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 15CFE3BD225
+	for <linux-scsi@vger.kernel.org>; Tue, 19 May 2026 21:22:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779225723; cv=none; b=InjzPaVvDZBjExYo9u+GnnyniBUyX9zwJyxB2VPeOO0Y9+mCBuKGe9nd8zi8InnwZfKo72Xjc5bTFqCCaZcu26uHIWB9ACeNF2h/Jsfdz10xDDEfdiHPPo+yQfisvEJvpt6viXdMtjwUBuJA9Y9GXh/224MuDBMlfQ12iqG9gLY=
+	t=1779225728; cv=none; b=rhpntXYw0j3+mvOQrEAQc0dLHi+MsEoJQ8SfGVFJZ7HnDD3Lyl+A2jSCm5up6qIBfhBPNvx/JPslFO4HkxXpnbgL37aFyGAyYkkqOPuNst/SMzK8948RbGAtaqChNDyfuECoSA23jZ5PWY872xOeYX/XeeRA6RIkEWcphKeqhuM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779225723; c=relaxed/simple;
-	bh=qtHpo6zow6uL5BwxKfR4Vd7xBY9DRrFM5zr5o9b7lUo=;
+	s=arc-20240116; t=1779225728; c=relaxed/simple;
+	bh=vBpyUloOpwAKuJehRB66QvT1XcZzF44bodcazCfiX+Q=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=RVxrbJGHzKqE0BUw2d++koSC0Eq1CeV7JJTmhAbZ/xnYJ65a62kIRSlYFEwelFfrtgDt0WEKVroDz3buScJioJsEm0psIWLsffMmzB9nN1iKTWfMdnMJIZQjRMfVn4g7iEt2n9Oc7Dgo5/E1Yf2RcdiQ+ul4BMsS7cacR0qKiy8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=O1LCe5+Y; arc=none smtp.client-ip=199.89.1.16
+	 MIME-Version; b=gdQAXCWg+dLJ2pyzCWlVMIq1SwHIGmcXY2Z43o4qgGzQ7BBRuUajGpLEnBErBioTT14BWoUpUy5nnV2aPwzf53oZ08MRQxPUn3TR9Q3p8LZE3br4gsuCmbSaewRRNOLtF/Zjryj5OHQORMFlEFJzEkCLKwpFiT9jnlRWLFAlPHg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=OsHx4uVn; arc=none smtp.client-ip=199.89.1.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="O1LCe5+Y"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="OsHx4uVn"
 Received: from localhost (localhost [127.0.0.1])
-	by 013.lax.mailroute.net (Postfix) with ESMTP id 4gKngF4GD6zlgtd3;
-	Tue, 19 May 2026 21:22:01 +0000 (UTC)
+	by 013.lax.mailroute.net (Postfix) with ESMTP id 4gKngL4ys9zlgwMq;
+	Tue, 19 May 2026 21:22:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:mime-version:references:in-reply-to
 	:x-mailer:message-id:date:date:subject:subject:from:from
-	:received:received; s=mr01; t=1779225716; x=1781817717; bh=igMEK
-	1pUq4UtzqCQRc/4V/RRTNQAk8LmIr0mBe3bff4=; b=O1LCe5+YXKa9XBvoe15vh
-	TR18blM3EDNar+bEM8uleBv6lPq4nxHjZbM1tZvq5MFvEt3GomwR07gJpfmgb+U8
-	5JXS11kv6KxOLoau+EaqM47UEVrMK35vrkMogdCcmj6ZvouPnjPYVGYfEwnxjCaN
-	mp0GBkl/0cQZQ9MAyIg+1NL9uTXR6gEM6oNuJkOF7kwoLnqc6EHMJojNU+4rWLiS
-	49utz4kcbhxrwebB8o0taQeiOZqZYMNCAQVFxQ9uj7JeYGGJsre8b+5h/9IUm0RI
-	ZM2WrEb4mYp8Joya8lLTIE9QSNsFfS84aAX+uBEoojRT4OSt5p8oWG26ms7RbHF2
+	:received:received; s=mr01; t=1779225722; x=1781817723; bh=eU3r3
+	pApy5/+GmWmwkShU+UTuNM3choA691IU9B3GMc=; b=OsHx4uVnSwxjea2B7YA0g
+	L6y336E9EFzcY2m6NKkOrS0tt66OQA3Q7yfsoKP5VZiH98b6X01orWkTuqZsQ+Wj
+	4bYtiUlajMAQhLIBWySCnxI25lH+N8IQG3PPoCaLshCRpZuPsdN5peZVED4PDzjk
+	BPeL/HPz4xeaQGl3CVFrCtVB06BZNsFkRieunpbo9beHj9o3HrTsmsqRNnFpISR+
+	by2V5CaWoTnT+vHtPqxvlrVCszeU8HpKjYwWHqiPlU5HdIg7UXEyo6piS5fqndla
+	/uHZyzqrUWZmyn5YEW/QTI+d7mDTa46HFPmEn7Uuf6ox3KBhq/bjOALl2/Xd7xfu
 	g==
 X-Virus-Scanned: by MailRoute
 Received: from 013.lax.mailroute.net ([127.0.0.1])
  by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id y1a3h9yliRMR; Tue, 19 May 2026 21:21:56 +0000 (UTC)
+ id uSJmatZfXVYM; Tue, 19 May 2026 21:22:02 +0000 (UTC)
 Received: from bvanassche.mtv.corp.google.com (unknown [104.135.180.219])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4gKng567Qlzlgtd1;
-	Tue, 19 May 2026 21:21:53 +0000 (UTC)
+	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4gKngC2RNhzlgtd2;
+	Tue, 19 May 2026 21:21:59 +0000 (UTC)
 From: Bart Van Assche <bvanassche@acm.org>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org,
 	Bart Van Assche <bvanassche@acm.org>,
-	Peter Wang <peter.wang@mediatek.com>,
 	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
+	Peter Wang <peter.wang@mediatek.com>,
 	Bean Huo <beanhuo@micron.com>,
 	Avri Altman <avri.altman@sandisk.com>,
 	Can Guo <can.guo@oss.qualcomm.com>,
 	Adrian Hunter <adrian.hunter@intel.com>
-Subject: [PATCH v2 2/3] ufs: core: Complain if UIC argument 2 is invalid
-Date: Tue, 19 May 2026 14:21:28 -0700
-Message-ID: <20260519212135.3130556-3-bvanassche@acm.org>
+Subject: [PATCH v2 3/3] ufs: core: Optimize ufshcd_add_uic_command_trace()
+Date: Tue, 19 May 2026 14:21:29 -0700
+Message-ID: <20260519212135.3130556-4-bvanassche@acm.org>
 X-Mailer: git-send-email 2.54.0.631.ge1b05301d1-goog
 In-Reply-To: <20260519212135.3130556-1-bvanassche@acm.org>
 References: <20260519212135.3130556-1-bvanassche@acm.org>
@@ -67,28 +65,49 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 
-According to the UFSHCI standard, the lowest byte of UIC argument 2 is
-an output value. Additionally, ufshcd_uic_cmd_compl() is based on the
-assumption that the lowest byte of UIC argument 2 is zero. Hence, complai=
-n
-if the result byte is set when a UIC command is submitted.
+Use cached values in ufshcd_add_uic_command_trace() instead of calling
+readl() when tracing command submission (UFS_CMD_SEND).
 
-Reviewed-by: Peter Wang <peter.wang@mediatek.com>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/ufs/core/ufshcd.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/ufs/core/ufshcd.c | 18 +++++++++++-------
+ 1 file changed, 11 insertions(+), 7 deletions(-)
 
 diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index f3e226e47c90..cfb362fe9784 100644
+index cfb362fe9784..c1a0a79e386d 100644
 --- a/drivers/ufs/core/ufshcd.c
 +++ b/drivers/ufs/core/ufshcd.c
-@@ -2571,6 +2571,7 @@ ufshcd_dispatch_uic_cmd(struct ufs_hba *hba, struct=
- uic_command *uic_cmd)
- 	lockdep_assert_held(&hba->uic_cmd_mutex);
+@@ -460,20 +460,24 @@ static void ufshcd_add_uic_command_trace(struct ufs=
+_hba *hba,
+ 					 const struct uic_command *ucmd,
+ 					 enum ufs_trace_str_t str_t)
+ {
+-	u32 cmd;
++	u32 cmd, arg1, arg2, arg3;
 =20
- 	WARN_ON(hba->active_uic_cmd);
-+	WARN_ON_ONCE(uic_cmd->argument2 & MASK_UIC_COMMAND_RESULT);
+ 	if (!trace_ufshcd_uic_command_enabled())
+ 		return;
 =20
- 	hba->active_uic_cmd =3D uic_cmd;
+-	if (str_t =3D=3D UFS_CMD_SEND)
++	if (str_t =3D=3D UFS_CMD_SEND) {
+ 		cmd =3D ucmd->command;
+-	else
++		arg1 =3D ucmd->argument1;
++		arg2 =3D ucmd->argument2;
++		arg3 =3D ucmd->argument3;
++	} else {
+ 		cmd =3D ufshcd_readl(hba, REG_UIC_COMMAND);
++		arg1 =3D ufshcd_readl(hba, REG_UIC_COMMAND_ARG_1);
++		arg2 =3D ufshcd_readl(hba, REG_UIC_COMMAND_ARG_2);
++		arg3 =3D ufshcd_readl(hba, REG_UIC_COMMAND_ARG_3);
++	}
 =20
+-	trace_ufshcd_uic_command(hba, str_t, cmd,
+-				 ufshcd_readl(hba, REG_UIC_COMMAND_ARG_1),
+-				 ufshcd_readl(hba, REG_UIC_COMMAND_ARG_2),
+-				 ufshcd_readl(hba, REG_UIC_COMMAND_ARG_3));
++	trace_ufshcd_uic_command(hba, str_t, cmd, arg1, arg2, arg3);
+ }
+=20
+ static void ufshcd_add_command_trace(struct ufs_hba *hba, struct scsi_cm=
+nd *cmd,
