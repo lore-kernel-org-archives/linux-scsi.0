@@ -1,47 +1,51 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF7C32E7F2C;
-	Tue, 19 May 2026 20:21:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 93C42377017
+	for <linux-scsi@vger.kernel.org>; Tue, 19 May 2026 20:54:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779222110; cv=none; b=pOFBuDM2xoYBoBYLe8HRaawqFImR1+QAfR/WcdPiETFxIlLmvYV84jGAV1i33piMmTOvY+ED0+LSthTRPNilUZR/SSllsslObyrgEOP0XiQDvIgeJREgUcuyVwWCzID3V/GezWklgoiVUj3yO40v0RnEVlgNEu1KjyoKH0cybLQ=
+	t=1779224048; cv=none; b=rdienHzVv1wm/lzNuXNQXZa+PR7bk8zlRqO2yR50FPP6ICGMkA6ZS/AKzp4YCF0lvPTG547SyFKeQ3aAphkUPHBHUbmJDvYCQOpqBZ41lUDpl29bbVY/rLDLm9EUV9LnM9SagNZjCGxEHVMvDKOaKPaSO7QKM3CxwIu8yh/kOX0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779222110; c=relaxed/simple;
-	bh=ubc1l+OcfR5/MPRrLhc6BNL3WpvLkCPcShU5H3ylQrw=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=nDtZw8u0KSr/47hLz5lQpAFlu5Vc/mnIO0CL3+FPYFbima6a6lgy0V1JyBVhmwVBVsvlFCKLE9JcUwz28NO/4jWb1DspjyYLuWhD6SS5EJY5O20oLjOz0bAxoihPF60x0y7JS4Itd89XIkg7YSFBYU0GndxlzF9DrLULBR8hi9Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fqzTgg10; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1779224048; c=relaxed/simple;
+	bh=s4NtoFWlCyUyLtG00nr/O7UkVMYRrivR0MI8cZU58i0=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=LxvZuiJ4eTb/wPCAJkZctAL6ldZXWFx8gHom0qQ8sGxC53QqAOqd3t+AGfaCbeLr20uyM1hX/0zcniSEhX2It39a2ZVTuFO/pRrmmL54o1tTqq4mK30C/Gmp3VVRu0W24DYW3x+7bbknzMTanggH5/mFxYXZR4+K/CFmlkm/+2Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=jElXJuA4; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fqzTgg10"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5272F1F000E9;
-	Tue, 19 May 2026 20:21:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1779222108;
-	bh=vF0SREBXyGRMringWBzmpzVqc1g/Mlb0KOno9gGckgo=;
-	h=From:To:Cc:Subject:Date;
-	b=fqzTgg10wXZnY6feN5DEUwTaoPQdimbiWZsVPm++3M09NIM8xuKHRoTWHZFv/vyXj
-	 DrlKuI1AlANprHyAjzj3duXgPR+B3F6yd9vi5JTetKRm3nV+6cvaVeRDz8qVBvVVXf
-	 aCL8H6bIGNERYV9RlLlbjLbbcvK+woclQm7F+hFok+P0VRY9b1C2T9vxHcrzwGGB2X
-	 6Nw92aIcVSnvFEVVmbeHbxZOmHjhkzjJ5FfaFEfmmZwYqfqI8yRgguPSWugLOi+5sM
-	 S8BY16LrI3l6PVrlKvXWJE2YPxij+I6PDxR5oIXXPjfLfgRcos8Peeu6mIFEOKMi+Z
-	 fSFS8Y09/OLnw==
-From: Arnd Bergmann <arnd@kernel.org>
-To: Kashyap Desai <kashyap.desai@broadcom.com>,
-	Sumit Saxena <sumit.saxena@broadcom.com>,
-	Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
-	Chandrakanth patil <chandrakanth.patil@broadcom.com>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-	Bart Van Assche <bvanassche@acm.org>,
-	Kees Cook <kees@kernel.org>,
-	megaraidlinux.pdl@broadcom.com,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] scsi: megaraid: reduce stack usage in megaraid_cmm_register()
-Date: Tue, 19 May 2026 22:21:24 +0200
-Message-Id: <20260519202143.1305850-1-arnd@kernel.org>
-X-Mailer: git-send-email 2.39.5
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="jElXJuA4"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1779224045;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=il7d3I39XqqLs+mcA7JOomlpb692EKsIxQrV8zDr16Y=;
+	b=jElXJuA4UWovCVtVy/aQOQPApdplcEikWAC92kfipnsc6WExOcAOcjIxP5Qxsn/GCthSBj
+	fKYBIsTJM5lyKDTCB4rV9bk454srfiPRQBRtyb9Mr3KRBhhMLo8hdSrYD4n/2vmXGWZUJE
+	0bgdhJy86MuUHHBhnCKtBYlGDw7PSBY=
+Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-439-6wmWlepxNWygUf6G9ZhR4A-1; Tue,
+ 19 May 2026 16:54:04 -0400
+X-MC-Unique: 6wmWlepxNWygUf6G9ZhR4A-1
+X-Mimecast-MFC-AGG-ID: 6wmWlepxNWygUf6G9ZhR4A_1779224043
+Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 33192195605F;
+	Tue, 19 May 2026 20:54:03 +0000 (UTC)
+Received: from emilne-na.ibmlowe.csb (unknown [10.17.17.93])
+	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 9E52D19560A2;
+	Tue, 19 May 2026 20:53:57 +0000 (UTC)
+From: "Ewan D. Milne" <emilne@redhat.com>
+To: linux-scsi@vger.kernel.org
+Cc: john.g.garry@oracle.com
+Subject: [PATCH] scsi: scsi_debug: Missing "\n" in sdev_printk() in scsi_debug_device_reset()
+Date: Tue, 19 May 2026 16:53:56 -0400
+Message-ID: <20260519205356.1040855-1-emilne@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -49,162 +53,31 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
 
-From: Arnd Bergmann <arnd@arndb.de>
+A "\n" at the end of the sdev_printk() string appears to have been
+inadvertently removed.  Add it back for correct log message formatting.
 
-The megaraid_cmm_register() function has a local copy of mraid_mmadp_t on
-the stack that gets copied into the actual structure used at runtime. When
--fsanitize=thread is enabled, this causes the per-function stack frame
-to grow beyond the warning limit:
-
-megaraid_mbox.c: In function 'megaraid_cmm_register':
-megaraid_mbox.c:3472:1: error: the frame size of 1312 bytes is larger than 1280 bytes [-Werror=frame-larger-than=]
-
-Refactor this by moving the allocation into the caller to
-save the extra on-stack copy of the structure.
-
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Fixes: a743b120227a ("scsi: scsi_debug: Stop printing extra function name in debug logs")
+Assisted-by: Claude:claude-opus-4-6
+Signed-off-by: Ewan D. Milne <emilne@redhat.com>
 ---
- drivers/scsi/megaraid/megaraid_mbox.c | 26 ++++++++++++++---------
- drivers/scsi/megaraid/megaraid_mm.c   | 30 +++++++--------------------
- 2 files changed, 24 insertions(+), 32 deletions(-)
+ drivers/scsi/scsi_debug.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/megaraid/megaraid_mbox.c b/drivers/scsi/megaraid/megaraid_mbox.c
-index 06cf94ee4e36..ce89032a5a74 100644
---- a/drivers/scsi/megaraid/megaraid_mbox.c
-+++ b/drivers/scsi/megaraid/megaraid_mbox.c
-@@ -3396,7 +3396,7 @@ static int
- megaraid_cmm_register(adapter_t *adapter)
- {
- 	mraid_device_t	*raid_dev = ADAP2RAIDDEV(adapter);
--	mraid_mmadp_t	adp;
-+	mraid_mmadp_t	*adp;
- 	scb_t		*scb;
- 	mbox_ccb_t	*ccb;
- 	int		rval;
-@@ -3404,11 +3404,16 @@ megaraid_cmm_register(adapter_t *adapter)
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index 1515495fd9ea..040c5e1e713a 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -6953,7 +6953,7 @@ static int scsi_debug_device_reset(struct scsi_cmnd *SCpnt)
+ 	++num_dev_resets;
  
- 	// Allocate memory for the base list of scb for management module.
- 	adapter->uscb_list = kzalloc_objs(scb_t, MBOX_MAX_USER_CMDS);
-+	adp = kzalloc_obj(*adp);
+ 	if (SDEBUG_OPT_ALL_NOISE & sdebug_opts)
+-		sdev_printk(KERN_INFO, sdp, "doing device reset");
++		sdev_printk(KERN_INFO, sdp, "doing device reset\n");
  
--	if (adapter->uscb_list == NULL) {
-+	if (!adapter->uscb_list || !adp) {
- 		con_log(CL_ANN, (KERN_WARNING
- 			"megaraid: out of memory, %s %d\n", __func__,
- 			__LINE__));
-+
-+		kfree(adapter->uscb_list);
-+		kfree(adp);
-+
- 		return -1;
- 	}
- 
-@@ -3452,20 +3457,21 @@ megaraid_cmm_register(adapter_t *adapter)
- 		list_add_tail(&scb->list, &adapter->uscb_pool);
- 	}
- 
--	adp.unique_id		= adapter->unique_id;
--	adp.drvr_type		= DRVRTYPE_MBOX;
--	adp.drvr_data		= (unsigned long)adapter;
--	adp.pdev		= adapter->pdev;
--	adp.issue_uioc		= megaraid_mbox_mm_handler;
--	adp.timeout		= MBOX_RESET_WAIT + MBOX_RESET_EXT_WAIT;
--	adp.max_kioc		= MBOX_MAX_USER_CMDS;
-+	adp->unique_id		= adapter->unique_id;
-+	adp->drvr_type		= DRVRTYPE_MBOX;
-+	adp->drvr_data		= (unsigned long)adapter;
-+	adp->pdev		= adapter->pdev;
-+	adp->issue_uioc		= megaraid_mbox_mm_handler;
-+	adp->timeout		= MBOX_RESET_WAIT + MBOX_RESET_EXT_WAIT;
-+	adp->max_kioc		= MBOX_MAX_USER_CMDS;
- 
--	if ((rval = mraid_mm_register_adp(&adp)) != 0) {
-+	if ((rval = mraid_mm_register_adp(adp)) != 0) {
- 
- 		con_log(CL_ANN, (KERN_WARNING
- 			"megaraid mbox: did not register with CMM\n"));
- 
- 		kfree(adapter->uscb_list);
-+		kfree(adp);
- 	}
- 
- 	return rval;
-diff --git a/drivers/scsi/megaraid/megaraid_mm.c b/drivers/scsi/megaraid/megaraid_mm.c
-index 538da0e98131..60db48dc8f3a 100644
---- a/drivers/scsi/megaraid/megaraid_mm.c
-+++ b/drivers/scsi/megaraid/megaraid_mm.c
-@@ -898,42 +898,28 @@ hinfo_to_cinfo(mraid_hba_info_t *hinfo, mcontroller_t *cinfo)
- 
- /**
-  * mraid_mm_register_adp - Registration routine for low level drivers
-- * @lld_adp	: Adapter object
-+ * @adapter	: Adapter object
-  */
- int
--mraid_mm_register_adp(mraid_mmadp_t *lld_adp)
-+mraid_mm_register_adp(mraid_mmadp_t *adapter)
- {
--	mraid_mmadp_t	*adapter;
- 	mbox64_t	*mbox_list;
- 	uioc_t		*kioc;
- 	uint32_t	rval;
- 	int		i;
- 
- 
--	if (lld_adp->drvr_type != DRVRTYPE_MBOX)
-+	if (adapter->drvr_type != DRVRTYPE_MBOX)
- 		return (-EINVAL);
- 
--	adapter = kzalloc_obj(mraid_mmadp_t);
--
--	if (!adapter)
--		return -ENOMEM;
--
--
--	adapter->unique_id	= lld_adp->unique_id;
--	adapter->drvr_type	= lld_adp->drvr_type;
--	adapter->drvr_data	= lld_adp->drvr_data;
--	adapter->pdev		= lld_adp->pdev;
--	adapter->issue_uioc	= lld_adp->issue_uioc;
--	adapter->timeout	= lld_adp->timeout;
--	adapter->max_kioc	= lld_adp->max_kioc;
- 	adapter->quiescent	= 1;
- 
- 	/*
- 	 * Allocate single blocks of memory for all required kiocs,
- 	 * mailboxes and passthru structures.
- 	 */
--	adapter->kioc_list	= kmalloc_objs(uioc_t, lld_adp->max_kioc);
--	adapter->mbox_list	= kmalloc_objs(mbox64_t, lld_adp->max_kioc);
-+	adapter->kioc_list	= kmalloc_objs(uioc_t, adapter->max_kioc);
-+	adapter->mbox_list	= kmalloc_objs(mbox64_t, adapter->max_kioc);
- 	adapter->pthru_dma_pool = dma_pool_create("megaraid mm pthru pool",
- 						&adapter->pdev->dev,
- 						sizeof(mraid_passthru_t),
-@@ -956,11 +942,11 @@ mraid_mm_register_adp(mraid_mmadp_t *lld_adp)
- 	 */
- 	INIT_LIST_HEAD(&adapter->kioc_pool);
- 	spin_lock_init(&adapter->kioc_pool_lock);
--	sema_init(&adapter->kioc_semaphore, lld_adp->max_kioc);
-+	sema_init(&adapter->kioc_semaphore, adapter->max_kioc);
- 
- 	mbox_list	= (mbox64_t *)adapter->mbox_list;
- 
--	for (i = 0; i < lld_adp->max_kioc; i++) {
-+	for (i = 0; i < adapter->max_kioc; i++) {
- 
- 		kioc		= adapter->kioc_list + i;
- 		kioc->cmdbuf	= (uint64_t)(unsigned long)(mbox_list + i);
-@@ -997,7 +983,7 @@ mraid_mm_register_adp(mraid_mmadp_t *lld_adp)
- 
- pthru_dma_pool_error:
- 
--	for (i = 0; i < lld_adp->max_kioc; i++) {
-+	for (i = 0; i < adapter->max_kioc; i++) {
- 		kioc = adapter->kioc_list + i;
- 		if (kioc->pthru32) {
- 			dma_pool_free(adapter->pthru_dma_pool, kioc->pthru32,
+ 	scsi_debug_stop_all_queued(sdp);
+ 	if (devip) {
 -- 
-2.39.5
+2.52.0
 
