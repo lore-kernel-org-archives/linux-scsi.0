@@ -1,109 +1,99 @@
-Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-dy1-f178.google.com (mail-dy1-f178.google.com [74.125.82.178])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DCC0D377558
-	for <linux-scsi@vger.kernel.org>; Tue, 19 May 2026 19:41:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.14
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 30CB33ACA42
+	for <linux-scsi@vger.kernel.org>; Tue, 19 May 2026 19:53:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.178
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779219684; cv=none; b=dFjsaBteoysgtPnjfSv1TAP7IpTtgLP2oEYrBuRkH+3dDAVub85g1H9xBN0VzKyA7daTbIiAJHOfMD5o+KrfofY06+AfEakDft5YIZ8dnm5RppskNpSsofxwb/r3ZGHBOqhMCj/xq9oFqzW+vXIHZYUxnbKHhpP8yfiHlJ7bbhc=
+	t=1779220437; cv=none; b=d9/F2akRfb1W+pVFmzffHpNhvDQoxoL0a8BB3MKtlc1DFbJ+mdU7nGqTGbv/uMjtoJG3q/zo/U3H1sfNm1JKRfKj62fICX9rJ9VLSe4//y85HWlvm4MB5ZvNSkG3cS3QEWme55G2U4w7L79qqjTRugnheBvdR6vPFT8qCCk8CVM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779219684; c=relaxed/simple;
-	bh=k/rQIwS1kkGpERf0z7mr3TpuPUL0KXSb36DK53Ki6eM=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=ixE14g88T9HnBUfskgq50ze3NqfMv0XnCJCml5LMwZvB2zrRcO2S+hp4ZxiZa2Ie6cpPbccdo4RzHfqpKsbuX1b2Hd3NWLgWB4YE1xbIGbjWgQp9uIci2dHlixFkNa6JfDLvqftaUIm6IHUbT3+vzWcNm3opH1jE2I4HX7GOC1M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=rBfrWzaE; arc=none smtp.client-ip=199.89.1.14
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1779220437; c=relaxed/simple;
+	bh=/yTXDUcSInNPHQIymKXgDkqeJ6bUbDCeIiKyGSieagQ=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=llBYDvds6yFfZ/d4juzf+iZfTwnc9j/5ZhnlVNxRzEoJ1y8gt3gLlBUbIAr4H+bBbXA2HLYbeau5zdhKD6Htpwy9Uy/61d1bp92MC+dwkvokuBs7sDkQWJUuYjyowdOjA/2alkEhisIkCbwxAF2GKNmuZjhBmCOF8hyit9s8/+A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=CUK2cafY; arc=none smtp.client-ip=74.125.82.178
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="rBfrWzaE"
-Received: from localhost (localhost [127.0.0.1])
-	by 011.lax.mailroute.net (Postfix) with ESMTP id 4gKlR62TQVz1XM6JQ;
-	Tue, 19 May 2026 19:41:22 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:mime-version:x-mailer:message-id:date
-	:date:subject:subject:from:from:received:received; s=mr01; t=
-	1779219678; x=1781811679; bh=NNSSEjEe0I6GWXxbGWb6oaLzkFNeUXojY+D
-	tOzgzNKQ=; b=rBfrWzaEXCnPPgdbtAKC1fUiXTOcZdfdgMxmviWR0J6nREl6h7W
-	RNNNZtgHYs8NzQn4nJeUro79XrLeA+jmey78ZyQb1reh3aek16hvhIB0XJLnq1w1
-	71fMJADa8jyhxKov88zaPwEMiSnwT1f28ktkn7s3ZzSNO4E1r9W3zMiBSW5d6580
-	IprMdie7ITi1bCkpwSoESYkeaexuXBNKMoAUZM5nWEwTv13y9dGSs8gw2TmfRWBj
-	uDa4k5Sjpc+ALcftRT4BKKCbLdezywJHQAOx1Y4BOwouOeqMuL9R1y4IvbChyLfZ
-	fkmPcnkOiCJ+PO8V2LYRoxHHs16RzZTxzYA==
-X-Virus-Scanned: by MailRoute
-Received: from 011.lax.mailroute.net ([127.0.0.1])
- by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id fOffJ8kiFsYn; Tue, 19 May 2026 19:41:18 +0000 (UTC)
-Received: from bvanassche.mtv.corp.google.com (unknown [104.135.180.219])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4gKlR135ybz1XM5jn;
-	Tue, 19 May 2026 19:41:17 +0000 (UTC)
-From: Bart Van Assche <bvanassche@acm.org>
-To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org,
-	Bart Van Assche <bvanassche@acm.org>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	Nathan Chancellor <nathan@kernel.org>
-Subject: [PATCH] scsi_debug: Remove a set-but-not-used variable
-Date: Tue, 19 May 2026 12:41:05 -0700
-Message-ID: <20260519194106.2534147-1-bvanassche@acm.org>
-X-Mailer: git-send-email 2.54.0.631.ge1b05301d1-goog
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="CUK2cafY"
+Received: by mail-dy1-f178.google.com with SMTP id 5a478bee46e88-2f0ad52830cso5016182eec.1
+        for <linux-scsi@vger.kernel.org>; Tue, 19 May 2026 12:53:56 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1779220435; x=1779825235; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=LBJpoz9+FDWyOZgmi5e6eowXrSWpVTMQLtjKWJI9K/w=;
+        b=CUK2cafYarBHtR233nBcJ46qJEPUFZpr+AOUBxHFGSxbnGsdnWl0+yPx0xs+V3KPk+
+         uZPg/UfIglkF2sHEMMltqQ7Oa4JlyWMTWmc9aSejgYSdkJ/5fv4EZJNXvhr6VuJfwKC6
+         OwrPj3t9kWpDUuP+ZmDmcyILzK9HBkpAovEn2c6KxYc70uQLnLnInDGxRlJTOybm6OQT
+         nj4i4MC8Da0j2PxS8VPVWmcqvGzMgATm3g+I+zNXWPBLleufCsHnbp0BmZi+9u7aE0jI
+         ijNf/c4qp0/8LYmpzxKGNC7JOPasZoqBxxgdFZyfKXytuulTQ+N/CTWdjYGuvJXqwJ9S
+         ifVg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1779220435; x=1779825235;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=LBJpoz9+FDWyOZgmi5e6eowXrSWpVTMQLtjKWJI9K/w=;
+        b=b3neGBoSwgrDBgocYZi028f+XCRNWZEZd8Zc9xS8FktWQroaYUOeN56/ob5gHFkRkJ
+         +R6y+oYU2dbsQ0CHOgxr1yLlEN9EPtgPfzdn0MSHLjyYf7U64tNiaxSZs7ysTz4FyuHV
+         TkUUDJW0w4hy9h+cfKp7RX/CiKt5D9eE4H5FV7kEjTS79Ne2iShT8RvTmbbRuECKHwGf
+         IEEwUOxbW4WXKMEqscYpK90f+hyvSwBYAGpmmhKLBmQTlo+UDefjxNuSvHAkZ1jQYYha
+         67r5Ox4yioeb0bTR/GwjSTz40ZuWTnHPZ6pOsyOtOJL5heI+6Dh08AXUfl2KJcFWCZVW
+         roAA==
+X-Forwarded-Encrypted: i=1; AFNElJ/UdiUJObw9aU+hRpqeDBrqVj3JwOSZ2RFAJP8QQt0LnqwBjIQWQlOFZ3UJhQxLFwgK9gXv1GLZmMAI@vger.kernel.org
+X-Gm-Message-State: AOJu0YyowFgNJahL2EnAfK+qCRAsgDggaD2jwv/ZxC++/1lNN7duBs8o
+	yGG8Gu+43SqBLVLejp509InrlNhRi5P+WqftVQYJqTdncfWy9RN5ex/Gew5+4YpJ
+X-Gm-Gg: Acq92OEK44i3UKixG5z6OMGqB+NuJ6PzyyhcvP0WfboQfoVGb1thLVAmfgyYtYMxHtv
+	/p5X4VJMpvakyu3rKJ5psV2NDnyM3BbqpxuV7JsBog2K7/J7eG9ll3872B209TDdbETBqa9P+l9
+	VkGL+jMSc8gZ21RHI2l5YsStgByfoclU0PyYavkewHazyjTjrnN9dvkcXc0wa38klFpC+E2OSLy
+	a9Bkv8IQLlUqAg1euH+xbIwBad8q3FScq2WW/FZ796a3IU6/MJt6Yi2qTCPFHqd4fdpg6VbPfzm
+	EqTWYvTfNI2eSOMKlZ9wCAtCOcaPhgGHApSoleSlVLxF+rXVSp1hmFJO8X5CrG7lDgUxjxAl4/3
+	p6PvtenOfNHkj7uEGBEAZEP2GrAPtVR5ztQebkoja3FFBIHAz9W5mY/C+QQWZ+wK3gInDqCsk1P
+	ZZ1p77t9NBdQHVVG84k3wh5gh+BT773d46LDD+4xEViChW24pTYmkDCnKNcz4JMLFkyrg3h8pdt
+	JY0LlS+zhoUzfQ=
+X-Received: by 2002:a05:7300:a94b:b0:2ed:a64:a457 with SMTP id 5a478bee46e88-303986552f6mr9519696eec.20.1779220435225;
+        Tue, 19 May 2026 12:53:55 -0700 (PDT)
+Received: from [10.69.76.71] ([192.19.223.252])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-30296dcb6e9sm20827669eec.16.2026.05.19.12.53.54
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 19 May 2026 12:53:54 -0700 (PDT)
+Message-ID: <67ad1039-b6e7-4507-a9be-12600a5fe385@gmail.com>
+Date: Tue, 19 May 2026 12:52:36 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] scsi: lpfc: fix potential memory leak in
+ lpfc_read_object()
+To: Abdun Nihaal <nihaal@cse.iitm.ac.in>
+Cc: justin.tee@broadcom.com, paul.ely@broadcom.com,
+ James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com,
+ linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+ jsmart2021@gmail.com, stable@vger.kernel.org
+References: <20260519074230.110624-1-nihaal@cse.iitm.ac.in>
+Content-Language: en-US
+From: Justin Tee <justintee8345@gmail.com>
+In-Reply-To: <20260519074230.110624-1-nihaal@cse.iitm.ac.in>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-The static variable sdebug_any_injecting_opt is no longer read. Commit
-3a90a63d02b8 ("scsi: scsi_debug: every_nth triggered error injection")
-removed all code that reads this variable. Hence, also remove this
-variable itself. This has been detected by building the scsi_debug
-driver with the git HEAD version of Clang and with W=3D1.
+Hi Abdun,
 
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
----
- drivers/scsi/scsi_debug.c | 4 ----
- 1 file changed, 4 deletions(-)
+ > The memory allocated for sge_array inside lpfc_sli4_config() which is
+ > attached to mbox, is not freed in one of the error path in
+ > lpfc_read_object(). Fix that by calling lpfc_sli4_mbox_cmd_free()
+ > instead of directly freeing the mbox.
 
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 1515495fd9ea..5ae7e4b83408 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -955,7 +955,6 @@ static bool sdebug_removable =3D DEF_REMOVABLE;
- static bool sdebug_clustering;
- static bool sdebug_host_lock =3D DEF_HOST_LOCK;
- static bool sdebug_strict =3D DEF_STRICT;
--static bool sdebug_any_injecting_opt;
- static bool sdebug_no_rwlock;
- static bool sdebug_verbose;
- static bool have_dif_prot;
-@@ -7528,7 +7527,6 @@ static int scsi_debug_write_info(struct Scsi_Host *=
-host, char *buffer,
- 		return -EINVAL;
- 	sdebug_opts =3D opts;
- 	sdebug_verbose =3D !!(SDEBUG_OPT_NOISE & opts);
--	sdebug_any_injecting_opt =3D !!(SDEBUG_OPT_ALL_INJECTING & opts);
- 	if (sdebug_every_nth !=3D 0)
- 		tweak_cmnd_count();
- 	return length;
-@@ -7748,7 +7746,6 @@ static ssize_t opts_store(struct device_driver *ddp=
-, const char *buf,
- opts_done:
- 	sdebug_opts =3D opts;
- 	sdebug_verbose =3D !!(SDEBUG_OPT_NOISE & opts);
--	sdebug_any_injecting_opt =3D !!(SDEBUG_OPT_ALL_INJECTING & opts);
- 	tweak_cmnd_count();
- 	return count;
- }
-@@ -9659,7 +9656,6 @@ static int sdebug_driver_probe(struct device *dev)
- 		scsi_host_set_guard(hpnt, SHOST_DIX_GUARD_CRC);
-=20
- 	sdebug_verbose =3D !!(SDEBUG_OPT_NOISE & sdebug_opts);
--	sdebug_any_injecting_opt =3D !!(SDEBUG_OPT_ALL_INJECTING & sdebug_opts)=
-;
- 	if (sdebug_every_nth)	/* need stats counters for every_nth */
- 		sdebug_statistics =3D true;
- 	error =3D scsi_add_host(hpnt, &sdbg_host->dev);
+I don’t believe this is true because in lpfc_read_object(), 
+lpfc_sli4_config() is called with LPFC_SLI4_MBX_EMBED.  So, sge_array is 
+not kzalloc’ed.  The code as it is today seems already correct without 
+this patch.
+
+Regards,
+Justin
