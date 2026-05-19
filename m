@@ -1,112 +1,171 @@
-Received: from mail-pf1-f172.google.com (mail-pf1-f172.google.com [209.85.210.172])
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E90F73DA7C3
-	for <linux-scsi@vger.kernel.org>; Tue, 19 May 2026 07:43:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF6FB3DB630
+	for <linux-scsi@vger.kernel.org>; Tue, 19 May 2026 08:06:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779176585; cv=none; b=qUuPKC1dKqaW7b6z0Y/r3rxfrBTSo0b56v7r/U2T40yiR5jnVH+O5FP9Rhr89jXVibYjWGH1Y4uGx/4C1kMJ/i3LR5rVyXkr2dTmMstpVNTza96fOfh2P9nsvg13d818uZNjtUectzmMs9aNU2Q/KuF6X611AD0asWnBwZVlvFQ=
+	t=1779177968; cv=none; b=mFY0VIdumesTX8fXEMrw8c7toWvWYiJaZsmzjT0j/GI63OhHoeuYxkvqEKS/NRb1HOouD2Rj/o+2xGhb4JTUbFBv9dA30IJg08zDk35moUYfGXGkDjbERZj/XS0lsrIA71SlaxfFg6ma/Pjt2faXMrQTJsG7V2OgOS/KbEuX3aY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779176585; c=relaxed/simple;
-	bh=PqBOXKIcL2LFH254HZC8CVkLl+stNhZQ5ZbAKeES868=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=XTRaDGizeykLkz9Qjtg0WvEx07iT4FnCgGMQmvHbOP/Q2fVubW37xd2ubW1oGss+viilXa3NuM6u+UsfapCpmhFsv5MSQLwAZYUazFf2jP7CH2FIgbKuTBwskisDiqr57sLmZ0DepHv3Yzo0u7sunNXE/1cREUiVxRaUydxnDeY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cse.iitm.ac.in; spf=pass smtp.mailfrom=cse.iitm.ac.in; dkim=pass (2048-bit key) header.d=cse-iitm-ac-in.20251104.gappssmtp.com header.i=@cse-iitm-ac-in.20251104.gappssmtp.com header.b=fcibrqSu; arc=none smtp.client-ip=209.85.210.172
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cse.iitm.ac.in
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cse.iitm.ac.in
+	s=arc-20240116; t=1779177968; c=relaxed/simple;
+	bh=5LIaieF+EdqI6zDSqITe7YONVkEKj4uPdw0XUVdszKc=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=R33T5y/mSpMjb6w3jm96oesYKl9LHYRZL9MxvPRQ9Qn1Gi96E9tGAGuCQU1iQqHV6P7sqUIh0dtnNAyoFnDLI6z2JaPW64Z8wd5xElcu3EPlPqMiP88uLZ1J2hb/voxFO1GjwIqjzUMLxLLq5Qq8E2QsUy9cuw8HcblGpbOvR70=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=w+6eptGL; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=CnkURakL; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=w+6eptGL; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=CnkURakL; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=cse-iitm-ac-in.20251104.gappssmtp.com header.i=@cse-iitm-ac-in.20251104.gappssmtp.com header.b="fcibrqSu"
-Received: by mail-pf1-f172.google.com with SMTP id d2e1a72fcca58-839dc688d6cso1310539b3a.2
-        for <linux-scsi@vger.kernel.org>; Tue, 19 May 2026 00:43:02 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cse-iitm-ac-in.20251104.gappssmtp.com; s=20251104; t=1779176582; x=1779781382; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=g/tERIhcgTY407JXDkFbxFgApJOVjg4hy+8W+lvT7Ww=;
-        b=fcibrqSuE6qyEsDuG9FMrvdHztLMUk42O/jagA/vo8hLB09lWyKo6ljvNwpjWK2an9
-         xKlTUlMlYADUKa6xCE+KFseSaCPvD8pZxO12gPo8lKY9qfKp5/yqdKaVFG2M6LNr+6d4
-         9KgShMzZy8gcMk/2iDVERHM5MbsYnxnew9wwwt6HqqbSXcKq56ztT3+pjGWUeo1qyfXi
-         RonPNy0l1157I5JgY/5NYAj5v0EjvPHqTwHGgVFNL5zKXU3AxkLzBnweAWgLPaeNCkIR
-         IU1KfRxcHEyU0ZFX8uZauyqxq3OL/NAeHURmmF/aLQAE+ZcW3NBxpsZfJFNhLfUFFyTs
-         Q1Tw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1779176582; x=1779781382;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=g/tERIhcgTY407JXDkFbxFgApJOVjg4hy+8W+lvT7Ww=;
-        b=FD2HV3gsJEOfbFcqlcZ24IQvByJNx0AtrnejAZEQspuklhzIaXNjVvFXXkrFbG1WYM
-         Y/e0Bx+aqUWwmhDBy+LB4lBwAZ2+8V9d6FFQ+8nISpwQgYx9dioHwe4G11SyvdIsu7e/
-         uoEaFXZRf6QIAKduuwGlr/MG6CzgipF7wlVwZpSXVGK4A+J4nrsKKPNIKgwYdJcF1X7t
-         tW3Maj8ulcUz/3fkGZvcFd2C35q3WN2wiV+6Jxkke0ds1n6gzkkuzEUY8oBgBqx2aQKI
-         4cZu5gICNJcA5ZklnLmXvXsiJptuOMKw0RDBYoeFOSAngLJjprUjYsYC1gRtKIVr1S0j
-         PyHQ==
-X-Forwarded-Encrypted: i=1; AFNElJ8uZG/ZydCVl/9+ujdTCNtOCKdRGh4o2KKimx9RmllqgZkp/TfuKENu0dH1dZS4sKSg3q/diAGP8nzJ@vger.kernel.org
-X-Gm-Message-State: AOJu0Yw0EFyU9kn68H5gq8+9NTzJ3ubFQt780HhQjwxnJSnJB4/Xid6n
-	D/9xrzTPbwpCYp7FF7NtvdKQEtmgtFcu1nHej0FMH2pyfLSV1XEGPO46vFV4T5MvniVCgrFqwYV
-	h6/uz/ss=
-X-Gm-Gg: Acq92OGMvZLu0VqOpGPW2QaA/crKedVIkjtB3RGfGGfoVr+e9y2Gp67UEekAryFOPUV
-	FOjWu7Z+pjRN5jT+dUBCS5zgb0nky22XaGmlIu4wMELHQr/rJM2K9HiByyyRYKK6kUhzqgkizvJ
-	gv9lkOzVSvQq3/ctbNduOLxIm6TlpKKEgWQPtxNbeFe4Uc8SNnAuW0cJgWkov4gCglbm20XMjPv
-	0bGzNT//9Jxdbw3MijlSuLhDf+0vnqVbDR82Q7AFS7LsmEcGIkIX459eelMRkPbxZmhHnQd/8fI
-	nF7sNsqvkWE/2FvedwKQtNXdmQ9Bpnzp9boNtKlw7ogjikMq9+SbRezkNCm8oQzUkvW/r7TqIkj
-	dB36AORj1jtXQw0aF/wcTVrFCBoN+RaINbllDm6Bnmwlqo+5p81Jd76z/X8f6MOhmDIFxvObY1C
-	DD/3ERGqE25lP7wIQZQfnrbkfSaPaonv56BSdhiwuK40ylS2TWXLIcWPCwm4wuVGC8FbkQWrLUl
-	LhJkku1FCk1oR8MlGvadaZwgcXZN7S1CsnrAkrZpNY1r/sVzpBSMdOOzA==
-X-Received: by 2002:a05:6a00:1908:b0:834:df57:9d67 with SMTP id d2e1a72fcca58-83f33cf0bddmr18987872b3a.32.1779176581994;
-        Tue, 19 May 2026 00:43:01 -0700 (PDT)
-Received: from localhost.localdomain ([103.158.43.41])
-        by smtp.googlemail.com with ESMTPSA id d2e1a72fcca58-83f19f7cc9asm21029127b3a.53.2026.05.19.00.42.58
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 19 May 2026 00:43:01 -0700 (PDT)
-From: Abdun Nihaal <nihaal@cse.iitm.ac.in>
-To: justin.tee@broadcom.com
-Cc: Abdun Nihaal <nihaal@cse.iitm.ac.in>,
-	paul.ely@broadcom.com,
-	James.Bottomley@HansenPartnership.com,
-	martin.petersen@oracle.com,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	jsmart2021@gmail.com,
-	stable@vger.kernel.org
-Subject: [PATCH] scsi: lpfc: fix potential memory leak in lpfc_read_object()
-Date: Tue, 19 May 2026 13:12:28 +0530
-Message-ID: <20260519074230.110624-1-nihaal@cse.iitm.ac.in>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="w+6eptGL";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="CnkURakL";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="w+6eptGL";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="CnkURakL"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id 495F96B099;
+	Tue, 19 May 2026 08:06:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1779177965; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=KRE5LwvV3NapoCdQWRczjHApUkyTo0LW3GAE75V2UlA=;
+	b=w+6eptGLmi1FtPGx5K7xQFSa5ew9fQDl1qwXXUMbkpEeTqvtu1gArj8euYXEVQB8/tTMd9
+	6pxtMQx9hyyABUHXP/HuQi4cmmXvXhVdLSjYzNG2/Jn5m6wSV7/cQ61+3OTbj5P8vcYq93
+	+UnJM6lfJUFB6UyFEuqwmRxzNBl6dQM=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1779177965;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=KRE5LwvV3NapoCdQWRczjHApUkyTo0LW3GAE75V2UlA=;
+	b=CnkURakLcKdkBcGL0K0YyouTqaUFAXWdQS+GSpW+qiZ70T2UpbEGsowqEv9D8rrmkg8GFZ
+	RknJq5TEA2ngKaAw==
+Authentication-Results: smtp-out1.suse.de;
+	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=w+6eptGL;
+	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=CnkURakL
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1779177965; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=KRE5LwvV3NapoCdQWRczjHApUkyTo0LW3GAE75V2UlA=;
+	b=w+6eptGLmi1FtPGx5K7xQFSa5ew9fQDl1qwXXUMbkpEeTqvtu1gArj8euYXEVQB8/tTMd9
+	6pxtMQx9hyyABUHXP/HuQi4cmmXvXhVdLSjYzNG2/Jn5m6wSV7/cQ61+3OTbj5P8vcYq93
+	+UnJM6lfJUFB6UyFEuqwmRxzNBl6dQM=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1779177965;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=KRE5LwvV3NapoCdQWRczjHApUkyTo0LW3GAE75V2UlA=;
+	b=CnkURakLcKdkBcGL0K0YyouTqaUFAXWdQS+GSpW+qiZ70T2UpbEGsowqEv9D8rrmkg8GFZ
+	RknJq5TEA2ngKaAw==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 2BF8A593A8;
+	Tue, 19 May 2026 08:06:05 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id tAiICe0ZDGqvdQAAD6G6ig
+	(envelope-from <hare@suse.de>); Tue, 19 May 2026 08:06:05 +0000
+Message-ID: <044fe652-0d28-43e1-9f4a-7f9f3c2fde8d@suse.de>
+Date: Tue, 19 May 2026 10:06:00 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 2/2] scsi: core: Convert inquiry information
+To: Bart Van Assche <bvanassche@acm.org>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, Brian Bunker <brian@purestorage.com>,
+ Damien Le Moal <dlemoal@kernel.org>, Guenter Roeck <linux@roeck-us.net>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
+References: <20260512194634.58145-1-bvanassche@acm.org>
+ <20260512194634.58145-3-bvanassche@acm.org>
+ <dc50e8ba-9c5b-41e9-8549-bde33a05f64a@suse.de>
+ <1a68681a-3080-4279-9406-96838bba4345@acm.org>
+Content-Language: en-US
+From: Hannes Reinecke <hare@suse.de>
+In-Reply-To: <1a68681a-3080-4279-9406-96838bba4345@acm.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
+X-Spam-Flag: NO
+X-Spam-Score: -4.51
+X-Rspamd-Action: no action
+X-Spamd-Result: default: False [-4.51 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	MX_GOOD(-0.01)[];
+	FUZZY_RATELIMITED(0.00)[rspamd.com];
+	ARC_NA(0.00)[];
+	TO_DN_SOME(0.00)[];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	RCPT_COUNT_SEVEN(0.00)[7];
+	RCVD_TLS_ALL(0.00)[];
+	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	FROM_EQ_ENVFROM(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	MID_RHS_MATCH_FROM(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:email,suse.de:dkim,suse.de:mid,imap1.dmz-prg2.suse.org:rdns,imap1.dmz-prg2.suse.org:helo];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	DKIM_TRACE(0.00)[suse.de:+]
+X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
+X-Rspamd-Queue-Id: 495F96B099
+X-Spam-Level: 
 
-The memory allocated for sge_array inside lpfc_sli4_config() which is
-attached to mbox, is not freed in one of the error path in
-lpfc_read_object(). Fix that by calling lpfc_sli4_mbox_cmd_free()
-instead of directly freeing the mbox.
+On 5/13/26 19:40, Bart Van Assche wrote:
+> On 5/13/26 2:33 AM, Hannes Reinecke wrote:
+>> Question is whether we shouldn't make this generic, ie treat 'inquiry'
+>> as a temporary blob, copy things over to fields in 'sdev', and then
+>> free the 'inquiry' blob again.
+>> There are soo many things tacked onto the standard inquiry data 
+>> (especially for storage array trying to mimic SCSI-2 inquiry data),
+>> that we're better of copying over only fields which we _know_.
+>> _And_ it'll save us a permanent data allocation for the scsi device...
+>>
+>> Hmm?
+> 
+> Are you perhaps suggesting to remove the inquiry sysfs attribute? From
+> scsi_sysfs.c:
+> 
+> static ssize_t show_inquiry(struct file *filep, struct kobject *kobj,
+>                  const struct bin_attribute *bin_attr,
+>                  char *buf, loff_t off, size_t count)
+> {
+>      struct device *dev = kobj_to_dev(kobj);
+>      struct scsi_device *sdev = to_scsi_device(dev);
+> 
+>      if (!sdev->inquiry)
+>          return -EINVAL;
+> 
+>      return memory_read_from_buffer(buf, count, &off, sdev->inquiry,
+>                         sdev->inquiry_len);
+> }
+> 
+Ah. no. Emphatically not; we need that for the udev rules.
 
-Fixes: 72df8a452883 ("scsi: lpfc: Add support for cm enablement buffer")
-Cc: stable@vger.kernel.org
-Signed-off-by: Abdun Nihaal <nihaal@cse.iitm.ac.in>
----
-Compile tested only. Issue found using static analysis.
+So ignore my comment.
 
- drivers/scsi/lpfc/lpfc_sli.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Cheers,
 
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index d38fb374b379..fe7d9942ebd2 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -22302,7 +22302,7 @@ lpfc_read_object(struct lpfc_hba *phba, char *rdobject, uint32_t *datap,
- 		pcmd->virt = lpfc_mbuf_alloc(phba, MEM_PRI, &pcmd->phys);
- 	if (!pcmd || !pcmd->virt) {
- 		kfree(pcmd);
--		mempool_free(mbox, phba->mbox_mem_pool);
-+		lpfc_sli4_mbox_cmd_free(phba, mbox);
- 		return -ENOMEM;
- 	}
- 	memset((void *)pcmd->virt, 0, LPFC_BPL_SIZE);
+Hannes
 -- 
-2.43.0
-
+Dr. Hannes Reinecke                  Kernel Storage Architect
+hare@suse.de                                +49 911 74053 688
+SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
+HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
