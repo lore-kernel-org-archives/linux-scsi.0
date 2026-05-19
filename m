@@ -1,46 +1,46 @@
 Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B4C22262A6
-	for <linux-scsi@vger.kernel.org>; Tue, 19 May 2026 21:21:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 094C53E7171
+	for <linux-scsi@vger.kernel.org>; Tue, 19 May 2026 21:22:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779225720; cv=none; b=r5Ic2uKceDAwz7sTmdZ7kA3pi9ekQaXd1wFb2HEx382WDoaLgkUUvI10x3U66Xmr7BBu097yZHWtfJqVEpXyKGrp6rBzWDg2+GHYINTYCPhSO4F4CDX6t9CXNTmLuf36Top0sMXkQVIATVfTn2bI8cFyUsf6ZjggVR6hGb/tzjA=
+	t=1779225723; cv=none; b=InjzPaVvDZBjExYo9u+GnnyniBUyX9zwJyxB2VPeOO0Y9+mCBuKGe9nd8zi8InnwZfKo72Xjc5bTFqCCaZcu26uHIWB9ACeNF2h/Jsfdz10xDDEfdiHPPo+yQfisvEJvpt6viXdMtjwUBuJA9Y9GXh/224MuDBMlfQ12iqG9gLY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779225720; c=relaxed/simple;
-	bh=3C/e91R5WgHQ6kvaxyf0CVX9uDE/uqrLGG81ezUOgMQ=;
+	s=arc-20240116; t=1779225723; c=relaxed/simple;
+	bh=qtHpo6zow6uL5BwxKfR4Vd7xBY9DRrFM5zr5o9b7lUo=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Dv5SaEBnc5e20odrmy7eO1CdwBfAdEVbdYL21ZzosmEh5jidaWdXBAdM6bRbP6eyyRWt4MY2gE6u5LXonEgfJTYWObToPFRC3/1lAVWGRCk+93H0M5KM4FmW7rCxy796zzb1T9S9FhFinZnlKmXn0x7p4Cy0ydkqUx5hCwMYJ4U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=N8HQPWfJ; arc=none smtp.client-ip=199.89.1.16
+	 MIME-Version; b=RVxrbJGHzKqE0BUw2d++koSC0Eq1CeV7JJTmhAbZ/xnYJ65a62kIRSlYFEwelFfrtgDt0WEKVroDz3buScJioJsEm0psIWLsffMmzB9nN1iKTWfMdnMJIZQjRMfVn4g7iEt2n9Oc7Dgo5/E1Yf2RcdiQ+ul4BMsS7cacR0qKiy8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=O1LCe5+Y; arc=none smtp.client-ip=199.89.1.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="N8HQPWfJ"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="O1LCe5+Y"
 Received: from localhost (localhost [127.0.0.1])
-	by 013.lax.mailroute.net (Postfix) with ESMTP id 4gKngB0Y9Mzlh2fp;
-	Tue, 19 May 2026 21:21:58 +0000 (UTC)
+	by 013.lax.mailroute.net (Postfix) with ESMTP id 4gKngF4GD6zlgtd3;
+	Tue, 19 May 2026 21:22:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:mime-version:references:in-reply-to
 	:x-mailer:message-id:date:date:subject:subject:from:from
-	:received:received; s=mr01; t=1779225711; x=1781817712; bh=tXfum
-	yvaEC7tKKYEPbpaFEfkPD89RMGX/Q4gcUCZLoA=; b=N8HQPWfJpTaWKms42yqgR
-	0lPpZHh9MeHkQw04TuZcvEgyreW6IdGg6nsVSlxx4kS+zgGEq6E9MSX0KcFoIgNo
-	TZmYr9ZccHsXNrZ2zy/Cs7yTsmPqwyqejJjo2dS4za09gkedQzjuTdMFF20+7ekV
-	iLTuJ4YYtz41CheuaarvR9BoG9FXnqp5wvYulMXhn0smFWe2JLhu49BWUlsrjYsX
-	o0RkNsibU1Ud3QZM9Ixsr7DkV0mSqC5GWbFecZTv/uEfkHvYRui0YSfkvpo1PMiY
-	pDoIATBt0DjODN15/rMeNbOchzG/iq9RZwrfRe4/BkKOrOlXtXSXaZtqSSsRZ8oy
+	:received:received; s=mr01; t=1779225716; x=1781817717; bh=igMEK
+	1pUq4UtzqCQRc/4V/RRTNQAk8LmIr0mBe3bff4=; b=O1LCe5+YXKa9XBvoe15vh
+	TR18blM3EDNar+bEM8uleBv6lPq4nxHjZbM1tZvq5MFvEt3GomwR07gJpfmgb+U8
+	5JXS11kv6KxOLoau+EaqM47UEVrMK35vrkMogdCcmj6ZvouPnjPYVGYfEwnxjCaN
+	mp0GBkl/0cQZQ9MAyIg+1NL9uTXR6gEM6oNuJkOF7kwoLnqc6EHMJojNU+4rWLiS
+	49utz4kcbhxrwebB8o0taQeiOZqZYMNCAQVFxQ9uj7JeYGGJsre8b+5h/9IUm0RI
+	ZM2WrEb4mYp8Joya8lLTIE9QSNsFfS84aAX+uBEoojRT4OSt5p8oWG26ms7RbHF2
 	g==
 X-Virus-Scanned: by MailRoute
 Received: from 013.lax.mailroute.net ([127.0.0.1])
  by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id f9MjNOKJoVQs; Tue, 19 May 2026 21:21:51 +0000 (UTC)
+ id y1a3h9yliRMR; Tue, 19 May 2026 21:21:56 +0000 (UTC)
 Received: from bvanassche.mtv.corp.google.com (unknown [104.135.180.219])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4gKng02hXpzlgtd3;
-	Tue, 19 May 2026 21:21:48 +0000 (UTC)
+	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4gKng567Qlzlgtd1;
+	Tue, 19 May 2026 21:21:53 +0000 (UTC)
 From: Bart Van Assche <bvanassche@acm.org>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org,
@@ -53,9 +53,9 @@ Cc: linux-scsi@vger.kernel.org,
 	Avri Altman <avri.altman@sandisk.com>,
 	Can Guo <can.guo@oss.qualcomm.com>,
 	Adrian Hunter <adrian.hunter@intel.com>
-Subject: [PATCH v2 1/3] ufs: core: Inline two functions related to UIC commands
-Date: Tue, 19 May 2026 14:21:27 -0700
-Message-ID: <20260519212135.3130556-2-bvanassche@acm.org>
+Subject: [PATCH v2 2/3] ufs: core: Complain if UIC argument 2 is invalid
+Date: Tue, 19 May 2026 14:21:28 -0700
+Message-ID: <20260519212135.3130556-3-bvanassche@acm.org>
 X-Mailer: git-send-email 2.54.0.631.ge1b05301d1-goog
 In-Reply-To: <20260519212135.3130556-1-bvanassche@acm.org>
 References: <20260519212135.3130556-1-bvanassche@acm.org>
@@ -67,70 +67,28 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 
-The implementation of the two functions ufshcd_get_uic_cmd_result() and
-ufshcd_get_dme_attr_val() is very short. Additionally, both functions
-only have one caller. Inline both functions to make the code shorter.
+According to the UFSHCI standard, the lowest byte of UIC argument 2 is
+an output value. Additionally, ufshcd_uic_cmd_compl() is based on the
+assumption that the lowest byte of UIC argument 2 is zero. Hence, complai=
+n
+if the result byte is set when a UIC command is submitted.
 
 Reviewed-by: Peter Wang <peter.wang@mediatek.com>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/ufs/core/ufshcd.c | 37 ++++++++-----------------------------
- 1 file changed, 8 insertions(+), 29 deletions(-)
+ drivers/ufs/core/ufshcd.c | 1 +
+ 1 file changed, 1 insertion(+)
 
 diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 1aad1c03c3fc..f3e226e47c90 100644
+index f3e226e47c90..cfb362fe9784 100644
 --- a/drivers/ufs/core/ufshcd.c
 +++ b/drivers/ufs/core/ufshcd.c
-@@ -912,33 +912,6 @@ static inline int ufshcd_get_lists_status(u32 reg)
- 	return !((reg & UFSHCD_STATUS_READY) =3D=3D UFSHCD_STATUS_READY);
- }
+@@ -2571,6 +2571,7 @@ ufshcd_dispatch_uic_cmd(struct ufs_hba *hba, struct=
+ uic_command *uic_cmd)
+ 	lockdep_assert_held(&hba->uic_cmd_mutex);
 =20
--/**
-- * ufshcd_get_uic_cmd_result - Get the UIC command result
-- * @hba: Pointer to adapter instance
-- *
-- * This function gets the result of UIC command completion
-- *
-- * Return: 0 on success; non-zero value on error.
-- */
--static inline int ufshcd_get_uic_cmd_result(struct ufs_hba *hba)
--{
--	return ufshcd_readl(hba, REG_UIC_COMMAND_ARG_2) &
--	       MASK_UIC_COMMAND_RESULT;
--}
--
--/**
-- * ufshcd_get_dme_attr_val - Get the value of attribute returned by UIC =
-command
-- * @hba: Pointer to adapter instance
-- *
-- * This function gets UIC command argument3
-- *
-- * Return: 0 on success; non-zero value on error.
-- */
--static inline u32 ufshcd_get_dme_attr_val(struct ufs_hba *hba)
--{
--	return ufshcd_readl(hba, REG_UIC_COMMAND_ARG_3);
--}
--
- /**
-  * ufshcd_get_req_rsp - returns the TR response transaction type
-  * @ucd_rsp_ptr: pointer to response UPIU
-@@ -5810,8 +5783,14 @@ static irqreturn_t ufshcd_uic_cmd_compl(struct ufs=
-_hba *hba, u32 intr_status)
- 		hba->errors |=3D (UFSHCD_UIC_HIBERN8_MASK & intr_status);
+ 	WARN_ON(hba->active_uic_cmd);
++	WARN_ON_ONCE(uic_cmd->argument2 & MASK_UIC_COMMAND_RESULT);
 =20
- 	if (intr_status & UIC_COMMAND_COMPL) {
--		cmd->argument2 |=3D ufshcd_get_uic_cmd_result(hba);
--		cmd->argument3 =3D ufshcd_get_dme_attr_val(hba);
-+		/*
-+		 * Store the UIC command result in the lowest byte of
-+		 * cmd->argument2.
-+		 */
-+		cmd->argument2 |=3D ufshcd_readl(hba, REG_UIC_COMMAND_ARG_2) &
-+				  MASK_UIC_COMMAND_RESULT;
-+		/* Store the DME attribute value in cmd->argument3. */
-+		cmd->argument3 =3D ufshcd_readl(hba, REG_UIC_COMMAND_ARG_3);
- 		if (!hba->uic_async_done)
- 			cmd->cmd_active =3D false;
- 		complete(&cmd->done);
+ 	hba->active_uic_cmd =3D uic_cmd;
+=20
