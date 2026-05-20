@@ -1,77 +1,110 @@
-Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ej1-f49.google.com (mail-ej1-f49.google.com [209.85.218.49])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5584E36A37D;
-	Wed, 20 May 2026 16:25:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D9BE37D101
+	for <linux-scsi@vger.kernel.org>; Wed, 20 May 2026 16:53:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.49
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779294317; cv=none; b=SkTNXZTxdhnHNBwsd8/g604+IAq29amVbjmjftfHk2AcbJPFRzvGNWCbFHRImL0hS97gauMY4RmKmwsu3MAy1xKNL2NvRFw2Viyt4gbh+npMku9vG1TpJ4ZGRd2jMM6DhzyWs5nP23gjg8qjJ47xOOhj1z3uPhv9S7/ISUgRdeA=
+	t=1779296003; cv=none; b=EKKjHHKL3PqG473RUvUZxnWxcx1tgm5uoRu176eYDkRLVfWu/JdRYdr4ByemzY4Kgx4LkFkzysJOhiALSAUFJyRmF48dhtor1f4Ph4btf/+VU7d/p2NzfD3b5ndPMOlpGyOUWfESZeHs7x62QeuhqkdC+oGsYgKfrAH5TGEpT3E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779294317; c=relaxed/simple;
-	bh=Ol95jQLfrdpBQjki+prXK8uzkfnEQdpuJm1VdFo8jb4=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=KN07CdTupkuiG99k1VXePYnsaqYqrqXOJqmL+Snsw84+PwaHTFGShL7qfIzdTnSyXqwmja8dRZ9tekmjtK6x1EKxuyzNkQOzpAqBQZR5TM5DhXzN4oOek75EHXRJGepnznIQ6wfawIe1gZBYMpX9V4R4Nw4y9IwJYv8ankSOCy4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=FwOxSY3l; arc=none smtp.client-ip=199.89.1.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1779296003; c=relaxed/simple;
+	bh=++VV2z8DF9nYNXw7ZGVhPSn17Ap73p9EQBATvvZQOOI=;
+	h=Message-ID:Date:From:To:Cc:Subject:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=KoeJ8Mk5BCiI1PEx1BHvG8NtnaeJ/Ucfn1dSJwvzuYxY0CGMo/bdUlss0/niaLsm491iO9BmE0d5R0cXEyTgA3djQSDFom8k+SFBiNsQ74yhR0s9zsXX8C6PAXYW5NxgSNwp6IqeZ0DqwWN2urvM2rWzReZJ3YwVeg8dGnxaINs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=a88r0ebo; arc=none smtp.client-ip=209.85.218.49
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="FwOxSY3l"
-Received: from localhost (localhost [127.0.0.1])
-	by 013.lax.mailroute.net (Postfix) with ESMTP id 4gLH2M54CVzlgyG8;
-	Wed, 20 May 2026 16:25:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1779294311; x=1781886312; bh=AvSIL1R5mmJ05UNrpWz3pGju
-	V/pjdLSvASGCbp0aaM8=; b=FwOxSY3lDGx8jPrdCT/3PISLmROvw/7GlQWyt1B5
-	t/Bf9nVEugzURnWG00MnzOcTt/Ee4HjfKDC5R8j0bu8enYnu6yn8z9sakRCBRJnL
-	rO0qx9abqcWCJpZkeqIiFrAEEuP0X1fGPtTNMmERnorSg0C1FuRYXyzS4qrYRmpr
-	nkszg+xOXP/BB+bzxMiD1M6QyyrdHPzaEE8m76SM4hqTqQWw6E3P1l34W3N3RHWj
-	0rWE4ctT1YYVoBxg0BVA0JC3xG9hOd1/i7mU0FL0jstiapFBUmsqQ5cAfSjfFkXz
-	zLqRtuUmMSbZgjm6lwCs7RmiSX5SM/BCF2DxgOkN/MvE1g==
-X-Virus-Scanned: by MailRoute
-Received: from 013.lax.mailroute.net ([127.0.0.1])
- by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id 6Y32Apy0XN7v; Wed, 20 May 2026 16:25:11 +0000 (UTC)
-Received: from [100.119.48.131] (unknown [104.135.180.219])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4gLH2F3xmtzlfpMC;
-	Wed, 20 May 2026 16:25:09 +0000 (UTC)
-Message-ID: <806a798d-b2b6-489b-93e3-0fc54eaa14eb@acm.org>
-Date: Wed, 20 May 2026 09:25:07 -0700
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="a88r0ebo"
+Received: by mail-ej1-f49.google.com with SMTP id a640c23a62f3a-bd8d0e4e341so647076466b.0
+        for <linux-scsi@vger.kernel.org>; Wed, 20 May 2026 09:53:19 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1779295998; x=1779900798; darn=vger.kernel.org;
+        h=mime-version:content-transfer-encoding:references:in-reply-to
+         :subject:cc:to:from:date:message-id:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=uW1DWs6dLVxbMJbJA1XC7hMjjnFFtxpIrjpCj7Et85U=;
+        b=a88r0ebomWrncpMAU1k1hVlO/8O9b5BTZsgHdTR7xyt6cnrTkR2xbvXR+pTYbUcwSW
+         WFN1WCAOPyK40/TM3xPW/3X57uY4dVxOUZRtvCZZ3w00TIY8PSx34NloolnOs04SO/Jl
+         +3UokslLUEu3svnFxjxH8ldUmJLhFePs9vjR3MrcF5pq+puw+z34DCUtmePCxDI1AZ+J
+         NdyWr0IyUQl0XTFdm/2d6dId1G/eRwEJWOxf/1wb+PdCOkmqJyfIRcwkCJXU8fGHv9iI
+         KQ4dQKerFnQT+YkpQ8NqDadATMvk6U2Khz8nfwyB+Oo1cVq6hk51af1v4NEuWln5j9uM
+         QMWg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1779295998; x=1779900798;
+        h=mime-version:content-transfer-encoding:references:in-reply-to
+         :subject:cc:to:from:date:message-id:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=uW1DWs6dLVxbMJbJA1XC7hMjjnFFtxpIrjpCj7Et85U=;
+        b=sCHZuTLqDJjkgmchU9kFq9x9GGlNSryHwiDDNxgYP2AAkqwBBSmLOWAzGj05J2GSVj
+         MSHtqdh9kI9IOokLkRgyfgxCJhqnxYxg6rQfmtS78zusqPTwVbO8W+KLqTFOo1DuMGSo
+         hIQilAPZzYFg+E0yA58aMNIHFUBtILGEcWnJ4GCCYkiwR3G0KL5FzX8zBFDaXnZxdxKj
+         Zw9OHkG7O80FX7ETrfMMfgEwZPOOWEeNhdecjusBXu1ar6nmFzSWeygbeGE7EmBAKNbC
+         05nRpHl54mPMQiydo+/kW6z/U+wC3MEmGLpYIHy0CSem9wyG7EFdVDQNcia1S4cBJSTi
+         dXNw==
+X-Forwarded-Encrypted: i=1; AFNElJ9aQNbYg+PVJfkbeyzXriuhobrXitAZoTY3g0rnmPtXc79hG7mJHw23U/MHMHEGCfXZxHD/nRgk5N7l@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw0HDuAN3OgQAjbA+Xl5EEQtrBJkk67AWoi6c1DqfdxuvbDtkq3
+	tdv1uh+f7nhLYkWtd6OlcSBSjBVRAUz/7yn/B1/w5W1Ab/undacrmJvI
+X-Gm-Gg: Acq92OEfHnGHSZNzmmS/q4GbMPg0eOqNmQjAG35ePB31q8BWBoSKM/UwOnCxtAt+Mw6
+	ndvJDAAd+FYqNDDhlcGqODPvvh+TpvrmH38UZXNwJMKG8HFA87HguKztLr7ye/+UNfp0W/VS1OC
+	iWqfENrmLwLuwguzNXqnjkMgPWyTwiqjeP61AIsQy1hlVNz96h0n2B7tToKzYgsyE1pqhfeHfHT
+	wB7eG0Ft3a1MQsy4Lvs+mDymo8s1qU4zPqEh7XqESeEd0B/CQTDE6t4LWiEK5McQyVJczOQrYbF
+	Rr88o8TCjloBpfxXB//CaYXPBtX64jFXe6u1Eu07Bei/RbLkHyPYXgA/RyPUSNbDywE9AfUdX4d
+	Xf+rnfTEQRPF+GV2taSlqkP9qzwHWf9qZh5wsvHdWGFfaKVNK3mI3I8HyK4DLCZ7NnU3VRlia7y
+	BX1n+S3n9Ojj+dmnTlNoyAMS1cXqmcIViB1OVlShXvm1NAuiVd4LWSLvCh8udMuVVhP/Ip0w/OG
+	HVAcVtCHKOWgejQLouautArEwkaIJkmfQ9356RkB1opsQ0w97HP59J1dH4od5xUNAC6WaL7k3Zn
+	8E19lW6Aao7XyCYPDRPqNvqp4gHw
+X-Received: by 2002:a17:907:d78b:b0:bd5:2c56:71a2 with SMTP id a640c23a62f3a-bd52c567250mr1328647166b.36.1779295997739;
+        Wed, 20 May 2026 09:53:17 -0700 (PDT)
+Received: from ahossu.localdomain (ip-217-105-56-94.ip.prioritytelecom.net. [217.105.56.94])
+        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-68704a658d3sm1547636a12.17.2026.05.20.09.53.14
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 20 May 2026 09:53:16 -0700 (PDT)
+Message-ID: <6a0de6fc.2d57a604.3a8602.5396@mx.google.com>
+Date: Wed, 20 May 2026 09:53:16 -0700 (PDT)
+From: Alexandru Hossu <hossu.alexandru@gmail.com>
+To: mlombard@arkamax.eu
+Cc: martin.petersen@oracle.com, bvanassche@acm.org, ddiss@suse.de,
+ target-devel@vger.kernel.org, linux-scsi@vger.kernel.org,
+ stable@vger.kernel.org, hossu.alexandru@gmail.com
+Subject: Re: [PATCH v2] scsi: target: iscsi: validate CHAP_R length before
+ base64 decode
+In-Reply-To: <DINMKOIB4PRJ.1Y571RHF6NAQJ@arkamax.eu>
+References: <20260518121811.385350-1-hossu.alexandru@gmail.com>
+ <20260518235040.48647-1-hossu.alexandru@gmail.com>
+ <DINMKOIB4PRJ.1Y571RHF6NAQJ@arkamax.eu>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi: st: Fix lock leak in st_ioctl()
-To: Hongling Zeng <zhongling0719@126.com>,
- Hongling Zeng <zenghongling@kylinos.cn>, Kai.Makisara@kolumbus.fi,
- James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com,
- djeffery@redhat.com, jmeneghi@redhat.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20260520074016.51975-1-zenghongling@kylinos.cn>
- <6A0D6825.8050902@126.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <6A0D6825.8050902@126.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: quoted-printable
 
-On 5/20/26 12:52 AM, Hongling Zeng wrote:
->  =C2=A0 The original code is correct. st_common_ioctl() releases &STp->=
-lock
->  =C2=A0 internally, so there is no lock leak.
-Indeed. See also the annotations in drivers/scsi/st.c in this patch=20
-series: "[PATCH 00/36] Enable lock context analysis for most SCSI drivers=
-"
-(https://lore.kernel.org/linux-scsi/20260312211636.3245119-1-bvanassche@a=
-cm.org/).
+On Wed, May 20, 2026, Maurizio Lombardi <mlombard@arkamax.eu> wrote:
+> There is something that doesn't totally convince me about this length check.
+> Couldn't chap_r contain those Base64 padding '=' characters that
+> would make strlen(chap_r) too big to pass this check?
 
-Bart.
+Correct. For SHA-256, a padded encoding of the 32-byte digest is 44
+characters (43 data + one '='), but DIV_ROUND_UP(32 * 4, 3) = 43, so a
+legitimate padded response would be incorrectly rejected.
+
+v3 strips trailing '=' before the comparison:
+
+	size_t r_len = strlen(chap_r);
+
+	while (r_len > 0 && chap_r[r_len - 1] == '=')
+		r_len--;
+	if (r_len > DIV_ROUND_UP(chap->digest_size * 4, 3)) {
+		pr_err("Malformed CHAP_R: base64 payload too long\n");
+		goto out;
+	}
+
+chap_base64_decode() already handles '=' by returning early, so
+stripping them from the pre-check does not affect decoding.
+
+v3 below.
+
+Alexandru
