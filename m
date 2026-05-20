@@ -1,152 +1,106 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from arkamax.eu (128-116-240-228.dyn.eolo.it [128.116.240.228])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 30E422F8EA5;
-	Wed, 20 May 2026 15:59:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 94F2D332ECB;
+	Wed, 20 May 2026 16:02:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=128.116.240.228
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779292754; cv=none; b=RZpK2ur3sdKfdwzzpuv8xWVavysxA+YMgxeavR1QI/dF+SeF+p+jfP14P/rkqGu+GJkLl3vpWawdo7OSQ6z0w8SjafsOpvgjPDEIGS9aXr6zwa8bHA/e2KBYwqRiVtrF2Rym4lwZwa/pEdQQVLZSGzbtp0Hlobpnt4gzFA72yUE=
+	t=1779292972; cv=none; b=HMrjzPXTDaJXYIBucYeHtJbm75gXsRaidaSSBpKQ0pmkkA0+ag+er+w2FqIgoGD6aop/tBvlVzkrRG0ExX3DVgQgA6/U9NXdmgv9wXM0ZunaTVcgk2T2fDGSmdcsNIQRk2JiXLZaPxDnig+xWzv/1CYCg5N/O0Ol99ZmDQ2X8Y4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779292754; c=relaxed/simple;
-	bh=2wsxsWgHYT5xJRV0UmOOLFUhM8ySvl59t/cDFVkdCQs=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=YPkjn+5Ec9O4JPv1fjejSh1YqkGIRcpmTPkEW9h4MMPG4H+nINGPqQPp6CcdYsx5owzgJqJWX/kR8TQfspzoB3ji+EnLtubiF17AuUV3ew3aymqCarZtoOWnIGPfJWBk1UypM+Wx/0ApP1kYo5kaVjwU91sMARkfHETOTThS4to=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=on3k07kn; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1779292972; c=relaxed/simple;
+	bh=GaBbEc9uW+LfiXI2M88y+C80PeLZt/HAXzvHd5Boy+U=;
+	h=Mime-Version:Content-Type:Date:Message-Id:From:To:Cc:Subject:
+	 References:In-Reply-To; b=c5NsLbe9/F7rWNthnneH6zjb9H48umjoR0aINWUfaSInncvXNHPdHRNwjIXo64VUJAJ8sia4w9LZOvACzGTp1Q4U56t6SvTM1DICosRzm6KJRU5WneUEehGMZ3mRsGW4FUFd48hH1tudq6waKWKlHjtDQeIiI5z6pUFMgdv1a9o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=arkamax.eu; spf=pass smtp.mailfrom=arkamax.eu; dkim=pass (2048-bit key) header.d=arkamax.eu header.i=@arkamax.eu header.b=MovymO1O; arc=none smtp.client-ip=128.116.240.228
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=arkamax.eu
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=arkamax.eu
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="on3k07kn"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 71F281F000E9;
-	Wed, 20 May 2026 15:59:08 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1779292752;
-	bh=xxNEuOzh0HknREoocyLObcTcBnYkGVJ+mx+LdnVcPWo=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=on3k07knhz66o/a5W6evhRpZ6LLYPkmOLkT3Liy+aNpcfK9dbIXJ4TPqPdhjpZ3YA
-	 ddaW3p+BWlPPFTrionrZehhIB0eXswuzG0fZStr/iCgUtTqe9sclQzL63yG3Nr3JBc
-	 5cL31Q9Xta9mD/EVGhzP0aTDKX5HdHQLnxBrQEJbbDRMVwFqy+l+M2fGy1uzmm/1td
-	 TaA3dbTfAgkv686UTYHbPm/7n/d45Ix0ybiOUlrKmAEZyG1oXMBbolmu2TMzVRWGII
-	 fPSOdsm0NPtKUIR0dumP1EitusOxl/l+skZtI65GjOyVIpgnGnJYxBEMP+VgZxoTLa
-	 pHC2iMrTTHuAw==
-Date: Wed, 20 May 2026 21:28:53 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Marek Szyprowski <m.szyprowski@samsung.com>
-Cc: manivannan.sadhasivam@oss.qualcomm.com, 
-	Bjorn Andersson <andersson@kernel.org>, Konrad Dybcio <konradybcio@kernel.org>, 
-	Abel Vesa <abelvesa@kernel.org>, Adrian Hunter <adrian.hunter@intel.com>, 
-	Ulf Hansson <ulfh@kernel.org>, "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
-	"Martin K. Petersen" <martin.petersen@oracle.com>, linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-mmc@vger.kernel.org, linux-scsi@vger.kernel.org, 
-	Sumit Garg <sumit.garg@oss.qualcomm.com>, Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
-Subject: Re: [PATCH v7 3/5] soc: qcom: ice: Return proper error codes from
- devm_of_qcom_ice_get() instead of NULL
-Message-ID: <o4goffqn5deyp2vta5xqqqzjkjdryl7dbhvnp5keijdihvhro4@damymrxz6zac>
-References: <20260518-qcom-ice-fix-v7-0-2a595382185b@oss.qualcomm.com>
- <20260518-qcom-ice-fix-v7-3-2a595382185b@oss.qualcomm.com>
- <CGME20260519182807eucas1p11ec910d88283c3ebb2fa7e7bcbe3cbe2@eucas1p1.samsung.com>
- <8bac0358-9da0-4cbb-98ee-333b85ba4908@samsung.com>
+	dkim=pass (2048-bit key) header.d=arkamax.eu header.i=@arkamax.eu header.b="MovymO1O"
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; s=mail1; bh=GaBbEc9uW+LfiX
+	I2M88y+C80PeLZt/HAXzvHd5Boy+U=; h=in-reply-to:references:subject:cc:
+	to:from:date; d=arkamax.eu; b=MovymO1ObrkaEcz6X3fGcxgsmOwsOW6UUc5gIop2
+	vcLpL4oNkQckWErXCbkw0iak04CIAb6Ldl7N2TyfnmZMHglBYLRig9qQk8Pu0PWr7IkE65
+	ApewtpU8kVHxwUnVSlQbdGH7aPW7sP8/j3qMbpemy9/I9h4xjFvvk5t8FfzCglnhCH6diR
+	+CRzjotYHGd6m29+k8sHwJ3yk4jdXszutDS2OVb6Z1uqtprFH9GzZaQxaWk+UXU+IkKt0f
+	Np4B4XPJchbbmKS/H+Mnl41w4fFddeI3x3XqQRUv3ezGhmpf2r5JNho5DZgPlwMZjmyAk0
+	aPaNw07ExBoK0gWz0dkq2A==
+Received: from localhost (128-116-240-228.dyn.eolo.it [128.116.240.228])
+	by arkamax.eu (OpenSMTPD) with ESMTPSA id 5e3afc91 (TLSv1.3:TLS_AES_256_GCM_SHA384:256:NO);
+	Wed, 20 May 2026 17:56:06 +0200 (CEST)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <8bac0358-9da0-4cbb-98ee-333b85ba4908@samsung.com>
+Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Date: Wed, 20 May 2026 17:56:05 +0200
+Message-Id: <DINMKOIB4PRJ.1Y571RHF6NAQJ@arkamax.eu>
+From: "Maurizio Lombardi" <mlombard@arkamax.eu>
+To: "Alexandru Hossu" <hossu.alexandru@gmail.com>,
+ <martin.petersen@oracle.com>
+Cc: <bvanassche@acm.org>, <target-devel@vger.kernel.org>,
+ <linux-scsi@vger.kernel.org>, <stable@vger.kernel.org>
+Subject: Re: [PATCH v2] scsi: target: iscsi: validate CHAP_R length before
+ base64 decode
+X-Mailer: aerc 0.21.0
+References: <20260518121811.385350-1-hossu.alexandru@gmail.com>
+ <20260518235040.48647-1-hossu.alexandru@gmail.com>
+In-Reply-To: <20260518235040.48647-1-hossu.alexandru@gmail.com>
 
-On Tue, May 19, 2026 at 08:28:04PM +0200, Marek Szyprowski wrote:
-> On 18.05.2026 15:52, Manivannan Sadhasivam via B4 Relay wrote:
-> > From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-> >
-> > devm_of_qcom_ice_get() currently returns NULL if ICE SCM is not available
-> > or "qcom,ice" property is not found in DT. But this confuses the clients
-> > since NULL doesn't convey the reason for failure. So return proper error
-> > codes instead of NULL.
-> >
-> > Reported-by: Sumit Garg <sumit.garg@oss.qualcomm.com>
-> > Reviewed-by: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
-> > Tested-by: Sumit Garg <sumit.garg@oss.qualcomm.com> # OP-TEE as TZ
-> > Acked-by: Sumit Garg <sumit.garg@oss.qualcomm.com>
-> > Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-> This patch landed in today's linux-next as commit b9ab7217dd7d ("soc: qcom: ice:
-> Return proper error codes from devm_of_qcom_ice_get() instead of NULL"). In my
-> tests I found that it breaks booting from the UFS storage on the RB5 board:
-> 
+On Tue May 19, 2026 at 1:50 AM CEST, Alexandru Hossu wrote:
+> chap_server_compute_hash() allocates client_digest as
+> kzalloc(chap->digest_size) and then, for BASE64-encoded responses,
+> passes chap_r directly to chap_base64_decode() without checking whether
+> the input length could produce more than digest_size bytes of output.
+>
+> chap_base64_decode() writes to the destination unconditionally as long
+> as there is input to consume. With MAX_RESPONSE_LENGTH set to 128 and
+> the "0b" prefix stripped by extract_param(), up to 127 base64 characters
+> can reach the decoder. 127 characters decode to 95 bytes. For SHA-256
+> (digest_size=3D32) this overflows client_digest by 63 bytes; for MD5
+> (digest_size=3D16) the overflow is 79 bytes.
+>
+> The length check at line 344 fires after the write has already happened.
+>
+> The HEX branch in the same switch statement already validates the length
+> up front. Apply the same approach to the BASE64 branch: reject any input
+> whose maximum decoded length exceeds digest_size before calling the
+> decoder.
+>
+> DIV_ROUND_UP(digest_size * 4, 3) is the maximum number of base64
+> characters that can decode to exactly digest_size bytes, matching the
+> convention used in base64.h BASE64_CHARS().
+>
+> Fixes: 1e5733883421 ("scsi: target: iscsi: Support base64 in CHAP")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Alexandru Hossu <hossu.alexandru@gmail.com>
+> ---
+> v2: use DIV_ROUND_UP(digest_size * 4, 3) as suggested by David Disseldorp
+>
+>  drivers/target/iscsi/iscsi_target_auth.c | 4 ++++
+>  1 file changed, 4 insertions(+)
+>
+> diff --git a/drivers/target/iscsi/iscsi_target_auth.c b/drivers/target/is=
+csi/iscsi_target_auth.c
+> index c46c69a..50eeded 100644
+> --- a/drivers/target/iscsi/iscsi_target_auth.c
+> +++ b/drivers/target/iscsi/iscsi_target_auth.c
+> @@ -341,6 +341,10 @@ static int chap_server_compute_hash(
+>  		}
+>  		break;
+>  	case BASE64:
+> +		if (strlen(chap_r) > DIV_ROUND_UP(chap->digest_size * 4, 3)) {
+> +			pr_err("Malformed CHAP_R: base64 payload too long\n");
+> +			goto out;
+> +		}
 
-Thanks for the report! I didn't consider the case where both 'ice' reg entry and
-'qcom,ice' property are absent in DT. Sent the fix now:
-https://lore.kernel.org/linux-arm-msm/20260520155704.130803-1-manivannan.sadhasivam@oss.qualcomm.com/
 
-- Mani
+There is something that doesn't totally convince me about this length check=
+.
+Couldn't chap_r contain those Base64 padding '=3D' characters that
+would make strlen(chap_r) too big to pass this check?
 
-> ufshcd-qcom 1d84000.ufshc: freq-table-hz property not specified
-> ufshcd-qcom 1d84000.ufshc: ufshcd_populate_vreg: Unable to find vdd-hba-supply regulator, assuming enabled
-> ufshcd-qcom 1d84000.ufshc: freq-table-hz property not specified
-> ufshcd-qcom 1d84000.ufshc: ufshcd_populate_vreg: Unable to find vdd-hba-supply regulator, assuming enabled
-> ufshcd-qcom 1d84000.ufshc: error -ENODEV: ufshcd_variant_hba_init: variant qcom init failed with err -19
-> ufshcd-qcom 1d84000.ufshc: error -ENODEV: Initialization failed with error -19
-> ufshcd-qcom 1d84000.ufshc: error -ENODEV: ufshcd_pltfrm_init() failed
-> /dev/root: Can't open blockdev
-> VFS: Cannot open root device "/dev/sda8" or unknown-block(0,0): error -6
-> 
-> ...
-> 
-> Kernel panic - not syncing: VFS: Unable to mount root fs on unknown-block(0,0)
-> CPU: 7 UID: 0 PID: 1 Comm: swapper/0 Not tainted 7.1.0-rc1+ #12707 PREEMPT
-> Hardware name: Qualcomm Technologies, Inc. Robotics RB5 (DT)
-> 
-> 
-> > ---
-> >  drivers/soc/qcom/ice.c | 9 ++++-----
-> >  1 file changed, 4 insertions(+), 5 deletions(-)
-> >
-> > diff --git a/drivers/soc/qcom/ice.c b/drivers/soc/qcom/ice.c
-> > index 85deb9ea4a68..2b592aa42941 100644
-> > --- a/drivers/soc/qcom/ice.c
-> > +++ b/drivers/soc/qcom/ice.c
-> > @@ -563,7 +563,7 @@ static struct qcom_ice *qcom_ice_create(struct device *dev,
-> >  
-> >  	if (!qcom_scm_ice_available()) {
-> >  		dev_warn(dev, "ICE SCM interface not found\n");
-> > -		return NULL;
-> > +		return ERR_PTR(-EOPNOTSUPP);
-> >  	}
-> >  
-> >  	engine = devm_kzalloc(dev, sizeof(*engine), GFP_KERNEL);
-> > @@ -645,7 +645,7 @@ static struct qcom_ice *of_qcom_ice_get(struct device *dev)
-> >  	struct device_node *node __free(device_node) = of_parse_phandle(dev->of_node,
-> >  									"qcom,ice", 0);
-> >  	if (!node)
-> > -		return NULL;
-> > +		return ERR_PTR(-ENODEV);
-> >  
-> >  	pdev = of_find_device_by_node(node);
-> >  	if (!pdev) {
-> > @@ -698,8 +698,7 @@ static void devm_of_qcom_ice_put(struct device *dev, void *res)
-> >   * phandle via 'qcom,ice' property to an ICE DT, the ICE instance will already
-> >   * be created and so this function will return that instead.
-> >   *
-> > - * Return: ICE pointer on success, NULL if there is no ICE data provided by the
-> > - * consumer or ERR_PTR() on error.
-> > + * Return: ICE pointer on success, ERR_PTR() on error.
-> >   */
-> >  struct qcom_ice *devm_of_qcom_ice_get(struct device *dev)
-> >  {
-> > @@ -710,7 +709,7 @@ struct qcom_ice *devm_of_qcom_ice_get(struct device *dev)
-> >  		return ERR_PTR(-ENOMEM);
-> >  
-> >  	ice = of_qcom_ice_get(dev);
-> > -	if (!IS_ERR_OR_NULL(ice)) {
-> > +	if (!IS_ERR(ice)) {
-> >  		*dr = ice;
-> >  		devres_add(dev, dr);
-> >  	} else {
-> >
-> Best regards
-> -- 
-> Marek Szyprowski, PhD
-> Samsung R&D Institute Poland
-> 
+Maurizio
 
--- 
-மணிவண்ணன் சதாசிவம்
