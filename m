@@ -1,110 +1,150 @@
-Received: from mail-ej1-f49.google.com (mail-ej1-f49.google.com [209.85.218.49])
+Received: from mail-ed1-f49.google.com (mail-ed1-f49.google.com [209.85.208.49])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D9BE37D101
-	for <linux-scsi@vger.kernel.org>; Wed, 20 May 2026 16:53:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.49
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 81BDE2F0C62
+	for <linux-scsi@vger.kernel.org>; Wed, 20 May 2026 16:53:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.49
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779296003; cv=none; b=EKKjHHKL3PqG473RUvUZxnWxcx1tgm5uoRu176eYDkRLVfWu/JdRYdr4ByemzY4Kgx4LkFkzysJOhiALSAUFJyRmF48dhtor1f4Ph4btf/+VU7d/p2NzfD3b5ndPMOlpGyOUWfESZeHs7x62QeuhqkdC+oGsYgKfrAH5TGEpT3E=
+	t=1779296013; cv=none; b=EF4tQvK/J/D3C9pqjC02z3EltKfVDoT6BBMqjM3JhjJ3h+XDESdND4pjXMHoKUjSxjHsmD9M1jmy4tDL3isJAqkhbCpd6YGLLgC1LPwi5Ffy631yvR5C2ndF8zihzi4iuqIw+PeEpnY75Qk77lynZbjXg7hchBMFeZvy6GdN3Mo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779296003; c=relaxed/simple;
-	bh=++VV2z8DF9nYNXw7ZGVhPSn17Ap73p9EQBATvvZQOOI=;
-	h=Message-ID:Date:From:To:Cc:Subject:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=KoeJ8Mk5BCiI1PEx1BHvG8NtnaeJ/Ucfn1dSJwvzuYxY0CGMo/bdUlss0/niaLsm491iO9BmE0d5R0cXEyTgA3djQSDFom8k+SFBiNsQ74yhR0s9zsXX8C6PAXYW5NxgSNwp6IqeZ0DqwWN2urvM2rWzReZJ3YwVeg8dGnxaINs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=a88r0ebo; arc=none smtp.client-ip=209.85.218.49
+	s=arc-20240116; t=1779296013; c=relaxed/simple;
+	bh=OqrZM/EZQoDxpdqsw83Tctk6QvpP+RDSvRPve3kZib4=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=VAg0YZyyNG2lFGB5g5tGbWVgzK83OP7Ii/GIuIGpUW2EbhI/83BE194USxAyTeRvRLty8i23X00GlHNBbYLuQz3RSDPhsdDOR6+4WP8xvrvizD9LiPiGZpoBiWWHNoeRIUPGxt5AZqBjHF6xyVF7u65QXVtlOvasCBi2N8QtrLs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=JkU4GBL/; arc=none smtp.client-ip=209.85.208.49
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="a88r0ebo"
-Received: by mail-ej1-f49.google.com with SMTP id a640c23a62f3a-bd8d0e4e341so647076466b.0
-        for <linux-scsi@vger.kernel.org>; Wed, 20 May 2026 09:53:19 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="JkU4GBL/"
+Received: by mail-ed1-f49.google.com with SMTP id 4fb4d7f45d1cf-67e43a8996fso6415613a12.0
+        for <linux-scsi@vger.kernel.org>; Wed, 20 May 2026 09:53:32 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1779295998; x=1779900798; darn=vger.kernel.org;
-        h=mime-version:content-transfer-encoding:references:in-reply-to
-         :subject:cc:to:from:date:message-id:from:to:cc:subject:date
+        d=gmail.com; s=20251104; t=1779296011; x=1779900811; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=uW1DWs6dLVxbMJbJA1XC7hMjjnFFtxpIrjpCj7Et85U=;
-        b=a88r0ebomWrncpMAU1k1hVlO/8O9b5BTZsgHdTR7xyt6cnrTkR2xbvXR+pTYbUcwSW
-         WFN1WCAOPyK40/TM3xPW/3X57uY4dVxOUZRtvCZZ3w00TIY8PSx34NloolnOs04SO/Jl
-         +3UokslLUEu3svnFxjxH8ldUmJLhFePs9vjR3MrcF5pq+puw+z34DCUtmePCxDI1AZ+J
-         NdyWr0IyUQl0XTFdm/2d6dId1G/eRwEJWOxf/1wb+PdCOkmqJyfIRcwkCJXU8fGHv9iI
-         KQ4dQKerFnQT+YkpQ8NqDadATMvk6U2Khz8nfwyB+Oo1cVq6hk51af1v4NEuWln5j9uM
-         QMWg==
+        bh=kKcl0f+YiSx0kT0A06n+DmaHMn0z0MjpQEGjfw2KSV8=;
+        b=JkU4GBL/LH8SDTqhqu2PMj/k2XBBu/ZymgoIeyqLDzs6PDk+Rjb8URfzCw/X4fEo4Y
+         mjzq4W6gOob6o8+/kl3IAwkel7yQDIg+Ohu+KCBSsciZ6ewBj8U9ieMmGdOyFf9DgZxT
+         uPR1MU23R1mOWxe74+LzQLz0KcAZnj7mIKtXgOfRz8R/LKaIn4nNuvFUb8JM9TZ5g3me
+         BXbRy6vnk2N7wScACVRVHEUX5jRVj5CLu1Pf2x8/QIKw+YLf3guPazizAtlQQIbKjlzR
+         aUD++Oztv4iRHkPIyckIwwwLik0fdmIOZqrFGBKPHavtt2ZKY+VnPTNa3Tkb91Oh+8Wm
+         sjPQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1779295998; x=1779900798;
-        h=mime-version:content-transfer-encoding:references:in-reply-to
-         :subject:cc:to:from:date:message-id:x-gm-gg:x-gm-message-state:from
+        d=1e100.net; s=20251104; t=1779296011; x=1779900811;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to;
-        bh=uW1DWs6dLVxbMJbJA1XC7hMjjnFFtxpIrjpCj7Et85U=;
-        b=sCHZuTLqDJjkgmchU9kFq9x9GGlNSryHwiDDNxgYP2AAkqwBBSmLOWAzGj05J2GSVj
-         MSHtqdh9kI9IOokLkRgyfgxCJhqnxYxg6rQfmtS78zusqPTwVbO8W+KLqTFOo1DuMGSo
-         hIQilAPZzYFg+E0yA58aMNIHFUBtILGEcWnJ4GCCYkiwR3G0KL5FzX8zBFDaXnZxdxKj
-         Zw9OHkG7O80FX7ETrfMMfgEwZPOOWEeNhdecjusBXu1ar6nmFzSWeygbeGE7EmBAKNbC
-         05nRpHl54mPMQiydo+/kW6z/U+wC3MEmGLpYIHy0CSem9wyG7EFdVDQNcia1S4cBJSTi
-         dXNw==
-X-Forwarded-Encrypted: i=1; AFNElJ9aQNbYg+PVJfkbeyzXriuhobrXitAZoTY3g0rnmPtXc79hG7mJHw23U/MHMHEGCfXZxHD/nRgk5N7l@vger.kernel.org
-X-Gm-Message-State: AOJu0Yw0HDuAN3OgQAjbA+Xl5EEQtrBJkk67AWoi6c1DqfdxuvbDtkq3
-	tdv1uh+f7nhLYkWtd6OlcSBSjBVRAUz/7yn/B1/w5W1Ab/undacrmJvI
-X-Gm-Gg: Acq92OEfHnGHSZNzmmS/q4GbMPg0eOqNmQjAG35ePB31q8BWBoSKM/UwOnCxtAt+Mw6
-	ndvJDAAd+FYqNDDhlcGqODPvvh+TpvrmH38UZXNwJMKG8HFA87HguKztLr7ye/+UNfp0W/VS1OC
-	iWqfENrmLwLuwguzNXqnjkMgPWyTwiqjeP61AIsQy1hlVNz96h0n2B7tToKzYgsyE1pqhfeHfHT
-	wB7eG0Ft3a1MQsy4Lvs+mDymo8s1qU4zPqEh7XqESeEd0B/CQTDE6t4LWiEK5McQyVJczOQrYbF
-	Rr88o8TCjloBpfxXB//CaYXPBtX64jFXe6u1Eu07Bei/RbLkHyPYXgA/RyPUSNbDywE9AfUdX4d
-	Xf+rnfTEQRPF+GV2taSlqkP9qzwHWf9qZh5wsvHdWGFfaKVNK3mI3I8HyK4DLCZ7NnU3VRlia7y
-	BX1n+S3n9Ojj+dmnTlNoyAMS1cXqmcIViB1OVlShXvm1NAuiVd4LWSLvCh8udMuVVhP/Ip0w/OG
-	HVAcVtCHKOWgejQLouautArEwkaIJkmfQ9356RkB1opsQ0w97HP59J1dH4od5xUNAC6WaL7k3Zn
-	8E19lW6Aao7XyCYPDRPqNvqp4gHw
-X-Received: by 2002:a17:907:d78b:b0:bd5:2c56:71a2 with SMTP id a640c23a62f3a-bd52c567250mr1328647166b.36.1779295997739;
-        Wed, 20 May 2026 09:53:17 -0700 (PDT)
+        bh=kKcl0f+YiSx0kT0A06n+DmaHMn0z0MjpQEGjfw2KSV8=;
+        b=cylXlQkXsa7/DOIMNkiSprIFl/oJgGQVYgMECC6zBVlCH2L2NmPoXJ8RClMWonuPcb
+         e+X5R7o2e5pnD4PIAFyOWJFqZG9Cunpr8Nnsc7bdRKU0yFvpvSOgUj/bKWb/UAn85XpV
+         4BVDm5Vi5KfYL+1OLCZ/ucBrVT7xLNp4fgdqFpYwOhM8EY9HPz9PM5vRi3cQJFlQM6G/
+         58U9kP0e5TN17MSxwheUXuiAO8tAQrL+wAA7p0ytFZDyLkU4Jrjele7G/gWrbo973Ef7
+         HgYmOwABbrl46W/yV6RaGP8pdnw5YqnRKGOa+m1SppV5uocZNccOTdLi3AoeAHoOYU1m
+         3nIg==
+X-Forwarded-Encrypted: i=1; AFNElJ+tipnCWWm6AB2zFaPtdeTt9sJLRC3aemnhPvGVR5HUd0Lxkh3IdK9WTCeru4dvDS+Tt478lAjHQSHu@vger.kernel.org
+X-Gm-Message-State: AOJu0YxGxJr4YjPaSLIeYRWoujF02aeoE+wnRiT+LVBHWe7zZB9LTMIw
+	+FspsUWUNcaLhO4ZXvNyNim9mXKvKgWeS05Cl5VA69iUZwmXIQHFzLwa
+X-Gm-Gg: Acq92OFq/H95Lb0OBUgQPekugspK3tQlWRuO8YmWwzzm2t6XwvsnvmymW49OhPD/taZ
+	bzdF4/trT2RjjoZnBQYiShmsejQ7AKMHqlimcd1vK7ZhOLKBRBzhqdG/GxBi6bYBY6JJQ/cvChV
+	9J/9Ug3VPgcXFterJSLqBL0gbfJpMhDw7DId2iIBda4O+b3b6SmsjrGFJlUYaZ/FEYZ7BlOi3kA
+	iS002NrSBePf/+apz2N6IBxvv3tiPklMpr9dCxSgAZYjn+1K5qDzTQlqo+pYnZu3ZDWOEPP9I8c
+	W17Fp5xSuRQdVYiFbLaMfwAnJnHCwPmp7XfiNCB5nrQxFCl9Ql1ELAm+7f9CkNapHGq0bhrhAre
+	lOnXhi6oUVDCktC9UMB+Kjw7wqtvXEF+4QxZGBpzNlQ4l0Rm64ToPPodeq3uMNTDKbpUO2v4F5B
+	XrC29aANuorubKsFQQvGkx3/041vBCwS++ahD0qAeD2Hh6MpUe23f2RpSoaDDaekZk3OBahk2Im
+	6X0LqmvDssC7xs3+SgzSIf6S9gaNcXWPj3z+Unk9PPjshEnFDwyjy/N+Gw6aBhH7xIUhrXs7qcD
+	0ar6CDwwiOKSG/UHSJR/950vPjyH
+X-Received: by 2002:aa7:d14f:0:b0:674:7363:3e91 with SMTP id 4fb4d7f45d1cf-683bce9cec6mr9495273a12.12.1779296010835;
+        Wed, 20 May 2026 09:53:30 -0700 (PDT)
 Received: from ahossu.localdomain (ip-217-105-56-94.ip.prioritytelecom.net. [217.105.56.94])
-        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-68704a658d3sm1547636a12.17.2026.05.20.09.53.14
+        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-6831187ecb7sm7966009a12.29.2026.05.20.09.53.29
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 20 May 2026 09:53:16 -0700 (PDT)
-Message-ID: <6a0de6fc.2d57a604.3a8602.5396@mx.google.com>
-Date: Wed, 20 May 2026 09:53:16 -0700 (PDT)
+        Wed, 20 May 2026 09:53:29 -0700 (PDT)
 From: Alexandru Hossu <hossu.alexandru@gmail.com>
-To: mlombard@arkamax.eu
-Cc: martin.petersen@oracle.com, bvanassche@acm.org, ddiss@suse.de,
- target-devel@vger.kernel.org, linux-scsi@vger.kernel.org,
- stable@vger.kernel.org, hossu.alexandru@gmail.com
-Subject: Re: [PATCH v2] scsi: target: iscsi: validate CHAP_R length before
- base64 decode
-In-Reply-To: <DINMKOIB4PRJ.1Y571RHF6NAQJ@arkamax.eu>
-References: <20260518121811.385350-1-hossu.alexandru@gmail.com>
- <20260518235040.48647-1-hossu.alexandru@gmail.com>
- <DINMKOIB4PRJ.1Y571RHF6NAQJ@arkamax.eu>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+To: martin.petersen@oracle.com
+Cc: bvanassche@acm.org,
+	mlombard@arkamax.eu,
+	ddiss@suse.de,
+	target-devel@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	stable@vger.kernel.org,
+	hossu.alexandru@gmail.com
+Subject: [PATCH v3] scsi: target: iscsi: validate CHAP_R length before base64 decode
+Date: Wed, 20 May 2026 18:52:59 +0200
+Message-ID: <20260520165259.272808-1-hossu.alexandru@gmail.com>
+X-Mailer: git-send-email 2.54.0
+In-Reply-To: <20260518121811.385350-1-hossu.alexandru@gmail.com>
+References: 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-On Wed, May 20, 2026, Maurizio Lombardi <mlombard@arkamax.eu> wrote:
-> There is something that doesn't totally convince me about this length check.
-> Couldn't chap_r contain those Base64 padding '=' characters that
-> would make strlen(chap_r) too big to pass this check?
+chap_server_compute_hash() allocates client_digest as
+kzalloc(chap->digest_size) and then, for BASE64-encoded responses,
+passes chap_r directly to chap_base64_decode() without checking whether
+the input length could produce more than digest_size bytes of output.
 
-Correct. For SHA-256, a padded encoding of the 32-byte digest is 44
-characters (43 data + one '='), but DIV_ROUND_UP(32 * 4, 3) = 43, so a
-legitimate padded response would be incorrectly rejected.
+chap_base64_decode() writes to the destination unconditionally as long
+as there is input to consume. With MAX_RESPONSE_LENGTH set to 128 and
+the "0b" prefix stripped by extract_param(), up to 127 base64 characters
+can reach the decoder. 127 characters decode to 95 bytes. For SHA-256
+(digest_size=32) this overflows client_digest by 63 bytes; for MD5
+(digest_size=16) the overflow is 79 bytes.
 
-v3 strips trailing '=' before the comparison:
+The length check at line 344 fires after the write has already happened.
 
-	size_t r_len = strlen(chap_r);
+The HEX branch in the same switch statement already validates the length
+up front. Apply the same approach to the BASE64 branch: strip trailing
+base64 padding characters, then reject any input whose data length
+exceeds DIV_ROUND_UP(digest_size * 4, 3) before calling the decoder.
 
-	while (r_len > 0 && chap_r[r_len - 1] == '=')
-		r_len--;
-	if (r_len > DIV_ROUND_UP(chap->digest_size * 4, 3)) {
-		pr_err("Malformed CHAP_R: base64 payload too long\n");
-		goto out;
-	}
+Stripping trailing '=' before the comparison handles both padded and
+unpadded encodings. chap_base64_decode() already returns early on '=',
+so the full original string is still passed to the decoder unchanged.
 
-chap_base64_decode() already handles '=' by returning early, so
-stripping them from the pre-check does not affect decoding.
+Fixes: 1e5733883421 ("scsi: target: iscsi: Support base64 in CHAP")
+Cc: stable@vger.kernel.org
+Signed-off-by: Alexandru Hossu <hossu.alexandru@gmail.com>
+---
+v3: strip trailing '=' before length check to handle padded encodings
+    (reported by Maurizio Lombardi)
+v2: use DIV_ROUND_UP(digest_size * 4, 3) as suggested by David Disseldorp
 
-v3 below.
+ drivers/target/iscsi/iscsi_target_auth.c | 11 ++++++++++-
+ 1 file changed, 10 insertions(+), 1 deletion(-)
 
-Alexandru
+diff --git a/drivers/target/iscsi/iscsi_target_auth.c b/drivers/target/iscsi/iscsi_target_auth.c
+index c46c69a..00487d0 100644
+--- a/drivers/target/iscsi/iscsi_target_auth.c
++++ b/drivers/target/iscsi/iscsi_target_auth.c
+@@ -340,13 +340,22 @@ static int chap_server_compute_hash(
+ 			goto out;
+ 		}
+ 		break;
+-	case BASE64:
++	case BASE64: {
++		size_t r_len = strlen(chap_r);
++
++		while (r_len > 0 && chap_r[r_len - 1] == '=')
++			r_len--;
++		if (r_len > DIV_ROUND_UP(chap->digest_size * 4, 3)) {
++			pr_err("Malformed CHAP_R: base64 payload too long\n");
++			goto out;
++		}
+ 		if (chap_base64_decode(client_digest, chap_r, strlen(chap_r)) !=
+ 		    chap->digest_size) {
+ 			pr_err("Malformed CHAP_R: invalid BASE64\n");
+ 			goto out;
+ 		}
+ 		break;
++	}
+ 	default:
+ 		pr_err("Could not find CHAP_R\n");
+ 		goto out;
+-- 
+2.54.0
+
