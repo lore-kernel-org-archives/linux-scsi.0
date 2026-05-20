@@ -1,260 +1,268 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr1-f43.google.com (mail-wr1-f43.google.com [209.85.221.43])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D7AD33F54DB;
-	Wed, 20 May 2026 11:20:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5F9A3375ACB
+	for <linux-scsi@vger.kernel.org>; Wed, 20 May 2026 12:58:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.43
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779276055; cv=none; b=juniZ39si0LtODDEYdsjdBAIQfh2ILEKvSduPvFW5+2fOTHV+vowZzLjnscCdxW4HGODvld2Za0Vb+z/LdXp8O12ocXVaEArwcV60yf2bQ+/cQQdn5YV+0mbKJPyPFvdohcgtG0LLMNIu/JK9yguS8pPxudUT7XgZSQzznBX1RQ=
+	t=1779281934; cv=none; b=JBLHmqF9ULfBwJCV8DSe55zt6xvPaoyKK9UhjxIDMenL/ouK4aFvssRq+lVYfpxHfphk72pSa79HRgBQovG/S5Kb5CdLVB9z/kf0alrelpyi3GBWaaTF+0xpzdyDlIDaZ9Q2/jnePMHiPcXw0Ckvg4046DFXyJVMOmql8K1F8ps=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779276055; c=relaxed/simple;
-	bh=MSSv7cZG4QR4CTe1tyXdoTYxertwGmgfBqtd9Nohg+Y=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=NJunGqjopsik5P0JPssvU4x4xgCXRvF5eHD7tdyT+MkOxo0l9XzBLNYH7754iy80XKZG0RQZ6rwKQDBZZurDpWyr2G/shI8lx8yVAJuAcOgVKRJSMn/7/If8FR045TXG5oaA+X0KpRPBZmFSZ7rRKwJgDsYR/ZyYQDJEuaBisjM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Rulbb9lA; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1779281934; c=relaxed/simple;
+	bh=dpkJh4eWo0NNOQOst2hZvRoTlNGuJSATaj2LFfZj978=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=lwoCdQ5AO5oMwEIQViE0b7lv15ofBSnnNS+QvhpYrKgGuLjImFySHBpS5YL5D8H2Y2qydsXH3vHdw1JAX5ItIr+dsgCD5yWpyycV6WrXiAsM4JtgTqaOpVqjNDj0xFv7fEK0f6PxxJfJanjQm+PicttZW7Lhhk0S+vsoM8/cjFQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=h1G/xUwA; arc=none smtp.client-ip=209.85.221.43
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Rulbb9lA"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B6E8A1F000E9;
-	Wed, 20 May 2026 11:20:52 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1779276053;
-	bh=vo7xLNpRRxHEcNbThS8imVCpKzJpc9GuQTSEECQtEYI=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=Rulbb9lA0EbzBso6sdZzUlxWfynxQNJaCbdzGrqQPt3EYmMQhNWy6bzS90B7CI5LL
-	 K+MWJFOyi2ZGy7k2jkbT8ODmTPH1iJVV9f4ZTvjjMW7EWeLfPTBFbfwusbmH3Sdhcg
-	 RPasKQ30oTUGIChJlPKQe8dUI3YR9WQqr3cvwIXfJ1rIOs+Hohmj/xpcQCLc5t/7Kk
-	 mk5ngTNj1juVE2z1XDQijR1pQj35JWgBZvQ6h1DTr9aZ4Fh2DWN/K1uJZiZvqKQn1V
-	 vN36Fqmd9AkLdmXuud1UnNPNmohfTezHbkH+dBDfE4h7efXeM6GNWHAWM154Mi7i7A
-	 6UnKAakfsllEg==
-From: Sasha Levin <sashal@kernel.org>
-To: patches@lists.linux.dev,
-	stable@vger.kernel.org
-Cc: Tomas Henzl <thenzl@redhat.com>,
-	Don Brace <don.brace@microchip.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Sasha Levin <sashal@kernel.org>,
-	James.Bottomley@HansenPartnership.com,
-	storagedev@microchip.com,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH AUTOSEL 7.0-5.15] scsi: smartpqi: Silence a recursive lock warning
-Date: Wed, 20 May 2026 07:19:20 -0400
-Message-ID: <20260520111944.3424570-48-sashal@kernel.org>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260520111944.3424570-1-sashal@kernel.org>
-References: <20260520111944.3424570-1-sashal@kernel.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="h1G/xUwA"
+Received: by mail-wr1-f43.google.com with SMTP id ffacd0b85a97d-4585a116a4aso4012593f8f.3
+        for <linux-scsi@vger.kernel.org>; Wed, 20 May 2026 05:58:52 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1779281931; x=1779886731; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:subject:cc:to:from:date:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=qGggALgHzCoPtLdgY/KCVV2cuvNqQvvmKNTA2nt3QnI=;
+        b=h1G/xUwAcQTGBt8lP9jW8tA8x0OE1cDdYxD9SBo3EqroOQeFA7ojwHg0oVzbktvs4c
+         MB88sodmdKj2Wh8llBPsr6ngoauGCSEznrwDEiFHZJhY8m61E09zYX9NHjLJ7jb+D+bT
+         +1YElgY/cNzyVBq7DnKBotcQkoAlvUZC/rYSfzGLlsfIV6Il6ErfQPloMOr2IPKjQaM6
+         vw0HOr1C6LtItLUyAp4c66OxCtJz0W6c2BdANGWBOHUnkwKLEkcifGRMLPfYtki0ZXzf
+         N/jYeFq1anmoWsdHfqesVqnSH67q+fXJlWPyn4oo7O3wQuzV+nWQDr3KcNLbQgIKuaJ4
+         ESAg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1779281931; x=1779886731;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=qGggALgHzCoPtLdgY/KCVV2cuvNqQvvmKNTA2nt3QnI=;
+        b=Q2bZDebz9V+ewXOvtfPzFSuUvai8NomjJ/hnnkyHor6xeBn0RkpBLe7xRJAtXcd+wb
+         fk8YwUNwH6QJnBXwr8S9Nnwd0tERh/AYHSvbkWeh5ZqxmLj2+6tCaUVAIKaEZ6Mc3Glb
+         A1DFWj1UUIwW11ilHOURyJAIUBaYTODFWZewuN/3GS6p2iS7krjKmAbDfcD/DVh1ibxz
+         be6Tf2wbRr1YrGooGABX6OlJ7NA0nbz4SUwLZz/supTiyQtIW0oM+fgqhJ0caLLbnVO4
+         eEXfbrsfyd8uqHnc2PDvfA84aNhCnv868L/yXrjaHKWYeBf2kX13yrigW8B9oMVBfOdA
+         xt/g==
+X-Forwarded-Encrypted: i=1; AFNElJ/QhN/cZHY5CuUlvfABKGczZH6u5/7ACv7JzM8PHwiszn+3Cco5H/arxpPxaEv46SoSLvuWZwUal2Bd@vger.kernel.org
+X-Gm-Message-State: AOJu0YzrvfT75AquiOiqsx3VDvCwr587zGwlTMyA8BUi7Vfk+RQsScJK
+	tpZFpCMOWSA/i+u2XPXMeUlFKlovujoWe1DQxvAnqOV5suOUISlG/VJz
+X-Gm-Gg: Acq92OFxBDhwuvqvKkyyYrGEY3Ei+/c59Oyw/orbbzcEN8OQTDIzZu5K3hZ7OvZai6Z
+	B8qehZnKG8FTaNc9AnMgGZUL3DW3lISVsyMxI0JzP/zV41V2803HWWe/P3R7xtmfVEdIaQqNw1Z
+	qqudeqbrISCXA6O1Fx7Upa/1MA/0ZPicJnCOLeeeNozhk8qHJbcgQpOe1/Hl6QZh2tI4hVyV3Y+
+	kVBnGE6lDzTGeLnl2fp+cPNzjviL76Q98ldWKRpdy2KwYvGZC+uvjkNemMfJ1krQp6uMCy3Telh
+	X00TRte4UxJrL5oJwzNxT6qwqOQIMdiu+UrLVZsK5dXJ/58UviWe9z0KfmMfE35B17XZUGy422V
+	2zSJqUrgq5iGitP5MA1KSblYHXFNCyw3tbYHIq9TDXXKFQExiTozr7FKYv84/sBNNTFHQTR5NNv
+	fuZxv0HlZlLTuKaooCYv+MGC92aSqE7x+6rExYoFPeg45o+yn0ZqeueuNFJretDhpy
+X-Received: by 2002:a05:6000:4011:b0:45d:41e0:467b with SMTP id ffacd0b85a97d-45e5c57d3b5mr38701966f8f.3.1779281930642;
+        Wed, 20 May 2026 05:58:50 -0700 (PDT)
+Received: from pumpkin (82-69-66-36.dsl.in-addr.zen.co.uk. [82.69.66.36])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-45d9ec39ff1sm58513115f8f.10.2026.05.20.05.58.50
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 20 May 2026 05:58:50 -0700 (PDT)
+Date: Wed, 20 May 2026 13:58:48 +0100
+From: David Laight <david.laight.linux@gmail.com>
+To: Michael Bommarito <michael.bommarito@gmail.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, "James E.J.
+ Bottomley" <James.Bottomley@HansenPartnership.com>, Nilesh Javali
+ <njavali@marvell.com>, Himanshu Madhani <himanshu.madhani@oracle.com>,
+ Shyam Sundar <ssundar@marvell.com>, James Smart <james.smart@broadcom.com>,
+ Hannes Reinecke <hare@kernel.org>, John Meneghini <jmeneghi@redhat.com>,
+ Bryan Gurney <bgurney@redhat.com>, Justin Tee <justin.tee@broadcom.com>,
+ Christoph Hellwig <hch@lst.de>, Keith Busch <kbusch@kernel.org>, Kees Cook
+ <kees@kernel.org>, linux-scsi@vger.kernel.org,
+ linux-nvme@lists.infradead.org, linux-hardening@vger.kernel.org,
+ linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Subject: Re: [PATCH v3] scsi: scsi_transport_fc: widen FPIN pname walker
+ counter to u32
+Message-ID: <20260520135848.6df9f7d2@pumpkin>
+In-Reply-To: <20260519190615.2761667-1-michael.bommarito@gmail.com>
+References: <20260518143706.2808177-1-michael.bommarito@gmail.com>
+	<20260519190615.2761667-1-michael.bommarito@gmail.com>
+X-Mailer: Claws Mail 4.1.1 (GTK 3.24.38; arm-unknown-linux-gnueabihf)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-X-stable-base: Linux 7.0.9
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-From: Tomas Henzl <thenzl@redhat.com>
+On Tue, 19 May 2026 15:06:15 -0400
+Michael Bommarito <michael.bommarito@gmail.com> wrote:
 
-[ Upstream commit d65efdf467ff935e35dfe6aa9a7ab93f17ac07ee ]
+> An adjacent Fibre Channel fabric actor that can deliver an FPIN ELS
+> frame to an lpfc or qla2xxx Linux initiator can trigger a non-return
+> in the generic FC transport. This is not a local userspace or IP
+> network path; the attacker must be able to inject fabric traffic, for
+> example as a compromised switch or fabric controller, or as a same-zone
+> N_Port on a fabric that permits source spoofing.
+> 
+> The Link-Integrity and Peer-Congestion FPIN walkers used a u8 loop
+> counter against the 32-bit on-wire pname_count field, and did not bound
+> pname_count by the descriptor body already validated by the TLV walker.
+> A pname_count of 256 therefore wraps the counter and keeps the loop
+> condition true indefinitely.
+> 
+> Factor the shared pname_list[] walk into one helper, widen the counter
+> to u32, and clamp pname_count against the entries that fit in the
+> descriptor body before iterating.
+> 
+> Fixes: 3dcfe0de5a97 ("scsi: fc: Parse FPIN packets and update statistics")
+> Cc: stable@vger.kernel.org
+> Assisted-by: Claude:claude-opus-4-7
+> Signed-off-by: Michael Bommarito <michael.bommarito@gmail.com>
+> ---
+> Changes in v3:
+> - State the fabric-adjacent threat model explicitly in the commit
+>   message and clarify that this is not local userspace or IP-network
+>   reachable.
+> - Use min_t(u32, ...) for the pname_count clamp, as Christoph suggested.
+> - Use FC_TLV_DESC_LENGTH_FROM_SZ() instead of open-coding the descriptor
+>   body length calculation.
+> - Factor the duplicate LI and peer-congestion pname walker into a common
+>   helper while preserving the LI-only host-stat update.
+> 
+> Changes in v2:
+> - Drop the redundant cover letter shipped with v1.  A single-patch send
+>   does not need one, and the v1 cover carried stale draft markers.
+> 
+>  drivers/scsi/scsi_transport_fc.c | 77 +++++++++++++++++---------------
+>  1 file changed, 41 insertions(+), 36 deletions(-)
+> 
+> diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
+> index dce95e361daf0..0684d8c69c3c6 100644
+> --- a/drivers/scsi/scsi_transport_fc.c
+> +++ b/drivers/scsi/scsi_transport_fc.c
+> @@ -737,6 +737,37 @@ fc_cn_stats_update(u16 event_type, struct fc_fpin_stats *stats)
+>  	}
+>  }
+>  
+> +static void
+> +fc_fpin_pname_stats_update(struct Scsi_Host *shost,
+> +			   struct fc_rport *attach_rport, u16 event_type,
+> +			   u32 desc_len, u32 fixed_len, u32 pname_count,
+> +			   __be64 *pname_list,
+> +			   void (*stats_update)(u16 event_type,
+> +						struct fc_fpin_stats *stats))
+> +{
+> +	u32 i, max_count;
+> +	struct fc_rport *rport;
+> +	u64 wwpn;
+> +
+> +	if (desc_len < fixed_len)
+> +		max_count = 0;
+> +	else
+> +		max_count = (desc_len - fixed_len) / sizeof(pname_list[0]);
+> +	pname_count = min_t(u32, pname_count, max_count);
 
-On systems with multiple controllers debug kernel shows
+No min_t() please, everything is unsigned so min() in fine.
+The above might even more readable without the extra variable:
+	if (desc_len < fixed_len)
+		pname_count = min(pname_count, (desc_len - fixed_len) / sizeof(pname_list[0]));
 
-  WARNING: possible recursive locking detected
+If you think the line is too long s/pname_count/count/g
 
-during shutdown.
+-- David
 
-Each controller does have its own ctrl_info (and mutex) and that isn't
-correctly recognized by debug kernel.  Suppress the warning by releasing
-the mutex at the end of pqi_shutdown().
-
-Signed-off-by: Tomas Henzl <thenzl@redhat.com>
-Acked-by: Don Brace <don.brace@microchip.com>
-Link: https://patch.msgid.link/20260414124118.23661-1-thenzl@redhat.com
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
-
-LLM Generated explanations, may be completely bogus:
-
-## Decision Summary
-Backport this to stable trees that contain the mutex-based
-`pqi_ctrl_block_device_reset()` shutdown path, verified in `v5.15`,
-`v6.1`, `v6.6`, `v6.12`, `v6.16`, and `v6.19`. Do not apply it as-is to
-`v5.10`, where that helper only sets `block_device_reset = true` and no
-`pqi_ctrl_unblock_device_reset()` helper exists.
-
-This is a one-line fix for an imbalanced `lun_reset_mutex` lock in
-`pqi_shutdown()`. The direct user-visible symptom is a lockdep “possible
-recursive locking detected” warning during shutdown/reboot on systems
-with multiple smartpqi controllers. The impact is mostly debug-kernel
-noise rather than data loss or a production crash, but the patch
-corrects real locking hygiene, is tiny, subsystem-reviewed, and has very
-low risk.
-
-## Phase Walkthrough
-Phase 1:
-- Record 1.1: subsystem `scsi: smartpqi`; action `Silence`; intent is to
-  stop a recursive lock warning during shutdown.
-- Record 1.2: tags present: `Signed-off-by: Tomas Henzl`, `Acked-by: Don
-  Brace`, `Link:
-  https://patch.msgid.link/20260414124118.23661-1-thenzl@redhat.com`,
-  `Signed-off-by: Martin K. Petersen`. No `Fixes:`, no `Reported-by:`,
-  no `Cc: stable`.
-- Record 1.3: message describes debug kernels warning on multi-
-  controller systems because distinct per-controller mutexes are not
-  recognized as distinct after shutdown leaves one held.
-- Record 1.4: hidden bug fix: yes. It is described as silencing a
-  warning, but the code adds a missing unlock for a mutex acquired
-  earlier in the same function.
-
-Phase 2:
-- Record 2.1: one file, `drivers/scsi/smartpqi/smartpqi_init.c`, one
-  insertion in `pqi_shutdown()`. Single-file surgical fix.
-- Record 2.2: before, `pqi_shutdown()` locked
-  `ctrl_info->lun_reset_mutex` via `pqi_ctrl_block_device_reset()` and
-  returned after `pqi_reset()` without unlocking. After, it unlocks via
-  `pqi_ctrl_unblock_device_reset()`.
-- Record 2.3: bug category is synchronization/lock balancing. The
-  changed helper is verified as
-  `mutex_unlock(&ctrl_info->lun_reset_mutex)`.
-- Record 2.4: fix quality is high: one existing helper call, no new API,
-  no refactor. Main risk is allowing a reset waiter to proceed late in
-  shutdown; Tomas explicitly discussed this risk on-list and said he
-  checked it.
-
-Phase 3:
-- Record 3.1: blame shows the shutdown call to
-  `pqi_ctrl_block_device_reset()` is old, but `9fa8202336096` changed
-  the helper to a mutex-based block/unblock model. That is the relevant
-  introduction point for the missing unlock.
-- Record 3.2: no `Fixes:` tag, so no tagged introducing commit to
-  follow.
-- Record 3.3: recent file history shows normal smartpqi churn, including
-  fixes and device-ID updates; no prerequisite for this one-line helper
-  call was identified for v5.15+ style code.
-- Record 3.4: Tomas Henzl has SCSI commits in history but no recent
-  smartpqi commits found; Don Brace is listed as smartpqi maintainer and
-  acked the patch.
-- Record 3.5: dependency is the existing
-  `pqi_ctrl_unblock_device_reset()` helper. It exists in v5.15+ verified
-  tags, not in v5.10.
-
-Phase 4:
-- Record 4.1: candidate commit hash was not available locally, so `b4
-  dig -c` could not be used for this candidate. `b4 mbox` and `b4 am`
-  using the Link fetched the original thread.
-- Record 4.2: original recipients were `linux-scsi` and Don Brace; Don
-  Brace acked it; Martin Petersen applied it.
-- Record 4.3: external thread and an earlier related LKML post show a
-  real lockdep splat with call trace through `__do_sys_reboot ->
-  device_shutdown -> pci_device_shutdown -> pqi_shutdown`.
-- Record 4.4: no newer v2/v3 was reported by `b4 mbox -c`; thread had
-  six messages. A separate 2025 lockdep-key proposal for the same
-  warning was found, but it is not present in this tree.
-- Record 4.5: web search found no relevant stable-list discussion.
-
-Phase 5:
-- Record 5.1: modified function: `pqi_shutdown()`.
-- Record 5.2: caller is PCI driver `.shutdown = pqi_shutdown`; this is
-  reached from PCI/device shutdown during reboot/poweroff paths.
-- Record 5.3: relevant callees are `pqi_wait_until_ofa_finished()`,
-  `pqi_scsi_block_requests()`, `pqi_ctrl_block_device_reset()`,
-  `pqi_ctrl_block_requests()`, `pqi_ctrl_wait_until_quiesced()`,
-  `pqi_flush_cache()`, `pqi_crash_if_pending_command()`, `pqi_reset()`,
-  and now `pqi_ctrl_unblock_device_reset()`.
-- Record 5.4: verified external call trace reaches `pqi_shutdown()` from
-  reboot. Trigger requires multiple smartpqi controllers and a
-  debug/lockdep kernel.
-- Record 5.5: similar lock/unlock pairing exists in OFA and
-  suspend/resume paths; shutdown was the unmatched case.
-
-Phase 6:
-- Record 6.1: verified `v5.15`, `v6.1`, `v6.6`, `v6.12`, `v6.16`, and
-  `v6.19` have mutex-based block/unblock helpers and shutdown lacks the
-  final unblock. Verified `v5.10` does not have the mutex helper.
-- Record 6.2: expected backport difficulty is clean or trivial for
-  v5.15+ style trees because the exact helper and shutdown context
-  exist. v5.10 is not applicable as-is.
-- Record 6.3: no related fix already present in the checked local tree;
-  `lun_reset_key` proposal is absent.
-
-Phase 7:
-- Record 7.1: subsystem is SCSI storage driver, `smartpqi`; criticality
-  is driver-specific but storage-related.
-- Record 7.2: subsystem is active; recent history shows ongoing fixes,
-  device IDs, and driver updates.
-
-Phase 8:
-- Record 8.1: affected users are systems with Microchip/Microsemi
-  SmartPQI controllers, especially multiple controllers with
-  debug/lockdep kernels.
-- Record 8.2: trigger is shutdown/reboot. The verified external trace
-  shows reboot path; unprivileged triggerability was not verified.
-- Record 8.3: failure mode is lockdep warning/lock imbalance, severity
-  medium-low in production terms but valid for debug-kernel correctness.
-- Record 8.4: benefit is moderate for affected systems and CI/debug
-  kernels; risk is very low because this is one line using an existing
-  helper after a matching lock.
-
-Phase 9:
-- Record 9.1: evidence for backporting: real lock imbalance,
-  reproducible lockdep warning, one-line fix, maintainer ack, existing
-  helper, verified affected stable baselines v5.15+. Evidence against:
-  symptom is mainly debug warning, not crash/data corruption; v5.10 not
-  applicable as-is.
-- Record 9.2: stable rules: obviously correct yes; fixes a real bug yes;
-  important issue borderline but acceptable due lockdep warning and tiny
-  risk; small/contained yes; no new features/APIs yes; applies to v5.15+
-  style trees likely clean/trivial.
-- Record 9.3: no exception category applies.
-- Record 9.4: risk-benefit favors backporting for applicable stable
-  trees.
-
-## Verification
-- Phase 1: Parsed supplied commit message and `b4 am` output; confirmed
-  tags and absence of `Fixes:`/stable/Reported-by.
-- Phase 2: Read `smartpqi_init.c`; confirmed
-  `pqi_ctrl_block_device_reset()` is `mutex_lock()` and
-  `pqi_ctrl_unblock_device_reset()` is `mutex_unlock()`.
-- Phase 3: Used `git blame`, `git show 0530736e40a069`, and `git show
-  9fa8202336096d`; confirmed helper semantics changed to mutex model in
-  the shutdown/suspend update.
-- Phase 4: `WebFetch` to `patch.msgid.link` was blocked by Anubis; `b4
-  mbox`/`b4 am` fetched the lore thread successfully. `b4 am` reported
-  the patch applies cleanly to current tree.
-- Phase 4: Read lore mirror; confirmed Bart’s “patch looks fine”
-  comment, Tomas’s risk discussion, Don Brace’s ack, and Martin
-  Petersen’s apply notice.
-- Phase 5: Used exact searches and file reads to trace `.shutdown =
-  pqi_shutdown`, SCSI reset handlers, and related lock users.
-- Phase 6: Used version tags to verify affected code in `v5.15+` and
-  non-applicability to `v5.10`.
-- Phase 7: Checked `MAINTAINERS`; confirmed Don Brace maintains
-  smartpqi.
-- Phase 8: External LKML mirror provided the concrete lockdep call trace
-  and trigger conditions.
-- Unverified: I did not build-test the patch and did not verify stable
-  branch-specific conflicts beyond version-tag code presence.
-
-**YES**
-
- drivers/scsi/smartpqi/smartpqi_init.c | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-index b4ed991976d06..2026ac645d6ab 100644
---- a/drivers/scsi/smartpqi/smartpqi_init.c
-+++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -9427,6 +9427,7 @@ static void pqi_shutdown(struct pci_dev *pci_dev)
- 
- 	pqi_crash_if_pending_command(ctrl_info);
- 	pqi_reset(ctrl_info);
-+	pqi_ctrl_unblock_device_reset(ctrl_info);
- }
- 
- static void pqi_process_lockup_action_param(void)
--- 
-2.53.0
+> +
+> +	for (i = 0; i < pname_count; i++) {
+> +		wwpn = be64_to_cpu(pname_list[i]);
+> +		rport = fc_find_rport_by_wwpn(shost, wwpn);
+> +		if (rport &&
+> +		    (rport->roles & FC_PORT_ROLE_FCP_TARGET ||
+> +		     rport->roles & FC_PORT_ROLE_NVME_TARGET)) {
+> +			if (rport == attach_rport)
+> +				continue;
+> +			stats_update(event_type, &rport->fpin_stats);
+> +		}
+> +	}
+> +}
+> +
+>  /*
+>   * fc_fpin_li_stats_update - routine to update Link Integrity
+>   * event statistics.
+> @@ -747,13 +778,11 @@ fc_cn_stats_update(u16 event_type, struct fc_fpin_stats *stats)
+>  static void
+>  fc_fpin_li_stats_update(struct Scsi_Host *shost, struct fc_tlv_desc *tlv)
+>  {
+> -	u8 i;
+>  	struct fc_rport *rport = NULL;
+>  	struct fc_rport *attach_rport = NULL;
+>  	struct fc_host_attrs *fc_host = shost_to_fc_host(shost);
+>  	struct fc_fn_li_desc *li_desc = (struct fc_fn_li_desc *)tlv;
+>  	u16 event_type = be16_to_cpu(li_desc->event_type);
+> -	u64 wwpn;
+>  
+>  	rport = fc_find_rport_by_wwpn(shost,
+>  				      be64_to_cpu(li_desc->attached_wwpn));
+> @@ -764,22 +793,11 @@ fc_fpin_li_stats_update(struct Scsi_Host *shost, struct fc_tlv_desc *tlv)
+>  		fc_li_stats_update(event_type, &attach_rport->fpin_stats);
+>  	}
+>  
+> -	if (be32_to_cpu(li_desc->pname_count) > 0) {
+> -		for (i = 0;
+> -		    i < be32_to_cpu(li_desc->pname_count);
+> -		    i++) {
+> -			wwpn = be64_to_cpu(li_desc->pname_list[i]);
+> -			rport = fc_find_rport_by_wwpn(shost, wwpn);
+> -			if (rport &&
+> -			    (rport->roles & FC_PORT_ROLE_FCP_TARGET ||
+> -			    rport->roles & FC_PORT_ROLE_NVME_TARGET)) {
+> -				if (rport == attach_rport)
+> -					continue;
+> -				fc_li_stats_update(event_type,
+> -						   &rport->fpin_stats);
+> -			}
+> -		}
+> -	}
+> +	fc_fpin_pname_stats_update(shost, attach_rport, event_type,
+> +				   be32_to_cpu(li_desc->desc_len),
+> +				   FC_TLV_DESC_LENGTH_FROM_SZ(*li_desc),
+> +				   be32_to_cpu(li_desc->pname_count),
+> +				   li_desc->pname_list, fc_li_stats_update);
+>  
+>  	if (fc_host->port_name == be64_to_cpu(li_desc->attached_wwpn))
+>  		fc_li_stats_update(event_type, &fc_host->fpin_stats);
+> @@ -827,13 +845,11 @@ static void
+>  fc_fpin_peer_congn_stats_update(struct Scsi_Host *shost,
+>  				struct fc_tlv_desc *tlv)
+>  {
+> -	u8 i;
+>  	struct fc_rport *rport = NULL;
+>  	struct fc_rport *attach_rport = NULL;
+>  	struct fc_fn_peer_congn_desc *pc_desc =
+>  	    (struct fc_fn_peer_congn_desc *)tlv;
+>  	u16 event_type = be16_to_cpu(pc_desc->event_type);
+> -	u64 wwpn;
+>  
+>  	rport = fc_find_rport_by_wwpn(shost,
+>  				      be64_to_cpu(pc_desc->attached_wwpn));
+> @@ -844,22 +860,11 @@ fc_fpin_peer_congn_stats_update(struct Scsi_Host *shost,
+>  		fc_cn_stats_update(event_type, &attach_rport->fpin_stats);
+>  	}
+>  
+> -	if (be32_to_cpu(pc_desc->pname_count) > 0) {
+> -		for (i = 0;
+> -		    i < be32_to_cpu(pc_desc->pname_count);
+> -		    i++) {
+> -			wwpn = be64_to_cpu(pc_desc->pname_list[i]);
+> -			rport = fc_find_rport_by_wwpn(shost, wwpn);
+> -			if (rport &&
+> -			    (rport->roles & FC_PORT_ROLE_FCP_TARGET ||
+> -			     rport->roles & FC_PORT_ROLE_NVME_TARGET)) {
+> -				if (rport == attach_rport)
+> -					continue;
+> -				fc_cn_stats_update(event_type,
+> -						   &rport->fpin_stats);
+> -			}
+> -		}
+> -	}
+> +	fc_fpin_pname_stats_update(shost, attach_rport, event_type,
+> +				   be32_to_cpu(pc_desc->desc_len),
+> +				   FC_TLV_DESC_LENGTH_FROM_SZ(*pc_desc),
+> +				   be32_to_cpu(pc_desc->pname_count),
+> +				   pc_desc->pname_list, fc_cn_stats_update);
+>  }
+>  
+>  /*
 
