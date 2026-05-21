@@ -1,175 +1,212 @@
-Received: from mail-ed1-f54.google.com (mail-ed1-f54.google.com [209.85.208.54])
+Received: from mail-wm1-f43.google.com (mail-wm1-f43.google.com [209.85.128.43])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D45C3043B2
-	for <linux-scsi@vger.kernel.org>; Thu, 21 May 2026 15:11:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.54
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D38F03839B4
+	for <linux-scsi@vger.kernel.org>; Thu, 21 May 2026 16:46:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.43
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779376317; cv=none; b=L2oVGWpITvAvxzjgmtebJeY3/1oEDz1BsbTNa86nHoAgw1fWO7/nUwUuG7lUgsR2CC4k/PS58FHdSEtKKJGl07N52KU1x6/zBcFmkUtHFcZAn3lfsF44b65bIr6lqLxziy3vn5VQ1pNcVdli8vN5rzf0lZ5evXSozPiF5bKb4W0=
+	t=1779382000; cv=none; b=I2KF8e6llwM4ps8svjtXw5jKtmiqTQ4pZSLXFRfrhtBCaxuGGn93wl0QcH1YBpNCbYh99AhVEEyAPsMdDQpoF8hiD08SmPh+xi8UtAtk3aeac0yXVipopIQRy1UD/VIqVYYmdViaPh+Z41X0qzPOXx/HpAEV1zDP/yk0mV+gOcE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779376317; c=relaxed/simple;
-	bh=RU6oU5V9Jd55+3BhZdYaEx6qEvtKNNlahl3xWR6s8Nk=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=iiJNYZL2KMbIIF3AUQFoZVx8JSAHZIIhDV06C3EEn6peLiAemykBySJrIU4nqXxB3acdCZjBzkB6Jl+VjSK6wlwfYnSEZmIFZaVmrfoNudBpu/qQFO56iNUU+8anzbhvByvUEplGHbNIrlUz5Z7k8CtW1TVRAPuKQfhrW2QoU5E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=sPQKIZbk; arc=none smtp.client-ip=209.85.208.54
+	s=arc-20240116; t=1779382000; c=relaxed/simple;
+	bh=55HpdrZ1XWqM3uwC+a47+vakAvshOA/Toys7NpGVJzc=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=LP3Yop5iXcI+xc/vYXgK/hCBa7PAWdOQLPE2JAcibmkws/H+TWIJHQjV7MhOITPljVAGMGtNG3e1mPrwiCs4+kcOJrPVoKRAkFAp14xxhnwWId8Qx4zwLayvLSvZMQNtpc++0t0muNgfCFnvuRZgCCOHCKqBUA8jAu+5X0OYOhY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=hAiFXflX; arc=none smtp.client-ip=209.85.128.43
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="sPQKIZbk"
-Received: by mail-ed1-f54.google.com with SMTP id 4fb4d7f45d1cf-67c2b4809baso13473330a12.3
-        for <linux-scsi@vger.kernel.org>; Thu, 21 May 2026 08:11:53 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="hAiFXflX"
+Received: by mail-wm1-f43.google.com with SMTP id 5b1f17b1804b1-48e8132c6d0so41746905e9.1
+        for <linux-scsi@vger.kernel.org>; Thu, 21 May 2026 09:46:36 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1779376312; x=1779981112; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=7tUwlivnxdHdof7RvuWQ2n+t4BjAy5qaJWU1MgyZM/w=;
-        b=sPQKIZbko+1GhnUwrlZA854tY9cal++hxEWrT3N9sG4EeAiXUDWQw/P3tdTO4b+5Kz
-         dD3mm9ALgzWtRFVERTRuB/jggsCFUlVZzz/rFjU2E3j2eGnkIHblc/Fr1cxBq1RlHxwl
-         a9Igg2pxZ/cwgTlsrpCP/Rtg8r1vhJFF1zcHbHHwBrjf9Oi2/jCv8tIvNIJUWuTyXjNd
-         3AkRZJtwsfgPu1pAPFcgsgRnxU4xX5rGQUEeZCKX86290f7jlLK/SdvAzMZkpLe1p0nk
-         8vcmq5yhpaM5th6qj6ED+XWB67M20z0BFbUgJfe9G8wVdBWTdsdF2nd/wT9NZUQ820vI
-         LbxA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1779376312; x=1779981112;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=gmail.com; s=20251104; t=1779381995; x=1779986795; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:subject:cc:to:from:date:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=7tUwlivnxdHdof7RvuWQ2n+t4BjAy5qaJWU1MgyZM/w=;
-        b=WmsG7+q5pkWgtv12aTAzhEqHNVdHm3Fj6KnRWrzyfmQayFkMij0EqztZPYdjmwgTuc
-         mSL3xpk2uAB6zqIPYe7k7AUKJvBREFkf4Z8dBXkH2ra3BM7XIAtdHguk6dkdbzUSHZkn
-         LN0hrbNyvmnv9ItEPFbDALobF1aqtMXvnT20HKhpiZTOKG2EdnPHejvm6DzELMYc40eJ
-         xrW0vctV3EwcLM8FrL7yP++cE/l6MjdtDJSjNC/Q//r0EHUGhrS65YfiouAZ+iDAu3Ti
-         eToAJW5wXDTktH8oFK9C4YJQYY0+3SczpPWO/e9F2j99fWHQt/Azh2LJG/jnjiXHkyc7
-         PRNQ==
-X-Forwarded-Encrypted: i=1; AFNElJ8d3+t5VKxuagksTdiZNhY7K2EnXg9KNTnyeSxVdDLbC+I6pYKOuyRfmq9znYZcEoKhwu/2G92HDT1C@vger.kernel.org
-X-Gm-Message-State: AOJu0Yz/yFGpYv0y4STSDqqVZAS/7SZGihdzoUVX2gLcVUJLZmfXul0M
-	Q9BuJiD/XjM8Iga/IXauj4FlYb0pWFZfDziXwq1Miq63SAEVhRvHmlGl
-X-Gm-Gg: Acq92OEKHrpv6Vcr+Ns7EeeJgWyJ4/ZtKQcov8mYHo7Ukiw4ccpxr5AZlnnX/WM8iDz
-	LNhuKPM9JJp7OgMuoBV2gs0hwPFVsPwD1EVRh6C/PBDrFelpYQSuRZTQCLTu12rulqgziYL1jmc
-	fMthXbmYScMJ+qa6s15m1ErzUFvqrSw0HrPwejTTSqw+u0Lcau1X1frrflnA7SHOMnbhIt78JUG
-	Pwke7fgkNMsaX3bBsQfmm7933vb4KfKzUKHUX8k3EongV2Cqt3IVj2sFI8L99iPBfvyplsoOTjk
-	msVwLI44kg/rBdJmkLINU9xAD+ZPEqRDday4lR9RKmnSBqwTF8jBUx/R7cDLHIR8qoWPpzqyI44
-	E7Ychivi1lE/RA2EpqTIdStR5zpL8vBpbXbiNzITOuf4bUZwAamzfQlMnv6aP+gZiwoGRFKiKO4
-	yRqnyrNi5Uhf9XgKcT5YSnWN06CMeJXPxMuFQKKjs/fhxOJ9Js6eEb/4lRyp3suigHcaWH7DGmX
-	jQfHkXGNNkZ9Lz5Dvh3ToMnEp+Ag6xXHnV7Ht1y2JJ7U7cO6iMCcgxP3bzNWbKuKLzh5ZP8UTG0
-	7sNMeQH9EO2k3qhGWaTy1nl1KtKv
-X-Received: by 2002:a17:907:784:b0:bcb:98cf:1a82 with SMTP id a640c23a62f3a-bdc12f8637fmr174232466b.14.1779376312188;
-        Thu, 21 May 2026 08:11:52 -0700 (PDT)
-Received: from ahossu.localdomain (ip-217-105-56-94.ip.prioritytelecom.net. [217.105.56.94])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-bdc8aef5459sm59846966b.59.2026.05.21.08.11.51
+        bh=NA/nM16UoxaTsk3A7SWQL7q3HkgK647mNtY2rDcRyyc=;
+        b=hAiFXflXTEbRl6U5Air/vBGryJ1P7DUwv5y5hFcBfrvyOOjvwLAPWk6boHEMfrP+03
+         djrSF/MmhRRc4oKAARffcHojm9lrMfH/yxDwEmaCsT4BFCL3flmfjoZXGq6TFSC3TeHl
+         JsiTufiR6et1mz+pI8XV2U+9x+ymMfxMCAW0bX+y+95+67AVxLZvt8B0iLXkU9d/aiqe
+         9TLZTYgekPiyf54s88p+J1C3j1Lc4MyofWrYIv5jQC1MQsWTxKDTJulTH9sW3bkKM6Er
+         8ENfEnS8Rye+RBlr7U5dk7H7qISkWK2Sz6IRcVfJFcdljcS2gaAHhL/dDTECxI2slWnI
+         yang==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1779381995; x=1779986795;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=NA/nM16UoxaTsk3A7SWQL7q3HkgK647mNtY2rDcRyyc=;
+        b=X6dbXIzR/UcQt7Df4Qc3CnIoEoRmPhtqwu5reWS80ZXUh4AsTPVT+/+QUEEZwIkks5
+         FERpVsMXZlSvdI+nC0CsTpjkpwqJFXgbn6+cclnI1MQ1m6F7x3z6xhE5djzFKkQ2Cbya
+         DAZEgy99YzL8XLoaFc0G9clND7dKHXkRu/ILB0PhR0ljkSkFFp0smcmQEqmOVppuuX6X
+         UJTq72qF2tOGNDvT5vu30Kqkl+ds7xtQSxItb6XJWILas/TT9pSa6Y+2y4xcS0P1uR6t
+         mpZ5XuzqZUMpgBXrvRiA9r7ewHt9Ru8vAeK4QRBB6Dy4B2x6O0cbDRWzSpLhicY6PlYu
+         WPEQ==
+X-Forwarded-Encrypted: i=1; AFNElJ/0NQ8XMRNMbyld60mFx6sKdCdo0oA3wt20BjCzcRbIoWvkFAF4/ilMRBTybP3vhBR1YfRQ07xzchTP@vger.kernel.org
+X-Gm-Message-State: AOJu0YzJVvGXSLMORvylKxDO9EeWAdYURdpC+ZBhjMhpBHT2kgAdqV1c
+	uWTTRAhdyE+7y5VCx/eowodvAICjR6pttFpUWSbjMGjH+Iq9gYL2evUf
+X-Gm-Gg: Acq92OGEIi0pb3laRKXwPrye7jzxSnfC1wCEqjLLEhjYl35JolQoBoqs8X1OlEcJ4IW
+	ozN707bi8wwohp3DW5QJXvn+jCjco+bBxgX3nPxK4e0RfkUQ/ohTz/qc7qjOcpodZACD4OvoAxw
+	cRX0N9GkkwtcLFdHiLPqD0tG6HV3E1TnPft+v3+9MvwInXEEB6x/AF0mHL8TDIEh0iSJ+QVLeh0
+	RHW06/OD8cAb/RPDpveQaNSE/HqI/wFTJ1benCL1e5ppZDPU0uGa//rzmy1idyGgy2TriellVDw
+	OEOArCss8ga5BTVVeNAWHmqBE6TZHqXyBwtyH4/hBlAHbRXjUtUmaNwsRUdHqvtaTEbfL+AZiQn
+	qQP+D7tMPzrqFM2cfo8dU6ezzaCk/PnuEgnqLoqNLeTy2CSyTgeYFiMHEGRNPKi1KfcaLkqWvcj
+	R76deJoDTCD5FGUiIns0JnlDadgn2D/M0vSgq1s9sjaUAFaHWQG++SPTzu5iyyD8kq
+X-Received: by 2002:a05:600c:45c6:b0:488:ac01:72de with SMTP id 5b1f17b1804b1-49036033502mr53623425e9.5.1779381994891;
+        Thu, 21 May 2026 09:46:34 -0700 (PDT)
+Received: from pumpkin (82-69-66-36.dsl.in-addr.zen.co.uk. [82.69.66.36])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-49035ecac15sm31613075e9.6.2026.05.21.09.46.33
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 21 May 2026 08:11:51 -0700 (PDT)
-From: Alexandru Hossu <hossu.alexandru@gmail.com>
-To: martin.petersen@oracle.com
-Cc: bvanassche@acm.org,
-	mlombard@arkamax.eu,
-	ddiss@suse.de,
-	target-devel@vger.kernel.org,
-	linux-scsi@vger.kernel.org,
-	stable@vger.kernel.org,
-	hossu.alexandru@gmail.com
-Subject: [PATCH v4] scsi: target: iscsi: validate CHAP_R length before base64 decode
-Date: Thu, 21 May 2026 17:11:21 +0200
-Message-ID: <20260521151121.808477-1-hossu.alexandru@gmail.com>
-X-Mailer: git-send-email 2.54.0
+        Thu, 21 May 2026 09:46:34 -0700 (PDT)
+Date: Thu, 21 May 2026 17:46:31 +0100
+From: David Laight <david.laight.linux@gmail.com>
+To: Kees Cook <kees@kernel.org>
+Cc: Luis Chamberlain <mcgrof@kernel.org>, Pengpeng Hou
+ <pengpeng@iscas.ac.cn>, stable@vger.kernel.org, Petr Pavlu
+ <petr.pavlu@suse.com>, Richard Weinberger <richard@nod.at>, Anton Ivanov
+ <anton.ivanov@cambridgegreys.com>, Johannes Berg
+ <johannes@sipsolutions.net>, "Rafael J. Wysocki" <rafael@kernel.org>, Len
+ Brown <lenb@kernel.org>, Corey Minyard <corey@minyard.net>, Gabriel Somlo
+ <somlo@cmu.edu>, "Michael S. Tsirkin" <mst@redhat.com>, Jani Nikula
+ <jani.nikula@linux.intel.com>, Joonas Lahtinen
+ <joonas.lahtinen@linux.intel.com>, Rodrigo Vivi <rodrigo.vivi@intel.com>,
+ Tvrtko Ursulin <tursulin@ursulin.net>, David Airlie <airlied@gmail.com>,
+ Simona Vetter <simona@ffwll.ch>, Bart Van Assche <bvanassche@acm.org>,
+ Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>, Laurent
+ Pinchart <laurent.pinchart@ideasonboard.com>, Hans de Goede
+ <hansg@kernel.org>, Mauro Carvalho Chehab <mchehab@kernel.org>, Bjorn
+ Helgaas <bhelgaas@google.com>, Hannes Reinecke <hare@suse.de>, "James E.J.
+ Bottomley" <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen"
+ <martin.petersen@oracle.com>, Daniel Lezcano <daniel.lezcano@kernel.org>,
+ Zhang Rui <rui.zhang@intel.com>, Lukasz Luba <lukasz.luba@arm.com>, Greg
+ Kroah-Hartman <gregkh@linuxfoundation.org>, Jiri Slaby
+ <jirislaby@kernel.org>, Alan Stern <stern@rowland.harvard.edu>, Jason Wang
+ <jasowang@redhat.com>, Xuan Zhuo <xuanzhuo@linux.alibaba.com>, Eugenio
+ =?UTF-8?B?UMOpcmV6?= <eperezma@redhat.com>, Jason Baron
+ <jbaron@akamai.com>, Jim Cromie <jim.cromie@gmail.com>, Tiwei Bie
+ <tiwei.btw@antgroup.com>, Benjamin Berg <benjamin.berg@intel.com>, Ilpo
+ =?UTF-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>, "David E. Box"
+ <david.e.box@linux.intel.com>, "Maciej W. Rozycki" <macro@orcam.me.uk>,
+ Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>, Peter Zijlstra
+ <peterz@infradead.org>, Heiko Carstens <hca@linux.ibm.com>, Vasily Gorbik
+ <gor@linux.ibm.com>, Sean Christopherson <seanjc@google.com>, Paolo Bonzini
+ <pbonzini@redhat.com>, Thomas Gleixner <tglx@kernel.org>, Ingo Molnar
+ <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>, Dave Hansen
+ <dave.hansen@linux.intel.com>, x86@kernel.org, "H. Peter Anvin"
+ <hpa@zytor.com>, Vinod Koul <vkoul@kernel.org>, Frank Li
+ <Frank.Li@kernel.org>, Daniel Gomez <da.gomez@kernel.org>, Sami Tolvanen
+ <samitolvanen@google.com>, Aaron Tomlin <atomlin@atomlin.com>, Alexander
+ Potapenko <glider@google.com>, Marco Elver <elver@google.com>, Dmitry
+ Vyukov <dvyukov@google.com>, Andrew Morton <akpm@linux-foundation.org>,
+ John Johansen <john.johansen@canonical.com>, Paul Moore
+ <paul@paul-moore.com>, James Morris <jmorris@namei.org>, "Serge E. Hallyn"
+ <serge@hallyn.com>, Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+ Georgia Garcia <georgia.garcia@canonical.com>, kvm@vger.kernel.org,
+ dmaengine@vger.kernel.org, linux-modules@vger.kernel.org,
+ kasan-dev@googlegroups.com, linux-mm@kvack.org, apparmor@lists.ubuntu.com,
+ linux-security-module@vger.kernel.org, linux-um@lists.infradead.org,
+ linux-acpi@vger.kernel.org, openipmi-developer@lists.sourceforge.net,
+ qemu-devel@nongnu.org, intel-gfx@lists.freedesktop.org,
+ dri-devel@lists.freedesktop.org, linux-rdma@vger.kernel.org,
+ linux-media@vger.kernel.org, linux-pci@vger.kernel.org,
+ linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org,
+ linuxppc-dev@lists.ozlabs.org, linux-serial@vger.kernel.org,
+ linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net,
+ virtualization@lists.linux.dev, linux-kernel@vger.kernel.org,
+ linux-arch@vger.kernel.org, netdev@vger.kernel.org,
+ linux-fsdevel@vger.kernel.org, linux-hardening@vger.kernel.org
+Subject: Re: [PATCH 01/11] params: bound array element output to the
+ caller's page buffer
+Message-ID: <20260521174631.71a06440@pumpkin>
+In-Reply-To: <20260521133326.2465264-1-kees@kernel.org>
+References: <20260521133315.work.845-kees@kernel.org>
+	<20260521133326.2465264-1-kees@kernel.org>
+X-Mailer: Claws Mail 4.1.1 (GTK 3.24.38; arm-unknown-linux-gnueabihf)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-chap_server_compute_hash() allocates client_digest as
-kzalloc(chap->digest_size) and then, for BASE64-encoded responses,
-passes chap_r directly to chap_base64_decode() without checking whether
-the input length could produce more than digest_size bytes of output.
+On Thu, 21 May 2026 06:33:14 -0700
+Kees Cook <kees@kernel.org> wrote:
 
-chap_base64_decode() writes to the destination unconditionally as long
-as there is input to consume. With MAX_RESPONSE_LENGTH set to 128 and
-the "0b" prefix stripped by extract_param(), up to 127 base64 characters
-can reach the decoder. 127 characters decode to 95 bytes. For SHA-256
-(digest_size=32) this overflows client_digest by 63 bytes; for MD5
-(digest_size=16) the overflow is 79 bytes.
+> From: Pengpeng Hou <pengpeng@iscas.ac.cn>
+> 
+> param_array_get() appends each element's string representation into the
+> shared sysfs page buffer by passing buffer + off to the element getter.
+> 
+> That works for getters that only write a small bounded string, but
+> param_get_charp() and similar helpers format against PAGE_SIZE from the
+> pointer they receive. Once off is non-zero, an element getter can
+> therefore write past the end of the original sysfs page buffer.
+> 
+> Collect each element into a temporary PAGE_SIZE buffer first and then
+> copy only the remaining space into the caller's page buffer.
 
-The length check at line 344 fires after the write has already happened.
+Should this be using a 4k buffer on all architectures?
+Initially perhaps just using a different name for the constant until
+all the associated PAGE_SIZE limits have been removed.
 
-The HEX branch in the same switch statement already validates the length
-up front. Apply the same approach to the BASE64 branch: strip trailing
-base64 padding characters, then reject any input whose data length
-exceeds DIV_ROUND_UP(digest_size * 4, 3) before calling the decoder.
+-- David
 
-Stripping trailing '=' before the comparison handles both padded and
-unpadded encodings. chap_base64_decode() already returns early on '=',
-so the full original string is still passed to the decoder unchanged.
-
-The mutual CHAP path decodes CHAP_C into initiatorchg_binhex, which is
-kzalloc(CHAP_CHALLENGE_STR_LEN). extract_param() caps initiatorchg at
-CHAP_CHALLENGE_STR_LEN characters, so at most CHAP_CHALLENGE_STR_LEN-1
-base64 characters reach the decoder. The maximum decoded size,
-DIV_ROUND_UP((CHAP_CHALLENGE_STR_LEN-1) * 3, 4), is less than
-CHAP_CHALLENGE_STR_LEN, so no overflow is possible there. A comment is
-added at the call site to document this.
-
-Fixes: 1e5733883421 ("scsi: target: iscsi: Support base64 in CHAP")
-Cc: stable@vger.kernel.org
-Signed-off-by: Alexandru Hossu <hossu.alexandru@gmail.com>
----
-v4: add comment in mutual CHAP BASE64 path explaining why no overflow
-    check is needed there (David Disseldorp)
-v3: strip trailing '=' before length check to handle padded encodings
-    (Maurizio Lombardi)
-v2: use DIV_ROUND_UP(digest_size * 4, 3) as suggested by David Disseldorp
-
-v3: https://lore.kernel.org/r/20260520165259.272808-1-hossu.alexandru@gmail.com
-v2: https://lore.kernel.org/r/20260519015100.837422-1-hossu.alexandru@gmail.com
-v1: https://lore.kernel.org/r/20260518121811.385350-1-hossu.alexandru@gmail.com
-
- drivers/target/iscsi/iscsi_target_auth.c | 19 ++++++++++++++++-
- 1 file changed, 18 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/target/iscsi/iscsi_target_auth.c b/drivers/target/iscsi/iscsi_target_auth.c
-index c46c69a28e97..a3ad2d244dbe 100644
---- a/drivers/target/iscsi/iscsi_target_auth.c
-+++ b/drivers/target/iscsi/iscsi_target_auth.c
-@@ -340,13 +340,22 @@ static int chap_server_compute_hash(
- 			goto out;
- 		}
- 		break;
--	case BASE64:
-+	case BASE64: {
-+		size_t r_len = strlen(chap_r);
-+
-+		while (r_len > 0 && chap_r[r_len - 1] == '=')
-+			r_len--;
-+		if (r_len > DIV_ROUND_UP(chap->digest_size * 4, 3)) {
-+			pr_err("Malformed CHAP_R: base64 payload too long\n");
-+			goto out;
-+		}
- 		if (chap_base64_decode(client_digest, chap_r, strlen(chap_r)) !=
- 		    chap->digest_size) {
- 			pr_err("Malformed CHAP_R: invalid BASE64\n");
- 			goto out;
- 		}
- 		break;
-+	}
- 	default:
- 		pr_err("Could not find CHAP_R\n");
- 		goto out;
-@@ -473,6 +482,14 @@ static int chap_server_compute_hash(
- 		}
- 		break;
- 	case BASE64:
-+		/*
-+		 * No overflow check needed: initiatorchg_binhex is
-+		 * CHAP_CHALLENGE_STR_LEN bytes and extract_param() caps
-+		 * initiatorchg at CHAP_CHALLENGE_STR_LEN characters, so
-+		 * the decoded output is at most DIV_ROUND_UP(
-+		 * (CHAP_CHALLENGE_STR_LEN - 1) * 3, 4) bytes, which is
-+		 * less than CHAP_CHALLENGE_STR_LEN.
-+		 */
- 		initiatorchg_len = chap_base64_decode(initiatorchg_binhex,
- 						      initiatorchg,
- 						      strlen(initiatorchg));
---
-2.54.0
+> 
+> Cc: stable@vger.kernel.org
+> Reviewed-by: Petr Pavlu <petr.pavlu@suse.com>
+> Signed-off-by: Pengpeng Hou <pengpeng@iscas.ac.cn>
+> Signed-off-by: Kees Cook <kees@kernel.org>
+> ---
+>  kernel/params.c | 26 ++++++++++++++++++++------
+>  1 file changed, 20 insertions(+), 6 deletions(-)
+> 
+> diff --git a/kernel/params.c b/kernel/params.c
+> index 74d620bc2521..752721922a15 100644
+> --- a/kernel/params.c
+> +++ b/kernel/params.c
+> @@ -475,22 +475,36 @@ static int param_array_set(const char *val, const struct kernel_param *kp)
+>  static int param_array_get(char *buffer, const struct kernel_param *kp)
+>  {
+>  	int i, off, ret;
+> +	char *elem_buf;
+>  	const struct kparam_array *arr = kp->arr;
+>  	struct kernel_param p = *kp;
+>  
+> +	elem_buf = kmalloc(PAGE_SIZE, GFP_KERNEL);
+> +	if (!elem_buf)
+> +		return -ENOMEM;
+> +
+>  	for (i = off = 0; i < (arr->num ? *arr->num : arr->max); i++) {
+> -		/* Replace \n with comma */
+> -		if (i)
+> -			buffer[off - 1] = ',';
+>  		p.arg = arr->elem + arr->elemsize * i;
+>  		check_kparam_locked(p.mod);
+> -		ret = arr->ops->get(buffer + off, &p);
+> +		ret = arr->ops->get(elem_buf, &p);
+>  		if (ret < 0)
+> -			return ret;
+> +			goto out;
+> +		ret = min(ret, (int)(PAGE_SIZE - 1 - off));
+> +		if (!ret)
+> +			break;
+> +		/* Replace the previous element's trailing newline with a comma. */
+> +		if (i)
+> +			buffer[off - 1] = ',';
+> +		memcpy(buffer + off, elem_buf, ret);
+>  		off += ret;
+> +		if (off == PAGE_SIZE - 1)
+> +			break;
+>  	}
+>  	buffer[off] = '\0';
+> -	return off;
+> +	ret = off;
+> +out:
+> +	kfree(elem_buf);
+> +	return ret;
+>  }
+>  
+>  static void param_array_free(void *arg)
 
