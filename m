@@ -1,65 +1,65 @@
-Received: from mail-pg1-f201.google.com (mail-pg1-f201.google.com [209.85.215.201])
+Received: from mail-pg1-f202.google.com (mail-pg1-f202.google.com [209.85.215.202])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 58B9784039
-	for <linux-scsi@vger.kernel.org>; Thu, 21 May 2026 13:45:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0ED8F3D3D0B
+	for <linux-scsi@vger.kernel.org>; Thu, 21 May 2026 13:59:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.202
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779371108; cv=none; b=ciJKP4bbbH2IBpPX5CJ/4p5NiL25U9Ul5cKOU/VQmaOV/orbeeGKmbca4wleh02IFkBYf548YtzJk2ATtCHddErsvG7QA7tlfyo47QVsjcw+2u12QdIwlLgsHxumiMofHnOu7JNTUB8AY5oXaXCC9HmbwWkSbari3Qogu6s/dDY=
+	t=1779371978; cv=none; b=HyNoxc6Bn+fhOtA9/awy0qtuwUR0fN4/7x40O9rZtZLm2b6WEv1/Qx7Eoqv4f/GP833Qf0Yh3ZkTFgGYrX3XzBJwdHs+Jql+ogZmaTatlULzob5zkc/YiQy0HL27JLc1/W/8mGXMj70gVjQvT7QY3dYE3YcggetdA0VFRnNCDzc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779371108; c=relaxed/simple;
-	bh=JmKBkku/kD8/n/a4gtEJvwwFH5TVoQOZ+eRQ7DUmO1k=;
+	s=arc-20240116; t=1779371978; c=relaxed/simple;
+	bh=h+4NVJo3wpAjspHwkhwsyzZn+zEl2CEEOehXzRGNdBY=;
 	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
-	 To:Cc:Content-Type; b=kjkxgyVJUAjdrE0A1GNfqZm3qJak4kUH5/m2EN/mlmKEvBO49Xrf/DBWLOd5krT/uY1XMZ1x12OrL6rkFE9kZcH4hPneSk9/U8ytxqSp3+gE8wNXVRmCQTwW4YFTLrSl1U+O6TZIUSPcTEVazGKd+O8efhBKg145UZ1y0QIBql0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--seanjc.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=apmH1Wyg; arc=none smtp.client-ip=209.85.215.201
+	 To:Cc:Content-Type; b=EoxfIGRzz36W2jApkK06MMxYSNbnEQzDLGpPHFCS438yPnrljADBHpIcBMDT0Nnvh++rKIWmMtkSX2JoIW1Tu0jEyC0z5YHyfaMGRtxXF8Tlju6lYbXFHBe/c1QM8vgRO8AlaZHuc4fOu2QfubS6Tmw0NNa29hAe+HlJlv+mk5k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--seanjc.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=jodHEZLM; arc=none smtp.client-ip=209.85.215.202
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--seanjc.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="apmH1Wyg"
-Received: by mail-pg1-f201.google.com with SMTP id 41be03b00d2f7-c829586e894so3199295a12.2
-        for <linux-scsi@vger.kernel.org>; Thu, 21 May 2026 06:45:06 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="jodHEZLM"
+Received: by mail-pg1-f202.google.com with SMTP id 41be03b00d2f7-c829366cf25so9100261a12.0
+        for <linux-scsi@vger.kernel.org>; Thu, 21 May 2026 06:59:35 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1779371106; x=1779975906; darn=vger.kernel.org;
+        d=google.com; s=20251104; t=1779371975; x=1779976775; darn=vger.kernel.org;
         h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
          :date:from:to:cc:subject:date:message-id:reply-to;
-        bh=Dnh9Qdh/Ek2SFmUD3YQQhAJ1lm8lFb5yTi3rkZyIV7s=;
-        b=apmH1WyggEos+GYDtmCU6UwvksL1feePBYzSOJ5L95TUjl2IgzIkjsOrlBLhWHn0iK
-         0z2UmkKdCTPjIUcJve/SIkIWmc7pd+VdH0jdGlEuQDhSfgRzBXMZl5NMdSsh1g9HmTxu
-         nFvuyqPWF9Ya78KJOvIt2VrnPlMzsG2nOuDKsE21diyTstnyCAiW+s5tm7w9z/oIw5DU
-         VCZclbGcsvk/fXeq5y9QTq6c+JWo5LZk3+btZNdmusOZU9KeC1tu04gbqiYdj54MBYG+
-         ONoLJtIbthd7xCi1A05VbpcJvT4SAp3a2C4Vrib6lmo3pyVIldCWzX9paUqSZahU68s+
-         Mnbw==
+        bh=tqeEG6FXEKElqAGUt/Z2qfbIbuB++N7b4Fh1Zt6D5dk=;
+        b=jodHEZLMnrXvcr0U+8aiQ3+8HMthO764B3RtgzEf+7ztkCNfkmkIlQBTfUmc0CO1Gm
+         znKHCX5+9bAECaG80vh/IPP806tKIqZE2l7HZLe1YU0HCE1c+TVzdByotFkWkoU+YEws
+         qLgdufxQuD2gsyG2s9NK2v18HBYBS1w+SMsS+Qi6jr0LEmhA4R7O7tZpYus8VaPMyFeG
+         15VYXBj+eYi7/OswJ5AioWab2qhZVYFRjyf4SpApvc+UkSyiNxbsaWg55EmuzRTPh+T9
+         X183BhHSUrQrVCzdTIOykwkJ84D445JXsSdEAvmO37Cr/WfIjw3mclOhGc8OX4c80G1x
+         Di8Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1779371106; x=1779975906;
+        d=1e100.net; s=20251104; t=1779371975; x=1779976775;
         h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
          :date:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=Dnh9Qdh/Ek2SFmUD3YQQhAJ1lm8lFb5yTi3rkZyIV7s=;
-        b=ozBXAt5pBboithn1GOL3x1Rsh2W/Gc6YuLRK5rLMd+BLsLSeeI+OsKSn4QzXygwgPR
-         BQKrGzTJKWCWpr7FJMQZ7TGhyfguH9a0i+Soo7gwrdSklNInUP8w3B4GOqWVHAIDE9de
-         t6sBjjuHjv3DqOLMwyPtzMzUDac+YmTZpo/vh+GkB0ZLfRdHKJVpZnYxpxqVXMvWSnW0
-         WZZ0kSzWkaeQJRTuvSAiwWywpt8gHDFpuWhjkStfucFODHhyk0wsejlTp/RkTK5OkrT9
-         tbdpUndjYy81wQ+KXE9HrpxvLB6jmu+VP4LzglsMWLjfBA0e/SZg6ujsle6DTJZLA712
-         hlOA==
-X-Forwarded-Encrypted: i=1; AFNElJ8w4K+xLeyn4gMuPhgjgqaJNXW9VKwjy5dP3oHXzslnEg9jXYgtIdOpAuGV4au8L+Mtzbq504TXTokz@vger.kernel.org
-X-Gm-Message-State: AOJu0YxA3YsjafRNc6BVqBkfR/rXZa7xcm0IMxlbHc1ePBQIJxqL8gUb
-	hgruXDclkIDDCG1c77drknbIClG/TzN8IjejLFBlYSVDeuzezoIIuTZLWjmBVeQX9g9of0Tm+cC
-	I5UXWxg==
-X-Received: from pgvm13.prod.google.com ([2002:a65:62cd:0:b0:c85:1159:ffbd])
- (user=seanjc job=prod-delivery.src-stubby-dispatcher) by 2002:a05:6a20:7491:b0:3a0:bc61:62e5
- with SMTP id adf61e73a8af0-3b30883a17bmr3700528637.44.1779371104725; Thu, 21
- May 2026 06:45:04 -0700 (PDT)
-Date: Thu, 21 May 2026 06:45:04 -0700
-In-Reply-To: <20260521133326.2465264-9-kees@kernel.org>
+        bh=tqeEG6FXEKElqAGUt/Z2qfbIbuB++N7b4Fh1Zt6D5dk=;
+        b=V4tcpaOc0C2pi/0a4+QFdaj5ho8OUHgny8XDhoEPXahgf+kM9yPq32Az4WkoG5ZLBH
+         Jmbs0LoDPRC3BVxD2nnFONEJNTpw52xfRvM6GuBws0gwRtgSYQBX5DhkniRHtMkwrypx
+         7xtKJmzgiqvZ2Hv44l+zTDTwNOyDilC1UR9NXfRqpWMOP41jIL75mENBeVHssBkTSNmh
+         VQFBbk4VTKunZQXr6COC2ofo2Mk7fkNb05IEKAtwiwxwGzFOuB/nJM7WTq0XDzpYcnPk
+         QB8+GZFSLVFZaGPuaNJSKTrwO3/xgdiyF1y2h7MAIG4kQyOfF7w83VyRQLWep1rgIwES
+         yRGA==
+X-Forwarded-Encrypted: i=1; AFNElJ/Fwv8SpDVWushfsMixOdF9sFipG8ryPIEvu50LFIWGYm+BWftAlmy5beEA1NS+OHjY2I6RacrQW5cv@vger.kernel.org
+X-Gm-Message-State: AOJu0Yz0Luld0fIjBEpHxSfY89e0EzlyAa6I2TSpSiNk7fk//WcL2ax+
+	iF5wn5NH8I7Ac3ZUkgvJSlWi2V4ZSeTlKCzPZF9z86+CHXRwJP7yuvY5caVlbXK1P5Pe3LzCEaY
+	3Q+F0xQ==
+X-Received: from pge1.prod.google.com ([2002:a05:6a02:2d01:b0:c79:83b3:cdf8])
+ (user=seanjc job=prod-delivery.src-stubby-dispatcher) by 2002:a05:6a20:431a:b0:39c:a78e:dba9
+ with SMTP id adf61e73a8af0-3b308ac1b14mr3725831637.40.1779371973881; Thu, 21
+ May 2026 06:59:33 -0700 (PDT)
+Date: Thu, 21 May 2026 06:59:33 -0700
+In-Reply-To: <20260521133326.2465264-4-kees@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
-References: <20260521133315.work.845-kees@kernel.org> <20260521133326.2465264-9-kees@kernel.org>
-Message-ID: <ag8MYC6pOZvvYHMp@google.com>
-Subject: Re: [PATCH 09/11] treewide: Convert custom kernel_param_ops .get
- callbacks to seq_buf via cocci
+References: <20260521133315.work.845-kees@kernel.org> <20260521133326.2465264-4-kees@kernel.org>
+Message-ID: <ag8PxTTi5NxT51EW@google.com>
+Subject: Re: [PATCH 04/11] treewide: Convert struct kernel_param_ops
+ initializers to DEFINE_KERNEL_PARAM_OPS
 From: Sean Christopherson <seanjc@google.com>
 To: Kees Cook <kees@kernel.org>
 Cc: Luis Chamberlain <mcgrof@kernel.org>, Pengpeng Hou <pengpeng@iscas.ac.cn>, 
@@ -113,50 +113,20 @@ Cc: Luis Chamberlain <mcgrof@kernel.org>, Pengpeng Hou <pengpeng@iscas.ac.cn>,
 Content-Type: text/plain; charset="us-ascii"
 
 On Thu, May 21, 2026, Kees Cook wrote:
-> diff --git a/arch/x86/kvm/vmx/vmx.c b/arch/x86/kvm/vmx/vmx.c
-> index 07f4c7209ac0..00317774a90b 100644
-> --- a/arch/x86/kvm/vmx/vmx.c
-> +++ b/arch/x86/kvm/vmx/vmx.c
-> @@ -368,12 +368,16 @@ static int vmentry_l1d_flush_set(const char *s, const struct kernel_param *kp)
->  	return ret;
->  }
->  
-> -static int vmentry_l1d_flush_get(char *s, const struct kernel_param *kp)
-> +static int vmentry_l1d_flush_get(struct seq_buf *s,
-> +				 const struct kernel_param *kp)
->  {
-> -	if (WARN_ON_ONCE(l1tf_vmx_mitigation >= ARRAY_SIZE(vmentry_l1d_param)))
-> -		return sysfs_emit(s, "???\n");
-> +	if (WARN_ON_ONCE(l1tf_vmx_mitigation >= ARRAY_SIZE(vmentry_l1d_param))) {
-> +		seq_buf_printf(s, "???\n");
-> +		return 0;
-> +	}
->  
-> -	return sysfs_emit(s, "%s\n", vmentry_l1d_param[l1tf_vmx_mitigation].option);
-> +	seq_buf_printf(s, "%s\n", vmentry_l1d_param[l1tf_vmx_mitigation].option);
-> +	return 0;
+> Using Coccinelle, rewrite every struct kernel_param_ops initializer that
+> sets .get into a DEFINE_KERNEL_PARAM_OPS-family macro invocation,
+> for example:
+> 
+> @@
+> declarer name DEFINE_KERNEL_PARAM_OPS;
+> identifier OPS;
+> expression SET, GET;
+> @@
+> - const struct kernel_param_ops OPS = {
+> -       .set = SET,
+> -       .get = GET,
+> - };
+> + DEFINE_KERNEL_PARAM_OPS(OPS, SET, GET);
 
-For this one, can you manually change it to this?
-
-	if (WARN_ON_ONCE(l1tf_vmx_mitigation >= ARRAY_SIZE(vmentry_l1d_param)))
-		seq_buf_printf(s, "???\n");
-	else
-		seq_buf_printf(s, "%s\n", vmentry_l1d_param[l1tf_vmx_mitigation].option);
-	return 0;
-
->  }
->  
->  /*
-> @@ -459,9 +463,11 @@ static int vmentry_l1d_flush_set(const char *s, const struct kernel_param *kp)
->  	pr_warn_once("Kernel compiled without mitigations, ignoring vmentry_l1d_flush\n");
->  	return 0;
->  }
-> -static int vmentry_l1d_flush_get(char *s, const struct kernel_param *kp)
-> +static int vmentry_l1d_flush_get(struct seq_buf *s,
-> +				 const struct kernel_param *kp)
->  {
-> -	return sysfs_emit(s, "never\n");
-> +	seq_buf_printf(s, "never\n");
-> +	return 0;
->  }
->  #endif
+IMO, "OPS, GET, SET" is more intuitive, especially since that's the order used
+by DEFINE_SIMPLE_ATTRIBUTE and DEFINE_DEBUGFS_ATTRIBUTE.
