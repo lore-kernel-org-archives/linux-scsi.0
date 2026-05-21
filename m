@@ -1,75 +1,77 @@
-Received: from rcdn-iport-8.cisco.com (rcdn-iport-8.cisco.com [173.37.86.79])
+Received: from rcdn-iport-1.cisco.com (rcdn-iport-1.cisco.com [173.37.86.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BCFF0381AEB;
-	Thu, 21 May 2026 18:12:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=173.37.86.79
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F02C6381AEB;
+	Thu, 21 May 2026 18:13:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=173.37.86.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779387177; cv=none; b=LyzFmUaKJefZX7q1GUAcxzezSZshpLYoHLFAGsEZ6fcx8mtbD9MtwHTKjr51S4KMcVvPDO8slPHpTo3ZCxP7Gx38qeglcHPiAuvXRqkwn+zDkVEcYSu8kttGNdWvb0cRtcq9TLnMDzaVMb/94bx7rqL8Nku5G3io3iVLud4R10A=
+	t=1779387205; cv=none; b=ow4iDUkFBxDBdMeZKvrw3V5Cg7k4KVSyA+nLPmT9i2waMFUPbW/zbEGyl9GEPOABhgcm2OawyZNjIirzKRNmMP85ha2GATkLGgg/MGtL6Tg+k+fmjpvzVwlRMcKVF7NpRWM/8D7y4uZR032DpHXnGXiR1LC3oFhkNDSFRJYcfzg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779387177; c=relaxed/simple;
-	bh=o9nMgombxxitkuQSWSwz5Z5hwS3ra7i1T1DDqsE69/M=;
+	s=arc-20240116; t=1779387205; c=relaxed/simple;
+	bh=WHaVe4lxP3vzySB73pwv+/q2GF2UEAHCOQH6XlTNEPs=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=ObXS8pyI1aVhvhRztsZeXweA88hW00342VTnrcOrgZTx+fv6CDfGQKq2Fa98LyVyokjlF5eQnYR/Z2G2r8xn84TH0MxBMYV0N9GBUDhkV/RytF+Ip9WsU6qsIxInJT+mvjR1PzGES3MG/1L853KOLFF8f+Z3xhtfPV2CWyaALUk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=cisco.com; spf=pass smtp.mailfrom=cisco.com; dkim=pass (2048-bit key) header.d=cisco.com header.i=@cisco.com header.b=PdVpZt0T; arc=none smtp.client-ip=173.37.86.79
+	 MIME-Version; b=LXrVsdVMwLXteeuZs1m2pEvlr5DpWqCdjxCL2Vm0+Uz41oYuOlB+/LgJlUl+geplvASHaArf1GLiKsY5mrzfuWY47kjregqoaqRNKka5ijnAIHOZQqUp+NTX10l/K90VAjgymxODwI6znG51MY/zHx34cCMWWUNwOvfQuBZiTG0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=cisco.com; spf=pass smtp.mailfrom=cisco.com; dkim=pass (2048-bit key) header.d=cisco.com header.i=@cisco.com header.b=HVvpXbxT; arc=none smtp.client-ip=173.37.86.72
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=cisco.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cisco.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=cisco.com header.i=@cisco.com header.b="PdVpZt0T"
+	dkim=pass (2048-bit key) header.d=cisco.com header.i=@cisco.com header.b="HVvpXbxT"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=cisco.com; i=@cisco.com; l=22590; q=dns/txt;
-  s=iport01; t=1779387174; x=1780596774;
+  d=cisco.com; i=@cisco.com; l=982; q=dns/txt;
+  s=iport01; t=1779387204; x=1780596804;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=zXwytYG2rm7AfwXHfh6krACRxkNqns79mO675sfEt0A=;
-  b=PdVpZt0TjEcutWTu+xWXlzusp2x33MUXXQgcFPWnUfSv7kTsOA44h1Yb
-   apxDx3wWfDvw6Asc/LjTt68qTVcmfcK5EcIFQyf4rxPUpeCbmE1LOpyVi
-   Z8JSA2fueX+d9YUH3dUBq/7XmbdaXcOfIdblB2hPq9SUOH5tn8IfT1L+U
-   SNVu9rGAg7j00oarP3BL5Y8QF2pPyRBC3UO7KHWVS40/+VTAvkuk3xxKD
-   UUfHNHFNATL88CZfBCQ+486aUQXtis/QlaV1p8rzaPZr+77giVgihs4mR
-   E4D/9OcwI3D1Y/xEnU1EqbMGOTDkR5YG709O05OmKjrXj/KZl5y1RPeCp
-   g==;
-X-CSE-ConnectionGUID: KM7Y6kg3TaqqmGL6tVeAcg==
-X-CSE-MsgGUID: e0ndJcWKSS2Dh6ld+PsJow==
-X-IPAS-Result: =?us-ascii?q?A0D5AgBKSQ9q/5L/Ja1aglmCV4FQQxkwlCqCIZ4egX8PA?=
- =?us-ascii?q?QEBD1EEAQGFBgKNMgImNgcOAQIEAwIDAQEBAQEBAQEBAQELAQEFAQEBAgEHB?=
- =?us-ascii?q?YEOE4ZchlsCAQMaDQsBRhBRVhAJgwKCdAO0GoF5M4EB3kGBZAELFAGBOI1cd?=
- =?us-ascii?q?IR7JxUGgUlEgRWDaIFSiTUEgiKBDIU2gWSIAkiBHgNZLAFVEw0KCwcFgWYDN?=
- =?us-ascii?q?RIqFW4yHYEjPheBCxsHBYFLgTdyaoEEhFd4IywDToEtgWsDCxgNSBEsNxQbB?=
- =?us-ascii?q?D5uB4p5HA+BOXEHMVMLEzk8gQcwH5MELAGSPoE1n1mEJqFYGjOEBKZmiEaQP?=
- =?us-ascii?q?4JYpmiBbgE1gVkzGggbFTuCZ1MZD44tFsseJzI9AgcCBw4DC5MFYAEB?=
-IronPort-Data: A9a23:Q/YE8am86GfT4JV9a18NV3vo5gwKJ0RdPkR7XQ2eYbSJt1+Wr1Gzt
- xJJCmGCbv/ZMGDyf94jYIyy9kMBvpWBmoRnQABl+Cw8FVtH+JHPbTi7wugcHM8zwunrFh8PA
- xA2M4GYRCwMZiaC4E/raf658SUUOZigHtLUEPTDNj16WThqQSIgjQMLs+Mii+aEu/Dha++2k
- Y20+ZG31GONgWYubDpJsfvb9HuDgdyr0N8mlg1mDRx0lAe2e0k9VPo3Oay3Jn3kdYhYdsbSb
- /rD1ryw4lTC9B4rDN6/+p6jGqHdauePVeQmoiM+t5mK2nCulARrukoIHKZ0hXNsttm8t4sZJ
- OOhGnCHYVxB0qXkwIzxWvTDes10FfUuFLTveRBTvSEPpqHLWyOE/hlgMK05Fa49pdcpAm4Vy
- fUBMTUiSk6fue+fy73uH4GAhux7RCXqFJkUtnclyXTSCuwrBMiSBa7L/tRfmjw3g6iiH96HO
- JFfMmUpNkmdJUQTZD/7C7pm9Ausrnr2aSFZrFuWjaE2+GPUigd21dABNfKJJYHaHp8NxRjwS
- mTu8jz/DjMRC/+k8mCp8iyoiqz3hgH8R9dHfFG/3rsw6LGJ/UQTAQcbfVi2u/+0jgi5Qd03A
- 0Ad/GwlpLIq+Uq3Q8PVWxy+qWSD+BkGVLJ4EeA44imJy6zJ80CYDG1CRTlEAPQjvdUqRDpsz
- lKVksnyCDpHt6ecQnaQsLyTqFuaMCQcLmgaYjIsVwYJ49D/5oo0i3rnTNNuFqO6jtzdAzz8w
- zmW6iM5gt07l8MV2r+g1UrKjzKlut7CSQtdzgHbQ2Su5wVRf5O+asqj7l2zxfJBKpuJC1qMp
- n4Jn+CA4+0US5KAjiqARKMKBr7Bz/KENiDMxEVkBJgJ6Tug4TigcJpW7TU4I11mWvvoYhfza
- 0PV/AcU75hJMT7yPOl8Ypm6DIIhyq2I+cnZa804p+FmOvBZHDJrNgkyDaJM9wgBSHQRrJw=
-IronPort-HdrOrdr: A9a23:wUkLd6q6V3GKG+BU52EMAlIaV5rheYIsimQD101hICG9vPb1qy
+  bh=Ih4/4CQtXsRllMF+cu0QXC1vYWo60kbbCDWls6M2bSg=;
+  b=HVvpXbxTE+h5cyR40Cdrh1lwbN3lA/SNhEX40r88wghQgIWNtlh6Bf1X
+   pW03iXqwdrYwOO7VIE7Iyyq3uxdzVTpIxmVNkLa7JDROZjZpd+06Ch6vQ
+   8ZnvzKkUdfTV0QozL+CJ8Ulf72M0mdpDsTWp6Y29u4GqXTL7yS0FFKEdA
+   dLFwAnSKJmLtgYQNNN4vbOctBBHdZtZVurvucS169dyzwQb0ny8upeAT+
+   NNvOrOeqI9fv+2pkZg2QNhzs7W0bxoQZdWhfU10kRorEuKyBhCDVGzZvv
+   FZjPUiFvHho9IBMQxu2fhGkdIoUYHqsfCaxsKO11YjuCZSBUUC9i8swfm
+   Q==;
+X-CSE-ConnectionGUID: s4I28M3/Q7uLtMuDDxd0iw==
+X-CSE-MsgGUID: +zDEyyfVRyq0tBSy/FrDhw==
+X-IPAS-Result: =?us-ascii?q?A0BBAgDGSQ9q/5L/Ja1aHgEBCxIMggULgleBUEMZMJQqo?=
+ =?us-ascii?q?D+Bfw8BAQEPUQQBAYUGAo0yAiY0CQ4BAgQDAgMBAQEBAQEBAQEBAQsBAQUBA?=
+ =?us-ascii?q?QECAQcFgQ4ThlyGWwIBAzIBRhBRVhmDAoJ0A7QbgiyBAd5BgWQBCxQBgTiNX?=
+ =?us-ascii?q?HSEeycVBoFJRIR9gVKCOIEGhXcEgxwSjxxIgR4DWSwBVRMNCgsHBYFmAzUSK?=
+ =?us-ascii?q?hVuMh2BIz4XgQsbBwWBS4IpaoEEhFd4IywDToEtgWsDCxgNSBEsNxQbBD5uB?=
+ =?us-ascii?q?4p5HA+CMYEOgTGBD6YOoQ6EJqFYGjOqapkFqUCBaDyBWTMaCBsVgyJTGQ/ZY?=
+ =?us-ascii?q?ScyPQIHAgcOAwuRaIF9AQE?=
+IronPort-Data: A9a23:uoaXLKvJjEyH8Caa4+jYeoHzvefnVN1fMUV32f8akzHdYApBsoF/q
+ tZmKW6BOvrbZ2unf9onPdmz9RlQ7Z7VmtYxHQRs+Hg8Q3gQgMeUXt7xwmUckM+xwmwvaGo9s
+ q3yv/GZdJhcokf0/0nrav666yEgiclkf5KkYMbcICd9WAR4fykojBNnioYRj5Vh6TSDK1vlV
+ eja/YuFZDdJ5xYuajhKs//Z8Usz1BjPkGpwUmIWNKgjUGD2zxH5PLpHTYmtIn3xRJVjH+LSb
+ 47r0LGj82rFyAwmA9Wjn6yTWhVirmn6ZFXmZtJ+AsBOszAazsAA+v9T2Mk0NS+7vw60c+VZk
+ 72hg3AfpTABZcUgkMxFO/VR/roX0aduoNcrKlDn2SCfItGvn3bEm51T4E8K0YIw4bpWWzFrr
+ rshdy0pcjWeq86mzOq6Vbw57igjBJGD0II3oHpsy3TdSP0hW52GG/SM7t5D1zB2jcdLdRrcT
+ 5NGMnw0M1KaPkAJYwtJYH49tL/Aan3XcDRCtFORrKkf6GnIxws327/oWDbQUoDaGZwKxBfE/
+ goq+Uy6ED03Jc2R9wCU6yqwrNTe2g3hdIINQejQGvlCxQf7KnYoIB0fT1aTovSjjEO6HdVFJ
+ CQ89iMo66M77lSmSMXwRTW8oXiNpBlaXMBfe8U45QOH4q7V5RuJQGkOS3hKb9lOnMo/XyAr0
+ BmRks/kHyditpWSU3uW8rrSpjS3UQAcIWYBYjcDUCMf7tXjqZ11hRXKJv5hFaOzg9L1GBnqz
+ jyKpTR4jLIW5eYR2ru250vvmT+gppHVCAUy423/Wm646AhwYqa+epelr1Pc6J5oKIefU0nEv
+ 3UencWaxP4BAIvLlyGXRugJWraz6J6tNDzanE4qBJI69hyz9HO5O4Nd+jdzIAFuKMlsRNPyS
+ FXYtQUU4NpYO2GnKPcmJYmwEM8ti6PnELwJS8zpUzaHWbApHCfvwc2kTRf4M7zF+KT0rZwCB
+ A==
+IronPort-HdrOrdr: A9a23:vapHQ6ol6UTZ0wzobxM+gcsaV5rheYIsimQD101hICG9vPb1qy
  nIpoV+6faaslgssR0b8+xofZPwIk80lqQFhLX5X43CYOCOggLBR72Kr7GSoQEIcBeQygcy78
  pdWpk7IMHsDFR8kMbx6BS1HpId2tWdmZrY4ts2t00McShaL4d98gx+FgGXVmdyRAVAGN4FMa
  D03Lsgm9JlEk5nFvhSwRI+LpH+m+E=
-X-Talos-CUID: 9a23:BUn/qm1RuKnjj6Hs674MzrxfOeV6QyPewyzsKlahDElNFqGrRHab9/Yx
-X-Talos-MUID: 9a23:JTOhmgbBm1HB7+BTumfqiBNpC+RT2P6CCB4JndY+oOuDKnkl
+X-Talos-CUID: =?us-ascii?q?9a23=3Ai7VogmiePn+ki0FWDxqseMfokzJuaSH8lif1eAi?=
+ =?us-ascii?q?BVntNVJiIZXOA9PtljJ87?=
+X-Talos-MUID: 9a23:UrIPnQb2AJOwBOBT9C3AqSBzOvlS8r32FGo2gNIooeWEKnkl
 X-IronPort-Anti-Spam-Filtered: true
 X-IronPort-AV: E=Sophos;i="6.24,160,1774310400"; 
-   d="scan'208";a="475832036"
+   d="scan'208";a="484172940"
 Received: from rcdn-l-core-09.cisco.com ([173.37.255.146])
-  by rcdn-iport-8.cisco.com with ESMTP/TLS/TLS_AES_256_GCM_SHA384; 21 May 2026 18:11:46 +0000
+  by rcdn-iport-1.cisco.com with ESMTP/TLS/TLS_AES_256_GCM_SHA384; 21 May 2026 18:13:23 +0000
 Received: from fedora.lan?044cisco.com (unknown [10.188.18.181])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: kartilak@cisco.com)
-	by rcdn-l-core-09.cisco.com (Postfix) with ESMTPSA id 5B90818000236;
-	Thu, 21 May 2026 18:11:44 +0000 (GMT)
+	by rcdn-l-core-09.cisco.com (Postfix) with ESMTPSA id 9726C18000496;
+	Thu, 21 May 2026 18:13:21 +0000 (GMT)
 From: Karan Tilak Kumar <kartilak@cisco.com>
 To: sebaddel@cisco.com
 Cc: arulponn@cisco.com,
@@ -89,9 +91,9 @@ Cc: arulponn@cisco.com,
 	lduncan@suse.com,
 	Karan Tilak Kumar <kartilak@cisco.com>,
 	Hannes Reinecke <hare@kernel.org>
-Subject: [PATCH 11/13] scsi: fnic: Track NVMe transport statistics
-Date: Thu, 21 May 2026 11:04:56 -0700
-Message-ID: <20260521180458.5448-12-kartilak@cisco.com>
+Subject: [PATCH 13/13] scsi: fnic: Bump up version number
+Date: Thu, 21 May 2026 11:04:58 -0700
+Message-ID: <20260521180458.5448-14-kartilak@cisco.com>
 X-Mailer: git-send-email 2.47.1
 In-Reply-To: <20260521180458.5448-1-kartilak@cisco.com>
 References: <20260521180458.5448-1-kartilak@cisco.com>
@@ -107,11 +109,7 @@ X-Outbound-Client-TLS: ANONYMOUS;unknown [10.188.18.181];TLSv1.3;TLS_AES_256_GCM
 X-Outbound-SMTP-Client: 10.188.18.181, [10.188.18.181]
 X-Outbound-Node: rcdn-l-core-09.cisco.com
 
-Add counters for NVMe requests, responses, LS handling, aborts, and
-wait-queue activity.
-
-Update NVMe I/O, completion, LS response, LS abort, and abort paths to
-maintain the new counters.
+Bump up version number to 1.9.0.0.
 
 Reviewed-by: Sesidhar Baddela <sebaddel@cisco.com>
 Reviewed-by: Arulprabhu Ponnusamy <arulponn@cisco.com>
@@ -119,600 +117,26 @@ Reviewed-by: Gian Carlo Boffa <gcboffa@cisco.com>
 Reviewed-by: Arun Easi <aeasi@cisco.com>
 Reviewed-by: Hannes Reinecke <hare@kernel.org>
 Reviewed-by: Lee Duncan <lduncan@suse.com>
+Tested-by: Karan Tilak Kumar <kartilak@cisco.com>
 Signed-off-by: Karan Tilak Kumar <kartilak@cisco.com>
 Co-developed-by: Hannes Reinecke <hare@kernel.org>
 ---
- drivers/scsi/fnic/fnic_nvme.c  | 186 ++++++++++++++++++++++++++++++++-
- drivers/scsi/fnic/fnic_stats.h |  21 ++++
- 2 files changed, 205 insertions(+), 2 deletions(-)
+ drivers/scsi/fnic/fnic.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/fnic/fnic_nvme.c b/drivers/scsi/fnic/fnic_nvme.c
-index dc202f0ae4d8..cf6a0ec963ea 100644
---- a/drivers/scsi/fnic/fnic_nvme.c
-+++ b/drivers/scsi/fnic/fnic_nvme.c
-@@ -59,6 +59,61 @@ static void nvfnic_update_io_bytes(struct fnic *fnic,
- 		fnic->fcp_output_bytes += io_req->fcp_req->transferred_length;
- }
+diff --git a/drivers/scsi/fnic/fnic.h b/drivers/scsi/fnic/fnic.h
+index 951549aff521..7a46b3ce0cb3 100644
+--- a/drivers/scsi/fnic/fnic.h
++++ b/drivers/scsi/fnic/fnic.h
+@@ -31,7 +31,7 @@
  
-+static void nvfnic_update_io_stats(struct fnic *fnic, u8 opcode)
-+{
-+	struct fnic_stats *fnic_stats = &fnic->fnic_stats;
-+
-+	switch (opcode) {
-+	case nvme_cmd_read:
-+		atomic64_inc(&fnic_stats->nvme_stats.nvme_input_requests);
-+		break;
-+	case nvme_cmd_write:
-+		atomic64_inc(&fnic_stats->nvme_stats.nvme_output_requests);
-+		break;
-+	default:
-+		atomic64_inc(&fnic_stats->nvme_stats.nvme_control_requests);
-+		break;
-+	}
-+}
-+
-+static void nvfnic_update_cmpl_stats(struct fnic *fnic,
-+				     struct fnic_io_req *io_req)
-+{
-+	struct io_path_stats *io_stats = &fnic->fnic_stats.io_stats;
-+	atomic64_t *duration_stat;
-+	unsigned long io_duration_time;
-+
-+	atomic64_dec(&io_stats->active_ios);
-+	if (atomic64_read(&fnic->io_cmpl_skip))
-+		atomic64_dec(&fnic->io_cmpl_skip);
-+	else
-+		atomic64_inc(&io_stats->io_completions);
-+
-+	io_duration_time = jiffies_to_msecs(jiffies - io_req->start_time);
-+
-+	if (io_duration_time <= 10)
-+		duration_stat = &io_stats->io_btw_0_to_10_msec;
-+	else if (io_duration_time <= 100)
-+		duration_stat = &io_stats->io_btw_10_to_100_msec;
-+	else if (io_duration_time <= 500)
-+		duration_stat = &io_stats->io_btw_100_to_500_msec;
-+	else if (io_duration_time <= 5000)
-+		duration_stat = &io_stats->io_btw_500_to_5000_msec;
-+	else if (io_duration_time <= 10000)
-+		duration_stat = &io_stats->io_btw_5000_to_10000_msec;
-+	else if (io_duration_time <= 30000)
-+		duration_stat = &io_stats->io_btw_10000_to_30000_msec;
-+	else {
-+		duration_stat = &io_stats->io_greater_than_30000_msec;
-+		if (io_duration_time >
-+		    atomic64_read(&io_stats->current_max_io_time))
-+			atomic64_set(&io_stats->current_max_io_time,
-+				     io_duration_time);
-+	}
-+
-+	atomic64_inc(duration_stat);
-+}
-+
- int
- nvfnic_alloc_fcpio_tag(struct fnic_iport_s *iport, struct fnic_io_req *io_req)
- {
-@@ -129,6 +184,7 @@ inline int nvfnic_queue_wq_nvme_copy_desc(struct fnic *fnic,
- 	struct scatterlist *sg;
- 	struct fnic_tport_s *tport = io_req->tport;
- 	struct host_sg_desc *desc;
-+	struct misc_stats *misc_stats = &fnic->fnic_stats.misc_stats;
- 	unsigned int i;
- 	unsigned long intr_flags;
- 	int flags;
-@@ -165,6 +221,7 @@ inline int nvfnic_queue_wq_nvme_copy_desc(struct fnic *fnic,
- 		spin_unlock_irqrestore(&fnic->wq_copy_lock[idx], intr_flags);
- 		FNIC_NVME_DBG(KERN_ERR, fnic,
- 			    "Enqueue failure: No descriptors\n");
-+		atomic64_inc(&misc_stats->io_cpwq_alloc_failures);
- 		return -EBUSY;
- 	}
+ #define DRV_NAME		"fnic"
+ #define DRV_DESCRIPTION		"Cisco FCoE HBA Driver"
+-#define DRV_VERSION		"1.8.0.3"
++#define DRV_VERSION		"1.9.0.0"
+ #define PFX			DRV_NAME ": "
+ #define DFX                     DRV_NAME "%d: "
  
-@@ -186,6 +243,11 @@ inline int nvfnic_queue_wq_nvme_copy_desc(struct fnic *fnic,
- 					tport->max_payload_size, tport->r_a_tov,
- 					tport->e_d_tov);
- 
-+	atomic64_inc(&fnic->fnic_stats.fw_stats.active_fw_reqs);
-+	if (atomic64_read(&fnic->fnic_stats.fw_stats.active_fw_reqs) >
-+	    atomic64_read(&fnic->fnic_stats.fw_stats.max_fw_reqs))
-+		atomic64_set(&fnic->fnic_stats.fw_stats.max_fw_reqs,
-+		     atomic64_read(&fnic->fnic_stats.fw_stats.active_fw_reqs));
- 
- 	spin_unlock_irqrestore(&fnic->wq_copy_lock[idx], intr_flags);
- 	return 0;
-@@ -195,20 +257,24 @@ bool
- nvfnic_transport_ready(struct fnic_iport_s *iport, struct fnic_tport_s *tport)
- {
- 	struct fnic *fnic = iport->fnic;
-+	struct fnic_stats *fnic_stats = &fnic->fnic_stats;
- 
- 	if (tport == NULL)
- 		return false;
- 
- 	if (fdls_get_state(&iport->fabric) == FDLS_STATE_LINKDOWN ||
- 	    iport->state != FNIC_IPORT_STATE_READY) {
-+		atomic64_inc(&fnic_stats->misc_stats.iport_not_ready);
- 		return false;
- 	}
- 
- 	if (unlikely(fnic_chk_state_flags_locked(fnic, FNIC_FLAGS_IO_BLOCKED)))
- 		return false;
- 
--	if (fdls_tport_is_offline(tport))
-+	if (fdls_tport_is_offline(tport)) {
-+		atomic64_inc(&fnic_stats->misc_stats.tport_not_ready);
- 		return false;
-+	}
- 
- 	return true;
- }
-@@ -218,6 +284,7 @@ int nvfnic_queuecommand(struct fnic_io_req *io_req)
- 	struct fnic_iport_s *iport = io_req->iport;
- 	struct fnic *fnic = iport->fnic;
- 	struct fnic_tport_s *tport = io_req->tport;
-+	struct fnic_stats *fnic_stats = &fnic->fnic_stats;
- 	struct vnic_wq_copy *wq = io_req->wq;
- 	int ret = 0;
- 	int sg_count = 0;
-@@ -251,6 +318,7 @@ int nvfnic_queuecommand(struct fnic_io_req *io_req)
- 		    mempool_alloc(fnic->io_sgl_pool[io_req->sgl_type],
- 				  GFP_ATOMIC);
- 		if (!io_req->sgl_list) {
-+			atomic64_inc(&fnic_stats->io_stats.alloc_failures);
- 			FNIC_NVME_DBG(KERN_INFO, fnic,
- 				      "Unable to alloc SGLs\n");
- 			ret = -ENOMEM;
-@@ -274,6 +342,7 @@ int nvfnic_queuecommand(struct fnic_io_req *io_req)
- 
- 	/* create copy wq desc and enqueue it */
- 	idx = wq - &fnic->hw_copy_wq[0];
-+	atomic64_inc(&fnic_stats->io_stats.ios[idx]);
- 	ret = nvfnic_queue_wq_nvme_copy_desc(fnic, io_req->wq, io_req, sg_count);
- 	if (ret) {
- 		FNIC_NVME_DBG(KERN_ERR, fnic, "Unable to queue frame\n");
-@@ -287,6 +356,13 @@ int nvfnic_queuecommand(struct fnic_io_req *io_req)
- 			   (((u64)io_req->cmd_flags << 32) | io_req->cmd_state));
- 		return ret;
- 	}
-+
-+	atomic64_inc(&fnic_stats->io_stats.active_ios);
-+	atomic64_inc(&fnic_stats->io_stats.num_ios);
-+	if (atomic64_read(&fnic_stats->io_stats.active_ios) >
-+	    atomic64_read(&fnic_stats->io_stats.max_active_ios))
-+		atomic64_set(&fnic_stats->io_stats.max_active_ios,
-+		     atomic64_read(&fnic_stats->io_stats.active_ios));
- 	io_req->cmd_flags |= FNIC_IO_ISSUED;
-  out:
- 	lba = (char *)&cmdiu->sqe.rw.slba;
-@@ -313,11 +389,14 @@ int nvfnic_fcpio_send(struct nvme_fc_local_port *lport,
- 	struct fnic *fnic = iport->fnic;
- 	unsigned long flags = 0;
- 	struct fnic_tport_s *tport;
-+	struct fnic_stats *fnic_stats = &fnic->fnic_stats;
- 
- 	spin_lock_irqsave(&fnic->fnic_lock, flags);
- 
- 	tport = (struct fnic_tport_s *)rport->private;
-+	atomic64_inc(&fnic_stats->io_stats.nvme_io_reqs_rcvd);
- 	if (!nvfnic_transport_ready(iport, tport)) {
-+		atomic64_inc(&fnic_stats->io_stats.nvme_io_rsps_sent);
- 		spin_unlock_irqrestore(&fnic->fnic_lock, flags);
- 		FNIC_NVME_DBG(KERN_INFO, fnic,
- 			      "iport: 0x%x tport: 0x%x not ready\n",
-@@ -339,7 +418,9 @@ int nvfnic_fcpio_send(struct nvme_fc_local_port *lport,
- 	if (io_req->tag == FNIC_NVME_NO_FREE_TAG) {
- 		FNIC_NVME_DBG(KERN_ERR, fnic,
- 			    "No free tag available. Failing IO\n");
-+		atomic64_inc(&fnic_stats->io_stats.alloc_failures);
- 		atomic_dec(&fnic->in_flight);
-+		atomic64_inc(&fnic_stats->io_stats.nvme_io_rsps_sent);
- 		spin_unlock_irqrestore(&fnic->fnic_lock, flags);
- 		return -EBUSY;
- 	}
-@@ -365,6 +446,7 @@ void nvfnic_fcpio_nvme_fast_cmpl_handler(struct fnic *fnic,
- 	struct fcpio_tag ftag;
- 	u32 id;
- 	struct fnic_io_req *io_req;
-+	struct fnic_stats *fnic_stats = &fnic->fnic_stats;
- 	unsigned long start_time;
- 	u64 cmd_trace;
- 	char *lba;
-@@ -390,6 +472,7 @@ void nvfnic_fcpio_nvme_fast_cmpl_handler(struct fnic *fnic,
- 
- 	WARN_ON_ONCE(!io_req);
- 	if (!io_req) {
-+		atomic64_inc(&fnic_stats->io_stats.ioreq_null);
- 		FNIC_NVME_DBG(KERN_ERR, fnic,
- 			      "IO req null hdr: %s tag: 0x%x desc: 0x%p\n",
- 			      fnic_fcpio_status_to_str(hdr_status), id, desc);
-@@ -459,6 +542,7 @@ void nvfnic_fcpio_nvme_fast_cmpl_handler(struct fnic *fnic,
- 	}
- 
- 	if (hdr_status != FCPIO_SUCCESS) {
-+		atomic64_inc(&fnic_stats->io_stats.io_failures);
- 		FNIC_NVME_DBG(KERN_INFO, fnic, "hdr status: %s\n",
- 			    fnic_fcpio_status_to_str(hdr_status));
- 	}
-@@ -479,7 +563,9 @@ void nvfnic_fcpio_nvme_fast_cmpl_handler(struct fnic *fnic,
- 		   (((u64) io_req->cmd_flags << 32) |
- 		    io_req->cmd_state));
- 
-+	nvfnic_update_io_stats(fnic, cmdiu->sqe.rw.opcode);
- 	nvfnic_update_io_bytes(fnic, io_req, cmdiu->sqe.rw.opcode);
-+	nvfnic_update_cmpl_stats(fnic, io_req);
- 
- 	nvfnic_release_nvme_ioreq_buf(iport, io_req);
- 	if (io_req->done)
-@@ -497,6 +583,7 @@ void nvfnic_fcpio_ersp_cmpl_handler(struct fnic *fnic,
- 	u32 id;
- 	struct fcpio_nvme_cmpl *nvme_cmpl;
- 	struct fnic_io_req *io_req;
-+	struct fnic_stats *fnic_stats = &fnic->fnic_stats;
- 	unsigned long start_time;
- 	uint32_t rsplen;
- 	struct nvme_fc_ersp_iu *ersp;
-@@ -527,6 +614,7 @@ void nvfnic_fcpio_ersp_cmpl_handler(struct fnic *fnic,
- 
- 	io_req = nvfnic_find_io_req_by_tag(fnic, tag);
- 	if (!io_req) {
-+		atomic64_inc(&fnic_stats->io_stats.ioreq_null);
- 		FNIC_NVME_DBG(KERN_ERR, fnic,
- 			    "IOREQ is null hdr status: %s tag: 0x%x desc: %p\n",
- 			    fnic_fcpio_status_to_str(hdr_status), tag, desc);
-@@ -607,6 +695,7 @@ void nvfnic_fcpio_ersp_cmpl_handler(struct fnic *fnic,
- 			rsplen = be16_to_cpu(ersp->iu_len * 4);
- 			memcpy(io_req->fcp_req->rspaddr, ersp, rsplen);
- 		}
-+		atomic64_inc(&fnic_stats->nvme_stats.nvme_ersps);
- 		io_req->fcp_req->rcv_rsplen = rsplen;
- 		break;
- 
-@@ -618,6 +707,7 @@ void nvfnic_fcpio_ersp_cmpl_handler(struct fnic *fnic,
- 	}
- 
- 	if (hdr_status != FCPIO_SUCCESS) {
-+		atomic64_inc(&fnic_stats->io_stats.io_failures);
- 		FNIC_NVME_DBG(KERN_ERR, fnic, "hdr status: %s tag: 0x%x\n",
- 			    fnic_fcpio_status_to_str(hdr_status), tag);
- 	}
-@@ -640,7 +730,9 @@ void nvfnic_fcpio_ersp_cmpl_handler(struct fnic *fnic,
- 		   (((u64) io_req->cmd_flags << 32) |
- 		    io_req->cmd_state));
- 
-+	nvfnic_update_io_stats(fnic, cmdiu->sqe.rw.opcode);
- 	nvfnic_update_io_bytes(fnic, io_req, cmdiu->sqe.rw.opcode);
-+	nvfnic_update_cmpl_stats(fnic, io_req);
- 
- 	nvfnic_release_nvme_ioreq_buf(iport, io_req);
- 
-@@ -661,6 +753,10 @@ void nvfnic_fcpio_nvme_itmf_cmpl_handler(struct fnic *fnic,
- 	unsigned int tag;
- 	struct fnic_io_req *io_req;
- 	struct nvme_fc_cmd_iu *cmd_iu;
-+	struct fnic_stats *fnic_stats = &fnic->fnic_stats;
-+	struct abort_stats *abts_stats = &fnic->fnic_stats.abts_stats;
-+	struct terminate_stats *term_stats = &fnic->fnic_stats.term_stats;
-+	struct misc_stats *misc_stats = &fnic->fnic_stats.misc_stats;
- 	unsigned long start_time;
- 	struct fnic_iport_s *iport;
- 	struct fnic_tport_s *tport;
-@@ -680,6 +776,7 @@ void nvfnic_fcpio_nvme_itmf_cmpl_handler(struct fnic *fnic,
- 	io_req = nvfnic_find_io_req_by_tag(fnic, tag);
- 	WARN_ON_ONCE(!io_req);
- 	if (!io_req) {
-+		atomic64_inc(&fnic_stats->io_stats.ioreq_null);
- 		FNIC_NVME_DBG(KERN_ERR, fnic,
- 			      "IOREQ null hdr:%s tag:0x%x desc:%p\n",
- 			      fnic_fcpio_status_to_str(hdr_status), tag, desc);
-@@ -711,6 +808,10 @@ void nvfnic_fcpio_nvme_itmf_cmpl_handler(struct fnic *fnic,
- 		FNIC_NVME_DBG(KERN_ERR, fnic,
- 				"Abort timeout received tag: 0x%x id: 0x%x\n",
- 			      tag, id);
-+		if (io_req->cmd_flags & FNIC_IO_ABTS_ISSUED)
-+			atomic64_inc(&abts_stats->abort_fw_timeouts);
-+		else
-+			atomic64_inc(&term_stats->terminate_fw_timeouts);
- 		break;
- 	case FCPIO_ITMF_REJECTED:
- 		FNIC_NVME_DBG(KERN_ERR, fnic,
-@@ -722,11 +823,19 @@ void nvfnic_fcpio_nvme_itmf_cmpl_handler(struct fnic *fnic,
- 		FNIC_NVME_DBG(KERN_ERR, fnic,
- 			      "Abort IO not found tag:0x%x id:0x%x\n",
- 			      tag, id);
-+		if (io_req->cmd_flags & FNIC_IO_ABTS_ISSUED)
-+			atomic64_inc(&abts_stats->abort_io_not_found);
-+		else
-+			atomic64_inc(&term_stats->terminate_io_not_found);
- 		break;
- 	default:
- 		FNIC_NVME_DBG(KERN_ERR, fnic,
- 				"Abort unknown received tag: 0x%x id: 0x%x\n",
- 			    tag, id);
-+		if (io_req->cmd_flags & FNIC_IO_ABTS_ISSUED)
-+			atomic64_inc(&abts_stats->abort_failures);
-+		else
-+			atomic64_inc(&term_stats->terminate_failures);
- 		break;
- 	}
- 
-@@ -752,11 +861,18 @@ void nvfnic_fcpio_nvme_itmf_cmpl_handler(struct fnic *fnic,
- 
- 	io_req->cmd_flags |= FNIC_IO_ABT_TERM_DONE;
- 
-+	if (!(io_req->cmd_flags & (FNIC_IO_ABORTED | FNIC_IO_DONE)))
-+		atomic64_inc(&misc_stats->no_icmnd_itmf_cmpls);
- 
- 	if (io_req->abts_state == FCPIO_SUCCESS) {
- 		io_req->fcp_req->transferred_length = 0;
- 		io_req->fcp_req->rcv_rsplen = 0;
- 		io_req->fcp_req->status = NVME_SC_ABORT_REQ;
-+		atomic64_dec(&fnic_stats->io_stats.active_ios);
-+		if (atomic64_read(&fnic->io_cmpl_skip))
-+			atomic64_dec(&fnic->io_cmpl_skip);
-+		else
-+			atomic64_inc(&fnic_stats->io_stats.io_completions);
- 
- 		nvfnic_release_nvme_ioreq_buf(iport, io_req);
- 		if (io_req->done)
-@@ -913,9 +1029,14 @@ bool _terminate_tport_ios(struct sbitmap *map, unsigned int tag,
- void nvfnic_terminate_tport_ios(struct fnic *fnic,
- 				     struct fnic_tport_s *tport)
- {
-+	struct abort_stats *abts_stats = &fnic->fnic_stats.abts_stats;
- 
- 	sbitmap_for_each_set(&fnic->nvfnic_tag_map, _terminate_tport_ios, tport);
- 
-+	FNIC_NVME_DBG(KERN_INFO, fnic,
-+		      "tport: 0x%x aborted %lld in_flight %d\n",
-+		      tport->fcid, atomic64_read(&abts_stats->aborts),
-+		      atomic_read(&fnic->in_flight));
- }
- 
- bool _cleanup_all_nvme_io(struct sbitmap *map, unsigned int tag,
-@@ -1044,11 +1165,14 @@ nvfnic_find_ls_req(struct fnic_tport_s *tport, uint16_t oxid)
- void nvfnic_fcpio_cmpl(struct fnic_io_req *io_req)
- {
- 	struct fnic *fnic = io_req->iport->fnic;
-+	struct fnic_stats *fnic_stats = &fnic->fnic_stats;
- 
- 	nvfnic_free_fcpio_tag(io_req->iport, io_req);
-+	atomic64_inc(&fnic_stats->io_stats.nvme_ios_queued_for_rsp);
- 
- 	llist_add(&io_req->nvfnic_io_cmpl, &fnic->nvme_io_event_llist);
- 	atomic_inc(&fnic->nvme_io_event_queued);
-+	atomic64_inc(&fnic_stats->io_stats.nvme_num_ios_in_waitq);
- 
- 	io_req->waitq_start_time = jiffies;
- 	queue_work(fnic_cmpl_queue, &fnic->nvme_io_cmpl_work);
-@@ -1064,6 +1188,7 @@ void nvfnic_process_ls_abts_rsp(struct fnic_iport_s *iport,
- 	uint8_t *fcid;
- 	uint16_t oxid = FNIC_STD_GET_OX_ID(fchdr);
- 	struct fnic *fnic = iport->fnic;
-+	struct fnic_stats *fnic_stats = &fnic->fnic_stats;
- 
- 	fcid = FNIC_STD_GET_S_ID(fchdr);
- 	tport_fcid = ntoh24(fcid);
-@@ -1091,8 +1216,12 @@ void nvfnic_process_ls_abts_rsp(struct fnic_iport_s *iport,
- 		return;
- 	}
- 
-+	atomic64_inc(&fnic_stats->nvme_stats.nvme_ls_abort_responses);
- 	nvfnic_ls_req->state = FNIC_LS_REQ_ABTS_COMPLETE;
- 
-+	FNIC_NVME_DBG(KERN_DEBUG, fnic, "nvme_ls_requests: %lld\n",
-+		      (u64) atomic64_read(&fnic_stats->nvme_stats.nvme_ls_requests));
-+
- 	list_del(&nvfnic_ls_req->list);
- 	fdls_free_oxid(iport, oxid, &nvfnic_ls_req->oxid);
- 	lsreq->private = NULL;
-@@ -1123,6 +1252,7 @@ void nvfnic_ls_rsp_recv(struct fnic_iport_s *iport,
- 	struct nvmefc_ls_req *lsreq;
- 	uint16_t oxid;
- 	struct fnic *fnic = iport->fnic;
-+	struct fnic_stats *fnic_stats = &fnic->fnic_stats;
- 
- 	fcid = FNIC_STD_GET_S_ID(fchdr);
- 	tport_fcid = ntoh24(fcid);
-@@ -1166,6 +1296,7 @@ void nvfnic_ls_rsp_recv(struct fnic_iport_s *iport,
- 	}
- 
- 	nvfnic_ls_req->state = FNIC_LS_REQ_CMD_COMPLETE;
-+	atomic64_inc(&fnic_stats->nvme_stats.nvme_ls_responses);
- 
- 	list_del_init(&nvfnic_ls_req->list);
- 	lsreq->private = NULL;
-@@ -1194,6 +1325,7 @@ void nvfnic_ls_req_timeout(struct timer_list *t)
- 	struct nvmefc_ls_req *ls_req = nvfnic_ls_req->ls_req;
- 	struct fnic_iport_s *iport = &fnic->iport;
- 	struct fnic_tport_s *tport = (struct fnic_tport_s *) nvfnic_ls_req->tport;
-+	struct fnic_stats *fnic_stats = &fnic->fnic_stats;
- 	uint16_t oxid = nvfnic_ls_req->oxid;
- 	int timeout;
- 
-@@ -1230,6 +1362,7 @@ void nvfnic_ls_req_timeout(struct timer_list *t)
- 			      "tport: 0x%x lsreq: 0x%x sending abort\n",
- 			      tport->fcid, nvfnic_ls_req->oxid);
- 		nvfnic_ls_req->state = FNIC_LS_REQ_CMD_ABTS_PENDING;
-+		atomic64_inc(&fnic_stats->nvme_stats.nvme_ls_aborts);
- 		spin_unlock_irqrestore(&fnic->fnic_lock, fnic->lock_flags);
- 
- 		if (fdls_send_ls_req_abts(iport, tport, nvfnic_ls_req->oxid) == 0) {
-@@ -1284,6 +1417,7 @@ int nvfnic_ls_req_send(struct nvme_fc_local_port *lport,
- 	struct nvmefc_ls_req *pls_req;
- 	struct fnic *fnic = iport->fnic;
- 	struct fc_std_ls_req *pfc_std_ls_req;
-+	struct fnic_stats *fnic_stats = &fnic->fnic_stats;
- 	struct nvfnic_ls_req *nvfnic_ls_req = ls_req->private;
- 	uint16_t frame_size = FNIC_ETH_FCOE_HDRS_OFFSET +
- 			sizeof(struct fc_frame_header) + ls_req->rqstlen;
-@@ -1320,6 +1454,7 @@ int nvfnic_ls_req_send(struct nvme_fc_local_port *lport,
- 		return -EAGAIN;
- 	}
- 
-+	atomic64_inc(&fnic_stats->nvme_stats.nvme_ls_requests);
- 	timer_setup(&nvfnic_ls_req->ls_req_timer, nvfnic_ls_req_timeout,
- 		     0UL);
- 
-@@ -1354,6 +1489,11 @@ int nvfnic_ls_req_send(struct nvme_fc_local_port *lport,
- 		 iport->fcid, nvfnic_ls_req->oxid, *((uint8_t *) ls_req->rqstaddr),
- 		 ls_req->rqstlen);
- 
-+	FNIC_NVME_DBG(KERN_INFO, fnic,
-+		 "0x%x: ls_reqs count: %lld",
-+		 iport->fcid,
-+		 (u64) atomic64_read(&fnic_stats->nvme_stats.nvme_ls_requests));
-+
- 	list_add_tail(&nvfnic_ls_req->list, &tport->ls_req_list);
- 	nvfnic_ls_req->state = FNIC_LS_REQ_CMD_PENDING;
- 	spin_unlock_irqrestore(&fnic->fnic_lock, flags);
-@@ -1469,6 +1609,7 @@ void nvfnic_ls_req_abort(struct nvme_fc_local_port *lport,
- 	struct fnic *fnic = iport->fnic;
- 	struct fnic_tport_s *tport;
- 	struct nvfnic_ls_req *nvfnic_ls_req;
-+	struct fnic_stats *fnic_stats = &fnic->fnic_stats;
- 	uint16_t oxid;
- 	int timeout;
- 
-@@ -1529,6 +1670,7 @@ void nvfnic_ls_req_abort(struct nvme_fc_local_port *lport,
- 
- 	/* Mark the state and flags */
- 	nvfnic_ls_req->state = FNIC_LS_REQ_CMD_ABTS_PENDING;
-+	atomic64_inc(&fnic_stats->nvme_stats.nvme_ls_aborts);
- 	timeout = FNIC_LS_REQ_TMO_MSECS(lsreq->timeout);
- 	mod_timer(&nvfnic_ls_req->ls_req_timer,
- 		  round_jiffies(jiffies + msecs_to_jiffies(timeout)));
-@@ -1542,6 +1684,7 @@ bool nvfnic_queue_abort_io_req(struct fnic *fnic, int tag,
- {
- 	int idx;
- 	unsigned long flags;
-+	struct misc_stats *misc_stats = &fnic->fnic_stats.misc_stats;
- 
- 	idx = io_req->wq - &fnic->hw_copy_wq[0];
- 
-@@ -1557,12 +1700,18 @@ bool nvfnic_queue_abort_io_req(struct fnic *fnic, int tag,
- 		atomic_dec(&fnic->in_flight);
- 		FNIC_NVME_DBG(KERN_ERR, fnic,
- 				"tag 0x%x failure: no descriptors\n", tag);
-+		atomic64_inc(&misc_stats->abts_cpwq_alloc_failures);
- 		return false;
- 	}
- 	fnic_queue_wq_copy_desc_itmf(io_req->wq, tag | FNIC_TAG_ABORT,
- 				     0, task_req, tag, NULL, io_req->port_id,
- 				     fnic->config.ra_tov, fnic->config.ed_tov);
- 
-+	atomic64_inc(&fnic->fnic_stats.fw_stats.active_fw_reqs);
-+	if (atomic64_read(&fnic->fnic_stats.fw_stats.active_fw_reqs) >
-+	    atomic64_read(&fnic->fnic_stats.fw_stats.max_fw_reqs))
-+		atomic64_set(&fnic->fnic_stats.fw_stats.max_fw_reqs,
-+			     atomic64_read(&fnic->fnic_stats.fw_stats.active_fw_reqs));
- 
- 	spin_unlock_irqrestore(&fnic->wq_copy_lock[idx], flags);
- 	atomic_dec(&fnic->in_flight);
-@@ -1579,9 +1728,14 @@ void nvfnic_fcpio_abort(struct nvme_fc_local_port *lport,
- 	struct nvme_fc_cmd_iu *cmd_iu = fcp_req->cmdaddr;
- 	struct fnic_io_req *io_req = (struct fnic_io_req *)fcp_req->private;
- 	unsigned int tag = io_req->tag;
-+	struct fnic_stats *fnic_stats = &fnic->fnic_stats;
-+	struct abort_stats *abts_stats;
-+	struct terminate_stats *term_stats;
- 	unsigned long flags = 0;
-+	unsigned long abt_issued_time;
- 	unsigned int task_req;
- 	enum fnic_ioreq_state old_ioreq_state;
-+	unsigned long num_ios_waitq, waitq_2sec, waitq_max_time;
- 
- 	spin_lock_irqsave(&fnic->fnic_lock, flags);
- 
-@@ -1597,6 +1751,15 @@ void nvfnic_fcpio_abort(struct nvme_fc_local_port *lport,
- 		FNIC_NVME_DBG(KERN_INFO, fnic,
- 			      "cmd tag freed or not issued:0x%x sn:0x%08x\n",
- 			      io_req->tag, be32_to_cpu(cmd_iu->csn));
-+		num_ios_waitq =
-+		    atomic64_read(&fnic_stats->io_stats.nvme_num_ios_in_waitq);
-+		waitq_2sec =
-+		    atomic64_read(&fnic_stats->io_stats.nvme_ios_in_waitq_3000_msec);
-+		waitq_max_time =
-+		    atomic64_read(&fnic_stats->io_stats.nvme_ios_in_waitq_max_time);
-+		FNIC_NVME_DBG(KERN_INFO, fnic,
-+			      "waitq:%ld waitq_2sec:%ld max_wait:%ld\n",
-+			      num_ios_waitq, waitq_2sec, waitq_max_time);
- 		spin_unlock_irqrestore(&fnic->fnic_lock, flags);
- 		return;
- 	}
-@@ -1644,7 +1807,26 @@ void nvfnic_fcpio_abort(struct nvme_fc_local_port *lport,
- 		task_req = FCPIO_ITMF_ABT_TASK;
- 	}
- 
--
-+	abts_stats = &fnic->fnic_stats.abts_stats;
-+	term_stats = &fnic->fnic_stats.term_stats;
-+	atomic64_inc(&abts_stats->aborts);
-+
-+	abt_issued_time = jiffies_to_msecs(jiffies) -
-+			jiffies_to_msecs(io_req->start_time);
-+	if (abt_issued_time <= 6000)
-+		atomic64_inc(&abts_stats->abort_issued_btw_0_to_6_sec);
-+	else if (abt_issued_time > 6000 && abt_issued_time <= 20000)
-+		atomic64_inc(&abts_stats->abort_issued_btw_6_to_20_sec);
-+	else if (abt_issued_time > 20000 && abt_issued_time <= 30000)
-+		atomic64_inc(&abts_stats->abort_issued_btw_20_to_30_sec);
-+	else if (abt_issued_time > 30000 && abt_issued_time <= 40000)
-+		atomic64_inc(&abts_stats->abort_issued_btw_30_to_40_sec);
-+	else if (abt_issued_time > 40000 && abt_issued_time <= 50000)
-+		atomic64_inc(&abts_stats->abort_issued_btw_40_to_50_sec);
-+	else if (abt_issued_time > 50000 && abt_issued_time <= 60000)
-+		atomic64_inc(&abts_stats->abort_issued_btw_50_to_60_sec);
-+	else
-+		atomic64_inc(&abts_stats->abort_issued_greater_than_60_sec);
- 
- 	old_ioreq_state = io_req->cmd_state;
- 	io_req->cmd_state = FNIC_IOREQ_ABTS_PENDING;
-diff --git a/drivers/scsi/fnic/fnic_stats.h b/drivers/scsi/fnic/fnic_stats.h
-index 8ddd20401a59..fc81e4a7e29e 100644
---- a/drivers/scsi/fnic/fnic_stats.h
-+++ b/drivers/scsi/fnic/fnic_stats.h
-@@ -29,6 +29,15 @@ struct io_path_stats {
- 	atomic64_t io_greater_than_30000_msec;
- 	atomic64_t current_max_io_time;
- 	atomic64_t ios[FNIC_MQ_MAX_QUEUES];
-+
-+	atomic64_t nvme_io_reqs_rcvd;
-+	atomic64_t nvme_ios_queued_for_rsp;
-+	atomic64_t nvme_io_rsps_unqueued;
-+	atomic64_t nvme_io_rsps_sending;
-+	atomic64_t nvme_io_rsps_sent;
-+	atomic64_t nvme_num_ios_in_waitq;
-+	atomic64_t nvme_ios_in_waitq_3000_msec;
-+	atomic64_t nvme_ios_in_waitq_max_time;
- };
- 
- struct abort_stats {
-@@ -151,6 +160,17 @@ struct fnic_iport_stats {
- 	atomic64_t unsupported_frames_dropped;
- };
- 
-+struct nvme_host_statistics {
-+	atomic64_t nvme_input_requests;
-+	atomic64_t nvme_output_requests;
-+	atomic64_t nvme_control_requests;
-+	atomic64_t nvme_ersps;
-+	atomic64_t nvme_ls_requests;
-+	atomic64_t nvme_ls_responses;
-+	atomic64_t nvme_ls_aborts;
-+	atomic64_t nvme_ls_abort_responses;
-+};
-+
- struct fnic_stats {
- 	struct stats_timestamps stats_timestamps;
- 	struct io_path_stats io_stats;
-@@ -161,6 +181,7 @@ struct fnic_stats {
- 	struct vlan_stats vlan_stats;
- 	struct fc_host_statistics host_stats;
- 	struct misc_stats misc_stats;
-+	struct nvme_host_statistics nvme_stats;
- };
- 
- struct stats_debug_info {
 -- 
 2.47.1
 
