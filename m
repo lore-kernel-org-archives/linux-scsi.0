@@ -1,190 +1,173 @@
-Received: from canpmsgout08.his.huawei.com (canpmsgout08.his.huawei.com [113.46.200.223])
+Received: from gloria.sntech.de (gloria.sntech.de [185.11.138.130])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B2A3033B6C4;
-	Thu, 21 May 2026 09:05:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.223
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3AC35376A10;
+	Thu, 21 May 2026 09:38:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.11.138.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779354305; cv=none; b=YHsuuNX9wZn5c2bPbTk6RVsRh5QcYA5p1Z/GqpjX5LjoKfnO9xK3rf6F1YLrDee+ClEH8MFK962Q9S2xHf32VjIgB68OPR6KY24X2I8T912rZehOEOpAW7/Yyrj9t815q+0hzbkfkrVVm+Tl28tcXFwzPurTi/yIX2AoQxJPHVc=
+	t=1779356329; cv=none; b=MfZj7393sxePZLF46o74pxuI+etB9G+ZLIlImEnprP51KLfYraJPD6WO5Oo1b7sC7FhHoZUqPfx/gJY/kHJm1J4Epe8ci6dkmtr9Q/tDB7Dr2QBmVJc0fmzLfPJcyAvO+8oADzKJQ3VSkVsEhBxj6PEvgljPH2dmUWCX5kGTlaE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779354305; c=relaxed/simple;
-	bh=qPFszIGsGP8lg8WyKcwTRNwFDB2RJ5ADPWR2AHBWVC8=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=Zn2q3S07mUCEbCHudgynwXNJHtyXftLj5LnftZ2i5bHh0QBf1EbAg9KbznMDsPJo6bjGgHvSbAxmB4lzc9IgUUD+I5VwzJC6+HWOrflLs+PzBgTLa/IH893gxxZXsNPlLSgyAOxAQCGLq22BCQJ4Lf7AzxkPBNtWTpTAlTxpWVY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=h-partners.com; dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b=D2YCLsZJ; arc=none smtp.client-ip=113.46.200.223
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=h-partners.com
+	s=arc-20240116; t=1779356329; c=relaxed/simple;
+	bh=KfGfTyFVL31vdUdOn+76p0c9asI51Kz6rpZ61Tm62g8=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=cEw3imQRhQn+KYwmqNMyGexNEwoS8UClVayeQ8FU6aYTc7vLw9cT0dHrvKadL0dWY25OaH6PiqmNjUujhbbyKHKqXHs1P/3GlDl/SRcOlfRY07DLXei3h5gEVSetrHh29J6PMt5hF86TC/vlW30M+D2Y0rnR84Z8UH+hZf9cdL8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=sntech.de; spf=pass smtp.mailfrom=sntech.de; dkim=pass (2048-bit key) header.d=sntech.de header.i=@sntech.de header.b=0I4tMOaq; arc=none smtp.client-ip=185.11.138.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=sntech.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sntech.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b="D2YCLsZJ"
-dkim-signature: v=1; a=rsa-sha256; d=h-partners.com; s=dkim;
-	c=relaxed/relaxed; q=dns/txt;
-	h=From;
-	bh=rIyzUnXWRbM50cxkKZx/Sdy2mBzDAoy8Jpq3SV6jbNY=;
-	b=D2YCLsZJx/BHNsue6OIOqfg9XkXuAYYkHFzkbERS1ieuhZD40+9lsvUUq9bfczeZsuurBZbQB
-	CZu+ppGOkbR9rM65F3Wn80x97uNxRZ5Nn5ZYPtyZwNh0wiNfJuB5uKO7rTxaBcalREFM81prNCl
-	V2Ydcn3egiq4/n/SRcX+DeU=
-Received: from mail.maildlp.com (unknown [172.19.163.163])
-	by canpmsgout08.his.huawei.com (SkyGuard) with ESMTPS id 4gLj2s4sk8zmV66;
-	Thu, 21 May 2026 16:57:09 +0800 (CST)
-Received: from kwepemj100018.china.huawei.com (unknown [7.202.194.12])
-	by mail.maildlp.com (Postfix) with ESMTPS id D543040538;
-	Thu, 21 May 2026 17:04:52 +0800 (CST)
-Received: from [10.67.120.108] (10.67.120.108) by
- kwepemj100018.china.huawei.com (7.202.194.12) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.36; Thu, 21 May 2026 17:04:52 +0800
-Message-ID: <5600f8fa-489a-9b81-9966-dc5d436c462e@huawei.com>
-Date: Thu, 21 May 2026 17:04:51 +0800
+	dkim=pass (2048-bit key) header.d=sntech.de header.i=@sntech.de header.b="0I4tMOaq"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=sntech.de;
+	s=gloria202408; h=Content-Transfer-Encoding:Content-Type:MIME-Version:
+	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Reply-To;
+	bh=82qSLImWzSWwJwDL4P56RDhSxB/3/+bLg3x1B6/8Vyo=; b=0I4tMOaqwxFvPcLAyXC1tGPrfE
+	HXHaVV7+wYwVP4UGjSNoFDd1VfRVRwKpSUpdi+/cM0lBIFBOtW57RPkKHZJ6gSZa57lZaOJNQszdB
+	j5MhP9nNF2ZBC5XTLEZLefqvWnNibulepEtkV4okP/kU2AAENM/x1cT5yntunk8HjnN93yJVk0KhD
+	4BGKyKzwZYIhS+icC3RQoCP/xlaXk2zQuPvKHmUwXbld7xPg620UPcbli2n9Nu98+Jo3ggiseSwXX
+	f5u71NtNcCGIkISy1Bu3AzX1ANpj9jp2f9+W1J8qexkOfVBSIDSPhC21GfXXPezuckw1Oq9h13vk1
+	Ke/2S4sA==;
+From: Heiko Stuebner <heiko@sntech.de>
+To: linux-phy@lists.infradead.org,
+	Vladimir Oltean <vladimir.oltean@nxp.com>
+Cc: Heiko Stuebner <heiko@sntech.de>,
+	Vinod Koul <vkoul@kernel.org>,
+	Neil Armstrong <neil.armstrong@linaro.org>,
+	dri-devel@lists.freedesktop.org,
+	freedreno@lists.freedesktop.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-arm-msm@vger.kernel.org,
+	linux-can@vger.kernel.org,
+	linux-gpio@vger.kernel.org,
+	linux-ide@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-media@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-renesas-soc@vger.kernel.org,
+	linux-riscv@lists.infradead.org,
+	linux-rockchip@lists.infradead.org,
+	linux-samsung-soc@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	linux-sunxi@lists.linux.dev,
+	linux-tegra@vger.kernel.org,
+	linux-usb@vger.kernel.org,
+	netdev@vger.kernel.org,
+	spacemit@lists.linux.dev,
+	UNGLinuxDriver@microchip.com,
+	Abhinav Kumar <abhinav.kumar@linux.dev>,
+	Alexandre Belloni <alexandre.belloni@bootlin.com>,
+	Alim Akhtar <alim.akhtar@samsung.com>,
+	=?UTF-8?q?Andr=C3=A9=20Draszik?= <andre.draszik@linaro.org>,
+	Andrew Lunn <andrew+netdev@lunn.ch>,
+	Andrzej Hajda <andrzej.hajda@intel.com>,
+	Andy Yan <andy.yan@rock-chips.com>,
+	Bart Van Assche <bvanassche@acm.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Can Guo <quic_cang@quicinc.com>,
+	Chanho Park <chanho61.park@samsung.com>,
+	Chen-Yu Tsai <wens@kernel.org>,
+	Claudiu Beznea <claudiu.beznea@tuxon.dev>,
+	Damien Le Moal <dlemoal@kernel.org>,
+	Daniel Machon <daniel.machon@microchip.com>,
+	David Airlie <airlied@gmail.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Dmitry Baryshkov <lumag@kernel.org>,
+	Eric Dumazet <edumazet@google.com>,
+	Fabio Estevam <festevam@gmail.com>,
+	Frank Li <Frank.Li@nxp.com>,
+	Geert Uytterhoeven <geert+renesas@glider.be>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Inki Dae <inki.dae@samsung.com>,
+	Jagan Teki <jagan@amarulasolutions.com>,
+	Jakub Kicinski <kuba@kernel.org>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	JC Kuo <jckuo@nvidia.com>,
+	Jernej Skrabec <jernej.skrabec@gmail.com>,
+	Jessica Zhang <jesszhan0024@gmail.com>,
+	Joe Perches <joe@perches.com>,
+	Johan Hovold <johan+linaro@kernel.org>,
+	Jonas Karlman <jonas@kwiboo.se>,
+	Jonathan Hunter <jonathanh@nvidia.com>,
+	Kevin Xie <kevin.xie@starfivetech.com>,
+	Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Laurent Pinchart <Laurent.pinchart@ideasonboard.com>,
+	Linus Walleij <linusw@kernel.org>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
+	Magnus Damm <magnus.damm@gmail.com>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Marc Kleine-Budde <mkl@pengutronix.de>,
+	Marek Szyprowski <m.szyprowski@samsung.com>,
+	Marijn Suijten <marijn.suijten@somainline.org>,
+	Markus Schneider-Pargmann <msp@baylibre.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Mathias Nyman <mathias.nyman@intel.com>,
+	Mauro Carvalho Chehab <mchehab@kernel.org>,
+	Maxime Ripard <mripard@kernel.org>,
+	Michael Dege <michael.dege@renesas.com>,
+	Nicolas Ferre <nicolas.ferre@microchip.com>,
+	Niklas Cassel <cassel@kernel.org>,
+	Nitin Rawat <quic_nitirawa@quicinc.com>,
+	Paolo Abeni <pabeni@redhat.com>,
+	Pengutronix Kernel Team <kernel@pengutronix.de>,
+	Peter Chen <peter.chen@kernel.org>,
+	Peter Griffin <peter.griffin@linaro.org>,
+	Rob Clark <robin.clark@oss.qualcomm.com>,
+	Robert Foss <rfoss@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	"Russell King (Oracle)" <rmk+kernel@armlinux.org.uk>,
+	Samuel Holland <samuel@sholland.org>,
+	Sandy Huang <hjc@rock-chips.com>,
+	Sascha Hauer <s.hauer@pengutronix.de>,
+	Sean Paul <sean@poorly.run>,
+	Sebastian Reichel <sre@kernel.org>,
+	Shawn Guo <shawn.guo@linaro.org>,
+	Shawn Lin <shawn.lin@rock-chips.com>,
+	Simona Vetter <simona@ffwll.ch>,
+	Steen Hegelund <Steen.Hegelund@microchip.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Thinh Nguyen <Thinh.Nguyen@synopsys.com>,
+	Thomas Zimmermann <tzimmermann@suse.de>,
+	Tudor Ambarus <tudor.ambarus@linaro.org>,
+	Vincent Mailhol <mailhol@kernel.org>,
+	Xu Yang <xu.yang_2@nxp.com>,
+	Yixun Lan <dlan@kernel.org>,
+	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+Subject: Re: (subset) [PATCH v8 phy-next 00/31] Split Generic PHY consumer and provider API
+Date: Thu, 21 May 2026 11:38:18 +0200
+Message-ID: <177935628872.1653123.15514691751947313571.b4-ty@sntech.de>
+X-Mailer: git-send-email 2.47.3
+In-Reply-To: <20260505100523.1922388-1-vladimir.oltean@nxp.com>
+References: <20260505100523.1922388-1-vladimir.oltean@nxp.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.3.1
-Subject: Re: [PATCH v3 2/2] scsi: libsas: Add linkrate and sas_addr change
- detection in rediscover
-Content-Language: en-CA
-To: John Garry <john.g.garry@oracle.com>, <yanaijie@huawei.com>,
-	<jejb@linux.ibm.com>, <martin.petersen@oracle.com>
-CC: <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linuxarm@huawei.com>, <liyihang9@h-partners.com>, <liuyonglong@huawei.com>,
-	<kangfenglong@huawei.com>
-References: <20260515084531.866259-1-yangxingui@huawei.com>
- <20260515084531.866259-3-yangxingui@huawei.com>
- <b18e1085-1d77-4b54-ae4d-8ae5a50a79b9@oracle.com>
-From: yangxingui <yangxingui@huawei.com>
-In-Reply-To: <b18e1085-1d77-4b54-ae4d-8ae5a50a79b9@oracle.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: kwepemh200005.china.huawei.com (7.202.181.112) To
- kwepemj100018.china.huawei.com (7.202.194.12)
-
-On 2026/5/21 16:13, John Garry wrote:
-> On 15/05/2026 09:45, Xingui Yang wrote:
->> In sas_rediscover_dev(), when detecting a "flutter" condition (same SAS
->> address and compatible device type), the code assumes the device remains
->> unchanged and only handles SATA pending state recovery. However, this
->> approach misses two important scenarios:
->>
->> First, the flutter detection only compares SAS address and device type,
->> ignoring potential linkrate changes that may have already occurred.
->>
->> Second, after sas_ex_phy_discover() re-queries the expander phy, both
->> linkrate and attached SAS address may be updated. The current code does
->> not validate these changes against the existing child device.
->>
->> Add validation checks after sas_ex_phy_discover() to detect linkrate and
->> sas_addr changes. When changes are detected, mark the device as gone and
->> schedule rediscovery via libsas's async discovery pattern:
->> - Set phy_change_count and ex_change_count to -1 to force revalidation
->> - Unregister the device and schedule DISCE_REVALIDATE_DOMAIN event
->> - The old device is destroyed by sas_destruct_devices()
->> - New event triggers discovery via sas_discover_new() since
->>    attached_sas_addr is cleared
->>
->> Suggested-by: John Garry <john.g.garry@oracle.com>
->> Signed-off-by: Xingui Yang <yangxingui@huawei.com>
->> ---
->>   drivers/scsi/libsas/sas_expander.c | 32 ++++++++++++++++++++++++++----
->>   1 file changed, 28 insertions(+), 4 deletions(-)
->>
->> diff --git a/drivers/scsi/libsas/sas_expander.c 
->> b/drivers/scsi/libsas/sas_expander.c
->> index f55ae9a979cd..720db4128727 100644
->> --- a/drivers/scsi/libsas/sas_expander.c
->> +++ b/drivers/scsi/libsas/sas_expander.c
->> @@ -2017,15 +2017,39 @@ static int sas_rediscover_dev(struct 
->> domain_device *dev, int phy_id,
->>           goto out_free_resp;
->>       } else if (SAS_ADDR(sas_addr) == 
->> SAS_ADDR(phy->attached_sas_addr) &&
->>              dev_type_flutter(type, phy->attached_dev_type)) {
->> -        struct domain_device *ata_dev = sas_ex_to_ata(dev, phy_id);
->> +        struct domain_device *child_dev = sas_ex_to_dev(dev, phy_id);
->> +        bool need_rediscover = false;
->>           char *action = "";
->>           sas_ex_phy_discover(dev, phy_id);
->> -        if (ata_dev && phy->attached_dev_type == SAS_SATA_PENDING)
->> +        if (child_dev && dev_is_sata(child_dev) &&
->> +            phy->attached_dev_type == SAS_SATA_PENDING) {
->>               action = ", needs recovery";
->> -        pr_debug("ex %016llx phy%02d broadcast flutter%s\n",
->> -             SAS_ADDR(dev->sas_addr), phy_id, action);
->> +        } else if (child_dev && phy->linkrate != child_dev->linkrate) {
->> +            pr_info("ex %016llx phy%02d linkrate changed from %d to 
->> %d\n",
->> +                SAS_ADDR(dev->sas_addr), phy_id,
->> +                child_dev->linkrate, phy->linkrate);
->> +            need_rediscover = true;
->> +        } else if (child_dev &&
->> +               SAS_ADDR(child_dev->sas_addr) != 
->> SAS_ADDR(phy->attached_sas_addr)) {
->> +            pr_info("ex %016llx phy%02d sas_addr changed from %016llx 
->> to %016llx\n",
->> +                SAS_ADDR(dev->sas_addr), phy_id,
->> +                SAS_ADDR(child_dev->sas_addr),
->> +                SAS_ADDR(phy->attached_sas_addr));
->> +            need_rediscover = true;
->> +        }
->> +
->> +        if (need_rediscover) {
->> +            set_bit(SAS_DEV_GONE, &child_dev->state);
->> +            phy->phy_change_count = -1;
->> +            ex->ex_change_count = -1;
-> 
-> the current code has following:
-> 
-> 
->      /* we always have to delete the old device when we went here */
->      pr_info("ex %016llx phy%02d replace %016llx\n",
->          SAS_ADDR(dev->sas_addr), phy_id,
->          SAS_ADDR(phy->attached_sas_addr));
->      sas_unregister_devs_sas_addr(dev, phy_id, last);
-> 
->      res = sas_discover_new(dev, phy_id);
-> 
-> Can this be reused (to lose and find the device with updated info)? Or 
-> why not good enough?
-> 
-> I don't know why you need full revalidation.
-
-Hi, John
-As the commit log. The existing pattern (unregister + sas_discover_new) 
-handles the "replace" case where the SAS address changes completely, 
-implying a different device.
-For the flutter case where we detect linkrate/sas_addr changes, we 
-cannot reuse this synchronous pattern because:
-sas_unregister_devs_sas_addr() only marks the device as gone (sets 
-SAS_DEV_GONE) and adds it to port->destroy_list. The actual sysfs 
-cleanup (sas_rphy_delete) happens later in sas_destruct_devices() called 
-at the end of sas_revalidate_domain() in sas_discover.c.
-I did try the approach you suggested (unregister + sas_discover_new), 
-but it produces sysfs duplicate directory errors:
-Workqueue: 0000:74:02.0_disco_q sas_revalidate_domain
-Call trace:
-  dump_backtrace+0x0/0x18c
-  show_stack+0x14/0x1c
-  dump_stack+0x88/0xac
-  sysfs_warn_dup+0x64/0x7c
-  sysfs_create_dir_ns+0x90/0xa0
-  kobject_add_internal+0xa0/0x284
-  kobject_add+0xb8/0x11c
-  device_add+0xe8/0x598
-  sas_port_add+0x24/0x50
-  sas_ex_discover_devices+0xb10/0xc30
-
-The async pattern with DISCE_REVALIDATE_DOMAIN ensures proper ordering:
-1. Old device added to destroy_list
-2. Current revalidate work completes → sas_destruct_devices() truly 
-deletes old device's sysfs
-3. New DISCE_REVALIDATE_DOMAIN event triggers → discovery starts with 
-clean sysfs state
-This follows libsas's async design pattern similar to sas_resume_devices 
-in sas_port.c.
-
-Thanks,
-Xingui
 
 
+On Tue, 05 May 2026 13:04:52 +0300, Vladimir Oltean wrote:
+> The biggest problem requiring this split is the fact that consumer
+> drivers poke around in struct phy, accessing fields which shouldn't be
+> visible to them. Follow the example of mux, gpio, iio, spi offload,
+> pwrsec, pinctrl and regulator, which each expose separate headers for
+> consumers and providers.
+> 
+> Some off-list discussions were had with Vinod Koul regarding the 3 PHY
+> providers outside the drivers/phy/ subsystem. It was agreed that it is
+> desirable to relocate them to drivers/phy/, rather than to publish
+> phy-provider.h to include/linux/phy/ for liberal use. Only phy.h and
+> (new) phy-props.h - consumer-facing headers - stay there.
+> 
+> [...]
+
+Applied, thanks!
+
+[15/31] drm/rockchip: dw_hdmi: avoid direct dereference of phy->dev.of_node
+        commit: 9392e7340bffb406a705de755adfb44eab547d40
+
+Best regards,
+-- 
+Heiko Stuebner <heiko@sntech.de>
