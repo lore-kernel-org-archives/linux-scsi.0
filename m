@@ -1,30 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E4073D7D86;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E22523D810C;
 	Thu, 21 May 2026 13:33:26 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779370408; cv=none; b=msZuTohy1Coz0X1mKGojk3iyC61JeT5McJoCceZJjZvt/N6f1M2D10D0V26kxde+Ejhz/Fl4zRRmHS5l8XzP/bKmEqHNDRq7eCueyiJy0xL4LkInSJc4nXCt5NUmvZ+JZ+wGyvqi7Skb6dS7ouPjLTEGrD8lhtUp16vvY28Fk+g=
+	t=1779370408; cv=none; b=W8J3PZ9rIyyCcjaCnREDjPcirdMbESHv42MXGfd5fmLusDVvtzFMYh+SulMEaJ8Fgb0TM6eQMdaulqgRU0gU5m9Dv+xzTaN8CeX5+dXi7MFyE9bDFBCcgsw5p9hWs2HpkjQZtWrCV2nDXeQ7TaZ6wi7Acsy1Hl8mgwgiNE0BwXU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1779370408; c=relaxed/simple;
-	bh=iRiRSOifqAhDEW+rM5ucutf2vqbqOCl0n39wA2pC2nE=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=RvUoM6syI9lAANqwABW2l+OlOvTta3WDZM7mK3NrbFqjJmCGYg+xmL3RTgoqz9G5Xq7ilU/VfrrgMw/tupLGLkjTnZSrVecWCfphJuW0yqVhELu5Bw4fC71qhPbroOJX1VoIv84B+TV5OAznCPKcHbnoxcCwgYlDtQIyLGFibec=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ENRvP//N; arc=none smtp.client-ip=100.103.45.18
+	bh=We2iaIAjr+4pDVj6nN4taHbnlsqb7PEX4Rc0M//7Kt8=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=tY7GKg553epOPgU31SaLsVdPoUPRJ+FIZnA4sh/AOhX6Yo7HPmIO/r/pHNo5zup7rmnQbRJ/nSj8hg7irop4pFKM1daIAsaR8Yy+8RPd6d8tQ4vei0DuR4eqj+kdPCYWi0U/Lfq072Z51Co/3mB3gopzksMP31lBaC2DMe2X6pU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gKeaVp4g; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ENRvP//N"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 52B451F000E9;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gKeaVp4g"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 93D611F01572;
 	Thu, 21 May 2026 13:33:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
 	s=k20260515; t=1779370406;
-	bh=JMvTXrLi2fecyuCzobJPBmjEJITlU0vYIW862WydbuI=;
-	h=From:To:Cc:Subject:Date;
-	b=ENRvP//NxlPse9MxCJOFh1AogZslAel87SB2mSCIhsf3jItcOS+woGIBwiFJXxxJO
-	 /vrcLfGb5f9Zgybo+8/jwPpcfxzDdtk9qobrtYv1Jx7qF2CaHOv9To+pMFVf+CxBaj
-	 Txk/IJPdMMNkgGbRiVQjeh8OyeTtBQ2jV3/sTZSlJcvRZB5VWyLoc9rDPU3aPLI4HL
-	 h0jOm1f2w6p8YOUlM5pSaTCh9uIPDhngu0K2kHqivFsRg/751UQV/kKlDAKhtjc0hL
-	 ruCH8xG0ElU6V7TuBi+cEWySHRlk4t3CmGbCJy8V2gQGUgE/wtg5mB81jG8Jj8LiQq
-	 dMkB09LzsXQtw==
+	bh=mCDvxzUe4SUE/8My5CdCqwCgEMUsyBtFnEQMMX6d/s8=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References;
+	b=gKeaVp4g+fZOCB2d1zbjK4W3dvda303iCxWkDVj8H14UNIIGY3gLpzELeZZiKDuA0
+	 6JIfunc/nVUvSrBIfRk900oxZ2787B+gF2h77BXqscTXGWlKDLIlSThYYzXi6Zaf6k
+	 rSGRMLv44XHHzSMHgbqg/hi8HytIpEFrRSPhR2+NF71x4bQnEWRMd+fmzjPChz9SHD
+	 l99zEnTWxInewz9sw/ltbjS6dRQ4fdJNXiQJ67R4+Wc+4RYmFsK3aPla3MQMOLPRtt
+	 Du0AZ41GslozrTV5c51WftQYxJqxNJ5tdYXIlfTZ4AdLpFEJ8Cy0CdC8iVcMT6c/cM
+	 6A9cOjvqn/5+A==
 From: Kees Cook <kees@kernel.org>
 To: Luis Chamberlain <mcgrof@kernel.org>
 Cc: Kees Cook <kees@kernel.org>,
@@ -125,176 +126,50 @@ Cc: Kees Cook <kees@kernel.org>,
 	netdev@vger.kernel.org,
 	linux-fsdevel@vger.kernel.org,
 	linux-hardening@vger.kernel.org
-Subject: [PATCH 00/11] Convert moduleparams to seq_buf
-Date: Thu, 21 May 2026 06:33:13 -0700
-Message-Id: <20260521133315.work.845-kees@kernel.org>
+Subject: [PATCH 02/11] panic: Replace panic_print_get() with generic helper
+Date: Thu, 21 May 2026 06:33:15 -0700
+Message-Id: <20260521133326.2465264-2-kees@kernel.org>
 X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20260521133315.work.845-kees@kernel.org>
+References: <20260521133315.work.845-kees@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=8383; i=kees@kernel.org; h=from:subject:message-id; bh=iRiRSOifqAhDEW+rM5ucutf2vqbqOCl0n39wA2pC2nE=; b=owGbwMvMwCVmps19z/KJym7G02pJDFn8nPP5NjJqfrXdrfdzgRzzhL0cEUvVFLTFyz0Emuo2S cuk+1zsKGVhEONikBVTZAmyc49z8XjbHu4+VxFmDisTyBAGLk4BmMjpjYwMW1sezs9aJ6S4pvfM 9cD7+tJ32F5enlDXEpZXkNZ/g4mVnZFh3zrv5UmSl4OP8839kFvnc/3g3qNPdE9ob/yzv04h4/U XTgA=
+X-Developer-Signature: v=1; a=openpgp-sha256; l=866; i=kees@kernel.org; h=from:subject; bh=We2iaIAjr+4pDVj6nN4taHbnlsqb7PEX4Rc0M//7Kt8=; b=owGbwMvMwCVmps19z/KJym7G02pJDFn8nAumTnkv6GXi6mHz69T5F/eS51xN2sf9+OYJ/5tKM a7BKpWXOkpZGMS4GGTFFFmC7NzjXDzetoe7z1WEmcPKBDKEgYtTACZy9S/Db7YGn+v9lrVPV4gu m3xhJm8Bs3PHO2Ofhg7+Rze8/k6O/Mzw3yuT8f9jHfbF7g9KrUVDtZlPT9yg9mVa1fd5W55tLpg ayQcA
 X-Developer-Key: i=kees@kernel.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
 Content-Transfer-Encoding: 8bit
 
-Hi,
+Since panic_print_get() just calls the ulong helper directly, there is
+no need for it to exist as a wrapper.
 
-I tried to trim the CC list here, but it's still pretty huge...
+Signed-off-by: Kees Cook <kees@kernel.org>
+---
+ kernel/panic.c | 7 +------
+ 1 file changed, 1 insertion(+), 6 deletions(-)
 
-We've had a long-standing issue with "write to a string pointer" callbacks
-that don't bounds check the destination (and for which the bounds is
-also not part of the callback prototype, even if it is "known" to be
-PAGE_SIZE, which sysfs_emit() depends on). Both moduleparams and sysfs
-use this pattern. As a first step, and to test the migration method,
-migrate moduleparams first.
-
-There are 2 "mechanical" treewide patches that are handled by Coccinelle:
-- treewide: Convert struct kernel_param_ops initializers to DEFINE_KERNEL_PARAM_OPS
-- treewide: Convert custom kernel_param_ops .get callbacks to seq_buf via cocci
-
-The last treewide patch is manual, and may need to be broken up into
-per-subsystem patches, though I'd prefer to avoid this, as it would
-extend the migration from 1 relase to at least 2 releases. (1 to
-release the migration infrastructure, then 1 release to collect all the
-subsystem changes, and possibly 1 more release to remove the migration
-infrastructure.)
-
-Thoughts, questions?
-
--Kees
-
-Kees Cook (10):
-  panic: Replace panic_print_get() with generic helper
-  moduleparam: Add DEFINE_KERNEL_PARAM_OPS macro family
-  treewide: Convert struct kernel_param_ops initializers to
-    DEFINE_KERNEL_PARAM_OPS
-  moduleparam: Rename .get field to .get_str
-  moduleparam: Add seq_buf-based .get callback alongside .get_str
-  moduleparam: Route DEFINE_KERNEL_PARAM_OPS get pointer via _Generic
-  params: Convert generic kernel_param_ops .get helpers to seq_buf
-  treewide: Convert custom kernel_param_ops .get callbacks to seq_buf
-    via cocci
-  treewide: Manually convert custom kernel_param_ops .get callbacks
-  moduleparam: Drop legacy kernel_param_ops .get_str field and dispatch
-    logic
-
-Pengpeng Hou (1):
-  params: bound array element output to the caller's page buffer
-
- include/linux/dynamic_debug.h                 |   8 +-
- include/linux/moduleparam.h                   |  65 +++++++---
- security/apparmor/include/lib.h               |   3 +-
- mm/kfence/core.c                              |  15 ++-
- arch/powerpc/kvm/book3s_hv.c                  |   5 +-
- arch/s390/kernel/perf_cpum_sf.c               |  12 +-
- arch/um/drivers/vfio_kern.c                   |   9 +-
- arch/um/drivers/virtio_uml.c                  |  18 +--
- arch/x86/kernel/msr.c                         |  11 +-
- arch/x86/kvm/mmu/mmu.c                        |  28 ++--
- arch/x86/kvm/svm/avic.c                       |  14 +-
- arch/x86/kvm/vmx/vmx.c                        |  24 ++--
- arch/x86/platform/uv/uv_nmi.c                 |  24 ++--
- block/disk-events.c                           |   6 +-
- drivers/acpi/button.c                         |  19 ++-
- drivers/acpi/ec.c                             |  14 +-
- drivers/acpi/sysfs.c                          | 114 ++++++++--------
- drivers/block/loop.c                          |  12 +-
- drivers/block/null_blk/main.c                 |  12 +-
- drivers/block/rnbd/rnbd-srv.c                 |   6 +-
- drivers/block/ublk_drv.c                      |  12 +-
- drivers/char/ipmi/ipmi_msghandler.c           |  12 +-
- drivers/char/ipmi/ipmi_watchdog.c             |  50 +++----
- drivers/crypto/hisilicon/hpre/hpre_main.c     |  16 +--
- drivers/crypto/hisilicon/sec2/sec_main.c      |  23 +---
- drivers/crypto/hisilicon/zip/zip_crypto.c     |   5 +-
- drivers/crypto/hisilicon/zip/zip_main.c       |  21 +--
- drivers/dma/dmatest.c                         |  34 ++---
- drivers/edac/i10nm_base.c                     |   6 +-
- drivers/firmware/efi/efi-pstore.c             |   6 +-
- drivers/firmware/qcom/qcom_scm.c              |  18 +--
- drivers/firmware/qemu_fw_cfg.c                |  40 +++---
- drivers/gpu/drm/drm_panic.c                   |  13 +-
- drivers/gpu/drm/i915/i915_mitigations.c       |  31 ++---
- drivers/gpu/drm/imagination/pvr_fw_trace.c    |   6 +-
- drivers/hid/hid-cougar.c                      |   6 +-
- drivers/hid/hid-steam.c                       |   6 +-
- drivers/infiniband/hw/hfi1/driver.c           |  12 +-
- drivers/infiniband/ulp/iser/iscsi_iser.c      |   6 +-
- drivers/infiniband/ulp/isert/ib_isert.c       |   6 +-
- drivers/infiniband/ulp/srp/ib_srp.c           |  12 +-
- drivers/infiniband/ulp/srpt/ib_srpt.c         |   5 +-
- drivers/input/misc/ati_remote2.c              |  23 ++--
- drivers/input/mouse/psmouse-base.c            |  15 ++-
- drivers/md/md.c                               |   5 +-
- drivers/media/pci/tw686x/tw686x-core.c        |   6 +-
- drivers/media/usb/uvc/uvc_driver.c            |  14 +-
- drivers/misc/lis3lv02d/lis3lv02d.c            |   5 +-
- drivers/net/wireless/ath/wil6210/main.c       |  10 +-
- drivers/nvme/host/multipath.c                 |  17 +--
- drivers/nvme/host/pci.c                       |  18 +--
- drivers/nvme/target/rdma.c                    |   5 +-
- drivers/nvme/target/tcp.c                     |   5 +-
- drivers/pci/pcie/aspm.c                       |  17 ++-
- drivers/platform/x86/acerhdf.c                |   5 +-
- drivers/power/supply/bq27xxx_battery.c        |   6 +-
- drivers/power/supply/test_power.c             | 122 +++++++++---------
- drivers/scsi/fcoe/fcoe_transport.c            |  22 ++--
- drivers/scsi/sg.c                             |   6 +-
- drivers/target/target_core_user.c             |  25 ++--
- .../processor_thermal_soc_slider.c            |  24 ++--
- drivers/thermal/intel/intel_powerclamp.c      |  34 ++---
- drivers/tty/hvc/hvc_iucv.c                    |  24 ++--
- drivers/tty/sysrq.c                           |   6 +-
- drivers/ufs/core/ufs-fault-injection.c        |  12 +-
- drivers/ufs/core/ufs-mcq.c                    |  18 +--
- drivers/ufs/core/ufs-txeq.c                   |   5 +-
- drivers/ufs/core/ufshcd.c                     |  12 +-
- drivers/usb/core/quirks.c                     |   6 +-
- drivers/usb/gadget/legacy/serial.c            |   5 +-
- drivers/usb/storage/usb.c                     |  25 ++--
- drivers/vhost/scsi.c                          |  12 +-
- drivers/virt/nitro_enclaves/ne_misc_dev.c     |   6 +-
- drivers/virtio/virtio_mmio.c                  |  27 ++--
- fs/ceph/super.c                               |  10 +-
- fs/fuse/dir.c                                 |   5 +-
- fs/nfs/namespace.c                            |  12 +-
- fs/nfs/super.c                                |   6 +-
- fs/ocfs2/dlmfs/dlmfs.c                        |   5 +-
- fs/overlayfs/copy_up.c                        |   5 +-
- fs/ubifs/super.c                              |   6 +-
- kernel/locking/locktorture.c                  |  12 +-
- kernel/panic.c                                |  11 +-
- kernel/params.c                               | 122 +++++++++---------
- kernel/power/hibernate.c                      |   6 +-
- kernel/rcu/tree.c                             |  24 ++--
- kernel/sched/ext.c                            |  11 +-
- kernel/workqueue.c                            |  18 ++-
- lib/dynamic_debug.c                           |  16 ++-
- lib/test_dynamic_debug.c                      |  12 +-
- mm/damon/lru_sort.c                           |  33 +++--
- mm/damon/reclaim.c                            |  33 +++--
- mm/damon/stat.c                               |  16 +--
- mm/memory_hotplug.c                           |  30 +++--
- mm/page_reporting.c                           |  11 +-
- mm/shuffle.c                                  |   6 +-
- mm/zswap.c                                    |  14 +-
- net/batman-adv/bat_algo.c                     |   6 +-
- net/ceph/ceph_common.c                        |  10 +-
- net/ipv4/tcp_dctcp.c                          |   6 +-
- net/sunrpc/auth.c                             |  12 +-
- net/sunrpc/svc.c                              |   5 +-
- net/sunrpc/xprtsock.c                         |  18 +--
- samples/damon/mtier.c                         |   6 +-
- samples/damon/prcl.c                          |   6 +-
- samples/damon/wsse.c                          |   6 +-
- security/apparmor/lib.c                       |  27 ++--
- security/apparmor/lsm.c                       |  75 +++++------
- sound/hda/controllers/intel.c                 |   5 +-
- sound/usb/card.c                              |   7 +-
- 110 files changed, 854 insertions(+), 1066 deletions(-)
-
+diff --git a/kernel/panic.c b/kernel/panic.c
+index 20feada5319d..42e5ebde4585 100644
+--- a/kernel/panic.c
++++ b/kernel/panic.c
+@@ -1214,14 +1214,9 @@ static int panic_print_set(const char *val, const struct kernel_param *kp)
+ 	return  param_set_ulong(val, kp);
+ }
+ 
+-static int panic_print_get(char *val, const struct kernel_param *kp)
+-{
+-	return  param_get_ulong(val, kp);
+-}
+-
+ static const struct kernel_param_ops panic_print_ops = {
+ 	.set	= panic_print_set,
+-	.get	= panic_print_get,
++	.get	= param_get_ulong,
+ };
+ __core_param_cb(panic_print, &panic_print_ops, &panic_print, 0644);
+ 
 -- 
 2.34.1
 
