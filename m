@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E27FC3D810D;
-	Thu, 21 May 2026 13:33:26 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 783573D88F1;
+	Thu, 21 May 2026 13:33:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779370409; cv=none; b=BU3OdzTjWW0q3JoodND0JimCoqqxn48IJZP1E6bPuiXi4gkaEzXl6iq3fXuJhag+CPCswz/CENLGXssbu6Rsa8xI621uKvTb0aGSk/Qzcj+w/d2Q5kcmD0UU14YtUruTeGuohHCkc8XNaxPFTjJVW+VZiz1b7fIxSt12IgR8tH4=
+	t=1779370410; cv=none; b=W80YcKp/g6nuVsnWFcAi9+4fmG4w0a1zI7dPzcn3S0qmTMPfcFfssGmp9U0EUm682OAMXD/dZr8BlmFWZwm9PAQM7jE9SbIAAoK9vJPdEhPF7lG0PI5iDc2a5YhL8WcgHMvouaVxCBT+mk3SDv9HzYYO8RcRt664o5xEXpV03n8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779370409; c=relaxed/simple;
-	bh=3qCwRbQEn6qV8q9ahXLM93O2aOukjHk7G2WsPfFNfHo=;
+	s=arc-20240116; t=1779370410; c=relaxed/simple;
+	bh=vLGSuUHmnLi1/YHHelOJK4C4TcXRiKv4YFWn5np0glM=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=dr7Hql+8moa9fULZHOvXh0jZOw4s2YIymlV0DEWt/i/A0lZ7rRRKtUL5RzpPp7RUzCUqpvFGh7voh012zxMCRQmd8SsKtUPCeMa0kAE8nNnxFmV5c4LPdR/b7YBgS5XEL3xJNrsGJv09U6tiAtRnraSCzpWaXujXXd2bJbl/eQM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=F7Ykfcvp; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=oU+vyFNwa/iAVuj1yjd+xIJafNuoFh+v4X0DwBTo2t+CxiatqMIUA/A5AnVTDpKHQ4g1x0hUTm+gIjlKEKxpJoBeMIcwheffd7BAQrrrzlUI0BzXCiCSdy//P2SxJBg8n/vZWKYYkq53PE3Rx93OOMNcQTuC3GcxuHBTleCfGB4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OsMbrSfw; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="F7Ykfcvp"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9C9C71F0155A;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OsMbrSfw"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BCD6A1F00ADE;
 	Thu, 21 May 2026 13:33:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
 	s=k20260515; t=1779370406;
-	bh=xIIxiknLSHVZBHNOKlLgNSXxWTGeUxPYBjk6/bNkxVs=;
+	bh=D92GfeXfztwtGh+NKFXW+ejJ7GCi/ckBt7Icqwg1tfs=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=F7Ykfcvp0h6C12Jt7BShNBYGEpfAXvBIAx55A0+93dBwBTPwWMwDWRrO5isUznkhU
-	 itctVylBMPCseJ9S3+reU25bfhnxLGs81ROGkHDrSKeWpg/Rez1y63/E0p0lUE95MZ
-	 f/u4MnqyDBhhEHDleXISBtEDS8S6m8ZqoBy++9FLbj+QOoOdhCrl4GIXgLtDV0fnor
-	 mdHdAkA0VigFdnzXd0I0EUKIL42pTjUoBNZrx7zwWr/eWeE294mHLH60nGc7HBVsnN
-	 mHi84Fj8xXC12VUh1R1/Dg14UV22HTZGInV0oKdkocpJo9YXz5btVupLw70hiUfFNW
-	 gaqKIygTuUjnA==
+	b=OsMbrSfwtX1kazk5IQM74ggG4Dvao03ITo2rB7fjYJyw9ABWXfqI+9aA5qAj2SR/5
+	 bCJNN1CMD9hyb5ppglH/pZwAMSiek0jplgAMqEVVQL5JpcL8KAc0T0+rQaEkPfLgZJ
+	 h9CesS2RNlFMe0lhxQwlPJ5aoyzt8jSouyNeQ/ut9fjkrIWPM1iotTIo8B7ZH0pEOt
+	 PXBO5iwh3tZMUmZ6TsOUjTCKa3JTEC0MG2ngQVnXCKyNc+yajzL20Z6iBGWjesqILa
+	 wl9GSf1Gtg2R6s/MvPcceAUrPZB+a/bbJr58Jk3b4DpNimJFAtwQW4sG1Fmcwkxlwv
+	 gBE9pRr5KxqXg==
 From: Kees Cook <kees@kernel.org>
 To: Luis Chamberlain <mcgrof@kernel.org>
 Cc: Kees Cook <kees@kernel.org>,
@@ -126,9 +126,9 @@ Cc: Kees Cook <kees@kernel.org>,
 	netdev@vger.kernel.org,
 	linux-fsdevel@vger.kernel.org,
 	linux-hardening@vger.kernel.org
-Subject: [PATCH 03/11] moduleparam: Add DEFINE_KERNEL_PARAM_OPS macro family
-Date: Thu, 21 May 2026 06:33:16 -0700
-Message-Id: <20260521133326.2465264-3-kees@kernel.org>
+Subject: [PATCH 05/11] moduleparam: Rename .get field to .get_str
+Date: Thu, 21 May 2026 06:33:18 -0700
+Message-Id: <20260521133326.2465264-5-kees@kernel.org>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20260521133315.work.845-kees@kernel.org>
 References: <20260521133315.work.845-kees@kernel.org>
@@ -138,107 +138,90 @@ List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=3674; i=kees@kernel.org; h=from:subject; bh=3qCwRbQEn6qV8q9ahXLM93O2aOukjHk7G2WsPfFNfHo=; b=owGbwMvMwCVmps19z/KJym7G02pJDFn8nAuull67+C5txg2e1YGCbPvcujb6Wx/JN/xsvCs3x vgezzqPjlIWBjEuBlkxRZYgO/c4F4+37eHucxVh5rAygQxh4OIUgIkYvWZkOH+4UFL72GLVDkfh BLNPz5NZzv2JWSzlWpkxwSTGt4VrNiPD9r2rxE49blEzn3CRa4uBQPBb6Zti6VkbO1blT5RSdFv EBQA=
+X-Developer-Signature: v=1; a=openpgp-sha256; l=3072; i=kees@kernel.org; h=from:subject; bh=vLGSuUHmnLi1/YHHelOJK4C4TcXRiKv4YFWn5np0glM=; b=owGbwMvMwCVmps19z/KJym7G02pJDFn8nAsD4o0V/uTmcB53njx1B6e/bj7HRgn2VXOEOnsWp wZ2X7zWUcrCIMbFICumyBJk5x7n4vG2Pdx9riLMHFYmkCEMXJwCMBEONkaGy7PKr73Ur1Czz5B6 etdJJuEbm4bhmk/7zrsdOuT8PYl9KSPDwTtq/fyyAtr+f2YaPvkpdWtWnGfLNNfmFeI5M+tXlVf wAAA=
 X-Developer-Key: i=kees@kernel.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
 Content-Transfer-Encoding: 8bit
 
-Add macros that define a struct kernel_param_ops initializer through a
-macro so the underlying field layout can evolve without touching every
-call site. Three variants cover the three cases:
+Now that every kernel_param_ops initializer in the tree goes through
+DEFINE_KERNEL_PARAM_OPS, no source file outside kernel/params.c and
+include/linux/moduleparam.h references the .get field by name. Take
+advantage of that to rename the field to .get_str.
 
- DEFINE_KERNEL_PARAM_OPS(name, set, get) // basic
- DEFINE_KERNEL_PARAM_OPS_NOARG(name, set, get) // set KERNEL_PARAM_OPS_FL_NOARG
- DEFINE_KERNEL_PARAM_OPS_FREE(name, set, get, free) // also set .free
-
-Callers prefix their own visibility qualifiers, e.g.:
-
-  static DEFINE_KERNEL_PARAM_OPS(my_ops, my_set, my_get);
-
-Also update module_param_call() and STANDARD_PARAM_DEF() to use
-DEFINE_KERNEL_PARAM_OPS internally so the generated ops table will go
-through the same macro as everything else.
-
-Subsequent commits convert all open-coded struct kernel_param_ops
-definitions to use these macros, in preparation for migrating to a
-seq_buf .get API.
+The bare .get name is now free for the next commit, which adds it
+back as a struct seq_buf *-based callback.
 
 Signed-off-by: Kees Cook <kees@kernel.org>
 ---
- include/linux/moduleparam.h | 36 ++++++++++++++++++++++++++++++++++--
- kernel/params.c             |  6 ++----
- 2 files changed, 36 insertions(+), 6 deletions(-)
+ include/linux/moduleparam.h | 8 ++++----
+ kernel/params.c             | 6 +++---
+ 2 files changed, 7 insertions(+), 7 deletions(-)
 
 diff --git a/include/linux/moduleparam.h b/include/linux/moduleparam.h
-index 075f28585074..26bf45b36d02 100644
+index 26bf45b36d02..f5f4148e2504 100644
 --- a/include/linux/moduleparam.h
 +++ b/include/linux/moduleparam.h
-@@ -68,6 +68,39 @@ struct kernel_param_ops {
+@@ -63,7 +63,7 @@ struct kernel_param_ops {
+ 	/* Returns 0, or -errno.  arg is in kp->arg. */
+ 	int (*set)(const char *val, const struct kernel_param *kp);
+ 	/* Returns length written or -errno.  Buffer is 4k (ie. be short!) */
+-	int (*get)(char *buffer, const struct kernel_param *kp);
++	int (*get_str)(char *buffer, const struct kernel_param *kp);
+ 	/* Optional function to free kp->arg when module unloaded. */
  	void (*free)(void *arg);
  };
+@@ -82,7 +82,7 @@ struct kernel_param_ops {
+ #define DEFINE_KERNEL_PARAM_OPS(_name, _set, _get)			\
+ 	const struct kernel_param_ops _name = {				\
+ 		.set = (_set),						\
+-		.get = (_get),						\
++		.get_str = (_get),					\
+ 	}
  
-+/*
-+ * Define a const struct kernel_param_ops initializer. Callers prefix with
-+ * any required visibility qualifiers (typically "static"):
-+ *
-+ *   static DEFINE_KERNEL_PARAM_OPS(my_ops, my_set, my_get);
-+ *
-+ * Routing the @_set and @_get function pointers through the macro
-+ * (rather than naming the struct fields at every call site) lets the
-+ * field layout change in one place when callbacks are migrated to a
-+ * new signature.
-+ */
-+#define DEFINE_KERNEL_PARAM_OPS(_name, _set, _get)			\
-+	const struct kernel_param_ops _name = {				\
-+		.set = (_set),						\
-+		.get = (_get),						\
-+	}
-+
-+/* As DEFINE_KERNEL_PARAM_OPS, with KERNEL_PARAM_OPS_FL_NOARG set. */
-+#define DEFINE_KERNEL_PARAM_OPS_NOARG(_name, _set, _get)		\
-+	const struct kernel_param_ops _name = {				\
-+		.flags = KERNEL_PARAM_OPS_FL_NOARG,			\
-+		.set = (_set),						\
-+		.get = (_get),						\
-+	}
-+
-+/* As DEFINE_KERNEL_PARAM_OPS, with an additional .free callback. */
-+#define DEFINE_KERNEL_PARAM_OPS_FREE(_name, _set, _get, _free)		\
-+	const struct kernel_param_ops _name = {				\
-+		.set = (_set),						\
-+		.get = (_get),						\
-+		.free = (_free),					\
-+	}
-+
- /*
-  * Flags available for kernel_param
-  *
-@@ -311,8 +344,7 @@ struct kparam_array
-  * kernel_param_ops), use module_param_cb() instead.
-  */
- #define module_param_call(name, _set, _get, arg, perm)			\
--	static const struct kernel_param_ops __param_ops_##name =	\
--		{ .flags = 0, .set = _set, .get = _get };		\
-+	static DEFINE_KERNEL_PARAM_OPS(__param_ops_##name, _set, _get); \
- 	__module_param_call(MODULE_PARAM_PREFIX,			\
- 			    name, &__param_ops_##name, arg, perm, -1, 0)
+ /* As DEFINE_KERNEL_PARAM_OPS, with KERNEL_PARAM_OPS_FL_NOARG set. */
+@@ -90,14 +90,14 @@ struct kernel_param_ops {
+ 	const struct kernel_param_ops _name = {				\
+ 		.flags = KERNEL_PARAM_OPS_FL_NOARG,			\
+ 		.set = (_set),						\
+-		.get = (_get),						\
++		.get_str = (_get),					\
+ 	}
+ 
+ /* As DEFINE_KERNEL_PARAM_OPS, with an additional .free callback. */
+ #define DEFINE_KERNEL_PARAM_OPS_FREE(_name, _set, _get, _free)		\
+ 	const struct kernel_param_ops _name = {				\
+ 		.set = (_set),						\
+-		.get = (_get),						\
++		.get_str = (_get),					\
+ 		.free = (_free),					\
+ 	}
  
 diff --git a/kernel/params.c b/kernel/params.c
-index 752721922a15..2cbad1f4dd06 100644
+index e19fff2926bc..6852caea1785 100644
 --- a/kernel/params.c
 +++ b/kernel/params.c
-@@ -222,10 +222,8 @@ char *parse_args(const char *doing,
- 		return scnprintf(buffer, PAGE_SIZE, format "\n",	\
- 				*((type *)kp->arg));			\
- 	}								\
--	const struct kernel_param_ops param_ops_##name = {			\
--		.set = param_set_##name,				\
--		.get = param_get_##name,				\
--	};								\
-+	DEFINE_KERNEL_PARAM_OPS(param_ops_##name,			\
-+				param_set_##name, param_get_##name);	\
- 	EXPORT_SYMBOL(param_set_##name);				\
- 	EXPORT_SYMBOL(param_get_##name);				\
- 	EXPORT_SYMBOL(param_ops_##name)
+@@ -467,7 +467,7 @@ static int param_array_get(char *buffer, const struct kernel_param *kp)
+ 	for (i = off = 0; i < (arr->num ? *arr->num : arr->max); i++) {
+ 		p.arg = arr->elem + arr->elemsize * i;
+ 		check_kparam_locked(p.mod);
+-		ret = arr->ops->get(elem_buf, &p);
++		ret = arr->ops->get_str(elem_buf, &p);
+ 		if (ret < 0)
+ 			goto out;
+ 		ret = min(ret, (int)(PAGE_SIZE - 1 - off));
+@@ -554,11 +554,11 @@ static ssize_t param_attr_show(const struct module_attribute *mattr,
+ 	int count;
+ 	const struct param_attribute *attribute = to_param_attr(mattr);
+ 
+-	if (!attribute->param->ops->get)
++	if (!attribute->param->ops->get_str)
+ 		return -EPERM;
+ 
+ 	kernel_param_lock(mk->mod);
+-	count = attribute->param->ops->get(buf, attribute->param);
++	count = attribute->param->ops->get_str(buf, attribute->param);
+ 	kernel_param_unlock(mk->mod);
+ 	return count;
+ }
 -- 
 2.34.1
 
