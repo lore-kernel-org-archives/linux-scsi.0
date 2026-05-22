@@ -1,114 +1,91 @@
-Received: from mail-m10188.netease.com (mail-m10188.netease.com [154.81.10.188])
+Received: from hr2.samba.org (hr2.samba.org [144.76.82.148])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 17AAC4369A;
-	Fri, 22 May 2026 03:05:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=154.81.10.188
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6520E3090D9;
+	Fri, 22 May 2026 03:13:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=144.76.82.148
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779419128; cv=none; b=OR29jNbKcx8pVfip3gV7SEycU9ARRZXu37Jd3JN38hNrxQujKAkN3dM8YfQfF6dUwIKQVnILBQJDofZ9UXZfRW1XvaIMu1346qctZg4k1WDdP0HjhZJj6NGstIsaUN1KOur03OXVrsyUcmEA3FUbEWPiD8zCXrFLq8tKo4crQPo=
+	t=1779419593; cv=none; b=Cd5a72iAftPhkrEsTaEfvKxWWqAPAogkpg30DutN6EkI/F4O3wTdmGqOodnEGwCIlTaj9h94SWUwU6JhNNsDDfmOjvFWeS6naRcLwOcJc5q+HZ7pGzUUNlxpRLbMaC4nDH/yVkK5nw3rcNtyW3iwrolml5Z54rXhzaLgAzMrhiE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779419128; c=relaxed/simple;
-	bh=Lqsy4HienDaWeboj22nwmyyE+vhyncL58Mye6wNTjGI=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=iwWBj6sdZpE0hAUMtA4WAHorLfWWLLaTbMx9hRPP0mhb8voqeGQe8Zv0gRKLjsEzUDnaODq3DlAUFhnuPvZh4T5WT8YNpvVMLuGmT2k+vzspmpzBfLpW867odv6gK7k1NDq6HiQ2LFfD9UnSxNnKHvqo7himvDdG1FlLvno0cSo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=seu.edu.cn; spf=pass smtp.mailfrom=seu.edu.cn; dkim=pass (1024-bit key) header.d=seu.edu.cn header.i=@seu.edu.cn header.b=n0FjetMn; arc=none smtp.client-ip=154.81.10.188
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=seu.edu.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=seu.edu.cn
+	s=arc-20240116; t=1779419593; c=relaxed/simple;
+	bh=/61dKCQsNXfQTrcIXspHCHPqrkHzg8ZI5b4gO8VUF6E=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=ap7eEEMxlC4lNgV089SNmGM4W1Ai3EjRBqtLrWDnfL73z7QKUBbPmZej+Gkw8/EuNIsWKsfrgNYB7BA0JBxBcF2A8vpIBzZ5Kwr+KRglvr/dSjq4xSHLMoNGKhMlhRokruOcqQsMGj7bj8LRbw1vyEUDW5zKBX5LjVHyTFsWB5c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=samba.org; spf=pass smtp.mailfrom=samba.org; dkim=pass (3072-bit key) header.d=samba.org header.i=@samba.org header.b=nq8XROVi; arc=none smtp.client-ip=144.76.82.148
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=samba.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samba.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=seu.edu.cn header.i=@seu.edu.cn header.b="n0FjetMn"
-Received: from DESKTOP-SUEFNF9.taila7e912.ts.net (unknown [223.112.146.162])
-	by smtp.qiye.163.com (Hmail) with ESMTP id 3f63bb564;
-	Fri, 22 May 2026 11:05:14 +0800 (GMT+08:00)
-From: Dawei Feng <dawei.feng@seu.edu.cn>
-To: sathya.prakash@broadcom.com
-Cc: sreekanth.reddy@broadcom.com,
-	suganath-prabu.subramani@broadcom.com,
-	ranjan.kumar@broadcom.com,
-	James.Bottomley@HansenPartnership.com,
-	martin.petersen@oracle.com,
-	MPT-FusionLinux.pdl@broadcom.com,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	jianhao.xu@seu.edu.cn,
-	Dawei Feng <dawei.feng@seu.edu.cn>,
-	stable@vger.kernel.org,
-	Zilin Guan <zilin@seu.edu.cn>
-Subject: [PATCH] scsi: mpt3sas: fix double free on attach failure
-Date: Fri, 22 May 2026 11:05:12 +0800
-Message-Id: <20260522030512.3593337-1-dawei.feng@seu.edu.cn>
-X-Mailer: git-send-email 2.34.1
+	dkim=pass (3072-bit key) header.d=samba.org header.i=@samba.org header.b="nq8XROVi"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=samba.org;
+	s=42; h=Message-ID:Cc:To:From:Date;
+	bh=rGhhkZ31Tac738LHOJgvPbLoPgSzeZGoYWdhYAmVw9g=; b=nq8XROVi6gwS6a7xGJL2uPJY7W
+	u92a2Hqdkq09S5sVb5xKhU5FPsIJ+ZDLnqximbfoB3Nj9vHzZ5Y59YEKqeiy46gwv9UYXk2BThbLs
+	AdVIPWUe/RgDD0SEXcCcEr3PkB4Kdf/oqBFrpR0XvEm+q64QNp/wIlhtAHtoJDInjswKSyXa7WyCF
+	VFBuWJnCXY+yw9n20Ekpw+PmZ1ZJXYnJs+VF1nMIh1Bhc+tskvGxuWygx3LrICY+7MNAkhHJin4ZM
+	Z4VVRnBVvnxloAB8KNbnMVTijipEes6YSexC19s5T6SaekAf9sXL15ry2uWxVs684B/NI4BDVVVwT
+	Ssswjkp856KzaAw2+6Oe9OWoP1ISF4kq1GRVQ0v7EEkaD+I+TzR+1EKnSpoFgJdEXbQJ/mEOHnD7A
+	9g6ei7dmBCAVt23WYwKyzS5XcbEQeOe39Ul7L1ZrZrrWRBc5Om5TCVSFzK5IY161Unb5o9ArVBQjL
+	hbvAYIzRaEN7MpjIt/Hnr8g1;
+Received: from [127.0.0.2] (localhost [127.0.0.1])
+	by hr2.samba.org with esmtpsa (TLS1.3:ECDHE_SECP256R1__ECDSA_SECP256R1_SHA256__CHACHA20_POLY1305:256)
+	(Exim)
+	id 1wQGJq-0000000AqWk-0fhk;
+	Fri, 22 May 2026 03:13:02 +0000
+Date: Fri, 22 May 2026 13:12:55 +1000
+From: David Disseldorp <ddiss@samba.org>
+To: Alexandru Hossu <hossu.alexandru@gmail.com>
+Cc: martin.petersen@oracle.com, bvanassche@acm.org, mlombard@arkamax.eu,
+ target-devel@vger.kernel.org, linux-scsi@vger.kernel.org,
+ stable@vger.kernel.org
+Subject: Re: [PATCH v4] scsi: target: iscsi: validate CHAP_R length before
+ base64 decode
+Message-ID: <20260522131255.317946f2.ddiss@samba.org>
+In-Reply-To: <20260521151121.808477-1-hossu.alexandru@gmail.com>
+References: <20260521151121.808477-1-hossu.alexandru@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-HM-Tid: 0a9e4da4ecea03a2kunmbeaf0ddc5fe61
-X-HM-MType: 10
-X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-	tZV1koWUFITzdXWRgWCB1ZQUpXWS1ZQUlXWQ8JGhUIEh9ZQVkaT05NVh1LTxlMTxgZHkIeSlYeHw
-	5VEwETFhoSFyQUDg9ZV1kYEgtZQVlJSUhVSkpJVUpPTVVKTUlZV1kWGg8SFR0UWUFZT0tIVUpLSU
-	hOQ0NVSktLVUtZBg++
-DKIM-Signature: a=rsa-sha256;
-	b=n0FjetMnflSYuRnILIwM6OFHiYrbgQnN1H0RTbAbbkO+8/l7w1hJLDdy9z8MjZ/5SyMjUgb3EZUlZ8jlce2HKPJ0qkKTEqZclHqzFCtiqW1fZ1vymRDMbOEJqd5x0pJWTAqG8AutDT1zL4vRVzTrOx5mBK8Xk6yH/fDBj14d9n8=; s=default; c=relaxed/relaxed; d=seu.edu.cn; v=1;
-	bh=5A71jDVZGOtR1kW6DpGCEYPpBI3TD0twhJ2npk6TIOI=;
-	h=date:mime-version:subject:message-id:from;
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-mpt3sas_base_attach() tears memory pools down from its
-out_free_resources path when _base_allocate_memory_pools() fails.
-Some _base_allocate_memory_pools() retry and error paths already call
-_base_release_memory_pools() before returning an error, so the attach
-cleanup can run the same teardown twice.
+On Thu, 21 May 2026 17:11:21 +0200, Alexandru Hossu wrote:
 
-Set reply_post, pcie_sgl_dma_pool, and config_page to NULL after
-teardown so the attach failure path cannot release the same resources a
-second time, avoiding a double free.
+> chap_server_compute_hash() allocates client_digest as
+> kzalloc(chap->digest_size) and then, for BASE64-encoded responses,
+> passes chap_r directly to chap_base64_decode() without checking whether
+> the input length could produce more than digest_size bytes of output.
+> 
+> chap_base64_decode() writes to the destination unconditionally as long
+> as there is input to consume. With MAX_RESPONSE_LENGTH set to 128 and
+> the "0b" prefix stripped by extract_param(), up to 127 base64 characters
+> can reach the decoder. 127 characters decode to 95 bytes. For SHA-256
+> (digest_size=32) this overflows client_digest by 63 bytes; for MD5
+> (digest_size=16) the overflow is 79 bytes.
+> 
+> The length check at line 344 fires after the write has already happened.
+> 
+> The HEX branch in the same switch statement already validates the length
+> up front. Apply the same approach to the BASE64 branch: strip trailing
+> base64 padding characters, then reject any input whose data length
+> exceeds DIV_ROUND_UP(digest_size * 4, 3) before calling the decoder.
+> 
+> Stripping trailing '=' before the comparison handles both padded and
+> unpadded encodings. chap_base64_decode() already returns early on '=',
+> so the full original string is still passed to the decoder unchanged.
+> 
+> The mutual CHAP path decodes CHAP_C into initiatorchg_binhex, which is
+> kzalloc(CHAP_CHALLENGE_STR_LEN). extract_param() caps initiatorchg at
+> CHAP_CHALLENGE_STR_LEN characters, so at most CHAP_CHALLENGE_STR_LEN-1
+> base64 characters reach the decoder. The maximum decoded size,
+> DIV_ROUND_UP((CHAP_CHALLENGE_STR_LEN-1) * 3, 4), is less than
+> CHAP_CHALLENGE_STR_LEN, so no overflow is possible there. A comment is
+> added at the call site to document this.
+> 
+> Fixes: 1e5733883421 ("scsi: target: iscsi: Support base64 in CHAP")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Alexandru Hossu <hossu.alexandru@gmail.com>
 
-The bug was first flagged by an experimental analysis tool we are
-developing for kernel memory-management bugs while analyzing
-v6.13-rc1. The tool is still under development and is not yet publicly
-available. Manual inspection confirms that the bug is still
-present in v7.1-rc4.
-
-Runtime validation was not attempted because this path depends on
-mpt3sas controller initialization and suitable hardware or firmware.
-
-Fixes: 8ff045c92708 ("mpt3sas: Free memory pools before retrying to allocate with different value.")
-Cc: stable@vger.kernel.org
-Signed-off-by: Zilin Guan <zilin@seu.edu.cn>
-Signed-off-by: Dawei Feng <dawei.feng@seu.edu.cn>
----
- drivers/scsi/mpt3sas/mpt3sas_base.c | 3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index 79052f2accbd..18fe64d6f40a 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -5866,6 +5866,7 @@ _base_release_memory_pools(struct MPT3SAS_ADAPTER *ioc)
- 		}
- 		dma_pool_destroy(ioc->reply_post_free_array_dma_pool);
- 		kfree(ioc->reply_post);
-+		ioc->reply_post = NULL;
- 	}
- 
- 	if (ioc->pcie_sgl_dma_pool) {
-@@ -5876,6 +5877,7 @@ _base_release_memory_pools(struct MPT3SAS_ADAPTER *ioc)
- 			ioc->pcie_sg_lookup[i].pcie_sgl = NULL;
- 		}
- 		dma_pool_destroy(ioc->pcie_sgl_dma_pool);
-+		ioc->pcie_sgl_dma_pool = NULL;
- 	}
- 	kfree(ioc->pcie_sg_lookup);
- 	ioc->pcie_sg_lookup = NULL;
-@@ -5886,6 +5888,7 @@ _base_release_memory_pools(struct MPT3SAS_ADAPTER *ioc)
- 				     ioc->config_page));
- 		dma_free_coherent(&ioc->pdev->dev, ioc->config_page_sz,
- 		    ioc->config_page, ioc->config_page_dma);
-+		ioc->config_page = NULL;
- 	}
- 
- 	kfree(ioc->hpr_lookup);
--- 
-2.34.1
-
+Reviewed-by: David Disseldorp <ddiss@suse.de>
