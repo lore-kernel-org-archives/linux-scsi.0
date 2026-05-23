@@ -1,66 +1,66 @@
 Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 75503334374;
-	Sat, 23 May 2026 03:15:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5AEA932B107;
+	Sat, 23 May 2026 03:15:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.165.32
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779506140; cv=none; b=YqAtDYoj0x2MHhKqOIuZJkAfjeQRKpKQKhMIvT/E0p4t4+DiT0ewk2kNwS4oThGMGK0b5+QrGbNJ23ojcy9lFmorYxoGwCUjjQ5+bw3qxY4GEYpoQy/WcP76hF1sG+5XkQijUCH5kVGN1n3B/bE6gIIwKDMf/8x70vRhgVcrcjc=
+	t=1779506143; cv=none; b=AbkD1ajrSeuENZ3GoRpCTjVV6v37/Rc1MgsnLtslZvWjnS6K/CqOjL44uT4UrvrlCd3x89ld0xuEqmzKr+ykioS+97BrzxhYGFskyfjmf7opcA5K9tjO/Tg9FCmtX1s6AjEXP+kEnETMU7Iv6aOyS1SYveG4jr3C0MtgWEa6I7E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779506140; c=relaxed/simple;
-	bh=e0ZJyqGGf4tturPztJYjTedtzszbcbFMNj1hE7+IuEs=;
+	s=arc-20240116; t=1779506143; c=relaxed/simple;
+	bh=xdmQDaZPGAjb+WmlUPN4urm3O40ToZSm/iJMOSCKLFU=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=CQGTM/rYIGn2idROnLps/oD8WQovPjGizE4dDBjn0qRJcJUpUdRuWwKBQSDm9MR/zDIqkGH1Q/pfRAEk04XCWx2hmXWbfuA8VbOobC6h5qFiU4qkAOqfJmd2BNgKs0tUcLjXJCIrtpwr5OjP64Nq6aLrgXtuMdRdiRgSY0UiMx8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=FVSXw99D; arc=none smtp.client-ip=205.220.165.32
+	 MIME-Version:Content-Type; b=FqsRVcnzEYJNWZniG2sqdHdr+tiCBZORvPDTTHx2TPDfIi6v+2XdSVEY08xLJeDJpQ6fy4i0wkZYnRR10l1IE/tGdtRdaC7PzaQ2WeLxhkNXPYJQr6UwQ86Fx1iRtLKqGMJY7+g+Lwvxg96QbZpPvm3BdBcbXmpQvS0Vw+sk/dE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=UZfyu+WD; arc=none smtp.client-ip=205.220.165.32
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="FVSXw99D"
-Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 64MNR269183313;
-	Sat, 23 May 2026 03:15:12 GMT
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="UZfyu+WD"
+Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 64N1hU1D771423;
+	Sat, 23 May 2026 03:15:18 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
 	:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=
-	corp-2025-04-25; bh=WQGUZ9G9X/zjeVA0ZNH07vvPNIXyNgq/Qdw3JCMIk7c=; b=
-	FVSXw99DM2Xqzff/VYX3i5/+sf26AwgViSoPoTP8bX16tVvmIWTAmOWgLl5q4FrC
-	g152WXk1MlyHFFxxlMgh7mRODlOpZwgn9W5SVWuFy/lnghodlFj7jPxDHroaC7wO
-	Hwj8kszspy6gxCRbLEd18WuTdEa4QysoBaM4zMRNi4XWDZsqq4BYOlOIxCZjydDB
-	Sh0aaO2EEJfYFJ4eK+y5v2yhhmiRjln+2OPBpFLlfAjJPzXoq2p3YO4RSZrJWHW2
-	8wUCSDuvbMQZ5l4ViTA2WLjPtS7BNX5ewkKMk3p5D9sJYt5x8oOgsgUixmrOGVfM
-	VsgiETo5iuuyl0R3LuYK0w==
+	corp-2025-04-25; bh=vR/isyuyP4vIGDp7X6qgVUcwX9FEcW2li2TtHSMdSjs=; b=
+	UZfyu+WDFaOOEvy3UiGnacnqAAutf5wBbQZaVR8fqNShStGENyCXP0HQPc/clnBL
+	vLhmOyksmCISjkV0RAzchDNTLhDsgHwM722ZJkcE1Q93VfoTk2hs5VT57hIP6X23
+	JUXabWqRYBGNe9OmrWbd9+WBy1z9G1QAJNKnR57UBL+uYB28dUYyqI0LkpUecC2P
+	NDJH4oqcPm3TlHRi097tvWiA27frissYO+s3e1RvTv2JK7lZgLoed8UAKE7NSqJm
+	B9w61/nwRA3kpobB5WduZpQo+XmZPn7L6XLY4npzIO1Ma2Pc3mz4wPeXkCtYwQ2O
+	WiUiphWjFRWMNeasdECU+A==
 Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4e6h4qcct0-1
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4eb2tyg72b-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Sat, 23 May 2026 03:15:12 +0000 (GMT)
+	Sat, 23 May 2026 03:15:18 +0000 (GMT)
 Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.7/8.18.1.7) with ESMTP id 64N3F6Wa032363;
-	Sat, 23 May 2026 03:15:11 GMT
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.7/8.18.1.7) with ESMTP id 64N3F6O7032436;
+	Sat, 23 May 2026 03:15:17 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 4eb2p6hscg-1
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 4eb2p6hsff-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Sat, 23 May 2026 03:15:11 +0000 (GMT)
+	Sat, 23 May 2026 03:15:17 +0000 (GMT)
 Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by pps.reinject (8.18.1.12/8.18.1.12) with ESMTP id 64N3F9du032824;
-	Sat, 23 May 2026 03:15:11 GMT
+	by pps.reinject (8.18.1.12/8.18.1.12) with ESMTP id 64N3F9e8032824;
+	Sat, 23 May 2026 03:15:17 GMT
 Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 4eb2p6hs6k-2;
-	Sat, 23 May 2026 03:15:10 +0000 (GMT)
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 4eb2p6hs6k-8;
+	Sat, 23 May 2026 03:15:17 +0000 (GMT)
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-        Matthew Wilcox <willy@infradead.org>, Hannes Reinecke <hare@suse.com>,
-        Jens Axboe <axboe@kernel.dk>, Arnd Bergmann <arnd@kernel.org>
+To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        Marco Crivellari <marco.crivellari@suse.com>
 Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Johannes Thumshirn <johannes.thumshirn@wdc.com>,
-        John Garry <john.g.garry@oracle.com>, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] scsi: advansys: drop ISA_DMA_API remnants
-Date: Fri, 22 May 2026 23:14:16 -0400
-Message-ID: <177913641744.1181900.4761236465722507016.b4-ty@oracle.com>
+        Tejun Heo <tj@kernel.org>, Lai Jiangshan <jiangshanlai@gmail.com>,
+        Frederic Weisbecker <frederic@kernel.org>,
+        Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
+        Michal Hocko <mhocko@suse.com>,
+        "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>
+Subject: Re: [RFC PATCH] scsi: scsi_transport_srp: Move long delayed work on system_dfl_long_wq
+Date: Fri, 22 May 2026 23:14:22 -0400
+Message-ID: <177913641775.1181900.3921727355907955217.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260429151623.3899875-1-arnd@kernel.org>
-References: <20260429151623.3899875-1-arnd@kernel.org>
+In-Reply-To: <20260507143410.337267-1-marco.crivellari@suse.com>
+References: <20260507143410.337267-1-marco.crivellari@suse.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -74,36 +74,39 @@ X-Proofpoint-Virus-Version: vendor=baseguard
  definitions=2026-05-23_01,2026-05-18_01,2025-10-01_01
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0
  suspectscore=0 malwarescore=0 spamscore=0 phishscore=0 lowpriorityscore=0
- mlxlogscore=414 bulkscore=0 mlxscore=0 classifier=spam adjust=0 reason=mlx
+ mlxlogscore=999 bulkscore=0 mlxscore=0 classifier=spam adjust=0 reason=mlx
  scancount=1 engine=8.19.0-2605130000 definitions=main-2605230029
-X-Authority-Analysis: v=2.4 cv=NdnWEWD4 c=1 sm=1 tr=0 ts=6a111bc0 cx=c_pps
+X-Authority-Analysis: v=2.4 cv=SoCgLvO0 c=1 sm=1 tr=0 ts=6a111bc6 cx=c_pps
  a=OOZaFjgC48PWsiFpTAqLcw==:117 a=OOZaFjgC48PWsiFpTAqLcw==:17
  a=IkcTkHD0fZMA:10 a=NGcC8JguVDcA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=jiCTI4zE5U7BLdzWsZGv:22 a=7Gl3-_t3PgB9XO-mQDs3:22 a=VwQbUJbxAAAA:8
- a=JK-S3ZpVlL6AxdlREH8A:9 a=QEXdDO2ut3YA:10
-X-Proofpoint-GUID: DlVWWQTdma4QKBhE3QKTdgrwFRqVBu1o
-X-Proofpoint-ORIG-GUID: DlVWWQTdma4QKBhE3QKTdgrwFRqVBu1o
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNTIzMDAyOSBTYWx0ZWRfX4NzBCGjSE7Br
- 19tnIRpByaeS5gCJoTWmnjCXm1wyobq4RipAhlAxrBU2eH4YSlUs0gnR7kG6uEfx7BqvXyA/l6y
- /7a9rwJGrRDwTV4er5ifalpTP7qgYAXlskQvh5ZTTs/4BQ4y/RlMZqOMoyWpY2TeSa4VahorwLs
- VCfvh/D/uDayU9Z1uKwFeQorngACzR/bLxIsSreTus7E0TikRUqZBfMb7r19i9fjSoLf+efP+dP
- eocxT6bSDd1wR44Jm1Lwt/nint4dacbdNH15rH4p0LVNX3kBdxCNQSuV2RJLcvxiTprt/jFh9Kb
- 4e17RXPWizS1fQfMfJBQ1IVMisnFK3prQPd9+HDqCYpq+yZ9hduqDX68y4cmF9CW5Wk1LUGQz5d
- e+pcKW0pflCwMA/+zs+xnNrD/k6HMVQHMtRg8SjV9khRB9SAvHKS3vAt5DBC8aDbTA1SURdXyl9
- +IJrJ1OiP6bQzljB5xA==
+ a=jiCTI4zE5U7BLdzWsZGv:22 a=RD47p0oAkeU5bO7t-o6f:22 a=VwQbUJbxAAAA:8
+ a=aYGLzZUFCA-z_BF5oZ8A:9 a=QEXdDO2ut3YA:10 a=O8hF6Hzn-FEA:10
+X-Proofpoint-ORIG-GUID: arYjaVoizl5udncvjvVwYSaq9sh9AZso
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNTIzMDAyOSBTYWx0ZWRfX1bpF6pWfW3si
+ cK+cpE2qsRNsYl9qOWwSOaEhdNcFU1GC1rn2YVJ3D10gy4pZr34+L/Kd2Y/9DTFaPqkhfdy/bFZ
+ CYU/WfsBEk17Lo84b7XZlUS11QIijjWwdmtaDkLjmZY93imrzzwmFyZ0yWznimh+kBywB4kPLcD
+ VB1yWjsmHz8hRjDvkYTZYBeHj9KTjTrU1336o0nTQJ8J0PzB//ApNaiyLlrlIA7kn92GjjPYeJE
+ JYNUpg7vJlVGAFFey23WiQFqKBB7esUgqwNJ4lIWgGuA6fcPN4vsl/1QE190USXF8JVrZhjVgIj
+ 3rrXYli3bvfwirM3FramqvxLOd9KoL43eMeGsJcQo7cOc+FS5XdMFLi3BDe8rTQhy8cyvZwZDCL
+ cbVYJGSkK8vjb1DcagQg/wTbcbATNozqo06EiLBnt71JPUx0Ddfw9+ZOhHR/UQWDwTvkLhGS9XJ
+ 4qbWSMggxuRGGJQzJXA==
+X-Proofpoint-GUID: arYjaVoizl5udncvjvVwYSaq9sh9AZso
 
-On Wed, 29 Apr 2026 17:15:37 +0200, Arnd Bergmann wrote:
+On Thu, 07 May 2026 16:34:10 +0200, Marco Crivellari wrote:
 
-> Support for ISA bus mastering was removed a few years ago, and the VLB
-> mode does not use the ISA DMA API, so drop the dependency and the
-> header inclusion.
+> Currently the code enqueue work items using {queue|mod}_delayed_work(),
+> using system_long_wq. This workqueue should be used when long works are
+> expected and it is a per-cpu workqueue.
 > 
+> The function(s) end up calling __queue_delayed_work(), which set a global
+> timer that could fire anywhere, enqueuing the work where the timer fired.
 > 
+> [...]
 
 Applied to 7.2/scsi-queue, thanks!
 
-[1/1] scsi: advansys: drop ISA_DMA_API remnants
-      https://git.kernel.org/mkp/scsi/c/c7233b3d99db
+[1/1] scsi: scsi_transport_srp: Move long delayed work on system_dfl_long_wq
+      https://git.kernel.org/mkp/scsi/c/1039939c52f2
 
 -- 
 Martin K. Petersen
