@@ -1,79 +1,60 @@
-Received: from mout02.posteo.de (mout02.posteo.de [185.67.36.66])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7DC6D187346
-	for <linux-scsi@vger.kernel.org>; Sat, 23 May 2026 12:52:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.67.36.66
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1AA5438F251
+	for <linux-scsi@vger.kernel.org>; Sat, 23 May 2026 13:47:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779540767; cv=none; b=C8pEWXksW8XnL2mDOZiCI50b3+dv5ceNtM8i8Ph4Zk4ZYEJh3BxFJc2ShfziXN6TGBcVhkQjtCQIQJjjbed3HVW6F+OTUduEW34wwZZoThwyU9DzXzeeS3Zwo8K0ezsEFmdH4QT5ldSw4lWl19PYql2YmKsuYANgPzsxXMzcf00=
+	t=1779544054; cv=none; b=OZBOSpUU6tBhzXjPmLGueTIeneZyJOVmu0FTQ3G14/OveGciZIKNX/xVmeyeyM+3tidWmch5MGP6Eye1c+ATYq9T5M+hk+cNmfDnk6Svyjftvv99YpzAzUU83betImNaan1J6SD8nkfAPrOjEr00HVt1bBKHQ0EABtkW6PViX68=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779540767; c=relaxed/simple;
-	bh=6+fWAZt+4ivYTzLpmo8IvPTUCuA4JscxLqeYDtrKYs4=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=k1/u0ooWhG/RX7FI7r+mOySo7aBGzje80efVKl6PXWbisE6ULf4SJuUaxUqIMb+SYj4Ybqaow9VlNqRx5fRCHlSYjpG4Qv9gy1gfWGMWoGKU9vorwvJp7K+mJW+/1UhTDwxsig7neq4TGGR0NkqTXkDyejsCDoi/dP8PIDzDtn4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.net; spf=pass smtp.mailfrom=posteo.net; dkim=pass (2048-bit key) header.d=posteo.net header.i=@posteo.net header.b=j3gOBikg; arc=none smtp.client-ip=185.67.36.66
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=posteo.net
+	s=arc-20240116; t=1779544054; c=relaxed/simple;
+	bh=k/mcuSRHwTFgtu+FciEXYjQ0vWINqaIzGSUzSylC1bQ=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=axPhXr9BRF/X51XkqJCHuKaA51g+BwBbjJiAxZmf33vSsYeV7+LQ5TJ2/wqE9FDfX7n5OemrZSUCLtH4UDNWo0l8JYVEvoTk1iKvPzFONdmU7s0e894BZ3eYyFzgx5Jc4bF8qVbDvUQ0VD4VunwEa0iuo4O3QaHl40obzrSyn2M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=Jn117R7J; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=posteo.net header.i=@posteo.net header.b="j3gOBikg"
-Received: from submission (posteo.de [185.67.36.169]) 
-	by mout02.posteo.de (Postfix) with ESMTPS id 4BA79240105
-	for <linux-scsi@vger.kernel.org>; Sat, 23 May 2026 14:52:37 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=posteo.net; s=2017;
-	t=1779540757; bh=bxiCjbyE4L9dPupS9cBbu4nnbIMmzEr7N/QwhywpPUo=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:
-	 Content-Transfer-Encoding:From;
-	b=j3gOBikgfn1xTd/Gd2B+JyqhIyaLtMxcxXdZX3m9eLRzQ1vmLG/sQ2WOzYbxt+OPZ
-	 0W3blV4pxc1wVtCgfZSjDG54sl27t3gA80+tuXxyJ7moJCzoVmjgSApuLW5Ji4lG9i
-	 l4LZ5AIUIJmiODfR+WIAw9GRIxXdCd2rF/dsklQuP8H0trjRBYUjfcyd2/1+2gRyTR
-	 HQOg+JgGmG3x/otZzozN/kbh7DQxC5md5txTL9dtXZiq8KlOXLB89O8cC4GXsBm1sf
-	 ERoqvMz8i/ZQosK4gKjcCaj6DkgX6TtWjYS+jXTZcvhP4h3nyFqk+ossLfxPYJ2lcp
-	 IacfcRFiAnelQ==
-Received: from customer (localhost [127.0.0.1])
-	by submission (posteo.de) with ESMTPSA id 4gN29W11Cqz6tvq;
-	Sat, 23 May 2026 14:52:31 +0200 (CEST)
-From: Mateusz Nowicki <mateusz.nowicki@posteo.net>
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Caleb Sander Mateos <csander@purestorage.com>,
-	Sung-woo Kim <iam@sung-woo.kim>,
-	Josef Bacik <josef@toxicpanda.com>,
-	Alasdair Kergon <agk@redhat.com>,
-	Mike Snitzer <snitzer@kernel.org>,
-	Mikulas Patocka <mpatocka@redhat.com>,
-	Benjamin Marzinski <bmarzins@redhat.com>,
-	Ulf Hansson <ulfh@kernel.org>,
-	Richard Weinberger <richard@nod.at>,
-	Zhihao Cheng <chengzhihao1@huawei.com>,
-	Miquel Raynal <miquel.raynal@bootlin.com>,
-	Vignesh Raghavendra <vigneshr@ti.com>,
-	Sven Peter <sven@kernel.org>,
-	Janne Grunau <j@jannau.net>,
-	Neal Gompa <neal@gompa.dev>,
-	Keith Busch <kbusch@kernel.org>,
-	Christoph Hellwig <hch@lst.de>,
-	Sagi Grimberg <sagi@grimberg.me>,
-	Justin Tee <justin.tee@broadcom.com>,
-	Naresh Gottumukkala <nareshgottumukkala83@gmail.com>,
-	Paul Ely <paul.ely@broadcom.com>,
-	Chaitanya Kulkarni <kch@nvidia.com>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Thomas Fourier <fourier.thomas@gmail.com>,
-	Al Viro <viro@zeniv.linux.org.uk>,
-	Luke Wang <ziniu.wang_1@nxp.com>,
-	Kees Cook <kees@kernel.org>,
-	linux-block@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	nbd@other.debian.org,
-	dm-devel@lists.linux.dev,
-	linux-mmc@vger.kernel.org,
-	linux-mtd@lists.infradead.org,
-	asahi@lists.linux.dev,
-	linux-arm-kernel@lists.infradead.org,
-	linux-nvme@lists.infradead.org,
-	linux-scsi@vger.kernel.org
-Subject: [PATCH v1] block: switch numa_node to int in blk_mq_hw_ctx and init_request
-Date: Sat, 23 May 2026 12:52:35 +0000
-Message-ID: <20260523125210.272274-1-mateusz.nowicki@posteo.net>
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="Jn117R7J"
+Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 64N3ZJ1V4027569;
+	Sat, 23 May 2026 13:47:15 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:date:from:message-id:mime-version
+	:subject:to; s=qcppdkim1; bh=dyy9X+s2t9wmY6ED1NOEfPYMwyF7GknY1tE
+	F0r67N0M=; b=Jn117R7JeqD+9gmYDQk9hqSYCNmOitUPfYIPVSwWSyr6JYTrFEz
+	X1KcPgoQW4g5ebS4kgKwfrzOdfs/i697UXHNt71NuBD1zAqd7K/3npa/Gq+nNRQ9
+	/sNDU0RMH5UzyI2zkOzAXQsmGI3cNcGK8ut8myjVA3h1RAnQp5V+X18BmziPywys
+	w+DleBGNPatGAaqhVZecvr8zTcQoB8HabL/vGH6UYOM+zDH1F1RNg5D0rueUramy
+	LJZ5jKDQDgN10ZpT0JATJ9vtP0TfNLBcCZbWdCewnApLg5dHTgFaLRKFlU9tsMFa
+	/tkD/D08Zl3MDMf5VuYq4fgKmyEn8SAO+jg==
+Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4eb4f392g5-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Sat, 23 May 2026 13:47:14 +0000 (GMT)
+Received: from pps.filterd (NALASPPMTA01.qualcomm.com [127.0.0.1])
+	by NALASPPMTA01.qualcomm.com (8.18.1.7/8.18.1.7) with ESMTP id 64NDlEsI031952;
+	Sat, 23 May 2026 13:47:14 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+	by NALASPPMTA01.qualcomm.com (PPS) with ESMTPS id 4eb5ahayu8-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Sat, 23 May 2026 13:47:14 +0000 (GMT)
+Received: from NALASPPMTA01.qualcomm.com (NALASPPMTA01.qualcomm.com [127.0.0.1])
+	by pps.reinject (8.18.1.12/8.18.1.12) with ESMTP id 64NDlDWl031947;
+	Sat, 23 May 2026 13:47:14 GMT
+Received: from hu-devc-lv-u22-c.qualcomm.com (hu-cang-lv.qualcomm.com [10.81.25.255])
+	by NALASPPMTA01.qualcomm.com (PPS) with ESMTPS id 64NDlD4b031943
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Sat, 23 May 2026 13:47:13 +0000 (GMT)
+Received: by hu-devc-lv-u22-c.qualcomm.com (Postfix, from userid 359480)
+	id AEE5061F; Sat, 23 May 2026 06:47:13 -0700 (PDT)
+From: Can Guo <can.guo@oss.qualcomm.com>
+To: bvanassche@acm.org, beanhuo@micron.com, peter.wang@mediatek.com,
+        martin.petersen@oracle.com, mani@kernel.org
+Cc: linux-scsi@vger.kernel.org, Can Guo <can.guo@oss.qualcomm.com>
+Subject: [PATCH v2 0/2] Add static TX Equalization settings support from DT
+Date: Sat, 23 May 2026 06:47:09 -0700
+Message-Id: <20260523134711.323425-1-can.guo@oss.qualcomm.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -81,232 +62,115 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+X-QCInternal: smtphost
+X-QCInternal: smtphost
+X-Proofpoint-ORIG-GUID: dDE5IcN9NQLNs7vVjErwBv1Qden4k1gE
+X-Authority-Analysis: v=2.4 cv=WvYb99fv c=1 sm=1 tr=0 ts=6a11afe2 cx=c_pps
+ a=ouPCqIW2jiPt+lZRy3xVPw==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
+ a=NGcC8JguVDcA:10 a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22
+ a=yOCtJkima9RkubShWh1s:22 a=VwQbUJbxAAAA:8 a=EUspDBNiAAAA:8
+ a=4ajky533VDcJp0aEe7MA:9
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNTIzMDE0MSBTYWx0ZWRfX8BI88ttSJD2H
+ FHWdCagX/28wBxir3Hdon6aB6qlno5ga5dIeBZEoxQYNS2aWrO5OGWWifd1B1Hltzt55PifChRE
+ vKq4HxgHRxnmWgDe8Nt+ixzS5ACiSywMPJwoqu3TB/HFLcjwoPS7d0C3lewMORF/xpTvfv1sNjF
+ kE8RUVKXkGgaXd505Xby7HfCtjzkpLFqqX0EcdiZgWOZlGyr0DcUQB+uJVfCdju+nBIYcMmpJma
+ Rn0Ek2iPYf+2moHkot8scgjuRssDk9aIkgffzxJ9wHaNsrViWGnFxcBNJhA4QAuKWRsCpL++lEc
+ N9rtmpdrWFzSIofj8iu62465zK5vh8KsZpd409oTbKiRxoZpV2wf+b4ZWKhueIfbhS5q4ez/eU1
+ rWsbhIeaGGqaDDROzHBPZ1gJ8Id4SL8m9F/ja7ZNObjq1ujJBy3LvVffZwbw3zKlFxflXJOJ9dC
+ i/xJt88JfouEp9Eug/g==
+X-Proofpoint-GUID: dDE5IcN9NQLNs7vVjErwBv1Qden4k1gE
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-05-23_04,2026-05-18_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ malwarescore=0 priorityscore=1501 lowpriorityscore=0 spamscore=0
+ clxscore=1015 phishscore=0 adultscore=0 suspectscore=0 impostorscore=0
+ bulkscore=0 classifier=typeunknown authscore=0 authtc= authcc= route=outbound
+ adjust=0 reason=mlx scancount=1 engine=8.22.0-2605130000
+ definitions=main-2605230141
 
-numa_node in blk_mq_hw_ctx and the matching argument of
-blk_mq_ops::init_request can be NUMA_NO_NODE (-1).  Declared as
-unsigned int, NUMA_NO_NODE becomes UINT_MAX and walks off
-nvme_dev::descriptor_pools[] on CONFIG_NUMA=n [1].
+Hi,
 
-Switch the field and the callback prototype to int and update all
-in-tree init_request implementations.  No functional change:
-cpu_to_node(), kmalloc_node() and blk_alloc_flush_queue() already
-take int.
+This series adds support for board-specific static TX Equalization settings
+provided through device tree.
 
-Link: https://lore.kernel.org/linux-nvme/20260522150628.399288-1-mateusz.nowicki@posteo.net/ [1]
-Link: https://lore.kernel.org/linux-nvme/20260309062840.2937858-2-iam@sung-woo.kim/
-Suggested-by: Caleb Sander Mateos <csander@purestorage.com>
-Suggested-by: Sung-woo Kim <iam@sung-woo.kim>
-Signed-off-by: Mateusz Nowicki <mateusz.nowicki@posteo.net>
----
- block/bsg-lib.c                   | 2 +-
- drivers/block/mtip32xx/mtip32xx.c | 2 +-
- drivers/block/nbd.c               | 2 +-
- drivers/md/dm-rq.c                | 2 +-
- drivers/mmc/core/queue.c          | 2 +-
- drivers/mtd/ubi/block.c           | 2 +-
- drivers/nvme/host/apple.c         | 2 +-
- drivers/nvme/host/fc.c            | 2 +-
- drivers/nvme/host/pci.c           | 2 +-
- drivers/nvme/host/rdma.c          | 2 +-
- drivers/nvme/host/tcp.c           | 2 +-
- drivers/nvme/target/loop.c        | 2 +-
- drivers/scsi/scsi_lib.c           | 2 +-
- include/linux/blk-mq.h            | 4 ++--
- 14 files changed, 15 insertions(+), 15 deletions(-)
+This series is based on the earlier TX Equalization enablement work and
+persistent storage/retrieval of optimal TX Equalization settings work:
+https://lore.kernel.org/all/20260325152154.1604082-1-can.guo@oss.qualcomm.com
+https://lore.kernel.org/all/20260424151420.111675-1-can.guo@oss.qualcomm.com
 
-diff --git a/block/bsg-lib.c b/block/bsg-lib.c
-index fdb4b290ca68..895db30a7033 100644
---- a/block/bsg-lib.c
-+++ b/block/bsg-lib.c
-@@ -299,7 +299,7 @@ static blk_status_t bsg_queue_rq(struct blk_mq_hw_ctx *hctx,
- 
- /* called right after the request is allocated for the request_queue */
- static int bsg_init_rq(struct blk_mq_tag_set *set, struct request *req,
--		       unsigned int hctx_idx, unsigned int numa_node)
-+		       unsigned int hctx_idx, int numa_node)
- {
- 	struct bsg_job *job = blk_mq_rq_to_pdu(req);
- 
-diff --git a/drivers/block/mtip32xx/mtip32xx.c b/drivers/block/mtip32xx/mtip32xx.c
-index 567192e371a8..8aedba9b5690 100644
---- a/drivers/block/mtip32xx/mtip32xx.c
-+++ b/drivers/block/mtip32xx/mtip32xx.c
-@@ -3340,7 +3340,7 @@ static void mtip_free_cmd(struct blk_mq_tag_set *set, struct request *rq,
- }
- 
- static int mtip_init_cmd(struct blk_mq_tag_set *set, struct request *rq,
--			 unsigned int hctx_idx, unsigned int numa_node)
-+			 unsigned int hctx_idx, int numa_node)
- {
- 	struct driver_data *dd = set->driver_data;
- 	struct mtip_cmd *cmd = blk_mq_rq_to_pdu(rq);
-diff --git a/drivers/block/nbd.c b/drivers/block/nbd.c
-index fe63f3c55d0d..e2fe9e3308fc 100644
---- a/drivers/block/nbd.c
-+++ b/drivers/block/nbd.c
-@@ -1888,7 +1888,7 @@ static void nbd_dbg_close(void)
- #endif
- 
- static int nbd_init_request(struct blk_mq_tag_set *set, struct request *rq,
--			    unsigned int hctx_idx, unsigned int numa_node)
-+			    unsigned int hctx_idx, int numa_node)
- {
- 	struct nbd_cmd *cmd = blk_mq_rq_to_pdu(rq);
- 	cmd->nbd = set->driver_data;
-diff --git a/drivers/md/dm-rq.c b/drivers/md/dm-rq.c
-index 9703b3ae364e..9a386254d836 100644
---- a/drivers/md/dm-rq.c
-+++ b/drivers/md/dm-rq.c
-@@ -462,7 +462,7 @@ static void dm_start_request(struct mapped_device *md, struct request *orig)
- }
- 
- static int dm_mq_init_request(struct blk_mq_tag_set *set, struct request *rq,
--			      unsigned int hctx_idx, unsigned int numa_node)
-+			      unsigned int hctx_idx, int numa_node)
- {
- 	struct mapped_device *md = set->driver_data;
- 	struct dm_rq_target_io *tio = blk_mq_rq_to_pdu(rq);
-diff --git a/drivers/mmc/core/queue.c b/drivers/mmc/core/queue.c
-index 39fcb662c43f..cfa268925c26 100644
---- a/drivers/mmc/core/queue.c
-+++ b/drivers/mmc/core/queue.c
-@@ -208,7 +208,7 @@ static unsigned short mmc_get_max_segments(struct mmc_host *host)
- }
- 
- static int mmc_mq_init_request(struct blk_mq_tag_set *set, struct request *req,
--			       unsigned int hctx_idx, unsigned int numa_node)
-+			       unsigned int hctx_idx, int numa_node)
- {
- 	struct mmc_queue_req *mq_rq = req_to_mmc_queue_req(req);
- 	struct mmc_queue *mq = set->driver_data;
-diff --git a/drivers/mtd/ubi/block.c b/drivers/mtd/ubi/block.c
-index 8880a783c3bc..29c0d6941a81 100644
---- a/drivers/mtd/ubi/block.c
-+++ b/drivers/mtd/ubi/block.c
-@@ -312,7 +312,7 @@ static blk_status_t ubiblock_queue_rq(struct blk_mq_hw_ctx *hctx,
- 
- static int ubiblock_init_request(struct blk_mq_tag_set *set,
- 		struct request *req, unsigned int hctx_idx,
--		unsigned int numa_node)
-+		int numa_node)
- {
- 	struct ubiblock_pdu *pdu = blk_mq_rq_to_pdu(req);
- 
-diff --git a/drivers/nvme/host/apple.c b/drivers/nvme/host/apple.c
-index c692fc73babf..97586307ac1a 100644
---- a/drivers/nvme/host/apple.c
-+++ b/drivers/nvme/host/apple.c
-@@ -819,7 +819,7 @@ static int apple_nvme_init_hctx(struct blk_mq_hw_ctx *hctx, void *data,
- 
- static int apple_nvme_init_request(struct blk_mq_tag_set *set,
- 				   struct request *req, unsigned int hctx_idx,
--				   unsigned int numa_node)
-+				   int numa_node)
- {
- 	struct apple_nvme_queue *q = set->driver_data;
- 	struct apple_nvme *anv = queue_to_apple_nvme(q);
-diff --git a/drivers/nvme/host/fc.c b/drivers/nvme/host/fc.c
-index e4f4528fe2a2..1907da499ad2 100644
---- a/drivers/nvme/host/fc.c
-+++ b/drivers/nvme/host/fc.c
-@@ -2109,7 +2109,7 @@ __nvme_fc_init_request(struct nvme_fc_ctrl *ctrl,
- 
- static int
- nvme_fc_init_request(struct blk_mq_tag_set *set, struct request *rq,
--		unsigned int hctx_idx, unsigned int numa_node)
-+		unsigned int hctx_idx, int numa_node)
- {
- 	struct nvme_fc_ctrl *ctrl = to_fc_ctrl(set->driver_data);
- 	struct nvme_fcp_op_w_sgl *op = blk_mq_rq_to_pdu(rq);
-diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
-index 139a10cd687f..afd407df640f 100644
---- a/drivers/nvme/host/pci.c
-+++ b/drivers/nvme/host/pci.c
-@@ -660,7 +660,7 @@ static int nvme_init_hctx(struct blk_mq_hw_ctx *hctx, void *data,
- 
- static int nvme_pci_init_request(struct blk_mq_tag_set *set,
- 		struct request *req, unsigned int hctx_idx,
--		unsigned int numa_node)
-+		int numa_node)
- {
- 	struct nvme_iod *iod = blk_mq_rq_to_pdu(req);
- 
-diff --git a/drivers/nvme/host/rdma.c b/drivers/nvme/host/rdma.c
-index f77c960f7632..08459c65c3d5 100644
---- a/drivers/nvme/host/rdma.c
-+++ b/drivers/nvme/host/rdma.c
-@@ -292,7 +292,7 @@ static void nvme_rdma_exit_request(struct blk_mq_tag_set *set,
- 
- static int nvme_rdma_init_request(struct blk_mq_tag_set *set,
- 		struct request *rq, unsigned int hctx_idx,
--		unsigned int numa_node)
-+		int numa_node)
- {
- 	struct nvme_rdma_ctrl *ctrl = to_rdma_ctrl(set->driver_data);
- 	struct nvme_rdma_request *req = blk_mq_rq_to_pdu(rq);
-diff --git a/drivers/nvme/host/tcp.c b/drivers/nvme/host/tcp.c
-index 15d36d6a728e..36b3ec50a9fd 100644
---- a/drivers/nvme/host/tcp.c
-+++ b/drivers/nvme/host/tcp.c
-@@ -548,7 +548,7 @@ static void nvme_tcp_exit_request(struct blk_mq_tag_set *set,
- 
- static int nvme_tcp_init_request(struct blk_mq_tag_set *set,
- 		struct request *rq, unsigned int hctx_idx,
--		unsigned int numa_node)
-+		int numa_node)
- {
- 	struct nvme_tcp_ctrl *ctrl = to_tcp_ctrl(set->driver_data);
- 	struct nvme_tcp_request *req = blk_mq_rq_to_pdu(rq);
-diff --git a/drivers/nvme/target/loop.c b/drivers/nvme/target/loop.c
-index d98d0cdc5d6f..ae00bcef2251 100644
---- a/drivers/nvme/target/loop.c
-+++ b/drivers/nvme/target/loop.c
-@@ -202,7 +202,7 @@ static int nvme_loop_init_iod(struct nvme_loop_ctrl *ctrl,
- 
- static int nvme_loop_init_request(struct blk_mq_tag_set *set,
- 		struct request *req, unsigned int hctx_idx,
--		unsigned int numa_node)
-+		int numa_node)
- {
- 	struct nvme_loop_ctrl *ctrl = to_loop_ctrl(set->driver_data);
- 	struct nvme_loop_iod *iod = blk_mq_rq_to_pdu(req);
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 6e8c7a42603e..67f789bd02e7 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1950,7 +1950,7 @@ static blk_status_t scsi_queue_rq(struct blk_mq_hw_ctx *hctx,
- }
- 
- static int scsi_mq_init_request(struct blk_mq_tag_set *set, struct request *rq,
--				unsigned int hctx_idx, unsigned int numa_node)
-+				unsigned int hctx_idx, int numa_node)
- {
- 	struct Scsi_Host *shost = set->driver_data;
- 	struct scsi_cmnd *cmd = blk_mq_rq_to_pdu(rq);
-diff --git a/include/linux/blk-mq.h b/include/linux/blk-mq.h
-index 18a2388ba581..2e7f90048171 100644
---- a/include/linux/blk-mq.h
-+++ b/include/linux/blk-mq.h
-@@ -428,7 +428,7 @@ struct blk_mq_hw_ctx {
- 	struct blk_mq_tags	*sched_tags;
- 
- 	/** @numa_node: NUMA node the storage adapter has been connected to. */
--	unsigned int		numa_node;
-+	int			numa_node;
- 	/** @queue_num: Index of this hardware queue. */
- 	unsigned int		queue_num;
- 
-@@ -653,7 +653,7 @@ struct blk_mq_ops {
- 	 * flush request.
- 	 */
- 	int (*init_request)(struct blk_mq_tag_set *set, struct request *,
--			    unsigned int, unsigned int);
-+			    unsigned int, int);
- 	/**
- 	 * @exit_request: Ditto for exit/teardown.
- 	 */
+Background
+==========
 
-base-commit: 45255ea1ca096b11b1303c9b54502a28f3a31dd1
+UFS v5.0/UFSHCI v5.0 add HS-G6 support (46.6 Gbps/lane) via UniPro v3.0
+and M-PHY v6.0. In these specs, TX Equalization is defined for all High
+Speed Gears (not only HS-G6) to compensate channel loss and improve signal
+integrity at high speed operation.
+
+For HS-G6, M-PHY uses PAM4 1b1b line coding, Pre-Coding may also be
+required depending on channel characteristics.
+
+Add vendor-neutral DT patternProperties:
+txeq-settings-g[1-6]
+
+Each property is a uint32 array of per-lane tuples:
+(PreShoot, DeEmphasis, PrecodeEn)
+
+Tuple order is:
+Host Lane 0, [Host Lane 1], Device Lane 0, [Device Lane 1]
+
+Accept 2..4 tuples (6..12 u32 values) to cover x1/x2 lane configs. These
+patternProperties carry board-level SI characterization data used as
+static TX Equalization settings for each High Speed Gear.
+
+Relationship with Adaptive TX Equalization
+==========================================
+
+Adaptive TX Equalization remains the primary path when enabled.
+
+Static TX Equalization settings from DT are board-specific baseline values,
+but when adaptive TX Equalization is used, static settings are not final:
+- If valid settings are retrieved from qTxEQGnSettings/wTxEQGnSettingsExt,
+those retrieved settings override static DT settings.
+- If retrieval is not available/valid, TX EQTR runs and trained settings
+override static DT settings.
+
+So static DT settings are a fallback and are intended for cases where
+adaptive TX Equalization is not enabled/used.
+
+No behavior changes for platforms that do not provide `txeq-settings-g*`
+properties.
+
+What this series adds
+=====================
+
+1. dt-bindings:
+- Document `txeq-settings-g[1-6]` in `ufs-common.yaml`.
+- Define tuple format as `(PreShoot, DeEmphasis, PreCodeEn)` in lane order:
+Host Lane 0, [Host Lane 1], Device Lane 0, [Device Lane 1].
+
+2. UFS core/platform integration:
+- Parse and validate per-gear DT TX EQ settings during platform init.
+- Store parsed values into per-gear TX EQ params and mark them as static.
+- Integrate static-state handling in TX EQ flow so static entries are
+  handled through the adaptive TX Equalization path and then converted to
+  normal runtime params.
+
+v1 -> v2:
+- Improved the commit message of patch 1.
+
+
+Can Guo (2):
+  dt-bindings: ufs: Document static TX Equalization settings properties
+  scsi: ufs: core: Add support for static TX Equalization settings
+
+ .../devicetree/bindings/ufs/ufs-common.yaml   |  11 +
+ arch/arm64/configs/defconfig                  | 289 +++++++-----------
+ drivers/ufs/core/ufs-txeq.c                   |   4 +-
+ drivers/ufs/host/ufshcd-pltfrm.c              |  82 +++++
+ include/ufs/ufshcd.h                          |   5 +
+ 5 files changed, 208 insertions(+), 183 deletions(-)
+
 -- 
-2.53.0
+2.34.1
 
