@@ -1,68 +1,64 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 26B3C330B14;
-	Sat, 23 May 2026 02:20:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 708D3B672;
+	Sat, 23 May 2026 03:15:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.177.32
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779502838; cv=none; b=CpbVfIOCegpb340XaX7y/zKwht5z+jfgrhb/ibQ7iBYh7EaRrcA1Ra2f6IafRMcSafvmV1aoN15+KKx1Ll5Tyzls8mBQfGnIFwkiRUQZUs96rqHhdnzNZs5D+Ie0iee//uPZhj6G1Nogt3+TfxIyI9iSTJNU9M3xITEP1tFTqi0=
+	t=1779506119; cv=none; b=pyl7TiXhVykB6DQHlmQ0rVi/Ux28LE7wR6RxYAPDoli8W5sk3MfMmMWGkYWQqSLh+OkHThvou8ezTAhS+h7egndCtSD044RoNGKHva0TNBFPn2wgST3436vo/vvatl6Giw+ZiBywD6jADdVQ0UbpH46wW6KAWzQOMZBouPtTizI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779502838; c=relaxed/simple;
-	bh=UmQYm34vYP2ENdkwyZNxGga4qD0x0KcDAm1qVllzKHw=;
+	s=arc-20240116; t=1779506119; c=relaxed/simple;
+	bh=DwZNuwY0fKeIzTDsvOHyLoubTPnvEKV2FhPuRoxNRLQ=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=CMTsBh58gtc/DWM9Sl0hFowDo7AwDgu5+Oac7Cfi8SLzrxqhXoNEbxufANsiCZaIvgvUkg21Qtvdne8YV69Ny+UtNvimiCOtQu46iTTstB+qDIzjC17FUKk3OzdvCxJ1zzxp5/gFM1ZS/jUQK0FAiNZJWoy0DUTzwmORTbDm5kE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=S3kSZj3u; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=Zi1uI2e7rlSizjQda7xZ2o2+qdAivMRG0p04vIrSadaLHhUAWH7UMdFxn7xU3Sht0ifV917G7vw5v6DaN2TNEjKMkETFKoCnMyr9WtlUOPrGdcgSQUGqtMIS4MfmkGTuyq81uhejRsxetPSJmzNSMXG/XFhiEuBmoq1hU+Z8sR8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=HhuzrYiL; arc=none smtp.client-ip=205.220.177.32
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="S3kSZj3u"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CAF8B1F00ACF;
-	Sat, 23 May 2026 02:20:34 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1779502836;
-	bh=fBqQY9ZHL/9cRLn8Occ+Ug3mEK4c+qwKMVy6BmevSGc=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=S3kSZj3u8L9wzn3G0IySJ/qib8kxdjnTrF5+H9P2Q/MLQmpUIAQLBfmZMi/wX6sr7
-	 Pe+xbSNDmhnFtf5FODb38MDAfPysadCA/pIxypN2s4DPeTqhkxX8+yzrjLyraz6Ers
-	 0OXBcqilsc0/RrfpbKbvb1FLBU5BKOPg7GmHj1zLgkHhrnzRXi5mmynSRXZhTltx74
-	 KlwKmksUHzwDrSR4I+fKg9gYJTHYBrYpLUc1z+3+SSWtCaioSAZCsED5dMANX2lGtV
-	 lTFMgXzx6skzbFFILszhlSTAhgYtD2JVxO8mAH0yzkF3FHmGOg3nIfvWjM62gBG7J7
-	 ZzuboHbBnY1jQ==
-From: Bjorn Andersson <andersson@kernel.org>
-To: robin.clark@oss.qualcomm.com,
-	lumag@kernel.org,
-	abhinav.kumar@linux.dev,
-	sean@poorly.run,
-	marijn.suijten@somainline.org,
-	maarten.lankhorst@linux.intel.com,
-	mripard@kernel.org,
-	tzimmermann@suse.de,
-	airlied@gmail.com,
-	simona@ffwll.ch,
-	robh@kernel.org,
-	krzk+dt@kernel.org,
-	conor+dt@kernel.org,
-	quic_mahap@quicinc.com,
-	konradybcio@kernel.org,
-	mani@kernel.org,
-	James.Bottomley@HansenPartnership.com,
-	martin.petersen@oracle.com,
-	vkoul@kernel.org,
-	kishon@kernel.org,
-	cros-qcom-dts-watchers@chromium.org,
-	Ritesh Kumar <quic_riteshk@quicinc.com>
-Cc: linux-phy@lists.infradead.org,
-	linux-arm-msm@vger.kernel.org,
-	dri-devel@lists.freedesktop.org,
-	freedreno@lists.freedesktop.org,
-	devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-scsi@vger.kernel.org,
-	quic_vproddut@quicinc.com
-Subject: Re: (subset) [PATCH v4 0/2] Add edp reference clock for lemans
-Date: Fri, 22 May 2026 21:20:02 -0500
-Message-ID: <177950280338.1097700.6276233449765894719.b4-ty@kernel.org>
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="HhuzrYiL"
+Received: from pps.filterd (m0246632.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 64N39cKn2840870;
+	Sat, 23 May 2026 03:15:15 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=
+	corp-2025-04-25; bh=uIoEv4UmIiGEbZhoQl6JdVYiEdEkre16sHyRRg4BmAI=; b=
+	HhuzrYiL1usAaiPTSCdtdCT/LQrOEEwVLOvHARr9dypQbvfRuZmCmK8WZR1YFoSR
+	Tvj4B3bWzLi/+zzVUOr02uwN2DhQei8/tFWPnmsnFDW9WSFAI17OAvEm59KRrEqF
+	I4SEOXOoPTjWpkqGw7PrwdobXZgHKOeJ6irvwcyRGcnDXPZYql0d/O3Uw5JJT/g7
+	kvkgrbYgvinZXpSIfPmyg6EiV9eR2bN0XzCdLO9Ow26I6yk7jbM/qBUoWueGXsGm
+	Stq7TjUpGxTLMIHZ+eqVkQRzjkxgt79NMp7CkHXMNRmAXc+ZSCrePqqTT8jqiA47
+	MwbA2DpTBXm9QVQrtHZi/Q==
+Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4eb3us80d2-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Sat, 23 May 2026 03:15:14 +0000 (GMT)
+Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.7/8.18.1.7) with ESMTP id 64N3F6w2032342;
+	Sat, 23 May 2026 03:15:13 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 4eb2p6hse2-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Sat, 23 May 2026 03:15:13 +0000 (GMT)
+Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+	by pps.reinject (8.18.1.12/8.18.1.12) with ESMTP id 64N3F9e0032824;
+	Sat, 23 May 2026 03:15:13 GMT
+Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 4eb2p6hs6k-4;
+	Sat, 23 May 2026 03:15:13 +0000 (GMT)
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+To: stable@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Evgenii Burenchev <evg28bur@yandex.ru>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, kartilak@cisco.com,
+        nmusini@cisco.com, sebaddel@cisco.com,
+        James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] snic/vnic_dev: Remove dead store in vnic_dev_discover_res()
+Date: Fri, 22 May 2026 23:14:18 -0400
+Message-ID: <177913641762.1181900.9483130298257376269.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260128114853.2543416-1-quic_riteshk@quicinc.com>
-References: <20260128114853.2543416-1-quic_riteshk@quicinc.com>
+In-Reply-To: <20260429095212.11251-1-evg28bur@yandex.ru>
+References: <20260429095212.11251-1-evg28bur@yandex.ru>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -71,57 +67,44 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-05-23_01,2026-05-18_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0
+ suspectscore=0 malwarescore=0 spamscore=0 phishscore=0 lowpriorityscore=0
+ mlxlogscore=999 bulkscore=0 mlxscore=0 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.19.0-2605130000 definitions=main-2605230029
+X-Authority-Analysis: v=2.4 cv=Zewt8MVA c=1 sm=1 tr=0 ts=6a111bc2 cx=c_pps
+ a=OOZaFjgC48PWsiFpTAqLcw==:117 a=OOZaFjgC48PWsiFpTAqLcw==:17
+ a=IkcTkHD0fZMA:10 a=NGcC8JguVDcA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=jiCTI4zE5U7BLdzWsZGv:22 a=3I1J8UUJPc9JN9BFgKH3:22 a=VwQbUJbxAAAA:8
+ a=obzxcOSibZW-SFeEL7EA:9 a=QEXdDO2ut3YA:10
+X-Proofpoint-GUID: Ajv3yf3uqpezbkuOXZ7_gu8DfZ26__dg
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNTIzMDAyOSBTYWx0ZWRfX0DkjzegDShKu
+ 4/jXjnPBV4pCCgByxhVs6l7YjHQQb6ElUevonrFIJqIIymD9FtzRgej6TFGq3YVIhL8qL8RHZvE
+ 6xY4O1lmaE1SoF3ehwZeehQWh8waFdGMx8LjvBqDxG/1NCjDXThGApAyDNbDnNU8Wu2XKq3ecI2
+ Ww/sP8jCXb/d66Kl9MdEwhQ00cm5I3KSIFX/SDu2x4bBylzKuYbOgmPYLOE2clUh7EPoOOuqGsn
+ P2Jq5ahO1yhGEluRUPePAP80yefNphdh08AiW528GeRk3ep600cudbK4Fvf8KO4TsShMJLXVbzU
+ MmQj9/mUGARswssAr8XNiMsMLW56U5gYmtY1cFI0n+z/xbfEBgNdp94qjpAKM7L9+g36M0n4Tcu
+ JJV7Z/jTu5OQIaDpWuo0cm7ZnRKXWa9mn/1MusQeWoI8zKzgOTjWgslBABOGB7zeIE4nFFccSSh
+ cDnPjIDyVOUUA7Y7Glg==
+X-Proofpoint-ORIG-GUID: Ajv3yf3uqpezbkuOXZ7_gu8DfZ26__dg
 
+On Wed, 29 Apr 2026 12:52:12 +0300, Evgenii Burenchev wrote:
 
-On Wed, 28 Jan 2026 17:18:48 +0530, Ritesh Kumar wrote:
-> On lemans chipset, edp reference clock is being voted by ufs mem phy
-> (ufs_mem_phy: phy@1d87000). But after commit 77d2fa54a945
-> ("scsi: ufs: qcom : Refactor phy_power_on/off calls") edp reference
-> clock is getting turned off, leading to below phy poweron failure on
-> lemans edp phy.
+> The assignment 'len = count' for RES_TYPE_INTR_PBA_LEGACY,
+> RES_TYPE_DEVCMD, and RES_TYPE_DEVCMD2 cases is never used.
 > 
-> [   19.830220] phy phy-aec2a00.phy.10: phy poweron failed --> -110
-> [   19.842112] mdss_0_disp_cc_mdss_dptx0_link_clk status stuck at 'off'
-> [   19.842131] WARNING: CPU: 2 PID: 371 at drivers/clk/qcom/clk-branch.c:87 clk_branch_toggle+0x174/0x18c
-> [   19.984356] Hardware name: Qualcomm QCS9100 Ride (DT)
-> [   19.989548] pstate: 604000c5 (nZCv daIF +PAN -UAO -TCO -DIT -SSBS BTYPE=--)
-> [   19.996697] pc : clk_branch_toggle+0x174/0x18c
-> [   20.001267] lr : clk_branch_toggle+0x174/0x18c
-> [   20.005833] sp : ffff8000863ebbc0
-> [   20.009251] x29: ffff8000863ebbd0 x28: 0000000000000000 x27: 0000000000000000
-> [   20.016579] x26: 0000000000000000 x25: 0000000000000000 x24: 0000000000000001
-> [   20.023915] x23: ffff0000c53de980 x22: 0000000000000001 x21: ffffb4b57fd8d710
-> [   20.031245] x20: ffffb4b5bb238b88 x19: 0000000000000000 x18: ffffffffffff7198
-> [   20.038584] x17: 0000000000000014 x16: ffffb4b5bb1e2330 x15: 0000000000000048
-> [   20.045926] x14: 0000000000000000 x13: ffffb4b5bd386a48 x12: 0000000000000dfb
-> [   20.053263] x11: 00000000000004a9 x10: ffffb4b5bd3e5a20 x9 : ffffb4b5bd386a48
-> [   20.060600] x8 : 00000000ffffefff x7 : ffffb4b5bd3dea48 x6 : 00000000000004a9
-> [   20.067934] x5 : ffff000eb7d38408 x4 : 40000000fffff4a9 x3 : ffff4b58fb2b7000
-> [   20.075269] x2 : 0000000000000000 x1 : 0000000000000000 x0 : ffff000ec4fc3480
-> [   20.082601] Call trace:
-> [   20.085127]  clk_branch_toggle+0x174/0x18c (P)
-> [   20.089705]  clk_branch2_enable+0x1c/0x28
-> [   20.093829]  clk_core_enable+0x6c/0xac
-> [   20.097687]  clk_enable+0x2c/0x4c
-> [   20.101104]  clk_bulk_enable+0x4c/0xd8
-> [   20.104964]  msm_dp_ctrl_enable_mainlink_clocks+0x184/0x24c [msm]
-> [   20.111294]  msm_dp_ctrl_on_link+0xb0/0x400 [msm]
-> [   20.116178]  msm_dp_display_process_hpd_high+0x110/0x190 [msm]
-> [   20.122209]  msm_dp_hpd_plug_handle.isra.0+0xac/0x1c4 [msm]
-> [   20.127983]  hpd_event_thread+0x320/0x5cc [msm]
-> [   20.132680]  kthread+0x12c/0x204
-> [   20.136011]  ret_from_fork+0x10/0x20
-> [   20.139699] ---[ end trace 0000000000000000 ]---
-> [   20.144489] Failed to enable clk 'ctrl_link': -16
-> [   20.149340] [drm:msm_dp_ctrl_enable_mainlink_clocks [msm]] *ERROR* Unable to start link clocks. ret=-16
+> Drop the unused assignments to fix the following static analyzer warning.
+> 
+> No functional change.
 > 
 > [...]
 
-Applied, thanks!
+Applied to 7.2/scsi-queue, thanks!
 
-[2/2] arm64: dts: qcom: lemans: Add eDP ref clock for eDP PHYs
-      commit: 4bd073e00fd79c0aead74ad64ade48c904221245
+[1/1] snic/vnic_dev: Remove dead store in vnic_dev_discover_res()
+      https://git.kernel.org/mkp/scsi/c/195254adeddc
 
-Best regards,
 -- 
-Bjorn Andersson <andersson@kernel.org>
+Martin K. Petersen
