@@ -1,60 +1,71 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1AA5438F251
-	for <linux-scsi@vger.kernel.org>; Sat, 23 May 2026 13:47:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A06AA36C9EE;
+	Sat, 23 May 2026 13:47:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779544054; cv=none; b=OZBOSpUU6tBhzXjPmLGueTIeneZyJOVmu0FTQ3G14/OveGciZIKNX/xVmeyeyM+3tidWmch5MGP6Eye1c+ATYq9T5M+hk+cNmfDnk6Svyjftvv99YpzAzUU83betImNaan1J6SD8nkfAPrOjEr00HVt1bBKHQ0EABtkW6PViX68=
+	t=1779544064; cv=none; b=ojA5XHmVZzlEh62cCo/hlMWttJdVOYggW6qxayDNQI42dcDa1NuKYOMQouhMe0pnlTkEY8NF1uabgdl0ovs2ALmIMQRDGcHClU/eRVhYtDVTOuGkdf+y2yL4oE6qYrA4rtnp5n41Uz1pm33AdDlddg4F+lTVPck7QSr478EPXAA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779544054; c=relaxed/simple;
-	bh=k/mcuSRHwTFgtu+FciEXYjQ0vWINqaIzGSUzSylC1bQ=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=axPhXr9BRF/X51XkqJCHuKaA51g+BwBbjJiAxZmf33vSsYeV7+LQ5TJ2/wqE9FDfX7n5OemrZSUCLtH4UDNWo0l8JYVEvoTk1iKvPzFONdmU7s0e894BZ3eYyFzgx5Jc4bF8qVbDvUQ0VD4VunwEa0iuo4O3QaHl40obzrSyn2M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=Jn117R7J; arc=none smtp.client-ip=205.220.168.131
+	s=arc-20240116; t=1779544064; c=relaxed/simple;
+	bh=B4gm9pP+88IyVqw9AfTTIVVlGJusAq/2/0b2EiHNMzQ=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=V4kF0Rbwz7yJCm9WDYXDtf1YjeVfHqY44DgwYzDcNebxRJOlGJtrXCPvwGD1zCAGIJblF977qRTZwWiql0TVSwRFNy9cM3P8wBGdoffLLSvPfMSs/bwHUkE7/lcIiySb9GziLu6nv6NZ/R2/S155ldosNcnBxOMuml8d6SpmD1I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=EkwcMPf6; arc=none smtp.client-ip=205.220.180.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="Jn117R7J"
-Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 64N3ZJ1V4027569;
-	Sat, 23 May 2026 13:47:15 GMT
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="EkwcMPf6"
+Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 64N51oPk492201;
+	Sat, 23 May 2026 13:47:20 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:date:from:message-id:mime-version
-	:subject:to; s=qcppdkim1; bh=dyy9X+s2t9wmY6ED1NOEfPYMwyF7GknY1tE
-	F0r67N0M=; b=Jn117R7JeqD+9gmYDQk9hqSYCNmOitUPfYIPVSwWSyr6JYTrFEz
-	X1KcPgoQW4g5ebS4kgKwfrzOdfs/i697UXHNt71NuBD1zAqd7K/3npa/Gq+nNRQ9
-	/sNDU0RMH5UzyI2zkOzAXQsmGI3cNcGK8ut8myjVA3h1RAnQp5V+X18BmziPywys
-	w+DleBGNPatGAaqhVZecvr8zTcQoB8HabL/vGH6UYOM+zDH1F1RNg5D0rueUramy
-	LJZ5jKDQDgN10ZpT0JATJ9vtP0TfNLBcCZbWdCewnApLg5dHTgFaLRKFlU9tsMFa
-	/tkD/D08Zl3MDMf5VuYq4fgKmyEn8SAO+jg==
-Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4eb4f392g5-1
+	cc:content-transfer-encoding:date:from:in-reply-to:message-id
+	:mime-version:references:subject:to; s=qcppdkim1; bh=QDmQ9U+JNxb
+	EO0gcsaYLF8lGo8oTH0HPmPD+4YMUfCY=; b=EkwcMPf6inEwYbaKvwtbOgVAWUb
+	eBBck14FEaoSpeCmbbXR9dPmL16JJF9PfdERjXJItlLRhQLpSUo/cP3MakT55jTa
+	/QSP25cHUJWScHywQROaaCCRnKn79B1pLZYv3xI5K2hWgT6O+s9jGKCpjvvZ4eWn
+	KXPdlpdmQN9r7ZxZP14lX1vruAkmuzGkLeNu8fgfGzC73gDWrjbcWQtb7JZ920WW
+	+9UaWmmGpAcHdCUJAJIsl39DkI1SR6twqxwoOfdONXpmeOHGLpLFKmljYujCFepP
+	OefCqJqHqyfnJ6gN21CYDYx3BE+KBNj3a1GVbIXvlLQwj9Ix2yF4ARDOLNg==
+Received: from nalasppmta02.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4eb4ass1je-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Sat, 23 May 2026 13:47:14 +0000 (GMT)
-Received: from pps.filterd (NALASPPMTA01.qualcomm.com [127.0.0.1])
-	by NALASPPMTA01.qualcomm.com (8.18.1.7/8.18.1.7) with ESMTP id 64NDlEsI031952;
-	Sat, 23 May 2026 13:47:14 GMT
+	Sat, 23 May 2026 13:47:20 +0000 (GMT)
+Received: from pps.filterd (NALASPPMTA02.qualcomm.com [127.0.0.1])
+	by NALASPPMTA02.qualcomm.com (8.18.1.7/8.18.1.7) with ESMTP id 64NDlJ3m026938;
+	Sat, 23 May 2026 13:47:19 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-	by NALASPPMTA01.qualcomm.com (PPS) with ESMTPS id 4eb5ahayu8-1
+	by NALASPPMTA02.qualcomm.com (PPS) with ESMTPS id 4eb5ahjyvh-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Sat, 23 May 2026 13:47:14 +0000 (GMT)
-Received: from NALASPPMTA01.qualcomm.com (NALASPPMTA01.qualcomm.com [127.0.0.1])
-	by pps.reinject (8.18.1.12/8.18.1.12) with ESMTP id 64NDlDWl031947;
-	Sat, 23 May 2026 13:47:14 GMT
+	Sat, 23 May 2026 13:47:19 +0000 (GMT)
+Received: from NALASPPMTA02.qualcomm.com (NALASPPMTA02.qualcomm.com [127.0.0.1])
+	by pps.reinject (8.18.1.12/8.18.1.12) with ESMTP id 64NDlI9I026932;
+	Sat, 23 May 2026 13:47:18 GMT
 Received: from hu-devc-lv-u22-c.qualcomm.com (hu-cang-lv.qualcomm.com [10.81.25.255])
-	by NALASPPMTA01.qualcomm.com (PPS) with ESMTPS id 64NDlD4b031943
+	by NALASPPMTA02.qualcomm.com (PPS) with ESMTPS id 64NDlIik026931
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Sat, 23 May 2026 13:47:13 +0000 (GMT)
+	Sat, 23 May 2026 13:47:18 +0000 (GMT)
 Received: by hu-devc-lv-u22-c.qualcomm.com (Postfix, from userid 359480)
-	id AEE5061F; Sat, 23 May 2026 06:47:13 -0700 (PDT)
+	id 9B90C61F; Sat, 23 May 2026 06:47:18 -0700 (PDT)
 From: Can Guo <can.guo@oss.qualcomm.com>
 To: bvanassche@acm.org, beanhuo@micron.com, peter.wang@mediatek.com,
         martin.petersen@oracle.com, mani@kernel.org
-Cc: linux-scsi@vger.kernel.org, Can Guo <can.guo@oss.qualcomm.com>
-Subject: [PATCH v2 0/2] Add static TX Equalization settings support from DT
-Date: Sat, 23 May 2026 06:47:09 -0700
-Message-Id: <20260523134711.323425-1-can.guo@oss.qualcomm.com>
+Cc: linux-scsi@vger.kernel.org, Can Guo <can.guo@oss.qualcomm.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>, Rob Herring <robh@kernel.org>,
+        Krzysztof Kozlowski <krzk+dt@kernel.org>,
+        Conor Dooley <conor+dt@kernel.org>,
+        Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>,
+        Zhaoming Luo <zhml@posteo.com>,
+        devicetree@vger.kernel.org (open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS),
+        linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH v2 1/2] dt-bindings: ufs: Document static TX Equalization settings properties
+Date: Sat, 23 May 2026 06:47:10 -0700
+Message-Id: <20260523134711.323425-2-can.guo@oss.qualcomm.com>
 X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20260523134711.323425-1-can.guo@oss.qualcomm.com>
+References: <20260523134711.323425-1-can.guo@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -64,43 +75,28 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-QCInternal: smtphost
 X-QCInternal: smtphost
-X-Proofpoint-ORIG-GUID: dDE5IcN9NQLNs7vVjErwBv1Qden4k1gE
-X-Authority-Analysis: v=2.4 cv=WvYb99fv c=1 sm=1 tr=0 ts=6a11afe2 cx=c_pps
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNTIzMDE0MSBTYWx0ZWRfX60Tww3EPf5nK
+ pBkG40fRZWFFV+gWKH3kk5V0A5V0T5zqSlqu6Tw67Ow2Ehtp0UVCwJ67ZbUdR5Fds0c3GN272uC
+ l0bOxxg57SRQ3QMYnhK46SgtS7+6RRHwAa9tw8NzMcIabFAbECniwj0NUwfTd+7OTvP06zinZ5N
+ a1CfBZWqhcLEz8+RQlQ1xhgTjyoFcOwV244qCh22DzsOjfXORz34RfFHv5TQluUUJ2SToJOzcbK
+ vyEq1LoYpxIMmbmLp7FRYwFhKN2/+qspgFeL5ZsNdoR16ZtqFT1PAbzCqCafmA7q7oLSQUCJuSi
+ HroObotGwLG0oV4EoSYL93sC+9ezDTdQbgdfSobfHZgoCXEi0SrLYkamhU9UQGOqmngYzb2t/pZ
+ bfjL7GXSVeAPJOqKdZZN4vX+f+iU+ouh8DAg0/QdELWggZQE/Tw7s6rH4inByE3v4l5UpMMzjnn
+ oEPkTKx4c+Wz4ZlqG0g==
+X-Proofpoint-ORIG-GUID: OAzdKCJNzJU62l1N5GPqv1UiaZ7C_VYA
+X-Proofpoint-GUID: OAzdKCJNzJU62l1N5GPqv1UiaZ7C_VYA
+X-Authority-Analysis: v=2.4 cv=c6ebhx9l c=1 sm=1 tr=0 ts=6a11afe8 cx=c_pps
  a=ouPCqIW2jiPt+lZRy3xVPw==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
  a=NGcC8JguVDcA:10 a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22
- a=yOCtJkima9RkubShWh1s:22 a=VwQbUJbxAAAA:8 a=EUspDBNiAAAA:8
- a=4ajky533VDcJp0aEe7MA:9
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNTIzMDE0MSBTYWx0ZWRfX8BI88ttSJD2H
- FHWdCagX/28wBxir3Hdon6aB6qlno5ga5dIeBZEoxQYNS2aWrO5OGWWifd1B1Hltzt55PifChRE
- vKq4HxgHRxnmWgDe8Nt+ixzS5ACiSywMPJwoqu3TB/HFLcjwoPS7d0C3lewMORF/xpTvfv1sNjF
- kE8RUVKXkGgaXd505Xby7HfCtjzkpLFqqX0EcdiZgWOZlGyr0DcUQB+uJVfCdju+nBIYcMmpJma
- Rn0Ek2iPYf+2moHkot8scgjuRssDk9aIkgffzxJ9wHaNsrViWGnFxcBNJhA4QAuKWRsCpL++lEc
- N9rtmpdrWFzSIofj8iu62465zK5vh8KsZpd409oTbKiRxoZpV2wf+b4ZWKhueIfbhS5q4ez/eU1
- rWsbhIeaGGqaDDROzHBPZ1gJ8Id4SL8m9F/ja7ZNObjq1ujJBy3LvVffZwbw3zKlFxflXJOJ9dC
- i/xJt88JfouEp9Eug/g==
-X-Proofpoint-GUID: dDE5IcN9NQLNs7vVjErwBv1Qden4k1gE
+ a=gowsoOTTUOVcmtlkKump:22 a=EUspDBNiAAAA:8 a=I_qBOUeEE_endWPDY1kA:9
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
  definitions=2026-05-23_04,2026-05-18_01,2025-10-01_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- malwarescore=0 priorityscore=1501 lowpriorityscore=0 spamscore=0
- clxscore=1015 phishscore=0 adultscore=0 suspectscore=0 impostorscore=0
- bulkscore=0 classifier=typeunknown authscore=0 authtc= authcc= route=outbound
- adjust=0 reason=mlx scancount=1 engine=8.22.0-2605130000
- definitions=main-2605230141
-
-Hi,
-
-This series adds support for board-specific static TX Equalization settings
-provided through device tree.
-
-This series is based on the earlier TX Equalization enablement work and
-persistent storage/retrieval of optimal TX Equalization settings work:
-https://lore.kernel.org/all/20260325152154.1604082-1-can.guo@oss.qualcomm.com
-https://lore.kernel.org/all/20260424151420.111675-1-can.guo@oss.qualcomm.com
-
-Background
-==========
+ phishscore=0 priorityscore=1501 spamscore=0 malwarescore=0 adultscore=0
+ suspectscore=0 lowpriorityscore=0 clxscore=1015 impostorscore=0 bulkscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2605130000 definitions=main-2605230141
 
 UFS v5.0/UFSHCI v5.0 add HS-G6 support (46.6 Gbps/lane) via UniPro v3.0
 and M-PHY v6.0. In these specs, TX Equalization is defined for all High
@@ -123,54 +119,33 @@ Accept 2..4 tuples (6..12 u32 values) to cover x1/x2 lane configs. These
 patternProperties carry board-level SI characterization data used as
 static TX Equalization settings for each High Speed Gear.
 
-Relationship with Adaptive TX Equalization
-==========================================
+Signed-off-by: Can Guo <can.guo@oss.qualcomm.com>
+---
+ Documentation/devicetree/bindings/ufs/ufs-common.yaml | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
 
-Adaptive TX Equalization remains the primary path when enabled.
-
-Static TX Equalization settings from DT are board-specific baseline values,
-but when adaptive TX Equalization is used, static settings are not final:
-- If valid settings are retrieved from qTxEQGnSettings/wTxEQGnSettingsExt,
-those retrieved settings override static DT settings.
-- If retrieval is not available/valid, TX EQTR runs and trained settings
-override static DT settings.
-
-So static DT settings are a fallback and are intended for cases where
-adaptive TX Equalization is not enabled/used.
-
-No behavior changes for platforms that do not provide `txeq-settings-g*`
-properties.
-
-What this series adds
-=====================
-
-1. dt-bindings:
-- Document `txeq-settings-g[1-6]` in `ufs-common.yaml`.
-- Define tuple format as `(PreShoot, DeEmphasis, PreCodeEn)` in lane order:
-Host Lane 0, [Host Lane 1], Device Lane 0, [Device Lane 1].
-
-2. UFS core/platform integration:
-- Parse and validate per-gear DT TX EQ settings during platform init.
-- Store parsed values into per-gear TX EQ params and mark them as static.
-- Integrate static-state handling in TX EQ flow so static entries are
-  handled through the adaptive TX Equalization path and then converted to
-  normal runtime params.
-
-v1 -> v2:
-- Improved the commit message of patch 1.
-
-
-Can Guo (2):
-  dt-bindings: ufs: Document static TX Equalization settings properties
-  scsi: ufs: core: Add support for static TX Equalization settings
-
- .../devicetree/bindings/ufs/ufs-common.yaml   |  11 +
- arch/arm64/configs/defconfig                  | 289 +++++++-----------
- drivers/ufs/core/ufs-txeq.c                   |   4 +-
- drivers/ufs/host/ufshcd-pltfrm.c              |  82 +++++
- include/ufs/ufshcd.h                          |   5 +
- 5 files changed, 208 insertions(+), 183 deletions(-)
-
+diff --git a/Documentation/devicetree/bindings/ufs/ufs-common.yaml b/Documentation/devicetree/bindings/ufs/ufs-common.yaml
+index ed97f5682509..bc83948fc168 100644
+--- a/Documentation/devicetree/bindings/ufs/ufs-common.yaml
++++ b/Documentation/devicetree/bindings/ufs/ufs-common.yaml
+@@ -105,6 +105,17 @@ properties:
+       Restricts the UFS controller to rate-a or rate-b for both TX and
+       RX directions.
+ 
++patternProperties:
++  "^txeq-settings-g[1-6]$":
++    $ref: /schemas/types.yaml#/definitions/uint32-array
++    minItems: 6
++    maxItems: 12
++    description: |
++      Static TX Equalization settings for High Speed (HS) gears.
++      The settings are specified as an array of tuples (PreShoot, DeEmphasis, PrecodeEn).
++      The array must contain these tuples in the following order:
++      Host Lane 0, [Host Lane 1], Device Lane 0, [Device Lane 1].
++
+ dependencies:
+   freq-table-hz: [ clocks ]
+   operating-points-v2: [ clocks, clock-names ]
 -- 
 2.34.1
 
