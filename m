@@ -1,45 +1,49 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3C1FD39FCAF;
-	Sat, 23 May 2026 14:14:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 11A7C1A6827;
+	Sat, 23 May 2026 14:15:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779545684; cv=none; b=XefV4RstgPD9TXeFVAU2g8EcX2KSSXulDTDLH3M66bb8KokM/0p9QsowBRBtSVcLonKydRuRyQq12WpYQFq4XDwbLZ7eOOnZg8mrkhxWxQbTkcObw1Y5TRceXVFWGRzgNS63K9J7+/4+FN4UCcIcKjHeoeezGJ9DGdyLT89Zdnw=
+	t=1779545730; cv=none; b=Ox1knAnvVc/usioIKqJV2YPQDULY9rM1r/IGwLmOWrH+UKSoGFaTeynNIJRoQQKjnFu4O96bgZGlbtFnr8KeYVW168tDmkK/jdhUTiGus3C6yVXd5IDpLisysn6J5FwV4wsBgfNtBrfDA6ekXit9H04zwVD0vHnL7QFiAqOMQEo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779545684; c=relaxed/simple;
-	bh=Y4jcun+ro1rgWcs1fAzBJ0gx8tgAoHvL8X4LwGRmMrI=;
+	s=arc-20240116; t=1779545730; c=relaxed/simple;
+	bh=MEiiT9y+LDZMC05KhWjhDcV5rBgpfx/UPBalexU5/ms=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=pfFVcqKGeWMWvRF2CwdTavxvTLfp1xpQzk+ICCgipdFWKoA9NqAe6fBB6RTS48TEW+v6juRln7hngEAjZiG3s6XeFrRcHSM6Jdq02DkVPheGFzm4nMV2V1VJT8TXU185PtCa83glKt9sMp4GjqU40eahb3A+VTrM/z2NGTFq6rM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gnhkl5dX; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=nbSfKFh/4AzQ+9m9wtpHwZSyjOU93qXMl2IEAGMYBzaESGkO+Lw1IpnNJyYNeA/cHQwt6gDhPnC+4xqhzovxynfMAIzdymmtr4YBFnLsoVNXYeCVpQM0dhdAhd2RvwwZX3UxSdlk6RyxFvvUzaMm0vfHzzANlXzyKd23Ry9/DOg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BTKtRxS6; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gnhkl5dX"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3C5CD1F00A3A;
-	Sat, 23 May 2026 14:14:37 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BTKtRxS6"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 26F6B1F00A3A;
+	Sat, 23 May 2026 14:15:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1779545683;
-	bh=bbeAZ/pWJi2Q6lOIbC6mtCkYgBo9dqxuAIJI4cU4wvc=;
+	s=k20260515; t=1779545728;
+	bh=UH0pjF2nMLGpUK+Cz8P9fsM32jdn+oAS7xGsvxMccJk=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=gnhkl5dXp8hrDPFOVyvJgET9Jv7RIEArTtEwqRg3RSnw9RBJ69xbCbYysDcQYkY5k
-	 i1aCbIGR54d4Qh+rvZmjDS8MZlLXnFpokjHL5naPuf/IqkUSDA85AWkEWeq7Fod/jz
-	 CshxXuap5kiO/ecVVF84xJgvVBPY0HLodbIdNB7C0qpmhK1oveXAb+AblWqaLd04la
-	 H5OVtppX3SCqZgm0l7jwOPmuIQkaVtOGdNjK0Y92tm4WbsPrjjEe84SbrxYXvmuLd1
-	 f6r9ht1l/X2CVWkpXgZ8V1bJonX5ljgbG1TsSAnhM4Hp2TiWKwB5w2ZZ/3oTfMFiD7
-	 eHzS+jEFBPdmA==
-Date: Sat, 23 May 2026 19:44:34 +0530
+	b=BTKtRxS6UQXR1SajXVchzRHKpxr4bTXlaDWHFsHFgAIwpAMsDpYFeUC8AsZv/uRNo
+	 0tDXVXxY81GkmtFGJbrNZ1+fmBfEzvuJlt1HxtSPtbdG4vzrL7EEMHP7cELNeZmUMz
+	 B+MBs7wVuUqVQRFP57XF+f1T6Oe2OBaa8mvHHk/Q4wWQ7V5BbF+XyRgpIxlZEnoN9U
+	 k9/XTAPMEBGY5HMWVxpvyVM0+g47W6tiuCk0Yj3EI+BJefOcKnw6aD4iENz8DncfjK
+	 spo7/aCIN7Pf/9bL0TgZ29GhlnoO/xz1fqHrqVo9e+p/sDy8BT+4tomzWga2fMVDxm
+	 vKNM0wZj1jqQQ==
+Date: Sat, 23 May 2026 19:45:17 +0530
 From: Manivannan Sadhasivam <mani@kernel.org>
 To: Can Guo <can.guo@oss.qualcomm.com>
 Cc: bvanassche@acm.org, beanhuo@micron.com, peter.wang@mediatek.com, 
 	martin.petersen@oracle.com, linux-scsi@vger.kernel.org, 
-	Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>, Rob Herring <robh@kernel.org>, 
-	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
-	Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>, Zhaoming Luo <zhml@posteo.com>, 
-	"open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" <devicetree@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v2 1/2] dt-bindings: ufs: Document static TX Equalization
- settings properties
-Message-ID: <m6qq3kxgfs73jve2pjmmszymgxb7aizdfo2rwg72o66n2rvov2@xkcvifciwu3z>
+	Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>, 
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>, 
+	Bjorn Andersson <bjorn.andersson@oss.qualcomm.com>, Geert Uytterhoeven <geert@linux-m68k.org>, 
+	Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>, Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>, 
+	Eric Biggers <ebiggers@kernel.org>, Michal Simek <michal.simek@amd.com>, 
+	Luca Weiss <luca.weiss@fairphone.com>, Sven Peter <sven@kernel.org>, 
+	Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>, Nitin Rawat <quic_nitirawa@quicinc.com>, 
+	open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v2 2/2] scsi: ufs: core: Add support for static TX
+ Equalization settings
+Message-ID: <kmuesrdxnh7eltlmijtvg4laxtgzz43tuhbqw6i2o7ndoskanr@zwxxprtyo2nj>
 References: <20260523134711.323425-1-can.guo@oss.qualcomm.com>
- <20260523134711.323425-2-can.guo@oss.qualcomm.com>
+ <20260523134711.323425-3-can.guo@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -49,41 +53,1009 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260523134711.323425-2-can.guo@oss.qualcomm.com>
+In-Reply-To: <20260523134711.323425-3-can.guo@oss.qualcomm.com>
 
-On Sat, May 23, 2026 at 06:47:10AM -0700, Can Guo wrote:
-> UFS v5.0/UFSHCI v5.0 add HS-G6 support (46.6 Gbps/lane) via UniPro v3.0
-> and M-PHY v6.0. In these specs, TX Equalization is defined for all High
-> Speed Gears (not only HS-G6) to compensate channel loss and improve signal
-> integrity at high speed operation.
+On Sat, May 23, 2026 at 06:47:11AM -0700, Can Guo wrote:
+> Static TX Equalization settings from DT patternProperties txeq-settings-g*
+> are board-specific baseline values, when adaptive TX Equalization is used,
+> static settings are not final:
 > 
-> For HS-G6, M-PHY uses PAM4 1b1b line coding, Pre-Coding may also be
-> required depending on channel characteristics.
+> - If valid settings are retrieved from qTxEQGnSettings/wTxEQGnSettingsExt,
+> those retrieved settings override static DT settings.
+> - If retrieval is not available/valid, TX EQTR runs and trained settings
+> override static DT settings.
 > 
-> Add vendor-neutral DT patternProperties:
-> txeq-settings-g[1-6]
+> So static DT settings are a fallback and are intended for cases where
+> adaptive TX Equalization is not enabled/used. Adaptive TX Equalization
+> remains the primary path when enabled.
 > 
-> Each property is a uint32 array of per-lane tuples:
-> (PreShoot, DeEmphasis, PrecodeEn)
+> No behavior changes for platforms that do not provide `txeq-settings-g*`
+> properties.
 > 
+> Signed-off-by: Can Guo <can.guo@oss.qualcomm.com>
+> ---
+>  arch/arm64/configs/defconfig     | 289 ++++++++++++-------------------
+>  drivers/ufs/core/ufs-txeq.c      |   4 +-
+>  drivers/ufs/host/ufshcd-pltfrm.c |  82 +++++++++
+>  include/ufs/ufshcd.h             |   5 +
+>  4 files changed, 197 insertions(+), 183 deletions(-)
+> 
+> diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
+> index d905a0777f93..89730d2ec954 100644
+> --- a/arch/arm64/configs/defconfig
+> +++ b/arch/arm64/configs/defconfig
 
-I don't think combining all EQ settings (PreShoot, DeEmphasis, PrecodeEn) in a
-single property as opaque tuples is the right approach. These are three
-semantically distinct parameters with independent value ranges. So packing
-them into a uint32 array makes validation impossible in the schema.
-
-AFACIS, PrecodeEn is applicable only to HS-G6 (PAM4), but the proposed
-patternProperties forces it into G1-G5 tuples as well, which is semantically
-wrong.
-
-PCIe binding defines one property per data rate for EQ presets:
-https://github.com/devicetree-org/dt-schema/blob/main/dtschema/schemas/pci/pci-bus-common.yaml#L193
-
-Similarly, UFS should define one property per gear per (like, txeq-preshoot-g6,
-txeq-deemphasis-g6, txeq-precode-enable-g6,...) rather than clubbing everything
-into opaque tuples.
+I think you added defconfig changes by mistake.
 
 - Mani
+
+> @@ -32,7 +32,6 @@ CONFIG_KALLSYMS_ALL=y
+>  CONFIG_PROFILING=y
+>  CONFIG_KEXEC=y
+>  CONFIG_KEXEC_FILE=y
+> -CONFIG_CRASH_DUMP=y
+>  CONFIG_ARCH_ACTIONS=y
+>  CONFIG_ARCH_AIROHA=y
+>  CONFIG_ARCH_SUNXI=y
+> @@ -50,7 +49,6 @@ CONFIG_ARCH_BLAIZE=y
+>  CONFIG_ARCH_BST=y
+>  CONFIG_ARCH_CIX=y
+>  CONFIG_ARCH_EXYNOS=y
+> -CONFIG_ARCH_SPARX5=y
+>  CONFIG_ARCH_K3=y
+>  CONFIG_ARCH_LG1K=y
+>  CONFIG_ARCH_HISI=y
+> @@ -58,6 +56,7 @@ CONFIG_ARCH_KEEMBAY=y
+>  CONFIG_ARCH_MEDIATEK=y
+>  CONFIG_ARCH_MESON=y
+>  CONFIG_ARCH_MICROCHIP=y
+> +CONFIG_ARCH_SPARX5=y
+>  CONFIG_ARCH_MVEBU=y
+>  CONFIG_ARCH_NXP=y
+>  CONFIG_ARCH_LAYERSCAPE=y
+> @@ -99,7 +98,6 @@ CONFIG_CPU_FREQ_GOV_USERSPACE=y
+>  CONFIG_CPU_FREQ_GOV_ONDEMAND=y
+>  CONFIG_CPU_FREQ_GOV_CONSERVATIVE=m
+>  CONFIG_CPUFREQ_DT=y
+> -CONFIG_ACPI_CPPC_CPUFREQ=m
+>  CONFIG_ARM_ALLWINNER_SUN50I_CPUFREQ_NVMEM=m
+>  CONFIG_ARM_APPLE_SOC_CPUFREQ=m
+>  CONFIG_ARM_ARMADA_37XX_CPUFREQ=y
+> @@ -112,6 +110,7 @@ CONFIG_ARM_RASPBERRYPI_CPUFREQ=m
+>  CONFIG_ARM_SCMI_CPUFREQ=y
+>  CONFIG_ARM_TEGRA186_CPUFREQ=y
+>  CONFIG_QORIQ_CPUFREQ=y
+> +CONFIG_ACPI_CPPC_CPUFREQ=m
+>  CONFIG_ACPI=y
+>  CONFIG_ACPI_HOTPLUG_MEMORY=y
+>  CONFIG_ACPI_HMAT=y
+> @@ -122,10 +121,9 @@ CONFIG_ACPI_APEI_MEMORY_FAILURE=y
+>  CONFIG_ACPI_APEI_EINJ=y
+>  CONFIG_VIRTUALIZATION=y
+>  CONFIG_KVM=y
+> -CONFIG_JUMP_LABEL=y
+>  CONFIG_MODULES=y
+>  CONFIG_MODULE_UNLOAD=y
+> -CONFIG_IOSCHED_BFQ=y
+> +CONFIG_BLK_INLINE_ENCRYPTION=y
+>  # CONFIG_CORE_DUMP_DEFAULT_ELF_HEADERS is not set
+>  # CONFIG_COMPAT_BRK is not set
+>  CONFIG_MEMORY_HOTPLUG=y
+> @@ -135,36 +133,22 @@ CONFIG_MEMORY_FAILURE=y
+>  CONFIG_TRANSPARENT_HUGEPAGE=y
+>  CONFIG_NET=y
+>  CONFIG_PACKET=y
+> -CONFIG_UNIX=y
+> -CONFIG_INET=y
+>  CONFIG_IP_MULTICAST=y
+>  CONFIG_IP_PNP=y
+>  CONFIG_IP_PNP_DHCP=y
+>  CONFIG_IP_PNP_BOOTP=y
+> -CONFIG_IPV6=y
+>  CONFIG_NETFILTER=y
+>  CONFIG_BRIDGE_NETFILTER=m
+>  CONFIG_NF_CONNTRACK=m
+>  CONFIG_NF_CONNTRACK_EVENTS=y
+>  CONFIG_NETFILTER_XT_MARK=m
+> -CONFIG_NETFILTER_XT_TARGET_CHECKSUM=m
+>  CONFIG_NETFILTER_XT_TARGET_LOG=m
+>  CONFIG_NETFILTER_XT_MATCH_ADDRTYPE=m
+>  CONFIG_NETFILTER_XT_MATCH_CONNTRACK=m
+>  CONFIG_NETFILTER_XT_MATCH_IPVS=m
+>  CONFIG_IP_VS=m
+>  CONFIG_IP_NF_IPTABLES=m
+> -CONFIG_IP_NF_FILTER=m
+> -CONFIG_IP_NF_TARGET_REJECT=m
+> -CONFIG_IP_NF_NAT=m
+> -CONFIG_IP_NF_TARGET_MASQUERADE=m
+> -CONFIG_IP_NF_MANGLE=m
+>  CONFIG_IP6_NF_IPTABLES=m
+> -CONFIG_IP6_NF_FILTER=m
+> -CONFIG_IP6_NF_TARGET_REJECT=m
+> -CONFIG_IP6_NF_MANGLE=m
+> -CONFIG_IP6_NF_NAT=m
+> -CONFIG_IP6_NF_TARGET_MASQUERADE=m
+>  CONFIG_BRIDGE=m
+>  CONFIG_BRIDGE_VLAN_FILTERING=y
+>  CONFIG_NET_DSA=m
+> @@ -182,8 +166,8 @@ CONFIG_NET_CLS_FLOWER=m
+>  CONFIG_NET_CLS_ACT=y
+>  CONFIG_NET_ACT_GACT=m
+>  CONFIG_NET_ACT_MIRRED=m
+> -CONFIG_HSR=m
+>  CONFIG_NET_ACT_GATE=m
+> +CONFIG_HSR=m
+>  CONFIG_QRTR_SMD=m
+>  CONFIG_QRTR_TUN=m
+>  CONFIG_CAN=m
+> @@ -205,7 +189,6 @@ CONFIG_BT_QCOMSMD=m
+>  CONFIG_BT_NXPUART=m
+>  CONFIG_CFG80211=m
+>  CONFIG_MAC80211=m
+> -CONFIG_MAC80211_LEDS=y
+>  CONFIG_RFKILL=m
+>  CONFIG_RFKILL_GPIO=m
+>  CONFIG_NET_9P=y
+> @@ -259,14 +242,13 @@ CONFIG_PCIE_LAYERSCAPE_GEN4=y
+>  CONFIG_PCI_ENDPOINT=y
+>  CONFIG_PCI_ENDPOINT_CONFIGFS=y
+>  CONFIG_PCI_EPF_TEST=m
+> -CONFIG_PCI_PWRCTRL_GENERIC=m
+>  CONFIG_DEVTMPFS=y
+>  CONFIG_DEVTMPFS_MOUNT=y
+>  CONFIG_FW_LOADER_USER_HELPER=y
+>  CONFIG_HISILICON_LPC=y
+> +CONFIG_IMX_AIPSTZ=m
+>  CONFIG_TEGRA_ACONNECT=m
+>  CONFIG_MHI_BUS_PCI_GENERIC=m
+> -CONFIG_ARM_SCMI_PROTOCOL=y
+>  CONFIG_ARM_SCPI_PROTOCOL=y
+>  CONFIG_RASPBERRYPI_FIRMWARE=y
+>  CONFIG_INTEL_STRATIX10_SERVICE=y
+> @@ -276,7 +258,6 @@ CONFIG_GOOGLE_FIRMWARE=y
+>  CONFIG_GOOGLE_CBMEM=m
+>  CONFIG_GOOGLE_COREBOOT_TABLE=m
+>  CONFIG_EFI_CAPSULE_LOADER=y
+> -CONFIG_IMX_AIPSTZ=m
+>  CONFIG_IMX_SCU=y
+>  CONFIG_QCOM_TZMEM_MODE_SHMBRIDGE=y
+>  CONFIG_QCOM_QSEECOM=y
+> @@ -303,11 +284,12 @@ CONFIG_MTD_NAND_MARVELL=y
+>  CONFIG_MTD_NAND_BRCMNAND=m
+>  CONFIG_MTD_NAND_FSL_IFC=y
+>  CONFIG_MTD_NAND_QCOM=y
+> -CONFIG_MTD_SPI_NOR=y
+>  CONFIG_MTD_SPI_NAND=m
+> +CONFIG_MTD_SPI_NOR=y
+>  CONFIG_MTD_UBI=m
+>  CONFIG_MTD_HYPERBUS=m
+>  CONFIG_HBMC_AM654=m
+> +CONFIG_OF_OVERLAY=y
+>  CONFIG_BLK_DEV_LOOP=y
+>  CONFIG_BLK_DEV_NBD=m
+>  CONFIG_VIRTIO_BLK=y
+> @@ -321,6 +303,7 @@ CONFIG_XILINX_SDFEC=m
+>  CONFIG_EEPROM_AT24=m
+>  CONFIG_EEPROM_AT25=m
+>  CONFIG_UACCE=m
+> +CONFIG_MISC_RP1=m
+>  # CONFIG_SCSI_PROC_FS is not set
+>  CONFIG_BLK_DEV_SD=y
+>  CONFIG_SCSI_SAS_ATA=y
+> @@ -339,7 +322,6 @@ CONFIG_AHCI_XGENE=y
+>  CONFIG_AHCI_QORIQ=y
+>  CONFIG_SATA_SIL24=y
+>  CONFIG_SATA_RCAR=y
+> -CONFIG_PATA_PLATFORM=y
+>  CONFIG_PATA_OF_PLATFORM=y
+>  CONFIG_MD=y
+>  CONFIG_BLK_DEV_MD=m
+> @@ -423,8 +405,8 @@ CONFIG_REALTEK_PHY=y
+>  CONFIG_ROCKCHIP_PHY=y
+>  CONFIG_DP83867_PHY=y
+>  CONFIG_DP83869_PHY=m
+> -CONFIG_DP83TG720_PHY=m
+>  CONFIG_DP83TD510_PHY=y
+> +CONFIG_DP83TG720_PHY=m
+>  CONFIG_VITESSE_PHY=y
+>  CONFIG_XILINX_GMII2RGMII=m
+>  CONFIG_CAN_FLEXCAN=m
+> @@ -563,7 +545,6 @@ CONFIG_I2C_MUX_PINCTRL=m
+>  CONFIG_I2C_BCM2835=m
+>  CONFIG_I2C_CADENCE=m
+>  CONFIG_I2C_DESIGNWARE_CORE=y
+> -CONFIG_I2C_DESIGNWARE_PLATFORM=y
+>  CONFIG_I2C_GPIO=m
+>  CONFIG_I2C_IMX=y
+>  CONFIG_I2C_IMX_LPI2C=y
+> @@ -630,8 +611,6 @@ CONFIG_SPMI=y
+>  CONFIG_SPMI_APPLE=m
+>  CONFIG_SPMI_MTK_PMIF=m
+>  CONFIG_PINCTRL_APPLE_GPIO=m
+> -CONFIG_PINCTRL_BRCMSTB=y
+> -CONFIG_PINCTRL_BCM2712=y
+>  CONFIG_PINCTRL_DA9062=m
+>  CONFIG_PINCTRL_MAX77620=y
+>  CONFIG_PINCTRL_RK805=m
+> @@ -640,17 +619,10 @@ CONFIG_PINCTRL_SX150X=m
+>  CONFIG_PINCTRL_OWL=y
+>  CONFIG_PINCTRL_S700=y
+>  CONFIG_PINCTRL_S900=y
+> -CONFIG_PINCTRL_IMX8MM=y
+> -CONFIG_PINCTRL_IMX8MN=y
+> -CONFIG_PINCTRL_IMX8MP=y
+> -CONFIG_PINCTRL_IMX8MQ=y
+> -CONFIG_PINCTRL_IMX8QM=y
+> -CONFIG_PINCTRL_IMX8QXP=y
+> -CONFIG_PINCTRL_IMX8DXL=y
+> -CONFIG_PINCTRL_IMX8ULP=y
+> -CONFIG_PINCTRL_IMX91=y
+> -CONFIG_PINCTRL_IMX93=y
+> +CONFIG_PINCTRL_BRCMSTB=y
+> +CONFIG_PINCTRL_BCM2712=y
+>  CONFIG_PINCTRL_IMX_SCMI=y
+> +CONFIG_PINCTRL_IMX91=y
+>  CONFIG_PINCTRL_MSM=y
+>  CONFIG_PINCTRL_ELIZA=y
+>  CONFIG_PINCTRL_GLYMUR=y
+> @@ -674,7 +646,6 @@ CONFIG_PINCTRL_QCS615=y
+>  CONFIG_PINCTRL_QCS8300=y
+>  CONFIG_PINCTRL_QDF2XXX=y
+>  CONFIG_PINCTRL_QDU1000=y
+> -CONFIG_PINCTRL_RP1=m
+>  CONFIG_PINCTRL_SA8775P=y
+>  CONFIG_PINCTRL_SC7180=y
+>  CONFIG_PINCTRL_SC7280=y
+> @@ -719,9 +690,9 @@ CONFIG_GPIO_PL061=y
+>  CONFIG_GPIO_RCAR=y
+>  CONFIG_GPIO_SYSCON=y
+>  CONFIG_GPIO_UNIPHIER=y
+> +CONFIG_GPIO_VF610=y
+>  CONFIG_GPIO_VISCONTI=y
+>  CONFIG_GPIO_WCD934X=m
+> -CONFIG_GPIO_VF610=y
+>  CONFIG_GPIO_XGENE=y
+>  CONFIG_GPIO_XGENE_SB=y
+>  CONFIG_GPIO_XILINX=m
+> @@ -729,9 +700,9 @@ CONFIG_GPIO_ZYNQ=m
+>  CONFIG_GPIO_MAX732X=y
+>  CONFIG_GPIO_PCA953X=y
+>  CONFIG_GPIO_PCA953X_IRQ=y
+> -CONFIG_GPIO_ADP5585=m
+>  CONFIG_GPIO_PCF857X=m
+>  CONFIG_GPIO_TPIC2810=m
+> +CONFIG_GPIO_ADP5585=m
+>  CONFIG_GPIO_BD9571MWV=m
+>  CONFIG_GPIO_MACSMC=m
+>  CONFIG_GPIO_MAX77620=y
+> @@ -770,7 +741,6 @@ CONFIG_SENSORS_AMC6821=m
+>  CONFIG_SENSORS_INA2XX=m
+>  CONFIG_SENSORS_INA3221=m
+>  CONFIG_SENSORS_TMP102=m
+> -CONFIG_MISC_RP1=m
+>  CONFIG_THERMAL_GOV_POWER_ALLOCATOR=y
+>  CONFIG_CPU_THERMAL=y
+>  CONFIG_DEVFREQ_THERMAL=y
+> @@ -781,11 +751,6 @@ CONFIG_K3_THERMAL=m
+>  CONFIG_QORIQ_THERMAL=m
+>  CONFIG_SUN8I_THERMAL=y
+>  CONFIG_ROCKCHIP_THERMAL=m
+> -CONFIG_RCAR_THERMAL=y
+> -CONFIG_RCAR_GEN3_THERMAL=y
+> -CONFIG_RZG2L_THERMAL=y
+> -CONFIG_RZG3E_THERMAL=y
+> -CONFIG_RZG3S_THERMAL=m
+>  CONFIG_ARMADA_THERMAL=y
+>  CONFIG_MTK_THERMAL=m
+>  CONFIG_MTK_LVTS_THERMAL=m
+> @@ -793,6 +758,11 @@ CONFIG_BCM2711_THERMAL=m
+>  CONFIG_BCM2835_THERMAL=m
+>  CONFIG_BRCMSTB_THERMAL=m
+>  CONFIG_EXYNOS_THERMAL=y
+> +CONFIG_RCAR_THERMAL=y
+> +CONFIG_RCAR_GEN3_THERMAL=y
+> +CONFIG_RZG2L_THERMAL=y
+> +CONFIG_RZG3E_THERMAL=y
+> +CONFIG_RZG3S_THERMAL=m
+>  CONFIG_TEGRA_SOCTHERM=m
+>  CONFIG_TEGRA_BPMP_THERMAL=m
+>  CONFIG_GENERIC_ADC_THERMAL=m
+> @@ -918,10 +888,10 @@ CONFIG_SDR_PLATFORM_DRIVERS=y
+>  CONFIG_V4L_MEM2MEM_DRIVERS=y
+>  CONFIG_VIDEO_AMPHION_VPU=m
+>  CONFIG_VIDEO_CADENCE_CSI2RX=m
+> -CONFIG_VIDEO_MEDIATEK_JPEG=m
+> -CONFIG_VIDEO_MEDIATEK_VCODEC=m
+>  CONFIG_VIDEO_WAVE_VPU=m
+>  CONFIG_VIDEO_E5010_JPEG_ENC=m
+> +CONFIG_VIDEO_MEDIATEK_JPEG=m
+> +CONFIG_VIDEO_MEDIATEK_VCODEC=m
+>  CONFIG_VIDEO_MEDIATEK_MDP3=m
+>  CONFIG_VIDEO_IMX7_CSI=m
+>  CONFIG_VIDEO_IMX_MIPI_CSIS=m
+> @@ -931,8 +901,8 @@ CONFIG_VIDEO_IMX8_JPEG=m
+>  CONFIG_VIDEO_QCOM_CAMSS=m
+>  CONFIG_VIDEO_QCOM_IRIS=m
+>  CONFIG_VIDEO_QCOM_VENUS=m
+> -CONFIG_VIDEO_RCAR_ISP=m
+>  CONFIG_VIDEO_RCAR_CSI2=m
+> +CONFIG_VIDEO_RCAR_ISP=m
+>  CONFIG_VIDEO_RCAR_VIN=m
+>  CONFIG_VIDEO_RZG2L_CSI2=m
+>  CONFIG_VIDEO_RZG2L_CRU=m
+> @@ -940,8 +910,8 @@ CONFIG_VIDEO_RENESAS_FCP=m
+>  CONFIG_VIDEO_RENESAS_FDP1=m
+>  CONFIG_VIDEO_RENESAS_VSP1=m
+>  CONFIG_VIDEO_RCAR_DRIF=m
+> -CONFIG_VIDEO_ROCKCHIP_CIF=m
+>  CONFIG_VIDEO_ROCKCHIP_RGA=m
+> +CONFIG_VIDEO_ROCKCHIP_CIF=m
+>  CONFIG_VIDEO_SAMSUNG_EXYNOS_GSC=m
+>  CONFIG_VIDEO_SAMSUNG_S5P_JPEG=m
+>  CONFIG_VIDEO_SAMSUNG_S5P_MFC=m
+> @@ -956,64 +926,11 @@ CONFIG_VIDEO_OV5640=m
+>  CONFIG_VIDEO_OV5645=m
+>  CONFIG_VIDEO_S5KJN1=m
+>  CONFIG_DRM=m
+> -CONFIG_DRM_I2C_NXP_TDA998X=m
+>  CONFIG_DRM_HDLCD=m
+>  CONFIG_DRM_MALI_DISPLAY=m
+>  CONFIG_DRM_KOMEDA=m
+> -CONFIG_DRM_NOUVEAU=m
+> -CONFIG_DRM_EXYNOS=m
+> -CONFIG_DRM_EXYNOS5433_DECON=y
+> -CONFIG_DRM_EXYNOS7_DECON=y
+> -CONFIG_DRM_EXYNOS_DSI=y
+> -# CONFIG_DRM_EXYNOS_DP is not set
+> -CONFIG_DRM_EXYNOS_HDMI=y
+> -CONFIG_DRM_EXYNOS_MIC=y
+> -CONFIG_DRM_ROCKCHIP=m
+> -CONFIG_ROCKCHIP_VOP2=y
+> -CONFIG_ROCKCHIP_ANALOGIX_DP=y
+> -CONFIG_ROCKCHIP_CDN_DP=y
+> -CONFIG_ROCKCHIP_DW_DP=y
+> -CONFIG_ROCKCHIP_DW_HDMI=y
+> -CONFIG_ROCKCHIP_DW_HDMI_QP=y
+> -CONFIG_ROCKCHIP_DW_MIPI_DSI=y
+> -CONFIG_ROCKCHIP_INNO_HDMI=y
+> -CONFIG_ROCKCHIP_LVDS=y
+> -CONFIG_DRM_RCAR_DU=m
+> -CONFIG_DRM_RCAR_DW_HDMI=m
+> -CONFIG_DRM_RCAR_MIPI_DSI=m
+> -CONFIG_DRM_RZG2L_MIPI_DSI=m
+> -CONFIG_DRM_RZG2L_DU=m
+> -CONFIG_DRM_SUN4I=m
+> -CONFIG_DRM_SUN6I_DSI=m
+> -CONFIG_DRM_SUN8I_DW_HDMI=m
+> -CONFIG_DRM_SUN8I_MIXER=m
+> -CONFIG_DRM_MSM=m
+> -CONFIG_DRM_TEGRA=m
+> -CONFIG_DRM_STM=m
+> -CONFIG_DRM_STM_LVDS=m
+> -CONFIG_DRM_PANEL_BOE_TV101WUM_NL6=m
+> -CONFIG_DRM_PANEL_LVDS=m
+> -CONFIG_DRM_PANEL_SIMPLE=m
+> -CONFIG_DRM_PANEL_SUMMIT=m
+> -CONFIG_DRM_PANEL_EDP=m
+> -CONFIG_DRM_PANEL_HIMAX_HX8279=m
+> -CONFIG_DRM_PANEL_HIMAX_HX83112A=m
+> -CONFIG_DRM_PANEL_HIMAX_HX83112B=m
+> -CONFIG_DRM_PANEL_ILITEK_ILI9882T=m
+> -CONFIG_DRM_PANEL_KHADAS_TS050=m
+> -CONFIG_DRM_PANEL_MANTIX_MLAF057WE51=m
+> -CONFIG_DRM_PANEL_NOVATEK_NT36672A=m
+> -CONFIG_DRM_PANEL_NOVATEK_NT36672E=m
+> -CONFIG_DRM_PANEL_NOVATEK_NT37801=m
+> -CONFIG_DRM_PANEL_RAYDIUM_RM67191=m
+> -CONFIG_DRM_PANEL_RAYDIUM_RM692E5=m
+> -CONFIG_DRM_PANEL_SAMSUNG_ATNA33XC20=m
+> -CONFIG_DRM_PANEL_SITRONIX_ST7703=m
+> -CONFIG_DRM_PANEL_STARTEK_KD070FHFID015=m
+> -CONFIG_DRM_PANEL_TRULY_NT35597_WQXGA=m
+> -CONFIG_DRM_PANEL_VISIONOX_VTDR6130=m
+> -CONFIG_DRM_DISPLAY_CONNECTOR=m
+>  CONFIG_DRM_FSL_LDB=m
+> +CONFIG_DRM_I2C_NXP_TDA998X=m
+>  CONFIG_DRM_ITE_IT6263=m
+>  CONFIG_DRM_LONTIUM_LT8912B=m
+>  CONFIG_DRM_LONTIUM_LT9611=m
+> @@ -1022,7 +939,6 @@ CONFIG_DRM_LONTIUM_LT8713SX=m
+>  CONFIG_DRM_ITE_IT66121=m
+>  CONFIG_DRM_NWL_MIPI_DSI=m
+>  CONFIG_DRM_PARADE_PS8640=m
+> -CONFIG_DRM_SAMSUNG_DSIM=m
+>  CONFIG_DRM_SII902X=m
+>  CONFIG_DRM_SIMPLE_BRIDGE=m
+>  CONFIG_DRM_THINE_THC63LVD1024=m
+> @@ -1040,38 +956,82 @@ CONFIG_DRM_IMX8MP_DW_HDMI_BRIDGE=m
+>  CONFIG_DRM_DW_HDMI_AHB_AUDIO=m
+>  CONFIG_DRM_DW_HDMI_CEC=m
+>  CONFIG_DRM_DW_HDMI_QP_CEC=y
+> -CONFIG_DRM_IMX_DCSS=m
+> -CONFIG_DRM_V3D=m
+> -CONFIG_DRM_VC4=m
+>  CONFIG_DRM_ETNAVIV=m
+> +CONFIG_DRM_EXYNOS=m
+> +CONFIG_DRM_EXYNOS5433_DECON=y
+> +CONFIG_DRM_EXYNOS7_DECON=y
+> +CONFIG_DRM_EXYNOS_DSI=y
+> +# CONFIG_DRM_EXYNOS_DP is not set
+> +CONFIG_DRM_EXYNOS_HDMI=y
+> +CONFIG_DRM_EXYNOS_MIC=y
+>  CONFIG_DRM_HISI_HIBMC=m
+>  CONFIG_DRM_HISI_KIRIN=m
+> +CONFIG_DRM_POWERVR=m
+> +CONFIG_DRM_IMX_DCSS=m
+> +CONFIG_DRM_LIMA=m
+>  CONFIG_DRM_MEDIATEK=m
+>  CONFIG_DRM_MEDIATEK_DP=m
+>  CONFIG_DRM_MEDIATEK_HDMI=m
+>  CONFIG_DRM_MEDIATEK_HDMI_V2=m
+> +CONFIG_DRM_MESON=m
+> +CONFIG_DRM_MSM=m
+>  CONFIG_DRM_MXSFB=m
+>  CONFIG_DRM_IMX_LCDIF=m
+> -CONFIG_DRM_MESON=m
+> -CONFIG_DRM_PL111=m
+> -CONFIG_DRM_LIMA=m
+> +CONFIG_DRM_NOUVEAU=m
+> +CONFIG_DRM_PANEL_BOE_TV101WUM_NL6=m
+> +CONFIG_DRM_PANEL_LVDS=m
+> +CONFIG_DRM_PANEL_HIMAX_HX8279=m
+> +CONFIG_DRM_PANEL_HIMAX_HX83112A=m
+> +CONFIG_DRM_PANEL_HIMAX_HX83112B=m
+> +CONFIG_DRM_PANEL_ILITEK_ILI9882T=m
+> +CONFIG_DRM_PANEL_KHADAS_TS050=m
+> +CONFIG_DRM_PANEL_MANTIX_MLAF057WE51=m
+> +CONFIG_DRM_PANEL_NOVATEK_NT36672A=m
+> +CONFIG_DRM_PANEL_NOVATEK_NT36672E=m
+> +CONFIG_DRM_PANEL_NOVATEK_NT37801=m
+> +CONFIG_DRM_PANEL_RAYDIUM_RM67191=m
+> +CONFIG_DRM_PANEL_RAYDIUM_RM692E5=m
+> +CONFIG_DRM_PANEL_SAMSUNG_ATNA33XC20=m
+> +CONFIG_DRM_PANEL_SITRONIX_ST7703=m
+> +CONFIG_DRM_PANEL_STARTEK_KD070FHFID015=m
+> +CONFIG_DRM_PANEL_EDP=m
+> +CONFIG_DRM_PANEL_SIMPLE=m
+> +CONFIG_DRM_PANEL_SUMMIT=m
+> +CONFIG_DRM_PANEL_TRULY_NT35597_WQXGA=m
+> +CONFIG_DRM_PANEL_VISIONOX_VTDR6130=m
+>  CONFIG_DRM_PANFROST=m
+>  CONFIG_DRM_PANTHOR=m
+> +CONFIG_DRM_PL111=m
+> +CONFIG_DRM_RCAR_DU=m
+> +CONFIG_DRM_RCAR_DW_HDMI=m
+> +CONFIG_DRM_RZG2L_DU=m
+> +CONFIG_DRM_ROCKCHIP=m
+> +CONFIG_ROCKCHIP_VOP2=y
+> +CONFIG_ROCKCHIP_ANALOGIX_DP=y
+> +CONFIG_ROCKCHIP_CDN_DP=y
+> +CONFIG_ROCKCHIP_DW_DP=y
+> +CONFIG_ROCKCHIP_DW_HDMI=y
+> +CONFIG_ROCKCHIP_DW_HDMI_QP=y
+> +CONFIG_ROCKCHIP_DW_MIPI_DSI=y
+> +CONFIG_ROCKCHIP_INNO_HDMI=y
+> +CONFIG_ROCKCHIP_LVDS=y
+> +CONFIG_DRM_STM=m
+> +CONFIG_DRM_STM_LVDS=m
+> +CONFIG_DRM_SUN4I=m
+> +CONFIG_DRM_TEGRA=m
+>  CONFIG_DRM_TIDSS=m
+> +CONFIG_DRM_V3D=m
+> +CONFIG_DRM_VC4=m
+>  CONFIG_DRM_ZYNQMP_DPSUB=m
+>  CONFIG_DRM_ZYNQMP_DPSUB_AUDIO=y
+> -CONFIG_DRM_POWERVR=m
+>  CONFIG_FB=y
+>  CONFIG_FB_EFI=y
+> -CONFIG_FB_MODE_HELPERS=y
+>  CONFIG_BACKLIGHT_PWM=m
+>  CONFIG_BACKLIGHT_APPLE_DWI=m
+>  CONFIG_BACKLIGHT_QCOM_WLED=m
+>  CONFIG_BACKLIGHT_LP855X=m
+>  CONFIG_BACKLIGHT_GPIO=m
+>  CONFIG_LOGO=y
+> -# CONFIG_LOGO_LINUX_MONO is not set
+> -# CONFIG_LOGO_LINUX_VGA16 is not set
+>  CONFIG_SOUND=m
+>  CONFIG_SND=m
+>  CONFIG_SND_ALOOP=m
+> @@ -1113,21 +1073,15 @@ CONFIG_SND_SOC_SC8280XP=m
+>  CONFIG_SND_SOC_SC7180=m
+>  CONFIG_SND_SOC_SC7280=m
+>  CONFIG_SND_SOC_X1E80100=m
+> -CONFIG_SND_SOC_ROCKCHIP=m
+> +CONFIG_SND_SOC_RCAR=m
+> +CONFIG_SND_SOC_MSIOF=m
+> +CONFIG_SND_SOC_RZ=m
+>  CONFIG_SND_SOC_ROCKCHIP_I2S_TDM=m
+>  CONFIG_SND_SOC_ROCKCHIP_SAI=m
+>  CONFIG_SND_SOC_ROCKCHIP_SPDIF=m
+>  CONFIG_SND_SOC_ROCKCHIP_RT5645=m
+>  CONFIG_SND_SOC_RK3399_GRU_SOUND=m
+> -CONFIG_SND_SOC_RCAR=m
+> -CONFIG_SND_SOC_MSIOF=m
+> -CONFIG_SND_SOC_RZ=m
+>  CONFIG_SND_SOC_SAMSUNG=m
+> -CONFIG_SND_SOC_SOF_TOPLEVEL=y
+> -CONFIG_SND_SOC_SOF_OF=m
+> -CONFIG_SND_SOC_SOF_MTK_TOPLEVEL=y
+> -CONFIG_SND_SOC_SOF_MT8186=m
+> -CONFIG_SND_SOC_SOF_MT8195=m
+>  CONFIG_SND_SUN8I_CODEC=m
+>  CONFIG_SND_SUN8I_CODEC_ANALOG=m
+>  CONFIG_SND_SUN50I_CODEC_ANALOG=m
+> @@ -1147,11 +1101,15 @@ CONFIG_SND_SOC_TEGRA210_AMX=m
+>  CONFIG_SND_SOC_TEGRA210_ADX=m
+>  CONFIG_SND_SOC_TEGRA210_MIXER=m
+>  CONFIG_SND_SOC_TEGRA_AUDIO_GRAPH_CARD=m
+> -CONFIG_SND_SOC_DAVINCI_MCASP=m
+>  CONFIG_SND_SOC_J721E_EVM=m
+>  CONFIG_SND_SOC_XILINX_I2S=m
+>  CONFIG_SND_SOC_XILINX_AUDIO_FORMATTER=m
+>  CONFIG_SND_SOC_XILINX_SPDIF=m
+> +CONFIG_SND_SOC_SOF_TOPLEVEL=y
+> +CONFIG_SND_SOC_SOF_OF=m
+> +CONFIG_SND_SOC_SOF_MTK_TOPLEVEL=y
+> +CONFIG_SND_SOC_SOF_MT8186=m
+> +CONFIG_SND_SOC_SOF_MT8195=m
+>  CONFIG_SND_SOC_AK4613=m
+>  CONFIG_SND_SOC_AK4619=m
+>  CONFIG_SND_SOC_DA7213=m
+> @@ -1163,7 +1121,6 @@ CONFIG_SND_SOC_GTM601=m
+>  CONFIG_SND_SOC_MAX98090=m
+>  CONFIG_SND_SOC_MSM8916_WCD_ANALOG=m
+>  CONFIG_SND_SOC_MSM8916_WCD_DIGITAL=m
+> -CONFIG_SND_SOC_PCM3168A_I2C=m
+>  CONFIG_SND_SOC_RK3308=m
+>  CONFIG_SND_SOC_RK817=m
+>  CONFIG_SND_SOC_RT5640=m
+> @@ -1189,8 +1146,6 @@ CONFIG_SND_SOC_WSA884X=m
+>  CONFIG_SND_SOC_NAU8822=m
+>  CONFIG_SND_SOC_LPASS_WSA_MACRO=m
+>  CONFIG_SND_SOC_LPASS_VA_MACRO=m
+> -CONFIG_SND_SOC_LPASS_RX_MACRO=m
+> -CONFIG_SND_SOC_LPASS_TX_MACRO=m
+>  CONFIG_SND_SIMPLE_CARD=m
+>  CONFIG_SND_AUDIO_GRAPH_CARD=m
+>  CONFIG_SND_AUDIO_GRAPH_CARD2=m
+> @@ -1220,12 +1175,10 @@ CONFIG_USB_CDNS_SUPPORT=m
+>  CONFIG_USB_CDNS3=m
+>  CONFIG_USB_CDNS3_GADGET=y
+>  CONFIG_USB_CDNS3_HOST=y
+> -CONFIG_USB_CDNS3_IMX=m
+>  CONFIG_USB_MTU3=y
+>  CONFIG_USB_MUSB_HDRC=y
+>  CONFIG_USB_MUSB_SUNXI=y
+>  CONFIG_USB_DWC3=y
+> -CONFIG_OMAP_USB2=m
+>  CONFIG_USB_DWC2=y
+>  CONFIG_USB_CHIPIDEA=y
+>  CONFIG_USB_CHIPIDEA_UDC=y
+> @@ -1311,6 +1264,7 @@ CONFIG_MMC_SDHCI_AM654=y
+>  CONFIG_MMC_OWL=y
+>  CONFIG_SCSI_UFSHCD=y
+>  CONFIG_SCSI_UFS_BSG=y
+> +CONFIG_SCSI_UFS_CRYPTO=y
+>  CONFIG_SCSI_UFSHCD_PLATFORM=y
+>  CONFIG_SCSI_UFS_CDNS_PLATFORM=m
+>  CONFIG_SCSI_UFS_QCOM=m
+> @@ -1320,9 +1274,6 @@ CONFIG_SCSI_UFS_RENESAS=m
+>  CONFIG_SCSI_UFS_TI_J721E=m
+>  CONFIG_SCSI_UFS_EXYNOS=y
+>  CONFIG_SCSI_UFS_ROCKCHIP=y
+> -CONFIG_BLK_INLINE_ENCRYPTION=y
+> -CONFIG_SCSI_UFS_CRYPTO=y
+> -CONFIG_NEW_LEDS=y
+>  CONFIG_LEDS_CLASS=y
+>  CONFIG_LEDS_CLASS_FLASH=m
+>  CONFIG_LEDS_CLASS_MULTICOLOR=m
+> @@ -1348,9 +1299,9 @@ CONFIG_RTC_CLASS=y
+>  CONFIG_RTC_DRV_DS1307=m
+>  CONFIG_RTC_DRV_HYM8563=m
+>  CONFIG_RTC_DRV_MAX77686=y
+> +CONFIG_RTC_DRV_NVIDIA_VRS10=m
+>  CONFIG_RTC_DRV_RK808=m
+>  CONFIG_RTC_DRV_ISL1208=m
+> -CONFIG_RTC_DRV_PCF85063=m
+>  CONFIG_RTC_DRV_PCF85363=m
+>  CONFIG_RTC_DRV_PCF8563=m
+>  CONFIG_RTC_DRV_M41T80=m
+> @@ -1358,10 +1309,10 @@ CONFIG_RTC_DRV_BQ32K=m
+>  CONFIG_RTC_DRV_RX8581=m
+>  CONFIG_RTC_DRV_RV3028=m
+>  CONFIG_RTC_DRV_RV8803=m
+> -CONFIG_RTC_DRV_S32G=m
+>  CONFIG_RTC_DRV_S5M=y
+>  CONFIG_RTC_DRV_DS3232=y
+>  CONFIG_RTC_DRV_PCF2127=m
+> +CONFIG_RTC_DRV_PCF85063=m
+>  CONFIG_RTC_DRV_DA9063=m
+>  CONFIG_RTC_DRV_EFI=y
+>  CONFIG_RTC_DRV_ZYNQMP=m
+> @@ -1380,8 +1331,8 @@ CONFIG_RTC_DRV_MT6397=m
+>  CONFIG_RTC_DRV_XGENE=y
+>  CONFIG_RTC_DRV_TI_K3=m
+>  CONFIG_RTC_DRV_RENESAS_RTCA3=m
+> -CONFIG_RTC_DRV_NVIDIA_VRS10=m
+>  CONFIG_RTC_DRV_MACSMC=m
+> +CONFIG_RTC_DRV_S32G=m
+>  CONFIG_DMADEVICES=y
+>  CONFIG_APPLE_ADMAC=m
+>  CONFIG_DMA_BCM2835=y
+> @@ -1432,19 +1383,17 @@ CONFIG_CROS_EC_RPMSG=m
+>  CONFIG_CROS_EC_SPI=y
+>  CONFIG_CROS_KBD_LED_BACKLIGHT=m
+>  CONFIG_CROS_EC_CHARDEV=m
+> -CONFIG_COMMON_CLK_APPLE_NCO=m
+>  CONFIG_EC_ACER_ASPIRE1=m
+>  CONFIG_EC_HUAWEI_GAOKUN=m
+>  CONFIG_EC_LENOVO_YOGA_C630=m
+>  CONFIG_EC_LENOVO_THINKPAD_T14S=m
+> +CONFIG_COMMON_CLK_APPLE_NCO=m
+>  CONFIG_COMMON_CLK_RK808=y
+> -CONFIG_COMMON_CLK_SCMI=y
+>  CONFIG_COMMON_CLK_SCPI=y
+>  CONFIG_COMMON_CLK_CS2000_CP=y
+>  CONFIG_COMMON_CLK_FSL_SAI=y
+>  CONFIG_COMMON_CLK_S2MPS11=y
+>  CONFIG_COMMON_CLK_PWM=y
+> -CONFIG_COMMON_CLK_RP1=m
+>  CONFIG_COMMON_CLK_RS9_PCIE=y
+>  CONFIG_COMMON_CLK_VC3=y
+>  CONFIG_COMMON_CLK_VC5=y
+> @@ -1459,18 +1408,6 @@ CONFIG_CLK_IMX8ULP=y
+>  CONFIG_CLK_IMX93=y
+>  CONFIG_CLK_IMX95_BLK_CTL=y
+>  CONFIG_TI_SCI_CLK=y
+> -CONFIG_COMMON_CLK_MT8192_AUDSYS=y
+> -CONFIG_COMMON_CLK_MT8192_CAMSYS=y
+> -CONFIG_COMMON_CLK_MT8192_IMGSYS=y
+> -CONFIG_COMMON_CLK_MT8192_IMP_IIC_WRAP=y
+> -CONFIG_COMMON_CLK_MT8192_IPESYS=y
+> -CONFIG_COMMON_CLK_MT8192_MDPSYS=y
+> -CONFIG_COMMON_CLK_MT8192_MFGCFG=y
+> -CONFIG_COMMON_CLK_MT8192_MMSYS=y
+> -CONFIG_COMMON_CLK_MT8192_MSDC=y
+> -CONFIG_COMMON_CLK_MT8192_SCP_ADSP=y
+> -CONFIG_COMMON_CLK_MT8192_VDECSYS=y
+> -CONFIG_COMMON_CLK_MT8192_VENCSYS=y
+>  CONFIG_COMMON_CLK_QCOM=y
+>  CONFIG_CLK_ELIZA_DISPCC=m
+>  CONFIG_CLK_ELIZA_GCC=y
+> @@ -1497,7 +1434,6 @@ CONFIG_QCOM_CLK_APCC_MSM8996=y
+>  CONFIG_QCOM_CLK_SMD_RPM=y
+>  CONFIG_QCOM_CLK_RPMH=y
+>  CONFIG_IPQ_APSS_6018=y
+> -CONFIG_IPQ_APSS_5018=y
+>  CONFIG_IPQ_CMN_PLL=m
+>  CONFIG_IPQ_GCC_5018=y
+>  CONFIG_IPQ_GCC_5210=y
+> @@ -1521,17 +1457,16 @@ CONFIG_QCM_DISPCC_2290=m
+>  CONFIG_QCS_DISPCC_615=m
+>  CONFIG_QCS_CAMCC_615=m
+>  CONFIG_QCS_GCC_404=y
+> -CONFIG_QCS_GCC_615=y
+> -CONFIG_QCS_GCC_8300=y
+> -CONFIG_SC_CAMCC_7280=m
+>  CONFIG_SA_CAMCC_8775P=m
+> +CONFIG_QCS_GCC_8300=y
+> +CONFIG_QCS_GCC_615=y
+>  CONFIG_QCS_GPUCC_615=m
+>  CONFIG_QCS_VIDEOCC_615=m
+> -CONFIG_QDU_GCC_1000=y
+> +CONFIG_SC_CAMCC_7280=m
+>  CONFIG_SC_CAMCC_8280XP=m
+> +CONFIG_SA_DISPCC_8775P=m
+>  CONFIG_SC_DISPCC_7280=m
+>  CONFIG_SC_DISPCC_8280XP=m
+> -CONFIG_SA_DISPCC_8775P=m
+>  CONFIG_SA_GCC_8775P=y
+>  CONFIG_SA_GPUCC_8775P=m
+>  CONFIG_SC_GCC_7180=y
+> @@ -1544,6 +1479,7 @@ CONFIG_SC_LPASSCC_8280XP=m
+>  CONFIG_SC_LPASS_CORECC_7280=m
+>  CONFIG_SC_VIDEOCC_7280=m
+>  CONFIG_SDM_CAMCC_845=m
+> +CONFIG_QDU_GCC_1000=y
+>  CONFIG_SDM_GPUCC_845=y
+>  CONFIG_SDM_VIDEOCC_845=y
+>  CONFIG_SDM_DISPCC_845=y
+> @@ -1608,22 +1544,22 @@ CONFIG_RENESAS_OSTM=y
+>  CONFIG_ARM_MHU=y
+>  CONFIG_EXYNOS_MBOX=m
+>  CONFIG_IMX_MBOX=y
+> -CONFIG_OMAP2PLUS_MBOX=m
+>  CONFIG_PLATFORM_MHU=y
+> +CONFIG_OMAP2PLUS_MBOX=m
+>  CONFIG_BCM2835_MBOX=y
+>  CONFIG_QCOM_APCS_IPC=y
+> +CONFIG_TEGRA_HSP_MBOX=y
+>  CONFIG_MTK_ADSP_MBOX=m
+>  CONFIG_QCOM_CPUCP_MBOX=m
+> -CONFIG_TEGRA_HSP_MBOX=y
+>  CONFIG_QCOM_IPCC=y
+>  CONFIG_CIX_MBOX=y
+> -CONFIG_ROCKCHIP_IOMMU=y
+> -CONFIG_TEGRA_IOMMU_SMMU=y
+>  CONFIG_ARM_SMMU=y
+>  CONFIG_ARM_SMMU_V3=y
+> -CONFIG_MTK_IOMMU=y
+>  CONFIG_QCOM_IOMMU=y
+> +CONFIG_ROCKCHIP_IOMMU=y
+> +CONFIG_TEGRA_IOMMU_SMMU=y
+>  CONFIG_APPLE_DART=m
+> +CONFIG_MTK_IOMMU=y
+>  CONFIG_REMOTEPROC=y
+>  CONFIG_IMX_REMOTEPROC=y
+>  CONFIG_MTK_SCP=m
+> @@ -1680,7 +1616,6 @@ CONFIG_IMX_SCU_PD=y
+>  CONFIG_QCOM_CPR=y
+>  CONFIG_QCOM_RPMHPD=y
+>  CONFIG_QCOM_RPMPD=y
+> -CONFIG_ROCKCHIP_PM_DOMAINS=y
+>  CONFIG_TI_SCI_PM_DOMAINS=y
+>  CONFIG_ARM_IMX_BUS_DEVFREQ=y
+>  CONFIG_ARM_IMX8M_DDRC_DEVFREQ=m
+> @@ -1727,9 +1662,9 @@ CONFIG_PWM_BCM2835=m
+>  CONFIG_PWM_BRCMSTB=m
+>  CONFIG_PWM_CROS_EC=m
+>  CONFIG_PWM_IMX27=m
+> +CONFIG_PWM_MEDIATEK=m
+>  CONFIG_PWM_MESON=m
+>  CONFIG_PWM_MTK_DISP=m
+> -CONFIG_PWM_MEDIATEK=m
+>  CONFIG_PWM_RENESAS_RCAR=m
+>  CONFIG_PWM_RENESAS_RZG2L_GPT=m
+>  CONFIG_PWM_RENESAS_RZ_MTU3=m
+> @@ -1757,10 +1692,10 @@ CONFIG_RESET_QCOM_PDC=m
+>  CONFIG_RESET_RZG2L_USBPHY_CTRL=y
+>  CONFIG_RESET_RZV2H_USB2PHY=m
+>  CONFIG_RESET_TI_SCI=y
+> -CONFIG_PHY_SNPS_EUSB2=m
+> -CONFIG_PHY_XGENE=y
+>  CONFIG_PHY_CAN_TRANSCEIVER=m
+>  CONFIG_PHY_NXP_PTN3222=m
+> +CONFIG_PHY_SNPS_EUSB2=m
+> +CONFIG_PHY_XGENE=y
+>  CONFIG_PHY_SUN4I_USB=y
+>  CONFIG_PHY_CADENCE_TORRENT=m
+>  CONFIG_PHY_CADENCE_DPHY=m
+> @@ -1811,6 +1746,7 @@ CONFIG_PHY_UNIPHIER_USB3=y
+>  CONFIG_PHY_TEGRA_XUSB=y
+>  CONFIG_PHY_AM654_SERDES=m
+>  CONFIG_PHY_J721E_WIZ=m
+> +CONFIG_OMAP_USB2=m
+>  CONFIG_PHY_XILINX_ZYNQMP=m
+>  CONFIG_ARM_CCI_PMU=m
+>  CONFIG_ARM_CCN=m
+> @@ -1854,7 +1790,6 @@ CONFIG_ALTERA_FREEZE_BRIDGE=m
+>  CONFIG_XILINX_PR_DECOUPLER=m
+>  CONFIG_FPGA_REGION=m
+>  CONFIG_OF_FPGA_REGION=m
+> -CONFIG_OF_OVERLAY=y
+>  CONFIG_FPGA_MGR_ZYNQMP_FPGA=m
+>  CONFIG_FPGA_MGR_VERSAL_FPGA=m
+>  CONFIG_TEE=y
+> @@ -1862,10 +1797,7 @@ CONFIG_OPTEE=y
+>  CONFIG_QCOMTEE=m
+>  CONFIG_MUX_GPIO=m
+>  CONFIG_MUX_MMIO=y
+> -CONFIG_SLIMBUS=m
+> -CONFIG_SLIM_QCOM_CTRL=m
+>  CONFIG_SLIM_QCOM_NGD_CTRL=m
+> -CONFIG_INTERCONNECT=y
+>  CONFIG_INTERCONNECT_IMX=y
+>  CONFIG_INTERCONNECT_IMX8MM=m
+>  CONFIG_INTERCONNECT_IMX8MN=m
+> @@ -1903,9 +1835,9 @@ CONFIG_INTERCONNECT_QCOM_SM8650=y
+>  CONFIG_INTERCONNECT_QCOM_SM8750=y
+>  CONFIG_INTERCONNECT_QCOM_X1E80100=y
+>  CONFIG_COUNTER=m
+> -CONFIG_TI_EQEP=m
+>  CONFIG_RZ_MTU3_CNT=m
+>  CONFIG_STM32_TIMER_CNT=m
+> +CONFIG_TI_EQEP=m
+>  CONFIG_HTE=y
+>  CONFIG_HTE_TEGRA194=y
+>  CONFIG_HTE_TEGRA194_TEST=m
+> @@ -1924,14 +1856,12 @@ CONFIG_OVERLAY_FS=m
+>  CONFIG_VFAT_FS=y
+>  CONFIG_TMPFS_POSIX_ACL=y
+>  CONFIG_HUGETLBFS=y
+> -CONFIG_CONFIGFS_FS=y
+>  CONFIG_EFIVAR_FS=y
+>  CONFIG_UBIFS_FS=m
+>  CONFIG_SQUASHFS=y
+>  CONFIG_PSTORE_RAM=m
+>  CONFIG_NFS_FS=y
+>  CONFIG_NFS_V4=y
+> -CONFIG_NFS_V4_1=y
+>  CONFIG_NFS_V4_2=y
+>  CONFIG_ROOT_NFS=y
+>  CONFIG_9P_FS=y
+> @@ -1939,14 +1869,11 @@ CONFIG_NLS_CODEPAGE_437=y
+>  CONFIG_NLS_ISO8859_1=y
+>  CONFIG_SECURITY=y
+>  CONFIG_CRYPTO_USER=y
+> -CONFIG_CRYPTO_CHACHA20=m
+>  CONFIG_CRYPTO_BENCHMARK=m
+> +CONFIG_CRYPTO_CHACHA20=m
+>  CONFIG_CRYPTO_ECHAINIV=y
+> -CONFIG_CRYPTO_SHA3=m
+> -CONFIG_CRYPTO_SM3=m
+>  CONFIG_CRYPTO_USER_API_RNG=m
+>  CONFIG_CRYPTO_GHASH_ARM64_CE=y
+> -CONFIG_CRYPTO_AES_ARM64_CE_BLK=y
+>  CONFIG_CRYPTO_AES_ARM64_BS=m
+>  CONFIG_CRYPTO_AES_ARM64_CE_CCM=y
+>  CONFIG_CRYPTO_DEV_SUN8I_CE=m
+> @@ -1972,8 +1899,6 @@ CONFIG_DEBUG_INFO_DWARF_TOOLCHAIN_DEFAULT=y
+>  CONFIG_DEBUG_INFO_REDUCED=y
+>  CONFIG_MAGIC_SYSRQ=y
+>  CONFIG_DEBUG_FS=y
+> -# CONFIG_SCHED_DEBUG is not set
+> -# CONFIG_DEBUG_PREEMPT is not set
+>  # CONFIG_FTRACE is not set
+>  CONFIG_CORESIGHT=m
+>  CONFIG_CORESIGHT_LINK_AND_SINK_TMC=m
+> diff --git a/drivers/ufs/core/ufs-txeq.c b/drivers/ufs/core/ufs-txeq.c
+> index 4b264adfdf49..634ec039e129 100644
+> --- a/drivers/ufs/core/ufs-txeq.c
+> +++ b/drivers/ufs/core/ufs-txeq.c
+> @@ -1297,7 +1297,7 @@ int ufshcd_config_tx_eq_settings(struct ufs_hba *hba,
+>  	}
+>  
+>  	params = &hba->tx_eq_params[gear - 1];
+> -	if (!params->is_valid || force_tx_eqtr) {
+> +	if (!params->is_valid || params->is_static || force_tx_eqtr) {
+>  		int ret;
+>  
+>  		ret = ufshcd_tx_eqtr(hba, params, pwr_mode);
+> @@ -1310,6 +1310,7 @@ int ufshcd_config_tx_eq_settings(struct ufs_hba *hba,
+>  		/* Mark TX Equalization settings as valid */
+>  		params->is_valid = true;
+>  		params->is_trained = true;
+> +		params->is_static = false;
+>  		params->is_applied = false;
+>  	}
+>  
+> @@ -1495,6 +1496,7 @@ static void ufshcd_extract_tx_eq_settings_attrs(struct ufs_hba *hba, u8 gear)
+>  	}
+>  
+>  	params->is_valid = true;
+> +	params->is_static = false;
+>  }
+>  
+>  void ufshcd_retrieve_tx_eq_settings(struct ufs_hba *hba)
+> diff --git a/drivers/ufs/host/ufshcd-pltfrm.c b/drivers/ufs/host/ufshcd-pltfrm.c
+> index c2dafb583cf5..3aa49a26f75a 100644
+> --- a/drivers/ufs/host/ufshcd-pltfrm.c
+> +++ b/drivers/ufs/host/ufshcd-pltfrm.c
+> @@ -210,6 +210,86 @@ static void ufshcd_init_lanes_per_dir(struct ufs_hba *hba)
+>  	}
+>  }
+>  
+> +static void ufshcd_parse_static_tx_eq_settings(struct ufs_hba *hba)
+> +{
+> +	size_t sz = hba->lanes_per_direction * 2 * TX_EQ_SETTINGS_TUPLE_SZ;
+> +	u32 settings[UFS_MAX_LANES * 2 * TX_EQ_SETTINGS_TUPLE_SZ];
+> +	u32 *host_settings, *device_settings;
+> +	u32 lpd = hba->lanes_per_direction;
+> +	struct ufshcd_tx_eq_params *params;
+> +	struct device *dev = hba->dev;
+> +	int i, err, count, gear, lane;
+> +	char prop_name[MAX_PROP_SIZE];
+> +
+> +	if (!lpd || lpd > UFS_MAX_LANES) {
+> +		dev_err(dev, "Invalid lanes-per-direction value (%u) provided\n", lpd);
+> +		return;
+> +	}
+> +
+> +	for (gear = UFS_HS_G1; gear <= UFS_HS_GEAR_MAX; gear++) {
+> +		snprintf(prop_name, MAX_PROP_SIZE, "txeq-settings-g%d", gear);
+> +		count = of_property_count_u32_elems(dev->of_node, prop_name);
+> +		if (count <= 0)
+> +			continue;
+> +
+> +		if (count != sz) {
+> +			dev_err(dev, "Property %s has invalid count (%d), expecting %zu\n",
+> +				prop_name, count, sz);
+> +			continue;
+> +		}
+> +
+> +		err = of_property_read_u32_array(dev->of_node, prop_name,
+> +						 settings, sz);
+> +		if (err) {
+> +			dev_err(dev, "Failed to read %s property, %d\n",
+> +				prop_name, err);
+> +			continue;
+> +		}
+> +
+> +		for (i = 0; i < count; i += TX_EQ_SETTINGS_TUPLE_SZ) {
+> +			if (settings[i] >= TX_HS_NUM_PRESHOOT) {
+> +				dev_err(dev, "An invalid TX EQ PreShoot (%d) provided in %s property\n",
+> +					settings[i], prop_name);
+> +				break;
+> +			}
+> +
+> +			if (settings[i + 1] >= TX_HS_NUM_DEEMPHASIS) {
+> +				dev_err(dev, "An invalid TX EQ DeEmphasis (%d) provided in %s property\n",
+> +					settings[i + 1], prop_name);
+> +				break;
+> +			}
+> +
+> +			if (settings[i + 2] > 1) {
+> +				dev_err(dev, "An invalid PrecodeEn (%d) provided in %s property\n",
+> +					settings[i + 2], prop_name);
+> +				break;
+> +			}
+> +		}
+> +
+> +		if (i != count)
+> +			continue;
+> +
+> +		params = &hba->tx_eq_params[gear - 1];
+> +		host_settings = settings;
+> +		device_settings = settings + lpd * TX_EQ_SETTINGS_TUPLE_SZ;
+> +
+> +		for (lane = 0; lane < lpd; lane++) {
+> +			params->host[lane].preshoot = host_settings[0];
+> +			params->host[lane].deemphasis =	host_settings[1];
+> +			params->host[lane].precode_en = host_settings[2];
+> +			host_settings += TX_EQ_SETTINGS_TUPLE_SZ;
+> +
+> +			params->device[lane].preshoot =	device_settings[0];
+> +			params->device[lane].deemphasis = device_settings[1];
+> +			params->device[lane].precode_en = device_settings[2];
+> +			device_settings += TX_EQ_SETTINGS_TUPLE_SZ;
+> +		}
+> +
+> +		params->is_valid = true;
+> +		params->is_static = true;
+> +	}
+> +}
+> +
+>  /**
+>   * ufshcd_parse_clock_min_max_freq  - Parse MIN and MAX clocks freq
+>   * @hba: per adapter instance
+> @@ -528,6 +608,8 @@ int ufshcd_pltfrm_init(struct platform_device *pdev,
+>  
+>  	ufshcd_init_lanes_per_dir(hba);
+>  
+> +	ufshcd_parse_static_tx_eq_settings(hba);
+> +
+>  	err = ufshcd_parse_operating_points(hba);
+>  	if (err) {
+>  		dev_err(dev, "%s: OPP parse failed %d\n", __func__, err);
+> diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
+> index f48d6416e299..2d385d42fcff 100644
+> --- a/include/ufs/ufshcd.h
+> +++ b/include/ufs/ufshcd.h
+> @@ -359,6 +359,7 @@ struct ufshcd_tx_eqtr_record {
+>   * @is_valid: True if parameter contains valid TX Equalization settings
+>   * @is_applied: True if settings have been applied to UniPro of both sides
+>   * @is_trained: True if parameters obtained from TX EQTR procedure
+> + * @is_static: True if settings are static
+>   */
+>  struct ufshcd_tx_eq_params {
+>  	struct ufshcd_tx_eq_settings host[UFS_MAX_LANES];
+> @@ -367,8 +368,12 @@ struct ufshcd_tx_eq_params {
+>  	bool is_valid;
+>  	bool is_applied;
+>  	bool is_trained;
+> +	bool is_static;
+>  };
+>  
+> +/* TX EQ Settings Tuple has 3 elements - PreShoot, DeEmphasis and PrecodeEn. */
+> +#define TX_EQ_SETTINGS_TUPLE_SZ		3
+> +
+>  /**
+>   * struct ufs_hba_variant_ops - variant specific callbacks
+>   * @name: variant name
+> -- 
+> 2.34.1
+> 
 
 -- 
 மணிவண்ணன் சதாசிவம்
