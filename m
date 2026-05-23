@@ -1,70 +1,62 @@
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB29932B107;
-	Sat, 23 May 2026 03:15:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.165.32
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 35DCF27703
+	for <linux-scsi@vger.kernel.org>; Sat, 23 May 2026 03:15:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.177.32
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779506133; cv=none; b=DR9mu/uA2eoPh73TFNSRZ/01oO+NTsFpxfZMyjD05azZ4bcBJ4tSf8YGFIzXO21ExMwWN2OpmlhEo2QxSqoWQpX8iv9OHFjGL5OpN/CHmnmQ6YWt8gB+mEkUIVZN6td6dy/0okggCxmIkj+lqMH84CgAatLkKq1N2Fmda+Amuw8=
+	t=1779506133; cv=none; b=FCj8+A3Vd9D/eXOP3FUWfYoFP01mRHw0XY7YUC2H/U6GKV7RyNtnnjYW+6XO4EGljzaUcs3JBUHmZTVA7O6luq7nsKS4sAbLJqWX7Zwak6QWTo5a4H88ih56CAwGio9zjR67Zxc/53rS+VTduR9/3w5TH4JIuvwdOEMRqPW6lKg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1779506133; c=relaxed/simple;
-	bh=cYmNgJif3MBctwCNz7r10/ugSuy7ZEM2QzwgNXh1UTI=;
+	bh=l5mnYq/H4MZGDqxG8rdZEZObR3h23eMGVLvv1gVugLU=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=mN/i1IP/uWuwtymep/tm50kurGrQFXTRalKhulT/IXkL+lKjOCIKXeLdJkowKGJdmpau476/9AEFbQj/G8BqbLO2QY4cY+tEirSFDE0EsrNKChY30+bluhTS0T9LGalTjSVvKWEGPcy/Sa5MnanqKIQOX6r1wyicbKxq1Ai05zQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=JJSFbYbf; arc=none smtp.client-ip=205.220.165.32
+	 MIME-Version:Content-Type; b=WYb7VKn6LQUu53NCt0qS0u99W9ff95vDwYbZgtVRCn8wwlyAYbCkM21pXjBffDF3ZSN4IJr8k9E8sK3ReP93hKdqtA0oqSKE4Sz9kxQz46xHGhkUe/WsiotpHOUzKjpPbH51op7cRRpTOtkrmFO7KY0BvaSBDowFV9m6L+RBBTg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=mp8Cof/P; arc=none smtp.client-ip=205.220.177.32
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="JJSFbYbf"
-Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 64N1hc2Z771545;
-	Sat, 23 May 2026 03:15:26 GMT
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="mp8Cof/P"
+Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 64N3FUNR2612422;
+	Sat, 23 May 2026 03:15:30 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
 	:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=
-	corp-2025-04-25; bh=W1qTmqz+ukB8nZk0DsEoX8bnLpw96qTX6w9LOPBiuuI=; b=
-	JJSFbYbf845+iBQSo1SRyZYS+jUL9yBlKUsb0wOS/nC7g8X1QqjZvTMCBoFBSlYP
-	DMeHskrd0FWU7sGkTfQ11rXxOxKnEJ5dQnwq6sVlNy/PwyYORn6hyVdMvKSq+a9y
-	2CKQXAVfrG1bBA0coN1yzmW3p3Ax61LQl7SlvJVlSkXiSIxqToYDUtm+OQBm9pdZ
-	PXbM8nMQ33lx+1XeSrlm+XcxQg2TVOcbjv2Hwhbw3HnphGOeKH/zu//euAAsgTMF
-	4Ssw8kxEARFLhTvu07YJBfRAqW1QXcIgPE1xaTArcXQh4a2Do/LFXmc9/sKk1VSg
-	PAFoc5MJ5Gwn8YJnWFg/cQ==
+	corp-2025-04-25; bh=fJjrTzpgy3sao2DPxSCIgs/Lp8XC0sfxtYpQTGrtx/U=; b=
+	mp8Cof/PrRHbBMxt9hK/sv/lrfel12IL36dPA4IfH9uiFwMd9gejVa7K4/iuLpXa
+	7yr+ZWeXWSgvgWrwGTnpgoB3V489i7lkhCMYwr12dM38rOGdOSJ8j6o7tnyFApNd
+	a+jVrqGeCd55Yse/BnM9+2RGApSTTnILEcL9HYUyRio5a0EnmACM28wuKqpWzw5N
+	sfa9A9EHB+Z8w470pxYGmkK1lQ5VJMUuFmtSvfAs55gqW3Px9VbTNPtzKYev3UDX
+	GkWJhWQmCHb7YAAw9w0vvazG7bIHT6svchsepbDiwRbDtIy2bQ6ST67HPq/L/jzQ
+	qF+mizH1a5rnhXtfj23YZg==
 Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4eb2tyg72d-1
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4eb2nb88ke-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Sat, 23 May 2026 03:15:25 +0000 (GMT)
+	Sat, 23 May 2026 03:15:29 +0000 (GMT)
 Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.7/8.18.1.7) with ESMTP id 64N3F68j032371;
-	Sat, 23 May 2026 03:15:25 GMT
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.7/8.18.1.7) with ESMTP id 64N3F6Zv032352;
+	Sat, 23 May 2026 03:15:29 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 4eb2p6hsjt-1
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 4eb2p6hsme-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Sat, 23 May 2026 03:15:25 +0000 (GMT)
+	Sat, 23 May 2026 03:15:29 +0000 (GMT)
 Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by pps.reinject (8.18.1.12/8.18.1.12) with ESMTP id 64N3F9eK032824;
-	Sat, 23 May 2026 03:15:24 GMT
+	by pps.reinject (8.18.1.12/8.18.1.12) with ESMTP id 64N3F9eS032824;
+	Sat, 23 May 2026 03:15:28 GMT
 Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 4eb2p6hs6k-14;
-	Sat, 23 May 2026 03:15:24 +0000 (GMT)
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 4eb2p6hs6k-18;
+	Sat, 23 May 2026 03:15:28 +0000 (GMT)
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-To: Shawn Guo <shengchao.guo@oss.qualcomm.com>
+To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+        =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig=20=28The=20Capable=20Hub=29?= <u.kleine-koenig@baylibre.com>
 Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>,
-        Krzysztof Kozlowski <krzk+dt@kernel.org>,
-        Conor Dooley <conor+dt@kernel.org>,
-        Konrad Dybcio <konradybcio@kernel.org>,
-        Dmitry Baryshkov <lumag@kernel.org>,
-        Kumar Dwivedi <ram.dwivedi@oss.qualcomm.com>,
-        Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>,
-        Deepti Jaggi <deepti.jaggi@oss.qualcomm.com>,
-        linux-scsi@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 0/2] scsi: ufs: dt-bindings: Add compatibles for Nord UFS controller
-Date: Fri, 22 May 2026 23:14:28 -0400
-Message-ID: <177913641751.1181900.7719645023341396564.b4-ty@oracle.com>
+        linux-scsi@vger.kernel.org
+Subject: Re: [PATCH] scsi: mvsas: Don't emit __LINE__ in debug messages
+Date: Fri, 22 May 2026 23:14:32 -0400
+Message-ID: <177913641781.1181900.13257682614122090938.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260427013115.231731-1-shengchao.guo@oss.qualcomm.com>
-References: <20260427013115.231731-1-shengchao.guo@oss.qualcomm.com>
+In-Reply-To: <20260427174545.2014499-2-u.kleine-koenig@baylibre.com>
+References: <20260427174545.2014499-2-u.kleine-koenig@baylibre.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -78,46 +70,42 @@ X-Proofpoint-Virus-Version: vendor=baseguard
  definitions=2026-05-23_01,2026-05-18_01,2025-10-01_01
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0
  suspectscore=0 malwarescore=0 spamscore=0 phishscore=0 lowpriorityscore=0
- mlxlogscore=790 bulkscore=0 mlxscore=0 classifier=spam adjust=0 reason=mlx
+ mlxlogscore=567 bulkscore=0 mlxscore=0 classifier=spam adjust=0 reason=mlx
  scancount=1 engine=8.19.0-2605130000 definitions=main-2605230029
-X-Authority-Analysis: v=2.4 cv=SoCgLvO0 c=1 sm=1 tr=0 ts=6a111bcd cx=c_pps
+X-Authority-Analysis: v=2.4 cv=bPcm5v+Z c=1 sm=1 tr=0 ts=6a111bd2 cx=c_pps
  a=OOZaFjgC48PWsiFpTAqLcw==:117 a=OOZaFjgC48PWsiFpTAqLcw==:17
  a=IkcTkHD0fZMA:10 a=NGcC8JguVDcA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=jiCTI4zE5U7BLdzWsZGv:22 a=RD47p0oAkeU5bO7t-o6f:22 a=VwQbUJbxAAAA:8
- a=ZC9mcO7Xf2SOoCrdTL8A:9 a=QEXdDO2ut3YA:10
-X-Proofpoint-ORIG-GUID: Uy00OdLTBUayyDaM-tM0EIugTWm-V_9i
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNTIzMDAyOSBTYWx0ZWRfX0lEhNU12WDa4
- iNx5UlkdjiSQuiTJJ7X1jDNWlXNywJmESOpr4REz6zQ3Q2wsItQng9OG8dc6LmmrliZfGzZS7Zu
- dpbnU3kCJlXGwAtDKXV36tXnLHT9GXkoLLpDucD33wB4Da89+QCXFUK35siSJ4D6nZsP4QiJSYA
- ZA2u1oCGBpyMsw0oJ+ozIWo4IKBsSFnQWu/k5H6awnd3ZsJjHAaasij0Y73+ljgQY4ddUqEq0uq
- GalPFnBbo5gY27McrlPhGb9GtREdmDet7vSAT/ffP2jUpxL5PAnkfw6oODPFbR04RJe7TQESZEG
- 9fRClquDNODekBh9ApzkLDRedxuIJQkyvGg+T1zqqF7x67gvI1VL4PLhdCdSUzCOcoCNhToSqXK
- UJYx/ro+rpFfABE2ieQ0X+pvZ7J4Qw+HrzxTRYj92tXoNkvn0Lar+66TFD18g+CJjysxbhZAJDs
- Fw+zO+Mt7LIQNYnhdnQ==
-X-Proofpoint-GUID: Uy00OdLTBUayyDaM-tM0EIugTWm-V_9i
+ a=jiCTI4zE5U7BLdzWsZGv:22 a=x4eqshVgHu-cdnggieHk:22 a=VwQbUJbxAAAA:8
+ a=w6_s345OmvwzK5sOhyQA:9 a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
+ a=zgiPjhLxNE0A:10
+X-Proofpoint-GUID: KtQGrdZxKaeDNIVdRNFukm3NVzl6I9LB
+X-Proofpoint-ORIG-GUID: KtQGrdZxKaeDNIVdRNFukm3NVzl6I9LB
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNTIzMDAyOSBTYWx0ZWRfXx1C+1iKJ3Hw9
+ fwjt7Hly7kZctf5daEv8e3x8DpW5M37SGh5ocarfoWiTN0uWLNgSMefCLzzU/K5V5kOTyHmMdlJ
+ GvsYZlYVEqxAgJsw0jFcNsQWBpjMy3UWWyFRej/5aWKsspkTkXAeDF8n7hoHoVVxS/KvqObKDgg
+ Rp/LIyg470lck1fanYOL7AcEomzYxRCLWOOd3Qrabi70/oS7QBM/sjc8/I6zoptR4tYnqwrYUGV
+ JzadqhJouzEUGIZNBdvQ++qEiXZlZjriKtiJ9qo23JS2wn56ogJ1F5TQJb80d6YNYeKoHqiOEnI
+ VcIckgEoPS53UTjn12sSn2Tpdv+341ow4uB9NlLaI7MKCzcwzS+Fgd3G2J6tedMCB3HT/Z+2KQG
+ lVFcXmlQdnLR6c48Cz7kbB8RwYXQwRnPoZWlHAK/RGfnPU6H6yVZsWrf+v545Ie+8A+9vLyQ9ZQ
+ 3sMpx2YSkT0fc5nU/Lw==
 
-On Mon, 27 Apr 2026 09:31:13 +0800, Shawn Guo wrote:
+On Mon, 27 Apr 2026 19:45:46 +0200, Uwe Kleine-König (The Capable Hub) wrote:
 
-> This series documents the UFS host controller on Qualcomm Nord SoC.
+> __LINE__ changes quite easily for cleanup commits. So when checking if a
+> cleanup patch introduces changes to the resulting binary each usage of
+> __LINE__ is source of annoyance.
 > 
-> Nord is a Qualcomm SoC series. Its UFS controller has a multi-queue
-> command (MCQ) register range in addition to the standard one,
-> both of which are required.
-> 
-> Nord also has an automotive variant, SA8797P, where the platform
-> firmware implements an SCMI server and manages UFS resources such as
-> the PHY, clocks, regulators and resets. As a result, SA8797P shares
-> the minimal OS-visible DT interface of SA8255P and uses it as the
-> fallback compatible
+> So instead of __FILE__ and __LINE__ emit __func__ to give at least some
+> more indication about where the messages originates from than __FILE__
+> alone; with that and the actual message the situation should be clear
+> enough.
 > 
 > [...]
 
 Applied to 7.2/scsi-queue, thanks!
 
-[1/2] scsi: ufs: dt-bindings: Add compatible for Nord UFS Host Controller
-      https://git.kernel.org/mkp/scsi/c/c9ee94c7e2fb
-[2/2] scsi: ufs: dt-bindings: Add compatible for SA8797P UFS Host Controller
-      https://git.kernel.org/mkp/scsi/c/7030e16247dc
+[1/1] scsi: mvsas: Don't emit __LINE__ in debug messages
+      https://git.kernel.org/mkp/scsi/c/2cc8a6cf8a80
 
 -- 
 Martin K. Petersen
