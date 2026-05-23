@@ -1,64 +1,63 @@
 Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7618D3064B5;
-	Sat, 23 May 2026 03:15:55 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0768E33D6C7;
+	Sat, 23 May 2026 03:16:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.165.32
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779506158; cv=none; b=IxrQcnEEbq2ERQbgZfB4twXAJ2eY+OlqTUpNwRy3dPGD5iV2wJv4SJ30mgwTopHH7r9jn9VKH99QiFdmBwakWUTp+62boekYXGxJEpIHWk0ft0LjuSj+wci0UaY38SCG9UA+4ouhMJ+tQeV4uNMx884DmpnlLzXk9g6wJTJZNco=
+	t=1779506162; cv=none; b=duvu8mT+a3r/5H5cm5bm6skBHo2SMZN1TXjktV7WCvkmp7FpepkH2DaTzkYxz2ZpvHwaE6y6htlgah+ZwsCX8mr88lGZLllIEAXVE5AQ2XBwSs/PirDIOQA1AEFKpbnR7HEC4y1BUwPUSoPJ7GCBMBzMbOjcU8NIKZ//59sIOos=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779506158; c=relaxed/simple;
-	bh=6QdnE50gKD+tD0QjrDjYqrv+GzTNJTCVGiBEnMarYUg=;
+	s=arc-20240116; t=1779506162; c=relaxed/simple;
+	bh=IFHtXUl/rmxrhXalXLLMn7jLuME+SNZdz9lMDAh1PKk=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=VZDa0qqtCdViZGZpg4UBYx2LleMG5da8u36/lE1pi0Byf1CQoC7YLuNLG6b1TW672WNtSFeAGGVE2GIXPNzVzipDhxzTd7Qu4nV2XI9SDY1v+N8mJJqjDOQfbjgqZ08FF0k2QLN/yLUCnMHsYmpvQOZ9K0tUfaY88RnsGXyQCYI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=Bs4hWhIM; arc=none smtp.client-ip=205.220.165.32
+	 MIME-Version:Content-Type; b=rVy85i1Ei8O9xj8QrySQ7c7eMTaFP8BwKtUhujFnYGQtLMbyJ84pgjGnj2ryrUHUvNb0inKW2l8zo6mgfLAjrCweMGGYkWDA4VNaDWduSC581jB2CGa6yj9S1YTCx0QCiynqie7MkGxN5LlNFGPXk+hOX8Fe1kb0ORmTA+QxuxI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=mSECbXsp; arc=none smtp.client-ip=205.220.165.32
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Bs4hWhIM"
-Received: from pps.filterd (m0333521.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 64N25WfF2306715;
-	Sat, 23 May 2026 03:15:11 GMT
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="mSECbXsp"
+Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 64N3BcnK1942559;
+	Sat, 23 May 2026 03:15:58 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
 	:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=
-	corp-2025-04-25; bh=ktEyyfLRRFdMxrVEwuRXgkrGd6j3WoLUViZhfjdpIzI=; b=
-	Bs4hWhIMzslsm+RWhy+hphFROIoTOhhATkMRnqvyaqITdVIvhR9bJfYiYa8UYX77
-	6GSACDcuiS3lu3uKJ8Io/MABzTlN3P76qgtOpvomfmpHvPUn2E7WtSl4Rxc7NgSc
-	dae6MCdu7wps4FaEu6vo3InaL21uX4AAyqKiWjT5pH/0n9lqGtqLfxacPqySusUv
-	UwDFXg7PWLxNAIF5UHY3ijDhHVQkiCmBzWsaSc7lIvdLAGfpryKtTfCIlouTtJj9
-	IqeJRUGHuucnmw7QdtUHdoEE7PQuj9dBy2HL275QfxpUzQdmeMuUegSCf8pmZssZ
-	mK4fg2/dtXqmVSFbAweEqA==
+	corp-2025-04-25; bh=1R/hnSMK+XZZmwmXUFxaesfejobLvV38R9JlnXvRZfA=; b=
+	mSECbXsp8f4sLKWaR2uSht/077PLLwG5AgV7pyClhrHF9iPe7T3GLV9GtozHjz4f
+	JwOuX7z1be28RH17EikPfZSNH/s/xwn9VCqJD2uOGUn/roetLncg3NVJYfos36ft
+	nFTfZlieMRA5wRK/HRvQsmhL+H9N1SMxeFNsASSLRozNhKKclZl5QgPx/NjnhlRH
+	uoNVuT9Bu8r11/bUrAC63yYIWBU/SvAFrcJUJVvq1C6THM0evNHz1NuRdZZ+eMtt
+	3a9fiR3XgwH0qhdJlK0tXtSMIdkT1kaqBIsBU1apwqINTbR3hxSj+evNo5XC8sUl
+	zrEbTsdU76vvnqzmrflRaQ==
 Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4eb35904mf-1
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4eb447g05m-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Sat, 23 May 2026 03:15:11 +0000 (GMT)
+	Sat, 23 May 2026 03:15:58 +0000 (GMT)
 Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.7/8.18.1.7) with ESMTP id 64N3F7ai032598;
-	Sat, 23 May 2026 03:15:10 GMT
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.7/8.18.1.7) with ESMTP id 64N3F6a1032352;
+	Sat, 23 May 2026 03:15:57 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 4eb2p6hsbw-1
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 4eb2p6hstm-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Sat, 23 May 2026 03:15:10 +0000 (GMT)
+	Sat, 23 May 2026 03:15:57 +0000 (GMT)
 Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by pps.reinject (8.18.1.12/8.18.1.12) with ESMTP id 64N3F9ds032824;
-	Sat, 23 May 2026 03:15:09 GMT
+	by pps.reinject (8.18.1.12/8.18.1.12) with ESMTP id 64N3FvRG035132;
+	Sat, 23 May 2026 03:15:57 GMT
 Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 4eb2p6hs6k-1;
-	Sat, 23 May 2026 03:15:09 +0000 (GMT)
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 4eb2p6hstd-1;
+	Sat, 23 May 2026 03:15:56 +0000 (GMT)
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-To: avri.altman@wdc.com, bvanassche@acm.org, robh@kernel.org,
-        krzk+dt@kernel.org, Alim Akhtar <alim.akhtar@samsung.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, sowon.na@samsung.com,
-        peter.griffin@linaro.org, linux-scsi@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: (subset) [PATCH v2 0/4] add ufs support for Exynosautov920 SoC
-Date: Fri, 22 May 2026 23:14:15 -0400
-Message-ID: <177913641756.1181900.3954359823694090087.b4-ty@oracle.com>
+To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+        Alexander Perlis <aperlis@math.lsu.edu>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Nikkos Svoboda <nsvoboda@math.lsu.edu>
+Subject: Re: [PATCH] scsi: devinfo: Add BLIST_NO_RSOC for Promise VTrak E310f
+Date: Fri, 22 May 2026 23:15:47 -0400
+Message-ID: <177950426844.1557613.195450412255768361.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260417121452.827054-1-alim.akhtar@samsung.com>
-References: <CGME20260417115813epcas5p40234b872c221ce28981b17e42ca48139@epcas5p4.samsung.com> <20260417121452.827054-1-alim.akhtar@samsung.com>
+In-Reply-To: <20260512231254.27530-1-aperlis@math.lsu.edu>
+References: <20260512231254.27530-1-aperlis@math.lsu.edu>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -74,41 +73,41 @@ X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0
  suspectscore=0 malwarescore=0 spamscore=0 phishscore=0 lowpriorityscore=0
  mlxlogscore=999 bulkscore=0 mlxscore=0 classifier=spam adjust=0 reason=mlx
  scancount=1 engine=8.19.0-2605130000 definitions=main-2605230029
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNTIzMDAyOSBTYWx0ZWRfXyFX+vTF4Zt7F
- 18aqXksxvYMFfeQCkjwTt4Mlpg/XYFyGL0L5m/TCFSryNhK1EXwpVpmsdUtH7kO9dgvokGiZHAb
- vIrX1sEtmS9IZxBAKSkWqch24Qd2cH9iNlacmlSQ69mEjRKAX1OQuTN/9kGnplx1jDcWPPs/gBY
- PYLV3MsxTIboJN7tARSbW0g2IT6rnLreR+/JU9+S/qyGhAlbVSNU+WmOJe3e2cu3r+tfGoiymbc
- T0OVsm9u5nsfCCC1Lje5gUcwEM06YXO8/WzcAap3uKE2d5dBampn2l15L+RSykJxBIqvKx3COaS
- tJvHv3rOuay09xSVKZfZolpNsDTV40rAMclpJoqaLXQjTy4opq+O/drHlGXQz0n7rprZs8/azFf
- j6kZp37LmcMNgHBBuCQyNR7jzAnAqlu+rsXxRz5H03zrgdyn0zdrKw3SzP2Vm/H/jkAydS/00xb
- +3tKnqom5140bel3Cwg==
-X-Proofpoint-GUID: QrLFBChcJdRLJx10MBLFfMdrcPYcSPO9
-X-Proofpoint-ORIG-GUID: QrLFBChcJdRLJx10MBLFfMdrcPYcSPO9
-X-Authority-Analysis: v=2.4 cv=TJJ1jVla c=1 sm=1 tr=0 ts=6a111bbf cx=c_pps
+X-Authority-Analysis: v=2.4 cv=Ecn4hvmC c=1 sm=1 tr=0 ts=6a111bee cx=c_pps
  a=OOZaFjgC48PWsiFpTAqLcw==:117 a=OOZaFjgC48PWsiFpTAqLcw==:17
  a=IkcTkHD0fZMA:10 a=NGcC8JguVDcA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=jiCTI4zE5U7BLdzWsZGv:22 a=x0eKOSpe3m1H3M0S9YoZ:22 a=VwQbUJbxAAAA:8
- a=UCUsExACdNoqk4LCDqkA:9 a=QEXdDO2ut3YA:10
+ a=jiCTI4zE5U7BLdzWsZGv:22 a=EIcjfB9IiI4px24ztqRk:22 a=VwQbUJbxAAAA:8
+ a=X2_Ych7kLY-UD9z66WAA:9 a=QEXdDO2ut3YA:10
+X-Proofpoint-ORIG-GUID: 3NrsfVwSm3APNJFgJqVlaImigc-5FVZe
+X-Proofpoint-GUID: 3NrsfVwSm3APNJFgJqVlaImigc-5FVZe
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNTIzMDAyOCBTYWx0ZWRfX3y4VBlBegUi+
+ fEtf2/tFIFdDh0/thNlZ+1xSswx6CikgKLyZcpZKoONh6xfdRq0n2iNVvXyQXClpRDUJjZXNqBN
+ IAT0BCAUUKPfY+WAYUnBKr8O/OftGnn+N5skcQTlxseICno7bHT9qQDATSDocs9pqiQ1btUf5mT
+ scyaJZ+zs0/X3b/sPLYufAyZTCySU0Ii8NxUrH6fI/NKHhfJzqGEUtXe4Dq6Gl4gp3zDShCJWBJ
+ ELcZUVWNaImXMHmHlmzTjNs87e0OjubIjXgPYEJQGefXNRjA2r3S3Im1I6oeTf2l3V8TJMwZicX
+ ZbxcCj5IG2R5gdFVm+GvVU6mALw6/5rdq99rUIlJLnLfw401mfvRmhcFHQhfUwEJpVJEAUZdC7M
+ 3suzAqdKxgS6T9vHzSdo4mwKXZ6QydI+J+CrMdU3fUepB/r4KzZvsbruHdGgPqm54CgCB3ZAszi
+ 1jSIPQlL2sTQhi7j5SQ==
 
-On Fri, 17 Apr 2026 17:44:48 +0530, Alim Akhtar wrote:
+On Tue, 12 May 2026 18:12:54 -0500, Alexander Perlis wrote:
 
-> This series adds ufs driver support for ExynosAutov920,
-> ExynosAutov920 has the UFSHCI 3.1 compliant UFS controller.
-> 
-> ExynosAutov920 has a different mask of UFS sharability from ExynosAutov9,
-> so this series provide flexible parameter for the mask.
-> 
-> With this series applied, UFS is functional and basic I/O operations are
-> known to be working.
+> The extremely slow boots reported July 2014 in
+>   [Bug 79901](https://bugzilla.kernel.org/show_bug.cgi?id=79901)
+> for Promise VTrak E610f 3U 16-bay FC RAID enclosure occur also with
+> the Promise VTrak E310f 2U 12-bay FC RAID enclosure. The 2014
+>   [patch](https://bugzilla.kernel.org/attachment.cgi?id=144101&action=diff)
+> added support for the BLIST_NO_RSOC flag and specified that flag for the
+> Promise VTrak E610f. This current patch simply adds the E310f to that same
+> list. (My workaround has been to include
+>   scsi_mod.dev_flags=Promise:\"VTrak E310f\":0x20000040
+> among my kernel boot parameters.)
 > 
 > [...]
 
-Applied to 7.2/scsi-queue, thanks!
+Applied to 7.1/scsi-fixes, thanks!
 
-[2/4] dt-bindings: ufs: exynos: add ExynosAutov920 compatible string
-      https://git.kernel.org/mkp/scsi/c/45c9dee6d653
-[3/4] scsi: ufs: exynos: add support for ExynosAutov920 SoC
-      https://git.kernel.org/mkp/scsi/c/50349bd5d0ab
+[1/1] scsi: devinfo: Add BLIST_NO_RSOC for Promise VTrak E310f
+      https://git.kernel.org/mkp/scsi/c/adda8a44e1e4
 
 -- 
 Martin K. Petersen
