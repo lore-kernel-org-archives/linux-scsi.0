@@ -1,64 +1,63 @@
 Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F2CF32E6B8;
-	Sat, 23 May 2026 03:15:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 611153314C5;
+	Sat, 23 May 2026 03:15:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.177.32
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779506135; cv=none; b=Zpl4x4XoYotqz8IyVXLpwcYABOo5Y+1F3SSEdT10hx+UZksUMdfqTe7VourX0NcwZpKvl6e8toAkKSJfaAoIcmIrgzCcAd+9kLa+xzUFRkHvTAXvypY4BeVAyCLtrrhiWmHMF13Ziuq8vqqlSWRMTaNKJLzuJWK2manUZMZFL3I=
+	t=1779506138; cv=none; b=DqIGJjHLS1+T3xT4D3NEW4jUN6M6EFioirtEHdtvcH/DryJTJYrzbrxa/wRjgRtIDz6mdmW59/y6kQZKHdsih8xwaMLuwuMjjjA9ddEQ7u1Dn65yrr1sLja7As1KmhQeVXNyiiyk9JcSEJvgTVSIh8EZqi9S/KsHa6QuDjX48no=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779506135; c=relaxed/simple;
-	bh=u9C4Z4dZr+w0n/DyvHPclVp15F+JVvK4VRpEKDED+so=;
+	s=arc-20240116; t=1779506138; c=relaxed/simple;
+	bh=ulQEQQ0A/MpfmAshxlTVNUaOUKKA6FA7LV/2rVnQqF0=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=ukO17cZigwE5eUQbIyCpH1j++Aa6RqcfQVelCdtQF9Yd4cyIZTc2SR24WH4pWXcUPsK24kz9zjPTIu9ovLvwNflJvMhGEoVFSYzVUPRrXyc7/m3emenvuNlzYyd9uNTcZWuv32YP1aqjKEMWyCgzHvJSK80ThZmm1F9Anst93Ys=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=j4Q/VYrT; arc=none smtp.client-ip=205.220.177.32
+	 MIME-Version:Content-Type; b=HXNkA06M7lxzDc63F8e3vujZsWuoTLvyzqX1NF36FTaO4dtHrArOGRt00c6y/FINxo0W/gRYMErVCaGb4nNOEoY3N99mAN82b/d0/+MEyU1lKaISf/jx7no2XpkVgulGfHcAWWZYoO/hWcdNjsy9h9pJpEAwkbRLnonlbqx/mk0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=nEUmoQIj; arc=none smtp.client-ip=205.220.177.32
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="j4Q/VYrT"
-Received: from pps.filterd (m0246632.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 64N3FKos2851105;
-	Sat, 23 May 2026 03:15:20 GMT
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="nEUmoQIj"
+Received: from pps.filterd (m0333520.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 64MHW0VO2622946;
+	Sat, 23 May 2026 03:15:28 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
 	:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=
-	corp-2025-04-25; bh=C3U5VgtECS8JBqQIcZmV30T5avejQzNYMQ8UfH1cCyQ=; b=
-	j4Q/VYrTju+Z/cxVqee+rVvMnuNnz+omjK0PqhLoDIf3o/TO7b2xy5U64gExXPi0
-	to0EqbeeaP3LGlbk6v1nfUcTgDiBRc44rJG91piYt9zm6yqEC81dFW7KWKnI/nYz
-	mx+04Rn5Sg0nKGmRy0r6WZgGYT3YwFF/3/qXwODaYY1sag5zuzo6RTvO36GUJ71Y
-	b3d6KJlIxyiHFAfK3FQSieZmtFlOH7ffyNIeAdgjqHK0GrdkrJVU61gCe+45FIc4
-	7In5VnUA8u4ty75PSFJOCqVVNjVctu1sq3XHTLhRQfLY/d/pfxVo6hbRG+bqsbQ+
-	yOiYg/U9VtLqP2b9d7qrcQ==
+	corp-2025-04-25; bh=7wzS14WVDJQWU2EwGyZLqtbho9V99BJWNFtRuDUf3/E=; b=
+	nEUmoQIjH9nRrB8mznYLzx/nFAnifdrZWEasqo9Ufrh7RiapIxQycu/L3vyc1VeV
+	V3HeIPoC4wWx44VJnc4B7yKAoUk2bG6+doV+DBSPROPocBqrJI9yQv5GBTNs2bBA
+	HVu2xueN7775NKvgRmyVl7m6wwrKEZvmYrk8b/3Exl0TfCuaZ+zBsNS6DYxJKWXE
+	KgPVT/WZaVi9G5v8fXlcAQwkEA0iIqijTuMiHnhiy7vfg0tTOh7fdLiV+Ey1xTln
+	Wcbwd1L6qS5ZOtTXbRYkloGtfLdTX2WKozKDfN93oGaPo9p+MzPSSppqoBVpFLbd
+	GPCOHYPOX07mkGVf3K61iQ==
 Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4eb3us80d4-1
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4e6h1t4e5c-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Sat, 23 May 2026 03:15:19 +0000 (GMT)
+	Sat, 23 May 2026 03:15:28 +0000 (GMT)
 Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.7/8.18.1.7) with ESMTP id 64N3F6jx032335;
-	Sat, 23 May 2026 03:15:19 GMT
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.7/8.18.1.7) with ESMTP id 64N3F5ak032306;
+	Sat, 23 May 2026 03:15:27 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 4eb2p6hsfv-1
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 4eb2p6hskn-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Sat, 23 May 2026 03:15:18 +0000 (GMT)
+	Sat, 23 May 2026 03:15:27 +0000 (GMT)
 Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by pps.reinject (8.18.1.12/8.18.1.12) with ESMTP id 64N3F9eA032824;
-	Sat, 23 May 2026 03:15:18 GMT
+	by pps.reinject (8.18.1.12/8.18.1.12) with ESMTP id 64N3F9eO032824;
+	Sat, 23 May 2026 03:15:26 GMT
 Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 4eb2p6hs6k-9;
-	Sat, 23 May 2026 03:15:18 +0000 (GMT)
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 4eb2p6hs6k-16;
+	Sat, 23 May 2026 03:15:26 +0000 (GMT)
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-To: mani@kernel.org, James.Bottomley@HansenPartnership.com,
-        palash.kambar@oss.qualcomm.com
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, bvanassche@acm.org,
-        shawn.lin@rock-chips.com, nitin.rawat@oss.qualcomm.com
-Subject: Re: [PATCH V7 0/2] Add post change sequence for link start notify
-Date: Fri, 22 May 2026 23:14:23 -0400
-Message-ID: <177913641794.1181900.10456858477800005065.b4-ty@oracle.com>
+To: linux-scsi@vger.kernel.org, linux-hyperv@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Md Shofiqul Islam <shofiqtest@gmail.com>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, longli@microsoft.com,
+        kys@microsoft.com, haiyangz@microsoft.com, wei.liu@kernel.org,
+        decui@microsoft.com, mhklinux@outlook.com
+Subject: Re: [PATCH v2] scsi: storvsc: Replace symbolic permissions with octal
+Date: Fri, 22 May 2026 23:14:30 -0400
+Message-ID: <177913641771.1181900.14473313849587305075.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260423102023.3779489-1-palash.kambar@oss.qualcomm.com>
-References: <20260423102023.3779489-1-palash.kambar@oss.qualcomm.com>
+In-Reply-To: <20260506004948.2172-1-shofiqtest@gmail.com>
+References: <20260506004948.2172-1-shofiqtest@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -72,44 +71,39 @@ X-Proofpoint-Virus-Version: vendor=baseguard
  definitions=2026-05-23_01,2026-05-18_01,2025-10-01_01
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0
  suspectscore=0 malwarescore=0 spamscore=0 phishscore=0 lowpriorityscore=0
- mlxlogscore=999 bulkscore=0 mlxscore=0 classifier=spam adjust=0 reason=mlx
+ mlxlogscore=576 bulkscore=0 mlxscore=0 classifier=spam adjust=0 reason=mlx
  scancount=1 engine=8.19.0-2605130000 definitions=main-2605230029
-X-Authority-Analysis: v=2.4 cv=Zewt8MVA c=1 sm=1 tr=0 ts=6a111bc7 cx=c_pps
+X-Proofpoint-GUID: zDgM3pwFtfh8LoySytLKY4cYOfAvJte6
+X-Authority-Analysis: v=2.4 cv=d9jFDxjE c=1 sm=1 tr=0 ts=6a111bd0 cx=c_pps
  a=OOZaFjgC48PWsiFpTAqLcw==:117 a=OOZaFjgC48PWsiFpTAqLcw==:17
  a=IkcTkHD0fZMA:10 a=NGcC8JguVDcA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=jiCTI4zE5U7BLdzWsZGv:22 a=3I1J8UUJPc9JN9BFgKH3:22 a=VwQbUJbxAAAA:8
- a=EUspDBNiAAAA:8 a=ntT2GETeEWiR4UES5aAA:9 a=QEXdDO2ut3YA:10
-X-Proofpoint-GUID: 5WqtKi6zLyqdHrBmtKnKVw7u9BbxnBZV
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNTIzMDAyOSBTYWx0ZWRfX9TIhXdTCIgQs
- UWDCDH+qWadVJWlbq6AaAj0eK8ZdEfHJkdoa19EkLWh5HLw3pv0E80ffKiphB6Y84EzHF/BtyNC
- 7GirDRtku/Fa0IvbYRMGKupxRNHI8lAj6oY+6HtOREakPk7YigLm/zGOru3LDrjbNMmkjrJ4+yv
- vP2Z1AZYmLxeWzGl2hG4SuvuZ115PTchb6H7Oj4x980F8ssQ6Q+ixqzKkI+/Mfbs9C72TQIX6eR
- 3fUghK/3+EI3RYhDTqoKSidwRdCS0fzVSfIZNLiHkRC5eeBb8H+4YtcdLshOEFdzJ0YsL5FIv8L
- oXcYYjyuIwKKUuCz0+GXdy8ovL50fgM20UAPYLrvOQPnnQj3IY2hjhhhazhCYwD0Dt4NJHs7ulr
- nYXfVBedZRR/nHICP1aV/F7Rtkq2/1j1zMkoyAjoUk7Q/V7v6LhVKBu57046i2eOYYvDOuEdQqV
- vw7l2mKdlR2+zuMU0aQ==
-X-Proofpoint-ORIG-GUID: 5WqtKi6zLyqdHrBmtKnKVw7u9BbxnBZV
+ a=jiCTI4zE5U7BLdzWsZGv:22 a=BqU2WV_vvsyTyxaotp0D:22 a=VwQbUJbxAAAA:8
+ a=UY0ZMbisSNrLhDL-TgMA:9 a=QEXdDO2ut3YA:10
+X-Proofpoint-ORIG-GUID: zDgM3pwFtfh8LoySytLKY4cYOfAvJte6
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNTIzMDAyOSBTYWx0ZWRfX+vBmpXoouOOL
+ QXQg04smDO3kpZMObMlAumwJAOZkz7FmVobzTbR6uI68FDWwKM9It1E/ayPlb7rg45Xo6bIKkTv
+ LVXGmE9mxqaF+4pq9nzaSooxyCQF70T4h2bxWh+y25fzfGTpmusCtY8q5mBG6nQw3xux0r/Q3Xu
+ kXOdM/yPDbeRVprUmk93qhNejDAc3DXigJCzLRoRTh5uWNcAE1A+SEonaMNnB4dZp+3aqIGvnIs
+ dqa0o/tzJ76OIqCD37hh/5mO60nyn1SER1kAwYDtWOG57M4FT0OfsVrqfLjJ6NONhRvns1VO0Gm
+ zxSzKeHxuCNtb4kyLnxX2vIIoB98z9BQLfC1uJNA97BudULmfoYLgTPfdqEYDmb3fqjNgU5xcuj
+ seuYQHmFJKeC256Z5M/nMXITs6VI7n64TdtpG2Mz1Ewx35WwgZCBVn039+futdAu2lLsaEEiOH5
+ g+TsV9XPrheOE5GVLvw==
 
-On Thu, 23 Apr 2026 15:50:21 +0530, palash.kambar@oss.qualcomm.com wrote:
+On Wed, 06 May 2026 03:49:48 +0300, Md Shofiqul Islam wrote:
 
-> changes from V1
-> 1) Addressed Shawn Lin's comments to fix comment to connected lanes.
-> 2) Addressed Bart's comments to remove warning and trigger failure
->    incase of lane mismatch.
+> Symbolic permissions like S_IRUGO and S_IWUSR are not preferred by
+> checkpatch. Replace with their octal equivalents:
 > 
-> changes from V2:
-> 1) Addressed Shawn's comments to fix commit text.
-> 2) Addressed Bart's comments to remove variable initializations and
->    indentation fix.
+>   - S_IRUGO|S_IWUSR -> 0644
+>   - S_IRUGO         -> 0444
+> 
 > 
 > [...]
 
 Applied to 7.2/scsi-queue, thanks!
 
-[1/2] ufs: core: Configure only active lanes during link
-      https://git.kernel.org/mkp/scsi/c/e72323f3b09f
-[2/2] ufs: ufs-qcom: Enable Auto Hibern8 clock request support
-      https://git.kernel.org/mkp/scsi/c/76417038c4d6
+[1/1] scsi: storvsc: Replace symbolic permissions with octal
+      https://git.kernel.org/mkp/scsi/c/73322071418e
 
 -- 
 Martin K. Petersen
