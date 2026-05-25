@@ -1,67 +1,130 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from spam.asrmicro.com (asrmicro.com [210.13.118.86])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D29A433C53F;
-	Mon, 25 May 2026 06:03:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9351B3AA4F9;
+	Mon, 25 May 2026 06:51:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.13.118.86
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779689004; cv=none; b=G5+Y9igPtZRSOiU5+GnUTx6I1KeG0wjI20rzDoMgQc540Q47cljYL8FCS+ur8La808xwVoNKBTd1fAp7RtZVjxaKqgjBkzV1T7QRWZ9pYJG4ztvd8vlnZwpVjKrfmMWjtNbfMZ5o5jmrfIap4yiJ41m6BLOXzZy9+NwI2VSVShA=
+	t=1779691897; cv=none; b=BCvGQML46s5lag3w6+04BXTJ86so0phn98dY22Mv73ju/9qjTiIW86NbKpABThtPGeUivQQsw4CuquKfBREv5kUObbtAOzMUOd9Pa3k+nzR3pIPwfoDf3sUpQXvIwtdWxHl/U1S1E80TBEPMWmz6LJry1SBwSEftHV4w0YhRmrU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779689004; c=relaxed/simple;
-	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=SOE0O8T86CFVeyKitQqxim73gJ8j6rdnYnnDlQhEShFZ26SkrXP3YXs6BCC0WsNe3OCCzXCTH/sSWQFhADgLM0J+A5Gjq5yhPQf2fZ1HgcreEhT6OO6eNJXjseeD4EBgRSbjrIarqlIz4BswJZON52gzbQL3wN7alO2M2YToT5A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id B108368C4E; Mon, 25 May 2026 08:03:14 +0200 (CEST)
-Date: Mon, 25 May 2026 08:03:14 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: Mateusz Nowicki <mateusz.nowicki@posteo.net>
-Cc: Jens Axboe <axboe@kernel.dk>,
-	Caleb Sander Mateos <csander@purestorage.com>,
-	Sung-woo Kim <iam@sung-woo.kim>, Josef Bacik <josef@toxicpanda.com>,
-	Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@kernel.org>,
-	Mikulas Patocka <mpatocka@redhat.com>,
-	Benjamin Marzinski <bmarzins@redhat.com>,
-	Ulf Hansson <ulfh@kernel.org>, Richard Weinberger <richard@nod.at>,
-	Zhihao Cheng <chengzhihao1@huawei.com>,
-	Miquel Raynal <miquel.raynal@bootlin.com>,
-	Vignesh Raghavendra <vigneshr@ti.com>, Sven Peter <sven@kernel.org>,
-	Janne Grunau <j@jannau.net>, Neal Gompa <neal@gompa.dev>,
-	Keith Busch <kbusch@kernel.org>, Christoph Hellwig <hch@lst.de>,
-	Sagi Grimberg <sagi@grimberg.me>,
-	Justin Tee <justin.tee@broadcom.com>,
-	Naresh Gottumukkala <nareshgottumukkala83@gmail.com>,
-	Paul Ely <paul.ely@broadcom.com>,
-	Chaitanya Kulkarni <kch@nvidia.com>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Thomas Fourier <fourier.thomas@gmail.com>,
-	Al Viro <viro@zeniv.linux.org.uk>, Luke Wang <ziniu.wang_1@nxp.com>,
-	Kees Cook <kees@kernel.org>, linux-block@vger.kernel.org,
-	linux-kernel@vger.kernel.org, nbd@other.debian.org,
-	dm-devel@lists.linux.dev, linux-mmc@vger.kernel.org,
-	linux-mtd@lists.infradead.org, asahi@lists.linux.dev,
-	linux-arm-kernel@lists.infradead.org,
-	linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org
-Subject: Re: [PATCH v1] block: switch numa_node to int in blk_mq_hw_ctx and
- init_request
-Message-ID: <20260525060313.GA3586@lst.de>
-References: <20260523125210.272274-1-mateusz.nowicki@posteo.net>
+	s=arc-20240116; t=1779691897; c=relaxed/simple;
+	bh=EroAbV2+K6nD+tWzKn4I/ywlaw5hpXOwNC8HfcJF1xE=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=OYooZc6uVGb2xEQlRKK611Z5SR8zmod2ihsoatbUaCO4rfA7AYd2k0aAxsEOHL2CpKcxwHLIq/p5lhgSBTsOJKHNArU8WL6IODKCKdIfZpxvelLuF4L171YZliYmzkZpKOXSH0rNzBnmQ+4kTNoGZP6tIJKthaERHF974UbfSv0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=asrmicro.com; spf=pass smtp.mailfrom=asrmicro.com; arc=none smtp.client-ip=210.13.118.86
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=asrmicro.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=asrmicro.com
+Received: from exch02.asrmicro.com (exch02.asrmicro.com [10.1.24.122])
+	by spam.asrmicro.com with ESMTPS id 64P6jrPq037373
+	(version=TLSv1 cipher=ECDHE-RSA-AES256-SHA bits=256 verify=FAIL);
+	Mon, 25 May 2026 14:45:53 +0800 (GMT-8)
+	(envelope-from hongjiefang@asrmicro.com)
+Received: from localhost (10.1.170.248) by exch02.asrmicro.com (10.1.24.122)
+ with Microsoft SMTP Server (TLS) id 15.0.847.32; Mon, 25 May 2026 14:45:56
+ +0800
+From: Hongjie Fang <hongjiefang@asrmicro.com>
+To: <James.Bottomley@HansenPartnership.com>, <martin.petersen@oracle.com>,
+        <jgarzik@redhat.com>, <stern@rowland.harvard.edu>,
+        <ming.m.lin@intel.com>
+CC: <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+Subject: [PATCH v2] scsi: core: pair EH runtime PM get/put
+Date: Mon, 25 May 2026 14:45:56 +0800
+Message-ID: <20260525064556.1277177-1-hongjiefang@asrmicro.com>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260523125210.272274-1-mateusz.nowicki@posteo.net>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: exch03.asrmicro.com (10.1.24.118) To exch02.asrmicro.com
+ (10.1.24.122)
+X-DNSRBL: 
+X-SPAM-SOURCE-CHECK: pass
+X-MAIL:spam.asrmicro.com 64P6jrPq037373
 
-Looks good:
+shost->eh_noresume is currently consulted twice in one error handling
+iteration: once before scsi_autopm_get_host() and once again before
+scsi_autopm_put_host().
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+That is racy when a PM-triggered error path flips shost->eh_noresume while
+the SCSI EH thread is still running.
+
+The problem flow looks like this:
+PM path
+  ufshcd_set_dev_pwr_mode()
+    shost->eh_noresume = 1
+    ufshcd_execute_start_stop  <-- trigger EH
+    ...
+    shost->eh_noresume = 0
+
+EH path
+  scsi_error_handler()
+    if (!shost->eh_noresume)
+      scsi_autopm_get_host()  <-- skipped
+    ...
+    if (!shost->eh_noresume)
+       scsi_autopm_put_host()  <-- executed later
+
+In that case one EH iteration can skip autoresume on entry and still drop
+a runtime PM reference on exit. That leaves an unmatched runtime PM put
+and can trigger a runtime PM usage count underflow.
+
+Fix this by calling scsi_autopm_put_host() only if the same iteration
+successfully acquired a runtime PM reference through the
+scsi_autopm_get_host().
+
+Fixes: ae0751ffc77e ("[SCSI] add flag to skip the runtime PM calls on the host")
+Signed-off-by: Hongjie Fang <hongjiefang@asrmicro.com>
+---
+ drivers/scsi/scsi_error.c | 19 ++++++++++++-------
+ 1 file changed, 12 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index 147127fb4db9..faa5cc818e5b 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -2342,6 +2342,7 @@ static void scsi_unjam_host(struct Scsi_Host *shost)
+ int scsi_error_handler(void *data)
+ {
+ 	struct Scsi_Host *shost = data;
++	bool autopm_get;
+ 
+ 	/*
+ 	 * We use TASK_INTERRUPTIBLE so that the thread is not
+@@ -2383,12 +2384,16 @@ int scsi_error_handler(void *data)
+ 		 * what we need to do to get it up and online again (if we can).
+ 		 * If we fail, we end up taking the thing offline.
+ 		 */
+-		if (!shost->eh_noresume && scsi_autopm_get_host(shost) != 0) {
+-			SCSI_LOG_ERROR_RECOVERY(1,
+-				shost_printk(KERN_ERR, shost,
+-					     "scsi_eh_%d: unable to autoresume\n",
+-					     shost->host_no));
+-			continue;
++		autopm_get = false;
++		if (!shost->eh_noresume) {
++			if (scsi_autopm_get_host(shost) != 0) {
++				SCSI_LOG_ERROR_RECOVERY(1,
++					shost_printk(KERN_ERR, shost,
++						     "scsi_eh_%d: unable to autoresume\n",
++						     shost->host_no));
++				continue;
++			}
++			autopm_get = true;
+ 		}
+ 
+ 		if (shost->transportt->eh_strategy_handler)
+@@ -2407,7 +2412,7 @@ int scsi_error_handler(void *data)
+ 		 * which are still online.
+ 		 */
+ 		scsi_restart_operations(shost);
+-		if (!shost->eh_noresume)
++		if (autopm_get)
+ 			scsi_autopm_put_host(shost);
+ 	}
+ 	__set_current_state(TASK_RUNNING);
+-- 
+2.25.1
 
