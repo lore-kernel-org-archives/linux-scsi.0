@@ -1,90 +1,113 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-lj1-f202.google.com (mail-lj1-f202.google.com [209.85.208.202])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C6EDA3B9935
-	for <linux-scsi@vger.kernel.org>; Tue, 26 May 2026 14:20:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C1A453FFAB9
+	for <linux-scsi@vger.kernel.org>; Tue, 26 May 2026 14:29:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.202
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779805258; cv=none; b=m56QKD3bP3KOZcwTfzT8K2sm8fSvAeOj5tXxzmUdEU+nhh6J0Etcj4YihrhFXdlcRm+0MUgStwh+ryC81TxcwlyC7ZIMmoqxjaSOGoK6aAORf5spYhYkil84tU6a1abXul9BCFEIigp4jsJPFWBe/AcDOfYbmBY7PXqNtcf+ofk=
+	t=1779805789; cv=none; b=Dye+p/+cBkhKnqdBL0JxwXH6FWA7O3LQ36gCQxtN/MWY3+Qng4oyO9wxyhxrsaZHfB33cQRoEKFsuKxlFXbzX38WW+Y/ylOIiODqwIsES3uyFCm9onr5RmnMGF2sPYhSQXXPcm77wvAvwKk2fzBZj3fW6KhSMPadJ5WbXny0Sxg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779805258; c=relaxed/simple;
-	bh=ZnNXN49JsLJG93x5V+J3hH7FPRjTSXEijvNIPGmGmi8=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=M9bIaGPp6iJs1QvW/NUU/zcv/Z6P5l3dRVs3jB1Pad3IqnqCwLN33wRIoYQzFYwQyBrH2k8wlfpdJCktx1RoSDBGn8+A74l/YFk6LhPQ7RNMc48i7e/4+WL5bk9EptLion5Abcuw7yo5Cblz6cbi2WvaH27J5b2cwse3OL877dI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=KYBu5gcu; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1779805789; c=relaxed/simple;
+	bh=t8iULvrUFjdfHnddacmqp3ZwHRl8owAMguuh6bqpWXw=;
+	h=Date:Mime-Version:Message-ID:Subject:From:To:Cc:Content-Type; b=cXBHVJpTHXbSjfBtTjgMZ9KjoAAryqv7VhiFuvc+NO7o236g1EQtr9BVsSCuN4AGP5ceIXBRI3DwUYG/oaTIB6Y50CkzqVZBmkmnI5RiMeJ68IU5y9L1h+j6onXA2sA3IKSs7O1bQJNOIkG/bJdLtFLBkt/9U1VMGMY0sWScQBA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--rnj.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=j8q9IkJ1; arc=none smtp.client-ip=209.85.208.202
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--rnj.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="KYBu5gcu"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1779805255;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=IgIAO9DCZ18s2gUeChDFGfjpD/GZyehJLs4LnVrZfIY=;
-	b=KYBu5gcu0dTQWSoYPGKEdnifkrBjT6a5VeYL0UoDAkUQ78jAl3jdAdi+Y70vPx8rmiVr0I
-	WJOpcaiZUfA0OaoR5Sp56iUBR9slW086GL9J+ZvQkPTIE4+8d5k8/nOMYRYxQeFZ4FJt8K
-	bGd6THKVg9VZuUSMJlej/h6aACjNRB0=
-Received: from mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-115-roSDKLc-M-CaW9WvvlJlyA-1; Tue,
- 26 May 2026 10:20:50 -0400
-X-MC-Unique: roSDKLc-M-CaW9WvvlJlyA-1
-X-Mimecast-MFC-AGG-ID: roSDKLc-M-CaW9WvvlJlyA_1779805243
-Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 663711936195;
-	Tue, 26 May 2026 14:19:55 +0000 (UTC)
-Received: from nprabudo-thinkpadp16vgen1.rmtin.csb (unknown [10.74.80.96])
-	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id E63E919560AB;
-	Tue, 26 May 2026 14:19:52 +0000 (UTC)
-From: Nimal Prabudoss I <nprabudo@redhat.com>
-To: James.Bottomley@HansenPartnership.com,
-	martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org,
-	jmeneghi@redhat.com,
-	nilesh.javali@marvell.com,
-	Nimal Prabudoss I <nprabudo@redhat.com>
-Subject: [PATCH] scsi: qedf: drop invalid skb_transport_header check to prevent panic
-Date: Tue, 26 May 2026 10:19:50 -0400
-Message-ID: <20260526141950.18394-1-nprabudo@redhat.com>
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="j8q9IkJ1"
+Received: by mail-lj1-f202.google.com with SMTP id 38308e7fff4ca-38e817d9498so41733031fa.2
+        for <linux-scsi@vger.kernel.org>; Tue, 26 May 2026 07:29:47 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1779805786; x=1780410586; darn=vger.kernel.org;
+        h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=PT3pEfkfxVmH8RSCJKQXWybdiAmWTUp2RzVFlPVXXfQ=;
+        b=j8q9IkJ1FnZlCj9wMfCKgMnlpDbxFEfAWyWdGQleBawo4F8Vtx6hctLh065o3ZbHuB
+         Y1ZHDIXtXkrdKDJorpOCbddWC3nRKVE+QDsUWozoV35VsEMiYz/5nJ/s+Gfpo17T23IL
+         mXj2lZMM1mQ/4pXwF0UzIiypm/whX/OcEkwKGijCr0QsF/eSk8HBKldqwzsVt7WwUXWk
+         x7jA9IQvlDh+yOw550WCtOfuObTe9MJl9E0CTSZrqtFwg3Htz90vGYLF2DhSwSxcHb2J
+         qUfZGvmA8CKSrouQdFSuleOewHOsYFqf4A1K/Saia1YsjUu5xjNEUa/XBV3SIPi7YeW3
+         9MXQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1779805786; x=1780410586;
+        h=cc:to:from:subject:message-id:mime-version:date:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=PT3pEfkfxVmH8RSCJKQXWybdiAmWTUp2RzVFlPVXXfQ=;
+        b=eLdC3myL/dwfphtVhOTPEIA89Ks3Ad8c/eF6WcI2PYDkaAOmv7X7y0Ai3TbPpzz3nP
+         Wl6Rcm7zKBAi134iLrT6ASeODHuzouYgbkj7EZdcEXjOMxdEOVN4K3px2WzrKH6Kaq2s
+         aZSb6pSG57UOftE2kMXw+XwAAOIF8BLfFa3T8UXX9DLTRRoMtx4SXuwy6RJE10C+Dtjj
+         1NTjJHN5DPI+3JThOMPqtsIBDec7VOnJ3dWwF8M8dgIdFEtqrEuunCIkIpWm3+sQW/15
+         WD+yhkudS/ASuswX5iuqmZGf8YINIQ6Gr1DGBmkmDWE9wDO+v3aAE21TVsdKdsm/mMpP
+         ECxg==
+X-Forwarded-Encrypted: i=1; AFNElJ+mH4AcTj7QMIKhkw/au4NAIwZcLMUrdCK4fZ2wqio6pRQk6E2Nf2igdjc2GAlNEWJdXHgF78qwGHnm@vger.kernel.org
+X-Gm-Message-State: AOJu0YzhZh4Xu8WpnuzsTMvlHHyrF7R8DKREWDB1Df1z9INps/uWpJ+b
+	w7lSkgRavRqaaOPzbSOq42xJJdeyTHb1Cbr7aNn6fCQ/WwPV8xt8Va2fq4yyfwkZhKirGQ==
+X-Received: from ljgv26.prod.google.com ([2002:a2e:925a:0:b0:38e:8a9b:c977])
+ (user=rnj job=prod-delivery.src-stubby-dispatcher) by 2002:a2e:bc90:0:b0:393:a2ec:da3f
+ with SMTP id 38308e7fff4ca-395d8bd3057mr66188811fa.4.1779805784717; Tue, 26
+ May 2026 07:29:44 -0700 (PDT)
+Date: Tue, 26 May 2026 14:29:42 +0000
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
+Mime-Version: 1.0
+X-B4-Tracking: v=1; b=H4sIAFauFWoC/3XMSw7CIBSF4a00dywGUCg6ch+mMS2v3sSWBhpi0
+ 7B3sXOH/0nOt0OyEW2Ce7NDtBkThrkGPzWgx372lqCpDZxySQUTxIW4ottey6QoGQRve0a1uhk K9bJE6/BzcM+u9ohpDXE79Mx+6x8oM0IJV/LCVOukuQ4PH4J/27MOE3SllC9AxICIqQAAAA==
+X-Change-Id: 20260515-fortify_pm80-b527a10c89d0
+X-Developer-Key: i=rnj@google.com; a=ed25519; pk=QwUkB1OONd7dk9zV4pLRQRehoWHHsLcRZD2QcswqHTc=
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1779805783; l=1362;
+ i=rnj@google.com; s=20260515; h=from:subject:message-id; bh=t8iULvrUFjdfHnddacmqp3ZwHRl8owAMguuh6bqpWXw=;
+ b=60heXesYHrd0tjquVnZnz6fuW08YKkDYOOgSc5mRXSZIBEe4SgxTIm8iTdnKCHDLgCZ/V6kbv vkDzOXIj5cgD5VdyrjMj9M6vYmTQ3LWqXPbP/gRyGwJ+8o9EcWgCv/Q
+X-Mailer: b4 0.14.3
+Message-ID: <20260526-fortify_pm80-v2-0-359b743eb97a@google.com>
+Subject: [PATCH v2 0/2] scsi: pm8001: Fix struct layout and FORTIFY_SOURCE crash
+From: Ronja Meyer <rnj@google.com>
+To: Jack Wang <jinpu.wang@cloud.ionos.com>, 
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
+	"Martin K. Petersen" <martin.petersen@oracle.com>, Tom Peng <tom_peng@usish.com>, 
+	Kevin Ao <aoqingyun@usish.com>, Lindar Liu <lindar_liu@usish.com>, 
+	James Bottomley <James.Bottomley@suse.de>
+Cc: jack wang <jack_wang@usish.com>, linux-scsi@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, Ronja Meyer <rnj@google.com>, stable@vger.kernel.org, 
+	Igor Pylypiv <ipylypiv@google.com>
+Content-Type: text/plain; charset="utf-8"
 
-During intensive FCOE Tier 1 CTC boot tests, the qedf driver triggers a
-warning assertion in include/linux/skbuff.h. This happens because the
-driver attempts to access an uninitialized transport header offset via
-skb_transport_header() under a CONFIG_DEBUG_NET environment.
+This patch series:
+- Fixes a crash when the driver is built with FORTIFY_SOURCE=y.
+- Aligns the struct layout of hw_event_resp to what the HBA believes
+  it looks like.
+- Simplifies code previously required to work around the incorrect
+  struct definition.
 
-Remove the invalid helper call within qedf_recv_frame() to eliminate the
-warning assertion and prevent the subsequent system panic.
+Testing:
+- Verified I can still read from disks using the pm80xx driver.
+- I do not have pm8001 hardware available to verify against.
 
-Link: https://issues.redhat.com/browse/RHEL-177545
-Signed-off-by: Nimal Prabudoss I <nprabudo@redhat.com>
+Changes in v2:
+- Define sas_identify_frame_local via struct_group.
+- Move pm8001 phy_start_req _local change to patch 2.
+- Don't mess with whitespace unnecessarily.
+- Link to v1: https://lore.kernel.org/r/20260515-fortify_pm80-v1-0-2863187f6d4b@google.com
+
+Signed-off-by: Ronja Meyer <rnj@google.com>
 ---
- drivers/scsi/qedf/qedf_main.c | 1 -
- 1 file changed, 1 deletion(-)
+Ronja Meyer (2):
+      scsi: libsas: Define sas_identify_frame_local via struct_group
+      scsi: pm8001: Match hw_event_resp to HBA data layout
 
-diff --git a/drivers/scsi/qedf/qedf_main.c b/drivers/scsi/qedf/qedf_main.c
-index da429b3a4283..f2bc0ac684e0 100644
---- a/drivers/scsi/qedf/qedf_main.c
-+++ b/drivers/scsi/qedf/qedf_main.c
-@@ -2496,7 +2496,6 @@ static void qedf_recv_frame(struct qedf_ctx *qedf,
- 
- 	/* Pull the header */
- 	hp = (struct fcoe_hdr *)skb->data;
--	fh = (struct fc_frame_header *) skb_transport_header(skb);
- 	skb_pull(skb, sizeof(struct fcoe_hdr));
- 	fr_len = skb->len - sizeof(struct fcoe_crc_eof);
- 
+ drivers/scsi/pm8001/pm8001_hwi.c |   6 +-
+ drivers/scsi/pm8001/pm8001_hwi.h |   6 +-
+ drivers/scsi/pm8001/pm80xx_hwi.c |   6 +-
+ drivers/scsi/pm8001/pm80xx_hwi.h | 100 +--------------------------
+ include/scsi/sas.h               | 144 ++++++++++++++++++++-------------------
+ 5 files changed, 85 insertions(+), 177 deletions(-)
+---
+base-commit: b71cb088b2e3427924a470fc43e7aedb8a40d2e3
+change-id: 20260515-fortify_pm80-b527a10c89d0
+
+Best regards,
 -- 
-2.54.0
+Ronja Meyer <rnj@google.com>
 
