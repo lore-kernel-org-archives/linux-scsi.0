@@ -1,127 +1,159 @@
-Received: from mail-oa1-f52.google.com (mail-oa1-f52.google.com [209.85.160.52])
+Received: from mail-wm1-f50.google.com (mail-wm1-f50.google.com [209.85.128.50])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF5CC3C6A56
-	for <linux-scsi@vger.kernel.org>; Tue, 26 May 2026 16:37:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 01D1D3932C5
+	for <linux-scsi@vger.kernel.org>; Tue, 26 May 2026 16:38:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.50
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779813447; cv=none; b=Lj1qvQVcg70bmOjpZYPJhx7WHsYEDyzW3h4vSJw5SEVxJHuH9Ok0vlvHlw3pK5YubfLarG5iY+KA4tkEuCmElK6KncaRFeUA1azsiUYa//tRn980VsLebkh4AaD5fD325sQTnCG+bI0Q7qLFZz11PZQZWKY9nWhiF5Z915MPrmo=
+	t=1779813501; cv=none; b=a0PHAMdxxehVsoA0yswu/gQtCd7Z/IlY9mte9v8dfIbayZvFxYJwaMg28jXQjUwyUwJUabxE47LjwVZmhQsZBLtKYRQTPiC7UwLfZ10zWkv7Sq6wPTCPF3XgLQ77xAIHu43U33kLv5i8ZCdbCdRnVKTPo6n9KifTjBZCBd6ytRY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779813447; c=relaxed/simple;
-	bh=2EeXpqQDt+Fd1xdkcAs9Zp3fbvTTh/2xP1kDKJJar2o=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=IuPIZ6zIjMLPBdeFhy4CZVNyvL6eRWQOxTUK1SSsQZ2OLOp6rv9FWrDqqruURTw/HdcpYQqt1R98aeUjCxDJpsL5R+dh0pEilG5hKmV2zYKXX/bZyM9ZPB/NcakH/Nm8p7S4UpCjG1rY4U00M0DyAMjc3YiHx9xZHv376tlBtSs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20251104.gappssmtp.com header.i=@kernel-dk.20251104.gappssmtp.com header.b=bhb6clff; arc=none smtp.client-ip=209.85.160.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
+	s=arc-20240116; t=1779813501; c=relaxed/simple;
+	bh=4V0/hRzQM3QPZtd9ciEuGpakZz9BDAJEY1Xq/95IEYA=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=TP/aL+E9JpF7xMq2OWVWnOWzYgVVSePWr9nbkfZMjvk0EbDHKlEWG+kTv0FvS6gfX2z4VVT7TkggaWqgywPLOEUVu38MD2Yr54iuGTZRJqPLMtplviiHqQ8xcOXrBKGdr2VyvhRtVHZJsl+e6UN1PFYZ5gpDidXRS0ZglkyxHb8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=baylibre.com; spf=pass smtp.mailfrom=baylibre.com; dkim=pass (2048-bit key) header.d=baylibre.com header.i=@baylibre.com header.b=mk0Bwf5h; arc=none smtp.client-ip=209.85.128.50
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=baylibre.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=baylibre.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20251104.gappssmtp.com header.i=@kernel-dk.20251104.gappssmtp.com header.b="bhb6clff"
-Received: by mail-oa1-f52.google.com with SMTP id 586e51a60fabf-439acb393f7so12078087fac.1
-        for <linux-scsi@vger.kernel.org>; Tue, 26 May 2026 09:37:25 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=baylibre.com header.i=@baylibre.com header.b="mk0Bwf5h"
+Received: by mail-wm1-f50.google.com with SMTP id 5b1f17b1804b1-4905529b933so24545975e9.0
+        for <linux-scsi@vger.kernel.org>; Tue, 26 May 2026 09:38:18 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20251104.gappssmtp.com; s=20251104; t=1779813445; x=1780418245; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:date:message-id:subject
-         :references:in-reply-to:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=CbEyVDKYB6brZVOZVveRW94ChbWHXbhuaSGALUdMmOo=;
-        b=bhb6clffjPZ33hypi328fsDoxxGGzo/mTIj2rr1QZbav0ouH+QMlwrL2Mq/VWQUYoX
-         JHqQWpDqmXNH5CFER7V7c5GbSVXJhhcQaFCf02ADG0aVAdh7u4NbJ03kUpZn3d/n8hPs
-         ES4K3VRZpEYKe+5itpRZWP4pWnyBFudG6LvAgir0R+chrb5SXpXEZ3WZr5nVjR6esOTC
-         NSIU0Jh4j+WApsL16FMACve0ZFznPxwcwpLi6gt6zCYgIm4Td4JYgTJVIT8yCt9jvagw
-         yX/a66GLQzJDG+fcqAuDMlIx7v1CLaMe2oEuYOsgvG9jxRjF4XR2Z7kG/2kOW5SDeDe+
-         hErA==
+        d=baylibre.com; s=google; t=1779813497; x=1780418297; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=+neT3f/iOdkns4E+8cxUHIEwouFFRC5e7pB2NZRvaQM=;
+        b=mk0Bwf5hXpVXtR8qKrq4eVR8YRH8uAgW243P9LPUcvYHlW/W3CenauBquVI1o3J3Gz
+         ykz9ET95iEHsRPV830hnFjr+E9v6rT8uhO0Iv8U2EVfdIiTHUUuKMxFybKQ5FuNj38bd
+         fdstOAocTCEVIJp/li2MjrH1TtrNYnTy9LFZwGX72Coi2ym25O4/5jgSbT/7y8xXzHEk
+         Fc/IBf27hQDsuVeDJJOKWgwtUeRO5mJq0jJAVfLR97P3J7upjpS4Qdi3HsJ8sYyNyP/o
+         LOkZcOScYuknd4QAmTD+rRr6zgy3tK7XkOL9daYc9jJ12Qq/UI632ZbmKMp5vbeHF0ud
+         rzRg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1779813445; x=1780418245;
-        h=content-transfer-encoding:mime-version:date:message-id:subject
-         :references:in-reply-to:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=CbEyVDKYB6brZVOZVveRW94ChbWHXbhuaSGALUdMmOo=;
-        b=fDLn0U24/ojq2Oz3E3SvAYdPg8om1J0C6C2cPoLrkwAIZ6wFS426URrhPZxyQC8LyL
-         vXzQs7O5ECdZdcMC6KT/KVAUB9uNeJbHUrI5gtRbnHAe4qW4Ev37cSuHsE5hdxaP4KjQ
-         CXdcveiUf3H9qn0/izuoQ3jQU5LmE1aYNatNkoFxnd6++vcdFjq+VDHYjTte0ivGGBBm
-         Hxi8WrMMxpXG7iTwsDPUex15OaT0psNWuFITSqplyTkODxmEh5k36sc9iwu0rS0nbzrL
-         cXDYUlF6okD/Si4EQl3xq8Usw5vIC6GJK+5Xizz5FvH3ZAYHr7VCAN67B23U4LROWkNJ
-         2Spw==
-X-Forwarded-Encrypted: i=1; AFNElJ/bwPYoBHc0bMCigjZrm2lGbbPQsCt3KEAXRzUG+2vO6kXTOCkpypp3YNa8gHtnJUPvhDkg+VQUlQTo@vger.kernel.org
-X-Gm-Message-State: AOJu0YxmHTrp3NvlRWFtnLfyhaOAXd3Ad0UVkiCE8mUgfCd8M2ccoi6K
-	i3gCxSD6HLdutC9yehIhRnfbD57K454S6vMfeRWuvigxHKptTC0uzk9OANc/iF/dz2E=
-X-Gm-Gg: Acq92OGk6kHotPxqPrAJ1PVSrFSK5MrmLQdI06C43jxxmt1kBS7IpD2wXXu+ZpAHQvE
-	C28j0BM2VNpxcH2yh4PJijnj6TAsIWK9O7LaLgHJ6adCLyn69iHQA05fUPu1L5pAbg4K+GiJiyk
-	kv3oBbxrsZPKtyezdxRGv/uwy6RsfjmpooAoydOUvK+RqC3DlfVo1SLlh72wczjUyG22LVmNU2Z
-	16OPLAPZ52Hv4Pc1PoibXi64Rr9/OqSBNel4PiCtFH+YC23Wrkvt63HsliyESgz1wxbqX50XXmF
-	4eNozd/do9rjJu7gBOXBsUVQKH6clzc533qRgOm5PKkJuHN/vxoqYskABE78zhf4veTd3gMbaxC
-	ZYpiLYpUMcUbjnumWigsixaig3HaUhNe0/WinXiCAzzhY+o0oDJgG23nwT8L7vz9+HvtqBZK9li
-	2G7KcAEBrkhFOXBMljQnh/DbEWJ7AcPAEO9MWGnTHg0SvgsZCNZK9CTa9zogyRoSndBAePE+BrU
-	NTcES3QzaktaYHwwHXH5VAu
-X-Received: by 2002:a05:6871:289a:b0:43a:5cd0:db00 with SMTP id 586e51a60fabf-43b5adb7a25mr12258063fac.23.1779813444777;
-        Tue, 26 May 2026 09:37:24 -0700 (PDT)
-Received: from [127.0.0.1] ([96.43.243.2])
-        by smtp.gmail.com with ESMTPSA id 586e51a60fabf-43b639fd7adsm13561265fac.14.2026.05.26.09.37.20
+        d=1e100.net; s=20251104; t=1779813497; x=1780418297;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=+neT3f/iOdkns4E+8cxUHIEwouFFRC5e7pB2NZRvaQM=;
+        b=iMR/PCAz2247w0Cvv2M3s0v14PJHdtG29iyXI4swgSLNWpyK10macp4IVWiUt9SHjt
+         9zGWvPRyHp4JkUPMlAPUhO6/T/wxMsLmIYnsQxv6adooOG1j8JjB2aaqEyIRGh9Z9KgS
+         R/MTc9ENSosiqGeYWT8GB1ieVey2muA1eDeU8rkihHlyYDhBWgBHpAOHxLtp8MjXBgM/
+         5gDTRkLi0N1Fz93x5K/ifnJ1Ycc/1UW5XnOOwBxHHVPpqIC6oLZ4lXZfJX6TBlOTy6/f
+         /PUUdY7VQ77FBj/gnGT/+4bmu7mI+acgF+Yprqk4YRc/WRMRw1VIRmFetcHyIxcM9bl4
+         Sn4Q==
+X-Forwarded-Encrypted: i=1; AFNElJ88VPEuRqDE16jqE76mRe0D2a2b04hHkoETRkomOfdwLFfOJFhAHZcK3UfmETAeLu1L0ZNbrXZBj5ST@vger.kernel.org
+X-Gm-Message-State: AOJu0Yz5op9cUoq+WU4ziZ2ntPb+8F+uTo5Gzxwg3qznlktlTCr4dIj9
+	4FGEp6zzVZ+L3Lfsd33JXF/+RhBPf4ieVryo/PkizucIf91fAzDLLngps9/QbjE04YM=
+X-Gm-Gg: Acq92OHCnX/IbmS3BLxvtJtMhPB0MKAJluvXsMdxh733H2/TpuhVPheMO3ATsMovrXr
+	vjIlAViBYSk+GaD4t+L+Vky2yvPQ+Y7W076YCJLRPgZBDlw2f1bsTJdQjmr8crEqwFsBpPd/4NV
+	TdYgZYaSu2KssB3p75M182UQaw9/tOcq4IopIKcAI7gyW5BBWBnU3mzt2zaOr+4hbs8qICR4VMN
+	8Gg1vBnZxseP5IIdTyrpbOQCro2+wzbB/2oO+k31xyOeEljOzj63JzKv74dBJ3xsL9kPEq2HRWL
+	/kyVQUTVGFcqAu+aVX+o3BlUsXdPAXDSmIZw3Cq/iZZO+kr+LGleG+Ofg/9TXIpdJxczWoY+MEz
+	KYEbIZfS4KsMvp/3zvlMTpA8hiEep0IFvpMQfaH7vLGytm17qGS0Q7I3LjU4bR1FsiS7zGHyodo
+	r6W+r9bxc0WE2Y5hkAvcsRrEH2ZR5HBogOz7ktqpoIq/XGy6GlAKBEpXDho/qg4jNDa8JWbBeYv
+	s/D1YdA1d8HPCU=
+X-Received: by 2002:a05:600c:4ecc:b0:485:4388:3492 with SMTP id 5b1f17b1804b1-490424b25abmr314126765e9.11.1779813497306;
+        Tue, 26 May 2026 09:38:17 -0700 (PDT)
+Received: from localhost (p200300f65f47db04a716d2bdeddb4813.dip0.t-ipconnect.de. [2003:f6:5f47:db04:a716:d2bd:eddb:4813])
+        by smtp.gmail.com with UTF8SMTPSA id ffacd0b85a97d-45eb6d493dfsm37901229f8f.23.2026.05.26.09.38.16
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 26 May 2026 09:37:22 -0700 (PDT)
-From: Jens Axboe <axboe@kernel.dk>
-To: Mateusz Nowicki <mateusz.nowicki@posteo.net>
-Cc: Caleb Sander Mateos <csander@purestorage.com>, 
- Sung-woo Kim <iam@sung-woo.kim>, Josef Bacik <josef@toxicpanda.com>, 
- Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@kernel.org>, 
- Mikulas Patocka <mpatocka@redhat.com>, 
- Benjamin Marzinski <bmarzins@redhat.com>, Ulf Hansson <ulfh@kernel.org>, 
- Richard Weinberger <richard@nod.at>, Zhihao Cheng <chengzhihao1@huawei.com>, 
- Miquel Raynal <miquel.raynal@bootlin.com>, 
- Vignesh Raghavendra <vigneshr@ti.com>, Sven Peter <sven@kernel.org>, 
- Janne Grunau <j@jannau.net>, Neal Gompa <neal@gompa.dev>, 
- Keith Busch <kbusch@kernel.org>, Christoph Hellwig <hch@lst.de>, 
- Sagi Grimberg <sagi@grimberg.me>, Justin Tee <justin.tee@broadcom.com>, 
- Naresh Gottumukkala <nareshgottumukkala83@gmail.com>, 
- Paul Ely <paul.ely@broadcom.com>, Chaitanya Kulkarni <kch@nvidia.com>, 
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
- "Martin K. Petersen" <martin.petersen@oracle.com>, 
- Thomas Fourier <fourier.thomas@gmail.com>, 
- Al Viro <viro@zeniv.linux.org.uk>, Luke Wang <ziniu.wang_1@nxp.com>, 
- Kees Cook <kees@kernel.org>, linux-block@vger.kernel.org, 
- linux-kernel@vger.kernel.org, nbd@other.debian.org, 
- dm-devel@lists.linux.dev, linux-mmc@vger.kernel.org, 
- linux-mtd@lists.infradead.org, asahi@lists.linux.dev, 
- linux-arm-kernel@lists.infradead.org, linux-nvme@lists.infradead.org, 
- linux-scsi@vger.kernel.org
-In-Reply-To: <20260523125210.272274-1-mateusz.nowicki@posteo.net>
-References: <20260523125210.272274-1-mateusz.nowicki@posteo.net>
-Subject: Re: [PATCH v1] block: switch numa_node to int in blk_mq_hw_ctx and
- init_request
-Message-Id: <177981344077.464267.4670805396521914701.b4-ty@b4>
-Date: Tue, 26 May 2026 10:37:20 -0600
+        Tue, 26 May 2026 09:38:16 -0700 (PDT)
+Date: Tue, 26 May 2026 18:38:15 +0200
+From: Uwe =?utf-8?Q?Kleine-K=C3=B6nig_=28The_Capable_Hub=29?= <u.kleine-koenig@baylibre.com>
+To: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>, 
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, 
+	Andrew Lunn <andrew+netdev@lunn.ch>, "David S. Miller" <davem@davemloft.net>, 
+	Eric Dumazet <edumazet@google.com>, Jakub Kicinski <kuba@kernel.org>, 
+	Paolo Abeni <pabeni@redhat.com>, Thomas Gleixner <tglx@kernel.org>, 
+	Ingo Molnar <mingo@kernel.org>, Max Staudt <max@enpas.org>, Andi Shyti <andi.shyti@kernel.org>, 
+	Helge Deller <deller@gmx.de>, linux-ide@vger.kernel.org, linux-m68k@lists.linux-m68k.org, 
+	linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, netdev@vger.kernel.org, 
+	linux-i2c@vger.kernel.org, linux-fbdev@vger.kernel.org, dri-devel@lists.freedesktop.org, 
+	"Christian A. Ehrhardt" <christian.ehrhardt@codasip.com>, "Christian A. Ehrhardt" <lk@c--e.de>
+Subject: Re: [PATCH v1 0/8] zorro: Improve handling of pointers in
+ zorro_device_id::driver_data
+Message-ID: <ahXMGtBv_pQXM7YS@monoceros>
+References: <cover.1779803053.git.u.kleine-koenig@baylibre.com>
+ <CAMuHMdUVoNg-rSV_hDcvi6KCosmE=SMcxUj2Y8fkoJ=33zMSXw@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.15.2
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="26ssrqftvvoyehs2"
+Content-Disposition: inline
+In-Reply-To: <CAMuHMdUVoNg-rSV_hDcvi6KCosmE=SMcxUj2Y8fkoJ=33zMSXw@mail.gmail.com>
 
 
-On Sat, 23 May 2026 12:52:35 +0000, Mateusz Nowicki wrote:
-> numa_node in blk_mq_hw_ctx and the matching argument of
-> blk_mq_ops::init_request can be NUMA_NO_NODE (-1).  Declared as
-> unsigned int, NUMA_NO_NODE becomes UINT_MAX and walks off
-> nvme_dev::descriptor_pools[] on CONFIG_NUMA=n [1].
-> 
-> Switch the field and the callback prototype to int and update all
-> in-tree init_request implementations.  No functional change:
-> cpu_to_node(), kmalloc_node() and blk_alloc_flush_queue() already
-> take int.
-> 
-> [...]
+--26ssrqftvvoyehs2
+Content-Type: text/plain; protected-headers=v1; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+Subject: Re: [PATCH v1 0/8] zorro: Improve handling of pointers in
+ zorro_device_id::driver_data
+MIME-Version: 1.0
 
-Applied, thanks!
+On Tue, May 26, 2026 at 05:01:48PM +0200, Geert Uytterhoeven wrote:
+> Hi Uwe,
+>=20
+> On Tue, 26 May 2026 at 16:17, Uwe Kleine-K=F6nig (The Capable Hub)
+> <u.kleine-koenig@baylibre.com> wrote:
+> > this series is about improving the handling of pointers in struct
+> > zorro_device_id's driver_data.
+> >
+> > While it's ok on all current Linux platforms to store a pointer in an
+> > unsigned long variable, it involves casting that loses type information.
+> > This can be nicely seen in patch #7 where after profiting from patch #6
+> > the compiler notices a missing const.
+> >
+> > Preparing for that change, all zorro_device_ids are converted to use
+> > named initializers, which is also a nice cleanup that could stand for
+> > itself, as it improves readability for humans. (That is necessary
+> > because an anonymous union can be initialized by name, but not using a
+> > list initializer.)
+> >
+> > My motivation for this series is the CHERI hardware extension. With that
+> > pointers are bigger than longs and thus you cannot store pointers in
+> > zorro_device_id::driver_data. So this series is also about getting
+> > support for CHERI into the mainline, but I hope the clean up effects
+> > mentioned above are justification enough to accept this series.
+>=20
+> Thanks for your series!
+>=20
+> > The dependencies in this series are as follows:
+> >
+> >  - Patch #5 depends on #1, #2
+>=20
+> s/5/6/?
+>=20
+> >  - Patches #7 and #8 depend on patch #6.
+> >
+> > So if the ata maintainers agreed to merge their patch #1 via scsi, and
+> > Geert agrees to patch #5 and that it's also merged via scsi, patches #1,
+>=20
+> s/5/6/?
 
-[1/1] block: switch numa_node to int in blk_mq_hw_ctx and init_request
-      commit: 65e1c8f96ad1a1f3b72e8a91d1341d570f91d985
+Yes, indeed. And I tried so hard to get all the numbers right :-\
 
-Best regards,
--- 
-Jens Axboe
+Best regards
+Uwe
 
+--26ssrqftvvoyehs2
+Content-Type: application/pgp-signature; name="signature.asc"
 
+-----BEGIN PGP SIGNATURE-----
 
+iQEzBAABCgAdFiEEP4GsaTp6HlmJrf7Tj4D7WH0S/k4FAmoVzHQACgkQj4D7WH0S
+/k4BXggAoAuTCgxPow5/rQYRxSTj+kNc4XmxhIlX39wkjq4KJoBOkfK1zOhQISV1
+4HHCqWa9m9dov4bu6Kg8LwbKa2UChzh7HIDanvg0FuTjuR2DvZAqQ1h3KlZHQj4H
+Dh1fxxwA9H2mAUN8tHgeBxUVZ6qajflOjKFHpsQbdgTyoj2LkR1szY77e5P4QdmS
+0UJbs5rWuTPA+ErMqqdl4SkAygYx8SEw84ch7byHO4yx9rpUCp8zJk95dKJCgAir
+L38wVLJUZNR7sQVkPKakWtv34niUdKWjqIXa8yB4GHOQFX65uFKEzrvodPCyE2J/
+vgh7fbUvdt3OqTL+DpSduQS2l1F1qA==
+=W3Nr
+-----END PGP SIGNATURE-----
+
+--26ssrqftvvoyehs2--
