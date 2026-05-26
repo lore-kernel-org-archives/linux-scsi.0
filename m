@@ -1,240 +1,153 @@
-Received: from mail-lj1-f202.google.com (mail-lj1-f202.google.com [209.85.208.202])
+Received: from mail-ed1-f47.google.com (mail-ed1-f47.google.com [209.85.208.47])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6477F400E05
-	for <linux-scsi@vger.kernel.org>; Tue, 26 May 2026 14:29:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.202
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 95F7A407CEC
+	for <linux-scsi@vger.kernel.org>; Tue, 26 May 2026 15:02:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.47
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779805793; cv=none; b=ucOi4oCOZ4kLCPVzCCPnwB8rShVRn1/bK7fJAUdcdFVUfmnFuJyDcfQCOIO9dbDSCWx1P/5z38ztMlqiyKXx2JGlCykMgPaTq1DpzlIBUrBMO+fYdOOSuSQI8iNEPS453Y43neN8mjwA8QTsxX6DKXmq5QitzidjaOaU3qUD/PM=
+	t=1779807733; cv=none; b=r9dex/5YoLftKoy8LKKDck+0RFJbff+CiMRDJJL9P+s5Raiz3xJFhJ5bq5P6pfWdwmsbPohxcc9fqeJCj/2zgqF0Bqz7uZz8s5HHzBuBqECF4/y4oSkEZLFPwjQNTxuh1T7Ft8SkQKcLdNZBTpu74P82mL2ZMkNTCU/WmwhkvtY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779805793; c=relaxed/simple;
-	bh=lM1U7NDEVUxoUgjU6ZWJkKgeycM4+CYRnq2yIpcFeSY=;
-	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
-	 To:Cc:Content-Type; b=G6MoUkglBKEplNJHeWW+9hyQdov4Fv+iMliEXvUbdeP7E+CYpRrCdOLalC45xkp088/lYi/9FihqIEllQBjQ7zfzS0EZ1XlJeRZXRjaWBfKlKViax1Gtc8Qg7VeLLrdy0jecgy+8p22PLYyNYl8qF8VtNNfcnTfKaw9bNonEGCg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--rnj.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=Z9Q63C2s; arc=none smtp.client-ip=209.85.208.202
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--rnj.bounces.google.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="Z9Q63C2s"
-Received: by mail-lj1-f202.google.com with SMTP id 38308e7fff4ca-38e83c25d24so52910601fa.0
-        for <linux-scsi@vger.kernel.org>; Tue, 26 May 2026 07:29:51 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1779805790; x=1780410590; darn=vger.kernel.org;
-        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
-         :date:from:to:cc:subject:date:message-id:reply-to;
-        bh=T7NFUbUyx8UkNyIRhDm6VYLpxHnlnNi3FgbihS8m/SI=;
-        b=Z9Q63C2srpk2jtLP94rq4CajaEessCH5zXv6RiqFfM8Bknbyog7zNR/EBuQOBx8neM
-         LUZ0/mDyPljddF3Ke7d36GVUx4NuKEYzHD3uY8R18u0bm+0FTGgDHWCJ5cMELx+OMiYE
-         M8oPSGSfDSB7dwi5JpqlVblqSDEiw4+cEwttyp01oR9nK+IaxWLJFs3TvuRlFmSdXvfH
-         5FC0bCtUwJR4D1sCNmCNcuYCgHYoJKd1XOcM6sgCWFTqKFuqwMBZNUJPFy8P7bJED5IU
-         Ws9Q+yXdOOTyFPJPgkT/iBOBM/dDsRmfruQAfR89rr+UH2ZQ0aaY2uULIGXGf8PE6njj
-         Mnmw==
+	s=arc-20240116; t=1779807733; c=relaxed/simple;
+	bh=yb+0omux6d1zyLgvLzeZABk2GNuWtKQ1yrpCoQCsmR0=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=RCs0+0B2MLx2syzjj7stPI7YSHO4ma6ns4e2K++kHGGiz08v3lixRa+xToF18UhPZDujgglOcN4Pp1ePjNTunGSEjhonIAFxxTX/y7oBzvleI+SLFscKutpfp5XvC3U28LeQhDeWM2dP7vs9X0q7d6Dx7hAyrW0MaAZsqm5J8bY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.208.47
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Received: by mail-ed1-f47.google.com with SMTP id 4fb4d7f45d1cf-67da63ae541so5674161a12.0
+        for <linux-scsi@vger.kernel.org>; Tue, 26 May 2026 08:02:11 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1779805790; x=1780410590;
-        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
-         :date:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=T7NFUbUyx8UkNyIRhDm6VYLpxHnlnNi3FgbihS8m/SI=;
-        b=LsXDdXMrgKEjFtQrZv83hfXTzs7O49smWVqw8yXJKLaIRbDzCF0kJmZSvR54VXsbzU
-         zOH89bF3//R97aL7Q62a73+CMzxqejx49/Vo2OXeCi9ozxCMTEK/2zIMMxE/1Y7dPvvp
-         HN1Du2P9MbkNuX6TgV6nhZv4aABLUGz/s7XaXx4IMzCufYiWMR8vmXQVOmm1HFR00v25
-         nX7tBdRB+9G7q35oJqNM1kpYcBv3pXlDcMaGzeDnRvOwY7btrJG2PPLEZbyFUyiY3VVH
-         bWSvwjoto2YAEQ8o5bXA+1zuPK8kp/XtKJ299ddH2AaX6Xhs6GFYRooXWTKWtZu+Jglx
-         o5hg==
-X-Forwarded-Encrypted: i=1; AFNElJ8/Nxg2hvX0bUshrBuqNTLIiNNfRNF3FzoTroUcMR4Tn4ucI3G31CRl3WmBUWISgE92M6EvCazywnb3@vger.kernel.org
-X-Gm-Message-State: AOJu0YylNdCwLhpMjf7N7lWZq5o19XEX6fCwolPFUUXn9E3w3BjbkFrl
-	QYMdUPWovq9iA79JHaoxzRjCex4fH1vSfv2/FFSdVaBrV3bmbtvoZ6xw7c2jPs/Ge43w9A==
-X-Received: from ljck14-n2.prod.google.com ([2002:a05:651c:20ce:20b0:391:fcf:3171])
- (user=rnj job=prod-delivery.src-stubby-dispatcher) by 2002:a05:651c:1586:b0:38e:d18:4d0
- with SMTP id 38308e7fff4ca-395d89263f9mr65278791fa.13.1779805789321; Tue, 26
- May 2026 07:29:49 -0700 (PDT)
-Date: Tue, 26 May 2026 14:29:44 +0000
-In-Reply-To: <20260526-fortify_pm80-v2-0-359b743eb97a@google.com>
+        d=1e100.net; s=20251104; t=1779807730; x=1780412530;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=MLTPgXz6PTE+WNmbiors/d1TQS2Sqmrm+U6hNBea8hs=;
+        b=DqokIUE1Yz1UZHGrtX8WcxaqpxmD2l2bcJs3KCyfpzt+hRwT/cSJ9f9Q+AlUbTUFKW
+         OcUkexuQVfu8+60IdLDhXxXta3WKyQ2lUZs0eeBHHNE5aB5jr9swejv9DrOItUhqQ9xp
+         7oVaDRnikNwXekDaxa8cKRaqLfp+0ugeYH1yySV47zvKtLGzXrni6aaqBr3uJ2HKcpm+
+         mjry62kKv4DiGm+HEUfcJlzH4RSokqkiF0jPbgep74f0dbnsrUrjUu2Ie/kIq2gpAVhp
+         +UrySFB1pHaf9CqgnniDRXATM515dToR+FBFDzAEFJe43/9n/eKfHpdqFJ676WODQd5w
+         RE0Q==
+X-Forwarded-Encrypted: i=1; AFNElJ8rEkTTq2gEhwlQqvoKnGk/S4VkAHs914cSBh6lEbTN1R6HbVXupV7xl6MI3ycZ/BMUiy8ZBKF/JFwc@vger.kernel.org
+X-Gm-Message-State: AOJu0Yzb22YZcza6wY/bLKvFdf/kNR1GVes6gpEVfp9alFGpssNnOQe4
+	H5MJnQPAT/wof0Fo8b6SQZkCRf8ZElVi8kuYaYmhKTOCGKBWzTcPpOVWaSkpC5QNV0o=
+X-Gm-Gg: Acq92OEhcxrThGcYAaTn1TF7m+kkFuRDKENqWcmoLHTQD+tq6S+wEnnyj/1sB0xvcxJ
+	nTUEpIJkxPA3DUiRYyAgWmQVaVPXO0Nj03Xtu+fPVcfo2oUmfA7tFe0gxWyMrGBXVjGb8z5OraY
+	UqXjyUmXFVTij8QCi8oWBoYCqnHPw51f8kVynQRgRsuHPT7j4d1Cao5/5bsA3OuBDexTFQZ9vSm
+	6lvMHbhj/opqZdSf1m+7zHouVOSZpFBaPGPeAnAa18tMujsxLps1lBpkx1CKPhEHzWW5Ql8/u08
+	zN+ZZr6Fo5GW244JQYS9JFu7Q7YME2vdFSS8ePPHYSqMyKGdBNtWz1ZGCyX9pEsVo/ljPYJtn/r
+	bP8G78pqStZ9fohCVsH6yOuRZrWC0HWvR5PgRbOw2biKwYr910hWI4oOnsztPjbEPtj2V18qbQy
+	GxsRGydF2qY08x53XqWIb4NUDK3+a9LY12rh08QizPGcHAvsh/I0xdmo+L24t6
+X-Received: by 2002:a05:6402:40d4:b0:662:ac7e:aac9 with SMTP id 4fb4d7f45d1cf-6889cc4eb4cmr9699055a12.20.1779807728208;
+        Tue, 26 May 2026 08:02:08 -0700 (PDT)
+Received: from mail-ed1-f42.google.com (mail-ed1-f42.google.com. [209.85.208.42])
+        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-688baf1f0afsm5105500a12.17.2026.05.26.08.02.01
+        for <linux-scsi@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 26 May 2026 08:02:03 -0700 (PDT)
+Received: by mail-ed1-f42.google.com with SMTP id 4fb4d7f45d1cf-687d82dd690so4855932a12.2
+        for <linux-scsi@vger.kernel.org>; Tue, 26 May 2026 08:02:01 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AFNElJ/mpSaMghAAJyMSlTRDv+zTlvNM9fvaPLyRzOo/EAcucfeNkNtWkwXdjhtBcARxAFku0xeu/b480b8i@vger.kernel.org
+X-Received: by 2002:a05:6402:360a:b0:674:40c3:f047 with SMTP id
+ 4fb4d7f45d1cf-6889ca4520cmr9385916a12.12.1779807721391; Tue, 26 May 2026
+ 08:02:01 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-References: <20260526-fortify_pm80-v2-0-359b743eb97a@google.com>
-X-Developer-Key: i=rnj@google.com; a=ed25519; pk=QwUkB1OONd7dk9zV4pLRQRehoWHHsLcRZD2QcswqHTc=
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1779805783; l=7499;
- i=rnj@google.com; s=20260515; h=from:subject:message-id; bh=lM1U7NDEVUxoUgjU6ZWJkKgeycM4+CYRnq2yIpcFeSY=;
- b=2Et7omVZmBjmwAvTpoLHGUFGqqG6SLNqHQoDNbruaHSNZV6PG65wYj0KGkKd3zBXzeWJA53nc QsKs9n8EDG2C1rZZqafXnOhjXLEKSvTzOyKOtZeM6r3aq4wN6cximWr
-X-Mailer: b4 0.14.3
-Message-ID: <20260526-fortify_pm80-v2-2-359b743eb97a@google.com>
-Subject: [PATCH v2 2/2] scsi: pm8001: Match hw_event_resp to HBA data layout
-From: Ronja Meyer <rnj@google.com>
-To: Jack Wang <jinpu.wang@cloud.ionos.com>, 
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
-	"Martin K. Petersen" <martin.petersen@oracle.com>, Tom Peng <tom_peng@usish.com>, 
-	Kevin Ao <aoqingyun@usish.com>, Lindar Liu <lindar_liu@usish.com>, 
-	James Bottomley <James.Bottomley@suse.de>
-Cc: jack wang <jack_wang@usish.com>, linux-scsi@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, Ronja Meyer <rnj@google.com>, stable@vger.kernel.org, 
-	Igor Pylypiv <ipylypiv@google.com>
-Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+References: <cover.1779803053.git.u.kleine-koenig@baylibre.com>
+In-Reply-To: <cover.1779803053.git.u.kleine-koenig@baylibre.com>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Date: Tue, 26 May 2026 17:01:48 +0200
+X-Gmail-Original-Message-ID: <CAMuHMdUVoNg-rSV_hDcvi6KCosmE=SMcxUj2Y8fkoJ=33zMSXw@mail.gmail.com>
+X-Gm-Features: AVHnY4KG1TJnpMipnk7rqdd9LGhhF-uK_MvXjYFynbh1jLKZ-eyBikYr9yO02y4
+Message-ID: <CAMuHMdUVoNg-rSV_hDcvi6KCosmE=SMcxUj2Y8fkoJ=33zMSXw@mail.gmail.com>
+Subject: Re: [PATCH v1 0/8] zorro: Improve handling of pointers in zorro_device_id::driver_data
+To: =?UTF-8?Q?Uwe_Kleine=2DK=C3=B6nig_=28The_Capable_Hub=29?= <u.kleine-koenig@baylibre.com>
+Cc: Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>, 
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
+	"Martin K. Petersen" <martin.petersen@oracle.com>, Andrew Lunn <andrew+netdev@lunn.ch>, 
+	"David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, 
+	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, Thomas Gleixner <tglx@kernel.org>, 
+	Ingo Molnar <mingo@kernel.org>, Max Staudt <max@enpas.org>, Andi Shyti <andi.shyti@kernel.org>, 
+	Helge Deller <deller@gmx.de>, linux-ide@vger.kernel.org, linux-m68k@lists.linux-m68k.org, 
+	linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, 
+	netdev@vger.kernel.org, linux-i2c@vger.kernel.org, 
+	linux-fbdev@vger.kernel.org, dri-devel@lists.freedesktop.org, 
+	"Christian A. Ehrhardt" <christian.ehrhardt@codasip.com>, "Christian A. Ehrhardt" <lk@c--e.de>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Correct the hw_event_resp and phy_start_req struct definitions to match
-the layout of data sent by the HBA. Remove pointer arithmetics working
-around the previously incorrect struct definitions.
+Hi Uwe,
 
-Looking at the struct definition before this patch:
-  struct hw_event_resp {
-           [...]
-           struct	sas_identify_frame sas_identify;
-           struct dev_to_host_fis	sata_fis;
-   } __attribute__((packed, aligned(4)));
+On Tue, 26 May 2026 at 16:17, Uwe Kleine-K=C3=B6nig (The Capable Hub)
+<u.kleine-koenig@baylibre.com> wrote:
+> this series is about improving the handling of pointers in struct
+> zorro_device_id's driver_data.
+>
+> While it's ok on all current Linux platforms to store a pointer in an
+> unsigned long variable, it involves casting that loses type information.
+> This can be nicely seen in patch #7 where after profiting from patch #6
+> the compiler notices a missing const.
+>
+> Preparing for that change, all zorro_device_ids are converted to use
+> named initializers, which is also a nice cleanup that could stand for
+> itself, as it improves readability for humans. (That is necessary
+> because an anonymous union can be initialized by name, but not using a
+> list initializer.)
+>
+> My motivation for this series is the CHERI hardware extension. With that
+> pointers are bigger than longs and thus you cannot store pointers in
+> zorro_device_id::driver_data. So this series is also about getting
+> support for CHERI into the mainline, but I hope the clean up effects
+> mentioned above are justification enough to accept this series.
 
-Previously the memcpy() in hw_event_sata_phy_up() crossed reading
-from the sas_identify struct over into the sata_fis struct. This was
-necessary, because the hw_event_resp struct definition didn't align
-properly with what the HBA actually sent. The member sas_identify right
-before the member sata_fis was 4 bytes too long, causing the first
-4 bytes of the sata_fis to be shifted into the last 4 bytes of
-sas_identify. The code worked around this by subtracting 4 bytes from
-both the sata_fis pointer, as well as sizeof(sas_identify), when they
-were used.
+Thanks for your series!
 
-FORTIFY_SOURCE detected this deliberate choice to cross struct member
-boundaries as an out-of-bounds read, even though in this case it didn't
-lead to a vulnerability. Hence the following fortify-panic was
-triggered:
+> The dependencies in this series are as follows:
+>
+>  - Patch #5 depends on #1, #2
 
-  kernel BUG at lib/string_helpers.c:1044!
-  RIP: 0010:__fortify_panic+0x9/0x10
-  hw_event_sata_phy_up+0xea/0x120 [pm80xx]
-  process_one_iomb+0x634e/0x6360 [pm80xx]
-  process_oq+0x391/0x430 [pm80xx]
-  pm80xx_chip_isr+0x78/0x100 [pm80xx]
-  tasklet_action_common+0x16a/0x2b0
-  handle_softirqs+0xcd/0x2a0
-  __irq_exit_rcu+0x50/0x100
-  common_interrupt+0x89/0xa0
+s/5/6/?
 
-Furthermore hw_event_resp was 64 bytes before this patch, which is
-4 bytes too long. Messages exchanged between the pm8001 and the host
-kernel can be a maximum of 64 bytes, as defined in iomb_size. The
-message structs defined in pm8001_hwi.h must have a size of 60 bytes,
-in order to leave space for a 4 byte header that implicitly precedes
-each message.
+>  - Patches #7 and #8 depend on patch #6.
+>
+> So if the ata maintainers agreed to merge their patch #1 via scsi, and
+> Geert agrees to patch #5 and that it's also merged via scsi, patches #1,
 
-Luckily the code interacting with hw_event_resp doesn't ever seem to
-read or write the last 4 bytes of the struct and doesn't seem to use
-the incorrect size of the struct in a copy operation. Hence it doesn't
-overflow in practice. Further the pm80xx driver was unaffected by this
-bug. While the pm80xx struct was also 64 bytes, the message size on
-pm80xx is 128 bytes. Hence it is able to fit the 68 byte header and
-message without overflowing.
+s/5/6/?
 
-This is not security critical AFAICT.
+> #2, #6 and #7 can go in without further coordination.
+>
+> Patches #3, #4 and #5 are only about using the same initialization style
+> for all zorro_device_id and can go in without coordination.
+>
+> Best regards
+> Uwe
+>
+> Uwe Kleine-K=C3=B6nig (The Capable Hub) (8):
+>   ata: pata_budda: Use named initializer for zorro_device_id
+>   scsi: Use named initializer for zorro_device_id
+>   net: Use named initializer for zorro_device_id arrays
+>   i2c: icy: Use named initializer for zorro_device_id arrays
+>   video: fm2fb: Use named initializer for zorro_device_id array
+>   zorro: Simplify storing pointers in device id struct
+>   scsi: zorro7xx: Make use of struct zorro_device_id::driver_data_ptr
+>   video: cirrusfb: Make use of struct zorro_device_id::driver_data_ptr
 
-Cc: stable@vger.kernel.org
-Fixes: dbf9bfe61571 ("[SCSI] pm8001: add SAS/SATA HBA driver")
-Co-developed-by: Igor Pylypiv <ipylypiv@google.com>
-Signed-off-by: Igor Pylypiv <ipylypiv@google.com>
-Signed-off-by: Ronja Meyer <rnj@google.com>
----
- drivers/scsi/pm8001/pm8001_hwi.c | 6 +++---
- drivers/scsi/pm8001/pm8001_hwi.h | 6 +++---
- drivers/scsi/pm8001/pm80xx_hwi.c | 6 +++---
- drivers/scsi/pm8001/pm80xx_hwi.h | 4 ++--
- 4 files changed, 11 insertions(+), 11 deletions(-)
+Gr{oetje,eeting}s,
 
-diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
-index fff8d877abb9..e90f2d98d8ed 100644
---- a/drivers/scsi/pm8001/pm8001_hwi.c
-+++ b/drivers/scsi/pm8001/pm8001_hwi.c
-@@ -3164,8 +3164,8 @@ hw_event_sas_phy_up(struct pm8001_hba_info *pm8001_ha, void *piomb)
- 	sas_notify_phy_event(&phy->sas_phy, PHYE_OOB_DONE, GFP_ATOMIC);
- 	spin_lock_irqsave(&phy->sas_phy.frame_rcvd_lock, flags);
- 	memcpy(phy->frame_rcvd, &pPayload->sas_identify,
--		sizeof(struct sas_identify_frame)-4);
--	phy->frame_rcvd_size = sizeof(struct sas_identify_frame) - 4;
-+		sizeof(struct sas_identify_frame_local));
-+	phy->frame_rcvd_size = sizeof(struct sas_identify_frame_local);
- 	pm8001_get_attached_sas_addr(phy, phy->sas_phy.attached_sas_addr);
- 	spin_unlock_irqrestore(&phy->sas_phy.frame_rcvd_lock, flags);
- 	if (pm8001_ha->flags == PM8001F_RUN_TIME)
-@@ -3208,7 +3208,7 @@ hw_event_sata_phy_up(struct pm8001_hba_info *pm8001_ha, void *piomb)
- 	phy->sas_phy.oob_mode = SATA_OOB_MODE;
- 	sas_notify_phy_event(&phy->sas_phy, PHYE_OOB_DONE, GFP_ATOMIC);
- 	spin_lock_irqsave(&phy->sas_phy.frame_rcvd_lock, flags);
--	memcpy(phy->frame_rcvd, ((u8 *)&pPayload->sata_fis - 4),
-+	memcpy(phy->frame_rcvd, &pPayload->sata_fis,
- 		sizeof(struct dev_to_host_fis));
- 	phy->frame_rcvd_size = sizeof(struct dev_to_host_fis);
- 	phy->identify.target_port_protocols = SAS_PROTOCOL_SATA;
-diff --git a/drivers/scsi/pm8001/pm8001_hwi.h b/drivers/scsi/pm8001/pm8001_hwi.h
-index f1ce8df082b0..395be4fdbf81 100644
---- a/drivers/scsi/pm8001/pm8001_hwi.h
-+++ b/drivers/scsi/pm8001/pm8001_hwi.h
-@@ -153,8 +153,8 @@ struct mpi_msg_hdr{
- struct phy_start_req {
- 	__le32	tag;
- 	__le32	ase_sh_lm_slr_phyid;
--	struct sas_identify_frame sas_identify;
--	u32	reserved[5];
-+	struct sas_identify_frame_local sas_identify;	/* _local to omit CRC field */
-+	u32	reserved[6];
- } __attribute__((packed, aligned(4)));
- 
- 
-@@ -229,7 +229,7 @@ struct hw_event_resp {
- 	__le32	lr_evt_status_phyid_portid;
- 	__le32	evt_param;
- 	__le32	npip_portstate;
--	struct sas_identify_frame	sas_identify;
-+	struct sas_identify_frame_local	sas_identify;	/* _local to omit CRC field */
- 	struct dev_to_host_fis	sata_fis;
- } __attribute__((packed, aligned(4)));
- 
-diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
-index 954f307352e6..03293e9b84e6 100644
---- a/drivers/scsi/pm8001/pm80xx_hwi.c
-+++ b/drivers/scsi/pm8001/pm80xx_hwi.c
-@@ -3241,8 +3241,8 @@ hw_event_sas_phy_up(struct pm8001_hba_info *pm8001_ha, void *piomb)
- 	sas_notify_phy_event(&phy->sas_phy, PHYE_OOB_DONE, GFP_ATOMIC);
- 	spin_lock_irqsave(&phy->sas_phy.frame_rcvd_lock, flags);
- 	memcpy(phy->frame_rcvd, &pPayload->sas_identify,
--		sizeof(struct sas_identify_frame)-4);
--	phy->frame_rcvd_size = sizeof(struct sas_identify_frame) - 4;
-+		sizeof(struct sas_identify_frame_local));
-+	phy->frame_rcvd_size = sizeof(struct sas_identify_frame_local);
- 	pm8001_get_attached_sas_addr(phy, phy->sas_phy.attached_sas_addr);
- 	spin_unlock_irqrestore(&phy->sas_phy.frame_rcvd_lock, flags);
- 	if (pm8001_ha->flags == PM8001F_RUN_TIME)
-@@ -3289,7 +3289,7 @@ hw_event_sata_phy_up(struct pm8001_hba_info *pm8001_ha, void *piomb)
- 	phy->sas_phy.oob_mode = SATA_OOB_MODE;
- 	sas_notify_phy_event(&phy->sas_phy, PHYE_OOB_DONE, GFP_ATOMIC);
- 	spin_lock_irqsave(&phy->sas_phy.frame_rcvd_lock, flags);
--	memcpy(phy->frame_rcvd, ((u8 *)&pPayload->sata_fis - 4),
-+	memcpy(phy->frame_rcvd, &pPayload->sata_fis,
- 		sizeof(struct dev_to_host_fis));
- 	phy->frame_rcvd_size = sizeof(struct dev_to_host_fis);
- 	phy->identify.target_port_protocols = SAS_PROTOCOL_SATA;
-diff --git a/drivers/scsi/pm8001/pm80xx_hwi.h b/drivers/scsi/pm8001/pm80xx_hwi.h
-index 2fa54b901a2e..41f10c970125 100644
---- a/drivers/scsi/pm8001/pm80xx_hwi.h
-+++ b/drivers/scsi/pm8001/pm80xx_hwi.h
-@@ -255,7 +255,7 @@ struct mpi_msg_hdr {
- struct phy_start_req {
- 	__le32	tag;
- 	__le32	ase_sh_lm_slr_phyid;
--	struct sas_identify_frame_local sas_identify; /* 28 Bytes */
-+	struct sas_identify_frame_local sas_identify;	/* _local to omit CRC field */
- 	__le32 spasti;
- 	u32	reserved[21];
- } __attribute__((packed, aligned(4)));
-@@ -331,7 +331,7 @@ struct hw_event_resp {
- 	__le32	lr_status_evt_portid;
- 	__le32	evt_param;
- 	__le32	phyid_npip_portstate;
--	struct sas_identify_frame	sas_identify;
-+	struct sas_identify_frame_local	sas_identify;	/* _local to omit CRC field */
- 	struct dev_to_host_fis	sata_fis;
- } __attribute__((packed, aligned(4)));
- 
+                        Geert
 
--- 
-2.54.0.746.g67dd491aae-goog
 
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k=
+.org
+
+In personal conversations with technical people, I call myself a hacker. Bu=
+t
+when I'm talking to journalists I just say "programmer" or something like t=
+hat.
+                                -- Linus Torvalds
