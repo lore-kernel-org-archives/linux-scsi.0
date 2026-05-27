@@ -1,151 +1,154 @@
-Received: from out-13.smtp.spacemail.com (out-13.smtp.spacemail.com [63.250.43.96])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from spam.asrmicro.com (asrmicro.com [210.13.118.86])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 94B803914FF;
-	Wed, 27 May 2026 11:05:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=63.250.43.96
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 96D033EE1D6;
+	Wed, 27 May 2026 11:24:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.13.118.86
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779879905; cv=none; b=AqT1U21bsJ4tJ3nzWtywvqoLr2AVPBbJAbOQu/xJQFnGG6HBuwlURj/uoEvF0uDXUL5hSsSE2CJ2mIiq+OAwWg24eCpdbMAkZ3uI5HSGlPYIGZrbm9DkAwSIN0/9hUtIXOLwIysntL8fiLELAUa6pcMnmENfpAkUmwfqquw4Ggs=
+	t=1779881061; cv=none; b=lqPlpNq3vlzD/acrZGhhzGV/atxMHXTNJWrkMozChYRbe2gO4ut8KT92+cWpy6oLLa8oxVTOVDKptfIbdG3cDkpU45bFzfonrV/uTRkiWoWYYcP3rF5Ch1FJDd/thX1an62e9gDz7A3r+dXfBo9ZM/2LP+YJqrgspPJ1bx4Vw80=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779879905; c=relaxed/simple;
-	bh=RFxwCps8BRo0X7Ta0ylRSygPBnYr60aPkBIthbUKDbs=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Oy+ECP3p/dGb4t0Nj5cHbMf8tkvAMcKSccsWP+Yh9y0ownMl7YMyHvJDhimdXzHbIc05uXIukX46igCeg53iuOo0WW3zxCSslPFlrgN0115z3Q7oPBJM3c4YtnTQKQIVWa1eyZEvPt3hNyJ6Wp6NxNxXhMlI0TY4QGCuiN3getI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=rexion.ai; spf=pass smtp.mailfrom=rexion.ai; dkim=fail (0-bit key) header.d=rexion.ai header.i=@rexion.ai header.b=Rx2XAw4e reason="key not found in DNS"; arc=none smtp.client-ip=63.250.43.96
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=rexion.ai
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rexion.ai
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=rexion.ai header.i=@rexion.ai header.b="Rx2XAw4e"
-Received: from Kyren (unknown [49.207.213.66])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mail.spacemail.com (Postfix) with ESMTPSA id 4gQRTS2sMkz8sWq;
-	Wed, 27 May 2026 10:59:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=rexion.ai;
-	s=spacemail; t=1779879584;
-	bh=DgDokx5pIAzNQ53sXah/UBDCt3R4wUhOvqyXIza65bI=;
-	h=From:To:Cc:Subject:Date:From;
-	b=Rx2XAw4eoq8Z2KPLh2pTGEvqZSYW4KJh8StEC5Wo5cla2t6eNVJDOKBrahImyNtr5
-	 H89keCEG4V2JSzgSBJq7SHrgTnouVGVc9CP0DnRv9t1kGfZXGgtrQE6Xrst+1KgUqV
-	 VYgv9kx+oYMmjP2ab6b+Fm6Q9MQ0ot3DGD9/WJbPDD9jzp0TJehelBPQOc3tbIhUqK
-	 73huw5rtNvtzyQeHEWizESIsEG5oqxN7aY6Wf+4TJ1VzAVQpIStdHLIL622s9JhK2E
-	 p0+rtVzXP9OWzH6x9S2No4F+xw9kRAeDp0EYk+crHk8Lkf2BbodzWYEwYiVz93mTki
-	 hHh5i3fJ2zojQ==
-From: Rahul Chandelkar <rc@rexion.ai>
-To: rc@rexion.ai,
-	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	Jens Axboe <axboe@kernel.dk>,
-	FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: linux-scsi@vger.kernel.org,
-	linux-block@vger.kernel.org,
-	io-uring@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org
-Subject: [PATCH] scsi: bsg: copy uring_cmd payload to prevent double-fetch from shared SQE
-Date: Wed, 27 May 2026 16:29:18 +0530
-Message-ID: <20260527105931.3950913-1-rc@rexion.ai>
-X-Mailer: git-send-email 2.54.0
+	s=arc-20240116; t=1779881061; c=relaxed/simple;
+	bh=VstbaORtbPZRsM0LAZ7qY2UgHW5+E4S29j1kvqewaLU=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=t25O/Fmhha0G/l1VLRJeKH9v6eP4i9iXxsGhYtYTxA1mkigunTeKdhfoazlV50M1upT/hR1bL0cPCLTrlrNSo+ZTNWYgE0v6ZVZnvtfhwB2N3nsrJTvvNslzpAOtT5BmkprPKTHlInlRX8vLu01jBoyg4kd9u0mPpz7lsdOa/pM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=asrmicro.com; spf=pass smtp.mailfrom=asrmicro.com; arc=none smtp.client-ip=210.13.118.86
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=asrmicro.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=asrmicro.com
+Received: from exch02.asrmicro.com (exch02.asrmicro.com [10.1.24.122])
+	by spam.asrmicro.com with ESMTPS id 64RBNO1g044600
+	(version=TLSv1 cipher=ECDHE-RSA-AES256-SHA bits=256 verify=FAIL);
+	Wed, 27 May 2026 19:23:24 +0800 (GMT-8)
+	(envelope-from hongjiefang@asrmicro.com)
+Received: from exch02.asrmicro.com (10.1.24.122) by exch02.asrmicro.com
+ (10.1.24.122) with Microsoft SMTP Server (TLS) id 15.0.847.32; Wed, 27 May
+ 2026 19:23:29 +0800
+Received: from exch02.asrmicro.com ([::1]) by exch02.asrmicro.com ([::1]) with
+ mapi id 15.00.0847.030; Wed, 27 May 2026 19:23:28 +0800
+From: =?utf-8?B?RmFuZyBIb25namllKOaWuea0quadsCk=?= <hongjiefang@asrmicro.com>
+To: Bart Van Assche <bvanassche@acm.org>,
+        "alim.akhtar@samsung.com"
+	<alim.akhtar@samsung.com>,
+        "avri.altman@wdc.com" <avri.altman@wdc.com>,
+        "James.Bottomley@HansenPartnership.com"
+	<James.Bottomley@HansenPartnership.com>,
+        "martin.petersen@oracle.com"
+	<martin.petersen@oracle.com>,
+        "peter.wang@mediatek.com"
+	<peter.wang@mediatek.com>,
+        "beanhuo@micron.com" <beanhuo@micron.com>
+CC: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH v1] ufs: core: complete wl runtime resume after SCSI EH
+Thread-Topic: [PATCH v1] ufs: core: complete wl runtime resume after SCSI EH
+Thread-Index: AQHc7VDa7XbUTpg5cEmDlfhToLay8bYhuYug
+Date: Wed, 27 May 2026 11:23:28 +0000
+Message-ID: <20e284b3ce2f4de78ed2ad9804b5910f@exch02.asrmicro.com>
+References: <20260526114941.667477-1-hongjiefang@asrmicro.com>
+ <606c4c21-bcf2-4ed5-9434-e7c70f541d7a@acm.org>
+In-Reply-To: <606c4c21-bcf2-4ed5-9434-e7c70f541d7a@acm.org>
+Accept-Language: zh-CN, en-US
+Content-Language: zh-CN
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Envelope-From: rc@rexion.ai
+X-DNSRBL: 
+X-SPAM-SOURCE-CHECK: pass
+X-MAIL:spam.asrmicro.com 64RBNO1g044600
 
-scsi_bsg_uring_cmd() and scsi_bsg_map_user_buffer() read bsg_uring_cmd
-fields directly from the shared mmap'd io_uring submission ring via
-io_uring_sqe128_cmd().  On the inline execution path, io_uring has not
-yet copied the SQE to kernel memory, so a concurrent userspace thread
-can modify fields between reads.
-
-cmd->request_len is read for the bounds check, for the cmd_len
-assignment, and for the copy_from_user length.  A racing thread can
-change request_len between the bounds check (passes with <= 32) and
-copy_from_user (uses the enlarged value), overflowing the 32-byte
-scmd->cmnd[] buffer into subsequent struct scsi_cmnd fields.
-
-scsi_bsg_map_user_buffer() independently re-derives its cmd pointer
-from the same shared SQE, re-reading dout_xfer_len, din_xfer_len,
-dout_xferp, and din_xferp, enabling direction confusion and buffer
-length races.
-
-Copy struct bsg_uring_cmd to a stack-local variable before use in both
-functions.  The pointer variable 'cmd' is redirected to the local copy
-so the rest of each function is unchanged.
-
-Tested with KASAN on QEMU (virtio-scsi, 2 vCPUs).  Without this fix,
-a two-thread race produces:
-
-  BUG: KASAN: wild-memory-access in scsi_queue_rq+0x4a3/0x58a0
-  Write of size 96 at addr dead000000001000 by task poc/67
-  Call Trace:
-   kasan_report+0xce/0x100
-   __asan_memset+0x23/0x50
-   scsi_queue_rq+0x4a3/0x58a0
-   scsi_bsg_uring_cmd+0x942/0x1570
-   io_uring_cmd+0x2f6/0x950
-   io_issue_sqe+0xe5/0x22d0
-
-Fixes: 7b6d3255e7f8 ("scsi: bsg: add io_uring passthrough handler")
-Cc: stable@vger.kernel.org
-Signed-off-by: Rahul Chandelkar <rc@rexion.ai>
----
- drivers/scsi/scsi_bsg.c | 23 ++++++++++++++++++-----
- 1 file changed, 18 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/scsi/scsi_bsg.c b/drivers/scsi/scsi_bsg.c
-index e80dec53174e..244740655eb0 100644
---- a/drivers/scsi/scsi_bsg.c
-+++ b/drivers/scsi/scsi_bsg.c
-@@ -78,13 +78,21 @@ static int scsi_bsg_map_user_buffer(struct request *req,
- 				    struct io_uring_cmd *ioucmd,
- 				    unsigned int issue_flags, gfp_t gfp_mask)
- {
--	const struct bsg_uring_cmd *cmd = io_uring_sqe128_cmd(ioucmd->sqe, struct bsg_uring_cmd);
--	bool is_write = cmd->dout_xfer_len > 0;
--	u64 buf_addr = is_write ? cmd->dout_xferp : cmd->din_xferp;
--	unsigned long buf_len = is_write ? cmd->dout_xfer_len : cmd->din_xfer_len;
-+	struct bsg_uring_cmd local_cmd;
-+	const struct bsg_uring_cmd *cmd;
-+	bool is_write;
-+	u64 buf_addr;
-+	unsigned long buf_len;
- 	struct iov_iter iter;
- 	int ret;
- 
-+	memcpy(&local_cmd, io_uring_sqe128_cmd(ioucmd->sqe, struct bsg_uring_cmd),
-+	       sizeof(local_cmd));
-+	cmd = &local_cmd;
-+	is_write = cmd->dout_xfer_len > 0;
-+	buf_addr = is_write ? cmd->dout_xferp : cmd->din_xferp;
-+	buf_len = is_write ? cmd->dout_xfer_len : cmd->din_xfer_len;
-+
- 	if (ioucmd->flags & IORING_URING_CMD_FIXED) {
- 		ret = io_uring_cmd_import_fixed(buf_addr, buf_len,
- 						is_write ? WRITE : READ,
-@@ -104,13 +112,18 @@ static int scsi_bsg_uring_cmd(struct request_queue *q, struct io_uring_cmd *iouc
- 			       unsigned int issue_flags, bool open_for_write)
- {
- 	struct scsi_bsg_uring_cmd_pdu *pdu = scsi_bsg_uring_cmd_pdu(ioucmd);
--	const struct bsg_uring_cmd *cmd = io_uring_sqe128_cmd(ioucmd->sqe, struct bsg_uring_cmd);
-+	struct bsg_uring_cmd local_cmd;
-+	const struct bsg_uring_cmd *cmd;
- 	struct scsi_cmnd *scmd;
- 	struct request *req;
- 	blk_mq_req_flags_t blk_flags = 0;
- 	gfp_t gfp_mask = GFP_KERNEL;
- 	int ret;
- 
-+	memcpy(&local_cmd, io_uring_sqe128_cmd(ioucmd->sqe, struct bsg_uring_cmd),
-+	       sizeof(local_cmd));
-+	cmd = &local_cmd;
-+
- 	if (cmd->protocol != BSG_PROTOCOL_SCSI ||
- 	    cmd->subprotocol != BSG_SUB_PROTOCOL_SCSI_CMD)
- 		return -EINVAL;
--- 
-2.54.0
-
+DQo+IEZyb206IEJhcnQgVmFuIEFzc2NoZSBbbWFpbHRvOmJ2YW5hc3NjaGVAYWNtLm9yZ10NCj4g
+U2VudDogV2VkbmVzZGF5LCBNYXkgMjcsIDIwMjYgNDo0NyBBTQ0KPiBUbzogRmFuZyBIb25namll
+KOaWuea0quadsCkgPGhvbmdqaWVmYW5nQGFzcm1pY3JvLmNvbT47DQo+IGFsaW0uYWtodGFyQHNh
+bXN1bmcuY29tOyBhdnJpLmFsdG1hbkB3ZGMuY29tOw0KPiBKYW1lcy5Cb3R0b21sZXlASGFuc2Vu
+UGFydG5lcnNoaXAuY29tOyBtYXJ0aW4ucGV0ZXJzZW5Ab3JhY2xlLmNvbTsNCj4gcGV0ZXIud2Fu
+Z0BtZWRpYXRlay5jb207IGJlYW5odW9AbWljcm9uLmNvbQ0KPiBDYzogbGludXgtc2NzaUB2Z2Vy
+Lmtlcm5lbC5vcmc7IGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmcNCj4gU3ViamVjdDogUmU6
+IFtQQVRDSCB2MV0gdWZzOiBjb3JlOiBjb21wbGV0ZSB3bCBydW50aW1lIHJlc3VtZSBhZnRlciBT
+Q1NJIEVIDQo+IA0KPiBPbiA1LzI2LzI2IDQ6NDkgQU0sIEhvbmdqaWUgRmFuZyB3cm90ZToNCj4g
+PiBkaWZmIC0tZ2l0IGEvZHJpdmVycy91ZnMvY29yZS91ZnNoY2QuYyBiL2RyaXZlcnMvdWZzL2Nv
+cmUvdWZzaGNkLmMNCj4gPiBpbmRleCBjM2YwODk1N2QxNzkuLmU3NTE3Y2YyM2YwNiAxMDA2NDQN
+Cj4gPiAtLS0gYS9kcml2ZXJzL3Vmcy9jb3JlL3Vmc2hjZC5jDQo+ID4gKysrIGIvZHJpdmVycy91
+ZnMvY29yZS91ZnNoY2QuYw0KPiA+IEBAIC0xMDM2OCw2ICsxMDM2OCwyMiBAQCBzdGF0aWMgaW50
+IF9fdWZzaGNkX3dsX3N1c3BlbmQoc3RydWN0DQo+IHVmc19oYmEgKmhiYSwgZW51bSB1ZnNfcG1f
+b3AgcG1fb3ApDQo+ID4gICB9DQo+ID4NCj4gPiAgICNpZmRlZiBDT05GSUdfUE0NCj4gPiArc3Rh
+dGljIGludCB1ZnNoY2Rfd2xfcmVzdW1lX3BtX3JlY292ZXJlZChzdHJ1Y3QgdWZzX2hiYSAqaGJh
+KQ0KPiA+ICt7DQo+ID4gKwlpbnQgcmV0ID0gMDsNCj4gPiArCXN0cnVjdCBzY3NpX2RldmljZSAq
+c2RwID0gaGJhLT51ZnNfZGV2aWNlX3dsdW47DQo+ID4gKw0KPiA+ICsJaWYgKCFzZHAgfHwgIXNj
+c2lfYmxvY2tfd2hlbl9wcm9jZXNzaW5nX2Vycm9ycyhzZHApKQ0KPiA+ICsJCXJldHVybiAwOw0K
+PiA+ICsNCj4gPiArCWlmIChoYmEtPnVmc2hjZF9zdGF0ZSA9PSBVRlNIQ0RfU1RBVEVfT1BFUkFU
+SU9OQUwgJiYNCj4gPiArCSAgICB1ZnNoY2RfaXNfbGlua19hY3RpdmUoaGJhKSAmJg0KPiA+ICsJ
+ICAgIHVmc2hjZF9pc191ZnNfZGV2X2FjdGl2ZShoYmEpKQ0KPiA+ICsJCXJldCA9IDE7DQo+ID4g
+Kw0KPiA+ICsJcmV0dXJuIHJldDsNCj4gPiArfQ0KPiA+ICsNCj4gPiAgIHN0YXRpYyBpbnQgX191
+ZnNoY2Rfd2xfcmVzdW1lKHN0cnVjdCB1ZnNfaGJhICpoYmEsIGVudW0gdWZzX3BtX29wDQo+IHBt
+X29wKQ0KPiA+ICAgew0KPiA+ICAgCWludCByZXQ7DQo+ID4gQEAgLTEwNDIyLDYgKzEwNDM4LDkg
+QEAgc3RhdGljIGludCBfX3Vmc2hjZF93bF9yZXN1bWUoc3RydWN0IHVmc19oYmENCj4gKmhiYSwg
+ZW51bSB1ZnNfcG1fb3AgcG1fb3ApDQo+ID4NCj4gPiAgIAlpZiAoIXVmc2hjZF9pc191ZnNfZGV2
+X2FjdGl2ZShoYmEpKSB7DQo+ID4gICAJCXJldCA9IHVmc2hjZF9zZXRfZGV2X3B3cl9tb2RlKGhi
+YSwNCj4gVUZTX0FDVElWRV9QV1JfTU9ERSk7DQo+ID4gKwkJaWYgKHBtX29wID09IFVGU19SVU5U
+SU1FX1BNICYmIHJldCA9PSAtRUlPICYmDQo+ID4gKwkJICAgIHVmc2hjZF93bF9yZXN1bWVfcG1f
+cmVjb3ZlcmVkKGhiYSkpDQo+ID4gKwkJCXJldCA9IDA7DQo+ID4gICAJCWlmIChyZXQpDQo+ID4g
+ICAJCQlnb3RvIHNldF9vbGRfbGlua19zdGF0ZTsNCj4gPiAgIAkJdWZzaGNkX3NldF90aW1lc3Rh
+bXBfYXR0cihoYmEpOw0KPiANCj4gVGhpcyBjaGFuZ2UgaW5jcmVhc2VzIHRoZSBjb21wbGV4aXR5
+IG9mIHRoZSBVRlMgZHJpdmVyIHRvbyBtdWNoLiBQbGVhc2UNCj4gY29uc2lkZXIgYnVpbGRpbmcg
+YSBzb2x1dGlvbiBmb3IgdGhpcyBpc3N1ZSBvbiB0b3Agb2YgdGhlICh1bnRlc3RlZCkNCj4gcGF0
+Y2ggYmVsb3cuIFRoZSBwYXRjaCBiZWxvdyBwcmV2ZW50cyB0aGF0IHRoZSBTQ1NJIEVIIGlzIGFj
+dGl2YXRlZCBpZiBhDQo+IFNUQVJUIFNUT1AgVU5JVCBjb21tYW5kIHRpbWVzIG91dDoNCj4gDQo+
+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3Vmcy9jb3JlL3Vmc2hjZC5jIGIvZHJpdmVycy91ZnMvY29y
+ZS91ZnNoY2QuYw0KPiBpbmRleCA5ZTAzMzYwOThlMjYuLjRiZTU0NTNlZmIzNCAxMDA2NDQNCj4g
+LS0tIGEvZHJpdmVycy91ZnMvY29yZS91ZnNoY2QuYw0KPiArKysgYi9kcml2ZXJzL3Vmcy9jb3Jl
+L3Vmc2hjZC5jDQo+IEBAIC05NDkxLDcgKzk0OTEsNyBAQCBzdGF0aWMgZW51bSBzY3NpX3RpbWVv
+dXRfYWN0aW9uDQo+IHVmc2hjZF9laF90aW1lZF9vdXQoc3RydWN0IHNjc2lfY21uZCAqc2NtZCkN
+Cj4gICB7DQo+ICAgCXN0cnVjdCB1ZnNfaGJhICpoYmEgPSBzaG9zdF9wcml2KHNjbWQtPmRldmlj
+ZS0+aG9zdCk7DQo+IA0KPiAtCWlmICghaGJhLT5zeXN0ZW1fc3VzcGVuZGluZykgew0KPiArCWlm
+ICghaGJhLT5wbV9vcF9pbl9wcm9ncmVzcykgew0KPiAgIAkJLyogQWN0aXZhdGUgdGhlIGVycm9y
+IGhhbmRsZXIgaW4gdGhlIFNDU0kgY29yZS4gKi8NCj4gICAJCXJldHVybiBTQ1NJX0VIX05PVF9I
+QU5ETEVEOw0KPiAgIAl9DQoNClRoYW5rcyBmb3IgdGhlIHN1Z2dlc3Rpb24uIEkgYWdyZWUgdGhh
+dCBwcmV2ZW50aW5nIHRoZSBQTSBTVEFSVCBTVE9QIFVOSVQNCnRpbWVvdXQgZnJvbSBlbnRlcmlu
+ZyB0aGUgcmVndWxhciBTQ1NJIEVIIHBhdGggaXMgY2xlYW5lciB0aGFuIGhhbmRsaW5nDQp0aGUg
+cmFjZSBhZnRlciBzY3NpX2V4ZWN1dGVfY21kKCkgcmV0dXJucy4NCg0KSSBsb29rZWQgY2xvc2Vy
+IGF0IHRoZSBkaXJlY3QgdWZzaGNkX2xpbmtfcmVjb3ZlcnkoKSBhcHByb2FjaCBmcm9tDQp1ZnNo
+Y2RfZWhfdGltZWRfb3V0KCkuIFRoZXJlIGlzIG9uZSBkZXRhaWwgdGhhdCBJIHRoaW5rIG5lZWRz
+IHRvIGJlDQpoYW5kbGVkLg0KDQpGb3IgdGhlIGxlZ2FjeSBzaW5nbGUtZG9vcmJlbGwgcGF0aCwg
+Zm9yY2VfY29tcGw9dHJ1ZSBjdXJyZW50bHkNCnN0aWxsIGNhbGxzIHVmc2hjZF90cmFuc2Zlcl9y
+ZXFfY29tcGwoKSwgd2hpY2ggb25seSBjb21wbGV0ZXMgcmVxdWVzdHMgZm9yDQp3aGljaCB0aGUg
+ZG9vcmJlbGwgYml0IGhhcyBhbHJlYWR5IGJlZW4gY2xlYXJlZDoNCiAgY29tcGxldGVkX3JlcXMg
+PSB+dHJfZG9vcmJlbGwgJiBoYmEtPm91dHN0YW5kaW5nX3JlcXM7DQoNClNvIGlmIHRoZSB0aW1l
+ZC1vdXQgU1NVIGlzIHN0aWxsIG1hcmtlZCBpbiBib3RoIGhiYS0+b3V0c3RhbmRpbmdfcmVxcyBh
+bmQNCnRoZSB0cmFuc2ZlciByZXF1ZXN0IGRvb3JiZWxsIGFmdGVyIHVmc2hjZF9oYmFfc3RvcCgp
+LCBpdCB3aWxsIG5vdCBiZQ0KY29tcGxldGVkIGJ5IHVmc2hjZF9jb21wbGV0ZV9yZXF1ZXN0cyho
+YmEsIHRydWUpLiBSZXR1cm5pbmcNClNDU0lfRUhfUkVTRVRfVElNRVIgaW4gdGhhdCBzdGF0ZSB3
+b3VsZCBvbmx5IHJlc3RhcnQgdGhlIHJlcXVlc3QgdGltZXIgYW5kDQp3b3VsZCBub3Qgd2FrZSB0
+aGUgYmxrX2V4ZWN1dGVfcnEoKSB3YWl0ZXIuDQoNCg0KDQo+IEBAIC0xMDU0Myw3ICsxMDU0Myw2
+IEBAIHN0YXRpYyBpbnQgdWZzaGNkX3dsX3N1c3BlbmQoc3RydWN0IGRldmljZSAqZGV2KQ0KPiAN
+Cj4gICAJaGJhID0gc2hvc3RfcHJpdihzZGV2LT5ob3N0KTsNCj4gICAJZG93bigmaGJhLT5ob3N0
+X3NlbSk7DQo+IC0JaGJhLT5zeXN0ZW1fc3VzcGVuZGluZyA9IHRydWU7DQo+IA0KPiAgIAlpZiAo
+cG1fcnVudGltZV9zdXNwZW5kZWQoZGV2KSkNCj4gICAJCWdvdG8gb3V0Ow0KPiBAQCAtMTA1ODUs
+NyArMTA1ODQsNiBAQCBzdGF0aWMgaW50IHVmc2hjZF93bF9yZXN1bWUoc3RydWN0IGRldmljZSAq
+ZGV2KQ0KPiAgIAkJaGJhLT5jdXJyX2Rldl9wd3JfbW9kZSwgaGJhLT51aWNfbGlua19zdGF0ZSk7
+DQo+ICAgCWlmICghcmV0KQ0KPiAgIAkJaGJhLT5pc19zeXNfc3VzcGVuZGVkID0gZmFsc2U7DQo+
+IC0JaGJhLT5zeXN0ZW1fc3VzcGVuZGluZyA9IGZhbHNlOw0KPiAgIAl1cCgmaGJhLT5ob3N0X3Nl
+bSk7DQo+ICAgCXJldHVybiByZXQ7DQo+ICAgfQ0KPiBkaWZmIC0tZ2l0IGEvaW5jbHVkZS91ZnMv
+dWZzaGNkLmggYi9pbmNsdWRlL3Vmcy91ZnNoY2QuaA0KPiBpbmRleCAzZWFhZTA4MjMyOWMuLjI0
+OGQwYTViZWY0MCAxMDA2NDQNCj4gLS0tIGEvaW5jbHVkZS91ZnMvdWZzaGNkLmgNCj4gKysrIGIv
+aW5jbHVkZS91ZnMvdWZzaGNkLmgNCj4gQEAgLTEwMjksOCArMTAyOSw2IEBAIGVudW0gdWZzaGNk
+X21jcV9vcHIgew0KPiAgICAqIEBjYXBzOiBiaXRtYXNrIHdpdGggaW5mb3JtYXRpb24gYWJvdXQg
+VUZTIGNvbnRyb2xsZXIgY2FwYWJpbGl0aWVzDQo+ICAgICogQGRldmZyZXE6IGZyZXF1ZW5jeSBz
+Y2FsaW5nIGluZm9ybWF0aW9uIG93bmVkIGJ5IHRoZSBkZXZmcmVxIGNvcmUNCj4gICAgKiBAY2xr
+X3NjYWxpbmc6IGZyZXF1ZW5jeSBzY2FsaW5nIGluZm9ybWF0aW9uIG93bmVkIGJ5IHRoZSBVRlMg
+ZHJpdmVyDQo+IC0gKiBAc3lzdGVtX3N1c3BlbmRpbmc6IHN5c3RlbSBzdXNwZW5kIGhhcyBiZWVu
+IHN0YXJ0ZWQgYW5kIHN5c3RlbQ0KPiByZXN1bWUgaGFzDQo+IC0gKglub3QgeWV0IGZpbmlzaGVk
+Lg0KPiAgICAqIEBpc19zeXNfc3VzcGVuZGVkOiBVRlMgZGV2aWNlIGhhcyBiZWVuIHN1c3BlbmRl
+ZCBiZWNhdXNlIG9mIHN5c3RlbQ0KPiBzdXNwZW5kDQo+ICAgICogQHVyZ2VudF9ia29wc19sdmw6
+IGtlZXBzIHRyYWNrIG9mIHVyZ2VudCBia29wcyBsZXZlbCBmb3IgZGV2aWNlDQo+ICAgICogQGlz
+X3VyZ2VudF9ia29wc19sdmxfY2hlY2tlZDoga2VlcHMgdHJhY2sgaWYgdGhlIHVyZ2VudCBia29w
+cyBsZXZlbCBmb3INCj4gQEAgLTEyMDYsNyArMTIwNCw2IEBAIHN0cnVjdCB1ZnNfaGJhIHsNCj4g
+DQo+ICAgCXN0cnVjdCBkZXZmcmVxICpkZXZmcmVxOw0KPiAgIAlzdHJ1Y3QgdWZzX2Nsa19zY2Fs
+aW5nIGNsa19zY2FsaW5nOw0KPiAtCWJvb2wgc3lzdGVtX3N1c3BlbmRpbmc7DQo+ICAgCWJvb2wg
+aXNfc3lzX3N1c3BlbmRlZDsNCj4gDQo+ICAgCWVudW0gYmtvcHNfc3RhdHVzIHVyZ2VudF9ia29w
+c19sdmw7DQo+IA0KPiBUaGFua3MsDQo+IA0KPiBCYXJ0Lg0KDQoNCkJlc3QuDQo=
