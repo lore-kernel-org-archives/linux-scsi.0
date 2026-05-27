@@ -1,36 +1,32 @@
 Received: from cstnet.cn (smtp25.cstnet.cn [159.226.251.25])
 	(using TLSv1.2 with cipher DHE-RSA-AES256-SHA (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E12A280318;
-	Wed, 27 May 2026 10:10:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 368073E3D86;
+	Wed, 27 May 2026 10:38:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.226.251.25
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779876617; cv=none; b=HFr+wn8sFaTuJJw3AB7CXI6ImCUEkZW2UY+Z6kcJbPAg1p6veDePsopqe2rCXpkqxAj2Izsm740qdcUreP56UpKUU6pD/elbp4S9ePZHZsrHmzQ3m5EcaFumazc1Wvo5aRAYdt8rXV1ZRDXL3zswku07Bky/XLin4bN+baDInZ8=
+	t=1779878328; cv=none; b=dpcNRcuXxFAR+ppkFpqUIJxoYr43a8cAb7Lt4XdPiKm5yqfM6m9VKili0p8D6tBA6MSUE0mym7Jsn4ym/pkKN/a+79yZkFHJfw8e7NF1NSMklXZv40eOj3dI/t1kSNdUTsFdk3HRMBmSxCRMtjZ+KpFArr6AeUw3fciyk6K4sKc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779876617; c=relaxed/simple;
-	bh=lFDe5C0ViBHCtU63G+Iu4849aG/k7gBGP5dWgk11pLQ=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=CZxOv2pvJaN3x0J/yxa6I9Ob7FU/xQqFbi5nGkb2xRYnTd5X3ieMWFV3BcnhxjVyCEpEa6FUGaL0PHgPCzBDi3GHp2HF7j40zWvjs4zEyzX+0fMImwXRWRMxZ94m2A+GPV41Oe6b4ARg4CBUhRDdnTnEt2ewydOWRUU7owE1Rj4=
+	s=arc-20240116; t=1779878328; c=relaxed/simple;
+	bh=xvVfFGqu0pRxJc8OdISO4s9Ig358JwKumzrKecXeUX8=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=In/EFu0zB4zoeYKf8I3kGU+EMSRJEAKp48pb9Opo72XCRpdSn7bUxG13HusUf4DMQu5eKt7XCvaFMjytatWzr4kFtcj8UbjiPYm1G/w+MY2tnOkdVbn1nL9VCqcrajLUlgxCbOqu6rNmtoiBCByGcyYtpnGawyDSTER8ujrywkU=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn; spf=pass smtp.mailfrom=iscas.ac.cn; arc=none smtp.client-ip=159.226.251.25
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iscas.ac.cn
 Received: from dfae2b116770.home.arpa (unknown [36.110.52.3])
-	by APP-05 (Coremail) with SMTP id zQCowAC3Gt7twhZqvXSLEQ--.67S2;
-	Wed, 27 May 2026 18:09:49 +0800 (CST)
+	by APP-05 (Coremail) with SMTP id zQCowAD3fACuyRZq6N+LEQ--.1041S2;
+	Wed, 27 May 2026 18:38:38 +0800 (CST)
 From: Wentao Liang <vulab@iscas.ac.cn>
-To: Ram Vegesna <ram.vegesna@broadcom.com>,
-	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: Wentao Liang <vulab@iscas.ac.cn>,
-	Daniel Wagner <dwagner@suse.de>,
-	Kees Cook <kees@kernel.org>,
-	Vitaliy Shevtsov <v.shevtsov@mt-integration.ru>,
+To: "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: Kees Cook <kees@kernel.org>,
+	Wentao Liang <vulab@iscas.ac.cn>,
 	linux-scsi@vger.kernel.org,
 	target-devel@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
-Subject: [PATCH] scsi: elx: efct: fix IO refcount leak in efct_hw_io_abort()
-Date: Wed, 27 May 2026 10:09:35 +0000
-Message-Id: <20260527100935.868042-1-vulab@iscas.ac.cn>
+Subject: [PATCH] target: iscsi: cxgbit: fix cnp kref leak in __cxgbit_free_cdev_np()
+Date: Wed, 27 May 2026 10:38:23 +0000
+Message-Id: <20260527103823.869792-1-vulab@iscas.ac.cn>
 X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -39,50 +35,61 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:zQCowAC3Gt7twhZqvXSLEQ--.67S2
-X-Coremail-Antispam: 1UD129KBjvdXoW7XrWfCF48ZrWrGFyUXr1kKrg_yoWkAFc_C3
-	WSqrn3u34rKF48Kr1xGrZrZrsIkF4DW340qF4FgFySgF48trWDAr1UurZ3JrW2yw4vyF95
-	Aw18JF4UCw13XjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUIcSsGvfJTRUUUb38FF20E14v26r4j6ryUM7CY07I20VC2zVCF04k26cxKx2IYs7xG
-	6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
-	A2z4x0Y4vE2Ix0cI8IcVAFwI0_Xr0_Ar1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr0_
-	Cr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_GcCE3s
-	1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E2Ix0
-	cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r4j6F4UMcvjeVCFs4IE7xkEbVWUJVW8Jw
-	ACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2Y2ka
-	0xkIwI1lc7CjxVAaw2AFwI0_Jw0_GFyl42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7
-	v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF
-	1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIx
-	AIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI
-	42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWI
-	evJa73UjIFyTuYvjfU52NtDUUUU
-X-CM-SenderInfo: pyxotu46lvutnvoduhdfq/1tbiCRAAA2oWibzwXwAAs8
+X-CM-TRANSID:zQCowAD3fACuyRZq6N+LEQ--.1041S2
+X-Coremail-Antispam: 1UD129KBjvJXoW7tF47Wr1xZr4kZr1UArWfuFg_yoW8Gw4rpF
+	40kFyUJr1UJ3y3Kr18Jw4I9FyxZanIyrW3C348CwsY9w4Y9ryDKFyayw42qay5Crykur43
+	Xan8AryUGryqy37anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUkl14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26r4j6ryUM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4j
+	6F4UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v26rxl6s
+	0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xII
+	jxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVW8JVWxJwAm72CE4IkC6x0Yz7v_Jr0_Gr
+	1lF7xvr2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7MxkF7I0En4kS14v26r12
+	6r1DMxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI
+	0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUAVWUtwCIc40Y
+	0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxV
+	WUJVW8JwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1l
+	IxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7VUjJ73PUUUU
+	U==
+X-CM-SenderInfo: pyxotu46lvutnvoduhdfq/1tbiBwwAA2oWirr+lwAAst
 
-efct_hw_io_abort() calls efct_hw_io_alloc() which initializes the IO
-reference counter to 1. On the error path where the abort operation
-fails after IO allocation, the function returns without calling
-kref_put() to release the IO reference, leaking the refcount.
+__cxgbit_free_cdev_np() calls cxgbit_get_cnp() which takes a kref
+reference on the cnp structure. This reference is only released on
+the immediate error path after cxgbit_get_cnp(). On the timeout path
+and the normal completion path that successfully processes the NP,
+the reference is never released via cxgbit_put_cnp(), leaking the
+kref.
 
-Add kref_put() on the error path to properly release the reference.
+Add cxgbit_put_cnp(cnp) on the timeout and success paths to properly
+release the kref reference.
 
-Fixes: 63de51327a64 ("scsi: elx: efct: Hardware I/O and SGL initialization")
 Cc: stable@vger.kernel.org
+Fixes: 9730ffcb8957 ("cxgbit: add files for cxgbit.ko")
 Signed-off-by: Wentao Liang <vulab@iscas.ac.cn>
 ---
- drivers/scsi/elx/efct/efct_hw.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/target/iscsi/cxgbit/cxgbit_cm.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/scsi/elx/efct/efct_hw.c b/drivers/scsi/elx/efct/efct_hw.c
-index 1838032f6486..4ecd6f4165f4 100644
---- a/drivers/scsi/elx/efct/efct_hw.c
-+++ b/drivers/scsi/elx/efct/efct_hw.c
-@@ -1997,6 +1997,7 @@ efct_hw_io_abort(struct efct_hw *hw, struct efct_hw_io *io_to_abort,
- 	wqcb = efct_hw_reqtag_alloc(hw, efct_hw_wq_process_abort, io_to_abort);
- 	if (!wqcb) {
- 		efc_log_err(hw->os, "can't allocate request tag\n");
-+		kref_put(&io_to_abort->ref, io_to_abort->release);
- 		return -ENOSPC;
- 	}
+diff --git a/drivers/target/iscsi/cxgbit/cxgbit_cm.c b/drivers/target/iscsi/cxgbit/cxgbit_cm.c
+index 146705845fa3..11149d73c844 100644
+--- a/drivers/target/iscsi/cxgbit/cxgbit_cm.c
++++ b/drivers/target/iscsi/cxgbit/cxgbit_cm.c
+@@ -545,6 +545,7 @@ __cxgbit_free_cdev_np(struct cxgbit_device *cdev, struct cxgbit_np *cnp)
+ 	ret = cxgbit_wait_for_reply(cdev, &cnp->com.wr_wait,
+ 				    0, 10, __func__);
+ 	if (ret == -ETIMEDOUT)
++		cxgbit_put_cnp(cnp);
+ 		return ret;
+ 
+ 	if (ipv6 && cnp->com.cdev) {
+@@ -558,6 +559,7 @@ __cxgbit_free_cdev_np(struct cxgbit_device *cdev, struct cxgbit_np *cnp)
+ 
+ 	cxgb4_free_stid(cdev->lldi.tids, stid,
+ 			cnp->com.local_addr.ss_family);
++	cxgbit_put_cnp(cnp);
+ 	return 0;
+ }
  
 -- 
 2.34.1
