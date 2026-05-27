@@ -1,189 +1,104 @@
-Received: from mailout2.samsung.com (mailout2.samsung.com [203.254.224.25])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ABEF43BFACE
-	for <linux-scsi@vger.kernel.org>; Wed, 27 May 2026 07:22:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.25
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F3D723C943B;
+	Wed, 27 May 2026 07:43:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779866562; cv=none; b=srU+NHqza9eAN6Qw4q2wYQ+8j0QnLprovXHRVq9HdKD7ErRTIGXa0/PoVOvshdCSHJO6hlo5RZL46N1cWr7serXTy7YocFF/hv7e1txxRU//GJMY6KxMn9XqZaweC/PnyjeyNTvdlF4DEkPUR51tRl48k+oYVvAuNIxT6r6ePqw=
+	t=1779867783; cv=none; b=r9K1305kFwrOoId8T8MMJYjQN0/Yc0rY25EVOtHeTMGuO7d8zgkr6gqcbXaSKvwm0YtzIefsoZssdEnFxFbxfILrB2ExX7sdwOKsXXL0xmgO3seT0oC9cIGu9sKQV5ehdNT8bhNx1NclL2dJW3xkMoTH84mSHAp7BFuO2qyYZT0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779866562; c=relaxed/simple;
-	bh=DW1k08rXTsFZIW2DKskLR0WlqMSnA83Mw2P+9Vmq7A0=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type:
-	 References; b=LIrRP+Ueelxn0tXRi87E/utlzJ6U/oXwldJXJ0beKQQ1kbrJQyn9YGCfj0ImrHSyW7ysDZTSWsJZu5sZH7aEo7vlunfJKmzJnwBAth1tTK/hTV3UQsImuAhSkYjEyp+XX0vNkkLHNCLabrsx7rta98JRO68U/temydPZgp0xETA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=mqfAfx5O; arc=none smtp.client-ip=203.254.224.25
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+	s=arc-20240116; t=1779867783; c=relaxed/simple;
+	bh=klF5ZMVluVPlXQqUygeOot5OisfLZO2JpSeb3OMva2w=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=q684ISHc6avS30vOsy5rcogh90EYZ+DpqyQw7TTTCjJ8hGfRmDW5NcTBxyMpu2VsTTGgVvgukLl4jPfID8qGLY3IfgH1RZSkDc+CYH01Ij+b0QXH8eP250kxbbXZL7oiKSnNEzywsf2APVD1FlxzCxwX89O90+Qcd43ciszmy30=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Bs+lCfYy; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="mqfAfx5O"
-Received: from epcas1p1.samsung.com (unknown [182.195.41.45])
-	by mailout2.samsung.com (KnoxPortal) with ESMTP id 20260527072232epoutp02778a9015d3dd6d54fabfab9762c3843d~zWzMnG5QB1404314043epoutp02k
-	for <linux-scsi@vger.kernel.org>; Wed, 27 May 2026 07:22:32 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20260527072232epoutp02778a9015d3dd6d54fabfab9762c3843d~zWzMnG5QB1404314043epoutp02k
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1779866553;
-	bh=wHKMTcKtGx/5tv8dh5v1S5wv2HCfPmN2uOlQVwpbV5o=;
-	h=From:To:Cc:Subject:Date:References:From;
-	b=mqfAfx5OKs59JyIXZXyAIqkKmcOi4x8WVh/whNMEsyWTN6Q7Jto9xWzGyoFKlByA0
-	 2b+VfhY+adFLJyZy10iSCI/MHGkN8TwTpNyUn0rIvyYrGfj9c4D21Xjw2liyzUCURq
-	 cARVCpQKJ43hNuZOZ6aY+iGlTMe2JqE8x89ZGe2s=
-Received: from epsnrtp04.localdomain (unknown [182.195.42.156]) by
-	epcas1p1.samsung.com (KnoxPortal) with ESMTPS id
-	20260527072232epcas1p191f854302c2716b2c1292b1eb6735a3e~zWzMGy7lE2834528345epcas1p1S;
-	Wed, 27 May 2026 07:22:32 +0000 (GMT)
-Received: from epcas1p4.samsung.com (unknown [182.195.38.115]) by
-	epsnrtp04.localdomain (Postfix) with ESMTP id 4gQLfw1XbRz6B9m6; Wed, 27 May
-	2026 07:22:32 +0000 (GMT)
-Received: from epsmtip1.samsung.com (unknown [182.195.34.30]) by
-	epcas1p3.samsung.com (KnoxPortal) with ESMTPA id
-	20260527072231epcas1p308649370c22bbf30eb2381abf6058db6~zWzLcdkzn1789617896epcas1p3v;
-	Wed, 27 May 2026 07:22:31 +0000 (GMT)
-Received: from cw9316lee.. (unknown [10.253.101.98]) by epsmtip1.samsung.com
-	(KnoxPortal) with ESMTPA id
-	20260527072231epsmtip1c69667ab36882a5c853dc552f816f0f1~zWzLX1TWg2850128501epsmtip1F;
-	Wed, 27 May 2026 07:22:31 +0000 (GMT)
-From: Chanwoo Lee <cw9316.lee@samsung.com>
-To: ulf.hansson@linaro.org, alim.akhtar@samsung.com, avri.altman@wdc.com,
-	bvanassche@acm.org, James.Bottomley@HansenPartnership.com,
-	martin.petersen@oracle.com, peter.wang@mediatek.com,
-	vamshigajjela@google.com, alok.a.tiwari@oracle.comm, beanhuo@micron.com,
-	can.guo@oss.qualcomm.com, adrian.hunter@intel.com,
-	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Chanwoo Lee <cw9316.lee@samsung.com>
-Subject: [PATCH] scsi: ufs: core: Fix NULL pointer dereference in
- scsi_cmd_priv() calls
-Date: Wed, 27 May 2026 16:22:28 +0900
-Message-ID: <20260527072228.271542-1-cw9316.lee@samsung.com>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Bs+lCfYy"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6EE1B1F000E9;
+	Wed, 27 May 2026 07:42:59 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1779867781;
+	bh=L4l/SWpNgNVYP85CML5uEJDa5fjqq3vqghd2CxOwqzo=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=Bs+lCfYyteZpYpfPKKTQJYgH8iKKRRnsWtk3P4WlmOY5BEYIW0oiTZB3V8BDD1+XT
+	 Jqm7TGqf505o9qc+MuEBF1K1Fv0vwRCmjFThAjleGzQH1tfTHu81OYp/YnVG/K219F
+	 537D4AuSuPyy42ibo7p0Pc3cRLlGbavYFu/7jAiTNtls7mGuKv9jCntOUC7vUR3VcO
+	 s3OXpF3UqOrWoQSvNAYXT4qvPXppCNK70zbns+O1NCO7aaNfpyxLtQOrAyOJRf6zAq
+	 vLyZXjs13NeC3zTnWfGs42y6i7g0hpRsnPaOmKz/Xve4/Z6C2RcXh5ji3OKfvOLO7r
+	 VxI6hMWmDqj9Q==
+Date: Wed, 27 May 2026 09:42:56 +0200
+From: Niklas Cassel <cassel@kernel.org>
+To: Uwe =?utf-8?Q?Kleine-K=C3=B6nig_=28The_Capable_Hub=29?= <u.kleine-koenig@baylibre.com>
+Cc: Geert Uytterhoeven <geert@linux-m68k.org>,
+	Damien Le Moal <dlemoal@kernel.org>,
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	linux-ide@vger.kernel.org, linux-m68k@lists.linux-m68k.org,
+	linux-kernel@vger.kernel.org,
+	"Christian A. Ehrhardt" <christian.ehrhardt@codasip.com>,
+	"Christian A. Ehrhardt" <lk@c--e.de>, linux-scsi@vger.kernel.org
+Subject: Re: [PATCH v1 1/8] ata: pata_budda: Use named initializer for
+ zorro_device_id
+Message-ID: <ahaggIq9eD8UjONu@ryzen>
+References: <cover.1779803053.git.u.kleine-koenig@baylibre.com>
+ <a20f52aeee9dfcacfaea43ff280fa1867878cbbe.1779803053.git.u.kleine-koenig@baylibre.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-X-CMS-MailID: 20260527072231epcas1p308649370c22bbf30eb2381abf6058db6
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-CMS-TYPE: 101P
-cpgsPolicy: CPGSC10-711,Y
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20260527072231epcas1p308649370c22bbf30eb2381abf6058db6
-References: <CGME20260527072231epcas1p308649370c22bbf30eb2381abf6058db6@epcas1p3.samsung.com>
+In-Reply-To: <a20f52aeee9dfcacfaea43ff280fa1867878cbbe.1779803053.git.u.kleine-koenig@baylibre.com>
 
-ufshcd_tag_to_cmd() may return NULL if no command is associated with
-the given tag. However, several callers dereference the returned cmd
-pointer via scsi_cmd_priv() without checking for NULL first, leading
-to a potential NULL pointer dereference.
+On Tue, May 26, 2026 at 04:17:27PM +0200, Uwe Kleine-König (The Capable Hub) wrote:
+> Using named initializers is more explicit and thus easier to parse for a
+> human.
+> 
+> It's also more robust to changes in the struct definition. This robustness
+> is relevant for a planned change to struct zorro_device_id that replaces
+> .driver_data by an anonymous union.
+> 
+> This change doesn't introduce changes to the compiled zorro_device_id
+> array.
+> 
+> Signed-off-by: Uwe Kleine-König (The Capable Hub) <u.kleine-koenig@baylibre.com>
+> ---
+>  drivers/ata/pata_buddha.c | 8 ++++----
+>  1 file changed, 4 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/ata/pata_buddha.c b/drivers/ata/pata_buddha.c
+> index c36ee991d5e5..3b1f0ee2f875 100644
+> --- a/drivers/ata/pata_buddha.c
+> +++ b/drivers/ata/pata_buddha.c
+> @@ -253,9 +253,9 @@ static void pata_buddha_remove(struct zorro_dev *z)
+>  }
+>  
+>  static const struct zorro_device_id pata_buddha_zorro_tbl[] = {
+> -	{ ZORRO_PROD_INDIVIDUAL_COMPUTERS_BUDDHA, BOARD_BUDDHA},
+> -	{ ZORRO_PROD_INDIVIDUAL_COMPUTERS_CATWEASEL, BOARD_CATWEASEL},
+> -	{ 0 }
+> +	{ .id = ZORRO_PROD_INDIVIDUAL_COMPUTERS_BUDDHA, .driver_data = BOARD_BUDDHA },
+> +	{ .id = ZORRO_PROD_INDIVIDUAL_COMPUTERS_CATWEASEL, .driver_data = BOARD_CATWEASEL },
+> +	{ }
+>  };
+>  MODULE_DEVICE_TABLE(zorro, pata_buddha_zorro_tbl);
+>  
+> @@ -282,7 +282,7 @@ static int __init pata_buddha_late_init(void)
+>  	/* Manually bind to all X-Surf boards */
+>  	while ((z = zorro_find_device(ZORRO_PROD_INDIVIDUAL_COMPUTERS_X_SURF, z))) {
+>  		static struct zorro_device_id xsurf_ent = {
+> -			ZORRO_PROD_INDIVIDUAL_COMPUTERS_X_SURF, BOARD_XSURF
+> +			.id = ZORRO_PROD_INDIVIDUAL_COMPUTERS_X_SURF, .driver_data = BOARD_XSURF
+>  		};
+>  
+>  		pata_buddha_probe(z, &xsurf_ent);
+> -- 
+> 2.47.3
+> 
 
-Fix this by adding NULL checks for cmd before calling scsi_cmd_priv()
-and moving the lrbp initialization after the NULL check
+Okay for this patch to go via SCSI as suggested by Uwe in the cover-letter:
 
-Signed-off-by: Chanwoo Lee <cw9316.lee@samsung.com>
----
- drivers/ufs/core/ufs-mcq.c | 14 +++++++++++---
- drivers/ufs/core/ufshcd.c  | 17 ++++++++++++++---
- 2 files changed, 25 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
-index c1b1d67a1ddc..798b2a910128 100644
---- a/drivers/ufs/core/ufs-mcq.c
-+++ b/drivers/ufs/core/ufs-mcq.c
-@@ -555,8 +555,8 @@ static int ufshcd_mcq_sq_start(struct ufs_hba *hba, struct ufs_hw_queue *hwq)
- int ufshcd_mcq_sq_cleanup(struct ufs_hba *hba, int task_tag)
- {
- 	struct scsi_cmnd *cmd = ufshcd_tag_to_cmd(hba, task_tag);
--	struct ufshcd_lrb *lrbp = scsi_cmd_priv(cmd);
--	struct request *rq = scsi_cmd_to_rq(cmd);
-+	struct ufshcd_lrb *lrbp;
-+	struct request *rq;
- 	struct ufs_hw_queue *hwq;
- 	void __iomem *reg, *opr_sqd_base;
- 	u32 nexus, id, val;
-@@ -568,6 +568,9 @@ int ufshcd_mcq_sq_cleanup(struct ufs_hba *hba, int task_tag)
- 	if (!cmd)
- 		return -EINVAL;
- 
-+	lrbp = scsi_cmd_priv(cmd);
-+	rq = scsi_cmd_to_rq(cmd);
-+
- 	hwq = ufshcd_mcq_req_to_hwq(hba, rq);
- 	if (!hwq)
- 		return 0;
-@@ -637,7 +640,7 @@ static bool ufshcd_mcq_sqe_search(struct ufs_hba *hba,
- 				  struct ufs_hw_queue *hwq, int task_tag)
- {
- 	struct scsi_cmnd *cmd = ufshcd_tag_to_cmd(hba, task_tag);
--	struct ufshcd_lrb *lrbp = scsi_cmd_priv(cmd);
-+	struct ufshcd_lrb *lrbp;
- 	struct utp_transfer_req_desc *utrd;
- 	__le64  cmd_desc_base_addr;
- 	bool ret = false;
-@@ -647,6 +650,11 @@ static bool ufshcd_mcq_sqe_search(struct ufs_hba *hba,
- 	if (hba->quirks & UFSHCD_QUIRK_MCQ_BROKEN_RTC)
- 		return true;
- 
-+	if (!cmd)
-+		return false;
-+
-+	lrbp = scsi_cmd_priv(cmd);
-+
- 	mutex_lock(&hwq->sq_mutex);
- 
- 	ufshcd_mcq_sq_stop(hba, hwq);
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 9e0336098e26..0371dea44887 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -5833,13 +5833,15 @@ void ufshcd_compl_one_cqe(struct ufs_hba *hba, int task_tag,
- 			  struct cq_entry *cqe)
- {
- 	struct scsi_cmnd *cmd = ufshcd_tag_to_cmd(hba, task_tag);
--	struct ufshcd_lrb *lrbp = scsi_cmd_priv(cmd);
-+	struct ufshcd_lrb *lrbp;
- 	enum utp_ocs ocs;
- 
- 	if (WARN_ONCE(!cmd, "cqe->command_desc_base_addr = %#llx\n",
- 		      le64_to_cpu(cqe->command_desc_base_addr)))
- 		return;
- 
-+	lrbp = scsi_cmd_priv(cmd);
-+
- 	if (hba->monitor.enabled) {
- 		lrbp->compl_time_stamp = ktime_get();
- 		lrbp->compl_time_stamp_local_clock = local_clock();
-@@ -7893,8 +7895,12 @@ static void ufshcd_set_req_abort_skip(struct ufs_hba *hba, unsigned long bitmap)
- 
- 	for_each_set_bit(tag, &bitmap, hba->nutrs) {
- 		struct scsi_cmnd *cmd = ufshcd_tag_to_cmd(hba, tag);
--		struct ufshcd_lrb *lrbp = scsi_cmd_priv(cmd);
-+		struct ufshcd_lrb *lrbp;
-+
-+		if (!cmd)
-+			continue;
- 
-+		lrbp = scsi_cmd_priv(cmd);
- 		lrbp->req_abort_skip = true;
- 	}
- }
-@@ -7915,11 +7921,16 @@ static void ufshcd_set_req_abort_skip(struct ufs_hba *hba, unsigned long bitmap)
- int ufshcd_try_to_abort_task(struct ufs_hba *hba, int tag)
- {
- 	struct scsi_cmnd *cmd = ufshcd_tag_to_cmd(hba, tag);
--	struct ufshcd_lrb *lrbp = scsi_cmd_priv(cmd);
-+	struct ufshcd_lrb *lrbp;
- 	int err;
- 	int poll_cnt;
- 	u8 resp = 0xF;
- 
-+	if (!cmd)
-+		return -EINVAL;
-+
-+	lrbp = scsi_cmd_priv(cmd);
-+
- 	for (poll_cnt = 100; poll_cnt; poll_cnt--) {
- 		err = ufshcd_issue_tm_cmd(hba, lrbp->lun, tag, UFS_QUERY_TASK,
- 					  &resp);
--- 
-2.43.0
-
+Acked-by: Niklas Cassel <cassel@kernel.org>
