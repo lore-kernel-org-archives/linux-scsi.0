@@ -1,74 +1,77 @@
-Received: from rcdn-iport-5.cisco.com (rcdn-iport-5.cisco.com [173.37.86.76])
+Received: from rcdn-iport-7.cisco.com (rcdn-iport-7.cisco.com [173.37.86.78])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BAA49311973;
-	Wed, 27 May 2026 19:50:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=173.37.86.76
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CBA863B19B1;
+	Wed, 27 May 2026 19:51:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=173.37.86.78
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779911424; cv=none; b=BPUZTMbMo2PI5KWzh3eGweXHnGzzUS0BAjjnwTN9b2N+MqmCuDBq0Y6EFAq3fMqu7yayqxm1BwnjtT6p8FB6pb5yVDRxBL9kjC/eHz0nbk/zUzwEdAA9JYeShz/p71RSqYNQt9RwgMwX1jnFyeoMtbuxOSYiaXXpxHJWJ1ZWa8c=
+	t=1779911475; cv=none; b=IA8kfsvKQIdUWzOszq8nL/Qu9cRyBVSDamQFkw8lfLe5UskEUZnnYHLZFHPaSR9KgRuGPFOPO7jv57g8dCF9tvL0MxVFBORgblI5b6a7aqPXtAYKcXkDKO1T2Bhz3QFMRcGA2W+iiwIdS4k0mnIXzlOQwY56OQvBVkR6eztlE34=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779911424; c=relaxed/simple;
-	bh=ZkYvCLgaXOu/8SNWd32vgrh/tVHgiqiH7avNBS0obV0=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=OtumpKTI7kCH3CqVuyFNda+zezV1tdLMpKdc8HkZVTg/85YLcv2jG38WJCDBqXMSFrKvHVX4ZwDjrr9CUIfGqubKUZTVC4yAEni2f/mVdyRWPsAEsU6JTTKZ/mcPihOMuQx6MrSnsiVqu8BAqhx5az+Mj68ZBa7H810p6Vh1lVg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=cisco.com; spf=pass smtp.mailfrom=cisco.com; dkim=pass (2048-bit key) header.d=cisco.com header.i=@cisco.com header.b=ipqHBbTW; arc=none smtp.client-ip=173.37.86.76
+	s=arc-20240116; t=1779911475; c=relaxed/simple;
+	bh=pOWAlkEoIShbwgg1lGGpW7DquvZe80UlLsSxgw2rQCo=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=g7F3/mBb0hckJ5HCtjbwLLeRYuWGR+4NVWWFTU7KM8VtKPSrAbmK5Nry9XIRi13mt9ztFhCP85zQFxslu92cDuW7ixWL0wsddfQWBaPGJJ4DAcLnqF8a6O5Urd7dx1CXtTmu5aDMPh9m46Y2QdZYf+V//YGL8VL2Avl56k2qE4U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=cisco.com; spf=pass smtp.mailfrom=cisco.com; dkim=pass (2048-bit key) header.d=cisco.com header.i=@cisco.com header.b=IMbtWldX; arc=none smtp.client-ip=173.37.86.78
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=cisco.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cisco.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=cisco.com header.i=@cisco.com header.b="ipqHBbTW"
+	dkim=pass (2048-bit key) header.d=cisco.com header.i=@cisco.com header.b="IMbtWldX"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=cisco.com; i=@cisco.com; l=4458; q=dns/txt;
-  s=iport01; t=1779911422; x=1781121022;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=rgQOK6nQjSpLbEgOH1bhDkCKNpk0EtCMJ7LdoLt34pQ=;
-  b=ipqHBbTWwfw9NTDo1oWuVdNVZGPo/mqLp3KI44O7dweUusq7DRJngQOd
-   O10xxSc8hB7urY0rIpLXJgLdHJxj85RVDGYYpCtL3bAXvfDmflzTzCESD
-   elRVA2wFn+m5nON9Zjit27UcUKzkF768RQWQPrQogYp1tI/9ew/i3Ctp6
-   twar0j3fw0/t6z6xSS+ELyOWNLi97+nN8yXRrP2WJBoZg0EWG5n37ZxZO
-   gL+vGwZbes6AIglMJcLYuji03iFjCjz1NUh7BoW3vqvhh0f1vJ62/K2dP
-   VmE3+QEVjDUz+5YPBxeaTcK5MrHZaOmqV4UoTlDlrubYuuI4ouQYYA2RX
-   Q==;
-X-CSE-ConnectionGUID: UTI8IWqcTI6pCt1z0Vkgpw==
-X-CSE-MsgGUID: xYZHqLLTRk+lbVmfGjfGrA==
-X-IPAS-Result: =?us-ascii?q?A0BfBADGShdq/5P/Ja1aglmEJ0MZlFqCIYEWnQiBfg8BA?=
- =?us-ascii?q?QEPUQQBAYUGjTQCJjYHDgECBAMCAwEBAQEBAQEBAQEBCwEBBQEBAQIBBwWBD?=
- =?us-ascii?q?hOGXIZdNgFGhFKCdAO0UIIsgQHeQYFwFYE4jVx0G4RgJxUGgUlEgRWCcoJIi?=
- =?us-ascii?q?TUEgiJ6EoYRiQBIgR4DWSwBVRMNCgsHBYFmAzUSKhVuMh2BIz4XgQsbBwWBS?=
- =?us-ascii?q?3ZyaoEFhRgjJgNOgS2Bf10DCxgNSBEsNxQbBD5uB40vGQcBVzcHdAYveBYBH?=
- =?us-ascii?q?pMvAxGSLYt3lReEJqFbGjOqa5kGo3CFUIFvCyqBWTMaCBsVgyNSGQ+OLRbOY?=
- =?us-ascii?q?CdvAgcCBw4DC5NlAQE?=
-IronPort-Data: A9a23:cDfg/qDiNIjfHxVW/8/iw5YqxClBgxIJ4kV8jS/XYbTApDgggWEBm
- msWCm7TOvuKYmv2LdklbdnlpEtQ7JTWz4BiOVdlrnsFo1CmBibm6XV1Cm+qYkt+++WaFBoPA
- /02M4eGdIZvCCeA+n9BC5C5xVFkz6aEW7HgP+DNPyF1VGdMRTwo4f5Zs7ZRbrVA357jX2thh
- fuo+5eBYAL/hGYuWo4pw/vrRC1H7ayaVAww5jTSVdgT1HfCmn8cCo4oJK3ZBxPQXolOE+emc
- P3Ixbe/83mx109F5gSNy+uTnuUiG9Y+DCDW4pZkc/HKbitq+kTe5p0G2M80Mi+7vdkmc+dZk
- 72hvbToIesg0zaldO41C3G0GAkmVUFKFSOuzXWX6aSuI0P6n3TE/slPXGAJJIYk27hvKn0X5
- 6QmKz8VcUXW7w626OrTpuhEnM8vKozveYgYoHwllGmfBvc9SpeFSKLPjTNa9G5v3YYVQrCEO
- pdfMGYwBPjDS0Un1lM/C5skgOasj3rXeDxDo1XTrq0yi4TW5FAhjuiybYWIKrRmQ+1Fr3S4v
- 0biw176QRUQCtmR5jiL3WiF07qncSTTHdh6+KeD3vxngle7wm0VFQ1QVFG+5/K+jyaWXttFN
- 00SvDIjsaUo70GtZt7nVha8rTiPuRt0c9NcGu498AaQ4rDZ7waQGi4PSTspQN4juck7Sjwr/
- kWEk9PgGXpkt7j9YWiQ6LqOthuoNCQVJHNEbigBJSMB78Tlq4g1pgnSVdslG6mw5vXxGDft0
- 3WJoTI4irE7k8EGzeO48ErBjjbqoYLGJiYx5wPKTie+5Rh4TJCqapbu6lXB6/tEaoGDQTG8U
- GMsgcOS6qUKSJqKjiHIGb1LF7Cy7PHDOzrZ6bJyI6QcG/2W0ybLVehtDPtWdC+F7u5slefVX
- XLu
-IronPort-HdrOrdr: A9a23:kzTKP6q4n3VVb3qTsF34/ckaV5r1eYIsimQD101hICG9vPb1qy
- nIpoV46faaslgssR0b8+xoW5PwIk80l6QV3WB5B97LNzUO01HGEGgN1+bf6gylMzHi9+JbyK
- dre7VzBZnNF1Rg5PyKhTVQa+xB/PC3tIa1mOzZ03BhCStua61m8kNFLzzzKDwTeOGDbqBJcq
- Z1IaF81l2dRUg=
-X-Talos-CUID: 9a23:LsFcI2EkS3qmvGsIqmJayG9EO/88eUH8km/7PxaqUVhqR6WKHAo=
-X-Talos-MUID: 9a23:TeTvuAgv+z6Ov0c47GT99cMpJPZaw72KLHw3ktYCsfeBOwNyNRiHpWHi
+  d=cisco.com; i=@cisco.com; l=2821; q=dns/txt;
+  s=iport01; t=1779911473; x=1781121073;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=VSNrcLjqRYsKd5NwYY0fI+ZO1scQ8J/2qIt99al3qBk=;
+  b=IMbtWldX4nkuCAZvDxY1YyyDqYYy8QG2EWKf+O5QKszQscLrj9ci8KPV
+   99UixftcR7n0uVyJKTTe9Kz5xSpmf2+TqJNN1BwEpsehHEE0Nj9RMFX8b
+   IAMWJ7eYa8NcU7nGo63JhAc+zmtiPO14FtY0SrvQByY5n2iwE1ZrpsIXt
+   ETmc64FdRpVJIg8T7dEJVAshDWbR27vKfAuaF1dkKexzVjoLh5ynu8ytK
+   BZMXbSazb038JcnlSFpvzF4YtfG2Sj3kT2DqNhsshkg4JQTJ20euWat3y
+   dKS6FkIOxZ+0mXVTtKC4Kea/Ji0hc9UpZjfzJNgccGerO8y8Ex+ZGKWu9
+   w==;
+X-CSE-ConnectionGUID: pL7peS68S36PWtX4gz+HMQ==
+X-CSE-MsgGUID: 8l+rM474RnCT5MPWpzjiFQ==
+X-IPAS-Result: =?us-ascii?q?A0BCAgDGShdq/5P/Ja1aglmCV4FQQxkwlCqgP4F+DwEBA?=
+ =?us-ascii?q?Q9RBAEBhQYCjTICJjQJDgECBAMCAwEBAQEBAQEBAQEBCwEBBQEBAQIBBwWBD?=
+ =?us-ascii?q?hOGXIZbAgEDJwsBRhBRVhmDAoJ0A7RQgXkzgQHeQYFkAQsUAYE4jVx0hHsnF?=
+ =?us-ascii?q?QaBSUSBFYNogVKDPoV3BIMcEo8RSIEeA1ksAVUTDQoLBwWBZgM1EioVbjIdg?=
+ =?us-ascii?q?SM+F4ELGwcFgUt2cmqBBYUYIyYDToEtgX9dAwsYDUgRLDcUGwQ+bgeKdRoPg?=
+ =?us-ascii?q?jGBD4EwZyiTT5AegiGhDoQmoVsaM6prLphYqUCBaDyBWTMaCBsVgyJTGQ+OL?=
+ =?us-ascii?q?RbOYCcyPQEBBwIHDgMLgWiRfQEB?=
+IronPort-Data: A9a23:hLZxnKviEbMgN5cJikawSKqrsufnVKdfMUV32f8akzHdYApBsoF/q
+ tZmKT/QPvqNM2ukc94gao+yoUJSusKGyd5lHQM5+CxgHiNGgMeUXt7xwmUckM+xwmwvaGo9s
+ q3yv/GZdJhcokf0/0nrav666yEgiclkf5KkYMbcICd9WAR4fykojBNnioYRj5Vh6TSDK1vlV
+ eja/YuFZDdJ5xYuajhKs//Z90s11BjPkGpwUmIWNKgjUGD2zxH5PLpHTYmtIn3xRJVjH+LSb
+ 47r0LGj82rFyAwmA9Wjn6yTWhVirmn6ZFXmZtJ+AsBOszAazsAA+v9T2Mk0NS+7vw60c+VZk
+ 72hg3AfpTABZcUgkMxFO/VR/roX0aduoNcrKlDn2SCfItGvn3bEm51T4E8K0YIw4sIoGWx1q
+ 6wjc241UQyz2+2kg5Kec7w57igjBJGD0II3oHpsy3TdSP0hW52GGv2M7t5D1zB2jcdLdRrcT
+ 5NGMnw0M1KaPkAJYwtIYH49tL/Aan3XcDRCtFORrKkf6GnIxws327/oWDbQUoDaG50PxBzF9
+ goq+UypBlIAEYDAlQCD2U7xo9fwhTH5WawrQejQGvlCxQf7KnYoIB0fT1aTovSjjEO6HdVFJ
+ CQ8+Ccsp4A29Uq2Xp/8VRj+q3mB1jYZUsBMEut88AyRx7DP7gCxAXINRTpMLtchsaceTDAj1
+ ViRmM7BHzFjsLSJD3ma89+8rza/PyUaLW4qfyIITQIZpdLkpekblB/RQ8x4OLS4gt38BXf7x
+ DXihCwymrMYhMgjzLig8BbMhDfEjpzISBMlowbaRGSo6itna4O/IY+l817W6bBHNonxZl2Au
+ mUU3tOV9+EmE56AjmqOTf8LEbXv4OyKWAAwmnZ1FJUnsjDo8Hm5cMUJuHd1JVxiNYAPfjqBj
+ FLvhD69LaR7ZBOCBZKbqaroYyj25cAMzejYa80=
+IronPort-HdrOrdr: A9a23:bW/AJaG2j2gE5yd1pLqEIseALOsnbusQ8zAXPo5KJSC9Ffbo8/
+ xG88506faZslwssTQb6LO90cq7MBbhHPxOgLX5VI3KNGLbUSmTXeNfBODZrAEIdReSysdtkY
+ 99bqlzD8DxB1Bmgcu/3BO1CL8bsb66GdiT5dv2/jNKURxgbb1m4kNSDwaWFVAzeSx9bKBJcq
+ Z1IqF81kKdkbN9VLXDOkU4
+X-Talos-CUID: =?us-ascii?q?9a23=3A2v8P42rBlTvlT4V5XUUNayvmUdgBLWXQ9ymAGBT?=
+ =?us-ascii?q?mMVl1eOGaWxyw3Zoxxg=3D=3D?=
+X-Talos-MUID: =?us-ascii?q?9a23=3AqupFnA0VaVy4tx/0jDaoOyEWdzUjs6DtEmVRzsk?=
+ =?us-ascii?q?8veK4aAlIBC+PjjWZe9py?=
 X-IronPort-Anti-Spam-Filtered: true
 X-IronPort-AV: E=Sophos;i="6.24,172,1774310400"; 
-   d="scan'208";a="486875758"
+   d="scan'208";a="486022258"
 Received: from rcdn-l-core-10.cisco.com ([173.37.255.147])
-  by rcdn-iport-5.cisco.com with ESMTP/TLS/TLS_AES_256_GCM_SHA384; 27 May 2026 19:50:15 +0000
+  by rcdn-iport-7.cisco.com with ESMTP/TLS/TLS_AES_256_GCM_SHA384; 27 May 2026 19:51:07 +0000
 Received: from fedora.lan?044cisco.com (unknown [10.188.14.55])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: kartilak@cisco.com)
-	by rcdn-l-core-10.cisco.com (Postfix) with ESMTPSA id 7619C18000A51;
-	Wed, 27 May 2026 19:50:14 +0000 (GMT)
+	by rcdn-l-core-10.cisco.com (Postfix) with ESMTPSA id A59A718000276;
+	Wed, 27 May 2026 19:51:05 +0000 (GMT)
 From: Karan Tilak Kumar <kartilak@cisco.com>
 To: sebaddel@cisco.com
 Cc: arulponn@cisco.com,
@@ -85,11 +88,14 @@ Cc: arulponn@cisco.com,
 	revers@redhat.com,
 	adakopou@redhat.com,
 	lduncan@suse.com,
-	Karan Tilak Kumar <kartilak@cisco.com>
-Subject: [PATCH v2 00/13] Introduce functionality for NVMe initiator
-Date: Wed, 27 May 2026 12:49:47 -0700
-Message-ID: <20260527195000.8444-1-kartilak@cisco.com>
+	Karan Tilak Kumar <kartilak@cisco.com>,
+	Hannes Reinecke <hare@kernel.org>
+Subject: [PATCH v2 02/13] scsi: fnic: Use fnic_num for non-SCSI identifiers
+Date: Wed, 27 May 2026 12:49:49 -0700
+Message-ID: <20260527195000.8444-3-kartilak@cisco.com>
 X-Mailer: git-send-email 2.47.1
+In-Reply-To: <20260527195000.8444-1-kartilak@cisco.com>
+References: <20260527195000.8444-1-kartilak@cisco.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -102,112 +108,73 @@ X-Outbound-Client-TLS: ANONYMOUS;unknown [10.188.14.55];TLSv1.3;TLS_AES_256_GCM_
 X-Outbound-SMTP-Client: 10.188.14.55, [10.188.14.55]
 X-Outbound-Node: rcdn-l-core-10.cisco.com
 
-Hi Martin, reviewers,
+Use SCSI host numbers only for FCP initiator paths.
 
-This series adds functionality for NVMe initiator to the fnic driver.
+Name NVMe-facing FDMI and debugfs entries with fnic_num, and record trace
+events with the driver instance number.
 
-The changes enable the fnic driver to act as an NVMe initiator over
-Fibre Channel (FC-NVMe), allowing the host to discover and communicate
-with NVMe targets using the existing fnic infrastructure. The patches
-prepare the driver for full FC-NVMe initiator operation while
-maintaining existing SCSI/FC functionality.
+Reviewed-by: Sesidhar Baddela <sebaddel@cisco.com>
+Reviewed-by: Arulprabhu Ponnusamy <arulponn@cisco.com>
+Reviewed-by: Gian Carlo Boffa <gcboffa@cisco.com>
+Reviewed-by: Arun Easi <aeasi@cisco.com>
+Reviewed-by: Hannes Reinecke <hare@kernel.org>
+Reviewed-by: Lee Duncan <lduncan@suse.com>
+Signed-off-by: Karan Tilak Kumar <kartilak@cisco.com>
+Co-developed-by: Hannes Reinecke <hare@kernel.org>
+---
+ drivers/scsi/fnic/fdls_disc.c    | 8 ++++++--
+ drivers/scsi/fnic/fnic_debugfs.c | 5 ++++-
+ drivers/scsi/fnic/fnic_scsi.c    | 2 +-
+ 3 files changed, 11 insertions(+), 4 deletions(-)
 
-These are some of the salient patches:
-
-o. Make fnic debug logging usable by SCSI and NVMe initiator roles.
-o. Use fnic instance numbers for non-SCSI-facing identifiers.
-o. Decode firmware roles for FCP, NVMe, and unsupported targets.
-o. Advertise NVMe initiator service parameters during FC discovery.
-o. Add FDLS role handling for NVMe initiator discovery flows.
-o. Add the NVMe/FC transport path and port registration.
-o. Route completions, resets, and LS frames by initiator role.
-o. Add NVMe LS timeouts, statistics, and debugfs state reporting.
-
-Even though the patches have been made into a series, some patches are
-heavier than others. But, every effort has been made to keep the
-purpose of each patch as a single-purpose, and to compile cleanly.
-All the individual patches compile cleanly. The compiler used is GCC
-14.2.
-
-This patch set has been tested as a whole. Therefore, the tested-by
-fields have been added only to one patch in the set.
-I've refrained from adding tested-by to most of the patches, so as to
-not mislead the reviewer/reader.
-
-A brief note on the unit tests:
-
-o. Configure multipathing, and run link flaps on single link. IOs drop
-   briefly, but pick up as expected.
-o. Configure multipathing, and run link flaps on two links, with a 30
-   second delay in between. IOs drop briefly, but pick up as expected.
-o. Repeat the above tests with 1 queue and 64 queues.
-o. Perform tests with Netapp and Pure targets.
-
-All tests were successful.
-
-This set of patches was reviewed before submitting upstream,
-and the following review comments were incorporated.
-
-Incorporate review comments from Hannes Reinecke:
-
-Decode target roles explicitly and report unsupported roles.
-Remove the empty line before the FLOGI completion else block.
-Add a short comment for the NVMe ERSP completion case.
-
-Incorporate review comments from Lee Duncan:
-
-Replace the NVMe LS OXID switch with a direct frame-type check.
-Rename the NVMe frame helper to follow fnic function naming style.
-Convert the NVMe opcode stats helper to a switch statement.
-Share NVMe completion stats accounting and compute duration once.
-
-Changes between v1 and v2:
-	Incorporate review comments from Marco Crivellari:
-		Explicitly use WQ_PERCPU for the fnic completion workqueue.
-
-Thanks,
-Karan
-
-Karan Tilak Kumar (13):
-  scsi: fnic: Make debug logging protocol independent
-  scsi: fnic: Use fnic_num for non-SCSI identifiers
-  scsi: fnic: Decode firmware role configuration
-  scsi: fnic: Advertise NVMe initiator service parameters
-  scsi: fnic: Add FDLS role handling for NVMe initiators
-  scsi: fnic: Add the NVMe/FC transport path
-  scsi: fnic: Route completions and resets by initiator role
-  scsi: fnic: Handle NVMe LS frames in FDLS
-  scsi: fnic: Send NVMe LS requests through FDLS
-  scsi: fnic: Abort timed-out NVMe LS requests
-  scsi: fnic: Track NVMe transport statistics
-  scsi: fnic: Expose NVMe transport state in debugfs
-  scsi: fnic: Bump up version number
-
- drivers/scsi/fnic/Makefile       |    1 +
- drivers/scsi/fnic/fcpio.h        |   35 +
- drivers/scsi/fnic/fdls_disc.c    |  953 ++++++++------
- drivers/scsi/fnic/fdls_fc.h      |   12 +
- drivers/scsi/fnic/fip.c          |  117 +-
- drivers/scsi/fnic/fip.h          |    2 +-
- drivers/scsi/fnic/fnic.h         |  104 +-
- drivers/scsi/fnic/fnic_debugfs.c |  101 +-
- drivers/scsi/fnic/fnic_fcs.c     |  196 +--
- drivers/scsi/fnic/fnic_fdls.h    |   48 +-
- drivers/scsi/fnic/fnic_io.h      |   23 +-
- drivers/scsi/fnic/fnic_isr.c     |   28 +-
- drivers/scsi/fnic/fnic_main.c    |  212 ++-
- drivers/scsi/fnic/fnic_nvme.c    | 2079 ++++++++++++++++++++++++++++++
- drivers/scsi/fnic/fnic_nvme.h    |  138 ++
- drivers/scsi/fnic/fnic_res.c     |   31 +-
- drivers/scsi/fnic/fnic_res.h     |   32 +-
- drivers/scsi/fnic/fnic_scsi.c    |  249 ++--
- drivers/scsi/fnic/fnic_stats.h   |   28 +
- drivers/scsi/fnic/fnic_trace.c   |    5 +-
- drivers/scsi/fnic/vnic_devcmd.h  |    2 +-
- 21 files changed, 3618 insertions(+), 778 deletions(-)
- create mode 100644 drivers/scsi/fnic/fnic_nvme.c
- create mode 100644 drivers/scsi/fnic/fnic_nvme.h
-
+diff --git a/drivers/scsi/fnic/fdls_disc.c b/drivers/scsi/fnic/fdls_disc.c
+index d22cd4ffe3fb..48b37748f44a 100644
+--- a/drivers/scsi/fnic/fdls_disc.c
++++ b/drivers/scsi/fnic/fdls_disc.c
+@@ -2083,8 +2083,12 @@ static void fdls_fdmi_register_pa(struct fnic_iport_s *iport)
+ 	fnic_fdmi_attr_set(fdmi_attr, FNIC_FDMI_TYPE_MAX_FRAME_SIZE,
+ 		FNIC_FDMI_MFS_LEN, data, &attr_off_bytes);
+ 
+-	snprintf(tmp_data, FNIC_FDMI_OS_NAME_LEN - 1, "host%d",
+-		 fnic->host->host_no);
++	if (IS_FNIC_FCP_INITIATOR(fnic))
++		snprintf(tmp_data, FNIC_FDMI_OS_NAME_LEN - 1, "host%d",
++			fnic->host->host_no);
++	else if (IS_FNIC_NVME_INITIATOR(fnic))
++		snprintf(tmp_data, FNIC_FDMI_OS_NAME_LEN - 1, "nvfnic%d",
++			fnic->fnic_num);
+ 	strscpy_pad(data, tmp_data, FNIC_FDMI_OS_NAME_LEN);
+ 	fnic_fdmi_attr_set(fdmi_attr, FNIC_FDMI_TYPE_OS_NAME,
+ 		FNIC_FDMI_OS_NAME_LEN, data, &attr_off_bytes);
+diff --git a/drivers/scsi/fnic/fnic_debugfs.c b/drivers/scsi/fnic/fnic_debugfs.c
+index ba86964fb45e..467fba29ea5f 100644
+--- a/drivers/scsi/fnic/fnic_debugfs.c
++++ b/drivers/scsi/fnic/fnic_debugfs.c
+@@ -681,7 +681,10 @@ int fnic_stats_debugfs_init(struct fnic *fnic)
+ {
+ 	char name[16];
+ 
+-	snprintf(name, sizeof(name), "host%d", fnic->host->host_no);
++	if (IS_FNIC_FCP_INITIATOR(fnic))
++		snprintf(name, sizeof(name), "host%d", fnic->host->host_no);
++	else if (IS_FNIC_NVME_INITIATOR(fnic))
++		snprintf(name, sizeof(name), "nvfnic%d", fnic->fnic_num);
+ 
+ 	fnic->fnic_stats_debugfs_host = debugfs_create_dir(name,
+ 						fnic_stats_debugfs_root);
+diff --git a/drivers/scsi/fnic/fnic_scsi.c b/drivers/scsi/fnic/fnic_scsi.c
+index 0759540f6675..b92260583c67 100644
+--- a/drivers/scsi/fnic/fnic_scsi.c
++++ b/drivers/scsi/fnic/fnic_scsi.c
+@@ -894,7 +894,7 @@ static inline void fnic_fcpio_ack_handler(struct fnic *fnic,
+ 
+ 	spin_unlock_irqrestore(&fnic->wq_copy_lock[wq_index], flags);
+ 	FNIC_TRACE(fnic_fcpio_ack_handler,
+-		  fnic->host->host_no, 0, 0, ox_id_tag[2], ox_id_tag[3],
++		  fnic->fnic_num, 0, 0, ox_id_tag[2], ox_id_tag[3],
+ 		  ox_id_tag[4], ox_id_tag[5]);
+ }
+ 
 -- 
 2.47.1
 
