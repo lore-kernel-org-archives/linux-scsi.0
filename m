@@ -1,57 +1,95 @@
-Received: from out-03.smtp.spacemail.com (out-03.smtp.spacemail.com [63.250.43.88])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from rcdn-iport-5.cisco.com (rcdn-iport-5.cisco.com [173.37.86.76])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A577634CFA7;
-	Wed, 27 May 2026 19:18:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=63.250.43.88
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BAA49311973;
+	Wed, 27 May 2026 19:50:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=173.37.86.76
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779909521; cv=none; b=BrsBLrZOr/jRGHWK5XKUXtNpMLkOb/1g1nvOKC1KGTvDUwzJQG8SzIeedBlw+HCjRRysdcdWUPKpuWqPSbXXxYVjHQXNy3dtfBa58Go26oQ189TrraA7lzyeGj2Xd6FcAebLxD4ug+/8K6FD+UwA77WKiZdgPONAOdsoBr2xNUo=
+	t=1779911424; cv=none; b=BPUZTMbMo2PI5KWzh3eGweXHnGzzUS0BAjjnwTN9b2N+MqmCuDBq0Y6EFAq3fMqu7yayqxm1BwnjtT6p8FB6pb5yVDRxBL9kjC/eHz0nbk/zUzwEdAA9JYeShz/p71RSqYNQt9RwgMwX1jnFyeoMtbuxOSYiaXXpxHJWJ1ZWa8c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779909521; c=relaxed/simple;
-	bh=kvGJAsELGXPJZk9NrIuTIvUOIwiNkTJ+kqt3GBsOj7E=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=diDBvCMn4gyFdIIgCcLqgQSb0JTf5VlHt0ALdnbXWLJOjmzRweXl4xtqQ7P7FddvCl8ZA6vHCmYzzMPa75Oroszug+rfYaxcAAlljoNLx1vb6jo+BSqosvc4tUkS1ABB2QYDE0Y7cXoStzJwaFuXfS5+ZLIUD7wn7uVk8C6ewrg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=rexion.ai; spf=pass smtp.mailfrom=rexion.ai; dkim=fail (0-bit key) header.d=rexion.ai header.i=@rexion.ai header.b=EjRuH8fk reason="key not found in DNS"; arc=none smtp.client-ip=63.250.43.88
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=rexion.ai
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rexion.ai
+	s=arc-20240116; t=1779911424; c=relaxed/simple;
+	bh=ZkYvCLgaXOu/8SNWd32vgrh/tVHgiqiH7avNBS0obV0=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=OtumpKTI7kCH3CqVuyFNda+zezV1tdLMpKdc8HkZVTg/85YLcv2jG38WJCDBqXMSFrKvHVX4ZwDjrr9CUIfGqubKUZTVC4yAEni2f/mVdyRWPsAEsU6JTTKZ/mcPihOMuQx6MrSnsiVqu8BAqhx5az+Mj68ZBa7H810p6Vh1lVg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=cisco.com; spf=pass smtp.mailfrom=cisco.com; dkim=pass (2048-bit key) header.d=cisco.com header.i=@cisco.com header.b=ipqHBbTW; arc=none smtp.client-ip=173.37.86.76
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=cisco.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cisco.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=rexion.ai header.i=@rexion.ai header.b="EjRuH8fk"
-Received: from Kyren (unknown [49.207.213.66])
+	dkim=pass (2048-bit key) header.d=cisco.com header.i=@cisco.com header.b="ipqHBbTW"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+  d=cisco.com; i=@cisco.com; l=4458; q=dns/txt;
+  s=iport01; t=1779911422; x=1781121022;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=rgQOK6nQjSpLbEgOH1bhDkCKNpk0EtCMJ7LdoLt34pQ=;
+  b=ipqHBbTWwfw9NTDo1oWuVdNVZGPo/mqLp3KI44O7dweUusq7DRJngQOd
+   O10xxSc8hB7urY0rIpLXJgLdHJxj85RVDGYYpCtL3bAXvfDmflzTzCESD
+   elRVA2wFn+m5nON9Zjit27UcUKzkF768RQWQPrQogYp1tI/9ew/i3Ctp6
+   twar0j3fw0/t6z6xSS+ELyOWNLi97+nN8yXRrP2WJBoZg0EWG5n37ZxZO
+   gL+vGwZbes6AIglMJcLYuji03iFjCjz1NUh7BoW3vqvhh0f1vJ62/K2dP
+   VmE3+QEVjDUz+5YPBxeaTcK5MrHZaOmqV4UoTlDlrubYuuI4ouQYYA2RX
+   Q==;
+X-CSE-ConnectionGUID: UTI8IWqcTI6pCt1z0Vkgpw==
+X-CSE-MsgGUID: xYZHqLLTRk+lbVmfGjfGrA==
+X-IPAS-Result: =?us-ascii?q?A0BfBADGShdq/5P/Ja1aglmEJ0MZlFqCIYEWnQiBfg8BA?=
+ =?us-ascii?q?QEPUQQBAYUGjTQCJjYHDgECBAMCAwEBAQEBAQEBAQEBCwEBBQEBAQIBBwWBD?=
+ =?us-ascii?q?hOGXIZdNgFGhFKCdAO0UIIsgQHeQYFwFYE4jVx0G4RgJxUGgUlEgRWCcoJIi?=
+ =?us-ascii?q?TUEgiJ6EoYRiQBIgR4DWSwBVRMNCgsHBYFmAzUSKhVuMh2BIz4XgQsbBwWBS?=
+ =?us-ascii?q?3ZyaoEFhRgjJgNOgS2Bf10DCxgNSBEsNxQbBD5uB40vGQcBVzcHdAYveBYBH?=
+ =?us-ascii?q?pMvAxGSLYt3lReEJqFbGjOqa5kGo3CFUIFvCyqBWTMaCBsVgyNSGQ+OLRbOY?=
+ =?us-ascii?q?CdvAgcCBw4DC5NlAQE?=
+IronPort-Data: A9a23:cDfg/qDiNIjfHxVW/8/iw5YqxClBgxIJ4kV8jS/XYbTApDgggWEBm
+ msWCm7TOvuKYmv2LdklbdnlpEtQ7JTWz4BiOVdlrnsFo1CmBibm6XV1Cm+qYkt+++WaFBoPA
+ /02M4eGdIZvCCeA+n9BC5C5xVFkz6aEW7HgP+DNPyF1VGdMRTwo4f5Zs7ZRbrVA357jX2thh
+ fuo+5eBYAL/hGYuWo4pw/vrRC1H7ayaVAww5jTSVdgT1HfCmn8cCo4oJK3ZBxPQXolOE+emc
+ P3Ixbe/83mx109F5gSNy+uTnuUiG9Y+DCDW4pZkc/HKbitq+kTe5p0G2M80Mi+7vdkmc+dZk
+ 72hvbToIesg0zaldO41C3G0GAkmVUFKFSOuzXWX6aSuI0P6n3TE/slPXGAJJIYk27hvKn0X5
+ 6QmKz8VcUXW7w626OrTpuhEnM8vKozveYgYoHwllGmfBvc9SpeFSKLPjTNa9G5v3YYVQrCEO
+ pdfMGYwBPjDS0Un1lM/C5skgOasj3rXeDxDo1XTrq0yi4TW5FAhjuiybYWIKrRmQ+1Fr3S4v
+ 0biw176QRUQCtmR5jiL3WiF07qncSTTHdh6+KeD3vxngle7wm0VFQ1QVFG+5/K+jyaWXttFN
+ 00SvDIjsaUo70GtZt7nVha8rTiPuRt0c9NcGu498AaQ4rDZ7waQGi4PSTspQN4juck7Sjwr/
+ kWEk9PgGXpkt7j9YWiQ6LqOthuoNCQVJHNEbigBJSMB78Tlq4g1pgnSVdslG6mw5vXxGDft0
+ 3WJoTI4irE7k8EGzeO48ErBjjbqoYLGJiYx5wPKTie+5Rh4TJCqapbu6lXB6/tEaoGDQTG8U
+ GMsgcOS6qUKSJqKjiHIGb1LF7Cy7PHDOzrZ6bJyI6QcG/2W0ybLVehtDPtWdC+F7u5slefVX
+ XLu
+IronPort-HdrOrdr: A9a23:kzTKP6q4n3VVb3qTsF34/ckaV5r1eYIsimQD101hICG9vPb1qy
+ nIpoV46faaslgssR0b8+xoW5PwIk80l6QV3WB5B97LNzUO01HGEGgN1+bf6gylMzHi9+JbyK
+ dre7VzBZnNF1Rg5PyKhTVQa+xB/PC3tIa1mOzZ03BhCStua61m8kNFLzzzKDwTeOGDbqBJcq
+ Z1IaF81l2dRUg=
+X-Talos-CUID: 9a23:LsFcI2EkS3qmvGsIqmJayG9EO/88eUH8km/7PxaqUVhqR6WKHAo=
+X-Talos-MUID: 9a23:TeTvuAgv+z6Ov0c47GT99cMpJPZaw72KLHw3ktYCsfeBOwNyNRiHpWHi
+X-IronPort-Anti-Spam-Filtered: true
+X-IronPort-AV: E=Sophos;i="6.24,172,1774310400"; 
+   d="scan'208";a="486875758"
+Received: from rcdn-l-core-10.cisco.com ([173.37.255.147])
+  by rcdn-iport-5.cisco.com with ESMTP/TLS/TLS_AES_256_GCM_SHA384; 27 May 2026 19:50:15 +0000
+Received: from fedora.lan?044cisco.com (unknown [10.188.14.55])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mail.spacemail.com (Postfix) with ESMTPSA id 4gQfXz1DXhz2x9B;
-	Wed, 27 May 2026 19:18:26 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=rexion.ai;
-	s=spacemail; t=1779909511;
-	bh=WIUEG4zzn5ErfYY0sg41nrfwYjNTMLRAi91DY7rABh8=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=EjRuH8fkN/sKcyDD/1ESBz24ZL4/qv+1gT0ShRF5ooMigtOU3T+TS5bg87K7LWW31
-	 q4wndmGXchDtpI+kDbxzk7sgSc/Ifv7qnwhk3efvuFx4Z4PAikZ8c+wyPF2O6McaLY
-	 vUw970HuKC4/t9V44aaBJ2O8D/w75ciTxru4Otu0XRK84bcZxmR0RzFWdfGFZKOnl1
-	 7m319TvwdbM1y1w2FRTI6mC33sP2482hlnBNiFkZrluh+Iub4AwMxIiE/63FLgtuLR
-	 MwVNt+F9kOrWMRP/lqUtT5ij7NT5dJAjAuksxh9IxmgXTTgwR6yHXr7z+0/z6BrlYo
-	 V6TRvLdqQ/b+w==
-From: Rahul Chandelkar <rc@rexion.ai>
-To: rc@rexion.ai,
-	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	Jens Axboe <axboe@kernel.dk>,
-	FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: linux-scsi@vger.kernel.org,
-	linux-block@vger.kernel.org,
-	io-uring@vger.kernel.org,
+	(Authenticated sender: kartilak@cisco.com)
+	by rcdn-l-core-10.cisco.com (Postfix) with ESMTPSA id 7619C18000A51;
+	Wed, 27 May 2026 19:50:14 +0000 (GMT)
+From: Karan Tilak Kumar <kartilak@cisco.com>
+To: sebaddel@cisco.com
+Cc: arulponn@cisco.com,
+	djhawar@cisco.com,
+	gcboffa@cisco.com,
+	mkai2@cisco.com,
+	satishkh@cisco.com,
+	aeasi@cisco.com,
+	jejb@linux.ibm.com,
+	martin.petersen@oracle.com,
+	linux-scsi@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	Yang Xiuwei <yangxiuwei@kylinos.cn>,
-	Bart Van Assche <bvanassche@acm.org>,
-	Caleb Sander Mateos <csander@purestorage.com>,
-	stable@vger.kernel.org
-Subject: [PATCH v2] scsi: bsg: read io_uring command fields once
-Date: Thu, 28 May 2026 00:47:41 +0530
-Message-ID: <20260527191817.142769-1-rc@rexion.ai>
-X-Mailer: git-send-email 2.54.0
-In-Reply-To: <20260527105931.3950913-1-rc@rexion.ai>
-References: <20260527105931.3950913-1-rc@rexion.ai>
+	jmeneghi@redhat.com,
+	revers@redhat.com,
+	adakopou@redhat.com,
+	lduncan@suse.com,
+	Karan Tilak Kumar <kartilak@cisco.com>
+Subject: [PATCH v2 00/13] Introduce functionality for NVMe initiator
+Date: Wed, 27 May 2026 12:49:47 -0700
+Message-ID: <20260527195000.8444-1-kartilak@cisco.com>
+X-Mailer: git-send-email 2.47.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -59,183 +97,117 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Envelope-From: rc@rexion.ai
+X-Authenticated-User: kartilak@cisco.com
+X-Outbound-Client-TLS: ANONYMOUS;unknown [10.188.14.55];TLSv1.3;TLS_AES_256_GCM_SHA384;256
+X-Outbound-SMTP-Client: 10.188.14.55, [10.188.14.55]
+X-Outbound-Node: rcdn-l-core-10.cisco.com
 
-scsi_bsg_uring_cmd() reads struct bsg_uring_cmd fields directly from the
-shared mmap'd io_uring SQE.  On the inline execution path, io_uring may
-still point at userspace-visible SQE storage, so a concurrent userspace
-thread can change fields between validation and use.
+Hi Martin, reviewers,
 
-request_len is checked against the size of scmd->cmnd, then used again for
-scmd->cmd_len and copy_from_user().  If userspace changes request_len after
-the bounds check, the later copy can overflow the 32-byte scmd->cmnd
-buffer.  Transfer fields are also read again by scsi_bsg_map_user_buffer(),
-leaving direction, address and length open to the same race.
+This series adds functionality for NVMe initiator to the fnic driver.
 
-Use READ_ONCE() to load each bsg_uring_cmd field needed by
-scsi_bsg_uring_cmd() into a local variable, then use those locals for both
-validation and execution.  Pass the stable transfer direction, address and
-length into scsi_bsg_map_user_buffer() so the helper no longer re-derives
-them from the SQE.
+The changes enable the fnic driver to act as an NVMe initiator over
+Fibre Channel (FC-NVMe), allowing the host to discover and communicate
+with NVMe targets using the existing fnic infrastructure. The patches
+prepare the driver for full FC-NVMe initiator operation while
+maintaining existing SCSI/FC functionality.
 
-This fixes the double-fetch without copying the whole io_uring command
-payload.
+These are some of the salient patches:
 
-Tested with KASAN on QEMU (virtio-scsi, 2 vCPUs).  Without this fix, a
-two-thread race produces:
+o. Make fnic debug logging usable by SCSI and NVMe initiator roles.
+o. Use fnic instance numbers for non-SCSI-facing identifiers.
+o. Decode firmware roles for FCP, NVMe, and unsupported targets.
+o. Advertise NVMe initiator service parameters during FC discovery.
+o. Add FDLS role handling for NVMe initiator discovery flows.
+o. Add the NVMe/FC transport path and port registration.
+o. Route completions, resets, and LS frames by initiator role.
+o. Add NVMe LS timeouts, statistics, and debugfs state reporting.
 
-  BUG: KASAN: wild-memory-access in scsi_queue_rq+0x4a3/0x58a0
-  Write of size 96 at addr dead000000001000 by task poc/67
-  Call Trace:
-   kasan_report+0xce/0x100
-   __asan_memset+0x23/0x50
-   scsi_queue_rq+0x4a3/0x58a0
-   scsi_bsg_uring_cmd+0x942/0x1570
-   io_uring_cmd+0x2f6/0x950
-   io_issue_sqe+0xe5/0x22d0
+Even though the patches have been made into a series, some patches are
+heavier than others. But, every effort has been made to keep the
+purpose of each patch as a single-purpose, and to compile cleanly.
+All the individual patches compile cleanly. The compiler used is GCC
+14.2.
 
-Link: https://lore.kernel.org/all/20260527105931.3950913-1-rc@rexion.ai/T/#u
-Fixes: 7b6d3255e7f8 ("scsi: bsg: add io_uring passthrough handler")
-Cc: stable@vger.kernel.org
-Signed-off-by: Rahul Chandelkar <rc@rexion.ai>
----
-Changes in v2:
-- Use READ_ONCE() for individual fields instead of memcpying the command
-  payload.
-- Pass stable transfer parameters to scsi_bsg_map_user_buffer() so it does
-  not re-read the SQE.
-- Do not carry the Reviewed-by tag from v1 because the implementation
-  strategy changed.
+This patch set has been tested as a whole. Therefore, the tested-by
+fields have been added only to one patch in the set.
+I've refrained from adding tested-by to most of the patches, so as to
+not mislead the reviewer/reader.
 
- drivers/scsi/scsi_bsg.c | 54 ++++++++++++++++++++++++++---------------
- 1 file changed, 35 insertions(+), 19 deletions(-)
+A brief note on the unit tests:
 
-diff --git a/drivers/scsi/scsi_bsg.c b/drivers/scsi/scsi_bsg.c
-index e80dec53174e..ccbe3d98e4ff 100644
---- a/drivers/scsi/scsi_bsg.c
-+++ b/drivers/scsi/scsi_bsg.c
-@@ -76,12 +76,10 @@ static enum rq_end_io_ret scsi_bsg_uring_cmd_done(struct request *req,
- 
- static int scsi_bsg_map_user_buffer(struct request *req,
- 				    struct io_uring_cmd *ioucmd,
--				    unsigned int issue_flags, gfp_t gfp_mask)
-+				    unsigned int issue_flags, gfp_t gfp_mask,
-+				    bool is_write, u64 buf_addr,
-+				    unsigned long buf_len)
- {
--	const struct bsg_uring_cmd *cmd = io_uring_sqe128_cmd(ioucmd->sqe, struct bsg_uring_cmd);
--	bool is_write = cmd->dout_xfer_len > 0;
--	u64 buf_addr = is_write ? cmd->dout_xferp : cmd->din_xferp;
--	unsigned long buf_len = is_write ? cmd->dout_xfer_len : cmd->din_xfer_len;
- 	struct iov_iter iter;
- 	int ret;
- 
-@@ -104,26 +102,40 @@ static int scsi_bsg_uring_cmd(struct request_queue *q, struct io_uring_cmd *iouc
- 			       unsigned int issue_flags, bool open_for_write)
- {
- 	struct scsi_bsg_uring_cmd_pdu *pdu = scsi_bsg_uring_cmd_pdu(ioucmd);
--	const struct bsg_uring_cmd *cmd = io_uring_sqe128_cmd(ioucmd->sqe, struct bsg_uring_cmd);
-+	const struct bsg_uring_cmd *cmd =
-+		io_uring_sqe128_cmd(ioucmd->sqe, struct bsg_uring_cmd);
- 	struct scsi_cmnd *scmd;
- 	struct request *req;
- 	blk_mq_req_flags_t blk_flags = 0;
- 	gfp_t gfp_mask = GFP_KERNEL;
-+	u64 request = READ_ONCE(cmd->request);
-+	u32 request_len = READ_ONCE(cmd->request_len);
-+	u32 protocol = READ_ONCE(cmd->protocol);
-+	u32 subprotocol = READ_ONCE(cmd->subprotocol);
-+	u32 max_response_len = READ_ONCE(cmd->max_response_len);
-+	u64 response = READ_ONCE(cmd->response);
-+	u64 dout_xferp = READ_ONCE(cmd->dout_xferp);
-+	u32 dout_xfer_len = READ_ONCE(cmd->dout_xfer_len);
-+	u32 dout_iovec_count = READ_ONCE(cmd->dout_iovec_count);
-+	u64 din_xferp = READ_ONCE(cmd->din_xferp);
-+	u32 din_xfer_len = READ_ONCE(cmd->din_xfer_len);
-+	u32 din_iovec_count = READ_ONCE(cmd->din_iovec_count);
-+	u32 timeout_ms = READ_ONCE(cmd->timeout_ms);
- 	int ret;
- 
--	if (cmd->protocol != BSG_PROTOCOL_SCSI ||
--	    cmd->subprotocol != BSG_SUB_PROTOCOL_SCSI_CMD)
-+	if (protocol != BSG_PROTOCOL_SCSI ||
-+	    subprotocol != BSG_SUB_PROTOCOL_SCSI_CMD)
- 		return -EINVAL;
- 
--	if (!cmd->request || cmd->request_len == 0)
-+	if (!request || request_len == 0)
- 		return -EINVAL;
- 
--	if (cmd->dout_xfer_len && cmd->din_xfer_len) {
-+	if (dout_xfer_len && din_xfer_len) {
- 		pr_warn_once("BIDI support in bsg has been removed.\n");
- 		return -EOPNOTSUPP;
- 	}
- 
--	if (cmd->dout_iovec_count > 0 || cmd->din_iovec_count > 0)
-+	if (dout_iovec_count > 0 || din_iovec_count > 0)
- 		return -EOPNOTSUPP;
- 
- 	if (issue_flags & IO_URING_F_NONBLOCK) {
-@@ -131,20 +143,20 @@ static int scsi_bsg_uring_cmd(struct request_queue *q, struct io_uring_cmd *iouc
- 		gfp_mask = GFP_NOWAIT;
- 	}
- 
--	req = scsi_alloc_request(q, cmd->dout_xfer_len ?
-+	req = scsi_alloc_request(q, dout_xfer_len ?
- 				 REQ_OP_DRV_OUT : REQ_OP_DRV_IN, blk_flags);
- 	if (IS_ERR(req))
- 		return PTR_ERR(req);
- 
- 	scmd = blk_mq_rq_to_pdu(req);
--	if (cmd->request_len > sizeof(scmd->cmnd)) {
-+	if (request_len > sizeof(scmd->cmnd)) {
- 		ret = -EINVAL;
- 		goto out_free_req;
- 	}
--	scmd->cmd_len = cmd->request_len;
-+	scmd->cmd_len = request_len;
- 	scmd->allowed = SG_DEFAULT_RETRIES;
- 
--	if (copy_from_user(scmd->cmnd, uptr64(cmd->request), cmd->request_len)) {
-+	if (copy_from_user(scmd->cmnd, uptr64(request), request_len)) {
- 		ret = -EFAULT;
- 		goto out_free_req;
- 	}
-@@ -154,12 +166,18 @@ static int scsi_bsg_uring_cmd(struct request_queue *q, struct io_uring_cmd *iouc
- 		goto out_free_req;
- 	}
- 
--	pdu->response_addr = cmd->response;
--	scmd->sense_len = cmd->max_response_len ?
--		min(cmd->max_response_len, SCSI_SENSE_BUFFERSIZE) : SCSI_SENSE_BUFFERSIZE;
-+	pdu->response_addr = response;
-+	scmd->sense_len = max_response_len ?
-+		min(max_response_len, SCSI_SENSE_BUFFERSIZE) : SCSI_SENSE_BUFFERSIZE;
- 
--	if (cmd->dout_xfer_len || cmd->din_xfer_len) {
--		ret = scsi_bsg_map_user_buffer(req, ioucmd, issue_flags, gfp_mask);
-+	if (dout_xfer_len || din_xfer_len) {
-+		bool is_write = dout_xfer_len > 0;
-+		u64 buf_addr = is_write ? dout_xferp : din_xferp;
-+		unsigned long buf_len = is_write ? dout_xfer_len : din_xfer_len;
-+
-+		ret = scsi_bsg_map_user_buffer(req, ioucmd, issue_flags,
-+					       gfp_mask, is_write, buf_addr,
-+					       buf_len);
- 		if (ret)
- 			goto out_free_req;
- 		pdu->bio = req->bio;
-@@ -167,8 +185,8 @@ static int scsi_bsg_uring_cmd(struct request_queue *q, struct io_uring_cmd *iouc
- 		pdu->bio = NULL;
- 	}
- 
--	req->timeout = cmd->timeout_ms ?
--		msecs_to_jiffies(cmd->timeout_ms) : BLK_DEFAULT_SG_TIMEOUT;
-+	req->timeout = timeout_ms ?
-+		msecs_to_jiffies(timeout_ms) : BLK_DEFAULT_SG_TIMEOUT;
- 
- 	req->end_io = scsi_bsg_uring_cmd_done;
- 	req->end_io_data = ioucmd;
+o. Configure multipathing, and run link flaps on single link. IOs drop
+   briefly, but pick up as expected.
+o. Configure multipathing, and run link flaps on two links, with a 30
+   second delay in between. IOs drop briefly, but pick up as expected.
+o. Repeat the above tests with 1 queue and 64 queues.
+o. Perform tests with Netapp and Pure targets.
+
+All tests were successful.
+
+This set of patches was reviewed before submitting upstream,
+and the following review comments were incorporated.
+
+Incorporate review comments from Hannes Reinecke:
+
+Decode target roles explicitly and report unsupported roles.
+Remove the empty line before the FLOGI completion else block.
+Add a short comment for the NVMe ERSP completion case.
+
+Incorporate review comments from Lee Duncan:
+
+Replace the NVMe LS OXID switch with a direct frame-type check.
+Rename the NVMe frame helper to follow fnic function naming style.
+Convert the NVMe opcode stats helper to a switch statement.
+Share NVMe completion stats accounting and compute duration once.
+
+Changes between v1 and v2:
+	Incorporate review comments from Marco Crivellari:
+		Explicitly use WQ_PERCPU for the fnic completion workqueue.
+
+Thanks,
+Karan
+
+Karan Tilak Kumar (13):
+  scsi: fnic: Make debug logging protocol independent
+  scsi: fnic: Use fnic_num for non-SCSI identifiers
+  scsi: fnic: Decode firmware role configuration
+  scsi: fnic: Advertise NVMe initiator service parameters
+  scsi: fnic: Add FDLS role handling for NVMe initiators
+  scsi: fnic: Add the NVMe/FC transport path
+  scsi: fnic: Route completions and resets by initiator role
+  scsi: fnic: Handle NVMe LS frames in FDLS
+  scsi: fnic: Send NVMe LS requests through FDLS
+  scsi: fnic: Abort timed-out NVMe LS requests
+  scsi: fnic: Track NVMe transport statistics
+  scsi: fnic: Expose NVMe transport state in debugfs
+  scsi: fnic: Bump up version number
+
+ drivers/scsi/fnic/Makefile       |    1 +
+ drivers/scsi/fnic/fcpio.h        |   35 +
+ drivers/scsi/fnic/fdls_disc.c    |  953 ++++++++------
+ drivers/scsi/fnic/fdls_fc.h      |   12 +
+ drivers/scsi/fnic/fip.c          |  117 +-
+ drivers/scsi/fnic/fip.h          |    2 +-
+ drivers/scsi/fnic/fnic.h         |  104 +-
+ drivers/scsi/fnic/fnic_debugfs.c |  101 +-
+ drivers/scsi/fnic/fnic_fcs.c     |  196 +--
+ drivers/scsi/fnic/fnic_fdls.h    |   48 +-
+ drivers/scsi/fnic/fnic_io.h      |   23 +-
+ drivers/scsi/fnic/fnic_isr.c     |   28 +-
+ drivers/scsi/fnic/fnic_main.c    |  212 ++-
+ drivers/scsi/fnic/fnic_nvme.c    | 2079 ++++++++++++++++++++++++++++++
+ drivers/scsi/fnic/fnic_nvme.h    |  138 ++
+ drivers/scsi/fnic/fnic_res.c     |   31 +-
+ drivers/scsi/fnic/fnic_res.h     |   32 +-
+ drivers/scsi/fnic/fnic_scsi.c    |  249 ++--
+ drivers/scsi/fnic/fnic_stats.h   |   28 +
+ drivers/scsi/fnic/fnic_trace.c   |    5 +-
+ drivers/scsi/fnic/vnic_devcmd.h  |    2 +-
+ 21 files changed, 3618 insertions(+), 778 deletions(-)
+ create mode 100644 drivers/scsi/fnic/fnic_nvme.c
+ create mode 100644 drivers/scsi/fnic/fnic_nvme.h
+
 -- 
-2.54.0
+2.47.1
+
