@@ -1,87 +1,75 @@
-Received: from cstnet.cn (smtp81.cstnet.cn [159.226.251.81])
-	(using TLSv1.2 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 352552773CA;
-	Wed, 27 May 2026 08:03:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.226.251.81
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7BE333CFF6C;
+	Wed, 27 May 2026 08:12:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779869015; cv=none; b=TWEHS8HaCeWskWbPJa83ZCHnYADUJS2Z06+PngxJrVdwt0qKavyMZ3TrVfeGgu8xYH+xfG43ZHYPT0CFAQDWkZeR/CBLn6l3CE4EEAymUVmFGDoxfxrRlnjn1Fhe7SxXGg68bU0mqIpLxmAcRrm05RVpVA0sqBCk4GaMBEHqjbA=
+	t=1779869524; cv=none; b=iJUgh8nRt7oFo0pNnajEKVmS3v7hEuPuT6WvkkzdDbQMOHG2WqF2Ey/0xUhlZFE+XAntj7dFgb/oeao863LlUuegfwSU2MZC7PtksE/QQCqtGRZxpZMijKLEAe7bslS20u4lZNfpQCi1NcUIZLyXiZhxK6uaTw357oZDM+YBiIo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779869015; c=relaxed/simple;
-	bh=S6mq/S+uDo8ws+FVAdz/OEhCkMIl/1/PwP8X6TOkemU=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=k65Q7wWca3idObezuINkjuz/K4aiUaeX7gyCwUMPz/LSwSh3cDxt/tMaMtMk82GbQY/DG+W6Ci/h31MhFg3Vn28/TLx724fJ0eTB7Pvu3434p+k+daBM2HCGRmOoQxqGO24bmZRnpg+kkXCjAMVJBwP04hOsL/wQuqsu7bhl6E0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=isrc.iscas.ac.cn; spf=pass smtp.mailfrom=isrc.iscas.ac.cn; arc=none smtp.client-ip=159.226.251.81
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=isrc.iscas.ac.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=isrc.iscas.ac.cn
-Received: from localhost.localdomain (unknown [36.112.3.223])
-	by APP-03 (Coremail) with SMTP id rQCowABHaN9JpRZqHlmIEg--.8338S2;
-	Wed, 27 May 2026 16:03:22 +0800 (CST)
-From: Haoxiang Li <lihaoxiang@isrc.iscas.ac.cn>
-To: skashyap@marvell.com,
-	jhasan@marvell.com,
-	GR-QLogic-Storage-Upstream@marvell.com,
-	James.Bottomley@HansenPartnership.com,
-	martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Haoxiang Li <lihaoxiang@isrc.iscas.ac.cn>,
-	stable@vger.kernel.org
-Subject: [PATCH] scsi: bnx2fc: unmap DMA mappings when BD count exceeds firmware limit
-Date: Wed, 27 May 2026 16:03:21 +0800
-Message-Id: <20260527080321.2355821-1-lihaoxiang@isrc.iscas.ac.cn>
-X-Mailer: git-send-email 2.25.1
+	s=arc-20240116; t=1779869524; c=relaxed/simple;
+	bh=CrjsZ89NLp/qgajRLSW9INu/xbfuVCAub2HUqhME3do=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=WJa2LUtQ7giQAwWOTbSNWMUfeQfZr6ayv7bpRJX97+V2+wujlDZrQiQLutQtp3QxZWuJ+YaMyD9JeDob/nP9sH7EMaCJOzruJPlTOwwY9LbVjQXFZscOyIClfvEYU83cGutbehkglhul/B/K5Xvg63aq020hChgrSkIBSvsMZPM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XkslF6Ms; arc=none smtp.client-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XkslF6Ms"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 49DB01F00A3A;
+	Wed, 27 May 2026 08:12:02 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1779869523;
+	bh=XF738AUc4MqY++N0qZJs3qwXniGKZajtAh9K82WHq8I=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To;
+	b=XkslF6MshykwuFiw8ug1amzS7XgpyzSqn4x+Vu8x9ltaDoDzlM0hzH3lQaPMdyg12
+	 YdEdJmyJBdaPk3x9qbMnBi6OsbOSCDq6O89Oh6iXsV+0oYwvyZz9Q2ln7+68I79yb+
+	 fD3uSwG2aUlkVqgLqoOCcSRYE7lkf3diTFq2euL6lHMM3NS328px5/Nkzix/rUFsrv
+	 nIUZQJEIvY54IlI1u7NkI2DC5RVy79BEVwADvs2qiLs6w0IwQZDSdfrW5IAfrGxfQ6
+	 XTEiWuYfR9c9mN0IbvEeqw2KH6ZZEo2hCnU3/D6bq6qhqgp9ZToleHLaX5s71el7Aa
+	 u6qMOj3trm1Gg==
+Message-ID: <42a4627a-e4f6-4bbd-89eb-559d1f969053@kernel.org>
+Date: Wed, 27 May 2026 17:11:59 +0900
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v1 1/8] ata: pata_budda: Use named initializer for
+ zorro_device_id
+To: =?UTF-8?Q?Uwe_Kleine-K=C3=B6nig_=28The_Capable_Hub=29?=
+ <u.kleine-koenig@baylibre.com>, Geert Uytterhoeven <geert@linux-m68k.org>,
+ Niklas Cassel <cassel@kernel.org>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-ide@vger.kernel.org, linux-m68k@lists.linux-m68k.org,
+ linux-kernel@vger.kernel.org,
+ "Christian A. Ehrhardt" <christian.ehrhardt@codasip.com>,
+ "Christian A. Ehrhardt" <lk@c--e.de>, linux-scsi@vger.kernel.org
+References: <cover.1779803053.git.u.kleine-koenig@baylibre.com>
+ <a20f52aeee9dfcacfaea43ff280fa1867878cbbe.1779803053.git.u.kleine-koenig@baylibre.com>
+Content-Language: en-US
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <a20f52aeee9dfcacfaea43ff280fa1867878cbbe.1779803053.git.u.kleine-koenig@baylibre.com>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:rQCowABHaN9JpRZqHlmIEg--.8338S2
-X-Coremail-Antispam: 1UD129KBjvdXoW7JrWDuF4DuryrZw13CFW7Jwb_yoWDtrXEkw
-	s8tr9Fgryxtr9rKr1v9FZYv34avay7Wryv93WYk34Syw1rXFyDZFWYyrZ8Aw1UWw4xGFn8
-	Jas7ZasFkrn8ujkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUIcSsGvfJTRUUUb48FF20E14v26r4j6ryUM7CY07I20VC2zVCF04k26cxKx2IYs7xG
-	6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
-	A2z4x0Y4vE2Ix0cI8IcVAFwI0_Jr0_JF4l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Jr0_
-	Gr1l84ACjcxK6I8E87Iv67AKxVW8JVWxJwA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gr0_Gr
-	1UM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xII
-	jxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr
-	1lF7xvr2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7MxkF7I0En4kS14v26r1q
-	6r43MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI
-	0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y
-	0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxV
-	WUJVW8JwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1l
-	IxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7VUbGQ6JUUUU
-	U==
-X-CM-SenderInfo: 5olkt0x0ld0ww6lv2u4olvutnvoduhdfq/1tbiDAUAE2oWidl8IgAAso
 
-bnx2fc_build_bd_list_from_sg() maps the SCSI SG list before checking
-whether the generated BD count exceeds the firmware limit. If the limit
-check fails, the function returns an error without unmapping the DMA
-mapping.
+On 5/26/26 11:17 PM, Uwe Kleine-König (The Capable Hub) wrote:
+> Using named initializers is more explicit and thus easier to parse for a
+> human.
+> 
+> It's also more robust to changes in the struct definition. This robustness
+> is relevant for a planned change to struct zorro_device_id that replaces
+> .driver_data by an anonymous union.
+> 
+> This change doesn't introduce changes to the compiled zorro_device_id
+> array.
+> 
+> Signed-off-by: Uwe Kleine-König (The Capable Hub) <u.kleine-koenig@baylibre.com>
 
-Unmap the SG list before returning the error.
+Acked-by: Damien Le Moal <dlemoal@kernel.org>
 
-Fixes: 3c97b569505f ("scsi: bnx2fc: Limit the IO size according to the FW capability")
-Cc: stable@vger.kernel.org
-Signed-off-by: Haoxiang Li <lihaoxiang@isrc.iscas.ac.cn>
----
- drivers/scsi/bnx2fc/bnx2fc_io.c | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_io.c b/drivers/scsi/bnx2fc/bnx2fc_io.c
-index 33057908f147..5429f127c5b8 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_io.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_io.c
-@@ -1718,6 +1718,7 @@ static int bnx2fc_build_bd_list_from_sg(struct bnx2fc_cmd *io_req)
- 	if (bd_count > BNX2FC_FW_MAX_BDS_PER_CMD) {
- 		pr_err("bd_count = %d exceeded FW supported max BD(255), task_id = 0x%x\n",
- 		       bd_count, io_req->xid);
-+		bnx2fc_unmap_sg_list(io_req);
- 		return -ENOMEM;
- 	}
- 
 -- 
-2.25.1
-
+Damien Le Moal
+Western Digital Research
