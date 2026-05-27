@@ -1,154 +1,108 @@
-Received: from spam.asrmicro.com (asrmicro.com [210.13.118.86])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-vk1-f178.google.com (mail-vk1-f178.google.com [209.85.221.178])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 96D033EE1D6;
-	Wed, 27 May 2026 11:24:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.13.118.86
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 125B73EF662
+	for <linux-scsi@vger.kernel.org>; Wed, 27 May 2026 13:15:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.178
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779881061; cv=none; b=lqPlpNq3vlzD/acrZGhhzGV/atxMHXTNJWrkMozChYRbe2gO4ut8KT92+cWpy6oLLa8oxVTOVDKptfIbdG3cDkpU45bFzfonrV/uTRkiWoWYYcP3rF5Ch1FJDd/thX1an62e9gDz7A3r+dXfBo9ZM/2LP+YJqrgspPJ1bx4Vw80=
+	t=1779887716; cv=none; b=sCogST0jAtcRT31Mbo9+vUfehhxfnoiRzKsIL2ZCkAfEJKinXvvuBoBb3Y7g11bGn/qAn0oInRJPfnkBcNTwtLQqv7nAPKmCai5AUwAvjvkvPUgiFof3XPftv3qwW5iUfmuKcknw9rAVMnARo5n3dBlecspzZ65yOLhd9N2NzI8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779881061; c=relaxed/simple;
-	bh=VstbaORtbPZRsM0LAZ7qY2UgHW5+E4S29j1kvqewaLU=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=t25O/Fmhha0G/l1VLRJeKH9v6eP4i9iXxsGhYtYTxA1mkigunTeKdhfoazlV50M1upT/hR1bL0cPCLTrlrNSo+ZTNWYgE0v6ZVZnvtfhwB2N3nsrJTvvNslzpAOtT5BmkprPKTHlInlRX8vLu01jBoyg4kd9u0mPpz7lsdOa/pM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=asrmicro.com; spf=pass smtp.mailfrom=asrmicro.com; arc=none smtp.client-ip=210.13.118.86
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=asrmicro.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=asrmicro.com
-Received: from exch02.asrmicro.com (exch02.asrmicro.com [10.1.24.122])
-	by spam.asrmicro.com with ESMTPS id 64RBNO1g044600
-	(version=TLSv1 cipher=ECDHE-RSA-AES256-SHA bits=256 verify=FAIL);
-	Wed, 27 May 2026 19:23:24 +0800 (GMT-8)
-	(envelope-from hongjiefang@asrmicro.com)
-Received: from exch02.asrmicro.com (10.1.24.122) by exch02.asrmicro.com
- (10.1.24.122) with Microsoft SMTP Server (TLS) id 15.0.847.32; Wed, 27 May
- 2026 19:23:29 +0800
-Received: from exch02.asrmicro.com ([::1]) by exch02.asrmicro.com ([::1]) with
- mapi id 15.00.0847.030; Wed, 27 May 2026 19:23:28 +0800
-From: =?utf-8?B?RmFuZyBIb25namllKOaWuea0quadsCk=?= <hongjiefang@asrmicro.com>
-To: Bart Van Assche <bvanassche@acm.org>,
-        "alim.akhtar@samsung.com"
-	<alim.akhtar@samsung.com>,
-        "avri.altman@wdc.com" <avri.altman@wdc.com>,
-        "James.Bottomley@HansenPartnership.com"
-	<James.Bottomley@HansenPartnership.com>,
-        "martin.petersen@oracle.com"
-	<martin.petersen@oracle.com>,
-        "peter.wang@mediatek.com"
-	<peter.wang@mediatek.com>,
-        "beanhuo@micron.com" <beanhuo@micron.com>
-CC: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH v1] ufs: core: complete wl runtime resume after SCSI EH
-Thread-Topic: [PATCH v1] ufs: core: complete wl runtime resume after SCSI EH
-Thread-Index: AQHc7VDa7XbUTpg5cEmDlfhToLay8bYhuYug
-Date: Wed, 27 May 2026 11:23:28 +0000
-Message-ID: <20e284b3ce2f4de78ed2ad9804b5910f@exch02.asrmicro.com>
-References: <20260526114941.667477-1-hongjiefang@asrmicro.com>
- <606c4c21-bcf2-4ed5-9434-e7c70f541d7a@acm.org>
-In-Reply-To: <606c4c21-bcf2-4ed5-9434-e7c70f541d7a@acm.org>
-Accept-Language: zh-CN, en-US
-Content-Language: zh-CN
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+	s=arc-20240116; t=1779887716; c=relaxed/simple;
+	bh=NuNvxIHEMMpLcTwcLN317lzyiSS9qhMROyeREEechDs=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=YaWL5M9o9Nc720XkioguNCDa11sfvtj09gs3L3DQYIhciFdbzTYoJtXb+OjrIrJt4xtWdL/yUu0MGWkOauv2kDzSHUjNEMqeH7t8oo7+DI3mMx0nHzR5o5D00rMxHdOMTMwGkthQbk8E7ovKtgFaO03nGgKt7KrPRagfYvRg9KM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.221.178
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Received: by mail-vk1-f178.google.com with SMTP id 71dfb90a1353d-56f72d27e7eso12919188e0c.0
+        for <linux-scsi@vger.kernel.org>; Wed, 27 May 2026 06:15:14 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1779887714; x=1780492514;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=VJbyg3CmiTY5UdW1iNZoeveCs0jnc1uKWTBV/g2Zt+o=;
+        b=PALrFVElGrt7Pn2XQnno+xybhrL6QbdqJ8ksHAqmTeTrAROVnIa6UOsroabzhVYaxL
+         yTZZRe9y+JgZSx+ahnsmrPk+Vwb3lebhXCRgon7Jh/OipCfu6xgdE3mQynkZnFxwEtgF
+         XGVoUhCmatvFHTLph5tWXQ8txgkKRlTP7fGSkz5eqpRh+ioqnnv3K7ONjDlcCYxxB1zt
+         jioOhb6PnNY4PlZDKf5P9qVoolhslNIny+jXm/aD8Yp2iZeXUx5VUV/vbprNXe+H4ssd
+         P5ZYfF2YhggdAv4ZwmhiLBFWYc+IETDJUKscC9JcWHdfMA8OX7HSmTg9CcnHqGFJ2wDc
+         jJjw==
+X-Forwarded-Encrypted: i=1; AFNElJ8aNpWDRFybvjUFpW2+VWXeq21ycpusIlJPkAcWp52lgRljBqk1jx6NlbMQHaTRT1k2Tlvb/OStffOY@vger.kernel.org
+X-Gm-Message-State: AOJu0Yz87tfTe/5gtljwdDLyqTgUnJIe3MscIQ/L0ERn7Yv35V3clJFX
+	jWzFrjdwYhMxO9kzbe6sjnKDCaV/Q8GX3vTG7zlbqQ8jHZEdWWmxAR3a0f623mL4bmk=
+X-Gm-Gg: Acq92OGokTK9RgFRev9uNdpShhUJGWk/zsQL2YLXu2376zUI/RbeYvGtGCgG+2+UcNh
+	xwcRhJF+z//0cO77wMMV6z+ARJSzAapIJqXlvSHH51JnxKHPm3B4EUrEuV19i7J3ACToBs3laIe
+	j4Bg+YWekiSGmwLuunxdCGk6Q10sni39eegjnPPGRFOTX1kVuurV0FqZEh5eUp71ibIK7zGtuSW
+	nKwC21M+elIeuTb1C0mtfV7aDTT+/LTq4IsFQ+tUJ+10L3dZuB6zZFW41K1AUYwZw3Xur4Ves8k
+	OGVLJC2tb7uXBNvPuw7DSvRYXkyW7dPachlp1e1mSIFlFrk99HisbtwXKFHNDjE3KCO5HqYToLO
+	3qAUEij/40N2Ii1TW9VsUzyAwoinD+6kx/FIGniJiv87H9X1sucTRc5PA1E34s6yH+KQOimbu5L
+	Dir5rJFfkL9ucRQUsdYfRFNaOUDqpntfstpWzdzSkXDmdE2R9UQlrbdQP6qKrbBNXSOoyRYR6q2
+	oetr00KRQ==
+X-Received: by 2002:a05:6122:1d4d:b0:56b:9534:c06f with SMTP id 71dfb90a1353d-58b86e788aamr6435781e0c.3.1779887714020;
+        Wed, 27 May 2026 06:15:14 -0700 (PDT)
+Received: from mail-vs1-f50.google.com (mail-vs1-f50.google.com. [209.85.217.50])
+        by smtp.gmail.com with ESMTPSA id 71dfb90a1353d-586f25d708bsm21340126e0c.1.2026.05.27.06.15.13
+        for <linux-scsi@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 27 May 2026 06:15:13 -0700 (PDT)
+Received: by mail-vs1-f50.google.com with SMTP id ada2fe7eead31-6312bdd281eso10662430137.0
+        for <linux-scsi@vger.kernel.org>; Wed, 27 May 2026 06:15:13 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AFNElJ9FVG5yq/pxxzH2I3memx/KtJTAynlFBytuMbOnrCBPFV2bgJqc+Kec1tQ6omF0tfXZqUAV1A0IEbaq@vger.kernel.org
+X-Received: by 2002:a67:e905:0:b0:6b1:c09:4202 with SMTP id
+ ada2fe7eead31-6b10c094452mr280240137.5.1779887712838; Wed, 27 May 2026
+ 06:15:12 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-DNSRBL: 
-X-SPAM-SOURCE-CHECK: pass
-X-MAIL:spam.asrmicro.com 64RBNO1g044600
+References: <cover.1779803053.git.u.kleine-koenig@baylibre.com> <a20f52aeee9dfcacfaea43ff280fa1867878cbbe.1779803053.git.u.kleine-koenig@baylibre.com>
+In-Reply-To: <a20f52aeee9dfcacfaea43ff280fa1867878cbbe.1779803053.git.u.kleine-koenig@baylibre.com>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Date: Wed, 27 May 2026 15:15:00 +0200
+X-Gmail-Original-Message-ID: <CAMuHMdWJpPZ2DhrUE7cpF20Dg2+wWqXRL4D6cfDca8XLQegOVw@mail.gmail.com>
+X-Gm-Features: AVHnY4JNlHO3xU2ToNfirnyHdNDRJnjKIw-cP8vUt0A5y3NPzppIp4JL0RDJSno
+Message-ID: <CAMuHMdWJpPZ2DhrUE7cpF20Dg2+wWqXRL4D6cfDca8XLQegOVw@mail.gmail.com>
+Subject: Re: [PATCH v1 1/8] ata: pata_budda: Use named initializer for zorro_device_id
+To: =?UTF-8?Q?Uwe_Kleine=2DK=C3=B6nig_=28The_Capable_Hub=29?= <u.kleine-koenig@baylibre.com>
+Cc: Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>, 
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
+	"Martin K. Petersen" <martin.petersen@oracle.com>, linux-ide@vger.kernel.org, 
+	linux-m68k@lists.linux-m68k.org, linux-kernel@vger.kernel.org, 
+	"Christian A. Ehrhardt" <christian.ehrhardt@codasip.com>, "Christian A. Ehrhardt" <lk@c--e.de>, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-DQo+IEZyb206IEJhcnQgVmFuIEFzc2NoZSBbbWFpbHRvOmJ2YW5hc3NjaGVAYWNtLm9yZ10NCj4g
-U2VudDogV2VkbmVzZGF5LCBNYXkgMjcsIDIwMjYgNDo0NyBBTQ0KPiBUbzogRmFuZyBIb25namll
-KOaWuea0quadsCkgPGhvbmdqaWVmYW5nQGFzcm1pY3JvLmNvbT47DQo+IGFsaW0uYWtodGFyQHNh
-bXN1bmcuY29tOyBhdnJpLmFsdG1hbkB3ZGMuY29tOw0KPiBKYW1lcy5Cb3R0b21sZXlASGFuc2Vu
-UGFydG5lcnNoaXAuY29tOyBtYXJ0aW4ucGV0ZXJzZW5Ab3JhY2xlLmNvbTsNCj4gcGV0ZXIud2Fu
-Z0BtZWRpYXRlay5jb207IGJlYW5odW9AbWljcm9uLmNvbQ0KPiBDYzogbGludXgtc2NzaUB2Z2Vy
-Lmtlcm5lbC5vcmc7IGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmcNCj4gU3ViamVjdDogUmU6
-IFtQQVRDSCB2MV0gdWZzOiBjb3JlOiBjb21wbGV0ZSB3bCBydW50aW1lIHJlc3VtZSBhZnRlciBT
-Q1NJIEVIDQo+IA0KPiBPbiA1LzI2LzI2IDQ6NDkgQU0sIEhvbmdqaWUgRmFuZyB3cm90ZToNCj4g
-PiBkaWZmIC0tZ2l0IGEvZHJpdmVycy91ZnMvY29yZS91ZnNoY2QuYyBiL2RyaXZlcnMvdWZzL2Nv
-cmUvdWZzaGNkLmMNCj4gPiBpbmRleCBjM2YwODk1N2QxNzkuLmU3NTE3Y2YyM2YwNiAxMDA2NDQN
-Cj4gPiAtLS0gYS9kcml2ZXJzL3Vmcy9jb3JlL3Vmc2hjZC5jDQo+ID4gKysrIGIvZHJpdmVycy91
-ZnMvY29yZS91ZnNoY2QuYw0KPiA+IEBAIC0xMDM2OCw2ICsxMDM2OCwyMiBAQCBzdGF0aWMgaW50
-IF9fdWZzaGNkX3dsX3N1c3BlbmQoc3RydWN0DQo+IHVmc19oYmEgKmhiYSwgZW51bSB1ZnNfcG1f
-b3AgcG1fb3ApDQo+ID4gICB9DQo+ID4NCj4gPiAgICNpZmRlZiBDT05GSUdfUE0NCj4gPiArc3Rh
-dGljIGludCB1ZnNoY2Rfd2xfcmVzdW1lX3BtX3JlY292ZXJlZChzdHJ1Y3QgdWZzX2hiYSAqaGJh
-KQ0KPiA+ICt7DQo+ID4gKwlpbnQgcmV0ID0gMDsNCj4gPiArCXN0cnVjdCBzY3NpX2RldmljZSAq
-c2RwID0gaGJhLT51ZnNfZGV2aWNlX3dsdW47DQo+ID4gKw0KPiA+ICsJaWYgKCFzZHAgfHwgIXNj
-c2lfYmxvY2tfd2hlbl9wcm9jZXNzaW5nX2Vycm9ycyhzZHApKQ0KPiA+ICsJCXJldHVybiAwOw0K
-PiA+ICsNCj4gPiArCWlmIChoYmEtPnVmc2hjZF9zdGF0ZSA9PSBVRlNIQ0RfU1RBVEVfT1BFUkFU
-SU9OQUwgJiYNCj4gPiArCSAgICB1ZnNoY2RfaXNfbGlua19hY3RpdmUoaGJhKSAmJg0KPiA+ICsJ
-ICAgIHVmc2hjZF9pc191ZnNfZGV2X2FjdGl2ZShoYmEpKQ0KPiA+ICsJCXJldCA9IDE7DQo+ID4g
-Kw0KPiA+ICsJcmV0dXJuIHJldDsNCj4gPiArfQ0KPiA+ICsNCj4gPiAgIHN0YXRpYyBpbnQgX191
-ZnNoY2Rfd2xfcmVzdW1lKHN0cnVjdCB1ZnNfaGJhICpoYmEsIGVudW0gdWZzX3BtX29wDQo+IHBt
-X29wKQ0KPiA+ICAgew0KPiA+ICAgCWludCByZXQ7DQo+ID4gQEAgLTEwNDIyLDYgKzEwNDM4LDkg
-QEAgc3RhdGljIGludCBfX3Vmc2hjZF93bF9yZXN1bWUoc3RydWN0IHVmc19oYmENCj4gKmhiYSwg
-ZW51bSB1ZnNfcG1fb3AgcG1fb3ApDQo+ID4NCj4gPiAgIAlpZiAoIXVmc2hjZF9pc191ZnNfZGV2
-X2FjdGl2ZShoYmEpKSB7DQo+ID4gICAJCXJldCA9IHVmc2hjZF9zZXRfZGV2X3B3cl9tb2RlKGhi
-YSwNCj4gVUZTX0FDVElWRV9QV1JfTU9ERSk7DQo+ID4gKwkJaWYgKHBtX29wID09IFVGU19SVU5U
-SU1FX1BNICYmIHJldCA9PSAtRUlPICYmDQo+ID4gKwkJICAgIHVmc2hjZF93bF9yZXN1bWVfcG1f
-cmVjb3ZlcmVkKGhiYSkpDQo+ID4gKwkJCXJldCA9IDA7DQo+ID4gICAJCWlmIChyZXQpDQo+ID4g
-ICAJCQlnb3RvIHNldF9vbGRfbGlua19zdGF0ZTsNCj4gPiAgIAkJdWZzaGNkX3NldF90aW1lc3Rh
-bXBfYXR0cihoYmEpOw0KPiANCj4gVGhpcyBjaGFuZ2UgaW5jcmVhc2VzIHRoZSBjb21wbGV4aXR5
-IG9mIHRoZSBVRlMgZHJpdmVyIHRvbyBtdWNoLiBQbGVhc2UNCj4gY29uc2lkZXIgYnVpbGRpbmcg
-YSBzb2x1dGlvbiBmb3IgdGhpcyBpc3N1ZSBvbiB0b3Agb2YgdGhlICh1bnRlc3RlZCkNCj4gcGF0
-Y2ggYmVsb3cuIFRoZSBwYXRjaCBiZWxvdyBwcmV2ZW50cyB0aGF0IHRoZSBTQ1NJIEVIIGlzIGFj
-dGl2YXRlZCBpZiBhDQo+IFNUQVJUIFNUT1AgVU5JVCBjb21tYW5kIHRpbWVzIG91dDoNCj4gDQo+
-IGRpZmYgLS1naXQgYS9kcml2ZXJzL3Vmcy9jb3JlL3Vmc2hjZC5jIGIvZHJpdmVycy91ZnMvY29y
-ZS91ZnNoY2QuYw0KPiBpbmRleCA5ZTAzMzYwOThlMjYuLjRiZTU0NTNlZmIzNCAxMDA2NDQNCj4g
-LS0tIGEvZHJpdmVycy91ZnMvY29yZS91ZnNoY2QuYw0KPiArKysgYi9kcml2ZXJzL3Vmcy9jb3Jl
-L3Vmc2hjZC5jDQo+IEBAIC05NDkxLDcgKzk0OTEsNyBAQCBzdGF0aWMgZW51bSBzY3NpX3RpbWVv
-dXRfYWN0aW9uDQo+IHVmc2hjZF9laF90aW1lZF9vdXQoc3RydWN0IHNjc2lfY21uZCAqc2NtZCkN
-Cj4gICB7DQo+ICAgCXN0cnVjdCB1ZnNfaGJhICpoYmEgPSBzaG9zdF9wcml2KHNjbWQtPmRldmlj
-ZS0+aG9zdCk7DQo+IA0KPiAtCWlmICghaGJhLT5zeXN0ZW1fc3VzcGVuZGluZykgew0KPiArCWlm
-ICghaGJhLT5wbV9vcF9pbl9wcm9ncmVzcykgew0KPiAgIAkJLyogQWN0aXZhdGUgdGhlIGVycm9y
-IGhhbmRsZXIgaW4gdGhlIFNDU0kgY29yZS4gKi8NCj4gICAJCXJldHVybiBTQ1NJX0VIX05PVF9I
-QU5ETEVEOw0KPiAgIAl9DQoNClRoYW5rcyBmb3IgdGhlIHN1Z2dlc3Rpb24uIEkgYWdyZWUgdGhh
-dCBwcmV2ZW50aW5nIHRoZSBQTSBTVEFSVCBTVE9QIFVOSVQNCnRpbWVvdXQgZnJvbSBlbnRlcmlu
-ZyB0aGUgcmVndWxhciBTQ1NJIEVIIHBhdGggaXMgY2xlYW5lciB0aGFuIGhhbmRsaW5nDQp0aGUg
-cmFjZSBhZnRlciBzY3NpX2V4ZWN1dGVfY21kKCkgcmV0dXJucy4NCg0KSSBsb29rZWQgY2xvc2Vy
-IGF0IHRoZSBkaXJlY3QgdWZzaGNkX2xpbmtfcmVjb3ZlcnkoKSBhcHByb2FjaCBmcm9tDQp1ZnNo
-Y2RfZWhfdGltZWRfb3V0KCkuIFRoZXJlIGlzIG9uZSBkZXRhaWwgdGhhdCBJIHRoaW5rIG5lZWRz
-IHRvIGJlDQpoYW5kbGVkLg0KDQpGb3IgdGhlIGxlZ2FjeSBzaW5nbGUtZG9vcmJlbGwgcGF0aCwg
-Zm9yY2VfY29tcGw9dHJ1ZSBjdXJyZW50bHkNCnN0aWxsIGNhbGxzIHVmc2hjZF90cmFuc2Zlcl9y
-ZXFfY29tcGwoKSwgd2hpY2ggb25seSBjb21wbGV0ZXMgcmVxdWVzdHMgZm9yDQp3aGljaCB0aGUg
-ZG9vcmJlbGwgYml0IGhhcyBhbHJlYWR5IGJlZW4gY2xlYXJlZDoNCiAgY29tcGxldGVkX3JlcXMg
-PSB+dHJfZG9vcmJlbGwgJiBoYmEtPm91dHN0YW5kaW5nX3JlcXM7DQoNClNvIGlmIHRoZSB0aW1l
-ZC1vdXQgU1NVIGlzIHN0aWxsIG1hcmtlZCBpbiBib3RoIGhiYS0+b3V0c3RhbmRpbmdfcmVxcyBh
-bmQNCnRoZSB0cmFuc2ZlciByZXF1ZXN0IGRvb3JiZWxsIGFmdGVyIHVmc2hjZF9oYmFfc3RvcCgp
-LCBpdCB3aWxsIG5vdCBiZQ0KY29tcGxldGVkIGJ5IHVmc2hjZF9jb21wbGV0ZV9yZXF1ZXN0cyho
-YmEsIHRydWUpLiBSZXR1cm5pbmcNClNDU0lfRUhfUkVTRVRfVElNRVIgaW4gdGhhdCBzdGF0ZSB3
-b3VsZCBvbmx5IHJlc3RhcnQgdGhlIHJlcXVlc3QgdGltZXIgYW5kDQp3b3VsZCBub3Qgd2FrZSB0
-aGUgYmxrX2V4ZWN1dGVfcnEoKSB3YWl0ZXIuDQoNCg0KDQo+IEBAIC0xMDU0Myw3ICsxMDU0Myw2
-IEBAIHN0YXRpYyBpbnQgdWZzaGNkX3dsX3N1c3BlbmQoc3RydWN0IGRldmljZSAqZGV2KQ0KPiAN
-Cj4gICAJaGJhID0gc2hvc3RfcHJpdihzZGV2LT5ob3N0KTsNCj4gICAJZG93bigmaGJhLT5ob3N0
-X3NlbSk7DQo+IC0JaGJhLT5zeXN0ZW1fc3VzcGVuZGluZyA9IHRydWU7DQo+IA0KPiAgIAlpZiAo
-cG1fcnVudGltZV9zdXNwZW5kZWQoZGV2KSkNCj4gICAJCWdvdG8gb3V0Ow0KPiBAQCAtMTA1ODUs
-NyArMTA1ODQsNiBAQCBzdGF0aWMgaW50IHVmc2hjZF93bF9yZXN1bWUoc3RydWN0IGRldmljZSAq
-ZGV2KQ0KPiAgIAkJaGJhLT5jdXJyX2Rldl9wd3JfbW9kZSwgaGJhLT51aWNfbGlua19zdGF0ZSk7
-DQo+ICAgCWlmICghcmV0KQ0KPiAgIAkJaGJhLT5pc19zeXNfc3VzcGVuZGVkID0gZmFsc2U7DQo+
-IC0JaGJhLT5zeXN0ZW1fc3VzcGVuZGluZyA9IGZhbHNlOw0KPiAgIAl1cCgmaGJhLT5ob3N0X3Nl
-bSk7DQo+ICAgCXJldHVybiByZXQ7DQo+ICAgfQ0KPiBkaWZmIC0tZ2l0IGEvaW5jbHVkZS91ZnMv
-dWZzaGNkLmggYi9pbmNsdWRlL3Vmcy91ZnNoY2QuaA0KPiBpbmRleCAzZWFhZTA4MjMyOWMuLjI0
-OGQwYTViZWY0MCAxMDA2NDQNCj4gLS0tIGEvaW5jbHVkZS91ZnMvdWZzaGNkLmgNCj4gKysrIGIv
-aW5jbHVkZS91ZnMvdWZzaGNkLmgNCj4gQEAgLTEwMjksOCArMTAyOSw2IEBAIGVudW0gdWZzaGNk
-X21jcV9vcHIgew0KPiAgICAqIEBjYXBzOiBiaXRtYXNrIHdpdGggaW5mb3JtYXRpb24gYWJvdXQg
-VUZTIGNvbnRyb2xsZXIgY2FwYWJpbGl0aWVzDQo+ICAgICogQGRldmZyZXE6IGZyZXF1ZW5jeSBz
-Y2FsaW5nIGluZm9ybWF0aW9uIG93bmVkIGJ5IHRoZSBkZXZmcmVxIGNvcmUNCj4gICAgKiBAY2xr
-X3NjYWxpbmc6IGZyZXF1ZW5jeSBzY2FsaW5nIGluZm9ybWF0aW9uIG93bmVkIGJ5IHRoZSBVRlMg
-ZHJpdmVyDQo+IC0gKiBAc3lzdGVtX3N1c3BlbmRpbmc6IHN5c3RlbSBzdXNwZW5kIGhhcyBiZWVu
-IHN0YXJ0ZWQgYW5kIHN5c3RlbQ0KPiByZXN1bWUgaGFzDQo+IC0gKglub3QgeWV0IGZpbmlzaGVk
-Lg0KPiAgICAqIEBpc19zeXNfc3VzcGVuZGVkOiBVRlMgZGV2aWNlIGhhcyBiZWVuIHN1c3BlbmRl
-ZCBiZWNhdXNlIG9mIHN5c3RlbQ0KPiBzdXNwZW5kDQo+ICAgICogQHVyZ2VudF9ia29wc19sdmw6
-IGtlZXBzIHRyYWNrIG9mIHVyZ2VudCBia29wcyBsZXZlbCBmb3IgZGV2aWNlDQo+ICAgICogQGlz
-X3VyZ2VudF9ia29wc19sdmxfY2hlY2tlZDoga2VlcHMgdHJhY2sgaWYgdGhlIHVyZ2VudCBia29w
-cyBsZXZlbCBmb3INCj4gQEAgLTEyMDYsNyArMTIwNCw2IEBAIHN0cnVjdCB1ZnNfaGJhIHsNCj4g
-DQo+ICAgCXN0cnVjdCBkZXZmcmVxICpkZXZmcmVxOw0KPiAgIAlzdHJ1Y3QgdWZzX2Nsa19zY2Fs
-aW5nIGNsa19zY2FsaW5nOw0KPiAtCWJvb2wgc3lzdGVtX3N1c3BlbmRpbmc7DQo+ICAgCWJvb2wg
-aXNfc3lzX3N1c3BlbmRlZDsNCj4gDQo+ICAgCWVudW0gYmtvcHNfc3RhdHVzIHVyZ2VudF9ia29w
-c19sdmw7DQo+IA0KPiBUaGFua3MsDQo+IA0KPiBCYXJ0Lg0KDQoNCkJlc3QuDQo=
+On Tue, 26 May 2026 at 16:18, Uwe Kleine-K=C3=B6nig (The Capable Hub)
+<u.kleine-koenig@baylibre.com> wrote:
+> Using named initializers is more explicit and thus easier to parse for a
+> human.
+>
+> It's also more robust to changes in the struct definition. This robustnes=
+s
+> is relevant for a planned change to struct zorro_device_id that replaces
+> .driver_data by an anonymous union.
+>
+> This change doesn't introduce changes to the compiled zorro_device_id
+> array.
+>
+> Signed-off-by: Uwe Kleine-K=C3=B6nig (The Capable Hub) <u.kleine-koenig@b=
+aylibre.com>
+
+Reviewed-by: Geert Uytterhoeven <geert@linux-m68k.org>
+
+Gr{oetje,eeting}s,
+
+                        Geert
+
+--=20
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k=
+.org
+
+In personal conversations with technical people, I call myself a hacker. Bu=
+t
+when I'm talking to journalists I just say "programmer" or something like t=
+hat.
+                                -- Linus Torvalds
