@@ -1,33 +1,51 @@
-Received: from cstnet.cn (smtp25.cstnet.cn [159.226.251.25])
-	(using TLSv1.2 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+Received: from out-13.smtp.spacemail.com (out-13.smtp.spacemail.com [63.250.43.96])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 368073E3D86;
-	Wed, 27 May 2026 10:38:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.226.251.25
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 94B803914FF;
+	Wed, 27 May 2026 11:05:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=63.250.43.96
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779878328; cv=none; b=dpcNRcuXxFAR+ppkFpqUIJxoYr43a8cAb7Lt4XdPiKm5yqfM6m9VKili0p8D6tBA6MSUE0mym7Jsn4ym/pkKN/a+79yZkFHJfw8e7NF1NSMklXZv40eOj3dI/t1kSNdUTsFdk3HRMBmSxCRMtjZ+KpFArr6AeUw3fciyk6K4sKc=
+	t=1779879905; cv=none; b=AqT1U21bsJ4tJ3nzWtywvqoLr2AVPBbJAbOQu/xJQFnGG6HBuwlURj/uoEvF0uDXUL5hSsSE2CJ2mIiq+OAwWg24eCpdbMAkZ3uI5HSGlPYIGZrbm9DkAwSIN0/9hUtIXOLwIysntL8fiLELAUa6pcMnmENfpAkUmwfqquw4Ggs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779878328; c=relaxed/simple;
-	bh=xvVfFGqu0pRxJc8OdISO4s9Ig358JwKumzrKecXeUX8=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=In/EFu0zB4zoeYKf8I3kGU+EMSRJEAKp48pb9Opo72XCRpdSn7bUxG13HusUf4DMQu5eKt7XCvaFMjytatWzr4kFtcj8UbjiPYm1G/w+MY2tnOkdVbn1nL9VCqcrajLUlgxCbOqu6rNmtoiBCByGcyYtpnGawyDSTER8ujrywkU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn; spf=pass smtp.mailfrom=iscas.ac.cn; arc=none smtp.client-ip=159.226.251.25
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iscas.ac.cn
-Received: from dfae2b116770.home.arpa (unknown [36.110.52.3])
-	by APP-05 (Coremail) with SMTP id zQCowAD3fACuyRZq6N+LEQ--.1041S2;
-	Wed, 27 May 2026 18:38:38 +0800 (CST)
-From: Wentao Liang <vulab@iscas.ac.cn>
-To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: Kees Cook <kees@kernel.org>,
-	Wentao Liang <vulab@iscas.ac.cn>,
-	linux-scsi@vger.kernel.org,
-	target-devel@vger.kernel.org,
+	s=arc-20240116; t=1779879905; c=relaxed/simple;
+	bh=RFxwCps8BRo0X7Ta0ylRSygPBnYr60aPkBIthbUKDbs=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Oy+ECP3p/dGb4t0Nj5cHbMf8tkvAMcKSccsWP+Yh9y0ownMl7YMyHvJDhimdXzHbIc05uXIukX46igCeg53iuOo0WW3zxCSslPFlrgN0115z3Q7oPBJM3c4YtnTQKQIVWa1eyZEvPt3hNyJ6Wp6NxNxXhMlI0TY4QGCuiN3getI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=rexion.ai; spf=pass smtp.mailfrom=rexion.ai; dkim=fail (0-bit key) header.d=rexion.ai header.i=@rexion.ai header.b=Rx2XAw4e reason="key not found in DNS"; arc=none smtp.client-ip=63.250.43.96
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=rexion.ai
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rexion.ai
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=rexion.ai header.i=@rexion.ai header.b="Rx2XAw4e"
+Received: from Kyren (unknown [49.207.213.66])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mail.spacemail.com (Postfix) with ESMTPSA id 4gQRTS2sMkz8sWq;
+	Wed, 27 May 2026 10:59:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=rexion.ai;
+	s=spacemail; t=1779879584;
+	bh=DgDokx5pIAzNQ53sXah/UBDCt3R4wUhOvqyXIza65bI=;
+	h=From:To:Cc:Subject:Date:From;
+	b=Rx2XAw4eoq8Z2KPLh2pTGEvqZSYW4KJh8StEC5Wo5cla2t6eNVJDOKBrahImyNtr5
+	 H89keCEG4V2JSzgSBJq7SHrgTnouVGVc9CP0DnRv9t1kGfZXGgtrQE6Xrst+1KgUqV
+	 VYgv9kx+oYMmjP2ab6b+Fm6Q9MQ0ot3DGD9/WJbPDD9jzp0TJehelBPQOc3tbIhUqK
+	 73huw5rtNvtzyQeHEWizESIsEG5oqxN7aY6Wf+4TJ1VzAVQpIStdHLIL622s9JhK2E
+	 p0+rtVzXP9OWzH6x9S2No4F+xw9kRAeDp0EYk+crHk8Lkf2BbodzWYEwYiVz93mTki
+	 hHh5i3fJ2zojQ==
+From: Rahul Chandelkar <rc@rexion.ai>
+To: rc@rexion.ai,
+	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	Jens Axboe <axboe@kernel.dk>,
+	FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: linux-scsi@vger.kernel.org,
+	linux-block@vger.kernel.org,
+	io-uring@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
-Subject: [PATCH] target: iscsi: cxgbit: fix cnp kref leak in __cxgbit_free_cdev_np()
-Date: Wed, 27 May 2026 10:38:23 +0000
-Message-Id: <20260527103823.869792-1-vulab@iscas.ac.cn>
-X-Mailer: git-send-email 2.34.1
+Subject: [PATCH] scsi: bsg: copy uring_cmd payload to prevent double-fetch from shared SQE
+Date: Wed, 27 May 2026 16:29:18 +0530
+Message-ID: <20260527105931.3950913-1-rc@rexion.ai>
+X-Mailer: git-send-email 2.54.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,62 +53,99 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:zQCowAD3fACuyRZq6N+LEQ--.1041S2
-X-Coremail-Antispam: 1UD129KBjvJXoW7tF47Wr1xZr4kZr1UArWfuFg_yoW8Gw4rpF
-	40kFyUJr1UJ3y3Kr18Jw4I9FyxZanIyrW3C348CwsY9w4Y9ryDKFyayw42qay5Crykur43
-	Xan8AryUGryqy37anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUkl14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26r4j6ryUM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4j
-	6F4UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v26rxl6s
-	0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xII
-	jxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVW8JVWxJwAm72CE4IkC6x0Yz7v_Jr0_Gr
-	1lF7xvr2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7MxkF7I0En4kS14v26r12
-	6r1DMxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI
-	0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUAVWUtwCIc40Y
-	0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxV
-	WUJVW8JwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1l
-	IxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7VUjJ73PUUUU
-	U==
-X-CM-SenderInfo: pyxotu46lvutnvoduhdfq/1tbiBwwAA2oWirr+lwAAst
+X-Envelope-From: rc@rexion.ai
 
-__cxgbit_free_cdev_np() calls cxgbit_get_cnp() which takes a kref
-reference on the cnp structure. This reference is only released on
-the immediate error path after cxgbit_get_cnp(). On the timeout path
-and the normal completion path that successfully processes the NP,
-the reference is never released via cxgbit_put_cnp(), leaking the
-kref.
+scsi_bsg_uring_cmd() and scsi_bsg_map_user_buffer() read bsg_uring_cmd
+fields directly from the shared mmap'd io_uring submission ring via
+io_uring_sqe128_cmd().  On the inline execution path, io_uring has not
+yet copied the SQE to kernel memory, so a concurrent userspace thread
+can modify fields between reads.
 
-Add cxgbit_put_cnp(cnp) on the timeout and success paths to properly
-release the kref reference.
+cmd->request_len is read for the bounds check, for the cmd_len
+assignment, and for the copy_from_user length.  A racing thread can
+change request_len between the bounds check (passes with <= 32) and
+copy_from_user (uses the enlarged value), overflowing the 32-byte
+scmd->cmnd[] buffer into subsequent struct scsi_cmnd fields.
 
+scsi_bsg_map_user_buffer() independently re-derives its cmd pointer
+from the same shared SQE, re-reading dout_xfer_len, din_xfer_len,
+dout_xferp, and din_xferp, enabling direction confusion and buffer
+length races.
+
+Copy struct bsg_uring_cmd to a stack-local variable before use in both
+functions.  The pointer variable 'cmd' is redirected to the local copy
+so the rest of each function is unchanged.
+
+Tested with KASAN on QEMU (virtio-scsi, 2 vCPUs).  Without this fix,
+a two-thread race produces:
+
+  BUG: KASAN: wild-memory-access in scsi_queue_rq+0x4a3/0x58a0
+  Write of size 96 at addr dead000000001000 by task poc/67
+  Call Trace:
+   kasan_report+0xce/0x100
+   __asan_memset+0x23/0x50
+   scsi_queue_rq+0x4a3/0x58a0
+   scsi_bsg_uring_cmd+0x942/0x1570
+   io_uring_cmd+0x2f6/0x950
+   io_issue_sqe+0xe5/0x22d0
+
+Fixes: 7b6d3255e7f8 ("scsi: bsg: add io_uring passthrough handler")
 Cc: stable@vger.kernel.org
-Fixes: 9730ffcb8957 ("cxgbit: add files for cxgbit.ko")
-Signed-off-by: Wentao Liang <vulab@iscas.ac.cn>
+Signed-off-by: Rahul Chandelkar <rc@rexion.ai>
 ---
- drivers/target/iscsi/cxgbit/cxgbit_cm.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/scsi/scsi_bsg.c | 23 ++++++++++++++++++-----
+ 1 file changed, 18 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/target/iscsi/cxgbit/cxgbit_cm.c b/drivers/target/iscsi/cxgbit/cxgbit_cm.c
-index 146705845fa3..11149d73c844 100644
---- a/drivers/target/iscsi/cxgbit/cxgbit_cm.c
-+++ b/drivers/target/iscsi/cxgbit/cxgbit_cm.c
-@@ -545,6 +545,7 @@ __cxgbit_free_cdev_np(struct cxgbit_device *cdev, struct cxgbit_np *cnp)
- 	ret = cxgbit_wait_for_reply(cdev, &cnp->com.wr_wait,
- 				    0, 10, __func__);
- 	if (ret == -ETIMEDOUT)
-+		cxgbit_put_cnp(cnp);
- 		return ret;
+diff --git a/drivers/scsi/scsi_bsg.c b/drivers/scsi/scsi_bsg.c
+index e80dec53174e..244740655eb0 100644
+--- a/drivers/scsi/scsi_bsg.c
++++ b/drivers/scsi/scsi_bsg.c
+@@ -78,13 +78,21 @@ static int scsi_bsg_map_user_buffer(struct request *req,
+ 				    struct io_uring_cmd *ioucmd,
+ 				    unsigned int issue_flags, gfp_t gfp_mask)
+ {
+-	const struct bsg_uring_cmd *cmd = io_uring_sqe128_cmd(ioucmd->sqe, struct bsg_uring_cmd);
+-	bool is_write = cmd->dout_xfer_len > 0;
+-	u64 buf_addr = is_write ? cmd->dout_xferp : cmd->din_xferp;
+-	unsigned long buf_len = is_write ? cmd->dout_xfer_len : cmd->din_xfer_len;
++	struct bsg_uring_cmd local_cmd;
++	const struct bsg_uring_cmd *cmd;
++	bool is_write;
++	u64 buf_addr;
++	unsigned long buf_len;
+ 	struct iov_iter iter;
+ 	int ret;
  
- 	if (ipv6 && cnp->com.cdev) {
-@@ -558,6 +559,7 @@ __cxgbit_free_cdev_np(struct cxgbit_device *cdev, struct cxgbit_np *cnp)
++	memcpy(&local_cmd, io_uring_sqe128_cmd(ioucmd->sqe, struct bsg_uring_cmd),
++	       sizeof(local_cmd));
++	cmd = &local_cmd;
++	is_write = cmd->dout_xfer_len > 0;
++	buf_addr = is_write ? cmd->dout_xferp : cmd->din_xferp;
++	buf_len = is_write ? cmd->dout_xfer_len : cmd->din_xfer_len;
++
+ 	if (ioucmd->flags & IORING_URING_CMD_FIXED) {
+ 		ret = io_uring_cmd_import_fixed(buf_addr, buf_len,
+ 						is_write ? WRITE : READ,
+@@ -104,13 +112,18 @@ static int scsi_bsg_uring_cmd(struct request_queue *q, struct io_uring_cmd *iouc
+ 			       unsigned int issue_flags, bool open_for_write)
+ {
+ 	struct scsi_bsg_uring_cmd_pdu *pdu = scsi_bsg_uring_cmd_pdu(ioucmd);
+-	const struct bsg_uring_cmd *cmd = io_uring_sqe128_cmd(ioucmd->sqe, struct bsg_uring_cmd);
++	struct bsg_uring_cmd local_cmd;
++	const struct bsg_uring_cmd *cmd;
+ 	struct scsi_cmnd *scmd;
+ 	struct request *req;
+ 	blk_mq_req_flags_t blk_flags = 0;
+ 	gfp_t gfp_mask = GFP_KERNEL;
+ 	int ret;
  
- 	cxgb4_free_stid(cdev->lldi.tids, stid,
- 			cnp->com.local_addr.ss_family);
-+	cxgbit_put_cnp(cnp);
- 	return 0;
- }
- 
++	memcpy(&local_cmd, io_uring_sqe128_cmd(ioucmd->sqe, struct bsg_uring_cmd),
++	       sizeof(local_cmd));
++	cmd = &local_cmd;
++
+ 	if (cmd->protocol != BSG_PROTOCOL_SCSI ||
+ 	    cmd->subprotocol != BSG_SUB_PROTOCOL_SCSI_CMD)
+ 		return -EINVAL;
 -- 
-2.34.1
+2.54.0
 
