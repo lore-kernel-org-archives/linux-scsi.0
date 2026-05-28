@@ -1,149 +1,161 @@
-Received: from mailout1.samsung.com (mailout1.samsung.com [203.254.224.24])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.19])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0568E3438BD
-	for <linux-scsi@vger.kernel.org>; Thu, 28 May 2026 00:43:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.24
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 92D4B1C860A;
+	Thu, 28 May 2026 02:06:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.19
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779929038; cv=none; b=X01IA9lPw+eTCTIp+DLm22FI7YWHWt2Wl8rc7WJiF89oBrXOf8oH7knx2NbczImjg1W85qxD+9sLmKLPpNHc8fZRCB5iV7NxQXT01UF4R/BqeWOfuebJk7VFrUn0moDxB/oelT34E8RXCoQaUgGHllUQ3uSAtHzKfF3iYW6WcW4=
+	t=1779933969; cv=none; b=QSoirRjkfRu8dRGlVVcDEDGVZk7GVX1dGT6RHJ2xh6HLPGj0DkS9gw1pnaMccwSjERVk1wMb3HLuEx6RCpcquWrytgV0CL7dEa1drfZtjlAF3F6AYFBM8aKLJskx0ukXYtQKWihmjLjjPy6A3L9zV2cehekKQOBNJTGd4I95PsM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779929038; c=relaxed/simple;
-	bh=I8fylyytm6SqyhS37HrsZvyOw6B02kBD7cHSF9ieQIk=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:MIME-Version:
-	 Content-Type:References; b=WSWG8URiJ5bfRpUVU5a0UQaofka9ni+QMECtegm5N+l+B4QPQdkxL0J998g3CUbJLa5Dq4eFM74Qce6qyW6ueQEJWocLq0oXyW5FJrqeISHahB13UR11B3NbI0tmuTkcKduDGvse3LTCO+Xd8/oNEacJjio+A6b6YDCiYF3ozeY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=EqWEP0GK; arc=none smtp.client-ip=203.254.224.24
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+	s=arc-20240116; t=1779933969; c=relaxed/simple;
+	bh=fbHrRWsCsev0XpjRGu7MWKUSpSvEPDO2W7/tolEiVlI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=SivQud7ewQnHVKKwjENblJYUhgenp9f1T1chPSRmEOBIX3iKc5eOu17xaDV7umpdy//KshMGV2F4xtyI/v3Ly06+R8fyWGOVRK5TYBHJLklPPWSxLfoyPNKI5W2Z+oUTL7pv2s8OdCmX4ppMglsdeqs8XwfJR74eNg9Lt0oOptA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=AphQ2ywH; arc=none smtp.client-ip=198.175.65.19
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="EqWEP0GK"
-Received: from epcas1p3.samsung.com (unknown [182.195.41.47])
-	by mailout1.samsung.com (KnoxPortal) with ESMTP id 20260528004353epoutp01aded875b85232b8fe7767b9eff6cb23c~zlAacGsHn1530615306epoutp01_
-	for <linux-scsi@vger.kernel.org>; Thu, 28 May 2026 00:43:53 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20260528004353epoutp01aded875b85232b8fe7767b9eff6cb23c~zlAacGsHn1530615306epoutp01_
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1779929033;
-	bh=qZnK9XNZnt5S75D0eJ2QB1UtmuCaHKxP5rlmMZeoiCU=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=EqWEP0GKldwHNBFfo+JcNRu7AbmM/xcIgspLUmQl6Yx7a1UM+FJDgmQXzeUS9ViI7
-	 gksY40xHaZhhPtgXS94nOepRpV4HbObnsUp4Q2T3zxcsDhHZqxAKsAp1ngmo+5TSX3
-	 1myfIRwU21NW1qIn8rR1l4vjeRn/w8kwFt7+ipCg=
-Received: from epsnrtp01.localdomain (unknown [182.195.42.153]) by
-	epcas1p1.samsung.com (KnoxPortal) with ESMTPS id
-	20260528004353epcas1p1a67c3f97fd1fde1d299f3f49c5840672~zlAZ6amc_2979629796epcas1p1b;
-	Thu, 28 May 2026 00:43:53 +0000 (GMT)
-Received: from epcas1p3.samsung.com (unknown [182.195.38.119]) by
-	epsnrtp01.localdomain (Postfix) with ESMTP id 4gQnmT0KWGz6B9mD; Thu, 28 May
-	2026 00:43:53 +0000 (GMT)
-Received: from epsmtip1.samsung.com (unknown [182.195.34.30]) by
-	epcas1p4.samsung.com (KnoxPortal) with ESMTPA id
-	20260528004352epcas1p4474702b6aae3232afefc3b7b528523ee~zlAZKEDW80380303803epcas1p4W;
-	Thu, 28 May 2026 00:43:52 +0000 (GMT)
-Received: from cw9316lee.. (unknown [10.253.101.98]) by epsmtip1.samsung.com
-	(KnoxPortal) with ESMTPA id
-	20260528004352epsmtip196271caae684f27ee41eeed971db167d~zlAZGRhCX0273302733epsmtip1Z;
-	Thu, 28 May 2026 00:43:52 +0000 (GMT)
-From: Chanwoo Lee <cw9316.lee@samsung.com>
-To: cw9316.lee@samsung.com
-Cc: James.Bottomley@HansenPartnership.com, adrian.hunter@intel.com,
-	alim.akhtar@samsung.com, alok.a.tiwari@oracle.comm, avri.altman@wdc.com,
-	beanhuo@micron.com, bvanassche@acm.org, can.guo@oss.qualcomm.com,
-	linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-	martin.petersen@oracle.com, peter.wang@mediatek.com, ulf.hansson@linaro.org,
-	vamshigajjela@google.com
-Subject: Re: [PATCH] scsi: ufs: core: Fix NULL pointer dereference in
- scsi_cmd_priv() calls
-Date: Thu, 28 May 2026 09:43:49 +0900
-Message-ID: <20260528004349.281467-1-cw9316.lee@samsung.com>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20260527072228.271542-1-cw9316.lee@samsung.com>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="AphQ2ywH"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1779933968; x=1811469968;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=fbHrRWsCsev0XpjRGu7MWKUSpSvEPDO2W7/tolEiVlI=;
+  b=AphQ2ywHffViWftFWb9ThB8fbywwfUa8KXLxDEDUiy2b0WxjEUbRAkRA
+   hrssin+ZDvjfUTXkhN+2TPxUfSG8fC1pLgK/dJYALYSEGUs/Q3jE0dCJl
+   o3opgkPDB0RZwPSEzYOSDlL8macvu4ei6XWrPh9/Y+c8JRurTmVTxIeb4
+   YxOwngHtlUKMsh4KT3+uzGLSleIK9QHKQnLMNJTyoAi0+lQBWRayQaEL5
+   NSW1VuauhB4QKjUdolZ6+pxGZT255cGF/Pvk8N7bzQ73qkPOUYtMiF4dD
+   0utzg5obIAhjZsY9nn1wXtu1pH5AYkmu31wtBvdjZ5rDBkls13NSk1jq2
+   Q==;
+X-CSE-ConnectionGUID: rvugshktRwaVGjY1JlOt9w==
+X-CSE-MsgGUID: RA2/0aJjTrWdECZ8YpZ1pw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11799"; a="80744162"
+X-IronPort-AV: E=Sophos;i="6.24,172,1774335600"; 
+   d="scan'208";a="80744162"
+Received: from orviesa001.jf.intel.com ([10.64.159.141])
+  by orvoesa111.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 May 2026 19:06:08 -0700
+X-CSE-ConnectionGUID: 0XcchuQ2Q0+DOBeLeejZqg==
+X-CSE-MsgGUID: 1ZdgjI7BQ/yZvCad8/YcgQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.24,172,1774335600"; 
+   d="scan'208";a="280528462"
+Received: from igk-lkp-server01.igk.intel.com (HELO 892db79562d4) ([10.211.93.152])
+  by orviesa001.jf.intel.com with ESMTP; 27 May 2026 19:06:05 -0700
+Received: from kbuild by 892db79562d4 with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1wSQ8J-000000000F7-0YER;
+	Thu, 28 May 2026 02:06:03 +0000
+Date: Thu, 28 May 2026 04:05:45 +0200
+From: kernel test robot <lkp@intel.com>
+To: Wentao Liang <vulab@iscas.ac.cn>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: oe-kbuild-all@lists.linux.dev, Kees Cook <kees@kernel.org>,
+	Wentao Liang <vulab@iscas.ac.cn>, linux-scsi@vger.kernel.org,
+	target-devel@vger.kernel.org, linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org
+Subject: Re: [PATCH] target: iscsi: cxgbit: fix cnp kref leak in
+ __cxgbit_free_cdev_np()
+Message-ID: <202605280336.gXG4Wlij-lkp@intel.com>
+References: <20260527103823.869792-1-vulab@iscas.ac.cn>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CMS-MailID: 20260528004352epcas1p4474702b6aae3232afefc3b7b528523ee
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-CMS-TYPE: 101P
-cpgsPolicy: CPGSC10-711,Y
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20260528004352epcas1p4474702b6aae3232afefc3b7b528523ee
-References: <20260527072228.271542-1-cw9316.lee@samsung.com>
-	<CGME20260528004352epcas1p4474702b6aae3232afefc3b7b528523ee@epcas1p4.samsung.com>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260527103823.869792-1-vulab@iscas.ac.cn>
 
-On 5/27/26 16:14, Bart Van Assche wrote:
->On 5/27/26 12:22 AM, Chanwoo Lee wrote:
->> diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
->> index c1b1d67a1ddc..798b2a910128 100644
->> --- a/drivers/ufs/core/ufs-mcq.c
->> +++ b/drivers/ufs/core/ufs-mcq.c
->> @@ -555,8 +555,8 @@ static int ufshcd_mcq_sq_start(struct ufs_hba *hba, struct ufs_hw_queue *hwq)
->>   int ufshcd_mcq_sq_cleanup(struct ufs_hba *hba, int task_tag)
->>   {
->>   	struct scsi_cmnd *cmd = ufshcd_tag_to_cmd(hba, task_tag);
->> -	struct ufshcd_lrb *lrbp = scsi_cmd_priv(cmd);
->> -	struct request *rq = scsi_cmd_to_rq(cmd);
->> +	struct ufshcd_lrb *lrbp;
->> +	struct request *rq;
->>   	struct ufs_hw_queue *hwq;
->>   	void __iomem *reg, *opr_sqd_base;
->>   	u32 nexus, id, val;
->> @@ -568,6 +568,9 @@ int ufshcd_mcq_sq_cleanup(struct ufs_hba *hba, int task_tag)
->>   	if (!cmd)
->>   		return -EINVAL;
->>   
->> +	lrbp = scsi_cmd_priv(cmd);
->> +	rq = scsi_cmd_to_rq(cmd);
->> +
->
->These changes are not necessary. Although scsi_cmd_priv() and
->scsi_cmd_to_rq() both return an invalid pointer if their argument is
->NULL, these pointers are not dereferenced before the cmd != NULL check.
->
->> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
->> index 9e0336098e26..0371dea44887 100644
->> --- a/drivers/ufs/core/ufshcd.c
->> +++ b/drivers/ufs/core/ufshcd.c
->> @@ -5833,13 +5833,15 @@ void ufshcd_compl_one_cqe(struct ufs_hba *hba, int task_tag,
->>   			  struct cq_entry *cqe)
->>   {
->>   	struct scsi_cmnd *cmd = ufshcd_tag_to_cmd(hba, task_tag);
->> -	struct ufshcd_lrb *lrbp = scsi_cmd_priv(cmd);
->> +	struct ufshcd_lrb *lrbp;
->>   	enum utp_ocs ocs;
->>   
->>   	if (WARN_ONCE(!cmd, "cqe->command_desc_base_addr = %#llx\n",
->>   		      le64_to_cpu(cqe->command_desc_base_addr)))
->>   		return;
->>   
->> +	lrbp = scsi_cmd_priv(cmd);
->> +
->>   	if (hba->monitor.enabled) {
->>   		lrbp->compl_time_stamp = ktime_get();
->>   		lrbp->compl_time_stamp_local_clock = local_clock();
->
->These changes are not necessary either because lrbp is not dereferenced
->before the cmd != NULL check.
->
->Thanks,
->
->Bart.
+Hi Wentao,
 
-Thank you for the review. You're right that there is no runtime
-crash since scsi_cmd_priv() and scsi_cmd_to_rq() only perform
-pointer arithmetic without dereferencing, and the derived pointers
-are not used before the NULL check.
+kernel test robot noticed the following build warnings:
 
-I made these changes because it felt logically awkward to derive
-values from a potentially NULL pointer, even if they aren't
-dereferenced before the check. But I understand your point and
-will drop these two changes.
+[auto build test WARNING on mkp-scsi/for-next]
+[also build test WARNING on kees/for-next/pstore kees/for-next/kspp linus/master v7.1-rc5 next-20260527]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
-Could you let me know if you think the remaining changes are
-acceptable, or if you consider the entire patch unnecessary?
-I'd like to clarify this before sending v2.
+url:    https://github.com/intel-lab-lkp/linux/commits/Wentao-Liang/target-iscsi-cxgbit-fix-cnp-kref-leak-in-__cxgbit_free_cdev_np/20260527-184050
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git for-next
+patch link:    https://lore.kernel.org/r/20260527103823.869792-1-vulab%40iscas.ac.cn
+patch subject: [PATCH] target: iscsi: cxgbit: fix cnp kref leak in __cxgbit_free_cdev_np()
+config: x86_64-rhel-9.4 (https://download.01.org/0day-ci/archive/20260528/202605280336.gXG4Wlij-lkp@intel.com/config)
+compiler: gcc-14 (Debian 14.2.0-19) 14.2.0
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260528/202605280336.gXG4Wlij-lkp@intel.com/reproduce)
 
-Thanks,
-Chanwoo Lee.
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202605280336.gXG4Wlij-lkp@intel.com/
+
+All warnings (new ones prefixed by >>):
+
+   drivers/target/iscsi/cxgbit/cxgbit_cm.c: In function '__cxgbit_free_cdev_np':
+>> drivers/target/iscsi/cxgbit/cxgbit_cm.c:547:9: warning: this 'if' clause does not guard... [-Wmisleading-indentation]
+     547 |         if (ret == -ETIMEDOUT)
+         |         ^~
+   drivers/target/iscsi/cxgbit/cxgbit_cm.c:549:17: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the 'if'
+     549 |                 return ret;
+         |                 ^~~~~~
+
+
+vim +/if +547 drivers/target/iscsi/cxgbit/cxgbit_cm.c
+
+9730ffcb8957e1 Varun Prakash 2016-04-20  516  
+9730ffcb8957e1 Varun Prakash 2016-04-20  517  static int
+9730ffcb8957e1 Varun Prakash 2016-04-20  518  __cxgbit_free_cdev_np(struct cxgbit_device *cdev, struct cxgbit_np *cnp)
+9730ffcb8957e1 Varun Prakash 2016-04-20  519  {
+9730ffcb8957e1 Varun Prakash 2016-04-20  520  	int stid, ret;
+9730ffcb8957e1 Varun Prakash 2016-04-20  521  	bool ipv6 = false;
+9730ffcb8957e1 Varun Prakash 2016-04-20  522  
+9730ffcb8957e1 Varun Prakash 2016-04-20  523  	stid = cxgbit_np_hash_del(cdev, cnp);
+9730ffcb8957e1 Varun Prakash 2016-04-20  524  	if (stid < 0)
+9730ffcb8957e1 Varun Prakash 2016-04-20  525  		return -EINVAL;
+9730ffcb8957e1 Varun Prakash 2016-04-20  526  	if (!test_bit(CDEV_STATE_UP, &cdev->flags))
+9730ffcb8957e1 Varun Prakash 2016-04-20  527  		return -EINVAL;
+9730ffcb8957e1 Varun Prakash 2016-04-20  528  
+9730ffcb8957e1 Varun Prakash 2016-04-20  529  	if (cnp->np->np_sockaddr.ss_family == AF_INET6)
+9730ffcb8957e1 Varun Prakash 2016-04-20  530  		ipv6 = true;
+9730ffcb8957e1 Varun Prakash 2016-04-20  531  
+9730ffcb8957e1 Varun Prakash 2016-04-20  532  	cxgbit_get_cnp(cnp);
+9730ffcb8957e1 Varun Prakash 2016-04-20  533  	cxgbit_init_wr_wait(&cnp->com.wr_wait);
+9730ffcb8957e1 Varun Prakash 2016-04-20  534  	ret = cxgb4_remove_server(cdev->lldi.ports[0], stid,
+9730ffcb8957e1 Varun Prakash 2016-04-20  535  				  cdev->lldi.rxq_ids[0], ipv6);
+9730ffcb8957e1 Varun Prakash 2016-04-20  536  
+9730ffcb8957e1 Varun Prakash 2016-04-20  537  	if (ret > 0)
+9730ffcb8957e1 Varun Prakash 2016-04-20  538  		ret = net_xmit_errno(ret);
+9730ffcb8957e1 Varun Prakash 2016-04-20  539  
+9730ffcb8957e1 Varun Prakash 2016-04-20  540  	if (ret) {
+9730ffcb8957e1 Varun Prakash 2016-04-20  541  		cxgbit_put_cnp(cnp);
+9730ffcb8957e1 Varun Prakash 2016-04-20  542  		return ret;
+9730ffcb8957e1 Varun Prakash 2016-04-20  543  	}
+9730ffcb8957e1 Varun Prakash 2016-04-20  544  
+9730ffcb8957e1 Varun Prakash 2016-04-20  545  	ret = cxgbit_wait_for_reply(cdev, &cnp->com.wr_wait,
+9730ffcb8957e1 Varun Prakash 2016-04-20  546  				    0, 10, __func__);
+9730ffcb8957e1 Varun Prakash 2016-04-20 @547  	if (ret == -ETIMEDOUT)
+956027c993d5b2 Wentao Liang  2026-05-27  548  		cxgbit_put_cnp(cnp);
+9730ffcb8957e1 Varun Prakash 2016-04-20  549  		return ret;
+9730ffcb8957e1 Varun Prakash 2016-04-20  550  
+9730ffcb8957e1 Varun Prakash 2016-04-20  551  	if (ipv6 && cnp->com.cdev) {
+9730ffcb8957e1 Varun Prakash 2016-04-20  552  		struct sockaddr_in6 *sin6;
+9730ffcb8957e1 Varun Prakash 2016-04-20  553  
+9730ffcb8957e1 Varun Prakash 2016-04-20  554  		sin6 = (struct sockaddr_in6 *)&cnp->com.local_addr;
+9730ffcb8957e1 Varun Prakash 2016-04-20  555  		cxgb4_clip_release(cdev->lldi.ports[0],
+9730ffcb8957e1 Varun Prakash 2016-04-20  556  				   (const u32 *)&sin6->sin6_addr.s6_addr,
+9730ffcb8957e1 Varun Prakash 2016-04-20  557  				   1);
+9730ffcb8957e1 Varun Prakash 2016-04-20  558  	}
+9730ffcb8957e1 Varun Prakash 2016-04-20  559  
+9730ffcb8957e1 Varun Prakash 2016-04-20  560  	cxgb4_free_stid(cdev->lldi.tids, stid,
+9730ffcb8957e1 Varun Prakash 2016-04-20  561  			cnp->com.local_addr.ss_family);
+956027c993d5b2 Wentao Liang  2026-05-27  562  	cxgbit_put_cnp(cnp);
+9730ffcb8957e1 Varun Prakash 2016-04-20  563  	return 0;
+9730ffcb8957e1 Varun Prakash 2016-04-20  564  }
+9730ffcb8957e1 Varun Prakash 2016-04-20  565  
+
+--
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
