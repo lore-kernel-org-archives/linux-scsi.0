@@ -1,242 +1,293 @@
-Received: from spam.asrmicro.com (asrmicro.com [210.13.118.86])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 53E153E4C6A;
-	Thu, 28 May 2026 11:35:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.13.118.86
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D0F013ED3DD;
+	Thu, 28 May 2026 12:27:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779968131; cv=none; b=QY/k2/f7iBoPrTNwvI2AuD2KASukZg6+W0SzbOgCZnGWLoOH8eMYMjdtzrW3G+Yrsq9I+BMaANFrdg97z31wedHbLJfdZERvTOXRqVpSJDfyDaN+OaDO1fTNaHjesQQYsvFw17d8xT757EdrpIt6xHn0Axwgbtuui+Dun8nlUcM=
+	t=1779971239; cv=none; b=pJSH4Wtf4Pd8mP6wKqkjDKjFH88Yd7yFSQ3LbjN0y57Mn2Liob44MeJIlo1XkWKU1si8uS7H9pNBzo4sRdz+Mi7ypJ2np522xdh68CoYMGSClgZbUfdx+7qRP0cHtlqcx1lAMa0Ea16A/rZKNrXrtEd684adyh2L/dSEIg1tdxs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779968131; c=relaxed/simple;
-	bh=yQcbxaQZHwTFRwFMwC/IUzpgWahAoaa9mHAPI2wjIAg=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=jVO8WW06EScQMS0HEacjydlA0w4Hm03SXpSZu/6t9wTjL2ofLyyrjpzXNprZQS5jzYtKYscdKCQcAa8ksACYiQ+XjJ2eKhMJu2Rnk02Z31hmFpVaMLCoAY9QuEbyAhlB+DpASCBXhiOQ+YUOwfZT0TvehCYlU82ShOjTqFKU7HE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=asrmicro.com; spf=pass smtp.mailfrom=asrmicro.com; arc=none smtp.client-ip=210.13.118.86
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=asrmicro.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=asrmicro.com
-Received: from exch02.asrmicro.com (exch02.asrmicro.com [10.1.24.122])
-	by spam.asrmicro.com with ESMTPS id 64SBYSse006103
-	(version=TLSv1 cipher=ECDHE-RSA-AES256-SHA bits=256 verify=FAIL);
-	Thu, 28 May 2026 19:34:28 +0800 (GMT-8)
-	(envelope-from hongjiefang@asrmicro.com)
-Received: from localhost (10.1.170.248) by exch02.asrmicro.com (10.1.24.122)
- with Microsoft SMTP Server (TLS) id 15.0.847.32; Thu, 28 May 2026 19:34:33
- +0800
-From: Hongjie Fang <hongjiefang@asrmicro.com>
-To: <alim.akhtar@samsung.com>, <avri.altman@wdc.com>, <bvanassche@acm.org>,
-        <James.Bottomley@HansenPartnership.com>, <martin.petersen@oracle.com>,
-        <peter.wang@mediatek.com>, <beanhuo@micron.com>
-CC: <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Subject: [PATCH v2] scsi: ufs: core: handle PM SSU timeout before SCSI EH
-Date: Thu, 28 May 2026 19:34:33 +0800
-Message-ID: <20260528113433.367083-1-hongjiefang@asrmicro.com>
-X-Mailer: git-send-email 2.25.1
+	s=arc-20240116; t=1779971239; c=relaxed/simple;
+	bh=fCvRxOmZWFmx6SVnpq+XK/iM3UH6xNmuEXVRaIV8bWk=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=hiYMjOakOARJWKWvdu8AZsk6fmXnBvTu2lSYqd75ogoiyil+ZkT+XJbuzJxsLV8Q2glsX0aexC2bNXB7AZOVf9BM5kkrqcSVHsnOiUPyDftbRtY5rF2Tidh/XUJP5SdQNOKlkFdNqdfuF47ryu/nULFngZO78IVF+nso8RzTGq4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DYAmdAh/; arc=none smtp.client-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DYAmdAh/"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1DC231F00A3A;
+	Thu, 28 May 2026 12:27:14 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1779971237;
+	bh=AKtovlCbQK2L9SecQuSzND1Hzg+p1s/9wKBZpHroIC8=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=DYAmdAh/UPeHc+5ayN1F7tSOxCQNSYGXc5i7NocUaom4feo8gvBmzaOqV/TLvNZ7H
+	 ePwdZz141hNaTbouHrv25vYpUcnDptzfUmpE5MG5Qu4Jg8uDdGCmm0o7odVzMcCEXD
+	 m6wVqsKiTSYSJTBLibdtPFfViykOAqYmw5axgyy5Kpt3PgQW40h9w+E+9yUNBMicux
+	 QxS30rY7VggoCRg/I9tF9OmWd8/MOW0Tu2L3Oxhzo4uLqKWCu46bODkD/wNh7Es5rP
+	 C71XxfZ3AkCSZphbYSd/PKUgg93YeuzS04pFVSNZQJOatPhgcLpQVbUA37rD7edoD4
+	 q9RGdOB0m3sQQ==
+Date: Thu, 28 May 2026 14:27:12 +0200
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Can Guo <can.guo@oss.qualcomm.com>
+Cc: bvanassche@acm.org, beanhuo@micron.com, peter.wang@mediatek.com, 
+	martin.petersen@oracle.com, linux-scsi@vger.kernel.org, 
+	Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>, 
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>, 
+	Nitin Rawat <quic_nitirawa@quicinc.com>, open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v4 2/2] scsi: ufs: core: Add support for static TX
+ Equalization settings
+Message-ID: <bh27zjliqpam2wzwbwusw4n5wk5ka7hdu776k22nmdogupsu6t@xetc7lnmj43v>
+References: <20260528100614.3386423-1-can.guo@oss.qualcomm.com>
+ <20260528100614.3386423-3-can.guo@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: exch02.asrmicro.com (10.1.24.122) To exch02.asrmicro.com
- (10.1.24.122)
-X-DNSRBL: 
-X-SPAM-SOURCE-CHECK: pass
-X-MAIL:spam.asrmicro.com 64SBYSse006103
+In-Reply-To: <20260528100614.3386423-3-can.guo@oss.qualcomm.com>
 
-A PM START STOP sent from the UFS well-known LU resume path can race with
-SCSI EH.
+On Thu, May 28, 2026 at 03:06:14AM -0700, Can Guo wrote:
+> Static TX Equalization settings and TX Precode enable indication from DT
+> properties txeq-preshoot-g[1-6], txeq-deemphasis-g[1-6], and
+> tx-precode-enable-g6 are board-specific baseline values. Values are
+> provided as per-lane tuples:
+> 
+> <Host_Lane0 Device_Lane0>, [<Host_Lane1 Device_Lane1>]
+> 
+> Parse DT u32 properties with explicit range checks by using
+> of_property_count_u32_elems()/of_property_read_u32_array().
+> 
+> When adaptive TX Equalization is used, these static settings are not final:
+> 
+> - If valid settings are retrieved from qTxEQGnSettings/wTxEQGnSettingsExt,
+>   those retrieved settings override static DT settings.
+> - If retrieval is not available/valid, TX EQTR runs and trained settings
+>   override static DT settings.
+> 
+> So static DT settings are a fallback and are intended for cases where
+> adaptive TX Equalization is not enabled/used. Adaptive TX Equalization
+> remains the primary path when enabled.
+> 
+> No behavior changes for platforms that do not provide these properties.
+> 
+> Signed-off-by: Can Guo <can.guo@oss.qualcomm.com>
 
-The "wl resume" task flow is:
-  __ufshcd_wl_resume()
-    ufshcd_set_dev_pwr_mode(UFS_ACTIVE_PWR_MODE)
-      ufshcd_execute_start_stop()
-        scsi_execute_cmd()
-          blk_execute_rq           <-- wait
-          scsi_check_passthrough() <-- may retry START STOP
+Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
 
-If the first START STOP time out, SCSI EH may already recover the link and
-reset the device before scsi_execute_cmd() returns:
-  scsi_timeout()
-    scsi_eh_scmd_add()
-      scsi_error_handler()
-        scsi_unjam_host()
-          scsi_eh_ready_devs()
-            scsi_eh_host_reset()
-              ufshcd_eh_host_reset_handler()
-                if (hba->pm_op_in_progress)
-                  ufshcd_link_recovery()
-                    ufshcd_device_reset()
-                    ufshcd_host_reset_and_restore()
-          ...
-          scsi_eh_flush_done_q()   <-- wakeup "wl resume" task
-        ...                        <-- host still in SHOST_RECOVERY
-        scsi_restart_operations()
+- Mani
 
-A later passthrough retry can then run while the host is still in
-SHOST_RECOVERY and hit the SCMD_FAIL_IF_RECOVERING path:
-  scsi_queue_rq()
-    if (scsi_host_in_recovery(shost) &&
-        cmd->flags & SCMD_FAIL_IF_RECOVERING)
-      return BLK_STS_OFFLINE
+> ---
+>  drivers/ufs/core/ufs-txeq.c      |  10 ++-
+>  drivers/ufs/host/ufshcd-pltfrm.c | 126 +++++++++++++++++++++++++++++++
+>  include/ufs/ufshcd.h             |   2 +
+>  3 files changed, 137 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/ufs/core/ufs-txeq.c b/drivers/ufs/core/ufs-txeq.c
+> index 4b264adfdf49..b645fe5f6d95 100644
+> --- a/drivers/ufs/core/ufs-txeq.c
+> +++ b/drivers/ufs/core/ufs-txeq.c
+> @@ -1297,7 +1297,13 @@ int ufshcd_config_tx_eq_settings(struct ufs_hba *hba,
+>  	}
+>  
+>  	params = &hba->tx_eq_params[gear - 1];
+> -	if (!params->is_valid || force_tx_eqtr) {
+> +	/*
+> +	 * TX EQTR must run for the following cases:
+> +	 * 1. TX EQ settings are invalid.
+> +	 * 2. TX EQ settings are valid but static, i.e., populated from DT.
+> +	 * 3. TX EQTR procedure is forced.
+> +	 */
+> +	if (!params->is_valid || params->is_static || force_tx_eqtr) {
+>  		int ret;
+>  
+>  		ret = ufshcd_tx_eqtr(hba, params, pwr_mode);
+> @@ -1310,6 +1316,7 @@ int ufshcd_config_tx_eq_settings(struct ufs_hba *hba,
+>  		/* Mark TX Equalization settings as valid */
+>  		params->is_valid = true;
+>  		params->is_trained = true;
+> +		params->is_static = false;
+>  		params->is_applied = false;
+>  	}
+>  
+> @@ -1495,6 +1502,7 @@ static void ufshcd_extract_tx_eq_settings_attrs(struct ufs_hba *hba, u8 gear)
+>  	}
+>  
+>  	params->is_valid = true;
+> +	params->is_static = false;
+>  }
+>  
+>  void ufshcd_retrieve_tx_eq_settings(struct ufs_hba *hba)
+> diff --git a/drivers/ufs/host/ufshcd-pltfrm.c b/drivers/ufs/host/ufshcd-pltfrm.c
+> index c2dafb583cf5..6fe360efa80a 100644
+> --- a/drivers/ufs/host/ufshcd-pltfrm.c
+> +++ b/drivers/ufs/host/ufshcd-pltfrm.c
+> @@ -210,6 +210,130 @@ static void ufshcd_init_lanes_per_dir(struct ufs_hba *hba)
+>  	}
+>  }
+>  
+> +static void ufshcd_parse_static_tx_eq_settings(struct ufs_hba *hba)
+> +{
+> +	size_t sz = hba->lanes_per_direction * 2;
+> +	u32 lpd = hba->lanes_per_direction;
+> +	struct ufshcd_tx_eq_params *params;
+> +	u32 deemphasis[UFS_MAX_LANES * 2];
+> +	u32 precode_en[UFS_MAX_LANES * 2];
+> +	u32 preshoot[UFS_MAX_LANES * 2];
+> +	struct device *dev = hba->dev;
+> +	char prop_name[MAX_PROP_SIZE];
+> +	int i, err, count, gear, lane;
+> +
+> +	if (!lpd || lpd > UFS_MAX_LANES)
+> +		return;
+> +
+> +	for (gear = UFS_HS_G1; gear <= UFS_HS_GEAR_MAX; gear++) {
+> +		snprintf(prop_name, MAX_PROP_SIZE, "txeq-preshoot-g%d", gear);
+> +		count = of_property_count_u32_elems(dev->of_node, prop_name);
+> +		if (count <= 0)
+> +			continue;
+> +
+> +		if (count != sz) {
+> +			dev_err(dev, "Property %s has invalid count (%d), expecting %zu\n",
+> +				prop_name, count, sz);
+> +			continue;
+> +		}
+> +
+> +		err = of_property_read_u32_array(dev->of_node, prop_name, preshoot, sz);
+> +		if (err) {
+> +			dev_err(dev, "Failed to read %s property, %d\n",
+> +				prop_name, err);
+> +			continue;
+> +		}
+> +
+> +		for (i = 0; i < count; i++) {
+> +			if (preshoot[i] >= TX_HS_NUM_PRESHOOT) {
+> +				dev_err(dev, "An invalid TX EQ PreShoot (%d) provided in %s property\n",
+> +					preshoot[i], prop_name);
+> +				break;
+> +			}
+> +		}
+> +
+> +		if (i != count)
+> +			continue;
+> +
+> +		snprintf(prop_name, MAX_PROP_SIZE, "txeq-deemphasis-g%d", gear);
+> +		count = of_property_count_u32_elems(dev->of_node, prop_name);
+> +		if (count <= 0) {
+> +			dev_err(dev, "Missing required %s property\n", prop_name);
+> +			continue;
+> +		}
+> +
+> +		if (count != sz) {
+> +			dev_err(dev, "Property %s has invalid count (%d), expecting %zu\n",
+> +				prop_name, count, sz);
+> +			continue;
+> +		}
+> +
+> +		err = of_property_read_u32_array(dev->of_node, prop_name, deemphasis, sz);
+> +		if (err) {
+> +			dev_err(dev, "Failed to read %s property, %d\n",
+> +				prop_name, err);
+> +			continue;
+> +		}
+> +
+> +		for (i = 0; i < count; i++) {
+> +			if (deemphasis[i] >= TX_HS_NUM_DEEMPHASIS) {
+> +				dev_err(dev, "An invalid TX EQ DeEmphasis (%d) provided in %s property\n",
+> +					deemphasis[i], prop_name);
+> +				break;
+> +			}
+> +		}
+> +
+> +		if (i != count)
+> +			continue;
+> +
+> +		memset(precode_en, 0, sizeof(precode_en));
+> +		if (gear == UFS_HS_G6) {
+> +			snprintf(prop_name, MAX_PROP_SIZE, "tx-precode-enable-g%d", gear);
+> +			count = of_property_count_u32_elems(dev->of_node, prop_name);
+> +			if (count > 0) {
+> +				if (count != sz) {
+> +					dev_err(dev, "Property %s has invalid count (%d), expecting %zu\n",
+> +						prop_name, count, sz);
+> +					continue;
+> +				}
+> +
+> +				err = of_property_read_u32_array(dev->of_node, prop_name,
+> +								 precode_en, sz);
+> +				if (err) {
+> +					dev_err(dev, "Failed to read %s property, %d\n",
+> +						prop_name, err);
+> +					continue;
+> +				}
+> +
+> +				for (i = 0; i < count; i++) {
+> +					if (precode_en[i] > 1) {
+> +						dev_err(dev, "An invalid PrecodeEn (%d) provided in %s property\n",
+> +							precode_en[i], prop_name);
+> +						break;
+> +					}
+> +				}
+> +
+> +				if (i != count)
+> +					continue;
+> +			}
+> +		}
+> +
+> +		params = &hba->tx_eq_params[gear - 1];
+> +		for (lane = 0; lane < lpd; lane++) {
+> +			params->host[lane].preshoot = preshoot[lane * 2];
+> +			params->host[lane].deemphasis = deemphasis[lane * 2];
+> +			params->host[lane].precode_en = precode_en[lane * 2];
+> +
+> +			params->device[lane].preshoot = preshoot[lane * 2 + 1];
+> +			params->device[lane].deemphasis = deemphasis[lane * 2 + 1];
+> +			params->device[lane].precode_en = precode_en[lane * 2 + 1];
+> +		}
+> +
+> +		params->is_valid = true;
+> +		params->is_static = true;
+> +	}
+> +}
+> +
+>  /**
+>   * ufshcd_parse_clock_min_max_freq  - Parse MIN and MAX clocks freq
+>   * @hba: per adapter instance
+> @@ -528,6 +652,8 @@ int ufshcd_pltfrm_init(struct platform_device *pdev,
+>  
+>  	ufshcd_init_lanes_per_dir(hba);
+>  
+> +	ufshcd_parse_static_tx_eq_settings(hba);
+> +
+>  	err = ufshcd_parse_operating_points(hba);
+>  	if (err) {
+>  		dev_err(dev, "%s: OPP parse failed %d\n", __func__, err);
+> diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
+> index f48d6416e299..c01824576472 100644
+> --- a/include/ufs/ufshcd.h
+> +++ b/include/ufs/ufshcd.h
+> @@ -359,6 +359,7 @@ struct ufshcd_tx_eqtr_record {
+>   * @is_valid: True if parameter contains valid TX Equalization settings
+>   * @is_applied: True if settings have been applied to UniPro of both sides
+>   * @is_trained: True if parameters obtained from TX EQTR procedure
+> + * @is_static: True if settings are static
+>   */
+>  struct ufshcd_tx_eq_params {
+>  	struct ufshcd_tx_eq_settings host[UFS_MAX_LANES];
+> @@ -367,6 +368,7 @@ struct ufshcd_tx_eq_params {
+>  	bool is_valid;
+>  	bool is_applied;
+>  	bool is_trained;
+> +	bool is_static;
+>  };
+>  
+>  /**
+> -- 
+> 2.34.1
+> 
 
-That retry completes with DID_ERROR or DID_NO_CONNECT even though EH may
-already have restored the device to an operational ACTIVE state.
-
-Handle PM SSU timeout directly from ufshcd_eh_timed_out() instead of
-letting these commands enter regular SCSI EH. Limit this path to SSU
-commands for the UFS device WLUN while a PM operation is in progress.
-If link recovery fails, return SCSI_EH_NOT_HANDLED so regular SCSI
-timeout handling can take over.
-
-Since this path bypasses scsi_eh_scmd_add(), UFS reset/restore must also
-complete the timed-out request itself. MCQ mode already force-completes
-requests without CQEs when force_compl is true. Add the same behavior for
-the legacy single-doorbell path: first process requests whose doorbell has
-already been cleared, then complete the remaining outstanding SCSI requests
-with DID_REQUEUE so callers can re-issue commands whose outcome became
-unknown after the host reset.
-
-The system_suspending flag is no longer needed because PM SSU timeout
-handling now uses pm_op_in_progress and command filtering.
-
-Fixes: b8c3a7bac9b6 ("scsi: ufs: Have midlayer retry start stop errors")
-Signed-off-by: Hongjie Fang <hongjiefang@asrmicro.com>
----
-
-v2: handle PM SSU timeout directly from ufshcd_eh_timed_out() suggested
-by Bart Van Assche
-
-drivers/ufs/core/ufshcd.c | 56 ++++++++++++++++++++++++++++++++-------
- include/ufs/ufshcd.h      |  3 ---
- 2 files changed, 47 insertions(+), 12 deletions(-)
-
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index c3f08957d179..ce79c0f30b46 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -5953,6 +5953,37 @@ static irqreturn_t ufshcd_transfer_req_compl(struct ufs_hba *hba)
- 	return IRQ_HANDLED;
- }
- 
-+static void ufshcd_force_compl_pending_transfer(struct ufs_hba *hba)
-+{
-+	unsigned long completed_reqs;
-+	unsigned long flags;
-+	int tag;
-+
-+	ufshcd_transfer_req_compl(hba);
-+
-+	spin_lock_irqsave(&hba->outstanding_lock, flags);
-+	completed_reqs = hba->outstanding_reqs;
-+	hba->outstanding_reqs = 0;
-+	spin_unlock_irqrestore(&hba->outstanding_lock, flags);
-+
-+	for_each_set_bit(tag, &completed_reqs, hba->nutrs) {
-+		struct scsi_cmnd *cmd = ufshcd_tag_to_cmd(hba, tag);
-+
-+		if (cmd && ufshcd_is_scsi_cmd(cmd) &&
-+		    !test_bit(SCMD_STATE_COMPLETE, &cmd->state)) {
-+			/*
-+			 * The host has been reset and the original command
-+			 * outcome is unknown. Requeue SCSI commands so callers
-+			 * such as ufshcd_set_dev_pwr_mode() can re-issue START
-+			 * STOP UNIT and converge the device power mode.
-+			 */
-+			set_host_byte(cmd, DID_REQUEUE);
-+			ufshcd_release_scsi_cmd(hba, cmd);
-+			scsi_done(cmd);
-+		}
-+	}
-+}
-+
- int __ufshcd_write_ee_control(struct ufs_hba *hba, u32 ee_ctrl_mask)
- {
- 	return ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_WRITE_ATTR,
-@@ -6517,6 +6548,8 @@ static void ufshcd_complete_requests(struct ufs_hba *hba, bool force_compl)
- {
- 	if (hba->mcq_enabled)
- 		ufshcd_mcq_compl_pending_transfer(hba, force_compl);
-+	else if (force_compl)
-+		ufshcd_force_compl_pending_transfer(hba);
- 	else
- 		ufshcd_transfer_req_compl(hba);
- 
-@@ -9465,23 +9498,30 @@ static void ufshcd_async_scan(void *data, async_cookie_t cookie)
- static enum scsi_timeout_action ufshcd_eh_timed_out(struct scsi_cmnd *scmd)
- {
- 	struct ufs_hba *hba = shost_priv(scmd->device->host);
-+	int ret;
- 
--	if (!hba->system_suspending) {
-+	if (!hba->pm_op_in_progress || scmd->device != hba->ufs_device_wlun ||
-+	    scmd->cmnd[0] != START_STOP) {
- 		/* Activate the error handler in the SCSI core. */
- 		return SCSI_EH_NOT_HANDLED;
- 	}
- 
- 	/*
--	 * If we get here we know that no TMFs are outstanding and also that
--	 * the only pending command is a START STOP UNIT command. Handle the
--	 * timeout of that command directly to prevent a deadlock between
--	 * ufshcd_set_dev_pwr_mode() and ufshcd_err_handler().
-+	 * PM START STOP UNIT commands are issued while a PM operation is in
-+	 * progress. Handle such timeouts directly to avoid entering regular
-+	 * SCSI EH, which may deadlock with the PM operation and may also make
-+	 * scsi_execute_cmd() retries fail while the host is still in recovery.
- 	 */
--	ufshcd_link_recovery(hba);
-+	ret = ufshcd_link_recovery(hba);
- 	dev_info(hba->dev, "%s() finished; outstanding_tasks = %#lx.\n",
- 		 __func__, hba->outstanding_tasks);
- 
--	return scsi_host_busy(hba->host) ? SCSI_EH_RESET_TIMER : SCSI_EH_DONE;
-+	if (ret)
-+		return SCSI_EH_NOT_HANDLED;
-+
-+	WARN_ON_ONCE(!test_bit(SCMD_STATE_COMPLETE, &scmd->state));
-+
-+	return SCSI_EH_DONE;
- }
- 
- static const struct attribute_group *ufshcd_driver_groups[] = {
-@@ -10518,7 +10558,6 @@ static int ufshcd_wl_suspend(struct device *dev)
- 
- 	hba = shost_priv(sdev->host);
- 	down(&hba->host_sem);
--	hba->system_suspending = true;
- 
- 	if (pm_runtime_suspended(dev))
- 		goto out;
-@@ -10560,7 +10599,6 @@ static int ufshcd_wl_resume(struct device *dev)
- 		hba->curr_dev_pwr_mode, hba->uic_link_state);
- 	if (!ret)
- 		hba->is_sys_suspended = false;
--	hba->system_suspending = false;
- 	up(&hba->host_sem);
- 	return ret;
- }
-diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-index cfbc75d8df83..8280a95c00c7 100644
---- a/include/ufs/ufshcd.h
-+++ b/include/ufs/ufshcd.h
-@@ -1020,8 +1020,6 @@ enum ufshcd_mcq_opr {
-  * @caps: bitmask with information about UFS controller capabilities
-  * @devfreq: frequency scaling information owned by the devfreq core
-  * @clk_scaling: frequency scaling information owned by the UFS driver
-- * @system_suspending: system suspend has been started and system resume has
-- *	not yet finished.
-  * @is_sys_suspended: UFS device has been suspended because of system suspend
-  * @urgent_bkops_lvl: keeps track of urgent bkops level for device
-  * @is_urgent_bkops_lvl_checked: keeps track if the urgent bkops level for
-@@ -1197,7 +1195,6 @@ struct ufs_hba {
- 
- 	struct devfreq *devfreq;
- 	struct ufs_clk_scaling clk_scaling;
--	bool system_suspending;
- 	bool is_sys_suspended;
- 
- 	enum bkops_status urgent_bkops_lvl;
 -- 
-2.25.1
-
+மணிவண்ணன் சதாசிவம்
