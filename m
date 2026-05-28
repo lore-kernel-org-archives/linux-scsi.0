@@ -1,71 +1,35 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from spam.asrmicro.com (asrmicro.com [210.13.118.86])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D428B39A805;
-	Thu, 28 May 2026 10:06:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 53E153E4C6A;
+	Thu, 28 May 2026 11:35:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.13.118.86
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779962815; cv=none; b=ND+6hF1pFJuDVm1KRmfjpTDADTcUlQiF8KpdeP5Tw91d+8M1T2FVaMntrFArsZvLln1QhIBZXCU/nmweMljZBh1k5c+YrmsenIupHZHMt1Vrljay0ZrXRiW+Eh2yPUgvdSDIOSE0YSEgQFKJwkXZeMxWyttTC4R0m2xWljQ0ViQ=
+	t=1779968131; cv=none; b=QY/k2/f7iBoPrTNwvI2AuD2KASukZg6+W0SzbOgCZnGWLoOH8eMYMjdtzrW3G+Yrsq9I+BMaANFrdg97z31wedHbLJfdZERvTOXRqVpSJDfyDaN+OaDO1fTNaHjesQQYsvFw17d8xT757EdrpIt6xHn0Axwgbtuui+Dun8nlUcM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779962815; c=relaxed/simple;
-	bh=cEGUrQn5zfSHcZel1YP2AsXMaFm37TEl1+M+p4EizJo=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=gWQTHNgtbnshQRXGbvD+jITC3BftxXkbyZLcP0cjNjuYjLZWUoNtBT40hWqBBzCT4I28Kn9+zzjeSV2cXhRl1H5EUcTnBAyLxNmCYjsaCmfbjDgemVoXuPLbuNXf/580rna/wU/cynxgAlv2Sd6BBq3SqS8ROUEA3gOQaYa3O3Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=h5lYngtS; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="h5lYngtS"
-Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 64S8vaPH4016473;
-	Thu, 28 May 2026 10:06:21 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:date:from:in-reply-to:message-id
-	:mime-version:references:subject:to; s=qcppdkim1; bh=Z9fHghHvoMM
-	TbEf/iS8uDXDn4ErwJXgkPHYYxFOsCkc=; b=h5lYngtSqXBZAaDsMIraNju4YAm
-	qrIld6lWYawjVTNK2WShVdRENyGgewiQ7+CA7cOQplMsjW7UhtBr9A5MKCLR0aFb
-	uJ0hCk3QWd/QFLccIlN2Ga1TyJByRn5urQD29cWLSaSVHZK6rNi/+1xO0YRpncUJ
-	hjPHUkrDdM9+IkOjBVikAN7sxbOtasxXsd68gspxKjd3TdNCDh6nmFr1YhLEEEv0
-	nxGsTR8nZRYRB1S2qrTikrehMqd+w1yR+B9XGfNtFF4Iv1zV7cy5unUPnt9ma6tq
-	r52rF67uLrv6xTZkTTpxJ4XzNO7lz6V9/e7MFinQ5Ds8bmCljqE8swpotEw==
-Received: from nalasppmta04.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4ee7y5aagt-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 28 May 2026 10:06:21 +0000 (GMT)
-Received: from pps.filterd (NALASPPMTA04.qualcomm.com [127.0.0.1])
-	by NALASPPMTA04.qualcomm.com (8.18.1.7/8.18.1.7) with ESMTP id 64SA4iUN013336;
-	Thu, 28 May 2026 10:06:20 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-	by NALASPPMTA04.qualcomm.com (PPS) with ESMTPS id 4ee8c5cx5w-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 28 May 2026 10:06:20 +0000 (GMT)
-Received: from NALASPPMTA04.qualcomm.com (NALASPPMTA04.qualcomm.com [127.0.0.1])
-	by pps.reinject (8.18.1.12/8.18.1.12) with ESMTP id 64SA6JcW015375;
-	Thu, 28 May 2026 10:06:20 GMT
-Received: from hu-devc-lv-u22-c.qualcomm.com (hu-cang-lv.qualcomm.com [10.81.25.255])
-	by NALASPPMTA04.qualcomm.com (PPS) with ESMTPS id 64SA6JH8015374
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 28 May 2026 10:06:19 +0000 (GMT)
-Received: by hu-devc-lv-u22-c.qualcomm.com (Postfix, from userid 359480)
-	id B142F62C; Thu, 28 May 2026 03:06:19 -0700 (PDT)
-From: Can Guo <can.guo@oss.qualcomm.com>
-To: bvanassche@acm.org, beanhuo@micron.com, peter.wang@mediatek.com,
-        martin.petersen@oracle.com, mani@kernel.org
-Cc: linux-scsi@vger.kernel.org, Can Guo <can.guo@oss.qualcomm.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>, Rob Herring <robh@kernel.org>,
-        Krzysztof Kozlowski <krzk+dt@kernel.org>,
-        Conor Dooley <conor+dt@kernel.org>,
-        Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>,
-        Zhaoming Luo <zhml@posteo.com>,
-        devicetree@vger.kernel.org (open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS),
-        linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH v4 1/2] dt-bindings: ufs: Document static TX Equalization settings properties
-Date: Thu, 28 May 2026 03:06:13 -0700
-Message-Id: <20260528100614.3386423-2-can.guo@oss.qualcomm.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20260528100614.3386423-1-can.guo@oss.qualcomm.com>
-References: <20260528100614.3386423-1-can.guo@oss.qualcomm.com>
+	s=arc-20240116; t=1779968131; c=relaxed/simple;
+	bh=yQcbxaQZHwTFRwFMwC/IUzpgWahAoaa9mHAPI2wjIAg=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=jVO8WW06EScQMS0HEacjydlA0w4Hm03SXpSZu/6t9wTjL2ofLyyrjpzXNprZQS5jzYtKYscdKCQcAa8ksACYiQ+XjJ2eKhMJu2Rnk02Z31hmFpVaMLCoAY9QuEbyAhlB+DpASCBXhiOQ+YUOwfZT0TvehCYlU82ShOjTqFKU7HE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=asrmicro.com; spf=pass smtp.mailfrom=asrmicro.com; arc=none smtp.client-ip=210.13.118.86
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=asrmicro.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=asrmicro.com
+Received: from exch02.asrmicro.com (exch02.asrmicro.com [10.1.24.122])
+	by spam.asrmicro.com with ESMTPS id 64SBYSse006103
+	(version=TLSv1 cipher=ECDHE-RSA-AES256-SHA bits=256 verify=FAIL);
+	Thu, 28 May 2026 19:34:28 +0800 (GMT-8)
+	(envelope-from hongjiefang@asrmicro.com)
+Received: from localhost (10.1.170.248) by exch02.asrmicro.com (10.1.24.122)
+ with Microsoft SMTP Server (TLS) id 15.0.847.32; Thu, 28 May 2026 19:34:33
+ +0800
+From: Hongjie Fang <hongjiefang@asrmicro.com>
+To: <alim.akhtar@samsung.com>, <avri.altman@wdc.com>, <bvanassche@acm.org>,
+        <James.Bottomley@HansenPartnership.com>, <martin.petersen@oracle.com>,
+        <peter.wang@mediatek.com>, <beanhuo@micron.com>
+CC: <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+Subject: [PATCH v2] scsi: ufs: core: handle PM SSU timeout before SCSI EH
+Date: Thu, 28 May 2026 19:34:33 +0800
+Message-ID: <20260528113433.367083-1-hongjiefang@asrmicro.com>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -73,113 +37,206 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-QCInternal: smtphost
-X-QCInternal: smtphost
-X-Authority-Analysis: v=2.4 cv=OM4XGyaB c=1 sm=1 tr=0 ts=6a18139d cx=c_pps
- a=ouPCqIW2jiPt+lZRy3xVPw==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
- a=NGcC8JguVDcA:10 a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22
- a=rJkE3RaqiGZ5pbrm-msn:22 a=VwQbUJbxAAAA:8 a=EUspDBNiAAAA:8
- a=aytFPfgCXfsv55HZsIkA:9
-X-Proofpoint-ORIG-GUID: sXGDQFHB6RyLDwWOjjA3dF4vxS7hh2JD
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNTI4MDEwMiBTYWx0ZWRfX/KxYpt9YL62h
- XI8qFqtiE/Qv6K6KkL3Ka7BkjEgeXJLAZ1rgv2LioQICPMlEBFG4qeSPONEY6r930O9xO69CN7S
- 1HVjOzuM2BBbXYHTAXjDwmf8pKgRzrtgXr1cRZ4ksZfdrH6G1DzuAYa3RPZLo+yKRK/KrCj/7gi
- II+2iVCq9Dt0D71dU/3JIL2wRA0sN2ujhpaaAGrhhmMb4yr1cgXI8MWA8Ju88+J5JUwFCIPk/Ou
- 210hTwdgyFtxUZ6EfnsE4VzsYKSCnW8jXoYMk/7Rld7EisBfuhsjl8ZK2CxdFt46Zzunw3sBuaZ
- ZfNrbvSnKXCc4p31b/n1vI+jVmWfq1fIkaN3fQ5OsgGUhDf3nlofEbb7b2+OqC00dKCVksVva6q
- /Cl/BLMhGJUtXQBEgZP3T5Tr9sF+saYw4fhjaIZa/+uAJmQN2ELsXvh/WoMcWSk5MwMt07vQV7e
- Ll4rQMlnyPjvFQGuqrA==
-X-Proofpoint-GUID: sXGDQFHB6RyLDwWOjjA3dF4vxS7hh2JD
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.125,FMLib:17.12.100.49
- definitions=2026-05-28_03,2026-05-26_03,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- malwarescore=0 bulkscore=0 impostorscore=0 adultscore=0 suspectscore=0
- clxscore=1015 priorityscore=1501 lowpriorityscore=0 phishscore=0 spamscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2605210000 definitions=main-2605280102
+Content-Type: text/plain
+X-ClientProxiedBy: exch02.asrmicro.com (10.1.24.122) To exch02.asrmicro.com
+ (10.1.24.122)
+X-DNSRBL: 
+X-SPAM-SOURCE-CHECK: pass
+X-MAIL:spam.asrmicro.com 64SBYSse006103
 
-UFS v5.0/UFSHCI v5.0 add HS-G6 support (46.6 Gbps/lane) via UniPro v3.0
-and M-PHY v6.0. In these specs, TX Equalization is defined for all High
-Speed Gears (not only HS-G6) to compensate channel loss and improve signal
-integrity at high speed operation.
+A PM START STOP sent from the UFS well-known LU resume path can race with
+SCSI EH.
 
-For HS-G6, M-PHY uses PAM4 1b1b line coding, Pre-Coding may also be
-required depending on channel characteristics.
+The "wl resume" task flow is:
+  __ufshcd_wl_resume()
+    ufshcd_set_dev_pwr_mode(UFS_ACTIVE_PWR_MODE)
+      ufshcd_execute_start_stop()
+        scsi_execute_cmd()
+          blk_execute_rq           <-- wait
+          scsi_check_passthrough() <-- may retry START STOP
 
-Add vendor-neutral DT properties:
+If the first START STOP time out, SCSI EH may already recover the link and
+reset the device before scsi_execute_cmd() returns:
+  scsi_timeout()
+    scsi_eh_scmd_add()
+      scsi_error_handler()
+        scsi_unjam_host()
+          scsi_eh_ready_devs()
+            scsi_eh_host_reset()
+              ufshcd_eh_host_reset_handler()
+                if (hba->pm_op_in_progress)
+                  ufshcd_link_recovery()
+                    ufshcd_device_reset()
+                    ufshcd_host_reset_and_restore()
+          ...
+          scsi_eh_flush_done_q()   <-- wakeup "wl resume" task
+        ...                        <-- host still in SHOST_RECOVERY
+        scsi_restart_operations()
 
-- patternProperties for txeq-preshoot-g[1-6] and txeq-deemphasis-g[1-6]
-- fixed property tx-precode-enable-g6
+A later passthrough retry can then run while the host is still in
+SHOST_RECOVERY and hit the SCMD_FAIL_IF_RECOVERING path:
+  scsi_queue_rq()
+    if (scsi_host_in_recovery(shost) &&
+        cmd->flags & SCMD_FAIL_IF_RECOVERING)
+      return BLK_STS_OFFLINE
 
-Each property is a uint32 array of per-lane tuples:
-<Host_Lane0 Device_Lane0>, [<Host_Lane1 Device_Lane1>]
+That retry completes with DID_ERROR or DID_NO_CONNECT even though EH may
+already have restored the device to an operational ACTIVE state.
 
-Accept 2 or 4 values (x1/x2 lane configs). PreShoot and DeEmphasis values
-are 0..7. Precode enable values are 0/1 and only applicable to HS-G6.
+Handle PM SSU timeout directly from ufshcd_eh_timed_out() instead of
+letting these commands enter regular SCSI EH. Limit this path to SSU
+commands for the UFS device WLUN while a PM operation is in progress.
+If link recovery fails, return SCSI_EH_NOT_HANDLED so regular SCSI
+timeout handling can take over.
 
-Acked-by: Manivannan Sadhasivam <mani@kernel.org>
-Signed-off-by: Can Guo <can.guo@oss.qualcomm.com>
+Since this path bypasses scsi_eh_scmd_add(), UFS reset/restore must also
+complete the timed-out request itself. MCQ mode already force-completes
+requests without CQEs when force_compl is true. Add the same behavior for
+the legacy single-doorbell path: first process requests whose doorbell has
+already been cleared, then complete the remaining outstanding SCSI requests
+with DID_REQUEUE so callers can re-issue commands whose outcome became
+unknown after the host reset.
+
+The system_suspending flag is no longer needed because PM SSU timeout
+handling now uses pm_op_in_progress and command filtering.
+
+Fixes: b8c3a7bac9b6 ("scsi: ufs: Have midlayer retry start stop errors")
+Signed-off-by: Hongjie Fang <hongjiefang@asrmicro.com>
 ---
- .../devicetree/bindings/ufs/ufs-common.yaml   | 45 +++++++++++++++++++
- 1 file changed, 45 insertions(+)
 
-diff --git a/Documentation/devicetree/bindings/ufs/ufs-common.yaml b/Documentation/devicetree/bindings/ufs/ufs-common.yaml
-index ed97f5682509..d90cf25adfa5 100644
---- a/Documentation/devicetree/bindings/ufs/ufs-common.yaml
-+++ b/Documentation/devicetree/bindings/ufs/ufs-common.yaml
-@@ -105,6 +105,51 @@ properties:
-       Restricts the UFS controller to rate-a or rate-b for both TX and
-       RX directions.
+v2: handle PM SSU timeout directly from ufshcd_eh_timed_out() suggested
+by Bart Van Assche
+
+drivers/ufs/core/ufshcd.c | 56 ++++++++++++++++++++++++++++++++-------
+ include/ufs/ufshcd.h      |  3 ---
+ 2 files changed, 47 insertions(+), 12 deletions(-)
+
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index c3f08957d179..ce79c0f30b46 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -5953,6 +5953,37 @@ static irqreturn_t ufshcd_transfer_req_compl(struct ufs_hba *hba)
+ 	return IRQ_HANDLED;
+ }
  
-+  tx-precode-enable-g6:
-+    $ref: /schemas/types.yaml#/definitions/uint32-array
-+    oneOf:
-+      - minItems: 2
-+        maxItems: 2
-+      - minItems: 4
-+        maxItems: 4
-+    items:
-+      enum: [0, 1]
-+    description: |
-+      Static TX Precode enable values for HS-G6 only.
-+      Values are specified as per-lane tuples:
-+      <Host_Lane0 Device_Lane0>, [<Host_Lane1 Device_Lane1>].
++static void ufshcd_force_compl_pending_transfer(struct ufs_hba *hba)
++{
++	unsigned long completed_reqs;
++	unsigned long flags;
++	int tag;
 +
-+patternProperties:
-+  "^txeq-preshoot-g[1-6]$":
-+    $ref: /schemas/types.yaml#/definitions/uint32-array
-+    oneOf:
-+      - minItems: 2
-+        maxItems: 2
-+      - minItems: 4
-+        maxItems: 4
-+    items:
-+      minimum: 0
-+      maximum: 7
-+    description: |
-+      Static TX Equalization PreShoot values for High Speed Gears.
-+      Values are specified as per-lane tuples:
-+      <Host_Lane0 Device_Lane0>, [<Host_Lane1 Device_Lane1>].
++	ufshcd_transfer_req_compl(hba);
 +
-+  "^txeq-deemphasis-g[1-6]$":
-+    $ref: /schemas/types.yaml#/definitions/uint32-array
-+    oneOf:
-+      - minItems: 2
-+        maxItems: 2
-+      - minItems: 4
-+        maxItems: 4
-+    items:
-+      minimum: 0
-+      maximum: 7
-+    description: |
-+      Static TX Equalization DeEmphasis values for High Speed Gears.
-+      Values are specified as per-lane tuples:
-+      <Host_Lane0 Device_Lane0>, [<Host_Lane1 Device_Lane1>].
++	spin_lock_irqsave(&hba->outstanding_lock, flags);
++	completed_reqs = hba->outstanding_reqs;
++	hba->outstanding_reqs = 0;
++	spin_unlock_irqrestore(&hba->outstanding_lock, flags);
 +
- dependencies:
-   freq-table-hz: [ clocks ]
-   operating-points-v2: [ clocks, clock-names ]
++	for_each_set_bit(tag, &completed_reqs, hba->nutrs) {
++		struct scsi_cmnd *cmd = ufshcd_tag_to_cmd(hba, tag);
++
++		if (cmd && ufshcd_is_scsi_cmd(cmd) &&
++		    !test_bit(SCMD_STATE_COMPLETE, &cmd->state)) {
++			/*
++			 * The host has been reset and the original command
++			 * outcome is unknown. Requeue SCSI commands so callers
++			 * such as ufshcd_set_dev_pwr_mode() can re-issue START
++			 * STOP UNIT and converge the device power mode.
++			 */
++			set_host_byte(cmd, DID_REQUEUE);
++			ufshcd_release_scsi_cmd(hba, cmd);
++			scsi_done(cmd);
++		}
++	}
++}
++
+ int __ufshcd_write_ee_control(struct ufs_hba *hba, u32 ee_ctrl_mask)
+ {
+ 	return ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_WRITE_ATTR,
+@@ -6517,6 +6548,8 @@ static void ufshcd_complete_requests(struct ufs_hba *hba, bool force_compl)
+ {
+ 	if (hba->mcq_enabled)
+ 		ufshcd_mcq_compl_pending_transfer(hba, force_compl);
++	else if (force_compl)
++		ufshcd_force_compl_pending_transfer(hba);
+ 	else
+ 		ufshcd_transfer_req_compl(hba);
+ 
+@@ -9465,23 +9498,30 @@ static void ufshcd_async_scan(void *data, async_cookie_t cookie)
+ static enum scsi_timeout_action ufshcd_eh_timed_out(struct scsi_cmnd *scmd)
+ {
+ 	struct ufs_hba *hba = shost_priv(scmd->device->host);
++	int ret;
+ 
+-	if (!hba->system_suspending) {
++	if (!hba->pm_op_in_progress || scmd->device != hba->ufs_device_wlun ||
++	    scmd->cmnd[0] != START_STOP) {
+ 		/* Activate the error handler in the SCSI core. */
+ 		return SCSI_EH_NOT_HANDLED;
+ 	}
+ 
+ 	/*
+-	 * If we get here we know that no TMFs are outstanding and also that
+-	 * the only pending command is a START STOP UNIT command. Handle the
+-	 * timeout of that command directly to prevent a deadlock between
+-	 * ufshcd_set_dev_pwr_mode() and ufshcd_err_handler().
++	 * PM START STOP UNIT commands are issued while a PM operation is in
++	 * progress. Handle such timeouts directly to avoid entering regular
++	 * SCSI EH, which may deadlock with the PM operation and may also make
++	 * scsi_execute_cmd() retries fail while the host is still in recovery.
+ 	 */
+-	ufshcd_link_recovery(hba);
++	ret = ufshcd_link_recovery(hba);
+ 	dev_info(hba->dev, "%s() finished; outstanding_tasks = %#lx.\n",
+ 		 __func__, hba->outstanding_tasks);
+ 
+-	return scsi_host_busy(hba->host) ? SCSI_EH_RESET_TIMER : SCSI_EH_DONE;
++	if (ret)
++		return SCSI_EH_NOT_HANDLED;
++
++	WARN_ON_ONCE(!test_bit(SCMD_STATE_COMPLETE, &scmd->state));
++
++	return SCSI_EH_DONE;
+ }
+ 
+ static const struct attribute_group *ufshcd_driver_groups[] = {
+@@ -10518,7 +10558,6 @@ static int ufshcd_wl_suspend(struct device *dev)
+ 
+ 	hba = shost_priv(sdev->host);
+ 	down(&hba->host_sem);
+-	hba->system_suspending = true;
+ 
+ 	if (pm_runtime_suspended(dev))
+ 		goto out;
+@@ -10560,7 +10599,6 @@ static int ufshcd_wl_resume(struct device *dev)
+ 		hba->curr_dev_pwr_mode, hba->uic_link_state);
+ 	if (!ret)
+ 		hba->is_sys_suspended = false;
+-	hba->system_suspending = false;
+ 	up(&hba->host_sem);
+ 	return ret;
+ }
+diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
+index cfbc75d8df83..8280a95c00c7 100644
+--- a/include/ufs/ufshcd.h
++++ b/include/ufs/ufshcd.h
+@@ -1020,8 +1020,6 @@ enum ufshcd_mcq_opr {
+  * @caps: bitmask with information about UFS controller capabilities
+  * @devfreq: frequency scaling information owned by the devfreq core
+  * @clk_scaling: frequency scaling information owned by the UFS driver
+- * @system_suspending: system suspend has been started and system resume has
+- *	not yet finished.
+  * @is_sys_suspended: UFS device has been suspended because of system suspend
+  * @urgent_bkops_lvl: keeps track of urgent bkops level for device
+  * @is_urgent_bkops_lvl_checked: keeps track if the urgent bkops level for
+@@ -1197,7 +1195,6 @@ struct ufs_hba {
+ 
+ 	struct devfreq *devfreq;
+ 	struct ufs_clk_scaling clk_scaling;
+-	bool system_suspending;
+ 	bool is_sys_suspended;
+ 
+ 	enum bkops_status urgent_bkops_lvl;
 -- 
-2.34.1
+2.25.1
 
