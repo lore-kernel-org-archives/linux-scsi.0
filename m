@@ -1,92 +1,109 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from arkamax.eu (128-116-240-228.dyn.eolo.it [128.116.240.228])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 81DE732143D
-	for <linux-scsi@vger.kernel.org>; Thu, 28 May 2026 06:36:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D48932B139
+	for <linux-scsi@vger.kernel.org>; Thu, 28 May 2026 06:37:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=128.116.240.228
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779950179; cv=none; b=LmGCtQCDy9EFJVFg8b50w8mZt7M2XLoqZeoBF2Hs/Qt3NSBLNp2F3yJZ4vYyZEJ9/pfH/QNzw4v77MgktzlgqykH/LijeEC9AEsg8WPK81r69OIScmlHFJKNkPYQ/chkphF625Btsdkx/nJT2QcCrI4l6FIGPQu+KT+uppzRcAw=
+	t=1779950269; cv=none; b=CIpg+6pIxCFXWig8Gwlv6Zwc0k19Jt8Kzj83d7/c63w6mxjiDUBWUc7PmmkgqTXQkRHaRhozIdc6VKESuY2RMlPjCxeNfcVZvIfN7Bpj7iBh7Yb/eyXgPdzT2RC5PucZXUQeYBTmLAJGphjp04i7PHnJGtRovOaepM39NkbB1JI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779950179; c=relaxed/simple;
-	bh=DOw/ZzBYmSXzyyeK4zS/+QP0W3u9NBakFd664Tw7VRg=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=GF4697LsB9GGu3kcV2r9V7/HPabZci0Fj4dqGnkMiLv+aJ/WIPg7mEvkd88su2isUuGfUS/FurzRGWRKhr0G3fzJ5o7RqnDiy153J2USBvRRqP99xafB89qtdOWSBjctYZS0NwJtRPOJQxHeYAFcX0AWnVpgf4mjGInMYlESwg0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=HxjGX4tf; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1779950269; c=relaxed/simple;
+	bh=rjf1M1rdJQ8MRrgqNMwuXVNidW7IgFQtnblsECw4YP4=;
+	h=Mime-Version:Content-Type:Date:Message-Id:Cc:Subject:From:To:
+	 References:In-Reply-To; b=iuayrmF3u6ZXeOlu5SFPNZftODWphW0DID5NlcYDx5VvY8YdPYmmNKd23aTsgXDJltsl+cUQArBdt6HHec+bBER8PKjPsmsQJUCkwTAOlKqIsa5QuEj9TQc/46HaLtTs4yX8VQCNarfsZdi42yW09fq8F/utxmKVNFUdyvYfEVE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=arkamax.eu; spf=pass smtp.mailfrom=arkamax.eu; dkim=pass (2048-bit key) header.d=arkamax.eu header.i=@arkamax.eu header.b=CYcr1LL0; arc=none smtp.client-ip=128.116.240.228
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=arkamax.eu
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=arkamax.eu
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="HxjGX4tf"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1779950177;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=TZ6g7N7FYYJkIC7fUk7B2y1NVe4LfZURAyPrJmAFUYk=;
-	b=HxjGX4tfvlEgGO85c/nDXDWJcKs0KOr4rxTZamQdmT/HGoM4VtnW0cdHi9aluRBAvRfNjh
-	a6EONkornEEdI2W2IuSGYyl2gEpTgHacjoAnMuV9XLS3EkkGtR5tyiJLNYK5DjANPqNUJL
-	FOICarueinOI/soMT8X9CUAQawSGZA8=
-Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-607--ne4_we-P8uCNYU_trN5CQ-1; Thu,
- 28 May 2026 02:36:14 -0400
-X-MC-Unique: -ne4_we-P8uCNYU_trN5CQ-1
-X-Mimecast-MFC-AGG-ID: -ne4_we-P8uCNYU_trN5CQ_1779950173
-Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id E9DCA18002C8;
-	Thu, 28 May 2026 06:36:12 +0000 (UTC)
-Received: from nprabudo-thinkpadp16vgen1.rmtin.csb (unknown [10.74.81.42])
-	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id D973A19560AB;
-	Thu, 28 May 2026 06:36:09 +0000 (UTC)
-From: Nimal Prabudoss I <nprabudo@redhat.com>
-To: James.Bottomley@HansenPartnership.com,
-	martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org,
-	jmeneghi@redhat.com,
-	nilesh.javali@marvell.com,
-	Nimal Prabudoss I <nprabudo@redhat.com>,
-	Jesse T <jtaubepe@redhat.com>
-Subject: [PATCH v2] scsi: qedf: drop invalid skb_transport_header check to prevent panic
-Date: Thu, 28 May 2026 02:36:06 -0400
-Message-ID: <20260528063606.22324-1-nprabudo@redhat.com>
+	dkim=pass (2048-bit key) header.d=arkamax.eu header.i=@arkamax.eu header.b="CYcr1LL0"
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; s=mail1; bh=rjf1M1rdJQ8MRr
+	gqNMwuXVNidW7IgFQtnblsECw4YP4=; h=in-reply-to:references:to:from:
+	subject:cc:date; d=arkamax.eu; b=CYcr1LL0k7I4BnznGKWjBQs2Cq9KzJIA5pNnv
+	UnQlOaIZl6NFzz7pEsRSxutXxUlmUmWwjKmDJ1m9jmkNLSpJvBZcE97CMfjvV/Jh2T68MU
+	ZqDXFO56LQ9LcJfxtFBZJtKBWmBl3oPNjnR+kSIOHbWOqYm7TNPZQ24tfdbhGl+TpA2EV3
+	Dg3FIEsl5vBP0m7Ue09vMj1MrzYObf8/MmaqpsFYbvBhWqM9XOXdJW5/UoEZJlAf+te37g
+	/8LK8l/yK8ZohXAjfje7SIwrNvHvELqOg2lpORDWsMTJ5FX/oafj040iaHUbPErmGTHA9z
+	7RoTPDSe4e75PgnUxrrS9fYCg==
+Received: from localhost (128-116-240-228.dyn.eolo.it [128.116.240.228])
+	by arkamax.eu (OpenSMTPD) with ESMTPSA id d49059f5 (TLSv1.3:TLS_AES_256_GCM_SHA384:256:NO);
+	Thu, 28 May 2026 08:37:45 +0200 (CEST)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
+Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Date: Thu, 28 May 2026 08:37:45 +0200
+Message-Id: <DIU3PJDWJ7ZA.13R289W326RZD@arkamax.eu>
+Cc: <linux-scsi@vger.kernel.org>, <jmeneghi@redhat.com>,
+ <nilesh.javali@marvell.com>
+Subject: Re: [PATCH] scsi: qedf: use GFP_ATOMIC to prevent vmalloc
+ allocation panic
+From: "Maurizio Lombardi" <mlombard@arkamax.eu>
+To: "Nimal Prabudoss I" <nprabudo@redhat.com>,
+ <James.Bottomley@HansenPartnership.com>, <martin.petersen@oracle.com>
+X-Mailer: aerc 0.21.0
+References: <20260528062750.20148-1-nprabudo@redhat.com>
+In-Reply-To: <20260528062750.20148-1-nprabudo@redhat.com>
 
-During intensive FCOE Tier 1 CTC boot tests, the qedf driver triggers a
-warning assertion in include/linux/skbuff.h. This happens because the
-driver attempts to access an uninitialized transport header offset via
-skb_transport_header() under a CONFIG_DEBUG_NET environment.
+On Thu May 28, 2026 at 8:27 AM CEST, Nimal Prabudoss I wrote:
+> The qedf driver encounters an exc_invalid_op crash in get_vm_area_node
+> when running under intensive I/O stress with IOMMU enabled.
+>
+> Link: https://issues.redhat.com/browse/RHEL-75146
 
-Remove the invalid helper call within qedf_recv_frame() to eliminate the
-warning assertion and prevent the subsequent system panic.
+This is not accessible without a Jira account.
+I'd suggest to drop the link and expand the commit message to explain
+why it crashed.
 
-Co-developed-by: Jesse T <jtaubepe@redhat.com>
-Signed-off-by: Nimal Prabudoss I <nprabudo@redhat.com>
-Signed-off-by: Jesse T <jtaubepe@redhat.com>
----
- drivers/scsi/qedf/qedf_main.c | 1 -
- 1 file changed, 1 deletion(-)
+Maurizio
 
-diff --git a/drivers/scsi/qedf/qedf_main.c b/drivers/scsi/qedf/qedf_main.c
-index da429b3a4283..f2bc0ac684e0 100644
---- a/drivers/scsi/qedf/qedf_main.c
-+++ b/drivers/scsi/qedf/qedf_main.c
-@@ -2496,7 +2496,6 @@ static void qedf_recv_frame(struct qedf_ctx *qedf,
- 
- 	/* Pull the header */
- 	hp = (struct fcoe_hdr *)skb->data;
--	fh = (struct fc_frame_header *) skb_transport_header(skb);
- 	skb_pull(skb, sizeof(struct fcoe_hdr));
- 	fr_len = skb->len - sizeof(struct fcoe_crc_eof);
- 
--- 
-2.54.0
+> Signed-off-by: Nimal Prabudoss I <nprabudo@redhat.com>
+> ---
+>  drivers/scsi/qedf/qedf_io.c | 8 ++++----
+>  1 file changed, 4 insertions(+), 4 deletions(-)
+>
+> diff --git a/drivers/scsi/qedf/qedf_io.c b/drivers/scsi/qedf/qedf_io.c
+> index a120f0e37a64..6883aaf683bd 100644
+> --- a/drivers/scsi/qedf/qedf_io.c
+> +++ b/drivers/scsi/qedf/qedf_io.c
+> @@ -2059,7 +2059,7 @@ int qedf_init_mp_req(struct qedf_ioreq *io_req)
+>  		mp_req->req_len =3D io_req->data_xfer_len;
+> =20
+>  	mp_req->req_buf =3D dma_alloc_coherent(&qedf->pdev->dev, QEDF_PAGE_SIZE=
+,
+> -	    &mp_req->req_buf_dma, GFP_KERNEL);
+> +	    &mp_req->req_buf_dma, GFP_ATOMIC);
+>  	if (!mp_req->req_buf) {
+>  		QEDF_ERR(&(qedf->dbg_ctx), "Unable to alloc MP req buffer\n");
+>  		qedf_free_mp_resc(io_req);
+> @@ -2067,7 +2067,7 @@ int qedf_init_mp_req(struct qedf_ioreq *io_req)
+>  	}
+> =20
+>  	mp_req->resp_buf =3D dma_alloc_coherent(&qedf->pdev->dev,
+> -	    QEDF_PAGE_SIZE, &mp_req->resp_buf_dma, GFP_KERNEL);
+> +	    QEDF_PAGE_SIZE, &mp_req->resp_buf_dma, GFP_ATOMIC);
+>  	if (!mp_req->resp_buf) {
+>  		QEDF_ERR(&(qedf->dbg_ctx), "Unable to alloc TM resp "
+>  			  "buffer\n");
+> @@ -2078,7 +2078,7 @@ int qedf_init_mp_req(struct qedf_ioreq *io_req)
+>  	/* Allocate and map mp_req_bd and mp_resp_bd */
+>  	sz =3D sizeof(struct scsi_sge);
+>  	mp_req->mp_req_bd =3D dma_alloc_coherent(&qedf->pdev->dev, sz,
+> -	    &mp_req->mp_req_bd_dma, GFP_KERNEL);
+> +	    &mp_req->mp_req_bd_dma, GFP_ATOMIC);
+>  	if (!mp_req->mp_req_bd) {
+>  		QEDF_ERR(&(qedf->dbg_ctx), "Unable to alloc MP req bd\n");
+>  		qedf_free_mp_resc(io_req);
+> @@ -2086,7 +2086,7 @@ int qedf_init_mp_req(struct qedf_ioreq *io_req)
+>  	}
+> =20
+>  	mp_req->mp_resp_bd =3D dma_alloc_coherent(&qedf->pdev->dev, sz,
+> -	    &mp_req->mp_resp_bd_dma, GFP_KERNEL);
+> +	    &mp_req->mp_resp_bd_dma, GFP_ATOMIC);
+>  	if (!mp_req->mp_resp_bd) {
+>  		QEDF_ERR(&(qedf->dbg_ctx), "Unable to alloc MP resp bd\n");
+>  		qedf_free_mp_resc(io_req);
 
