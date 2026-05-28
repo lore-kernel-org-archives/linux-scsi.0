@@ -1,161 +1,287 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.19])
+Received: from canpmsgout02.his.huawei.com (canpmsgout02.his.huawei.com [113.46.200.217])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 92D4B1C860A;
-	Thu, 28 May 2026 02:06:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.19
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C84D253B73;
+	Thu, 28 May 2026 02:40:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.217
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779933969; cv=none; b=QSoirRjkfRu8dRGlVVcDEDGVZk7GVX1dGT6RHJ2xh6HLPGj0DkS9gw1pnaMccwSjERVk1wMb3HLuEx6RCpcquWrytgV0CL7dEa1drfZtjlAF3F6AYFBM8aKLJskx0ukXYtQKWihmjLjjPy6A3L9zV2cehekKQOBNJTGd4I95PsM=
+	t=1779936046; cv=none; b=f8uEJEGggHXNe/TPZIVcQxEPJ+IAWwN+78Gcrx3fK6eqnxB8cLn+2FeiK0hg2VZgGylUFVeQCUXsXUirOb5npP4SoBOrgETYdDY2AVXr8K2h06WOvwPS8RPqyC+LFAVTHZkb//yhxh5l0RIANsOq5rc9C8lBmgyv+y06sjsHoW8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779933969; c=relaxed/simple;
-	bh=fbHrRWsCsev0XpjRGu7MWKUSpSvEPDO2W7/tolEiVlI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=SivQud7ewQnHVKKwjENblJYUhgenp9f1T1chPSRmEOBIX3iKc5eOu17xaDV7umpdy//KshMGV2F4xtyI/v3Ly06+R8fyWGOVRK5TYBHJLklPPWSxLfoyPNKI5W2Z+oUTL7pv2s8OdCmX4ppMglsdeqs8XwfJR74eNg9Lt0oOptA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=AphQ2ywH; arc=none smtp.client-ip=198.175.65.19
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1779936046; c=relaxed/simple;
+	bh=4ne/F3GhJd4ug+cucRL+Ux9T+hXykDXFIyYfjRJfAIc=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=RN3cKQoHIFMcZn9Z96//xN6gtR7q4g1Du6Fj5Y7ulxXnUE/NxrQFcdeTO+Rbop30ANCYtgi8T4J28fGCYnij2ca9pplYl2kedXlISno3zKF5bz/VdqU/ViwGdXFUlyGfT6kUx09dextBG5rGmox/w4l9rHXOtGZmcrTQ1/Kt4po=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=h-partners.com; dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b=djrm+F5D; arc=none smtp.client-ip=113.46.200.217
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=h-partners.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="AphQ2ywH"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1779933968; x=1811469968;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=fbHrRWsCsev0XpjRGu7MWKUSpSvEPDO2W7/tolEiVlI=;
-  b=AphQ2ywHffViWftFWb9ThB8fbywwfUa8KXLxDEDUiy2b0WxjEUbRAkRA
-   hrssin+ZDvjfUTXkhN+2TPxUfSG8fC1pLgK/dJYALYSEGUs/Q3jE0dCJl
-   o3opgkPDB0RZwPSEzYOSDlL8macvu4ei6XWrPh9/Y+c8JRurTmVTxIeb4
-   YxOwngHtlUKMsh4KT3+uzGLSleIK9QHKQnLMNJTyoAi0+lQBWRayQaEL5
-   NSW1VuauhB4QKjUdolZ6+pxGZT255cGF/Pvk8N7bzQ73qkPOUYtMiF4dD
-   0utzg5obIAhjZsY9nn1wXtu1pH5AYkmu31wtBvdjZ5rDBkls13NSk1jq2
-   Q==;
-X-CSE-ConnectionGUID: rvugshktRwaVGjY1JlOt9w==
-X-CSE-MsgGUID: RA2/0aJjTrWdECZ8YpZ1pw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11799"; a="80744162"
-X-IronPort-AV: E=Sophos;i="6.24,172,1774335600"; 
-   d="scan'208";a="80744162"
-Received: from orviesa001.jf.intel.com ([10.64.159.141])
-  by orvoesa111.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 May 2026 19:06:08 -0700
-X-CSE-ConnectionGUID: 0XcchuQ2Q0+DOBeLeejZqg==
-X-CSE-MsgGUID: 1ZdgjI7BQ/yZvCad8/YcgQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.24,172,1774335600"; 
-   d="scan'208";a="280528462"
-Received: from igk-lkp-server01.igk.intel.com (HELO 892db79562d4) ([10.211.93.152])
-  by orviesa001.jf.intel.com with ESMTP; 27 May 2026 19:06:05 -0700
-Received: from kbuild by 892db79562d4 with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1wSQ8J-000000000F7-0YER;
-	Thu, 28 May 2026 02:06:03 +0000
-Date: Thu, 28 May 2026 04:05:45 +0200
-From: kernel test robot <lkp@intel.com>
-To: Wentao Liang <vulab@iscas.ac.cn>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: oe-kbuild-all@lists.linux.dev, Kees Cook <kees@kernel.org>,
-	Wentao Liang <vulab@iscas.ac.cn>, linux-scsi@vger.kernel.org,
-	target-devel@vger.kernel.org, linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org
-Subject: Re: [PATCH] target: iscsi: cxgbit: fix cnp kref leak in
- __cxgbit_free_cdev_np()
-Message-ID: <202605280336.gXG4Wlij-lkp@intel.com>
-References: <20260527103823.869792-1-vulab@iscas.ac.cn>
+	dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b="djrm+F5D"
+dkim-signature: v=1; a=rsa-sha256; d=h-partners.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=Jq/ZSA0n/bM3e0hfO/ARy0dkxHT14vAwyRwagdoexeA=;
+	b=djrm+F5DQGCkVTqx31dpvD0YALMrrCaudrkHDbapQLfN+vU471sEjQoH9EqJVyGCVUr5aaZBy
+	e3a99/fq1R38a6F1UYpydL7QKi7XOB0y8TfRsKDT/HssbY+ZGYZLNBv6rDAYVrRlZME1xMwXzpc
+	zJN8+Tbpkrnv0/r4TMwK21o=
+Received: from mail.maildlp.com (unknown [172.19.162.197])
+	by canpmsgout02.his.huawei.com (SkyGuard) with ESMTPS id 4gQrB66z8Dzcb19;
+	Thu, 28 May 2026 10:32:46 +0800 (CST)
+Received: from kwepemj100018.china.huawei.com (unknown [7.202.194.12])
+	by mail.maildlp.com (Postfix) with ESMTPS id E7A3140569;
+	Thu, 28 May 2026 10:40:34 +0800 (CST)
+Received: from [10.67.120.108] (10.67.120.108) by
+ kwepemj100018.china.huawei.com (7.202.194.12) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.36; Thu, 28 May 2026 10:40:34 +0800
+Message-ID: <a96f591e-5742-4e58-149b-294563d456d4@huawei.com>
+Date: Thu, 28 May 2026 10:40:33 +0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260527103823.869792-1-vulab@iscas.ac.cn>
-
-Hi Wentao,
-
-kernel test robot noticed the following build warnings:
-
-[auto build test WARNING on mkp-scsi/for-next]
-[also build test WARNING on kees/for-next/pstore kees/for-next/kspp linus/master v7.1-rc5 next-20260527]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
-
-url:    https://github.com/intel-lab-lkp/linux/commits/Wentao-Liang/target-iscsi-cxgbit-fix-cnp-kref-leak-in-__cxgbit_free_cdev_np/20260527-184050
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git for-next
-patch link:    https://lore.kernel.org/r/20260527103823.869792-1-vulab%40iscas.ac.cn
-patch subject: [PATCH] target: iscsi: cxgbit: fix cnp kref leak in __cxgbit_free_cdev_np()
-config: x86_64-rhel-9.4 (https://download.01.org/0day-ci/archive/20260528/202605280336.gXG4Wlij-lkp@intel.com/config)
-compiler: gcc-14 (Debian 14.2.0-19) 14.2.0
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260528/202605280336.gXG4Wlij-lkp@intel.com/reproduce)
-
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202605280336.gXG4Wlij-lkp@intel.com/
-
-All warnings (new ones prefixed by >>):
-
-   drivers/target/iscsi/cxgbit/cxgbit_cm.c: In function '__cxgbit_free_cdev_np':
->> drivers/target/iscsi/cxgbit/cxgbit_cm.c:547:9: warning: this 'if' clause does not guard... [-Wmisleading-indentation]
-     547 |         if (ret == -ETIMEDOUT)
-         |         ^~
-   drivers/target/iscsi/cxgbit/cxgbit_cm.c:549:17: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the 'if'
-     549 |                 return ret;
-         |                 ^~~~~~
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.3.1
+Subject: Re: [PATCH v3 2/2] scsi: libsas: Add linkrate and sas_addr change
+ detection in rediscover
+Content-Language: en-CA
+To: John Garry <john.g.garry@oracle.com>, <yanaijie@huawei.com>,
+	<jejb@linux.ibm.com>, <martin.petersen@oracle.com>
+CC: <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linuxarm@huawei.com>, <liyihang9@h-partners.com>, <liuyonglong@huawei.com>,
+	<kangfenglong@huawei.com>
+References: <20260515084531.866259-1-yangxingui@huawei.com>
+ <20260515084531.866259-3-yangxingui@huawei.com>
+ <b18e1085-1d77-4b54-ae4d-8ae5a50a79b9@oracle.com>
+ <5600f8fa-489a-9b81-9966-dc5d436c462e@huawei.com>
+ <b99cd59f-b986-432e-aaf1-3b757e1c4c34@oracle.com>
+ <be627116-acd2-c9c5-a665-b86e4f6392c5@huawei.com>
+ <0a0f7284-8c11-4976-9377-d2fe9e0cf147@oracle.com>
+From: yangxingui <yangxingui@huawei.com>
+In-Reply-To: <0a0f7284-8c11-4976-9377-d2fe9e0cf147@oracle.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: kwepemh500008.china.huawei.com (7.202.181.139) To
+ kwepemj100018.china.huawei.com (7.202.194.12)
 
 
-vim +/if +547 drivers/target/iscsi/cxgbit/cxgbit_cm.c
 
-9730ffcb8957e1 Varun Prakash 2016-04-20  516  
-9730ffcb8957e1 Varun Prakash 2016-04-20  517  static int
-9730ffcb8957e1 Varun Prakash 2016-04-20  518  __cxgbit_free_cdev_np(struct cxgbit_device *cdev, struct cxgbit_np *cnp)
-9730ffcb8957e1 Varun Prakash 2016-04-20  519  {
-9730ffcb8957e1 Varun Prakash 2016-04-20  520  	int stid, ret;
-9730ffcb8957e1 Varun Prakash 2016-04-20  521  	bool ipv6 = false;
-9730ffcb8957e1 Varun Prakash 2016-04-20  522  
-9730ffcb8957e1 Varun Prakash 2016-04-20  523  	stid = cxgbit_np_hash_del(cdev, cnp);
-9730ffcb8957e1 Varun Prakash 2016-04-20  524  	if (stid < 0)
-9730ffcb8957e1 Varun Prakash 2016-04-20  525  		return -EINVAL;
-9730ffcb8957e1 Varun Prakash 2016-04-20  526  	if (!test_bit(CDEV_STATE_UP, &cdev->flags))
-9730ffcb8957e1 Varun Prakash 2016-04-20  527  		return -EINVAL;
-9730ffcb8957e1 Varun Prakash 2016-04-20  528  
-9730ffcb8957e1 Varun Prakash 2016-04-20  529  	if (cnp->np->np_sockaddr.ss_family == AF_INET6)
-9730ffcb8957e1 Varun Prakash 2016-04-20  530  		ipv6 = true;
-9730ffcb8957e1 Varun Prakash 2016-04-20  531  
-9730ffcb8957e1 Varun Prakash 2016-04-20  532  	cxgbit_get_cnp(cnp);
-9730ffcb8957e1 Varun Prakash 2016-04-20  533  	cxgbit_init_wr_wait(&cnp->com.wr_wait);
-9730ffcb8957e1 Varun Prakash 2016-04-20  534  	ret = cxgb4_remove_server(cdev->lldi.ports[0], stid,
-9730ffcb8957e1 Varun Prakash 2016-04-20  535  				  cdev->lldi.rxq_ids[0], ipv6);
-9730ffcb8957e1 Varun Prakash 2016-04-20  536  
-9730ffcb8957e1 Varun Prakash 2016-04-20  537  	if (ret > 0)
-9730ffcb8957e1 Varun Prakash 2016-04-20  538  		ret = net_xmit_errno(ret);
-9730ffcb8957e1 Varun Prakash 2016-04-20  539  
-9730ffcb8957e1 Varun Prakash 2016-04-20  540  	if (ret) {
-9730ffcb8957e1 Varun Prakash 2016-04-20  541  		cxgbit_put_cnp(cnp);
-9730ffcb8957e1 Varun Prakash 2016-04-20  542  		return ret;
-9730ffcb8957e1 Varun Prakash 2016-04-20  543  	}
-9730ffcb8957e1 Varun Prakash 2016-04-20  544  
-9730ffcb8957e1 Varun Prakash 2016-04-20  545  	ret = cxgbit_wait_for_reply(cdev, &cnp->com.wr_wait,
-9730ffcb8957e1 Varun Prakash 2016-04-20  546  				    0, 10, __func__);
-9730ffcb8957e1 Varun Prakash 2016-04-20 @547  	if (ret == -ETIMEDOUT)
-956027c993d5b2 Wentao Liang  2026-05-27  548  		cxgbit_put_cnp(cnp);
-9730ffcb8957e1 Varun Prakash 2016-04-20  549  		return ret;
-9730ffcb8957e1 Varun Prakash 2016-04-20  550  
-9730ffcb8957e1 Varun Prakash 2016-04-20  551  	if (ipv6 && cnp->com.cdev) {
-9730ffcb8957e1 Varun Prakash 2016-04-20  552  		struct sockaddr_in6 *sin6;
-9730ffcb8957e1 Varun Prakash 2016-04-20  553  
-9730ffcb8957e1 Varun Prakash 2016-04-20  554  		sin6 = (struct sockaddr_in6 *)&cnp->com.local_addr;
-9730ffcb8957e1 Varun Prakash 2016-04-20  555  		cxgb4_clip_release(cdev->lldi.ports[0],
-9730ffcb8957e1 Varun Prakash 2016-04-20  556  				   (const u32 *)&sin6->sin6_addr.s6_addr,
-9730ffcb8957e1 Varun Prakash 2016-04-20  557  				   1);
-9730ffcb8957e1 Varun Prakash 2016-04-20  558  	}
-9730ffcb8957e1 Varun Prakash 2016-04-20  559  
-9730ffcb8957e1 Varun Prakash 2016-04-20  560  	cxgb4_free_stid(cdev->lldi.tids, stid,
-9730ffcb8957e1 Varun Prakash 2016-04-20  561  			cnp->com.local_addr.ss_family);
-956027c993d5b2 Wentao Liang  2026-05-27  562  	cxgbit_put_cnp(cnp);
-9730ffcb8957e1 Varun Prakash 2016-04-20  563  	return 0;
-9730ffcb8957e1 Varun Prakash 2016-04-20  564  }
-9730ffcb8957e1 Varun Prakash 2016-04-20  565  
+On 2026/5/27 17:42, John Garry wrote:
+> On 25/05/2026 03:25, yangxingui wrote:
+>>>>
+>>>> Hi, John
+>>>> As the commit log. The existing pattern (unregister + 
+>>>> sas_discover_new) handles the "replace" case where the SAS address 
+>>>> changes completely, implying a different device.
+>>>> For the flutter case where we detect linkrate/sas_addr changes,
+>>>
+>>> Can you please clarify this: you say that the existing pattern 
+>>> handles "replace" case where the SAS address changes completely, and 
+>>> then flutter case covers sas_addr changes.
+>>>
+>>> What is the difference in the SAS address changes between the two cases?
+>>>
+>> Hi, John
+>>
+>> The difference is in when the SAS address change is detected:
+>> Replace case:
+>> - Detected immediately by the initial SMP DISCOVER response
+>> - New SAS address differs from stored phy->attached_sas_addr
+>>
+>> Flutter case:
+>> - Initial SMP DISCOVER shows SAS address matching stored phy- 
+>>  >attached_sas_addr
+>> - Linkrate may change
+>> - After sas_ex_phy_discover() refreshes phy info, child device address 
+>> and linkrate may mismatched with refreshed phy info
+>>
+>> Additional issue with Replace flow:
+>> The existing replace code path also suffers from the same 
+>> sysfs_warn_dup issue I mentioned earlier. 
+>> sas_unregister_devs_sas_addr() only marks the device as gone and adds 
+>> it to destroy_list. The actual sysfs cleanup happens later in 
+>> sas_destruct_devices(). Calling sas_discover_new() immediately after 
+>> unregister causes sysfs duplicate directory errors.
+>>
+> 
+> So can you actually recreate this issue? Or is it just theoretical?
+Yes, it can recreate, such as quickly replacing a disk or swapping two 
+disk. However, during normal use, we recommend that customers wait for 
+one minute before inserting a new disk when replacing a disk to avoid 
+this issue.
 
---
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+The following are example of similar exception logs:
+log1：
+
+[ 7957.283194][T67794] sas: ex 500e004aaaaaaa1f phy19 replace 
+5001882016000000
+[ 7957.290960][T67794] sysfs: cannot create duplicate filename 
+'/devices/pci0000:74/0000:74:02.0/host1/port-1:2/expander-1:2/port-1:2:19'
+[ 7957.317973][T67794] Hardware name: Huawei Technologies Co., Ltd. 
+EVBCS/EVBCS, BIOS CS B055 2P TA 02/19/2020
+[ 7957.328900][T67794] Workqueue: 0000:74:02.0_disco_q 
+sas_revalidate_domain [libsas]
+[ 7957.337636][T67794] Call trace:
+[ 7957.341419][T67794]  dump_backtrace+0x0/0x200
+[ 7957.346317][T67794]  show_stack+0x20/0x30
+[ 7957.350887][T67794]  dump_stack+0xf0/0x138
+[ 7957.355511][T67794]  sysfs_warn_dup+0x6c/0x90
+[ 7957.360410][T67794]  sysfs_create_dir_ns+0xf8/0x11c
+[ 7957.365795][T67794]  create_dir+0x30/0x18c
+[ 7957.370416][T67794]  kobject_add_internal+0x5c/0x190
+[ 7957.375877][T67794]  kobject_add+0x98/0x110
+[ 7957.380566][T67794]  device_add+0x100/0x4a0
+[ 7957.385255][T67794]  sas_port_add+0x30/0x74 [scsi_transport_sas]
+[ 7957.391722][T67794]  sas_ex_discover_end_dev+0x328/0x630 [libsas]
+[ 7957.398328][T67794]  sas_ex_discover_dev+0x230/0x320 [libsas]
+[ 7957.404599][T67794]  sas_ex_discover_devices+0x60/0x100 [libsas]
+[ 7957.411116][T67794]  sas_discover_new+0xa4/0x150 [libsas]
+[ 7957.416986][T67794]  sas_rediscover_dev+0x198/0x260 [libsas]
+[ 7957.423125][T67794]  sas_rediscover+0xb8/0x100 [libsas]
+[ 7957.428854][T67794]  sas_ex_revalidate_domain+0x5c/0xe0 [libsas]
+[ 7957.435320][T67794]  sas_revalidate_domain+0x1ac/0x1b4 [libsas]
+[ 7957.441714][T67794]  process_one_work+0x1d8/0x4cc
+[ 7957.446884][T67794]  worker_thread+0x158/0x410
+[ 7957.451769][T67794]  kthread+0x108/0x13c
+[ 7957.456089][T67794]  ret_from_fork+0x10/0x18
+[ 7957.460800][T67794] kobject_add_internal failed for port-1:2:19 with 
+-EEXIST, don't try to register things with the same name in the same 
+directory.
+[ 7957.474864][T67794] sas: ex 500e004aaaaaaa1f phy19 failed to discover
+
+log2：
+[ 8608.766031][T66335] sas: ex 500e004aaaaaaa1f phy17 change count has 
+changed
+[ 8608.774390][T66335] sysfs: cannot create duplicate filename 
+'/devices/pci0000:74/0000:74:02.0/host1/port-1:2/expander-1:3/port-1:3:17'
+[ 8608.800667][T66335] Hardware name: Huawei Technologies Co., Ltd. 
+EVBCS/EVBCS, BIOS CS B055 2P TA 02/19/2020
+[ 8608.811270][T66335] Workqueue: 0000:74:02.0_disco_q 
+sas_revalidate_domain [libsas]
+[ 8608.819685][T66335] Call trace:
+[ 8608.823235][T66335]  dump_backtrace+0x0/0x200
+[ 8608.827990][T66335]  show_stack+0x20/0x30
+[ 8608.832387][T66335]  dump_stack+0xf0/0x138
+[ 8608.836858][T66335]  sysfs_warn_dup+0x6c/0x90
+[ 8608.841580][T66335]  sysfs_create_dir_ns+0xf8/0x11c
+[ 8608.846814][T66335]  create_dir+0x30/0x18c
+[ 8608.851257][T66335]  kobject_add_internal+0x5c/0x190
+[ 8608.856566][T66335]  kobject_add+0x98/0x110
+[ 8608.861083][T66335]  device_add+0x100/0x4a0
+[ 8608.865588][T66335]  sas_port_add+0x30/0x74 [scsi_transport_sas]
+[ 8608.871919][T66335]  sas_ex_discover_end_dev+0x328/0x630 [libsas]
+[ 8608.878345][T66335]  sas_ex_discover_dev+0x230/0x320 [libsas]
+[ 8608.884430][T66335]  sas_ex_discover_devices+0x60/0x100 [libsas]
+[ 8608.890768][T66335]  sas_discover_new+0xa4/0x150 [libsas]
+[ 8608.896506][T66335]  sas_rediscover+0xd8/0x100 [libsas]
+[ 8608.902075][T66335]  sas_ex_revalidate_domain+0x5c/0xe0 [libsas]
+[ 8608.908438][T66335]  sas_revalidate_domain+0x1ac/0x1b4 [libsas]
+[ 8608.914708][T66335]  process_one_work+0x1d8/0x4cc
+[ 8608.919757][T66335]  worker_thread+0x158/0x410
+[ 8608.924533][T66335]  kthread+0x108/0x13c
+[ 8608.928778][T66335]  ret_from_fork+0x10/0x18
+[ 8608.933377][T66335] kobject_add_internal failed for port-1:3:17 with 
+-EEXIST, don't try to register things with the same name in the same 
+directory.
+[ 8608.947364][T66335] sas: ex 500e004aaaaaaa1f phy17 failed to discover
+
+
+> About this following code:
+> 
+> +        if (need_rediscover) {
+> +            set_bit(SAS_DEV_GONE, &child_dev->state);
+> +            phy->phy_change_count = -1;
+> +            ex->ex_change_count = -1;
+> +            sas_unregister_devs_sas_addr(dev, phy_id, true);
+> +            sas_discover_event(dev->port, DISCE_REVALIDATE_DOMAIN);
+> +        } else {
+> 
+> 
+> Can we factor it out with other code? AFAICR, this can pattern can be 
+> seen elsewhere.
+
+Yes, in the updated v4 version, I refined it into a function.
+
+In the v4 test log, the disk is gone and then connected again.
+test case:
+phy=phy-10:0:0
+echo 1.5 Gbit > /sys/class/sas_phy/$phy/maximum_linkrate
+
+The details are as follows:
+
+[  541.880156] sas: broadcast received: 0
+[  541.880712] sas: REVALIDATING DOMAIN on port 0, pid:8995
+[  541.882509] sas: ex 500e004aaaaaaa1f phy00 change count has changed
+[  541.883680] sas: ex 500e004aaaaaaa1f phy00 originated BROADCAST(CHANGE)
+[  541.883703] sas: ex 500e004aaaaaaa1f rediscovering phy00
+[  541.884838] sas: ex 500e004aaaaaaa1f phy00:U:8 attached: 
+500e004aaaaaaa00 (stp pending)
+[  541.884844] sas: ex 500e004aaaaaaa1f phy00 broadcast flutter, needs 
+recovery
+[  541.898893] sas: done REVALIDATING DOMAIN on port 0, pid:8995, res 0x0
+[  541.899444] sas: broadcast received: 0
+[  541.899506] sas: REVALIDATING DOMAIN on port 0, pid:8995
+[  541.899659] sas: done REVALIDATING DOMAIN on port 0, pid:8995, res 0x0
+[  541.900213] sas: broadcast received: 0
+[  541.900282] sas: REVALIDATING DOMAIN on port 0, pid:8995
+[  541.900367] sas: done REVALIDATING DOMAIN on port 0, pid:8995, res 0x0
+[  541.900992] sas: broadcast received: 0
+[  541.901041] sas: REVALIDATING DOMAIN on port 0, pid:8995
+[  541.901132] sas: done REVALIDATING DOMAIN on port 0, pid:8995, res 0x0
+[  541.901160] sas: broadcast received: 0
+[  541.901195] sas: REVALIDATING DOMAIN on port 0, pid:8995
+[  541.901278] sas: done REVALIDATING DOMAIN on port 0, pid:8995, res 0x0
+[  541.901887] sas: broadcast received: 0
+[  541.901948] sas: REVALIDATING DOMAIN on port 0, pid:8995
+[  541.902035] sas: done REVALIDATING DOMAIN on port 0, pid:8995, res 0x0
+[  541.902673] sas: broadcast received: 0
+[  541.902741] sas: REVALIDATING DOMAIN on port 0, pid:8995
+[  541.902836] sas: done REVALIDATING DOMAIN on port 0, pid:8995, res 0x0
+[  541.903467] sas: broadcast received: 0
+[  541.903536] sas: REVALIDATING DOMAIN on port 0, pid:8995
+[  541.903625] sas: done REVALIDATING DOMAIN on port 0, pid:8995, res 0x0
+[  541.919967] sas: broadcast received: 0
+[  541.920036] sas: REVALIDATING DOMAIN on port 0, pid:8995
+[  541.920385] sas: ex 500e004aaaaaaa1f phy00 change count has changed
+[  541.920494] sas: ex 500e004aaaaaaa1f phy00 originated BROADCAST(CHANGE)
+[  541.920504] sas: ex 500e004aaaaaaa1f rediscovering phy00
+[  541.920687] sas: ex 500e004aaaaaaa1f phy00:U:8 attached: 
+500e004aaaaaaa00 (stp)
+[  541.920697] sas: ex 500e004aaaaaaa1f phy00 linkrate changed from 9 to 8
+[  541.920710] sas: ex 500e004aaaaaaa1f phy00 replace 500e004aaaaaaa00
+[  541.922648] sas: done REVALIDATING DOMAIN on port 0, pid:8995, res 0x0
+[  542.007031] sd 10:0:0:0: [sdd] Stopping disk
+[  542.007122] sd 10:0:0:0: [sdd] Start/Stop Unit failed: Result: 
+hostbyte=0x04 driverbyte=DRIVER_OK
+[  542.027347] hisi_sas_v3_hw 0000:70:04.0: dev[2:5] is gone
+[  542.039000] sas: REVALIDATING DOMAIN on port 0, pid:8995
+[  542.039358] sas: ex 500e004aaaaaaa1f phy00 change count has changed
+[  542.039436] sas: broadcast received: 0
+[  542.039470] sas: ex 500e004aaaaaaa1f phy00 originated BROADCAST(CHANGE)
+[  542.039482] sas: ex 500e004aaaaaaa1f phy00 new device attached
+[  542.039569] sas: ex 500e004aaaaaaa1f phy00:U:8 attached: 
+500e004aaaaaaa00 (stp)
+[  542.040152] hisi_sas_v3_hw 0000:70:04.0: dev[15:5] found
+[  542.042112] sas: done REVALIDATING DOMAIN on port 0, pid:8995, res 0x0
+[  542.153137] sas: Enter sas_scsi_recover_host busy: 0 failed: 0
+[  542.153900] sas: ata10: end_device-10:0:1: dev error handler
+[  542.153972] sas: ata11: end_device-10:0:2: dev error handler
+[  542.153994] sas: ata12: end_device-10:0:5: dev error handler
+[  542.154010] sas: ata13: end_device-10:0:6: dev error handler
+[  542.154021] sas: ata14: end_device-10:0:9: dev error handler
+[  542.154032] sas: ata15: end_device-10:0:10: dev error handler
+[  542.154044] sas: ata9: end_device-10:0:0: dev error handler
+[  542.519243] ata9.00: ATA-10: ST4000NM0035-1V4107, TN03, max UDMA/133
+[  542.522538] ata9.00: 7814037168 sectors, multi 0: LBA48 NCQ (depth 32)
+[  542.522561] ata9.00: Features: DIPM NCQ-sndrcv
+[  542.527315] ata9.00: configured for UDMA/133
+[  542.527976] sas: --- Exit sas_scsi_recover_host: busy: 0 failed: 0 
+tries: 1
+[  542.570193] scsi 10:0:13:0: Direct-Access     ATA 
+ST4000NM0035-1V4 TN03 PQ: 0 ANSI: 5
+[  542.571771] scsi 10:0:13:0: Attached scsi generic sg3 type 0
+
+
+Thanks,
+Xingui
