@@ -1,87 +1,87 @@
 Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DED49302165
-	for <linux-scsi@vger.kernel.org>; Thu, 28 May 2026 07:24:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AFD553264DF
+	for <linux-scsi@vger.kernel.org>; Thu, 28 May 2026 07:27:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779953088; cv=none; b=Ezhq13Uy1yvyTxlypWV6qZnjD+rNyqdVa9dMXg2Lb88vvUYP9j+Ibt5wxxDdd+4LVD0fWn1XcfxGPqKhxmCqit3yMPOihPbsKBTyhaf00KSfN+2FzrfxhCqFqPY633ycDEQ5uIu9CK5KtAo6FEgbDFBTImChUUoDBKWcYrThYy0=
+	t=1779953245; cv=none; b=C+CLlZAAVXEkBlMw1nvX+U+RPTVT5cEHw1W096vFHe3BuFdwtCmfQVYQWsu1TqZiiuphzcrTBbaKFRGsC3gpJ6EdWgsw7+VbsXxkhJcY+MqWYIUykhHMbeqX00sIt9BiCDuQUn4Yx6vN/c+nHSPv/YjMa//pR/hxkzyoY697pYk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779953088; c=relaxed/simple;
-	bh=3idqJl6wcwvb0AxoBWTmL/VY5VBaQ2Axkzvg62roBUk=;
+	s=arc-20240116; t=1779953245; c=relaxed/simple;
+	bh=pUFhRgZcU2TdETFDOoO8Bf0ioN6fFY+P5sMX83hBmFY=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=VCnf1OtXC4bYVGxHRMUmxRDeuO3IZXBtZaux8gg8NWWZuEqjeSrdkRNSuB3HOVGSoka+Ep1Zuq9V8ffJLtrD3ULS+3W5B6fVaXB3lAkAnkN6xBW/b+o10sGQchL1T5UdKoiVkKayMgQKRmsOd0r/qVjwZcGwKXn2DEsiEcttIl8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=K/HIdM0J; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=IWFQqjYb; arc=none smtp.client-ip=205.220.180.131
+	 In-Reply-To:Content-Type; b=ICNc2zTmQRfqR1dWKa8TSGBCtNXXGQiacaJ+nJ1qVLvV/Yj14iCsuT1wEfcwr7Dypq5qmVHxjSESk6I4azp1BcVpLb3vTlBtY0kU/VrnmuEsOgUidS7MovwKdJ9IDGBF5aGKlURWmv9lAwgPqPebLQHglLVES4BUfyHAhRu4kAE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=Sv+szjd0; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=XTYChzVk; arc=none smtp.client-ip=205.220.180.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="K/HIdM0J";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="IWFQqjYb"
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="Sv+szjd0";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="XTYChzVk"
 Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 64S6bR5p2755150
-	for <linux-scsi@vger.kernel.org>; Thu, 28 May 2026 07:24:44 GMT
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 64S6hYX42754246
+	for <linux-scsi@vger.kernel.org>; Thu, 28 May 2026 07:27:15 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
 	cc:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	xG2QgzYKrgNHNc7YpKtXae1/+zJd/2dlkLEFMR6jA5Q=; b=K/HIdM0J4VfZNZg9
-	gWwXPiL0VpXp98qi9sa+PsE8pR9yOzWdbihcKQxfeBa0l7v8LFXJmZerqGb/Y4Jm
-	ugp5tdlGPxaXSQx9nOZiCFgl+MOBASaFP8Bj9ji2HwPM+OzmJP6i10zCAp5g8Afp
-	34zYP/zK74oxdg9Ab2XvRgaVpMYsyGFnod/a6uLMCFFIABnPnel+Byfvst8t6+c3
-	topwHEkkyimPNnYskjbVHMcHuT15BHBBzFxLL6H6JBaEeVGQNqMmGsurdzZTVML2
-	MRFQQU1PN9HGPYcYK6IL8SMp0fUFnCKdDF+s3gU9Q4OfN6BTQcIoTsVfsf+ZPNsH
-	QeDOsw==
-Received: from mail-pj1-f72.google.com (mail-pj1-f72.google.com [209.85.216.72])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4ee7yc9s3u-1
+	ZIJSHjPmbE5160eqXjRAxLmfKnGWp0tUz5Qubw7oeD0=; b=Sv+szjd0vOdMub+x
+	yY5Agigy3+4nHmwrHUvV0MoPQlXQvlknQjH1xglhVnvN8X5EsA4EGt0G5GSRpnib
+	JnXgXI5Znq44IEfo9P1opJqN1MF8FpV8pKJ2FiOA5a9+atH4jK7pfxhuw5PAMOdn
+	0ompapT8CzxfTygCV85lRWpeIARFUSsDL6+sZvikZtArThNj+7qJYNxSurWJV7wp
+	cIHpYf2bLGrMdqs/2JKXKbALS1HyElodYBjec6zKPt3ApSrgH3h187O1KucpnH8W
+	okNx7BC36i23cxFpJspfIcBmJtC/4EIcuWRodBFGa77+VvqKqPaaHnbLogCEVTp/
+	NgX0nw==
+Received: from mail-pg1-f198.google.com (mail-pg1-f198.google.com [209.85.215.198])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4ee7yc9sd9-1
 	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Thu, 28 May 2026 07:24:44 +0000 (GMT)
-Received: by mail-pj1-f72.google.com with SMTP id 98e67ed59e1d1-367f715cbd0so12041993a91.0
-        for <linux-scsi@vger.kernel.org>; Thu, 28 May 2026 00:24:44 -0700 (PDT)
+	for <linux-scsi@vger.kernel.org>; Thu, 28 May 2026 07:27:15 +0000 (GMT)
+Received: by mail-pg1-f198.google.com with SMTP id 41be03b00d2f7-c8292e18166so6157012a12.3
+        for <linux-scsi@vger.kernel.org>; Thu, 28 May 2026 00:27:15 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1779953084; x=1780557884; darn=vger.kernel.org;
+        d=oss.qualcomm.com; s=google; t=1779953234; x=1780558034; darn=vger.kernel.org;
         h=content-transfer-encoding:in-reply-to:from:content-language
          :references:cc:to:subject:user-agent:mime-version:date:message-id
          :from:to:cc:subject:date:message-id:reply-to;
-        bh=xG2QgzYKrgNHNc7YpKtXae1/+zJd/2dlkLEFMR6jA5Q=;
-        b=IWFQqjYbcjy+m3Q0dFfAfRPXpIcKV9gLC+fgRwGNNdT1B7C92M5WKUAlinOmoOY/vF
-         9HuTFE0jCbTxQ1AbODI8NmK4FuRtjdUf12sFVTDv0h2ZTU7Dc43qHvMw36eJQrVHt/aq
-         MRjzRWyQFCowVsAr+Su8s+N0mxUyt2jMrc5+WXgBEFPbAdKU9KoPOOS3l4tMTe4Wn+wK
-         oaLNCGe7vqNGP/dqTG0qswp0byB8Iz9nDW/R8N5Q+XcvqafLDhpxCetfj0OTDmQ87/NT
-         j5yQs7d1ciPBYFzSGEvKn8uAUI7VS/1EiyEffFDzKc/UI3FsNPCC2+kNVtSintBmAcXy
-         WMUA==
+        bh=ZIJSHjPmbE5160eqXjRAxLmfKnGWp0tUz5Qubw7oeD0=;
+        b=XTYChzVkW4MaPnzpm1BvKNzCzpDjoDS3i4m9PrVzyBsz0M5AX0bUN2CQW7mlFQwVfI
+         s+1gmqfZcCQzowuiTRK6yMbtsr8lb+QxdYExC8FbBakiz+S3tlOeB9uclMdicfBxWQu0
+         PsKP8WELYU1BMq62m6KnECRCdv7G2GddyEZ7wtO9aUe/BQGGVZBzJYFLWcV9YZHG7UN7
+         q4UQhlM3ffuGKCX4qHiS5JqJQarCs6tDW1AfxdsREL7OqMPFEVY5GhwOUZ8cgGeI0w4H
+         CMlq0l9dKx6r2RLpSSTdbyhLuc9XcnvNLgNIFbQ4Yz/YbxduDaRXblcB3Y3M7+7q/u6L
+         g/eA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1779953084; x=1780557884;
+        d=1e100.net; s=20251104; t=1779953234; x=1780558034;
         h=content-transfer-encoding:in-reply-to:from:content-language
          :references:cc:to:subject:user-agent:mime-version:date:message-id
          :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=xG2QgzYKrgNHNc7YpKtXae1/+zJd/2dlkLEFMR6jA5Q=;
-        b=E97musxv16j4GYsBUSbXKjXIMCrGupkYq3wwaq6/RRExIM1yA9oTt3CJe2g6Wi439D
-         ag37SWQVJxV3XOeZsDvtp16QPLe3n4wxRx+LV0Mfi3gr0IlO2yTsJzI8Le9Bfu19rfW7
-         lPLECqc2uxTGNxgH96hLz+pbkmmCCaP5v/yDhgHNikEEweM1xA2o5d3ux8CBiWnE9t0Z
-         8F3w45C4HojS6Pwqj2HtuwbiqI6sMvAd3buCjO9WsdMKyHLdfjJNiCUIm8eZFgwbg7UP
-         FyNEx2qd+zTTmUKyRGXTtoVPJWS8LtwqayxZc4EoyIX4+2E8KYovWLdpCpKcY6BouvMF
-         m8og==
-X-Forwarded-Encrypted: i=1; AFNElJ/5DILgRbPV4Zn7gY4OAbkPwsCyBukGrpWT+4SN7gW5d95LxqzRoJFeeGLJvurYxAKM59ZB50Ps296n@vger.kernel.org
-X-Gm-Message-State: AOJu0YzNqP2adAxCXkoo6ih2ow9Cx3CRtN07aXvcIzXq5K43TgeCMaIp
-	4jxEMS33WW1Hp3ecaSdOw/pFi5tmpuzGJUsjggFDinlqOIuYUw0k5/4bMX8IwlCpxPSg//FVKDk
-	6WN7O9uGSE8OzPGenTUBDWwM3cdjM19uNnrVBwsH42E/fkq/gTEwJhKm6Xjo+k6tB
-X-Gm-Gg: Acq92OEDViP3aEjHKkVBdzIFckAlTKhqMk3HAGSj5ab99KIZYtxzJiVnKalL27THr8m
-	FLx4k/vweenk56ElYKVKGgrkJM5sDrWpZ10+tq/Cb8dyypNkZjDJZ8Ba25lhlfQdKjEJ96pBidc
-	/cg4bxNLFHXmfhE+ZwswfN6M1OrXTx2pWSusZVhEpBhNIWA9r0ykC/M9eTFcOUBrgGKovTZkmVy
-	7T/p2FTm1JEdjjUfRwcq8SBtjBdSJfAfsBMwDvOck22rj3l6qfm7nKmmWdl4MzLl9Neg1do1rn1
-	PrpC7idUkw/MpNtD+Ttyq9En/7/GvJeOrWN44ztgp7OrELa9EyS1jzQLFP4QQSMrhjAsdOBp4G7
-	MvW4VPNr7TAmlN07ZUfB7xMS2eT+w2iJDoGmYt4VbcEs44M/C4d3LWraMJnTWsyWQdWENUriqpN
-	DkF/GGo01iJ4anpmtS4xasmQ==
-X-Received: by 2002:a17:902:d48e:b0:2ba:5a20:1d94 with SMTP id d9443c01a7336-2beb059944cmr298415495ad.13.1779953083699;
-        Thu, 28 May 2026 00:24:43 -0700 (PDT)
-X-Received: by 2002:a17:902:d48e:b0:2ba:5a20:1d94 with SMTP id d9443c01a7336-2beb059944cmr298414945ad.13.1779953083192;
-        Thu, 28 May 2026 00:24:43 -0700 (PDT)
+        bh=ZIJSHjPmbE5160eqXjRAxLmfKnGWp0tUz5Qubw7oeD0=;
+        b=gjDX0PJUog3nvMPVnC5t9CbTT3q6ltv8zQ3y5XOa+k4Yh/N42eWosikPu4LzOSlRv0
+         BX+sfaaoMLvW1ngNzphl3yN94y1yEQfSuJnGrEpZjCs1O0cJKUiCLXCPrzv76w9SN+72
+         sN7EscuyTbCMATNW8iaJ1ucLF8Mtam16CRMEYw7mJSRPmlorNxL4LoiOffyrIUbeG/nO
+         CZYuYZlq4ZKPQ0/gcOW2SwlIokfp3lc7/jADBfgVlJV6QKfAGb4sZDhnXuFWvkN17yKL
+         MuSMkluFOPOwyY3qnoRTDSagVZNMi9kzPIUtjWSPl9xOeXkXrVfWS79IuTJ/rafYbcWa
+         2YAA==
+X-Forwarded-Encrypted: i=1; AFNElJ+xTQ8Xd7RUarxHUOHtieoAtO0RsSmQwQnUQ8EYIY1G0AXfnYBiJeS9S0HsQrK78Cu2R45GYqGS046e@vger.kernel.org
+X-Gm-Message-State: AOJu0YzBVrTM32FNwJDoPi13mdJCIdUzAK5btyYY7FOfBziOXR0gg5xF
+	7xGnnbBKW0BHUGLEWq7a8JYTPhGL6IMWxD8LdPpzsees3tbbbkD3u27yyF8CMC0ep7kjqSs2oRL
+	8qWtud42tKdG7d77jfY7ikrV90/6X1aaS6hNsTpfnDpyXuYKRDvaqQqrHeTvw19lg
+X-Gm-Gg: Acq92OFyFIB1sNO1/DyQUmnwNVo0j2lbN7hfMU4Z4SKXkmOWm5ljH18tCeD7s2lKU4g
+	XBBH+uA564n08+uF32T1vkIXH9/o0r0SK+TDBGU/nNDMYAbb59lTQaVvtnb/zztZBAt19Fs5xNM
+	f6Mgc0PLMvxlgFpsPz6puXMLhuAiLn5wIBDHIickrRVoQxXeu12h8msk0tKgeneWfikNv5FyoSI
+	RBEzuN6nFssZlAj0dwgw6eU32xFBMGFtud4em811LPiIuAxtR3iewsNTzWfo1lzcbfuqW04CRv5
+	a4pcSpuvSM1+eWx1zrufzqC6qVALKWun4en1MXEKZOWgDKp/MGuxI4TuFPlkWWgIu9zQLV2TJ76
+	NFZ4F+2OTUR1YigBvpp2DmIzopWwAIY4IVRaHbD2DZOBZYTw2pi+lLk7gHoXy75fyus1hlHRXAf
+	lhRK9UpEXqkNMdPk9jdJdWfg==
+X-Received: by 2002:a17:903:1a70:b0:2b9:ec37:2977 with SMTP id d9443c01a7336-2beb06bf9d7mr284835825ad.38.1779953233979;
+        Thu, 28 May 2026 00:27:13 -0700 (PDT)
+X-Received: by 2002:a17:903:1a70:b0:2b9:ec37:2977 with SMTP id d9443c01a7336-2beb06bf9d7mr284835545ad.38.1779953233445;
+        Thu, 28 May 2026 00:27:13 -0700 (PDT)
 Received: from [10.133.33.247] (tpe-colo-wan-fw-bordernet.qualcomm.com. [103.229.16.4])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2beb5695f05sm219572265ad.6.2026.05.28.00.24.39
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2beb58b2cd6sm178086085ad.52.2026.05.28.00.27.09
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 28 May 2026 00:24:42 -0700 (PDT)
-Message-ID: <d57a0e9b-74f6-4472-842f-6479c7449cd8@oss.qualcomm.com>
-Date: Thu, 28 May 2026 15:24:37 +0800
+        Thu, 28 May 2026 00:27:12 -0700 (PDT)
+Message-ID: <c8f16920-95e7-4aeb-a08d-cb4cb8a32483@oss.qualcomm.com>
+Date: Thu, 28 May 2026 15:27:08 +0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -102,28 +102,28 @@ Cc: bvanassche@acm.org, beanhuo@micron.com, peter.wang@mediatek.com,
         open list <linux-kernel@vger.kernel.org>
 References: <20260527144055.2758170-1-can.guo@oss.qualcomm.com>
  <20260527144055.2758170-3-can.guo@oss.qualcomm.com>
- <mt2asdx4vnuxo3eodrc7dlfdtv3b5bpjfvxxglmncny36otfav@htri3l5q4ba3>
+ <z23icwga6qa4edt3amjx6jfl7uxmqqb7ipibxrqtpewguulfid@z4d7nj47mcu7>
 Content-Language: en-US
 From: Can Guo <can.guo@oss.qualcomm.com>
-In-Reply-To: <mt2asdx4vnuxo3eodrc7dlfdtv3b5bpjfvxxglmncny36otfav@htri3l5q4ba3>
+In-Reply-To: <z23icwga6qa4edt3amjx6jfl7uxmqqb7ipibxrqtpewguulfid@z4d7nj47mcu7>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Authority-Analysis: v=2.4 cv=VOntWdPX c=1 sm=1 tr=0 ts=6a17edbc cx=c_pps
- a=RP+M6JBNLl+fLTcSJhASfg==:117 a=nuhDOHQX5FNHPW3J6Bj6AA==:17
+Content-Transfer-Encoding: 7bit
+X-Authority-Analysis: v=2.4 cv=VOntWdPX c=1 sm=1 tr=0 ts=6a17ee53 cx=c_pps
+ a=Qgeoaf8Lrialg5Z894R3/Q==:117 a=nuhDOHQX5FNHPW3J6Bj6AA==:17
  a=IkcTkHD0fZMA:10 a=NGcC8JguVDcA:10 a=s4-Qcg_JpJYA:10
  a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=ZpdpYltYx_vBUK5n70dp:22
- a=EUspDBNiAAAA:8 a=f2HFmwmC_kV93FwCZ9MA:9 a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
- a=iS9zxrgQBfv6-_F4QbHw:22
-X-Proofpoint-GUID: Dmm9R27YsktkgqBOiUW_Ozc92emFIjIk
-X-Proofpoint-ORIG-GUID: Dmm9R27YsktkgqBOiUW_Ozc92emFIjIk
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNTI4MDA3MiBTYWx0ZWRfXzikY4Vu81Fzs
- C1t8OzAABrf6Gol6IlwmHsQWE6iS7zaKKfeSzd5zX9/GEssTvCyh4F5KtXCpE74bFQkJ0vTnFzp
- 87F7c9BEIZXjNxXMXkcDojfRJR9ncqbcVYDo8xMFklg0XHBc09qWgRTdDcDp5FUkh7sD8D/8VMi
- UAnGviVyNY+6Gew5jErhTAsl5krKwbGRyuFOhFCSOUStweiAlsMGK/f1Jfv3OIBcyN7L+CDwWLu
- dA+uNCMblsQ3TWoBKD+Tiv6BKMl6RaZYoc81xpL/gnA/ekiWu9uZlFPKvGT7KnYq/GEfhYEpnMx
- cKlle2VyreCwJujC3J9vHJ7vXZLPH23IJVbP0hL3jeRteuENCX5OKD6/FuoJrADnie14ovT+jpc
- Z0Qd1UPi6SIOoIneZYhv1yCJvKCz9ScpDzhDmDoSdkdwzL8rfYImZ6LZu6K/2can8Iw1FYIapTE
- BSzTzaX1lDPCEwWUt4w==
+ a=VwQbUJbxAAAA:8 a=EUspDBNiAAAA:8 a=YQh3IHUOoYMcq4u-F6gA:9 a=QEXdDO2ut3YA:10
+ a=x9snwWr2DeNwDh03kgHS:22
+X-Proofpoint-GUID: KKKGuN_OWHZxJv50K1VBVfjJodIwkmQG
+X-Proofpoint-ORIG-GUID: KKKGuN_OWHZxJv50K1VBVfjJodIwkmQG
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNTI4MDA3MyBTYWx0ZWRfX86r9ZynhwJTR
+ gwuaXeSQGlniarP8FXPa21RCh6DJocVmCMrRN6CbJL5QB+3NkAEc8HRMOSbBii0kN+KA94Yf3M9
+ +z3HwJf6yNOuE6Sdea2ZdJ8R1mJycEcLdf19Bwl5Bgrif3CJzTEYEEQK3gzDyG7Q8ta0yqbR1oR
+ vNIXtqMZzG7bGwjq20xFiQXfNyKcPw8HQw2LOS35q0x0vu3j294t/aIGH8E0Jmbf0WCcYuIgrea
+ Dk9YDUQyoT2z5yf6IASd3QmU44pfSd0Fuyg+KgFPqL18WcwDmTPahY3jTq3nUp7v+MsXiwsZeWJ
+ Em7Z6nlJXYbj0kt0djQP3Xzqdr8HshP8nZGFRw1nfVfPa3r5ROuWIbJru19vv90ASIcmFveH79m
+ wGcCHxpqb2m8qYA9rP89CC7xk53fFPyilwTWKUzL/QKadg8ZTfQUmconz8BSbY7lPNoilcjAKaj
+ rdP0qYVkWeZ5iGmt4uA==
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.125,FMLib:17.12.100.49
  definitions=2026-05-28_02,2026-05-26_03,2025-10-01_01
@@ -131,11 +131,10 @@ X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
  priorityscore=1501 phishscore=0 adultscore=0 impostorscore=0 suspectscore=0
  lowpriorityscore=0 bulkscore=0 clxscore=1015 malwarescore=0 spamscore=0
  classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2605210000 definitions=main-2605280072
+ reason=mlx scancount=1 engine=8.22.0-2605210000 definitions=main-2605280073
 
 
-
-On 5/28/2026 2:13 PM, Manivannan Sadhasivam wrote:
+On 5/28/2026 2:18 PM, Manivannan Sadhasivam wrote:
 > On Wed, May 27, 2026 at 07:40:55AM -0700, Can Guo wrote:
 >> Static TX Equalization settings and TX Precode enable indication from DT
 >> properties txeq-preshoot-g[1-6], txeq-deemphasis-g[1-6], and
@@ -193,45 +192,188 @@ On 5/28/2026 2:13 PM, Manivannan Sadhasivam wrote:
 >>   
 >>   	params->is_valid = true;
 >> +	params->is_static = false;
-> Maybe it's me, but I'm not able to understand how you want to apply these static
-> EQ settings. In commit message you said, the static values should be used as a
-> fallback, but you just check for 'params->is_static' while triggering
-> ufshcd_tx_eqtr() which is supposed to perform adaptive TX EQ training. IMO, you
-> don't need any check at all for applying static setting. If '(!params->is_valid
-> || force_tx_eqtr)' condition is not satisfied, then the static setting should be
-> used.
-Thanks for the review.
-
-The distinction is between two different sources that can pre-populate 
-txeq_params with
-is_valid set to true before ufshcd_config_tx_eq_settings() is called:
-
-1. DT properties — parsed by ufshcd_pltfrm_parse_tx_eq_settings(),
-     sets is_valid = true, is_static = true.
-2. UFS Attributes (qTxEQGnSettings/wTxEQGnSettingsExt) — retrieved by
-     ufshcd_retrieve_tx_eq_settings() (introduced in the 2nd series),
-     sets is_valid = true, is_static = false.
-
-Since both sources set is_valid = true, the is_valid flag alone cannot 
-tell them apart.
-The is_static flag is the discriminator:
-
-- is_valid && is_static -> settings came from DT; they are a board-level 
-baseline.
-   TX EQTR should still run to find optimal settings, which will then 
-overwrite the static ones.
-- is_valid && !is_static -> settings came from UFS Attributes; they are 
-previously trained
-   known-good values. TX EQTR can be skipped.
-- !is_valid -> no settings available yet; TX EQTR must run.
-
-So the condition check on (!params->is_valid || params->is_static || 
-force_tx_eqtr) handles
-all three cases.
+>>   }
+>>   
+>>   void ufshcd_retrieve_tx_eq_settings(struct ufs_hba *hba)
+>> diff --git a/drivers/ufs/host/ufshcd-pltfrm.c b/drivers/ufs/host/ufshcd-pltfrm.c
+>> index c2dafb583cf5..2db2103a6ac0 100644
+>> --- a/drivers/ufs/host/ufshcd-pltfrm.c
+>> +++ b/drivers/ufs/host/ufshcd-pltfrm.c
+>> @@ -210,6 +210,132 @@ static void ufshcd_init_lanes_per_dir(struct ufs_hba *hba)
+>>   	}
+>>   }
+>>   
+>> +static void ufshcd_parse_static_tx_eq_settings(struct ufs_hba *hba)
+>> +{
+>> +	size_t sz = hba->lanes_per_direction * 2;
+>> +	u32 lpd = hba->lanes_per_direction;
+>> +	struct ufshcd_tx_eq_params *params;
+>> +	u32 deemphasis[UFS_MAX_LANES * 2];
+>> +	u32 precode_en[UFS_MAX_LANES * 2];
+>> +	u32 preshoot[UFS_MAX_LANES * 2];
+>> +	struct device *dev = hba->dev;
+>> +	char prop_name[MAX_PROP_SIZE];
+>> +	int i, err, count, gear, lane;
+>> +
+>> +	if (!lpd || lpd > UFS_MAX_LANES) {
+>> +		dev_err(dev, "Invalid lanes-per-direction value (%u) provided\n", lpd);
+>> +		return;
+>> +	}
+>> +
+> 'lanes_per_direction' can be 0 for platforms that do not support deriving the
+> lanes count from DT:
+>
+> https://lore.kernel.org/linux-scsi/20260520070009epcms2p6542f3abb7660839e9d8140b3f2f145c3@epcms2p6/
+>
+> You should just drop the err message to avoid spamming those platforms.
+Good catch! Will do in next version.
 
 Thanks,
 Can Guo.
 >
 > - Mani
 >
+>> +	for (gear = UFS_HS_G1; gear <= UFS_HS_GEAR_MAX; gear++) {
+>> +		snprintf(prop_name, MAX_PROP_SIZE, "txeq-preshoot-g%d", gear);
+>> +		count = of_property_count_u32_elems(dev->of_node, prop_name);
+>> +		if (count <= 0)
+>> +			continue;
+>> +
+>> +		if (count != sz) {
+>> +			dev_err(dev, "Property %s has invalid count (%d), expecting %zu\n",
+>> +				prop_name, count, sz);
+>> +			continue;
+>> +		}
+>> +
+>> +		err = of_property_read_u32_array(dev->of_node, prop_name, preshoot, sz);
+>> +		if (err) {
+>> +			dev_err(dev, "Failed to read %s property, %d\n",
+>> +				prop_name, err);
+>> +			continue;
+>> +		}
+>> +
+>> +		for (i = 0; i < count; i++) {
+>> +			if (preshoot[i] >= TX_HS_NUM_PRESHOOT) {
+>> +				dev_err(dev, "An invalid TX EQ PreShoot (%d) provided in %s property\n",
+>> +					preshoot[i], prop_name);
+>> +				break;
+>> +			}
+>> +		}
+>> +
+>> +		if (i != count)
+>> +			continue;
+>> +
+>> +		snprintf(prop_name, MAX_PROP_SIZE, "txeq-deemphasis-g%d", gear);
+>> +		count = of_property_count_u32_elems(dev->of_node, prop_name);
+>> +		if (count <= 0) {
+>> +			dev_err(dev, "Missing required %s property\n", prop_name);
+>> +			continue;
+>> +		}
+>> +
+>> +		if (count != sz) {
+>> +			dev_err(dev, "Property %s has invalid count (%d), expecting %zu\n",
+>> +				prop_name, count, sz);
+>> +			continue;
+>> +		}
+>> +
+>> +		err = of_property_read_u32_array(dev->of_node, prop_name, deemphasis, sz);
+>> +		if (err) {
+>> +			dev_err(dev, "Failed to read %s property, %d\n",
+>> +				prop_name, err);
+>> +			continue;
+>> +		}
+>> +
+>> +		for (i = 0; i < count; i++) {
+>> +			if (deemphasis[i] >= TX_HS_NUM_DEEMPHASIS) {
+>> +				dev_err(dev, "An invalid TX EQ DeEmphasis (%d) provided in %s property\n",
+>> +					deemphasis[i], prop_name);
+>> +				break;
+>> +			}
+>> +		}
+>> +
+>> +		if (i != count)
+>> +			continue;
+>> +
+>> +		memset(precode_en, 0, sizeof(precode_en));
+>> +		if (gear == UFS_HS_G6) {
+>> +			snprintf(prop_name, MAX_PROP_SIZE, "tx-precode-enable-g%d", gear);
+>> +			count = of_property_count_u32_elems(dev->of_node, prop_name);
+>> +			if (count > 0) {
+>> +				if (count != sz) {
+>> +					dev_err(dev, "Property %s has invalid count (%d), expecting %zu\n",
+>> +						prop_name, count, sz);
+>> +					continue;
+>> +				}
+>> +
+>> +				err = of_property_read_u32_array(dev->of_node, prop_name,
+>> +								 precode_en, sz);
+>> +				if (err) {
+>> +					dev_err(dev, "Failed to read %s property, %d\n",
+>> +						prop_name, err);
+>> +					continue;
+>> +				}
+>> +
+>> +				for (i = 0; i < count; i++) {
+>> +					if (precode_en[i] > 1) {
+>> +						dev_err(dev, "An invalid PrecodeEn (%d) provided in %s property\n",
+>> +							precode_en[i], prop_name);
+>> +						break;
+>> +					}
+>> +				}
+>> +
+>> +				if (i != count)
+>> +					continue;
+>> +			}
+>> +		}
+>> +
+>> +		params = &hba->tx_eq_params[gear - 1];
+>> +		for (lane = 0; lane < lpd; lane++) {
+>> +			params->host[lane].preshoot = preshoot[lane * 2];
+>> +			params->host[lane].deemphasis = deemphasis[lane * 2];
+>> +			params->host[lane].precode_en = precode_en[lane * 2];
+>> +
+>> +			params->device[lane].preshoot = preshoot[lane * 2 + 1];
+>> +			params->device[lane].deemphasis = deemphasis[lane * 2 + 1];
+>> +			params->device[lane].precode_en = precode_en[lane * 2 + 1];
+>> +		}
+>> +
+>> +		params->is_valid = true;
+>> +		params->is_static = true;
+>> +	}
+>> +}
+>> +
+>>   /**
+>>    * ufshcd_parse_clock_min_max_freq  - Parse MIN and MAX clocks freq
+>>    * @hba: per adapter instance
+>> @@ -528,6 +654,8 @@ int ufshcd_pltfrm_init(struct platform_device *pdev,
+>>   
+>>   	ufshcd_init_lanes_per_dir(hba);
+>>   
+>> +	ufshcd_parse_static_tx_eq_settings(hba);
+>> +
+>>   	err = ufshcd_parse_operating_points(hba);
+>>   	if (err) {
+>>   		dev_err(dev, "%s: OPP parse failed %d\n", __func__, err);
+>> diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
+>> index f48d6416e299..c01824576472 100644
+>> --- a/include/ufs/ufshcd.h
+>> +++ b/include/ufs/ufshcd.h
+>> @@ -359,6 +359,7 @@ struct ufshcd_tx_eqtr_record {
+>>    * @is_valid: True if parameter contains valid TX Equalization settings
+>>    * @is_applied: True if settings have been applied to UniPro of both sides
+>>    * @is_trained: True if parameters obtained from TX EQTR procedure
+>> + * @is_static: True if settings are static
+>>    */
+>>   struct ufshcd_tx_eq_params {
+>>   	struct ufshcd_tx_eq_settings host[UFS_MAX_LANES];
+>> @@ -367,6 +368,7 @@ struct ufshcd_tx_eq_params {
+>>   	bool is_valid;
+>>   	bool is_applied;
+>>   	bool is_trained;
+>> +	bool is_static;
+>>   };
+>>   
+>>   /**
+>> -- 
+>> 2.34.1
 
