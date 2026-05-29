@@ -1,131 +1,78 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 87F507E792;
-	Fri, 29 May 2026 16:58:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8623138F626;
+	Fri, 29 May 2026 17:34:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780073908; cv=none; b=ux8Y1ePy569IsqK3BKaCxeFLupNbaqogWrvs3SaN6Eu0DGzHXG/s6MFr+99kYuH3dgIwYWl5Nv2E1jGTyJuURw+VVgnZF8qktXxX5yLqYuY+tp7vc2BtTHSJQOc6mAtmgcwQPlmOt1MGzx0f3Rz/14Ss1P6FFYKZUsHxLikatzo=
+	t=1780076099; cv=none; b=eClwR35p77hWdQzyVKjAq+vAbmZK8bxexGuyfEKdBhpBISIxQ8uO+sHNXf3OdY482ASLNVCr1T/c2orlFePE6XRCsO/ORyFQcVHB0ZByrmLTwroMqhBm0VLwNBwIbrlMrNB4uBL8NfMgsEs4BHc8S4OaqWLx0JHYVX8SyS3eoQU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780073908; c=relaxed/simple;
-	bh=DI5s+Qlb5cV8ThCHfzB7N3JjJbgH01aqV0lO9k9vKPM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=TpS6Id0WkKPJxEUxjbBjxapBweB1/nLpSaAMuouFwFj0B4vavKEOB00wm9TCQAuPuEJVgXh9lHVmbEl9ToKEdlj4l/lZf6SvaiwA0babFpFjYYEahDTIh7ctrRI/n87u6S/euejagngml5mltqQHYQciD20ouaOB9RgECKavP6Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YcdEd8KI; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1780076099; c=relaxed/simple;
+	bh=WMk3aPSN5jhhBmNXLYJZ4Gz+/snI/h6rjQXNjS9JVdY=;
+	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=mVRhJDO1d1iZMv8BPFxi+eFWN7WHzsv3TblcmeSonlnZgw52424OU+gBcVR97iqldlkohJIQ3e0qUBQ+oRORdHBtK7U3YDATfwLLvhGRZ7HLS14OcOxC66/1Bawqae8cFN8s6S5FeOnGD5jvc5/Mj7wOKhkafh+2G27/S8glORY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=ur8xms30; arc=none smtp.client-ip=199.89.1.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YcdEd8KI"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 794101F00893;
-	Fri, 29 May 2026 16:58:26 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1780073907;
-	bh=Rr93txAorkGK4w7kSiV9wcRvir3FWXid5u8/S3kOYh8=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=YcdEd8KIrgqEjIJyzfEWp3wxA2BOaPQFdZlliH+hhKlBpjybWVcwk0zVC6bgK5YTR
-	 RmnqI08n1+vYEJMy4t8kaL28I/0vBbs8kisVrBWt4MBPRPPKVXK8zs4hov/GJ/al6F
-	 AHt9PSSgT3oGgXaSXqe6NxsSK0q4PYe4GSO/3OyZMhBdkmr5XdhUmDf/OazuTy8zIM
-	 pZmWz+Hx9kJHzKe6wH3BejyNDN0Vzad/IOXlRwj7othy/nDthuEY4IAlgp7pNCl3Zc
-	 +eyfImujLBctVUARngY8my0TXcuI3qqcT5R5XiB4jgJHik3fElcHZ3O35fGpKUW+Uz
-	 j1DqtFpAdUTVA==
-Date: Fri, 29 May 2026 18:58:24 +0200
-From: Krzysztof Kozlowski <krzk@kernel.org>
-To: Can Guo <can.guo@oss.qualcomm.com>
-Cc: bvanassche@acm.org, beanhuo@micron.com, peter.wang@mediatek.com, 
-	martin.petersen@oracle.com, mani@kernel.org, linux-scsi@vger.kernel.org, 
-	Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>, Rob Herring <robh@kernel.org>, 
-	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
-	Matthias Brugger <matthias.bgg@gmail.com>, 
-	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>, Zhaoming Luo <zhml@posteo.com>, 
-	Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>, 
-	"open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" <devicetree@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>, 
-	"moderated list:ARM/Mediatek SoC support:Keyword:mediatek" <linux-arm-kernel@lists.infradead.org>, 
-	"moderated list:ARM/Mediatek SoC support:Keyword:mediatek" <linux-mediatek@lists.infradead.org>
-Subject: Re: [PATCH v6 1/2] dt-bindings: ufs: Document static TX Equalization
- settings properties
-Message-ID: <20260529-neat-bright-shellfish-eab5e8@quoll>
-References: <20260529113338.984301-1-can.guo@oss.qualcomm.com>
- <20260529113338.984301-2-can.guo@oss.qualcomm.com>
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="ur8xms30"
+Received: from localhost (localhost [127.0.0.1])
+	by 013.lax.mailroute.net (Postfix) with ESMTP id 4gRr8X2T34zlh2gG;
+	Fri, 29 May 2026 17:34:52 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1780076087; x=1782668088; bh=U5BYMx4zAStPRR36x0y6uE05
+	65WUCRFyP1aAJEmtYbY=; b=ur8xms30Oxud6H0iLJifx5ly+juftAyDcRiAPg5n
+	VCPGGFHyKb8PwL3+DFBTJGIqoHkUtJ/Z7nbf2ny5YEOaB+w2Ts76w+5n3qMB4/qf
+	FxJ1bJAvHz3f2A3NtEftuMvdnvvdzuYzoh8qY+/Kng7jNicDPRVoJEoT0qMeEfPd
+	WX7m+r4zu4wi6EcCCjB/Dbbzw/l50TVzCupJyENLUePCqF1jd8uPf1065C+yr1m5
+	XT0LhsCbtooBaHYPHamns1SMPMqpICKMmxI039DgfX0kkHQanCgghWzjYXTkzmDe
+	5eOqE6Z8hEUpRXZicxrRZ+nZl5cLnyd6/ACwZIhNRbSrVA==
+X-Virus-Scanned: by MailRoute
+Received: from 013.lax.mailroute.net ([127.0.0.1])
+ by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id NxEpmRFbPrmR; Fri, 29 May 2026 17:34:47 +0000 (UTC)
+Received: from [192.168.51.14] (c-73-231-117-72.hsd1.ca.comcast.net [73.231.117.72])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4gRr8L3bcRzlh2rW;
+	Fri, 29 May 2026 17:34:42 +0000 (UTC)
+Message-ID: <1d48e5e2-f0a6-434e-9ad8-84beed1a9918@acm.org>
+Date: Fri, 29 May 2026 10:34:41 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <20260529113338.984301-2-can.guo@oss.qualcomm.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2] scsi: ufs: core: Fix NULL pointer dereference in
+ scsi_cmd_priv() calls
+To: Chanwoo Lee <cw9316.lee@samsung.com>, alim.akhtar@samsung.com,
+ avri.altman@wdc.com, James.Bottomley@HansenPartnership.com,
+ martin.petersen@oracle.com, peter.wang@mediatek.com,
+ vamshigajjela@google.com, alok.a.tiwari@oracle.com, beanhuo@micron.com,
+ can.guo@oss.qualcomm.com, adrian.hunter@intel.com,
+ linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <CGME20260529010749epcas1p2bf38209e55149f0681550c220e541e92@epcas1p2.samsung.com>
+ <20260529010739.295391-1-cw9316.lee@samsung.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20260529010739.295391-1-cw9316.lee@samsung.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Fri, May 29, 2026 at 04:33:37AM -0700, Can Guo wrote:
-> UFS v5.0/UFSHCI v5.0 add HS-G6 support (46.6 Gbps/lane) via UniPro v3.0
-> and M-PHY v6.0. In these specs, TX Equalization is defined for all High
-> Speed Gears (not only HS-G6) to compensate channel loss and improve signal
-> integrity at high speed operation.
+On 5/28/26 6:07 PM, Chanwoo Lee wrote:
+> ufshcd_tag_to_cmd() may return NULL if no command is associated with
+> the given tag. However, several callers dereference the returned cmd
+> pointer via scsi_cmd_priv() without checking for NULL first, leading
+> to a potential NULL pointer dereference.
 > 
-> For HS-G6, M-PHY uses PAM4 1b1b line coding, Pre-Coding may also be
-> required depending on channel characteristics.
-> 
-> Add vendor-neutral DT properties:
-> 
-> - patternProperties for txeq-preshoot-g[1-6] and txeq-deemphasis-g[1-6]
-> - fixed property tx-precode-enable-g6
-> 
-> Each property is a uint32 array of per-lane tuples:
-> <Host_Lane0 Device_Lane0>, [<Host_Lane1 Device_Lane1>]
-> 
-> Accept 2 or 4 values (x1/x2 lane configs). PreShoot and DeEmphasis values
-> are 0..7. Precode enable values are 0/1 and only applicable to HS-G6.
-> 
-> Acked-by: Manivannan Sadhasivam <mani@kernel.org>
-> Reviewed-by: Bean Huo <beanhuo@micron.com>
-> Reviewed-by: Peter Wang <peter.wang@mediatek.com>
-> Signed-off-by: Can Guo <can.guo@oss.qualcomm.com>
-> ---
->  .../devicetree/bindings/ufs/ufs-common.yaml   | 45 +++++++++++++++++++
->  1 file changed, 45 insertions(+)
-> 
-> diff --git a/Documentation/devicetree/bindings/ufs/ufs-common.yaml b/Documentation/devicetree/bindings/ufs/ufs-common.yaml
-> index ed97f5682509..d90cf25adfa5 100644
-> --- a/Documentation/devicetree/bindings/ufs/ufs-common.yaml
-> +++ b/Documentation/devicetree/bindings/ufs/ufs-common.yaml
-> @@ -105,6 +105,51 @@ properties:
->        Restricts the UFS controller to rate-a or rate-b for both TX and
->        RX directions.
->  
-> +  tx-precode-enable-g6:
-> +    $ref: /schemas/types.yaml#/definitions/uint32-array
-> +    oneOf:
-> +      - minItems: 2
-> +        maxItems: 2
-> +      - minItems: 4
-> +        maxItems: 4
-> +    items:
-> +      enum: [0, 1]
-> +    description: |
-> +      Static TX Precode enable values for HS-G6 only.
-> +      Values are specified as per-lane tuples:
-> +      <Host_Lane0 Device_Lane0>, [<Host_Lane1 Device_Lane1>].
+> Fix this by adding NULL checks for cmd before calling scsi_cmd_priv()
+> and moving the lrbp initialization after the NULL check.
 
-You need to include them in any of applicable examples, otherwise
-nothing here is validated.
-
-Why values cannot be on or off? Or even better: why you cannot just list
-all the lanes which has it enabled, assuming disabled is by default?
-
-> +
-> +patternProperties:
-> +  "^txeq-preshoot-g[1-6]$":
-> +    $ref: /schemas/types.yaml#/definitions/uint32-array
-> +    oneOf:
-> +      - minItems: 2
-> +        maxItems: 2
-> +      - minItems: 4
-> +        maxItems: 4
-> +    items:
-> +      minimum: 0
-> +      maximum: 7
-
-What is the meaning of values? Nothing here refers to the spec, so is
-this driver specific?
-
-Best regards,
-Krzysztof
-
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
