@@ -1,37 +1,41 @@
-Received: from mail.loongson.cn (mail.loongson.cn [114.242.206.163])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id AFD888834;
-	Fri, 29 May 2026 01:26:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=114.242.206.163
+Received: from mail-m49198.qiye.163.com (mail-m49198.qiye.163.com [45.254.49.198])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 856FD36C5A9;
+	Fri, 29 May 2026 04:06:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.254.49.198
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780017988; cv=none; b=Y9VP/uxiWazu4iNxH9EuhkTmWAbKbps7mg2NPX4KEQkorJJGMh64i5sg5VTXVc1Iw3Tb3VawhfGTE6MvU2ng3uzhTjXMUB4KtyT4PDC8nzk/PUzChFANG5bmimL3tv+gx6C8n42D+/M7Au6gdyUd073SwMrSh2RaX6BLQtXBjuY=
+	t=1780027606; cv=none; b=bMr5TsLlFrA5I3WxeX/ZrNLBnC+CFzx4m2VoErEy6rWEfsZXINR20pdQoaaeBhTkzpkyqYZ9MOwryK8+mjC5GLxZsfSmIaQGclu+yh1yuma+M2tq4QrR06G5M1Xo5gp1teBPquPkCl49pLCXyXRISc0oedkiHQ9NlIjnvRZYeww=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780017988; c=relaxed/simple;
-	bh=A6jOFu3Ky9NEYtgpNyQIfXbOORWaLkn2b/tyjgDpK9A=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=J/tDsaapFB48R7z9WavTSSmuM6by6eOPd+QuMU3YqzPfHmAPeMO8I4/zS/pSpWpy45KUBnavza7VAf15Gbar+BaoTEFjpT5elONZ2hJD/AqkW6qiLldO0s2zkjF1vJcPB21k3ASQ114+wTOA8/BI44bUMIp0kGYN4ZLYg9OrCrA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=loongson.cn; spf=pass smtp.mailfrom=loongson.cn; arc=none smtp.client-ip=114.242.206.163
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=loongson.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=loongson.cn
-Received: from loongson.cn (unknown [10.2.5.213])
-	by gateway (Coremail) with SMTP id _____8BxNeg_6xhqOWIOAA--.34781S3;
-	Fri, 29 May 2026 09:26:23 +0800 (CST)
-Received: from localhost.localdomain (unknown [10.2.5.213])
-	by front1 (Coremail) with SMTP id qMiowJDx6+A+6xhqV2yUAA--.20589S2;
-	Fri, 29 May 2026 09:26:22 +0800 (CST)
-From: Bibo Mao <maobibo@loongson.cn>
-To: Kashyap Desai <kashyap.desai@broadcom.com>,
-	Sumit Saxena <sumit.saxena@broadcom.com>,
-	Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
-	Chandrakanth patil <chandrakanth.patil@broadcom.com>
+	s=arc-20240116; t=1780027606; c=relaxed/simple;
+	bh=KzU6O0oaQxdN8fER/sAFGVLRyq1GlkUdYGWKBN7OWMU=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=jSUSKzjZ+KB3P3TtWbe8s/D84dJzBw9W/q1cB5jnvv7aKMhGKEBR24OMI0wSAZN9Gos/GyFeb93NGxwocUXdSibzH3yDf1IhfiXaH/RMzaHtFKW+LT52cj1ivr66MZBdQkpN3vN1zSCDPPOPOQNuff4QKeuqShYGchKAiJb8OMg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=seu.edu.cn; spf=pass smtp.mailfrom=seu.edu.cn; dkim=pass (1024-bit key) header.d=seu.edu.cn header.i=@seu.edu.cn header.b=kuDCqILb; arc=none smtp.client-ip=45.254.49.198
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=seu.edu.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=seu.edu.cn
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=seu.edu.cn header.i=@seu.edu.cn header.b="kuDCqILb"
+Received: from DESKTOP-SUEFNF9.taila7e912.ts.net (unknown [223.112.146.162])
+	by smtp.qiye.163.com (Hmail) with ESMTP id 404634e9f;
+	Fri, 29 May 2026 12:01:17 +0800 (GMT+08:00)
+From: Dawei Feng <dawei.feng@seu.edu.cn>
+To: ram.vegesna@broadcom.com
 Cc: James.Bottomley@HansenPartnership.com,
 	martin.petersen@oracle.com,
-	megaraidlinux.pdl@broadcom.com,
+	bigeasy@linutronix.de,
+	kees@kernel.org,
+	tglx@kernel.org,
 	linux-scsi@vger.kernel.org,
+	target-devel@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	zhangtianyang@loongson.cn
-Subject: [PATCH] scsi: megaraid_sas: Add dma read memory barrier during complete command poll
-Date: Fri, 29 May 2026 09:26:20 +0800
-Message-Id: <20260529012620.815886-1-maobibo@loongson.cn>
-X-Mailer: git-send-email 2.39.3
+	jianhao.xu@seu.edu.cn,
+	Dawei Feng <dawei.feng@seu.edu.cn>,
+	stable@vger.kernel.org,
+	Zilin Guan <zilin@seu.edu.cn>
+Subject: [PATCH] scsi: elx: efct: fix resource leak in efct_xport_initialize()
+Date: Fri, 29 May 2026 12:01:15 +0800
+Message-Id: <20260529040115.2735213-1-dawei.feng@seu.edu.cn>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -39,39 +43,65 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:qMiowJDx6+A+6xhqV2yUAA--.20589S2
-X-CM-SenderInfo: xpdruxter6z05rqj20fqof0/
-X-Coremail-Antispam: 1Uk129KBjDUn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7KY7
-	ZEXasCq-sGcSsGvfJ3UbIjqfuFe4nvWSU5nxnvy29KBjDU0xBIdaVrnUUvcSsGvfC2Kfnx
-	nUUI43ZEXa7xR_UUUUUUUUU==
+X-HM-Tid: 0a9e71e4c08a03a2kunm6552753fa6be4
+X-HM-MType: 10
+X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
+	tZV1koWUFITzdXWRgWCB1ZQUpXWS1ZQUlXWQ8JGhUIEh9ZQVlCGh4fVkIeTBlIQk9LGB0dTlYeHw
+	5VEwETFhoSFyQUDg9ZV1kYEgtZQVlJSUhVSkpJVUpPTVVKTUlZV1kWGg8SFR0UWUFZT0tIVUpLSU
+	hOQ0NVSktLVUtZBg++
+DKIM-Signature: a=rsa-sha256;
+	b=kuDCqILbIXwg54fvwxSOFWZlqbBSIn/TqfvmBOLrIU8PLKJ2mNlWpIqYbwaJA8Nxyk5V1rln56wH3JBTlTVCL5ALNS72hBvd1pn67KWgCVi20vNgj9POIVUiJjYCrUSrGCM9LtJDEbhwhGFFVKwLDySMZWXwJhGEdUrdB8eFvpQ=; c=relaxed/relaxed; s=default; d=seu.edu.cn; v=1;
+	bh=VbiDC2PSm+G49sEOu82h+lcLRU5NKq+hJZBIagGj7yU=;
+	h=date:mime-version:subject:message-id:from;
 
-Control dependencies do not guarantee load order across the condition,
-allowing a CPU to predict and speculate memory reads.
+efct_device_attach() frees efct->xport when efct_xport_initialize()
+fails, but efct_xport_initialize() returns directly when efct_hw_init()
+fails. That skips efct_hw_teardown() and leaves the hardware resources
+allocated by efct_xport_attach() behind before the transport object
+itself is freed.
 
-Add a dma read barrier before reading the complete SMID entry in
-structure reply_des and after the condition its contents depend on to
-ensure the read order is determinsitic.
+Route the efct_hw_init() error through the existing hw_init_out cleanup
+path so the hardware teardown runs before returning.
 
-Signed-off-by: Bibo Mao <maobibo@loongson.cn>
+The bug was first flagged by an experimental analysis tool we are
+developing for kernel memory-management bugs while analyzing
+v6.13-rc1. The tool is still under development and is not yet publicly
+available. Manual inspection confirms that the bug is still present in
+v7.1-rc5.
+
+An x86_64 allyesconfig build showed no new warnings. As we do not have
+access to an Emulex LPE31004/LPE36000 adapter to test with in this
+environment, no runtime testing was able to beperformed.
+
+Fixes: 4df84e846624 ("scsi: elx: efct: Driver initialization routines")
+Cc: stable@vger.kernel.org
+Signed-off-by: Zilin Guan <zilin@seu.edu.cn>
+Signed-off-by: Dawei Feng <dawei.feng@seu.edu.cn>
 ---
- drivers/scsi/megaraid/megaraid_sas_fusion.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/scsi/elx/efct/efct_xport.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-index 2699e4e09b5b..6ec6e5fa71ce 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-@@ -3589,6 +3589,8 @@ complete_cmd_fusion(struct megasas_instance *instance, u32 MSIxIndex,
- 	while (d_val.u.low != cpu_to_le32(UINT_MAX) &&
- 	       d_val.u.high != cpu_to_le32(UINT_MAX)) {
+diff --git a/drivers/scsi/elx/efct/efct_xport.c b/drivers/scsi/elx/efct/efct_xport.c
+index 9dcaef6fc188..e7b7d2c3bbf3 100644
+--- a/drivers/scsi/elx/efct/efct_xport.c
++++ b/drivers/scsi/elx/efct/efct_xport.c
+@@ -229,7 +229,7 @@ efct_xport_initialize(struct efct_xport *xport)
+ 	rc = efct_hw_init(&efct->hw);
+ 	if (rc) {
+ 		efc_log_err(efct, "efct_hw_init failure\n");
+-		goto out;
++		goto hw_init_out;
+ 	}
  
-+		/* Read SIMD after ReplyFlags and d_val.word check */
-+		dma_rmb();
- 		smid = le16_to_cpu(reply_desc->SMID);
- 		cmd_fusion = fusion->cmd_list[smid - 1];
- 		scsi_io_req = (struct MPI2_RAID_SCSI_IO_REQUEST *)
-
-base-commit: e8c2f9fdadee7cbc75134dc463c1e0d856d6e5c7
+ 	rc = efct_scsi_tgt_new_device(efct);
+@@ -256,7 +256,6 @@ efct_xport_initialize(struct efct_xport *xport)
+ 
+ hw_init_out:
+ 	efct_hw_teardown(&efct->hw);
+-out:
+ 	return rc;
+ }
+ 
 -- 
-2.39.3
+2.34.1
 
