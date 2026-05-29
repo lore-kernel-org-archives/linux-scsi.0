@@ -1,268 +1,153 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr1-f42.google.com (mail-wr1-f42.google.com [209.85.221.42])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A5DDD392C3A;
-	Fri, 29 May 2026 17:53:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 838E14218A3
+	for <linux-scsi@vger.kernel.org>; Fri, 29 May 2026 20:56:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780077183; cv=none; b=ItvB+R0tWNjD5W4kknrlGlByef79+o0KNmshN2BWNA06k/rPFO6UI3IZ0GDrfH7BWyiEzgRykKB74o8bdGQywPlNr2TTl6+JvhSHCoWCHLVOUrxvPvKcA1UUcuePvpVsEAthSzXwfOO0C/Ked6QLQDROaugJPnfLztv2Uyg0dhI=
+	t=1780088167; cv=none; b=oXiUJJ0zfvtLyV92KFX/CgEywqSMIj1GWSVWI/nhsuc90pl9k9yjFVEvAJeWN7yAKtJ08L8n9Dq5XndZhCOqOlYRBdV5L8+PF6XiA4UUIcU3/foDhc2VHfPVx21MpU/5TzwuC9pxgCzyRhZODZcuBgQ1eJosf/RxV9ssTlfVT44=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780077183; c=relaxed/simple;
-	bh=54IFEOZdN2o2SWjPhLNoTbpQLmuPaWhWr9cSAUki4wc=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=J0Lf6hn1kS1i0d3BREIhSNmWg6uXPi3JwJVv5AnOrXx8TQv7RagZk/HnsZA3z732SjvQkSrG5WYidhVMBsoVgiYWXf8R25+OxLfP+k0ZfUS3w4/wxonLCRCcUAlTN0delA3iFK6xoCHJe1Coswi15Um7DlHtuWkpxhB4iN2BORI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CL0+TWK0; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1780088167; c=relaxed/simple;
+	bh=QUkTU9MAzHVjY/R52ylF2nX1IyF7xZP2bnvafUhKIKM=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=MDEkimBCUoOfxo/MWspARVzcn24b3kSoxOtsOgmwSAcu7v5ibZ2BtZTlxrTGSgygLVrk1U0jwJqBIeP0BmtS6Tz3wwymNsq1Dw2t/qz8N7VX07eQPOCwOhy6j+tcjZMtT0wR3gQGfHZfdCUthkoq+BefcNmb5uWhNkWwFnPMGOg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=lBQq8e21; arc=none smtp.client-ip=209.85.221.42
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CL0+TWK0"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6AADB1F00893;
-	Fri, 29 May 2026 17:52:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1780077179;
-	bh=1bpqPpO9aTHCPceJDjrVjKhFFDy3yMAGMbtB/mhfrOE=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=CL0+TWK0LOPIO65oUDsWrSbN0zLvWb5tb0y4g5bvuTv/04lgueJrTu+oqkhsQqs5n
-	 ULBFhvmZCVayzBHYdfaSH+QYGDjwvsppx/09MvR3Eu3DXXAzt0o8bn843XlOdPoCPq
-	 69+SquO6DatpBUSADOEsAFrmy13rPWw7IHxVQ1O2mzSFYNG4HQG8ubeSWvQcUSL+W3
-	 2fro1t2NfMDmoQ2g8UC9/VRiWMPvL+npzAjD90pADD84CvAi29PEpSzhX38p0eJuNX
-	 VLV7vn+mR0GXVUmu0GQZxpJ93WnJCxrI7tjQOydX/uTVLi1d27AWv4zb685Z9/KMGI
-	 MgbgJpvcfHtNg==
-Date: Fri, 29 May 2026 19:52:54 +0200
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Can Guo <can.guo@oss.qualcomm.com>
-Cc: bvanassche@acm.org, beanhuo@micron.com, peter.wang@mediatek.com, 
-	martin.petersen@oracle.com, linux-scsi@vger.kernel.org, 
-	Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>, 
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, Nitin Rawat <quic_nitirawa@quicinc.com>, 
-	Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>, open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v6 2/2] scsi: ufs: core: Add support for static TX
- Equalization settings
-Message-ID: <w2mwg7g6l7mwbwk5yjjlrrp3hcg2hccdenyusb6ehez644kbhm@dfy2ex63iam3>
-References: <20260529113338.984301-1-can.guo@oss.qualcomm.com>
- <20260529113338.984301-3-can.guo@oss.qualcomm.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="lBQq8e21"
+Received: by mail-wr1-f42.google.com with SMTP id ffacd0b85a97d-45ef3efa8b0so112687f8f.3
+        for <linux-scsi@vger.kernel.org>; Fri, 29 May 2026 13:56:05 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1780088164; x=1780692964; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=W6SZ4oP1DlaBjPFDdYbBzO7LwjBZ+p9b7ExzMxZ0B/w=;
+        b=lBQq8e21lrncbsphyR1LoJ6t+QCFg7wiFY52HEuknXbcIc0V78RJoTqqaOfwyA47P7
+         ak3YNsRrnelh3goINfm9ndO6W5t1C2iXTHwyvxnInHBY2CA37fU7OeHvGYOgFLfZWwWC
+         RerZrykSU/WAAuBlOxFxkpcez76Ut8hBIc/eFY+4KSIdKMUJYN9pxidKjnWlLTlh/+yq
+         q4wow7zDB7pNwTH8G2bedilGd1uhMoZtvmgdYJyBB9eF9MKxc6TPdBctHuRrgdVxfYsd
+         OsYXeyWyj2cAvl0BGrDJEkjiVhccHkusap7Sp25ICH1riFf88F62YWMWps3rgNRXPlHE
+         ReqA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1780088164; x=1780692964;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=W6SZ4oP1DlaBjPFDdYbBzO7LwjBZ+p9b7ExzMxZ0B/w=;
+        b=WsvHG1mIIHbTOU8CmLUlJpoVJRbV/3A6q1WHtHjuGL4b/Yp53/7/D32iY7gX+fa83M
+         C23r/mHiHFA/d2uybUcg7MV6pzokMx303kW1qznFTLOemrKh2DDWPab+wN0XwbqH/202
+         qhf+nKYmgw7l/fp7OSSBt/1l9l3sGj06IGmJ7TvgzxErJEWDLDCKW6edoUcPZZaD+8ik
+         n82O6pJQGuuFCbYjBvlMaCXNS6bgqynuHizq+izFINDOYu0/As1V5slO/gOnZIx21hj6
+         L8r6jiI5RFvqEYbEo2btAq7r/ODHa5UH3Izta5xF6J02SkGbf85RRD2oRDDlNtl1mK+r
+         7JTQ==
+X-Forwarded-Encrypted: i=1; AFNElJ/i5L3x9X7L1btfouhPv+kweyKdw8OVEG4HUFkGYsgNe8C7p0Q6wZlEy1DGPcOP2AkUDZDYOYDia6XT@vger.kernel.org
+X-Gm-Message-State: AOJu0YwSeEL17aOkrKjBMtzvm4xE2ESyUwyUERGlqWC/5KeK+rR0jJuu
+	vys5f+htCNB02oFiRczxHyIHIjOAYuNtg414Ie+ChCmP59z6Rn6HR2s=
+X-Gm-Gg: Acq92OGjxoBbiMZxZYNBJ5HMz+u0yHQvacFOGpzVyUSZGPUTTsnPau4TGG8lFDBhrUP
+	ZejJzFQEMdnO3gIk83TTT7/69PnTQxsJt4lzIc7iHBPtEaiycYSLXVG7BUDRfhpQy5XPB8aFT/r
+	aa2ABZuc7mMRBeaAb47z/f0v3Dn7ahPhWV/D0vG9YKKXMlmMm/SrZ1GZCrb3n57UnelgVjpOZwD
+	obmNrk/oVk1S3xt/Dnypw68uW5nJhI1a6raa1lgXnU/f29VMaHmpxeLREZpYLtrAlE20P/iGSMX
+	/lAPNR5zT60kixCoG1TvyDdJRciCAx3yEPU2KIA/nh02VGOHde+lcU4DrN1IWA3co2H/lJSG+Pm
+	+7H5iG0JxKjXNBXu0zYgxi6ZRY+bmTMG3UDTAzPb9BILRKLA3+b1RovBE28iVIDXGsY1EOT2ZJd
+	7/ciAZYMWHL+CEni4+tqAtP0C64iVkE0CM+DeNYyDqZIwBbRq8q6SpWlAFDSimHWq5uM/iYUk=
+X-Received: by 2002:a05:600c:3e18:b0:485:c456:5e4f with SMTP id 5b1f17b1804b1-490a28d24admr8850055e9.0.1780088163713;
+        Fri, 29 May 2026 13:56:03 -0700 (PDT)
+Received: from localhost (32.red-80-39-29.staticip.rima-tde.net. [80.39.29.32])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4909cab0e79sm126968085e9.13.2026.05.29.13.56.03
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 29 May 2026 13:56:03 -0700 (PDT)
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+To: 
+Cc: Xose Vazquez Perez <xose.vazquez@gmail.com>,
+	Alexander Perlis <aperlis@math.lsu.edu>,
+	Nikkos Svoboda <nsvoboda@math.lsu.edu>,
+	Martin Wilck <mwilck@suse.com>,
+	Benjamin Marzinski <bmarzins@redhat.com>,
+	Christophe Varoqui <christophe.varoqui@opensvc.com>,
+	Christoph Hellwig <hch@lst.de>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	SCSI-ML <linux-scsi@vger.kernel.org>,
+	DM_DEVEL-ML <dm-devel@lists.linux.dev>
+Subject: [PATCH] scsi: devinfo: broaden Promise VTrak E310/E610 identification
+Date: Fri, 29 May 2026 22:56:02 +0200
+Message-ID: <20260529205602.177515-1-xose.vazquez@gmail.com>
+X-Mailer: git-send-email 2.54.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
+X-Patchwork-Bot: notify
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260529113338.984301-3-can.guo@oss.qualcomm.com>
 
-On Fri, May 29, 2026 at 04:33:38AM -0700, Can Guo wrote:
-> Static TX Equalization settings and TX Precode enable indication from DT
-> properties txeq-preshoot-g[1-6], txeq-deemphasis-g[1-6], and
-> tx-precode-enable-g6 are board-specific baseline values. Values are
-> provided as per-lane tuples:
-> 
-> <Host_Lane0 Device_Lane0>, [<Host_Lane1 Device_Lane1>]
-> 
-> Parse DT u32 properties with explicit range checks by using
-> of_property_count_u32_elems()/of_property_read_u32_array().
-> 
-> When adaptive TX Equalization is used, these static settings are not final:
-> 
-> - If valid settings are retrieved from qTxEQGnSettings/wTxEQGnSettingsExt,
->   those retrieved settings override static DT settings.
-> - If retrieval is not available/valid, TX EQTR runs and trained settings
->   override static DT settings.
-> 
-> So static DT settings are a fallback and are intended for cases where
-> adaptive TX Equalization is not enabled/used. Adaptive TX Equalization
-> remains the primary path when enabled.
-> 
-> No behavior changes for platforms that do not provide these properties.
-> 
-> Reviewed-by: Bean Huo <beanhuo@micron.com>
-> Signed-off-by: Can Guo <can.guo@oss.qualcomm.com>
+The Promise VTrak Ex10 series share the same hardware base and firmware.
+Consequently all interface variants, whether fibre channel ("f") or
+SAS ("s") in dual/single controller, exhibit the same SCSI behavior.
 
-Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
+Instead of adding separate blacklist entries for every specific model
+variant (such as E610f, E610s, E310f, E310s), consolidate and
+broaden the match strings to "VTrak E310" and "VTrak E610".
 
-A couple of nits below.
+Cc: Alexander Perlis <aperlis@math.lsu.edu>
+Cc: Nikkos Svoboda <nsvoboda@math.lsu.edu>
+Cc: Martin Wilck <mwilck@suse.com>
+Cc: Benjamin Marzinski <bmarzins@redhat.com>
+Cc: Christophe Varoqui <christophe.varoqui@opensvc.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: James E.J. Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Martin K. Petersen <martin.petersen@oracle.com>
+Cc: SCSI-ML <linux-scsi@vger.kernel.org>
+Cc: DM_DEVEL-ML <dm-devel@lists.linux.dev>
+Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
+---
+BTW: Be careful with the dual-controller models. They advertise ALUA
+to the OS, but they have a non-standard implementation. This could
+also happen with other Promise VTrak/Vess models, whether legacy or newer.
 
-> ---
->  drivers/ufs/core/ufs-txeq.c      |  10 ++-
->  drivers/ufs/host/ufshcd-pltfrm.c | 139 +++++++++++++++++++++++++++++++
->  include/ufs/ufshcd.h             |   2 +
->  3 files changed, 150 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/ufs/core/ufs-txeq.c b/drivers/ufs/core/ufs-txeq.c
-> index 4b264adfdf49..b645fe5f6d95 100644
-> --- a/drivers/ufs/core/ufs-txeq.c
-> +++ b/drivers/ufs/core/ufs-txeq.c
-> @@ -1297,7 +1297,13 @@ int ufshcd_config_tx_eq_settings(struct ufs_hba *hba,
->  	}
->  
->  	params = &hba->tx_eq_params[gear - 1];
-> -	if (!params->is_valid || force_tx_eqtr) {
-> +	/*
-> +	 * TX EQTR must run for the following cases:
-> +	 * 1. TX EQ settings are invalid.
-> +	 * 2. TX EQ settings are valid but static, i.e., populated from DT.
-> +	 * 3. TX EQTR procedure is forced.
-> +	 */
-> +	if (!params->is_valid || params->is_static || force_tx_eqtr) {
->  		int ret;
->  
->  		ret = ufshcd_tx_eqtr(hba, params, pwr_mode);
-> @@ -1310,6 +1316,7 @@ int ufshcd_config_tx_eq_settings(struct ufs_hba *hba,
->  		/* Mark TX Equalization settings as valid */
->  		params->is_valid = true;
->  		params->is_trained = true;
-> +		params->is_static = false;
->  		params->is_applied = false;
->  	}
->  
-> @@ -1495,6 +1502,7 @@ static void ufshcd_extract_tx_eq_settings_attrs(struct ufs_hba *hba, u8 gear)
->  	}
->  
->  	params->is_valid = true;
-> +	params->is_static = false;
->  }
->  
->  void ufshcd_retrieve_tx_eq_settings(struct ufs_hba *hba)
-> diff --git a/drivers/ufs/host/ufshcd-pltfrm.c b/drivers/ufs/host/ufshcd-pltfrm.c
-> index c2dafb583cf5..fc6aa91b6210 100644
-> --- a/drivers/ufs/host/ufshcd-pltfrm.c
-> +++ b/drivers/ufs/host/ufshcd-pltfrm.c
-> @@ -210,6 +210,143 @@ static void ufshcd_init_lanes_per_dir(struct ufs_hba *hba)
->  	}
->  }
->  
-> +/**
-> + * ufshcd_parse_tx_eq_settings_for_gear - Parse static TX EQ DT settings for one gear
-> + * @hba: per adapter instance
-> + * @gear: target HS gear
-> + * @num_elems: expected number of elements per property
-> + *
-> + * Reads the txeq-preshoot-gN, txeq-deemphasis-gN, and (for G6)
-> + * tx-precode-enable-gN device-tree properties and, if all are valid, stores
-> + * them as static TX Equalization settings for the given gear.
-> + */
-> +static void ufshcd_parse_tx_eq_settings_for_gear(struct ufs_hba *hba,
-> +						 int gear, const u32 num_elems)
+From its multipath-tools/libmultipath/prioritizers/alua_spc3.h:
+[...]
+#define AAS_OPTIMIZED                   0x0
+#define AAS_STANDBY                     0x2
 
-ufshcd_parse_tx_eq_settings_per_gear()?
+struct rtpg_tpg_dscr {
+        unsigned char   b0;             /* x....... = pref(ered) port        */
+                                        /* .xxx.... = reserved               */
+                                        /* ....xxxx = asymetric access state */
+[...]
 
-> +{
-> +	u32 precode_en[UFS_MAX_LANES * 2] = { 0 };
-> +	const u32 lpd = hba->lanes_per_direction;
-> +	struct ufshcd_tx_eq_params *params;
-> +	u32 deemphasis[UFS_MAX_LANES * 2];
-> +	u32 preshoot[UFS_MAX_LANES * 2];
-> +	struct device *dev = hba->dev;
-> +	char prop_name[MAX_PROP_SIZE];
-> +	int i, err, lane, count;
-> +
-> +	snprintf(prop_name, MAX_PROP_SIZE, "txeq-preshoot-g%d", gear);
-> +	count = of_property_count_u32_elems(dev->of_node, prop_name);
-> +	if (count <= 0)
-> +		return;
-> +
-> +	if (count != num_elems) {
-> +		dev_err(dev, "Property %s has invalid count (%d), expecting %u\n",
-> +			prop_name, count, num_elems);
-> +		return;
-> +	}
-> +
-> +	err = of_property_read_u32_array(dev->of_node, prop_name, preshoot, num_elems);
-> +	if (err) {
-> +		dev_err(dev, "Failed to read %s property, %d\n", prop_name, err);
-> +		return;
-> +	}
-> +
-> +	for (i = 0; i < num_elems; i++) {
-> +		if (preshoot[i] >= TX_HS_NUM_PRESHOOT) {
-> +			dev_err(dev, "An invalid TX EQ PreShoot (%d) provided in %s property\n",
-> +				preshoot[i], prop_name);
-> +			return;
-> +		}
-> +	}
-> +
-> +	snprintf(prop_name, MAX_PROP_SIZE, "txeq-deemphasis-g%d", gear);
-> +	count = of_property_count_u32_elems(dev->of_node, prop_name);
-> +	if (count <= 0) {
-> +		dev_err(dev, "Missing required %s property\n", prop_name);
-> +		return;
-> +	}
-> +
-> +	if (count != num_elems) {
-> +		dev_err(dev, "Property %s has invalid count (%d), expecting %u\n",
-> +			prop_name, count, num_elems);
-> +		return;
-> +	}
-> +
-> +	err = of_property_read_u32_array(dev->of_node, prop_name, deemphasis, num_elems);
-> +	if (err) {
-> +		dev_err(dev, "Failed to read %s property, %d\n", prop_name, err);
-> +		return;
-> +	}
-> +
-> +	for (i = 0; i < num_elems; i++) {
-> +		if (deemphasis[i] >= TX_HS_NUM_DEEMPHASIS) {
-> +			dev_err(dev, "An invalid TX EQ DeEmphasis (%d) provided in %s property\n",
-> +				deemphasis[i], prop_name);
-> +			return;
-> +		}
-> +	}
-> +
-> +	if (gear == UFS_HS_G6) {
-> +		snprintf(prop_name, MAX_PROP_SIZE, "tx-precode-enable-g%d", gear);
-> +		count = of_property_count_u32_elems(dev->of_node, prop_name);
-> +		if (count > 0) {
-> +			if (count != num_elems) {
-> +				dev_err(dev, "Property %s has invalid count (%d), expecting %u\n",
-> +					prop_name, count, num_elems);
-> +				return;
-> +			}
-> +
-> +			err = of_property_read_u32_array(dev->of_node, prop_name,
-> +							 precode_en, num_elems);
-> +			if (err) {
-> +				dev_err(dev, "Failed to read %s property, %d\n",
-> +					prop_name, err);
-> +				return;
-> +			}
-> +
-> +			for (i = 0; i < num_elems; i++) {
-> +				if (precode_en[i] > 1) {
-> +					dev_err(dev, "An invalid PrecodeEn (%d) provided in %s property\n",
-> +						precode_en[i], prop_name);
-> +					return;
-> +				}
-> +			}
-> +		}
-> +	}
-> +
-> +	params = &hba->tx_eq_params[gear - 1];
-> +	for (lane = 0; lane < lpd; lane++) {
-> +		params->host[lane].preshoot = preshoot[lane * 2];
-> +		params->host[lane].deemphasis = deemphasis[lane * 2];
-> +		params->host[lane].precode_en = precode_en[lane * 2];
-> +
-> +		params->device[lane].preshoot = preshoot[lane * 2 + 1];
-> +		params->device[lane].deemphasis = deemphasis[lane * 2 + 1];
-> +		params->device[lane].precode_en = precode_en[lane * 2 + 1];
-> +	}
-> +
-> +	params->is_valid = true;
-> +	params->is_static = true;
-> +}
-> +
-> +static void ufshcd_parse_static_tx_eq_settings(struct ufs_hba *hba)
-> +{
-> +	const u32 lpd = hba->lanes_per_direction;
-> +	const u32 num_elems = lpd * 2;
-> +	int gear;
-> +
-> +	if (!lpd) {
-> +		return;
-> +	}
+static inline int
+rtpg_tpg_dscr_get_aas(struct rtpg_tpg_dscr *d)
+{
+        return (d->b0 & 0x0f);
+}
 
-Redundant braces.
+/* added for PROMISE VTRAK */
+static inline int
+rtpg_tpg_dscr_get_aas_for_promise(struct rtpg_tpg_dscr *d)
+{
+        return ((d->b0 & 0x80)? AAS_OPTIMIZED: AAS_STANDBY);
+}
+---
+ drivers/scsi/scsi_devinfo.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-- Mani
-
+diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
+index c6defe1c3152..15ffbe93ac72 100644
+--- a/drivers/scsi/scsi_devinfo.c
++++ b/drivers/scsi/scsi_devinfo.c
+@@ -218,8 +218,8 @@ static struct {
+ 	{"PIONEER", "CD-ROM DRM-602X", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
+ 	{"PIONEER", "CD-ROM DRM-604X", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
+ 	{"PIONEER", "CD-ROM DRM-624X", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
+-	{"Promise", "VTrak E310f", NULL, BLIST_SPARSELUN | BLIST_NO_RSOC},
+-	{"Promise", "VTrak E610f", NULL, BLIST_SPARSELUN | BLIST_NO_RSOC},
++	{"Promise", "VTrak E310", NULL, BLIST_SPARSELUN | BLIST_NO_RSOC},
++	{"Promise", "VTrak E610", NULL, BLIST_SPARSELUN | BLIST_NO_RSOC},
+ 	{"Promise", "", NULL, BLIST_SPARSELUN},
+ 	{"QEMU", "QEMU CD-ROM", NULL, BLIST_SKIP_VPD_PAGES},
+ 	{"QNAP", "iSCSI Storage", NULL, BLIST_MAX_1024},
 -- 
-மணிவண்ணன் சதாசிவம்
+2.54.0
+
