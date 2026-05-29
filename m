@@ -1,60 +1,69 @@
 Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2BFD43D75C7
-	for <linux-scsi@vger.kernel.org>; Fri, 29 May 2026 11:33:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 706543CBE79;
+	Fri, 29 May 2026 11:34:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780054433; cv=none; b=KTpJZ2gEUXgEYVRdiJTegTx0y5vo/2YtOLV/eei41luutnJ03qFs+kyQhlT364T2nL06jJ7seoyqR9ZZoLm6sD5tGNZQo5edCFNPkAOc6+aSTuJE969Uyf8jAfJVBV3hWAFgOpqWTRh4P2VXSZ8YOm699HcHstgIEdz+sVW1VJY=
+	t=1780054447; cv=none; b=DtxeJQRc3iMPNlI4CjTP4J+3ufF9YR3WjfnJ07oibrVSiAfBxOndvdbk3l5wuR+J5azLEWN+PohH75VPttWonMNnpP6ksNsutr/p00Nd4sYSRVZbIVl5ebLYASU7EhJEo3U+M0xLTQXPjZ02Crvzkx/xOyj9/90XIT6mt5Hs5Po=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780054433; c=relaxed/simple;
-	bh=rLs1t0xB6kj4RK5r28DQ76/jaka5xe0q/GEj++rE1qQ=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=S7EuyP+FBilTVbf7tuFxkW1z5SzN2pC25x1G8fqq0eFvLAkOKEuH39N+l9lu3vRiVLsQ6MYLlQtq+e/t5ucDFXh3cti4TQAwQ/eQDa3q1V8rMz0NCtX/ro4PMTbHShwU226UiDKaJ9Axdduy0+ePpYfLljBhhptShVUpBQvw0l8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=FzcRialI; arc=none smtp.client-ip=205.220.180.131
+	s=arc-20240116; t=1780054447; c=relaxed/simple;
+	bh=utMJBp9kyqoJfAvISbjnGHF3QrfIZHcJ0y7Whu6D1QE=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=DroJ9KFNcXZjZ2yfOBH4pAuiOCtKWq/yowMVcqpqY/yyWMu4MYvt2MSI6ZGyGyyvUUPpnSMX5mq+OljBxGmzQlug9xrPr1/n9FAtZaRnFTFtIb6GoJNGIypVLcT6kBHBdIqRre+93uvc2j2A+D9I+G0UCWomNoOZuoqvkyAf2TI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=K/WAojkw; arc=none smtp.client-ip=205.220.180.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="FzcRialI"
-Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 64T6fpIM1388067;
-	Fri, 29 May 2026 11:33:42 GMT
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="K/WAojkw"
+Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 64T6d7SR1369492;
+	Fri, 29 May 2026 11:33:52 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:date:from:message-id:mime-version
-	:subject:to; s=qcppdkim1; bh=lEflP1EdXzIN10WHffFQS/5tvAROHdoCAun
-	Y6i6XiZU=; b=FzcRialIUPcCIEBEMVSBGUux7Drx9EcJ2y0eLSo1wewm4opiS/x
-	JPoDWgeTC3Rk1jAclZUE/FC/zHOb9NRrICaFXsmBTWkAxn5sDeEUICxqQwBHRg+e
-	fqzFGIObZI/xP0yGj7Q/hQalgK85O2vvdYQBWZ+8pNTMaOYzs7ZNktpehkwkLug/
-	pCDotDQr22Gsmj/ysRsUTi5dWea2LrthADXqiB6x63TGS6BnlHC2mgSKhZUvUlYY
-	ZZ+9cWACcmB246mJEAgnPV69BdRZg5Q7kP9sN8FDf8kB/1zdh5LX7sjGvqmKiFIH
-	MDj/SyoKZW7LPINMRrgoVOK7DV1dqrPi2Aw==
+	cc:content-transfer-encoding:date:from:in-reply-to:message-id
+	:mime-version:references:subject:to; s=qcppdkim1; bh=X2kQS1AldSj
+	uaukzNNFFcx4hBSm6CK+qAe04FgyElbE=; b=K/WAojkwCUk6It/EF6wOo3fFqlC
+	JE/qsMGMTx6BV+WMybYzLKyWIelzRd4UhJxIEV3tBkN0x8ui4zObXWpJpbY0PMOD
+	ILJoyzb4U2SI3QEGCM1DLQstcgevSfWL0R1lZl9twq9AVfrVCGhCLecuBMhYecXN
+	/JV2gEigkEFn3aQLzSlwPr4e6/69VTtOSqU+AW0BiI7hUJIupxAcCv5Wd+lvK1iW
+	GZDSEhyO8xESr8epgrgM+jjffJ0Pnwana99ewCiTn+RMQgwkEuG+6ny9ZHVnIPIG
+	KZudAPknELvPTavGS9RJsZBJx6JgNh3ReK8ZEQzcVCRgi/FFxtZwJYaxP7A==
 Received: from nalasppmta04.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4eevumu9d4-1
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4eety5uywb-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 29 May 2026 11:33:41 +0000 (GMT)
+	Fri, 29 May 2026 11:33:52 +0000 (GMT)
 Received: from pps.filterd (NALASPPMTA04.qualcomm.com [127.0.0.1])
-	by NALASPPMTA04.qualcomm.com (8.18.1.7/8.18.1.7) with ESMTP id 64TBUAHd011265;
-	Fri, 29 May 2026 11:33:40 GMT
+	by NALASPPMTA04.qualcomm.com (8.18.1.7/8.18.1.7) with ESMTP id 64TBTuaL009884;
+	Fri, 29 May 2026 11:33:51 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-	by NALASPPMTA04.qualcomm.com (PPS) with ESMTPS id 4ef1qkccfh-1
+	by NALASPPMTA04.qualcomm.com (PPS) with ESMTPS id 4ef1qkccgb-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 29 May 2026 11:33:40 +0000 (GMT)
+	Fri, 29 May 2026 11:33:51 +0000 (GMT)
 Received: from NALASPPMTA04.qualcomm.com (NALASPPMTA04.qualcomm.com [127.0.0.1])
-	by pps.reinject (8.18.1.12/8.18.1.12) with ESMTP id 64TBTpX5009772;
-	Fri, 29 May 2026 11:33:40 GMT
+	by pps.reinject (8.18.1.12/8.18.1.12) with ESMTP id 64TBXoQi017955;
+	Fri, 29 May 2026 11:33:50 GMT
 Received: from hu-devc-lv-u22-c.qualcomm.com (hu-cang-lv.qualcomm.com [10.81.25.255])
-	by NALASPPMTA04.qualcomm.com (PPS) with ESMTPS id 64TBXdMD017899
+	by NALASPPMTA04.qualcomm.com (PPS) with ESMTPS id 64TBXoeH017953
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 29 May 2026 11:33:40 +0000 (GMT)
+	Fri, 29 May 2026 11:33:50 +0000 (GMT)
 Received: by hu-devc-lv-u22-c.qualcomm.com (Postfix, from userid 359480)
-	id C1D8F62E; Fri, 29 May 2026 04:33:39 -0700 (PDT)
+	id 3FA3E62E; Fri, 29 May 2026 04:33:50 -0700 (PDT)
 From: Can Guo <can.guo@oss.qualcomm.com>
 To: bvanassche@acm.org, beanhuo@micron.com, peter.wang@mediatek.com,
         martin.petersen@oracle.com, mani@kernel.org
-Cc: linux-scsi@vger.kernel.org, Can Guo <can.guo@oss.qualcomm.com>
-Subject: [PATCH v6 0/2] Add static TX Equalization settings support from DT
-Date: Fri, 29 May 2026 04:33:36 -0700
-Message-Id: <20260529113338.984301-1-can.guo@oss.qualcomm.com>
+Cc: linux-scsi@vger.kernel.org, Can Guo <can.guo@oss.qualcomm.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+        Nitin Rawat <quic_nitirawa@quicinc.com>,
+        Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>,
+        linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH v6 2/2] scsi: ufs: core: Add support for static TX Equalization settings
+Date: Fri, 29 May 2026 04:33:38 -0700
+Message-Id: <20260529113338.984301-3-can.guo@oss.qualcomm.com>
 X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20260529113338.984301-1-can.guo@oss.qualcomm.com>
+References: <20260529113338.984301-1-can.guo@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -64,142 +73,274 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-QCInternal: smtphost
 X-QCInternal: smtphost
-X-Proofpoint-GUID: Aal1Q9TGN4zbwzaOHoUj43FNTRFdILVt
-X-Proofpoint-ORIG-GUID: Aal1Q9TGN4zbwzaOHoUj43FNTRFdILVt
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNTI5MDExNSBTYWx0ZWRfX0/4HahgP7ljo
- 7/z/pGSbFexGxIvMl/Lx65QAIGRmiEAMHP2oStfJEocKe8xPNbvUQWGAiKxv2Sev1KcqLrBh54D
- FDDFfO3secc0CUml4aE++19lInZrFpLqpJrPV0+mPcF3a8GB4uHN8mgF5kzGGnGS84zq469WqA1
- 9DSHygmipl1Oz7ghCG0X30lcHMNaEESTA13S7/Iak9IC1XfjXqFR05hDkYOSaLwb1C9NSYPYQyp
- C1nQnJo3QlCioCLkto3DTPSJknT7Bf58uDFTDFaviDeKlVefaBfBL/5kSUyZHBztzdlBkf9ksZN
- Aj41e19kyUAmLc8Hs8UEwBe7br4ZunmogUHKYlSR7qCtdjtXFHIB3en8HTcbV9CQTKauklhC95L
- /8FXUyCDR8VK/vk3G6upioHaY3Hz6KLInYv7d+HXm4p/S/g7B7+MVztccpn7JEso4i2Z7rsEXHC
- UNQ1PJToUkeh7e3PJyg==
-X-Authority-Analysis: v=2.4 cv=cObQdFeN c=1 sm=1 tr=0 ts=6a197995 cx=c_pps
+X-Proofpoint-ORIG-GUID: hvFv86qtVkcL4Aizq7aDrKjj0f5MdP1W
+X-Authority-Analysis: v=2.4 cv=TeqmcxQh c=1 sm=1 tr=0 ts=6a1979a0 cx=c_pps
  a=ouPCqIW2jiPt+lZRy3xVPw==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
  a=NGcC8JguVDcA:10 a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22
- a=3WHJM1ZQz_JShphwDgj5:22 a=VwQbUJbxAAAA:8 a=EUspDBNiAAAA:8
- a=PU2HUsy48LbWZyxNEuoA:9
+ a=rJkE3RaqiGZ5pbrm-msn:22 a=PY6Zn8H8AAAA:8 a=EUspDBNiAAAA:8
+ a=-xlrxDLzkpAifl49RugA:9 a=ySS05r0LPNlNiX1MMvNp:22
+X-Proofpoint-GUID: hvFv86qtVkcL4Aizq7aDrKjj0f5MdP1W
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNTI5MDExNSBTYWx0ZWRfX7Xfsy6BfleAJ
+ NYMNfots76pAnesAmZzFdUwm1omE9QFQXhSFa+lktEk+lNbOPJGy0PZqurakhe2s6cXvmSDBATg
+ 3YOSzp2oMYI3lvhVyD+a/FUygolR2kIaLHqolxCflYJvdGazORxd+yVa4CcTYaQJSc2bFFlX6SW
+ lSdJE6pKMT3JZIS6cwGC+6zQg4eQCohdJt69J56bV00CZjjywyTftp/d8jKx3fj20gA4oKdhFzW
+ 4POJ1AFAMw81RCk8VC3Wn3WSYRr1M9buyLjK6q9QjnHAhwnPKdrhMTDJNn+56NLEndkCeJe81NW
+ jgPj+G8jPowFXd+iEMsK94/C0b4ZdQKRvNTLfmFp+SSaUpRnT4td7jIz+wFfvzJAb2mb5V9rymb
+ GGIholWbxLpwGNyqQcY3j45VY074gIVgnMaWTTl1nfTP6CKKEp6I6pr7tQFGujU3bVSJgLPsS2u
+ kue591K1ZZxk5BNQXtA==
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.125,FMLib:17.12.100.49
  definitions=2026-05-29_03,2026-05-28_03,2025-10-01_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- impostorscore=0 adultscore=0 clxscore=1015 spamscore=0 malwarescore=0
- phishscore=0 suspectscore=0 priorityscore=1501 lowpriorityscore=0 bulkscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2605210000 definitions=main-2605290115
+ priorityscore=1501 impostorscore=0 clxscore=1015 lowpriorityscore=0
+ spamscore=0 suspectscore=0 bulkscore=0 malwarescore=0 adultscore=0
+ phishscore=0 classifier=typeunknown authscore=0 authtc= authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2605210000
+ definitions=main-2605290115
 
-Hi,
+Static TX Equalization settings and TX Precode enable indication from DT
+properties txeq-preshoot-g[1-6], txeq-deemphasis-g[1-6], and
+tx-precode-enable-g6 are board-specific baseline values. Values are
+provided as per-lane tuples:
 
-This series adds support for board-specific static TX Equalization settings
-provided through device tree.
+<Host_Lane0 Device_Lane0>, [<Host_Lane1 Device_Lane1>]
 
-This series is based on the earlier TX Equalization enablement work and
-persistent storage/retrieval of optimal TX Equalization settings work:
-https://lore.kernel.org/all/20260325152154.1604082-1-can.guo@oss.qualcomm.com
-https://lore.kernel.org/all/20260424151420.111675-1-can.guo@oss.qualcomm.com
+Parse DT u32 properties with explicit range checks by using
+of_property_count_u32_elems()/of_property_read_u32_array().
 
-Background
-==========
+When adaptive TX Equalization is used, these static settings are not final:
 
-UFS v5.0/UFSHCI v5.0 add HS-G6 support (46.6 Gbps/lane) via UniPro v3.0
-and M-PHY v6.0. In these specs, TX Equalization is defined for all High
-Speed Gears (not only HS-G6) to compensate channel loss and improve signal
-integrity at high speed operation.
-
-For HS-G6, M-PHY uses PAM4 1b1b line coding, Pre-Coding may also be
-required depending on channel characteristics.
-
-Add vendor-neutral DT properties:
-- patternProperties: txeq-preshoot-g[1-6], txeq-deemphasis-g[1-6]
-- fixed property: tx-precode-enable-g6
-
-Each property is a uint32 array of per-lane tuples:
-<Host Lane 0 Device Lane 0>, [<Host Lane 1 Device Lane 1>]
-
-Accept 2 or 4 values (x1/x2 lane configs). PreShoot and DeEmphasis values
-are 0..7. Precode enable values are 0/1 and only applicable to HS-G6.
-These patternProperties carry board-level SI characterization data used as
-static TX Equalization settings for each High Speed Gear.
-
-Relationship with Adaptive TX Equalization
-==========================================
-
-Adaptive TX Equalization remains the primary path when enabled.
-
-Static TX Equalization settings from DT are board-specific baseline values,
-but when adaptive TX Equalization is used, static settings are not final:
 - If valid settings are retrieved from qTxEQGnSettings/wTxEQGnSettingsExt,
-those retrieved settings override static DT settings.
+  those retrieved settings override static DT settings.
 - If retrieval is not available/valid, TX EQTR runs and trained settings
-override static DT settings.
+  override static DT settings.
 
 So static DT settings are a fallback and are intended for cases where
-adaptive TX Equalization is not enabled/used.
+adaptive TX Equalization is not enabled/used. Adaptive TX Equalization
+remains the primary path when enabled.
 
 No behavior changes for platforms that do not provide these properties.
 
-What this series adds
-=====================
+Reviewed-by: Bean Huo <beanhuo@micron.com>
+Signed-off-by: Can Guo <can.guo@oss.qualcomm.com>
+---
+ drivers/ufs/core/ufs-txeq.c      |  10 ++-
+ drivers/ufs/host/ufshcd-pltfrm.c | 139 +++++++++++++++++++++++++++++++
+ include/ufs/ufshcd.h             |   2 +
+ 3 files changed, 150 insertions(+), 1 deletion(-)
 
-1. dt-bindings:
-- Document `txeq-preshoot-g[1-6]`, `txeq-deemphasis-g[1-6]`,
-  and `tx-precode-enable-g6` in `ufs-common.yaml`.
-- Define per-lane tuple format:
-  <Host_Lane0 Device_Lane0>, [<Host_Lane1 Device_Lane1>].
-- Add per-property value validation ranges in schema.
-
-2. UFS core/platform integration:
-- Parse and validate per-gear DT TX EQ settings during platform init.
-- Store parsed values into per-gear TX EQ params and mark them as static.
-- Integrate static-state handling in TX EQ flow so static entries are
-  handled through the adaptive TX Equalization path and then converted to
-  normal runtime params.
-
-
-v5 -> v6:
-- Use num_elems instead of count in the per-property validation loops for
-  clarity (patch 2).
-- Change else if (lpd > UFS_MAX_LANES) to a plain if after the !lpd early
-  return, per kernel style (patch 2).
-
-v4 -> v5:
-- Extract the body of the per-gear for-loop in ufshcd_parse_static_tx_eq_settings()
-  into a new helper ufshcd_parse_tx_eq_settings_for_gear() to reduce indentation
-  depth (patch 2).
-- Mark lpd and num_elems as const u32; rename sz to num_elems for clarity; use
-  %u format specifier to match (patch 2).
-- Replace size_t with u32 for the element-count variable (patch 2).
-- Emit dev_warn() when lanes_per_direction exceeds UFS_MAX_LANES (patch 2).
-
-v3 -> v4:
-- Add Acked-by from Manivannan Sadhasivam to patch 1.
-- Remove spurious dev_err() on the lpd guard in patch 2 (lpd == 0 is
-  normal on platforms without lanes-per-direction in DT, not an error).
-- Improve comment above the is_static condition in patch 2 to read
-  "valid but static, i.e., populated from DT" for clarity.
-
-v2 -> v3:
-- Split the DT TX EQ binding into semantically separate properties:
-  txeq-preshoot-g*, txeq-deemphasis-g*, tx-precode-enable-g6.
-- Place tx-precode-enable-g6 in `properties` (fixed key) instead of
-  `patternProperties` to satisfy dt-schema meta-schema rules.
-- Restrict precode property to HS-G6 and document per-property ranges.
-- Update the core parser to consume split properties.
-- Drop unrelated `arch/arm64/configs/defconfig` changes from patch 2.
-
-v1 -> v2:
-- Improved the commit message of patch 1.
-
-Can Guo (2):
-  dt-bindings: ufs: Document static TX Equalization settings properties
-  scsi: ufs: core: Add support for static TX Equalization settings
-
- .../devicetree/bindings/ufs/ufs-common.yaml   |  45 ++++++
- drivers/ufs/core/ufs-txeq.c                   |  10 +-
- drivers/ufs/host/ufshcd-pltfrm.c              | 139 ++++++++++++++++++
- include/ufs/ufshcd.h                          |   2 +
- 4 files changed, 195 insertions(+), 1 deletion(-)
-
+diff --git a/drivers/ufs/core/ufs-txeq.c b/drivers/ufs/core/ufs-txeq.c
+index 4b264adfdf49..b645fe5f6d95 100644
+--- a/drivers/ufs/core/ufs-txeq.c
++++ b/drivers/ufs/core/ufs-txeq.c
+@@ -1297,7 +1297,13 @@ int ufshcd_config_tx_eq_settings(struct ufs_hba *hba,
+ 	}
+ 
+ 	params = &hba->tx_eq_params[gear - 1];
+-	if (!params->is_valid || force_tx_eqtr) {
++	/*
++	 * TX EQTR must run for the following cases:
++	 * 1. TX EQ settings are invalid.
++	 * 2. TX EQ settings are valid but static, i.e., populated from DT.
++	 * 3. TX EQTR procedure is forced.
++	 */
++	if (!params->is_valid || params->is_static || force_tx_eqtr) {
+ 		int ret;
+ 
+ 		ret = ufshcd_tx_eqtr(hba, params, pwr_mode);
+@@ -1310,6 +1316,7 @@ int ufshcd_config_tx_eq_settings(struct ufs_hba *hba,
+ 		/* Mark TX Equalization settings as valid */
+ 		params->is_valid = true;
+ 		params->is_trained = true;
++		params->is_static = false;
+ 		params->is_applied = false;
+ 	}
+ 
+@@ -1495,6 +1502,7 @@ static void ufshcd_extract_tx_eq_settings_attrs(struct ufs_hba *hba, u8 gear)
+ 	}
+ 
+ 	params->is_valid = true;
++	params->is_static = false;
+ }
+ 
+ void ufshcd_retrieve_tx_eq_settings(struct ufs_hba *hba)
+diff --git a/drivers/ufs/host/ufshcd-pltfrm.c b/drivers/ufs/host/ufshcd-pltfrm.c
+index c2dafb583cf5..fc6aa91b6210 100644
+--- a/drivers/ufs/host/ufshcd-pltfrm.c
++++ b/drivers/ufs/host/ufshcd-pltfrm.c
+@@ -210,6 +210,143 @@ static void ufshcd_init_lanes_per_dir(struct ufs_hba *hba)
+ 	}
+ }
+ 
++/**
++ * ufshcd_parse_tx_eq_settings_for_gear - Parse static TX EQ DT settings for one gear
++ * @hba: per adapter instance
++ * @gear: target HS gear
++ * @num_elems: expected number of elements per property
++ *
++ * Reads the txeq-preshoot-gN, txeq-deemphasis-gN, and (for G6)
++ * tx-precode-enable-gN device-tree properties and, if all are valid, stores
++ * them as static TX Equalization settings for the given gear.
++ */
++static void ufshcd_parse_tx_eq_settings_for_gear(struct ufs_hba *hba,
++						 int gear, const u32 num_elems)
++{
++	u32 precode_en[UFS_MAX_LANES * 2] = { 0 };
++	const u32 lpd = hba->lanes_per_direction;
++	struct ufshcd_tx_eq_params *params;
++	u32 deemphasis[UFS_MAX_LANES * 2];
++	u32 preshoot[UFS_MAX_LANES * 2];
++	struct device *dev = hba->dev;
++	char prop_name[MAX_PROP_SIZE];
++	int i, err, lane, count;
++
++	snprintf(prop_name, MAX_PROP_SIZE, "txeq-preshoot-g%d", gear);
++	count = of_property_count_u32_elems(dev->of_node, prop_name);
++	if (count <= 0)
++		return;
++
++	if (count != num_elems) {
++		dev_err(dev, "Property %s has invalid count (%d), expecting %u\n",
++			prop_name, count, num_elems);
++		return;
++	}
++
++	err = of_property_read_u32_array(dev->of_node, prop_name, preshoot, num_elems);
++	if (err) {
++		dev_err(dev, "Failed to read %s property, %d\n", prop_name, err);
++		return;
++	}
++
++	for (i = 0; i < num_elems; i++) {
++		if (preshoot[i] >= TX_HS_NUM_PRESHOOT) {
++			dev_err(dev, "An invalid TX EQ PreShoot (%d) provided in %s property\n",
++				preshoot[i], prop_name);
++			return;
++		}
++	}
++
++	snprintf(prop_name, MAX_PROP_SIZE, "txeq-deemphasis-g%d", gear);
++	count = of_property_count_u32_elems(dev->of_node, prop_name);
++	if (count <= 0) {
++		dev_err(dev, "Missing required %s property\n", prop_name);
++		return;
++	}
++
++	if (count != num_elems) {
++		dev_err(dev, "Property %s has invalid count (%d), expecting %u\n",
++			prop_name, count, num_elems);
++		return;
++	}
++
++	err = of_property_read_u32_array(dev->of_node, prop_name, deemphasis, num_elems);
++	if (err) {
++		dev_err(dev, "Failed to read %s property, %d\n", prop_name, err);
++		return;
++	}
++
++	for (i = 0; i < num_elems; i++) {
++		if (deemphasis[i] >= TX_HS_NUM_DEEMPHASIS) {
++			dev_err(dev, "An invalid TX EQ DeEmphasis (%d) provided in %s property\n",
++				deemphasis[i], prop_name);
++			return;
++		}
++	}
++
++	if (gear == UFS_HS_G6) {
++		snprintf(prop_name, MAX_PROP_SIZE, "tx-precode-enable-g%d", gear);
++		count = of_property_count_u32_elems(dev->of_node, prop_name);
++		if (count > 0) {
++			if (count != num_elems) {
++				dev_err(dev, "Property %s has invalid count (%d), expecting %u\n",
++					prop_name, count, num_elems);
++				return;
++			}
++
++			err = of_property_read_u32_array(dev->of_node, prop_name,
++							 precode_en, num_elems);
++			if (err) {
++				dev_err(dev, "Failed to read %s property, %d\n",
++					prop_name, err);
++				return;
++			}
++
++			for (i = 0; i < num_elems; i++) {
++				if (precode_en[i] > 1) {
++					dev_err(dev, "An invalid PrecodeEn (%d) provided in %s property\n",
++						precode_en[i], prop_name);
++					return;
++				}
++			}
++		}
++	}
++
++	params = &hba->tx_eq_params[gear - 1];
++	for (lane = 0; lane < lpd; lane++) {
++		params->host[lane].preshoot = preshoot[lane * 2];
++		params->host[lane].deemphasis = deemphasis[lane * 2];
++		params->host[lane].precode_en = precode_en[lane * 2];
++
++		params->device[lane].preshoot = preshoot[lane * 2 + 1];
++		params->device[lane].deemphasis = deemphasis[lane * 2 + 1];
++		params->device[lane].precode_en = precode_en[lane * 2 + 1];
++	}
++
++	params->is_valid = true;
++	params->is_static = true;
++}
++
++static void ufshcd_parse_static_tx_eq_settings(struct ufs_hba *hba)
++{
++	const u32 lpd = hba->lanes_per_direction;
++	const u32 num_elems = lpd * 2;
++	int gear;
++
++	if (!lpd) {
++		return;
++	}
++
++	if (lpd > UFS_MAX_LANES) {
++		dev_warn(hba->dev, "lanes_per_direction (%u) exceeds UFS_MAX_LANES (%u)\n",
++			 lpd, UFS_MAX_LANES);
++		return;
++	}
++
++	for (gear = UFS_HS_G1; gear <= UFS_HS_GEAR_MAX; gear++)
++		ufshcd_parse_tx_eq_settings_for_gear(hba, gear, num_elems);
++}
++
+ /**
+  * ufshcd_parse_clock_min_max_freq  - Parse MIN and MAX clocks freq
+  * @hba: per adapter instance
+@@ -528,6 +665,8 @@ int ufshcd_pltfrm_init(struct platform_device *pdev,
+ 
+ 	ufshcd_init_lanes_per_dir(hba);
+ 
++	ufshcd_parse_static_tx_eq_settings(hba);
++
+ 	err = ufshcd_parse_operating_points(hba);
+ 	if (err) {
+ 		dev_err(dev, "%s: OPP parse failed %d\n", __func__, err);
+diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
+index f48d6416e299..c01824576472 100644
+--- a/include/ufs/ufshcd.h
++++ b/include/ufs/ufshcd.h
+@@ -359,6 +359,7 @@ struct ufshcd_tx_eqtr_record {
+  * @is_valid: True if parameter contains valid TX Equalization settings
+  * @is_applied: True if settings have been applied to UniPro of both sides
+  * @is_trained: True if parameters obtained from TX EQTR procedure
++ * @is_static: True if settings are static
+  */
+ struct ufshcd_tx_eq_params {
+ 	struct ufshcd_tx_eq_settings host[UFS_MAX_LANES];
+@@ -367,6 +368,7 @@ struct ufshcd_tx_eq_params {
+ 	bool is_valid;
+ 	bool is_applied;
+ 	bool is_trained;
++	bool is_static;
+ };
+ 
+ /**
 -- 
 2.34.1
 
