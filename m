@@ -1,47 +1,47 @@
-Received: from canpmsgout11.his.huawei.com (canpmsgout11.his.huawei.com [113.46.200.226])
+Received: from canpmsgout04.his.huawei.com (canpmsgout04.his.huawei.com [113.46.200.219])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D31641B4F1F;
-	Sat, 30 May 2026 02:51:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.226
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 916FC20ED;
+	Sat, 30 May 2026 02:51:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.219
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780109507; cv=none; b=Jh0Ev4s3Aaijn6U7q5dgGgTDmcS2jIiC5HXYRy5jxEflG5QFMmIYlk0cH5CWBz5MKM+2ezhO900kHHHaWfK3S28p+f4qHuhFxtPb8CbmNCE1FBH2qkBRJfu6vui/DsBAIY5AWOotrkAv+3D8/gZxkX9DVkspJHdny2ADYtGrjP4=
+	t=1780109507; cv=none; b=P8dBkuc2wis/Pe48UNb0x8HoAa8Lp5uvOY+ME4QgJ2RqwDh+TEFOhSBMNpUr97eXJFBcvIcAio5Vh+TvTYS8BXHX2EZV57ivelm8Ma0ODkJSo0neGad5KVb64T4PFlZetBatWvd2RNH8SqVzsikgnIKINd+/YhrjTeRtw+74rxo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1780109507; c=relaxed/simple;
-	bh=vlcyG20a44xK5NP4c5hbAi30HisFbU79Yg9eRc0mvbk=;
+	bh=EFG/iQaBXXP+DusiWKq81bHf2W4ixTBrCHyUwVzINcQ=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=ImziCWYabU9mPwKkd8kovHyI0QALvmjddUaURDcJl6qWwfZHyGgbV84lLCQlfLIWQ0txDlHwQsNtANJSsKMAHR7gYKP/AS/BS01iD0Yh7fDacwxL+EYX7dz78e5BSo65VbgpaKm0q14UuOHUbPbOtRAApptH73rO5d4+xuFPuII=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=h-partners.com; dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b=HS3b8kIR; arc=none smtp.client-ip=113.46.200.226
+	 MIME-Version:Content-Type; b=CIDQo/SBNnmeLxMsm+iBefGN4HDU+PcnkTPVYScLM1St/lWFTC46qpRHEGv5x72Vzkki+LFdWhvjI9AjTupWk9DUx8TlRfTsRBMmF+0wAp4Ubi3xC662y+JddWXvQ2RIsc7nseMs+WaxjDEodyXQuS9Mf2i08Id6k75bYWi3bgs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=h-partners.com; dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b=Qg2K+xKC; arc=none smtp.client-ip=113.46.200.219
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=h-partners.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b="HS3b8kIR"
+	dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b="Qg2K+xKC"
 dkim-signature: v=1; a=rsa-sha256; d=h-partners.com; s=dkim;
 	c=relaxed/relaxed; q=dns/txt;
 	h=From;
-	bh=gEIvW/6wtZnScM7ws+i7IkXSapQJNZN2tini6VXnhhg=;
-	b=HS3b8kIRVbrL4V5eFfTDFb0GXN+X3pbxUAibaEKzR3qmy9BXYZC7YENkizK8Q0lh6WrXEMyLN
-	mK/ZdGdtJoAowq2GktW+yvwqj+szmf4/NH8ylXh3fYw52lBWPbjtwK2TPsGnqKMM/enK6KSRS2/
-	3ubRxCXlQ+vmX4trNHlhujE=
-Received: from mail.maildlp.com (unknown [172.19.163.200])
-	by canpmsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4gS4Ks53hfzKm6k;
-	Sat, 30 May 2026 10:43:45 +0800 (CST)
+	bh=RMFOUU7k7mkNvJvM/qymw/jR59axjzjEhPWy9hDZ+t4=;
+	b=Qg2K+xKCvOVeOADnv2/AnDYxY3JAp5Lzb63lgGzkGSz6daXj410i8g+p666JF0Cd6oaAh3i2k
+	52So2rVIWHkk1yDtRzPx5SBwcRSixMEHZE36weGqeAGYbzteodumnTMm+EqYMOi/XtXbMs7gbuR
+	BtmXwY4e3YJRW5OuHEVNFyw=
+Received: from mail.maildlp.com (unknown [172.19.162.197])
+	by canpmsgout04.his.huawei.com (SkyGuard) with ESMTPS id 4gS4Kt0SFGz1prk3;
+	Sat, 30 May 2026 10:43:46 +0800 (CST)
 Received: from kwepemj100018.china.huawei.com (unknown [7.202.194.12])
-	by mail.maildlp.com (Postfix) with ESMTPS id 7DDD040563;
+	by mail.maildlp.com (Postfix) with ESMTPS id DCF6C40569;
 	Sat, 30 May 2026 10:51:35 +0800 (CST)
 Received: from localhost.localdomain (10.50.163.32) by
  kwepemj100018.china.huawei.com (7.202.194.12) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.36; Sat, 30 May 2026 10:51:34 +0800
+ 15.2.1544.36; Sat, 30 May 2026 10:51:35 +0800
 From: Xingui Yang <yangxingui@huawei.com>
 To: <john.g.garry@oracle.com>, <yanaijie@huawei.com>, <jejb@linux.ibm.com>,
 	<martin.petersen@oracle.com>
 CC: <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
 	<linuxarm@huawei.com>, <liyihang9@h-partners.com>, <yangxingui@huawei.com>,
 	<liuyonglong@huawei.com>, <kangfenglong@huawei.com>
-Subject: [PATCH v5 1/2] scsi: libsas: refactor sas_ex_to_ata() using new helper sas_ex_to_dev()
-Date: Sat, 30 May 2026 10:49:57 +0800
-Message-ID: <20260530024958.3279112-2-yangxingui@huawei.com>
+Subject: [PATCH v5 2/2] scsi: libsas: Add linkrate and sas_addr change detection in rediscover
+Date: Sat, 30 May 2026 10:49:58 +0800
+Message-ID: <20260530024958.3279112-3-yangxingui@huawei.com>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20260530024958.3279112-1-yangxingui@huawei.com>
 References: <20260530024958.3279112-1-yangxingui@huawei.com>
@@ -56,66 +56,141 @@ Content-Type: text/plain
 X-ClientProxiedBy: kwepems200002.china.huawei.com (7.221.188.68) To
  kwepemj100018.china.huawei.com (7.202.194.12)
 
-The sas_ex_to_ata() function checks for an attached ATA device on an
-expander phy. Refactor it to use a new helper function sas_ex_to_dev()
-which returns any device type attached to an expander phy, improving code
-reuse and allowing other code paths to find attached devices regardless
-of type.
+In sas_rediscover_dev(), when detecting a "flutter" condition (same SAS
+address and compatible device type), the code assumes the device remains
+unchanged and only handles SATA pending state recovery. However, this
+approach misses two important scenarios:
 
-No functional changes intended.
+First, the flutter detection only compares SAS address and device type,
+ignoring potential linkrate changes that may have already occurred.
+
+Second, after sas_ex_phy_discover() re-queries the expander phy, both
+linkrate and attached SAS address may be updated. The current code does
+not validate these changes against the existing child device.
+
+Additionally, the replace code path (different SAS address detected)
+has a sysfs duplication issue: sas_unregister_devs_sas_addr() only marks
+the device as gone, but the actual sysfs cleanup happens later in
+sas_destruct_devices(). Calling sas_discover_new() immediately after
+unregister causes sysfs_warn_dup() errors.
+
+Introduce sas_dev_is_flutter() to check whether it is a true flutter with
+validation for linkrate and sas_addr changes. It returns true for normal
+flutter and false when changes are detected requiring rediscovery.
+
+Introduce sas_rediscover_ex_phy() to handle async rediscovery for both
+flutter and replace cases. When invoked:
+- Set phy_change_count and ex_change_count to -1 to force revalidation
+- Unregister the device via sas_unregister_devs_sas_addr()
+- Queue DISCE_REVALIDATE_DOMAIN event
+
+The old device sysfs is cleaned up by sas_destruct_devices() at the end
+of current revalidation work. The new event triggers discovery via
+sas_discover_new() since attached_sas_addr is cleared, avoiding the
+sysfs duplication issue.
 
 Signed-off-by: Xingui Yang <yangxingui@huawei.com>
-Reviewed-by: John Garry <john.g.garry@oracle.com>
-Reviewed-by: Jason Yan <yanaijie@huawei.com>
+Suggested-by: John Garry <john.g.garry@oracle.com>
 ---
- drivers/scsi/libsas/sas_expander.c | 12 ++++++++----
- drivers/scsi/libsas/sas_internal.h |  1 +
- 2 files changed, 9 insertions(+), 4 deletions(-)
+ drivers/scsi/libsas/sas_expander.c | 71 ++++++++++++++++++++++++------
+ 1 file changed, 57 insertions(+), 14 deletions(-)
 
 diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
-index f471ab464a78..f55ae9a979cd 100644
+index f55ae9a979cd..7246e41aee12 100644
 --- a/drivers/scsi/libsas/sas_expander.c
 +++ b/drivers/scsi/libsas/sas_expander.c
-@@ -345,11 +345,9 @@ static void sas_set_ex_phy(struct domain_device *dev, int phy_id,
- 		 SAS_ADDR(phy->attached_sas_addr), type);
+@@ -1962,6 +1962,60 @@ static bool dev_type_flutter(enum sas_device_type new, enum sas_device_type old)
+ 	return false;
  }
  
--/* check if we have an existing attached ata device on this expander phy */
--struct domain_device *sas_ex_to_ata(struct domain_device *ex_dev, int phy_id)
-+struct domain_device *sas_ex_to_dev(struct domain_device *ex_dev, int phy_id)
- {
- 	struct ex_phy *ex_phy = &ex_dev->ex_dev.ex_phy[phy_id];
--	struct domain_device *dev;
- 	struct sas_rphy *rphy;
- 
- 	if (!ex_phy->port)
-@@ -359,7 +357,13 @@ struct domain_device *sas_ex_to_ata(struct domain_device *ex_dev, int phy_id)
- 	if (!rphy)
- 		return NULL;
- 
--	dev = sas_find_dev_by_rphy(rphy);
-+	return sas_find_dev_by_rphy(rphy);
++static void sas_rediscover_ex_phy(struct domain_device *dev, int phy_id,
++				  bool last)
++{
++	struct expander_device *ex = &dev->ex_dev;
++	struct ex_phy *phy = &ex->ex_phy[phy_id];
++
++	phy->phy_change_count = -1;
++	ex->ex_change_count = -1;
++	sas_unregister_devs_sas_addr(dev, phy_id, last);
++	sas_discover_event(dev->port, DISCE_REVALIDATE_DOMAIN);
 +}
 +
-+/* check if we have an existing attached ata device on this expander phy */
-+struct domain_device *sas_ex_to_ata(struct domain_device *ex_dev, int phy_id)
++static bool sas_dev_is_flutter(struct domain_device *dev, int phy_id,
++			       u8 *sas_addr, enum sas_device_type type)
 +{
-+	struct domain_device *dev = sas_ex_to_dev(ex_dev, phy_id);
++	struct expander_device *ex = &dev->ex_dev;
++	struct ex_phy *phy = &ex->ex_phy[phy_id];
++	struct domain_device *child_dev;
++	char *action = "";
++	int res;
++
++	if (SAS_ADDR(sas_addr) != SAS_ADDR(phy->attached_sas_addr) ||
++	    !dev_type_flutter(type, phy->attached_dev_type))
++		return false;
++
++	child_dev = sas_ex_to_dev(dev, phy_id);
++	if (!child_dev)
++		goto out;
++
++	res = sas_ex_phy_discover(dev, phy_id);
++	if (res)
++		return false;
++
++	if (dev_is_sata(child_dev) &&
++	    phy->attached_dev_type == SAS_SATA_PENDING) {
++		action = ", needs recovery";
++	} else if (child_dev->linkrate != phy->linkrate) {
++		pr_info("ex %016llx phy%02d linkrate changed from %d to %d\n",
++			SAS_ADDR(dev->sas_addr), phy_id,
++			child_dev->linkrate, phy->linkrate);
++		return false;
++	} else if (SAS_ADDR(child_dev->sas_addr) != SAS_ADDR(phy->attached_sas_addr)) {
++		pr_info("ex %016llx phy%02d sas_addr changed from %016llx to %016llx\n",
++			SAS_ADDR(dev->sas_addr), phy_id,
++			SAS_ADDR(child_dev->sas_addr),
++			SAS_ADDR(phy->attached_sas_addr));
++		return false;
++	}
++out:
++	pr_debug("ex %016llx phy%02d broadcast flutter%s\n",
++		 SAS_ADDR(dev->sas_addr), phy_id, action);
++	return true;
++}
++
+ static int sas_rediscover_dev(struct domain_device *dev, int phy_id,
+ 			      bool last, int sibling)
+ {
+@@ -2015,27 +2069,16 @@ static int sas_rediscover_dev(struct domain_device *dev, int phy_id,
+ 		if (res == 0)
+ 			sas_set_ex_phy(dev, phy_id, disc_resp);
+ 		goto out_free_resp;
+-	} else if (SAS_ADDR(sas_addr) == SAS_ADDR(phy->attached_sas_addr) &&
+-		   dev_type_flutter(type, phy->attached_dev_type)) {
+-		struct domain_device *ata_dev = sas_ex_to_ata(dev, phy_id);
+-		char *action = "";
+-
+-		sas_ex_phy_discover(dev, phy_id);
++	}
  
- 	if (dev && dev_is_sata(dev))
- 		return dev;
-diff --git a/drivers/scsi/libsas/sas_internal.h b/drivers/scsi/libsas/sas_internal.h
-index 7dce0f587149..350a70484bde 100644
---- a/drivers/scsi/libsas/sas_internal.h
-+++ b/drivers/scsi/libsas/sas_internal.h
-@@ -91,6 +91,7 @@ int sas_smp_get_phy_events(struct sas_phy *phy);
+-		if (ata_dev && phy->attached_dev_type == SAS_SATA_PENDING)
+-			action = ", needs recovery";
+-		pr_debug("ex %016llx phy%02d broadcast flutter%s\n",
+-			 SAS_ADDR(dev->sas_addr), phy_id, action);
++	if (sas_dev_is_flutter(dev, phy_id, sas_addr, type))
+ 		goto out_free_resp;
+-	}
  
- void sas_device_set_phy(struct domain_device *dev, struct sas_port *port);
- struct domain_device *sas_find_dev_by_rphy(struct sas_rphy *rphy);
-+struct domain_device *sas_ex_to_dev(struct domain_device *ex_dev, int phy_id);
- struct domain_device *sas_ex_to_ata(struct domain_device *ex_dev, int phy_id);
- int sas_ex_phy_discover(struct domain_device *dev, int single);
- int sas_get_report_phy_sata(struct domain_device *dev, int phy_id,
+ 	/* we always have to delete the old device when we went here */
+ 	pr_info("ex %016llx phy%02d replace %016llx\n",
+ 		SAS_ADDR(dev->sas_addr), phy_id,
+ 		SAS_ADDR(phy->attached_sas_addr));
+-	sas_unregister_devs_sas_addr(dev, phy_id, last);
+-
+-	res = sas_discover_new(dev, phy_id);
++	sas_rediscover_ex_phy(dev, phy_id, last);
+ out_free_resp:
+ 	kfree(disc_resp);
+ 	return res;
 -- 
 2.43.0
 
