@@ -1,267 +1,180 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f48.google.com (mail-wm1-f48.google.com [209.85.128.48])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7CF2F2F3621
-	for <linux-scsi@vger.kernel.org>; Sat, 30 May 2026 13:57:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E6B717A2F6
+	for <linux-scsi@vger.kernel.org>; Sat, 30 May 2026 14:03:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.48
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780149478; cv=none; b=pgTCAXQiH3w01ZiT3zVfH3RW1y0OIM+sSdtNzyl8r6LnokC1yOZH07o5n3a0Heb+Ew5pykfnVSKzZQ0WdRvP3idr1mDy5PkRqSiv10KOyotALrlplLWJPHbhvxYf8eGc7mG1BIEiegoxX3ANmV/Z0I28T8FQxTW6O+XFXhdevxk=
+	t=1780149833; cv=none; b=BxEYWMwBz8dQwU49pM9YCnQdXxmPDpt6KMokOFZ3rQhLUY+tB3mTi7UuMXT+iYSp45FX+BDisSvAYM6zsjL+7rFtD7uxDk56abKQBVSBjjpbKSl3XlH+xoXV9EgxDXZviR3xYiTeMUmKlQ8MS3L8D6k8xJ2j8n1E6kfdMFuQPs0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780149478; c=relaxed/simple;
-	bh=3JkTCQgiH3LxrL3vazE20yrW65gmotpbptgLugSPFxE=;
-	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
-	 In-Reply-To:Content-Type; b=DYbaqEUXun61qy/6nhTzZhuvx3G4fPRmgXpdU6RtvUAPtrFcQJIk+ucjr/bjFovrthM74A6tNwBHZbZa1YbS/j/pszQhQfvgrZbakm17GM5v/X3zIb6eyXckHT6Q0SSKLYI16M+vujjXVTGZxNRrklH94Nr/s5OUmgHn9OVRr4w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=bzxEthrp; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=I+rSQQBv; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	s=arc-20240116; t=1780149833; c=relaxed/simple;
+	bh=ZdV21FAQ6FfUbG/FwtwVOCiY+WKE6K02yGhSDAPUDPc=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=hlZeT8xzLDaE0wCai83CwW9r80p0rsnjfzzpuAyE5zoBWdzpLbuNDW0LgMszLmDWCiRiR0RRzObXe+AxRcGyMHd9SCVxCTf/qqj7Rw+LQIDGHqFpIjkACA2wUMJq4rfIXSTp2XcdrrgPmGRUI+J6o+GJhuCn8W4avYwyvieqFE0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Lxji/7Ml; arc=none smtp.client-ip=209.85.128.48
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="bzxEthrp";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="I+rSQQBv"
-Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 64U3k8aH1758088
-	for <linux-scsi@vger.kernel.org>; Sat, 30 May 2026 13:57:56 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	wyfGzEjL9T0vealm6OZP5o97m37ViNP+EY8gC06YbN0=; b=bzxEthrpwQ2pHhnC
-	mXbdLD543QfAL0YPQACuqoLErzbiPmGmLK1F83dQzicPXablwtcUpB0CmOzQ4/Ej
-	/o85P/EnhUT5Jr72fA92EBsbLovboI69RstSVEjSaYjawP5owiUfpEqtVP3itFkT
-	bwBpdTqIm/sCLD+ffq0iAdOe4fjaOmdL6j6iGg3NZAgKGtvVQ0GQxgd++r2ArBKY
-	Uu6FNeoStb52siXH9bVGNIGAltQwkfIIjzwD+Sdr63BrQtsanHiQEoi9AEA1OP9H
-	5AxM50aPa4JS8+ibUZgElClEFOpcel7BFu9ssKSsSfgRmMGN/zMl7yJEcWhpTRs7
-	TjYPAA==
-Received: from mail-pj1-f72.google.com (mail-pj1-f72.google.com [209.85.216.72])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4efr9890u9-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Sat, 30 May 2026 13:57:56 +0000 (GMT)
-Received: by mail-pj1-f72.google.com with SMTP id 98e67ed59e1d1-3663cbff31cso10432583a91.2
-        for <linux-scsi@vger.kernel.org>; Sat, 30 May 2026 06:57:56 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Lxji/7Ml"
+Received: by mail-wm1-f48.google.com with SMTP id 5b1f17b1804b1-4905e190c71so76879245e9.3
+        for <linux-scsi@vger.kernel.org>; Sat, 30 May 2026 07:03:52 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1780149475; x=1780754275; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:content-language:references
-         :cc:to:from:subject:user-agent:mime-version:date:message-id:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=wyfGzEjL9T0vealm6OZP5o97m37ViNP+EY8gC06YbN0=;
-        b=I+rSQQBvJ3WKQ+26x1mt+Js0Biz5ceGMCMUCkO480Qnwh1+O2qbxld1UnSXu6zrHck
-         KKEsvY+8qyqNEcG6dbWJZqWHzg1UtcgfxBU42Rx/KqDyGFexfNZE5DYw0XfPawMBAF6k
-         O1RiPXfiGcWmr+h8CtcMEIV/leYCCivNfY4k+O0KM0crkwNqznsx729WRTVAAQf6h2tY
-         WTNQm+XluEMr+4FRmtMVgs9tKbD2LYUV06tr03fMi7KurMKz/lPTSNYSfHljla5OOzwx
-         nuNE6DD9rrThXOPcpoXkgZSQ76zNONmDb80gbTMpep9AqoHR875RGjyW54BFhPOFRfw9
-         RDug==
+        d=gmail.com; s=20251104; t=1780149831; x=1780754631; darn=vger.kernel.org;
+        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=N7AqBN4NC5EGll9YHhMJnBpsZ57jgRyRTy4tKAk75xk=;
+        b=Lxji/7Ml0vRncEY5hTJ0n9mWDUVh733ayykX4D5srPWX5YdbJYz7kHKRlR5fIqZrhF
+         i39QHycHg75r/V7RRa9HyT7y82dWS2lgLtQernxCX3EdXo1onh8iArxPjNAaRdN2D9a2
+         61wO02sLTcKcV0gcwTHWPB+AJec96RAbLcfiDcJH5MBYDY5kuty4kQVc2+KorB84Rlcx
+         duGYrI4aA796m/m/yndEkJ1g0D7l9zZw/gNy2Z0RNVSoUom+584rl8Sn7DnHWtm9O5vs
+         5Ejt2WaUrKBfyn0XTczCDzohb9H3hBQ+hibXE2NvX3rIY2LxK8+p70imFmEYaW6awKU7
+         Jqdw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1780149475; x=1780754275;
-        h=content-transfer-encoding:in-reply-to:content-language:references
-         :cc:to:from:subject:user-agent:mime-version:date:message-id:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=wyfGzEjL9T0vealm6OZP5o97m37ViNP+EY8gC06YbN0=;
-        b=nl1Cg7M9wkquA8PwsJowsXOSgsq+HT4PyQRLGJPRxsd85FzWsui+/uPLZJM4xO9pn2
-         S2fNAr5uO1521BqGzPpxkuFqMNiosH/kRprVcEyhnrUPv5K0ecq154ncMktWhnw8auAJ
-         wtcl/6jSe91gQdTJc5vJWhu6s2d5RISIGu/UekdTY71K4CKMJtiTVBrm42ucA/p0SUwd
-         VgyGDRFXjJ1qEqKPTndTfPazJ+xjQubjOzIUdjoWiOzXC39WJEmy0gQ1tDJpIYrQ3HWL
-         73Vk52J7kMrwMMKujSylL5M1zowqh/UFxJsJ2lq+nzbThHQrHSDliGx3f38JZVT7MRHT
-         81fA==
-X-Forwarded-Encrypted: i=1; AFNElJ+VGiIk+jALxmIYxEv9Hubco7DMJjrWmMYimZ8+1snJbzibwrla+fp/avibSp5h2B3KMlBOlFiu0sUj@vger.kernel.org
-X-Gm-Message-State: AOJu0Yx2EQGifUFNDAJ15yHwM0/aj+7pxS/NM/NqUPS6HpbyoIXebIAQ
-	7HIjWB+YzEUHltJEQ7MpRgQf1lQgtBNXUP7tv8rT8VTrByAhkk2Ecl+8koLOB+QF5dcKR2PkkZf
-	HT9KpQ0/RjELZ8IjQzSTCBfUJuqTtWDs9SpS66oiOWwH3coenLCr47owtZMnfHo6U
-X-Gm-Gg: Acq92OEWP0W6Q5SvF5iuKlBVtvG2P/sX0yCduXXzkzt9eSqfhpBamKthgh5/pXloTDR
-	0/lEf9QC4RXhcMZrDshmyKP8Zi84qfKxs8be1KyA+D2JMkOhNZhs02hdPoI1sOV626w6bU/MND/
-	uaodHpnUcYKkMIjpZZGPEibJt78ZUtYl5xWcroC7PPypX+wLKsfDkta3bI+Q8ts7F+oN16UyIpU
-	tR0eqyVjyAm8jeSJjeDpGdG7oRDAJWgGT4qeCKKLYOpyn1Fe/h8LRA7r29PxAKp8DSVd4hyk/pm
-	s4pUc2n1R5/K9naTQl2FnBOvR3TueRcTSbezWwPCJjrWH5Fcf/fw8T9/pmJyhhU4QsNUl03QCmr
-	rSxidvpiwdVMHjGGYBedJH/FmF+SWjBbkKB/TU2iLUCm4bS8XjVajZZT1FCSfSOvCl8i9ssFee/
-	E0RNSefUKVHXom6VTTWvwZ
-X-Received: by 2002:a17:90b:5704:b0:36b:9c4a:e05d with SMTP id 98e67ed59e1d1-36c501ce691mr3673535a91.17.1780149475473;
-        Sat, 30 May 2026 06:57:55 -0700 (PDT)
-X-Received: by 2002:a17:90b:5704:b0:36b:9c4a:e05d with SMTP id 98e67ed59e1d1-36c501ce691mr3673524a91.17.1780149474988;
-        Sat, 30 May 2026 06:57:54 -0700 (PDT)
-Received: from [10.133.33.28] (tpe-colo-wan-fw-bordernet.qualcomm.com. [103.229.16.4])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-36bbffc1879sm5653053a91.5.2026.05.30.06.57.41
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 30 May 2026 06:57:54 -0700 (PDT)
-Message-ID: <dff3c74f-0c46-4ac1-914a-9ea8bd40316c@oss.qualcomm.com>
-Date: Sat, 30 May 2026 21:57:37 +0800
+        d=1e100.net; s=20251104; t=1780149831; x=1780754631;
+        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=N7AqBN4NC5EGll9YHhMJnBpsZ57jgRyRTy4tKAk75xk=;
+        b=cv4JF7dtaZA726bXvK0dCWXGsyRxnd9nbSETNVu84fBNF08yaTe0fXCVU7q72LV3Mv
+         TKAIU7wv4f4FOisBj2upvokjx+cfEsNyeI7WvyOUOMtB2nGS4wytuUWLaMAB/+HJEaIO
+         61xD0NnqCGmTXrxGVnN4akkMc3p0jIoz5ljXCUxy+7zrOBE0x+SN10F93qM4xpvzZJmE
+         dBU79dUWPbDWeGCUajc9QCnOEuvvjW3jHNk61w2rKvfZcP2DItwb7Py3qx9yKfgNkzXI
+         jDKLjtuFo8DO0wljIEjTwZw5UkL5RfZupgvPu0pJSq45v7Sha9IvlQ7lpLmYj/XiOLNN
+         IovA==
+X-Forwarded-Encrypted: i=1; AFNElJ8XXcdG98vxoWxLR0WnHmJMlb7rEbuRTYo+6B6CVB3l3ha5n6nZegXv9UrdeDHbDFCeQKelVJilXNFs@vger.kernel.org
+X-Gm-Message-State: AOJu0YwzG4ClSC+IKhSzCJCelClZLdOi6XelBNX1TIQ/ORif5dqciUFM
+	on3chnQIGLI+BQU/Hc3S5X0e4891hz2Z7xSOjuCrLDOFy8kjPNpPnKbV
+X-Gm-Gg: Acq92OFwymo7jVFKlCRg2s9YLoSf1Iy0UY9yS5BpbLJnv7OQbCgxh3WoZfgzTe7ZLYp
+	yvO0WUvPG8UC8hgw+49+gowoquQrnhsx9p7akaHpBM4/gqS/1QQlEWQ4KPjEhIQMWMgPH+vD15l
+	YhJlGYNlpvzn83Kb12qiPiBAt0q+pzXJXo5wbkMijagNQrdrxBvo6GGAQRzshj3FZLcjHKvJr0b
+	KZWp1xP/FSZfDjiyNibm+uLpHy18ilAK1z+Qf09IKfq5mYWKQGyehvCxTV0BZ1VzckO6GbDxD7b
+	FawCroJGxG3q+yGOCCsawgwybmep4vVULM195UdJymTViaiLPfMvz6DPmrCVwdvS0J1yy/dJyTe
+	FrCcf0h5KhAmfjLIRUsO1w3Y2DcbiI858EmYEO2AWOpaWmI4wfK/JZA56EFinn4Des1ICbnqxCf
+	Rr8cdKNS5hPaP/7LG7MO8Y1O/FQz4MGFX/NQ==
+X-Received: by 2002:a05:600c:3552:b0:48a:8b02:ae91 with SMTP id 5b1f17b1804b1-490a29e43bemr61272475e9.11.1780149830642;
+        Sat, 30 May 2026 07:03:50 -0700 (PDT)
+Received: from localhost ([196.207.164.177])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4909c12b2dbsm48875825e9.6.2026.05.30.07.03.49
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 30 May 2026 07:03:49 -0700 (PDT)
+Date: Sat, 30 May 2026 17:03:46 +0300
+From: Dan Carpenter <error27@gmail.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
+Subject: [bug report] scsi: megaraid_mbox: Reduce stack usage in
+ megaraid_cmm_register()
+Message-ID: <ahruQrDsEDQO8RAP@stanley.mountain>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v6 1/2] dt-bindings: ufs: Document static TX Equalization
- settings properties
-From: Can Guo <can.guo@oss.qualcomm.com>
-To: Krzysztof Kozlowski <krzk@kernel.org>
-Cc: bvanassche@acm.org, beanhuo@micron.com, peter.wang@mediatek.com,
-        martin.petersen@oracle.com, mani@kernel.org,
-        linux-scsi@vger.kernel.org, Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>, Rob Herring <robh@kernel.org>,
-        Krzysztof Kozlowski <krzk+dt@kernel.org>,
-        Conor Dooley <conor+dt@kernel.org>,
-        Matthias Brugger
- <matthias.bgg@gmail.com>,
-        AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
-        Zhaoming Luo <zhml@posteo.com>,
-        Ram Kumar Dwivedi
- <quic_rdwivedi@quicinc.com>,
-        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS"
- <devicetree@vger.kernel.org>,
-        open list <linux-kernel@vger.kernel.org>,
-        "moderated list:ARM/Mediatek SoC support:Keyword:mediatek"
- <linux-arm-kernel@lists.infradead.org>,
-        "moderated list:ARM/Mediatek SoC support:Keyword:mediatek"
- <linux-mediatek@lists.infradead.org>
-References: <20260529113338.984301-1-can.guo@oss.qualcomm.com>
- <20260529113338.984301-2-can.guo@oss.qualcomm.com>
- <20260529-neat-bright-shellfish-eab5e8@quoll>
- <ada65ce2-6736-44fe-9396-d3ed632274ce@oss.qualcomm.com>
-Content-Language: en-US
-In-Reply-To: <ada65ce2-6736-44fe-9396-d3ed632274ce@oss.qualcomm.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Authority-Analysis: v=2.4 cv=BaDoFLt2 c=1 sm=1 tr=0 ts=6a1aece4 cx=c_pps
- a=RP+M6JBNLl+fLTcSJhASfg==:117 a=nuhDOHQX5FNHPW3J6Bj6AA==:17
- a=IkcTkHD0fZMA:10 a=NGcC8JguVDcA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=yx91gb_oNiZeI1HMLzn7:22
- a=VwQbUJbxAAAA:8 a=PY6Zn8H8AAAA:8 a=mpaa-ttXAAAA:8 a=EUspDBNiAAAA:8
- a=LJiSo-RwSUm5TJ8LWggA:9 a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
- a=iS9zxrgQBfv6-_F4QbHw:22 a=ySS05r0LPNlNiX1MMvNp:22
-X-Proofpoint-GUID: CpXyUQVpM9uROHfSNVy_11KNp9Kx3SzU
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNTMwMDE1MSBTYWx0ZWRfX3rpZmAPWJqc5
- o79bNarRLAN4jabWYzHIL67cHiWedsjOJiCdOovdm1ekhWFyRgf1NAAWTxMccUdceU5i4K3Dyuz
- 1iU+DyyTYZPO9x5CGjm/tGWnG34n9fz0bVagACz7HlnGXKUvW5mMDQzE1orCphGkbfM0026Ia1Z
- fkaVXLt+yKrQGarFyNoERwXJD3l1Yiw0pSCCKBfrXwXC2b26p4Dvspp9dodtmsJ7Y7rWx3qx0GI
- P9SaPQ9fPM+ttpq4M67jzyiwyvdEjx3TnhV0fAdVLtL70NEQ/RydvgpMJ2Oql0lNC/Az6bEcjQb
- SdyjGiFkYsOri0wZai61o83xatLxC/hhy40zJYJY/X2DGLtDTIjAvroqCWvhhcfyEgXyE8wlv+5
- ngxmh/rTMT2zkXHNidyrr7k5DQGTOkGk2xap8vYZ0chLS9FDxR0/0cUVvVXtLSeproFDEn8W5o0
- hzswXMxVMIFEldFyngA==
-X-Proofpoint-ORIG-GUID: CpXyUQVpM9uROHfSNVy_11KNp9Kx3SzU
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.125,FMLib:17.12.100.49
- definitions=2026-05-30_04,2026-05-28_03,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- suspectscore=0 clxscore=1015 phishscore=0 malwarescore=0 impostorscore=0
- adultscore=0 priorityscore=1501 spamscore=0 lowpriorityscore=0 bulkscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2605210000 definitions=main-2605300151
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
+Hello Arnd Bergmann,
 
+Commit c1f7275b613b ("scsi: megaraid_mbox: Reduce stack usage in
+megaraid_cmm_register()") from May 19, 2026 (linux-next), leads to
+the following Smatch static checker warning:
 
-On 5/30/2026 8:45 PM, Can Guo wrote:
->
->
-> On 5/30/2026 12:58 AM, Krzysztof Kozlowski wrote:
->> On Fri, May 29, 2026 at 04:33:37AM -0700, Can Guo wrote:
->>> UFS v5.0/UFSHCI v5.0 add HS-G6 support (46.6 Gbps/lane) via UniPro v3.0
->>> and M-PHY v6.0. In these specs, TX Equalization is defined for all High
->>> Speed Gears (not only HS-G6) to compensate channel loss and improve 
->>> signal
->>> integrity at high speed operation.
->>>
->>> For HS-G6, M-PHY uses PAM4 1b1b line coding, Pre-Coding may also be
->>> required depending on channel characteristics.
->>>
->>> Add vendor-neutral DT properties:
->>>
->>> - patternProperties for txeq-preshoot-g[1-6] and txeq-deemphasis-g[1-6]
->>> - fixed property tx-precode-enable-g6
->>>
->>> Each property is a uint32 array of per-lane tuples:
->>> <Host_Lane0 Device_Lane0>, [<Host_Lane1 Device_Lane1>]
->>>
->>> Accept 2 or 4 values (x1/x2 lane configs). PreShoot and DeEmphasis 
->>> values
->>> are 0..7. Precode enable values are 0/1 and only applicable to HS-G6.
->>>
->>> Acked-by: Manivannan Sadhasivam <mani@kernel.org>
->>> Reviewed-by: Bean Huo <beanhuo@micron.com>
->>> Reviewed-by: Peter Wang <peter.wang@mediatek.com>
->>> Signed-off-by: Can Guo <can.guo@oss.qualcomm.com>
->>> ---
->>>   .../devicetree/bindings/ufs/ufs-common.yaml   | 45 
->>> +++++++++++++++++++
->>>   1 file changed, 45 insertions(+)
->>>
->>> diff --git a/Documentation/devicetree/bindings/ufs/ufs-common.yaml 
->>> b/Documentation/devicetree/bindings/ufs/ufs-common.yaml
->>> index ed97f5682509..d90cf25adfa5 100644
->>> --- a/Documentation/devicetree/bindings/ufs/ufs-common.yaml
->>> +++ b/Documentation/devicetree/bindings/ufs/ufs-common.yaml
->>> @@ -105,6 +105,51 @@ properties:
->>>         Restricts the UFS controller to rate-a or rate-b for both TX 
->>> and
->>>         RX directions.
->>>   +  tx-precode-enable-g6:
->>> +    $ref: /schemas/types.yaml#/definitions/uint32-array
->>> +    oneOf:
->>> +      - minItems: 2
->>> +        maxItems: 2
->>> +      - minItems: 4
->>> +        maxItems: 4
->>> +    items:
->>> +      enum: [0, 1]
->>> +    description: |
->>> +      Static TX Precode enable values for HS-G6 only.
->>> +      Values are specified as per-lane tuples:
->>> +      <Host_Lane0 Device_Lane0>, [<Host_Lane1 Device_Lane1>].
->> You need to include them in any of applicable examples, otherwise
->> nothing here is validated.
-> Hi Krzysztof,
->
-> Thanks for the review.
->
-> Since no UFS5-capable SoC binding exists upstream yet (the target SoC is
-> still pre-CS), there is no vendor-specific YAML to attach the example to.
->
-> Is a synthetic example directly in ufs-common.yaml OK to you?
-Let me update qcom,sm8650-ufshc.yaml as it includes sm8650 and others.
+	drivers/scsi/megaraid/megaraid_mbox.c:3474 megaraid_cmm_register()
+	error: double free of 'adp' (line 3468)
 
-Thanks,
-Can Guo.
->>
->> Why values cannot be on or off? Or even better: why you cannot just list
->> all the lanes which has it enabled, assuming disabled is by default?
-> Thanks for the suggestions.
->
-> For the "just list enabled lanes" suggestion: precode must be configured
-> independently for the Host-side TX and Device-side TX transceivers within
-> the same physical lane. A lane index list alone cannot capture this
-> two-dimensional per-lane state. The tuple format <Host_LaneN 
-> Device_LaneN>
-> is the minimal encoding that covers both.
->
-> For the "on/off" suggestion: the on/off string pattern is used with
-> single-value properties (e.g. LED default-state) read via
-> of_property_read_string(). I am not aware of precedent for on/off as a
-> string array for per-lane tuples.
->>
->>> +
->>> +patternProperties:
->>> +  "^txeq-preshoot-g[1-6]$":
->>> +    $ref: /schemas/types.yaml#/definitions/uint32-array
->>> +    oneOf:
->>> +      - minItems: 2
->>> +        maxItems: 2
->>> +      - minItems: 4
->>> +        maxItems: 4
->>> +    items:
->>> +      minimum: 0
->>> +      maximum: 7
->> What is the meaning of values? Nothing here refers to the spec, so is
->> this driver specific?
-> These are not driver-specific. PreShoot and DeEmphasis are standard
-> features of the MIPI M-PHY / UniPro stack. The range [0, 7] is defined
-> in the UniPro specification for the relevant PA layer attributes, and 
-> each
-> value maps to a specific dB level as defined in the M-PHY specification.
-> I will add the value-to-dB mapping table to the property descriptions 
-> in v7.
->
-> Thanks,
-> Can Guo.
->>
->> Best regards,
->> Krzysztof
->>
->
+drivers/scsi/megaraid/megaraid_mbox.c
+    3395 static int
+    3396 megaraid_cmm_register(adapter_t *adapter)
+    3397 {
+    3398         mraid_device_t        *raid_dev = ADAP2RAIDDEV(adapter);
+    3399         mraid_mmadp_t        *adp;
+    3400         scb_t                *scb;
+    3401         mbox_ccb_t        *ccb;
+    3402         int                rval;
+    3403         int                i;
+    3404 
+    3405         // Allocate memory for the base list of scb for management module.
+    3406         adapter->uscb_list = kzalloc_objs(scb_t, MBOX_MAX_USER_CMDS);
+    3407         adp = kzalloc_obj(*adp);
+    3408 
+    3409         if (!adapter->uscb_list || !adp) {
+    3410                 con_log(CL_ANN, (KERN_WARNING
+    3411                         "megaraid: out of memory, %s %d\n", __func__,
+    3412                         __LINE__));
+    3413 
+    3414                 kfree(adapter->uscb_list);
+    3415                 kfree(adp);
+    3416 
+    3417                 return -1;
+    3418         }
+    3419 
+    3420 
+    3421         // Initialize the synchronization parameters for resources for
+    3422         // commands for management module
+    3423         INIT_LIST_HEAD(&adapter->uscb_pool);
+    3424 
+    3425         spin_lock_init(USER_FREE_LIST_LOCK(adapter));
+    3426 
+    3427 
+    3428 
+    3429         // link all the packets. Note, CCB for commands, coming from the
+    3430         // commom management module, mailbox physical address are already
+    3431         // setup by it. We just need placeholder for that in our local command
+    3432         // control blocks
+    3433         for (i = 0; i < MBOX_MAX_USER_CMDS; i++) {
+    3434 
+    3435                 scb                        = adapter->uscb_list + i;
+    3436                 ccb                        = raid_dev->uccb_list + i;
+    3437 
+    3438                 scb->ccb                = (caddr_t)ccb;
+    3439                 ccb->mbox64                = raid_dev->umbox64 + i;
+    3440                 ccb->mbox                = &ccb->mbox64->mbox32;
+    3441                 ccb->raw_mbox                = (uint8_t *)ccb->mbox;
+    3442 
+    3443                 scb->gp                        = 0;
+    3444 
+    3445                 // COMMAND ID 0 - (MBOX_MAX_SCSI_CMDS-1) ARE RESERVED FOR
+    3446                 // COMMANDS COMING FROM IO SUBSYSTEM (MID-LAYER)
+    3447                 scb->sno                = i + MBOX_MAX_SCSI_CMDS;
+    3448 
+    3449                 scb->scp                = NULL;
+    3450                 scb->state                = SCB_FREE;
+    3451                 scb->dma_direction        = DMA_NONE;
+    3452                 scb->dma_type                = MRAID_DMA_NONE;
+    3453                 scb->dev_channel        = -1;
+    3454                 scb->dev_target                = -1;
+    3455 
+    3456                 // put scb in the free pool
+    3457                 list_add_tail(&scb->list, &adapter->uscb_pool);
+    3458         }
+    3459 
+    3460         adp->unique_id                = adapter->unique_id;
+    3461         adp->drvr_type                = DRVRTYPE_MBOX;
+    3462         adp->drvr_data                = (unsigned long)adapter;
+    3463         adp->pdev                = adapter->pdev;
+    3464         adp->issue_uioc                = megaraid_mbox_mm_handler;
+    3465         adp->timeout                = MBOX_RESET_WAIT + MBOX_RESET_EXT_WAIT;
+    3466         adp->max_kioc                = MBOX_MAX_USER_CMDS;
+    3467 
+    3468         if ((rval = mraid_mm_register_adp(adp)) != 0) {
+    3469 
+    3470                 con_log(CL_ANN, (KERN_WARNING
+    3471                         "megaraid mbox: did not register with CMM\n"));
+    3472 
+    3473                 kfree(adapter->uscb_list);
+--> 3474                 kfree(adp);
 
+mraid_mm_register_adp() has a kfree() of the adapter on the the
+error path.  I suppose, someone could make the argument that the
+original code was already buggy since kfreeing a stack variable isn't
+going to end well...
+
+    3475         }
+    3476 
+    3477         return rval;
+    3478 }
+
+This email is a free service from the Smatch-CI project [smatch.sf.net].
+
+regards,
+dan carpenter
