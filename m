@@ -1,66 +1,66 @@
-Received: from mail-dl1-f51.google.com (mail-dl1-f51.google.com [74.125.82.51])
+Received: from mail-dl1-f43.google.com (mail-dl1-f43.google.com [74.125.82.43])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 58F4A17B43F
-	for <linux-scsi@vger.kernel.org>; Sat, 30 May 2026 00:20:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0069213D53C
+	for <linux-scsi@vger.kernel.org>; Sat, 30 May 2026 00:20:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.43
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780100449; cv=none; b=jpDs2a4VgjRtXTo+oljB+8Tkpnr4smq48/rANmVYZrbS+iwiRSMWmNgZKiBnaA/6K8MHvCqtO2Gauflf980ekDVEWGuhjJzr8kffl9vGJAGsJg5U7X6uiTgUwF4ZOxyTx/Dj/uoNDXifRpnoJHI50Jp22eLOpgDFcX9rfK7dgwk=
+	t=1780100451; cv=none; b=dxSYQTt27rf2f0FxUslLaoxrbyETV3m1WvGRY8Kq8OQPu7K3dR+h6T7XBy+uExStSCISFl2uEggrkdNG7i52hc+bx7+bS4XiEOp5OAQgDdztu6R4qniUXyr/bD0snShEyyRg52nc5GUO3KLQULhtb4IpDMD/e6Tv3dHqLyU/uD4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780100449; c=relaxed/simple;
-	bh=zbrjbwjyVpef9LnCkOLWX6dtGqUrgwAhdLHYkF4e43I=;
+	s=arc-20240116; t=1780100451; c=relaxed/simple;
+	bh=gVuLHuuWrm6jB5XTPw8YDzVNHdXcvEm26u9ULAlgsfA=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=bJqM+TVq0roOdCA1fuhhSGzyC2xHSU3bs9YeImADWcxBsDD2yZ5+U6dgsuJkgHeL+upbz3fFwZQbZ428XpHqH2c/mOeKh2oPYkSsyUY6H/XniuuVpDZ5Ul9+A3eCaKBlF1kBYuPxQtdEr9b5xfsjBz+OGlvDUA8RdIJcxcuyA8Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=purestorage.com; spf=pass smtp.mailfrom=purestorage.com; dkim=pass (2048-bit key) header.d=purestorage.com header.i=@purestorage.com header.b=Yg9JUwTa; arc=none smtp.client-ip=74.125.82.51
+	 MIME-Version; b=GfMpOGwKx4qoxTMrYFB1J86ll9In4Jz7nyjdrKunvVeyid990bDDMH37tduo9Q1Y/CeGOTLa0dxKTzIQN02sM5HhlpT7kLX+IPxBOZEfyMdU7cUztF44g/QHRvg409cDoliLf3LnRNSzZ6kyeuevuKJTyTAFs24K06yHH4lFcQE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=purestorage.com; spf=pass smtp.mailfrom=purestorage.com; dkim=pass (2048-bit key) header.d=purestorage.com header.i=@purestorage.com header.b=f77UyRR7; arc=none smtp.client-ip=74.125.82.43
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=purestorage.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=purestorage.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=purestorage.com header.i=@purestorage.com header.b="Yg9JUwTa"
-Received: by mail-dl1-f51.google.com with SMTP id a92af1059eb24-13721dfd471so6833792c88.1
-        for <linux-scsi@vger.kernel.org>; Fri, 29 May 2026 17:20:48 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=purestorage.com header.i=@purestorage.com header.b="f77UyRR7"
+Received: by mail-dl1-f43.google.com with SMTP id a92af1059eb24-134fe980658so17227427c88.1
+        for <linux-scsi@vger.kernel.org>; Fri, 29 May 2026 17:20:49 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=purestorage.com; s=google2022; t=1780100447; x=1780705247; darn=vger.kernel.org;
+        d=purestorage.com; s=google2022; t=1780100449; x=1780705249; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=VkTEnYvvug8fAC+K+JcMlGUmjqYa9wMPYq/L/RnB76M=;
-        b=Yg9JUwTaIbMYcHDbAhnkUo6VCDrHwy0TFH7+Xy0mZpmR74w2USFFMpE0FGUt/8ZgME
-         qCBCL+xS34vy9H11OjPfA4FzHd2WSxiEBGGK4cgrLOHs0QWhvcCVYeMxIZaBqOo8CqMe
-         91lUYfWCCjdbnWD75k6H0QS0u5VXzffT0C65ZDeM/1vbDxUGOdaFxpokwkQ/1TiljGVO
-         UV8ucKchqi1US8sgphmjs8mfQMDddC5CRHT0c+m1xtBUdZqELQ40m6PFbNDR+/u61WMv
-         BbYcGIY7OuQ9RRjtlkA8XX1DHv3JozHVFzLzqxF7e5kPcdWkAGyUm/Rsut/IaDWPnNBQ
-         1SpA==
+        bh=RxtMZOet/chLxeMQSrtUKxzNBtCgiJ6XXEjpeslIupA=;
+        b=f77UyRR7aT6Rb2MmsdHWLtMCRmfixJXDkCzIKpBYl3oSppKdfmeGKWAGVRv9gN0OSG
+         Lo9aHck2wnftOScfrx5voaZvW2ao2hoVmCX2mn6CeLwgaBKxXY+5/bagSDtPsC3OsVAW
+         ZMRaugzO+/JaGyCbFlr1/mmPSMT0Y/OtDgasEAAdQgHPgXIgAt/qznG89Ymwbv4pOxx5
+         rdsYnEiNc7BcQWRp+gtOyE56qasxNB5dvVRhHVPzzQLHNiCNFwy6NxYgfKsMpYkjuell
+         hZQH984jp+bcTwKoSGoYLmbjfA5Sy/KhuNJf+nYGgQ6VjC6aMrZvDdhqV8STq9vBDiwY
+         FL6A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1780100447; x=1780705247;
+        d=1e100.net; s=20251104; t=1780100449; x=1780705249;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to;
-        bh=VkTEnYvvug8fAC+K+JcMlGUmjqYa9wMPYq/L/RnB76M=;
-        b=NOVto0UnM2npiUyHjmJ57DvvIRix7ytuFzc1sJRHG1AdPXe1GzWpsVAKtoUO7fs+cU
-         a1dox8xRORitIG5wS7VfR6DERb4y+ai6XijwMcg5BeWudzyj4eC+Tl5VDpvwPe4N3wKy
-         nzDz/Xv4emVg7QJwZ54MrmkIqSqUhR7latwqV7IV6OToT72BBmmO/JR1bLhtu2e1Xevs
-         dw2+DpyEyts+0OcqGk/pBk3m4R4S8Gr0muQqzrSBLNWCjJHEYocJHDx1hmKrjcgmRvmv
-         Js84nO1pS5d9QakQMuFVetKnn2jJC8eYfA9/Vn2+pJJjMIw84azfU7YNObeWVZNa8Qmj
-         /wkA==
-X-Gm-Message-State: AOJu0YxIigPwVpN42lCYTni5ohQbbaRJwx75YJwiNLiRghoKyFvnn1E9
-	XzRimdlGwNcztpwbRG7GI7M8s1mmJeucCOXUfE3SaxHhkiXNvbtgAzcjS459zspG3XErbVXx2jD
-	NrCvqtT6eGz8VwuvegTYoz5IcywXxjP63P1IEQSQ2mMd6MJssJgscXfW1dvPQm3STRmaN+D0/K3
-	nVWBz+jGhr8eiSMqLH6V2EeyrTd+6sNUuPNfHdIR+G713BxbruoA==
-X-Gm-Gg: Acq92OH2ZSYi8SkEyEDprUAZxH42fTI3VCrR1+xLnHUblAnIrUpT9o0Yfy90WkKODgM
-	5qKFhBP1TG7PZrtFhENYErHdPf9cwgr7Mm8H9cjmo7sK89flsIH1sCtVvfeO1J/b06xrHx4rC1r
-	v3+ktm6BZaJet3XBBcw/xSELUcPvIUSqx7t+TmGqenHT2RmVLUsIG6R+VIg/95UFCG5uf7aFyPf
-	dlZy4YlUTglHucn3+q9FsxtjC5B3I8GLlfAD9IskFllQptuIM5xZ+Nm+lB//CUk3HbOvt0U8x6G
-	BcAuA2OS6fcTYIJFd65c9ssVXJ7fS4YyvuVrwyCPMlfJRdvbT7aDka7ISzN9PK7q5fnx5f0LoSN
-	UWb7sGqxV5TTHXIJF5zGB2UpDGfEWtji1Hd2MmefCHZsPwHLnoSwFKne+d/5idSWyy8JnQ7458A
-	Gn1DgYTHduaE3SYBUDfR7gvgum/kqf3TQR2fmyffKik0msIe8lg/4udZBvgFYH/hsnF6AIUveLH
-	2/O0ZekiYhhZeBMU2YCFVgXpsCLHsX2v3c26dv0i+PQLDBwTPIoWGqq5voEiXtTIIHC2XVY+3k/
-	PkquSI2yusdldDxY7t8Hl96OSCpxF5Su4OI=
-X-Received: by 2002:a05:7022:4581:b0:12d:ea6a:1d33 with SMTP id a92af1059eb24-137d4259495mr687834c88.33.1780100447120;
-        Fri, 29 May 2026 17:20:47 -0700 (PDT)
+        bh=RxtMZOet/chLxeMQSrtUKxzNBtCgiJ6XXEjpeslIupA=;
+        b=fn5IH6g6r3Lzz+WRcCkOVHtyiGpjzZ3kj0Px72pgYAm8Cr6myTj2kLdDsyNTeE84JT
+         8TWPHPs8BLshxVmNWbAyXBeDL+bQUY9oeMLFrk//yVN3MPhkRQRrNAQF3c3JRucEN2Ug
+         VUNgFs5fXYZMYIQe1Y1xtpApWBNXzVCFZHoMUC7hVzHftYVJRUugxy+ybVZfkUc+NaP+
+         si+Gbic6EhxRvXp+IRHm/q+F5KTKM+nPp+AvsG6bab4WVG9rvaH46Urmc9dltGWULk8J
+         vp8RMEHYJki90omcdmapa4GHVyU/PbE5p6CtBdH5XIENboFK1ugyNCChVn0KU3p2xHfI
+         c2aw==
+X-Gm-Message-State: AOJu0YyhkLkrlANlNmyiBiQMIEnV2J4exx5P3l0pOAUSZvgOHz6T5G+1
+	u62yY3NTOxxo96EsW77plyRh/v3FhDNU7HWt6QFLBQCW6Wa2vyC/6QmbJJ9CE5UL7Qx02FEbBno
+	nAJj/3+rXpQBWGGrQM/KhB9K5Ahd6ONrx5teDLgNEf05GVHsj5WCaU+qNsfvDMZTa5/oZvvGreY
+	cq3R2F/MN29gXlLykx6deEvgk6zQ8e+6LMPitvknoX5zKZ1NfA+w==
+X-Gm-Gg: Acq92OGZ1AD6PgktBJDA4ir6jt8VyjJBXOaNY9QZNRE6RtvjHDCswXsJdX6vM8pT4g8
+	Zcv+EbTO11GVAr+vFZDcKWwtweFVBTNbk5snDcFvxznCaiFxfoWT15B/rvmBL+XMa8tS8DvpkDx
+	sTJAerFadxrglZFhsl9mlzp1TSYBWTrrE9DqwmpT0i14RHlfqc5MFsLYb+bact9II27Ji+4eG9F
+	MfBaqC8oZFN0hAu9rwQxSeZlafUPs3VnXtZNWgi278AHeTmbEAjo7zC3FfxgIjf+ggDgUd3YFNg
+	Reh9fnKPUWtoBTfLcH152mtKlKZxAg4NCdwESp6mzJmvJ01hNJ6/jjfC4S0ruUtoH571VtZLv13
+	Z4mk0LN+ybiR2BMsrsc6AutaYtczlmOxfVsKfI3PpcFJqfEvkkgLaY2tnf+uDSlyKcACPNNQUOE
+	7Rnu1JNKAh9MR6Z3UOeFoczNFylnRO1ItCFEk3YzWv0qMU+yAAycweZ7CV1ixOq6B9NTjfeaUWi
+	Enuaw7BvbUtA/AufRI4OVKNxpZjYIoBz5B5JOBMbToyXkUPpbkXU7ICyy35stsAZfjejbxnisP1
+	jr8ciP1Eqqlp+A1bkpXsK6ADz+dNvwAOqG0=
+X-Received: by 2002:a05:7022:4b:b0:130:c9cc:3395 with SMTP id a92af1059eb24-137d413272bmr795912c88.29.1780100448949;
+        Fri, 29 May 2026 17:20:48 -0700 (PDT)
 Received: from brian--MacBookPro18.purestorage.com ([136.226.65.115])
-        by smtp.gmail.com with ESMTPSA id a92af1059eb24-137b3d8f839sm2027163c88.15.2026.05.29.17.20.46
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-137b3d8f839sm2027163c88.15.2026.05.29.17.20.48
         (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
-        Fri, 29 May 2026 17:20:46 -0700 (PDT)
+        Fri, 29 May 2026 17:20:48 -0700 (PDT)
 From: Brian Bunker <brian@purestorage.com>
 To: linux-scsi@vger.kernel.org
 Cc: James.Bottomley@HansenPartnership.com,
@@ -69,9 +69,9 @@ Cc: James.Bottomley@HansenPartnership.com,
 	hare@suse.de,
 	Brian Bunker <brian@purestorage.com>,
 	Krishna Kant <krishna.kant@purestorage.com>
-Subject: [PATCH v4 4/5] scsi: core: Add device reprobe support to scsi_rescan_device()
-Date: Fri, 29 May 2026 17:20:18 -0700
-Message-ID: <20260530002019.47109-5-brian@purestorage.com>
+Subject: [PATCH v4 5/5] scsi: core: Handle reprobe for existing devices during SCSI scan
+Date: Fri, 29 May 2026 17:20:19 -0700
+Message-ID: <20260530002019.47109-6-brian@purestorage.com>
 X-Mailer: git-send-email 2.54.0
 In-Reply-To: <20260530002019.47109-1-brian@purestorage.com>
 References: <20260429224939.77082-1-brian@purestorage.com>
@@ -84,168 +84,150 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Update INQUIRY data on rescan and call device_reprobe() if PQ or type
-changed. Critical for ALUA unavailable state handling (SPC-4 5.15.2.4.4).
+Complement scsi_rescan_device() reprobe by handling the scan path.
+Update INQUIRY data and reprobe existing devices when PQ or type changed.
 
 Co-developed-by: Krishna Kant <krishna.kant@purestorage.com>
 Signed-off-by: Krishna Kant <krishna.kant@purestorage.com>
 Signed-off-by: Brian Bunker <brian@purestorage.com>
 ---
- drivers/scsi/scsi_scan.c | 125 +++++++++++++++++++++++++++++++++++----
- 1 file changed, 114 insertions(+), 11 deletions(-)
+ drivers/scsi/scsi_scan.c | 91 ++++++++++++++++++++++++++++++++++++----
+ 1 file changed, 83 insertions(+), 8 deletions(-)
 
 diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index 62409217ff23..89513f341d84 100644
+index 89513f341d84..62f524e1757e 100644
 --- a/drivers/scsi/scsi_scan.c
 +++ b/drivers/scsi/scsi_scan.c
-@@ -1094,6 +1094,86 @@ static unsigned char *scsi_inq_str(unsigned char *buf, unsigned char *inq,
- }
- #endif
+@@ -1206,6 +1206,7 @@ static int scsi_probe_and_add_lun(struct scsi_target *starget,
+ 	blist_flags_t bflags;
+ 	int res = SCSI_SCAN_NO_RESPONSE, result_len = 256;
+ 	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
++	bool is_reprobe = false;
  
-+/**
-+ * __scsi_reprobe_inquiry - Update INQUIRY data and reprobe device if needed
-+ * @sdev: The SCSI device to reprobe
-+ * @inq_result: Buffer containing fresh INQUIRY data
-+ * @inq_len: Length of INQUIRY data
-+ * @need_reprobe: Pointer to store whether device_reprobe() is needed
-+ *
-+ * Updates the device's INQUIRY data, attaches VPD pages, checks CDL support,
-+ * and determines if the device needs to be reprobed due to type or peripheral
-+ * qualifier changes. If no reprobe is needed, calls driver rescan functions.
-+ *
-+ * This function does NOT take device_lock - caller must hold it.
-+ *
-+ * Returns:
-+ *   SCSI_INQ_UNCHANGED on success (no reprobe needed)
-+ *   SCSI_INQ_REPROBE_NEEDED if type or PQ changed (reprobe needed)
-+ *  -ENOMEM on allocation failure
-+ *  -EINVAL if INQUIRY data is too short
-+ */
-+static int __scsi_reprobe_inquiry(struct scsi_device *sdev,
-+				  unsigned char *inq_result,
-+				  size_t inq_len,
-+				  bool *need_reprobe)
-+{
-+	struct device *dev = &sdev->sdev_gendev;
-+	int ret;
-+
-+	/* Update INQUIRY data */
-+	ret = scsi_update_inquiry_data(sdev, inq_result, inq_len);
-+	if (ret < 0) {
-+		sdev_printk(KERN_ERR, sdev,
-+			    "failed to update inquiry data: %d\n", ret);
-+		return ret;
+ 	/*
+ 	 * The rescan flag is used as an optimization, the first scan of a
+@@ -1213,7 +1214,32 @@ static int scsi_probe_and_add_lun(struct scsi_target *starget,
+ 	 */
+ 	sdev = scsi_device_lookup_by_target(starget, lun);
+ 	if (sdev) {
+-		if (rescan != SCSI_SCAN_INITIAL || !scsi_device_created(sdev)) {
++		if (rescan == SCSI_SCAN_INITIAL && scsi_device_created(sdev)) {
++			/*
++			 * Initial scan found device in CREATED state (being probed
++			 * by another thread). Drop reference and allocate new -
++			 * the other thread will complete setup of the original.
++			 */
++			scsi_device_put(sdev);
++			sdev = scsi_alloc_sdev(starget, lun, hostdata);
++			if (!sdev)
++				goto out;
++		} else if (rescan != SCSI_SCAN_INITIAL && !scsi_device_created(sdev)) {
++			/*
++			 * Manual rescan of fully initialized device.
++			 * Reprobe to detect peripheral qualifier or device type
++			 * changes (e.g., ALUA state transitions).
++			 */
++			SCSI_LOG_SCAN_BUS(3, sdev_printk(KERN_INFO, sdev,
++				"scsi scan: device exists (type %d, PQ %d), reprobing\n",
++				sdev->type, sdev->inq_periph_qual));
++			is_reprobe = true;
++		} else {
++			/*
++			 * Either initial scan with fully initialized device,
++			 * or manual rescan with device still in CREATED state.
++			 * Return that device exists.
++			 */
+ 			SCSI_LOG_SCAN_BUS(3, sdev_printk(KERN_INFO, sdev,
+ 				"scsi scan: device exists on %s\n",
+ 				dev_name(&sdev->sdev_gendev)));
+@@ -1228,11 +1254,11 @@ static int scsi_probe_and_add_lun(struct scsi_target *starget,
+ 								 sdev->model);
+ 			return SCSI_SCAN_LUN_PRESENT;
+ 		}
+-		scsi_device_put(sdev);
+-	} else
++	} else {
+ 		sdev = scsi_alloc_sdev(starget, lun, hostdata);
+-	if (!sdev)
+-		goto out;
++		if (!sdev)
++			goto out;
 +	}
-+
-+	SCSI_LOG_SCAN_BUS(3, sdev_printk(KERN_INFO, sdev,
-+		"updated inquiry data (type %d, PQ %d)\n",
-+		sdev->type, sdev->inq_periph_qual));
-+
-+	/* Update VPD pages and CDL support */
-+	scsi_attach_vpd(sdev);
-+	scsi_cdl_check(sdev);
-+
-+	/*
-+	 * If peripheral qualifier or device type changed, caller should
-+	 * reprobe to update driver attachment. scsi_update_inquiry_data()
-+	 * returns 1 when either changes.
-+	 *
-+	 * The scsi_bus_match() function only matches devices with PQ == 0,
-+	 * so PQ changes cause driver attach/detach.
-+	 *
-+	 * Device type changes require reprobe to match the correct upper-layer
-+	 * driver (e.g., sd for TYPE_DISK, sr for TYPE_ROM).
-+	 */
-+	if (ret == SCSI_INQ_REPROBE_NEEDED) {
-+		SCSI_LOG_SCAN_BUS(3, sdev_printk(KERN_INFO, sdev,
-+			"type or PQ changed, reprobe needed\n"));
-+		*need_reprobe = true;
-+		return ret;
-+	}
-+
-+	/*
-+	 * PQ and type unchanged, call driver's rescan functions to update
-+	 * device properties (capacity, etc.)
-+	 */
-+	if (sdev->handler && sdev->handler->rescan)
-+		sdev->handler->rescan(sdev);
-+
-+	if (dev->driver && try_module_get(dev->driver->owner)) {
-+		struct scsi_driver *drv = to_scsi_driver(dev->driver);
-+
-+		if (drv->rescan)
-+			drv->rescan(dev);
-+		module_put(dev->driver->owner);
-+	}
-+
-+	*need_reprobe = false;
-+	return ret;
-+}
-+
- /**
-  * scsi_probe_and_add_lun - probe a LUN, if a LUN is found add it
-  * @starget:	pointer to target device structure
-@@ -1653,7 +1733,11 @@ EXPORT_SYMBOL(scsi_resume_device);
- int scsi_rescan_device(struct scsi_device *sdev)
- {
- 	struct device *dev = &sdev->sdev_gendev;
-+	unsigned char *inq_result;
-+	blist_flags_t bflags;
-+	int result_len = 256;
- 	int ret = 0;
-+	bool need_reprobe = false;
  
- 	device_lock(dev);
+ 	if (scsi_device_is_pseudo_dev(sdev)) {
+ 		if (bflagsp)
+@@ -1247,6 +1273,40 @@ static int scsi_probe_and_add_lun(struct scsi_target *starget,
+ 	if (scsi_probe_lun(sdev, result, result_len, &bflags))
+ 		goto out_free_result;
  
-@@ -1669,18 +1753,37 @@ int scsi_rescan_device(struct scsi_device *sdev)
- 		goto unlock;
- 	}
- 
--	scsi_attach_vpd(sdev);
--	scsi_cdl_check(sdev);
--
--	if (sdev->handler && sdev->handler->rescan)
--		sdev->handler->rescan(sdev);
--
--	if (dev->driver && try_module_get(dev->driver->owner)) {
--		struct scsi_driver *drv = to_scsi_driver(dev->driver);
 +	/*
-+	 * Rescan standard INQUIRY data to detect changes in device
-+	 * properties (vendor, model, rev, peripheral qualifier, device type, etc.)
++	 * For reprobe scenarios, update the inquiry data with fresh
++	 * INQUIRY results. The device already exists in sysfs, so we
++	 * don't call scsi_add_lun() which would try to add it again.
 +	 */
-+	inq_result = kmalloc(result_len, GFP_KERNEL);
-+	if (inq_result) {
-+		if (scsi_probe_lun(sdev, inq_result, result_len,
-+				   &bflags) == 0) {
-+			/* Successfully got fresh INQUIRY data, reprobe if needed */
-+			ret = __scsi_reprobe_inquiry(sdev, inq_result,
-+						     sdev->inquiry_len,
-+						     &need_reprobe);
-+			if (ret < 0) {
-+				/* Critical failure, bail out */
-+				kfree(inq_result);
-+				goto unlock;
-+			}
++	if (is_reprobe) {
++		bool need_reprobe = false;
++		int update_ret = __scsi_reprobe_inquiry(sdev, result, result_len,
++							&need_reprobe);
++
++		if (update_ret < 0) {
++			res = SCSI_SCAN_NO_RESPONSE;
++			goto out_free_result;
 +		}
-+		kfree(inq_result);
++
++		if (bflagsp)
++			*bflagsp = bflags;
++
++		/*
++		 * If type or PQ changed, reprobe to update driver attachment.
++		 * Reprobe failure is not fatal - device exists, just may have
++		 * wrong driver attached.
++		 */
++		if (need_reprobe) {
++			if (device_reprobe(&sdev->sdev_gendev) < 0)
++				sdev_printk(KERN_WARNING, sdev,
++					    "device reprobe failed\n");
++		}
++
++		/* Device already exists, just return success */
++		res = SCSI_SCAN_LUN_PRESENT;
++		goto out_free_result;
 +	}
- 
--		if (drv->rescan)
--			drv->rescan(dev);
--		module_put(dev->driver->owner);
-+	/*
-+	 * If type or PQ changed, reprobe to update driver attachment.
-+	 * Must unlock device before calling device_reprobe() to avoid deadlock.
-+	 */
-+	if (need_reprobe) {
-+		device_unlock(dev);
-+		if (device_reprobe(dev) < 0)
-+			sdev_printk(KERN_WARNING, sdev,
-+				    "device reprobe failed\n");
-+		device_lock(dev);
- 	}
- 
- unlock:
++
+ 	if (bflagsp)
+ 		*bflagsp = bflags;
+ 	/*
+@@ -1329,12 +1389,27 @@ static int scsi_probe_and_add_lun(struct scsi_target *starget,
+ 			if (scsi_device_get(sdev) == 0) {
+ 				*sdevp = sdev;
+ 			} else {
+-				__scsi_remove_device(sdev);
++				if (!is_reprobe)
++					__scsi_remove_device(sdev);
+ 				res = SCSI_SCAN_NO_RESPONSE;
+ 			}
+ 		}
+-	} else
+-		__scsi_remove_device(sdev);
++		/*
++		 * For reprobe case, we held a reference from
++		 * scsi_device_lookup_by_target(), release it now.
++		 */
++		if (is_reprobe)
++			scsi_device_put(sdev);
++	} else {
++		/*
++		 * For reprobe, device already exists - don't remove it.
++		 * Just release the reference we got from lookup.
++		 */
++		if (is_reprobe)
++			scsi_device_put(sdev);
++		else
++			__scsi_remove_device(sdev);
++	}
+  out:
+ 	return res;
+ }
 -- 
 2.54.0
 
