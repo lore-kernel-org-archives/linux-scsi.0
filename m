@@ -1,56 +1,56 @@
 Received: from mx0b-0016f401.pphosted.com (mx0b-0016f401.pphosted.com [67.231.156.173])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BDB563537CC
-	for <linux-scsi@vger.kernel.org>; Mon,  1 Jun 2026 10:31:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1A323356766
+	for <linux-scsi@vger.kernel.org>; Mon,  1 Jun 2026 10:31:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.156.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780309890; cv=none; b=jvpFS5aciOGrf5GwZaD8Wj8hobC72n7yASDrMme5oZBF0/Huq4hU8ShPPbCj8V1ZP3lesoG14pCT6hwYb+YG/2QIVRKWDqw8EnFA0kGXviokib4Tu3xTl7k+x8GxAJM/ckeOQH2JED/sAeqB6MHfpsLp9wu5Zvb3EO97REjLl0Y=
+	t=1780309892; cv=none; b=lOHDy1BR9MGbezQUyeYnj0DhyhL9gzqplU9WYzjwBeCL25LXwQDlIw1dM+Epb+ZzTcDwI8Iaeb4ZqpLnkFccrqpDLyhGh9aGf+OwTX506VUC209JQXD6zgRGcvHrAcRTo7Wrr9/Jad3KFN5YaFjl2gaOQg5csK5gyTiuvSPQDtM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780309890; c=relaxed/simple;
-	bh=o6/xUWQRZf+IIcMBhNSMiWR+0y05RjicMJ8cqcWubpo=;
+	s=arc-20240116; t=1780309892; c=relaxed/simple;
+	bh=iIz27BtZHfX0WCgAziFEkPgD8putxnimPVwYs2QyBzs=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=m1QUVzGIoiM2lWz7y1EA/ddqk70v9bXFyYpRg9oeHGDNmkeCDZjKMZ2GX1/ZUQ4133S5DC8xAGpNDe5G7Mx9+vu1U2c8It8G5n+S7Qm3K6RdBmyYUxmNdyD3LEjoEubjrZDhDLW1ZuHvqu1ION8/KkPvdoaaXaAaFYCkExh4+H8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=marvell.com; spf=pass smtp.mailfrom=marvell.com; dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b=JZ4MV9tw; arc=none smtp.client-ip=67.231.156.173
+	 MIME-Version:Content-Type; b=h3a8yMgADYB/FZyCFjkGGAPxQ6ppgk2akQS9IaLCB6weEDbM8xX2bAyeGVZVA/0SOAHg55rlRpjMv1VI/dPMlbw0cgNofJkDBFbeXS+f97n+I9FzUqqhVBUHceFudwuWlf05vnv/fV/Wr/yhzQLKr3KVGufVQzv1rtV730SvW14=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=marvell.com; spf=pass smtp.mailfrom=marvell.com; dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b=XEonv15t; arc=none smtp.client-ip=67.231.156.173
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=marvell.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=marvell.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="JZ4MV9tw"
+	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="XEonv15t"
 Received: from pps.filterd (m0431383.ppops.net [127.0.0.1])
-	by mx0b-0016f401.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 64VLUDj33286782;
-	Mon, 1 Jun 2026 03:31:25 -0700
+	by mx0b-0016f401.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 64VLj62M3311732;
+	Mon, 1 Jun 2026 03:31:28 -0700
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=
 	cc:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=pfpt0220; bh=r
-	HGInztqBQVNCreozifNmQk3o19sNSu9c7vUoclOWl0=; b=JZ4MV9twmNkitWiI5
-	OyYG80lVhmhMAZZ74mmMg4NAoSQMBVS650DtfyDHXgRZHN90CYjJ+CljLHg3bGNj
-	5ZG3uh3Y/AkpQAlTQaDWl7eXy/AJwCB6CLeSX9DtJSJXh29frhT1vM0I1hWmNjCn
-	Xh0KyTPzLsUgqe09UgK7T0TB+pQP0Hp/UH7CWB/BZyWU1m6HCLn2bm1EcWmziGRB
-	UccmQpMQnRZ9qW2o4/FkPJqEw/jqf/QeUAgk7xaRDD5N8yeZ6xEYnGPPrqSMMNFM
-	ErDBl6bWHph5ZEDYb09VXpzUbRZjCAU842w+qCvB85PX+PCPGlk5ZS+hnM5K7dOX
-	z58ng==
-Received: from dc5-exch05.marvell.com ([199.233.59.128])
-	by mx0b-0016f401.pphosted.com (PPS) with ESMTPS id 4eggn8b8yv-1
+	HTJB9kc3FWdCehabrphRkWrJxOfopvuR84RKbT1Quw=; b=XEonv15twswry09nm
+	WJba4JNHpGKWw6dsQYFXB8Kv8/Vm2Rh/WMFgEsPv1HVSpGlbC2pkY5X6uTb6X2Oh
+	71SytBrYwjHjRBlxu+6pHZgN83hyv3BtjxRdXSghZ/Ki5RX/LoeKSRw3IP8E/olX
+	PlRKwrl3izjxWzoh+lsKPCuArzubx/pg6aibFm9Oq0Affz00wKEtiU6xnFOTywcn
+	OxfyhfW5PAIsTJQ7ZKEXpwqxriFjklG/hi1ynZ566znELO5d/S8exJtX4qiJkIn5
+	RI/8xSOBd57yH7lXkYnTFqExHmTddeNabKJW6jsxHVp8kzcV3r3cQmiLrTvLrhbS
+	N+pXg==
+Received: from dc6wp-exch02.marvell.com ([4.21.29.225])
+	by mx0b-0016f401.pphosted.com (PPS) with ESMTPS id 4eggn8b901-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 01 Jun 2026 03:31:25 -0700 (PDT)
-Received: from DC5-EXCH05.marvell.com (10.69.176.209) by
- DC5-EXCH05.marvell.com (10.69.176.209) with Microsoft SMTP Server
+	Mon, 01 Jun 2026 03:31:27 -0700 (PDT)
+Received: from DC6WP-EXCH02.marvell.com (10.76.176.209) by
+ DC6WP-EXCH02.marvell.com (10.76.176.209) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.25; Mon, 1 Jun 2026 03:31:24 -0700
-Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH05.marvell.com
- (10.69.176.209) with Microsoft SMTP Server id 15.2.1544.25 via Frontend
- Transport; Mon, 1 Jun 2026 03:31:24 -0700
+ 15.2.1544.25; Mon, 1 Jun 2026 03:31:27 -0700
+Received: from maili.marvell.com (10.69.176.80) by DC6WP-EXCH02.marvell.com
+ (10.76.176.209) with Microsoft SMTP Server id 15.2.1544.25 via Frontend
+ Transport; Mon, 1 Jun 2026 03:31:27 -0700
 Received: from stgdev-a5u16.punelab.marvell.com (stgdev-a5u16.punelab.marvell.com [10.31.33.164])
-	by maili.marvell.com (Postfix) with ESMTP id C6FAC3F7053;
-	Mon,  1 Jun 2026 03:31:21 -0700 (PDT)
+	by maili.marvell.com (Postfix) with ESMTP id C63F23F7053;
+	Mon,  1 Jun 2026 03:31:24 -0700 (PDT)
 From: Nilesh Javali <njavali@marvell.com>
 To: <martin.petersen@oracle.com>
 CC: <linux-scsi@vger.kernel.org>, <GR-QLogic-Storage-Upstream@marvell.com>,
         <agurumurthy@marvell.com>, <emilne@redhat.com>, <jmeneghi@redhat.com>,
         <hare@suse.com>
-Subject: [PATCH 42/44] scsi: qla2xxx: Add LS4 pass-through IOCB handling for 29xx series
-Date: Mon, 1 Jun 2026 15:58:51 +0530
-Message-ID: <20260601102853.328426-43-njavali@marvell.com>
+Subject: [PATCH 43/44] scsi: qla2xxx: Convert NVMe ring advance to use qla_req_ring_advance()
+Date: Mon, 1 Jun 2026 15:58:52 +0530
+Message-ID: <20260601102853.328426-44-njavali@marvell.com>
 X-Mailer: git-send-email 2.23.1
 In-Reply-To: <20260601102853.328426-1-njavali@marvell.com>
 References: <20260601102853.328426-1-njavali@marvell.com>
@@ -62,334 +62,63 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-Proofpoint-ORIG-GUID: rVBo9yESviOeoFSaj_OorhD-G1gN_Vjf
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNjAxMDEwNSBTYWx0ZWRfX9J0p8w8fS/pn
- aBsERN6iBcsTXWOjK/f0bXhVmVs+m7zjdnCfQHPEAPuuaXs3oeSuGLJBdm/wzdrbkflp0+opZxH
- i2A4lu3F/L4CnqmtJ+gKCuPuv7/u++W/d2I63r6yRtIi10vBqL/NxETedpdYDHW8mZ+gCkH0Gyi
- jSc7XR+qFfSFImvLtCU+N7J2YhOEtO7xvgZ+gHJm27ajD5LVIQIjb8FqbknmvaXk3QcOLQIdvcx
- k3HZakInAi4x1M0LQEeZbIiOkQvjQSYGkK5tHQJFlTVXpC4eUi5fU30N0rdRtnkMXbVEaWmDd+F
- IjWr2s1EmfIPxMRfI5rMp3A91A80crR6f8fXCxWSaeG/wcFoIne9dotzk+kKKhQA/W5OwmU7PSK
- HHk3wRrwXqXDbYVwfmXWEZNp8Cm6/PrZYSU9pVrWozf//13+nOX0TeX/B/33aSu389lLrKeKmAn
- chvQNNi5ZVrOSr3DMvA==
-X-Proofpoint-GUID: rVBo9yESviOeoFSaj_OorhD-G1gN_Vjf
-X-Authority-Analysis: v=2.4 cv=ON0XGyaB c=1 sm=1 tr=0 ts=6a1d5f7d cx=c_pps
- a=rEv8fa4AjpPjGxpoe8rlIQ==:117 a=rEv8fa4AjpPjGxpoe8rlIQ==:17
+X-Proofpoint-ORIG-GUID: rOBn2a0tzfsK1GmrRynm_DUj4Z38hVi9
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNjAxMDEwNSBTYWx0ZWRfX1jq1qv4Hal24
+ dAQKsoT9yoeWJrxO6WuyU6n873xMFp/IIPt/4tCI3O9yv25C59k8IE13xKqY+kKXmKpY0LmnbYL
+ j6JK14SIKfrACvwsEjAz9TI896WVJuIBRtmFgJEFtqoiUexEnDxgH8G388u0VuDNh3JfCoC0izV
+ LXNgylRkkci4mUOTyzq8hp29lhp9DasBMGyjDnUfsqqOmR9uFQZ1DOPnBsTxhbwfFBCUxLvAU4G
+ IgTwI1O0JwmD9Yy62OW3VGelYKAKCmu0wt5qydFv3ae1ZaRi8yTaB2e/R98WLPSnOrWVfsiAsmU
+ bQZlvl3jD56wdqmobQ4EDwku0H7yUibEqvXPNWma1tXZWlfCUdB+n1QJ9DrQ17XkuxZ6K04wQQU
+ Ms3mCuMkCduaD+SQr+IBQ93uAC3SfSn5eccRJ+Rl1DTodF73Pu5y0+3NkIzpFXqOmCgADCMPzbp
+ 1HZHNKs460hab7N6Xkw==
+X-Proofpoint-GUID: rOBn2a0tzfsK1GmrRynm_DUj4Z38hVi9
+X-Authority-Analysis: v=2.4 cv=ON0XGyaB c=1 sm=1 tr=0 ts=6a1d5f80 cx=c_pps
+ a=gIfcoYsirJbf48DBMSPrZA==:117 a=gIfcoYsirJbf48DBMSPrZA==:17
  a=FelO9ux0wxsA:10 a=VkNPw1HP01LnGYTKEx00:22 a=l0iWHRpgs5sLHlkKQ1IR:22
- a=qit2iCtTFQkLgVSMPQTB:22 a=M5GUcnROAAAA:8 a=VwQbUJbxAAAA:8
- a=N8dHboFCl7IniiCa_5wA:9 a=OBjm3rFKGHvpk9ecZwUJ:22
+ a=qit2iCtTFQkLgVSMPQTB:22 a=VwQbUJbxAAAA:8 a=M5GUcnROAAAA:8
+ a=Mq_Bs6O7SrpB7tt5vDcA:9 a=OBjm3rFKGHvpk9ecZwUJ:22
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.125,FMLib:17.12.100.49
  definitions=2026-06-01_03,2026-05-28_03,2025-10-01_01
 
-From: Manish Rangankar <mrangankar@marvell.com>
-
-Extend the LS4 pass-through IOCB handling to support the 128-byte
-pt_ls4_request_ext layout used by 29xx series adapters.  The extension
-grows inline DSD capacity from 2 to 5 entries.  Function signatures are
-widened to void * so both layouts can be passed without casts.
-
-pt_ls4_request_ext overlays pt_ls4_request through exchange_address
-(offsets 0-27 are byte-identical), so common-header writes go through a
-single struct pt_ls4_request * view; only the divergent fields
-(vp_index width, tx_/rx_byte_count offset, dsd[] base) are branched.
+Replace the open-coded IS_QLA29XX() ring_ext_ptr/ring_ptr advancement
+in qla2x00_start_nvme_mq() with the qla_req_ring_advance() helper,
+removing 16 lines of duplicated logic.
 
 Cc: stable@vger.kernel.org
-Signed-off-by: Manish Rangankar <mrangankar@marvell.com>
 Signed-off-by: Nilesh Javali <njavali@marvell.com>
 ---
- drivers/scsi/qla2xxx/qla_fw29.h | 37 +++++++++++++++++
- drivers/scsi/qla2xxx/qla_iocb.c | 73 ++++++++++++++++++++++-----------
- drivers/scsi/qla2xxx/qla_isr.c  |  9 ++--
- drivers/scsi/qla2xxx/qla_nvme.c | 64 +++++++++++++++++++----------
- drivers/scsi/qla2xxx/qla_nvme.h |  4 +-
- drivers/scsi/qla2xxx/qla_os.c   |  1 +
- 6 files changed, 137 insertions(+), 51 deletions(-)
+ drivers/scsi/qla2xxx/qla_nvme.c | 17 +----------------
+ 1 file changed, 1 insertion(+), 16 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_fw29.h b/drivers/scsi/qla2xxx/qla_fw29.h
-index 423f1fc7f483..9ae21e8d54e6 100644
---- a/drivers/scsi/qla2xxx/qla_fw29.h
-+++ b/drivers/scsi/qla2xxx/qla_fw29.h
-@@ -295,6 +295,43 @@ struct ct_entry_24xx_ext {
- 	struct dsd64 dsd[NUM_CT_DSDS];	/* Data Segment Descriptors */
- };
- 
-+/*
-+ * 29xx extended Link Service pass-through request IOCB (128 bytes).
-+ *
-+ * Same wire purpose as the 64-byte struct pt_ls4_request used on 24xx-class
-+ * adapters, but laid out for the 128-byte 29xx request ring:
-+ *   - vp_index widened to __le16 (bits [8:0] meaningful, see
-+ *     CMD_EXT_VP_INDEX_MASK).
-+ *   - reserved area expanded to 32 bytes between exchange_address and
-+ *     rx_byte_count.
-+ *   - inline DSD capacity grown from 2 to 5.
-+ * Header through 'tx_dseg_count' (offset 14) and the control_flags /
-+ * exchange_address fields keep the same offsets as struct pt_ls4_request,
-+ * so common code can populate them via either type once IS_QLA29XX(ha) is
-+ * branched for the layout-divergent fields.
-+ */
-+#define NUM_PT_LS4_EXT_DSDS	5
-+struct pt_ls4_request_ext {
-+	uint8_t entry_type;
-+	uint8_t entry_count;
-+	uint8_t sys_define;
-+	uint8_t entry_status;
-+	uint32_t handle;
-+	__le16	status;
-+	__le16	nport_handle;
-+	__le16	tx_dseg_count;
-+	__le16	vp_index;	/* VP Index 9 bits; see CMD_EXT_VP_INDEX_MASK */
-+	__le16	timeout;
-+	__le16	control_flags;	/* CF_LS4_* (see struct pt_ls4_request) */
-+	__le16	rx_dseg_count;
-+	__le16	rsvd2;
-+	__le32	exchange_address;
-+	uint8_t rsvd3[32];
-+	__le32	rx_byte_count;
-+	__le32	tx_byte_count;
-+	struct dsd64 dsd[NUM_PT_LS4_EXT_DSDS];
-+};
-+
- /*
-  * ISP queue - PUREX IOCB entry structure definition
-  */
-diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
-index 2747e3c59318..f73b449b70b5 100644
---- a/drivers/scsi/qla2xxx/qla_iocb.c
-+++ b/drivers/scsi/qla2xxx/qla_iocb.c
-@@ -3984,38 +3984,65 @@ static void qla2x00_send_notify_ack_iocb(srb_t *sp,
- }
- 
- /*
-- * Build NVME LS request
-+ * Build NVME LS request.
-+ *
-+ * pt_ls4_request_ext overlays pt_ls4_request through exchange_address
-+ * (offsets 0-27 are byte-identical), so the common-header writes go
-+ * through one struct pt_ls4_request * view.  The ext layout has a wider
-+ * __le16 vp_index and places rx_/tx_byte_count and dsd[] at different
-+ * offsets, so those assignments diverge per stride.
-  */
- static void
--qla_nvme_ls(srb_t *sp, struct pt_ls4_request *cmd_pkt)
-+qla_nvme_ls(srb_t *sp, void *cmd_pkt)
- {
--	struct srb_iocb *nvme;
-+	struct srb_iocb *nvme = &sp->u.iocb_cmd;
-+	struct qla_hw_data *ha = sp->vha->hw;
-+	struct pt_ls4_request *pkt = cmd_pkt;
- 
--	nvme = &sp->u.iocb_cmd;
--	cmd_pkt->entry_type = PT_LS4_REQUEST;
--	cmd_pkt->entry_count = 1;
--	cmd_pkt->timeout = cpu_to_le16(nvme->u.nvme.timeout_sec);
--	cmd_pkt->vp_index = sp->fcport->vha->vp_idx;
-+	pkt->entry_type = PT_LS4_REQUEST;
-+	pkt->entry_count = 1;
-+	pkt->timeout = cpu_to_le16(nvme->u.nvme.timeout_sec);
-+	pkt->tx_dseg_count = cpu_to_le16(1);
- 
- 	if (sp->unsol_rsp) {
--		cmd_pkt->control_flags =
--				cpu_to_le16(CF_LS4_RESPONDER << CF_LS4_SHIFT);
--		cmd_pkt->nport_handle = nvme->u.nvme.nport_handle;
--		cmd_pkt->exchange_address = nvme->u.nvme.exchange_address;
-+		pkt->control_flags =
-+			cpu_to_le16(CF_LS4_RESPONDER << CF_LS4_SHIFT);
-+		pkt->nport_handle = nvme->u.nvme.nport_handle;
-+		pkt->exchange_address = nvme->u.nvme.exchange_address;
- 	} else {
--		cmd_pkt->control_flags =
--				cpu_to_le16(CF_LS4_ORIGINATOR << CF_LS4_SHIFT);
--		cmd_pkt->nport_handle = cpu_to_le16(sp->fcport->loop_id);
--		cmd_pkt->rx_dseg_count = cpu_to_le16(1);
--		cmd_pkt->rx_byte_count = nvme->u.nvme.rsp_len;
--		cmd_pkt->dsd[1].length  = nvme->u.nvme.rsp_len;
--		put_unaligned_le64(nvme->u.nvme.rsp_dma, &cmd_pkt->dsd[1].address);
-+		pkt->control_flags =
-+			cpu_to_le16(CF_LS4_ORIGINATOR << CF_LS4_SHIFT);
-+		pkt->nport_handle = cpu_to_le16(sp->fcport->loop_id);
-+		pkt->rx_dseg_count = cpu_to_le16(1);
- 	}
- 
--	cmd_pkt->tx_dseg_count = cpu_to_le16(1);
--	cmd_pkt->tx_byte_count = nvme->u.nvme.cmd_len;
--	cmd_pkt->dsd[0].length = nvme->u.nvme.cmd_len;
--	put_unaligned_le64(nvme->u.nvme.cmd_dma, &cmd_pkt->dsd[0].address);
-+	if (IS_QLA29XX(ha)) {
-+		struct pt_ls4_request_ext *ext = cmd_pkt;
-+
-+		ext->vp_index = cpu_to_le16(sp->fcport->vha->vp_idx);
-+		ext->tx_byte_count = nvme->u.nvme.cmd_len;
-+		ext->dsd[0].length = nvme->u.nvme.cmd_len;
-+		put_unaligned_le64(nvme->u.nvme.cmd_dma,
-+				   &ext->dsd[0].address);
-+		if (!sp->unsol_rsp) {
-+			ext->rx_byte_count = nvme->u.nvme.rsp_len;
-+			ext->dsd[1].length = nvme->u.nvme.rsp_len;
-+			put_unaligned_le64(nvme->u.nvme.rsp_dma,
-+					   &ext->dsd[1].address);
-+		}
-+	} else {
-+		pkt->vp_index = sp->fcport->vha->vp_idx;
-+		pkt->tx_byte_count = nvme->u.nvme.cmd_len;
-+		pkt->dsd[0].length = nvme->u.nvme.cmd_len;
-+		put_unaligned_le64(nvme->u.nvme.cmd_dma,
-+				   &pkt->dsd[0].address);
-+		if (!sp->unsol_rsp) {
-+			pkt->rx_byte_count = nvme->u.nvme.rsp_len;
-+			pkt->dsd[1].length = nvme->u.nvme.rsp_len;
-+			put_unaligned_le64(nvme->u.nvme.rsp_dma,
-+					   &pkt->dsd[1].address);
-+		}
-+	}
- }
- 
- static void
-diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-index b3d619f8b3a8..4ed141065015 100644
---- a/drivers/scsi/qla2xxx/qla_isr.c
-+++ b/drivers/scsi/qla2xxx/qla_isr.c
-@@ -4056,7 +4056,7 @@ qla24xx_abort_iocb_entry(scsi_qla_host_t *vha, struct req_que *req,
- }
- 
- void qla24xx_nvme_ls4_iocb(struct scsi_qla_host *vha,
--    struct pt_ls4_request *pkt, struct req_que *req)
-+			   void *pkt, struct req_que *req)
- {
- 	srb_t *sp;
- 	const char func[] = "LS4_IOCB";
-@@ -4066,7 +4066,9 @@ void qla24xx_nvme_ls4_iocb(struct scsi_qla_host *vha,
- 	if (!sp)
- 		return;
- 
--	comp_status = le16_to_cpu(pkt->status);
-+	/* status lives at the same offset (8) in both IOCB strides */
-+	comp_status = le16_to_cpu(((struct pt_ls4_request *)pkt)->status);
-+
- 	sp->done(sp, comp_status);
- }
- 
-@@ -4231,8 +4233,7 @@ void qla24xx_process_response_queue(struct scsi_qla_host *vha,
- 			qlt_response_pkt_all_vps(vha, rsp, (response_t *)pkt);
- 			break;
- 		case PT_LS4_REQUEST:
--			qla24xx_nvme_ls4_iocb(vha, (struct pt_ls4_request *)pkt,
--			    rsp->req);
-+			qla24xx_nvme_ls4_iocb(vha, pkt, rsp->req);
- 			break;
- 		case NOTIFY_ACK_TYPE:
- 			if (((response_t *)pkt)->handle == QLA_TGT_SKIP_HANDLE)
 diff --git a/drivers/scsi/qla2xxx/qla_nvme.c b/drivers/scsi/qla2xxx/qla_nvme.c
-index fa89cd2b5f29..61a8e9162135 100644
+index 61a8e9162135..0038b6274d44 100644
 --- a/drivers/scsi/qla2xxx/qla_nvme.c
 +++ b/drivers/scsi/qla2xxx/qla_nvme.c
-@@ -1212,37 +1212,57 @@ static void qla_nvme_fc_format_rjt(void *buf, u8 ls_cmd, u8 reason,
- 	rjt->rjt.vendor = vendor;
- }
+@@ -798,22 +798,7 @@ static inline int qla2x00_start_nvme_mq(srb_t *sp)
+ 	wmb();
  
-+/*
-+ * pt_ls4_request_ext overlays pt_ls4_request through exchange_address
-+ * (offsets 0-27 are byte-identical), so the common-header writes go
-+ * through one struct pt_ls4_request * view.  The ext layout has a wider
-+ * __le16 vp_index and places tx_/rx_byte_count and dsd[] at different
-+ * offsets, so those assignments diverge per stride.
-+ */
- static void qla_nvme_lsrjt_pt_iocb(struct scsi_qla_host *vha,
--				   struct pt_ls4_request *lsrjt_iocb,
-+				   void *lsrjt_iocb,
- 				   struct qla_nvme_lsrjt_pt_arg *a)
- {
--	lsrjt_iocb->entry_type = PT_LS4_REQUEST;
--	lsrjt_iocb->entry_count = 1;
--	lsrjt_iocb->sys_define = 0;
--	lsrjt_iocb->entry_status = 0;
--	lsrjt_iocb->handle = QLA_SKIP_HANDLE;
--	lsrjt_iocb->nport_handle = a->nport_handle;
--	lsrjt_iocb->exchange_address = a->xchg_address;
--	lsrjt_iocb->vp_index = a->vp_idx;
--
--	lsrjt_iocb->control_flags = cpu_to_le16(a->control_flags);
--
--	put_unaligned_le64(a->tx_addr, &lsrjt_iocb->dsd[0].address);
--	lsrjt_iocb->dsd[0].length = cpu_to_le32(a->tx_byte_count);
--	lsrjt_iocb->tx_dseg_count = cpu_to_le16(1);
--	lsrjt_iocb->tx_byte_count = cpu_to_le32(a->tx_byte_count);
--
--	put_unaligned_le64(a->rx_addr, &lsrjt_iocb->dsd[1].address);
--	lsrjt_iocb->dsd[1].length = 0;
--	lsrjt_iocb->rx_dseg_count = 0;
--	lsrjt_iocb->rx_byte_count = 0;
-+	struct qla_hw_data *ha = vha->hw;
-+	struct pt_ls4_request *pkt = lsrjt_iocb;
-+
-+	pkt->entry_type = PT_LS4_REQUEST;
-+	pkt->entry_count = 1;
-+	pkt->sys_define = 0;
-+	pkt->entry_status = 0;
-+	pkt->handle = QLA_SKIP_HANDLE;
-+	pkt->nport_handle = a->nport_handle;
-+	pkt->exchange_address = a->xchg_address;
-+	pkt->control_flags = cpu_to_le16(a->control_flags);
-+	pkt->tx_dseg_count = cpu_to_le16(1);
-+	pkt->rx_dseg_count = 0;
-+
-+	if (IS_QLA29XX(ha)) {
-+		struct pt_ls4_request_ext *ext = lsrjt_iocb;
-+
-+		ext->vp_index = cpu_to_le16(a->vp_idx);
-+		ext->tx_byte_count = cpu_to_le32(a->tx_byte_count);
-+		ext->rx_byte_count = 0;
-+		put_unaligned_le64(a->tx_addr, &ext->dsd[0].address);
-+		ext->dsd[0].length = cpu_to_le32(a->tx_byte_count);
-+		put_unaligned_le64(a->rx_addr, &ext->dsd[1].address);
-+		ext->dsd[1].length = 0;
-+	} else {
-+		pkt->vp_index = a->vp_idx;
-+		pkt->tx_byte_count = cpu_to_le32(a->tx_byte_count);
-+		pkt->rx_byte_count = 0;
-+		put_unaligned_le64(a->tx_addr, &pkt->dsd[0].address);
-+		pkt->dsd[0].length = cpu_to_le32(a->tx_byte_count);
-+		put_unaligned_le64(a->rx_addr, &pkt->dsd[1].address);
-+		pkt->dsd[1].length = 0;
-+	}
- }
+ 	/* Adjust ring index. */
+-	req->ring_index++;
+-	if (IS_QLA29XX(ha)) {
+-		if (req->ring_index == req->length) {
+-			req->ring_index = 0;
+-			req->ring_ext_ptr = req->ring_ext;
+-		} else {
+-			req->ring_ext_ptr++;
+-		}
+-	} else {
+-		if (req->ring_index == req->length) {
+-			req->ring_index = 0;
+-			req->ring_ptr = req->ring;
+-		} else {
+-			req->ring_ptr++;
+-		}
+-	}
++	qla_req_ring_advance(ha, req);
  
- static int
- qla_nvme_ls_reject_iocb(struct scsi_qla_host *vha, struct qla_qpair *qp,
- 			struct qla_nvme_lsrjt_pt_arg *a, bool is_xchg_terminate)
- {
--	struct pt_ls4_request *lsrjt_iocb;
-+	void *lsrjt_iocb;
- 
- 	lsrjt_iocb = __qla2x00_alloc_iocbs(qp, NULL);
- 	if (!lsrjt_iocb) {
-diff --git a/drivers/scsi/qla2xxx/qla_nvme.h b/drivers/scsi/qla2xxx/qla_nvme.h
-index a253ac55171b..e6a41d53cbe1 100644
---- a/drivers/scsi/qla2xxx/qla_nvme.h
-+++ b/drivers/scsi/qla2xxx/qla_nvme.h
-@@ -144,7 +144,7 @@ struct pt_ls4_rx_unsol {
- int qla_nvme_register_hba(struct scsi_qla_host *);
- int  qla_nvme_register_remote(struct scsi_qla_host *, struct fc_port *);
- void qla_nvme_delete(struct scsi_qla_host *);
--void qla24xx_nvme_ls4_iocb(struct scsi_qla_host *, struct pt_ls4_request *,
--    struct req_que *);
-+void qla24xx_nvme_ls4_iocb(struct scsi_qla_host *vha, void *pkt,
-+			   struct req_que *req);
- void qla24xx_async_gffid_sp_done(struct srb *sp, int);
- #endif
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 62f9323e5dc3..5d2441f7611b 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -8393,6 +8393,7 @@ qla2x00_module_init(void)
- 	BUILD_BUG_ON(sizeof(struct nvram_24xx) != 512);
- 	BUILD_BUG_ON(sizeof(struct nvram_81xx) != 512);
- 	BUILD_BUG_ON(sizeof(struct pt_ls4_request) != 64);
-+	BUILD_BUG_ON(sizeof(struct pt_ls4_request_ext) != 128);
- 	BUILD_BUG_ON(sizeof(struct pt_ls4_rx_unsol) != 64);
- 	BUILD_BUG_ON(sizeof(struct purex_entry_24xx) != 64);
- 	BUILD_BUG_ON(sizeof(struct purex_entry_24xx_ext) != 128);
+ 	/* ignore nvme async cmd due to long timeout */
+ 	if (!nvme->u.nvme.aen_op)
 -- 
 2.47.3
 
