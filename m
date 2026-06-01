@@ -1,136 +1,191 @@
-Received: from mail-ej1-f48.google.com (mail-ej1-f48.google.com [209.85.218.48])
+Received: from mail-wr1-f48.google.com (mail-wr1-f48.google.com [209.85.221.48])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8BA0C13959D
-	for <linux-scsi@vger.kernel.org>; Mon,  1 Jun 2026 04:59:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.218.48
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780289971; cv=pass; b=JXyu+SbPMN+IFRQXM3sOcNpVH6u/LiWCIcNNBx3ev5qbmu8QzrqXy+UBU+QDPGDYLCk639IdiokXFtFU/n5V0AkCDlv6vw8kS8kG9KTP86xYic9F9wIWxqeHuUvHfo62n+YNGo9Tdib8q88rHL6kvkb8yCfs9uMUHyGcgUwzmCM=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780289971; c=relaxed/simple;
-	bh=wBFVGCqCyESGZeWw0kFKKPpCRpxPQf8+k2stU6NaYlk=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=tdAgcEyJAlEKijFmw/kBsqr86hGWJLpqjQFAo53NM6HLrzSkSvH2JbpENo91OWbu754s228lLRe4IP2DkDzAi97sOiHBXXZotxHkelCnG6oLzoThW/yPhVXWAjRHfTmYKuyAeibJl4PxhamPGoAxqQqMWauGUuTokfwoZEpmDmc=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=ionos.com; spf=pass smtp.mailfrom=ionos.com; dkim=pass (2048-bit key) header.d=ionos.com header.i=@ionos.com header.b=Xsn3tx9f; arc=pass smtp.client-ip=209.85.218.48
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=ionos.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ionos.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 440BB33F385
+	for <linux-scsi@vger.kernel.org>; Mon,  1 Jun 2026 06:14:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.48
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1780294483; cv=none; b=Y17tSqw/W2WjPmnBM25nleRRBX60T2R4adJuVbOTQdO1IXN9LzywjcvxrNt0ubvRI3yjBhYC8hTYiYDJyAKpzjpZhRcFlE9uESETuUlVrEVbfIjjqNdfpR4fQ20EjmVIqAtiHdbgwRNtGmeK1xTzeQWDcQBuMUhUUEkuYbvwcwA=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1780294483; c=relaxed/simple;
+	bh=9MNzn12fHIiogHe+ExGRksoHKHMAM3exEmf5WZZ/azI=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=YXUfmnfsWtdmoYa+1OyNyUozjXE+0e25kuIjvTTT/dRUBIJgq+fkKbPClfNmTU92cSGetxh7eKA0QblEBE+B89VProQuuR3Sy/ph3DuKnxtc+GZKQhCXWLAeHNQRAfjHodQXcOH1jqmhB3Fi8TPenqS+Bkvd+7v4L5Xxaq6XNug=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=Xbwlm1tI; arc=none smtp.client-ip=209.85.221.48
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ionos.com header.i=@ionos.com header.b="Xsn3tx9f"
-Received: by mail-ej1-f48.google.com with SMTP id a640c23a62f3a-bebde8a0adfso19413166b.1
-        for <linux-scsi@vger.kernel.org>; Sun, 31 May 2026 21:59:29 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1780289968; cv=none;
-        d=google.com; s=arc-20240605;
-        b=Utv24DmByNEJGnoN1MPy1FL+bPCQlqopj41tkhsJrX5bydqJ4GE0si+zelgUdT6vM5
-         7Z45DxDzubBcu/YgD0qg5m9M3OL7N0HyVFFgyzHT/rTzzBeqgf6zJz3yfE2vq4oq69Ms
-         BfPgptH47mlUNhJrSwGm2PJkAOXkuAPrJ7WjFQA93Yr3J5ijsgA0xa/2HyIEH61auJQL
-         L9u5elplYCZja9juV8KzPsatTw9ey7a9lRp4wvsc/ZiOATyFm5du36ahcpxc2LmXQxT0
-         u/gCQoygpSlZ27CiWV7dmJAn4+I5hJk6j4tXQQ4nVUsNEWva+RBJPP0MQDmSxIuznHZB
-         We+g==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=L+TBTZFxxv1JuC2qd1ez82wqnLD2VWaPg7OYnlws9+E=;
-        fh=MZM/hKh8Mxj4XzXHSsB7eUZshT2tQzLKtz0Or+bO0r4=;
-        b=Q39vWDdp67n3v/Na+9P27wtsjjH/PAqUWZN0LILP/X1Lin/x2TFCoi3EKNDDUuM/n7
-         /wvo1xnqTOFmAd/cO5J5nw5p0idk+by+abSq7ZJ7HjP0vgx80ucZrc/TNm1S2TvBt7xe
-         FE5qSVRK73ODOqHTTm4sdUdK9FWMwrBPgw+5eKRuDDLRvzR4PMGUd93OUKy6RooLLDMQ
-         zkGmn9mttyZDUZLNvg02Bomrcn0d3uRngsRK0mpbN4n4Qn1fr866hO66MBzPvg2Y5ELB
-         +ATPRFCXvWeCGD+mKzW42QNqTdXPm0+cXHM0a6rLA6ITemLKPeYPYu0KCmpWQGGXzWri
-         4DSg==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="Xbwlm1tI"
+Received: by mail-wr1-f48.google.com with SMTP id ffacd0b85a97d-45ef4223be7so1373650f8f.2
+        for <linux-scsi@vger.kernel.org>; Sun, 31 May 2026 23:14:42 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ionos.com; s=google; t=1780289968; x=1780894768; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=L+TBTZFxxv1JuC2qd1ez82wqnLD2VWaPg7OYnlws9+E=;
-        b=Xsn3tx9folCbb8zOE21GmsIkxXBXnMrsIEHyMeIpIM3KRgZLKvxuMECHiVEeSmRFHc
-         gCGVeWQcZsRNTxDmKNFvY3qlrkAXMpV6ez67rLTX7J4oOoHdvW282LVVMxF8ZNTL1IW0
-         R/9BS3GCS5ExkRvJZjDW5+YIxD6Z7J4D1ojrWadH1kgvvKCNYJXh24L1VtyudRlC2p/w
-         v0KWKRrkf6mOZTN1Qfa11RmbNJbCxQKEI/9RV0zOUhw0XwP+/DXlEMFVy+Zpu4XOaiAx
-         vtuu6N5vUSSJ6iB0IaJRkwQouXrbnQgcKuRsCZ/J4ToMzl0ArieSzHjuAChU2ZLp310s
-         P+uQ==
+        d=suse.com; s=google; t=1780294481; x=1780899281; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=qnQ4Egkx2jvHi2uwwRkA+XvJq80HYWm7qvhBoPf3qpA=;
+        b=Xbwlm1tI4FEILndE3UUHcpqJMPp+Du8rtYxMlSPiGzacjeuta6kaNYOz5iN2GG1HaF
+         3Ab7uPt5pdAKS24xjoonBLZh6/uo8n/PNf1jBoGa4C2xfcNTfZRSmkLtrsIy4KpmDQuG
+         Tc2RpyVKiYMu9ZMfY1Zm4gkW1Wa5qlOWzrO4goxRa/1ucsWeRN/ya1LNnbSVTJdSVBLK
+         WJPoshQmK2zVJXRLwL7bwJXQUa34l8R+3KEj5Ody/eDBP/x4wf3RYQjTGDJ2NauS7TCV
+         hRXeesld4X8yfRlnG/WKiOFny9LlnSsa9VjjJu/P33KPcTmJw64Aood1lGCP1WOOxtg6
+         +LPQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1780289968; x=1780894768;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=L+TBTZFxxv1JuC2qd1ez82wqnLD2VWaPg7OYnlws9+E=;
-        b=j1Z891BEPHvrqrzW+4Jmf6aP5UtfKEV9h4HEKsvIrvoqSUmMOmvDoFbLzKJzZWutxh
-         FRVb4SNbfdR8swMVGhsjzuOYIum+fGTwx4lFxT388pkhtiMKK0VY4V9ZkPi4PLQNBFpS
-         4lzCo9VHp6z84zeo7G89ZG2AUNWEYVvWamyIC+7zP+75ueDRsG0baPqkJvZlDecEqUOh
-         PHhxMaV1Lmtx9PoNLASp/IGCYLFsLUDdW1+WV0u+nGsTI5cYnpvu9q/igKrf5YGnqtfS
-         T7WVigEMNftVwH5c6Q14ZAZWvbdZ3EgyVccBpgiXc+zVJEMo7ztB4xfcSglG1yMpTlB5
-         Z+6g==
-X-Forwarded-Encrypted: i=1; AFNElJ/xqi8pzHuDwxxkVsS+E5ZAc7q2NUevbpi1qVe8z8EmPTboHNWcplOEuECxQT9MJ0S7FRTt9utiFXuI@vger.kernel.org
-X-Gm-Message-State: AOJu0YxcV9OZ3mxoHFrJTZDxkPM9L6o+Ojt47s2M+X2oWeiIVS0MRiRh
-	bjrzYPWvtI/oPlY+rPJTj3PR1w3xv/SxwE+htt8o+qGObcspsEExBpBTqcK+zB0g1FXh7ME26ot
-	E8rwj65x7kaFLbXrDK+t3btklR4K2RgtQWKrZaSomZw==
-X-Gm-Gg: Acq92OFoXdZ/wu7JLlIrZeSJr2Jl0bZZpqGfbDtDDEwK+mH5r/n1+nPCoOi551UF7Kp
-	18/lfovXYHPPpw5c75+CxTmkuRNIB1UNTBIvcVMruibb7bECGtK4ubyEZiiMJLmgqo+3diITxeG
-	tD6S+KuCv7yMdgCyKlEYceycWoMedBL3GFarnFfVP9N1gsfZB5Qf9MvSI71xU8GdRQy9YXvgle4
-	hJxBQwseytPhXXZcq4xTgRqk1LaHugV4134mMgglUBpVSWUeZxvKn74M2i9Rnd6J/Wm+4jcA8B3
-	oX+k5/o5R09rThr9YEuLxhGfUJGD5BBsPkydhqhDu50LJ6OZ4xk=
-X-Received: by 2002:a17:907:1dd0:b0:beb:7979:47d5 with SMTP id
- a640c23a62f3a-beb7979599emr92349166b.6.1780289967892; Sun, 31 May 2026
- 21:59:27 -0700 (PDT)
+        d=1e100.net; s=20251104; t=1780294481; x=1780899281;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=qnQ4Egkx2jvHi2uwwRkA+XvJq80HYWm7qvhBoPf3qpA=;
+        b=o2eZujqAqz+Wi+r2fZeL38PFt2tnO1h7W0DVdjp+uNhlEIBTlxg1bUJ7OyYHWJh9dS
+         sNEyatQ5s5hr6csIuPyA1THpRFlMQx0s13pbNPfcs6hZWzcjFGVOcgOsod4QmJjLRPQq
+         esCLO6wDQhHJVB2+iAeiFCpd14RzAVbgfD08C8FyAKESuu5IYxEkQRUd76VkLxVhZGRX
+         Y9TOLLoz+3Yi7SXeURiUECjuSv1twFNUBPfuXgKUuQIL8RwVHNdISBcmxd3+edBrfaW8
+         dTmhmY7nZmTIpXog9C5nb5VH3J4RNGAx+tazLmqQ24Sv5fZ6uErGa/wO/xRJyLo0d0TQ
+         z3Xw==
+X-Forwarded-Encrypted: i=1; AFNElJ8LQEwqroeOBUKDl477Kg6Rjk56vuD+yrnLX66/hvvXao8+rEFL8hZc3+OPhAYCbRt1LJtCFOMKjOtM@vger.kernel.org
+X-Gm-Message-State: AOJu0Yx7m3KadiI/IKkCcvQhOy/gUXEdrOIElQpRV341WGgAWkxxhjxF
+	58zGft0cCnakHQGUbBikAQFDNmDnTeB3g3Jdryj8NaxgUs2jcIAcRqs9pqe3NDMH2O3HOuw7eeM
+	wNQ09
+X-Gm-Gg: Acq92OEy9vgiFYBYEAJ83KNVULs/KaC9g2dTtY3nxUtsJr9RwJ8j62qhx7Q18TTSM+S
+	3az0UQRlSsHjd0XopErA01JPAgY0dGfQjutMfbUZp5GVkD69Bn3fOSMCyGd/nDXfFUN1lcqqoA7
+	ZVpXr2wxbovaN5LX/8RICT/WZebxbqKpZEDcMUC5z/IzOovBQ98w1j0D2KdxFgJm8Mdh6hbsQWu
+	vA69Dis8us2KeQJyXVj+yUeSrgilO7WTOjCuUPwmj+1T4OqSN9BY02ZFBuwlHA8/BNO3GW7N9oj
+	WVlcOcPHjoBRgKgNVqUZIcxsdiLsoKUGZk2L0ds22KhF2G7gc/YvZWPdWlIQzXuKbMooFG7bkdU
+	X7JVasaFDGSReAYIkql8+HyqoP8jniF+nvk5gyCzscbPkBKb0b3tncic18N58Vxax7ZmggTcZVZ
+	NzsFLh5CqK1Sd5I5zYfilmZjrPVilDtZEDPwuvwpIaMUKad3K/p90OPhY14RkE5JvMLur9ivc=
+X-Received: by 2002:adf:f190:0:b0:44f:9b70:2996 with SMTP id ffacd0b85a97d-45ef6b4f4f5mr12541489f8f.21.1780294480614;
+        Sun, 31 May 2026 23:14:40 -0700 (PDT)
+Received: from ?IPV6:2001:a61:2a86:dc01:360a:1184:3ef3:86d5? ([2001:a61:2a86:dc01:360a:1184:3ef3:86d5])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-45ef354cd7csm22555338f8f.18.2026.05.31.23.14.39
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sun, 31 May 2026 23:14:40 -0700 (PDT)
+Message-ID: <c77edd76-39ec-4041-8185-366f76675c68@suse.com>
+Date: Mon, 1 Jun 2026 08:14:39 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <ahs-bEsBJH0KhnsX@stanley.mountain>
-In-Reply-To: <ahs-bEsBJH0KhnsX@stanley.mountain>
-From: Jinpu Wang <jinpu.wang@ionos.com>
-Date: Mon, 1 Jun 2026 06:59:16 +0200
-X-Gm-Features: AVHnY4LAehZcnZHdh13j_GDDl34f5hNMroM6OlI6VVhmBxdbnfHfcsO2NPSUDWE
-Message-ID: <CAMGffEkmt_aXWrJq0Oj8kkEbQvsi7r9zrdOxV7KvcB2aOjVXPA@mail.gmail.com>
-Subject: Re: [PATCH] scsi: pm8001: Fix error code in non_fatal_log_show()
-To: Dan Carpenter <error27@gmail.com>
-Cc: Deepak Ukey <deepak.ukey@microchip.com>, 
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
-	"Martin K. Petersen" <martin.petersen@oracle.com>, Radha Ramachandran <radha@google.com>, 
-	Viswas G <Viswas.G@microchip.com>, linux-scsi@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] scsi: target: Remove tcm_loop target reset handling
+To: Mike Christie <michael.christie@oracle.com>, martin.petersen@oracle.com,
+ linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+Cc: josef@toxicpanda.com
+References: <20260530052349.5134-1-michael.christie@oracle.com>
+Content-Language: en-US
+From: Hannes Reinecke <hare@suse.com>
+In-Reply-To: <20260530052349.5134-1-michael.christie@oracle.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-On Sat, May 30, 2026 at 9:45=E2=80=AFPM Dan Carpenter <error27@gmail.com> w=
-rote:
->
-> The non_fatal_log_show() function is supposed to return negative
-> error codes on failure.  But because the error codes are saved in
-> a u32 and then cast to signed long, they end up being high positive
-> values instead of negative.  Remove the intermediary u32 variable
-> to fix this bug.
->
-> Fixes: dba2cc03b9db ("scsi: pm80xx: sysfs attribute for non fatal dump")
-> Signed-off-by: Dan Carpenter <error27@gmail.com>
-Acked-by: Jack Wang <jinpu.wang@ionos.com>
+On 5/30/26 07:23, Mike Christie wrote:
+> tcm_loop_target_reset is supposed to handle all the LUNs on a target
+> but it's only doing a TMR_LUN_RESET so only that one LUN is handled.
+> This will cause us to return early while IOs to other LUNs are still
+> hung in lower layers. This just removes the target reset handler for
+> the driver because LIO doesn't support target resets and for the
+> common case where this is run from the scsi-ml error hamdler we have
+> already tried an abort and lun reset so waiting again is most likely
+> useless.
+> 
+> Fixes: 1333eee56cdf ("scsi: target: tcm_loop: Drain commands in target_reset handler")
+> Signed-off-by: Mike Christie <michael.christie@oracle.com>
 > ---
->  drivers/scsi/pm8001/pm8001_ctl.c | 5 +----
->  1 file changed, 1 insertion(+), 4 deletions(-)
->
-> diff --git a/drivers/scsi/pm8001/pm8001_ctl.c b/drivers/scsi/pm8001/pm800=
-1_ctl.c
-> index bb38b2d63acb..a27f3287748e 100644
-> --- a/drivers/scsi/pm8001/pm8001_ctl.c
-> +++ b/drivers/scsi/pm8001/pm8001_ctl.c
-> @@ -588,10 +588,7 @@ static DEVICE_ATTR(fatal_log, S_IRUGO, pm8001_ctl_fa=
-tal_log_show, NULL);
->  static ssize_t non_fatal_log_show(struct device *cdev,
->         struct device_attribute *attr, char *buf)
->  {
-> -       u32 count;
+>   drivers/target/loopback/tcm_loop.c | 64 ------------------------------
+>   1 file changed, 64 deletions(-)
+> 
+> diff --git a/drivers/target/loopback/tcm_loop.c b/drivers/target/loopback/tcm_loop.c
+> index 110297345751..d29830b951f7 100644
+> --- a/drivers/target/loopback/tcm_loop.c
+> +++ b/drivers/target/loopback/tcm_loop.c
+> @@ -270,69 +270,6 @@ static int tcm_loop_device_reset(struct scsi_cmnd *sc)
+>   	return (ret == TMR_FUNCTION_COMPLETE) ? SUCCESS : FAILED;
+>   }
+>   
+> -static bool tcm_loop_flush_work_iter(struct request *rq, void *data)
+> -{
+> -	struct scsi_cmnd *sc = blk_mq_rq_to_pdu(rq);
+> -	struct tcm_loop_cmd *tl_cmd = scsi_cmd_priv(sc);
+> -	struct se_cmd *se_cmd = &tl_cmd->tl_se_cmd;
 > -
-> -       count =3D pm80xx_get_non_fatal_dump(cdev, attr, buf);
-> -       return count;
-> +       return pm80xx_get_non_fatal_dump(cdev, attr, buf);
->  }
->  static DEVICE_ATTR_RO(non_fatal_log);
->
-> --
-> 2.53.0
->
+> -	flush_work(&se_cmd->work);
+> -	return true;
+> -}
+> -
+> -static int tcm_loop_target_reset(struct scsi_cmnd *sc)
+> -{
+> -	struct tcm_loop_hba *tl_hba;
+> -	struct tcm_loop_tpg *tl_tpg;
+> -	struct Scsi_Host *sh = sc->device->host;
+> -	int ret;
+> -
+> -	/*
+> -	 * Locate the tcm_loop_hba_t pointer
+> -	 */
+> -	tl_hba = *(struct tcm_loop_hba **)shost_priv(sh);
+> -	if (!tl_hba) {
+> -		pr_err("Unable to perform device reset without active I_T Nexus\n");
+> -		return FAILED;
+> -	}
+> -	/*
+> -	 * Locate the tl_tpg pointer from TargetID in sc->device->id
+> -	 */
+> -	tl_tpg = &tl_hba->tl_hba_tpgs[sc->device->id];
+> -	if (!tl_tpg)
+> -		return FAILED;
+> -
+> -	/*
+> -	 * Issue a LUN_RESET to drain all commands that the target core
+> -	 * knows about.  This handles commands not yet marked CMD_T_COMPLETE.
+> -	 */
+> -	ret = tcm_loop_issue_tmr(tl_tpg, sc->device->lun, 0, TMR_LUN_RESET);
+> -	if (ret != TMR_FUNCTION_COMPLETE)
+> -		return FAILED;
+> -
+> -	/*
+> -	 * Flush any deferred target core completion work that may still be
+> -	 * queued.  Commands that already had CMD_T_COMPLETE set before the TMR
+> -	 * are skipped by the TMR drain, but their async completion work
+> -	 * (transport_lun_remove_cmd → percpu_ref_put, release_cmd → scsi_done)
+> -	 * may still be pending in target_completion_wq.
+> -	 *
+> -	 * The SCSI EH will reuse in-flight scsi_cmnd structures for recovery
+> -	 * commands (e.g. TUR) immediately after this handler returns SUCCESS —
+> -	 * if deferred work is still pending, the memset in queuecommand would
+> -	 * zero the se_cmd while the work accesses it, leaking the LUN
+> -	 * percpu_ref and hanging configfs unlink forever.
+> -	 *
+> -	 * Use blk_mq_tagset_busy_iter() to find all started requests and
+> -	 * flush_work() on each — the same pattern used by mpi3mr, scsi_debug,
+> -	 * and other SCSI drivers to drain outstanding commands during reset.
+> -	 */
+> -	blk_mq_tagset_busy_iter(&sh->tag_set, tcm_loop_flush_work_iter, NULL);
+> -
+> -	tl_tpg->tl_transport_status = TCM_TRANSPORT_ONLINE;
+> -	return SUCCESS;
+> -}
+> -
+>   static const struct scsi_host_template tcm_loop_driver_template = {
+>   	.show_info		= tcm_loop_show_info,
+>   	.proc_name		= "tcm_loopback",
+> @@ -341,7 +278,6 @@ static const struct scsi_host_template tcm_loop_driver_template = {
+>   	.change_queue_depth	= scsi_change_queue_depth,
+>   	.eh_abort_handler = tcm_loop_abort_task,
+>   	.eh_device_reset_handler = tcm_loop_device_reset,
+> -	.eh_target_reset_handler = tcm_loop_target_reset,
+>   	.this_id		= -1,
+>   	.sg_tablesize		= 256,
+>   	.max_sectors		= 0xFFFF,
+
+Reviewed-by: Hannes Reinecke <hare@kernel.org>
+
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke                  Kernel Storage Architect
+hare@suse.com                               +49 911 74053 688
+SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
+HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
