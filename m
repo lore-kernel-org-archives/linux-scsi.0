@@ -1,56 +1,56 @@
-Received: from mx0b-0016f401.pphosted.com (mx0a-0016f401.pphosted.com [67.231.148.174])
+Received: from mx0b-0016f401.pphosted.com (mx0b-0016f401.pphosted.com [67.231.156.173])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8E07D2BE65B
-	for <linux-scsi@vger.kernel.org>; Mon,  1 Jun 2026 10:29:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.148.174
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1D54B2BE65B
+	for <linux-scsi@vger.kernel.org>; Mon,  1 Jun 2026 10:29:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.156.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780309791; cv=none; b=l6/dZweXAD775bY4K/SCXScFozo0moiahQobQaXjJ2yxV885BBaQ1qJIcjJNWmO9MWRf6axC/z9SlAasVLMcPCaK43heXIPtoiNmSua2cQFBxl9uETXiPpZG3T2R141PioXmpUKnOBYJCWwSs+J6HZ9/B4S86I1Be9fAUYxS0SM=
+	t=1780309794; cv=none; b=XrOWI8FpOgtRZsDxcxLgYyGmUlnEdVvecq/sjWAyN/JQG9A4rShG4Cm4K9IevqpI14chQryynxzp85SSPxLLw/dhuacUqF0/Y7DX8Np0mtYS0LM9m5B7UItC8HcX95Pmx++VlIZ403NDqpCoPM1YryCxv+vSHgFbtoTJEnF99DA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780309791; c=relaxed/simple;
-	bh=aovmORRTgRZrUa+OoQYIGWLllaAhuvu2XM/c7QFhjxo=;
+	s=arc-20240116; t=1780309794; c=relaxed/simple;
+	bh=MvuTmpcCLlT7e3TY32+W9zxmsKsWSeBh6gwH0l9rlcA=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=k3ckktIq/yB5jv5awcTYP5X0ijuX1QVm1PuV7Oo1ZWl3I8qHyov0xhUiTR/zpQWFIGfhIz/NdjMSoQnXQ0bFEzztsVx5JtsapY4z0329AfPkm+b4QIubulz4dXkQ4tXyAwFz8x/J4vdOCCr61f7Aj6ESvYUw/n93ynZwMfsrCww=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=marvell.com; spf=pass smtp.mailfrom=marvell.com; dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b=DgJUAPHG; arc=none smtp.client-ip=67.231.148.174
+	 MIME-Version:Content-Type; b=hGI7e2XjDJUQk88TFc1WvacE/WdGJurLjPD/LKjAVGMZ4ZRS8ueQK2QgeGnG45c4xarZHGFmSSggbNedafGx77n6oboQx5Z4ctGm8IfFj1eB5L2abWaioTqXIwKwBXvtbXdhy8hgJvKQq8E569AoFxW6JbjDHpbqblk7Bu1jqhM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=marvell.com; spf=pass smtp.mailfrom=marvell.com; dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b=Rtt17Pai; arc=none smtp.client-ip=67.231.156.173
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=marvell.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=marvell.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="DgJUAPHG"
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-	by mx0a-0016f401.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 64VKPZeB857198;
-	Mon, 1 Jun 2026 03:29:47 -0700
+	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="Rtt17Pai"
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 64VMGmDH1261723;
+	Mon, 1 Jun 2026 03:29:50 -0700
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=
 	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=pfpt0220; bh=x
-	yZGUdhcL+KnEOhDhPqcTb9+RkFZSj5N9DzwEZYwCx0=; b=DgJUAPHGE4IOXXDgh
-	iyWXcLsCNXA1227ZMukZSCkdIhITSm+dNxX/0fsv1MP32sq9rLFewjlAK0OwOti6
-	AgGvbkd7r3fHJGnL03By2WDz3QrjrSUYqmrKEA1QwiQTaELyoC9wP10DU3SpowqV
-	pOwpMsKvStoq14RMffEbhDkjx4Fu53tN4qk8RYvknSgcVSstgOuFIPeRE0EYrTeQ
-	MSSFercUVtPxWqcTJAneyy/KRqxTtGww7ahOwu5mpHKXO8EIHsXIpUwKgg3VXj6Z
-	B3dS/AwVA6sXWJULS0gfPGGjMDmLzi7K+Pk4D5GHxfuy5r1CluNfic7/o6grkF+F
-	JW53A==
+	:message-id:mime-version:references:subject:to; s=pfpt0220; bh=S
+	Qo3UIaw+EdiIF81P8DEsV6Mz/FasVJPJIRRRatyUXk=; b=Rtt17PaiY3nLlZvaW
+	dDlz0MB/ElRCo4UllWBupMUiZVJYkqTvoJs0Gg9rNnshsq46ALB+KKw3sqU55xOK
+	8zfZLLLPLrfPti1d0Mw9h7F5PzFCZfS6c6JUgZG+4CeP56wMA2EnLTlttXyqRrar
+	2S6f/kd5nRX2LLCzOpesjKWKVsWQtqTsV6CTWRqXTXOsvtDtX2cyZgeSL/x/JFxs
+	DX/Rn8e0CCaI/zyIsxgXVYuNCc6u0D79pJdkWYqgNhRmmr70E230laiUQUT5x45T
+	aUiBnq/4ZbD2beOAQsJaSldAQ78lhvKi2JEtddyFEwn0BYQ/87z1oYnVAsGr3Jup
+	XbRcA==
 Received: from dc5-exch05.marvell.com ([199.233.59.128])
-	by mx0a-0016f401.pphosted.com (PPS) with ESMTPS id 4efw8hwpmx-1
+	by mx0b-0016f401.pphosted.com (PPS) with ESMTPS id 4ega3b41j4-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 01 Jun 2026 03:29:47 -0700 (PDT)
+	Mon, 01 Jun 2026 03:29:50 -0700 (PDT)
 Received: from DC5-EXCH05.marvell.com (10.69.176.209) by
  DC5-EXCH05.marvell.com (10.69.176.209) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.25; Mon, 1 Jun 2026 03:29:46 -0700
+ 15.2.1544.25; Mon, 1 Jun 2026 03:29:49 -0700
 Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH05.marvell.com
  (10.69.176.209) with Microsoft SMTP Server id 15.2.1544.25 via Frontend
- Transport; Mon, 1 Jun 2026 03:29:46 -0700
+ Transport; Mon, 1 Jun 2026 03:29:49 -0700
 Received: from stgdev-a5u16.punelab.marvell.com (stgdev-a5u16.punelab.marvell.com [10.31.33.164])
-	by maili.marvell.com (Postfix) with ESMTP id D6C033F7053;
-	Mon,  1 Jun 2026 03:29:43 -0700 (PDT)
+	by maili.marvell.com (Postfix) with ESMTP id D63583F7053;
+	Mon,  1 Jun 2026 03:29:46 -0700 (PDT)
 From: Nilesh Javali <njavali@marvell.com>
 To: <martin.petersen@oracle.com>
 CC: <linux-scsi@vger.kernel.org>, <GR-QLogic-Storage-Upstream@marvell.com>,
         <agurumurthy@marvell.com>, <emilne@redhat.com>, <jmeneghi@redhat.com>,
         <hare@suse.com>
-Subject: [PATCH 10/44] scsi: qla2xxx: Add extended status continuation and marker IOCBs
-Date: Mon, 1 Jun 2026 15:58:19 +0530
-Message-ID: <20260601102853.328426-11-njavali@marvell.com>
+Subject: [PATCH 11/44] scsi: qla2xxx: Remove duplicate flash memo block definitions
+Date: Mon, 1 Jun 2026 15:58:20 +0530
+Message-ID: <20260601102853.328426-12-njavali@marvell.com>
 X-Mailer: git-send-email 2.23.1
 In-Reply-To: <20260601102853.328426-1-njavali@marvell.com>
 References: <20260601102853.328426-1-njavali@marvell.com>
@@ -62,90 +62,86 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNjAxMDEwNSBTYWx0ZWRfX/52qOIBMCGcl
- 9LP8d76d4xPBKhc61DPok0IADCBYxwm8Ra2fkWDzW4by3gVMRRAAffTDfsb15o0JAFlgCYRZaDT
- dfQgFVyPCF8T1ey7RSqmBo8LRKIcYpF7i6JQCxaqhkIIuPDhRAgUbyxM2s3x+89tKRqglcVrFoZ
- h7yEKYeYBSvM5lHYH0sMTBSw/a8GJQL9ky5N1GNqgmcvO4O5K/b6V8JhFnOLu2NonwCxWzcl7xb
- 5OyPbauIAqza6NpCyRCpYoP4ncAVs5hY+Bd3UHmcC2fjEC4jvV6xCgiJkrpLCj3WoLYBc1a5U7c
- muaMV+y0SyIa4rQyGR8C8+hoY20UqqTF7dbE7ldCHM13rE3iZ7vRalTM+nSLJ/GM0ApwYRAC05P
- QLEQaJsgahTfPg5reSNHyUBIdp1VoIEJu+A0yD55ppKxuUGhXe7Rl/2vRMbqjuRPGJbkGtzw2yS
- jhYjap7P94F8pehPATA==
-X-Proofpoint-GUID: EvJntJV6WTp9Nv1SHAZP5st1uyqQJMoO
-X-Proofpoint-ORIG-GUID: EvJntJV6WTp9Nv1SHAZP5st1uyqQJMoO
-X-Authority-Analysis: v=2.4 cv=F99nsKhN c=1 sm=1 tr=0 ts=6a1d5f1b cx=c_pps
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNjAxMDEwNSBTYWx0ZWRfX6SsB/uMS7XCS
+ RbH/vtxCr/FK56KuBlL1mzaSWHxSdSvU4TCMKfRd7SrYYCxCsmuGnY224eQT+pFKax8SGn+l0zi
+ yvxJ9F9E6oYcrNbPVlwBh4fUAiD67B++PxBULEfXJSdvegBW9oNS4zpj80xnBy4K+n90L4eG8Vu
+ QUpOhgBxw4h4i6xNRLYfku5jQ1u1e2oYVYxnWRd3/sMN63MLJnPxvjEWLplRbuT0EsVfSUxbpQZ
+ Xh5i0AbifC1U5JUKpiaZAeC+gIXDeyAhbcFw75mIkafy+jfruyyWgon0hF+8HP6O/LpMPovXk1F
+ NH+Hdwm/Z1g4s9Q7Jjxz0UtRPtAQsJkyD1OWApbW8ioSNKsMuAd1ETrI9saiFkUnwGXM7AIeNLS
+ eWvR7iUAC3q5dRgTjADwmcS93Vb7p/ce77r441VPCHPvpCN8GPu8KQzMqpa8tWFmDaqfjfycuci
+ f1W+9+4okSxVE5JvbzA==
+X-Authority-Analysis: v=2.4 cv=cLjQdFeN c=1 sm=1 tr=0 ts=6a1d5f1e cx=c_pps
  a=rEv8fa4AjpPjGxpoe8rlIQ==:117 a=rEv8fa4AjpPjGxpoe8rlIQ==:17
  a=FelO9ux0wxsA:10 a=VkNPw1HP01LnGYTKEx00:22 a=l0iWHRpgs5sLHlkKQ1IR:22
- a=EAYMVhzMl8SCOHhVQcBL:22 a=M5GUcnROAAAA:8 a=VwQbUJbxAAAA:8
- a=dH9mCnKsI0P63bTXedQA:9 a=OBjm3rFKGHvpk9ecZwUJ:22
+ a=QXcCYyLzdtTjyudCfB6f:22 a=M5GUcnROAAAA:8 a=VwQbUJbxAAAA:8
+ a=kL93aq-EMttsvyrpbMAA:9 a=OBjm3rFKGHvpk9ecZwUJ:22
+X-Proofpoint-ORIG-GUID: dg4fM8y_k8_f73970tR3TvcR9SekIjuS
+X-Proofpoint-GUID: dg4fM8y_k8_f73970tR3TvcR9SekIjuS
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.125,FMLib:17.12.100.49
  definitions=2026-06-01_03,2026-05-28_03,2025-10-01_01
 
 From: Anil Gurumurthy <agurumurthy@marvell.com>
 
-Add the 128-byte sts_cont_entry_ext_t and mrk_entry_ext_t
-structures required by 29xx firmware.  Include the qla_fw29.h
-header from qla_def.h so the new types are available throughout
-the driver.
+The qla_flash_memo_block and related structures in qla_fw29.h
+duplicate definitions already present elsewhere.  Remove the
+duplicates to avoid divergence and build warnings.
 
 Cc: stable@vger.kernel.org
 Signed-off-by: Anil Gurumurthy <agurumurthy@marvell.com>
 Signed-off-by: Nilesh Javali <njavali@marvell.com>
 ---
- drivers/scsi/qla2xxx/qla_def.h | 33 +++++++++++++++++++++++++++++++++
- 1 file changed, 33 insertions(+)
+ drivers/scsi/qla2xxx/qla_fw29.h | 39 ---------------------------------
+ 1 file changed, 39 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index 7423687578dc..485c744a59fb 100644
---- a/drivers/scsi/qla2xxx/qla_def.h
-+++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -337,6 +337,7 @@ static inline void wrt_reg_dword(volatile __le32 __iomem *addr, u32 data)
- 
- #define MAX_CMDSZ	16		/* SCSI maximum CDB size. */
- #include "qla_fw.h"
-+#include "qla_fw29.h"
- 
- struct name_list_extended {
- 	struct get_name_list_extended *l;
-@@ -2360,6 +2361,38 @@ typedef struct {
- 	uint8_t reserved_2[48];
- } mrk_entry_t;
- 
-+/* 29xx definitions */
-+struct sts_cont_entry_ext {
-+	uint8_t entry_type;		/* Entry type. */
-+	uint8_t entry_count;		/* Entry count. */
-+	uint8_t sys_define;		/* System defined. */
-+	uint8_t entry_status;		/* Entry Status. */
-+	uint8_t data[124];		/* data */
-+};
-+
-+/*
-+ * ISP queue - marker entry structure definition.
-+ */
-+struct mrk_entry_ext {
-+	uint8_t entry_type;		/* Entry type. */
-+	uint8_t entry_count;		/* Entry count. */
-+	uint8_t handle_count;		/* Handle count. */
-+	uint8_t entry_status;		/* Entry Status. */
-+	uint32_t sys_define_2;		/* System defined. */
-+	target_id_t target;		/* SCSI ID */
-+	uint8_t modifier;		/* Modifier (7-0). */
-+#define MK_SYNC_ID_LUN	0		/* Synchronize ID/LUN */
-+#define MK_SYNC_ID	1		/* Synchronize ID */
-+#define MK_SYNC_ALL	2		/* Synchronize all ID/LUN */
-+#define MK_SYNC_LIP	3		/* Synchronize all ID/LUN, */
-+					/* clear port changed, */
-+					/* use sequence number. */
-+	uint8_t reserved_1;
-+	__le16	sequence_number;	/* Sequence number of event */
-+	__le16	lun;			/* SCSI LUN */
-+	uint8_t reserved_2[112];
-+};
-+
- /*
-  * ISP queue - Management Server entry structure definition.
-  */
+diff --git a/drivers/scsi/qla2xxx/qla_fw29.h b/drivers/scsi/qla2xxx/qla_fw29.h
+index cbb945c011da..26345e308a2c 100644
+--- a/drivers/scsi/qla2xxx/qla_fw29.h
++++ b/drivers/scsi/qla2xxx/qla_fw29.h
+@@ -689,43 +689,4 @@ struct vp_rpt_id_entry_24xx_ext {
+ 		} f2;
+ 	} u;
+ };
+-
+-struct qla_fmb_version {
+-	uint8_t major;
+-	uint8_t minor;
+-	uint8_t sub;
+-	uint8_t build;
+-};
+-
+-struct qla_fmb_upd_time {
+-	uint16_t year;
+-	uint8_t  month;
+-	uint8_t  day;
+-
+-	uint8_t  hour;
+-	uint8_t  minute;
+-	uint8_t  second;
+-	uint8_t  reserved;
+-};
+-
+-struct qla_flash_memo_block {
+-	int32_t  signature;	/* "FMBS" */
+-#define QLFC_FMB_SIG 0x464D4253
+-	uint32_t length;
+-	uint32_t version;
+-#define QLFC_FMB_VERSION 3
+-	uint32_t checksum;
+-	struct qla_fmb_version ffv_ver;
+-	struct qla_fmb_version mbi_ver;
+-	struct  {    /* offset 0x18: MBI package build time: YYYYMMDD */
+-		uint16_t year;
+-		uint8_t  month;
+-		uint8_t  day;
+-		uint8_t  reserve[4];
+-	} bld_time;
+-	uint8_t tool_id[4];
+-	struct qla_fmb_upd_time upd_time;	/* offset 0x24: flash update time stamp */
+-	struct qla_fmb_version  tool_version;	/* offset 0x2C: FW/tool version */
+-};
+-
+ #endif
 -- 
 2.47.3
 
