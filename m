@@ -1,56 +1,56 @@
 Received: from mx0b-0016f401.pphosted.com (mx0b-0016f401.pphosted.com [67.231.156.173])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1A323356766
-	for <linux-scsi@vger.kernel.org>; Mon,  1 Jun 2026 10:31:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9AE90312831
+	for <linux-scsi@vger.kernel.org>; Mon,  1 Jun 2026 10:31:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.156.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780309892; cv=none; b=lOHDy1BR9MGbezQUyeYnj0DhyhL9gzqplU9WYzjwBeCL25LXwQDlIw1dM+Epb+ZzTcDwI8Iaeb4ZqpLnkFccrqpDLyhGh9aGf+OwTX506VUC209JQXD6zgRGcvHrAcRTo7Wrr9/Jad3KFN5YaFjl2gaOQg5csK5gyTiuvSPQDtM=
+	t=1780309898; cv=none; b=D0ZOodR1xITp58Ett2uZzDJiMCdSNRamLO+CyMhgrIhqnewvoAnIQAm+vq5GYlpXVgBbSzepBLE7ZmrHDR2tW0SQiV9KnMe56nlOU2GnmcMKNa99qJ/fFH2heZHdSrh9f78ej6q9dsNYlGY4rh/uAAJLM9ak5jnd35KdEJDz5Ds=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780309892; c=relaxed/simple;
-	bh=iIz27BtZHfX0WCgAziFEkPgD8putxnimPVwYs2QyBzs=;
+	s=arc-20240116; t=1780309898; c=relaxed/simple;
+	bh=Ksd8RJ/Bb3HEKjTTmj19qIo9cDfu/yg8LBzjeOeuUh0=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=h3a8yMgADYB/FZyCFjkGGAPxQ6ppgk2akQS9IaLCB6weEDbM8xX2bAyeGVZVA/0SOAHg55rlRpjMv1VI/dPMlbw0cgNofJkDBFbeXS+f97n+I9FzUqqhVBUHceFudwuWlf05vnv/fV/Wr/yhzQLKr3KVGufVQzv1rtV730SvW14=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=marvell.com; spf=pass smtp.mailfrom=marvell.com; dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b=XEonv15t; arc=none smtp.client-ip=67.231.156.173
+	 MIME-Version:Content-Type; b=A1q7GsoSSJW2kO3xdd16hBaTsmDEw9rnHtyAujPPBgJ2+8z7zVSopVCmsQLDs4RaXxp+soYaqukiMAiB9SFqffOyoDgXrAUxcS0b7Jcp1n/3tYyMraAXeazbIbnHxVkDFhGxJuxY4NhW/kxq0WGTqupkzO5DVo3XqHlzGj5G3v4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=marvell.com; spf=pass smtp.mailfrom=marvell.com; dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b=Lt0vkkNv; arc=none smtp.client-ip=67.231.156.173
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=marvell.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=marvell.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="XEonv15t"
-Received: from pps.filterd (m0431383.ppops.net [127.0.0.1])
-	by mx0b-0016f401.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 64VLj62M3311732;
-	Mon, 1 Jun 2026 03:31:28 -0700
+	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="Lt0vkkNv"
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 64VLxfYa1231225;
+	Mon, 1 Jun 2026 03:31:31 -0700
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=
 	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=pfpt0220; bh=r
-	HTJB9kc3FWdCehabrphRkWrJxOfopvuR84RKbT1Quw=; b=XEonv15twswry09nm
-	WJba4JNHpGKWw6dsQYFXB8Kv8/Vm2Rh/WMFgEsPv1HVSpGlbC2pkY5X6uTb6X2Oh
-	71SytBrYwjHjRBlxu+6pHZgN83hyv3BtjxRdXSghZ/Ki5RX/LoeKSRw3IP8E/olX
-	PlRKwrl3izjxWzoh+lsKPCuArzubx/pg6aibFm9Oq0Affz00wKEtiU6xnFOTywcn
-	OxfyhfW5PAIsTJQ7ZKEXpwqxriFjklG/hi1ynZ566znELO5d/S8exJtX4qiJkIn5
-	RI/8xSOBd57yH7lXkYnTFqExHmTddeNabKJW6jsxHVp8kzcV3r3cQmiLrTvLrhbS
-	N+pXg==
-Received: from dc6wp-exch02.marvell.com ([4.21.29.225])
-	by mx0b-0016f401.pphosted.com (PPS) with ESMTPS id 4eggn8b901-1
+	:message-id:mime-version:references:subject:to; s=pfpt0220; bh=o
+	YLOENYRmqSZI/+o/g1p9qUaavKFkil5dIgfrmfn6Ok=; b=Lt0vkkNv72zijEAbM
+	JhHh4C2COpaafQLusaihWtLZow6Eg9dpNBPHV2zPZKwMgOoJuFQeCFEYm0jOh1AN
+	Bt2VqZEqm1vbz3Yus/YULmv1L6qL+OmQtDNC1gxcO+t9BiV6KWavLWrg2n6FsbOZ
+	Y82vG1WNIeLUB8aBeuw7fmcizuDMBoG3gJPynqkqd670TQaL2pLpbUoA2mDSJFbX
+	3tD4ZS5r4G4V8SFAPqTnTV/Wl2kOp7V2SY9h3c9EfyFVuVr/qyRY9KS0KyzlccRe
+	wKeXPhzirR5hYIiTtdgvi5c+rpPxMpWl+UnMBCdaGlAShFit5veyQeen/Xqk1WW5
+	AQDAQ==
+Received: from dc5-exch05.marvell.com ([199.233.59.128])
+	by mx0b-0016f401.pphosted.com (PPS) with ESMTPS id 4ega3b41qh-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 01 Jun 2026 03:31:27 -0700 (PDT)
-Received: from DC6WP-EXCH02.marvell.com (10.76.176.209) by
- DC6WP-EXCH02.marvell.com (10.76.176.209) with Microsoft SMTP Server
+	Mon, 01 Jun 2026 03:31:31 -0700 (PDT)
+Received: from DC5-EXCH05.marvell.com (10.69.176.209) by
+ DC5-EXCH05.marvell.com (10.69.176.209) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.25; Mon, 1 Jun 2026 03:31:27 -0700
-Received: from maili.marvell.com (10.69.176.80) by DC6WP-EXCH02.marvell.com
- (10.76.176.209) with Microsoft SMTP Server id 15.2.1544.25 via Frontend
- Transport; Mon, 1 Jun 2026 03:31:27 -0700
+ 15.2.1544.25; Mon, 1 Jun 2026 03:31:30 -0700
+Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH05.marvell.com
+ (10.69.176.209) with Microsoft SMTP Server id 15.2.1544.25 via Frontend
+ Transport; Mon, 1 Jun 2026 03:31:30 -0700
 Received: from stgdev-a5u16.punelab.marvell.com (stgdev-a5u16.punelab.marvell.com [10.31.33.164])
-	by maili.marvell.com (Postfix) with ESMTP id C63F23F7053;
-	Mon,  1 Jun 2026 03:31:24 -0700 (PDT)
+	by maili.marvell.com (Postfix) with ESMTP id CF2643F7053;
+	Mon,  1 Jun 2026 03:31:27 -0700 (PDT)
 From: Nilesh Javali <njavali@marvell.com>
 To: <martin.petersen@oracle.com>
 CC: <linux-scsi@vger.kernel.org>, <GR-QLogic-Storage-Upstream@marvell.com>,
         <agurumurthy@marvell.com>, <emilne@redhat.com>, <jmeneghi@redhat.com>,
         <hare@suse.com>
-Subject: [PATCH 43/44] scsi: qla2xxx: Convert NVMe ring advance to use qla_req_ring_advance()
-Date: Mon, 1 Jun 2026 15:58:52 +0530
-Message-ID: <20260601102853.328426-44-njavali@marvell.com>
+Subject: [PATCH 44/44] scsi: qla2xxx: Adjust feature gating in BSG paths for 29xx support
+Date: Mon, 1 Jun 2026 15:58:53 +0530
+Message-ID: <20260601102853.328426-45-njavali@marvell.com>
 X-Mailer: git-send-email 2.23.1
 In-Reply-To: <20260601102853.328426-1-njavali@marvell.com>
 References: <20260601102853.328426-1-njavali@marvell.com>
@@ -62,63 +62,176 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-Proofpoint-ORIG-GUID: rOBn2a0tzfsK1GmrRynm_DUj4Z38hVi9
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNjAxMDEwNSBTYWx0ZWRfX1jq1qv4Hal24
- dAQKsoT9yoeWJrxO6WuyU6n873xMFp/IIPt/4tCI3O9yv25C59k8IE13xKqY+kKXmKpY0LmnbYL
- j6JK14SIKfrACvwsEjAz9TI896WVJuIBRtmFgJEFtqoiUexEnDxgH8G388u0VuDNh3JfCoC0izV
- LXNgylRkkci4mUOTyzq8hp29lhp9DasBMGyjDnUfsqqOmR9uFQZ1DOPnBsTxhbwfFBCUxLvAU4G
- IgTwI1O0JwmD9Yy62OW3VGelYKAKCmu0wt5qydFv3ae1ZaRi8yTaB2e/R98WLPSnOrWVfsiAsmU
- bQZlvl3jD56wdqmobQ4EDwku0H7yUibEqvXPNWma1tXZWlfCUdB+n1QJ9DrQ17XkuxZ6K04wQQU
- Ms3mCuMkCduaD+SQr+IBQ93uAC3SfSn5eccRJ+Rl1DTodF73Pu5y0+3NkIzpFXqOmCgADCMPzbp
- 1HZHNKs460hab7N6Xkw==
-X-Proofpoint-GUID: rOBn2a0tzfsK1GmrRynm_DUj4Z38hVi9
-X-Authority-Analysis: v=2.4 cv=ON0XGyaB c=1 sm=1 tr=0 ts=6a1d5f80 cx=c_pps
- a=gIfcoYsirJbf48DBMSPrZA==:117 a=gIfcoYsirJbf48DBMSPrZA==:17
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNjAxMDEwNSBTYWx0ZWRfX9IrUpAG1Rs9f
+ fsi33D7n9+qWMZsefQulEIpzanS7TJO8pxTMiod9gIWatqeWVt8UHo9HE1kZswDAzpF9QlckdRt
+ lNj+yFXKIqbirlmo2AHw9lbpSEGcxskujlaA14SR/rG5rx2VE02ZlQppzOWZrbnNAq2GEbRgGcp
+ vtbjQhUlNSsOXNRiotXv4T+jOg80V7u1lfrryGB7ZtByPrBCzNFkNxL33FKCgm61mg8HwlCOA/+
+ FDZ9ZWez4xCCBNSziSAhAAfTjhIF0I5nAdURvv5FYyWiyNZQFJX/ukUpjbIS2owb/mW6Bs3G84l
+ 7nO4pp6jpYACDZz6n62AA8Yg2WM++g6QHXyuIPKw+v874VtYkH8jqEuF52TnfotC0UcXjDj9P9D
+ O7ciCACy6B9vdwnfZfdlZm9KkzeHf3dASvJY1U+KDa6WsoyvkpkNtrG+UM1KbZLNtEVZQPJ6HMG
+ PE3GiXLyaxjXYEIVdJQ==
+X-Authority-Analysis: v=2.4 cv=cLjQdFeN c=1 sm=1 tr=0 ts=6a1d5f83 cx=c_pps
+ a=rEv8fa4AjpPjGxpoe8rlIQ==:117 a=rEv8fa4AjpPjGxpoe8rlIQ==:17
  a=FelO9ux0wxsA:10 a=VkNPw1HP01LnGYTKEx00:22 a=l0iWHRpgs5sLHlkKQ1IR:22
- a=qit2iCtTFQkLgVSMPQTB:22 a=VwQbUJbxAAAA:8 a=M5GUcnROAAAA:8
- a=Mq_Bs6O7SrpB7tt5vDcA:9 a=OBjm3rFKGHvpk9ecZwUJ:22
+ a=QXcCYyLzdtTjyudCfB6f:22 a=M5GUcnROAAAA:8 a=VwQbUJbxAAAA:8
+ a=AL1J6h4vQ9Q_KpX2ngUA:9 a=OBjm3rFKGHvpk9ecZwUJ:22
+X-Proofpoint-ORIG-GUID: R6jNlKWYcj3LAWuC5TzhhuCx657RF39F
+X-Proofpoint-GUID: R6jNlKWYcj3LAWuC5TzhhuCx657RF39F
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.125,FMLib:17.12.100.49
  definitions=2026-06-01_03,2026-05-28_03,2025-10-01_01
 
-Replace the open-coded IS_QLA29XX() ring_ext_ptr/ring_ptr advancement
-in qla2x00_start_nvme_mq() with the qla_req_ring_advance() helper,
-removing 16 lines of duplicated logic.
+From: Manish Rangankar <mrangankar@marvell.com>
+
+Extend qla2xxx BSG command handling to recognize QLA29xx adapters and
+align feature availability with hardware capabilities.
+
+Allow QLA29xx in paths previously restricted to QLA27xx/28xx:
+  - Flash update capability queries (get/set)
+  - BBCR data retrieval
+  - D-port diagnostics
+  - MPI and PEP version sysfs attributes
+
+Restrict unsupported operations on QLA29xx:
+  - Reject flash image status query (no active image tracking)
+  - Block qla28xx_validate_flash_image()
+
+Guard the qla27xx_get_active_image() call with an explicit IS_QLA27XX
+|| IS_QLA28XX check so it is not reached from adapters that lack the
+legacy active-image layout.
 
 Cc: stable@vger.kernel.org
+Signed-off-by: Manish Rangankar <mrangankar@marvell.com>
 Signed-off-by: Nilesh Javali <njavali@marvell.com>
 ---
- drivers/scsi/qla2xxx/qla_nvme.c | 17 +----------------
- 1 file changed, 1 insertion(+), 16 deletions(-)
+ drivers/scsi/qla2xxx/qla_attr.c |  4 ++--
+ drivers/scsi/qla2xxx/qla_bsg.c  | 21 +++++++++++++--------
+ drivers/scsi/qla2xxx/qla_def.h  |  2 +-
+ drivers/scsi/qla2xxx/qla_fw.h   |  2 +-
+ 4 files changed, 17 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_nvme.c b/drivers/scsi/qla2xxx/qla_nvme.c
-index 61a8e9162135..0038b6274d44 100644
---- a/drivers/scsi/qla2xxx/qla_nvme.c
-+++ b/drivers/scsi/qla2xxx/qla_nvme.c
-@@ -798,22 +798,7 @@ static inline int qla2x00_start_nvme_mq(srb_t *sp)
- 	wmb();
+diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
+index e8755ab86b6a..88428cf51202 100644
+--- a/drivers/scsi/qla2xxx/qla_attr.c
++++ b/drivers/scsi/qla2xxx/qla_attr.c
+@@ -1542,7 +1542,7 @@ qla2x00_mpi_version_show(struct device *dev, struct device_attribute *attr,
+ 	struct qla_hw_data *ha = vha->hw;
  
- 	/* Adjust ring index. */
--	req->ring_index++;
--	if (IS_QLA29XX(ha)) {
--		if (req->ring_index == req->length) {
--			req->ring_index = 0;
--			req->ring_ext_ptr = req->ring_ext;
--		} else {
--			req->ring_ext_ptr++;
--		}
--	} else {
--		if (req->ring_index == req->length) {
--			req->ring_index = 0;
--			req->ring_ptr = req->ring;
--		} else {
--			req->ring_ptr++;
--		}
--	}
-+	qla_req_ring_advance(ha, req);
+ 	if (!IS_QLA81XX(ha) && !IS_QLA8031(ha) && !IS_QLA8044(ha) &&
+-	    !IS_QLA27XX(ha) && !IS_QLA28XX(ha))
++	    !IS_QLA27XX(ha) && !IS_QLA28XX(ha) && !IS_QLA29XX(ha))
+ 		return scnprintf(buf, PAGE_SIZE, "\n");
  
- 	/* ignore nvme async cmd due to long timeout */
- 	if (!nvme->u.nvme.aen_op)
+ 	return scnprintf(buf, PAGE_SIZE, "%d.%02d.%02d (%x)\n",
+@@ -1770,7 +1770,7 @@ qla2x00_pep_version_show(struct device *dev, struct device_attribute *attr,
+ 	scsi_qla_host_t *vha = shost_priv(class_to_shost(dev));
+ 	struct qla_hw_data *ha = vha->hw;
+ 
+-	if (!IS_QLA27XX(ha) && !IS_QLA28XX(ha))
++	if (!IS_QLA27XX(ha) && !IS_QLA28XX(ha) && !IS_QLA29XX(ha))
+ 		return scnprintf(buf, PAGE_SIZE, "\n");
+ 
+ 	return scnprintf(buf, PAGE_SIZE, "%d.%02d.%02d\n",
+diff --git a/drivers/scsi/qla2xxx/qla_bsg.c b/drivers/scsi/qla2xxx/qla_bsg.c
+index 733e0921ecef..89eeef06bb94 100644
+--- a/drivers/scsi/qla2xxx/qla_bsg.c
++++ b/drivers/scsi/qla2xxx/qla_bsg.c
+@@ -1877,7 +1877,7 @@ static int qla2900_bsg_load_mpi(struct bsg_job *bsg_job)
+ 	bsg_job_done(bsg_job, bsg_reply->result,
+ 		     bsg_reply->reply_payload_rcv_len);
+ 
+-	return rval;
++	return 0;
+ }
+ 
+ static int
+@@ -2521,7 +2521,7 @@ qla27xx_get_flash_upd_cap(struct bsg_job *bsg_job)
+ 	struct qla_hw_data *ha = vha->hw;
+ 	struct qla_flash_update_caps cap;
+ 
+-	if (!(IS_QLA27XX(ha)) && !IS_QLA28XX(ha))
++	if (!(IS_QLA27XX(ha)) && !IS_QLA28XX(ha) && !IS_QLA29XX(ha))
+ 		return -EPERM;
+ 
+ 	memset(&cap, 0, sizeof(cap));
+@@ -2554,7 +2554,7 @@ qla27xx_set_flash_upd_cap(struct bsg_job *bsg_job)
+ 	uint64_t online_fw_attr = 0;
+ 	struct qla_flash_update_caps cap;
+ 
+-	if (!IS_QLA27XX(ha) && !IS_QLA28XX(ha))
++	if (!IS_QLA27XX(ha) && !IS_QLA28XX(ha) && !IS_QLA29XX(ha))
+ 		return -EPERM;
+ 
+ 	memset(&cap, 0, sizeof(cap));
+@@ -2602,7 +2602,7 @@ qla27xx_get_bbcr_data(struct bsg_job *bsg_job)
+ 	uint8_t domain, area, al_pa, state;
+ 	int rval;
+ 
+-	if (!IS_QLA27XX(ha) && !IS_QLA28XX(ha))
++	if (!IS_QLA27XX(ha) && !IS_QLA28XX(ha) && !IS_QLA29XX(ha))
+ 		return -EPERM;
+ 
+ 	memset(&bbcr, 0, sizeof(bbcr));
+@@ -2718,7 +2718,7 @@ qla2x00_do_dport_diagnostics(struct bsg_job *bsg_job)
+ 	struct qla_dport_diag *dd;
+ 
+ 	if (!IS_QLA83XX(vha->hw) && !IS_QLA27XX(vha->hw) &&
+-	    !IS_QLA28XX(vha->hw))
++	    !IS_QLA28XX(vha->hw) && !IS_QLA29XX(vha->hw))
+ 		return -EPERM;
+ 
+ 	dd = kmalloc_obj(*dd);
+@@ -2844,8 +2844,13 @@ qla2x00_get_flash_image_status(struct bsg_job *bsg_job)
+ 	struct qla_active_regions regions = { };
+ 	struct active_regions active_regions = { };
+ 
+-	qla27xx_get_active_image(vha, &active_regions);
+-	regions.global_image = active_regions.global;
++	if (IS_QLA29XX(ha))
++		return -EPERM;
++
++	if (IS_QLA27XX(ha) || IS_QLA28XX(ha)) {
++		qla27xx_get_active_image(vha, &active_regions);
++		regions.global_image = active_regions.global;
++	}
+ 
+ 	if (IS_QLA27XX(ha))
+ 		regions.nvme_params = QLA27XX_PRIMARY_IMAGE;
+@@ -3685,7 +3690,7 @@ static int qla28xx_validate_flash_image(struct bsg_job *bsg_job)
+ 	uint16_t state = 0;
+ 	int rval = 0;
+ 
+-	if (!IS_QLA28XX(ha) || vha->vp_idx != 0)
++	if (!IS_QLA28XX(ha) || IS_QLA29XX(ha) || vha->vp_idx != 0)
+ 		return -EPERM;
+ 
+ 	mutex_lock(&ha->optrom_mutex);
+diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
+index becee225ae83..3e8a99476141 100644
+--- a/drivers/scsi/qla2xxx/qla_def.h
++++ b/drivers/scsi/qla2xxx/qla_def.h
+@@ -4476,7 +4476,7 @@ struct qla_hw_data {
+ #define IS_QLA27XX(ha)  (IS_QLA2071(ha) || IS_QLA2271(ha) || IS_QLA2261(ha))
+ #define IS_QLA28XX(ha)	(IS_QLA2081(ha) || IS_QLA2281(ha))
+ #define IS_QLA29XX(ha)	(IS_QLA2099(ha) || IS_QLA2299(ha) || \
+-			 IS_QLA2091(ha) || IS_QLA2291(ha))
++				IS_QLA2091(ha) || IS_QLA2291(ha))
+ 
+ #define IS_QLA24XX_TYPE(ha)     (IS_QLA24XX(ha) || IS_QLA54XX(ha) || \
+ 				IS_QLA84XX(ha))
+diff --git a/drivers/scsi/qla2xxx/qla_fw.h b/drivers/scsi/qla2xxx/qla_fw.h
+index 050986c6217f..4d6f8b1a36d1 100644
+--- a/drivers/scsi/qla2xxx/qla_fw.h
++++ b/drivers/scsi/qla2xxx/qla_fw.h
+@@ -2360,7 +2360,7 @@ struct qla_fmb_upd_time {
+ 
+ struct qla_flash_memo_block {
+ 	__le32   signature;	/* "FMBS" */
+-#define QLFC_FMB_SIG	cpu_to_le32(0x464D4253)
++#define QLFC_FMB_SIG	cpu_to_le32(0x53424D46)
+ 	__le32   length;
+ 	__le32   version;
+ #define QLFC_FMB_VERSION 3
 -- 
 2.47.3
 
