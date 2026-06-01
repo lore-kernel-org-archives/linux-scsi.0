@@ -1,133 +1,151 @@
-Received: from mail-wr1-f46.google.com (mail-wr1-f46.google.com [209.85.221.46])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1BA5E3612ED
-	for <linux-scsi@vger.kernel.org>; Mon,  1 Jun 2026 19:59:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.46
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D035E3ADBAF;
+	Mon,  1 Jun 2026 19:59:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780343943; cv=none; b=Wp7L/p+0r/Vw7YG+GP3hftf6Je7oy94d94tiDJ/ffX+w5kBFh1kKQ9byg7W4KgiwvJvB5q/ybZx0EvxCMIFHg2F5gQ4yQinqKbo6cWBUpvJBDHPY06wZVmYlVgs03SUOF+0bB6dn5SxJ1M0pkpUtfgRjgT6xOakgIG0SO2LlzV0=
+	t=1780343993; cv=none; b=d/14E24sRTgRlzKDWGaFYz0V+XwfPEEaJwl5JrCtVY2iNwg69bHOkp5icX6CPL93fSDtqtgTfv+O0le9Lk2Tu2ljUt8f6gnPbx3GPBMa+ExV5kR2QiK15egkD5xDsLg+3NLRow5HNOTcQ/oGtpZJbT7wCLyxJ7sgryM1yTQCJEo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780343943; c=relaxed/simple;
-	bh=yvt9sp/5rw1QyNxbDG+ApxfyltK9VLSOPVcZat10j7g=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=euHlOZI7Sc1j1qzXNP5O7gQEy+cAKv/zeRrJJvEfIJL2si81pi+Y+cHpioqqsHSOy+U+/jjmeo/vsNiiNAeQROQCmSZV0R729GnKQBG1o8OOcb1h3LY4zeRLdPlC8M8zVKesf58iXOEgYqp1Vrk8qHHcAf0CnjJA3lZ/k0d38Lo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=fL09BPZr; arc=none smtp.client-ip=209.85.221.46
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1780343993; c=relaxed/simple;
+	bh=mqezQcqx9istaPeCmmXZaMwR719orDM1w23ry+SfsJU=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=XhtjzjjnZCvHpCBSexyKH1ukDjjZx+ob50B13ShpY/D5MJad40tq/6eMrxGF/3zDBprT/rTURA2QSZD9uQUvOTuGvJwC57gwawuTZuuAYsdCa3e9mMUCSNvdPKQhh1GFxwomn2ucfeJrw86MECp49KuOcRvKBd0ZbxrwGHbmsiI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jPPf1HSE; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="fL09BPZr"
-Received: by mail-wr1-f46.google.com with SMTP id ffacd0b85a97d-45ef7720385so297571f8f.3
-        for <linux-scsi@vger.kernel.org>; Mon, 01 Jun 2026 12:59:01 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1780343940; x=1780948740; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:mime-version:date:message-id:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=nF0mPffLzyNKxaX+qwdDIt1M45JYJkJ7Btt6JiKxXQk=;
-        b=fL09BPZrjZSjczeXG3edIMXez0To7jkTCJkW/Z1Y4T2t0pZdsI6eTXahcz+ozvEaVB
-         0ZZxBVWiVLigWgHI4KIG5mBVLSwAUG17N1DUHvs9kqYAficIcpa/zVTJY3o6HiE1uAiu
-         VDEtqEKVvFNE55MArl20AYKGYbCn/EdJts6e/64tfzbNy3y4OslHGQ9mC19P2h3q0SIo
-         6wRT+0mPa7NIl8n/t8Qf6n57EOh1GpvnBM83GF1oiepnm5PGwgYQqWHr07UY8O/qJLmQ
-         MuEI/H3HoooPdUSWbYsiweu8EpUNlBhouc9t3MedLOgrugHrNdl2nqRRun+L8/h/1QrC
-         mK5A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1780343940; x=1780948740;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:mime-version:date:message-id:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=nF0mPffLzyNKxaX+qwdDIt1M45JYJkJ7Btt6JiKxXQk=;
-        b=nUqKPgx3OCT+Vi4Kk8RrQRjqkyK/1qqq1uRJwGxnSvz5WfQ5GGeRX6vYohAz3uSHCm
-         fCsxqYYoLFBItrFlA7YbkvEdcg19R5NDsUpP7mJn0ydaJrWL+D/o5D5Kafv1brXjkqJV
-         u+brmn27bN1VZtA7vc4Kg76xiRQ9DQyGJc3h7hANAJgU4M+8LNRUBuW7wWjHp6L0sTuu
-         T8GBEergHFALAPoun7Nip2hrjbQbS0PuUsQDh8VNXbqe8QXlqDFK7vfuJs6zTO1NIsei
-         pCxHqU801LCNzOJ0OWamEzmwJY4RM1RyriF6qYDrBl5heVmil9nFY7gcO6mBKbeRI5rG
-         Qj2w==
-X-Gm-Message-State: AOJu0Yw4nJepZv7kgCzkSfAX88dtyyoCxirvc2Xqc/Qaq7FU0i4edUfY
-	ZX3Ypo6uf9LBcvTgacIYjO3Whelv5YQONxXP4Ac/3tA0Ke5EwVensPU=
-X-Gm-Gg: Acq92OFIue3myrJJj3tV4TiHbEcAwoj7qFmBOB5WSEALXtb7A4MFjQwkNNrNFqIuggO
-	fUQQbo01I9hxmp8cYi/YW9o+eAAz3xhilRn7pdckwvW2Nr6Whse6zkseougWlPyRjwXGFThg941
-	lYECLIADNXwnoZlmgL3pu/hCF014/mXpSeyqhC+b0PgBvp2cwDPNfrePtGegmcfNVVQizka1Fab
-	lAeliyoQP9sEi2KWOO6nWYQHyizz3kS6kX4ROmzAbXrJoAT5xGB6dgOfm4Tk+pq3qES8WJ9oleF
-	flMKGB2zedvJoNlcgM81f0fP9YfCUcNkrt0zkjdwL2fn7QRT985yTEkWsJkun8q06cXbHLU/Dua
-	8osyJMJ0tyAWzCN5AeSWaoQlmwdicmcCRT+QvP7dYQzggj567rDibBHdSOXgq5bkj1zK806dcyW
-	a3VTVU2VBkn+/3nYGpzga3AaAN32ivcIEXmmu0u/LWBFRUyJvPzHM6jlNdy0foikX8LmQwmcU=
-X-Received: by 2002:a05:600c:4753:b0:48a:797f:24f8 with SMTP id 5b1f17b1804b1-490a28ae8camr93776815e9.0.1780343940250;
-        Mon, 01 Jun 2026 12:59:00 -0700 (PDT)
-Received: from localhost (32.red-80-39-29.staticip.rima-tde.net. [80.39.29.32])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-490b0e2e8cesm11343245e9.11.2026.06.01.12.58.59
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 01 Jun 2026 12:58:59 -0700 (PDT)
-Message-ID: <191cd7dc-f6e7-46c1-8a0c-9e63482f34a0@gmail.com>
-Date: Mon, 1 Jun 2026 21:58:58 +0200
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jPPf1HSE"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2D6831F00893;
+	Mon,  1 Jun 2026 19:59:50 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1780343990;
+	bh=XNCn/hiuq2TSQD0/7268qMBjDGPldqx55TcTTgULBQo=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=jPPf1HSEtTmrOkKgXG7yZ4L4yWlXriv9f4UInH3EUjfr7uRqEixqsswHEVJD66e/i
+	 UYMnZm3AwHRFYgRV2ih8KtH9UMVsaXegF2blXd/AV6FabDLb+h4l5NmMOw9ZVrD++N
+	 KcX2jHWXOHM02LWFJzDj4MfNwHTR6omd404TzjNZvpI6ZIAf59Yvhv/clTseKbIOtO
+	 ETM1funcq4ukCXv67pvcGJzgYBqL/gNfgi123wCjIaYqeaTkJBGmaBAvvqiI5vVIDR
+	 F9G7b/Sg9jjyGT7K98XQKfJ06MeRLxen4rImVcQChLpFwv+lALs23w52eL46/a7lq6
+	 WVHwgppy+tSkw==
+Date: Mon, 1 Jun 2026 12:59:49 -0700
+From: Kees Cook <kees@kernel.org>
+To: Petr Pavlu <petr.pavlu@suse.com>
+Cc: Luis Chamberlain <mcgrof@kernel.org>,
+	Pengpeng Hou <pengpeng@iscas.ac.cn>,
+	Richard Weinberger <richard@nod.at>,
+	Anton Ivanov <anton.ivanov@cambridgegreys.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Len Brown <lenb@kernel.org>, Corey Minyard <corey@minyard.net>,
+	Gabriel Somlo <somlo@cmu.edu>,
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	Jani Nikula <jani.nikula@linux.intel.com>,
+	Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
+	Rodrigo Vivi <rodrigo.vivi@intel.com>,
+	Tvrtko Ursulin <tursulin@ursulin.net>,
+	David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>,
+	Bart Van Assche <bvanassche@acm.org>,
+	Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>,
+	Laurent Pinchart <laurent.pinchart@ideasonboard.com>,
+	Hans de Goede <hansg@kernel.org>,
+	Mauro Carvalho Chehab <mchehab@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, Hannes Reinecke <hare@suse.de>,
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Daniel Lezcano <daniel.lezcano@kernel.org>,
+	Zhang Rui <rui.zhang@intel.com>, Lukasz Luba <lukasz.luba@arm.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Jiri Slaby <jirislaby@kernel.org>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Jason Wang <jasowang@redhat.com>,
+	Xuan Zhuo <xuanzhuo@linux.alibaba.com>,
+	Eugenio =?iso-8859-1?Q?P=E9rez?= <eperezma@redhat.com>,
+	Jason Baron <jbaron@akamai.com>, Jim Cromie <jim.cromie@gmail.com>,
+	Tiwei Bie <tiwei.btw@antgroup.com>,
+	Benjamin Berg <benjamin.berg@intel.com>,
+	Ilpo =?iso-8859-1?Q?J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+	"David E. Box" <david.e.box@linux.intel.com>,
+	"Maciej W. Rozycki" <macro@orcam.me.uk>,
+	Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
+	Peter Zijlstra <peterz@infradead.org>,
+	Heiko Carstens <hca@linux.ibm.com>,
+	Vasily Gorbik <gor@linux.ibm.com>,
+	Sean Christopherson <seanjc@google.com>,
+	Paolo Bonzini <pbonzini@redhat.com>,
+	Thomas Gleixner <tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>,
+	Borislav Petkov <bp@alien8.de>,
+	Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org,
+	"H. Peter Anvin" <hpa@zytor.com>, Vinod Koul <vkoul@kernel.org>,
+	Frank Li <Frank.Li@kernel.org>, Daniel Gomez <da.gomez@kernel.org>,
+	Sami Tolvanen <samitolvanen@google.com>,
+	Aaron Tomlin <atomlin@atomlin.com>,
+	Alexander Potapenko <glider@google.com>,
+	Marco Elver <elver@google.com>, Dmitry Vyukov <dvyukov@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	John Johansen <john.johansen@canonical.com>,
+	Paul Moore <paul@paul-moore.com>, James Morris <jmorris@namei.org>,
+	"Serge E. Hallyn" <serge@hallyn.com>,
+	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+	Georgia Garcia <georgia.garcia@canonical.com>, kvm@vger.kernel.org,
+	dmaengine@vger.kernel.org, linux-modules@vger.kernel.org,
+	kasan-dev@googlegroups.com, linux-mm@kvack.org,
+	apparmor@lists.ubuntu.com, linux-security-module@vger.kernel.org,
+	linux-um@lists.infradead.org, linux-acpi@vger.kernel.org,
+	openipmi-developer@lists.sourceforge.net, qemu-devel@nongnu.org,
+	intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+	linux-rdma@vger.kernel.org, linux-media@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
+	linux-pm@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	linux-serial@vger.kernel.org, linux-usb@vger.kernel.org,
+	usb-storage@lists.one-eyed-alien.net,
+	virtualization@lists.linux.dev, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org, netdev@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org, linux-hardening@vger.kernel.org
+Subject: Re: [PATCH 00/11] Convert moduleparams to seq_buf
+Message-ID: <202606011259.CE6E74CE@keescook>
+References: <20260521133315.work.845-kees@kernel.org>
+ <88c5ca1d-eeda-4023-bc7a-397b92780db9@suse.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Subject: Re: [PATCH 06/44] scsi: qla2xxx: Add FC operational firmware load for
- 29xx
-To: Nilesh Javali <njavali@marvell.com>,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- Christoph Hellwig <hch@lst.de>
-Cc: SCSI-ML <linux-scsi@vger.kernel.org>,
- GR-QLogic-Storage-Upstream@marvell.com, agurumurthy@marvell.com,
- emilne@redhat.com, jmeneghi@redhat.com, hare@suse.com
-References: <20260601102853.328426-1-njavali@marvell.com>
- <20260601102853.328426-7-njavali@marvell.com>
-Content-Language: en-US, en-GB, es-ES
-From: Xose Vazquez Perez <xose.vazquez@gmail.com>
-In-Reply-To: <20260601102853.328426-7-njavali@marvell.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <88c5ca1d-eeda-4023-bc7a-397b92780db9@suse.com>
 
-On 6/1/26 12:28 PM, Nilesh Javali wrote:
-
-> From: Manish Rangankar <mrangankar@marvell.com>
+On Tue, May 26, 2026 at 08:53:06AM +0200, Petr Pavlu wrote:
+> On 5/21/26 3:33 PM, Kees Cook wrote:
+> > Hi,
+> > 
+> > I tried to trim the CC list here, but it's still pretty huge...
+> > 
+> > We've had a long-standing issue with "write to a string pointer" callbacks
+> > that don't bounds check the destination (and for which the bounds is
+> > also not part of the callback prototype, even if it is "known" to be
+> > PAGE_SIZE, which sysfs_emit() depends on). Both moduleparams and sysfs
+> > use this pattern. As a first step, and to test the migration method,
+> > migrate moduleparams first.
+> > 
+> > There are 2 "mechanical" treewide patches that are handled by Coccinelle:
+> > - treewide: Convert struct kernel_param_ops initializers to DEFINE_KERNEL_PARAM_OPS
+> > - treewide: Convert custom kernel_param_ops .get callbacks to seq_buf via cocci
+> > 
+> > The last treewide patch is manual, and may need to be broken up into
+> > per-subsystem patches, though I'd prefer to avoid this, as it would
+> > extend the migration from 1 relase to at least 2 releases. (1 to
+> > release the migration infrastructure, then 1 release to collect all the
+> > subsystem changes, and possibly 1 more release to remove the migration
+> > infrastructure.)
+> > 
+> > Thoughts, questions?
 > 
-> Add support to load the 29xx FC operational firmware from the
-> filesystem and to set up the corresponding firmware dump
-> template.  This follows the same request_firmware / segment-load
-> pattern used by earlier adapters.
+> This looks reasonable to me. I added a few minor comments on the patches
+> but they already look solid.
 
-> Cc: stable@vger.kernel.org
+Thanks for the review! I'll get a v2 prepared with your notes addressed. :)
 
-New features and hardware support should not be targeted for stable
-trees. Only bug fixes or essential regressions belong here.
+-Kees
 
-> @@ -7680,6 +7720,7 @@ qla2x00_timer(struct timer_list *t)
->   #define FW_FILE_ISP8031	"ql8300_fw.bin"
->   #define FW_FILE_ISP27XX	"ql2700_fw.bin"
->   #define FW_FILE_ISP28XX	"ql2800_fw.bin"
-> +#define FW_FILE_ISP29XX	"ql2900_fw.bin"
->   
->   
->   static DEFINE_MUTEX(qla_fw_lock);
-> @@ -7697,6 +7738,7 @@ static struct fw_blob qla_fw_blobs[] = {
->   	{ .name = FW_FILE_ISP8031, },
->   	{ .name = FW_FILE_ISP27XX, },
->   	{ .name = FW_FILE_ISP28XX, },
-> +	{ .name = FW_FILE_ISP29XX, },
->   	{ .name = NULL, },
->   };
->   
-> @@ -7730,6 +7772,8 @@ qla2x00_request_firmware(scsi_qla_host_t *vha)
->   		blob = &qla_fw_blobs[FW_ISP27XX];
->   	} else if (IS_QLA28XX(ha)) {
->   		blob = &qla_fw_blobs[FW_ISP28XX];
-> +	} else if (IS_QLA29XX(ha)) {
-> +		blob = &qla_fw_blobs[FW_ISP29XX];
->   	} else {
->   		return NULL;
->   	}
-The last available firmware file intended for user-space updates via
-request_firmware() was "ql2500_fw.bin" back in 2019 (for the ISP25xx QLogic
-2500 Series 8Gb FC HBAs). Since then, no official firmware binaries have
-been released or published for newer 16Gb or 32Gb HBAs (such as ISP83xx,
-ISP27xx, or ISP28xx), let alone being merged into the upstream
-linux-firmware.git repository.
-
-While this code might be useful for your internal development and testing
-purposes, adding dead code to the upstream kernel for firmware files that
-do not publicly exist provides zero value.
+-- 
+Kees Cook
