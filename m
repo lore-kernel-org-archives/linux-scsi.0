@@ -1,66 +1,35 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from spam.asrmicro.com (asrmicro.com [210.13.118.86])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EBE373603EF;
-	Sun, 31 May 2026 23:51:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7BF2013959D;
+	Mon,  1 Jun 2026 04:58:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.13.118.86
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780271488; cv=none; b=SVrbhV4+FDEeZRbHvTYCy1PpcrKzdBm732BJNwX6L/PuZAOBESIfDw9eJZqHxiCZM7jcxUfk6QNvAtNabt/xSiZfH8FOooH5PmEjnTTe2U/4jkXbS2BssWVyk8KIFWoOM+zlW39qSp0IHv4KGo7qSTjh+RnVm8JizllZEmkzFQg=
+	t=1780289885; cv=none; b=I7jNhX0xMEHTWxOmUK0GqEAmfAoim1ugCgYw6WYVyOTt8OimugXJeUVHWDTAY/WJKThUoW1o7Ilk6RnsSwlea8dAPzzh07JM0eubxPR0SvvU7WIbALzyz6GAbuCEuE2t6/pWLq5W5hBnUXHzsnfwSNOpBpSddNPKpnPt3ayfPNE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780271488; c=relaxed/simple;
-	bh=USWYhZGRa2R7RDbF9RBquLvBrwNSeb1Y4LrYpCDI6Pw=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=oxyy058aoo7LtLQg5NQ074CcMvKlbisyxzPP+w0uRvSKRhu6hr8o9T2XCv2xQ5sJN493Fu3fKbIkTZ2tU/fRvGOPbM9q40Bfnxy/QL+NdxQeyQu5odWxwvyYdcAwP2a6KLTMOxrIKCiR3po8bB3mjan8QkCjBQ7EEQZx3Jg02EA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=fMhrJlMF; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="fMhrJlMF"
-Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 64VJUGvG3838769;
-	Sun, 31 May 2026 23:51:02 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:date:from:in-reply-to:message-id
-	:mime-version:references:subject:to; s=qcppdkim1; bh=YUKxUX9UHqP
-	UcjOStYk74PJ5jj3MakW/GTJelLi6lSU=; b=fMhrJlMFb8I+bmOtcy4U5AY5Gkf
-	KKxM6492mDXOTTsU6IL5MEj7CpjlVr4rY0+Fnpuz/Hadb5Ir2YPCOAHQSP1aCF7s
-	ijNaU1x0DLW0lJi/6m7JCAxvWdbkPEZVCZxE7KB/PISyVX0FsPovr0jkZye27GUD
-	bFqWpj98ikuo2SP60/vZiFrs3ULmxql0xnSSmQi11K6yelxTwTbLyrdzeqxcclBU
-	HGOCdkK5XTKnqQGtNlBKFM+UOrw6LptFQjN1v0xNguZSOtzqry0SaIZJTU4CbCv5
-	h094j3zo4VllV1Dd4Q7BxTgx/X+8lMtaa7WYIsar3CQ02s2tq5+jFZs+ung==
-Received: from apblrppmta01.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.18.19])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4efq7fd042-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Sun, 31 May 2026 23:51:01 +0000 (GMT)
-Received: from pps.filterd (APBLRPPMTA01.qualcomm.com [127.0.0.1])
-	by APBLRPPMTA01.qualcomm.com (8.18.1.7/8.18.1.7) with ESMTP id 64VNowvZ008828;
-	Sun, 31 May 2026 23:50:58 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-	by APBLRPPMTA01.qualcomm.com (PPS) with ESMTPS id 4efryj04bq-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Sun, 31 May 2026 23:50:58 +0000 (GMT)
-Received: from APBLRPPMTA01.qualcomm.com (APBLRPPMTA01.qualcomm.com [127.0.0.1])
-	by pps.reinject (8.18.1.12/8.18.1.12) with ESMTP id 64VNovoj008810;
-	Sun, 31 May 2026 23:50:58 GMT
-Received: from hu-devc-hyd-u22-c.qualcomm.com ([10.213.101.157])
-	by APBLRPPMTA01.qualcomm.com (PPS) with ESMTPS id 64VNowTg008823
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Sun, 31 May 2026 23:50:58 +0000 (GMT)
-Received: by hu-devc-hyd-u22-c.qualcomm.com (Postfix, from userid 2342877)
-	id DD747625; Mon,  1 Jun 2026 05:20:57 +0530 (+0530)
-From: Nitin Rawat <nitin.rawat@oss.qualcomm.com>
-To: mani@kernel.org, James.Bottomley@HansenPartnership.com,
-        alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org,
-        martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org,
-        Nitin Rawat <nitin.rawat@oss.qualcomm.com>
-Subject: [PATCH V1 2/2] scsi: ufs: ufs-qcom: Enable SKIP DEVICE RESET Quirk
-Date: Mon,  1 Jun 2026 05:20:11 +0530
-Message-Id: <20260531235011.1052706-3-nitin.rawat@oss.qualcomm.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20260531235011.1052706-1-nitin.rawat@oss.qualcomm.com>
-References: <20260531235011.1052706-1-nitin.rawat@oss.qualcomm.com>
+	s=arc-20240116; t=1780289885; c=relaxed/simple;
+	bh=Wfu8mM1F65C3julBL2/5LDTFtCE36tFg0eujZVfkuGM=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=pcCvqxBLVnzH9CgZXN3Wr6Xfsy+y3aho/5J0zp4+ecCghTGE/0wTuCPTqm8PJfnfvcWLznKBsjMEoRHffC/8Md2/yawMpS2UqGDp5NtMJRaNCOMMC5J4sJxTR6nwXAX9FNjbr9bsxq5/s2rW+SJdSntjk8VELIya/yOLt9TNTOY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=asrmicro.com; spf=pass smtp.mailfrom=asrmicro.com; arc=none smtp.client-ip=210.13.118.86
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=asrmicro.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=asrmicro.com
+Received: from exch02.asrmicro.com (exch02.asrmicro.com [10.1.24.122])
+	by spam.asrmicro.com with ESMTPS id 6514uu1J082067
+	(version=TLSv1 cipher=ECDHE-RSA-AES256-SHA bits=256 verify=FAIL);
+	Mon, 1 Jun 2026 12:56:56 +0800 (GMT-8)
+	(envelope-from hongjiefang@asrmicro.com)
+Received: from localhost (10.1.170.248) by exch02.asrmicro.com (10.1.24.122)
+ with Microsoft SMTP Server (TLS) id 15.0.847.32; Mon, 1 Jun 2026 12:56:58
+ +0800
+From: Hongjie Fang <hongjiefang@asrmicro.com>
+To: <alim.akhtar@samsung.com>, <avri.altman@wdc.com>, <bvanassche@acm.org>,
+        <James.Bottomley@HansenPartnership.com>, <martin.petersen@oracle.com>,
+        <peter.wang@mediatek.com>, <beanhuo@micron.com>
+CC: <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+Subject: [PATCH v3] scsi: ufs: core: handle PM SSU timeout before SCSI EH
+Date: Mon, 1 Jun 2026 12:56:58 +0800
+Message-ID: <20260601045658.1232848-1-hongjiefang@asrmicro.com>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -68,105 +37,190 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-QCInternal: smtphost
-X-QCInternal: smtphost
-X-Proofpoint-ORIG-GUID: ScOiyB3NDfBflTQTwGr-cyNHAvDaTFo2
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNTMxMDI2MSBTYWx0ZWRfX9l5+juXe6ENP
- OdFn5qVCShZTbiE7byA0ylrM3BcbgbYBLsE3BDh3xx9MDwBf+T3zWoCTlc3ZZsRd9UMBuMv9Bfk
- 6AcAcYmZIiPmpqjtyoWY0HIwGIt29Gt10geYVcrRII3XrhR2DwBZCWf0p09Ph7Lc9Mg58x5ju4b
- Mauhy2+9zVpdMi+wb2CV/qEDJVJJZxJTOWJwzKi3+0ZBw4Psnp2klOB1VX78AxMxFtqy1jkyuvg
- DKVssXOBEb+ni2QYRjVYUBxASpap29FRcnXKJuun5HPEHiZ726qdKY2yajZwReG35Cj8zVLXnqC
- OBFK+Xnx+ocufabnN+pvG4rJabg6BuswBwR4GlC9KNnaRV8hG6FSRcNb+vHMwUZQohJct78Lsyo
- OawWhzmN7ajGRkUyGu1S+nvrMJrvDgdzfSXy1KAiHkgmQWrETySGu8bz8iSqXkLJUu2Cq/prPkA
- DyrgYfbsrgSKCW712Xg==
-X-Proofpoint-GUID: ScOiyB3NDfBflTQTwGr-cyNHAvDaTFo2
-X-Authority-Analysis: v=2.4 cv=XqzK/1F9 c=1 sm=1 tr=0 ts=6a1cc966 cx=c_pps
- a=Ou0eQOY4+eZoSc0qltEV5Q==:117 a=Ou0eQOY4+eZoSc0qltEV5Q==:17
- a=NGcC8JguVDcA:10 a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22
- a=ZpdpYltYx_vBUK5n70dp:22 a=EUspDBNiAAAA:8 a=y5UFWkHqcRnmusbZrT0A:9
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.125,FMLib:17.12.100.49
- definitions=2026-05-31_07,2026-05-28_03,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- malwarescore=0 bulkscore=0 adultscore=0 clxscore=1015 phishscore=0
- impostorscore=0 lowpriorityscore=0 priorityscore=1501 spamscore=0
- suspectscore=0 classifier=typeunknown authscore=0 authtc= authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2605210000
- definitions=main-2605310261
+Content-Type: text/plain
+X-ClientProxiedBy: exch02.asrmicro.com (10.1.24.122) To exch02.asrmicro.com
+ (10.1.24.122)
+X-DNSRBL: 
+X-SPAM-SOURCE-CHECK: pass
+X-MAIL:spam.asrmicro.com 6514uu1J082067
 
-A previous fix [1] addressed an OCP (Over Current Protection) issue
-during UFS power down (PC=3) by adding a 10ms delay after asserting
-HWRST. The delay allows the UFS device to complete its reset routine
-before the power rail transitions to LPM (Low Power Mode).
+A PM START STOP sent from the UFS well-known LU resume path can race with
+SCSI EH.
 
-However, this fix is insufficient for certain Micron UFS parts. Unlike
-other vendors whose reset routine completes within ~10ms, Micron parts
-continue to draw current beyond the LPM threshold for a longer duration
-after reset is asserted, specifically until the reset is deasserted
-(RST_N goes high). No fixed delay can reliably cover this window since
-there is currently no mechanism for the host to query whether the
-device reset routine has completed.
+The "wl resume" task flow is:
+  __ufshcd_wl_resume()
+    ufshcd_set_dev_pwr_mode(UFS_ACTIVE_PWR_MODE)
+      ufshcd_execute_start_stop()
+        scsi_execute_cmd()
+          blk_execute_rq           <-- wait
+          scsi_check_passthrough() <-- may retry START STOP
 
-Enable the UFSHCD_QUIRK_SKIP_DEVICE_RESET quirk to skip device assert
-reset during UFS power down for Micron parts. For all other vendors,
-the existing behavior (assert reset + 10ms delay) is preserved.
+If the first START STOP time out, SCSI EH may already recover the link and
+reset the device before scsi_execute_cmd() returns:
+  scsi_timeout()
+    scsi_eh_scmd_add()
+      scsi_error_handler()
+        scsi_unjam_host()
+          scsi_eh_ready_devs()
+            scsi_eh_host_reset()
+              ufshcd_eh_host_reset_handler()
+                if (hba->pm_op_in_progress)
+                  ufshcd_link_recovery()
+                    ufshcd_device_reset()
+                    ufshcd_host_reset_and_restore()
+          ...
+          scsi_eh_flush_done_q()   <-- wakeup "wl resume" task
+        ...                        <-- host still in SHOST_RECOVERY
+        scsi_restart_operations()
 
-This quirk is applicable only during shutdown. The device reset
-will be asserted as part of the platform shutdown sequences.
+A later passthrough retry can then run while the host is still in
+SHOST_RECOVERY and hit the SCMD_FAIL_IF_RECOVERING path:
+  scsi_queue_rq()
+    if (scsi_host_in_recovery(shost) &&
+        cmd->flags & SCMD_FAIL_IF_RECOVERING)
+      return BLK_STS_OFFLINE
 
-[1] commit 5127be409c6c ("scsi: ufs: ufs-qcom: Fix UFS OCP issue during
-    UFS power down (PC=3)")
+That retry completes with DID_ERROR or DID_NO_CONNECT even though EH may
+already have restored the device to an operational ACTIVE state.
 
-Signed-off-by: Nitin Rawat <nitin.rawat@oss.qualcomm.com>
+Handle PM SSU timeout directly from ufshcd_eh_timed_out() instead of
+letting these commands enter regular SCSI EH. Limit this path to SSU
+commands for the UFS device WLUN while a PM operation is in progress.
+If link recovery fails, return SCSI_EH_NOT_HANDLED so regular SCSI
+timeout handling can take over.
+
+Since this path bypasses scsi_eh_scmd_add(), UFS reset/restore must also
+complete the timed-out request itself. MCQ mode already force-completes
+requests without CQEs when force_compl is true. Add the same behavior for
+the legacy single-doorbell path: first process requests whose doorbell has
+already been cleared, then complete the remaining outstanding SCSI requests
+with DID_REQUEUE so callers can re-issue commands whose outcome became
+unknown after the host reset.
+
+The system_suspending flag is no longer needed because PM SSU timeout
+handling now uses pm_op_in_progress and command filtering.
+
+Fixes: b8c3a7bac9b6 ("scsi: ufs: Have midlayer retry start stop errors")
+Signed-off-by: Hongjie Fang <hongjiefang@asrmicro.com>
 ---
- drivers/ufs/host/ufs-qcom.c | 27 ++++++++++++++++++++++++---
- 1 file changed, 24 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-index 291c43448764..d0ad1e47c31d 100644
---- a/drivers/ufs/host/ufs-qcom.c
-+++ b/drivers/ufs/host/ufs-qcom.c
-@@ -770,9 +770,17 @@ static int ufs_qcom_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op,
- 	if (!ufs_qcom_is_link_active(hba))
- 		ufs_qcom_disable_lane_clks(host);
+v3: ufshcd_eh_timed_out() no longer checks the UFS device WLUN or the
+START STOP opcode. It only checks whether a PM operation is in progress
+for normal SCSI command
 
--
--	/* reset the connected UFS device during power down */
--	if (ufs_qcom_is_link_off(hba) && host->device_reset) {
-+	/*
-+	 * For some UFS vendors, skip asserting device reset here.
-+	 * These vendor parts keep drawing larger current after reset
-+	 * is asserted until it is deasserted, and the 10ms delay is
-+	 * not sufficient to prevent OCP (Over Current Protection)
-+	 * on the regulator. This is for the powerdown case, so
-+	 * the device reset can be asserted later as part of the
-+	 * platform shutdown sequence.
-+	 */
-+	if (ufs_qcom_is_link_off(hba) && host->device_reset &&
-+	    !(hba->quirks & UFSHCD_QUIRK_SKIP_DEVICE_RESET)) {
- 		ufs_qcom_device_reset_ctrl(hba, true);
- 		/*
- 		 * After sending the SSU command, asserting the rst_n
-@@ -1288,6 +1296,19 @@ static struct ufs_dev_quirk ufs_qcom_dev_fixups[] = {
- static void ufs_qcom_fixup_dev_quirks(struct ufs_hba *hba)
- {
- 	ufshcd_fixup_dev_quirks(hba, ufs_qcom_dev_fixups);
-+
-+	/*
-+	 * Some UFS parts keep drawing larger current after reset is asserted
-+	 * until it is deasserted. The 10ms delay added after asserting HWRST
-+	 * (as done for other vendors) is not sufficient for these parts.
-+	 *
-+	 * Skip asserting device reset during UFS power down for these parts
-+	 * to prevent OCP (Over Current Protection) fault on the regulator.
-+	 * This is handled only in shutdown; the device reset will be asserted
-+	 * as part of the platform shutdown sequence.
-+	 */
-+	if (hba->dev_info.wmanufacturerid == UFS_VENDOR_MICRON)
-+		hba->quirks |= UFSHCD_QUIRK_SKIP_DEVICE_RESET;
+v2: handle PM SSU timeout directly from ufshcd_eh_timed_out() suggested
+by Bart Van Assche
+
+ drivers/ufs/core/ufshcd.c | 39 +++++++++++++++++++++++++++++++++++----
+ include/ufs/ufshcd.h      |  3 ---
+ 2 files changed, 35 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index c3f08957d179..407b93d28f85 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -5953,6 +5953,37 @@ static irqreturn_t ufshcd_transfer_req_compl(struct ufs_hba *hba)
+ 	return IRQ_HANDLED;
  }
-
- static u32 ufs_qcom_get_ufs_hci_version(struct ufs_hba *hba)
---
-2.34.1
+ 
++static void ufshcd_force_compl_pending_transfer(struct ufs_hba *hba)
++{
++	unsigned long completed_reqs;
++	unsigned long flags;
++	int tag;
++
++	ufshcd_transfer_req_compl(hba);
++
++	spin_lock_irqsave(&hba->outstanding_lock, flags);
++	completed_reqs = hba->outstanding_reqs;
++	hba->outstanding_reqs = 0;
++	spin_unlock_irqrestore(&hba->outstanding_lock, flags);
++
++	for_each_set_bit(tag, &completed_reqs, hba->nutrs) {
++		struct scsi_cmnd *cmd = ufshcd_tag_to_cmd(hba, tag);
++
++		if (cmd && ufshcd_is_scsi_cmd(cmd) &&
++		    !test_bit(SCMD_STATE_COMPLETE, &cmd->state)) {
++			/*
++			 * The host has been reset and the original command
++			 * outcome is unknown. Requeue SCSI commands so callers
++			 * such as ufshcd_set_dev_pwr_mode() can re-issue START
++			 * STOP UNIT and converge the device power mode.
++			 */
++			set_host_byte(cmd, DID_REQUEUE);
++			ufshcd_release_scsi_cmd(hba, cmd);
++			scsi_done(cmd);
++		}
++	}
++}
++
+ int __ufshcd_write_ee_control(struct ufs_hba *hba, u32 ee_ctrl_mask)
+ {
+ 	return ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_WRITE_ATTR,
+@@ -6517,6 +6548,8 @@ static void ufshcd_complete_requests(struct ufs_hba *hba, bool force_compl)
+ {
+ 	if (hba->mcq_enabled)
+ 		ufshcd_mcq_compl_pending_transfer(hba, force_compl);
++	else if (force_compl)
++		ufshcd_force_compl_pending_transfer(hba);
+ 	else
+ 		ufshcd_transfer_req_compl(hba);
+ 
+@@ -9466,7 +9499,7 @@ static enum scsi_timeout_action ufshcd_eh_timed_out(struct scsi_cmnd *scmd)
+ {
+ 	struct ufs_hba *hba = shost_priv(scmd->device->host);
+ 
+-	if (!hba->system_suspending) {
++	if (!hba->pm_op_in_progress || !ufshcd_is_scsi_cmd(scmd)) {
+ 		/* Activate the error handler in the SCSI core. */
+ 		return SCSI_EH_NOT_HANDLED;
+ 	}
+@@ -9481,7 +9514,7 @@ static enum scsi_timeout_action ufshcd_eh_timed_out(struct scsi_cmnd *scmd)
+ 	dev_info(hba->dev, "%s() finished; outstanding_tasks = %#lx.\n",
+ 		 __func__, hba->outstanding_tasks);
+ 
+-	return scsi_host_busy(hba->host) ? SCSI_EH_RESET_TIMER : SCSI_EH_DONE;
++	return SCSI_EH_DONE;
+ }
+ 
+ static const struct attribute_group *ufshcd_driver_groups[] = {
+@@ -10518,7 +10551,6 @@ static int ufshcd_wl_suspend(struct device *dev)
+ 
+ 	hba = shost_priv(sdev->host);
+ 	down(&hba->host_sem);
+-	hba->system_suspending = true;
+ 
+ 	if (pm_runtime_suspended(dev))
+ 		goto out;
+@@ -10560,7 +10592,6 @@ static int ufshcd_wl_resume(struct device *dev)
+ 		hba->curr_dev_pwr_mode, hba->uic_link_state);
+ 	if (!ret)
+ 		hba->is_sys_suspended = false;
+-	hba->system_suspending = false;
+ 	up(&hba->host_sem);
+ 	return ret;
+ }
+diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
+index cfbc75d8df83..8280a95c00c7 100644
+--- a/include/ufs/ufshcd.h
++++ b/include/ufs/ufshcd.h
+@@ -1020,8 +1020,6 @@ enum ufshcd_mcq_opr {
+  * @caps: bitmask with information about UFS controller capabilities
+  * @devfreq: frequency scaling information owned by the devfreq core
+  * @clk_scaling: frequency scaling information owned by the UFS driver
+- * @system_suspending: system suspend has been started and system resume has
+- *	not yet finished.
+  * @is_sys_suspended: UFS device has been suspended because of system suspend
+  * @urgent_bkops_lvl: keeps track of urgent bkops level for device
+  * @is_urgent_bkops_lvl_checked: keeps track if the urgent bkops level for
+@@ -1197,7 +1195,6 @@ struct ufs_hba {
+ 
+ 	struct devfreq *devfreq;
+ 	struct ufs_clk_scaling clk_scaling;
+-	bool system_suspending;
+ 	bool is_sys_suspended;
+ 
+ 	enum bkops_status urgent_bkops_lvl;
+-- 
+2.25.1
 
