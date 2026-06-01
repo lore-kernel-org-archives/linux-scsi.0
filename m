@@ -1,162 +1,133 @@
-Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr1-f46.google.com (mail-wr1-f46.google.com [209.85.221.46])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 92CE82D781B;
-	Mon,  1 Jun 2026 17:42:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1BA5E3612ED
+	for <linux-scsi@vger.kernel.org>; Mon,  1 Jun 2026 19:59:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.46
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780335735; cv=none; b=UH9/wzewlZq0ELUnjR9UWH1UlGam1vnJSGqtISGhNHLof9/HkNvJx8lamxoppot+VAX0Np+bjwGEgG/MKjQ5953Y35OfRoa3Em3HYM7Hnb6xN9hsOFoKbzqcv7Diacl7Jtf7eOu7p0ElczJrFA2bSqSxsZ5s2Gq46ISrZAVeroA=
+	t=1780343943; cv=none; b=Wp7L/p+0r/Vw7YG+GP3hftf6Je7oy94d94tiDJ/ffX+w5kBFh1kKQ9byg7W4KgiwvJvB5q/ybZx0EvxCMIFHg2F5gQ4yQinqKbo6cWBUpvJBDHPY06wZVmYlVgs03SUOF+0bB6dn5SxJ1M0pkpUtfgRjgT6xOakgIG0SO2LlzV0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780335735; c=relaxed/simple;
-	bh=kkHomwwt7E+LrKrtnM4au8eKbmAw1IRzBXy4X6KKoOc=;
+	s=arc-20240116; t=1780343943; c=relaxed/simple;
+	bh=yvt9sp/5rw1QyNxbDG+ApxfyltK9VLSOPVcZat10j7g=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=D8OTUxwTnGh3OA8WGf+xynkGVlt30YNQSrskYQ6syxQ2BlFi6I1IEkfeoD0rhdDH3cKqhpxe0BpQGwgTQ10EixHIVpJhBGARcOP/vo56HSH1J5O8XbIwd7WxfzlFtBkhES50kvEa5eLZUEGAY+aPpWJykZJHMFekRokQ3QY8ZcA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=fjQICXbp; arc=none smtp.client-ip=199.89.1.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	 In-Reply-To:Content-Type; b=euHlOZI7Sc1j1qzXNP5O7gQEy+cAKv/zeRrJJvEfIJL2si81pi+Y+cHpioqqsHSOy+U+/jjmeo/vsNiiNAeQROQCmSZV0R729GnKQBG1o8OOcb1h3LY4zeRLdPlC8M8zVKesf58iXOEgYqp1Vrk8qHHcAf0CnjJA3lZ/k0d38Lo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=fL09BPZr; arc=none smtp.client-ip=209.85.221.46
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="fjQICXbp"
-Received: from localhost (localhost [127.0.0.1])
-	by 013.lax.mailroute.net (Postfix) with ESMTP id 4gTh9d0XSXzlgyH3;
-	Mon,  1 Jun 2026 17:42:13 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1780335726; x=1782927727; bh=KZkdQUUmyhapn6hW7TWcKceE
-	5HSLHEwqOdQWCc01zyM=; b=fjQICXbp7WSjIfXXvoFA9/6kGDX/0IW98a/PVbQv
-	Tn4j4OrL2cgV/9ciw+GxEyH4qQmKdUEm6ndn07tqlFskk0sh5tx8jHWoV86VwQu4
-	oCMS4bUfetF0PA3ZALkTChEveVtiY5g8FN4UxLBTyTHLQeimPPHdNq2TFqtAA+eM
-	4I8xJ7IiiN7NNtO1N9fqLpzUO3gfaDZGUAyCWRc8rVm1VzeHSe9o0UUtoVIIavZb
-	MVkIWxf1UYoi23J26RuVZkZ4QGGUJ3zSMeIai8eKjuZqTPAkLcnD8nyQTFh/h2QB
-	pLGninLtUXrQv0/BKU9xi0TFl/g7h89YX6Gou0a+o0JXRg==
-X-Virus-Scanned: by MailRoute
-Received: from 013.lax.mailroute.net ([127.0.0.1])
- by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id XXJRpbiWXXfP; Mon,  1 Jun 2026 17:42:06 +0000 (UTC)
-Received: from [100.119.48.131] (unknown [104.135.180.219])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4gTh9S0QKkzlfvq8;
-	Mon,  1 Jun 2026 17:42:03 +0000 (UTC)
-Message-ID: <27613670-be13-4923-ae6a-f9a32f1a053b@acm.org>
-Date: Mon, 1 Jun 2026 10:42:02 -0700
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="fL09BPZr"
+Received: by mail-wr1-f46.google.com with SMTP id ffacd0b85a97d-45ef7720385so297571f8f.3
+        for <linux-scsi@vger.kernel.org>; Mon, 01 Jun 2026 12:59:01 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1780343940; x=1780948740; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:mime-version:date:message-id:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=nF0mPffLzyNKxaX+qwdDIt1M45JYJkJ7Btt6JiKxXQk=;
+        b=fL09BPZrjZSjczeXG3edIMXez0To7jkTCJkW/Z1Y4T2t0pZdsI6eTXahcz+ozvEaVB
+         0ZZxBVWiVLigWgHI4KIG5mBVLSwAUG17N1DUHvs9kqYAficIcpa/zVTJY3o6HiE1uAiu
+         VDEtqEKVvFNE55MArl20AYKGYbCn/EdJts6e/64tfzbNy3y4OslHGQ9mC19P2h3q0SIo
+         6wRT+0mPa7NIl8n/t8Qf6n57EOh1GpvnBM83GF1oiepnm5PGwgYQqWHr07UY8O/qJLmQ
+         MuEI/H3HoooPdUSWbYsiweu8EpUNlBhouc9t3MedLOgrugHrNdl2nqRRun+L8/h/1QrC
+         mK5A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1780343940; x=1780948740;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:mime-version:date:message-id:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=nF0mPffLzyNKxaX+qwdDIt1M45JYJkJ7Btt6JiKxXQk=;
+        b=nUqKPgx3OCT+Vi4Kk8RrQRjqkyK/1qqq1uRJwGxnSvz5WfQ5GGeRX6vYohAz3uSHCm
+         fCsxqYYoLFBItrFlA7YbkvEdcg19R5NDsUpP7mJn0ydaJrWL+D/o5D5Kafv1brXjkqJV
+         u+brmn27bN1VZtA7vc4Kg76xiRQ9DQyGJc3h7hANAJgU4M+8LNRUBuW7wWjHp6L0sTuu
+         T8GBEergHFALAPoun7Nip2hrjbQbS0PuUsQDh8VNXbqe8QXlqDFK7vfuJs6zTO1NIsei
+         pCxHqU801LCNzOJ0OWamEzmwJY4RM1RyriF6qYDrBl5heVmil9nFY7gcO6mBKbeRI5rG
+         Qj2w==
+X-Gm-Message-State: AOJu0Yw4nJepZv7kgCzkSfAX88dtyyoCxirvc2Xqc/Qaq7FU0i4edUfY
+	ZX3Ypo6uf9LBcvTgacIYjO3Whelv5YQONxXP4Ac/3tA0Ke5EwVensPU=
+X-Gm-Gg: Acq92OFIue3myrJJj3tV4TiHbEcAwoj7qFmBOB5WSEALXtb7A4MFjQwkNNrNFqIuggO
+	fUQQbo01I9hxmp8cYi/YW9o+eAAz3xhilRn7pdckwvW2Nr6Whse6zkseougWlPyRjwXGFThg941
+	lYECLIADNXwnoZlmgL3pu/hCF014/mXpSeyqhC+b0PgBvp2cwDPNfrePtGegmcfNVVQizka1Fab
+	lAeliyoQP9sEi2KWOO6nWYQHyizz3kS6kX4ROmzAbXrJoAT5xGB6dgOfm4Tk+pq3qES8WJ9oleF
+	flMKGB2zedvJoNlcgM81f0fP9YfCUcNkrt0zkjdwL2fn7QRT985yTEkWsJkun8q06cXbHLU/Dua
+	8osyJMJ0tyAWzCN5AeSWaoQlmwdicmcCRT+QvP7dYQzggj567rDibBHdSOXgq5bkj1zK806dcyW
+	a3VTVU2VBkn+/3nYGpzga3AaAN32ivcIEXmmu0u/LWBFRUyJvPzHM6jlNdy0foikX8LmQwmcU=
+X-Received: by 2002:a05:600c:4753:b0:48a:797f:24f8 with SMTP id 5b1f17b1804b1-490a28ae8camr93776815e9.0.1780343940250;
+        Mon, 01 Jun 2026 12:59:00 -0700 (PDT)
+Received: from localhost (32.red-80-39-29.staticip.rima-tde.net. [80.39.29.32])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-490b0e2e8cesm11343245e9.11.2026.06.01.12.58.59
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 01 Jun 2026 12:58:59 -0700 (PDT)
+Message-ID: <191cd7dc-f6e7-46c1-8a0c-9e63482f34a0@gmail.com>
+Date: Mon, 1 Jun 2026 21:58:58 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3] scsi: ufs: core: handle PM SSU timeout before SCSI EH
-To: Hongjie Fang <hongjiefang@asrmicro.com>, alim.akhtar@samsung.com,
- avri.altman@wdc.com, James.Bottomley@HansenPartnership.com,
- martin.petersen@oracle.com, peter.wang@mediatek.com, beanhuo@micron.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20260601045658.1232848-1-hongjiefang@asrmicro.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20260601045658.1232848-1-hongjiefang@asrmicro.com>
+Subject: Re: [PATCH 06/44] scsi: qla2xxx: Add FC operational firmware load for
+ 29xx
+To: Nilesh Javali <njavali@marvell.com>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ Christoph Hellwig <hch@lst.de>
+Cc: SCSI-ML <linux-scsi@vger.kernel.org>,
+ GR-QLogic-Storage-Upstream@marvell.com, agurumurthy@marvell.com,
+ emilne@redhat.com, jmeneghi@redhat.com, hare@suse.com
+References: <20260601102853.328426-1-njavali@marvell.com>
+ <20260601102853.328426-7-njavali@marvell.com>
+Content-Language: en-US, en-GB, es-ES
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+In-Reply-To: <20260601102853.328426-7-njavali@marvell.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
-On 5/31/26 9:56 PM, Hongjie Fang wrote:
-> @@ -9466,7 +9499,7 @@ static enum scsi_timeout_action ufshcd_eh_timed_out(struct scsi_cmnd *scmd)
->   {
->   	struct ufs_hba *hba = shost_priv(scmd->device->host);
+On 6/1/26 12:28 PM, Nilesh Javali wrote:
+
+> From: Manish Rangankar <mrangankar@marvell.com>
+> 
+> Add support to load the 29xx FC operational firmware from the
+> filesystem and to set up the corresponding firmware dump
+> template.  This follows the same request_firmware / segment-load
+> pattern used by earlier adapters.
+
+> Cc: stable@vger.kernel.org
+
+New features and hardware support should not be targeted for stable
+trees. Only bug fixes or essential regressions belong here.
+
+> @@ -7680,6 +7720,7 @@ qla2x00_timer(struct timer_list *t)
+>   #define FW_FILE_ISP8031	"ql8300_fw.bin"
+>   #define FW_FILE_ISP27XX	"ql2700_fw.bin"
+>   #define FW_FILE_ISP28XX	"ql2800_fw.bin"
+> +#define FW_FILE_ISP29XX	"ql2900_fw.bin"
 >   
-> -	if (!hba->system_suspending) {
-> +	if (!hba->pm_op_in_progress || !ufshcd_is_scsi_cmd(scmd)) {
->   		/* Activate the error handler in the SCSI core. */
->   		return SCSI_EH_NOT_HANDLED;
+>   
+>   static DEFINE_MUTEX(qla_fw_lock);
+> @@ -7697,6 +7738,7 @@ static struct fw_blob qla_fw_blobs[] = {
+>   	{ .name = FW_FILE_ISP8031, },
+>   	{ .name = FW_FILE_ISP27XX, },
+>   	{ .name = FW_FILE_ISP28XX, },
+> +	{ .name = FW_FILE_ISP29XX, },
+>   	{ .name = NULL, },
+>   };
+>   
+> @@ -7730,6 +7772,8 @@ qla2x00_request_firmware(scsi_qla_host_t *vha)
+>   		blob = &qla_fw_blobs[FW_ISP27XX];
+>   	} else if (IS_QLA28XX(ha)) {
+>   		blob = &qla_fw_blobs[FW_ISP28XX];
+> +	} else if (IS_QLA29XX(ha)) {
+> +		blob = &qla_fw_blobs[FW_ISP29XX];
+>   	} else {
+>   		return NULL;
 >   	}
+The last available firmware file intended for user-space updates via
+request_firmware() was "ql2500_fw.bin" back in 2019 (for the ISP25xx QLogic
+2500 Series 8Gb FC HBAs). Since then, no official firmware binaries have
+been released or published for newer 16Gb or 32Gb HBAs (such as ISP83xx,
+ISP27xx, or ISP28xx), let alone being merged into the upstream
+linux-firmware.git repository.
 
-I think we want to avoid SCSI error handler activation for all commands
-that time out while a power management operation is in progress,
-including device management commands.
-
-Please consider completing commands from inside the timeout handler
-instead of adding force_compl support for the legacy single doorbell
-mode. The very lightly tested patch below should realize this.
-
-Thanks,
-
-Bart.
-
-
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 9e0336098e26..63788b187eea 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -9491,22 +9491,23 @@ static enum scsi_timeout_action 
-ufshcd_eh_timed_out(struct scsi_cmnd *scmd)
-  {
-  	struct ufs_hba *hba = shost_priv(scmd->device->host);
-
--	if (!hba->system_suspending) {
-+	if (!hba->pm_op_in_progress) {
-  		/* Activate the error handler in the SCSI core. */
-  		return SCSI_EH_NOT_HANDLED;
-  	}
-
-  	/*
--	 * If we get here we know that no TMFs are outstanding and also that
--	 * the only pending command is a START STOP UNIT command. Handle the
--	 * timeout of that command directly to prevent a deadlock between
-+	 * Handle the timeout directly to prevent a deadlock between
-  	 * ufshcd_set_dev_pwr_mode() and ufshcd_err_handler().
-  	 */
-  	ufshcd_link_recovery(hba);
-  	dev_info(hba->dev, "%s() finished; outstanding_tasks = %#lx.\n",
-  		 __func__, hba->outstanding_tasks);
-
--	return scsi_host_busy(hba->host) ? SCSI_EH_RESET_TIMER : SCSI_EH_DONE;
-+	set_host_byte(scmd, DID_TIME_OUT);
-+	ufshcd_release_scsi_cmd(hba, scmd);
-+	scsi_done(scmd);
-+	return SCSI_EH_DONE;
-  }
-
-  static const struct attribute_group *ufshcd_driver_groups[] = {
-@@ -10543,7 +10544,6 @@ static int ufshcd_wl_suspend(struct device *dev)
-
-  	hba = shost_priv(sdev->host);
-  	down(&hba->host_sem);
--	hba->system_suspending = true;
-
-  	if (pm_runtime_suspended(dev))
-  		goto out;
-@@ -10585,7 +10585,6 @@ static int ufshcd_wl_resume(struct device *dev)
-  		hba->curr_dev_pwr_mode, hba->uic_link_state);
-  	if (!ret)
-  		hba->is_sys_suspended = false;
--	hba->system_suspending = false;
-  	up(&hba->host_sem);
-  	return ret;
-  }
-diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-index 3eaae082329c..248d0a5bef40 100644
---- a/include/ufs/ufshcd.h
-+++ b/include/ufs/ufshcd.h
-@@ -1029,8 +1029,6 @@ enum ufshcd_mcq_opr {
-   * @caps: bitmask with information about UFS controller capabilities
-   * @devfreq: frequency scaling information owned by the devfreq core
-   * @clk_scaling: frequency scaling information owned by the UFS driver
-- * @system_suspending: system suspend has been started and system 
-resume has
-- *	not yet finished.
-   * @is_sys_suspended: UFS device has been suspended because of system 
-suspend
-   * @urgent_bkops_lvl: keeps track of urgent bkops level for device
-   * @is_urgent_bkops_lvl_checked: keeps track if the urgent bkops level for
-@@ -1206,7 +1204,6 @@ struct ufs_hba {
-
-  	struct devfreq *devfreq;
-  	struct ufs_clk_scaling clk_scaling;
--	bool system_suspending;
-  	bool is_sys_suspended;
-
-  	enum bkops_status urgent_bkops_lvl;
-
+While this code might be useful for your internal development and testing
+purposes, adding dead code to the upstream kernel for firmware files that
+do not publicly exist provides zero value.
