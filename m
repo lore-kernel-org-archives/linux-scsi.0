@@ -1,63 +1,68 @@
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3911D349CFE
-	for <linux-scsi@vger.kernel.org>; Tue,  2 Jun 2026 02:11:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.177.32
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9BA5332860B;
+	Tue,  2 Jun 2026 02:11:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.165.32
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780366264; cv=none; b=dBwW74CEneoYGbjgClezW9HtNp4j/ILeLs8wwITeqTw/ZM208EhENpWxlHuwPkZylRmE7vn9796Em7WDa+vTRScaFQ+0ejR4eoY61BqVAyKo7jSjaouF492H5ON2H7Mq0RQAhrFjHw4v8O5k43wmzShb5SBE6BwbcbDPyU9SMbE=
+	t=1780366265; cv=none; b=d4VNIVUsTcn/I1LzuNuapa153euwhlss1jn/KLecLRfMiyVAHZ/PWbeefy64fhY4303VMZlgxiGRcys1EeklQhkipk1Hua63csAe/c6mIIa3GVPpT034hZzVb10UqTDJmXFQP9xhyVtESAWiQ/9W7RejtYehvUeXt5QpBaliU0g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780366264; c=relaxed/simple;
-	bh=xP7Bw2KRV+4lG+7Vm/bo7mGRF4Ljm0VOjaPr1FVDyiA=;
+	s=arc-20240116; t=1780366265; c=relaxed/simple;
+	bh=OP/inSMX7QAW1vN+mvfYNnJsEbeE1YVPbB2N+ZC8+vw=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=sdrjmBtoKUavFMWXeb+DCGKn9/MKieXTQels4tl1o5BQClZjZfkyAYaQ+FEkW7TNwL72kqQlF5pHsTxTnqwm9TRilT/U9QVZ/6hxbmOyd/PbKPt5KFxzGFbiR9Ty4zqZTByaokmbkTjfzzLHAo3Rg80Iu+/TBYaIxqM/ukrbMB0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=X3H+Q3l4; arc=none smtp.client-ip=205.220.177.32
+	 MIME-Version:Content-Type; b=ZyN8il5q2jGvugTtWe8WUwx9RPgSZCBYiZlWP+3l5DuBMXx1qPUdtNv39b7ptOMyLJzN+3quD1n47o0uDE1jU/+d7p7av7irIr+oTZY5v7GWv+CDz0SR3uBLCGUCwFiRsba8lviUHzSHf0utgDEGLbBZmnsV10Zb542B9bfR2Fs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=ev7yVSz+; arc=none smtp.client-ip=205.220.165.32
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="X3H+Q3l4"
-Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 651Gtv2A665474;
-	Tue, 2 Jun 2026 02:10:57 GMT
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="ev7yVSz+"
+Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 651GtoH13108079;
+	Tue, 2 Jun 2026 02:10:55 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
 	:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=
-	corp-2025-04-25; bh=bsOaMR10TnjkuO+4xrtkhkIvKa0qmqMmW9NIdZV3gSo=; b=
-	X3H+Q3l4on2SAHPbUekxflqrDP69l87D2Yfo/D+e3cUNO937JMPtIJVXiIvTpZEh
-	Ou2mSvt1bpAjZDLgTYflIZwi2o0NY4ikWF6NoZPlGV0L1X1Bf9BR4uegbrMyJLQP
-	XHZr+MyYK30IReq58eEzih/MMVjvbu9nyEvhMMcz7v+Kcf8hg2K4vg7EDU1U2bDB
-	auWSQ9It3aB1jyD/cfC6AiLtNcM+FczBvh8DhpAWIHwjiUpYO5vBlMLWQdgAqEFh
-	Tw91fHbF3R6X4xbkRTA3TG9WRzUSJaR4Q+hvelTl8ipdr4fkHux6Sut0gDg82Pjj
-	hNfgHGMRpVEQOoGa8wJ9HQ==
+	corp-2025-04-25; bh=pfBoKeU0NjSDSShkXdKMYbr9iILagvIoOzU8h21OUEg=; b=
+	ev7yVSz+S7CQb2HvNvqDW5jWq4dcH8sLYfPsHO3Chuet2rVUcURekoujxSIYOPbn
+	TUmoNR/gJ+nZ21ZVmMLO/pZ0c//HFiMH0VFsanku/EqijDX/pTUriNcLlf1cFerS
+	FMvbYohvht1cJI+UV8OxUpMgfObPBKVLeQ03rgPEREZoiqEP4rNMFuBi27rW2jaP
+	WlYBzDH0EK/TqtaqMSomgFtBbDyZXc0RfC9vnCnh6MMdahVeP9iRLDDQPdXylipA
+	iRIpSc9+l3TgZU2bJgJNkTFa038SCJG9BGDIrHYGShwWbo3LR+kmNlhj4CNU4YVW
+	dHPHWvwxzVwZUWEqZ4kcrA==
 Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4efpaau8d3-1
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4efpfxu9fw-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 02 Jun 2026 02:10:57 +0000 (GMT)
-Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.7/8.18.1.7) with ESMTP id 6522A5Rd020253;
-	Tue, 2 Jun 2026 02:10:56 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 4efpbc2wyc-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 02 Jun 2026 02:10:56 +0000 (GMT)
-Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by pps.reinject (8.18.1.12/8.18.1.12) with ESMTP id 6522ArCA023303;
-	Tue, 2 Jun 2026 02:10:56 GMT
-Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 4efpbc2ww0-4;
 	Tue, 02 Jun 2026 02:10:55 +0000 (GMT)
+Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.7/8.18.1.7) with ESMTP id 6522A4fi020139;
+	Tue, 2 Jun 2026 02:10:54 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 4efpbc2wx1-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Tue, 02 Jun 2026 02:10:54 +0000 (GMT)
+Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+	by pps.reinject (8.18.1.12/8.18.1.12) with ESMTP id 6522ArC4023303;
+	Tue, 2 Jun 2026 02:10:53 GMT
+Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 4efpbc2ww0-1;
+	Tue, 02 Jun 2026 02:10:53 +0000 (GMT)
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org,
+To: Kashyap Desai <kashyap.desai@broadcom.com>,
+        Sumit Saxena <sumit.saxena@broadcom.com>,
+        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
+        Chandrakanth patil <chandrakanth.patil@broadcom.com>,
         "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-        Nathan Chancellor <nathan@kernel.org>
-Subject: Re: [PATCH v2] scsi_debug: Remove the set-but-not-used variable "sdebug_any_injecting_opt"
-Date: Mon,  1 Jun 2026 22:10:45 -0400
-Message-ID: <178036282196.1628204.9291487772026370229.b4-ty@oracle.com>
+        Arnd Bergmann <arnd@kernel.org>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Arnd Bergmann <arnd@arndb.de>, Bart Van Assche <bvanassche@acm.org>,
+        Kees Cook <kees@kernel.org>, megaraidlinux.pdl@broadcom.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] scsi: megaraid: reduce stack usage in megaraid_cmm_register()
+Date: Mon,  1 Jun 2026 22:10:42 -0400
+Message-ID: <178036282202.1628204.14731403880451053161.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260520171454.4035623-1-bvanassche@acm.org>
-References: <20260520171454.4035623-1-bvanassche@acm.org>
+In-Reply-To: <20260519202143.1305850-1-arnd@kernel.org>
+References: <20260519202143.1305850-1-arnd@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -71,40 +76,40 @@ X-Proofpoint-Virus-Version: vendor=baseguard
  definitions=2026-06-01_07,2026-05-28_03,2025-10-01_01
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0
  malwarescore=0 spamscore=0 bulkscore=0 mlxscore=0 suspectscore=0
- lowpriorityscore=0 adultscore=0 mlxlogscore=969 classifier=spam adjust=0
+ lowpriorityscore=0 adultscore=0 mlxlogscore=999 classifier=spam adjust=0
  reason=mlx scancount=1 engine=8.19.0-2605130000 definitions=main-2606020018
-X-Authority-Analysis: v=2.4 cv=T/S8ifKQ c=1 sm=1 tr=0 ts=6a1e3bb1 cx=c_pps
+X-Authority-Analysis: v=2.4 cv=FOMrAeos c=1 sm=1 tr=0 ts=6a1e3baf cx=c_pps
  a=OOZaFjgC48PWsiFpTAqLcw==:117 a=OOZaFjgC48PWsiFpTAqLcw==:17
  a=IkcTkHD0fZMA:10 a=FelO9ux0wxsA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=jiCTI4zE5U7BLdzWsZGv:22 a=x4eqshVgHu-cdnggieHk:22 a=VwQbUJbxAAAA:8
- a=0mlL1PYO3GfcHMNWUR0A:9 a=QEXdDO2ut3YA:10
-X-Proofpoint-ORIG-GUID: CvB-0fiMDEvkfwAjNDb_KF746Cx_l6Qu
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNjAyMDAxOCBTYWx0ZWRfXxbXFvaA4r/xu
- 8OVrPaX/Rd4rkuRMahF6IaHIckMpSgcqAsC6IIjhQ5i8n+rqXLiBVvIZ2a44WR5HT21XbhhhES1
- QzVFhUvH0xquXj7dSJSGjosEIDUeldY0GLIhFb7kndEWtZsWQVNBP8jVCj3bwuQNw8kHsnd96vF
- 14zNpwqpSIQdUIZlMkLIyFLaAB0Qsp8Mp6cZv8naFQCWDUvbe1uvyWl8Ogk80YALZGGpsqgEIKc
- BmTFOHGwcq/WqGmQRsHdwssO83PtaY2mKtxueUtRnr5/GUm4cGSXKHSrsTr/w7ZQmD2mYyYfmp2
- /rFhkEVy2E3N482X2tSt0bDaasHv8cmykfZ3Ata3LtL9ZTMnpouV0YUPLqSLoFi5YCZierHg4BE
- NCxxqkxA9u/f+pds1NsujGkWVO9HuQcXX2AEayi/dthcDf9dBqCFyhawV8mnUx1kV4YZkGhkdpv
- l2Kbgu4pYIKvNDXYdtg==
-X-Proofpoint-GUID: CvB-0fiMDEvkfwAjNDb_KF746Cx_l6Qu
+ a=jiCTI4zE5U7BLdzWsZGv:22 a=RD47p0oAkeU5bO7t-o6f:22 a=VwQbUJbxAAAA:8
+ a=uw2dwx6-vXxH-_8Kw_EA:9 a=QEXdDO2ut3YA:10
+X-Proofpoint-GUID: 4eDfLvssI6QAPhUOrvNiMb0ERgtXCwmS
+X-Proofpoint-ORIG-GUID: 4eDfLvssI6QAPhUOrvNiMb0ERgtXCwmS
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNjAyMDAxNyBTYWx0ZWRfXwMKJg+GTdKtX
+ enWyMt784n4XLiWGntvJHHonvi1ev3w6bPm0TXE1sajTHDHAk42YVs4tCctHVpVXY1mmi1IJ3UW
+ DuCElYV1LcMDJ0LhocbXWlYsJ6T2GGn3VodYI7Inp6IMyaQfAEMFtzhxMrhonHq+oue5Kt9SpVt
+ Gt1+49irRm6/EdjPSg+ylzVDXiakoJIPAQJ0o4fyx1Gadv+KUj4+QGKIJcBm5YiXaNUPiM4oNfz
+ 4EKwg2OUCdbopD3HTzwMd1uwJGUJTK8SBsa6nq5VoHVgNRmfDHtQBx8rmSb4w7GdFOiGujehbfH
+ Zq87zXSoMo70z1bbAwWZmqdHF31Ha0rebDr633OR6JGuV4G95ZrCuHAwlaWppQTPlmMXE3uHucM
+ Du4GKeP76XePdPMR7aE3JCumaoKW3aJPIzSVbWh3JwiFZ50duSgKRBVF3DZyENTlWY/t7lwuIJk
+ ia7JIgncQXCBR3XwnKw==
 
-On Wed, 20 May 2026 10:14:53 -0700, Bart Van Assche wrote:
+On Tue, 19 May 2026 22:21:24 +0200, Arnd Bergmann wrote:
 
-> The static variable sdebug_any_injecting_opt is no longer read. Commit
-> 3a90a63d02b8 ("scsi: scsi_debug: every_nth triggered error injection")
-> removed all code that reads this variable. Hence, also remove this
-> variable itself. Remove SDEBUG_OPT_ALL_INJECTING because there is no
-> code left that uses this constant if sdebug_any_injecting_opt is
-> removed. This has been detected by building the scsi_debug driver with
-> the git HEAD version of Clang and with W=1.
+> The megaraid_cmm_register() function has a local copy of mraid_mmadp_t on
+> the stack that gets copied into the actual structure used at runtime. When
+> -fsanitize=thread is enabled, this causes the per-function stack frame
+> to grow beyond the warning limit:
+> 
+> megaraid_mbox.c: In function 'megaraid_cmm_register':
+> megaraid_mbox.c:3472:1: error: the frame size of 1312 bytes is larger than 1280 bytes [-Werror=frame-larger-than=]
 > 
 > [...]
 
 Applied to 7.2/scsi-queue, thanks!
 
-[1/1] scsi_debug: Remove the set-but-not-used variable "sdebug_any_injecting_opt"
-      https://git.kernel.org/mkp/scsi/c/f199cee401f7
+[1/1] scsi: megaraid: reduce stack usage in megaraid_cmm_register()
+      https://git.kernel.org/mkp/scsi/c/c1f7275b613b
 
 -- 
 Martin K. Petersen
