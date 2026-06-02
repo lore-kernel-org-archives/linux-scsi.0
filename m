@@ -1,209 +1,196 @@
-Received: from mail-wm1-f50.google.com (mail-wm1-f50.google.com [209.85.128.50])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F5E83DC4C8
-	for <linux-scsi@vger.kernel.org>; Tue,  2 Jun 2026 13:04:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.50
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 90FC33E639E
+	for <linux-scsi@vger.kernel.org>; Tue,  2 Jun 2026 13:25:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780405498; cv=none; b=Xw/ESbDWNzLepPu3tOdgbJ0D7S9Jkr63GbO/sJJggkE2iNDn3B3R8DpKar6JiHmlEEwmB9J3X1a7xw/dk37mkJ9JpiRIHKFPY/K8cUaUwa7K6PEIbwkj4vUmW1dXB/HcImuDSEGxP4yrqXQpCBtb4afSVe18K0oQhnGZzVXY7Qo=
+	t=1780406754; cv=none; b=rQhqBnOKbwheD0PrmpXOwH3aypWhQt7i6cRJhTrW4HbMsMOvdsTCIq9IFdDlkH9pLYhZZ6n1HBCHVm9s44ho8l+Oj6txhZ4uVaVJ+YfwCH6cAhVCqWujZduwdL/dA9F0/PwQhTvfoEDJsnwUjEWaH63Sp0Hnp135Nz72VybavUY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780405498; c=relaxed/simple;
-	bh=Lv88enNvVjptEHx4RPDpSYkoiYl4NHCAht/k1YwYRy4=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=CgzmWeCfhvXcKbw7ARnTK2va1j2OgZTrmafnhH1G99D3ErgQkFNVsmA4jCfMF3G31wSknCDGk8x7I+Peg+QIlGJUqxxSUHQVXInLH758wMSQdUFu6rW6updCXnR9ngkwb6dMXOlL0eWS1gC6qudZXD4zco9CPSG2w/H5BZxH6cc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=oYCy8oWL; arc=none smtp.client-ip=209.85.128.50
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1780406754; c=relaxed/simple;
+	bh=u2oSW9MvpNEfUu+vOchA11/s/8BkpmK5TUgWdjd+XJQ=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=RGNNyf1eSiHrO00bcyPx5/0j++7DNkPqisI1miVGUE29gF77rYdGONMeTjnhb3weH2+CkJQtvaXXYUeZ/bU3VMM4T0y1GZeZOFH0UzdFM+XcuuGnEn8mvbNt42XS21InnnZTCFMkC36tQriQiSreZ+MoGElCOtgVtkTQBl7FiXg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=gDsjXweo; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=GNqyL1fz; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="oYCy8oWL"
-Received: by mail-wm1-f50.google.com with SMTP id 5b1f17b1804b1-4904fd4f6aeso95916365e9.2
-        for <linux-scsi@vger.kernel.org>; Tue, 02 Jun 2026 06:04:56 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="gDsjXweo";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="GNqyL1fz"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1780406751;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=QDur5Cc1IxYhEdUOcsZXvMnW9H4MCreBRcibLRysFd4=;
+	b=gDsjXweoz76ZBpXnS6tvFln69QzN3dWgaRsLphiEGz1AF6SWNk8Yjm46Vu2sEvj8+b5qiy
+	zhH3g3ogfP+pfXUMOjLbtmhUtgZdOUfyvAhIpZGAVloJMosebVDOj3yS+PVc1a1ZqIXO/s
+	iTYMoEI5WTyXVX/XuwsU8JzfT8POMpU=
+Received: from mail-qk1-f200.google.com (mail-qk1-f200.google.com
+ [209.85.222.200]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-206-Ew7EdEDoOAmZ-TpI4jkT6g-1; Tue, 02 Jun 2026 09:25:50 -0400
+X-MC-Unique: Ew7EdEDoOAmZ-TpI4jkT6g-1
+X-Mimecast-MFC-AGG-ID: Ew7EdEDoOAmZ-TpI4jkT6g_1780406749
+Received: by mail-qk1-f200.google.com with SMTP id af79cd13be357-914b616c670so1441896085a.2
+        for <linux-scsi@vger.kernel.org>; Tue, 02 Jun 2026 06:25:50 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1780405496; x=1781010296; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:subject:cc:to:from:date:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=H/8nMdqnIqVIuE86ZCCEmz0EQ1iXOszPXfKX9VZoGH4=;
-        b=oYCy8oWLEOXs3ZZpnQ8VOQHoNFjKZT62/QUyW3df6kxvDecqCOK07UnU98cT9bih7d
-         QifFlcWIr+EJiA3Y4YekpYVbMWMA0XqQZb9m0aNzEy+n6CZ9KNJxUBct5gbgm0d6jBJX
-         4RYm7cSM4Fa+MgP775wpjzUTJB2NacljxFREy0lFq+bJunDJIYp2ZV4sTIDkO+Vc1xr7
-         FpcRQcE1R3qM6zq5aytz97WBpu5zXpd39pgEA0GnDnl2ujkjmEdAdRZhqHjKWr+k4Lc4
-         ry5o67NwkoWSsT9Lap7TwhGHQwNn20aUpkBNKTwaaKQ1kQ2Jb1T0oTaxOfTVux7BZHHQ
-         5nZw==
+        d=redhat.com; s=google; t=1780406749; x=1781011549; darn=vger.kernel.org;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=QDur5Cc1IxYhEdUOcsZXvMnW9H4MCreBRcibLRysFd4=;
+        b=GNqyL1fzhwysqSMA2jYwm2ldfFpHYlbZLFsyeco6CPH1xR5LWs3+5NCuleq37ax8oD
+         HuRSFG4W2tbLqrQuxXXVXOKF5/QqYFw+LO7mcJjjrdscCYksRwivZhuxWArjkkEv0jak
+         1LBRQ66lU++jYQ22U9zWdii8+tjQndE/J3xf9x/3lY9xGH/tP8fFo+mij3tRSbHb9VYs
+         VRQ+/9f5X44vqScpIud7Wk1trLw42J0T/b7dfcF99KrUsM0IAFzPBB0KYIzvvnvYjG1Z
+         hNyzqAzEMwOZ4luxCjYS99KiTn2TYl59RAerZc0gswA3lX8H9tU0E15pmUrNYpYNMMpY
+         fvZw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1780405496; x=1781010296;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=H/8nMdqnIqVIuE86ZCCEmz0EQ1iXOszPXfKX9VZoGH4=;
-        b=dupGOgeuKZI+4rkT0rlnETkZyS+svqAa75B92GjT+2wX41GPQA3OYLr0qehCGOkyYK
-         y9RmQsIWHyD8/jvz6bAT5kEzn8Sem+fsS7SMyD4jteR9JSvT/UIO93u2FlMfumeyfM+h
-         DSQe5ZROgCR8LxVrJ/aIFghsVuIxBnJ8anYH78ZJjVkr+mDXFJ1BHS4JvppiHjdPDiBa
-         unCsMVTjm2dCu0Eom6q63KSzPuNFcJkPa1qn/lz/pY6EzQpg5B0AwAAlvnGztu8oTh0L
-         475bA2S2MGUgYywLd4m3oauOElQGZPmuER9VtzjY8fC10phFjWoTKN9fDg3bbI3iduig
-         phJw==
-X-Forwarded-Encrypted: i=1; AFNElJ+Cb2gr0l5Vjw6fxHzDbtAIOuyZWPifOGApWmfC6amVNPlNYsL24FjyPd8MGUy//8wcRDQz65D9cmgl@vger.kernel.org
-X-Gm-Message-State: AOJu0Yx3ZoUCaxqoVHSmCCKlAXCYGmfCr6N8hL8F2N7XddLgZOYi9JeX
-	ec+Oe2A3j9jiTCX0teJzTTZbwreezmdKptSSFeAjmEryUaBFr6ppKUCq
-X-Gm-Gg: Acq92OHzj8MY66Dhc/t1+VoZ2c1Ob8xernPsNrVqMx8e0PQ8Sa8oJlQ5LcRSmirrCIF
-	C6OiNAVTYHW5kxRSUM8cEqq7RxTZzLlSdqllCbRv7u/zrPOjZHp4t1L7Oe1sebz3QP/PZmkZzuH
-	fOgRHkrKIUz2KzLctz+vo4+w0WgzKkMKuAB5XZvSRKC/Du3NzdmYkJh5W6NVE7jPkqWQZZqtE/c
-	NR50uN3mW3XnAYsgo8c5lZaJv00pmOvd+XJMn6oYCNBXSuSE4KDTB7fYJYuBNlommo23UT3Y6RD
-	J1cpkmmudY+esnEeBGTbI0ZpfGVXX303PT0i5iGsR98e1GgO1ChGJQQzuU0wQA0QqmYbj2sCWMQ
-	vdbh4Eim43s777G8a6AAtff7r4l7pgPNQF3ZelnKUUnx/3UqB+DyNmTI5vESJ1IA5ZTE5nfz0mD
-	3WxVQ9w6TQ8slAvv0hHMrRipgAblVF9Gc0Pa+1CwWJHQCqBSlXIXTsidDftnUZ1yN2mS4wrAkG3
-	jsHn0JRCw==
-X-Received: by 2002:a05:600c:8105:b0:490:b072:1be6 with SMTP id 5b1f17b1804b1-490b0721e0amr76565325e9.25.1780405495119;
-        Tue, 02 Jun 2026 06:04:55 -0700 (PDT)
-Received: from pumpkin (82-69-66-36.dsl.in-addr.zen.co.uk. [82.69.66.36])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-45ef34b834esm33184301f8f.11.2026.06.02.06.04.53
+        d=1e100.net; s=20251104; t=1780406749; x=1781011549;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=QDur5Cc1IxYhEdUOcsZXvMnW9H4MCreBRcibLRysFd4=;
+        b=h3BU+KVb9h6GNoiUGPKXGno/8HNKyUbzBQD9u/U/cxUKastzM1bxSvftsXwxPk11IQ
+         8Unn1gTHxLDEPSVhIdZykPoeBwHaH01FKBQFrWrikTnfz/hbwiCjJHq6ueT/Ynn/d2me
+         bY09dqFXLDjieCE+/6rQH7d80z+OZn9PIZL0laoLq1gSJBGYTHl+pU5Q6XozGvsPWzvo
+         F13f9bf6spZvhthfaObc5DCCZ5GfqcpniQjSy47EPoFwROP/IKF2fJ3WgSJcJJupUHeh
+         toh57hSxtw9hJrsgPGkK/oUhbzODg9Nhe7gkZZ5+Zepz5s8LYlPHCks+jpUadWK64GrZ
+         lwcA==
+X-Gm-Message-State: AOJu0Yw/kZSbl7tmH420wFr+VbiXG2a8H7hNCID8muclc997cpRr8WCD
+	VdMCziuBuMpNGBnyOwHcqM51UUAKWqUO7/79O74x/4ofhAMcbNL8AKp02lHvx2mKkth6Zuu43Ht
+	nafbCkVoy8+eDgMqY9EdhCKlKzO4SG/cYVvQ5FNo1fF88UTJVTHN69x/5Yh4SZ7HTXqfBtY+ZX3
+	/nxTEk16xgEo+d03flfUZel1rra83qAXhqPPqjkK1E1+5U9Xk=
+X-Gm-Gg: Acq92OG48ePp5KW9eidFQ0Hrt+jsId/wdJethomXvwc7YdQjJ/mmJfSN5YJ9DhMhJJA
+	/NlwMpYcUTSuWPuwtJAPCBkXq/G7TQf+W4N4Ci5HSUkm6yE3RieoJt7boTjhe6E9fmN5O/Gq9n/
+	5RmtqXwmp2OHRd7t3ugZT+TiHqLNex7tO69r4Z+QQvycNdruoEabVsZvjvC0bdkSkQ76NY5HQj8
+	fY2twXSqQbpboh9ISElbPRuqWflOxIB1F5O4OAf/JoSNkVdZBpSnskcuE3IVKbXG4LxQc9X92Om
+	6uKt/cqqLQHRpkoM6zWb0w9j7skgogIJ711461RSmd6GOOV3PqkuR25pJEsRvdk1iwwULi72INL
+	a6OVr9jf7dyJpGNtd4soVduKjVTUVMm/+m1IAguqIc3ctLFaij1ag6aR5f8qXhtozeXEx
+X-Received: by 2002:a05:620a:4113:b0:915:6820:b791 with SMTP id af79cd13be357-9156820b842mr1021458185a.1.1780406749287;
+        Tue, 02 Jun 2026 06:25:49 -0700 (PDT)
+X-Received: by 2002:a05:620a:4113:b0:915:6820:b791 with SMTP id af79cd13be357-9156820b842mr1021450285a.1.1780406748610;
+        Tue, 02 Jun 2026 06:25:48 -0700 (PDT)
+Received: from loberman-thinkpadp16gen3.rmtusma.csb ([2600:6c65:2440:d8c:aa2b:ddff:fe88:da74])
+        by smtp.gmail.com with ESMTPSA id af79cd13be357-9153262b95esm1324488185a.37.2026.06.02.06.25.44
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 02 Jun 2026 06:04:54 -0700 (PDT)
-Date: Tue, 2 Jun 2026 14:04:51 +0100
-From: David Laight <david.laight.linux@gmail.com>
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: Kees Cook <kees@kernel.org>, Luis Chamberlain <mcgrof@kernel.org>,
- Pengpeng Hou <pengpeng@iscas.ac.cn>, stable@vger.kernel.org, Petr Pavlu
- <petr.pavlu@suse.com>, Richard Weinberger <richard@nod.at>, Anton Ivanov
- <anton.ivanov@cambridgegreys.com>, Johannes Berg
- <johannes@sipsolutions.net>, "Rafael J. Wysocki" <rafael@kernel.org>, Len
- Brown <lenb@kernel.org>, Corey Minyard <corey@minyard.net>, Gabriel Somlo
- <somlo@cmu.edu>, "Michael S. Tsirkin" <mst@redhat.com>, Jani Nikula
- <jani.nikula@linux.intel.com>, Joonas Lahtinen
- <joonas.lahtinen@linux.intel.com>, Rodrigo Vivi <rodrigo.vivi@intel.com>,
- Tvrtko Ursulin <tursulin@ursulin.net>, David Airlie <airlied@gmail.com>,
- Simona Vetter <simona@ffwll.ch>, Bart Van Assche <bvanassche@acm.org>,
- Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>, Laurent
- Pinchart <laurent.pinchart@ideasonboard.com>, Hans de Goede
- <hansg@kernel.org>, Mauro Carvalho Chehab <mchehab@kernel.org>, Bjorn
- Helgaas <bhelgaas@google.com>, Hannes Reinecke <hare@suse.de>, "James E.J.
- Bottomley" <James.Bottomley@hansenpartnership.com>, "Martin K. Petersen"
- <martin.petersen@oracle.com>, Daniel Lezcano <daniel.lezcano@kernel.org>,
- Zhang Rui <rui.zhang@intel.com>, Lukasz Luba <lukasz.luba@arm.com>, Greg
- Kroah-Hartman <gregkh@linuxfoundation.org>, Jiri Slaby
- <jirislaby@kernel.org>, Alan Stern <stern@rowland.harvard.edu>, Jason Wang
- <jasowang@redhat.com>, Xuan Zhuo <xuanzhuo@linux.alibaba.com>, Eugenio
- =?UTF-8?B?UMOpcmV6?= <eperezma@redhat.com>, Jason Baron
- <jbaron@akamai.com>, Jim Cromie <jim.cromie@gmail.com>, Tiwei Bie
- <tiwei.btw@antgroup.com>, Benjamin Berg <benjamin.berg@intel.com>, Ilpo
- =?UTF-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>, "David E. Box"
- <david.e.box@linux.intel.com>, "Maciej W. Rozycki" <macro@orcam.me.uk>,
- Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>, Peter Zijlstra
- <peterz@infradead.org>, Heiko Carstens <hca@linux.ibm.com>, Vasily Gorbik
- <gor@linux.ibm.com>, Sean Christopherson <seanjc@google.com>, Paolo Bonzini
- <pbonzini@redhat.com>, Thomas Gleixner <tglx@kernel.org>, Ingo Molnar
- <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>, Dave Hansen
- <dave.hansen@linux.intel.com>, x86@kernel.org, "H. Peter Anvin"
- <hpa@zytor.com>, Vinod Koul <vkoul@kernel.org>, Frank Li
- <Frank.Li@kernel.org>, Daniel Gomez <da.gomez@kernel.org>, Sami Tolvanen
- <samitolvanen@google.com>, Aaron Tomlin <atomlin@atomlin.com>, Alexander
- Potapenko <glider@google.com>, Marco Elver <elver@google.com>, Dmitry
- Vyukov <dvyukov@google.com>, Andrew Morton <akpm@linux-foundation.org>,
- John Johansen <john.johansen@canonical.com>, Paul Moore
- <paul@paul-moore.com>, James Morris <jmorris@namei.org>, "Serge E. Hallyn"
- <serge@hallyn.com>, Georgia Garcia <georgia.garcia@canonical.com>,
- kvm@vger.kernel.org, dmaengine@vger.kernel.org,
- linux-modules@vger.kernel.org, kasan-dev@googlegroups.com,
- linux-mm@kvack.org, apparmor@lists.ubuntu.com,
- linux-security-module@vger.kernel.org, linux-um@lists.infradead.org,
- linux-acpi@vger.kernel.org, openipmi-developer@lists.sourceforge.net,
- qemu-devel@nongnu.org, intel-gfx@lists.freedesktop.org,
- dri-devel@lists.freedesktop.org, linux-rdma@vger.kernel.org,
- linux-media@vger.kernel.org, linux-pci@vger.kernel.org,
- linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org,
- linuxppc-dev@lists.ozlabs.org, linux-serial@vger.kernel.org,
- linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net,
- virtualization@lists.linux.dev, linux-kernel@vger.kernel.org,
- linux-arch@vger.kernel.org, netdev@vger.kernel.org,
- linux-fsdevel@vger.kernel.org, linux-hardening@vger.kernel.org
-Subject: Re: [PATCH 01/11] params: bound array element output to the
- caller's page buffer
-Message-ID: <20260602140451.2e3e6622@pumpkin>
-In-Reply-To: <ah699hwLxIIOZ0-7@ashevche-desk.local>
-References: <20260521133315.work.845-kees@kernel.org>
-	<20260521133326.2465264-1-kees@kernel.org>
-	<ah699hwLxIIOZ0-7@ashevche-desk.local>
-X-Mailer: Claws Mail 4.1.1 (GTK 3.24.38; arm-unknown-linux-gnueabihf)
+        Tue, 02 Jun 2026 06:25:45 -0700 (PDT)
+Message-ID: <6427abedf14272e5e35eb732262a067bc8fb8870.camel@redhat.com>
+Subject: Re: [PATCH v2 0/2] scsi: Replace FC-specific jammer with
+ transport-agnostic fault injector
+From: Laurence Oberman <loberman@redhat.com>
+To: linux-scsi@vger.kernel.org
+Cc: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
+Date: Tue, 02 Jun 2026 09:25:43 -0400
+In-Reply-To: <20260506140934.1005361-1-loberman@redhat.com>
+References: <20260506140934.1005361-1-loberman@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.58.3 (3.58.3-1.fc43) 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
 
-On Tue, 2 Jun 2026 14:26:46 +0300
-Andy Shevchenko <andriy.shevchenko@linux.intel.com> wrote:
+On Wed, 2026-05-06 at 10:09 -0400, Laurence Oberman wrote:
+> This two-patch series replaces the FC-specific SCSI command jammer
+> introduced in commit 54a5e73f4d6e ("tcm_qla2xxx Add SCSI command
+> jammer/discard capability") with a transport-agnostic initiator-side
+> fault injection module.
+>=20
+> The original implementation required LIO configured in target mode
+> with a QLogic qla2xxx HBA, limiting it to FC environments only.
+> tcm_qla2xxx target mode has effectively been retired, making the
+> original approach no longer viable as a general-purpose test tool.
+>=20
+> The replacement module (scsi_jammer) operates on the initiator side
+> at the queuecommand level of the SCSI mid-layer. It intercepts
+> commands before they reach any HBA driver by saving and replacing
+> the queuecommand function pointer of the selected Scsi_Host at
+> runtime. This makes it equally effective for FC, FCoE, iSCSI, SAS,
+> and any other transport that presents a Scsi_Host, with no
+> target-side configuration required.
+>=20
+> Three injection modes simulate different fabric failure scenarios:
+> =C2=A0 - drop:=C2=A0=C2=A0=C2=A0 immediate DID_NO_CONNECT (dead path / ca=
+ble pull)
+> =C2=A0 - timeout: delayed completion beyond SCSI timeout (slow drain)
+> =C2=A0 - flap:=C2=A0=C2=A0=C2=A0 periodic arm/disarm (repeated RSCN event=
+s)
+>=20
+> The flap mode is particularly useful for testing dm-multipath path
+> reinstatement logic in addition to initial failover.
+>=20
+> An optional jam_tur_passthrough knob lets TEST UNIT READY commands
+> pass through to the real driver while all other commands are jammed.
+> This simulates the real-world slow-drain failure mode where the path
+> appears alive to dm-multipath path checkers but data I/O is stalled.
+>=20
+> Safety: commands are never silently dropped; every intercepted
+> command is completed via scsi_done() either immediately or from a
+> workqueue timer. The initiator will not panic or be left with
+> orphaned commands regardless of when the module is unloaded.
+>=20
+> This patch series was developed with the assistance of Claude AI
+> (Anthropic). The design, testing, and sign-off responsibility
+> remain with the author.
+>=20
+> Tested on x86_64 with Emulex lpfc FC HBA, dm-multipath,
+> Linux 7.0.0+. All three injection modes and TUR passthrough
+> verified against active multipath configurations.
+>=20
+> Note to reviewers: checkpatch reports 4 CHECKs on patch 2/2,
+> all of which are false positives:
+> =C2=A0 - "Alignment should match open parenthesis": checkpatch
+> =C2=A0=C2=A0=C2=A0 miscounts tabs for enum return types; alignment is cor=
+rect.
+> =C2=A0 - "Lines should not end with a '('": common kernel pattern.
+> =C2=A0 - "Macro argument reuse '_var'" (x2): READ_ONCE/WRITE_ONCE
+> =C2=A0=C2=A0=C2=A0 are specifically designed to be safe with macro argume=
+nt
+> =C2=A0=C2=A0=C2=A0 reuse; this is a known false positive for these access=
+ors.
+>=20
+> Changes since v1:
+> =C2=A0 - Patch 2: Add jam_tur_passthrough control to pass TEST UNIT
+> =C2=A0=C2=A0=C2=A0 READY commands through while jamming all other command=
+s.
+> =C2=A0=C2=A0=C2=A0 Simulates slow-drain where path appears alive to multi=
+path
+> =C2=A0=C2=A0=C2=A0 but data I/O is stalled.
+> =C2=A0 - Patch 1: unchanged
+> =C2=A0 - Fix duplicate flap_work_fn forward declaration in patch 2
+>=20
+> Laurence Oberman (2):
+> =C2=A0 scsi: tcm_qla2xxx: Remove FC-specific SCSI command jammer
+> =C2=A0 scsi: Add transport-agnostic initiator-side fault injector
+>=20
+> =C2=A0MAINTAINERS=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0 |=C2=A0=C2=A0 6 +
+> =C2=A0drivers/scsi/Kconfig=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 |=C2=A0 22 +
+> =C2=A0drivers/scsi/Makefile=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 |=C2=A0=C2=A0 1 +
+> =C2=A0drivers/scsi/qla2xxx/Kconfig=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 |=
+=C2=A0=C2=A0 9 -
+> =C2=A0drivers/scsi/qla2xxx/tcm_qla2xxx.c |=C2=A0 23 -
+> =C2=A0drivers/scsi/qla2xxx/tcm_qla2xxx.h |=C2=A0=C2=A0 1 -
+> =C2=A0drivers/scsi/scsi_jammer.c=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0 | 657
+> +++++++++++++++++++++++++++++
+> =C2=A07 files changed, 686 insertions(+), 33 deletions(-)
+> =C2=A0create mode 100644 drivers/scsi/scsi_jammer.c
 
-> On Thu, May 21, 2026 at 06:33:14AM -0700, Kees Cook wrote:
-> > 
-> > param_array_get() appends each element's string representation into the
-> > shared sysfs page buffer by passing buffer + off to the element getter.
-> > 
-> > That works for getters that only write a small bounded string, but
-> > param_get_charp() and similar helpers format against PAGE_SIZE from the
-> > pointer they receive. Once off is non-zero, an element getter can
-> > therefore write past the end of the original sysfs page buffer.
-> > 
-> > Collect each element into a temporary PAGE_SIZE buffer first and then
-> > copy only the remaining space into the caller's page buffer.  
-> 
-> ...
-> 
-> > +	elem_buf = kmalloc(PAGE_SIZE, GFP_KERNEL);  
-> 
-> get_free_page() (or how it is called)?
+Hello
 
-The kmalloc() should be faster and I think has to be aligned.
-There is another patch set to replace get_free_pages() with kmalloc().
+A gentle ping, any interest in looking at this series. If there is no
+interest,  then we should at least retire my old 2016 version that uses
+tcm_qla2xxx as that is no longer functional
 
-Although all these 'show' functions should really head to using a safer
-interface.
-Although, at the moment, it is really difficult to find the ones that
-are guaranteed to be passed a page aligned buffer.
-
--- David
-
-> 
-> > +	if (!elem_buf)
-> > +		return -ENOMEM;
-> > +
-> >  	for (i = off = 0; i < (arr->num ? *arr->num : arr->max); i++) {
-> > -		/* Replace \n with comma */
-> > -		if (i)
-> > -			buffer[off - 1] = ',';
-> >  		p.arg = arr->elem + arr->elemsize * i;
-> >  		check_kparam_locked(p.mod);
-> > -		ret = arr->ops->get(buffer + off, &p);
-> > +		ret = arr->ops->get(elem_buf, &p);
-> >  		if (ret < 0)
-> > -			return ret;
-> > +			goto out;
-> > +		ret = min(ret, (int)(PAGE_SIZE - 1 - off));  
-> 
-> It's usually discouraged to use castings in min/max/clamp. Can we make ret long
-> or do something different here?
-> 
-> > +		if (!ret)
-> > +			break;  
-> 
-> > +		/* Replace the previous element's trailing newline with a comma. */
-> > +		if (i)
-> > +			buffer[off - 1] = ',';  
-> 
-> Can't we do this after with help of strreplace()?
-> 
-> > +		memcpy(buffer + off, elem_buf, ret);
-> >  		off += ret;
-> > +		if (off == PAGE_SIZE - 1)
-> > +			break;
-> >  	}
-> >  	buffer[off] = '\0';
-> > -	return off;
-> > +	ret = off;
-> > +out:
-> > +	kfree(elem_buf);
-> > +	return ret;  
-> 
+Thanks a lot Laurence
 
