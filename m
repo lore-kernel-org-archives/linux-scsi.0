@@ -1,51 +1,52 @@
 Received: from spam.asrmicro.com (asrmicro.com [210.13.118.86])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DABC71A681B;
-	Tue,  2 Jun 2026 04:43:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 441E62AE7A;
+	Tue,  2 Jun 2026 05:26:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.13.118.86
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780375406; cv=none; b=HdPfPXG2QAE7FttBDiRcL05a9eknPUCvfuHQhtNLK3TTVeMV1mJCPw/3n1J8q7c0/T8ti7PxyZGS+X5AJ6I9p/7wCOAAQyLanAdyco3SbswN7TtYuyY21wQ9/zVhG0uZyr2MUYmj1crL/PNFZfN4itor5zZP7WSzyNEuKS2pdN0=
+	t=1780378015; cv=none; b=r3nBM9Y6A9rFFCOaEpMV9j84pFD2NOlerK4PNTZoubL6pyAhLNS95z3aAikQ1xy7ySd9Qe2Y5zgZLUwbPpKbXhkrfN8hddaiKRrJG+6cD2rIY9MeTvS1STp1pY3VR0nDroFWpNf3YZltP4NZi9/VKjFvho+TzFen1yvYsVIwd/g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780375406; c=relaxed/simple;
-	bh=DQbD86EAaR+AbloyTT128cCPXbevYTgQwsV6+1GHiIs=;
+	s=arc-20240116; t=1780378015; c=relaxed/simple;
+	bh=Zdymhpl8nPYHAHZYbXbh8+0tETiEwy6yteQJYTzX1RE=;
 	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=HJUA5eUy81w5sJz0R40SSlTefxthDDRatwVexH2dKQWSjLb4JVT8JGDPCuNCnz2lvFVCScmRdbdM8+v9NHkyfdBaKzlPR4N2Q6dya3cHs89cEhGfKJtr+R+CCbqFzRggxNqU4RXbqRDIV7CMyx5rN+YYdpSLelLjnedABCxnxmM=
+	 Content-Type:MIME-Version; b=IBqRT5TzNCOyK0k2YlUKTcWwCe947wpaEOYC8pEFuWVlL3Cn8E6K5qtASSPpCqEyp5bBcKQxycYc9Ix9J0lsMrqihzFo+tImSuXarcv73TarbaFq3Q/PxX6aOUUS+7JbkKll/9s6WFxLtE9TYib4E2bJfFrOPYF5H+6vVnWN5LA=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=asrmicro.com; spf=pass smtp.mailfrom=asrmicro.com; arc=none smtp.client-ip=210.13.118.86
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=asrmicro.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=asrmicro.com
-Received: from exch02.asrmicro.com (exch02.asrmicro.com [10.1.24.122])
-	by spam.asrmicro.com with ESMTPS id 6524gY02034112
+Received: from exch01.asrmicro.com (exch01.asrmicro.com [10.1.24.121])
+	by spam.asrmicro.com with ESMTPS id 6525PsPf043879
 	(version=TLSv1 cipher=ECDHE-RSA-AES256-SHA bits=256 verify=FAIL);
-	Tue, 2 Jun 2026 12:42:34 +0800 (GMT-8)
+	Tue, 2 Jun 2026 13:25:54 +0800 (GMT-8)
 	(envelope-from hongjiefang@asrmicro.com)
-Received: from exch02.asrmicro.com (10.1.24.122) by exch02.asrmicro.com
- (10.1.24.122) with Microsoft SMTP Server (TLS) id 15.0.847.32; Tue, 2 Jun
- 2026 12:42:36 +0800
+Received: from exch02.asrmicro.com (10.1.24.122) by exch01.asrmicro.com
+ (10.1.24.121) with Microsoft SMTP Server (TLS) id 15.0.847.32; Tue, 2 Jun
+ 2026 13:25:56 +0800
 Received: from exch02.asrmicro.com ([::1]) by exch02.asrmicro.com ([::1]) with
- mapi id 15.00.0847.030; Tue, 2 Jun 2026 12:42:36 +0800
+ mapi id 15.00.0847.030; Tue, 2 Jun 2026 13:25:56 +0800
 From: =?utf-8?B?RmFuZyBIb25namllKOaWuea0quadsCk=?= <hongjiefang@asrmicro.com>
-To: =?utf-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= <peter.wang@mediatek.com>,
-        "beanhuo@micron.com" <beanhuo@micron.com>,
-        "James.Bottomley@HansenPartnership.com"
-	<James.Bottomley@HansenPartnership.com>,
+To: Bart Van Assche <bvanassche@acm.org>,
         "alim.akhtar@samsung.com"
 	<alim.akhtar@samsung.com>,
         "avri.altman@wdc.com" <avri.altman@wdc.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "bvanassche@acm.org" <bvanassche@acm.org>
+        "James.Bottomley@HansenPartnership.com"
+	<James.Bottomley@HansenPartnership.com>,
+        "martin.petersen@oracle.com"
+	<martin.petersen@oracle.com>,
+        "peter.wang@mediatek.com"
+	<peter.wang@mediatek.com>,
+        "beanhuo@micron.com" <beanhuo@micron.com>
 CC: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
         "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 Subject: RE: [PATCH v3] scsi: ufs: core: handle PM SSU timeout before SCSI EH
 Thread-Topic: [PATCH v3] scsi: ufs: core: handle PM SSU timeout before SCSI
  EH
-Thread-Index: AQHc8YM5kTD4w00lK0W0zHRuj40B8rYpeauAgAEdvbCAAAAlAA==
-Date: Tue, 2 Jun 2026 04:42:36 +0000
-Message-ID: <4bb33ee3a8ba462fa1007334e9d95fba@exch02.asrmicro.com>
+Thread-Index: AQHc8e30kTD4w00lK0W0zHRuj40B8rYqu1xA
+Date: Tue, 2 Jun 2026 05:25:56 +0000
+Message-ID: <09e266caba584fc488029a6bcd951777@exch02.asrmicro.com>
 References: <20260601045658.1232848-1-hongjiefang@asrmicro.com>
- <c3f4df6820edbdcaa04622f7fc06fa706a685163.camel@mediatek.com>
- <a8867cc460c44391bd942f0708cc2037@exch02.asrmicro.com>
-In-Reply-To: <a8867cc460c44391bd942f0708cc2037@exch02.asrmicro.com>
+ <27613670-be13-4923-ae6a-f9a32f1a053b@acm.org>
+In-Reply-To: <27613670-be13-4923-ae6a-f9a32f1a053b@acm.org>
 Accept-Language: zh-CN, en-US
 Content-Language: zh-CN
 X-MS-Has-Attach:
@@ -60,31 +61,37 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-DNSRBL: 
 X-SPAM-SOURCE-CHECK: pass
-X-MAIL:spam.asrmicro.com 6524gY02034112
+X-MAIL:spam.asrmicro.com 6525PsPf043879
 
-DQo+ID4gQEAgLTY1MTcsNiArNjU0OCw4IEBAIHN0YXRpYyB2b2lkIHVmc2hjZF9jb21wbGV0ZV9y
-ZXF1ZXN0cyhzdHJ1Y3QNCj4gPiB1ZnNfaGJhICpoYmEsIGJvb2wgZm9yY2VfY29tcGwpDQo+ID4g
-wqB7DQo+ID4gwqDCoMKgwqDCoMKgwqAgaWYgKGhiYS0+bWNxX2VuYWJsZWQpDQo+ID4gwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgIHVmc2hjZF9tY3FfY29tcGxfcGVuZGluZ190cmFuc2Zl
-cihoYmEsIGZvcmNlX2NvbXBsKTsNCj4gPiArwqDCoMKgwqDCoMKgIGVsc2UgaWYgKGZvcmNlX2Nv
-bXBsKQ0KPiA+ICvCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgIHVmc2hjZF9mb3JjZV9jb21w
-bF9wZW5kaW5nX3RyYW5zZmVyKGhiYSk7DQo+ID4NCj4gDQo+IEhpIEhvbmdqaWUsDQo+IA0KPiBX
-aHkgd2lsbCBhbiBTU1UgdGltZW91dCBpbnZva2UgdWZzaGNkX2NvbXBsZXRlX3JlcXVlc3RzDQo+
-IGlmIFNDU0lfRUhfRE9ORSBpcyByZXR1cm5lZCBpbiB1ZnNoY2RfZWhfdGltZWRfb3V0Pw0KPiAN
-CkFuIFNTVSB0aW1lb3V0IHJlYWNoZXMgdWZzaGNkX2NvbXBsZXRlX3JlcXVlc3RzKGhiYSwgdHJ1
-ZSkgdGhyb3VnaCB0aGUNCmRpcmVjdCByZWNvdmVyeSBwYXRoOg0KICAgIHVmc2hjZF9laF90aW1l
-ZF9vdXQoKQ0KICAgICAgICB1ZnNoY2RfbGlua19yZWNvdmVyeSgpDQogICAgICAgICAgICB1ZnNo
-Y2RfaG9zdF9yZXNldF9hbmRfcmVzdG9yZSgpDQogICAgICAgICAgICAgICAgdWZzaGNkX2NvbXBs
-ZXRlX3JlcXVlc3RzKGhiYSwgdHJ1ZSkNCg0KPiANCj4gPiDCoMKgwqDCoMKgwqDCoCBlbHNlDQo+
-ID4gwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgIHVmc2hjZF90cmFuc2Zlcl9yZXFfY29t
-cGwoaGJhKTsNCj4gPg0KPiA+IEBAIC05NDY2LDcgKzk0OTksNyBAQCBzdGF0aWMgZW51bSBzY3Np
-X3RpbWVvdXRfYWN0aW9uDQo+ID4gdWZzaGNkX2VoX3RpbWVkX291dChzdHJ1Y3Qgc2NzaV9jbW5k
-ICpzY21kKQ0KPiA+IMKgew0KPiA+IMKgwqDCoMKgwqDCoMKgIHN0cnVjdCB1ZnNfaGJhICpoYmEg
-PSBzaG9zdF9wcml2KHNjbWQtPmRldmljZS0+aG9zdCk7DQo+ID4NCj4gPiAtwqDCoMKgwqDCoMKg
-IGlmICghaGJhLT5zeXN0ZW1fc3VzcGVuZGluZykgew0KPiA+ICvCoMKgwqDCoMKgwqAgaWYgKCFo
-YmEtPnBtX29wX2luX3Byb2dyZXNzIHx8ICF1ZnNoY2RfaXNfc2NzaV9jbWQoc2NtZCkpIHsNCj4g
-Pg0KPiANCj4gVUZTIGludGVybmFsIGRldmljZS1tYW5hZ2VtZW50IGNvbW1hbmQgdGltZW91dHMg
-d2lsbCBuZXZlcg0KPiByZWFjaCB1ZnNoY2RfZWhfdGltZWRfb3V0LCByaWdodD8NCg0KVGhleSBh
-cmUgc3RpbGwgZXhlY3V0ZWQgdmlhIGJsa19leGVjdXRlX3JxKCksIHNvIHRoZWlyIHRpbWVvdXQg
-aGFuZGxpbmcgc3RpbGwgZ29lcw0KdGhyb3VnaCBzY3NpX3RpbWVvdXQoKSBhbmQgdGhlIGhvc3Qg
-ZWhfdGltZWRfb3V0KCkgY2FsbGJhY2suDQoNCg0KQmVzdC4NCg==
+DQo+IEZyb206IEJhcnQgVmFuIEFzc2NoZSBbbWFpbHRvOmJ2YW5hc3NjaGVAYWNtLm9yZ10NCj4g
+U2VudDogVHVlc2RheSwgSnVuZSAyLCAyMDI2IDE6NDIgQU0NCj4gVG86IEZhbmcgSG9uZ2ppZSjm
+lrnmtKrmnbApIDxob25namllZmFuZ0Bhc3JtaWNyby5jb20+Ow0KPiBhbGltLmFraHRhckBzYW1z
+dW5nLmNvbTsgYXZyaS5hbHRtYW5Ad2RjLmNvbTsNCj4gSmFtZXMuQm90dG9tbGV5QEhhbnNlblBh
+cnRuZXJzaGlwLmNvbTsgbWFydGluLnBldGVyc2VuQG9yYWNsZS5jb207DQo+IHBldGVyLndhbmdA
+bWVkaWF0ZWsuY29tOyBiZWFuaHVvQG1pY3Jvbi5jb20NCj4gQ2M6IGxpbnV4LXNjc2lAdmdlci5r
+ZXJuZWwub3JnOyBsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnDQo+IFN1YmplY3Q6IFJlOiBb
+UEFUQ0ggdjNdIHNjc2k6IHVmczogY29yZTogaGFuZGxlIFBNIFNTVSB0aW1lb3V0IGJlZm9yZSBT
+Q1NJDQo+IEVIDQo+IA0KPiBPbiA1LzMxLzI2IDk6NTYgUE0sIEhvbmdqaWUgRmFuZyB3cm90ZToN
+Cj4gPiBAQCAtOTQ2Niw3ICs5NDk5LDcgQEAgc3RhdGljIGVudW0gc2NzaV90aW1lb3V0X2FjdGlv
+bg0KPiB1ZnNoY2RfZWhfdGltZWRfb3V0KHN0cnVjdCBzY3NpX2NtbmQgKnNjbWQpDQo+ID4gICB7
+DQo+ID4gICAJc3RydWN0IHVmc19oYmEgKmhiYSA9IHNob3N0X3ByaXYoc2NtZC0+ZGV2aWNlLT5o
+b3N0KTsNCj4gPg0KPiA+IC0JaWYgKCFoYmEtPnN5c3RlbV9zdXNwZW5kaW5nKSB7DQo+ID4gKwlp
+ZiAoIWhiYS0+cG1fb3BfaW5fcHJvZ3Jlc3MgfHwgIXVmc2hjZF9pc19zY3NpX2NtZChzY21kKSkg
+ew0KPiA+ICAgCQkvKiBBY3RpdmF0ZSB0aGUgZXJyb3IgaGFuZGxlciBpbiB0aGUgU0NTSSBjb3Jl
+LiAqLw0KPiA+ICAgCQlyZXR1cm4gU0NTSV9FSF9OT1RfSEFORExFRDsNCj4gPiAgIAl9DQo+IA0K
+PiBJIHRoaW5rIHdlIHdhbnQgdG8gYXZvaWQgU0NTSSBlcnJvciBoYW5kbGVyIGFjdGl2YXRpb24g
+Zm9yIGFsbCBjb21tYW5kcw0KPiB0aGF0IHRpbWUgb3V0IHdoaWxlIGEgcG93ZXIgbWFuYWdlbWVu
+dCBvcGVyYXRpb24gaXMgaW4gcHJvZ3Jlc3MsDQo+IGluY2x1ZGluZyBkZXZpY2UgbWFuYWdlbWVu
+dCBjb21tYW5kcy4NCj4gDQo+IFBsZWFzZSBjb25zaWRlciBjb21wbGV0aW5nIGNvbW1hbmRzIGZy
+b20gaW5zaWRlIHRoZSB0aW1lb3V0IGhhbmRsZXINCj4gaW5zdGVhZCBvZiBhZGRpbmcgZm9yY2Vf
+Y29tcGwgc3VwcG9ydCBmb3IgdGhlIGxlZ2FjeSBzaW5nbGUgZG9vcmJlbGwNCj4gbW9kZS4gVGhl
+IHZlcnkgbGlnaHRseSB0ZXN0ZWQgcGF0Y2ggYmVsb3cgc2hvdWxkIHJlYWxpemUgdGhpcy4NCj4g
+DQoNClRoYW5rcywgdGhpcyBtYWtlcyBzZW5zZS4NCkkgd2lsbCByZXdvcmsgdGhlIHBhdGNoIGlu
+IHRoYXQgZGlyZWN0aW9uIGZvciB2NC4gSXQgd2lsbCB1c2UNCmhiYS0+cG1fb3BfaW5fcHJvZ3Jl
+c3MgZm9yIGFsbCBQTSB0aW1lb3V0IGNvbW1hbmRzIGFuZCBubyBsb25nZXINCnJlbGF5IG9uIHRo
+ZSBleHRyYSBsZWdhY3kgc2luZ2xlLWRvb3JiZWxsIGZvcmNlLWNvbXBsZXRpb24gcGF0aC4NCg0K
+Rm9yIHJlZ3VsYXIgU0NTSSBjb21tYW5kcyBpdCByZWxlYXNlcyB0aGUgU0NTSSBjb21tYW5kIHJl
+c291cmNlcyBiZWZvcmUNCnNjc2lfZG9uZSgpLiBGb3IgaW50ZXJuYWwgZGV2aWNlLW1hbmFnZW1l
+bnQgY29tbWFuZHMgaXQgb25seQ0KY29tcGxldGVzIHRoZSByZXF1ZXN0LCBzaW5jZSB0aG9zZSBj
+b21tYW5kcyBkbyBub3QgdXNlIHRoZQ0KdWZzaGNkX3JlbGVhc2Vfc2NzaV9jbWQoKSBsaWZldGlt
+ZSBydWxlcy4NCg0KDQoNCkJlc3QuDQoNCg==
