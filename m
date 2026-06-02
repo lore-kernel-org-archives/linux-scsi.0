@@ -1,76 +1,47 @@
 Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC52A378D74
-	for <linux-scsi@vger.kernel.org>; Tue,  2 Jun 2026 11:59:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A8ED38F226
+	for <linux-scsi@vger.kernel.org>; Tue,  2 Jun 2026 11:59:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780401544; cv=none; b=iQjX3viWYFZoBdpEbLPOIDtIKpYm4rv2G4ss5Kr/3WpW7OqC8bywkarFwtu6weRwA3djNLb6P2lp3dvbGutqkdIWegVHQJ7wL8LTTyGGOpdKQ43cDpm8THvYmKTag7qxhpy3zWNmJ2YLZRTp+rQIzZN2rB8qR57gRhQwL9wmp5c=
+	t=1780401549; cv=none; b=TVT7phz78OO4YxaKUAVm9TEbOpjeMs6FNmCN5AFyVuu4VPo7Ius8/MTzlAxSVnyZDowIWyojlPThfjoJe2FHJ+VFFKtmZ78NSbN4xyyQkIbUTQrjy+29G6l8mVci47k4iO6m2f4uMsVDiSsiyTQoDzJzWlRt3cHLymf7ge75u7M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780401544; c=relaxed/simple;
-	bh=MM2qSn9gpWfxRLXOEVLvuOaUdZ7iwZYANO1cAWdPEoI=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=B2uUgjmLNLjenZQO4y9y1FuXDrMKGtgnejInZ8rMYfpm9TnyQQY8T3jldoGtCSs8KHwtzuGNVARBBrmkD4ZhfOV4BU8bgOdJs1yCT89eccdw93tY6F9IZGlAcffqOWfREAj36uuXg9y8U3g42eaO68XRd3HRaGquTxtcpwiGbuw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=X89mYCAy; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=8bUhL/MX; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=EvLfPknn; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=3Ts8eAl7; arc=none smtp.client-ip=195.135.223.131
+	s=arc-20240116; t=1780401549; c=relaxed/simple;
+	bh=Pw7j6rikG76+jCwZbryfmOO5D5knUhDkIZv1O24Hn8s=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=sZscdTY3Rynfx29v7N3HUXL1wvCGKsjQYAGIE1UmuUwzm3h76ZrdzuOQsKLLaw/2mBrenkbMey10RDVgvltjO5VuceyHKFpGsGyd6llABePox62IGE8mErR70hG3xbzhCM06cJu1gPBmtvC1yUEmkDCzK9rmx9iYBHbM7arSxqI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; arc=none smtp.client-ip=195.135.223.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="X89mYCAy";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="8bUhL/MX";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="EvLfPknn";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="3Ts8eAl7"
-Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id F12636814D;
-	Tue,  2 Jun 2026 11:58:58 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1780401540; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
-	bh=AvUNf0GpbjtAaTVlupRs1LvbrUSj1uvZ3+UYsgsO3SQ=;
-	b=X89mYCAyX9APqTCCHdtwfc2Zw/lKjhA0sBjdLWPJbkRNaRURBz9+jeVh5MjINw0H9G9cuW
-	cOuuegqxQkgkTHaL+H499Hzzvc3/P/6/dkyrQdvntsICottHziYe1roC7WB/k0NJZ16C4r
-	0afCTxKFC+EC+HuxuE5Xe/G8Esn/QXo=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1780401540;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
-	bh=AvUNf0GpbjtAaTVlupRs1LvbrUSj1uvZ3+UYsgsO3SQ=;
-	b=8bUhL/MXMotoMXZumSkG0kHdtBXsmPGwFmx80le66MYl/gpjJoRZzEW2k4xws4KT2yaZ/o
-	5WeNOn6RK3ceMLBA==
+	by smtp-out2.suse.de (Postfix) with ESMTPS id E53686817D;
+	Tue,  2 Jun 2026 11:59:00 +0000 (UTC)
 Authentication-Results: smtp-out2.suse.de;
 	none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1780401538; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
-	bh=AvUNf0GpbjtAaTVlupRs1LvbrUSj1uvZ3+UYsgsO3SQ=;
-	b=EvLfPknnIoWm1yFLrNQNPKcFmwpqGUOcXCRh/Onol3U9GuJPHbK2aKJea8jCsS2yXSzQvy
-	lXoZnkmJMBCE8kt8StFMvFNpoI/EM4nse2RWwQF7mgZYDH0uvIq7Te4dfBINPnsD9qBoL2
-	IraRvYuLk0oeRvFO6HOfW5tbKac0TOw=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1780401538;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
-	bh=AvUNf0GpbjtAaTVlupRs1LvbrUSj1uvZ3+UYsgsO3SQ=;
-	b=3Ts8eAl72kumm5BPzllnlKwWb1Vapgd8CmEHsdeK/iHok4i1YqUNcLgtgpohq28QWkFnkZ
-	4zR8XH/iab7cMhCg==
 Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id CF260779A7;
-	Tue,  2 Jun 2026 11:58:57 +0000 (UTC)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 80819779A8;
+	Tue,  2 Jun 2026 11:58:59 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
 	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id gdfoIYHFHmpvYQAAD6G6ig
-	(envelope-from <ddiss@suse.de>); Tue, 02 Jun 2026 11:58:57 +0000
+	id SIHNDoPFHmpvYQAAD6G6ig
+	(envelope-from <ddiss@suse.de>); Tue, 02 Jun 2026 11:58:59 +0000
 From: David Disseldorp <ddiss@suse.de>
 To: target-devel@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org
-Subject: [PATCH 0/2] scsi: target: fix CHAP_N handling
-Date: Tue,  2 Jun 2026 21:43:56 +1000
-Message-ID: <20260602115840.26490-1-ddiss@suse.de>
+Cc: linux-scsi@vger.kernel.org,
+	David Disseldorp <ddiss@suse.de>
+Subject: [PATCH 1/2] scsi: target: add extract_param_str() helper
+Date: Tue,  2 Jun 2026 21:43:57 +1000
+Message-ID: <20260602115840.26490-2-ddiss@suse.de>
 X-Mailer: git-send-email 2.51.0
+In-Reply-To: <20260602115840.26490-1-ddiss@suse.de>
+References: <20260602115840.26490-1-ddiss@suse.de>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -78,50 +49,91 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+X-Rspamd-Pre-Result: action=no action;
+	module=replies;
+	Message is reply to one we originated
+X-Rspamd-Pre-Result: action=no action;
+	module=replies;
+	Message is reply to one we originated
 X-Spam-Flag: NO
-X-Spam-Score: -2.80
-X-Spamd-Result: default: False [-2.80 / 50.00];
-	BAYES_HAM(-3.00)[99.99%];
-	MID_CONTAINS_FROM(1.00)[];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	R_MISSING_CHARSET(0.50)[];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	RCPT_COUNT_TWO(0.00)[2];
-	FUZZY_RATELIMITED(0.00)[rspamd.com];
-	ARC_NA(0.00)[];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:mid,sashiko.dev:url,imap1.dmz-prg2.suse.org:helo];
-	FROM_EQ_ENVFROM(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	RCVD_COUNT_TWO(0.00)[2];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	TO_DN_NONE(0.00)[];
-	RCVD_TLS_ALL(0.00)[]
+X-Spam-Score: -4.00
 X-Spam-Level: 
+X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
+X-Spamd-Result: default: False [-4.00 / 50.00];
+	REPLY(-4.00)[]
+X-Rspamd-Queue-Id: E53686817D
+X-Rspamd-Action: no action
 
-The sashiko bot pointed out issues with CHAP_N handling recently, when
-reviewing a patch for a separate issue:
-https://sashiko.dev/#/patchset/20260521151121.808477-1-hossu.alexandru%40gmail.com
-  Since extract_param() unconditionally strips '0x' or '0b' prefixes and
-  alters the returned type, wouldn't a valid user with a name like '0xalice' or
-  '0bob' have their username mutated to 'alice' or 'ob'?
+The existing extract_param() helper, detects and strips any hex (0x/0X)
+or base64 (0b/0B). This makes sense for some parameters, but not strings
+such as CHAP_N.
 
-I believe this behaviour is contrary to the iSCSI spec. I added some simple
-libiscsi tests to cover prefix stripping:
-https://github.com/sahlberg/libiscsi/pull/472
-
-These patches attempt to fix CHAP_N handling.
-
-----------------------------------------------------------------
-David Disseldorp (2):
-      scsi: target: add extract_param_str() helper
-      scsi: target: fix auth when CHAP_N carries a hex/b64 prefix
-
- drivers/target/iscsi/iscsi_target_auth.c |  8 ++---
+Signed-off-by: David Disseldorp <ddiss@suse.de>
+---
  drivers/target/iscsi/iscsi_target_nego.c | 37 ++++++++++++++++++++++++
  drivers/target/iscsi/iscsi_target_nego.h |  1 +
- 3 files changed, 40 insertions(+), 6 deletions(-)
+ 2 files changed, 38 insertions(+)
+
+diff --git a/drivers/target/iscsi/iscsi_target_nego.c b/drivers/target/iscsi/iscsi_target_nego.c
+index b03ed154ca34e..53b17d3cc86c3 100644
+--- a/drivers/target/iscsi/iscsi_target_nego.c
++++ b/drivers/target/iscsi/iscsi_target_nego.c
+@@ -98,6 +98,43 @@ int extract_param(
+ 	return 0;
+ }
+ 
++/* same as extract_param() above, but don't interpret any type-prefix */
++int extract_param_str(
++	const char *in_buf,
++	const char *pattern,
++	unsigned int max_length,
++	char *out_buf)
++{
++	char *ptr;
++	int len;
++
++	if (!in_buf || !pattern || !out_buf)
++		return -EINVAL;
++
++	ptr = strstr(in_buf, pattern);
++	if (!ptr)
++		return -ENOENT;
++
++	ptr = strstr(ptr, "=");
++	if (!ptr)
++		return -EINVAL;
++
++	ptr += 1;
++	len = strlen_semi(ptr);
++	if (len < 0)
++		return -EINVAL;
++
++	if (len >= max_length) {
++		pr_err("Length of input: %d exceeds max_length:"
++			" %d\n", len, max_length);
++		return -EINVAL;
++	}
++	memcpy(out_buf, ptr, len);
++	out_buf[len] = '\0';
++
++	return 0;
++}
++
+ static struct iscsi_node_auth *iscsi_get_node_auth(struct iscsit_conn *conn)
+ {
+ 	struct iscsi_portal_group *tpg;
+diff --git a/drivers/target/iscsi/iscsi_target_nego.h b/drivers/target/iscsi/iscsi_target_nego.h
+index e60a46d348352..6b72edd2aef2e 100644
+--- a/drivers/target/iscsi/iscsi_target_nego.h
++++ b/drivers/target/iscsi/iscsi_target_nego.h
+@@ -13,6 +13,7 @@ struct iscsi_np;
+ extern void convert_null_to_semi(char *, int);
+ extern int extract_param(const char *, const char *, unsigned int, char *,
+ 		unsigned char *);
++extern int extract_param_str(const char *, const char *, unsigned int, char *);
+ extern int iscsi_target_check_login_request(struct iscsit_conn *,
+ 		struct iscsi_login *);
+ extern int iscsi_target_locate_portal(struct iscsi_np *, struct iscsit_conn *,
+-- 
+2.51.0
 
