@@ -1,198 +1,75 @@
-Received: from mail-wr1-f51.google.com (mail-wr1-f51.google.com [209.85.221.51])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from lamorak.hansenpartnership.com (lamorak.hansenpartnership.com [198.37.111.173])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 599EE3FF8AA
-	for <linux-scsi@vger.kernel.org>; Wed,  3 Jun 2026 20:42:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1BF423AB285;
+	Wed,  3 Jun 2026 20:45:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.37.111.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780519323; cv=none; b=Zt/t6y+IwTXTIjkBhkLJ+KOLcBcR6/GJ1wOb+wocOLL/HloBeNASgm2pzU8woqbEJr0pnoEats1G11wnCXdNeeFVkYZxh01FxS9iStiVx9DHidmdsBfqgnEsw5it7ouoBIenJpZySeF13pjiV8AzBr4wOS+fxjU8miTOFLAgLGQ=
+	t=1780519560; cv=none; b=bamj75moMq7LqUcOE5xDGLhlI4ugIdqmMZH4OQix92XtMrO0cc3rmIXPkK+02o5wlseHWr+Bopg+ZacTvVh/vwZIBXWswkQbOiIGUpgZJ2Ff6+Xy1m7LBNgyYmMfwV8DmoGdS28A9vZ4oBLhL3J0rf1aOvE5CQnZhxzs3Clf4vM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780519323; c=relaxed/simple;
-	bh=6r7aiSGG3HfNEQdLKMO+qc53gHDujJmEknTqmImzIUE=;
-	h=Message-ID:Date:MIME-Version:Subject:Cc:References:From:
-	 In-Reply-To:Content-Type; b=dkUZodkMcJeeuCuS3i1SY5JkBWAJaFC1tc3HMjcw7K4rrjwqk0Clye/o9qTMWkwOsCVOnwgU+uKtSrOYiIXww27cy6BMK0gAV6UmAvBdXwsSveD92Eql6BPMm5sK2mTB/cD1KOEXq3eOqtcwMMFDsuqduTsNn5EcVuHbvxZuGuY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=hTzr/xmv; arc=none smtp.client-ip=209.85.221.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1780519560; c=relaxed/simple;
+	bh=zYERk6FD/fcEWRPZJccjqf4Ja8zzXfI+uz7nBFydqOI=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=Jo47vDDSHwsaWgHNUFWZxMXvvqLNvFhksKIKKch8jiuI+mTkPUxI4vYgn7IiEyKFWm3uykhcHRRPUs5Z5K4eGGPddiSnqmjR+SnM1L6Q0A8rpOWP8FuVX6+nCVsgDhC26GtdqgsLqQ5LPfDckpuYJLP1huWzxEF/YMbUrGJtoRw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com; spf=pass smtp.mailfrom=HansenPartnership.com; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=rJYo98io; arc=none smtp.client-ip=198.37.111.173
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=HansenPartnership.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="hTzr/xmv"
-Received: by mail-wr1-f51.google.com with SMTP id ffacd0b85a97d-45ef4332d89so563912f8f.3
-        for <linux-scsi@vger.kernel.org>; Wed, 03 Jun 2026 13:42:02 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1780519321; x=1781124121; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:subject:mime-version:date:message-id:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=plob93CUsY59KTxyJOCCanfa9cZeC1KBx3jMt6kIIHI=;
-        b=hTzr/xmvgrH7UHe1g77AzmDLxJVvrLjHq5yedX95tC33B4JJBClixYpZfr3rLrllID
-         XyOSEQ1+8MUOVoMdLrjaVb7QlyPESsOiP4yPQU8OzS4muZvmOFg4uMnp0kAXTjXjO0e1
-         wajLhk97QCZjhDtNctP/p/iDsDvvu/5DEu1o1XstiE0ZdlRioNi4jghnZrv2TCbzEV1y
-         koBCRpH1RDDRnKZPY5MQKb3sjjuQj5npWmu/ih47iD/iDuTVfNJBrleSRb0NVY7phPMM
-         35YX1+UwAqkSVdXUl+U9CZqPnpup+2PNksZjSmjjDiaHuSo38bdJukRyFOTfPxEHdiJ6
-         lsEQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1780519321; x=1781124121;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:subject:mime-version:date:message-id:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=plob93CUsY59KTxyJOCCanfa9cZeC1KBx3jMt6kIIHI=;
-        b=J9ZUtBpIRp4GpnhCAoUnAWZuX7u6v5UZ+QK3pIzXl5fHN/7GWTs754aO5Wr3F9Tuab
-         hUxVk2f9RwHDe3UvNaO+ikYTkBzCBIl7Evha4QoamJYww8umgcqUIj937JxtZ2cCKdDk
-         /Toyh7aqZXjqDdfH29EJ6mG4KYsfMlLu00YTL4rVpQ2qEkr+AHVD9V3QlO+n2TY/0Mh6
-         0NXtqtjYQ4HKNTyjhHXL0TmnMomI+/Ju4HB/y4FwUvKVIuaHHMaXjqVCSDVGtbiijqDZ
-         971GisKQyFbr4qX/mxLpyDwy9gGkgehnuY//yJ8NfOfe8y0XaQihNUaEZAgAcq8MFBjR
-         ONtg==
-X-Forwarded-Encrypted: i=1; AFNElJ+bDPMqKHR0XqxjcZyhSOb7Kc75Cl00VUIzjCxXKjj+Edy0LDcEEWug0Oo/iw0tCRqQoqVs5kky97eC@vger.kernel.org
-X-Gm-Message-State: AOJu0Yxc663fOxz260NdBSg9m52Q9pUjQjIDhFfdKrzI7UzUVznfgo4+
-	SSYP5FwMuU6UlUQv4y5v37A8Ep/1/ZZsQlI8/G6JFsuCn/YFage9o5A=
-X-Gm-Gg: Acq92OFFbplEHz5fOIB6d0ThvEMYmr0gBBBgyaNKOTnsAkiNVphOO9+YvW/5bHwidwQ
-	oFtbNC0ZZB5rqjsE/ngG8qJWgRTdPParVeCuwPL71YafMAFKuySa0xjMiLKbBOBndSI0LRs9PUb
-	WoQAA1zmqVtQp7PkCdB/Wy8qIf3LAQbgkv3mkC1cYJbhsZJpjjYL//N0v19MtXkwZeO1gma7PP+
-	ntzi3DunjJIw+VwjVkeWoK/x1fLV2yywK8ijOWkplOZk9KhhpctSxmYal40tuHe/9huI0z4sZzf
-	upsg3815ugLd8BfbnprAthqnJCh9KoCODWgN581VRuOcwv+A0ENyc/8g09u9myDjsDQMNCW3ohW
-	cqw9e1QArkQknCxf2aD+3AP8DcPhGKRWA+dg1c+p5vsPZvHMysC3eF/1yRvQZUhGAd4+0h3+Xl/
-	A8ez1sjZXOFDoYY46YX2z5CHvLWV9zLKHBUwDZnjtBwqD7FV9OzS42f+vcmXlJymrCRiZB+nE=
-X-Received: by 2002:a05:600c:6286:b0:490:a2f4:c497 with SMTP id 5b1f17b1804b1-490b52ced77mr37377975e9.7.1780519320405;
-        Wed, 03 Jun 2026 13:42:00 -0700 (PDT)
-Received: from localhost (32.red-80-39-29.staticip.rima-tde.net. [80.39.29.32])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-490bc39e024sm21764485e9.4.2026.06.03.13.41.58
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 03 Jun 2026 13:41:58 -0700 (PDT)
-Message-ID: <4d3fda0b-36ff-4351-97b8-914c22b86c96@gmail.com>
-Date: Wed, 3 Jun 2026 22:41:58 +0200
+	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="rJYo98io"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+	d=hansenpartnership.com; s=20151216; t=1780519558;
+	bh=zYERk6FD/fcEWRPZJccjqf4Ja8zzXfI+uz7nBFydqOI=;
+	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
+	b=rJYo98iotOo7na08cN2W9MuNHy1qAjpAp3KQ0pm8TdgmJQHeV4vBa7CY5pCbM2hX7
+	 I37Eh7a97mkn2m8lJFK4CjDHeU4u1hBSq3n9lte7oeV+HvWS6fXUWeo3ooQXYsjnSp
+	 BnX1YOTWps5fh9+aXrUkIg2sTtU16ztFvcz+1L+w=
+Received: from lingrow.int.hansenpartnership.com (unknown [IPv6:2601:5c4:4300:d341::8c71])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by lamorak.hansenpartnership.com (Postfix) with ESMTPSA id D18A41C0234;
+	Wed, 03 Jun 2026 16:45:57 -0400 (EDT)
+Message-ID: <1280577210aa54ba9a769ff39c3bfa797bbd32c3.camel@HansenPartnership.com>
+Subject: Re: [PATCH] scsi: scsi_debug: fix one-partition tape setup bounds
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+To: Samuel Moelius <sam.moelius@trailofbits.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, "open list:SCSI
+ SUBSYSTEM" <linux-scsi@vger.kernel.org>, open list
+ <linux-kernel@vger.kernel.org>
+Date: Wed, 03 Jun 2026 16:45:57 -0400
+In-Reply-To: <20260603182518.27082-1-sam.moelius@trailofbits.com>
+References: <20260603182518.27082-1-sam.moelius@trailofbits.com>
+Autocrypt: addr=James.Bottomley@HansenPartnership.com;
+ keydata=mQENBE58FlABCADPM714lRLxGmba4JFjkocqpj1/6/Cx+IXezcS22azZetzCXDpm2MfNElecY3qkFjfnoffQiw5rrOO0/oRSATOh8+2fmJ6el7naRbDuh+i8lVESfdlkoqX57H5R8h/UTIp6gn1mpNlxjQv6QSZbl551zQ1nmkSVRbA5TbEp4br5GZeJ58esmYDCBwxuFTsSsdzbOBNthLcudWpJZHURfMc0ew24By1nldL9F37AktNcCipKpC2U0NtGlJjYPNSVXrCd1izxKmO7te7BLP+7B4DNj1VRnaf8X9+VIApCi/l4Kdx+ZR3aLTqSuNsIMmXUJ3T8JRl+ag7kby/KBp+0OpotABEBAAG0N0phbWVzIEJvdHRvbWxleSA8SmFtZXMuQm90dG9tbGV5QEhhbnNlblBhcnRuZXJzaGlwLmNvbT6JAVgEEwEIAEICGwMGCwkIBwMCBhUIAgkKCwQWAgMBAh4BAheAAhkBFiEE1WBuc8i0YnG+rZrfgUrkfCFIVNYFAml2ZBIFCS3GUMIACgkQgUrkfCFIVNZKjQf/deRzlXZClKxTC/Ee2yEPqqS7mm/INUA49KdQQ5oIhSxkUBy09J4qjMIo5F8ZFkFTqikBqeL35LKu7O7rn8WETfX8Bxvos3HUsl3jHo34DES4MUFIpoQPgtiLRGwLbK0cVCAArR2u2qj4ABmTRrs1I1kvdjEw6gatOuXtEe/j5O2fvfzTq9GBr0Q3n2IAsFXi4hLlx6VPE8tyWUZ8BWJKtih3JAeUiXFvASL3McV0rV9RnU0VbjEQEhSE7PMYhWpnDC9AyBb0lXJllQRvC3NSkUB8KVQgNNxRPss0WE/nBoZ4dFA42jTyzTz8lNylxZoAWV7WJb3QxVg4oCodRVrxxrQhSmFtZXMgQm90dG9tbGV5IDxqZWpiQGtlcm5lbC5vcmc+iQFVBBMBCAA/AhsDBgsJCAcDAgYVCAIJCgsEFgIDA
+	QIeAQIXgBYhBNVgbnPItGJxvq2a34FK5HwhSFTWBQJgS5mYBQkbNYS9AAoJEIFK5HwhSFTWBpwIAL5Bk35FB34U6iHmDzzgdCbxLTs43T/YQyJpcGIvopBvnI/fDY8oSG6Df64/O6B+1R+A8TDp6ZG5ysUWnCC6GuIaEHemBYkitMPglR6+sGCMQY7O0mlsPvdssvKK1KI9Bno4VU6ogaF2qVzefSqg1Djmf/DcsxWPrI/jdJ8FB5AYR2rjIdDFc+zRdAJuavo1/anyY2wgpFh/3R8IOYAEfWV9nGgYkf9+tA4EIn1sxE0I3L5oW2N3mbyRrkzuBwO8ztMCwqEPk7moWzhokcZqMXiAIahaZdkashJC+s2X2RZSGCy+g+pvY5NN4BBVG5XwLgVBqbHMTcxE0fbmPqz+q6O0LEphbWVzIEJvdHRvbWxleSA8amVqYkBoYW5zZW5wYXJ0bmVyc2hpcC5jb20+iQFXBBMBCABBFiEE1WBuc8i0YnG+rZrfgUrkfCFIVNYFAmODZ5ACGwMFCRs1hL0FCwkIBwICIgIGFQoJCAsCBBYCAwECHgcCF4AACgkQgUrkfCFIVNZu0Af/TzvL2/NdgAcw9uN3x60H8jc4QUq14VpxcFEFEMpcj1morkX/G93V+56HBBaXZj+yK8PhxIA/SIz+sU7C/0YvKuvzakP8ZX/7WJe32SOUtjfr/VTaqjIBzNj6OxLvZpmNbBw7s6DwhhNpHOWqJ/1ml+PtDRDV71IB58yVqQjp1xlNKVlZppcJ5908EJzsFnRIVjiQiDSKoppqB2BCibBbrWcln7CiWMyOC/cco6SIn6twH+f7+aivJ3xGcOE2a9gBKF5rNi9TBoX9oyPmshv/TDmnohsVrH7AYXlGYfZTk15SWEiROh1QX8/uD9wl/gcIv5EDUpT/FL2jzOsA5663b7hSBFpntuYTCCqGSM49AwEHAgMEfgawiAvTJCKPlLkhINmaVHuoNA9xZT
+	ExXHrNU+wCghN2MoWNoOZQBORL6XnOaIKtQFwnowFq8+JhDiSqfj/HBokBswQYAQgAJgIbAhYhBNVgbnPItGJxvq2a34FK5HwhSFTWBQJpdmSfBQkh2rC5AIF2IAQZEwgAHRYhBOdgQNt2yj0XZwj5qudCyUzumKyFBQJaZ7bmAAoJEOdCyUzumKyF2L0BAPI68tg4GTKUGqJOUmsycYIKxaAZnA+kqrd7ezslD/EEAQCXHb2k9jnPREvIgNSyN/2a2RI1Np5pDpMiMOsVr7xcfwkQgUrkfCFIVNbHmQgAk3WhtOC5ajSffgDF25vqZreQJPJS0HCRnHxvfLe2WnJvShmaexY6BFyYtLmamrBRYcefLZSZkgc8nWOdlA7kr94Hj8GMrX5hZQHi6zzN0g3v9B+YTUh1btDbIcuPQWKjKUhD9EGrH0XNhB8nRIeSfwb3mDHyQ1tcd2lso5GUaYPHIgO8VKkNAJHyurxuyTYJjQi2T0i656zCK8I9NBh7gs58BTbHMqBRI5Q4oDLgzXg6o5CUUmZhS7ON2Xb7J+twT6GXG+iRjE+uMa72fiZax5l0upKcYYkOS2q2lSVwgwsGBftya4CPWzMwmCI3NYPFO2XdAOVP9ouvFQSSK1Sm6LhWBFpntyUSCCqGSM49AwEHAgMEx+4y4T48QJs6hiOQPRN6ejtMNtyDEk2A9XtjaVBs0Gd7Ews4Rjr/EnNGLVeb+j2Y7Jn5UiPyHgblX95ZKe02TAMBCAeJATwEGAEIACYCGwwWIQTVYG5zyLRicb6tmt+BSuR8IUhU1gUCaXZkMwUJIdqwDgAKCRCBSuR8IUhU1pfLB/wLszTzsV2JYbCYLOdPF0dGcv+dSx8rLiydrJ/hgv4fcTJgXv45zzNCL/QqHAiKjnxXeSRsFBjyHf3gYXmhbP5eGCW81eZHOUDy7CoSyZRPzIPf1At8IFia3pPZ+xibcIz7JntKFWWw43YdtVghoGZIxa5PM4v
+	ESQBwmRFUv0DF2TFKWHM7amrZAal162kknsH5gKQnFRdX1uLZHw51BzeW+Mzso3xcGi2iby9hcACv1L5TZTQpyD67B+znqj884Vgj4JKdInPQgxJ1yS7aR0ezRHqJYJrjHmzR4aSRFIEnw5azZlH/lsvKCee42fPGoZ956VcVZCagf29mjzDLXxGmuQINBFR2FpkBEACl4X2Bs1IEG51bzF4xAiIH8JnArhU4Q/ucYdmfdSxZ6ay8T2W+NsXNupwiRtSnZXoTEzm3ISDOKjYFq8t7VkkYdVoqQvdwosAGhiL/IEsSeiA8XPNh8rZ92KmbYb4aEtqp8PG0BDtypd6jVMKxktK+MP6QtVXVO8qVodLy1QKHahTJHt9Nu/pYeLkfwMvJHQ+du30T38ZyzWPXUlf4xYnuOx63YVUOwHlTUszvQCOFeIOJAK00nMpqop0x6LzNrNZLnSIwop6jib9p1YGMb/yV3d9Dv8dyPo6mSHzE9oKeaANmi9gZq/DgCba2NGoTobqs9ClLTB7kjqVKwo0E//YWEuYj1+ewGdkLWXU2sBJFJfUErTF/gtgHZbDd9hCZtsCkBQFtZn/VpChzYQIptIr2JbSB9nysOCB8zDyfOmYQQTGXSFTrC0kvKbINX5Aag/HkrBgr/qoBQ0lAidRjPzPYREz8c4jT1m7eOJq4UEO2i5Iitpf/YMO9N/st97X6KEBEVKWnriQQwCyMq600Era7miPgfuFDvMP4G9YsfEyDKw61hi3CCDB46sz+TdGd2xn/PeewaoXSCBy3VUu4fZ7OcOSwj4qRncGDRaKFDIntn2iaBpADJEMVy36Ocmy/YjNr7Ei896L5+lsY0DIW+PR75OxmhAZwLfj+KkbDN7rnVQARAQABiQEfBCgBAgAJBQJVPoFoAh0DAAoJEIFK5HwhSFTWnlAIALumCM4zXsfHCrP2aUYQuKViqPM09Shm3nGyVxMUbGP9BY3O7QryARA94+dzl1N+
+	6bNYvTvufGF0pi2irCbYLp86ZeIkFnHqSEF9Gpy1S83YOU4Hp0V/kj7VBP1NEG9x4bPDTUTgaLTGNYoAHo4ggwB2c9wNUXNpcl2UAAl2N+D+XIm0DLGJ9+Ubw2dcnd6XAaqgGyjzhcE1ZbNtzlUqZq3OFgs69e1/MOG7iY0+//PtLUdO1GC4jQ2UflFUHNK9/PJuKf2HKwTf/6vcLQcnbGI4fO5w0CYbTdrO3NlgMxNspBbhtCp4PkwnFPry8Fi7wy3N8h7jWVIulv+qXCrWqDSJASUEGAECAA8FAlR2FpkCGwwFCQDtTgAACgkQgUrkfCFIVNbdiAf8DIkvauUK8auQtxqz3g0P0+afRxSVWs+XvBUZwhX7ojievDq7j1PKo0yaxhqbZimN6u8kaBu8hszOgcUJESLpH1fJSzDnDsYJGhZ6DDZuVliLkDnbF7nTT79Gu4b/8wp861VSi27c367sVxdpgCD2Bth4Y1kJXvS8j5ycWCrQAQlF2OJ3N8JZUo+Np9OjuMd4XFftDbaRR9Y6QzPOGgNsWDSM+FVg2IRek3JcLCKvO8oDtu8XBk+VGRt+KFqJcMTtAohS1DXSLmTDgL2uoMrDHwXQ9pYNEX2AZop3v8gkYclppz85xInfrPGCQ2AuxVfkZSugnYZplxHtb1WmmPkf4LhSBGS5HJMTCCqGSM49AwEHAgME7JKiaexbZKQCle/XNQFoPfx0USPQtB4MQx1ITtubV+et2MBi3R/8K1tRSINo+h1CTap4fM4/rAD/YrquuPA0hYkBPQQYAQgAJwMbIAQWIQTVYG5zyLRicb6tmt+BSuR8IUhU1gUCaXZkiAUJF4lK9QAKCRCBSuR8IUhU1t6CCACFp/Wk55zQu2MQAvzXSexcBczROJSLUiNL8hRejgidulGRb/nvvxgsPQkdKxvxi02LFcU2jeFK5TuuRvebZozJ0LDJsECWJ0CHUoWzN+FZ/j0IG4qPgGSD1DIdfwGft
+	AHBLpBdnl9SOe8ETkv6GqbZrXUED/dAbRVIT5vHP51zyYB8rAUjp3PnzxsXFG8eQaacEyKSl0DKDlgKuQ+k292LVGJhEva8z4cwg3JcrQWzbpTRskQRP624aQ7t0LKbNfXqfYT13TvZNTDdjQaCJRJ3EG8uXOszVKuc0guXunZPmmq6x1Y3bOfOezcFYoywwL3nKef+Z5sQrjG3/5NLeu+W
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.50.3 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Subject: Re: [PATCH] scsi: devinfo: drop redundant entries from
- scsi_static_device_list
-Cc: Christoph Hellwig <hch@lst.de>,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- SCSI-ML <linux-scsi@vger.kernel.org>
-References: <20260523114034.326963-1-xose.vazquez@gmail.com>
-Content-Language: en-US, en-GB, es-ES
-From: Xose Vazquez Perez <xose.vazquez@gmail.com>
-In-Reply-To: <20260523114034.326963-1-xose.vazquez@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
 
-On 5/23/26 1:40 PM, Xose Vazquez Perez wrote:
+On Wed, 2026-06-03 at 18:25 +0000, Samuel Moelius wrote:
+> The tape setup path writes partition metadata one element past the
+> allocated tape_blocks array when a one-partition configuration is
+> selected.
 
-> These entries are redundant because they are already covered by existing
-> prefix matches in the list and same flags:
-> 
-> {"NRC", "MBR-7", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
-> {"NRC", "MBR-7.4", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
-> 
-> {"DELL", "PV660F", NULL, BLIST_SPARSELUN},
-> {"DELL", "PV660F   PSEUDO", NULL, BLIST_SPARSELUN},
-> 
-> {"COMPAQ", "MSA1000", NULL, BLIST_SPARSELUN | BLIST_NOSTARTONADD},
-> {"COMPAQ", "MSA1000 VOLUME", NULL, BLIST_SPARSELUN | BLIST_NOSTARTONADD},
-> 
-> 
-> Cc: Christoph Hellwig <hch@lst.de>
-> Cc: James E.J. Bottomley <James.Bottomley@HansenPartnership.com>
-> Cc: Martin K. Petersen <martin.petersen@oracle.com>
-> Cc: SCSI-ML <linux-scsi@vger.kernel.org>
-> Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
-> ---
->   drivers/scsi/scsi_devinfo.c | 3 ---
->   1 file changed, 3 deletions(-)
-> 
-> diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
-> index 68a992494b12..3a9b691d7e72 100644
-> --- a/drivers/scsi/scsi_devinfo.c
-> +++ b/drivers/scsi/scsi_devinfo.c
-> @@ -148,12 +148,10 @@ static struct {
->   	{"COMPAQ", "LOGICAL VOLUME", NULL, BLIST_FORCELUN | BLIST_MAX_512}, /* Compaq RA4x00 */
->   	{"COMPAQ", "CR3500", NULL, BLIST_FORCELUN},
->   	{"COMPAQ", "MSA1000", NULL, BLIST_SPARSELUN | BLIST_NOSTARTONADD},
-> -	{"COMPAQ", "MSA1000 VOLUME", NULL, BLIST_SPARSELUN | BLIST_NOSTARTONADD},
->   	{"COMPAQ", "HSV110", NULL, BLIST_REPORTLUN2 | BLIST_NOSTARTONADD},
->   	{"DDN", "SAN DataDirector", "*", BLIST_SPARSELUN},
->   	{"DEC", "HSG80", NULL, BLIST_REPORTLUN2 | BLIST_NOSTARTONADD},
->   	{"DELL", "PV660F", NULL, BLIST_SPARSELUN},
-> -	{"DELL", "PV660F   PSEUDO", NULL, BLIST_SPARSELUN},
->   	{"DELL", "PSEUDO DEVICE .", NULL, BLIST_SPARSELUN},	/* Dell PV 530F */
->   	{"DELL", "PV530F", NULL, BLIST_SPARSELUN},
->   	{"DELL", "PERCRAID", NULL, BLIST_FORCELUN},
-> @@ -213,7 +211,6 @@ static struct {
->   	{"NEC", "PD-1 ODX654P", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
->   	{"NEC", "iStorage", NULL, BLIST_REPORTLUN2},
->   	{"NRC", "MBR-7", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
-> -	{"NRC", "MBR-7.4", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
->   	{"PIONEER", "CD-ROM DRM-600", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
->   	{"PIONEER", "CD-ROM DRM-602X", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
->   	{"PIONEER", "CD-ROM DRM-604X", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
+I don't think that's correct.  tape_blocks is defined in struct
+sdebug_dev_info as
 
-While reviewing this patch, Sashiko discovered an unrelated legacy bug by extension:
+	struct tape_block *tape_blocks[TAPE_MAX_PARTITIONS];
 
-From: https://sashiko.dev/#/patchset/20260523114034.326963-1-xose.vazquez%40gmail.com
+so tape_blocks[1] is always allocated.  You can argue it shouldn't be
+written to even though it is allocated, but that's not what you wrote.
 
-8>==============================================================================
+Regards,
 
-commit 721e2689d447c8de8d1d7183a4deca12e9771da5
-Author: Xose Vazquez Perez <xose.vazquez@gmail.com>
-scsi: devinfo: drop redundant entries from scsi_static_device_list
+James
 
-These entries are redundant because they are already covered by existing
-prefix matches in the list and same flags.
-
- > diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
- > index cf8dfab9489fc..f141cd9a91418 100644
- > --- a/drivers/scsi/scsi_devinfo.c
- > +++ b/drivers/scsi/scsi_devinfo.c
- > @@ -148,12 +148,10 @@ static struct {
- >       {"COMPAQ", "LOGICAL VOLUME", NULL, BLIST_FORCELUN | BLIST_MAX_512}, /* Compaq RA4x00 */
- >       {"COMPAQ", "CR3500", NULL, BLIST_FORCELUN},
- >       {"COMPAQ", "MSA1000", NULL, BLIST_SPARSELUN | BLIST_NOSTARTONADD},
- > -     {"COMPAQ", "MSA1000 VOLUME", NULL, BLIST_SPARSELUN | BLIST_NOSTARTONADD},
-
-This isn't a regression introduced by this patch, but does the handling of
-strings from scsi_static_device_list lead to an out-of-bounds read and
-kernel panic under fortify source bounds checking?
-
-When devinfo is allocated via kmalloc(), the memory is uninitialized. Struct
-fields like flags and compatible immediately follow the vendor (8 bytes) and
-model (16 bytes) string arrays in memory.
-
-When strings from this list exactly match the array length (like the 8-byte
-vendor Nakamich or the 16-byte model Array Controller further down the list),
-scsi_strcpy_devinfo() uses strncpy() which does not append a null terminator.
-
-The manual termination branch is also skipped because from_length < to_length
-is false:
-
-drivers/scsi/scsi_devinfo.c:scsi_strcpy_devinfo() {
-     ...
-     strncpy(to, from, min(to_length, from_length));
-     if (from_length < to_length) {
-         if (compatible) {
-             to[from_length] = '\0';
-         }
-     ...
-}
-
-Later, during device scanning, scsi_get_device_flags_keyed() calls
-strlen(devinfo->vendor) and strlen(devinfo->model):
-drivers/scsi/scsi_devinfo.c:scsi_get_device_flags_keyed() {
-     ...
-     if (memcmp(devinfo->vendor, vendor,
-                 min(max, strlen(devinfo->vendor))))
-     ...
-}
-
-Because the array lacks a null terminator, strlen() reads past the array
-bounds into the adjacent struct fields until it finds a zero byte.
-
-While this read doesn't cross the kmalloc slab boundary, kernels compiled
-with fortify source instrument strlen() to validate the length against
-the known array bounds. Since the null byte is located outside the array,
-strlen() returns a value greater than or equal to the array's defined size,
-causing fortify source to detect an overflow and execute fortify_panic().
-
-8>==============================================================================
