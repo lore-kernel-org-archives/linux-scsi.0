@@ -1,93 +1,93 @@
-Received: from mail-lj1-f169.google.com (mail-lj1-f169.google.com [209.85.208.169])
+Received: from mail-lj1-f174.google.com (mail-lj1-f174.google.com [209.85.208.174])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 95EFF436369
-	for <linux-scsi@vger.kernel.org>; Wed,  3 Jun 2026 16:30:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.169
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2594F3D9028
+	for <linux-scsi@vger.kernel.org>; Wed,  3 Jun 2026 16:31:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.174
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780504236; cv=pass; b=OShvglI3HWK1RQOYQtwQRu6w8aB7aCKCohxXdBgvxTgd3XHVyO9r/sl+4XWBCuTjKjMFFlXYzkkaJRFTRRy8SgTxZeDXafF+Yg7ZaY5aqajSUCkmMRWTqoOoEeFFXMUjkaeSfrkrGljQ09LIVB5BDLULRXmKTCFWbAokZIeMhq0=
+	t=1780504272; cv=pass; b=LmUi408qOyBblzdAn6C/NZoqh4ykN1CaL/sSoTNGFnrKr99IYQ+w/Z3rJaKITQSzwXQupEsVdKJ06tKM6cHXXSAt23f28uUUdY09cxnUxAah8CCO2mbS+DtVLHjNtVDEHp29K3ySqpqwl0VjNu41i3JrfLLNIxBk/fZLvjLiFpg=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780504236; c=relaxed/simple;
-	bh=MGjyHAboyvKunuPMYx+1O58h1Rnay/E34EqctC7+rsc=;
+	s=arc-20240116; t=1780504272; c=relaxed/simple;
+	bh=GDbsJcs2QiLywbucMnh0d/gAmgm1aQxoL7ban/WLVQI=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=Q7xh3TV0vav0eVjK9R6iri6W5rC715Dr/d1QnWlWTKn87bq7feCTu9YyS/JdtKmOsz8+XOOTYSl6hjov+fWMZBWqDnq9+uARaKxx+6alx9QqK+sBySy/19LNGqUKhdfihIqE5G53ibdk6B0/OCskYSCoWp3+nR2TLDlW6xinr10=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=CG5dssQO; arc=pass smtp.client-ip=209.85.208.169
+	 To:Cc:Content-Type; b=qa6oAQnNNkZvUgOPrT/4/mVe/vTxQC8qk7yn6HllZNSvmBs1Q4qbRgUOBaipIxdVL3IjlwX7xDIoIBtYPDMujmEYoxQHX8TcgRt6UxdOfoWYC9t+mkW2M1bRq4mPJZpOb4WqCd0TxJx+3BCeb3QIOX0uD8GnPQyv6fEsC2PXpFA=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=gvIrX0ng; arc=pass smtp.client-ip=209.85.208.174
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="CG5dssQO"
-Received: by mail-lj1-f169.google.com with SMTP id 38308e7fff4ca-3966388b388so9915351fa.1
-        for <linux-scsi@vger.kernel.org>; Wed, 03 Jun 2026 09:30:33 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1780504232; cv=none;
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="gvIrX0ng"
+Received: by mail-lj1-f174.google.com with SMTP id 38308e7fff4ca-39677234558so43961581fa.1
+        for <linux-scsi@vger.kernel.org>; Wed, 03 Jun 2026 09:31:10 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1780504269; cv=none;
         d=google.com; s=arc-20240605;
-        b=W6cdEA1Nf6EE10nB6e2OaTkMKXVvAC0rkeNpFlz8nt+u+7GAw2mHG8NUYxHt23SPrH
-         pTRddvTi257MFGb5wgqsvIRv/vzGq3L1Lh7G+tFLjmLV1AfRfXH7OQygHLuUps+FcML1
-         DUu8OoXfXaV3pEJqZ17hi56u5MOekqyP/+SFjlYf6y1vi4HtjoEgToWLKaSKbVsJuC24
-         REpzPhRC/PzcucXQ8Pl2gvgPt1dMaEriWqyzjFNCzBxsvXCGM9k9IGCcP+jZtYMi2UXh
-         sIMkC1c4VY/FbWywkDrD0W2KTj7zljlVGpMJGxg+VMd7yRvo3ahV1d+M0u8kqp9YfrGG
-         mt8w==
+        b=Niraumc+/eUERiOnbTOR58ObTbE1J9tkzCMGEtnm5ZHdhJWySLD9mia0fYa02Bo8wB
+         we+PJCvRr4LbIF+gxf8wwsqGumaCe625JRDgosy3ltScajAfl6B6DC97UKkOMT3BwWoB
+         UIah1By/GeHa7MhQj9WoHSNs6J0QKHqjWf9pzOODv5Da2PATqNEbiBurhqw0LKcPMnVu
+         SutKqj9M3CbSjx9s9+NIm2kUPHxe+mVHp6yg1ZQzeIgV042PFcLy1/816gsDDHOImrf0
+         9bC4PVh/xDh5IQbGB5UcJ2kRIiR11z3TU07OxgHpCDP+t5dqT+i2ibxmbvCAX+G33fBF
+         gyzQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:dkim-signature;
-        bh=XoEOVYrB6znHXj9h4Z3nSLM94MZ4hDg42P6x3cwnbBU=;
-        fh=XKetfoYxAe6VUYTVM97rZqqbfznHtXVCvA9Vo6m1wVs=;
-        b=S30AtJITSeETuQApfdNpv0cB09EQUnT5Utu+iN/njji60rn2UfN+FalRAfKQD32cED
-         scY/AcFlyFk1bYxExwMLDXNsjy+L5kNRVS5xSlAclocJT07E9wsAF5LNDHWXMzYn/FB4
-         dUPJXLCEuBIwPJUFl97Xa7jjXPHVv6cQGTlUKZA0nA4GW18iwXLSFnreotjE0rivJETr
-         yNvFxkPlnmA1KhefLVK/GeU1vDAHzpFgtKZQWjcaQP+Mp/BxI1I5pl1j8uT7Kkx1gkE4
-         YMOSzzEUnO82oh/5TuruCyd6p93HUASaiJmRbWUpaXePaD1ju/ZpsKx+HaG49tt2Yc3g
-         /+qw==;
+        bh=sxfSZaF8do2hQPd38ry8GeKt7hfM6jV9CMwJ030Ibpc=;
+        fh=P66mMhLz1nthv0j+377KwGF9HlleBdYIu6SC4zdI//I=;
+        b=I7EUt5h2nCWic4nkOG1/XfgfS9bHd/1biXeShSi2svy9DVT9bupDR+Myk/dU0k20Ep
+         QpaDYU+s/xqBaVT+FGud1qhOKE5ZeBXlnSUhTroRNCq/0SWzlxVQiXs3fPWoDT3VdAqR
+         cHVEWs68HG1RahBGolO7w9Gqa33mEzt1ZQ9fxfETE0zpq7XtWnTD1GbVRKJe3WgYQYBU
+         exPiWua2opXVY8Wtioln+pfrtZ7n2eVrLT+sqs+9ak4sYpwEeAZw4IoHJOL8TxzrjxfR
+         ZPQ7HkLIZvKQGUs3BoX8/wdUKyYanwA70Hbjl8FTOCU+S22fDHBJqOAakuHjZWcOjbZF
+         DnJw==;
         darn=vger.kernel.org
 ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1780504232; x=1781109032; darn=vger.kernel.org;
+        d=suse.com; s=google; t=1780504269; x=1781109069; darn=vger.kernel.org;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=XoEOVYrB6znHXj9h4Z3nSLM94MZ4hDg42P6x3cwnbBU=;
-        b=CG5dssQO0+XXNHVw8KrQr6CIpkZgYUTF8oG5Gq9SBTdFrebDZfFzGhFH/ehdishd8g
-         F+Q9RX0cgVJRRifcEte+xqLugfD/rSPresdRsoxWZAZogpwAugSqNpOic0gZANlPhI8F
-         1vy2PIFSlHwuJpCGKb0WHPSQPnBYWhcWzROfD+tWvSAQGzZxnF1OXgozkLBrWE5fnUrl
-         1jgrSJx3uJtsEEf5RxL6kLuK71XH4qNUvFtrhkQysa849JzOwlw35RGLk/Ebt9JRBAWJ
-         +tdL8fCpG1OJ9cUKATwwPcquby2rF20Nj+Ub/8TWZC0QdPw6IDLe/+zXfa6DrYN9Er1X
-         DTBA==
+        bh=sxfSZaF8do2hQPd38ry8GeKt7hfM6jV9CMwJ030Ibpc=;
+        b=gvIrX0ngerlepkqsb0tNKAo01NeEIhSGyCUDWunpHFcfkpQ+ITWr3T+h9/OsYLV54E
+         EKJjXVmOcIwzUWiCTV8pjTQ6jouHNwzlBMlvqUoTZ5bgb8u5G73lSn6FPTsxQapBHznS
+         fZsHguNEtHtFs+NlqDEBRqx7PTP2e7sXqYHwAeBsoEqvj1vKTTjm3PhFNBTDTkQh5b+I
+         MvCUHT31W1qLwEo3Jn4MlkwwgSoRmQkq/vG/pxs6ZPiug2U0iNmylnhOrFBkSJ8oBgPi
+         ivAIUFvy26fwb/RmJqBMf4c9sS+4/HflNuvu5AO/A/ezyQ3PWaBQ0E9Cj7/7PiAYgbPG
+         kbkg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1780504232; x=1781109032;
+        d=1e100.net; s=20251104; t=1780504269; x=1781109069;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to;
-        bh=XoEOVYrB6znHXj9h4Z3nSLM94MZ4hDg42P6x3cwnbBU=;
-        b=rqo17FqLrHUoqBE8m0xPguokHhC8BwCcD9hLs1YIOqcfcW3U/dKCZ2K8DOUNYqmiUn
-         MXK/ifTqAtNArmfek6s/L2BbnSNNsh0hQucbS8S2ft6EuiMrTllzohlUDciASUoudd+4
-         fSlgJzq0RG7hSAymOZmhSkTeODFC54nnXrk7C00ip9BvZtOik0iLlyA8O3OXJeVf3RN7
-         8oQloM6EUJe0zB42ggXvqi+diIB5Msf4VMsNcV62yGUDZVzoTj6kiJIs2tfbXf3vUHBr
-         9IRfVqn0zVDQZYyJKk6ZonuTXrHH/oS93aWuGxYpsGvnXKy4GoCj3h7AzELblJeeOsze
-         5v3Q==
-X-Forwarded-Encrypted: i=1; AFNElJ8AQd8lMpJC3FhH9mfZNnoUOWWdizCD9cw0PFjm266DSoRZbxF1Jfk6NILw4n+DpCrfmLYRI1/nAzE+@vger.kernel.org
-X-Gm-Message-State: AOJu0YxN8cZOg9MFhwiYInZdafyL3t/n6xHkBa0wTSBSqU7NwesmhJCr
-	SDG5KfvUeNzTpii+ysqq9vv5de6DJ78QVuH/8V1mWJHX/XMCJjPa1s+W1Eflmrb78uVC+PbaI7T
-	LCuit/9ViDw7cyurAn+PWbkNYi4RoDgsS0ICiB3C6Dg==
-X-Gm-Gg: Acq92OEu0O6YuHmY4sx8AZVkdryKvJuBOCPZC7ucws/V7f6zvM70RrKJ3fE0JRlURWw
-	RXapFHZ/4tjI7/eHhF3VEx67OgyoY8Uha5tFrKAiUMkw+6sLwfSS55Ffrxi9wqPciGmZ622D1D/
-	HiiFiTlkzmRsdRsPMo3qWDkWy14uHawJ+7oXHdW3RlvxDxZ8bQBhHRbXklyNplEQaK/t/Jq9pRP
-	bSrMrugamtf8smMJYV1NfzspGwsbJLnwFjxqcBUPHfxDpe/sTn6Gk8hVSDdeoBjZ11qRKY9H/2C
-	9bYui+wIr7kQ02woPb3D+aCw4eCzcA==
-X-Received: by 2002:a05:651c:2115:b0:396:711a:dcb9 with SMTP id
- 38308e7fff4ca-396bbaeee4dmr312821fa.16.1780504231815; Wed, 03 Jun 2026
- 09:30:31 -0700 (PDT)
+        bh=sxfSZaF8do2hQPd38ry8GeKt7hfM6jV9CMwJ030Ibpc=;
+        b=qDccOWlURfR1/kHvNtv+NTGxaZ6JYeyCrep3m5I1Vn9PRZul4KIucKQwTOdaTrOGv9
+         ipx5NcrdhjLsOVfs3jp5bneOkzCXH9vhNsoOVFksK938eNPE8mckYZSqdeJeZlQd6K9N
+         x32P1eJC6gggMfnJhSULmhCNubeXDcACrfTNc+x0nanhjk1L09EfV6r3tWsdzcqiBJAY
+         NER0AKmvBhnSrki42/HXArmwXuczmsYndTxsJczS6pA7luppfUd9btWLcXmYVS8Lj70S
+         yZBf65oGbLZ+jb78th6iMuqEW6opkOXdA/KHRVqwaZ38dtbaGp/M3AM2txSnxO+aQ2Hl
+         lnDA==
+X-Forwarded-Encrypted: i=1; AFNElJ+GnNzp70JFMODbrirpQ6DOWXOcn5pgNpuzANi/Q9gZSHXrEmAtFm4EYGWGYyalI995IBN/2G7iqWrj@vger.kernel.org
+X-Gm-Message-State: AOJu0Yzxf1AealhaifwT+CcyjPaM/Xnl0Ud+nPKj48jhXeaawWCeHYtn
+	saSv+0lqUfWR0iKowdQTrQdbmQ7wr+Eztf/NEDEdbGYzwcp1rYC7o5StzMOTeP1fz+xLLCF9zQ7
+	NMgMU97sxKASHVNJn8Sce4cdssYGa8ndkHY0GW7zO9Z5tsSlkXFmSVw8=
+X-Gm-Gg: Acq92OGPMJ8pC5zRvkURTON98tlWF2TewDhhNYHSHOW3PnYrlq61LUTqNcD1QWh7Mxy
+	Us0F4w7aIlUsCYkPDa/TykDdPIY+tar0obqICinoAlT2ROEcb1tjPn7d/wMXlvobGWbobhhZzwP
+	auSIs4++nYIqGT7bzNbgwnYsPDpzZVpPExPQoCcjf+5yRh6izFu1GIvycICmD0ttSapY/tYzgdq
+	KJTZxj66ORJlRo7X0n80Pp1+DY1XUDOgKTSX55e/4qEYQkgZseGYSVkfrbuF+oP+rcvRjY9t69b
+	XX9VdoZKRoVFLQTQqJ9jMNMw6SkujA==
+X-Received: by 2002:a05:651c:150d:b0:396:7b8a:3da0 with SMTP id
+ 38308e7fff4ca-396af4d5d09mr14505761fa.26.1780504269294; Wed, 03 Jun 2026
+ 09:31:09 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260602115840.26490-1-ddiss@suse.de> <20260602115840.26490-3-ddiss@suse.de>
-In-Reply-To: <20260602115840.26490-3-ddiss@suse.de>
+References: <20260602115840.26490-1-ddiss@suse.de> <20260602115840.26490-2-ddiss@suse.de>
+In-Reply-To: <20260602115840.26490-2-ddiss@suse.de>
 From: Lee Duncan <lduncan@suse.com>
-Date: Wed, 3 Jun 2026 09:30:20 -0700
-X-Gm-Features: AVHnY4K8fEmdPNDZXjCK3g-EVU3HYTqV94mC9U4cLBGZG90M1vb2BXJytEjQwC0
-Message-ID: <CAPj3X_U11zY5yHEw6xE4AET2zSzhG+EXRuWH0cKHKwgG+Hz1Uw@mail.gmail.com>
-Subject: Re: [PATCH 2/2] scsi: target: fix auth when CHAP_N carries a hex/b64 prefix
+Date: Wed, 3 Jun 2026 09:30:57 -0700
+X-Gm-Features: AVHnY4L4u7qOl5tCuqk9eSOmN2pRIjr0SC76D06SccNBNg_xh7kuL7DKkW_MY1E
+Message-ID: <CAPj3X_XbHq3W0yozq6LWMom-m2jcWeGiwK=cbJKyns9UXEFeog@mail.gmail.com>
+Subject: Re: [PATCH 1/2] scsi: target: add extract_param_str() helper
 To: David Disseldorp <ddiss@suse.de>
 Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
@@ -96,67 +96,82 @@ Content-Transfer-Encoding: quoted-printable
 On Tue, Jun 2, 2026 at 5:04=E2=80=AFAM David Disseldorp <ddiss@suse.de> wro=
 te:
 >
-> Attempting to authenticate using a CHAP username with a '0x' or '0b'
-> prefix currently fails. This is due to extract_param()'s behaviour of
-> stripping these prefixes, and the subsequent (type =3D=3D HEX) error-path=
-.
-> I believe this behaviour is contrary to the RFC 3720 specification,
-> which states:
+> The existing extract_param() helper, detects and strips any hex (0x/0X)
+> or base64 (0b/0B). This makes sense for some parameters, but not strings
+> such as CHAP_N.
 >
->   5.1.  Text Format
->   ...
->   text-value: A string of zero or more characters that consist of
->   letters, digits, dot, minus, plus, commercial at, underscore,
->   slash, left bracket, right bracket, or colon.
->
->   11.1.4.  Challenge Handshake Authentication Protocol (CHAP)
->   ...
->     CHAP_A=3D<A> CHAP_I=3D<I> CHAP_C=3D<C>
->
->    Where A is one of A1,A2... that were proposed by the initiator.
->
->    In the third step, the initiator MUST continue with:
->
->       CHAP_N=3D<N> CHAP_R=3D<R>
->    ...
->    Where N, (A,A1,A2), I, C, and R are (correspondingly) the Name,
->    Algorithm, Identifier, Challenge, and Response as defined in
->    [RFC1994], N is a text string, A,A1,A2, and I are numbers, and C and
->    R are large-binary-values ...
->
-> "N is a text string" implies that any hex or base64 encoding prefix
-> should not be interpreted or stripped. Fix this by using the new
-> extract_param_str() helper function to obtain the CHAP_N value as-is.
->
-> Reported-by: Sashiko (gemini/gemini-3.1-pro-preview)
-> Link: https://sashiko.dev/#/patchset/20260521151121.808477-1-hossu.alexan=
-dru%40gmail.com
 > Signed-off-by: David Disseldorp <ddiss@suse.de>
 > ---
->  drivers/target/iscsi/iscsi_target_auth.c | 8 ++------
->  1 file changed, 2 insertions(+), 6 deletions(-)
+>  drivers/target/iscsi/iscsi_target_nego.c | 37 ++++++++++++++++++++++++
+>  drivers/target/iscsi/iscsi_target_nego.h |  1 +
+>  2 files changed, 38 insertions(+)
 >
-> diff --git a/drivers/target/iscsi/iscsi_target_auth.c b/drivers/target/is=
-csi/iscsi_target_auth.c
-> index a3ad2d244dbee..6f21075e58416 100644
-> --- a/drivers/target/iscsi/iscsi_target_auth.c
-> +++ b/drivers/target/iscsi/iscsi_target_auth.c
-> @@ -303,12 +303,8 @@ static int chap_server_compute_hash(
->         /*
->          * Extract CHAP_N.
->          */
-> -       if (extract_param(nr_in_ptr, "CHAP_N", MAX_CHAP_N_SIZE, chap_n,
-> -                               &type) < 0) {
-> -               pr_err("Could not find CHAP_N.\n");
-> -               goto out;
-> -       }
-> -       if (type =3D=3D HEX) {
-> +       ret =3D extract_param_str(nr_in_ptr, "CHAP_N", MAX_CHAP_N_SIZE, c=
-hap_n);
-> +       if (ret < 0) {
->                 pr_err("Could not find CHAP_N.\n");
->                 goto out;
->         }
+> diff --git a/drivers/target/iscsi/iscsi_target_nego.c b/drivers/target/is=
+csi/iscsi_target_nego.c
+> index b03ed154ca34e..53b17d3cc86c3 100644
+> --- a/drivers/target/iscsi/iscsi_target_nego.c
+> +++ b/drivers/target/iscsi/iscsi_target_nego.c
+> @@ -98,6 +98,43 @@ int extract_param(
+>         return 0;
+>  }
+>
+> +/* same as extract_param() above, but don't interpret any type-prefix */
+> +int extract_param_str(
+> +       const char *in_buf,
+> +       const char *pattern,
+> +       unsigned int max_length,
+> +       char *out_buf)
+> +{
+> +       char *ptr;
+> +       int len;
+> +
+> +       if (!in_buf || !pattern || !out_buf)
+> +               return -EINVAL;
+> +
+> +       ptr =3D strstr(in_buf, pattern);
+> +       if (!ptr)
+> +               return -ENOENT;
+> +
+> +       ptr =3D strstr(ptr, "=3D");
+> +       if (!ptr)
+> +               return -EINVAL;
+> +
+> +       ptr +=3D 1;
+> +       len =3D strlen_semi(ptr);
+> +       if (len < 0)
+> +               return -EINVAL;
+> +
+> +       if (len >=3D max_length) {
+> +               pr_err("Length of input: %d exceeds max_length:"
+> +                       " %d\n", len, max_length);
+> +               return -EINVAL;
+> +       }
+> +       memcpy(out_buf, ptr, len);
+> +       out_buf[len] =3D '\0';
+> +
+> +       return 0;
+> +}
+> +
+>  static struct iscsi_node_auth *iscsi_get_node_auth(struct iscsit_conn *c=
+onn)
+>  {
+>         struct iscsi_portal_group *tpg;
+> diff --git a/drivers/target/iscsi/iscsi_target_nego.h b/drivers/target/is=
+csi/iscsi_target_nego.h
+> index e60a46d348352..6b72edd2aef2e 100644
+> --- a/drivers/target/iscsi/iscsi_target_nego.h
+> +++ b/drivers/target/iscsi/iscsi_target_nego.h
+> @@ -13,6 +13,7 @@ struct iscsi_np;
+>  extern void convert_null_to_semi(char *, int);
+>  extern int extract_param(const char *, const char *, unsigned int, char =
+*,
+>                 unsigned char *);
+> +extern int extract_param_str(const char *, const char *, unsigned int, c=
+har *);
+>  extern int iscsi_target_check_login_request(struct iscsit_conn *,
+>                 struct iscsi_login *);
+>  extern int iscsi_target_locate_portal(struct iscsi_np *, struct iscsit_c=
+onn *,
 > --
 > 2.51.0
 >
