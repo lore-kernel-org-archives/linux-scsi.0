@@ -1,116 +1,99 @@
-Received: from mail-ua1-f49.google.com (mail-ua1-f49.google.com [209.85.222.49])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from lamorak.hansenpartnership.com (lamorak.hansenpartnership.com [198.37.111.173])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 20B663955CC
-	for <linux-scsi@vger.kernel.org>; Wed,  3 Jun 2026 18:25:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.49
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 173A5325701;
+	Wed,  3 Jun 2026 19:11:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.37.111.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780511123; cv=none; b=oNuoCbBz8tT1pWJmg8a2zdq6BM+N9rNfIDAIymU37PtocsV4Q1cTYlQTU1Pc4zfq4EfK9hLZtifEmnNihAraQ1QmEYCY1OWiXhQR/zbczuIuUzDqbiHCG/dBHo1Mlpv3UIzNLji9J+XIxaMNVgTKVcZF2W4kWM0e0NjSHPYizOI=
+	t=1780513894; cv=none; b=YmRVJ/goYAHLJFkCL2n9D+phU22VbCy/gSY1i9XatjBT7foHSGkVBt44NSamgOLpWPdE2s6eZct61+QxL1YjYWKA0nRDwarf52AS0QK9z/5urGkXHwInlwl65/0ceYMitcxh0gMZUFFIvyEMnf1jPD9GfLAM75mdV9E88Y/tAo4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780511123; c=relaxed/simple;
-	bh=9kCR/6Ip6UBB5yFOtANKH48+nsmbIPRUgaRo1CrFUK0=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=rIM9BmOuvPjTN9d2XTncPJwOEC8o9U6a1a/mPa9i4hIJgTCIqjxizpOqaCZJfDcBClZ8TGyQc9fs0hU8vMkO/DmzgRw/r0gLW7t6pTIF6qXsbxZn97FEfoq5yF/7wxzpvGjb8PuvUw70u0D/ELDMtjY6LlHFBcdW0/9SmOjPgko=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=trailofbits.com; spf=pass smtp.mailfrom=trailofbits.com; dkim=pass (2048-bit key) header.d=trailofbits.com header.i=@trailofbits.com header.b=K7zQS6P2; arc=none smtp.client-ip=209.85.222.49
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=trailofbits.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=trailofbits.com
+	s=arc-20240116; t=1780513894; c=relaxed/simple;
+	bh=tUw5+CGH1E3dQmebhzIjdLQPJuX63gUL115cQ3ukEuQ=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=D+PsUgRGyadN342z61NBLBtfgRLAKd52B/LFPN/89v4UhYkgPF9wWU0vyxm9urgc0EOFonIEvIqMVKEwbAJZwOF7oOKdCd9AWg/x/saQeO1UiBvIXVTObToF9TakgtSUE16Hhn+x+Z7cXSB/cTz38U9Ep/qf+Ti9ifXRM5vPrOU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com; spf=pass smtp.mailfrom=HansenPartnership.com; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=QCYZt/4W; arc=none smtp.client-ip=198.37.111.173
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=HansenPartnership.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=trailofbits.com header.i=@trailofbits.com header.b="K7zQS6P2"
-Received: by mail-ua1-f49.google.com with SMTP id a1e0cc1a2514c-96387cf6335so926308241.1
-        for <linux-scsi@vger.kernel.org>; Wed, 03 Jun 2026 11:25:21 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=trailofbits.com; s=google; t=1780511121; x=1781115921; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=LCMZLPljRhZ6RXq6a4YfF43l0gzI2FlO5vYDlJr0lic=;
-        b=K7zQS6P2U690AIyfha7h1/vS9gYM/r84nJ6jIQtG+TqrLurMZO2kOrCajb9dN5Y9TZ
-         KCOhc/Vch5pNXGq8DwiE5TViH9NC8adgardotZTyBaLQudbwHeKAMHJWlC5j9+7UGSai
-         YVubWf8EM/kMQe9UL3p/SKtas2v4bfPjCXysDwepbjXQc6Odxq8oJSmY9krh/Obb8o+1
-         Lq+z2gdHc3w7heXl4FHCjEYVI9BqO+D94YKaB13PGznheoiO62Qc6oRiAWU0kqG/EBc4
-         qKsdo0T6XJJaQefWYnlWN0WdjuaTmED9miGt9UIcOVqPkBwv20uZobvYBqCyM4bARgsD
-         d67A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1780511121; x=1781115921;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=LCMZLPljRhZ6RXq6a4YfF43l0gzI2FlO5vYDlJr0lic=;
-        b=lpuG7V6VUJ6sArGJqw/zU1uEvxnSZeJGEkKR+I1ocOIxhkdVVVURIm/g72NOgFT660
-         woU/w1E7qW71iVMBhYTJHARDHdbbm0IHLP9rhzMZAItq3vkyfQJ/WpRom5UaVewvmsaL
-         5vuCMWqPgyUQGLjt2jxSqL9UVIfiOOKhqB1JK1oqwk8zn+v5zeHx+WY/cL3Ko+RRg863
-         ZKLTPbTX7FfihB3aHclyZyinEkhBgV4O0r72wLGBRHPcdTanPAMbhGDje4VJ6LnMIKjq
-         1freA4enMTzZ5w+1WFPmhHo6I0UxKWwRJ4mzY4jhXd9SJ2lcDgnO+Qh9YK00dcWR7Md3
-         +e2A==
-X-Forwarded-Encrypted: i=1; AFNElJ9XRd70nohFA7k0IdM43PaB3e3cLd5etbF93/S73tH+fiCEFAoetkO8BiiabeA+GJzFteRbjeI5lM6f@vger.kernel.org
-X-Gm-Message-State: AOJu0YwSqZZMHKFM/OUM44rCTOluGYR0mbRWYwG6iGpxxZjaFxXoaxsk
-	HLcWKLWpo8J3p0rVlMFXaYjczvsJmDFKWkvo3LzXh2PlH2oei+qTsMMzj+guUewKpYs=
-X-Gm-Gg: Acq92OFlvV/Y9GBgJjq8VC/JgEJ203zH1KGCPhZCwAyVUcPGM3+CZHPw4ByHr9zDgcE
-	kiqECuL4dffLtDSaUZC21oeN4+w4RniTthhEQPCX82j1ihkiuwGizT/vdB6MclSyhIWiPWoy5c4
-	R5HpiiDwx4rl6lwf0/oAn0SCaeZnjxP7pocMV18nV+FLVr2rUp9LOrhEbJXP9w2BtKPcd7OpIUf
-	GVnFwxWJiuKwHlWg3KL8eKCefwN0U8xu8MUuN/vJITWs+nxFUK1QoWMQ2H6ASDGN4ZyqrJGWCmA
-	YpQBSAijBjs7WRJhPakBr+Q2FdKwBOurKPxFiMIwMAsrytFB5ggrZsBgk6peeB6lWTfnNLUMRj1
-	RPnmr5Y3aIk9jmQde/P/h5wLCkMEY4kcthZxbNWfNCTAMKMEEAyArHTh8h4qwyGJofkc7byOSwi
-	2/5YcDPhWzsB98ZUQnFJdx4oOTVl7gyo3FEtVRTA==
-X-Received: by 2002:a05:6102:8193:20b0:6cf:2b61:3fa9 with SMTP id ada2fe7eead31-6f54cea3ce7mr292215137.10.1780511121041;
-        Wed, 03 Jun 2026 11:25:21 -0700 (PDT)
-Received: from localhost ([161.35.96.86])
-        by smtp.gmail.com with UTF8SMTPSA id af79cd13be357-9158a2359ecsm315723185a.14.2026.06.03.11.25.20
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 03 Jun 2026 11:25:20 -0700 (PDT)
-From: Samuel Moelius <sam.moelius@trailofbits.com>
-To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-Cc: Samuel Moelius <sam.moelius@trailofbits.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	linux-scsi@vger.kernel.org (open list:SCSI SUBSYSTEM),
-	linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH] scsi: scsi_debug: fix one-partition tape setup bounds
-Date: Wed,  3 Jun 2026 18:25:17 +0000
-Message-ID: <20260603182518.27082-1-sam.moelius@trailofbits.com>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="QCYZt/4W"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+	d=hansenpartnership.com; s=20151216; t=1780513890;
+	bh=tUw5+CGH1E3dQmebhzIjdLQPJuX63gUL115cQ3ukEuQ=;
+	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
+	b=QCYZt/4WTU+QlkYHExXrsa5X8s50jl1h6Lp5dpaN383dOybgr6dInZPrEjWI1pDRF
+	 NLAQlAnJYvJOSxkYGOq8dRsHl2sb44+X4aLRdmIC95DrzshoqeZypCt+7uw83CcHzr
+	 6ltCw6zpE+No/2iW2hguZfbB39u5dGSdRwMxSDPY=
+Received: from lingrow.int.hansenpartnership.com (unknown [IPv6:2601:5c4:4300:d341::8c71])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by lamorak.hansenpartnership.com (Postfix) with ESMTPSA id 83D0C1C02E0;
+	Wed, 03 Jun 2026 15:11:30 -0400 (EDT)
+Message-ID: <c01aa774677d1f6fdb0f0924ae0e2de47836d55a.camel@HansenPartnership.com>
+Subject: Re: [PATCH] scsi: scsi_debug: reject too-small REPORT ZONES buffers
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+To: Samuel Moelius <sam.moelius@trailofbits.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, "open list:SCSI
+ SUBSYSTEM" <linux-scsi@vger.kernel.org>, open list
+ <linux-kernel@vger.kernel.org>
+Date: Wed, 03 Jun 2026 15:11:29 -0400
+In-Reply-To: <20260603171104.18464-1-sam.moelius@trailofbits.com>
+References: <20260603171104.18464-1-sam.moelius@trailofbits.com>
+Autocrypt: addr=James.Bottomley@HansenPartnership.com;
+ keydata=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
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.50.3 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-The tape setup path writes partition metadata one element past the
-allocated tape_blocks array when a one-partition configuration is
-selected.
+On Wed, 2026-06-03 at 17:11 +0000, Samuel Moelius wrote:
+> REPORT ZONES subtracts the response header size from the allocation
+> length before ensuring that the allocation is large enough.=C2=A0 A short
+> allocation can underflow and make the remaining length look huge.
+>=20
+> The handler can then write zone descriptors past the caller-provided
+> response buffer.
+>=20
+> Validate the allocation length before subtracting the header size.
+>=20
+> Assisted-by: Codex:gpt-5.5-cyber-preview
+> Signed-off-by: Samuel Moelius <sam.moelius@trailofbits.com>
+> ---
+> =C2=A0drivers/scsi/scsi_debug.c | 4 ++++
+> =C2=A01 file changed, 4 insertions(+)
+>=20
+> diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+> index 1515495fd9ea..f17e59482cfc 100644
+> --- a/drivers/scsi/scsi_debug.c
+> +++ b/drivers/scsi/scsi_debug.c
+> @@ -5911,6 +5911,10 @@ static int resp_report_zones(struct scsi_cmnd
+> *scp,
+> =C2=A0	alloc_len =3D get_unaligned_be32(cmd + 10);
+> =C2=A0	if (alloc_len =3D=3D 0)
+> =C2=A0		return 0;	/* not an error */
+> +	if (alloc_len < RZONES_DESC_HD) {
+> +		mk_sense_buffer(scp, ILLEGAL_REQUEST,
+> INVALID_FIELD_IN_CDB, 0);
+> +		return check_condition_result;
 
-That corrupts adjacent state during device initialization before any
-command is issued.
+That doesn't look right.  The returned length is almost always the
+first parameter of a SCSI command (it is in this case) and a lot of
+users will send a buffer just big enough for the length (4 bytes in
+this case) to get the actual length before they ask for the whole
+thing.  If you require 64 bytes, we're going to reject perfectly legal
+requests.
 
-Use the allocated partition bounds when initializing the tape block
-array.
+Regards,
 
-Assisted-by: Codex:gpt-5.5-cyber-preview
-Signed-off-by: Samuel Moelius <sam.moelius@trailofbits.com>
----
- drivers/scsi/scsi_debug.c | 10 +++++++---
- 1 file changed, 7 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 1515495fd9ea..dda19793862d 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -3664,9 +3664,13 @@ static int partition_tape(struct sdebug_dev_info *devip, int nbr_partitions,
- 	devip->tape_eop[0] = part_0_size;
- 	devip->tape_blocks[0]->fl_size = TAPE_BLOCK_EOD_FLAG;
- 	devip->tape_eop[1] = part_1_size;
--	devip->tape_blocks[1] = devip->tape_blocks[0] +
--			devip->tape_eop[0];
--	devip->tape_blocks[1]->fl_size = TAPE_BLOCK_EOD_FLAG;
-+	if (nbr_partitions > 1 && part_1_size > 0) {
-+		devip->tape_blocks[1] = devip->tape_blocks[0] +
-+				devip->tape_eop[0];
-+		devip->tape_blocks[1]->fl_size = TAPE_BLOCK_EOD_FLAG;
-+	} else {
-+		devip->tape_blocks[1] = NULL;
-+	}
- 
- 	for (i = 0 ; i < TAPE_MAX_PARTITIONS; i++)
- 		devip->tape_location[i] = 0;
--- 
-2.43.0
+James
 
