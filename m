@@ -1,113 +1,132 @@
-Received: from mail-lf1-f42.google.com (mail-lf1-f42.google.com [209.85.167.42])
+Received: from mail-qk1-f177.google.com (mail-qk1-f177.google.com [209.85.222.177])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 80EE84ADDB1
-	for <linux-scsi@vger.kernel.org>; Wed,  3 Jun 2026 21:41:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.167.42
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780522876; cv=pass; b=a4ykV2NblsTYxobnHqSJ9e5xI5dQv5uBhmc9i73ui931SxSK1pNC2t3JVYqiFcXxw6vj+Zgh/v/+vMfJyKHSH8n5Yv4XLrrcTqy8nurqUBwRjRnZquLvvsdzlZTf+fS/uJrvQK7V7jfB7mgi+PmdL6Fcc2S5mf3bIDbyw0LcAxU=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780522876; c=relaxed/simple;
-	bh=YrdS/TEXaFu1Egbrt3UIHjVIXgPo3HVq423b7i0eJH0=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=WSy0BAtX2VSnyykXdu/upX9bw4nWBj+jO9+pAy+fypaZUC9XZO36qWZGS4zyk6RR0TfubpcFqe+MaklJ+SFa8DDATRMYqsomOE4xtBeac2I/ZdE6MQ16PpjCeryzMAe1cIUO5j00fzQ8otKDW8a4U0cCSlYkP7xZ0Jbwq0o69bM=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=trailofbits.com; spf=pass smtp.mailfrom=trailofbits.com; dkim=pass (2048-bit key) header.d=trailofbits.com header.i=@trailofbits.com header.b=FniHnaRr; arc=pass smtp.client-ip=209.85.167.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E18EB4A13A2
+	for <linux-scsi@vger.kernel.org>; Wed,  3 Jun 2026 22:52:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.177
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1780527172; cv=none; b=Cjx2G1YNpDNY7tcMa76mjZV7QbeWFeR3x5BmYRqgMFAtiZf/gXX12eo3wqGOiZVBSnAk//I+YQKk7oMIgbimpexiKqlWS1W7M+0l/MP24ZZ82Vzjb3zwI0xUeAc1fMFAy+RmsEfJTqIrdNPcUczh/KWIslq5/Nyeb9gmLiEgxK8=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1780527172; c=relaxed/simple;
+	bh=qjorpjoies0yCKhFL/o3qCWHKHXvk50YcoRHmto6qrw=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=ER8vwkNk2QujJjuWSV6luBEdObc3CGwYjuUGRzjXEldf6hNVz3WM+iP+6Trqa1qmlz9MGswkRtfd04cBQGnmFUMc7KKtYiVTyMZB+E+QQCD208j4IjcIY0ofSsrxgmjJtdHUG7WrbKMsJj1W1IBEDxVoNAmAfjnfjMwqBVBXHgQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=trailofbits.com; spf=pass smtp.mailfrom=trailofbits.com; dkim=pass (2048-bit key) header.d=trailofbits.com header.i=@trailofbits.com header.b=f1TfE3MU; arc=none smtp.client-ip=209.85.222.177
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=trailofbits.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=trailofbits.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=trailofbits.com header.i=@trailofbits.com header.b="FniHnaRr"
-Received: by mail-lf1-f42.google.com with SMTP id 2adb3069b0e04-5aa5be9ab1aso6028764e87.1
-        for <linux-scsi@vger.kernel.org>; Wed, 03 Jun 2026 14:41:14 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1780522873; cv=none;
-        d=google.com; s=arc-20240605;
-        b=FzsvmQBdIOENY9E0Q/9B+Ckgux5XilPXWEjvsT9xj6sSq8DqYuA5gg3bKeJhHF7s8i
-         J+IUZy6/euDKTslTgJ23N5AqTTHjpsyN1yVEYq3IjwqhXZKUIgt+Qai5qZdmp3EmqDv4
-         Y0GbbcidNlOW7O0ryhtn9JWIEHir0MDR46RjabWxsc9m2ufWe0C5wiES9lWJEhIa9Fmh
-         MFT9oX0VEGc+lXzqOjy/eWOxQBwg9vcoUV0Fyj6O2qx3zBghjo2uNvSFpIrQewQst7d4
-         NluWn9WNz73UpFYjtnfmiCdGb6gHHormwcpZQhoEIpyY7fBbUzsgRewOhxokXDIllXhy
-         KTNA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=YGtm56fWsDCiVqCJpc9AuYA/ZFzOFDDDvhQbt0piruM=;
-        fh=wwDgdlw2ydYneaVTB/AGZSRbG4RBmWGOOQm21jEqF3A=;
-        b=FEhjmuaQiW4p/Mk2Ow3F96bnxyKq0s6SnDfFtwEOtqY+nqseS58qLPKtGtXQPwGGcj
-         QWvCO02dyfQlaIBSjsztgc5FQmzLWK9oOvRBOXUaGv77/0rulYTlvRhILJzfTjBxSDcF
-         Fh+wfYyDLcTLjeDoBox4wgM7cX8nuTFmo4o3MP65MnN3QZPzVbruqbng5m7ttoCx6ozL
-         Bp+XAcIonr1Z2n4cMZ89urcASnMY1bVmX9XPIKdssmFjXKzEHKRxfg0e1n6yYa4mdQOq
-         digru3BXe2B0ObJCJA0s8L8lmolm0WbqIGTole5rMn5J3DMY2nAu3/82s5o6HUHvZEcG
-         S64w==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key) header.d=trailofbits.com header.i=@trailofbits.com header.b="f1TfE3MU"
+Received: by mail-qk1-f177.google.com with SMTP id af79cd13be357-9157f7c1c0eso13717085a.1
+        for <linux-scsi@vger.kernel.org>; Wed, 03 Jun 2026 15:52:47 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=trailofbits.com; s=google; t=1780522873; x=1781127673; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=YGtm56fWsDCiVqCJpc9AuYA/ZFzOFDDDvhQbt0piruM=;
-        b=FniHnaRrZbM0WuE3nGCefQB8TSf686EuMNKzXy941daKRCPnuesGVdCmFFhQJm6weE
-         4Tzy83zLsfgRko7qIBvDj83gsS5VcsakDUtK+FbmX2THVWs8IqPCB+1HUKdyDtp50SIb
-         isysPDECSEPoQ5Bf6AbgNX8uCNh+lN4n4NE13dIVJvVI88ZO3hg7lQKTEre2/OzYo/w4
-         hwWTQZkTLZHO4T2nYRumS0WSBTXL1SrkW/K79BCdnfhrgLSo8jIaqkSCOd9baTn+hCVA
-         zHcNhV42hq5fyWCwXhBI8vyrF0qe+cVxZDgPsJ1BTIMTmymN+bHu0mNNfZoOfouHw9dY
-         BpZA==
+        d=trailofbits.com; s=google; t=1780527167; x=1781131967; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=vbl8rnY4ongUXS+ZU4aTOUz0VCkVMDkx1IEbiyAfVIE=;
+        b=f1TfE3MU2neqpHVSmwonONBGUQv55Lf+6gZc0tH/iwIyUCJAyTM8pFtfnGvdLHaOse
+         8bCcgntR7zH0/Wrl551qXI7tsIDvUD+nI9fmr+VVtAWCEZyPaRR40mUs7kp9Y5SzX8Xl
+         ZDcCVEFYwHCVFHKS1DJaLyByj33eDtmDM2dlSkR0fapx8imvDlCM7dtIISke7xEPUwrK
+         Yf8nSVgQn+w18HvL5ibxEPfSSdAlHcTjnbJnI1oJzzpd9RVzx6AdaCKwmSftf6LXeuiu
+         nBwAiixiXifv2EOEkqnKmw3hn25nI3V70R23xWB1bjxtFq6fxqK77fs6Ay65p4agSoKX
+         Kovw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1780522873; x=1781127673;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=YGtm56fWsDCiVqCJpc9AuYA/ZFzOFDDDvhQbt0piruM=;
-        b=op10bv4U/8sHA2qPeNJUpCRHMNEXWoYCnFuWyyWuPp06N4kbnbnthr3hMN1AaFygWP
-         rhq/6G9SC2WUwY4cBDFlXP042CU7UPUahPaJbErLt1xDksvI0Y6+oQxP/D1znY+JxTIh
-         1XK7SEH+HqDPWBohweNjNHoBE9WbHefJ7gy+E1vnLUffORGoW7x4dl7dOtB3wsvrG5Rp
-         CGG+kOIbT2fh3c3gb3GZAbVptiFAJK4IU7szUC5HGDZotb1v9/1psT9DnzKOe3Js2YS2
-         kaG+a9GYyGVz14LXukTaTWJc8/kmadA+2suy+3tZR2NyCOPhr5HrhmTx26flWKG7JwLP
-         pJ+A==
-X-Forwarded-Encrypted: i=1; AFNElJ+j9Ij6xtF53Fe2PBaeQCOuzK6JeMSNqpYCZ5stS/o0UhoE5G2cmnldapXJIBMCq5S9PzZmpyZz0S/E@vger.kernel.org
-X-Gm-Message-State: AOJu0Yw5PxmJzjunmj3pW2/38L3WgryQR61zLyGEEHI3oSnD5Q7v2T+b
-	ofalmYvsOUd+3uVB9K81ggFD7AIu0L1018y/Ix6k7y0g+X2A1kuJ3eFXOBwLatuVhk9i/cW4udK
-	FsBpj935LdlhtriU9oXdOqSu8XKHP1C0s5rt0w4Wr/dSrTwPAzK2dl+w=
-X-Gm-Gg: Acq92OGSpnxLllETtLo6FDEQmVwZqPb4GM2sTKJwlsmdJkk41fXTzHxQVXUsMgnwufw
-	XTMUbKHCn+rQJY72Lo/jWfXiBuDg830z7Cif7lA1KkouGIJv0FpvVlL4xJWZGY9erFoV/qL7643
-	E26JMLNIcG+gAtI7MQE91fCFZhAJo9ibJJ6IxQ7EJFVnWPgz45hxVieyZe8pVM1j8AxLn7KX5GM
-	p4wlY+AZ06azj9jRFq0+atypZgWytRBSNyO7nxOfy063jpl22/cpMDUKI3WaRz4jGTOkaVcdKQF
-	5WX/nvrynPlyHgn+tg==
-X-Received: by 2002:a05:6512:1387:b0:5aa:6e60:1983 with SMTP id
- 2adb3069b0e04-5aa7c0a606emr1694586e87.24.1780522872548; Wed, 03 Jun 2026
- 14:41:12 -0700 (PDT)
+        d=1e100.net; s=20251104; t=1780527167; x=1781131967;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=vbl8rnY4ongUXS+ZU4aTOUz0VCkVMDkx1IEbiyAfVIE=;
+        b=V4AFo8QGYVz0xV05OUJmjKtosncCPJJaM8JZL295BJP8a1Oe+Fwa2p+l50rupUtYlw
+         dU4Nof/A9ikEng1lLE9e/88L3iiFdtu48Ga1KnRsclaeJlLsTt9CaC4/SFSxXRp1v76D
+         Kbu5jsJeYkPfgWW/DFouFJzzyhp1Ar5VDhXpxLTqZF3D1PMQE4eEzF+sdQB/OmJAd4HA
+         Zv0PlrkaiiSuqf42cgRxHX0n2WMcZMDzSVCabSrrEhc72i5jLzd9mx1hptiJzJ7ytqgB
+         S6D4MRNOTiFli4Cnd/CtDm00jatUu+RX2LcyDtXEo85+e/4LLijAiz07Oj4h9aNmpElr
+         Dkfw==
+X-Forwarded-Encrypted: i=1; AFNElJ+kepx3S6D605MUGxkYAbCKwn5HQwm+Hb0YFQ1NpZDXWIge+7VLdRbTgQCMk+OsU8wSUv7GGTsxY5j6@vger.kernel.org
+X-Gm-Message-State: AOJu0YyP3b1SplD5cY5uQZtKw096yHa7OpDrWi/eIS2FjQjHbtfSsGee
+	zVEqcM3qtpO22jjHuPXXttgnWTmvfYArpVeDRzbPAudfDne2vqG7U/pDte+9ScZiQLo=
+X-Gm-Gg: Acq92OEXolu8yD67T/66gVWBTCoHQX5qup77gW8Kr7yRfHvs7sjgcZn1rSm3xeSUQKz
+	rxc/uao2Jj6qQerFmBbpjtgc4K9tQbRcLT+LMhBgBCGiYJOIz/eNtq/25YXmVEH9xmQLzPFH1Mr
+	uNIhclQeFsQbANB29JilhSKfFU+T6i93kTRsWZexufdzafN+XBRl14dMRFze3Mtel+HItPZ/RvR
+	3oclD7a3OFgTg/bwKij4+W4wmKjif5imZgQGJMdasdpJ8OeYC3kXlUjme8jTtzdNEM+drXYFNlG
+	IxArp7veJ+JWMlkMrO/IDariVLXhRaUFgKyjGx8RDAdiMfKIDkFmlwisBAXid0U2YfbGl0SPNH1
+	432M4jGGVnDjqx5DEpi77/mfQcOm5Gw4noaqtdHxuU1akdTnbp97Zic5G2+MURHFmNVUHHUYC/K
+	rajiQJD2Zw3mt1LwUemHWdbzRFw35ou6//Pi4ZCg==
+X-Received: by 2002:a05:620a:7081:b0:914:7b4f:cf5b with SMTP id af79cd13be357-9158a6a84bdmr940589385a.16.1780527166747;
+        Wed, 03 Jun 2026 15:52:46 -0700 (PDT)
+Received: from localhost ([161.35.96.86])
+        by smtp.gmail.com with UTF8SMTPSA id af79cd13be357-9158a411333sm400540785a.46.2026.06.03.15.52.45
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 03 Jun 2026 15:52:46 -0700 (PDT)
+From: Samuel Moelius <sam.moelius@trailofbits.com>
+To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
+Cc: Samuel Moelius <sam.moelius@trailofbits.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	linux-scsi@vger.kernel.org (open list:SCSI SUBSYSTEM),
+	linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH] scsi: scsi_debug: avoid REPORT ZONES short-buffer overflow
+Date: Wed,  3 Jun 2026 22:52:38 +0000
+Message-ID: <20260603225239.102803-1-sam.moelius@trailofbits.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260603182518.27082-1-sam.moelius@trailofbits.com> <1280577210aa54ba9a769ff39c3bfa797bbd32c3.camel@HansenPartnership.com>
-In-Reply-To: <1280577210aa54ba9a769ff39c3bfa797bbd32c3.camel@HansenPartnership.com>
-From: Samuel Moelius <sam.moelius@trailofbits.com>
-Date: Wed, 3 Jun 2026 17:41:00 -0400
-X-Gm-Features: AVHnY4I6LQUziGwk48uQIlJUbxz38uUSplJxC6VbV7s-CSUkh9jOoEshw-Sh7ZE
-Message-ID: <CAE+C+DYQU9P-XnZfbOR+EocYtU0Tj=PPnW5zziXnFAv-RX+Q_Q@mail.gmail.com>
-Subject: Re: [PATCH] scsi: scsi_debug: fix one-partition tape setup bounds
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, 
-	"open list:SCSI SUBSYSTEM" <linux-scsi@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 
-On Wed, Jun 3, 2026 at 4:45=E2=80=AFPM James Bottomley
-<James.Bottomley@hansenpartnership.com> wrote:
->
-> On Wed, 2026-06-03 at 18:25 +0000, Samuel Moelius wrote:
-> > The tape setup path writes partition metadata one element past the
-> > allocated tape_blocks array when a one-partition configuration is
-> > selected.
->
-> I don't think that's correct.  tape_blocks is defined in struct
-> sdebug_dev_info as
->
->         struct tape_block *tape_blocks[TAPE_MAX_PARTITIONS];
->
-> so tape_blocks[1] is always allocated.  You can argue it shouldn't be
-> written to even though it is allocated, but that's not what you wrote.
+REPORT ZONES allocation length is the initiator's receive buffer size,
+not a minimum valid response size.  Short allocation lengths are valid:
+an initiator may request only the first few bytes of the response before
+issuing a larger request.
 
-Please disregard this patch. I will submit a new one.
+scsi_debug currently derives the number of descriptors from
+alloc_len - RZONES_DESC_HD and allocates only alloc_len bytes.  For a
+nonzero allocation length smaller than the report header, that
+subtraction underflows and the handler can write header fields or zone
+descriptors past the allocated buffer.
+
+Keep accepting short allocation lengths, but allocate enough internal
+space for the report header and only emit descriptors that fit after the
+header.  Limit the transfer back to the initiator to the requested
+allocation length.  Non-PARTIAL short requests still return the normal
+leading report-length field, so 4-byte length probes continue to work.
+
+Assisted-by: Codex:gpt-5.5-cyber-preview
+Signed-off-by: Samuel Moelius <sam.moelius@trailofbits.com>
+---
+ drivers/scsi/scsi_debug.c | 11 ++++++++---
+ 1 file changed, 8 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index 1515495fd9ea..6084257dabe1 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -5895,7 +5895,7 @@ static int resp_report_zones(struct scsi_cmnd *scp,
+ {
+ 	unsigned int rep_max_zones, nrz = 0;
+ 	int ret = 0;
+-	u32 alloc_len, rep_opts, rep_len;
++	u32 alloc_len, arr_len, rep_opts, rep_len;
+ 	bool partial;
+ 	u64 lba, zs_lba;
+ 	u8 *arr = NULL, *desc;
+@@ -5919,9 +5919,14 @@ static int resp_report_zones(struct scsi_cmnd *scp,
+ 		return check_condition_result;
+ 	}
+ 
+-	rep_max_zones = (alloc_len - 64) >> ilog2(RZONES_DESC_HD);
++	if (alloc_len > RZONES_DESC_HD)
++		rep_max_zones = (alloc_len - RZONES_DESC_HD) >>
++				ilog2(RZONES_DESC_HD);
++	else
++		rep_max_zones = 0;
++	arr_len = RZONES_DESC_HD + rep_max_zones * RZONES_DESC_HD;
+ 
+-	arr = kzalloc(alloc_len, GFP_ATOMIC | __GFP_NOWARN);
++	arr = kzalloc(arr_len, GFP_ATOMIC | __GFP_NOWARN);
+ 	if (!arr) {
+ 		mk_sense_buffer(scp, ILLEGAL_REQUEST, INSUFF_RES_ASC,
+ 				INSUFF_RES_ASCQ);
+-- 
+2.43.0
+
