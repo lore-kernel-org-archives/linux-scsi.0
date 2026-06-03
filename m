@@ -1,185 +1,104 @@
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+Received: from spam.asrmicro.com (asrmicro.com [210.13.118.86])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D1AF3AB482;
-	Wed,  3 Jun 2026 10:56:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 527413CCA11;
+	Wed,  3 Jun 2026 11:09:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.13.118.86
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780484217; cv=none; b=Rtioz1F8sh8Z4hsvasxexJigiIu+lY0q9fB6zjPhtdA7PXGadFUOdl1XK2gWAnLAaGu3LiR/4wofpeudHkswp5VukhkdDgZp1es8lm+DvoHB5AahkUFW7zY3wgvc+KNN7ue2s1GnG1tmeJCzUoJv8IIJNU2x8S2uVE4hcqQLoRY=
+	t=1780484966; cv=none; b=aHOTAoaxn9cWaCE7UlYnPFkewPtNGMvCDmpYWwEhe0z8S8JphTK5aP/CNzP1NKWHiHE+C7F/V91bpjOhHtyULmPL6EYRWmKJ92D+b4IvPeC2XjED30NdvtgtOWP69RHLKDEujb9D4495Xic5aJa6UlGsy8/qhzDTpX2ASzRO3uY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780484217; c=relaxed/simple;
-	bh=Tja5yhCofjmsVJ+sBi06G3oUE1wx2TP7zmSjMFMT0Sw=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=bhsi5UugDbzT9EJj7ug2IrHXlYk0ll0JzrAhRJxs5Tx2LYHeqOPhmicBCoKcm25WrePlgMTRDfs7FO5BT4fVqGVdJTbaxJqo1w+pahv/MgUMM5uUrtqFxZQY8dPlAcyds1U83DberOFz6XfTHE5UveHh74OxsVW42D++AxgsD0o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=sKontEXL; arc=none smtp.client-ip=148.163.156.1
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="sKontEXL"
-Received: from pps.filterd (m0356517.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 652JdW1b1276410;
-	Wed, 3 Jun 2026 10:56:47 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=pp1; bh=itkTAH
-	ASZK2OQqLGjrU2zc88p58uCLzscZjgdkGwxXQ=; b=sKontEXLXj/EkcVZLWDnrC
-	pTOJdWMTnwKHhpb8qjyzwRQngW+Qt9fTqt17cAViGaW7mqC6Qbz5nYHN1s91rvtH
-	xKS1GvzLHg/7RdUwffQnFk8f8X4jDDPp3twqK4u2YFT1vcFkcPfExOleu53QUqf6
-	Oc0TLva+cSHR/edYbkk/kC4jR9kesRkzG0jqYcXEI0wZroSZjg0wyxbObJCzBHoH
-	JAJIy7kvovToTPX6XjbdVpeb/k/AtN8ifF6DdCH5F6KOM/Wq0P8he4FtfKKQKgv9
-	ecc2+WNeUHBhgwwAqzPZsRgOdwdfZyEmayG5LrjNugwba986sf+n+AALrPWFidNQ
-	==
-Received: from ppma22.wdc07v.mail.ibm.com (5c.69.3da9.ip4.static.sl-reverse.com [169.61.105.92])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4efqm52evk-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 03 Jun 2026 10:56:47 +0000 (GMT)
-Received: from pps.filterd (ppma22.wdc07v.mail.ibm.com [127.0.0.1])
-	by ppma22.wdc07v.mail.ibm.com (8.18.1.7/8.18.1.7) with ESMTP id 653AsIKK017636;
-	Wed, 3 Jun 2026 10:56:46 GMT
-Received: from smtprelay04.fra02v.mail.ibm.com ([9.218.2.228])
-	by ppma22.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4egakvywrf-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 03 Jun 2026 10:56:45 +0000 (GMT)
-Received: from smtpav05.fra02v.mail.ibm.com (smtpav05.fra02v.mail.ibm.com [10.20.54.104])
-	by smtprelay04.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 653Aue6125625156
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 3 Jun 2026 10:56:40 GMT
-Received: from smtpav05.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 2EE7E2004E;
-	Wed,  3 Jun 2026 10:56:40 +0000 (GMT)
-Received: from smtpav05.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id BB1D92004B;
-	Wed,  3 Jun 2026 10:56:37 +0000 (GMT)
-Received: from [9.39.23.37] (unknown [9.39.23.37])
-	by smtpav05.fra02v.mail.ibm.com (Postfix) with ESMTP;
-	Wed,  3 Jun 2026 10:56:37 +0000 (GMT)
-Message-ID: <5124c4ea-743a-4047-9d5e-990a7e9907aa@linux.ibm.com>
-Date: Wed, 3 Jun 2026 16:26:36 +0530
+	s=arc-20240116; t=1780484966; c=relaxed/simple;
+	bh=l8NAMlLRWjb4PWGamPU3tyFYH4VQA1Jkmzi3GWgkSKI=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=d7rmP+I+H7yq2wPl9ewKD3xCiZA+gyCksOCt6XZivui1d8g4slVOq4wLmB81P8/qFuMByuGw4kiVUTEcizADtbR0eAo2puFkbBlCBaARslvy0EvDBahl6uQV3cWFlq3FU83hBtPZeQovI8Pyd2Stq9u+CqSfpY2EM2JDYqBiko4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=asrmicro.com; spf=pass smtp.mailfrom=asrmicro.com; arc=none smtp.client-ip=210.13.118.86
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=asrmicro.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=asrmicro.com
+Received: from exch01.asrmicro.com (exch01.asrmicro.com [10.1.24.121])
+	by spam.asrmicro.com with ESMTPS id 653B8GYL064086
+	(version=TLSv1 cipher=ECDHE-RSA-AES256-SHA bits=256 verify=FAIL);
+	Wed, 3 Jun 2026 19:08:16 +0800 (GMT-8)
+	(envelope-from hongjiefang@asrmicro.com)
+Received: from exch02.asrmicro.com (10.1.24.122) by exch01.asrmicro.com
+ (10.1.24.121) with Microsoft SMTP Server (TLS) id 15.0.847.32; Wed, 3 Jun
+ 2026 19:08:21 +0800
+Received: from exch02.asrmicro.com ([::1]) by exch02.asrmicro.com ([::1]) with
+ mapi id 15.00.0847.030; Wed, 3 Jun 2026 19:08:08 +0800
+From: =?utf-8?B?RmFuZyBIb25namllKOaWuea0quadsCk=?= <hongjiefang@asrmicro.com>
+To: =?utf-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= <peter.wang@mediatek.com>,
+        "beanhuo@micron.com" <beanhuo@micron.com>,
+        "James.Bottomley@HansenPartnership.com"
+	<James.Bottomley@HansenPartnership.com>,
+        "alim.akhtar@samsung.com"
+	<alim.akhtar@samsung.com>,
+        "avri.altman@wdc.com" <avri.altman@wdc.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "bvanassche@acm.org" <bvanassche@acm.org>
+CC: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH v4] scsi: ufs: core: handle PM commands timeout before
+ SCSI EH
+Thread-Topic: [PATCH v4] scsi: ufs: core: handle PM commands timeout before
+ SCSI EH
+Thread-Index: AQHc8o1Awukd7b9NBk+4vV9CGfadLrYsZsGAgABEegCAAABAsA==
+Date: Wed, 3 Jun 2026 11:08:08 +0000
+Message-ID: <27ad241130a34ece8d2645b687f6ffc7@exch02.asrmicro.com>
+References: <20260602124103.1581617-1-hongjiefang@asrmicro.com>
+ <7404d3067b87d33bb446a1b7f4432b5ae9d98486.camel@mediatek.com>
+ <5c2f95f00b484bca9c5df97219230acc@exch02.asrmicro.com>
+In-Reply-To: <5c2f95f00b484bca9c5df97219230acc@exch02.asrmicro.com>
+Accept-Language: zh-CN, en-US
+Content-Language: zh-CN
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] [SCSI] qla2xxx: Handle the INTx not connected while
- passing through
-To: Madhavan Srinivasan <maddy@linux.ibm.com>, njavali@marvell.com,
-        GR-QLogic-Storage-Upstream@marvell.com,
-        James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com,
-        Kyle.Mahlkuch@ibm.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        alex.williamson@nvidia.com,
-        linuxppc-dev <linuxppc-dev@lists.ozlabs.org>, harshpb@linux.ibm.com
-References: <177885270578.1573.14283751510936407585.stgit@linux.ibm.com>
- <66039318-07c0-4453-a295-bc39a2a5b8ec@linux.ibm.com>
-Content-Language: en-US
-From: Shivaprasad G Bhat <sbhat@linux.ibm.com>
-In-Reply-To: <66039318-07c0-4453-a295-bc39a2a5b8ec@linux.ibm.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-GUID: MCVu_sUZo1C-csPGwBHbygqPTh7FtzWY
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNjAzMDEwMiBTYWx0ZWRfX6JxFg+ZsWBxT
- fWDNU3zOxEQ1hB5jwQhvs38CYftcsoMWSR7cQNbQkFWGitsMWmpdrKJVXkVpBROg82Kmy4Uric6
- wT0mZx2nN3K+JvdRAq9MeUmH01lFAC/6GNlPlyrsl6tQf1jxKFW0V0GezhuPHONb6d+hsXDw+cH
- sjkQf5OlCU10DcjCrrMi9MzRQBoaUNsmhky/ZGPkVbKMDD0WDeFs6s3Njbr686aJMS6n579l3iE
- wy1/lY9Q7IQQRjXHEuiBiBolU3stQ9OcQvpV/cw+HLW9W2sM5GOs4XfRXg2rSVUz7bHq+cpArZO
- xzHvnf4smAMW7uDokOXOMGV7pVjR9bYsyYvGpETlamrIa9oFZQdea4kdO25oyKZwev32LeB7VkL
- l92n1I6LbFWpXgADM47qHWCCOPnkgCyJk6e4qM/WJDXFUhoxwtteQUH5hCRWLtpD+N+qDWNprIq
- Zk8NSyMWE19JCCLJSkQ==
-X-Proofpoint-ORIG-GUID: MCVu_sUZo1C-csPGwBHbygqPTh7FtzWY
-X-Authority-Analysis: v=2.4 cv=Vf3H+lp9 c=1 sm=1 tr=0 ts=6a20086f cx=c_pps
- a=5BHTudwdYE3Te8bg5FgnPg==:117 a=5BHTudwdYE3Te8bg5FgnPg==:17
- a=IkcTkHD0fZMA:10 a=FelO9ux0wxsA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=RnoormkPH1_aCDwRdu11:22 a=U7nrCbtTmkRpXpFmAIza:22 a=VnNF1IyMAAAA:8
- a=enu2mHtoF2I52F_0tAQA:9 a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.125,FMLib:17.12.100.49
- definitions=2026-06-03_04,2026-05-28_03,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- priorityscore=1501 suspectscore=0 adultscore=0 bulkscore=0 impostorscore=0
- phishscore=0 lowpriorityscore=0 malwarescore=0 clxscore=1015 spamscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2605210000 definitions=main-2606030102
+X-DNSRBL: 
+X-SPAM-SOURCE-CHECK: pass
+X-MAIL:spam.asrmicro.com 653B8GYL064086
 
-On 6/3/26 1:42 PM, Madhavan Srinivasan wrote:
->
-> On 5/15/26 7:15 PM, Shivaprasad G Bhat wrote:
->> The PCI_INTERRUPT_PIN reports if the device supports the INTx.
->> However, when the device is assigned to a guest via vfio, the
->> PCI_INTERRUPT_PIN is set to 0(i.e none) if the line is not
->> connected and|or the platform cannot route the interrupt.
->>
->> In such cases, the guest PCI_INTERRUPT_PIN is 0 and the port
->> number becomes -1(255, uint8_t underflow) for qla[25|27|28]xx and
->> qla2031 devices. The flt_region_nvram is never set, and subsequently
->> the lun detection fails. Below warnings show the NVRAM configuration
->> failure.
->>
->>   []-0073:1: Inconsistent NVRAM checksum=0xffffffc0 id=HCAM 
->> version=0x100.
->>   []-0074:1: Falling back to functioning (yet invalid -- WWPN) defaults.
->>   []-0076:1: NVRAM configuration failed.
->>
->> The patch handles the case, and sets the port_no to devfn like
->> its done everywhere else.
->
-> Any update on this? do you have any comments/concerns that should be 
-> addressed
->
-Hi Maddy,
-
-
-Priya has tested this already. I have requested Kyle to help with 
-reviewing this patch.
-
-Meanwhile, would request Nilesh, James or Martin to provide feedback, if 
-any.
-
-
-Thanks,
-
-Shivaprasad
-
-
-
-> Maddy
->
->> Reference: commit 2bd42b03ab6b ("vfio/pci: Virtualize zero INTx PIN 
->> if no pdev->irq")
->> Signed-off-by: Shivaprasad G Bhat <sbhat@linux.ibm.com>
->> ---
->>   drivers/scsi/qla2xxx/qla_os.c |   15 ++++++++++-----
->>   1 file changed, 10 insertions(+), 5 deletions(-)
->>
->> diff --git a/drivers/scsi/qla2xxx/qla_os.c 
->> b/drivers/scsi/qla2xxx/qla_os.c
->> index 72b1c28e4dae..a8d6a0a021f4 100644
->> --- a/drivers/scsi/qla2xxx/qla_os.c
->> +++ b/drivers/scsi/qla2xxx/qla_os.c
->> @@ -2803,11 +2803,16 @@ qla2x00_set_isp_flags(struct qla_hw_data *ha)
->>       else {
->>           /* Get adapter physical port no from interrupt pin 
->> register. */
->>           pci_read_config_byte(ha->pdev, PCI_INTERRUPT_PIN, 
->> &ha->port_no);
->> -        if (IS_QLA25XX(ha) || IS_QLA2031(ha) ||
->> -            IS_QLA27XX(ha) || IS_QLA28XX(ha))
->> -            ha->port_no--;
->> -        else
->> -            ha->port_no = !(ha->port_no & 1);
->> +        if (ha->port_no == 0) {
->> +            /* None of INT[A|B|C|D], may be virtualized by vfio */
->> +            ha->port_no = PCI_FUNC(ha->pdev->devfn);
->> +        } else {
->> +            if (IS_QLA25XX(ha) || IS_QLA2031(ha) ||
->> +                IS_QLA27XX(ha) || IS_QLA28XX(ha))
->> +                ha->port_no--;
->> +            else
->> +                ha->port_no = !(ha->port_no & 1);
->> +        }
->>       }
->>         ql_dbg_pci(ql_dbg_init, ha->pdev, 0x000b,
->>
->>
+DQo+IEZyb206IFBldGVyIFdhbmcgKOeOi+S/oeWPiykgW21haWx0bzpwZXRlci53YW5nQG1lZGlh
+dGVrLmNvbV0NCj4gU2VudDogV2VkbmVzZGF5LCBKdW5lIDMsIDIwMjYgMjo1NSBQTQ0KPiBUbzog
+YmVhbmh1b0BtaWNyb24uY29tOyBKYW1lcy5Cb3R0b21sZXlASGFuc2VuUGFydG5lcnNoaXAuY29t
+Ow0KPiBGYW5nIEhvbmdqaWUo5pa55rSq5p2wKSA8aG9uZ2ppZWZhbmdAYXNybWljcm8uY29tPjsN
+Cj4gYWxpbS5ha2h0YXJAc2Ftc3VuZy5jb207IGF2cmkuYWx0bWFuQHdkYy5jb207DQo+IG1hcnRp
+bi5wZXRlcnNlbkBvcmFjbGUuY29tOyBidmFuYXNzY2hlQGFjbS5vcmcNCj4gQ2M6IGxpbnV4LXNj
+c2lAdmdlci5rZXJuZWwub3JnOyBsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnDQo+IFN1Ympl
+Y3Q6IFJlOiBbUEFUQ0ggdjRdIHNjc2k6IHVmczogY29yZTogaGFuZGxlIFBNIGNvbW1hbmRzIHRp
+bWVvdXQgYmVmb3JlDQo+IFNDU0kgRUgNCj4gDQo+IA0KPiBPbiBUdWUsIDIwMjYtMDYtMDIgYXQg
+MjA6NDEgKzA4MDAsIEhvbmdqaWUgRmFuZyB3cm90ZToNCj4gPiArwqDCoMKgwqDCoMKgIC8qDQo+
+ID4gK8KgwqDCoMKgwqDCoMKgICogdWZzaGNkX2xpbmtfcmVjb3ZlcnkoKSBtYXkgYWxyZWFkeSBo
+YXZlIGNvbXBsZXRlZCBAc2NtZCwNCj4gPiBlLmcuIHZpYQ0KPiA+ICvCoMKgwqDCoMKgwqDCoCAq
+IHRoZSBleGlzdGluZyBNQ1EgZm9yY2UtY29tcGxldGlvbiBwYXRoLg0KPiA+ICvCoMKgwqDCoMKg
+wqDCoCAqLw0KPiA+ICvCoMKgwqDCoMKgwqAgaWYgKCF0ZXN0X2JpdChTQ01EX1NUQVRFX0NPTVBM
+RVRFLCAmc2NtZC0+c3RhdGUpKSB7DQo+ID4gK8KgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAg
+aWYgKCFoYmEtPm1jcV9lbmFibGVkKSB7DQo+ID4NCj4gDQo+IEhpIEhvbmdqaWUsDQo+IA0KPiBN
+Q1Egd2lsbCBjb21wbGV0ZSBhbGwgdW5jb21wbGV0ZWQgc2NtZCBieSBzZXR0aW5nIGZvcmNlX2Nv
+bXBsLg0KPiBIZW5jZSwgaWYgdGhlcmUgYXJlIHN0aWxsIHVuY29tcGxldGVkIHNjbWQsIGl0IHNo
+b3VsZCBiZQ0KPiBpbiBsZWdhY3kgbW9kZSwgYW5kIHRoZXJlIGlzIG5vIG5lZWQgdG8gY2hlY2sN
+Cj4gaWYgKCFoYmEtPm1jcV9lbmFibGVkKSwgcmlnaHQ/DQo+IA0KDQpUaGUgIWhiYS0+bWNxX2Vu
+YWJsZWQgY2hlY2sgaXMgb25seSBmb3IgY2xlYXJpbmcgb3V0c3RhbmRpbmdfcmVxcywNCndoaWNo
+IGlzIHRoZSBsZWdhY3kgc2luZ2xlLWRvb3JiZWxsIHNvZnR3YXJlIGJpdG1hcC4NCk1DUSBkb2Vz
+IG5vdCB1c2Ugb3V0c3RhbmRpbmdfcmVxcyBmb3IgcmVxdWVzdCB0cmFja2luZy4NCg0KDQo+IA0K
+PiA+ICvCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoCB1bnNpZ25l
+ZCBsb25nIGZsYWdzOw0KPiA+ICvCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
+oMKgwqDCoCBzdHJ1Y3QgcmVxdWVzdCAqcnEgPSBzY3NpX2NtZF90b19ycShzY21kKTsNCj4gPiAr
+DQo+ID4gK8KgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgIHNwaW5f
+bG9ja19pcnFzYXZlKCZoYmEtPm91dHN0YW5kaW5nX2xvY2ssDQo+ID4gZmxhZ3MpOw0KPiA+ICvC
+oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoCBfX2NsZWFyX2JpdChy
+cS0+dGFnLCAmaGJhLT5vdXRzdGFuZGluZ19yZXFzKTsNCj4gPiArwqDCoMKgwqDCoMKgwqDCoMKg
+wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAgc3Bpbl91bmxvY2tfaXJxcmVzdG9yZSgmaGJhLQ0K
+PiA+ID5vdXRzdGFuZGluZ19sb2NrLCBmbGFncyk7DQo+ID4gK8KgwqDCoMKgwqDCoMKgwqDCoMKg
+wqDCoMKgwqAgfQ0KPiA+ICsNCj4gPiArwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoCBzZXRf
+aG9zdF9ieXRlKHNjbWQsIERJRF9USU1FX09VVCk7DQo+ID4NCj4gDQo+IFdoeSBkb2VzIE1DUSBt
+b2RlIHNldCBESURfUkVRVUVVRSwgd2hpbGUgbGVnYWN5IG1vZGUgc2V0cw0KPiBESURfVElNRV9P
+VVQ/DQo+IA0KTm9ybWFsIFNDU0kgUE0gY29tbWFuZHMgdXNlIERJRF9SRVFVRVVFLCBtYXRjaGlu
+ZyB0aGUgZXhpc3RpbmcNCk1DUSBmb3JjZS1jb21wbGV0aW9uIGJlaGF2aW9yLiBSZXNlcnZlZCBp
+bnRlcm5hbCBkZXZpY2UtbWFuYWdlbWVudA0KY29tbWFuZHMgY29udGludWUgdG8gdXNlIERJRF9U
+SU1FX09VVCwgcmlnaHQgPw0KDQoNCg0KQmVzdC4NCg0KDQo=
