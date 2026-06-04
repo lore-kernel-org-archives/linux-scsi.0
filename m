@@ -1,141 +1,122 @@
-Received: from mail-lf1-f41.google.com (mail-lf1-f41.google.com [209.85.167.41])
+Received: from mail-qk1-f172.google.com (mail-qk1-f172.google.com [209.85.222.172])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2CB8D23507C
-	for <linux-scsi@vger.kernel.org>; Thu,  4 Jun 2026 18:43:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.167.41
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780598596; cv=pass; b=MWHzqkdRCXONuUfe9gaju+4t7rSCh6/8G11gWsNie2QdV8X/Qc9hGRQ1K0rWJzw4YA4ybqM4U6IgmO640Q+A35RKtKulRm1TgSrY68Wrou5/gWI1cPLcHPrBjNQqNsRTU5v0CajmHTUn8s8Y9QWBGr9wgKxZGnSbeihhtJT/1vE=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780598596; c=relaxed/simple;
-	bh=eotJYuddMzet9b8algR4vYdg8t1Mhd7014CzpJGZyy4=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=pGKMcOIj14IyfUszRpZq8qsEknUOaIXvBw0vysu7B/RwU1K1f0YpMWUiWEvn3xVM4gMWSpOg5mxQOSK0sTvkJsuAb4o48I6N5uRnjYD1nM3Zc+CbusnPS/SMlhkLDwsfq9bipwmkeA98pencGhlIVNlDr607+nkDIbE5fQPcrks=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=trailofbits.com; spf=pass smtp.mailfrom=trailofbits.com; dkim=pass (2048-bit key) header.d=trailofbits.com header.i=@trailofbits.com header.b=GJYzn4l3; arc=pass smtp.client-ip=209.85.167.41
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=trailofbits.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=trailofbits.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D42473BADB6
+	for <linux-scsi@vger.kernel.org>; Thu,  4 Jun 2026 18:50:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.172
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1780599044; cv=none; b=K/7B/xS22glrjLJBU6aWtO9aL0PThBoXvbXgDhisQMdwzK5T8SwVYxov74eof4WdSHQWJTNpbsQCCbM5dxwYb0Z29fh86+/yEMxGZDc/7fl0SqEm12VJi3gtFwGDLHZTVNmb0b01wotuLeSj7giIqwrVjoXnsE9Lclxyvpy8li8=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1780599044; c=relaxed/simple;
+	bh=gbD4FCJy0BQ4W1zXJKiTk9oj2celhkKljTujiWAVRVs=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=f+Tj20cI/qqdj8enFLUNl2Ke78+UXeAyhFqHN7a7Zx+qeECnPZ0TvErm42Q23jOz1hUhqBYc+cMV7yNFzezEQhhuemLwUMO8qmPWZpW17LZE0EuQR1fh0Yfdr8+R6xiKxYRK58hzBDmz++/4JzDNXTnq5araPMDWxk+swNNcJ+M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=jugTdIH6; arc=none smtp.client-ip=209.85.222.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=trailofbits.com header.i=@trailofbits.com header.b="GJYzn4l3"
-Received: by mail-lf1-f41.google.com with SMTP id 2adb3069b0e04-5aa68d9dc18so1110435e87.2
-        for <linux-scsi@vger.kernel.org>; Thu, 04 Jun 2026 11:43:14 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1780598593; cv=none;
-        d=google.com; s=arc-20240605;
-        b=ZxKi+Xo5ttCGOB0YXraZpmuht3zi3u3XvrMZfrg7lpELP74yqt+5M//PUS6+cYBVrF
-         03u6zageVtPQCFt7GadF7pBiuYSlMp+l9bXY2zXvkE3klZPap/J219KruaJjoa/enE6Y
-         2xPB4P1/pk5WjokO7uCQL9coa1GvzYiPAutanr1mRMKwBIB+E2obr0dqCX4fSOWvWfAa
-         5sxh5WUgygcEqx88uqPWaSRssqagGhFK7oHdWBNfx4dH8RFixI1eY+JdMtoYB+1ggxny
-         ykhRTikpwMyGLyT/HCCb6jKdZmyNd08gCIylwaQHiaocUxU3aidbdtcO1mRAYfH0DEsE
-         6fEw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=Lk8dusq0quFWGHcSy4ii+GurR95Lq5xubrXWHatHs0Q=;
-        fh=wUJKX1ukwBugfigKKR7vKvp3YYvWZ3ad7rXsYrvr+DI=;
-        b=TcsfJDWdlNbO5kjNZ4xWe41M5XsG7QRORj3DF8U3RECTvOCb7fh9A0eHTbq0ru7Fsl
-         I+grfuow1A2NIcwqysHuzS5vfuh9IkRl5CHZImelKAea5ajNC4JZLfPsYh7NOKOsWmle
-         SZhffqrVmW4Q5BO0X25B8IQQod6/MwI3QsUj0eGN7dZg9fqQP/cwSKNxrSCAYOQ507UV
-         M3DP4H8x4gZhe9PCwQvG6klKvn6cNvJIlq+Xz3Vsv6GgiLl6lhecLzVX/SXoTLLUrsVv
-         Ae0L8wq09mhwuhZmUk/Q42NcQ52c+vxg2pF0Lec1qrlXEykEK/t3LCc2A38cN+FrlW1l
-         qSiw==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="jugTdIH6"
+Received: by mail-qk1-f172.google.com with SMTP id af79cd13be357-91587626ae1so122450585a.3
+        for <linux-scsi@vger.kernel.org>; Thu, 04 Jun 2026 11:50:42 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=trailofbits.com; s=google; t=1780598593; x=1781203393; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=Lk8dusq0quFWGHcSy4ii+GurR95Lq5xubrXWHatHs0Q=;
-        b=GJYzn4l3IR0yMP5EKGeizyFm6m117QL1UZSr+FIUjCEGqLl2TUaJKWxK2s4KLvfAme
-         7Q75fN3LCpY6nvWuIXFSQDSJ5xMT+kk9wu7FJoT0oXKbxAmnA2zocrlFpq0rWVZ+eHox
-         v883fKD1xtz6O5NrPAjRxQNlxDCMDZVRUsG3DpHE153frzUag7kPG8vkcScOObLqMvmF
-         yQuTr3tGVj/qzoHXlGsIC02UB2dPJySzT5zzqtR7SNArhEHMP3BQ7zrEYgS4CP4BwHoN
-         VH4Mcd7A+E20jxu/jr4DaYKq4iPRzch0EtsNLV1bxwvHl4yP10b+ziRo0Ugj36IOMQc4
-         Xdgw==
+        d=gmail.com; s=20251104; t=1780599042; x=1781203842; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=o1nKnoCKwwPu7b7Objh9jn1z5sqhtLDS46+7PHLh/Ds=;
+        b=jugTdIH6DlAvJ3Q7mIyt8Iu14iW1QiLhcmeV9ZTkTE6YZo3keNTTsUCxYHMTbGFxXq
+         7UlwvVUq1+jXd1B2thY2YltzAxyKDnFVBh9C0DAbuqZEZlojj8K80vb2hCEV8jH+HwvU
+         mJQgUhr/MJLL7bsQumdy93NNh/uVhuWmHJgTe/XuA3isaPK5Dd7EpIo9q2U3m52i5b20
+         RF1J0w1ujxgMjHPQ+UNIfXQYeR6gRQiH2eJ7qMF5w7yD5PPVC8KQHuUJo3+i2GIYs2zu
+         C61q+VcyZXFsOYkLhtx3PLoD60kI00zHcLPbeEvbgCVggCPotOd2mx/cqrBIi4FyT0BK
+         YAqQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1780598593; x=1781203393;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=Lk8dusq0quFWGHcSy4ii+GurR95Lq5xubrXWHatHs0Q=;
-        b=ohC50CmfV7SAGzFAmFcRJVDQJ69d5q/riEQkUuZwlZ6MkHuBV6EGb+kW0sk/f1LIpT
-         pHQCE8nWG3yHPOhDUFhoTMAE4QaG7qeAC9axtPi8euShylxEPC4/kOfqKySNTb4uXKav
-         axIRyyVDCn6w8uAe60OA8GVl7MolcaBeUp0e/POY0AzQg/n1r4LXeECbj2Z3bZfrfZI7
-         BQi47ZovyeurYgCioq79GcJLVuVLrTxfTSYVRSXjZw/ptTU9ln5nWKPtiJfbImY9wugy
-         6j0MdvT3GFJUngC1evS0tGxhrAqPayHN9Q9rmjATDBqNvehoHmn0HcPZHAeVP2XfqCHm
-         ZHDA==
-X-Forwarded-Encrypted: i=1; AFNElJ+RZSgjyLM5AHOsjKK77RMTP0VtB/PwaUmxkNvMcMl/iDQTUoQZ70eIgs3RfCSrdxIcvB67LoZZmS0n@vger.kernel.org
-X-Gm-Message-State: AOJu0Yz8lGkBjJYBUK5+osaOJBdVCTiu+48Pihm7Ap+tTpKjL6tRRLPp
-	G+OopXHVkYG7rZEYCfqqLTQVPhmC6NXARdqLWqs85B+eh8oJYG/VZf7ZK8Cu/qbrsJ6ZAhT1sit
-	eSyaegqmSr1A4Qm4GoN4Hjk4diQBbV7skObRL8vR8Pg==
-X-Gm-Gg: Acq92OGVxprPTiRwd/kiP6IdE94JAJbepdikvcvSvsVrzB2bDSE4KNFUcumUEKVfou0
-	vL58bE+HESuxP7cLixbJ+l1OL2sKJEt3Uqa7M/FdFfMsEkEw09jQo6BynPtzjKjqZsEC2QQmoEc
-	01sKNWSHu6txH/0qoU0X3bZfVUzFeSpOWJOZY6bRLu8Ifwi6F1y063TjKvp2gJgoO9lTLRxb4q+
-	WXD+GQJ0TOKWMA78jKYpzOvt49qLQeKk3AHZYZ6WS+0vOL6MddwG42gz2Jw7bgDHFcuAWjQ2Kwp
-	63AeYbNszuIiFLtc
-X-Received: by 2002:a19:f615:0:b0:5aa:6a2b:d456 with SMTP id
- 2adb3069b0e04-5aa87bc2359mr6214e87.27.1780598593211; Thu, 04 Jun 2026
- 11:43:13 -0700 (PDT)
+        d=1e100.net; s=20251104; t=1780599042; x=1781203842;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=o1nKnoCKwwPu7b7Objh9jn1z5sqhtLDS46+7PHLh/Ds=;
+        b=HlFZcC2D5+7DZL3NNN9FKpH7bnB60Lw37OqSCc7JgdrMxjyvjar2TMRujb9u2rIbLW
+         aILrxEefVqR76DYl0I6JSlNrWD5ce5e2dgFW1MICfYaNMxrckWMslJL8PXLPp44Y8RZg
+         RN02oiGqBs0PuBH/cK8hdq0HheJjMKu+FQzKm2pptQDgxzduDtOIjibrHSo95cHKXwQs
+         /QTlacbnYV4/+xUKU4S3zKBo9Ysj0U32++R01MlzEV5sNN7V7FemT8gwa5J0uk6LBoZe
+         F+GMd4khqzBDVnALcdVG/SNdQTL+7G7jOvjeKQv3NntUaILJB9hcWgYgOx13xwb87zeR
+         82AQ==
+X-Gm-Message-State: AOJu0Yz/QpL5hsafqhAubcFSPY24HYRCP+8z1TU+CyQ8QgEPC8jAWsII
+	K8kPKMty7165vKhgIuClQPlhh3Dey9i33SuYuSr5rV9m8Vwy0PhZyNsDAyTfn5N2
+X-Gm-Gg: Acq92OHVKwkRlL27DuLm64NueWJeh8ezeFOO5WL+/wYReyKhhbqD+xIsI9/iY/eyWKq
+	xiSJZ7Ossvctreswmy7QCG3x+fZay82FrC/wjT3/LjBSSEe96NjCFyWMx8NS+mcVNHl7T37gcI7
+	FAl9SW+krIegCbWSE9gYW83Rv2OOO9mnQ9Uf+vpoCQIg8Iz8e/izh+U5qNw7812/UJtMh4vfvoY
+	SO8Wz1Dz8Yx88NiaVf7+iZHhsKSNYN8mO2xPo9aTePKwSFmgx3rdv0YTp6qmiBqXbw7w5E7U9Um
+	DC9amhYFInp1wOHqWwTvhKyRhLF2C7BOw5MdbFX795VBL9TqA7j57y4VOGlAXrhMmGod0ISZzsD
+	J8fcDyQr28i63ZdCqZwRJlrQKKuNRSZpAlqAQXXhUOaraAFVcN6AZR1pNS/ulp+pJs5Szne8LpT
+	NzNjUY05+ky55M2DyX5PqIxsgkLoOyRMmX/a4fVOuHV1OghfUpkiAtVKfOs3aa7pKHRHzoYxZoM
+	y8CjdPV+5jHSmgX6tM9kCi6zgJHk1DHIc+bin2CdRMXwffa6+OrIw==
+X-Received: by 2002:a05:620a:261e:b0:915:9531:f6d2 with SMTP id af79cd13be357-915a9c75563mr76704785a.10.1780599041854;
+        Thu, 04 Jun 2026 11:50:41 -0700 (PDT)
+Received: from dhcp-10-231-55-133.dhcp.broadcom.net ([192.19.223.252])
+        by smtp.gmail.com with ESMTPSA id af79cd13be357-9158a37cab6sm651208685a.22.2026.06.04.11.50.41
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Thu, 04 Jun 2026 11:50:41 -0700 (PDT)
+From: Justin Tee <justintee8345@gmail.com>
+To: linux-scsi@vger.kernel.org
+Cc: jsmart833426@gmail.com,
+	justin.tee@broadcom.com,
+	Justin Tee <justintee8345@gmail.com>
+Subject: [PATCH 00/14] Update lpfc to revision 15.0.0.1
+Date: Thu,  4 Jun 2026 12:29:23 -0700
+Message-Id: <20260604192937.65605-1-justintee8345@gmail.com>
+X-Mailer: git-send-email 2.38.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260603171104.18464-1-sam.moelius@trailofbits.com> <c01aa774677d1f6fdb0f0924ae0e2de47836d55a.camel@HansenPartnership.com>
-In-Reply-To: <c01aa774677d1f6fdb0f0924ae0e2de47836d55a.camel@HansenPartnership.com>
-From: Samuel Moelius <sam.moelius@trailofbits.com>
-Date: Thu, 4 Jun 2026 14:43:01 -0400
-X-Gm-Features: AVHnY4IjNNsBu8cY3MG7HJl3iZiGbyZDbrE90xMKY1EvImD9OIRtVpLJ4iKBcp4
-Message-ID: <CAE+C+DY4yoHz5ML5nZGEBwCZZ9jjX-0R5Dz=NS4xbDHp3Fe_7g@mail.gmail.com>
-Subject: Re: [PATCH] scsi: scsi_debug: reject too-small REPORT ZONES buffers
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, 
-	"open list:SCSI SUBSYSTEM" <linux-scsi@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 
-On Wed, Jun 3, 2026 at 3:11=E2=80=AFPM James Bottomley
-<James.Bottomley@hansenpartnership.com> wrote:
->
-> On Wed, 2026-06-03 at 17:11 +0000, Samuel Moelius wrote:
-> > REPORT ZONES subtracts the response header size from the allocation
-> > length before ensuring that the allocation is large enough.  A short
-> > allocation can underflow and make the remaining length look huge.
-> >
-> > The handler can then write zone descriptors past the caller-provided
-> > response buffer.
-> >
-> > Validate the allocation length before subtracting the header size.
-> >
-> > Assisted-by: Codex:gpt-5.5-cyber-preview
-> > Signed-off-by: Samuel Moelius <sam.moelius@trailofbits.com>
-> > ---
-> >  drivers/scsi/scsi_debug.c | 4 ++++
-> >  1 file changed, 4 insertions(+)
-> >
-> > diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-> > index 1515495fd9ea..f17e59482cfc 100644
-> > --- a/drivers/scsi/scsi_debug.c
-> > +++ b/drivers/scsi/scsi_debug.c
-> > @@ -5911,6 +5911,10 @@ static int resp_report_zones(struct scsi_cmnd
-> > *scp,
-> >       alloc_len =3D get_unaligned_be32(cmd + 10);
-> >       if (alloc_len =3D=3D 0)
-> >               return 0;       /* not an error */
-> > +     if (alloc_len < RZONES_DESC_HD) {
-> > +             mk_sense_buffer(scp, ILLEGAL_REQUEST,
-> > INVALID_FIELD_IN_CDB, 0);
-> > +             return check_condition_result;
->
-> That doesn't look right.  The returned length is almost always the
-> first parameter of a SCSI command (it is in this case) and a lot of
-> users will send a buffer just big enough for the length (4 bytes in
-> this case) to get the actual length before they ask for the whole
-> thing.  If you require 64 bytes, we're going to reject perfectly legal
-> requests.
+Update lpfc to revision 15.0.0.1
 
-This patch is meant to be superseded by:
-https://lore.kernel.org/linux-scsi/20260603225239.102803-1-sam.moelius@trai=
-lofbits.com/T/#u
+This patch set contains bug fixes related to cleanup handling in both
+normal and error paths, discovery rework for large SAN configurations, and
+refactoring of duplicate code.
 
-Apologies for not having said that explicitly.
+The patches were cut against Martin's 7.2/scsi-queue tree.
+
+Justin Tee (14):
+  lpfc: Fix use-after-free in lpfc_cmpl_ct_cmd_vmid
+  lpfc: Early return out of lpfc_els_abort when HBA_SETUP flag is not
+    set
+  lpfc: Fix kernel oops when unmapping scsi dma buffers for an aborted
+    cmd
+  lpfc: Check fc4_xpt_flags before decrementing ndlp kref on FDISC error
+  lpfc: Add handling for when PLOGI or PRLI is dropped during link
+    failure
+  lpfc: Fix ndlp use-after-free during repeated RSCN and rediscovery
+    sequence
+  lpfc: Rework I/O flush ordering when unloading driver
+  lpfc: Improve PLOGI retry handling for large SAN configurations
+  lpfc: Send inhibited ABORT_WQE when PLOGI CQE SEQUENCE_TMO is received
+  lpfc: Remove slowpath cqe process limiter in slow ring event handler
+  lpfc: Put iocbq on phba->txq when ELS WQ is full or ELS SGL
+    unavailable
+  lpfc: Update ELS ACC logging for diagnostic troubleshooting
+  lpfc: Refactor calls on fc_disctmo to lpfc_set_disctmo in RSCN handler
+  lpfc: Update lpfc version to 15.0.0.1
+
+ drivers/scsi/lpfc/lpfc_bsg.c       |   5 +-
+ drivers/scsi/lpfc/lpfc_crtn.h      |  12 +-
+ drivers/scsi/lpfc/lpfc_ct.c        |  19 +-
+ drivers/scsi/lpfc/lpfc_disc.h      |   2 +-
+ drivers/scsi/lpfc/lpfc_els.c       | 427 +++++++++++++++++++++++------
+ drivers/scsi/lpfc/lpfc_hbadisc.c   | 100 +++----
+ drivers/scsi/lpfc/lpfc_init.c      |  16 +-
+ drivers/scsi/lpfc/lpfc_nportdisc.c |  86 +++++-
+ drivers/scsi/lpfc/lpfc_nvme.c      |   2 +-
+ drivers/scsi/lpfc/lpfc_scsi.c      |   2 +-
+ drivers/scsi/lpfc/lpfc_sli.c       | 246 ++++++++++++-----
+ drivers/scsi/lpfc/lpfc_sli.h       |   4 +-
+ drivers/scsi/lpfc/lpfc_version.h   |   2 +-
+ 13 files changed, 707 insertions(+), 216 deletions(-)
+
+-- 
+2.38.0
+
