@@ -1,124 +1,368 @@
-Received: from mail-qv1-f46.google.com (mail-qv1-f46.google.com [209.85.219.46])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D0DF49252E
-	for <linux-scsi@vger.kernel.org>; Wed,  3 Jun 2026 23:56:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.46
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 59B0822F388
+	for <linux-scsi@vger.kernel.org>; Thu,  4 Jun 2026 04:12:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780531008; cv=none; b=EkldiHWzAI1lNIe8SqsCuE0oQQE+2F4PWehYYoOl/Y7bOi7ssO1xNdIkpbLrZY/w6kqNxHjFRpI3z/SIdszbDIxeFHEhKzBi2tVWLbwZJ0QL/4AObdXuXwWbPOewrprPHToOB5+crx/LOTK2Vn8UmmZN8feuERD+5vaINxaM9aU=
+	t=1780546347; cv=none; b=b2hhk34JC9awLlzR1CG/y9AaGWI1JWoRlZPatP6wuqW2e+thE0leJL+B0sP3UdVOWt6J6ztv7Wws8HnUVUT3VrNb51emUoDXy1C+vSqewIDW3udy6mFodbMLvHVPe6fhK7jKLLWhlbevk2j8+wH92qjUs9dR4Qfjj1ZQQh8Lq6c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780531008; c=relaxed/simple;
-	bh=T0/NMI00gb3tSsw/lDXZhV7NFN3on5mOm+ZY3F9d1wQ=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=lDGQI9d13rd59DddEISrNacq1pgNRRwXeddqdIEArbn3ZHqdfcXnMhkgnUnYAI0nWJGJY72Q9K2EhGTGmthdwWdok/M9CmOlVIwDnQ1rjpeNPub6NnU+vlRirhH6SRL/NjZ5WlF5CvjVeh44eyRN38c9Rk9sZR3PbiPQoxulYeo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=trailofbits.com; spf=pass smtp.mailfrom=trailofbits.com; dkim=pass (2048-bit key) header.d=trailofbits.com header.i=@trailofbits.com header.b=JTcPcI/Y; arc=none smtp.client-ip=209.85.219.46
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=trailofbits.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=trailofbits.com
+	s=arc-20240116; t=1780546347; c=relaxed/simple;
+	bh=BIg2mcHtdm2hEko1buK0XSs4TUAboO7cDciSC1p8SWo=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=HFB+XiD8rboEUpqNM2ZDFSW2cOGfagFifucd5atF4zN8VpTsoT1qk+5/sNMLdXeN5gwHluUdUF/guetdD42aHbzABYAJNbuNFWckNeOhP3v131TZX7ScucXjYSR2yJ1+L+PzfCrfRyc23Gci7F814ypmXnGfZyJzPdlBsufiNfQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YyNNL48h; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=trailofbits.com header.i=@trailofbits.com header.b="JTcPcI/Y"
-Received: by mail-qv1-f46.google.com with SMTP id 6a1803df08f44-8ccea53f35cso1183526d6.1
-        for <linux-scsi@vger.kernel.org>; Wed, 03 Jun 2026 16:56:47 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=trailofbits.com; s=google; t=1780531006; x=1781135806; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=mp1vJh8uao2AHw0c9OHkXhZ0mnitHWn6AZWE/LHDbYg=;
-        b=JTcPcI/Yw8faw9RsFSbCZAfPrdzVklTwre1eWRTyAoYlOiYzElLOGiZIw9PFonW2aD
-         72QVYkzOICXTVYiBRYLzljogletAi7ox16+mY8TGPQLN/pZRfmnj/I1dY7+btzoxwpwc
-         /dJh3fM8VXFDYHnFIYUwsM51kCpD6Zzm1xydE5k7tyfCWOJU7H0/rlzErJXMjME4P+6E
-         DVqYhnfLkJnRZ03CCnkGh2gv2AbNjGps8YaQ3vZfG94Y6wWvWxduJUpypj+ObXxwtSzo
-         Dd9wiTYVYWHy/HkyAFpS5nrClMxU+rfTzmkVcvEIZMsMZTFksc+4SSv8E3vqY9QDtGtS
-         haxA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1780531006; x=1781135806;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=mp1vJh8uao2AHw0c9OHkXhZ0mnitHWn6AZWE/LHDbYg=;
-        b=gLTAQcjwAXFXiIIr6ah4l9gKBxZaamKFLi+NcsI0EXkZ1L9+oct0Z/Zu3OkEA7CrpX
-         BPUOKInEd1NA34kwgKNpHVHawgFKOJrzjXxfUSeDjqTzjRA4MPMTqbS5pv0OEBmyp/Lq
-         vkJGImcwtzpGjqqm4z8YF9VVLk2c7dktP0uvY4rg66XHFEhXwBXf3l/eoulsKMQVsESm
-         cfTQBpgrcctRb+sho/VmWodMRxu+UbvwS3jYk4VS1q3peR5lN+FntuPqp0Q61e73O9+2
-         pn5+KU+X+PlB7v7I26xADGMVjxsDo3CCjmhonzebdB+XMYRxhqvEvE/EEtUcdXrvBM0Q
-         8xnw==
-X-Forwarded-Encrypted: i=1; AFNElJ8i/hu1C74xEhuipR8w3RBRmaDq36mfJOoKcPTQa+V9sN/JSgSBhYdDzugGQJtMWncJGMUkqhfGSrld@vger.kernel.org
-X-Gm-Message-State: AOJu0YxRinig7J3G+QYa2y/BepN9gmZyepGCjCEkA3vYeO9yPJ7egFpu
-	Pabaw9Acp7ysRIPlp0JUG05Mz73SssnW+bBDJY/B6W2NYhmPIoIg04xNTVcS0I+8I3U=
-X-Gm-Gg: Acq92OGKTlWl2gSmxH+jqC7WLFhhL3aUhuK+YFbUZ+7CkDhIWM/E/zDiUlGU5e7pvW3
-	tPK4maEU2q1ouc1Lt6c8HcQ7fQqFNUQvdxAQ3+mDxLxtlpyTV1/Cb99Ru57BjknKepT3jUIIqLD
-	ZoWWgSkdeXbH7a/rN8YbTxbFmL6VX7JGf/b9SgNLKk6oQqsDozRnMiZTflSjlgFdLB2Rk5ce5JX
-	LiVswRaoTShK7bx+4JK9eZiuLwsb1dWr2kTCHcGr/aauYTOG89gBgiFyZC7sHEEkMPeQaH0wxoL
-	iECCkbWtosIHDOdKG4UuVVfjIDWqOt/MViUxgst1QgdPAVdnuvbFIpFgFMoztcvIfRTAVWDxo1a
-	jYWdQG6/iuACxU/dt3DHrCa5ydF5nHS/mljky7E0ngH1b3Zkf4UmH++QOkbRy5cKAHO+nkOR2De
-	to7xCwgsJ8q3b4CUnNuA4E6m6N9mqM4UaipuJcVA==
-X-Received: by 2002:a05:6214:2424:b0:8ce:cc3e:9d08 with SMTP id 6a1803df08f44-8cecdd35d4cmr80141996d6.45.1780531006561;
-        Wed, 03 Jun 2026 16:56:46 -0700 (PDT)
-Received: from localhost ([161.35.96.86])
-        by smtp.gmail.com with UTF8SMTPSA id 6a1803df08f44-8cecd277070sm34168026d6.48.2026.06.03.16.56.44
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 03 Jun 2026 16:56:46 -0700 (PDT)
-From: Samuel Moelius <sam.moelius@trailofbits.com>
-To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-Cc: Samuel Moelius <sam.moelius@trailofbits.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	linux-scsi@vger.kernel.org (open list:SCSI SUBSYSTEM),
-	linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH v2] scsi: scsi_debug: fix one-partition tape setup bounds
-Date: Wed,  3 Jun 2026 23:55:48 +0000
-Message-ID: <20260603235616.124535-1-sam.moelius@trailofbits.com>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YyNNL48h"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 312941F00893;
+	Thu,  4 Jun 2026 04:12:22 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1780546346;
+	bh=pXHSkmn8Ctm4rOXYaV7jbBx2oIMNnqAUBcttJDSGVt8=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To;
+	b=YyNNL48hfsdW7O2x/KgaIiA0KcAauECb8nLN3zrtu/CgP6l/LjQARpQEXCoyo+egu
+	 wuaRID+lKPL8EwpgpzrImvldP0jK0Sv4Ov1xDhQKf56nr5FG6pMeszNdzNUMM3Qek+
+	 PnN5lpV3IOYZv74uW2uoOnZuo7550kyjHRO+X0y0A27fr201FrD7aS3MevpF5IfBOC
+	 K50IqLg23AgapdFeWxYSm4x6HvtWlm+X2EuISzsM7SJRSc7pXhUgmTrwSy+tJuDGkX
+	 l3aoRvAfZyaXUb3lpXi5C/Z+BKBfFZrTaoPMrdUmkZLU1bfTqR8HmRejxRyYYv/1tb
+	 P5y9Q2kx47EQA==
+Message-ID: <b2c0ab9c-d6c0-4f13-9df4-b8589ba98d11@kernel.org>
+Date: Thu, 4 Jun 2026 12:12:15 +0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 1/2] scsi: leapraid: Add new SCSI driver
+To: Dongdong Hao <doubled@leap-io-kernel.com>,
+ James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
+Cc: yjzhang@leap-io-kernel.com, kezijie@leap-io-kernel.com,
+ linux-scsi@vger.kernel.org
+References: <cover.1780383814.git.doubled@leap-io-kernel.com>
+ <6c20b88401906713f948ff72bf06988930fa0fde.1780383814.git.doubled@leap-io-kernel.com>
+Content-Language: en-US
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <6c20b88401906713f948ff72bf06988930fa0fde.1780383814.git.doubled@leap-io-kernel.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-The tape setup path writes partition metadata one element past the
-allocated tape_blocks array when a one-partition configuration is
-selected.
+On 2026/06/02 15:10, Dongdong Hao wrote:
+> The LeapRAID driver provides support for LeapRAID PCIe RAID controllers,
+> enabling communication between the host operating system, firmware, and
+> hardware for efficient storage management.
+> 
+> The driver is organized into several logical modules, each with a clear
+> responsibility:
+> 
+> leapraid_os.c: Integrates with the Linux SCSI subsystem, handling host
+> template callbacks, PCIe device probing, and initialization.
+> 
+> leapraid_func.c: Contains low-level routines for firmware/hardware
+> interaction, interrupt handling, and reset logic.
+> 
+> leapraid_app.c: Provides the ioctl interface for user-space tools.
+> 
+> leapraid_transport.c: Manages interactions with the SCSI transport
+> layer for SAS PHYs and ports.
+> 
+> leapraid_func.h: Contains internal definitions shared among driver
+> modules.
+> 
+> leapraid.h: Contains low-level hardware definitions for
+> driver/firmware interaction.
+> 
+> The leapraid_probe() function orchestrates the setup: it allocates the
+> adapter structure and SCSI host, configures hardware interfaces, and
+> registers it with the SCSI mid-layer. Following registration,
+> scsi_scan_host() is invoked to initiate device discovery, with firmware
+> reporting devices via interrupt-driven events.
+> 
+> This initial commit provides the necessary infrastructure for
+> subsequent development of full I/O path handling, error recovery,
+> and advanced management features.
+> 
+> Signed-off-by: Dongdong Hao <doubled@leap-io-kernel.com>
 
-That corrupts adjacent state during device initialization before any
-command is issued.
+[...]
 
-Reject a declared multi-partition layout that has no space for partition
-1, and initialize partition 1's marker only when partition 1 exists.
+> +static long bad_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
+> +{
+> +	return -ENOTTY;
+> +}
 
-Assisted-by: Codex:gpt-5.5-cyber-preview
-Signed-off-by: Samuel Moelius <sam.moelius@trailofbits.com>
----
-Changes in v2
-  - Fixed handling of part_1_size == 0 case
+> +static const struct file_operations leapraid_ctl_fops = {
+> +	.owner = THIS_MODULE,
+> +	.unlocked_ioctl = leapraid_ctl_ioctl,
+> +	.mmap = leapraid_fw_mmap,
+> +	.compat_ioctl = bad_ioctl,
 
- drivers/scsi/scsi_debug.c | 12 +++++++++---
- 1 file changed, 9 insertions(+), 3 deletions(-)
+You do not need to define .compat_ioctl if not supported. The ioctl syscall will
+return -ENOTTY when .compat_ioctl is undefined. So drop bad_ioctl()
 
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 1515495fd9ea..edcc2f5f6977 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -3661,12 +3661,18 @@ static int partition_tape(struct sdebug_dev_info *devip, int nbr_partitions,
- 
- 	if (part_0_size + part_1_size > TAPE_UNITS)
- 		return -1;
-+	if (nbr_partitions > 1 && part_1_size <= 0)
-+		return -1;
- 	devip->tape_eop[0] = part_0_size;
- 	devip->tape_blocks[0]->fl_size = TAPE_BLOCK_EOD_FLAG;
- 	devip->tape_eop[1] = part_1_size;
--	devip->tape_blocks[1] = devip->tape_blocks[0] +
--			devip->tape_eop[0];
--	devip->tape_blocks[1]->fl_size = TAPE_BLOCK_EOD_FLAG;
-+	if (nbr_partitions > 1) {
-+		devip->tape_blocks[1] = devip->tape_blocks[0] +
-+				devip->tape_eop[0];
-+		devip->tape_blocks[1]->fl_size = TAPE_BLOCK_EOD_FLAG;
-+	} else {
-+		devip->tape_blocks[1] = NULL;
-+	}
- 
- 	for (i = 0 ; i < TAPE_MAX_PARTITIONS; i++)
- 		devip->tape_location[i] = 0;
+[...]
+
+> +out_cleanup:
+> +	adapter->driver_cmds.cfg_op_cmd.status = LEAPRAID_CMD_NOT_USED;
+> +	mutex_unlock(&adapter->driver_cmds.cfg_op_cmd.mutex);
+> +	if (issue_reset) {
+> +		if (adapter->scan_dev_desc.first_scan_dev_fired) {
+> +			dev_info(&adapter->pdev->dev,
+> +				 "%s:%d cfg-req: Failure, issuing reset\n",
+> +				 __func__, __LINE__);
+
+Shouldn't this be a dev_err() ? or dev_warn() ?
+
+> +			leapraid_hard_reset_handler(adapter, FULL_RESET);
+> +		} else {
+> +			dev_warn(&adapter->pdev->dev,
+> +				 "cfg-req: CMD fail in init, skip reset\n");
+> +		}
+> +		rc = -EFAULT;
+> +	}
+> +	return rc;
+
+[...]
+
+> +	adapter_state = leapraid_get_adapter_state(adapter);
+> +	if (adapter_state != LEAPRAID_DB_OPERATIONAL) {
+> +		dev_info(&adapter->pdev->dev, "%s:%d: call hard_reset 0x%x\n",
+> +			 __func__, __LINE__, adapter_state);
+> +		rc = leapraid_hard_reset_handler(adapter, FULL_RESET);
+> +		dev_warn(&adapter->pdev->dev, "%s: Hard reset %s\n",
+> +			 __func__, rc == 0 ? "success" : "failed");
+
+A warning in the case of success is a little odd. Maybe stay silent for the
+success case and dev_err() for the failure case ?
+
+> +
+> +		adapter_state = leapraid_get_adapter_state(adapter);
+> +		if (rc && adapter_state != LEAPRAID_DB_OPERATIONAL)
+> +			return;
+> +	}
+
+[...]
+
+> +static struct leapraid_fw_evt_work *leapraid_alloc_fw_evt_work(void)
+> +{
+> +	struct leapraid_fw_evt_work *fw_evt =
+> +		kzalloc(sizeof(*fw_evt), GFP_ATOMIC);
+
+Please add a blank line here.
+
+> +	if (!fw_evt)
+> +		return NULL;
+
+Maybe simplify here:
+
+	if (fw_evt)
+		kref_init(&fw_evt->refcnt);
+
+	return fw_evt;
+
+> +
+> +	kref_init(&fw_evt->refcnt);
+> +	return fw_evt;
+> +}
+
+[...]
+
+> +static void leapraid_remove_unresp_raid_volumes(
+> +		struct leapraid_adapter *adapter)
+> +{
+> +	unsigned long flags;
+> +	struct leapraid_raid_volume *raid_volume, *raid_volume_next;
+> +	LIST_HEAD(head);
+> +
+> +	spin_lock_irqsave(&adapter->dev_topo.raid_volume_lock, flags);
+> +	list_for_each_entry_safe(raid_volume, raid_volume_next,
+> +				 &adapter->dev_topo.raid_volume_list, list) {
+> +		if (!raid_volume->resp)
+> +			list_move_tail(&raid_volume->list, &head);
+> +		else
+> +			raid_volume->resp = 0;
+> +	}
+> +	spin_unlock_irqrestore(&adapter->dev_topo.raid_volume_lock, flags);
+> +
+> +	list_for_each_entry_safe(raid_volume, raid_volume_next, &head, list) {
+> +		leapraid_sas_volume_delete_by_ptr(adapter, raid_volume);
+> +	}
+> +
+> +	dev_info(&adapter->pdev->dev,
+> +		 "Unresponsive RAID volumes removed\n");
+
+Maybe dev_warn() here ?
+
+> +static void leapraid_remove_unresp_sas_exp(struct leapraid_adapter *adapter)
+> +{
+> +	struct leapraid_topo_node *topo_node_exp, *topo_node_exp_next;
+> +	unsigned long flags;
+> +	LIST_HEAD(head);
+> +
+> +	spin_lock_irqsave(&adapter->dev_topo.topo_node_lock, flags);
+> +	list_for_each_entry_safe(topo_node_exp, topo_node_exp_next,
+> +				 &adapter->dev_topo.exp_list, list) {
+> +		if (!topo_node_exp->resp)
+> +			list_move_tail(&topo_node_exp->list, &head);
+> +		else
+> +			topo_node_exp->resp = 0;
+> +	}
+> +	spin_unlock_irqrestore(&adapter->dev_topo.topo_node_lock, flags);
+> +
+> +	list_for_each_entry_safe(topo_node_exp, topo_node_exp_next,
+> +				 &head, list)
+> +		leapraid_exp_node_rm(adapter, topo_node_exp);
+> +
+> +	dev_info(&adapter->pdev->dev,
+> +		 "Unresponsive SAS expanders removed\n");
+
+And here too ?
+
+[...]
+
+> +static void leapraid_scan_all_dev_after_reset(struct leapraid_adapter *adapter)
+> +{
+> +	dev_info(&adapter->pdev->dev, "Begin scanning devices\n");
+> +
+> +	leapraid_sas_host_add(adapter, adapter->dev_topo.card.phys_num > 0);
+> +	leapraid_scan_exp_after_reset(adapter);
+> +	if (adapter->adapter_attr.raid_support) {
+> +		leapraid_scan_phy_disks_after_reset(adapter);
+> +		leapraid_scan_vol_after_reset(adapter);
+> +	}
+> +	leapraid_scan_sas_dev_after_reset(adapter);
+> +
+> +	dev_info(&adapter->pdev->dev, "Devices scan complete\n");
+
+Maybe drop this message to not polute too much the kernel log ?
+
+[...]
+
+> +static u8 leapraid_handle_scan_cb(struct leapraid_adapter *adapter,
+> +				  struct leapraid_driver_cmd *cmd,
+> +				  struct leapraid_rep *rep)
+> +{
+> +	u16 status;
+> +
+> +	cmd->status &= ~LEAPRAID_CMD_PENDING;
+> +
+> +	status = le16_to_cpu(rep->adapter_status) &
+> +		 LEAPRAID_ADAPTER_STATUS_MASK;
+> +
+> +	if (status != LEAPRAID_ADAPTER_STATUS_SUCCESS)
+> +		adapter->scan_dev_desc.scan_dev_failed = 1;
+> +
+> +	if (!cmd->async_scan_dev) {
+> +		complete(&cmd->done);
+> +		return 1;
+> +	}
+> +
+> +	if (status == LEAPRAID_ADAPTER_STATUS_SUCCESS)
+> +		leapraid_scan_dev_complete(adapter);
+> +	else
+> +		adapter->scan_dev_desc.scan_start_failed = status;
+> +
+> +	return 1;
+> +}
+
+This function only returns 1. It has a single caller site. So make it void and...
+
+> +static bool leapraid_driver_cmds_done(struct leapraid_adapter *adapter,
+> +				      u16 taskid, u8 msix_index,
+> +				      u32 rep_paddr, u8 cb_idx)
+> +{
+
+[...]
+
+> +		if (_sp_cmd->cb_idx == LEAPRAID_SCAN_DEV_CB_IDX)
+> +			return leapraid_handle_scan_cb(adapter,
+> +						       _sp_cmd,
+> +						       leap_mpi_rep);
+
+call thr function here and "retrun true".
+
+> +
+> +		if (_sp_cmd->cb_idx == LEAPRAID_CTL_CB_IDX)
+> +			leapraid_handle_ctl_cb(adapter, leap_mpi_rep, taskid);
+> +	}
+> +
+> +	_sp_cmd->status &= ~LEAPRAID_CMD_PENDING;
+> +	complete(&_sp_cmd->done);
+> +
+> +	return true;
+> +}
+
+[...]
+
+> +static int leapraid_tm_post_processing(struct leapraid_adapter *adapter,
+> +				       u16 hdl, uint channel, uint id,
+> +				       uint lun, u8 type, u16 taskid_task)
+> +{
+> +	int rc;
+> +
+> +	rc = leapraid_tm_cmd_map_status(adapter, channel, id, lun,
+> +					type, taskid_task);
+> +	if (rc == SUCCESS)
+> +		return rc;
+> +
+> +	leapraid_mask_int(adapter);
+> +	leapraid_sync_irqs(adapter, true);
+> +	leapraid_unmask_int(adapter);
+> +
+> +	rc = leapraid_tm_cmd_map_status(adapter, channel, id, lun, type,
+> +					taskid_task);
+> +	return rc;
+
+	return leapraid_tm_cmd_map_status(adapter, channel, id, lun,
+					  type, taskid_task);
+
+is a little better :)
+
+[...]
+
+> +static inline bool leapraid_is_scmd_permitted(struct leapraid_adapter *adapter,
+> +					      struct scsi_cmnd *scmd)
+> +{
+> +	u8 opcode;
+> +
+> +	if (adapter->access_ctrl.pcie_recovering ||
+> +	    atomic_read(&adapter->overheat_desc.thermal_alert))
+> +		return false;
+> +
+> +	if (adapter->access_ctrl.host_removing) {
+> +		if (leapraid_pci_removed(adapter))
+> +			return false;
+> +
+> +		opcode = scmd->cmnd[0];
+> +		if (opcode == SYNCHRONIZE_CACHE || opcode == START_STOP)
+> +			return true;
+> +
+> +		return false;
+
+Simplify:
+
+		return opcode == SYNCHRONIZE_CACHE ||
+			opcode == START_STOP;
+
+> +	}
+> +	return true;
+> +}
+
+[...]
+
+With these nits corrected, feel free to add:
+
+Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+
+Martin,
+
+I did 3 rounds of reviews with the author off-list. So I think this is all good
+enough to get in, which will simplify fixes/improvements going forward.
+
+
+
 -- 
-2.43.0
-
+Damien Le Moal
+Western Digital Research
