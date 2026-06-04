@@ -1,143 +1,109 @@
-Received: from fgw23-4.mail.saunalahti.fi (fgw23-4.mail.saunalahti.fi [62.142.5.110])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f46.google.com (mail-wm1-f46.google.com [209.85.128.46])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A167E37CD2B
-	for <linux-scsi@vger.kernel.org>; Thu,  4 Jun 2026 19:42:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=62.142.5.110
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 629373C2BB9
+	for <linux-scsi@vger.kernel.org>; Thu,  4 Jun 2026 20:58:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.46
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780602166; cv=none; b=RR6XNLqvOjJpa5NbRww0TLtQATu88AjgGmsyIZUomK/ehA6UTLOQf5mQ3jR1bjuUA0768TSby+o8AqQJgcLe4GLfTiKrRMtYPUtub7tYPw4uukXiHNMvfnLoPivholdHfkqlbYbtFlrII8RPp5aDuZoVajuD9z/rOCcLo38UudU=
+	t=1780606720; cv=none; b=NaShiNzhBXsPaqKcVZNu9ZV8/bLSOM0Vxz6S9vU7TO14DuBORDj3X2toHGCEPHyaM9f13AW3ybgkfR3ob1XcTuYrm3HtMzKD/sV2/M1Nu+xi5qGJN2uxsZnyJE+QTZ4iRPpI6JOohirCd+jWRBAsI4m3qA/DuUMSSFICVZCYZZM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780602166; c=relaxed/simple;
-	bh=3+Rmw5EryJdYC61KHhQySTMMBQfEpZk1RqVwPts4GGo=;
-	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
-	 Message-Id:References:To; b=AY0FpAQYzcuZJFG9wPeRXKTdds2rdv+/0qOH/bO9e7kqsFhgEOqj+pSNilNOdSHulfAN/QETrq/kl//smXBRylpoBiLqi1R5esGhkj2xqhwuhZkTI75r7m0EVplGAwtpfYNG1nekwUrbYlGjSPOOi5WdBGRgk4O1W5I56onrm0k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=kolumbus.fi; spf=pass smtp.mailfrom=kolumbus.fi; dkim=pass (2048-bit key) header.d=kolumbus.fi header.i=@kolumbus.fi header.b=Fx7sHgmx; arc=none smtp.client-ip=62.142.5.110
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=kolumbus.fi
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kolumbus.fi
+	s=arc-20240116; t=1780606720; c=relaxed/simple;
+	bh=DQTkf1lHMIqbwK47/czYzHj+glOCSShwPoAIlDnSnRw=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Oh1KDElVQs4G9MMeRsR84G7A773wD8HDOKCp8OdhDXkKe/Z4gCia7lwHbrwXAbW3tYT8FYy4wp7DBG32dcs8Fu0r7tqTkhVsycB/Jq1wNqvAdG1+03jHX8mxlCA8Qe+fDNOnHUOqvsHIxFGeCoR5EBZlP5Y6L6a6aOb9D2I2Nuo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=iknnO2pz; arc=none smtp.client-ip=209.85.128.46
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kolumbus.fi header.i=@kolumbus.fi header.b="Fx7sHgmx"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="iknnO2pz"
+Received: by mail-wm1-f46.google.com with SMTP id 5b1f17b1804b1-490ac357c55so13938005e9.1
+        for <linux-scsi@vger.kernel.org>; Thu, 04 Jun 2026 13:58:39 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=kolumbus.fi; s=elisa1;
-	h=to:references:message-id:content-transfer-encoding:cc:date:in-reply-to:from:
-	 subject:mime-version:content-type:from:to:cc:reply-to:subject:date:in-reply-to:
-	 references:list-archive:list-subscribe:list-unsubscribe:content-type:
-	 content-transfer-encoding:message-id;
-	bh=q3eFp/pQYS72R28wqdYmwEwrPf7BZnjQN8KVpBafd1c=;
-	b=Fx7sHgmxwf2BYqxq9e7RJW8m3dHC3Kl2T+Hrx6bofEISSqOP8j1SZk8bjOY4FMIgqOc3QCiwfgPSs
-	 OCm+zIkiuiYNbEY4U38OBuCdctOKAho+ucelF6VHyt4QbLzgYc4sRfiIEBAasBXEPIiWEgpFQWdCmO
-	 jgvB4dflVP3n3rUklEVZ83Vf+ARbeyQziINQZGe2PumA5g+/rcZ9XBRdqYXpJ/QXvrj4bYNimBzoP0
-	 4I4j5DudfjZIP/+hOwP8LWzV6/F4mvMULWbqQbZs2eV6XkvOXwV5c3jEhTUC3rZCG7i01Rt55pkG4j
-	 AweSiR4D+hQf3W7KL5N4zhB1Udl5bYQ==
-Received: from smtpclient.apple (91-158-174-119.elisa-laajakaista.fi [91.158.174.119])
-	by fgw23.mail.saunalahti.fi (Halon) with ESMTPSA
-	id 626b5ecb-604d-11f1-9b5e-005056bdfda7;
-	Thu, 04 Jun 2026 22:41:30 +0300 (EEST)
-Content-Type: text/plain;
-	charset=utf-8
+        d=gmail.com; s=20251104; t=1780606718; x=1781211518; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=DQTkf1lHMIqbwK47/czYzHj+glOCSShwPoAIlDnSnRw=;
+        b=iknnO2pzYAxVBr5i32I5mNFlyUF4hG16k08qD4F71/MXpgO41aPReHIyqAUUCJV6RS
+         ViihSrIEddeu0NhEUPgs9lB8hDS+Ep36XfsjybRB+5GMugVp4FyZhL9U0kHhkOduxGbT
+         maWotG0ZImKwZF7omJlhECYYrhgdvXilFsiefRidN5gYZPFckPzFPAR/C47NAPfVGjps
+         7RHYlODTmTQhgbviG7ZVGmzhgRzv7pF5ksNClaagSXvoSSJmfCcX2whiiZxpwoscAXQB
+         snl2pwk1CGqeCMF2Foq66rJF/MxGmx74R8cuKe5FYm1qsjt5qmQ8p4H7Ao3iwKimMlol
+         8Jkw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1780606718; x=1781211518;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=DQTkf1lHMIqbwK47/czYzHj+glOCSShwPoAIlDnSnRw=;
+        b=iZr/A49Glg45mrWSsopTAWBE37fA84tXadRXMBMI3QPwQDl3UArex1bXSLrHiWBRgW
+         GPYe/WFjlWmMAT36D1QmfCYEDjUkAEjZVaCFr4xuG1ytyhUigX7ap+D7/g4SMTutM+pb
+         H7K6srgtE/kCz6cJlBNMGXTU79lmKNGAAJdWgteh8qFdzCfRAX87K11012R58UEIAawP
+         QvwTK5TamSVzuJKCSggrhXyOgKhl05L6bjSosfXJIYhiKcpNCRYb5n+aDgs6go8OzvNs
+         w1tU23BJpksS5PhFMUvnhzRvhYsySDvBr52YQrd/L9KfNnVb1Fde3CqH/wXQJ/QOf8W+
+         flrQ==
+X-Forwarded-Encrypted: i=1; AFNElJ/FQkh0DhxSulCsKPtxEpwG68uX+pNwrwKCwLImWaTmgBsLx6xaJWFRdPnzPA9nl6aonIJmNi8Baeby@vger.kernel.org
+X-Gm-Message-State: AOJu0YxoWL0tNikOT8q5APAaUCcmSBQSTexJPLJD06POs0kHGb+f8YZi
+	5EP8RfqxDhpoZ7h9Nc2BYEB9So0R16f536DCr9hl1HkUUaC1rbIeObaW
+X-Gm-Gg: Acq92OHOMOCALvigNxU0dJiz4VpxIJXdNoFKygO/CheIbdGnusytnW218EonliG01CL
+	hz2y7baMt408rRjfMmHKG+zI8JZfHb1SYZWwgq0egcoYhtyVj8TTT3mcfxcbft2DqKSEPVfvOXY
+	wYawmTiC7YsTZ+X5BkjEF21KXeGpDnu5ZZ3tvFS6EZBI8mrAvT2UjiYcguj20o+0PaPw63N2IsW
+	Czs29MqxAYgzR8wEn3hPXwDlfeFtHTf3yV71WPbEyPUFgGwED2OqwCeHoHJsZhv6dBlfSp/5Yoe
+	Xx959OWMXhjtdCvAF4ICxyPwZBFw/IwXXQxBsZZSIB9Ewh4BxhcpbDNSMW2q/qnX3crTNq2qtg5
+	BtzRISsCtviz1WHcUN6i7PTIBFqxxIVRngEE709LnbiukvdtCtZCY740j+7cUdlod/gKo1cIKrC
+	3ukSvIzg8MXDzZtNdbeY2FIoNoWKL5SJ1O
+X-Received: by 2002:a05:600c:83c3:b0:48f:d612:3c59 with SMTP id 5b1f17b1804b1-490c25a21a9mr4351475e9.9.1780606717742;
+        Thu, 04 Jun 2026 13:58:37 -0700 (PDT)
+Received: from localhost ([94.53.77.213])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-490bc413adbsm100278155e9.15.2026.06.04.13.58.35
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 04 Jun 2026 13:58:36 -0700 (PDT)
+Date: Thu, 4 Jun 2026 23:59:21 +0300
+From: Catalin Iacob <iacobcatalin@gmail.com>
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: Thomas Bogendoerfer <tsbogend@alpha.franken.de>, 
+	Madhavan Srinivasan <maddy@linux.ibm.com>, Michael Ellerman <mpe@ellerman.id.au>, 
+	Nicholas Piggin <npiggin@gmail.com>, "Christophe Leroy (CS GROUP)" <chleroy@kernel.org>, 
+	Rich Felker <dalias@libc.org>, John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>, 
+	"David S. Miller" <davem@davemloft.net>, Andreas Larsson <andreas@gaisler.com>, 
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, 
+	Jens Axboe <axboe@kernel.dk>, Yoshinori Sato <ysato@users.sourceforge.jp>, 
+	linux-mips@vger.kernel.org, linux-kernel@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, 
+	linux-sh@vger.kernel.org, sparclinux@vger.kernel.org, linux-scsi@vger.kernel.org
+Subject: Re: [PATCH v3 0/6] Remove remaining references to the pktcdvd driver
+Message-ID: <aiHbj0zn4y9X6qV2@toolbx>
+References: <20260530-remove-pktcdvd-references-v1-1-aa56941d4315@gmail.com>
+ <20260604-remove-pktcdvd-references-v3-0-e2f06fb4eef4@gmail.com>
+ <96a48e65-6ee2-4b81-91f8-821a2de707db@acm.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3864.600.51.1.1\))
-Subject: Re: [PATCH v2] scsi: scsi_debug: fix one-partition tape setup bounds
-From: =?utf-8?B?IkthaSBNw6RraXNhcmEgKEtvbHVtYnVzKSI=?= <kai.makisara@kolumbus.fi>
-In-Reply-To: <c56802d9d3f05635c5b126687d0351a647801a77.camel@HansenPartnership.com>
-Date: Thu, 4 Jun 2026 22:41:20 +0300
-Cc: Samuel Moelius <sam.moelius@trailofbits.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- "open list:SCSI SUBSYSTEM" <linux-scsi@vger.kernel.org>,
- open list <linux-kernel@vger.kernel.org>
-Content-Transfer-Encoding: quoted-printable
-Message-Id: <EF8E0075-D397-453A-B06F-F2C77067BA53@kolumbus.fi>
-References: <20260603235616.124535-1-sam.moelius@trailofbits.com>
- <6d2e78e6a5840f5892e7eb081657b23aa62bc50d.camel@HansenPartnership.com>
- <CAE+C+DbpB6UP29WTNGgrnYqhazEC5=5ErNJiChrDz8sygC_-0w@mail.gmail.com>
- <4A3BD9E5-21E2-40F7-9242-71589477F2EF@kolumbus.fi>
- <c56802d9d3f05635c5b126687d0351a647801a77.camel@HansenPartnership.com>
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-X-Mailer: Apple Mail (2.3864.600.51.1.1)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <96a48e65-6ee2-4b81-91f8-821a2de707db@acm.org>
 
+On Thu, Jun 04, 2026 at 08:50:22AM -0700, Bart Van Assche wrote:
+> If this series is reposted, please combine patches 1/6 and 2/6. Anyway,
+> this series looks good to me.
 
+Thanks for taking a look.
 
-> On 4. Jun 2026, at 22.29, James Bottomley =
-<James.Bottomley@HansenPartnership.com> wrote:
->=20
-> On Thu, 2026-06-04 at 22:14 +0300, Kai M=C3=A4kisara (Kolumbus) wrote:
->>=20
->>> On 4. Jun 2026, at 21.33, Samuel Moelius
->>> <sam.moelius@trailofbits.com> wrote:
->>>=20
->>> On Thu, Jun 4, 2026 at 9:38=E2=80=AFAM James Bottomley
->>> <James.Bottomley@hansenpartnership.com> wrote:
->>>>=20
->>>> On Wed, 2026-06-03 at 23:55 +0000, Samuel Moelius wrote:
->>>>> The tape setup path writes partition metadata one element past
->>>>> the
->>>>> allocated tape_blocks array when a one-partition configuration
->>>>> is
->>>>> selected.
->>>>>=20
->>>>> That corrupts adjacent state during device initialization
->>>>> before any
->>>>> command is issued.
->>>>=20
->>>> I still don't get what the actual problem is.  For a single
->>>> partition
->>>> tape I can't see where scsi_debug would actually do anything with
->>>> tape_blocks[1].  What is it that you're seeing when using
->>>> scsi_debug
->>>> that motivates this?
->>>=20
->>> The bug is a kernel OOB write. I can share a PoC if desired. The
->>> PoC
->>> sends this SCSI command through /dev/sgN:
->>>=20
->>> ...
->>=20
->>> Then the bug: it initializes partition 1 even though there is only
->>> one
->>> partition:
->>>=20
->>>    devip->tape_eop[1] =3D part_1_size;
->>>    devip->tape_blocks[1] =3D devip->tape_blocks[0] +
->>>                            devip->tape_eop[0];
->>>    devip->tape_blocks[1]->fl_size =3D TAPE_BLOCK_EOD_FLAG;
->>>=20
->>> Because devip->tape_eop[0] =3D=3D 10000, this computes:
->>>=20
->>>    devip->tape_blocks[1] =3D devip->tape_blocks[0] + 10000
->>>=20
->>> But the allocation has only 10000 elements. So this write is one
->>> element past the allocation.
->>=20
->> OK. The bug is not initialization of the pointer but writing the
->> fl_size using the pointer. Good catch!
->=20
-> Isn't the fix actually to allocate an extra block for the EOF:
->=20
-> @@ -6648,7 +6648,7 @@ static int scsi_debug_sdev_configure(struct =
-scsi_device *sdp,
->        if (sdebug_ptype =3D=3D TYPE_TAPE) {
->                if (!devip->tape_blocks[0]) {
->                        devip->tape_blocks[0] =3D
-> -                               kzalloc_objs(struct tape_block, =
-TAPE_UNITS);
-> +                               kzalloc_objs(struct tape_block, =
-TAPE_UNITS + 1);
->                        if (!devip->tape_blocks[0])
->                                return 1;
->=20
-> ?
-That came into my mind, too. But I considered it a workaround, not a =
-real fix.
+I will repost in a few days when back to a computer to fix the subject
+of patch 2 since you are right, it does wrongly suggest that the
+implementation is moved.
 
-But after considering the other alternatives and possible problems that =
-should be checked,
-I think your suggestion is the best way. It solves tha OOB write, but =
-does not change the code
-paths.
+For learning purposes, do you mind quickly sharing your rationale for
+combining 1 and 2? To me they are in the same area but still separate
+things: one removes dead code, the other increases encapsulation. Each
+is a small but worthwhile cleanup, they can be applied in any order and
+each can be applied without the other. It's true that, while patch 2
+without patch 1 works, it would increase confusion but I find that an
+argument to order 2 after 1, not to say they are one thing.
 
-Thanks,
-Kai
-
+I'd also find it hard to describe what that combined patch does except
+by calling out two things: "remove dead code and move the declaration".
+Your suggested "unexport" seems more confusing than clarifying, I'd
+argue that today the symbol is not exported since that ifdef always
+compiles the export out.
