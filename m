@@ -1,102 +1,120 @@
-Received: from mail-qk1-f170.google.com (mail-qk1-f170.google.com [209.85.222.170])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from fgw20-4.mail.saunalahti.fi (fgw20-4.mail.saunalahti.fi [62.142.5.107])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F281A3BD647
-	for <linux-scsi@vger.kernel.org>; Thu,  4 Jun 2026 18:51:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.170
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 75AB214883F
+	for <linux-scsi@vger.kernel.org>; Thu,  4 Jun 2026 19:14:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=62.142.5.107
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780599068; cv=none; b=aTYHIYYIeumx34Y7YVe8U1CAPojLDzV0Av67UiRY3FKOhxFIk790m7A1zW+LGi/W6nyWZxjN9gMZWK/lMdUJ3Pp3nJTYVU4e4pBL2qLzXHz9JbUWMfjNmJoqCWLNqPaI62cP3p0EgtZiIcGlkpkWiayyBsewRBiRVNToFx2gnYY=
+	t=1780600498; cv=none; b=dm5BS5NWYcZT1nVkphxqG/Cy66rAkinNTQ4W45yxJW5BUdVqPR+TP2nZ84To2OQJNJg1hs2Euc4PgNRGUh+BfGGw8J1pshahtcpzWfYOJMU/1vtf32CXfbScYIgDf52q00E7K1kt8nXA+7hVycRiwD0VdkmKaTE/UWJHCJHWcHM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780599068; c=relaxed/simple;
-	bh=bdwMNcZVjf0I1CDFWjmxuzGycazN9aJDtvxsS5g9hFg=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=The3Hj6UlLUq9MTaadV5mHwPqHPOiJSDTsFWqZLnGyU4rb/qiSFfCvTrohgw++KhjvoECSj6xAqx3LcMC9lKAdO0mGaP/ItwVpSYV/yHouFWnXp80qtLV2HByMbpia3eyXSujAuzNn7jkNusR8mb5hg06PPhX2iynP/ijby8rbI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=A6xeTwBY; arc=none smtp.client-ip=209.85.222.170
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1780600498; c=relaxed/simple;
+	bh=EUx02vWcTw+p0rwy3FBeL+59RDqjmCn+7cgADewMYe8=;
+	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
+	 Message-Id:References:To; b=ciW/3I7CJn0/55En/G834S+PdrlttaMBWy2DLYVi5DcsMOHB/RrEck/+9V6ioU0ICSnUCTKZocd7IrxoGDcADbV+cltcKiGQieL/St3gUz1nOcV2Tfe0fdDfJp8ARPM8GRHERaMgAQoqkv8MNt0s6ExBiNK7seBRC9PRFxD6MP4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=kolumbus.fi; spf=pass smtp.mailfrom=kolumbus.fi; dkim=pass (2048-bit key) header.d=kolumbus.fi header.i=@kolumbus.fi header.b=OAzpl8Ry; arc=none smtp.client-ip=62.142.5.107
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=kolumbus.fi
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kolumbus.fi
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="A6xeTwBY"
-Received: by mail-qk1-f170.google.com with SMTP id af79cd13be357-9157b94a07aso158592185a.0
-        for <linux-scsi@vger.kernel.org>; Thu, 04 Jun 2026 11:51:06 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=kolumbus.fi header.i=@kolumbus.fi header.b="OAzpl8Ry"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1780599066; x=1781203866; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=2CQIKIOUNHK4p/kK1ZVRgUxKnjETRbt3AMrCW5x1awc=;
-        b=A6xeTwBYAryazVJwHxydeUNnsdkMyog04gVLZBvEbieiDo9MWwc+OTXZe7pKDHO6hr
-         wl/RNy2LJFZvj69q0oD6lkxbxzJjIdFhhhg42WK5F6WyJDKRTCeyW0HghNijeqagBSh/
-         sB47D1ruqvCdZppFvNHHNZinjU621G8BMW/x6AGLBA1we2nlXSOe2mHqWZB93dz/iNNQ
-         QjdCAfC7x7tgl2rvS83S6qREN965Kup7N77liuEmoFYgLxCfVTqgOOmoFlAQ132Pie0X
-         mdyzvMw2cTVkO4aYuuXCrF04q6NhlQgoSBx2OOGq6jO2hBVWtH8wffqm53yH51AauTpg
-         9dGQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1780599066; x=1781203866;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=2CQIKIOUNHK4p/kK1ZVRgUxKnjETRbt3AMrCW5x1awc=;
-        b=pcpGYtm5uL79+Gzq8ZnRxkS2XCT/Rley1nOy3NPdt88WUb8jKGlTAKuvxlW/0PhSMf
-         dukhsEodrq37V2fq6DhrtUzMDGXd8RRT+h3uobWp3Fdas8DEn2+yUkjC8Mqp0w93GYxi
-         ljE59/01Ov7eyt0l6fIVzlF1E2P2oKtPoXBST085h1OmZ1KJEAj/Su5zAMK7UUr2xlH9
-         /MvnGUDphm79LPMLk8vt3OQcJ2olBiJd4sjv3pSJOTu7z7oKq30t1vDVkCX2ByzDbkmN
-         90pD1ssUfp0f+we7lhlLozcN0HgzrT5+tNT1fL+YXsKrRIMIY9jepsOWeh/HWmcDWjtH
-         bA6Q==
-X-Gm-Message-State: AOJu0YyAhk45FMLTailHltSuDRTnJn0IOezL8gzJkI/yy59uEs6KEODf
-	Ot8kGtV/72iudfxu342J7TDIFPXfoNBJWLegiEZVi/f/uVJKuD9el1Lovh0MGb9+
-X-Gm-Gg: Acq92OHITmd/+U7G/SwrJVP+cA0orIIPJGh0Yu38fFjIt/c3smtHjmnyVi2nkuT8f/l
-	hfvs3jYePK9xntdKtWRXUlz/5MyCLJ4uRfQN5feCItBGPJ5+QYMWM7O8Q9Bo2u9zzDJYLnp70JN
-	bsXkxrqnw3D/YPf2ueojO3aAPUEnLI4gt+U2JJecIrKfN/wrZCWy13gIfep6dmAP5Gf84HoNRlo
-	Y4vYXzZn39Xd65V+pWG99cJI9ntKFypGxrOsqVLeASwWyRcMM0hCf2y8a2t5HPo9bode6BUEomZ
-	imvrQ8PkAcphb0stYazo2Ezf83Va4m0a/hVuvhtD3z1Br4HpuuXaLZnBBax8kdiQb4rlBg0cajQ
-	NTVdPcjQ1Xf0Klqa+Kz8SFvgo0KradM9OnAVN0KjcbYhJcKa7sQ3BiiJJH9jghut28a2CahzdLe
-	M4Mmlzqt8PR0fe7bhdgPMY8akHWKwJkDW6s+rlhsAI3OvxaIXKkskCv41j5UPzpVSp+KQFwKty0
-	gUBinyeYD7UU69C0gku6l4aN0am14bvZsmTk7RdJZKCc4+WlRPMd4JcBos9Ku+N
-X-Received: by 2002:a05:620a:390f:b0:915:9f28:6739 with SMTP id af79cd13be357-915a9cb1b35mr68684085a.20.1780599065940;
-        Thu, 04 Jun 2026 11:51:05 -0700 (PDT)
-Received: from dhcp-10-231-55-133.dhcp.broadcom.net ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id af79cd13be357-9158a37cab6sm651208685a.22.2026.06.04.11.51.05
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 04 Jun 2026 11:51:05 -0700 (PDT)
-From: Justin Tee <justintee8345@gmail.com>
-To: linux-scsi@vger.kernel.org
-Cc: jsmart833426@gmail.com,
-	justin.tee@broadcom.com,
-	Justin Tee <justintee8345@gmail.com>
-Subject: [PATCH 14/14] lpfc: Update lpfc version to 15.0.0.1
-Date: Thu,  4 Jun 2026 12:29:37 -0700
-Message-Id: <20260604192937.65605-15-justintee8345@gmail.com>
-X-Mailer: git-send-email 2.38.0
-In-Reply-To: <20260604192937.65605-1-justintee8345@gmail.com>
-References: <20260604192937.65605-1-justintee8345@gmail.com>
+	d=kolumbus.fi; s=elisa1;
+	h=to:references:message-id:content-transfer-encoding:cc:date:in-reply-to:from:
+	 subject:mime-version:content-type:from:to:cc:reply-to:subject:date:in-reply-to:
+	 references:list-archive:list-subscribe:list-unsubscribe:content-type:
+	 content-transfer-encoding:message-id;
+	bh=PDjUtEkw4GIEAYRiw9lwdP4l593RTBsMOLvdDIYZNXk=;
+	b=OAzpl8Ry0/QWH197rWLSVI9apV54ONQZfVnHHvcBgWFzUsvWK3MsmQvEkGF9ia8kx2IEs73b9FBFR
+	 5xZiqDHk/on3c6fXLj6UwjCS9hHSF46oV+hcA3IAfFjEvDZM+IBAfLKMK8PgGCL0XlVFpE4fJgnYvF
+	 d3ekFdLhUlQX5yG4ZApdhVez/bM8IQKYN0gTDr3uJEQ1fV7dXxuelg+nbj26sof0TBFIu0aSmkbOHz
+	 n4mQ4VzaKzo0NH0Z8u27C8KjRCRXR5vpiWmkBif002VtyqDf0Uq36vINTNrOdR04HxpGRBSLGjHsVG
+	 DpKAZistmCOJX8gW/TfE7iQRsEEhTfQ==
+Received: from smtpclient.apple (91-158-174-119.elisa-laajakaista.fi [91.158.174.119])
+	by fgw22.mail.saunalahti.fi (Halon) with ESMTPSA
+	id a44ffe07-6049-11f1-8e05-005056bdf889;
+	Thu, 04 Jun 2026 22:14:43 +0300 (EEST)
+Content-Type: text/plain;
+	charset=utf-8
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3864.600.51.1.1\))
+Subject: Re: [PATCH v2] scsi: scsi_debug: fix one-partition tape setup bounds
+From: =?utf-8?B?IkthaSBNw6RraXNhcmEgKEtvbHVtYnVzKSI=?= <kai.makisara@kolumbus.fi>
+In-Reply-To: <CAE+C+DbpB6UP29WTNGgrnYqhazEC5=5ErNJiChrDz8sygC_-0w@mail.gmail.com>
+Date: Thu, 4 Jun 2026 22:14:32 +0300
+Cc: James Bottomley <James.Bottomley@hansenpartnership.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ "open list:SCSI SUBSYSTEM" <linux-scsi@vger.kernel.org>,
+ open list <linux-kernel@vger.kernel.org>
+Content-Transfer-Encoding: quoted-printable
+Message-Id: <4A3BD9E5-21E2-40F7-9242-71589477F2EF@kolumbus.fi>
+References: <20260603235616.124535-1-sam.moelius@trailofbits.com>
+ <6d2e78e6a5840f5892e7eb081657b23aa62bc50d.camel@HansenPartnership.com>
+ <CAE+C+DbpB6UP29WTNGgrnYqhazEC5=5ErNJiChrDz8sygC_-0w@mail.gmail.com>
+To: Samuel Moelius <sam.moelius@trailofbits.com>
+X-Mailer: Apple Mail (2.3864.600.51.1.1)
 
-Update lpfc version to 15.0.0.1
 
-Signed-off-by: Justin Tee <justintee8345@gmail.com>
----
- drivers/scsi/lpfc/lpfc_version.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> On 4. Jun 2026, at 21.33, Samuel Moelius <sam.moelius@trailofbits.com> =
+wrote:
+>=20
+> On Thu, Jun 4, 2026 at 9:38=E2=80=AFAM James Bottomley
+> <James.Bottomley@hansenpartnership.com> wrote:
+>>=20
+>> On Wed, 2026-06-03 at 23:55 +0000, Samuel Moelius wrote:
+>>> The tape setup path writes partition metadata one element past the
+>>> allocated tape_blocks array when a one-partition configuration is
+>>> selected.
+>>>=20
+>>> That corrupts adjacent state during device initialization before any
+>>> command is issued.
+>>=20
+>> I still don't get what the actual problem is.  For a single partition
+>> tape I can't see where scsi_debug would actually do anything with
+>> tape_blocks[1].  What is it that you're seeing when using scsi_debug
+>> that motivates this?
+>=20
+> The bug is a kernel OOB write. I can share a PoC if desired. The PoC
+> sends this SCSI command through /dev/sgN:
+>=20
+> ...
 
-diff --git a/drivers/scsi/lpfc/lpfc_version.h b/drivers/scsi/lpfc/lpfc_version.h
-index d6e6e436fbfc..7df63d118234 100644
---- a/drivers/scsi/lpfc/lpfc_version.h
-+++ b/drivers/scsi/lpfc/lpfc_version.h
-@@ -20,7 +20,7 @@
-  * included with this package.                                     *
-  *******************************************************************/
- 
--#define LPFC_DRIVER_VERSION "15.0.0.0"
-+#define LPFC_DRIVER_VERSION "15.0.0.1"
- #define LPFC_DRIVER_NAME		"lpfc"
- 
- /* Used for SLI 2/3 */
--- 
-2.38.0
+> Then the bug: it initializes partition 1 even though there is only one
+> partition:
+>=20
+>    devip->tape_eop[1] =3D part_1_size;
+>    devip->tape_blocks[1] =3D devip->tape_blocks[0] +
+>                            devip->tape_eop[0];
+>    devip->tape_blocks[1]->fl_size =3D TAPE_BLOCK_EOD_FLAG;
+>=20
+> Because devip->tape_eop[0] =3D=3D 10000, this computes:
+>=20
+>    devip->tape_blocks[1] =3D devip->tape_blocks[0] + 10000
+>=20
+> But the allocation has only 10000 elements. So this write is one
+> element past the allocation.
+
+OK. The bug is not initialization of the pointer but writing the fl_size =
+using the
+pointer. Good catch!
+
+But the patch is not quite correct. If nbr_partitions =3D=3D 2 and =
+partition_1_size =3D=3D 0,
+it sets tape_nbr_partitions =3D 2 but does not initialize the second =
+partition. This
+will cause problems.
+
+I think partition_tape() should return -1 if nbr_partitions > 0 && =
+part_1_size =3D=3D 0.
+
+All call sites of partition_page() check for error, but the error case =
+has never
+happened. The code should be checked so that an error return does not =
+cause
+problems later.
+
+Thanks,
+Kai
 
