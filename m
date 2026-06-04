@@ -1,125 +1,156 @@
-Received: from mail-wr1-f49.google.com (mail-wr1-f49.google.com [209.85.221.49])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C51947ECF0
-	for <linux-scsi@vger.kernel.org>; Thu,  4 Jun 2026 13:20:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.49
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 54FB347DD48
+	for <linux-scsi@vger.kernel.org>; Thu,  4 Jun 2026 13:35:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=60.244.123.138
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780579209; cv=none; b=JE7tqG5pWPMLQPcFdp8GHGsoknFoYNiwW0z8Z0jHzVAz/yxbgmX4APl1//G8ndjbJwU3h+mtUw8osrPq5mfQ3Q4A60QyjoI8zR9hFbI5yuB9maj1w6rlhrtuuw3jHwmote0wx1rAoUAU5g5LY+/Ovj1tva9qB8J4RCSNPcU9KnU=
+	t=1780580111; cv=none; b=TkVeQvRsBmFsR8Yko7E7/2Zr80JhTc5JSimm5y4X34yGhflzj04gYBfwmYXiXKHCv6J99W+jcMcTxKI/NmEJ8D4ApbdFdaCPnIv5FAmol3jhhpMpUDPCRttqOnesCYQd7VYFl/FsfwrFaa8NIuy0GU1r5S7pTGOzd2J++kuv/Fs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780579209; c=relaxed/simple;
-	bh=T2wQkK65vboZ4IeGnr4NbeD+9D8laMYxlcwY9lW95Qo=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=W5QIl9TpYe1kAU4sPQs+L1p3iDW27mYRkQUwdbLcq+8iPy2W3EYL6gdoYel7J6zd7cog5Ls0p3TrLplxMqNoMBuT/xdunG5XuZ15E2D/INYz6SQsQA6Lsik3upIOOmBjWJ9CK1sMLWSWnrQF/rYX0GdNSX5LpK2TOfgG1lWi9o0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=U/MSGcKj; arc=none smtp.client-ip=209.85.221.49
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1780580111; c=relaxed/simple;
+	bh=mUg5OQFiTtkznQDA0krroHL1FQ11lUZkJZPw1BcGYuc=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=fjs6YVEbFjRihE9EWp/Ntu5VC623gD16gxS4/ktFKMI8I9a0bGlX6Qrh0zRQfv3I7oxPe/0STP2frZ8Jj1vYGuAZKcvdlFJ/+t7gqKe1rQ12wwLADhAE5Ogu1LTlC+m2BRnqHNcmGC04d3WCFSsvZdbKDlrPT+yifcif3Yyf0WU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=WydqHRS6; arc=none smtp.client-ip=60.244.123.138
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="U/MSGcKj"
-Received: by mail-wr1-f49.google.com with SMTP id ffacd0b85a97d-45eec22fab7so389184f8f.3
-        for <linux-scsi@vger.kernel.org>; Thu, 04 Jun 2026 06:20:06 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1780579204; x=1781184004; darn=vger.kernel.org;
-        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
-         :mime-version:subject:date:from:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=nCy5icZAFPKbCxn3K3WrZKHkVhOrNfCywaz2Tw/0Yng=;
-        b=U/MSGcKjCOLpKGiwmb+hS6FzWFLCtJ6wvdYdnHQmDaSBnqFmO05w0ioUV+SrGfOxfF
-         XiRqqhlPMZ1EcHJ4AVLYrCWuZ19nM5c9AcKiolBT6t5zfbp3Ka13PBs7LwN+/DLBzrIH
-         9YU1JoXrNLqvIMsTiGYf5aaXp9bRVN4b8CClSaEeU3PdL3JnzaAGZy2Sb4kipcA26Pnc
-         i0Vli4Vi2svsdclzVrs04iNFpA9+tNH4DTezcyVnlM80DLdidU50PMXNojOfg7OyVIAm
-         ZELBI6wVqLhYrQiWM6Ie3WKfuyuUzZaM/DOzmhmzhP6/A+U8vOFeQE4RDz8LuYFmvrcT
-         nPwg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1780579204; x=1781184004;
-        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
-         :mime-version:subject:date:from:x-gm-gg:x-gm-message-state:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=nCy5icZAFPKbCxn3K3WrZKHkVhOrNfCywaz2Tw/0Yng=;
-        b=FP34bgI0xECy4leaU72u+dpyCRQbD3ZY4V3CTlq87CHfjnWVrdxuG/7I8PhV78g0pR
-         2UIvaXKhTWoW8exIjt4W93fvPornDwRy17Cbcsd+Z/UAMNGCZtG+dSvwBBAKseJCTxit
-         daY7ND/xF18MRmNFoSDH0j+Yzmi85nxJwWVS45qYNu8xlC1kxrBNM/aq3wsfzhc/r0n4
-         0bGDOADn1K/Bzi89awDUFW6jzdrMiMPTkDfeEFsQQTw1ErIzun2u1ZdUxWCsiSBaE1EX
-         7RJ6U/snCF4hHzZjweaQtifQdYNy9SU/L9u6O7WPu9fOodVgFGZsYjf8dxspBJj6+EJc
-         sS2g==
-X-Forwarded-Encrypted: i=1; AFNElJ96yFJd+LHsV7afaq6vIc7m2Ce4xWzdUDFT/NEDq6SqXc7qSpF80fuYMl1P70Lui4V5LYrrbl7N30D+@vger.kernel.org
-X-Gm-Message-State: AOJu0Yw5xIKMmu4Ov01Py3tPLT2wi+yUCHbE34ES+GLVLAWka32Hy+pO
-	BabRBi+/jAh5w9tjnujWIu47czTogpOOQSuaJZJ9P0GGSD452tF1QeCAJiO/8mxM
-X-Gm-Gg: Acq92OFR0kePN7CsbIFhvtmnwuEsDks0nEvLI81G3QhL+rYiuoJzZpWQb+vzzl3heq0
-	ekj9/SmHospU7LHFMlWH+cNQEFLM0TcCVKdcUkfPDCNytDGhhRylbwW9ZZyR19bfMMIkFiF4LhN
-	9q+8PdFtWz76XZanPbATBc7m5I5AH3j0P/vhtAvmj1huHmaSqLNONJHUbe6O1bEFqFtLAG6F2xz
-	uptEYd1xegq3aAwdVylUxE7+7S91JjrI/+E+0oRmt+N3np1Rfhc4L4gNBSmehssVWKlI6z3NJ8A
-	pySN/dFZ8y64he+ZJgMQ8QdimF633KyDdBA4XGdT2WpIUwjo8pkTHshFTKv7LGunqwFWt/pY2IF
-	cSJmJRHYL15vXWhdzmCrXIsL5P2v5a4DtS//kFKHa92uME7jQoLEfJTtnKnYEtnc7GC7fR8iV+k
-	mWCcwAmAo3B4NRoFt1qhlLy+t8ncbkswlg
-X-Received: by 2002:a05:6000:299c:20b0:45e:7418:a3f2 with SMTP id ffacd0b85a97d-46021846dc0mr9148505f8f.26.1780579204445;
-        Thu, 04 Jun 2026 06:20:04 -0700 (PDT)
-Received: from localhost ([94.53.77.213])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-4602cda3651sm3398435f8f.32.2026.06.04.06.20.03
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 04 Jun 2026 06:20:04 -0700 (PDT)
-From: Catalin Iacob <iacobcatalin@gmail.com>
-Date: Thu, 04 Jun 2026 16:20:29 +0300
-Subject: [PATCH v3 6/6] sparc: Remove remaining defconfig references to the
- pktcdvd driver
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="WydqHRS6"
+X-UUID: 32221704601a11f1b1788b6acf885367-20260604
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+	h=Content-Type:Content-Transfer-Encoding:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=y62SA2SsKPoSYZRzV69KTgT+7aqhJBWj89zXq315zyE=;
+	b=WydqHRS6vu8OEWeqPs5Ejm2tHyWdy8twkM7UXgt51Nw071z+wM68ti6VUtnfG8ibnrW8Yt91hrLlGeRKcKfHShqQbNTQ15tvXSMHsIYAIgy2/YTj1eFuLzp9U1O+wYhhXrmrLErdi1frkYnZUHInT1VuIAiWNtn8pGWjIE7zyOk=;
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.3.15,REQID:240823cc-87e8-42a6-8a2f-0ffc1f1db791,IP:0,U
+	RL:0,TC:0,Content:-5,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION
+	:release,TS:-5
+X-CID-META: VersionHash:e276073,CLOUDID:cd594b2a-13d2-4d29-83ea-b8014339a000,B
+	ulkID:nil,BulkQuantity:0,Recheck:0,SF:102|123|836|865|888|898,TC:-5,Conten
+	t:0|15|50,EDM:-3,IP:nil,URL:0,File:130,RT:0,Bulk:nil,QS:nil,BEC:-1,COL:0,O
+	SI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-BVR: 2,SSN|SDN
+X-CID-BAS: 2,SSN|SDN,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR
+X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
+X-UUID: 32221704601a11f1b1788b6acf885367-20260604
+Received: from mtkmbs14n1.mediatek.inc [(172.21.101.75)] by mailgw01.mediatek.com
+	(envelope-from <peter.wang@mediatek.com>)
+	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+	with ESMTP id 1684318082; Thu, 04 Jun 2026 21:35:05 +0800
+Received: from mtkmbs13n2.mediatek.inc (172.21.101.108) by
+ MTKMBS09N2.mediatek.inc (172.21.101.94) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.29; Thu, 4 Jun 2026 21:35:04 +0800
+Received: from mtksitap99.mediatek.inc (10.233.130.16) by
+ mtkmbs13n2.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
+ 15.2.2562.29 via Frontend Transport; Thu, 4 Jun 2026 21:35:04 +0800
+From: <peter.wang@mediatek.com>
+To: <linux-scsi@vger.kernel.org>, <martin.petersen@oracle.com>,
+	<avri.altman@wdc.com>, <alim.akhtar@samsung.com>, <jejb@linux.ibm.com>
+CC: <wsd_upstream@mediatek.com>, <linux-mediatek@lists.infradead.org>,
+	<peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
+	<alice.chao@mediatek.com>, <cc.chou@mediatek.com>,
+	<chaotian.jing@mediatek.com>, <tun-yu.yu@mediatek.com>,
+	<eddie.huang@mediatek.com>, <naomi.chu@mediatek.com>, <ed.tsai@mediatek.com>,
+	<bvanassche@acm.org>
+Subject: [PATCH v1] ufs: core: Remove unnecessary block I/O quiesce for clock scaling
+Date: Thu, 4 Jun 2026 21:33:58 +0800
+Message-ID: <20260604133503.2049288-1-peter.wang@mediatek.com>
+X-Mailer: git-send-email 2.45.2
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20260604-remove-pktcdvd-references-v3-6-e2f06fb4eef4@gmail.com>
-References: <20260604-remove-pktcdvd-references-v3-0-e2f06fb4eef4@gmail.com>
-In-Reply-To: <20260604-remove-pktcdvd-references-v3-0-e2f06fb4eef4@gmail.com>
-To: Thomas Bogendoerfer <tsbogend@alpha.franken.de>, 
- Madhavan Srinivasan <maddy@linux.ibm.com>, 
- Michael Ellerman <mpe@ellerman.id.au>, Nicholas Piggin <npiggin@gmail.com>, 
- "Christophe Leroy (CS GROUP)" <chleroy@kernel.org>, 
- Rich Felker <dalias@libc.org>, 
- John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>, 
- "David S. Miller" <davem@davemloft.net>, 
- Andreas Larsson <andreas@gaisler.com>, 
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
- "Martin K. Petersen" <martin.petersen@oracle.com>, 
- Jens Axboe <axboe@kernel.dk>, Yoshinori Sato <ysato@users.sourceforge.jp>
-Cc: linux-mips@vger.kernel.org, linux-kernel@vger.kernel.org, 
- linuxppc-dev@lists.ozlabs.org, linux-sh@vger.kernel.org, 
- sparclinux@vger.kernel.org, linux-scsi@vger.kernel.org, 
- Catalin Iacob <iacobcatalin@gmail.com>
-X-Mailer: b4 0.16-dev
-X-Developer-Signature: v=1; a=openpgp-sha256; l=746; i=iacobcatalin@gmail.com;
- h=from:subject:message-id; bh=T2wQkK65vboZ4IeGnr4NbeD+9D8laMYxlcwY9lW95Qo=;
- b=owGbwMvMwCX261qtXAKXKjvjabUkhizF6vUry7hfsO25sPz06cyFgXWfhXOy1B3f+N6v/xxft
- T7rWuWjjlIWBjEuBlkxRZYX5663bdhzJuBekl0LzBxWJpAhDFycAjCRvxkM/8PWMczLnZQ1MVVk
- 61zh9Gc8zi+v3191c++BLfadB9vXLZzB8M+6u/j1BddEqaaNtVEqK99Nb7E/mlw1+8ssJ3HGyv3
- 3njIAAA==
-X-Developer-Key: i=iacobcatalin@gmail.com; a=openpgp;
- fpr=F609BFABD84EB5C9DDDC37EDE89C6A3571CD0E33
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-MTK: N
 
-Commit 1cea5180f2f8 ("block: remove pktcdvd driver") left behind some
-CONFIG_CONFIG_CDROM_PKTCDVD* references in defconfigs. Remove them.
+From: Peter Wang <peter.wang@mediatek.com>
 
-Signed-off-by: Catalin Iacob <iacobcatalin@gmail.com>
+According to the MIPI UniPro Specification v2.0:
+
+5.3.2.3 PA_DL_PAUSE.ind
+This primitive informs the PA Service User, the DL Layer in
+this case, that the PA Layer was requested to execute a
+operation that requires the usage of the Link, e.g. Power
+Mode change or PACP frame transmission.
+
+5.3.2.4 PA_DL_PAUSE.rsp_L
+This primitive informs the Service Provider that the PA
+Service User, the DL Layer in this case, has reached
+a state where the Link may be used by the PA Layer.
+
+5.3.2.5 PA_DL_RESUME.ind
+This primitive informs the PA Service User, the DL Layer
+in this case, that the PA Layer has completed its operation
+and the DL Layer may continue to use the Link.
+
+The detailed flow can be found in Figure 52:
+Power Mode Change Using PACP_PWR_req and PACP_PWR_cnf.
+
+In short, when the PA layer do power mode change:
+1. The DL layer receives PA_DL_PAUSE.ind.
+2. The DL layer stops and responds to the PA layer with PA_DL_PAUSE.rsp_L.
+3. Waits until the PA layer has completed its work.
+4. The PA layer then informs the DL layer with PA_DL_RESUME.ind.
+
+Hence, it is not necessary to stop I/O during a power mode change,
+and this step can be removed.
+
+Signed-off-by: Peter Wang <peter.wang@mediatek.com>
 ---
- arch/sparc/configs/sparc64_defconfig | 2 --
- 1 file changed, 2 deletions(-)
+ drivers/ufs/core/ufshcd.c | 10 +++-------
+ 1 file changed, 3 insertions(+), 7 deletions(-)
 
-diff --git a/arch/sparc/configs/sparc64_defconfig b/arch/sparc/configs/sparc64_defconfig
-index 632081a262ba..4abea39281cd 100644
---- a/arch/sparc/configs/sparc64_defconfig
-+++ b/arch/sparc/configs/sparc64_defconfig
-@@ -60,8 +60,6 @@ CONFIG_CONNECTOR=m
- CONFIG_BLK_DEV_LOOP=m
- CONFIG_BLK_DEV_CRYPTOLOOP=m
- CONFIG_BLK_DEV_NBD=m
--CONFIG_CDROM_PKTCDVD=m
--CONFIG_CDROM_PKTCDVD_WCACHE=y
- CONFIG_ATA_OVER_ETH=m
- CONFIG_SUNVDC=m
- CONFIG_ATA=y
-
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index c3f08957d179..b979f5105eb5 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -1468,7 +1468,7 @@ static int ufshcd_scale_gear(struct ufs_hba *hba, u32 target_gear, bool scale_up
+  *
+  * Return: 0 upon success; -EBUSY upon timeout.
+  */
+-static int ufshcd_clock_scaling_prepare(struct ufs_hba *hba, u64 timeout_us)
++static int ufshcd_clock_scaling_prepare(struct ufs_hba *hba)
+ {
+ 	int ret = 0;
+ 	/*
+@@ -1476,16 +1476,13 @@ static int ufshcd_clock_scaling_prepare(struct ufs_hba *hba, u64 timeout_us)
+ 	 * clock scaling is in progress
+ 	 */
+ 	mutex_lock(&hba->host->scan_mutex);
+-	blk_mq_quiesce_tagset(&hba->host->tag_set);
+ 	mutex_lock(&hba->wb_mutex);
+ 	down_write(&hba->clk_scaling_lock);
+ 
+-	if (!hba->clk_scaling.is_allowed ||
+-	    ufshcd_wait_for_pending_cmds(hba, timeout_us)) {
++	if (!hba->clk_scaling.is_allowed) {
+ 		ret = -EBUSY;
+ 		up_write(&hba->clk_scaling_lock);
+ 		mutex_unlock(&hba->wb_mutex);
+-		blk_mq_unquiesce_tagset(&hba->host->tag_set);
+ 		mutex_unlock(&hba->host->scan_mutex);
+ 		goto out;
+ 	}
+@@ -1501,7 +1498,6 @@ static void ufshcd_clock_scaling_unprepare(struct ufs_hba *hba, int err)
+ {
+ 	up_write(&hba->clk_scaling_lock);
+ 	mutex_unlock(&hba->wb_mutex);
+-	blk_mq_unquiesce_tagset(&hba->host->tag_set);
+ 	mutex_unlock(&hba->host->scan_mutex);
+ 
+ 	/* Enable Write Booster if current gear requires it else disable it */
+@@ -1529,7 +1525,7 @@ static int ufshcd_devfreq_scale(struct ufs_hba *hba, unsigned long freq,
+ 
+ 	new_gear = ufshcd_vops_freq_to_gear_speed(hba, freq);
+ 
+-	ret = ufshcd_clock_scaling_prepare(hba, 1 * USEC_PER_SEC);
++	ret = ufshcd_clock_scaling_prepare(hba);
+ 	if (ret)
+ 		return ret;
+ 
 -- 
-2.54.0
+2.45.2
 
