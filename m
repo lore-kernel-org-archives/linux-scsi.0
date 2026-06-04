@@ -1,109 +1,178 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-lf1-f50.google.com (mail-lf1-f50.google.com [209.85.167.50])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C832047ECD3;
-	Thu,  4 Jun 2026 16:54:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780592060; cv=none; b=upMxKgZ4UTqGvdkFjpqNXdULNGGJVTQ9r28CrVjqGm5KcRuKN0Ov2eEMUM/JUbLTF+iaLKL9w09eH6EMT00QQXbKNOZmsTTg1hHASds1N97pNLmWW++C3KSwU1W2f9Z45y1MDha9aJijS0jhwkzryY+KMQ2TAHolMR2VbEYBTK4=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780592060; c=relaxed/simple;
-	bh=83d5YF6a6JOKUupQqWa0hRM85HFEO+nv3nmMh2owUgM=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=q7ucGrtSBxoycX8Fu45snb8444tEIVhNqepzuPz0efA3d2P3PVxICyB4Kn49vbwOMbyPKimdjOx+5yifRcJNgYBDqIJntrQP8Pd3RKeA8a/S8Ingj0Fre35Oj6vxHRtnBdBp02qS8NqUxQGzadzXuJHvnM4GS+LhnmMILVO+fBg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CcRCHvx7; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3C5FD25B098
+	for <linux-scsi@vger.kernel.org>; Thu,  4 Jun 2026 18:33:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.167.50
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1780598003; cv=pass; b=TLmwuqaz+/DwWHwMrKglNWVTxvO0ma7L5kQRjJwN8IZSEu6OFwp4s094uoZR+NA3uPu+r9B0kPzC2Awd4Y3uEaq3gQEt050lvgwVOcXVey4jmwqnrgI/vUVt132gNXTd5644CXLLHPURtHIVYyMvHDnbwoJeFNGnJHo34VBdsLU=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1780598003; c=relaxed/simple;
+	bh=oMDSYTH3vXxx750YzjzDtvEQHOAZ3c0ZtF9U+ZOlB28=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=Nx6AnzM1vHH6yQlK5dtv9qq1s3CKjGSUOwiTVI4dfOUUgneRFc82354MMjeGeATT+JXIf7gG13v1e7mGSEnooHjsryEyLIhA5H3FcL78Il1z2EJFKcfSD7QXzo9XbIuYcVC9PFjcqEe1AxPHhm10v9UIKXoZfJzwv3vMKIXF11E=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=trailofbits.com; spf=pass smtp.mailfrom=trailofbits.com; dkim=pass (2048-bit key) header.d=trailofbits.com header.i=@trailofbits.com header.b=czoly+SI; arc=pass smtp.client-ip=209.85.167.50
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=trailofbits.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=trailofbits.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CcRCHvx7"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5814B1F00893;
-	Thu,  4 Jun 2026 16:54:12 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1780592059;
-	bh=bo2GyEEy4xu6h2H9g7kvuBasTAj9M2iEdezOrFMAt+Q=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=CcRCHvx7XiMId89uyow5kX116ZvFiy0M/OECHIPm3B2TG7cbu7iPpNfhuRfxpYUkR
-	 FUEWihCfCFcA/H8rjaVSIJj/3zqRYUKNHAg9tBLG80lZFaMnJ3Xzb6Tpge74OAAquC
-	 pLgmD7+/JJl2jiAM2JENE9gc9hPAfz177ONk36EXb+PxJAwr9b+uXn4pDOoIqfvcJV
-	 7rS0fVi95fd3USSxC3GiE0hW3lluDnSOLIBAfb/2h0t13NndIyVwPjnk1P4s5HtOlK
-	 2LBIpG6hy0O49JyybV8nQsjPLT1Nsje2kxChW7AHq8DK7vQla0l6y8ruknMLGfDm8N
-	 FQSEWU87XQj8A==
-Message-ID: <6fb5fe06-e1b3-429e-8631-6420b1190a80@kernel.org>
-Date: Thu, 4 Jun 2026 18:54:10 +0200
+	dkim=pass (2048-bit key) header.d=trailofbits.com header.i=@trailofbits.com header.b="czoly+SI"
+Received: by mail-lf1-f50.google.com with SMTP id 2adb3069b0e04-5aa5edf347eso711359e87.3
+        for <linux-scsi@vger.kernel.org>; Thu, 04 Jun 2026 11:33:21 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1780598000; cv=none;
+        d=google.com; s=arc-20240605;
+        b=TuLRwss1L+PN1OXjqRiurE+jedSp4i/j00jU8ZOe5ufGrlAVVxhMr+Ny4ysC0/Jugn
+         ltjatPwr23xFvTCSfV9pHKzyugBVUDh8bH7dg2RF0yWE/qxh6wSuOyOIFIDEj5leP9Hw
+         kyciPD4oP6nhOvyYPdcwAhT1/8YOEmeWdtxx/aFea5FzYtzEzI6OD1jD10H0tZY764CI
+         aKwXUMvRbRqsnDqBHbYfDw5lFAqFjS3T57SSPmWlbyS1hWAdWGuOzF/VpHwNRA4ZaETi
+         /aHoWUNf7bsqe8Ejdwn8oTCyvH+bM86idtX6ukZpuVH+aV6im1phENbQHoyU6S+5LKA9
+         Pwdw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=FMBBNVyyWUX8SOTnPk3dJHwEcA4PwzlXJ8JPotT6/PE=;
+        fh=EBeU+Ep+lvgSEfh51eKQY7YytSptfcv+8xhSodSRFfw=;
+        b=XXir7PeqEihfCsHpOu174cuk3zg6sLpq+yETlvxa5sEPLOka4m3Hwdur6ixZfRBuAP
+         ApF9LkeBH1aiHvE5F1ODqCjAlB68zdwWOYHjlg011GvdHHeV9Hrz3OSE4ciXOuukbd+Y
+         sUHmGnKMJsq8HKf8oInqwcliwzU85jOCYaPuMzdUizYBJjYBw6kE+UqmDWZ7iuN6CTGs
+         NPu0CcIbKuZh4w2PGZVfRf4ISM60PR7+GqTQOv1jEG0ru36pBpB9/FM0XPxpt5HunjTM
+         3nJcLXdAwDJNZmgj56Z6nhcX2bGSZbMF6gGwOt7lHCfYzFmB4ImqXanxRHc2Tuumaj3H
+         dB2Q==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=trailofbits.com; s=google; t=1780598000; x=1781202800; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=FMBBNVyyWUX8SOTnPk3dJHwEcA4PwzlXJ8JPotT6/PE=;
+        b=czoly+SIU3QgFdfAv28Cusd8eGmAHdDXEEdswwaAINn0GeJldVshO58QZGM7S2zyLC
+         lnMlUW/IdlE0JR+BKUJqAsI7gv8N8qYhK38X8l6I9eTfEd9K0conmOfrqunyjKcwcClT
+         q8SToEKtpyQdfyXgvCiHMg0+LY+Wc61qdZ3rm26qkdZ69HyOP06LVCw9VqhmMuSc8JDa
+         n35GoBc5ZYztAZAjWYDlIzCxOb4c4tlTDpUPyCjXGjUQIDDPdASpr2QiIn0ziAHA30Yz
+         DefWc71dj0/+R2CRn/ky+4logy90CAuGR5smcUUNdAvBXZnwNI5ZOlqcUeOIZCy3FG7e
+         INqg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1780598000; x=1781202800;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=FMBBNVyyWUX8SOTnPk3dJHwEcA4PwzlXJ8JPotT6/PE=;
+        b=PJ2Charw8JauDoUJTaSAVYMj4ryhypTIvEnQiTpFnB+JCVYeHXAbb2tc/b0jGgbK9n
+         ZT7pkWM1+9I4olBBV/dOfuBuDgPAwcWOaxvQH5zVKiYKNI2D4LiXvLFbNSS5c42n44Rk
+         HEnd5YOkGTtHO0SVmEQeEtM51Sly0z8QDbNRJvKGtbVoIL9QwfQHNlpi0LjnKFMlAPwL
+         31VG9IYK6TcJ03E2m0W8pO0vCOJBrSTMeiEyg/3LW0GhTgX/MK8w9XXLykzkVytcSbrY
+         D0gyuDYMY+oU/YqUy057XkHJ0QsAwAFwJrBfE7HV4GqdA3IaOJ2gA9f9LT/drQG1rjdq
+         N4qQ==
+X-Forwarded-Encrypted: i=1; AFNElJ/pCzjYLE6cKC939zyd4Si5DgMG4TLZOZTZ+xkHy8tkexhoRYcdsgl9vCBE/lkmpH843R6nNnWdIjE0@vger.kernel.org
+X-Gm-Message-State: AOJu0YzqsXti97vJNNCElw61Maj42D5DgdvFJYkEPpla6t4QzyiULOKh
+	7HBYYv+bTGLIPBI5Jm4xtR9igaIY/PtTbTVkTtTZKxRJVbHbLDmNoxSBepVGrIEqIyi8VS0fxYj
+	q7GIY6CIqadMB/WRIbTzKjkk81tyBQiqaE0FjuCh3JQ==
+X-Gm-Gg: Acq92OFaP9VQLRRq4fCnPGzC461O8E4i8OzYk+mq99BzTi8xOACHacoTPUzXM4AD4kC
+	Ywy9wwKbLAVjPlCoPsrbqGR98SJ3hu0dkZ4eQkryiqg2/JXVyYrsUzdJcV1STUYK5e74Ln0tm7f
+	nbIPhofUhDsGYG9HmgyeDx6YiIdXoUNcEmiZHZ596Up+F88KqrOhvxUf6Syzh9dpU7+IygJ+mMM
+	XOoa12UsLi5QbS6J4GmxBj1587nC/toYOTHfk8TMDz93dn83OYMxqJHpI/9q9E0/G2mfEGbBSVz
+	9OlP7upU2mVKdIJO
+X-Received: by 2002:a05:6512:15a4:b0:5aa:6eca:f382 with SMTP id
+ 2adb3069b0e04-5aa87b76dc4mr11807e87.11.1780598000460; Thu, 04 Jun 2026
+ 11:33:20 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 1/3] dt-bindings: phy: qcom,sc8280xp-qmp-ufs-phy: Add
- Hawi UFS PHY compatible
-To: palash.kambar@oss.qualcomm.com, vkoul@kernel.org,
- neil.armstrong@linaro.org, robh@kernel.org, krzk+dt@kernel.org,
- conor+dt@kernel.org, mani@kernel.org, alim.akhtar@samsung.com,
- bvanassche@acm.org, andersson@kernel.org, dmitry.baryshkov@oss.qualcomm.com,
- abel.vesa@oss.qualcomm.com, luca.weiss@fairphone.com
-Cc: linux-arm-msm@vger.kernel.org, linux-phy@lists.infradead.org,
- devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-scsi@vger.kernel.org, nitin.rawat@oss.qualcomm.com
-References: <20260526090956.2340262-1-palash.kambar@oss.qualcomm.com>
- <20260526090956.2340262-2-palash.kambar@oss.qualcomm.com>
-From: Krzysztof Kozlowski <krzk@kernel.org>
-Content-Language: en-US
-Autocrypt: addr=krzk@kernel.org; keydata=
- xsFNBFVDQq4BEAC6KeLOfFsAvFMBsrCrJ2bCalhPv5+KQF2PS2+iwZI8BpRZoV+Bd5kWvN79
- cFgcqTTuNHjAvxtUG8pQgGTHAObYs6xeYJtjUH0ZX6ndJ33FJYf5V3yXqqjcZ30FgHzJCFUu
- JMp7PSyMPzpUXfU12yfcRYVEMQrmplNZssmYhiTeVicuOOypWugZKVLGNm0IweVCaZ/DJDIH
- gNbpvVwjcKYrx85m9cBVEBUGaQP6AT7qlVCkrf50v8bofSIyVa2xmubbAwwFA1oxoOusjPIE
- J3iadrwpFvsZjF5uHAKS+7wHLoW9hVzOnLbX6ajk5Hf8Pb1m+VH/E8bPBNNYKkfTtypTDUCj
- NYcd27tjnXfG+SDs/EXNUAIRefCyvaRG7oRYF3Ec+2RgQDRnmmjCjoQNbFrJvJkFHlPeHaeS
- BosGY+XWKydnmsfY7SSnjAzLUGAFhLd/XDVpb1Een2XucPpKvt9ORF+48gy12FA5GduRLhQU
- vK4tU7ojoem/G23PcowM1CwPurC8sAVsQb9KmwTGh7rVz3ks3w/zfGBy3+WmLg++C2Wct6nM
- Pd8/6CBVjEWqD06/RjI2AnjIq5fSEH/BIfXXfC68nMp9BZoy3So4ZsbOlBmtAPvMYX6U8VwD
- TNeBxJu5Ex0Izf1NV9CzC3nNaFUYOY8KfN01X5SExAoVTr09ewARAQABzSVLcnp5c3p0b2Yg
- S296bG93c2tpIDxrcnprQGtlcm5lbC5vcmc+wsGVBBMBCgA/AhsDBgsJCAcDAgYVCAIJCgsE
- FgIDAQIeAQIXgBYhBJvQfg4MUfjVlne3VBuTQ307QWKbBQJoF1BKBQkWlnSaAAoJEBuTQ307
- QWKbHukP/3t4tRp/bvDnxJfmNdNVn0gv9ep3L39IntPalBFwRKytqeQkzAju0whYWg+R/rwp
- +r2I1Fzwt7+PTjsnMFlh1AZxGDmP5MFkzVsMnfX1lGiXhYSOMP97XL6R1QSXxaWOpGNCDaUl
- ajorB0lJDcC0q3xAdwzRConxYVhlgmTrRiD8oLlSCD5baEAt5Zw17UTNDnDGmZQKR0fqLpWy
- 786Lm5OScb7DjEgcA2PRm17st4UQ1kF0rQHokVaotxRM74PPDB8bCsunlghJl1DRK9s1aSuN
- hL1Pv9VD8b4dFNvCo7b4hfAANPU67W40AaaGZ3UAfmw+1MYyo4QuAZGKzaP2ukbdCD/DYnqi
- tJy88XqWtyb4UQWKNoQqGKzlYXdKsldYqrLHGoMvj1UN9XcRtXHST/IaLn72o7j7/h/Ac5EL
- 8lSUVIG4TYn59NyxxAXa07Wi6zjVL1U11fTnFmE29ALYQEXKBI3KUO1A3p4sQWzU7uRmbuxn
- naUmm8RbpMcOfa9JjlXCLmQ5IP7Rr5tYZUCkZz08LIfF8UMXwH7OOEX87Y++EkAB+pzKZNNd
- hwoXulTAgjSy+OiaLtuCys9VdXLZ3Zy314azaCU3BoWgaMV0eAW/+gprWMXQM1lrlzvwlD/k
- whyy9wGf0AEPpLssLVt9VVxNjo6BIkt6d1pMg6mHsUEVzsFNBFVDXDQBEADNkrQYSREUL4D3
- Gws46JEoZ9HEQOKtkrwjrzlw/tCmqVzERRPvz2Xg8n7+HRCrgqnodIYoUh5WsU84N03KlLue
- MNsWLJBvBaubYN4JuJIdRr4dS4oyF1/fQAQPHh8Thpiz0SAZFx6iWKB7Qrz3OrGCjTPcW6ei
- OMheesVS5hxietSmlin+SilmIAPZHx7n242u6kdHOh+/SyLImKn/dh9RzatVpUKbv34eP1wA
- GldWsRxbf3WP9pFNObSzI/Bo3kA89Xx2rO2roC+Gq4LeHvo7ptzcLcrqaHUAcZ3CgFG88CnA
- 6z6lBZn0WyewEcPOPdcUB2Q7D/NiUY+HDiV99rAYPJztjeTrBSTnHeSBPb+qn5ZZGQwIdUW9
- YegxWKvXXHTwB5eMzo/RB6vffwqcnHDoe0q7VgzRRZJwpi6aMIXLfeWZ5Wrwaw2zldFuO4Dt
- 91pFzBSOIpeMtfgb/Pfe/a1WJ/GgaIRIBE+NUqckM+3zJHGmVPqJP/h2Iwv6nw8U+7Yyl6gU
- BLHFTg2hYnLFJI4Xjg+AX1hHFVKmvl3VBHIsBv0oDcsQWXqY+NaFahT0lRPjYtrTa1v3tem/
- JoFzZ4B0p27K+qQCF2R96hVvuEyjzBmdq2esyE6zIqftdo4MOJho8uctOiWbwNNq2U9pPWmu
- 4vXVFBYIGmpyNPYzRm0QPwARAQABwsF8BBgBCgAmAhsMFiEEm9B+DgxR+NWWd7dUG5NDfTtB
- YpsFAmgXUF8FCRaWWyoACgkQG5NDfTtBYptO0w//dlXJs5/42hAXKsk+PDg3wyEFb4NpyA1v
- qmx7SfAzk9Hf6lWwU1O6AbqNMbh6PjEwadKUk1m04S7EjdQLsj/MBSgoQtCT3MDmWUUtHZd5
- RYIPnPq3WVB47GtuO6/u375tsxhtf7vt95QSYJwCB+ZUgo4T+FV4hquZ4AsRkbgavtIzQisg
- Dgv76tnEv3YHV8Jn9mi/Bu0FURF+5kpdMfgo1sq6RXNQ//TVf8yFgRtTUdXxW/qHjlYURrm2
- H4kutobVEIxiyu6m05q3e9eZB/TaMMNVORx+1kM3j7f0rwtEYUFzY1ygQfpcMDPl7pRYoJjB
- dSsm0ZuzDaCwaxg2t8hqQJBzJCezTOIkjHUsWAK+tEbU4Z4SnNpCyM3fBqsgYdJxjyC/tWVT
- AQ18NRLtPw7tK1rdcwCl0GFQHwSwk5pDpz1NH40e6lU+NcXSeiqkDDRkHlftKPV/dV+lQXiu
- jWt87ecuHlpL3uuQ0ZZNWqHgZoQLXoqC2ZV5KrtKWb/jyiFX/sxSrodALf0zf+tfHv0FZWT2
- zHjUqd0t4njD/UOsuIMOQn4Ig0SdivYPfZukb5cdasKJukG1NOpbW7yRNivaCnfZz6dTawXw
- XRIV/KDsHQiyVxKvN73bThKhONkcX2LWuD928tAR6XMM2G5ovxLe09vuOzzfTWQDsm++9UKF a/A=
-In-Reply-To: <20260526090956.2340262-2-palash.kambar@oss.qualcomm.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+References: <20260603235616.124535-1-sam.moelius@trailofbits.com> <6d2e78e6a5840f5892e7eb081657b23aa62bc50d.camel@HansenPartnership.com>
+In-Reply-To: <6d2e78e6a5840f5892e7eb081657b23aa62bc50d.camel@HansenPartnership.com>
+From: Samuel Moelius <sam.moelius@trailofbits.com>
+Date: Thu, 4 Jun 2026 14:33:09 -0400
+X-Gm-Features: AVHnY4LD3pkiYKZ7fNmSUUSjU2S3PT1PsKvK4xcHx49ubGuvEYgRrydimR-dFo0
+Message-ID: <CAE+C+DbpB6UP29WTNGgrnYqhazEC5=5ErNJiChrDz8sygC_-0w@mail.gmail.com>
+Subject: Re: [PATCH v2] scsi: scsi_debug: fix one-partition tape setup bounds
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, 
+	"open list:SCSI SUBSYSTEM" <linux-scsi@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On 26/05/2026 11:09, palash.kambar@oss.qualcomm.com wrote:
-> From: Palash Kambar <palash.kambar@oss.qualcomm.com>
-> 
-> Document QMP UFS PHY compatible for Hawi SoC.
-> 
+On Thu, Jun 4, 2026 at 9:38=E2=80=AFAM James Bottomley
+<James.Bottomley@hansenpartnership.com> wrote:
+>
+> On Wed, 2026-06-03 at 23:55 +0000, Samuel Moelius wrote:
+> > The tape setup path writes partition metadata one element past the
+> > allocated tape_blocks array when a one-partition configuration is
+> > selected.
+> >
+> > That corrupts adjacent state during device initialization before any
+> > command is issued.
+>
+> I still don't get what the actual problem is.  For a single partition
+> tape I can't see where scsi_debug would actually do anything with
+> tape_blocks[1].  What is it that you're seeing when using scsi_debug
+> that motivates this?
 
+The bug is a kernel OOB write. I can share a PoC if desired. The PoC
+sends this SCSI command through /dev/sgN:
 
-Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
+    unsigned char format_medium[6] =3D { 0x04, 0, 0, 0, 0, 0 };
 
-Best regards,
-Krzysztof
+    rc =3D sg_cmd(fd, "format_medium_one_partition",
+                format_medium, sizeof(format_medium));
+
+Inside sg_cmd(), that becomes an SG_IO ioctl:
+
+    hdr.interface_id =3D 'S';
+    hdr.dxfer_direction =3D SG_DXFER_NONE;
+    hdr.cmd_len =3D cdb_len;
+    hdr.cmdp =3D cdb;
+    hdr.timeout =3D 10000;
+
+    ioctl(fd, SG_IO, &hdr);
+
+For scsi_debug tape devices, opcode 0x04 dispatches here:
+
+    { 0, 0x4, 0, DS_SSC, 0, resp_format_medium, NULL,
+      /* FORMAT MEDIUM (6) */ }
+
+resp_format_medium() sees cmd[2] =3D=3D 0, meaning the default
+one-partition format path:
+
+    if (cmd[2] !=3D 0) {
+            ...
+    } else {
+            res =3D partition_tape(devip, 1, TAPE_UNITS, 0);
+    }
+
+So partition_tape() is called with:
+
+    nbr_partitions =3D 1
+    part_0_size    =3D TAPE_UNITS =3D 10000
+    part_1_size    =3D 0
+
+The unpatched code only checked total size:
+
+    if (part_0_size + part_1_size > TAPE_UNITS)
+            return -1;
+
+That passes:
+
+    10000 + 0 =3D=3D 10000
+
+Then it initializes partition 0:
+
+    devip->tape_eop[0] =3D part_0_size;
+    devip->tape_blocks[0]->fl_size =3D TAPE_BLOCK_EOD_FLAG;
+
+Then the bug: it initializes partition 1 even though there is only one
+partition:
+
+    devip->tape_eop[1] =3D part_1_size;
+    devip->tape_blocks[1] =3D devip->tape_blocks[0] +
+                            devip->tape_eop[0];
+    devip->tape_blocks[1]->fl_size =3D TAPE_BLOCK_EOD_FLAG;
+
+Because devip->tape_eop[0] =3D=3D 10000, this computes:
+
+    devip->tape_blocks[1] =3D devip->tape_blocks[0] + 10000
+
+But the allocation has only 10000 elements. So this write is one
+element past the allocation.
