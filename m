@@ -1,66 +1,66 @@
-Received: from mail-wr1-f43.google.com (mail-wr1-f43.google.com [209.85.221.43])
+Received: from mail-wr1-f49.google.com (mail-wr1-f49.google.com [209.85.221.49])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E8A447DFBE
-	for <linux-scsi@vger.kernel.org>; Thu,  4 Jun 2026 13:20:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.43
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C51947ECF0
+	for <linux-scsi@vger.kernel.org>; Thu,  4 Jun 2026 13:20:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.49
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780579206; cv=none; b=KXudeHaGGi0Y1rjprlOrBXcbzsgsfpvzYt2N1Z/sVYEGJ7McKaSLUZY4NQCeMEMoBxnjdQ+gsBiIYX8OsdL4Tbsy/MbdeX4UGT4IxFIyI3xRbRfM7wXxXRG7e11NhXbc75YtiW36cv47ZxZzUxqjU4cyLU/giHiMNCeq5+TYepY=
+	t=1780579209; cv=none; b=JE7tqG5pWPMLQPcFdp8GHGsoknFoYNiwW0z8Z0jHzVAz/yxbgmX4APl1//G8ndjbJwU3h+mtUw8osrPq5mfQ3Q4A60QyjoI8zR9hFbI5yuB9maj1w6rlhrtuuw3jHwmote0wx1rAoUAU5g5LY+/Ovj1tva9qB8J4RCSNPcU9KnU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780579206; c=relaxed/simple;
-	bh=qLq31BYjVwoita8p3VYbMVHsnGBFQquUbQzcOZAQW8k=;
+	s=arc-20240116; t=1780579209; c=relaxed/simple;
+	bh=T2wQkK65vboZ4IeGnr4NbeD+9D8laMYxlcwY9lW95Qo=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=X9O3yoY1pVzPpWSEblLaROtP1OBsZB01q+k5nk48+2aE9mNCa+HX9pK3Qv+LxOj+VGXh4QekUnwgitdSAMJdcWN00OOcKmyjzPvyMCw6VzLFzKopxKz9BGw1HZdbH8ZvotoYntQvRvyr05pE9e+nVnJ/cY9bGwFfD7mcjAxpc7A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=i2ujJrb1; arc=none smtp.client-ip=209.85.221.43
+	 In-Reply-To:To:Cc; b=W5QIl9TpYe1kAU4sPQs+L1p3iDW27mYRkQUwdbLcq+8iPy2W3EYL6gdoYel7J6zd7cog5Ls0p3TrLplxMqNoMBuT/xdunG5XuZ15E2D/INYz6SQsQA6Lsik3upIOOmBjWJ9CK1sMLWSWnrQF/rYX0GdNSX5LpK2TOfgG1lWi9o0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=U/MSGcKj; arc=none smtp.client-ip=209.85.221.49
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="i2ujJrb1"
-Received: by mail-wr1-f43.google.com with SMTP id ffacd0b85a97d-4600cbb06deso407438f8f.1
-        for <linux-scsi@vger.kernel.org>; Thu, 04 Jun 2026 06:20:03 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="U/MSGcKj"
+Received: by mail-wr1-f49.google.com with SMTP id ffacd0b85a97d-45eec22fab7so389184f8f.3
+        for <linux-scsi@vger.kernel.org>; Thu, 04 Jun 2026 06:20:06 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1780579202; x=1781184002; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1780579204; x=1781184004; darn=vger.kernel.org;
         h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
          :mime-version:subject:date:from:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=fx/LUhwU/PuBYtkBp+ygwfhlhplOE7zsRH3troT6KA8=;
-        b=i2ujJrb1D9nO/hu9cDbPAjhHHqffMnDb38JHEUX+5GcLatPkLsKhFIfYlks2Wl22h4
-         dcEUw1W0YE/3jthQ3eg3mZJQlyoC2bliAPxptg0oGLnn7Yy6idbBe1YqbDTerkMfZMpy
-         vKCgmT8X2AgSOo7TTewzY/m8VQ/ld/fbrgBrUabZemG8Xa9zfEkrKqUNZENNGGn9EZSR
-         C0iHhx/5A798ar2ZDEzvzG2P11xY9BEd1jFIzrBU1YV/inbVmxJIG5pdlAibDoVuuCI0
-         k4ske8v9r+xL4MubZsrDnb1WErNVjmyButUPp1D2iV5gFEVreLaJBzDm9hDnwoj5218/
-         xzeA==
+        bh=nCy5icZAFPKbCxn3K3WrZKHkVhOrNfCywaz2Tw/0Yng=;
+        b=U/MSGcKjCOLpKGiwmb+hS6FzWFLCtJ6wvdYdnHQmDaSBnqFmO05w0ioUV+SrGfOxfF
+         XiRqqhlPMZ1EcHJ4AVLYrCWuZ19nM5c9AcKiolBT6t5zfbp3Ka13PBs7LwN+/DLBzrIH
+         9YU1JoXrNLqvIMsTiGYf5aaXp9bRVN4b8CClSaEeU3PdL3JnzaAGZy2Sb4kipcA26Pnc
+         i0Vli4Vi2svsdclzVrs04iNFpA9+tNH4DTezcyVnlM80DLdidU50PMXNojOfg7OyVIAm
+         ZELBI6wVqLhYrQiWM6Ie3WKfuyuUzZaM/DOzmhmzhP6/A+U8vOFeQE4RDz8LuYFmvrcT
+         nPwg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1780579202; x=1781184002;
+        d=1e100.net; s=20251104; t=1780579204; x=1781184004;
         h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
          :mime-version:subject:date:from:x-gm-gg:x-gm-message-state:from:to
          :cc:subject:date:message-id:reply-to;
-        bh=fx/LUhwU/PuBYtkBp+ygwfhlhplOE7zsRH3troT6KA8=;
-        b=cVDR689//HQ2+60pda6CaDRtPN75Y6dXqgoR0+6HOHbSHhXC5GARMoCvSREXuIgJi9
-         3v1Dn3c4PiPP4LuwDz8bGlNbQ5neTX9eTiGuyd+dHbRcJmuhz5XgJJM5Hq9redRUELkb
-         qDyFDfqEyG6CLqIFBqNl8sYAnLQ8e3IYdf494Ir+BpB45KLWgTJt9rt+GbdDfrPgmj0Q
-         A2QWa3HN/dd6c3PbrO+60aev2ry4h+09PTwt3DUH8jikrzHwfHoNAfuupQrG37z1JgsZ
-         ErPOKBIZd46LnG8N1uEdVczui2ZzV2E8d0O6W7EsVXqzqrwvb/ubE39TlRnzViBkEQJ/
-         JfHQ==
-X-Forwarded-Encrypted: i=1; AFNElJ9dLsRzY7R7EqB+vS9z1SWKE1jeJFbOEMtWCUbOicWO0mxxVFtVM09ZMdY2n0fgdF806BV9dO9bLjPI@vger.kernel.org
-X-Gm-Message-State: AOJu0Yye6nyV/S/2NjhREnIsCvEUZ2kyfdJFz8MBD9abH4TCXQWAl5sr
-	7K4jY4I5EVzcG2dch09F0v2RPelg7MlcoMNHjcA10wZ2pSzpsPwkm8uc
-X-Gm-Gg: Acq92OFFROK9UWnsapIJ/M5uSgp3Ua36R5URO7xudKe8+j1Orj8WRXChB2q+PbeMotc
-	jc50EvxwQvO4wicNPfCYJUv9QHon3K4q8BlNFFNRnPlNykuvC1DWbhQJZn8ubXaiOW2E0rGsFBk
-	5Axx5hsKzL3WqTN8XMzQPASy3e+axQLcF6Q43x9FOD0jQm2Yv7gC8OYFLXXV1vfeQ+iNJhYJDuh
-	63X3xTZBEHiA1Ry0jEmZfizyGfuBzkxzUOFuJNqYnMfE2knaYT1hGFBhAYH0tOOUOEvxovG3vwr
-	hhEVtpYpPhrAD3A0J5Igjp0REETdUosiz2jHV/Q50NHHmNQ4qqUTwhO0kuzXqhDFmhFrCo7MSd+
-	wqMt5+gnDFs7ifADDmpoTTvV9Ru0BpwCcks+bxE7heBwHG/MDnMtR+g9l3Fj8rdQQLIrKVv/Stf
-	irqLsoiCrLKJWvi4Yv5TxfmA2umeijMM2k
-X-Received: by 2002:adf:f9cb:0:b0:450:ad00:86aa with SMTP id ffacd0b85a97d-46027334f00mr4350905f8f.15.1780579201550;
-        Thu, 04 Jun 2026 06:20:01 -0700 (PDT)
+        bh=nCy5icZAFPKbCxn3K3WrZKHkVhOrNfCywaz2Tw/0Yng=;
+        b=FP34bgI0xECy4leaU72u+dpyCRQbD3ZY4V3CTlq87CHfjnWVrdxuG/7I8PhV78g0pR
+         2UIvaXKhTWoW8exIjt4W93fvPornDwRy17Cbcsd+Z/UAMNGCZtG+dSvwBBAKseJCTxit
+         daY7ND/xF18MRmNFoSDH0j+Yzmi85nxJwWVS45qYNu8xlC1kxrBNM/aq3wsfzhc/r0n4
+         0bGDOADn1K/Bzi89awDUFW6jzdrMiMPTkDfeEFsQQTw1ErIzun2u1ZdUxWCsiSBaE1EX
+         7RJ6U/snCF4hHzZjweaQtifQdYNy9SU/L9u6O7WPu9fOodVgFGZsYjf8dxspBJj6+EJc
+         sS2g==
+X-Forwarded-Encrypted: i=1; AFNElJ96yFJd+LHsV7afaq6vIc7m2Ce4xWzdUDFT/NEDq6SqXc7qSpF80fuYMl1P70Lui4V5LYrrbl7N30D+@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw5xIKMmu4Ov01Py3tPLT2wi+yUCHbE34ES+GLVLAWka32Hy+pO
+	BabRBi+/jAh5w9tjnujWIu47czTogpOOQSuaJZJ9P0GGSD452tF1QeCAJiO/8mxM
+X-Gm-Gg: Acq92OFR0kePN7CsbIFhvtmnwuEsDks0nEvLI81G3QhL+rYiuoJzZpWQb+vzzl3heq0
+	ekj9/SmHospU7LHFMlWH+cNQEFLM0TcCVKdcUkfPDCNytDGhhRylbwW9ZZyR19bfMMIkFiF4LhN
+	9q+8PdFtWz76XZanPbATBc7m5I5AH3j0P/vhtAvmj1huHmaSqLNONJHUbe6O1bEFqFtLAG6F2xz
+	uptEYd1xegq3aAwdVylUxE7+7S91JjrI/+E+0oRmt+N3np1Rfhc4L4gNBSmehssVWKlI6z3NJ8A
+	pySN/dFZ8y64he+ZJgMQ8QdimF633KyDdBA4XGdT2WpIUwjo8pkTHshFTKv7LGunqwFWt/pY2IF
+	cSJmJRHYL15vXWhdzmCrXIsL5P2v5a4DtS//kFKHa92uME7jQoLEfJTtnKnYEtnc7GC7fR8iV+k
+	mWCcwAmAo3B4NRoFt1qhlLy+t8ncbkswlg
+X-Received: by 2002:a05:6000:299c:20b0:45e:7418:a3f2 with SMTP id ffacd0b85a97d-46021846dc0mr9148505f8f.26.1780579204445;
+        Thu, 04 Jun 2026 06:20:04 -0700 (PDT)
 Received: from localhost ([94.53.77.213])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-4601f2f67c6sm16699144f8f.16.2026.06.04.06.20.00
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-4602cda3651sm3398435f8f.32.2026.06.04.06.20.03
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 04 Jun 2026 06:20:01 -0700 (PDT)
+        Thu, 04 Jun 2026 06:20:04 -0700 (PDT)
 From: Catalin Iacob <iacobcatalin@gmail.com>
-Date: Thu, 04 Jun 2026 16:20:28 +0300
-Subject: [PATCH v3 5/6] sh: Remove remaining defconfig reference to the
+Date: Thu, 04 Jun 2026 16:20:29 +0300
+Subject: [PATCH v3 6/6] sparc: Remove remaining defconfig references to the
  pktcdvd driver
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -70,7 +70,7 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260604-remove-pktcdvd-references-v3-5-e2f06fb4eef4@gmail.com>
+Message-Id: <20260604-remove-pktcdvd-references-v3-6-e2f06fb4eef4@gmail.com>
 References: <20260604-remove-pktcdvd-references-v3-0-e2f06fb4eef4@gmail.com>
 In-Reply-To: <20260604-remove-pktcdvd-references-v3-0-e2f06fb4eef4@gmail.com>
 To: Thomas Bogendoerfer <tsbogend@alpha.franken.de>, 
@@ -89,35 +89,36 @@ Cc: linux-mips@vger.kernel.org, linux-kernel@vger.kernel.org,
  sparclinux@vger.kernel.org, linux-scsi@vger.kernel.org, 
  Catalin Iacob <iacobcatalin@gmail.com>
 X-Mailer: b4 0.16-dev
-X-Developer-Signature: v=1; a=openpgp-sha256; l=686; i=iacobcatalin@gmail.com;
- h=from:subject:message-id; bh=qLq31BYjVwoita8p3VYbMVHsnGBFQquUbQzcOZAQW8k=;
- b=owGbwMvMwCX261qtXAKXKjvjabUkhizF6vUbg4sCfwjVxDoesvyfcbp2wXwO5d1rzS5+q5cTn
- pozz+ZGRykLgxgXg6yYIsuLc9fbNuw5E3Avya4FZg4rE8gQBi5OAZiIMRcjw4LzeSe7T+xV9p50
- z5Yh/ZzHFna1hwXT1+ZHTSp83fXl60FGhj0iy0Jk/1atj4qxP3tw4bVFNxnFYrn//RW9kh8fLuX
- ymhMA
+X-Developer-Signature: v=1; a=openpgp-sha256; l=746; i=iacobcatalin@gmail.com;
+ h=from:subject:message-id; bh=T2wQkK65vboZ4IeGnr4NbeD+9D8laMYxlcwY9lW95Qo=;
+ b=owGbwMvMwCX261qtXAKXKjvjabUkhizF6vUry7hfsO25sPz06cyFgXWfhXOy1B3f+N6v/xxft
+ T7rWuWjjlIWBjEuBlkxRZYX5663bdhzJuBekl0LzBxWJpAhDFycAjCRvxkM/8PWMczLnZQ1MVVk
+ 61zh9Gc8zi+v3191c++BLfadB9vXLZzB8M+6u/j1BddEqaaNtVEqK99Nb7E/mlw1+8ssJ3HGyv3
+ 3njIAAA==
 X-Developer-Key: i=iacobcatalin@gmail.com; a=openpgp;
  fpr=F609BFABD84EB5C9DDDC37EDE89C6A3571CD0E33
 
-Commit 1cea5180f2f8 ("block: remove pktcdvd driver") left behind a
-CONFIG_CONFIG_CDROM_PKTCDVD reference in defconfigs. Remove it.
+Commit 1cea5180f2f8 ("block: remove pktcdvd driver") left behind some
+CONFIG_CONFIG_CDROM_PKTCDVD* references in defconfigs. Remove them.
 
 Signed-off-by: Catalin Iacob <iacobcatalin@gmail.com>
 ---
- arch/sh/configs/sh2007_defconfig | 1 -
- 1 file changed, 1 deletion(-)
+ arch/sparc/configs/sparc64_defconfig | 2 --
+ 1 file changed, 2 deletions(-)
 
-diff --git a/arch/sh/configs/sh2007_defconfig b/arch/sh/configs/sh2007_defconfig
-index 5d9080499485..f287a41cd38c 100644
---- a/arch/sh/configs/sh2007_defconfig
-+++ b/arch/sh/configs/sh2007_defconfig
-@@ -45,7 +45,6 @@ CONFIG_NETWORK_SECMARK=y
- CONFIG_NET_PKTGEN=y
- CONFIG_BLK_DEV_LOOP=y
- CONFIG_BLK_DEV_RAM=y
--CONFIG_CDROM_PKTCDVD=y
- CONFIG_RAID_ATTRS=y
- CONFIG_SCSI=y
- CONFIG_BLK_DEV_SD=y
+diff --git a/arch/sparc/configs/sparc64_defconfig b/arch/sparc/configs/sparc64_defconfig
+index 632081a262ba..4abea39281cd 100644
+--- a/arch/sparc/configs/sparc64_defconfig
++++ b/arch/sparc/configs/sparc64_defconfig
+@@ -60,8 +60,6 @@ CONFIG_CONNECTOR=m
+ CONFIG_BLK_DEV_LOOP=m
+ CONFIG_BLK_DEV_CRYPTOLOOP=m
+ CONFIG_BLK_DEV_NBD=m
+-CONFIG_CDROM_PKTCDVD=m
+-CONFIG_CDROM_PKTCDVD_WCACHE=y
+ CONFIG_ATA_OVER_ETH=m
+ CONFIG_SUNVDC=m
+ CONFIG_ATA=y
 
 -- 
 2.54.0
