@@ -1,71 +1,71 @@
-Received: from mail-qv1-f46.google.com (mail-qv1-f46.google.com [209.85.219.46])
+Received: from mail-qt1-f180.google.com (mail-qt1-f180.google.com [209.85.160.180])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5953931ED93
-	for <linux-scsi@vger.kernel.org>; Fri,  5 Jun 2026 17:45:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.46
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A1EDE36EA8C
+	for <linux-scsi@vger.kernel.org>; Fri,  5 Jun 2026 17:45:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.180
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780681520; cv=none; b=mR+mKW3B6ys2krATWJUMk0tqK3E75P1H6mi4dxpZ4JPN94unF8ZsSXk0v4qI2h1oBVzgTg9ndA70HubMSjKpRaJpq6O1a9jKfQxrXttZrfbYgKJMjOGU5MlVPwxydNdPc/b0yMWHFGt/TaAiTeKWAB4jntKsHlBEi7KARCPZTPI=
+	t=1780681521; cv=none; b=ClGRHP7nw+bWWGTsMokNxtYJI4YA08Q1O5VDXwfXJM5l/YvENcQvUkopVPnWd2PV0ixANXtOK9kTOIA/MuiUNA4q+ErzpRsyeMPvrLyqa++9zcR8uSLygENxITRa5+2dNu+4vRbKDCB9agyAR05gXA3uEyblUumtTZeOKJZvZKI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780681520; c=relaxed/simple;
-	bh=kMpwQhPqju4oCrvzV8XzrSkHCfWHp71p9nPZ/6qzfqw=;
+	s=arc-20240116; t=1780681521; c=relaxed/simple;
+	bh=bdwMNcZVjf0I1CDFWjmxuzGycazN9aJDtvxsS5g9hFg=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=TphN2qwAnd/cuMQuUo/ZshnFbjen6Cvvriaxv/NTDggZwvyz9J6FS9p7LXJV7zSr70nGD0tPiqDHbqDEF4vdWrR6jorA27ZQNMCvyE6MDGNy5XoP532gkPq4wXfYYZezDTi5pyS0bPOU7PStJYlBarwgizFlTzb1Rf+gEItwrD0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=GGWORXqW; arc=none smtp.client-ip=209.85.219.46
+	 MIME-Version; b=LmJHlDR78zre1CJLb9i4jSx7jhpKu9Mp0WuBR1t1gHvPNbwZJB8c5zyTWXKtAdAfUdY/4o6ZmVTy43U24b2O1HxeKddtj8NDWDllCcmwmY1ORtNWAfy9prSiR63g9r4ZEH6L26+BqUM0O2X54/4yAJ21Hr73YTisKfRps29aLMg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=EZlzhAnk; arc=none smtp.client-ip=209.85.160.180
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="GGWORXqW"
-Received: by mail-qv1-f46.google.com with SMTP id 6a1803df08f44-8ce9ddeddefso22933466d6.0
-        for <linux-scsi@vger.kernel.org>; Fri, 05 Jun 2026 10:45:14 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="EZlzhAnk"
+Received: by mail-qt1-f180.google.com with SMTP id d75a77b69052e-517907feed0so15447431cf.1
+        for <linux-scsi@vger.kernel.org>; Fri, 05 Jun 2026 10:45:15 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1780681513; x=1781286313; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1780681514; x=1781286314; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=Meq+S3sUis9q5hh4b+PS0TDRjT62KvcCqdUR4XGhqzQ=;
-        b=GGWORXqWKq9c7mnwoIsRDk+O6brwfy6UgzbnN22NHDkSquPlo4wMjrl+uesw1ya0Sk
-         QZfeNbOPIoiE5YzbSreaqkbX29uOo5qk98oZI7GzScAE7Cs6tL4CEIATefio9TMCp0fd
-         w4PSGbZDnGPHrfjEARArDn/Q1w5hwqR7rdUgv/g1iDrjXtNldf1Uyld99WoF9EddW6o/
-         aJ8gTsOQhgygdGdWBvvT89hELPEb2JCmov+JViWj+zGhTFxc+QmZfgEzdUAbskN8mI8y
-         hJg1w/JR9zE8paDJW5ugKNy3i/eUPTCJnFrJF7DHS9K0NE0Dpy4kJ5CN/U+LE8B4kkha
-         Sy6Q==
+        bh=2CQIKIOUNHK4p/kK1ZVRgUxKnjETRbt3AMrCW5x1awc=;
+        b=EZlzhAnkgEnVALpp1rZIjCiFRVblaVhz3lA9wlKhEFl3HR+IJ3aq8e+OXG3eI3xTxq
+         wLM046RF5yu5n0DYqIKfp8xbPm842IJ5FFlsaUqciOmO/mNYQ/r9vi2zqCjNsbW7pmbX
+         ebCbOYehmig10vKu59lX8m4LDAXIMFJNfTo0RKSPLEGf0V95qU76WwzL0ZW4lGAY6/oK
+         wHbbiEJQ/MeY8qUh+p6DJnUawhoEBWYtsIrTv3vgBrlUMKlvvIN29j8Fj4eo2AzchOst
+         7PyUC+zVlchB0FgxwqwQBsgGEknja+DkKQd3zVfo8KPWzW5tURpEa6lilmVyNDW7i9T3
+         CdxA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1780681513; x=1781286313;
+        d=1e100.net; s=20251104; t=1780681514; x=1781286314;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to;
-        bh=Meq+S3sUis9q5hh4b+PS0TDRjT62KvcCqdUR4XGhqzQ=;
-        b=EXdaxXrtlHY8FjBlDa7v6eIgvDBzquIGy0ArlySUC/P4bmIKzF+v1BWl1+NjnLonFZ
-         i503tZsAWR7DAR/nDS51P5SXc4QtaZQcdLMRw7if1Us1f2gVjCqM+wPc/6RZGHB4ct4d
-         Xi6HEgKzp5GAQWtexHiKxou7EEyGMq003IIAcdvNgxrP3GixWbhvHuMWCs3nHNhi0XJ4
-         y6OxR6DTF0f5/jhkGeDvMAfe8lUjnaRlTHC9UDJ6qYVhL+YQAnSefLmwN0gn37WQdIrQ
-         r8ja/+NaF13d3LjkTy09YnsTW3Xo8cdut4q7dyCyAeuDjGKAcXzTSs8Wr1/gUCbgBw+z
-         +n7A==
-X-Gm-Message-State: AOJu0YwFu5n+bXZJdGLL0cRV1SpI7U+KqojbaQuG93Vg/1sl6iHm7yfu
-	qoAVpQCIV8rPXOy5mUyljmSheFZIPtHLYIKzkSUe8MvObPQRKrk/H/JDMISqZQXy
-X-Gm-Gg: Acq92OFCuXdBb7AtdE8BxMoR52M5LEHhTpL42I9HcSUHPOnGgAVy71VcUQjOI8yRdaP
-	YygiIlCCvUNNdjFKgZ45pHiqpDQ9LCwDQvvwLh/xEPEzMvPkc/IViCBcnq7aiSDPO8LEgBFYIsm
-	jQ+hJ8OucA6wNh9/dnRSDt3dlROs3Etoayty4EIlLnRYVFlPH81oK22+7sW9K6jmF9RfKkrCFQV
-	jdTBukY9HgRF4uBl8zB6bPz7lpTOmtBGHI8EVUWzo5O9D32n6qzEAfSFMMYch21h0OsKgFNlnZS
-	/6LRIwQ3+eHOdV0sHLj5eWazjFdP5hm+80gMBkokR1gVLb9vWCyu1SF9u+u2Sxs/QgFOjoiMycd
-	HGlx8dOcYFBod/nn+0WCdg5x+2REUfmd2KezJIW8eeOsVGgTGSXC4wViREYL0fg9ipEkdcXuE+L
-	0ua9VFLYpGzja73eYrLBVejRujxhdw5gn5xuamT6U+K9bdGzyTd9IuSDDebYZNmdz0MmPtr45wG
-	6zHfueVcoWn3bSeRpMsbCsC/aNGM4Vi+qCEAt7XlQCP9eCXH91x5A==
-X-Received: by 2002:a05:622a:291:b0:517:61d5:2f7b with SMTP id d75a77b69052e-51795bfe545mr65914971cf.56.1780681513197;
-        Fri, 05 Jun 2026 10:45:13 -0700 (PDT)
+        bh=2CQIKIOUNHK4p/kK1ZVRgUxKnjETRbt3AMrCW5x1awc=;
+        b=HZHp4GpSrzn8Cn3h72rLyrNmcWJlpt6ne7oRepdDD2XVeVc1rURfwCDE3rK+0ClRwe
+         ePMdMOoKDoyDFtK7pjD8BDSlajXJwNkrGBNRovRz1o+85lc4diCV/UqAb0uhN+D1YefT
+         ff7ZruF5Kn3r6jiyihlMjQXKv0MsKQt04m1Ssh5kCzyqVTmvVdubcAz27EzsJ0QUPQQr
+         bh5fj+AyZCiQWZcO5Os4DLcpxvE2MWdXL1SIBYtUvXl/FcbAmLPqeKT/sEYnx4Th1MMe
+         lSg5AusTZRINvNvlAdyU6srMR71d0aKUxXB223Rc7a6HSuOn85YTFa6GVI4z6KUhu5fI
+         DSTw==
+X-Gm-Message-State: AOJu0YwBNIjnh5DvQ0y9kRBbKnsLazTv6s9eQKopcGapE0DYtLzqp+L4
+	XAaEFGJNL/GiX8j9MQ2ptB7DPWrPBM/ggQnCaxLSbcCWDRuvbxX5hhIYsbszar/M
+X-Gm-Gg: Acq92OHNhwR5XKgmrbEqeq9pJ3E9x5vtz/HbO85SAlARc4B9FLwTFZzu7stPZFLznuP
+	jpNBp5g/lLAMwsEhhSIYt1Bz7tx4ewA+ZBEEObzFWDZ5/bJXP/9yA7TKMJemH0kYmjAt5yxYvU5
+	ul/ep/YB+0nXDU+cAtiHfiUaOZVurofy0e+zorfO5OFK8IgbB31VhdD76QoRDsGfhjCSte7npkM
+	AV6nBlmQ7Rg1QEhMVqbKwqYm0veMgnvPnasrmHTindmTvFXGwqkqqN9uxzTAchORf5Y9yCuuB7E
+	kb5Mivje9BHU/FHDIlSopMjVzsh7t3X3KXnr7DMh69TTJoxzKmmA3+v2jSwBfZ0xJFE1kKESqn/
+	SMHxBp5yPP74VvPzF+Q644NVZIxWL8lvb1YM83psK0MpSGtdQ58LGkIJ1U356ftD5PM2MbdVZEh
+	0T2S9NPih1Z7KmhhmbEQseJi/XXkaVDpI2g1ow8DNPxRVXQHFNbk/4zeEOXYotJYNxoEpcNjgEf
+	U5wPlW1OYW1FV81xEAcdx7HuCS48DymhN1hmUoJctEaq0o/37ndFg==
+X-Received: by 2002:ac8:57cc:0:b0:517:70a5:c875 with SMTP id d75a77b69052e-517987a8e1dmr11206451cf.14.1780681514562;
+        Fri, 05 Jun 2026 10:45:14 -0700 (PDT)
 Received: from dhcp-10-231-55-133.dhcp.broadcom.net ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id d75a77b69052e-51789407da8sm53376171cf.19.2026.06.05.10.45.12
+        by smtp.gmail.com with ESMTPSA id d75a77b69052e-51789407da8sm53376171cf.19.2026.06.05.10.45.13
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Fri, 05 Jun 2026 10:45:12 -0700 (PDT)
+        Fri, 05 Jun 2026 10:45:14 -0700 (PDT)
 From: Justin Tee <justintee8345@gmail.com>
 To: linux-scsi@vger.kernel.org
 Cc: jsmart833426@gmail.com,
 	justin.tee@broadcom.com,
 	Justin Tee <justintee8345@gmail.com>
-Subject: [PATCH v2 13/14] lpfc: Refactor calls on fc_disctmo to lpfc_set_disctmo in RSCN handler
-Date: Fri,  5 Jun 2026 11:23:35 -0700
-Message-Id: <20260605182336.134919-14-justintee8345@gmail.com>
+Subject: [PATCH v2 14/14] lpfc: Update lpfc version to 15.0.0.1
+Date: Fri,  5 Jun 2026 11:23:36 -0700
+Message-Id: <20260605182336.134919-15-justintee8345@gmail.com>
 X-Mailer: git-send-email 2.38.0
 In-Reply-To: <20260605182336.134919-1-justintee8345@gmail.com>
 References: <20260605182336.134919-1-justintee8345@gmail.com>
@@ -77,59 +77,26 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The lpfc_set_disctmo routine is not used for all cases when the driver
-needs to restart discovery on the fc_disctmo timer.  Not doing so, makes
-discovery timer actions invisible in some cases as they do not get logged.
-This patch substitutes calls on fc_disctmo to use lpfc_set_disctmo in
-lpfc_els_rcv_rscn.
+Update lpfc version to 15.0.0.1
 
 Signed-off-by: Justin Tee <justintee8345@gmail.com>
 ---
- drivers/scsi/lpfc/lpfc_els.c | 17 ++++++-----------
- 1 file changed, 6 insertions(+), 11 deletions(-)
+ drivers/scsi/lpfc/lpfc_version.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-index 27ccd3ad4b7a..c5f3fae0ccb4 100644
---- a/drivers/scsi/lpfc/lpfc_els.c
-+++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -8383,7 +8383,7 @@ lpfc_els_rcv_rscn(struct lpfc_vport *vport, struct lpfc_iocbq *cmdiocb,
- 	uint32_t payload_len, length, nportid, *cmd;
- 	int rscn_cnt;
- 	int rscn_id = 0, hba_id = 0;
--	int i, tmo;
-+	int i;
+diff --git a/drivers/scsi/lpfc/lpfc_version.h b/drivers/scsi/lpfc/lpfc_version.h
+index d6e6e436fbfc..7df63d118234 100644
+--- a/drivers/scsi/lpfc/lpfc_version.h
++++ b/drivers/scsi/lpfc/lpfc_version.h
+@@ -20,7 +20,7 @@
+  * included with this package.                                     *
+  *******************************************************************/
  
- 	pcmd = cmdiocb->cmd_dmabuf;
- 	lp = (uint32_t *) pcmd->virt;
-@@ -8462,11 +8462,8 @@ lpfc_els_rcv_rscn(struct lpfc_vport *vport, struct lpfc_iocbq *cmdiocb,
- 			lpfc_els_rsp_acc(vport, ELS_CMD_ACC, cmdiocb,
- 				ndlp, NULL);
- 			/* Restart disctmo if its already running */
--			if (test_bit(FC_DISC_TMO, &vport->fc_flag)) {
--				tmo = ((phba->fc_ratov * 3) + 3);
--				mod_timer(&vport->fc_disctmo,
--					  jiffies + secs_to_jiffies(tmo));
--			}
-+			if (test_bit(FC_DISC_TMO, &vport->fc_flag))
-+				lpfc_set_disctmo(vport);
- 			return 0;
- 		}
- 	}
-@@ -8497,11 +8494,9 @@ lpfc_els_rcv_rscn(struct lpfc_vport *vport, struct lpfc_iocbq *cmdiocb,
- 		set_bit(FC_RSCN_DEFERRED, &vport->fc_flag);
+-#define LPFC_DRIVER_VERSION "15.0.0.0"
++#define LPFC_DRIVER_VERSION "15.0.0.1"
+ #define LPFC_DRIVER_NAME		"lpfc"
  
- 		/* Restart disctmo if its already running */
--		if (test_bit(FC_DISC_TMO, &vport->fc_flag)) {
--			tmo = ((phba->fc_ratov * 3) + 3);
--			mod_timer(&vport->fc_disctmo,
--				  jiffies + secs_to_jiffies(tmo));
--		}
-+		if (test_bit(FC_DISC_TMO, &vport->fc_flag))
-+			lpfc_set_disctmo(vport);
-+
- 		if ((rscn_cnt < FC_MAX_HOLD_RSCN) &&
- 		    !test_bit(FC_RSCN_DISCOVERY, &vport->fc_flag)) {
- 			set_bit(FC_RSCN_MODE, &vport->fc_flag);
+ /* Used for SLI 2/3 */
 -- 
 2.38.0
 
