@@ -1,71 +1,71 @@
-Received: from mail-qt1-f180.google.com (mail-qt1-f180.google.com [209.85.160.180])
+Received: from mail-qt1-f175.google.com (mail-qt1-f175.google.com [209.85.160.175])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4FB223655CF
-	for <linux-scsi@vger.kernel.org>; Fri,  5 Jun 2026 17:45:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.180
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B89DD39935D
+	for <linux-scsi@vger.kernel.org>; Fri,  5 Jun 2026 17:45:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.175
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780681511; cv=none; b=Aa14QVeCHUHtl4FChMn9RVTV0RLMXoz2E0kcSDBwDUQ6CNZPqDu20ekTpAalZeWI4t5dNMnGYa6IULWkEWQouARcfuoKGCdLb+oXQ0i+Tibz3LphQrr8uK9mJ/vHnL9LmUTAxiNlIj7bEd+dwnqC5nSi4Wu0lXRgO4ypvCsdu+Q=
+	t=1780681516; cv=none; b=JotksxsVzTyKBliEi/nr/ba4q9dNMakoz35Fv/h7IslVJFgLqNeIWYqr5bVt6ZE5BIEZEwdxFqXDrxGSTqyc01jRnJK3YkHFKFDaXKySRDUAOU9GtZWEmtuW/ErwJLy9unb4Fn2DFbsANW00BzGvUKO/uDm4Do3s9Y5hdnMcaqI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780681511; c=relaxed/simple;
-	bh=5YwSlHjzPku5jClGrO5YdrDfDaBGQQ9SOib3DM+4KxU=;
+	s=arc-20240116; t=1780681516; c=relaxed/simple;
+	bh=LCrHk0mXmBoxqijlXX61kg8RAalLQLRHE4JPG4lfKDw=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=ZHPZPVXDlA93vP5fTYIROcHzh96m1zKJDSbAVMpMdV3/r2WUxSE6hjmcKdp3KKB7t30W4EbMkSzN1UDywFUFWhEPHHBDp7jbm+l0ZocxhoaqVw/JDK5xn/vGvfAKHrOoiie8gkpevgt+x8dUwbl4B2kU3cOIC+DwHK6kjEz9oaA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=HzT8ibYT; arc=none smtp.client-ip=209.85.160.180
+	 MIME-Version; b=q2/xfMQ3FHup685wCtRnCFdB+21DBmgaFS4D1ebmMPAC/80tiLiuHPlZGvfZ7F60W9JHuGDZfvBRr2tE+HiQw9pYgjp/0C0pWhxry2V/Ax1QjPnGI1B5cnhpk6k0i3Zmx6Ht00I5onrCyFVHcgdhM466QapyU2wZe42ozVB0pOI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=sK8mXE/Z; arc=none smtp.client-ip=209.85.160.175
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="HzT8ibYT"
-Received: by mail-qt1-f180.google.com with SMTP id d75a77b69052e-5177945a22eso14858731cf.1
-        for <linux-scsi@vger.kernel.org>; Fri, 05 Jun 2026 10:45:01 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="sK8mXE/Z"
+Received: by mail-qt1-f175.google.com with SMTP id d75a77b69052e-5177b1a7441so31574981cf.3
+        for <linux-scsi@vger.kernel.org>; Fri, 05 Jun 2026 10:45:09 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1780681500; x=1781286300; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1780681509; x=1781286309; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=7AQZWzaCaXXwVZTmQKqoWa0gLJ7DsAx7kXaPYcVACMg=;
-        b=HzT8ibYTSN+Wm1zTRkh20oz3B287C9YKBXLpUqF7h0AxOblAjM9Ze5f53gYuqg+x6c
-         F8OKyFR1twVJu3z0qWuw3c+FTxRsMHn3nhxSJ94ttaSzP62ezV5Olin2gUB587xkahMX
-         csnTHylmH4PdWXaFv6zJpZ69OXNG0ty/zdfLdLY1MqwK+CfBrIvUyxR2aomohx1uILZY
-         aI0e7rfwYfdZ+HQYMXNclq4IEJG8uONTWFRIgeKv2+lMjKS2S7WTCU3Gm2HCwK3JSRJV
-         mK/fBbOIeC/RFqUPFZbXHv2YS3YWSH+DhgDEnNQG/lqSj9PJ2YB0mPJUmw83SC2OcJfy
-         Unpg==
+        bh=Ad6xz+bi/Z+3fCS3JOxccp7lrZfKAVizkwzbCWI1elc=;
+        b=sK8mXE/ZKq41yDVWL9RkU2pGPDzOH4Rbusj9cIIHz7t+IQ/SrnAugthF8X+5j3xDzf
+         vWh+xBgBHCsaftO1xfh17bz16B1GN/lIdUWWqw9mLe1I1dw1nrL0BoFWVp0PRyHBS9ov
+         gOBH8vd+BecIabXE/meDKoYPhtEnSUxTGga1fRsMk1nskYQqQxVRZbajjKjfVg1E0HY6
+         4IghGWeFjR0x9pvtNG91kOWxik6U7e3N8LK7YknO+blCv4evNHGb2SM2W2LtMI8FS1dr
+         LnjY/x5KG9yi2BvSEnPMH4BgEtmButGKoGcHtnQXs0zxM4nPWQLpGg64hPkPH5Ihwuin
+         fT5Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1780681500; x=1781286300;
+        d=1e100.net; s=20251104; t=1780681509; x=1781286309;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to;
-        bh=7AQZWzaCaXXwVZTmQKqoWa0gLJ7DsAx7kXaPYcVACMg=;
-        b=fCB84Txxi+1/eLb7di9qfTW87LgDknRbxg+7qlsBGSIFWC43bXZwjRudNdREOIMhi8
-         ei5BveCsWZhcUlPCuKqvIJSf9RVupazf9os9mi0ni8VZdahbm5Em/32lSokF4ksVuhi/
-         7vuU7LmCYVs+WJYI6UAonhg5XqsDiLSJuFkvJT4MQxPgxYOejSUFoPedG1Y8Rlaw1zMs
-         PF9pJLg2suZi+btB/NJGKYXPZzmDFBndEA89+E46ZOwP88OAB1n3+4JRFVO1tWn8sYj9
-         IKoC8n131HgmScXljueQGNOsLaG4TYqnFH7EfgmbIe4kxcmezAfciEn6hN3jeOWf+PiI
-         3+5g==
-X-Gm-Message-State: AOJu0Yw2iIwTGXYKHkG2bOlrrHYtuR/WP8g92Pz+zmxdmq4llFCOnXp7
-	8EH1WA/lXydz1kMyGbmseMHm2AjPQrSXlGWbLjN3klAAusfDzVzDqnQtjlMoeZfR
-X-Gm-Gg: Acq92OG/e7BjThbgnEqh4YUxuGRgWACe2ZNTIS+IJ9fKpRbxhWCMmPpOacsr2OBFBbn
-	z0aGYFb4MQrrxD24aeUhxK/PlmcL9KJd7ytlpCBziXsm0nN9OS+apP0HbFK/bnCjmPZHeRNeSIO
-	M/R8w0yG78Zf+8w4IGpvRIjj5u44T/n++O7y041ZV7iB7zhqPuEvbi8rJT+qkPx6NUypAzcZjNk
-	A4448SjIIzW1uu2zNPppqZbi3xNJGTRGDGXe5Oyyw5FqVgbp6OrBmjyDjFxcCxloktNtqbct+eo
-	VDIBLqMc6DmBUL1J00eOcOLmIoYvOjNma1r/0e9MRljCrRLOBnRE79o1QO8sEIttMi1aQM5OI6X
-	CYXcDDXbzWNujMAUqKaEOwdcZVDxgHExlA7GRjdipu8Kuzpm35BeasJHMcrHW1u4L/NPFn9Ktun
-	u6/+fuWkOrFsRT4pCrrWQQy4xWl+q9ChnGqqYAjdJK67KgsTx9f3gZnti+Yqk7BWvrxzFT5fh/2
-	QAs8yvsSacXJ1UFpyUtfrkbPWjdnrx3422yy+nA/Rh3vIFycLP2Fw==
-X-Received: by 2002:a05:622a:99b:b0:50f:c2f8:4081 with SMTP id d75a77b69052e-51795c5b470mr66516821cf.53.1780681500137;
-        Fri, 05 Jun 2026 10:45:00 -0700 (PDT)
+        bh=Ad6xz+bi/Z+3fCS3JOxccp7lrZfKAVizkwzbCWI1elc=;
+        b=KlXMSja5teLIV56TNO/RiJ9CCnVP3Iv0+MtPPixZ21cpV9GBVgfXTBW7BD27APNeh5
+         K8qto+FLhyZF3NiST2y+DSejijE8JkCn7TJhlPGmvIHzmXYj9MY/Vu/2dLfJSW0sNfhI
+         vZ+iAmcCfpKe+D1W6W6QgS+JC8PauiGNBjDwiuf6DoQyXV4+AYlry/uo5WVB/lH4uBK0
+         Ae7dLrSb7YsRGh+BtO5xiZdhWRFEN6W0nveQWpbW3pkHtv9eDfWMRXef4TrBsN9K5NYJ
+         iNNCCK+2BhzP2GRfefeZhMLGaU9QKWulV0RSRcBRr7HaPoXgD0mtR+zwNVztnJWtsoTq
+         3K8A==
+X-Gm-Message-State: AOJu0YyY9VD2ugYr8HMFb4Z4M3y8EXcePamfAXHMUTydER4iZ7RtKrNj
+	4meiic+h4ZgsRJrp8MTA9Q4hPaLJio+6nYc9A2K095qqGW19N4/t1BGur6gS3YOY
+X-Gm-Gg: Acq92OHtCrbEVy5IIUTNuX0+Ln4DSvvBJTGiWa43+fZpYBIDhgEduzguygkrqbKvDXK
+	LRJv6QwGI9o9L2X7m3IbGTih4qNDxYOYgHFb4uzwzufm/brBo451TE+osWqZYdPLupUwy4rE2Fi
+	SSNYDwT+YxFXPSigBD3qhdLBAkFbC21arlvWEFtCk5ieAvNuNR/9rBLDXHtHZT8IuMZ1J8DyNhC
+	If0esEq40lJJX0yHM9X5Ml71cqxMVhbd7AKlWjSOqVol1yWQ0M5wdHRUOTdCJOeHFYmsdteSkfY
+	xnitSY7NJOcmRPNbC1owDshWAyI84lGWYSS7FN+D4UQ4eYmOjpTEwxPXhnhUpYxhPG2YVZD0jWl
+	lRmwi5au7H5ZtezpeIMnBtG+ssx+paoTJJNOFJYEzb5DGY/HyGedTw1l6rZ94drAgcvVHLlp4ME
+	ot5mws3e5rpju94XF9yk9XWIJKqfwU5NheT1s9p37OJHMXSMu/alIkVBwpVBAqiQ+G9+ZbvUbdB
+	u9K/4X0/Wi73ddA1piXm5OoeRuVtAkW4b270+YsIpDXqJ3EmqBSGQ==
+X-Received: by 2002:a05:622a:400c:b0:517:7971:a234 with SMTP id d75a77b69052e-51795b729ffmr69681091cf.4.1780681508604;
+        Fri, 05 Jun 2026 10:45:08 -0700 (PDT)
 Received: from dhcp-10-231-55-133.dhcp.broadcom.net ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id d75a77b69052e-51789407da8sm53376171cf.19.2026.06.05.10.44.59
+        by smtp.gmail.com with ESMTPSA id d75a77b69052e-51789407da8sm53376171cf.19.2026.06.05.10.45.07
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Fri, 05 Jun 2026 10:44:59 -0700 (PDT)
+        Fri, 05 Jun 2026 10:45:08 -0700 (PDT)
 From: Justin Tee <justintee8345@gmail.com>
 To: linux-scsi@vger.kernel.org
 Cc: jsmart833426@gmail.com,
 	justin.tee@broadcom.com,
 	Justin Tee <justintee8345@gmail.com>
-Subject: [PATCH v2 04/14] lpfc: Check fc4_xpt_flags before decrementing ndlp kref on FDISC error
-Date: Fri,  5 Jun 2026 11:23:26 -0700
-Message-Id: <20260605182336.134919-5-justintee8345@gmail.com>
+Subject: [PATCH v2 10/14] lpfc: Remove slowpath cqe process limiter in slow ring event handler
+Date: Fri,  5 Jun 2026 11:23:32 -0700
+Message-Id: <20260605182336.134919-11-justintee8345@gmail.com>
 X-Mailer: git-send-email 2.38.0
 In-Reply-To: <20260605182336.134919-1-justintee8345@gmail.com>
 References: <20260605182336.134919-1-justintee8345@gmail.com>
@@ -77,65 +77,80 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The current initial kref count drop logic for an ndlp that fails FDISC
-assumes that the ndlp has never registered with transport layer and thus
-the lpfc_dev_loss_tmo_callbk never called.  However, a failed FDISC can
-occur after a successful transport layer registration too.  So,
-lpfc_dev_loss_tmo_callbk can occur and there is a potential use-after-free
-on the ndlp.
+There is a cqe process limit of 64 cqes in
+lpfc_sli_handle_slow_ring_event_s4.  The HBA_SP_QUEUE_EVT flag is not set
+nor the worker thread rescheduled when reaching this 64 limit.  This means
+a burst of over 64 cqes can incur a delayed processing penalty, which can
+be problematic in large SAN configurations waiting for rediscovery after a
+link perturbation.
 
-Check ndlp->fc4_xpt_flags if previously registered with an upper layer
-transport and check ndlp->nlp_flags if there is a LPFC_EVT_DEV_LOSS work
-pending.  If not previously registered nor LPFC_EVT_DEV_LOSS work pending,
-then set the NLP_DROPPED flag as before and decrement the initial kref on
-FDISC error.  However, if ndlp has been previously registered, then let the
-pre-existing logic for each transport's respective dev_loss_tmo_callbk
-perform the initial kref decrement.
+Remove the slowpath cqe process limiter in
+lpfc_sli_handle_slow_ring_event_s4 to ensure the slow path CQ is drained.
+Add log messages to notify when the 64 cqe count is reached.
 
 Signed-off-by: Justin Tee <justintee8345@gmail.com>
 ---
- drivers/scsi/lpfc/lpfc_els.c | 20 +++++++++++++++-----
- 1 file changed, 15 insertions(+), 5 deletions(-)
+ drivers/scsi/lpfc/lpfc_sli.c | 29 +++++++++++++++++++++++------
+ 1 file changed, 23 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-index 4e3fe89283e4..896d69a0a655 100644
---- a/drivers/scsi/lpfc/lpfc_els.c
-+++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -11416,7 +11416,6 @@ lpfc_cmpl_els_fdisc(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 		ulp_status, ulp_word4, vport->fc_prevDID);
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index 31ab72cbee95..5c559cec9f55 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -4527,7 +4527,7 @@ lpfc_sli_handle_slow_ring_event_s4(struct lpfc_hba *phba,
+ 	struct hbq_dmabuf *dmabuf;
+ 	struct lpfc_cq_event *cq_event;
+ 	unsigned long iflag;
+-	int count = 0;
++	u32 count = 0;
  
- 	if (ulp_status) {
--
- 		if (lpfc_fabric_login_reqd(phba, cmdiocb, rspiocb)) {
- 			lpfc_retry_pport_discovery(phba);
- 			goto out;
-@@ -11427,11 +11426,22 @@ lpfc_cmpl_els_fdisc(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 			goto out;
- 		/* Warn FDISC status */
- 		lpfc_vlog_msg(vport, KERN_WARNING, LOG_ELS,
--			      "0126 FDISC cmpl status: x%x/x%x)\n",
--			      ulp_status, ulp_word4);
-+			      "0126 FDISC cmpl status: (x%x/x%x) ndlp x%px "
-+			      "Data: x%lx x%x x%x x%x x%x x%x x%x x%x x%x\n",
-+			      ulp_status, ulp_word4, ndlp, ndlp->nlp_flag,
-+			      ndlp->nlp_DID, ndlp->nlp_last_elscmd,
-+			      ndlp->nlp_type, ndlp->nlp_rpi, ndlp->nlp_state,
-+			      ndlp->nlp_prev_state, ndlp->fc4_xpt_flags,
-+			      kref_read(&ndlp->kref));
+ 	clear_bit(HBA_SP_QUEUE_EVT, &phba->hba_flag);
+ 	while (!list_empty(&phba->sli4_hba.sp_queue_event)) {
+@@ -4547,22 +4547,39 @@ lpfc_sli_handle_slow_ring_event_s4(struct lpfc_hba *phba,
+ 			if (irspiocbq)
+ 				lpfc_sli_sp_handle_rspiocb(phba, pring,
+ 							   irspiocbq);
+-			count++;
+ 			break;
+ 		case CQE_CODE_RECEIVE:
+ 		case CQE_CODE_RECEIVE_V1:
+ 			dmabuf = container_of(cq_event, struct hbq_dmabuf,
+ 					      cq_event);
+ 			lpfc_sli4_handle_received_buffer(phba, dmabuf);
+-			count++;
+ 			break;
+ 		default:
++			lpfc_printf_log(phba, KERN_INFO, LOG_ELS,
++					"7771 Unknown WCQE completion code "
++					"x%x, ignoring.\n",
++					bf_get(lpfc_wcqe_c_code,
++					       &cq_event->cqe.wcqe_cmpl));
+ 			break;
+ 		}
  
--		/* drop initial reference */
--		if (!test_and_set_bit(NLP_DROPPED, &ndlp->nlp_flag))
-+		/* If have not previously registered with transport layer and no
-+		 * LPFC_EVT_DEV_LOSS work pending, then drop initial reference.
-+		 * Otherwise, let the dev_loss_tmo_callbk drop the initial
-+		 * reference.
+-		/* Limit the number of events to 64 to avoid soft lockups */
+-		if (count == 64)
+-			break;
++		/* This loop runs until the ELS/CT CQ is empty.  Post a one
++		 * time message for debug support when ELS WQ ecount
++		 * completions are processed - this represent 1 full ELS WQ
++		 * wrap.
 +		 */
-+		if (!(ndlp->fc4_xpt_flags & (SCSI_XPT_REGD | NVME_XPT_REGD)) &&
-+		    !test_bit(NLP_IN_DEV_LOSS, &ndlp->nlp_flag) &&
-+		    !test_and_set_bit(NLP_DROPPED, &ndlp->nlp_flag))
- 			lpfc_nlp_put(ndlp);
++		if (++count == LPFC_WQE_DEF_COUNT) {
++			lpfc_printf_log(phba, KERN_INFO, LOG_ELS,
++					"7772 %s SP CQE count %d\n",
++					__func__, count);
++		}
++	}
++
++	/* Log a final message to note how many CQEs were processed. */
++	if (count > LPFC_WQE_DEF_COUNT) {
++		lpfc_printf_log(phba, KERN_INFO, LOG_ELS,
++				"7773 %s SP CQEs complete, count %d\n",
++				__func__, count);
+ 	}
+ }
  
- 		goto fdisc_failed;
 -- 
 2.38.0
 
