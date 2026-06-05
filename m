@@ -1,76 +1,76 @@
 Received: from rcdn-iport-2.cisco.com (rcdn-iport-2.cisco.com [173.37.86.73])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B63834029E;
-	Fri,  5 Jun 2026 23:49:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9494C2F7F08;
+	Fri,  5 Jun 2026 23:49:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=173.37.86.73
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780703345; cv=none; b=CqgjxvdD6lnF9HULHaj7PbsW9TSBHU/k1KuhHyq+Pgf/DgkFHahPCes7KfZHaVlDWYKY1Y8JbU+cnxljepmZQO9E7e+jz5PrDZ9fh45R99SXHB97AIiy2DkSDhSwH92Q9PHxHBTvG90VBoeYa5rZKDMa6Z2FmsEN0bX0fOjYWJU=
+	t=1780703387; cv=none; b=J5LT1WBXZeuRf7S78yJw105+y2ONYy4MY8nTl8IyG71rLxLtQVXHL38FxOydI0wJzt75T+sXPqQoYLCBqDtewuKiLvwp5zAq+zb4wHmVWb4gPfyOlA0SSep94iWwIPamjixn4tr8YKz847LHE/aPCxfMLrZHD0F9KJ7dFcpRjT4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780703345; c=relaxed/simple;
-	bh=w63TqDzsRQKWwXfbnroa0ul2vPyuSQwpeRsltrgwg44=;
+	s=arc-20240116; t=1780703387; c=relaxed/simple;
+	bh=DbZaQBKWNkP66MZVfHbHwUt6XaKcXX157O6z/VEF034=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Rx7hUKKEIrPB/mWuZ23k3POC4MaAndA37DHjhzJBNTdmy2pFFLv0DpoHPe3Pn48oOQO2j2JG7EvCT2J8fFbI/wULHL0V8qrU9GCcT7PagjLZj85sku7qNAt/DY5ex2FoI7A5VNFBI4isQVeEq4eq5CDTrX9CnUuwOHnwAHlscmM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=cisco.com; spf=pass smtp.mailfrom=cisco.com; dkim=pass (2048-bit key) header.d=cisco.com header.i=@cisco.com header.b=Vgaud3mK; arc=none smtp.client-ip=173.37.86.73
+	 MIME-Version; b=eCOXxUHlzRbKX9mAp1Ev0xzFhVYE8dK9dxoRyiBPKGS4EsFeEkuMxzRYOUG0i3cBveU4NChhMxqsQltOhHW9FkYoRCq34225GxI/3oGlDAKhU9c+QeyBMkB7FDRESzgJaQNk7zTVMmnSHDK5WNMY83Sf56UDZyOLpWqMpIDVXXA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=cisco.com; spf=pass smtp.mailfrom=cisco.com; dkim=pass (2048-bit key) header.d=cisco.com header.i=@cisco.com header.b=NTDbVvt6; arc=none smtp.client-ip=173.37.86.73
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=cisco.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cisco.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=cisco.com header.i=@cisco.com header.b="Vgaud3mK"
+	dkim=pass (2048-bit key) header.d=cisco.com header.i=@cisco.com header.b="NTDbVvt6"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=cisco.com; i=@cisco.com; l=3870; q=dns/txt;
-  s=iport01; t=1780703344; x=1781912944;
+  d=cisco.com; i=@cisco.com; l=8280; q=dns/txt;
+  s=iport01; t=1780703385; x=1781912985;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=irt3uGD+zc1UAhy1SFvsP7ro9QE+N6DJrLAnzshgE80=;
-  b=Vgaud3mKABZm1QOXOV6gLqYs/TCb70AoAyVOJ3yVNf/4u9tOhrPKl0Jk
-   fah/xr8zJ1I8ak3JcmVNHf+OqgwjRc7ReTnrQg5xc6Arc9K2spFcomZeq
-   u3E99iv8Afj9olE3dtRpsw9KxEYzaPcKXUdziEEQsGR2EGTTBAvkE+KeW
-   w/+ItfEkwbE2ZtW1EZA9bl4Lh97QqRLQsnAcHpzwlw49tndmwwifaTB4l
-   PFOgMX93nft8pJSvbrk5q1BCtZxzO8h+OWh8BwdL+Es4D/vM5LEbee+DT
-   Y3k1ipUKPtUZ8yHuu1W3W5Ph0d4iPaTMkwRFUfHovD1OGXpWgChrDpq56
-   Q==;
-X-CSE-ConnectionGUID: EoEWWqpwSayD5BzzJF8LxA==
-X-CSE-MsgGUID: moTuk5hwSXy9RyyaCR5qsA==
-X-IPAS-Result: =?us-ascii?q?A0BDAgAtXyNq/5P/Ja1aglmCV4FSQxkwlCqCIZ4eFIFqD?=
- =?us-ascii?q?wEBAQ9RBAEBhQYCjTMCJjQJDgECBAMCAwEBAQEBAQEBAQEBCwEBBQEBAQIBB?=
- =?us-ascii?q?wWBDhOGXIZbAgEDJwsBRhBRVhmDAoJ0A7QGgXkzgQHeQoFmAQsUAYE4jV10h?=
- =?us-ascii?q?HsnFQaBSUSBFYJ5b4FSgliGXQSDLpBcSIEeA1ksAVUTDQoLBwWBZgM1EioVb?=
- =?us-ascii?q?jIdgSM+F4ELGwcFgUqBSWqBBIUSIx8DOYEXgXyBKGdpFTE6FwMLGA1IESw3F?=
- =?us-ascii?q?BsEPm4HjC4XD4IXGQeBD0uBXRYBpg6hDoQmoVsaM4QElBaSUZkGqUCBaDyBW?=
- =?us-ascii?q?TMaCBsVgyJTGQ+OLRbIPCcyPQIHAgcOAwuTZQEB?=
-IronPort-Data: A9a23:YohkwazyVc4Awhec4IB6t+fGxyrEfRIJ4+MujC+fZmUNrF6WrkUBm
- DYeWz2AMviJZjf3eYh0bNu+8EwFv8LcmocxTgpuqlhgHilAwSbn6Xt1DatR0we6dJCroJdPt
- p1GAjX4BJlqCCea/VH1buSJQUBUjcmgXqD7BPPPJhd/TAplTDZJoR94kobVuKYw6TSCK13L4
- 4+aT/H3Ygf/hWYqaj9MsspvlTs21BjMkGJA1rABTagjUG/2zxE9EJ8ZLKetGHr0KqE8NvK6X
- evK0Iai9Wrf+Ro3Yvv9+losWhRXKlJ6FVHmZkt+A8BOsDAbzsAB+vpT2M4nVKtio27hc+adZ
- zl6ncfYpQ8BZsUgkQmGOvVSO3kW0aZuoNcrLZUj2CCe5xWuTpfi/xlhJGwxELIn4/5oOmhf2
- aEyOiIvQECnl8vjldpXSsE07igiBNPgMIVavjRryivUSK9+B5vCWK7No9Rf2V/chOgXQq2YP
- JVfM2cyKk2cPHWjOX9PYH46tOShnGX+dzRbgFmUvqEwpWPUyWSd1ZCxb4SPKoLSG5U9ckCwo
- 2X64mekAg4hBM3O8yuU+1mW2/bUtHauMG4VPPjinhJwu3WTz3YeIB4bT122pb++kEHWc9BSK
- UY8/isosLh09UauCNL6WnWQpXeeoh8aHcJdD+Ag8wyL4q3O6g2dCy4PSTspQNUqvcwxXTs3/
- kWEk9PgGXpkt7j9YXCY+7GZojOzETIYIW8LeWkPSg5ty8PuvowplTrVQ9pjGbLzhdrwcRn0z
- y2MpyE4r64OlsNN3KK+lXjDgjSxtt3KQxQz6wH/QG2o9EV6aZSjaoju7kLUhd5ELYCEXhyat
- 2MFs9aR4fpIDpyXkiGJBuIXE9mUC+2tKjbQhxtrWpIm7TnooibldoFL6zY4L0BsWioZRQLUj
- IbokVs5zPdu0LGCN8ebv6rZ5xwW8JXd
-IronPort-HdrOrdr: A9a23:0x0Sxqkyk74r9iwHwvBh6UU/KWzpDfLm3DAbv31ZSRFFG/FwWf
- rDoB19726RtN9/Yh8dcLy7UpVoBEmslqKdgrNhWItKPjOGhILAFugLhrcKgQeQeREWndQz6U
- 4PScVDIey1JURmjMr8/QmzG8stzZ266qyy7N2uqEuFNTsLV4hQqyFkFw2cDkp6ACNCBZY/Cd
- 6gw/AvnUvHRZzSBf7LfkXsmIP41qT2qK4=
-X-Talos-CUID: 9a23:GUimSWMJxA0Hpu5DdS5Ky3ENAt8ee2zxkV3CMW2WWUJ5YejA
-X-Talos-MUID: =?us-ascii?q?9a23=3AzSraVw1FIHqDF0+Rb4FOd+XpxDUj5qOSFUNQkYo?=
- =?us-ascii?q?9i9jVDz1hMhyn0S2sa9py?=
+  bh=UjdgobZZ/9eUsUSLpYXJoTbVaLHYnDA6ayaePKIt2lQ=;
+  b=NTDbVvt6Hl97+RnjR/VO/MuPWUxUB0R9Vmnfhs4Snxg4XcHAi9hY14QL
+   v83TI4gFfI1efzoJCUJMLTBQvBlmBcE5byNFOMQNKOOyW98fqF0CbitIP
+   9uPHHxcEbd0tJ+WhQtjbFSUAsLTZcTeiuImT/ZwVD1Me/JFRfOU9AnZD0
+   RtwsEeEgPlITCdp5h00etQsr8mGvOEtCiXoADqhtlbbG5vRmWTXropD7Z
+   twULUVHEKC3m9dXao/lweGtQH5SelXWEHQh8oevuYDCVtVgxCex7L/8Wb
+   3Wc319+2L9C/OiPsyYKjfJfhSh/H+RvMf0JVPlU99Dut7SRpkFRcdDIS9
+   g==;
+X-CSE-ConnectionGUID: 6E+IIGbARi2DtfmlvFE/gg==
+X-CSE-MsgGUID: nI9F+cdYS/aCy4kOGeWWMA==
+X-IPAS-Result: =?us-ascii?q?A0BDAgAtXyNq/5P/Ja1aglmCGD+BUkMZMJQqgiGBFp0IF?=
+ =?us-ascii?q?IFqDwEBAQ9RBAEBhQYCjTMCJjQJDgECBAMCAwEBAQEBAQEBAQEBCwEBBQEBA?=
+ =?us-ascii?q?QIBBwWBDhOGXIZbAgEDJwsBRhBRVhmCKliCdAO0BoF5M4EB3kKBZgELFAGBO?=
+ =?us-ascii?q?I1ddIR7JxUGgUlEgRWCcgdvgVKCWIZdBIMuhnmJY0iBHgNZLAFVEw0KCwcFg?=
+ =?us-ascii?q?WYDNRIqFW4yHYEjPheBCxsHBYFKgUlqgQSFEiMfAzmBF4F8gShnaRUxOhcDC?=
+ =?us-ascii?q?xgNSBEsNxQbBD5uB4wuFw+BRWsHAVc3B3SBFAQrAWOSagIBkj6hDoQmoVsaM?=
+ =?us-ascii?q?6prmQakCIU4gWg8gVkzGggbFYMiUxkPji0WyDwnMj0CBwIHDgMLk2UBAQ?=
+IronPort-Data: A9a23:hLp4UqkKwznFxz+tp2KoUXvo5gxwJ0RdPkR7XQ2eYbSJt1+Wr1Gzt
+ xIWXGiOM6qMYzanLYwnbYjjpE0CuZTcm99iSVA6+Cs8FFtH+JHPbTi7wugcHM8zwunrFh8PA
+ xA2M4GYRCwMZiaC4E/raf658SUUOZigHtLUEPTDNj16WThqQSIgjQMLs+Mii+aEu/Dha++2k
+ Y20+ZG31GONgWYubDpKs//b8XuDgdyr0N8mlg1mDRx0lAe2e0k9VPo3Oay3Jn3kdYhYdsbSb
+ /rD1ryw4lTC9B4rDN6/+p6jGqHdauePVeQmoiM+t5mK2nCulARrukoIHKZ0hXNsttm8t4sZJ
+ OOhGnCHYVxB0qXkwIzxWvTDes10FfUuFLTveRBTvSEPpqHLWyOE/hlgMK05FdM1ucdWLmtnz
+ /1CBCwDaxSdqc/xz73uH4GAhux7RCXqFJkUtnclyXTSCuwrBMmbBa7L/tRfmjw3g6iiH96HO
+ JFfMmUpNkmdJUQTZT/7C7pm9Ausrnr2aSFZrFuWjaE2+GPUigd21dABNfKJJYLQFZsPxRzwS
+ mTu+UWoLFIROO2kjjOu4y6vocDCohzecddHfFG/3rsw6LGJ/UQTAQcbfVi2u/+0jgi5Qd03A
+ 04Z+CAGqak06VztT9P4GRa/pRasuxcGR9tWVfU39AyX0afSywGDD2MAQ3hKb9lOnMY6TD8tz
+ liUt8nkCTxmrPueTnf13rWRoDW/NigUBXUPaS8NUU0O5NyLiJs+kB/VVf55HaK1h8GzEjb1q
+ xiOoDU4jLwVpdUWzKj99lfC6xqop57UXks26x/RU2aN8Ax0fsimapau5Fyd6uxPRK6dT1+cr
+ D0fkNOfxP4BAIvLlyGXRugJWraz6J643Cb0m1VjGdwlsj+q4XPmJNgW6zBlL0AvOcEBEdP0X
+ HLuVcpqzMc7FBOXgWVfOupd1+xCIXDcKOnY
+IronPort-HdrOrdr: A9a23:EfhMhK+XRZT1xY8d3gduk+ASI+orL9Y04lQ7vn2ZhyY4TiX+rb
+ HLoB1173HJYVoqMk3I3OrwW5VoIkmskKKdg7NxAV7KZmCP01dAbrsSj7cKqAeOJ8SRzINg/J
+ YlW7RiCdH2EFhxhdv37U2FCdo6qeP3l5xA/d2/815dCSd3dqpn8wB1TiyfEkFwWU16IKBRLu
+ v72iKCzADQAUj+qa+AdwA4Y9Q=
+X-Talos-CUID: =?us-ascii?q?9a23=3AN7VrwGk8Jr4f8fnkqWS45G/sPW7XOSPwj1bxDEW?=
+ =?us-ascii?q?RM2czZKGbTFuO1o4jnMU7zg=3D=3D?=
+X-Talos-MUID: 9a23:w50l1wVZ3q0C7xDq/DnN1R8hP8tZ2OOnI1FRkrIptva7EAUlbg==
 X-IronPort-Anti-Spam-Filtered: true
 X-IronPort-AV: E=Sophos;i="6.24,189,1774310400"; 
-   d="scan'208";a="476286068"
+   d="scan'208";a="476286232"
 Received: from rcdn-l-core-10.cisco.com ([173.37.255.147])
-  by rcdn-iport-2.cisco.com with ESMTP/TLS/TLS_AES_256_GCM_SHA384; 05 Jun 2026 23:49:03 +0000
+  by rcdn-iport-2.cisco.com with ESMTP/TLS/TLS_AES_256_GCM_SHA384; 05 Jun 2026 23:49:44 +0000
 Received: from fedora.lan?044cisco.com (unknown [10.188.102.68])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: kartilak@cisco.com)
-	by rcdn-l-core-10.cisco.com (Postfix) with ESMTPSA id 9DF3E18000887;
-	Fri,  5 Jun 2026 23:49:01 +0000 (GMT)
+	by rcdn-l-core-10.cisco.com (Postfix) with ESMTPSA id 1FD2B18000887;
+	Fri,  5 Jun 2026 23:49:43 +0000 (GMT)
 From: Karan Tilak Kumar <kartilak@cisco.com>
 To: sebaddel@cisco.com
 Cc: arulponn@cisco.com,
@@ -89,9 +89,9 @@ Cc: arulponn@cisco.com,
 	lduncan@suse.com,
 	Karan Tilak Kumar <kartilak@cisco.com>,
 	Hannes Reinecke <hare@kernel.org>
-Subject: [PATCH v3 07/13] scsi: fnic: Route completions and resets by initiator role
-Date: Fri,  5 Jun 2026 16:45:32 -0700
-Message-ID: <20260605234538.7950-8-kartilak@cisco.com>
+Subject: [PATCH v3 08/13] scsi: fnic: Handle NVMe LS frames in FDLS
+Date: Fri,  5 Jun 2026 16:45:33 -0700
+Message-ID: <20260605234538.7950-9-kartilak@cisco.com>
 X-Mailer: git-send-email 2.47.1
 In-Reply-To: <20260605234538.7950-1-kartilak@cisco.com>
 References: <20260605234538.7950-1-kartilak@cisco.com>
@@ -107,107 +107,231 @@ X-Outbound-Client-TLS: ANONYMOUS;unknown [10.188.102.68];TLSv1.3;TLS_AES_256_GCM
 X-Outbound-SMTP-Client: 10.188.102.68, [10.188.102.68]
 X-Outbound-Node: rcdn-l-core-10.cisco.com
 
-Dispatch FCPIO command, response, and ITMF completions to the FCP or
-NVMe handlers based on the configured role.
+Classify NVMe LS request OXIDs, route NVMe LS responses and ABTS frames
+through the FCS receive path, and reset NVMe exchanges when FDLS tears
+down target ports.
 
-Read the NVMe queue-depth and timeout retry fields from firmware config,
-clean up NVMe I/O on firmware reset, and skip SCSI-only cleanup for
-initiator roles that already reset firmware-owned requests.
+Extend FDLS link-down and frame-processing paths so NVMe LS traffic
+follows the same discovery and cleanup state machine as FCP traffic.
 
 Reviewed-by: Sesidhar Baddela <sebaddel@cisco.com>
 Reviewed-by: Arulprabhu Ponnusamy <arulponn@cisco.com>
 Reviewed-by: Gian Carlo Boffa <gcboffa@cisco.com>
 Reviewed-by: Arun Easi <aeasi@cisco.com>
+Reviewed-by: Hannes Reinecke <hare@kernel.org>
 Reviewed-by: Lee Duncan <lduncan@suse.com>
 Signed-off-by: Karan Tilak Kumar <kartilak@cisco.com>
 Co-developed-by: Hannes Reinecke <hare@kernel.org>
 ---
-Incorporate review comments from Hannes:
-        Remove the empty line before the FLOGI completion else block.
-        Add a short comment for the NVMe ERSP completion case.
+Incorporate review comments from Lee Duncan:
+	Replace the NVMe LS OXID switch with a direct frame-type check.
+	Rename the NVMe frame helper to follow fnic function naming style.
 ---
- drivers/scsi/fnic/fnic_res.c  |  2 ++
- drivers/scsi/fnic/fnic_scsi.c | 30 ++++++++++++++++++++++++++----
- 2 files changed, 28 insertions(+), 4 deletions(-)
+ drivers/scsi/fnic/fdls_disc.c | 30 ++++++++++++++++++++++++++++++
+ drivers/scsi/fnic/fnic_fcs.c  | 33 +++++++++++++++++++++++++++------
+ 2 files changed, 57 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/fnic/fnic_res.c b/drivers/scsi/fnic/fnic_res.c
-index 18353fbb5f98..d75d7046c7f6 100644
---- a/drivers/scsi/fnic/fnic_res.c
-+++ b/drivers/scsi/fnic/fnic_res.c
-@@ -57,6 +57,8 @@ int fnic_get_vnic_config(struct fnic *fnic)
- 	GET_CONFIG(port_down_io_retries);
- 	GET_CONFIG(luns_per_tgt);
- 	GET_CONFIG(intr_mode);
-+	GET_CONFIG(lun_queue_depth);
-+	GET_CONFIG(io_timeout_retry);
- 	GET_CONFIG(wq_copy_count);
+diff --git a/drivers/scsi/fnic/fdls_disc.c b/drivers/scsi/fnic/fdls_disc.c
+index 90bb1a39972d..5b4087f1247a 100644
+--- a/drivers/scsi/fnic/fdls_disc.c
++++ b/drivers/scsi/fnic/fdls_disc.c
+@@ -387,10 +387,16 @@ static bool fdls_is_oxid_tgt_req(uint16_t oxid)
+ 	return true;
+ }
  
- 	role = c->flags & FNIC_ROLE_CONFIG_MASK;
-diff --git a/drivers/scsi/fnic/fnic_scsi.c b/drivers/scsi/fnic/fnic_scsi.c
-index 04ab384033b1..5ad4bb714428 100644
---- a/drivers/scsi/fnic/fnic_scsi.c
-+++ b/drivers/scsi/fnic/fnic_scsi.c
-@@ -145,8 +145,9 @@ unsigned int fnic_count_ioreqs(struct fnic *fnic, u32 portid)
- {
- 	unsigned int count = 0;
- 
--	fnic_scsi_io_iter(fnic, fnic_count_portid_ioreqs_iter,
--				&portid, &count);
-+	if (IS_FNIC_FCP_INITIATOR(fnic))
-+		fnic_scsi_io_iter(fnic, fnic_count_portid_ioreqs_iter,
-+					&portid, &count);
- 
- 	FNIC_SCSI_DBG(KERN_DEBUG, fnic,
- 		      "portid = 0x%x count = %u\n", portid, count);
-@@ -734,6 +735,8 @@ static int fnic_fcpio_fw_reset_cmpl_handler(struct fnic *fnic,
- 	/* Clean up all outstanding io requests */
- 	if (IS_FNIC_FCP_INITIATOR(fnic))
- 		fnic_cleanup_io(fnic, SCSI_NO_TAG);
-+	else if (IS_FNIC_NVME_INITIATOR(fnic))
-+		nvfnic_cleanup_all_nvme_ios(fnic);
- 
- 	atomic64_set(&fnic->fnic_stats.fw_stats.active_fw_reqs, 0);
- 	atomic64_set(&fnic->fnic_stats.io_stats.active_ios, 0);
-@@ -1457,11 +1460,21 @@ static int fnic_fcpio_cmpl_handler(struct vnic_dev *vdev,
- 		break;
- 
- 	case FCPIO_ICMND_CMPL: /* fw completed a command */
--		fnic_fcpio_icmnd_cmpl_handler(fnic, cq_index, desc);
-+		if (IS_FNIC_FCP_INITIATOR(fnic))
-+			fnic_fcpio_icmnd_cmpl_handler(fnic, cq_index, desc);
-+		else if (IS_FNIC_NVME_INITIATOR(fnic))
-+			nvfnic_fcpio_nvme_fast_cmpl_handler(fnic, desc);
-+		break;
++static inline bool fdls_is_oxid_nvme_req(uint16_t oxid)
++{
++	return FNIC_FRAME_TYPE(oxid) == FNIC_FRAME_TYPE_NVME_LS;
++}
 +
-+	case FCPIO_NVME_ERSP_HW_CMPL: /* fw completed NVMe ERSP */
-+		nvfnic_fcpio_ersp_cmpl_handler(fnic, desc, 1);
+ static void fdls_reset_oxid_pool(struct fnic_iport_s *iport)
+ {
+ 	struct fnic_oxid_pool_s *oxid_pool = &iport->oxid_pool;
+ 
++	bitmap_clear(oxid_pool->bitmap, 0, FNIC_OXID_POOL_SZ);
+ 	oxid_pool->next_idx = 0;
+ }
+ 
+@@ -1288,6 +1294,10 @@ bool fdls_delete_tport(struct fnic_iport_s *iport, struct fnic_tport_s *tport)
+ 		spin_unlock_irqrestore(&fnic->fnic_lock, fnic->lock_flags);
+ 		fnic_rport_exch_reset(iport->fnic, tport->fcid);
+ 		spin_lock_irqsave(&fnic->fnic_lock, fnic->lock_flags);
++	} else if (IS_FNIC_NVME_INITIATOR(fnic)) {
++		spin_unlock_irqrestore(&fnic->fnic_lock, fnic->lock_flags);
++		nvfnic_exch_reset(iport, tport);
++		spin_lock_irqsave(&fnic->fnic_lock, fnic->lock_flags);
+ 	}
+ 
+ 	if ((tport->flags & FNIC_FDLS_SCSI_REGISTERED) ||
+@@ -1828,6 +1838,7 @@ static struct fnic_tport_s *fdls_create_tport(struct fnic_iport_s *iport,
+ 	tport->fcid = fcid;
+ 	tport->wwpn = wwpn;
+ 	tport->iport = iport;
++	INIT_LIST_HEAD(&tport->ls_req_list);
+ 
+ 	FNIC_FCS_DBG(KERN_DEBUG, fnic,
+ 				 "Need to setup tport timer callback");
+@@ -2439,6 +2450,8 @@ static void fdls_tport_timer_callback(struct timer_list *t)
+ 	struct fnic *fnic = iport->fnic;
+ 	uint16_t oxid;
+ 	unsigned long flags;
++	struct fc_frame_header fchdr = {0};
++	uint8_t fcid[3];
+ 
+ 	spin_lock_irqsave(&fnic->fnic_lock, flags);
+ 	if (!tport->timer_pending) {
+@@ -2531,6 +2544,12 @@ static void fdls_tport_timer_callback(struct timer_list *t)
+ 		FNIC_FCS_DBG(KERN_INFO, fnic,
+ 			"0x%x timeout tport 0x%x oxid 0x%x state %d\n",
+ 			iport->fcid, tport->fcid, oxid, tport->state);
++		if (IS_FNIC_NVME_INITIATOR(fnic)) {
++			hton24(fcid, tport->fcid);
++			FNIC_STD_SET_S_ID(fchdr, fcid);
++			FNIC_STD_SET_OX_ID(fchdr, oxid);
++			nvfnic_process_ls_abts_rsp(iport, &fchdr);
++		}
  		break;
- 
- 	case FCPIO_ITMF_CMPL: /* fw completed itmf (abort cmd, lun reset)*/
--		fnic_fcpio_itmf_cmpl_handler(fnic, cq_index, desc);
-+		if (IS_FNIC_FCP_INITIATOR(fnic))
-+			fnic_fcpio_itmf_cmpl_handler(fnic, cq_index, desc);
-+		else if (IS_FNIC_NVME_INITIATOR(fnic))
-+			nvfnic_fcpio_nvme_itmf_cmpl_handler(fnic, desc);
+ 	}
+ 	spin_unlock_irqrestore(&fnic->fnic_lock, flags);
+@@ -2841,6 +2860,12 @@ fdls_process_tgt_prli_rsp(struct fnic_iport_s *iport,
+ 				 "mismatched target zoned with FC SCSI initiator: 0x%x",
+ 				 tgt_fcid);
+ 			mismatched_tgt = true;
++		} else if (IS_FNIC_NVME_INITIATOR(fnic) &&
++			   prli_rsp->sp.spp_type != FC_TYPE_NVME) {
++			FNIC_FCS_DBG(KERN_ERR, fnic,
++				 "mismatched target zoned with NVME initiator: 0x%x",
++				 tgt_fcid);
++			mismatched_tgt = true;
+ 		}
+ 		if (mismatched_tgt) {
+ 			fdls_tgt_logout(iport, tport);
+@@ -4852,6 +4877,8 @@ fnic_fdls_validate_and_get_frame_type(struct fnic_iport_s *iport,
+ 			return FNIC_FDMI_BLS_ABTS_RSP;
+ 		} else if (fdls_is_oxid_tgt_req(oxid)) {
+ 			return FNIC_TPORT_BLS_ABTS_RSP;
++		} else if (fdls_is_oxid_nvme_req(oxid)) {
++			return FNIC_LS_REQ_ABTS_RSP;
+ 		}
+ 		FNIC_FCS_DBG(KERN_INFO, fnic,
+ 			"Received ABTS rsp with unknown oxid(0x%x) from 0x%x. Dropping frame",
+@@ -5084,6 +5111,9 @@ void fnic_fdls_recv_frame(struct fnic_iport_s *iport, void *rx_frame,
+ 	case FNIC_FABRIC_BLS_ABTS_RSP:
+ 			fdls_process_fabric_abts_rsp(iport, fchdr);
  		break;
++	case FNIC_LS_REQ_ABTS_RSP:
++		nvfnic_process_ls_abts_rsp(iport, fchdr);
++		break;
+ 	case FNIC_FDMI_BLS_ABTS_RSP:
+ 		fdls_process_fdmi_abts_rsp(iport, fchdr);
+ 		break;
+diff --git a/drivers/scsi/fnic/fnic_fcs.c b/drivers/scsi/fnic/fnic_fcs.c
+index ac1febaa8474..24fc36c0ad5c 100644
+--- a/drivers/scsi/fnic/fnic_fcs.c
++++ b/drivers/scsi/fnic/fnic_fcs.c
+@@ -31,6 +31,11 @@ struct workqueue_struct *fnic_event_queue;
  
- 	case FCPIO_FLOGI_REG_CMPL: /* fw completed flogi_reg */
-@@ -1650,6 +1663,15 @@ void fnic_wq_copy_cleanup_handler(struct vnic_wq_copy *wq,
- 	unsigned long start_time = 0;
- 	uint16_t hwq;
+ static uint8_t FCOE_ALL_FCF_MAC[6] = FC_FCOE_FLOGI_MAC;
  
-+	/*
-+	 * Clean up all outstanding io requests. For FC initiator or NVME
-+	 * initiator we issue firmware reset before this and all I/Os are
-+	 * already freed
-+	 */
-+	if (IS_FNIC_FCP_INITIATOR(fnic) ||
-+	    IS_FNIC_NVME_INITIATOR(fnic))
++static inline bool fnic_is_nvme_frame(struct fc_frame_header *fchdr)
++{
++	return (fchdr->fh_type == FC_TYPE_NVME);
++}
++
+ /*
+  * Internal Functions
+  * This function will initialize the src_mac address to be
+@@ -284,6 +289,7 @@ void fnic_handle_frame(struct work_struct *work)
+ 	struct fnic *fnic = container_of(work, struct fnic, frame_work);
+ 	struct fnic_frame_list *cur_frame, *next;
+ 	int fchdr_offset = 0;
++	struct fc_frame_header *fchdr;
+ 
+ 	spin_lock_irqsave(&fnic->fnic_lock, fnic->lock_flags);
+ 	list_for_each_entry_safe(cur_frame, next, &fnic->frame_queue, links) {
+@@ -313,8 +319,14 @@ void fnic_handle_frame(struct work_struct *work)
+ 		fchdr_offset = (cur_frame->rx_ethhdr_stripped) ?
+ 			0 : FNIC_ETH_FCOE_HDRS_OFFSET;
+ 
+-		fnic_fdls_recv_frame(&fnic->iport, cur_frame->fp,
+-							 cur_frame->frame_len, fchdr_offset);
++		fchdr = (struct fc_frame_header *)((u8 *)cur_frame->fp + fchdr_offset);
++		if (IS_FNIC_NVME_INITIATOR(fnic) && fnic_is_nvme_frame(fchdr)) {
++			nvfnic_ls_rsp_recv(&fnic->iport, fchdr,
++					  cur_frame->frame_len - fchdr_offset);
++		} else {
++			fnic_fdls_recv_frame(&fnic->iport, cur_frame->fp,
++					     cur_frame->frame_len, fchdr_offset);
++		}
+ 
+ 		mempool_free(cur_frame->fp, fnic->frame_recv_pool);
+ 		mempool_free(cur_frame, fnic->frame_elem_pool);
+@@ -617,6 +629,9 @@ void fnic_free_rq_buf(struct vnic_rq *rq, struct vnic_rq_buf *buf)
+ 	void *rq_buf = buf->os_buf;
+ 	struct fnic *fnic = vnic_dev_priv(rq->vdev);
+ 
++	if (WARN_ON(!buf))
 +		return;
 +
- 	/* get the tag reference */
- 	fcpio_tag_id_dec(&desc->hdr.tag, &id);
- 	id &= FNIC_TAG_MASK;
+ 	dma_unmap_single(&fnic->pdev->dev, buf->dma_addr, buf->len,
+ 			 DMA_FROM_DEVICE);
+ 
+@@ -651,7 +666,7 @@ static int fnic_send_frame(struct fnic *fnic, void *frame, int frame_len)
+ 		dma_unmap_single(&fnic->pdev->dev, pa, frame_len, DMA_TO_DEVICE);
+ 		FNIC_FCS_DBG(KERN_INFO, fnic,
+ 					 "vnic work queue descriptor is not available");
+-		ret = -1;
++		ret = -ENXIO;
+ 		goto fnic_send_frame_end;
+ 	}
+ 
+@@ -685,7 +700,6 @@ fdls_send_fcoe_frame(struct fnic *fnic, void *frame, int frame_size,
+ 	struct fcoe_hdr *pfcoe_hdr;
+ 	struct fnic_frame_list *frame_elem;
+ 	int len = frame_size;
+-	int ret;
+ 	struct fc_frame_header *fchdr = (struct fc_frame_header *) (frame +
+ 			FNIC_ETH_FCOE_HDRS_OFFSET);
+ 
+@@ -723,8 +737,7 @@ fdls_send_fcoe_frame(struct fnic *fnic, void *frame, int frame_size,
+ 
+ 	fnic_debug_dump_fc_frame(fnic, fchdr, frame_size, "Outgoing");
+ 
+-	ret = fnic_send_frame(fnic, frame, len);
+-	return ret;
++	return fnic_send_frame(fnic, frame, len);
+ }
+ 
+ int fnic_send_fcoe_frame(struct fnic_iport_s *iport, void *frame,
+@@ -872,6 +885,9 @@ static void fnic_wq_complete_frame_send(struct vnic_wq *wq,
+ {
+ 	struct fnic *fnic = vnic_dev_priv(wq->vdev);
+ 
++	if (WARN_ON(!buf))
++		return;
++
+ 	dma_unmap_single(&fnic->pdev->dev, buf->dma_addr, buf->len,
+ 			 DMA_TO_DEVICE);
+ 	mempool_free(buf->os_buf, fnic->frame_pool);
+@@ -917,6 +933,9 @@ void fnic_free_wq_buf(struct vnic_wq *wq, struct vnic_wq_buf *buf)
+ 	dma_unmap_single(&fnic->pdev->dev, buf->dma_addr, buf->len,
+ 			 DMA_TO_DEVICE);
+ 
++	if (WARN_ON(!buf))
++		return;
++
+ 	mempool_free(buf->os_buf, fnic->frame_pool);
+ 	buf->os_buf = NULL;
+ }
+@@ -1048,6 +1067,8 @@ void fnic_tport_event_handler(struct work_struct *work)
+ 			if (tport->state == FDLS_TGT_STATE_READY) {
+ 				if (IS_FNIC_FCP_INITIATOR(fnic))
+ 					fnic_fdls_add_tport(&fnic->iport, tport, flags);
++				else if (IS_FNIC_NVME_INITIATOR(fnic))
++					nvfnic_add_tport(fnic, tport);
+ 			} else {
+ 				FNIC_FCS_DBG(KERN_INFO, fnic,
+ 					 "Target not ready. Add rport event dropped: 0x%x",
 -- 
 2.47.1
 
