@@ -1,129 +1,213 @@
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from spam.asrmicro.com (asrmicro.com [210.13.118.86])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D157D41931B
-	for <linux-scsi@vger.kernel.org>; Fri,  5 Jun 2026 11:15:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C5E983BBFAF;
+	Fri,  5 Jun 2026 11:21:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.13.118.86
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780658159; cv=none; b=M7rFncya1Kofj1CKFBnUe8/yRt5Xqed7IID/6B4jQ9dHM+SWPJ3MRsF4740SSm41p413W5zyKXdT8eo010gba0Fk9sTN9uHJ5Nyzj87n/IXVAq7fmCxxRFGwNl0Erxq86Z0KRjUrCKwkQo62ykM/i88B1PT8ucY/kzkhRK9aHYg=
+	t=1780658484; cv=none; b=E7Af4kJAMcVxtRZW5mYFNoSioOBTLL9d8x/xBRrV2B+2Xb3jru6Ukmn9KnUcN0bvCronKGvCkLVotSSnh6y/7T5Zf9BgR3V5ryqTM9bGrt4LGltor2rdJFqRAzjvZfOneutY/WjmtfmZssnJklNdY6Ffd4rQmyze557WriXQUJw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780658159; c=relaxed/simple;
-	bh=kqxiOotK0FA1RkAiHhG2IBA+vwuPdIDMrIhttxYJopM=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=LeBgAeTa1isjxQug4bBwhXuyO4SVpZ3XPvuCJWwONO3UF7IxqSuShauDjNVY6nd9Lkl23E4xFPwSTsqk4r8kiYSKORdyGcMD+M3stFddbPq6UFFaFAlPPtiAvF8OOsgjzMEntEaIM3XRJXccMiQKvKHYncdpGBsIZUZaJdM3HoY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b=rdukO1tZ; dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b=rdukO1tZ; arc=none smtp.client-ip=195.135.223.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b="rdukO1tZ";
-	dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b="rdukO1tZ"
-Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id 234DB68574;
-	Fri,  5 Jun 2026 11:15:56 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-	t=1780658156; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=kqxiOotK0FA1RkAiHhG2IBA+vwuPdIDMrIhttxYJopM=;
-	b=rdukO1tZQ/5OTSb2Pble2X5+mt7jVSomYJjZI5HxOr9IFFEqWcUuF8DUCzWjCCRJ5LU/Yz
-	7fjso5eiR1Rv8WUsjawhAlGGqpYCcfPp+dxPrI9dSMN/B3SLZ2C+KrcbdTdwLzgtCXZp+s
-	wcM8tiI5LK+Gw9CakFLXO2V3E31QnQg=
-Authentication-Results: smtp-out2.suse.de;
-	none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-	t=1780658156; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=kqxiOotK0FA1RkAiHhG2IBA+vwuPdIDMrIhttxYJopM=;
-	b=rdukO1tZQ/5OTSb2Pble2X5+mt7jVSomYJjZI5HxOr9IFFEqWcUuF8DUCzWjCCRJ5LU/Yz
-	7fjso5eiR1Rv8WUsjawhAlGGqpYCcfPp+dxPrI9dSMN/B3SLZ2C+KrcbdTdwLzgtCXZp+s
-	wcM8tiI5LK+Gw9CakFLXO2V3E31QnQg=
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id DBC1A779A9;
-	Fri,  5 Jun 2026 11:15:55 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id j0+SNOuvImqoEAAAD6G6ig
-	(envelope-from <mwilck@suse.com>); Fri, 05 Jun 2026 11:15:55 +0000
-Message-ID: <91b28db156bf1a643cbe6b6380d2361f2b954a98.camel@suse.com>
-Subject: Re: [PATCH] scsi: devinfo: broaden Promise VTrak E310/E610
- identification
-From: Martin Wilck <mwilck@suse.com>
-To: Xose Vazquez Perez <xose.vazquez@gmail.com>
-Cc: Alexander Perlis <aperlis@math.lsu.edu>, Nikkos Svoboda	
- <nsvoboda@math.lsu.edu>, Benjamin Marzinski <bmarzins@redhat.com>, 
- Christophe Varoqui <christophe.varoqui@opensvc.com>, Christoph Hellwig
- <hch@lst.de>, "James E.J. Bottomley"	
- <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen"	
- <martin.petersen@oracle.com>, SCSI-ML <linux-scsi@vger.kernel.org>,
- DM_DEVEL-ML	 <dm-devel@lists.linux.dev>
-Date: Fri, 05 Jun 2026 13:15:55 +0200
-In-Reply-To: <20260529205602.177515-1-xose.vazquez@gmail.com>
-References: <20260529205602.177515-1-xose.vazquez@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.60.2 
+	s=arc-20240116; t=1780658484; c=relaxed/simple;
+	bh=OgVk+RUqYRILSi1wq86AS2+D7OqLMfYYrQCIRJEWoes=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=bxxWnMnXH8eIOdntQk1TISVebAv9bRo0Z4oxSsF/1GBZ2cIq1vILSKhb9Eek/FY2tWSmAXVRYW9EVtBtjWPv23qmqM5BifVEgCoTptA+hDJX3Q1o2zakyONZlyTUE/e9xtqXRjrXKsisDGAuwp71SnHszL3TfhcVXPhiR0zdTWQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=asrmicro.com; spf=pass smtp.mailfrom=asrmicro.com; arc=none smtp.client-ip=210.13.118.86
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=asrmicro.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=asrmicro.com
+Received: from exch02.asrmicro.com (exch02.asrmicro.com [10.1.24.122])
+	by spam.asrmicro.com with ESMTPS id 655BKTWU027917
+	(version=TLSv1 cipher=ECDHE-RSA-AES256-SHA bits=256 verify=FAIL);
+	Fri, 5 Jun 2026 19:20:29 +0800 (GMT-8)
+	(envelope-from hongjiefang@asrmicro.com)
+Received: from localhost (10.1.170.248) by exch02.asrmicro.com (10.1.24.122)
+ with Microsoft SMTP Server (TLS) id 15.0.847.32; Fri, 5 Jun 2026 19:20:34
+ +0800
+From: Hongjie Fang <hongjiefang@asrmicro.com>
+To: <alim.akhtar@samsung.com>, <avri.altman@wdc.com>, <bvanassche@acm.org>,
+        <James.Bottomley@HansenPartnership.com>, <martin.petersen@oracle.com>,
+        <peter.wang@mediatek.com>, <beanhuo@micron.com>
+CC: <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+Subject: [PATCH v5] scsi: ufs: core: handle PM commands timeout before SCSI EH
+Date: Fri, 5 Jun 2026 19:20:34 +0800
+Message-ID: <20260605112034.3802540-1-hongjiefang@asrmicro.com>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Spam-Flag: NO
-X-Spamd-Result: default: False [-2.80 / 50.00];
-	BAYES_HAM(-3.00)[99.99%];
-	SUSPICIOUS_RECIPS(1.50)[];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	FREEMAIL_ENVRCPT(0.00)[gmail.com];
-	RCPT_COUNT_SEVEN(0.00)[10];
-	FREEMAIL_TO(0.00)[gmail.com];
-	FUZZY_RATELIMITED(0.00)[rspamd.com];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	TAGGED_RCPT(0.00)[];
-	ARC_NA(0.00)[];
-	MID_RHS_MATCH_FROM(0.00)[];
-	DKIM_SIGNED(0.00)[suse.com:s=susede1];
-	TO_DN_ALL(0.00)[];
-	FROM_EQ_ENVFROM(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	RCVD_TLS_ALL(0.00)[];
-	RCVD_COUNT_TWO(0.00)[2];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.com:email,suse.com:mid,imap1.dmz-prg2.suse.org:helo]
-X-Spam-Level: 
-X-Spam-Score: -2.80
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: exch03.asrmicro.com (10.1.24.118) To exch02.asrmicro.com
+ (10.1.24.122)
+X-DNSRBL: 
+X-SPAM-SOURCE-CHECK: pass
+X-MAIL:spam.asrmicro.com 655BKTWU027917
 
-On Fri, 2026-05-29 at 22:56 +0200, Xose Vazquez Perez wrote:
-> The Promise VTrak Ex10 series share the same hardware base and
-> firmware.
-> Consequently all interface variants, whether fibre channel ("f") or
-> SAS ("s") in dual/single controller, exhibit the same SCSI behavior.
->=20
-> Instead of adding separate blacklist entries for every specific model
-> variant (such as E610f, E610s, E310f, E310s), consolidate and
-> broaden the match strings to "VTrak E310" and "VTrak E610".
->=20
-> Cc: Alexander Perlis <aperlis@math.lsu.edu>
-> Cc: Nikkos Svoboda <nsvoboda@math.lsu.edu>
-> Cc: Martin Wilck <mwilck@suse.com>
-> Cc: Benjamin Marzinski <bmarzins@redhat.com>
-> Cc: Christophe Varoqui <christophe.varoqui@opensvc.com>
-> Cc: Christoph Hellwig <hch@lst.de>
-> Cc: James E.J. Bottomley <James.Bottomley@HansenPartnership.com>
-> Cc: Martin K. Petersen <martin.petersen@oracle.com>
-> Cc: SCSI-ML <linux-scsi@vger.kernel.org>
-> Cc: DM_DEVEL-ML <dm-devel@lists.linux.dev>
-> Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
+A PM START STOP sent from the UFS well-known LU resume path can race with
+SCSI EH.
 
-Reviewed-by: Martin Wilck <mwilck@suse.com>
+The "wl resume" task flow is:
+  __ufshcd_wl_resume()
+    ufshcd_set_dev_pwr_mode(UFS_ACTIVE_PWR_MODE)
+      ufshcd_execute_start_stop()
+        scsi_execute_cmd()
+          blk_execute_rq           <-- wait
+          scsi_check_passthrough() <-- may retry START STOP
+
+If the first START STOP time out, SCSI EH may already recover the link and
+reset the device before scsi_execute_cmd() returns:
+  scsi_timeout()
+    scsi_eh_scmd_add()
+      scsi_error_handler()
+        scsi_unjam_host()
+          scsi_eh_ready_devs()
+            scsi_eh_host_reset()
+              ufshcd_eh_host_reset_handler()
+                if (hba->pm_op_in_progress)
+                  ufshcd_link_recovery()
+                    ufshcd_device_reset()
+                    ufshcd_host_reset_and_restore()
+          ...
+          scsi_eh_flush_done_q()   <-- wakeup "wl resume" task
+        ...                        <-- host still in SHOST_RECOVERY
+        scsi_restart_operations()
+
+A later passthrough retry can then run while the host is still in
+SHOST_RECOVERY and hit the SCMD_FAIL_IF_RECOVERING path:
+  scsi_queue_rq()
+    if (scsi_host_in_recovery(shost) &&
+        cmd->flags & SCMD_FAIL_IF_RECOVERING)
+      return BLK_STS_OFFLINE
+
+That retry completes with DID_ERROR or DID_NO_CONNECT even though EH may
+already have restored the device to an operational ACTIVE state.
+
+Handle these PM timeouts directly from ufshcd_eh_timed_out() instead.
+After ufshcd_link_recovery(), complete the timed-out command immediately
+if it has not been completed already.
+
+For regular SCSI commands, complete them with DID_REQUEUE to match the
+existing MCQ force-completion semantics and allow scsi_execute_cmd() to
+retry if needed. For reserved internal device-management commands, finish
+the request with DID_TIME_OUT without calling ufshcd_release_scsi_cmd()
+since those commands use different resource lifetime rules.
+
+The system_suspending flag is no longer needed because PM command timeout
+handling now uses pm_op_in_progress.
+
+Fixes: b8c3a7bac9b6 ("scsi: ufs: Have midlayer retry start stop errors")
+Signed-off-by: Hongjie Fang <hongjiefang@asrmicro.com>
+---
+
+v5: complete SCSI commands with DID_REQUEUE and use DID_TIME_OUT for
+reserved commands suggested by Peter Wang
+
+v4: handle PM timeouts directly from ufshcd_eh_timed_out(), no longer
+relay on the extra legacy single-doorbell force-completion path
+
+v3: ufshcd_eh_timed_out() no longer checks the UFS device WLUN or the
+START STOP opcode. It only checks whether a PM operation is in progress
+for normal SCSI command
+
+v2: handle PM SSU timeout directly from ufshcd_eh_timed_out() suggested
+by Bart Van Assche
+
+ drivers/ufs/core/ufshcd.c | 34 +++++++++++++++++++++++++++-------
+ include/ufs/ufshcd.h      |  3 ---
+ 2 files changed, 27 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index c3f08957d179..cc38588d99eb 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -9466,22 +9466,44 @@ static enum scsi_timeout_action ufshcd_eh_timed_out(struct scsi_cmnd *scmd)
+ {
+ 	struct ufs_hba *hba = shost_priv(scmd->device->host);
+ 
+-	if (!hba->system_suspending) {
++	if (!hba->pm_op_in_progress) {
+ 		/* Activate the error handler in the SCSI core. */
+ 		return SCSI_EH_NOT_HANDLED;
+ 	}
+ 
+ 	/*
+-	 * If we get here we know that no TMFs are outstanding and also that
+-	 * the only pending command is a START STOP UNIT command. Handle the
+-	 * timeout of that command directly to prevent a deadlock between
++	 * Handle the timeout directly to prevent a deadlock between
+ 	 * ufshcd_set_dev_pwr_mode() and ufshcd_err_handler().
+ 	 */
+ 	ufshcd_link_recovery(hba);
+ 	dev_info(hba->dev, "%s() finished; outstanding_tasks = %#lx.\n",
+ 		 __func__, hba->outstanding_tasks);
+ 
+-	return scsi_host_busy(hba->host) ? SCSI_EH_RESET_TIMER : SCSI_EH_DONE;
++	/*
++	 * ufshcd_link_recovery() may already have completed @scmd, e.g. via
++	 * the existing MCQ force-completion path.
++	 */
++	if (!test_bit(SCMD_STATE_COMPLETE, &scmd->state)) {
++		if (!hba->mcq_enabled) {
++			unsigned long flags;
++			struct request *rq = scsi_cmd_to_rq(scmd);
++
++			spin_lock_irqsave(&hba->outstanding_lock, flags);
++			__clear_bit(rq->tag, &hba->outstanding_reqs);
++			spin_unlock_irqrestore(&hba->outstanding_lock, flags);
++		}
++
++		if (ufshcd_is_scsi_cmd(scmd)) {
++			set_host_byte(scmd, DID_REQUEUE);
++			ufshcd_release_scsi_cmd(hba, scmd);
++		} else {
++			set_host_byte(scmd, DID_TIME_OUT);
++		}
++
++		scsi_done(scmd);
++	}
++
++	return SCSI_EH_DONE;
+ }
+ 
+ static const struct attribute_group *ufshcd_driver_groups[] = {
+@@ -10518,7 +10540,6 @@ static int ufshcd_wl_suspend(struct device *dev)
+ 
+ 	hba = shost_priv(sdev->host);
+ 	down(&hba->host_sem);
+-	hba->system_suspending = true;
+ 
+ 	if (pm_runtime_suspended(dev))
+ 		goto out;
+@@ -10560,7 +10581,6 @@ static int ufshcd_wl_resume(struct device *dev)
+ 		hba->curr_dev_pwr_mode, hba->uic_link_state);
+ 	if (!ret)
+ 		hba->is_sys_suspended = false;
+-	hba->system_suspending = false;
+ 	up(&hba->host_sem);
+ 	return ret;
+ }
+diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
+index cfbc75d8df83..8280a95c00c7 100644
+--- a/include/ufs/ufshcd.h
++++ b/include/ufs/ufshcd.h
+@@ -1020,8 +1020,6 @@ enum ufshcd_mcq_opr {
+  * @caps: bitmask with information about UFS controller capabilities
+  * @devfreq: frequency scaling information owned by the devfreq core
+  * @clk_scaling: frequency scaling information owned by the UFS driver
+- * @system_suspending: system suspend has been started and system resume has
+- *	not yet finished.
+  * @is_sys_suspended: UFS device has been suspended because of system suspend
+  * @urgent_bkops_lvl: keeps track of urgent bkops level for device
+  * @is_urgent_bkops_lvl_checked: keeps track if the urgent bkops level for
+@@ -1197,7 +1195,6 @@ struct ufs_hba {
+ 
+ 	struct devfreq *devfreq;
+ 	struct ufs_clk_scaling clk_scaling;
+-	bool system_suspending;
+ 	bool is_sys_suspended;
+ 
+ 	enum bkops_status urgent_bkops_lvl;
+-- 
+2.25.1
+
