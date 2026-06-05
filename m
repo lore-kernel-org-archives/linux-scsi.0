@@ -1,143 +1,122 @@
-Received: from mail-lj1-f171.google.com (mail-lj1-f171.google.com [209.85.208.171])
+Received: from mail-qt1-f169.google.com (mail-qt1-f169.google.com [209.85.160.169])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EBAF93290D9
-	for <linux-scsi@vger.kernel.org>; Fri,  5 Jun 2026 16:04:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.171
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780675489; cv=pass; b=KUEREAQctLHYGl2/cUIF2bf80JFK5KEmS7My6mSSzX2LTc9ebXEF9isd8IBleSTuC8Nf2UtfHuqYgPWBDUJsBY1ExWJeL/Moc9rOS7eHryqWg2pml2qM0vbi5Bh24vyiFB4mymOSd8k6vqVWE/veBO25AT96+P4ZFm1GLJLJrPQ=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780675489; c=relaxed/simple;
-	bh=LG8J/R+2eufDNwIl81kPJGrTs5zv+E3jtTsi0TpUf2Y=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=I0vPI+l6n8YST62Cxq/O8L7TCJIveBI127NqlPlpO5ZM37J7NIoOzgEUsgu9Vpj0g65VAK7X8bCOOcLuDM1LdyraLLWXSskUKFs+kE3t1wDSBrpS1vC4grNhK1kFF2WJL7mvbhSMy3svrWRkM8QxX/W13NpnVMw2I5THuOS4QAc=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=Cv8Lu6JC; arc=pass smtp.client-ip=209.85.208.171
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4823A38F636
+	for <linux-scsi@vger.kernel.org>; Fri,  5 Jun 2026 17:44:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.169
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1780681492; cv=none; b=Ii3X7y0/vniv7OQG9OJHXTS23K0vw1Rlq+zgwGTlZcaecit3JLR7U3sWIXvHkUrqDclmZIuaLEIFkIGQMLA+Rbt8OU8lug/xM8iHnToyoZqjH+Cw3zNP45Y3e/OSPb/t/G/Ky8awGVeHYBJYCUk8+3wB71YnEINu+FG0IBqskrM=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1780681492; c=relaxed/simple;
+	bh=gbD4FCJy0BQ4W1zXJKiTk9oj2celhkKljTujiWAVRVs=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=VZbUwG4tZEbzdGLp45zXTQTPas71k42WExPbrJVZYJdwNeFnPrM9q/BVN/kHCMseX1xUknKuw4DDCDITdHHTMTY2GLa51UU4Yj9Pr6I29YmEPGvQOl80UkNrobs+mALDl0p8aZ5W8U2UA1zci1UeT+4vcmB2QENIvBrZ8NT8auA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=YBz/UsI4; arc=none smtp.client-ip=209.85.160.169
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="Cv8Lu6JC"
-Received: by mail-lj1-f171.google.com with SMTP id 38308e7fff4ca-396753f343aso21998791fa.2
-        for <linux-scsi@vger.kernel.org>; Fri, 05 Jun 2026 09:04:47 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1780675486; cv=none;
-        d=google.com; s=arc-20240605;
-        b=AJBYXE/mb6p7qkdeKlbOdzzVfRq/KoTyHjr13cP3mTfMoaVk/qo2hi79ZMscPrOQ9Z
-         JY3YUI4NPcFfyCJr3+l8g3ksY0XKtO9jZ6p27wOmsXTCWNiinp0Fzzrs+1xBb0g9dtLQ
-         VnJ7SYKU10/9To+zUgmw6vdsPMkllDaPAgLWwegisJDa/c0jYnHXuLN6W1G6mp/A6DwG
-         OFgi1L+Crj2pUMbZsDeTMzSmv/0Fjs9ek/OtlqdCXzb6P7zuNxq4fMZXCrsHc05MOizi
-         FhJilpdmMRyqFUEJ11JdGp+DwOs02QEHuUZOUaDazA+F9MuHd9ofOhnvkQjGUYKcQ6oN
-         oQQQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=Vm/ss87izqfP/0U05LwE7pPzc4bfkP4ilQm2LP62OvM=;
-        fh=F1nnWtY5V79wguKyAENFGOKWBR0iSoQT2io3ROLg/1s=;
-        b=M4Dt6iBvrgXpxD8UEc7kXGcWWI5fnEWketOVS5dO8gKslDfM8BRDPXHm5EwKeQwtdE
-         ve6ruGnOReUSqp0TQYQjM7gYHwIlPTRZPAtl7uddsGOuhNsLIdwrkWWExhFfO1mnKn+6
-         OE1eirJ7k1GLPbPCgmbYSQSi7qPbnIuDEBqmT7L4L5ji5/Ubf/lh1hjxsIEAT/eBAIbq
-         ChTA+ddblJjqAEpEIsdKLtcf3GOlLsVL+NVSSyHR7dDmIiM4gLNwuzYME7mic6dFQvK5
-         bebIt/1mwhrgNMiAOSCIn1trcuH9rdjAcvqO1czJ4l3rvgrSHPvip4Br0k/etLDJgfl2
-         TeHA==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="YBz/UsI4"
+Received: by mail-qt1-f169.google.com with SMTP id d75a77b69052e-517907feed0so15441451cf.1
+        for <linux-scsi@vger.kernel.org>; Fri, 05 Jun 2026 10:44:48 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1780675486; x=1781280286; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=Vm/ss87izqfP/0U05LwE7pPzc4bfkP4ilQm2LP62OvM=;
-        b=Cv8Lu6JC5XtyxQIsfqjw9APdSzUn3k3L0GM3Fs3LxCqwoDc5s+poIN7gKPHR4G0NUK
-         ZzdnM9l8Gl/JJaV4RecX2IPwVXqOIAsMuDtE/5v5mrbqqBR736sZMZZAr9YYyQf2zXJY
-         AtFLp5ghh6O+zoSqJdVwXSr1caC9A38Pd+A/HAsUNoJfbBMAwscra6t1LwD+JWVrqqjl
-         BVRe12xPmEVB3848m5fqVuCeC+J39Fx6VcOv5Jp6fir3p1eTIdg29zBnF9bW/FFgHsXi
-         4Omk3p+ewDYOf8VZL0ZG3lX481gL+i1a04g9GLZ7a9n2YduAvkSBkbPISfIpdPpGNoGk
-         vuKg==
+        d=gmail.com; s=20251104; t=1780681487; x=1781286287; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=o1nKnoCKwwPu7b7Objh9jn1z5sqhtLDS46+7PHLh/Ds=;
+        b=YBz/UsI4b/P1hmKUmEq8UkAexP+8Qnr65gKLVFbsohDoehX0wB6JwNq7qW1GUSGPmd
+         LEGnXbWGltSHRCHVDcrsIuaOMhAESWVAkabeQ/0tZLIgtWg40/JGYPBs1+Zj0oCXX4on
+         VZEdwZZBP54opTiZeRHLW/5uwB4Tm/7F6wZWSf1IQoRW3unoGfDiiN24Swai9CAtRGID
+         hez5tg32jgTbp9YJleCzy63MP49NKCWvuJqddQZ1L5PvMbpdx4prjv0C8SEOOFf+s/ga
+         198RJQf53twcsXRc/zMKpXzaGMZAP7JFcgzK8HjcCWXHYHiJlWCMz4j54CLdDPfFOTUh
+         vfkA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1780675486; x=1781280286;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=Vm/ss87izqfP/0U05LwE7pPzc4bfkP4ilQm2LP62OvM=;
-        b=V150iDBcejJSppNaUGk33YkAmeaLx9NDQdEJH9KlOXBYMpHEu0gCo9GbdFfPUQmIEx
-         wa7pouzqRWvJSKfVq51m+p4ywPjBqCXfD/ZW/mGSnx8a60kCdWfk1lo8rpl3/YjKvq12
-         /tNmt/a2dkqbziSq6xez9f59reSD0YjsSM8HMG6y134YfL/LSsMS/TTyrh5ztZPoEMF0
-         t5GolCJ9gbkTfSuwQtN/hgLeuo4St0JwWS4Mf3mecSaRG2fRRWHFugTRw30LxvWy+U7f
-         PsfTH8zQ9KU6UlrFXmhANfrFny15Mb1xNCVtIvs19DncnW7rdeHxW2Uy1aPe13Ki1jao
-         colg==
-X-Forwarded-Encrypted: i=1; AFNElJ91jfhJhpO3svq10UeZlsyc3gjeamKHE2qw9dwrdaxjFQIwLUYU/FuZO5+vz5x6QaTas+lEl7UhUE2N@vger.kernel.org
-X-Gm-Message-State: AOJu0YzSRg9qWTI1JdNiBXMVFi2sTlvZHhLa9gjJatHMK7FNc/BnYZ8m
-	xgyE8ZrJ8sfhwtrSUkBEovxIuhe/xr37/OEoVyEF4U5LWN6QV6zWPRZJ4QSr+Eq5Ah1qYM6UmBm
-	GeLoyhBysIG0WL24XRLmibfm/IE5ObzAltslZGblgVqkkXdxiGHWrHmg=
-X-Gm-Gg: Acq92OG8/coYoyZZWUtdzNyzG/rksYEuNkk7lRZeDu9X/9SlHbvIgisZy7yaofjKV/B
-	FjOtXr8K6uyfzrvStbMl3oqIgXZMEu1EWxMe4+u7OINbNkX3mJj/Dsoxl7DB2owwc0Xz0/NBJI7
-	Pv38WTZClrn3Rk3K9kE64xqG9Glk9M24cXwjMMdhQa15bv/4rTxvRE2aPJ+QkUBg9vqBOruABB4
-	pUrQBf7S+5ArLNiG6yzA60SEElvYj5z4K2S1G/UzyyktRNXqg3MqpDR0vV+6xBlVE8HXSZ/v7sp
-	8h1r7cuU49rBTq9mD0s=
-X-Received: by 2002:a05:651c:2226:b0:396:6bd5:a9c9 with SMTP id
- 38308e7fff4ca-396d0951cc0mr13180741fa.20.1780675486192; Fri, 05 Jun 2026
- 09:04:46 -0700 (PDT)
+        d=1e100.net; s=20251104; t=1780681487; x=1781286287;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=o1nKnoCKwwPu7b7Objh9jn1z5sqhtLDS46+7PHLh/Ds=;
+        b=OXWYFwF6ZrXO+7EuKkybOxXvExvBnT3X4UdqjyIHSt+M4N4C6G6ZcwzRaWkNIUmSrx
+         wlzTCkRSu7o75L4sReufbDvQ5DgcC9L79NneUYthYayEzVo3+yrITtvwlpXN/X6KU7nG
+         Oey7iiUNYrWDJNDWF7Q744Jpj3JOjjiEQ6Gxm42QChhXyQdQ3sZP8zRolRQU+ZW4bU+A
+         6sKZQEdSsLWlxkkEfgrUmu9//y9CbaiCprayRzppJgU/rQ+ubapVXiXYxphCEHM0vVZD
+         6aPk5rHAkCTYv8tNVS3x3vPyjutpJLCKbr+jYs3hgyF9tw4Nq8nX8e2XpAfo9x9ZKo5E
+         bYsw==
+X-Gm-Message-State: AOJu0YzxqT/TL/igtfbuDbWH2Y/j794cioNRy2PSx0ZEEXRDBGwQWLaU
+	3l8uiWZ3zK9mJ+RXv40KwReDPuohCRFGk5bJdQ6WzM/Lk2ZWVWLUqCgEynwW+iF9
+X-Gm-Gg: Acq92OEYd/xSdPuUlOKJ1f5vt/FXGPvkI1iAzYVVLpgRNY63WhQDRBuWYzO6Ax3hVpV
+	z9yMG5d4GxLgM2gUv0jE4X1TtHkPH/i5zMvk/eV1cSpwu9OWV2gbQ9tTrC4zWoDW63c2pescu/i
+	1rYo7DkAyunN5yAZpnBGdw/m4aJBnyk6WkOb4zZ6yOJJDSt3WKkG2c2vKFLUcL/f8IO5sceHZn6
+	6xx4HcR0Gw9Z09DUhxu40Oyrw3qz0YuLL88xBdDlSkThuqZH3i6n8P2sTbgCTwa/q6F4nplM+uG
+	npePpbQlPEMENurDDfNeE6EVC1tkWjf+N9Cl2VPG7B9ZsVgo2HQM350TEI5OXyz4iSV36mbrclZ
+	C+khW/gPzQ7lb+WprgolrMmrk0pdD/Q5CUj61foY8SK8tUavVmSm6bJhmhnXEUq5p7sjEVj9dIa
+	ki77VJdlNbgksRQtV1GvJLEWl2Qa6IUz6mRphP+kWHW+rDGEAsHrYw3FypcBq7BbF5yVRS6NUEB
+	S9QgCUT2HFUtX5DopuG4ivdAy6sLyHFEjmfnYCRzDDu+7DotP8ZQg==
+X-Received: by 2002:a05:622a:1f8d:b0:50b:2542:e16f with SMTP id d75a77b69052e-517987a918fmr47974111cf.15.1780681487223;
+        Fri, 05 Jun 2026 10:44:47 -0700 (PDT)
+Received: from dhcp-10-231-55-133.dhcp.broadcom.net ([192.19.223.252])
+        by smtp.gmail.com with ESMTPSA id d75a77b69052e-51789407da8sm53376171cf.19.2026.06.05.10.44.46
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Fri, 05 Jun 2026 10:44:46 -0700 (PDT)
+From: Justin Tee <justintee8345@gmail.com>
+To: linux-scsi@vger.kernel.org
+Cc: jsmart833426@gmail.com,
+	justin.tee@broadcom.com,
+	Justin Tee <justintee8345@gmail.com>
+Subject: [PATCH v2 00/14] Update lpfc to revision 15.0.0.1
+Date: Fri,  5 Jun 2026 11:23:22 -0700
+Message-Id: <20260605182336.134919-1-justintee8345@gmail.com>
+X-Mailer: git-send-email 2.38.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260605122019.24146-1-ddiss@suse.de> <20260605122019.24146-3-ddiss@suse.de>
-In-Reply-To: <20260605122019.24146-3-ddiss@suse.de>
-From: Lee Duncan <lduncan@suse.com>
-Date: Fri, 5 Jun 2026 09:04:34 -0700
-X-Gm-Features: AVVi8CcJBFVxH8_a3drKGpbHpoIuI2zt32jQkrprudoFvbnSYf69bqjmgG0S-LM
-Message-ID: <CAPj3X_WHMQZTZ7UBv99_H5Gv8UVxcKzgdzW2OWv+ez2ocwfp_g@mail.gmail.com>
-Subject: Re: [PATCH 2/2] scsi: target: use constant-time crypto_memneq for
- CHAP digests
-To: David Disseldorp <ddiss@suse.de>
-Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 
-On Fri, Jun 5, 2026 at 5:32=E2=80=AFAM David Disseldorp <ddiss@suse.de> wro=
-te:
->
-> A constant-time memory comparison is more suitable than plain memcmp()
-> for authentication digest comparison.
-> CHAP digests use an authenticator-provided random challenge, so any
-> timing side-channel shouldn't be easily exploitable.
->
-> Reported-by: Sashiko (gemini/gemini-3.1-pro-preview)
-> Link: https://sashiko.dev/#/patchset/20260521151121.808477-1-hossu.alexan=
-dru%40gmail.com
-> Signed-off-by: David Disseldorp <ddiss@suse.de>
-> ---
->  drivers/target/iscsi/iscsi_target_auth.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/target/iscsi/iscsi_target_auth.c b/drivers/target/is=
-csi/iscsi_target_auth.c
-> index 5858cc3089796..f3c0cdd318300 100644
-> --- a/drivers/target/iscsi/iscsi_target_auth.c
-> +++ b/drivers/target/iscsi/iscsi_target_auth.c
-> @@ -9,6 +9,7 @@
->   ***********************************************************************=
-*******/
->
->  #include <crypto/hash.h>
-> +#include <crypto/utils.h>
->  #include <linux/kernel.h>
->  #include <linux/string.h>
->  #include <linux/err.h>
-> @@ -408,7 +409,7 @@ static int chap_server_compute_hash(
->         pr_debug("[server] %s Server Digest: %s\n",
->                 chap->digest_name, response);
->
-> -       if (memcmp(server_digest, client_digest, chap->digest_size) !=3D =
-0) {
-> +       if (crypto_memneq(server_digest, client_digest, chap->digest_size=
-)) {
->                 pr_debug("[server] %s Digests do not match!\n\n",
->                         chap->digest_name);
->                 goto out;
-> --
-> 2.51.0
->
->
+Update lpfc to revision 15.0.0.1
 
-Reviewed-by: Lee Duncan <lduncan@suse.com>
+This patch set contains bug fixes related to cleanup handling in both
+normal and error paths, discovery rework for large SAN configurations, and
+refactoring of duplicate code.
+
+The patches were cut against Martin's 7.2/scsi-queue tree.
+
+Justin Tee (14):
+  lpfc: Fix use-after-free in lpfc_cmpl_ct_cmd_vmid
+  lpfc: Early return out of lpfc_els_abort when HBA_SETUP flag is not
+    set
+  lpfc: Fix kernel oops when unmapping scsi dma buffers for an aborted
+    cmd
+  lpfc: Check fc4_xpt_flags before decrementing ndlp kref on FDISC error
+  lpfc: Add handling for when PLOGI or PRLI is dropped during link
+    failure
+  lpfc: Fix ndlp use-after-free during repeated RSCN and rediscovery
+    sequence
+  lpfc: Rework I/O flush ordering when unloading driver
+  lpfc: Improve PLOGI retry handling for large SAN configurations
+  lpfc: Send inhibited ABORT_WQE when PLOGI CQE SEQUENCE_TMO is received
+  lpfc: Remove slowpath cqe process limiter in slow ring event handler
+  lpfc: Put iocbq on phba->txq when ELS WQ is full or ELS SGL
+    unavailable
+  lpfc: Update ELS ACC logging for diagnostic troubleshooting
+  lpfc: Refactor calls on fc_disctmo to lpfc_set_disctmo in RSCN handler
+  lpfc: Update lpfc version to 15.0.0.1
+
+ drivers/scsi/lpfc/lpfc_bsg.c       |   5 +-
+ drivers/scsi/lpfc/lpfc_crtn.h      |  12 +-
+ drivers/scsi/lpfc/lpfc_ct.c        |  19 +-
+ drivers/scsi/lpfc/lpfc_disc.h      |   2 +-
+ drivers/scsi/lpfc/lpfc_els.c       | 427 +++++++++++++++++++++++------
+ drivers/scsi/lpfc/lpfc_hbadisc.c   | 100 +++----
+ drivers/scsi/lpfc/lpfc_init.c      |  16 +-
+ drivers/scsi/lpfc/lpfc_nportdisc.c |  86 +++++-
+ drivers/scsi/lpfc/lpfc_nvme.c      |   2 +-
+ drivers/scsi/lpfc/lpfc_scsi.c      |   2 +-
+ drivers/scsi/lpfc/lpfc_sli.c       | 246 ++++++++++++-----
+ drivers/scsi/lpfc/lpfc_sli.h       |   4 +-
+ drivers/scsi/lpfc/lpfc_version.h   |   2 +-
+ 13 files changed, 707 insertions(+), 216 deletions(-)
+
+-- 
+2.38.0
+
