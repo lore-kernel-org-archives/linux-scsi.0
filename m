@@ -1,213 +1,206 @@
-Received: from spam.asrmicro.com (asrmicro.com [210.13.118.86])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f45.google.com (mail-wm1-f45.google.com [209.85.128.45])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C5E983BBFAF;
-	Fri,  5 Jun 2026 11:21:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.13.118.86
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8E6E84D90B2
+	for <linux-scsi@vger.kernel.org>; Fri,  5 Jun 2026 11:56:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780658484; cv=none; b=E7Af4kJAMcVxtRZW5mYFNoSioOBTLL9d8x/xBRrV2B+2Xb3jru6Ukmn9KnUcN0bvCronKGvCkLVotSSnh6y/7T5Zf9BgR3V5ryqTM9bGrt4LGltor2rdJFqRAzjvZfOneutY/WjmtfmZssnJklNdY6Ffd4rQmyze557WriXQUJw=
+	t=1780660586; cv=none; b=f9jYFaE0CprsKNGTTpmD+1LsoQ5qlE9mdjIED3L1Xtb25JjiviqGjcnqT3+ekSPOypEzsmp8CZxLzhOkATZo10HzcxFTj8lRorFyVpqPq0pAiHOI6Inp54fJV0NLxOZsibYsuqJAqox1YcJ3NalFb3Cx8vhnLp6J3quwg5Yaqdw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780658484; c=relaxed/simple;
-	bh=OgVk+RUqYRILSi1wq86AS2+D7OqLMfYYrQCIRJEWoes=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=bxxWnMnXH8eIOdntQk1TISVebAv9bRo0Z4oxSsF/1GBZ2cIq1vILSKhb9Eek/FY2tWSmAXVRYW9EVtBtjWPv23qmqM5BifVEgCoTptA+hDJX3Q1o2zakyONZlyTUE/e9xtqXRjrXKsisDGAuwp71SnHszL3TfhcVXPhiR0zdTWQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=asrmicro.com; spf=pass smtp.mailfrom=asrmicro.com; arc=none smtp.client-ip=210.13.118.86
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=asrmicro.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=asrmicro.com
-Received: from exch02.asrmicro.com (exch02.asrmicro.com [10.1.24.122])
-	by spam.asrmicro.com with ESMTPS id 655BKTWU027917
-	(version=TLSv1 cipher=ECDHE-RSA-AES256-SHA bits=256 verify=FAIL);
-	Fri, 5 Jun 2026 19:20:29 +0800 (GMT-8)
-	(envelope-from hongjiefang@asrmicro.com)
-Received: from localhost (10.1.170.248) by exch02.asrmicro.com (10.1.24.122)
- with Microsoft SMTP Server (TLS) id 15.0.847.32; Fri, 5 Jun 2026 19:20:34
- +0800
-From: Hongjie Fang <hongjiefang@asrmicro.com>
-To: <alim.akhtar@samsung.com>, <avri.altman@wdc.com>, <bvanassche@acm.org>,
-        <James.Bottomley@HansenPartnership.com>, <martin.petersen@oracle.com>,
-        <peter.wang@mediatek.com>, <beanhuo@micron.com>
-CC: <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Subject: [PATCH v5] scsi: ufs: core: handle PM commands timeout before SCSI EH
-Date: Fri, 5 Jun 2026 19:20:34 +0800
-Message-ID: <20260605112034.3802540-1-hongjiefang@asrmicro.com>
-X-Mailer: git-send-email 2.25.1
+	s=arc-20240116; t=1780660586; c=relaxed/simple;
+	bh=RUeXkJiOC5YOIHyl10EHg1neCRlJCG9AqHP1nNGld8M=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=u+ZzdS/ieDF6EEI3H1a+TX9t0bsA2Jbq+jDhVWc7ynkJaNg30myWkWMyWxg/lLLWiZy9V+Gw7bZzS7eQECcJ3j1PbOoH3AKAItGl+nEng06JsbgNnI+USfdKHIfMVpDvhl1Z1FfBIvYwVERJebxQf3a4+jge6SBADYiAWEUSoq0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=baylibre.com; spf=pass smtp.mailfrom=baylibre.com; dkim=pass (2048-bit key) header.d=baylibre.com header.i=@baylibre.com header.b=WPk4LjV2; arc=none smtp.client-ip=209.85.128.45
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=baylibre.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=baylibre.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=baylibre.com header.i=@baylibre.com header.b="WPk4LjV2"
+Received: by mail-wm1-f45.google.com with SMTP id 5b1f17b1804b1-490be03d47bso15064885e9.0
+        for <linux-scsi@vger.kernel.org>; Fri, 05 Jun 2026 04:56:22 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=baylibre.com; s=google; t=1780660581; x=1781265381; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=+kMxhX4dP4R/LjY4CwrRq2xMY3d+unBriPLMp8xLnLc=;
+        b=WPk4LjV23jxnahAgWyU3SDAR/6VvX1WbfQplE0M5hwrKobgCUdMlIgh98Q6Gjw53cK
+         Ucem92i0wYtq9gOBRtze4GqMsVHM4khWVXtfu9kglV7LPd3vA6k0aryBRZhoAVtyLnRr
+         dl8CtJOvuqkIxSeBJ7OiWygIoohnk98UJoKsplWZalRynW1h4UUxBJmU/5xNbV+wry6K
+         2wjZLNm5HNm4rifBcYbOxWZkroP8JW6sftHCQLKDD1Mz8YMvQGWe4Jzme4Rm7P3zx5f/
+         fb3st2sU5OFPght7xhRb5lPriVWHU5YGYicn4arAskw2JjdPa1izKTBYi9u4TOxZYL8z
+         FkPw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1780660581; x=1781265381;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=+kMxhX4dP4R/LjY4CwrRq2xMY3d+unBriPLMp8xLnLc=;
+        b=RksfmhLsD4qLLcGj0BsKki1/t0sAnJ8dGUx4x2bO32kdedHUfKwqTZjVw7S0ePFhQz
+         Y2HTIQDG9WsWwC+WPZchk9AY++f5NeMwNs+YR3JA2Lo2B1LXEw1F0vkmCNbSjesB7oyO
+         XknPK6iNM4N6w20arpaB1CjCNlEsGu16KbcQhULVm9WY/2Ep4E91SO/+q+tLSesl8YdA
+         q6usetxWaLaBH8FhVt09JXKcRWpKKtUxlsAv0hCAMsRnP5duKWbsbUffe3AjNOvfspiN
+         keluOU8rxYJ5wI3DAshuvtroMqFa61ZtQ7I7Wxe5HoDYuOE5icEf6dD4HBM7VrL931cU
+         EZAg==
+X-Forwarded-Encrypted: i=1; AFNElJ/sGQXWBww3V/SN5MyjcPG1xJTR1JeASQ1Hfd4SfzOMakvY3rCrLWFrEbG9JL9KUa1t1tc2UFqXBuzd@vger.kernel.org
+X-Gm-Message-State: AOJu0YwMtj9iia9gOJC62RMUXmxPAOxIm4Y58WhV5YebsldMai6DwDUa
+	uNvnQWWpQUVGMwEhENQZy6DuUH6NxBk66zJ1SZnJ8vniblQe0Q8yMZIR4rwfwFF3oHE=
+X-Gm-Gg: Acq92OHn5rqKPSzuQgqQT3v/LMBtokBXV2SlgMsv69pPIYZnVPSI6xVeRX40FTqOtEr
+	HxQv2m0Q93aC14VVLMUkbAoo359r+nNb2cMoWksRjzhl6ghdaZ51LpK0NCgJ9msh1NosqscKcDw
+	Cu71YAtZECKrDtnZbccU2IhaS4dUIsnmPUIiZ1AOV2g2GPoODi/kw2pyeKY1oThJ3ML6bQpIbcW
+	ozTzP0W0Ly1LwE6KzM8wuq4IqZVsg2lIYGCubVtLVxvePM2cmQZe3rOP+NLeQtw7Jnkq5FuSNJz
+	L+QAIQF9G3Rgr9LF1JhVorb44pR+rwA5kiXFZ7wzT9bapBG4g5oARFW4CE0ItrNi7l1zb4o81RX
+	+6tNGFHNdBEVvTeORkTSm3PWZPp+lZDKsJzKp+oXuAXlbLdHB+yuu1ue2DBtPvgmEpw3Y6ZXnve
+	kCVLFkk6u539v/s12L3W1jiPBtdZa1OHHr
+X-Received: by 2002:a05:600c:8705:b0:488:ac01:72de with SMTP id 5b1f17b1804b1-490c25898efmr60737855e9.5.1780660580944;
+        Fri, 05 Jun 2026 04:56:20 -0700 (PDT)
+Received: from localhost ([212.133.41.47])
+        by smtp.gmail.com with UTF8SMTPSA id 5b1f17b1804b1-490bc3fd502sm147344695e9.11.2026.06.05.04.56.19
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 05 Jun 2026 04:56:20 -0700 (PDT)
+Date: Fri, 5 Jun 2026 13:56:17 +0200
+From: Uwe =?utf-8?Q?Kleine-K=C3=B6nig_=28The_Capable_Hub=29?= <u.kleine-koenig@baylibre.com>
+To: Helge Deller <deller@gmx.de>, 
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-ide@vger.kernel.org, linux-m68k@lists.linux-m68k.org, 
+	linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, netdev@vger.kernel.org, 
+	linux-i2c@vger.kernel.org, linux-fbdev@vger.kernel.org, dri-devel@lists.freedesktop.org, 
+	"Christian A. Ehrhardt" <christian.ehrhardt@codasip.com>, "Christian A. Ehrhardt" <lk@c--e.de>
+Subject: Re: [PATCH v1 0/8] zorro: Improve handling of pointers in
+ zorro_device_id::driver_data
+Message-ID: <aiKyB-28VEg1kp7W@monoceros>
+References: <cover.1779803053.git.u.kleine-koenig@baylibre.com>
+ <a3f9e96e-3bbb-4cfc-845c-58649405a1cf@gmx.de>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: exch03.asrmicro.com (10.1.24.118) To exch02.asrmicro.com
- (10.1.24.122)
-X-DNSRBL: 
-X-SPAM-SOURCE-CHECK: pass
-X-MAIL:spam.asrmicro.com 655BKTWU027917
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="22tuv3cnyx6wf3bq"
+Content-Disposition: inline
+In-Reply-To: <a3f9e96e-3bbb-4cfc-845c-58649405a1cf@gmx.de>
 
-A PM START STOP sent from the UFS well-known LU resume path can race with
-SCSI EH.
 
-The "wl resume" task flow is:
-  __ufshcd_wl_resume()
-    ufshcd_set_dev_pwr_mode(UFS_ACTIVE_PWR_MODE)
-      ufshcd_execute_start_stop()
-        scsi_execute_cmd()
-          blk_execute_rq           <-- wait
-          scsi_check_passthrough() <-- may retry START STOP
+--22tuv3cnyx6wf3bq
+Content-Type: text/plain; protected-headers=v1; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+Subject: Re: [PATCH v1 0/8] zorro: Improve handling of pointers in
+ zorro_device_id::driver_data
+MIME-Version: 1.0
 
-If the first START STOP time out, SCSI EH may already recover the link and
-reset the device before scsi_execute_cmd() returns:
-  scsi_timeout()
-    scsi_eh_scmd_add()
-      scsi_error_handler()
-        scsi_unjam_host()
-          scsi_eh_ready_devs()
-            scsi_eh_host_reset()
-              ufshcd_eh_host_reset_handler()
-                if (hba->pm_op_in_progress)
-                  ufshcd_link_recovery()
-                    ufshcd_device_reset()
-                    ufshcd_host_reset_and_restore()
-          ...
-          scsi_eh_flush_done_q()   <-- wakeup "wl resume" task
-        ...                        <-- host still in SHOST_RECOVERY
-        scsi_restart_operations()
+Hello Helge,
 
-A later passthrough retry can then run while the host is still in
-SHOST_RECOVERY and hit the SCMD_FAIL_IF_RECOVERING path:
-  scsi_queue_rq()
-    if (scsi_host_in_recovery(shost) &&
-        cmd->flags & SCMD_FAIL_IF_RECOVERING)
-      return BLK_STS_OFFLINE
+On Fri, Jun 05, 2026 at 12:44:04AM +0200, Helge Deller wrote:
+> On 5/26/26 16:17, Uwe Kleine-K=C3=B6nig (The Capable Hub) wrote:
 
-That retry completes with DID_ERROR or DID_NO_CONNECT even though EH may
-already have restored the device to an operational ACTIVE state.
+Your MUA seems to interpret my UTF-8 encoded name as latin1 and
+converted it to UTF-8 making my =F6 appear as =C3=B6. I *think* the problem=
+ is
+on your side.
 
-Handle these PM timeouts directly from ufshcd_eh_timed_out() instead.
-After ufshcd_link_recovery(), complete the timed-out command immediately
-if it has not been completed already.
+> > this series is about improving the handling of pointers in struct
+> > zorro_device_id's driver_data.
+> >=20
+> > While it's ok on all current Linux platforms to store a pointer in an
+> > unsigned long variable, it involves casting that loses type information.
+> > This can be nicely seen in patch #7 where after profiting from patch #6
+> > the compiler notices a missing const.
+> >=20
+> > Preparing for that change, all zorro_device_ids are converted to use
+> > named initializers, which is also a nice cleanup that could stand for
+> > itself, as it improves readability for humans. (That is necessary
+> > because an anonymous union can be initialized by name, but not using a
+> > list initializer.)
+> >=20
+> > My motivation for this series is the CHERI hardware extension. With that
+> > pointers are bigger than longs and thus you cannot store pointers in
+> > zorro_device_id::driver_data. So this series is also about getting
+> > support for CHERI into the mainline, but I hope the clean up effects
+> > mentioned above are justification enough to accept this series.
+> >=20
+> > The dependencies in this series are as follows:
+> >=20
+> >   - Patch #5 depends on #1, #2
+> >   - Patches #7 and #8 depend on patch #6.
+> >=20
+> > So if the ata maintainers agreed to merge their patch #1 via scsi, and
+> > Geert agrees to patch #5 and that it's also merged via scsi, patches #1,
+> > #2, #6 and #7 can go in without further coordination.
+> >=20
+> > Patches #3, #4 and #5 are only about using the same initialization style
+> > for all zorro_device_id and can go in without coordination.
+> >=20
+> > Best regards
+> > Uwe
+> >=20
+> > Uwe Kleine-K=F6nig (The Capable Hub) (8):
+> >    ata: pata_budda: Use named initializer for zorro_device_id
+> >    scsi: Use named initializer for zorro_device_id
+> >    net: Use named initializer for zorro_device_id arrays
+> >    i2c: icy: Use named initializer for zorro_device_id arrays
+> >    video: fm2fb: Use named initializer for zorro_device_id array
+> >    zorro: Simplify storing pointers in device id struct
+> >    scsi: zorro7xx: Make use of struct zorro_device_id::driver_data_ptr
+> >    video: cirrusfb: Make use of struct zorro_device_id::driver_data_ptr
+> >=20
+> >   drivers/ata/pata_buddha.c             |  8 ++++----
+> >   drivers/i2c/busses/i2c-icy.c          |  4 ++--
+> >   drivers/net/ethernet/8390/hydra.c     |  4 ++--
+> >   drivers/net/ethernet/8390/xsurf100.c  |  4 ++--
+> >   drivers/net/ethernet/8390/zorro8390.c |  6 +++---
+> >   drivers/net/ethernet/amd/a2065.c      |  8 ++++----
+> >   drivers/net/ethernet/amd/ariadne.c    |  4 ++--
+> >   drivers/scsi/a2091.c                  |  6 +++---
+> >   drivers/scsi/gvp11.c                  | 17 ++++++++--------
+> >   drivers/scsi/zorro7xx.c               | 16 +++++++--------
+> >   drivers/scsi/zorro_esp.c              |  2 +-
+> >   drivers/video/fbdev/cirrusfb.c        | 28 +++++++++++++--------------
+> >   drivers/video/fbdev/fm2fb.c           |  6 +++---
+> >   include/linux/mod_devicetable.h       |  6 +++++-
+> >   14 files changed, 62 insertions(+), 57 deletions(-)
+>=20
+> you may add to the series:
+> Acked-by: Helge Deller <deller@gmx.de>
 
-For regular SCSI commands, complete them with DID_REQUEUE to match the
-existing MCQ force-completion semantics and allow scsi_execute_cmd() to
-retry if needed. For reserved internal device-management commands, finish
-the request with DID_TIME_OUT without calling ufshcd_release_scsi_cmd()
-since those commands use different resource lifetime rules.
+Thanks!
 
-The system_suspending flag is no longer needed because PM command timeout
-handling now uses pm_op_in_progress.
+> Since it touches various subtrees, I assume you will merge it though your=
+ tree?
 
-Fixes: b8c3a7bac9b6 ("scsi: ufs: Have midlayer retry start stop errors")
-Signed-off-by: Hongjie Fang <hongjiefang@asrmicro.com>
----
+Well, my plan is that the scsi maintainers pick up patches #1, #2, #6
+and #7 and I remind you once #6 (i.e. the dependency for #8) is in
+Linus' tree. But with your ack the two fb patches can also go in via
+scsi.
 
-v5: complete SCSI commands with DID_REQUEUE and use DID_TIME_OUT for
-reserved commands suggested by Peter Wang
+To James and Martin: I didn't hear from you about my merge suggestion up
+to now. The other affected maintainers agreed so far that (assuming
+you're using b4) and interpreting Helge's ack as agreement that you also
+pick up the fb patches, you can go for
 
-v4: handle PM timeouts directly from ufshcd_eh_timed_out(), no longer
-relay on the extra legacy single-doorbell force-completion path
+	b4 am -l -t -3 -P1,2,5-8 cover.1779803053.git.u.kleine-koenig@baylibre.com
 
-v3: ufshcd_eh_timed_out() no longer checks the UFS device WLUN or the
-START STOP opcode. It only checks whether a PM operation is in progress
-for normal SCSI command
+If you like I can also pick up these patches (then with your ack please)
+and send them to Linus for the next merge window. Just tell me about
+your preference.
 
-v2: handle PM SSU timeout directly from ufshcd_eh_timed_out() suggested
-by Bart Van Assche
+Best regards
+Uwe
 
- drivers/ufs/core/ufshcd.c | 34 +++++++++++++++++++++++++++-------
- include/ufs/ufshcd.h      |  3 ---
- 2 files changed, 27 insertions(+), 10 deletions(-)
+--22tuv3cnyx6wf3bq
+Content-Type: application/pgp-signature; name="signature.asc"
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index c3f08957d179..cc38588d99eb 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -9466,22 +9466,44 @@ static enum scsi_timeout_action ufshcd_eh_timed_out(struct scsi_cmnd *scmd)
- {
- 	struct ufs_hba *hba = shost_priv(scmd->device->host);
- 
--	if (!hba->system_suspending) {
-+	if (!hba->pm_op_in_progress) {
- 		/* Activate the error handler in the SCSI core. */
- 		return SCSI_EH_NOT_HANDLED;
- 	}
- 
- 	/*
--	 * If we get here we know that no TMFs are outstanding and also that
--	 * the only pending command is a START STOP UNIT command. Handle the
--	 * timeout of that command directly to prevent a deadlock between
-+	 * Handle the timeout directly to prevent a deadlock between
- 	 * ufshcd_set_dev_pwr_mode() and ufshcd_err_handler().
- 	 */
- 	ufshcd_link_recovery(hba);
- 	dev_info(hba->dev, "%s() finished; outstanding_tasks = %#lx.\n",
- 		 __func__, hba->outstanding_tasks);
- 
--	return scsi_host_busy(hba->host) ? SCSI_EH_RESET_TIMER : SCSI_EH_DONE;
-+	/*
-+	 * ufshcd_link_recovery() may already have completed @scmd, e.g. via
-+	 * the existing MCQ force-completion path.
-+	 */
-+	if (!test_bit(SCMD_STATE_COMPLETE, &scmd->state)) {
-+		if (!hba->mcq_enabled) {
-+			unsigned long flags;
-+			struct request *rq = scsi_cmd_to_rq(scmd);
-+
-+			spin_lock_irqsave(&hba->outstanding_lock, flags);
-+			__clear_bit(rq->tag, &hba->outstanding_reqs);
-+			spin_unlock_irqrestore(&hba->outstanding_lock, flags);
-+		}
-+
-+		if (ufshcd_is_scsi_cmd(scmd)) {
-+			set_host_byte(scmd, DID_REQUEUE);
-+			ufshcd_release_scsi_cmd(hba, scmd);
-+		} else {
-+			set_host_byte(scmd, DID_TIME_OUT);
-+		}
-+
-+		scsi_done(scmd);
-+	}
-+
-+	return SCSI_EH_DONE;
- }
- 
- static const struct attribute_group *ufshcd_driver_groups[] = {
-@@ -10518,7 +10540,6 @@ static int ufshcd_wl_suspend(struct device *dev)
- 
- 	hba = shost_priv(sdev->host);
- 	down(&hba->host_sem);
--	hba->system_suspending = true;
- 
- 	if (pm_runtime_suspended(dev))
- 		goto out;
-@@ -10560,7 +10581,6 @@ static int ufshcd_wl_resume(struct device *dev)
- 		hba->curr_dev_pwr_mode, hba->uic_link_state);
- 	if (!ret)
- 		hba->is_sys_suspended = false;
--	hba->system_suspending = false;
- 	up(&hba->host_sem);
- 	return ret;
- }
-diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-index cfbc75d8df83..8280a95c00c7 100644
---- a/include/ufs/ufshcd.h
-+++ b/include/ufs/ufshcd.h
-@@ -1020,8 +1020,6 @@ enum ufshcd_mcq_opr {
-  * @caps: bitmask with information about UFS controller capabilities
-  * @devfreq: frequency scaling information owned by the devfreq core
-  * @clk_scaling: frequency scaling information owned by the UFS driver
-- * @system_suspending: system suspend has been started and system resume has
-- *	not yet finished.
-  * @is_sys_suspended: UFS device has been suspended because of system suspend
-  * @urgent_bkops_lvl: keeps track of urgent bkops level for device
-  * @is_urgent_bkops_lvl_checked: keeps track if the urgent bkops level for
-@@ -1197,7 +1195,6 @@ struct ufs_hba {
- 
- 	struct devfreq *devfreq;
- 	struct ufs_clk_scaling clk_scaling;
--	bool system_suspending;
- 	bool is_sys_suspended;
- 
- 	enum bkops_status urgent_bkops_lvl;
--- 
-2.25.1
+-----BEGIN PGP SIGNATURE-----
 
+iQEzBAABCgAdFiEEP4GsaTp6HlmJrf7Tj4D7WH0S/k4FAmoiuV8ACgkQj4D7WH0S
+/k6cwgf+IBJ8XPNUSo4d38q7fIjSN9Kio+eF/i1F0XZFkTXu/snZAgAhVec4a9nQ
+0tReoiNbPZL5k1kFhyjqoVSmH2A6Oe8hDK/rHeszhxosEzgOuGyGVmM1cDKfUkNQ
++nhcan81Bf43fZgyFWoOlxns+20U6kjBBAksZHGYgm6L41w0tjVYLHTN9Pv1jTWz
+TK+k3WMkM0Sln7O6Rk2DBDBNJ8/lz82tGZkcfgmaM8P8WffD91LeUDcXvTBNYFJR
+9P0mISJgM+Qt5WaJwzW0k/h0Vu3HPh3P3wPIGiYQGLV7jfcHFG2xvWIwxONopqV5
+MD78q/W31G+Q1Z796Ms01uQxrzyWaQ==
+=ZKbW
+-----END PGP SIGNATURE-----
+
+--22tuv3cnyx6wf3bq--
