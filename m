@@ -1,71 +1,71 @@
-Received: from mail-qt1-f173.google.com (mail-qt1-f173.google.com [209.85.160.173])
+Received: from mail-qt1-f171.google.com (mail-qt1-f171.google.com [209.85.160.171])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA31536EA8C
-	for <linux-scsi@vger.kernel.org>; Fri,  5 Jun 2026 17:44:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF3C63806B0
+	for <linux-scsi@vger.kernel.org>; Fri,  5 Jun 2026 17:44:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780681505; cv=none; b=HpJeqOMnA4HiWoh+On+lBTcvJnwe+KVv/ycOWeebl2HaMND8JF7azUgkcrI7xHSmeuCyZDHVpeMrTXvY1qV1A6vkSHe+msLVE6FUm44hoHLkTbwdCbYqrJ6WeaorS8B/ZMXvcktfgexiMOL8PGZ/cF5xYGjk94t7TzqIBPTsNes=
+	t=1780681506; cv=none; b=ZDhThhPZl8Fe2guch46WBwOn5OY3nyhwkcFCrZwLXhz5NnBan3E+WDFKUb1fsrcxffbBfY26DMweSGB5W5iuO2T2FfQgUD665qUXw+cWnfRHazOAYuWD2gZwsoEC7qJfZQftlfcKbPRrPTznIhzF3twaGpC56VzPbxj5VU+3v3s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780681505; c=relaxed/simple;
-	bh=uzRsLBkRjDumYAVG90ujWoyRwH5o0caFsignH/DRc6c=;
+	s=arc-20240116; t=1780681506; c=relaxed/simple;
+	bh=XDJSA9ARqSXKjDURqUbtMPI2B17diU6ylGKvLmSJAVw=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=JP+axN7bDVgm0GraDOcwFWDWMS/Y1JdnGZqc17OC6VuVbmDfX7a8YNYziyx4RxRqEM2yxN3sBqw0zQO7/ZmlMEOLwyJDXwQPI+F/hVfTiVtvQmB5pApje+acWxWgqHrHzPdGAVfx0WpnWqjAWrHS4PCZlb5DK8iF1EUtPDB/lUI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=JM+AfhiA; arc=none smtp.client-ip=209.85.160.173
+	 MIME-Version; b=MmTf+Z1d5RHlUBXuxVDxI+DSf8moNWqspZZ9bxfxwol4HxjMSqY/lTjxzkccM+5MhzIIAVVx+IpUhBzjQaU8y0fCVSn9JqVxNIUr2hjMkUyUQuW+ZmGynVMkg7P6r8lhE8841m/6i/NQaqPfXXOGGrdhkBJKOYu+KfHSnv2FjF0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=LuMo8pBH; arc=none smtp.client-ip=209.85.160.171
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="JM+AfhiA"
-Received: by mail-qt1-f173.google.com with SMTP id d75a77b69052e-5177b1a7441so31571601cf.3
-        for <linux-scsi@vger.kernel.org>; Fri, 05 Jun 2026 10:44:59 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="LuMo8pBH"
+Received: by mail-qt1-f171.google.com with SMTP id d75a77b69052e-5174a3d9598so19542271cf.3
+        for <linux-scsi@vger.kernel.org>; Fri, 05 Jun 2026 10:44:55 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1780681499; x=1781286299; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1780681495; x=1781286295; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=AqYVp931at5BTO3V7xOddO7UQBUdeCKu9JpHGI5LQBY=;
-        b=JM+AfhiA1zi6R+/vtrRABos6l9VKgNU5tn0HLVQqfeTnTKEQv4Gdm+FhPG8/jel22s
-         znwfjbZUC+wFOv5Gansk9SHHSK7ERy2MGnkT9uG2Y3wFYaTsZY/7RoRE797wfRrK4a25
-         i0ZDMpNArW15ujlrOdXS3o0CsMIX+6y/CAVql8DXf1Kw8oVkH74vWxU76gAc9wWD0rN0
-         0Jfzg1mXkxKwvGt6E6x7m9gFHf9QJNlyUhWII3n/Im1T3ywkuHGHetTUcAmfaayTqe32
-         WPFrmLePYAjulcsLAkAN7feIq8nQX0sswO7oGfvUaOK1CpL0y+wTB30+waFu7ic1JpU8
-         9tbw==
+        bh=dmCG1d3AlAtiNH3LEYA0GcaDkoTjkg6k8fP4s7NLwiE=;
+        b=LuMo8pBHkeHe96Ml2yH/A+Eij2tHU9zKBlJ1cBCp/FHrCKvZZjvTNr16nu6cbsTPmf
+         6SQ3hluSP23+dfzgTaYwuwNazxqIOCzyxQ3L3I3yHs69rO02BqrZmqMpEaECMv/L11Pt
+         YOtb/f9h9wiJUmhbXVryoGofURhtJyd1EGqlEoaGkQyU7NuOLoe7Eg3QkpP48EUPL95m
+         UHboqDdasbEwAWfX76G9W2JBV4Lem3vt+C4EfQubb6SoI2dmL0Kb35wulstbtW6yUUKo
+         GglkFOoHTSxOVSrucra7Fr29k93uTRhGT8YmYgDoadnk3AvKWnRY4HzfXE3CScxNNj18
+         r/YQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1780681499; x=1781286299;
+        d=1e100.net; s=20251104; t=1780681495; x=1781286295;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to;
-        bh=AqYVp931at5BTO3V7xOddO7UQBUdeCKu9JpHGI5LQBY=;
-        b=qiIfm/Z0EUTIlBSjTnSiCE1KIJiM9RuEt9kTT5r62ozChfhh6qGW+1ecXOLNInK9r/
-         u9SxjPDDcRrsephAO/Mdk+WslVA6TCL8rTNPLhV0EtiAi2up4f6D0TQXt1FDs0US/i6p
-         6wcH3IrY58/BvtT1VAbMLhxDjbFkveY32tkM5vWtfb/Q+dfIMZ0AAXohkxKC43qyAWVL
-         IbTXnCHbucvPGiSLLuYSZidKsRMFlQfbB/eQizS3zg3636JxxwgasLbF677mUzvDKf/r
-         rieZoBIbElJdJednTgE+wUBGDHjezs/fHIiDjFR3ZvmvgxaSdWDg+fBlmt5GkrwPzzvO
-         9zNQ==
-X-Gm-Message-State: AOJu0YyULFakMFRDa528P2tgGKlRkpXqL+pWViQQ9Q9uYt8+LB0pFlCx
-	juqcEnsVkFTskjCN/iA4y1LatJTTfbkRxG8y+YrhwmfJIOk9iIbSyJCYZU2Ja5pF
-X-Gm-Gg: Acq92OFLHSP25c4r9RHnNcVbOnR34mb9nVR6eS7uJfg2vVkdgeO8kbN4rCIqcel/gLy
-	xsqXWS3tsDrGfvYIP3NhV7ECHCwRrKDYbtkVyLimIj+s+6bx6Cxjg1rsd+4FLPIluGL8A95jU0q
-	U1lqNO7WI45c0h34m+C0pcV4XJO3irNbNuaCkWuY0uKyJjKvMC1ZW8zXH5ufL4eK5gHQBds+G8V
-	X9CPLOXQQcqGuFK9WJOpE29IwV2Uar3rlfOBNmuXsDhu1N426LnSS3zZcVXFFIk4BfyyvlvGECw
-	GU0goBDjmHzfGeK7QW13ndXmhc+rW9QAx5hIsZjIBGt+x+Ps4ljn0kFquNHsxiVwC4etQHaGJ+j
-	Ms6sGo3pyFvhByRvxRgr//qY8QkYkKgG6McbjOiQnYyp3eszITmE9apyetmv8p53mjOCw/eJ90+
-	wc5eF3l5SKVZyUNhpTNV6G33g/jd0kpaIwL7WXwo3dA0VUn+hJhusuOUStCgCXzOn2QS/YDjUH1
-	8OnG7dYk8FEpP+h2qEsgdh0t9AoB45IIIfr0HwCvxgDMIpYx0m/YA==
-X-Received: by 2002:a05:622a:2516:b0:516:ddfa:23a4 with SMTP id d75a77b69052e-51795c8e01emr79741881cf.41.1780681498710;
-        Fri, 05 Jun 2026 10:44:58 -0700 (PDT)
+        bh=dmCG1d3AlAtiNH3LEYA0GcaDkoTjkg6k8fP4s7NLwiE=;
+        b=CgO4XE893DWCqPO1iIkwRzhoHY2ul4JMfOZcA7/5ygQXTcH+TVrOOaM91G01nXuASV
+         QKFlpPHf134bEIr5Hl574ArCIyBMvc+tSYWWgnH5/xSNmi1QCXUbXbAT2pM7HkQm4jpv
+         tXw+z+csbTXWiVkvV7fMKZW/j3gsT4Nw1E6U6qAHIBVSmzGoRTFHHpLqM+ebmyZryz+w
+         K+Rn2oXhEHrEkoXxzFCHpU3qFiwg7+bQt/qz6sR5E2zjFw8XZuukY0j/zLCcf7X30mao
+         cutt1pGHIXktqZWn6lfy+1DC/fI4TBlkRl/KYUEhcU0kTd3AtySS3F1cqNeh8BfmQySs
+         TCLQ==
+X-Gm-Message-State: AOJu0Yw/btizc6ucU5Ut9nRPJwE+j0TRFXGlNvNJhV0PvLOR3R/qKJ0T
+	TMMInIOVXgXi42bHWR0FHgXf6Fi/Rkhs19Hi9CC1hyRrb4td7UNmY3FIKiRGSGnc
+X-Gm-Gg: Acq92OEIzHFmCWDTdAwQZhaWjP6kgEHJiPqCwiJ/XEx8Qvy/NBzBtFqnMV33u5nAixa
+	gA1YbiDdRz/G5gGgx/K030xfoEZRxGAfkMh7LgpMpg1aAanPUNPITXvr+rjyq/2e6DVVh8GYntE
+	VX+NMqjMafPLaaa8EmvJp9uvYnRZtv7P/z8vgtdbYO3jKyncAX0gDarZPa0z5WJ5oGLLVUqLdBc
+	kh9XZwJZpdp/D4ukuPpgBm6UuBANqTSIah8G7jmlTzkK/UOzVdZAJHo3dlhNMWxY3Uh0dA+nNM8
+	4kuYMBNCOyabObXh6b0Xt7apTy1Oa2+fUzSHgu4PGcmu7gtExLyRkr76DtwdhNQZL0YRKpf8HQJ
+	FAS7wswQZiWGI1DIAii1+lvu9n0JAn8EZs5omPkkwQhipRZp/iOxPR/uUcq4xvBDvQNv2KlskWh
+	46L+NUo9pWfLlfgFwnwLpPSMCy6K3CNZ86tUJUQkULCQKfs3GYe1CqmqNhrc2aywQJogASskIBK
+	TNbyXyyxw6qLUf4jcI72mKIhT3qZ0p9HtN5f9G3antmBEbH04q0Ax0aT1xiFMHg
+X-Received: by 2002:ac8:59d6:0:b0:50b:38c1:c6a with SMTP id d75a77b69052e-517959fdda5mr66006841cf.19.1780681494607;
+        Fri, 05 Jun 2026 10:44:54 -0700 (PDT)
 Received: from dhcp-10-231-55-133.dhcp.broadcom.net ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id d75a77b69052e-51789407da8sm53376171cf.19.2026.06.05.10.44.57
+        by smtp.gmail.com with ESMTPSA id d75a77b69052e-51789407da8sm53376171cf.19.2026.06.05.10.44.53
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Fri, 05 Jun 2026 10:44:58 -0700 (PDT)
+        Fri, 05 Jun 2026 10:44:54 -0700 (PDT)
 From: Justin Tee <justintee8345@gmail.com>
 To: linux-scsi@vger.kernel.org
 Cc: jsmart833426@gmail.com,
 	justin.tee@broadcom.com,
 	Justin Tee <justintee8345@gmail.com>
-Subject: [PATCH v2 03/14] lpfc: Fix kernel oops when unmapping scsi dma buffers for an aborted cmd
-Date: Fri,  5 Jun 2026 11:23:25 -0700
-Message-Id: <20260605182336.134919-4-justintee8345@gmail.com>
+Subject: [PATCH v2 01/14] lpfc: Fix use-after-free in lpfc_cmpl_ct_cmd_vmid
+Date: Fri,  5 Jun 2026 11:23:23 -0700
+Message-Id: <20260605182336.134919-2-justintee8345@gmail.com>
 X-Mailer: git-send-email 2.38.0
 In-Reply-To: <20260605182336.134919-1-justintee8345@gmail.com>
 References: <20260605182336.134919-1-justintee8345@gmail.com>
@@ -77,40 +77,35 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-A kernel oops at dma_unmap_sg_attrs may occur due to a race between an
-aborted scsi I/O completion and a scsi error handler issued TUR using the
-same repurposed scsi_cmnd structure.
+In lpfc_cmpl_ct_cmd_vmid, there is an early call to lpfc_ct_free_iocb when
+cmd is SLI_CTAS_DALLAPP_ID.  Within lpfc_ct_free_iocb the
+cmdiocb->rsp_dmabuf will be freed.  This means any ctrsp ptr dereference
+for SLI_CT_RESPONSE_FS_RJT or even ctrsp->ReasonCode and ctrsp->Explanation
+when handling a CT LS_RJT response is a use-after-free.
 
-The LPFC_DRIVER_ABORTED cmd_flag is set when inflight I/Os are aborted
-via lpfc_sli_abort_taskmgmt, and this flag is not cleared until after
-scsi_done is called.  The inflight I/O test is changed to check scsi I/O
-for either LFPC_IO_ON_TXCMPLQ or LPFC_DRIVER_ABORTED.  If either cmd_flag
-is set, then the I/O should still be counted.
+Remove the early lpfc_ct_free_iocb call for SLI_CTAS_DALLAPP_ID.  There
+already is a free_res label that calls lpfc_ct_free_iocb so there doesn't
+need to be an early lpfc_ct_free_iocb at the start of
+lpfc_cmpl_ct_cmd_vmid.
 
 Signed-off-by: Justin Tee <justintee8345@gmail.com>
 ---
- drivers/scsi/lpfc/lpfc_sli.c | 8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
+ drivers/scsi/lpfc/lpfc_ct.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index d38fb374b379..20ee8171e31f 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -12725,8 +12725,12 @@ lpfc_sli_sum_iocb(struct lpfc_vport *vport, uint16_t tgt_id, uint64_t lun_id,
+diff --git a/drivers/scsi/lpfc/lpfc_ct.c b/drivers/scsi/lpfc/lpfc_ct.c
+index c7853e7fe071..e14170550e69 100644
+--- a/drivers/scsi/lpfc/lpfc_ct.c
++++ b/drivers/scsi/lpfc/lpfc_ct.c
+@@ -3595,8 +3595,6 @@ lpfc_cmpl_ct_cmd_vmid(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ 	int i;
  
- 		if (!iocbq || iocbq->vport != vport)
- 			continue;
--		if (!(iocbq->cmd_flag & LPFC_IO_FCP) ||
--		    !(iocbq->cmd_flag & LPFC_IO_ON_TXCMPLQ))
-+		/* Only count FCP i/o */
-+		if (!(iocbq->cmd_flag & LPFC_IO_FCP))
-+			continue;
-+		/* Count i/o whilst LLDD retains an interest in the scsi_cmnd */
-+		if (!(iocbq->cmd_flag &
-+				(LPFC_IO_ON_TXCMPLQ | LPFC_DRIVER_ABORTED)))
- 			continue;
+ 	cmd = be16_to_cpu(ctcmd->CommandResponse.bits.CmdRsp);
+-	if (cmd == SLI_CTAS_DALLAPP_ID)
+-		lpfc_ct_free_iocb(phba, cmdiocb);
  
- 		/* Include counting outstanding aborts */
+ 	if (lpfc_els_chk_latt(vport) || get_job_ulpstatus(phba, rspiocb)) {
+ 		if (cmd != SLI_CTAS_DALLAPP_ID)
 -- 
 2.38.0
 
