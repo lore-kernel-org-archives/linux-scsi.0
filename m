@@ -1,71 +1,71 @@
 Received: from mail-qt1-f180.google.com (mail-qt1-f180.google.com [209.85.160.180])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A1EDE36EA8C
-	for <linux-scsi@vger.kernel.org>; Fri,  5 Jun 2026 17:45:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE6EF39A06F
+	for <linux-scsi@vger.kernel.org>; Fri,  5 Jun 2026 17:45:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.180
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780681521; cv=none; b=ClGRHP7nw+bWWGTsMokNxtYJI4YA08Q1O5VDXwfXJM5l/YvENcQvUkopVPnWd2PV0ixANXtOK9kTOIA/MuiUNA4q+ErzpRsyeMPvrLyqa++9zcR8uSLygENxITRa5+2dNu+4vRbKDCB9agyAR05gXA3uEyblUumtTZeOKJZvZKI=
+	t=1780681528; cv=none; b=ZCofXs2ZJI3t4o488sjgHr2SBShhQhHDW+FCx0VnGHIPFmRAOunjoguQRkm9pEQgU9LR5BZN+6CyCV4P18xwvYjjs1LEXbjTvHt8TJcB0jw42CWdHiUf90jVrDIW6yEKGtoIHaIEl0VRFkvpwD4N7Qwgd5TN7Gzh/kbwI115Ix8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780681521; c=relaxed/simple;
-	bh=bdwMNcZVjf0I1CDFWjmxuzGycazN9aJDtvxsS5g9hFg=;
+	s=arc-20240116; t=1780681528; c=relaxed/simple;
+	bh=WGIGiIGQliZS4WeSdMAqguVZTPS7YMRuOuC8NzegaEU=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=LmJHlDR78zre1CJLb9i4jSx7jhpKu9Mp0WuBR1t1gHvPNbwZJB8c5zyTWXKtAdAfUdY/4o6ZmVTy43U24b2O1HxeKddtj8NDWDllCcmwmY1ORtNWAfy9prSiR63g9r4ZEH6L26+BqUM0O2X54/4yAJ21Hr73YTisKfRps29aLMg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=EZlzhAnk; arc=none smtp.client-ip=209.85.160.180
+	 MIME-Version:Content-Type; b=ri6riMHm7JDQgGAYStW2lQflFsimzvLkloDHP+3+sQZCS0kIklaEUVkBppsgNKgSLcQGG03XhQv9Xo9JBwGpI9AaGjeQEBOuhviUibXm1WxApcfIY4Qt5UodIPyjTv1T+75pFtoV8v7U0CIC//PTHYXLxjI7owmhkxB4QL1/H7U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=bJqL2FwV; arc=none smtp.client-ip=209.85.160.180
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="EZlzhAnk"
-Received: by mail-qt1-f180.google.com with SMTP id d75a77b69052e-517907feed0so15447431cf.1
-        for <linux-scsi@vger.kernel.org>; Fri, 05 Jun 2026 10:45:15 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="bJqL2FwV"
+Received: by mail-qt1-f180.google.com with SMTP id d75a77b69052e-51790c0a692so18779451cf.2
+        for <linux-scsi@vger.kernel.org>; Fri, 05 Jun 2026 10:45:11 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1780681514; x=1781286314; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1780681511; x=1781286311; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=2CQIKIOUNHK4p/kK1ZVRgUxKnjETRbt3AMrCW5x1awc=;
-        b=EZlzhAnkgEnVALpp1rZIjCiFRVblaVhz3lA9wlKhEFl3HR+IJ3aq8e+OXG3eI3xTxq
-         wLM046RF5yu5n0DYqIKfp8xbPm842IJ5FFlsaUqciOmO/mNYQ/r9vi2zqCjNsbW7pmbX
-         ebCbOYehmig10vKu59lX8m4LDAXIMFJNfTo0RKSPLEGf0V95qU76WwzL0ZW4lGAY6/oK
-         wHbbiEJQ/MeY8qUh+p6DJnUawhoEBWYtsIrTv3vgBrlUMKlvvIN29j8Fj4eo2AzchOst
-         7PyUC+zVlchB0FgxwqwQBsgGEknja+DkKQd3zVfo8KPWzW5tURpEa6lilmVyNDW7i9T3
-         CdxA==
+        bh=UMHd3Ce+KTVYmn2bGOMPkYucCgD0+cbBr4oT5g7Jn6M=;
+        b=bJqL2FwVw8y1CjKbw6XENvrnSkqr0l5Sm1KQlo6NHVFng7eq2vXarYGfT9axzlMOmP
+         4qQkQ0G7ozDov1vTq+k0cP807B7CYPgsjPWoKO0NnSCi89GKJw6hrvYU/pcJEU3ObUAa
+         KoPh2ajtEmhnyGgbehNSu0IZscBZR2BVBV9+5qR/1fU4DwYgJ3k2mnVSKnLAVBesOpPW
+         JB1jNS1NHHsID42w/n4Gmb/HjHfkxxrOkfQgXsrXjLJI/hf8SCJZLm3/V9+w5rBRxY/0
+         25B0am6HSZSQ5Dz0ELO8htOZuSrUAGdNMCESnSd7o8/jpnadmUnlUyvfGc6wZ736WOuO
+         WUYw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1780681514; x=1781286314;
+        d=1e100.net; s=20251104; t=1780681511; x=1781286311;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to;
-        bh=2CQIKIOUNHK4p/kK1ZVRgUxKnjETRbt3AMrCW5x1awc=;
-        b=HZHp4GpSrzn8Cn3h72rLyrNmcWJlpt6ne7oRepdDD2XVeVc1rURfwCDE3rK+0ClRwe
-         ePMdMOoKDoyDFtK7pjD8BDSlajXJwNkrGBNRovRz1o+85lc4diCV/UqAb0uhN+D1YefT
-         ff7ZruF5Kn3r6jiyihlMjQXKv0MsKQt04m1Ssh5kCzyqVTmvVdubcAz27EzsJ0QUPQQr
-         bh5fj+AyZCiQWZcO5Os4DLcpxvE2MWdXL1SIBYtUvXl/FcbAmLPqeKT/sEYnx4Th1MMe
-         lSg5AusTZRINvNvlAdyU6srMR71d0aKUxXB223Rc7a6HSuOn85YTFa6GVI4z6KUhu5fI
-         DSTw==
-X-Gm-Message-State: AOJu0YwBNIjnh5DvQ0y9kRBbKnsLazTv6s9eQKopcGapE0DYtLzqp+L4
-	XAaEFGJNL/GiX8j9MQ2ptB7DPWrPBM/ggQnCaxLSbcCWDRuvbxX5hhIYsbszar/M
-X-Gm-Gg: Acq92OHNhwR5XKgmrbEqeq9pJ3E9x5vtz/HbO85SAlARc4B9FLwTFZzu7stPZFLznuP
-	jpNBp5g/lLAMwsEhhSIYt1Bz7tx4ewA+ZBEEObzFWDZ5/bJXP/9yA7TKMJemH0kYmjAt5yxYvU5
-	ul/ep/YB+0nXDU+cAtiHfiUaOZVurofy0e+zorfO5OFK8IgbB31VhdD76QoRDsGfhjCSte7npkM
-	AV6nBlmQ7Rg1QEhMVqbKwqYm0veMgnvPnasrmHTindmTvFXGwqkqqN9uxzTAchORf5Y9yCuuB7E
-	kb5Mivje9BHU/FHDIlSopMjVzsh7t3X3KXnr7DMh69TTJoxzKmmA3+v2jSwBfZ0xJFE1kKESqn/
-	SMHxBp5yPP74VvPzF+Q644NVZIxWL8lvb1YM83psK0MpSGtdQ58LGkIJ1U356ftD5PM2MbdVZEh
-	0T2S9NPih1Z7KmhhmbEQseJi/XXkaVDpI2g1ow8DNPxRVXQHFNbk/4zeEOXYotJYNxoEpcNjgEf
-	U5wPlW1OYW1FV81xEAcdx7HuCS48DymhN1hmUoJctEaq0o/37ndFg==
-X-Received: by 2002:ac8:57cc:0:b0:517:70a5:c875 with SMTP id d75a77b69052e-517987a8e1dmr11206451cf.14.1780681514562;
-        Fri, 05 Jun 2026 10:45:14 -0700 (PDT)
+        bh=UMHd3Ce+KTVYmn2bGOMPkYucCgD0+cbBr4oT5g7Jn6M=;
+        b=S1E0pX6lsoS+waoKUPNN4vjtGSCyHU5ODkWMLcJIIxlFNo3RdlbHkxNYcd3V4M/ZCN
+         rPhE8N6Dgv31SHI8GIgqiLvjFOiNldMolPUcCwfoVPFnHFOTmNe6UR8kksqyahJzFlhB
+         a/hz4yWQN443NUAlXt/hCU9vibC5qZMTfGs4DxqxFExHTquhUVDwtovSZ2lYKVjG8d5t
+         KujM3Jj8LIxdR+UO0ot3t6l6pZupateaB/HEU0bHCM2s56F5WWdUt7hZy6Jrs6ZCvmFl
+         +AmyVp23Pmk+HApAyvCmqFSbMwscisUVro+h2/CtgnVMm+wQg+oSWO9TfTYhn7Zrdvi4
+         JUkw==
+X-Gm-Message-State: AOJu0YxXSaTm7Jpib14rQ4LBcp45Sxc//dnIzc+QVu/Lh9cE3oTHEaA4
+	vfnwJDcV8YveMtEO6YluynMf7IpzKSLIS5QChqyT8HGO/gFeyRyGaLYhTIdMAS/R
+X-Gm-Gg: Acq92OFRoNw0pcJTg1ppOZYHy49V8v8QD7AtoEhuhssX3pL0q8tl/YHlfRkcH8Qa+Yv
+	WqO+Rr5+ZFn89vC0WjVJpoauR5huh0s3mcZbE88nIvsJQUUFNBxlARrXUF+Unaq/f/lsyJHUJQc
+	vxkdz+cnvK85jUSsq7ArgzDU38b0M18xxqVDbkDjyChZykBxricnpqr+YBDr8uw9Zj4B/HtLP72
+	XELMTcluc9eQ7Unv2KXbxutgnx5c1fi4JnfXfzZ0q2ZVjoCzgqI3DxKM8YYJ+U+5eC3DAhDmFL7
+	jo+fUo1Kpc3wMGAn0FOKeZBP30RlbaTSgGLZatTKcgBtMrwFWNodJMpUejOtDYcW6CmmUl2TC1U
+	hqPY8ouJKBMVo+5vp1C2guajG0Zva3qKX0VWcEebkBe/jKSr+CaTtSjaTQePC1nXSLspcRj4BKM
+	oDMjEmJz+QOSW1vBMyZyk8eqfFksgkHhhvuVHEoCutiGZ59hw6kVSdVLTlB0cH3owoc6sSwpKUP
+	Qpg66CpQyetTY26d/rypsmQshoOQiaAQkRvDxDg2du/sIkwWaiZ+jqs4pQL+BJ8
+X-Received: by 2002:a05:622a:14d2:b0:517:8e65:68ea with SMTP id d75a77b69052e-51795b914aamr64410591cf.54.1780681510192;
+        Fri, 05 Jun 2026 10:45:10 -0700 (PDT)
 Received: from dhcp-10-231-55-133.dhcp.broadcom.net ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id d75a77b69052e-51789407da8sm53376171cf.19.2026.06.05.10.45.13
+        by smtp.gmail.com with ESMTPSA id d75a77b69052e-51789407da8sm53376171cf.19.2026.06.05.10.45.09
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Fri, 05 Jun 2026 10:45:14 -0700 (PDT)
+        Fri, 05 Jun 2026 10:45:09 -0700 (PDT)
 From: Justin Tee <justintee8345@gmail.com>
 To: linux-scsi@vger.kernel.org
 Cc: jsmart833426@gmail.com,
 	justin.tee@broadcom.com,
 	Justin Tee <justintee8345@gmail.com>
-Subject: [PATCH v2 14/14] lpfc: Update lpfc version to 15.0.0.1
-Date: Fri,  5 Jun 2026 11:23:36 -0700
-Message-Id: <20260605182336.134919-15-justintee8345@gmail.com>
+Subject: [PATCH v2 11/14] lpfc: Put iocbq on phba->txq when ELS WQ is full or ELS SGL unavailable
+Date: Fri,  5 Jun 2026 11:23:33 -0700
+Message-Id: <20260605182336.134919-12-justintee8345@gmail.com>
 X-Mailer: git-send-email 2.38.0
 In-Reply-To: <20260605182336.134919-1-justintee8345@gmail.com>
 References: <20260605182336.134919-1-justintee8345@gmail.com>
@@ -75,28 +75,437 @@ List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-Update lpfc version to 15.0.0.1
+When ELS/CT commands can't be sent due to ELS WQ full, queue the iocbq on
+the phba->txq tail for retrying submission later in lpfc_drain_txq.
+
+lpfc_drain_txq is flagged to be called by the worker thread when an ELS CQE
+completes lpfc_sli4_sp_handle_els_wcqe through the HBA_SP_QUEUE_EVT flag.
+
+lpfc_drain_txq is also updated to queue an iocbq back on to the head of
+phba->txq when lpfc_drain_txq itself still observes ELS WQ full or SGL
+unavailable events.
 
 Signed-off-by: Justin Tee <justintee8345@gmail.com>
 ---
- drivers/scsi/lpfc/lpfc_version.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/lpfc/lpfc_crtn.h      |   7 +-
+ drivers/scsi/lpfc/lpfc_ct.c        |  17 ++++-
+ drivers/scsi/lpfc/lpfc_els.c       |  58 ++++++++++++++--
+ drivers/scsi/lpfc/lpfc_nportdisc.c |   9 ++-
+ drivers/scsi/lpfc/lpfc_sli.c       | 105 +++++++++++++++++++++++++----
+ drivers/scsi/lpfc/lpfc_sli.h       |   4 +-
+ 6 files changed, 177 insertions(+), 23 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_version.h b/drivers/scsi/lpfc/lpfc_version.h
-index d6e6e436fbfc..7df63d118234 100644
---- a/drivers/scsi/lpfc/lpfc_version.h
-+++ b/drivers/scsi/lpfc/lpfc_version.h
-@@ -20,7 +20,7 @@
-  * included with this package.                                     *
-  *******************************************************************/
+diff --git a/drivers/scsi/lpfc/lpfc_crtn.h b/drivers/scsi/lpfc/lpfc_crtn.h
+index 2ca5f0229ca1..47a593fe5e69 100644
+--- a/drivers/scsi/lpfc/lpfc_crtn.h
++++ b/drivers/scsi/lpfc/lpfc_crtn.h
+@@ -536,8 +536,11 @@ int lpfc_bsg_timeout(struct bsg_job *);
+ int lpfc_bsg_ct_unsol_event(struct lpfc_hba *, struct lpfc_sli_ring *,
+ 			     struct lpfc_iocbq *);
+ int lpfc_bsg_ct_unsol_abort(struct lpfc_hba *, struct hbq_dmabuf *);
+-void __lpfc_sli_ringtx_put(struct lpfc_hba *, struct lpfc_sli_ring *,
+-	struct lpfc_iocbq *);
++void lpfc_sli4_queue_io_for_retry(struct lpfc_hba *phba,
++				  struct lpfc_iocbq *iocb,
++				  bool head);
++void __lpfc_sli_ringtx_put(struct lpfc_hba *phba, struct lpfc_sli_ring *ring,
++			   struct lpfc_iocbq *iocb, bool head);
+ struct lpfc_iocbq *lpfc_sli_ringtx_get(struct lpfc_hba *,
+ 	struct lpfc_sli_ring *);
+ int __lpfc_sli_issue_iocb(struct lpfc_hba *, uint32_t,
+diff --git a/drivers/scsi/lpfc/lpfc_ct.c b/drivers/scsi/lpfc/lpfc_ct.c
+index e14170550e69..16f9cd507834 100644
+--- a/drivers/scsi/lpfc/lpfc_ct.c
++++ b/drivers/scsi/lpfc/lpfc_ct.c
+@@ -639,11 +639,24 @@ lpfc_gen_req(struct lpfc_vport *vport, struct lpfc_dmabuf *bmp,
+ 		goto out;
  
--#define LPFC_DRIVER_VERSION "15.0.0.0"
-+#define LPFC_DRIVER_VERSION "15.0.0.1"
- #define LPFC_DRIVER_NAME		"lpfc"
+ 	rc = lpfc_sli_issue_iocb(phba, LPFC_ELS_RING, geniocb, 0);
+-	if (rc == IOCB_ERROR) {
++	if (rc) {
++		lpfc_vlog_msg(vport, KERN_NOTICE,
++			      LOG_ELS | LOG_DISCOVERY | LOG_NODE,
++			      "0156 %ps WQE Put returned %d\n",
++			      cmpl, rc);
++
++		/* Under heavy vpi counts, the driver's host_index can catch up
++		 * to the hba_index causing a put error. Catch this case and
++		 * put the IO on phba->txq.
++		 */
++		if (rc == IOCB_FAILED_PUT && phba->sli_rev == LPFC_SLI_REV4) {
++			lpfc_sli4_queue_io_for_retry(phba, geniocb, false);
++			return 0;
++		}
++
+ 		lpfc_nlp_put(ndlp);
+ 		goto out;
+ 	}
+-
+ 	return 0;
+ out:
+ 	lpfc_sli_release_iocbq(phba, geniocb);
+diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+index f03ca253ed99..38a23646538e 100644
+--- a/drivers/scsi/lpfc/lpfc_els.c
++++ b/drivers/scsi/lpfc/lpfc_els.c
+@@ -2440,6 +2440,20 @@ lpfc_issue_els_plogi(struct lpfc_vport *vport, uint32_t did, uint8_t retry)
  
- /* Used for SLI 2/3 */
+ 	ret = lpfc_sli_issue_iocb(phba, LPFC_ELS_RING, elsiocb, 0);
+ 	if (ret) {
++		lpfc_vlog_msg(vport, KERN_NOTICE,
++			      LOG_ELS | LOG_DISCOVERY | LOG_NODE,
++			      "0157 PLOGI WQE Put returned %d\n",
++			      ret);
++
++		/* Under heavy vpi counts, the driver's host_index can catch up
++		 * to the hba_index causing a put error. Catch this case and
++		 * put the IO on phba->txq.
++		 */
++		if (ret == IOCB_FAILED_PUT && phba->sli_rev == LPFC_SLI_REV4) {
++			lpfc_sli4_queue_io_for_retry(phba, elsiocb, false);
++			return 0;
++		}
++
+ 		lpfc_els_free_iocb(phba, elsiocb);
+ 		lpfc_nlp_put(ndlp);
+ 		return 1;
+@@ -2766,7 +2780,21 @@ lpfc_issue_els_prli(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
+ 	}
+ 
+ 	rc = lpfc_sli_issue_iocb(phba, LPFC_ELS_RING, elsiocb, 0);
+-	if (rc == IOCB_ERROR) {
++	if (rc) {
++		lpfc_vlog_msg(vport, KERN_NOTICE,
++			      LOG_ELS | LOG_DISCOVERY | LOG_NODE,
++			      "0155 PRLI WQE Put returned %d\n",
++			      rc);
++
++		/* Under heavy vpi counts, the driver's host_index can catch up
++		 * to the hba_index causing a put error. Catch this case and
++		 * put the IO on phba->txq.
++		 */
++		if (rc == IOCB_FAILED_PUT && phba->sli_rev == LPFC_SLI_REV4) {
++			lpfc_sli4_queue_io_for_retry(phba, elsiocb, false);
++			return 0;
++		}
++
+ 		lpfc_els_free_iocb(phba, elsiocb);
+ 		lpfc_nlp_put(ndlp);
+ 		return 1;
+@@ -5982,7 +6010,21 @@ lpfc_els_rsp_acc(struct lpfc_vport *vport, uint32_t flag,
+ 	}
+ 
+ 	rc = lpfc_sli_issue_iocb(phba, LPFC_ELS_RING, elsiocb, 0);
+-	if (rc == IOCB_ERROR) {
++	if (rc) {
++		lpfc_vlog_msg(vport, KERN_NOTICE,
++			      LOG_ELS | LOG_DISCOVERY | LOG_NODE,
++			      "0154 LS_ACC WQE Put returned %d\n",
++			      rc);
++
++		/* Under heavy vpi counts, the driver's host_index can catch up
++		 * to the hba_index causing a put error. Catch this case and
++		 * put the IO on phba->txq.
++		 */
++		if (rc == IOCB_FAILED_PUT && phba->sli_rev == LPFC_SLI_REV4) {
++			lpfc_sli4_queue_io_for_retry(phba, elsiocb, false);
++			return 0;
++		}
++
+ 		lpfc_els_free_iocb(phba, elsiocb);
+ 		lpfc_nlp_put(ndlp);
+ 		return 1;
+@@ -10583,6 +10625,7 @@ lpfc_els_unsol_buffer(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
+ 	uint8_t rjt_exp, rjt_err = 0, init_link = 0;
+ 	struct lpfc_wcqe_complete *wcqe_cmpl = NULL;
+ 	LPFC_MBOXQ_t *mbox;
++	u16 rcv_oxid;
+ 
+ 	if (!vport || !elsiocb->cmd_dmabuf)
+ 		goto dropit;
+@@ -10652,11 +10695,18 @@ lpfc_els_unsol_buffer(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
+ 	if ((cmd & ELS_CMD_MASK) == ELS_CMD_RSCN) {
+ 		cmd &= ELS_CMD_MASK;
+ 	}
++
++	/* Fetch the incoming ox_id for SLI4 only - SLI3 can't do this. */
++	rcv_oxid = 0xffff;
++	if (phba->sli_rev == LPFC_SLI_REV4)
++		rcv_oxid = get_job_rcvoxid(phba, elsiocb);
++
+ 	/* ELS command <elsCmd> received from NPORT <did> */
+ 	lpfc_printf_vlog(vport, KERN_INFO, LOG_ELS,
+ 			 "0112 ELS command x%x received from NPORT x%x "
+-			 "refcnt %d Data: x%x x%lx x%x x%x\n",
+-			 cmd, did, kref_read(&ndlp->kref), vport->port_state,
++			 "refcnt %d rcvoxid x%x Data: x%x x%lx x%x x%x\n",
++			 cmd, did, kref_read(&ndlp->kref),
++			 rcv_oxid, vport->port_state,
+ 			 vport->fc_flag, vport->fc_myDID, vport->fc_prevDID);
+ 
+ 	/* reject till our FLOGI completes or PLOGI assigned DID via PT2PT */
+diff --git a/drivers/scsi/lpfc/lpfc_nportdisc.c b/drivers/scsi/lpfc/lpfc_nportdisc.c
+index e7ade735a97c..c0b2a678d492 100644
+--- a/drivers/scsi/lpfc/lpfc_nportdisc.c
++++ b/drivers/scsi/lpfc/lpfc_nportdisc.c
+@@ -1993,6 +1993,7 @@ lpfc_cmpl_reglogin_reglogin_issue(struct lpfc_vport *vport,
+ 	LPFC_MBOXQ_t *pmb = (LPFC_MBOXQ_t *) arg;
+ 	MAILBOX_t *mb = &pmb->u.mb;
+ 	uint32_t did  = mb->un.varWords[1];
++	int rc;
+ 
+ 	if (mb->mbxStatus) {
+ 		/* RegLogin failed */
+@@ -2071,7 +2072,13 @@ lpfc_cmpl_reglogin_reglogin_issue(struct lpfc_vport *vport,
+ 
+ 		ndlp->nlp_prev_state = NLP_STE_REG_LOGIN_ISSUE;
+ 		lpfc_nlp_set_state(vport, ndlp, NLP_STE_PRLI_ISSUE);
+-		if (lpfc_issue_els_prli(vport, ndlp, 0)) {
++		rc = lpfc_issue_els_prli(vport, ndlp, 0);
++		if (rc) {
++			lpfc_vlog_msg(vport, KERN_NOTICE,
++				      LOG_ELS | LOG_DISCOVERY | LOG_NODE,
++				      "3015 PRLI Issue returning %d to DID "
++				      "x%06x, Send LOGO\n",
++				      rc, ndlp->nlp_DID);
+ 			lpfc_issue_els_logo(vport, ndlp, 0);
+ 			ndlp->nlp_prev_state = NLP_STE_REG_LOGIN_ISSUE;
+ 			lpfc_nlp_set_state(vport, ndlp, NLP_STE_NPR_NODE);
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index 5c559cec9f55..0082d5c46af4 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -243,6 +243,38 @@ lpfc_sli4_pcimem_bcopy(void *srcp, void *destp, uint32_t cnt)
+ #define lpfc_sli4_pcimem_bcopy(a, b, c) lpfc_sli_pcimem_bcopy(a, b, c)
+ #endif
+ 
++/**
++ * lpfc_sli4_queue_io_for_retry - Put an ELS/CT IO request on the txq.
++ * @phba: pointer to the hba instance.
++ * @iocb: the IO request to put on the txq.
++ * @head: A boolean to request a put to the head (true) or tail (false) of the
++ *        txq.
++ *
++ * This routine is for SLI4 interfaces only.
++ * When ELS/CT commands can't be sent because of ELS WQ full put status,
++ * queue the iocbq on the phba->txq, at the head or tail as requested by
++ * the caller, for a retry later in lpfc_drain_txq. The lpfc_drain_txq
++ * routine is called per ELS CQE completion.
++ */
++void lpfc_sli4_queue_io_for_retry(struct lpfc_hba *phba,
++				  struct lpfc_iocbq *iocb,
++				  bool head)
++{
++	unsigned long iflags;
++	struct lpfc_sli_ring *pring;
++
++	/* Mark the IO as in RETRY to stop a full reprep of the SGL/XRI. */
++	iocb->cmd_flag |= LPFC_IO_IN_RETRY;
++	pring = phba->sli4_hba.els_wq->pring;
++
++	/* Insert to the head or tail of the txq ring as indicated
++	 * by the caller's head argument.
++	 */
++	spin_lock_irqsave(&pring->ring_lock, iflags);
++	__lpfc_sli_ringtx_put(phba, pring, iocb, head);
++	spin_unlock_irqrestore(&pring->ring_lock, iflags);
++}
++
+ /**
+  * lpfc_sli4_wq_put - Put a Work Queue Entry on an Work Queue
+  * @q: The Work Queue to operate on.
+@@ -275,6 +307,10 @@ lpfc_sli4_wq_put(struct lpfc_queue *q, union lpfc_wqe128 *wqe)
+ 	/* If the host has not yet processed the next entry then we are done */
+ 	idx = ((q->host_index + 1) % q->entry_count);
+ 	if (idx == q->hba_index) {
++		lpfc_printf_log(q->phba, KERN_WARNING, LOG_SLI,
++				"9998 No available WQ Slots on "
++				"q_id x%x, host x%x, hba x%x\n",
++				q->queue_id, idx, q->hba_index);
+ 		q->WQ_overflow++;
+ 		return -EBUSY;
+ 	}
+@@ -10419,6 +10455,7 @@ lpfc_mbox_api_table_setup(struct lpfc_hba *phba, uint8_t dev_grp)
+  * @phba: Pointer to HBA context object.
+  * @pring: Pointer to driver SLI ring object.
+  * @piocb: Pointer to address of newly added command iocb.
++ * @head: put at head (true) or tail (false)
+  *
+  * This function is called with hbalock held for SLI3 ports or
+  * the ring lock held for SLI4 ports to add a command
+@@ -10427,14 +10464,20 @@ lpfc_mbox_api_table_setup(struct lpfc_hba *phba, uint8_t dev_grp)
+  **/
+ void
+ __lpfc_sli_ringtx_put(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
+-		    struct lpfc_iocbq *piocb)
++		      struct lpfc_iocbq *piocb, bool head)
+ {
+ 	if (phba->sli_rev == LPFC_SLI_REV4)
+ 		lockdep_assert_held(&pring->ring_lock);
+ 	else
+ 		lockdep_assert_held(&phba->hbalock);
+-	/* Insert the caller's iocb in the txq tail for later processing. */
+-	list_add_tail(&piocb->list, &pring->txq);
++
++	/* Insert the caller's iocb in the txq head or tail for later
++	 * processing.
++	 */
++	if (head)
++		list_add(&piocb->list, &pring->txq);
++	else
++		list_add_tail(&piocb->list, &pring->txq);
+ }
+ 
+ /**
+@@ -10442,6 +10485,7 @@ __lpfc_sli_ringtx_put(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
+  * @phba: Pointer to HBA context object.
+  * @pring: Pointer to driver SLI ring object.
+  * @piocb: Pointer to address of newly added command iocb.
++ * @head: put at head (true) or tail (false)
+  *
+  * This function is called with hbalock held before a new
+  * iocb is submitted to the firmware. This function checks
+@@ -10587,7 +10631,7 @@ __lpfc_sli_issue_iocb_s3(struct lpfc_hba *phba, uint32_t ring_number,
+  out_busy:
+ 
+ 	if (!(flag & SLI_IOCB_RET_IOCB)) {
+-		__lpfc_sli_ringtx_put(phba, pring, piocb);
++		__lpfc_sli_ringtx_put(phba, pring, piocb, false);
+ 		return IOCB_SUCCESS;
+ 	}
+ 
+@@ -10725,6 +10769,7 @@ __lpfc_sli_issue_iocb_s4(struct lpfc_hba *phba, uint32_t ring_number,
+ 	struct lpfc_queue *wq;
+ 	struct lpfc_sli_ring *pring;
+ 	u32 ulp_command = get_job_cmnd(phba, piocb);
++	int rc = IOCB_SUCCESS;
+ 
+ 	/* Get the WQ */
+ 	if ((piocb->cmd_flag & LPFC_IO_FCP) ||
+@@ -10740,9 +10785,11 @@ __lpfc_sli_issue_iocb_s4(struct lpfc_hba *phba, uint32_t ring_number,
+ 	/*
+ 	 * The WQE can be either 64 or 128 bytes,
+ 	 */
+-
+ 	lockdep_assert_held(&pring->ring_lock);
+ 	wqe = &piocb->wqe;
++	if (piocb->cmd_flag & LPFC_IO_IN_RETRY)
++		goto retry_io;
++
+ 	if (piocb->sli4_xritag == NO_XRI) {
+ 		if (ulp_command == CMD_ABORT_XRI_CX)
+ 			sglq = NULL;
+@@ -10752,7 +10799,7 @@ __lpfc_sli_issue_iocb_s4(struct lpfc_hba *phba, uint32_t ring_number,
+ 				if (!(flag & SLI_IOCB_RET_IOCB)) {
+ 					__lpfc_sli_ringtx_put(phba,
+ 							pring,
+-							piocb);
++							piocb, false);
+ 					return IOCB_SUCCESS;
+ 				} else {
+ 					return IOCB_BUSY;
+@@ -10793,12 +10840,18 @@ __lpfc_sli_issue_iocb_s4(struct lpfc_hba *phba, uint32_t ring_number,
+ 			return IOCB_ERROR;
+ 	}
+ 
+-	if (lpfc_sli4_wq_put(wq, wqe))
+-		return IOCB_ERROR;
++ retry_io:
++	piocb->cmd_flag &= ~LPFC_IO_IN_RETRY;
+ 
+-	lpfc_sli_ringtxcmpl_put(phba, pring, piocb);
++	/* Push the wqe to the wq.  If the push fails with -EBUSY it means
++	 * the WQ is full.  Pass this status back to enable a retry.
++	 */
++	rc = lpfc_sli4_wq_put(wq, wqe);
++	if (rc == -EBUSY)
++		return IOCB_FAILED_PUT;
+ 
+-	return 0;
++	lpfc_sli_ringtxcmpl_put(phba, pring, piocb);
++	return rc;
+ }
+ 
+ /*
+@@ -21278,7 +21331,7 @@ lpfc_drain_txq(struct lpfc_hba *phba)
+ 
+ 		ret = __lpfc_sli_issue_iocb(phba, pring->ringno, piocbq, 0);
+ 
+-		if (ret && ret != IOCB_BUSY) {
++		if (ret && ret != IOCB_BUSY && ret != IOCB_FAILED_PUT) {
+ 			fail_msg = " - Cannot send IO ";
+ 			piocbq->cmd_flag &= ~LPFC_DRIVER_ABORTED;
+ 		}
+@@ -21294,9 +21347,35 @@ lpfc_drain_txq(struct lpfc_hba *phba)
+ 			list_add_tail(&piocbq->list, &completions);
+ 			fail_msg = NULL;
+ 		}
+-		spin_unlock_irqrestore(&pring->ring_lock, iflags);
+-		if (txq_cnt == 0 || ret == IOCB_BUSY)
++
++		if (txq_cnt == 0 || ret == IOCB_BUSY ||
++		    ret == IOCB_FAILED_PUT) {
++			/* If ELS WQ was full (IOCB_FAILED_PUT), then an SGL has
++			 * been assigned.  If SGL pool was empty (IOCB_BUSY),
++			 * then all we need is to put back on phba->txq to try
++			 * again later.
++			 */
++			lpfc_printf_log(phba, KERN_INFO, LOG_SLI,
++					"2820 IOCB iotag x%x xri x%x ret %d "
++					"cmd_flg x%x txq_cnt x%x\n",
++					piocbq->iotag, piocbq->sli4_xritag, ret,
++					piocbq->cmd_flag, txq_cnt);
++			switch (ret) {
++			case IOCB_FAILED_PUT:
++				piocbq->cmd_flag |= LPFC_IO_IN_RETRY;
++				__lpfc_sli_ringtx_put(phba, pring, piocbq,
++						      true);
++				break;
++			case IOCB_BUSY:
++				__lpfc_sli_ringtx_put(phba, pring, piocbq,
++						      true);
++				break;
++			}
++			spin_unlock_irqrestore(&pring->ring_lock, iflags);
+ 			break;
++		}
++
++		spin_unlock_irqrestore(&pring->ring_lock, iflags);
+ 	}
+ 	/* Cancel all the IOCBs that cannot be issued */
+ 	lpfc_sli_cancel_iocbs(phba, &completions, IOSTAT_LOCAL_REJECT,
+diff --git a/drivers/scsi/lpfc/lpfc_sli.h b/drivers/scsi/lpfc/lpfc_sli.h
+index cf7c42ec0306..86a7363a771a 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.h
++++ b/drivers/scsi/lpfc/lpfc_sli.h
+@@ -1,7 +1,7 @@
+ /*******************************************************************
+  * This file is part of the Emulex Linux Device Driver for         *
+  * Fibre Channel Host Bus Adapters.                                *
+- * Copyright (C) 2017-2024 Broadcom. All Rights Reserved. The term *
++ * Copyright (C) 2017-2026 Broadcom. All Rights Reserved. The term *
+  * “Broadcom” refers to Broadcom Inc. and/or its subsidiaries.     *
+  * Copyright (C) 2004-2016 Emulex.  All rights reserved.           *
+  * EMULEX and SLI are trademarks of Emulex.                        *
+@@ -123,6 +123,7 @@ struct lpfc_iocbq {
+ #define LPFC_IO_NVMET		0x800000 /* NVMET command */
+ #define LPFC_IO_VMID            0x1000000 /* VMID tagged IO */
+ #define LPFC_IO_CMF		0x4000000 /* CMF command */
++#define LPFC_IO_IN_RETRY	0x8000000 /* Caller is retrying IO. */
+ 
+ 	uint32_t drvrTimeout;	/* driver timeout in seconds */
+ 	struct lpfc_vport *vport;/* virtual port pointer */
+@@ -160,6 +161,7 @@ struct lpfc_iocbq {
+ #define IOCB_ABORTED        4
+ #define IOCB_ABORTING	    5
+ #define IOCB_NORESOURCE	    6
++#define IOCB_FAILED_PUT     7
+ 
+ #define SLI_WQE_RET_WQE    1    /* Return WQE if cmd ring full */
+ 
 -- 
 2.38.0
 
