@@ -1,71 +1,71 @@
-Received: from mail-qt1-f171.google.com (mail-qt1-f171.google.com [209.85.160.171])
+Received: from mail-qt1-f170.google.com (mail-qt1-f170.google.com [209.85.160.170])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF3C63806B0
-	for <linux-scsi@vger.kernel.org>; Fri,  5 Jun 2026 17:44:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3271C27057D
+	for <linux-scsi@vger.kernel.org>; Fri,  5 Jun 2026 17:45:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.170
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780681506; cv=none; b=ZDhThhPZl8Fe2guch46WBwOn5OY3nyhwkcFCrZwLXhz5NnBan3E+WDFKUb1fsrcxffbBfY26DMweSGB5W5iuO2T2FfQgUD665qUXw+cWnfRHazOAYuWD2gZwsoEC7qJfZQftlfcKbPRrPTznIhzF3twaGpC56VzPbxj5VU+3v3s=
+	t=1780681507; cv=none; b=Vad1XqGty9NaEGCHBA/LpW+hXKM4hlbTiT196hnUwk3q0zNOEgjYW5XpPbQ1brAx3612RBbsHsDb4yfRK/tsIf0E4jFcQhvYyvDryo9WLcqI9tlcnAnKdOVRVJEuNtb9INnBNOwQ4d5/URxkY9pI9zK43voQWMssY29gkbNp7vY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780681506; c=relaxed/simple;
-	bh=XDJSA9ARqSXKjDURqUbtMPI2B17diU6ylGKvLmSJAVw=;
+	s=arc-20240116; t=1780681507; c=relaxed/simple;
+	bh=sNuw3Rr24MrADxXmUI/LMhq95QsKPSErx90MhsPKstg=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=MmTf+Z1d5RHlUBXuxVDxI+DSf8moNWqspZZ9bxfxwol4HxjMSqY/lTjxzkccM+5MhzIIAVVx+IpUhBzjQaU8y0fCVSn9JqVxNIUr2hjMkUyUQuW+ZmGynVMkg7P6r8lhE8841m/6i/NQaqPfXXOGGrdhkBJKOYu+KfHSnv2FjF0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=LuMo8pBH; arc=none smtp.client-ip=209.85.160.171
+	 MIME-Version; b=snJ8wPsYHwFA1zcar1s+DQNcCv8YiI6Q2agKcQYQM2M4O4sqrYk82AtFGpeR64APGJfl90KH7i37+4Ywt834WBkMHjYGi1NL1Oj8VeFFYwpx+WiaPrl3ZDzLQB1vWMcxMminRUxUAzMhiSljL2+0SfDqSBxPPwZQfXj4ctcaz0w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Zu+br469; arc=none smtp.client-ip=209.85.160.170
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="LuMo8pBH"
-Received: by mail-qt1-f171.google.com with SMTP id d75a77b69052e-5174a3d9598so19542271cf.3
-        for <linux-scsi@vger.kernel.org>; Fri, 05 Jun 2026 10:44:55 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Zu+br469"
+Received: by mail-qt1-f170.google.com with SMTP id d75a77b69052e-5177b9a02bdso32921731cf.1
+        for <linux-scsi@vger.kernel.org>; Fri, 05 Jun 2026 10:45:02 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1780681495; x=1781286295; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1780681502; x=1781286302; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=dmCG1d3AlAtiNH3LEYA0GcaDkoTjkg6k8fP4s7NLwiE=;
-        b=LuMo8pBHkeHe96Ml2yH/A+Eij2tHU9zKBlJ1cBCp/FHrCKvZZjvTNr16nu6cbsTPmf
-         6SQ3hluSP23+dfzgTaYwuwNazxqIOCzyxQ3L3I3yHs69rO02BqrZmqMpEaECMv/L11Pt
-         YOtb/f9h9wiJUmhbXVryoGofURhtJyd1EGqlEoaGkQyU7NuOLoe7Eg3QkpP48EUPL95m
-         UHboqDdasbEwAWfX76G9W2JBV4Lem3vt+C4EfQubb6SoI2dmL0Kb35wulstbtW6yUUKo
-         GglkFOoHTSxOVSrucra7Fr29k93uTRhGT8YmYgDoadnk3AvKWnRY4HzfXE3CScxNNj18
-         r/YQ==
+        bh=90G+/k3ivvkjwlSq1oBsthVu32VZAAkJRSGlmbEOEe0=;
+        b=Zu+br469O8FLUULPmWzu1O0UMu8a9K1asimZ2lye67u/et3vs6OCSW/JGALxJ7Ii2x
+         oEk3FPYwptdYTmxgmQSmHfGtn7sDtxwZgXvwcQDChTNxJtJEzBAlX11sorW2k5UUG+M5
+         ZsYHSkN23OFdXykCMqt0w+VDMkQyOfQova+P7HPr8+a828+7ScrYKaZpOfL7cRG4qooX
+         LMmD59+McXWs45HwJepogQdBh6SSAFjUpzy+C45fFVulyfyP79oO2myYWcqD9WnuFmvE
+         PiWxp3s9meEZuuvHm2w66KjvenFPlbUTudtfXdDoli5nlgNU6QkfN+fa18XgnyKRvVGz
+         x2gg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1780681495; x=1781286295;
+        d=1e100.net; s=20251104; t=1780681502; x=1781286302;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to;
-        bh=dmCG1d3AlAtiNH3LEYA0GcaDkoTjkg6k8fP4s7NLwiE=;
-        b=CgO4XE893DWCqPO1iIkwRzhoHY2ul4JMfOZcA7/5ygQXTcH+TVrOOaM91G01nXuASV
-         QKFlpPHf134bEIr5Hl574ArCIyBMvc+tSYWWgnH5/xSNmi1QCXUbXbAT2pM7HkQm4jpv
-         tXw+z+csbTXWiVkvV7fMKZW/j3gsT4Nw1E6U6qAHIBVSmzGoRTFHHpLqM+ebmyZryz+w
-         K+Rn2oXhEHrEkoXxzFCHpU3qFiwg7+bQt/qz6sR5E2zjFw8XZuukY0j/zLCcf7X30mao
-         cutt1pGHIXktqZWn6lfy+1DC/fI4TBlkRl/KYUEhcU0kTd3AtySS3F1cqNeh8BfmQySs
-         TCLQ==
-X-Gm-Message-State: AOJu0Yw/btizc6ucU5Ut9nRPJwE+j0TRFXGlNvNJhV0PvLOR3R/qKJ0T
-	TMMInIOVXgXi42bHWR0FHgXf6Fi/Rkhs19Hi9CC1hyRrb4td7UNmY3FIKiRGSGnc
-X-Gm-Gg: Acq92OEIzHFmCWDTdAwQZhaWjP6kgEHJiPqCwiJ/XEx8Qvy/NBzBtFqnMV33u5nAixa
-	gA1YbiDdRz/G5gGgx/K030xfoEZRxGAfkMh7LgpMpg1aAanPUNPITXvr+rjyq/2e6DVVh8GYntE
-	VX+NMqjMafPLaaa8EmvJp9uvYnRZtv7P/z8vgtdbYO3jKyncAX0gDarZPa0z5WJ5oGLLVUqLdBc
-	kh9XZwJZpdp/D4ukuPpgBm6UuBANqTSIah8G7jmlTzkK/UOzVdZAJHo3dlhNMWxY3Uh0dA+nNM8
-	4kuYMBNCOyabObXh6b0Xt7apTy1Oa2+fUzSHgu4PGcmu7gtExLyRkr76DtwdhNQZL0YRKpf8HQJ
-	FAS7wswQZiWGI1DIAii1+lvu9n0JAn8EZs5omPkkwQhipRZp/iOxPR/uUcq4xvBDvQNv2KlskWh
-	46L+NUo9pWfLlfgFwnwLpPSMCy6K3CNZ86tUJUQkULCQKfs3GYe1CqmqNhrc2aywQJogASskIBK
-	TNbyXyyxw6qLUf4jcI72mKIhT3qZ0p9HtN5f9G3antmBEbH04q0Ax0aT1xiFMHg
-X-Received: by 2002:ac8:59d6:0:b0:50b:38c1:c6a with SMTP id d75a77b69052e-517959fdda5mr66006841cf.19.1780681494607;
-        Fri, 05 Jun 2026 10:44:54 -0700 (PDT)
+        bh=90G+/k3ivvkjwlSq1oBsthVu32VZAAkJRSGlmbEOEe0=;
+        b=C18ruxoMIo55cmkgcxr2ipSrcHvTBf/IlWDRZxoopJuuFDqZ12LMvd//W0nBhyThVi
+         xnlJurhX8kJeBZXBntJaENn7udTwSw/v2OUCvwHW9rkKMPSmcMMrw0ej/DyTO2fuNc7p
+         Ebvufis8IwvFTSwLvxxpCGiGNHOwpyG8ZUYLm9XJaCMMBuwm1AP5KYdPqIOgliUIGs35
+         sfrf7b3ZEAI3sz+3MN+L9iLzCmTaSdPbO/pN3/5iqnwVYM7faB60sCbg7KD/ICCC+Uk1
+         qoMKN4bflYTGxBK6FN5hYgrpTtDqFo+9EEBAgX0VdR4outg736aRttJBn8AR1Is2n2sc
+         DkLw==
+X-Gm-Message-State: AOJu0YyaDjbkpRVy2GZBXBvC5i8GawYf9r5YIfE67ztMjGORbaHvi5M8
+	bY4DYtAr19oUec09aCI6NYStDubZKIn2AlIbQIOAobYiAX8ebjK8c0bn1NWpFPXu
+X-Gm-Gg: Acq92OE1BHCGW9e1iPn6DBdzH6N/kBb0WwEf+MV/sZq3jhayANH3P44gKLxPNzRrfXL
+	D8BR6Pcm0K870wCsfZFrN6JZgXgDMo3GMmd9hiuxOU5RawVVIe1otwh+HWgC6UGDfcGwequCb3y
+	ZnU/C/2DTfLK6LlourZLt9D//GT4cjlIco8C4gubA95qsZxnm7kkvjNVh2EERZIlt7iRo983K0P
+	yNLPe8nYC1FwX84Mpk2mnveCzlENr7vs1HDxfnYuLsnw/wJ8DqqasFGNqlpNtXReyxDEX8zW0mw
+	5i84N6EzQYOBE+mC7r18ZOvcgjfs902qCn97WOObzIJcHYUBQ70aSEnGodCUUVgMVDgdFAS4sOb
+	fda1Xw0oZy41ae41kGlcUg2vjNNBWEUdF8B85t4D1e9HmaxCapJ1teeZiytXCB8nYClRptMEbdm
+	N7Yx9deW/VufqcMLRxQ1+tM2fqMJCi2Ke6399JZXMJYKS5ExhXHbghMY2KS05AKX1NI8N7sz2rC
+	bl5ckt6jeBuxNGdRFaDj5nA4O4jdsZz5DIO5X1vMLGB8wSht+J8rw==
+X-Received: by 2002:a05:622a:98d:b0:516:ef49:f6f5 with SMTP id d75a77b69052e-51795c5306emr68480491cf.39.1780681501665;
+        Fri, 05 Jun 2026 10:45:01 -0700 (PDT)
 Received: from dhcp-10-231-55-133.dhcp.broadcom.net ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id d75a77b69052e-51789407da8sm53376171cf.19.2026.06.05.10.44.53
+        by smtp.gmail.com with ESMTPSA id d75a77b69052e-51789407da8sm53376171cf.19.2026.06.05.10.45.00
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Fri, 05 Jun 2026 10:44:54 -0700 (PDT)
+        Fri, 05 Jun 2026 10:45:01 -0700 (PDT)
 From: Justin Tee <justintee8345@gmail.com>
 To: linux-scsi@vger.kernel.org
 Cc: jsmart833426@gmail.com,
 	justin.tee@broadcom.com,
 	Justin Tee <justintee8345@gmail.com>
-Subject: [PATCH v2 01/14] lpfc: Fix use-after-free in lpfc_cmpl_ct_cmd_vmid
-Date: Fri,  5 Jun 2026 11:23:23 -0700
-Message-Id: <20260605182336.134919-2-justintee8345@gmail.com>
+Subject: [PATCH v2 05/14] lpfc: Add handling for when PLOGI or PRLI is dropped during link failure
+Date: Fri,  5 Jun 2026 11:23:27 -0700
+Message-Id: <20260605182336.134919-6-justintee8345@gmail.com>
 X-Mailer: git-send-email 2.38.0
 In-Reply-To: <20260605182336.134919-1-justintee8345@gmail.com>
 References: <20260605182336.134919-1-justintee8345@gmail.com>
@@ -77,35 +77,78 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-In lpfc_cmpl_ct_cmd_vmid, there is an early call to lpfc_ct_free_iocb when
-cmd is SLI_CTAS_DALLAPP_ID.  Within lpfc_ct_free_iocb the
-cmdiocb->rsp_dmabuf will be freed.  This means any ctrsp ptr dereference
-for SLI_CT_RESPONSE_FS_RJT or even ctrsp->ReasonCode and ctrsp->Explanation
-when handling a CT LS_RJT response is a use-after-free.
-
-Remove the early lpfc_ct_free_iocb call for SLI_CTAS_DALLAPP_ID.  There
-already is a free_res label that calls lpfc_ct_free_iocb so there doesn't
-need to be an early lpfc_ct_free_iocb at the start of
-lpfc_cmpl_ct_cmd_vmid.
+PLOGI and PRLI typically complete via the lpfc_cmpl_els_plogi and
+lpfc_cmpl_els_prli handler respectively, but when the link drops they
+complete via the lpfc_cmpl_els_link_down handler.  When this occurs, normal
+cleanup completion actions are missed and we may fail to recover the login
+session due to ndlp logistical mixups.  Fix by clearing the NLP_PLOGI_SND
+or NLP_PRLI_SND flag and decrement the outstanding prli_sent counters in
+the lpfc_cmpl_els_link_down handler.
 
 Signed-off-by: Justin Tee <justintee8345@gmail.com>
 ---
- drivers/scsi/lpfc/lpfc_ct.c | 2 --
- 1 file changed, 2 deletions(-)
+ drivers/scsi/lpfc/lpfc_els.c | 35 ++++++++++++++++++++++++++++++-----
+ 1 file changed, 30 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_ct.c b/drivers/scsi/lpfc/lpfc_ct.c
-index c7853e7fe071..e14170550e69 100644
---- a/drivers/scsi/lpfc/lpfc_ct.c
-+++ b/drivers/scsi/lpfc/lpfc_ct.c
-@@ -3595,8 +3595,6 @@ lpfc_cmpl_ct_cmd_vmid(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 	int i;
+diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+index 896d69a0a655..c67f8581f584 100644
+--- a/drivers/scsi/lpfc/lpfc_els.c
++++ b/drivers/scsi/lpfc/lpfc_els.c
+@@ -1230,6 +1230,8 @@ lpfc_cmpl_els_link_down(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ 	uint32_t *pcmd;
+ 	uint32_t cmd;
+ 	u32 ulp_status, ulp_word4;
++	struct lpfc_vport *vport = cmdiocb->vport;
++	struct lpfc_nodelist *ndlp = cmdiocb->ndlp;
  
- 	cmd = be16_to_cpu(ctcmd->CommandResponse.bits.CmdRsp);
--	if (cmd == SLI_CTAS_DALLAPP_ID)
--		lpfc_ct_free_iocb(phba, cmdiocb);
+ 	pcmd = (uint32_t *)cmdiocb->cmd_dmabuf->virt;
+ 	cmd = *pcmd;
+@@ -1237,17 +1239,40 @@ lpfc_cmpl_els_link_down(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ 	ulp_status = get_job_ulpstatus(phba, rspiocb);
+ 	ulp_word4 = get_job_word4(phba, rspiocb);
  
- 	if (lpfc_els_chk_latt(vport) || get_job_ulpstatus(phba, rspiocb)) {
- 		if (cmd != SLI_CTAS_DALLAPP_ID)
+-	lpfc_printf_log(phba, KERN_INFO, LOG_ELS,
+-			"6445 ELS completes after LINK_DOWN: "
+-			" Status %x/%x cmd x%x flg x%x iotag x%x\n",
+-			ulp_status, ulp_word4, cmd,
+-			cmdiocb->cmd_flag, cmdiocb->iotag);
++	lpfc_printf_vlog(vport, KERN_INFO, LOG_ELS,
++			 "6445 ELS completes after LINK_DOWN: "
++			 "Status %x/%x cmd x%x data: x%x x%x x%x x%px x%px\n",
++			 ulp_status, ulp_word4, cmd,
++			 cmdiocb->cmd_flag, cmdiocb->iotag,
++			 ndlp->nlp_state, vport, ndlp);
++
++	if (cmd == ELS_CMD_PLOGI) {
++		/* A PLOGI ELS IO needs to clear the PLOGI_SND flag to
++		 * acknowledge the ELS completion and allow recovery. Otherwise
++		 * a subsequent PLOGI gets rejected as a duplicate.
++		 */
++		clear_bit(NLP_PLOGI_SND, &ndlp->nlp_flag);
++	} else if (cmd == ELS_CMD_PRLI || cmd == ELS_CMD_NVMEPRLI) {
++		/* A PRLI ELS IO needs to decrement the fc4_prli_sent count
++		 * added by the lpfc_issue_els_prli function.  A nonzero count
++		 * stops transport registrations.
++		 */
++		clear_bit(NLP_PRLI_SND, &ndlp->nlp_flag);
++		spin_lock_irq(&ndlp->lock);
++		vport->fc_prli_sent--;
++		ndlp->fc4_prli_sent--;
++		spin_unlock_irq(&ndlp->lock);
++	}
+ 
+ 	if (cmdiocb->cmd_flag & LPFC_IO_FABRIC) {
+ 		cmdiocb->cmd_flag &= ~LPFC_IO_FABRIC;
+ 		atomic_dec(&phba->fabric_iocb_count);
+ 	}
++
+ 	lpfc_els_free_iocb(phba, cmdiocb);
++
++	/* lpfc took a reference in the issue.  Release it now. */
++	lpfc_nlp_put(ndlp);
+ }
+ 
+ /**
 -- 
 2.38.0
 
