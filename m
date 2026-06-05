@@ -1,169 +1,88 @@
-Received: from mail-lf1-f48.google.com (mail-lf1-f48.google.com [209.85.167.48])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from fgw22-4.mail.saunalahti.fi (fgw22-4.mail.saunalahti.fi [62.142.5.109])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DB0D5355F5F
-	for <linux-scsi@vger.kernel.org>; Thu,  4 Jun 2026 23:47:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.167.48
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780616853; cv=pass; b=SzJvC7tVaPiKqkgZX3ULEwajvEk8fcEvaNQSre7XehVig9xMoG+fwTVNY5vKuj7Gwxux2LKRBrpXXUZE/RdSxJ67p+uSckng9xDBA8+HYKtuK9wddzMS56e11zXexyhTeusNaoLghpNLQh69GcsfC1nKNy5MNEcuwqqgohoo8pc=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780616853; c=relaxed/simple;
-	bh=biIxAk+6odobKkfmCAx2K1/eRar8yr8TI4Z/4RRvvwE=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=iALkeBiar8AA0eP39AOcY7hrrOgk6PjFhbt7bZXZNPe1ZuLgsaAQ8EJkmKs3ffHb6QnF+q86KvBnoYtNEXb8CDiOOkuGtlsdq3gyESgXu4wA2ahfsM1AAVt3o2wW8F1I7J521LmDMxfaTkWWKsQpcVe9Ox7lfI7IDgxyhEl4yHE=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=trailofbits.com; spf=pass smtp.mailfrom=trailofbits.com; dkim=pass (2048-bit key) header.d=trailofbits.com header.i=@trailofbits.com header.b=U9JB4WSH; arc=pass smtp.client-ip=209.85.167.48
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=trailofbits.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=trailofbits.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C960B3672A2
+	for <linux-scsi@vger.kernel.org>; Fri,  5 Jun 2026 05:59:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=62.142.5.109
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1780639202; cv=none; b=Y2NWnINHyxjHqsy9R0mNqsq1JtvTBlzp1wkPUAKywQqaHhtz4bxyVPkesZHrGuiTBjObMvKm1pyjFof8JnV1El2OltOYeBS6VsOqsLuOOQZD5pMcXo5myzlx4K6CWxTNMurH+XKWxFHdBS0fHA/vGksOnZrRjPx/FApRyrxy0tI=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1780639202; c=relaxed/simple;
+	bh=wIt2BIIvEZYEQNyARMvbAAeSVcMVm+CWy2lcBwf10eg=;
+	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
+	 Message-Id:References:To; b=GhkxT4eSGfZd1xCrdu+nNW22D8SvB15pPOp13SF3AxEFgW0cc20Uhfh5KrU+7buiTDA0IjOTfPM3MPw6c2mttzrWE3SxTRURCr8hoaAZaDgI8W/t56QrztCw3IUhApKRQCfkgyWW5B+1XwGveEiHi+zjg+uQHjF+mL15tMc8uWE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=kolumbus.fi; spf=pass smtp.mailfrom=kolumbus.fi; dkim=pass (2048-bit key) header.d=kolumbus.fi header.i=@kolumbus.fi header.b=h87oJ/il; arc=none smtp.client-ip=62.142.5.109
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=kolumbus.fi
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kolumbus.fi
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=trailofbits.com header.i=@trailofbits.com header.b="U9JB4WSH"
-Received: by mail-lf1-f48.google.com with SMTP id 2adb3069b0e04-5aa7a7ad4d3so1055697e87.1
-        for <linux-scsi@vger.kernel.org>; Thu, 04 Jun 2026 16:47:31 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1780616850; cv=none;
-        d=google.com; s=arc-20240605;
-        b=g9N0VN+KJbdy8c2l6vWwNa5UI12edm7DlIGmDTZP0qokZoSrqDdjOTV8O2Xw9VpwXf
-         cjY5YoF2WMG1BB+6Kc5BzjtVw8QTOddV8iynX5xZXCJksHSEcW8f7PROf7ySpqynyiHn
-         Gr1oZwIbnFciTADvXmgXPLDadMoL6XMZtx9vWy2UFBt7Q+vPmtBI4dfN+AwbnuIzKe6c
-         pytA3xpAe5EwVSgUI1vcoK3xowUOKPyGFBJaNm631aoBf1/Gt7vfb6eP4Y7ai0TojeIu
-         m63p1G5J1TEMXszXYnYpdWAv++Ufe+BJjImtmcpuWszaIIgHo7bRcbx3qU4c76Jr0y4y
-         pI+w==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=4etXzWJuSqceR5kMD0xuPCm3358nSlE7U+Eq4Mdardw=;
-        fh=rnb7MjWsTwSriPQPZqVE1YGi3BIu2FnREoAEv9526AA=;
-        b=XveYkBcEldUDbIItmNroavj2JHhweMl+KZ1ysK5pkqbl/CQCfUEPmKiKgoMA4NTj9t
-         Tb+Wsok7fGCDCtKxWXPFA57kdBr/PACgFq3wygdLF3UzRH9UKrjNaW9uox+0Xe2cNxWQ
-         hMjc0Se0lEOGgnNx2qEa9AleocuC0v5tmZGGJa0cm2LPUSC9zzfK1zEjkEwCc8MxYYUW
-         a/PLiKp+++G93I98JPej0m5uA83LBGo2pFmZksvK2m/UDQEI/trrWYfsZ3bsl8biCPBs
-         XqNQ8F7clQnfdGhcn1JUS37KH2XqZCoIr2rRixan99i0IGFjvGW8cLJI69A0yNshkID+
-         /hLg==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key) header.d=kolumbus.fi header.i=@kolumbus.fi header.b="h87oJ/il"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=trailofbits.com; s=google; t=1780616850; x=1781221650; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=4etXzWJuSqceR5kMD0xuPCm3358nSlE7U+Eq4Mdardw=;
-        b=U9JB4WSHlbVrY68gVWctM7HkFcuCgsyYvzK03Ce/nf7kvNgjg8jBCQkLviWf6pW6Ei
-         RCSMCdbl4UvxG/1hF8NUuLFWMlcNDa81Uo3OnzmvFZkYOBJE2Zy5TQabgJE+EGAYl9ak
-         jViiS1Wm6CgPiyUQWehH1kpfd01daRSa5ihXTiGGW+WzjZPhlzRvzFAD92pMNVrD44oU
-         0mVmI6R2wAYfwfs1elv5fVoB/hSLDjGAD5VuixbhdYuwxBckuSSUTNtI/bw1qRJGbPkD
-         RyhY61nJota/8MNcDf/g8YryOC+lp5Q9x9uXTbhVseaONHwdxZm4JKt8IcJ3l8GdhSo6
-         49eQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1780616850; x=1781221650;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=4etXzWJuSqceR5kMD0xuPCm3358nSlE7U+Eq4Mdardw=;
-        b=rusJYzKholcwj3luYOiLsjEuwVCVxUcZO2calnwXO/B/pOyOUXYyAi3ylJUunDRjsi
-         Ph2oFLSeRwtcmBHZqQ+8comODWKq5ezzACQCTQbt6gCXyOqsGJf+D3ykKTtDQhJzQC/G
-         wF+B5TWFr+XAsVRnHbEZE4AtzKer7EGzvkSQs5wvCF3+ammR9waZ4EnlKYKrWSFkqRTd
-         Zg99NXlECU07h/s3+EORO98UO4+4hgh1mZEkN5tYe2MxIAyWB5PF3KyApq3rpRyGYGmq
-         snLMMxb+XHriwq3HMS/m034u/IwnDKJKri5gKbU5kzj4U0glDQmQE90r7EzI3XK0LoXZ
-         ELwA==
-X-Forwarded-Encrypted: i=1; AFNElJ+eDwWpVx51cIg/ddOCGjNBajVuGxT3KW4Vs0Y7/PPOLzod6KsF6EgzFZC4mpO03Ubea3hVGGaF6gUt@vger.kernel.org
-X-Gm-Message-State: AOJu0YysGPHHR1EZVQInpk/HsGRl/8deJ0DDDJIYxUO8KB2d3XeugpCR
-	1T0pawhqeqwPR66X8nr58v3RXa1WQib/WqUnl8BIDcVY8VRGM0gG7taKHC8U0U+sYD2dpSKrqdT
-	37IUajr0q1hwNMPER9wj0Gvupwm6Ty0S6QC5sY6NGgg==
-X-Gm-Gg: Acq92OGviuWSubVt3wJQug3tPK3cLXhHHCC3YXGS2hURW/2gEKHJOe+LwUfDmRQSilg
-	y1SBBV0TXP1H6fboWJTNEUMu2Tdku4ZAw/QT+KwPkl7H10VggIKi6+LdO3+f9uk7a+qw6Zt3nCH
-	JTFQi3iz1AsMWlaxIBzb7sm8vTOiG7BqqlnWbnCbuRr+52jGqtQok49XYkUDtlRxWDqsudmp3qh
-	lNfR1uNqhyLqCMnw1YXMt+pPTv9B26x4U3JqMNkMza+BuXjdHIAhsmIFq2pQ3oO+NKPijQnbDlw
-	SRdgkU65vMbdm7Sm
-X-Received: by 2002:a05:6512:3990:b0:5aa:6ede:62 with SMTP id
- 2adb3069b0e04-5aa87b521dbmr269910e87.17.1780616850140; Thu, 04 Jun 2026
- 16:47:30 -0700 (PDT)
+	d=kolumbus.fi; s=elisa1;
+	h=to:references:message-id:content-transfer-encoding:cc:date:in-reply-to:from:
+	 subject:mime-version:content-type:from:to:cc:reply-to:subject:date:in-reply-to:
+	 references:list-archive:list-subscribe:list-unsubscribe:content-type:
+	 content-transfer-encoding:message-id;
+	bh=Dd62zMhOx1L1LDLnprRZRcjVyhtsaKK1HG4aQQ+k9gs=;
+	b=h87oJ/ilW0KNBI9Rifh/EHLpExCvrv7VWhDLoSwh3mCiD6+wWv0WCErNhCy8mQ4p1Q597TsuNWCXa
+	 RI9kmOs1+Ck/PCPg3P8k/2fI3fMGjSVIak9Mbnma+hiEc9Cv6L/q9mpEGj45Y97aj27no4JLA1AQeg
+	 yIGmmyEBg7ZHVpiqBUpwRVh11h/Q9MBKRTsNg0DlCdWQPUwKLn1R7QKnM2zNBxP2AICk5h4o78Ad1e
+	 s4KHcgiY8tfDVq7W8JfQ2AFuajFG1AHrE7go9NxscSNIVIJj8HJOeBlSymjsmOkeKSvYls4HhC5r4y
+	 hC4MNebNyxxbu5NMbf/40gNVcGnvLGQ==
+Received: from smtpclient.apple (91-158-174-119.elisa-laajakaista.fi [91.158.174.119])
+	by fgw22.mail.saunalahti.fi (Halon) with ESMTPSA
+	id c58cb440-60a3-11f1-8e05-005056bdf889;
+	Fri, 05 Jun 2026 08:59:55 +0300 (EEST)
+Content-Type: text/plain;
+	charset=utf-8
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-References: <20260603235616.124535-1-sam.moelius@trailofbits.com>
- <6d2e78e6a5840f5892e7eb081657b23aa62bc50d.camel@HansenPartnership.com>
- <CAE+C+DbpB6UP29WTNGgrnYqhazEC5=5ErNJiChrDz8sygC_-0w@mail.gmail.com>
- <4A3BD9E5-21E2-40F7-9242-71589477F2EF@kolumbus.fi> <c56802d9d3f05635c5b126687d0351a647801a77.camel@HansenPartnership.com>
-In-Reply-To: <c56802d9d3f05635c5b126687d0351a647801a77.camel@HansenPartnership.com>
-From: Samuel Moelius <sam.moelius@trailofbits.com>
-Date: Thu, 4 Jun 2026 19:47:18 -0400
-X-Gm-Features: AVVi8CeqTYFDPYKHxRDZW89x5Vz_VZEpg3kCVJq9TSc2oktx-wK8ucq3uxn4cKA
-Message-ID: <CAE+C+DYFZ8qRn1c2RL6g85rYvfX4n999GR7oL1+LD6aFgDP5Ow@mail.gmail.com>
-Subject: Re: [PATCH v2] scsi: scsi_debug: fix one-partition tape setup bounds
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: =?UTF-8?B?S2FpIE3DpGtpc2FyYSAoS29sdW1idXMp?= <kai.makisara@kolumbus.fi>, 
-	"Martin K. Petersen" <martin.petersen@oracle.com>, 
-	"open list:SCSI SUBSYSTEM" <linux-scsi@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3864.600.51.1.1\))
+Subject: Re: [PATCH v3] scsi: scsi_debug: fix one-partition tape setup bounds
+From: =?utf-8?B?IkthaSBNw6RraXNhcmEgKEtvbHVtYnVzKSI=?= <kai.makisara@kolumbus.fi>
+In-Reply-To: <20260604234724.1936118-1-sam.moelius@trailofbits.com>
+Date: Fri, 5 Jun 2026 08:59:43 +0300
+Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ "open list:SCSI SUBSYSTEM" <linux-scsi@vger.kernel.org>,
+ open list <linux-kernel@vger.kernel.org>
 Content-Transfer-Encoding: quoted-printable
+Message-Id: <A287E87F-0A9B-46CA-94AF-6ABF1FAE44B9@kolumbus.fi>
+References: <20260604234724.1936118-1-sam.moelius@trailofbits.com>
+To: Samuel Moelius <sam.moelius@trailofbits.com>
+X-Mailer: Apple Mail (2.3864.600.51.1.1)
 
-On Thu, Jun 4, 2026 at 3:29=E2=80=AFPM James Bottomley
-<James.Bottomley@hansenpartnership.com> wrote:
->
-> On Thu, 2026-06-04 at 22:14 +0300, Kai M=C3=A4kisara (Kolumbus) wrote:
-> >
-> > > On 4. Jun 2026, at 21.33, Samuel Moelius
-> > > <sam.moelius@trailofbits.com> wrote:
-> > >
-> > > On Thu, Jun 4, 2026 at 9:38=E2=80=AFAM James Bottomley
-> > > <James.Bottomley@hansenpartnership.com> wrote:
-> > > >
-> > > > On Wed, 2026-06-03 at 23:55 +0000, Samuel Moelius wrote:
-> > > > > The tape setup path writes partition metadata one element past
-> > > > > the
-> > > > > allocated tape_blocks array when a one-partition configuration
-> > > > > is
-> > > > > selected.
-> > > > >
-> > > > > That corrupts adjacent state during device initialization
-> > > > > before any
-> > > > > command is issued.
-> > > >
-> > > > I still don't get what the actual problem is.  For a single
-> > > > partition
-> > > > tape I can't see where scsi_debug would actually do anything with
-> > > > tape_blocks[1].  What is it that you're seeing when using
-> > > > scsi_debug
-> > > > that motivates this?
-> > >
-> > > The bug is a kernel OOB write. I can share a PoC if desired. The
-> > > PoC
-> > > sends this SCSI command through /dev/sgN:
-> > >
-> > > ...
-> >
-> > > Then the bug: it initializes partition 1 even though there is only
-> > > one
-> > > partition:
-> > >
-> > >    devip->tape_eop[1] =3D part_1_size;
-> > >    devip->tape_blocks[1] =3D devip->tape_blocks[0] +
-> > >                            devip->tape_eop[0];
-> > >    devip->tape_blocks[1]->fl_size =3D TAPE_BLOCK_EOD_FLAG;
-> > >
-> > > Because devip->tape_eop[0] =3D=3D 10000, this computes:
-> > >
-> > >    devip->tape_blocks[1] =3D devip->tape_blocks[0] + 10000
-> > >
-> > > But the allocation has only 10000 elements. So this write is one
-> > > element past the allocation.
-> >
-> > OK. The bug is not initialization of the pointer but writing the
-> > fl_size using the pointer. Good catch!
->
-> Isn't the fix actually to allocate an extra block for the EOF:
->
-> @@ -6648,7 +6648,7 @@ static int scsi_debug_sdev_configure(struct scsi_de=
-vice *sdp,
->         if (sdebug_ptype =3D=3D TYPE_TAPE) {
->                 if (!devip->tape_blocks[0]) {
->                         devip->tape_blocks[0] =3D
-> -                               kzalloc_objs(struct tape_block, TAPE_UNIT=
-S);
-> +                               kzalloc_objs(struct tape_block, TAPE_UNIT=
-S + 1);
->                         if (!devip->tape_blocks[0])
->                                 return 1;
 
-I'll send a v3 that uses that approach.
+
+> On 5. Jun 2026, at 2.43, Samuel Moelius <sam.moelius@trailofbits.com> =
+wrote:
+>=20
+> The tape setup path uses one tape_block entry as the end-of-data =
+marker
+> after the usable tape blocks. For the one-partition layout, partition =
+0
+> uses all TAPE_UNITS data slots and partition 1's marker is written at
+> tape_blocks[0] + TAPE_UNITS.
+>=20
+> Only TAPE_UNITS entries are allocated, so that marker write is one
+> element past the allocation during device initialization before any
+> command is issued.
+>=20
+> Allocate one extra tape_block entry for the marker. This keeps the
+> existing partitioning paths unchanged while providing backing storage =
+for
+> the sentinel.
+>=20
+> Assisted-by: Codex:gpt-5.5-cyber-preview
+> Signed-off-by: Samuel Moelius <sam.moelius@trailofbits.com>
+> ---
+> Changes in v3
+>  - Use TAPE_UNITS + 1 approach
+
+Reviewed-by: Kai M=C3=A4kisara <Kai.Makisara@kolumbus.fi =
+<mailto:Kai.Makisara@kolumbus.fi>>
+
+Thanks, Kai
+
