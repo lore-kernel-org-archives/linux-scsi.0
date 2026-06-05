@@ -1,88 +1,107 @@
-Received: from fgw22-4.mail.saunalahti.fi (fgw22-4.mail.saunalahti.fi [62.142.5.109])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-vk1-f174.google.com (mail-vk1-f174.google.com [209.85.221.174])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C960B3672A2
-	for <linux-scsi@vger.kernel.org>; Fri,  5 Jun 2026 05:59:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=62.142.5.109
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 880E14611E1
+	for <linux-scsi@vger.kernel.org>; Fri,  5 Jun 2026 07:30:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780639202; cv=none; b=Y2NWnINHyxjHqsy9R0mNqsq1JtvTBlzp1wkPUAKywQqaHhtz4bxyVPkesZHrGuiTBjObMvKm1pyjFof8JnV1El2OltOYeBS6VsOqsLuOOQZD5pMcXo5myzlx4K6CWxTNMurH+XKWxFHdBS0fHA/vGksOnZrRjPx/FApRyrxy0tI=
+	t=1780644649; cv=none; b=QRfA++4nVJmblyJEv95eY5PBI0H0p4Vle/n21QuAZYGEbI4yHGuC8kL7JVKD9SFTB2m6LeluFyO/oEHuLC2JStTeO1JKfpFvbNVPpwXvOq3cquqs421zOO6CKbKtd2zlyCPXhg1PGghNzUYaXc5W6QSlV132Z9Bo3WwGVOQqgsE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780639202; c=relaxed/simple;
-	bh=wIt2BIIvEZYEQNyARMvbAAeSVcMVm+CWy2lcBwf10eg=;
-	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
-	 Message-Id:References:To; b=GhkxT4eSGfZd1xCrdu+nNW22D8SvB15pPOp13SF3AxEFgW0cc20Uhfh5KrU+7buiTDA0IjOTfPM3MPw6c2mttzrWE3SxTRURCr8hoaAZaDgI8W/t56QrztCw3IUhApKRQCfkgyWW5B+1XwGveEiHi+zjg+uQHjF+mL15tMc8uWE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=kolumbus.fi; spf=pass smtp.mailfrom=kolumbus.fi; dkim=pass (2048-bit key) header.d=kolumbus.fi header.i=@kolumbus.fi header.b=h87oJ/il; arc=none smtp.client-ip=62.142.5.109
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=kolumbus.fi
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kolumbus.fi
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kolumbus.fi header.i=@kolumbus.fi header.b="h87oJ/il"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=kolumbus.fi; s=elisa1;
-	h=to:references:message-id:content-transfer-encoding:cc:date:in-reply-to:from:
-	 subject:mime-version:content-type:from:to:cc:reply-to:subject:date:in-reply-to:
-	 references:list-archive:list-subscribe:list-unsubscribe:content-type:
-	 content-transfer-encoding:message-id;
-	bh=Dd62zMhOx1L1LDLnprRZRcjVyhtsaKK1HG4aQQ+k9gs=;
-	b=h87oJ/ilW0KNBI9Rifh/EHLpExCvrv7VWhDLoSwh3mCiD6+wWv0WCErNhCy8mQ4p1Q597TsuNWCXa
-	 RI9kmOs1+Ck/PCPg3P8k/2fI3fMGjSVIak9Mbnma+hiEc9Cv6L/q9mpEGj45Y97aj27no4JLA1AQeg
-	 yIGmmyEBg7ZHVpiqBUpwRVh11h/Q9MBKRTsNg0DlCdWQPUwKLn1R7QKnM2zNBxP2AICk5h4o78Ad1e
-	 s4KHcgiY8tfDVq7W8JfQ2AFuajFG1AHrE7go9NxscSNIVIJj8HJOeBlSymjsmOkeKSvYls4HhC5r4y
-	 hC4MNebNyxxbu5NMbf/40gNVcGnvLGQ==
-Received: from smtpclient.apple (91-158-174-119.elisa-laajakaista.fi [91.158.174.119])
-	by fgw22.mail.saunalahti.fi (Halon) with ESMTPSA
-	id c58cb440-60a3-11f1-8e05-005056bdf889;
-	Fri, 05 Jun 2026 08:59:55 +0300 (EEST)
-Content-Type: text/plain;
-	charset=utf-8
+	s=arc-20240116; t=1780644649; c=relaxed/simple;
+	bh=5W/tWie+s0GyiFfiVzYnA5c+lJxiUZ1i+gzNpq+8JKc=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=t7JLbW6nG1mN2UM+1zthAwhTAXNR+Gi6M1Ngpoic1ocDg6+O/eyKCzboiacAQ96xagbr0M4RcjfVKAupSuGQ+JibQmFNfuw+PX3DtxeRBRpy28B956X+eBCrQQzgjiuntgcsse9ltI/YCYb+koEidhbyUYsl6VCSjyalzkFexpk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.221.174
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Received: by mail-vk1-f174.google.com with SMTP id 71dfb90a1353d-59d4aa96ef2so1156696e0c.1
+        for <linux-scsi@vger.kernel.org>; Fri, 05 Jun 2026 00:30:48 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1780644647; x=1781249447;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=JJPTFXFfEVfaClOO5icEXfzsJcEhxZLVJwj7hX3l3SM=;
+        b=GvANOyHdM4HYILkLDhd3nf5VF/gLksSb6NOeYkLwA+F5wXDbnCfIS+mDFstJGgmHxq
+         0a1EdfXNXhjie/x49g4gw5br6pmfSF77NEOU+tbfUI0oR/ilYmQSfyLz1Fbms34s1oe5
+         zH7ydEixqABU/lmpejNPqm8cl2bAIl7/HLPGawTbPeZO4kW81/qWQD06cfPGba4+eDmR
+         MrXNI7KQMFZWpSV+Asy1GphW9NjH/MLwsKjLGYXr/WYn3EAxZKxWEOzhaAP+nPm6FigW
+         pCnfrW5wGL5Pb7nHyyheFOvCVWZkePOYPt2TFRpsbBiF+FMq+2I0qRDrjNnpIiZk8ptr
+         RiRw==
+X-Forwarded-Encrypted: i=1; AFNElJ/qlhZIX95Cu6lUAEViYRMvLchiD7y6OTy4S6yVNRoZVOkHjyyZXONLiRVSCT93M4soMqD1rrG+13FY@vger.kernel.org
+X-Gm-Message-State: AOJu0YzMpz+BL2OCt52npr4zm7vKRMXwMXKJlJ7ZdkXwten0ftGRtwWM
+	hwvrhJgXJjmN6+I57SQi1mDIAULMpLZs0yLZy0tdRxtthGErEowAl1kfRZxxpQ7KY2k=
+X-Gm-Gg: Acq92OFLUCx4dwItODuxjkI7XodPKmuK6iAQMrbc9S2CC4TEtFPBZNprrBVH+2VX+tm
+	QAD2Wy+3RM4OJSNs0XzuCjIM5i3LeANEEUHMIsu5OeqMghn+kpr1B71932s2y6F+Fkso7PoLBE8
+	Gx38t0Yj2lBsl3dYPAXK1HHDR+/2rJTqDxE62Mr4Pc3Y4WxKhWTloUiL4pc4gObD9SwG1/imxYX
+	yBAjR0H4YDq0X8hES0TkQVBu/Ube+sMTKwQSxqup+7QpCgLwGzlF4O6jc2NyRwy+lHScEsvGSjS
+	UcdZfE8u4xzvoCYEM5y2JWw56iH2BLpXWbOvH3tTZ8YyugBDBOx33DtGpwr3tX0z2q3qiT12qsG
+	arQL8zRc6coSTeA0kuGEYzS2w7V36s+m+LfwVDp03mCQJ5ezsetwIoVzyV3fvE0zvwQx0lmhBnb
+	bjej8eyrzddyGaQKdINCkoLLhPoXbuZeFSW4nDrPR0A4z5nv97yW+9HVwK/YhCNWKeN4saa9c=
+X-Received: by 2002:a05:6122:e14e:b0:5a0:3d17:f939 with SMTP id 71dfb90a1353d-5ac5291a586mr1116284e0c.9.1780644647585;
+        Fri, 05 Jun 2026 00:30:47 -0700 (PDT)
+Received: from mail-ua1-f43.google.com (mail-ua1-f43.google.com. [209.85.222.43])
+        by smtp.gmail.com with ESMTPSA id 71dfb90a1353d-5a6dcc2ecbesm6612957e0c.13.2026.06.05.00.30.46
+        for <linux-scsi@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 05 Jun 2026 00:30:46 -0700 (PDT)
+Received: by mail-ua1-f43.google.com with SMTP id a1e0cc1a2514c-963a7e48493so1199821241.1
+        for <linux-scsi@vger.kernel.org>; Fri, 05 Jun 2026 00:30:46 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AFNElJ/3JAHDeGrN3aWpYtwrlX/IP38uG7r2Qj/m0GIjUZHWghyu6nbJJ+NfFrTVM489qyvMpEiBxCNdcSGz@vger.kernel.org
+X-Received: by 2002:a05:6102:cc8:b0:62f:3abe:907f with SMTP id
+ ada2fe7eead31-6feed1adbffmr1189675137.4.1780644646130; Fri, 05 Jun 2026
+ 00:30:46 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3864.600.51.1.1\))
-Subject: Re: [PATCH v3] scsi: scsi_debug: fix one-partition tape setup bounds
-From: =?utf-8?B?IkthaSBNw6RraXNhcmEgKEtvbHVtYnVzKSI=?= <kai.makisara@kolumbus.fi>
-In-Reply-To: <20260604234724.1936118-1-sam.moelius@trailofbits.com>
-Date: Fri, 5 Jun 2026 08:59:43 +0300
-Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- "open list:SCSI SUBSYSTEM" <linux-scsi@vger.kernel.org>,
- open list <linux-kernel@vger.kernel.org>
-Content-Transfer-Encoding: quoted-printable
-Message-Id: <A287E87F-0A9B-46CA-94AF-6ABF1FAE44B9@kolumbus.fi>
-References: <20260604234724.1936118-1-sam.moelius@trailofbits.com>
-To: Samuel Moelius <sam.moelius@trailofbits.com>
-X-Mailer: Apple Mail (2.3864.600.51.1.1)
+MIME-Version: 1.0
+References: <20260604-remove-pktcdvd-references-v3-0-e2f06fb4eef4@gmail.com>
+ <20260604-remove-pktcdvd-references-v3-1-e2f06fb4eef4@gmail.com> <88d9bb41-e51d-4b71-a6d9-f1b79eccd496@acm.org>
+In-Reply-To: <88d9bb41-e51d-4b71-a6d9-f1b79eccd496@acm.org>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Date: Fri, 5 Jun 2026 09:30:35 +0200
+X-Gmail-Original-Message-ID: <CAMuHMdVhjYBhKUPzx-FAKWAAkUwcpYh0v2V5w64OMJtREZr4PQ@mail.gmail.com>
+X-Gm-Features: AVVi8CdzPUN0PjO13sCwZaAxIjLcvwA5tXzyJ1zGjjn5YbgvhAb6LM_UbfPQhv4
+Message-ID: <CAMuHMdVhjYBhKUPzx-FAKWAAkUwcpYh0v2V5w64OMJtREZr4PQ@mail.gmail.com>
+Subject: Re: [PATCH v3 1/6] scsi: core: Remove remaining reference to the
+ pktcdvd driver
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: Catalin Iacob <iacobcatalin@gmail.com>, Thomas Bogendoerfer <tsbogend@alpha.franken.de>, 
+	Madhavan Srinivasan <maddy@linux.ibm.com>, Michael Ellerman <mpe@ellerman.id.au>, 
+	Nicholas Piggin <npiggin@gmail.com>, "Christophe Leroy (CS GROUP)" <chleroy@kernel.org>, Rich Felker <dalias@libc.org>, 
+	John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>, "David S. Miller" <davem@davemloft.net>, 
+	Andreas Larsson <andreas@gaisler.com>, 
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
+	"Martin K. Petersen" <martin.petersen@oracle.com>, Jens Axboe <axboe@kernel.dk>, 
+	Yoshinori Sato <ysato@users.sourceforge.jp>, linux-mips@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, 
+	linux-sh@vger.kernel.org, sparclinux@vger.kernel.org, 
+	linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
+Hoi Bart,
 
+On Thu, 4 Jun 2026 at 18:01, Bart Van Assche <bvanassche@acm.org> wrote:
+> On 6/4/26 6:20 AM, Catalin Iacob wrote:
+> > Commit 1cea5180f2f8 ("block: remove pktcdvd driver") left behind an
+> > export that is now dead code. Remove it.
+> The subject should say something like "Unexport
+> scsi_device_from_queue()".
 
-> On 5. Jun 2026, at 2.43, Samuel Moelius <sam.moelius@trailofbits.com> =
-wrote:
->=20
-> The tape setup path uses one tape_block entry as the end-of-data =
-marker
-> after the usable tape blocks. For the one-partition layout, partition =
-0
-> uses all TAPE_UNITS data slots and partition 1's marker is written at
-> tape_blocks[0] + TAPE_UNITS.
->=20
-> Only TAPE_UNITS entries are allocated, so that marker write is one
-> element past the allocation during device initialization before any
-> command is issued.
->=20
-> Allocate one extra tape_block entry for the marker. This keeps the
-> existing partitioning paths unchanged while providing backing storage =
-for
-> the sentinel.
->=20
-> Assisted-by: Codex:gpt-5.5-cyber-preview
-> Signed-off-by: Samuel Moelius <sam.moelius@trailofbits.com>
-> ---
-> Changes in v3
->  - Use TAPE_UNITS + 1 approach
+<pedantic>
+But that is not what it does: the symbol is never exported, as
+CONFIG_CDROM_PKTCDVD_MODULE can never be set?
+</pedantic>
 
-Reviewed-by: Kai M=C3=A4kisara <Kai.Makisara@kolumbus.fi =
-<mailto:Kai.Makisara@kolumbus.fi>>
+Gr{oetje,eeting}s,
 
-Thanks, Kai
+                        Geert
 
+-- 
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
