@@ -1,168 +1,110 @@
-Received: from mail-06.mail-europe.com (mail-06.mail-europe.com [85.9.210.45])
+Received: from mailtransmit05.runbox.com (mailtransmit05.runbox.com [185.226.149.38])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C5A3E24A07C
-	for <linux-scsi@vger.kernel.org>; Sat,  6 Jun 2026 01:54:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=85.9.210.45
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A6CA3C4B64;
+	Sat,  6 Jun 2026 20:27:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.226.149.38
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780710867; cv=none; b=kIWuZyeU84USiLYrLQeD00i+4vVLt6iiOnoruI7ZOTM6qLlh/xEwWah5EHDhO1+feq77LRaqS0z3c4ubbnQ83y4VnhdfOVSJ1Xv0H/gNiWZ6RPDkA0gECc/xxh1gyfNXMDB/XU7Z7gSRN4g/J1AAPI5YXUuKQfpMc3wcN8ckau8=
+	t=1780777645; cv=none; b=pyMmussoNCZESHIZ9Y2EhOqmy/Pt2TfCs6xmE2ubnqRVCfIMczNOQm0pPreH8OQ5GfrziecWoy4VzlRe/QSFgUmUsEwRxd5COWVIVlL0E1Ov9PxNuiiPW4vED8mU1PJRMA8I8FOZxl4dlH5A10GYpDOJ+Fpjw0RpLvQJ9uYSsKk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780710867; c=relaxed/simple;
-	bh=4xCBLXpZkQ5ZWF7wgaJ0bFA7lqdW6pE50xsoulFbMl4=;
-	h=Date:To:From:Cc:Subject:Message-ID:MIME-Version:Content-Type; b=keqUv2lO8n3AedcLWMUji1WEmutp0OockyXgvok/2Xe4c/lsg/kNqxhvdwNomKLCHSSAkp0mHRifmQZCO9RbDUf6JGU1pajmKyAQPLKpUXEP1NXgZ8DWYwupii4GtgYIM4JnlhOwG9oS18XkBslQyiG2YVf9WHIyIkbOeG20qOg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=proton.me; spf=pass smtp.mailfrom=proton.me; dkim=pass (2048-bit key) header.d=proton.me header.i=@proton.me header.b=SBJNoV1g; arc=none smtp.client-ip=85.9.210.45
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=proton.me
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=proton.me
+	s=arc-20240116; t=1780777645; c=relaxed/simple;
+	bh=REI97TkIhRniVInqZO0EIxrxjcRCipcco1/8n5eTLEQ=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=onEwZGxNPSssOw4QezitYag51ke74TuCRdem4wDE3T1NkcCvilywUBreY2UEkE5e6ZNGbZEfnyhpqQ7oJR2UsXxvBlF76Jy3C7MQ5+09fR+0RYUUBGQMypC8ToB17biyTKEj/9r1lZQTQATkhTNe4Y7Y7ennvlUqN3b4Bw3dqtM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=runbox.com; dkim=pass (2048-bit key) header.d=runbox.com header.i=@runbox.com header.b=ngXuQet4; arc=none smtp.client-ip=185.226.149.38
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=runbox.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=proton.me header.i=@proton.me header.b="SBJNoV1g"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=proton.me;
-	s=protonmail; t=1780710848; x=1780970048;
-	bh=MDDqlyl1man/oMNqafLv44XpGatzizLBqYeIOfvJ4D8=;
-	h=Date:To:From:Cc:Subject:Message-ID:Feedback-ID:From:To:Cc:Date:
-	 Subject:Reply-To:Feedback-ID:Message-ID:BIMI-Selector;
-	b=SBJNoV1gMqqpLWWezaOF3WdpT+ZC9zx3hszc9duGrSAUoMzVmhpccyyee0YMSoNIl
-	 hyxhUKMvDrRDGQRuYcHBQV1y3A0zqtUWYZwG+MjV78fnF3IgiuKUHE/bujwSApkMVv
-	 6SYnIkQZqrjinCPctbHiEflXgE3ZY45yPqEvr9WzHFR/mqek50zT+kHzez+oR7H298
-	 L91Ekw4zmIjN3d8yssePM9RXA8flnYcfdHZ2PS9wKUu072zvZ7P6ANpm428GpqL/Oo
-	 SodomwA05SoVA+Mrj/Q2ieaSIbqTvp9eXEnVr76bJvGSn/oY+lHC/I1/wL5PzuGzII
-	 I/SGcV7/YYb0g==
-Date: Sat, 06 Jun 2026 01:54:02 +0000
-To: "Martin K . Petersen" <martin.petersen@oracle.com>
-From: Bryam Vargas <hexlabsecurity@proton.me>
-Cc: Mike Christie <michael.christie@oracle.com>, Maurizio Lombardi <mlombard@redhat.com>, John Garry <john.g.garry@oracle.com>, David Disseldorp <ddiss@suse.de>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] scsi: target: copy iSCSI ISID before unmapping the PR OUT buffer
-Message-ID: <20260606015359.181724-1-hexlabsecurity@proton.me>
-Feedback-ID: 199661219:user:proton
-X-Pm-Message-ID: 4f9147923b14bc3da58aadef374b0d7517c97506
+	dkim=pass (2048-bit key) header.d=runbox.com header.i=@runbox.com header.b="ngXuQet4"
+Received: from mailtransmit03.runbox ([10.9.9.163] helo=aibo.runbox.com)
+	by mailtransmit05.runbox.com with esmtps  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+	(Exim 4.93)
+	(envelope-from <david.laight.linux_spam@runbox.com>)
+	id 1wVxbx-007cIc-Gl; Sat, 06 Jun 2026 22:27:17 +0200
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=runbox.com;
+	 s=selector1; h=Content-Transfer-Encoding:MIME-Version:Message-Id:Date:
+	Subject:Cc:To:From; bh=kWjuf1g6cy43Bm0IGGIGiw7IX2e5DSbEIybtUGFTzJw=; b=ngXuQe
+	t4gnreCwusAGR7PIEIjNG35xDyOA3jv3r+CJYnFGSuRA83P4EHLVKDwqBAXFa0BZDGhsVLbRc/muj
+	HJLuOXpiZcA2CU/dRTC3N/06AtkzZuqjB3x60fsEF/Z7DH3N9XjFVR585Gev47oZc0GUksXmOMqr2
+	3ydFtc2BRlTtXSK4fS3gyVtftx3UUD0UQuuXKV0eNkt/y1KRe4rOS5OLM+Zlygcksb68UzjQNvfBb
+	Rp1h3Ont2cqd9B9a32NytUZO0xqe7m/WjknOvEVNr7wLTmPdRhUiHJDYwP+pBxiAtmXpaX6lp4SDc
+	Ve19L09HViXOAPbazKd3iNt0Bigg==;
+Received: from [10.9.9.72] (helo=submission01.runbox)
+	by mailtransmit03.runbox with esmtp (Exim 4.86_2)
+	(envelope-from <david.laight.linux_spam@runbox.com>)
+	id 1wVxbw-0005Da-VU; Sat, 06 Jun 2026 22:27:17 +0200
+Received: by submission01.runbox with esmtpsa  [Authenticated ID (1493616)]  (TLS1.2:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+	(Exim 4.95)
+	id 1wVxbm-006V18-ET;
+	Sat, 06 Jun 2026 22:27:06 +0200
+From: david.laight.linux@gmail.com
+To: Kees Cook <kees@kernel.org>,
+	linux-hardening@vger.kernel.org,
+	Arnd Bergmann <arnd@kernel.org>,
+	linux-kernel@vger.kernel.org,
+	linux-scsi@vger.kernel.org
+Cc: Hannes Reinecke <hare@suse.com>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	David Laight <david.laight.linux@gmail.com>
+Subject: [PATCH next] drivers/scsi/aic7xxx/aic79xx_osm: Use kstrdup() instead of kmalloc() and strcpy()
+Date: Sat,  6 Jun 2026 21:26:26 +0100
+Message-Id: <20260606202633.5018-32-david.laight.linux@gmail.com>
+X-Mailer: git-send-email 2.39.5
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 
-core_scsi3_emulate_pro_register_and_move() maps the PERSISTENT RESERVE OUT
-parameter list with transport_kmap_data_sg() and parses the destination
-TransportID with target_parse_pr_out_transport_id(). For an iSCSI
-TransportID (FORMAT CODE 01b) iscsi_parse_pr_out_transport_id() returns
-iport_ptr as a raw pointer into that mapped buffer (the ISID following the
-",i,0x" separator).
+From: David Laight <david.laight.linux@gmail.com>
 
-The function then unmaps the buffer with transport_kunmap_data_sg() before
-dereferencing iport_ptr in strcmp(), __core_scsi3_locate_pr_reg() and
-core_scsi3_alloc_registration() (the last reads 8 bytes via
-get_unaligned_be64() and copies the string with snprintf()). When the
-parameter list spans more than one page (PARAMETER LIST LENGTH > 4096),
-transport_kmap_data_sg() uses vmap() and transport_kunmap_data_sg() does
-vunmap(), so the kernel virtual address backing iport_ptr is torn down on
-all architectures and every subsequent dereference is a use-after-free of
-the unmapped region.
-
-initiator_str does not have this problem because the parser strscpy()s it
-into a caller-owned buffer; iport_ptr is the only output left as a borrowed
-alias. core_scsi3_decode_spec_i_port() consumes the same alias safely
-because it unmaps only after all uses.
-
-Copy the ISID into a caller-owned stack buffer while the mapping is still
-live and repoint iport_ptr at it, mirroring the existing initiator_str
-handling. strscpy_pad() NUL-terminates and zero-fills the tail so the fixed
-8-byte get_unaligned_be64() read stays in-bounds and deterministic even for
-an ISID shorter than 8 bytes. The NULL (device-format / non-iSCSI) case is
-preserved by copying only when iport_ptr is non-NULL.
-
-Fixes: 4949314c7283 ("target: Allow control CDBs with data > 1 page")
-Cc: stable@vger.kernel.org
-Signed-off-by: Bryam Vargas <hexlabsecurity@proton.me>
+Signed-off-by: David Laight <david.laight.linux@gmail.com>
 ---
-Everything below the --- is dropped by git am.
+This is one of a group of patches that remove potentially unbounded
+strcpy() calls.
 
-Class / impact: CWE-416 use-after-free (use-after-vunmap) in the LIO SCSI
-target. Triggerable by an authenticated iSCSI initiator that is a current
-Persistent Reservation registrant on the LUN: it sends PERSISTENT RESERVE
-OUT / REGISTER AND MOVE with an iSCSI (FORMAT CODE 01b) TransportID and a
-PARAMETER LIST LENGTH > 4096 so the parameter list spans >1 page and is
-mapped with vmap(). After transport_kunmap_data_sg() vunmap()s that region,
-the retained iport_ptr is dereferenced -> kernel read of an unmapped
-vmalloc address (oops / DoS; memory-safety corruption confirmed by KASAN).
-Primarily a remotely-reachable authenticated denial of service.
+They are mostly replaced by strscpy() or, when strlen() has just been
+called, with memcpy() (usually including the '\0').
 
-Affected: all maintained trees -- the bug predates the git history reachabl=
-e
-here; it became a destructive dangling dereference with 4949314c7283 (v3.3,
-2012), which introduced the multi-page vmap() path. Verified present at
-mainline v7.1-rc6 and stable v6.12.92.
+Calls with copy string literals into arrays are left unchanged.
+They are safe and easily detected as such.
 
-Reproducer (authenticated iSCSI initiator, current PR reservation holder):
-  1. PERSISTENT RESERVE OUT / REGISTER a key from the iSCSI nexus.
-  2. PERSISTENT RESERVE OUT / REGISTER AND MOVE, FORMAT CODE 01b TransportI=
-D
-     (IQN + ",i,0x" + 12-char ISID), RELATIVE TARGET PORT IDENTIFIER of an
-     existing target port, with PARAMETER LIST LENGTH =3D 8192 (two pages -=
->
-     vmap()/vunmap()), the inner ADDITIONAL LENGTH set so tid_len + 24 =3D=
-=3D
-     data_length, the remainder zero padding.
+The changes were made by getting the compiler to detect the calls and
+then fixing the code by hand.
 
-A/B verification (CONFIG_KASAN_VMALLOC=3Dy, kasan.fault=3Dreport, x86-64,
-6.12.90; reproduced with both a 64-bit and a 32-bit initiator):
-  - Without this patch (8192-byte, two-page request):
-      BUG: KASAN: vmalloc-out-of-bounds in strcmp+0xa7/0xb0
-        strcmp
-        core_scsi3_emulate_pro_register_and_move [target_core]
-        ? remove_vm_area
-        target_scsi3_emulate_pr_out [target_core]
-        __target_execute_cmd / iscsit_execute_cmd / iscsi_target_rx_thread
-      The buggy address belongs to a vmalloc virtual mapping
-      BUG: unable to handle page fault for address ... (PTE 0)
-  - Control (56/128-byte, single-page request): no report (kunmap is a
-    no-op on 64-bit !HIGHMEM, so the alias stays valid) -- confirming the
-    multi-page vmap()/vunmap() path is what makes iport_ptr dangle.
-  - With this patch (same 8192-byte request): no report, command completes.
+Note that all the changes are only compile tested.
 
- drivers/target/target_core_pr.c | 17 +++++++++++++++++
- 1 file changed, 17 insertions(+)
+Some Makefiles were changed to allow files to contain strcpy().
+As well as 'difficult to fix' files, this included 'show' functions
+as they really need to use sysfs_emit() or seq_printf().
 
-diff --git a/drivers/target/target_core_pr.c b/drivers/target/target_core_p=
-r.c
-index 11790f2c5d80..b102f5f67793 100644
---- a/drivers/target/target_core_pr.c
-+++ b/drivers/target/target_core_pr.c
-@@ -3160,6 +3160,7 @@ core_scsi3_emulate_pro_register_and_move(struct se_cm=
-d *cmd, u64 res_key,
- =09unsigned char *buf;
- =09unsigned char initiator_str[TRANSPORT_IQN_LEN];
- =09char *iport_ptr =3D NULL, i_buf[PR_REG_ISID_ID_LEN] =3D { };
-+=09char isid_buf[PR_REG_ISID_LEN] =3D { };
- =09u32 tid_len, tmp_tid_len;
- =09int new_reg =3D 0, type, scope, matching_iname;
- =09sense_reason_t ret;
-@@ -3293,6 +3294,22 @@ core_scsi3_emulate_pro_register_and_move(struct se_c=
-md *cmd, u64 res_key,
- =09=09goto out;
- =09}
+All the patches are being sent individually to avoid very long cc lists.
+Apologies for the terse commit messages and likely unexpected tags.
+(There are about 100 patches in total.)
 
-+=09/*
-+=09 * For an iSCSI TransportID, iport_ptr aliases directly into the data
-+=09 * buffer mapped above.  When that buffer spans more than one page it i=
-s
-+=09 * a vmap() region that transport_kunmap_data_sg() is about to vunmap()=
-,
-+=09 * tearing down the kernel mapping and leaving iport_ptr dangling for
-+=09 * every consumer below.  Copy the ISID into caller-owned storage now,
-+=09 * while the mapping is still live.  strscpy_pad() NUL-terminates and
-+=09 * zero-fills the tail so the later 8-byte get_unaligned_be64() read in
-+=09 * __core_scsi3_do_alloc_registration() stays in-bounds and determinist=
-ic
-+=09 * even for an ISID shorter than 8 bytes.
-+=09 */
-+=09if (iport_ptr) {
-+=09=09strscpy_pad(isid_buf, iport_ptr, sizeof(isid_buf));
-+=09=09iport_ptr =3D isid_buf;
-+=09}
-+
- =09transport_kunmap_data_sg(cmd);
- =09buf =3D NULL;
+ drivers/scsi/aic7xxx/aic79xx_osm.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
+diff --git a/drivers/scsi/aic7xxx/aic79xx_osm.c b/drivers/scsi/aic7xxx/aic79xx_osm.c
+index feb1707feb7e..97ebee94230e 100644
+--- a/drivers/scsi/aic7xxx/aic79xx_osm.c
++++ b/drivers/scsi/aic7xxx/aic79xx_osm.c
+@@ -1233,11 +1233,9 @@ ahd_linux_register_host(struct ahd_softc *ahd, struct scsi_host_template *templa
+ 	ahd_set_unit(ahd, ahd_linux_unit++);
+ 	ahd_unlock(ahd, &s);
+ 	sprintf(buf, "scsi%d", host->host_no);
+-	new_name = kmalloc(strlen(buf) + 1, GFP_ATOMIC);
+-	if (new_name != NULL) {
+-		strcpy(new_name, buf);
++	new_name = kstrdup(buf, GFP_ATOMIC);
++	if (new_name != NULL)
+ 		ahd_set_name(ahd, new_name);
+-	}
+ 	host->unique_id = ahd->unit;
+ 	ahd_linux_initialize_scsi_bus(ahd);
+ 	ahd_intr_enable(ahd, TRUE);
+-- 
+2.39.5
 
