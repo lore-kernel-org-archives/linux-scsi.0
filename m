@@ -1,246 +1,204 @@
-Received: from nick.sneptech.io (nick.sneptech.io [178.62.38.78])
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 790BA3AFB19;
-	Mon,  8 Jun 2026 21:52:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=178.62.38.78
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780955524; cv=none; b=BsIoBnTaTDun/SkmTrQhP1cRobM/3LSj3h9Lc5EspV3JHOlyp/ARTLyTKhjd5Jp7PlLeJfPieSvPiC5+JFuPf3EwdcVDMzYORWTwXppLopQYVSPyd8NnNPlIAoWdUMktvEGo/XvZH6/9FAlY5k/H1xRc+JlpZR0cDNMi/vezqbM=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780955524; c=relaxed/simple;
-	bh=V6YgNKq+susbKey9ypxTfubpOI6f1RBHLIQyXHjy4EU=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=OkC2HnRg6o9xy0V4T6aLNHRD6+hZPFHZeuq8jK+X7uwEd6eZ3VxOzai7nkuXwMSRNZvF+v5tMgHwY9ztAqjPIpQonya1sSWcAyTbuGNx6X6U9MBrEEK7FpyQd2lHUrhx0euShCuti68FhGSSREE8nZTNa59JWhX5y67LCmY8FKw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=philpem.me.uk; spf=pass smtp.mailfrom=philpem.me.uk; dkim=pass (1024-bit key) header.d=philpem.me.uk header.i=@philpem.me.uk header.b=qHlrWAwC; arc=none smtp.client-ip=178.62.38.78
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=philpem.me.uk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=philpem.me.uk
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 57B433A0E85;
+	Mon,  8 Jun 2026 21:54:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.177.32
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1780955693; cv=fail; b=R/9nOPbwV7JKI0FyRY7U6ZuoPZgTNBWtXm2Ay/7kPt5u5dA2XGqMltyc4dzc1tiTOThOX+uUcd80gEi18eqiZqBv/z9H28jZLBfHpbv/mzfcb4cemwuzAzTpeWEo4MPF9n43/NSa167l+pxbCas2eAEMoBZvIzDY4GO9Y/hzZ0k=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1780955693; c=relaxed/simple;
+	bh=oziLaIL87HuvCdHO2KiikcabIpvd1jMhu3pdikJxWBs=;
+	h=To:Cc:Subject:From:In-Reply-To:Message-ID:References:Date:
+	 Content-Type:MIME-Version; b=XzMORtFpOJ+pke83SGGL+QR4cp3eTeRH1G6Z1mEpXNG5hWy2Fic+5f0nNP0TPEbwwwd65eteHYjaUg2CfNDyU/IWlzcerBB6aN565502epMl6dyh5+GPx1V9iJMmWiWYNPKqaFw7ni/OBJ08V9bWxbnni4WuoC78dKlaBQUyLrE=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=R5a0N7/F; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=zebEr3Fz; arc=fail smtp.client-ip=205.220.177.32
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=philpem.me.uk header.i=@philpem.me.uk header.b="qHlrWAwC"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=philpem.me.uk;
-	s=mail; t=1780954491;
-	bh=V6YgNKq+susbKey9ypxTfubpOI6f1RBHLIQyXHjy4EU=;
-	h=From:To:Cc:Subject:Date:From;
-	b=qHlrWAwCbQo8D0sWnB56mVibCl7q0sKvKbQUPRLTa/HjC9VmzesdEbnVR6TWKLTL1
-	 +ar9FNfQTNrFw+iT6X+6O5dgtvYsafUvIBi1nVujRYNahI1upXnr0jva6svxX2J180
-	 BALEq67oUaVHyFAx6j1tfcDcCRuQTFigyWelUrPM=
-Received: from wolf.philpem.me.uk (81-187-163-148.ip4.reverse-dns.uk [81.187.163.148])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: mailrelay_wolf@philpem.me.uk)
-	by nick.sneptech.io (Postfix) with ESMTPSA id 3AD03BE5AB;
-	Mon,  8 Jun 2026 21:34:51 +0000 (UTC)
-Received: from cheetah.homenet.philpem.me.uk (cheetah.homenet.philpem.me.uk [10.0.0.32])
-	by wolf.philpem.me.uk (Postfix) with ESMTPSA id C3AB95FBA6;
-	Mon,  8 Jun 2026 22:34:50 +0100 (BST)
-From: Phil Pemberton <philpem@philpem.me.uk>
-To: linux-ide@vger.kernel.org,
-	linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org,
-	Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>,
-	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	Hannes Reinecke <hare@suse.de>,
-	Phil Pemberton <philpem@philpem.me.uk>
-Subject: [PATCH v6 0/6] ata: libata-scsi: multi-LUN ATAPI device support
-Date: Mon,  8 Jun 2026 22:34:37 +0100
-Message-ID: <20260608213443.2296614-1-philpem@philpem.me.uk>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="R5a0N7/F";
+	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="zebEr3Fz"
+Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 658HSUxx1242849;
+	Mon, 8 Jun 2026 21:54:46 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
+	:content-type:date:from:in-reply-to:message-id:mime-version
+	:references:subject:to; s=corp-2025-04-25; bh=ddUYuhTULPgsM6+ffX
+	VATsY0vN/yZqrygzKB8PY438w=; b=R5a0N7/FGow9Od1FxQ89+rL7nHex21xBH3
+	WM9XF/vvHlkczSK6JDM6VpHIs5pHIuF2b1/ms18ax5M6IZg1uJju2xQirucq+Ru/
+	nWfW1935cb5LlyRXk4rl1lEo67RjECz0UVODUGG1Is9b7VfyD3xdaNAqeTXA/2E7
+	k813oYRKdK1asI10/rZuEVPKcVirhmUbrEgSvLayHuAlt3v4cPHt6fYjF1XGbmFW
+	o0cOpxSdwmQbfRDz4qe8uFLA5NnOSQM8xTg1Ro7LITelc4NBsk4ExrdPZSFtuOr5
+	9iLACOGcq5pOtFCPYc6BS07Kspo7MzpdJafRkG0JAALu2zZm8JQw==
+Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4em9ybbars-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Mon, 08 Jun 2026 21:54:45 +0000 (GMT)
+Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.7/8.18.1.7) with ESMTP id 658LrdLg014555;
+	Mon, 8 Jun 2026 21:54:45 GMT
+Received: from ph0pr06cu001.outbound.protection.outlook.com (mail-westus3azon11011044.outbound.protection.outlook.com [40.107.208.44])
+	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 4ema0pb2hw-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Mon, 08 Jun 2026 21:54:45 +0000 (GMT)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=Vn7+Znsylf70KWEKCd0J7U/Vvb/9Xm9YG3YTWj2HWWUHgsBg4m1+3/l9ZEhmeNMsje4B+7h2qv8XyrfPsw8EnWW5mj4wYRdDxkO2xCcKsImcHHMoYAK610oYYID4jVdJ6sRIK2JRbm2xPZFdXji4Isxco2U/wJJbGRV7+led0tuIoBPjVRhmV60F0B/vAcZxR5ZUQhsoUHHsmitz0vzfNsPX/TEWf3AwomwMi9UonIM8A7zLpt4UmpDwNgKACgKBA7iKwGYVZISHxosW3p1UXJOaAIhvlnG32SSSAv8AGyQ72aHBN0C744tppTZ0keIbA+9yaBCIfwrzUeOFWo/mag==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=ddUYuhTULPgsM6+ffXVATsY0vN/yZqrygzKB8PY438w=;
+ b=rEXlb+F0XOpV757U83SaXVSb7gSBSl9DzqzheDGLeO4tjhbhwcGYk4UC07oFmg03k2AsNo8Lbhtt3HRcwxAmfdelTHNcsWF6udR0BVkR/pkHNQxOq+DPsWUFd8PIBT7SuNf93VaYlfoOKKpDb5seSig/6cIs+czVv4Vl5lFRJCmzcaF/mgl2qgqYckIBUTsBvpCD5Az1f/mDhMuurByMygye9FtOEOjhnYARV2yDjP+iuI3IwmlT6xRlctQwisLx622l5nFshkHeRywfyuXLwHCxN0NxBYDXpfAijQcQa1DD7XWfe0l7cOommkkrNrq4HniKf0V1s/RYtlc7NKv/DA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=ddUYuhTULPgsM6+ffXVATsY0vN/yZqrygzKB8PY438w=;
+ b=zebEr3FzJscUWVgqjCyeE8l/nEtsdPcr+WTJYl3M8Nq/m2m3ytu/Rmrn7uuL5WL51xeQRmjYFR8IQhlEbU+487ri62uYPW9SJojBukhRnuOTEH1bmHp8m8m1X0w2KfzB/sR7rItYD2qrO2eKJDkFFvcIfdsZ+XA2ND8jEeytIto=
+Received: from CH0PR10MB5338.namprd10.prod.outlook.com (2603:10b6:610:cb::8)
+ by CY8PR10MB7368.namprd10.prod.outlook.com (2603:10b6:930:7f::16) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.92.13; Mon, 8 Jun 2026
+ 21:54:37 +0000
+Received: from CH0PR10MB5338.namprd10.prod.outlook.com
+ ([fe80::e525:dd71:b002:6ad5]) by CH0PR10MB5338.namprd10.prod.outlook.com
+ ([fe80::e525:dd71:b002:6ad5%6]) with mapi id 15.21.0092.011; Mon, 8 Jun 2026
+ 21:54:37 +0000
+To: Abhinaba Rakshit <abhinaba.rakshit@oss.qualcomm.com>
+Cc: Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio
+ <konradybcio@kernel.org>,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+        "Martin
+ K. Petersen" <martin.petersen@oracle.com>,
+        Adrian Hunter
+ <adrian.hunter@intel.com>,
+        Ulf Hansson <ulfh@kernel.org>, Rob Herring
+ <robh@kernel.org>,
+        Krzysztof Kozlowski <krzk+dt@kernel.org>,
+        Conor
+ Dooley <conor+dt@kernel.org>,
+        Neeraj Soni <neeraj.soni@oss.qualcomm.com>,
+        Harshal Dev <harshal.dev@oss.qualcomm.com>,
+        Kuldeep Singh
+ <kuldeep.singh@oss.qualcomm.com>,
+        linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-mmc@vger.kernel.org,
+        devicetree@vger.kernel.org
+Subject: Re: [PATCH v10 2/5] ufs: host: Add ICE clock scaling during UFS
+ clock changes
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+In-Reply-To: <20260603-enable-ice-clock-scaling-v10-2-b0b728435356@oss.qualcomm.com>
+	(Abhinaba Rakshit's message of "Wed, 03 Jun 2026 03:53:54 +0530")
+Organization: Oracle
+Message-ID: <yq1ldco3dh5.fsf@ca-mkp.ca.oracle.com>
+References: <20260603-enable-ice-clock-scaling-v10-0-b0b728435356@oss.qualcomm.com>
+	<20260603-enable-ice-clock-scaling-v10-2-b0b728435356@oss.qualcomm.com>
+Date: Mon, 08 Jun 2026 17:54:36 -0400
+Content-Type: text/plain
+X-ClientProxiedBy: YT3PR01CA0024.CANPRD01.PROD.OUTLOOK.COM
+ (2603:10b6:b01:86::31) To CH0PR10MB5338.namprd10.prod.outlook.com
+ (2603:10b6:610:cb::8)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-
-Hi all,
-
-This is v6, addressing review feedback from Hannes Reinecke, Damien Le
-Moal, and the Sashiko AI code review on v5.
-
-This series gives libata support for ATAPI devices with multiple LUNs,
-such as the Panasonic PD-1 PD/CD combo drive.  This exposes both the
-CD-ROM and rewritable PD optical interfaces: CD-ROM as LUN 0 and PD
-as LUN 1.
-
-libata has never supported multi-LUN ATAPI.  This series adds support
-by fixing the following limitations:
-
-  1. shost->max_lun is hardcoded to 1 in ata_scsi_add_hosts(), preventing
-     the SCSI layer from probing any LUN beyond 0.
-
-  2. __ata_scsi_find_dev() rejects all commands where scsidev->lun != 0,
-     returning NULL and resulting in DID_BAD_TARGET.
-
-  3. The SCSI-2 CDB LUN field (byte 1, bits 7:5) is never populated.
-     ATAPI tunnels SCSI commands over the ATA PACKET interface, and the
-     transport-layer LUN addressing used by SPC-3+ is not available.
-     Older multi-LUN ATAPI devices rely on this CDB field to route
-     commands to the correct LUN.
-
-  4. ata_scsi_scan_host() only calls __scsi_add_device() for LUN 0,
-     never probing additional LUNs even when the SCSI device info table
-     would indicate the device supports them.
-
-  5. dev->sdev is a single pointer, but multi-LUN ATAPI puts multiple
-     sdevs behind one ata_device.  Every call to ata_scsi_dev_config()
-     overwrote the pointer, and ata_scsi_sdev_destroy() tore down the
-     entire ATA device whenever any sdev was destroyed -- so removing a
-     spurious LUN result during scanning would kill the whole port, and
-     the other users of dev->sdev (scsi_remove_device in
-     ata_port_detach(), ACPI uevents, zpodd, media-change notify,
-     suspend/resume rescan) could only ever see one LUN.
-
-Changes from v5:
-
-  - Drop dev->nr_luns entirely (Hannes Reinecke): nr_luns was an
-    unnecessary counter tracking how many dev->sdev[] slots were valid.
-    All loop bounds now use ATAPI_MAX_LUN directly, relying on NULL
-    checks to skip empty slots.  ata_dev_scsi_device() uses ATAPI_MAX_LUN
-    in its WARN_ON_ONCE bound.  The pre-scan assignment
-    "dev->nr_luns = ap->scsi_host->max_lun" in ata_scsi_scan_host() is
-    also removed (it had been needed to let atapi_xlat() accept INQUIRY
-    CDBs during scsi_scan_target(); that hack is no longer necessary).
-
-  - Restructure CDB LUN encoding in atapi_xlat() (Damien Le Moal):
-    always clear CDB byte 1 bits 7:5; only set them for nonzero LUNs
-    (with unlikely()).  Bounds check uses host->max_lun vs ATAPI_MAX_LUN.
-    Also set scmd->result = DID_ERROR << 16 before returning non-zero so
-    the error is not silently dropped by the ata_scsi_translate() done
-    path (Sashiko AI review).
-
-  - ata_scsi_scan_host: early-continue after LUN 0 failure (Damien Le
-    Moal): clear dev->sdev[0] = NULL and continue to the next device
-    rather than goto when __scsi_add_device() fails.
-
-  - ata_scsi_dev_rescan: split get-all from resume/rescan (Damien Le
-    Moal): reference collection, do_resume initialisation, and the
-    resume/rescan loop are now three separate steps, with leftover refs
-    released on EWOULDBLOCK and error paths.
-
-  - pdt_1f_for_no_lun set before the PDT=0x1f check (Sashiko AI
-    review): in scsi_probe_and_add_lun(), set starget->pdt_1f_for_no_lun
-    from bflags before the PDT=0x1f early-return rather than inside
-    scsi_add_lun() after it.
-
-  - ata_port_detach: snapshot dev->sdev[lun] under the lock before
-    releasing it, then use the snapshot for scsi_remove_device() (Sashiko
-    AI review).  Mirrors the existing pattern in ata_scsi_remove_dev().
-
-  - ata_scsi_sdev_destroy: set ATA_DFLAG_DETACH only when all
-    ATAPI_MAX_LUN slots are NULL, regardless of LUN removal order
-    (Sashiko AI review).
-
-  - ata_scsi_scan_host: move ata_scsi_assign_ofnode() before
-    scsi_device_put() to avoid a potential use-after-free (Sashiko AI
-    review).
-
-  - MODULE_PARM_DESC for atapi_max_lun clarified (Damien Le Moal).
-
-  - Style: braces on the single-statement else branch in
-    ata_acpi_uevent(); braces on the ata_scsi_media_change_notify() loop
-    body; store ata_dev_scsi_device() result in a local before
-    dereferencing in zpodd_wake_dev() (Damien Le Moal / Sashiko AI
-    review).
-
-The series is split as:
-
-  1/6: libata-scsi: add libata.atapi_max_lun module parameter.
-
-  2/6: libata-scsi: convert dev->sdev to a per-LUN array, add the
-       ata_dev_scsi_device() helper, and update every caller.
-
-  3/6: libata-scsi: relax __ata_scsi_find_dev() to accept non-zero LUN
-       for ATAPI devices, and encode the LUN in CDB byte 1 bits 7:5.
-
-  4/6: scsi: add a BLIST_NO_LUN_1F blacklist flag, which sets
-       scsi_target.pdt_1f_for_no_lun for matching devices so that
-       PDT 0x1f / PQ 0 INQUIRY responses are treated as "LUN not
-       present" and silently skipped.
-
-  5/6: libata-scsi: after adding LUN 0, trigger scsi_scan_target() for
-       BLIST_FORCELUN ATAPI devices only.  Single-LUN devices are
-       completely unaffected.
-
-  6/6: scsi_devinfo: add the COMPAQ-branded variant of the PD-1 to the
-       device info table with BLIST_FORCELUN | BLIST_SINGLELUN |
-       BLIST_NO_LUN_1F.
-
-Tested on a Panasonic LF-1195C PD/CD (Compaq branded) attached to an
-ata_piix host on i686, kernel 7.0.0-rc7+, with libata.atapi_max_lun=7.
-Both LUNs enumerate correctly: the CD-ROM as sr0 and the PD as sda.
-Reads from each device succeed against the appropriate media.
-Non-responding LUNs are silently skipped (no spurious "No Device"
-entries in dmesg).  An iHAS124 DVD writer on the same machine
-(single-LUN, no BLIST_FORCELUN entry) is unaffected: only LUN 0 is
-scanned.
-
-Two known limitations around media-change detection on multi-LUN
-ATAPI devices with a shared physical media slot (e.g. PD/CD combos
-flagged BLIST_SINGLELUN):
-
-1. The block layer disables in-kernel polling by default
-   (block.events_dfl_poll_msecs defaults to 0).  Without polling,
-   sd_check_events never runs and media insertion on the PD LUN is
-   not detected automatically.  sr_mod is unaffected because it
-   re-reads the TOC on every open.
-
-   Workaround -- either globally via kernel boot parameter:
-
-       block.events_dfl_poll_msecs=2000
-
-   or per-device via udev rule:
-
-       ACTION=="add", KERNEL=="sd*", \
-         ATTRS{vendor}=="COMPAQ  ", ATTRS{model}=="PD-1*", \
-         ATTR{events_poll_msecs}="2000"
-
-2. Media-change sense is not propagated across sibling LUNs.  When
-   one LUN reports UNIT ATTENTION (ASC 0x28 or 0x3A), the other LUNs
-   are not notified.  With polling enabled, sd_check_events detects
-   the change independently on each LUN via TUR, so this is mainly a
-   latency issue rather than a functional one.  A follow-up to
-   propagate media-change events to sibling LUNs in
-   atapi_qc_complete is straightforward but deferred to keep this
-   series focused on the LUN-scanning core.
-
-Suspend/resume with multi-LUN ATAPI attached has not yet been tested;
-this is on the list.  ata_scsi_dev_rescan iterates all populated LUN
-slots, and the SCSI layer's host-level suspend tracking already
-serialises port quiesce, so no additional per-LUN suspend counting
-is needed in libata.
-
-v5 collected Reviewed-by from Damien Le Moal and Hannes Reinecke on
-patches 4/6 and 6/6, and from Hannes Reinecke on 1/6.  The tags on
-1/6 and 6/6 are preserved as those patches are unchanged.  The tags on
-4/6 have been dropped as that patch gained a scsi_scan.c change
-(moving the pdt_1f_for_no_lun assignment earlier).
-
-Comments and suggestions welcome.
-
-Phil Pemberton (6):
-  ata: libata-scsi: add atapi_max_lun module parameter
-  ata: libata-scsi: convert dev->sdev to per-LUN array
-  ata: libata-scsi: route non-zero LUN commands for multi-LUN ATAPI
-  scsi: add BLIST_NO_LUN_1F blacklist flag
-  ata: libata-scsi: probe additional LUNs for multi-LUN ATAPI devices
-  scsi: scsi_devinfo: add COMPAQ PD-1 multi-LUN ATAPI device quirk
-
- drivers/ata/libata-acpi.c   |   6 +-
- drivers/ata/libata-core.c   |  16 ++-
- drivers/ata/libata-scsi.c   | 208 +++++++++++++++++++++++-------------
- drivers/ata/libata-zpodd.c  |   6 +-
- drivers/ata/libata.h        |   1 +
- drivers/scsi/scsi_devinfo.c |   2 +
- drivers/scsi/scsi_scan.c    |   2 +
- include/linux/libata.h      |  12 ++-
- include/scsi/scsi_devinfo.h |   6 +-
- 9 files changed, 171 insertions(+), 88 deletions(-)
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: CH0PR10MB5338:EE_|CY8PR10MB7368:EE_
+X-MS-Office365-Filtering-Correlation-Id: e5972fa3-da1c-42b4-2e00-08dec5a888d6
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|7416014|376014|366016|1800799024|4143699003|56012099006|18002099003|22082099003;
+X-Microsoft-Antispam-Message-Info:
+	q1j3RAej7AZZxgbOdyZMSI2DHlMF3KS9zix+BRRHB6edjYw78fTG4qHMGAmeiMVM3MEiWfqNiEpKt1K1lwtgTk1WGameSty+kN1ls52OctJVwSWoHlfxI+idef3cRNTN/5Foaia5aZVSM/5pDHrhfiRaVCEXqqLarstuQnKBeJQ5Q9/eE0TIVzROLHk632vthS8jBV3qM7i/4DVVEDz1iMIuw3O5jUQ15Yv2QunsW02Qehryevs7iSVc1C9e5QKAQNCyk61j+PRYE57Rn0WDwgBNOiWIHCbxsMAj9T8hUiKKHBK+v08YFaXi/3vP+39s0CbD+SNyAMiLDP7KaP/fWYj4niiPkOW6CNxWonMTovwgb380cWBUGZR2Xann3ATaPXtGiNmkMmvFXcCifTAYle/eTHMJUndSuYr7ykE6+aDdws6rSkbI2DlNsuyvcSZGjN7ECWa2la+Arpt5KRuGiOs46UJK3ZM19gX4s7HzI6y16hPT5cIUm0Ym3ZRDmy4MdzMOS0R5+0v4YrmNovmCWNUm+bJ6KYwI8jjkqBNPfZVqMrt5TABN/6MVfRi5oKlvDhDcMV1/gqmEuyVABOVyPSImQxTh/srzeeffd+yBAUi42k23SfbRmJ8sHsgoGg1rp8aiLfNlk4hwMWNKo6OipA7SypZOD8xMr4ycNHnm0lIA6uzLfS4EbKtBYe2/Un9r
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CH0PR10MB5338.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(7416014)(376014)(366016)(1800799024)(4143699003)(56012099006)(18002099003)(22082099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?qNPuLqgXnzWr9UHzq2DeEbc0+4Lt+rjJGEJcdnv/eX0rluYbvDO8YrDNZbpq?=
+ =?us-ascii?Q?0WdCqo6CtxHAcAdCsw+JPt7pdgwaEWpx3Aw9j/YizIOQDJ3WK6yQcGo9sDSu?=
+ =?us-ascii?Q?SiXJiybojWgDTdJ0TGikvBDSI5dIxjx3awnDIzgFu4Y/jKWPmvRAee1521xP?=
+ =?us-ascii?Q?goUfZUfJmYhR4FQxVm2AgTt9zEKwONtOT3rBMCEWNLjJvXJLBaP2HJy40TFb?=
+ =?us-ascii?Q?pBY99Iwf+sjTZk8AqS1szPZm9twIjtAzyeo2YKGIZkXszuao0CNycbVSrHYD?=
+ =?us-ascii?Q?XSYbho6flfwqOqBGkBqzzOFo2T0ph/IsrmhywXI2miyX9rTwTNsQySXH83iE?=
+ =?us-ascii?Q?f+rb+G7QcjYPMybdK6ZXGeWLGhBT2PF88p3MEdjpedGYVwE9nnEmfgdJ4OmV?=
+ =?us-ascii?Q?kxUkG6ZGqd93yVCv0rAkKlQXr1eVlRE7y29wbSm0lb91PwwZOk5UaoE/JCv5?=
+ =?us-ascii?Q?K9OraNbDhwSbokROv5bph2I0ApJF97BbZBo85WLBKK94IRzDm013IYImhaxP?=
+ =?us-ascii?Q?9KF0tAlqINB+4H4WBORrvn1+zL30b5vH7JUMnwe4kf9MAwrOo4p21wet3sYh?=
+ =?us-ascii?Q?8Rji1o57FKJiifUej314kmBAx4clWxHQwfgFnoZow4dXau6DVvFB6foGJfig?=
+ =?us-ascii?Q?uj1N6aNcjUeGzNWJpz1o2WQxDz8DEf9IIa8B6FX6+v//30oNdufPSEq/VSVn?=
+ =?us-ascii?Q?bQSPYR7tBi6saxzIs2uapyoG6rdcAGlo/mzi4BMemAPq2SKTE4997azX7fAX?=
+ =?us-ascii?Q?IP77638M5b0g9LcCNlTOIMnT8hTyoTDugJap16CNZf86rDkyQK3DvYwMSoRc?=
+ =?us-ascii?Q?pnkwCqoXqcSvO05UK9Ipuz/K+8dtpdbNH8aqSjJ2BQrqgEnzLVDYxusAh+tr?=
+ =?us-ascii?Q?sgfSsW4gbZ9I3ug8Aqg+2PZLDI00FpKPXeFpk/Ya0f6CGI3UG/M2VqF84f4b?=
+ =?us-ascii?Q?dG1FoCIJ8/y5jF7/ln1N5VoHihY3Fk6QDGiCGwPB1Otb/OEgf/b7rq3F12lp?=
+ =?us-ascii?Q?7h5w8iFmbgBzNwQaJ61LU0rsIKQhh7qfPbYjZDuqSMGdAdzmmCO0xsHAHewq?=
+ =?us-ascii?Q?UoGHY4/8s+HEXB2DOKWbPWR0fSsEazsUKBR8vNcrMsAuEtlMO+jmVfL7mGUl?=
+ =?us-ascii?Q?jRU8FkaRBxFZGmVrG1QkBIWEGK9OIdNBf/y7JLKaY/svjWZmCfoeh+47PsjF?=
+ =?us-ascii?Q?pFknNVQljjQcJsjJIMzYWq1UlaJIQcTsKvnf6Tyv1v3Bzo9aeQMI/G9XlXBh?=
+ =?us-ascii?Q?y3iZ36nZwtIbSqaxdxov5rva47fY34vpKoK+jm1O0GODW3cSMp8UOBe60WAN?=
+ =?us-ascii?Q?j52w1+QguhlVU5zPs8qdymUhPUCfSqDeixVxN8lOJZRCyAYaq4jOW6zAd7in?=
+ =?us-ascii?Q?jBw0xURKyeaVsXypMEdjiEi9oZ8bYYDBbxaNGUoRw+FEGMSHT44f8cMQeOHe?=
+ =?us-ascii?Q?7yWNTKVjJr6zNkvLD0myG5gichzkw6CT5go7K8QvdBEYsGUgTDVt38bYjur0?=
+ =?us-ascii?Q?KEbBYhNfMLOty2IrhEhX3NbP4EMSXNLuztg7ZDxyxybeoh/4KXhJkZhtvJzG?=
+ =?us-ascii?Q?3ScGzRmTglXZkCGrAb8EgCVEREOaUlq8Fj9al9ETJ9CzRyMiTgB9ZXbOrxep?=
+ =?us-ascii?Q?0q1HVfSx/m4EBHGo65VJj/z7rF/ZcnjG78IVcapqiBS9j/eDT+cSUEMTzLWu?=
+ =?us-ascii?Q?6ZFzb6k7Kw2Ev89zH1WdIbW9qkK4Cq5Ga2KkJBlJJpmL9epmTjyjs9E1l6Zr?=
+ =?us-ascii?Q?w5OHYAtQRBrQMWDccvCF7XpugOqDO3w=3D?=
+X-Exchange-RoutingPolicyChecked:
+	ZYmVyYasTt3My/OLYGlZqnDs8pIPD27PmD4I3bA+N5cuDZU4kHIfuGAuFa5WB75Lx/Xb1m5o8AWNUNghWUlmMeUCkhhwwoD3rR+/GtWIBiI/GUH+bA9Q68QnZ+Eug8llFUmYew9iyDk+0eBz3GXjqUcSqgiAmX1Awf2ZIH+YaoIF7qwvB8eA/tu5UsZkwDym6Rj/DfobUsJIH1QBW4KP12vbXiTvKXifCrlWgVgU2hRigA+2QXHauMTAFCs/giNFdwTMtKOfnsvU2BgHkxlS1ajdAPcW6rl34EP5NiiPATaUC1XJnpHMIvOp7ZVLWNv5w15Vhafxfa4GbL7YtbiZvg==
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
+	y1MsHSla5BMdJsh7MvMiSGxGqcvimIPW/gcIbM8ZMYCC5XUj/lVHzdeIDIvy/StEY0AkZdqV3+OOT+l6sjjX8CNKEoojX57c8eoJyBdMPJ3sbuRodZiU1C0UemIM0pluEppVwtzV1Jf/OMbwrGizDyzGmFfyq+IB3I2YdYbZBoFAmh2JB7NQqfJho1TuJCSI83MajbAs9miiZ49gY114JmcTBD8RpTwy65GMAV+Y7tDUuczbkp2NdNagREqbhDLPMMw72wM+i2ZQOwjKxrFqKdsdnOQ0ts4SbBaU6njgXRNj0QEotFFq2Shz/DxbrzY5rfiH0Fb7xs2tADIwD9mJ3IPs3gIRNiMvrxFqQvdWTABUlEYu6FVCVlS67md4k4TS4vUtjmrgeLCv4TsalDym28nLfI6haf6EnLGsGXLiQIoZ5wiXdHBu4UfUeGlys5OsJQCR2TMG3k2PfgmVt0ZpIvfbrpdZYo/warOHqcp9Opo8yPyB2NLyxyk88p+7ZKUNZ8OXDv0coIbo+OtPtCUh+1c6EJtb3+nSNPexTwfvU2QUn9F95dBAufQcumPL+8Ka3+7hIC00EDi9j2SMvo69TJqPIEjZ4Rt8G7yLz0Ep964=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: e5972fa3-da1c-42b4-2e00-08dec5a888d6
+X-MS-Exchange-CrossTenant-AuthSource: CH0PR10MB5338.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 08 Jun 2026 21:54:37.5603
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: RRxr7h4rff1EeFO/FecQyYUjCXMXF61w0Rct/n2VVRqb7m1gFH/dRvUmtjKF4JXuUD/A7DOBV/8mxZEj1/Xu72AI3I4Ys1HuyOk0gVnkXg4=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY8PR10MB7368
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.125,FMLib:17.12.100.49
+ definitions=2026-06-08_05,2026-06-05_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0
+ mlxlogscore=999 phishscore=0 spamscore=0 mlxscore=0 bulkscore=0
+ malwarescore=0 adultscore=0 lowpriorityscore=0 classifier=spam adjust=0
+ reason=mlx scancount=1 engine=8.19.0-2605130000 definitions=main-2606080200
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNjA4MDIwMCBTYWx0ZWRfX8m4R40Rl9vNv
+ C3Z5SdHLuZZYtAQTv/XV9DVifvrluc5TscP87R5p2biYEFOHUikxvWQGF7HolrA4tYwSI4SarF6
+ LcvEabvSRry5p/FRT7UcOcArA5AYmge/w3uB5zPT1eU4RtdVL9qDUAmMVwcBCP+UFDP1ZzcppI0
+ zQAgfNne9S4lSXM5NApw/dmcOqniQeYNVlrL030sSZofYaX0D0TwhsY4Iz4ipsw0xyB7onD82tJ
+ ihIdk8LER8DahhClb/dQA2K/NOOkE0SropgNkx95XgsvCHKYBAp+SeMsuikYWPaOb4MOfplFtD0
+ /Jq9tstU1qACea4mHbxHfNezwqsBZgEe/RWozbwzB0Hbt7quATM4gZ7EOMjoV1EmJjSSZy/NHHd
+ HA7f4I8ndHkxVHqx+ngDMfYhj2rl4cMFbOG9vkP9bl3jcLOsU5LRr+enczyzF8ZjjRttT40fZIN
+ b9YsKf1uqRpuoj/OIibmNFO/GNFFnvIISUOU45T8=
+X-Authority-Analysis: v=2.4 cv=IYK3n2qa c=1 sm=1 tr=0 ts=6a273a25 b=1 cx=c_pps
+ a=zPCbziy225d3KhSqZt3L1A==:117 a=zPCbziy225d3KhSqZt3L1A==:17
+ a=6eWqkTHjU83fiwn7nKZWdM+Sl24=:19 a=z/mQ4Ysz8XfWz/Q5cLBRGdckG28=:19
+ a=lCpzRmAYbLLaTzLvsPZ7Mbvzbb8=:19 a=xqWC_Br6kY4A:10 a=FelO9ux0wxsA:10
+ a=GoEa3M9JfhUA:10 a=VkNPw1HP01LnGYTKEx00:22 a=jiCTI4zE5U7BLdzWsZGv:22
+ a=x4eqshVgHu-cdnggieHk:22 a=yPCof4ZbAAAA:8 a=xy4oZan2cbFDXSxVChgA:9
+ a=5yU3S35YU4bGjq-dph-N:22 a=Bho9c0fBagfJEIQBS7DQ:22 cc=ntf awl=host:12312
+X-Proofpoint-GUID: mfAlVAzS5RMpMxza3VEt6pMNW_s1JQdp
+X-Proofpoint-ORIG-GUID: mfAlVAzS5RMpMxza3VEt6pMNW_s1JQdp
 
 
-base-commit: a3f75e5e6b023958c92ad03fa2e68e047b6169c4
---
-2.43.0
+Abhinaba,
 
+> Implement ICE (Inline Crypto Engine) clock scaling in sync with
+> UFS controller clock scaling. This ensures that the ICE operates at
+> an appropriate frequency when the UFS clocks are scaled up or down,
+> improving performance and maintaining stability for crypto operations.
+
+Acked-by: Martin K. Petersen <martin.petersen@oracle.com>
+
+-- 
+Martin K. Petersen
