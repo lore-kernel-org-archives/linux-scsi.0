@@ -1,71 +1,74 @@
-Received: from mail-pj1-f44.google.com (mail-pj1-f44.google.com [209.85.216.44])
+Received: from mail-dl1-f67.google.com (mail-dl1-f67.google.com [74.125.82.67])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A3D8C36EAAB
-	for <linux-scsi@vger.kernel.org>; Sun,  7 Jun 2026 11:03:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.44
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED4C33101A2
+	for <linux-scsi@vger.kernel.org>; Mon,  8 Jun 2026 05:20:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.67
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780830227; cv=none; b=aJ3vzM7u4eW9EWCb9G101EetKMLTdz/PpeHZJ8uU1NDZvH1OdmA5XDKCN9wvxY8AxRNTej/1oeA7VXxEEXBpxMFJAHfmdAfPGjviYYQ53b9wgIY5cH9tPfVx2WrLQFXdFgJwJf/5fPStv914vCNBtQ43qTTR4rqyUkXNGLj99W4=
+	t=1780896009; cv=none; b=OinLleiXUFSsmDp+M8AX0bo4e64LMRaOhSXluZAGDRbZbFNE5Z6C3viPl9B04X5yqksYrrkyTVB0kWThfGH1EXDVhIjLP+syl+T/uqXMDyG+saK4YbxwgySlQXfQf0zuz3lysWQZlst2U9VBVCYNxAZcwcvbYIbEqT/fKNZVh5U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780830227; c=relaxed/simple;
-	bh=7TL9mox3kFnWg7MAxp78VEQJzb2DwRyijYkLdDkS2AY=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=tReUO3cJOfcpFSGU2Ga2fqxu7kA+kP2G19z+yoVQvbw6zI4BRzDa+og3Y2qKMwsk4HJIjjtAqPXpm7TDpss4Ej7C+wz9poaFb+179HODMUD6MuUP1Jd3U6cqV9S8Q7rWUHdcM1VpKAAIpMxVX27GxD25zeigY7QSronzfnKAxgw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Xk0Zxb/E; arc=none smtp.client-ip=209.85.216.44
+	s=arc-20240116; t=1780896009; c=relaxed/simple;
+	bh=w0eMqpE2DKuYdMxtHQzEHmuoUuiuFQ3ww571CwZ8qE8=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=a5TLBovEbq8rb0sCYG1a2MPe3G0ehst+VfZxpVi9fV2uq28nExHqRKA9nMUtMlNfJ2wlsQoucglIegINM5leim1n5lgmYk7rlPjvH789aI4dz4ceqVrNNohY0BBOldV6vi35zOF8g8MzKroOHoC2VLMz7mx6/jpBd/3KMo664oE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=EuJHyy/L; arc=none smtp.client-ip=74.125.82.67
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Xk0Zxb/E"
-Received: by mail-pj1-f44.google.com with SMTP id 98e67ed59e1d1-36b9033d230so1702768a91.1
-        for <linux-scsi@vger.kernel.org>; Sun, 07 Jun 2026 04:03:45 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="EuJHyy/L"
+Received: by mail-dl1-f67.google.com with SMTP id a92af1059eb24-137ec563a95so4575198c88.0
+        for <linux-scsi@vger.kernel.org>; Sun, 07 Jun 2026 22:20:07 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1780830225; x=1781435025; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1780896007; x=1781500807; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=MRYeS+3lgp5NTYUoJEOQjWZ0O0A5oiI8iTFU5nQK1KU=;
-        b=Xk0Zxb/E5mNA//4EqGaC/1rS13aMVzxMuKxXRwhZziGyprYeDS0wlQEac/9ZJJI97T
-         ST3x8Ox2i0sc+rqZWQFtR/2G7PQDyhKTxCdawSJTd6dA7aGS0E+aJ2x5G2e9+UHTlHDX
-         fnkku1b+6CU6r5CSzW0RPtK9v4TP3QamtWDqE1b5sL81Ur21xj7fOFhSDd8120wK9q2/
-         PRsvMIclerBtFikWI+/e3Mg2uxTeEPPvBlmgP184MRZT9vaJOuW7I68NmsJIAC0kRQ3J
-         uMlt4Airf7RNdrfWVYa/+Ky82tH/9/zPy8XXksCuHgxhpRGFKuDSTlByISzYfcq7u8ge
-         ecJA==
+        bh=00X0z1cboQ6oKHbGCA7RyCrLv3pho/TkOSoPRKU0WEA=;
+        b=EuJHyy/LynH7nhID5v6P5lx2/OaP3fHQ+PBZK1wSv1GXBFyVVCA94/LhqPdZwMGJLY
+         dV+3s6byuxsKk4eUVcDKSGn7lUFaNsYl3ooF5UtXarP44/aI03atCZUb/B3HMPlq4aOn
+         Iq7PIi+SAXA97t97kgRsVoGRQLICUaU+0m9f4AfBMbgdcZVohYHAN+EBHzeHaitn1e34
+         f4XAcaF5gAYmpo0YP4rpdogTv+TutsCRrmovfelEkMmnHsaaLHdDS7ypUB++CBi6ApgQ
+         t1T48x6jb+N2y9aflVQXspCZx2o8JdW/wNYQfJKoxFuHZs+g3ecDdcW3QjH7QryLVq4y
+         R5Fg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1780830225; x=1781435025;
+        d=1e100.net; s=20251104; t=1780896007; x=1781500807;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=MRYeS+3lgp5NTYUoJEOQjWZ0O0A5oiI8iTFU5nQK1KU=;
-        b=nEtmM4xnsM9QGcJm0JewfdPGdNfYQlm3NHDK/ZavjsANj+F/1gI03qO966FWcMP9Z9
-         MqDmIlStAd3gBMGNavbm14E5oNGE3HKPMKCk4LTqBso5LEC2hCNJZX+u75WfZ9EpyGvv
-         9XkkRR4PwVY7QCc3ksNJ7HnEn3Hp4eeVPYY2N8cnKBqZpRn52u0a/e/MwDhki4txefRh
-         WrcPMh8Mfd+MTfRri01Dql4Hkt4V2fTYWZ5VExnTRwiPrQGiLy0vNUxBQveYjxGzQqV4
-         m6+A7p9s3w0hi1GP5eb/NvzsgGjwcHgCyOSBkiabKcew1t8u8D3bmKGC4ZBJqc1WXeub
-         Q6og==
-X-Gm-Message-State: AOJu0YwXJE6PLeBTgfbHMlEyf+GkRSptvXZLtJX6jk6ooeUBADkzZO1x
-	xVXU8K1gOx6s3Ak3iUp36IUlizo7SrnYgcLk2anpeRCUR8dAr8zvXxVM
-X-Gm-Gg: Acq92OHVW8xGL6s94GKouVREtFLe+DzxQvplINsBC0wSpwnBLqzD26C2XoxL87u+sw0
-	B602r7sExgsWhJSdiTktQrvFaBfrtc4AcDnOTunpePvB+Vas5P7A7pOcZKgoEvBm8AhFbWC4Qxu
-	4Xl3gAT0QNDd0iPNhBTmyDnUCU8cv3qjcSyAGhpPtlJiSuPKpD0s3tUYHfZ4Z7exH0+h+8zYeoB
-	CGh1vD70kiQWK7+UIpspAsSeJN5nBe5u8MYIzjcpzie7NaTi5927bp1VSRhmhH5XqXBJVjkomzB
-	72cZJNPrhhI97j+fmatkGSNxSM5o5GLjkafK7CODQZU9IR5EBZexKHBl4IOPHbJ7vW7xdIUcjIj
-	vEUJphgJz+hE5adDDmEkMAGEN/Ymg+tOKltw0QxwKVa2GWi04Dab3Dgmj6Qn9OVuFGitqUwHazi
-	f6Nxd2kYA1z+s8jdDspZjy6r2A3k+USdXS4eMr+iSUE8x8sBt3sf0j/6ml/l8yU/Y=
-X-Received: by 2002:a17:90b:4a83:b0:368:864:62ad with SMTP id 98e67ed59e1d1-3713029c115mr8369162a91.3.1780830224771;
-        Sun, 07 Jun 2026 04:03:44 -0700 (PDT)
-Received: from haichao.tail057a43.ts.net ([2001:da8:e000:1206:5d57:2cec:64ac:50a])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-36f6dba8521sm12124123a91.15.2026.06.07.04.03.42
+        bh=00X0z1cboQ6oKHbGCA7RyCrLv3pho/TkOSoPRKU0WEA=;
+        b=PoQyQUsOBmVt3EXZbXOQXTgOqyWLz3uYA2mE9KXM1LvgCIMsQYqNhGqbawO55Q75Y1
+         /uOkU2kad03nvEiWT6JtLa+wEdSVSGCjb1PCvOWHycYG3+J7Y04MJkWHkdsdUHaYv8Ih
+         jBjLlmU7Oo4gPNfD5iuw5xHn5vz+2fwJpZCvCvQry7GIsOWDh0BZEUWc7PeNZ2fK4EVT
+         SS4mCkYkhiqJixhnKS5EzOCi2zjOgJURN+FVbWIXChdMF1w6PiUJazE+sEx8bLbrZe1k
+         NMDZL5tlcK8gxDUq5psXKk+p4l4Nb/mRWqAbQMHD8BhZlU9SRq5AZPIyLw15+VVnHo9a
+         mgyA==
+X-Forwarded-Encrypted: i=1; AFNElJ/U/nV4d2fQLaEWPWSRHagVnyNNTklN9RqRa9zXWhd7olbzi2UbIW30OzVS/DfS1UD3dVJzmejLXqNT@vger.kernel.org
+X-Gm-Message-State: AOJu0YwO7CThQZGDUfjsPDJ4yPmhwJe9zAT+cqxpSKxBO7dj/qDIq4AB
+	WAPZ+dj3l8SAXitmgkujpMpMYZ7REjOD9c5N9tu4go1uEbsA43naIwE8
+X-Gm-Gg: Acq92OEfdNQCmjJQkkAPfis2Tvl29k5Itzcx15rkvNNISP996Jk1ejbUBDGRJ6XGQSH
+	qYQ/pgdtbCHd6QGHZnDlk2eOih+KeHjjpXRZzJyobkn4QnNL1o09Z7kMunPk+atby/O0yTptND+
+	/hKcpC/MUovB7IubiF6zDsPLSyLBvN16vP3n1BIPBO3gxO25W/9SFWqFrx50+NYH6ALpSJWC0D5
+	RQFFSWn/ur25JHWycl4RqvpDIqLcDqYP6KaIPOnHGfSWu/D9nyMjVveXMlA/7JSY5nULvYRPsAv
+	DODB8L06xzihyJN1XQvCdnprSIi38xjEA6yKEBtAopaPqBu/0KKzx+VR5gzCrnWAC1ySd5jI6cP
+	78M2VTCsmDR4+90KmGxu8JaI0WF7zXxfZWJO3vamD7jTcZedh/aArI0e8Kq6xur8GWEl13MFWIp
+	kQu4c18SX9spIeGYeTZpYZ5EhJR+TY29TJ/ugd5cNQpQHtW7hEzvDvYqVkpBD4/zps0HPm5eJgD
+	rpJJ2BZrTqxN2xzbjpdcwxygpl8YIGmUbXMOVCLPHGv1PYEnEH0JfORzyOAsfp5gmh/lNlZkJni
+	I4JNuc9/U++Q0L6TGcp0tm9VPSSK
+X-Received: by 2002:a05:7022:6b99:b0:136:b370:64de with SMTP id a92af1059eb24-1380671273bmr7692171c88.32.1780896007014;
+        Sun, 07 Jun 2026 22:20:07 -0700 (PDT)
+Received: from ethan-latitude5420.. (host-127-24.cafrjco.fresno.ca.us.clients.pavlovmedia.net. [68.180.127.24])
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-137f549bbefsm11725310c88.4.2026.06.07.22.20.05
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 07 Jun 2026 04:03:44 -0700 (PDT)
-From: Ruoyu Wang <ruoyuw560@gmail.com>
-To: Ketan Mukadam <ketan.mukadam@broadcom.com>,
+        Sun, 07 Jun 2026 22:20:06 -0700 (PDT)
+From: Ethan Nelson-Moore <enelsonmoore@gmail.com>
+To: linux-arm-kernel@lists.infradead.org,
+	linux-scsi@vger.kernel.org
+Cc: Ethan Nelson-Moore <enelsonmoore@gmail.com>,
+	Russell King <linux@armlinux.org.uk>,
 	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
 	"Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Ruoyu Wang <ruoyuw560@gmail.com>
-Subject: [PATCH] scsi: be2iscsi: fix cleanup on memory allocation failure
-Date: Sun,  7 Jun 2026 19:03:39 +0800
-Message-ID: <20260607110339.3-1-ruoyuw560@gmail.com>
-X-Mailer: git-send-email 2.51.0
+Subject: [PATCH] scsi: acornscsi: resolve set-but-not-used variable warning
+Date: Sun,  7 Jun 2026 22:19:53 -0700
+Message-ID: <20260608051954.109435-1-enelsonmoore@gmail.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -74,65 +77,32 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-beiscsi_alloc_mem() builds each memory descriptor from DMA chunks
-recorded in the temporary mem_arr_orig array. After all chunks for the
-current descriptor have been allocated, the code allocates
-mem_descr->mem_array and copies the temporary descriptors into it.
+The variable "p" in the acornscsi_info() function is set but not used,
+which causes a warning with W=1 builds. Remove it to resolve this issue.
 
-If mem_descr->mem_array allocation fails, or if DMA allocation fails
-after some chunks have been allocated for the current descriptor, the
-error path records the current chunk count in mem_descr->num_elements and
-then dereferences mem_descr->mem_array. That pointer has not been
-allocated for the current descriptor, so the cleanup path can dereference
-NULL and also fail to release the current DMA chunks.
-
-Release the current descriptor chunks from mem_arr_orig first, then walk
-backward over the descriptors that were fully initialized earlier.
-
-Fixes: 6733b39a1301 ("[SCSI] be2iscsi: add 10Gbps iSCSI - BladeEngine 2 driver")
-Signed-off-by: Ruoyu Wang <ruoyuw560@gmail.com>
+Signed-off-by: Ethan Nelson-Moore <enelsonmoore@gmail.com>
 ---
- drivers/scsi/be2iscsi/be_main.c | 20 +++++++++++++-------
- 1 file changed, 13 insertions(+), 7 deletions(-)
+ drivers/scsi/arm/acornscsi.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-index fd18d4d3d..31c617bb6 100644
---- a/drivers/scsi/be2iscsi/be_main.c
-+++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -2549,8 +2549,18 @@ static int beiscsi_alloc_mem(struct beiscsi_hba *phba)
- 	kfree(mem_arr_orig);
- 	return 0;
- free_mem:
--	mem_descr->num_elements = j;
--	while ((i) || (j)) {
-+	while (j) {
-+		j--;
-+		bus_add = mem_arr_orig[j].bus_address.u.a64.address;
-+		dma_free_coherent(&phba->pcidev->dev,
-+				  mem_arr_orig[j].size,
-+				  mem_arr_orig[j].virtual_address,
-+				  bus_add);
-+	}
-+
-+	while (i) {
-+		i--;
-+		mem_descr--;
- 		for (j = mem_descr->num_elements; j > 0; j--) {
- 			dma_free_coherent(&phba->pcidev->dev,
- 					    mem_descr->mem_array[j - 1].size,
-@@ -2560,11 +2570,7 @@ free_mem:
- 					    mem_array[j - 1].
- 					    bus_address.u.a64.address);
- 		}
--		if (i) {
--			i--;
--			kfree(mem_descr->mem_array);
--			mem_descr--;
--		}
-+		kfree(mem_descr->mem_array);
- 	}
- 	kfree(mem_arr_orig);
- 	kfree(phba->init_mem);
+diff --git a/drivers/scsi/arm/acornscsi.c b/drivers/scsi/arm/acornscsi.c
+index 79d7d7336b6a..ebf09b787dfd 100644
+--- a/drivers/scsi/arm/acornscsi.c
++++ b/drivers/scsi/arm/acornscsi.c
+@@ -2681,11 +2681,9 @@ static int acornscsi_host_reset(struct scsi_cmnd *SCpnt)
+  */
+ static const char *acornscsi_info(struct Scsi_Host *host)
+ {
+-    static char string[100], *p;
++    static char string[100];
+ 
+-    p = string;
+-    
+-    p += sprintf(string, "%s at port %08lX irq %d v%d.%d.%d"
++    sprintf(string, "%s at port %08lX irq %d v%d.%d.%d"
+ #ifdef CONFIG_SCSI_ACORNSCSI_SYNC
+     " SYNC"
+ #endif
 -- 
-2.51.0
+2.43.0
 
