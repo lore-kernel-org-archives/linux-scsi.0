@@ -1,186 +1,119 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from mailtransmit05.runbox.com (mailtransmit05.runbox.com [185.226.149.38])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F82033FE36
-	for <linux-scsi@vger.kernel.org>; Mon,  8 Jun 2026 09:33:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 044D63B8948;
+	Mon,  8 Jun 2026 09:55:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.226.149.38
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780911188; cv=none; b=N07CmJNTcjsqOdP4JmsqZAzQ64rE/ebUHuSSlHWTcc8XvtkpS+dDIDl2wrfGnao9wEPqR90FmPbQuxjYM4WBdyuKZds8NtFh/14jJlNx7p8nme0qH5nzsVOL0KS5X90Noe6tmpQZlyVo7fGCOPszteHeZCnvNe7/7qz/S6b2U1I=
+	t=1780912548; cv=none; b=a+2nZ1k4syonFyksw6ZrJP3niXXnXVW08TA8ZpUnD38APYK/pFTCiM1Os3Q8RJJ458pMtRNv3Lgmi+F11Lvy+av0Ucv7fmuq4E+s/hNeWlg8a6RWiu1HZjtN7kg3BQxC+BI2cpr4RTlBt98AI/cO06VIu+Rffpjs8eKt/G2l4Lg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780911188; c=relaxed/simple;
-	bh=2mKuoNeczjYmLgNRJsQsMc3RGm1bt+Gt8+Odq/otNCA=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=knzgxgdx/baSBlRfZTlw2wGKTKXYeGQytO/kiMeGN8o0ROulcsQp763sFHmCBipp6dHUqdCBrUng/vEEF7WJ4liDgjdk8pxLIvR0LctHT35+33PNkkEVMoKI6dJ/tZAQf2NpaoUQWm36sq6a0+JS9qOv9eKzkGxgW8poZF0TRKk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=h/FSNtbJ; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=FGscSEv8; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	s=arc-20240116; t=1780912548; c=relaxed/simple;
+	bh=wz8XEsY3kJvOSryhfHZlc/eFu9yoBoFSN2PD5F8zRpA=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=iu0UrUki4hP6uVV4PGOEQhmITHzMJrxmRQuwggUeLRVc/S4d88kMN9NpClcoTeKzVx57oBLt7cYgiXGpW+RJy0G1LVrNpKHYnnIsIyCvq6TAEwJdTQ4KMo+7U4gxqV7zGWIdL5n9OytbfKCmhvxzdY1qGKkKaisR6dVTzI3007k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=runbox.com; dkim=pass (2048-bit key) header.d=runbox.com header.i=@runbox.com header.b=L3pZv2Cz; arc=none smtp.client-ip=185.226.149.38
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=runbox.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="h/FSNtbJ";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="FGscSEv8"
-Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6586P2Di2802607
-	for <linux-scsi@vger.kernel.org>; Mon, 8 Jun 2026 09:33:06 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	BZtl15ww4PXc5flceKtv+LPJ3x3xJtHYHA2F+jHkfLs=; b=h/FSNtbJsjoVXbt3
-	Dzkg8y6u7GxupvGXgs6sS15rhtrQ0p+i5A5xECXxovdmyBJ7wM7Mt3PssJUTDBd+
-	oKlhiMTLfRtoDJ+aH8hikFv/vSrYGv2bXmHtUoPrehanPTGRURwM9VTIWkatXphQ
-	o0pjmL/OxuTKvGGBHZVgoIaa6/azJVPYX5oKg5yDQSVEZUMozGJdiPkMO2mnDZja
-	DACEu20q+2LIodR+KJmVY27DtY3s2az4ifNYtUbqUSFtCDqZGwhSte3QfOrv5PY0
-	Sa7XHgbYuRbK7Dw3lOa8UMRYHU+PDAFv8o+pwe8Ra7Q8+j+K4Pmi20LD0ZvGOuYl
-	VYyHyQ==
-Received: from mail-qt1-f199.google.com (mail-qt1-f199.google.com [209.85.160.199])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4em9k3qgqc-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Mon, 08 Jun 2026 09:33:06 +0000 (GMT)
-Received: by mail-qt1-f199.google.com with SMTP id d75a77b69052e-517741bcc53so11288361cf.1
-        for <linux-scsi@vger.kernel.org>; Mon, 08 Jun 2026 02:33:06 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1780911186; x=1781515986; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=BZtl15ww4PXc5flceKtv+LPJ3x3xJtHYHA2F+jHkfLs=;
-        b=FGscSEv8H22tjO+kkZH1qKapc2mgkhFgP0Co0YwXLiIC69JD71o2kCy/ua9p4sZegy
-         SMHmbNhLJi87/Jpzu6zp74Cu24WxVgkK8mr6QW3xIEV4WQ853VRwJM+TkMlV4ZvuFIBT
-         3z6ibdL7WIZ9+F8AluOyprZHjnzFN+eHfPrgXVdxZaPvX01fsuNrqv9IpR0u0RaK0XG7
-         xno3PYsfendRlyy4WVvgKRTJiZI2x2VzPjjgZo6llxfO8eyhT9dtMMsuOYV/W53N4BVb
-         WdPLDdFRRI5zJ046uiSvyGr8uvKu9pCaOzdLAMirXesyc8BabV3FHibNmOPbeqJnDHHD
-         YcIg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1780911186; x=1781515986;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=BZtl15ww4PXc5flceKtv+LPJ3x3xJtHYHA2F+jHkfLs=;
-        b=cTX/ddsxD7xgi5vEqiG98ObknzmbdC8W7wKvd8R8+DjKxZyIyn9dVTk0H/5VwXZIBn
-         Ko6ZgIKuFk4UkYH4xsu5ofDHR3ZWMg+F6AOmAQuG9NQypm5n7hA8+aKzMRWjWPA4qrAj
-         EDVC3+jj/rYe/XoOzvZupE7mAJHlJx1zWuOY3kM2Twm1S7wk0/64LK1UXvlRLGYPgxgs
-         RkV475pfrBFCCBUc7B3FgbUevJH5WBOn/QvWDyvAs3tivAc3Rk8lvZHBt69hZSTajRU+
-         qySJO18OFKdMWo2p6M+YE7RSi1goc9HrmfDaXqbzNCLWaf4wVPVBbI0X2JMbUgJpKwAQ
-         xw4g==
-X-Gm-Message-State: AOJu0Yyydgc2H4aelkULI4IyJj+Pri+2xRpvrv2bacrByEgNssqQfVDq
-	bMs8JA9L1zmfvpOLMDBU9hNGWBZ+sRkFwFSkeyo8Vcj/R45zN3BC1Bk5Qkai+TCnofugXA6wdnb
-	KjDyiDR+ADEOvjlpFNWRtpZxcz1PNVrtAmu/RzdHHA5uQdpHrWqpwsVRuB406l2NT
-X-Gm-Gg: Acq92OHcrpUOGQp7xGmqfVZALJgSR8Y+hOiO0HI5GSSYPpjsyhJZTYIMNHzgC3Ebuf1
-	MLSeOh8t87/yAsLVDCYltrYIhL3I4Jp1ifeC/QhUKJPxkgBTkg46nC7RwCCg11y/RTnWQSIaMDS
-	81pRo0Ig8EmvrvIh/XuiXlZQNr4HYVmEoUz1p/CHcTHdEKD/bX33UWGodNzi9JGSo5lLmv3cuv2
-	J0r7vb/nqYUDi8IgSuTYjTnMtp1YDohbslGPY2qm+BEC5Qm9xJ5bk9lQM7H9QtnYyw3CbQdKMO9
-	ubESqQV45muVGEm+P4ueNY56fbk68AbiO+EkJG4fnRNYYGJthVh+F4o5IniayLHBumBeE+7k760
-	gLSjTLNDAJ2B1LB9TGVvA7XrgoKnlG2ZHfJ5ah6WcuewdaBt0F/Egh5bT
-X-Received: by 2002:a05:622a:58cf:b0:50f:bea5:52a with SMTP id d75a77b69052e-517958e7faemr125040521cf.0.1780911185731;
-        Mon, 08 Jun 2026 02:33:05 -0700 (PDT)
-X-Received: by 2002:a05:622a:58cf:b0:50f:bea5:52a with SMTP id d75a77b69052e-517958e7faemr125040321cf.0.1780911185313;
-        Mon, 08 Jun 2026 02:33:05 -0700 (PDT)
-Received: from [192.168.120.170] ([178.235.128.140])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-bf05176fd07sm852062466b.1.2026.06.08.02.33.03
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 08 Jun 2026 02:33:04 -0700 (PDT)
-Message-ID: <c7036b15-853b-445c-87ae-f9ff06ede326@oss.qualcomm.com>
-Date: Mon, 8 Jun 2026 11:33:02 +0200
+	dkim=pass (2048-bit key) header.d=runbox.com header.i=@runbox.com header.b="L3pZv2Cz"
+Received: from mailtransmit03.runbox ([10.9.9.163] helo=aibo.runbox.com)
+	by mailtransmit05.runbox.com with esmtps  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+	(Exim 4.93)
+	(envelope-from <david.laight.linux_spam@runbox.com>)
+	id 1wWWhm-00Br7v-Jk; Mon, 08 Jun 2026 11:55:38 +0200
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=runbox.com;
+	 s=selector1; h=Content-Transfer-Encoding:MIME-Version:Message-Id:Date:
+	Subject:Cc:To:From; bh=g+VTKhbN/6tees8YPIaQJkfwcrtiigF1OfLz8IHB57c=; b=L3pZv2
+	CzHxv1vHmf6IMa+vsMQfgnE04LeNq2X29Qrv0UZgeN/DGAuqjIFgXPw4xhS98x8A4YNCs++sJb0n9
+	1K8X8hKDazq6eMPm69OwOogjV7FX6Fic3IRK57L0rfn41UF4BOtVsFyyRUDT0kZc5QAc8II0pX1R3
+	l+ef4mlCj4DAulp9YspOtNqrIqOL1DAiH+47MdXbztuFW8nbi+BQhZeataBKk0a9Dw+GrAvUtmdJx
+	ukp+KoE9zy2eX+9ZDT+jikMk21ep3PbuhwoeUfUOjxagH9depryO/vxbpJxcmqgO6b9hsyO5/zrXu
+	9CTJXfGgYWqf7oRH3qDZ35SK5iTA==;
+Received: from [10.9.9.73] (helo=submission02.runbox)
+	by mailtransmit03.runbox with esmtp (Exim 4.86_2)
+	(envelope-from <david.laight.linux_spam@runbox.com>)
+	id 1wWWhl-0003bI-NT; Mon, 08 Jun 2026 11:55:38 +0200
+Received: by submission02.runbox with esmtpsa  [Authenticated ID (1493616)]  (TLS1.2:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+	(Exim 4.95)
+	id 1wWWhd-00Ag6G-0r;
+	Mon, 08 Jun 2026 11:55:29 +0200
+From: david.laight.linux@gmail.com
+To: Kees Cook <kees@kernel.org>,
+	linux-hardening@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-scsi@vger.kernel.org
+Cc: Arnd Bergmann <arnd@kernel.org>,
+	GR-QLogic-Storage-Upstream@marvell.com,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	Manish Rangankar <mrangankar@marvell.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Nilesh Javali <njavali@marvell.com>,
+	David Laight <david.laight.linux@gmail.com>
+Subject: [PATCH next] drivers/scsi/qla4xxx/ql4_mbx: Use strscpy() to copy strings into arrays
+Date: Mon,  8 Jun 2026 10:54:53 +0100
+Message-Id: <20260608095523.2606-9-david.laight.linux@gmail.com>
+X-Mailer: git-send-email 2.39.5
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH V1 1/2] scsi: ufs: core: Add
- UFSHCD_QUIRK_SKIP_DEVICE_RESET quirk
-To: Nitin Rawat <nitin.rawat@oss.qualcomm.com>, mani@kernel.org,
-        James.Bottomley@HansenPartnership.com, alim.akhtar@samsung.com,
-        avri.altman@wdc.com, bvanassche@acm.org, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org
-References: <20260531235011.1052706-1-nitin.rawat@oss.qualcomm.com>
- <20260531235011.1052706-2-nitin.rawat@oss.qualcomm.com>
-Content-Language: en-US
-From: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
-In-Reply-To: <20260531235011.1052706-2-nitin.rawat@oss.qualcomm.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNjA4MDA4OSBTYWx0ZWRfX/wmrBrG1pn4U
- PUwBC4QnhY5a/4AUtYzpORHvWAHCMurWO87PVX1I3/dof/yF05C2fSNWH2b+8JTdx0u7DLjtdEi
- 6mQJMjqbLZUbUNaHczRCY2lrISl28hwuCViDu4ds/pdQI8LIRq5cTvdBegsjFpXNNHgtzluB6UP
- 8ZFKly6mGZ2aG0stgNtrTe1zTkgGFhTs0us0iRbd84OtY7+q1qq+nYeXqDjW9AR9Ax69Mcq0p7U
- 1VszbIMIJXqgUT0aOrF9vDZiJADqdz2Dx8cEpFZ4IL359d36mdEo0iAlTMWh0AXTOLEOrcPBgja
- Ak3xtlp5iLKg+UjsQQktD/lKkDzzgrXcN6PpZpFaF3yNz3omtHoHhpoUWc5FeiNS4Q7uRhx/xpk
- OLPMJJ2lrm4kpT7yJ/s6YxZMSTYD+35NCUqxviXaJQ0JBI/lgCXFmDp/KuG13s2ZRYk4XIyF1UQ
- 0BQWNFY77jKbQl1Tzyw==
-X-Proofpoint-ORIG-GUID: QfEjBNaJNK5hSAUDej_8RzUl0DZWu4KE
-X-Proofpoint-GUID: QfEjBNaJNK5hSAUDej_8RzUl0DZWu4KE
-X-Authority-Analysis: v=2.4 cv=TIB1jVla c=1 sm=1 tr=0 ts=6a268c52 cx=c_pps
- a=WeENfcodrlLV9YRTxbY/uA==:117 a=PRfkaYvzSr8QmIIGAkY2Sg==:17
- a=IkcTkHD0fZMA:10 a=FelO9ux0wxsA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=rJkE3RaqiGZ5pbrm-msn:22
- a=EUspDBNiAAAA:8 a=Am--5WPmF5lAGn9LL3QA:9 a=QEXdDO2ut3YA:10
- a=kacYvNCVWA4VmyqE58fU:22
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.125,FMLib:17.12.100.49
- definitions=2026-06-08_02,2026-06-05_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- lowpriorityscore=0 phishscore=0 clxscore=1011 adultscore=0 priorityscore=1501
- bulkscore=0 malwarescore=0 suspectscore=0 spamscore=0 impostorscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2605210000 definitions=main-2606080089
+Content-Transfer-Encoding: 8bit
 
-On 6/1/26 1:50 AM, Nitin Rawat wrote:
-> Add a new host quirk UFSHCD_QUIRK_SKIP_DEVICE_RESET to allow host
-> controller drivers to skip asserting device reset during UFS power
-> down.
-> 
-> When RST_N is asserted, the UFS device firmware wakes up and executes
-> its internal reset routine. This routine initializes multiple hardware
-> blocks and causing the device to draw a large curreny during this time.
-> If the power rail transitions to LPM (Low Power Mode) while the device
-> is still drawing this elevated current, it may trigger an
-> OCP (Over Current Protection) fault in the regulator.
-> 
-> For some UFS devices (e.g., Micron), the elevated current draw persists
-> until the reset line is deasserted, making a fixed delay insufficient
-> to prevent OCP. This quirk allows such devices to skip device reset
-> during UFS power down. The device reset will instead be asserted as
-> part of the platform shutdown sequence.
-> 
-> Signed-off-by: Nitin Rawat <nitin.rawat@oss.qualcomm.com>
-> ---
->  include/ufs/ufshcd.h | 14 ++++++++++++++
->  1 file changed, 14 insertions(+)
-> 
-> diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-> index 3eaae082329c..18d634499ce5 100644
-> --- a/include/ufs/ufshcd.h
-> +++ b/include/ufs/ufshcd.h
-> @@ -813,6 +813,20 @@ enum ufshcd_quirks {
->  	 * allowed by M-PHY spec ver 6.0.
->  	 */
->  	UFSHCD_QUIRK_EXTENDED_TX_EQTR_ADAPT_LENGTH_L0L1L2L3	= 1 << 28,
-> +
-> +	/*
-> +	 * Some UFS devices keep drawing larger current after reset is
-> +	 * asserted until it is deasserted. Asserting device reset
-> +	 * during UFS power down causes the device firmware to wake up and
-> +	 * execute its reset routine, drawing current beyond the permissible
-> +	 * limit for low-power mode (LPM). This may trigger an OCP fault on
+From: David Laight <david.laight.linux@gmail.com>
 
-Is that UFS-LPM, or Qualcomm-regulator-LPM?
+Replacing strcpy() with strscpy() ensures that overflow of the target
+buffer cannot happen.
 
-Konrad
+Signed-off-by: David Laight <david.laight.linux@gmail.com>
+---
+This is one of a group of patches that remove potentially unbounded
+strcpy() calls.
 
+They are mostly replaced by strscpy() or, when strlen() has just been
+called, with memcpy() (usually including the '\0').
 
-> +	 * the regulator supplying power to UFS.
-> +	 *
-> +	 * Enable this quirk to skip asserting device reset during UFS power
-> +	 * down. This is handled only in shutdown; the device reset will be
-> +	 * asserted as part of the platform shutdown sequence.
-> +	 */
-> +	UFSHCD_QUIRK_SKIP_DEVICE_RESET			= 1 << 29,
->  };
-> 
->  enum ufshcd_caps {
-> --
-> 2.34.1
-> 
-> 
+Calls with copy string literals into arrays are left unchanged.
+They are safe and easily detected as such.
+
+The changes were made by getting the compiler to detect the calls and
+then fixing the code by hand.
+
+Note that all the changes are only compile tested.
+
+Some Makefiles were changed to allow files to contain strcpy().
+As well as 'difficult to fix' files, this included 'show' functions
+as they really need to use sysfs_emit() or seq_printf().
+
+All the patches are being sent individually to avoid very long cc lists.
+Apologies for the terse commit messages and likely unexpected tags.
+(There are about 100 patches in total.)
+
+ drivers/scsi/qla4xxx/ql4_mbx.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/qla4xxx/ql4_mbx.c b/drivers/scsi/qla4xxx/ql4_mbx.c
+index 7febc0baa9d6..cb0dc2908582 100644
+--- a/drivers/scsi/qla4xxx/ql4_mbx.c
++++ b/drivers/scsi/qla4xxx/ql4_mbx.c
+@@ -1370,7 +1370,7 @@ int qla4xxx_about_firmware(struct scsi_qla_host *ha)
+ 	       sizeof(about_fw->fw_build_date));
+ 	memcpy(ha->fw_info.fw_build_time, about_fw->fw_build_time,
+ 	       sizeof(about_fw->fw_build_time));
+-	strcpy((char *)ha->fw_info.fw_build_user,
++	strscpy(ha->fw_info.fw_build_user,
+ 	       skip_spaces((char *)about_fw->fw_build_user));
+ 	ha->fw_info.fw_load_source = le16_to_cpu(about_fw->fw_load_source);
+ 	ha->fw_info.iscsi_major = le16_to_cpu(about_fw->iscsi_major);
+@@ -1379,7 +1379,7 @@ int qla4xxx_about_firmware(struct scsi_qla_host *ha)
+ 	ha->fw_info.bootload_minor = le16_to_cpu(about_fw->bootload_minor);
+ 	ha->fw_info.bootload_patch = le16_to_cpu(about_fw->bootload_patch);
+ 	ha->fw_info.bootload_build = le16_to_cpu(about_fw->bootload_build);
+-	strcpy((char *)ha->fw_info.extended_timestamp,
++	strscpy(ha->fw_info.extended_timestamp,
+ 	       skip_spaces((char *)about_fw->extended_timestamp));
+ 
+ 	ha->fw_uptime_secs = le32_to_cpu(mbox_sts[5]);
+-- 
+2.39.5
+
