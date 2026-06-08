@@ -1,96 +1,69 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.20])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 70EB53DDDB2
-	for <linux-scsi@vger.kernel.org>; Mon,  8 Jun 2026 18:37:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1D26F3E717D;
+	Mon,  8 Jun 2026 19:49:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.20
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780943849; cv=none; b=HlkwgWnL7416KwshZQvwFIUTLIaAzr9eZ944cehrmpas2IfgbfGpbpC4xeVJXoOZ1OC2a7Y3lYL+T2yTqlmoDJvHDL8ggFytcjeSMAqLgHflGjpVK49+JfvfG34q2N/xGyY/c12jRqNSWLA3Ha2CG5y5SQRBWCsfW1fa/nqU7j8=
+	t=1780948150; cv=none; b=AUVYrqL2k4RVwsFBMCcLNx/O0Red9sh+3eMngvpl4QgaiSHlSdqTJe7NW2OfE6Bi4/+DekGYWYqwNSQYj9R2h2Zt3rH7xQkuPdUwVpTVI3IBpQrXPj8ISAfqYswYqfaF+JGxcxuxVj6Vf7eR2vQxVoEmIMGXlevG6UHBZbqZcX4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780943849; c=relaxed/simple;
-	bh=Gf04WEalx/FUQCjoE4Tim+odsuoobVmL7oDW5+HAgG8=;
+	s=arc-20240116; t=1780948150; c=relaxed/simple;
+	bh=cLjXBQlG2tT1InHlIXc/N4kTn3WdSiHN99HVZXCFngs=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ROUnOMtvCQ8A9xvzvgfngjyPbf77XwzM9iySI0uI7rPOGti12GtDvtLHb4FZMI6bCB8SOKjD3AI6RfnUeiYVPgZjS3i/lW7RPOBK2kZl2mfYRSJfOjm9Wjdl4MnNSrXs55VY50wqXCSR+XTtrDZPzodtROHxWaEL7yoliuZ22pk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=Ve6KxcPd; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=hbipcLAe; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=I3y1012LCVovtWPGPtVNewPpSIG0S9wg1ayq9AzCWPA11F1NKbg0Z4TickbSAl9bo0JtPuYqXzzfFVUGLdWggDBTFTYeD2Y7FElO2zKWxDkex36X1CALDnLix0Lrd9tcGrxe9FMMAlDS2pyEj7dv18sh9iBOW0+L5Pg+6Cz8k8I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=ahY7gkw/; arc=none smtp.client-ip=198.175.65.20
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="Ve6KxcPd";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="hbipcLAe"
-Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 658FFe8g4008673
-	for <linux-scsi@vger.kernel.org>; Mon, 8 Jun 2026 18:37:27 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-type:date:from:in-reply-to:message-id:mime-version
-	:references:subject:to; s=qcppdkim1; bh=nIZ1j2oO4hKk0sVO2Hu6TOAa
-	KuhKzlRHmyJatc66WiA=; b=Ve6KxcPdZvl6B8I2F1YCoUs97rEowdCEDqmkApdl
-	AvAFb+rdNQVgJrGInOIQZDLQeb0Va59EbdNWVN1qAwmswzh/aJf/LKpxZl2QHGmI
-	QEUhvr/pdHKWEGtPQoQFjEeMDJTbTATeMCiYlzsxFwSu6yL5DjZ321dRKkNoQc1E
-	TBLBYARUxglCCr55z7VpDZ1c857hMtwlqFYM7R6mdDY2VkDSMJpeXCl7FZf8Z0N7
-	UmyIMbUTQ3bCPdh/CakIvYBSVXUtrQIsEmabCc4/XWhnb5b6SBjtMEUTbCMop8fa
-	2QipVp6uHvplwQGH67lk+iAQGs/8vP4NE6nQxJElk/ggUg==
-Received: from mail-vs1-f72.google.com (mail-vs1-f72.google.com [209.85.217.72])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4entr0jq4q-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Mon, 08 Jun 2026 18:37:27 +0000 (GMT)
-Received: by mail-vs1-f72.google.com with SMTP id ada2fe7eead31-6cfc66167c4so1893432137.1
-        for <linux-scsi@vger.kernel.org>; Mon, 08 Jun 2026 11:37:27 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1780943847; x=1781548647; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=nIZ1j2oO4hKk0sVO2Hu6TOAaKuhKzlRHmyJatc66WiA=;
-        b=hbipcLAeNVhUYhaQ0hRNUtdHc69IhOJkjsg3Kf9gdgXC/oGZbs+CXUfTs0aNPop2xU
-         O6ci6IOgsC6hwXe87DaRnIrn7xNULuAOfFclvyzwZ4RxPfx1ZxzBh5J1xAbeYoq25B5x
-         sMPt3KXTaNqppdOeJhph00oXvN15GLKv2qT/Tm/QyQfET04taqhgKUQgw/aLSsWp624K
-         xayRwvOuZz+1FFRqrSSQhZDbOqsjwknxNnpnwEyBLrKUyFGZ6sNaYHs1NRd6nxw3bDL+
-         71vUnzUJwCLDYlhYarvaW4F/nXXxdjbXx0kHV2ZoFh8O6iEP4L5L+J/30U62+AbbwPpc
-         lm0Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1780943847; x=1781548647;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=nIZ1j2oO4hKk0sVO2Hu6TOAaKuhKzlRHmyJatc66WiA=;
-        b=S98SUgk5AXfVLQ96nLSKS/hJLDsM8Jgi1iiAni+WXDiNn66Jzi2X4MUBSmdwwJKg6t
-         yUJmjZXSveYu8rI0A97oyHgH3TUU8pokNGk9Nz741gIgoDWJ+4SJEzotDlM3NGCa3j2V
-         rBKUepEmv+329tZOqv02wi7NWYiqvZ48jr8tIV2MxUvK96RAYQ7/tOBMtwhRxQhh6xpG
-         VwNh6GrkfNKbBJCyOPcaq8l0Ukt06W4O61EEgwPHaDWsHJV6+kwZEsty3rsleyeI7Owh
-         5Gk5So0FyiTLvnQRsOOiPaKyjGwq3RfKUfjH8aihhIydhR5MVl5xZry2GcEUDBALrq+n
-         emWg==
-X-Forwarded-Encrypted: i=1; AFNElJ9OrwdJR4yTCwyGqtEeLBDcypIvjQ5Yu2DbXnqlHdbG6v7+r3JUZeercGmB2WTkoZh9OiGFk2qfNHeu@vger.kernel.org
-X-Gm-Message-State: AOJu0Yyb236gw3IRJj5tu+GZqZV8MluretuBF8RAv/rCS84SLi6VU5nb
-	1xvZQNQO+FtWnq4vQoS7cRS1guxhxLRDJPbDqMaHT9nqBD/H0oEGquQDubTX4T8txTsR2ajCIol
-	mjPo8vjuG4Kpdu97V1AtBBRqWWsVlBOJO7KkKYMb5CNh8QtHtqJ0239qXIfTF9doT
-X-Gm-Gg: Acq92OHOlal3WxoIWMVi04DJ0KsOaF8mp4Zu9ZoFXY38MNjfB+4TkuMBF3LDBSN8N1D
-	BqTibopuZ2po/lU9pf/KaQgg3w9bGeFzbI/jnoOZKeB9sFjmQJh/WodDE1el5eX80tPVtZyZnDE
-	Hot8dXVxhj78YY2ib3bHPhql79GUX6UwH1QSJlpW23LNv6igJ+PTeZDGXIksjX+LBQHNQOrdAUb
-	oz1a48fAorGsuYYRACTI8Sm81GIyk+jblzurVy7IHGq6VG6Mcr9JIzpOUDBXClS4ndmeGYxyXTo
-	Tk4d+8VmwEaFBzpqE3AUA4KI5SLQMVXynfCHrY69Nxd+b1n9p1HoH56z2YMtFViHQrERJb++PEF
-	Xwyp3pKOCiysambBgjVJHbZDVXp4cR4uvV4QayvCNMnvNKQPWtCaO1OSQgy3iBbtm2wsXml+dq3
-	Z7uOOtH97ZvheaFD3i2KWgXcaqFo3G6FDpW+bKDr4vojeTaw==
-X-Received: by 2002:a05:6102:442c:b0:631:81d6:e15c with SMTP id ada2fe7eead31-6feeeea7c1cmr7778969137.4.1780943846816;
-        Mon, 08 Jun 2026 11:37:26 -0700 (PDT)
-X-Received: by 2002:a05:6102:442c:b0:631:81d6:e15c with SMTP id ada2fe7eead31-6feeeea7c1cmr7778948137.4.1780943846371;
-        Mon, 08 Jun 2026 11:37:26 -0700 (PDT)
-Received: from umbar.lan (2001-14ba-a073-af00-264b-feff-fe8b-be8a.rev.dnainternet.fi. [2001:14ba:a073:af00:264b:feff:fe8b:be8a])
-        by smtp.gmail.com with ESMTPSA id 2adb3069b0e04-5aa7b992a66sm3938821e87.74.2026.06.08.11.37.24
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 08 Jun 2026 11:37:25 -0700 (PDT)
-Date: Mon, 8 Jun 2026 21:37:23 +0300
-From: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
-To: palash.kambar@oss.qualcomm.com
-Cc: vkoul@kernel.org, neil.armstrong@linaro.org, robh@kernel.org,
-        krzk+dt@kernel.org, conor+dt@kernel.org, mani@kernel.org,
-        alim.akhtar@samsung.com, bvanassche@acm.org, andersson@kernel.org,
-        abel.vesa@oss.qualcomm.com, luca.weiss@fairphone.com,
-        linux-arm-msm@vger.kernel.org, linux-phy@lists.infradead.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org, nitin.rawat@oss.qualcomm.com
-Subject: Re: [PATCH v3 3/3] phy: qcom-qmp-ufs: Add UFS PHY support on Hawi
-Message-ID: <25m2ts5lomrmmxkjc24t6ky633sb23ge5udg3z3rln2jaqrfh6@46xrntztb24p>
-References: <20260526090956.2340262-1-palash.kambar@oss.qualcomm.com>
- <20260526090956.2340262-4-palash.kambar@oss.qualcomm.com>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="ahY7gkw/"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1780948150; x=1812484150;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=cLjXBQlG2tT1InHlIXc/N4kTn3WdSiHN99HVZXCFngs=;
+  b=ahY7gkw/jhK4WiYAV07v+FxjnJrxYP1l0zLArryHG1UkZoVah8oA/9C3
+   zxpbS1zeCkn+/AReih8wZIzf+3AvxmXRD2eya1VGcOdgBipyhDlcUya9t
+   paGOEkAiC95xzrr5cw0NwWU4kATxdT75+bdRsGIcGiDPfZtOjXVPF3Wmt
+   di1tgez6pis4Fbe6OpBJ62CddmVxlxRZm8RlSE1Km72TWp1xTv4H5Mkev
+   tHOKIIjXtTtEItGbyc+rgSCLBldnqxSqvTEpFAOoNaOyDC+Q+gZ+/RIwe
+   kY8iwIlhUVDtDTstCVHDDvqX7LpNwsJ4vFmDsedLRYD5Lhy4wIeOf6CD/
+   A==;
+X-CSE-ConnectionGUID: x/598/FZT/iCuh8H1FM0vQ==
+X-CSE-MsgGUID: Z511JdlJT0aAlzLKaOaukw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11811"; a="81444110"
+X-IronPort-AV: E=Sophos;i="6.24,195,1774335600"; 
+   d="scan'208";a="81444110"
+Received: from fmviesa005.fm.intel.com ([10.60.135.145])
+  by orvoesa112.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Jun 2026 12:49:09 -0700
+X-CSE-ConnectionGUID: xlWtpJ9vQkqMk3y4uIrmSg==
+X-CSE-MsgGUID: 1NK8XJS7QweFfMfxrDawPw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.24,195,1774335600"; 
+   d="scan'208";a="250745244"
+Received: from igk-lkp-server01.igk.intel.com (HELO 892db79562d4) ([10.211.93.152])
+  by fmviesa005.fm.intel.com with ESMTP; 08 Jun 2026 12:49:05 -0700
+Received: from kbuild by 892db79562d4 with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1wWfy3-000000003J7-1PfR;
+	Mon, 08 Jun 2026 19:49:03 +0000
+Date: Mon, 8 Jun 2026 21:48:44 +0200
+From: kernel test robot <lkp@intel.com>
+To: david.laight.linux@gmail.com, Kees Cook <kees@kernel.org>,
+	linux-hardening@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-scsi@vger.kernel.org, MPT-FusionLinux.pdl@broadcom.com
+Cc: oe-kbuild-all@lists.linux.dev, Arnd Bergmann <arnd@kernel.org>,
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Ranjan Kumar <ranjan.kumar@broadcom.com>,
+	Sathya Prakash <sathya.prakash@broadcom.com>,
+	Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+	Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>,
+	David Laight <david.laight.linux@gmail.com>
+Subject: Re: [PATCH next] drivers/scsi/mpt3sas: Replace strcpy() + strcat()
+ with snprintf()
+Message-ID: <202606082107.T3scOqQb-lkp@intel.com>
+References: <20260608095523.2606-35-david.laight.linux@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -99,51 +72,101 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260526090956.2340262-4-palash.kambar@oss.qualcomm.com>
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNjA4MDE3NCBTYWx0ZWRfXzs4Im6bdWpKM
- +HEQNisWjqz4J1oYjUiOhU6zz11yuzvozw3onfiVV0cc49f/vjMJzwvcAJ1iuHdQGhdWH0apjNu
- qc973CX/iY0O23s2CKCdlvGG/v7PoaIKl8VT9csOTIvtiVj/akp+FwJIJYtV/uUaAJFB8epox1I
- 1sQgefJhuiFw1rTgcN5iIwqfICmTads52J5/rs9BgJifLReBCOpRHoIWpt9m50eBvXZMRaKZ1HO
- bYfHBi5HSERqjbKDctgMKqAOrWGqrEov3qvP/KMginAFNDov0yI6xp6kh5hMOITi/uF6KUT2ZN+
- 3Le/IQxn1TBGGIpec+nXfQ3XGqdQtx0pp512EfFuXS/oH1s1hR1P1KAYAMqJ/ThwgrYVsUTM+2R
- TxDtlDhTE2tIQ6T/mPH0AoE/Xi5FyIVN3etzt8pAfhUEnbDSze+kLjDnmh97Y6Xt615lA8hltT5
- xbxNuy6xALj0vNlLjfg==
-X-Proofpoint-ORIG-GUID: LdRmPk6SS45JbfqmJDGaMZRA14D9i_wC
-X-Proofpoint-GUID: LdRmPk6SS45JbfqmJDGaMZRA14D9i_wC
-X-Authority-Analysis: v=2.4 cv=VowTxe2n c=1 sm=1 tr=0 ts=6a270be7 cx=c_pps
- a=DUEm7b3gzWu7BqY5nP7+9g==:117 a=xqWC_Br6kY4A:10 a=kj9zAlcOel0A:10
- a=FelO9ux0wxsA:10 a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=u7WPNUs3qKkmUXheDGA7:22 a=3WHJM1ZQz_JShphwDgj5:22 a=EUspDBNiAAAA:8
- a=4nhpQrVHSdZsbWUMf4AA:9 a=CjuIK1q_8ugA:10 a=-aSRE8QhW-JAV6biHavz:22
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.125,FMLib:17.12.100.49
- definitions=2026-06-08_04,2026-06-05_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- impostorscore=0 spamscore=0 phishscore=0 priorityscore=1501
- lowpriorityscore=0 malwarescore=0 suspectscore=0 bulkscore=0 clxscore=1015
- adultscore=0 classifier=typeunknown authscore=0 authtc= authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2605210000
- definitions=main-2606080174
+In-Reply-To: <20260608095523.2606-35-david.laight.linux@gmail.com>
 
-On Tue, May 26, 2026 at 02:39:56PM +0530, palash.kambar@oss.qualcomm.com wrote:
-> From: Palash Kambar <palash.kambar@oss.qualcomm.com>
-> 
-> Add the init sequence tables and config for the UFS QMP phy found in
-> the Hawi SoC.
-> 
-> Signed-off-by: Palash Kambar <palash.kambar@oss.qualcomm.com>
-> ---
->  .../phy/qualcomm/phy-qcom-qmp-pcs-ufs-v7.h    |  24 +++
->  .../phy-qcom-qmp-qserdes-txrx-ufs-v8.h        |  37 +++++
->  drivers/phy/qualcomm/phy-qcom-qmp-ufs.c       | 139 ++++++++++++++++++
->  3 files changed, 200 insertions(+)
->  create mode 100644 drivers/phy/qualcomm/phy-qcom-qmp-pcs-ufs-v7.h
->  create mode 100644 drivers/phy/qualcomm/phy-qcom-qmp-qserdes-txrx-ufs-v8.h
-> 
+Hi,
 
-Reviewed-by: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
+kernel test robot noticed the following build warnings:
+
+[auto build test WARNING on next-20260605]
+
+url:    https://github.com/intel-lab-lkp/linux/commits/david-laight-linux-gmail-com/drivers-scsi-mpt3sas-Replace-strcpy-strcat-with-snprintf/20260608-182042
+base:   next-20260605
+patch link:    https://lore.kernel.org/r/20260608095523.2606-35-david.laight.linux%40gmail.com
+patch subject: [PATCH next] drivers/scsi/mpt3sas: Replace strcpy() + strcat() with snprintf()
+config: x86_64-rhel-9.4 (https://download.01.org/0day-ci/archive/20260608/202606082107.T3scOqQb-lkp@intel.com/config)
+compiler: gcc-14 (Debian 14.2.0-19) 14.2.0
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260608/202606082107.T3scOqQb-lkp@intel.com/reproduce)
+
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202606082107.T3scOqQb-lkp@intel.com/
+
+All warnings (new ones prefixed by >>):
+
+   drivers/scsi/mpt3sas/mpt3sas_ctl.c: In function '_ctl_getiocinfo':
+>> drivers/scsi/mpt3sas/mpt3sas_ctl.c:1262:73: warning: '%s' directive output may be truncated writing up to 12 bytes into a region of size between 8 and 31 [-Wformat-truncation=]
+    1262 |         snprintf(karg.driver_version, sizeof (karg.driver_version), "%s-%s",
+         |                                                                         ^~
+   drivers/scsi/mpt3sas/mpt3sas_ctl.c:1262:9: note: 'snprintf' output between 2 and 37 bytes into a destination of size 32
+    1262 |         snprintf(karg.driver_version, sizeof (karg.driver_version), "%s-%s",
+         |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    1263 |                  ioc->driver_name, ver);
+         |                  ~~~~~~~~~~~~~~~~~~~~~~
 
 
--- 
-With best wishes
-Dmitry
+vim +1262 drivers/scsi/mpt3sas/mpt3sas_ctl.c
+
+  1218	
+  1219	/**
+  1220	 * _ctl_getiocinfo - main handler for MPT3IOCINFO opcode
+  1221	 * @ioc: per adapter object
+  1222	 * @arg: user space buffer containing ioctl content
+  1223	 */
+  1224	static long
+  1225	_ctl_getiocinfo(struct MPT3SAS_ADAPTER *ioc, void __user *arg)
+  1226	{
+  1227		struct mpt3_ioctl_iocinfo karg;
+  1228		const char *ver = "";
+  1229	
+  1230		dctlprintk(ioc, ioc_info(ioc, "%s: enter\n",
+  1231					 __func__));
+  1232	
+  1233		memset(&karg, 0 , sizeof(karg));
+  1234		if (ioc->pfacts)
+  1235			karg.port_number = ioc->pfacts[0].PortNumber;
+  1236		karg.hw_rev = ioc->pdev->revision;
+  1237		karg.pci_id = ioc->pdev->device;
+  1238		karg.subsystem_device = ioc->pdev->subsystem_device;
+  1239		karg.subsystem_vendor = ioc->pdev->subsystem_vendor;
+  1240		karg.pci_information.u.bits.bus = ioc->pdev->bus->number;
+  1241		karg.pci_information.u.bits.device = PCI_SLOT(ioc->pdev->devfn);
+  1242		karg.pci_information.u.bits.function = PCI_FUNC(ioc->pdev->devfn);
+  1243		karg.pci_information.segment_id = pci_domain_nr(ioc->pdev->bus);
+  1244		karg.firmware_version = ioc->facts.FWVersion.Word;
+  1245		switch  (ioc->hba_mpi_version_belonged) {
+  1246		case MPI2_VERSION:
+  1247			if (ioc->is_warpdrive)
+  1248				karg.adapter_type = MPT2_IOCTL_INTERFACE_SAS2_SSS6200;
+  1249			else
+  1250				karg.adapter_type = MPT2_IOCTL_INTERFACE_SAS2;
+  1251			ver = MPT2SAS_DRIVER_VERSION;
+  1252			break;
+  1253		case MPI25_VERSION:
+  1254		case MPI26_VERSION:
+  1255			if (ioc->is_gen35_ioc)
+  1256				karg.adapter_type = MPT3_IOCTL_INTERFACE_SAS35;
+  1257			else
+  1258				karg.adapter_type = MPT3_IOCTL_INTERFACE_SAS3;
+  1259			ver = MPT3SAS_DRIVER_VERSION;
+  1260			break;
+  1261		}
+> 1262		snprintf(karg.driver_version, sizeof (karg.driver_version), "%s-%s",
+  1263			 ioc->driver_name, ver);
+  1264		karg.bios_version = le32_to_cpu(ioc->bios_pg3.BiosVersion);
+  1265	
+  1266		karg.driver_capability |= MPT3_IOCTL_IOCINFO_DRIVER_CAP_MCTP_PASSTHRU;
+  1267	
+  1268		if (copy_to_user(arg, &karg, sizeof(karg))) {
+  1269			pr_err("failure at %s:%d/%s()!\n",
+  1270			    __FILE__, __LINE__, __func__);
+  1271			return -EFAULT;
+  1272		}
+  1273		return 0;
+  1274	}
+  1275	
+
+--
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
