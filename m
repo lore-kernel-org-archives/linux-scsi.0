@@ -1,492 +1,203 @@
-Received: from nick.sneptech.io (nick.sneptech.io [178.62.38.78])
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 90E263B0AC4;
-	Mon,  8 Jun 2026 21:57:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=178.62.38.78
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780955825; cv=none; b=oL2U7+kYVpc6JRlZpvVE5KttrzhkpSHuwhUkeY6LrAa8AQGT7VBtJ4KA4FxMio98aYnltNNUhayU0pMr+BzMekzy5Sdkr+8KHiWS/nBAfTyuxzyDHnyGv3Yae8oKIxiU3sJ6i9+tcaGv4ITcI5HdLWSpAgb4AoN1OnhxrT2fans=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780955825; c=relaxed/simple;
-	bh=qYv8tVeIH19cO/jH+GEV12UiE4fByjbcTz6BekvguZ4=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=HP5vPlmltO8yaqCPGS4j4FwcYEr+i9T41LfbffvoriJ2BQ0J4ryFCsJqXQjsIBjxf1lKP9hkOSSaCZQybvVKt+CjCb0uNQEt+mugqqXjgIcCoNA6LGF7MXBkfXYkM2SZ3rg+BwMuspd8b9IHv8Ti/FMynfay3WxjvGbD0hDMXFo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=philpem.me.uk; spf=pass smtp.mailfrom=philpem.me.uk; dkim=pass (1024-bit key) header.d=philpem.me.uk header.i=@philpem.me.uk header.b=w8lFnNFZ; arc=none smtp.client-ip=178.62.38.78
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=philpem.me.uk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=philpem.me.uk
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A48B039D6FD;
+	Mon,  8 Jun 2026 21:58:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.177.32
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1780955932; cv=fail; b=IaB5rfZ3qJFZHs6LBuQLWEuB0CWayP6Ax14hQpkOYLNQbavgolCYzG/XFIDVbwCDT1amxEn0dnLf2tXVdTiC01LUDQW9FdTQtNN9PrmVQEiQUc1aaYjh0cc1bKQ0Ggo9CKQKteidgC6XKJYSxpYVLYuknu6qfwVSKczdZwB/dtU=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1780955932; c=relaxed/simple;
+	bh=oziLaIL87HuvCdHO2KiikcabIpvd1jMhu3pdikJxWBs=;
+	h=To:Cc:Subject:From:In-Reply-To:Message-ID:References:Date:
+	 Content-Type:MIME-Version; b=tjt/I/PMVPJ/iq5kBNLXM/DHL4bUCrpXKxwAHzq75QkYaXlu18QCPj9SC4lOstneXDMJ8zuc3UCx+v4RdVLuEQydY5vI5+m56Q/n4yUrsQu7Fm18B2P/ln+JjrXgETJvWFgDRFBCggAuieDOkgjfwXlEC8zWduX6mk2+9XEFPjA=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=F0SvB8Hu; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=rEd4Rb7i; arc=fail smtp.client-ip=205.220.177.32
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=philpem.me.uk header.i=@philpem.me.uk header.b="w8lFnNFZ"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=philpem.me.uk;
-	s=mail; t=1780954491;
-	bh=qYv8tVeIH19cO/jH+GEV12UiE4fByjbcTz6BekvguZ4=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=w8lFnNFZfGkURrE4xQtrhUtgMeObVsVMRiVcmiaivIaFXFiNTpwJ5tF8IbgR8tEID
-	 Cmwz+ieeoaPFREKS4U0w/DfXXnCvJKtMmKYB0zq7U3uSLoZFMUh8MWo6KdTfouneXx
-	 mrtiOzCO5dFU7Fqg8rth6/kQPvOCJXyeqPRN2V60=
-Received: from wolf.philpem.me.uk (81-187-163-148.ip4.reverse-dns.uk [81.187.163.148])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits))
-	(No client certificate requested)
-	(Authenticated sender: mailrelay_wolf@philpem.me.uk)
-	by nick.sneptech.io (Postfix) with ESMTPSA id 42D21BE6B5;
-	Mon,  8 Jun 2026 21:34:51 +0000 (UTC)
-Received: from cheetah.homenet.philpem.me.uk (cheetah.homenet.philpem.me.uk [10.0.0.32])
-	by wolf.philpem.me.uk (Postfix) with ESMTPSA id DEAD85FC3F;
-	Mon,  8 Jun 2026 22:34:50 +0100 (BST)
-From: Phil Pemberton <philpem@philpem.me.uk>
-To: linux-ide@vger.kernel.org,
-	linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org,
-	Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>,
-	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	Hannes Reinecke <hare@suse.de>,
-	Phil Pemberton <philpem@philpem.me.uk>
-Subject: [PATCH v6 2/6] ata: libata-scsi: convert dev->sdev to per-LUN array
-Date: Mon,  8 Jun 2026 22:34:39 +0100
-Message-ID: <20260608213443.2296614-3-philpem@philpem.me.uk>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20260608213443.2296614-1-philpem@philpem.me.uk>
-References: <20260608213443.2296614-1-philpem@philpem.me.uk>
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="F0SvB8Hu";
+	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="rEd4Rb7i"
+Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 658HSfq81690708;
+	Mon, 8 Jun 2026 21:58:46 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
+	:content-type:date:from:in-reply-to:message-id:mime-version
+	:references:subject:to; s=corp-2025-04-25; bh=ddUYuhTULPgsM6+ffX
+	VATsY0vN/yZqrygzKB8PY438w=; b=F0SvB8Hu9fCt4Rsmn9dEEFzAUoBfTxYDGB
+	1n/0vnoy+Wot+J1Uc2EKQt9YWX1HB1EmZWCRozGlwmGjbUlO/d0w2ar9C0GV0/da
+	BNva63aSQa1xjKrxsbr4Mt0xVsZmCz0Gk5F91aLUBeZlUfULjZEHsAz1ErWe40yb
+	314TzO6rqs8ZBZSS1Buofg681JVXKGF7E3bdIWfuepxjS+AmemM7iDS2AWuPvfOy
+	Qpe/zeO6hsfky3lFT0YUE1PhJlXmLpx2f+2R8w4taaSNDsFH9qh22I+ZmsfhcT5K
+	rz9xCvqHSp2B1Uf/0J4+paqRJmo4zVT4wQry6V9U+oE+4AMo92iQ==
+Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4emab4kbnc-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Mon, 08 Jun 2026 21:58:46 +0000 (GMT)
+Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.7/8.18.1.7) with ESMTP id 658Lw8Nr009745;
+	Mon, 8 Jun 2026 21:58:45 GMT
+Received: from sj2pr03cu001.outbound.protection.outlook.com (mail-westusazon11012063.outbound.protection.outlook.com [52.101.43.63])
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 4ema0eau4a-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Mon, 08 Jun 2026 21:58:45 +0000 (GMT)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=laS+dqM8uOwOlAjE45bPVJSGsbF/oLBDE6NjMIny/hGU430Kca+2Q5sd1kx7M2fz01uLpc4WTFZwOW+2yiIuXJ4kj+IwMtobDRlWad3gH+X0CN+enXL0rCVp13H5VHeQEdQo0DgnQL75TWY5ldBD9Y3F9cU8wZjRdz+C7sMfFMUxU5ztP3iYV6/M386/C/+CrdmOttuFc6ir6XXpnJpAi7tGgI/PbJNjh+HdowHPU9rQc+s6hX0STPqABwQB68B1Z/2FojVvt/sQrSIH5xm8ODDhKkTQwSsnLf2Fx7/hr/eOQoM5Z3IuLvpUN3RPxx3QUX5cRU9aQt3otkK/o00bRQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=ddUYuhTULPgsM6+ffXVATsY0vN/yZqrygzKB8PY438w=;
+ b=S9AyN1s7SI8CmCr9yfWe9eYKb54AYYtu4VBqceetfdNz+1u/7JB4FwJtZmuGunjk1rto5Iddut0Ag3A2KOFuXkfiS6JM3/mQy2H8GZyLT4rs60Ee34UlZXmg/YvPLSlY7NTI45+Y2gAP5nutibs6Clh6ifA2o/vuDxxWpfjfoIA2jSj+xFnAI9OP3VY7OpEZSr3+LZE2PC0UAYmtJqz7+XiCTIWnzM8Qs+X4rVc151884Bj1Y6hz3IdSc8eEN+vd3qpZqEabc1MeFC1qykpMhhaFpTGo3RM9UNya/p5EP+rcBjYqlVldygij1Qz/Kr8ZN6NYumk5oYsYEB7IuoLq0A==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=ddUYuhTULPgsM6+ffXVATsY0vN/yZqrygzKB8PY438w=;
+ b=rEd4Rb7iD0UvL10JbLwfQP91XPNgzP2ejhiqUUxVPhVO/90z0jYA4p9TsIveXEjdeQ8P/D1QGm5TUtCjSH/ldN9dj67Akmusd+nYcHF6UPGIkP82zcVKAZm4Eu6GiqRcHvR10cSTCsMUb//6/XyxVgGybv/s8zTKsz23GondSjw=
+Received: from CH0PR10MB5338.namprd10.prod.outlook.com (2603:10b6:610:cb::8)
+ by BN0PR10MB4998.namprd10.prod.outlook.com (2603:10b6:408:120::10) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.92.12; Mon, 8 Jun 2026
+ 21:57:37 +0000
+Received: from CH0PR10MB5338.namprd10.prod.outlook.com
+ ([fe80::e525:dd71:b002:6ad5]) by CH0PR10MB5338.namprd10.prod.outlook.com
+ ([fe80::e525:dd71:b002:6ad5%6]) with mapi id 15.21.0092.011; Mon, 8 Jun 2026
+ 21:57:37 +0000
+To: Abhinaba Rakshit <abhinaba.rakshit@oss.qualcomm.com>
+Cc: Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio
+ <konradybcio@kernel.org>,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+        "Martin
+ K. Petersen" <martin.petersen@oracle.com>,
+        Adrian Hunter
+ <adrian.hunter@intel.com>,
+        Ulf Hansson <ulfh@kernel.org>, Rob Herring
+ <robh@kernel.org>,
+        Krzysztof Kozlowski <krzk+dt@kernel.org>,
+        Conor
+ Dooley <conor+dt@kernel.org>,
+        Neeraj Soni <neeraj.soni@oss.qualcomm.com>,
+        Harshal Dev <harshal.dev@oss.qualcomm.com>,
+        Kuldeep Singh
+ <kuldeep.singh@oss.qualcomm.com>,
+        linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-mmc@vger.kernel.org,
+        devicetree@vger.kernel.org
+Subject: Re: [PATCH v11 2/6] ufs: host: Add ICE clock scaling during UFS
+ clock changes
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+In-Reply-To: <20260609-enable-ice-clock-scaling-v11-2-1cebc8b3275b@oss.qualcomm.com>
+	(Abhinaba Rakshit's message of "Tue, 09 Jun 2026 03:17:24 +0530")
+Organization: Oracle
+Message-ID: <yq1ecig3dc1.fsf@ca-mkp.ca.oracle.com>
+References: <20260609-enable-ice-clock-scaling-v11-0-1cebc8b3275b@oss.qualcomm.com>
+	<20260609-enable-ice-clock-scaling-v11-2-1cebc8b3275b@oss.qualcomm.com>
+Date: Mon, 08 Jun 2026 17:57:35 -0400
+Content-Type: text/plain
+X-ClientProxiedBy: YT4PR01CA0315.CANPRD01.PROD.OUTLOOK.COM
+ (2603:10b6:b01:10a::28) To CH0PR10MB5338.namprd10.prod.outlook.com
+ (2603:10b6:610:cb::8)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: CH0PR10MB5338:EE_|BN0PR10MB4998:EE_
+X-MS-Office365-Filtering-Correlation-Id: 0cef7bb1-a2ac-4e70-a04c-08dec5a8f3cd
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|366016|1800799024|7416014|376014|4143699003|56012099006|22082099003|18002099003;
+X-Microsoft-Antispam-Message-Info:
+	d6gyvCCummXEzBFoQeruL1Mmlhbsoy5wvvIUXgLQNle/FWrlGBUeSMLgN0mW1fWkRCFWbBLiUipMRD1CvagnYjl4kwcHPqmYF+1An18tKF6JC6JUxpT+NVUvwmc+zAjEl6M4Rsiwq3P2s9VlXWGjKGtS11AK3q2fAzkFz0NlWXuXD4PgOvF9RPIqvQBYkv9z1cflfpFNrtdnUwNoDXInUVICsIeKBb3ZGMuIKrsOg0q/1u9KC0WRucBVEM3H6SS3w6l5PHFBfN4Dcm30J25bC/RZy3Y8XkxTLF0rhaEY5TpHkMbFr5PvDrZY1ErHBqTAZ0stef+CO5tzDbjR1DG2rlIxi6bCA+pe4yDVIcnAHThUqabEGE9mHyz3lW/u3yxcbjrlQfHDg4vBg7PjjyH2pl6TS+ibba/9XOMXG6V9CdSuRNh4j8k2aa2sQMfy6LiGEIbkND4+pDE34UaTM4emHVt4U67LvCHTgsiJ9vVTLjamESS1iRuaLFXSh/Z5qNNin1dKZZcb9/gqlGXWRJH/92NWr5FEAfHsdAr03Rl71BNkUUSOkSLLNgqSj6Sn7wRTeqonSxgaoc/pLZVYgbz0Cz0yzPXeWHeQYNDDpC8qOeDZ8lE0idcsFrqJ/pHju5g419fjjKPxZARgYdZ5Ul+M3T9DIc1aKoMB+tHgF5OqiPIugn46YBhotey9AWFtlL8M
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CH0PR10MB5338.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(7416014)(376014)(4143699003)(56012099006)(22082099003)(18002099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?kSQw89MMItwFOeBxGPCcaUIy2I1+uttuxKewc9eDY2na7S0AGoinNEcaTuSB?=
+ =?us-ascii?Q?8UHa/qUzSwYITXjLb9a49TVs5qITPyzWj5+SozkQNnh+sa+KIBIjCyjgsAhK?=
+ =?us-ascii?Q?bKbiP9Lc3T5RWEl1YjwwgLQFQW7ToUbEa85nJfrBDrXhuzbJAPiHmabN6nSg?=
+ =?us-ascii?Q?JBlK3Kjf2BR+BkDE4JCq2XB9YMmfY0aXk6BB7xDfEFQRRAHD98PZDM8lmRIp?=
+ =?us-ascii?Q?oPMMDjmtf1rAieNGzJTK1f0o/NDIvhgvUm7oiyameShTPGTALl1t3tQGwfp5?=
+ =?us-ascii?Q?+K32k64HQKKpjqNoaBrulA4Dq7XSvDdnpmqegCzhMY7y9fE0dCjJplaSBQ04?=
+ =?us-ascii?Q?7yvAYoYnGFd2XWvxSYIT9yiyUlU2omKT92ConTGYy93u64VriN6m1ATpQFxd?=
+ =?us-ascii?Q?6fvVmgZOYg1gLLrqU/hYBCtTlUlj2jqMhc2ajG2CtDlXEoRwc0/Sn/QTPV3Q?=
+ =?us-ascii?Q?pXWrLAXlJh+KA+NYIeETOeCTe2B22PSS+05qa3KIW2Voh2H1pNN5vlTITeWI?=
+ =?us-ascii?Q?Y7At8KDkuYNiumXTts4YW2VhVQ6hqtM3EYWqnLWP9VfnFAqEgOeM4n5eiebr?=
+ =?us-ascii?Q?SP0bj0Xq+UOHPGX8JtUb1KxqiBARC788so3RR/5ZKRelQHql6b3NwMzN2z0W?=
+ =?us-ascii?Q?BsimbxXwFe+AJuwdCvK5hybtdz8DzWgjwR+w1PbsVEvMPByd7GQXm+CBh9Md?=
+ =?us-ascii?Q?dqqjCxGbQYEt+tu3I2LoJn+ENdAcmeSKYcCgjDzNkJVpL8pEQ+CDybJMzLtd?=
+ =?us-ascii?Q?6tmxOBhlYw22F/1b0+Vb3Nyv2FMynjg5kfQDN9fe0joqjVtp11MGvtOh4jJH?=
+ =?us-ascii?Q?I9p1BMAv2Zat0NwbBT7GMyTNkR5HezTOjJbCGtefw5u1Cyh0GY97D7t0DxSa?=
+ =?us-ascii?Q?D/3TslZVn7XcJhHhfubJynGVfVPy9JFEZIno2Q4rAUG0XmMUSbD14ODfAPzN?=
+ =?us-ascii?Q?Ph4H++ISjh32ZGTDmktSux7m5KOYwZLmrRig1x3mfYn8bbew/Vz83Y9KGxqu?=
+ =?us-ascii?Q?YUFp73RhduZyXjVux68x5kkGnbGJaiPH/FdnG0uVSaaulOB++QuCPnV6RBen?=
+ =?us-ascii?Q?LKEX251YWAkMaOEiQJMN8lyipwA2VoyKn8XHMb4OlxG6srZB3oPlcI59YjdN?=
+ =?us-ascii?Q?ttFbbAxgyiRVWKXy988dEtq69NsfnxGBRC2Y60nOsLuHi2g+n8bodZGYuCBb?=
+ =?us-ascii?Q?jPoe6kMvdKKxq3Ga0o+gNDf3JqXJXAksXTRX9T9uxXo2aYoS0PV6Gwrh/6Fg?=
+ =?us-ascii?Q?/7yuaJh7cCefR8VxdZ/FdAF2qKk//i2BDby6RwmwqczoEb91TuWqWWyF5Bye?=
+ =?us-ascii?Q?QzW/fEeVBN1ics+4ymK3ULyz86dIaMtmJAcaq/GebmVG/qcR2khD89r8l5Bf?=
+ =?us-ascii?Q?Axy++7VWmAKJANX/JQNceS8xQV3qfmoOf1nX4X+36Y0rpIggGzL1PlwqElut?=
+ =?us-ascii?Q?0kRdSNLGVafDx2ubTOD/1bot0lN1SA2Z3fFszhH9lkRaB2gO2JVSLhwzsdLj?=
+ =?us-ascii?Q?awe5c0ABmqG4TKwDioQPOOha1F/g1z89Qxrl+0By3ecUNvAp3d8c9rFky1VX?=
+ =?us-ascii?Q?GuDWYvUy0k1lOy79hGfqI6PjtpMXO965XW6cvIO+Q2OH327s0YwA8lkFEOhD?=
+ =?us-ascii?Q?i/10bR/xi69a2rxuEzqMo8Wl4uSllmXchcpD9yUVPboarS59ZMKYjQK1rrpb?=
+ =?us-ascii?Q?gr6Sqjmfg//hhKUuaGgVUsuOo8MXjzJ/QSzdaAlc3dErXjSB7OpxRTf5S7ms?=
+ =?us-ascii?Q?Qk7bOejLtsA5DI0mlAAiTI6GrDzfYZk=3D?=
+X-Exchange-RoutingPolicyChecked:
+	HVERBU8y7KR9tHWl+vrkXL8BQmCu4LcuOp/u1Tu/7+lQ7B+masJ2QdD1iSVxfU5twppMc8i6PyOOu4KZFYXv9yBcOuj1haRBJjeTMiO43HqMa42zmDaRbZ0bIvNaMVP4VVHIH98DPTZJcEy0f+0Xe6MP9q80G+JXlYrE7dII+zyMom71iF6dk8Yp/eyS5FJLpVPC9X1pwpN+bG49LkxLry7CTnVKe5kVGQyXnO2ewpHl3enHuVW8hPpd79Lv6FG5/1MS8lSrNabI4Q7lBEac5naiSjgsqU7Skmo71xgqm2R/ZdZkPzD3V2Lwx+fbRHLx/6WgjhhBZq3uepdEKt6LfQ==
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
+	zi3B4uq6Ubs1/Otyh9K8p/QYzki/krjxY86/2d35ur9C+aEZkclpSGG1fpUUMNX2Bi4naG1VV6ucAQYk+e1rwWE5MdNlR1n5PEQ0EpWQDbfzMwgbzmPspKgFahrraDpHsPmtCyokmX7E2Af1zr7MIJLc+/3duG447ocKR5tXWCJMobrkfBpyvSPlSGbn56aHzGqFpXsdgv5qQgzo9jS/KfW4WxDaF6muAVc1bWkGMLhYKZuu4T06RvzsruigEvpHharXNChJiD3FnwOsrCprUMPHaR6Ahh+qHbQvK6OIVKaIhDuT0D8mP21phrGvH4KrUYjvbjMkWA7wzVW4dzt/j7P4/7mVq56WyUp2dGzA8AqI/jiyUZhOMT/GicrxTyButGsLZS78wyrkb/5vZeBYiBU7RGp8MUsnMrKmPp7s63W4QAwL014Fc11oliUEbwNgGgdZVJX60qnNhjEaj+ODLKWEE+E7RZdRj69OLLGKuxFPS+rq0z+8Ol2KZim65poU5tjoruIMSULheu4UjABYVDRQpdQJgY6HDbFDGonZB8h6Hh1D1eyTQjz2Ymvn6+gbDLwSNZydtaovflc8A+8EWzMRpbN6PoCIWjCH1lPPymw=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 0cef7bb1-a2ac-4e70-a04c-08dec5a8f3cd
+X-MS-Exchange-CrossTenant-AuthSource: CH0PR10MB5338.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 08 Jun 2026 21:57:36.9779
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: Y7jGbfAJi6Ks0fuONDkDCwMXUfqKgAVF2S+mPRFmlpoQN+YJLSLMCeJeVnE+7ClNc0V1p4eQHBQyNHQ59diawr77ZmYJ32dRNfTrmOxDbv8=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN0PR10MB4998
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.125,FMLib:17.12.100.49
+ definitions=2026-06-08_05,2026-06-05_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0
+ spamscore=0 malwarescore=0 bulkscore=0 mlxlogscore=999 suspectscore=0
+ mlxscore=0 lowpriorityscore=0 phishscore=0 classifier=spam adjust=0
+ reason=mlx scancount=1 engine=8.19.0-2605130000 definitions=main-2606080201
+X-Authority-Analysis: v=2.4 cv=cL/QdFeN c=1 sm=1 tr=0 ts=6a273b16 cx=c_pps
+ a=OOZaFjgC48PWsiFpTAqLcw==:117 a=OOZaFjgC48PWsiFpTAqLcw==:17
+ a=6eWqkTHjU83fiwn7nKZWdM+Sl24=:19 a=z/mQ4Ysz8XfWz/Q5cLBRGdckG28=:19
+ a=lCpzRmAYbLLaTzLvsPZ7Mbvzbb8=:19 a=xqWC_Br6kY4A:10 a=FelO9ux0wxsA:10
+ a=GoEa3M9JfhUA:10 a=VkNPw1HP01LnGYTKEx00:22 a=jiCTI4zE5U7BLdzWsZGv:22
+ a=o5oIOnhZENCTenyL_yNV:22 a=yPCof4ZbAAAA:8 a=xy4oZan2cbFDXSxVChgA:9
+X-Proofpoint-GUID: pAIc_KyfAKjFExiQ1pFnJoUed3JzTk0q
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNjA4MDIwMCBTYWx0ZWRfX6Qkd0eHDYY+J
+ o28YJ9t6s2DFQt/nYCEo0jVG9hCAP62Mzt32e37RraAKdP9TvzUdIfWcqcijM4YeBQSYF3KJuvT
+ QfQmq5HYiQxva2+zFPxLGJ2D+bmyjASIXlRhRxlcNJA/SHGzyPDDR8oUHkw1lnUxIbVqic5Cilp
+ 2jL+Po7XtirDT575cgFq/dJGk9sha2kgHe/AClkgNarHX8GEgMI/URBiONVjZtRg6Sv/Y6qrXg0
+ wcUTk2APXcDA8XEXrXUs/dhJZ2/3oOLZTXQDdO1VEpdQfjD1k8yKtTFSGTDROHfJobTmfn1ACrM
+ KIaF3NdENK1kIIgx4tgMwSublNAtDbPWKBTUUYBndC2r9H4ly3RNvxLvL8JxtRUoYWhayLO+SIF
+ NFiFYwsocsm1BuUgDBs+0MCp5UVIxtB5ffpZRoE498AwE5iCgiAJsmA3B3RtGyQqUntLbGrlwLV
+ D3mCTreVJe5IYKQryJQ==
+X-Proofpoint-ORIG-GUID: pAIc_KyfAKjFExiQ1pFnJoUed3JzTk0q
 
-Multi-LUN ATAPI devices (PD/CD combos, CD changers) share a single
-ata_device but expose multiple scsi_devices.  The previous single
-dev->sdev pointer could only track one LUN, making all other LUNs
-invisible to code that operates on sdevs: port detach, suspend/resume,
-ACPI uevent, ZPODD, media change notification, and EH teardown.
 
-Replace the scalar struct scsi_device *sdev with a fixed-size array
-dev->sdev[ATAPI_MAX_LUN] indexed by LUN number, where ATAPI_MAX_LUN
-is 8 (the SCSI-2 ceiling, LUN values 0..7).  Add a companion field
-dev->nr_luns recording the number of valid entries -- defaults to 1
-during ata_dev_init() and is bumped during multi-LUN probe -- so the
-common single-LUN case iterates one slot, not eight.
+Abhinaba,
 
-Add an inline helper ata_dev_scsi_device(dev, lun) that returns
-dev->sdev[lun] guarded by a WARN_ON_ONCE(lun >= dev->nr_luns) bounds
-check.  Use it for the hardcoded LUN-0 references in libata-acpi
-(uevent kobj), libata-zpodd (disk events, wake notify), and the
-door-lock and OF-node paths in libata-scsi.
+> Implement ICE (Inline Crypto Engine) clock scaling in sync with
+> UFS controller clock scaling. This ensures that the ICE operates at
+> an appropriate frequency when the UFS clocks are scaled up or down,
+> improving performance and maintaining stability for crypto operations.
 
-Key changes per call site:
-  - ata_scsi_dev_config:  assign sdev to dev->sdev[sdev->lun]
-  - ata_scsi_sdev_destroy: clear dev->sdev[sdev->lun]; only trigger
-    ATA-level detach when LUN 0 is destroyed, since removing a higher
-    LUN should not tear down the underlying ATA device
-  - ata_port_detach:  iterate dev->nr_luns slots (high->low)
-  - ata_scsi_offline_dev:  iterate dev->nr_luns slots
-  - ata_scsi_remove_dev:  snapshot and remove all LUN slots, then
-    scsi_remove_device each one outside the lock
-  - ata_scsi_media_change_notify:  send event to all populated LUNs
-  - ata_scsi_dev_rescan:  resume and rescan each populated LUN
-  - ACPI, ZPODD, ofnode, door-lock:  use ata_dev_scsi_device(dev, 0)
+Acked-by: Martin K. Petersen <martin.petersen@oracle.com>
 
-For single-LUN devices (the vast majority) only dev->sdev[0] is ever
-populated and dev->nr_luns stays at 1, so existing call paths see no
-change in behaviour.
-
-Signed-off-by: Phil Pemberton <philpem@philpem.me.uk>
----
- drivers/ata/libata-acpi.c  |   6 +-
- drivers/ata/libata-core.c  |  11 ++-
- drivers/ata/libata-scsi.c  | 151 +++++++++++++++++++------------------
- drivers/ata/libata-zpodd.c |   6 +-
- include/linux/libata.h     |  11 ++-
- 5 files changed, 103 insertions(+), 82 deletions(-)
-
-diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
-index 4433f626246b..8af35d0b1053 100644
---- a/drivers/ata/libata-acpi.c
-+++ b/drivers/ata/libata-acpi.c
-@@ -153,8 +153,10 @@ static void ata_acpi_uevent(struct ata_port *ap, struct ata_device *dev,
- 	char *envp[] = { event_string, NULL };
- 
- 	if (dev) {
--		if (dev->sdev)
--			kobj = &dev->sdev->sdev_gendev.kobj;
-+		struct scsi_device *sdev = ata_dev_scsi_device(dev, 0);
-+
-+		if (sdev)
-+			kobj = &sdev->sdev_gendev.kobj;
- 	} else
- 		kobj = &ap->dev->kobj;
- 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 4408b1fb48c7..1cb159d9dbc7 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -5564,6 +5564,7 @@ void ata_dev_init(struct ata_device *dev)
- 	dev->pio_mask = UINT_MAX;
- 	dev->mwdma_mask = UINT_MAX;
- 	dev->udma_mask = UINT_MAX;
-+	dev->nr_luns = 1;
- }
- 
- /**
-@@ -6275,11 +6276,15 @@ static void ata_port_detach(struct ata_port *ap)
- 	/* Remove scsi devices */
- 	ata_for_each_link(link, ap, HOST_FIRST) {
- 		ata_for_each_dev(dev, link, ALL) {
--			if (dev->sdev) {
-+			int lun;
-+
-+			for (lun = dev->nr_luns - 1; lun >= 0; lun--) {
-+				if (!dev->sdev[lun])
-+					continue;
- 				spin_unlock_irqrestore(ap->lock, flags);
--				scsi_remove_device(dev->sdev);
-+				scsi_remove_device(dev->sdev[lun]);
- 				spin_lock_irqsave(ap->lock, flags);
--				dev->sdev = NULL;
-+				dev->sdev[lun] = NULL;
- 			}
- 		}
- 	}
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 32c6a0e497cf..7c3d31dc49a1 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -1131,7 +1131,7 @@ int ata_scsi_dev_config(struct scsi_device *sdev, struct queue_limits *lim,
- 	if (dev->flags & ATA_DFLAG_TRUSTED)
- 		sdev->security_supported = 1;
- 
--	dev->sdev = sdev;
-+	dev->sdev[sdev->lun] = sdev;
- 	return 0;
- }
- 
-@@ -1202,10 +1202,10 @@ EXPORT_SYMBOL_GPL(ata_scsi_sdev_configure);
-  *
-  *	@sdev is about to be destroyed for hot/warm unplugging.  If
-  *	this unplugging was initiated by libata as indicated by NULL
-- *	dev->sdev, this function doesn't have to do anything.
-+ *	dev->sdev[], this function doesn't have to do anything.
-  *	Otherwise, SCSI layer initiated warm-unplug is in progress.
-- *	Clear dev->sdev, schedule the device for ATA detach and invoke
-- *	EH.
-+ *	Clear the per-LUN slot; when the last LUN (LUN 0) is destroyed,
-+ *	schedule ATA-level detach via EH.
-  *
-  *	LOCKING:
-  *	Defined by SCSI layer.  We don't really care.
-@@ -1220,11 +1220,12 @@ void ata_scsi_sdev_destroy(struct scsi_device *sdev)
- 
- 	spin_lock_irqsave(ap->lock, flags);
- 	dev = __ata_scsi_find_dev(ap, sdev);
--	if (dev && dev->sdev) {
--		/* SCSI device already in CANCEL state, no need to offline it */
--		dev->sdev = NULL;
--		dev->flags |= ATA_DFLAG_DETACH;
--		ata_port_schedule_eh(ap);
-+	if (dev && dev->sdev[sdev->lun] == sdev) {
-+		dev->sdev[sdev->lun] = NULL;
-+		if (sdev->lun == 0) {
-+			dev->flags |= ATA_DFLAG_DETACH;
-+			ata_port_schedule_eh(ap);
-+		}
- 	}
- 	spin_unlock_irqrestore(ap->lock, flags);
- 
-@@ -2911,10 +2912,15 @@ static void atapi_qc_complete(struct ata_queued_cmd *qc)
- 		 * avoid this infinite loop.
- 		 *
- 		 * This may happen before SCSI scan is complete.  Make
--		 * sure qc->dev->sdev isn't NULL before dereferencing.
-+		 * sure the LUN-0 sdev isn't NULL before dereferencing.
- 		 */
--		if (qc->cdb[0] == ALLOW_MEDIUM_REMOVAL && qc->dev->sdev)
--			qc->dev->sdev->locked = 0;
-+		if (qc->cdb[0] == ALLOW_MEDIUM_REMOVAL) {
-+			struct scsi_device *sdev =
-+				ata_dev_scsi_device(qc->dev, 0);
-+
-+			if (sdev)
-+				sdev->locked = 0;
-+		}
- 
- 		ata_scsi_qc_done(qc, true, SAM_STAT_CHECK_CONDITION);
- 		return;
-@@ -4658,7 +4664,7 @@ int ata_scsi_add_hosts(struct ata_host *host, const struct scsi_host_template *s
- #ifdef CONFIG_OF
- static void ata_scsi_assign_ofnode(struct ata_device *dev, struct ata_port *ap)
- {
--	struct scsi_device *sdev = dev->sdev;
-+	struct scsi_device *sdev = ata_dev_scsi_device(dev, 0);
- 	struct device *d = ap->host->dev;
- 	struct device_node *np = d->of_node;
- 	struct device_node *child;
-@@ -4696,7 +4702,7 @@ void ata_scsi_scan_host(struct ata_port *ap, int sync)
- 			struct scsi_device *sdev;
- 			int channel = 0, id = 0;
- 
--			if (dev->sdev)
-+			if (dev->sdev[0])
- 				continue;
- 
- 			if (ata_is_host_link(link))
-@@ -4707,11 +4713,11 @@ void ata_scsi_scan_host(struct ata_port *ap, int sync)
- 			sdev = __scsi_add_device(ap->scsi_host, channel, id, 0,
- 						 NULL);
- 			if (!IS_ERR(sdev)) {
--				dev->sdev = sdev;
-+				dev->sdev[0] = sdev;
- 				ata_scsi_assign_ofnode(dev, ap);
- 				scsi_device_put(sdev);
- 			} else {
--				dev->sdev = NULL;
-+				dev->sdev[0] = NULL;
- 			}
- 		}
- 	}
-@@ -4722,7 +4728,7 @@ void ata_scsi_scan_host(struct ata_port *ap, int sync)
- 	 */
- 	ata_for_each_link(link, ap, EDGE) {
- 		ata_for_each_dev(dev, link, ENABLED) {
--			if (!dev->sdev)
-+			if (!dev->sdev[0])
- 				goto exit_loop;
- 		}
- 	}
-@@ -4763,7 +4769,7 @@ void ata_scsi_scan_host(struct ata_port *ap, int sync)
-  *
-  *	This function is called from ata_eh_detach_dev() and is responsible for
-  *	taking the SCSI device attached to @dev offline.  This function is
-- *	called with host lock which protects dev->sdev against clearing.
-+ *	called with host lock which protects dev->sdev[] against clearing.
-  *
-  *	LOCKING:
-  *	spin_lock_irqsave(host lock)
-@@ -4773,11 +4779,16 @@ void ata_scsi_scan_host(struct ata_port *ap, int sync)
-  */
- bool ata_scsi_offline_dev(struct ata_device *dev)
- {
--	if (dev->sdev) {
--		scsi_device_set_state(dev->sdev, SDEV_OFFLINE);
--		return true;
-+	bool found = false;
-+	int lun;
-+
-+	for (lun = dev->nr_luns - 1; lun >= 0; lun--) {
-+		if (dev->sdev[lun]) {
-+			scsi_device_set_state(dev->sdev[lun], SDEV_OFFLINE);
-+			found = true;
-+		}
- 	}
--	return false;
-+	return found;
- }
- 
- /**
-@@ -4793,49 +4804,38 @@ bool ata_scsi_offline_dev(struct ata_device *dev)
- static void ata_scsi_remove_dev(struct ata_device *dev)
- {
- 	struct ata_port *ap = dev->link->ap;
--	struct scsi_device *sdev;
-+	struct scsi_device *sdevs[ATAPI_MAX_LUN] = {};
- 	unsigned long flags;
-+	int lun;
- 
--	/* Alas, we need to grab scan_mutex to ensure SCSI device
--	 * state doesn't change underneath us and thus
--	 * scsi_device_get() always succeeds.  The mutex locking can
--	 * be removed if there is __scsi_device_get() interface which
--	 * increments reference counts regardless of device state.
--	 */
- 	mutex_lock(&ap->scsi_host->scan_mutex);
- 	spin_lock_irqsave(ap->lock, flags);
- 
--	/* clearing dev->sdev is protected by host lock */
--	sdev = dev->sdev;
--	dev->sdev = NULL;
-+	for (lun = dev->nr_luns - 1; lun >= 0; lun--) {
-+		struct scsi_device *sdev = dev->sdev[lun];
-+
-+		dev->sdev[lun] = NULL;
-+		if (!sdev)
-+			continue;
- 
--	if (sdev) {
--		/* If user initiated unplug races with us, sdev can go
--		 * away underneath us after the host lock and
--		 * scan_mutex are released.  Hold onto it.
--		 */
- 		if (scsi_device_get(sdev) == 0) {
--			/* The following ensures the attached sdev is
--			 * offline on return from ata_scsi_offline_dev()
--			 * regardless it wins or loses the race
--			 * against this function.
--			 */
- 			scsi_device_set_state(sdev, SDEV_OFFLINE);
-+			sdevs[lun] = sdev;
- 		} else {
- 			WARN_ON(1);
--			sdev = NULL;
- 		}
- 	}
- 
- 	spin_unlock_irqrestore(ap->lock, flags);
- 	mutex_unlock(&ap->scsi_host->scan_mutex);
- 
--	if (sdev) {
-+	for (lun = dev->nr_luns - 1; lun >= 0; lun--) {
-+		if (!sdevs[lun])
-+			continue;
- 		ata_dev_info(dev, "detaching (SCSI %s)\n",
--			     dev_name(&sdev->sdev_gendev));
--
--		scsi_remove_device(sdev);
--		scsi_device_put(sdev);
-+			     dev_name(&sdevs[lun]->sdev_gendev));
-+		scsi_remove_device(sdevs[lun]);
-+		scsi_device_put(sdevs[lun]);
- 	}
- }
- 
-@@ -4872,9 +4872,12 @@ static void ata_scsi_handle_link_detach(struct ata_link *link)
-  */
- void ata_scsi_media_change_notify(struct ata_device *dev)
- {
--	if (dev->sdev)
--		sdev_evt_send_simple(dev->sdev, SDEV_EVT_MEDIA_CHANGE,
--				     GFP_ATOMIC);
-+	int lun;
-+
-+	for (lun = 0; lun < dev->nr_luns; lun++)
-+		if (dev->sdev[lun])
-+			sdev_evt_send_simple(dev->sdev[lun],
-+					     SDEV_EVT_MEDIA_CHANGE, GFP_ATOMIC);
- }
- 
- /**
-@@ -5007,37 +5010,39 @@ void ata_scsi_dev_rescan(struct work_struct *work)
- 
- 	ata_for_each_link(link, ap, EDGE) {
- 		ata_for_each_dev(dev, link, ENABLED) {
--			struct scsi_device *sdev = dev->sdev;
-+			int lun;
- 
--			/*
--			 * If the port was suspended before this was scheduled,
--			 * bail out.
--			 */
- 			if (ap->pflags & ATA_PFLAG_SUSPENDED)
- 				goto unlock_ap;
- 
--			if (!sdev)
--				continue;
--			if (scsi_device_get(sdev))
--				continue;
--
- 			do_resume = dev->flags & ATA_DFLAG_RESUMING;
- 
--			spin_unlock_irqrestore(ap->lock, flags);
--			if (do_resume) {
--				ret = scsi_resume_device(sdev);
--				if (ret == -EWOULDBLOCK) {
--					scsi_device_put(sdev);
--					goto unlock_scan;
-+			for (lun = 0; lun < dev->nr_luns; lun++) {
-+				struct scsi_device *sdev = dev->sdev[lun];
-+
-+				if (!sdev)
-+					continue;
-+				if (scsi_device_get(sdev))
-+					continue;
-+
-+				spin_unlock_irqrestore(ap->lock, flags);
-+				if (do_resume) {
-+					ret = scsi_resume_device(sdev);
-+					if (ret == -EWOULDBLOCK) {
-+						scsi_device_put(sdev);
-+						goto unlock_scan;
-+					}
- 				}
--				dev->flags &= ~ATA_DFLAG_RESUMING;
-+				ret = scsi_rescan_device(sdev);
-+				scsi_device_put(sdev);
-+				spin_lock_irqsave(ap->lock, flags);
-+
-+				if (ret)
-+					goto unlock_ap;
- 			}
--			ret = scsi_rescan_device(sdev);
--			scsi_device_put(sdev);
--			spin_lock_irqsave(ap->lock, flags);
- 
--			if (ret)
--				goto unlock_ap;
-+			if (do_resume)
-+				dev->flags &= ~ATA_DFLAG_RESUMING;
- 		}
- 	}
- 
-diff --git a/drivers/ata/libata-zpodd.c b/drivers/ata/libata-zpodd.c
-index 414e7c63bd85..dca774d8ec05 100644
---- a/drivers/ata/libata-zpodd.c
-+++ b/drivers/ata/libata-zpodd.c
-@@ -185,7 +185,7 @@ void zpodd_enable_run_wake(struct ata_device *dev)
- {
- 	struct zpodd *zpodd = dev->zpodd;
- 
--	sdev_disable_disk_events(dev->sdev);
-+	sdev_disable_disk_events(ata_dev_scsi_device(dev, 0));
- 
- 	zpodd->powered_off = true;
- 	acpi_pm_set_device_wakeup(&dev->tdev, true);
-@@ -233,14 +233,14 @@ void zpodd_post_poweron(struct ata_device *dev)
- 	zpodd->zp_sampled = false;
- 	zpodd->zp_ready = false;
- 
--	sdev_enable_disk_events(dev->sdev);
-+	sdev_enable_disk_events(ata_dev_scsi_device(dev, 0));
- }
- 
- static void zpodd_wake_dev(acpi_handle handle, u32 event, void *context)
- {
- 	struct ata_device *ata_dev = context;
- 	struct zpodd *zpodd = ata_dev->zpodd;
--	struct device *dev = &ata_dev->sdev->sdev_gendev;
-+	struct device *dev = &ata_dev_scsi_device(ata_dev, 0)->sdev_gendev;
- 
- 	if (event == ACPI_NOTIFY_DEVICE_WAKE && pm_runtime_suspended(dev)) {
- 		zpodd->from_notify = true;
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 3e33ee30628d..5db8a2e3f051 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -722,7 +722,8 @@ struct ata_device {
- 	unsigned int		devno;		/* 0 or 1 */
- 	u64			quirks;		/* List of broken features */
- 	unsigned long		flags;		/* ATA_DFLAG_xxx */
--	struct scsi_device	*sdev;		/* attached SCSI device */
-+	struct scsi_device	*sdev[ATAPI_MAX_LUN];	/* per-LUN SCSI devices */
-+	unsigned int		nr_luns;	/* valid entries in sdev[] */
- 	void			*private_data;
- #ifdef CONFIG_ATA_ACPI
- 	union acpi_object	*gtf_cache;
-@@ -1715,6 +1716,14 @@ static inline unsigned int ata_dev_absent(const struct ata_device *dev)
- 	return ata_class_absent(dev->class);
- }
- 
-+static inline struct scsi_device *
-+ata_dev_scsi_device(struct ata_device *dev, unsigned int lun)
-+{
-+	if (WARN_ON_ONCE(lun >= dev->nr_luns))
-+		return NULL;
-+	return dev->sdev[lun];
-+}
-+
- /*
-  * link helpers
-  */
 -- 
-2.43.0
-
+Martin K. Petersen
