@@ -1,149 +1,81 @@
-Received: from mailtransmit04.runbox.com (mailtransmit04.runbox.com [185.226.149.37])
+Received: from mail-43100.protonmail.ch (mail-43100.protonmail.ch [185.70.43.100])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF306326942;
-	Mon,  8 Jun 2026 23:04:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.226.149.37
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E0E20282F2E;
+	Tue,  9 Jun 2026 00:59:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.70.43.100
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780959879; cv=none; b=MFr0n3v+8/HLpKSj8M1jV72qWRp85pGBymPTfBwDL+v2xABz8N+dUeXlAc85TlYoMOimy8KXuzCzP2DKrWCHxw3N3gBRQuqPO0zroY8IOUZubIRfVsnyyBuFv0N+iwqkWEE5JyLZ3TNJOAx7+pgXb49YA4FwYTnRZTeBVQcL0eI=
+	t=1780966752; cv=none; b=LQ1Teg8puGTM7KJUOxXZt3lfTrmWji882/1dJpFYai8VML6qXmcY1rt5d97z8fdShHJO6JGINAd7EOu6mfZkmHSQnsOWT4zsMZOGffldj0XL9odSqpbTV/olJpd+zeK71Ije9W6GL/Ll6tpUPNac0z4NgfsoW6Zyid/3e+AYFTs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780959879; c=relaxed/simple;
-	bh=A7NQMwa8A5mndopGSKOon03gdnAzOvi/KsGAaeecZ/A=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=VATp1b5O8ENjXrU3QpVlIL5P+3yhqRPNdclJDgi3J4kxnUnqZs85xu8roJs6sa2UZDQ7HGWSwuqr43/umCUUhYBTTlXxqdU+LlZuEGaol/3o24f8ZDDpaiEY+Sjmuh8pooDmgSF4LnKSIC90rrJKQCannfN73obL8hEO8Zus2Cg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=runbox.com; dkim=pass (2048-bit key) header.d=runbox.com header.i=@runbox.com header.b=Q7fSPhfI; arc=none smtp.client-ip=185.226.149.37
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=runbox.com
+	s=arc-20240116; t=1780966752; c=relaxed/simple;
+	bh=emQColVb5JpepEtvSSs2I/M5bZIgI2CRo6RNk23HyJU=;
+	h=Date:To:From:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=BDugGpRcxw84+Bt6AcAgPpXN2gnlgIEW0Hb/5IqLdMq0kjoISeUWKQ1LXezKw4wFD9V7Mt6VI48lkf0wmoV7D3LuOqcJIuV4R5tMYA8M7svOB+zkd2PIp5QjRP5s7BqH3ysgDK8PILIuENmobFDTwRF+Nhdu8hZmpf07hZzfFvU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=proton.me; spf=pass smtp.mailfrom=proton.me; dkim=pass (2048-bit key) header.d=proton.me header.i=@proton.me header.b=elJquuNt; arc=none smtp.client-ip=185.70.43.100
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=proton.me
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=proton.me
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=runbox.com header.i=@runbox.com header.b="Q7fSPhfI"
-Received: from mailtransmit03.runbox ([10.9.9.163] helo=aibo.runbox.com)
-	by mailtransmit04.runbox.com with esmtps  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-	(Exim 4.93)
-	(envelope-from <david.laight.linux_spam@runbox.com>)
-	id 1wWj1C-00D0NR-Mj; Tue, 09 Jun 2026 01:04:30 +0200
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=runbox.com;
-	 s=selector1; h=Content-Transfer-Encoding:MIME-Version:Message-Id:Date:
-	Subject:Cc:To:From; bh=7gP6YkVyya3OXS3MmDOjeyd3Nhn3Cm5Wz08yFaXZ8o0=; b=Q7fSPh
-	fIAO5CRENhF0lbF2JKzFAPdK9KuzYsiOzhT927Ey4JS4vsj+Fx6evumyv/GLg8+/5Qd1f91kQU8QE
-	NXC8NI41AH3IbnDZvceWlfEROpkgsl+KgozNIKsr6vRFoS1wvyHLitdcc3AHhbCiK2pvAqjOFkjKE
-	hNFM7qGcdwTlre2vkYuA/3pJ1MRmFCdiSkkH+NvWTDA1H3/rbElBf5QC6nR6ecP2lHs8+RjkL2fef
-	GxR+m9lxoiBeK4dUww3Vkg5GtdWXOR29klkKHSGjYL9hhZXhhGwjcIFV4U/4RWNpWdDnFyhOYjd0+
-	OSU3sW8MbarQLwVsFwhPXRnCV9Xg==;
-Received: from [10.9.9.74] (helo=submission03.runbox)
-	by mailtransmit03.runbox with esmtp (Exim 4.86_2)
-	(envelope-from <david.laight.linux_spam@runbox.com>)
-	id 1wWj1B-0002Tv-LA; Tue, 09 Jun 2026 01:04:30 +0200
-Received: by submission03.runbox with esmtpsa  [Authenticated ID (1493616)]  (TLS1.2:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-	(Exim 4.95)
-	id 1wWj0s-00C6zU-U4;
-	Tue, 09 Jun 2026 01:04:11 +0200
-From: David Laight <david.laight.linux@gmail.com>
-To: Kees Cook <kees@kernel.org>,
-	linux-hardening@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-scsi@vger.kernel.org,
-	MPT-FusionLinux.pdl@broadcom.com
-Cc: Arnd Bergmann <arnd@kernel.org>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Ranjan Kumar <ranjan.kumar@broadcom.com>,
-	Sathya Prakash <sathya.prakash@broadcom.com>,
-	Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-	Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>,
-	David Laight <david.laight.linux@gmail.com>
-Subject: [PATCH next v2] drivers/scsi/mpt3sas: Replace strcpy() + strcat() with snprintf()
-Date: Tue,  9 Jun 2026 00:03:57 +0100
-Message-Id: <20260608230357.25889-1-david.laight.linux@gmail.com>
-X-Mailer: git-send-email 2.39.5
+	dkim=pass (2048-bit key) header.d=proton.me header.i=@proton.me header.b="elJquuNt"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=proton.me;
+	s=protonmail; t=1780966740; x=1781225940;
+	bh=3P35bW1gmmV3dnEbB9b86VqbPSQKXQsWFLxm1PJz68s=;
+	h=Date:To:From:Cc:Subject:Message-ID:In-Reply-To:References:
+	 Feedback-ID:From:To:Cc:Date:Subject:Reply-To:Feedback-ID:
+	 Message-ID:BIMI-Selector;
+	b=elJquuNtDwupmaPJfPS/+7pZl9uF+f7LpRBb3Bab6ybJtTcEM6fgXMpyr4l7V+uma
+	 5U9lM4Iff/V+GJGA86fluRrSEdypRaMFAUsPdIdvY43CyI38PbAxMweOJHIrbNIFh1
+	 gz9duLIa2fXc3G5SeTU0GaAKtgNMCK/3D/w9uYKltuv2r0jg/2ahwZzWZn5DlRiVMl
+	 JTQkLRKN4KOThf4lHa2V9ilBw/ELxCKDwsvh3naCa8F1VwtXw2nYzYbsaPGAtNPnNc
+	 f8MeW4y0CwGSC5RWgq+7PqjhO4WSEjH8prihroHuogQGd2jh2wySxhGqe7IePR196d
+	 dpnRfck2Gj7Qg==
+Date: Tue, 09 Jun 2026 00:58:57 +0000
+To: "Martin K . Petersen" <martin.petersen@oracle.com>
+From: Bryam Vargas <hexlabsecurity@proton.me>
+Cc: Mike Christie <michael.christie@oracle.com>, Maurizio Lombardi <mlombard@redhat.com>, John Garry <john.g.garry@oracle.com>, David Disseldorp <ddiss@suse.de>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] scsi: target: copy iSCSI ISID before unmapping the PR OUT buffer
+Message-ID: <20260609005851.17484-1-hexlabsecurity@proton.me>
+In-Reply-To: <43ed2b6f-5b84-4a3d-b185-4275c9bb69f0@oracle.com>
+References: <20260606015359.181724-1-hexlabsecurity@proton.me> <43ed2b6f-5b84-4a3d-b185-4275c9bb69f0@oracle.com>
+Feedback-ID: 199661219:user:proton
+X-Pm-Message-ID: 96bf9b84640b6bfe34f2997174b9be027c812ed3
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-Avoids unbounded string functions returning the version string.
-Allow 16 characters for the driver name (actually 7 chars) to stop
-gcc complaining about possible truncation.
+On 06/06/2026, John Garry wrote:
+> It's not so nice to re-assign the pointer like this or have it even
+> pointing at a local array.
+>
+> Is it really messy for iscsi_parse_pr_out_transport_id() to do something
+> like kstrdup and then the caller has the job of later free'ing it?
 
-Signed-off-by: David Laight <david.laight.linux@gmail.com>
----
+You are right -- v2 moves the copy into iscsi_parse_pr_out_transport_id()
+so the parser returns an owned allocation via *port_nexus_ptr and callers
+kfree() it.
 
-v2: The build test bot reported that the snprintf() can truncate.
-(I thought that was the entire point of snprintf.)
-In this case ioc->driver_name is either "mpt2sas" or "mpt3sas" and
-the version string is like "20.102.00.00".
-Keep it all happy by using "%.16s.%s" instead of "%s-%s"
+We use kzalloc(PR_REG_ISID_LEN) + strscpy_pad() rather than plain kstrdup()
+because __core_scsi3_do_alloc_registration() reads the ISID with a fixed
+8-byte get_unaligned_be64(isid).  A malformed TransportID with an ISID
+shorter than 8 characters would give a kstrdup allocation smaller than 8
+bytes, turning that read into a heap out-of-bounds.  kzalloc zero-fills the
+full PR_REG_ISID_LEN (16) bytes so the be64 read is always in-bounds and
+returns a deterministic value; strscpy_pad() copies the lowercased ISID and
+NUL-fills the tail.
 
-Note that there are a lot of sprintf() related to these strings.
+core_scsi3_decode_spec_i_port() also receives the allocated pointer and
+needs to kfree() it.  The inner list_for_each_entry iterates over multiple
+TPGs per TransportID, calling the parser at each; we kfree(iport_ptr) befor=
+e
+the reset at the top of each inner-loop iteration so a failed ACL match tha=
+t
+triggers a continue does not leak the previous parse's allocation.
+kfree(iport_ptr) is also added at out_unmap: (error exit) and before
+return 0 (success exit).
 
-This is one of a group of patches that remove potentially unbounded
-strcpy() calls.
-
-They are mostly replaced by strscpy() or, when strlen() has just been
-called, with memcpy() (usually including the '\0').
-
-Calls with copy string literals into arrays are left unchanged.
-They are safe and easily detected as such.
-
-The changes were made by getting the compiler to detect the calls and
-then fixing the code by hand.
-
-Note that all the changes are only compile tested.
-
-Some Makefiles were changed to allow files to contain strcpy().
-As well as 'difficult to fix' files, this included 'show' functions
-as they really need to use sysfs_emit() or seq_printf().
-
-All the patches are being sent individually to avoid very long cc lists.
-Apologies for the terse commit messages and likely unexpected tags.
-(There are about 100 patches in total.)
-
- drivers/scsi/mpt3sas/mpt3sas_ctl.c | 9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-index 8bb947004885..3488446d38a3 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-@@ -1225,6 +1225,7 @@ static long
- _ctl_getiocinfo(struct MPT3SAS_ADAPTER *ioc, void __user *arg)
- {
- 	struct mpt3_ioctl_iocinfo karg;
-+	const char *ver = "";
- 
- 	dctlprintk(ioc, ioc_info(ioc, "%s: enter\n",
- 				 __func__));
-@@ -1241,15 +1242,13 @@ _ctl_getiocinfo(struct MPT3SAS_ADAPTER *ioc, void __user *arg)
- 	karg.pci_information.u.bits.function = PCI_FUNC(ioc->pdev->devfn);
- 	karg.pci_information.segment_id = pci_domain_nr(ioc->pdev->bus);
- 	karg.firmware_version = ioc->facts.FWVersion.Word;
--	strcpy(karg.driver_version, ioc->driver_name);
--	strcat(karg.driver_version, "-");
- 	switch  (ioc->hba_mpi_version_belonged) {
- 	case MPI2_VERSION:
- 		if (ioc->is_warpdrive)
- 			karg.adapter_type = MPT2_IOCTL_INTERFACE_SAS2_SSS6200;
- 		else
- 			karg.adapter_type = MPT2_IOCTL_INTERFACE_SAS2;
--		strcat(karg.driver_version, MPT2SAS_DRIVER_VERSION);
-+		ver = MPT2SAS_DRIVER_VERSION;
- 		break;
- 	case MPI25_VERSION:
- 	case MPI26_VERSION:
-@@ -1257,9 +1256,11 @@ _ctl_getiocinfo(struct MPT3SAS_ADAPTER *ioc, void __user *arg)
- 			karg.adapter_type = MPT3_IOCTL_INTERFACE_SAS35;
- 		else
- 			karg.adapter_type = MPT3_IOCTL_INTERFACE_SAS3;
--		strcat(karg.driver_version, MPT3SAS_DRIVER_VERSION);
-+		ver = MPT3SAS_DRIVER_VERSION;
- 		break;
- 	}
-+	snprintf(karg.driver_version, sizeof (karg.driver_version), "%.16s-%s",
-+		 ioc->driver_name, ver);
- 	karg.bios_version = le32_to_cpu(ioc->bios_pg3.BiosVersion);
- 
- 	karg.driver_capability |= MPT3_IOCTL_IOCINFO_DRIVER_CAP_MCTP_PASSTHRU;
--- 
-2.39.5
+[PATCH v2] follows.
 
