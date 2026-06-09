@@ -1,77 +1,77 @@
-Received: from mail-pj1-f97.google.com (mail-pj1-f97.google.com [209.85.216.97])
+Received: from mail-vk1-f227.google.com (mail-vk1-f227.google.com [209.85.221.227])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B428D401A37
-	for <linux-scsi@vger.kernel.org>; Tue,  9 Jun 2026 11:49:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.97
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6FBB740245F
+	for <linux-scsi@vger.kernel.org>; Tue,  9 Jun 2026 11:50:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.227
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781005789; cv=none; b=goM6W09OzmzKFEW3D/UIhZgpBBLeBBWrxH931dSVsGPbiaPeWqo8vLPEZIq/2X42g6JV2OWQBP4VjV1TgN4F35mAHEf28yUJQey1LSgtvyG5A6Q627AU+QvdS5iovOPYqHxwYGoIhfcr2yxHu900/pTeuY2RWjIYY1CrYYW48U4=
+	t=1781005811; cv=none; b=EcnCpJXctwNhsxoQEMDo0o3P2PXmYCMggO9pNxs2GoCUeHbem9jEJOcnx7jSAPNAT/Z/r5eFsbGK66vk0QyKEDLOlf0dLl8mWjWpRhPtXUKqejqwl2a+9yPPneNO+tR1uG12n1KUstGMjq9nCZzdZiSrOx0A785qu3CmcsvA3VE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781005789; c=relaxed/simple;
-	bh=hUkr9noVP9YselBii7w+/niEN7FeS6FPBj/VGw4/Qn4=;
+	s=arc-20240116; t=1781005811; c=relaxed/simple;
+	bh=3Kv41lKgpOl5wee6Wmx4e4vTLz9/OZ6j/+o4p0XS7OM=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=jSOkYjRFiDAd8ABNo7zBjzI3EuZnzrFFfsxKiF+PJ5Y3/jFVxByhmtLPtwebdPVHSLlcwmop3wx1ketIN/b9TVSgbnVEWHTPg9myoxSGiFSuINAOgRof/tAauMiLCN6XlSgRVfFLQN8ITzJUfqxOr+B3PJ6eCojJ6B8ToeF+2JQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=By5D5USY; arc=none smtp.client-ip=209.85.216.97
+	 MIME-Version; b=cF6fef4/bJ7U2YVLalSZQFSTEwFeuQ43ijetndOD/3tx1h3eaUuljwDhHbSLOT6zEQv1ik8xhkmXFM2ucfXqmhO1o2Z6LZ9ZEdlZkhH//yy0B2kSHjaXQZNcLIQXZ9DrA121JGiiI+0Hm40A/63VzWdOCbIATMujwNu3cCkMQGk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=Cm51PGc2; arc=none smtp.client-ip=209.85.221.227
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="By5D5USY"
-Received: by mail-pj1-f97.google.com with SMTP id 98e67ed59e1d1-36da151a152so3750800a91.1
-        for <linux-scsi@vger.kernel.org>; Tue, 09 Jun 2026 04:49:47 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="Cm51PGc2"
+Received: by mail-vk1-f227.google.com with SMTP id 71dfb90a1353d-59ebf30a91dso1806505e0c.1
+        for <linux-scsi@vger.kernel.org>; Tue, 09 Jun 2026 04:50:09 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1781005787; x=1781610587;
+        d=1e100.net; s=20251104; t=1781005808; x=1781610608;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:dkim-signature:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=d7jf3E3dEVwQVNqBXvyK4i7zv9F+advmarrjrg+nD7g=;
-        b=W1TErOdhqJG8e8d+ibQ5r62c0hfJKpYyd7xhKriJlSYXUYccFBdtZzrWdZMohZ3LPd
-         NN0a12jISoK5jEkdm8REhnhC+Uv+/EfMntBzO8N/cNHaic32UycWOSRR7DV4FvwQHG2C
-         mqZTZMvQaAqcgw1zJNaWc0UVzOdvSm5qkE7ZuHg01JRVwfE5uwxwHdUmFg+4lcj0jMSv
-         TM9EsJOW4FM3OmVqwweZ8sCe9jft0c06SWvYXBXMvKL7ClkSG06A4a4/3BLIwk1X92ly
-         75BcZQuqG25UvF+6zCUbunoCKHSXKoQZCl7y0bcuz9QVKTl6UnwPR5yjTJygKNkN28ni
-         ENJg==
-X-Forwarded-Encrypted: i=1; AFNElJ/0vsChac6UAj8eEJARkHRN8qCrsanRq/i0NQXEhsBgXUik1EFiZHhwotdmwPTlKqIOzF5TLQeYuKMd@vger.kernel.org
-X-Gm-Message-State: AOJu0YyfxsQtv+VC+orJ+8CwXUY7fXF9f/beOAN7YLnjjvTqs0Nqmybc
-	nIgTekYKeU+5/wzJiDEjKVpdFggCYYEIs+oUplQqTWFI3Kw4O9ytcZioeTp0HQsF5isccKrjmg9
-	/qcVI2lgeAYzMi4QjnGE7lOOQGu+crOFNm1uRMkLl6VSxmcUtfegXxxxpElUC+OUDHfmdqcn/UI
-	xNnec0n7kLNmK7mI/hrh9GAADxJOl53XhD2B6tsPXjGTMJUWS684WO81qzvQzfvJjrdYw9QT4mF
-	ZgWb4pMNFVyg0aY
-X-Gm-Gg: Acq92OGD+QiDuF8Z8lLErTKcdIhF1eginG45Pa//4bxQmvZF29c+NiAVMQ4zX8rMRpc
-	v6qJyd5SUtP4JtuiJkzinJsmwGEgkaQYVNLEg3wcPuUT79bCVVr+0z7mvK5MdPzeHbhdS0fPvhc
-	IqooStppPA6gOprh+Vz5lKQrwJp4ahshyIrGSBPXlaRFXTlu3fLr8GXA65IshMruc5Ziiogc0rh
-	3x9IsAtFl3Wv4rEW08VYz4Hbsy+ZHbz4QkwXdvr5BjTefPurt3cekGIlFcdvpGKr/n0wETIybXp
-	EmqAEMAntX94Z2nlf5/hpQASe1ohRRq6nNT7wHHlFm9flPzc4kDS9TYdA+muILWttYPd64BNsdP
-	ZbvCxguKzCoiMPswtRTl3vfi1xN4vZWfcMElPGabIbMqeGHrU1AJN11HJHqUbvddHt9ImaUzIVA
-	Z+XLGN9UiWPJ1aJXw=
-X-Received: by 2002:a17:90b:180a:b0:36a:7da3:266b with SMTP id 98e67ed59e1d1-370f0c54d08mr21561845a91.21.1781005786920;
-        Tue, 09 Jun 2026 04:49:46 -0700 (PDT)
-Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com ([144.49.247.127])
-        by smtp-relay.gmail.com with ESMTPS id 98e67ed59e1d1-370f8f49081sm456275a91.0.2026.06.09.04.49.46
+        bh=fLAZlEa/gpJjIgpIJ2e9Ooy6MTW++uhKEEc/j768mlo=;
+        b=BJyInPVtsso45gJkIa8487bm8oILJtNO0NoF5FBsd4gpABrvhnPNQsUQupdKnX1p4r
+         LMfXjJwihZ5IECdA4x+YnubW+OZLva1F4UEG37c/dsbGHCAm3dz/X3X/vI3vM2ENefdQ
+         GrwjccefBKmEzkDrtEcRj/FMlo8f72HIaakbZAsux7tU6Hy46SE6QtrnBLu6pdpNxvtd
+         n/Ib/4/wGTwbbQ86T7H5rQCYaJNVHMLEXQ5lp/cNXcgN9fiJshfzDjXvJIkXAjL7EBt+
+         tNBZ2yTbOyc/PlwozuOKacSiDaDjrVQqIaRR9EX3WFHQPJG5GjqaBL9yPVOPgIUU8fqr
+         m72Q==
+X-Forwarded-Encrypted: i=1; AFNElJ+m4tfANECKnGVKgNIWuBDIl93XeGjwrTPUNsvulQ1XEyOM92kwGj0gLHWHrwsY3g6XQn8xGGR9b5Zx@vger.kernel.org
+X-Gm-Message-State: AOJu0Yy9OsiC77CNQcKT1vmCQA6sC7bzoDeMkAhA+UFykG9ei6264AO0
+	2f+KDiO7GxvNt4vPC4xLiW/hUoPq/swkf4LPcxIwdJN5oFodT7UdqxCAeKk+ys3CSGMtvzIPuO0
+	LjTaBWfB5fU8X0APV3IXjpdfEbmRn0Oan0RI8uv9oG6+oQ2W54PaRDKXRx4hkeopavBctXeL4J+
+	JYo4B6wn33cFhvJPChv02ZTDYjSQLCnOwpYO5U/P8nTciv/Ap1OhxJz9UnkVllylQkmaWy8WXu4
+	LRs+/lyPs/K/tDy
+X-Gm-Gg: Acq92OGRu15Ihr6eRaissbaSBzqXD2xXOfMlvvCiR9jtLMTS4ChWnl0tZJ46CPpcj/g
+	jTbhZdR5eHYipcrPflmyqgTxf9LLFHFQPWvUcoJXsArJHPrghNrEXZX7RQh00xgsDJQY/2liTJU
+	J+ItIOk14v4s5A7+L4msC+6wqS6D/p0kPe1KdsQgY6aOEMwf8ayyI2Dt6IBRdirJ9qBXPEgfYtq
+	J4ojEuZ7D27qegMZOZpL5QusJyCOC82Nvdq0L9fdiUAjOYwIWK5k/G6xeJCQj8H5Vp5S+UE2gK3
+	OkfD0fAPZwRYXNzC74ljiR7F4BO+VAFf39G7d02gpvTqOIXXm3MOVc8+CeOHfYvCJegA4sNmDVE
+	bkelzS7A/eqYEKCrgXkosOFV5NCPY8KBuySYVuFT42IJG/aMN0CUkyH+OlqaujakRoyJTt+194V
+	kHZfUIdjUnlNx7tQCqEy4UmRdFs9/tv7+VzNtRobrzIPBD9oqSLGj3lMzad86DUIs0KJeglw==
+X-Received: by 2002:a05:6122:8b16:b0:575:29ef:7df8 with SMTP id 71dfb90a1353d-5ac4dcf256dmr9630058e0c.2.1781005808094;
+        Tue, 09 Jun 2026 04:50:08 -0700 (PDT)
+Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-117.dlp.protect.broadcom.com. [144.49.247.117])
+        by smtp-relay.gmail.com with ESMTPS id 71dfb90a1353d-5a6db1d4376sm1419355e0c.3.2026.06.09.04.50.06
         for <linux-scsi@vger.kernel.org>
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 09 Jun 2026 04:49:46 -0700 (PDT)
+        Tue, 09 Jun 2026 04:50:08 -0700 (PDT)
 X-Relaying-Domain: broadcom.com
 X-CFilter-Loop: Reflected
-Received: by mail-pj1-f72.google.com with SMTP id 98e67ed59e1d1-36d97a4e08fso5087627a91.0
-        for <linux-scsi@vger.kernel.org>; Tue, 09 Jun 2026 04:49:45 -0700 (PDT)
+Received: by mail-pj1-f69.google.com with SMTP id 98e67ed59e1d1-36b808bedfaso6244007a91.1
+        for <linux-scsi@vger.kernel.org>; Tue, 09 Jun 2026 04:50:06 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1781005784; x=1781610584; darn=vger.kernel.org;
+        d=broadcom.com; s=google; t=1781005806; x=1781610606; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=d7jf3E3dEVwQVNqBXvyK4i7zv9F+advmarrjrg+nD7g=;
-        b=By5D5USYn+jjfrzZK6zqoZZqsJGO9C+nynugvzWz2oIa7phPQN9XT7yn0gcczeR7aF
-         6LP5CVi84arIkejUEVRcrFlKvqNVDMpdXIThMpYw3e+AUZDLzV6nHw4Epe7IaG7QFFdQ
-         UgPuk0iunSxlw+f8rcaYtN2Pc+8idAU8EC52M=
-X-Forwarded-Encrypted: i=1; AFNElJ/d7Wk7wqbIwHzBXE8kFOsoccdW8bgYfQmvdLir1HtmneOmkIzsos8nii3Scv7no6VE4Nw9N/0jPzwA@vger.kernel.org
-X-Received: by 2002:a17:90b:3503:b0:369:7f25:cec0 with SMTP id 98e67ed59e1d1-370ebff34bcmr20900048a91.0.1781005783420;
-        Tue, 09 Jun 2026 04:49:43 -0700 (PDT)
-X-Received: by 2002:a17:90b:3503:b0:369:7f25:cec0 with SMTP id 98e67ed59e1d1-370ebff34bcmr20900004a91.0.1781005782876;
-        Tue, 09 Jun 2026 04:49:42 -0700 (PDT)
+        bh=fLAZlEa/gpJjIgpIJ2e9Ooy6MTW++uhKEEc/j768mlo=;
+        b=Cm51PGc2QdV8g1RHRzxw8t/lDGzGZYGexsMd7UFYDiUfAukSeTvOvSYr2syyiSs51w
+         BYOA7NvlwQYGDJPgr1RGpRd5zHqNNA82aDlR6HOKlvfdIIke3BboxXGU+ODnps5xgIg7
+         zR8uBfo2lrgdPJKeQEslVawVI8gyMzZFO/Kwc=
+X-Forwarded-Encrypted: i=1; AFNElJ89aCudVV6Uw/QQ/pTtjV9CuIe7mqIDOkmhFevtU6tc8wZqC4MT1N4Y/Yl8i7SPzfrsZmEHEJ4ILxeu@vger.kernel.org
+X-Received: by 2002:a17:90b:57c4:b0:36b:75:6387 with SMTP id 98e67ed59e1d1-370eea202f0mr20609542a91.8.1781005805589;
+        Tue, 09 Jun 2026 04:50:05 -0700 (PDT)
+X-Received: by 2002:a17:90b:57c4:b0:36b:75:6387 with SMTP id 98e67ed59e1d1-370eea202f0mr20609495a91.8.1781005805070;
+        Tue, 09 Jun 2026 04:50:05 -0700 (PDT)
 Received: from sumit_ws.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-36f6bf903fasm18898075a91.2.2026.06.09.04.49.21
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-36f6bf903fasm18898075a91.2.2026.06.09.04.49.43
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 09 Jun 2026 04:49:41 -0700 (PDT)
+        Tue, 09 Jun 2026 04:50:03 -0700 (PDT)
 From: Sumit Saxena <sumit.saxena@broadcom.com>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>,
 	Jens Axboe <axboe@kernel.dk>
@@ -153,11 +153,11 @@ Cc: "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
 	Stefano Stabellini <sstabellini@kernel.org>,
 	Oleksandr Tyshchenko <oleksandr_tyshchenko@epam.com>,
 	xen-devel@lists.xenproject.org,
-	Bart Van Assche <bvanassche@acm.org>,
-	Sumit Saxena <sumit.saxena@broadcom.com>
-Subject: [PATCH v3 3/4] block: drop shared-tag fairness throttling
-Date: Tue,  9 Jun 2026 17:48:02 +0530
-Message-ID: <20260609121806.2121755-4-sumit.saxena@broadcom.com>
+	Sumit Saxena <sumit.saxena@broadcom.com>,
+	John Garry <john.g.garry@oracle.com>
+Subject: [PATCH v3 4/4] scsi: use percpu counters for iostat counters in struct scsi_device
+Date: Tue,  9 Jun 2026 17:48:03 +0530
+Message-ID: <20260609121806.2121755-5-sumit.saxena@broadcom.com>
 X-Mailer: git-send-email 2.43.7
 In-Reply-To: <20260609121806.2121755-1-sumit.saxena@broadcom.com>
 References: <20260609121806.2121755-1-sumit.saxena@broadcom.com>
@@ -170,325 +170,201 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
 
-From: Bart Van Assche <bvanassche@acm.org>
+iorequest_cnt and iodone_cnt are updated on every command dispatch and
+completion, often from different CPUs on high queue depth workloads.
+Using adjacent atomic_t fields causes cache line contention between the
+submission and completion paths.
 
-Original patch [1] by Bart Van Assche; this version is rebased onto the
-current tree.  In testing it improves IOPS by roughly 16-18% by removing
-the fair-sharing throttle on shared tag queues.
+Extend the same treatment to ioerr_cnt and iotmo_cnt so all four iostat
+counters in struct scsi_device use struct percpu_counter.
 
-This patch removes the following code and structure members:
-- The function hctx_may_queue().
-- blk_mq_hw_ctx.nr_active and request_queue.nr_active_requests_shared_tags
-  and also all the code that modifies these two member variables.
-
-[1]: https://lore.kernel.org/linux-block/20240529213921.3166462-1-bvanassche@acm.org/
-
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+Suggested-by: John Garry <john.g.garry@oracle.com>
 Signed-off-by: Sumit Saxena <sumit.saxena@broadcom.com>
 ---
- block/blk-core.c       |   2 -
- block/blk-mq-debugfs.c |  22 ++++++++-
- block/blk-mq-tag.c     |   4 --
- block/blk-mq.c         |  17 +------
- block/blk-mq.h         | 100 -----------------------------------------
- include/linux/blk-mq.h |   6 ---
- include/linux/blkdev.h |   2 -
- 7 files changed, 22 insertions(+), 131 deletions(-)
+ drivers/scsi/scsi_error.c  |  4 ++--
+ drivers/scsi/scsi_lib.c    | 10 +++++-----
+ drivers/scsi/scsi_scan.c   |  8 ++++++++
+ drivers/scsi/scsi_sysfs.c  | 23 ++++++++++++++---------
+ drivers/scsi/sd.c          |  2 +-
+ include/scsi/scsi_device.h |  9 +++++----
+ 6 files changed, 35 insertions(+), 21 deletions(-)
 
-diff --git a/block/blk-core.c b/block/blk-core.c
-index 17450058ea6d..129acc1b27e5 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -421,8 +421,6 @@ struct request_queue *blk_alloc_queue(struct queue_limits *lim, int node_id)
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index 147127fb4db9..b1aa7da2ba7c 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -349,7 +349,7 @@ enum blk_eh_timer_return scsi_timeout(struct request *req)
+ 	trace_scsi_dispatch_cmd_timeout(scmd);
+ 	scsi_log_completion(scmd, TIMEOUT_ERROR);
  
- 	q->node = node_id;
+-	atomic_inc(&scmd->device->iotmo_cnt);
++	percpu_counter_inc(&scmd->device->iotmo_cnt);
+ 	if (host->eh_deadline != -1 && !host->last_reset)
+ 		host->last_reset = jiffies;
  
--	atomic_set(&q->nr_active_requests_shared_tags, 0);
--
- 	timer_setup(&q->timeout, blk_rq_timed_out_timer, 0);
- 	INIT_WORK(&q->timeout_work, blk_timeout_work);
- 	INIT_LIST_HEAD(&q->icq_list);
-diff --git a/block/blk-mq-debugfs.c b/block/blk-mq-debugfs.c
-index 047ec887456b..8b85a7f8e987 100644
---- a/block/blk-mq-debugfs.c
-+++ b/block/blk-mq-debugfs.c
-@@ -468,11 +468,31 @@ static int hctx_sched_tags_bitmap_show(void *data, struct seq_file *m)
- 	return 0;
- }
+@@ -370,7 +370,7 @@ enum blk_eh_timer_return scsi_timeout(struct request *req)
+ 	 */
+ 	if (test_and_set_bit(SCMD_STATE_COMPLETE, &scmd->state))
+ 		return BLK_EH_DONE;
+-	atomic_inc(&scmd->device->iodone_cnt);
++	percpu_counter_inc(&scmd->device->iodone_cnt);
+ 	if (scsi_abort_command(scmd) != SUCCESS) {
+ 		set_host_byte(scmd, DID_TIME_OUT);
+ 		scsi_eh_scmd_add(scmd);
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 6e8c7a42603e..979fdace33ac 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1554,9 +1554,9 @@ static void scsi_complete(struct request *rq)
  
-+struct count_active_params {
-+	struct blk_mq_hw_ctx	*hctx;
-+	int			*active;
-+};
-+
-+static bool hctx_count_active(struct request *rq, void *data)
-+{
-+	const struct count_active_params *params = data;
-+
-+	if (rq->mq_hctx == params->hctx)
-+		(*params->active)++;
-+
-+	return true;
-+}
-+
- static int hctx_active_show(void *data, struct seq_file *m)
- {
- 	struct blk_mq_hw_ctx *hctx = data;
-+	int active = 0;
-+	struct count_active_params params = { .hctx = hctx, .active = &active };
-+
-+	blk_mq_all_tag_iter(hctx->sched_tags ?: hctx->tags, hctx_count_active,
-+			    &params);
+ 	INIT_LIST_HEAD(&cmd->eh_entry);
  
--	seq_printf(m, "%d\n", __blk_mq_active_requests(hctx));
-+	seq_printf(m, "%d\n", active);
- 	return 0;
- }
+-	atomic_inc(&cmd->device->iodone_cnt);
++	percpu_counter_inc(&cmd->device->iodone_cnt);
+ 	if (cmd->result)
+-		atomic_inc(&cmd->device->ioerr_cnt);
++		percpu_counter_inc(&cmd->device->ioerr_cnt);
  
-diff --git a/block/blk-mq-tag.c b/block/blk-mq-tag.c
-index 33946cdb5716..bfd27cc6249b 100644
---- a/block/blk-mq-tag.c
-+++ b/block/blk-mq-tag.c
-@@ -109,10 +109,6 @@ void __blk_mq_tag_idle(struct blk_mq_hw_ctx *hctx)
- static int __blk_mq_get_tag(struct blk_mq_alloc_data *data,
- 			    struct sbitmap_queue *bt)
- {
--	if (!data->q->elevator && !(data->flags & BLK_MQ_REQ_RESERVED) &&
--			!hctx_may_queue(data->hctx, bt))
--		return BLK_MQ_NO_TAG;
--
- 	if (data->shallow_depth)
- 		return sbitmap_queue_get_shallow(bt, data->shallow_depth);
- 	else
-diff --git a/block/blk-mq.c b/block/blk-mq.c
-index 4c5c16cce4f8..bbac59a06044 100644
---- a/block/blk-mq.c
-+++ b/block/blk-mq.c
-@@ -489,8 +489,6 @@ __blk_mq_alloc_requests_batch(struct blk_mq_alloc_data *data)
- 		}
- 	} while (data->nr_tags > nr);
+ 	disposition = scsi_decide_disposition(cmd);
+ 	if (disposition != SUCCESS && scsi_cmd_runtime_exceeced(cmd))
+@@ -1592,7 +1592,7 @@ static enum scsi_qc_status scsi_dispatch_cmd(struct scsi_cmnd *cmd)
+ 	struct Scsi_Host *host = cmd->device->host;
+ 	int rtn = 0;
  
--	if (!(data->rq_flags & RQF_SCHED_TAGS))
--		blk_mq_add_active_requests(data->hctx, nr);
- 	/* caller already holds a reference, add for remainder */
- 	percpu_ref_get_many(&data->q->q_usage_counter, nr - 1);
- 	data->nr_tags -= nr;
-@@ -587,8 +585,6 @@ static struct request *__blk_mq_alloc_requests(struct blk_mq_alloc_data *data)
- 		goto retry;
+-	atomic_inc(&cmd->device->iorequest_cnt);
++	percpu_counter_inc(&cmd->device->iorequest_cnt);
+ 
+ 	/* check if the device is still usable */
+ 	if (unlikely(cmd->device->sdev_state == SDEV_DEL)) {
+@@ -1614,7 +1614,7 @@ static enum scsi_qc_status scsi_dispatch_cmd(struct scsi_cmnd *cmd)
+ 		 */
+ 		SCSI_LOG_MLQUEUE(3, scmd_printk(KERN_INFO, cmd,
+ 			"queuecommand : device blocked\n"));
+-		atomic_dec(&cmd->device->iorequest_cnt);
++		percpu_counter_dec(&cmd->device->iorequest_cnt);
+ 		return SCSI_MLQUEUE_DEVICE_BUSY;
  	}
  
--	if (!(data->rq_flags & RQF_SCHED_TAGS))
--		blk_mq_inc_active_requests(data->hctx);
- 	rq = blk_mq_rq_ctx_init(data, blk_mq_tags_from_data(data), tag);
- 	blk_mq_rq_time_init(rq, alloc_time_ns);
- 	return rq;
-@@ -763,8 +759,6 @@ struct request *blk_mq_alloc_request_hctx(struct request_queue *q,
- 	tag = blk_mq_get_tag(&data);
- 	if (tag == BLK_MQ_NO_TAG)
- 		goto out_queue_exit;
--	if (!(data.rq_flags & RQF_SCHED_TAGS))
--		blk_mq_inc_active_requests(data.hctx);
- 	rq = blk_mq_rq_ctx_init(&data, blk_mq_tags_from_data(&data), tag);
- 	blk_mq_rq_time_init(rq, alloc_time_ns);
- 	rq->__data_len = 0;
-@@ -807,10 +801,8 @@ static void __blk_mq_free_request(struct request *rq)
- 	blk_pm_mark_last_busy(rq);
- 	rq->mq_hctx = NULL;
+@@ -1647,7 +1647,7 @@ static enum scsi_qc_status scsi_dispatch_cmd(struct scsi_cmnd *cmd)
+ 	trace_scsi_dispatch_cmd_start(cmd);
+ 	rtn = host->hostt->queuecommand(host, cmd);
+ 	if (rtn) {
+-		atomic_dec(&cmd->device->iorequest_cnt);
++		percpu_counter_dec(&cmd->device->iorequest_cnt);
+ 		trace_scsi_dispatch_cmd_error(cmd, rtn);
+ 		if (rtn != SCSI_MLQUEUE_DEVICE_BUSY &&
+ 		    rtn != SCSI_MLQUEUE_TARGET_BUSY)
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index 121a14d5fdb8..bc885c72f01e 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -350,6 +350,14 @@ static struct scsi_device *scsi_alloc_sdev(struct scsi_target *starget,
  
--	if (rq->tag != BLK_MQ_NO_TAG) {
--		blk_mq_dec_active_requests(hctx);
-+	if (rq->tag != BLK_MQ_NO_TAG)
- 		blk_mq_put_tag(hctx->tags, ctx, rq->tag);
--	}
- 	if (sched_tag != BLK_MQ_NO_TAG)
- 		blk_mq_put_tag(hctx->sched_tags, ctx, sched_tag);
- 	blk_mq_sched_restart(hctx);
-@@ -1188,8 +1180,6 @@ static inline void blk_mq_flush_tag_batch(struct blk_mq_hw_ctx *hctx,
+ 	scsi_sysfs_device_initialize(sdev);
+ 
++	if (percpu_counter_init(&sdev->iorequest_cnt, 0, GFP_KERNEL) ||
++	    percpu_counter_init(&sdev->iodone_cnt, 0, GFP_KERNEL) ||
++	    percpu_counter_init(&sdev->ioerr_cnt, 0, GFP_KERNEL) ||
++	    percpu_counter_init(&sdev->iotmo_cnt, 0, GFP_KERNEL)) {
++		ret = -ENOMEM;
++		goto out_device_destroy;
++	}
++
+ 	if (scsi_device_is_pseudo_dev(sdev))
+ 		return sdev;
+ 
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index dfc3559e7e04..f652edd16497 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -516,6 +516,10 @@ static void scsi_device_dev_release(struct device *dev)
+ 	if (vpd_pgb7)
+ 		kfree_rcu(vpd_pgb7, rcu);
+ 	kfree(sdev->inquiry);
++	percpu_counter_destroy(&sdev->iotmo_cnt);
++	percpu_counter_destroy(&sdev->ioerr_cnt);
++	percpu_counter_destroy(&sdev->iodone_cnt);
++	percpu_counter_destroy(&sdev->iorequest_cnt);
+ 	kfree(sdev);
+ 
+ 	if (parent)
+@@ -936,26 +940,27 @@ static ssize_t
+ show_iostat_counterbits(struct device *dev, struct device_attribute *attr,
+ 			char *buf)
  {
- 	struct request_queue *q = hctx->queue;
- 
--	blk_mq_sub_active_requests(hctx, nr_tags);
--
- 	blk_mq_put_tags(hctx->tags, tag_array, nr_tags);
- 	percpu_ref_put_many(&q->q_usage_counter, nr_tags);
- }
-@@ -1875,9 +1865,6 @@ bool __blk_mq_alloc_driver_tag(struct request *rq)
- 	if (blk_mq_tag_is_reserved(rq->mq_hctx->sched_tags, rq->internal_tag)) {
- 		bt = &rq->mq_hctx->tags->breserved_tags;
- 		tag_offset = 0;
--	} else {
--		if (!hctx_may_queue(rq->mq_hctx, bt))
--			return false;
- 	}
- 
- 	tag = __sbitmap_queue_get(bt);
-@@ -1885,7 +1872,6 @@ bool __blk_mq_alloc_driver_tag(struct request *rq)
- 		return false;
- 
- 	rq->tag = tag + tag_offset;
--	blk_mq_inc_active_requests(rq->mq_hctx);
- 	return true;
+-	return snprintf(buf, 20, "%d\n", (int)sizeof(atomic_t) * 8);
++	/* iostat counters are per-CPU sums (s64).  Report width for tools. */
++	return sysfs_emit(buf, "%zu\n", sizeof(s64) * 8);
  }
  
-@@ -4058,7 +4044,6 @@ blk_mq_alloc_hctx(struct request_queue *q, struct blk_mq_tag_set *set,
- 	if (!zalloc_cpumask_var_node(&hctx->cpumask, gfp, node))
- 		goto free_hctx;
+ static DEVICE_ATTR(iocounterbits, S_IRUGO, show_iostat_counterbits, NULL);
  
--	atomic_set(&hctx->nr_active, 0);
- 	if (node == NUMA_NO_NODE)
- 		node = set->numa_node;
- 	hctx->numa_node = node;
-diff --git a/block/blk-mq.h b/block/blk-mq.h
-index aa15d31aaae9..8dfb67c55f5d 100644
---- a/block/blk-mq.h
-+++ b/block/blk-mq.h
-@@ -291,70 +291,9 @@ static inline int blk_mq_get_rq_budget_token(struct request *rq)
- 	return -1;
- }
+-#define show_sdev_iostat(field)						\
++#define show_sdev_iostat_percpu(field)					\
+ static ssize_t								\
+ show_iostat_##field(struct device *dev, struct device_attribute *attr,	\
+ 		    char *buf)						\
+ {									\
+ 	struct scsi_device *sdev = to_scsi_device(dev);			\
+-	unsigned long long count = atomic_read(&sdev->field);		\
+-	return snprintf(buf, 20, "0x%llx\n", count);			\
++	unsigned long long count = percpu_counter_sum(&sdev->field);	\
++	return sysfs_emit(buf, "0x%llx\n", count);			\
+ }									\
+-static DEVICE_ATTR(field, S_IRUGO, show_iostat_##field, NULL)
++static DEVICE_ATTR(field, 0444, show_iostat_##field, NULL)
  
--static inline void __blk_mq_add_active_requests(struct blk_mq_hw_ctx *hctx,
--						int val)
--{
--	if (blk_mq_is_shared_tags(hctx->flags))
--		atomic_add(val, &hctx->queue->nr_active_requests_shared_tags);
--	else
--		atomic_add(val, &hctx->nr_active);
--}
--
--static inline void __blk_mq_inc_active_requests(struct blk_mq_hw_ctx *hctx)
--{
--	__blk_mq_add_active_requests(hctx, 1);
--}
--
--static inline void __blk_mq_sub_active_requests(struct blk_mq_hw_ctx *hctx,
--		int val)
--{
--	if (blk_mq_is_shared_tags(hctx->flags))
--		atomic_sub(val, &hctx->queue->nr_active_requests_shared_tags);
--	else
--		atomic_sub(val, &hctx->nr_active);
--}
--
--static inline void __blk_mq_dec_active_requests(struct blk_mq_hw_ctx *hctx)
--{
--	__blk_mq_sub_active_requests(hctx, 1);
--}
--
--static inline void blk_mq_add_active_requests(struct blk_mq_hw_ctx *hctx,
--					      int val)
--{
--	if (hctx->flags & BLK_MQ_F_TAG_QUEUE_SHARED)
--		__blk_mq_add_active_requests(hctx, val);
--}
--
--static inline void blk_mq_inc_active_requests(struct blk_mq_hw_ctx *hctx)
--{
--	if (hctx->flags & BLK_MQ_F_TAG_QUEUE_SHARED)
--		__blk_mq_inc_active_requests(hctx);
--}
--
--static inline void blk_mq_sub_active_requests(struct blk_mq_hw_ctx *hctx,
--					      int val)
--{
--	if (hctx->flags & BLK_MQ_F_TAG_QUEUE_SHARED)
--		__blk_mq_sub_active_requests(hctx, val);
--}
--
--static inline void blk_mq_dec_active_requests(struct blk_mq_hw_ctx *hctx)
--{
--	if (hctx->flags & BLK_MQ_F_TAG_QUEUE_SHARED)
--		__blk_mq_dec_active_requests(hctx);
--}
--
--static inline int __blk_mq_active_requests(struct blk_mq_hw_ctx *hctx)
--{
--	if (blk_mq_is_shared_tags(hctx->flags))
--		return atomic_read(&hctx->queue->nr_active_requests_shared_tags);
--	return atomic_read(&hctx->nr_active);
--}
- static inline void __blk_mq_put_driver_tag(struct blk_mq_hw_ctx *hctx,
- 					   struct request *rq)
- {
--	blk_mq_dec_active_requests(hctx);
- 	blk_mq_put_tag(hctx->tags, rq->mq_ctx, rq->tag);
- 	rq->tag = BLK_MQ_NO_TAG;
- }
-@@ -396,45 +335,6 @@ static inline void blk_mq_free_requests(struct list_head *list)
- 	}
- }
+-show_sdev_iostat(iorequest_cnt);
+-show_sdev_iostat(iodone_cnt);
+-show_sdev_iostat(ioerr_cnt);
+-show_sdev_iostat(iotmo_cnt);
++show_sdev_iostat_percpu(iorequest_cnt);
++show_sdev_iostat_percpu(iodone_cnt);
++show_sdev_iostat_percpu(ioerr_cnt);
++show_sdev_iostat_percpu(iotmo_cnt);
  
--/*
-- * For shared tag users, we track the number of currently active users
-- * and attempt to provide a fair share of the tag depth for each of them.
-- */
--static inline bool hctx_may_queue(struct blk_mq_hw_ctx *hctx,
--				  struct sbitmap_queue *bt)
--{
--	unsigned int depth, users;
--
--	if (!hctx || !(hctx->flags & BLK_MQ_F_TAG_QUEUE_SHARED))
--		return true;
--
--	/*
--	 * Don't try dividing an ant
--	 */
--	if (bt->sb.depth == 1)
--		return true;
--
--	if (blk_mq_is_shared_tags(hctx->flags)) {
--		struct request_queue *q = hctx->queue;
--
--		if (!test_bit(QUEUE_FLAG_HCTX_ACTIVE, &q->queue_flags))
--			return true;
--	} else {
--		if (!test_bit(BLK_MQ_S_TAG_ACTIVE, &hctx->state))
--			return true;
--	}
--
--	users = READ_ONCE(hctx->tags->active_queues);
--	if (!users)
--		return true;
--
--	/*
--	 * Allow at least some tags
--	 */
--	depth = max((bt->sb.depth + users - 1) / users, 4U);
--	return __blk_mq_active_requests(hctx) < depth;
--}
--
- /* run the code block in @dispatch_ops with rcu/srcu read lock held */
- #define __blk_mq_run_dispatch_ops(q, check_sleep, dispatch_ops)	\
- do {								\
-diff --git a/include/linux/blk-mq.h b/include/linux/blk-mq.h
-index 18a2388ba581..ccbb07559402 100644
---- a/include/linux/blk-mq.h
-+++ b/include/linux/blk-mq.h
-@@ -432,12 +432,6 @@ struct blk_mq_hw_ctx {
- 	/** @queue_num: Index of this hardware queue. */
- 	unsigned int		queue_num;
+ static ssize_t
+ sdev_show_modalias(struct device *dev, struct device_attribute *attr, char *buf)
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index adc3fa55ca2c..b7ce01de17b3 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -4043,7 +4043,7 @@ static int sd_probe(struct scsi_device *sdp)
+ 	sdkp->index = index;
+ 	sdkp->max_retries = SD_MAX_RETRIES;
+ 	atomic_set(&sdkp->openers, 0);
+-	atomic_set(&sdkp->device->ioerr_cnt, 0);
++	percpu_counter_set(&sdkp->device->ioerr_cnt, 0);
  
--	/**
--	 * @nr_active: Number of active requests. Only used when a tag set is
--	 * shared across request queues.
--	 */
--	atomic_t		nr_active;
--
- 	/** @cpuhp_online: List to store request if CPU is going to die */
- 	struct hlist_node	cpuhp_online;
- 	/** @cpuhp_dead: List to store request if some CPU die. */
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 890128cdea1c..95525b1d7b74 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -567,8 +567,6 @@ struct request_queue {
- 	struct timer_list	timeout;
- 	struct work_struct	timeout_work;
+ 	if (!sdp->request_queue->rq_timeout) {
+ 		if (sdp->type != TYPE_MOD)
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index 029f5115b2ea..4be36bf2a475 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -9,6 +9,7 @@
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_common.h>
+ #include <linux/atomic.h>
++#include <linux/percpu_counter.h>
+ #include <linux/sbitmap.h>
  
--	atomic_t		nr_active_requests_shared_tags;
--
- 	struct blk_mq_tags	*sched_shared_tags;
+ struct bsg_device;
+@@ -272,10 +273,10 @@ struct scsi_device {
+ 	unsigned int max_device_blocked; /* what device_blocked counts down from  */
+ #define SCSI_DEFAULT_DEVICE_BLOCKED	3
  
- 	struct list_head	icq_list;
+-	atomic_t iorequest_cnt;
+-	atomic_t iodone_cnt;
+-	atomic_t ioerr_cnt;
+-	atomic_t iotmo_cnt;
++	struct percpu_counter iorequest_cnt;
++	struct percpu_counter iodone_cnt;
++	struct percpu_counter ioerr_cnt;
++	struct percpu_counter iotmo_cnt;
+ 
+ 	struct device		sdev_gendev,
+ 				sdev_dev;
 -- 
 2.43.7
 
