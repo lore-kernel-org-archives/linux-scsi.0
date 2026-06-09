@@ -1,100 +1,92 @@
-Received: from mail.loongson.cn (mail.loongson.cn [114.242.206.163])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 476273A0B31;
-	Tue,  9 Jun 2026 09:35:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=114.242.206.163
+Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E4EBB199D8;
+	Tue,  9 Jun 2026 10:39:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=60.244.123.138
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780997717; cv=none; b=f016HJVHI4MN67UPcWo8CcyX4mjrgeBpL+aMnitB1PO5Vf6goBQAj1GxgsBLykmsiVkUloP4/TTbWfbawRK6dA7dQp+O3Lr5y8Eb0MTtmkhtOTbHfct51Dp23UYpo5LghKfri+aZGkDwFHMGf5Z5kVnjVCzMLnV97l5TNT3NR4Y=
+	t=1781001546; cv=none; b=O6BJOu4OYa2AeP2QS3QXRKHWl3uIfLA4KPrWi7WbXjlQhKMnjkxxy3V6nJXyH/3r7Nk4q09ukUuKKt8RRm2eLzSL52axQAZ4vzuXQfw/18Z7VLRDSIXCFZh8CD+FOcw+EIekQr0e6p5JCGWVNKxg922rqI4YropHi2jtT5njpd8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780997717; c=relaxed/simple;
-	bh=Ihobr2NoPz+IDgT5CzNxs/60fUZ6UiSQdfpcZZbFJWk=;
-	h=Subject:From:To:Cc:References:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=mmHHahcq68ZM/XciKa7n447O7tNjYrK2t7On2v0tYCjUaDT2Q4H2142CutLR5Sxn3sOOTe4SeDjyDLGTXD865nKtVOJ3PeZSlohBnzlkjqig2foFSqrGNBm0DPKrfW3WRez3vsRChXPdj9L4I+Ix9J/mgwCcMVEaWBCIy9Tomlw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=loongson.cn; spf=pass smtp.mailfrom=loongson.cn; arc=none smtp.client-ip=114.242.206.163
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=loongson.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=loongson.cn
-Received: from loongson.cn (unknown [10.20.42.62])
-	by gateway (Coremail) with SMTP id _____8DxFOhQ3idqBTQSAA--.42462S3;
-	Tue, 09 Jun 2026 17:35:12 +0800 (CST)
-Received: from [10.20.42.62] (unknown [10.20.42.62])
-	by front1 (Coremail) with SMTP id qMiowJDxjcJN3idq9aigAA--.40227S3;
-	Tue, 09 Jun 2026 17:35:12 +0800 (CST)
-Subject: Re: [PATCH] scsi: megaraid_sas: Add dma read memory barrier during
- complete command poll
-From: Bibo Mao <maobibo@loongson.cn>
-To: Kashyap Desai <kashyap.desai@broadcom.com>,
- Sumit Saxena <sumit.saxena@broadcom.com>,
- Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
- Chandrakanth patil <chandrakanth.patil@broadcom.com>
-Cc: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com,
- megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
- linux-kernel@vger.kernel.org, zhangtianyang@loongson.cn
-References: <20260529012620.815886-1-maobibo@loongson.cn>
-Message-ID: <f7ad0956-fefb-4933-6a62-20846d3314ad@loongson.cn>
-Date: Tue, 9 Jun 2026 17:32:02 +0800
-User-Agent: Mozilla/5.0 (X11; Linux loongarch64; rv:68.0) Gecko/20100101
- Thunderbird/68.7.0
+	s=arc-20240116; t=1781001546; c=relaxed/simple;
+	bh=8cJvuRbd6ClyesLFVFnAFWhmrf7Edts5Hntjz+P3iq4=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=JRGmg/P33GlArtYQlDNfzgEURYhMv+2tC72QaVHUcO5T4FPj5LKOFgFct8olR7kEFSHp38h+qqS48BEXc7Kg4co3/fATNOo978o4mMoMx9KWT57bgZ/eb8+SM11OiqtSgs4Fpz/iF7dNLEMZdrrb0V/pV+ZCPfPftJS0CfQdSuo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=qvcKeHdq; arc=none smtp.client-ip=60.244.123.138
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="qvcKeHdq"
+X-UUID: 6d25901e63ef11f1b1788b6acf885367-20260609
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+	h=Content-Type:Content-Transfer-Encoding:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=OxZg1HbkTQJaG3rBGBiIsByihp2SXJ3mxZea50kB+9Q=;
+	b=qvcKeHdqX271kaSyJCj65IKVqkbEq/5wQQh2AMnAp3yxGmmGOYOWpVRK/T15w3Kc9v8+ULOLkm3anifefZ/KqGnQGXQ7vT4bmt/5MDmw130p2SDHsW6rpazFeTWZa9bwMM//OVAQdmKM9LJaUl7XfrFgdKTCp83uUl3P8vCSQyY=;
+X-CID-CACHE: Type:Local,Time:202606091817+08,HitQuantity:1
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.3.15,REQID:8fef85b0-5ee2-43f0-8ddd-4fc76847345e,IP:0,U
+	RL:0,TC:0,Content:0,EDM:-25,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTIO
+	N:release,TS:-25
+X-CID-META: VersionHash:e276073,CLOUDID:72aa9030-7784-4a77-a538-47ed6151d81b,B
+	ulkID:nil,BulkQuantity:0,Recheck:0,SF:102|123|836|865|888|898,TC:-5,Conten
+	t:0|15|50,EDM:2,IP:nil,URL:0,File:130,RT:0,Bulk:nil,QS:nil,BEC:-1,COL:0,OS
+	I:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-BVR: 2,SSN|SDN
+X-CID-BAS: 2,SSN|SDN,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR
+X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
+X-UUID: 6d25901e63ef11f1b1788b6acf885367-20260609
+Received: from mtkmbs10n1.mediatek.inc [(172.21.101.34)] by mailgw01.mediatek.com
+	(envelope-from <ed.tsai@mediatek.com>)
+	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+	with ESMTP id 1795642712; Tue, 09 Jun 2026 18:39:00 +0800
+Received: from mtkmbs13n2.mediatek.inc (172.21.101.108) by
+ MTKMBS09N2.mediatek.inc (172.21.101.94) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.29; Tue, 9 Jun 2026 18:38:59 +0800
+Received: from mtksitap99.mediatek.inc (10.233.130.16) by
+ mtkmbs13n2.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
+ 15.2.2562.29 via Frontend Transport; Tue, 9 Jun 2026 18:38:59 +0800
+From: <ed.tsai@mediatek.com>
+To: <alim.akhtar@samsung.com>, <avri.altman@wdc.com>, <bvanassche@acm.org>,
+	<James.Bottomley@HansenPartnership.com>, <martin.petersen@oracle.com>,
+	<linux-scsi@vger.kernel.org>
+CC: <linux-kernel@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
+	<linux-mediatek@lists.infradead.org>, <wsd_upstream@mediatek.com>,
+	<peter.wang@mediatek.com>, <alice.chao@mediatek.com>,
+	<naomi.chu@mediatek.com>, <chun-hung.wu@mediatek.com>, Ed Tsai
+	<ed.tsai@mediatek.com>
+Subject: [PATCH 0/2] ufs: Add callback for vendor-specific RTT capability
+Date: Tue, 9 Jun 2026 18:38:54 +0800
+Message-ID: <20260609103856.676222-1-ed.tsai@mediatek.com>
+X-Mailer: git-send-email 2.45.2
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20260529012620.815886-1-maobibo@loongson.cn>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:qMiowJDxjcJN3idq9aigAA--.40227S3
-X-CM-SenderInfo: xpdruxter6z05rqj20fqof0/
-X-Coremail-Antispam: 1Uk129KBj93XoW7Ww1DGFW7Jr4rXw1UGw1UXFc_yoW8Gr1fp3
-	4kG3WUtw4DX34F9an8Cw45AF15Xas3Gas5tan3t34Y9rZ8KFyYyr4jk3W5CFySyrn5K3WU
-	Zr4qqrZ5GF4DtrgCm3ZEXasCq-sJn29KB7ZKAUJUUUUr529EdanIXcx71UUUUU7KY7ZEXa
-	sCq-sGcSsGvfJ3Ic02F40EFcxC0VAKzVAqx4xG6I80ebIjqfuFe4nvWSU5nxnvy29KBjDU
-	0xBIdaVrnRJUUUPab4IE77IF4wAFF20E14v26r1j6r4UM7CY07I20VC2zVCF04k26cxKx2
-	IYs7xG6rWj6s0DM7CIcVAFz4kK6r1Y6r17M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48v
-	e4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Gr0_Xr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI
-	0_Gr0_Cr1l84ACjcxK6I8E87Iv67AKxVW8Jr0_Cr1UM28EF7xvwVC2z280aVCY1x0267AK
-	xVW8Jr0_Cr1UM2kKe7AKxVWUXVWUAwAS0I0E0xvYzxvE52x082IY62kv0487Mc804VCY07
-	AIYIkI8VC2zVCFFI0UMc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2IY67AKxVWU
-	AVWUtwAv7VC2z280aVAFwI0_Gr0_Cr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0Y48IcVAKI4
-	8JMxk0xIA0c2IEe2xFo4CEbIxvr21lc7CjxVAaw2AFwI0_JF0_Jw1l42xK82IYc2Ij64vI
-	r41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1l4IxYO2xFxVAFwI0_Jrv_JF1lx2IqxVAqx4xG67
-	AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIY
-	rxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_JFI_Gr1lIxAIcVC0I7IYx2IY6xkF7I0E14
-	v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVW8JVWx
-	JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjxUxYiiDU
-	UUU
+Content-Type: text/plain
+X-MTK: N
 
+From: Ed Tsai <ed.tsai@mediatek.com>
 
+The first patch adds the get_hba_nortt() callback to the UFS core layer
+and removes the static max_num_rtt field from ufs_hba_variant_ops. This
+allows platform vendors to provide dynamic, platform-specific RTT capability
+handling.
 
-On 2026/5/29 上午9:26, Bibo Mao wrote:
-> Control dependencies do not guarantee load order across the condition,
-> allowing a CPU to predict and speculate memory reads.
-> 
-> Add a dma read barrier before reading the complete SMID entry in
-> structure reply_des and after the condition its contents depend on to
-> ensure the read order is determinsitic.
-> 
-> Signed-off-by: Bibo Mao <maobibo@loongson.cn>
-> ---
->   drivers/scsi/megaraid/megaraid_sas_fusion.c | 2 ++
->   1 file changed, 2 insertions(+)
-> 
-> diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-> index 2699e4e09b5b..6ec6e5fa71ce 100644
-> --- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-> +++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-> @@ -3589,6 +3589,8 @@ complete_cmd_fusion(struct megasas_instance *instance, u32 MSIxIndex,
->   	while (d_val.u.low != cpu_to_le32(UINT_MAX) &&
->   	       d_val.u.high != cpu_to_le32(UINT_MAX)) {
->   
-> +		/* Read SIMD after ReplyFlags and d_val.word check */
-> +		dma_rmb();
->   		smid = le16_to_cpu(reply_desc->SMID);
->   		cmd_fusion = fusion->cmd_list[smid - 1];
->   		scsi_io_req = (struct MPI2_RAID_SCSI_IO_REQUEST *)
-> 
-> base-commit: e8c2f9fdadee7cbc75134dc463c1e0d856d6e5c7
-> 
-Any comments about this simple patch?
-gently ping :)
+The second patch implements this callback in the MediaTek UFS driver,
+distinguishing between legacy and newer platforms.
 
+Ed Tsai (2):
+  ufs: core: Add get_hba_nortt callback for vendor-specific RTT
+    capability
+  ufs: mediatek: Implement get_hba_nortt callback for RTT capability
+
+ drivers/ufs/core/ufshcd.c       |  9 +++++----
+ drivers/ufs/host/ufs-mediatek.c | 12 +++++++++++-
+ drivers/ufs/host/ufs-mediatek.h |  4 ++--
+ include/ufs/ufshcd.h            |  5 +++--
+ 4 files changed, 21 insertions(+), 9 deletions(-)
+
+--
+2.45.2
