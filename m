@@ -1,115 +1,135 @@
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B80CB30E0FB;
-	Tue,  9 Jun 2026 01:39:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.177.32
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D682D3CF205;
+	Tue,  9 Jun 2026 07:08:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780969174; cv=none; b=ICmN9jignwETrnKTFIhLnSs9aKKdAmcH3GRpNC0dljQ/Sh9U+Edp4U4Wqrcel9KdREOmBXZWJWvHrlkoDYaCS3Ah8wz+mQ4OJPyixeM+mWDSpDxAXIIwrIKJNiAQfdHhqTvU46HLuBsm78Z7sx7nTCJXz4IatFM/8I6cGftBIEo=
+	t=1780988931; cv=none; b=JP4O2Xpthw6zZGiFx++ss3B0o9oe/lcFi3QhPDUsRg3LTfOFzgKvbvFTDAkMqQHgIWr6vCOb4RNfx6J/3AeLiQURY3SPo+N4D9T8tgc7Ly2CeSdNt/mPVwuIQHL78u1468rXhmXi+GUY3m3BuZChHPaObIGgU5HUJsU2HOg+1pY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780969174; c=relaxed/simple;
-	bh=jPr3bw3y4iOnV0cMOk+Zu/DAivUcOCD3d5Rq9Z1qq9w=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=rBShmzT1/t4TDbOAr0WXAzYB/4Y5rv+j1/2YC1wvXEfesoHjNvqGox4t4CjoHQEl0xLmKk+IXzPXEtfbru4YJw0Q4ICsCbDJPJZSAiF1hS13lumNeDd+Q3Zc16ts3KFvgvhxmo4L+RF3R18VRoTGVvdGmKnfGGTkYckc0UgMl+Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=q1BzmG/s; arc=none smtp.client-ip=205.220.177.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+	s=arc-20240116; t=1780988931; c=relaxed/simple;
+	bh=nrlcOCJWcj5mw/nczlgJLXdZhzW7syA0p08DeFalL+A=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=eHAnWxkogpcHCkQ/ZOKyv8PwR8ubsB/MYo0VEhzC1isRroYCiZHu4Jp1wzbKYD94SlWxxxdZm4PPrB4M7ZGgGAsSAymOBdiD5C93MXY+O3GobW5KtQK88ovtrsFToZSDCU7LVdaKdc5PpmpX5tFQy+lguFcPPivqUORtTmj/7DE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=A7I9TjEr; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="q1BzmG/s"
-Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 658HSUaI1690093;
-	Tue, 9 Jun 2026 01:39:11 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=
-	corp-2025-04-25; bh=IvJ/OP8BmyxjZ/E+K1UO316wfhfyls0xhc+riDZgKZM=; b=
-	q1BzmG/st85ypKL6ajTypY4rltK0CM+THtgZVSVn5p0fxDOiYwNtF+JWKjEZMohB
-	oIqx8AQZHZWasHWjozVKpRcGnlLh2JBOurFx/XRD1vTcO7hmfCXwJDVN2BN8HLjy
-	/Zhfq+5QQgImejly4ieOs6OXcg+YfLxGbv/Gmqe9znaZzoOGkggc6ejk/m3l+bOL
-	ubw9ZZS7Fvd5MEHFDk0CQNY3YWHOFe9CNJy/L//UASe+FB3GP3q9XnGwKcDrSFT8
-	OHbz1W/3bP1Xo9ACaj2fOGQaZ7EASCu41LBbmzJBqIhdmbITPD6JFJa7nF17TLVd
-	a/NXfK2LToge4yNS6wB70A==
-Received: from iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta02.appoci.oracle.com [147.154.18.20])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4emab4kh1g-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 09 Jun 2026 01:39:11 +0000 (GMT)
-Received: from pps.filterd (iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.7/8.18.1.7) with ESMTP id 6591caME028076;
-	Tue, 9 Jun 2026 01:39:10 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 4ema0pges4-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 09 Jun 2026 01:39:10 +0000 (GMT)
-Received: from iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by pps.reinject (8.18.1.12/8.18.1.12) with ESMTP id 6591d6Ar030153;
-	Tue, 9 Jun 2026 01:39:09 GMT
-Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 4ema0pgepy-8;
-	Tue, 09 Jun 2026 01:39:09 +0000 (GMT)
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-To: James.Bottomley@HansenPartnership.com,
-        "Ionut Nechita (Wind River)" <ionut.nechita@windriver.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        stable@vger.kernel.org, hch@lst.de, dlemoal@kernel.org,
-        robin.murphy@arm.com, john.g.garry@oracle.com, axboe@kernel.dk,
-        m.szyprowski@samsung.com, ahuang12@lenovo.com, ionut_n2001@yahoo.com,
-        sunlightlinux@gmail.com
-Subject: Re: [PATCH v8 0/1] scsi: sas: fix mkfs.xfs failure due to bogus optimal_io_size
-Date: Mon,  8 Jun 2026 21:39:01 -0400
-Message-ID: <178094912072.1810714.9115795923804476782.b4-ty@oracle.com>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260519135238.373784-1-ionut.nechita@windriver.com>
-References: <20260519135238.373784-1-ionut.nechita@windriver.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="A7I9TjEr"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 064701F00893;
+	Tue,  9 Jun 2026 07:08:42 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1780988930;
+	bh=XwsXjy4TG/aM2U5Nqdm0tLLdMZmOEbkGY8HrxumjzYw=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To;
+	b=A7I9TjErCh8bJA+Sgh+ldlAi1FCBT5rzTJH9aFo9QiPmKOHhCYTy+9KAXb+cQthF/
+	 EW8LhzSH62fo5YMSUAbEm2h20VInMz6gfRXxSNR+fvnB1nQjksSxgNgvtxcNj/1Bmd
+	 +A1XAE53zOaVJPTLy1R2hEaMMoSAY17IzOF4Al0fJL4XyhFnd7wd9vxMdSwG0NMPcC
+	 p7FvYfGOB59KGhEpiGlnEul+d2X55EJBA+KiTJoAUB6EKwwLszhhOCvAf84yN7DEF5
+	 LIsYclbjcDzalkM2lNZ95L5ZtEAdKDWxvYAP1FRM9Zucb4EB0iCJZuDDPH1Z5DQ8pM
+	 NFattSM2R7o+A==
+Message-ID: <87c9f8cf-1300-4dae-82cd-fe6427649cea@kernel.org>
+Date: Tue, 9 Jun 2026 09:08:39 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.125,FMLib:17.12.100.49
- definitions=2026-06-08_06,2026-06-09_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0
- lowpriorityscore=0 spamscore=0 mlxscore=0 malwarescore=0 mlxlogscore=372
- adultscore=0 suspectscore=0 phishscore=0 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.19.0-2605130000 definitions=main-2606090013
-X-Authority-Analysis: v=2.4 cv=cL/QdFeN c=1 sm=1 tr=0 ts=6a276ebf b=1 cx=c_pps
- a=e1sVV491RgrpLwSTMOnk8w==:117 a=e1sVV491RgrpLwSTMOnk8w==:17
- a=IkcTkHD0fZMA:10 a=FelO9ux0wxsA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=jiCTI4zE5U7BLdzWsZGv:22 a=o5oIOnhZENCTenyL_yNV:22 a=VwQbUJbxAAAA:8
- a=t7CeM3EgAAAA:8 a=EwlQa_qvEpErnvP18DcA:9 a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
- a=FdTzh2GWekK77mhwV6Dw:22 a=5yU3S35YU4bGjq-dph-N:22 a=Bho9c0fBagfJEIQBS7DQ:22
- cc=ntf awl=host:13723
-X-Proofpoint-GUID: qHGR5GtSfRdE37XMffGVzBXrewjRwIt1
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNjA5MDAxMyBTYWx0ZWRfXxhTicKgkslf1
- KOzBJppRa40qbTjnWcE/BDQnXhn4hkV1e4cuOpCmxr/RLME/GeSuYBSR4cRBydl3OOIgKMW+Ny9
- 00M/R1dplfYYCsNM2vna3DLJEWnXtuinT1rONOBOK27aj6XE+4uVrPJBBrRmBVJP2Un185As1x3
- Y2PA2HXvenw+X6cN4Q3xVUOwb0TC+GiUpj3ZCjr3M1uUBLYvjyNvAxy5jXYslxC1qKn8HJfjw9C
- kor3AL3mdQH5xN5yVoIQCJR+0W5bA1eXaeTmdN/Qw1p3tSZFYteQqr9b+lV67hagU+/7hiYJcjM
- PxmnAbCywlaKHpEjXg6Qx/Y8jbQEfmBD3k00IMZ41pvpYmkEaS4QvV2YlpTXjwu8qXladxaGjO7
- vzGgI1PU5PgfZ1HP4SigBrt57Ap3vxYkC8fPW+cXNOHTbo/tSV4QXiscSLnmV7HV3ZasrgJ8BcR
- 0wSegLjCHdtMhC7WNZKKI3CNMc9NE/BIwLRQcCgQ=
-X-Proofpoint-ORIG-GUID: qHGR5GtSfRdE37XMffGVzBXrewjRwIt1
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v6 1/2] dt-bindings: ufs: Document static TX Equalization
+ settings properties
+To: Can Guo <can.guo@oss.qualcomm.com>
+Cc: bvanassche@acm.org, beanhuo@micron.com, peter.wang@mediatek.com,
+ martin.petersen@oracle.com, mani@kernel.org, linux-scsi@vger.kernel.org,
+ Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>,
+ Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>,
+ Conor Dooley <conor+dt@kernel.org>, Matthias Brugger
+ <matthias.bgg@gmail.com>,
+ AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
+ Zhaoming Luo <zhml@posteo.com>, Ram Kumar Dwivedi
+ <quic_rdwivedi@quicinc.com>,
+ "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS"
+ <devicetree@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>,
+ "moderated list:ARM/Mediatek SoC support:Keyword:mediatek"
+ <linux-arm-kernel@lists.infradead.org>,
+ "moderated list:ARM/Mediatek SoC support:Keyword:mediatek"
+ <linux-mediatek@lists.infradead.org>
+References: <20260529113338.984301-1-can.guo@oss.qualcomm.com>
+ <20260529113338.984301-2-can.guo@oss.qualcomm.com>
+ <20260529-neat-bright-shellfish-eab5e8@quoll>
+ <ada65ce2-6736-44fe-9396-d3ed632274ce@oss.qualcomm.com>
+ <b445e9e3-dfda-45d6-bafb-a2deb3357144@kernel.org>
+ <7d49742a-7602-4f58-8dce-7e02664b783c@oss.qualcomm.com>
+ <64bd6272-6111-4ffa-8a4a-366d0c287693@oss.qualcomm.com>
+From: Krzysztof Kozlowski <krzk@kernel.org>
+Content-Language: en-US
+Autocrypt: addr=krzk@kernel.org; keydata=
+ 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
+In-Reply-To: <64bd6272-6111-4ffa-8a4a-366d0c287693@oss.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Tue, 19 May 2026 16:52:32 +0300, Ionut Nechita (Wind River) wrote:
-
-> From: Ionut Nechita <ionut.nechita@windriver.com>
+On 31/05/2026 06:48, Can Guo wrote:
+>>>> is the minimal encoding that covers both.
+>>> Again, why do you need to encode '0'?
+>> The tuple is still needed because Precoding is configured per 
+>> transmitter-receiver pair,
+>> so each lane has two independent states:
+>> - Host_TX -> Device_RX
+>> - Device_TX -> Host_RX
+>> A lane-only enabled list cannot represent directional combinations 
+>> like lane0 =
+>> (on, off) vs (off, on).
+> How about we split into two properties, something like below?
+> tx-precode-enable-g6-host-lanes = <0 1>
+> tx-precode-enable-g6-device-lanes = <1>
 > 
-> v8 (per Christoph Hellwig's review of v7):
->   - Removed the dma_dev->dma_mask guard — dma_opt_mapping_size() and
->     dma_max_mapping_size() both return SIZE_MAX when no DMA ops are
->     present, so the opt >= max early-return already covers this case.
->   - Added inline comments explaining each conditional in the helper.
+> Only listed lanes are enabled; unlisted lanes are disabled by default.
 > 
-> [...]
+> Are you OK with this approach?
 
-Applied to 7.2/scsi-queue, thanks!
+Yes, I do prefer this, because we don't have empty entries (<0, 0>, <0,
+1> ....).
 
-[1/1] scsi: sas: skip opt_sectors when DMA reports no real optimization hint
-      https://git.kernel.org/mkp/scsi/c/be8fcd4a8217
-
--- 
-Martin K. Petersen
+Best regards,
+Krzysztof
