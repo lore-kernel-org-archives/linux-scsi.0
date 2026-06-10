@@ -1,234 +1,208 @@
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BFF323FCB39
-	for <linux-scsi@vger.kernel.org>; Wed, 10 Jun 2026 11:00:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA6063624DE
+	for <linux-scsi@vger.kernel.org>; Wed, 10 Jun 2026 11:03:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781089242; cv=none; b=E/5a8IdPM2ATEJ2+FejGn3w7yMWE/GNeIZc26+FLRHGTxS7wYe9kneCGC8UrSqMXK0zw5VQWEefqcVCWf+n7jQGBM1cKpHSlMMqjYLEddREnETsgXFdQDwFW8PEi9TDu3Oeaf4TKJgwGgSaIFEHY/pGMRF2SXeeJbDIrr3+BN64=
+	t=1781089417; cv=none; b=drVFKxcl5421jWm00fb25ns3xYWTQ22gjfDUEsvxD7cJCONGhPGdWeKJw1pvpo0ltqZv2CtvwXexl0lkkyF3TyiftyCjfkdsS0XcALxFNi9PNWhgWl5FMp8VzTPnPnE+4MlYhKudK3BQVDJ33AjVByQeOrbocHK++7/znnkWhVY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781089242; c=relaxed/simple;
-	bh=GGC1No7WYPzYm9lP88oSEOKjdzY9BKHDXPWylHpXoM0=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=QG39x8WMo2y6F7wsGTsPWYyZx8kOJknaEtV3xTepvAVRiNMU0uuLrIgdKB72SR8SR0pWPmgAmytT6cRJCx4Dno44WMFWiawLnWpN9Z+Ew7fNELQtNny+t5QNMxNC4ejDDIHWLM89/2v0gTUU2qalsMT4lx3invmva+UzzBx2iZw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=JWtGUWXp; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=yjxufWAR; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=aE82fglj; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=NNs6cpmY; arc=none smtp.client-ip=195.135.223.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+	s=arc-20240116; t=1781089417; c=relaxed/simple;
+	bh=cpvojbR4NEgiFApUpxBtxeqWkAXd4uiayxPXu24BtJ0=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=tCrwF03c8c9UCsRoLurShVLtEGsFmbqNpHI3ngY2qhMxWTsW1KUDbEhtYIABbuVVtTDRYsOBOB0xhyBvM0h8keTU273m9j3kvBs+w7XgGCXenrx1milHlixgfDtG2yiU1Hkaai7d5vuxMaCQyL3Ha/koBXYE3GN5nQLMtu9bITI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PGtQRORS; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="JWtGUWXp";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="yjxufWAR";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="aE82fglj";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="NNs6cpmY"
-Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id 88AE77581C;
-	Wed, 10 Jun 2026 11:00:34 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1781089235; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=2I4ZEP18hlGuRjluq9/BBT7zqhaGgYRnQahT0UeNjz4=;
-	b=JWtGUWXpK9dluLL9S/Q6klcCEIhtNPb1bh536JReWZN/EjhQqQR7s39PtBg6FVii+mYIF1
-	IYU7q9S1l7dflNfKmHqgMuTscVAjn0WyXBkn4pDjFxrHI2PSK8iOzxnh474HjLWfI9k4uO
-	t2D4X1+oSVfIffgrDIeOodJrBBs04pQ=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1781089235;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=2I4ZEP18hlGuRjluq9/BBT7zqhaGgYRnQahT0UeNjz4=;
-	b=yjxufWARco5MtuDzsOqN+mhMfQCeTe+jCpWkPhMK2D3VrmMwxwgD67M+RsfJV977+qp/zm
-	u7S5QHnKvYbRlYCQ==
-Authentication-Results: smtp-out2.suse.de;
-	none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1781089234; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=2I4ZEP18hlGuRjluq9/BBT7zqhaGgYRnQahT0UeNjz4=;
-	b=aE82fgljuNyCyuyA77EAz3YOpp4tYlVwvJgudAuEBAbTWwL0n8G0YUBEZ2Jq+mGucqUNEx
-	b3TZKmpjAEVT5h3PgNZigF0eeO16goWFdZQXUSYlgJes3RLINcB7FQzfXSXbEERSG0/wT5
-	vmvzAG0r3IkaEUZ4GFsj3HsVerue06s=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1781089234;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=2I4ZEP18hlGuRjluq9/BBT7zqhaGgYRnQahT0UeNjz4=;
-	b=NNs6cpmYM/P7z2M0+atwDpWL/2rbqRApv9fTH4VcD8llM/E/DD81TEBjpUzRHOSTFBcS8m
-	N7L1hD49c6dOLzDQ==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 3970D779A7;
-	Wed, 10 Jun 2026 11:00:30 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id l5WoN85DKWqYFAAAD6G6ig
-	(envelope-from <ddiss@suse.de>); Wed, 10 Jun 2026 11:00:30 +0000
-Date: Wed, 10 Jun 2026 21:00:25 +1000
-From: David Disseldorp <ddiss@suse.de>
-To: Bryam Vargas <hexlabsecurity@proton.me>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, Mike Christie
- <michael.christie@oracle.com>, Maurizio Lombardi <mlombard@redhat.com>,
- John Garry <john.g.garry@oracle.com>, James Bottomley
- <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org,
- target-devel@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3] scsi: target: fix iSCSI ISID use-after-free in
- REGISTER AND MOVE
-Message-ID: <20260610210025.35dc7040.ddiss@suse.de>
-In-Reply-To: <20260610042245.35473-1-hexlabsecurity@proton.me>
-References: <20260610042245.35473-1-hexlabsecurity@proton.me>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PGtQRORS"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CE0211F00893;
+	Wed, 10 Jun 2026 11:03:26 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1781089407;
+	bh=tIdRrHLfy0IMLrlE/pYlks6ZyDvrLaXSoJFnPWfYaB4=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=PGtQRORS5pNpwsCAcd3vagN4Ygb3963xpsQImk11eXoqhpYKOTEKx8Ou/Ep2bRou0
+	 lUpcPbU1hkpgHWk9TJWI4l5sLDEkMNW+1DJ7Zs2IRfx0Z51L0WJRVg+ajSF5vTv+sU
+	 yvTjy39fgUj3X5czjHRY+Iy/9bqBq8FfSS1Qs3G77NPjTYcSCXTQUTZ8PkFKqyLvLc
+	 mg7O6miJVos7UbdWuQHSil+GXfTtMSoHCO+0QCyykZsTdlJ5fp7rk27pdUzGQZkfQ/
+	 HBAzkIGaeBTP5+DeFTOU/qmm3tzUG0iXTwq6mmH5h4ad72FovLVUPZjOev/jPE6s82
+	 W0QL0uTTKVgVw==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] scsi_error: send device reset if asynchronous abort
+ failed
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Hannes Reinecke" <hare@kernel.org>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20260610105119.30903-1-hare@kernel.org>
+References: <20260610105119.30903-1-hare@kernel.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Wed, 10 Jun 2026 11:03:26 +0000
+Message-Id: <20260610110326.CE0211F00893@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-X-Spam-Flag: NO
-X-Spam-Score: -3.30
-X-Spamd-Result: default: False [-3.30 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	MID_CONTAINS_FROM(1.00)[];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	FUZZY_RATELIMITED(0.00)[rspamd.com];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	MISSING_XM_UA(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	ARC_NA(0.00)[];
-	RCPT_COUNT_SEVEN(0.00)[9];
-	RCVD_TLS_ALL(0.00)[];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	FROM_HAS_DN(0.00)[];
-	TO_DN_SOME(0.00)[];
-	FROM_EQ_ENVFROM(0.00)[];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	RCVD_COUNT_TWO(0.00)[2];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,suse.de:email,suse.de:mid,proton.me:email]
-X-Spam-Level: 
 
-On Wed, 10 Jun 2026 04:22:48 +0000, Bryam Vargas wrote:
+Thank you for your contribution! Sashiko AI review found 6 potential issue(=
+s) to consider:
+- [High] Calling `eh_device_reset_handler` asynchronously outside the SCSI =
+EH thread violates midlayer concurrency guarantees and breaks low-level dri=
+vers (LLDDs).
+- [High] Lockless modification of bitfields in `__scsi_report_device_reset(=
+)` causes data races that silently corrupt `struct scsi_device` state.
+- [High] Concurrent command timeouts on the same device trigger an unbounde=
+d cascade of redundant, sequential Bus Device Resets (BDRs).
+- [High] Premature escalation to Target Reset due to improper handling of t=
+he `SCSI_EH_RESET_SCHEDULED` flag.
+- [Medium] Missing Test Unit Ready (TUR) verification after asynchronous de=
+vice reset leads to immediate I/O failures.
+- [Medium] Asynchronous device reset bypasses post-recovery cleanup, leavin=
+g removable media physically unlocked but logically locked.
+--
 
-> core_scsi3_emulate_pro_register_and_move() maps the PERSISTENT RESERVE OUT
-> parameter list with transport_kmap_data_sg() and parses the destination
-> TransportID with target_parse_pr_out_transport_id(). For an iSCSI
-> TransportID (FORMAT CODE 01b), iscsi_parse_pr_out_transport_id() returns
-> the ISID in iport_ptr as a raw pointer into that mapped buffer.
-> 
-> The function then unmaps the buffer with transport_kunmap_data_sg() before
-> dereferencing iport_ptr in strcmp(), __core_scsi3_locate_pr_reg() and
-> core_scsi3_alloc_registration(). When the parameter list spans more than
-> one page (PARAMETER LIST LENGTH > 4096), transport_kmap_data_sg() uses
-> vmap() and transport_kunmap_data_sg() does vunmap(), so the kernel virtual
-> address backing iport_ptr is torn down and every subsequent dereference is
-> a use-after-free read of the unmapped region.
-> 
-> Keep the parameter list mapped until iport_ptr is no longer needed: drop
-> the early transport_kunmap_data_sg() and unmap once on the success path,
-> right before returning. The error paths already unmap through the existing
-> "if (buf) transport_kunmap_data_sg(cmd)" at the out: label, which now runs
-> on every post-map error exit because buf is no longer cleared early. Only
-> reads of the mapping happen while spinlocks are held; the map and unmap
-> calls remain outside any lock. The sibling caller
-> core_scsi3_decode_spec_i_port() already uses the buffer before unmapping it
-> and is left unchanged.
-> 
-> Fixes: 4949314c7283 ("target: Allow control CDBs with data > 1 page")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Bryam Vargas <hexlabsecurity@proton.me>
-> ---
-> v3 (review of v2 by John Garry and James Bottomley):
->   - Drop the parser-ownership approach. Rather than copy the ISID into an
->     allocation that both callers must kfree() (v2), keep the PR-OUT
->     parameter list mapped across the iport_ptr dereferences and move the
->     single unmap to the success path. No allocation, no kfree, and
->     target_core_fabric_lib.c / core_scsi3_decode_spec_i_port() are
->     unchanged. This is the form John Garry asked for ("keep the mapping in
->     place for longer, until the out: label") and removes the multiple
->     kfree() paths v2 added.
->   - Re: holding the mapping while spinlocks are held (raised on v2): only
->     reads of the mapping occur under dev_reservation_lock; the kmap/kunmap
->     calls are all outside any lock, so there is no sleep-in-atomic concern.
-> 
-> v2: https://lore.kernel.org/linux-scsi/20260609005858.17504-1-hexlabsecurity@proton.me/
-> v1: https://lore.kernel.org/linux-scsi/20260606015359.181724-1-hexlabsecurity@proton.me/
-> 
-> Class / impact: CWE-416 use-after-free (use-after-vunmap) in the LIO SCSI
-> target, reachable by an authenticated iSCSI initiator that is a current
-> Persistent Reservation registrant on the LUN. It sends PERSISTENT RESERVE
-> OUT / REGISTER AND MOVE with an iSCSI (FORMAT CODE 01b) TransportID and a
-> PARAMETER LIST LENGTH > 4096 so the parameter list spans >1 page and is
-> mapped with vmap(). After transport_kunmap_data_sg() vunmap()s that region,
-> the retained iport_ptr is dereferenced -> kernel read of an unmapped
-> vmalloc address (oops / DoS). Primarily a remotely reachable authenticated
-> denial of service. Present in all maintained trees since 4949314c7283
-> (v3.3, 2012), which introduced the multi-page vmap() path. Verified at
-> mainline v7.1-rc6 and stable v6.12.92.
-> 
-> Reproducer (authenticated iSCSI initiator, current PR reservation holder):
->   1. PERSISTENT RESERVE OUT / REGISTER a key from the iSCSI nexus.
->   2. PERSISTENT RESERVE OUT / REGISTER AND MOVE, FORMAT CODE 01b TransportID
->      (IQN + ",i,0x" + 12-char ISID), RELATIVE TARGET PORT IDENTIFIER of an
->      existing target port, with PARAMETER LIST LENGTH = 8192 (two pages ->
->      vmap()/vunmap()), the inner ADDITIONAL LENGTH set so tid_len + 24 ==
->      data_length, the remainder zero padding.
-> 
-> A/B verification (CONFIG_KASAN_VMALLOC=y, kasan.fault=report, x86-64,
-> 6.12.90; same kernel for every arm; 64-bit and 32-bit initiator):
->   - Without this patch (8192-byte, two-page request):
->       BUG: KASAN: vmalloc-out-of-bounds in strcmp+0xa7/0xb0
->         strcmp
->         core_scsi3_emulate_pro_register_and_move [target_core]
->         ? remove_vm_area
->         target_scsi3_emulate_pr_out [target_core]
->         __target_execute_cmd / iscsit_execute_cmd / iscsi_target_rx_thread
->       followed by "unable to handle page fault" (PTE 0); the command never
->       completes (the iSCSI rx kthread dies).
->   - Control (128-byte, single-page request): no report (kunmap is a no-op
->     on 64-bit !HIGHMEM, no vunmap).
->   - With this patch (same 8192-byte request, 64-bit and 32-bit initiator):
->     no report, the command completes.
-> 
->  drivers/target/target_core_pr.c | 8 +++++---
->  1 file changed, 5 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/target/target_core_pr.c b/drivers/target/target_core_pr.c
-> index 11790f2c5d80..7c5bb7d67947 100644
-> --- a/drivers/target/target_core_pr.c
-> +++ b/drivers/target/target_core_pr.c
-> @@ -3293,9 +3293,6 @@ core_scsi3_emulate_pro_register_and_move(struct se_cmd *cmd, u64 res_key,
->  		goto out;
+commit ba182d2d6163ba8d4c3c38885f49aacbb5f4c7fe
+Author: Hannes Reinecke <hare@kernel.org>
+Subject: scsi_error: send device reset if asynchronous abort failed
+
+This commit allows a device reset to be issued directly from
+scmd_eh_abort_handler() if a command abort fails. The change aims to prevent
+noticeable I/O stalls on other devices sharing the same host by avoiding
+the wait for all outstanding commands to finish before entering the error
+handler.
+
+> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+> index 147127fb4db9c..23dc50332f582 100644
+> --- a/drivers/scsi/scsi_error.c
+> +++ b/drivers/scsi/scsi_error.c
+
+[ ... ]
+
+> @@ -170,7 +171,16 @@ scmd_eh_abort_handler(struct work_struct *work)
+>  				    "cmd abort %s\n",
+>  				    (rtn =3D=3D FAST_IO_FAIL) ?
+>  				    "not send" : "failed"));
+> -		goto out;
+> +		if (scsi_host_eh_past_deadline(shost))
+> +			goto out;
+> +		rtn =3D scsi_try_bus_device_reset(scmd);
+
+[Severity: High]
+This invokes the device reset asynchronously from the abort workqueue, while
+the host is still in the active SHOST_RUNNING state.
+
+The SCSI midlayer documentation explicitly guarantees to low-level drivers
+that strategy routines like eh_device_reset_handler() are executed exclusiv=
+ely
+in the kernel EH thread. This ensures the host is in SHOST_RECOVERY where no
+normal I/O is dispatched and no other commands are queued.
+
+Will concurrent queuecommand() calls execute alongside the reset handler he=
+re?
+
+Does this expose drivers to data races and hardware state corruption,
+as their reset callbacks assume a quiescent state?
+
+[Severity: Medium]
+When a SCSI device is reset, removable media devices typically drop their
+medium removal prevention state, physically unlocking the door.
+
+The standard EH thread handles this by calling scsi_restart_operations()
+post-recovery, which checks sdev->was_reset and sdev->locked to re-issue
+ALLOW_MEDIUM_REMOVAL.
+
+Because this async device reset never enters SHOST_RECOVERY, does it bypass
+the scsi_restart_operations() cleanup entirely?
+
+Could this leave the physical device unlocked while the kernel still consid=
+ers
+it locked, allowing users to unexpectedly eject mounted media?
+
+> +		if (rtn !=3D SUCCESS) {
+> +			scmd_printk(KERN_INFO, scmd,
+> +				    "device reset %s\n",
+> +				    (rtn =3D=3D FAST_IO_FAIL) ?
+> +				    "not send" : "failed");
+> +			goto out;
+> +		}
 >  	}
->  
-> -	transport_kunmap_data_sg(cmd);
-> -	buf = NULL;
-> -
->  	pr_debug("SPC-3 PR [%s] Extracted initiator %s identifier: %s"
->  		" %s\n", dest_tf_ops->fabric_name, (iport_ptr != NULL) ?
->  		"port" : "device", initiator_str, (iport_ptr != NULL) ?
-> @@ -3532,6 +3529,11 @@ core_scsi3_emulate_pro_register_and_move(struct se_cmd *cmd, u64 res_key,
->  	core_scsi3_update_and_write_aptpl(cmd->se_dev, aptpl);
->  
->  	core_scsi3_put_pr_reg(dest_pr_reg);
-> +	/*
-> +	 * iport_ptr aliases the PR-OUT parameter list mapped above, so the
-> +	 * buffer is unmapped only here on success (and at out: on error).
-> +	 */
-> +	transport_kunmap_data_sg(cmd);
->  	return 0;
->  out:
->  	if (buf)
+>  	set_host_byte(scmd, DID_TIME_OUT);
+>  	if (scsi_host_eh_past_deadline(shost)) {
 
-Looks good.
-Reviewed-by: David Disseldorp <ddiss@suse.de>
+[Severity: Medium]
+In the standard EH thread, a successful device reset is followed by sending
+a Test Unit Ready (TUR) command via scsi_eh_tur() to ensure the device has
+fully recovered.
+
+This code proceeds to complete or retry the command immediately after a
+successful reset without invoking scsi_eh_tur().
+
+Could re-issuing commands or allowing new I/O immediately after a reset
+without verifying device readiness lead to unpredictable device behavior or
+immediate failures?
+
+[ ... ]
+
+> @@ -1013,6 +1023,11 @@ static enum scsi_disposition scsi_try_bus_device_r=
+eset(struct scsi_cmnd *scmd)
+>  	if (!hostt->eh_device_reset_handler)
+>  		return FAILED;
+> =20
+> +	/* Device reset had already been issued, escalate to next level */
+> +	if (scmd->eh_eflags & SCSI_EH_RESET_SCHEDULED)
+> +		return FAILED;
+> +
+> +	scmd->eh_eflags |=3D SCSI_EH_RESET_SCHEDULED;
+
+[Severity: High]
+When multiple commands time out concurrently on the same device, each
+schedules its own abort_work. If their aborts fail, they each independently
+call scsi_try_bus_device_reset().
+
+The deduplication flag SCSI_EH_RESET_SCHEDULED introduced here is tracked
+per-command (scmd->eh_eflags), not per-device.
+
+Does this fail to prevent BDR cascades?
+
+Would every single timed-out command on the device sequentially trigger a f=
+ull
+Bus Device Reset, severely delaying recovery?
+
+[Severity: High]
+If the asynchronous scsi_try_bus_device_reset() fails, it marks the command
+with SCSI_EH_RESET_SCHEDULED and delegates it to the main EH thread.
+
+When the main EH thread attempts recovery via scsi_eh_bus_device_reset(), it
+picks the first command for the device. If it picks this previously poisoned
+command, it will hit the check above and immediately return FAILED.
+
+Will this completely bypass the driver reset callback in the fully quiescent
+EH thread, depriving the device of a valid reset attempt and prematurely
+escalating to a Target Reset?
+
+>  	rtn =3D hostt->eh_device_reset_handler(scmd);
+>  	if (rtn =3D=3D SUCCESS)
+>  		__scsi_report_device_reset(scmd->device, NULL);
+
+[Severity: High]
+A successful asynchronous device reset calls __scsi_report_device_reset(),
+which modifies bitfields on struct scsi_device:
+
+scsi_error.c:__scsi_report_device_reset() {
+	sdev->was_reset =3D 1;
+	sdev->expecting_cc_ua =3D 1;
+}
+
+In C, bitfield assignments are non-atomic Read-Modify-Write (RMW) operation=
+s.
+Because this executes outside of the serialized SHOST_RECOVERY state, normal
+I/O completions can continue to process concurrently.
+
+Can concurrent softirq paths, such as scsi_check_sense() clearing
+expecting_cc_ua =3D 0, modify adjacent bitfields in the same machine word a=
+nd
+result in a data race that silently clobbers critical device flags?
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260610105119.3090=
+3-1-hare@kernel.org?part=3D1
