@@ -1,39 +1,80 @@
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5F0DA370AD3
-	for <linux-scsi@vger.kernel.org>; Wed, 10 Jun 2026 06:18:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D021227B32C
+	for <linux-scsi@vger.kernel.org>; Wed, 10 Jun 2026 06:21:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781072323; cv=none; b=GK01zuoWdGbsH22DjC+dcBiG8WoMBUMXAGJXbA7UTnOB8gozgp9Jnurqr90AVFQLoN7HWVAtk523v5p1XFkNjN3aKE0UDV3RTzr072K0JzV/OY/PDRqAkZL57hHHd7F6CLEyYZKnAKSf9j/p6V0JjJB82cTUQXi9sprBdcOqh98=
+	t=1781072474; cv=none; b=YL2icxF3lCYZ06NxWCs3s9xVBY8eVn3sOnKWeB2HsH2gifu1JhdYsJyOWu5+WkmLkI5RNjyuPGa/tdESZlb9gxoHENF/CR88ksGbboLk5twv0jKiL29YG/NumH5sZBDVLxPTCAQrJImanlqBW+IJX6sChscg3vLH3NkPd2XJ3Zk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781072323; c=relaxed/simple;
-	bh=1/856M6PqZ/8zjVZbqXQWpXYXTBEd3pLgjIjMgZCn4Q=;
+	s=arc-20240116; t=1781072474; c=relaxed/simple;
+	bh=b15syD9XJVTyKHxDm4QFDt0FJsK3/KebWv6z20t7bNE=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=ITEYShh+Gcdy8ndF+SNkbzL9aPNF/I5Zb5nj40LOX6UTEoczmDMtOSvRWNDgM4uG1vH4WDDGgggZE1SYntEdHutUFLCEsoQSX+jSkDlOxbzWilFzPc0O1yBsI/jCAZmsQab2T5j+sTZvObrfrxCubK0mVO93r2V8iYIWet+3IVM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; arc=none smtp.client-ip=195.135.223.131
+	 In-Reply-To:Content-Type; b=cJpRwdYiYcWF0bR41h05pXLIPpjBzW5YxYnHBhmxLdsxzHHGAPNxdiRHOG3qQul3CPTKDdsC2wfxYGtq8zKjcd6pZFEBHiCstg5VA9oUqdi6upBFI2tppg7l1F8gT7T+UXZHZHjv4jB/ypgQjGWSqI1CzUAf5B3Pb7KgGnrTCyE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=waHJe4W/; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=U6EAtjYv; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=waHJe4W/; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=U6EAtjYv; arc=none smtp.client-ip=195.135.223.130
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="waHJe4W/";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="U6EAtjYv";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="waHJe4W/";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="U6EAtjYv"
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id 8AA8575A9A;
-	Wed, 10 Jun 2026 06:18:35 +0000 (UTC)
-Authentication-Results: smtp-out2.suse.de;
+	by smtp-out1.suse.de (Postfix) with ESMTPS id CA2156AB65;
+	Wed, 10 Jun 2026 06:21:10 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1781072470; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=WbCQ0d3zTQZ6CGG+6Az/23i9L/arq92TNEcy3sEelj0=;
+	b=waHJe4W/QB/axCJtQRgAST3/L1ZffdvaSfCdsCopUjv8covGVV5Mu6HHQ5ZlTpiH9EpD9Q
+	zRFQa5HcZmyHm4tz927PKTsOEuhqSbWWv79hnw/iiQtLMoT8Yx5PxmoLIYnQrbZ7E69uds
+	o9AhwRFbIjTMQJ64sGTeky5eMDj3n/c=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1781072470;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=WbCQ0d3zTQZ6CGG+6Az/23i9L/arq92TNEcy3sEelj0=;
+	b=U6EAtjYvBU2LDrzfCGj83Db9o2/YQoljDhw02wO4Suo5f/iMj8UC41aU4G/FsxU6Rl43RT
+	YPgghOAwmqZuiBCQ==
+Authentication-Results: smtp-out1.suse.de;
 	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1781072470; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=WbCQ0d3zTQZ6CGG+6Az/23i9L/arq92TNEcy3sEelj0=;
+	b=waHJe4W/QB/axCJtQRgAST3/L1ZffdvaSfCdsCopUjv8covGVV5Mu6HHQ5ZlTpiH9EpD9Q
+	zRFQa5HcZmyHm4tz927PKTsOEuhqSbWWv79hnw/iiQtLMoT8Yx5PxmoLIYnQrbZ7E69uds
+	o9AhwRFbIjTMQJ64sGTeky5eMDj3n/c=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1781072470;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=WbCQ0d3zTQZ6CGG+6Az/23i9L/arq92TNEcy3sEelj0=;
+	b=U6EAtjYvBU2LDrzfCGj83Db9o2/YQoljDhw02wO4Suo5f/iMj8UC41aU4G/FsxU6Rl43RT
+	YPgghOAwmqZuiBCQ==
 Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 5D489779A7;
-	Wed, 10 Jun 2026 06:18:33 +0000 (UTC)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 35718779A7;
+	Wed, 10 Jun 2026 06:21:08 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
 	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id esOfFbkBKWoafQAAD6G6ig
-	(envelope-from <hare@suse.de>); Wed, 10 Jun 2026 06:18:33 +0000
-Message-ID: <93a82831-608d-4462-a019-26b3adc7089c@suse.de>
-Date: Wed, 10 Jun 2026 08:18:33 +0200
+	id cGvRC1QCKWqkfwAAD6G6ig
+	(envelope-from <hare@suse.de>); Wed, 10 Jun 2026 06:21:08 +0000
+Message-ID: <ca44e52a-ddf7-4bf8-9634-5afaf7413176@suse.de>
+Date: Wed, 10 Jun 2026 08:21:07 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -41,7 +82,8 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 3/4] block: drop shared-tag fairness throttling
+Subject: Re: [PATCH v3 4/4] scsi: use percpu counters for iostat counters in
+ struct scsi_device
 To: Sumit Saxena <sumit.saxena@broadcom.com>,
  "Martin K . Petersen" <martin.petersen@oracle.com>,
  Jens Axboe <axboe@kernel.dk>
@@ -94,64 +136,63 @@ Cc: "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
  bcm-kernel-feedback-list@broadcom.com, Juergen Gross <jgross@suse.com>,
  Stefano Stabellini <sstabellini@kernel.org>,
  Oleksandr Tyshchenko <oleksandr_tyshchenko@epam.com>,
- xen-devel@lists.xenproject.org, Bart Van Assche <bvanassche@acm.org>
+ xen-devel@lists.xenproject.org, John Garry <john.g.garry@oracle.com>
 References: <20260609121806.2121755-1-sumit.saxena@broadcom.com>
- <20260609121806.2121755-4-sumit.saxena@broadcom.com>
+ <20260609121806.2121755-5-sumit.saxena@broadcom.com>
 Content-Language: en-US
 From: Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20260609121806.2121755-4-sumit.saxena@broadcom.com>
+In-Reply-To: <20260609121806.2121755-5-sumit.saxena@broadcom.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-Rspamd-Pre-Result: action=no action;
-	module=replies;
-	Message is reply to one we originated
-X-Rspamd-Pre-Result: action=no action;
-	module=replies;
-	Message is reply to one we originated
 X-Spam-Flag: NO
-X-Spam-Score: -4.00
+X-Spamd-Result: default: False [-4.30 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	NEURAL_HAM_SHORT(-0.20)[-0.999];
+	MIME_GOOD(-0.10)[text/plain];
+	MID_RHS_MATCH_FROM(0.00)[];
+	FUZZY_RATELIMITED(0.00)[rspamd.com];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	ARC_NA(0.00)[];
+	TO_DN_SOME(0.00)[];
+	FREEMAIL_ENVRCPT(0.00)[web.de];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	RCPT_COUNT_GT_50(0.00)[82];
+	FROM_HAS_DN(0.00)[];
+	FREEMAIL_CC(0.00)[HansenPartnership.com,vger.kernel.org,gmail.com,gonehiking.org,microsemi.com,infradead.org,suse.com,norbit.de,armlinux.org.uk,lists.infradead.org,linux-m68k.org,qlogic.com,neukum.org,web.de,twibble.org,broadcom.com,attotech.com,cisco.com,h-partners.com,microchip.com,highpoint-tech.com,linux.ibm.com,ellerman.id.au,kernel.org,lists.ozlabs.org,us.ibm.com,redhat.com,oracle.com,googlegroups.com,thingy.jp,debian.or.jp,netlab.is.tsukuba.ac.jp,cloud.ionos.com,sgi.com,marvell.com,microsoft.com,lists.linux.dev,epam.com,lists.xenproject.org];
+	R_RATELIMIT(0.00)[to_ip_from(RLe7mkytzjcetcarxr9hjfjrzi)];
+	FROM_EQ_ENVFROM(0.00)[];
+	TO_MATCH_ENVRCPT_SOME(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	RCVD_TLS_ALL(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[broadcom.com:email,imap1.dmz-prg2.suse.org:helo,suse.de:email,suse.de:mid]
 X-Spam-Level: 
-X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
-X-Spamd-Result: default: False [-4.00 / 50.00];
-	REPLY(-4.00)[]
-X-Rspamd-Queue-Id: 8AA8575A9A
-X-Rspamd-Action: no action
+X-Spam-Score: -4.30
 
 On 6/9/26 14:18, Sumit Saxena wrote:
-> From: Bart Van Assche <bvanassche@acm.org>
+> iorequest_cnt and iodone_cnt are updated on every command dispatch and
+> completion, often from different CPUs on high queue depth workloads.
+> Using adjacent atomic_t fields causes cache line contention between the
+> submission and completion paths.
 > 
-> Original patch [1] by Bart Van Assche; this version is rebased onto the
-> current tree.  In testing it improves IOPS by roughly 16-18% by removing
-> the fair-sharing throttle on shared tag queues.
+> Extend the same treatment to ioerr_cnt and iotmo_cnt so all four iostat
+> counters in struct scsi_device use struct percpu_counter.
 > 
-> This patch removes the following code and structure members:
-> - The function hctx_may_queue().
-> - blk_mq_hw_ctx.nr_active and request_queue.nr_active_requests_shared_tags
->    and also all the code that modifies these two member variables.
-> 
-> [1]: https://lore.kernel.org/linux-block/20240529213921.3166462-1-bvanassche@acm.org/
-> 
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+> Suggested-by: John Garry <john.g.garry@oracle.com>
 > Signed-off-by: Sumit Saxena <sumit.saxena@broadcom.com>
 > ---
->   block/blk-core.c       |   2 -
->   block/blk-mq-debugfs.c |  22 ++++++++-
->   block/blk-mq-tag.c     |   4 --
->   block/blk-mq.c         |  17 +------
->   block/blk-mq.h         | 100 -----------------------------------------
->   include/linux/blk-mq.h |   6 ---
->   include/linux/blkdev.h |   2 -
->   7 files changed, 22 insertions(+), 131 deletions(-)
+>   drivers/scsi/scsi_error.c  |  4 ++--
+>   drivers/scsi/scsi_lib.c    | 10 +++++-----
+>   drivers/scsi/scsi_scan.c   |  8 ++++++++
+>   drivers/scsi/scsi_sysfs.c  | 23 ++++++++++++++---------
+>   drivers/scsi/sd.c          |  2 +-
+>   include/scsi/scsi_device.h |  9 +++++----
+>   6 files changed, 35 insertions(+), 21 deletions(-)
 > 
-What tests did you perform?
-I'm pretty sure you see an improvement when having just a few drives,
-but what about having a lot of them (ie tens of drives)?
-The whole point of this was to increase fairness between drives, so
-of course removing it will make an individual drive going faster ...
+Good idea.
 
-Maybe it's an idea to move the fairness algorithm into an I/O scheduler;
-that way we can keep the original behaviour yet get the performance
-increase if people want it.
+Reviewed-by: Hannes Reinecke <hare@kernel.org>
 
 Cheers,
 
