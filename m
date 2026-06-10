@@ -1,115 +1,158 @@
-Received: from mail-yw1-f176.google.com (mail-yw1-f176.google.com [209.85.128.176])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 351C732E12E
-	for <linux-scsi@vger.kernel.org>; Wed, 10 Jun 2026 17:32:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.128.176
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781112758; cv=pass; b=cgZWA1GfTNzK2rwKU/h0nDXij6hF3vpTOayQwK/Ro3fD50IZ2nS6phCMazB0h9XyiBjSP4m14s21hmWeuUKlBNrMaaO8+ZQeaYmEVKdWA3txLShkbeCRsgjYO3zvNuE5pdCXPJBjCx+b5nTx8Mr8kc59RTNEtEQhfb/qFSgid1Q=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781112758; c=relaxed/simple;
-	bh=pv27nD72m+0lU+Zg8Sfz05ZN+Nn05pr71ShMvkiRWec=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=niSvW0ftxJeBQiUpjcn+q+IygrDA56E+t6fS3b+bIW2lnBvYLoLnUBrVr2NO9Xwz6VpsMotpI+/Z9TCjvny2FnlyVye1JdJFLlClqKFmkDcUqJW/Y7zTvz8+82R+32Eqziy7dx2XJxGygcmFD+H733r7eFT2NSKn4XxOUQrFsOE=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=KP7Dn7GQ; arc=pass smtp.client-ip=209.85.128.176
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DA5D0165F1A;
+	Wed, 10 Jun 2026 18:20:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.14
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1781115603; cv=none; b=pvABYL8cTy1Owu4PZYlYuA2uACZP2mWx4xpXVL8dmSpK2vZm+jw7IX2rDOezCp0NK44bc1TsbUv4Ov7yS7c0iuD3IQkQ/r+vHro9gVyKkAjLC0WQIKUc264CoOXa8tkDiawWkFIrqag+X6Bheokp06VEfOIlFwahxpKsXNQDLvA=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1781115603; c=relaxed/simple;
+	bh=JVIYg6cJofNnExXLa0L/JWdwfMC0pckWPaSEzyTwAJE=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=a7vAlShZk1BCJofnBhu7L+sqOmF+FYohVPiUmP48NaAL4SiCMyvrnEzd9AuxgZWGkZK5Au1nGdcI6VCdCtSYSx4yDdgOvcLIMx3Glc9d0KSeYJYpqt88xcqiHxlhYQRBz3g9Ns+gknYZKVecyhneXBP96pD1F6S2vxHJz/JKE8Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=4PtCdXrt; arc=none smtp.client-ip=199.89.1.14
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="KP7Dn7GQ"
-Received: by mail-yw1-f176.google.com with SMTP id 00721157ae682-7dfceeaf168so66933167b3.0
-        for <linux-scsi@vger.kernel.org>; Wed, 10 Jun 2026 10:32:37 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1781112756; cv=none;
-        d=google.com; s=arc-20240605;
-        b=PtwTK9dmt033aGqVWeIn7ohCwGi5m2prmTdj5rRo3egsS3PDx9RfTmiDDNy5CICB2j
-         1hO27fDiokEMdmXizHeUuzZkrys0bE7citPDhoN9qvHuosjvyxGlHlyM7DcY4DAHmm4l
-         /+iiIETIXs8mddDmYccFm7WqzGWGhzEYFntqXLR4JxOphcEW77qbO30IHKplXjw9IAKP
-         q088fMCTr3Omu1wysajo6UFhZMPG4Dp5ihqTL4JbLlSJrOJg8FCEXMZjNBeCWCL341I2
-         /goVTC9ZXAWiGmTVGbz2tkDUaJLvIYgwIhknIJ/ydXM55fCu/4bQNAAABxsYEup1/M/0
-         sOAA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=TwPccAVt1qmj9UT4eXbvYpUbw68SGsfYYMuRUSdO1Mw=;
-        fh=uX6OuyPaMcFxvbwcHRLbQktINC6g2jhTkRT8t8rxjTc=;
-        b=MSBqDaqDQH/8ePA2lEzH6UGhOR6LNZyszOt73Cc6/LDtCNUWTybemoe9NKuAKm3olJ
-         Z91Ar3Re5k48gyrsV3Cu13xIodsdcaVzR+3EzBer721PLPrh6RlWHv6Qolx6VbLHsN6k
-         t6DDKM/fk9BO7YAfPGLgo4pCJm27k9PL30N9UtP+taA96L+GCPvU0dtct1ggpNNwsiDb
-         q4t5/ctwqOjMxm+26IVxFYXeZugyBHlJv+kWlTCdw4ll/p9ykf8QJd8pMCKunBVeZaLC
-         rQfUjYu0JHu5D6axqjBx0RXi1seMVEvLaliK/10kP1xB6XTfEzyYIllBs1QdH776E1NJ
-         IhAg==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1781112756; x=1781717556; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=TwPccAVt1qmj9UT4eXbvYpUbw68SGsfYYMuRUSdO1Mw=;
-        b=KP7Dn7GQBNvb471v+u4CUHwOVL5SvkytqQzQ7g6dm7yTO6JGqxI95SdH5pS2+P8HW/
-         kE/Pu26RsRA5Gudt+TtWrBANl/gqH7E5hhy2tiFS/vOLkCdww4mMtOchzTSiq/zd7YaQ
-         rTe/PebNxpzavdzds/3A2j4caXPCgRzexSiia1vGnmv0EsfOERiGEvfAQBVknXfVF82t
-         zWE0OS9LOJBpAIeXu3QEczdsfvBQ1oIBXHc0QLKHxUm1mTMW/KYMZkCudsPegrtGwPUL
-         FGk8I1q0j3+F3GPT5oEfpdLS5f4YObwvXCBxTJxeMN7XzNyOXUiLZp8cVQXczDGMA89z
-         +a5g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1781112756; x=1781717556;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=TwPccAVt1qmj9UT4eXbvYpUbw68SGsfYYMuRUSdO1Mw=;
-        b=p/C7uTjpOjCLPTrsVeq1sJ10n8cfvk7FR9ltOj0MlP1UYLJ+Z+SlukL/szQlH8U1Di
-         URxY9sJEg7MXdK0Q3rXYn2IXYRGysXkFo4JWA0UUSMfyrcaS5qwfwBy3IHeNu9WnLlym
-         ALTrXyGWrw+QlWODms3jxniGIo4fc2XL3rGg77T11k0GcuLnFCoXnu6AR+59YPkh+Y8e
-         Bt/74sefSTU7ZCH1N0UvG1HQT0DlzPs8Mz3hq9mb/d27XLow0aUA28yCxmhvsIA1CLy6
-         qszQ/fNrCmQHDRID7Vb/UpfEKqkjal/JJOs8g+vANkk7zedQ2t2kx9lkX2jA1WeUKfe1
-         x+PQ==
-X-Forwarded-Encrypted: i=1; AFNElJ8QFS02MhVI0NXGBOcEVZ0QFynSSCyEUZSg0n4N2KOz28zy6fj9hnglgoOXNP6UOM2DgzbVPJZfcNWQ@vger.kernel.org
-X-Gm-Message-State: AOJu0Yx8T+bp/b2kpuXAwTJs92LsfZcw3gyYFKi7KIZrlEDnnsarFmzh
-	KKpd37LmWSWhO9FC8GbC4839D7AAEJukI4v+yDy89TKQblomgSSNz8RsD19sRMUG6nyh7F8cLyz
-	bCyMo+RFY553WPIn0N/Ej8IBa89/J4qk=
-X-Gm-Gg: Acq92OEAea5w/+cD3IeDMZZHrqsDcpejI4PuAWF63GbqhSHrWirMf5sQBcZT7eFEutD
-	ERk1KsK8mqHZ35y556sYOFHyV0mHFAUrO4CWRozisI4C3+GTp1+WPEgj1yTv4QuvqIt0DPgrb8C
-	GEzy6y8AddZTFKQJ8vb8VpDubowWtAsmsKiwfA9NOOhz2NDi1rJWAX2VnGzQ3p80zuKEAxJYtNa
-	6sgxB+14gHiEj0QZKdKynVIwZfD5zbenoS4YLx2iXUorCeWP+21XBN4RE0KTN8E7nqkzgc7gCHx
-	D76qVojMEs/rgXWC3avbcLd7x7WllhnQF+YUT+uP5CAlOu0=
-X-Received: by 2002:a05:690e:d45:b0:652:ddea:1679 with SMTP id
- 956f58d0204a3-6626582c171mr122992d50.16.1781112756029; Wed, 10 Jun 2026
- 10:32:36 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="4PtCdXrt"
+Received: from localhost (localhost [127.0.0.1])
+	by 011.lax.mailroute.net (Postfix) with ESMTP id 4gbDb52fQHz1XLyhf;
+	Wed, 10 Jun 2026 18:20:01 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1781115596; x=1783707597; bh=e20oA2/hYWBsVwzEsdV1BTXP
+	nHBOXoli9wZcBXVbjm0=; b=4PtCdXrtx9wrO3j1MPY++vYvqNEfIXDUkqxEIU7R
+	JhbTVvId71C0vBiP2yMk5etJOdF3+FVjIRKw1ENyZpOHK0v8Tn/QZlyIyXclpeOP
+	/8gTh6FWGYp4+vqVx+mb+HeJHxHqgcGWHrjiCSB3X4gA5QHT67HMuLc9edTVjVXj
+	j6Ik8Zxv0frazFmmhgb2K4SbP5Wc40S2NFRpRijBNmoYNxzp0fsJwNgG9GUP5s5W
+	Ak+JDJ3XtG1t1ugffwxz5FHCApO5BCCJ0ZUJ4r2mCxGbd8RHCiNMzoUWNZyX21E/
+	32WxjtC4JT4x2CVHQsPt7Ou7+lbRKXMoKIvB04fOJnjJRw==
+X-Virus-Scanned: by MailRoute
+Received: from 011.lax.mailroute.net ([127.0.0.1])
+ by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id 1S3SlWX5CanL; Wed, 10 Jun 2026 18:19:56 +0000 (UTC)
+Received: from [100.119.48.131] (unknown [104.135.180.219])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4gbDZy4xmQz1XLyhT;
+	Wed, 10 Jun 2026 18:19:54 +0000 (UTC)
+Message-ID: <fd67c7af-4e80-403f-bcde-0e0fadf6d5d0@acm.org>
+Date: Wed, 10 Jun 2026 11:19:53 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260610114120.3748526-1-michael.bommarito@gmail.com> <CABPRKS_HbtV5vWx5nHT9rwJV4TGmOPj670yUuLK-Hd-r6TBF1g@mail.gmail.com>
-In-Reply-To: <CABPRKS_HbtV5vWx5nHT9rwJV4TGmOPj670yUuLK-Hd-r6TBF1g@mail.gmail.com>
-From: Michael Bommarito <michael.bommarito@gmail.com>
-Date: Wed, 10 Jun 2026 13:32:24 -0400
-X-Gm-Features: AVVi8CcXqdpLUnD172xmFbgGPxwwTP7xSfHNWUNfDHYPtVKWYaJD2heVrYF3UV4
-Message-ID: <CAJJ9bXxMvSfzttjiRATN1vkVP9-RyyH-P6O4yMwVJGcpZVOCFg@mail.gmail.com>
-Subject: Re: [PATCH] scsi: lpfc: bound RPL ACC payload size to the response structure
-To: Justin Tee <justintee8345@gmail.com>
-Cc: Justin Tee <justin.tee@broadcom.com>, 
-	"James E . J . Bottomley" <James.Bottomley@hansenpartnership.com>, 
-	"Martin K . Petersen" <martin.petersen@oracle.com>, Paul Ely <paul.ely@broadcom.com>, 
-	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	stable@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2] ufs: sysfs: Add WB partial flush mode support
+To: Daniel Lee <chullee@google.com>, James.Bottomley@hansenpartnership.com,
+ martin.petersen@oracle.com
+Cc: alim.akhtar@samsung.com, tanghuan@vivo.com, linux-scsi@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+References: <20260610134316.990430-1-chullee@google.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20260610134316.990430-1-chullee@google.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Wed, Jun 10, 2026 at 1:29=E2=80=AFPM Justin Tee <justintee8345@gmail.com=
-> wrote:
-> Thanks for bringing this to attention.  The RPL ELS command has been
-> obsoleted from Fibre Channel specifications since FC-LS-2, and there
-> are current plans to remove RPL ELS handling routines from the lpfc
-> driver entirely.  Therefore, the issue this patch is trying to address
-> will no longer exist by the next lpfc version update.
+On 6/10/26 6:43 AM, Daniel Lee wrote:
+> +static const char *ufs_wb_pfm_to_string(u32 pfm)
+> +{
+> +	if (pfm < NUM_WB_PARTIAL_FLUSH_MODES)
+> +		return wb_partial_flush_modes[pfm];
+> +
+> +	return "unknown";
+> +}
 
-Glad to hear!
+Is a new function really required for something that can be written as a
+single ternary expression? Please consider folding this function into 
+its caller since the above function only has one caller.
 
-Will you be sending the refactor through stable@ to backport too?  I'm
-not sure how this works if there might be reasons to backport but
-obviously next+ are safe
+> +
+> +
+
+Please follow the convention used elsewhere in the Linux kernel and only 
+insert a single blank line between definitions.
+
+> +	ret = ufshcd_query_flag(hba, UPIU_QUERY_OPCODE_READ_FLAG,
+> +		idn, index, &flag);
+> +	ufshcd_rpm_put_sync(hba);
+> +	if (ret) {
+> +		ret = -EINVAL;
+> +		goto out;
+> +	}
+
+Why is the error code returned by ufshcd_query_flag() changed into
+-EINVAL? Isn't this something that should only happen if
+ufshcd_query_flag() returns a positive value? From the comment block
+above the definition of ufshcd_query_flag():
+
+  * Return: 0 upon success; > 0 in case the UFS device reported an OCS 
+error;
+  * < 0 if another error occurred.
+
+> +	ret = ufshcd_query_flag(hba,
+> +		value ? UPIU_QUERY_OPCODE_SET_FLAG : UPIU_QUERY_OPCODE_CLEAR_FLAG,
+> +		idn, index, NULL);
+> +	ufshcd_rpm_put_sync(hba);
+> +	if (ret) {
+> +		ret = -EINVAL;
+> +		goto out;
+> +	}
+
+Same comment here.
+
+> +	if (ufshcd_is_qword_attr(idn))
+> +		ret = ufshcd_query_attr_qword(hba, UPIU_QUERY_OPCODE_READ_ATTR,
+> +			idn, index, 0, &qword_value);
+> +	else
+> +		ret = ufshcd_query_attr(hba, UPIU_QUERY_OPCODE_READ_ATTR,
+> +			idn, index, 0, &value);
+> +	ufshcd_rpm_put_sync(hba);
+> +	if (ret) {
+> +		ret = -EINVAL;
+> +		goto out;
+> +	}
+
+Same comment here.
+
+> +	ret = ufshcd_query_attr(hba, UPIU_QUERY_OPCODE_WRITE_ATTR,
+> +		idn, index, 0, &value);
+> +	ufshcd_rpm_put_sync(hba);
+> +	if (ret) {
+> +		ret = -EINVAL;
+> +		goto out;
+> +	}
+
+Same comment here.
+
+> +	ret = ufshcd_query_attr(hba, UPIU_QUERY_OPCODE_READ_ATTR,
+> +		QUERY_ATTR_IDN_WB_PFM, ufshcd_wb_get_query_index(hba), 0, &value);
+> +	ufshcd_rpm_put_sync(hba);
+> +	up(&hba->host_sem);
+> +	if (ret)
+> +		return -EINVAL;
+
+Same comment here.
+
+> +	ret = ufshcd_query_attr(hba, UPIU_QUERY_OPCODE_WRITE_ATTR,
+> +		QUERY_ATTR_IDN_WB_PFM, ufshcd_wb_get_query_index(hba), 0, &value);
+> +	ufshcd_rpm_put_sync(hba);
+> +	up(&hba->host_sem);
+> +
+> +	return ret ? -EINVAL : count;
+
+Same comment here.
+
+Otherwise this patch looks good to me.
 
 Thanks,
-Mike
+
+Bart.
