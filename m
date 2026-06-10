@@ -1,48 +1,48 @@
 Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8EEDE42EEB8;
-	Wed, 10 Jun 2026 16:05:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 510BA2FE056;
+	Wed, 10 Jun 2026 16:19:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781107545; cv=none; b=bT+7M9dJqAAlpb4gqWTi7EYK+okEN3Jc+J2BwXdkvP1U9sto4J4ag4MCNgqeT8rLGM0NCADkrswciyKM30z6A63fzh1URK4vkrtQaCHoSwwtgQ0qT+dLNLSQhP0y+H87ZWneKAF8Z/P7Or2u6Ii0q05/It8l4H/MfxQfLPpzZWQ=
+	t=1781108356; cv=none; b=af5KJtWGSJAkhJrXLXLU8jXotNxIiedVGnFCazq9wkFQ8UkWzjEOsMEOT/bPm3WEoUhkL90BBIqPHuIcm4XYCfh0sRuCxS95+bJdlDL4MxeFfVHBFjDVOCvkntlO65B3e4WnJVDqbZHqqbkzjjrNegYW7+pq30Ud3J35jay5cGE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781107545; c=relaxed/simple;
-	bh=4g06kR2RckvBV7kCGKvXj9C1F/7q+DmeXmWHnyrFlTA=;
+	s=arc-20240116; t=1781108356; c=relaxed/simple;
+	bh=5+iSWpXr2CnR85Fhrd14dIO7ZwkH4DoPjLCETONjDhk=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=ByGje9GIGqsA9d6f1ZtgKnggWsbsdKN4A+UQ9glIvrMZt0iyC3N/pCXMn8dm28v+lTfIbfMR70FyxBBj1t+QNzBV13HFB82M1Au+aXJe/PtKIjVbvzgIBg89B/wDESjk6KZy/moCVqy7BFDppjO3dgLoZ5UtPczcNOgfdDqJ83k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=fkbj5R4t; arc=none smtp.client-ip=199.89.1.14
+	 In-Reply-To:Content-Type; b=K8TB1I9bRCw/dDlyzqOwSac6LCYO+9VuGIAas7I7bplXFKboUtufOTEfaaoRGt0CMQT7sxRnQb1vKlzwNUiaiWdbr7S78lvM5rgH3biqZ5FNELt+1nDjKYejF9MO/7OI/UGP6zJ+rMZ7Q3wKFRWZaV7C1FV7fNtkQOmhAhjHcv8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=W5lGVwD4; arc=none smtp.client-ip=199.89.1.14
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="fkbj5R4t"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="W5lGVwD4"
 Received: from localhost (localhost [127.0.0.1])
-	by 011.lax.mailroute.net (Postfix) with ESMTP id 4gb9c56Zp1z1XLyhV;
-	Wed, 10 Jun 2026 16:05:41 +0000 (UTC)
+	by 011.lax.mailroute.net (Postfix) with ESMTP id 4gb9vk5yHDz1XLyhV;
+	Wed, 10 Jun 2026 16:19:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:content-type:content-type:in-reply-to
 	:from:from:content-language:references:subject:subject
 	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1781107538; x=1783699539; bh=4g06kR2RckvBV7kCGKvXj9C1
-	F/7q+DmeXmWHnyrFlTA=; b=fkbj5R4tOI5lubOPFat6/GZdWo+ycb3oJo7xk1fr
-	b658P0CtpayqRMiKyXjB2QQ1dmvJ71GfYwEZHQPnG1vwmyImHMdQtR0S0A/GjkH9
-	mLGI5dkr9OIOjx4fLhZ+WKys3xMHs07JAPPLvMk/ma53H6NY5Boaw8r/QJcnqF8t
-	pVlWTlZKRhbSmzX+1LyFWsXgV34EIahLS4Sz8mTBOduLQVXdHK0HCzgPSulGTGrk
-	Qh18HyjMZxxtcK+uay2jL0KE7v9FbF7VUSagPaidN+ZpJqtrPh/DZGz7cZyK7OJO
-	g55/ILtj2t4FZCYWAXdhoyn+E77thZyhI/WpdnAoC5FC2A==
+	 s=mr01; t=1781108350; x=1783700351; bh=xfHa9RuC2nGVQeuWNKXTunXF
+	zBkwGqnU+KCmJdSTHR4=; b=W5lGVwD4eJR9E3h/dqFI4fFevnrEqeetxMs8rbwB
+	KnkCOMpNG9VJSNJrWjo/AUKkpA/iiXt+bcJsZO7CapnlnLXQvAF7bbA+2oLnHPpF
+	BJbVDz5+7qi9JcLZMbnjQIzDmtwFhT5rI9F0jA8lg4hlyfVLt1tiwbBRbKr+yDaP
+	YHtaxfbYaY6GhZpQcOn9vXzgNbTg9vZPcvztfV6LagGWaS10ztQnXXec5K5CRfFs
+	b5iuUBPVPudCmsOPUJhVBg+FGhmV2X+AbgOxOaZX69gyXEJiYqwIrEM1fLJinqFk
+	TElG4GhbyK+7GqO3ITwJaPLh2p5JR87zTu6Rs28VYuSDVA==
 X-Virus-Scanned: by MailRoute
 Received: from 011.lax.mailroute.net ([127.0.0.1])
  by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id Zdm7l2cw2X3o; Wed, 10 Jun 2026 16:05:38 +0000 (UTC)
+ id naQvPif2iLkO; Wed, 10 Jun 2026 16:19:10 +0000 (UTC)
 Received: from [100.119.48.131] (unknown [104.135.180.219])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4gb9bz5MFLz1XLyhT;
-	Wed, 10 Jun 2026 16:05:35 +0000 (UTC)
-Message-ID: <3086f8a4-1f0b-4261-a19f-1ec0f4d2af80@acm.org>
-Date: Wed, 10 Jun 2026 09:05:34 -0700
+	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4gb9vd0Rfyz1XLyhS;
+	Wed, 10 Jun 2026 16:19:08 +0000 (UTC)
+Message-ID: <8a07bac5-7083-4cf2-966a-2d5281e52a2a@acm.org>
+Date: Wed, 10 Jun 2026 09:19:08 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,29 +50,50 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 3/4] block: drop shared-tag fairness throttling
-To: open-iscsi@googlegroups.com, Hannes Reinecke <hare@suse.de>,
- Sumit Saxena <sumit.saxena@broadcom.com>,
- "Martin K . Petersen" <martin.petersen@oracle.com>,
- Jens Axboe <axboe@kernel.dk>
-Cc: "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
- linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
-References: <20260609121806.2121755-1-sumit.saxena@broadcom.com>
- <20260609121806.2121755-4-sumit.saxena@broadcom.com>
- <93a82831-608d-4462-a019-26b3adc7089c@suse.de>
+Subject: Re: [PATCH v1] scsi: Improve style of pnp_device_id array terminator
+To: =?UTF-8?Q?Uwe_Kleine-K=C3=B6nig_=28The_Capable_Hub=29?=
+ <u.kleine-koenig@baylibre.com>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ Finn Thain <fthain@linux-m68k.org>, Michael Schmitz <schmitzmic@gmail.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <096aaa981c0bf1aaa8be75e675f17b1c9ca0086c.1781102092.git.u.kleine-koenig@baylibre.com>
 Content-Language: en-US
 From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <93a82831-608d-4462-a019-26b3adc7089c@suse.de>
+In-Reply-To: <096aaa981c0bf1aaa8be75e675f17b1c9ca0086c.1781102092.git.u.kleine-koenig@baylibre.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: quoted-printable
 
-On 6/9/26 11:18 PM, Hannes Reinecke wrote:
-> The whole point of this was to increase fairness between drives, so
-> of course removing it will make an individual drive going faster ...
-Data that shows that fairness is preserved even with this patch applied
-is available here:
-https://lore.kernel.org/linux-block/20240529213921.3166462-1-bvanassche@acm.org/
+On 6/10/26 7:36 AM, Uwe Kleine-K=C3=B6nig (The Capable Hub) wrote:
+> diff --git a/drivers/scsi/aha1542.c b/drivers/scsi/aha1542.c
+> index fd766282d4a4..93dab19c1cb9 100644
+> --- a/drivers/scsi/aha1542.c
+> +++ b/drivers/scsi/aha1542.c
+> @@ -1083,7 +1083,7 @@ static int isa_registered;
+>   #ifdef CONFIG_PNP
+>   static const struct pnp_device_id aha1542_pnp_ids[] =3D {
+>   	{ .id =3D "ADP1542" },
+> -	{ .id =3D "" }
+> +	{ }
+>   };
+>   MODULE_DEVICE_TABLE(pnp, aha1542_pnp_ids);
+>  =20
+> diff --git a/drivers/scsi/g_NCR5380.c b/drivers/scsi/g_NCR5380.c
+> index 270eae7ac427..41731a7304dd 100644
+> --- a/drivers/scsi/g_NCR5380.c
+> +++ b/drivers/scsi/g_NCR5380.c
+> @@ -739,7 +739,7 @@ static struct isa_driver generic_NCR5380_isa_driver=
+ =3D {
+>   #ifdef CONFIG_PNP
+>   static const struct pnp_device_id generic_NCR5380_pnp_ids[] =3D {
+>   	{ .id =3D "DTC436e", .driver_data =3D BOARD_DTC3181E },
+> -	{ .id =3D "" }
+> +	{ }
+>   };
+>   MODULE_DEVICE_TABLE(pnp, generic_NCR5380_pnp_ids);
 
-Thanks,
+Although in general I'm not a fan of code cleanups for legacy drivers, I
+like this change. Hence:
 
-Bart.
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+
