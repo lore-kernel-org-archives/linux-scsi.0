@@ -1,149 +1,157 @@
-Received: from mail-oi1-f169.google.com (mail-oi1-f169.google.com [209.85.167.169])
+Received: from mail-wm1-f46.google.com (mail-wm1-f46.google.com [209.85.128.46])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 956CD3921E9
-	for <linux-scsi@vger.kernel.org>; Wed, 10 Jun 2026 20:43:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.169
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3131D352F95
+	for <linux-scsi@vger.kernel.org>; Wed, 10 Jun 2026 20:56:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.46
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781124205; cv=none; b=s2aJE+Ma2Tt9xbs+uTl2jgeRMga6fpj+3PRkTyInuWnQS8UMAX7JcYaJNHdgadsIYUnBMjtesDT6VBTKmV/964PTh59lepHGFBQG/9QGU1kK/36Nu32/7XACW7iP4WR1RewE9k4wrLUUVPOM1+nj7BIvcBDzq+ztRYSDcm/1/EU=
+	t=1781125010; cv=none; b=No2sZQRIMvztb1iDoGpz1A85DmXO32x6N7+1d2dgqoeLW81np18Im3N0ztZhXyfdYrkRRgN65ow7ptgRBjr8Iuy3KZvW546R0bJh6LfcYitOYg5PSOdVXzxhOA04mAzpFLQcogu0WHZZkbM0IZ6PR4GmgWpyHKTjyvB2lVELTtQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781124205; c=relaxed/simple;
-	bh=eECEFWKviFGovSY8dv4YhSbKFI3KHDczqXjfIHtU4KI=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=KHTeqgjhvSiHYJ0JIaUXcyPDQORI+NQbmw564s9RtSU/hWctYia4weeeLiZz4FR6CqWNoYX/tMneV+/xxuEgrswpyKN0r9n92VScl6YIQmyXbnA1ufZup6NG5Tj2rskmDIpyyaFojLj+B74RCbXKcWA4dXXN2UgFEv7XoAp0ltU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=a7zQhnTV; arc=none smtp.client-ip=209.85.167.169
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1781125010; c=relaxed/simple;
+	bh=Uw+bVKuSNHDEmPzBZJHOJj8rAChZRPa0vhBaxuhG/U0=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=ZwaGAC3lGU/T3XEay5+9EBn0HUe+CVJkZRF2O9tRt6G1fghQrsEdhfHMdLBUI2q0J38fN/ATyxSyWNG/GRgErQRknuP1RFrIxYfKv7BCJNzvMnM7KuODc9nzdk9PSWZxPFRsvJzCfbEk8Z01zWUDCsax9ztWJc5oX5ZLsMr9IAo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=baylibre.com; spf=pass smtp.mailfrom=baylibre.com; dkim=pass (2048-bit key) header.d=baylibre.com header.i=@baylibre.com header.b=gBiCDNYK; arc=none smtp.client-ip=209.85.128.46
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=baylibre.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=baylibre.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="a7zQhnTV"
-Received: by mail-oi1-f169.google.com with SMTP id 5614622812f47-4863cd41330so206617b6e.1
-        for <linux-scsi@vger.kernel.org>; Wed, 10 Jun 2026 13:43:22 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=baylibre.com header.i=@baylibre.com header.b="gBiCDNYK"
+Received: by mail-wm1-f46.google.com with SMTP id 5b1f17b1804b1-490c1915793so52029175e9.2
+        for <linux-scsi@vger.kernel.org>; Wed, 10 Jun 2026 13:56:47 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1781124201; x=1781729001; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=NpiWNaJanDKRHuWCGrhJcww0s9XnS0dPsuz5e44KkOA=;
-        b=a7zQhnTVZxa2jAorHiG22FymWcK3Y5ROW1m5Nc97nczB7ZIFkjCfTWC5bKXr7C93Z2
-         MGyVh2XFNrgrOqbUQpwG1Ht6urbckcDtudfvA4IY55weSDuAVy7T8Est1qZ9QWfQEoBj
-         TIsvxmxCTQA8KfNXAuukxUZ9Mtmt78g1rTXoIhT6iEfJIZoTxzGahjNo8nlvolOSd4uN
-         6zonM7NI9vsSw8XB3/f4m6OKdsFwDj6n33gJEvDevtUnFXLwu4a8uN1d90CV6MEWXejz
-         KxG2f5fghg2+p50+uxyB0TXjtiBPc9529VfbA7QQTcHZXdmkDNNPYr9/pmUjY1u7fdJb
-         +TLA==
+        d=baylibre.com; s=google; t=1781125006; x=1781729806; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=wHnIpgO42NH6+Ad+ppwobMNc15nwTLi776JaQeCvZQE=;
+        b=gBiCDNYKPwSzykz2mRQoSmwLpZ6TgevfS1jLtng8wrg+GDrm6zsCQJn8Ln8nb/fsl9
+         KR6IhlbmthsfB4fbWiVShAIZKw5MAbwiMrDBth9bMytUTpAo/hOQGv66lQEyNY++BBfr
+         5uQxaeKKHeD97kRvnv93Ae37XLnOHOsS9IzvQa/5h1J106472nkFenTp/0CJ/CSyqxlt
+         Y/m/JmttxS12DfjSYYT7tkHg+Jk92jMLZ+jEttfamyqQ2pA5DTroJHfvkr9Iv6x1Ui+l
+         n3Fpl+0J1Nb6HAUT9QBFvmrnP0JTEDKtdLs/v4tExvuvuTLEZdkrd1PPQWqH1rzqGo6V
+         TbsQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1781124201; x=1781729001;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=NpiWNaJanDKRHuWCGrhJcww0s9XnS0dPsuz5e44KkOA=;
-        b=iee2Z1ip1buthuOwTekFUM4cM0tiyq1XUpjyjrrMO3AJ6TovPxxhJdiWRJ6TbhyliC
-         EfeKncFqTjB3MeV4jtAbLCgbLihLdUPD4prgsk0rMUBB6o+QXCrdBwxFys0yZDYX+vkU
-         h/w48MZ9dFKeVc/RdA8T0jJ7taMTXV5DpCnHClKXlTf3NzD/K9tucCjLMgtPctZUT03A
-         Kgg+GMUWqugYSfNCyqmiWfvmcAXePjzRGs2d3wKWbaSaek54E2E6W+hR3gEuO2nV2lio
-         yGrPVvQBJWGJ1tl1lW4/h6tDB9M630c8HWH8q1oDJ5cCqn9CVaueVuMSARU4XSEdOMns
-         LFJg==
-X-Gm-Message-State: AOJu0YzrLQY1gUR0rzmXbSkIIetVeUpJKJj3HS0Gol/l7+Z/gTakTNC9
-	gdpx23thGalKXIXjLGB6RXwPowYl2U2vwnDtELNyu55uXnk0ceYybmaYAjiPFg==
-X-Gm-Gg: Acq92OFhfVIb8QgsnHC45UlGxydBHbYMtujGUQtf/U8tP7O5u/2kJ/tMYDNfYSUohFL
-	aN89Ya3knB3X091vErzVXIPg2Zan3LFZqhzBSN35mLiALIu8b03icGecaS4fHFRxh901qlE0i5l
-	kgYr/i4rL8mozPmwL0pGnwGt/a+LDnstZWLUZgnPmSy3lgkf6G46kK42Fx5s65uCpzyUr3epGEd
-	DrcY0FY/pyhVMLS5Tb+DuYvAbQ4rMAmmmyffScd6RaFoBqYm8N+mHg2NyznwVsYiZf9Ll/K+pOr
-	HjjjiqloY4sEwd2AwxuUUh3YGHsTPMPbA70vwYfb9xVNTWDi+ZuBrE0wDjzzSs7DDwpdiasT17c
-	5IYLySbsInatfWQ2vR5u1vwMG8Ax2tn/1lYp0XSb1E04OzzhAyrgNHcgso5ViyYPOb78mRwC6+D
-	4qT5FJBjUW5i6GOu5+/ml6rXWd5ZEX/UXiLqfzt2/oA+9UkOVt4UIisOhQFzIHg6HgLv0UNAwR3
-	wdlcFV7aFWB4mThTjp93AM=
-X-Received: by 2002:a05:6808:2f08:b0:479:eead:df9 with SMTP id 5614622812f47-48717b1f6a9mr224413b6e.4.1781124201362;
-        Wed, 10 Jun 2026 13:43:21 -0700 (PDT)
-Received: from ?IPV6:2605:a601:aab9:5000:dc49:41fd:5d54:871a? ([2605:a601:aab9:5000:dc49:41fd:5d54:871a])
-        by smtp.gmail.com with ESMTPSA id 5614622812f47-4865b5a53bcsm19419533b6e.3.2026.06.10.13.43.20
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 10 Jun 2026 13:43:20 -0700 (PDT)
-Message-ID: <ca27f17a-d95e-471b-ad4f-ecbf6be1104d@gmail.com>
-Date: Wed, 10 Jun 2026 15:43:19 -0500
+        d=1e100.net; s=20251104; t=1781125006; x=1781729806;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=wHnIpgO42NH6+Ad+ppwobMNc15nwTLi776JaQeCvZQE=;
+        b=rVgRmS/6RdnwARROCwq89Yi0sMqKMm3ghCA7a6mYnqHe7LB67YKKxo3AheFy3iQbrz
+         xCzFvzZaJOOl6CufeKam1mtQPSOk4l8fbfeKQ1bdoOjmnhAD7h/kmREMnjljVwcUH2JR
+         Cv9aSeVeU9NDOV5ic10IqagTkKdgADAxXcmAcpD1P+c2jfvy004Os5goRl4v9IOgZEqk
+         IUZ29SqQOfzjYAUUyhgdMjP/4etFOJm7Mk/FS8EmRcsQ3jWRVc29x/DQ1zrWU9MipY57
+         hMkinls+UfxDumUqs+gm/FE4C/Lyb9mV9S9Reiu5uimpkPKa6/H7jKbVJsTgBs5EXQxC
+         +klg==
+X-Forwarded-Encrypted: i=1; AFNElJ+iSzZqY96kIWrrVKm0DiJJyBifupt4yI/m16/meqiokD1GhloC6b8kj6l+RoQalfUy1g8D3/vbsxzQ@vger.kernel.org
+X-Gm-Message-State: AOJu0YzBNcKDZHBjSLBUKX3v7WQn15bUERTcqxwBrcs7WJEVpDB+0oG0
+	1onja1TA1POHw3mkQQstWPenhtWtvJVnEzXbhrsgxcD7yZrhfLBbgRpSmoEa1/x7Ah0=
+X-Gm-Gg: Acq92OGZCDfDvDBhGQinZPh6OYcdTQgKj5YS1aquQnCMOvONubVYYOOCulGdzYOpWfj
+	BMWQQsLmTbyJiuBnwW97DsPbQQNY9QskbCktd1ntThsU2D2mEYnHCmgxNdjAANYfZnQMLluhTxt
+	rlRdYn0mOxSgkXmoS1rxONfA7pH6caEylNdlO+KBI+WGJKUyts8rGvEbKV6epWXKt1w/b8rjyd2
+	kUJjcCzKT0Him3lD3Hh/hM+lDG2kg0G5X0DwKPfoOJQ4W4jHSn/8QcBHsapTTHHrTrolxzyiLei
+	YaArs/KE4hCXlMOI0o+LOy2yXzFyWo1KGTaMFHiaWKrWvBmlRIWdmfdSPzEXVvrWwa4azZ0MJ+1
+	KviuCvfXjdQXLlYSnZ2NmEUGg/IhQeTojCXqWuebpTw4Y9mwG25GB/GN87mgzZ+qPaKgmu+u9vl
+	M/Ekf45qPxwTzc70FUDQRXN0k3V2qbM088EN7dHwI=
+X-Received: by 2002:a05:600c:4746:b0:490:bb44:3f8b with SMTP id 5b1f17b1804b1-490e2e4517cmr6406585e9.17.1781125006559;
+        Wed, 10 Jun 2026 13:56:46 -0700 (PDT)
+Received: from localhost ([2a02:8071:56d1:2de0:559d:eec2:887f:c200])
+        by smtp.gmail.com with UTF8SMTPSA id ffacd0b85a97d-4601f35eae5sm75644130f8f.33.2026.06.10.13.56.44
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 10 Jun 2026 13:56:45 -0700 (PDT)
+Date: Wed, 10 Jun 2026 22:56:29 +0200
+From: Uwe =?utf-8?Q?Kleine-K=C3=B6nig_=28The_Capable_Hub=29?= <u.kleine-koenig@baylibre.com>
+To: John Garry <john.g.garry@oracle.com>
+Cc: "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
+	"Martin K. Petersen" <martin.petersen@oracle.com>, Finn Thain <fthain@linux-m68k.org>, 
+	Michael Schmitz <schmitzmic@gmail.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v1] scsi: Improve style of pnp_device_id array terminator
+Message-ID: <ainNaTWWNlqRPmh7@monoceros>
+References: <096aaa981c0bf1aaa8be75e675f17b1c9ca0086c.1781102092.git.u.kleine-koenig@baylibre.com>
+ <f5624497-a6e3-45f3-8837-bdf8cf848dfc@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2] scsi: target: Allow FUA if no write cache enabled
-To: sashiko-reviews@lists.linux.dev,
- "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org
-References: <20260609202156.90700-1-stuart.w.hayes@gmail.com>
- <20260609203953.154771F00898@smtp.kernel.org>
-Content-Language: en-US
-From: stuart hayes <stuart.w.hayes@gmail.com>
-In-Reply-To: <20260609203953.154771F00898@smtp.kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="6dqirmxzpmjjskyb"
+Content-Disposition: inline
+In-Reply-To: <f5624497-a6e3-45f3-8837-bdf8cf848dfc@oracle.com>
 
-On 6/9/2026 3:39 PM, sashiko-bot@kernel.org wrote:
-> Thank you for your contribution! Sashiko AI review found 1 potential issue(s) to consider:
-> - [Critical] Silently dropping the FUA bit when WCE=0 prevents the backend from honoring the FUA request, causing silent data loss in the fileio AIO backend.
-> --
-> 
-> commit 5cb17faff566c1313276f5a67af675e43649d8d6
-> Author: Stuart Hayes <stuart.w.hayes@gmail.com>
-> 
-> scsi: target: Allow FUA if no write cache enabled
-> 
-> This commit modifies the target core code to ignore the FUA bit in SCSI
-> commands for targets without an enabled write cache. This allows systems
-> with firmware that aggressively sets the FUA bit to successfully boot
-> without failing due to unsupported FUA write errors.
-> 
->> diff --git a/drivers/target/target_core_sbc.c b/drivers/target/target_core_sbc.c
->> index 21f5cb86d70c0..ffd2b6c9bd231 100644
->> --- a/drivers/target/target_core_sbc.c
->> +++ b/drivers/target/target_core_sbc.c
->> @@ -754,6 +754,12 @@ sbc_check_dpofua(struct se_device *dev, struct se_cmd *cmd, unsigned char *cdb)
->>   	}
->>   	if (cdb[1] & 0x8) {
->>   		if (!target_check_fua(dev)) {
->> +			/*
->> +			 * Silently ignore FUA if there's no write cache.
->> +			 */
->> +			if (!target_check_wce(dev))
->> +				return 0;
->> +
-> 
-> [Severity: Critical]
-> Does returning early here prevent the command from receiving the SCF_FUA flag?
-> 
-> By returning 0, this bypasses the cmd->se_cmd_flags |= SCF_FUA; assignment
-> that happens further down in sbc_check_dpofua().
-> 
-> While WCE=0 implies no write cache, the fileio AIO backend relies entirely
-> on the SCF_FUA flag to ensure synchronous writes:
-> 
-> drivers/target/target_core_file.c:fd_execute_rw_aio() {
-> ...
-> 	aio_cmd->iocb.ki_flags = IOCB_DIRECT;
-> 
-> 	if (is_write && (cmd->se_cmd_flags & SCF_FUA))
-> 		aio_cmd->iocb.ki_flags |= IOCB_DSYNC;
-> ...
-> }
-> 
-> Without the SCF_FUA flag, fd_execute_rw_aio() will issue asynchronous
-> writes without flushing the cache, as it ignores the O_DSYNC flag set on
-> the underlying file descriptor.
-> 
-> Could this regression lead to silent data loss on power failure, since
-> what used to be rejected as an unsupported FUA write will now complete
-> asynchronously without a disk cache flush?
-> 
 
-Valid point, yes. I will fix.
+--6dqirmxzpmjjskyb
+Content-Type: text/plain; protected-headers=v1; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+Subject: Re: [PATCH v1] scsi: Improve style of pnp_device_id array terminator
+MIME-Version: 1.0
 
-Also, I accidentally submitted this as V2 when it should have been V3, 
-sorry.
+On Wed, Jun 10, 2026 at 04:46:24PM +0100, John Garry wrote:
+> On 10/06/2026 15:36, Uwe Kleine-K=F6nig (The Capable Hub) wrote:
+> > To match how device-id array terminators look like for other device
+> > types drop `.id =3D ""` from it and let the compiler care for zeroing t=
+he
+> > entry.
+> >=20
+> > There are no changes in the compiled drivers, only the source looks
+> > nicer.
+> >=20
+> > Signed-off-by: Uwe Kleine-K=F6nig (The Capable Hub) <u.kleine-koenig@ba=
+ylibre.com>
+> > ---
+> > Hello,
+> >=20
+> > I'm currently working on changing various *_device_id definitions.
+> > This patch is irrelevant for this quest and a pure style update for
+> > consistency reasons without further dependencies on it. I just stumbled
+> > over this while working on that quest.
+> >=20
+> > So if you don't like this patch, I won't insist.
+> >=20
+> > Best regards
+> > Uwe
+> >=20
+> >   drivers/scsi/aha1542.c   | 2 +-
+> >   drivers/scsi/g_NCR5380.c | 2 +-
+> >   2 files changed, 2 insertions(+), 2 deletions(-)
+> >=20
+> > diff --git a/drivers/scsi/aha1542.c b/drivers/scsi/aha1542.c
+> > index fd766282d4a4..93dab19c1cb9 100644
+> > --- a/drivers/scsi/aha1542.c
+> > +++ b/drivers/scsi/aha1542.c
+> > @@ -1083,7 +1083,7 @@ static int isa_registered;
+> >   #ifdef CONFIG_PNP
+> >   static const struct pnp_device_id aha1542_pnp_ids[] =3D {
+> >   	{ .id =3D "ADP1542" },
+> > -	{ .id =3D "" }
+>=20
+> It seems to be standard practice to use { .id =3D "" } as pnp dev table
+> sentinel - so why change? Are they all going to be changed?
 
->>   			pr_err("Got CDB: 0x%02x with FUA bit set, but device"
->>   			       " does not advertise support for FUA write\n",
->>   			       cdb[0]);
-> 
+I sent several patches reworking pnp_device_id arrays. Both styles exist
+(and also { "", 0 }) and I adapted all arrays I touched to the { } style
+matching what is usual for all other *_device_id arrays I saw so far.
 
+And I sent this patch only to create consistency. I think I catched most
+instances already, and before declaring the quest done I will make sure
+to tackle also those that I now might have missed for now.
+
+Best regards
+Uwe
+
+--6dqirmxzpmjjskyb
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAABCgAdFiEEP4GsaTp6HlmJrf7Tj4D7WH0S/k4FAmopz3gACgkQj4D7WH0S
+/k4qSAgAq2KBTnzdHTPfLlDqyKf0nlJq9IoOTjV7wXhGGiR7TlglXAF6f1FL0Zxx
+KKqQtZjgTYN+w6wGxW51G8OF/bqkLriu6RXZ4bXIcJtE1WWsSKlAFD8zcHIJv6dG
+3+BV8lwIqZbZDVzbND84MxsNQ8Dmro0HHyFvam75o50YsoDlo1HMqV9tKsIYhiCv
+mN4k26SiwFSJw9sE1Oc9rPKZWzGxctufXEoRw9Wr4n7t8nD+m88EvrFAokQC6gXR
+pTIMUA5JYNsxLctmMizX5ay+M/71ZiDmyV2okftn5wsw8bwuc8fEXRtOtvpJaD+j
+KFjntFfHqP2tepoGAxPFHBC9bDPXFQ==
+=xzIf
+-----END PGP SIGNATURE-----
+
+--6dqirmxzpmjjskyb--
