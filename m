@@ -1,129 +1,141 @@
-Received: from mail-qv1-f54.google.com (mail-qv1-f54.google.com [209.85.219.54])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F2F33DBD76
-	for <linux-scsi@vger.kernel.org>; Wed, 10 Jun 2026 11:41:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.54
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 869D53DB31A
+	for <linux-scsi@vger.kernel.org>; Wed, 10 Jun 2026 11:45:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781091687; cv=none; b=hDH1BHRrHhQmvzbFNVmkPpJ73H3kCs9Ki87nWiP2FZq+iS8LURczRTkyOtukvpcHtHACOAffi3YCMjg7uswh7bfZBx8Wd/PIHJ+9kI8N3J4KT/CuNrd8g+L8k6zVpTK9fvEqYfIExTqjVWslD9bd6fkjErOh2daz8tdqj1buLUA=
+	t=1781091931; cv=none; b=t8gCemgxOiazaNBLErbwN9mgVlm6FKCbcU4to6ltSc9S1vZRFvCGfKx2ePqfTMyIPqUW+Q2fPfHhC29dDuhmez1gfvir7Zc0/f7siGWgQp/vkwWd9gZVsSQGA+Mfh+nS8KPi+lptz56am8PpNVJuKWu/kgOmE9FHkhA0SuysCfI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781091687; c=relaxed/simple;
-	bh=Kz5o+o4V/50TgyMsDM1u+PPBmb+aUdtA7Th63o/S4GM=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=K2i8KVZpPelPrW0I9RHJcQD7TlQb3/FScrL45lItecdTIY9b4yI72nPzdVaacamnXbHQl61tgaehNduRjsvpcTyV23BfKDOS5wN31dk/PtTgPx0SmsE4Un1gxbyroK11rKQu/vsZRAllqjjLLthkQACmNefn4YkCKTcK/cVDMgg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=UI+dDQhC; arc=none smtp.client-ip=209.85.219.54
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1781091931; c=relaxed/simple;
+	bh=iofbCknlK7p+ercG8I988m1tmILBqBh8o/nYmwyXPcM=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=lu3P8qcQvgtrX/hAp3rfQx/NcW1HO+y93625kf9KLN/AMXpbc76+vKm6vrclvBruVfhp/KQoZ44Gosul+Q1EXxe6yHKvL1uqG7pHW/N7loZY4vyjz1NHEAwbw+z9bmeIAkbWFpdRagrGhZxojQZBfijmjEKtYFP14muC/lDTN84=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BASUUzo7; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="UI+dDQhC"
-Received: by mail-qv1-f54.google.com with SMTP id 6a1803df08f44-8ce9df31840so50103216d6.1
-        for <linux-scsi@vger.kernel.org>; Wed, 10 Jun 2026 04:41:24 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1781091683; x=1781696483; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=/FNVXr9zawygTZbMFPpNLLMPEhT2gh4L5OBjQ+E7NpM=;
-        b=UI+dDQhCBkL2djbo9jRTxvJto/ZNc2U7mZRKQcUdrIyg4ikS6tuNhWNNGfqabwz+Le
-         CqOfZhKp4K6gESU/Bm6kCKNDsGx2HYmB35HvEh0P9UsIki9XhadTEQ+5WCr/JVlUgEA/
-         zPD6Y51/QbXp9WSTb2pkrHD2zmDZufE/z+X+yu9HJE4w+8KF6A51rTkj3Zmr1fNVIYQ9
-         XEM32Z0knRNdN+EfS2r3nRL4OFyFe/8w/kV5PBoYVzfXBes56cUewIWZctpM+5wyL2ht
-         QFH6UfCi9xjovuPHwiZOH2Gg8VGcC32hwDhESH6+e4KmWgSeXWHh3OeV86f4oMG3AM12
-         iMTQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1781091683; x=1781696483;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=/FNVXr9zawygTZbMFPpNLLMPEhT2gh4L5OBjQ+E7NpM=;
-        b=jFKtHz//m5eJ+kRMNOiAUw5wl5ywURnr19fxGr7SCCC1v1d9P0/6sHWcCBsXh8fANB
-         FI0Ie7ZeYt9kQX0y9T2VOe0Ic+GooVvMv1j7YOovEEfs58lQqXTOWDNTbhuYebERGWZD
-         sRFrwR2uSB/6BWYlk7kJk93+YfGocNyyX+zCO7gwD51SWOwA2tV1DYHahpUOYwmCHzdC
-         p3k/hx3VYqEDvjAVfgh5Ua0fbbLUtdoMFd1LdVze89uG+xwGTVgOI7sVP52xEADZpSTl
-         x8MRdzCrvVXokS6M9WZ5SWXtIvDv+jN1SBXCgoS6L7vt2WH6YPUuBMR0THjuXTuHazM2
-         F8vw==
-X-Forwarded-Encrypted: i=1; AFNElJ+FKQKxBZVAD3r2CsO8izVZBg6dSzXZoIUFVY3og1GBOABA/NMUTQldAHBxcPO53JzvZPnybuFLzrFD@vger.kernel.org
-X-Gm-Message-State: AOJu0Yw5/TQlyHI0HY6J0lHSHCk/h56Kh2EYySBF9/OAIoOR8+c8EDx3
-	be1mUyH2oZq9Q1fvRJb/QmvAeqKcSOqNUobTmDLOXNNjSnTWgLX9YClv
-X-Gm-Gg: Acq92OErc60F+UQSV+0SqWiWyA2Ux/m8UxuvyrJEH6CB7eOPenFL3I9ngaLFb5+QM4h
-	ruLIYkECj3LYCvzs2Hn7/pX+v11mObmrZbuVJ3EVSfm6N/1VQbmRjfcE3GmALsC5U008KprCEjG
-	67sRHJRgUCe5dloX/sUm0btjzuxAI3RW6mwtCI9UOR8WQfHqZdyod5VXN0GhK4Db27FMuy/Q3Qp
-	jeY/cq1wANAFcCl6gqmgQFyGtBbCGqHeF1Qiwr9GGxz3GAS81hzl75BDsL+9FJN9C+VHQh9m/RC
-	lfrOrH4a/Hztuz/w5LJPO/DnaL2IyDHpxFOiQeTkp/FEAtGH6nFMJGhAtk39hpzoc5RONunnqVl
-	+4ZVf3phx/jRTYLmzzYhxZNb0O3DolZHKPVWfLzJtF6NL9vgAbYRofllStz/065k7nzb14ljpIx
-	6L/bbijwzusl1wNVOdRFdpxHmKHSbVBaeeil8q965L3ejRqjhMVKen57hxxNuOI+3WdntERNg22
-	2qM8mrxdiW/0FcyFF7oIVzDIwWp8DQ=
-X-Received: by 2002:a0c:f09c:0:b0:8cc:dfa6:3333 with SMTP id 6a1803df08f44-8cee613313amr408672466d6.32.1781091682895;
-        Wed, 10 Jun 2026 04:41:22 -0700 (PDT)
-Received: from server0 (c-68-48-65-54.hsd1.mi.comcast.net. [68.48.65.54])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-8ceccd9fc7dsm234124256d6.5.2026.06.10.04.41.21
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 10 Jun 2026 04:41:21 -0700 (PDT)
-From: Michael Bommarito <michael.bommarito@gmail.com>
-To: Justin Tee <justin.tee@broadcom.com>,
-	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: Paul Ely <paul.ely@broadcom.com>,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org
-Subject: [PATCH] scsi: lpfc: bound RPL ACC payload size to the response structure
-Date: Wed, 10 Jun 2026 07:41:19 -0400
-Message-ID: <20260610114120.3748526-1-michael.bommarito@gmail.com>
-X-Mailer: git-send-email 2.53.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BASUUzo7"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BFF3B1F00893;
+	Wed, 10 Jun 2026 11:45:29 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1781091930;
+	bh=VXv2RxHDTPsvB7YLxL66eNKBNczmdRxLXgVh2Gm2u0c=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=BASUUzo7TjQ6nq2clu9CIsgxa8/3Oe8KUsPAmaQ8iGxBteroVvQR2rTnecoFANm4d
+	 y1HX0f+tGhATEsgbiNWDH3L5THedRdb1ma3e0kG2oPCxljuWCkc6qxkx/7o7OE4k50
+	 zSHyBTEk012V1ngRL7qB0sL1pQCeo5qPfPgtBSaY+7G7WgLG0F9f1QDCZuLIhsmvJ+
+	 i9oOPf9eYgGA3Mh5gF/EhHtOaj3xSBpsDk2g8x6FPxQwmsOvg6qv685pSSYDEzeiuk
+	 Yp+juyeR+q1MKzPUiZSb/PmNBSaRxwnXzFG9n6lApnh5mhTmRTEZRE9kPdfvwMHZ0D
+	 Y53LOSmOyqG5g==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v3] scsi: core: pair EH runtime PM get/put
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Hongjie Fang" <hongjiefang@asrmicro.com>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20260610113333.632859-1-hongjiefang@asrmicro.com>
+References: <20260610113333.632859-1-hongjiefang@asrmicro.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Wed, 10 Jun 2026 11:45:29 +0000
+Message-Id: <20260610114529.BFF3B1F00893@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
 
-lpfc_els_rcv_rpl() handles an unsolicited RPL (Read Port List) ELS
-request from a fabric peer. For a request with rpl->index != 0 (or
-index 0 with a small maxsize) it computes the accept payload size as
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
 
-	cmdsize = sizeof(uint32_t) + maxsize * sizeof(uint32_t);
+Pre-existing issues:
+- [High] The SCSI error handler thread enters an infinite, non-sleeping bus=
+y-loop (100% CPU lockup) if `scsi_autopm_get_host()` persistently fails.
+- [High] Concurrent modification of the `eh_noresume` bitfield without prop=
+er locking causes data corruption of adjacent bitfields in `struct Scsi_Hos=
+t`.
+--
 
-into a uint16_t, where maxsize comes straight from the peer's request
-with no upper bound. lpfc_els_rsp_rpl_acc() then builds the response
-with
+commit 3a9d1cff49c35df0198a4186d8f838a19d67f4d5
+Author: Hongjie Fang <hongjiefang@asrmicro.com>
 
-	memcpy(pcmd, &rpl_rsp, cmdsize - sizeof(uint32_t));
+scsi: core: pair EH runtime PM get/put
 
-The RPL accept always carries exactly one RPL_RSP structure, so a
-peer-chosen maxsize makes cmdsize - sizeof(uint32_t) exceed
-sizeof(RPL_RSP): the copy reads past the on-stack RPL_RSP, placing
-adjacent kernel stack into the response sent back to the peer, and for
-a large maxsize overruns the command buffer.
+This patch ensures that the runtime PM put in the SCSI error handler
+is only executed if the corresponding get succeeded. It avoids a
+runtime PM usage count underflow that can occur when the eh_noresume
+flag changes concurrently.
 
-Bound cmdsize the same way the index == 0 branch already does, since
-the accept payload is a single RPL_RSP regardless of the requested
-maxsize.
+> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+> index 147127fb4db9c..c78ea64641a98 100644
+> --- a/drivers/scsi/scsi_error.c
+> +++ b/drivers/scsi/scsi_error.c
+[ ... ]
+> @@ -2383,12 +2384,16 @@ int scsi_error_handler(void *data)
+>  		 * what we need to do to get it up and online again (if we can).
+>  		 * If we fail, we end up taking the thing offline.
+>  		 */
+> -		if (!shost->eh_noresume && scsi_autopm_get_host(shost) !=3D 0) {
+> -			SCSI_LOG_ERROR_RECOVERY(1,
+> -				shost_printk(KERN_ERR, shost,
+> -					     "scsi_eh_%d: unable to autoresume\n",
+> -					     shost->host_no));
+> -			continue;
+> +		autopm_put =3D false;
+> +		if (!shost->eh_noresume) {
 
-Fixes: 7bb3b137abf2 ("[SCSI] lpfc 8.1.2: Handling of ELS commands RRQ, RPS, RPL and LIRR correctly")
-Cc: stable@vger.kernel.org
-Assisted-by: Claude:claude-opus-4-8
-Signed-off-by: Michael Bommarito <michael.bommarito@gmail.com>
----
- drivers/scsi/lpfc/lpfc_els.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+[Severity: High]
+This is a pre-existing issue, but could modifying the eh_noresume flag
+without locking cause data corruption?
 
-diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-index 4e3fe89283e41..555b2e4d78fb9 100644
---- a/drivers/scsi/lpfc/lpfc_els.c
-+++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -9250,7 +9250,11 @@ lpfc_els_rcv_rpl(struct lpfc_vport *vport, struct lpfc_iocbq *cmdiocb,
- 	     ((maxsize * sizeof(uint32_t)) >= sizeof(RPL_RSP)))) {
- 		cmdsize = sizeof(uint32_t) + sizeof(RPL_RSP);
- 	} else {
--		cmdsize = sizeof(uint32_t) + maxsize * sizeof(uint32_t);
-+		u64 sz = sizeof(uint32_t) + (u64)maxsize * sizeof(uint32_t);
-+
-+		if (sz > sizeof(uint32_t) + sizeof(RPL_RSP))
-+			sz = sizeof(uint32_t) + sizeof(RPL_RSP);
-+		cmdsize = sz;
- 	}
- 	lpfc_els_rsp_rpl_acc(vport, cmdsize, cmdiocb, ndlp);
- 
--- 
-2.53.0
+The eh_noresume flag is defined as a 1-bit bitfield in struct Scsi_Host
+alongside other critical bitfields like tmf_in_progress:
 
+include/scsi/scsi_host.h:
+	unsigned tmf_in_progress:1;
+	unsigned eh_noresume:1;
+	unsigned no_write_same:1;
+
+Since bitfield modifications are implemented as non-atomic read-modify-write
+operations on the underlying word, modifying eh_noresume locklessly in paths
+like ufshcd_set_dev_pwr_mode() can overwrite locked updates to adjacent
+bitfields.
+
+For example, if a concurrent thread is modifying tmf_in_progress under
+the host_lock in scsi_ioctl_reset():
+
+	spin_lock_irqsave(shost->host_lock, flags);
+	shost->tmf_in_progress =3D 1;
+	spin_unlock_irqrestore(shost->host_lock, flags);
+
+Will the lockless write to eh_noresume silently drop the locked update
+and potentially cause hangs?
+
+> +			if (scsi_autopm_get_host(shost) !=3D 0) {
+> +				SCSI_LOG_ERROR_RECOVERY(1,
+> +					shost_printk(KERN_ERR, shost,
+> +						     "scsi_eh_%d: unable to autoresume\n",
+> +						     shost->host_no));
+> +				continue;
+
+[Severity: High]
+This isn't a bug introduced by this patch, but does this continue statement
+cause the error handler thread to spin in an infinite busy-loop if
+scsi_autopm_get_host() fails persistently?
+
+When the continue is taken, it bypasses the clearance of shost->host_failed
+and the subsequent recovery steps. On the next iteration of
+scsi_error_handler(), the condition for going to sleep evaluates to false
+because host_failed was never cleared.
+
+The thread then bypasses schedule(), sets its state to TASK_RUNNING, and
+retries the autoresume immediately. If the PM failure is persistent, could
+this lock up the CPU core at 100% utilization?
+
+> +			}
+> +			autopm_put =3D true;
+>  		}
+> =20
+>  		if (shost->transportt->eh_strategy_handler)
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260610113333.6328=
+59-1-hongjiefang@asrmicro.com?part=3D1
