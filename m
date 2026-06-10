@@ -1,86 +1,176 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3CB18EEBB;
-	Thu, 11 Jun 2026 12:56:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0748F2DA76C
+	for <linux-scsi@vger.kernel.org>; Thu, 11 Jun 2026 12:57:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781182568; cv=none; b=si9sx9CLnTkw6P38vZmYk1CTT4JsyaYBYLuQ2noYfYj83Pv7pDrIs9jow450AZDf17vgqUXFhqXh6Y2Xewwa74m674VhBoPyCRwnkAUU3iHg5JydZTvQib5m3PdEi/Pi85K0JEA4PH7c9JaNoERg3q9NwqUqXWtt6DIvO9U3PdI=
+	t=1781182677; cv=none; b=tnyXlAQZCHqyHw0ZdSJRMr9U16NhHWykxxkb/EuWz14c4EweWeWUqa+FIdWghd5fJ8vjrqcyTNaOiCIDSALdcUrUSvFtJOnlexq/hxqPnlbjds7gJPVQOv2yx02oz/WFoX+E1gTjVc7QARSI0AOzHAc1ulwBJlchizjGjLKCrs4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781182568; c=relaxed/simple;
-	bh=DmIjU3x/SEAEpCl+gbbBkEz91WrO/E0QgXWGDEvi9CE=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=AAxJ4mTeD4r8YzLyDwE43J8Bwq0MP9Kty4bMu37tXgLcc/Sb5BQ7oVlBVcaXrzij5aiR8X8wn1lySdiahGy6jR6GB/jSYgrq/zhvNd5pJzt+QQPwhjqU2ReOc8Kj/JFybY/HxmOGko3jMgXdFmwuCDU1vDa3Vq6eF4g7BUPVGrw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AWy9kMbI; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1781182677; c=relaxed/simple;
+	bh=pMz0XopnIHTyXSKV4o5NA6+8Cj6CQUbxxVzNeeDGF4U=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=OHx//jZKVXI2s3dYqyEubSfg1huML3Zc/cUsC1mWDVOnPfM4NYuWJZpV6iwMoWJViMOZyUoGzDriHdAeej9MSX94AA5PiS6LFk8B4tu6voA5zCXePvXaDdUrzZ6cN/cAy4xNIGjzbuL4dJDb/nMwngdsN11L9DJaHfViTccDfVQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=K57/wpwx; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AWy9kMbI"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EE1F01F00893;
-	Thu, 11 Jun 2026 12:56:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781182566;
-	bh=mqeGLS1xSMHnHuirRJiKVE5d1yFDFFJiKFLcDHcv4Jc=;
-	h=From:To:Cc:Subject:Date;
-	b=AWy9kMbIfOioVg1b+pKrNwsjvwr5PuYM4HfjzXzUPY597isqyeORxz7DxkadujbDX
-	 oZINbe8Ru6xFKT3tuMjBgAjpuNz0xF/t6njNuBiDT1ugNxd3da8jdrU80I9+gU6A/W
-	 vO5ttrDPxl/UDl2nnILif1TRiFuHFQ2536WCqtf1hwarJ5kX6nfVaGT+d5MrMOPWWL
-	 qZL1e7x0+9dGPQjjQ6hXORWEiLv+4moFxVAoJJm8a/pjPR3EGSaNvgbePw6whHR/yY
-	 Wjw1k3mGA+iUpwv1FVfp1HgvTT5t7srkhAozhcJHpouXSI6BgB1t2tkC85skgChiMI
-	 4EBP98kHsI0ew==
-From: Arnd Bergmann <arnd@kernel.org>
-To: Anil Gurumurthy <anil.gurumurthy@qlogic.com>,
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="K57/wpwx"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1781182675;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=wutI1NEOrxe0Ga9sQ5pG620uXi0d0C5Aj7NTI3FNepo=;
+	b=K57/wpwxaGIdnvZmSZ72MRcFMPsmqT+oLnncu0FEpDuzsHMOZ6zfd8bQHzKMiJTk84MDJV
+	w1rdZ3KMkc33EqYv+NxlpFeB7+n5bD7mdlrEpq19bmmYH6WRWBSsDTHvSXsfyvw61Kgbbi
+	eozNtVkDMS6T4umKuIQj18W+73fArMc=
+Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-49-_h9LaK_xPp-Cw2A3pjQP9w-1; Thu,
+ 11 Jun 2026 08:57:51 -0400
+X-MC-Unique: _h9LaK_xPp-Cw2A3pjQP9w-1
+X-Mimecast-MFC-AGG-ID: _h9LaK_xPp-Cw2A3pjQP9w_1781182668
+Received: from mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.93])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 1984519775EB;
+	Thu, 11 Jun 2026 12:57:48 +0000 (UTC)
+Received: from localhost (unknown [10.2.16.137])
+	by mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 179B1180057F;
+	Thu, 11 Jun 2026 12:57:43 +0000 (UTC)
+Date: Wed, 10 Jun 2026 11:37:47 -0400
+From: Stefan Hajnoczi <stefanha@redhat.com>
+To: Sumit Saxena <sumit.saxena@broadcom.com>,
+	"Michael S. Tsirkin" <mst@redhat.com>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
+	Jens Axboe <axboe@kernel.dk>,
+	"James E . J . Bottomley" <James.Bottomley@hansenpartnership.com>,
+	linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
+	Adam Radford <aradford@gmail.com>,
+	Khalid Aziz <khalid@gonehiking.org>,
+	Adaptec OEM Raid Solutions <aacraid@microsemi.com>,
+	Matthew Wilcox <willy@infradead.org>,
+	Hannes Reinecke <hare@suse.com>,
+	"Juergen E . Fischer" <fischer@norbit.de>,
+	Russell King <linux@armlinux.org.uk>,
+	linux-arm-kernel@lists.infradead.org,
+	Finn Thain <fthain@linux-m68k.org>,
+	Michael Schmitz <schmitzmic@gmail.com>,
+	Anil Gurumurthy <anil.gurumurthy@qlogic.com>,
 	Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-	Kees Cook <kees@kernel.org>,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] scsi: bfa: reduce kernel stack usage in bfa_fcs_lport_fdmi_build_portattr_block
-Date: Thu, 11 Jun 2026 14:55:56 +0200
-Message-Id: <20260611125601.3385418-1-arnd@kernel.org>
-X-Mailer: git-send-email 2.39.5
+	Oliver Neukum <oliver@neukum.org>, Ali Akcaagac <aliakc@web.de>,
+	Jamie Lenehan <lenehan@twibble.org>,
+	Ram Vegesna <ram.vegesna@broadcom.com>,
+	target-devel@vger.kernel.org,
+	Bradley Grove <linuxdrivers@attotech.com>,
+	Satish Kharat <satishkh@cisco.com>,
+	Sesidhar Baddela <sebaddel@cisco.com>,
+	Karan Tilak Kumar <kartilak@cisco.com>,
+	Yihang Li <liyihang9@h-partners.com>,
+	Don Brace <don.brace@microchip.com>, storagedev@microchip.com,
+	HighPoint Linux Team <linux@highpoint-tech.com>,
+	Tyrel Datwyler <tyreld@linux.ibm.com>,
+	Madhavan Srinivasan <maddy@linux.ibm.com>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Nicholas Piggin <npiggin@gmail.com>,
+	Christophe Leroy <chleroy@kernel.org>,
+	linuxppc-dev@lists.ozlabs.org, Brian King <brking@us.ibm.com>,
+	Lee Duncan <lduncan@suse.com>, Chris Leech <cleech@redhat.com>,
+	Mike Christie <michael.christie@oracle.com>,
+	open-iscsi@googlegroups.com, Justin Tee <justin.tee@broadcom.com>,
+	Paul Ely <paul.ely@broadcom.com>,
+	Kashyap Desai <kashyap.desai@broadcom.com>,
+	Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
+	Chandrakanth Patil <chandrakanth.patil@broadcom.com>,
+	megaraidlinux.pdl@broadcom.com,
+	Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>,
+	Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+	mpi3mr-linuxdrv.pdl@broadcom.com,
+	Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>,
+	Ranjan Kumar <ranjan.kumar@broadcom.com>,
+	MPT-FusionLinux.pdl@broadcom.com, Daniel Palmer <daniel@thingy.jp>,
+	GOTO Masanori <gotom@debian.or.jp>,
+	Jack Wang <jinpu.wang@cloud.ionos.com>,
+	Geoff Levand <geoff@infradead.org>, Michael Reed <mdr@sgi.com>,
+	Nilesh Javali <njavali@marvell.com>,
+	GR-QLogic-Storage-Upstream@marvell.com,
+	Narsimhulu Musini <nmusini@cisco.com>,
+	"K . Y . Srinivasan" <kys@microsoft.com>,
+	Haiyang Zhang <haiyangz@microsoft.com>,
+	Wei Liu <wei.liu@kernel.org>, Dexuan Cui <decui@microsoft.com>,
+	Long Li <longli@microsoft.com>, linux-hyperv@vger.kernel.org,
+	"Michael S . Tsirkin" <mst@redhat.com>,
+	Jason Wang <jasowang@redhat.com>,
+	Paolo Bonzini <pbonzini@redhat.com>,
+	Eugenio Perez <eperezma@redhat.com>, virtualization@lists.linux.dev,
+	Vishal Bhakta <vishal.bhakta@broadcom.com>,
+	bcm-kernel-feedback-list@broadcom.com,
+	Juergen Gross <jgross@suse.com>,
+	Stefano Stabellini <sstabellini@kernel.org>,
+	Oleksandr Tyshchenko <oleksandr_tyshchenko@epam.com>,
+	xen-devel@lists.xenproject.org,
+	John Garry <john.g.garry@oracle.com>
+Subject: Re: [PATCH v3 2/4] scsi: host: allocate struct Scsi_Host on the NUMA
+ node of the host adapter
+Message-ID: <20260610153747.GA121666@fedora>
+References: <20260609121806.2121755-1-sumit.saxena@broadcom.com>
+ <20260609121806.2121755-3-sumit.saxena@broadcom.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="57Se20/pMUpk+P8R"
+Content-Disposition: inline
+In-Reply-To: <20260609121806.2121755-3-sumit.saxena@broadcom.com>
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.93
 
-From: Arnd Bergmann <arnd@arndb.de>
 
-bfa_fcs_fdmi_get_portattr() gets inlined into multiple places and has two
-fairly large variables on the stack, to the point of causing a warning
-in some randconfig builds:
+--57Se20/pMUpk+P8R
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-drivers/scsi/bfa/bfa_fcs_lport.c:2198:1: error: stack frame size (1560) exceeds limit (1280) in 'bfa_fcs_lport_fdmi_build_portattr_block' [-Werror,-Wframe-larger-than]
- 2198 | bfa_fcs_lport_fdmi_build_portattr_block(struct bfa_fcs_lport_fdmi_s *fdmi,
-      | ^
-drivers/scsi/bfa/bfa_fcs_lport.c:1856:1: error: stack frame size (1600) exceeds limit (1280) in 'bfa_fcs_lport_fdmi_build_rhba_pyld' [-Werror,-Wframe-larger-than]
- 1856 | bfa_fcs_lport_fdmi_build_rhba_pyld(struct bfa_fcs_lport_fdmi_s *fdmi, u8 *pyld)
-      | ^
+On Tue, Jun 09, 2026 at 05:48:01PM +0530, Sumit Saxena wrote:
+> diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
+> index 5fdaa71f0652..88375574cb18 100644
+> --- a/drivers/scsi/virtio_scsi.c
+> +++ b/drivers/scsi/virtio_scsi.c
+> @@ -929,7 +929,7 @@ static int virtscsi_probe(struct virtio_device *vdev)
+>  	num_targets =3D virtscsi_config_get(vdev, max_target) + 1;
+> =20
+>  	shost =3D scsi_host_alloc(&virtscsi_host_template,
+> -				struct_size(vscsi, req_vqs, num_queues));
+> +				struct_size(vscsi, req_vqs, num_queues), NULL);
 
-Mark the inner function as noinline_for_stack to keep it separate from
-the other variables and prevent multiple copies of the same variable
-to get inlined here.
+A virtio_device has a parent (this is the virtio transport, like
+virtio_pci) and that may have NUMA node.
 
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
- drivers/scsi/bfa/bfa_fcs_lport.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+drivers/virtio/virtio.c:register_virtio_device() could call
+set_dev_node(dev, dev_to_node(dev->parent)) to propagate the NUMA node
+to the virtio_device if it is not already automatically propagated.
 
-diff --git a/drivers/scsi/bfa/bfa_fcs_lport.c b/drivers/scsi/bfa/bfa_fcs_lport.c
-index 2df399c537c1..8c9d423129c0 100644
---- a/drivers/scsi/bfa/bfa_fcs_lport.c
-+++ b/drivers/scsi/bfa/bfa_fcs_lport.c
-@@ -2627,7 +2627,7 @@ bfa_fcs_fdmi_get_hbaattr(struct bfa_fcs_lport_fdmi_s *fdmi,
- 
- }
- 
--static void
-+static noinline_for_stack void
- bfa_fcs_fdmi_get_portattr(struct bfa_fcs_lport_fdmi_s *fdmi,
- 			  struct bfa_fcs_fdmi_port_attr_s *port_attr)
- {
--- 
-2.39.5
+Stefan
+
+--57Se20/pMUpk+P8R
+Content-Type: application/pgp-signature; name=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAEBCgAdFiEEhpWov9P5fNqsNXdanKSrs4Grc8gFAmophMsACgkQnKSrs4Gr
+c8h+7Af/Yl5xc4DOlpzwRNKEPqqogmtmADQbRI91eNljCoArG1qdxcTTSKksIgWC
+5g0jjNOCwbOatljS+FxPkDgpPYoZbsIv+K4p/D6UyHLP+Dff2FQhwPaAKkOvJi6k
+9BoNOORgp8ZKrf0RrCTr2M5clKgG0GT+5WxgezSZtTh6wSoN0ksL5kwqx+8B4sWw
+irnTFz4hZhKlUsYHWWYvNhiq0ChdmzYMdxw6GFwIWrRpNcElfSmOAMBE12bJeqIi
+u2/3ah3cSSanhmuITCC+dXImHUlYtxtFRBowqsxCEtdiRFs5srPStR/WW8yyZoXe
+mhXbMPjGmQXNdAT61yT9lw+ZVx2y1w==
+=kfg0
+-----END PGP SIGNATURE-----
+
+--57Se20/pMUpk+P8R--
 
