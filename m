@@ -1,189 +1,270 @@
-Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f48.google.com (mail-wm1-f48.google.com [209.85.128.48])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 46D6022AE48;
-	Wed, 10 Jun 2026 05:34:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=210.61.82.184
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781069666; cv=fail; b=GD3ymWo8e4s7MvScbhSBAq5o/e4W0I34RryJ0X76nRFOKAWIIs4QpD4dqBUroMlWYgYlFQqrSSbp9H+sF2D0KeST7pVXMqE2GJSLFu1BKp0XnzFTf0TO6zp05wSjfswVon4IKfiaXKl+q52xK0wOVbvt9472YGj3iXgPgpD4Xn0=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781069666; c=relaxed/simple;
-	bh=h+7YhoW9TE5jEZByvqe8GIS2QLULVfIBSI0Ij6H/Sfw=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=XcEFgWxNoItgACDXm6Pk45WX2CrXXMNwy/7MbiRWvdZbbnIo47yoyBk0dNpTfCeS3ZP4NDcvwhS2wnRgr5EWTK/GWgc4BgIrXNFY6PM3Qym0G3VnNnSkx/2oW5UXfmZ2Qm7a4Zj+UC9PyhWIfoZhz8PYCWcR5HgR0Gvz3SJCT6U=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=HsbVZVib; dkim=pass (1024-bit key) header.d=mediateko365.onmicrosoft.com header.i=@mediateko365.onmicrosoft.com header.b=WUBQf4bC; arc=fail smtp.client-ip=210.61.82.184
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6A7E5309F08
+	for <linux-scsi@vger.kernel.org>; Wed, 10 Jun 2026 06:00:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.48
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1781071205; cv=none; b=lgI+CQTZGCypTo7YCEFzSxPHtwRYQQWJB8wf8PuERUE3c26drQqV393B5fnro8lzcBxj5JzhJ36ni9aTMkTpnuUltrmhbZ+3tujVElg0Dr/+vR3owOhm2cW705yqauGZGgltEdosKVXo/GU7+COBjTiOl44CE+HVTDg0Oa4u/Qk=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1781071205; c=relaxed/simple;
+	bh=AvZ62CJBNYf9slGn5Sv7jZnOy8sCQBSyuSuQs3KW624=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Ugs4tmGQUqeiS/QGTNWgrBXXqJU/ljSOiueoXG7HHd0tSUeEpeDESzuD6nuKp1NGbIISb/ZxV6YClY47pWTCd9Tkcc5GSHVmg36x1noWlQKHUqMtdZI1ZRjynoGTsfmbVyP+SzvORHNNJHH+c0sF+djz+xUd8ZgKz69acv4Ekyc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=EjMwLqYu; arc=none smtp.client-ip=209.85.128.48
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="HsbVZVib";
-	dkim=pass (1024-bit key) header.d=mediateko365.onmicrosoft.com header.i=@mediateko365.onmicrosoft.com header.b="WUBQf4bC"
-X-UUID: 06140fc8648e11f18dc8c9802ae25ab1-20260610
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=MIME-Version:Content-Transfer-Encoding:Content-ID:Content-Type:In-Reply-To:References:Message-ID:Date:Subject:CC:To:From; bh=h+7YhoW9TE5jEZByvqe8GIS2QLULVfIBSI0Ij6H/Sfw=;
-	b=HsbVZVibRlvAnxpylf7bbAw/EFznh8ulGyc/wAhfSf8aaWyf/OPmuazeiI9CG2+IzSNvMb/NTAz2lNK1c6nLVmH6sB9PEHoHD/K2rI2G4dCymXONnk1BkEY314HsOSaqo1om/eFm21fwBPv40MlzipQ01ZEFqXhbvi0oRDlZh40=;
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.15,REQID:550eaa35-47b4-4d1c-89cd-31134988c81a,IP:0,U
-	RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
-	release,TS:0
-X-CID-META: VersionHash:e276073,CLOUDID:957f852a-13d2-4d29-83ea-b8014339a000,B
-	ulkID:nil,BulkQuantity:0,Recheck:0,SF:80|81|82|83|102|110|111|836|865|888|
-	898,TC:-5,Content:0|15|50,EDM:-3,IP:nil,URL:0,File:130,RT:0,Bulk:nil,QS:ni
-	l,BEC:-1,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
-X-CID-BVR: 2,SSN|SDN
-X-CID-BAS: 2,SSN|SDN,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR
-X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: 06140fc8648e11f18dc8c9802ae25ab1-20260610
-Received: from mtkmbs11n2.mediatek.inc [(172.21.101.187)] by mailgw02.mediatek.com
-	(envelope-from <peter.wang@mediatek.com>)
-	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 301208645; Wed, 10 Jun 2026 13:34:17 +0800
-Received: from mtkmbs10n2.mediatek.inc (172.21.101.183) by
- mtkmbs13n2.mediatek.inc (172.21.101.108) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.29; Wed, 10 Jun 2026 13:34:16 +0800
-Received: from SG2PR04CU009.outbound.protection.outlook.com (172.21.101.237)
- by mtkmbs10n2.mediatek.inc (172.21.101.183) with Microsoft SMTP Server id
- 15.2.2562.29 via Frontend Transport; Wed, 10 Jun 2026 13:34:16 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=Yo04MyGhEEq8fYo+mFcq3Me9vjWXPEy+ZRWHau5KDWed9Bt2TLluw+ZC6dAQq4zk0h4sKjiP32qpPxXsx489Vcy4ngicqIG3nmF6WD5DxGJmZ3pjmEm/RrsHfstDeBw4L4l9PsvTEXHHovEaFirrvE6jkf04kiEg6mZTW92JnE4v4l3RLg4mrS/hLz9qohwWwwAIOk0LR7Xjo9G7VwcIgSr5/uPD2XN6AIjvlp8nLwJHJr/0a38kI3jYwKbmjPz4m2HueC+phKxt/xY4WHfTRqm7gLZj6zUi15HfiS9z4LU8f6XosFrBtuJirF/rl4suH7mAr8VmGBfcolfapGc6fg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=h+7YhoW9TE5jEZByvqe8GIS2QLULVfIBSI0Ij6H/Sfw=;
- b=viMgvwA4Vtmbb+bIsK/SJCi1nPYePPbiAq9bUqkmVwbopvef4HS9ksFG/npdc4d4awJ88K0YJt5MUUkuX2mhYg1CuK00zo8+GWpnXSmAHUTFlOUzVZArX+TKG+5zEo0EHoA9wlWj0F8n+QqBItZj2wwMIP/3wg3poE0VKRjcJgix29QxyV410T1irDFebfcmesL9TjHHH9QCA5NxcVv3YvBfQAJFeYX6CGXR2GUChFofqd/6NWYxpavFFOjuzcVcX2+r1s7QAagrAUPY/cwsiXTRTVqKS7uwCx6d9Onp0weQF31iaPwZkCVBLNoRTu0r+Wx8UZAgFdUKN69bs/48DA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=mediatek.com; dmarc=pass action=none header.from=mediatek.com;
- dkim=pass header.d=mediatek.com; arc=none
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="EjMwLqYu"
+Received: by mail-wm1-f48.google.com with SMTP id 5b1f17b1804b1-490be29c1c5so80308345e9.2
+        for <linux-scsi@vger.kernel.org>; Tue, 09 Jun 2026 23:00:02 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=mediateko365.onmicrosoft.com; s=selector2-mediateko365-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=h+7YhoW9TE5jEZByvqe8GIS2QLULVfIBSI0Ij6H/Sfw=;
- b=WUBQf4bCaw9BNCNWS7qWZ6gNnQh4ldC7B3amtoS+KL4fpyOnuY5SePnzUEFZHLgOKhsiG3ZQraIP/sjJIUUxlHij40l5L3f5cZLLHA7TMYiQ5l/Be5x2Kj6Ez8mcAT8jYXEB992cgt77Ch8udU1mLMcE54b0/rqXWFUSfi0Vuao=
-Received: from PSAPR03MB5605.apcprd03.prod.outlook.com (2603:1096:301:66::6)
- by TYNPR03MB10250.apcprd03.prod.outlook.com (2603:1096:405:3c1::18) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.113.11; Wed, 10 Jun
- 2026 05:34:13 +0000
-Received: from PSAPR03MB5605.apcprd03.prod.outlook.com
- ([fe80::165:d36a:3f76:2925]) by PSAPR03MB5605.apcprd03.prod.outlook.com
- ([fe80::165:d36a:3f76:2925%6]) with mapi id 15.21.0113.011; Wed, 10 Jun 2026
- 05:34:13 +0000
-From: =?utf-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= <peter.wang@mediatek.com>
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-	"James.Bottomley@HansenPartnership.com"
-	<James.Bottomley@HansenPartnership.com>,
-	=?utf-8?B?RWQgVHNhaSAo6JSh5a6X6LuSKQ==?= <Ed.Tsai@mediatek.com>,
-	"alim.akhtar@samsung.com" <alim.akhtar@samsung.com>, "avri.altman@wdc.com"
-	<avri.altman@wdc.com>, "martin.petersen@oracle.com"
-	<martin.petersen@oracle.com>, "bvanassche@acm.org" <bvanassche@acm.org>
-CC: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>, "linux-mediatek@lists.infradead.org"
-	<linux-mediatek@lists.infradead.org>,
-	=?utf-8?B?Q2h1bi1IdW5nIFd1ICjlt6vpp7/lro8p?= <Chun-hung.Wu@mediatek.com>,
-	=?utf-8?B?TmFvbWkgQ2h1ICjmnLHoqaDnlLAp?= <Naomi.Chu@mediatek.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, wsd_upstream
-	<wsd_upstream@mediatek.com>, =?utf-8?B?QWxpY2UgQ2hhbyAo6LaZ54+u5Z2HKQ==?=
-	<Alice.Chao@mediatek.com>
-Subject: Re: [PATCH 2/2] ufs: mediatek: Implement get_hba_nortt callback for
- RTT capability
-Thread-Topic: [PATCH 2/2] ufs: mediatek: Implement get_hba_nortt callback for
- RTT capability
-Thread-Index: AQHc9/xLQSvNF7liEEiBLwm8hGNt1LY3RZAA
-Date: Wed, 10 Jun 2026 05:34:13 +0000
-Message-ID: <680b0c845682dced056e7e6b3bfee14cb0c959c6.camel@mediatek.com>
-References: <20260609103856.676222-1-ed.tsai@mediatek.com>
-	 <20260609103856.676222-3-ed.tsai@mediatek.com>
-In-Reply-To: <20260609103856.676222-3-ed.tsai@mediatek.com>
-Accept-Language: zh-TW, en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=mediatek.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: PSAPR03MB5605:EE_|TYNPR03MB10250:EE_
-x-ms-office365-filtering-correlation-id: 72e76bc0-8ba4-434c-ccdd-08dec6b1e7d8
-x-ld-processed: a7687ede-7a6b-4ef6-bace-642f677fbe31,ExtAddr
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;ARA:13230040|23010399003|376014|366016|1800799024|38070700021|4143699003|11063799006|56012099006|18002099003|22082099003;
-x-microsoft-antispam-message-info: mtLKaYG4ew8iha0keeeln0nZZAH05BDyCvDcNvs49H1VIbDd9TajSy0+vMByCaBG+ozBqgRKNolV7/jWnmPah+r5bdSVX+LIxt8sLoM1gs/76C/bk5h+AT6znTS2x140DEuU6HFSnINHNYZFXqHn2fR5WwV+Gk0+17EtXhjjhG3WFVO0kBtLqmeG+pRpE38/Mcd+sX4HZAEfEJmDO2bFQcH6EXsBijPWG5ZW3lnRdhf/lpptWfxmg+4Vk207CiPNSaizKvwOQ/TMklHsV2pTghHKbDT10YPPm47UtC7OBopXdh0MGC15oco9E+VwOhc3ewZpIZ1vw2nhTO21rmE1RtkX3VK0iESUnGGlBaFoRwf4u0F3c9rIvYSjqSJzAA7eZ9r5LTDXAxrEtbXi6tcN6yBLuuBPcy7qe0ggvIwyab3XPERMVs/NdwHm+b7rJ7UbZYdL8B4T08e2I2ElO3kmmWGqzwLTHGzolBw4bxFqMz/5wb14OeMYbEAbTE2ueS4MqQ/s2rHHgRa8a273OQ7fNpWf0bNYobBShzYYnMIsPmgoeXfPdT/DZwqVRe4E9KxUxeIRKxMOvel0s6RuAuelI8AF9gZMPPmthfeOEEQDnGHcFvd7LYRVDhzX8/IbKzUxJQn8LW4WsFJ34QKbBYlzwpy0olClgYeanhJxPQFIgWy7SvC0DOE766+C9OM3hc+8sISDeNmdjFJlQNYlXQa/bVbkHtQUKBmDRLDJfZ6JYxsH5Iu7UOJ8JiCgNFUA7/Y2
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PSAPR03MB5605.apcprd03.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(376014)(366016)(1800799024)(38070700021)(4143699003)(11063799006)(56012099006)(18002099003)(22082099003);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?utf-8?B?Y3EycEdOb1MrRWV6NTBsR2xqbkVSWDJ5TzdJbzd1bWUzUlBzc01jNThIYjlC?=
- =?utf-8?B?cjdKQ0dHY0ZtMkFMU1Nwa3NYeEFLVno5NW5RMDExVks1ZFZkUWhsbEQxZ2Rh?=
- =?utf-8?B?dW9wZm53UE1hR1JCNFFlTWdBYkU0N1YyemNTMFJqcDNGNUR4bEJlRVFYa2JW?=
- =?utf-8?B?SGtlOC9Cekh5Q3RTWitBQm1USXpRa3VwbFYvb0NLcVo0bkZXNTBwWWpiM0Nt?=
- =?utf-8?B?V0c3NU15TlFMNDVoek9paStIQzdVd0g3QTkvZ29COUwwQ1d5NnBrc2QrU0FD?=
- =?utf-8?B?S3UzaTVqSWJJZ1NDbHpyVmFWQTVqajl5QVNYcm1adDhEZVFhNG9YQVl0Nkhx?=
- =?utf-8?B?SzJQODhwZHdKM0VvN3EzZnEvU2ZuQ1BJZWV3Z0VtNXlHUldpcEFHK3ZQU0Jz?=
- =?utf-8?B?M2w4Z0RiQ3lrMUJvRWF5VFZ0ZG9CZnEyaDZtc0RlNjE4RTN1V2RzNDFjUlBu?=
- =?utf-8?B?UUdXbldrYXA2cnp1bmk3VHEwRjlPOTI3YjVrZVE1OTRJdzV2MkYzTXVnb3Qw?=
- =?utf-8?B?cDI3MjFQZGlUVHYyTngxUzA5cGd4QXBtUFJVZE1tVVpmUDdMeVNqWXVsNlpl?=
- =?utf-8?B?VEpGR0h4RDVRcWtaNFlBNWlUM0tKUmYyeFhzS0J2ajcxZHh6U2ptVlAvRUY1?=
- =?utf-8?B?WitpS1R5OFJLSEtOSys1aENtN0lFQ0xWTXl6ZUFIaTRpT29Cc3hZN052TlNx?=
- =?utf-8?B?R2NKUW1ocWRMdnlLVkg2MVI0d3MwRjhqZ0lpMzFZRjM2VjE2S0J4dUgyOW9E?=
- =?utf-8?B?WEg4L1Q2TmxmRG9KeFBqWlZKUG0zQk56UDNmNFkvUCtTbG9YV1pVbDRzMTk1?=
- =?utf-8?B?Q0VxNjFuZEcyTlVjWlR3VjNPREpMVnA0aTR6VTBPUndCRFNqLzZpeFlVZlBN?=
- =?utf-8?B?bUQ5Ny9sTnRmMzRhclNYVzNzUkZRRnRLT0Z0alJNbEZRKytUN2Z3bzF3ZlUv?=
- =?utf-8?B?UVdhckpkdlIzZVpTWTNyTnJOaXBNV25adTlhQnNxZ0FVZUErVGVUSktjT2tC?=
- =?utf-8?B?L2hhN1dNMHhGbDdyYWNsdE8za3lkeEkzNFhjMloxVTkrc2pxU01RaHRIWi9w?=
- =?utf-8?B?dGRuMC9xZlJlREo3VlVNQU9ZVFdyM3hPait1ZWg4dCswREF5bVNKWDZ6bnZD?=
- =?utf-8?B?ckZ3T1ZvK0pRWEpDRGtjTk5xbDFZN1hIRVJmSTVBSkdRMVlRb3l0d2Vnd3Ir?=
- =?utf-8?B?YmpUSkh1NWdFN3g1QW84ZDNBdHg3QWtqMTYzWDNEWHBrNW8zMCs4NkUrbnUr?=
- =?utf-8?B?Q09NeUFveTQ2Z3d2clc4MzNUUUtpa256dUJUWjFVVFFOSU9xZnl1QWY1Sm1T?=
- =?utf-8?B?UTRub1FDaE12M0dyT09lNS82TTJRYlc1dDV5T21BdENRU2o2Nmo3TEdzbnMx?=
- =?utf-8?B?MUFYTDRzVG5DR1dCT2x0cE0ycXlqUTc4WTA5ZFlQbE02b2VBOG9EL0Ryc1lr?=
- =?utf-8?B?RmVzOTBiR1BhZnFLY2xiZEVaTENscDhDMEJnaFk2UzZPaWJkUVVzbHZpWXlZ?=
- =?utf-8?B?ZlR0NFZ2cGRESlBsVzBHQnhYM0VFWGtGQzVpZUhOU3VwTDNqM0VIZEg1NS9E?=
- =?utf-8?B?SWp1S2M2ak5ybWg2MU10TWdka0prVWdsZCtSelZVdkF0L1l5UkVUb0dUT05P?=
- =?utf-8?B?OGRvc0daVUZRRk5nMXBPalJKYXk5ejRDOHQ0OTBkRktsd3NDK1RRNlJoaVNR?=
- =?utf-8?B?MW1VeXZZTEl5ajdqMmllUlZ2VkwzY3hwenllWmwyZXg4YzRtQXJBdGJzSjlo?=
- =?utf-8?B?UnVyT1JrRUgvdm9CWmt0WDNDNHBMU2htbXNJa0YweDNWdGsxdUd6VzhMZWJL?=
- =?utf-8?B?dGJ1SnlEZURnbTA0aHdZNHF1a1hUWEVzZmtsVjhHQ3ZkcEwwUW9GOUF1WHUr?=
- =?utf-8?B?Wnh0cmliaTczQUh1eHhlTGlpaGRDMzZPNFRzTThVQVNZTktQZXphZWprWDZx?=
- =?utf-8?B?VEY0OVQxNVhrU1lHUlczS1dzaHM1bXZlaGp0QlhPdzgwUzJva284RmcvZGJr?=
- =?utf-8?B?azhzSFhlQnVrWWE4SGtLNjJhQ1RGZHVQbVE0cVZ5T3pDSXMwSUlsSFVSRlRK?=
- =?utf-8?B?UVp4OUs5WndPaS9DbzlMeFlIbDIzZ3MzOXJvRzBCRVl1QU5vdU9uQXVHOUlK?=
- =?utf-8?B?R2JzZ3J3dTZocFhpMWRWNmJOZkRkWDdZOVVjaVBuZjhKdmV5QzRkblM0OGo4?=
- =?utf-8?B?bkNqY1pWMStkWWtUMkllbFppTksyZFdXd0x1emZjVWExS0ZNMUlLQjlWYllk?=
- =?utf-8?B?cjNYUUxUMXFobWZIUDZXbHJVY0FCbVYrRStER25rNGlmQm42RHNaMVl5bm1Q?=
- =?utf-8?B?WVZkQmlrdHVkVmlKTURDZEpOY2lLdzYwZnRxbCt1V1FhbWFlRkRtL20zc2h5?=
- =?utf-8?Q?ROo1Sj4ov4izMm2E=3D?=
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <DEBC2416BD83A343850822331DFE6298@apcprd03.prod.outlook.com>
-Content-Transfer-Encoding: base64
+        d=suse.com; s=google; t=1781071201; x=1781676001; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=0eeq4qUemue69ATVH9Hc0G+s1EX6SM4VcPKiJpjYoUk=;
+        b=EjMwLqYujTxy+YSxoLHsRyOYOX4r/EAZp2/ifXHXTJoJpf9tpEOLpOI6D7kbGzidhm
+         qLO79IlI7HlqlCK2gjE/c/4YJ1nTaFIu84/098dMgwpBwJeE6ErYxbhVjJIN+z8Sdkq6
+         tG02njeUzYHi+UzF2x88M8Cj2tCrV/CvpscLRDBurC7eykEDaT6soboaQvvNGgsbgH1w
+         cbhQPAhnngBmAjWFoXiD/UAP3F2fTRPvDToqhbNLmRvaotOirJ2RIJwGNcKaGni4Vzom
+         AdDC11mPMOHY5fCA3RWHyUtXOlaKEZdxwYYX0zhLUJRpYxe9G5r2KsqOMbSpkoEVSioS
+         8M4Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1781071201; x=1781676001;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=0eeq4qUemue69ATVH9Hc0G+s1EX6SM4VcPKiJpjYoUk=;
+        b=kS49iRSL+iMB2TfrXcxPKcQ3s9IBHPjSOahmUOZTa2TL/yfp0/pKbcTpeiyX0PE3NH
+         O/JcbTCnLknv5hlwvfDlKUf0I+h4O/U5yaI6AMcv7CP7H5R13UnYm2Q3SiTUwoK7OvpE
+         pVIwR8KVzzx9bHTB0kM/YmlsytsgPFpquCvYyLnFbYoxM3tw5Z7ISVdDEgQetWEUf756
+         KJU63j8zlfVV3Nd6A+WKmpiuyqoIC8+2fkijduL2mInMga4GCE0/dUPyzaMfQAM2r/IH
+         9JbcEfAqemWVooiVQwbSl/o1+P0+udc7G43Iz3198lL7Fyi4fKbN0d4mxv+msjGd1cwO
+         GdHQ==
+X-Forwarded-Encrypted: i=1; AFNElJ+cws/I2i/pjQ7m+jqUbmg3u1ivcMJlYeFB1yVm32JVRJ1KexQhO1rhnM0fB98ojqSgIllaj2OLZpPH@vger.kernel.org
+X-Gm-Message-State: AOJu0YxOqe3nnViozaUhU+LMceK6PMZ7vuiCqJvBbiNSKIsl4WYVBBuG
+	jXUufo+MC6s/0PtWbP6E3oGhYS7m7dt0GxtscyiVhv7ZoMJ1eGkKw2hhitww9w99AGQ=
+X-Gm-Gg: Acq92OHlf6OfBfQzzcpgiKC7P3KBa0HeF33G47FbHrMETnwnDFGiLMC2ffp+qIM/s08
+	/SI76KaKD8I2164OtsdnsayGPHY/PMaqKphlORtEDjeQ80ZdfOB2U0/75u+pNDF41jZM9qgDkTt
+	QiXbNpyT0A5cJCGvHHzVDc3kJpmBxpBM334gLJLOA/3VBchzENBmfx2iyE61K/fuRHPydwb8yDq
+	JKpvkG2DbDZgspALzzLWuNFld3xIH0EOb+EIrsGj6IIbLRF66WI2MmeE8+Ph0YI37RMCMicFisJ
+	RxTUv8fV7DDsPnPRCGd/Um6cNM4gq/Ixp7/tIuJjPgV/ahCH7yIR9NMS+fuGqtfBZaLH/U9wg24
+	IEnDdODnh5yFzL6lrgxYx7LGlZjwiNnUxEtQHs8wrkc+VrSL7HS4bWlmNaNxvME3Y4oHDT4vg8m
+	GUmeSATOie1bPpQtii8Wx95O1HcUx9JjlJHtC4tAzqMjEHIrI8UUWQ/fgsZ2PNPhzZRi3k1Cg=
+X-Received: by 2002:a05:600c:8285:b0:490:abef:dae6 with SMTP id 5b1f17b1804b1-490c25b09bcmr392960895e9.19.1781071200857;
+        Tue, 09 Jun 2026 23:00:00 -0700 (PDT)
+Received: from ?IPV6:2001:a62:1439:d001:a0af:1164:c6fd:8c51? ([2001:a62:1439:d001:a0af:1164:c6fd:8c51])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-4601f35eae5sm69552212f8f.33.2026.06.09.22.59.58
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 09 Jun 2026 23:00:00 -0700 (PDT)
+Message-ID: <e2a61373-0c27-41c3-b0ca-836a4727a3b5@suse.com>
+Date: Wed, 10 Jun 2026 07:59:57 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Exchange-RoutingPolicyChecked: AYyBdyjH1fdNVGy0XbyCVuBhXMdIR8ryhypKu5WPMNfh90H5wulafTvSg0bZuGN0Bn6i1jvh359WLPR1kaWb8lAsBGKGutgot3+P7WYdQ3doabzIcnF0SMyXkA30V0j4PDQQ3DIwkwR+eAlSsovWNOrrCxn2L9R0Hs8GNo7V0i3+O3YgU9NLVmXne/Hfgbe84xzWGI++9HYgrX1W2XoekwiGeskhRK9zQrzIvzazLsZDLTXhsno05SZQpXi6CenMlhWzIpCJB8NWxSIhkEaPI8qQojHG3q6cxHqATlayfcvm+kz9OJBsEFbUhneMbnMV/TvFrjrWL6MQv3Ijv/ekHA==
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: PSAPR03MB5605.apcprd03.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 72e76bc0-8ba4-434c-ccdd-08dec6b1e7d8
-X-MS-Exchange-CrossTenant-originalarrivaltime: 10 Jun 2026 05:34:13.4193
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: a7687ede-7a6b-4ef6-bace-642f677fbe31
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: 3xZ0EOudbUjA/ypNyDnI6aQOwehZAXYg/noL5dSdLgDJs2AYtrAG1BI1MnQAvhn8PNLedi1f174RqjvhvtO5qA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: TYNPR03MB10250
-X-MTK: N
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3 2/4] scsi: host: allocate struct Scsi_Host on the NUMA
+ node of the host adapter
+To: Sumit Saxena <sumit.saxena@broadcom.com>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>,
+ Jens Axboe <axboe@kernel.dk>
+Cc: "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+ linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
+ Adam Radford <aradford@gmail.com>, Khalid Aziz <khalid@gonehiking.org>,
+ Adaptec OEM Raid Solutions <aacraid@microsemi.com>,
+ Matthew Wilcox <willy@infradead.org>, "Juergen E . Fischer"
+ <fischer@norbit.de>, Russell King <linux@armlinux.org.uk>,
+ linux-arm-kernel@lists.infradead.org, Finn Thain <fthain@linux-m68k.org>,
+ Michael Schmitz <schmitzmic@gmail.com>,
+ Anil Gurumurthy <anil.gurumurthy@qlogic.com>,
+ Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>,
+ Oliver Neukum <oliver@neukum.org>, Ali Akcaagac <aliakc@web.de>,
+ Jamie Lenehan <lenehan@twibble.org>, Ram Vegesna <ram.vegesna@broadcom.com>,
+ target-devel@vger.kernel.org, Bradley Grove <linuxdrivers@attotech.com>,
+ Satish Kharat <satishkh@cisco.com>, Sesidhar Baddela <sebaddel@cisco.com>,
+ Karan Tilak Kumar <kartilak@cisco.com>, Yihang Li
+ <liyihang9@h-partners.com>, Don Brace <don.brace@microchip.com>,
+ storagedev@microchip.com, HighPoint Linux Team <linux@highpoint-tech.com>,
+ Tyrel Datwyler <tyreld@linux.ibm.com>,
+ Madhavan Srinivasan <maddy@linux.ibm.com>,
+ Michael Ellerman <mpe@ellerman.id.au>, Nicholas Piggin <npiggin@gmail.com>,
+ Christophe Leroy <chleroy@kernel.org>, linuxppc-dev@lists.ozlabs.org,
+ Brian King <brking@us.ibm.com>, Lee Duncan <lduncan@suse.com>,
+ Chris Leech <cleech@redhat.com>, Mike Christie
+ <michael.christie@oracle.com>, open-iscsi@googlegroups.com,
+ Justin Tee <justin.tee@broadcom.com>, Paul Ely <paul.ely@broadcom.com>,
+ Kashyap Desai <kashyap.desai@broadcom.com>,
+ Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
+ Chandrakanth Patil <chandrakanth.patil@broadcom.com>,
+ megaraidlinux.pdl@broadcom.com,
+ Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>,
+ Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+ mpi3mr-linuxdrv.pdl@broadcom.com,
+ Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>,
+ Ranjan Kumar <ranjan.kumar@broadcom.com>, MPT-FusionLinux.pdl@broadcom.com,
+ Daniel Palmer <daniel@thingy.jp>, GOTO Masanori <gotom@debian.or.jp>,
+ YOKOTA Hiroshi <yokota@netlab.is.tsukuba.ac.jp>,
+ Jack Wang <jinpu.wang@cloud.ionos.com>, Geoff Levand <geoff@infradead.org>,
+ Michael Reed <mdr@sgi.com>, Nilesh Javali <njavali@marvell.com>,
+ GR-QLogic-Storage-Upstream@marvell.com, Narsimhulu Musini
+ <nmusini@cisco.com>, "K . Y . Srinivasan" <kys@microsoft.com>,
+ Haiyang Zhang <haiyangz@microsoft.com>, Wei Liu <wei.liu@kernel.org>,
+ Dexuan Cui <decui@microsoft.com>, Long Li <longli@microsoft.com>,
+ linux-hyperv@vger.kernel.org, "Michael S . Tsirkin" <mst@redhat.com>,
+ Jason Wang <jasowang@redhat.com>, Paolo Bonzini <pbonzini@redhat.com>,
+ Stefan Hajnoczi <stefanha@redhat.com>, Eugenio Perez <eperezma@redhat.com>,
+ virtualization@lists.linux.dev, Vishal Bhakta <vishal.bhakta@broadcom.com>,
+ bcm-kernel-feedback-list@broadcom.com, Juergen Gross <jgross@suse.com>,
+ Stefano Stabellini <sstabellini@kernel.org>,
+ Oleksandr Tyshchenko <oleksandr_tyshchenko@epam.com>,
+ xen-devel@lists.xenproject.org, John Garry <john.g.garry@oracle.com>
+References: <20260609121806.2121755-1-sumit.saxena@broadcom.com>
+ <20260609121806.2121755-3-sumit.saxena@broadcom.com>
+Content-Language: en-US
+From: Hannes Reinecke <hare@suse.com>
+In-Reply-To: <20260609121806.2121755-3-sumit.saxena@broadcom.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-T24gVHVlLCAyMDI2LTA2LTA5IGF0IDE4OjM4ICswODAwLCBlZC50c2FpQG1lZGlhdGVrLmNvbSB3
-cm90ZToNCj4gRnJvbTogRWQgVHNhaSA8ZWQudHNhaUBtZWRpYXRlay5jb20+DQo+IA0KPiBJbXBs
-ZW1lbnQgdGhlIGdldF9oYmFfbm9ydHQgY2FsbGJhY2sgdG8gaGFuZGxlIHBsYXRmb3JtLXNwZWNp
-ZmljIFJUVA0KPiBjYXBhYmlsaXR5IGRpZmZlcmVuY2VzOg0KPiANCj4gLSBGb3IgbGVnYWN5IHBs
-YXRmb3JtcyBhbmQgSVAgdmVyc2lvbnMgYmVmb3JlIE1UNjk5NSBCMCwgdGhlIFJUVA0KPiDCoCBj
-YXBhYmlsaXR5IGZyb20gaG9zdCBjb250cm9sbGVyIHJlZ2lzdGVyIGlzIHByb2JsZW1hdGljLCBz
-byBsaW1pdA0KPiDCoCBpdCB0byAyIChNVEtfTUFYX05VTV9SVFRfTEVHQUNZKS4NCj4gDQo+IC0g
-Rm9yIE1UNjk5NSBCMCBhbmQgbGF0ZXIgcGxhdGZvcm1zLCB0aGUgaXNzdWUgaXMgZml4ZWQgYW5k
-IHRoZQ0KPiDCoCB2YWx1ZSBmcm9tIGhvc3QgY29udHJvbGxlciBjYXBhYmlsaXR5IHJlZ2lzdGVy
-IGNhbiBiZSB1c2VkDQo+IGRpcmVjdGx5Lg0KPiANCj4gVGhpcyByZXBsYWNlcyB0aGUgcHJldmlv
-dXMgbWF4X251bV9ydHQgZmllbGQgaW4gdWZzX2hiYV92YXJpYW50X29wcw0KPiB3aXRoIGR5bmFt
-aWMgcGxhdGZvcm0tc3BlY2lmaWMgbG9naWMuDQo+IA0KPiBTaWduZWQtb2ZmLWJ5OiBFZCBUc2Fp
-IDxlZC50c2FpQG1lZGlhdGVrLmNvbT4NCj4gLS0tDQoNClJldmlld2VkLWJ5OiBQZXRlciBXYW5n
-IDxwZXRlci53YW5nQG1lZGlhdGVrLmNvbT4NCg0K
+On 6/9/26 14:18, Sumit Saxena wrote:
+> scsi_host_alloc() used kzalloc(), which always picks an arbitrary node.
+> Extend the function to accept a 'struct device *dev' parameter and use
+> kzalloc_node() with dev_to_node(dev) so the Scsi_Host struct lands on
+> the same NUMA node as the HBA, mirroring the treatment already applied
+> to struct scsi_device, struct scsi_target, and shost_data.
+> 
+> When dev is NULL (legacy ISA/platform drivers without a dma_dev) the
+> allocation falls back to NUMA_NO_NODE, preserving existing behaviour.
+> 
+> Update all in-tree callers:
+>    - PCI-based HBA drivers pass &pdev->dev (or the equivalent struct
+>      member such as &phba->pcidev->dev, &h->pdev->dev, &ha->pdev->dev)
+>      so their host struct is placed on the adapter's node.
+>    - Non-PCI drivers (ISA, Amiga, ARM PCMCIA, virtio, Hyper-V, PS3, …)
+>      pass NULL.
+>    - libfc's libfc_host_alloc() inline helper passes NULL; FC drivers
+>      that want NUMA awareness can open-code the call with their pdev.
+> 
+> Suggested-by: John Garry <john.g.garry@oracle.com>
+> Signed-off-by: Sumit Saxena <sumit.saxena@broadcom.com>
+> ---
+>   drivers/scsi/3w-9xxx.c                    | 2 +-
+>   drivers/scsi/3w-sas.c                     | 2 +-
+>   drivers/scsi/3w-xxxx.c                    | 2 +-
+>   drivers/scsi/53c700.c                     | 2 +-
+>   drivers/scsi/BusLogic.c                   | 2 +-
+>   drivers/scsi/a100u2w.c                    | 2 +-
+>   drivers/scsi/a2091.c                      | 2 +-
+>   drivers/scsi/a3000.c                      | 2 +-
+>   drivers/scsi/aacraid/linit.c              | 2 +-
+>   drivers/scsi/advansys.c                   | 6 +++---
+>   drivers/scsi/aha152x.c                    | 2 +-
+>   drivers/scsi/aha1542.c                    | 2 +-
+>   drivers/scsi/aha1740.c                    | 2 +-
+>   drivers/scsi/aic7xxx/aic79xx_osm.c        | 2 +-
+>   drivers/scsi/aic7xxx/aic7xxx_osm.c        | 2 +-
+>   drivers/scsi/aic94xx/aic94xx_init.c       | 2 +-
+>   drivers/scsi/am53c974.c                   | 2 +-
+>   drivers/scsi/arcmsr/arcmsr_hba.c          | 3 ++-
+>   drivers/scsi/arm/acornscsi.c              | 2 +-
+>   drivers/scsi/arm/arxescsi.c               | 2 +-
+>   drivers/scsi/arm/cumana_1.c               | 2 +-
+>   drivers/scsi/arm/cumana_2.c               | 2 +-
+>   drivers/scsi/arm/eesox.c                  | 2 +-
+>   drivers/scsi/arm/oak.c                    | 2 +-
+>   drivers/scsi/arm/powertec.c               | 2 +-
+>   drivers/scsi/atari_scsi.c                 | 2 +-
+>   drivers/scsi/atp870u.c                    | 2 +-
+>   drivers/scsi/bfa/bfad_im.c                | 2 +-
+>   drivers/scsi/csiostor/csio_init.c         | 4 ++--
+>   drivers/scsi/dc395x.c                     | 2 +-
+>   drivers/scsi/dmx3191d.c                   | 2 +-
+>   drivers/scsi/elx/efct/efct_xport.c        | 4 ++--
+>   drivers/scsi/esas2r/esas2r_main.c         | 2 +-
+>   drivers/scsi/fdomain.c                    | 2 +-
+>   drivers/scsi/fnic/fnic_main.c             | 2 +-
+>   drivers/scsi/g_NCR5380.c                  | 2 +-
+>   drivers/scsi/gvp11.c                      | 2 +-
+>   drivers/scsi/hisi_sas/hisi_sas_main.c     | 2 +-
+>   drivers/scsi/hisi_sas/hisi_sas_v3_hw.c    | 2 +-
+>   drivers/scsi/hosts.c                      | 6 ++++--
+>   drivers/scsi/hpsa.c                       | 2 +-
+>   drivers/scsi/hptiop.c                     | 2 +-
+>   drivers/scsi/ibmvscsi/ibmvfc.c            | 2 +-
+>   drivers/scsi/ibmvscsi/ibmvscsi.c          | 2 +-
+>   drivers/scsi/imm.c                        | 2 +-
+>   drivers/scsi/initio.c                     | 2 +-
+>   drivers/scsi/ipr.c                        | 2 +-
+>   drivers/scsi/ips.c                        | 2 +-
+>   drivers/scsi/isci/init.c                  | 2 +-
+>   drivers/scsi/jazz_esp.c                   | 2 +-
+>   drivers/scsi/libiscsi.c                   | 2 +-
+>   drivers/scsi/lpfc/lpfc_init.c             | 2 +-
+>   drivers/scsi/mac53c94.c                   | 2 +-
+>   drivers/scsi/mac_esp.c                    | 2 +-
+>   drivers/scsi/mac_scsi.c                   | 2 +-
+>   drivers/scsi/megaraid.c                   | 2 +-
+>   drivers/scsi/megaraid/megaraid_mbox.c     | 2 +-
+>   drivers/scsi/megaraid/megaraid_sas_base.c | 2 +-
+>   drivers/scsi/mesh.c                       | 2 +-
+>   drivers/scsi/mpi3mr/mpi3mr_os.c           | 2 +-
+>   drivers/scsi/mpt3sas/mpt3sas_scsih.c      | 4 ++--
+>   drivers/scsi/mvme147.c                    | 2 +-
+>   drivers/scsi/mvsas/mv_init.c              | 2 +-
+>   drivers/scsi/mvumi.c                      | 2 +-
+>   drivers/scsi/myrb.c                       | 2 +-
+>   drivers/scsi/myrs.c                       | 2 +-
+>   drivers/scsi/ncr53c8xx.c                  | 2 +-
+>   drivers/scsi/nsp32.c                      | 2 +-
+>   drivers/scsi/pcmcia/nsp_cs.c              | 2 +-
+>   drivers/scsi/pcmcia/qlogic_stub.c         | 2 +-
+>   drivers/scsi/pcmcia/sym53c500_cs.c        | 2 +-
+>   drivers/scsi/pm8001/pm8001_init.c         | 2 +-
+>   drivers/scsi/pmcraid.c                    | 2 +-
+>   drivers/scsi/ppa.c                        | 2 +-
+>   drivers/scsi/ps3rom.c                     | 2 +-
+>   drivers/scsi/qla1280.c                    | 2 +-
+>   drivers/scsi/qla2xxx/qla_mid.c            | 2 +-
+>   drivers/scsi/qla2xxx/qla_os.c             | 2 +-
+>   drivers/scsi/qlogicfas.c                  | 2 +-
+>   drivers/scsi/qlogicpti.c                  | 2 +-
+>   drivers/scsi/scsi_debug.c                 | 2 +-
+>   drivers/scsi/sgiwd93.c                    | 2 +-
+>   drivers/scsi/smartpqi/smartpqi_init.c     | 2 +-
+>   drivers/scsi/snic/snic_main.c             | 2 +-
+>   drivers/scsi/stex.c                       | 2 +-
+>   drivers/scsi/storvsc_drv.c                | 2 +-
+>   drivers/scsi/sun3_scsi.c                  | 2 +-
+>   drivers/scsi/sun3x_esp.c                  | 2 +-
+>   drivers/scsi/sun_esp.c                    | 2 +-
+>   drivers/scsi/sym53c8xx_2/sym_glue.c       | 2 +-
+>   drivers/scsi/virtio_scsi.c                | 2 +-
+>   drivers/scsi/vmw_pvscsi.c                 | 2 +-
+>   drivers/scsi/wd719x.c                     | 2 +-
+>   drivers/scsi/xen-scsifront.c              | 2 +-
+>   drivers/scsi/zorro_esp.c                  | 2 +-
+>   include/scsi/libfc.h                      | 2 +-
+>   include/scsi/scsi_host.h                  | 3 ++-
+>   97 files changed, 107 insertions(+), 103 deletions(-)
+> 
+Quite a lot of churn for such a (relatively) simple change.
+
+I think it might be better to introduce a new function
+(scsi_host_alloc_node() ?) with the additional parameter,
+and make scsi_host_alloc() a wrapper around that.
+
+That will reduce the size of this patch immensely.
+
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke                  Kernel Storage Architect
+hare@suse.com                               +49 911 74053 688
+SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
+HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
