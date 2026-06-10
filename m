@@ -1,157 +1,179 @@
-Received: from mail-wm1-f46.google.com (mail-wm1-f46.google.com [209.85.128.46])
+Received: from mail-yw1-f182.google.com (mail-yw1-f182.google.com [209.85.128.182])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3131D352F95
-	for <linux-scsi@vger.kernel.org>; Wed, 10 Jun 2026 20:56:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.46
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781125010; cv=none; b=No2sZQRIMvztb1iDoGpz1A85DmXO32x6N7+1d2dgqoeLW81np18Im3N0ztZhXyfdYrkRRgN65ow7ptgRBjr8Iuy3KZvW546R0bJh6LfcYitOYg5PSOdVXzxhOA04mAzpFLQcogu0WHZZkbM0IZ6PR4GmgWpyHKTjyvB2lVELTtQ=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781125010; c=relaxed/simple;
-	bh=Uw+bVKuSNHDEmPzBZJHOJj8rAChZRPa0vhBaxuhG/U0=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ZwaGAC3lGU/T3XEay5+9EBn0HUe+CVJkZRF2O9tRt6G1fghQrsEdhfHMdLBUI2q0J38fN/ATyxSyWNG/GRgErQRknuP1RFrIxYfKv7BCJNzvMnM7KuODc9nzdk9PSWZxPFRsvJzCfbEk8Z01zWUDCsax9ztWJc5oX5ZLsMr9IAo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=baylibre.com; spf=pass smtp.mailfrom=baylibre.com; dkim=pass (2048-bit key) header.d=baylibre.com header.i=@baylibre.com header.b=gBiCDNYK; arc=none smtp.client-ip=209.85.128.46
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=baylibre.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=baylibre.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 33CB73ACA68
+	for <linux-scsi@vger.kernel.org>; Wed, 10 Jun 2026 21:06:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.128.182
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1781125591; cv=pass; b=PKyNFUhiHCjKOtN0r8tCHdz2R7wi+dBFYr32QXgHaEGPg8vJiTXH3ZhVyhypEgVYCP7ttH3V/4/xLnK9ZtCnfB+FxohGJywUFMLUODc2DQ2eopQI4XyiuoU0RPqpdsYW8i/3yJWQgrf10AvyX8qe/R72v5x/Q/aJDIxXaFGkMXg=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1781125591; c=relaxed/simple;
+	bh=8SPk+9kPUL0DQYsfiU6U+3rhy9CmKqHE6O0qDp+jLZI=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=X/WIrZGIFraG0aqh933h0MeBXkIUmPPsNLWGixz/ygtwBqJznJ2vzh+IaSqjQdu/6t032x+iefQrUygOMo/CDEe7H67IYyIRmTpq+C+cFUDpxFVbQxkBatM2UsH7YiY7Q5FKSoeQ6PeLAzpX64zwy26qDsL6x0zW/mrlWA9Dqg8=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=jWOwKwlS; arc=pass smtp.client-ip=209.85.128.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=baylibre.com header.i=@baylibre.com header.b="gBiCDNYK"
-Received: by mail-wm1-f46.google.com with SMTP id 5b1f17b1804b1-490c1915793so52029175e9.2
-        for <linux-scsi@vger.kernel.org>; Wed, 10 Jun 2026 13:56:47 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="jWOwKwlS"
+Received: by mail-yw1-f182.google.com with SMTP id 00721157ae682-7e8b45dfb3dso86859047b3.3
+        for <linux-scsi@vger.kernel.org>; Wed, 10 Jun 2026 14:06:30 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1781125589; cv=none;
+        d=google.com; s=arc-20240605;
+        b=NxAJTmgHQS8JTrJTwz6ffY4Te1E8P3GGGvj0LARJ1tm9c512nzE5DCvuKEP5Y+5WTZ
+         Ab2EOhotuUgNXYjz/GirrRNcHykJBL3ViCAP3gsCyzB70UpQT84JB/6lAohOlipjm3kT
+         Bxa9fkuXiIvkynqM8cFWgCiY/PLiis4ji3hoE+tQSeDWTNHm17z9jHRxuC4iyDU8LaHx
+         bqyF3RLlsz28pBeMjDxtw52nqagNYAM7D685iYwhYrR0sMI9psrdgpmaKZLOimLi9f+I
+         O+Yw/qVYIQKC3a5ZKd3rZlOO3K+MHx4u/mNtBPo3c0WEegPn7jJgoIIAEuYfTY7L7HaO
+         ViCA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=96czj6yri6D29TEjjpnrX0Ms962E0G1MVyGNh2o55HQ=;
+        fh=SXVISmOZlajWAedJ0cDlXmTuq3t3Ay/lmqRzz0+2NG8=;
+        b=ZQZGqNoeKpKBLzvFlbdLPvTy160V5g8MP/0bv0NfeL7HER1Gd8tagOYcPekzI9BmZg
+         8MmsC9ICZTXcJCErpilNrmq2XNe00n7YVCp0DhqsmQf1YZezhhT1G8bHApzVfXcTO7nl
+         rE7Gsb03Eu7SU6ag8wdyGqKuCr3V196ANzs0jLdO0dTW9NbKKNk6/GIzN+b21OuAwZWL
+         LBDFwP/eBGHAOg7c5Uzm6bS4T9qtn6+TF0xDc6JM6CEsu0b0gDcTONpFr9mF7aBXWoqF
+         z994jjIfQ4YBZ9DlQRXxKSIsT1zntxYhixg+rCPm4wkqso1x5TFtHQLkoWXOx8u0FOWW
+         j/CQ==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=baylibre.com; s=google; t=1781125006; x=1781729806; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=wHnIpgO42NH6+Ad+ppwobMNc15nwTLi776JaQeCvZQE=;
-        b=gBiCDNYKPwSzykz2mRQoSmwLpZ6TgevfS1jLtng8wrg+GDrm6zsCQJn8Ln8nb/fsl9
-         KR6IhlbmthsfB4fbWiVShAIZKw5MAbwiMrDBth9bMytUTpAo/hOQGv66lQEyNY++BBfr
-         5uQxaeKKHeD97kRvnv93Ae37XLnOHOsS9IzvQa/5h1J106472nkFenTp/0CJ/CSyqxlt
-         Y/m/JmttxS12DfjSYYT7tkHg+Jk92jMLZ+jEttfamyqQ2pA5DTroJHfvkr9Iv6x1Ui+l
-         n3Fpl+0J1Nb6HAUT9QBFvmrnP0JTEDKtdLs/v4tExvuvuTLEZdkrd1PPQWqH1rzqGo6V
-         TbsQ==
+        d=gmail.com; s=20251104; t=1781125589; x=1781730389; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=96czj6yri6D29TEjjpnrX0Ms962E0G1MVyGNh2o55HQ=;
+        b=jWOwKwlStXwGgUAXfngBzfebepF/l+Iz4nUi1RY4ZFUDUceLV7UGbSPy/9QVHif4B8
+         ZPz1O75qxMy7MzdeNnHDuLBQRANDqdgtNr4gpz1YjTbGBhWiD5oYWhkIc+R75zzFDCkO
+         Meumk/PL2hxGiDTi1EoFtI5Rjo6hDtBgNs4khoSmLMvoD3D6m4fDnyZeU2/SVa8Rl3Nq
+         Np8qgXa+5CNjzN4wJqgw9w2Dk9ZrR505dzxMLNWm5lQRAcJlwSMMAmfpaaFKXCI38Fkc
+         kL00/uRMaIP0VLi90TJNN5Ph1pRYS3cFKXlldKH1fiRvxQ998TEqxSQ9HgBoZT5xJce+
+         N+TQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1781125006; x=1781729806;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=wHnIpgO42NH6+Ad+ppwobMNc15nwTLi776JaQeCvZQE=;
-        b=rVgRmS/6RdnwARROCwq89Yi0sMqKMm3ghCA7a6mYnqHe7LB67YKKxo3AheFy3iQbrz
-         xCzFvzZaJOOl6CufeKam1mtQPSOk4l8fbfeKQ1bdoOjmnhAD7h/kmREMnjljVwcUH2JR
-         Cv9aSeVeU9NDOV5ic10IqagTkKdgADAxXcmAcpD1P+c2jfvy004Os5goRl4v9IOgZEqk
-         IUZ29SqQOfzjYAUUyhgdMjP/4etFOJm7Mk/FS8EmRcsQ3jWRVc29x/DQ1zrWU9MipY57
-         hMkinls+UfxDumUqs+gm/FE4C/Lyb9mV9S9Reiu5uimpkPKa6/H7jKbVJsTgBs5EXQxC
-         +klg==
-X-Forwarded-Encrypted: i=1; AFNElJ+iSzZqY96kIWrrVKm0DiJJyBifupt4yI/m16/meqiokD1GhloC6b8kj6l+RoQalfUy1g8D3/vbsxzQ@vger.kernel.org
-X-Gm-Message-State: AOJu0YzBNcKDZHBjSLBUKX3v7WQn15bUERTcqxwBrcs7WJEVpDB+0oG0
-	1onja1TA1POHw3mkQQstWPenhtWtvJVnEzXbhrsgxcD7yZrhfLBbgRpSmoEa1/x7Ah0=
-X-Gm-Gg: Acq92OGZCDfDvDBhGQinZPh6OYcdTQgKj5YS1aquQnCMOvONubVYYOOCulGdzYOpWfj
-	BMWQQsLmTbyJiuBnwW97DsPbQQNY9QskbCktd1ntThsU2D2mEYnHCmgxNdjAANYfZnQMLluhTxt
-	rlRdYn0mOxSgkXmoS1rxONfA7pH6caEylNdlO+KBI+WGJKUyts8rGvEbKV6epWXKt1w/b8rjyd2
-	kUJjcCzKT0Him3lD3Hh/hM+lDG2kg0G5X0DwKPfoOJQ4W4jHSn/8QcBHsapTTHHrTrolxzyiLei
-	YaArs/KE4hCXlMOI0o+LOy2yXzFyWo1KGTaMFHiaWKrWvBmlRIWdmfdSPzEXVvrWwa4azZ0MJ+1
-	KviuCvfXjdQXLlYSnZ2NmEUGg/IhQeTojCXqWuebpTw4Y9mwG25GB/GN87mgzZ+qPaKgmu+u9vl
-	M/Ekf45qPxwTzc70FUDQRXN0k3V2qbM088EN7dHwI=
-X-Received: by 2002:a05:600c:4746:b0:490:bb44:3f8b with SMTP id 5b1f17b1804b1-490e2e4517cmr6406585e9.17.1781125006559;
-        Wed, 10 Jun 2026 13:56:46 -0700 (PDT)
-Received: from localhost ([2a02:8071:56d1:2de0:559d:eec2:887f:c200])
-        by smtp.gmail.com with UTF8SMTPSA id ffacd0b85a97d-4601f35eae5sm75644130f8f.33.2026.06.10.13.56.44
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 10 Jun 2026 13:56:45 -0700 (PDT)
-Date: Wed, 10 Jun 2026 22:56:29 +0200
-From: Uwe =?utf-8?Q?Kleine-K=C3=B6nig_=28The_Capable_Hub=29?= <u.kleine-koenig@baylibre.com>
-To: John Garry <john.g.garry@oracle.com>
-Cc: "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
-	"Martin K. Petersen" <martin.petersen@oracle.com>, Finn Thain <fthain@linux-m68k.org>, 
-	Michael Schmitz <schmitzmic@gmail.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v1] scsi: Improve style of pnp_device_id array terminator
-Message-ID: <ainNaTWWNlqRPmh7@monoceros>
-References: <096aaa981c0bf1aaa8be75e675f17b1c9ca0086c.1781102092.git.u.kleine-koenig@baylibre.com>
- <f5624497-a6e3-45f3-8837-bdf8cf848dfc@oracle.com>
+        d=1e100.net; s=20251104; t=1781125589; x=1781730389;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=96czj6yri6D29TEjjpnrX0Ms962E0G1MVyGNh2o55HQ=;
+        b=LKGX52qFupDpch7quZRHBiKkW371RA5YAv1WyPgJ7UkkyyopRiFBBYPcbYJxTuIyNH
+         /ERgr5GQ0jO4y6zedDvzKZ9OO12sdJ34I96f5nuRerW7PuJGmyupfCqolyEu9uZrNORp
+         LtYoJM6ZCmPezmHoq9SngRsMqLHKRpoEJ0pPBnvaQIOfkdyMwMVlLwPc47EbUK4mNNBW
+         rIUsYM6sWEJOzu9yjNlWv2GaHS7T4yO5W0FtWuA9xCQlZtbfEy2wc2otyHhjhtzX+vod
+         pcj4JIOBq21GBaTI7lLfLsKFsogKhhguqiBGBcGGUaOEtHni87WxoEEPnWybSVGL9ktv
+         5twQ==
+X-Forwarded-Encrypted: i=1; AFNElJ+osIVVAF6J5sINU8Y54NfvNbr6FyhT97YqQU1foOTs7R9bACxeaZn/qiLqfEvmCqJepNrhN/BD5LxV@vger.kernel.org
+X-Gm-Message-State: AOJu0YxofCIl5oKH3YuTAeD97qO+TfNPBp7VXt0CPgsiPW19HabfdH6Q
+	sYkDp3DoOCg27latYrxucGzIcqNdw74AUZxtV3fpRAm9BGdCpMRSmySncO+TzFoNP4a03pPmBYy
+	SUlu/WXRvAtUPJCzAvZbiY+d4KpUjEqo=
+X-Gm-Gg: Acq92OHdCfjnl7D++b6EsLNVYrd4kR+lH428fGPEIrqQm7XigpiogTDzdWYDMdCzAy9
+	TDX6+XIDka+r4e41NOcBo3t75ZT0uQ4I2NcsZzedWABPZ9KnFbUnPJYurG2P0KkdisVscLYwzwa
+	JmM6IZic4YMHXBMalv8vnU3UOtjWaO9xOaXXqV1afzJJk0UagdhPaUKy61RYZMHV7JiHuQhpIfX
+	T1I5RJtJiSGPc8YnWk7fPsW8ZNQWPahy1SBipfnXBBM4bfI2ga4ApzORVbts7p3wzdhdIYJC/Ll
+	+KaIyWe6vuz5gprdUI4B0q8KnQ==
+X-Received: by 2002:a05:690c:45c5:b0:7e9:ab56:3c99 with SMTP id
+ 00721157ae682-7ed0adbb616mr276188567b3.6.1781125589039; Wed, 10 Jun 2026
+ 14:06:29 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-	protocol="application/pgp-signature"; boundary="6dqirmxzpmjjskyb"
-Content-Disposition: inline
-In-Reply-To: <f5624497-a6e3-45f3-8837-bdf8cf848dfc@oracle.com>
-
-
---6dqirmxzpmjjskyb
-Content-Type: text/plain; protected-headers=v1; charset=iso-8859-1
-Content-Disposition: inline
+References: <20260521133315.work.845-kees@kernel.org> <20260521133326.2465264-4-kees@kernel.org>
+ <da358ae1-91b4-4a16-ac76-ffab99c230b9@suse.com>
+In-Reply-To: <da358ae1-91b4-4a16-ac76-ffab99c230b9@suse.com>
+From: jim.cromie@gmail.com
+Date: Wed, 10 Jun 2026 15:06:02 -0600
+X-Gm-Features: AVVi8CcLXClq9Fijm8VjZF47hQWmos5q_iXrehNZDw9kSOby-E_cMxEQI0SK-hU
+Message-ID: <CAJfuBxwRuT1K=rjPX+sdNyYurEJ=OjqbJaSa_S6JnY6yzTwTvQ@mail.gmail.com>
+Subject: Re: [PATCH 04/11] treewide: Convert struct kernel_param_ops
+ initializers to DEFINE_KERNEL_PARAM_OPS
+To: Petr Pavlu <petr.pavlu@suse.com>
+Cc: Kees Cook <kees@kernel.org>, Luis Chamberlain <mcgrof@kernel.org>, 
+	Pengpeng Hou <pengpeng@iscas.ac.cn>, Richard Weinberger <richard@nod.at>, 
+	Anton Ivanov <anton.ivanov@cambridgegreys.com>, Johannes Berg <johannes@sipsolutions.net>, 
+	"Rafael J. Wysocki" <rafael@kernel.org>, Len Brown <lenb@kernel.org>, Corey Minyard <corey@minyard.net>, 
+	Gabriel Somlo <somlo@cmu.edu>, "Michael S. Tsirkin" <mst@redhat.com>, 
+	Jani Nikula <jani.nikula@linux.intel.com>, 
+	Joonas Lahtinen <joonas.lahtinen@linux.intel.com>, Rodrigo Vivi <rodrigo.vivi@intel.com>, 
+	Tvrtko Ursulin <tursulin@ursulin.net>, David Airlie <airlied@gmail.com>, 
+	Simona Vetter <simona@ffwll.ch>, Bart Van Assche <bvanassche@acm.org>, Jason Gunthorpe <jgg@ziepe.ca>, 
+	Leon Romanovsky <leon@kernel.org>, Laurent Pinchart <laurent.pinchart@ideasonboard.com>, 
+	Hans de Goede <hansg@kernel.org>, Mauro Carvalho Chehab <mchehab@kernel.org>, 
+	Bjorn Helgaas <bhelgaas@google.com>, Hannes Reinecke <hare@suse.de>, 
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
+	"Martin K. Petersen" <martin.petersen@oracle.com>, Daniel Lezcano <daniel.lezcano@kernel.org>, 
+	Zhang Rui <rui.zhang@intel.com>, Lukasz Luba <lukasz.luba@arm.com>, 
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jiri Slaby <jirislaby@kernel.org>, 
+	Alan Stern <stern@rowland.harvard.edu>, Jason Wang <jasowang@redhat.com>, 
+	Xuan Zhuo <xuanzhuo@linux.alibaba.com>, =?UTF-8?Q?Eugenio_P=C3=A9rez?= <eperezma@redhat.com>, 
+	Jason Baron <jbaron@akamai.com>, Tiwei Bie <tiwei.btw@antgroup.com>, 
+	Benjamin Berg <benjamin.berg@intel.com>, =?UTF-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>, 
+	"David E. Box" <david.e.box@linux.intel.com>, "Maciej W. Rozycki" <macro@orcam.me.uk>, 
+	Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>, Peter Zijlstra <peterz@infradead.org>, 
+	Heiko Carstens <hca@linux.ibm.com>, Vasily Gorbik <gor@linux.ibm.com>, 
+	Sean Christopherson <seanjc@google.com>, Paolo Bonzini <pbonzini@redhat.com>, 
+	Thomas Gleixner <tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>, 
+	Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org, 
+	"H. Peter Anvin" <hpa@zytor.com>, Vinod Koul <vkoul@kernel.org>, Frank Li <Frank.Li@kernel.org>, 
+	Daniel Gomez <da.gomez@kernel.org>, Sami Tolvanen <samitolvanen@google.com>, 
+	Aaron Tomlin <atomlin@atomlin.com>, Alexander Potapenko <glider@google.com>, Marco Elver <elver@google.com>, 
+	Dmitry Vyukov <dvyukov@google.com>, Andrew Morton <akpm@linux-foundation.org>, 
+	John Johansen <john.johansen@canonical.com>, Paul Moore <paul@paul-moore.com>, 
+	James Morris <jmorris@namei.org>, "Serge E. Hallyn" <serge@hallyn.com>, 
+	Andy Shevchenko <andriy.shevchenko@linux.intel.com>, 
+	Georgia Garcia <georgia.garcia@canonical.com>, kvm@vger.kernel.org, 
+	dmaengine@vger.kernel.org, linux-modules@vger.kernel.org, 
+	kasan-dev@googlegroups.com, linux-mm@kvack.org, apparmor@lists.ubuntu.com, 
+	linux-security-module@vger.kernel.org, linux-um@lists.infradead.org, 
+	linux-acpi@vger.kernel.org, openipmi-developer@lists.sourceforge.net, 
+	qemu-devel@nongnu.org, intel-gfx@lists.freedesktop.org, 
+	dri-devel@lists.freedesktop.org, linux-rdma@vger.kernel.org, 
+	linux-media@vger.kernel.org, linux-pci@vger.kernel.org, 
+	linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, 
+	linuxppc-dev@lists.ozlabs.org, linux-serial@vger.kernel.org, 
+	linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net, 
+	virtualization@lists.linux.dev, linux-kernel@vger.kernel.org, 
+	linux-arch@vger.kernel.org, netdev@vger.kernel.org, 
+	linux-fsdevel@vger.kernel.org, linux-hardening@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
-Subject: Re: [PATCH v1] scsi: Improve style of pnp_device_id array terminator
-MIME-Version: 1.0
 
-On Wed, Jun 10, 2026 at 04:46:24PM +0100, John Garry wrote:
-> On 10/06/2026 15:36, Uwe Kleine-K=F6nig (The Capable Hub) wrote:
-> > To match how device-id array terminators look like for other device
-> > types drop `.id =3D ""` from it and let the compiler care for zeroing t=
-he
-> > entry.
-> >=20
-> > There are no changes in the compiled drivers, only the source looks
-> > nicer.
-> >=20
-> > Signed-off-by: Uwe Kleine-K=F6nig (The Capable Hub) <u.kleine-koenig@ba=
-ylibre.com>
-> > ---
-> > Hello,
-> >=20
-> > I'm currently working on changing various *_device_id definitions.
-> > This patch is irrelevant for this quest and a pure style update for
-> > consistency reasons without further dependencies on it. I just stumbled
-> > over this while working on that quest.
-> >=20
-> > So if you don't like this patch, I won't insist.
-> >=20
-> > Best regards
-> > Uwe
-> >=20
-> >   drivers/scsi/aha1542.c   | 2 +-
-> >   drivers/scsi/g_NCR5380.c | 2 +-
-> >   2 files changed, 2 insertions(+), 2 deletions(-)
-> >=20
-> > diff --git a/drivers/scsi/aha1542.c b/drivers/scsi/aha1542.c
-> > index fd766282d4a4..93dab19c1cb9 100644
-> > --- a/drivers/scsi/aha1542.c
-> > +++ b/drivers/scsi/aha1542.c
-> > @@ -1083,7 +1083,7 @@ static int isa_registered;
-> >   #ifdef CONFIG_PNP
-> >   static const struct pnp_device_id aha1542_pnp_ids[] =3D {
-> >   	{ .id =3D "ADP1542" },
-> > -	{ .id =3D "" }
->=20
-> It seems to be standard practice to use { .id =3D "" } as pnp dev table
-> sentinel - so why change? Are they all going to be changed?
+On Mon, May 25, 2026 at 7:35=E2=80=AFAM Petr Pavlu <petr.pavlu@suse.com> wr=
+ote:
+>
+> On 5/21/26 3:33 PM, Kees Cook wrote:
+> > Using Coccinelle, rewrite every struct kernel_param_ops initializer tha=
+t
+> > sets .get into a DEFINE_KERNEL_PARAM_OPS-family macro invocation,
+> > for example:
+> >
+> > @@
+> > declarer name DEFINE_KERNEL_PARAM_OPS;
+> > identifier OPS;
+> > expression SET, GET;
+> > @@
+> > - const struct kernel_param_ops OPS =3D {
+> > -       .set =3D SET,
+> > -       .get =3D GET,
+> > - };
+> > + DEFINE_KERNEL_PARAM_OPS(OPS, SET, GET);
+> >
+> > Using the macro for initialization means future changes can manipulate
+> > the struct layout and callback prototypes without having to change ever=
+y
+> > initializer.
+>
+> Nit: For consistency, I suggest also converting the few remaining
+> kernel_param_ops instances that specify only .set and no .get, such as
+> simdisk_param_ops_filename.
+>
+> --
+> Thanks,
+> Petr
 
-I sent several patches reworking pnp_device_id arrays. Both styles exist
-(and also { "", 0 }) and I adapted all arrays I touched to the { } style
-matching what is usual for all other *_device_id arrays I saw so far.
+for the dynamic-debug changes
 
-And I sent this patch only to create consistency. I think I catched most
-instances already, and before declaring the quest done I will make sure
-to tackle also those that I now might have missed for now.
-
-Best regards
-Uwe
-
---6dqirmxzpmjjskyb
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQEzBAABCgAdFiEEP4GsaTp6HlmJrf7Tj4D7WH0S/k4FAmopz3gACgkQj4D7WH0S
-/k4qSAgAq2KBTnzdHTPfLlDqyKf0nlJq9IoOTjV7wXhGGiR7TlglXAF6f1FL0Zxx
-KKqQtZjgTYN+w6wGxW51G8OF/bqkLriu6RXZ4bXIcJtE1WWsSKlAFD8zcHIJv6dG
-3+BV8lwIqZbZDVzbND84MxsNQ8Dmro0HHyFvam75o50YsoDlo1HMqV9tKsIYhiCv
-mN4k26SiwFSJw9sE1Oc9rPKZWzGxctufXEoRw9Wr4n7t8nD+m88EvrFAokQC6gXR
-pTIMUA5JYNsxLctmMizX5ay+M/71ZiDmyV2okftn5wsw8bwuc8fEXRtOtvpJaD+j
-KFjntFfHqP2tepoGAxPFHBC9bDPXFQ==
-=xzIf
------END PGP SIGNATURE-----
-
---6dqirmxzpmjjskyb--
+Reviewed-by: Jim Cromie <jim.cromie@gmail.com>
