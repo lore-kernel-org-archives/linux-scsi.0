@@ -1,127 +1,162 @@
-Received: from mail-qk1-f174.google.com (mail-qk1-f174.google.com [209.85.222.174])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D1F63F7AB4
-	for <linux-scsi@vger.kernel.org>; Thu, 11 Jun 2026 12:32:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.174
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2BCE73F0763
+	for <linux-scsi@vger.kernel.org>; Thu, 11 Jun 2026 12:34:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781181140; cv=none; b=O/of3w7jIibWi9l4lj21nnCAU1Mn8wpRNJTxaym3rYr5YPNS7aAe8rCKB8g0yTQePKH52tJTVmdAs7b+0peHDcUw+DR+QRfkLw/bBbdq651l15cjkCRZFe6XOt41WcGstpRkuoaRC3P2u523BPQth3XlrF+Vp6Eo83wubloVrM4=
+	t=1781181272; cv=none; b=eC+rWzINGo1zk3R7HxvuYjuGaIHV2uh9Ck1q5jKOpwmZAozUs4o8SnVEf5w1BWnXG2rSlkntTfG4XmpOL2xuyGdfyC/ENiE9zt9ZaxM1YfvcCwJxTjYEs6TWle8SRq5JARScT97LJnXjYPR1bnNFSLS6xjCdCYzh7PPNI5tShTU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781181140; c=relaxed/simple;
-	bh=+g3UoGJSQBMIJWfE4I1WQriSnOqWfRW0HPDuB75fY0k=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=XWGLInIqd2WshJoL7JRCT6keIwhjYo0/XIOSOjOWS6ImRntyBbEovIZ+dQT0LQD3KuVGCSiqctnMrlZW+VOfiCk7eCj/kO8EwsdWC7T6sioNsdpyUucdgNlb5S7r1Yh+urpzDC2niKXcFgZS4nWReF5cxuLzG2uKnCRDgP0/UXg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=AVQN5Lzz; arc=none smtp.client-ip=209.85.222.174
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1781181272; c=relaxed/simple;
+	bh=sE7LBVFts7GAzHF3y2QXXeMQ18jAu+qCvdJtO+dYjOU=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=G5kJT8aNl5ZJmDZIrvi3N/+0Byi6MWYWNMdRbI8USCqXKRS9ZzrO30dBvAdaE2HtCkgSI1/p2S5QwZuKmc79dCxMxY/YhgOT0qUtC8dF8M1tQzUQwCAr/ON8qAzPJVvY0XheurGWjEen/meINvTnxeV5RknzLSl9UnOgHb8ft28=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JHnlllGp; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="AVQN5Lzz"
-Received: by mail-qk1-f174.google.com with SMTP id af79cd13be357-9158629a220so880551385a.1
-        for <linux-scsi@vger.kernel.org>; Thu, 11 Jun 2026 05:32:19 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1781181138; x=1781785938; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=VGR23VQQ0KIak7ZD7YLq3Alex+Q6WU/vJpcU1WhhyY0=;
-        b=AVQN5LzzLDR6l4zmuedj4Kj76oucvGfD7HqTkq4tGb18BXNO3Sj+YvVqF1GKv030m+
-         JlImv9Eyfv0eKC0hfNukxTwO241dNX0vERIXnj2SlDOSqNTafdJbDKN6YH3Zzusk6Rdw
-         Fz4VAOjJjHISNW+ol7QjZ46yq/MDbOptcdaL8uxBeh0QMuB8gj/lc6Fz5k5b0W4wSc5L
-         dsnRLO7XJN7gYHgNapC/oM8Nm/7aZtvaIbczFeKUMZzIX58xyJ/Wu+MMPGFBnsXaSrSf
-         8jJ+DYORCHRqYHnBPpblAIihk8wzUpFfWJpYLdHzLBPrPqOtZL/4SoMF9oHCJq/L/nCg
-         lSBg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1781181138; x=1781785938;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=VGR23VQQ0KIak7ZD7YLq3Alex+Q6WU/vJpcU1WhhyY0=;
-        b=rNphZYk8g0ZuJJ+IPAnkisSPYTywRyFd233egebgOs+tSt64PrJe6lJ0c70Qq7561x
-         GCm8CJZ1rqkldak0gto+unBT7z6e+0FpBa/S3Jc+67pp0HRA0sWWpSDZsJu2TkhnAJKL
-         epADXcaZ868PahDe4e4LdpjMGidJir/3vNyTQRe4RLoqqeeIcExFlgaBgx+bNOWzX047
-         GECb12+6ts51KUABzMSMkH64AJZ8nRy1RxvNHaYgZ5d37TfLBjlTMmvZlqIuH6iquKZ/
-         NVx4otYh9huN23dz/FUT2C6mAip8Yccr3i47+gzntxsDpjZCxFPby1Xdp/0uB4MzrKQs
-         w+4w==
-X-Forwarded-Encrypted: i=1; AFNElJ8xVhpKX8eZyzOMhiz+bt16HD1dhehyncQMH+dc6HDoM5PIox/j7y/zX5u6Wz/yGOD8+q7+I2k5HjJ2@vger.kernel.org
-X-Gm-Message-State: AOJu0YyNQkRI4mBe1QcPlBhEFLAGQV4kC1HUCIeeUBU+hacdKnX6GNpI
-	lKVFP9m5J+8689B+R1CdE83/nhU9beHnkK4m82j21BJoYIrnfor7q2Ur
-X-Gm-Gg: Acq92OFc7byC9uMCtNPQTesAt8JGlXASAUqGO3HK0c6f+EnfFAXguflXdDrHTOPWAWE
-	1lqUwzD6zRa8WOjoCpSfW3WvR2k13Psz2RIqP25PijgeRp6jVBu7WITcf7Inlslph7lAxi1B+WU
-	WCgws17ZJVUSrD6vq/tpuYKW7sxFYWQNLhKOri8TRF2T7soRLn/YE9lWY1bQ4isMPls/laK6O/e
-	cskSXIDtkMozbl0qV42DL1yiaKsMpwRUepaza+c1SZXX3B2GbVAtgXCCorRGxYQKizYNRfEJ5YJ
-	Ne20q4wENngxPDUxu+J4Mm0oBZ4G5vUsuYtLw9aRQw2Bdfbc1+d93bCCThao8b4Vuy9zAqZvJc4
-	BxjS3N3Xo2yy96ErTZc2emusE6asgwP3ha6kTTYBkqevDDAYF9q35mTC9a++BWOndmfSYSPhTmB
-	f2bIn8/qVpTUpx7GKbyEb0TdaTbQNuvDP6+iBU9UgdeTnqgTD8jYM+wSUzAvoJ5tPO336JQ5YW/
-	q+N4tGzQYyJZD3tkwoTauiRc3ekm4E=
-X-Received: by 2002:a05:620a:17a2:b0:915:3542:ff72 with SMTP id af79cd13be357-9160acc37e6mr365473885a.22.1781181138395;
-        Thu, 11 Jun 2026 05:32:18 -0700 (PDT)
-Received: from server0 (c-68-48-65-54.hsd1.mi.comcast.net. [68.48.65.54])
-        by smtp.gmail.com with ESMTPSA id af79cd13be357-9160b02f758sm171220685a.36.2026.06.11.05.32.16
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 11 Jun 2026 05:32:17 -0700 (PDT)
-From: Michael Bommarito <michael.bommarito@gmail.com>
-To: Juergen Gross <jgross@suse.com>,
-	Stefano Stabellini <sstabellini@kernel.org>,
-	Oleksandr Tyshchenko <oleksandr_tyshchenko@epam.com>
-Cc: xen-devel@lists.xenproject.org,
-	linux-scsi@vger.kernel.org,
-	stable@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH 2/2] xen/scsiback: free the command tag on the TMR submit-failure path
-Date: Thu, 11 Jun 2026 08:30:46 -0400
-Message-ID: <20260611123046.2323342-3-michael.bommarito@gmail.com>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260611123046.2323342-1-michael.bommarito@gmail.com>
-References: <20260611123046.2323342-1-michael.bommarito@gmail.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JHnlllGp"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AB6F21F00898;
+	Thu, 11 Jun 2026 12:34:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1781181270;
+	bh=+qalzoBBT6l0wzrrZblaqr5HJdXooOBLxHakGZJSECo=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=JHnlllGpec4fDYKMYL+HyIhIi3PKVJS5PAM4X5hR1ZrLyKGLMmuZ0oWuMBnNWMnTi
+	 49/V5PkXr9JZUZyzMa7FJgRWDXl+lMdjLYGNn47Vx60tPab6as6UTUqqxfIaJeO6UC
+	 JDgGAj4/p9ZX7UO2tGrf8UzXANPq3iNxS9gfNG6QSlhwu6oba3uSGzUIGECA6MnYee
+	 bKxM43ypoNkDA4oziELBX774ttcJD60ZZv6u1OuHdQ75a9AhluSxwMADH624W15PnC
+	 zDWgf1mfnKmkuYLuo7pkJjFez6YOfd8q3maS1DR7ripES3e2AtRhITgf+61vbAiosT
+	 oQftrDDGjsoIw==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] scsi: target: cxgbit: fix refcount leak in
+ __cxgbit_free_cdev_np
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "WenTao Liang" <vulab@iscas.ac.cn>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20260611122203.78379-1-vulab@iscas.ac.cn>
+References: <20260611122203.78379-1-vulab@iscas.ac.cn>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Thu, 11 Jun 2026 12:34:30 +0000
+Message-Id: <20260611123430.AB6F21F00898@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
 
-scsiback_device_action() obtains a command tag in
-scsiback_get_pend_req() and submits a task-management request with
-target_submit_tmr(). When target_submit_tmr() fails it returns < 0
-and scsiback jumps to the err: label, which sends a response but
-frees nothing, leaking the tag.
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
 
-Impact: a pvSCSI guest can leak the command tags of a LUN's
-session, stopping the LUN, by issuing VSCSIIF_ACT_SCSI_ABORT or
-RESET requests whenever target_submit_tmr() fails.
+New issues:
+- [Critical] The patch introduces critical use-after-free and double-free v=
+ulnerabilities by unconditionally dropping the `cnp` reference count on bot=
+h the success and timeout paths, violating the driver's asynchronous reply =
+handling model.
 
-transport_generic_free_cmd() cannot be used here. By the time
-target_submit_tmr() returns an error it has already run
-__target_init_cmd() (so se_cmd->cmd_kref is one, not zero), and on
-its target_get_sess_cmd() error path it has freed se_cmd->se_tmr_req
-via core_tmr_release_req() while leaving SCF_SCSI_TMR_CDB set and
-the pointer dangling. Letting the command release run
-target_free_cmd_mem() would then double-free se_tmr_req.
+Pre-existing issues:
+- [Critical] When `__cxgbit_free_cdev_np()` times out, it aborts cleanup an=
+d causes the caller `cxgbit_free_all_np()` to break its loop, leaving dangl=
+ing STID references to `cnp` on remaining devices.
+--
 
-Use the same helper, which returns just the tag, on this path too.
+commit f433423e199b1a3438bcf4e0bc324b24ab3b6629
+Author: WenTao Liang <vulab@iscas.ac.cn>
 
-Fixes: 2dbcdf33dbf6 ("xen-scsiback: Convert to percpu_ida tag allocation")
+scsi: target: cxgbit: fix refcount leak in __cxgbit_free_cdev_np
+
+__cxgbit_free_cdev_np() calls cxgbit_get_cnp() to take a reference
+on cnp for the duration of the firmware remove-server operation.
+This patch attempts to release the reference on the timeout and
+success paths.
+
 Cc: stable@vger.kernel.org
-Assisted-by: Claude:claude-opus-4-8
-Signed-off-by: Michael Bommarito <michael.bommarito@gmail.com>
----
- drivers/xen/xen-scsiback.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Fixes: 9730ffcb8957 ("cxgbit: add files for cxgbit.ko")
 
-diff --git a/drivers/xen/xen-scsiback.c b/drivers/xen/xen-scsiback.c
-index f324732eba7f8..c7036e0e41bda 100644
---- a/drivers/xen/xen-scsiback.c
-+++ b/drivers/xen/xen-scsiback.c
-@@ -658,7 +658,7 @@ static void scsiback_device_action(struct vscsibk_pend *pending_req,
- 	return;
- 
- err:
--	scsiback_do_resp_with_sense(NULL, err, 0, pending_req);
-+	scsiback_resp_and_free(pending_req, err);
- }
- 
- /*
--- 
-2.53.0
+> diff --git a/drivers/target/iscsi/cxgbit/cxgbit_cm.c b/drivers/target/isc=
+si/cxgbit/cxgbit_cm.c
+> index 146705845fa3e..f8cd6457666b0 100644
+> --- a/drivers/target/iscsi/cxgbit/cxgbit_cm.c
+> +++ b/drivers/target/iscsi/cxgbit/cxgbit_cm.c
+> @@ -544,8 +544,10 @@ __cxgbit_free_cdev_np(struct cxgbit_device *cdev, st=
+ruct cxgbit_np *cnp)
+> =20
+>  	ret =3D cxgbit_wait_for_reply(cdev, &cnp->com.wr_wait,
+>  				    0, 10, __func__);
+> -	if (ret =3D=3D -ETIMEDOUT)
+> +	if (ret =3D=3D -ETIMEDOUT) {
+> +		cxgbit_put_cnp(cnp);
+>  		return ret;
+> +	}
 
+[Severity: Critical]
+Does this cause a use-after-free and double-free if the firmware
+reply is delayed?
+
+In the Chelsio hardware transaction model, the reference acquired by
+cxgbit_get_cnp() before sending the remove-server command is strictly
+intended to be consumed by the asynchronous firmware reply handler,
+cxgbit_close_listsrv_rpl().
+
+If we time out and drop the reference here, the firmware request is
+still pending and the STID is not unlinked. When the delayed reply
+eventually arrives, cxgbit_close_listsrv_rpl() will look up the STID,
+retrieve the already-freed cnp object, dereference it to wake up the
+wait queue, and attempt to drop the reference again:
+
+drivers/target/iscsi/cxgbit/cxgbit_cm.c:cxgbit_close_listsrv_rpl() {
+    ...
+    cxgbit_wake_up(&cnp->com.wr_wait, __func__, rpl->status);
+    cxgbit_put_cnp(cnp);
+    ...
+}
+
+[Severity: Critical]
+This is a pre-existing issue, but does this timeout path leave
+dangling STID references that lead to a use-after-free on incoming
+connections?
+
+If __cxgbit_free_cdev_np() returns -ETIMEDOUT, the caller
+cxgbit_free_all_np() will break its loop and abandon the removal
+of STIDs on subsequent healthy devices:
+
+drivers/target/iscsi/cxgbit/cxgbit_cm.c:cxgbit_free_all_np() {
+    ...
+    ret =3D __cxgbit_free_cdev_np(cdev, cnp);
+    if (ret =3D=3D -ETIMEDOUT)
+        break;
+    ...
+}
+
+The parent caller cxgbit_free_np() then drops its base reference, freeing
+the cnp object. Because the remaining devices still have active STID
+registrations pointing to this freed cnp, any incoming connection request
+handled by cxgbit_pass_accept_req() will look up the dangling STID and
+access the freed cnp.
+
+> =20
+>  	if (ipv6 && cnp->com.cdev) {
+>  		struct sockaddr_in6 *sin6;
+[ ... ]
+> @@ -558,6 +560,7 @@ __cxgbit_free_cdev_np(struct cxgbit_device *cdev, str=
+uct cxgbit_np *cnp)
+> =20
+>  	cxgb4_free_stid(cdev->lldi.tids, stid,
+>  			cnp->com.local_addr.ss_family);
+> +	cxgbit_put_cnp(cnp);
+
+[Severity: Critical]
+Does this addition cause an immediate double-free on the success path?
+
+On the success path where cxgbit_wait_for_reply() returns 0, the
+asynchronous reply handler cxgbit_close_listsrv_rpl() has already
+executed and dropped the reference originally acquired by
+cxgbit_get_cnp(). Adding an unconditional cxgbit_put_cnp(cnp) here
+will attempt to drop a reference that has already been consumed.
+
+>  	return 0;
+>  }
+>
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260611122203.7837=
+9-1-vulab@iscas.ac.cn?part=3D1
