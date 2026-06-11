@@ -1,280 +1,103 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B2AF5487BE;
-	Thu, 11 Jun 2026 03:01:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E0E735675C;
+	Thu, 11 Jun 2026 05:06:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781146893; cv=none; b=CSPYFTH87KXi34Tynd37vvFM3hWWe8zcr3mRZqQhVwKzMgb3tWfy9BrMaM0ooHWZo+M33NLeZ01ogIlwqdq/vYKelHciTyu/T0DrGG1/49wVx/2RfPTGaqktAkfJ2afdvoGKEZF3CQqjptS/cQTGdE6FF/AytV8u9NJJlQJ/gik=
+	t=1781154374; cv=none; b=SfqLzclws5GcoXMAGxacECSXSr1e/Qz61ItCu5DpOIbQN3eSFTqvEiNXXA+2bUB9uaEJCoMyvam6vkKR0+VozHEO2A/9ewX/setSleUGiR/xbf4RNJGhS+6XmG2qOpv5MLtUS8hZPXVcKjJ0fujL3jCsmVHiQKl18XQCgWaeqJE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781146893; c=relaxed/simple;
-	bh=GvdyO6pXKH/tnz5EivqwF64AAdB9N1hqE7xhqzDekjM=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=lnyVGrAbAzErb7w8joC/MbmJFq2gkU9q/2WB7/z7VaPJbU7W1ssmZ8894xgSdQUUSGjQb6efr2HMMLZal91T9zcgQ7dkevHGF57jQN7XPq9HqsFtgapWSNN109WF0p79yiU5lRUWVoyqbk2YSf+y3wzQx7UI5H5BqKIWOjlQa5Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hsbA10Cj; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1781154374; c=relaxed/simple;
+	bh=zlq703AWH0pL8jns88jx/Nj7RX5XZv6W2AVOphMEHGk=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=e26uaFrvPvRcy1ZzkqE4iU4rW1K11tfJ9U1KID4RQiDQJWBkDoGoO5ljLSAUhYcbIBfFzvAMXLbjjU9l6oKzUGPJ1vvDmvl4sqhuEY6mTU49cCPF/nCy/UMCxr+JV0VNvwyTwIaOe+jiOXkraVLc3d7jilvm6PJoKBzxp8sOKIE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=BkvPH+++; arc=none smtp.client-ip=148.163.156.1
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hsbA10Cj"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5285D1F00893;
-	Thu, 11 Jun 2026 03:01:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781146891;
-	bh=PBPOE2mDhSNmbSySHR3QqjDsvZG2qZwQ6UzgH5rjgG4=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=hsbA10Cj1B8HxKO69iGtyZ5JLK0ikeL+3xF1G21SPnOdFZu0Vqsp8mjBD27HKu2zj
-	 iBFZQKwhGgLU0UvCxnXcyMcNpv5tiu3FuOEtX5qojYavmA9JD4F6XfIKaXFeLU2ctB
-	 pt7vmX/tu9KzCOrNf7pIcy2oSp+OJA3y4cNtI5asd+4VealiXPq1DA6jsdfZ9MYlb1
-	 3cYGzMNm8wXhAMWkReCJfvPWSXNDC/pHD0M3a4pdF0YUqsjcGDUj/+sSjqa6M3x0Xx
-	 O/2CGBb4e9zzLz3WqlaAbPakCsp2YOz26ibc16UOVrtkjs2A6aWZfd8cFblHFRTZsx
-	 9v8psVEnbYWBg==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v7 2/6] ata: libata-scsi: convert dev->sdev to per-LUN
- array
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Phil Pemberton" <philpem@philpem.me.uk>
-Cc: dlemoal@kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, cassel@kernel.org
-In-Reply-To: <20260611024356.2769320-3-philpem@philpem.me.uk>
-References: <20260611024356.2769320-3-philpem@philpem.me.uk>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 11 Jun 2026 03:01:30 +0000
-Message-Id: <20260611030131.5285D1F00893@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="BkvPH+++"
+Received: from pps.filterd (m0353729.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 65AJucbQ4147541;
+	Thu, 11 Jun 2026 05:06:06 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-transfer-encoding:date:from:message-id:mime-version
+	:subject:to; s=pp1; bh=Rpq9TYLbjOcnZhuLIU3/B/VXC6nUthLa9CgTcfV3z
+	GA=; b=BkvPH+++OcVTZ81QJB21T5KUfsNyFc1db6FdY22bHJovPeBZZuSY0Tx5e
+	5pu0Dno08j4edrLbt2iireg/J2Q9qF5eOHn4SPjEBLSjlheTtJzNnJu86jQvfxd2
+	FQu0mIL6NpaqX4fTLVz3WrAHmLze+ayMqppd4EMVJIAsGo689QkDQX983bLnhot/
+	RXPXKrCij30Of5SlJCQVPJELAIItphhXoFOZxZUS1vAeDrBV+lvB+zRBjCPMuFsm
+	uX93aKov3nWqFv3g5H2mJxe2+uIHeJB123CWFa6jIe98V4ghUnzfWPVMVERXbA3k
+	wkA91hJ05ymsTSX9chozdBrhadT1A==
+Received: from ppma11.dal12v.mail.ibm.com (db.9e.1632.ip4.static.sl-reverse.com [50.22.158.219])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4eqe8c1gyj-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 11 Jun 2026 05:06:05 +0000 (GMT)
+Received: from pps.filterd (ppma11.dal12v.mail.ibm.com [127.0.0.1])
+	by ppma11.dal12v.mail.ibm.com (8.18.1.7/8.18.1.7) with ESMTP id 65B54dro024651;
+	Thu, 11 Jun 2026 05:06:04 GMT
+Received: from smtprelay01.fra02v.mail.ibm.com ([9.218.2.227])
+	by ppma11.dal12v.mail.ibm.com (PPS) with ESMTPS id 4eqe09hqck-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 11 Jun 2026 05:06:04 +0000 (GMT)
+Received: from smtpav01.fra02v.mail.ibm.com (smtpav01.fra02v.mail.ibm.com [10.20.54.100])
+	by smtprelay01.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 65B55wZT55640430
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Thu, 11 Jun 2026 05:05:58 GMT
+Received: from smtpav01.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id AE4A920040;
+	Thu, 11 Jun 2026 05:05:58 +0000 (GMT)
+Received: from smtpav01.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 7DFB92004D;
+	Thu, 11 Jun 2026 05:05:58 +0000 (GMT)
+Received: from tuxmaker.boeblingen.de.ibm.com (unknown [9.87.85.9])
+	by smtpav01.fra02v.mail.ibm.com (Postfix) with ESMTP;
+	Thu, 11 Jun 2026 05:05:58 +0000 (GMT)
+From: Nihar Panda <niharp@linux.ibm.com>
+To: "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org,
+        Heiko Carstens <hca@linux.ibm.com>, Vasily Gorbik <gor@linux.ibm.com>,
+        Alexander Gordeev <agordeev@linux.ibm.com>,
+        Christian Borntraeger <borntraeger@de.ibm.com>,
+        Nihar Panda <nihar.panda@ibm.com>
+Subject: 
+Date: Thu, 11 Jun 2026 07:05:21 +0200
+Message-ID: <20260611050550.796772-1-niharp@linux.ibm.com>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-Spam-Info: AW1haW4tMjYwNjExMDA0NyBTYWx0ZWRfX8K5R7y5hdr3H
+ JZBLtpuseUoRL6lALyW+ZMYEO8ft4yUhECpkvjNyRBhYH1f3D4D5kiZUYWLdWjNfz4uz9iuILWt
+ rn9UeaZ+9hBC1Zmsj/NkDFHFjCBXgeA=
+X-Authority-Analysis: v=2.4 cv=AYCB2XXG c=1 sm=1 tr=0 ts=6a2a423d cx=c_pps
+ a=aDMHemPKRhS1OARIsFnwRA==:117 a=aDMHemPKRhS1OARIsFnwRA==:17
+ a=FelO9ux0wxsA:10 a=VkNPw1HP01LnGYTKEx00:22 a=RnoormkPH1_aCDwRdu11:22
+ a=uAbxVGIbfxUO_5tXvNgY:22 a=Z_OdQcjUOodbFZUBGIsA:9 a=xo5jKAKm-U-Zyk2_beg_:22
+X-Proofpoint-GUID: jK65PDlbIekitPlE_jQl04UiFCiz2V4S
+X-Proofpoint-ORIG-GUID: jK65PDlbIekitPlE_jQl04UiFCiz2V4S
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNjExMDA0NyBTYWx0ZWRfXy6xFgVBSs7+W
+ c22SzJTCO73aySik6Jitu/KWTBzM0Jj1dElAuluHypccw4Lo8TTEDgCx2XT20xpSsH3emwAErX6
+ fUNHuEg0u0O/dg6mVDTN60Wx7Im3mkrFbKHH/9qCUgiWlbWzlfvJA1hkVelWnm3tEmAO5iqh8gp
+ 3zx1H/ZMRzTmORAeZ2xlbUb5enWuHF3SPJvnWDnLz4zuAZm3XjGscalgn1Lzxt7EYf9wz3Y25BG
+ HooP+Mx3NnrV44bBkxj/Z0u8hl8Kd4GcezYw/AT6FNOcjx48ZbBesi1iIC/M+K+yoFfxksff8Xs
+ APaFjZ4G5UbUDVnpNc9j9Cgzx8WYqIgioketf9yyJAXmc0uhlsBqExgedFAmi0weCm252Su8Xl0
+ H4wkNOjeQjo47umdjG3ARrmg8+rZYHkpjWcbgYta96kC11o+g1WkDLHod0nGNP8zXD1I9FXuB8I
+ D/o8meJSBH0vewJSP4Q==
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.125,FMLib:17.12.100.49
+ definitions=2026-06-11_01,2026-06-09_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ impostorscore=0 suspectscore=0 malwarescore=0 spamscore=0 phishscore=0
+ lowpriorityscore=0 bulkscore=0 adultscore=0 priorityscore=1501 clxscore=1011
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2606040000 definitions=main-2606110047
 
-Thank you for your contribution! Sashiko AI review found 5 potential issue(=
-s) to consider:
+Subject: Request to queue zfcp enhancements for upstream v7.2 merge window
 
-New issues:
-- [High] Deadlock caused by calling scsi_device_put() while holding an IRQ-=
-disabled spinlock.
-- [High] Infinite retry loop and LUN starvation due to early loop exit in a=
-ta_scsi_dev_rescan().
-- [Medium] Denial of Service via WARN_ON_ONCE triggered by malicious device=
- LUN.
+Hi Martin and James, we have a small zfcp enhancement that improves the zfcp trace logging. It would be great if this could be included in the v7.2 release.  
 
-Pre-existing issues:
-- [High] Use-After-Free in ata_port_detach due to unreferenced scsi_device.
-- [High] Use-After-Free in ZPODD wake callbacks racing with concurrent sysf=
-s device deletion.
---
-
-commit 49dbde19170ff410a516820c897120bfd39b44b3
-Author: Phil Pemberton <philpem@philpem.me.uk>
-Subject: ata: libata-scsi: convert dev->sdev to per-LUN array
-
-Multi-LUN ATAPI devices share a single ata_device but expose multiple
-scsi_devices. This patch replaces the scalar struct scsi_device *sdev
-with a fixed-size array dev->sdev[ATAPI_MAX_LUN] indexed by LUN number,
-allowing callers to operate on all populated LUNs.
-
-> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-> index d39ac4292f818..11f8a341252db 100644
-> --- a/drivers/ata/libata-core.c
-> +++ b/drivers/ata/libata-core.c
-> @@ -6275,11 +6275,16 @@ static void ata_port_detach(struct ata_port *ap)
->  	/* Remove scsi devices */
->  	ata_for_each_link(link, ap, HOST_FIRST) {
->  		ata_for_each_dev(dev, link, ALL) {
-> -			if (dev->sdev) {
-> +			int lun;
-> +
-> +			for (lun =3D ATAPI_MAX_LUN - 1; lun >=3D 0; lun--) {
-> +				struct scsi_device *sdev =3D dev->sdev[lun];
-> +				if (!sdev)
-> +					continue;
-> +				dev->sdev[lun] =3D NULL;
->  				spin_unlock_irqrestore(ap->lock, flags);
-> -				scsi_remove_device(dev->sdev);
-> +				scsi_remove_device(sdev);
->  				spin_lock_irqsave(ap->lock, flags);
-> -				dev->sdev =3D NULL;
->  			}
->  		}
->  	}
-
-[Severity: High]
-This isn't a bug introduced by this patch, but does dropping ap->lock witho=
-ut
-taking a reference to sdev open a race condition in ata_port_detach() in
-drivers/ata/libata-core.c?
-
-If a concurrent sysfs device deletion drops the last reference right after
-the lock is released, could scsi_remove_device(sdev) trigger a use-after-fr=
-ee
-when it accesses sdev->host to lock the scan mutex?
-
-Would it be safer to use scsi_device_get() before dropping the lock, and
-scsi_device_put() after scsi_remove_device()?
-
-> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-> index 32c6a0e497cf9..b65358955cf17 100644
-> --- a/drivers/ata/libata-scsi.c
-> +++ b/drivers/ata/libata-scsi.c
-> @@ -1131,7 +1131,9 @@ int ata_scsi_dev_config(struct scsi_device *sdev, s=
-truct queue_limits *lim,
->  	if (dev->flags & ATA_DFLAG_TRUSTED)
->  		sdev->security_supported =3D 1;
-> =20
-> -	dev->sdev =3D sdev;
-> +	if (WARN_ON_ONCE(sdev->lun >=3D ATAPI_MAX_LUN))
-> +		return -EINVAL;
-> +	dev->sdev[sdev->lun] =3D sdev;
->  	return 0;
->  }
-
-[Severity: Medium]
-In ata_scsi_dev_config() in drivers/ata/libata-scsi.c, can an external devi=
-ce
-provide an untrusted LUN (for example, via a crafted REPORT LUNS response o=
-ver
-USB)?
-
-If so, would this WARN_ON_ONCE crash the machine when panic_on_warn is
-enabled?
-
-Should this use ata_dev_warn() or ata_dev_err() instead of WARN_ON_ONCE?
-
-[ ... ]
-
-> @@ -5016,28 +5025,43 @@ void ata_scsi_dev_rescan(struct work_struct *work)
->  			if (ap->pflags & ATA_PFLAG_SUSPENDED)
->  				goto unlock_ap;
-> =20
-> -			if (!sdev)
-> -				continue;
-> -			if (scsi_device_get(sdev))
-> -				continue;
-> +			for (lun =3D 0; lun < ATAPI_MAX_LUN; lun++) {
-> +				if (dev->sdev[lun] &&
-> +				    !scsi_device_get(dev->sdev[lun]))
-> +					sdevs[lun] =3D dev->sdev[lun];
-> +			}
-> =20
->  			do_resume =3D dev->flags & ATA_DFLAG_RESUMING;
-> =20
-> -			spin_unlock_irqrestore(ap->lock, flags);
-> -			if (do_resume) {
-> -				ret =3D scsi_resume_device(sdev);
-> -				if (ret =3D=3D -EWOULDBLOCK) {
-> -					scsi_device_put(sdev);
-> -					goto unlock_scan;
-> +			for (lun =3D 0; lun < ATAPI_MAX_LUN; lun++) {
-> +				if (!sdevs[lun])
-> +					continue;
-> +
-> +				spin_unlock_irqrestore(ap->lock, flags);
-> +				if (do_resume) {
-> +					ret =3D scsi_resume_device(sdevs[lun]);
-> +					if (ret =3D=3D -EWOULDBLOCK) {
-> +						scsi_device_put(sdevs[lun]);
-> +						while (++lun < ATAPI_MAX_LUN)
-> +							if (sdevs[lun])
-> +								scsi_device_put(sdevs[lun]);
-> +						goto unlock_scan;
-> +					}
-> +				}
-> +				ret =3D scsi_rescan_device(sdevs[lun]);
-> +				scsi_device_put(sdevs[lun]);
-> +				spin_lock_irqsave(ap->lock, flags);
-> +
-> +				if (ret) {
-> +					while (++lun < ATAPI_MAX_LUN)
-> +						if (sdevs[lun])
-> +							scsi_device_put(sdevs[lun]);
-> +					goto unlock_ap;
->  				}
-
-[Severity: High]
-In ata_scsi_dev_rescan() in drivers/ata/libata-scsi.c, could calling
-scsi_device_put() here while holding the IRQ-disabled ap->lock cause a
-deadlock?
-
-If this drops the last reference to the device, the synchronous release
-function ata_scsi_sdev_destroy() will execute. That function attempts to
-acquire ap->lock again, which would cause a hard deadlock on the same CPU
-since we just acquired it via spin_lock_irqsave(ap->lock, flags).
-
-[Severity: High]
-If scsi_rescan_device() returns an error for an early LUN (such as LUN 0), =
-we
-exit the loop early via goto unlock_ap.
-
-Does this skip the dev->flags &=3D ~ATA_DFLAG_RESUMING clearance that happe=
-ns
-at the end of the loop?
-
-Since the work item reschedules itself on error, would this cause an infini=
-te
-loop that repeatedly attempts to scan LUN 0 while permanently starving the
-higher LUNs?
-
-> -				dev->flags &=3D ~ATA_DFLAG_RESUMING;
->  			}
-> -			ret =3D scsi_rescan_device(sdev);
-> -			scsi_device_put(sdev);
-> -			spin_lock_irqsave(ap->lock, flags);
-> =20
-> -			if (ret)
-> -				goto unlock_ap;
-> +			if (do_resume)
-> +				dev->flags &=3D ~ATA_DFLAG_RESUMING;
->  		}
->  	}
-
-> diff --git a/drivers/ata/libata-zpodd.c b/drivers/ata/libata-zpodd.c
-> index 414e7c63bd850..151ae5726aca1 100644
-> --- a/drivers/ata/libata-zpodd.c
-> +++ b/drivers/ata/libata-zpodd.c
-[ ... ]
-> @@ -233,18 +239,27 @@ void zpodd_post_poweron(struct ata_device *dev)
->  	zpodd->zp_sampled =3D false;
->  	zpodd->zp_ready =3D false;
-> =20
-> -	sdev_enable_disk_events(dev->sdev);
-> +	for (lun =3D 0; lun < ATAPI_MAX_LUN; lun++) {
-> +		struct scsi_device *sdev =3D dev->sdev[lun];
-> +		if (sdev)
-> +			sdev_enable_disk_events(sdev);
-> +	}
->  }
-> =20
->  static void zpodd_wake_dev(acpi_handle handle, u32 event, void *context)
->  {
->  	struct ata_device *ata_dev =3D context;
->  	struct zpodd *zpodd =3D ata_dev->zpodd;
-> -	struct device *dev =3D &ata_dev->sdev->sdev_gendev;
-> +	int lun;
-> =20
-> -	if (event =3D=3D ACPI_NOTIFY_DEVICE_WAKE && pm_runtime_suspended(dev)) {
-> -		zpodd->from_notify =3D true;
-> -		pm_runtime_resume(dev);
-> +	if (event !=3D ACPI_NOTIFY_DEVICE_WAKE)
-> +		return;
-> +	for (lun =3D 0; lun < ATAPI_MAX_LUN; lun++) {
-> +		struct scsi_device *sdev =3D ata_dev->sdev[lun];
-> +		if (sdev && pm_runtime_suspended(&sdev->sdev_gendev)) {
-
-[Severity: High]
-This isn't a bug introduced by this patch, but is it safe to iterate and
-dereference ata_dev->sdev[lun] here in zpodd_wake_dev() in
-drivers/ata/libata-zpodd.c without holding ap->lock or acquiring a reference
-via scsi_device_get()?
-
-If a SCSI device is concurrently removed (for example, via a sysfs delete
-operation), could the scsi_device structure be freed while the ACPI notify
-callback is executing?
-
-Would this lead to a use-after-free when pm_runtime_suspended() is called?
-
-> +			zpodd->from_notify =3D true;
-> +			pm_runtime_resume(&sdev->sdev_gendev);
-> +		}
->  	}
->  }
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260611024356.2769=
-320-1-philpem@philpem.me.uk?part=3D2
