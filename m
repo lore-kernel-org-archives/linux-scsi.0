@@ -1,87 +1,101 @@
-Received: from cstnet.cn (smtp81.cstnet.cn [159.226.251.81])
-	(using TLSv1.2 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A90243B9D95;
-	Thu, 11 Jun 2026 11:09:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.226.251.81
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5FD023E022A
+	for <linux-scsi@vger.kernel.org>; Thu, 11 Jun 2026 11:21:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781176175; cv=none; b=Kd4Yd0IpDp9/96YQpHxIVq5hz1jvXIkEP8jLYc0VJPgFW6JanuJu7IbgvOuHCcCIZltMO5smIVyBX4vd2gMOS4QnzjZ+owjSizBjUiLBdMNlPK5Ple/a1j1qN0qkwFYU7/lw5e+dl3uqmWE6LNG2z6qAxcG1nimo4d7dHBPM9rM=
+	t=1781176916; cv=none; b=pdr7uq7hs0pxFEDaeCnAuZc535JoGy2Kcy2BxmL9w3+W3rqc3QbHyzKeArtnPQ3yAm3Bh24xhRplHW/mDesRCRKdEJNJ81/HuLSc7UJi3sNWc7G/D5S62P9V9J1P3P+8PHR9giIOCzJzuXQQz5/94HR3qQ8UV8r8cbwTytEag4Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781176175; c=relaxed/simple;
-	bh=r4yk5gLKbqPyq4I6SokKO0R2ZRD6eTlTtlo8Fqk1tPU=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=PmYX/AgODm3CONzIpNzknLs1cGYX0snvcbVu+Pn6W/sb+cpyYw3augYUXdJWsfqzu6SwRcGxefPj273FSBD9PCqRx0zBuXbYh30/O+e/9Z3q0K0TBijKOTGhJ+pwn92GK8F67YwOaDpT04ePn9Z+UkjpUlmjxhR0Kpy6YaUYGZY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn; spf=pass smtp.mailfrom=iscas.ac.cn; arc=none smtp.client-ip=159.226.251.81
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iscas.ac.cn
-Received: from localhost.localdomain (unknown [117.182.75.76])
-	by APP-03 (Coremail) with SMTP id rQCowACHp95hlypq_bldFA--.8073S2;
-	Thu, 11 Jun 2026 19:09:23 +0800 (CST)
-From: WenTao Liang <vulab@iscas.ac.cn>
-To: njavali@marvell.com,
-	GR-QLogic-Storage-Upstream@marvell.com,
-	James.Bottomley@HansenPartnership.com,
-	martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	WenTao Liang <vulab@iscas.ac.cn>,
-	stable@vger.kernel.org
-Subject: [PATCH] scsi: qla2xxx: fix refcount leak in qla24xx_async_prli()
-Date: Thu, 11 Jun 2026 19:09:19 +0800
-Message-ID: <20260611110919.74911-1-vulab@iscas.ac.cn>
-X-Mailer: git-send-email 2.50.1
+	s=arc-20240116; t=1781176916; c=relaxed/simple;
+	bh=zTXzeRbsAySNExeDAgC5s5oqfZjCoxStM4wJXTlvc5I=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=fV8VdaBDIGHs0G8Iohj53TQM8BYurPdD4oCcoDzhfFKpj7HKHwHQnYxDjegGjMTIblp8ot78mcpLm72hadEfdy/5JyXv4G+6Hzoc/NX+y8OCU5l2SqN0kEiNSnoycyHM/su3aEQG91YYNF98l2yf3rqniAZ6w86L/X28eGiixPg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Bl025dUi; arc=none smtp.client-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Bl025dUi"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E81801F00893;
+	Thu, 11 Jun 2026 11:21:54 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1781176915;
+	bh=tec8RFZcrXdFGtrltST8PX7dTyh34prTR0ucfobfKxU=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=Bl025dUi7AQIqgAWKI++bXg1Jq+5MndAQHslY2N+OnSSO5bD3hrKgSiNFQ53SHUfJ
+	 w8UZzZbo42s5tSw79i4xTKRfJt4jnfknx4nQ0wWedG2QWLHvmV8qaXcfeF2hIbMnc1
+	 0Z2sIb37nq0D+DuJhmBgSTFEnJ05EZyc4rNzASDHE4a/GVeVmg04+QRRcAm1sFZXuG
+	 6GoHTznRHvrWw4FuSps2UqY2C5U1krrmhVdUTKLf0MSxDMkRiI1ipFP0T1hwG3Ju6l
+	 jqYqHW36M1k3beKnjL12QFp5RnvsLyOZxbr0YhaoUndaKzhzqoqFxf+lcvER0QC8cx
+	 4DuBL3UzW2lUA==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] scsi: qla2xxx: fix refcount leak in
+ qla24xx_async_prli()
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "WenTao Liang" <vulab@iscas.ac.cn>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20260611110919.74911-1-vulab@iscas.ac.cn>
+References: <20260611110919.74911-1-vulab@iscas.ac.cn>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Thu, 11 Jun 2026 11:21:54 +0000
+Message-Id: <20260611112154.E81801F00893@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:rQCowACHp95hlypq_bldFA--.8073S2
-X-Coremail-Antispam: 1UD129KBjvdXoW7XF4UGr4xuF1UCFW3tw4DCFg_yoWktrg_uF
-	4UXryI9ryUursrW3WxurWfArWS9FZ7Xryvvw1jqrWfAry5u3W7Jr15uF9xXa4xt3yjvFZ8
-	Gws7WrW8ZryUujkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUIcSsGvfJTRUUUbcAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k26cxKx2IYs7xG
-	6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
-	A2z4x0Y4vE2Ix0cI8IcVAFwI0_Gr0_Xr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr0_
-	Cr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_GcCE3s
-	1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E2Ix0
-	cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJVW8Jw
-	ACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lc7CjxVAaw2AFwI0_JF0_
-	Jw1l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxV
-	WUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI
-	7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r
-	1j6r4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJVW8JwCI
-	42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjfUYCJmUUUUU
-X-CM-SenderInfo: pyxotu46lvutnvoduhdfq/1tbiBgsPA2oqhg409AAAsJ
 
-When qla24xx_async_prli() fails to start an SP, it jumps to the
-done_free_sp error path and releases only the command kref via
-kref_put.  However, the vha reference count obtained earlier by
-qla2x00_get_sp() through qla_vha_mark_busy() is never released on
-this path, leading to a permanent leak of vha->vref_count.
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+- [High] Double-decrement (underflow) of `vha->vref_count` on the error pat=
+h of `qla24xx_async_prli()`.
+--
 
-Fix the leak by explicitly calling QLA_VHA_MARK_NOT_BUSY(vha) in
-the error path before returning.
+commit 96156510fc7447ae3d281225a3388973efa74abd
+Author: WenTao Liang <vulab@iscas.ac.cn>
 
-Cc: stable@vger.kernel.org
-Fixes: a5d42f4cffa5 ("scsi: qla2xxx: Add FC-NVMe port discovery and PRLI handling")
-Signed-off-by: WenTao Liang <vulab@iscas.ac.cn>
----
- drivers/scsi/qla2xxx/qla_init.c | 1 +
- 1 file changed, 1 insertion(+)
+scsi: qla2xxx: fix refcount leak in qla24xx_async_prli()
 
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index e746c9274cde..8dd717dfcc14 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -1352,6 +1352,7 @@ qla24xx_async_prli(struct scsi_qla_host *vha, fc_port_t *fcport)
- done_free_sp:
- 	/* ref: INIT */
- 	kref_put(&sp->cmd_kref, qla2x00_sp_release);
-+	QLA_VHA_MARK_NOT_BUSY(vha);
- 	fcport->flags &= ~FCF_ASYNC_SENT;
- 	return rval;
- }
--- 
-2.50.1 (Apple Git-155)
+This commit attempts to fix a vha refcount leak in the error path of
+qla24xx_async_prli by explicitly calling QLA_VHA_MARK_NOT_BUSY(vha) after
+releasing the command kref.
 
+> diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_i=
+nit.c
+> index e746c9274cded..8dd717dfcc144 100644
+> --- a/drivers/scsi/qla2xxx/qla_init.c
+> +++ b/drivers/scsi/qla2xxx/qla_init.c
+> @@ -1352,6 +1352,7 @@ qla24xx_async_prli(struct scsi_qla_host *vha, fc_po=
+rt_t *fcport)
+>  done_free_sp:
+>  	/* ref: INIT */
+>  	kref_put(&sp->cmd_kref, qla2x00_sp_release);
+> +	QLA_VHA_MARK_NOT_BUSY(vha);
+
+[Severity: High]
+Does this result in a double-decrement of the vha refcount?
+
+Looking at the release callback chain, kref_put() calls qla2x00_sp_release(=
+),
+which unconditionally calls sp->free(sp).
+
+During initialization, qla2x00_init_async_sp() sets the free callback to
+qla2x00_sp_free(), which then calls qla2x00_rel_sp(). Finally,
+qla2x00_rel_sp() calls QLA_VHA_MARK_NOT_BUSY(sp->vha).
+
+If the refcount is already decremented by the kref_put() callback chain:
+
+kref_put()
+  qla2x00_sp_release()
+    qla2x00_sp_free()
+      qla2x00_rel_sp()
+        QLA_VHA_MARK_NOT_BUSY()
+
+Does adding an explicit call here cause an underflow?
+
+>  	fcport->flags &=3D ~FCF_ASYNC_SENT;
+>  	return rval;
+>  }
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260611110919.7491=
+1-1-vulab@iscas.ac.cn?part=3D1
