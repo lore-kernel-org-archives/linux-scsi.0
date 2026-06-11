@@ -1,110 +1,120 @@
-Received: from mail-m155101.qiye.163.com (mail-m155101.qiye.163.com [101.71.155.101])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BCDE523ABB9;
-	Thu, 11 Jun 2026 05:41:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=101.71.155.101
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A0702F7AC1
+	for <linux-scsi@vger.kernel.org>; Thu, 11 Jun 2026 05:51:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781156493; cv=none; b=mNYAxvyCy72ngmFt4sShpINB4T0B79JGG+I4j21rnNiFAULLmyUebVm9k3HektTOwM/R4+On7BHyy9TF5z8noiaOcHIq5YIHwAZEo2KroOllp3w6Xe/jjeW6m7u+RNieIIJHgxUAyMSjZEWxj9c20RhsJrltz08VBvjmRqdZh/A=
+	t=1781157121; cv=none; b=qCS18QIW7iG0XlB3odcB0J91QkpSC/r1VXfUzUioyEl4ezHg3SOj41eO8ie4vbNAA3c/0wIDGdyUUaDmnOLXqCuBeeQjsOS6TFtVEgZ+tIK0XKrQ7z1fzks7FCcGHzWVSoJF6L/Edvk10Hnb1bVykRRU7OF4oIFDbmgAnn5uLrU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781156493; c=relaxed/simple;
-	bh=pTpu5XFQpelgw4k+UN+3Zof3bpfuaNRmvg+ifwuojcs=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=He9M6VrSgSuHk8GRWNIpkvgea8hO3LS1TkXsXa4z8sYM/aU/gpM1jVAI/sGOMoROOy6iicPgDBPwTbBQt15fWMX4lLYYpSPBZJKakQ3DhJF2XNllgRYvlPe3ubF59EkE9MQUxxR2GofI+N4HxDRc/xDDBkdXDqqWJU1J11rnIWM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=seu.edu.cn; spf=pass smtp.mailfrom=seu.edu.cn; dkim=pass (1024-bit key) header.d=seu.edu.cn header.i=@seu.edu.cn header.b=SXPEaUkT; arc=none smtp.client-ip=101.71.155.101
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=seu.edu.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=seu.edu.cn
+	s=arc-20240116; t=1781157121; c=relaxed/simple;
+	bh=I5S0cnt0nhp2xjHApsEXcw0S5yzhUI80VKq8zFfNBHs=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=eplEmPLgDP3x9Lewz2cU3vmJez+oLc7rvsDm3A4SZemYRfohbGTyH4jp7w5nLRRwXn42HbWu3eyNfHYd3A8xKH0v+QeNDdsWvrNbU1QP01udOKeikQiOdT4t+DdOWmR464raMq2eIJ30hwS8rouGRVkiJUecZX5I7DEaHIRKG0w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=a6xPXFz9; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=seu.edu.cn header.i=@seu.edu.cn header.b="SXPEaUkT"
-Received: from PC-202605011814.localdomain (unknown [222.191.246.242])
-	by smtp.qiye.163.com (Hmail) with ESMTP id 41f34cc06;
-	Thu, 11 Jun 2026 13:36:13 +0800 (GMT+08:00)
-From: Runyu Xiao <runyu.xiao@seu.edu.cn>
-To: lduncan@suse.com,
-	cleech@redhat.com,
-	michael.christie@oracle.com,
-	James.Bottomley@HansenPartnership.com,
-	martin.petersen@oracle.com,
-	linux-scsi@vger.kernel.org
-Cc: open-iscsi@googlegroups.com,
-	linux-kernel@vger.kernel.org,
-	jianhao.xu@seu.edu.cn,
-	runyu.xiao@seu.edu.cn
-Subject: [PATCH] scsi: iscsi_tcp: use WRITE_ONCE() for shared socket callbacks
-Date: Thu, 11 Jun 2026 13:36:10 +0800
-Message-Id: <20260611053610.2435548-1-runyu.xiao@seu.edu.cn>
-X-Mailer: git-send-email 2.34.1
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="a6xPXFz9"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A08591F00893;
+	Thu, 11 Jun 2026 05:51:59 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1781157119;
+	bh=j4KWGthz8dn1QyyPeU4Oiv6oP8sY/pslWYrEMbe1Pns=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=a6xPXFz9KLOuhl5/vWQ+gMNfOlJrUcMGe9HBO0ZnoOd1TSxqWHjDnakeClhXgM912
+	 yxZJZ6uWIYPh05Opzs3z191jm6Ndzb2275yZk14OTf6gd/JhfXlVeZEEe+8RfF/Jcc
+	 0MEWhwNkyDo8fpwOyYFdQVWIjt8nEq7A8jam4Q7WbbQby/N4vb3ZHIPda15FChN7aP
+	 i82Q/1hqzNwHbM8uhYCyC6iqCWxauumaYycMen1IQsrsEzRpgOrvYyDWMXNSIFJEoA
+	 In9bBKE4DgwHmpW6WTcz42XmQfnH5dL8t8M4H+mHvM3lMAMRpgAK4iKqTdevmGY6Ks
+	 fBnFud6R1Lwaw==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] scsi: elx: efct: fix refcount leak in
+ efct_hw_io_abort()
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "WenTao Liang" <vulab@iscas.ac.cn>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20260611053037.63756-1-vulab@iscas.ac.cn>
+References: <20260611053037.63756-1-vulab@iscas.ac.cn>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Thu, 11 Jun 2026 05:51:58 +0000
+Message-Id: <20260611055159.A08591F00893@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-HM-Tid: 0a9eb52e585903a1kunme2f62dd7151683
-X-HM-MType: 10
-X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-	tZV1koWUFITzdXWRgWCB1ZQUpXWS1ZQUlXWQ8JGhUIEh9ZQVlDTU0YVkIaTk1LTR9MTEpLGVYeHw
-	5VEwETFhoSFyQUDg9ZV1kYEgtZQVlJSUlVSkJKVUlPTVVJT0lZV1kWGg8SFR0UWUFZT0tIVUpLSE
-	pPSExVSktLVUpCS0tZBg++
-DKIM-Signature: a=rsa-sha256;
-	b=SXPEaUkTu9LULhIM0EM9ck7kQ/j/XBxo556qoycFx9GG/+Z5mFt5XZJ4kqeaqYVvTpqhlCQC57ireXjMbtYLBDm+qHa6uzjcd4b4IjUQ34FzwtH3pYEb7vuqrm8XUueDqVpEz1ci0LK0/ODK1Z6Ta+KxuZatb4vIJJfDXHndEAU=; s=default; c=relaxed/relaxed; d=seu.edu.cn; v=1;
-	bh=CwNuDXeIvT8BWfXDicqZLqpiuN5Iwkvqkv4hiZaEdSc=;
-	h=date:mime-version:subject:message-id:from;
 
-iscsi_sw_tcp_conn_set_callbacks() and
-iscsi_sw_tcp_conn_restore_callbacks() replace and restore
-sk->sk_data_ready and sk->sk_write_space on a live TCP socket with
-plain stores. These callback pointers are shared with generic socket
-and TCP paths that may read or invoke them concurrently, so the write
-side needs the same WRITE_ONCE() contract that commit 2ef2b20cf4e0
-("net: annotate data-races around sk->sk_{data_ready,write_space}")
-applied elsewhere.
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
 
-If another CPU has taken an earlier callback snapshot, the plain
-replace and restore leave the same visibility hole as the validated
-4022 family. A stale snapshot can then still call
-iscsi_sw_tcp_data_ready() or iscsi_sw_tcp_write_space() after the live
-socket has already been restored to sock_def_readable() or
-sk_stream_write_space(), with sk_user_data cleared.
+Pre-existing issues:
+- [High] Hardware aborts for active IOs are silently dropped due to an inco=
+rrect check for list membership.
+--
 
-Use WRITE_ONCE() for the shared sk_data_ready and sk_write_space
-stores in both the callback-install and callback-restore paths. This
-matches the required socket callback visibility contract while keeping
-the existing locking and sk_state_change handling unchanged.
+commit 33508d96614625ca6aabac77bfd4b3f88a0202b5
+Author: WenTao Liang <vulab@iscas.ac.cn>
 
-Fixes: 38e1a8f5479d ("[SCSI] iscsi_tcp: hook iscsi_tcp into new libiscsi_tcp module")
-Signed-off-by: Runyu Xiao <runyu.xiao@seu.edu.cn>
----
- drivers/scsi/iscsi_tcp.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+scsi: elx: efct: fix refcount leak in efct_hw_io_abort()
 
-diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
-index 7b4fe0e6afb2..5dabda97043d 100644
---- a/drivers/scsi/iscsi_tcp.c
-+++ b/drivers/scsi/iscsi_tcp.c
-@@ -254,9 +254,9 @@ static void iscsi_sw_tcp_conn_set_callbacks(struct iscsi_conn *conn)
- 	tcp_sw_conn->old_data_ready = sk->sk_data_ready;
- 	tcp_sw_conn->old_state_change = sk->sk_state_change;
- 	tcp_sw_conn->old_write_space = sk->sk_write_space;
--	sk->sk_data_ready = iscsi_sw_tcp_data_ready;
-+	WRITE_ONCE(sk->sk_data_ready, iscsi_sw_tcp_data_ready);
- 	sk->sk_state_change = iscsi_sw_tcp_state_change;
--	sk->sk_write_space = iscsi_sw_tcp_write_space;
-+	WRITE_ONCE(sk->sk_write_space, iscsi_sw_tcp_write_space);
- 	write_unlock_bh(&sk->sk_callback_lock);
- }
- 
-@@ -270,9 +270,9 @@ iscsi_sw_tcp_conn_restore_callbacks(struct iscsi_conn *conn)
- 	/* restore socket callbacks, see also: iscsi_conn_set_callbacks() */
- 	write_lock_bh(&sk->sk_callback_lock);
- 	sk->sk_user_data    = NULL;
--	sk->sk_data_ready   = tcp_sw_conn->old_data_ready;
-+	WRITE_ONCE(sk->sk_data_ready, tcp_sw_conn->old_data_ready);
- 	sk->sk_state_change = tcp_sw_conn->old_state_change;
--	sk->sk_write_space  = tcp_sw_conn->old_write_space;
-+	WRITE_ONCE(sk->sk_write_space, tcp_sw_conn->old_write_space);
- 	sk->sk_no_check_tx = 0;
- 	write_unlock_bh(&sk->sk_callback_lock);
- }
--- 
-2.34.1
+This commit fixes a reference count and flag leak when
+efct_hw_reqtag_alloc() fails in efct_hw_io_abort(). It adds the missing
+kref_put() and resets the abort_in_progress flag to prevent blocking
+future recovery attempts.
+
+> diff --git a/drivers/scsi/elx/efct/efct_hw.c b/drivers/scsi/elx/efct/efct=
+_hw.c
+> index 1838032f64862..b79c6a7ea7912 100644
+> --- a/drivers/scsi/elx/efct/efct_hw.c
+> +++ b/drivers/scsi/elx/efct/efct_hw.c
+> @@ -1997,6 +1997,8 @@ efct_hw_io_abort(struct efct_hw *hw, struct efct_hw=
+_io *io_to_abort,
+>  	wqcb =3D efct_hw_reqtag_alloc(hw, efct_hw_wq_process_abort, io_to_abort=
+);
+>  	if (!wqcb) {
+>  		efc_log_err(hw->os, "can't allocate request tag\n");
+> +		io_to_abort->abort_in_progress =3D false;
+> +		kref_put(&io_to_abort->ref, io_to_abort->release);
+>  		return -ENOSPC;
+>  	}
+> =20
+
+[Severity: High]
+This is a pre-existing issue, but does the list membership check later in
+efct_hw_io_abort() reliably determine if an IO is on the pending list?
+
+When WQEs are dispatched to hardware, they are removed from the pending list
+using list_del_init(). This leaves the next and prev pointers pointing to t=
+he
+list entry itself, meaning they are non-NULL.
+
+Since io->wqe is not zeroed when the IO object is freed and recycled, any
+recycled IO or already-dispatched IO will have a non-NULL list_entry.next
+when it is evaluated here:
+
+	if (io_to_abort->wq) {
+		spin_lock_irqsave(&io_to_abort->wq->queue->lock, flags);
+		if (io_to_abort->wqe.list_entry.next) {
+			io_to_abort->wqe.abort_wqe_submit_needed =3D true;
+			spin_unlock_irqrestore(&io_to_abort->wq->queue->lock,
+					       flags);
+			return 0;
+		}
+
+Could this cause the check to evaluate to true for IOs that are no longer on
+the list, flagging them for a software abort and returning 0 without
+submitting an actual ABORT WQE to the hardware?
+
+Since the WQE is no longer on the pending list, the pending abort would nev=
+er
+be dispatched, leaving the abort_in_progress flag set forever.
+
+If the hardware later completes the original IO, the completion handler mig=
+ht
+see abort_in_progress =3D=3D true and ignore the completion. Could this seq=
+uence
+permanently leak the IO object and its associated XRI tags?
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260611053037.6375=
+6-1-vulab@iscas.ac.cn?part=3D1
