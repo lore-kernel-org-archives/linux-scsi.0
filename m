@@ -1,104 +1,96 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from cstnet.cn (smtp21.cstnet.cn [159.226.251.21])
+	(using TLSv1.2 with cipher DHE-RSA-AES256-SHA (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1FC0138945C
-	for <linux-scsi@vger.kernel.org>; Thu, 11 Jun 2026 06:53:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C18673446C0;
+	Thu, 11 Jun 2026 08:43:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.226.251.21
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781160821; cv=none; b=ba3jXQNuWV3DxX/op0MRezX2Q+noa21MF1INhJk3T5VBURO/gHqan0M5wjrJ6ih0RdPb+uxX8O3MQSyTZL8/KRNg2wL3r8Lgz1XiI5LCqZK+/dtSq61Y2Vx5K3xAQhMXzEENuO7l4GB7eDhJxtOyJWkJNR+HAl36GCyKC+G+FJM=
+	t=1781167419; cv=none; b=lHJ2hF4dWmuwKDwnOjDT4MLmgBk7OiyKRxy6DvRSBbyzfEZaIlR7Cj+WfLXgYYi1uw6JFoj/G4mOPQIk1snQ9FGGWM5Cfpv853Ek0Ua4IqBbRLnU2gSIQ6SFxQky5+9Z6GqWqJ6wbxNvJAdIs5fdCBS0Xtm8qNadKPJy0m0eWQ4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781160821; c=relaxed/simple;
-	bh=S0qbWTSSrlmQytFIei+PHc3fQYjOnLaZvTlH1UP18bY=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=MKvBNTJU9E1Hx9wBciLlk+j+XETScXiV1JGtJravJvBUGO1yc37mme2l82tBWsWrQcpdMYyqWBwaUKXj4T75BD3HZh/W91afarm3+CwXqVYPce5yn//1Ixd1hb49PS7anCpFLYm2iEz85zsYokQB88g5oRYpvE93fbdfz+jXXyk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UjHczuRq; arc=none smtp.client-ip=100.103.45.18
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UjHczuRq"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 448941F00893;
-	Thu, 11 Jun 2026 06:53:36 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781160816;
-	bh=pU44by4qb+tVC6HxwHFMdfxFnfufJg3Evv/8Wu9lANw=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=UjHczuRqwWp0V27wBUzWE4aosnXU9Y+RDTwZKZnazuWKwRhWpAsBNM0qVJghl2E7i
-	 b2fBs36ZglR0wglHemPb602DHIgQhN/guMTXd895aocI7JmT2vFtU+i0EQzchrtqHF
-	 niVMezlsqTYCf5ubrBIrLtD+90J0AXRjoLxpOrSr9YEsT5uH+8R+swm3k492KkttoD
-	 B3tt2SZ/dEcGHk+fY9fmMwtRLgs9jYr/6LXZSDEk0L2Le2tkNjZnK9ItAjlW3za967
-	 oVSvgHkoYnBoDBBY5rrBSlsqXG/wWjpwy/YmqfV8jBGu2wQ3f7oN0xFA4JNur4yXYZ
-	 TT+/cxixZKywg==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] scsi: esas2r: fix refcount leak in esas2r_resume()
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "WenTao Liang" <vulab@iscas.ac.cn>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260611064100.65731-1-vulab@iscas.ac.cn>
-References: <20260611064100.65731-1-vulab@iscas.ac.cn>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 11 Jun 2026 06:53:35 +0000
-Message-Id: <20260611065336.448941F00893@smtp.kernel.org>
+	s=arc-20240116; t=1781167419; c=relaxed/simple;
+	bh=CWD0Mxp3GNtqQXI1I0aSkG4k1ua5HOdfpwalFPgaH6I=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=EPYjL2DCgZbC5Rq8z+V+kXbeAJVnXIkeaG4+U+t+x3iQy0aZBA9zrkIgy8VVTy1toBsqaPfwB3U4UUUpFDpjvuVEVZb7ZGs60Cpr0CsrIyxP3NboTJLs///2KO9sGBsYTVHzHkAEsE/pDCiP0TpQ1nIl6hkFrEPTNdDB2XqYdTw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn; spf=pass smtp.mailfrom=iscas.ac.cn; arc=none smtp.client-ip=159.226.251.21
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iscas.ac.cn
+Received: from localhost.localdomain (unknown [117.182.75.76])
+	by APP-01 (Coremail) with SMTP id qwCowAB3HtcudSpq1C5IAQ--.2776S2;
+	Thu, 11 Jun 2026 16:43:28 +0800 (CST)
+From: WenTao Liang <vulab@iscas.ac.cn>
+To: sathya.prakash@broadcom.com,
+	sreekanth.reddy@broadcom.com,
+	suganath-prabu.subramani@broadcom.com,
+	ranjan.kumar@broadcom.com,
+	James.Bottomley@HansenPartnership.com,
+	martin.petersen@oracle.com
+Cc: MPT-FusionLinux.pdl@broadcom.com,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	WenTao Liang <vulab@iscas.ac.cn>,
+	stable@vger.kernel.org
+Subject: [PATCH] scsi: mpt3sas: fix refcount leak in mpt3sas_transport_port_add()
+Date: Thu, 11 Jun 2026 16:43:24 +0800
+Message-ID: <20260611084324.70303-1-vulab@iscas.ac.cn>
+X-Mailer: git-send-email 2.50.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:qwCowAB3HtcudSpq1C5IAQ--.2776S2
+X-Coremail-Antispam: 1UD129KBjvJXoW7Ar15ury8GrWUGryrAF1DWrg_yoW8Ww1rpa
+	yq9Fy5Ar98Gr4I9rnrGw18Zr4rX3W7A3s8KrW0v3Z5Cr45AFyIqrWxCrZ0qFyUAFZ5Ja4D
+	JrWDJ395KFW5GrJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUU9Y14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26ryj6F1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26F4j
+	6r4UJwA2z4x0Y4vEx4A2jsIE14v26F4UJVW0owA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
+	2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
+	W8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2
+	Y2ka0xkIwI1lc7CjxVAaw2AFwI0_Jw0_GFyl42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x
+	0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2
+	zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF
+	4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWU
+	CwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCT
+	nIWIevJa73UjIFyTuYvjfUonmRUUUUU
+X-CM-SenderInfo: pyxotu46lvutnvoduhdfq/1tbiBwkPA2oqQh7AHQAAsD
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [High] The patch introduces a critical vulnerability in the IRQ claim fai=
-lure path by blindly calling `esas2r_enable_chip_interrupts()`. Since `esas=
-2r_power_up()` already decremented the `dis_ints_cnt` refcount on its succe=
-ss path, this additional call drops the refcount to 0, which physically unm=
-asks hardware interrupts without a registered OS-level handler.
---
+In mpt3sas_transport_port_add(), after acquiring the sas_device by
+calling mpt3sas_get_sdev_by_addr() (which bumps the reference count via
+sas_device_get()), several error paths leak the reference.  If
+sas_node->parent_dev is NULL, or port creation/sas_port_add() fails, or
+rphy allocation or sas_rphy_add() fails, the function jumps to out_fail
+or out_delete_port, where the sas_device reference is not released.  The
+reference is only dropped on the success path via sas_device_put().
 
-commit bcbf85bebac19683b875da8be0ef4e9cf5ebfcdd
-Author: WenTao Liang <vulab@iscas.ac.cn>
+Add the missing sas_device_put() call in the out_fail cleanup, which
+also covers the out_delete_port label that falls through to out_fail.
+This fixes the leak for all error paths that occur after the sas_device
+is acquired.  Before that point, sas_device is NULL, so the put is safe.
 
-scsi: esas2r: fix refcount leak in esas2r_resume()
+Cc: stable@vger.kernel.org
+Fixes: f92363d12359 ("[SCSI] mpt3sas: add new driver supporting 12GB SAS")
+Signed-off-by: WenTao Liang <vulab@iscas.ac.cn>
+---
+ drivers/scsi/mpt3sas/mpt3sas_transport.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-This commit attempts to fix a refcount leak in esas2r_resume() by calling
-esas2r_enable_chip_interrupts() on the error paths.
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_transport.c b/drivers/scsi/mpt3sas/mpt3sas_transport.c
+index e74a526efa8d..f831d4823503 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_transport.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_transport.c
+@@ -869,6 +869,8 @@ mpt3sas_transport_port_add(struct MPT3SAS_ADAPTER *ioc, u16 handle,
+ 	list_for_each_entry_safe(mpt3sas_phy, next, &mpt3sas_port->phy_list,
+ 	    port_siblings)
+ 		list_del(&mpt3sas_phy->port_siblings);
++	if (sas_device)
++		sas_device_put(sas_device);
+ 	kfree(mpt3sas_port);
+ 	return NULL;
+ }
+-- 
+2.50.1 (Apple Git-155)
 
-> diff --git a/drivers/scsi/esas2r/esas2r_init.c b/drivers/scsi/esas2r/esas=
-2r_init.c
-> index 0a35f19537680..727ddcebec9f9 100644
-> --- a/drivers/scsi/esas2r/esas2r_init.c
-> +++ b/drivers/scsi/esas2r/esas2r_init.c
-
-[ ... ]
-
-> @@ -699,6 +700,7 @@ static int __maybe_unused esas2r_resume(struct device=
- *dev)
->  		esas2r_debug("yikes, unable to claim IRQ");
->  		esas2r_log(ESAS2R_LOG_CRIT, "could not re-claim IRQ!");
->  		rez =3D -ENOMEM;
-> +		esas2r_enable_chip_interrupts(a);
-
-[Severity: High]
-Does this call to esas2r_enable_chip_interrupts() prematurely drop the
-dis_ints_cnt refcount to 0 and physically unmask hardware interrupts?
-
-If esas2r_power_up() succeeded earlier in this function, its internal succe=
-ss
-path already decremented the dis_ints_cnt refcount back to 1.
-
-If esas2r_claim_interrupts() subsequently fails to register an IRQ handler =
-and
-execution branches to this error path, calling esas2r_enable_chip_interrupt=
-s()
-again drops the refcount from 1 to 0.
-
-When the counter reaches 0, it writes ESAS2R_INT_ENB_MASK to the hardware
-register to unmask interrupts. Since the OS explicitly refused to grant the
-IRQ, will any generated hardware interrupt be left unhandled, leading to a
-screaming interrupt on shared lines and forcing the kernel to disable the
-shared IRQ line?
-
->  		goto error_exit;
->  	}
->
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260611064100.6573=
-1-1-vulab@iscas.ac.cn?part=3D1
