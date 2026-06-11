@@ -1,202 +1,179 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ej1-f49.google.com (mail-ej1-f49.google.com [209.85.218.49])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 94993306B08
-	for <linux-scsi@vger.kernel.org>; Thu, 11 Jun 2026 18:57:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781204230; cv=none; b=cPseIjeXjq5prUa2rMsyf72UM4LMDk42pt1BeFmFC3CBebb9P3+zbbKV/3QgTRdEYGUImOLNg6I7+X/Gm2Cv97HW3KE4vKCPhw1H+ADawA6cjKgxavWSyj30QKVOVI3rCyYMeF6nAr6yr2NAurssmbWaSupOF9bqgoJEyuLji04=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781204230; c=relaxed/simple;
-	bh=Z28Y14R1bpH1TFR1CCxv/Xa9BdwzY8sIVM1YQ73zsug=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=InaiRESrXIR7UeefsSjEdL5TLPAkJsdwRYy2gmA0ULpMxGFatkf0EJpEqvs24dwX9OJ3CrQZbDwPJ/A1qZ9DkIkp680HmkpgVEbDk3MxXvp0UiujUKdZ4sdj0bIXRzewcAj8EmOgURzVLJFS1hWNj5THUqCNHB9iuWzVU/vOK10=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cy7r/tx0; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C110382F26
+	for <linux-scsi@vger.kernel.org>; Thu, 11 Jun 2026 23:14:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.218.49
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1781219692; cv=pass; b=rRpqz5ffalYlYGjh31a+x5s0XlIMS1ZGJpzIQbHucAaRuooxHhAVr18mRt00eq2RdKMtKiC3XBNn02puolzIzdOIPqed2/whp6enWv8GZX0q9Ezh+L/CXVhDvORlOQTaifVoivBosLOhIXguOVHlDpACqLHowz00OO/y3rYCZ6Y=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1781219692; c=relaxed/simple;
+	bh=SDuNW4DOYbM/LU2KIbJc8jA8cg9SXoyNM0Pf8/UucQk=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=MCUMSBrYCC5HWEWvbvy4TH2BZ+SsaiovFPdyuVOCFXMO+BVoaOXNO6293baz306ciW1VomWl96HNI4o3WVMmYDwlJ1K8PZt14xDE6L3hatiZXCh0mRFJ5WCmg2BR7Fx32fwDW5DCWBvMCDSfwb8SqCXTD4xflQAyV1SfY0DLdMk=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=arista.com; spf=pass smtp.mailfrom=arista.com; dkim=pass (2048-bit key) header.d=arista.com header.i=@arista.com header.b=O5NHANJB; arc=pass smtp.client-ip=209.85.218.49
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=arista.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=arista.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cy7r/tx0"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1D58E1F000E9;
-	Thu, 11 Jun 2026 18:57:09 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781204229;
-	bh=U4GYmimfsVKsAXjcC/xa0f/T3mgOHT/bfR7nDLsZIlM=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=cy7r/tx0/XsW8/GAv3MsO5tNtqIyl1cA9+d7uYFPbgMHjF0oyvrda6LQi5IThpIkF
-	 nnSuJwPl/UDyDeiCiczpVibrClK+8IQk602tp28cDa+NklcHlJiLSZz78yY3MjqPxq
-	 AfPfHJhGWGc/JkOgE/KlJqb3tyFCeTuHN6gSnL5M7Qy0KMzcH8B9DNqYkSHJYVE/Eh
-	 GFH4hk/9DfDnXJSEd+uZbiMafjxegS3HiTRzLAlR0C707SglpoixAh1Kx1nrXSAK1a
-	 V+v4XWftwxehZuj/9sp0feAarG0igPnZGh2DVrp8BpMumrGP/vu+6H7IpL0V/Be+Rz
-	 vK4aawxdMBqpA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v6] scsi: target: bound PR-OUT TransportID parsing to
- the received buffer
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Bryam Vargas via B4 Relay" <devnull+hexlabsecurity.proton.me@kernel.org>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260611-b4-disp-9f20739e-v6-1-f6630e2aae44@proton.me>
-References: <20260611-b4-disp-9f20739e-v6-1-f6630e2aae44@proton.me>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 11 Jun 2026 18:57:08 +0000
-Message-Id: <20260611185709.1D58E1F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=arista.com header.i=@arista.com header.b="O5NHANJB"
+Received: by mail-ej1-f49.google.com with SMTP id a640c23a62f3a-bec405a6ea5so60556766b.0
+        for <linux-scsi@vger.kernel.org>; Thu, 11 Jun 2026 16:14:50 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1781219689; cv=none;
+        d=google.com; s=arc-20240605;
+        b=bDnrxph6IgbLDfVZPudj6Kk7j/c3XKduS0TSI0RqOJwxoJ8fjQCHqtr+OcdNWSa3L6
+         DKPVHynJWObyWCOqvDL4liEbwEYBXdudCYxXmBA4K2Ej5wPi0OYA2/yKrh2EE0gzByek
+         /yGBG2p2yvNTehETBm6jwzd8fa+oqEYHEuxzBbsgyuq6CIjtq5swoPVycfCfMtoNugKm
+         bDMeeLZ/Qic9y0aDg81RYsegrjlduJ5bE7pQfOiSGStQPjiuhMEpYYkMP1YJtzBebggt
+         uoAxFqWGpFoMHEKPTPnI0VemMNhKDkxwCdYmCLbSCHMago9XN/9JeWZfghG7wmAnFxws
+         AaSA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=0ZqakqEpgu30/29D6Zy6J4ujejKu003rEEGBzzqhukM=;
+        fh=0RZWjFf0Xcq0koEx0cTvbby93A1iIZqK8eQQpP8YFSM=;
+        b=WMLgntnHC2ljnOB6uIRlowzX2LpgR5Oq3sMQ6zJ17xg+KZ6yO/ib7hkH7AyImPY8/L
+         eLXgZXGT+hv/6a8/DiNRmxQvyttNX9QEYtAgNJ3MkyHO4Mc/m3o7FdZrXyZ8jXoRAIYu
+         8N/ZQ8aPsG5qUBrY+9QReDZn6JW6s7JnenCsOyZ4QZKAEqrIkymVfOUD6rvacNoUueXs
+         wX63vypoCj+Sr9CF+zPfJPG24p4CWuL3BiDWMdFCdnfCEyNfick7SaBzVFPE7P+DX4Qm
+         8NBNxE692aHiBrS1MDj+2VaXrjHm4G9ZKOffFD9HFy3B5uCe18BpAcGzVHTJykkkX5jp
+         eH3g==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=arista.com; s=google; t=1781219689; x=1781824489; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=0ZqakqEpgu30/29D6Zy6J4ujejKu003rEEGBzzqhukM=;
+        b=O5NHANJBczf4Xr5DLfkg9xG7wCIu6wpyaLijj5+UJm1S7yZaN9yLKSS15W85P5E20n
+         x0ec0pZU+qRlo05S+Z4snJO/ShEmRO8SRm4iZGJyQ3LnOR4zO8EIEbj5Jnh2NmZAkh9j
+         f55efnqeYI4oVmT06n5a40jXcIF6OlJrhmRC4x81KE4Ql9y1kErUSUT4JZRC4L/nJyui
+         z3vqvi/H6o82OVkaqBsywbn/XofN5afucy/Ara58by0lincAubxdlYijWivfIJH4nX3s
+         lWRIYXgflONvHZMTbewEiZIXiL3TkuoFTi4kL7TcFDVpGAy9MZU9gR7DIOuG6mqcbTbH
+         +2rA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1781219689; x=1781824489;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=0ZqakqEpgu30/29D6Zy6J4ujejKu003rEEGBzzqhukM=;
+        b=NUT1xqptDKjRUOHqPPvJT3o/QbdjuHNRmr7fdvT9Oz+kJ9t9mihOpd81ukT9irplVe
+         Fw6Xm+Fik9tbzgI84Eu8XIsalfoMAxG6VBhD04P0DIUkzTe5iLvFrObojsZGp/c3L2C/
+         9j5lPk02JWv8iF1fmlCE59Ii5LY/cSPTaB+AN80CaHtWU2Fa2KLV7Bp7cmeta9QcmKGt
+         8IWBD0qfQvJJkKA15/OL+yEEldMe4Jqc7UNXG6bHhuPQ+TdMhy6TmhEzzFwI1Uxf8LqT
+         WmNz+41PK+3MJfpbzNd0uzmj44yJZ1NqCI7j2cZfiNRR/rTmPTaMnpMSuWDecnw3SZsc
+         0wlw==
+X-Gm-Message-State: AOJu0Yw8vjW6WIM+l2jB0e9Yv9uI/fb+8n0BmZjQOvx7GVu4P2n5Bonl
+	NkqO3AZsAnY+qUo7VOcA09ZgB9X8nz6ENWBc0wlDGDjPCA+ihoJV+SxjVb5krRfjlWfZHaE25fQ
+	o32Zd7pSharKxxjI5zlEpGLwbowgVel+7e+xod0KI
+X-Gm-Gg: Acq92OEFuh0x8VNPRpSD4T/12AEa7molJMke0PpECcGfgiAhR1wobg0j77gcg3HW4th
+	MCb86OGYguy9btI++EVLxXM+1XUxDfJ4Ox4YAB8T0fwQ2C8eeH+/q8dmuIokCvz5fpo1XbUEjhZ
+	U+HiZaRENani5cRC9khi8UcdVMfK2QFBTzmmNX82+Q+mGdyd8LyaRPMVrRIYY/bZlWrTPNap0aL
+	kszPwfUHk4NcmFmgH+BzAiSZVH8KDRdknYq3L4PLiIYgivDHfVmC6HvCdMIIiM6mSPBTB2Lsk/C
+	kWufdGW0JnJffFITxxZkRQaC2GpmG+c0OOv028I=
+X-Received: by 2002:a17:906:8a56:b0:bec:18d5:ddee with SMTP id
+ a640c23a62f3a-bfe2681acd0mr2816166b.4.1781219688682; Thu, 11 Jun 2026
+ 16:14:48 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+References: <20250926233642.268514-1-sushrut@arista.com>
+In-Reply-To: <20250926233642.268514-1-sushrut@arista.com>
+From: Sushrut Shirole <sushrut@arista.com>
+Date: Thu, 11 Jun 2026 16:14:12 -0700
+X-Gm-Features: AVVi8CeL-RuOvPM7DBWX_6oGkKh_Bfx0FEVWpwpGkL-kKi_Iemk-vQV3nVRRY5c
+Message-ID: <CACW+J6c9Bjrzv2O1sEvYxwOGrhS8bnetvGMxU=DuHhxzTmt9AQ@mail.gmail.com>
+Subject: Re: [PATCH] scsi: sd: Add sd_stop_on_restart parameter for restart
+ device shutdown
+To: James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Thank you for your contribution! Sashiko AI review found 4 potential issue(=
-s) to consider:
+This issue appears to have been addressed by commit 8fdfdb148816
+("scsi: sd: Add manage_restart device attribute to scsi_disk"), merged
+in November 2025.
 
-New issues:
-- [Medium] The patch incorrectly rejects valid, maximum-length (224-byte) F=
-ORMAT CODE 00b iSCSI TransportIDs due to an off-by-one error.
+8fdfdb148816 introduces a per-device sysfs attribute manage_restart
+which allows stopping a disk on system restart, solving the same
+problem this patch was targeting but with finer-grained per-device
+control rather than a global module parameter.
 
-Pre-existing issues:
-- [High] The parser does not enforce that the ISID string in a FORMAT CODE =
-01b TransportID is NUL-terminated or bounded to 8 bytes, leading to out-of-=
-bounds reads and potential Information Leaks.
-- [High] In-place modification of the TransportID buffer breaks `SPEC_I_PT`=
- PR OUT registrations if the matching iSCSI Target Portal Group (TPG) is no=
-t the first one evaluated.
-- [High] Leak of configfs dependency and `pr_kref` for `local_pr_reg->pr_re=
-g_deve` in `core_scsi3_decode_spec_i_port`.
---
+Closing this patch as superseded.
 
-commit 00c1537650e798bd12f371445b4780a799d66bab
-Author: Bryam Vargas <hexlabsecurity@proton.me>
+Thanks,
+Sushrut
 
-scsi: target: bound PR-OUT TransportID parsing to the received buffer
 
-This commit fixes out-of-bounds reads when parsing an iSCSI TransportID
-without a separator or NUL terminator by adding length validation. It checks
-the lengths of the TransportID elements before scanning or copying data.
-
-> diff --git a/drivers/target/target_core_fabric_lib.c b/drivers/target/tar=
-get_core_fabric_lib.c
-> index 87c5d26a50895..2853b95b2c597 100644
-> --- a/drivers/target/target_core_fabric_lib.c
-> +++ b/drivers/target/target_core_fabric_lib.c
-[ ... ]
-> @@ -332,16 +345,32 @@ static bool iscsi_parse_pr_out_transport_id(
->  	 * format.
->  	 */
->  	if (format_code =3D=3D 0x40) {
-> -		p =3D strstr(&buf[4], ",i,0x");
-> +		p =3D strnstr(&buf[4], ",i,0x", tid_len - 4);
->  		if (!p) {
-> -			pr_err("Unable to locate \",i,0x\" separator"
-> -				" for Initiator port identifier: %s\n",
-> -				&buf[4]);
-> +			pr_err("Unable to locate \",i,0x\" separator in iSCSI TransportID\n");
-> +			return false;
-> +		}
-> +		/*
-> +		 * The iSCSI name runs from &buf[4] up to the separator; reject it
-> +		 * if it cannot fit in i_str[TRANSPORT_IQN_LEN].
-> +		 */
-> +		if (p - &buf[4] >=3D TRANSPORT_IQN_LEN) {
-> +			pr_err("iSCSI Initiator port name too long in TransportID\n");
->  			return false;
->  		}
->  		*p =3D '\0'; /* Terminate iSCSI Name */
-
-[Severity: High]
-This is a pre-existing issue, but does mutating the shared request buffer
-in-place break SPEC_I_PT PR OUT registrations?
-
-In core_scsi3_decode_spec_i_port(), the code loops over multiple exported
-TPGs and calls target_parse_pr_out_transport_id() on the same payload
-buffer.
-
-If the node ACL is not found on the first matching TPG, the loop continues
-and attempts to parse the exact same buffer again for the next TPG.
-
-Because the separator is overwritten with a '\0' here during the first
-pass, strnstr() fails to find ",i,0x" on the second pass, returning false
-and causing the valid registration to fail.
-
-[ ... ]
-> @@ -349,7 +378,7 @@ static bool iscsi_parse_pr_out_transport_id(
->  		 * for comparison against the running iSCSI session's ISID from
->  		 * iscsi_target.c:lio_sess_get_initiator_sid()
->  		 */
-> -		for (i =3D 0; i < 12; i++) {
-> +		for (i =3D 0; i < 12 && p < buf + tid_len; i++) {
-
-[Severity: High]
-This isn't a bug introduced by this patch, but does the parser enforce that
-the ISID string is NUL-terminated or bounded to 8 bytes?
-
-If an attacker provides an unterminated ISID string that extends exactly
-to the end of the mapped command buffer page,
-iscsi_parse_pr_out_transport_id() correctly bounds the lowercasing loop but
-returns the port_nexus_ptr pointing to the unterminated string.
-
-Callers then read past the buffer boundary. For example,
-__core_scsi3_do_alloc_registration() calls get_unaligned_be64(isid) and
-snprintf("%s", isid) reading past the buffer.
-
-Could this read into the adjacent vmalloc guard page causing a KASAN crash?
-
-[ ... ]
-> -	} else
-> +		strscpy(i_str, &buf[4], TRANSPORT_IQN_LEN);
-> +	} else {
->  		*port_nexus_ptr =3D NULL;
-> -
-> -	strscpy(i_str, &buf[4], TRANSPORT_IQN_LEN);
-> +		/*
-> +		 * FORMAT CODE 00b: the name occupies buf[4..tid_len-1].  The
-> +		 * declared length tid_len - 4 must fit in i_str[TRANSPORT_IQN_LEN].
-> +		 * (For 01b the same tid_len bound would be over-restrictive: the
-> +		 * descriptor also carries the separator and ISID, so a legal
-> +		 * <=3D223-byte name gives tid_len up to 244.)
-> +		 */
-> +		if (tid_len - 4 >=3D TRANSPORT_IQN_LEN) {
-
-[Severity: Medium]
-Does this incorrectly reject valid, maximum-length (224-byte) FORMAT CODE
-00b iSCSI TransportIDs?
-
-The length tid_len - 4 represents the entire length of the iSCSI NAME field
-including its mandatory NUL terminator.
-
-An iSCSI name of 223 characters plus a NUL terminator equals exactly 224
-bytes, which SPC-4 explicitly allows.
-
-Because strscpy() operates safely when the source perfectly matches the
-destination array size, should this check use ">" instead of ">=3D"?
-
-[ ... ]
-> diff --git a/drivers/target/target_core_pr.c b/drivers/target/target_core=
-_pr.c
-> index 11790f2c5d80f..0b19997c2edde 100644
-> --- a/drivers/target/target_core_pr.c
-> +++ b/drivers/target/target_core_pr.c
-> @@ -1573,7 +1573,7 @@ core_scsi3_decode_spec_i_port(
-> =20
->  			iport_ptr =3D NULL;
->  			tid_found =3D target_parse_pr_out_transport_id(tmp_tpg,
-> -					ptr, &tid_len, &iport_ptr, i_str);
-> +					ptr, tpdl, &tid_len, &iport_ptr, i_str);
-
-[Severity: High]
-This is a pre-existing issue, but does core_scsi3_decode_spec_i_port()
-leak a configfs dependency and pr_kref for local_pr_reg->pr_reg_deve?
-
-Earlier in this function, local_pr_reg is created and
-core_scsi3_lunacl_depend_item(local_pr_reg->pr_reg_deve) is called,
-acquiring a configfs dependency.
-
-The registration is added to tid_dest_list via a newly allocated tidh_new,
-but tidh_new->dest_se_deve is left as NULL.
-
-On the success path, the configfs dependency is not released. On the error
-path, the cleanup loop bypasses core_scsi3_lunacl_undepend_item() because
-tidh->dest_se_deve is NULL for local_pr_reg.
-
-Could this prevent administrative tear down of the LUN via configfs?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260611-b4-disp-9f=
-20739e-v6-1-f6630e2aae44@proton.me?part=3D1
+On Fri, Sep 26, 2025 at 4:36=E2=80=AFPM sushrut <sushrut@arista.com> wrote:
+>
+> From: Sushrut Shirole <sushrut@arista.com>
+>
+> Currently, sd_shutdown() skips calling sd_start_stop_device() during
+> system restart (SYSTEM_RESTART) to avoid delays during reboot, under
+> the assumption that storage devices will maintain power and don't need
+> to be explicitly stopped.
+>
+> However, this assumption doesn't hold for all system designs. Unlike
+> traditional servers that can maintain storage power during restart,
+> some enterprise network equipment, embedded systems, and specialized
+> hardware use centralized power management that immediately cuts power
+> to all components during restart. This can result in:
+>
+> - Filesystem corruption due to incomplete writes
+> - SSD firmware corruption during metadata update operations,
+>   potentially leading to unrecoverable device failure
+> - Elevated SMART error counters (e.g., Unexpected_Power_Loss_Ct)
+> - Potential data loss in systems without proper power-fail protection
+>
+> While the kernel provides manage_shutdown and manage_runtime_start_stop
+> flags for fine-grained control in other scenarios, there's currently no
+> mechanism to ensure proper device shutdown during restart for systems
+> that require it.
+>
+> Add a module parameter 'sd_stop_on_restart' (default: false) to allow
+> administrators to enable device stop operations during system restart.
+> This maintains backward compatibility while providing the flexibility
+> needed for diverse hardware configurations.
+>
+> The parameter follows established patterns in other SCSI drivers
+> (e.g., smartpqi's disable_ctrl_shutdown) and provides a clean
+> administrative interface via /sys/module/sd_mod/parameters/.
+>
+> Signed-off-by: Sushrut Shirole <sushrut@arista.com>
+> ---
+>  drivers/scsi/sd.c | 7 +++++++
+>  1 file changed, 7 insertions(+)
+>
+> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+> index 5b8668accf8e..d280b395026d 100644
+> --- a/drivers/scsi/sd.c
+> +++ b/drivers/scsi/sd.c
+> @@ -116,6 +116,10 @@ static DEFINE_IDA(sd_index_ida);
+>  static mempool_t *sd_page_pool;
+>  static struct lock_class_key sd_bio_compl_lkclass;
+>
+> +static bool sd_stop_on_restart;
+> +module_param(sd_stop_on_restart, bool, 0644);
+> +MODULE_PARM_DESC(sd_stop_on_restart, "Issue STOP UNIT command on system =
+restart (default: false)");
+> +
+>  static const char *sd_cache_types[] =3D {
+>         "write through", "none", "write back",
+>         "write back, no read (daft)"
+> @@ -4172,6 +4176,9 @@ static void sd_shutdown(struct device *dev)
+>
+>         if ((system_state !=3D SYSTEM_RESTART &&
+>              sdkp->device->manage_system_start_stop) ||
+> +           (system_state =3D=3D SYSTEM_RESTART &&
+> +            sdkp->device->manage_system_start_stop &&
+> +            sd_stop_on_restart) ||
+>             (system_state =3D=3D SYSTEM_POWER_OFF &&
+>              sdkp->device->manage_shutdown) ||
+>             (system_state =3D=3D SYSTEM_RUNNING &&
+> --
+> 2.51.0
+>
