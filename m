@@ -1,133 +1,120 @@
-Received: from nick.sneptech.io (nick.sneptech.io [178.62.38.78])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D29F9317145;
-	Thu, 11 Jun 2026 02:44:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=178.62.38.78
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 76A87190473;
+	Thu, 11 Jun 2026 02:52:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781145847; cv=none; b=fRvp464/OJY+Tfw91sSIlYvCp/7w7hHIcc6/TqIVD9sqfYnu63qK60Zkr+JQZkD9sCG1cekx3tUuejzCpamU/K9BNMBneihGB6v5cM3dRB+cgj3fTapQWHAuKvRTympPhJ0p2Gau14ZxMXak4pzkHgI7tpSbo4UBxDpv5bfTZFo=
+	t=1781146371; cv=none; b=a7Xe8mXSzIG5GUChLER7VIE4gNaqFPbZ9FwePfaziUZjescL7RUnoSX7elodC1Wrf/ifgj6azzJxsIyY6Ce3MBZlSNCuxOIdomGR3oo4zheCcclJAO0j7XEfwVTd+bqUQ5exEWAwWhrSFtCXaWEf4zTEfVQjphcQmDUnOjgZmNM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781145847; c=relaxed/simple;
-	bh=Ohwei67EyyiLNbo47BimEV7g1a9XykkOtkEiQgxjyD0=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=hq0/QtNAtIy7kCXEGdEj0vC4yMpoM/N24Js2cf3DgN2Zj7pqkqsPsEJB31v21zUjZGNVBE3CJubZJP4dwgUw9dTBqtTqWsYvqCweSnoOHbekDLIHDPLcz8vbZyEHlHExpS8LGPuuEO9664mZDF/9Kt0wJq2qFbVo4qgT3xiLw9c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=philpem.me.uk; spf=pass smtp.mailfrom=philpem.me.uk; dkim=pass (1024-bit key) header.d=philpem.me.uk header.i=@philpem.me.uk header.b=RAHRTxmn; arc=none smtp.client-ip=178.62.38.78
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=philpem.me.uk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=philpem.me.uk
+	s=arc-20240116; t=1781146371; c=relaxed/simple;
+	bh=/bOhZ+e5Q2WoqqzgteCdUd+4m539oypcuLRm+OhHfl8=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=Al35pS7PgN+hVI6ZHvhz5LVmWwGr4OoP3M4SW3xcMZ9mVOS3m/d3spdAv2XY9sN1dgOOZ/wYXnWuFcS62rrY3AUZ4SUxs4at5SMUKD1o9Jge10DSzGgF7E15CCF04j7ieg2a8HOM/Y3odGHQ35vCAxAPj5N175e1guhjp71gOL4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RL6e7rmi; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=philpem.me.uk header.i=@philpem.me.uk header.b="RAHRTxmn"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=philpem.me.uk;
-	s=mail; t=1781145841;
-	bh=Ohwei67EyyiLNbo47BimEV7g1a9XykkOtkEiQgxjyD0=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=RAHRTxmn67J9HlqHgki/Y7ezeoGymz7XEco5Wx2Xoj2UfH4KaojezBneRkRQngQNl
-	 huqLM9SbdX9iK4oXKnsdIiN2jS9z1NiHuIT9APTq+4d2wUAsKve185MlCpDd3Jxjcn
-	 3/Y6fL8Il1keuxxjPE9VdfqPGowGOKQfGEOzoogA=
-Received: from wolf.philpem.me.uk (81-187-163-148.ip4.reverse-dns.uk [81.187.163.148])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits))
-	(No client certificate requested)
-	(Authenticated sender: mailrelay_wolf@philpem.me.uk)
-	by nick.sneptech.io (Postfix) with ESMTPSA id AA6ACBE526;
-	Thu, 11 Jun 2026 02:44:01 +0000 (UTC)
-Received: from cheetah.homenet.philpem.me.uk (cheetah.homenet.philpem.me.uk [10.0.0.32])
-	by wolf.philpem.me.uk (Postfix) with ESMTPSA id 51D235FC51;
-	Thu, 11 Jun 2026 03:44:01 +0100 (BST)
-From: Phil Pemberton <philpem@philpem.me.uk>
-To: linux-ide@vger.kernel.org,
-	linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org,
-	Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>,
-	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	Hannes Reinecke <hare@suse.de>,
-	Phil Pemberton <philpem@philpem.me.uk>,
-	Hannes Reinecke <hare@kernel.org>
-Subject: [PATCH v7 5/6] ata: libata-scsi: probe additional LUNs for multi-LUN ATAPI devices
-Date: Thu, 11 Jun 2026 03:43:55 +0100
-Message-ID: <20260611024356.2769320-6-philpem@philpem.me.uk>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20260611024356.2769320-1-philpem@philpem.me.uk>
-References: <20260611024356.2769320-1-philpem@philpem.me.uk>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RL6e7rmi"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D23191F00893;
+	Thu, 11 Jun 2026 02:52:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1781146370;
+	bh=9t+JS9WkWIKNurhG2LeEssq5g6+xg+k1pfMAGvKfh74=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=RL6e7rmip+/xhv10j2/RlkdddiCljkmXRxuEd+YSvVN+vGqRXSaQ22ifSxxzc6ls0
+	 r55zRHUUJdLwxILlWvwEv1t5PMkaCkGhTySGA1N+A7eoBH12StvIXzz63OPZYK8YFm
+	 IwaWtU88eOVwxwHc0UIv39OTSNIKxMjv77hKQ4yP7pVam7UD6wh04XFCMZL2ynqjR9
+	 un/IxlSOtOYrJruLdBtkN74MuwBufrYJTxnTnwpOfM5mssNb4vP0m53kTsLeuAIeN6
+	 LZW5F2zFQ6dj8phj2Ksq2cbzR5IDY2NQO3uI05Spnv71mvPsYpnlVS8rtyLL6t1J72
+	 2pOUjSoIKmynQ==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v7 6/6] scsi: scsi_devinfo: add COMPAQ PD-1 multi-LUN
+ ATAPI device quirk
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Phil Pemberton" <philpem@philpem.me.uk>
+Cc: cassel@kernel.org, dlemoal@kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+In-Reply-To: <20260611024356.2769320-7-philpem@philpem.me.uk>
+References: <20260611024356.2769320-7-philpem@philpem.me.uk>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Thu, 11 Jun 2026 02:52:49 +0000
+Message-Id: <20260611025249.D23191F00893@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-After LUN 0 is added for an ATAPI device, check its BLIST_FORCELUN
-flag.  If set, call scsi_scan_target() with SCAN_WILD_CARD to trigger
-the SCSI layer's built-in sequential LUN scan for that target only.
-This probes LUNs 1..shost->max_lun, driven by the libata atapi_max_lun
-module parameter.
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
 
-Devices without BLIST_FORCELUN (the vast majority of ATAPI devices)
-are left with only LUN 0 -- no sequential scan is triggered, so
-single-LUN devices like the iHAS124 DVD writer are completely
-unaffected.
+Pre-existing issues:
+- [High] Max-length vendor (8 characters) and model (16 characters) static =
+quirks are silently ignored due to forced null-termination by `strscpy_pad`.
+--
 
-Non-responding LUNs (PQ=0/PDT=0x1f) are silently skipped by
-scsi_probe_and_add_lun() when BLIST_NO_LUN_1F is set on the device
-via scsi_devinfo.
+commit 5a65a1f1e5d686dcd28440ac5645f5a5b22ab1ae
+Author: Phil Pemberton <philpem@philpem.me.uk>
 
-Also fix a TOCTOU window: call ata_scsi_assign_ofnode() before
-scsi_device_put() so the reference to dev->sdev[0] is held while
-the OF node is assigned.
+scsi: scsi_devinfo: add COMPAQ PD-1 multi-LUN ATAPI device quirk
 
-Reviewed-by: Hannes Reinecke <hare@kernel.org>
-Signed-off-by: Phil Pemberton <philpem@philpem.me.uk>
----
- drivers/ata/libata-scsi.c | 25 ++++++++++++++++++++-----
- 1 file changed, 20 insertions(+), 5 deletions(-)
+The Compaq PD-1 (and equivalent Panasonic LF-1195C) is a combination
+PD/CD-ROM drive that exposes two LUNs: LUN 0 is the CD-ROM and LUN 1
+is the PD (Phase-change rewritable) drive.
 
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 2e3b5fd41d05..64cb2860a67b 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -26,6 +26,7 @@
- #include <scsi/scsi_device.h>
- #include <scsi/scsi_tcq.h>
- #include <scsi/scsi_transport.h>
-+#include <scsi/scsi_devinfo.h>
- #include <linux/libata.h>
- #include <linux/hdreg.h>
- #include <linux/uaccess.h>
-@@ -4754,13 +4755,27 @@ void ata_scsi_scan_host(struct ata_port *ap, int sync)
- 
- 			sdev = __scsi_add_device(ap->scsi_host, channel, id, 0,
- 						 NULL);
--			if (!IS_ERR(sdev)) {
--				dev->sdev[0] = sdev;
--				ata_scsi_assign_ofnode(dev, ap);
--				scsi_device_put(sdev);
--			} else {
-+			if (IS_ERR(sdev)) {
- 				dev->sdev[0] = NULL;
-+				continue;
- 			}
-+
-+			/*
-+			 * For multi-LUN ATAPI (BLIST_FORCELUN), trigger a
-+			 * sequential scan for this target.  pdt_1f_for_no_lun,
-+			 * set during LUN 0 configure, ensures non-responding
-+			 * LUNs are silently skipped; dev->sdev[] is populated
-+			 * by ata_scsi_dev_config() during the scan.
-+			 */
-+			if (dev->class == ATA_DEV_ATAPI &&
-+			    sdev->sdev_bflags & BLIST_FORCELUN &&
-+			    !WARN_ON_ONCE(ap->scsi_host->max_lun > ATAPI_MAX_LUN))
-+				scsi_scan_target(&ap->scsi_host->shost_gendev,
-+						 channel, id, SCAN_WILD_CARD,
-+						 SCSI_SCAN_RESCAN);
-+			if (dev->sdev[0])
-+				ata_scsi_assign_ofnode(dev, ap);
-+			scsi_device_put(sdev);
- 		}
- 	}
- 
--- 
-2.43.0
+Add a scsi_devinfo entry with BLIST_FORCELUN to enable multi-LUN
+scanning, BLIST_SINGLELUN to prevent issuing LUN-aware commands
+simultaneously, and BLIST_NO_LUN_1F to suppress spurious "No Device"
+entries for unpopulated LUNs (which respond with PQ=3D0/PDT=3D0x1f).
 
+> diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
+> index 68a992494b121..bfc2cbd438975 100644
+> --- a/drivers/scsi/scsi_devinfo.c
+> +++ b/drivers/scsi/scsi_devinfo.c
+> @@ -150,6 +150,8 @@ static struct {
+>  	{"COMPAQ", "MSA1000", NULL, BLIST_SPARSELUN | BLIST_NOSTARTONADD},
+>  	{"COMPAQ", "MSA1000 VOLUME", NULL, BLIST_SPARSELUN | BLIST_NOSTARTONADD=
+},
+>  	{"COMPAQ", "HSV110", NULL, BLIST_REPORTLUN2 | BLIST_NOSTARTONADD},
+> +	{"COMPAQ", "PD-1", NULL, BLIST_FORCELUN | BLIST_SINGLELUN |
+> +				 BLIST_NO_LUN_1F},
+[Severity: High]
+This isn't a bug introduced by this patch, but max-length vendor (8
+characters) and model (16 characters) static quirks in this list are
+silently ignored due to forced null-termination by strscpy_pad().
+
+While this specific COMPAQ quirk is short enough to avoid the issue, the use
+of strscpy_pad() in scsi_strcpy_devinfo() forces a null-terminator for
+string lengths exactly equal to the maximum array size:
+
+drivers/scsi/scsi_devinfo.c:scsi_strcpy_devinfo() {
+	...
+	strscpy_pad(to, from, to_length);
+	...
+}
+
+If a vendor string is 8 characters long (e.g. MATSHITA, transtec) or a model
+is 16 characters long (e.g. ARRAY CONTROLLER, ImageMate CF-SD1),
+strscpy_pad() truncates the string to leave room for the null byte.
+
+In scsi_dev_info_list_find(), the matching logic compares the length of the
+device's INQUIRY data (vmax) against strnlen(devinfo->vendor, 8):
+
+drivers/scsi/scsi_devinfo.c:scsi_dev_info_list_find() {
+	...
+	if (vmax !=3D strnlen(devinfo->vendor,
+			    sizeof(devinfo->vendor)) ||
+	...
+}
+
+Since vmax is 8 but strnlen() returns 7 for truncated strings, the length
+comparison fails. This silently breaks critical SCSI quirks. Without these
+quirks, devices like the Compaq ARRAY CONTROLLER fail to report LUNs
+correctly (leading to missing disks or unbootable systems), or devices could
+lock up the SCSI bus.
+
+Could the truncation logic be revised to safely handle exact length strings
+without null-termination?
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260611024356.2769=
+320-1-philpem@philpem.me.uk?part=3D6
