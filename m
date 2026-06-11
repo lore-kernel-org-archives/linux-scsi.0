@@ -1,80 +1,80 @@
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D6E8C2BD58A
-	for <linux-scsi@vger.kernel.org>; Thu, 11 Jun 2026 06:21:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BAD23346AE8
+	for <linux-scsi@vger.kernel.org>; Thu, 11 Jun 2026 06:22:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781158898; cv=none; b=U88s3q430oMHL45Mlk/KThH5kku70PiTVOjaX1GyfdaOOoSLnDOk8SKpH1YCdZygkaQZvOKqEwF5adkXIQxUl3zhhs5I6FVvLEAwvZ8gkTwzEbdId5X4NEnmgX6c4iDgLWQxJnsGeBp/waEdWcio1syd+XuG8Q+etAnPR0xEzl4=
+	t=1781158936; cv=none; b=uRo0E1wKE1KSLtTZh8Is7GPezpQE453B665dImRHHld4mAT1N7uix0QQ9hIku6Kh5oEadJwiJ5mC5MCUJCFwd9rzyoSbFBBiztiJgNIsQInm07+oM0ajEzCeAeWgIwNT+KXqAT2lbb6raqswUfmF3tJrqzTw4M0wN65f8mhZsWA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781158898; c=relaxed/simple;
-	bh=RZIWCXDGCxLA6bpVCcimJy+fR/Ifh5AlhmLEVNxUMd8=;
+	s=arc-20240116; t=1781158936; c=relaxed/simple;
+	bh=OfSFJnsiWpPNdzVOwRUzv6mJVNHRdZFxxejcPMVgGsU=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=G8DreOg/LfFz7tNrIOKlTVcXSJoKUxpM9yxTlgZovcUNiZl/2rt0XDAjMrVnlhOD4L4uaKibIRnHlCaigCnR999eqDsyTad0VOhzu8zyXCeRTuzZVkXfp75aSMDpzwmNC2QH82U6y6D+jbEUG4Q/85HRJFKRAY0hpGphGr8oWak=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=TwB1Eq45; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=3OZnb0oq; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=TwB1Eq45; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=3OZnb0oq; arc=none smtp.client-ip=195.135.223.131
+	 In-Reply-To:Content-Type; b=TRjb4b0Yq6224neOUZ26AIcLBU5NtdhBSsuzb+SgiVAWRrFbQ1ginvYv1hTca8++Cd1UyERdM5DjeTgjkmqRW4xVsV4AL8wlDMNQzZXWqMcGBo4h1MnhMCxQi9NxxtsasbPfOe+2BcQ7uzW5tZnrwQVdrnm3paCOs3Jp2a8RYsU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=q/5s1/KJ; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=SCyGubdH; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=uEAucPak; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=N8uM98vE; arc=none smtp.client-ip=195.135.223.130
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="TwB1Eq45";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="3OZnb0oq";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="TwB1Eq45";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="3OZnb0oq"
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="q/5s1/KJ";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="SCyGubdH";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="uEAucPak";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="N8uM98vE"
 Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id 3652B7596A;
-	Thu, 11 Jun 2026 06:21:29 +0000 (UTC)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id C84956AF23;
+	Thu, 11 Jun 2026 06:22:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1781158889; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	t=1781158933; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=wgT3rUnYmtJQrYVp8HCUrtuFBH8fCvf5EqNgZfuewyo=;
-	b=TwB1Eq45HxQ074o7OXD+/9UjBJdYDdEcEPzvPLa7D3rhtRbOcCuIpBRSpL8V8NkMqBIYy8
-	7Vx3tgYC8B0CiT0bLhlyN0y+1qwKpHUF93PrhcfWndxrD+rumth5k2Jl8Bua6GVwiqb/N/
-	iic+W2ki4fkVtJ+HAOUfwLJLZE1/L+o=
+	bh=GaPVAJKQE+WamK90I3PEnWONi9ufq8nA3zt2PV9zgE0=;
+	b=q/5s1/KJT3Rp1JX1LhI6CYkPcyqMXm8UuGGpqMN5fuA4yWOZ9gE1y9uz2EqiQQkv45I7YO
+	M/wml8pcLVjTGbmMEVqGQS+27DDAvTP257qzVB/j251KrjJRPPTvvRwUVKciZ4/t2NGGrl
+	eYLle68RqLfeQH1blxxusCCFpyZMM2g=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1781158889;
+	s=susede2_ed25519; t=1781158933;
 	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=wgT3rUnYmtJQrYVp8HCUrtuFBH8fCvf5EqNgZfuewyo=;
-	b=3OZnb0oq7YBcBevd9GsX4MAjmeX8L9qHVPcvQAqeRrQJ9uxgDH0sqETmiaVYlzi0+MK5gw
-	lSUEOPmy/+ojItDQ==
-Authentication-Results: smtp-out2.suse.de;
+	bh=GaPVAJKQE+WamK90I3PEnWONi9ufq8nA3zt2PV9zgE0=;
+	b=SCyGubdH8HzdG0iQ+9DflpBd5gGnmxjjw6Rd7eTYGYlF3c50Arwjd7o4zjl36g+FvuT4dj
+	6Sf+Ec5VpVJoYhDA==
+Authentication-Results: smtp-out1.suse.de;
 	none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1781158889; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	t=1781158931; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=wgT3rUnYmtJQrYVp8HCUrtuFBH8fCvf5EqNgZfuewyo=;
-	b=TwB1Eq45HxQ074o7OXD+/9UjBJdYDdEcEPzvPLa7D3rhtRbOcCuIpBRSpL8V8NkMqBIYy8
-	7Vx3tgYC8B0CiT0bLhlyN0y+1qwKpHUF93PrhcfWndxrD+rumth5k2Jl8Bua6GVwiqb/N/
-	iic+W2ki4fkVtJ+HAOUfwLJLZE1/L+o=
+	bh=GaPVAJKQE+WamK90I3PEnWONi9ufq8nA3zt2PV9zgE0=;
+	b=uEAucPak39hEi4haK/A/nLMETNdwDXjmd+7CvZhN0e4LbY0QYP23/VMbLqqgcVvhG8s9vr
+	WwPr8lC+an8zkKNbujSu+L/RPmMpZU89kRAaUNucZvitRY1m1ymDd7yw0hpqlvy5w7JzkP
+	Te/wvyWgC/OHMMbUjLCglHhxz8NaeA0=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1781158889;
+	s=susede2_ed25519; t=1781158931;
 	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=wgT3rUnYmtJQrYVp8HCUrtuFBH8fCvf5EqNgZfuewyo=;
-	b=3OZnb0oq7YBcBevd9GsX4MAjmeX8L9qHVPcvQAqeRrQJ9uxgDH0sqETmiaVYlzi0+MK5gw
-	lSUEOPmy/+ojItDQ==
+	bh=GaPVAJKQE+WamK90I3PEnWONi9ufq8nA3zt2PV9zgE0=;
+	b=N8uM98vEwDMWKcnfbJOJnE0aM8+pOKnh9MJFa3s34e/LVUfJR5vIZ6DzwCmYmnauONtBU4
+	ZPQFth9RqxaMzsCA==
 Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id E9D74779A7;
-	Thu, 11 Jun 2026 06:21:28 +0000 (UTC)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 7F646779A7;
+	Thu, 11 Jun 2026 06:22:11 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
 	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id olJaN+hTKmrybgAAD6G6ig
-	(envelope-from <hare@suse.de>); Thu, 11 Jun 2026 06:21:28 +0000
-Message-ID: <1e3c81e4-fd22-49fb-87cf-194705b2d11d@suse.de>
-Date: Thu, 11 Jun 2026 08:21:28 +0200
+	id 5GMxHRNUKmoIcAAAD6G6ig
+	(envelope-from <hare@suse.de>); Thu, 11 Jun 2026 06:22:11 +0000
+Message-ID: <da054cb5-2899-44f0-91b3-967f12feaa38@suse.de>
+Date: Thu, 11 Jun 2026 08:22:11 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -82,8 +82,8 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v7 2/6] ata: libata-scsi: convert dev->sdev to per-LUN
- array
+Subject: Re: [PATCH v7 6/6] scsi: scsi_devinfo: add COMPAQ PD-1 multi-LUN
+ ATAPI device quirk
 To: Phil Pemberton <philpem@philpem.me.uk>, linux-ide@vger.kernel.org,
  linux-scsi@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>,
@@ -91,10 +91,10 @@ Cc: linux-kernel@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>,
  "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
  "Martin K . Petersen" <martin.petersen@oracle.com>
 References: <20260611024356.2769320-1-philpem@philpem.me.uk>
- <20260611024356.2769320-3-philpem@philpem.me.uk>
+ <20260611024356.2769320-7-philpem@philpem.me.uk>
 Content-Language: en-US
 From: Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20260611024356.2769320-3-philpem@philpem.me.uk>
+In-Reply-To: <20260611024356.2769320-7-philpem@philpem.me.uk>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 X-Spam-Flag: NO
@@ -116,54 +116,38 @@ X-Spamd-Result: default: False [-4.30 / 50.00];
 	FROM_EQ_ENVFROM(0.00)[];
 	TO_MATCH_ENVRCPT_ALL(0.00)[];
 	RCVD_COUNT_TWO(0.00)[2];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:email,suse.de:mid,imap1.dmz-prg2.suse.org:helo]
+	DBL_BLOCKED_OPENRESOLVER(0.00)[philpem.me.uk:email,imap1.dmz-prg2.suse.org:helo,suse.de:email,suse.de:mid]
 X-Spam-Level: 
 X-Spam-Score: -4.30
 
 On 6/11/26 04:43, Phil Pemberton wrote:
-> Multi-LUN ATAPI devices (PD/CD combos, CD changers) share a single
-> ata_device but expose multiple scsi_devices.  The previous single
-> dev->sdev pointer could only track one LUN, making all other LUNs
-> invisible to code that operates on sdevs: port detach, suspend/resume,
-> ACPI uevent, ZPODD, media change notification, and EH teardown.
+> The Compaq PD-1 (and equivalent Panasonic LF-1195C) is a combination
+> PD/CD-ROM drive that exposes two LUNs: LUN 0 is the CD-ROM and LUN 1
+> is the PD (Phase-change rewritable) drive.
 > 
-> Replace the scalar struct scsi_device *sdev with a fixed-size array
-> dev->sdev[ATAPI_MAX_LUN] indexed by LUN number, where ATAPI_MAX_LUN
-> is 8 (the SCSI-2 ceiling, LUN values 0..7).  All callers are updated
-> to iterate the full array and skip NULL slots; only populated LUN slots
-> are ever non-NULL so single-LUN devices (the vast majority) see no
-> change in behaviour.
-> 
-> Add an inline helper ata_dev_scsi_device(dev, lun) that returns
-> dev->sdev[lun] guarded by a WARN_ON_ONCE(lun >= ATAPI_MAX_LUN) bounds
-> check.  Use it for the hardcoded LUN-0 references in libata-acpi
-> (uevent kobj), libata-zpodd (disk events, wake notify for all LUNs),
-> and the door-lock and OF-node paths in libata-scsi.
-> 
-> Key changes per call site:
->    - ata_scsi_dev_config:    bounds-check lun, assign sdev to dev->sdev[sdev->lun]
->    - ata_scsi_sdev_destroy:  clear per-LUN slot; trigger ATA detach only
->                              when the last populated LUN is destroyed
->    - ata_port_detach:        iterate all ATAPI_MAX_LUN slots descending;
->                              clear dev->sdev[lun] before unlock to close
->                              the UAF window (Hannes Reinecke)
->    - ata_scsi_offline_dev:   iterate all slots
->    - ata_scsi_remove_dev:    snapshot all LUN slots then remove outside lock
->    - ata_scsi_media_change_notify: send event to all populated LUNs
->    - ata_scsi_dev_rescan:    snapshot all LUNs under lock, then resume and
->                              rescan each; release remaining refs on early exit
->    - ACPI, ZPODD, door-lock: use ata_dev_scsi_device(dev, 0)
->    - ZPODD disk-events:      iterate all LUNs for enable/disable and wake
+> Add a scsi_devinfo entry with BLIST_FORCELUN to enable multi-LUN
+> scanning, BLIST_SINGLELUN to prevent issuing LUN-aware commands
+> simultaneously, and BLIST_NO_LUN_1F to suppress spurious "No Device"
+> entries for unpopulated LUNs (which respond with PQ=0/PDT=0x1f).
 > 
 > Signed-off-by: Phil Pemberton <philpem@philpem.me.uk>
 > ---
->   drivers/ata/libata-acpi.c  |   9 +-
->   drivers/ata/libata-core.c  |  11 ++-
->   drivers/ata/libata-scsi.c  | 164 +++++++++++++++++++++----------------
->   drivers/ata/libata-zpodd.c |  27 ++++--
->   include/linux/libata.h     |  10 ++-
->   5 files changed, 138 insertions(+), 83 deletions(-)
+>   drivers/scsi/scsi_devinfo.c | 2 ++
+>   1 file changed, 2 insertions(+)
 > 
+> diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
+> index 68a992494b12..bfc2cbd43897 100644
+> --- a/drivers/scsi/scsi_devinfo.c
+> +++ b/drivers/scsi/scsi_devinfo.c
+> @@ -150,6 +150,8 @@ static struct {
+>   	{"COMPAQ", "MSA1000", NULL, BLIST_SPARSELUN | BLIST_NOSTARTONADD},
+>   	{"COMPAQ", "MSA1000 VOLUME", NULL, BLIST_SPARSELUN | BLIST_NOSTARTONADD},
+>   	{"COMPAQ", "HSV110", NULL, BLIST_REPORTLUN2 | BLIST_NOSTARTONADD},
+> +	{"COMPAQ", "PD-1", NULL, BLIST_FORCELUN | BLIST_SINGLELUN |
+> +				 BLIST_NO_LUN_1F},
+>   	{"DDN", "SAN DataDirector", "*", BLIST_SPARSELUN},
+>   	{"DEC", "HSG80", NULL, BLIST_REPORTLUN2 | BLIST_NOSTARTONADD},
+>   	{"DELL", "PV660F", NULL, BLIST_SPARSELUN},
 
 Reviewed-by: Hannes Reinecke <hare@kernel.org>
 
