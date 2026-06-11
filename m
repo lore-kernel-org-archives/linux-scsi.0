@@ -1,42 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4C3A8307AF0;
-	Thu, 11 Jun 2026 02:59:24 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 15953487BE;
+	Thu, 11 Jun 2026 03:01:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781146765; cv=none; b=BYr+DknAPbXwVmspQ4uPen8jvIjNAZnvWDGg6DhTLjUJutvQDz9CM76f4k2qMbREeuonErlDBspnih2O8Xi+y+U9h8G24Hd5j2in+6+qcCE5av2kLAWGnbucA6BQPmoETZkqSkwvIarudEpqi7g+IJcU8NX9M7QPtnJvKKzFdCg=
+	t=1781146877; cv=none; b=UL8I9uCgYtvx7Yjb0E/7Zg+N3i8Ufdl6OZCSjj6vY+Lt8nDsyBlsBY6nQ7EWxNn7nkUxkiJZWeUV2lepVnlNbK8w6nvljCFtHdqkoWUOa+wKPuMHuUUkn+MwJykHzlCu8F/ey8bSK+3U8gCNVd7GE4dS3NlTS3f9ruy9Sg+7ALg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781146765; c=relaxed/simple;
-	bh=D/b5P9Hii0XQwfE+2nQNgfw5JRABfD7HQz4tPY/oajU=;
+	s=arc-20240116; t=1781146877; c=relaxed/simple;
+	bh=s9nKYW69tWH40M0eXj7Lleiik2sM1Epppa1vGyR+8Gs=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=M9G1+XYC+SxzdBIW1MiFzmm/frKcUu31QE70i0h2OCn6ZqbQrLrji4xQIjE5MeBFBMQnGCQf/JV+ywBrjE9rlCraEdY5eL4kVmH6g8tudnGtn0TE+dAxKJss9t1s4wLq0NdgtUiqPtXlnc/yu7eQ6KK89yMsIoNzsr0ujqbt4P4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ukf0KgD7; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=hbMGruDWrf9I1ab53N7kc+jMGbTaXxVhSwQer4L8tPi5ernqaVH/muDN3FJEYRTn8My59SA3yo2jcjaF1Es77GWpPh6oK9Y+YerP/IdPIBtkapDRa91rLxpQVRtba/Ns2zw+7voj3nRhsvJYZoXmKH/aTk/JeIHK/QKx67o1FEQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Gi3F19aU; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ukf0KgD7"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A319C1F00893;
-	Thu, 11 Jun 2026 02:59:23 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Gi3F19aU"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 77A1A1F00893;
+	Thu, 11 Jun 2026 03:01:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781146763;
-	bh=AK7brepBhWd/l5+KmrdZVyukL7SJWd59SkYVYwFGzD4=;
+	s=k20260515; t=1781146875;
+	bh=ksIIfWxITKO+irJWA3W5IuUhP9eX9Y9lfFFHMKOUOZU=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=Ukf0KgD73INb51VoRnkiPbegfHaf4kUXuozacn30e2qX3yJE4G8bfBi+n6WQlwU77
-	 mP1W7CqsRyU0CAJGGVu9cQMQN+xgzGD9fwyrSrEyB4G07zHgGEl0yhY7P8kzYGNhkO
-	 4nJ0LNJ9msqa6txAOThG/Wadc48wrpqW/jgc+/Cz0LQ0mxLd1vyEQ1Rq9ggCPXH9EM
-	 akFBCrRLzUH/vHmJnNWpQsMfbB818AdcBeGRcXvUL5dS40DFAvwks4+0BJT02/O37K
-	 n5nUUTd4wbs/wGtgUynfHiODTNz6je+SOzcPiSu9A+0No3uNhGz22eSdk8S87lwQew
-	 YIBQNOuy/2aUw==
+	b=Gi3F19aUIE1kqCPgatNBxBsPg3S6FKlI1oMYZv6LCDCp/0lIuvbAaunGk5BgwZRcd
+	 NJiro5uR0YEyP8/Zi2BfYJYMx1JzOYL54Viub7r74jFjo/T7j09o5Ql2y0redrNqw/
+	 PI9W7ZmxABBhYGqVD03qBIjldFtY1yxMC7K+H4x+V7arV8iy08Sd198Yl0Q7aN2MfB
+	 15fFS02FvWhpP4HAmFPFqTrNHp7rWH88ESDyv/iBC7IKVl7STDu8jO/zeXgDBzGiHB
+	 WJCKhDeZg9SycHBygARjZxn13MU/GBlEZeDckACpqkQ2EBi5ca/ftIBqp/wrpC3mQR
+	 aLntpd1NtXeoA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v7 4/6] scsi: add BLIST_NO_LUN_1F blacklist flag
+Subject: Re: [PATCH v7 5/6] ata: libata-scsi: probe additional LUNs for
+ multi-LUN ATAPI devices
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Phil Pemberton" <philpem@philpem.me.uk>
-Cc: linux-ide@vger.kernel.org, dlemoal@kernel.org, cassel@kernel.org, linux-scsi@vger.kernel.org
-In-Reply-To: <20260611024356.2769320-5-philpem@philpem.me.uk>
-References: <20260611024356.2769320-5-philpem@philpem.me.uk>
+Cc: dlemoal@kernel.org, cassel@kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+In-Reply-To: <20260611024356.2769320-6-philpem@philpem.me.uk>
+References: <20260611024356.2769320-6-philpem@philpem.me.uk>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 11 Jun 2026 02:59:23 +0000
-Message-Id: <20260611025923.A319C1F00893@smtp.kernel.org>
+Date: Thu, 11 Jun 2026 03:01:15 +0000
+Message-Id: <20260611030115.77A1A1F00893@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -45,57 +46,71 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [High] Unsynchronized read-modify-write of bitfields in `struct scsi_targ=
-et` (`pdt_1f_for_no_lun`) causes a data race that can corrupt concurrent up=
-dates to `expecting_lun_change`.
+
+Pre-existing issues:
+- [High] A Time-of-Check to Time-of-Use (TOCTOU) race condition exists betw=
+een checking `dev->sdev[0]` in `ata_scsi_scan_host()` and re-fetching it in=
+side `ata_scsi_assign_ofnode()`, potentially leading to a NULL pointer dere=
+ference.
 --
 
-commit 22aca9342fbe7619010508e9209d9f91ff554f8a
+commit 67ae5925dcb0647224ec016d88000305f0e5c2f2
 Author: Phil Pemberton <philpem@philpem.me.uk>
 
-scsi: add BLIST_NO_LUN_1F blacklist flag
+ata: libata-scsi: probe additional LUNs for multi-LUN ATAPI devices
 
-This commit adds a new blacklist flag, BLIST_NO_LUN_1F, to handle multi-LUN
-devices that respond to INQUIRY on unpopulated LUNs with PQ=3D0 / PDT=3D0x1=
-f. It
-wires this flag up in scsi_probe_and_add_lun() to set the pdt_1f_for_no_lun
-field on the scsi_target.
+This commit probes additional LUNs for ATAPI devices with the BLIST_FORCELUN
+flag by triggering a sequential LUN scan. Non-responding LUNs are silently
+skipped. It also attempts to fix a TOCTOU window by calling
+ata_scsi_assign_ofnode() before releasing the scsi_device reference.
 
-> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-> index ef22a4228b855..ef0f5ee6be87d 100644
-> --- a/drivers/scsi/scsi_scan.c
-> +++ b/drivers/scsi/scsi_scan.c
-> @@ -1285,6 +1285,9 @@ static int scsi_probe_and_add_lun(struct scsi_targe=
-t *starget,
->  	 * PDT=3D00h Direct-access device (floppy)
->  	 * PDT=3D1Fh none (no FDD connected to the requested logical unit)
->  	 */
-> +	if (bflags & BLIST_NO_LUN_1F)
-> +		starget->pdt_1f_for_no_lun =3D 1;
+> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+> index 2e3b5fd41d05f..64cb2860a67b1 100644
+> --- a/drivers/ata/libata-scsi.c
+> +++ b/drivers/ata/libata-scsi.c
+[ ... ]
+> @@ -4754,13 +4755,27 @@ void ata_scsi_scan_host(struct ata_port *ap, int =
+sync)
+[ ... ]
+> +			if (dev->class =3D=3D ATA_DEV_ATAPI &&
+> +			    sdev->sdev_bflags & BLIST_FORCELUN &&
+> +			    !WARN_ON_ONCE(ap->scsi_host->max_lun > ATAPI_MAX_LUN))
+> +				scsi_scan_target(&ap->scsi_host->shost_gendev,
+> +						 channel, id, SCAN_WILD_CARD,
+> +						 SCSI_SCAN_RESCAN);
+> +			if (dev->sdev[0])
+> +				ata_scsi_assign_ofnode(dev, ap);
 
 [Severity: High]
-Does this unprotected bitfield assignment risk a data race?
+This is a pre-existing issue, but does holding the scsi_device reference
+actually prevent the TOCTOU race here?
 
-In include/scsi/scsi_device.h, pdt_1f_for_no_lun shares a memory word with
-expecting_lun_change in struct scsi_target.
+While this patch holds the scsi_device_put() until after the call to
+ata_scsi_assign_ofnode(), a concurrent sysfs hot-unplug can trigger
+scsi_remove_device(). This unconditionally calls ata_scsi_sdev_destroy(),
+which safely acquires ap->lock and sets dev->sdev[0] =3D NULL, regardless of
+the scsi_device refcount.
 
-If this function processes LUN 1 while LUN 0 has already been added and is
-processing I/O, a concurrent UNIT_ATTENTION could trigger an update to
-expecting_lun_change from softirq context in
-drivers/scsi/scsi_error.c:scsi_report_lun_change():
+If dev->sdev[0] is cleared right after the unprotected if (dev->sdev[0])
+check, the re-fetch inside ata_scsi_assign_ofnode() will return NULL:
 
-	sdev->sdev_target->expecting_lun_change =3D 1;
+drivers/ata/libata-scsi.c:ata_scsi_assign_ofnode() {
+    ...
+    struct scsi_device *sdev =3D ata_dev_scsi_device(dev, 0);
+    ...
+    sdev->sdev_gendev.of_node =3D child;
+    ...
+}
 
-Since bitfield assignments are implemented as non-atomic read-modify-write
-sequences by the compiler, could this process-context write to
-pdt_1f_for_no_lun silently overwrite and drop the softirq's update to
-expecting_lun_change?
+This would lead to a kernel panic when dereferencing sdev.
 
-> +
->  	if (((result[0] >> 5) =3D=3D 1 || starget->pdt_1f_for_no_lun) &&
->  	    (result[0] & 0x1f) =3D=3D 0x1f &&
->  	    !scsi_is_wlun(lun)) {
+Could the local sdev pointer be passed directly to ata_scsi_assign_ofnode()
+instead of re-fetching it from dev->sdev[0]?
+
+> +			scsi_device_put(sdev);
+>  		}
+>  	}
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260611024356.2769=
-320-1-philpem@philpem.me.uk?part=3D4
+320-1-philpem@philpem.me.uk?part=3D5
