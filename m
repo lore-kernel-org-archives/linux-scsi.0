@@ -1,120 +1,145 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 76A87190473;
-	Thu, 11 Jun 2026 02:52:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4324F1A3164;
+	Thu, 11 Jun 2026 02:58:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781146371; cv=none; b=a7Xe8mXSzIG5GUChLER7VIE4gNaqFPbZ9FwePfaziUZjescL7RUnoSX7elodC1Wrf/ifgj6azzJxsIyY6Ce3MBZlSNCuxOIdomGR3oo4zheCcclJAO0j7XEfwVTd+bqUQ5exEWAwWhrSFtCXaWEf4zTEfVQjphcQmDUnOjgZmNM=
+	t=1781146689; cv=none; b=LRMKnpWVc7Agb9ilcj0PN78tG9Q6zwSzfWADU5B5jXyqfAMxCv5QBONlFXyDqMJscL4Jg8kdOuARWiUKElOwkmVCFsJTXzlJTrFPqcTbu7GKRVhN8GfTD/heTYvkKH9U+40ewdpIS/fn7nXgIBc1VPCHq0XaA6fssBjpM8IJ4OA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781146371; c=relaxed/simple;
-	bh=/bOhZ+e5Q2WoqqzgteCdUd+4m539oypcuLRm+OhHfl8=;
+	s=arc-20240116; t=1781146689; c=relaxed/simple;
+	bh=fiJT3IqK43i+0rspuzb1Ct8gVDxVGHqszBI60buK0fk=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=Al35pS7PgN+hVI6ZHvhz5LVmWwGr4OoP3M4SW3xcMZ9mVOS3m/d3spdAv2XY9sN1dgOOZ/wYXnWuFcS62rrY3AUZ4SUxs4at5SMUKD1o9Jge10DSzGgF7E15CCF04j7ieg2a8HOM/Y3odGHQ35vCAxAPj5N175e1guhjp71gOL4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RL6e7rmi; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=eAk7MEKMiAQ72LqmMkVUeyxE87p6bcn1W26P01bSL2QizOgix1YdLNYYgjpvcRneVSmS4SzddfvYS9sB0ycXL1VCFoBov8UfDx8qZzBa5TULDUeXviTRN+3TdhgOidp6n1T8oL3n/EWx+dN8Uo7al/sLBVfQg21LF3sUiGNrADA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZIjQ7wlx; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RL6e7rmi"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D23191F00893;
-	Thu, 11 Jun 2026 02:52:49 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZIjQ7wlx"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9FF511F00893;
+	Thu, 11 Jun 2026 02:58:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781146370;
-	bh=9t+JS9WkWIKNurhG2LeEssq5g6+xg+k1pfMAGvKfh74=;
+	s=k20260515; t=1781146687;
+	bh=rVRepx5j2jr7gykwdfGTBIVRdooHGGBSQKVdnnMos2M=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=RL6e7rmip+/xhv10j2/RlkdddiCljkmXRxuEd+YSvVN+vGqRXSaQ22ifSxxzc6ls0
-	 r55zRHUUJdLwxILlWvwEv1t5PMkaCkGhTySGA1N+A7eoBH12StvIXzz63OPZYK8YFm
-	 IwaWtU88eOVwxwHc0UIv39OTSNIKxMjv77hKQ4yP7pVam7UD6wh04XFCMZL2ynqjR9
-	 un/IxlSOtOYrJruLdBtkN74MuwBufrYJTxnTnwpOfM5mssNb4vP0m53kTsLeuAIeN6
-	 LZW5F2zFQ6dj8phj2Ksq2cbzR5IDY2NQO3uI05Spnv71mvPsYpnlVS8rtyLL6t1J72
-	 2pOUjSoIKmynQ==
+	b=ZIjQ7wlxMrFS1cdyjg+uxAaF/TZ3T9qt8xA2m4fMiCz4GlPwf9xr6Q7POZkha8uHa
+	 tijUwwmYVLOujjLPKw5hF45pJSS6/YyoZto6sLfD4oDIusDV97ug3vKtOrq4MVNMOD
+	 bAwMntKEUrNKYy4UMrcasJgd8/vfdtXC/QWZSD+rXw5s8fdayp6T9iefd3O0a7TfVu
+	 opO0ACdmBSGOastcwU31T4m0Q9UMjSXof6Fmt4uyZUZPYpGwQjRRIre8IuAvOVuMrO
+	 4ldrL28oUN44quJJE4HTRfvJUDHNJ3T5UEonDqZNUoFiPW41WaPnEcZGbKeyr2MTMZ
+	 XgHNIp4RZbmAA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v7 6/6] scsi: scsi_devinfo: add COMPAQ PD-1 multi-LUN
- ATAPI device quirk
+Subject: Re: [PATCH v7 3/6] ata: libata-scsi: route non-zero LUN commands
+ for multi-LUN ATAPI
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Phil Pemberton" <philpem@philpem.me.uk>
-Cc: cassel@kernel.org, dlemoal@kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
-In-Reply-To: <20260611024356.2769320-7-philpem@philpem.me.uk>
-References: <20260611024356.2769320-7-philpem@philpem.me.uk>
+Cc: linux-ide@vger.kernel.org, dlemoal@kernel.org, linux-scsi@vger.kernel.org, cassel@kernel.org
+In-Reply-To: <20260611024356.2769320-4-philpem@philpem.me.uk>
+References: <20260611024356.2769320-4-philpem@philpem.me.uk>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 11 Jun 2026 02:52:49 +0000
-Message-Id: <20260611025249.D23191F00893@smtp.kernel.org>
+Date: Thu, 11 Jun 2026 02:58:07 +0000
+Message-Id: <20260611025807.9FF511F00893@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+Thank you for your contribution! Sashiko AI review found 3 potential issue(=
 s) to consider:
-
-Pre-existing issues:
-- [High] Max-length vendor (8 characters) and model (16 characters) static =
-quirks are silently ignored due to forced null-termination by `strscpy_pad`.
+- [High] LUN validation incorrectly checks the host's max_lun instead of th=
+e device's LUN limit, breaking SAS HBAs and introducing a kernel panic vect=
+or.
+- [High] Unconditionally clearing bits 7:5 of CDB byte 1 destroys command-s=
+pecific parameters for standard MMC commands, breaking Blu-ray decryption.
+- [High] Error handling routines for ATAPI do not propagate the non-zero LU=
+N, causing atapi_eh_request_sense() to incorrectly fetch sense data for LUN=
+ 0.
 --
 
-commit 5a65a1f1e5d686dcd28440ac5645f5a5b22ab1ae
+commit 0fa4117328a093e17803a117416e6ddc64dee46b
 Author: Phil Pemberton <philpem@philpem.me.uk>
 
-scsi: scsi_devinfo: add COMPAQ PD-1 multi-LUN ATAPI device quirk
+ata: libata-scsi: route non-zero LUN commands for multi-LUN ATAPI
 
-The Compaq PD-1 (and equivalent Panasonic LF-1195C) is a combination
-PD/CD-ROM drive that exposes two LUNs: LUN 0 is the CD-ROM and LUN 1
-is the PD (Phase-change rewritable) drive.
+This patch modifies __ata_scsi_find_dev() to allow non-zero LUNs for ATAPI
+devices and updates atapi_xlat() to encode the LUN into CDB byte 1 as
+expected by older SCSI-2 era devices.
 
-Add a scsi_devinfo entry with BLIST_FORCELUN to enable multi-LUN
-scanning, BLIST_SINGLELUN to prevent issuing LUN-aware commands
-simultaneously, and BLIST_NO_LUN_1F to suppress spurious "No Device"
-entries for unpopulated LUNs (which respond with PQ=3D0/PDT=3D0x1f).
+> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+> index b65358955cf17..2e3b5fd41d05f 100644
+> --- a/drivers/ata/libata-scsi.c
+> +++ b/drivers/ata/libata-scsi.c
 
-> diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
-> index 68a992494b121..bfc2cbd438975 100644
-> --- a/drivers/scsi/scsi_devinfo.c
-> +++ b/drivers/scsi/scsi_devinfo.c
-> @@ -150,6 +150,8 @@ static struct {
->  	{"COMPAQ", "MSA1000", NULL, BLIST_SPARSELUN | BLIST_NOSTARTONADD},
->  	{"COMPAQ", "MSA1000 VOLUME", NULL, BLIST_SPARSELUN | BLIST_NOSTARTONADD=
-},
->  	{"COMPAQ", "HSV110", NULL, BLIST_REPORTLUN2 | BLIST_NOSTARTONADD},
-> +	{"COMPAQ", "PD-1", NULL, BLIST_FORCELUN | BLIST_SINGLELUN |
-> +				 BLIST_NO_LUN_1F},
+[ ... ]
+
+> @@ -2958,6 +2958,20 @@ static unsigned int atapi_xlat(struct ata_queued_c=
+md *qc)
+>  	memset(qc->cdb, 0, dev->cdb_len);
+>  	memcpy(qc->cdb, scmd->cmnd, scmd->cmd_len);
+> =20
+> +	/*
+> +	 * SCSI-2 CDB LUN encoding: bits 7:5 of byte 1 (3-bit field).
+> +	 * Always clear those bits; only set them for non-zero LUNs.
+> +	 */
+> +	qc->cdb[1] =3D qc->cdb[1] & 0x1f;
+
 [Severity: High]
-This isn't a bug introduced by this patch, but max-length vendor (8
-characters) and model (16 characters) static quirks in this list are
-silently ignored due to forced null-termination by strscpy_pad().
+Could this unconditional masking cause a regression by destroying
+command-specific parameters for standard MMC commands?
 
-While this specific COMPAQ quirk is short enough to avoid the issue, the use
-of strscpy_pad() in scsi_strcpy_devinfo() forces a null-terminator for
-string lengths exactly equal to the maximum array size:
+Modern ATAPI/MMC devices reuse these bits for essential parameters since th=
+ey
+no longer rely on LUN addressing inside the CDB. For example, the REPORT KEY
+command (0xA4) relies on bits 7:6 of byte 1 for the Key Class. Clearing
+these bits forces the Key Class to 0 (DVD CSS), which breaks Blu-ray AACS
+decryption tools for SATA/ATAPI optical drives.
 
-drivers/scsi/scsi_devinfo.c:scsi_strcpy_devinfo() {
-	...
-	strscpy_pad(to, from, to_length);
-	...
-}
+> +	if (unlikely(scmd->device->lun)) {
+> +		if (WARN_ON_ONCE(scmd->device->host->max_lun > ATAPI_MAX_LUN ||
+> +				 scmd->device->lun >=3D scmd->device->host->max_lun)) {
 
-If a vendor string is 8 characters long (e.g. MATSHITA, transtec) or a model
-is 16 characters long (e.g. ARRAY CONTROLLER, ImageMate CF-SD1),
-strscpy_pad() truncates the string to leave room for the null byte.
+[Severity: High]
+Does this check incorrectly validate against the host max_lun instead of the
+device LUN limit?
 
-In scsi_dev_info_list_find(), the matching logic compares the length of the
-device's INQUIRY data (vmax) against strnlen(devinfo->vendor, 8):
+On SAS HBAs (like mpt3sas), host->max_lun is legitimately set to very large
+values (e.g., 16895). Because 16895 > 8 (ATAPI_MAX_LUN), any command sent to
+a non-zero LUN on an ATAPI device attached to such an HBA will trigger this
+WARN_ON_ONCE and fail with DID_ERROR.=20
 
-drivers/scsi/scsi_devinfo.c:scsi_dev_info_list_find() {
-	...
-	if (vmax !=3D strnlen(devinfo->vendor,
-			    sizeof(devinfo->vendor)) ||
-	...
-}
+On systems with panic_on_warn enabled, this will cause a kernel panic when a
+multi-LUN ATAPI device is scanned.
 
-Since vmax is 8 but strnlen() returns 7 for truncated strings, the length
-comparison fails. This silently breaks critical SCSI quirks. Without these
-quirks, devices like the Compaq ARRAY CONTROLLER fail to report LUNs
-correctly (leading to missing disks or unbootable systems), or devices could
-lock up the SCSI bus.
+[Severity: High]
+Is there a missing update for error handling routines to propagate the
+non-zero LUN, leading to a regression in sense data retrieval?
 
-Could the truncation logic be revised to safely handle exact length strings
-without null-termination?
+While this patch routes non-zero LUN commands by mutating CDB byte 1 in
+atapi_xlat(), it appears this routing is missing from error handling. When a
+command fails, ata_eh_analyze_tf() calls atapi_eh_request_sense().
+
+In drivers/ata/libata-eh.c:atapi_eh_request_sense():
+    u8 cdb[ATAPI_CDB_LEN] =3D
+        { REQUEST_SENSE, 0, 0, 0, SCSI_SENSE_BUFFERSIZE, 0 };
+
+This constructs a hardcoded REQUEST_SENSE CDB with byte 1 explicitly set to
+0. If an I/O error occurs on LUN 1, the kernel will fetch the sense data
+for LUN 0 instead.=20
+
+This could cause the SCSI midlayer to receive incorrect error status,
+potentially masking legitimate I/O errors and leading to infinite retry
+loops.
+
+> +			scmd->result =3D DID_ERROR << 16;
+> +			return 1;
+> +		}
+> +		qc->cdb[1] |=3D (u8)scmd->device->lun << 5;
+> +	}
+> +
+>  	qc->complete_fn =3D atapi_qc_complete;
+
+[ ... ]
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260611024356.2769=
-320-1-philpem@philpem.me.uk?part=3D6
+320-1-philpem@philpem.me.uk?part=3D3
