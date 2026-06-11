@@ -1,37 +1,37 @@
 Received: from nick.sneptech.io (nick.sneptech.io [178.62.38.78])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 15F4E2749DF;
-	Thu, 11 Jun 2026 02:44:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 14D59243367;
+	Thu, 11 Jun 2026 02:44:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=178.62.38.78
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781145845; cv=none; b=AaQSCc3gSpVbD/0y2i2ynLAcyy+NdMn82KNJFgkNjUiAy4gN4h5Y4aCZSbBxYKzRcOCe7sBeCuVdYhtI13NGliQlyDMO5a9AaCmIrt+4PyqOGFmncdI+EkJZtTlKe0S1y/eR+/aesyJm16iU6X7dyGU6iDyT7RU7KNkMrffGTAE=
+	t=1781145846; cv=none; b=rwBlfDyYgKCFcKzFhM+uANJaFmXYBQ+MkMeFsX7c/fo1Ci8qW6hGQVM0Ve0bTxzoU6fG5TVPkGOxLy3f1LeraOZ/8y/kaQ6Owg9zRrtY98dctIX/AUzyUOyfLaJQsujC2NZNHMFfcn6AkrnRC1ZgGM8apOLJ4jdVyX7rAJbM4T4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781145845; c=relaxed/simple;
-	bh=UXURcbg2sjOgPMtko0dyRF+dtpmXYFBsvbEZo1xTc6c=;
+	s=arc-20240116; t=1781145846; c=relaxed/simple;
+	bh=HIMiPWQpHuxi1X9ykJCFw7zFjflEllvE50xN9UaF05M=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=GYPduoTaTwIXoFuc4qmOuYR0/jNwfsmHSGFb1fuuppbopeCyqVehX9ZyYgJq6iFiDvInRJGM/FDjY0Y2hJOkJF7IDjcs1YNggsjiU2NrBLb/Po3eToLFmRoYN3gr1Xsqj8HR0XqUQunN/nZbTX5XOSele+0wJyYfUp058x4LUEQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=philpem.me.uk; spf=pass smtp.mailfrom=philpem.me.uk; dkim=pass (1024-bit key) header.d=philpem.me.uk header.i=@philpem.me.uk header.b=aVlAyMOe; arc=none smtp.client-ip=178.62.38.78
+	 MIME-Version; b=TNjoiDqOluTdF6PZGkJZRwrBvGu77l7iGPAEESvOsLdbsyNQHMVnjv7YUregZwHV5wZslnO554zqmeEYrUiIfVVun+GALiRJ/xKrK9+DgecdVgQJzQZ+6KrmsB4aaM71WP0Di4Nk1xc3HsMIrJhM4UuaoF2c1YwBULox2qTt7As=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=philpem.me.uk; spf=pass smtp.mailfrom=philpem.me.uk; dkim=pass (1024-bit key) header.d=philpem.me.uk header.i=@philpem.me.uk header.b=UUs0JPFW; arc=none smtp.client-ip=178.62.38.78
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=philpem.me.uk
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=philpem.me.uk
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=philpem.me.uk header.i=@philpem.me.uk header.b="aVlAyMOe"
+	dkim=pass (1024-bit key) header.d=philpem.me.uk header.i=@philpem.me.uk header.b="UUs0JPFW"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=philpem.me.uk;
 	s=mail; t=1781145841;
-	bh=UXURcbg2sjOgPMtko0dyRF+dtpmXYFBsvbEZo1xTc6c=;
+	bh=HIMiPWQpHuxi1X9ykJCFw7zFjflEllvE50xN9UaF05M=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=aVlAyMOeJ8Wmq+0IhhtFBjU0ehBupbbxPQqdiXIy1+AKOASWZNvcKkpgp2EsL8P56
-	 E59NuK37pJO3BiFIOPHvneyjaByMwWDPQe9flzTBViXESsXXw/mTK94mqEIVn6TS06
-	 lwk0Wu+Je7xZ+PGRRMcvuXnAmcISaLwFaQ0PMl28=
+	b=UUs0JPFWuFoVY1MaXmimwG20/jLnTzhksBtFdiczZXy1JyNbST+hK/fPaRLL84p+e
+	 An9Qsdm7R/dhxku+nkZUB1Yovozd7Zw+ngkStTWQst1VklPImOzvLT4s+T3FNuRLMK
+	 /3oSIRIS+QdOq09VkBY1XZriEqufPmG67zslNktE=
 Received: from wolf.philpem.me.uk (81-187-163-148.ip4.reverse-dns.uk [81.187.163.148])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits))
 	(No client certificate requested)
 	(Authenticated sender: mailrelay_wolf@philpem.me.uk)
-	by nick.sneptech.io (Postfix) with ESMTPSA id 7DC2FBD89A;
+	by nick.sneptech.io (Postfix) with ESMTPSA id 61444BD897;
 	Thu, 11 Jun 2026 02:44:01 +0000 (UTC)
 Received: from cheetah.homenet.philpem.me.uk (cheetah.homenet.philpem.me.uk [10.0.0.32])
-	by wolf.philpem.me.uk (Postfix) with ESMTPSA id 3DA305FC3F;
+	by wolf.philpem.me.uk (Postfix) with ESMTPSA id 1960D5FC0F;
 	Thu, 11 Jun 2026 03:44:01 +0100 (BST)
 From: Phil Pemberton <philpem@philpem.me.uk>
 To: linux-ide@vger.kernel.org,
@@ -42,11 +42,10 @@ Cc: linux-kernel@vger.kernel.org,
 	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
 	"Martin K . Petersen" <martin.petersen@oracle.com>,
 	Hannes Reinecke <hare@suse.de>,
-	Phil Pemberton <philpem@philpem.me.uk>,
-	Hannes Reinecke <hare@kernel.org>
-Subject: [PATCH v7 3/6] ata: libata-scsi: route non-zero LUN commands for multi-LUN ATAPI
-Date: Thu, 11 Jun 2026 03:43:53 +0100
-Message-ID: <20260611024356.2769320-4-philpem@philpem.me.uk>
+	Phil Pemberton <philpem@philpem.me.uk>
+Subject: [PATCH v7 1/6] ata: libata-scsi: add atapi_max_lun module parameter
+Date: Thu, 11 Jun 2026 03:43:51 +0100
+Message-ID: <20260611024356.2769320-2-philpem@philpem.me.uk>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20260611024356.2769320-1-philpem@philpem.me.uk>
 References: <20260611024356.2769320-1-philpem@philpem.me.uk>
@@ -58,86 +57,85 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Two changes are required to route commands to ATAPI LUNs other than 0:
+Until now libata has hard-coded shost->max_lun = 1 for every ATA host,
+so the SCSI layer never scans past LUN 0.  This blocks support for
+the small handful of multi-LUN ATAPI devices (Panasonic LF-1195C and
+COMPAQ PD-1 PD/CD combos export CD on LUN 0 and PD on LUN 1; old
+Nakamichi MJ-x.y CD changers expose one LUN per disc slot, up to 7).
 
-1. __ata_scsi_find_dev():  The existing code rejects any scsi_device
-   with a non-zero LUN, returning NULL and dropping the command on
-   the floor.  Hoist a non-zero LUN early-exit ahead of the original
-   channel/id checks: when scsidev->lun is non-zero, allow it through
-   only if the underlying ata_device is ATAPI class.  The original
-   LUN-0 path is left structurally unchanged.
+Introduce a libata module parameter, atapi_max_lun, that controls the
+upper bound of the per-host SCSI LUN scan.  Default is 1, preserving
+current behaviour exactly: out-of-the-box only LUN 0 is scanned.
+Range is clamped to 1..ATAPI_MAX_LUN (8, the SCSI-2 ceiling, covering
+LUN values 0..7).
 
-2. atapi_xlat():  Older ATAPI devices (SCSI-2 era) expect the LUN in
-   CDB byte 1 bits 7:5 rather than relying on transport-level LUN
-   addressing.  Always clear those bits first, then encode
-   scmd->device->lun into them for non-zero LUNs.  This is required by
-   both the Panasonic PD/CD combos and Nakamichi CD changers.
+Subsequent patches gate actual LUN>0 probing on BLIST_FORCELUN, so a
+device must both be on the SCSI device list (or carry the appropriate
+quirk) and run on a host whose atapi_max_lun has been raised before
+any extra LUNs are scanned.
 
-   Guard with WARN_ON_ONCE() and fail the command (setting scmd->result
-   to DID_ERROR) if the LUN is out of range, since the 3-bit CDB field
-   cannot represent it.
-
-Reviewed-by: Hannes Reinecke <hare@kernel.org>
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 Signed-off-by: Phil Pemberton <philpem@philpem.me.uk>
 ---
- drivers/ata/libata-scsi.c | 37 +++++++++++++++++++++++++++++++++++++
- 1 file changed, 37 insertions(+)
+ drivers/ata/libata-core.c | 5 +++++
+ drivers/ata/libata-scsi.c | 2 +-
+ drivers/ata/libata.h      | 1 +
+ include/linux/libata.h    | 1 +
+ 4 files changed, 8 insertions(+), 1 deletion(-)
 
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index e76d15411e2a..d39ac4292f81 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -122,6 +122,11 @@ int atapi_passthru16 = 1;
+ module_param(atapi_passthru16, int, 0444);
+ MODULE_PARM_DESC(atapi_passthru16, "Enable ATA_16 passthru for ATAPI devices (0=off, 1=on [default])");
+ 
++int atapi_max_lun = 1;
++module_param(atapi_max_lun, int, 0444);
++MODULE_PARM_DESC(atapi_max_lun,
++	"Number of LUNs to scan on ATAPI devices flagged BLIST_FORCELUN (1 [default] = LUN 0 only, 8 = all SCSI-2 LUNs 0..7)");
++
+ int libata_fua = 0;
+ module_param_named(fua, libata_fua, int, 0444);
+ MODULE_PARM_DESC(fua, "FUA support (0=off [default], 1=on)");
 diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index b65358955cf1..2e3b5fd41d05 100644
+index f44612e269a4..32c6a0e497cf 100644
 --- a/drivers/ata/libata-scsi.c
 +++ b/drivers/ata/libata-scsi.c
-@@ -2958,6 +2958,20 @@ static unsigned int atapi_xlat(struct ata_queued_cmd *qc)
- 	memset(qc->cdb, 0, dev->cdb_len);
- 	memcpy(qc->cdb, scmd->cmnd, scmd->cmd_len);
+@@ -4627,7 +4627,7 @@ int ata_scsi_add_hosts(struct ata_host *host, const struct scsi_host_template *s
+ 		shost->transportt = &ata_scsi_transportt;
+ 		shost->unique_id = ap->print_id;
+ 		shost->max_id = 16;
+-		shost->max_lun = 1;
++		shost->max_lun = clamp(atapi_max_lun, 1, ATAPI_MAX_LUN);
+ 		shost->max_channel = 1;
+ 		shost->max_cmd_len = 32;
  
-+	/*
-+	 * SCSI-2 CDB LUN encoding: bits 7:5 of byte 1 (3-bit field).
-+	 * Always clear those bits; only set them for non-zero LUNs.
-+	 */
-+	qc->cdb[1] = qc->cdb[1] & 0x1f;
-+	if (unlikely(scmd->device->lun)) {
-+		if (WARN_ON_ONCE(scmd->device->host->max_lun > ATAPI_MAX_LUN ||
-+				 scmd->device->lun >= scmd->device->host->max_lun)) {
-+			scmd->result = DID_ERROR << 16;
-+			return 1;
-+		}
-+		qc->cdb[1] |= (u8)scmd->device->lun << 5;
-+	}
-+
- 	qc->complete_fn = atapi_qc_complete;
+diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
+index b5423b6e97de..96d804d02b99 100644
+--- a/drivers/ata/libata.h
++++ b/drivers/ata/libata.h
+@@ -33,6 +33,7 @@ enum {
+ #define ATA_PORT_TYPE_NAME	"ata_port"
  
- 	qc->tf.flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;
-@@ -3068,6 +3082,29 @@ static struct ata_device *__ata_scsi_find_dev(struct ata_port *ap,
- {
- 	int devno;
+ extern int atapi_passthru16;
++extern int atapi_max_lun;
+ extern int libata_fua;
+ extern int libata_noacpi;
+ extern int libata_allow_tpm;
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 5c085ef4eda7..3e33ee30628d 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -131,6 +131,7 @@ enum {
+ 	ATA_SHORT_PAUSE		= 16,
  
-+	/*
-+	 * Non-zero LUN is only legal for ATAPI devices, since they can
-+	 * legitimately expose more than one LUN (PD/CD combos, CD changers).
-+	 * Handle that case up front so the LUN-0 path below stays unchanged.
-+	 */
-+	if (unlikely(scsidev->lun)) {
-+		struct ata_device *dev;
-+
-+		if (!sata_pmp_attached(ap)) {
-+			if (unlikely(scsidev->channel))
-+				return NULL;
-+			devno = scsidev->id;
-+		} else {
-+			if (unlikely(scsidev->id))
-+				return NULL;
-+			devno = scsidev->channel;
-+		}
-+		dev = ata_find_dev(ap, devno);
-+		if (!dev || dev->class != ATA_DEV_ATAPI)
-+			return NULL;
-+		return dev;
-+	}
-+
- 	/* skip commands not addressed to targets we simulate */
- 	if (!sata_pmp_attached(ap)) {
- 		if (unlikely(scsidev->channel || scsidev->lun))
+ 	ATAPI_MAX_DRAIN		= 16 << 10,
++	ATAPI_MAX_LUN		= 8,	/* SCSI-2 cap (LUN values 0..7) */
+ 
+ 	ATA_ALL_DEVICES		= (1 << ATA_MAX_DEVICES) - 1,
+ 
 -- 
 2.43.0
 
