@@ -1,149 +1,110 @@
-Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3A91F37FF71;
-	Thu, 11 Jun 2026 23:26:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.61.82.184
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4CE0032938D;
+	Thu, 11 Jun 2026 23:32:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781220419; cv=none; b=IQYdasxknc2obEhMgJkf6OHCh5eSOLYYzPL4h0tOX0zcoVPPBltYsFk4NskU2tFIA9jlzl7A6CGrjNUBISyBEdHx6O8nYloYKMdfrA5tVWUTDdDM80HcjqUa1X86EM3UdzcvdCdZeGDB/GHyg4E+yDCYPDX9QDKMWj0R9oqmHsw=
+	t=1781220743; cv=none; b=SSRZUBhe30CfVnxo8YYCMsk8LqFSBdF48xzR6sSX774cFSx0saZ73ckl1AvlmddgfQI23U8FNyu/YeaS0O+BJK4wBD0V9ACruyR3Fvjf+WpL3yES9yMhVwIHOLqac38L9X7LfDkS+k/7srwvrSnK5ESWnXy+UuVE9f7+yGdDFOI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781220419; c=relaxed/simple;
-	bh=yQRUHhQ/GUdBIWZZWZd8rfP9NUEUKOMOnTy9i0aOAoE=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=qIC84dKoeaqMMbjadw8ZzErt6I9snte8wkbFm8+6JwqZcC8m/kB5d/aiiko6Qf7Au3neuYz/hkdCAP4Jl1nSZsO3+cH0tnZLp9cUOoM+1qJ5PQh3t1GO+6ZuW5MDk6sNvgFO+LDZ70hJCf23T4xqzySBrr7/uZv2x0WcKSYVkkc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=EuMYz3CQ; arc=none smtp.client-ip=210.61.82.184
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
+	s=arc-20240116; t=1781220743; c=relaxed/simple;
+	bh=h+KBinhNiXy2ebHi7hoVnnRYtG1vDCeiSp9x7aGY+as=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=i6mzOB4sgKvTyQbk2yA1sfx3nKodFXNCb4D0SE2Tb+C5yTjtV9qSUm7cMN567UvDI+37aVVerT24Ghi3wtljZXhL7M0bc9800zzmX850XoLRRTyP/ntGTUIelpkiMIrJr32JKLtwIAKjb3JroQliSD2fFzuNIDg+purArjwTJIo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hk9q+YiF; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="EuMYz3CQ"
-X-UUID: 02e8531c65ed11f18dc8c9802ae25ab1-20260612
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=Content-Type:Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=8OvMGtIsGsOtMQl2xAttiCfpDCXCMY4lw0XAc8MsG7s=;
-	b=EuMYz3CQrP8J56OFx50gM5in58b9DaacnbTJANb2twW05j8XoD1rljRWCs2oYcB40qvWxtAF7PrST5hCKybLw6Uv2Mfioi/oM3SfW0IeGg6Xntr/xR7EvMsIu0SfkQI8Bj1q+KJGCQZ1qY13sVuudIlnvHiITfCSQXsyO8SBj74=;
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.15,REQID:dc8eff2a-d96f-4925-bc9a-c099c7fc6538,IP:0,U
-	RL:0,TC:0,Content:-25,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTIO
-	N:release,TS:-25
-X-CID-META: VersionHash:e276073,CLOUDID:6301ae30-7784-4a77-a538-47ed6151d81b,B
-	ulkID:nil,BulkQuantity:0,Recheck:0,SF:81|82|102|123|836|865|888|898,TC:-5,
-	Content:0|15|50,EDM:-3,IP:nil,URL:0,File:130,RT:0,Bulk:nil,QS:nil,BEC:-1,C
-	OL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
-X-CID-BVR: 2,SSN|SDN
-X-CID-BAS: 2,SSN|SDN,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR
-X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: 02e8531c65ed11f18dc8c9802ae25ab1-20260612
-Received: from mtkmbs09n1.mediatek.inc [(172.21.101.35)] by mailgw02.mediatek.com
-	(envelope-from <ed.tsai@mediatek.com>)
-	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 1359894672; Fri, 12 Jun 2026 07:26:45 +0800
-Received: from mtkmbs13n1.mediatek.inc (172.21.101.193) by
- MTKMBS09N1.mediatek.inc (172.21.101.35) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.29; Fri, 12 Jun 2026 07:26:45 +0800
-Received: from mtksitap99.mediatek.inc (10.233.130.16) by
- mtkmbs13n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.2562.29 via Frontend Transport; Fri, 12 Jun 2026 07:26:45 +0800
-From: <ed.tsai@mediatek.com>
-To: <alim.akhtar@samsung.com>, <avri.altman@wdc.com>, <bvanassche@acm.org>,
-	<James.Bottomley@HansenPartnership.com>, <martin.petersen@oracle.com>,
-	<linux-scsi@vger.kernel.org>
-CC: <linux-kernel@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
-	<linux-mediatek@lists.infradead.org>, <wsd_upstream@mediatek.com>,
-	<peter.wang@mediatek.com>, <alice.chao@mediatek.com>,
-	<naomi.chu@mediatek.com>, <chun-hung.wu@mediatek.com>, Ed Tsai
-	<ed.tsai@mediatek.com>
-Subject: [PATCH v2 2/3] ufs: mediatek: Implement get_hba_nortt callback for RTT capability
-Date: Fri, 12 Jun 2026 07:26:31 +0800
-Message-ID: <20260611232632.2324422-3-ed.tsai@mediatek.com>
-X-Mailer: git-send-email 2.45.2
-In-Reply-To: <20260611232632.2324422-1-ed.tsai@mediatek.com>
-References: <20260611232632.2324422-1-ed.tsai@mediatek.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hk9q+YiF"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0A7D71F000E9;
+	Thu, 11 Jun 2026 23:32:19 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1781220741;
+	bh=Cwe5AFKFgyX3A2tnZLz300MxtXADjcDySyH4Nf0UHNA=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To;
+	b=hk9q+YiFl9Mj5Si0qJD9jsIV+7j5D16drEP6Oba4uNQxjUj+JALutYf3E5ITKDn8c
+	 5zrww6ciifnFBq8jh8P+lzWpgbmNVWpM4DnGTIxzlo4yHGuV8qCjJzTs98tWERlpWn
+	 F03wCsd6E8D+xkFmHewbWwcpwwn51jRfgjeQoNBAd2Ra0oLBDuTIwGHi/02qk7mSj3
+	 wafQy6Ts6LEdVKuCz52FPNiHHO6ZIU7CXfhQhHnoXyWuMnqtIJiXqmxmnMQXu3TBJi
+	 00CZXFfTxmF3fdMgDzhBt4AEMFEl+CCXZ+MCmJMlsQ5u1TnZjkMk7t5RFFXpzooeCA
+	 24at1Ijyo4QVQ==
+Message-ID: <8171d9e5-e347-403a-bc3c-79a89a8e45d3@kernel.org>
+Date: Fri, 12 Jun 2026 08:32:17 +0900
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-MTK: N
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3 RESEND 1/2] scsi: mpt3sas: add IO Unit Page 7 config
+ accessor
+To: Louis Sautier <sautier.louis@gmail.com>
+Cc: Sathya Prakash <sathya.prakash@broadcom.com>,
+ Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+ Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>,
+ Ranjan Kumar <ranjan.kumar@broadcom.com>,
+ "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ Guenter Roeck <linux@roeck-us.net>, MPT-FusionLinux.pdl@broadcom.com,
+ linux-scsi@vger.kernel.org, linux-hwmon@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+References: <20260609164423.2829699-1-sautier.louis@gmail.com>
+ <20260609164423.2829699-2-sautier.louis@gmail.com>
+ <5effba66-0d42-4d42-9833-f2c0be6874ad@kernel.org>
+ <airkbg8-kDC0Gyv9@localhost>
+Content-Language: en-US
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <airkbg8-kDC0Gyv9@localhost>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-From: Ed Tsai <ed.tsai@mediatek.com>
+On 6/12/26 01:38, Louis Sautier wrote:
+> On Wed, 10 Jun 2026 08:12:05 +0800, Damien Le Moal wrote:
+>>> +int
+>>> +mpt3sas_config_get_iounit_pg7(struct MPT3SAS_ADAPTER *ioc,
+>>
+>> Please do not break the line after "int"
+> 
+> Hi and thanks for the review.
+> 
+> Sure, I can change this. Can you confirm we want to diverge from the
+> convention used by neighbouring functions such as
+> mpt3sas_config_get_iounit_pg8?
 
-Implement the get_hba_nortt callback to handle platform-specific RTT
-capability differences:
+My comment is based on the standard kernel coding style, which we should follow.
 
-- For legacy platforms and IP versions before MT6995 B0, the RTT
-  capability from host controller register is problematic, so limit
-  it to 2 (MTK_MAX_NUM_RTT_LEGACY).
+> 
+>>> +	Mpi2ConfigReply_t *mpi_reply, Mpi2IOUnitPage7_t *config_page)
+>>> +{
+>>> +	Mpi2ConfigRequest_t mpi_request;
+>>> +	int r;
+>>> +
+>>> +	memset(&mpi_request, 0, sizeof(Mpi2ConfigRequest_t));
+>>> +	mpi_request.Function = MPI2_FUNCTION_CONFIG;
+>>> +	mpi_request.Action = MPI2_CONFIG_ACTION_PAGE_HEADER;
+>>> +	mpi_request.Header.PageType = MPI2_CONFIG_PAGETYPE_IO_UNIT;
+>>> +	mpi_request.Header.PageNumber = 7;
+>>> +	mpi_request.Header.PageVersion = MPI2_IOUNITPAGE7_PAGEVERSION;
+>>> +	ioc->build_zero_len_sge_mpi(ioc, &mpi_request.PageBufferSGE);
+>>> +	r = _config_request(ioc, &mpi_request, mpi_reply,
+>>> +	    MPT3_CONFIG_PAGE_DEFAULT_TIMEOUT, NULL, 0);
+>>
+>> 	r = _config_request(ioc, &mpi_request, mpi_reply,
+>> 			    MPT3_CONFIG_PAGE_DEFAULT_TIMEOUT, NULL, 0);
+>>
+>> is a lot nicer to read.
+> 
+> Do I also align the signature like so in both the source file and the
+> header?
 
-- For MT6995 B0 and later platforms, the issue is fixed and the
-  value from host controller capability register can be used directly.
+I think so, as in my opinion, that makes for a nicer reading.
 
-This replaces the previous max_num_rtt field in ufs_hba_variant_ops
-with dynamic platform-specific logic.
+> 
+> int mpt3sas_config_get_iounit_pg7(struct MPT3SAS_ADAPTER *ioc,
+> 				  Mpi2ConfigReply_t *mpi_reply,
+> 				  Mpi2IOUnitPage7_t *config_page)
 
-Signed-off-by: Ed Tsai <ed.tsai@mediatek.com>
-Reviewed-by: Peter Wang <peter.wang@mediatek.com>
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
----
- drivers/ufs/host/ufs-mediatek.c | 12 +++++++++++-
- drivers/ufs/host/ufs-mediatek.h |  4 ++--
- 2 files changed, 13 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/ufs/host/ufs-mediatek.c b/drivers/ufs/host/ufs-mediatek.c
-index 3991a51263a6..58701ca95edd 100644
---- a/drivers/ufs/host/ufs-mediatek.c
-+++ b/drivers/ufs/host/ufs-mediatek.c
-@@ -2183,6 +2183,16 @@ static int ufs_mtk_clk_scale_notify(struct ufs_hba *hba, bool scale_up,
- 	return 0;
- }
- 
-+static int ufs_mtk_get_hba_nortt(struct ufs_hba *hba)
-+{
-+	struct ufs_mtk_host *host = ufshcd_get_variant(hba);
-+
-+	if (host->legacy_ip_ver || host->ip_ver < IP_VER_MT6995_B0)
-+		return MTK_MAX_NUM_RTT_LEGACY;
-+
-+	return FIELD_GET(MASK_NUMBER_OUTSTANDING_RTT, hba->capabilities) + 1;
-+}
-+
- static int ufs_mtk_get_hba_mac(struct ufs_hba *hba)
- {
- 	struct ufs_mtk_host *host = ufshcd_get_variant(hba);
-@@ -2322,7 +2332,6 @@ static void ufs_mtk_config_scsi_dev(struct scsi_device *sdev)
-  */
- static const struct ufs_hba_variant_ops ufs_hba_mtk_vops = {
- 	.name                = "mediatek.ufshci",
--	.max_num_rtt         = MTK_MAX_NUM_RTT,
- 	.init                = ufs_mtk_init,
- 	.get_ufs_hci_version = ufs_mtk_get_ufs_hci_version,
- 	.setup_clocks        = ufs_mtk_setup_clocks,
-@@ -2339,6 +2348,7 @@ static const struct ufs_hba_variant_ops ufs_hba_mtk_vops = {
- 	.event_notify        = ufs_mtk_event_notify,
- 	.config_scaling_param = ufs_mtk_config_scaling_param,
- 	.clk_scale_notify    = ufs_mtk_clk_scale_notify,
-+	.get_hba_nortt       = ufs_mtk_get_hba_nortt,
- 	/* mcq vops */
- 	.get_hba_mac         = ufs_mtk_get_hba_mac,
- 	.op_runtime_config   = ufs_mtk_op_runtime_config,
-diff --git a/drivers/ufs/host/ufs-mediatek.h b/drivers/ufs/host/ufs-mediatek.h
-index 8547a6f04990..73cdc726f290 100644
---- a/drivers/ufs/host/ufs-mediatek.h
-+++ b/drivers/ufs/host/ufs-mediatek.h
-@@ -203,8 +203,8 @@ struct ufs_mtk_host {
- /* MTK delay of autosuspend: 500 ms */
- #define MTK_RPM_AUTOSUSPEND_DELAY_MS 500
- 
--/* MTK RTT support number */
--#define MTK_MAX_NUM_RTT 2
-+/* MTK RTT support number for platforms before MT6995 B0 */
-+#define MTK_MAX_NUM_RTT_LEGACY 2
- 
- /* UFSHCI MTK ip version value */
- enum {
 -- 
-2.45.2
-
+Damien Le Moal
+Western Digital Research
