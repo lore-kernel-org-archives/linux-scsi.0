@@ -1,120 +1,121 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from canpmsgout11.his.huawei.com (canpmsgout11.his.huawei.com [113.46.200.226])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A0702F7AC1
-	for <linux-scsi@vger.kernel.org>; Thu, 11 Jun 2026 05:51:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AAEE130F957;
+	Thu, 11 Jun 2026 06:15:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.226
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781157121; cv=none; b=qCS18QIW7iG0XlB3odcB0J91QkpSC/r1VXfUzUioyEl4ezHg3SOj41eO8ie4vbNAA3c/0wIDGdyUUaDmnOLXqCuBeeQjsOS6TFtVEgZ+tIK0XKrQ7z1fzks7FCcGHzWVSoJF6L/Edvk10Hnb1bVykRRU7OF4oIFDbmgAnn5uLrU=
+	t=1781158560; cv=none; b=fXYQbbWEDhWGmwTUsbkKbfF5PUYII9faVsJ6I2mYzN+bgZnYkkQbdP6H74r3kYzB0kUkGZNDbMb7lfz5jJEswQD0xPZxebknbeRyG8aUhdejreHrZYd5Mn1XoQtbW9gb5jjkislALnwhQJGavQiuYe7TiR4PdxCo/yWpLKQUlAY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781157121; c=relaxed/simple;
-	bh=I5S0cnt0nhp2xjHApsEXcw0S5yzhUI80VKq8zFfNBHs=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=eplEmPLgDP3x9Lewz2cU3vmJez+oLc7rvsDm3A4SZemYRfohbGTyH4jp7w5nLRRwXn42HbWu3eyNfHYd3A8xKH0v+QeNDdsWvrNbU1QP01udOKeikQiOdT4t+DdOWmR464raMq2eIJ30hwS8rouGRVkiJUecZX5I7DEaHIRKG0w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=a6xPXFz9; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1781158560; c=relaxed/simple;
+	bh=vlcyG20a44xK5NP4c5hbAi30HisFbU79Yg9eRc0mvbk=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=KjzdBXBnqEIxovqdRQ8cG1RYl+tBZjOK/KTyGtIbeDSMIO57/bXoSpIpNBLlitznuBpDuxQ240vm84S5AstnF5104+HUhhinCM7Azn92AzdF2SA1yDGqAgDs8r/67jejElIvOZTm1CNaoXccS7h2X/cO2uqieDJkKjO94QkS2/Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=h-partners.com; dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b=HS3b8kIR; arc=none smtp.client-ip=113.46.200.226
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=h-partners.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="a6xPXFz9"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A08591F00893;
-	Thu, 11 Jun 2026 05:51:59 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781157119;
-	bh=j4KWGthz8dn1QyyPeU4Oiv6oP8sY/pslWYrEMbe1Pns=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=a6xPXFz9KLOuhl5/vWQ+gMNfOlJrUcMGe9HBO0ZnoOd1TSxqWHjDnakeClhXgM912
-	 yxZJZ6uWIYPh05Opzs3z191jm6Ndzb2275yZk14OTf6gd/JhfXlVeZEEe+8RfF/Jcc
-	 0MEWhwNkyDo8fpwOyYFdQVWIjt8nEq7A8jam4Q7WbbQby/N4vb3ZHIPda15FChN7aP
-	 i82Q/1hqzNwHbM8uhYCyC6iqCWxauumaYycMen1IQsrsEzRpgOrvYyDWMXNSIFJEoA
-	 In9bBKE4DgwHmpW6WTcz42XmQfnH5dL8t8M4H+mHvM3lMAMRpgAK4iKqTdevmGY6Ks
-	 fBnFud6R1Lwaw==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] scsi: elx: efct: fix refcount leak in
- efct_hw_io_abort()
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "WenTao Liang" <vulab@iscas.ac.cn>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260611053037.63756-1-vulab@iscas.ac.cn>
-References: <20260611053037.63756-1-vulab@iscas.ac.cn>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 11 Jun 2026 05:51:58 +0000
-Message-Id: <20260611055159.A08591F00893@smtp.kernel.org>
+	dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b="HS3b8kIR"
+dkim-signature: v=1; a=rsa-sha256; d=h-partners.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=gEIvW/6wtZnScM7ws+i7IkXSapQJNZN2tini6VXnhhg=;
+	b=HS3b8kIRVbrL4V5eFfTDFb0GXN+X3pbxUAibaEKzR3qmy9BXYZC7YENkizK8Q0lh6WrXEMyLN
+	mK/ZdGdtJoAowq2GktW+yvwqj+szmf4/NH8ylXh3fYw52lBWPbjtwK2TPsGnqKMM/enK6KSRS2/
+	3ubRxCXlQ+vmX4trNHlhujE=
+Received: from mail.maildlp.com (unknown [172.19.163.127])
+	by canpmsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4gbXHv6nS6zKm5D;
+	Thu, 11 Jun 2026 14:07:55 +0800 (CST)
+Received: from kwepemj100018.china.huawei.com (unknown [7.202.194.12])
+	by mail.maildlp.com (Postfix) with ESMTPS id 2E47A402AB;
+	Thu, 11 Jun 2026 14:15:53 +0800 (CST)
+Received: from localhost.localdomain (10.50.163.32) by
+ kwepemj100018.china.huawei.com (7.202.194.12) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.36; Thu, 11 Jun 2026 14:15:52 +0800
+From: Xingui Yang <yangxingui@huawei.com>
+To: <john.g.garry@oracle.com>, <yanaijie@huawei.com>, <jejb@linux.ibm.com>,
+	<martin.petersen@oracle.com>
+CC: <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linuxarm@huawei.com>, <liyihang9@h-partners.com>, <yangxingui@huawei.com>,
+	<liuyonglong@huawei.com>, <kangfenglong@huawei.com>
+Subject: [PATCH v7 1/2] scsi: libsas: refactor sas_ex_to_ata() using new helper sas_ex_to_dev()
+Date: Thu, 11 Jun 2026 14:15:50 +0800
+Message-ID: <20260611061551.1171058-2-yangxingui@huawei.com>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20260611061551.1171058-1-yangxingui@huawei.com>
+References: <20260611061551.1171058-1-yangxingui@huawei.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: kwepems100002.china.huawei.com (7.221.188.206) To
+ kwepemj100018.china.huawei.com (7.202.194.12)
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
+The sas_ex_to_ata() function checks for an attached ATA device on an
+expander phy. Refactor it to use a new helper function sas_ex_to_dev()
+which returns any device type attached to an expander phy, improving code
+reuse and allowing other code paths to find attached devices regardless
+of type.
 
-Pre-existing issues:
-- [High] Hardware aborts for active IOs are silently dropped due to an inco=
-rrect check for list membership.
---
+No functional changes intended.
 
-commit 33508d96614625ca6aabac77bfd4b3f88a0202b5
-Author: WenTao Liang <vulab@iscas.ac.cn>
+Signed-off-by: Xingui Yang <yangxingui@huawei.com>
+Reviewed-by: John Garry <john.g.garry@oracle.com>
+Reviewed-by: Jason Yan <yanaijie@huawei.com>
+---
+ drivers/scsi/libsas/sas_expander.c | 12 ++++++++----
+ drivers/scsi/libsas/sas_internal.h |  1 +
+ 2 files changed, 9 insertions(+), 4 deletions(-)
 
-scsi: elx: efct: fix refcount leak in efct_hw_io_abort()
+diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
+index f471ab464a78..f55ae9a979cd 100644
+--- a/drivers/scsi/libsas/sas_expander.c
++++ b/drivers/scsi/libsas/sas_expander.c
+@@ -345,11 +345,9 @@ static void sas_set_ex_phy(struct domain_device *dev, int phy_id,
+ 		 SAS_ADDR(phy->attached_sas_addr), type);
+ }
+ 
+-/* check if we have an existing attached ata device on this expander phy */
+-struct domain_device *sas_ex_to_ata(struct domain_device *ex_dev, int phy_id)
++struct domain_device *sas_ex_to_dev(struct domain_device *ex_dev, int phy_id)
+ {
+ 	struct ex_phy *ex_phy = &ex_dev->ex_dev.ex_phy[phy_id];
+-	struct domain_device *dev;
+ 	struct sas_rphy *rphy;
+ 
+ 	if (!ex_phy->port)
+@@ -359,7 +357,13 @@ struct domain_device *sas_ex_to_ata(struct domain_device *ex_dev, int phy_id)
+ 	if (!rphy)
+ 		return NULL;
+ 
+-	dev = sas_find_dev_by_rphy(rphy);
++	return sas_find_dev_by_rphy(rphy);
++}
++
++/* check if we have an existing attached ata device on this expander phy */
++struct domain_device *sas_ex_to_ata(struct domain_device *ex_dev, int phy_id)
++{
++	struct domain_device *dev = sas_ex_to_dev(ex_dev, phy_id);
+ 
+ 	if (dev && dev_is_sata(dev))
+ 		return dev;
+diff --git a/drivers/scsi/libsas/sas_internal.h b/drivers/scsi/libsas/sas_internal.h
+index 7dce0f587149..350a70484bde 100644
+--- a/drivers/scsi/libsas/sas_internal.h
++++ b/drivers/scsi/libsas/sas_internal.h
+@@ -91,6 +91,7 @@ int sas_smp_get_phy_events(struct sas_phy *phy);
+ 
+ void sas_device_set_phy(struct domain_device *dev, struct sas_port *port);
+ struct domain_device *sas_find_dev_by_rphy(struct sas_rphy *rphy);
++struct domain_device *sas_ex_to_dev(struct domain_device *ex_dev, int phy_id);
+ struct domain_device *sas_ex_to_ata(struct domain_device *ex_dev, int phy_id);
+ int sas_ex_phy_discover(struct domain_device *dev, int single);
+ int sas_get_report_phy_sata(struct domain_device *dev, int phy_id,
+-- 
+2.43.0
 
-This commit fixes a reference count and flag leak when
-efct_hw_reqtag_alloc() fails in efct_hw_io_abort(). It adds the missing
-kref_put() and resets the abort_in_progress flag to prevent blocking
-future recovery attempts.
-
-> diff --git a/drivers/scsi/elx/efct/efct_hw.c b/drivers/scsi/elx/efct/efct=
-_hw.c
-> index 1838032f64862..b79c6a7ea7912 100644
-> --- a/drivers/scsi/elx/efct/efct_hw.c
-> +++ b/drivers/scsi/elx/efct/efct_hw.c
-> @@ -1997,6 +1997,8 @@ efct_hw_io_abort(struct efct_hw *hw, struct efct_hw=
-_io *io_to_abort,
->  	wqcb =3D efct_hw_reqtag_alloc(hw, efct_hw_wq_process_abort, io_to_abort=
-);
->  	if (!wqcb) {
->  		efc_log_err(hw->os, "can't allocate request tag\n");
-> +		io_to_abort->abort_in_progress =3D false;
-> +		kref_put(&io_to_abort->ref, io_to_abort->release);
->  		return -ENOSPC;
->  	}
-> =20
-
-[Severity: High]
-This is a pre-existing issue, but does the list membership check later in
-efct_hw_io_abort() reliably determine if an IO is on the pending list?
-
-When WQEs are dispatched to hardware, they are removed from the pending list
-using list_del_init(). This leaves the next and prev pointers pointing to t=
-he
-list entry itself, meaning they are non-NULL.
-
-Since io->wqe is not zeroed when the IO object is freed and recycled, any
-recycled IO or already-dispatched IO will have a non-NULL list_entry.next
-when it is evaluated here:
-
-	if (io_to_abort->wq) {
-		spin_lock_irqsave(&io_to_abort->wq->queue->lock, flags);
-		if (io_to_abort->wqe.list_entry.next) {
-			io_to_abort->wqe.abort_wqe_submit_needed =3D true;
-			spin_unlock_irqrestore(&io_to_abort->wq->queue->lock,
-					       flags);
-			return 0;
-		}
-
-Could this cause the check to evaluate to true for IOs that are no longer on
-the list, flagging them for a software abort and returning 0 without
-submitting an actual ABORT WQE to the hardware?
-
-Since the WQE is no longer on the pending list, the pending abort would nev=
-er
-be dispatched, leaving the abort_in_progress flag set forever.
-
-If the hardware later completes the original IO, the completion handler mig=
-ht
-see abort_in_progress =3D=3D true and ignore the completion. Could this seq=
-uence
-permanently leak the IO object and its associated XRI tags?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260611053037.6375=
-6-1-vulab@iscas.ac.cn?part=3D1
