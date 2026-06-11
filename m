@@ -1,196 +1,333 @@
-Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 06028345CBC;
-	Thu, 11 Jun 2026 10:11:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=60.244.123.138
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781172681; cv=fail; b=NKlJ1KLhYfuFOmZfu7oXx1n2tMMOrZLpIlTHgN5u+FtzcfLDqov+/1v2hvlK2dyrWu/krBWuEBNphxO7vFArx7y1TcjNsb1trvym9JPdCF9vOa4ioNffoyj8jzaj3Yb8y7fXJaDYX0JWYK+iduPYhjTBD8D1v7+fuguZ6eyx+eo=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781172681; c=relaxed/simple;
-	bh=FkJZjCsq0XJKkFqwWf72+UbaLESxdPD7nyekwoULC9Y=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=E6NbKHyq3zQTtPo+U+gM7jJ0IIWPUK/Y463q65LgpmcBF92zbWdva2JXwYM2syz3Qc0Yb8lYUbZMht1Tmk4jkJwRgQHkrSADX1D1zvoIF74gUJ1K3pB7uVnPrrOpqt3vPOdMtS8VezbE046O6jsINlQz7VqPL2WjqlJRldMXKLc=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=DbLcP35H; dkim=pass (1024-bit key) header.d=mediateko365.onmicrosoft.com header.i=@mediateko365.onmicrosoft.com header.b=DCtxMuei; arc=fail smtp.client-ip=60.244.123.138
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD2343C988D
+	for <linux-scsi@vger.kernel.org>; Thu, 11 Jun 2026 10:13:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1781172809; cv=none; b=RGz07KnUXfWESdacxQwZmayKzzoOaeomem9mm5h8k3otLloRL7bnI6t6ohIXyn+iF4Es0UqrI1Voe3Ux3p4z46y8eJDfJKbZqpHt2JBpeuGeBCTRd7eXj05nxZoD6lo/seF03roueZcsCSjmuLmcm8AG59eHWmnHDbjHPqavZgw=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1781172809; c=relaxed/simple;
+	bh=YDo8f7tzdscheRFFMTexaBZIDM1fKlLwL+kHTprN/vY=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=ZMh53gO1naiMmAAszgV3q8cjJgLTi/Jv0x8PnxKcYuRKwz/S9ZIVmCbU6GrO8niifNJgGPCVNjtLkhPD71wwWu9PxeAVfqTTbnV9gDsKOoIQBpTf3q4+L367V11MFlsuQUVWNORZ5WNKt71eSa/WHnyHf5iSuphZLPA5gw6QJn0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=j2mQREcJ; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=StFFehpg; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="DbLcP35H";
-	dkim=pass (1024-bit key) header.d=mediateko365.onmicrosoft.com header.i=@mediateko365.onmicrosoft.com header.b="DCtxMuei"
-X-UUID: de050258657d11f1b1788b6acf885367-20260611
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=MIME-Version:Content-Transfer-Encoding:Content-ID:Content-Type:In-Reply-To:References:Message-ID:Date:Subject:CC:To:From; bh=FkJZjCsq0XJKkFqwWf72+UbaLESxdPD7nyekwoULC9Y=;
-	b=DbLcP35H0QdJGoXN0X1KtaUz34mMr6yruWJOHB6HuVMefs08g+tMrGo/A+/iN6IJIMQYzxQbZj/NvYqqfGyw2okslgjtzh13oV+5o7hkmiYafaT1eod1bGmap2FsEB8BYigbCZavsOpxi0Zm3tR2PJDhgMnhjrfubmm388bZNhE=;
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.15,REQID:9865c24e-7762-4051-8095-93a179f0bf97,IP:0,U
-	RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
-	release,TS:0
-X-CID-META: VersionHash:e276073,CLOUDID:129768a4-7b17-4c9c-9453-88ae4be61918,B
-	ulkID:nil,BulkQuantity:0,Recheck:0,SF:80|81|82|83|102|110|111|136|836|865|
-	888|898,TC:-5,Content:0|15|50,EDM:-3,IP:nil,URL:0,File:130,RT:0,Bulk:nil,Q
-	S:nil,BEC:-1,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,A
-	RC:0
-X-CID-BVR: 2,SSN|SDN
-X-CID-BAS: 2,SSN|SDN,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR
-X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: de050258657d11f1b1788b6acf885367-20260611
-Received: from mtkmbs11n2.mediatek.inc [(172.21.101.187)] by mailgw01.mediatek.com
-	(envelope-from <peter.wang@mediatek.com>)
-	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 1774574411; Thu, 11 Jun 2026 18:11:09 +0800
-Received: from mtkmbs10n1.mediatek.inc (172.21.101.34) by
- mtkmbs10n2.mediatek.inc (172.21.101.183) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.29; Thu, 11 Jun 2026 18:11:08 +0800
-Received: from SI4PR04CU002.outbound.protection.outlook.com (172.21.101.237)
- by mtkmbs10n1.mediatek.inc (172.21.101.34) with Microsoft SMTP Server id
- 15.2.2562.29 via Frontend Transport; Thu, 11 Jun 2026 18:11:08 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=mr7vMQrMebaJWHZGN35h32cjyYcq8Fh8UiDVEQhOeKPGuFiy1plF905AJhQySXXfpOGLXAzfX0C+LIlpN4UiHPzshdTF8U3woq734RndsrauziwgbgtDp9xV5nNuoY9OBAqRxVUxl8JMAAUrQ5j2byZHE8TPG/GO3deQpDTy4WU36+OI2Ip44iP7VSVu+ZAuVlZe9Hgrk21FFwUl9AxSj78Jd1HdLdiymePPFYP1kQQtdgLh2XLVpW3Gz4PyoByqIBDo92r1pUaGtE7iPBLSi2Mfa/v1E/PxsP9yADPWKkT0Pmb8nPx1zuozEfLupTw30oSfFExH5xboXiPDuHctyQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=FkJZjCsq0XJKkFqwWf72+UbaLESxdPD7nyekwoULC9Y=;
- b=YbFUX+mhzFMShRkcbCaJDmeMhG5sgZov8HwEDPNsy9rNlrZOrmx/ou+nFpO9tHAY1GwGGTBWu3dIG+ooqirTWN02elL4clihXr2b9PKxsjZVXZkkRl5fTOBx97lUhow5pSe9XbFWGri0FBMvtXyn3swjgB9H5wKIvwHWUT7yatRTqBOVwZExdBsmuMugqA8Crhh56GDCj7R9VY1Ax3Sp1tTrEuAW9B4UTHCfqJEJSMcIO4OWYQgkKsm4f81NCQubIYDP9hKqDW4RZAwvroG+wKy8cHwfoYVV/BnTaVz0Ain0DAZyeBIbS68MpPmIHM1amcil50s9Jsfruho9cwALTQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=mediatek.com; dmarc=pass action=none header.from=mediatek.com;
- dkim=pass header.d=mediatek.com; arc=none
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="j2mQREcJ";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="StFFehpg"
+Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 65BA0pY3303964
+	for <linux-scsi@vger.kernel.org>; Thu, 11 Jun 2026 10:13:27 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	Bh0jJTozn65zI8Feh54vu2pvrCDOQPSqIdgZRKqSjj8=; b=j2mQREcJVGn9U4G6
+	cLCM2mYvAT/tC8YYRfzdt76hyaQaOqS4vG60pd5mjHFIKBSCKWkCTE7CpHmKNa5/
+	TkqDmyE2QAkqH9IfdMPqAjeG1pjxbojsEm9PsEB0tBu6rwo7gODMbZttthQnqgOV
+	MKYkrO7AmZCmM43aSSJq/jZ2o2MOjHNPVC3+ZvVhfCWUlHGrtDPG9yfdihu5lQ/Q
+	LGBI7xZbF8+0769YLIh0zDdkImUDf8NzEWujpa+PeW8zNlfKSXSVbwUR+6+xe9fn
+	TV4Ugfn4Hxr1fVFSj+Y5KRIuk1+iUge31Ik8oHikuBOwF7Ku9o5EbADHkHNyv/rh
+	ssNEHA==
+Received: from mail-pj1-f70.google.com (mail-pj1-f70.google.com [209.85.216.70])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4eqtb5g6de-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Thu, 11 Jun 2026 10:13:26 +0000 (GMT)
+Received: by mail-pj1-f70.google.com with SMTP id 98e67ed59e1d1-36bba9b849dso7276725a91.1
+        for <linux-scsi@vger.kernel.org>; Thu, 11 Jun 2026 03:13:26 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=mediateko365.onmicrosoft.com; s=selector2-mediateko365-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=FkJZjCsq0XJKkFqwWf72+UbaLESxdPD7nyekwoULC9Y=;
- b=DCtxMueidetzBk8w3FskYt9IanJJvEmVG8YZUhHvneTO9XS4M8FPL7CpuI5QSSe6GXoWeR27NhoI3t0CcFtlpflb1bBRuQZVH70cXcscf2ujAEy6TKpO9kcuDGpfEERKeKei+LYR3HJHW29RXL780DlI2vXjooKPrgowM5YIiMU=
-Received: from SI2PR03MB5609.apcprd03.prod.outlook.com (2603:1096:4:129::11)
- by TYPPR03MB9519.apcprd03.prod.outlook.com (2603:1096:405:385::5) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.113.11; Thu, 11 Jun
- 2026 10:11:06 +0000
-Received: from SI2PR03MB5609.apcprd03.prod.outlook.com
- ([fe80::38e4:3e0b:bb37:322e]) by SI2PR03MB5609.apcprd03.prod.outlook.com
- ([fe80::38e4:3e0b:bb37:322e%5]) with mapi id 15.21.0113.013; Thu, 11 Jun 2026
- 10:11:05 +0000
-From: =?utf-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= <peter.wang@mediatek.com>
-To: "beanhuo@micron.com" <beanhuo@micron.com>, "mani@kernel.org"
-	<mani@kernel.org>, "can.guo@oss.qualcomm.com" <can.guo@oss.qualcomm.com>,
-	"bvanassche@acm.org" <bvanassche@acm.org>, "krzk@kernel.org"
-	<krzk@kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-CC: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-	"quic_nitirawa@quicinc.com" <quic_nitirawa@quicinc.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"alim.akhtar@samsung.com" <alim.akhtar@samsung.com>, "avri.altman@wdc.com"
-	<avri.altman@wdc.com>, "quic_rdwivedi@quicinc.com"
-	<quic_rdwivedi@quicinc.com>, "James.Bottomley@HansenPartnership.com"
-	<James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH v7 2/2] scsi: ufs: core: Add support for static TX
- Equalization settings
-Thread-Topic: [PATCH v7 2/2] scsi: ufs: core: Add support for static TX
- Equalization settings
-Thread-Index: AQHc+KkLv87BTuTPxUmcK7HuJdQPW7Y5I+iA
-Date: Thu, 11 Jun 2026 10:11:05 +0000
-Message-ID: <5a1e01dda55af091204c430ff383c97c8dd69ed6.camel@mediatek.com>
-References: <20260610071516.3763916-1-can.guo@oss.qualcomm.com>
-	 <20260610071516.3763916-3-can.guo@oss.qualcomm.com>
-In-Reply-To: <20260610071516.3763916-3-can.guo@oss.qualcomm.com>
-Accept-Language: zh-TW, en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=mediatek.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: SI2PR03MB5609:EE_|TYPPR03MB9519:EE_
-x-ms-office365-filtering-correlation-id: b69107ec-093c-4a39-a003-08dec7a1c002
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;ARA:13230040|23010399003|7416014|376014|366016|1800799024|4143699003|11063799006|56012099006|22082099003|18002099003|38070700021;
-x-microsoft-antispam-message-info: MdK/TLfuxJDxNJ3Ia8Q7o8fwE5OraLN3mfiLt5jjt9kWHnEkkJXn3dPgBi1GoUmNhsV+4vTUwHzPen8Z1fuXtnpTjBcc9C66WvVBPqQfIW9rV7qbv1RHvrwLLHq1oomJCPfgt3priSwH3gP4AMJZhoto6RyFeF3+BxK1VUbGYTJb43ZJlzKNYShX4YzvmtFcaZ0A3+D7gh6213jCtP6mApf2XJLWnK7kpJZaRi695DTF4FOiVY7xXfeLi1qExCtfYHvaqbt3Fo64k4qFcfXOGDFEvSsKJHAnIac5oZAaxH/4siqAkTTG97Rm8b6tz7kHryaYSPOk6S5YwNvSPj2uN/6Ggci3fGj/hzI/wIeuWNJrMyxMQg8RlirOfGGZndNwaN6woP4391A1r3Re9T1ZZ9U++xjCoRe1vuCteO1WUURNP34OjzCwb/iai5p0oUYiR59Z9HMhKQ2XfvnKV3caqHehQQnS+fzEnHwZY+4Dr+JXkD0qBfB5LAko3ToF1fN+jSPERLsVUnoUyCjygNRa+sWIULmWFQbVY/Nr17P3XX+nr2CItgZP8/Fz2uc1ZKPQoQjyx8XczUSPSe1KsDgPr8Fmnp65RcEwwJ1clz+hcAZ48Dl8WE4lxIhZQVg4ElXYR98YWwBAZ6KoafQ08GjBhBVGTb72y3JcdGkDQ3TUAzROdEtNqKaI+cCqCSM99jJo717EgrgSb3UO5gtiLrKgLTukC8K09NP7yLXZH7lvUPd6nFUbJhhmIoYcd9sUeb95
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SI2PR03MB5609.apcprd03.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(7416014)(376014)(366016)(1800799024)(4143699003)(11063799006)(56012099006)(22082099003)(18002099003)(38070700021);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?utf-8?B?aGRISElxaVJjM015MWRBK0ZnZU9LRytXRjg5UWV1SE1oTEdHcit1bzhFL3Rs?=
- =?utf-8?B?THB0QzgyaXhHeVJ3SEQzN3J6ZjhITUxoUWdCZ2hUSk1Wd1Zla21Ua09hMWs2?=
- =?utf-8?B?ZEVURFl2ZGRXTktNejk2cXRTRHdDMmZkUGdJRnQ3NWt1WkUwVjhPVWFMN1Fi?=
- =?utf-8?B?UHZXbDh5Z2lQaGdFeHlEbFA4akRueDd4eDZFQXdqZUJ3M1h0bE9QLzRkaFhj?=
- =?utf-8?B?YUM2eXpYc2t3TkFzN3VyZGJmQ0RLYm1PSmRnbTkvMHpFQ0tmcWJZSEVrVXhV?=
- =?utf-8?B?ME9lTUtyMFZncW1qdkRodnhjS1JrK0R5OVliTlpTdS9paUhYR0U5emZRanVE?=
- =?utf-8?B?S2Fpd0VvUkFlVUhueTZpUTRHNTZrVExFZlEwWXdrb29RUGlCcDRLUkNqenBC?=
- =?utf-8?B?VVB3ZjVpUFpjZFMvZkx5RFFoWFk3T2tHMEtKSTNLU3FLZTRTRUMvUS9pMndK?=
- =?utf-8?B?Rk9FUmJvT3V1TFQxd3ZzQUJlZGV2bjluNTJmMFhtTy9rWVRHMDdaTmxrS213?=
- =?utf-8?B?U2xYU2FqVnJabzh1Y2RTMlVkRzliVUhncGhhMmVidDFQUXZFejZjemhhNzVa?=
- =?utf-8?B?RGhwMGdkSmw0TkkvUHFWN0MxNWtYUXRFT0d6WVRjMWkyam1wUldoNDVKVVBV?=
- =?utf-8?B?TE9mTzhwTnM3U3d4Rk9hcXdRK1g1dk1qOUJLbnVGMTh5OEx2cXFvVlFmWTR3?=
- =?utf-8?B?YVlxd3dJaGJEUlZKdk9PcDFTdXhlWVBRSVY3U2ljdEZHTlJWdldDNWNxYmxa?=
- =?utf-8?B?NS9CYWFsZjVvM2lPQkFOMy9nMUJHMG01TFJ0b0tRaUIrdFNMdFYxQ2NGYTNv?=
- =?utf-8?B?eFhNYUZISVFpdmF4Nyt2bGVPalhuZklHaHVBbTRyK0dYR01pMHA4eVJlR2s5?=
- =?utf-8?B?ZGlnRStSRE1WekhwVncyZW9Mdjlua3FLYU1HYmRPYlpWVDF5UEpraVg0dzAx?=
- =?utf-8?B?SkFVSFdGM1pSYndEcGM4NHJjUWtoQ2N5TXord3MzdHJmQ3RMSXZEYUYxNXJp?=
- =?utf-8?B?a01TTE42T3diWHpWQ2l2ZWVoKzdqOElWY1gvcTRwc29tcWFpZGt1VWFNV0Fm?=
- =?utf-8?B?RFRBK1NZdWV4aDZsZm9uYXpidXNLUXA0S0JURW1odXBSM2hFS0h1UlpEVk05?=
- =?utf-8?B?N0hUdC9URkxrRTJDdzlHc2RidkVHRThncS9rR3JYdmtRcVBTWmpxZjRyWHJQ?=
- =?utf-8?B?VHdKWDNrbUxjVCtDUTkyMTdwd28xMGd4Z0VQY2drYVp1bGlna1NHak5mWDQx?=
- =?utf-8?B?M2NVbmFkU05RMnppeTJUUTY1WFVLK1NWcGY4TThSTVI2ajBGNlRSTUtWYnFJ?=
- =?utf-8?B?QkR6SHRHYWtnTEoxWHJSYTNSOGdqenJSWnNwbVkzNXpDMUg2VUIrYXlyY3Y4?=
- =?utf-8?B?Wi9zWUtEL0locnFDNXducElCdm8zMHpDYlBRUDNYSlgvTXZZeWozT1BDQ2Rx?=
- =?utf-8?B?cDhXSVR2V0QzOEdaN0pyY1p1UEp3MDFpVkRCVVREZUVxQ0VDdGtSZnUzV0Zu?=
- =?utf-8?B?Mjd6T0Jyd09WSnRLUHhoNzRMWnlRbm9NOEFRblFPeWJZYTBabHV4TW9VNWtv?=
- =?utf-8?B?aC9qMFdRbHdBOGhpNjlTZFNIVUdJa0dTSjFnTjZoNVhPZUorUUdrdEVndW5K?=
- =?utf-8?B?dG1qR0hzWU5jSlN5Y2FGWWNzelBUU1ZkK0VOZDU1K3VNaWppWHhMdzNCeC9m?=
- =?utf-8?B?c2pUZGNYeVRwdWRIdTdIMXRVeGtTT2VVa3E5ZWZLTXg2WVJjV2JyT0VNbjMx?=
- =?utf-8?B?ZkFuRHYrRk5yc3ZCRlJUb3BLeSszbHRzRXV6ZTVob0J3MXF5WHB5TzhRSWRG?=
- =?utf-8?B?OU1GWUsyZi9HQmk4ZlJDa1p5UVNTTEhxSmVsTzB4Yk44MnFBeUpjbEFRUjdX?=
- =?utf-8?B?QXdtL2NXWGRjbDNFa013L0VkcXVmczU5U2JRc2RQbDgxRU4rSzVvME1ITjBJ?=
- =?utf-8?B?RnpIaVZ2NlA1YWRGNFR3WUtIZE5BSjlLQjlTZERmYjltVVgvQWNTTlhiRVJI?=
- =?utf-8?B?OEFyckpYa3JaeUhDVmp3Ukc2OXBYS2hrT3FVb1dHc1pqTUpweU1mUjVrM1Nz?=
- =?utf-8?B?RmcyQzJ4ZDRtdG9rb3RQbEk2eStjQjZTa0h1MnVxV3VOWmRPemQxdFZxaWVU?=
- =?utf-8?B?YXZ4eHVJd3I3UzdhTUlRc2NsL3JGT0tOQ29taWRyby83UVJhTUM2WE4weDVr?=
- =?utf-8?B?YllFak5aOTJacnZMTFVMRkhqd01qUDhvSUJNWEdXRVNvVXFtdEw1M21CSC9G?=
- =?utf-8?B?aXRlZ3lVNjB6b2VnRXFmZ2l1L2VvSkluQXJ5UklDMjdGRzdmYzhRSnVUa0dO?=
- =?utf-8?B?MkUvZjJsNFhHNTlUb3ZEYUhVU3VoNGFRUG1uYkRma2x1dmN6a2x3VWpTMmpj?=
- =?utf-8?Q?u9H4rC4OfvZws+dk=3D?=
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <A3FD0088AAA6CF4D9A56BDAE77842D7E@apcprd03.prod.outlook.com>
-Content-Transfer-Encoding: base64
+        d=oss.qualcomm.com; s=google; t=1781172806; x=1781777606; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=Bh0jJTozn65zI8Feh54vu2pvrCDOQPSqIdgZRKqSjj8=;
+        b=StFFehpgBRBdMoK3HazK2jNH2SSu0KegNXYEs/Fc0BHfok6O65oXcCiMEvf5OwG0QM
+         9aNen2T/TmxYE8uJc4kXih+vzss9ySuUI81R/4q8T909QoRnLHRjCoiHi8WwoC6/iUJW
+         DAnMLqSUHoFymVr3WDsg6PXQllihY9khnfYL4UvjUlxrIvi2vr29zbwqZVYr2oOAk+UQ
+         q1VA2/ed2EYp4NIuU2GI8i3jJWWOyfMZm+3HxV5Yj7aUMDVy3fLTuq223rcLHmgK/Xxm
+         213/O7tn/ogpSsiJfipFSEDrYt17HfelEFfEyle2ntZnOFC+k3vnvvumkcY3RyNxBsj2
+         k/TQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1781172806; x=1781777606;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=Bh0jJTozn65zI8Feh54vu2pvrCDOQPSqIdgZRKqSjj8=;
+        b=P+avFVM8FIW/Hj6r+raBwO6siMx5AETsBD67X8kMOBM+COM8lN0uOaAS+6t3UWKcpf
+         xq71tLQCTB6ZgDRDoxiTDt5PAoWGn7GmICXg0wzQ/C5NQbWj2sVFRaBdkKSrJe0MUj+b
+         trjLSV7Vj1zHRTAh998aHPrStJ5su03UnTGqZltGQYwNwLW0Jc6WQtdxy9AqWIhBF96e
+         Nw5z2SQPih0WUXXeIsp++F7SFumZnqMe3mZ7BDaGisEZekzsgL4hVsPaMNLeyqnjTh0w
+         rRo+5a4u+mhFQ2OTjCPQfwcuCy/UwvaSOQzBljZUe3gIIqmu+lDtPP8mVm1s0KV34kJY
+         j8vg==
+X-Forwarded-Encrypted: i=1; AFNElJ/fstS2hRjf8x5s0vzelDxo6xrRYeCpHDE+MGgjUXA2N3An9lAgbArRp2HffYE0kmWwgmlhkmetNOue@vger.kernel.org
+X-Gm-Message-State: AOJu0YyfgjgonYwv89kclk2h3VKrTgNrI2wu6+QWZnt2nEqh43Zrqp6/
+	f+hAwz//eR/hxb8Sh4STmZq81COphY33l4s9d7+U0T4Ikqeu4CNNI+mg0BAmI+NelMGPFowWNgl
+	pawX1ZRIO5NM289d6PGqDRu4E1n7q5z1cCcPwdRUOtBP9EmqPL7TxAHE5NO9q2rne
+X-Gm-Gg: Acq92OH4e3kYCbyLc1icKGxTOxB3lZDG3Cta+AJ3NpAjv3lSo+r8SByoJw/Hbf2iOHJ
+	rO5S7Y4ZZLH5OLUeK/0TYFrmBgzXSnU7HU6POKWHtJ8PLz3w2FbAU7E1LhzB5XL0E9tKoLJrz2l
+	bX1pWBQ39fd4SN1FZBXWgjiCDlF71UWz9dJWftluoMPBKiEas0ZE5SjjTHJajuAy0OTlC/HBc+Z
+	c4F8K62psKB+/CobK08kLpkd4MtJdnktJUtgocqKGXl9kLsd/FoNpAaw/arZV7x7Psn9ynD5rsQ
+	dIzsoIxCTV1wAa9YKHsshwAB6phhR49fINCpHKL3kDjTDrBSKOGqAKPfPcfGtqxK2U2vx5/51Aq
+	ykKrS1BfoVtDsfR7uY7YRJHt8Co3dmXmBVs/XidlaC963XNbP2yaiYGfkCu1ze08S6MPXOQ==
+X-Received: by 2002:a17:90b:390a:b0:36d:b818:f848 with SMTP id 98e67ed59e1d1-3779bade6f1mr2514691a91.5.1781172805704;
+        Thu, 11 Jun 2026 03:13:25 -0700 (PDT)
+X-Received: by 2002:a17:90b:390a:b0:36d:b818:f848 with SMTP id 98e67ed59e1d1-3779bade6f1mr2514650a91.5.1781172805218;
+        Thu, 11 Jun 2026 03:13:25 -0700 (PDT)
+Received: from hu-arakshit-hyd.qualcomm.com ([202.46.22.19])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-377a5ddd3cdsm797886a91.1.2026.06.11.03.13.19
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 11 Jun 2026 03:13:24 -0700 (PDT)
+Date: Thu, 11 Jun 2026 15:43:17 +0530
+From: Abhinaba Rakshit <abhinaba.rakshit@oss.qualcomm.com>
+To: Manivannan Sadhasivam <mani@kernel.org>
+Cc: Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio <konradybcio@kernel.org>,
+        "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Adrian Hunter <adrian.hunter@intel.com>, Ulf Hansson <ulfh@kernel.org>,
+        Rob Herring <robh@kernel.org>,
+        Krzysztof Kozlowski <krzk+dt@kernel.org>,
+        Conor Dooley <conor+dt@kernel.org>,
+        Neeraj Soni <neeraj.soni@oss.qualcomm.com>,
+        Harshal Dev <harshal.dev@oss.qualcomm.com>,
+        Kuldeep Singh <kuldeep.singh@oss.qualcomm.com>,
+        linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-mmc@vger.kernel.org,
+        devicetree@vger.kernel.org
+Subject: Re: [PATCH v11 1/6] soc: qcom: ice: Add OPP-based clock scaling
+ support for ICE
+Message-ID: <aiqKPYmkIRl1QiSN@hu-arakshit-hyd.qualcomm.com>
+References: <20260609-enable-ice-clock-scaling-v11-0-1cebc8b3275b@oss.qualcomm.com>
+ <20260609-enable-ice-clock-scaling-v11-1-1cebc8b3275b@oss.qualcomm.com>
+ <mcqrm4pwziflqomw22gepqusc7jdlb2foslcfvtjufuyyoslb7@37olf54qxtfv>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Exchange-RoutingPolicyChecked: CykKu0gcbWivi8kId6Bn5k3Kywoq+VXXWHhiA0N1rNKgX0RHn7D3tPpenhuWgTMN04D76cAQu6ItcV0VObQcW8yosqRSEGGrvrgBSxve+3+S+sjZ/Abz5/UoAiwdWH6OG49/KB9rHtEUpOU1rbPlQ8UP+Pcskc1DWs9rMIye6TiY9vUMpi2sK/p+NOdQIHDL+vq/wvs3rauCQZjNjEDJFZSB2NIgF/WZiiYV/cZ2L7RzYHTLXTfNOPDLXu3NoWr3a61Qr8FrC5QSHyiH9G0PjjuXf53FKwWu9XhjtZHfpl78kz2O7pC1JpGWYtwYatFpvlMWxsBNqL1piN93ZPz/Fw==
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: SI2PR03MB5609.apcprd03.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: b69107ec-093c-4a39-a003-08dec7a1c002
-X-MS-Exchange-CrossTenant-originalarrivaltime: 11 Jun 2026 10:11:05.7690
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: a7687ede-7a6b-4ef6-bace-642f677fbe31
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: 7+7mK+g/5eG6+DQ82Y4+mF7rng7RyuzzKi1qrsdEmD91G5OLpqSCxInvQJncJXmTr6Tci7s6A9p436z3ODH1bg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: TYPPR03MB9519
-X-MTK: N
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <mcqrm4pwziflqomw22gepqusc7jdlb2foslcfvtjufuyyoslb7@37olf54qxtfv>
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNjExMDEwMiBTYWx0ZWRfXzdKJpHJXNUIS
+ XKC4185dqRNOB0bFDK6c448dUMaCR/wMYdtsobedJDTZJIQPpsI+FatPoWRN7X4D6KxtvlaTBeD
+ hyJTADUyZKSSsErdw0/CBnlRgQFvYjl8z1Wnex5hq2ImHNsJXVqwapA7EPPeC6S+hLvaL6/9qiQ
+ 5VxmnI/7A4PmG741TVBr7vokIij+X+PHWWEN3FC+Zl3reez3c4n14k8eqfplPZ7nKJH+8N8JGye
+ Q/A8XyF3xhJ/n4pJ9/MpM03crrXtIcCMV78YQcmM2g8veBfkP/9xHGsCkHHcNHAvHFDveEream7
+ 3m8ZMCgIsWbwbm8GXImtQoPzQJsHC8k32e492rc6xDTHQUjWB+7LCn4bA1dv3bT6vWdDn3Drbty
+ iuUBT/nmWKwoxmGVo9ehr3mfrbrW6lbr7niY4obe+TZFBLTAM9GR5VbUBjzD6waFeFjMk9nicn1
+ bthA+doLu6nJzpdN3Ng==
+X-Proofpoint-ORIG-GUID: AiFtZJdPgCbQTxbqiAc59PkRX8ZU9bqM
+X-Proofpoint-Spam-Info: AW1haW4tMjYwNjExMDEwMiBTYWx0ZWRfXzKsfuOwXmQ5c
+ NAuFNVz2ntMAqZr2GVhIklvfZ2pwSHUghMWp/+XIC6/KXMtvIeYq/BV0gL9+r4DOKHMlVlRsqf6
+ ivu6P6mPg/EQccLnv/k3F1t3fI3Zpjw=
+X-Authority-Analysis: v=2.4 cv=e6g2j6p/ c=1 sm=1 tr=0 ts=6a2a8a46 cx=c_pps
+ a=0uOsjrqzRL749jD1oC5vDA==:117 a=fChuTYTh2wq5r3m49p7fHw==:17
+ a=IkcTkHD0fZMA:10 a=FelO9ux0wxsA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=gowsoOTTUOVcmtlkKump:22
+ a=i-GQASlAym38gW1YhUoA:9 a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
+ a=mQ_c8vxmzFEMiUWkPHU9:22
+X-Proofpoint-GUID: AiFtZJdPgCbQTxbqiAc59PkRX8ZU9bqM
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.125,FMLib:17.12.100.49
+ definitions=2026-06-11_02,2026-06-09_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ spamscore=0 suspectscore=0 bulkscore=0 priorityscore=1501 lowpriorityscore=0
+ phishscore=0 clxscore=1015 impostorscore=0 adultscore=0 malwarescore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2606040000 definitions=main-2606110102
 
-T24gV2VkLCAyMDI2LTA2LTEwIGF0IDAwOjE1IC0wNzAwLCBDYW4gR3VvIHdyb3RlOgo+ICtzdGF0
-aWMgaW50IHVmc2hjZF9wYXJzZV90eF9lcV92YWx1ZV9hcnJheShzdHJ1Y3QgdWZzX2hiYSAqaGJh
-LAo+ICvCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoCBjb25zdCBjaGFyICpwcm9wX25hbWUsCj4gK8Kg
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgIGNvbnN0IHUzMiBtYXhfdmFsdWUsCj4gK8KgwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgIHUzMiB2YWx1ZXNbVUZTX01BWF9MQU5FUyAqCj4gMl0pCj4gK3sKPiArwqDC
-oMKgwqDCoMKgIHUzMiBudW1fZWxlbXMgPSAyICogaGJhLT5sYW5lc19wZXJfZGlyZWN0aW9uOwo+
-ICvCoMKgwqDCoMKgwqAgc3RydWN0IGRldmljZSAqZGV2ID0gaGJhLT5kZXY7Cj4gK8KgwqDCoMKg
-wqDCoCBpbnQgY291bnQsIGVyciwgaTsKPiArCj4gK8KgwqDCoMKgwqDCoCBjb3VudCA9IG9mX3By
-b3BlcnR5X2NvdW50X3UzMl9lbGVtcyhkZXYtPm9mX25vZGUsIHByb3BfbmFtZSk7Cj4gK8KgwqDC
-oMKgwqDCoCBpZiAoY291bnQgPD0gMCkKPiArwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoCBy
-ZXR1cm4gY291bnQgPyBjb3VudCA6IC1FTk9FTlQ7Cj4gCgpIaSBDYW4sCgpSZXR1cm5pbmcgLUVO
-T0VOVCB3aGVuIGNvdW50ID09IDAgaXMgbm90IGNvcnJlY3QuCmNvdW50ID09IDAgbWVhbnMgImVt
-cHR5IHByb3BlcnR5LCIgd2hlcmVhcyAtRU5PRU5UIG1lYW5zICJwcm9wZXJ0ecKgCm5vdCBwcmVz
-ZW50LiIKSSBzdWdnZXN0IG9ubHkgY2hlY2tpbmcgZm9yIDwgMCBhcyBmb2xsb3dzOgppZiAoY291
-bnQgPCAwKQogICAgcmV0dXJuIGNvdW50OwoKYW5kIGxldHRpbmcgdGhlIGNvdW50ID09IDAgY2Fz
-ZSBiZSBoYW5kbGVkIGJlbG93OgppZiAoY291bnQgIT0gbnVtX2VsZW1zKSB7CiAgICAuLi4KICAg
-IHJldHVybiAtRUlOVkFMOwp9CgpUaGFua3MuClBldGVyCgoKPiArCj4gK8KgwqDCoMKgwqDCoCBp
-ZiAoY291bnQgIT0gbnVtX2VsZW1zKSB7Cj4gK8KgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAg
-ZGV2X2VycihkZXYsICJQcm9wZXJ0eSAlcyBoYXMgaW52YWxpZCBjb3VudCAoJWQpLAo+IGV4cGVj
-dGluZyAldVxuIiwKPiArwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqAgcHJvcF9uYW1lLCBjb3VudCwgbnVtX2VsZW1zKTsKPiArwqDCoMKgwqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoCByZXR1cm4gLUVJTlZBTDsKPiArwqDCoMKgwqDCoMKgIH0KCg==
+> > diff --git a/drivers/soc/qcom/ice.c b/drivers/soc/qcom/ice.c
+> > index 5f20108aa03ebe9a47a10fba9afde420add0f34a..519d08c4727a6cb2dc5991216a2c042ed6218857 100644
+> > --- a/drivers/soc/qcom/ice.c
+> > +++ b/drivers/soc/qcom/ice.c
+> > @@ -17,6 +17,7 @@
+> >  #include <linux/of_platform.h>
+> >  #include <linux/platform_device.h>
+> >  #include <linux/xarray.h>
+> > +#include <linux/pm_opp.h>
+> >  
+> >  #include <linux/firmware/qcom/qcom_scm.h>
+> >  
+> > @@ -113,6 +114,8 @@ struct qcom_ice {
+> >  	bool use_hwkm;
+> >  	bool hwkm_init_complete;
+> >  	u8 hwkm_version;
+> > +	unsigned long core_clk_freq;
+> > +	bool has_opp;
+> >  };
+> >  
+> >  static DEFINE_XARRAY(ice_handles);
+> > @@ -315,6 +318,10 @@ int qcom_ice_resume(struct qcom_ice *ice)
+> >  	struct device *dev = ice->dev;
+> >  	int err;
+> >  
+> > +	/* Restore the ICE core clk freq */
+> 
+> Redundant comment.
+
+Ack. Will drop.
+
+> > +	if (ice->has_opp && ice->core_clk_freq)
+> 
+> Can core clk be 0 if OPP is used?
+
+In the current logic, core_clk_freq will always be non-zero if has_opp is true.
+I included the check to decouple the two variables defensively, but I agree it's
+redundant if we assume the OPP table is the sole source of frequency scaling here.
+I will simplify this to *if (ice->has_opp)* and ensure core_clk_freq is initialized
+within the OPP registration block.
+
+> > +		dev_pm_opp_set_rate(ice->dev, ice->core_clk_freq);
+> > +
+> >  	err = clk_prepare_enable(ice->core_clk);
+> >  	if (err) {
+> >  		dev_err(dev, "Failed to enable core clock: %d\n", err);
+> > @@ -335,6 +342,11 @@ int qcom_ice_suspend(struct qcom_ice *ice)
+> >  {
+> >  	clk_disable_unprepare(ice->iface_clk);
+> >  	clk_disable_unprepare(ice->core_clk);
+> > +
+> > +	/* Drop the clock votes while suspend */
+> 
+> Redundant comment.
+
+Ack. Will drop.
+
+> > +	if (ice->has_opp)
+> > +		dev_pm_opp_set_rate(ice->dev, 0);
+> > +
+> >  	ice->hwkm_init_complete = false;
+> >  
+> >  	return 0;
+> > @@ -560,6 +572,51 @@ int qcom_ice_import_key(struct qcom_ice *ice,
+> >  }
+> >  EXPORT_SYMBOL_GPL(qcom_ice_import_key);
+> >  
+> > +/**
+> > + * qcom_ice_scale_clk() - Scale ICE clock for DVFS-aware operations
+> > + * @ice: ICE driver data
+> > + * @target_freq: requested frequency in Hz
+> > + * @round_ceil: when true, selects nearest freq >= @target_freq;
+> > + *              otherwise, selects nearest freq <= @target_freq
+> > + *
+> > + * Selects an OPP frequency based on @target_freq and the rounding direction
+> > + * specified by @round_ceil, then programs it using dev_pm_opp_set_rate(),
+> > + * including any voltage or power-domain transitions handled by the OPP
+> > + * framework. Updates ice->core_clk_freq on success.
+> > + *
+> > + * Return: 0 on success; -EOPNOTSUPP if no OPP table; or error from
+> 
+> s/error/errno
+
+Ack. Will update.
+
+> > + *         dev_pm_opp_set_rate()/OPP lookup.
+> > + */
+> > +int qcom_ice_scale_clk(struct qcom_ice *ice, unsigned long target_freq,
+> > +		       bool round_ceil)
+> > +{
+> > +	unsigned long ice_freq = target_freq;
+> > +	struct dev_pm_opp *opp;
+> > +	int ret;
+> > +
+> > +	if (!ice->has_opp)
+> > +		return -EOPNOTSUPP;
+> > +
+> > +	if (round_ceil)
+> > +		opp = dev_pm_opp_find_freq_ceil(ice->dev, &ice_freq);
+> > +	else
+> > +		opp = dev_pm_opp_find_freq_floor(ice->dev, &ice_freq);
+> > +
+> > +	if (IS_ERR(opp))
+> > +		return PTR_ERR(opp);
+> > +	dev_pm_opp_put(opp);
+> > +
+> > +	ret = dev_pm_opp_set_rate(ice->dev, ice_freq);
+> > +	if (ret) {
+> > +		dev_err(ice->dev, "Unable to scale ICE clock rate\n");
+> > +		return ret;
+> > +	}
+> > +	ice->core_clk_freq = ice_freq;
+> > +
+> > +	return ret;
+> 
+> return 0;
+
+Ack. Will update.
+
+> > +}
+> > +EXPORT_SYMBOL_GPL(qcom_ice_scale_clk);
+> > +
+> >  static struct qcom_ice *qcom_ice_create(struct device *dev,
+> >  					void __iomem *base)
+> >  {
+> > @@ -738,6 +795,7 @@ static int qcom_ice_probe(struct platform_device *pdev)
+> >  	unsigned long phandle = pdev->dev.of_node->phandle;
+> >  	struct qcom_ice *engine;
+> >  	void __iomem *base;
+> > +	int err;
+> >  
+> >  	guard(mutex)(&ice_mutex);
+> >  
+> > @@ -756,6 +814,41 @@ static int qcom_ice_probe(struct platform_device *pdev)
+> >  		return PTR_ERR(engine);
+> >  	}
+> >  
+> > +	err = devm_pm_opp_set_clkname(&pdev->dev, "core");
+> > +	if (err && err != -ENOENT) {
+> > +		dev_err(&pdev->dev, "Unable to set core clkname to OPP-table\n");
+> > +		/* Store the error pointer for devm_of_qcom_ice_get() */
+> > +		xa_store(&ice_handles, phandle, ERR_PTR(err), GFP_KERNEL);
+> > +		return err;
+> > +	}
+> > +
+> > +	/* OPP table is optional */
+> > +	err = devm_pm_opp_of_add_table(&pdev->dev);
+> > +	if (err && err != -ENODEV) {
+> > +		dev_err(&pdev->dev, "Invalid OPP table in Device tree\n");
+> > +		/* Store the error pointer for devm_of_qcom_ice_get() */
+> > +		xa_store(&ice_handles, phandle, ERR_PTR(err), GFP_KERNEL);
+> > +		return err;
+> > +	}
+> > +
+> > +	/*
+> > +	 * The OPP table is optional. devm_pm_opp_of_add_table() returns
+> > +	 * -ENODEV when no OPP table is present in DT, which is not treated
+> > +	 * as an error. Therefore, track successful OPP registration only
+> > +	 * when err is not -ENODEV.
+> > +	 */
+> > +	if (err == -ENODEV)
+> > +		dev_info(&pdev->dev, "ICE OPP table is not registered, please update your DT\n");
+> 
+> dev_dbg() please. No need to spam old DTs.
+
+I intentionally used dev_info() here as it would provide a quick diagnostic hint
+for KPI/performance regressions as mentioned in the cover-letter, which can be difficult
+to trace. But I’m fine switching to dev_dbg() to avoid log noise if that’s preferred.
+
+> > +	else
+> > +		engine->has_opp = true;
+> > +
+> > +	/*
+> > +	 * Store the core clock rate for suspend resume cycles,
+> > +	 * against OPP aware DVFS operations. core_clk_freq will
+> > +	 * have a valid value only for non-legacy bindings.
+> 
+> use full 80 column width for comments.
+
+Ack. Will reformat the comment to include it within 80 columns.
+
+> > +	 */
+> > +	engine->core_clk_freq = clk_get_rate(engine->core_clk);
+> 
+> Why can't you conditionally cache the freq by moving it to the above else
+> condition?
+
+For core_clk_freq, I agree moving it under the else improves clarity and clearly
+defines the purpose of the variable. I kept it outside earlier to avoid tying it
+strictly to OPP presence, but I can move it for better readability.
+
+Abhinaba Rakshit
