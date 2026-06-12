@@ -1,122 +1,110 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f49.google.com (mail-wm1-f49.google.com [209.85.128.49])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 188D936F91F
-	for <linux-scsi@vger.kernel.org>; Fri, 12 Jun 2026 10:40:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A7B936F91F
+	for <linux-scsi@vger.kernel.org>; Fri, 12 Jun 2026 10:41:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.49
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781260845; cv=none; b=ifWVfZHensBh4a6N70DLrAubesiBGYjODBP84SkB/O6ypQ7C1HCSMfsWQe2NDS4SPKhLv7Fyjt8trgrutjtMZUoqwJo+vENQg4hpHxdl6nHOi5HvJsAcEIUTgeD/xC8mTDiTGyyPoQrRaMY6vG4RG9sMAjSI3NMpE6nrBA57cDU=
+	t=1781260864; cv=none; b=SETzAh1vukxZJh27w3zcGL9u1rh6FF66AXc/7K+tDFLaUZQCkujzqfc8Eex9YrcQgrSpiq3sYspIvlJpRGEYzea3Ywv1Aep0FR4mTjK90LW194EVf8c3G9Md5qE/sg3Pr+sMhTJgrpNQM2VbUxdgVLGsmsTy1BeUN36EVqnsOHI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781260845; c=relaxed/simple;
-	bh=2olPoPCBkrIbTiF0sn0sCApEm7ZQxVwWw1iHADaE7Xs=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=GY53Tr7i+Upf8u0fVDVIaC+OQmLEqjDe5OLG/c/iyHP4GWIcJGVFCXyh1+3fCkNd94XtyCnAhkevcXI0OU/Yo4+p31yfWWd2DAdOr+WxnsG9fSUkjapnhRYR3ISG+riKVW3CUcEB87zwQ9oDAGbo5gp+7yzKC/ZDtL/jIKgD/+E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JdRofQ4J; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1781260864; c=relaxed/simple;
+	bh=6WAX/BY1sHk/+7dB46Dm7FyBEXp55ETI0OgUhcm8Qd0=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=JvlFvxBqKeqbqq6D48NUSFh6HidgultPz5kooifqvUZmNr19strDuLaig/XS7br9ZnvTuWOuHEO3sWS+2s6QAtu53qrkkDXAQjk9sHZFErBpQNP7Yynfqt1cfdM3SlqM9nrRM116CDiYaoJsPQSRwCVg79AJPA0Xhen5p7i3Mew=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=WjpIh3SP; arc=none smtp.client-ip=209.85.128.49
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JdRofQ4J"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A1F471F000E9;
-	Fri, 12 Jun 2026 10:40:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781260843;
-	bh=qWS68IZeIYVxIzb74AVm6qcv43PkEvOdmEagL9pMdow=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=JdRofQ4Jo/T2H/sGy6QvL8CqDxFPYoBtxHK04fuQMM9ppo5E8/CTg216nCV9CwFf6
-	 tDz58PPQE3DCUn4kfF677dwNkSFD9rtEpZIbdTovv5LCWda1U5uFkf7SpGLWxBAcV8
-	 t8QlmK+wuuMJaMMv1jHXwidP2atEM4+0kJQJgFg2i7ucHJ5jgSOmdvmJpJ3O11JaJY
-	 mvhYHkZY4oL9KG+BEDM40VHPgvFctz9ml4lyQzthxlfrlXy9uTS8A9BVTiqYKXSxtO
-	 OxziWAcJJBMDHH3ndxtyxqubEG+6MSC1+cEqMAeflHmSNDm3SalOh6sityyNEcr/Lj
-	 jdG+B5dIJEIRQ==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 26/60] scsi: qla2xxx: Add support for QLA29XX in
- memory allocation
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Nilesh Javali" <njavali@marvell.com>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260612095333.1666592-27-njavali@marvell.com>
-References: <20260612095333.1666592-27-njavali@marvell.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Fri, 12 Jun 2026 10:40:42 +0000
-Message-Id: <20260612104043.A1F471F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="WjpIh3SP"
+Received: by mail-wm1-f49.google.com with SMTP id 5b1f17b1804b1-490b7866869so7944875e9.2
+        for <linux-scsi@vger.kernel.org>; Fri, 12 Jun 2026 03:41:02 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=suse.com; s=google; t=1781260861; x=1781865661; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=IKYhDbo/BVbPAG52eCa6j34AzNbuZIzmkWiRm07K9uM=;
+        b=WjpIh3SPqOtaAiWFBM/HFmo3fBXl7TrGx9d9Mi47UXKIpd0wCVBCacFTdvZdItA40H
+         ogMyqzMxsjoxcysvi7hGKN+okt96eZRrC+0t1kWr3NwTEqXGEKtkXzejCkFgsF+6x86P
+         y3C+NsLAvO3e2B+AZAAmkbMkiHxHooik3Am1EC9/FgKEKqFSYAhyvJUtzV+mEPUVb4Lt
+         VQiiQ8p2hOLIZWO0eal29IqX8Q4X104ubDs8RWBYImtc32PLPTwd7jgB0dsisf60eqmC
+         pKWYHIUDKNSTbyFHGgyXTGUUwljJfrzt0N6H4sjsyjqZ18QK1VLozVdGZ1+iTTYKvW7C
+         pWEw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1781260861; x=1781865661;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=IKYhDbo/BVbPAG52eCa6j34AzNbuZIzmkWiRm07K9uM=;
+        b=nYimiL+p7f2CwMFGKiprvJeYSpt8vgIpGGCL76b5dhoQhgQga/N5Dk0DHQlVRKn5zT
+         FNcw6urQ7mL8b5YZO9VYoOq0mgk/MtHv8lp8GDkDH3wgGNgMNc4AlUgkyDR26bqJ/hDe
+         w6+3XIEDPOe+xzYy/+3D3T0QpklPpsgAqX+gg9Fb17QyHRpsho9bOpONz29napRrMsqF
+         M8zNWZ/7FgY3DuWTDBqZuL0ygD/mXt9+i21FErTutyUSny4zTldZLlGKVAyyYhQVfYhO
+         SBQ3tMq18mU930E1ukdz94wlHH8wwA1bwJn1iMw1pSijwnAeZ0//6EQely02RIiAe2xj
+         GdXQ==
+X-Gm-Message-State: AOJu0YzK7rAL5QnLSsnLFak33s6rqP+w1KqaOMDIAvnGBQPWUEMn0Bo4
+	wt/J/bas5VBEIY8qfztMoivMvp/tZ6TPjNtQPZAOG7jiv6hFfbE9Yk8rZhRGa3izrHg=
+X-Gm-Gg: Acq92OEWfCpj17yQvzjJ42cMyX1h8ETPClB9roekKrFpiEP1S32/Ike+28vASIQoPgn
+	XSB/pG8QwUwmrWOpmn1jgU6u3hFYVLS0X64/BvsmhyCNvw+PUj34lex3SFXOLJWvh4C76aUEF+/
+	nT1rYXLp3dg+ioHfNzE2OSoS7LIVifXYRRd4S6sgK86Dqq64GkDq3PmgP5VoTeqaGdMGR3MYPDD
+	VXQbrXG0M6heP7r4k3yZzPPn8s5q+PjDTwMk+evx5cI5XXdUNI6KKgDFjDqrOk2rafoKWJkNc4Q
+	YPo2+iStkiegENhhiVwPYAswKzMfe+ncinfb/RfgwRneWNtb6FfB920sFgrqKRLnQllgZSjCix2
+	eymi7XdFQn50ngJwJuUPjs3O5ZKKP7n9sIK0BvHLJ26pV/QYjsThHaX05QwzTvPTh3iOYhsisQl
+	upveqMdbW1MIsvFkl9lo/l3RLTjmUNiV7flnf7FsbadilGwUYe3qkJQBtV
+X-Received: by 2002:a05:600c:4514:b0:490:e1e6:8988 with SMTP id 5b1f17b1804b1-490ec4c0327mr28465305e9.7.1781260860813;
+        Fri, 12 Jun 2026 03:41:00 -0700 (PDT)
+Received: from ?IPV6:2a07:de40:a101:3:ce70:3e6f:3b9c:9125? ([2a01:4a0:2e:ffff:ffff:ffff:ffff:ffff])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-490e2cf582bsm154474595e9.10.2026.06.12.03.41.00
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 12 Jun 2026 03:41:00 -0700 (PDT)
+Message-ID: <28469a1e-361b-45d0-9e7c-82a3565e4f45@suse.com>
+Date: Fri, 12 Jun 2026 12:40:59 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 01/60] scsi: qla2xxx: Add 29xx series PCI device ID
+ support
+To: Nilesh Javali <njavali@marvell.com>, martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, GR-FC-Storage-Upstream@marvell.com,
+ agurumurthy@marvell.com, emilne@redhat.com, jmeneghi@redhat.com
+References: <20260612095333.1666592-1-njavali@marvell.com>
+ <20260612095333.1666592-2-njavali@marvell.com>
+Content-Language: en-US
+From: Hannes Reinecke <hare@suse.com>
+In-Reply-To: <20260612095333.1666592-2-njavali@marvell.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
+On 6/12/26 11:52, Nilesh Javali wrote:
+> From: Manish Rangankar <mrangankar@marvell.com>
+> 
+> The QLA29xx is a new generation FC HBA that shares much of its
+> architecture with the 27xx/28xx family.  Register the new PCI
+> device IDs, wire up IS_QLA29XX() capability checks in the probe
+> and ISP-flags paths, and extend speed-capability logic so the
+> driver correctly recognises and initialises 29xx adapters.
+> 
+> Signed-off-by: Manish Rangankar <mrangankar@marvell.com>
+> Signed-off-by: Nilesh Javali <njavali@marvell.com>
+> ---
+>   drivers/scsi/qla2xxx/qla_def.h  | 33 +++++++++++----
+>   drivers/scsi/qla2xxx/qla_init.c |  2 +-
+>   drivers/scsi/qla2xxx/qla_isr.c  |  5 ++-
+>   drivers/scsi/qla2xxx/qla_os.c   | 74 ++++++++++++++++++++++++++-------
+>   4 files changed, 88 insertions(+), 26 deletions(-)
+> 
+Reviewed-by: Hannes Reinecke <hare@kernel.org>
 
-Pre-existing issues:
-- [High] Double frees and NULL pointer dereferences occur on `qla2x00_mem_a=
-lloc` error paths because freed pointers are not set to NULL.
---
+Cheers,
 
-commit ec7e8420d4fa55d2851ed0f0ca2bc56ab9339db8
-Author: Nilesh Javali <njavali@marvell.com>
-
-scsi: qla2xxx: Add support for QLA29XX in memory allocation
-
-This commit enhances qla2x00_mem_alloc to support QLA29XX adapters. It modi=
-fies
-the conditions for memory allocation and cleanup, ensuring proper handling =
-of
-the new adapter series alongside existing QLA27XX and QLA28XX checks.
-
-> diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-> index a3e2c0a95a99b..3ac48eeb9f698 100644
-> --- a/drivers/scsi/qla2xxx/qla_os.c
-> +++ b/drivers/scsi/qla2xxx/qla_os.c
-[ ... ]
-> @@ -4681,12 +4683,12 @@ qla2x00_mem_alloc(struct qla_hw_data *ha, uint16_=
-t req_len, uint16_t rsp_len,
->  	}
-> =20
->  fail_dif_bundl_dma_pool:
-> -	if (IS_QLA82XX(ha) || ql2xenabledif) {
-> +	if (IS_QLA82XX(ha) || IS_QLA29XX(ha) || ql2xenabledif) {
->  		dma_pool_destroy(ha->fcp_cmnd_dma_pool);
->  		ha->fcp_cmnd_dma_pool =3D NULL;
->  	}
->  fail_dl_dma_pool:
-> -	if (IS_QLA82XX(ha) || ql2xenabledif) {
-> +	if (IS_QLA82XX(ha) || IS_QLA29XX(ha) || ql2xenabledif) {
->  		dma_pool_destroy(ha->dl_dma_pool);
->  		ha->dl_dma_pool =3D NULL;
->  	}
-
-[Severity: High]
-This is a pre-existing issue, but does the error path in qla2x00_mem_alloc()
-lead to double-frees and NULL pointer dereferences?
-
-When qla2x00_mem_alloc() fails during late allocation stages (e.g., at
-fail_lsrjt or fail_async_pd), it frees adapter members like ha->elsrej.c or
-ha->async_pd but leaves the pointers non-NULL. The function returns -ENOMEM,
-and the caller qla2x00_probe_one() handles this by branching to
-probe_hw_failed, which unconditionally calls qla2x00_mem_free(ha).
-
-Because the pointers were not zeroed out, qla2x00_mem_free(ha) evaluates th=
-em
-as valid and attempts to free them again, resulting in a systemic double-fr=
-ee.
-
-Additionally, fail_s_dma_pool destroys and correctly NULLs ha->s_dma_pool.
-When qla2x00_mem_free(ha) later evaluates the dangling ha->async_pd as true,
-it calls dma_pool_free(ha->s_dma_pool, ...) with a NULL pool pointer, which
-will cause an immediate kernel panic when the allocator lock is dereference=
-d:
-
-qla2x00_mem_free() {
-	...
-	if (ha->async_pd)
-		dma_pool_free(ha->s_dma_pool, ha->async_pd, ha->async_pd_dma);
-	...
-}
-
-Should the error labels in qla2x00_mem_alloc() that free resources be updat=
-ed
-to also set their corresponding pointers to NULL?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260612095333.1666=
-592-1-njavali@marvell.com?part=3D26
+Hannes
+-- 
+Dr. Hannes Reinecke                  Kernel Storage Architect
+hare@suse.com                               +49 911 74053 688
+SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
+HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
