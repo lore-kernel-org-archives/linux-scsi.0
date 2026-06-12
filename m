@@ -1,240 +1,159 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1DE732E7BD9
-	for <linux-scsi@vger.kernel.org>; Fri, 12 Jun 2026 11:38:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8269A35E1B1
+	for <linux-scsi@vger.kernel.org>; Fri, 12 Jun 2026 11:39:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781264323; cv=none; b=btRy8/NEkP8tdbC0xTM7IlOkXPtfq3+exvcU4QeYS2K4Ktyt7Y4+A5Vnee6mQGFdVvD8UUTIsFkJltZSzIQePICUowbsvEgeO903ZpXwa8Pfi+t+z31snAPzHvA+u3VdXWOhv//gQm3BNHnO3Qmg4RcM/6P5VimxKzPjgRnZE1k=
+	t=1781264354; cv=none; b=EDQ85fEhOm+xVZHBlcxrHzhAE+HebpVmWrBaktHeuzJ+UO/gUjfGBAWXNaQVEi+KikVFUQPvEkO+9gB7laly7u1Pn/1QLN8ojl7gZj/rKn7ZTGKPuFhG1oqvAPCYJJMQJICzKWsrrDX2kzWw7Mwq+jl+ks336wuBtQuCbZiZ6fA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781264323; c=relaxed/simple;
-	bh=cyn4wU0iolz4PJUPG/d5qe2tAJaItFg9dxUGfUOIG8E=;
+	s=arc-20240116; t=1781264354; c=relaxed/simple;
+	bh=l0cteBQ/yCvud/LLLFfqmfo094+UvFsx4K5FXaDVSq4=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=uIzHElYH5BAXTTMN0iesV0Ii6rlmIZa4FZ8m/dUqEOc4F5P6RJ9swXS4XpjnoGu6oKk6aPk08AqbEO8J42kU/4/a6zPSf2y4AN63l0miziMb+Ky/3ApviUFwuUadup0KAYNptZen0RIhIgbc4nWqmlXAySFLR2xyfaPuRbHeiHA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lVQnY81m; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=AjhZf/nc0yL8X5+a91VV7GOcXh4FBv9IjZGA/iJbcphxi4mMzXUfAPkR3mVvZU+GhgotPR5mIzWqBRgyJLN7FcJsq8FKXXe3UECCQbzykGBg22Vr8PgXrgcrmiWVspjtk7LtMOw6BKqtGQjdYg/IEMvoz7lIVESsTz5NZQWR/a8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XJFSqgJA; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lVQnY81m"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D9C151F000E9;
-	Fri, 12 Jun 2026 11:38:41 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XJFSqgJA"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 009791F000E9;
+	Fri, 12 Jun 2026 11:39:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781264322;
-	bh=GBrERva/2ryvQe/oxS5ijoEX/UyjuLYUbcaKamncIC8=;
+	s=k20260515; t=1781264353;
+	bh=5LHcQR7v9RvzhchcstheQn5magY0ER8KJvx5wcW0V44=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=lVQnY81m63Ey1YT63mk6BaaO0N+SBMGd8jS4k0DwxXMSEfhGuTZtOkSHKVbo1e9S1
-	 kjIE9NY7b+0oAloFY/lZrjOFDPUTf0/oTkvtPmFSTum4rBrY3mcIjRmXUSLUcdzBb8
-	 a6Ye4siHrBV5ZGiTjwJMS4zUFHYNpSQJ2ibCh84HEESvQdisxdaHF2SyP3oY7VoHgk
-	 MpxQ2ULDjBdKRMgTKlTEYbetsnW4BKnBdtClcTzp0aKkyl5u1NBl8vMxqaLCtPICu4
-	 mNnyVpahALykAwz2v14ZvSvZYCOSVHBM8V0cmLBFhh23XDgRnxEb4gKpUI2jiC1+Ic
-	 q8kDFS5S+g9hQ==
+	b=XJFSqgJAy1yfBbJFCMv6ZvnKK4+ceb4V9II5k8huIUB5o36XhjO0NLdC8C1ZixBkS
+	 VH/tpcyEMbJ40h9U8BL0gHiRvT+nVssXoEyi9lACmXvIt0SrBs5SP7Oann1y535TyQ
+	 AiFP4mxq31KoWGceHsPfdXVjw4L5nH2TAeOS3/yegUZwBDBVR/osR/rhaAqy7JjZRJ
+	 9S/WSYaUWNAWNVs98WRLuYEzhxBXwjdofD0Sfh1sUuFjc7zUfoxFxu17qAADRkBtOe
+	 tglV7QQsIZKn4eP0yQF63SmUudFnbwr6emBqK8d1u84OQWhxKS71vCO14LRHa38Dfg
+	 DKxCrF9vklI4A==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 55/60] scsi: qla2xxx: Hold vport reference in
- qla24xx_report_id_acquisition()
+Subject: Re: [PATCH v2 57/60] scsi: qla2xxx: Hold qpair lock when sending
+ NVMe LS reject
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Nilesh Javali" <njavali@marvell.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260612095333.1666592-56-njavali@marvell.com>
-References: <20260612095333.1666592-56-njavali@marvell.com>
+In-Reply-To: <20260612095333.1666592-58-njavali@marvell.com>
+References: <20260612095333.1666592-58-njavali@marvell.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 12 Jun 2026 11:38:41 +0000
-Message-Id: <20260612113841.D9C151F000E9@smtp.kernel.org>
+Date: Fri, 12 Jun 2026 11:39:12 +0000
+Message-Id: <20260612113913.009791F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 7 potential issue(=
+Thank you for your contribution! Sashiko AI review found 3 potential issue(=
 s) to consider:
 
-New issues:
-- [High] The decrement of `vp->vref_count` lacks a release memory barrier a=
-nd breaks the driver's locking idiom, potentially leading to a use-after-fr=
-ee write on weakly ordered architectures.
-
 Pre-existing issues:
-- [High] The exact same use-after-free vulnerability fixed by this patch in=
- `qla24xx_report_id_acquisition` is present in the NVMe FC path via `qla2xx=
-x_get_vha_from_vp_idx`.
-- [High] Target mode processing uses `qla_find_host_by_vp_idx` which return=
-s an unreferenced `vha` pointer, opening a race condition for UAF during vp=
-ort teardown.
-- [High] btree operations on `ha->host_map` via `qla_update_host_map()` are=
- performed without holding `vport_slock`.
-- [High] Missing `sess_lock` during `vp_fcports` list traversal in Format 2=
- branch.
-- [High] Invalid use of list_for_each_entry_safe across dropped spinlocks i=
-n DPC and alert handlers.
-- [High] `qla24xx_report_id_acquisition` ignores `VPORT_DELETE` and can res=
-urrect a deleted vport.
+- [High] Missing `list_del()` before `kfree()` on the error path of `qla_nv=
+me_xmt_ls_rsp()` causes use-after-free list corruption.
+- [High] Concurrent and unsynchronized operations on the `fcport->unsol_ctx=
+_head` linked list.
+- [High] `qla_nvme_ls_reject_iocb()` unconditionally writes to the hardware=
+ doorbell even when the firmware is not started or the device is offline.
 --
 
-commit 95ed94124983f94c25ebc87bace3b12cf63aa94f
+commit d9117eaeb87a4e4531b8933ba8f285e5c93c354a
 Author: Nilesh Javali <njavali@marvell.com>
-scsi: qla2xxx: Hold vport reference in qla24xx_report_id_acquisition()
 
-This commit fixes a use-after-free by taking a vport reference
-(vref_count) while holding vport_slock when finding a virtual port,
-and dropping it after use. This ensures the vport isn't freed by a
-concurrent qla24xx_deallocate_vp_id().
+scsi: qla2xxx: Hold qpair lock when sending NVMe LS reject
 
-Cc: stable@vger.kernel.org
+This commit addresses an issue where qla_nvme_ls_reject_iocb() is called
+without holding the producer lock from two paths, which can corrupt the ring
+producer state. It takes the qp_lock_ptr around the two unlocked callers and
+documents the helper as caller-locked.
 
-> diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mb=
-x.c
-> index 8a001b489fc0e..bfb931eb14f61 100644
-> --- a/drivers/scsi/qla2xxx/qla_mbx.c
-> +++ b/drivers/scsi/qla2xxx/qla_mbx.c
-> @@ -4275,6 +4275,7 @@ qla24xx_report_id_acquisition(scsi_qla_host_t *vha,=
- void *pkt)
->  			list_for_each_entry(vp, &ha->vp_list, list) {
->  				if (vp_idx =3D=3D vp->vp_idx) {
->  					found =3D 1;
-> +					atomic_inc(&vp->vref_count);
+> diff --git a/drivers/scsi/qla2xxx/qla_nvme.c b/drivers/scsi/qla2xxx/qla_n=
+vme.c
+> index 3b2f255a5d7d4..8dc6df6c2e1c5 100644
+> --- a/drivers/scsi/qla2xxx/qla_nvme.c
+> +++ b/drivers/scsi/qla2xxx/qla_nvme.c
+> @@ -374,6 +374,7 @@ static int qla_nvme_xmt_ls_rsp(struct nvme_fc_local_p=
+ort *lport,
+>  	srb_t *sp;
+>  	int rval =3D QLA_FUNCTION_FAILED;
+>  	uint8_t cnt =3D 0;
+> +	unsigned long flags;
+> =20
+>  	if (!fcport || fcport->deleted)
+>  		goto out;
 
-[Severity: High]
-This is a pre-existing issue, but does this loop need to check if the vport
-is actively being deleted?
+[ ... ]
 
-If qla24xx_vport_delete() is concurrently removing the vport and has already
-taken it out of the host_map, would we resurrect it here?
-
-We take a reference and later re-register it without checking for
-VPORT_DELETE on vp->dpc_flags, which might lead to a use-after-free when the
-system later queries the map.
-
->  					break;
->  				}
->  			}
-> @@ -4292,6 +4293,8 @@ qla24xx_report_id_acquisition(scsi_qla_host_t *vha,=
- void *pkt)
->  			set_bit(VP_IDX_ACQUIRED, &vp->vp_flags);
->  			set_bit(REGISTER_FC4_NEEDED, &vp->dpc_flags);
->  			set_bit(REGISTER_FDMI_NEEDED, &vp->dpc_flags);
-> +
-> +			atomic_dec(&vp->vref_count);
+> @@ -440,7 +441,9 @@ static int qla_nvme_xmt_ls_rsp(struct nvme_fc_local_p=
+ort *lport,
+>  	a.vp_idx =3D vha->vp_idx;
+>  	a.nport_handle =3D uctx->nport_handle;
+>  	a.xchg_address =3D uctx->exchange_address;
+> +	spin_lock_irqsave(ha->base_qpair->qp_lock_ptr, flags);
+>  	qla_nvme_ls_reject_iocb(vha, ha->base_qpair, &a, true);
+> +	spin_unlock_irqrestore(ha->base_qpair->qp_lock_ptr, flags);
 
 [Severity: High]
-Could the weakly ordered nature of atomic_dec() allow the preceding set_bit=
-()
-operations to be reordered after the decrement?
+This isn't a bug introduced by this patch, but does the call to
+qla_nvme_ls_reject_iocb() here write to the hardware doorbell even when the
+firmware is not started?
 
-In the kernel, set_bit() and atomic_dec() do not imply memory barriers.
-On weakly ordered architectures, the atomic_dec() could become visible
-before the stores to vp->vp_flags and vp->dpc_flags.
+If qla_nvme_xmt_ls_rsp() bails out early because !ha->flags.fw_started, it
+jumps to the out label and executes qla_nvme_ls_reject_iocb(). Inside that
+function, qla2x00_start_iocbs() unconditionally writes to the doorbell ring.
 
-If qla24xx_deallocate_vp_id() polls vref_count concurrently, could it
-observe vref_count =3D=3D 0 early, proceeding to unlink the vport before the
-flags are fully updated?
+Could accessing MMIO registers when the firmware is stopped or in reset lead
+to PCIe bus errors or adapter hangs?
 
-Would it be safer to enclose the atomic_dec() within vport_slock, matching
-how the reference is acquired?
-
->  		}
->  		set_bit(VP_DPC_NEEDED, &vha->dpc_flags);
+>  	kfree(uctx);
 
 [Severity: High]
-This is a pre-existing issue, but are we modifying the host_map without
-holding the required lock in this same function?
+This is a pre-existing issue, but does this error path leave a dangling
+pointer in the unsol_ctx_head list?
 
-Just before the snippet above, qla_update_host_map() evaluates to
-qla_update_vp_map() which inserts the vp into the ha->host_map btree. The
-documentation for qla_update_vp_map() states it requires vport_slock:
+If uctx was previously linked into fcport->unsol_ctx_head (such as in
+qla2xxx_process_purls_iocb()), freeing it here without first calling
+list_del(&uctx->elem) leaves the freed memory in the list.
 
-drivers/scsi/qla2xxx/qla_mid.c:qla_update_vp_map() {
-    /* vport_slock to be held by the caller */
-    ...
-    btree_insert32(&ha->host_map, ...);
-}
+Will the next operation on this list access freed memory and cause list
+corruption?
 
-Since we dropped ha->vport_slock before this call, could concurrent
-modifications corrupt the btree?
+>  	return rval;
+>  }
 
+[ ... ]
 
-[Severity: High]
-This isn't a bug introduced by this patch, but should we be holding
-sess_lock while iterating vp_fcports in the Format 2 path of
-qla24xx_report_id_acquisition()?
-
-In the Format 1 path, the list is traversed with sess_lock held.
-However, in the Format 2 path, we traverse the list and call
-qla2x00_find_fcport_by_wwpn() without holding vha->hw->tgt.sess_lock:
-
-drivers/scsi/qla2xxx/qla_mbx.c:qla24xx_report_id_acquisition() {
-    ...
-    list_for_each_entry(fcport, &vha->vp_fcports, list) {
-        fcport->scan_state =3D QLA_FCPORT_SCAN;
-        fcport->n2n_flag =3D 0;
-    }
-
-    fcport =3D qla2x00_find_fcport_by_wwpn(vha,
-        rptid_entry->u.f2.port_name, 1);
-    ...
-}
-
-Could this lack of locking lead to list corruption or use-after-free if
-vp_fcports is modified concurrently?
-
+> @@ -1299,6 +1306,7 @@ qla2xxx_process_purls_pkt(struct scsi_qla_host *vha=
+, struct purex_item *item)
+>  {
+>  	struct qla_nvme_unsol_ctx *uctx =3D item->purls_context;
+>  	struct qla_nvme_lsrjt_pt_arg a;
+> +	unsigned long flags;
+>  	int ret =3D 1;
+> =20
+>  #if (IS_ENABLED(CONFIG_NVME_FC))
+> @@ -1311,7 +1319,9 @@ qla2xxx_process_purls_pkt(struct scsi_qla_host *vha=
+, struct purex_item *item)
+>  		a.vp_idx =3D vha->vp_idx;
+>  		a.nport_handle =3D uctx->nport_handle;
+>  		a.xchg_address =3D uctx->exchange_address;
+> +		spin_lock_irqsave(vha->hw->base_qpair->qp_lock_ptr, flags);
+>  		qla_nvme_ls_reject_iocb(vha, vha->hw->base_qpair, &a, true);
+> +		spin_unlock_irqrestore(vha->hw->base_qpair->qp_lock_ptr, flags);
+>  		list_del(&uctx->elem);
 
 [Severity: High]
-This is a pre-existing issue, but does the NVMe FC path suffer from a simil=
-ar
-use-after-free vulnerability as the one fixed in this patch?
+This isn't a bug introduced by this patch, but does this list deletion race
+with other contexts?
 
-When calling qla2xxx_get_vha_from_vp_idx() in qla_nvme.c, the lock is dropp=
-ed
-and the vha pointer is returned without incrementing vref_count:
+This list_del(&uctx->elem) is executed in a workqueue context without
+acquiring any locks to protect the list. Since elements are added to the li=
+st
+in qla2xxx_process_purls_iocb() while holding a per-queue hardware response
+lock, could concurrent unsynchronized operations corrupt the list pointers?
 
-drivers/scsi/qla2xxx/qla_nvme.c:qla2xxx_get_vha_from_vp_idx() {
-    if (vha->vp_idx =3D=3D vp_index) {
-        spin_unlock_irqrestore(&ha->vport_slock, flags);
-        return vha;
-    }
-}
-
-The caller, qla2xxx_process_purls_iocb(), then heavily uses this unreferenc=
-ed
-pointer. Could a concurrent qla24xx_deallocate_vp_id() tear down the vport
-and free it, causing a use-after-free in the NVMe response path?
-
-
-[Severity: High]
-This is a pre-existing issue, but does qla_find_host_by_vp_idx() also leak
-unreferenced pointers in target mode?
-
-drivers/scsi/qla2xxx/qla_mid.c:qla_find_host_by_vp_idx() {
-    if (likely(test_bit(vp_idx, ha->vp_idx_map)))
-        return ha->vp_map[vp_idx].vha;
-}
-
-Various target mode functions route commands to the vport returned by this
-lookup. Since no reference is taken, couldn't qla24xx_deallocate_vp_id()
-free the vha concurrently?
-
-
-[Severity: High]
-This is a pre-existing issue, but is it safe to use list_for_each_entry_saf=
-e()
-when dropping the spinlock in DPC and alert handlers?
-
-In qla2x00_do_dpc_all_vps(), the lock is dropped inside the safe iteration
-loop:
-
-drivers/scsi/qla2xxx/qla_mid.c:qla2x00_do_dpc_all_vps() {
-    spin_lock_irqsave(&ha->vport_slock, flags);
-    list_for_each_entry_safe(vp, tvp, &ha->vp_list, list) {
-        if (vp->vp_idx) {
-            atomic_inc(&vp->vref_count);
-            spin_unlock_irqrestore(&ha->vport_slock, flags);
-            ...
-            spin_lock_irqsave(&ha->vport_slock, flags);
-}
-
-Since list_for_each_entry_safe() caches the next element (tvp), if a
-concurrent deletion removes tvp from the list and frees it while the lock
-is dropped, won't resuming the loop result in a use-after-free?
-A similar pattern exists in qla2x00_alert_all_vps().
+>  		kfree(uctx);
+>  	}
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260612095333.1666=
-592-1-njavali@marvell.com?part=3D55
+592-1-njavali@marvell.com?part=3D57
