@@ -1,214 +1,174 @@
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8EADF3644C6;
-	Fri, 12 Jun 2026 23:12:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8DE3E33F5BF
+	for <linux-scsi@vger.kernel.org>; Fri, 12 Jun 2026 23:16:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781305930; cv=none; b=AtmqSRyWvnPlNlaMKblkY2HoOPqcL7+mcm4gGOoRMWjePyvZq14aCueL8kq4GKSvBkxmggRluyXg0bcFBmfX5b2j3k2JX3lMpAnASRAriiTtp64VO2OkAr7U0GQuey0QHMqO+4MIO3af2MS4S6Jhro01cKx18J7i3IbVi9tSG1k=
+	t=1781306167; cv=none; b=lFiGsbLxCwYystoCB2P7Umm/GUr407keAitUfGOLoAcAuvKLwcWjPeCCj4gArihbucpfBuhvLNf/hwE+yzDAhtSVima5SSJ68j7c4sf3VHU4XEKDA859uqXiySYQrc/TcMK6gMjb7Z2paX26IhEvcmItXS5RFH3FVPDXREm85R8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781305930; c=relaxed/simple;
-	bh=qhIWZwDDuDWB2OEBZXnjxyJknODG3ClGhSgN1hxlEhk=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=BKtJdvl/C5A3ADM5fv91a+2MPAaXMqWYzJqpeco+uTy2Yr9EOZuIPXtLhMDB5EoPmVpUrnU5w47REA075xDeqYF/wNHESg1/Vhks9HNBwL9KhxW3Yo2MrbEcT19pZ16FTz15gH3FEotFlT+QTrpr9lPioDtMf6MoN50RjOeZb9U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=Ak+J8iSv; arc=none smtp.client-ip=148.163.156.1
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	s=arc-20240116; t=1781306167; c=relaxed/simple;
+	bh=/Svp77bgp3BIjpBR/ZIKavRH6r0pUeyIQQD3UliNBOg=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=EpuLrQRXC9qNe9AQL5EBbg6pIUy4SFtZMpMi4X78NgtKMqqW912H/FE+KUUau5mGv86LTTg8iTDPVpiLTFEVnYJ8wkW292NyyzJD48lRKfRKWWb95ESXU2/k7s/rL2n7lCDATNWCMBikjaan8XnGNuLk3k/jcX8j5rr6z2AOz4E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MYw3Lw49; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="Ak+J8iSv"
-Received: from pps.filterd (m0360083.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 65CGK190722204;
-	Fri, 12 Jun 2026 23:11:56 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=pp1; bh=XN2+Lv
-	+Bpsdrx7zggvVnqXZteIICRqidIKpH/qtqCBc=; b=Ak+J8iSvyKcrEFPBMhfIDM
-	YmZtEBY4cSeCZuAlh8xf5cPI4VG7rLjkEyOHcimKt4iEKRx0Fu0WRzVShZr6vBxm
-	b12z1BQ1ZgjCqzTxX7RCID1CMWWHJohI2RBpOVkKcaqrw1dgJgZybxNF41uGSUeC
-	k5B5kCYTrrfU6eXJbLTA7cv6QskX/ne0rNbHya0x085lZl0B0uy9S0bug3qfJVI7
-	3bn6AIA0rCdFeSpxpKRoESX5+OxEnMYD6L9th9+DAuCvL+AvpJx5zC8gY+jZk0tk
-	4VVpz92bIw3QUv5StZu9YCQnC2yf0ZlCwmV5nAb2878u9c/SnW+w68Ex6q6g2n4g
-	==
-Received: from ppma23.wdc07v.mail.ibm.com (5d.69.3da9.ip4.static.sl-reverse.com [169.61.105.93])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4eqe8dkdv4-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 12 Jun 2026 23:11:55 +0000 (GMT)
-Received: from pps.filterd (ppma23.wdc07v.mail.ibm.com [127.0.0.1])
-	by ppma23.wdc07v.mail.ibm.com (8.18.1.7/8.18.1.7) with ESMTP id 65CN4ZM3032256;
-	Fri, 12 Jun 2026 23:11:54 GMT
-Received: from smtprelay05.dal12v.mail.ibm.com ([172.16.1.7])
-	by ppma23.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4eqe0aa1je-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 12 Jun 2026 23:11:54 +0000 (GMT)
-Received: from smtpav06.wdc07v.mail.ibm.com (smtpav06.wdc07v.mail.ibm.com [10.39.53.233])
-	by smtprelay05.dal12v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 65CNBqje33292988
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Fri, 12 Jun 2026 23:11:53 GMT
-Received: from smtpav06.wdc07v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id D12D75804E;
-	Fri, 12 Jun 2026 23:11:52 +0000 (GMT)
-Received: from smtpav06.wdc07v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 9B5F65803F;
-	Fri, 12 Jun 2026 23:11:51 +0000 (GMT)
-Received: from [9.61.160.241] (unknown [9.61.160.241])
-	by smtpav06.wdc07v.mail.ibm.com (Postfix) with ESMTP;
-	Fri, 12 Jun 2026 23:11:51 +0000 (GMT)
-Message-ID: <bfb7ff08-e4ec-46a2-b368-12d5c77f0ee4@linux.ibm.com>
-Date: Fri, 12 Jun 2026 16:11:50 -0700
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MYw3Lw49"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1976E1F000E9;
+	Fri, 12 Jun 2026 23:16:06 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1781306166;
+	bh=TWE2oZDF3qaO1tEDFdsfEw2fWOYjHX7C0RygXFDyrWQ=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=MYw3Lw49dV/j3h46gfdsfzxXp3e+00DrAhBjPw7tGUyYstTpBRIGV9yMaC+i1ZGKs
+	 8nDdMfKnAWGP7/zMnwJ1ukUd7mujA9w7/n7RAEk+F3wjUrxMRomg1TFiozm0RQGcUt
+	 r0GQRQDJ9GBTvlUX5O7th3kW0hkHN/CTYrpTFtVeT5JU5b8a2ypgW2LFhl8wvZ8lMy
+	 Q5gJNvtJMF4U5dF9Rd+K+atPeSZ2UKht8s5eu9/oOuE/5Zk/CzJfMz4TuI5iEu7xXU
+	 9fatR4s1i1PgfLLNnoqt/UlwLTTzribdbWHkGjjbteEskF3d5QHYyO0NWQUjQlBcoN
+	 N/gCdxk7rTkHA==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v4 11/13] scsi: fnic: Track NVMe transport statistics
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Karan Tilak Kumar" <kartilak@cisco.com>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20260612180918.8554-12-kartilak@cisco.com>
+References: <20260612180918.8554-12-kartilak@cisco.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Fri, 12 Jun 2026 23:16:05 +0000
+Message-Id: <20260612231606.1976E1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 3/7] ibmvfc: make ibmvfc login to fabric
-To: davemarq@linux.ibm.com,
-        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Madhavan Srinivasan <maddy@linux.ibm.com>,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        Nicholas Piggin <npiggin@gmail.com>,
-        "Christophe Leroy (CS GROUP)" <chleroy@kernel.org>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org, Brian King <brking@linux.ibm.com>,
-        Greg Joyce <gjoyce@linux.ibm.com>,
-        Kyle Mahlkuch <kmahlkuc@linux.ibm.com>
-References: <20260608-ibmvfc-fpin-support-v2-0-d41f540fba5c@linux.ibm.com>
- <20260608-ibmvfc-fpin-support-v2-3-d41f540fba5c@linux.ibm.com>
-Content-Language: en-US
-From: Tyrel Datwyler <tyreld@linux.ibm.com>
-In-Reply-To: <20260608-ibmvfc-fpin-support-v2-3-d41f540fba5c@linux.ibm.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-Reinject: loops=2 maxloops=12
-X-Proofpoint-Spam-Info: AW1haW4tMjYwNjEyMDIyMCBTYWx0ZWRfX30a1uCGgXRb0
- qUbqHu2cdSeRywaflWXHobQUOhAbzGhPuR03LDyK4Vw47w23lA7lg1R6r4MS+NhZFvINsiay/3t
- krGWMQIkmuC43DaPuaHAPNiG9SKwhfU=
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNjEyMDIyMCBTYWx0ZWRfX6MioWJsnb8Fm
- TiC25s6c/s0RMw4GJLrjAkJH8EU2XBAE9tNEWOSXxhqgL58hpbwqJSqAiWQ3QG6n0c5m3EAqO1D
- 3IJUiGSHKkrrX0g8MVY2xUenm7QDFV/6DXKSuOO/OJgHrQSsjyhCclNLiWPM/e6xKAf2EB2pH1+
- 2L9mVQGvio6RTnXqaRAvQZKCeoGpUa0G9rX/T6Rj7MO+KjnrhiN5BQnUPtJqFoHldJ0eDI8gUo3
- Ic2iKcYjb7GAzK0pigPnQnWvSvqUkq28SXxViHM7Q1K6e5uRBJJEciAXXCMggTGQsiWFKZzOK/x
- UxtjbO0eABdFY+NK3HqIve9In/bM7YDkMwMzV6C/j+GfrwaFx21KaQYgvA7OUavG6qDz1gGn2qc
- M7+mbm4PrlsLCEJDuLR6E1OhbomVrRlDtuAy6n2mLPT8fRJUewCAVtd/ikd5l0drEQ5IWrZN2hg
- joQZ+3aYcZprUqci0vg==
-X-Proofpoint-ORIG-GUID: lnI6gV-ZIlmvnu72oD7TXbKnTxSK6fzV
-X-Authority-Analysis: v=2.4 cv=GIM41ONK c=1 sm=1 tr=0 ts=6a2c923c cx=c_pps
- a=3Bg1Hr4SwmMryq2xdFQyZA==:117 a=3Bg1Hr4SwmMryq2xdFQyZA==:17
- a=IkcTkHD0fZMA:10 a=FelO9ux0wxsA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=RnoormkPH1_aCDwRdu11:22 a=iQ6ETzBq9ecOQQE5vZCe:22 a=VnNF1IyMAAAA:8
- a=rJ4d5xbAOQceQwH0KXUA:9 a=QEXdDO2ut3YA:10
-X-Proofpoint-GUID: hhYXZCFmBA_lzEO61kTaD4YLRPAYOEO8
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.125,FMLib:17.12.100.49
- definitions=2026-06-12_03,2026-06-12_03,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- clxscore=1015 suspectscore=0 impostorscore=0 spamscore=0 phishscore=0
- adultscore=0 lowpriorityscore=0 bulkscore=0 priorityscore=1501 malwarescore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2606040000 definitions=main-2606120220
 
-On 6/8/26 11:30 AM, Dave Marquardt via B4 Relay wrote:
-> From: Dave Marquardt <davemarq@linux.ibm.com>
-> 
-> Add support for fabric login in order to support the asynchronous
-> event queue with its own interrupt as required by NPIV specification
-> to support the asynchronous sub-queue and interrupt in order to
-> support full and extended FPIN messages.
-> ---
->  drivers/scsi/ibmvscsi/ibmvfc.c | 94 ++++++++++++++++++++++++++++++++++++++++--
->  drivers/scsi/ibmvscsi/ibmvfc.h | 16 +++++++
->  2 files changed, 106 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
-> index 88386d7c9106..a18861808325 100644
-> --- a/drivers/scsi/ibmvscsi/ibmvfc.c
-> +++ b/drivers/scsi/ibmvscsi/ibmvfc.c
-> @@ -5244,6 +5244,86 @@ static void ibmvfc_discover_targets(struct ibmvfc_host *vhost)
->  		ibmvfc_link_down(vhost, IBMVFC_LINK_DEAD);
->  }
->  
-> +static void ibmvfc_fabric_login_done(struct ibmvfc_event *evt)
-> +{
-> +	struct ibmvfc_fabric_login *rsp = &evt->xfer_iu->fabric_login;
-> +	u32 mad_status = be16_to_cpu(rsp->common.status);
-> +	struct ibmvfc_host *vhost = evt->vhost;
-> +	int level = IBMVFC_DEFAULT_LOG_LEVEL;
-> +
-> +	ENTER;
-> +
-> +	switch (mad_status) {
-> +	case IBMVFC_MAD_SUCCESS:
-> +		fc_host_port_id(vhost->host) = be64_to_cpu(rsp->nport_id);
-> +		ibmvfc_free_event(evt);
-> +		break;
-> +
-> +	case IBMVFC_MAD_FAILED:
-> +		if (ibmvfc_retry_cmd(be16_to_cpu(rsp->status), be16_to_cpu(rsp->error)))
-> +			level += ibmvfc_retry_host_init(vhost);
+Thank you for your contribution! Sashiko AI review found 4 potential issue(=
+s) to consider:
+- [High] Deadlock between fnic_lock and timer lock during NVMe LS response.
+- [High] Use-After-Free of io_req when writing waitq_start_time.
+- [High] Memory and active_ios leak when ITMF abort fails.
+- [Medium] active_fw_reqs counter permanently drifts upwards on ERSP comple=
+tions.
+--
+
+commit b68b40c66de8d347db7bd91c9ea2450605172e71
+Author: Karan Tilak Kumar <kartilak@cisco.com>
+
+scsi: fnic: Track NVMe transport statistics
+
+Add counters for NVMe requests, responses, LS handling, aborts, and
+wait-queue activity.
+
+Update NVMe I/O, completion, LS response, LS abort, and abort paths to
+maintain the new counters.
+
+> diff --git a/drivers/scsi/fnic/fnic_nvme.c b/drivers/scsi/fnic/fnic_nvme.c
+> index 9cc8f0baf09cb..2ccbfa0dfa92d 100644
+> --- a/drivers/scsi/fnic/fnic_nvme.c
+> +++ b/drivers/scsi/fnic/fnic_nvme.c
+
+[ ... ]
+
+> @@ -193,6 +250,11 @@ inline int nvfnic_queue_wq_nvme_copy_desc(struct fni=
+c *fnic,
+>  					tport->max_payload_size, tport->r_a_tov,
+>  					tport->e_d_tov);
+> =20
+> +	atomic64_inc(&fnic->fnic_stats.fw_stats.active_fw_reqs);
+> +	if (atomic64_read(&fnic->fnic_stats.fw_stats.active_fw_reqs) >
+> +	    atomic64_read(&fnic->fnic_stats.fw_stats.max_fw_reqs))
+> +		atomic64_set(&fnic->fnic_stats.fw_stats.max_fw_reqs,
+> +		     atomic64_read(&fnic->fnic_stats.fw_stats.active_fw_reqs));
+> =20
+>  	spin_unlock_irqrestore(&fnic->wq_copy_lock[idx], intr_flags);
+
+[Severity: Medium]
+Since this function increments active_fw_reqs for NVMe requests, does the
+decrement in fnic_fcpio_cmpl_handler() in fnic_scsi.c need to be updated
+to include FCPIO_NVME_ERSP_HW_CMPL?
+
+Without updating the switch statement in fnic_fcpio_cmpl_handler(), will
+the counter permanently drift upwards when NVMe commands complete with an
+Extended Response?
+
+[ ... ]
+
+> @@ -766,11 +878,18 @@ void nvfnic_fcpio_nvme_itmf_cmpl_handler(struct fni=
+c *fnic,
+> =20
+>  	io_req->cmd_flags |=3D FNIC_IO_ABT_TERM_DONE;
+> =20
+> +	if (!(io_req->cmd_flags & (FNIC_IO_ABORTED | FNIC_IO_DONE)))
+> +		atomic64_inc(&misc_stats->no_icmnd_itmf_cmpls);
+> =20
+>  	if (io_req->abts_state =3D=3D FCPIO_SUCCESS) {
+>  		io_req->fcp_req->transferred_length =3D 0;
+>  		io_req->fcp_req->rcv_rsplen =3D 0;
+>  		io_req->fcp_req->status =3D NVME_SC_ABORT_REQ;
+> +		atomic64_dec(&fnic_stats->io_stats.active_ios);
+> +		if (atomic64_read(&fnic->io_cmpl_skip))
+> +			atomic64_dec(&fnic->io_cmpl_skip);
 > +		else
-> +			ibmvfc_link_down(vhost, IBMVFC_LINK_DEAD);
-> +		ibmvfc_log(vhost, level, "Fabric Login failed: %s (%x:%x)\n",
-> +			   ibmvfc_get_cmd_error(be16_to_cpu(rsp->status), be16_to_cpu(rsp->error)),
-> +						be16_to_cpu(rsp->status), be16_to_cpu(rsp->error));
-> +		ibmvfc_free_event(evt);
-> +		LEAVE;
-> +		return;
-> +
-> +	case IBMVFC_MAD_CRQ_ERROR:
-> +		ibmvfc_retry_host_init(vhost);
-> +		fallthrough;
-> +
-> +	case IBMVFC_MAD_DRIVER_FAILED:
-> +		ibmvfc_free_event(evt);
-> +		LEAVE;
-> +		return;
-> +
-> +	default:
-> +		dev_err(vhost->dev, "Invalid fabric Login response: 0x%x\n", mad_status);
-> +		ibmvfc_link_down(vhost, IBMVFC_LINK_DEAD);
-> +		ibmvfc_free_event(evt);
-> +		LEAVE;
-> +		return;
-> +	}
-> +
-> +	ibmvfc_set_host_action(vhost, IBMVFC_HOST_ACTION_QUERY);
-> +	wake_up(&vhost->work_wait_q);
-> +
-> +	LEAVE;
-> +}
-> +
-> +static void ibmvfc_fabric_login(struct ibmvfc_host *vhost)
-> +{
-> +	struct ibmvfc_fabric_login *mad;
-> +	struct ibmvfc_event *evt = ibmvfc_get_reserved_event(&vhost->crq);
-> +	int level = IBMVFC_DEFAULT_LOG_LEVEL;
-> +
-> +	if (!evt) {
-> +		ibmvfc_log(vhost, level, "Fabric Login failed: no available events\n");
-> +		ibmvfc_hard_reset_host(vhost);
-> +		return;
-> +	}
-> +
-> +	ibmvfc_init_event(evt, ibmvfc_fabric_login_done, IBMVFC_MAD_FORMAT);
-> +	mad = &evt->iu.fabric_login;
-> +	memset(mad, 0, sizeof(*mad));
-> +	if (vhost->scsi_scrqs.protocol == IBMVFC_PROTO_SCSI)
-> +		mad->common.opcode = cpu_to_be32(IBMVFC_FABRIC_LOGIN);
-> +	else {
-> +		ibmvfc_log(vhost, level, "Fabric Login failed: unknown protocol\n");
-> +		return;
-> +	}
+> +			atomic64_inc(&fnic_stats->io_stats.io_completions);
+> =20
+>  		nvfnic_release_nvme_ioreq_buf(iport, io_req);
+>  		if (io_req->done)
 
-This check is pretty pedantic. Seeing as you are directly referencing the scsi
-sub-crqs. The protocol field exists so we can pass the sub-crqs blindly and the
-code once NVMf comes along can determine the protocol.
+[Severity: High]
+Does this code leak memory and the active_ios counter when the abort status
+is not FCPIO_SUCCESS?
 
-Also, if somehow this was ever possibly the case you would leak the event
-structure. I think we can drop the check all together.
+If the abort fails, the function skips nvfnic_release_nvme_ioreq_buf(),
+the io_req->done() callback, and the active_ios decrement before unlocking
+and returning.
 
--Tyrel
+[ ... ]
 
+> @@ -1067,11 +1191,14 @@ nvfnic_find_ls_req(struct fnic_tport_s *tport, ui=
+nt16_t oxid)
+>  void nvfnic_fcpio_cmpl(struct fnic_io_req *io_req)
+>  {
+>  	struct fnic *fnic =3D io_req->iport->fnic;
+> +	struct fnic_stats *fnic_stats =3D &fnic->fnic_stats;
+> =20
+>  	nvfnic_free_fcpio_tag(io_req->iport, io_req);
+> +	atomic64_inc(&fnic_stats->io_stats.nvme_ios_queued_for_rsp);
+> =20
+>  	llist_add(&io_req->nvfnic_io_cmpl, &fnic->nvme_io_event_llist);
+>  	atomic_inc(&fnic->nvme_io_event_queued);
+> +	atomic64_inc(&fnic_stats->io_stats.nvme_num_ios_in_waitq);
+> =20
+>  	io_req->waitq_start_time =3D jiffies;
+>  	queue_work(fnic_cmpl_queue, &fnic->nvme_io_cmpl_work);
 
+[Severity: High]
+Can this write to waitq_start_time cause a use-after-free?
+
+The io_req is published to a lockless list via llist_add() before assigning
+waitq_start_time. A concurrent worker thread could dequeue the request,
+process the completion, and free the memory before this assignment occurs.
+
+[ ... ]
+
+> @@ -1215,6 +1348,7 @@ void nvfnic_ls_rsp_recv(struct fnic_iport_s *iport,
+>  	}
+> =20
+>  	nvfnic_ls_req->state =3D FNIC_LS_REQ_CMD_COMPLETE;
+> +	atomic64_inc(&fnic_stats->nvme_stats.nvme_ls_responses);
+> =20
+>  	list_del_init(&nvfnic_ls_req->list);
+>  	lsreq->private =3D NULL;
+
+[Severity: High]
+Is it possible the timer_delete_sync() call right after this block triggers
+a deadlock?
+
+nvfnic_ls_rsp_recv() is called with fnic->fnic_lock held. The sync
+cancellation blocks on the timer callback if it's running, but the callback
+(nvfnic_ls_req_timeout()) unconditionally attempts to acquire the same
+fnic->fnic_lock, creating an AB-BA deadlock scenario.
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260612180918.8554=
+-1-kartilak@cisco.com?part=3D11
