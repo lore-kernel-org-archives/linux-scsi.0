@@ -1,188 +1,134 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f41.google.com (mail-wm1-f41.google.com [209.85.128.41])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3981B3E9286
-	for <linux-scsi@vger.kernel.org>; Fri, 12 Jun 2026 11:45:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7968B368946
+	for <linux-scsi@vger.kernel.org>; Fri, 12 Jun 2026 11:47:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.41
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781264758; cv=none; b=hUuG78l3OaRxNQ1T5RnpMngQ/Ziri/BSQWDhfm6NUUct3pPBPSAoUu4umIbrC7BywtwlCSmxM8beuOa9QSZwVFssIlRo6U1IThxioGk5N6vF8elTM6Ni2D8d0R7qxloPaB2HGVKzme+jAKho0K2TOuzUx5yBmtGCidC9gHCy7gA=
+	t=1781264874; cv=none; b=EmPxSACO15h5tYDDCEUlz3XFacXik+9sWl9P2qlVYoPKDOqjFMB7W5YjLejJ7Ifa4m8E6mOoGMJAvarefizqiFcRifW5BZ2YOV6iJBTu65jXirTt3Yh4evcUFj2U7t1m01qpqUxFeEbEAF5adeKrrOx39Oh3zz8fZSgQvYRmXVI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781264758; c=relaxed/simple;
-	bh=HEPq660xzn2FXKFXqQ8nh5uxDEtSJwaE760j+H7fc+E=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=RV5kRsJZCz0nnqrynBjcRipgBnifG6+34Vs9vqGF7FaLMe2ezgzX+nlP0Ses8TFhR3ycaNmdoplCQwdchvu25XkJ9TNJgr1pHamaQ9LJzvdygAVWSqYeLHLOy5rAcNLL7HEydh/96/2pLxvTELuMI22LvuWQHfVFLs/b0uCaMPo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aNCeh+i+; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1781264874; c=relaxed/simple;
+	bh=fVOSbob9d8hsY4XIb4oM4EhSUFBIa8HVrW81A0q56YM=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=gdgOrNyWwZpG/4qfzi/0GpFap1xDQGPjKoIS9P2npUavSLk2rptktoI/1VZ5NYDqq7oaI/M0PRuAXad1Wwds1H42BFGoS2oWAiIvS8OuwYRszHZd0PYRVClUWwQiOQr1JFTL8duXvXoTSqPyByEO0Tb+PRtS6YaSrPMRdMueXpw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=RUdE9siD; arc=none smtp.client-ip=209.85.128.41
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aNCeh+i+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B5D0D1F000E9;
-	Fri, 12 Jun 2026 11:45:56 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781264756;
-	bh=LGwVi+gUKpUHSiOSj8nhRswGyLeOGXIX0hGYsljefSs=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=aNCeh+i+KaTjldRSm137Tw9UDiimLv7UppvDT4ZsAKgZ76l4hsmSZnN0PszXsW/X3
-	 3lGDWwOqCP1PYl2o1EfhXbq58AGSCZZvqwuoRB6A8u/L48PkjQAIP07voyE86j0JeD
-	 iNWqfn9/cx+snHYG9JHnkHeAyr5of/zv1lHdFwWwSMvs+l1EubH6uT/txLtDYVRvAZ
-	 lEhjIzBby2can48H6t5DbHXV+tghRMsnb2bLHR9ocZYhAbouwiaWGw3NPMOJLqOD5a
-	 OszxxnqaVUxBbEAfeZPezzc8sw2KSA9gwP6METh7VHl4Lctk3PJf3uV2x4r1vzpdWE
-	 pXR93fnsMHEPg==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 60/60] scsi: qla2xxx: Bound image count in
- qla2x00_update_fru_versions()
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Nilesh Javali" <njavali@marvell.com>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260612095333.1666592-61-njavali@marvell.com>
-References: <20260612095333.1666592-61-njavali@marvell.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Fri, 12 Jun 2026 11:45:55 +0000
-Message-Id: <20260612114556.B5D0D1F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="RUdE9siD"
+Received: by mail-wm1-f41.google.com with SMTP id 5b1f17b1804b1-490cf3000f0so9209375e9.1
+        for <linux-scsi@vger.kernel.org>; Fri, 12 Jun 2026 04:47:53 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=suse.com; s=google; t=1781264872; x=1781869672; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=saYLI4wB9U9hT6ImFtGdQfpcUC/+nMSmTcWzovuyFpU=;
+        b=RUdE9siDmGMNZ8CjEf5x0ncSY8boicIAQGBu1BWCgS/TwQqxwgKGWHmffdg8HKs6Hl
+         RM4QXUYf4tq9MIMVuh/0dDlRM9Uu0z/+SDFBwxmfFY/9yPlAV0692gvujldTZYSFFgnm
+         90Jx5X8uiVUAqUGisjHC9ZMe2gY7q3bHU/SesULJNsI9U8Ahxma1VNLyC8Xqz+JjAIG5
+         7LGAn6TsHv7GG8LuNYu7PmnCnXuWUcASWzkiwy5ZZuxPdEfd5fHoy467aWmHwo84BI6t
+         wL+wzVHOm8HhA/cdH8kWM10plrD54B85zDhM3eO7DelLdeiOc2KvFFER+h2GqYxWaC4l
+         uMcw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1781264872; x=1781869672;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=saYLI4wB9U9hT6ImFtGdQfpcUC/+nMSmTcWzovuyFpU=;
+        b=Q4OmunHh5F7TjmwYOYoFFkSU744cn5tubXIDnVbaZ68y4lGsLzgDuwqPkltd2pDSNn
+         z9Dl9QV7II/+/ebseDfGcvpEMCM/m12+9pYx8wg5Wl1xfm8NeySiqt9D2AdDrBllHwrP
+         qSgOPEoqyRokLy/yT7R266idCz36v2Z10Xm9CNK2olAw/U/NYHlDZLP1Hbw+zEfDGUl7
+         8fAi/mek8z/Wzme72YNaUvkczJULi8XPi3p98HAFo9dTVI7VZcYphu9OxjfklGdFb3cy
+         CrVLZSgixVOFqtCXGwPbhjvoKRwKAch2qezwkafbAPN2dS6moYd0RVFyLZECW4ziodiK
+         PzQA==
+X-Gm-Message-State: AOJu0Yy3CWksUuMBqdAWj/2j4RpzhAR2sxLN4rmz3Y3igzVjgzdYugOS
+	GY6pBRgaiyu2ZHFRwFvuctemTZFqi461bq0Ox3BC4M6RAG+LJ3xXV0QKKNA+Fgxi4Qw=
+X-Gm-Gg: Acq92OHrx2UiE84Ww6afRUU1yU9VF2Qd5jqbkFJN/huY3KnJHhu3rLhBrfbQKDUfwqK
+	vXNeAM3MZTHnCnNaG4sYkO3+VY8NiUDrH1UQpZgyNITkzP9zg4TJWz/RhA20oNAjkd9RK7uo/81
+	zRMWhOfrX5zBjmt1KcQgPDVCY8kpB3lRvmzE/uJZaywfo/BH8VVnBVS6ErW/uS+wFBvuJXxHYBk
+	T4QlyrUOuK4N7v4rXS6a1O/le20qUMPqUlkCKU/405BcUJ9LLi5rN+uuJxS//TwmhWCRXmmCSxT
+	si0q07uXUnJkdetRE+ASePAGJtARUlaGAsN2MFesy3IsoHVheuoifUZqgPxNvHgqB14EGXzqE/6
+	7kuWXLcqiXt+KU+hLfwEIUveCzou+pNPhWhI/7afVq2C/GpUmrTNHiJh0Y470YsSMYOxdVDeX6W
+	CyvM+6/T2RTZ4Qj1nHWSQqe5gKZs9pr1myahGn71sNh8dh90iC2TV3KDoY
+X-Received: by 2002:a05:600d:8494:10b0:490:c7dd:de3e with SMTP id 5b1f17b1804b1-490ec521187mr22864575e9.31.1781264871852;
+        Fri, 12 Jun 2026 04:47:51 -0700 (PDT)
+Received: from ?IPV6:2a07:de40:a101:3:ce70:3e6f:3b9c:9125? ([2a01:4a0:2e:ffff:ffff:ffff:ffff:ffff])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-4606f26f309sm5604578f8f.14.2026.06.12.04.47.51
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 12 Jun 2026 04:47:51 -0700 (PDT)
+Message-ID: <6039739b-370a-4307-b2c3-d433f4b0e68f@suse.com>
+Date: Fri, 12 Jun 2026 13:47:50 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 28/60] scsi: qla2xxx: Handle sts_cont_entry_ext_t for
+ 29xx adapters
+To: Nilesh Javali <njavali@marvell.com>, martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, GR-FC-Storage-Upstream@marvell.com,
+ agurumurthy@marvell.com, emilne@redhat.com, jmeneghi@redhat.com
+References: <20260612095333.1666592-1-njavali@marvell.com>
+ <20260612095333.1666592-29-njavali@marvell.com>
+Content-Language: en-US
+From: Hannes Reinecke <hare@suse.com>
+In-Reply-To: <20260612095333.1666592-29-njavali@marvell.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-Thank you for your contribution! Sashiko AI review found 4 potential issue(=
-s) to consider:
+On 6/12/26 11:53, Nilesh Javali wrote:
+> 29xx adapters use 128-byte response queue entries
+> (sts_cont_entry_ext_t) instead of 64-byte (sts_cont_entry_t).  Update
+> all status continuation IOCB processing paths to branch on
+> IS_QLA29XX() and use the correct entry type and data payload size.
+> 
+> The affected functions are __qla_copy_purex_to_buffer(),
+> qla27xx_copy_multiple_pkt(), qla2x00_status_cont_entry(), and their
+> call sites in qla2x00_process_response_entry() and
+> qla24xx_process_response_queue().
+> 
+> Change qla2x00_status_cont_entry() to accept void * so callers no
+> longer need an explicit cast and the function can internally select the
+> right structure based on the adapter type.
+> 
+> Add BUILD_BUG_ON for sts_cont_entry_ext_t size (128 bytes).
+> 
+> Signed-off-by: Nilesh Javali <njavali@marvell.com>
+> ---
+>   drivers/scsi/qla2xxx/qla_isr.c | 192 +++++++++++++++++++++++----------
+>   drivers/scsi/qla2xxx/qla_os.c  |   1 +
+>   2 files changed, 139 insertions(+), 54 deletions(-)
+> 
+> diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+> index e95fb0e59f38..c18ee2459f5b 100644
+> --- a/drivers/scsi/qla2xxx/qla_isr.c
+> +++ b/drivers/scsi/qla2xxx/qla_isr.c
+> @@ -19,7 +19,7 @@
+>   
+>   static void qla2x00_mbx_completion(scsi_qla_host_t *, uint16_t);
+>   static void qla2x00_status_entry(scsi_qla_host_t *, struct rsp_que *, void *);
+> -static void qla2x00_status_cont_entry(struct rsp_que *, sts_cont_entry_t *);
+> +static void qla2x00_status_cont_entry(struct rsp_que *, void *);
+>   static int qla2x00_error_entry(scsi_qla_host_t *, struct rsp_que *,
+>   	sts_entry_t *);
+>   static void qla27xx_process_purex_fpin(struct scsi_qla_host *vha,
 
-Pre-existing issues:
-- [Critical] Lack of bounds checking on `i2c->length` leads to severe kerne=
-l stack and DMA heap buffer overflows.
-- [High] The patch bounds-checks `count` but fails to verify that the user'=
-s request payload actually contains enough data for the requested `count`. =
-This allows the function to use uninitialized kernel stack memory.
-- [High] Short user payloads leak uninitialized kernel stack memory directl=
-y to user space in FRU status handlers.
-- [High] The DMA pool buffer `sfp` is allocated without being zeroed, leaki=
-ng uninitialized kernel DMA memory to the SFP device due to a user-controll=
-ed length override.
---
+Using a void pointer is always awkward as it doesn't allow for an 
+out-of-bounds check.
 
-commit 5c0e5610a345e0804d665fbbbd2f23719341a171
-Author: Nilesh Javali <njavali@marvell.com>
+I would rather add a 'size' field, too, as then the size of 'void' 
+pointer would be known and one doesn't need to sprinkle the code with
+IS_QLA29XX() calls.
 
-scsi: qla2xxx: Bound image count in qla2x00_update_fru_versions()
+Cheers,
 
-qla2x00_update_fru_versions() copies the user-supplied BSG request into
-a fixed 256-byte stack buffer (bsg[DMA_POOL_SIZE]) and then iterates
-list->count times over the qla_image_version array embedded in that
-buffer, advancing the image pointer each iteration. count is taken
-directly from user input with no upper bound, while only
-(DMA_POOL_SIZE - sizeof(list->count)) / sizeof(struct qla_image_version)
-=3D 6 entries actually fit. A larger count walks the image pointer off the
-end of the stack buffer, reading adjacent kernel stack memory and
-sending it to the device via qla2x00_write_sfp().
-
-Reject requests whose declared count does not fit in the buffer.
-
-> diff --git a/drivers/scsi/qla2xxx/qla_bsg.c b/drivers/scsi/qla2xxx/qla_bs=
-g.c
-> index 22be6c822ddae..bcca4ef3c23e1 100644
-> --- a/drivers/scsi/qla2xxx/qla_bsg.c
-> +++ b/drivers/scsi/qla2xxx/qla_bsg.c
-> @@ -1929,6 +1929,13 @@ qla2x00_update_fru_versions(struct bsg_job *bsg_jo=
-b)
-> =20
->  	image =3D list->version;
->  	count =3D list->count;
-> +
-> +	if (struct_size(list, version, count) > sizeof(bsg)) {
-
-[Severity: High]
-This isn't a bug introduced by this patch, but the patch fails to properly
-prevent uninitialized stack memory use.
-
-If the user provides a short payload, sg_copy_to_buffer() leaves the traili=
-ng
-portions of the uninitialized bsg array untouched:
-
-	sg_copy_to_buffer(bsg_job->request_payload.sg_list,
-	    bsg_job->request_payload.sg_cnt, list, sizeof(bsg));
-
-Because struct_size(list, version, count) is only checked against
-sizeof(bsg), not the actual payload length, does this still allow the loop =
-to
-read uninitialized stack memory and write it to the SFP flash?
-
-[Severity: High]
-This is a pre-existing issue, but while we are looking at
-qla2x00_update_fru_versions(), the sfp buffer is allocated without zeroing:
-
-	void *sfp =3D dma_pool_alloc(ha->s_dma_pool, GFP_KERNEL, &sfp_dma);
-
-If the user sets BIT_0 in image->field_address.option, qla2x00_write_sfp()
-overrides the transfer length to the first byte of sfp (which is user
-controlled):
-
-drivers/scsi/qla2xxx/qla_mbx.c:qla2x00_write_sfp() {
-...
-	if (opt & BIT_0)
-		len =3D *sfp;
-...
-}
-
-Could this cause the hardware to read past the initialized 36 bytes and leak
-up to 219 bytes of uninitialized DMA heap memory to the device flash?
-
-> +		bsg_reply->reply_data.vendor_reply.vendor_rsp[0] =3D
-> +		    EXT_STATUS_INVALID_PARAM;
-> +		goto dealloc;
-> +	}
-> +
->  	while (count--) {
->  		memcpy(sfp, &image->field_info, sizeof(image->field_info));
->  		rval =3D qla2x00_write_sfp(vha, sfp_dma, sfp,
-
-[Severity: Critical]
-This isn't a bug introduced by this patch, but looking at the same file, th=
-ere
-appears to be a severe bounds checking issue in qla2x00_write_i2c() and
-qla2x00_read_i2c().
-
-The user-controlled i2c->length is an unbounded 16-bit integer passed direc=
-tly
-to memcpy():
-
-drivers/scsi/qla2xxx/qla_bsg.c:qla2x00_write_i2c() {
-...
-	memcpy(sfp, i2c->buffer, i2c->length);
-...
-}
-
-drivers/scsi/qla2xxx/qla_bsg.c:qla2x00_read_i2c() {
-...
-	memcpy(i2c->buffer, sfp, i2c->length);
-...
-}
-
-Since sfp is a 256-byte buffer and i2c->buffer points to the 256-byte bsg
-stack array, doesn't this cause a massive out-of-bounds read and stack/heap
-buffer overflow if a large length up to 65535 is provided?
-
-[Severity: High]
-This is a pre-existing issue, but similar to the short payload issue above,
-qla2x00_read_fru_status() also seems to leak uninitialized stack memory.
-
-If the user provides a short payload, sg_copy_to_buffer() leaves the sr
-buffer uninitialized:
-
-drivers/scsi/qla2xxx/qla_bsg.c:qla2x00_read_fru_status() {
-...
-	sg_copy_to_buffer(bsg_job->request_payload.sg_list,
-	    bsg_job->request_payload.sg_cnt, sr, sizeof(*sr));
-...
-}
-
-Then sg_copy_from_buffer() blindly copies it back to the user's reply paylo=
-ad:
-
-	sg_copy_from_buffer(bsg_job->reply_payload.sg_list,
-	    bsg_job->reply_payload.sg_cnt, sr, sizeof(*sr));
-
-Does this directly leak kernel stack memory to userspace?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260612095333.1666=
-592-1-njavali@marvell.com?part=3D60
+Hannes
+-- 
+Dr. Hannes Reinecke                  Kernel Storage Architect
+hare@suse.com                               +49 911 74053 688
+SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
+HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
