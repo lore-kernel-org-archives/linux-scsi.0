@@ -1,200 +1,379 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 12530356751
-	for <linux-scsi@vger.kernel.org>; Fri, 12 Jun 2026 22:29:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 42B77367291;
+	Fri, 12 Jun 2026 22:35:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781303356; cv=none; b=Reics4oi5DpWyFMVCOT8pbyiKm9DkNOWHuHbOSsoy+sEHPVaYFLB+FTf9uDaMbEA2vlTV9vtQbNlHU0vdKNRlC2YV0SB4E3Hsy5ClE9w23X66HfFcScMirXZWZ5lGxjMaKIGSivYS6a5H3mx847g9j6XuWVGKPtqkHc4IMZKThs=
+	t=1781303743; cv=none; b=UEwk01v1lT14OsWRoBKJ6c/gkZj42qaLyFhwF3wy5X6UviKNb0bKFwUIxz0GwslvM3gitTDqIV8FOnAAgBWkytjR4sAUvQzuEiNGxTMGgcoBCROMFz7vdxoaG72bI6u5ODLilxlcePlmRp8qm1diPxEi1zVyjO/pcCmpUYPQMXc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781303356; c=relaxed/simple;
-	bh=PzRtwC/5499sW6Ew6S904I5LnXOBx/emu64ZskSvzME=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=QcssECS+WGNM+koOLEPblQBsghGYPx/22RDHK0z4whgZFVm0t6AgxJlAH3x9ffxBAHZKvxdu7a5Iu2gbBzdH4qLJPSOehhISPErxTQv6tBp9xDCoeH4l4fU63QT3WFPH9bmfSpckGK6DPDVHxEmK/zw+aQc5S1C6S/tfumKzvFM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZsIbXCwg; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1781303743; c=relaxed/simple;
+	bh=M0Pe8sbx9o2tQ3ZQLPVz8FPYPXvCLqtWZ+bFCuvH0FA=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=r9fczRjxvkdVpf0n3tlnyFCldto9iXXj94Qo+YcZ0xfq7oLdl+IhKGdHYxxyKIjnDajZZPB+wPoUO4+F0eEjJe/B0Bc1aB/5m6yKItqtHntRe8O70k5u8zQdKqRRfVntu46OfnTZ4cyMWS2sqv0sPQ4kpPc/HjWYMN3V2pXWlMI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=i1ZZ7969; arc=none smtp.client-ip=148.163.156.1
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZsIbXCwg"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C040C1F000E9;
-	Fri, 12 Jun 2026 22:29:14 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781303354;
-	bh=KUtf2JGJAGJlAopZynwDI7uK6KKHM1kTn46v3MzM1iY=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=ZsIbXCwgx7G7dFzQi8nafEiiGDlAZ0CjsdmBOKRHkJHNqOD6/DRKmKeegvYveFxr2
-	 QvJ+mwq0Nly0y+SUo29aIdvDELciJdU60H05l7vcTJXkcQ2RwVhSobpzsMadSgE+qf
-	 28fmyvaWZH+tPziCRZCluGrhbI0fFFVxSMjSNgRejSNQA9jXcThaS3DdL7PxfNougn
-	 55kczT26YetukLyReBZrhYZQSh1hqpGynRLMtnxHQLt6eeBxJ3fpEgTda45ntzyMzi
-	 f1ao129gORKMIlt87YPSwcYzFQ72ORBk/QkjmsS4YNfDalqCHX65oCFO2QT8AFW4hj
-	 C2p+gwSwUPteA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4 08/13] scsi: fnic: Handle NVMe LS frames in FDLS
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Karan Tilak Kumar" <kartilak@cisco.com>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260612180918.8554-9-kartilak@cisco.com>
-References: <20260612180918.8554-9-kartilak@cisco.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Fri, 12 Jun 2026 22:29:14 +0000
-Message-Id: <20260612222914.C040C1F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="i1ZZ7969"
+Received: from pps.filterd (m0356517.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 65CCtGjI3872955;
+	Fri, 12 Jun 2026 22:35:22 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=pp1; bh=tcozaS
+	NDxW287Z2KI+BjjJnFriV5XYqdoKxv9KEBfjs=; b=i1ZZ7969zhe5HD+UxnzS6Q
+	IW7bJYEWdTZdvVy5LMsJXnlldiN5s+7cMUx35f5awVxm6kO1zoC1xLTnYNGmCkAm
+	bSdifScmh8tPMll3wVz6po6CTlddaR4Xh+1NDORlcQNChhSAsBYcHqxENtWlN18H
+	E+asoNIbZ2utc302Tr0SGoXM6Mf99TCWdVUrCdCoQjo4OyXyu41xuk0HDmcYGCgZ
+	Cx9fp87a8NtwGeABsGWvnhaNq6NFaZ9P9ifW8JN2ox2DJddIQMGww3gZKPnzSZsu
+	w5HbcIEgWP9jBcOw6dILzF7G+5ZOnSy1/lOE+pgwvIJ10NwgBAnhCLeiJpsJciDA
+	==
+Received: from ppma23.wdc07v.mail.ibm.com (5d.69.3da9.ip4.static.sl-reverse.com [169.61.105.93])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4eqe8f39vq-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 12 Jun 2026 22:35:21 +0000 (GMT)
+Received: from pps.filterd (ppma23.wdc07v.mail.ibm.com [127.0.0.1])
+	by ppma23.wdc07v.mail.ibm.com (8.18.1.7/8.18.1.7) with ESMTP id 65CMYarW003327;
+	Fri, 12 Jun 2026 22:35:20 GMT
+Received: from smtprelay02.dal12v.mail.ibm.com ([172.16.1.4])
+	by ppma23.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4eqe0a9xfe-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 12 Jun 2026 22:35:20 +0000 (GMT)
+Received: from smtpav06.wdc07v.mail.ibm.com (smtpav06.wdc07v.mail.ibm.com [10.39.53.233])
+	by smtprelay02.dal12v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 65CMZJ0G25625122
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Fri, 12 Jun 2026 22:35:19 GMT
+Received: from smtpav06.wdc07v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 2102B58068;
+	Fri, 12 Jun 2026 22:35:19 +0000 (GMT)
+Received: from smtpav06.wdc07v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id C50965803F;
+	Fri, 12 Jun 2026 22:35:17 +0000 (GMT)
+Received: from [9.61.160.241] (unknown [9.61.160.241])
+	by smtpav06.wdc07v.mail.ibm.com (Postfix) with ESMTP;
+	Fri, 12 Jun 2026 22:35:17 +0000 (GMT)
+Message-ID: <d99205f7-8467-4918-8102-4b84620fd0ff@linux.ibm.com>
+Date: Fri, 12 Jun 2026 15:35:17 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 1/7] ibmvfc: add basic FPIN support
+To: davemarq@linux.ibm.com,
+        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Madhavan Srinivasan <maddy@linux.ibm.com>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        Nicholas Piggin <npiggin@gmail.com>,
+        "Christophe Leroy (CS GROUP)" <chleroy@kernel.org>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, Brian King <brking@linux.ibm.com>,
+        Greg Joyce <gjoyce@linux.ibm.com>,
+        Kyle Mahlkuch <kmahlkuc@linux.ibm.com>
+References: <20260608-ibmvfc-fpin-support-v2-0-d41f540fba5c@linux.ibm.com>
+ <20260608-ibmvfc-fpin-support-v2-1-d41f540fba5c@linux.ibm.com>
+Content-Language: en-US
+From: Tyrel Datwyler <tyreld@linux.ibm.com>
+In-Reply-To: <20260608-ibmvfc-fpin-support-v2-1-d41f540fba5c@linux.ibm.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-Reinject: loops=2 maxloops=12
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNjEyMDIxMCBTYWx0ZWRfX1HnA7gSHOoKi
+ GdBnvYZ6HX5g4P0l0sYtw+57QXozaxobkNHLz2EMD+3G9eS9yXyjHZjeQIm37Sidp/ubEfncKHf
+ i9AZ5/goll4WnVkNvf/R6rmjCfo6YyQE5m4c6KuATBUqlTA+nDnSwJMFF1QBjYpLU+nf2ofebUS
+ 691qm4DMQZjkB0twUue8L2GGe2QdwEiSMjD2UIf0qb9NbWhqUNulkJ81CWDZqSR2igyUnz/G0Y1
+ n4fa4GcueECCfayTVHcCL2jBKGtXY9NmxbC5IS2PxE77VK95nkxOyUs9VkvArte9MHOmECaPL3w
+ fWhnJQjwAI8Jg5rJGeuTJiawzTR04ECLWkKRoXqmAvprwnZE2x9AP7rDiwe3oaJs2f+piiTkeBQ
+ +TcF7HTcwvUXCruXtEYU6xSH80L+fZKmmCG3JdwWNsCB5gZnbMuQd+cJietg8eWzGQdaH8Pi2DX
+ 0O3+O37U0qTJGccNdOg==
+X-Authority-Analysis: v=2.4 cv=dr7rzVg4 c=1 sm=1 tr=0 ts=6a2c89aa cx=c_pps
+ a=3Bg1Hr4SwmMryq2xdFQyZA==:117 a=3Bg1Hr4SwmMryq2xdFQyZA==:17
+ a=IkcTkHD0fZMA:10 a=FelO9ux0wxsA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=RnoormkPH1_aCDwRdu11:22 a=U7nrCbtTmkRpXpFmAIza:22 a=VnNF1IyMAAAA:8
+ a=x49wV4nTLdBlH4IQi7IA:9 a=QEXdDO2ut3YA:10
+X-Proofpoint-ORIG-GUID: m0Dn58y3kFfRlbOQFJBom6gv6POwOqU1
+X-Proofpoint-GUID: ToOt9YvdzwHDg0Le4IXAbOfSFHrlv3eb
+X-Proofpoint-Spam-Info: AW1haW4tMjYwNjEyMDIxMCBTYWx0ZWRfX1OXbErOJ4bCz
+ RM4St7Lw51+cZmbL1PLVbakNTBL9ul7Z1lP2l0upSWWcYw/aoZLiKYVuBj8z/XLac8DDDJDO2Dc
+ jAGEi8OrfeZOr58bNzbVWYMKCvZW6fY=
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.125,FMLib:17.12.100.49
+ definitions=2026-06-12_03,2026-06-12_03,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ spamscore=0 adultscore=0 suspectscore=0 priorityscore=1501 phishscore=0
+ clxscore=1015 bulkscore=0 impostorscore=0 lowpriorityscore=0 malwarescore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2606040000 definitions=main-2606120210
 
-Thank you for your contribution! Sashiko AI review found 4 potential issue(=
-s) to consider:
-- [High] IRQ state corruption due to locking inconsistency with local flags=
- vs struct member
-- [High] State corruption and Use-After-Free of OXIDs due to incomplete poo=
-l reset
-- [High] ABBA deadlock involving `timer_delete_sync()` and `fnic->fnic_lock`
-- [Medium] Dead code in defensive check causing NULL pointer dereference
---
+On 6/8/26 11:30 AM, Dave Marquardt via B4 Relay wrote:
+> From: Dave Marquardt <davemarq@linux.ibm.com>
+> 
+> Add support for basic FPIN messages to the ibmvfc driver. This includes
+> 
+> - adding FPIN handling support to the async event handler
+> - offloading processing of FPIN messages to a work queue
+> - converting the VIOS FPIN message to a struct fc_els_fpin as used by
+>   the Linux kernel
+> - passing the converted struct fc_els_fpin to fc_host_fpin_rcv for
+>   processing
+> 
+> The FPIN message conversion routines include a common routine that
+> will also be used in patches 6 and 7, which add full and extended FPIN
+> support.
 
-commit fab490a6f935460a8594dd821b190a2f2d7c7b5c
-Author: Karan Tilak Kumar <kartilak@cisco.com>
+You are missing a Signed-off-by tag here.
 
-scsi: fnic: Handle NVMe LS frames in FDLS
-
-Classify NVMe LS request OXIDs, route NVMe LS responses and ABTS frames
-through the FCS receive path, and reset NVMe exchanges when FDLS tears
-down target ports. Extend FDLS link-down and frame-processing paths so
-NVMe LS traffic follows the same discovery and cleanup state machine as
-FCP traffic.
-
-> diff --git a/drivers/scsi/fnic/fdls_disc.c b/drivers/scsi/fnic/fdls_disc.c
-> --- a/drivers/scsi/fnic/fdls_disc.c
-> +++ b/drivers/scsi/fnic/fdls_disc.c
-> @@ -387,10 +387,16 @@ static bool fdls_is_oxid_tgt_req(uint16_t oxid)
->  	return true;
+> ---
+>  drivers/scsi/Kconfig                 |  10 ++
+>  drivers/scsi/ibmvscsi/Makefile       |   1 +
+>  drivers/scsi/ibmvscsi/ibmvfc.c       | 226 ++++++++++++++++++++++++++++++++++-
+>  drivers/scsi/ibmvscsi/ibmvfc.h       |  15 +++
+>  drivers/scsi/ibmvscsi/ibmvfc_kunit.c | 131 ++++++++++++++++++++
+>  5 files changed, 379 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+> index c3042393af23..d5fc7eb2ebb1 100644
+> --- a/drivers/scsi/Kconfig
+> +++ b/drivers/scsi/Kconfig
+> @@ -758,6 +758,16 @@ config SCSI_IBMVFC
+>  	  To compile this driver as a module, choose M here: the
+>  	  module will be called ibmvfc.
+>  
+> +config SCSI_IBMVFC_KUNIT_TEST
+> +	tristate "KUnit tests for the IBM POWER Virtual FC Client" if !KUNIT_ALL_TESTS
+> +	depends on SCSI_IBMVFC && KUNIT
+> +	default KUNIT_ALL_TESTS
+> +	help
+> +	  Compile IBM POWER Virtual FC client KUnit tests. These tests
+> +	  specifically test FPIN functionality. To compile this driver
+> +	  as a module, choose M here: the module will be called
+> +	  ibmvfc_kunit.
+> +
+>  config SCSI_IBMVFC_TRACE
+>  	bool "enable driver internal trace"
+>  	depends on SCSI_IBMVFC
+> diff --git a/drivers/scsi/ibmvscsi/Makefile b/drivers/scsi/ibmvscsi/Makefile
+> index 5eb1cb1a0028..75dc7aee15a0 100644
+> --- a/drivers/scsi/ibmvscsi/Makefile
+> +++ b/drivers/scsi/ibmvscsi/Makefile
+> @@ -1,3 +1,4 @@
+>  # SPDX-License-Identifier: GPL-2.0-only
+>  obj-$(CONFIG_SCSI_IBMVSCSI)	+= ibmvscsi.o
+>  obj-$(CONFIG_SCSI_IBMVFC)	+= ibmvfc.o
+> +obj-$(CONFIG_SCSI_IBMVFC_KUNIT_TEST)	+= ibmvfc_kunit.o
+> diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
+> index 3dd2adda195e..9e5f0c0f0369 100644
+> --- a/drivers/scsi/ibmvscsi/ibmvfc.c
+> +++ b/drivers/scsi/ibmvscsi/ibmvfc.c
+> @@ -30,6 +30,9 @@
+>  #include <scsi/scsi_tcq.h>
+>  #include <scsi/scsi_transport_fc.h>
+>  #include <scsi/scsi_bsg_fc.h>
+> +#include <kunit/visibility.h>
+> +#include <scsi/fc/fc_els.h>
+> +#include <linux/overflow.h>
+>  #include "ibmvfc.h"
+>  
+>  static unsigned int init_timeout = IBMVFC_INIT_TIMEOUT;
+> @@ -3137,6 +3140,7 @@ static const struct ibmvfc_async_desc ae_desc [] = {
+>  	{ "Halt",	IBMVFC_AE_HALT,		IBMVFC_DEFAULT_LOG_LEVEL },
+>  	{ "Resume",	IBMVFC_AE_RESUME,	IBMVFC_DEFAULT_LOG_LEVEL },
+>  	{ "Adapter Failed", IBMVFC_AE_ADAPTER_FAILED, IBMVFC_DEFAULT_LOG_LEVEL },
+> +	{ "FPIN",	IBMVFC_AE_FPIN,		IBMVFC_DEFAULT_LOG_LEVEL },
+>  };
+>  
+>  static const struct ibmvfc_async_desc unknown_ae = {
+> @@ -3185,17 +3189,211 @@ static const char *ibmvfc_get_link_state(enum ibmvfc_ae_link_state state)
+>  	return "";
 >  }
-> =20
-> +static inline bool fdls_is_oxid_nvme_req(uint16_t oxid)
+>  
+> +#define IBMVFC_FPIN_CONGN_DESC_SZ (sizeof(struct fc_els_fpin) + sizeof(struct fc_fn_congn_desc))
+> +#define IBMVFC_FPIN_LI_DESC_SZ (sizeof(struct fc_els_fpin) + \
+> +				struct_size_t(struct fc_fn_li_desc, pname_list, 1))
+> +#define IBMVFC_FPIN_PEER_CONGN_DESC_SZ (sizeof(struct fc_els_fpin) + \
+> +					struct_size_t(struct fc_fn_peer_congn_desc, pname_list, 1))
+> +
+> +/**
+> + * ibmvfc_fpin_size_helper(): compute fpin structure size based on fpin status
+> + * @fpin_status: status value
+> + *
+> + * Return:
+> + * 0: invalid fpin_status
+> + * other: valid size
+> + */
+> +static size_t ibmvfc_fpin_size_helper(u8 fpin_status)
 > +{
-> +	return FNIC_FRAME_TYPE(oxid) =3D=3D FNIC_FRAME_TYPE_NVME_LS;
+> +	size_t size = 0;
+> +
+> +	switch (fpin_status) {
+> +	case IBMVFC_AE_FPIN_LINK_CONGESTED:
+> +	case IBMVFC_AE_FPIN_CONGESTION_CLEARED:
+> +		size = IBMVFC_FPIN_CONGN_DESC_SZ;
+> +		break;
+> +	case IBMVFC_AE_FPIN_PORT_CONGESTED:
+> +	case IBMVFC_AE_FPIN_PORT_CLEARED:
+> +		size = IBMVFC_FPIN_PEER_CONGN_DESC_SZ;
+> +		break;
+> +	case IBMVFC_AE_FPIN_PORT_DEGRADED:
+> +		size = IBMVFC_FPIN_LI_DESC_SZ;
+> +		break;
+> +	default:
+> +		break;
+> +	}
+> +
+> +	return size;
 > +}
 > +
->  static void fdls_reset_oxid_pool(struct fnic_iport_s *iport)
->  {
->  	struct fnic_oxid_pool_s *oxid_pool =3D &iport->oxid_pool;
-> =20
-> +	bitmap_clear(oxid_pool->bitmap, 0, FNIC_OXID_POOL_SZ);
->  	oxid_pool->next_idx =3D 0;
->  }
-
-[Severity: High]
-Does this clear the bitmap without tearing down the background reclaim time=
-rs?
-
-If oxid_reclaim_work is still pending or the oxid_reclaim_list is not clear=
-ed
-when fdls_reset_oxid_pool() is called, the background reclaim task might run
-after the link is reset.
-
-If a new connection starts allocating OXIDs, could the pending reclaim task
-blindly clear bits for newly allocated OXIDs? This might cause those active
-OXIDs to be marked free again, leading to double-allocation and session
-corruption.
-
-[ ... ]
-
-> @@ -1288,6 +1294,10 @@ bool fdls_delete_tport(struct fnic_iport_s *iport,=
- struct fnic_tport_s *tport)
->  		spin_unlock_irqrestore(&fnic->fnic_lock, fnic->lock_flags);
->  		fnic_rport_exch_reset(iport->fnic, tport->fcid);
->  		spin_lock_irqsave(&fnic->fnic_lock, fnic->lock_flags);
-> +	} else if (IS_FNIC_NVME_INITIATOR(fnic)) {
-> +		spin_unlock_irqrestore(&fnic->fnic_lock, fnic->lock_flags);
-> +		nvfnic_exch_reset(iport, tport);
-> +		spin_lock_irqsave(&fnic->fnic_lock, fnic->lock_flags);
->  	}
-
-[Severity: High]
-Can using the structure member fnic->lock_flags here instead of a local fla=
-gs
-variable corrupt the IRQ state?
-
-If a caller (like nvfnic_remote_port_delete) acquires the lock using a local
-flags variable, releasing and reacquiring it here with fnic->lock_flags will
-restore a stale or uninitialized IRQ state instead of the actual state.
-Could this prematurely re-enable interrupts and lead to an IRQ reentrancy
-deadlock?
-
-A similar lock mismatch appears to happen in nvfnic_process_ls_abts_rsp(),
-which is called from fdls_tport_timer_callback() where the lock is acquired
-with a local flags variable.
-
-[ ... ]
-
-> diff --git a/drivers/scsi/fnic/fnic_fcs.c b/drivers/scsi/fnic/fnic_fcs.c
-> --- a/drivers/scsi/fnic/fnic_fcs.c
-> +++ b/drivers/scsi/fnic/fnic_fcs.c
-> @@ -313,8 +319,14 @@ void fnic_handle_frame(struct work_struct *work)
->  		fchdr_offset =3D (cur_frame->rx_ethhdr_stripped) ?
->  			0 : FNIC_ETH_FCOE_HDRS_OFFSET;
-> =20
-> -		fnic_fdls_recv_frame(&fnic->iport, cur_frame->fp,
-> -							 cur_frame->frame_len, fchdr_offset);
-> +		fchdr =3D (struct fc_frame_header *)((u8 *)cur_frame->fp + fchdr_offse=
-t);
-> +		if (IS_FNIC_NVME_INITIATOR(fnic) && fnic_is_nvme_frame(fchdr)) {
-> +			nvfnic_ls_rsp_recv(&fnic->iport, fchdr,
-> +					  cur_frame->frame_len - fchdr_offset);
-
-[Severity: High]
-Is there a risk of an ABBA deadlock occurring inside nvfnic_ls_rsp_recv()
-when it calls timer_delete_sync()?
-
-nvfnic_ls_rsp_recv() executes while holding fnic->fnic_lock and calls
-timer_delete_sync(&nvfnic_ls_req->ls_req_timer).=20
-
-Meanwhile, the timer callback nvfnic_ls_req_timeout() unconditionally acqui=
-res
-fnic->fnic_lock at its start via spin_lock_irqsave().
-
-If the timer callback begins executing on another CPU right before
-timer_delete_sync() is called, will it spin indefinitely waiting for
-fnic_lock while timer_delete_sync() spins indefinitely waiting for the
-timer callback to finish?
-
-[ ... ]
-
-> @@ -617,6 +629,9 @@ void fnic_free_rq_buf(struct vnic_rq *rq, struct vnic=
-_rq_buf *buf)
->  	void *rq_buf =3D buf->os_buf;
->  	struct fnic *fnic =3D vnic_dev_priv(rq->vdev);
-> =20
-> +	if (WARN_ON(!buf))
-> +		return;
+> +/**
+> + * ibmvfc_common_fpin_to_desc(): allocate and populate a struct fc_els_fpin struct
+> + * containing a descriptor.
+> + *
+> + * Allocate a struct fc_els_fpin containing a descriptor and populate
+> + * based on data from *ibmvfc_fpin.
+> + *
+> + * Return:
+> + * NULL     - unable to allocate structure
+> + * non-NULL - pointer to populated struct fc_els_fpin
+> + */
+> +static struct fc_els_fpin *
+> +ibmvfc_common_fpin_to_desc(u8 fpin_status, __be64 wwpn, __be16 modifier,
+> +			   __be32 period, __be32 threshold, __be32 event_count)
+> +{
+> +	struct fc_fn_peer_congn_desc *pdesc;
+> +	struct fc_fn_congn_desc *cdesc;
+> +	struct fc_fn_li_desc *ldesc;
+> +	struct fc_els_fpin *fpin;
+> +	size_t size;
 > +
+> +	size = ibmvfc_fpin_size_helper(fpin_status);
+> +	if (size == 0)
 
-[Severity: Medium]
-Will this defensive check ever evaluate successfully if buf is NULL?
+To be consistent with other places in the driver !size instead of size == 0 check.
 
-Because buf->os_buf is dereferenced on the first line of the function to
-initialize rq_buf, a NULL buf will cause a crash before this WARN_ON check
-is reached. Should the check be moved above the dereference?
-
-[ ... ]
-
-> @@ -917,6 +933,9 @@ void fnic_free_wq_buf(struct vnic_wq *wq, struct vnic=
-_wq_buf *buf)
->  	dma_unmap_single(&fnic->pdev->dev, buf->dma_addr, buf->len,
->  			 DMA_TO_DEVICE);
-> =20
-> +	if (WARN_ON(!buf))
-> +		return;
+> +		return NULL;
 > +
->  	mempool_free(buf->os_buf, fnic->frame_pool);
+> +	fpin = kzalloc(size, GFP_KERNEL);
+> +	if (fpin == NULL)
 
-[Severity: Medium]
-Similarly, will this check prevent a crash if buf is NULL?
+Same nit here !fpin instead of fpin == NULL.
 
-By the time execution reaches this WARN_ON, buf->dma_addr and buf->len have
-already been dereferenced in the dma_unmap_single() call above it.
+> +		return NULL;
+> +
+> +	fpin->fpin_cmd = ELS_FPIN;
+> +
+> +	switch (fpin_status) {
+> +	case IBMVFC_AE_FPIN_CONGESTION_CLEARED:
+> +	case IBMVFC_AE_FPIN_LINK_CONGESTED:
+> +		fpin->desc_len = cpu_to_be32(sizeof(struct fc_fn_congn_desc));
+> +		cdesc = (struct fc_fn_congn_desc *)fpin->fpin_desc;
+> +		cdesc->desc_tag = cpu_to_be32(ELS_DTAG_CONGESTION);
+> +		cdesc->desc_len = cpu_to_be32(FC_TLV_DESC_LENGTH_FROM_SZ(*cdesc));
+> +		if (fpin_status == IBMVFC_AE_FPIN_CONGESTION_CLEARED)
+> +			cdesc->event_type = cpu_to_be16(FPIN_CONGN_CLEAR);
+> +		else
+> +			cdesc->event_type = cpu_to_be16(FPIN_CONGN_DEVICE_SPEC);
+> +		cdesc->event_modifier = modifier;
+> +		cdesc->event_period = period;
+> +		cdesc->severity = FPIN_CONGN_SEVERITY_WARNING;
+> +		break;
+> +	case IBMVFC_AE_FPIN_PORT_CONGESTED:
+> +	case IBMVFC_AE_FPIN_PORT_CLEARED:
+> +		fpin->desc_len =
+> +			cpu_to_be32(struct_size_t(struct fc_fn_peer_congn_desc, pname_list, 1));
+> +		pdesc = (struct fc_fn_peer_congn_desc *)fpin->fpin_desc;
+> +		pdesc->desc_tag = cpu_to_be32(ELS_DTAG_PEER_CONGEST);
+> +		pdesc->desc_len = cpu_to_be32(FC_TLV_DESC_LENGTH_FROM_SZ(*pdesc));
+> +		if (fpin_status == IBMVFC_AE_FPIN_PORT_CLEARED)
+> +			pdesc->event_type = cpu_to_be16(FPIN_CONGN_CLEAR);
+> +		else
+> +			pdesc->event_type = cpu_to_be16(FPIN_CONGN_DEVICE_SPEC);
+> +		pdesc->event_modifier = modifier;
+> +		pdesc->event_period = period;
+> +		pdesc->detecting_wwpn = cpu_to_be64(0);
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260612180918.8554=
--1-kartilak@cisco.com?part=3D8
+While not wrong 0 is 0 regardless of endianiess. Is this value always going to
+be zero here or is this place holder code that changes later in this patchset?
+If its the case this isn't a place holder the original fpin struct was allocated
+with kzalloc so this value should be zero already.
+
+> +		pdesc->attached_wwpn = wwpn;
+> +		pdesc->pname_count = cpu_to_be32(1);
+> +		pdesc->pname_list[0] = wwpn;
+> +		break;
+> +	case IBMVFC_AE_FPIN_PORT_DEGRADED:
+> +		fpin->desc_len = cpu_to_be32(struct_size_t(struct fc_fn_li_desc, pname_list, 1));
+> +		ldesc = (struct fc_fn_li_desc *)fpin->fpin_desc;
+> +		ldesc->desc_tag = cpu_to_be32(ELS_DTAG_LNK_INTEGRITY);
+> +		ldesc->desc_len = cpu_to_be32(FC_TLV_DESC_LENGTH_FROM_SZ(*ldesc));
+> +		ldesc->event_type = cpu_to_be16(FPIN_LI_UNKNOWN);
+> +		ldesc->event_modifier = modifier;
+> +		ldesc->event_threshold = threshold;
+> +		ldesc->event_count = event_count;
+> +		ldesc->detecting_wwpn = cpu_to_be64(0);
+
+Same comment as above.
+
+> +		ldesc->attached_wwpn = wwpn;
+> +		ldesc->pname_count = cpu_to_be32(1);
+> +		ldesc->pname_list[0] = wwpn;
+> +		break;
+> +	default:
+> +		/* This should be caught above. */
+> +		kfree(fpin);
+> +		fpin = NULL;
+> +		break;
+> +	}
+> +
+> +	return fpin;
+> +}
+> +
+> +/**
+> + * ibmvfc_basic_fpin_to_desc(): allocate and populate a struct fc_els_fpin struct
+> + * containing a descriptor.
+> + * @ibmvfc_fpin: Pointer to async crq
+> + *
+> + * Allocate a struct fc_els_fpin containing a descriptor and populate
+> + * based on data from *ibmvfc_fpin.
+> + *
+> + * Return:
+> + * NULL     - unable to allocate structure
+> + * non-NULL - pointer to populated struct fc_els_fpin
+> + */
+> +static struct fc_els_fpin *
+> +ibmvfc_basic_fpin_to_desc(struct ibmvfc_async_crq *crq, u64 wwpn)
+> +{
+> +	return ibmvfc_common_fpin_to_desc(crq->fpin_status, cpu_to_be64(wwpn),
+> +					  cpu_to_be16(0),
+> +					  cpu_to_be32(IBMVFC_FPIN_DEFAULT_EVENT_PERIOD),
+> +					  cpu_to_be32(IBMVFC_FPIN_DEFAULT_EVENT_THRESHOLD),
+> +					  cpu_to_be32(1));
+> +}
+> +
+> +/**
+> + * ibmvfc_process_async_work - Process IBMVFC_AE_FPIN async CRQ from work queue
+> + * @work: pointer to work_struct
+> + */
+> +static void ibmvfc_process_async_work(struct work_struct *work)
+> +{
+> +	struct ibmvfc_async_work *aw;
+> +	struct ibmvfc_async_crq *crq;
+> +	struct ibmvfc_target *tgt;
+> +	struct ibmvfc_host *vhost;
+> +	struct fc_els_fpin *fpin;
+> +
+> +	aw = container_of(work, struct ibmvfc_async_work, async_work_s);
+> +	crq = aw->crq;
+> +	vhost = aw->vhost;
+> +
+> +	if (!crq->scsi_id && !crq->wwpn && !crq->node_name)
+> +		goto end;
+> +	list_for_each_entry(tgt, &vhost->targets, queue) {
+
+Should we be holding the host lock when iterateing targets?
+
+-Tyrel
