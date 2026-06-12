@@ -1,181 +1,200 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 029CF34403D
-	for <linux-scsi@vger.kernel.org>; Fri, 12 Jun 2026 22:15:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 12530356751
+	for <linux-scsi@vger.kernel.org>; Fri, 12 Jun 2026 22:29:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781302552; cv=none; b=Vvu7lmk37hgSVsUesP4ZA5zuc0DRl5agBkav8YII4emXYlAx975vTg6Tej+/p7jXtsnDCTW00ooFq5Na5TqChqFAC+0rwlUgXq2T0R3+7NwsfVUN7uMFcZE1PS0utVCSQa7kuW4DXFWtaaYmP1KFjQQ4BCobu5XjButBLAhw95o=
+	t=1781303356; cv=none; b=Reics4oi5DpWyFMVCOT8pbyiKm9DkNOWHuHbOSsoy+sEHPVaYFLB+FTf9uDaMbEA2vlTV9vtQbNlHU0vdKNRlC2YV0SB4E3Hsy5ClE9w23X66HfFcScMirXZWZ5lGxjMaKIGSivYS6a5H3mx847g9j6XuWVGKPtqkHc4IMZKThs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781302552; c=relaxed/simple;
-	bh=cc/W/TAFOea3m/I2B2RJDRrHevHuhDXVMRt721r1Kx0=;
+	s=arc-20240116; t=1781303356; c=relaxed/simple;
+	bh=PzRtwC/5499sW6Ew6S904I5LnXOBx/emu64ZskSvzME=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=llGZSW5K2LWSULF7kk0MGglR8D7IF51C6ORQq71iRjHNpNyu+tyjnZfnDhMhSsuLu1KEe+IPmR6kk8dIJI1I8v4b0CfbAX/lx5CNz270lPxmtpy0hor+GdSgsEuwLPF929We1kZBYU9KuMLDyg471GfLzxmfWJ90vt5onmSNHAM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PjBTJ0pQ; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=QcssECS+WGNM+koOLEPblQBsghGYPx/22RDHK0z4whgZFVm0t6AgxJlAH3x9ffxBAHZKvxdu7a5Iu2gbBzdH4qLJPSOehhISPErxTQv6tBp9xDCoeH4l4fU63QT3WFPH9bmfSpckGK6DPDVHxEmK/zw+aQc5S1C6S/tfumKzvFM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZsIbXCwg; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PjBTJ0pQ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B8A961F000E9;
-	Fri, 12 Jun 2026 22:15:50 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZsIbXCwg"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C040C1F000E9;
+	Fri, 12 Jun 2026 22:29:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781302550;
-	bh=xuUpg/Hgmh88vsupxvuva7AsQP697zY/w4zjoSheeTo=;
+	s=k20260515; t=1781303354;
+	bh=KUtf2JGJAGJlAopZynwDI7uK6KKHM1kTn46v3MzM1iY=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=PjBTJ0pQnYKZ7pf5CfN6CXWaSRaNG/JzvZaEWixs+N0lg59TBRJ5Cfb5FRmsy5Kqx
-	 yz+SspJapn0UxCFwvgi6zU13H3/TR6Bx5gEmWqxl2LVmreIgD+qNcD3c7bY3yt/wAU
-	 Uazqe4i2F5XE8FYNejK1qq7ScZTzpdahg9GwJSjOawynvGcs8SHAP7sPx7VVGv7iRS
-	 JA0Vo0KAqeNB2QGiSfZBD4iDheDmLt1S+YpBnYobkjq3RMlvAs1VThTZ/ffcQR8gnj
-	 Da8ksfYJVTccB+mykqyfx1aS0Fdn07PFzM4By30hDI8zYdidImcblYcW0Lk7UO+4jw
-	 +vkwVOeCbOsvA==
+	b=ZsIbXCwgx7G7dFzQi8nafEiiGDlAZ0CjsdmBOKRHkJHNqOD6/DRKmKeegvYveFxr2
+	 QvJ+mwq0Nly0y+SUo29aIdvDELciJdU60H05l7vcTJXkcQ2RwVhSobpzsMadSgE+qf
+	 28fmyvaWZH+tPziCRZCluGrhbI0fFFVxSMjSNgRejSNQA9jXcThaS3DdL7PxfNougn
+	 55kczT26YetukLyReBZrhYZQSh1hqpGynRLMtnxHQLt6eeBxJ3fpEgTda45ntzyMzi
+	 f1ao129gORKMIlt87YPSwcYzFQ72ORBk/QkjmsS4YNfDalqCHX65oCFO2QT8AFW4hj
+	 C2p+gwSwUPteA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4 07/13] scsi: fnic: Route completions and resets by
- initiator role
+Subject: Re: [PATCH v4 08/13] scsi: fnic: Handle NVMe LS frames in FDLS
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Karan Tilak Kumar" <kartilak@cisco.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260612180918.8554-8-kartilak@cisco.com>
-References: <20260612180918.8554-8-kartilak@cisco.com>
+In-Reply-To: <20260612180918.8554-9-kartilak@cisco.com>
+References: <20260612180918.8554-9-kartilak@cisco.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 12 Jun 2026 22:15:50 +0000
-Message-Id: <20260612221550.B8A961F000E9@smtp.kernel.org>
+Date: Fri, 12 Jun 2026 22:29:14 +0000
+Message-Id: <20260612222914.C040C1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
+Thank you for your contribution! Sashiko AI review found 4 potential issue(=
 s) to consider:
-
-New issues:
-- [High] Skipping WQ copy cleanup for initiator roles causes memory leaks a=
-nd module unload hangs when the firmware reset times out or fails.
-- [High] Unconditional processing of `FCPIO_NVME_ERSP_HW_CMPL` causes a NUL=
-L pointer dereference when the driver is configured as an FC initiator.
-
-Pre-existing issues:
-- [High] Calling `schedule_timeout()` inside a hard IRQ handler causes a 'B=
-UG: scheduling while atomic' kernel panic.
+- [High] IRQ state corruption due to locking inconsistency with local flags=
+ vs struct member
+- [High] State corruption and Use-After-Free of OXIDs due to incomplete poo=
+l reset
+- [High] ABBA deadlock involving `timer_delete_sync()` and `fnic->fnic_lock`
+- [Medium] Dead code in defensive check causing NULL pointer dereference
 --
 
-commit 23c7cf5a299e9835a32a14602537f5791c94b14b
+commit fab490a6f935460a8594dd821b190a2f2d7c7b5c
 Author: Karan Tilak Kumar <kartilak@cisco.com>
 
-scsi: fnic: Route completions and resets by initiator role
+scsi: fnic: Handle NVMe LS frames in FDLS
 
-Dispatch FCPIO command, response, and ITMF completions to the FCP or NVMe
-handlers based on the configured role. Read the NVMe queue-depth and timeout
-retry fields from firmware config, clean up NVMe I/O on firmware reset, and
-skip SCSI-only cleanup for initiator roles that already reset firmware-owned
-requests.
+Classify NVMe LS request OXIDs, route NVMe LS responses and ABTS frames
+through the FCS receive path, and reset NVMe exchanges when FDLS tears
+down target ports. Extend FDLS link-down and frame-processing paths so
+NVMe LS traffic follows the same discovery and cleanup state machine as
+FCP traffic.
 
-> diff --git a/drivers/scsi/fnic/fnic_scsi.c b/drivers/scsi/fnic/fnic_scsi.c
-> index 04ab384033b19..5ad4bb7144283 100644
-> --- a/drivers/scsi/fnic/fnic_scsi.c
-> +++ b/drivers/scsi/fnic/fnic_scsi.c
-> @@ -734,6 +735,8 @@ static int fnic_fcpio_fw_reset_cmpl_handler(struct fn=
-ic *fnic,
->  	/* Clean up all outstanding io requests */
->  	if (IS_FNIC_FCP_INITIATOR(fnic))
->  		fnic_cleanup_io(fnic, SCSI_NO_TAG);
-> +	else if (IS_FNIC_NVME_INITIATOR(fnic))
-> +		nvfnic_cleanup_all_nvme_ios(fnic);
-
-[Severity: High]
-This is a pre-existing issue, but does calling fnic_cleanup_io() here cause=
- a
-'BUG: scheduling while atomic' kernel panic?
-
-The completion handler is called in an atomic context:
-fnic_isr_msix_wq_copy() -> vnic_cq_copy_service() ->
-fnic_fcpio_cmpl_handler() -> fnic_fcpio_fw_reset_cmpl_handler() ->
-fnic_cleanup_io()
-
-Inside fnic_cleanup_io(), the thread yields:
-
-drivers/scsi/fnic/fnic_scsi.c:fnic_cleanup_io() {
-    ...
-	while ((io_count =3D fnic_count_all_ioreqs(fnic))) {
-		FNIC_SCSI_DBG(KERN_DEBUG, fnic, ...);
-
-		schedule_timeout(msecs_to_jiffies(100));
-	}
-    ...
-}
-
-[ ... ]
-> @@ -1457,11 +1460,21 @@ static int fnic_fcpio_cmpl_handler(struct vnic_de=
-v *vdev,
->  		break;
+> diff --git a/drivers/scsi/fnic/fdls_disc.c b/drivers/scsi/fnic/fdls_disc.c
+> --- a/drivers/scsi/fnic/fdls_disc.c
+> +++ b/drivers/scsi/fnic/fdls_disc.c
+> @@ -387,10 +387,16 @@ static bool fdls_is_oxid_tgt_req(uint16_t oxid)
+>  	return true;
+>  }
 > =20
->  	case FCPIO_ICMND_CMPL: /* fw completed a command */
-> -		fnic_fcpio_icmnd_cmpl_handler(fnic, cq_index, desc);
-> +		if (IS_FNIC_FCP_INITIATOR(fnic))
-> +			fnic_fcpio_icmnd_cmpl_handler(fnic, cq_index, desc);
-> +		else if (IS_FNIC_NVME_INITIATOR(fnic))
-> +			nvfnic_fcpio_nvme_fast_cmpl_handler(fnic, desc);
-> +		break;
+> +static inline bool fdls_is_oxid_nvme_req(uint16_t oxid)
+> +{
+> +	return FNIC_FRAME_TYPE(oxid) =3D=3D FNIC_FRAME_TYPE_NVME_LS;
+> +}
 > +
-> +	case FCPIO_NVME_ERSP_HW_CMPL: /* fw completed NVMe ERSP */
-> +		nvfnic_fcpio_ersp_cmpl_handler(fnic, desc, 1);
->  		break;
+>  static void fdls_reset_oxid_pool(struct fnic_iport_s *iport)
+>  {
+>  	struct fnic_oxid_pool_s *oxid_pool =3D &iport->oxid_pool;
+> =20
+> +	bitmap_clear(oxid_pool->bitmap, 0, FNIC_OXID_POOL_SZ);
+>  	oxid_pool->next_idx =3D 0;
+>  }
 
 [Severity: High]
-Does unconditional processing of FCPIO_NVME_ERSP_HW_CMPL cause a NULL point=
-er
-dereference when the driver is configured as an FC initiator?
+Does this clear the bitmap without tearing down the background reclaim time=
+rs?
 
-Unlike the FCPIO_ICMND_CMPL and FCPIO_ITMF_CMPL cases which check the
-initiator role, nvfnic_fcpio_ersp_cmpl_handler() is called unconditionally.
+If oxid_reclaim_work is still pending or the oxid_reclaim_list is not clear=
+ed
+when fdls_reset_oxid_pool() is called, the background reclaim task might run
+after the link is reset.
 
-This function relies on nvfnic_find_io_req_by_tag(), which tests a bit in t=
-he
-nvfnic_tag_map bitmap:
-
-drivers/scsi/fnic/fnic_nvme.c:nvfnic_find_io_req_by_tag() {
-    if (tag =3D=3D FNIC_NVME_NO_FREE_TAG ||
-        !sbitmap_test_bit(&fnic->nvfnic_tag_map, tag))
-        return NULL;
-}
-
-However, fnic->nvfnic_tag_map is initialized exclusively in
-fnic_nvme_drv_init(), which is only executed if the driver role is
-FNIC_ROLE_NVME_INITIATOR. If firmware sends this event to a host operating =
-as
-an FC initiator, sbitmap_test_bit() will dereference the uninitialized sbit=
-map
-struct.
+If a new connection starts allocating OXIDs, could the pending reclaim task
+blindly clear bits for newly allocated OXIDs? This might cause those active
+OXIDs to be marked free again, leading to double-allocation and session
+corruption.
 
 [ ... ]
-> @@ -1650,6 +1663,15 @@ void fnic_wq_copy_cleanup_handler(struct vnic_wq_c=
-opy *wq,
->  	unsigned long start_time =3D 0;
->  	uint16_t hwq;
+
+> @@ -1288,6 +1294,10 @@ bool fdls_delete_tport(struct fnic_iport_s *iport,=
+ struct fnic_tport_s *tport)
+>  		spin_unlock_irqrestore(&fnic->fnic_lock, fnic->lock_flags);
+>  		fnic_rport_exch_reset(iport->fnic, tport->fcid);
+>  		spin_lock_irqsave(&fnic->fnic_lock, fnic->lock_flags);
+> +	} else if (IS_FNIC_NVME_INITIATOR(fnic)) {
+> +		spin_unlock_irqrestore(&fnic->fnic_lock, fnic->lock_flags);
+> +		nvfnic_exch_reset(iport, tport);
+> +		spin_lock_irqsave(&fnic->fnic_lock, fnic->lock_flags);
+>  	}
+
+[Severity: High]
+Can using the structure member fnic->lock_flags here instead of a local fla=
+gs
+variable corrupt the IRQ state?
+
+If a caller (like nvfnic_remote_port_delete) acquires the lock using a local
+flags variable, releasing and reacquiring it here with fnic->lock_flags will
+restore a stale or uninitialized IRQ state instead of the actual state.
+Could this prematurely re-enable interrupts and lead to an IRQ reentrancy
+deadlock?
+
+A similar lock mismatch appears to happen in nvfnic_process_ls_abts_rsp(),
+which is called from fdls_tport_timer_callback() where the lock is acquired
+with a local flags variable.
+
+[ ... ]
+
+> diff --git a/drivers/scsi/fnic/fnic_fcs.c b/drivers/scsi/fnic/fnic_fcs.c
+> --- a/drivers/scsi/fnic/fnic_fcs.c
+> +++ b/drivers/scsi/fnic/fnic_fcs.c
+> @@ -313,8 +319,14 @@ void fnic_handle_frame(struct work_struct *work)
+>  		fchdr_offset =3D (cur_frame->rx_ethhdr_stripped) ?
+>  			0 : FNIC_ETH_FCOE_HDRS_OFFSET;
 > =20
-> +	/*
-> +	 * Clean up all outstanding io requests. For FC initiator or NVME
-> +	 * initiator we issue firmware reset before this and all I/Os are
-> +	 * already freed
-> +	 */
-> +	if (IS_FNIC_FCP_INITIATOR(fnic) ||
-> +	    IS_FNIC_NVME_INITIATOR(fnic))
+> -		fnic_fdls_recv_frame(&fnic->iport, cur_frame->fp,
+> -							 cur_frame->frame_len, fchdr_offset);
+> +		fchdr =3D (struct fc_frame_header *)((u8 *)cur_frame->fp + fchdr_offse=
+t);
+> +		if (IS_FNIC_NVME_INITIATOR(fnic) && fnic_is_nvme_frame(fchdr)) {
+> +			nvfnic_ls_rsp_recv(&fnic->iport, fchdr,
+> +					  cur_frame->frame_len - fchdr_offset);
+
+[Severity: High]
+Is there a risk of an ABBA deadlock occurring inside nvfnic_ls_rsp_recv()
+when it calls timer_delete_sync()?
+
+nvfnic_ls_rsp_recv() executes while holding fnic->fnic_lock and calls
+timer_delete_sync(&nvfnic_ls_req->ls_req_timer).=20
+
+Meanwhile, the timer callback nvfnic_ls_req_timeout() unconditionally acqui=
+res
+fnic->fnic_lock at its start via spin_lock_irqsave().
+
+If the timer callback begins executing on another CPU right before
+timer_delete_sync() is called, will it spin indefinitely waiting for
+fnic_lock while timer_delete_sync() spins indefinitely waiting for the
+timer callback to finish?
+
+[ ... ]
+
+> @@ -617,6 +629,9 @@ void fnic_free_rq_buf(struct vnic_rq *rq, struct vnic=
+_rq_buf *buf)
+>  	void *rq_buf =3D buf->os_buf;
+>  	struct fnic *fnic =3D vnic_dev_priv(rq->vdev);
+> =20
+> +	if (WARN_ON(!buf))
 > +		return;
 > +
 
-[Severity: High]
-Does this early return cause memory leaks and module unload hangs if the
-firmware reset times out or fails?
+[Severity: Medium]
+Will this defensive check ever evaluate successfully if buf is NULL?
 
-If fnic_fcpio_reset() times out while waiting for completion, the
-fnic_fcpio_fw_reset_cmpl_handler() is never invoked, and the IO cleanup
-functions are skipped.
+Because buf->os_buf is dereferenced on the first line of the function to
+initialize rq_buf, a NULL buf will cause a crash before this WARN_ON check
+is reached. Should the check be moved above the dereference?
 
-Because fnic_wq_copy_cleanup_handler() now unconditionally returns early
-instead of acting as a fallback to complete pending descriptors with
-DID_NO_CONNECT, it seems all outstanding IOs would be leaked. Their
-completion callbacks are never triggered, which permanently blocks
-scsi_remove_host() during teardown.
+[ ... ]
+
+> @@ -917,6 +933,9 @@ void fnic_free_wq_buf(struct vnic_wq *wq, struct vnic=
+_wq_buf *buf)
+>  	dma_unmap_single(&fnic->pdev->dev, buf->dma_addr, buf->len,
+>  			 DMA_TO_DEVICE);
+> =20
+> +	if (WARN_ON(!buf))
+> +		return;
+> +
+>  	mempool_free(buf->os_buf, fnic->frame_pool);
+
+[Severity: Medium]
+Similarly, will this check prevent a crash if buf is NULL?
+
+By the time execution reaches this WARN_ON, buf->dma_addr and buf->len have
+already been dereferenced in the dma_unmap_single() call above it.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260612180918.8554=
--1-kartilak@cisco.com?part=3D7
+-1-kartilak@cisco.com?part=3D8
