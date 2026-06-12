@@ -1,103 +1,147 @@
-Received: from mail-wm1-f50.google.com (mail-wm1-f50.google.com [209.85.128.50])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C9A2E38B13C
-	for <linux-scsi@vger.kernel.org>; Fri, 12 Jun 2026 11:22:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.50
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 56CFE3C454F
+	for <linux-scsi@vger.kernel.org>; Fri, 12 Jun 2026 11:22:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781263349; cv=none; b=C3IO9gXDhAQgmTK75NBIcyhsH3X12h3S1rL3rEZoh2jsgdbPs5X9T1PkiKcDoxZUJTo5OkNwAFuqU1kVJb37jtnwhiwKqOgrVu2gD7yTnfcH+JgGfdJaHiTnzh95+WMs0TtTffCQghRfx0+qBXaCU4lXkM8wWvAjkhXzv5bo7Ow=
+	t=1781263379; cv=none; b=KbvbneImBA5w4X9LqOmy6xAob9E3U0qXUNBOYHeJ7WhWJ4Dt9RtSSO41Qr5CrrgZ7VADciCkL6TQt+jKzhvShq5T4yhqSch9Pl0um+5y/kTQToUBK8Hr+IwRk5C1rDVNGSCZTfPUeN0oiHgFL/OyHUVcHypsZQnVppWDFWCmktg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781263349; c=relaxed/simple;
-	bh=GuV1H0IEHrRo+v3Ch6tLNA3gxvy+KGSn/r4gPa0YYAU=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=SQYgzxrC+DhGxjb4dK1dipOcN/shCl9whoHpdrBjSjv9p/MKCyshIcXysj4P+nevyHv5SXlZrilpxaAUvCotCd2KpIsFkguoYSsyFtbBWvvb19+AEQgJW515Iv5ciq0NkyZr2wYZ06kMQpVyCyiPcWYNQO15PELP2bNoF2fT7D8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=AiKM308m; arc=none smtp.client-ip=209.85.128.50
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+	s=arc-20240116; t=1781263379; c=relaxed/simple;
+	bh=R6ZT1F1EGW0g0JYL1ak+gsnDOpVwIN3J8qWm4L6bTRs=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=be1ty3DjQMSj32eNJJHeCfVym/zU3AcQs1hEXQcDj2u8TxM8QNx7PobXaUSkZ7ilrSeTncweKcsiky+HGSVj5i3RtCMzVQsYwbGVRG1c4KaJdlyUPFTqUKR0307CxqnP2vKVOnN3b98iFjkahJjwn5BQM0bV7vBGYlzKzDGDJcI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UesUbwcH; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="AiKM308m"
-Received: by mail-wm1-f50.google.com with SMTP id 5b1f17b1804b1-490acbb0f89so5587495e9.0
-        for <linux-scsi@vger.kernel.org>; Fri, 12 Jun 2026 04:22:23 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1781263342; x=1781868142; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=DnHgK6okwKqvTys9E31IvEONtVGuXsYGgm60dYpgyTE=;
-        b=AiKM308mf35K1j7aspFpziDdQBPvEgi8EiktYyXviCezzaHLPQXQCGde+KB/4zusMt
-         Lh0AnHUBBGZ9Fdk3l1qlBk11lLAwLJc+MZXP7oth7yZKJ3JYA4EGVBMi3Zzd7cHGYiqA
-         zDoN+Rp1iH25VyOYX1dXSQJ5ogXxhyh6noA8VcVYnxtJ5/pSbla6IrMIJx1lNIsdThvN
-         BhfMVSRZ/f9twMX6/q9zcOaE3HkgewFbiNCwbspbEwUC4gEJYviXxy+uIU9COqVr2JyE
-         GvIJds/ZQsCHzT8/j4hFDvvk2l3Tt+27QJ3y6QVe0Hn8CJsxApGrUii0PXBtoo6D+eF1
-         oSqg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1781263342; x=1781868142;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=DnHgK6okwKqvTys9E31IvEONtVGuXsYGgm60dYpgyTE=;
-        b=HKs6CJI6UwGZafYpl2dFGxowicXwtd9RasxmvFN+eGd6sEJ58wNMFuLfgsovY0Oydz
-         KiOVHn0OWR5iCHhtkly173OwSzCtzdXP2RjH7VtSGVVKJ1ikB6Wl3vsX0a0txTitrfhU
-         6r/L1DABbe2ZGeL5EK5ZjyJfC089Ov1VTJ3YoE3keKWCsP8ML2kbvxYs1P1uhb0sTteh
-         JA8buHSnudERCxoX6rW16SW7WJykIpIJfFDeacHMd8AwyAz5kxhBbX+QU3qbgE9WppHo
-         NaFxcRXsPaDLZeNDMvusIUwVYu+FK3PwJVQP9ddlO0jn9EkKxyK68B48IU/gaPWj6XID
-         fDfw==
-X-Gm-Message-State: AOJu0YxOgUT0wzzSfr8UDEnJ1hIzm+3g/Dpcoo4VsxgTqtIe9FeD6eKH
-	dUq20TaXYI6kSy+9PezNa1hE2YhMXlDI6ZwY9BllFtZnQ/TZsUOabvQMeQ8MQnZSUow=
-X-Gm-Gg: Acq92OEqkEdYr5ZK2WA63STrGEbxeVHiLVVRGTLtoowUzEzs1LTo+6ozXd8Fx9NSe5r
-	QnND7PUTlUuUQ7n+48PCprhbZUkeJqjgaz3w8KOLKmzROprxVkklyBrb+M4YNRBcIlSf9Cz+7iv
-	L1PY+7JOBSLlclzFFJsQPZQzUKh1VGeDvOmq15QE1Fm3P3xiDVuhFvGCHz0qAEg4ut3CBzVKHOH
-	yadvdP4IC6RXlKbqMhFjdEwqR/ZpUdkQ3pztAd5Z9LTlKklsCepysa9mtf8LV+mQxha0rYpl1jp
-	w6cHuFiqfyF7Lh7VfoZ9YYX43e25lW0ksuDsUnn/j1MVZNPsUT8ksc1z6feev7weP9Q7rgL/tqn
-	ZeTQjth/derUv7N3xXn7GA2a5QHqEyFrqQo41Q6kKM85A5KcgD4bcHq+Cl8QzRx+nL+rXfQ5/NV
-	osYd65Kuhanbwd7fu+yk0Yeo5VytnYyrqne2S4dkhIB1We8UNI084nPOV0
-X-Received: by 2002:a05:600c:1d09:b0:490:e1a6:45b6 with SMTP id 5b1f17b1804b1-490ec4df0c0mr28871095e9.20.1781263341793;
-        Fri, 12 Jun 2026 04:22:21 -0700 (PDT)
-Received: from ?IPV6:2a07:de40:a101:3:ce70:3e6f:3b9c:9125? ([2a01:4a0:2e:ffff:ffff:ffff:ffff:ffff])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-4606f2cf5d9sm4291163f8f.32.2026.06.12.04.22.21
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 12 Jun 2026 04:22:21 -0700 (PDT)
-Message-ID: <8729ed4c-3b5a-4135-8ecf-38fe2f02a457@suse.com>
-Date: Fri, 12 Jun 2026 13:22:21 +0200
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UesUbwcH"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A64F71F000E9;
+	Fri, 12 Jun 2026 11:22:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1781263376;
+	bh=PUCcxklApmrWFF/jWFmAxHWxNK+j+PJMdaaPPmaOOeg=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=UesUbwcHLfvT3JrLSKXRSFLeYzDQBmnZktVL6hxWlrRMpW0RBip2BSIa7UxcACO2j
+	 FHsLytu+2Is55OFHUjj5WWDKatSRQWcq+KAmZDV7XACA/cSNX78siz0loNnUOvcRga
+	 IZREi8Uc8uYdO4KyDktlrh7noQg6Dy8/Cba1wLlhck5B+dagCML2jU4whsMZmHUJhY
+	 TdVtDutCK1DMtIuGOS/1ruxqKrG8377BpEI6tjG4E5EMxf5qNw3aoJu7ohZxPbPW1z
+	 El/PTo8EFAsZMND/XMaHzaRg0QRHmjMvYRt+wsAzoXXQ5qlRjW7ZmmgXFqsu7PoPmB
+	 vHwQWc+zqHPow==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v2 20/60] scsi: qla2xxx: Enable get_firmware_state for
+ 29xx
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Nilesh Javali" <njavali@marvell.com>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20260612095333.1666592-21-njavali@marvell.com>
+References: <20260612095333.1666592-21-njavali@marvell.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Fri, 12 Jun 2026 11:22:56 +0000
+Message-Id: <20260612112256.A64F71F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 26/60] scsi: qla2xxx: Add support for QLA29XX in memory
- allocation
-To: Nilesh Javali <njavali@marvell.com>, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, GR-FC-Storage-Upstream@marvell.com,
- agurumurthy@marvell.com, emilne@redhat.com, jmeneghi@redhat.com
-References: <20260612095333.1666592-1-njavali@marvell.com>
- <20260612095333.1666592-27-njavali@marvell.com>
-Content-Language: en-US
-From: Hannes Reinecke <hare@suse.com>
-In-Reply-To: <20260612095333.1666592-27-njavali@marvell.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
 
-On 6/12/26 11:52, Nilesh Javali wrote:
-> Enhance the qla2x00_mem_alloc function to include checks for
-> QLA29XX adapters.  This modification updates the conditions for
-> memory allocation and cleanup, ensuring proper handling of the
-> new adapter series alongside existing QLA27XX and QLA28XX checks.
-> 
-> Signed-off-by: Nilesh Javali <njavali@marvell.com>
-> ---
->   drivers/scsi/qla2xxx/qla_os.c | 10 ++++++----
->   1 file changed, 6 insertions(+), 4 deletions(-)
-> 
-Reviewed-by: Hannes Reinecke <hare@kernel.org>
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
 
-Cheers,
+Pre-existing issues:
+- [High] Kernel stack memory is leaked to userspace because `qla2x00_get_fi=
+rmware_state()` copies uninitialized stack variables into the `states` arra=
+y on error, which is then exposed via sysfs.
+- [High] The `qla2x00_fw_state_show()` function attempts to bypass retrievi=
+ng the firmware state when the chip is down or EEH is busy, but due to a lo=
+gic flaw, it unconditionally executes the command anyway outside the safety=
+ lock.
+--
 
-Hannes
--- 
-Dr. Hannes Reinecke                  Kernel Storage Architect
-hare@suse.com                               +49 911 74053 688
-SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
-HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
+commit 9c27dc0c2250c56e44cb02cf37c800f20ca12033
+Author: Nilesh Javali <njavali@marvell.com>
+
+scsi: qla2xxx: Enable get_firmware_state for 29xx
+
+This commit enables the get_firmware_state mailbox command for 29xx
+adapters. It adds IS_QLA29XX() checks to ensure MBX_12 is properly
+set up and reported.
+
+> diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_a=
+ttr.c
+> index 742becc0dadf7..ee6bf83029911 100644
+> --- a/drivers/scsi/qla2xxx/qla_attr.c
+> +++ b/drivers/scsi/qla2xxx/qla_attr.c
+> @@ -2436,7 +2436,7 @@ qla2x00_mpi_fw_state_show(struct device *dev, struc=
+t device_attribute *attr,
+>  	u16 mpi_state;
+>  	struct qla_hw_data *ha =3D vha->hw;
+> =20
+> -	if (!(IS_QLA27XX(ha) || IS_QLA28XX(ha)))
+> +	if (!(IS_QLA27XX(ha) || IS_QLA28XX(ha) || IS_QLA29XX(ha)))
+>  		return scnprintf(buf, PAGE_SIZE,
+>  				"MPI state reporting is not supported for this HBA.\n");
+
+[Severity: High]
+This isn't a bug introduced by this patch, but I noticed a logic flaw in
+qla2x00_fw_state_show() in this same file. When the chip is down, it unlocks
+the mutex and jumps to the out label, but then unconditionally executes the
+mailbox command again outside the lock:
+
+qla2x00_fw_state_show()
+    if (qla2x00_chip_is_down(vha)) {
+        mutex_unlock(&vha->hw->optrom_mutex);
+        ql_log(ql_log_warn, vha, 0x707c, "ISP reset active.\n");
+        goto out;
+    }
+    ...
+out:
+    if (rval !=3D QLA_SUCCESS) {
+        memset(state, -1, sizeof(state));
+        rval =3D qla2x00_get_firmware_state(vha, state);
+    }
+
+Since rval is initialized to QLA_FUNCTION_FAILED, does this bypass the safe=
+ty
+checks and execute qla2x00_get_firmware_state() anyway, potentially causing=
+ a
+firmware hang?
+
+> diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mb=
+x.c
+> index 9c78aa66e12b3..a91ac59dd9c06 100644
+> --- a/drivers/scsi/qla2xxx/qla_mbx.c
+> +++ b/drivers/scsi/qla2xxx/qla_mbx.c
+[ ... ]
+> @@ -2301,7 +2301,7 @@ qla2x00_get_firmware_state(scsi_qla_host_t *vha, ui=
+nt16_t *states)
+>  		states[3] =3D mcp->mb[4];
+>  		states[4] =3D mcp->mb[5];
+>  		states[5] =3D mcp->mb[6];  /* DPORT status */
+> -		if (IS_QLA27XX(ha) || IS_QLA28XX(ha))
+> +		if (IS_QLA27XX(ha) || IS_QLA28XX(ha) || IS_QLA29XX(ha))
+>  			states[11] =3D mcp->mb[12]; /* MPI state. */
+>  	}
+
+[Severity: High]
+This is a pre-existing issue, but it looks like there is a kernel stack mem=
+ory
+leak in qla2x00_get_firmware_state() affecting the states array.
+
+The mailbox command structure mbx_cmd_t mc is allocated on the stack but not
+zero-initialized. If qla2x00_mailbox_command() fails early and returns
+without modifying mc.mb, the code unconditionally copies the uninitialized
+variables into the states array:
+
+    states[0] =3D mcp->mb[1];
+    if (IS_FWI2_CAPABLE(vha->hw)) {
+        states[1] =3D mcp->mb[2];
+        ...
+
+The sysfs handler then formats this state array directly into its output and
+ignores the error return value.
+
+Could this expose uninitialized kernel stack memory to userspace?
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260612095333.1666=
+592-1-njavali@marvell.com?part=3D20
