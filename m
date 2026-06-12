@@ -1,127 +1,240 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F2639337BBD
-	for <linux-scsi@vger.kernel.org>; Fri, 12 Jun 2026 11:38:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1DE732E7BD9
+	for <linux-scsi@vger.kernel.org>; Fri, 12 Jun 2026 11:38:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781264304; cv=none; b=tnJulLoN+2X/z1ej9zW/CxH0biNTzwh7N4ITMN6kA/Go8iweYFPc3UNiflR3Thw0Wvel8qMldPm5KRe819s/0rBmAlwjAU199t1nve+EHoUbXbYkqMZV8BYG0vIK80afM7w5d7F//1rC7hprzfSbaGK/cMOPivyMoa5uDPDFeqQ=
+	t=1781264323; cv=none; b=btRy8/NEkP8tdbC0xTM7IlOkXPtfq3+exvcU4QeYS2K4Ktyt7Y4+A5Vnee6mQGFdVvD8UUTIsFkJltZSzIQePICUowbsvEgeO903ZpXwa8Pfi+t+z31snAPzHvA+u3VdXWOhv//gQm3BNHnO3Qmg4RcM/6P5VimxKzPjgRnZE1k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781264304; c=relaxed/simple;
-	bh=PH24FsN7BBA1uX5Za7MgC2pnJPgwt71j22Mz3abYEuc=;
+	s=arc-20240116; t=1781264323; c=relaxed/simple;
+	bh=cyn4wU0iolz4PJUPG/d5qe2tAJaItFg9dxUGfUOIG8E=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=XjlyHXuOI1dnkNNMj7IoG8RK43y2qBjVFbo+8O7sczR7aipOW3tWUPeNAs43fmx79FkgKCcw9EnsmIlSt5zK+1pt11EZCNtB/NSm2i83yh3ERoG1JVy2lm1dbtNWm2BZ0R6DpZNs1irvgL8xRbRFJNu95wBhXs+J38k86bogFTI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WBIlvelP; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=uIzHElYH5BAXTTMN0iesV0Ii6rlmIZa4FZ8m/dUqEOc4F5P6RJ9swXS4XpjnoGu6oKk6aPk08AqbEO8J42kU/4/a6zPSf2y4AN63l0miziMb+Ky/3ApviUFwuUadup0KAYNptZen0RIhIgbc4nWqmlXAySFLR2xyfaPuRbHeiHA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lVQnY81m; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WBIlvelP"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3EC281F00A3A;
-	Fri, 12 Jun 2026 11:38:22 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lVQnY81m"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D9C151F000E9;
+	Fri, 12 Jun 2026 11:38:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781264302;
-	bh=JNETbx2z6zKNVxmLWeXIKtrF0gledZPLHUnmHVhjSZI=;
+	s=k20260515; t=1781264322;
+	bh=GBrERva/2ryvQe/oxS5ijoEX/UyjuLYUbcaKamncIC8=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=WBIlvelPOgh+Fes1w6b4u7MaiSi3Dt3McQduvk4Yw/yySjdn53O+zwP+AbjoP3Gps
-	 /lXXG0PQiPEabeU+QJEEbuhc3sX9a8KJa1grlAQ6uys2Fh9pGGoFwHz/hTvT263AMX
-	 TEzu0LtPxmnR+a+hjUZi7wRk3chVIup6LomIjN7s2ro1L+RBlOOWfvXnXP7Ejc0okY
-	 kMMPZRBhjF+U0uKuE+UwmB4B3oIn/q5iObLYgKHsyBh8Fs+j6gB8HZ0ZLmexLsM6jz
-	 20+TgxGggM6wdxsFadYVy1/5KvvQ0FiwBkQLg7whEKaZSAB+haz/7O7zOL+MCg1dOb
-	 +hHYPKEhQb4BA==
+	b=lVQnY81m63Ey1YT63mk6BaaO0N+SBMGd8jS4k0DwxXMSEfhGuTZtOkSHKVbo1e9S1
+	 kjIE9NY7b+0oAloFY/lZrjOFDPUTf0/oTkvtPmFSTum4rBrY3mcIjRmXUSLUcdzBb8
+	 a6Ye4siHrBV5ZGiTjwJMS4zUFHYNpSQJ2ibCh84HEESvQdisxdaHF2SyP3oY7VoHgk
+	 MpxQ2ULDjBdKRMgTKlTEYbetsnW4BKnBdtClcTzp0aKkyl5u1NBl8vMxqaLCtPICu4
+	 mNnyVpahALykAwz2v14ZvSvZYCOSVHBM8V0cmLBFhh23XDgRnxEb4gKpUI2jiC1+Ic
+	 q8kDFS5S+g9hQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 59/60] scsi: qla2xxx: Fix BSG job leak on validate
- flash image error path
+Subject: Re: [PATCH v2 55/60] scsi: qla2xxx: Hold vport reference in
+ qla24xx_report_id_acquisition()
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Nilesh Javali" <njavali@marvell.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260612095333.1666592-60-njavali@marvell.com>
-References: <20260612095333.1666592-60-njavali@marvell.com>
+In-Reply-To: <20260612095333.1666592-56-njavali@marvell.com>
+References: <20260612095333.1666592-56-njavali@marvell.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 12 Jun 2026 11:38:21 +0000
-Message-Id: <20260612113822.3EC281F00A3A@smtp.kernel.org>
+Date: Fri, 12 Jun 2026 11:38:41 +0000
+Message-Id: <20260612113841.D9C151F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+Thank you for your contribution! Sashiko AI review found 7 potential issue(=
 s) to consider:
 
+New issues:
+- [High] The decrement of `vp->vref_count` lacks a release memory barrier a=
+nd breaks the driver's locking idiom, potentially leading to a use-after-fr=
+ee write on weakly ordered architectures.
+
 Pre-existing issues:
-- [High] Missing bounds check on `job->request_len` leads to out-of-bounds =
-heap reads of the BSG request payload.
+- [High] The exact same use-after-free vulnerability fixed by this patch in=
+ `qla24xx_report_id_acquisition` is present in the NVMe FC path via `qla2xx=
+x_get_vha_from_vp_idx`.
+- [High] Target mode processing uses `qla_find_host_by_vp_idx` which return=
+s an unreferenced `vha` pointer, opening a race condition for UAF during vp=
+ort teardown.
+- [High] btree operations on `ha->host_map` via `qla_update_host_map()` are=
+ performed without holding `vport_slock`.
+- [High] Missing `sess_lock` during `vp_fcports` list traversal in Format 2=
+ branch.
+- [High] Invalid use of list_for_each_entry_safe across dropped spinlocks i=
+n DPC and alert handlers.
+- [High] `qla24xx_report_id_acquisition` ignores `VPORT_DELETE` and can res=
+urrect a deleted vport.
 --
 
-commit 39e37aaaa21d29987eb2a2358ad4f2e41418684a
+commit 95ed94124983f94c25ebc87bace3b12cf63aa94f
 Author: Nilesh Javali <njavali@marvell.com>
+scsi: qla2xxx: Hold vport reference in qla24xx_report_id_acquisition()
 
-scsi: qla2xxx: Fix BSG job leak on validate flash image error path
+This commit fixes a use-after-free by taking a vport reference
+(vref_count) while holding vport_slock when finding a virtual port,
+and dropping it after use. This ensures the vport isn't freed by a
+concurrent qla24xx_deallocate_vp_id().
 
-This commit fixes a BSG job leak in the validate flash image error path.
-By calling bsg_job_done() unconditionally, it ensures the transport
-completes the job and frees resources even if the validation fails.
+Cc: stable@vger.kernel.org
 
-> diff --git a/drivers/scsi/qla2xxx/qla_bsg.c b/drivers/scsi/qla2xxx/qla_bs=
-g.c
-> --- a/drivers/scsi/qla2xxx/qla_bsg.c
-> +++ b/drivers/scsi/qla2xxx/qla_bsg.c
-> @@ -3734,9 +3734,8 @@ static int qla28xx_validate_flash_image(struct bsg_=
-job *bsg_job)
+> diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mb=
+x.c
+> index 8a001b489fc0e..bfb931eb14f61 100644
+> --- a/drivers/scsi/qla2xxx/qla_mbx.c
+> +++ b/drivers/scsi/qla2xxx/qla_mbx.c
+> @@ -4275,6 +4275,7 @@ qla24xx_report_id_acquisition(scsi_qla_host_t *vha,=
+ void *pkt)
+>  			list_for_each_entry(vp, &ha->vp_list, list) {
+>  				if (vp_idx =3D=3D vp->vp_idx) {
+>  					found =3D 1;
+> +					atomic_inc(&vp->vref_count);
 
 [Severity: High]
-This is a pre-existing issue, but does this BSG job handling path lack
-sufficient bounds checking on job->request_len?
+This is a pre-existing issue, but does this loop need to check if the vport
+is actively being deleted?
 
-The BSG infrastructure allocates job->request using memdup_user() with the
-exact user-supplied length. In fc_bsg_host_dispatch(), the transport only
-verifies that request_len >=3D sizeof(uint32_t) before inspecting the msgco=
-de.
+If qla24xx_vport_delete() is concurrently removing the vport and has already
+taken it out of the host_map, would we resurrect it here?
 
-When dispatching a vendor command, it appears to read out of bounds if the
-request is too small:
+We take a reference and later re-register it without checking for
+VPORT_DELETE on vp->dpc_flags, which might lead to a use-after-free when the
+system later queries the map.
 
-drivers/scsi/scsi_transport_fc.c:fc_bsg_host_dispatch() {
+>  					break;
+>  				}
+>  			}
+> @@ -4292,6 +4293,8 @@ qla24xx_report_id_acquisition(scsi_qla_host_t *vha,=
+ void *pkt)
+>  			set_bit(VP_IDX_ACQUIRED, &vp->vp_flags);
+>  			set_bit(REGISTER_FC4_NEEDED, &vp->dpc_flags);
+>  			set_bit(REGISTER_FDMI_NEEDED, &vp->dpc_flags);
+> +
+> +			atomic_dec(&vp->vref_count);
+
+[Severity: High]
+Could the weakly ordered nature of atomic_dec() allow the preceding set_bit=
+()
+operations to be reordered after the decrement?
+
+In the kernel, set_bit() and atomic_dec() do not imply memory barriers.
+On weakly ordered architectures, the atomic_dec() could become visible
+before the stores to vp->vp_flags and vp->dpc_flags.
+
+If qla24xx_deallocate_vp_id() polls vref_count concurrently, could it
+observe vref_count =3D=3D 0 early, proceeding to unlink the vport before the
+flags are fully updated?
+
+Would it be safer to enclose the atomic_dec() within vport_slock, matching
+how the reference is acquired?
+
+>  		}
+>  		set_bit(VP_DPC_NEEDED, &vha->dpc_flags);
+
+[Severity: High]
+This is a pre-existing issue, but are we modifying the host_map without
+holding the required lock in this same function?
+
+Just before the snippet above, qla_update_host_map() evaluates to
+qla_update_vp_map() which inserts the vp into the ha->host_map btree. The
+documentation for qla_update_vp_map() states it requires vport_slock:
+
+drivers/scsi/qla2xxx/qla_mid.c:qla_update_vp_map() {
+    /* vport_slock to be held by the caller */
     ...
-    if ((shost->hostt->vendor_id =3D=3D 0L) ||
-        (bsg_request->rqst_data.h_vendor.vendor_id !=3D
-            shost->hostt->vendor_id)) {
+    btree_insert32(&ha->host_map, ...);
+}
+
+Since we dropped ha->vport_slock before this call, could concurrent
+modifications corrupt the btree?
+
+
+[Severity: High]
+This isn't a bug introduced by this patch, but should we be holding
+sess_lock while iterating vp_fcports in the Format 2 path of
+qla24xx_report_id_acquisition()?
+
+In the Format 1 path, the list is traversed with sess_lock held.
+However, in the Format 2 path, we traverse the list and call
+qla2x00_find_fcport_by_wwpn() without holding vha->hw->tgt.sess_lock:
+
+drivers/scsi/qla2xxx/qla_mbx.c:qla24xx_report_id_acquisition() {
+    ...
+    list_for_each_entry(fcport, &vha->vp_fcports, list) {
+        fcport->scan_state =3D QLA_FCPORT_SCAN;
+        fcport->n2n_flag =3D 0;
+    }
+
+    fcport =3D qla2x00_find_fcport_by_wwpn(vha,
+        rptid_entry->u.f2.port_name, 1);
     ...
 }
 
-If the access accidentally matches the host's vendor_id, the driver then
-reads further without validating the length:
+Could this lack of locking lead to list corruption or use-after-free if
+vp_fcports is modified concurrently?
 
-drivers/scsi/qla2xxx/qla_bsg.c:qla2x00_process_vendor_specific() {
-    ...
-    switch (bsg_request->rqst_data.h_vendor.vendor_cmd[0]) {
-    ...
+
+[Severity: High]
+This is a pre-existing issue, but does the NVMe FC path suffer from a simil=
+ar
+use-after-free vulnerability as the one fixed in this patch?
+
+When calling qla2xxx_get_vha_from_vp_idx() in qla_nvme.c, the lock is dropp=
+ed
+and the vha pointer is returned without incrementing vref_count:
+
+drivers/scsi/qla2xxx/qla_nvme.c:qla2xxx_get_vha_from_vp_idx() {
+    if (vha->vp_idx =3D=3D vp_index) {
+        spin_unlock_irqrestore(&ha->vport_slock, flags);
+        return vha;
+    }
 }
 
-This validation path then continues to read the command index directly
-from the request without length validation:
+The caller, qla2xxx_process_purls_iocb(), then heavily uses this unreferenc=
+ed
+pointer. Could a concurrent qla24xx_deallocate_vp_id() tear down the vport
+and free it, causing a use-after-free in the NVMe response path?
 
-drivers/scsi/qla2xxx/qla_bsg.c:qla28xx_do_validate_flash_image() {
-    ...
-    img_idx =3D bsg_request->rqst_data.h_vendor.vendor_cmd[1];
-    ...
+
+[Severity: High]
+This is a pre-existing issue, but does qla_find_host_by_vp_idx() also leak
+unreferenced pointers in target mode?
+
+drivers/scsi/qla2xxx/qla_mid.c:qla_find_host_by_vp_idx() {
+    if (likely(test_bit(vp_idx, ha->vp_idx_map)))
+        return ha->vp_map[vp_idx].vha;
 }
 
-Can an attacker with the sys_rawio capability submit a malformed request
-that triggers out-of-bounds heap reads across these functions, potentially
-causing a panic or leaking uninitialized data?
+Various target mode functions route commands to the vport returned by this
+lookup. Since no reference is taken, couldn't qla24xx_deallocate_vp_id()
+free the vha concurrently?
 
->  	bsg_reply->result =3D DID_OK << 16;
->  	bsg_reply->reply_payload_rcv_len =3D 0;
->  	bsg_job->reply_len =3D sizeof(struct fc_bsg_reply);
-> -	if (!rval)
-> -		bsg_job_done(bsg_job, bsg_reply->result,
-> -			     bsg_reply->reply_payload_rcv_len);
-> +	bsg_job_done(bsg_job, bsg_reply->result,
-> +		     bsg_reply->reply_payload_rcv_len);
-> =20
->  	return QLA_SUCCESS;
->  }
+
+[Severity: High]
+This is a pre-existing issue, but is it safe to use list_for_each_entry_saf=
+e()
+when dropping the spinlock in DPC and alert handlers?
+
+In qla2x00_do_dpc_all_vps(), the lock is dropped inside the safe iteration
+loop:
+
+drivers/scsi/qla2xxx/qla_mid.c:qla2x00_do_dpc_all_vps() {
+    spin_lock_irqsave(&ha->vport_slock, flags);
+    list_for_each_entry_safe(vp, tvp, &ha->vp_list, list) {
+        if (vp->vp_idx) {
+            atomic_inc(&vp->vref_count);
+            spin_unlock_irqrestore(&ha->vport_slock, flags);
+            ...
+            spin_lock_irqsave(&ha->vport_slock, flags);
+}
+
+Since list_for_each_entry_safe() caches the next element (tvp), if a
+concurrent deletion removes tvp from the list and frees it while the lock
+is dropped, won't resuming the loop result in a use-after-free?
+A similar pattern exists in qla2x00_alert_all_vps().
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260612095333.1666=
-592-1-njavali@marvell.com?part=3D59
+592-1-njavali@marvell.com?part=3D55
