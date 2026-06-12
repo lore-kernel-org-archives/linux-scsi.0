@@ -1,305 +1,307 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B7AE633123D
-	for <linux-scsi@vger.kernel.org>; Fri, 12 Jun 2026 21:42:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B2F89376A14
+	for <linux-scsi@vger.kernel.org>; Fri, 12 Jun 2026 21:59:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781300580; cv=none; b=F3pMPti1HCnTCZUOxOKeXbxWK2Uj7UeiNtMXf7B5KgeVE0kyHDIVxsJVRNrhuuZej3PDO1XeKHn+CG0kAesJ8NpmJvZ/BqZz0zdDx6tXbZppv5xiQuwdT/I0qLbn01BTqGC3a5PrISvRVPWE5N5TCU5KH9znfK3CoPGf/42QC/U=
+	t=1781301554; cv=none; b=DmjeQCUdcdrjG+mMRnzmrK2jJ37I37HJ1ShmH1VMEkIWPCUUrBvwAJaqjqOXsuc3t6ctUkduSxQjI7IbC69czRTN5cGHzYTzyDGhOV16i/prckJ44qqquz/Ls03wlALPnOsCZ11fOpiwjgudn9QS5ndA/ngIF/Zbbc5W8WPL3Lo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781300580; c=relaxed/simple;
-	bh=rV/z4XLIWLbk14YY/4L/E/6KFWe7uLmiHDydrAE40Us=;
+	s=arc-20240116; t=1781301554; c=relaxed/simple;
+	bh=AJl5iunmYpIh9pzUxeWFMuIZ9C53uWqL4M+JfvIA3Co=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=hKmYpcNLCQXyi0t25EuDuXcBEEvNVX67pGurghbuR08PvokIQ8sIWN5vPcGosm2Utvz4prPWuTFaLO8azTs2So2NZCD2DkkkkJouWyiwJXfYbqE/RgGvux1yz/fn71/eLJ7ZEPf8EkCxqIfHVXqFkhkoSR6EVxhTyeegABe7k/M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aThzYMRA; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=bXO7qr3VrWvYkyotMTEuCrX6TxbLKPrKZzcWjSuint+wj04iDTsV3qdSzCnSO5qlrelu+25k+NyElCmcdlQB3y9TFlnbWQxYuHFKQltWPH4g4HOZ+TFKaZRfM2+uD3CK0y6uXIvcZGGogfoePRX+TcpbErUN6a22A/G2x+WMKgw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iwljQhXw; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aThzYMRA"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 311271F000E9;
-	Fri, 12 Jun 2026 21:42:58 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iwljQhXw"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7D0A61F000E9;
+	Fri, 12 Jun 2026 21:59:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781300578;
-	bh=lZLr3arQdIdvbIPjZ5GchdytK4B17r9l6SGsFMVRjZY=;
+	s=k20260515; t=1781301552;
+	bh=wm2X4zBJ5S0EWN2OwINYQ+mGTL+gzBskIfXWqHDk8yI=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=aThzYMRA7UmG6Itn5ZLr1aEQvxCBGTXlEJwlvME1vBOAsIbN5+NAKzTyTxzBPWcO8
-	 RNjc3wMlOLmmOVgi4lMhoYDyCpWxV+Swb7wayJBgQxocKSRYEOmGCfi5RWojpqxM/X
-	 pHpSG0LbPiUO6OTisVpzWTB2ffhPZpVN7uC1sxLzJqlK4GTVpzfFPrCpD+06YJMtcp
-	 jivMrm3jxD0so2PgY87dmqkjvEAbkLzN6NkoeDpanR7supLAr9h8t7s3l6r179f7lN
-	 qAP9FfQMCqvBrKx7TLyRyWipS6KOqZZ5td+Bqgc25VgvMLb0r4oVez4d6lMqz3N+OL
-	 AmwjyKw+XjPUA==
+	b=iwljQhXwebbJDJlfQeyx2Y6fVp/JA/48ybf195hbK/jPzcEf2mVQ9ecnJ0vF6JK6z
+	 kUo1bjaRvmTbw+02GvkORoMRzrxcBM4o84bjIsXaKLjoXuh80XrDIjqIeqolh8eve8
+	 xMMdjY6VheBmTz3i6yHhsH7B/HKCycrh6NRYdDvyi3N7r92ztomZe6A2mJbpmFuhCI
+	 CZwcUdqZpVij7NJyx+5K2iPVUOklVtoGW26wHPKfHMblf4dYPgJXtG1mtGAZ7xcSsv
+	 DpMYEgP2KaqODyjxoh32BaSZNpD22ifC6kdFoxiHOiF4e26WCeCgc511aP8mDm9mIg
+	 4U44UyvXslZow==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4 05/13] scsi: fnic: Add FDLS role handling for NVMe
- initiators
+Subject: Re: [PATCH v4 06/13] scsi: fnic: Add the NVMe/FC transport path
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Karan Tilak Kumar" <kartilak@cisco.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260612180918.8554-6-kartilak@cisco.com>
-References: <20260612180918.8554-6-kartilak@cisco.com>
+In-Reply-To: <20260612180918.8554-7-kartilak@cisco.com>
+References: <20260612180918.8554-7-kartilak@cisco.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 12 Jun 2026 21:42:57 +0000
-Message-Id: <20260612214258.311271F000E9@smtp.kernel.org>
+Date: Fri, 12 Jun 2026 21:59:11 +0000
+Message-Id: <20260612215912.7D0A61F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 8 potential issue(=
-s) to consider:
+Thank you for your contribution! Sashiko AI review found 10 potential issue=
+(s) to consider:
 
 New issues:
-- [High] The 'Establish Image Pair' flag (FC_SPP_EST_IMG_PAIR) is omitted i=
-n the NVMe PRLI Service Parameters.
-- [High] NVMe PRLI frame payload is truncated by 4 bytes, violating the spe=
-cified prli_len and omitting the end of the NVMe SPP.
+- [High] Calling timer_delete_sync() while holding fnic_lock causes an AB-B=
+A deadlock.
+- [High] Dropping the spinlock inside list_for_each_entry_safe() exposes th=
+e cached 'next' pointer to concurrent deletion, leading to Use-After-Free.
+- [High] Lockless access to io_req_table elements in _terminate_tport_ios()=
+ races with IO completions, causing Use-After-Free.
+- [High] Unhandled NVMe abort failures permanently leak fnic_io_req and han=
+g the NVMe core.
+- [High] Freeing tag_map and io_req_table in nvfnic_nvme_unload before disa=
+bling interrupts causes Use-After-Free on late IO completions.
+- [High] Early return on nvme_fc_unregister_localport failure in nvfnic_nvm=
+e_unload leaks memory and guarantees Use-After-Free of the fnic structure.
+- [Medium] Unused memory pool io_req_pool is leaked on module unload for NV=
+Me initiators.
+- [Medium] The fnic_tport_s structure memory is leaked if NVMe remote port =
+unregistration fails or times out.
+- [Medium] Valid DMA mappings at address 0 will not be unmapped, causing an=
+ IOMMU resource leak.
 
 Pre-existing issues:
-- [High] Dereference of freed `tport` pointer in `fnic_tport_event_handler`=
- if a link down occurs before the event is processed.
-- [High] Missing cancellation of iport->fabric.retry_timer upon module unlo=
-ad causes UAF.
-- [High] Dropping the list-protecting lock inside list_for_each_entry_safe =
-leads to a Use-After-Free if concurrent threads delete the 'next' element.
-- [High] Functions drop and reacquire `fnic_lock` using the shared `fnic->l=
-ock_flags` instead of the local `flags` saved by the caller, potentially co=
-rrupting IRQ state.
-- [High] FCoE frames are permanently leaked when send or queue operations f=
-ail, leading to kernel memory exhaustion (OOM).
-- [High] Releasing `fnic_lock` during target port addition allows concurren=
-t deletion, causing a Use-After-Free.
+- [Critical] Using a shared struct member (fnic->lock_flags) with spin_lock=
+_irqsave() corrupts CPU IRQ states.
 --
 
-commit 97165276705c88c1da90e05dc10eb567481fddcd
+commit bbeed4ae296bbd0a10dc168bc3c202bd9dce7297
 Author: Karan Tilak Kumar <kartilak@cisco.com>
+Subject: scsi: fnic: Add the NVMe/FC transport path
 
-scsi: fnic: Add FDLS role handling for NVMe initiators
+This patch adds the NVMe/FC transport path to the fnic driver. It includes
+NVMe local-port and remote-port registration, I/O submission, DMA mapping,
+tag management, completion, abort handling, and cleanup logic.
 
-Modify FDLS registration and discovery flows to use NVMe FC-4 type,
-features, PRLI service parameters, and FDMI attributes when the adapter
-runs as an NVMe initiator.
+Link: https://lore.kernel.org/oe-kbuild-all/202605280430.wTYAqI3A-lkp@intel=
+.com/
+Link: https://lore.kernel.org/oe-kbuild-all/202605280619.pmobiDWp-lkp@intel=
+.com/
+Link: https://lore.kernel.org/oe-kbuild-all/202605280519.Jd4fmgAZ-lkp@intel=
+.com/
 
-Limit SCSI host setup, teardown, rport reset, and FC host notifications
-to FCP initiators while keeping target-port events available to both FCP
-and NVMe roles.
+> --- a/drivers/scsi/fnic/fnic_nvme.c
+> +++ b/drivers/scsi/fnic/fnic_nvme.c
+> [ ... ]
+> @@ -44,6 +44,8 @@ int nvfnic_dma_map_sgl(struct fnic *fnic, struct fnic_i=
+o_req *io_req,
+>  void nvfnic_dma_unmap_sgl(struct fnic *fnic, struct fnic_io_req *io_req)
+>  {
+>  	if (io_req->sgl_list_pa)
+>  		dma_unmap_single(&fnic->pdev->dev, io_req->sgl_list_pa,
+>  				 sizeof(io_req->sgl_list[0]) * io_req->sgl_cnt,
+>  				 DMA_TO_DEVICE);
+>  }
 
-> diff --git a/drivers/scsi/fnic/fdls_disc.c b/drivers/scsi/fnic/fdls_disc.c
-> --- a/drivers/scsi/fnic/fdls_disc.c
-> +++ b/drivers/scsi/fnic/fdls_disc.c
+[Severity: Medium]
+Could this leak IOMMU mappings if the DMA mapping happens to be at address =
+0?
+On many architectures, 0 is a perfectly valid DMA address, so evaluating
+it directly for truthiness might falsely skip unmapping a legitimate mappin=
+g.
 
-[ ... ]
-
-> @@ -1264,11 +1284,14 @@ bool fdls_delete_tport(struct fnic_iport_s *iport=
-, struct fnic_tport_s *tport)
->  		tport->timer_pending =3D 0;
+> [ ... ]
+> @@ -288,6 +290,7 @@ void nvfnic_fcpio_nvme_fast_cmpl_handler(struct fnic =
+*fnic,
+>  			    desc->hdr.type, desc->hdr.status, desc->hdr._resvd,
+>  			    id);
+>  		spin_unlock_irqrestore(&fnic->fnic_lock, fnic->lock_flags);
+>  		return;
 >  	}
+>  	spin_lock_irqsave(&fnic->fnic_lock, fnic->lock_flags);
+
+[Severity: Critical]
+This is a pre-existing issue, but does using a shared structure member
+(fnic->lock_flags) for saving IRQ state corrupt CPU IRQ states?=20
+
+When spin_lock_irqsave() is called, it saves the local CPU's IRQ state into
+the provided variable. Since multiple CPUs could hit this concurrently and
+overwrite the shared lock_flags, unlocking may restore corrupted state
+and cause hard lockups.
+
+> [ ... ]
+> @@ -530,6 +533,7 @@ void nvfnic_fcpio_nvme_itmf_cmpl_handler(struct fnic =
+*fnic,
+>  		io_req->fcp_req->status =3D NVME_SC_ABORT_REQ;
 > =20
-> -	spin_unlock_irqrestore(&fnic->fnic_lock, fnic->lock_flags);
-> -	fnic_rport_exch_reset(iport->fnic, tport->fcid);
-> -	spin_lock_irqsave(&fnic->fnic_lock, fnic->lock_flags);
-> +	if (IS_FNIC_FCP_INITIATOR(fnic)) {
-> +		spin_unlock_irqrestore(&fnic->fnic_lock, fnic->lock_flags);
-> +		fnic_rport_exch_reset(iport->fnic, tport->fcid);
-> +		spin_lock_irqsave(&fnic->fnic_lock, fnic->lock_flags);
-> +	}
-
-[Severity: High]
-This is a pre-existing issue, but does dropping and reacquiring the lock
-using the shared fnic->lock_flags instead of a local variable corrupt the
-IRQ state?
-
-Because spin_lock_irqsave() updates fnic->lock_flags with the local CPU's I=
-RQ
-state, and fnic_lock is acquired from numerous contexts, this acts as a sha=
-red
-variable. Restoring it via spin_unlock_irqrestore() can restore an invalid
-IRQ state, leading to system instability.
-
-[ ... ]
-
-> @@ -1508,13 +1535,20 @@ fdls_send_tgt_prli(struct fnic_iport_s *iport, st=
-ruct fnic_tport_s *tport)
->  		.fchdr =3D {.fh_r_ctl =3D FC_RCTL_ELS_REQ, .fh_type =3D FC_TYPE_ELS,
->  			  .fh_f_ctl =3D {FNIC_ELS_REQ_FCTL, 0, 0},
->  			  .fh_rx_id =3D cpu_to_be16(FNIC_UNASSIGNED_RXID)},
-> -		.els_prli =3D {.prli_cmd =3D ELS_PRLI,
-> -			     .prli_spp_len =3D 16,
-> -			     .prli_len =3D cpu_to_be16(0x14)},
-> -		.sp =3D {.spp_type =3D 0x08, .spp_flags =3D 0x0020,
-> -		       .spp_params =3D cpu_to_be32(0xA2)}
-> +		.els_prli =3D {.prli_cmd =3D ELS_PRLI},
-> +		.sp =3D {.spp_params =3D cpu_to_be32(iport->service_params)}
->  	};
-> =20
-> +	fdls_set_frame_type(fnic, &pprli->sp.spp_type);
-> +	if (IS_FNIC_FCP_INITIATOR(fnic)) {
-> +		pprli->els_prli.prli_spp_len =3D 16;
-> +		pprli->els_prli.prli_len =3D cpu_to_be16(0x14);
-> +		pprli->sp.spp_flags =3D FC_SPP_EST_IMG_PAIR;
-> +	} else if (IS_FNIC_NVME_INITIATOR(fnic)) {
-> +		pprli->els_prli.prli_spp_len =3D 20;
-> +		pprli->els_prli.prli_len =3D cpu_to_be16(0x18);
-> +	}
-
-[Severity: High]
-For the NVMe initiator branch, is the omission of the FC_SPP_EST_IMG_PAIR
-flag an oversight?
-
-The FC-NVMe standard mandates that the Establish Image Pair bit shall be set
-to 1 in PRLI requests to establish the connection. By leaving it 0, the NVMe
-initiator sends an invalid PRLI, potentially causing compliant targets to
-reject the login.
-
-[Severity: High]
-Also in fdls_send_tgt_prli(), does this truncate the NVMe PRLI frame payloa=
-d?
-
-Earlier in the function, the transmission size is statically allocated as:
-
-uint16_t frame_size =3D FNIC_ETH_FCOE_HDRS_OFFSET +
-        sizeof(struct fc_std_els_prli);
-
-The fc_std_els_prli structure is only 44 bytes long. For NVMe, prli_len
-is set to 0x18 (24 bytes payload), meaning the frame over the wire needs
-to be 48 bytes. Because it is fixed to sizeof(struct fc_std_els_prli), it
-truncates the last 4 bytes of the NVMe SPP (containing the First Burst
-Size), resulting in a malformed frame.
-
-[Severity: High]
-This is a pre-existing issue, but does failing to send the FCoE frame leak
-memory here?
-
-If fnic_send_fcoe_frame() fails at the end of fdls_send_tgt_prli() (and
-similar discovery routines), it returns an error code, but the allocated
-frame is never freed:
-
-	fnic_send_fcoe_frame(iport, frame, frame_size);
-
-err_out:
-	timeout =3D max(2 * iport->e_d_tov, iport->plogi_timeout);
-
-The caller just starts a retry timer, permanently leaking the frame and
-potentially causing OOM under congestion.
-
-[ ... ]
-
-> @@ -2868,20 +2916,23 @@ fdls_process_tgt_prli_rsp(struct fnic_iport_s *ip=
-ort,
->  	fdls_set_tport_state(tport, FDLS_TGT_STATE_READY);
-> =20
->  	/* Inform the driver about new target added */
-> -	tport_add_evt =3D kzalloc_obj(struct fnic_tport_event_s, GFP_ATOMIC);
-> -	if (!tport_add_evt) {
-> -		FNIC_FCS_DBG(KERN_INFO, fnic,
-> +	if (IS_FNIC_FCP_INITIATOR(fnic) ||
-> +	    IS_FNIC_NVME_INITIATOR(fnic)) {
-> +		tport_add_evt =3D kzalloc_obj(struct fnic_tport_event_s, GFP_ATOMIC);
-> +		if (!tport_add_evt) {
-> +			FNIC_FCS_DBG(KERN_INFO, fnic,
->  				     "iport fcid: 0x%x tport event memory allocation failure: 0x%0x\=
-n",
->  				     iport->fcid, tport->fcid);
-> -		return;
-> -	}
-> -	tport_add_evt->event =3D TGT_EV_RPORT_ADD;
-> -	tport_add_evt->arg1 =3D (void *) tport;
-> +			return;
-> +		}
-> +		tport_add_evt->event =3D TGT_EV_RPORT_ADD;
-> +		tport_add_evt->arg1 =3D (void *)tport;
->  		FNIC_FCS_DBG(KERN_INFO, fnic,
->  			     "iport fcid: 0x%x add tport event fcid: 0x%x\n",
->  			     tport->fcid, iport->fcid);
-> -	list_add_tail(&tport_add_evt->links, &fnic->tport_event_list);
-> -	queue_work(fnic_event_queue, &fnic->tport_work);
-> +		list_add_tail(&tport_add_evt->links, &fnic->tport_event_list);
-> +		queue_work(fnic_event_queue, &fnic->tport_work);
-> +	}
-
-[Severity: High]
-This is a pre-existing issue, but does queueing a raw tport pointer here
-expose us to a use-after-free in the workqueue handler?
-
-If a link down occurs before the workqueue executes, fdls_delete_tport()
-can free the tport because the FNIC_FDLS_SCSI_REGISTERED flag isn't set yet.
-When fnic_tport_event_handler() later processes the event, it dereferences
-the freed pointer:
-
-	if (tport->state =3D=3D FDLS_TGT_STATE_READY) {
-		if (IS_FNIC_FCP_INITIATOR(fnic))
-			fnic_fdls_add_tport(&fnic->iport, tport, flags);
-
-> diff --git a/drivers/scsi/fnic/fnic_fcs.c b/drivers/scsi/fnic/fnic_fcs.c
-> --- a/drivers/scsi/fnic/fnic_fcs.c
-> +++ b/drivers/scsi/fnic/fnic_fcs.c
-
-[ ... ]
-
-> @@ -1018,7 +1018,8 @@ void fnic_delete_fcp_tports(struct fnic *fnic)
->  					 "removing fcp rport fcid: 0x%x", tport->fcid);
->  		fdls_set_tport_state(tport, FDLS_TGT_STATE_OFFLINING);
->  		fnic_del_tport_timer_sync(fnic, tport);
-> -		fnic_fdls_remove_tport(&fnic->iport, tport, flags);
-> +		if (IS_FNIC_FCP_INITIATOR(fnic))
-> +			fnic_fdls_remove_tport(&fnic->iport, tport, flags);
+>  		nvfnic_release_nvme_ioreq_buf(iport, io_req);
+>  		if (io_req->done)
+>  			io_req->done(io_req);
+>  		spin_unlock_irqrestore(&fnic->fnic_lock, fnic->lock_flags);
+>  		return;
 >  	}
->  	spin_unlock_irqrestore(&fnic->fnic_lock, flags);
+>  	spin_unlock_irqrestore(&fnic->fnic_lock, fnic->lock_flags);
 >  }
 
 [Severity: High]
-This is a pre-existing issue, but does fnic_del_tport_timer_sync() temporar=
-ily
-drop the fnic_lock while iterating with list_for_each_entry_safe()?
+If the abort command fails (e.g., returning FCPIO_TIMEOUT), does this path
+accidentally skip calling io_req->done()? It looks like the function just
+returns without it, meaning the midlayer is never notified of the completio=
+n,
+which could permanently hang the block layer queue and leak the IO request
+buffers.
 
-Dropping the list-protecting lock inside list_for_each_entry_safe() allows
-concurrent threads to delete the "next" element on the list. When the loop
-resumes, advancing to the freed "next" element results in a use-after-free.
-
-[ ... ]
-
-> @@ -1044,8 +1045,8 @@ void fnic_tport_event_handler(struct work_struct *w=
-ork)
->  			FNIC_FCS_DBG(KERN_INFO, fnic,
->  						 "Add rport event");
->  			if (tport->state =3D=3D FDLS_TGT_STATE_READY) {
-> -				fnic_fdls_add_tport(&fnic->iport,
-> -					(struct fnic_tport_s *) cur_evt->arg1, flags);
-> +				if (IS_FNIC_FCP_INITIATOR(fnic))
-> +					fnic_fdls_add_tport(&fnic->iport, tport, flags);
+> [ ... ]
+> @@ -582,6 +586,7 @@ void nvfnic_cleanup_tport_io(struct fnic *fnic, struc=
+t fnic_tport_s *tport)
+> =20
+>  	spin_lock_irqsave(&fnic->fnic_lock, flags);
+>  	list_for_each_entry_safe(nvfnic_ls_req, next,
+>  				 &(tport->ls_req_list), list) {
+>  		lsreq =3D nvfnic_ls_req->ls_req;
+>  		if (!lsreq || (lsreq->private =3D=3D NULL)) {
+>  			FNIC_NVME_DBG(KERN_INFO, fnic,
+>  				"fnic_cleanup_tport_io lsreq NULL\n");
+>  			continue;
+>  		}
+>  		list_del(&nvfnic_ls_req->list);
+>  		lsreq->private =3D NULL;
+>  		oxid =3D nvfnic_ls_req->oxid;
+>  		fdls_free_oxid(&fnic->iport, oxid, &nvfnic_ls_req->oxid);
+>  		nvfnic_ls_req->state =3D FNIC_LS_REQ_CMD_COMPLETE;
+>  		spin_unlock_irqrestore(&fnic->fnic_lock, flags);
+>  		timer_delete_sync(&nvfnic_ls_req->ls_req_timer);
+>  		lsreq->done(lsreq, -ENXIO);
+>  		spin_lock_irqsave(&fnic->fnic_lock, flags);
+>  	}
 
 [Severity: High]
-This is a pre-existing issue, but does fnic_fdls_add_tport() drop the
-fnic_lock internally, leading to another potential use-after-free?
+Can dropping fnic_lock inside the list_for_each_entry_safe() loop cause a
+use-after-free?=20
 
-fnic_fdls_add_tport() executes under fnic_lock but drops it to call
-fc_remote_port_add(). A concurrent event could acquire the lock and free
-the tport. When fnic_fdls_add_tport() reacquires the lock, it writes to
-tport->rport and tport->flags, corrupting the freed memory.
+The list_for_each_entry_safe() macro caches the 'next' pointer before
+executing the loop body. Because the lock is temporarily dropped, a
+concurrent timeout or completion handler could execute and free that cached
+'next' element before the loop reacquires the lock and advances to it.
 
-> diff --git a/drivers/scsi/fnic/fnic_main.c b/drivers/scsi/fnic/fnic_main.c
-> --- a/drivers/scsi/fnic/fnic_main.c
-> +++ b/drivers/scsi/fnic/fnic_main.c
-
-[ ... ]
-
-> @@ -1184,7 +1188,8 @@ static void fnic_remove(struct pci_dev *pdev)
->  	 */
->  	flush_workqueue(fnic_event_queue);
+> [ ... ]
+> @@ -647,6 +652,7 @@ bool _terminate_tport_ios(struct sbitmap *map, unsign=
+ed int tag,
+>  	struct fnic *fnic =3D iport->fnic;
+>  	struct fnic_io_req *io_req;
 > =20
-> -	fnic_scsi_unload(fnic);
-> +	if (IS_FNIC_FCP_INITIATOR(fnic))
-> +		fnic_scsi_unload(fnic);
+>  	io_req =3D fnic->sw_copy_wq[0].io_req_table[tag];
+>  	if (!io_req)
+>  		return true;
 > =20
->  	if (vnic_dev_get_intr_mode(fnic->vdev) =3D=3D VNIC_DEV_INTR_MODE_MSI)
->  		timer_delete_sync(&fnic->notify_timer);
+>  	if (io_req->tport !=3D tport)
+>  		return true;
 
 [Severity: High]
-This is a pre-existing issue, but does fnic_remove() omit the teardown of
-iport->fabric.retry_timer?
+Is it safe to access io_req_table here without holding fnic_lock? An IO
+completion could concurrently execute nvfnic_fcpio_cmpl(), complete the IO,
+and hand the memory back to the block layer where it gets freed. We might
+dereference a freed io_req or io_req->tport during this check.
 
-The timer is set up during initialization, but timer_delete_sync() for
-the fabric retry timer is missing from the module unload paths. If the timer
-fires after the fnic structure is freed, it will cause a use-after-free.
+> [ ... ]
+> @@ -704,6 +710,7 @@ void nvfnic_nvme_unload(struct fnic *fnic)
+>  	fnic_flush_tport_event_list(fnic);
+>  	fnic_delete_fcp_tports(fnic);
+> =20
+>  	if (iport->flags & FNIC_LPORT_NVME_REGISTERED) {
+>  		ret =3D nvme_fc_unregister_localport(fnic->iport.nv_lport);
+>  		if (ret) {
+>  			FNIC_NVME_DBG(KERN_ERR, fnic,
+>  				"Unregister nvme localport failed: %d\n", ret);
+>  			spin_lock_irqsave(&fnic->fnic_lock, flags);
+>  			fnic->nvme_lport_unreg_done =3D NULL;
+>  			spin_unlock_irqrestore(&fnic->fnic_lock, flags);
+>  			return;
+>  		}
+
+[Severity: High]
+If nvme_fc_unregister_localport() fails, does returning early here cause a
+use-after-free?=20
+
+Returning early skips the rest of the local teardown and yields control back
+to fnic_remove(), which proceeds to free the fnic structure entirely. Becau=
+se
+the local port remains registered, the NVMe FC transport could continue mak=
+ing
+callbacks to the freed fnic structure.
+
+> [ ... ]
+> @@ -735,6 +742,7 @@ void nvfnic_nvme_unload(struct fnic *fnic)
+>  	fnic->nvme_lport_unreg_done =3D NULL;
+>  	spin_unlock_irqrestore(&fnic->fnic_lock, flags);
+> =20
+>  	nvfnic_flush_nvme_io_list(fnic);
+>  	sbitmap_free(&fnic->nvfnic_tag_map);
+>  	for (hwq =3D 0; hwq < fnic->wq_copy_count; hwq++)
+>  		kfree(fnic->sw_copy_wq[hwq].io_req_table);
+>  }
+
+[Severity: High]
+Does freeing nvfnic_tag_map and the io_req_table array here cause a
+use-after-free if a late completion interrupt fires? Hardware interrupts and
+completion queues aren't disabled until fnic_cleanup() is called later in t=
+he
+removal process, so an active ISR might still try to access these structure=
+s.
+
+[Severity: Medium]
+Also, does this function forget to destroy fnic->io_req_pool? It appears
+fnic_scsi_unload_cleanup() destroys it for FCP initiators, but NVMe-only
+initiators might skip that step and leak the pool entirely on module unload.
+
+> [ ... ]
+> @@ -826,6 +834,7 @@ void nvfnic_ls_rsp_recv(struct fnic_iport_s *iport,
+>  	nvfnic_ls_req->state =3D FNIC_LS_REQ_CMD_COMPLETE;
+> =20
+>  	list_del_init(&nvfnic_ls_req->list);
+>  	lsreq->private =3D NULL;
+>  	fdls_free_oxid(iport, oxid, &nvfnic_ls_req->oxid);
+>  	timer_delete_sync(&nvfnic_ls_req->ls_req_timer);
+
+[Severity: High]
+Can calling timer_delete_sync() while holding fnic_lock cause an AB-BA
+deadlock?=20
+
+timer_delete_sync() will spin waiting for the timer callback to finish, but=
+ if
+the callback (nvfnic_ls_req_timeout()) is already executing concurrently on
+another CPU, it will attempt to acquire fnic_lock and spin indefinitely.
+
+> [ ... ]
+> @@ -1164,6 +1173,7 @@ void nvfnic_delete_tport(struct fnic_iport_s *iport,
+>  	tport->flags |=3D FNIC_FDLS_TPORT_DELETED;
+>  	spin_unlock_irqrestore(&fnic->fnic_lock, flags);
+>  	ret =3D nvme_fc_unregister_remoteport(tport->nv_rport);
+>  	if (ret) {
+>  		FNIC_NVME_DBG(KERN_ERR, fnic,
+>  			    "tport: 0x%x unregister failed %d\n",
+>  			    tport->fcid, ret);
+>  		spin_lock_irqsave(&fnic->fnic_lock, flags);
+>  		tport->tport_del_done =3D NULL;
+>  		return;
+>  	}
+
+[Severity: Medium]
+Are we leaking the tport structure on failure here? If=20
+nvme_fc_unregister_remoteport() returns an error, the function returns early
+without freeing tport.
+
+> [ ... ]
+> @@ -1186,6 +1196,7 @@ void nvfnic_delete_tport(struct fnic_iport_s *iport,
+>  		spin_unlock_irqrestore(&fnic->fnic_lock, flags);
+>  		nvfnic_cleanup_tport_io(fnic, tport);
+>  		spin_lock_irqsave(&fnic->fnic_lock, flags);
+>  		tport->flags &=3D ~FNIC_FDLS_NVME_TPORT_CLEANUP_PENDING;
+>  	} else {
+>  		while (!(tport->flags & FNIC_TPORT_CAN_BE_FREED) && (count < 8)) {
+>  			count++;
+
+[Severity: Medium]
+Similarly, if wait_for_completion_timeout() times out, does the !time_remain
+branch bypass the kfree(tport) call that happens in the else block, leaking
+the memory?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260612180918.8554=
--1-kartilak@cisco.com?part=3D5
+-1-kartilak@cisco.com?part=3D6
