@@ -1,56 +1,56 @@
-Received: from mx0b-0016f401.pphosted.com (mx0b-0016f401.pphosted.com [67.231.156.173])
+Received: from mx0a-0016f401.pphosted.com (mx0a-0016f401.pphosted.com [67.231.148.174])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6A959258CE5
-	for <linux-scsi@vger.kernel.org>; Fri, 12 Jun 2026 09:55:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.156.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3117B258CE5
+	for <linux-scsi@vger.kernel.org>; Fri, 12 Jun 2026 09:55:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.148.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781258149; cv=none; b=kcGQorw2KB1J06beffDvH+ULsC4BDgqeHRjRH5PJMmRLXR0doNTVGiqkc7AEEjgwwrxj4Ffn01t+S8KrtB0DSkNnqWh3qfveZg6LgU4Nj2J4+Q+ZHwnOb4L4iOFmWb2pxdr+gkNuQgzLKAx6vHcLGqiSjBPyU5XyMKRmyEwdelI=
+	t=1781258155; cv=none; b=ttrQ1ahHau5QwQLBpOuxmBXVVXgFKbgsv9h3UyOzvqkDcFvaQBFxOXwnQM3EEUg/H9zu6qI2VboOn/JVOcfk8h1X3BCSxh5JyfdYW/S50zK/qg/Smo17r9lptxI38u7cG6HbXv8f/Q6v4qw90QobOmcE+JRMjMvjn/4mfV0EZAY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781258149; c=relaxed/simple;
-	bh=eQaVLj57fDARXjxr5ptP74CXAY+v4X4hjg4FMNkwlK0=;
+	s=arc-20240116; t=1781258155; c=relaxed/simple;
+	bh=QidjFDtEVDY7xfPbb3UXwtir8RaHIxh0eoKC3HpsgMU=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=PBxQI9Ue9R0M5MlT4U8G35Oi6e4dw/NqHA6L5tHmCdJvKSc11AgmflGQpTXvsItCqep7ppTcdD5hQ7vgibWPyyIwD7ccQUyo1wPOfYt/CXyt2SLptSyel6YQedZfbobsqeyRWP+PuKKos/QUizzWHHesjz4YGXBp5zNhrRHnxDY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=marvell.com; spf=pass smtp.mailfrom=marvell.com; dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b=HCB4gVYm; arc=none smtp.client-ip=67.231.156.173
+	 MIME-Version:Content-Type; b=cw0BFec4Iz5xh52ThFPLWCcy24tMcv3IMNg1U682ep3nUPeN8cpJUXxXCV2vrSA/JZ2c94Fe/o5rxIlW7If0i2PgfjFf6dSFWzw+MATWks/F8/VHIAIR38XucXULGZu+WbqxZhmaT8H+KyUheZVknBaKZExn/vUUhp5+jCwa89k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=marvell.com; spf=pass smtp.mailfrom=marvell.com; dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b=b3mHnyHx; arc=none smtp.client-ip=67.231.148.174
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=marvell.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=marvell.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="HCB4gVYm"
-Received: from pps.filterd (m0431383.ppops.net [127.0.0.1])
-	by mx0b-0016f401.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 65C39D9g3782217;
-	Fri, 12 Jun 2026 02:55:46 -0700
+	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="b3mHnyHx"
+Received: from pps.filterd (m0431384.ppops.net [127.0.0.1])
+	by mx0a-0016f401.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 65C39qBv3679423;
+	Fri, 12 Jun 2026 02:55:51 -0700
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=
 	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=pfpt0220; bh=p
-	HlfFOeqQ3fthr6IX9guGP3EHQoviP3Kvnvi4kzVvA0=; b=HCB4gVYmhwCPSpTuf
-	bwJBRlfIUw6KBlRGauP0eRTeyvBc0LPKM4+Yx+MxonipV4qNTDiEtnSx1tIFAlds
-	0ebYIFkG0l+G+Rd08155lYJnmnuNy9Y6nsWa6oGhi5EDcM+4WOwztaXPMwBbcgcI
-	y+0sgFKEGRKS0LBKir/q1QDIbQj9yVQMAAqTNJ22ERRQDaZBZQnrJF9Qxl8DR44V
-	CHjSu5eBLpi7tlaRWuwr9wyte+q6YQVF7CSCkehmpaFKQae4lQOWkts+kD+sxhS/
-	7+ouw+XsSEAEckEkKSBWg5RFshKdRP0ZvUf/B9UJmJVOhf6HsOFLz12Lm1fZ1YnI
-	Mrh9A==
-Received: from dc5-exch05.marvell.com ([199.233.59.128])
-	by mx0b-0016f401.pphosted.com (PPS) with ESMTPS id 4er6r2hjj4-1
+	:message-id:mime-version:references:subject:to; s=pfpt0220; bh=v
+	7EDgrFuvjZU6W20k4iav8e241Irf/3jMopccYD8xW8=; b=b3mHnyHxIXcm1f0v/
+	DSKx2156BLN5gjp6PvBVV1oGlSeQcT51YqOpgtFpNPajQ151yrtmNxBTT0rdS8jH
+	l3K9kOBc8bETM/dIxeGccvGidXGYPNWIO/IGCeOsKxfCHbSjKcwO7lD4Ti3oawQC
+	WzgBNDn0/2N5PS3CJfAnxUjjI+DVozlxHhPCB+A0pGsXSziPPVIv9xvWVPC//aaF
+	rVGYody3dWYcb/krLwzAkNdKqhnQgQXwyVRmaqMKXH2tWSfsNvkBJmyqL1eCHuM4
+	VFhBbKrLmsGPRNEHcxPN295J/N5BWZtLYxGLvbp6HsStbW3eHY6DEsBHKSfNkQgz
+	PU86g==
+Received: from dc6wp-exch02.marvell.com ([4.21.29.225])
+	by mx0a-0016f401.pphosted.com (PPS) with ESMTPS id 4er9qn92m7-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 12 Jun 2026 02:55:45 -0700 (PDT)
-Received: from DC5-EXCH05.marvell.com (10.69.176.209) by
- DC5-EXCH05.marvell.com (10.69.176.209) with Microsoft SMTP Server
+	Fri, 12 Jun 2026 02:55:50 -0700 (PDT)
+Received: from DC6WP-EXCH02.marvell.com (10.76.176.209) by
+ DC6WP-EXCH02.marvell.com (10.76.176.209) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.25; Fri, 12 Jun 2026 02:55:44 -0700
-Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH05.marvell.com
- (10.69.176.209) with Microsoft SMTP Server id 15.2.1544.25 via Frontend
- Transport; Fri, 12 Jun 2026 02:55:44 -0700
+ 15.2.1544.25; Fri, 12 Jun 2026 02:55:49 -0700
+Received: from maili.marvell.com (10.69.176.80) by DC6WP-EXCH02.marvell.com
+ (10.76.176.209) with Microsoft SMTP Server id 15.2.1544.25 via Frontend
+ Transport; Fri, 12 Jun 2026 02:55:48 -0700
 Received: from stgdev-a5u16.punelab.marvell.com (stgdev-a5u16.punelab.marvell.com [10.31.33.164])
-	by maili.marvell.com (Postfix) with ESMTP id 2C4FA3F7040;
-	Fri, 12 Jun 2026 02:55:41 -0700 (PDT)
+	by maili.marvell.com (Postfix) with ESMTP id 401FA3F704D;
+	Fri, 12 Jun 2026 02:55:44 -0700 (PDT)
 From: Nilesh Javali <njavali@marvell.com>
 To: <martin.petersen@oracle.com>
 CC: <linux-scsi@vger.kernel.org>, <GR-FC-Storage-Upstream@marvell.com>,
         <agurumurthy@marvell.com>, <emilne@redhat.com>, <jmeneghi@redhat.com>,
         <hare@suse.com>
-Subject: [PATCH v2 35/60] scsi: qla2xxx: Enhance task management IOCB handling for 29xx series
-Date: Fri, 12 Jun 2026 15:23:08 +0530
-Message-ID: <20260612095333.1666592-36-njavali@marvell.com>
+Subject: [PATCH v2 36/60] scsi: qla2xxx: Add abort command handling for 29xx series
+Date: Fri, 12 Jun 2026 15:23:09 +0530
+Message-ID: <20260612095333.1666592-37-njavali@marvell.com>
 X-Mailer: git-send-email 2.23.1
 In-Reply-To: <20260612095333.1666592-1-njavali@marvell.com>
 References: <20260612095333.1666592-1-njavali@marvell.com>
@@ -62,170 +62,405 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNjEyMDA4OSBTYWx0ZWRfX63N/HphkpGNG
- aS/SpFwD4wB7TEZiMJpgge1F48fVf26qJs0Ybs6TlkGfp2oTxkBR2WIz7mJmRP0ZlQJbqq97pnR
- w3hrQsBwBeMLzZpfmcQAEdaGzemTNbFOZptfuUxghbJ4WhzhwYBJ2BtPkzIXOl4PXjktL41/y6n
- PMKWjJKKYPp548i1qqG7dWqky1o1SXcfGNKNWyRtazIuNRl/jRM9L9PvZmqRTMrAM3TS55dNC23
- heNu4Pqi9kJZrNjaqmWJk+UTF2O6En3Zbp0HfqGkY8chUjheoKJUnuI/f8AM+FVvvvvpE+b95XR
- 5Ej382YpXzvUXLxNKc2itqaHdJMNSc5Iaafemz5SsJcwWbYosknqhzpW3VLt/I11yDWTroVVLZ5
- ZN12grW/JaEPewCtT/1JFFzvXAI+LjI1YdAe9ybS5qadtiv7GX7VxyjHSUAGJY9485bLoEE19Jx
- GrPnzWB8Wt+67aRlmAQ==
-X-Authority-Analysis: v=2.4 cv=GoByPE1C c=1 sm=1 tr=0 ts=6a2bd7a1 cx=c_pps
- a=rEv8fa4AjpPjGxpoe8rlIQ==:117 a=rEv8fa4AjpPjGxpoe8rlIQ==:17
+X-Proofpoint-ORIG-GUID: b6ygWiqUNfr8grI9ZhwezguovtZyJYmC
+X-Authority-Analysis: v=2.4 cv=Y9HIdBeN c=1 sm=1 tr=0 ts=6a2bd7a6 cx=c_pps
+ a=gIfcoYsirJbf48DBMSPrZA==:117 a=gIfcoYsirJbf48DBMSPrZA==:17
  a=FelO9ux0wxsA:10 a=VkNPw1HP01LnGYTKEx00:22 a=l0iWHRpgs5sLHlkKQ1IR:22
- a=qit2iCtTFQkLgVSMPQTB:22 a=M5GUcnROAAAA:8 a=GCX_fLWMEB1gCRu7i1AA:9
+ a=TtqV-g6YmW1Jfm2GSLaY:22 a=M5GUcnROAAAA:8 a=6rvhxTjoopgx-VfHQW4A:9
  a=OBjm3rFKGHvpk9ecZwUJ:22
-X-Proofpoint-Spam-Info: AW1haW4tMjYwNjEyMDA4OSBTYWx0ZWRfX1dYX42GlPLdd
- iWESmpiU2CEEndgxnqqNyu7FbssF+FWcGWvdIcDeBHZLgB5HrbxifL+8vUPRJwNbioyPwMwjXtb
- LEbsXNoTr7DkmoZp1CSTAUnRSALyyC4=
-X-Proofpoint-GUID: OadJsYWYCoCjP6POQWSO867dBw_4DhMI
-X-Proofpoint-ORIG-GUID: OadJsYWYCoCjP6POQWSO867dBw_4DhMI
+X-Proofpoint-Spam-Info: AW1haW4tMjYwNjEyMDA4OSBTYWx0ZWRfX/aUJ5M24qPi6
+ dHln+TKW8BwOBRfFJZ6OQW0ZBBzS27UUJXhUmrckNZZa0O520bYuzI2fe0IaM/z0TWV+WDkUGt4
+ 1yfLj4AXDUYq0sitbZ3/CIlgx1ZgMS8=
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNjEyMDA4OSBTYWx0ZWRfX/8m5dtNn6Mk4
+ 8c4j4yFxnZiXf/UVEw4PKYfmAOSPmwzPR1e5tZrwzw+5roU6+17h6o94B9dW1WM0isI+pVVpI0R
+ L/rxSsbvVR2Ei+BjEMRgNM3fT6rgib/9XiZEqQfhbWEHtOAZD2lVW7qzF1hUc9vyvjmSJF6LqPb
+ 1lFcCGVDmlJY7np4CNJoNwmNIj5Y18JwGMtVMLaO6kQUwiR2IZKGjFKfxhotgI3Dgw8JamPXMho
+ qPdBo7Iuflld7OLYePK/3LLmrSZ85cGa/Y34zTFAwagHRyR3re4jtT9Z05K2hQZvmu0xdInwhEI
+ jCC0aHZ2cFFR38mqeqTBaKetdHKSnw1XoVM4hOJ+MKmKbPBW53OJuUUdQZ87JUyhqqCB68Uxw9s
+ tAX+oVjB7QKa2A/P8f7zp3Hoo0mKTb4EK5D9yuB6ZsbYzJUu+fWLWhXgP+WKImdqZtb9GgIzyu6
+ gNZ4t9bdxuMuJAqZiaQ==
+X-Proofpoint-GUID: b6ygWiqUNfr8grI9ZhwezguovtZyJYmC
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.125,FMLib:17.12.100.49
  definitions=2026-06-12_01,2026-06-11_01,2025-10-01_01
 
-Update qla24xx_tm_iocb() and __qla24xx_issue_tmf() to support the
-extended task management structure (tsk_mgmt_entry_ext) for 29xx
-adapters.
+Extend the abort-IOCB code path to support the 29xx extended
+abort_entry_24xx_ext structure alongside the existing
+abort_entry_24xx.
 
-tsk_mgmt_entry_ext overlays tsk_mgmt_entry through control_flags
-(offsets 0-27 are byte-identical): entry_type, entry_count, handle,
-nport_handle, timeout, lun and control_flags sit at the same offsets
-and widths.  The layouts diverge only after that point:
+The two layouts overlay byte-for-byte through req_que_no
+(offsets 0-17): entry_status (offset 3), the
+nport_handle/comp_status union (offset 8), and options (offset 10)
+sit at identical positions in both.  After that they diverge: the
+24xx variant carries reserved_1[30], port_id[3], and a u8 vp_index
+at offsets 48-51, while the ext variant places a __le16 vp_index at
+offset 18 and drops port_id.  The drv / fw unions live at offset 56
+in the 24xx layout but offset 24 in ext.
 
-  - the 24xx layout has port_id[3] + u8 vp_index;
-  - the ext layout has __le16 vp_index and no port_id.
+Leverage this overlap by using a single struct abort_entry_24xx *
+view for the common header writes (entry_type, count, handle,
+nport_handle, handle_to_abort, req_que_no) and completion-status
+reads (entry_status, comp_status), branching on IS_QLA29XX() only
+where the layouts genuinely diverge:
 
-Factor the common IOCB header writes through a single tsk_mgmt_entry *
-view and branch on IS_QLA29XX() only for the diverging port_id /
-vp_index assignments.  Change qla24xx_tm_iocb() to accept void *pkt
-to allow casting to either structure type.
+  - port_id (24xx-only) and vp_index width on the issue path
+    (qla24xx_abort_iocb in qla_iocb.c, qla24xx_abort_command in
+    qla_mbx.c);
+  - drv / fw union access in qla_nvme_abort_set_option /
+    qla_nvme_abort_process_comp_status (qla_nvme.c);
+  - completion comp_status read in qla24xx_abort_iocb_entry
+    (qla_isr.c) is stride-agnostic -- no IS_QLA29XX dispatch
+    needed.
 
-Add tsk_ext member to the tsk_mgmt_cmd union and a BUILD_BUG_ON size
-check for the 128-byte extended structure.
+Function signatures in qla_nvme_abort_set_option(),
+qla_nvme_abort_process_comp_status(), qla24xx_abort_iocb(), and
+qla24xx_abort_iocb_entry() are widened to accept void * so both
+struct variants can be passed through.  memset() uses
+qla_req_entry_size(ha) to match the ring-slot size.  Response
+status checking now reads comp_status instead of nport_handle.  A
+BUILD_BUG_ON verifies abort_entry_24xx_ext is 128 bytes.
 
 Signed-off-by: Nilesh Javali <njavali@marvell.com>
 ---
- drivers/scsi/qla2xxx/qla_iocb.c | 31 ++++++++++++++++++++++---------
- drivers/scsi/qla2xxx/qla_mbx.c  | 18 ++++++++++++++----
+ drivers/scsi/qla2xxx/qla_gbl.h  |  6 ++--
+ drivers/scsi/qla2xxx/qla_iocb.c | 52 ++++++++++++++++++++-----------
+ drivers/scsi/qla2xxx/qla_isr.c  | 14 ++++++---
+ drivers/scsi/qla2xxx/qla_mbx.c  | 45 ++++++++++++++++++---------
+ drivers/scsi/qla2xxx/qla_nvme.c | 54 +++++++++++++++++++++++++--------
  drivers/scsi/qla2xxx/qla_os.c   |  1 +
- 3 files changed, 37 insertions(+), 13 deletions(-)
+ 6 files changed, 120 insertions(+), 52 deletions(-)
 
+diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
+index 4ac3cb08fcc9..bba324febf09 100644
+--- a/drivers/scsi/qla2xxx/qla_gbl.h
++++ b/drivers/scsi/qla2xxx/qla_gbl.h
+@@ -989,10 +989,8 @@ extern void qla24xx_process_purex_list(struct purex_list *);
+ extern void qla2x00_dfs_create_rport(scsi_qla_host_t *vha, struct fc_port *fp);
+ extern void qla2x00_dfs_remove_rport(scsi_qla_host_t *vha, struct fc_port *fp);
+ extern void qla_wait_nvme_release_cmd_kref(srb_t *sp);
+-extern void qla_nvme_abort_set_option
+-		(struct abort_entry_24xx *abt, srb_t *sp);
+-extern void qla_nvme_abort_process_comp_status
+-		(struct abort_entry_24xx *abt, srb_t *sp);
++extern void qla_nvme_abort_set_option(void *pkt, srb_t *sp);
++extern void qla_nvme_abort_process_comp_status(void *pkt, srb_t *sp);
+ struct scsi_qla_host *qla_find_host_by_vp_idx(struct scsi_qla_host *vha,
+ 	uint16_t vp_idx);
+ 
 diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
-index d0d3a56affdc..c62fef2e7624 100644
+index c62fef2e7624..8e435b170fe1 100644
 --- a/drivers/scsi/qla2xxx/qla_iocb.c
 +++ b/drivers/scsi/qla2xxx/qla_iocb.c
-@@ -2667,7 +2667,7 @@ qla2x00_adisc_iocb(srb_t *sp, struct mbx_entry *mbx)
+@@ -3868,32 +3868,50 @@ qla82xx_start_scsi(srb_t *sp)
  }
  
  static void
--qla24xx_tm_iocb(srb_t *sp, struct tsk_mgmt_entry *tsk)
-+qla24xx_tm_iocb(srb_t *sp, void *pkt)
+-qla24xx_abort_iocb(srb_t *sp, struct abort_entry_24xx *abt_iocb)
++qla24xx_abort_iocb(srb_t *sp, void *pkt)
  {
- 	uint32_t flags;
- 	uint64_t lun;
-@@ -2676,26 +2676,39 @@ qla24xx_tm_iocb(srb_t *sp, struct tsk_mgmt_entry *tsk)
- 	struct qla_hw_data *ha = vha->hw;
- 	struct srb_iocb *iocb = &sp->u.iocb_cmd;
+ 	struct srb_iocb *aio = &sp->u.iocb_cmd;
+ 	scsi_qla_host_t *vha = sp->vha;
++	struct qla_hw_data *ha = vha->hw;
  	struct req_que *req = sp->qpair->req;
-+	struct tsk_mgmt_entry *tsk;
+ 	srb_t *orig_sp = sp->cmd_sp;
++	struct abort_entry_24xx *abt = pkt;
  
- 	flags = iocb->u.tmf.flags;
- 	lun = iocb->u.tmf.lun;
- 
+-	memset(abt_iocb, 0, sizeof(struct abort_entry_24xx));
+-	abt_iocb->entry_type = ABORT_IOCB_TYPE;
+-	abt_iocb->entry_count = 1;
+-	abt_iocb->handle = make_handle(req->id, sp->handle);
+-	if (sp->fcport) {
+-		abt_iocb->nport_handle = cpu_to_le16(sp->fcport->loop_id);
+-		abt_iocb->port_id[0] = sp->fcport->d_id.b.al_pa;
+-		abt_iocb->port_id[1] = sp->fcport->d_id.b.area;
+-		abt_iocb->port_id[2] = sp->fcport->d_id.b.domain;
+-	}
+-	abt_iocb->handle_to_abort =
+-		make_handle(le16_to_cpu(aio->u.abt.req_que_no),
+-			    aio->u.abt.cmd_hndl);
+-	abt_iocb->vp_index = vha->vp_idx;
+-	abt_iocb->req_que_no = aio->u.abt.req_que_no;
 +	/*
-+	 * tsk_mgmt_entry_ext overlays tsk_mgmt_entry through control_flags
-+	 * (offsets 0-27 are byte-identical), so the common header writes
-+	 * go through one struct tsk_mgmt_entry * view.  The ext layout
-+	 * has no port_id and uses a wider __le16 vp_index at a different
-+	 * offset, so port_id / vp_index assignments diverge per stride.
++	 * abort_entry_24xx_ext overlays abort_entry_24xx through
++	 * req_que_no (offsets 0-17).  After that the layouts diverge:
++	 * the 24xx variant has 30 bytes of reserved_1 followed by
++	 * port_id[3] and a u8 vp_index at offsets 48-51, while the
++	 * ext variant places a __le16 vp_index at offset 18 and has
++	 * no port_id field.  Common-header writes go through one
++	 * struct abort_entry_24xx * view; only port_id / vp_index
++	 * branch on stride.
 +	 */
-+	tsk = pkt;
- 	tsk->entry_type = TSK_MGMT_IOCB_TYPE;
- 	tsk->entry_count = 1;
- 	tsk->handle = make_handle(req->id, tsk->handle);
- 	tsk->nport_handle = cpu_to_le16(fcport->loop_id);
- 	tsk->timeout = cpu_to_le16(ha->r_a_tov / 10 * 2);
- 	tsk->control_flags = cpu_to_le32(flags);
--	tsk->port_id[0] = fcport->d_id.b.al_pa;
--	tsk->port_id[1] = fcport->d_id.b.area;
--	tsk->port_id[2] = fcport->d_id.b.domain;
--	tsk->vp_index = fcport->vha->vp_idx;
++	memset(abt, 0, qla_req_entry_size(ha));
++	abt->entry_type = ABORT_IOCB_TYPE;
++	abt->entry_count = 1;
++	abt->handle = make_handle(req->id, sp->handle);
++	if (sp->fcport)
++		abt->nport_handle = cpu_to_le16(sp->fcport->loop_id);
++	abt->handle_to_abort =
++	    make_handle(le16_to_cpu(aio->u.abt.req_que_no),
++			aio->u.abt.cmd_hndl);
++	abt->req_que_no = aio->u.abt.req_que_no;
 +	if (IS_QLA29XX(ha)) {
-+		((struct tsk_mgmt_entry_ext *)pkt)->vp_index =
-+		    cpu_to_le16(fcport->vha->vp_idx);
++		((struct abort_entry_24xx_ext *)pkt)->vp_index =
++		    cpu_to_le16(vha->vp_idx);
 +	} else {
-+		tsk->port_id[0] = fcport->d_id.b.al_pa;
-+		tsk->port_id[1] = fcport->d_id.b.area;
-+		tsk->port_id[2] = fcport->d_id.b.domain;
-+		tsk->vp_index = fcport->vha->vp_idx;
++		if (sp->fcport) {
++			abt->port_id[0] = sp->fcport->d_id.b.al_pa;
++			abt->port_id[1] = sp->fcport->d_id.b.area;
++			abt->port_id[2] = sp->fcport->d_id.b.domain;
++		}
++		abt->vp_index = vha->vp_idx;
 +	}
  
--	if (flags & (TCF_LUN_RESET | TCF_ABORT_TASK_SET|
--	    TCF_CLEAR_TASK_SET|TCF_CLEAR_ACA)) {
-+	if (flags & (TCF_LUN_RESET | TCF_ABORT_TASK_SET |
-+	    TCF_CLEAR_TASK_SET | TCF_CLEAR_ACA)) {
- 		int_to_scsilun(lun, &tsk->lun);
--		host_to_fcp_swap((uint8_t *)&tsk->lun,
--			sizeof(tsk->lun));
-+		host_to_fcp_swap((uint8_t *)&tsk->lun, sizeof(tsk->lun));
- 	}
- }
+ 	/* need to pass original sp */
+ 	if (orig_sp)
+-		qla_nvme_abort_set_option(abt_iocb, orig_sp);
++		qla_nvme_abort_set_option(pkt, orig_sp);
  
+ 	/* Send the command to the firmware */
+ 	wmb();
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index d76f201d694a..5b5ccf207535 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -4024,7 +4024,7 @@ qla24xx_mbx_completion(scsi_qla_host_t *vha, uint16_t mb0)
+ 
+ static void
+ qla24xx_abort_iocb_entry(scsi_qla_host_t *vha, struct req_que *req,
+-	struct abort_entry_24xx *pkt)
++	void *pkt)
+ {
+ 	const char func[] = "ABT_IOCB";
+ 	srb_t *sp;
+@@ -4036,7 +4036,14 @@ qla24xx_abort_iocb_entry(scsi_qla_host_t *vha, struct req_que *req,
+ 		return;
+ 
+ 	abt = &sp->u.iocb_cmd;
+-	abt->u.abt.comp_status = pkt->comp_status;
++	/*
++	 * abort_entry_24xx_ext overlays abort_entry_24xx through the
++	 * nport_handle/comp_status union at offset 8, so reading
++	 * comp_status is stride-agnostic and goes through the 24xx view.
++	 */
++	abt->u.abt.comp_status =
++	    ((struct abort_entry_24xx *)pkt)->comp_status;
++
+ 	orig_sp = sp->cmd_sp;
+ 	/* Need to pass original sp */
+ 	if (orig_sp)
+@@ -4237,8 +4244,7 @@ void qla24xx_process_response_queue(struct scsi_qla_host *vha,
+ 			qla_marker_iocb_entry(vha, rsp->req, pkt);
+ 			break;
+ 		case ABORT_IOCB_TYPE:
+-			qla24xx_abort_iocb_entry(vha, rsp->req,
+-			    (struct abort_entry_24xx *)pkt);
++			qla24xx_abort_iocb_entry(vha, rsp->req, pkt);
+ 			break;
+ 		case MBX_IOCB_TYPE:
+ 			qla24xx_mbx_iocb_entry(vha, rsp->req,
 diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
-index 461b11df2e7e..fbf4579c8594 100644
+index fbf4579c8594..ea39f3793296 100644
 --- a/drivers/scsi/qla2xxx/qla_mbx.c
 +++ b/drivers/scsi/qla2xxx/qla_mbx.c
-@@ -3419,6 +3419,7 @@ qla24xx_abort_command(srb_t *sp)
- struct tsk_mgmt_cmd {
- 	union {
- 		struct tsk_mgmt_entry tsk;
-+		struct tsk_mgmt_entry_ext tsk_ext;
- 		struct sts_entry_24xx sts;
- 		struct sts_entry_24xx_ext sts_ext;
- 	} p;
-@@ -3458,16 +3459,25 @@ __qla24xx_issue_tmf(char *name, uint32_t type, struct fc_port *fcport,
- 		return QLA_MEMORY_ALLOC_FAILED;
+@@ -3332,7 +3332,7 @@ qla24xx_abort_command(srb_t *sp)
+ {
+ 	int		rval;
+ 	unsigned long   flags = 0;
+-
++	void		*abt_buf;
+ 	struct abort_entry_24xx *abt;
+ 	dma_addr_t	abt_dma;
+ 	uint32_t	handle;
+@@ -3364,28 +3364,42 @@ qla24xx_abort_command(srb_t *sp)
+ 		return QLA_ERR_NOT_FOUND;
  	}
  
+-	abt = dma_pool_zalloc(ha->s_dma_pool, GFP_KERNEL, &abt_dma);
+-	if (abt == NULL) {
++	abt_buf = dma_pool_zalloc(ha->s_dma_pool, GFP_KERNEL, &abt_dma);
++	if (abt_buf == NULL) {
+ 		ql_log(ql_log_warn, vha, 0x108d,
+ 		    "Failed to allocate abort IOCB.\n");
+ 		return QLA_MEMORY_ALLOC_FAILED;
+ 	}
++	abt = abt_buf;
+ 
 +	/*
-+	 * tsk_mgmt_entry_ext overlays tsk_mgmt_entry through control_flags;
-+	 * the common-header writes go through tsk->p.tsk and only port_id
-+	 * (24xx-only) and vp_index width / offset diverge.
++	 * abort_entry_24xx_ext overlays abort_entry_24xx through
++	 * req_que_no (offsets 0-17), and entry_status (offset 3) and
++	 * comp_status (offset 8) sit at identical offsets in both, so
++	 * the common header writes and the completion-status reads are
++	 * stride-agnostic and go through the 24xx view.  Only port_id
++	 * (24xx-only) and vp_index width / offset diverge per stride.
 +	 */
- 	tsk->p.tsk.entry_type = TSK_MGMT_IOCB_TYPE;
- 	tsk->p.tsk.entry_count = 1;
- 	tsk->p.tsk.handle = make_handle(req->id, tsk->p.tsk.handle);
- 	tsk->p.tsk.nport_handle = cpu_to_le16(fcport->loop_id);
- 	tsk->p.tsk.timeout = cpu_to_le16(ha->r_a_tov / 10 * 2);
- 	tsk->p.tsk.control_flags = cpu_to_le32(type);
--	tsk->p.tsk.port_id[0] = fcport->d_id.b.al_pa;
--	tsk->p.tsk.port_id[1] = fcport->d_id.b.area;
--	tsk->p.tsk.port_id[2] = fcport->d_id.b.domain;
--	tsk->p.tsk.vp_index = fcport->vha->vp_idx;
+ 	abt->entry_type = ABORT_IOCB_TYPE;
+ 	abt->entry_count = 1;
+ 	abt->handle = make_handle(req->id, abt->handle);
+ 	abt->nport_handle = cpu_to_le16(fcport->loop_id);
+ 	abt->handle_to_abort = make_handle(req->id, handle);
+-	abt->port_id[0] = fcport->d_id.b.al_pa;
+-	abt->port_id[1] = fcport->d_id.b.area;
+-	abt->port_id[2] = fcport->d_id.b.domain;
+-	abt->vp_index = fcport->vha->vp_idx;
+-
+ 	abt->req_que_no = cpu_to_le16(req->id);
 +	if (IS_QLA29XX(ha)) {
-+		tsk->p.tsk_ext.vp_index = cpu_to_le16(fcport->vha->vp_idx);
++		((struct abort_entry_24xx_ext *)abt)->vp_index =
++		    cpu_to_le16(fcport->vha->vp_idx);
 +	} else {
-+		tsk->p.tsk.port_id[0] = fcport->d_id.b.al_pa;
-+		tsk->p.tsk.port_id[1] = fcport->d_id.b.area;
-+		tsk->p.tsk.port_id[2] = fcport->d_id.b.domain;
-+		tsk->p.tsk.vp_index = fcport->vha->vp_idx;
++		abt->port_id[0] = fcport->d_id.b.al_pa;
++		abt->port_id[1] = fcport->d_id.b.area;
++		abt->port_id[2] = fcport->d_id.b.domain;
++		abt->vp_index = fcport->vha->vp_idx;
 +	}
- 	if (type == TCF_LUN_RESET) {
- 		int_to_scsilun(l, &tsk->p.tsk.lun);
- 		host_to_fcp_swap((uint8_t *)&tsk->p.tsk.lun,
++
+ 	/* Need to pass original sp */
+-	qla_nvme_abort_set_option(abt, sp);
++	qla_nvme_abort_set_option(abt_buf, sp);
+ 
+-	rval = qla2x00_issue_iocb(vha, abt, abt_dma, 0);
++	rval = qla2x00_issue_iocb(vha, abt_buf, abt_dma, 0);
+ 	if (rval != QLA_SUCCESS) {
+ 		ql_dbg(ql_dbg_mbx, vha, 0x108e,
+ 		    "Failed to issue IOCB (%x).\n", rval);
+@@ -3394,11 +3408,11 @@ qla24xx_abort_command(srb_t *sp)
+ 		    "Failed to complete IOCB -- error status (%x).\n",
+ 		    abt->entry_status);
+ 		rval = QLA_FUNCTION_FAILED;
+-	} else if (abt->nport_handle != cpu_to_le16(0)) {
++	} else if (abt->comp_status != cpu_to_le16(0)) {
+ 		ql_dbg(ql_dbg_mbx, vha, 0x1090,
+ 		    "Failed to complete IOCB -- completion status (%x).\n",
+-		    le16_to_cpu(abt->nport_handle));
+-		if (abt->nport_handle == cpu_to_le16(CS_IOCB_ERROR))
++		    le16_to_cpu(abt->comp_status));
++		if (abt->comp_status == cpu_to_le16(CS_IOCB_ERROR))
+ 			rval = QLA_FUNCTION_PARAMETER_ERROR;
+ 		else
+ 			rval = QLA_FUNCTION_FAILED;
+@@ -3406,12 +3420,13 @@ qla24xx_abort_command(srb_t *sp)
+ 		ql_dbg(ql_dbg_mbx + ql_dbg_verbose, vha, 0x1091,
+ 		    "Done %s.\n", __func__);
+ 	}
++
+ 	if (rval == QLA_SUCCESS)
+-		qla_nvme_abort_process_comp_status(abt, sp);
++		qla_nvme_abort_process_comp_status(abt_buf, sp);
+ 
+ 	qla_wait_nvme_release_cmd_kref(sp);
+ 
+-	dma_pool_free(ha->s_dma_pool, abt, abt_dma);
++	dma_pool_free(ha->s_dma_pool, abt_buf, abt_dma);
+ 
+ 	return rval;
+ }
+diff --git a/drivers/scsi/qla2xxx/qla_nvme.c b/drivers/scsi/qla2xxx/qla_nvme.c
+index 6ca300f8cc26..cdd9e657bec6 100644
+--- a/drivers/scsi/qla2xxx/qla_nvme.c
++++ b/drivers/scsi/qla2xxx/qla_nvme.c
+@@ -1056,36 +1056,69 @@ int qla_nvme_register_hba(struct scsi_qla_host *vha)
+ 	return ret;
+ }
+ 
+-void qla_nvme_abort_set_option(struct abort_entry_24xx *abt, srb_t *orig_sp)
++void qla_nvme_abort_set_option(void *pkt, srb_t *orig_sp)
+ {
+ 	struct qla_hw_data *ha;
++	struct abort_entry_24xx *abt = pkt;
+ 
+ 	if (!(ql2xabts_wait_nvme && QLA_ABTS_WAIT_ENABLED(orig_sp)))
+ 		return;
+ 
+ 	ha = orig_sp->fcport->vha->hw;
+ 
++	/*
++	 * abort_entry_24xx_ext overlays abort_entry_24xx through 'options'
++	 * (offset 10), so options writes are stride-agnostic.  The drv
++	 * union sits at offset 56 in the 24xx layout but offset 24 in the
++	 * ext layout, so the drv writes need a typed pointer.
++	 */
+ 	WARN_ON_ONCE(abt->options & cpu_to_le16(BIT_0));
+-	/* Use Driver Specified Retry Count */
+ 	abt->options |= cpu_to_le16(AOF_ABTS_RTY_CNT);
+-	abt->drv.abts_rty_cnt = cpu_to_le16(2);
+-	/* Use specified response timeout */
+ 	abt->options |= cpu_to_le16(AOF_RSP_TIMEOUT);
+-	/* set it to 2 * r_a_tov in secs */
+-	abt->drv.rsp_timeout = cpu_to_le16(2 * (ha->r_a_tov / 10));
++	if (IS_QLA29XX(ha)) {
++		struct abort_entry_24xx_ext *abt_ext = pkt;
++
++		abt_ext->drv.abts_rty_cnt = cpu_to_le16(2);
++		abt_ext->drv.rsp_timeout =
++		    cpu_to_le16(2 * (ha->r_a_tov / 10));
++	} else {
++		abt->drv.abts_rty_cnt = cpu_to_le16(2);
++		abt->drv.rsp_timeout = cpu_to_le16(2 * (ha->r_a_tov / 10));
++	}
+ }
+ 
+-void qla_nvme_abort_process_comp_status(struct abort_entry_24xx *abt, srb_t *orig_sp)
++void qla_nvme_abort_process_comp_status(void *pkt, srb_t *orig_sp)
+ {
+ 	u16	comp_status;
+ 	struct scsi_qla_host *vha;
++	u8	rjt_vendor_unique, rjt_reason_expl, rjt_reason_code;
++	struct abort_entry_24xx *abt = pkt;
+ 
+ 	if (!(ql2xabts_wait_nvme && QLA_ABTS_WAIT_ENABLED(orig_sp)))
+ 		return;
+ 
+ 	vha = orig_sp->fcport->vha;
+ 
++	/*
++	 * comp_status sits at offset 8 in both layouts (the
++	 * nport_handle/comp_status union), so the read is
++	 * stride-agnostic.  The fw union, like drv, lives at offset
++	 * 56 in the 24xx layout and offset 24 in the ext layout, so
++	 * those byte reads still need a typed pointer.
++	 */
+ 	comp_status = le16_to_cpu(abt->comp_status);
++	if (IS_QLA29XX(vha->hw)) {
++		struct abort_entry_24xx_ext *abt_ext = pkt;
++
++		rjt_vendor_unique = abt_ext->fw.ba_rjt_vendorUnique;
++		rjt_reason_expl = abt_ext->fw.ba_rjt_reasonCodeExpl;
++		rjt_reason_code = abt_ext->fw.ba_rjt_reasonCode;
++	} else {
++		rjt_vendor_unique = abt->fw.ba_rjt_vendorUnique;
++		rjt_reason_expl = abt->fw.ba_rjt_reasonCodeExpl;
++		rjt_reason_code = abt->fw.ba_rjt_reasonCode;
++	}
++
+ 	switch (comp_status) {
+ 	case CS_RESET:		/* reset event aborted */
+ 	case CS_ABORTED:	/* IOCB was cleaned */
+@@ -1105,11 +1138,8 @@ void qla_nvme_abort_process_comp_status(struct abort_entry_24xx *abt, srb_t *ori
+ 	/* BA_RJT was received for the ABTS */
+ 	case CS_REJECT_RECEIVED:
+ 		ql_dbg(ql_dbg_async, vha, 0xf09e,
+-		       "BA_RJT was received for the ABTS rjt_vendorUnique = %u",
+-			abt->fw.ba_rjt_vendorUnique);
+-		ql_dbg(ql_dbg_async + ql_dbg_mbx, vha, 0xf09e,
+-		       "ba_rjt_reasonCodeExpl = %u, ba_rjt_reasonCode = %u\n",
+-		       abt->fw.ba_rjt_reasonCodeExpl, abt->fw.ba_rjt_reasonCode);
++		    "BA_RJT was received for the ABTS rjt_vendorUnique=%u, ba_rjt_reasonCodeExpl=%u, ba_rjt_reasonCode=%u\n",
++		    rjt_vendor_unique, rjt_reason_expl, rjt_reason_code);
+ 		break;
+ 
+ 	case CS_COMPLETE:
 diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 3feaaed43857..19daa60953af 100644
+index 19daa60953af..a0191bf0e9fd 100644
 --- a/drivers/scsi/qla2xxx/qla_os.c
 +++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -8427,6 +8427,7 @@ qla2x00_module_init(void)
- 	BUILD_BUG_ON(sizeof(struct sts_entry_24xx) != 64);
- 	BUILD_BUG_ON(sizeof(struct sts_entry_24xx_ext) != 128);
- 	BUILD_BUG_ON(sizeof(struct tsk_mgmt_entry) != 64);
-+	BUILD_BUG_ON(sizeof(struct tsk_mgmt_entry_ext) != 128);
- 	BUILD_BUG_ON(sizeof(struct tsk_mgmt_entry_fx00) != 64);
- 	BUILD_BUG_ON(sizeof(struct verify_chip_entry_84xx) != 64);
- 	BUILD_BUG_ON(sizeof(struct verify_chip_rsp_84xx) != 52);
+@@ -8358,6 +8358,7 @@ qla2x00_module_init(void)
+ 	BUILD_BUG_ON(sizeof(ms_iocb_entry_t) != 64);
+ 	BUILD_BUG_ON(sizeof(request_t) != 64);
+ 	BUILD_BUG_ON(sizeof(struct abort_entry_24xx) != 64);
++	BUILD_BUG_ON(sizeof(struct abort_entry_24xx_ext) != 128);
+ 	BUILD_BUG_ON(sizeof(struct abort_iocb_entry_fx00) != 64);
+ 	BUILD_BUG_ON(sizeof(struct abts_entry_24xx) != 64);
+ 	BUILD_BUG_ON(sizeof(struct access_chip_84xx) != 64);
 -- 
 2.47.3
 
