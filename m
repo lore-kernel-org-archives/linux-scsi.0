@@ -1,162 +1,122 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 70160371D0A
-	for <linux-scsi@vger.kernel.org>; Fri, 12 Jun 2026 10:38:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 188D936F91F
+	for <linux-scsi@vger.kernel.org>; Fri, 12 Jun 2026 10:40:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781260733; cv=none; b=DCH3gnMDmfr1dPh6SDNDYhQqAeJZjiThs04AS0m9iBZIw/ny94PMiYOHFW0PoAIFOm5lZMMCMwStEfoRvs75bh/r66G/drg1fC8bW1qjQ9hQCzmm6ZKT31TnilSG4yksEktre1aT3s0Hl7NsHrBFqE9tBqFX5JJRc4coH5Q+J4w=
+	t=1781260845; cv=none; b=ifWVfZHensBh4a6N70DLrAubesiBGYjODBP84SkB/O6ypQ7C1HCSMfsWQe2NDS4SPKhLv7Fyjt8trgrutjtMZUoqwJo+vENQg4hpHxdl6nHOi5HvJsAcEIUTgeD/xC8mTDiTGyyPoQrRaMY6vG4RG9sMAjSI3NMpE6nrBA57cDU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781260733; c=relaxed/simple;
-	bh=09x1kLrdtYNuUVorUb/gG3VpILHDBs445opurILapF8=;
+	s=arc-20240116; t=1781260845; c=relaxed/simple;
+	bh=2olPoPCBkrIbTiF0sn0sCApEm7ZQxVwWw1iHADaE7Xs=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=KKdrgYdyglYqIDE4sVGhc2fTaOc7cESlX6Dectx8Ser2MbHkBRV5m6a+nb0drJY3yvaaq/q3pZVXI+e3tvqbCZDxk6wnS2jKIcxgAgssQsjvbia/AJ9zm5hWjMQNv75ZwbxJSoymTKl6PuPiWVgRwMvS+aw/etmV5tf5e4WAA3o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Z+wMqhBB; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=GY53Tr7i+Upf8u0fVDVIaC+OQmLEqjDe5OLG/c/iyHP4GWIcJGVFCXyh1+3fCkNd94XtyCnAhkevcXI0OU/Yo4+p31yfWWd2DAdOr+WxnsG9fSUkjapnhRYR3ISG+riKVW3CUcEB87zwQ9oDAGbo5gp+7yzKC/ZDtL/jIKgD/+E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JdRofQ4J; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Z+wMqhBB"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DFAD01F000E9;
-	Fri, 12 Jun 2026 10:38:51 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JdRofQ4J"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A1F471F000E9;
+	Fri, 12 Jun 2026 10:40:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781260732;
-	bh=Q98di/AfBlZ1F24IDe0q2+DCQmcXJTrLZ+vsbxEMD14=;
+	s=k20260515; t=1781260843;
+	bh=qWS68IZeIYVxIzb74AVm6qcv43PkEvOdmEagL9pMdow=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=Z+wMqhBB3fo0W5VEkI0De/BMFgRQ1QI3g9sAs1wBQGAignSCrepdfM+C9XjfOqgO9
-	 CwA7N7mh+FrmmPzONcTUIFBmMcUv5FVl+aATpHSV3vO6ZAfP6oruf4lYzapeU8HCg7
-	 baOu5tQ3EWYyn6uZ4JWc5VkVRwMVPm7OO4alEJ8iSmdqXWpnLzSr8bdfF8WkTTQ+pv
-	 hahbgPNZFw0q9nYZ/WAIfcmzyLY2ptmXxF60KilNEMwQt69M7r6avb9cvqMsnhpM4X
-	 CeT+6qW6DkETrTotYcWsas9JNXC+ZLTUysb3QbsNtRlMu7I5yjQsJIJsw1BpKLVn9i
-	 q06jmKLyXruXg==
+	b=JdRofQ4Jo/T2H/sGy6QvL8CqDxFPYoBtxHK04fuQMM9ppo5E8/CTg216nCV9CwFf6
+	 tDz58PPQE3DCUn4kfF677dwNkSFD9rtEpZIbdTovv5LCWda1U5uFkf7SpGLWxBAcV8
+	 t8QlmK+wuuMJaMMv1jHXwidP2atEM4+0kJQJgFg2i7ucHJ5jgSOmdvmJpJ3O11JaJY
+	 mvhYHkZY4oL9KG+BEDM40VHPgvFctz9ml4lyQzthxlfrlXy9uTS8A9BVTiqYKXSxtO
+	 OxziWAcJJBMDHH3ndxtyxqubEG+6MSC1+cEqMAeflHmSNDm3SalOh6sityyNEcr/Lj
+	 jdG+B5dIJEIRQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 21/60] scsi: qla2xxx: Enable serdes, resource count
- and FCE trace for 29xx
+Subject: Re: [PATCH v2 26/60] scsi: qla2xxx: Add support for QLA29XX in
+ memory allocation
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Nilesh Javali" <njavali@marvell.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260612095333.1666592-22-njavali@marvell.com>
-References: <20260612095333.1666592-22-njavali@marvell.com>
+In-Reply-To: <20260612095333.1666592-27-njavali@marvell.com>
+References: <20260612095333.1666592-27-njavali@marvell.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 12 Jun 2026 10:38:51 +0000
-Message-Id: <20260612103851.DFAD01F000E9@smtp.kernel.org>
+Date: Fri, 12 Jun 2026 10:40:42 +0000
+Message-Id: <20260612104043.A1F471F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 4 potential issue(=
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
 
 Pre-existing issues:
-- [High] Calling kstrtoul(buf, 0, 0) passes a NULL pointer for the result, =
-which unconditionally causes a kernel panic upon successful string parsing.
-- [High] qla2x00_alloc_fw_dump() lacks an IS_QLA29XX check when deciding wh=
-ether to size the fw_dump buffer using FWDT, leading to legacy fixed-size a=
-llocations that are too small.
-- [High] Enabling FCE trace dynamically via debugfs does not resize the pre=
--allocated firmware dump buffer, leading to an out-of-bounds write of 64KB =
-(FCE_SIZE) during a firmware dump.
-- [High] A race condition between disabling the FCE trace via debugfs and a=
- concurrent firmware dump leads to a Use-After-Free of the DMA-allocated FC=
-E trace buffer.
+- [High] Double frees and NULL pointer dereferences occur on `qla2x00_mem_a=
+lloc` error paths because freed pointers are not set to NULL.
 --
 
-commit f8a1650862943af8f27bc3e84bb79567498967d8
+commit ec7e8420d4fa55d2851ed0f0ca2bc56ab9339db8
 Author: Nilesh Javali <njavali@marvell.com>
 
-scsi: qla2xxx: Enable serdes, resource count and FCE trace for 29xx
-   =20
-The 29xx adapters share the diagnostic and management interfaces
-already supported on ISP27xx/28xx, but several family capability
-gates still omitted IS_QLA29XX(), leaving these paths unreachable
-on 29xx.
+scsi: qla2xxx: Add support for QLA29XX in memory allocation
 
+This commit enhances qla2x00_mem_alloc to support QLA29XX adapters. It modi=
+fies
+the conditions for memory allocation and cleanup, ensuring proper handling =
+of
+the new adapter series alongside existing QLA27XX and QLA28XX checks.
+
+> diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+> index a3e2c0a95a99b..3ac48eeb9f698 100644
+> --- a/drivers/scsi/qla2xxx/qla_os.c
+> +++ b/drivers/scsi/qla2xxx/qla_os.c
 [ ... ]
-
-> diff --git a/drivers/scsi/qla2xxx/qla_dfs.c b/drivers/scsi/qla2xxx/qla_df=
-s.c
-> index 43970caca7b39..177d47e92e494 100644
-> --- a/drivers/scsi/qla2xxx/qla_dfs.c
-> +++ b/drivers/scsi/qla2xxx/qla_dfs.c
-> @@ -497,7 +497,7 @@ qla2x00_dfs_fce_write(struct file *file, const char _=
-_user *buffer,
->  	unsigned long enable;
+> @@ -4681,12 +4683,12 @@ qla2x00_mem_alloc(struct qla_hw_data *ha, uint16_=
+t req_len, uint16_t rsp_len,
+>  	}
 > =20
->  	if (!IS_QLA25XX(ha) && !IS_QLA81XX(ha) && !IS_QLA83XX(ha) &&
-> -	    !IS_QLA27XX(ha) && !IS_QLA28XX(ha)) {
-> +	    !IS_QLA27XX(ha) && !IS_QLA28XX(ha) && !IS_QLA29XX(ha)) {
+>  fail_dif_bundl_dma_pool:
+> -	if (IS_QLA82XX(ha) || ql2xenabledif) {
+> +	if (IS_QLA82XX(ha) || IS_QLA29XX(ha) || ql2xenabledif) {
+>  		dma_pool_destroy(ha->fcp_cmnd_dma_pool);
+>  		ha->fcp_cmnd_dma_pool =3D NULL;
+>  	}
+>  fail_dl_dma_pool:
+> -	if (IS_QLA82XX(ha) || ql2xenabledif) {
+> +	if (IS_QLA82XX(ha) || IS_QLA29XX(ha) || ql2xenabledif) {
+>  		dma_pool_destroy(ha->dl_dma_pool);
+>  		ha->dl_dma_pool =3D NULL;
+>  	}
 
 [Severity: High]
-This isn't a bug introduced by this patch, but exposing this interface to 2=
-9xx
-adapters makes it relevant here. Looking further down in qla2x00_dfs_fce_wr=
-ite(),
-there is a call to kstrtoul():
+This is a pre-existing issue, but does the error path in qla2x00_mem_alloc()
+lead to double-frees and NULL pointer dereferences?
 
-    enable =3D kstrtoul(buf, 0, 0);
-    rc =3D count;
+When qla2x00_mem_alloc() fails during late allocation stages (e.g., at
+fail_lsrjt or fail_async_pd), it frees adapter members like ha->elsrej.c or
+ha->async_pd but leaves the pointers non-NULL. The function returns -ENOMEM,
+and the caller qla2x00_probe_one() handles this by branching to
+probe_hw_failed, which unconditionally calls qla2x00_mem_free(ha).
 
-Does passing a NULL pointer as the third argument to kstrtoul() cause a ker=
-nel
-crash when parsing succeeds? Additionally, since kstrtoul() returns a status
-code (0 on success, negative on failure), does assigning its return value
-directly to the boolean enable flag cause inverse logic where writing a val=
-id
-number skips FCE enablement?
+Because the pointers were not zeroed out, qla2x00_mem_free(ha) evaluates th=
+em
+as valid and attempts to free them again, resulting in a systemic double-fr=
+ee.
 
-[Severity: High]
-This is a pre-existing issue, but since 29xx adapters are now enabling FCE =
-and
-fw dump features, should IS_QLA29XX be added to the sizing check in
-qla2x00_alloc_fw_dump()?
+Additionally, fail_s_dma_pool destroys and correctly NULLs ha->s_dma_pool.
+When qla2x00_mem_free(ha) later evaluates the dangling ha->async_pd as true,
+it calls dma_pool_free(ha->s_dma_pool, ...) with a NULL pool pointer, which
+will cause an immediate kernel panic when the allocator lock is dereference=
+d:
 
-Currently, the check only includes IS_QLA27XX and IS_QLA28XX:
+qla2x00_mem_free() {
+	...
+	if (ha->async_pd)
+		dma_pool_free(ha->s_dma_pool, ha->async_pd, ha->async_pd_dma);
+	...
+}
 
-    if (IS_QLA27XX(ha) || IS_QLA28XX(ha)) {
-        struct fwdt *fwdt =3D ha->fwdt;
-
-If a 29xx adapter falls through this check, it defaults to legacy fixed-size
-allocations that are too small. When qla27xx_fwdump() later executes the FW=
-DT
-templates for QLA29XX, could this write past the end of the undersized buff=
-er?
-
-[Severity: High]
-This is a pre-existing issue, but exposing FCE trace dynamically via debugfs
-highlights it. When qla2x00_dfs_fce_write() enables FCE, it attempts to res=
-ize
-the firmware dump buffer to account for the new 64KB FCE trace:
-
-    if (!ha->flags.fce_dump_buf_alloced)
-        qla2x00_alloc_fw_dump(vha);
-
-However, if ha->fw_dump is already allocated, qla2x00_alloc_fw_dump() retur=
-ns
-immediately without expanding the buffer.
-
-Later, if a firmware dump occurs, qla27xx_fwdt_entry_t264() sees ha->fce is=
- not
-NULL and unconditionally copies FCE_SIZE (64KB) bytes into the dump buffer.
-Can this result in an out-of-bounds write since the buffer was never actual=
-ly
-enlarged?
-
-[Severity: High]
-This is a pre-existing issue, but could disabling the FCE trace via this
-debugfs node race with a concurrent firmware dump?
-
-When FCE is disabled in qla2x00_dfs_fce_write(), qla2x00_free_fce_trace()
-frees the DMA memory and sets ha->fce to NULL under ha->fce_mutex, but
-without holding ha->hardware_lock.
-
-Conversely, the firmware dump routines (like qla27xx_fwdt_entry_t264)
-execute under ha->hardware_lock and read from ha->fce without acquiring
-ha->fce_mutex.
-
-Could this race allow the FCE buffer to be freed after the dump routine
-verifies the pointer but before the memcpy completes, leading to a
-use-after-free?
+Should the error labels in qla2x00_mem_alloc() that free resources be updat=
+ed
+to also set their corresponding pointers to NULL?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260612095333.1666=
-592-1-njavali@marvell.com?part=3D21
+592-1-njavali@marvell.com?part=3D26
