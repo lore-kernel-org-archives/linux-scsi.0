@@ -1,198 +1,244 @@
-Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
+Received: from mx0a-0016f401.pphosted.com (mx0a-0016f401.pphosted.com [67.231.148.174])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C5B91FB1;
-	Fri, 12 Jun 2026 00:05:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=210.61.82.184
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781222712; cv=fail; b=AWWbSYh7CeAXHcoY4Aosgtskm/9GhU1ZB3fcwgtigTk6Lxml/IfNfKrMQs1F9ULTVf0CCTaScDN3vB8ZCKnsGnV6SyLPXtbqJfQXYujXOmLGBSwcekAHS7s8BqN/gQZsMQD+500zBioKRuhxJtjzIOSvg9vqpZZd6opGx/UM03M=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781222712; c=relaxed/simple;
-	bh=CNoGraKfnz+5NZOiOvzoNqADoKAwXQWD+6MjRnQ5Et0=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=FRYPg1WLDxtylNmL1gNkvKjH6iumIk72kUQLmT5SAcVhU+WF/syIuDSqyv5Fg8a7XYLPeOIKFt1mdUnR1X3OvWIOvY+CiG+9nWf8rDffKEdbcZBsp8lUtsQACjHH0PxXR0gIA08GfZg2nMgnlXiIFFLmVYUozUf1HVKaiG+vhAs=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=oWZMuD6D; dkim=pass (1024-bit key) header.d=mediateko365.onmicrosoft.com header.i=@mediateko365.onmicrosoft.com header.b=i3zyMtzb; arc=fail smtp.client-ip=210.61.82.184
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BAAA8305673
+	for <linux-scsi@vger.kernel.org>; Fri, 12 Jun 2026 09:53:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.148.174
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1781258041; cv=none; b=QeW4/8TrMwOm9fsgJjJn+AIvkQJXaWNKvGMy5LJisewWksuh2ppaUrSO1oT9a6tyPzywTuDisBGFBeGi/6HcKOVGUHEyY+lSohzkyqAQktHiygaTyxd8nKHOJ9Wqd4kTzhTjGNIzEVIDvAatHacte0LBaqw1K9j9ezK1DUOkAwc=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1781258041; c=relaxed/simple;
+	bh=iUM6j8Na7K1/mY5BcIEVQFQiiMqYTc/ABX8UedP5n94=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=P4PZqExuPgsTddZ2nRNVJ5JaVjtIXnGYdlLnH2V7pzKp08hR67mLxQ3Zpkz0frUzaVzvOey93QBqK25bQs7CTOWnIlhmdTBrAh5ZWY1382XcomPt4PVAKx/Ql1Z/sHQuH5+xFgQQsglRNVIhmGI/xAi67iKmFR4PFRQLhWGjLso=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=marvell.com; spf=pass smtp.mailfrom=marvell.com; dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b=DY9LQmoF; arc=none smtp.client-ip=67.231.148.174
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=marvell.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=marvell.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="oWZMuD6D";
-	dkim=pass (1024-bit key) header.d=mediateko365.onmicrosoft.com header.i=@mediateko365.onmicrosoft.com header.b="i3zyMtzb"
-X-UUID: 5d3f296265f211f18dc8c9802ae25ab1-20260612
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=MIME-Version:Content-Transfer-Encoding:Content-ID:Content-Type:In-Reply-To:References:Message-ID:Date:Subject:CC:To:From; bh=CNoGraKfnz+5NZOiOvzoNqADoKAwXQWD+6MjRnQ5Et0=;
-	b=oWZMuD6DnyKv+9st33rtT7EXtQVjDM9sCkRiZtTfKjue4cQmK7dtLu79PM3aa0fHfXVScAzQuarxauR1FOYyBOhSdzTEHTdK0FZQFcgUzSekqsehLH/EeHhupDPagdyOJ3CDTS7WThyKnzoX3Dx+KEOqDjYO70my5t+10D1MgbE=;
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.15,REQID:0a366b8f-e470-4e1e-bfc2-f229bf87bd25,IP:0,U
-	RL:0,TC:0,Content:13,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION
-	:release,TS:13
-X-CID-META: VersionHash:e276073,CLOUDID:fc421627-afc3-4ed1-ba0a-209ce2a83810,B
-	ulkID:nil,BulkQuantity:0,Recheck:0,SF:80|81|82|83|102|110|111|836|865|888|
-	898,TC:-5,Content:3|15|50,EDM:-3,IP:nil,URL:0,File:130,RT:0,Bulk:nil,QS:ni
-	l,BEC:-1,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
-X-CID-BVR: 2,SSN|SDN
-X-CID-BAS: 2,SSN|SDN,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR
-X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: 5d3f296265f211f18dc8c9802ae25ab1-20260612
-Received: from mtkmbs13n1.mediatek.inc [(172.21.101.193)] by mailgw02.mediatek.com
-	(envelope-from <ed.tsai@mediatek.com>)
-	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 1623907990; Fri, 12 Jun 2026 08:05:04 +0800
-Received: from mtkmbs10n1.mediatek.inc (172.21.101.34) by
- mtkmbs10n1.mediatek.inc (172.21.101.34) with Microsoft SMTP Server
+	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="DY9LQmoF"
+Received: from pps.filterd (m0431384.ppops.net [127.0.0.1])
+	by mx0a-0016f401.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 65C38x5P3678669;
+	Fri, 12 Jun 2026 02:53:56 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=
+	cc:content-transfer-encoding:content-type:date:from:message-id
+	:mime-version:subject:to; s=pfpt0220; bh=qWFreSSBt82c2ViR+emasYC
+	116hxhoiY4Oks99EQPTw=; b=DY9LQmoF2n5/WdZ+vEAKKZ9eBIGf7nh4hYq+Sd8
+	0ByOMUOTFquShSbazdzyZid1UwembbzWyjAReVNGY5weVP8vs8HoNEOtYhbmt0jJ
+	PhDhanUAts3iNpyT2VIbibBnWTVVlNPg0pknGx/tF/kqAHiHXf79S/51CHM6waa9
+	IySEjgRrac/DsqqMKtQqsGVxEhBs6LUcOShEHljwqbPC+hO5TOpa82HGLeVqJc8d
+	NNMDEdRw4R7gk97XpdA6z4gJSO8MOjGnC5CEAe8sqB0m1cNuzOvFJDV8G1U0Vs/g
+	Ipx9QCPUAEJP/ruj5cLncq4ZUcDn5cy+2AbfMmqdGUWfKpg==
+Received: from dc5-exch05.marvell.com ([199.233.59.128])
+	by mx0a-0016f401.pphosted.com (PPS) with ESMTPS id 4er9qn92f7-3
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 12 Jun 2026 02:53:56 -0700 (PDT)
+Received: from DC5-EXCH05.marvell.com (10.69.176.209) by
+ DC5-EXCH05.marvell.com (10.69.176.209) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.29; Fri, 12 Jun 2026 08:05:03 +0800
-Received: from SG2PR04CU010.outbound.protection.outlook.com (172.21.101.237)
- by mtkmbs10n1.mediatek.inc (172.21.101.34) with Microsoft SMTP Server id
- 15.2.2562.29 via Frontend Transport; Fri, 12 Jun 2026 08:05:03 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=W6Ee7WUmRVhPCxCMW/+Gj9sdoiiMJyJq0ezng57F1ewNoeeMrSJKZoEBGgpXp7SdqqTbXwtV7Bp8vOq2zg21RHtDADe6sBTVSLwCKWrqv18wMV6SwqxnrfBhLFVCRRIhwB6brSyHhpdcn30805rrOCfiQKgaWKF+ercpITRGILVjlUorfgutIQ6yor6r5pDHHBTTrbG+uahqgq27+O5e/dScFO9AxUwSBti/3AbdruwxPdcdH7jpjSsTtHsnHy/USN2XhWlG5YmayHyvjI/CiBLMc5dPZBmSYX+toqpB3Mwa1TjISltKvVk94fAX+95w66Ani4i1HP3oM36e1y3C+A==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=CNoGraKfnz+5NZOiOvzoNqADoKAwXQWD+6MjRnQ5Et0=;
- b=ft6LSY91GW+Q/Ihf2JTcR/0qvSmDxR6O561qdrrOm3zcds84zL37GJoeo74++m/WDVZM7fYlr37TyQOzhZgfjAajvKRFajpk/ai10jFGaU+Zq3UzzCdMdcELDMLAL5NPcWKC1r+F+eBVH6lN3q6kSM8m4Gwcs8rHKidjdHOWDKAxEl2aJrpQy1KQDVRmLNHAucqPPe9Y/Cz6UuoYV5tTSjOEWGuR8RPKuzlW57vcz1A3wPtvBNPwRYfwamQSHp1lp24XwTwM7RdG4Dg00U+S+p3DtKocuofx9LH2oKUtOo05WSDLbfqzvN+aQesKP9ftA7+4JhGKZdEOPVMVYYfstg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=mediatek.com; dmarc=pass action=none header.from=mediatek.com;
- dkim=pass header.d=mediatek.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=mediateko365.onmicrosoft.com; s=selector2-mediateko365-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=CNoGraKfnz+5NZOiOvzoNqADoKAwXQWD+6MjRnQ5Et0=;
- b=i3zyMtzbZZB6ucYCkcJc+wV3H8kH4WhhUO9O/hDd1oQDjHikUKvq+iouRDwEidw5dWoUW9Hyb594WqAAwU5B+uSSqx7PkOTEvWl1v2ek2QG1p0Hsmhrt5jW1MPbB8E8oVUE3rnzYpUcBjR3xOFjYJqKgA9vzMG3Ilq/2P4eF3do=
-Received: from SI2PR03MB5545.apcprd03.prod.outlook.com (2603:1096:4:131::9) by
- SEZPR03MB9633.apcprd03.prod.outlook.com (2603:1096:101:22c::12) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.113.13; Fri, 12 Jun
- 2026 00:04:59 +0000
-Received: from SI2PR03MB5545.apcprd03.prod.outlook.com
- ([fe80::42a2:bb5:d1fd:3ac6]) by SI2PR03MB5545.apcprd03.prod.outlook.com
- ([fe80::42a2:bb5:d1fd:3ac6%6]) with mapi id 15.21.0113.013; Fri, 12 Jun 2026
- 00:04:59 +0000
-From: =?utf-8?B?RWQgVHNhaSAo6JSh5a6X6LuSKQ==?= <Ed.Tsai@mediatek.com>
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-	"James.Bottomley@HansenPartnership.com"
-	<James.Bottomley@HansenPartnership.com>, "alim.akhtar@samsung.com"
-	<alim.akhtar@samsung.com>, "avri.altman@wdc.com" <avri.altman@wdc.com>,
-	"martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-	"bvanassche@acm.org" <bvanassche@acm.org>
-CC: =?utf-8?B?QWxpY2UgQ2hhbyAo6LaZ54+u5Z2HKQ==?= <Alice.Chao@mediatek.com>,
-	wsd_upstream <wsd_upstream@mediatek.com>, "linux-kernel@vger.kernel.org"
-	<linux-kernel@vger.kernel.org>, =?utf-8?B?Q2h1bi1IdW5nIFd1ICjlt6vpp7/lro8p?=
-	<Chun-hung.Wu@mediatek.com>, "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	=?utf-8?B?TmFvbWkgQ2h1ICjmnLHoqaDnlLAp?= <Naomi.Chu@mediatek.com>,
-	"linux-mediatek@lists.infradead.org" <linux-mediatek@lists.infradead.org>,
-	=?utf-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= <peter.wang@mediatek.com>
-Subject: Re: [PATCH v2 0/3] ufs: Add callback for vendor-specific RTT
- capability
-Thread-Topic: [PATCH v2 0/3] ufs: Add callback for vendor-specific RTT
- capability
-Thread-Index: AQHc+fnHrRx7EivWTE6MasQ/l0lEaLY6CkIA
-Date: Fri, 12 Jun 2026 00:04:59 +0000
-Message-ID: <3caf962878536cc1d0ba6f95e44a817cdb04a408.camel@mediatek.com>
-References: <20260611232632.2324422-1-ed.tsai@mediatek.com>
-In-Reply-To: <20260611232632.2324422-1-ed.tsai@mediatek.com>
-Accept-Language: zh-TW, en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=mediatek.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: SI2PR03MB5545:EE_|SEZPR03MB9633:EE_
-x-ms-office365-filtering-correlation-id: bdb09570-a43b-4778-ccf2-08dec8163e34
-x-ld-processed: a7687ede-7a6b-4ef6-bace-642f677fbe31,ExtAddr
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;ARA:13230040|366016|1800799024|376014|23010399003|38070700021|18002099003|22082099003|11063799006|56012099006;
-x-microsoft-antispam-message-info: I9LA3/yspTUpjHixAxnla9XQzgH1MgUW4D4FOpKuLPaej8AFKDurSbGbUBXBBOb1yFBBiW7LKwYnYA2Efc9P0s6u/q08kTcLVV1Lzs0nS23ApxcXQCh8gnst69fMtKcPqZFDBMreHPeAUle8r/PfcjPyLf0iwGU2DTTqI2YuLmoqZkFXnh5tREDaqj4iRR2q8NshCewq1bS8F/tHuMy0q8CjBQNtLqNHLq8B2WkIZ4IVIcJ9ufuYhL2RGRdMuQMqe6D6RIualz4gveZUbuFoWUzeWiBNQdOA5Z0BFcI56ReQ+C13dPFUr1SP8jdcG95TUBzxFIW1TshfiB6B28Oes6hjrrF23oHdmkmTPHNItuM72AXHjcKYQ7SnHatzmovs7ylixIaKorVwA10LSKYi29l6oSwSOzBCe8odSmXE3JlnJcIzm4MBeJUrvZROEGor59DbXcX2s25C7Uz182T0sMD5eyIl7n4CSr9NCeZY1bQ/MnUE6Vc7x1HzTAcjGiFXfxqElK05eqSd4pViHnmTG5+pOQ6izcnmjMRv6kOFn0wmT2vWxHIznzKzPSfW99bOVGQOQ72kku5akJTzPbqqEWEeurxRiRS0G+NjwUoSGv6fczrgDpJQXnXIHaRJ6jIjfZt/Gc/APlemJv/H06NdNgQjOIKwUZfSa3muocXsVeAnZma1SnOMoEpUL8/DL2ZsqL/PVRDqrPa5PMfqbLUSOm+u42Sgs/jaxM5Pc4lIrJeFQyPxbbl8/CHI1aJB7UL1
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SI2PR03MB5545.apcprd03.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(376014)(23010399003)(38070700021)(18002099003)(22082099003)(11063799006)(56012099006);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?utf-8?B?K2FwMlJ1V011QWNUdTcvNGNjNVgyZlNkdkhrSTVZSERmWWZJcGpDS2tPZDB4?=
- =?utf-8?B?c1FwanNFYWpOeldKKzdZQk9TUzRpVE5BTElteWdrZGRxM2dGZEllcDQ0RHlp?=
- =?utf-8?B?RFNHbFIrSXRycHVMUThoYkdFUVhUM1A2cDEyYm93N1pqeFdmSkxnNVpZVjhv?=
- =?utf-8?B?L3ZsVGp3VVFCYlUybmx4eU03Rkk0SXgySU4vL3BFbS9kUE9ySXd5azNSckhP?=
- =?utf-8?B?WnNaRTkrRVExaXlPeVRmYUJZK3k4QlZqNVFjYnUycDRVOG9zM2l0WjR4NWxt?=
- =?utf-8?B?QUlaeTZxUVpUZUV1NmlFc3cyaWVOdlJZdUs4L0pHR1BxVFNkWlI2c3FXd25E?=
- =?utf-8?B?MjlFeXFQclcwRHU2MkN5c2xnb1krK0R2VURMZk9mRStyTFlFbW9LYUVSRkFL?=
- =?utf-8?B?OFAwTzJ6dVVjOTFOaGNDd0NwdW52dzY2T0F2Um81eVFPWnZkVWE0RnUwYndt?=
- =?utf-8?B?L3ZPdXZxNGdxUjV5UkVrV2FDMWR3N1NpRGhnUnpzcndPR25XbmRxaTVZUW1s?=
- =?utf-8?B?U1ZiV1FmNU5vMDlzc0g1SnFtR3VabHBiaU5vN2hPWmRZMi9YK0ZrSWcyQVJL?=
- =?utf-8?B?YU43MnZhTlVKUGR4NHR5SzVnRFNqVUl4U25PMVZ1N081ZzZSR2tpdXQ2QVdR?=
- =?utf-8?B?N3JsRGVJUUVIMzJjVkFhSGdYeHBOeFFxWXM0MGxBZWVsMzVQczlaUHV3aUdQ?=
- =?utf-8?B?SUVtd0R2QUxPa2lFbzJmMW5pOHY1QTZyMWxyOVNrcFdMbUduckl3L1lnTnUx?=
- =?utf-8?B?NG5KYk9vQ1lhYXNBMS9sZlBybURzWStIYlp3SEx1YlEwMkNqdWlkK0w3Z3lt?=
- =?utf-8?B?aVdyaVMxTll0bFB0MHpUSFlQQzlRenBEUzRNbW04QzIwK0dod0wzblhtMnBt?=
- =?utf-8?B?a044Wnp4ejRDR1RUSlZsUm93UEpCOC84OGF5MmhKTVdzVW9YcTcySjU4aUFL?=
- =?utf-8?B?Sm1LWTUybHRPNWpuaE9BM0JRN0lWVTlCOWptVFN6eVVaL2FsVUxJZ1Vpb0Z0?=
- =?utf-8?B?ZEttOG5RS3pHemRrblNVaTVOVktKVGRRL1ZzSEVTV3BPdGtSazhJcGtxektL?=
- =?utf-8?B?Q1FaUWVCRUUrVUoyb2hyRHowajlKdm5scjVJZ0tCQmJsWTVrbWJKSTRyazNF?=
- =?utf-8?B?QnNmSkVLd09SaDg3NWpFOUgyZ2VOOUlxR1o0eWw0U1Flai9RNUVqRUFlejBq?=
- =?utf-8?B?OGxpcDdGNlB6VW9jeW5sU2VLUTlMUkZnbXZhOGJ6bjZaRUZCYXQ2N0llMU5n?=
- =?utf-8?B?eWpxcVFLa3VOSCtMTHZLNThaVHI4Rk9ZYURtY01sNllVQ05DeTNlTnZGclY0?=
- =?utf-8?B?THE5VlRQaTVzSko2WGtPZUIrZmthRzNVSzJHclRjVHFUK1c2eitjcm8rOGph?=
- =?utf-8?B?b0ZES1QrTHVGSmdWUVlxR0VnM21iWlpMODVaNXNLTWFvUkZVZW1Rd0pweSs3?=
- =?utf-8?B?UG9YL2JOdHQ1K3pPSkpuRlpMMmM3b1VrSXZlSEkxMjVFQUs5TFZkaG1zVkJN?=
- =?utf-8?B?cUI5ZndGRkhxL0Q4TGFvc3B4UVF6VE1JVVh3Vjh1ZG9maTBYbkNNNGJ1c01a?=
- =?utf-8?B?T3FzRDBWb1VvTWVGbm1QdWlDMHRKQ05abUtHTXhlWGpqYlFzQVdoWUF6QURF?=
- =?utf-8?B?Wk5odzZldUJWWlYralFqYWlsZVMyWmJiOWZ4cWg5R1ZxMzAzcGo1Q1RDT3Mz?=
- =?utf-8?B?aFRxRkV4R0FxREVkbGNPUXVJNTc4MHh0NE5SeEhZbGdNQ2djMFAxTnZ5eE1P?=
- =?utf-8?B?RUpGSHJRY3VoeXNhUUxEZHpza0xEZEYxbTBQVndLb21Rb1ZGNlhuN3ZNY0Zv?=
- =?utf-8?B?aFpnSjFGWHZaQnUzRzc5bytzM3ZYdlQvWElwSjU3N29lWkJJSk42cGxtbEpo?=
- =?utf-8?B?alhHU3RIbnZmcVNZYzVYcnFsZUc3TSswUzdPam1GOHZmSUhQQ0s1eVJKbVpG?=
- =?utf-8?B?VEtCcWZNdGJVMlFsR1FtSnVTVWV1VHNUNC9wK2I3VUlJYmF2UXBZZzBRUXIv?=
- =?utf-8?B?SlhGVThtWFNNNXFIcW5wakxBcHh2bW1VNlFFQVlSMjRwbWhOZ0gwMlEwQmlx?=
- =?utf-8?B?MlNCSnRoWlp4SThTaGtseVVNZW0rdDhxSTdPMGVEL0NhOFNpeXVvL3g2SFNI?=
- =?utf-8?B?MmxZbkNKRmRid1F1L0FBZlpQc1NsYm9wdlh2R3ZQTmkyckp2ZmZ6bTdoUmhj?=
- =?utf-8?B?QUVwbXpKQllOamFVNkFnejIzY29DVXpzcVlCR3pNS1JyOXBGOEwrSEY1YzBY?=
- =?utf-8?B?QzB4RDhvc2JvS3MzbHF2dE1KcWZiWFNuVEVxNWlyL2VTcDF5NUFkK1M2SnNn?=
- =?utf-8?B?TVVJWEFNeWYzM2l4TElxa2p6Z3psNzdWeUJqMitCaGJOV1pDanBqQT09?=
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <B01E83A4F14DA24485E41C3D6C0D9907@apcprd03.prod.outlook.com>
-Content-Transfer-Encoding: base64
+ 15.2.1544.25; Fri, 12 Jun 2026 02:53:55 -0700
+Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH05.marvell.com
+ (10.69.176.209) with Microsoft SMTP Server id 15.2.1544.25 via Frontend
+ Transport; Fri, 12 Jun 2026 02:53:55 -0700
+Received: from stgdev-a5u16.punelab.marvell.com (stgdev-a5u16.punelab.marvell.com [10.31.33.164])
+	by maili.marvell.com (Postfix) with ESMTP id 99F853F704D;
+	Fri, 12 Jun 2026 02:53:52 -0700 (PDT)
+From: Nilesh Javali <njavali@marvell.com>
+To: <martin.petersen@oracle.com>
+CC: <linux-scsi@vger.kernel.org>, <GR-FC-Storage-Upstream@marvell.com>,
+        <agurumurthy@marvell.com>, <emilne@redhat.com>, <jmeneghi@redhat.com>,
+        <hare@suse.com>
+Subject: [PATCH v2 00/60] scsi: qla2xxx: Add QLA29xx series adapter support
+Date: Fri, 12 Jun 2026 15:22:33 +0530
+Message-ID: <20260612095333.1666592-1-njavali@marvell.com>
+X-Mailer: git-send-email 2.23.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Exchange-RoutingPolicyChecked: m+jkq4lAtYdRzknqoSOIUwPXcpg/e7OKTsmr9DqNZEkSy3wXVOrVH9f4AlorJUs6mmJpRAj9rlvCFLRHj+5yoVXEuyjsCEXHYBq5YpC6Pk7pjeYTeaGvFEUNrBkzHyVkftPRL9VCAhP2HqeCBm4XQoPT2fzvrPfsq2vC1SLH41oRGJVVGUcfZhyBQuPyjAj6gHWHpgC04YGevsTGygTsTX9dihQ3NusTg7x4apw9dor7+XxtM8tOdCKXwMab7Nr21fyoR/66LmBeUkIE5MrjNFEE66tiPjsY9H/QueZ/4Qk6RZ0JPO/asgUls/6Ef8afc2ilLYmIY2E3Ne4IYUa60Q==
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: SI2PR03MB5545.apcprd03.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: bdb09570-a43b-4778-ccf2-08dec8163e34
-X-MS-Exchange-CrossTenant-originalarrivaltime: 12 Jun 2026 00:04:59.1057
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: a7687ede-7a6b-4ef6-bace-642f677fbe31
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: 9XoDRdiHWYKPmCY23mTdONOZLSdaUJ2Kc2TE+LDnbi0oRCnSIPWtYXghvZfTZClNpMb64z36f5k93IOELw5D1w==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SEZPR03MB9633
-X-MTK: N
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Proofpoint-ORIG-GUID: wnn8yUZf4dVqLWLJCln7XNVHw9Gj5zjW
+X-Authority-Analysis: v=2.4 cv=Y9HIdBeN c=1 sm=1 tr=0 ts=6a2bd734 cx=c_pps
+ a=rEv8fa4AjpPjGxpoe8rlIQ==:117 a=rEv8fa4AjpPjGxpoe8rlIQ==:17
+ a=FelO9ux0wxsA:10 a=VkNPw1HP01LnGYTKEx00:22 a=l0iWHRpgs5sLHlkKQ1IR:22
+ a=TtqV-g6YmW1Jfm2GSLaY:22 a=4y__Q5RjsK4sF3brMMwA:9
+X-Proofpoint-Spam-Info: AW1haW4tMjYwNjEyMDA4OSBTYWx0ZWRfX19MS2XH2o412
+ NCGSKOPly7aEzWCHYqjzDN/c6wcf72cIKoxbU+aAKI3AjMk/HXwH22ExHsRTIIjKq8sJC/8Ef3X
+ cCeE8BdZu0FiIJr3C0KMi8QfwPx1LPo=
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNjEyMDA4OSBTYWx0ZWRfXzZfcxUkK2/hI
+ CgmisUnedvVN0GkqbP+LTIc1XJduIPvoboI5hiePyepTXzHv9D/eFcD024d4nWobU6JnCYneUCU
+ STQYzCJ7Ti5m9L0dxW7Zkk2F2qcgSNLHXxZWmEwBWUatgcb4sPUaOlcuy2mokP0Ixe7D7c6dHvB
+ Ypj8cF6V3ojV7ghddyXxRoU9Zo0Eh1/2Cbjph1llvo5iSJ+f26rzYPO1ljmEfgqzIbS7I/yQESP
+ lnVYUgKc3COAmw9oQBLDEA4pTQ8U9v0jwUB2uYIwMzvn5Uylvo61sl7FyG5+BDIJocPUarm/uJ6
+ E0IsvRrpNDEWY2ZNktuHevrkPeaUubjD5nPPUXmrwF0EE3+IZ3m+5WlGKEdWr9/qNqA8Bfe1eiV
+ J7khb03ZAkpjrF9ZKVdGAjOvp32frH39vH4Oiu15xEkepMe1UTUA9L+jGwsGuR7rhMuq1FVV39B
+ RH+6tZeyJKJZ8Vj/ilg==
+X-Proofpoint-GUID: wnn8yUZf4dVqLWLJCln7XNVHw9Gj5zjW
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.125,FMLib:17.12.100.49
+ definitions=2026-06-12_01,2026-06-11_01,2025-10-01_01
 
-T24gRnJpLCAyMDI2LTA2LTEyIGF0IDA3OjI2ICswODAwLCBlZC50c2FpQG1lZGlhdGVrLmNvbSB3
-cm90ZToNCj4gRnJvbTogRWQgVHNhaSA8ZWQudHNhaUBtZWRpYXRlay5jb20+DQo+IA0KPiBUaGUg
-Zmlyc3QgcGF0Y2ggYWRkcyB0aGUgZ2V0X2hiYV9ub3J0dCgpIGNhbGxiYWNrIHRvIHRoZSBVRlMg
-Y29yZQ0KPiBsYXllciwNCj4gYWxsb3dpbmcgdmVuZG9yIGRyaXZlcnMgdG8gcHJvdmlkZSBkeW5h
-bWljLCBwbGF0Zm9ybS1zcGVjaWZpYyBSVFQNCj4gY2FwYWJpbGl0eSBoYW5kbGluZy4NCj4gDQo+
-IFRoZSBzZWNvbmQgcGF0Y2ggaW1wbGVtZW50cyB0aGlzIGNhbGxiYWNrIGluIHRoZSBNZWRpYVRl
-ayBVRlMgZHJpdmVyLA0KPiBkaXN0aW5ndWlzaGluZyBiZXR3ZWVuIGxlZ2FjeSBwbGF0Zm9ybXMg
-KHdoaWNoIHJlcXVpcmUgdGhlIFJUVCB0byBiZQ0KPiBsaW1pdGVkIHRvIDIpIGFuZCBuZXdlciBN
-VDY5OTUgQjArIHBsYXRmb3JtcyAod2hpY2ggY2FuIHVzZSB0aGUgdmFsdWUNCj4gZnJvbSB0aGUg
-Y2FwYWJpbGl0eSByZWdpc3RlciBkaXJlY3RseSkuDQo+IA0KPiBUaGUgdGhpcmQgcGF0Y2ggcmVt
-b3ZlcyB0aGUgbWF4X251bV9ydHQgZmllbGQgZnJvbQ0KPiB1ZnNfaGJhX3ZhcmlhbnRfb3BzDQo+
-IGFzIGl0IGlzIG5vdyByZXBsYWNlZCBieSB0aGUgZ2V0X2hiYV9ub3J0dCgpIGNhbGxiYWNrLg0K
-PiANCj4gQ2hhbmdlcyBpbiB2MjoNCj4gLSBLZWVwIG1heF9udW1fcnR0IGZpZWxkIGluIHBhdGNo
-IDEgdG8gbWFpbnRhaW4gYmlzZWN0YWJpbGl0eQ0KPiAtIFNwbGl0IHJlbW92YWwgb2YgbWF4X251
-bV9ydHQgaW50byBhIHNlcGFyYXRlIHBhdGNoIChwYXRjaCAzKQ0KPiANCj4gRWQgVHNhaSAoMyk6
-DQo+IMKgIHVmczogY29yZTogQWRkIGdldF9oYmFfbm9ydHQgY2FsbGJhY2sgZm9yIHZlbmRvci1z
-cGVjaWZpYyBSVFQNCj4gwqDCoMKgIGNhcGFiaWxpdHkNCj4gwqAgdWZzOiBtZWRpYXRlazogSW1w
-bGVtZW50IGdldF9oYmFfbm9ydHQgY2FsbGJhY2sgZm9yIFJUVCBjYXBhYmlsaXR5DQo+IMKgIHVm
-czogY29yZTogUmVtb3ZlIG1heF9udW1fcnR0IGZpZWxkIGZyb20gdWZzX2hiYV92YXJpYW50X29w
-cw0KPiANCj4gwqBkcml2ZXJzL3Vmcy9jb3JlL3Vmc2hjZC5jwqDCoMKgwqDCoMKgIHzCoCA5ICsr
-KysrLS0tLQ0KPiDCoGRyaXZlcnMvdWZzL2hvc3QvdWZzLW1lZGlhdGVrLmMgfCAxMiArKysrKysr
-KysrKy0NCj4gwqBkcml2ZXJzL3Vmcy9ob3N0L3Vmcy1tZWRpYXRlay5oIHzCoCA0ICsrLS0NCj4g
-wqBpbmNsdWRlL3Vmcy91ZnNoY2QuaMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAgfMKgIDQgKysrLQ0K
-PiDCoDQgZmlsZXMgY2hhbmdlZCwgMjEgaW5zZXJ0aW9ucygrKSwgOCBkZWxldGlvbnMoLSkNCj4g
-DQoNClNvcnJ5LCBJIHNlbnQgdGhlIHdyb25nIHYyLiBQbGVhc2UgaWdub3JlIHRoaXMgc2VyaWVz
-Lg0K
+Add support for the QLA29xx generation of Marvell QLogic
+Fibre Channel HBAs (ISP2091/ISP2291/ISP2099/ISP2299).
+The 29xx family shares much of its architecture with the
+existing 27xx/28xx adapters but introduces 128-byte request
+and response ring entries (up from 64 bytes), requiring
+extended IOCB definitions and updated ring management
+throughout the driver.
+
+The key hardware change is the wider IOCB format: every
+request and response queue entry is now 128 bytes.
+This propagates into every code path that builds, submits,
+or processes IOCBs -- command submission, status completion,
+marker, CT pass-through, ELS, logio, task management,
+abort, ABTS, VP control, and NVMe.
+
+The series is organised as follows:
+
+Patches 01-08: Foundation and flash/firmware infrastructure
+  PCI device ID registration, ISP-flags wiring, flash read/write
+  interface, NVRAM configuration, queue initialisation, FC operational
+  firmware load, and BSG passthrough (flash block I/O, MPI firmware
+  load/dump).
+
+Patches 09-13: 128-byte IOCB infrastructure
+  New qla_fw29.h header with extended structure definitions, status
+  continuation and marker IOCBs, removal of duplicate flash memo
+  block defines, IO-path updates to select the correct IOCB size, and
+  introduction of entry-size helper functions that centralise the
+  IS_QLA29XX() dispatch pattern.
+
+Patches 14-26: Sysfs, mailbox commands, and core enablement
+  Sysfs attribute gating for unsupported 29xx features, mailbox command
+  enablement (get_fw_version, execute_fw, get_adapter_id,
+  init_firmware, get_firmware_state, serdes, ELS, echo_test,
+  data rate), shutdown path, ring-slot helpers, and memory allocation
+  updates.
+
+Patches 27-44: Response-path IOCB handling and final wiring
+  Marker, status continuation, status entry, CT pass-through, PUREX,
+  ELS, logio, task management, abort, ABTS, VP control/config/report-ID,
+  NVMe IOCB unification, LS4 pass-through, NVMe ring advance
+  conversion, and BSG feature gating adjustments.
+
+Patches 45-60: the tail of the series carries bug fixes uncovered
+  during review of v1 patchset (64G/128G speed reporting,
+  VP index bounds, Name Server logout detection, NVMe
+  abort/LS-reject locking, a BSG job leak, an info leak,
+  and an edif NULL deref).
+
+The series applies on top of the scsi tree's 7.1/scsi-queue branch.
+
+Changes in v2:
+  - Folded the standalone fix-ups posted in v1 into the feature commits
+    they corrected, so the 29xx enablement commits are now individually
+    correct and bisectable (no "fix the previous patch" commits in the
+    middle of the series).
+  - Corrected several Fixes: tags to reference the actual introducing
+    commits after the above reorganisation.
+  - Widened the ELS vp_index path to 16 bits to match the 29xx 9-bit
+    hardware field, folded into the ELS enablement commit.
+
+Thanks,
+Nilesh
+
+Anil Gurumurthy (5):
+  scsi: qla2xxx: Add 128-byte IOCB definitions for 29xx
+  scsi: qla2xxx: Add extended status continuation and marker IOCBs
+  scsi: qla2xxx: Remove duplicate flash memo block definitions
+  scsi: qla2xxx: Update IO path to use 128-byte IOCBs for 29xx
+  scsi: qla2xxx: Replace IS_QLA29XX() size checks with entry-size
+    helpers
+
+Manish Rangankar (10):
+  scsi: qla2xxx: Add 29xx series PCI device ID support
+  scsi: qla2xxx: Add flash read/write interface for 29xx
+  scsi: qla2xxx: Add NVRAM config support for 29xx adapters
+  scsi: qla2xxx: Add get_flash_version support for 29xx adapters
+  scsi: qla2xxx: Add 29xx support in queue initialisation path
+  scsi: qla2xxx: Add FC operational firmware load for 29xx
+  scsi: qla2xxx: Add flash block read/write BSG support for 29xx
+  scsi: qla2xxx: Add BSG MPI firmware load/dump for 29xx
+  scsi: qla2xxx: Add LS4 pass-through IOCB handling for 29xx series
+  scsi: qla2xxx: Adjust feature gating in BSG paths for 29xx support
+
+Nilesh Javali (45):
+  scsi: qla2xxx: Skip image-set-valid attribute for 29xx
+  scsi: qla2xxx: Skip unsupported sysfs attributes for 29xx
+  scsi: qla2xxx: Enable get_fw_version mailbox for 29xx
+  scsi: qla2xxx: Extend execute_fw mailbox to include 29xx
+  scsi: qla2xxx: Enable get_adapter_id mailbox for 29xx
+  scsi: qla2xxx: Enable init_firmware mailbox for 29xx
+  scsi: qla2xxx: Enable get_firmware_state for 29xx
+  scsi: qla2xxx: Enable serdes, resource count and FCE trace for 29xx
+  scsi: qla2xxx: Enable set_els_cmds and echo_test for 29xx
+  scsi: qla2xxx: Add support for QLA29XX in data rate functions
+  scsi: qla2xxx: Enable qla2x00_shutdown for 29xx
+  scsi: qla2xxx: Use ring-slot helpers in __qla2x00_alloc_iocbs
+  scsi: qla2xxx: Add support for QLA29XX in memory allocation
+  scsi: qla2xxx: Refactor marker IOCB handling for 29xx series
+  scsi: qla2xxx: Handle sts_cont_entry_ext_t for 29xx adapters
+  scsi: qla2xxx: Update handling of status entries for 29xx series
+  scsi: qla2xxx: Enhance ct_entry_24xx_ext iocb handling for 29xx series
+  scsi: qla2xxx: Enhance purex_entry handling for 29xx series
+  scsi: qla2xxx: Update handling of ELS IOCBs for 29xx series
+  scsi: qla2xxx: Add size check for ELS status entry layout on 29xx
+  scsi: qla2xxx: Add 29xx extended logio IOCB support
+  scsi: qla2xxx: Enhance task management IOCB handling for 29xx series
+  scsi: qla2xxx: Add abort command handling for 29xx series
+  scsi: qla2xxx: Enhance ABTS processing for 29xx series
+  scsi: qla2xxx: Update VP control IOCB handling for 29xx series
+  scsi: qla2xxx: Add build-time size check for VP config IOCB layout
+  scsi: qla2xxx: Add size check for extended VP report ID entry
+  scsi: qla2xxx: Unify NVMe IOCB build path for 29xx and legacy adapters
+  scsi: qla2xxx: Convert NVMe ring advance to use qla_req_ring_advance()
+  scsi: qla2xxx: Fix queue teardown NULL dma_free and bitmap locking
+  scsi: qla2xxx: Replace __le16 bitfields with scalar and accessors
+  scsi: qla2xxx: Fix endianness annotations in vp_rpt_id_entry
+    structures
+  scsi: qla2xxx: Use 64-bit FPM word counters for 29xx host stats
+  scsi: qla2xxx: Add 64G/128G port speed setting support
+  scsi: qla2xxx: Fix 64G link speed reporting in get_data_rate
+  scsi: qla2xxx: edif: Fix NULL pointer deref in RX SA delete check
+  scsi: qla2xxx: Fix Name Server logout detection on FWI2 adapters
+  scsi: qla2xxx: Bound VP index against VP_CTRL IOCB bitmap size
+  scsi: qla2xxx: Check entry_status in qla24xx_modify_vp_config()
+  scsi: qla2xxx: Hold vport reference in qla24xx_report_id_acquisition()
+  scsi: qla2xxx: Initialize NVMe abort_work once at submission
+  scsi: qla2xxx: Hold qpair lock when sending NVMe LS reject
+  scsi: qla2xxx: Zero dport diagnostics buffer to avoid info leak
+  scsi: qla2xxx: Fix BSG job leak on validate flash image error path
+  scsi: qla2xxx: Bound image count in qla2x00_update_fru_versions()
+
+ drivers/scsi/qla2xxx/qla_attr.c   |   55 +-
+ drivers/scsi/qla2xxx/qla_bsg.c    |  475 +++++++++--
+ drivers/scsi/qla2xxx/qla_bsg.h    |   34 +
+ drivers/scsi/qla2xxx/qla_dbg.c    |   31 +-
+ drivers/scsi/qla2xxx/qla_def.h    |  140 +++-
+ drivers/scsi/qla2xxx/qla_dfs.c    |    4 +-
+ drivers/scsi/qla2xxx/qla_edif.c   |  104 ++-
+ drivers/scsi/qla2xxx/qla_fw.h     |  140 +++-
+ drivers/scsi/qla2xxx/qla_fw29.h   |  830 ++++++++++++++++++
+ drivers/scsi/qla2xxx/qla_gbl.h    |   40 +-
+ drivers/scsi/qla2xxx/qla_gs.c     |  174 +++-
+ drivers/scsi/qla2xxx/qla_init.c   |  692 ++++++++++++++-
+ drivers/scsi/qla2xxx/qla_inline.h |  247 +++++-
+ drivers/scsi/qla2xxx/qla_iocb.c   | 1304 +++++++++++++++++++++++------
+ drivers/scsi/qla2xxx/qla_isr.c    |  756 +++++++++++------
+ drivers/scsi/qla2xxx/qla_mbx.c    |  482 ++++++++---
+ drivers/scsi/qla2xxx/qla_mid.c    |   74 +-
+ drivers/scsi/qla2xxx/qla_nvme.c   |  288 +++++--
+ drivers/scsi/qla2xxx/qla_nvme.h   |    4 +-
+ drivers/scsi/qla2xxx/qla_nx.c     |    2 +-
+ drivers/scsi/qla2xxx/qla_os.c     |  273 +++++-
+ drivers/scsi/qla2xxx/qla_sup.c    |  761 ++++++++++++++++-
+ drivers/scsi/qla2xxx/qla_target.c |   17 +-
+ 23 files changed, 5920 insertions(+), 1007 deletions(-)
+ create mode 100644 drivers/scsi/qla2xxx/qla_fw29.h
+
+
+base-commit: f9a7112b50efe8e115ca335ff57ed7504646a734
+-- 
+2.47.3
+
