@@ -1,65 +1,65 @@
-Received: from mail-wm1-f51.google.com (mail-wm1-f51.google.com [209.85.128.51])
+Received: from mail-wm1-f49.google.com (mail-wm1-f49.google.com [209.85.128.49])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 33A0A3A7F5D
-	for <linux-scsi@vger.kernel.org>; Fri, 12 Jun 2026 11:20:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 85D9C3C1096
+	for <linux-scsi@vger.kernel.org>; Fri, 12 Jun 2026 11:20:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.49
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781263224; cv=none; b=X5ZJxsxO/2mXFTPdAUZ5IVQfonoA7KdMzVHratyrSG5UVrpo3Ck/tzjVcOoFUknDVfHB3370Ofln8mE9QWfhOISjp77yM0x54yrQVgPuA2JHCOGSIufm6IaCXEZqhqm839+8uuvM8tWB8q90g5Gdpi6r4Fh8b9XRlyWFbkakSZk=
+	t=1781263257; cv=none; b=TFvHy0D3AcXECkeaZs+w3SD57cYnl3/XkBPdkKAUpDX3nLqPalh5mIugtQF3k8+BQbwHzTHWCOxe0UYZMnTp1k6janwKkHlLZn9h/wzhzKLCJqGiJISpajgsI2qtvYDmbGphYk5pGmfZT3gltlDeFK6m9UNga/pd7JiMV92F3aY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781263224; c=relaxed/simple;
-	bh=XMLNVnhWBi7p+74vEzkkxOFlzN/z5ncJuRKtUxp3iw4=;
+	s=arc-20240116; t=1781263257; c=relaxed/simple;
+	bh=fzAjsfcO6Uj35dLGbQrOMAXl0RV01JWAbcsbIfHSWv8=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=XlHzMfDjfXlVZS/IIAU46f/xpC20CNLeamiUvR1AyRZBBSnLLfe/ABzwesgH6YViQzTJvMMg8ZQ7C8oikZvGi7KQPueku6bFnblTFPqGJ6NVJcA/A/++jL6HDjWCrEnR39hBp5dQsi6p2/rMmowtrcB9jh8Aibr9ZzLPP7QS5sg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=FFoCSlE3; arc=none smtp.client-ip=209.85.128.51
+	 In-Reply-To:Content-Type; b=JZd7Djtzd4UbMR3Att8LShtBJZES1OM0043DHK50+p3chLKoL9IpL+It9+zTtmEgwES52BLOqI5A01Rhoogw2/gzPNagHdWpAUbeQzAu64NYS5TNt+1+SVlU2QnXeVBago9byUcQPDTY7cLk//YneqHNT2YochQGxKp61TB/Fxs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=Vr25Zzjh; arc=none smtp.client-ip=209.85.128.49
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="FFoCSlE3"
-Received: by mail-wm1-f51.google.com with SMTP id 5b1f17b1804b1-490cdae130cso4449855e9.0
-        for <linux-scsi@vger.kernel.org>; Fri, 12 Jun 2026 04:20:18 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="Vr25Zzjh"
+Received: by mail-wm1-f49.google.com with SMTP id 5b1f17b1804b1-490d1e54b3bso10431935e9.1
+        for <linux-scsi@vger.kernel.org>; Fri, 12 Jun 2026 04:20:52 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1781263217; x=1781868017; darn=vger.kernel.org;
+        d=suse.com; s=google; t=1781263251; x=1781868051; darn=vger.kernel.org;
         h=content-transfer-encoding:in-reply-to:from:content-language
          :references:cc:to:subject:user-agent:mime-version:date:message-id
          :from:to:cc:subject:date:message-id:reply-to;
-        bh=uFQKjWylAEAtaE8lJ5+Jta6x8jdquEmB4dQrdUCRvZ8=;
-        b=FFoCSlE3UEvoxaa/CTRGxX5o1pWnPEfxKh2ob7T35/ErNkDsZjIhRWTCMOD1kf9kkZ
-         uDok+z2ax3e+oEOOUpHXr/CyLunf4gCa+eIfdZi+uR+mYNWBbBtT0eME8l7qNdCgutOs
-         AdUmB4SFJfI5PX6OHTLLtxP6SYd/kTwZlyDfv6sZr7/vmypSytRBM+rH8wPnOFLT5uSF
-         Kzr16+jsNLSSYEGYSQBMcgDZt09dzsZ399uKUQYSSbZWJ4GnNSkjllBH6+1wu3ZwDM8R
-         bKSPWkvdl6bxu0SodgTwbrqI6uvcLTPxoQ9TfFsWYUIeE3JBBrUgLUrX9U/bZaQNYp34
-         LXbg==
+        bh=+sOaUaWGad6uUNi/7z21KDmn/IjXFQvcikRAycl03Ys=;
+        b=Vr25ZzjhhkH8XPg+0CT7AWHcbHgwndud4pN6ZLq7K0Qhtz5FfP7Pi52wM+NcDtGZqY
+         jfx3spr9Ooq1+Y3EngdB8XR3qhwjrpj6Xk3PrYNR3XiuSqJ8bQZX360KQ7SkRgETyei9
+         tOhh44KN95eHHTveZGzOlTyh9M/EDNirFqAsHKQ+phXj13bEayR0BP3J2NYNgHTdjF/Z
+         cQjuHsu2omWxKLBnvdA4LjANpzpY4IoT3DQUDBXw31+8jNv0UOOjaO7QnZbWphDo7KXm
+         Nim5q85djQuvSjZgDMuukEAWSzBEpZg1TcoI2NQMyNtv3kpQcW77c9gF9JOVizKxLwpU
+         9kVw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1781263217; x=1781868017;
+        d=1e100.net; s=20251104; t=1781263251; x=1781868051;
         h=content-transfer-encoding:in-reply-to:from:content-language
          :references:cc:to:subject:user-agent:mime-version:date:message-id
          :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=uFQKjWylAEAtaE8lJ5+Jta6x8jdquEmB4dQrdUCRvZ8=;
-        b=ky35iCnKgWblJgs8V131GDIl8l95tLVErCg4yrASjn/mQIqhU8qcNlBhPbL4dlkw1i
-         Y6kAUF6+JbO9sBdXa4c0JAQPFuL1jxXb2zz4pH930vSVoDr+prrKHgnmAH8fjy1KM2AC
-         HXHhQBzWdcEklkDTbjqhd8mvQ4CpwGRGT3s7tx3m8mmZuTHZtVkuAHM8popBx89olq6H
-         I3E3mL7PVqsEqX459qwvpHgulH+LQObHsg6lfN/xq7smLvOnnMX0VrmnZSYNkZyJ/ev4
-         BWHgZYXRAwNeRyTL9DPSCo9RcZ/5gWsA2GDnx4mtQrd16h2dJ9V844MX5cVxHf+Zj1Xz
-         8RNg==
-X-Gm-Message-State: AOJu0YzteXqiWRLmRZqUK16bMYR1kGqDolpdycTu1Ce1BXvMyP07EirR
-	+B5aWo/DHpCMba2ttJuK6207YTK3jK5rC3KGl3etbJbG7bmo4jb1CCfjN5kXTkBtw8Y=
-X-Gm-Gg: Acq92OGtSp2IDcxB4n//YrgFnmBDp3sBM3K+KTahrYQj6bP/a92JcvJrHj8QAUnY0NH
-	DfCgYTQ8WJp+5VsqyN9MdivdMP3sQD+kCpvVUXZHDAMTVHzfkIf/vqQQLfbLKmb3OicRphmHuam
-	vkIwAuLOM7BZUDTq8AnR9Hea3wc9E/hupIH+j1hWCU0wNFHhCO65W4uESge07kl+3NHJVRWJt89
-	mXa09Z7wjjhBhVhoqaRKN8sMajFD1JTw2VHvDZRBjF0vxzMVi5HqGpIWSgwZpxs6i+vKdHWc7l9
-	K9q2WXImaGbB25kNgiBXybw0pR4McLI+Bk1CadRGsDwf2+7+qtGUOICPjJE5v/QJJVESmTqxD/S
-	ezdQm6sraP+JdSs9KePRzSz8if+RMaEEYgwJFQVzT6X70B9asvg1jy0mddZ9b5dx7T221eVuKuu
-	PGl64S2n1ruiah/6nw44U2XhWjNlOCSZV9wos1wFPmNqmlMPGyIT40wGW+
-X-Received: by 2002:a7b:cb09:0:b0:490:5466:8576 with SMTP id 5b1f17b1804b1-490ec4b906emr19252375e9.1.1781263217325;
-        Fri, 12 Jun 2026 04:20:17 -0700 (PDT)
+        bh=+sOaUaWGad6uUNi/7z21KDmn/IjXFQvcikRAycl03Ys=;
+        b=Zw9RsbiTQKZqxadOjgGYvKlPQ4uzWqgNJyZV4SweAY1vYRPAc8u6Vyh+giFMktGWGt
+         G17EGUp7FzWdccaFla0h6CnXNRHrcTEQg08BtdZbE67wJxbgRxF7jHvzn/GvSb+gL2ya
+         lTekgORVkiWlal7jAOFBPVk424237IOL8NNaSvFUNLRW7gV8NoJQ4j1k1tnB3TnoZ5R7
+         9Ip2LvRzD+pOcogM1qBNNFoMVkl12TQnCTI8gJ25F7WIl7qKYZdnxzhPXtdj11F7ZGZz
+         xh1RiQd3z5ZqvNqzbiWc5SIDcP5aToVPzuNdgFZNgdP6kwDn7IzU7MO+vYI7VpgTYpQ2
+         /GBA==
+X-Gm-Message-State: AOJu0YzRXD/78+esrpUj1qtJ9ekRIpBqVwhXJcs8HC1WGvWoaTygQ1qr
+	ORC/1f9UWpRoZ+SxNEXKthNKF/6lS1tb9qX05bQOWot8xvtitk//VvmQ6tVymDFvOTA=
+X-Gm-Gg: Acq92OH/Ye2oj/UlZ3UMnG+Do9XnM6lTOFaL+8JuPtlY2jBsXIyuXlCgpSjJgN/EBXX
+	ppftGOSZV2Z42wR8un0aeMXHB+JVoXuhZwmXh/g4g7dl8UKk7MxWLbAMXgo7U8u82JMOY7wqGAz
+	XmERLYgbp54xLmorJhqPEtsaLxVUQZIv6xTdO1Kg1SYwQuj+gZq3f1Giz4VI+H0XSHKatO7qVdo
+	b5SNnOMXqWPKo9XJR1+cAgpLIJ9P7FP3r+x5W4nilFlok2o9Z+HKKRl+/6BQbC3ekKHXZXSeiwg
+	9aSkxYMiJSjg+T/0u/3bqJxF1CBCdLLyMtX9gVhyPKdfLQPoiBg5wq7USysDbTXl9EiHJpGT8hy
+	pxOmGN18byxp2dVYUFKVsRiLHf8ninY5Q5wAl/IAzVdVzoXu1j5KjYocBsMgjFqS3J7eZTIVqcc
+	+Zw3CDCKE5GfO+DHwC3+/zYRZnUHUlOpre6gLA5aKD9SftOvfOob4poxh0
+X-Received: by 2002:a05:600d:8497:10b0:490:be41:87c6 with SMTP id 5b1f17b1804b1-490ec4a8309mr21694805e9.10.1781263250663;
+        Fri, 12 Jun 2026 04:20:50 -0700 (PDT)
 Received: from ?IPV6:2a07:de40:a101:3:ce70:3e6f:3b9c:9125? ([2a01:4a0:2e:ffff:ffff:ffff:ffff:ffff])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-4606f2b1056sm4927495f8f.18.2026.06.12.04.20.16
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-4606f2b0c10sm5075620f8f.21.2026.06.12.04.20.50
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 12 Jun 2026 04:20:17 -0700 (PDT)
-Message-ID: <f7678b0f-38d6-468d-af96-f8f297000899@suse.com>
-Date: Fri, 12 Jun 2026 13:20:16 +0200
+        Fri, 12 Jun 2026 04:20:50 -0700 (PDT)
+Message-ID: <72a55bf8-3aac-43e9-a444-37d296000625@suse.com>
+Date: Fri, 12 Jun 2026 13:20:50 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -67,28 +67,31 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 22/60] scsi: qla2xxx: Enable set_els_cmds and echo_test
- for 29xx
+Subject: Re: [PATCH v2 23/60] scsi: qla2xxx: Add support for QLA29XX in data
+ rate functions
 To: Nilesh Javali <njavali@marvell.com>, martin.petersen@oracle.com
 Cc: linux-scsi@vger.kernel.org, GR-FC-Storage-Upstream@marvell.com,
  agurumurthy@marvell.com, emilne@redhat.com, jmeneghi@redhat.com
 References: <20260612095333.1666592-1-njavali@marvell.com>
- <20260612095333.1666592-23-njavali@marvell.com>
+ <20260612095333.1666592-24-njavali@marvell.com>
 Content-Language: en-US
 From: Hannes Reinecke <hare@suse.com>
-In-Reply-To: <20260612095333.1666592-23-njavali@marvell.com>
+In-Reply-To: <20260612095333.1666592-24-njavali@marvell.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 
 On 6/12/26 11:52, Nilesh Javali wrote:
-> Add IS_QLA29XX() checks to qla25xx_set_els_cmds_supported() and
-> qla2x00_echo_test() so that ELS command support and echo test
-> diagnostics are available on 29xx series adapters.
+> Enhance the qla2x00_set_data_rate and qla2x00_get_data_rate
+> functions to include checks for the QLA29XX series adapters.
+> This modification ensures that the mailbox commands are correctly
+> configured for the 29xx series, improving functionality and
+> compatibility.
 > 
 > Signed-off-by: Nilesh Javali <njavali@marvell.com>
 > ---
->   drivers/scsi/qla2xxx/qla_mbx.c | 7 ++++---
->   1 file changed, 4 insertions(+), 3 deletions(-)
+>   drivers/scsi/qla2xxx/qla_attr.c | 2 +-
+>   drivers/scsi/qla2xxx/qla_mbx.c  | 6 +++---
+>   2 files changed, 4 insertions(+), 4 deletions(-)
 > 
 Reviewed-by: Hannes Reinecke <hare@kernel.org>
 
