@@ -1,66 +1,65 @@
-Received: from mail-wm1-f46.google.com (mail-wm1-f46.google.com [209.85.128.46])
+Received: from mail-wm1-f52.google.com (mail-wm1-f52.google.com [209.85.128.52])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 686B23E5EF1
-	for <linux-scsi@vger.kernel.org>; Fri, 12 Jun 2026 13:09:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.46
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4AED6352017
+	for <linux-scsi@vger.kernel.org>; Fri, 12 Jun 2026 13:10:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781269758; cv=none; b=cVafAKacC0qqKxOO0dx6VfET6eL2vIKsY9+ZuKK8Z4/2n/ej0w+IzL1Z+oaECxK8h0kd5CL0YHGfjiTvvNBBUA9qzdQ4sea48YgBb/Z36N0QEoU5RA9AAHG8YWbwRSLaeRqmj6krprQXkkdhVROK8SZN2pIiHqzjDeF5A4LgItI=
+	t=1781269805; cv=none; b=JdI7bbN/X1OQHXqlGrDSuNKb2Q1XMI6VepiEWRG8XtPF1O4bFTzVjXaNBjCFX2sg7SRNdHEjPVCPW6vLrm18UUg81pBmw5m18qOcgYg+MLCeGnGM92YD+XX8fcW9ltvI4rnRJIsSqjYh8G+kZmrzFNqcQk7+f3IwtBxbi11qvzc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781269758; c=relaxed/simple;
-	bh=0D5E2Lg6DDFA3IiT/nidQaiHeH9Yz3qHG4XcZ1k/lEc=;
+	s=arc-20240116; t=1781269805; c=relaxed/simple;
+	bh=qo37hH9o4IYYEA/93bmUz5IcEC7URqOybXyBprnsOkk=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=IXGdzKbfRFZQBL3hWmpPVx9zki10FehJgAT6lPMBNiXbE+U04emfn91odHxnTbBlwDA71BWlYJNOxZI+oeGqixj5oIYbB0QISawW4DBzq1LoWFr7i8v9cRPlngFz5KUCqCxJG+gEm4Cm2u5YQjcvYdLvBnsMjHXxX4uss+2G/CA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=L/1b/zhG; arc=none smtp.client-ip=209.85.128.46
+	 In-Reply-To:Content-Type; b=dpa786IlPIU18LNkkPmuaXWry1mBvEJFdoylFM74UEqX4KPYlUeBUI6BindIkai1Bm03i25imnkcLjoOwGyclNSLdh2D9OFjKEcNC4sMbBRd3OqoKaxEypXrQWYPv9mmBDp/kHZJSe7Hdvba0weCkCRBmEQGI8w3Y3VCWJ0yoyo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=JHpGQuDV; arc=none smtp.client-ip=209.85.128.52
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="L/1b/zhG"
-Received: by mail-wm1-f46.google.com with SMTP id 5b1f17b1804b1-490aebf33e9so4441135e9.3
-        for <linux-scsi@vger.kernel.org>; Fri, 12 Jun 2026 06:09:15 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="JHpGQuDV"
+Received: by mail-wm1-f52.google.com with SMTP id 5b1f17b1804b1-490aebf33e9so4446375e9.3
+        for <linux-scsi@vger.kernel.org>; Fri, 12 Jun 2026 06:10:04 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1781269754; x=1781874554; darn=vger.kernel.org;
+        d=suse.com; s=google; t=1781269803; x=1781874603; darn=vger.kernel.org;
         h=content-transfer-encoding:in-reply-to:from:content-language
          :references:cc:to:subject:user-agent:mime-version:date:message-id
          :from:to:cc:subject:date:message-id:reply-to;
-        bh=eiR3AZzWmPHQQLMRGbFKgYC9l+2sz0bIyEfzyk26NRo=;
-        b=L/1b/zhGYhYb4FnhqFEz3fe+pwtxhzdilRpC9qQq/udLouzX/E7lUpB65qqbws1urJ
-         U40fBzokbR8NfsRMP9o4PakOL6qMhmGqMQPqxsmaB67xt0Jsr7ckatKrKFYZ1Aqhm/0u
-         GzoBnxVZ+OW+Vt47aGz3/XWJmZuLnPZJJ6UDJF0kr0UnMEJjHpYUN0RTyQVWLIgOTTz/
-         lRPe+lbf+BaESaSnH2d66dfCSKPO4ksxgFbtvnSCo92eWhMqjOahryWN6Wf9l8ZGqtY0
-         3vohIz57wTYCiMeHaqge+R5qHvL4r3PK7BSFvGjzPuVxmhvl+7Vh6D5fbXcJM6B8McB5
-         SGrQ==
+        bh=iPeC7BkfAYwphte+EOoCK2zVEn5tGYbXHS5ERFiRbUQ=;
+        b=JHpGQuDVH5+CxrsjGpAUlN65SsVobNKJhuI7uQ2ZQejFRX5qRLQxi0AUnoqd3jjOBq
+         kjBp7N++gTTZK8YO5T9hripRbisiZhWyYLVb+uYmCHJSMrvKvXnFsHOSFRqnJlDQBeFt
+         cdmIOqFyPa3Qs5wUMKa50nlMr1MAxH3saK+JSZ524+B9tNBl46tfAZegJfqFCid/t9NQ
+         rARVgk+FQUA4/AKKvlcNAsfSd9Cht2WtBkvKWPW47rUgGt01LkzwPwzDrqpKvKxkgf2W
+         aMqs4l4dDtJpAscLW6o7wYG3JoKvZzQQsJ0zSf+/1tIoJwRYDu0N5BUT5n1O4WZ1doW/
+         Uwzg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1781269754; x=1781874554;
+        d=1e100.net; s=20251104; t=1781269803; x=1781874603;
         h=content-transfer-encoding:in-reply-to:from:content-language
          :references:cc:to:subject:user-agent:mime-version:date:message-id
          :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=eiR3AZzWmPHQQLMRGbFKgYC9l+2sz0bIyEfzyk26NRo=;
-        b=NYTp3ceSFfXigvwGwsBg+44wbrYtrKeJfZYUMbKJmgGY4ED/mZIDggVLjfT+qih9hG
-         L7HpeSBqn+6Go+nK5ZHcGwuKfV7YzujysAk/ckaMMleJzX0kP2GJPSxtabfLkuPHWmra
-         R7VNQJlB22cThuRZTb0LUqvqpWtMV82x+0v2di9Ms2ea/WTGOnRTnmhU9oK5arK2GcH0
-         tIpifEx718MHNw1Jp2ZOn2Y0Z47CDNfVWsqPen3CsKW3q4H4CPBssonJmBEuWmM1nRos
-         Lj0hTfrB7oo7qIOPnfi+hjkTxd2CDowuWRbBS+b/GduCkCydVOT4QaIqnEW0ThsXMOEg
-         ZFlQ==
-X-Gm-Message-State: AOJu0YyszEdeV2GywY3HEwn8qSmuKa9PHi7Jxg6SvMggt/P1avROEfUJ
-	XqzQlaqQ9UZ4Xe8S2XyS+9N8vuH4Semikym1OHVpL5EVwyYIcnnzyvR5Mt3lUFJdWrBqd11UR3X
-	ZAe2H
-X-Gm-Gg: Acq92OH0kGzYZicpygbnhW4U2V4PE8Np4yLmAnhXFYEQF+JkrFIZHCfNu1Ay3ai0T1f
-	a2lF6GHRZn4l4OQQ06CHf56YlvGpes3zrdeCjaXva+t6S9lFTxFau5JfyjTV/NGjbmydbYu4aZ/
-	baBK9SAPn7Thw1yoRUbjToyQznBb9HfqjejMrh/XzYdBAiBQ/yCQVXWR6XdA+MN9lYtgql34BkJ
-	21m8bLJGL6pmojgr++t7Wk0pZjKlEBVlm4uRiiB2kREjJF6g1hb6ekatnjENUc++We+KgM6z8MQ
-	9OdnoFzmLnzKsDEMdnhwDCysLSDuGJRudYfHR8H7oZcfqv7c+UxbH853UNh5VwoH3dL9/ylnlpn
-	ikSilN+eskrdi2TFe3WoMv4bFZtW0NmTVMKXoF+6D6v3/ZwQix4wAINt4qo8KgK1C3BK1s1HsCZ
-	o7KhpXw/nWoakyfYkaKMLsFxM5l/wxDuxAMuJGK8B32umNVgQG+wVqJiIdSZU+VVSq2HA=
-X-Received: by 2002:a05:6000:2384:b0:45e:945b:276 with SMTP id ffacd0b85a97d-4606dbc6787mr4353820f8f.20.1781269753628;
-        Fri, 12 Jun 2026 06:09:13 -0700 (PDT)
+        bh=iPeC7BkfAYwphte+EOoCK2zVEn5tGYbXHS5ERFiRbUQ=;
+        b=k/yWGh9JSli77wMte9XmANHZcqLxP1Bn4R3VDUb060sevBiz5Xvf9jZ/H7qRf+wvis
+         rXS7NEnkrvHiXVzt/TDtc6FTgyaAY0LEuN+1kTEiDSavWcGkrWv6gDQBLof84LUI3DNj
+         OzGLWWnkVG+ch975TWtToU/8dH7ARGz9or6Dib9nZRvmyvMfzCGYU2QI4woXq2rZNvlc
+         HezW8r9KcNsgV4S5hd+fjqCUq641nTo5ol5h8cb2MFTqi+AD2qQsj64jtbBT+wmcEFRq
+         mTMHzXJpakik6d98oinJjEUFIFJsk4oMnPCb/jYAvZZPKt9YnsxALc/WdV1EHZHeLMHE
+         S9DA==
+X-Gm-Message-State: AOJu0Yz+MiusUQnVZUsCDwN4nLBWeNhClWlXwaCu5EN7tjPPvRVSbNCh
+	oTD9FD4c0cFWEjRe0RDOToXbCDFwBvcrn2V+9NRro/HmMaxrYXRORq1A01s4jQApQ54=
+X-Gm-Gg: Acq92OH9NXeckN8JJQagZQBehpjfSwiA2MIMFDXNpKxQY/4VY9NfrH5uqNLcGIInyef
+	pxG9MEXdhGpB41db1nYJCDX5ThvIdmQHELO/f93B48ZRciYmHcHh5+CMslOUgcXVNnTrJ9xIjFx
+	5xQyv13M2paTqn+526GuxfLOHLLpPdcMm+PdZe87KwYjjBM65371Jg/4U1yYa17beEiiuX2HvT3
+	ytQBrWL/i4ucSXnySts+KShOFmOddYFRTIaK2jhphd/JGwcDo1cMYkovNwDtg0zngbYatqXrBaw
+	urpTp9qT/77dMqsNvWcIVNy0J1EDMC720e8Goq8BmiVmnDzSn1z6gK0tbRHOLrju4jWB2kT13Xt
+	Frk/fOmWUXPmUp0la5xF6XRZN+SKMUjtgh547KpuiCjH791KG64cQtZnOHZHX7Fy5hHoZI/QEfZ
+	w/800dz2ufIoiFNmbf507leWGo1sDsoZuY90dwsBPrlEAJ/Z6H7sTflsWy
+X-Received: by 2002:a05:600d:6452:20b0:490:3f7a:108b with SMTP id 5b1f17b1804b1-490ec4fb540mr26873875e9.16.1781269802555;
+        Fri, 12 Jun 2026 06:10:02 -0700 (PDT)
 Received: from ?IPV6:2a07:de40:a101:3:ce70:3e6f:3b9c:9125? ([2a01:4a0:2e:ffff:ffff:ffff:ffff:ffff])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-4606f26f3dcsm5627025f8f.13.2026.06.12.06.09.13
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-490ea7c8f15sm67249475e9.4.2026.06.12.06.10.02
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 12 Jun 2026 06:09:13 -0700 (PDT)
-Message-ID: <a9e878d5-cff2-4e2d-9835-c8ec18208178@suse.com>
-Date: Fri, 12 Jun 2026 15:09:12 +0200
+        Fri, 12 Jun 2026 06:10:02 -0700 (PDT)
+Message-ID: <e37fed00-ccc9-4997-99e4-9812c08ff48c@suse.com>
+Date: Fri, 12 Jun 2026 15:10:01 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -68,82 +67,62 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 53/60] scsi: qla2xxx: Bound VP index against VP_CTRL
- IOCB bitmap size
+Subject: Re: [PATCH v2 54/60] scsi: qla2xxx: Check entry_status in
+ qla24xx_modify_vp_config()
 To: Nilesh Javali <njavali@marvell.com>, martin.petersen@oracle.com
 Cc: linux-scsi@vger.kernel.org, GR-FC-Storage-Upstream@marvell.com,
  agurumurthy@marvell.com, emilne@redhat.com, jmeneghi@redhat.com
 References: <20260612095333.1666592-1-njavali@marvell.com>
- <20260612095333.1666592-54-njavali@marvell.com>
+ <20260612095333.1666592-55-njavali@marvell.com>
 Content-Language: en-US
 From: Hannes Reinecke <hare@suse.com>
-In-Reply-To: <20260612095333.1666592-54-njavali@marvell.com>
+In-Reply-To: <20260612095333.1666592-55-njavali@marvell.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 
 On 6/12/26 11:53, Nilesh Javali wrote:
-> The VP control IOCB selects its target virtual port by setting one bit
-> in vp_idx_map, a fixed 16-byte (128-bit) array in both
-> vp_ctrl_entry_24xx and vp_ctrl_entry_24xx_ext. qla25xx_ctrlvp_iocb()
-> computes map = (vp_index - 1) / 8 and writes vce->vp_idx_map[map]
-> without checking that map stays within the array.
+> The Modify VP Config completion handler labelled its first error branch
+> "error status" but tested vpmod->comp_status instead of
+> vpmod->entry_status. Because CS_COMPLETE is 0, the following
+> "comp_status != CS_COMPLETE" branch duplicated that test and was dead
+> code, and entry_status was never examined at all.
 > 
-> max_npiv_vports is taken from firmware and only sanitized to a
-> MIN_MULTI_ID_FABRIC-aligned boundary, so it can legitimately be 191 or
-> 255, and qla24xx_control_vp() only rejects vp_index >= max_npiv_vports.
-> A vp_index above 128 therefore yields map >= 16 and an out-of-bounds
-> write of up to 16 bytes past vp_idx_map, corrupting the trailing IOCB
-> fields (or the adjacent request-ring slot on the 64-byte layout).
+> When firmware rejects the IOCB early it sets entry_status while leaving
+> comp_status zero. As the IOCB is allocated with dma_pool_zalloc(), both
+> comp_status branches evaluate false and the handler falls through to the
+> success path, calling fc_vport_set_state(FC_VPORT_INITIALIZING) for a
+> configuration the firmware never accepted. This can leave the virtual
+> port enabled on top of an invalid config and surface later as login
+> timeouts or follow-on firmware errors.
 > 
-> Reject a vp_index that cannot be represented in the IOCB bitmap in
-> qla24xx_control_vp(), and add a defensive ARRAY_SIZE() guard in
-> qla25xx_ctrlvp_iocb() before the write. Adapters that report the usual
-> 63 or 127 NPIV vports are unaffected.
+> Test entry_status in the first branch, matching qla_ctrlvp_completed()
+> and the login/logout/abort/reset IOCB handlers; the comp_status branch
+> then becomes the live completion-status check.
 > 
-> Fixes: 2853192e154b ("scsi: qla2xxx: Use IOCB path to submit Control VP MBX command")
+> Fixes: 2c3dfe3f6ad8 ("[SCSI] qla2xxx: add support for NPIV")
 > Cc: stable@vger.kernel.org
 > Signed-off-by: Nilesh Javali <njavali@marvell.com>
 > ---
->   drivers/scsi/qla2xxx/qla_iocb.c | 6 ++++++
->   drivers/scsi/qla2xxx/qla_mid.c  | 8 ++++++++
->   2 files changed, 14 insertions(+)
+>   drivers/scsi/qla2xxx/qla_mbx.c | 4 ++--
+>   1 file changed, 2 insertions(+), 2 deletions(-)
 > 
-> diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
-> index a103be30fddb..8b5a13823b3d 100644
-> --- a/drivers/scsi/qla2xxx/qla_iocb.c
-> +++ b/drivers/scsi/qla2xxx/qla_iocb.c
-> @@ -4068,6 +4068,12 @@ qla25xx_ctrlvp_iocb(srb_t *sp, void *pkt)
->   	vce->entry_count = 1;
->   	vce->command = cpu_to_le16(sp->u.iocb_cmd.u.ctrlvp.cmd);
->   	vce->vp_count = cpu_to_le16(1);
-> +	if (map >= ARRAY_SIZE(vce->vp_idx_map)) {
-> +		ql_log(ql_log_warn, sp->vha, 0x307c,
-> +		       "ctrlvp: vp_index %u exceeds vp_idx_map capacity\n",
-> +		       sp->u.iocb_cmd.u.ctrlvp.vp_index);
-> +		return;
-> +	}
->   	vce->vp_idx_map[map] |= 1 << pos;
->   }
->   
-> diff --git a/drivers/scsi/qla2xxx/qla_mid.c b/drivers/scsi/qla2xxx/qla_mid.c
-> index 7072af5b4217..b7d9c1a53f3c 100644
-> --- a/drivers/scsi/qla2xxx/qla_mid.c
-> +++ b/drivers/scsi/qla2xxx/qla_mid.c
-> @@ -987,6 +987,14 @@ int qla24xx_control_vp(scsi_qla_host_t *vha, int cmd)
->   	if (vp_index == 0 || vp_index >= ha->max_npiv_vports)
->   		return QLA_PARAMETER_ERROR;
->   
-> +	/*
-> +	 * The VP_CTRL IOCB selects the target VP through a fixed 128-bit
-> +	 * (16-byte) vp_idx_map bitmap, so vp_index must fit within it even
-> +	 * if firmware advertises more NPIV vports.
-> +	 */
-> +	if (vp_index > sizeof_field(struct vp_ctrl_entry_24xx, vp_idx_map) * 8)
-> +		return QLA_PARAMETER_ERROR;
-> +
->   	/* ref: INIT */
->   	sp = qla2x00_get_sp(base_vha, NULL, GFP_KERNEL);
->   	if (!sp)
+> diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
+> index d661662aed26..8a001b489fc0 100644
+> --- a/drivers/scsi/qla2xxx/qla_mbx.c
+> +++ b/drivers/scsi/qla2xxx/qla_mbx.c
+> @@ -4409,10 +4409,10 @@ qla24xx_modify_vp_config(scsi_qla_host_t *vha)
+>   	if (rval != QLA_SUCCESS) {
+>   		ql_dbg(ql_dbg_mbx, vha, 0x10bd,
+>   		    "Failed to issue VP config IOCB (%x).\n", rval);
+> -	} else if (vpmod->comp_status != 0) {
+> +	} else if (vpmod->entry_status != 0) {
+>   		ql_dbg(ql_dbg_mbx, vha, 0x10be,
+>   		    "Failed to complete IOCB -- error status (%x).\n",
+> -		    vpmod->comp_status);
+> +		    vpmod->entry_status);
+>   		rval = QLA_FUNCTION_FAILED;
+>   	} else if (vpmod->comp_status != cpu_to_le16(CS_COMPLETE)) {
+>   		ql_dbg(ql_dbg_mbx, vha, 0x10bf,
 
 Reviewed-by: Hannes Reinecke <hare@kernel.org>
 
