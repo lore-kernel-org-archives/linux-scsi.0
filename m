@@ -1,65 +1,65 @@
-Received: from mail-wr1-f50.google.com (mail-wr1-f50.google.com [209.85.221.50])
+Received: from mail-wm1-f42.google.com (mail-wm1-f42.google.com [209.85.128.42])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C78E382379
-	for <linux-scsi@vger.kernel.org>; Fri, 12 Jun 2026 12:59:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.50
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 846393D79F9
+	for <linux-scsi@vger.kernel.org>; Fri, 12 Jun 2026 13:00:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781269185; cv=none; b=FkgAtQYFDfq2t0M1L7TqNeVZdGOWFOunGnc5cQLD4ZHQx2q6LtpJROeHhqD+aKnYURyckQn7a6fK1ml2Xi82aNIXvpmjyPdk93QYYeS5V89jlhKL/TlN/AKP1glzZU9zBtopIpQsUUS6O3hlDh5CoxfFD0Hr34vQa3M4ulwDMqc=
+	t=1781269222; cv=none; b=EI28BQRrfOLkhiWL0hOvU8clEvFOSZGja5X6u4FxYMljgMQ8fwyHxEdTTXuuk+8EQ9yknYtkHumK9xM9QiiUg1lyEmAJLZDglglGnxN8zIKJR6Gtz5lmL/5SJEj9/HBEn7BhAAn7d7kE/J/zzi/VOEPxQ+ymX4fCnxLQESsK2bk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781269185; c=relaxed/simple;
-	bh=4lq+SfMCSnX2KBce2B+KcFX+2kY/pbiASebZQ/IbI1A=;
+	s=arc-20240116; t=1781269222; c=relaxed/simple;
+	bh=kLMk7cLFqt8emjPbF8ChpEcVvv3JbS7p+wjpNym3aAk=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=DMpfkSOFBiSvYoq5q1hDJYlO5MSxBk/pdX6gVTH725u9ScM3UyeHSgLLgHJIatAb10Oz2SmAL0cfgsEMDSh28O4ulJMed4IBe4WQwPWe8906xFC63ioXnVUFqpsoE/8/7rDoQUKIcoq+OGrAKXtqg6VMuUuJ1CLfcikPk9RBnu8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=H1VcScNE; arc=none smtp.client-ip=209.85.221.50
+	 In-Reply-To:Content-Type; b=RIfnSaWjth+9ZUA0PYsQyKNjTmd2Go3NcWp2hH7jzxcvFH/U1GOByyyvuNU9DG/XdX+CSqye9selq9lUpRvdieFp30NSsXUGxrdgVTKj0H5uqnNqh9ZoF8wTjUAsLmM/K4hHjKRsqUvtdbOh82+ow9J44DeHAbc+1j+ZTcWFfO4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=ZNZlijff; arc=none smtp.client-ip=209.85.128.42
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="H1VcScNE"
-Received: by mail-wr1-f50.google.com with SMTP id ffacd0b85a97d-45eecb8bf67so702384f8f.2
-        for <linux-scsi@vger.kernel.org>; Fri, 12 Jun 2026 05:59:44 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="ZNZlijff"
+Received: by mail-wm1-f42.google.com with SMTP id 5b1f17b1804b1-490cf322ed0so6533035e9.1
+        for <linux-scsi@vger.kernel.org>; Fri, 12 Jun 2026 06:00:21 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1781269183; x=1781873983; darn=vger.kernel.org;
+        d=suse.com; s=google; t=1781269220; x=1781874020; darn=vger.kernel.org;
         h=content-transfer-encoding:in-reply-to:from:content-language
          :references:cc:to:subject:user-agent:mime-version:date:message-id
          :from:to:cc:subject:date:message-id:reply-to;
-        bh=4OdpWLGIyZAUUrXChKdRMSNDrmSTkQAwZBD2AaBJOmY=;
-        b=H1VcScNEiIa7WohTL0SJezdxpmRlkrUSnNYW4j7tqI4hYcy8odwUgGwiaPwK185/qa
-         a5Sa8RNf9qowQAF3smCPl+ZOUvLkjkroTG2gf8rs1gY/Pz7ornhA7bMm5wnZWV+Sd5PT
-         oH8PLzoswWJPQXdxuaIQFqLoHBtKgHSctGVezfFCPjCpurL9CLUvr6MIkrKeTaOkn41a
-         CpODRiSF2iNBcmlOyTTkaK857C70Z+v0HBTsMjOQ2F0fSLAV8akk1pxEjpvdfdHI5Mp0
-         1Yva/sytDolMxXIlSdSwvNLvahD7K+ySI6dDdrQqO4ZVKSPwvTcNYYy7xnoESHvfK//G
-         Fnsw==
+        bh=O1rqmorXiTwA+GCK5llnpeIsWYTGgAvF4Fp+EjD0HEo=;
+        b=ZNZlijffptqIlerx1lkYrGZkKqAx12eJYikyroukXS2K0GL53Y0ErSR+k3aijUpg51
+         yK2KdhvYVoXNVb+wmlg7PPXvgYEO2HkcZLkv8aRX/TGnDmj0WW4FzNoyGxHRUNVu9Qsn
+         eUOmveML5mJf1LlAgAx3b93rngMCdv37tAFgNLuYtMzaf8k44Z16cY2DoIZ0hG8sVlSh
+         0unIE9CmLL3tZ234j0/5s+RL3r1SSRNC0UvSaeCWyPX320NbYz3TFfqURjqTI0ZmYVpw
+         qW7MIGZ93Sna5v/nLKc0aIrFRpZfNHNmUIAP5PO0yeNzU6Zpt4rv/CZtfqGJLXjDbqrp
+         pVrw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1781269183; x=1781873983;
+        d=1e100.net; s=20251104; t=1781269220; x=1781874020;
         h=content-transfer-encoding:in-reply-to:from:content-language
          :references:cc:to:subject:user-agent:mime-version:date:message-id
          :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=4OdpWLGIyZAUUrXChKdRMSNDrmSTkQAwZBD2AaBJOmY=;
-        b=e05JdEq7YnvfzZ1riCzqfxfDitkNowdkauTY5kXhjVqIfuyPXa8V8kewm2pyATa2UF
-         WFGLt+cEevUzZDiJMbxGL6U0kSRnrVHVrbZ4zzvvNTyC8oDaRVbMdRNQtdF4acwxfaXQ
-         7EO0jabIA3PYldMfG6GPcN3+d69UOwnSwI7Smpg438yvp3uYW8mEc6OMPu78pJIYGrKL
-         EnlH0fzu/oOA2G/sFqjCiiA6fPRsBeXoPXlSOpOLQy5Eh1RvR4PmSPgnvGGzYWvWGCZW
-         c7GCpUNCtxvJZzATPu1UOYXPpQ1fHGp2f9eGZfoM61lhxSL+2tz6PQ8XGABV57DlWtOa
-         y0OA==
-X-Gm-Message-State: AOJu0Yw83tZySGTf3hJaTyze4srNCuhTYDPrH1wX/o1SoIqFy0Dkcfsu
-	vOAzxpvy1LLvYOOH3PsREq4scwnOqQuAGMBuhg2A+6xYpHkBAvTeqWbRpxlSKAvftp8=
-X-Gm-Gg: Acq92OEN+85u0B1jzVRa3Zj5DK0Uwl94y7lzEzgihsJ4f/oqcgs2WAQSE0quhpqZZv1
-	SdvdSBZfCq+hsROZEmJwF4vsocxLz0d+qOVtkLG0bLLEJhhv72vW7FJFZyZE/APCasJHgtzjb2r
-	i7q1U4H6k9NszrDzh1rI46RV/MF7zfuxWDcd+CP8UCoF5jweacwDhbGeyB+IdZa5eH2ZZErabf5
-	AUOP7v50Gg1POPb4cy4u2NlYDBRDaQZHUIPja/2bTUx+fuM5IDeIl6EQZT6lAOuSBsQq8VmqxDd
-	hQOZQpWC135zln+u2EAj4DxjYqcBMt+mr3V1g1uEYhAkgjic8a/uy/Y4X4eFmf4HEk2SQgTz2Jl
-	q4+JVkJ050ogsSzPoNiAsx/Xh8Ga57my4kOFyovTvikYHf96uV/TRT8hRSEnccmNEybxvTTU+Jh
-	6Gn1vK+Eb5d0xlVFgCap2btpr9l+37i2e/yZ32c8UNKsdhVk9pGB4pbq+s
-X-Received: by 2002:a05:6000:41e5:b0:460:2477:2284 with SMTP id ffacd0b85a97d-4606dbcc0a8mr3894521f8f.39.1781269182633;
-        Fri, 12 Jun 2026 05:59:42 -0700 (PDT)
+        bh=O1rqmorXiTwA+GCK5llnpeIsWYTGgAvF4Fp+EjD0HEo=;
+        b=TPWojQ2YnjUdAO4yqpCGk0ldxQcEd7ANerc+ikxO655whRNcsQOZP0QomUN73OygxE
+         makg3hWPNNRGAuwE3NrppAtxZJzcpv3MQZidUAnHvI0Wb0DtDAgiLVg6OTXaBpuPdZcn
+         usN/+W8JEMdnmeOR7KNL3eKDStW/qheeaeeKMHOCWUvGkhd+UXz9eMJXMD+ANjkMtiPq
+         DLSDCgc6CkbXaJOrJylcYLFerh5NdhSLn6MozKEpJzRz7iAu8EkBhlzcLlMmKROWBmB6
+         JgHUom8V4rPoNZTNNu6sYbAh/92SsRAs6wzp1wxCV1Oa0g6+yMjN18HGKa0o8JKsZCyc
+         p8MQ==
+X-Gm-Message-State: AOJu0YxQbJD771W56ZRNHaCAkM0WPzsRWKrsoL+0oxXrxcdoFA+CmV0v
+	X+ID2qo67TiygTqEJmfbT3gNsJFJTwvHLOJDoh20TE0ExlK2+BAmHGogeboskFI/03E=
+X-Gm-Gg: Acq92OE+iJy7IKX0uXkJOBhM/uCNFH46nj5wcnbeJUjXXdbdfNZDqwQ4xK4SGQXGGzO
+	Dh0bdAaGgs3KlI3pZLBzHodzD9RnlaaAI5jLp4/eIGqj3qHk37lq7llNfkSbDTF9uKG/jYnyuax
+	jBBhzj6J7yPtZWUTWeCtSkcfCe3iUx1OEhYClSCBpk4ZSTG64cv21/GHxbnaBQ2N0i4O4GIOzJD
+	OBvpymW4J+QU5Shmy0KO9mVz53FMjH+SqZdeO3Vj0A5vdG6+LHoRZ7vj/0xyhEipj1Lm11zX4ap
+	ZaYJZQ6J1pFX3dyxFw8OQcn92ztKXwCMnXF6uiEU1eVYgEcjBGRz6kG9qMl6Y89O5M+dEHZtUnD
+	vemy7i2uBNoMwXl1PwhBqXA2+tWXfHk5+4Avz6uem/26aIz42IApiHvnEG3Hg9IBi72mcOXh8Z3
+	ezF6JOMJPBv4kB5SQnGTUiTzRSl5n04lagEitTQ2THot9mKJKCGRo9IJPc
+X-Received: by 2002:a05:600c:4749:b0:491:7325:39c4 with SMTP id 5b1f17b1804b1-49173253aa3mr25085735e9.34.1781269219614;
+        Fri, 12 Jun 2026 06:00:19 -0700 (PDT)
 Received: from ?IPV6:2a07:de40:a101:3:ce70:3e6f:3b9c:9125? ([2a01:4a0:2e:ffff:ffff:ffff:ffff:ffff])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-4606f2b1056sm5675952f8f.18.2026.06.12.05.59.42
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-490ea7c871dsm73977165e9.5.2026.06.12.06.00.19
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 12 Jun 2026 05:59:42 -0700 (PDT)
-Message-ID: <bb5bc0ea-685f-4814-a9cf-6eab0dccdc5c@suse.com>
-Date: Fri, 12 Jun 2026 14:59:41 +0200
+        Fri, 12 Jun 2026 06:00:19 -0700 (PDT)
+Message-ID: <bba3317b-4003-4843-87bb-fd053a010f88@suse.com>
+Date: Fri, 12 Jun 2026 15:00:18 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -67,48 +67,34 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 47/60] scsi: qla2xxx: Fix endianness annotations in
- vp_rpt_id_entry structures
+Subject: Re: [PATCH v2 48/60] scsi: qla2xxx: Use 64-bit FPM word counters for
+ 29xx host stats
 To: Nilesh Javali <njavali@marvell.com>, martin.petersen@oracle.com
 Cc: linux-scsi@vger.kernel.org, GR-FC-Storage-Upstream@marvell.com,
  agurumurthy@marvell.com, emilne@redhat.com, jmeneghi@redhat.com
 References: <20260612095333.1666592-1-njavali@marvell.com>
- <20260612095333.1666592-48-njavali@marvell.com>
+ <20260612095333.1666592-49-njavali@marvell.com>
 Content-Language: en-US
 From: Hannes Reinecke <hare@suse.com>
-In-Reply-To: <20260612095333.1666592-48-njavali@marvell.com>
+In-Reply-To: <20260612095333.1666592-49-njavali@marvell.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 
 On 6/12/26 11:53, Nilesh Javali wrote:
-> The vp_rpt_id_entry_24xx and vp_rpt_id_entry_24xx_ext DMA structures
-> use plain uint16_t for fip_flags and bbcr fields that the firmware
-> writes in little-endian format.  On big-endian hosts, reading bbcr
-> without le16_to_cpu() produces an incorrect value, breaking the
-> buffer-to-buffer credit enable detection.
+> 29xx provides the 64-bit FPM transmit/receive word counters in the link
+> statistics block, like 83xx/27xx/28xx.  qla2x00_get_fc_host_stats()
+> only consumed those counters for the older families and fell back to the
+> software approximation (input/output bytes >> 2) on 29xx, reporting less
+> accurate rx_words/tx_words.
 > 
-> Additionally, the 29xx ext struct uses __le16 bitfields for
-> vp_idx:9/vp_status:7 which suffer from architecture-dependent
-> bit packing order (same class of bug fixed in the ELS/ABTS
-> extended IOCBs).
+> Add IS_QLA29XX() to the high-speed branch so 29xx reports the hardware
+> word counters.
 > 
-> Fix by:
->    - Changing uint16_t fip_flags/bbcr to __le16 in both qla_fw.h
->      and qla_fw29.h (enables Sparse endianness checking)
->    - Replacing the __le16 bitfields with a scalar __le16 vp_idx_status
->      and defined shift/mask constants
->    - Adding le16_to_cpu() at the bbcr and vp_idx_status access sites
->      in qla_mbx.c
-> 
-> Fixes: 1b923fdfaeb5 ("scsi: qla2xxx: Add 128-byte IOCB definitions for 29xx")
 > Signed-off-by: Nilesh Javali <njavali@marvell.com>
 > ---
->   drivers/scsi/qla2xxx/qla_fw.h   |  8 ++++----
->   drivers/scsi/qla2xxx/qla_fw29.h | 20 ++++++++++++++------
->   drivers/scsi/qla2xxx/qla_mbx.c  |  9 ++++++---
->   3 files changed, 24 insertions(+), 13 deletions(-)
+>   drivers/scsi/qla2xxx/qla_attr.c | 3 ++-
+>   1 file changed, 2 insertions(+), 1 deletion(-)
 > 
-
 Reviewed-by: Hannes Reinecke <hare@kernel.org>
 
 Cheers,
