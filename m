@@ -1,227 +1,186 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E95933812DD
-	for <linux-scsi@vger.kernel.org>; Fri, 12 Jun 2026 10:14:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F355115B971
+	for <linux-scsi@vger.kernel.org>; Fri, 12 Jun 2026 10:15:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781259261; cv=none; b=r04/FMni5UV9ctvg/NUgCkg5eY3nr1jOFfb+YFArv4Qn65bPb0FYIwdfPPU6cxLHSfsDml155Oj85cAHkFni/3ioyZmplkAPA74RgNiDU3/AaF9f0JSSpb9X2mFeVBiWnvvTyIThNk0A0oPogcfZj20evLpKCUUpxUDWxi/CLp0=
+	t=1781259302; cv=none; b=VPo7VVG1kuYyZdpJYhhgPzA6HOz6sOIHEhZGNlzL95CNvN5/CR7V8eq4zpvjt6POZFVn69W5Av0BuVuDLjmEoAnmCP8+V6XUqTZniqnHDkOQKw5euzV+iRpHEANioA4eBqWDLJMGiKajtryqXBjkbz8sVniGKMnhM4uSGcq6mAM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781259261; c=relaxed/simple;
-	bh=uywKf7RuwHy6EjRs51dQU+UbPyp+3VMlmQBp2ReMqrA=;
+	s=arc-20240116; t=1781259302; c=relaxed/simple;
+	bh=FnpXh4nMhZc45/ve8Kxs08IifmgadZvtiTOx9fLeDL8=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=AxjgfA3zSbP/sWSUPWbg7tzwi7odAxGGcoFtGU0Tv/9mUs9yaTja0/4FtnajvqIUVw4IOHjYo3fuBziw+2L27VIOVQZUsgKPOTDNpNQhzKpnTVMJzSTuIemICHA23xUH1EVQJ4vb3tnUJxlOs4enKqioH+16sAWtYobXtSm9tQw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=boziwzNq; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=aX4m8o0tLLEEi8oYDXj+4bVxJj0z1m39BLpWv2FIyFL3MVa6PyT5sG9BT5mh+ha8wKGX52ovTq+4HKlfFvDT8xT6JeDw1t/jrloMRL1evPmdnZNtxu8+DJnTuMuZb5LoK2IYydQcko/Egi31in5OtXzo00TsBCbQUkuoK4ERaqs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HQvcU7Un; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="boziwzNq"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 69D491F00A3A;
-	Fri, 12 Jun 2026 10:14:19 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HQvcU7Un"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6CBD21F000E9;
+	Fri, 12 Jun 2026 10:15:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781259259;
-	bh=aIOE2ecCMF5Q3GAar2Hf+BY9earTpgP1SuSfNnvCg1o=;
+	s=k20260515; t=1781259300;
+	bh=37Xu6cvOBZx1zOZ/cMJeZwgzDg9Fd/EIl/KyAX3AI50=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=boziwzNqIACwHYiyqNY6o2Sq1cssj3dnBRSOB81JFtM4i4Viug9R2iJkvTUk0c45R
-	 UynphipDOn+7ffmXeSxWR9xx9wgLuHwHygBbeb0D5CgOaM7ejOqXurSS6zfPqoyvuC
-	 lH9qs9648hKjYASbodJkISSA6hzhe9u9Xm+hU8aH35jgjPph5RcougUYdaTUFiEaJd
-	 r2w/L0cMA1YhBm3ifZMIdDO5AvQJMTkkZB3gs5JmC0iOXF8RdIaDA1lLwvJG6m3lx8
-	 ngUJO++mCahAe88GHOo4k0/bqeLnDDK4hb//QXpmfP96jCo5R+GsfWd+FsgzqXHmum
-	 W6ICD9zvyyY6A==
+	b=HQvcU7UnI2wxJy2U6WLR0ujo0BF/HR8jb/aqemzwpMi/TbUpxEQqTIiL8i3+jeDQQ
+	 Br65SlBoHIhaXMJztQJDOhH9Ykn23otNEd+UFJWG1L4vI9sYDK1tU6YDsmh9qr43ba
+	 J4q27naD9blBTDmrlvIwxZKP9dwtWeRW/sPSKbkmPGQzOF7B8x/w63EfG3TaDA2BAW
+	 isFld44LlUAE2YOqpLNzv/kspxCvwYXChEJyUQQVOhykoKV0To8GdLeNJjW3ZqC3dA
+	 QYZz/QoEBfPDNXDDHPGdtVUUR9bXJSqXzzb9RXAQGOKnYSp0JOQlWeaxMGbjq4JXeL
+	 8QGtQYbxvl+bQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 06/60] scsi: qla2xxx: Add FC operational firmware
- load for 29xx
+Subject: Re: [PATCH v2 08/60] scsi: qla2xxx: Add BSG MPI firmware load/dump
+ for 29xx
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Nilesh Javali" <njavali@marvell.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260612095333.1666592-7-njavali@marvell.com>
-References: <20260612095333.1666592-7-njavali@marvell.com>
+In-Reply-To: <20260612095333.1666592-9-njavali@marvell.com>
+References: <20260612095333.1666592-9-njavali@marvell.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 12 Jun 2026 10:14:19 +0000
-Message-Id: <20260612101419.69D491F00A3A@smtp.kernel.org>
+Date: Fri, 12 Jun 2026 10:14:59 +0000
+Message-Id: <20260612101500.6CBD21F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 5 potential issue(=
+Thank you for your contribution! Sashiko AI review found 3 potential issue(=
 s) to consider:
-- [High] Unconditional byte-swapping of `risc_attr` using `swab32()` instea=
-d of `be32_to_cpu()` causes endianness corruption.
-- [High] Heap out-of-bounds read in `qla29xx_load_fw_template()` due to mis=
-sing bounds check on `template_size`.
-- [High] Out-of-bounds read in `qla29xx_load_risc_blob()` due to missing bo=
-unds checks on `array3_addr` dereferences.
-- [High] Logic Error: Missing `BIT_1` (last chunk) flag due to flawed `is_l=
-ast_chunk` calculation.
-- [High] Integer overflow of firmware section offsets and lengths bypasses =
-bounds checks on 32-bit systems.
+- [High] The implementations of LOAD and DUMP MPI commands are semantically=
+ reversed, leading to firmware data corruption.
+- [High] Incorrect address scaling in `qla29xx_mpi_optrom_data()` mixes byt=
+e offsets with word counts during burst transfers, causing corrupted memory=
+ chunks.
+- [Medium] Applying Option ROM (Flash) bounds to MPI RAM addresses causes s=
+purious rejections and truncated transfers.
 --
 
-commit 010601e8a1ad75507948f2ba92e178c2b94266b2
+commit b9c1c98154245d3fd8c709eb1527874ff55f8c3a
 Author: Manish Rangankar <mrangankar@marvell.com>
-scsi: qla2xxx: Add FC operational firmware load for 29xx
 
-This commit adds support to load the 29xx FC operational firmware from the
-filesystem and sets up the corresponding firmware dump template.
+scsi: qla2xxx: Add BSG MPI firmware load/dump for 29xx
 
-> diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_i=
-nit.c
-> --- a/drivers/scsi/qla2xxx/qla_init.c
-> +++ b/drivers/scsi/qla2xxx/qla_init.c
+Add BSG vendor commands for loading and dumping MPI firmware on
+29xx adapters. This extends the existing BSG infrastructure with
+the necessary mailbox wrappers and flash helpers for MPI
+operations.
 
-[ ... ]
-
-> +static int qla29xx_process_rd_image(struct scsi_qla_host *vha,
-
-[ ... ]
-
-> +				is_last_chunk =3D
-> +					(chunk =3D=3D (chunks_per_segment - 1) ||
-> +					 size_remainder < CHUNK_SIZE);
-
-[Severity: High]
-Does this logic accurately capture the final chunk when the remaining size =
-is
-exactly a multiple of the chunk size?
-
-If the final segment's remaining size is exactly CHUNK_SIZE, size_remainder=
- <
-CHUNK_SIZE evaluates to false. Because it is a partial segment, the chunk
-index will also be less than chunks_per_segment - 1. Since both conditions
-are false, is_last_chunk becomes false. Could this cause the final chunk to
-be sent without the BIT_1 flag, potentially hanging the firmware load?
-
-[ ... ]
-
-> +static int
-> +qla29xx_load_risc_blob(scsi_qla_host_t *vha, uint32_t *srisc_addr)
+> diff --git a/drivers/scsi/qla2xxx/qla_bsg.c b/drivers/scsi/qla2xxx/qla_bs=
+g.c
+> index 0baf486e8fb89..92a0bc6dc7bcd 100644
+> --- a/drivers/scsi/qla2xxx/qla_bsg.c
+> +++ b/drivers/scsi/qla2xxx/qla_bsg.c
+> @@ -1756,6 +1756,153 @@ static int qla29xx_bsg_flash_block_write(struct b=
+sg_job *bsg_job)
+>  	return 0;
+>  }
+> =20
+> +static int qla2900_bsg_dump_mpi(struct bsg_job *bsg_job)
 > +{
-
 [ ... ]
+> +	mutex_lock(&ha->optrom_mutex);
+> +	rval =3D qla2x00_optrom_setup(bsg_job, vha, dmcmd->mpi_address, 1);
 
-> +	header->header_length <<=3D 2;
-> +	header->tim_length <<=3D 2;
-> +	header->array1_length <<=3D 2;
-> +	header->array2_length <<=3D 2;
-> +	header->array3_length <<=3D 2;
-> +	header->array4_length <<=3D 2;
+[Severity: Medium]
+Will this correctly validate the MPI RAM boundaries? It looks like
+qla2x00_optrom_setup() validates the start parameter against ha->optrom_siz=
+e,
+which is the physical size of the flash chip, not the MPI RAM size. Could
+this falsely reject or truncate valid MPI RAM addresses if they exceed the
+flash size limits?
+
+> +	if (rval) {
+> +		mutex_unlock(&ha->optrom_mutex);
+> +		return rval;
+> +	}
 > +
-> +	if (!header->segment_size) {
+> +	sg_copy_to_buffer(bsg_job->request_payload.sg_list,
+> +			  bsg_job->request_payload.sg_cnt, ha->optrom_buffer,
+> +			  ha->optrom_region_size);
+[ ... ]
+> +	rval =3D qla29xx_mpi_optrom_data(vha, opts, ha->optrom_buffer,
+> +				       ha->optrom_region_start,
+> +				       ha->optrom_region_size,
+> +				       QLA29XX_MPI_OP_DUMP);
 
 [Severity: High]
-Could these shifts result in integer overflow on 32-bit systems?
-
-The firmware section lengths are multiplied by 4 without verifying if the
-multiplication overflows.
-
-[ ... ]
-
-> +		/* Array 1 */
-> +		offset +=3D header->tim_length;
-> +		if (offset + header->array1_length > fw_size) {
-> +			ql_log(ql_log_fatal, vha, 0x0098,
-
-If a crafted firmware image provides large section lengths (for instance,
-0xFFFFFFFC), adding the offset could wrap around to a small value on 32-bit
-architectures. Would this bypass the bounds check and cause the inner copy
-loop in qla29xx_process_rd_image() to read past the end of the firmware
-buffer?
+Are the semantics of DUMP and LOAD reversed here? The function is named
+qla2900_bsg_dump_mpi(), but it copies data from the user's request_payload
+and passes QLA29XX_MPI_OP_DUMP, which acts as a Write operation to the
+device. Usually, dumping firmware implies reading it from the device into a
+buffer.
 
 [ ... ]
+> +static int qla2900_bsg_load_mpi(struct bsg_job *bsg_job)
+> +{
+[ ... ]
+> +	mutex_lock(&ha->optrom_mutex);
+> +	rval =3D qla2x00_optrom_setup(bsg_job, vha, lmcmd->mpi_address, 0);
 
-> +		/* Array 3: FW_DUMP template */
-> +		if (offset + 10 * sizeof(__be32) > fw_size) {
-> +			ql_log(ql_log_fatal, vha, 0x0098,
-> +			       "FW image too small for risc_attr.\n");
-> +			goto img_corrupt;
-> +		}
-> +		array1_addr =3D (__be32 *)((char *)fwcode +
-> +				header->header_length +
-> +				header->tim_length);
-> +		risc_attr =3D swab32(array1_addr[9]);
+[Severity: Medium]
+Similar to qla2900_bsg_dump_mpi(), this passes lmcmd->mpi_address to
+qla2x00_optrom_setup(). Could this result in the transfer being silently
+truncated if the requested MPI RAM address space differs from the flash
+size constraints?
+
+> +	if (rval) {
+[ ... ]
+> +	rval =3D qla29xx_mpi_optrom_data(vha, opts, ha->optrom_buffer,
+> +				       ha->optrom_region_start,
+> +				       ha->optrom_region_size,
+> +				       QLA29XX_MPI_OP_LOAD);
+[ ... ]
+> +	sg_copy_from_buffer(bsg_job->reply_payload.sg_list,
+> +			    bsg_job->reply_payload.sg_cnt,
+> +			    ha->optrom_buffer,
+> +			    ha->optrom_region_size);
 
 [Severity: High]
-Does using swab32() here cause endianness issues on big-endian architecture=
-s?
+This function is named qla2900_bsg_load_mpi(), but it appears to be reading
+data from the device into the reply_payload (a Read operation). Standard
+firmware conventions typically define LOAD as sending data to the device.
+Could invoking these commands overwrite the adapter's MPI RAM with
+uninitialized data due to the reversed directions?
 
-Since array1_addr is defined as an array of __be32, the data is already bei=
-ng
-read in native memory order. Converting this to CPU endianness typically
-requires be32_to_cpu(). Using an unconditional byte swap produces the corre=
-ct
-result on little-endian machines, but might corrupt the value on big-endian
-systems, which could break the template count logic.
-
+> diff --git a/drivers/scsi/qla2xxx/qla_sup.c b/drivers/scsi/qla2xxx/qla_su=
+p.c
+> index 1d5ea5e432edc..af7509083910d 100644
+> --- a/drivers/scsi/qla2xxx/qla_sup.c
+> +++ b/drivers/scsi/qla2xxx/qla_sup.c
+> @@ -527,6 +527,123 @@ qla29xx_read_optrom_data(struct scsi_qla_host *vha,=
+ uint16_t reg_code,
 [ ... ]
-
-> +	array3_addr =3D (__be32 *)(((char *)fwcode) + array3_offset);
-> +	for (j =3D 0; j < templates; j++, fwdt++) {
-> +		vfree(fwdt->template);
-> +		fwdt->template =3D NULL;
-> +		fwdt->length =3D 0;
-> +
-> +		array_size =3D be32_to_cpu(array3_addr[2]);
-
-[Severity: High]
-Is there a bounds check ensuring array3_addr has enough capacity before
-dereferencing it?
-
-While there is a check earlier to ensure array3_offset does not exceed the
-total firmware size, that check allows the offset to sit exactly at the
-end of the file. Dereferencing array3_addr[2] here might read past the end
-of the buffer if the remaining size is less than 12 bytes.
-
+> +int
+> +qla29xx_mpi_optrom_data(struct scsi_qla_host *vha, uint16_t opts, void *=
+buf,
+> +		       uint32_t offset, uint32_t length, enum qla29xx_mpi_optrom_op op)
+> +{
 [ ... ]
-
-> +		fwdt->length =3D dlen;
-> +		ql_dbg(ql_dbg_init, vha, 0x0168,
-> +		       "-> fwdt%u loaded template ok\n", j);
+> +	mpi_addr =3D offset;
+> +	dcode =3D (uint32_t *)optrom;
+> +	memset(dcode, 0, OPTROM_BURST_SIZE);
 > +
-> +		array3_addr +=3D array_size + 1;
+> +	fwcode =3D (uint32_t *)buf;
+> +	mpi_size =3D length >> 2;
+> +	burst =3D OPTROM_BURST_SIZE >> 2;
+> +	total_chunks =3D (mpi_size + burst - 1) / burst;
+> +
+> +	while (mpi_size > 0) {
+[ ... ]
+> +		chunk_count++;
+> +		fwcode +=3D burst;
+> +		mpi_addr +=3D burst;
+> +		mpi_size -=3D burst;
 > +	}
 
-Additionally, if the loop continues for another template, array3_addr is
-advanced and immediately dereferenced at the start of the next iteration
-without validating if the new address remains within the firmware blob.
-Could this also lead to an out-of-bounds read?
-
-[ ... ]
-
-> +static int
-> +qla29xx_load_fw_template(scsi_qla_host_t *vha)
-> +{
-
-[ ... ]
-
-> +	for (j =3D 0; j < templates; j++, fwdt++) {
-> +		vfree(fwdt->template);
-> +		fwdt->template =3D NULL;
-> +		fwdt->length =3D 0;
-> +
-> +		template_size =3D le32_to_cpu(((__le32 *)fw_dump_tmplt)[2]);
-
-[ ... ]
-
-> +		fwdt->template =3D vmalloc(template_size);
-> +		if (!fwdt->template) {
-> +			ql_log(ql_log_warn, vha, 0x0164,
-> +			       "-> fwdt%u failed allocate template.\n", j);
-> +			goto failed;
-> +		}
-> +
-> +		dcode =3D fwdt->template;
-> +		memcpy((char *)dcode, (char *)fw_dump_tmplt, template_size);
-
 [Severity: High]
-Does template_size need to be validated against the actual size of the
-fw_dump_tmplt allocation?
-
-The template_size is read directly from the flash buffer data. Without
-checking if template_size is less than or equal to ha->fw_dump_tmplt_len,
-a malformed flash image specifying an excessively large template_size might
-cause memcpy() to read out of bounds from the fw_dump_tmplt heap allocation.
+Does this loop mix byte offsets with word counts? It looks like mpi_addr is
+initialized to offset (a byte address from the user parameter), but it is
+advanced by burst. Since burst is calculated as OPTROM_BURST_SIZE >> 2
+(a count of 32-bit words), mpi_addr will only advance by a quarter of the
+intended byte distance each iteration. Will this cause successive transfers
+to heavily overlap and corrupt the firmware load or dump?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260612095333.1666=
-592-1-njavali@marvell.com?part=3D6
+592-1-njavali@marvell.com?part=3D8
