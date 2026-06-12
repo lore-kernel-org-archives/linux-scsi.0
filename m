@@ -1,156 +1,104 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD13136F91D
-	for <linux-scsi@vger.kernel.org>; Fri, 12 Jun 2026 10:18:24 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 689953A48E6
+	for <linux-scsi@vger.kernel.org>; Fri, 12 Jun 2026 10:25:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781259505; cv=none; b=pPOoqem+DE2mpAa9v8G5kJ8s4bf1T1dZIHwSYRiZctSiCYCIcw6mzd4ca3vhXAFNlX9V0A+xQyrVSOHayUDacvmU8XueViPD53eFNxiAfB/UkIMJfydQ13lWGFcR/Le0PDgS61hzmweI4repXhfEbulHRtv5m8dzSgQAL0dN6dQ=
+	t=1781259951; cv=none; b=kOuoOVTQjQDUc9EXujWQxY6cBQP5t+JljmaZ4Lda9QybUpzAsjVFzrlIvafGWJjF9rbMLRZSmYYvZc0doDFJlzjXceSuMnqIAiZp3Igx/424Tdhc4A8yCWoN6vEtEpeSAoQ/6QMlXVeotJZ+a7khpFD0In17h7SJPZW5kcSQZnk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781259505; c=relaxed/simple;
-	bh=M2BunIqwPzkCKuIz0bndbfaam9avlwT5DMr3ZX9YIhQ=;
+	s=arc-20240116; t=1781259951; c=relaxed/simple;
+	bh=ZfBevt4ccEb8AkIiHeXNJUUO2rbhflBLXKxr7WjLt+I=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=jB+DW8wixZam0aU6L363go9vdsaEU3qTcjzp1JO9Y5xjKUJiQiGMKWI0JHs7LyxHxjcCj0rjV2ghBvsrYuKFNHb7wG+HEYofx89W3G6H1J4u3AzndU9enovHPjSe/B+wX1nHwkpSCE7XPGgi99DcpLgx2LKJYCXvFU6aIuUsoAA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MCXY7Fii; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=NajI6upcbq7dTRSApmcNiHicOac8pPF82YcUWQxWYCMN/+/YN0/SBrBrhIFb90Mp2ZFC0HlIAXPPQo9UwjZytk2vq0KYW/Uc4b6Ttk3hG+zoxpomfzMDKoQ8xKf+0eLy+tLm6HyvYjXJaYS9SpgnmIh+qf/vzCsTeOBbaMjg5kY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XL2GY0le; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MCXY7Fii"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5367E1F000E9;
-	Fri, 12 Jun 2026 10:18:24 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XL2GY0le"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B552B1F000E9;
+	Fri, 12 Jun 2026 10:25:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781259504;
-	bh=vhj43dGBN2+wOToo+sbN7sEiWfVhFRVjEX7QUMRDG2I=;
+	s=k20260515; t=1781259948;
+	bh=iH20LFf2Gi3WC4mLB5IufzQi8VNVPUBT2SsUhslSPTU=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=MCXY7FiiwxY3ROie947+ISRzEnnKe9gmZQ+T8E5MUuyzsYrHcnblerBPjhl4OaYUY
-	 29izkgti37EG1ZdNUxLW83nPaHrgXjAvlwbKjheyWlxksEB8jDmPLrdg67672MNpZt
-	 YCs+D1HlycIJpxQDgZqp8eRK43hKWBf165j/wMNT+FiE2930NcR2pEy6RI7ACMrbHw
-	 sHLbefX+qUnWiDTeMVgiCLvTrNQ8LiCtPGiWxo/dRC6wcquDHwYFnS4ePpP+JwJfR5
-	 BjOqkVjXvWi0a2dDQPBi8ShoMvcBA6bHF0xely0y8WMeKcSRT1dRJ769yk8mFM5Na9
-	 bkTeNDCKgPW0A==
+	b=XL2GY0leEuNxNzao1RToov2xmzHmhmDvBZ08eQJ4DmCTR1pcNNlzGDgezdphvQR5y
+	 UVk30jx///3vovxk5Ev17sf5qXHwkP+AkbOG3BAPHbNOKFJdQYla0IqR0hCpZ4Zsr9
+	 PKRsuzMuWsqJWybTp9K9N/bCXuyn+E+6pTh054NJdHuaswswvSnd5HA54UqXX6CVlP
+	 pOtpIlXKPOBpsXnFGmFoQGy6NyXYacUyVw00BGExLWM0elhulHduhg/jRy6BZevb2v
+	 o5U3Sxw3I6eSN7nCh5rM5LGMbf/mER3cEN+1seCvah469aHASzky6euVcU+As5ZQya
+	 /bUvLTMSr+/Ow==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 04/60] scsi: qla2xxx: Add get_flash_version support
- for 29xx adapters
+Subject: Re: [PATCH v2 17/60] scsi: qla2xxx: Extend execute_fw mailbox to
+ include 29xx
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Nilesh Javali" <njavali@marvell.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260612095333.1666592-5-njavali@marvell.com>
-References: <20260612095333.1666592-5-njavali@marvell.com>
+In-Reply-To: <20260612095333.1666592-18-njavali@marvell.com>
+References: <20260612095333.1666592-18-njavali@marvell.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 12 Jun 2026 10:18:23 +0000
-Message-Id: <20260612101824.5367E1F000E9@smtp.kernel.org>
+Date: Fri, 12 Jun 2026 10:25:48 +0000
+Message-Id: <20260612102548.B552B1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-
-New issues:
-- [Medium] Inconsistent fallback error handling logic and commit message mi=
-smatch in `qla24xx_get_flash_version()`.
-
-Pre-existing issues:
-- [High] Hardware flash registers are read/written via `qla24xx_read_flash_=
-dword` without proper locking, creating a race condition with concurrent sy=
-sfs operations.
+- [Medium] Incomplete implementation of 128 Gbps link speed reporting and c=
+apability parsing.
 --
 
-commit 94d10a85b890acf6bb363bf65b3e955e838a9522
-Author: Manish Rangankar <mrangankar@marvell.com>
+commit 132584b87856488e93a0fd2c24a72b08430be770
+Author: Nilesh Javali <njavali@marvell.com>
 
-scsi: qla2xxx: Add get_flash_version support for 29xx adapters
+scsi: qla2xxx: Extend execute_fw mailbox to include 29xx
 
-This commit removes the standalone qla29xx_get_flash_version() and folds=20
-29xx support directly into qla24xx_get_flash_version(). It uses early=20
-metadata reads for 29xx firmware and modifies PCI expansion ROM reads.
+Add IS_QLA29XX() to the BPM capability macros and to the
+execute-firmware mailbox command so that NVMe enable, minimum
+speed negotiation, 128 Gbps speed reporting, EDIF hardware
+detection, and FW-semaphore retry logic all apply to 29xx
+adapters.
 
->   - PCI expansion ROM reads (header + data structure): a new
->     file-static helper, qla24xx_read_pci_rom_chunk(), abstracts the
->     per-generation flash access so both read sites are straight-line
->     calls instead of inline if/else twin blocks.  29xx uses
->     qla29xx_read_optrom_data(FLT_REG_BOOT_CODE, byte-offset); 24xx
->     uses qla24xx_read_flash_data(dword-address).
-
-The commit message mentions a new file-static helper,
-qla24xx_read_pci_rom_chunk(), but this function does not appear in the code.
-Is the commit message out of sync with the patch?
-
-> diff --git a/drivers/scsi/qla2xxx/qla_sup.c b/drivers/scsi/qla2xxx/qla_su=
-p.c
-> index eb10904f14caa..2229c2b084cff 100644
-> --- a/drivers/scsi/qla2xxx/qla_sup.c
-> +++ b/drivers/scsi/qla2xxx/qla_sup.c
 [ ... ]
-> @@ -4137,7 +4108,7 @@ qla24xx_get_flash_version(scsi_qla_host_t *vha, voi=
-d *mbuf)
->  		if (ret) {
->  			ql_log(ql_log_info, vha, 0x017d,
->  			    "Unable to read PCI EXP Rom Header(%x).\n", ret);
-> -			return QLA_FUNCTION_FAILED;
-> +			break;
->  		}
 
-[Severity: High]
-This is a pre-existing issue, but can qla24xx_read_flash_data() race with
-concurrent sysfs operations?
-
-Hardware flash registers are read/written via qla24xx_read_flash_dword()
-without proper locking:
-
-qla24xx_read_flash_dword() {
-	wrt_reg_dword(&reg->flash_addr, addr & ~FARX_DATA_FLAG);
-	while (cnt--) {
-		if (rd_reg_dword(&reg->flash_addr) & FARX_DATA_FLAG) {
-        ...
-}
-
-When invoked via the sysfs reset handler:
-
-qla2x00_sysfs_write_reset() {
-    ...
-    ha->isp_ops->get_flash_version(vha, tmp_data);
-    ...
-}
-
-It doesn't appear to hold ha->optrom_mutex or ha->hardware_lock. Could
-concurrent calls interleave their register accesses and corrupt data?
+> diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_de=
+f.h
+> index 2b57782b3cd34..e93766e814809 100644
+> --- a/drivers/scsi/qla2xxx/qla_def.h
+> +++ b/drivers/scsi/qla2xxx/qla_def.h
+> @@ -4333,6 +4333,7 @@ struct qla_hw_data {
+>  #define PORT_SPEED_16GB 0x05
+>  #define PORT_SPEED_32GB 0x06
+>  #define PORT_SPEED_64GB 0x07
+> +#define PORT_SPEED_128GB 0x08
 
 [Severity: Medium]
-When qla24xx_read_flash_data() fails, the code now uses break to fall throu=
-gh
-and read the active firmware image version. However, signature validation
-failures later in this loop still return QLA_FUNCTION_FAILED:
+Will this new speed cause qla2x00_get_link_speed_str() and
+qla2x00_port_speed_capability() to return unknown values for 128 Gbps links?
 
-		bcode =3D mbuf + (pcihdr % 4);
-		if (memcmp(bcode, "\x55\xaa", 2)) {
-			/* No signature */
-			ql_log(ql_log_fatal, vha, 0x0059,
-			    "No matching ROM signature.\n");
-			return QLA_FUNCTION_FAILED;
-		}
+In drivers/scsi/qla2xxx/qla_isr.c:qla2x00_get_link_speed_str(), QLA_LAST_SP=
+EED
+is 8. Because PORT_SPEED_128GB is 8, the condition speed < QLA_LAST_SPEED
+evaluates to false, causing the function to fall through to LS_UNKNOWN.
 
-If the flash read succeeds but contains invalid boot code, the function abo=
-rts
-entirely and skips reading the firmware version, whereas a complete flash r=
-ead
-failure successfully falls through. Is this inconsistent fallback behavior
-intentional?
+Consequently, the driver logs "LOOP UP detected (? Gbps)" instead of
+reporting 128 Gbps.
 
-> =20
->  		bcode =3D mbuf + (pcihdr % 4);
-> @@ -4155,7 +4126,7 @@ qla24xx_get_flash_version(scsi_qla_host_t *vha, voi=
-d *mbuf)
->  		if (ret) {
->  			ql_log(ql_log_info, vha, 0x018e,
->  			    "Unable to read PCI Data Structure (%x).\n", ret);
-> -			return QLA_FUNCTION_FAILED;
-> +			break;
->  		}
-> =20
->  		bcode =3D mbuf + (pcihdr % 4);
+In drivers/scsi/qla2xxx/qla_gs.c:qla2x00_port_speed_capability(), there is =
+no
+case for the FC-GS GPSC 128 Gbps bit (BIT_6).
+
+Remote ports operating at 128 Gbps are mapped to PORT_SPEED_UNKNOWN, which =
+may
+prevent the driver from correctly adjusting iIDMA tuning parameters for
+128 Gbps targets in qla2x00_set_idma_speed().
+
+>  #define PORT_SPEED_10GB	0x13
+>  	uint16_t	link_data_rate;         /* F/W operating speed */
+>  	uint16_t	set_data_rate;		/* Set by user */
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260612095333.1666=
-592-1-njavali@marvell.com?part=3D4
+592-1-njavali@marvell.com?part=3D17
