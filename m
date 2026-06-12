@@ -1,65 +1,65 @@
-Received: from mail-wr1-f48.google.com (mail-wr1-f48.google.com [209.85.221.48])
+Received: from mail-wm1-f50.google.com (mail-wm1-f50.google.com [209.85.128.50])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4C37A3939D3
-	for <linux-scsi@vger.kernel.org>; Fri, 12 Jun 2026 12:12:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.48
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 67C97368D73
+	for <linux-scsi@vger.kernel.org>; Fri, 12 Jun 2026 12:14:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.50
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781266330; cv=none; b=L5+Q6qhMmeRDLEH8dRVxrPoUE3xqGO33yqm+QHNF8umivOAswW5hmLUPb6P2QGvSPzRLUXhZPN6/m8DmPmmEr/6rSW9zCvGKaB1H/+P0/nxWBAM+ql7XTSkEe7PfB/kABpwdmZf9UdUG0FHlpoH9HbCB0P/IjgV5vIeT7Jw9NAY=
+	t=1781266449; cv=none; b=dPIztA1jMBmFW2/0d92Jnb6TgeB5ae1mpsUF7ZmdKqzjVLHYZOS7cVHYzsWpOYSisrj4foZYc/EqSsmtwf8HvpucG8FUdcc/5spoQKyplvd9iQUJHhHz+jXQscmYrfXTP1ls2KRj7iTAOPeaLBNSljQX+kS+72MuAbOv7OBBMrM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781266330; c=relaxed/simple;
-	bh=xZXnXTQu+nNmTMo2NeQo2AqSpUPKIpEOf5+wGuEK+wE=;
+	s=arc-20240116; t=1781266449; c=relaxed/simple;
+	bh=LOheufCcSmJ2BkOmPYustZuWfpDN0iFu5JTRSh+4GmY=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Q8TcRc1aJdE/J9cc0z09/4XnhAfNNjVNgpbMj5eg5ZHi3qW8m3AiRx2vpyB+nzNnNMjxvZTkm5TaZb+PDS6JQ4jeMSSX5L2R6O1Pau3suGMuWsIHRCLeRMW3yKQgz0ue83ZOVg1ASDlk9PMDG3tSgH2kgfLX6SrWigwK2jYVEDk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=EZHy3rO5; arc=none smtp.client-ip=209.85.221.48
+	 In-Reply-To:Content-Type; b=s6geLaRHZD1sZ1yzI8bG9vZK8sU+YcyiArl9Yc/ETjpHKwO6OUIvBg8+wtCpYhTvima958QoxIxOM+6o8ONzrs8CenTk8NMzoIlW+VjrMa8MB0p2jUrjY0s39YCGQls3rJMf8v7+6dWsbzTbzZ0nkJS0A5im9Hh9TKHIjD7iQDc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=DqVFgzbs; arc=none smtp.client-ip=209.85.128.50
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="EZHy3rO5"
-Received: by mail-wr1-f48.google.com with SMTP id ffacd0b85a97d-45f3cf907ceso481951f8f.2
-        for <linux-scsi@vger.kernel.org>; Fri, 12 Jun 2026 05:12:08 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="DqVFgzbs"
+Received: by mail-wm1-f50.google.com with SMTP id 5b1f17b1804b1-490cdae130cso4751425e9.0
+        for <linux-scsi@vger.kernel.org>; Fri, 12 Jun 2026 05:14:08 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1781266327; x=1781871127; darn=vger.kernel.org;
+        d=suse.com; s=google; t=1781266447; x=1781871247; darn=vger.kernel.org;
         h=content-transfer-encoding:in-reply-to:from:content-language
          :references:cc:to:subject:user-agent:mime-version:date:message-id
          :from:to:cc:subject:date:message-id:reply-to;
-        bh=8JIudbb8WRs2xMRnLfg5/I5LOwOVvsjnhdAtHp8jHEg=;
-        b=EZHy3rO5HPNP+Fop98vb2zTsMOuvDn6AJ2vhQNTP6qlLHnttE22pHXNbFEQt3c3JSR
-         /AMDUk3geoB2sMcru877/jp2DA7wTI4vrR8d7/ElGVu6S/nJGajBHFWe+/wegzl8Q3Rk
-         1w9o/RVgUA9QFhdiEzxd3vgpj/r5MTvW1pQsDzCG8kK9CptumAtltvCfePkTskWkhCrY
-         IXnGe5DLN491GpiNowN+KN+I02Tz4SxbLKMJZ/ARg8aSH3Eis4HTNi2yYwGN+MvH/GzW
-         TGZT+k6HztyMlwBxSOOXqxwFh+GBUhF4IX2vkwkTXs/b7KMNUSMhJNTf3d71M6BLojbs
-         hYYA==
+        bh=DI+yf8HoEMKT+hUdix9JhzXrvVzSKAqZkp5rHY5A2Ik=;
+        b=DqVFgzbsT7Oyk1jLd7MAdMJbwsGot95CdEvGU7+c2plsj+CwbuHnoHCR7n3Fl9G1pR
+         2CPvMcNChrpc8RUFX/OGHSv1mTUWynC3nqr4ZedozVu/hWnAyM+0q2kjU8UgstJEXgNy
+         LczqfagTfmAFB0sLRyqnJWVMPw0TKio2HSZyQw3Bk1Eubxu1P10Scx4sTztX8bCalaVs
+         HgVNUXj09earnjYxLlg3D04fdpfgwTXCNPOuEJEF9cRdG9nOCDZo3tdSpl3Wa/zsPudE
+         C3HcIjqDSY6rGQbXsPOSiOjv6ThdZYm2ypEJN1aeD+P4N8Z29pdLRR0ZcK+/0t6BGhh3
+         T/ag==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1781266327; x=1781871127;
+        d=1e100.net; s=20251104; t=1781266447; x=1781871247;
         h=content-transfer-encoding:in-reply-to:from:content-language
          :references:cc:to:subject:user-agent:mime-version:date:message-id
          :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=8JIudbb8WRs2xMRnLfg5/I5LOwOVvsjnhdAtHp8jHEg=;
-        b=E2hBoYjjMVslhznBXTHOguaJoPXuXEWyK7e54MkxSzgoZSgr/djaZDTCPG+46CoiJw
-         bjdgFAsHu75Zk8gE23OQen2SfvuihD9e5G438kCbMlbyz92uZ9WYJlazU1KbPnibmq0r
-         blTM0yOo6tVziuB1YasrEx+2I9+bUcSGztgrHtGv1YfbdgGkZC5BTtOhrf/HW0qrwwCb
-         /ZvIkLGM0JOa0UHBDA9MWQXb4lSCavIMArHykGnL+3RsztK1X7fEoqaqs4gg9psXUOYv
-         NJFSEvUSTsdg8jq75CmFl21G8n6PBVuOHdvwHMfEqqOYq8+ieCprsMB5u1ccoahhsHZH
-         8e7Q==
-X-Gm-Message-State: AOJu0YzcKhUnkgPHPS7gv+sKb++B8ow8teGDV2VeCJrV8L+qetV9YHS9
-	xShFW2zRmbOTvA9DIBQwx2sCnS5jtEpaYBL5G1tWE+q07Hj4dNcpXTUhAASwTXkQT6U=
-X-Gm-Gg: Acq92OGWSgQpAPNXmZH7Sn+iCMqKPUUQXetgUYyaTEJzLmw1SbLmBzwmpwerr06147D
-	G+1e1sa6ZquAoNu/kMVhF0BjwoD7cQYYVZu5BhG2GBtNp/bbiUokBk1rlsEgjbIen0EinLrF/EM
-	nG4D9gIQp2Z7CtSdM1VDo1UVoCIIWPpvsToHJqywwZY/CfDtt768UJN+VdS/Db5RR6xv48CU+qW
-	yMzr8Bwwxx6t1C89G8+g4p9zFUdERBuC598KTo9tB0f/8eBSxAYPQM8IDXtlYOYX/mSuKTVRxNZ
-	N/yHM13oAQPMFxDifHj4507zuFVDNpz/Vg7g58fxnd1EaiCtqSgtAHjhCeu+GZExdrex29VdIBY
-	E9QlqnLoQJ8eiBipeB2bHVpciVGQGsrpb71YqRA8CwIfctkAwbUGZkC754fmwLcwiYNuZVSNr+T
-	8VWaM+gqrM/arLorEwHx9l5pGSyWS2xkIgARBpQiaz1Jc1sYTv8b4XyLog
-X-Received: by 2002:a5d:5846:0:b0:460:660a:3647 with SMTP id ffacd0b85a97d-4606db9f166mr3840085f8f.25.1781266326620;
-        Fri, 12 Jun 2026 05:12:06 -0700 (PDT)
+        bh=DI+yf8HoEMKT+hUdix9JhzXrvVzSKAqZkp5rHY5A2Ik=;
+        b=P/fA9ggPZ/J+EzKGT8LIfnSjvfttxEnsf4xG6FWT/aTS6+yzPc4Hr6aJ+t/5H91OCV
+         Na4teZyWEEaNTnp8dl5ppDNiyRSvsze/VWzV6K1iFQR4Zk+ZkLymDxUQbmNcQnTXaGwV
+         Aa0gZVn1b/g+zP21o8vP2Lc8Gj7r2sknbqpzn5ThjpOjjvJnfgosGyxTq1AVWD8Encbb
+         68toZfUxr9v90ziJ9RfCyaRDHrztP4p+OgYRL0bS0ShHMON2KDPg4EMB9oW/U3tqP+wT
+         EeXQ+UM0mlj/v+s5uVfLu/a56R4eNkDzpNmzjT/nxPcx5KOPBcy/YGMiYMGnwBXTYYwm
+         y55w==
+X-Gm-Message-State: AOJu0Yy5lRBHHwjvtsSOpj//8L5F4z6EH9SOqizg3pO5AhJWKJ1FdlKP
+	tp/zIlAK1gY/ILYFrlCfRj5rBuXWwm0rhm4esuBSvkxlQLehhGkNh3GLZqIHPeh9Uco=
+X-Gm-Gg: Acq92OEBRDRlw7DTgeUwmZfIuzdJvfserQRRmvD5i0ufDZQWFp0ubybe9ZRk2/es04E
+	Ct9MOATAtcRy1OWvJtIPyMLMou89y4UbGrlMdMRpt4qkPGePNnjPRzWtjVI5Is2SqXzgoQSBJIg
+	1arlke3qyH+L8oBTEzS6oIxiaaGuPyJ1tui+d1V1jLvSCY2M+2ZBJvK7WsO7mBJ1dqq6UAmugPU
+	2Vkr2+XFdAnpJjzeqHMhcSQDN41fgl31/8f+1uqUYP8+Qzwiw4uu2UQcTThCSExy6PoTFm9BRnY
+	7O87R85Ti3GFhY7JwDpRrKqZc610y4riFPv43fSQIMkFZZ0e/yRQEDgafqJQvAQTG9obNgHV/7A
+	+ezdxk3t4fNGprAsyJQrPuCeJvQy7+/tQlsaHIAphR1185wS1X1g/vfydgyqAXAXct2GaIANHZ+
+	qPiQjtZRpTBHa01u/SBfUYSqFi3+gZy2hUgHHsY1hH4gAlMdcJ/RK5u/5V
+X-Received: by 2002:a05:600c:1d03:b0:490:ec86:ad4e with SMTP id 5b1f17b1804b1-490ec86bf8fmr30025925e9.31.1781266446698;
+        Fri, 12 Jun 2026 05:14:06 -0700 (PDT)
 Received: from ?IPV6:2a07:de40:a101:3:ce70:3e6f:3b9c:9125? ([2a01:4a0:2e:ffff:ffff:ffff:ffff:ffff])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-4606f2b0d28sm5474368f8f.20.2026.06.12.05.12.06
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-490ea8123e1sm65125325e9.0.2026.06.12.05.14.06
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 12 Jun 2026 05:12:06 -0700 (PDT)
-Message-ID: <52237230-8a4e-4b3c-b392-8de1b445ef28@suse.com>
-Date: Fri, 12 Jun 2026 14:12:05 +0200
+        Fri, 12 Jun 2026 05:14:06 -0700 (PDT)
+Message-ID: <b4f23690-8ac5-41b6-b66a-d02cdf045554@suse.com>
+Date: Fri, 12 Jun 2026 14:14:05 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -67,37 +67,34 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 29/60] scsi: qla2xxx: Update handling of status entries
- for 29xx series
+Subject: Re: [PATCH v2 30/60] scsi: qla2xxx: Enhance ct_entry_24xx_ext iocb
+ handling for 29xx series
 To: Nilesh Javali <njavali@marvell.com>, martin.petersen@oracle.com
 Cc: linux-scsi@vger.kernel.org, GR-FC-Storage-Upstream@marvell.com,
  agurumurthy@marvell.com, emilne@redhat.com, jmeneghi@redhat.com
 References: <20260612095333.1666592-1-njavali@marvell.com>
- <20260612095333.1666592-30-njavali@marvell.com>
+ <20260612095333.1666592-31-njavali@marvell.com>
 Content-Language: en-US
 From: Hannes Reinecke <hare@suse.com>
-In-Reply-To: <20260612095333.1666592-30-njavali@marvell.com>
+In-Reply-To: <20260612095333.1666592-31-njavali@marvell.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 
 On 6/12/26 11:53, Nilesh Javali wrote:
-> Modify the handling of status entries in the qla2xxx driver to
-> accommodate the extended structure for the 29xx series. Changes include
-> updating function signatures to accept a generic pointer for status
-> packets, and adjusting the logic to differentiate between the standard
-> and extended status entries. This ensures proper processing of
-> completion statuses and error handling for the new hardware
-> capabilities.
+> Refine the handling of I/O control blocks (IOCBs) for the 29xx series
+> by introducing support for the extended structure ct_entry_24xx_ext.
+> Update function signatures to accept a generic pointer for IOCB packets,
+> differentiating between standard and extended structures, and ensuring
+> proper initialization and processing of command and response data.
+> Additionally, the size check for the extended structure is added to
+> maintain integrity.
 > 
 > Signed-off-by: Nilesh Javali <njavali@marvell.com>
 > ---
->   drivers/scsi/qla2xxx/qla_edif.c   |  15 ++--
->   drivers/scsi/qla2xxx/qla_gbl.h    |   2 +-
->   drivers/scsi/qla2xxx/qla_inline.h |  45 ++++++++++++
->   drivers/scsi/qla2xxx/qla_isr.c    | 111 +++++++++++++++++++-----------
->   drivers/scsi/qla2xxx/qla_mbx.c    |  28 ++++----
->   drivers/scsi/qla2xxx/qla_os.c     |   1 +
->   6 files changed, 143 insertions(+), 59 deletions(-)
+>   drivers/scsi/qla2xxx/qla_gs.c   | 156 ++++++++++++++++++++++++--------
+>   drivers/scsi/qla2xxx/qla_iocb.c |  78 ++++++++++------
+>   drivers/scsi/qla2xxx/qla_os.c   |   1 +
+>   3 files changed, 168 insertions(+), 67 deletions(-)
 > 
 Reviewed-by: Hannes Reinecke <hare@kernel.org>
 
