@@ -1,65 +1,66 @@
-Received: from mail-wm1-f49.google.com (mail-wm1-f49.google.com [209.85.128.49])
+Received: from mail-wm1-f45.google.com (mail-wm1-f45.google.com [209.85.128.45])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA29537CD45
-	for <linux-scsi@vger.kernel.org>; Fri, 12 Jun 2026 12:36:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.49
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 574B33C942E
+	for <linux-scsi@vger.kernel.org>; Fri, 12 Jun 2026 12:37:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781267819; cv=none; b=ToOn+iiadRh+zwWO8CV4OD8w6lnfVxNHbPYJ3M2EQr2RZwK/YRSb0u7KYycFXvRURMb4VQ0ayY+JrvtjhEYQmeoyoma231QnoS7+YcD6PWaqVPQcR2xIl6mZQ/+M7dNK2WYHVTcrjogndq+cfCSKVtBOuTCIBT6HrZrF0G25Aj8=
+	t=1781267867; cv=none; b=uwtxislIkQQFjqoJc79JGek8Lghb1B058vPBaYcnJj6F96g6x0T1iz4V/Vt0E1S0kknt+oM4r/RlUCUyYVWW/w8ZsNNf4P/fIRJoI/WAzVB22//O5hUb+LLM7Noe+0SDkv69zGnUT2B2AFL62LIinSYdixh/KPh5/Tl2K8m8+SQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781267819; c=relaxed/simple;
-	bh=Srz3T+iePUOCZtTB5OfhfNKyD5krbvN6QpvufKqbFWo=;
+	s=arc-20240116; t=1781267867; c=relaxed/simple;
+	bh=GbPmf7RubxcF5Eit0mop28dEhZpRGBhq8W3ksmlFAI4=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=JixqbF6SBf19RrZxSVdCaT7Ojh5EFnzQG0Wr71G4cCPXfthsIhhmJgiCLCiyr22SOIzkxJInmBc4GWKZ1fjk7bHKNE5vYbrG8qXSUZvcDQcEcQ7rcu+V+zalvwdGqh4kGaoarUd1QpNwwgulJwDphT31IBLMmH83xrSYM9Mu5sA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=LPAf+GL+; arc=none smtp.client-ip=209.85.128.49
+	 In-Reply-To:Content-Type; b=oyLBPSQzjj9wQ8QVn+BOwbhWuN6B3sKB24pGod1wN7Y6FSg0pY+2QKfBTNVM2GaooCb2nfEadC1bOsPAMEJ23rHrGFWQ8CKzgwsTpBgGucruevc4JYn3iEFchv7hC/8GLv4o+r6uGzuyW+Q2AT/ndphvxoIwMR7Evv9I9aU2FRs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=ZFSF7TWc; arc=none smtp.client-ip=209.85.128.45
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="LPAf+GL+"
-Received: by mail-wm1-f49.google.com with SMTP id 5b1f17b1804b1-490cf3000f0so9743215e9.1
-        for <linux-scsi@vger.kernel.org>; Fri, 12 Jun 2026 05:36:57 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="ZFSF7TWc"
+Received: by mail-wm1-f45.google.com with SMTP id 5b1f17b1804b1-490b3637b90so7079485e9.3
+        for <linux-scsi@vger.kernel.org>; Fri, 12 Jun 2026 05:37:46 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1781267816; x=1781872616; darn=vger.kernel.org;
+        d=suse.com; s=google; t=1781267865; x=1781872665; darn=vger.kernel.org;
         h=content-transfer-encoding:in-reply-to:from:content-language
          :references:cc:to:subject:user-agent:mime-version:date:message-id
          :from:to:cc:subject:date:message-id:reply-to;
-        bh=NDPuOhtRKoc2o9gALOwF5IkxVxSv2Vi6j0K7JaoKQPQ=;
-        b=LPAf+GL+dYpD5WXBDeOlvitR1VSO9glUhQwcFeia3/nLOV/yzdks8nUt0XllkJIqQ+
-         7y09uKfKDZonqpDSHBd0OdyiZT6IjbvpjjWlK4dp46ajgwwbS+zoD0VkWq6IgAQMS4FJ
-         RopLBPPKd75gkwxAsicQ7kVGhhE+Lx/vPzkNQx//xVOuEx16ccouNrPnjXCXEB8eBPgN
-         jlfr8xO41jRAHVfmlBmEKlgFviVFeEHoEQZphSJM1UKm7ZvqWzAqPHJWPQL2y2onwfT5
-         Jj0tiJmgr+eCxeylvxnQG57oQfC9eQdb+JrdE8jxcqm9ufIu4+CrzWBgIFEo8grWPMzG
-         OtUQ==
+        bh=Z1kaU2qJASgNCIGFShmTbzfOd7845sgronUE19/aoSI=;
+        b=ZFSF7TWcTY9+SbJG1W+X3SkV3qR+aFTBfDdp2fjXefGU6SViU7W2cHHgO9CffrJF9w
+         7WNjdiT6xWkmDXblPjWESVhhLFj/01P6CgDQOUnJx3vtxgOS291NafV8hJaAwCUCVPEE
+         bgtpQ4/A8o3nD8ftoi+qrTkhWeVbMoNltZyIP7dO7f/eNoQon8x6K2z6ctqZ4VEm7qCw
+         2EU+o1D+8OHIutzeBi0aXxoDYBcDS3RX4UOwwuhl1AvVjy6sH3Veqtf99QW8+WHn42wU
+         9Ebe5a0Uenk76U7BkNTrLctDXr4VbXZrs6Me+OSSuLQLemcf7UpZXzmLPXwxx/H6Whcs
+         02QQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1781267816; x=1781872616;
+        d=1e100.net; s=20251104; t=1781267865; x=1781872665;
         h=content-transfer-encoding:in-reply-to:from:content-language
          :references:cc:to:subject:user-agent:mime-version:date:message-id
          :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=NDPuOhtRKoc2o9gALOwF5IkxVxSv2Vi6j0K7JaoKQPQ=;
-        b=AFgI3rvO4EVJj5H81sTDlcCY8s9m5+JYcr+v+IrIj480D8zV0yGzWZIyLRbQ1Ba68t
-         5poWyFKWBCuFMPanavqTRWZp1FX7Kj6lFU3hHMdgIDzs0UyC9yIhKniOJEf6hSjFyqPV
-         b5YdEGgECiK3I3NAkz4vNzqqXhMWP6FSA358hmOeHN6y7p8Oi/fEw3asqDqdmF8dpyiH
-         PtusCFjbNb2Ycm2COk8YnwfNAU3+6tWgVp/FLzU6murXrZwPfGQNsgVYth4uaeZ9Jbf0
-         24dwv+kfJAq5GGvRI+6DEPYR47+pUvmbuXt5jc9AMJ9xisgvJfEJw7AKuhdvc5LJFgD6
-         HeMA==
-X-Gm-Message-State: AOJu0YwwU/6i4JHuGiPsY5YvEStusAnkukw533C6t4T/jRo5BNIzoI+e
-	JqtEV2Dc5g4C+qMBcUwcXFXsx+NmnoOmhliwzNhSxZURZLocVqJitmfU6oaDbx9Qaew=
-X-Gm-Gg: Acq92OHP9t9shW55OdHLzlTQEo/kfXSfQcK8Wv8+w0fITTgdG/iZemyO5yI9zZJ2q4K
-	dLN8hU7grRW4rmIb2GGfdsDgnmGB2Pk+cq6+MxXEHdu4wSG6ExL38igQxPu2d0PtKTUqDOyjMUo
-	8742Yf3E4OQu9lucIb7HrcW8QH3GKMZjEzCvMn3o8l0bi/LFrxKun5D/rcOISVhSnLBcWfhwOQC
-	7R/YRVXCr71SUdp4Ss7IPZqzDEA2BaXyqy+nJ29/kEecQMCk4R7VZOwJP7OG+0indW8FTl20WvZ
-	lCsM5dt8HRx9QKk5DDfFq/wr0Tj4rrtnhDZa8KXM1cQgH/F3j1zkwndIgpW0A7/U2u6Sx9ron8k
-	VGAatnYCEYfdqTgZItMlGp+Iwud+pLWG8aAOkUthXpMsvOUp6QdODSD2An0QoMy/eJcwkaY5/vk
-	bbOTvONLF0i0Q216yGLgVn6C83KOgbn/zi4YQy5xkeNiXcSZA6q2GeqPzL
-X-Received: by 2002:a05:600c:2941:b0:490:b780:13f7 with SMTP id 5b1f17b1804b1-490ec50b526mr25887365e9.23.1781267816014;
-        Fri, 12 Jun 2026 05:36:56 -0700 (PDT)
+        bh=Z1kaU2qJASgNCIGFShmTbzfOd7845sgronUE19/aoSI=;
+        b=YpqXLo7sJOJapZyGyKV2B5CCBTr0QNoz8b++SmYqSNFFpoz20V/NMlhS43ZrOEF7+X
+         vfoWUZ2NzshTQX2mJ3xVRFTApNw8n8hYhY9Qs6uNeW9UPfVPln061Hlx8+mamQg/sDBy
+         x5YDJTWlzVR4Cl+S2lCqSugJ/hPSJh8Pl/FoHwBvwXc+YI4Mkzx3jLFnkXIb4oDzlbmf
+         JwY6TOPXPSfnJL4hEcAOBXJ4WggVkBSZKASyd+PHh6gX3bntVCoR0ODKb9xjbZmcf/Bc
+         E9J3Nk9D6C1clerUMkq2UnFZpKKorssqDPb868BWDIkoIP/Epev7mgVaMeJHt4BpA8sF
+         mPEA==
+X-Gm-Message-State: AOJu0YyaNnrH3LDAjyV2x6hO/QykXkQWOeSiath/sY/+n/Jloe3FNIUX
+	nWlIZZSok1+GsR1wSOuNGGv5Eq8MFlJQ1L30CkieRpr/ri6wDaMo+/HDJwT0blMUZl+Fwzg3YX9
+	na3yi
+X-Gm-Gg: Acq92OGB3ibPl2uwzF/AEuF9BzaJ7VlvBQHh6+0YvF45W4JTs4/1aLmecykPSem9wcO
+	O8CEYbLnPRE1VNk1rRbDK1NVPjuuFV75t17CAR3t3kYxXAZSyuFujjvCRHr/Bskc/lfIzCXQFme
+	peaF7jCGNdXo/QOZrrrw4oMa1qeL9ucyJIRA0wXaSDVhUDsCpjjX4jtS4Yoo2qqr/GgbhIqaTrT
+	8MNUAb/yWqmEA4g6VSsGUKGs/ZUKCxI1lcfDMY8psFpVGt0ctmm8UxwVHhP9Kj6R75fHoQFOt7G
+	wT4xhurYtXRZGO1wGz6x/a2EObykCjabjO3ZV91PfjNLNNdz2NIQJ7os2tXNZhCmjZRRfRZInjQ
+	+9WAADqR5fSQRInDnY7Cchk9LMus0wkwuWJdCNhnlkwHppDJSggUOcL1ASAeDlhYXtt37wercsz
+	L0SPI5LIOvd3HkEvnKttcGlD/sXxEbbw/8dlObUIpLgaxMgXzRs7Dg5p8A3xDxHJV3yyo=
+X-Received: by 2002:a05:600c:4fc8:b0:490:b724:5085 with SMTP id 5b1f17b1804b1-490ec5058d3mr34827835e9.33.1781267864675;
+        Fri, 12 Jun 2026 05:37:44 -0700 (PDT)
 Received: from ?IPV6:2a07:de40:a101:3:ce70:3e6f:3b9c:9125? ([2a01:4a0:2e:ffff:ffff:ffff:ffff:ffff])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-490ea7db56asm80279995e9.7.2026.06.12.05.36.55
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-490ea84cc32sm59537585e9.15.2026.06.12.05.37.43
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 12 Jun 2026 05:36:55 -0700 (PDT)
-Message-ID: <8341e3e4-433c-4d3c-8af8-8c9177a271a0@suse.com>
-Date: Fri, 12 Jun 2026 14:36:55 +0200
+        Fri, 12 Jun 2026 05:37:44 -0700 (PDT)
+Message-ID: <49b9d617-f879-4694-8a2c-f28aff43ec2d@suse.com>
+Date: Fri, 12 Jun 2026 14:37:43 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -67,82 +68,49 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 34/60] scsi: qla2xxx: Add 29xx extended logio IOCB
- support
+Subject: Re: [PATCH v2 35/60] scsi: qla2xxx: Enhance task management IOCB
+ handling for 29xx series
 To: Nilesh Javali <njavali@marvell.com>, martin.petersen@oracle.com
 Cc: linux-scsi@vger.kernel.org, GR-FC-Storage-Upstream@marvell.com,
  agurumurthy@marvell.com, emilne@redhat.com, jmeneghi@redhat.com
 References: <20260612095333.1666592-1-njavali@marvell.com>
- <20260612095333.1666592-35-njavali@marvell.com>
+ <20260612095333.1666592-36-njavali@marvell.com>
 Content-Language: en-US
 From: Hannes Reinecke <hare@suse.com>
-In-Reply-To: <20260612095333.1666592-35-njavali@marvell.com>
+In-Reply-To: <20260612095333.1666592-36-njavali@marvell.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 
 On 6/12/26 11:53, Nilesh Javali wrote:
-> The 29xx series uses a wider IOCB stride (128 bytes vs 64 bytes).
-> The logio_entry_24xx_ext layout extends logio_entry_24xx with a
-> wider vp_index field (__le16 vs u8) while keeping all other
-> read-side fields (comp_status, io_parameter[0..10], entry_status)
-> at identical offsets and widths.
+> Update qla24xx_tm_iocb() and __qla24xx_issue_tmf() to support the
+> extended task management structure (tsk_mgmt_entry_ext) for 29xx
+> adapters.
 > 
-> Update the logio IOCB builder functions (qla24xx_login_iocb,
-> qla24xx_logout_iocb, qla24xx_prli_iocb, qla24xx_prlo_iocb,
-> qla24xx_adisc_iocb) to accept a void pointer and dispatch the
-> vp_index write through IS_QLA29XX(), using an inline cast to the
-> extended layout at the single write site.
+> tsk_mgmt_entry_ext overlays tsk_mgmt_entry through control_flags
+> (offsets 0-27 are byte-identical): entry_type, entry_count, handle,
+> nport_handle, timeout, lun and control_flags sit at the same offsets
+> and widths.  The layouts diverge only after that point:
 > 
-> In the completion handler qla24xx_logio_entry(), accept a void
-> pointer and read through a single logio_entry_24xx view since all
-> accessed fields sit at the same offsets in both layouts.  Use the
-> qla_req_entry_size() helper for the dump buffer size.
+>    - the 24xx layout has port_id[3] + u8 vp_index;
+>    - the ext layout has __le16 vp_index and no port_id.
 > 
-> In qla24xx_login_fabric() and qla24xx_fabric_logout(), allocate
-> through a void pointer from the DMA pool and dispatch vp_index
-> via the same inline-cast pattern.
+> Factor the common IOCB header writes through a single tsk_mgmt_entry *
+> view and branch on IS_QLA29XX() only for the diverging port_id /
+> vp_index assignments.  Change qla24xx_tm_iocb() to accept void *pkt
+> to allow casting to either structure type.
 > 
-> Add a BUILD_BUG_ON for logio_entry_24xx_ext to enforce the 128-byte
-> size invariant at compile time.
+> Add tsk_ext member to the tsk_mgmt_cmd union and a BUILD_BUG_ON size
+> check for the 128-byte extended structure.
 > 
 > Signed-off-by: Nilesh Javali <njavali@marvell.com>
 > ---
->   drivers/scsi/qla2xxx/qla_iocb.c | 48 ++++++++++++++++++++++++++-------
->   drivers/scsi/qla2xxx/qla_isr.c  | 41 ++++++++++++++++------------
->   drivers/scsi/qla2xxx/qla_mbx.c  | 35 ++++++++++++++++--------
+>   drivers/scsi/qla2xxx/qla_iocb.c | 31 ++++++++++++++++++++++---------
+>   drivers/scsi/qla2xxx/qla_mbx.c  | 18 ++++++++++++++----
 >   drivers/scsi/qla2xxx/qla_os.c   |  1 +
->   4 files changed, 87 insertions(+), 38 deletions(-)
+>   3 files changed, 37 insertions(+), 13 deletions(-)
 > 
-> diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
-> index 45d6837100ad..d0d3a56affdc 100644
-> --- a/drivers/scsi/qla2xxx/qla_iocb.c
-> +++ b/drivers/scsi/qla2xxx/qla_iocb.c
-> @@ -2488,8 +2488,9 @@ qla2x00_alloc_iocbs(struct scsi_qla_host *vha, srb_t *sp)
->   }
->   
->   static void
-> -qla24xx_prli_iocb(srb_t *sp, struct logio_entry_24xx *logio)
-> +qla24xx_prli_iocb(srb_t *sp, void *pkt)
->   {
-> +	struct logio_entry_24xx *logio = pkt;
->   	struct srb_iocb *lio = &sp->u.iocb_cmd;
->   
->   	logio->entry_type = LOGINOUT_PORT_IOCB_TYPE;
-> @@ -2516,12 +2517,17 @@ qla24xx_prli_iocb(srb_t *sp, struct logio_entry_24xx *logio)
->   	logio->port_id[0] = sp->fcport->d_id.b.al_pa;
->   	logio->port_id[1] = sp->fcport->d_id.b.area;
->   	logio->port_id[2] = sp->fcport->d_id.b.domain;
-> -	logio->vp_index = sp->vha->vp_idx;
-> +	if (IS_QLA29XX(sp->vha->hw))
-> +		((struct logio_entry_24xx_ext *)pkt)->vp_index =
-> +		    cpu_to_le16(sp->vha->vp_idx);
-> +	else
-> +		logio->vp_index = sp->vha->vp_idx;
->   }
->   
 
-This really cries out for a helper; the same code snippet is used 
-throughout the patch.
+Reviewed-by: Hannes Reinecke <hare@kernel.org>
 
 Cheers,
 
