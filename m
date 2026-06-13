@@ -1,153 +1,166 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr1-f49.google.com (mail-wr1-f49.google.com [209.85.221.49])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A723F3396EE
-	for <linux-scsi@vger.kernel.org>; Fri, 12 Jun 2026 23:22:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8DD3A335BA8
+	for <linux-scsi@vger.kernel.org>; Sat, 13 Jun 2026 02:38:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.49
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781306553; cv=none; b=hsHRHNccst7bzjmkN+BETAJH0HMrzGJRAQmBWeGWatOkzu54Ny36hqgPcJvuutj6uHYbbHJznuK2bplzIQnKgQQKtVDTL0yR22CXq/eBVrz21JWl5hin7YtkrBiNwzWgt7TxNHo47a2Y6p8Dkl9hRX8JScJbvqHrB+toWSYg3xc=
+	t=1781318334; cv=none; b=ruQQxkzsnpjBtseNVVmsxvn6h7J6v4ad5cTA9Gd53PxLUAtTIl2qy3xMTiJ3bVYQFA+wxSAHM8VFV12i9mN3vRQAIn+Db8NxgM8pQ5TwepJ5chXe08S/QA/NDIqLqyXYuxu0Hpe8aLWM/kRUtQjoZac22fMWJsfu/B4BJlxUWNY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781306553; c=relaxed/simple;
-	bh=A0IcIUV0neE+7sNAq/7ERrlTVNZ9xkJz77RmsbLuiys=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=DLnC82X66LOe1FXgclfgLeaO3pR5fg9sGj+7L14yaMntPLtRfi28Kqjzy8l5aQ8TwUIZwQ3ODMMd9/rg+E+RuNkJvYdT/PO34XsIs1fJgSGBBzSwIyMu4arLvTApyEwujOh0H+DpNryT05VaCpNt5o0Lrm3NhcsJhD3SuavqhEY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lMhfrY0W; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1781318334; c=relaxed/simple;
+	bh=sS2pag8ityal4Ke4JpwX5ngMd9Aj2Tc4avCoToagAG4=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=MBuSPLHMlZ80XC3AprD6x8ePO1qZH5v7vgL7gslNKw/hMcM4Ra83+hm2mWRjjR8gj81KgqXCIKNFCJWzLk1MeC3rnQuMsvOk6+et5Lrhg/1N34Z0PUcrklFDiVDmxJGuy7GfXBZY46T/sV7jkxf0ewy9Ik/caPlNPF0jjjjA8VE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=QZRE1Ypb; arc=none smtp.client-ip=209.85.221.49
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lMhfrY0W"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1C5FA1F000E9;
-	Fri, 12 Jun 2026 23:22:32 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781306552;
-	bh=fFgBe2qFzP9bnHF+b27Wg7Lr+cx6KEMYhFOM7DL/JEA=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=lMhfrY0Wq1ymJuiSJRpheAUN9abOHnUUWV+mpHBC3TfN82vo9s+dHaMwf7oZei9KA
-	 fuUiXtv2zUMlTPmsBToNUuL0gPkWrHF+03fCfXIdaULslzZjfZAhegL//gjrkYRgnQ
-	 HeDsLfce0VuJ8qvgxeTxFs4DPNFoatXSNgPX5MbHfvFSlhJy/lB4a5YSNyyzGRtKqa
-	 pwk+hhCz1gpExt5FD2pzQNMIX2p/wJ2Av99eiYgAyril0Ys01ga14zPvPzaiBKz5Tq
-	 1Tdqb5qdtzHjCg2Ng/9qZXAeV9OrVUHE3dbtqHDjto7X8akXSRyVeP6qRNA2g0YlNH
-	 AzaWC57KBWUOw==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4 12/13] scsi: fnic: Expose NVMe transport state in
- debugfs
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Karan Tilak Kumar" <kartilak@cisco.com>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260612180918.8554-13-kartilak@cisco.com>
-References: <20260612180918.8554-13-kartilak@cisco.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Fri, 12 Jun 2026 23:22:31 +0000
-Message-Id: <20260612232232.1C5FA1F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="QZRE1Ypb"
+Received: by mail-wr1-f49.google.com with SMTP id ffacd0b85a97d-45eeea039ebso884619f8f.1
+        for <linux-scsi@vger.kernel.org>; Fri, 12 Jun 2026 19:38:53 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1781318332; x=1781923132; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=jQ+NrGH9TGLSeTAEwxLMPtDtSoGteAFo2K5vU8feXq8=;
+        b=QZRE1Ypb2TqO1oYlslk7RB4bVR85S13iuP5klm/hQg/ecNerRSE5SN0pcmwvAsxBVI
+         jWewQhvidCoT6AzANHA7nch90PifSQDE/laDtyl7XxQpezrLl4KFJ/CFLT4ugC8gOhRT
+         44vX4cfoow/6mNNIPq6SUCkm8jrg7ZDEzZ+//YlTAzB9PdSd5Fv9N6pevGF1rXFLYIP0
+         SIrB0wlmb9dA+rYVWU4RH7yGqNcOVYE/0RTG8ReDT0bIRnnMzvE9jJm4WTK2Vi/Ma6Y6
+         614VetJ20X22nd3l+cDDXBP2XzaOPFAIn2ToANRRW/7e+pLH89mxzxAVjyp71Xo50gDN
+         jYwA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1781318332; x=1781923132;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=jQ+NrGH9TGLSeTAEwxLMPtDtSoGteAFo2K5vU8feXq8=;
+        b=DR/rRTwcpT2DHnEPEsQYoWiyxAzrlQ1jBjRNtpFuwCviu5XamlhHWMPiHIYTb4/zhy
+         YTh/j4ptV4YQH/9LF2WZPu76V+MkyA+vMEC+pxCrf2mxuFZ+y4Ncx6SFb8hMq5hp7qhP
+         dYgJNJevTM+DmAIYWz4YFgMyaz7SDqwZbkGgsEvC4GPfZtTDTpRJbF989UDKRP/2b6Bu
+         sgt6fWs1ROgPcKsJpQzUTYIdhRDTQo8btSlauEkj7qcv6z9h6UDfK598BxkH8jy9ITJZ
+         ZYkJRa08qakw70rRUQw1S6tImFdWqkqpUiZEqynYlrWNqO9aoTQP/AW9XnRztq3Qlr5z
+         YMAg==
+X-Forwarded-Encrypted: i=1; AFNElJ80HBrZGH9IZmRMxDiR4tpKbFe36KWt4xHLKGZ/JjyckSUQYkw0n0l4JfEzA+H7FVuJYXSQ8zE5lrb4@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw8KF73EI9Q2Ua1PRJ9SOvxVonFSdbb4gG/sNPOO3mpJX3wwKE7
+	bS1hnirXJPgFPeZG3EidWpqV8gmq2ABmaQKFYub5N94cYLy34LnoBb9g
+X-Gm-Gg: Acq92OFgI/JWzYeDwets5xbCkhJ3LzBoPxTDM4Ypv5MMIVl0beZlm07kzN7APgnsYUf
+	ys6GPeu532ZMbT5pt0tvqt2WMmsi3+KzUHM8tY3oGnr4DJBFjF+rci4agzEEYhxFqRvPxekr1/6
+	KFIiYC6exjCR/bVOIZEboziRAyW9f3LM6a/CmQAvGJ/FCctmMPjTFfDI30CgmBCVtZt8Lh2sC2R
+	KppyoCnkdCB7e9weYMPe85sWmyTZaV7bw8cdSesSOhAZ4S/NdHMILSeSAOTGlQkglxN8y1qF2hc
+	8MG+iLJScXlHPXxwkGm6WFtbB7STIrB1FexXiKnyRKbiwsPXsnUQAzeyA4IAOdwlxcj3DQl+Q2r
+	DKrgYpPodJgS0J5lcIRTpWTnm5xxEHvQa1OR0oQ9XQfFehv+yAA3gxRZWBnijhbCtKYHcw2dntx
+	HyXbK6Q+A=
+X-Received: by 2002:a5d:6f13:0:b0:460:1301:ded1 with SMTP id ffacd0b85a97d-46074a800dcmr1840439f8f.6.1781318331679;
+        Fri, 12 Jun 2026 19:38:51 -0700 (PDT)
+Received: from localhost ([2603:c027:c000:3cde::f])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-4606f2c473bsm11468595f8f.28.2026.06.12.19.38.50
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 12 Jun 2026 19:38:51 -0700 (PDT)
+From: Louis Sautier <sautier.louis@gmail.com>
+To: Sathya Prakash <sathya.prakash@broadcom.com>,
+	Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+	Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>,
+	Ranjan Kumar <ranjan.kumar@broadcom.com>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Guenter Roeck <linux@roeck-us.net>,
+	MPT-FusionLinux.pdl@broadcom.com,
+	linux-scsi@vger.kernel.org,
+	linux-hwmon@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH v4 0/2] scsi: mpt3sas: add hwmon support
+Date: Sat, 13 Jun 2026 04:38:31 +0200
+Message-ID: <20260613023833.3163507-1-sautier.louis@gmail.com>
+X-Mailer: git-send-email 2.54.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
-s) to consider:
-- [High] Missing cleanup of NVMe debugfs files during `fnic_probe` error pa=
-ths allows a use-after-free on the freed `fnic` structure.
-- [Low] The debugfs file is created with write permissions (`0200`) but the=
- file operations lack a `.write` callback.
-- [Low] The error handling block for `fnic_nvmef_debugfs_init` is dead code=
- because the function unconditionally returns 0.
---
+Expose the IOC and board temperature sensors of LSI / Broadcom / Avago
+SAS HBAs that bind to mpt3sas through the hwmon interface. The data
+lives in MPI IO Unit Page 7.
 
-commit 295552911c6b775471123862aa4f6e6325417f36
-Author: Karan Tilak Kumar <kartilak@cisco.com>
+The same fields are exposed by Broadcom's userspace tooling through
+the /dev/mpt[23]ctl ioctl path (typically root-only): IOCTemperature
+and BoardTemperature in lsiutil; ROC and Controller in storcli.
+With this driver, sensors(1) shows them unprivileged:
 
-scsi: fnic: Expose NVMe transport state in debugfs
+  $ sensors mpt3sas-pci-0200
+  mpt3sas-pci-0200
+  Adapter: PCI adapter
+  IOC:          +42.0°C
 
-Create an NVMe debugfs directory with a per-host nvmef_info file.
-Report local-port and target-port identifiers for NVMe initiator
-instances, and initialize and remove the debugfs entries with the NVMe
-probe and teardown paths.
+v3 -> v4:
+  v3: https://lore.kernel.org/r/20260524210545.1333637-1-sautier.louis@gmail.com
+  v3 (resend): https://lore.kernel.org/r/20260609164423.2829699-1-sautier.louis@gmail.com
+  * Dropped the SCSI_MPT3SAS_HWMON Kconfig option as suggested by
+    Damien Le Moal; the hwmon code is now built whenever CONFIG_HWMON
+    is enabled. Used IS_REACHABLE() rather than IS_ENABLED() so
+    SCSI_MPT3SAS=y with HWMON=m still builds, same pattern as i915/xe.
+  * No line breaks after function return types; aligned multi-line
+    call arguments to the opening parenthesis (Damien Le Moal).
+  * Dropped unused #include <linux/kernel.h> from mpt3sas_hwmon.c.
+  * Added Damien Le Moal's Reviewed-by to patch 1.
 
-> diff --git a/drivers/scsi/fnic/fnic_debugfs.c b/drivers/scsi/fnic/fnic_de=
-bugfs.c
-> index 467fba29ea5f8..690b1c6ecf010 100644
-> --- a/drivers/scsi/fnic/fnic_debugfs.c
-> +++ b/drivers/scsi/fnic/fnic_debugfs.c
+v2 -> v3:
+  v2: https://lore.kernel.org/r/20260518184109.770185-1-sautier.louis@gmail.com
+  * Removed stale Documentation/hwmon/mpt3sas.rst reference from
+    Kconfig help text.
 
-[ ... ]
+v1 -> v2:
+  v1: https://lore.kernel.org/r/20260512214703.655633-1-sautier.louis@gmail.com
+  * Dropped misleading Documentation/hwmon/mpt3sas.rst.
+  * Dropped inaccurate concurrency-wait figure from Testing;
+    corrected empirical data is in the on-list discussion.
 
-> +static const struct file_operations fnic_nvmef_debugfs_fops =3D {
-> +	.owner =3D THIS_MODULE,
-> +	.open =3D fnic_nvmef_debugfs_open,
-> +	.read =3D fnic_nvmef_debugfs_read,
-> +	.release =3D fnic_nvmef_debugfs_release,
-> +};
+Testing
+-------
 
-[ ... ]
+Build-tested all four SCSI_MPT3SAS x HWMON combinations (=y and =m
+each), including the SCSI_MPT3SAS=y with HWMON=m case that requires
+IS_REACHABLE().
 
-> +int fnic_nvmef_debugfs_init(struct fnic *fnic)
-> +{
-> +	char name[16];
-> +
-> +	snprintf(name, sizeof(name), "host%d", fnic->fnic_num);
-> +
-> +	fnic->fnic_nvmef_debugfs_host =3D debugfs_create_dir(name,
-> +							   fnic_nvmef_debugfs_root);
-> +	fnic->fnic_nvmef_debugfs_file =3D debugfs_create_file("nvmef_info",
-> +							    S_IFREG | 0444 |
-> +							    0200,
+Validated across three Broadcom SAS chip generations. None of the
+cards had a board sensor present, so the testing only covers the
+IOC channel:
 
-[Severity: Low]
-Is the 0200 write permission intended here?
+  * LSI 9500-8i / SAS3816, SAS-3:
+    - hwmon device registers as "mpt3sas" with only temp1 (IOC) exposed
+    - IOC reading matches `storcli /c0 show temperature` and
+      `lsiutil -p1 -a 25,2,0,0`
+    - rmmod / modprobe cycle goes through the explicit
+      unregister/register paths cleanly
 
-The file is created with write permissions (resulting in 0644), but
-fnic_nvmef_debugfs_fops does not implement a .write callback.
+  * LSI 9305-24i / SAS3224, SAS-3: same behaviour.
 
-> +							    fnic->fnic_nvmef_debugfs_host,
-> +							    fnic,
-> +							    &fnic_nvmef_debugfs_fops);
-> +	return 0;
+  * LSI 9211-4i / SAS2004, SAS-2: firmware reports both
+    *TemperatureUnits = NOT_PRESENT, no hwmon device registered
+    (graceful-skip path).
 
-[Severity: Low]
-Since fnic_nvmef_debugfs_init() unconditionally returns 0, the error checki=
-ng
-block for it in fnic_probe() is unreachable dead code.
+Not verified (no available hardware):
+  * Path with both IOC and board sensors present.
+  * Fahrenheit-units conversion.
+  * Sub-zero readings (signed-cast path).
 
-Could this function be changed to return void, or should it propagate an er=
-ror
-if the debugfs creation fails?
+Louis Sautier (2):
+  scsi: mpt3sas: add IO Unit Page 7 config accessor
+  scsi: mpt3sas: add hwmon support
 
-> +}
+ drivers/scsi/mpt3sas/Makefile         |   2 +
+ drivers/scsi/mpt3sas/mpt3sas_base.h   |  20 +++
+ drivers/scsi/mpt3sas/mpt3sas_config.c |  36 +++++
+ drivers/scsi/mpt3sas/mpt3sas_hwmon.c  | 195 ++++++++++++++++++++++++++
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c  |   6 +
+ 5 files changed, 259 insertions(+)
+ create mode 100644 drivers/scsi/mpt3sas/mpt3sas_hwmon.c
 
-> diff --git a/drivers/scsi/fnic/fnic_main.c b/drivers/scsi/fnic/fnic_main.c
-> index cd5483aac4629..da5f9d53ad104 100644
-> --- a/drivers/scsi/fnic/fnic_main.c
-> +++ b/drivers/scsi/fnic/fnic_main.c
 
-[ ... ]
+base-commit: 5d6919055dec134de3c40167a490f33c74c12581
+-- 
+2.54.0
 
-> @@ -933,6 +933,15 @@ static int fnic_probe(struct pci_dev *pdev, const st=
-ruct pci_device_id *ent)
->  		err =3D -EOPNOTSUPP;
->  		goto err_out_fnic_role;
->  	case VFCF_FC_NVME_INITIATOR:
-> +		err =3D fnic_nvmef_debugfs_init(fnic);
-> +		if (err) {
-> +			dev_info(&fnic->pdev->dev,
-> +			       "fnic(%d) Failed to initialize debugfs for nvmef\n",
-> +			       fnic->fnic_num);
-> +			fnic_nvmef_debugfs_remove(fnic);
-> +			goto err_out_fnic_role;
-> +		}
-
-[Severity: High]
-If fnic_probe() encounters an error later in the initialization sequence
-(for example, during fnic_set_intr_mode() or fnic_alloc_vnic_resources()),
-does the error handling cascade correctly clean up this debugfs entry?
-
-Looking at the error paths at the end of fnic_probe(), it appears the fnic
-structure is ultimately freed via kfree(fnic), but there is no matching
-call to fnic_nvmef_debugfs_remove(fnic) during the teardown sequence.
-
-Could this leave an active debugfs node pointing to a freed fnic structure,
-leading to a use-after-free if the debugfs file is read?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260612180918.8554=
--1-kartilak@cisco.com?part=3D12
