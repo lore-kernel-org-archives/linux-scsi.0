@@ -1,118 +1,94 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pg1-f202.google.com (mail-pg1-f202.google.com [209.85.215.202])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 53489219301
-	for <linux-scsi@vger.kernel.org>; Mon, 15 Jun 2026 13:45:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 82F803F99E9
+	for <linux-scsi@vger.kernel.org>; Mon, 15 Jun 2026 14:26:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.202
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781531117; cv=none; b=F9LlQRDeOjPIJrU1a0wA0rqmV4lwmSW9V2LjEIMxTeqI8gVm3e3mjF/Nceo0MvixDVMzTDwZmwlzRIQ5ma6BKgTrmtPzEjJSGKLly4WitW9u6ldOz+z9jqckExMLOctSgIUqIZjc3iYk0oEM8k785z9ZFvusd3e8Xre/nkQkKyM=
+	t=1781533573; cv=none; b=Ek0hJwCtNmuug1aUoLKsqMLWVlLWZd2y5Tv8WbSo50ipySKRUAFl0Vt6jXwH6oRkxDuma0VQsjiJLsKwC9uKaHzOZXDS1SzRLCRYyrhi0beie6vzEBy1Lsyj/nysjqFLeGn+Bah4JCiZkPoajP1j7nDPYH6Phkf07A0o0O/QSpo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781531117; c=relaxed/simple;
-	bh=h+TbHZSqneaJSLexdF3ZEyukepAP5vX3kWldF8c3Zrg=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=gMZ02MGTC+1aRooBzfVKFn8OTE5Sq+Xdf0dte9D4w23oKKtGsooV0wPXBFR4XJ09cMn+6SiSbppPtvTbYxIOmY2l5ug7RfVsLuA1Zt40Ln9WxcHRkK7KV/9YZtwQBrlC6s/UZOqd3+pvl8jzu2NPCGPxZESRieDRcqcPMuY/zH8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gRYMfyWo; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1781533573; c=relaxed/simple;
+	bh=464aCXfvZzsZqwNbj4vr4SPbBTTx/rFyjRChfgFLlts=;
+	h=Date:Mime-Version:Message-ID:Subject:From:To:Cc:Content-Type; b=laqPkAiVUgCVkzp/D6O4Ky1t0oVYGhvo5ORncHsU/yyTYLd2EMpFKY1QcAomEe/TA0AU5QKVS8hGVYmYsKyukGnjieoqQfFa/wfQ8a09CrZX4T95wICa4bkTMs5cKq2cOXFX8sjFsmrm4PG7WUs0asM1wgBt7PoZcR8uuV/p4Fo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--himanshubatra.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=KvujyCLt; arc=none smtp.client-ip=209.85.215.202
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--himanshubatra.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gRYMfyWo"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8D19A1F000E9;
-	Mon, 15 Jun 2026 13:45:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781531116;
-	bh=AiiY3O2r4Me60mgTrcXqh1SG1Dl232SNPGSNFWVM6V4=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=gRYMfyWoN4XRDtNY9Hy7tEqFAymtZIr0Rh9zC5kpDM4u7DO/as01b3me5qRXZcv8W
-	 +rGrIrQfG7qHxTSZH7bnky11PuiFEHEbuAOb16afGO+FWgyT85soAX1tmXpEXSUo8c
-	 fZqW2Kn0VXtvLep9oPz1gZ7UxM1sc2q5LGgh6ZbDioiv8jD51zK+8lwjZexeA5aCTR
-	 LHlGIoaxMIaaXKYcpKLqWG+KE4gr4dRW9B+oDFc3D4DipZgiWJHV7s1UlpxruR+98M
-	 qYbN8JDS1jU2enopDGBmHd4CCkU1lj1MnyNgdzjBZ3w7il1cvohZoGOyPr9rc1eDnP
-	 j4ovN8y9idZwg==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v9 2/2] scsi: ufs: core: Add support for static TX
- Equalization settings
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Can Guo" <can.guo@oss.qualcomm.com>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260615132834.2985346-3-can.guo@oss.qualcomm.com>
-References: <20260615132834.2985346-3-can.guo@oss.qualcomm.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Mon, 15 Jun 2026 13:45:15 +0000
-Message-Id: <20260615134515.8D19A1F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="KvujyCLt"
+Received: by mail-pg1-f202.google.com with SMTP id 41be03b00d2f7-c8599ebec31so3677437a12.1
+        for <linux-scsi@vger.kernel.org>; Mon, 15 Jun 2026 07:26:10 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1781533570; x=1782138370; darn=vger.kernel.org;
+        h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=YEF2OMYK714HCc6CoMTDE62CnJ76NkStyu/hySqrREc=;
+        b=KvujyCLtMhQIWYaATafUOYnjK4B9utybyu8YpaL/R6FqW0vrRk7o+mJ6Dx+Mvjcy1x
+         QdARbhkWqETcp8j23cqr6+0XziHl+RodK3k6HJSmVdC5rnx2xYWGweShDczBhVaBSpJu
+         QBeXwk6J6AhYU8MsxSMY3CQbYuYLt2eMN8D0v3+634FaPgaJIsSbKcQ+gPNK4bYfwo0z
+         nwxht+x3arpiCkNH4yqVcomBwG+hF99cmYAsgELr+bXjSwft/u81bYdwTXkF7PyOhX/w
+         6Eo9y9RYiZi04qT0ZTt7ICsFd370SRe1wz0hDeDUIX4IdV9eoZl2mjY5IXl69b+VkSrG
+         j4YQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1781533570; x=1782138370;
+        h=cc:to:from:subject:message-id:mime-version:date:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=YEF2OMYK714HCc6CoMTDE62CnJ76NkStyu/hySqrREc=;
+        b=XPDP9oVjcEsHMlX5ILb6CInCGFhx++6WLj4QDZg1UA4fz5E27C0FrBfkbKw6QYmUNh
+         VrsVyCO4Fe0pT0KzVVCUWA6mYsCpmGudU5+YXJF+M2gIdvv60mjyBp4/1vpIQFiY+tnV
+         xJQbs+Ibo1zMTbaVPMKxJQElAo0+2OMGKgJYjIHE8hIP73ZijUqbftreWz6RJFPYk9nY
+         QrBGn3PtucLBuTVasoTSThQIX9ppAicHD3utolzYC5npGjdxf41dYOyX8CLFR6Yw3Ajo
+         GdiLLhM8dXhZaVaRvIVAv3V4kF7jrSMkOTD5u5/UcZ7ING2Gz8VbHOHcl16UZfa8VSfC
+         EPrA==
+X-Forwarded-Encrypted: i=1; AFNElJ/NrNJJD7mRrT+TLORfAvfDHmkLErmTIbcy2j4v2x6tfiAcOiTxvorfpK7A0Hxs8rNk9gnK4Bdelfsz@vger.kernel.org
+X-Gm-Message-State: AOJu0YzjZ5UM6yEknPGVZEUNph53VEPOoehPrPK/39VybveEK8uiYeGS
+	s9u2QBB4CNtrK7fYaGcYhqu7/dJMmBzx6gz6LakwMtvI8g5TMuvGoYXrsyZFAllKdNva7qJBaDl
+	H0fyB8eLv8x74FxNmcGGuWRuB1Y8gd/VBiQ==
+X-Received: from pgbcp3.prod.google.com ([2002:a05:6a02:4003:b0:c85:1159:ffbd])
+ (user=himanshubatra job=prod-delivery.src-stubby-dispatcher) by
+ 2002:a05:6300:220d:b0:3b4:7aae:1ef4 with SMTP id adf61e73a8af0-3b783b4269cmr16496594637.9.1781533569483;
+ Mon, 15 Jun 2026 07:26:09 -0700 (PDT)
+Date: Mon, 15 Jun 2026 19:56:05 +0530
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+Mime-Version: 1.0
+X-Mailer: git-send-email 2.54.0.1189.g8c84645362-goog
+Message-ID: <20260615142605.2795757-1-himanshubatra@google.com>
+Subject: [PATCH] ufs: Add HS_GEAR6 string in power_info/gear sysfs output
+From: himanshubatra <himanshubatra@google.com>
+To: Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>, 
+	Bart Van Assche <bvanassche@acm.org>
+Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
+	"Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-serial@vger.kernel.org, 
+	vamshigajjela@google.com, manugautam@google.com, 
+	himanshubatra <himanshubatra@google.com>
+Content-Type: text/plain; charset="UTF-8"
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
+In power_info/gear sysfs, currently it supports output only till gear 5.
+If operating mode is gear 6, it is giving output as "UNKNOWN".
+Add support for HS_GEAR6 string in sysfs output when operating mode
+is gear 6.
 
-Pre-existing issues:
-- [High] Calling `devm_kzalloc` with `GFP_KERNEL` while the UFS block devic=
-e queue is quiesced can cause a direct reclaim deadlock.
---
+Signed-off-by: himanshubatra <himanshubatra@google.com>
+---
+ drivers/ufs/core/ufs-sysfs.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-commit ad55228fec48bc54dfc7ac781e567e213cf4a86e
-Author: Can Guo <can.guo@oss.qualcomm.com>
+diff --git a/drivers/ufs/core/ufs-sysfs.c b/drivers/ufs/core/ufs-sysfs.c
+index 99af3c73f1af..d1f5041fc3c8 100644
+--- a/drivers/ufs/core/ufs-sysfs.c
++++ b/drivers/ufs/core/ufs-sysfs.c
+@@ -54,6 +54,7 @@ static const char *ufs_hs_gear_to_string(enum ufs_hs_gear_tag gear)
+ 	case UFS_HS_G3:	return "HS_GEAR3";
+ 	case UFS_HS_G4:	return "HS_GEAR4";
+ 	case UFS_HS_G5:	return "HS_GEAR5";
++	case UFS_HS_G6:	return "HS_GEAR6";
+ 	default:	return "UNKNOWN";
+ 	}
+ }
+-- 
+2.54.0.1189.g8c84645362-goog
 
-scsi: ufs: core: Add support for static TX Equalization settings
-
-This patch parses board-specific static TX Equalization settings from
-Device Tree for each HS gear. It introduces a from_dt flag to track=20
-whether the settings came from the Device Tree and forces the TX EQTR
-procedure to run when those static settings need to be overridden.
-
-> diff --git a/drivers/ufs/core/ufs-txeq.c b/drivers/ufs/core/ufs-txeq.c
-> index aa64f2bf4f1ef..f06dc3c3492d1 100644
-> --- a/drivers/ufs/core/ufs-txeq.c
-> +++ b/drivers/ufs/core/ufs-txeq.c
-> @@ -1301,7 +1301,13 @@ int ufshcd_config_tx_eq_settings(struct ufs_hba *h=
-ba,
->  	}
-> =20
->  	params =3D &hba->tx_eq_params[gear - 1];
-> -	if (!params->is_valid || force_tx_eqtr) {
-> +	/*
-> +	 * TX EQTR must run for the following cases:
-> +	 * 1. TX EQ settings are invalid.
-> +	 * 2. TX EQ settings are from Device Tree.
-> +	 * 3. TX EQTR procedure is forced.
-> +	 */
-> +	if (!params->is_valid || params->from_dt || force_tx_eqtr) {
->  		int ret;
-> =20
->  		ret =3D ufshcd_tx_eqtr(hba, params, pwr_mode);
-
-[Severity: High]
-This is a pre-existing issue, but this patch further exposes it since the
-new from_dt flag condition can trigger ufshcd_tx_eqtr() during devfreq
-gear changes.
-
-Can calling devm_kzalloc() with GFP_KERNEL in ufshcd_tx_eqtr() cause a
-direct reclaim deadlock?
-
-During devfreq gear scaling, the UFS block device queue is first quiesced:
-
-ufshcd_clock_scaling_prepare() {
-    ...
-    blk_mq_quiesce_tagset(&hba->host->tag_set);
-    ...
-}
-
-Later in the scaling process, this condition is evaluated and can trigger
-the memory allocation:
-
-ufshcd_config_pwr_mode()
-  -> ufshcd_config_tx_eq_settings()
-    -> ufshcd_tx_eqtr()
-       params->eqtr_record =3D devm_kzalloc(hba->dev,
-                                          sizeof(*params->eqtr_record),
-                                          GFP_KERNEL);
-
-If memory reclaim is triggered by this GFP_KERNEL allocation, the system
-might attempt to flush dirty pages to the same UFS device. Since the queue
-is already quiesced, the flush would block indefinitely.
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260615132834.2985=
-346-1-can.guo@oss.qualcomm.com?part=3D2
