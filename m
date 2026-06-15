@@ -1,175 +1,184 @@
-Received: from GVZP280CU018.outbound.protection.outlook.com (mail-swedencentralazon11022072.outbound.protection.outlook.com [52.101.82.72])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E4E4836A35A;
-	Mon, 15 Jun 2026 10:52:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.82.72
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781520772; cv=fail; b=lOnP4ma5HV9yEK3Iguh5EKC3QIhZ+oSHukMYpf/RyOWcaWAG+7bd6sJgfhD+KcXEjWGSizv/narormJ4ZR0JCl/SLjX9f52uwMZ0lXIJQeljHjvYQAUWZQSfeqMGJnpckW89bPkv4UQf5HcvDafHFKIQqUT3O/l4osCrmlSrCHI=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781520772; c=relaxed/simple;
-	bh=mk9dZB+TThHGhLBzmbajR01sLqzXf6sncuYMG1miMPs=;
-	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=HeB1yYbi7SEF0xatwd02woyvWI0R2PaUw75fpNvHF7ObG33AHge7er9SGhDpgzgdg9a8nzdiCOcbo2e04RFEkAtCYb5P/VfOsjv/Omr4iiSmFBfxWxrNrBJKKTfCZretoWHdKJj/EPHdNwWvU9uZmQA6/p/XcU+g8rtfXUcaJr8=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=permerror header.from=gaisler.com; spf=pass smtp.mailfrom=gaisler.com; dkim=pass (2048-bit key) header.d=gaisler.com header.i=@gaisler.com header.b=AmwwRQCe; arc=fail smtp.client-ip=52.101.82.72
-Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=gaisler.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gaisler.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F3F53E4519;
+	Mon, 15 Jun 2026 11:26:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1781522776; cv=none; b=LMt53Ljv5ksuuerlN5DyJAZVzhft1w1yxZC5nbt8mPDPR/I7RDsIbe8dabUSZI4wiJZyQpGaU4CQpNmRRb29rShFbANFWVJyWdHMuySRKSxlOZLI2c1STqjcm42qPQAtRfPTKujbVeBp2HZXCd+yH80odQQss4yC0dQtr5W2BkQ=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1781522776; c=relaxed/simple;
+	bh=50rTYE6DTwOfJ1L3FKIi5qxwqDTG+KHLwGsAAM4DvpM=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=SQQss8Y9imFpTcX315YtJFK76A9ydGsHMU4Ah+heN013Rw+9SzU0/9MNQsWIzxgB5WSviM1hc0qI3w2Cc45Jz4+TLxPjkJ1a3UnYaXmAIW/sjVUrmccmOBJoeUvTfjHgnjR5moHWs6c1jE2h704haBHScfpQ7xhAQOFUUjamCP4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Cdb8kenC; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gaisler.com header.i=@gaisler.com header.b="AmwwRQCe"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=o5hP1EMyLvJcpCEHRYxb2fqiQlC5BXY+yDRZ0dXCNgUOFuTp4nasNh9XfvbOtA69zEjVUF4COj/nTnpgIWooMcZXlcvZf1nqTmm/427WmG3251Bs5RjSn6rgOe2IXzmYxDh0hy3xLZMWgnIGl3Ad6mtnlbpD37+d1nql0eA86ty2Z6caugtWw+k2JCxGVOUHUx3RNQYNUgypBAp27c/+fdFkXUqCE11pbgRlSkCF9dkh6E+t5mvqgwx0cYuNCjdro7Rsuhncr3prOlr/yUTkLwDhy7LBr8GjlCeVoGrCjAwhDv/NiFOPo1jb24xHDc/PBDe47h84q6FCT8y/RIZsZQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=VZZ9HuKbA0zQ0VwJtXcsGx/pVDCJNKq8x/AJabyeOMk=;
- b=vh6nw8eT1YAJ6Ckw/ciNVzb0Jc64l8zgXAPmBsEEsmRohQd79EjLDVaAg6XLfdRD7D4AfUYY1JsmfmcEB8m/NO8Etzs1DtjPp7zZ7WNRCHPOxMBAIUPJv6M4XU7g/I5xnH7Fk0eVfwAMrD78tNHlS6grCCnDE+GlAfwmL6/eSYuEaU6fGBhDxCmuxd3ZsFgiRksGH3MDLxeT/Npz6cGvdMEuIEsDOmu7MSgNnZaAQRlXe094xlnwJ2kmsW9vo7MmbAd0tiiXZgll7/UCqC7KDRgmuPqHaKQY6E1KN5adNGC8eZaTRJcoapbM35vtPC9POdm0QisXHwArNM2O8ES1aA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=gaisler.com; dmarc=pass action=none header.from=gaisler.com;
- dkim=pass header.d=gaisler.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gaisler.com;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=VZZ9HuKbA0zQ0VwJtXcsGx/pVDCJNKq8x/AJabyeOMk=;
- b=AmwwRQCePo3mKdKWLlPoJZP7yj66d/0SjGHMr63QxPtPcvUrZPOudkvLeQP6OhIsdEtpo+V5bzaMRelta8XMiwq7pPPrvczbKmAdDNfr5vP9FZ4dmLMTal2aN+B6L/bxk1qhjTgMo5kkWbpgwluSJ/ojm7yYQEnyIT3yRuXUF0BnQRK6QSdUesvE2zeaM5/wmOw43YFTs05FVXP74/Y9vG8x0LY0F+Kr4sy5Hjo48u+4zKs4KQjAbzbyRwlW/Ovx80KTjL+QtCo0FnvB7PjNdNSHsFri6nGvA4MwCrXDtdZPV6TPcxD4ZuUIrOge2bDW9qsvUeAR2I1gOT1IyE8S4A==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=gaisler.com;
-Received: from GVYP280MB1290.SWEP280.PROD.OUTLOOK.COM (2603:10a6:150:195::18)
- by GVZP280MB1738.SWEP280.PROD.OUTLOOK.COM (2603:10a6:150:237::10) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.113.18; Mon, 15 Jun
- 2026 10:52:44 +0000
-Received: from GVYP280MB1290.SWEP280.PROD.OUTLOOK.COM
- ([fe80::be76:7636:f4ac:6773]) by GVYP280MB1290.SWEP280.PROD.OUTLOOK.COM
- ([fe80::be76:7636:f4ac:6773%6]) with mapi id 15.21.0113.015; Mon, 15 Jun 2026
- 10:52:44 +0000
-Message-ID: <d592a4de-7c36-4028-9763-3913b0836349@gaisler.com>
-Date: Mon, 15 Jun 2026 12:52:43 +0200
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4 5/5] sparc: Remove remaining defconfig references to
- the pktcdvd driver
-To: Catalin Iacob <iacobcatalin@gmail.com>,
- Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
- Madhavan Srinivasan <maddy@linux.ibm.com>,
- Michael Ellerman <mpe@ellerman.id.au>, Nicholas Piggin <npiggin@gmail.com>,
- "Christophe Leroy (CS GROUP)" <chleroy@kernel.org>,
- Rich Felker <dalias@libc.org>,
- John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>,
- "David S. Miller" <davem@davemloft.net>,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- Jens Axboe <axboe@kernel.dk>
-Cc: linux-mips@vger.kernel.org, linux-kernel@vger.kernel.org,
- linuxppc-dev@lists.ozlabs.org, linux-sh@vger.kernel.org,
- sparclinux@vger.kernel.org, linux-scsi@vger.kernel.org
-References: <20260608-remove-pktcdvd-references-v4-0-72f88b04cc87@gmail.com>
- <20260608-remove-pktcdvd-references-v4-5-72f88b04cc87@gmail.com>
-Content-Language: en-US
-From: Andreas Larsson <andreas@gaisler.com>
-In-Reply-To: <20260608-remove-pktcdvd-references-v4-5-72f88b04cc87@gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: GVZP280CA0009.SWEP280.PROD.OUTLOOK.COM
- (2603:10a6:150:273::7) To GVYP280MB1290.SWEP280.PROD.OUTLOOK.COM
- (2603:10a6:150:195::18)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Cdb8kenC"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C87051F00A3A;
+	Mon, 15 Jun 2026 11:26:09 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1781522775;
+	bh=4tfI640HQlxM02Fv4lCeLHOEUDwDAWi0qaHz5zFkTw4=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To;
+	b=Cdb8kenCBsj6o/pnQykpthWp/Cfru57Uh0g79UcGwxAg0bIPH3FUcLlzmk2Z2n3fq
+	 hGTK3MgzkzUxh9+gVAFwwNsX7uyA+fkN5fwazanlBFTFJw9OzRY3y6kPBs12Nogwy8
+	 Ee8qORkK/6qV4G3eHb/NqGb8KHcDTWweCHvU22TSnbmRaVjJpHngGEYfivw7HALS1u
+	 MZTiFIKrGhDWlReOfICuu16uNBwAUr6AKNjsOgE8XEZzNBFjyqKsfX+9atC/41kpGy
+	 turesqfJDWZJNapjyqQDOW8bFIRwhjaGze9IEZZm+xMMBS4CxUKrFDZ1J7ofKLgiGP
+	 rLzAqpR5thj5g==
+Message-ID: <8ee6bfe0-71aa-4d3a-a583-f7495a86fc58@kernel.org>
+Date: Mon, 15 Jun 2026 13:26:07 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: GVYP280MB1290:EE_|GVZP280MB1738:EE_
-X-MS-Office365-Filtering-Correlation-Id: 71e3a7ad-0117-4e59-9886-08decacc3ad6
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|366016|7416014|376014|23010399003|1800799024|56012099006|4143699003|22082099003|18002099003|921020;
-X-Microsoft-Antispam-Message-Info:
-	YcBE1IOwW0Tty0tgFy4d5Tn7QJ4DCkk+8NtNWvZgq32/8BzxIixbwjEvflMp1m0ay1mZi04PsT1ygJ3HHRQmfCtSoev7WG++RbdbbuH6V4K7uxMLAE66i81qiDgJ5s1+CwgiDaz3Y+2TojHisONHMkcVFdptFkUE65YtXIQw3wfZr6TGQcYFApJfKVcrPH2de1y+rlvnA6ki6S9qKVr2/OcI+g+yZYBKdWsaF3em0fHD7lixVcbj6l/SIcQ3dW3l8pbGDz9tyAfzPYA1HH6/ATLuuaqSmOHK1LqPYo+dkTGnKiyI4P6usMJWrRyvKkDomF1BEW7Qme3k9oPHQd/OyZ7ifr3TGatJzA8HTgnjCn2ciXR01Xhec46gZGJVuK9rybyhesfhNuE7SnkNcs1hTVVbw34zDHSt+z9XAb0lua7g9LcP/sXfjwOIgR5YV0phDCmnVf473ag8GH7vSULxCnpbiHlKvMh2Wo6ZT3FL3xz4CEPnFsBWJ73qvNtAIo0aWJFfWLsm7N8scHBnSqf/4OGFz/yT4fTfwrr79cgl3Zo74KcxdVdolz0vY7fk55KnIUAUPxx3Gr3FbMKt6D6Vox9HPrC1Ui1yRqFn0xL7I3Q0+LdZlgfZscUo7LqJ38nawiGe+5SgegYuo+6fOSYVtGrJTQiLQmcSPsOFpotmOLSpkERpcSTy89C5empqE1kyrw1DRU8RamioiEZ7vHkoHDOO/0ogYosUKuz1JhBuuJo=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:GVYP280MB1290.SWEP280.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(366016)(7416014)(376014)(23010399003)(1800799024)(56012099006)(4143699003)(22082099003)(18002099003)(921020);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?c0tyeGVST0t0YTkvMjFFR0IwbkphZklET2Vud0M0YlRVcm1hQVVRT2NYRlNo?=
- =?utf-8?B?MG1Td1VnanBRNVMxQU1COGUyMDJHTU4zZ3A0RXdIK0IxaGpwaDZaVUdvQlQ0?=
- =?utf-8?B?TTdBdytUWTBaU2tkaFMzZEhJZ3F5cG9UdzF3bTJyL0tkUEQ1Vms2N09SS1k1?=
- =?utf-8?B?cHdUTVFFTkJpVGdFMndmWkIrT0l0cE1qY3c4OE9leEZBVFl2UFBEQkRJTnVl?=
- =?utf-8?B?emJ5Z2xtVDl5NEI4ODc3V3plZE93dnhLRDZJL01ZNytwQkN6ekJjK1lNcTdE?=
- =?utf-8?B?WHJObjJRNnZEZHNoVnp5RDd0SnQ1d2JZMnFpencrVGdxamF4MC8wWWtKZzVw?=
- =?utf-8?B?Lys0dFNkUWl0dEs3VVU4cS9UcVFDNUJNQ0ZSQWhxYThVSXk5UmVjR2JjakQv?=
- =?utf-8?B?cmlvZEY0a0FSMmF2dzJHb2Y3b0ZBaGwreWM3K3duYlRBcmxtZ2JhZWlKb0RU?=
- =?utf-8?B?azZVSUV2aFVlZWhpclhMNXgwTFJ1Qlk4Y3laUENWWElKR3psTktBOVNPN0ZY?=
- =?utf-8?B?bHRXZDJIWC80NUtsM2d5NHNLMFNncHZCT3BKRkV2czVLUnQ0c3AvWlNWTEVF?=
- =?utf-8?B?ZDRuVWE3OEhod2lpdUV4SlhoY0dNRlpGYzFIZlBnVmEzYS9IZEt2elY3NzN4?=
- =?utf-8?B?aHNiZ3BpbzVnUXNmek96Mks0d09nNWsxdU0zRlp4ZmxyWkRBR3M3cUdkcDZa?=
- =?utf-8?B?SEZxWm1kaHVBMmxCU3VJbWMyeGg1K3hmVmFZOU1LR1pnei90T1ZUZTJqUjdj?=
- =?utf-8?B?bXF2MU5PelRhblVGdmpydG9TMGNPYXRUdWZFdk5saVREQ0N2VjM3Ti9DVjhi?=
- =?utf-8?B?THJmeFhWWXV5QVEyL0NSREdSVXNUR0d1OXdid0JWZERDdmhNcXc5M3ZZZm5I?=
- =?utf-8?B?d2VCcnBrYTRnTDdncmpoMjRFeDBGcTk3bHRpeEVhZVYyMU43UEFNbHhZSlhJ?=
- =?utf-8?B?QUU0T1FFTTI3aldqZkFCcm1qNzBzRFc5UDRPSFB3U2c3Zm50UHNROXZTdGZp?=
- =?utf-8?B?dmtqVGltc0I0cGRZQURzcXdkUEp4TG5Sb0pRZUVONlJnYis0ZHE2eEJFblNu?=
- =?utf-8?B?S3hLdE9IZWJiak5lRm9MdEdJa0tQcnlaNXhkdklOMzhFMzh1aWtPdEhVQzdR?=
- =?utf-8?B?eU5tQUFXeHpFanJQbzJIOWxCMXkzaU1nZThTTTRTcGE5QnZjUDd3eGdLM001?=
- =?utf-8?B?elBCbzdqSS9JZG54SlZFNkNFaFo0ZmM4ejZHdW1QSU8yQTMyUy82Z01LMGpv?=
- =?utf-8?B?WjBDaTgwNUJxSmdpbG40UjM5bkxsMkU0ZEpTMEZhcEc5d1RncUV4K1l1ZmJv?=
- =?utf-8?B?cGdXdTFSQmx2ZVZVUTVTS2h3a284blVqMkVaRVUrR2taamJhZEkzaXVGMVJo?=
- =?utf-8?B?RjJIQ3JaUXhOOHBLMm9HMkFsbWtUT2N3bHNVN01UcWMyZ0lLb2M1Wm94MFR4?=
- =?utf-8?B?NStHVzdhQUJOTFloc0kzbWFxblJXQWV2VVRSVnlHb09TbHk5cHBOazhuMlZH?=
- =?utf-8?B?UGpNMnp3N290V2Z4amhDYSt5NkRMUzFRRFJpY05RakJ6N0lVUEZNUk9DUFdW?=
- =?utf-8?B?d3NRMU1hd2VVUkF3b3VPK21NTnppWG53ZDUreXFnZGlqWTVRd0hWWWZWU3or?=
- =?utf-8?B?c3duSDEwaGppL2ZBR08rM2lFbnZZeWJtaHIwU0NQOU5KZWk4S0tBVCtIaE5s?=
- =?utf-8?B?VmQvYkU0Szk1Z3MwS3dCYXpKMTJYTkNDYm9INk5CYlVUMXhiMVJlcXloSy9T?=
- =?utf-8?B?RXJzcGJydnJSNHVkblFUV29NbE90VERMMFoyMHVOY1lGUGxTTTVObC9ZUS9G?=
- =?utf-8?B?clgzU3FTOVpDcHd2M2Q3SFA2RnRDSUJBVTBsbkdUa01DQ3BvQWowQ2c4aUFU?=
- =?utf-8?B?enorUU1YWk5UakRlL2g0andyNEhuWmJhNjh4VFEzRkk5aWFpd3BacmM0Z2NM?=
- =?utf-8?B?bld5M1pRZjdrZ3RUZDVIZG9tZ1Y4NjNBa2RsQ2h1WXZOcnoxalhab05mR25a?=
- =?utf-8?B?SDdaWjNaMm1KTVhIWGRGSjhEM1hDb2JKbjNHTDBkRVpQN0xVL0RzMzRqSUhp?=
- =?utf-8?B?YUIzWTdYblBOSDMvdWMrMzVwYXE2alM5d2lrbGx2bGFnTXRTUXZsMXN0M1pt?=
- =?utf-8?B?d1Z1WE8wRENtYzAwdGZLL0F0ZFN4Y2hHbElGb0VCVDBYS1VUbzM2ZFBHR0k4?=
- =?utf-8?B?bjZSNGN4SFZqRVdGeThSS3Z0aHlEYjQ2WTFpTFlXSk96UW40Y1NiakQvZlYr?=
- =?utf-8?B?U1Fva0crZ3V6eHd2MzZrQU44T2NKZ0plUWIrSktRYW16SWxJKy83aE9NUGRj?=
- =?utf-8?B?YmFXTEQ1cFhQMnlYbWYyaHppRzFSU3Y5RU41MnQyeUJ2V0owaUJlTlFncmRk?=
- =?utf-8?Q?c44te9QAjbmb95t0=3D?=
-X-OriginatorOrg: gaisler.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 71e3a7ad-0117-4e59-9886-08decacc3ad6
-X-MS-Exchange-CrossTenant-AuthSource: GVYP280MB1290.SWEP280.PROD.OUTLOOK.COM
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 15 Jun 2026 10:52:44.4200
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 91fa4a59-2167-458a-8318-e45d80469d7e
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: GXWf5JRMy2vo4wnz60pDKOMAwnCVhH2Jr7BYCTt0/SKfH8g90gFvRFp6uo6IjZLuoCBUcwXrlStAi199DDdiTHkSkx59cPBGXYzcnG6obW8=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: GVZP280MB1738
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v8 1/2] dt-bindings: ufs: Document static TX Equalization
+ settings properties
+To: Can Guo <can.guo@oss.qualcomm.com>, bvanassche@acm.org,
+ beanhuo@micron.com, peter.wang@mediatek.com, martin.petersen@oracle.com,
+ mani@kernel.org
+Cc: linux-scsi@vger.kernel.org, Alim Akhtar <alim.akhtar@samsung.com>,
+ Avri Altman <avri.altman@wdc.com>, Rob Herring <robh@kernel.org>,
+ Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley
+ <conor+dt@kernel.org>, Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>,
+ Zhaoming Luo <zhml@posteo.com>,
+ "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS"
+ <devicetree@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
+References: <20260615085027.2102882-1-can.guo@oss.qualcomm.com>
+ <20260615085027.2102882-2-can.guo@oss.qualcomm.com>
+From: Krzysztof Kozlowski <krzk@kernel.org>
+Content-Language: en-US
+Autocrypt: addr=krzk@kernel.org; keydata=
+ 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
+In-Reply-To: <20260615085027.2102882-2-can.guo@oss.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On 2026-06-08 16:29, Catalin Iacob wrote:
-> Commit 1cea5180f2f8 ("block: remove pktcdvd driver") left behind some
-> CONFIG_CONFIG_CDROM_PKTCDVD* references in defconfigs. Remove them.
+On 15/06/2026 10:50, Can Guo wrote:
+> UFS v5.0/UFSHCI v5.0 adds HS-G6 support (46.6 Gbps/lane) via UniPro
+> v3.0 and M-PHY v6.0. These specs define TX Equalization for all
+> High-Speed Gears (not only HS-G6) to compensate channel loss and
+> improve signal integrity at high speed.
 > 
-> Signed-off-by: Catalin Iacob <iacobcatalin@gmail.com>
+> For HS-G6, M-PHY uses PAM4 1b1b line coding. Pre-Coding may also be
+> required depending on channel characteristics.
+> 
+> Document vendor-neutral properties in ufs-common.yaml:
+> - txeq-preshoot-g[1-6]
+> - txeq-deemphasis-g[1-6]
+> - tx-precode-enable-g6
+> 
+> Values are per-lane Host/Device tuples (2 values for x1, 4 values for
+> x2). PreShoot/DeEmphasis range from 0..7, and Precode is 0/1.
+> 
+> These are board-specific signal-integrity tuning values. They depend on
+> channel SI/PHY characterization and validation (host PHY, device PHY,
+> package, and board routing), and are determined by HW/PHY designers.
+> 
+> Although UFSHCI v5.0 supports TX Equalization Training via UniPro v3.0,
+> which allows host software to determine optimal TX Equalization at
+> runtime, static board-specific TX Equalization settings in the Device
+> Tree are still necessary because:
+> - TX Equalization Training is not supported for HS-G3 and below
+> - TX Equalization Training is disabled on some platforms
+> 
+> Signed-off-by: Can Guo <can.guo@oss.qualcomm.com>
 > ---
->  arch/sparc/configs/sparc64_defconfig | 2 --
->  1 file changed, 2 deletions(-)
+>  .../devicetree/bindings/ufs/ufs-common.yaml   | 55 +++++++++++++++++++
+>  1 file changed, 55 insertions(+)
 > 
-> diff --git a/arch/sparc/configs/sparc64_defconfig b/arch/sparc/configs/sparc64_defconfig
-> index 632081a262ba..4abea39281cd 100644
-> --- a/arch/sparc/configs/sparc64_defconfig
-> +++ b/arch/sparc/configs/sparc64_defconfig
-> @@ -60,8 +60,6 @@ CONFIG_CONNECTOR=m
->  CONFIG_BLK_DEV_LOOP=m
->  CONFIG_BLK_DEV_CRYPTOLOOP=m
->  CONFIG_BLK_DEV_NBD=m
-> -CONFIG_CDROM_PKTCDVD=m
-> -CONFIG_CDROM_PKTCDVD_WCACHE=y
->  CONFIG_ATA_OVER_ETH=m
->  CONFIG_SUNVDC=m
->  CONFIG_ATA=y
-> 
+> diff --git a/Documentation/devicetree/bindings/ufs/ufs-common.yaml b/Documentation/devicetree/bindings/ufs/ufs-common.yaml
+> index ed97f5682509..145a6416e1df 100644
+> --- a/Documentation/devicetree/bindings/ufs/ufs-common.yaml
+> +++ b/Documentation/devicetree/bindings/ufs/ufs-common.yaml
+> @@ -105,6 +105,61 @@ properties:
+>        Restricts the UFS controller to rate-a or rate-b for both TX and
+>        RX directions.
+>  
+> +  tx-precode-enable-g6:
+> +    $ref: /schemas/types.yaml#/definitions/uint32-matrix
+> +    oneOf:
+> +      - items:
+> +          - description: Host_Lane0 precode
+> +          - description: Device_Lane0 precode
+> +      - items:
+> +          - description: Host_Lane0 precode
+> +          - description: Device_Lane0 precode
+> +          - description: Host_Lane1 precode
+> +          - description: Device_Lane1 precode
+> +    items:
+> +      enum: [0, 1]
+> +    description:
+> +      Static TX Precode enable values for HS-G6 only.
 
-Reviewed-by: Andreas Larsson <andreas@gaisler.com>
+My bad here, that was my mistake. I wanted matrix, but gave you array
+syntax. Proper code would be:
 
-Picking this one up to my for-next.
+  tx-precode-enable-g6:
+    $ref: /schemas/types.yaml#/definitions/uint32-matrix
+    minItems: 1
+    items:
+      - items:
+          - description: Host_Lane0 precode
+            enum: [0, 1]
+          - description: Device_Lane0 precode
+            enum: [0, 1]
+      - items:
+          - description: Host_Lane1 precode
+            enum: [0, 1]
+          - description: Device_Lane1 precode
+            enum: [0, 1]
+    description:
+      Static TX Precode enable values for HS-G6 only.
 
-Thanks,
-Andreas
 
+I tested it with DTS and seems to work fine. Please use the same for
+other properties, but enum will be 0-7.
+
+
+Best regards,
+Krzysztof
