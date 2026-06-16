@@ -1,102 +1,155 @@
-Received: from mail-pj1-f74.google.com (mail-pj1-f74.google.com [209.85.216.74])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 41A7732B9B6
-	for <linux-scsi@vger.kernel.org>; Tue, 16 Jun 2026 08:31:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.74
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3D4383B42E0;
+	Tue, 16 Jun 2026 09:07:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781598690; cv=none; b=CDWByV2Z3RnKOI9zgAMz+vHeo43qQ/lIFj4aumJSCJINjRgViCgNInqe2JinDQ44voKGJyiug2rv5yJ00AQP02s23rvQbdX0rYV26+QeH3NW15pqr4fxiLGFB3kmZ/VQjQ+MESc5z0IdJeuds5U8h4GLONqpTcIZgAnx6W5ymps=
+	t=1781600842; cv=none; b=Uu+AH6mWy8VnQI3SaoL0TNNM09fPq4OKgUdpl3Gxjk99OW15c/QYLhLHdx7NTi0QzVUuN7qxwhWrHmUJIdYI+/WY23Umrbk0V4HV70OaYL6/1FP697Jugf5Jf1OfvivlKy9Mi/NTWwp4Z3+Cw3dOVcu1odR1schy9aarAFc2RFg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781598690; c=relaxed/simple;
-	bh=U1CCaUEUj+Uj+CZV2pR4dhrK2VZTd4Us+SMggdhLU1c=;
-	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
-	 To:Cc:Content-Type; b=GNbHirAIGTBYNyCFTgi7iz5o54LgvU6mNcNfkd4TuQ5EZsO8mGtu9S5dmRW74higF3Q0HZkepxXV83YKRk7dCLOy/OJkRFcGISm21LlUeYeGZ9CiL/UyrqdSeuXufuxnZNcKk8lCQAhI1W1wwzuBuAapnj9DlrhUUbHthPBYN+c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--himanshubatra.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=iENWB1pM; arc=none smtp.client-ip=209.85.216.74
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--himanshubatra.bounces.google.com
+	s=arc-20240116; t=1781600842; c=relaxed/simple;
+	bh=qzeryRYpdLGCVYS4KABk0ntO6zNjQc2NMGaaVW2AJ5c=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=b7m2yfNhCMIn7vv3AniOLKfXz6wXqzzGSQvoEio+1291WTnYue/ZUJTtYXofMYkKRDweWWkPPjAH1y+zcDQmaJC1eaCMesgAkSEuPMhPUBy4FdMnN3ao0Mqd0ZTyFtFpwAS8Izxu+cLE5pNSpVJWMKS++TwFIEtofMOgyt1bnrQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=YKGGi/f4; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="iENWB1pM"
-Received: by mail-pj1-f74.google.com with SMTP id 98e67ed59e1d1-36d98b5a68fso7730607a91.2
-        for <linux-scsi@vger.kernel.org>; Tue, 16 Jun 2026 01:31:28 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1781598688; x=1782203488; darn=vger.kernel.org;
-        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
-         :date:from:to:cc:subject:date:message-id:reply-to;
-        bh=cCVWn/Tak5xeployam8KSgFpW0BNc4qS3cakDpS+Z1Y=;
-        b=iENWB1pMK9wFOwnSvWgTLY/9nmPdi5hEl7Yxs2AShcQz1xhV+Zkd6m1zWrrHVtqGJ4
-         ix+oaIli8SDiKgavrBCzHpycMXTjLA5voJFbUODnfa+6tNZE6qmTMu2zU5UE/u+vgcOw
-         jTUx6EfYnwTkAytYu6Q07cyOZU8mMoCB+UKzXNcVGvUKlLdc1+Yk/V6okzcC40tm35lk
-         rwPni9iWtBpyAohkeqxjWPWGPhQm2U6t4q+A/CTjJ+PsG6RjXGHXepXR33lgwpd+uLPh
-         Lb25Kd/OGQUdpPxpQViucTUnVFiCLNhaMeb+duX9s+4CdLORe8c0Ne0r9JRCKSZUQeDt
-         b2xA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1781598688; x=1782203488;
-        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
-         :date:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=cCVWn/Tak5xeployam8KSgFpW0BNc4qS3cakDpS+Z1Y=;
-        b=G8plvtuDp6DIqvAOSjNm9qRST309m2YpSgku/wnPmBbIRJIz0UpSYfqZH280Oe77zo
-         af6cwBVxCGG96u3nOUocuktnKhdH/+LOFt1F5uoIy4AFbFJjjMSQl217r4Kr0mHKAETC
-         3eHbAKpPis4UlHd7GGkU+MQdu3IM22AVf0a9k8MvCiwU2jcsxCnbAJy9lK8N/HHQ9POB
-         xEegIz+Qzie25vZNQ+7uI0f3oZOc8tgK1fiYEAXFeFe0S0OS+NDbbzx7ItY+xRVPJqmc
-         NCYbRRj0E+W545oI/wC8XgpLPjbfMHbikeTnp12UxjnJhPSxmesJTGKNV5ZkCLh/Eb9u
-         j5AQ==
-X-Forwarded-Encrypted: i=1; AFNElJ9nemDwK/+I7DocFwWkqN4ny151s+BQZij7QkQ42Ls3Q27YgtepgN7N15HtmD4A10jTPXin/jNrjDdv@vger.kernel.org
-X-Gm-Message-State: AOJu0Yx7yHVWNpBZxmgwFyyzaShry+inVpOt4kQKc2NVycSu4qvU7VcJ
-	RSJSCtLAI1wm1oux/5tOq742Q/zl028QNyW/A3jZJKj0ls5nleC8DXy6sgCPIq4AE1jeR/oUrhv
-	//pDVBvy/qGtTDUM0OWcARogKUhmVlw8Nmw==
-X-Received: from pgc13.prod.google.com ([2002:a05:6a02:2f8d:b0:c82:283f:132f])
- (user=himanshubatra job=prod-delivery.src-stubby-dispatcher) by
- 2002:a05:6a21:7d01:b0:3b2:b1ed:d1df with SMTP id adf61e73a8af0-3b796363482mr16795836637.29.1781598687366;
- Tue, 16 Jun 2026 01:31:27 -0700 (PDT)
-Date: Tue, 16 Jun 2026 14:01:24 +0530
-In-Reply-To: <CAEif7DR3KUdhPww-q_Fn6gR6L=V5nrD3EyLn3vi+hWLmS3eU6g@mail.gmail.com>
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="YKGGi/f4"
+Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 65G65fUU2699304;
+	Tue, 16 Jun 2026 09:06:57 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:date:from:message-id:mime-version
+	:subject:to; s=qcppdkim1; bh=Q49hmB3FmH5hqN2TomYa5f2WQRUZP4pblCY
+	yLO2OOAY=; b=YKGGi/f4XCOPB00jiJkPc2F4KNGVhxaYwg+W6DvfHPd1v1rK2MP
+	TP80dRpoIa8VwRfUeai1/0CTYNcNTBRxtBz7SqH4kU62EBIMbwrD/bdOnFnUi4Vc
+	4D++GBoVsXvT84UsgJG3lbdInXYzrddrhyCKuUu3vk5j6H2YVBR49nsnc+X8Fv6V
+	0NlS9FXK2fetZV/uL4YGOdz/73XMQ4weuEPx3bSKHPW7I4n1LGohy64OV8s5nPES
+	gIEQpZ4AH1q34fK+cynWT5GC2XeQiTauAWuEFLgV7avYkOfofedwoC4jvxYRKmrI
+	pmpTC6M98SfG1200LokYJ5cRf4h4XqB3iBQ==
+Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4eu09k8xcn-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 16 Jun 2026 09:06:56 +0000 (GMT)
+Received: from pps.filterd (NALASPPMTA01.qualcomm.com [127.0.0.1])
+	by NALASPPMTA01.qualcomm.com (8.18.1.7/8.18.1.7) with ESMTP id 65G95sE7021280;
+	Tue, 16 Jun 2026 09:06:55 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+	by NALASPPMTA01.qualcomm.com (PPS) with ESMTPS id 4ettxpvpbr-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 16 Jun 2026 09:06:55 +0000 (GMT)
+Received: from NALASPPMTA01.qualcomm.com (NALASPPMTA01.qualcomm.com [127.0.0.1])
+	by pps.reinject (8.18.1.12/8.18.1.12) with ESMTP id 65G96tRO023199;
+	Tue, 16 Jun 2026 09:06:55 GMT
+Received: from hu-devc-lv-u22-c.qualcomm.com (hu-cang-lv.qualcomm.com [10.81.25.255])
+	by NALASPPMTA01.qualcomm.com (PPS) with ESMTPS id 65G96tIc023194
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 16 Jun 2026 09:06:55 +0000 (GMT)
+Received: by hu-devc-lv-u22-c.qualcomm.com (Postfix, from userid 359480)
+	id 3E961644; Tue, 16 Jun 2026 02:06:55 -0700 (PDT)
+From: Can Guo <can.guo@oss.qualcomm.com>
+To: bvanassche@acm.org, beanhuo@micron.com, peter.wang@mediatek.com,
+        martin.petersen@oracle.com, mani@kernel.org
+Cc: linux-scsi@vger.kernel.org, Can Guo <can.guo@oss.qualcomm.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+        linux-kernel@vger.kernel.org (open list),
+        linux-arm-msm@vger.kernel.org (open list:ARM/QUALCOMM MAILING LIST)
+Subject: [PATCH] scsi: ufs: core: Avoid possible memory reclaim deadlock in TX EQTR context
+Date: Tue, 16 Jun 2026 02:06:42 -0700
+Message-Id: <20260616090654.421850-1-can.guo@oss.qualcomm.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-References: <CAEif7DR3KUdhPww-q_Fn6gR6L=V5nrD3EyLn3vi+hWLmS3eU6g@mail.gmail.com>
-X-Mailer: git-send-email 2.54.0.1189.g8c84645362-goog
-Message-ID: <20260616083124.267262-1-himanshubatra@google.com>
-Subject: [PATCH v2] scsi: ufs: sysfs: Add HS_GEAR6 string in power_info/gear
- sysfs output
-From: himanshubatra <himanshubatra@google.com>
-To: Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>, 
-	Bart Van Assche <bvanassche@acm.org>
-Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
-	"Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-serial@vger.kernel.org, 
-	vamshigajjela@google.com, manugautam@google.com, 
-	himanshubatra <himanshubatra@google.com>
-Content-Type: text/plain; charset="UTF-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-QCInternal: smtphost
+X-QCInternal: smtphost
+X-Proofpoint-Spam-Info: AW1haW4tMjYwNjE2MDA5MCBTYWx0ZWRfX7Dur2vpheyW/
+ inVrxZpw/kv8sUY068o7me6t/1g3r2PtL5rsYIPXRQUjGhXRnEJIvIlvhmxh80IuBE2HiLk4fOq
+ AJz5o/8xjXWZXLkY/tRh+QxunzbyAgE=
+X-Proofpoint-GUID: 2Rc9tUVEWN-SITlOHqjE6lZorYvKQYel
+X-Authority-Analysis: v=2.4 cv=DoZmPm/+ c=1 sm=1 tr=0 ts=6a311230 cx=c_pps
+ a=ouPCqIW2jiPt+lZRy3xVPw==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
+ a=FelO9ux0wxsA:10 a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22
+ a=ZpdpYltYx_vBUK5n70dp:22 a=c92rfblmAAAA:8 a=EUspDBNiAAAA:8
+ a=GQIZyLKiKp83YMogZvcA:9 a=GvGzcOZaWPEFPQC_NcjD:22
+X-Proofpoint-ORIG-GUID: 2Rc9tUVEWN-SITlOHqjE6lZorYvKQYel
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNjE2MDA5MCBTYWx0ZWRfXzjJ53/4VnP5K
+ Mjkv4x6wFlW00f76ja7gjSr5XQXbC0lUzdJvP1aQ+esGoAdCc2ZBkeTC8fga7vWkaoq7ZYWR2V8
+ fiOwiv0D6f3KCwOiNjJWjtAmuG4MhLmMvEeHZRVXRkCpOdesXXWKEp0qcbAiZ3by4eLKrlsFtVF
+ rZWYnXEtpnyK5944MUixxL3mheyeSd5tEl3QaxHGaYPusdyeXFfiJazTEnqR/f4H3U2KV8icvor
+ KRV2jjTl9kK2OFL80F3foIM3h1hBct8xoXLnzczDbOij1wPlixjwRD0vulezElxktkY3mpw2+2c
+ /K4jkhOivEEfnIxokUTJPreF4GTqCWcEZ0udzyE/7dkNjX3JlhCRbl0fqO9nnJc2YJ482lE2J8O
+ 0ued2yxAe9c9jQap9fII+wV9R7pQbS+fc1AyOMFFL6uWAb5VJZfaTBGFZwRNJP/ZmuYrei8Hxb+
+ 2C3EVAtjck9Ere4ho5g==
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.125,FMLib:17.12.100.49
+ definitions=2026-06-16_02,2026-06-15_04,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ clxscore=1015 malwarescore=0 phishscore=0 adultscore=0 impostorscore=0
+ suspectscore=0 priorityscore=1501 spamscore=0 bulkscore=0 lowpriorityscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2606040000 definitions=main-2606160090
 
-In power_info/gear sysfs, currently it supports output only till gear 5.
-If operating mode is gear 6, it outputs "UNKNOWN".
-Add support for HS_GEAR6 string in sysfs output when operating mode
-is gear 6.
+TX EQTR may run while devfreq gear scaling has quiesced the UFS tagset. In
+that context, functions ufshcd_tx_eqtr(), __ufshcd_tx_eqtr() and
+ufs_qcom_get_rx_fom() allocate memory with GFP_KERNEL. If direct reclaim
+is triggered, reclaim/writeback can depend on I/O to UFS device. Because
+the queue is quiesced, this can cause deadlock.
 
-Signed-off-by: himanshubatra <himanshubatra@google.com>
+Use GFP_NOIO for TX EQTR memory allocations:
+- params->eqtr_record in ufshcd_tx_eqtr()
+- eqtr_data in __ufshcd_tx_eqtr()
+- params in ufs_qcom_get_rx_fom()
+
+Fixes: 03e5d38e2f98 ("scsi: ufs: core: Add support for TX Equalization")
+Closes: https://sashiko.dev/#/patchset/20260615132834.2985346-1-can.guo@oss.qualcomm.com?part=2
+Signed-off-by: Can Guo <can.guo@oss.qualcomm.com>
 ---
+ drivers/ufs/core/ufs-txeq.c | 4 ++--
+ drivers/ufs/host/ufs-qcom.c | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-Changes in v2:
-- A slightly better comment.
-
- drivers/ufs/core/ufs-sysfs.c | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/drivers/ufs/core/ufs-sysfs.c b/drivers/ufs/core/ufs-sysfs.c
-index 99af3c73f1af..d1f5041fc3c8 100644
---- a/drivers/ufs/core/ufs-sysfs.c
-+++ b/drivers/ufs/core/ufs-sysfs.c
-@@ -54,6 +54,7 @@ static const char *ufs_hs_gear_to_string(enum ufs_hs_gear_tag gear)
- 	case UFS_HS_G3:	return "HS_GEAR3";
- 	case UFS_HS_G4:	return "HS_GEAR4";
- 	case UFS_HS_G5:	return "HS_GEAR5";
-+	case UFS_HS_G6:	return "HS_GEAR6";
- 	default:	return "UNKNOWN";
+diff --git a/drivers/ufs/core/ufs-txeq.c b/drivers/ufs/core/ufs-txeq.c
+index 4b264adfdf49..3a2fb5329d27 100644
+--- a/drivers/ufs/core/ufs-txeq.c
++++ b/drivers/ufs/core/ufs-txeq.c
+@@ -1059,7 +1059,7 @@ static int __ufshcd_tx_eqtr(struct ufs_hba *hba,
+ 			    struct ufs_pa_layer_attr *pwr_mode)
+ {
+ 	struct ufshcd_tx_eqtr_data *eqtr_data  __free(kfree) =
+-		kzalloc(sizeof(*eqtr_data), GFP_KERNEL);
++		kzalloc(sizeof(*eqtr_data), GFP_NOIO);
+ 	struct tx_eqtr_iter h_iter = {};
+ 	struct tx_eqtr_iter d_iter = {};
+ 	u32 gear = pwr_mode->gear_tx;
+@@ -1217,7 +1217,7 @@ static int ufshcd_tx_eqtr(struct ufs_hba *hba,
+ 	if (!params->eqtr_record) {
+ 		params->eqtr_record = devm_kzalloc(hba->dev,
+ 						   sizeof(*params->eqtr_record),
+-						   GFP_KERNEL);
++						   GFP_NOIO);
+ 		if (!params->eqtr_record)
+ 			return -ENOMEM;
  	}
- }
+diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+index c084ccc72523..e7f104987c6a 100644
+--- a/drivers/ufs/host/ufs-qcom.c
++++ b/drivers/ufs/host/ufs-qcom.c
+@@ -2760,7 +2760,7 @@ static int ufs_qcom_get_rx_fom(struct ufs_hba *hba,
+ 			       struct tx_eqtr_iter *d_iter)
+ {
+ 	struct ufshcd_tx_eq_params *params __free(kfree) =
+-		kzalloc(sizeof(*params), GFP_KERNEL);
++		kzalloc(sizeof(*params), GFP_NOIO);
+ 	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+ 	struct ufs_pa_layer_attr old_pwr_info;
+ 	u32 fom[PA_MAXDATALANES] = { 0 };
 -- 
-2.54.0.1189.g8c84645362-goog
+2.34.1
 
