@@ -1,76 +1,45 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 09C8B4418F0
-	for <linux-scsi@vger.kernel.org>; Tue, 16 Jun 2026 15:23:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AEB0043E9C6;
+	Tue, 16 Jun 2026 15:30:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781623400; cv=none; b=JAtEVWtU0GenpAGwoTMzUhRZ67Vabe1m/MtEy2xs390a75BgY26s+PmPBXHaQIuzt2JMSqJ53Rg6puw+ctbNeX0BoHd5wXQYtMotqgHD9lSZq6CXzcNROqCrhw42HtwwhNOdIwzzTtCon0ceq13EJpYgeyQphgHYxCLKVtJyPuA=
+	t=1781623833; cv=none; b=PXl6fA8RFDyq11UfN0mM1Bn3Vzn8sLMXq2xhg1Meja2x/+8Cv02Usg10dkEVsakWAtnX9xiV1msaYe2gTMgClJDe1BaDKQpaVaeCw5mzpIZDCKCWcMVo72y7q/Toq1nTeYc6xtVc1y6qWsF3Qs011MumFI3RS8tTspotVsvDyqU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781623400; c=relaxed/simple;
-	bh=csykStPKL2vxh5U9zFjBn7rXw/Awp9+Rlx3O/TPqDCw=;
+	s=arc-20240116; t=1781623833; c=relaxed/simple;
+	bh=9a8z1iwKQnqy6KEwtDO+vWVPHnbhMjURXgFjgniogRM=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=dTIGgpD+X28EwCcmua9b9RPhM/5V8+3vTDPkyJpiMd1jA+WXAtViwHDDQ+QmocCEo6GoFjtL+mIgfXQQgcWNtK4TwGo5qPA+ZqxuLt4LDXKNb64LCudiplXpPBIj/55OImDxFSkkSauVTJm0AVYx4L07151mSn8MleVRNAnmN/o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=FxsNQ+Tg; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	 MIME-Version; b=GDjt0rt5mT4oUfPPdNol0ncFPWj+WXH9M6xrgifNyYNLu/xugMvtZMoSMITSVONMNrDoa3bSKi5FPmpxkhb+OZOduyLwTtfjsZqY4VrVBsGDchErnNFpbTT+R8V+QTC2jlyEp+Qt/FdtQiPQyT0o2fADwaUVe5Te5v87U2/AxYM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KDv4rmuI; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="FxsNQ+Tg"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1781623398;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=qMS+SWEyDEjE+jxgzivY9c5ZtMduep7fGow2UpH8XlU=;
-	b=FxsNQ+TgPFsDIy/aTAdV4JBvW+A3gUgYmGREMzrXoB5a/EGJmaoLd4GDL6Uf1z3hMfHKLI
-	qgclcT3Gy/9srX4ZlS65PkdJWhwoxQMTdI0ws274/mo3yDEL4XyKwoyLYHWUcJg7BVCr05
-	/lmEK48EqrTwGb9Ey7je3R6fC1UP3Lc=
-Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-108-4km-Gb8fOv-X_BbJWgTaGQ-1; Tue,
- 16 Jun 2026 11:23:14 -0400
-X-MC-Unique: 4km-Gb8fOv-X_BbJWgTaGQ-1
-X-Mimecast-MFC-AGG-ID: 4km-Gb8fOv-X_BbJWgTaGQ_1781623391
-Received: from mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.111])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 910FC19560B9;
-	Tue, 16 Jun 2026 15:23:11 +0000 (UTC)
-Received: from fedora-work.redhat.com (unknown [10.22.80.179])
-	by mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id B7A08180034F;
-	Tue, 16 Jun 2026 15:23:06 +0000 (UTC)
-From: David Jeffery <djeffery@redhat.com>
-To: driver-core@lists.linux.dev,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Danilo Krummrich <dakr@kernel.org>
-Cc: linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org,
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KDv4rmuI"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F34E91F00A3A;
+	Tue, 16 Jun 2026 15:30:29 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1781623831;
+	bh=nUS7SYRwGO7Dk5r+dINtODaRZr+3PT9sPBP/zZYA0eU=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References;
+	b=KDv4rmuICw10lcsmtQ19i5KUgGXgIrIakXPQy2AYyJGkFQa6b4rmCOVkn+Ts3P7lC
+	 /GnkpvUihsQA7fRSIQy5mCD3AHt9CMTFI47Eh8kF2moOJv3e0gkYmpsiFYw59K9Pr9
+	 /ptIR9ISPLFHowa8hisSAgdq1KUjRBGA9v5HPAvAZZ+NpnPtT9glanwycyGCMawpIe
+	 cgWakyMZNozs/G+6gReUVQDX2NjApkpf61dkiSsTlqi9mMR8qG/nM0ossA3ioSdmS1
+	 e/adKdf1/DaZpyI57nDQkhJ+H6M26k+qBwnwbnGqLilxfJwfzaNoCMpGCfb1/5hs9S
+	 A585fdj6y9dgg==
+From: Alexey Gladkov <legion@kernel.org>
+To: Sathya Prakash <sathya.prakash@broadcom.com>,
+	Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+	Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
+Cc: MPT-FusionLinux.pdl@broadcom.com,
 	linux-scsi@vger.kernel.org,
-	Tarun Sahu <tarunsahu@google.com>,
-	Pasha Tatashin <tatashin@google.com>,
-	=?UTF-8?q?Micha=C5=82=20C=C5=82api=C5=84ski?= <mclapinski@google.com>,
-	Jordan Richards <jordanrichards@google.com>,
-	Ewan Milne <emilne@redhat.com>,
-	John Meneghini <jmeneghi@redhat.com>,
-	"Lombardi, Maurizio" <mlombard@redhat.com>,
-	Stuart Hayes <stuart.w.hayes@gmail.com>,
-	Laurence Oberman <loberman@redhat.com>,
-	Bart Van Assche <bvanassche@acm.org>,
-	Bjorn Helgaas <helgaas@kernel.org>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	John Garry <john.g.garry@oracle.com>,
-	kexec@lists.infradead.org,
-	David Jeffery <djeffery@redhat.com>,
-	Pasha Tatashin <pasha.tatashin@soleen.com>
-Subject: [PATCH 5/5] scsi: Enable async shutdown support
-Date: Tue, 16 Jun 2026 11:22:19 -0400
-Message-ID: <20260616152219.6268-6-djeffery@redhat.com>
-In-Reply-To: <20260616152219.6268-1-djeffery@redhat.com>
-References: <20260616152219.6268-1-djeffery@redhat.com>
+	linux-kernel@vger.kernel.org,
+	legion@kernel.org
+Subject: [PATCH v2] scsi: mptfusion: Fix array out of bounds error
+Date: Tue, 16 Jun 2026 17:29:08 +0200
+Message-ID: <20260616152908.363621-1-legion@kernel.org>
+X-Mailer: git-send-email 2.54.0
+In-Reply-To: <20260616124528.319527-1-legion@kernel.org>
+References: <20260616124528.319527-1-legion@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -78,70 +47,288 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.111
 
-Like scsi's async suspend support, allow scsi devices to be shut down
-asynchronously to reduce system shutdown time.
+The driver retrieves the number of ports from the hardware. However, the
+driver can handle no more than two such ports. It uses a fixed array for
+them.
 
-Signed-off-by: David Jeffery <djeffery@redhat.com>
-Signed-off-by: Stuart Hayes <stuart.w.hayes@gmail.com>
-Tested-by: Laurence Oberman <loberman@redhat.com>
-Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
-Reviewed-by: Pasha Tatashin <pasha.tatashin@soleen.com>
-Reviewed-by: John Garry <john.g.garry@oracle.com>
+We use NumberOfPorts without checking, and maybe on actual hardware
+there really are never more than two ports, but QEMU passes 8 [1][2].
+
+[1] https://gitlab.com/qemu-project/qemu/-/blob/master/hw/scsi/mptsas.h?ref_type=heads#L7
+[2] https://gitlab.com/qemu-project/qemu/-/blob/master/hw/scsi/mptsas.c?ref_type=heads#L619
+
+Signed-off-by: Alexey Gladkov <legion@kernel.org>
 ---
- drivers/scsi/hosts.c      | 2 ++
- drivers/scsi/scsi_sysfs.c | 3 +++
- 2 files changed, 5 insertions(+)
+v2:
+* Replaced the retrieval of MPT_ADAPTER from pci_get_drvdata with a wrapper that
+  checks the array boundaries.
+* Replaced the magic number of array elements with a macro because these arrays
+  are associated.
 
-diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-index e047747d4ecf..bf691acc7a67 100644
---- a/drivers/scsi/hosts.c
-+++ b/drivers/scsi/hosts.c
-@@ -273,6 +273,7 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, struct device *dev,
- 	pm_runtime_set_active(&shost->shost_gendev);
- 	pm_runtime_enable(&shost->shost_gendev);
- 	device_enable_async_suspend(&shost->shost_gendev);
-+	dev_set_async_shutdown(&shost->shost_gendev);
- 
- 	error = device_add(&shost->shost_gendev);
- 	if (error)
-@@ -282,6 +283,7 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, struct device *dev,
- 	get_device(shost->shost_gendev.parent);
- 
- 	device_enable_async_suspend(&shost->shost_dev);
-+	dev_set_async_shutdown(&shost->shost_dev);
- 
- 	get_device(&shost->shost_gendev);
- 	error = device_add(&shost->shost_dev);
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index dfc3559e7e04..8fd317aef37b 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -1386,6 +1386,7 @@ static int scsi_target_add(struct scsi_target *starget)
- 	pm_runtime_set_active(&starget->dev);
- 	pm_runtime_enable(&starget->dev);
- 	device_enable_async_suspend(&starget->dev);
-+	dev_set_async_shutdown(&starget->dev);
- 
- 	return 0;
+---
+ drivers/message/fusion/mptbase.c  | 22 +++++++++++++++++++---
+ drivers/message/fusion/mptbase.h  |  9 ++++++---
+ drivers/message/fusion/mptctl.c   |  2 +-
+ drivers/message/fusion/mptfc.c    |  4 ++--
+ drivers/message/fusion/mptlan.c   |  4 ++--
+ drivers/message/fusion/mptsas.c   |  6 +++---
+ drivers/message/fusion/mptscsih.c |  6 +++---
+ drivers/message/fusion/mptspi.c   |  6 +++---
+ 8 files changed, 39 insertions(+), 20 deletions(-)
+
+diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
+index 3a431ffd3e2e..9e738d0bb8e3 100644
+--- a/drivers/message/fusion/mptbase.c
++++ b/drivers/message/fusion/mptbase.c
+@@ -1741,6 +1741,21 @@ mpt_mapresources(MPT_ADAPTER *ioc)
+ 	return r;
  }
-@@ -1412,6 +1413,7 @@ int scsi_sysfs_add_sdev(struct scsi_device *sdev)
- 	transport_configure_device(&starget->dev);
  
- 	device_enable_async_suspend(&sdev->sdev_gendev);
-+	dev_set_async_shutdown(&sdev->sdev_gendev);
- 	scsi_autopm_get_target(starget);
- 	pm_runtime_set_active(&sdev->sdev_gendev);
- 	if (!sdev->rpm_autosuspend)
-@@ -1431,6 +1433,7 @@ int scsi_sysfs_add_sdev(struct scsi_device *sdev)
- 	}
++MPT_ADAPTER *
++mpt_get_adapter(struct pci_dev *pdev)
++{
++	MPT_ADAPTER *ioc = pci_get_drvdata(pdev);
++
++	if (ioc && ioc->facts.NumberOfPorts >= ARRAY_SIZE(ioc->pfacts)) {
++		ioc->facts.NumberOfPorts = ARRAY_SIZE(ioc->pfacts);
++	}
++
++	BUILD_BUG_ON(ARRAY_SIZE(ioc->pfacts) != ARRAY_SIZE(ioc->fc_port_page0));
++	BUILD_BUG_ON(ARRAY_SIZE(ioc->pfacts) != ARRAY_SIZE(ioc->fc_data.fc_port_page1));
++
++	return ioc;
++}
++
+ /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
+ /**
+  *	mpt_attach - Install a PCI intelligent MPT adapter.
+@@ -2074,7 +2089,7 @@ mpt_attach(struct pci_dev *pdev, const struct pci_device_id *id)
+ void
+ mpt_detach(struct pci_dev *pdev)
+ {
+-	MPT_ADAPTER 	*ioc = pci_get_drvdata(pdev);
++	MPT_ADAPTER 	*ioc = mpt_get_adapter(pdev);
+ 	char pname[64];
+ 	u8 cb_idx;
+ 	unsigned long flags;
+@@ -2140,7 +2155,7 @@ int
+ mpt_suspend(struct pci_dev *pdev, pm_message_t state)
+ {
+ 	u32 device_state;
+-	MPT_ADAPTER *ioc = pci_get_drvdata(pdev);
++	MPT_ADAPTER *ioc = mpt_get_adapter(pdev);
  
- 	device_enable_async_suspend(&sdev->sdev_dev);
-+	dev_set_async_shutdown(&sdev->sdev_dev);
- 	error = device_add(&sdev->sdev_dev);
- 	if (error) {
- 		sdev_printk(KERN_INFO, sdev,
+ 	device_state = pci_choose_state(pdev, state);
+ 	printk(MYIOC_s_INFO_FMT "pci-suspend: pdev=0x%p, slot=%s, Entering "
+@@ -2179,7 +2194,7 @@ mpt_suspend(struct pci_dev *pdev, pm_message_t state)
+ int
+ mpt_resume(struct pci_dev *pdev)
+ {
+-	MPT_ADAPTER *ioc = pci_get_drvdata(pdev);
++	MPT_ADAPTER *ioc = mpt_get_adapter(pdev);
+ 	u32 device_state = pdev->current_state;
+ 	int recovery_state;
+ 	int err;
+@@ -8451,6 +8466,7 @@ EXPORT_SYMBOL(mpt_reset_register);
+ EXPORT_SYMBOL(mpt_reset_deregister);
+ EXPORT_SYMBOL(mpt_device_driver_register);
+ EXPORT_SYMBOL(mpt_device_driver_deregister);
++EXPORT_SYMBOL(mpt_get_adapter);
+ EXPORT_SYMBOL(mpt_get_msg_frame);
+ EXPORT_SYMBOL(mpt_put_msg_frame);
+ EXPORT_SYMBOL(mpt_put_msg_frame_hi_pri);
+diff --git a/drivers/message/fusion/mptbase.h b/drivers/message/fusion/mptbase.h
+index b406fd676da0..ca0a873af01e 100644
+--- a/drivers/message/fusion/mptbase.h
++++ b/drivers/message/fusion/mptbase.h
+@@ -113,6 +113,8 @@
+ #define MPT_PROCFS_SUMMARY_ALL_PATHNAME		"/proc/" MPT_PROCFS_SUMMARY_ALL_NODE
+ #define MPT_FW_REV_MAGIC_ID_STRING		"FwRev="
+ 
++#define MPT_MAX_PORT_FACTS		2
++
+ #define  MPT_MAX_REQ_DEPTH		1023
+ #define  MPT_DEFAULT_REQ_DEPTH		256
+ #define  MPT_MIN_REQ_DEPTH		128
+@@ -537,7 +539,7 @@ typedef struct _FcCfgData {
+ 		FCPortPage1_t	*data;
+ 		dma_addr_t	 dma;
+ 		int		 pg_sz;
+-	}			 fc_port_page1[2];
++	}			 fc_port_page1[MPT_MAX_PORT_FACTS];
+ } FcCfgData;
+ 
+ #define MPT_RPORT_INFO_FLAGS_REGISTERED	0x01	/* rport registered */
+@@ -699,8 +701,8 @@ typedef struct _MPT_ADAPTER
+ 	u32			 hs_req[MPT_MAX_FRAME_SIZE/sizeof(u32)];
+ 	u16			 hs_reply[MPT_MAX_FRAME_SIZE/sizeof(u16)];
+ 	IOCFactsReply_t		 facts;
+-	PortFactsReply_t	 pfacts[2];
+-	FCPortPage0_t		 fc_port_page0[2];
++	PortFactsReply_t	 pfacts[MPT_MAX_PORT_FACTS];
++	FCPortPage0_t		 fc_port_page0[MPT_MAX_PORT_FACTS];
+ 	LANPage0_t		 lan_cnfg_page0;
+ 	LANPage1_t		 lan_cnfg_page1;
+ 
+@@ -918,6 +920,7 @@ extern int	 mpt_reset_register(u8 cb_idx, MPT_RESETHANDLER reset_func);
+ extern void	 mpt_reset_deregister(u8 cb_idx);
+ extern int	 mpt_device_driver_register(struct mpt_pci_driver * dd_cbfunc, u8 cb_idx);
+ extern void	 mpt_device_driver_deregister(u8 cb_idx);
++extern MPT_ADAPTER *mpt_get_adapter(struct pci_dev *pdev);
+ extern MPT_FRAME_HDR	*mpt_get_msg_frame(u8 cb_idx, MPT_ADAPTER *ioc);
+ extern void	 mpt_free_msg_frame(MPT_ADAPTER *ioc, MPT_FRAME_HDR *mf);
+ extern void	 mpt_put_msg_frame(u8 cb_idx, MPT_ADAPTER *ioc, MPT_FRAME_HDR *mf);
+diff --git a/drivers/message/fusion/mptctl.c b/drivers/message/fusion/mptctl.c
+index 77fa55df70d0..8023062431e1 100644
+--- a/drivers/message/fusion/mptctl.c
++++ b/drivers/message/fusion/mptctl.c
+@@ -2849,7 +2849,7 @@ static long compat_mpctl_ioctl(struct file *f, unsigned int cmd, unsigned long a
+ static int
+ mptctl_probe(struct pci_dev *pdev)
+ {
+-	MPT_ADAPTER *ioc = pci_get_drvdata(pdev);
++	MPT_ADAPTER *ioc = mpt_get_adapter(pdev);
+ 
+ 	mutex_init(&ioc->ioctl_cmds.mutex);
+ 	init_completion(&ioc->ioctl_cmds.done);
+diff --git a/drivers/message/fusion/mptfc.c b/drivers/message/fusion/mptfc.c
+index b55deb988ad9..3c00f4c88343 100644
+--- a/drivers/message/fusion/mptfc.c
++++ b/drivers/message/fusion/mptfc.c
+@@ -1219,7 +1219,7 @@ mptfc_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	if ((r = mpt_attach(pdev,id)) != 0)
+ 		return r;
+ 
+-	ioc = pci_get_drvdata(pdev);
++	ioc = mpt_get_adapter(pdev);
+ 	ioc->DoneCtx = mptfcDoneCtx;
+ 	ioc->TaskCtx = mptfcTaskCtx;
+ 	ioc->InternalCtx = mptfcInternalCtx;
+@@ -1525,7 +1525,7 @@ mptfc_init(void)
+  */
+ static void mptfc_remove(struct pci_dev *pdev)
+ {
+-	MPT_ADAPTER		*ioc = pci_get_drvdata(pdev);
++	MPT_ADAPTER		*ioc = mpt_get_adapter(pdev);
+ 	struct mptfc_rport_info	*p, *n;
+ 	struct workqueue_struct *work_q;
+ 	unsigned long		flags;
+diff --git a/drivers/message/fusion/mptlan.c b/drivers/message/fusion/mptlan.c
+index f7fc5cc04b92..ccd735aa532a 100644
+--- a/drivers/message/fusion/mptlan.c
++++ b/drivers/message/fusion/mptlan.c
+@@ -1380,7 +1380,7 @@ mpt_register_lan_device (MPT_ADAPTER *mpt_dev, int pnum)
+ static int
+ mptlan_probe(struct pci_dev *pdev)
+ {
+-	MPT_ADAPTER 		*ioc = pci_get_drvdata(pdev);
++	MPT_ADAPTER 		*ioc = mpt_get_adapter(pdev);
+ 	struct net_device	*dev;
+ 	int			i;
+ 
+@@ -1426,7 +1426,7 @@ mptlan_probe(struct pci_dev *pdev)
+ static void
+ mptlan_remove(struct pci_dev *pdev)
+ {
+-	MPT_ADAPTER 		*ioc = pci_get_drvdata(pdev);
++	MPT_ADAPTER 		*ioc = mpt_get_adapter(pdev);
+ 	struct net_device	*dev = ioc->netdev;
+ 	struct mpt_lan_priv *priv = netdev_priv(dev);
+ 
+diff --git a/drivers/message/fusion/mptsas.c b/drivers/message/fusion/mptsas.c
+index c362f09a8c55..b328c8685192 100644
+--- a/drivers/message/fusion/mptsas.c
++++ b/drivers/message/fusion/mptsas.c
+@@ -5163,7 +5163,7 @@ mptsas_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	if (r)
+ 		return r;
+ 
+-	ioc = pci_get_drvdata(pdev);
++	ioc = mpt_get_adapter(pdev);
+ 	mptsas_fw_event_off(ioc);
+ 	ioc->DoneCtx = mptsasDoneCtx;
+ 	ioc->TaskCtx = mptsasTaskCtx;
+@@ -5337,7 +5337,7 @@ mptsas_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ static void
+ mptsas_shutdown(struct pci_dev *pdev)
+ {
+-	MPT_ADAPTER *ioc = pci_get_drvdata(pdev);
++	MPT_ADAPTER *ioc = mpt_get_adapter(pdev);
+ 
+ 	mptsas_fw_event_off(ioc);
+ 	mptsas_cleanup_fw_event_q(ioc);
+@@ -5345,7 +5345,7 @@ mptsas_shutdown(struct pci_dev *pdev)
+ 
+ static void mptsas_remove(struct pci_dev *pdev)
+ {
+-	MPT_ADAPTER *ioc = pci_get_drvdata(pdev);
++	MPT_ADAPTER *ioc = mpt_get_adapter(pdev);
+ 	struct mptsas_portinfo *p, *n;
+ 	int i;
+ 
+diff --git a/drivers/message/fusion/mptscsih.c b/drivers/message/fusion/mptscsih.c
+index ec6edcc4ef56..290939225688 100644
+--- a/drivers/message/fusion/mptscsih.c
++++ b/drivers/message/fusion/mptscsih.c
+@@ -1171,7 +1171,7 @@ mptscsih_report_queue_full(struct scsi_cmnd *sc, SCSIIOReply_t *pScsiReply, SCSI
+ void
+ mptscsih_remove(struct pci_dev *pdev)
+ {
+-	MPT_ADAPTER 		*ioc = pci_get_drvdata(pdev);
++	MPT_ADAPTER 		*ioc = mpt_get_adapter(pdev);
+ 	struct Scsi_Host 	*host = ioc->sh;
+ 	MPT_SCSI_HOST		*hd;
+ 	int sz1;
+@@ -1228,7 +1228,7 @@ mptscsih_shutdown(struct pci_dev *pdev)
+ int
+ mptscsih_suspend(struct pci_dev *pdev, pm_message_t state)
+ {
+-	MPT_ADAPTER 		*ioc = pci_get_drvdata(pdev);
++	MPT_ADAPTER 		*ioc = mpt_get_adapter(pdev);
+ 
+ 	scsi_block_requests(ioc->sh);
+ 	mptscsih_shutdown(pdev);
+@@ -1244,7 +1244,7 @@ mptscsih_suspend(struct pci_dev *pdev, pm_message_t state)
+ int
+ mptscsih_resume(struct pci_dev *pdev)
+ {
+-	MPT_ADAPTER 		*ioc = pci_get_drvdata(pdev);
++	MPT_ADAPTER 		*ioc = mpt_get_adapter(pdev);
+ 	int rc;
+ 
+ 	rc = mpt_resume(pdev);
+diff --git a/drivers/message/fusion/mptspi.c b/drivers/message/fusion/mptspi.c
+index 56892b1f3de2..ad92c23bd632 100644
+--- a/drivers/message/fusion/mptspi.c
++++ b/drivers/message/fusion/mptspi.c
+@@ -1330,7 +1330,7 @@ mptspi_ioc_reset(MPT_ADAPTER *ioc, int reset_phase)
+ static int
+ mptspi_resume(struct pci_dev *pdev)
+ {
+-	MPT_ADAPTER 	*ioc = pci_get_drvdata(pdev);
++	MPT_ADAPTER 	*ioc = mpt_get_adapter(pdev);
+ 	struct _MPT_SCSI_HOST *hd = shost_priv(ioc->sh);
+ 	int rc;
+ 
+@@ -1367,7 +1367,7 @@ mptspi_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	if ((r = mpt_attach(pdev,id)) != 0)
+ 		return r;
+ 
+-	ioc = pci_get_drvdata(pdev);
++	ioc = mpt_get_adapter(pdev);
+ 	ioc->DoneCtx = mptspiDoneCtx;
+ 	ioc->TaskCtx = mptspiTaskCtx;
+ 	ioc->InternalCtx = mptspiInternalCtx;
+@@ -1546,7 +1546,7 @@ mptspi_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 
+ static void mptspi_remove(struct pci_dev *pdev)
+ {
+-	MPT_ADAPTER *ioc = pci_get_drvdata(pdev);
++	MPT_ADAPTER *ioc = mpt_get_adapter(pdev);
+ 
+ 	scsi_remove_host(ioc->sh);
+ 	mptscsih_remove(pdev);
 -- 
 2.54.0
 
