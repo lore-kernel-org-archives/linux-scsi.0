@@ -1,222 +1,211 @@
-Received: from alln-iport-7.cisco.com (alln-iport-7.cisco.com [173.37.142.94])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F1C76352C5C
-	for <linux-scsi@vger.kernel.org>; Tue, 16 Jun 2026 05:15:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=173.37.142.94
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781586955; cv=fail; b=cc5N0/mT/nIIrFttfUDVR55GtTB5sF1aq25Wue++g0sqZkgHbY1da9cXzX9SK0/bXZ5NHKP3K2G4/7rDpCUjKHtDtwYUR0TnlgWArCZzhXmbKii2rF3MmeL8wwMdang1VshDo7eDokxbXXPkcHCttoAJ+aWAGAE5IFFgA37R2lU=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781586955; c=relaxed/simple;
-	bh=eazCtP3uSb8guYXw+vZbV1W0bY9932WPoPTAz79+zog=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=lZ7Z0stbDLLgP1wlhByW8x1XfyG2YmMndCs33WPy5npv09Glcnk7V8FXtsQo//w6LpNX/GkUVQTge9Ql0wnL3A5Z0B1TcTlwQMAq8hOLLcGuQINQs8BIDTE3CYHL+oweoRRM/tKFnG1yG2Uf3wACK+3ucYXN1+5MSZB9QRaWkes=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=cisco.com; spf=pass smtp.mailfrom=cisco.com; dkim=pass (2048-bit key) header.d=cisco.com header.i=@cisco.com header.b=BGMyeVZh; arc=fail smtp.client-ip=173.37.142.94
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=cisco.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cisco.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4330B3D3311
+	for <linux-scsi@vger.kernel.org>; Tue, 16 Jun 2026 05:35:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1781588153; cv=none; b=oenHIwUxySy1Z+WLMErj3fBQc0D4NcoYRfDVzSO5Ez/1r7+FD/F5XmGBB8RwhWkNhvYfwXJPYJNf2hnXJQWa2EYHkUIsVCt6gEDLr0Dbnj3dj6DuNf/QU5AErW0gGb6M8w939xuo7SpZswSoaHiSpJ2w/T0zSrn/ubRg7lubvtk=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1781588153; c=relaxed/simple;
+	bh=y7N3/u0OsrEjlkWJIJ5OphcW+jiH7V5hEQlDaXf+Xgc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=U1Q6//qaUK9Ws3XRkN55qVSWAUjV3eB0ikh4e80LBTB8paLYz1KfTmU+arUL/zYgckBg4Npp/YLWns3enjOkxv0ZMeqq+PHRs6oJ3N5u9eViGlVgPwhWagR032Jsgyzc2GRdzW7Nhk0/5t1VMcLorpYFadTPU1JzIcqO/s6XT8Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Bw9djGwH; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=cisco.com header.i=@cisco.com header.b="BGMyeVZh"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=cisco.com; i=@cisco.com; l=1478; q=dns/txt;
-  s=iport01; t=1781586954; x=1782796554;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=eazCtP3uSb8guYXw+vZbV1W0bY9932WPoPTAz79+zog=;
-  b=BGMyeVZh+5ahMCURQyb2k6jz3Y7nIitAleA+ARBvGtHtSnre7wj8U+zV
-   n/tDtDsFqf1obunwYRUE+1bzCIbBrULe8sU+nBexWsx7TS7nyoGPFKXFE
-   mIoRpMbuc8AUuf6E04Nu/riP5karKa8mBemLr8Dh1BJaD1jmzz871/s9v
-   7qvD2z6k5PfRjwQonDtZRu2acJQw25PP4HAGQehq5nh507CgCThHi8Bmn
-   cG+AN1gnstQ8TSb2tc4rF4/6sWjjVrZ86/hUJLyCO3Plxa7H9Qt+odHDW
-   n4MjROloHl16+i1wOd1TxZ2I8MYiO+97ABAxkCqNIQWl6ScvZSyLQG6gN
-   A==;
-X-CSE-ConnectionGUID: mqJYxFXvThe1uH7fErdhKA==
-X-CSE-MsgGUID: xhDs2h/2TjGsHRb8ZCm7Cg==
-X-IPAS-Result: =?us-ascii?q?A0CPAwAr2jBq/4oQJK1aHgEBCxIMZYEgC4FuU4IrSYRXg?=
- =?us-ascii?q?0wDhSyIfJ4bgX4PAQEBDQJRBAEBhQYCFo0pAiY0CQ4BAgQDAgMBAQEBAQEBA?=
- =?us-ascii?q?QEBAQsBAQUBAQECAQcFgQ4ThlAMhloBAQEBAxIRBA1FEAIBCBgCAiYCAgIvF?=
- =?us-ascii?q?RACBA4FCBqFVAMBAqcgAYE9Aooqen8zgQHgNRWBCi6IWwGBcIQGOIREJxuCD?=
- =?us-ascii?q?YEVQoJpPoRFFYNEOoIwBIIigQyREwlJeBwDWSwBVRMXCwcFYUJDAyovLSNLB?=
- =?us-ascii?q?S0dgSMhHRcWHlgbBwUSICpCRSMDAhYzNAQhQjgLQwWBXQKCGk4jHwM5f4Fvg?=
- =?us-ascii?q?SVnZhUwNYEBAREfCjoDC209NxQbAwQ6ewWMWxcPgjwugWMvgQ6WfEmaQpUXC?=
- =?us-ascii?q?oQdohEXqmwumFojqHQCBAIEBQIQAQEGgWg8gVlwFYMiUxkP2kF5PQEBBwIHD?=
- =?us-ascii?q?gMLgWiRfQEB?=
-IronPort-PHdr: A9a23:jizQYBXprsSBYv0hTMW7dymXuIHV8K3PAWYlg6HPw5pHdqClupP6M
- 1OavLNmjUTCWsPQ7PcXw+bVsqW1QWUb+t7Bq3ENdpVQSgUIwdsbhQ0uAcOJSAX7IffmYjZ8H
- ZFqX15+9Hb9Ok9QcPs=
-IronPort-Data: A9a23:AL7xsavbCQP9sS/Lsx14kktfwefnVBxfMUV32f8akzHdYApBsoF/q
- tZmKTyEPvePYTGme4x1bI7k9E4HvJ/UzNA3GwVuryk1FHwTgMeUXt7xwmUckM+xwmwvaGo9s
- q3yv/GZdJhcokf0/0nrav666yEgiclkf5KkYMbcICd9WAR4fykojBNnioYRj5Vh6TSDK1vlV
- eja/YuFZDdJ5xYuajhKs/za9Us11BjPkGpwUmIWNKgjUGD2zxH5PLpHTYmtIn3xRJVjH+LSb
- 47r0LGj82rFyAwmA9Wjn6yTWhVirmn6ZFXmZtJ+AsBOszAazsAA+v9T2Mk0NS+7vw60c+VZk
- 72hg3AfpTABZcUgkMxFO/VR/roX0aduoNcrKlDn2SCfItGvn3bEm51T4E8K0YIw//9VMHFgx
- eIkKD1UczDcic+szLKYY7w57igjBJGD0II3s3Vky3TdSP0hW52GG/yM7t5D1zB2jcdLdRrcT
- 5NGMnw0MlKZPVsWYQd/5JEWxI9EglH8eidEqVacpoI84nPYy0p6172F3N/9JYLQHJkLzh3Ez
- o7A13T5LgpANJvF9Tiq6VKWjL/9tiakc41HQdVU8dYv2jV/3Fc7DBwQSEv+uvKii2agVN9Fb
- U8Z4Cwjqe417kPDczXmdxS8pHjBulsXXMBdVrVjrgqM0aHTpQ2eAwDoUwJ8VTDvj+dvLRQC3
- V6SlNSvDjtq2IB5g1rNnltIhVte4RQoEFI=
-IronPort-HdrOrdr: A9a23:DyeXR63LjeRcYAbFM3IFswqjBb1xeYIsimQD101hICG9Lfbo9P
- xGzc566farslcssSkb6K690cm7LU819fZOkO8s1MSZLXjbUQyTXc5fBOrZsnHd8kLFh5RgPM
- tbAsxD4ZjLfCdHZKXBkUeF+rQbsaS6GcmT7I+0oQYOPGRXguNbnntE422gYzRLrXx9dOEE/e
- 2nl7J6TlSbCBMqR/X+LEMoG8LEoNrGno/nZxkpOz4LgTPlsRqYrJTBP1y9xBkxbxNjqI1OzU
- H11yDp7KSqtP+2jiTby3LS6Jpunt7gwMtoBcCHiMQZQw+cyzpAYr4PZ5Sy+BQO5M2/4lcjl9
- fB5z06Od5o1n/Xdmap5TPwxgjJyl8Vmjzf4G7dpUGmjd3yRTo8BcYEr5leaAHl500pu8w5+L
- 5X3lieq4FcAXr77WbADpnzJlRXf3iP0D0feN0o/jpiuEwlGeZsRLkkjQdo+VE7bXrHAc4cYb
- JT5YrnlYZrmBuhHgPkVy9UsZyRd0V2OAuaSU4fvcHQ+T1XkHdli3Y8/qUk7y09HFZXcegZ2w
- wCWZ4YyY1mX4sYa7lwC/wGRtbyAmvRQQjUOGbXOlj/ErobUki94KIfzY9Frd1CQqZ4hKcaid
- DEShdVpGQyc0XhBYmH24BK6AnERCG4US72ws9T6pBlsvmkLYCbfBGrWRQriY+tsv8fCsrUV7
- K6P49XGebqKS/rFZxS1wPzVpFOIT0VUdETuNw8R1WSy/i7YLHCp6jearLeNbDtGTErVif2BW
- YCRiH6IIFa4kWiShbD8W7ssrPWCzvCFL5LYdznFrIoufow36V3w30otWg=
-X-Talos-CUID: 9a23:yB4WVm7n/cnIHmBl49ss8Vc2K9ALQmPhzHqJPm/nB0tzRL22YArF
-X-Talos-MUID: 9a23:Wtj68goDv8YdDe4SiyIezyFiGNwy4+P0NEIiirU8sZm2HikvEDjI2Q==
-X-IronPort-Anti-Spam-Filtered: true
-Received: from alln-l-core-01.cisco.com ([173.36.16.138])
-  by alln-iport-7.cisco.com with ESMTP/TLS/TLS_AES_256_GCM_SHA384; 16 Jun 2026 05:14:45 +0000
-Received: from alln-opgw-1.cisco.com (alln-opgw-1.cisco.com [173.37.147.229])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by alln-l-core-01.cisco.com (Postfix) with ESMTPS id 748CC18007E6A
-	for <linux-scsi@vger.kernel.org>; Tue, 16 Jun 2026 05:13:51 +0000 (GMT)
-X-CSE-ConnectionGUID: X22YVo9eR9u3Whn50b8nYQ==
-X-CSE-MsgGUID: vqcBknAqT7aXN8Hds3xP5Q==
-Authentication-Results: alln-opgw-1.cisco.com; dkim=pass (signature verified) header.i=@cisco.com
-X-IronPort-AV: E=Sophos;i="6.24,207,1774310400"; 
-   d="scan'208";a="78168716"
-Received: from mail-northcentralusazon11012045.outbound.protection.outlook.com (HELO CH5PR02CU005.outbound.protection.outlook.com) ([40.107.200.45])
-  by alln-opgw-1.cisco.com with ESMTP/TLS/TLS_AES_256_GCM_SHA384; 16 Jun 2026 05:13:51 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=ESvcEw+FlpOf1fkvW4MvN3hOvhz+w6fpWlqqiHinYE2jzMWlulmGmMmAaKn1qTDPIjRm6fRQdr2cOCLDmQ5eoU3qp7xCuDxcggWuEHx0QKkGRsYOlbjOITHNBcaK3ITl99ojWUYC+tn4YTlqJfnWsoyyBa9YD99ZOO0vAWZTW8DDWAtF9kThRu9s3b0Auqib7gTxo9i8xegIEusb3tGlNWQp5HCRQyUOLUaPnq44G+Mfkjpg1+rJhKIbqhKnu8Jb5Z3XGqbCl7slE678HJCzN+fsAhYDGCqaT8xmfDCQ+1qdgb/IeQpG8Ai/OwYjWSFUvcm6lsw9fPo9to+YpigcYQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=eazCtP3uSb8guYXw+vZbV1W0bY9932WPoPTAz79+zog=;
- b=lXoqct9bejwdeMWGbJEJm4Il7RCMhn09JY4HVQdrYfgoiMbZ1CRGe6Ty1Kqpa3xSwi8mEHwpyTuG/vMxLQZnj5XcMnaqGOrw9aW49BlvaxOvryyjaCb777c3QJC1lLktQ7Exvw8oJ8fRLHWTND9BUrobVG8MzvfgHXUwSb7U+hqt1mpvGBbIxpu61LYWZ/uhEMLVuIVEyewkxSj0vO6a9XSyJ8QUITJYKrkHcC2J1NGN1fsy+/XhOiTxbssX84L4xCZBgDE6Use+zyjm2kLdXsG9femfZ1PS4vljA1pSOZs2+m5IOoQ+k2w/F8bDlx1dRXGIgJimXw80Lde3vGsUJg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=cisco.com; dmarc=pass action=none header.from=cisco.com;
- dkim=pass header.d=cisco.com; arc=none
-Received: from SJ0PR11MB5896.namprd11.prod.outlook.com (2603:10b6:a03:42c::19)
- by SJ0PR11MB5088.namprd11.prod.outlook.com (2603:10b6:a03:2df::17) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.113.18; Tue, 16 Jun
- 2026 05:13:49 +0000
-Received: from SJ0PR11MB5896.namprd11.prod.outlook.com
- ([fe80::41fa:d12d:31c1:d5db]) by SJ0PR11MB5896.namprd11.prod.outlook.com
- ([fe80::41fa:d12d:31c1:d5db%3]) with mapi id 15.21.0113.015; Tue, 16 Jun 2026
- 05:13:49 +0000
-From: "Karan Tilak Kumar (kartilak)" <kartilak@cisco.com>
-To: "sashiko-reviews@lists.linux.dev" <sashiko-reviews@lists.linux.dev>
-CC: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Sesidhar
- Baddela (sebaddel)" <sebaddel@cisco.com>, "Arulprabhu Ponnusamy (arulponn)"
-	<arulponn@cisco.com>, "Gian Carlo Boffa (gcboffa)" <gcboffa@cisco.com>, "Arun
- Easi (aeasi)" <aeasi@cisco.com>
-Subject: RE: [PATCH v4 02/13] scsi: fnic: Use fnic_num for non-SCSI
- identifiers
-Thread-Topic: [PATCH v4 02/13] scsi: fnic: Use fnic_num for non-SCSI
- identifiers
-Thread-Index: AQHc+pbEXUWIMrK8OkSiDqdkq+hlkrY7RWGAgAUHx5A=
-Date: Tue, 16 Jun 2026 05:13:49 +0000
-Message-ID:
- <SJ0PR11MB5896264CC178D592F9D5C234C3E52@SJ0PR11MB5896.namprd11.prod.outlook.com>
-References: <20260612180918.8554-3-kartilak@cisco.com>
- <20260612185714.174651F000E9@smtp.kernel.org>
-In-Reply-To: <20260612185714.174651F000E9@smtp.kernel.org>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: SJ0PR11MB5896:EE_|SJ0PR11MB5088:EE_
-x-ms-office365-filtering-correlation-id: b482d778-4c59-4eae-1c3e-08decb660caf
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam:
- BCL:0;ARA:13230040|1800799024|366016|376014|23010399003|38070700021|22082099003|18002099003|3023799007|4143699003|11063799006|56012099006|6133799003;
-x-microsoft-antispam-message-info:
- LX4xLJrRUGe08LiT4b+JMN3mYBZxYEzJfIaiQ5XqVvEt+LyGwTPkQ+s3mBit9ajPQGUk5MVz+jxqXhNd7pn24chK4KEl0DvC/sxw29eVj5jQ025ZD5r3P/iEg/TJ72yH2C5jdMV7TYCAQzc0qJzVsJukzIDT3HcfV00l03WdWySKONrh6pJBwW4Id5r6f+LSZwlPTv9yko0cfeMSq/juHmm41iPKUFZ2vCgtmmXObc8307LzKBK5O3Ow8PANMJ8Pn9W0EvKbxed8L79QLMgeoqV4MDJqUKokWGuoXvAuHbq9bzuJg5gJ2ID1N6aAc57Ez6enSBT+mdV7u7FZ8fTN77/i3OqjOiH2ZcMRdlD6x90GOsTT7zbBp0VgJawhbS5hynoaVPQdkB8HihHjOw3xKdkNpW2KJ7t8AYBYxkPGlRqp+vlRyNvWXxqI3dzPwH+5RAoHRWqgfsQNPshnekl5V/iJfa1yMA6Rh6uDFD0dEw8KYVnUMwOAhvfMgfBa3jeqwZ4ujUT+X2fseognXDDF2ANdIUfLYsAyuXUfFt6hmtRX8ZkKs7YJ0EfSDHG2X0DhyrAfcojy0W7IwsXFqx20i2SvFwHGnVMD/0cN0YfRQrkf8s4r4OWAlaB+SRWo0WPimclQY8czw9MuV2oyEnfStSSg2qS20yGMYbOmkUR/1ry9r+2VB84f+aDUPN/CKEkAP5RpoYIeLZ/GLowq+C+ZFdkY++MYV0PUu1BB1Dxp8jaJdqOkD0aNaDTE0RmymlJ+
-x-forefront-antispam-report:
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SJ0PR11MB5896.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(376014)(23010399003)(38070700021)(22082099003)(18002099003)(3023799007)(4143699003)(11063799006)(56012099006)(6133799003);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?utf-8?B?T0Nid3VuT1NhTGYvT2xWSG5rTXZPMHB4RU1rQ3dDeWpRNUY4L2trbEVRd0FZ?=
- =?utf-8?B?Z2Z0THB5Rlp0Sk5reTRKM2kzbDBlYlIvWlJiNjIzbnJVTnZzUVRKNW1PakRW?=
- =?utf-8?B?eVdvYW0xdkppN2h0cWJMazJOUnhVQzNNOEtRMkgvWnpSak1tYXM4bVd5WTlW?=
- =?utf-8?B?RnRReHAySTJqSlA0aW1ra1NtMStRVVZDaHlISDJHTFQ4YnBhamUzRUE4S0NY?=
- =?utf-8?B?NTdCd1dqZnNBMXU2Y2N5c3A4UHFza1ZYV3FQMWp0WHIyK25LQ0xHTGsrOFo4?=
- =?utf-8?B?WjM2MDI0YjhOMFNUUkI1cytUaXJWWDVrTHp0TWsrRnZGUi9RaWJUL1JLdCt2?=
- =?utf-8?B?cmFhczRQczd1d3RWL3VFejhXTGZYWEJ3V2tFb0dtZFh3WUg0dmlyaGVTakZQ?=
- =?utf-8?B?YkRucGRYZzU2VzhhbVgra0RCWFNjbU84RXZDb3NpZElJa2x0dkFmd1NKbk5Y?=
- =?utf-8?B?SmV1eHQ4ekdIUER4UVJCV1J6cnNtYkhSUUZqRzcwUWZqeXVPOHd5SlNUV01C?=
- =?utf-8?B?cVJUZW9aTUpTSnJGTEFqbWc1M0lxejlWbnFsckU4SUs5cUVvZTlyL0R0ckVj?=
- =?utf-8?B?cEh4VVI1UFpKMjh1MkduY2h0TTE0V3VUeEdCMFN5NTdKbHF0UUpDYzlzUWFG?=
- =?utf-8?B?eFk4ejkyOVp5MXQ5RFYxakNuVWFWcjNtS09zR1hYZ3REUVVBeFpTMVF2OGVq?=
- =?utf-8?B?dG80UDZ2azBkcXh2cDMyQzdTd3JlTFNXbHFBcy9xTlJHelhKYzVoMXVrb1dk?=
- =?utf-8?B?WXcxbmdEQ0ZrdURrSjA5ZDNxUUU2VjlaR3F3emNlRitvSk9WUXhEcTU3cXlu?=
- =?utf-8?B?ZGFJUjNYT3c0SEt1SUdRZEZXakRWYUI2ZTFOVXVLUWl6ZXJQYnlyTE1oUWda?=
- =?utf-8?B?RDMvTnh3TnBVRkZqYnUrRzM2cG8waHdndEZnbHN6cXE3bEhuZWZ1cnZaSHlu?=
- =?utf-8?B?UUhMUkVFdWFyMW84c1JGWm80T0xmTGg2WlNkOU9yTjJNa01hM3lSYkdnYzFh?=
- =?utf-8?B?TC95VzBDWm0vMmN4Z2grcWQwN0xXS3RidVVPNVNxOSt3NlFmNW82YmdiUUQw?=
- =?utf-8?B?TWFib1V4eVVzTlRsKzBBb3NyMHNOWG5tbTZFOXlhbGxkWGVMUHQzeDNmWExU?=
- =?utf-8?B?MktZdjVqR1UxbzgyNWxVYkdXWjBka204azVnYTUwWTJjZk5UaG9TT252dU00?=
- =?utf-8?B?K2t0UlcrQ05uOFdPWjRPS2xsbjNzTG5rQ2RGWlp1MEJJNkVteDZxT3h6YTda?=
- =?utf-8?B?d2F2UDV3SW5HcysrSVlaQnoxb3ZmRW8rNm42ZGt0MHpRNEZFNVdocVRBQ1BR?=
- =?utf-8?B?dmZId1RXQ0hCbFlRSS9OTW1FdS9nVW01UUZmbnBrRERSK1dFSTB4K0FYUmkz?=
- =?utf-8?B?M0ZTS3AvZFdaRmpxSyswKzNUalQ1YWtEYmtPNDRjaCtNUE5aeWVCalBWWG9Y?=
- =?utf-8?B?Mzg0eENRQlo0Ty9vRUs0TC9KNHJRRkpzMzFyMmRSR3NJeElncURXblFuTmZ3?=
- =?utf-8?B?Q2xMSUNTMkRGUTVnS1RHbmM2akFsTkVEakpKZkE1UXVzSm4xdnR1amZuK1A0?=
- =?utf-8?B?bFZoeTZ0TjZoTFpla0VXcFN2OTAraWRtUXc0TzJ5eCtoREZzSGR0b1NmeFJ1?=
- =?utf-8?B?WGF1a0JGbHA5QWNRQmdjQno4Z3pGVHBTTkI5VWVsUGx6Y1ZCcnNCVnZCajU2?=
- =?utf-8?B?akxBeGZqTE1iOHBISkoxSDI5eFQ3ZTgyK3FtYkJVRXZNYk0rVTBHOUU4amtU?=
- =?utf-8?B?OEIrd1VQUCtZRTMvZzJjN3VCeXpWZFlBS0dGdmxxSFJteEhOcXpFeUxCZktG?=
- =?utf-8?B?OE05WGpHUjNndE9Oa2hpMjMvNXZQbjNPNmk4eGlkTVhpeFZOSENwbllDdGxr?=
- =?utf-8?B?cFJqRE5LTVpLUkp1cFFDZ2NJKzRRZkZOMnoxRjY0ZytncVdhTEJZZWxXaU9t?=
- =?utf-8?B?VytQQndJOGpNdDVBTDlSWGpGdkJ5M0U5M2ZmZzVmTjhsL3A4QnUyMWpaMndR?=
- =?utf-8?B?K3V5d0Izcnc1TzZlbUdjcGNVY0RkTGRuU1dIYUJkV05tRkdVVklrTWpVcGRB?=
- =?utf-8?B?S2lBdG81a3l0YXltWmFNTzZUblBtaHNzakZDQTIrSzFJcElEU2EvT3lNa2tT?=
- =?utf-8?B?REovR3BGaDI1OFdONWJCQjN5SzJLdWx3SWFoWFRXbmdVZE8yVFZRQTliNHg1?=
- =?utf-8?B?VkhxOHFNZm9yYVcwcDgvQ3hiMGI2eWFnU3V5YjJhclhEYzcvVTZXTFBaZEFI?=
- =?utf-8?B?bS9VU3JNRXVhNEh1ZkVEQ3NPa2pzUGdkdmtWY0ZBUmdRckRmS3lxRElibW9Y?=
- =?utf-8?Q?EGXLoknTXgWzZJRg8e?=
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Bw9djGwH"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7C97A1F00A3A;
+	Tue, 16 Jun 2026 05:35:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1781588152;
+	bh=G1Mw2a7qoi+boOLpzB9qaRc3RlovOt1XSTdOWigzRUA=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=Bw9djGwHj7Sx60ELJVMYy+f8hljc6iGEliq2ik8N5YzAnacPD7I37mOi5nvsElhpy
+	 supxUYcYGxtqcpCMygQ5eJEDJ+atRBQqaTEmye+bL5mDnghZDMffTctZgrz2khqlJk
+	 qwL6Ol14Uqufo8OKVSUtSxogKzpslWDT0moWKoZO0IpFrMZVj7KlU/qBdLtlzXoIJR
+	 2tFakOO7roYh4lswSbOoFY0mqhBprZ5Zn+idFzcBx6TXZmhe9Yx6sTeqPCApK7rNmD
+	 naII2cDEZz331Hekwl3QOFepL1iAvsVbERdP2RuZP36zNr6GgWw1ZJ9/PBudbFvvLI
+	 54AcdgLJMi49Q==
+Date: Tue, 16 Jun 2026 07:35:45 +0200
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Can Guo <can.guo@oss.qualcomm.com>
+Cc: krzk@kernel.org, bvanassche@acm.org, beanhuo@micron.com, 
+	peter.wang@mediatek.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
+Subject: Re: [PATCH v9 0/2] scsi: ufs: Add support for static TX Equalization
+ settings
+Message-ID: <xow5me7cu2a3ksidppgw3zchjpydj5s65r77jzg22xrrbjol4g@nlvgcccr6gxu>
+References: <20260615132834.2985346-1-can.guo@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Exchange-RoutingPolicyChecked:
-	Tp8s02Hxqci46gLTCNX4Mx5vtXtQCkJk5ERNOyY4DPubauFgLVgIMImhdv1pvJeXH/y+PAf7rSJ1k3drkf1cAFvVVs8maDzMPrepU8V8GOP6JsKWHQBaqdZTvxOhX+MvGjioBUIfkOVtomoKykMkiFFJGKjHt0VSziCBhPoi92Asnl1lsP7lNKXN/G5J17tz2du8ER9J2HUlJCyLQ/HX4Foq1X6F34r0XIBptzw2UEefxEUX/xIzJN0h9cteoFTJ22IT4Hy6e95I9Els7EQ8z/HsZrT7oGe4bi8cQ4mSM/7tHzu7tBBeet52rPFcWhAtWSEgriaPDfuSI6J8jJYURw==
-X-OriginatorOrg: cisco.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: SJ0PR11MB5896.namprd11.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: b482d778-4c59-4eae-1c3e-08decb660caf
-X-MS-Exchange-CrossTenant-originalarrivaltime: 16 Jun 2026 05:13:49.2742
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 5ae1af62-9505-4097-a69a-c1553ef7840e
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: n2alN9GRY/6C4MTQvEi65f7P1b/FYUOuH4wta9p4X093Xjah5/kDifUrxZwe68x35vMe3KSBHKgZOTJ15OJotQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ0PR11MB5088
-X-Outbound-Client-TLS: ANONYMOUS;alln-opgw-1.cisco.com [173.37.147.229];TLSv1.3;TLS_AES_256_GCM_SHA384;256
-X-Outbound-SMTP-Client: 173.37.147.229, alln-opgw-1.cisco.com
-X-Outbound-Node: alln-l-core-01.cisco.com
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260615132834.2985346-1-can.guo@oss.qualcomm.com>
 
-T24gRnJpZGF5LCBKdW5lIDEyLCAyMDI2IDExOjU3IEFNLCBzYXNoaWtvLWJvdEBrZXJuZWwub3Jn
-IDxzYXNoaWtvLWJvdEBrZXJuZWwub3JnPiB3cm90ZToNCj4NCj4gW1NldmVyaXR5OiBMb3ddDQo+
-IElzIGl0IGludGVudGlvbmFsIHRvIHVuY29uZGl0aW9uYWxseSB1c2UgZm5pYy0+Zm5pY19udW0g
-aGVyZSBpbnN0ZWFkIG9mDQo+IGNvbmRpdGlvbmFsbHkgc3dpdGNoaW5nIGJhc2VkIG9uIHRoZSBp
-bml0aWF0b3IgdHlwZT8NCj4NCj4gT3RoZXIgRkNQLXNwZWNpZmljIHRyYWNlIGV2ZW50cyBjb250
-aW51ZSB0byBsb2cgdGhlIGhvc3Rfbm8uIEJlY2F1c2UgaG9zdF9ubw0KPiBhbmQgZm5pY19udW0g
-Y2FuIGRpZmZlciBkZXBlbmRpbmcgb24gZHJpdmVyIGxvYWQgb3JkZXIsIGxvZ2dpbmcgRkNQIEFD
-S3MgdW5kZXINCj4gYSBkaWZmZXJlbnQgaWRlbnRpZmllciBtaWdodCBzcGxpdCB0aGUgdHJhY2Ug
-c3RyZWFtIGFuZCBicmVhayB0b29scyB0aGF0DQo+IGZpbHRlciB0cmFjZXMgYnkgaG9zdCBudW1i
-ZXIuDQo+DQo+IFdvdWxkIGl0IGJlIGJldHRlciB0byBjb25kaXRpb25hbGx5IHVzZSBob3N0X25v
-IGZvciBGQ1AgaW5pdGlhdG9ycyBhbmQNCj4gZm5pY19udW0gZm9yIE5WTWUgaW5pdGlhdG9ycywg
-c2ltaWxhciB0byBob3cgdGhlIEZETUkgYW5kIGRlYnVnZnMgZW50cmllcw0KPiB3ZXJlIHVwZGF0
-ZWQ/DQoNClRoYW5rcyBmb3IgdGhlIHJldmlldy4NCg0KWWVzLCB0aGlzIGlzIGludGVudGlvbmFs
-Lg0KDQpUaGUgZ29hbCBvZiB0aGlzIGNoYW5nZSBpcyB0byB1c2UgZm5pY19udW0gYXMgdGhlIGRy
-aXZlci13aWRlIGlkZW50aWZpZXIgZm9yDQphbGwgdHJhY2UgZXZlbnRzIHNvIHRoYXQgdHJhY2lu
-ZyByZW1haW5zIGNvbnNpc3RlbnQgYWNyb3NzIGJvdGggRkNQIGFuZCBOVk1lDQppbml0aWF0b3Ig
-cm9sZXMuIFVzaW5nIGhvc3Rfbm8gY29uZGl0aW9uYWxseSBmb3IgRkNQIGluaXRpYXRvcnMgd291
-bGQgcmVpbnRyb2R1Y2UNCnJvbGUtc3BlY2lmaWMgaWRlbnRpZmllcnMgYW5kIGNyZWF0ZSBpbmNv
-bnNpc3RlbmN5IGluIHRoZSB0cmFjZSBvdXRwdXQuDQoNClJlZ2FyZHMsDQpLYXJhbg0KDQo=
+On Mon, Jun 15, 2026 at 06:28:32AM -0700, Can Guo wrote:
+> Hi,
+> 
+> This series adds support for board-specific static TX Equalization settings
+> provided through Device Tree.
+> 
+> This series is based on the earlier TX Equalization enablement work and
+> persistent storage/retrieval of optimal TX Equalization settings work:
+> https://lore.kernel.org/all/20260325152154.1604082-1-can.guo@oss.qualcomm.com
+> https://lore.kernel.org/all/20260424151420.111675-1-can.guo@oss.qualcomm.com
+> 
+
+Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
+
+- Mani
+
+> Background
+> ==========
+> 
+> UFS v5.0/UFSHCI v5.0 adds HS-G6 support (46.6 Gbps/lane) via UniPro v3.0
+> and M-PHY v6.0. These specs define TX Equalization for all High-Speed
+> Gears (not only HS-G6) to compensate channel loss and improve signal
+> integrity at high speed.
+> 
+> For HS-G6, M-PHY uses PAM4 1b1b line coding. Pre-Coding may also be
+> required depending on channel characteristics.
+> 
+> This series adds vendor-neutral DT properties:
+> - patternProperties: txeq-preshoot-g[1-6], txeq-deemphasis-g[1-6]
+> - fixed property: tx-precode-enable-g6
+> 
+> All properties use per-lane Host/Device tuples and accept 2 or 4 values
+> for x1/x2 lane configurations:
+> - txeq-preshoot-g[1-6]: values 0..7
+> - txeq-deemphasis-g[1-6]: values 0..7
+> - tx-precode-enable-g6: values 0/1
+> 
+> These properties carry board-level SI characterization data used as static
+> TX Equalization settings for each High-Speed Gear.
+> 
+> Example DTS snippet
+> ===================
+> 
+> The following x2-lane example shows the expected DT encoding:
+> 
+> 	ufs@1d84000 {
+> 		lanes-per-direction = <2>;
+> 
+> 		txeq-preshoot-g6 = <1 2>, <3 4>;
+> 		txeq-deemphasis-g6 = <0 1>, <2 3>;
+> 		tx-precode-enable-g6 = <1 0>, <0 1>;
+> 	};
+> 
+> Relationship with Adaptive TX Equalization
+> ==========================================
+> 
+> Adaptive TX Equalization remains the primary path when enabled.
+> 
+> Static TX Equalization settings from DT are board-specific baseline values,
+> but when adaptive TX Equalization is used, static settings are not final:
+> - If valid settings are retrieved from qTxEQGnSettings/wTxEQGnSettingsExt,
+>   those retrieved settings override static DT settings.
+> - If retrieval is not available/valid, TX EQTR runs and trained settings
+>   override static DT settings.
+> 
+> So static DT settings are a fallback and are intended for cases where
+> adaptive TX Equalization is not enabled/used.
+> 
+> No behavior changes for platforms that do not provide these properties.
+> 
+> What this series adds
+> =====================
+> 
+> 1. dt-bindings:
+> - Document txeq-preshoot-g[1-6], txeq-deemphasis-g[1-6], and
+>   tx-precode-enable-g6 in ufs-common.yaml.
+> - Define tuple encoding for host/device values per lane.
+> - Add per-property value validation ranges in schema.
+> 
+> 2. UFS core/platform integration:
+> - Parse and validate per-gear DT TX EQ settings during platform init.
+> - Store parsed values into per-gear TX EQ params and track DT origin using
+>   the from_dt flag.
+> - Integrate static-state handling in TX EQ flow so DT-provided entries are
+>   fed through the adaptive TX Equalization path and then converted to
+>   normal runtime params.
+> 
+> v8 -> v9:
+> - Fix DT schema shape for TX EQ properties to use proper uint32-matrix tuple
+>   form (nested rows) for tx-precode-enable-g6, txeq-preshoot-g[1-6], and
+>   txeq-deemphasis-g[1-6].
+> 
+> v7 -> v8:
+> - Replace split HS-G6 precode lane-list properties
+>   (tx-precode-g6-host-lanes/tx-precode-g6-device-lanes) with a single
+>   tx-precode-enable-g6 tuple property in the binding.
+> - Update parser in patch 2 to read tx-precode-enable-g6 as Host/Device
+>   tuples and validate full lane coverage and 0/1 values.
+> - Rename is_static to from_dt for clearer semantics in TX EQ params.
+> - Update commit messages for clarity and consistency.
+> 
+> v6 -> v7:
+> - Add DTS properties example in the cover letter.
+> - Replace tx-precode-enable-g6 tuple encoding with split lane-list
+>   properties:
+>   tx-precode-g6-host-lanes and tx-precode-g6-device-lanes.
+> - Update parser in patch 2 to read optional u32 lane-index arrays and
+>   treat unlisted lanes as precode disabled.
+> - Refactor patch 2 TX EQ property parsing to share a single helper for
+>   txeq-preshoot-gN/txeq-deemphasis-gN array read and validation.
+> - Dropped Reviewed-by/Acked-by due to code changes.
+> 
+> v5 -> v6:
+> - Use num_elems instead of count in the per-property validation loops for
+>   clarity (patch 2).
+> - Change else if (lpd > UFS_MAX_LANES) to a plain if after the !lpd early
+>   return, per kernel style (patch 2).
+> 
+> v4 -> v5:
+> - Extract the body of the per-gear for-loop in
+>   ufshcd_parse_static_tx_eq_settings() into a new helper
+>   ufshcd_parse_tx_eq_settings_for_gear() to reduce indentation depth
+>   (patch 2).
+> - Mark lpd and num_elems as const u32; rename sz to num_elems for clarity;
+>   use %u format specifier to match (patch 2).
+> - Replace size_t with u32 for the element-count variable (patch 2).
+> - Emit dev_warn() when lanes_per_direction exceeds UFS_MAX_LANES
+>   (patch 2).
+> 
+> v3 -> v4:
+> - Add Acked-by from Manivannan Sadhasivam to patch 1.
+> - Remove spurious dev_err() on the lpd guard in patch 2 (lpd == 0 is
+>   normal on platforms without lanes-per-direction in DT, not an error).
+> - Improve comment above the is_static condition in patch 2 to read
+>   "valid but static, i.e., populated from DT" for clarity.
+> 
+> v2 -> v3:
+> - Split the DT TX EQ binding into semantically separate properties:
+>   txeq-preshoot-g*, txeq-deemphasis-g*, tx-precode-g6-*-lanes.
+> - Place precode properties in properties (fixed keys) instead of
+>   patternProperties to satisfy dt-schema meta-schema rules.
+> - Restrict precode property to HS-G6 and document per-property ranges.
+> - Update the core parser to consume split properties.
+> - Drop unrelated arch/arm64/configs/defconfig changes from patch 2.
+> 
+> v1 -> v2:
+> - Improve the commit message of patch 1.
+> 
+> Can Guo (2):
+>   dt-bindings: ufs: Document static TX Equalization settings properties
+>   scsi: ufs: core: Add support for static TX Equalization settings
+> 
+>  .../devicetree/bindings/ufs/ufs-common.yaml   |  58 +++++++
+>  drivers/ufs/core/ufs-txeq.c                   |  15 +-
+>  drivers/ufs/host/ufshcd-pltfrm.c              | 156 ++++++++++++++++++
+>  include/ufs/ufshcd.h                          |   2 +
+>  4 files changed, 230 insertions(+), 1 deletion(-)
+> 
+> -- 
+> 2.34.1
+
+-- 
+மணிவண்ணன் சதாசிவம்
