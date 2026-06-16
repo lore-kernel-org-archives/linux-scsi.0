@@ -1,137 +1,227 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D2E4038E126;
-	Tue, 16 Jun 2026 14:41:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 57B9543E4B4
+	for <linux-scsi@vger.kernel.org>; Tue, 16 Jun 2026 15:22:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781620870; cv=none; b=U+cRgDOGSimJox9MaSwW0PBOr2PZs4NPwS1DLEC4azX+a9pST3b+nEGvF17xcyReIc7UK1mCm7JJIs3ntN9Cy6qzmvYy69gg/Xqi9thqGGLmkIju77jMOe6pN5dX2cWurKOmKg1EdvvW47I8zCML7nmfmyflKz5O+GvvnlQl/Kg=
+	t=1781623373; cv=none; b=dTVhKjxprUTBFN8He+WVJ3D0cRnOH9sKahHHCcsHX1zuvH8PW7k/7zx8GHh92piVOyJRza1MPCkRA9ftmnl6OyBX7RsQsLI91CVFCXljkVs0suKvFuaEOoVKX+g+Lo6jKA198sKClkgL1kpjvI8dhudERjrjm8tBKqg2TYYsp+Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781620870; c=relaxed/simple;
-	bh=OjvWOd72oofwYk1RZDIhJiFu01Pylqt27dmk+xB+knM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Oo25rveqwIJN+Aqro/PEI10p9J12qhWGDe5gFmv+Xe4zfiFlJQL1iPDCxUjBNVrFHTNPdV5w7Pc1xU0v1ljGvQhoO1lhhJ9GWLkcL9FmZXSuIhwEvdURJDXSQRHfBKmwZzpif+9rNeApYDWHG9WvrmYJM922I8BgI4M4A0jFsj8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VMm5yA6o; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1781623373; c=relaxed/simple;
+	bh=r2bPjaF+3nM4GNJt44dnr4hjNplN+rhkhZ49EgwrWrQ=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=miK7QJLwmdxpZZ5TqN9mwGAf9Gsxz8x4QdbNEnBnaEdEH1tzqH1+8gOQj1ZJ3OXvoDM019lZBlruFb2VwxQbn5fsxXE1KGD3ruRYQkbkwHtOtzc6zX4aEp317yNNyUZ9jsHoR2MKvXY9qz1dw9IQdz6nRw9UzbhBxFqduX9jcbc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=HgzKQ8Xx; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VMm5yA6o"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AF67A1F000E9;
-	Tue, 16 Jun 2026 14:41:08 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781620869;
-	bh=c9QTra+kbV8VYr3UBES6o1aA4Cc8/libaJin7AQVNQ8=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=VMm5yA6oJAvphvcK20Z9E9bgIdMOCWhAwm5IjBHMR766nO8TJdXGDJ/EWfkmkosz9
-	 09n2ZZeHjSGIxLSJd6tIJ1kPpgfO6KBeyg2FjHSr99J8hvX2rzksMFJD8pmgvhZE7V
-	 l+lSrT7oEaN8M8GXrl9oQEm5UoqMfSG5+0iwgQgxTjWghMDYv1MACoTbC9IfpgnEG2
-	 6WCC0JtfPKr/JdBB2X72Cff5dqeZeKIEvRqIZfGxgEqnCRQEeEPLuSsK4eVZ1p3Fqc
-	 v26tqKr19tvVQfyhNu59rwwx8LkwC6HGUHQy/Wtns0spynzVqK1UThAbZfIIqlMOdj
-	 qlbpvcbgYI9Qg==
-Date: Tue, 16 Jun 2026 16:41:04 +0200
-From: Alexey Gladkov <legion@kernel.org>
-To: sashiko-reviews@lists.linux.dev
-Cc: linux-scsi@vger.kernel.org
-Subject: Re: [PATCH] scsi: mptfusion: Fix array out of bounds error
-Message-ID: <ajFggL0I9qDdzeY5@example.org>
-References: <20260616124528.319527-1-legion@kernel.org>
- <20260616130423.A220B1F000E9@smtp.kernel.org>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="HgzKQ8Xx"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1781623371;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=RjBP9R1S5MxdGQYXMh2db+E4ZHkiyeiPNhqM9DClkYY=;
+	b=HgzKQ8Xx3uPEcY5d5ie6PGdCpSaW15shfvwKZKuVVDWgUJLqfsuJn3lsEWcjkW6m4X0CwY
+	nAwfYEQ52dW4yOGJKVr0BDJdaAHJMr29R4XXTLDoenREWHwVikpqsIml4hZB7tH3ZE5WGT
+	Pnq9CGg3rMGnwc1Xwf+h2zD3PE/m408=
+Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-158-0oQWpsMLNSePo8FNB0w9jA-1; Tue,
+ 16 Jun 2026 11:22:46 -0400
+X-MC-Unique: 0oQWpsMLNSePo8FNB0w9jA-1
+X-Mimecast-MFC-AGG-ID: 0oQWpsMLNSePo8FNB0w9jA_1781623364
+Received: from mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.111])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 79A931800D86;
+	Tue, 16 Jun 2026 15:22:43 +0000 (UTC)
+Received: from fedora-work.redhat.com (unknown [10.22.80.179])
+	by mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 90B42180034F;
+	Tue, 16 Jun 2026 15:22:37 +0000 (UTC)
+From: David Jeffery <djeffery@redhat.com>
+To: driver-core@lists.linux.dev,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Danilo Krummrich <dakr@kernel.org>
+Cc: linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	Tarun Sahu <tarunsahu@google.com>,
+	Pasha Tatashin <tatashin@google.com>,
+	=?UTF-8?q?Micha=C5=82=20C=C5=82api=C5=84ski?= <mclapinski@google.com>,
+	Jordan Richards <jordanrichards@google.com>,
+	Ewan Milne <emilne@redhat.com>,
+	John Meneghini <jmeneghi@redhat.com>,
+	"Lombardi, Maurizio" <mlombard@redhat.com>,
+	Stuart Hayes <stuart.w.hayes@gmail.com>,
+	Laurence Oberman <loberman@redhat.com>,
+	Bart Van Assche <bvanassche@acm.org>,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	John Garry <john.g.garry@oracle.com>,
+	kexec@lists.infradead.org,
+	David Jeffery <djeffery@redhat.com>
+Subject: [PATCH v17 0/5] shut down devices asynchronously
+Date: Tue, 16 Jun 2026 11:22:14 -0400
+Message-ID: <20260616152219.6268-1-djeffery@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260616130423.A220B1F000E9@smtp.kernel.org>
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.111
 
-On Tue, Jun 16, 2026 at 01:04:22PM +0000, sashiko-bot@kernel.org wrote:
-> Thank you for your contribution! Sashiko AI review found 1 potential issue(s) to consider:
-> 
-> Pre-existing issues:
-> - [Critical] Incomplete fix: Out-of-bounds array access in fusion sub-drivers due to unclamped ioc->facts.NumberOfPorts
-> --
-> 
-> commit c993313579593bc432c039b88b1e748a26bc690c
-> Author: Alexey Gladkov <legion@kernel.org>
-> 
-> scsi: mptfusion: Fix array out of bounds error
-> 
-> The driver retrieves the number of ports from the hardware. However, the
-> driver can handle no more than two such ports. It uses a fixed array for
-> them.
-> 
-> > diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
-> > index 3a431ffd3e2eb..05bd556bb9383 100644
-> > --- a/drivers/message/fusion/mptbase.c
-> > +++ b/drivers/message/fusion/mptbase.c
-> > @@ -3257,6 +3257,8 @@ GetPortFacts(MPT_ADAPTER *ioc, int portnum, int sleepFlag)
-> >  		return -4;
-> >  	}
-> >  
-> > +	BUG_ON(portnum < 0 || portnum >= ARRAY_SIZE(ioc->pfacts));
-> > +
-> >  	pfacts = &ioc->pfacts[portnum];
-> 
-> [ ... ]
-> 
-> > @@ -6701,6 +6703,7 @@ static int mpt_iocinfo_proc_show(struct seq_file *m, void *v)
-> >  	char		 expVer[32];
-> >  	int		 sz;
-> >  	int		 p;
-> > +	int		 numberOfPorts = MIN(ioc->facts.NumberOfPorts, ARRAY_SIZE(ioc->pfacts));
-> >  
-> >  	mpt_get_fw_exp_ver(expVer, ioc);
-> >  
-> > @@ -6755,7 +6758,7 @@ static int mpt_iocinfo_proc_show(struct seq_file *m, void *v)
-> >  	seq_printf(m, "  MaxBuses = %d\n", ioc->facts.MaxBuses);
-> >  
-> >  	/* per-port info */
-> > -	for (p=0; p < ioc->facts.NumberOfPorts; p++) {
-> > +	for (p = 0; p < numberOfPorts; p++) {
-> 
-> [Severity: Critical]
-> This is a pre-existing issue, but by only capping numberOfPorts locally here,
-> does this leave the rest of the fusion sub-drivers vulnerable to out-of-bounds
-> accesses?
-> 
-> The unclamped ioc->facts.NumberOfPorts is still used in several loops across
-> the driver, where the bounds of statically sized arrays (like pfacts or
-> fc_port_page1, both size 2) are exceeded if hardware reports more than 2
-> ports.
-> 
-> For instance, in drivers/message/fusion/mptfc.c:mptfc_remove():
-> 
-> 	for (ii=0; ii<ioc->facts.NumberOfPorts; ii++) {
-> 		if (ioc->fc_data.fc_port_page1[ii].data) {
-> 			dma_free_coherent(&ioc->pcidev->dev,
-> 					  ioc->fc_data.fc_port_page1[ii].pg_sz,
-> 					  ioc->fc_data.fc_port_page1[ii].data,
-> 					  ioc->fc_data.fc_port_page1[ii].dma);
-> 
-> Since fc_port_page1 is size 2, if NumberOfPorts is 8, could this read
-> adjacent struct members of MPT_ADAPTER and pass them to dma_free_coherent(),
-> leading to arbitrary invalid frees and a kernel panic?
-> 
-> Similar loops iterating over pfacts exist in mptfc_probe(), mptsas_probe(),
-> mptspi_probe(), and mptlan_probe().
-> 
-> Would it be safer to clamp ioc->facts.NumberOfPorts directly after retrieving
-> it from firmware, so all sub-drivers are protected?
+These patches are rebased against the driver-core tree's driver-core-next
+branch and should also apply against recent linux-next. Changes for v17 are
+contained in patches 2 and 3 which are most in need of reviewing.
 
-Indeed. We could create a wrapper to retrieve MPT_ADAPTER that checks for
-array index out-of-bounds errors. But there is one little catch here,
-since we use NumberOfPorts to iterate over different arrays. We need to
-synchronize their sizes.
 
-> >  		seq_printf(m, "  PortNumber = %d (of %d)\n",
-> >  				p+1,
-> >  				ioc->facts.NumberOfPorts);
-> 
-> -- 
-> Sashiko AI review · https://sashiko.dev/#/patchset/20260616124528.319527-1-legion@kernel.org?part=1
-> 
+This patchset allows the kernel to shutdown devices asynchronously and
+unrelated async devices to be shut down in parallel to each other.
+
+Only devices which explicitly enable it are shut down asynchronously. The
+default is for a device to be shut down from the synchronous shutdown loop.
+
+This can dramatically reduce system shutdown/reboot time on systems that
+have multiple devices that take many seconds to shut down (like certain
+NVMe drives). On one system tested, the shutdown time went from 11 minutes
+without this patch to 55 seconds with the patch. And on another system from
+80 seconds to 11.
+
+And thank you to everyone who has spent some of their valuable time
+providing reviews, suggestions, criticisms, or tests on the various
+iterations of this patchset.
+
+Changes from V16:
+
+Drop spinlock before async subsystem call which uses GFP_KERNEL
+Handle that async shutdown can widen races between device shutdown and deletion
+  * __shutdown_one_device will immediately return if a device is dead
+  * Set shutdown device completion to complete when marking a device dead to
+      prevent waiting on a dead device
+  * Only late-access a parent pointer if device is in a non-dead state to
+      ensure the pointer is still valid
+
+Changes from V15:
+
+The async_shutdown bit field is converted to a device flags bit
+Convert all patches to use the flag bit accessor macros to set or check if
+  async shutdown should be used
+Added documentation on the kernel parameter to control use of async shutdown
+
+Changes from V14:
+
+Remove unneeded use of '!!' with boolean type
+
+Changes from V13:
+
+Remove duplicate flagging of async shutdown on scsi hosts/targets/devices
+
+Changes from V12:
+
+Only acquire a parent reference if acquiring the parent's lock
+device_enable_async_shutdown should return void
+Minor comment and description cleanups
+
+Changes from V11:
+
+  * Swap the order of the first two patches
+  * Rework conditional parent locking so that lock and unlock no longer use
+    separate conditional checks
+  * Remove an used variable
+  * Comment and description text cleanups
+
+Changes from V10:
+
+Reworked to more closely match the design used for async suspend
+  * No longer uses async subsystem cookies for synchronization
+  * Minimized changes to struct device
+  * Enable async shutdown for pci and scsi devices which support async suspend
+
+Changes from V9:
+
+Address resource and timing issues when spawning a unique async thread
+for every device during shutdown:
+  * Make the asynchronous threads able to shut down multiple devices,
+    instead of spawning a unique thread for every device.
+  * Modify core kernel async code with a custom wake function so it
+    doesn't wake up a thread waiting to synchronize on a cookie until
+    the cookie has reached the desired value, instead of waking up
+    every waiting thread to check the cookie every time an async thread
+    ends.
+
+Changes from V8:
+
+Deal with shutdown hangs resulting when a parent/supplier device is
+  later in the devices_kset list than its children/consumers:
+  * Ignore sync_state_only devlinks for shutdown dependencies
+  * Ignore shutdown_after for devices that don't want async shutdown
+  * Add a sanity check to revert to sync shutdown for any device that
+    would otherwise wait for a child/consumer shutdown that hasn't
+    already been scheduled
+
+Changes from V7:
+
+Do not expose driver async_shutdown_enable in sysfs.
+Wrapped a long line.
+
+Changes from V6:
+
+Removed a sysfs attribute that allowed the async device shutdown to be
+"on" (with driver opt-out), "safe" (driver opt-in), or "off"... what was
+previously "safe" is now the only behavior, so drivers now only need to
+have the option to enable or disable async shutdown.
+
+Changes from V5:
+
+Separated into multiple patches to make review easier.
+Reworked some code to make it more readable
+Made devices wait for consumers to shut down, not just children
+  (suggested by David Jeffery)
+
+Changes from V4:
+
+Change code to use cookies for synchronization rather than async domains
+Allow async shutdown to be disabled via sysfs, and allow driver opt-in or
+  opt-out of async shutdown (when not disabled), with ability to control
+  driver opt-in/opt-out via sysfs
+  
+Changes from V3:
+
+Bug fix (used "parent" not "dev->parent" in device_shutdown)
+ 
+Changes from V2:
+ 
+Removed recursive functions to schedule children to be shutdown before
+  parents, since existing device_shutdown loop will already do this
+ 
+Changes from V1:
+
+Rewritten using kernel async code (suggested by Lukas Wunner)
+
+
+Stuart Hayes (2):
+  driver core: separate function to shutdown one device
+  driver core: do not always lock parent in shutdown
+
+David Jeffery (3):
+  driver core: async device shutdown infrastructure
+  PCI: Enable async shutdown support
+  scsi: Enable async shutdown support
+
+ .../admin-guide/kernel-parameters.txt         |  10 +
+ drivers/base/base.h                           |   2 +
+ drivers/base/core.c                           | 214 +++++++++++++++---
+ drivers/pci/probe.c                           |   2 +
+ drivers/scsi/hosts.c                          |   2 +
+ drivers/scsi/scsi_sysfs.c                     |   3 +
+ include/linux/device.h                        |   2 +
+ 7 files changed, 199 insertions(+), 36 deletions(-)
 
 -- 
-Rgrds, legion
+2.53.0
 
