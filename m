@@ -1,155 +1,212 @@
 Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3D4383B42E0;
-	Tue, 16 Jun 2026 09:07:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F08A040FDB7
+	for <linux-scsi@vger.kernel.org>; Tue, 16 Jun 2026 09:09:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781600842; cv=none; b=Uu+AH6mWy8VnQI3SaoL0TNNM09fPq4OKgUdpl3Gxjk99OW15c/QYLhLHdx7NTi0QzVUuN7qxwhWrHmUJIdYI+/WY23Umrbk0V4HV70OaYL6/1FP697Jugf5Jf1OfvivlKy9Mi/NTWwp4Z3+Cw3dOVcu1odR1schy9aarAFc2RFg=
+	t=1781600957; cv=none; b=LXeBYeHnDk494pFc3whxf7QN7ekSwCYJvr2NDKt2wftFAQQUpHGaqm5uxk511EjT03PxB92EkPUwsSXPwt1UlLZVG/T5fL0iAUsFwG2yL0UPfTp022jw7WpVm+faIbJt8NCpwrDhe9Inqxa+JHMI/ks45Z/gm8/UPBNdtpRFozE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781600842; c=relaxed/simple;
-	bh=qzeryRYpdLGCVYS4KABk0ntO6zNjQc2NMGaaVW2AJ5c=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=b7m2yfNhCMIn7vv3AniOLKfXz6wXqzzGSQvoEio+1291WTnYue/ZUJTtYXofMYkKRDweWWkPPjAH1y+zcDQmaJC1eaCMesgAkSEuPMhPUBy4FdMnN3ao0Mqd0ZTyFtFpwAS8Izxu+cLE5pNSpVJWMKS++TwFIEtofMOgyt1bnrQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=YKGGi/f4; arc=none smtp.client-ip=205.220.180.131
+	s=arc-20240116; t=1781600957; c=relaxed/simple;
+	bh=Ih6jeq8wPPjziulVsHkz2i18GZmjPdSfbEXqLyxqvv0=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=c1L9S+LBXm1ucLQKyr9PLH4UIJNX4VHMucO/JgSAT0uRDQxRdci5l/hfZCbQ35XLfeDLt2lP4grUr4iRHvQ1ZBIhLVOXzAr4BT2kojEVZnAgmWwk3pobiFRGv4KeQU6t4WpzhNcuN6rxVvGO//Hk0q3YMYz03lPdhl3ANsIHL7c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=ROsV5Jy3; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=VxcQactk; arc=none smtp.client-ip=205.220.180.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="YKGGi/f4"
-Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 65G65fUU2699304;
-	Tue, 16 Jun 2026 09:06:57 GMT
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="ROsV5Jy3";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="VxcQactk"
+Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 65G65RGZ2850117
+	for <linux-scsi@vger.kernel.org>; Tue, 16 Jun 2026 09:09:15 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:date:from:message-id:mime-version
-	:subject:to; s=qcppdkim1; bh=Q49hmB3FmH5hqN2TomYa5f2WQRUZP4pblCY
-	yLO2OOAY=; b=YKGGi/f4XCOPB00jiJkPc2F4KNGVhxaYwg+W6DvfHPd1v1rK2MP
-	TP80dRpoIa8VwRfUeai1/0CTYNcNTBRxtBz7SqH4kU62EBIMbwrD/bdOnFnUi4Vc
-	4D++GBoVsXvT84UsgJG3lbdInXYzrddrhyCKuUu3vk5j6H2YVBR49nsnc+X8Fv6V
-	0NlS9FXK2fetZV/uL4YGOdz/73XMQ4weuEPx3bSKHPW7I4n1LGohy64OV8s5nPES
-	gIEQpZ4AH1q34fK+cynWT5GC2XeQiTauAWuEFLgV7avYkOfofedwoC4jvxYRKmrI
-	pmpTC6M98SfG1200LokYJ5cRf4h4XqB3iBQ==
-Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4eu09k8xcn-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 16 Jun 2026 09:06:56 +0000 (GMT)
-Received: from pps.filterd (NALASPPMTA01.qualcomm.com [127.0.0.1])
-	by NALASPPMTA01.qualcomm.com (8.18.1.7/8.18.1.7) with ESMTP id 65G95sE7021280;
-	Tue, 16 Jun 2026 09:06:55 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-	by NALASPPMTA01.qualcomm.com (PPS) with ESMTPS id 4ettxpvpbr-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 16 Jun 2026 09:06:55 +0000 (GMT)
-Received: from NALASPPMTA01.qualcomm.com (NALASPPMTA01.qualcomm.com [127.0.0.1])
-	by pps.reinject (8.18.1.12/8.18.1.12) with ESMTP id 65G96tRO023199;
-	Tue, 16 Jun 2026 09:06:55 GMT
-Received: from hu-devc-lv-u22-c.qualcomm.com (hu-cang-lv.qualcomm.com [10.81.25.255])
-	by NALASPPMTA01.qualcomm.com (PPS) with ESMTPS id 65G96tIc023194
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 16 Jun 2026 09:06:55 +0000 (GMT)
-Received: by hu-devc-lv-u22-c.qualcomm.com (Postfix, from userid 359480)
-	id 3E961644; Tue, 16 Jun 2026 02:06:55 -0700 (PDT)
-From: Can Guo <can.guo@oss.qualcomm.com>
-To: bvanassche@acm.org, beanhuo@micron.com, peter.wang@mediatek.com,
-        martin.petersen@oracle.com, mani@kernel.org
-Cc: linux-scsi@vger.kernel.org, Can Guo <can.guo@oss.qualcomm.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-        linux-kernel@vger.kernel.org (open list),
-        linux-arm-msm@vger.kernel.org (open list:ARM/QUALCOMM MAILING LIST)
-Subject: [PATCH] scsi: ufs: core: Avoid possible memory reclaim deadlock in TX EQTR context
-Date: Tue, 16 Jun 2026 02:06:42 -0700
-Message-Id: <20260616090654.421850-1-can.guo@oss.qualcomm.com>
-X-Mailer: git-send-email 2.34.1
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	tF8QGDLALBCYPdqex0XcjlP/aqvAXjPOLvPPj6ruw/0=; b=ROsV5Jy3TdJPHVRu
+	Wh4BBmLwk/uud2DbnPr9z+dhI/eGPXYjSDGNsLmCaWbt9KzD8k5inhdq7Lzes6PK
+	SGcc91GGqkelEdHyw8dR/5yC2q9U05buqzYQijBuHckO2Bm//Rl83s44r7DPHNuJ
+	WzGmj2HW0e3KLWj4SqYkjwIJus1uMqp2q1y5+/7kV+sTagu5O8CAF2nYH3RYuuv2
+	zjMHBJkpDdw9eKBabihqJiw2xKfNYbq8NDpOSphPt4gi+586VO+8Wrl2EYx3ZXOe
+	VoDGBWywcoJL7zPvBo9STb+3kl2H1UX67ev3qlJn5W2G49UBe/dRcs7DhefQj3vV
+	Ut+upQ==
+Received: from mail-pl1-f200.google.com (mail-pl1-f200.google.com [209.85.214.200])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4eu09g8xwm-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Tue, 16 Jun 2026 09:09:14 +0000 (GMT)
+Received: by mail-pl1-f200.google.com with SMTP id d9443c01a7336-2beff6b6e74so57180825ad.1
+        for <linux-scsi@vger.kernel.org>; Tue, 16 Jun 2026 02:09:14 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1781600954; x=1782205754; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=tF8QGDLALBCYPdqex0XcjlP/aqvAXjPOLvPPj6ruw/0=;
+        b=VxcQactkiAyFeKbtn6XXJ9ZITb8j/b/P59Fw/vEyWai8ZNNy0te2c0L5qwUcQXIdnc
+         KwES1GY0pNWnTjIbyXaFstZb+n1F2VDYFT81RfU4n/u7wHI4iEXocF6BRLIrG7SSgDZg
+         Rd1zfKwVSEkWU7aXC5AdVgD/IWMmwqPL6g/1cOVhYmqPQGViC6zvaAc/b6xy7K6a0Npd
+         z82pwUYePhn9TQdDgszFOeRfAwMvhUv8wY4qdTtT/XzV68pT/kFpe/X5gPt6r9ydPdwA
+         T5VHtuTs3o6gIZFin/6LTOzt90vw1c1B0XKJENSfVAHTs8BbmxfTt9HAS7ibHU+fhjDF
+         jxOw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1781600954; x=1782205754;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=tF8QGDLALBCYPdqex0XcjlP/aqvAXjPOLvPPj6ruw/0=;
+        b=Vjg5q3M5hlkJdZR5uUmW6XRGpltWb407p0QuiMZ6nJ8XDJSpFUr2ONdkbx8VoWTwLl
+         YpErfxp2eG0lomLq3N+mKuaJ5UXNas99XWD6wjvPY8QIWtnV6j3Ec+qOBcLkkXUiLMIk
+         /i6MnxPbJpiVQrIbmb+tkZ43bWtXY4b/H40A6WH0TfpIaf8BdzH09ihb8L0ncOEYTGQY
+         kwRo31lFLDNgC3LM5bi7ZPOmjiVgYLpcAC1SX3y94hah2pPiBl4/lt6xYYrUlQYwdRnP
+         gkqUkUL+ye2Mb4NpAoY55Sa5NC4r87T9XBKIWrrw8IhOuPZCzuYchRoBu+PPo16nHD8Y
+         1CHQ==
+X-Gm-Message-State: AOJu0YwACcKaCMNobvV/RmGAGsu/NaVYhue+oLtSSiuK1voe0+lB+H1L
+	sM/czqGpj2MmDdF6sjazUxyMZHMjsLwsTjBxwuSohcrFbEhwe8KdiEOfG6u7HdU+wuWp6IbFtNH
+	zgZkky60HCXLDyGjCTfsS0yyciKi3M2gVir3ph8+FUe8M5dxtdYbigfhyTkKRXTSZ
+X-Gm-Gg: Acq92OGEggi0hEzT08NR9aMVxHxloBYYuDNyEnAbSfugwpLyLeLApbaCz1gpCRoM4nb
+	9fEd1tujw5mO9wrtMg/ZsVqSeUrYzeeWAUYMBTf4Z5UYDiaPKnnFjwfivqUeSGpls90L6xDJs2A
+	NtWDGw7utKYjkiIvGOAsQ0fn6ZzJtoXvNM6TC3h5J4yPk2u9u3hGqSyLuefaQ5JQ2dfhmlb8Ltb
+	Swl+SPXLkttW+7M3eid9bI3ajVo2CSvQt9YOL1/4Tn4jD+yqBFnximeNqR8R07VG0PYMEYRkHjc
+	CDVBKYVJD87dboEh/+2KqgIdyJGIRyoANzyyBnh79Gx1FkZP6qMA7+OieVbbP4ybsBl0NCjkYDh
+	dh/tAS24edMlwWLRbJah9YuMRQPkrM0XC/Whq1raG7E/eCD8ExrUN3vxdjbsNybt3YHI+kfMRjx
+	zpIZDG/LXl3w==
+X-Received: by 2002:a17:903:1b67:b0:2bf:172d:ef7e with SMTP id d9443c01a7336-2c4135e5c1cmr209319865ad.34.1781600953862;
+        Tue, 16 Jun 2026 02:09:13 -0700 (PDT)
+X-Received: by 2002:a17:903:1b67:b0:2bf:172d:ef7e with SMTP id d9443c01a7336-2c4135e5c1cmr209319425ad.34.1781600953373;
+        Tue, 16 Jun 2026 02:09:13 -0700 (PDT)
+Received: from [10.133.33.52] (tpe-colo-wan-fw-bordernet.qualcomm.com. [103.229.16.4])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2c42f7c651dsm124810995ad.26.2026.06.16.02.09.10
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 16 Jun 2026 02:09:12 -0700 (PDT)
+Message-ID: <bf4d2fd7-2a8d-48cb-9f50-67b6ae4f2163@oss.qualcomm.com>
+Date: Tue, 16 Jun 2026 17:09:08 +0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v9 2/2] scsi: ufs: core: Add support for static TX
+ Equalization settings
+To: =?UTF-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= <peter.wang@mediatek.com>,
+        "beanhuo@micron.com" <beanhuo@micron.com>,
+        "mani@kernel.org"
+ <mani@kernel.org>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        "krzk@kernel.org" <krzk@kernel.org>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "quic_nitirawa@quicinc.com" <quic_nitirawa@quicinc.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
+        "avri.altman@wdc.com" <avri.altman@wdc.com>,
+        "quic_rdwivedi@quicinc.com" <quic_rdwivedi@quicinc.com>,
+        "James.Bottomley@HansenPartnership.com"
+ <James.Bottomley@HansenPartnership.com>
+References: <20260615132834.2985346-1-can.guo@oss.qualcomm.com>
+ <20260615132834.2985346-3-can.guo@oss.qualcomm.com>
+ <e4590bb7dcda6bd8b20af2e22a18111b998b9efb.camel@mediatek.com>
+Content-Language: en-US
+From: Can Guo <can.guo@oss.qualcomm.com>
+In-Reply-To: <e4590bb7dcda6bd8b20af2e22a18111b998b9efb.camel@mediatek.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-QCInternal: smtphost
-X-QCInternal: smtphost
-X-Proofpoint-Spam-Info: AW1haW4tMjYwNjE2MDA5MCBTYWx0ZWRfX7Dur2vpheyW/
- inVrxZpw/kv8sUY068o7me6t/1g3r2PtL5rsYIPXRQUjGhXRnEJIvIlvhmxh80IuBE2HiLk4fOq
- AJz5o/8xjXWZXLkY/tRh+QxunzbyAgE=
-X-Proofpoint-GUID: 2Rc9tUVEWN-SITlOHqjE6lZorYvKQYel
-X-Authority-Analysis: v=2.4 cv=DoZmPm/+ c=1 sm=1 tr=0 ts=6a311230 cx=c_pps
- a=ouPCqIW2jiPt+lZRy3xVPw==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
- a=FelO9ux0wxsA:10 a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22
- a=ZpdpYltYx_vBUK5n70dp:22 a=c92rfblmAAAA:8 a=EUspDBNiAAAA:8
- a=GQIZyLKiKp83YMogZvcA:9 a=GvGzcOZaWPEFPQC_NcjD:22
-X-Proofpoint-ORIG-GUID: 2Rc9tUVEWN-SITlOHqjE6lZorYvKQYel
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNjE2MDA5MCBTYWx0ZWRfXzjJ53/4VnP5K
- Mjkv4x6wFlW00f76ja7gjSr5XQXbC0lUzdJvP1aQ+esGoAdCc2ZBkeTC8fga7vWkaoq7ZYWR2V8
- fiOwiv0D6f3KCwOiNjJWjtAmuG4MhLmMvEeHZRVXRkCpOdesXXWKEp0qcbAiZ3by4eLKrlsFtVF
- rZWYnXEtpnyK5944MUixxL3mheyeSd5tEl3QaxHGaYPusdyeXFfiJazTEnqR/f4H3U2KV8icvor
- KRV2jjTl9kK2OFL80F3foIM3h1hBct8xoXLnzczDbOij1wPlixjwRD0vulezElxktkY3mpw2+2c
- /K4jkhOivEEfnIxokUTJPreF4GTqCWcEZ0udzyE/7dkNjX3JlhCRbl0fqO9nnJc2YJ482lE2J8O
- 0ued2yxAe9c9jQap9fII+wV9R7pQbS+fc1AyOMFFL6uWAb5VJZfaTBGFZwRNJP/ZmuYrei8Hxb+
- 2C3EVAtjck9Ere4ho5g==
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNjE2MDA5MSBTYWx0ZWRfX0up83blkxJxW
+ epH55tAVHQyyQGYYRWwND0FxIVH7qJnVU4sK1z3pQQ1J0/cbcoZAUDP481OlAMevh6w6VrBSAJZ
+ odtpT3SDb1J2xf5uF1bGgJkah8BZCf1bcseL+zXJod4pgwjeTvdWdwL1BjwhBigG521QK5g1iRW
+ NBkU2lTwoX/Of9tTsgsJ4j+nEhRc8QbAH7ZhM7QYFl4gLqkDvx8YPKjlTSTdu6Zpp7cpZoceXcn
+ nTUuaVSMPHzWCp6UmJDEu5fP5VvJZrW2DdrrMSi6F02Wnr34+AMdLW1cXEzlyssAFtJMemv78Yh
+ 8JA795yKJdIUnetadCw6ssQgY5EJbinTSHZQ3sF8cD8ZEtQHfNOBx52SPL7/ZjUQ5EprjaBLwVl
+ 5tamP19q1JgzUEpmMtFmZ9+S2RTETwHYvSJ0iHlWSszRPxsvRF2DO44z7ITtX4g1CXgvIY5oZbR
+ jM8YC1PccWImcmSff1A==
+X-Proofpoint-ORIG-GUID: fBd-ROtkv0sH1tTLY5UbSnruK24SfjZv
+X-Proofpoint-Spam-Info: AW1haW4tMjYwNjE2MDA5MSBTYWx0ZWRfX5UIvnjNxdQ1I
+ w2juDMf08VrTdrjekG+PCWf2rPNNh6swlCfV02uu4VnZnygrk5voKbpHrln+0QjFsruBf9JLBhq
+ eWANzldPuo+uSQEbYtcvPa/kS1pTm+M=
+X-Authority-Analysis: v=2.4 cv=DLa/JSNb c=1 sm=1 tr=0 ts=6a3112ba cx=c_pps
+ a=IZJwPbhc+fLeJZngyXXI0A==:117 a=nuhDOHQX5FNHPW3J6Bj6AA==:17
+ a=IkcTkHD0fZMA:10 a=FelO9ux0wxsA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=rJkE3RaqiGZ5pbrm-msn:22
+ a=VwQbUJbxAAAA:8 a=EUspDBNiAAAA:8 a=R3sHXq4109Ddd7yNOpYA:9 a=3ZKOabzyN94A:10
+ a=QEXdDO2ut3YA:10 a=uG9DUKGECoFWVXl0Dc02:22
+X-Proofpoint-GUID: fBd-ROtkv0sH1tTLY5UbSnruK24SfjZv
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.125,FMLib:17.12.100.49
  definitions=2026-06-16_02,2026-06-15_04,2025-10-01_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- clxscore=1015 malwarescore=0 phishscore=0 adultscore=0 impostorscore=0
- suspectscore=0 priorityscore=1501 spamscore=0 bulkscore=0 lowpriorityscore=0
+ impostorscore=0 lowpriorityscore=0 clxscore=1015 spamscore=0 malwarescore=0
+ priorityscore=1501 phishscore=0 suspectscore=0 bulkscore=0 adultscore=0
  classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2606040000 definitions=main-2606160090
+ reason=mlx scancount=1 engine=8.22.0-2606040000 definitions=main-2606160091
 
-TX EQTR may run while devfreq gear scaling has quiesced the UFS tagset. In
-that context, functions ufshcd_tx_eqtr(), __ufshcd_tx_eqtr() and
-ufs_qcom_get_rx_fom() allocate memory with GFP_KERNEL. If direct reclaim
-is triggered, reclaim/writeback can depend on I/O to UFS device. Because
-the queue is quiesced, this can cause deadlock.
 
-Use GFP_NOIO for TX EQTR memory allocations:
-- params->eqtr_record in ufshcd_tx_eqtr()
-- eqtr_data in __ufshcd_tx_eqtr()
-- params in ufs_qcom_get_rx_fom()
 
-Fixes: 03e5d38e2f98 ("scsi: ufs: core: Add support for TX Equalization")
-Closes: https://sashiko.dev/#/patchset/20260615132834.2985346-1-can.guo@oss.qualcomm.com?part=2
-Signed-off-by: Can Guo <can.guo@oss.qualcomm.com>
----
- drivers/ufs/core/ufs-txeq.c | 4 ++--
- drivers/ufs/host/ufs-qcom.c | 2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
+On 6/16/2026 4:04 PM, Peter Wang (王信友) wrote:
+>
+> On Mon, 2026-06-15 at 06:28 -0700, Can Guo wrote:
+> > Parse board-specific static TX Equalization settings from Device Tree
+> > for
+> > each HS gear and store them in hba->tx_eq_params.
+> > 
+> > Parse txeq-preshoot-g[1-6] and txeq-deemphasis-g[1-6] as per-lane
+> > tuples:
+> > <Host_Lane0 Device_Lane0>, [<Host_Lane1 Device_Lane1>].
+> > 
+> > For HS-G6, parse optional tx-precode-enable-g6 using the same per-
+> > lane
+> > Host/Device tuple format. If provided, it must contain values for all
+> > active lanes, and each value must be 0 or 1.
+> > 
+> > Introduce from_dt in struct ufshcd_tx_eq_params to track whether TX
+> > EQ
+> > values came from static Device Tree data.
+> > 
+> > When TX Equalization Training is used, static settings are not final:
+> > - If valid settings are retrieved from
+> > qTxEQGnSettings/wTxEQGnSettingsExt,
+> >   those retrieved settings override static Device Tree settings.
+> > - If retrieval is not available/valid, TX EQTR runs and trained
+> > settings
+> >   override static Device Tree settings.
+> > 
+> > No behavior changes for platforms that do not provide these
+> > properties.
+> > 
+> > Signed-off-by: Can Guo <can.guo@oss.qualcomm.com>
+> > ---
+>
+> Hi Can,
+>
+> I agree with Bart's comment.
+> Regarding sashiko-bot's comment, will you have another patch to
+> fix this pre-existing issue?
+> I think force_tx_eqtr could potentially trigger this deadlock.
+Yes, I pushed a separate fix to address the memory reclaim deadlock issue.
 
-diff --git a/drivers/ufs/core/ufs-txeq.c b/drivers/ufs/core/ufs-txeq.c
-index 4b264adfdf49..3a2fb5329d27 100644
---- a/drivers/ufs/core/ufs-txeq.c
-+++ b/drivers/ufs/core/ufs-txeq.c
-@@ -1059,7 +1059,7 @@ static int __ufshcd_tx_eqtr(struct ufs_hba *hba,
- 			    struct ufs_pa_layer_attr *pwr_mode)
- {
- 	struct ufshcd_tx_eqtr_data *eqtr_data  __free(kfree) =
--		kzalloc(sizeof(*eqtr_data), GFP_KERNEL);
-+		kzalloc(sizeof(*eqtr_data), GFP_NOIO);
- 	struct tx_eqtr_iter h_iter = {};
- 	struct tx_eqtr_iter d_iter = {};
- 	u32 gear = pwr_mode->gear_tx;
-@@ -1217,7 +1217,7 @@ static int ufshcd_tx_eqtr(struct ufs_hba *hba,
- 	if (!params->eqtr_record) {
- 		params->eqtr_record = devm_kzalloc(hba->dev,
- 						   sizeof(*params->eqtr_record),
--						   GFP_KERNEL);
-+						   GFP_NOIO);
- 		if (!params->eqtr_record)
- 			return -ENOMEM;
- 	}
-diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-index c084ccc72523..e7f104987c6a 100644
---- a/drivers/ufs/host/ufs-qcom.c
-+++ b/drivers/ufs/host/ufs-qcom.c
-@@ -2760,7 +2760,7 @@ static int ufs_qcom_get_rx_fom(struct ufs_hba *hba,
- 			       struct tx_eqtr_iter *d_iter)
- {
- 	struct ufshcd_tx_eq_params *params __free(kfree) =
--		kzalloc(sizeof(*params), GFP_KERNEL);
-+		kzalloc(sizeof(*params), GFP_NOIO);
- 	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
- 	struct ufs_pa_layer_attr old_pwr_info;
- 	u32 fom[PA_MAXDATALANES] = { 0 };
--- 
-2.34.1
+https://lore.kernel.org/all/20260616090654.421850-1-can.guo@oss.qualcomm.com/
+
+Please help review.
+
+Thanks,
+Can Guo.
+>
+> Thanks.
+> Peter
+>
+>
+>
+> ************* MEDIATEK Confidentiality Notice ********************
+> The information contained in this e-mail message (including any
+> attachments) may be confidential, proprietary, privileged, or otherwise
+> exempt from disclosure under applicable laws. It is intended to be
+> conveyed only to the designated recipient(s). Any use, dissemination,
+> distribution, printing, retaining or copying of this e-mail (including its
+> attachments) by unintended recipient(s) is strictly prohibited and may
+> be unlawful. If you are not an intended recipient of this e-mail, or believe
+> that you have received this e-mail in error, please notify the sender
+> immediately (by replying to this e-mail), delete any and all copies of
+> this e-mail (including any attachments) from your system, and do not
+> disclose the content of this e-mail to any other person. Thank you!
 
