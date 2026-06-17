@@ -1,82 +1,139 @@
-Received: from arkamax.eu (128-116-240-228.dyn.eolo.it [128.116.240.228])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-dl1-f49.google.com (mail-dl1-f49.google.com [74.125.82.49])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F2A1374E71
-	for <linux-scsi@vger.kernel.org>; Wed, 17 Jun 2026 17:42:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=128.116.240.228
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4FFC333263A
+	for <linux-scsi@vger.kernel.org>; Wed, 17 Jun 2026 18:21:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.49
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781718130; cv=none; b=SWqgSEcHLRuboXlfR3ALhlVHR2rbh6JvHspoLwVmww7pYFkt6GzL3KZ0BqXvSQtfklAKpHXq5JPH5697a6X2nzBvKrR4zmTKWcxsdp6iBsqAviixYMHl3RnxxpDGyqwxtfkGc0c31+hDSoCIoZttNOl4un2hu9oe7QzdBd3XWYA=
+	t=1781720489; cv=none; b=olq++juSU1gWel45Saar/VUlRyKCx3GszPMQW2n/fGJTXaf8SZx4/jX9ooIUlY/mj/CPdf5c4nYIGEmxC+NcKdhDC1s1Eqv17B3EYdkTlvlEP90KDGTsgSBl9RtQ352J4qN+tLUCgvENC4YbX2woP9LvgKeljgm50V90zLN0HTc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781718130; c=relaxed/simple;
-	bh=kvFAel3hT2aCpodG8ZLF82cEweXUConelsw4C01uKcs=;
-	h=Mime-Version:Content-Type:Date:Message-Id:Subject:From:To:Cc:
-	 References:In-Reply-To; b=hAtDHxgL0GVWT3qK5Ke7qLrfG5GVUcKXtlWn0IgG7pbcBmkeP48BQLGGAqF++ktHD5V86H4Ufnvt+avVx/blVZbi0i1KnWO8YzUaQY6EBLwnqivdAEzbHdUr9nFWDYrpskaBXTVtzpHETYGzZ0EBQpFi0IfyJZ20xl8So2UbHHk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=arkamax.eu; spf=pass smtp.mailfrom=arkamax.eu; dkim=pass (2048-bit key) header.d=arkamax.eu header.i=@arkamax.eu header.b=bXoC4Q/+; arc=none smtp.client-ip=128.116.240.228
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=arkamax.eu
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=arkamax.eu
+	s=arc-20240116; t=1781720489; c=relaxed/simple;
+	bh=5EkO+kKe+XG+j+gG6dZQgorrpjxbN3Pwb8lDh+j85RY=;
+	h=From:To:Subject:Date:Message-ID:MIME-Version; b=m5H0q+PhTk1xEec33RpWfjOHKt7Yuz0Qn+734M+pZL4MxAgG6oatbUffLQbFzCCsct/a9sAWiih6nn8pL4J2uzMo8NYAnXHzbucdP8YGz2VVjaKqXvcS8Bmkd7u6tKWBlanTgUqFkPx5X98O7ndop84uqE6727ZBVdZ9vuKuwFY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=nFs3vbbK; arc=none smtp.client-ip=74.125.82.49
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=arkamax.eu header.i=@arkamax.eu header.b="bXoC4Q/+"
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; s=mail1; bh=kvFAel3hT2aCpo
-	dG8ZLF82cEweXUConelsw4C01uKcs=; h=in-reply-to:references:cc:to:from:
-	subject:date; d=arkamax.eu; b=bXoC4Q/+g8Q3M+9xsufKiMepSkRrdEDbRettbEIo
-	oajAncUGQUldjtbTqy8AhgaD+HzaJ8QAADRQLRGqczE7okLXDvig4Lz48/IDg02y89IFTn
-	aTC1piz2s2ajSiFnh3J6Uh04E6UkdMVY3aAY/f0eViV1SAUmSuFSkyI51WBtjCEcArizU6
-	Indz+Zmt8umniFjDZwXlzbVabHvL5eQl/dIbD35xX5+nzG7/wTIUg6yIJOK6m779E0ggwU
-	MTPmbT21rydTl7O6YryJVEvIA8szKEy2Cw0XS1TxVmkemKpOysUEmNO4nEug2IAp4bjEMD
-	32RESfS9GtpbnrzxVpIVAQ==
-Received: from localhost (128-116-240-228.dyn.eolo.it [128.116.240.228])
-	by arkamax.eu (OpenSMTPD) with ESMTPSA id 52c4389b (TLSv1.3:TLS_AES_256_GCM_SHA384:256:NO);
-	Wed, 17 Jun 2026 19:41:58 +0200 (CEST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="nFs3vbbK"
+Received: by mail-dl1-f49.google.com with SMTP id a92af1059eb24-13986d61b4eso302530c88.0
+        for <linux-scsi@vger.kernel.org>; Wed, 17 Jun 2026 11:21:28 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1781720487; x=1782325287; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:to
+         :from:from:to:cc:subject:date:message-id:reply-to;
+        bh=vAl7Lbx6JYWedbPXdgrZx70B+jeSbFyD7OiCuKZu1GY=;
+        b=nFs3vbbKHXCcIM//ZzJAW0V2aKptl412qcVAFc1TQDby9Dq9p4tvV1EODYymtX4+e1
+         MM0+HW2sh2TOGqqjWRlojIHUFEGuXbD2jCShU32Wku9Rv7+q8c2Q6uFKzVisbzlum4KM
+         FaBnbpHY1F+BTv1IAW/FU9KYUTZzZ2lWGJEGohyqtZqUt11SSX2kkLCr9qxNSylWmLKH
+         Mc0uqDfJioY2MIlEMoFpHzdd/1hwR105b4+9P8lVHoN85czDIzxnY2eu6Hka5ZVt+rvo
+         1qk2iqjV65M3RMPDkKHqDuxQSxQaYAFNAA0k+FPL6R5x/sIXfb9mZ79Hp6CQK9YsBmPM
+         NQJg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1781720487; x=1782325287;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:to
+         :from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=vAl7Lbx6JYWedbPXdgrZx70B+jeSbFyD7OiCuKZu1GY=;
+        b=erom3dSiqZJ/Ja0JDDvsiZ9HIr7AC042jOooOqaqJiiF131fmitSfwqrUQGLg3hq6e
+         /lXPvO8Uhcz/iexmiZhy+lcWeYQcJC9bnjW8rocWA/0TpjMDBcPbjhsUhAN3wSjsMLrO
+         dk5QOffqFRSkOJVfGQAMu18oEt2ZpIkz/YUAgpPB9NaYUcOi4nsoNAySQtQ9OTvOTqAx
+         Whox57dZ3mPOZFu7tmUxp9uP6WSUTOkw+Gve0VM9oFvjAMVSs/Ebrt5FOCfjq91OXBxr
+         2Vk4m0Nnl7Uhy9MU2qWj9cjAIR1B70b79LFLTbywxooD3fv+EmBDOAVIMYzyDaSBRy7O
+         sYHQ==
+X-Forwarded-Encrypted: i=1; AFNElJ/2taWxtFp3DveYXp3+jra1UmoX44efKTBStHPg0Do+sG1gfE4g5ZXtJMO5+2UqqOrQHmegM70mpYi4@vger.kernel.org
+X-Gm-Message-State: AOJu0Yy6w9/W9+axeg30yfZjee5AePH2pope8Cjj5PnWGnfYwmTVOzG3
+	ZaE2yJnxr7WvId8yUoQ/anIMmLpPUUCdDCayaPVrv+XstTMzDuCGuKyybXgs9kXkO+g=
+X-Gm-Gg: Acq92OEmqSrFxhNTKwoNaCWLeWCc8DIFv949CLfNjUGTabbHHrn1xoWq4MuhW8xQ9wE
+	/3cN5qY91jCpB4hhL6Z51P6Di0DhULFLpMR2/KYVgH9QSgTBt2eywnwPft9IESEMHLYJI/SRetF
+	xFyhLKGgkrlTOcmSap00rwoVjHTiqY7+CypuZHmjS2LpokJVijgz5BW+scX2vEUYiE9Q3ft/1Lv
+	T1APF+P7pX5z4QG9lQlr32xmk9LkqBUVQcK/yRKjU7uCAC7xsNUKd0y2neWltsCUZMmnEta7nCS
+	eUrd8xBaNiBoCPQhccHihd19PleRliKCtvqWIioX/qv4KGsKLUx8REYSxHvFlaqrm/RikfTGQ+R
+	1eTYd1Qd0VXLd6kTa4iduUUj1IFw0y5dvzjbJT/UQsh4pdwSPSCTDaS2A1HWVvbEtBCLpT+5v3o
+	WogHZVKhNNdyK3DiDAKOTqkxi5mSfxbR5y
+X-Received: by 2002:a05:7022:907:b0:128:d4be:7438 with SMTP id a92af1059eb24-1398f6dedc6mr2179384c88.30.1781720487367;
+        Wed, 17 Jun 2026 11:21:27 -0700 (PDT)
+Received: from haichao.tail057a43.ts.net ([2001:da8:e000:1206:1886:6b7a:3e78:272c])
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-1384b964853sm16996924c88.11.2026.06.17.11.21.25
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 17 Jun 2026 11:21:27 -0700 (PDT)
+From: Ruoyu Wang <ruoyuw560@gmail.com>
+To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] scsi: ch: publish changer devices after probe setup
+Date: Thu, 18 Jun 2026 02:21:21 +0800
+Message-ID: <20260617182122.955546-1-ruoyuw560@gmail.com>
+X-Mailer: git-send-email 2.51.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Wed, 17 Jun 2026 19:41:58 +0200
-Message-Id: <DJBICZU143X2.3S261SDT21N0V@arkamax.eu>
-Subject: Re: [PATCH V3 0/3] Ensure ordered namespace registration during
- async scan
-From: "Maurizio Lombardi" <mlombard@arkamax.eu>
-To: "Keith Busch" <kbusch@kernel.org>, "Hannes Reinecke" <hare@suse.de>
-Cc: "John Meneghini" <jmeneghi@redhat.com>, "Maurizio Lombardi"
- <mlombard@arkamax.eu>, "Maurizio Lombardi" <mlombard@redhat.com>,
- <hch@lst.de>, <chaitanyak@nvidia.com>, <bvanassche@acm.org>,
- <linux-scsi@vger.kernel.org>, <linux-nvme@lists.infradead.org>,
- <James.Bottomley@hansenpartnership.com>, <emilne@redhat.com>,
- <bgurney@redhat.com>
-X-Mailer: aerc 0.21.0
-References: <20260225161203.76168-1-mlombard@redhat.com>
- <aZ9sjbZ3CEW_1rW1@kbusch-mbp> <DGOQMFJJ6K5P.3KLF45WQT2SAS@arkamax.eu>
- <e43b914c-2ca5-455e-b0fe-3ce2eb0c64bd@redhat.com>
- <aaCNtpPzP9TIDNjE@kbusch-mbp>
- <869034b1-c7e8-4e35-b153-43fd787a8edd@suse.de>
- <aaXE4s3AT45UIAN8@kbusch-mbp>
-In-Reply-To: <aaXE4s3AT45UIAN8@kbusch-mbp>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Hello Keith,
+ch_probe() inserts the new changer into ch_index_idr before initializing
+the kref, lock and scsi_device pointer. ch_open() looks up the object
+directly from the IDR by minor, so a racing open can observe a partially
+initialized changer.
 
-On Mon Mar 2, 2026 at 6:12 PM CET, Keith Busch wrote:
-> On Mon, Mar 02, 2026 at 08:16:19AM +0100, Hannes Reinecke wrote:
->> I really would like to go with the nsid based solution from Keith.
->> That would avoid quite some cumbersome code here.
->
-> I've seen various documentation that assumes the current naming
-> indicates the nsid, so the scheme follows at least some people's
-> expectations. I don't know if we can make everyone happy here, though.
-> :(
->
-> I've fixed up most of the multipath races that get us closer to allowing
-> nsid suffix, but there's one left: nvme_remove_head is called outside
-> the subsys lock after detaching the head from the subsystem list. That
-> could cause a subsequent add event to call nvme_alloc_ns() before the
-> mpath side has completed del_gendisk() for the old nsid.
+Reserve the minor with a NULL IDR entry, finish device setup and element
+discovery, then publish the initialized changer with idr_replace().
+Early opens continue to fail with -ENXIO until the object is ready.
 
-Did you manage to find a solution for this race?
-I just wanted to check whether you had any patches ready for testing since
-this discussion.
+Signed-off-by: Ruoyu Wang <ruoyuw560@gmail.com>
+---
+ drivers/scsi/ch.c | 14 +++++++++++++-
+ 1 file changed, 13 insertions(+), 1 deletion(-)
 
-Thanks,
-Maurizio
+diff --git a/drivers/scsi/ch.c b/drivers/scsi/ch.c
+index 4010fdbf813cc..12061e4681ace 100644
+--- a/drivers/scsi/ch.c
++++ b/drivers/scsi/ch.c
+@@ -897,6 +897,7 @@ static int ch_probe(struct scsi_device *sd)
+ {
+ 	struct device *dev = &sd->sdev_gendev;
+ 	struct device *class_dev;
++	void *old;
+ 	int ret;
+ 	scsi_changer *ch;
+ 
+@@ -909,7 +910,7 @@ static int ch_probe(struct scsi_device *sd)
+ 
+ 	idr_preload(GFP_KERNEL);
+ 	spin_lock(&ch_index_lock);
+-	ret = idr_alloc(&ch_index_idr, ch, 0, CH_MAX_DEVS + 1, GFP_NOWAIT);
++	ret = idr_alloc(&ch_index_idr, NULL, 0, CH_MAX_DEVS + 1, GFP_NOWAIT);
+ 	spin_unlock(&ch_index_lock);
+ 	idr_preload_end();
+ 
+@@ -951,6 +952,15 @@ static int ch_probe(struct scsi_device *sd)
+ 		ch_init_elem(ch);
+ 
+ 	mutex_unlock(&ch->lock);
++
++	spin_lock(&ch_index_lock);
++	old = idr_replace(&ch_index_idr, ch, ch->minor);
++	spin_unlock(&ch_index_lock);
++	if (IS_ERR(old)) {
++		ret = PTR_ERR(old);
++		goto destroy_dev;
++	}
++
+ 	dev_set_drvdata(dev, ch);
+ 	sdev_printk(KERN_INFO, sd, "Attached scsi changer %s\n", ch->name);
+ 
+@@ -960,7 +970,9 @@ destroy_dev:
+ put_device:
+ 	scsi_device_put(sd);
+ remove_idr:
++	spin_lock(&ch_index_lock);
+ 	idr_remove(&ch_index_idr, ch->minor);
++	spin_unlock(&ch_index_lock);
+ free_ch:
+ 	kfree(ch);
+ 	return ret;
+-- 
+2.51.0
+
