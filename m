@@ -1,69 +1,77 @@
-Received: from mail-dl1-f49.google.com (mail-dl1-f49.google.com [74.125.82.49])
+Received: from mail-dl1-f54.google.com (mail-dl1-f54.google.com [74.125.82.54])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4FFC333263A
-	for <linux-scsi@vger.kernel.org>; Wed, 17 Jun 2026 18:21:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.49
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4D9CB33B6EF
+	for <linux-scsi@vger.kernel.org>; Wed, 17 Jun 2026 18:21:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.54
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781720489; cv=none; b=olq++juSU1gWel45Saar/VUlRyKCx3GszPMQW2n/fGJTXaf8SZx4/jX9ooIUlY/mj/CPdf5c4nYIGEmxC+NcKdhDC1s1Eqv17B3EYdkTlvlEP90KDGTsgSBl9RtQ352J4qN+tLUCgvENC4YbX2woP9LvgKeljgm50V90zLN0HTc=
+	t=1781720503; cv=none; b=ceVsPJBN8S5KRKz+fiygPI5tIYM2hcMh5saQ1U0FaY27UOLxDidYgEoizUoHHqItwGUZfJr9XnDKJlLcTJY3Dj8xFA4wCHjZrfKI1Q3+I9Vy0t+pCka5l5fuH5Tk9ZMVKhF2H/wQ58OO8vGfyMyWgyMnU4JSx82zdwQANNEO8ro=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781720489; c=relaxed/simple;
-	bh=5EkO+kKe+XG+j+gG6dZQgorrpjxbN3Pwb8lDh+j85RY=;
-	h=From:To:Subject:Date:Message-ID:MIME-Version; b=m5H0q+PhTk1xEec33RpWfjOHKt7Yuz0Qn+734M+pZL4MxAgG6oatbUffLQbFzCCsct/a9sAWiih6nn8pL4J2uzMo8NYAnXHzbucdP8YGz2VVjaKqXvcS8Bmkd7u6tKWBlanTgUqFkPx5X98O7ndop84uqE6727ZBVdZ9vuKuwFY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=nFs3vbbK; arc=none smtp.client-ip=74.125.82.49
+	s=arc-20240116; t=1781720503; c=relaxed/simple;
+	bh=XNwyF/irvPyjNnKCbPr5vGhL7Z+UfsTTfXWN8q0I23Y=;
+	h=From:To:Subject:Date:Message-ID:MIME-Version; b=UR+QXpuR9WhINQ7vdOIBf06Mm/aeegTJ0pN2kwub9jc4yzHUjoR3kBEsyzvlxmYg01pivvbrtoR83K4/LPJ2fbd7gTTi+zGBscmN7Oq7taVa4ZGRlf1Zk+Yk63F81943kmlJmyx+1Hb7D/FrWp/talb9IrP+N+I5yw3Peay6HDI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=cKpDxA1J; arc=none smtp.client-ip=74.125.82.54
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="nFs3vbbK"
-Received: by mail-dl1-f49.google.com with SMTP id a92af1059eb24-13986d61b4eso302530c88.0
-        for <linux-scsi@vger.kernel.org>; Wed, 17 Jun 2026 11:21:28 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="cKpDxA1J"
+Received: by mail-dl1-f54.google.com with SMTP id a92af1059eb24-13807d2f898so117734c88.0
+        for <linux-scsi@vger.kernel.org>; Wed, 17 Jun 2026 11:21:42 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1781720487; x=1782325287; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1781720501; x=1782325301; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:message-id:date:subject:to
          :from:from:to:cc:subject:date:message-id:reply-to;
-        bh=vAl7Lbx6JYWedbPXdgrZx70B+jeSbFyD7OiCuKZu1GY=;
-        b=nFs3vbbKHXCcIM//ZzJAW0V2aKptl412qcVAFc1TQDby9Dq9p4tvV1EODYymtX4+e1
-         MM0+HW2sh2TOGqqjWRlojIHUFEGuXbD2jCShU32Wku9Rv7+q8c2Q6uFKzVisbzlum4KM
-         FaBnbpHY1F+BTv1IAW/FU9KYUTZzZ2lWGJEGohyqtZqUt11SSX2kkLCr9qxNSylWmLKH
-         Mc0uqDfJioY2MIlEMoFpHzdd/1hwR105b4+9P8lVHoN85czDIzxnY2eu6Hka5ZVt+rvo
-         1qk2iqjV65M3RMPDkKHqDuxQSxQaYAFNAA0k+FPL6R5x/sIXfb9mZ79Hp6CQK9YsBmPM
-         NQJg==
+        bh=bRVXRuL3SokNbQhryzhuBG+QpU0mVRqeo7dUwoex+3o=;
+        b=cKpDxA1Jteu5Oz2zUBuAqjLmCcWvx6gfyIKgBqLNM4j+eqd+tasqGCKs0qqt98OlQt
+         1KiYQSAumuJITQPgO57WdBLoK/SrCOznxsRoE5Taeem1pY+wMNOAh+FW9Fuc0aJSxAjJ
+         4dxJ7oRY6ZOmfxXSvx7tnNW2PH5MQrUuatRALu/TlsBQIOuMx9Occscg8w80nNDISTw+
+         Glx2ndQxsNIt4UggieqpoU+faXn523RPPHEXn/dsir5Y3H84l1RWflXOoN+peS3SMTWa
+         hpqYa8ruSimCYL9LLHHhcercEJqPq6nlCyGy6Q2xklFZR7X0nI3OYghWDKL+kqgoba2P
+         d88A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1781720487; x=1782325287;
+        d=1e100.net; s=20251104; t=1781720501; x=1782325301;
         h=content-transfer-encoding:mime-version:message-id:date:subject:to
          :from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=vAl7Lbx6JYWedbPXdgrZx70B+jeSbFyD7OiCuKZu1GY=;
-        b=erom3dSiqZJ/Ja0JDDvsiZ9HIr7AC042jOooOqaqJiiF131fmitSfwqrUQGLg3hq6e
-         /lXPvO8Uhcz/iexmiZhy+lcWeYQcJC9bnjW8rocWA/0TpjMDBcPbjhsUhAN3wSjsMLrO
-         dk5QOffqFRSkOJVfGQAMu18oEt2ZpIkz/YUAgpPB9NaYUcOi4nsoNAySQtQ9OTvOTqAx
-         Whox57dZ3mPOZFu7tmUxp9uP6WSUTOkw+Gve0VM9oFvjAMVSs/Ebrt5FOCfjq91OXBxr
-         2Vk4m0Nnl7Uhy9MU2qWj9cjAIR1B70b79LFLTbywxooD3fv+EmBDOAVIMYzyDaSBRy7O
-         sYHQ==
-X-Forwarded-Encrypted: i=1; AFNElJ/2taWxtFp3DveYXp3+jra1UmoX44efKTBStHPg0Do+sG1gfE4g5ZXtJMO5+2UqqOrQHmegM70mpYi4@vger.kernel.org
-X-Gm-Message-State: AOJu0Yy6w9/W9+axeg30yfZjee5AePH2pope8Cjj5PnWGnfYwmTVOzG3
-	ZaE2yJnxr7WvId8yUoQ/anIMmLpPUUCdDCayaPVrv+XstTMzDuCGuKyybXgs9kXkO+g=
-X-Gm-Gg: Acq92OEmqSrFxhNTKwoNaCWLeWCc8DIFv949CLfNjUGTabbHHrn1xoWq4MuhW8xQ9wE
-	/3cN5qY91jCpB4hhL6Z51P6Di0DhULFLpMR2/KYVgH9QSgTBt2eywnwPft9IESEMHLYJI/SRetF
-	xFyhLKGgkrlTOcmSap00rwoVjHTiqY7+CypuZHmjS2LpokJVijgz5BW+scX2vEUYiE9Q3ft/1Lv
-	T1APF+P7pX5z4QG9lQlr32xmk9LkqBUVQcK/yRKjU7uCAC7xsNUKd0y2neWltsCUZMmnEta7nCS
-	eUrd8xBaNiBoCPQhccHihd19PleRliKCtvqWIioX/qv4KGsKLUx8REYSxHvFlaqrm/RikfTGQ+R
-	1eTYd1Qd0VXLd6kTa4iduUUj1IFw0y5dvzjbJT/UQsh4pdwSPSCTDaS2A1HWVvbEtBCLpT+5v3o
-	WogHZVKhNNdyK3DiDAKOTqkxi5mSfxbR5y
-X-Received: by 2002:a05:7022:907:b0:128:d4be:7438 with SMTP id a92af1059eb24-1398f6dedc6mr2179384c88.30.1781720487367;
-        Wed, 17 Jun 2026 11:21:27 -0700 (PDT)
+        bh=bRVXRuL3SokNbQhryzhuBG+QpU0mVRqeo7dUwoex+3o=;
+        b=eWwMjOU5szClEP8unUK+NXRi79GG3ipKBTGdhs0w5R2+VgByj/5O4Nbt4mI9SeNmFo
+         NNEMBTT7gcQEVWjvZ5/SfDHFL8nwIx17qeEGGOEPY7AkzMg/00M3zCwjikYs6+7I+XI3
+         +JMInVzGeqqxAn3wuk4kYTPa8uk2J9TJL/JQllDLFobrt2Tv3KTNUDoxgtEYBj9KakII
+         Kg5hUmnVMvjRUFMgBmtLPYMsL3IB8YXiPlZMZ9tVBgnteLS5fBFxVFB+vgeMCa24mJjL
+         o0AkwnQUMubESKv5K89xYxC8llT3Jvsq4Vgs0p74Mdk8JxSKpf/xfYymeXOkgYM+NEgJ
+         mEGQ==
+X-Forwarded-Encrypted: i=1; AFNElJ8dxXx6TZMPjwJ9lV32mioVWFHatQLI2uD5A92Fr+8xw98+/RbFJ+l3K6zvKUMdRAdtlxxcl6S5yG+/@vger.kernel.org
+X-Gm-Message-State: AOJu0YwCWPEmsroVKhttBhc/Dl2BROs9MAxEmIkhsl9aXkOxYmIAEzFd
+	fQkotsVKgkP5sxQfQY7ROzRBPxvPltbwcB/rUMoDPgo1w7BbWXm4iIVI
+X-Gm-Gg: Acq92OEJ9coc3oclQEmBuweubs0Y5o+z0ARgteJp3+jm0UjD1FOkbp+npg7cVeMuJNl
+	UvZDT8/aq3Mo1znPvkjXoFBOk/V85qKc569/pFwsPnsS32TipuOCxfZjHDJtJIj5ggZ1I2uEoer
+	qoQhgLBhAUXnKu6s4Eci4Oh+3hyd4mhoe+E7gRnOj2wm54Eke1NlGyZlXVmsjeSFG12NeL0tcCK
+	h1b+KtQSCka0xHonnWyBKxMSBRsA9tSixvUdxEGpt7gge4Yqe1zY4AgYXmYBdTpj5RunUN0BvQQ
+	XT0K2eFezk+rUXSMAEgF2J1MEA7waWuq8qpclEbFrQ/b+j+xd9txTqp1ANDhkjZgrXMWQXzB4d3
+	7ChCUMJbw8CTPxpN1mlHHI63pP4QfXSj5hqql8Sjj+HV5eeStb0dxE+RnVrOrHAbA5pZJNGdMgT
+	b4xuW8yEG+oHXNWtXYWRtRbzU/pheh4ZJg
+X-Received: by 2002:a05:7022:497:b0:138:4e43:6399 with SMTP id a92af1059eb24-1398f65477cmr1906421c88.11.1781720501367;
+        Wed, 17 Jun 2026 11:21:41 -0700 (PDT)
 Received: from haichao.tail057a43.ts.net ([2001:da8:e000:1206:1886:6b7a:3e78:272c])
-        by smtp.gmail.com with ESMTPSA id a92af1059eb24-1384b964853sm16996924c88.11.2026.06.17.11.21.25
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-1386f20ad25sm15683154c88.0.2026.06.17.11.21.37
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 17 Jun 2026 11:21:27 -0700 (PDT)
+        Wed, 17 Jun 2026 11:21:41 -0700 (PDT)
 From: Ruoyu Wang <ruoyuw560@gmail.com>
-To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+To: Ketan Mukadam <ketan.mukadam@broadcom.com>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
 	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Nilesh Javali <njavali@marvell.com>,
+	Manish Rangankar <mrangankar@marvell.com>,
+	GR-QLogic-Storage-Upstream@marvell.com,
+	Lee Duncan <lduncan@suse.com>,
+	Chris Leech <cleech@redhat.com>,
+	Mike Christie <michael.christie@oracle.com>,
 	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] scsi: ch: publish changer devices after probe setup
-Date: Thu, 18 Jun 2026 02:21:21 +0800
-Message-ID: <20260617182122.955546-1-ruoyuw560@gmail.com>
+	linux-kernel@vger.kernel.org,
+	open-iscsi@googlegroups.com
+Subject: [PATCH] scsi: iscsi: publish endpoints after transport setup
+Date: Thu, 18 Jun 2026 02:21:33 +0800
+Message-ID: <20260617182135.957230-1-ruoyuw560@gmail.com>
 X-Mailer: git-send-email 2.51.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -73,67 +81,169 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-ch_probe() inserts the new changer into ch_index_idr before initializing
-the kref, lock and scsi_device pointer. ch_open() looks up the object
-directly from the IDR by minor, so a racing open can observe a partially
-initialized changer.
+iscsi_create_endpoint() inserts a new endpoint into iscsi_ep_idr before
+transport drivers have initialized their endpoint-private data. The
+endpoint handle is returned only after ep_connect() completes, but handles
+are allocated from a predictable IDR and iscsi_lookup_endpoint() looks
+them up directly.
 
-Reserve the minor with a NULL IDR entry, finish device setup and element
-discovery, then publish the initialized changer with idr_replace().
-Early opens continue to fail with -ENXIO until the object is ready.
+Reserve the endpoint ID with a NULL IDR entry, add
+iscsi_register_endpoint() for the publish step, and call it from the
+in-tree transport drivers after private endpoint setup has completed.
+Until registration, endpoint lookup keeps returning NULL for the reserved
+handle.
 
 Signed-off-by: Ruoyu Wang <ruoyuw560@gmail.com>
 ---
- drivers/scsi/ch.c | 14 +++++++++++++-
- 1 file changed, 13 insertions(+), 1 deletion(-)
+ drivers/scsi/be2iscsi/be_iscsi.c    |  6 ++++++
+ drivers/scsi/bnx2i/bnx2i_iscsi.c    |  4 ++++
+ drivers/scsi/cxgbi/libcxgbi.c       |  6 ++++++
+ drivers/scsi/qedi/qedi_iscsi.c      |  4 ++++
+ drivers/scsi/qla4xxx/ql4_os.c       |  6 ++++++
+ drivers/scsi/scsi_transport_iscsi.c | 24 +++++++++++++++++++++++-
+ include/scsi/scsi_transport_iscsi.h |  1 +
+ 7 files changed, 50 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/ch.c b/drivers/scsi/ch.c
-index 4010fdbf813cc..12061e4681ace 100644
---- a/drivers/scsi/ch.c
-+++ b/drivers/scsi/ch.c
-@@ -897,6 +897,7 @@ static int ch_probe(struct scsi_device *sd)
- {
- 	struct device *dev = &sd->sdev_gendev;
- 	struct device *class_dev;
-+	void *old;
- 	int ret;
- 	scsi_changer *ch;
+diff --git a/drivers/scsi/be2iscsi/be_iscsi.c b/drivers/scsi/be2iscsi/be_iscsi.c
+index 8d374ae863ba2..1abb2bc695923 100644
+--- a/drivers/scsi/be2iscsi/be_iscsi.c
++++ b/drivers/scsi/be2iscsi/be_iscsi.c
+@@ -1188,6 +1188,12 @@ beiscsi_ep_connect(struct Scsi_Host *shost, struct sockaddr *dst_addr,
+ 		goto free_ep;
+ 	}
  
-@@ -909,7 +910,7 @@ static int ch_probe(struct scsi_device *sd)
- 
- 	idr_preload(GFP_KERNEL);
- 	spin_lock(&ch_index_lock);
--	ret = idr_alloc(&ch_index_idr, ch, 0, CH_MAX_DEVS + 1, GFP_NOWAIT);
-+	ret = idr_alloc(&ch_index_idr, NULL, 0, CH_MAX_DEVS + 1, GFP_NOWAIT);
- 	spin_unlock(&ch_index_lock);
- 	idr_preload_end();
- 
-@@ -951,6 +952,15 @@ static int ch_probe(struct scsi_device *sd)
- 		ch_init_elem(ch);
- 
- 	mutex_unlock(&ch->lock);
-+
-+	spin_lock(&ch_index_lock);
-+	old = idr_replace(&ch_index_idr, ch, ch->minor);
-+	spin_unlock(&ch_index_lock);
-+	if (IS_ERR(old)) {
-+		ret = PTR_ERR(old);
-+		goto destroy_dev;
++	ret = iscsi_register_endpoint(ep);
++	if (ret) {
++		beiscsi_ep_disconnect(ep);
++		return ERR_PTR(ret);
 +	}
 +
- 	dev_set_drvdata(dev, ch);
- 	sdev_printk(KERN_INFO, sd, "Attached scsi changer %s\n", ch->name);
+ 	return ep;
  
-@@ -960,7 +970,9 @@ destroy_dev:
- put_device:
- 	scsi_device_put(sd);
- remove_idr:
-+	spin_lock(&ch_index_lock);
- 	idr_remove(&ch_index_idr, ch->minor);
-+	spin_unlock(&ch_index_lock);
- free_ch:
- 	kfree(ch);
- 	return ret;
+ free_ep:
+diff --git a/drivers/scsi/bnx2i/bnx2i_iscsi.c b/drivers/scsi/bnx2i/bnx2i_iscsi.c
+index 6c80e5b514fda..2c84b4864e240 100644
+--- a/drivers/scsi/bnx2i/bnx2i_iscsi.c
++++ b/drivers/scsi/bnx2i/bnx2i_iscsi.c
+@@ -1914,6 +1914,10 @@ static struct iscsi_endpoint *bnx2i_ep_connect(struct Scsi_Host *shost,
+ 	if (rc)
+ 		goto del_active_ep;
+ 
++	rc = iscsi_register_endpoint(ep);
++	if (rc)
++		goto del_active_ep;
++
+ 	mutex_unlock(&hba->net_dev_lock);
+ 	return ep;
+ 
+diff --git a/drivers/scsi/cxgbi/libcxgbi.c b/drivers/scsi/cxgbi/libcxgbi.c
+index ea9631bfe2e23..c1b2a401ddca3 100644
+--- a/drivers/scsi/cxgbi/libcxgbi.c
++++ b/drivers/scsi/cxgbi/libcxgbi.c
+@@ -2937,11 +2937,17 @@ check_route:
+ 	cep->csk = csk;
+ 	cep->chba = hba;
+ 
++	err = iscsi_register_endpoint(ep);
++	if (err)
++		goto release_ep;
++
+ 	log_debug(1 << CXGBI_DBG_ISCSI | 1 << CXGBI_DBG_SOCK,
+ 		"ep 0x%p, cep 0x%p, csk 0x%p, hba 0x%p,%s.\n",
+ 		ep, cep, csk, hba, hba->ndev->name);
+ 	return ep;
+ 
++release_ep:
++	iscsi_destroy_endpoint(ep);
+ release_conn:
+ 	cxgbi_sock_put(csk);
+ 	cxgbi_sock_closed(csk);
+diff --git a/drivers/scsi/qedi/qedi_iscsi.c b/drivers/scsi/qedi/qedi_iscsi.c
+index 6ab3a989d2817..60c37566f768c 100644
+--- a/drivers/scsi/qedi/qedi_iscsi.c
++++ b/drivers/scsi/qedi/qedi_iscsi.c
+@@ -1014,6 +1014,10 @@ qedi_ep_connect(struct Scsi_Host *shost, struct sockaddr *dst_addr,
+ 		goto ep_rel_conn;
+ 	}
+ 
++	ret = iscsi_register_endpoint(ep);
++	if (ret)
++		goto ep_rel_conn;
++
+ 	atomic_inc(&qedi->num_offloads);
+ 	return ep;
+ 
+diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
+index d598ab4126f80..8b30620d0e8dc 100644
+--- a/drivers/scsi/qla4xxx/ql4_os.c
++++ b/drivers/scsi/qla4xxx/ql4_os.c
+@@ -1749,6 +1749,12 @@ qla4xxx_ep_connect(struct Scsi_Host *shost, struct sockaddr *dst_addr,
+ 
+ 	qla_ep->host = shost;
+ 
++	ret = iscsi_register_endpoint(ep);
++	if (ret) {
++		iscsi_destroy_endpoint(ep);
++		return ERR_PTR(ret);
++	}
++
+ 	return ep;
+ }
+ 
+diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
+index 8aa76f813bcdb..a8c2a32c0f134 100644
+--- a/drivers/scsi/scsi_transport_iscsi.c
++++ b/drivers/scsi/scsi_transport_iscsi.c
+@@ -217,7 +217,7 @@ iscsi_create_endpoint(int dd_size)
+ 	 * First endpoint id should be 1 to comply with user space
+ 	 * applications (iscsid).
+ 	 */
+-	id = idr_alloc(&iscsi_ep_idr, ep, 1, -1, GFP_NOIO);
++	id = idr_alloc(&iscsi_ep_idr, NULL, 1, -1, GFP_NOIO);
+ 	if (id < 0) {
+ 		mutex_unlock(&iscsi_ep_idr_mutex);
+ 		printk(KERN_ERR "Could not allocate endpoint ID. Error %d.\n",
+@@ -257,6 +257,28 @@ free_ep:
+ }
+ EXPORT_SYMBOL_GPL(iscsi_create_endpoint);
+ 
++int iscsi_register_endpoint(struct iscsi_endpoint *ep)
++{
++	void *old;
++	int err = 0;
++
++	mutex_lock(&iscsi_ep_idr_mutex);
++	old = idr_find(&iscsi_ep_idr, ep->id);
++	if (old) {
++		err = -EBUSY;
++		goto unlock;
++	}
++
++	old = idr_replace(&iscsi_ep_idr, ep, ep->id);
++	if (IS_ERR(old))
++		err = PTR_ERR(old);
++unlock:
++	mutex_unlock(&iscsi_ep_idr_mutex);
++
++	return err;
++}
++EXPORT_SYMBOL_GPL(iscsi_register_endpoint);
++
+ void iscsi_destroy_endpoint(struct iscsi_endpoint *ep)
+ {
+ 	sysfs_remove_group(&ep->dev.kobj, &iscsi_endpoint_group);
+diff --git a/include/scsi/scsi_transport_iscsi.h b/include/scsi/scsi_transport_iscsi.h
+index 76de2b662f4fb..96299d25e0f73 100644
+--- a/include/scsi/scsi_transport_iscsi.h
++++ b/include/scsi/scsi_transport_iscsi.h
+@@ -459,6 +459,7 @@ extern void iscsi_get_conn(struct iscsi_cls_conn *conn);
+ extern void iscsi_unblock_session(struct iscsi_cls_session *session);
+ extern void iscsi_block_session(struct iscsi_cls_session *session);
+ extern struct iscsi_endpoint *iscsi_create_endpoint(int dd_size);
++int iscsi_register_endpoint(struct iscsi_endpoint *ep);
+ extern void iscsi_destroy_endpoint(struct iscsi_endpoint *ep);
+ extern struct iscsi_endpoint *iscsi_lookup_endpoint(u64 handle);
+ extern void iscsi_put_endpoint(struct iscsi_endpoint *ep);
 -- 
 2.51.0
 
