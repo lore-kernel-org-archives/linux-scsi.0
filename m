@@ -1,212 +1,185 @@
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 01BD12DB7A3;
-	Wed, 17 Jun 2026 19:46:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 10ADE340402
+	for <linux-scsi@vger.kernel.org>; Wed, 17 Jun 2026 20:41:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781725615; cv=none; b=m2cp8J2zJW20Ug+K1xHI+Dx3jOM4SWVmSWFb0nG76+YnEakAuVAPbtqjE0/SlEre2m6K7Qt5DCJVmO6Mf8JyU4X/gy2l8nDAw0L9orfJ3TKVtuVvUhQnU7RsroQCtMS7s7+z5Y0SDWK02LfBDfzUUGa+oVML8ASOcxEnFHs16p8=
+	t=1781728889; cv=none; b=AXcvFWmkoiTv098hpUR6mlU+8S8TEODgs4kZ167lSR06PSTExfPxaZtT614myBToHJErA80uFiqQ0wiHdWKeACfaUGiX5hr0oy71mxAH0/qHYy6fMkoJh0AK6Ll3SDz/364AKl3cB92kGzWarC25lFmKuRxhDSFiCPVVyTgHu+I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781725615; c=relaxed/simple;
-	bh=8JTU7UxbTbE06AkjS2t4gSCVHtWGmUVh3YE6vkISARI=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=n1RKfbwO3hLvcjXFTz026WUZk2Ya7Vz3RAavaTWD0PshgBhX/WO3+Zh14V51zqPhQn0bc/qrluH+Q/IkbyMAXSdjd+N3MQMOezSwPNFF8RIKU7RwNwgnzRn3nEFRFkqF5eAgrDaTrk8tgr/GxGh8zdBdsdzbhJyNPb9LbdC5bM0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=BfQn0ETP; arc=none smtp.client-ip=148.163.156.1
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	s=arc-20240116; t=1781728889; c=relaxed/simple;
+	bh=yY5TeCnFp5daSfwZFM9KEl0Dl4rojWDYUABEGQT8/S4=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=IUUE0XEXN9hYVICUUVVCqnL6PHJ08PDcCPL7V6HJc4phx9eDBuxg8lh36QJ9YqcjtNOmmGbHzR7ANFfZZAmKz80Bz3temY4mV4HorWvds+oGlBIRbHT+Ua91WDi0ySKF6tHNIJAGkUkJ36bBcKI1/dWz72tkiNwg+uiZf14TyxM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Qh17n+AJ; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="BfQn0ETP"
-Received: from pps.filterd (m0356517.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 65HHmCSR1082447;
-	Wed, 17 Jun 2026 19:46:39 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-type:date:from:in-reply-to:message-id:mime-version
-	:references:subject:to; s=pp1; bh=Z3rebz/z5OzZE6RQuTTAguKU0UekT4
-	SohTdWB7PpYP8=; b=BfQn0ETP8bG6VU4jOxobhHgO/18z4P3NIOiFvh6qQTyvuq
-	sfwdtBXb7v3Yj3odEGPhet/kALHhdpbQOvs+dVdBauRplbF09gnhepKWYP8RUos2
-	+jsg6l0xxumLRUpeFp14K4hhC0WbsFhbNuNkoBxaZff3bVLJme98xKmjBrPkvHnp
-	89Ww9PP/eA8pV0wkxXh22ZtmTWMCPOToAKLnT+pSmw4CfDxPeJ2ESgEJfONtW3Xf
-	AKIRFiJdWqf7ie/2+E3/uZOYSUtEYcT1dhR6CBfV7RSEdz+YtHOJtqQX4FhZEQV8
-	/TKOffVIoufssv/SmUTUbPw/jC7ckRJaekAK9PGg==
-Received: from ppma21.wdc07v.mail.ibm.com (5b.69.3da9.ip4.static.sl-reverse.com [169.61.105.91])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4eueqvvs9r-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 17 Jun 2026 19:46:39 +0000 (GMT)
-Received: from pps.filterd (ppma21.wdc07v.mail.ibm.com [127.0.0.1])
-	by ppma21.wdc07v.mail.ibm.com (8.18.1.7/8.18.1.7) with ESMTP id 65HJYdYF016545;
-	Wed, 17 Jun 2026 19:46:37 GMT
-Received: from smtprelay03.dal12v.mail.ibm.com ([172.16.1.5])
-	by ppma21.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4ev17287du-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 17 Jun 2026 19:46:37 +0000 (GMT)
-Received: from smtpav01.wdc07v.mail.ibm.com (smtpav01.wdc07v.mail.ibm.com [10.39.53.228])
-	by smtprelay03.dal12v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 65HJkaL322872602
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 17 Jun 2026 19:46:36 GMT
-Received: from smtpav01.wdc07v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 46B4458065;
-	Wed, 17 Jun 2026 19:46:36 +0000 (GMT)
-Received: from smtpav01.wdc07v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 9855858063;
-	Wed, 17 Jun 2026 19:46:35 +0000 (GMT)
-Received: from d (unknown [9.16.41.19])
-	by smtpav01.wdc07v.mail.ibm.com (Postfix) with ESMTPS;
-	Wed, 17 Jun 2026 19:46:35 +0000 (GMT)
-From: Dave Marquardt <davemarq@linux.ibm.com>
-To: Tyrel Datwyler <tyreld@linux.ibm.com>
-Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-        "Martin
- K. Petersen" <martin.petersen@oracle.com>,
-        Madhavan Srinivasan
- <maddy@linux.ibm.com>,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        Nicholas
- Piggin <npiggin@gmail.com>,
-        "Christophe Leroy (CS GROUP)"
- <chleroy@kernel.org>,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org, Brian King
- <brking@linux.ibm.com>,
-        Greg Joyce <gjoyce@linux.ibm.com>,
-        Kyle Mahlkuch
- <kmahlkuc@linux.ibm.com>
-Subject: Re: [PATCH v2 5/7] ibmvfc: allocate asynchronous sub-queue
-In-Reply-To: <09278991-08df-4b99-9076-8f90689412ee@linux.ibm.com>
-References: <20260608-ibmvfc-fpin-support-v2-0-d41f540fba5c@linux.ibm.com>
-	<20260608-ibmvfc-fpin-support-v2-5-d41f540fba5c@linux.ibm.com>
-	<09278991-08df-4b99-9076-8f90689412ee@linux.ibm.com>
-Date: Wed, 17 Jun 2026 14:46:34 -0500
-Message-ID: <87ik7har1h.fsf@linux.ibm.com>
-User-Agent: Gnus/5.13 (Gnus v5.13)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Qh17n+AJ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 881C31F000E9;
+	Wed, 17 Jun 2026 20:41:27 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1781728887;
+	bh=t8raulfujDmG+GSHaqQLZi/tL4tA3Nn+JDD1Baqe49s=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=Qh17n+AJ90+Y2xhWLSpnUdtu8rPBwZJ4ClJt6cndlPvUZCjEJL1zGTWIheHPCSEpo
+	 jdIxDbtdz+PO4VNdU7v+8EKhKwXuZAv6n0QLRB4jQGQB+FfiFgmIsiclWFT/kkueoV
+	 tXXaQPaU7+ymUPB9NlUBKq03aaTS43ZpLNt/Xd5giyd3vtk1PMb5aK2/d0y0Qn21bN
+	 keN3O2xpz3WGVWtHyXNS13dleZx5jLNEyFlPpniIOwX+/aM5uA79mmvPU03uM1QWsB
+	 Hrcp4Heol+W64aEb3NlYtsIDzsVQVaiD35GTV68iEjtjldIQtcHSoOt8k2CMFbv1ng
+	 ksb6MYzYlmC4w==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] scsi: ch: publish changer devices after probe setup
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Ruoyu Wang" <ruoyuw560@gmail.com>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20260617182122.955546-1-ruoyuw560@gmail.com>
+References: <20260617182122.955546-1-ruoyuw560@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Wed, 17 Jun 2026 20:41:27 +0000
+Message-Id: <20260617204127.881C31F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain
-X-TM-AS-GCONF: 00
-X-Proofpoint-Reinject: loops=2 maxloops=12
-X-Proofpoint-Spam-Info: AW1haW4tMjYwNjE3MDE4NiBTYWx0ZWRfXxUWZHn1+cqTr
- YSKU/8DFaQUdVLbodmEi6GN3hYt+kNcm/dE1ZPzoijaEQPvkXUQEe+HzFVoEYKADMVHJ2UOcV4G
- DRnvj5LhO5IyWcZXLqhP72xh1obxx7I=
-X-Proofpoint-GUID: fnxEb9MJ4lM3AATC1O9u7RLfM7B84yYf
-X-Authority-Analysis: v=2.4 cv=bMgm5v+Z c=1 sm=1 tr=0 ts=6a32f99f cx=c_pps
- a=GFwsV6G8L6GxiO2Y/PsHdQ==:117 a=GFwsV6G8L6GxiO2Y/PsHdQ==:17
- a=FelO9ux0wxsA:10 a=VkNPw1HP01LnGYTKEx00:22 a=RnoormkPH1_aCDwRdu11:22
- a=U7nrCbtTmkRpXpFmAIza:22 a=VnNF1IyMAAAA:8 a=HaNE_Ar9JYGMzoPkwGYA:9
-X-Proofpoint-ORIG-GUID: OwpmVo_IkBAPvy1AFw_DtdXG9Vn7DItS
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNjE3MDE4NiBTYWx0ZWRfXy3de5X5jmpeT
- 6XAKcC7xRr2LVx7UKrep0gwcxlaySu3NAsbiDm0TgXWOfdxqi52549wxK00EIOV4EZHd0FLklse
- t3CSvKNZ9fX8EgG7qonY7/lsdnHqU9X5v7YFUHS4lOEopJ5jkQf3gGk3mcH2u5vYVGYrYs4MwEj
- P9fMIxlg+3jGR4OQfChNC2yeJE3iMUy3drEtXOMYvev49B+Z0JIwcc1hGADx1/MbIYWMR/CDrXt
- X1KKskcN/fIkP23dl7G0CICOpYNITzIxdKFUS/2BB5V2jTtW10NuxLvUnlutB2PmAsLz3V3dcSu
- 2wnECFlFOaasMmAyT3HnRbKTCLtcACZDjy68d7c8GxmSedJcGmEC98LJHDvaOVZ4qtyvgo6AjhX
- 6/Bu1EFLxtqTfvdl3akbdhjMLTbtYobw/wAQLXghBWfbvcy0/Hi7VqrJQUQBZlhiJescmwQqKfL
- /UL1Z31wLvb/aWG3MuQ==
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.125,FMLib:17.12.100.49
- definitions=2026-06-17_02,2026-06-17_03,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- suspectscore=0 impostorscore=0 malwarescore=0 adultscore=0 spamscore=0
- bulkscore=0 priorityscore=1501 phishscore=0 clxscore=1015 lowpriorityscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2606170186
 
-Tyrel Datwyler <tyreld@linux.ibm.com> writes:
+Thank you for your contribution! Sashiko AI review found 4 potential issue(=
+s) to consider:
 
-> On 6/8/26 11:30 AM, Dave Marquardt via B4 Relay wrote:
->> From: Dave Marquardt <davemarq@linux.ibm.com>
->> 
->> Allocate and set up the asynchronous sub-queue for asynchronous
->> events, as required for full and extended FPIN support.
->> ---
->>  drivers/scsi/ibmvscsi/ibmvfc.c | 28 ++++++++++++++++++++++++++++
->>  1 file changed, 28 insertions(+)
->> 
->> diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
->> index a18861808325..ad1f5636e879 100644
->> --- a/drivers/scsi/ibmvscsi/ibmvfc.c
->> +++ b/drivers/scsi/ibmvscsi/ibmvfc.c
->> @@ -5352,6 +5352,8 @@ static void ibmvfc_channel_setup_done(struct ibmvfc_event *evt)
->>  			for (i = 0; i < active_queues; i++)
->>  				scrqs->scrqs[i].vios_cookie =
->>  					be64_to_cpu(setup->channel_handles[i]);
->> +			scrqs->async_scrq->vios_cookie =
->> +				be64_to_cpu(setup->asyncSubqHandle);
->>  
->>  			ibmvfc_dbg(vhost, "Using %u channels\n",
->>  				   vhost->scsi_scrqs.active_queues);
->> @@ -5402,6 +5404,7 @@ static void ibmvfc_channel_setup(struct ibmvfc_host *vhost)
->>  		setup_buf->num_scsi_subq_channels = cpu_to_be32(num_channels);
->>  		for (i = 0; i < num_channels; i++)
->>  			setup_buf->channel_handles[i] = cpu_to_be64(scrqs->scrqs[i].cookie);
->> +		setup_buf->asyncSubqHandle = cpu_to_be64(scrqs->async_scrq->cookie);
->>  	}
->>  
->>  	ibmvfc_init_event(evt, ibmvfc_channel_setup_done, IBMVFC_MAD_FORMAT);
->> @@ -6369,6 +6372,24 @@ static int ibmvfc_alloc_channels(struct ibmvfc_host *vhost,
->>  	if (!channels->scrqs)
->>  		return -ENOMEM;
->>  
->> +	channels->async_scrq = kzalloc_obj(*channels->async_scrq, GFP_KERNEL);
->> +
->> +	if (!channels->async_scrq) {
->> +		kfree(channels->scrqs);
->> +		channels->scrqs = NULL;
->> +		return -ENOMEM;
->
-> This failure cleanup code starts duplicating here.
->
->> +	}
->> +
->> +	rc = ibmvfc_alloc_queue(vhost, channels->async_scrq,
->> +				IBMVFC_SUB_CRQ_FMT);
->> +	if (rc) {
->> +		kfree(channels->scrqs);
->> +		channels->scrqs = NULL;
->> +		kfree(channels->async_scrq);
->> +		channels->async_scrq = NULL;
->
-> Again here plus freeing channels->scrqs memory.
->
->> +		return rc;
->> +	}
->> +
->>  	for (i = 0; i < channels->max_queues; i++) {
->>  		scrq = &channels->scrqs[i];
->>  		rc = ibmvfc_alloc_queue(vhost, scrq, IBMVFC_SUB_CRQ_FMT);
->> @@ -6380,6 +6401,9 @@ static int ibmvfc_alloc_channels(struct ibmvfc_host *vhost,
->>  			kfree(channels->scrqs);
->>  			channels->scrqs = NULL;
->>  			channels->active_queues = 0;
->> +			ibmvfc_free_queue(vhost, channels->async_scrq);
->> +			kfree(channels->async_scrq);
->> +			channels->async_scrq = NULL;
->
-> And then again here. Could use goto to do the frees at the end of the function.
->
-> free_async:
-> 	kfree(channels->async_scrq);
-> 	channels->async = NULL;
-> free_scrqs:
-> 	kfree(channels->scrqs);
-> 	channels->scrqs = NULL;
->
-> return rc;
->
->>  			return rc;
->>  		}
->>  	}
->> @@ -6418,6 +6442,10 @@ static void ibmvfc_release_channels(struct ibmvfc_host *vhost,
->>  
->>  		kfree(channels->scrqs);
->>  		channels->scrqs = NULL;
->> +
->> +		ibmvfc_free_queue(vhost, channels->async_scrq);
->
-> Looks like missing kfree(channels->async_scrq) here.
+New issues:
+- [High] Spurious udev open failures (Regression) due to deferred idr_repla=
+ce().
+- [Medium] Memory leak of the dynamically allocated `ch->dt` array in the `=
+idr_replace()` error path.
 
-I'll clean this up. Thanks.
+Pre-existing issues:
+- [Critical] Race condition between `ch_open()` and `ch_remove()` leads to =
+a Use-After-Free of the `scsi_device` structure.
+- [High] Information leak of uninitialized kernel heap memory in the `CHIOG=
+ELEM` ioctl handler.
+--
 
--Dave
+commit 63eb67253a3c4a6ab60f598a1642027bbd386913
+Author: Ruoyu Wang <ruoyuw560@gmail.com>
+
+scsi: ch: publish changer devices after probe setup
+
+ch_probe() inserts the new changer into ch_index_idr before initializing
+the kref, lock and scsi_device pointer. ch_open() looks up the object
+directly from the IDR by minor, so a racing open can observe a partially
+initialized changer.
+
+Reserve the minor with a NULL IDR entry, finish device setup and element
+discovery, then publish the initialized changer with idr_replace().
+Early opens continue to fail with -ENXIO until the object is ready.
+
+> diff --git a/drivers/scsi/ch.c b/drivers/scsi/ch.c
+> index 4010fdbf813cc..12061e4681ace 100644
+> --- a/drivers/scsi/ch.c
+> +++ b/drivers/scsi/ch.c
+
+[ ... ]
+
+> @@ -951,6 +952,15 @@ static int ch_probe(struct scsi_device *sd)
+>  		ch_init_elem(ch);
+> =20
+>  	mutex_unlock(&ch->lock);
+> +
+> +	spin_lock(&ch_index_lock);
+> +	old =3D idr_replace(&ch_index_idr, ch, ch->minor);
+> +	spin_unlock(&ch_index_lock);
+
+[Severity: High]
+Does this change introduce spurious udev open failures?
+
+Looking at ch_probe(), device_create() is called earlier which emits a
+KOBJ_ADD uevent, prompting udev to immediately create the device node and
+attempt to open it.
+
+Because idr_replace() is now deferred until here, ch_open() will observe a
+NULL IDR entry during the udev open attempt and return -ENXIO. Since udev
+rules do not automatically retry on -ENXIO, won't this permanently fail
+userspace device initialization, whereas previously it would gracefully
+block on mutex_lock(&ch->lock)?
+
+> +	if (IS_ERR(old)) {
+> +		ret =3D PTR_ERR(old);
+> +		goto destroy_dev;
+
+[Severity: Medium]
+Does this error path leak the ch->dt array?
+
+If idr_replace() fails, we jump to destroy_dev and eventually to free_ch
+where kfree(ch) is called directly. Since ch_readconfig(ch) was
+successfully executed earlier in this function, it allocates the ch->dt
+array. Does bypassing ch_destroy() leave the ch->dt array permanently
+leaked?
+
+> +	}
+> +
+>  	dev_set_drvdata(dev, ch);
+>  	sdev_printk(KERN_INFO, sd, "Attached scsi changer %s\n", ch->name);
+
+[ ... ]
+
+[Severity: Critical]
+This is a pre-existing issue, but can a race condition between ch_open()
+and ch_remove() lead to a use-after-free of the scsi_device structure?
+
+In ch_open(), after the ch structure is found via the IDR and its kref is
+incremented, the ch_index_lock is released:
+
+ch_open() {
+    ...
+    ch =3D idr_find(&ch_index_idr, minor);
+    if (ch =3D=3D NULL || !kref_get_unless_zero(&ch->ref)) {
+        spin_unlock(&ch_index_lock);
+        return -ENXIO;
+    }
+    spin_unlock(&ch_index_lock);
+    if (scsi_device_get(ch->device)) {
+    ...
+}
+
+Concurrently, if a device removal occurs, ch_remove() drops the driver's
+reference to the scsi_device:
+
+ch_remove() {
+    ...
+    scsi_device_put(ch->device);
+    kref_put(&ch->ref, ch_destroy);
+    ...
+}
+
+If this drops the final reference to the scsi_device, it can be freed
+before the preempted ch_open() resumes and calls
+scsi_device_get(ch->device). Could this be triggered by userspace
+repeatedly opening the device while it is being hot-unplugged?
+
+[Severity: High]
+This is a pre-existing issue, but does the CHIOGELEM ioctl leak
+uninitialized kernel heap memory to userspace?
+
+The CHIOGELEM ioctl allocates a buffer using kmalloc() without the
+__GFP_ZERO flag:
+
+ch_ioctl() {
+    ...
+    buffer =3D kmalloc(512, GFP_KERNEL);
+    ...
+    result =3D ch_do_scsi(ch, ch_cmd, 12, buffer, 256, REQ_OP_DRV_IN);
+    ...
+    memcpy(cge.cge_pvoltag,buffer+28,36);
+    ...
+    if (copy_to_user(argp, &cge, sizeof (cge)))
+    ...
+}
+
+If the SCSI device returns a short read, the trailing bytes of the buffer
+retain uninitialized kernel heap memory. The driver then copies from this
+buffer into the cge structure and calls copy_to_user(). Can this leak up
+to 72 bytes of potentially sensitive uninitialized memory to userspace?
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260617182122.9555=
+46-1-ruoyuw560@gmail.com?part=3D1
