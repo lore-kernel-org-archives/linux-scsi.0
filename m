@@ -1,144 +1,130 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3435635AC0E
-	for <linux-scsi@vger.kernel.org>; Thu, 18 Jun 2026 14:21:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D0082FDC53;
+	Thu, 18 Jun 2026 16:56:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781792476; cv=none; b=B1xT6MiY4VZ7Ck6KNGo1LvU28Oq9nrP1gCk64Ll9l2+JLWsiwmwYjQ2YDBD7D5vIBoKa54e0ife+/Lk68qdaByNAIEKo8IiD+SKoRwte+hwrcpAsJZdcU4tmgvWLY7m1o6guCi6l/nkCntZT4epOAlMiEgzO7w360HMX59HJsww=
+	t=1781801781; cv=none; b=cFa7gTDMQSkKpQXuteQlPKpHeUs0+dY7F+/dmMpMFyDz36XjeF9v6AG+M5WDY8p1D0u2PNq1I5iFqvS7zgdb0CVlu/QBEgDRZhe3k4vvA5DZgFVl+bBfrWeqyuiN1FFZjsa7N2ZORz227BsySTo9XmDBOwbElhZTixGN3i13coc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781792476; c=relaxed/simple;
-	bh=gSdgolfmFakrZjYbByuiyLgIjNVqafReeoPkHq5VYG0=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=s3NTZZxmIacrs0y2azUXqAOHprSpXlrIDSSY8pGhjt99kXFNGTz4kTjYSEcXKcHXxWAn8vwf0RomqMxK5FlGagrYrnSLCiH4SoPFTWIrUb/gYmkhM7EFISeXw44HWKOTt0eY015m38i/qEcEPDRr71fVGGLyWxtebb4yjkgJBHc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LX7wzu4T; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1781801781; c=relaxed/simple;
+	bh=pL05IKwYx4UstC4ZgKgoFcdh/6UBtNNYEKqbUbo4usY=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=oFoDqzhsmq1RZ5yBo39WIb4/mIEy4sIlU1ITkrfQ+/tm9lZ9xABYdxerZXjAXM0q4EWuxfvXnblyeEbFiQXvpYblfuiDYdnrZJuZ9Jlr4PeLUmL8cVIDeFlMON/W4kL6LdPYpmrQuquH0ouD2cQjTh43Hy8EuoCY6Jky6glHL14=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=BXfkUctz; arc=none smtp.client-ip=148.163.156.1
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LX7wzu4T"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B61281F000E9;
-	Thu, 18 Jun 2026 14:21:14 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781792474;
-	bh=fn0CLHCRzGUhqytmYVUZsgDQ//1CWISRPizndV5du9w=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=LX7wzu4THdxiRZh2tkJ44eqoazSvAfA+nKJNw0jjxCk3M4MlpbnJrfsH0a/qyAQCd
-	 3hfoeraX0YyZDs1UQxrrWa8GzO+AUkgL771/gr9z+oNcFdnQoX1DFZgUVi/lXnE/f6
-	 3b24LbaQSfzvzd8CHW6tuYhmJTsHzLaQlZzpcOBhMAkPG3qlnUX0v7inFfX25/mxqz
-	 KQQo/THtdGqWg5EF1HsZ99CMAIi9R8CWF5U/X4BCN43mQ4TNVx1l9z8R9dBZHAA6gi
-	 6fHyaYHz14sfWBw4k7rdsIcuNWurHivf8e2b2ZFqBhw/hYDQnZH2O4OzJgzPmNIlpC
-	 8AB3GWJ4SX2PQ==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2] scsi: ufs: core: Avoid possible memory reclaim
- deadlock in TX EQTR context
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Can Guo" <can.guo@oss.qualcomm.com>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260618140941.902000-1-can.guo@oss.qualcomm.com>
-References: <20260618140941.902000-1-can.guo@oss.qualcomm.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 18 Jun 2026 14:21:14 +0000
-Message-Id: <20260618142114.B61281F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="BXfkUctz"
+Received: from pps.filterd (m0356517.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 65IFIAEs3791117;
+	Thu, 18 Jun 2026 16:56:15 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=pp1; bh=/M89B4
+	3eLy86dQw26BGfTceoT1IpnWgn1jyHCgZo9Ao=; b=BXfkUctzqCFgcXBiVegj/c
+	RHqINvfJ8+ggVntCpowfi0zN4Wsl1sF+3uVih0A70QeKrLBGMKQ801btxmKGjpzY
+	JG/AQDCcP/GAsGtqDw7Xw7n4UMDOfDPDPhAqdbsF1bOaK+rUTdzCccBPoxiy5fXF
+	Y4yxc817ip657TBaFWFOKhuxHra6IyNM6DNyumPBpnnS+VAzJaBqn4Q694aPyRmI
+	e3IjNQEBCi/eDuLqE6LY7BZTTQCWeJw9AiDDZ9IyJPR/Vxk3sgmB6Owqou4RpSIa
+	S0ljt8r5dhogCv9JZNyM6jY1bmN1G55tl8nFSby8pMvUftQPCsADf9ofGFqBaF4w
+	==
+Received: from ppma13.dal12v.mail.ibm.com (dd.9e.1632.ip4.static.sl-reverse.com [50.22.158.221])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4eueqw19ng-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 18 Jun 2026 16:56:14 +0000 (GMT)
+Received: from pps.filterd (ppma13.dal12v.mail.ibm.com [127.0.0.1])
+	by ppma13.dal12v.mail.ibm.com (8.18.1.7/8.18.1.7) with ESMTP id 65IGnf75005083;
+	Thu, 18 Jun 2026 16:56:14 GMT
+Received: from smtprelay06.wdc07v.mail.ibm.com ([172.16.1.73])
+	by ppma13.dal12v.mail.ibm.com (PPS) with ESMTPS id 4ev1724r51-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 18 Jun 2026 16:56:14 +0000 (GMT)
+Received: from smtpav04.dal12v.mail.ibm.com (smtpav04.dal12v.mail.ibm.com [10.241.53.103])
+	by smtprelay06.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 65IGuDk126346182
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Thu, 18 Jun 2026 16:56:13 GMT
+Received: from smtpav04.dal12v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 0E74158052;
+	Thu, 18 Jun 2026 16:56:13 +0000 (GMT)
+Received: from smtpav04.dal12v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 68ABF58056;
+	Thu, 18 Jun 2026 16:56:12 +0000 (GMT)
+Received: from [9.61.18.44] (unknown [9.61.18.44])
+	by smtpav04.dal12v.mail.ibm.com (Postfix) with ESMTP;
+	Thu, 18 Jun 2026 16:56:12 +0000 (GMT)
+Message-ID: <75268c28-c937-47c4-aba1-9ff47d9cd9a2@linux.ibm.com>
+Date: Thu, 18 Jun 2026 11:56:11 -0500
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] [SCSI] qla2xxx: Handle the INTx not connected while
+ passing through
+To: Shivaprasad G Bhat <sbhat@linux.ibm.com>, njavali@marvell.com,
+        GR-QLogic-Storage-Upstream@marvell.com,
+        James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        alex.williamson@nvidia.com
+References: <177885270578.1573.14283751510936407585.stgit@linux.ibm.com>
+Content-Language: en-US
+From: Kyle Mahlkuch <kmahlkuc@linux.ibm.com>
+In-Reply-To: <177885270578.1573.14283751510936407585.stgit@linux.ibm.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-Spam-Info: AW1haW4tMjYwNjE4MDE1NiBTYWx0ZWRfX3GfdovMaL4SM
+ RwSCaeI9yUuCEwXGmkx3+mJ5jIThtbnCAQnswJ/JPhReVURODc2uTYT0D/yrrNmm916oqo2fQXV
+ qnRJxuj3W2K+jUEgxTUUMloxtWvSJ7E=
+X-Proofpoint-GUID: 81LH3OvHIGWHpyraig_G4Y7ui_a4WvJ5
+X-Authority-Analysis: v=2.4 cv=bMgm5v+Z c=1 sm=1 tr=0 ts=6a34232f cx=c_pps
+ a=AfN7/Ok6k8XGzOShvHwTGQ==:117 a=AfN7/Ok6k8XGzOShvHwTGQ==:17
+ a=IkcTkHD0fZMA:10 a=FelO9ux0wxsA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=RnoormkPH1_aCDwRdu11:22 a=U7nrCbtTmkRpXpFmAIza:22 a=VnNF1IyMAAAA:8
+ a=tgEE0hn4WxFvroNNBIsA:9 a=QEXdDO2ut3YA:10
+X-Proofpoint-ORIG-GUID: 81LH3OvHIGWHpyraig_G4Y7ui_a4WvJ5
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNjE4MDE1NiBTYWx0ZWRfX04LQpfOnU72g
+ j9dg8VFmi9sR8I5lP4P/3Gsij+yvZEHLFC1R0tlQP7Ee74j6gdDbFXv5+8DBLvPMCxzc1q02+tR
+ r2PZ04Z1awkW9eGoIKl/n+uH5LyuMyKRZhsf4yxZXrRpPSKwakMxjX/OzLP2YX3ktO+IkZkLVfu
+ Q7jqjBQpyridUu29XvdzkicHFqagUOWvC0wh8YfdkGULd8tAfqNDJElGP2aHICrrWYqVZ/e7DI/
+ ite0wPdi5ahRQysuykByeYNTCLLGIwhtnoYLSZ4M4//AAvw/y+qSuHIvq99SEkl2ZnwCVbOHldN
+ bK1Ho3Q9/xZyHiEpcWOuoUYc6uxVj4qG420LggXN7KniiKndELHga+7chpWXC/rJuchb786grYE
+ Fr2yvb1xd8oGvSs0LtD+75tfwSAlhvRvgk5XCtCmcp+2evxfZdL9nzBkiyWvqYTvXd2QuKzNP/k
+ hUOMePITXqxFAGxdduA==
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.125,FMLib:17.12.100.49
+ definitions=2026-06-18_02,2026-06-18_03,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ suspectscore=0 impostorscore=0 malwarescore=0 adultscore=0 spamscore=0
+ bulkscore=0 priorityscore=1501 phishscore=0 clxscore=1011 lowpriorityscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2606180156
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
+> The PCI_INTERRUPT_PIN reports if the device supports the INTx.
+> However, when the device is assigned to a guest via vfio, the
+> PCI_INTERRUPT_PIN is set to 0(i.e none) if the line is not
+> connected and|or the platform cannot route the interrupt.
+> 
+> In such cases, the guest PCI_INTERRUPT_PIN is 0 and the port
+> number becomes -1(255, uint8_t underflow) for qla[25|27|28]xx and
+> qla2031 devices. The flt_region_nvram is never set, and subsequently
+> the lun detection fails. Below warnings show the NVRAM configuration
+> failure.
+> 
+>   []-0073:1: Inconsistent NVRAM checksum=0xffffffc0 id=HCAM version=0x100.
+>   []-0074:1: Falling back to functioning (yet invalid -- WWPN) defaults.
+>   []-0076:1: NVRAM configuration failed.
+> 
+> The patch handles the case, and sets the port_no to devfn like
+> its done everywhere else.
+> 
+> Reference: commit 2bd42b03ab6b ("vfio/pci: Virtualize zero INTx PIN if no pdev->irq")
+> Signed-off-by: Shivaprasad G Bhat <sbhat@linux.ibm.com>
 
-Pre-existing issues:
-- [High] The POST_CHANGE notification is skipped on error paths in ufshcd_t=
-x_eqtr(), leaving variant-specific hardware state unbalanced.
-- [High] Missing cleanup of TX Equalization settings and Power Mode on erro=
-r paths in ufs_qcom_get_rx_fom().
---
+Hi Shiva,
+Your changes look reasonable and fix a known bug.
 
-commit 8d8593416ad1701fbb78203bd1a0efec4ccc4895
-Author: Can Guo <can.guo@oss.qualcomm.com>
-
-scsi: ufs: core: Avoid possible memory reclaim deadlock in TX EQTR context
-   =20
-This patch uses memalloc_noio_save() and memalloc_noio_restore() in
-ufshcd_tx_eqtr() to prevent potential memory reclaim deadlocks. TX EQTR
-allocations in a quiesced UFS tagset context could trigger direct reclaim
-depending on UFS I/O, leading to deadlocks.
-
-Closes: https://sashiko.dev/#/patchset/20260615132834.2985346-1-can.guo@oss=
-.qualcomm.com?part=3D2
-
->     Use memalloc_noio_save/restore() in ufshcd_tx_eqtr() to cover all
->     allocations in the TX EQTR call tree, including:
->     - params->eqtr_record in ufshcd_tx_eqtr()
->     - eqtr_data in __ufshcd_tx_eqtr()
->     - params in ufs_qcom_get_rx_fom()
-
-[Severity: High]
-This is a pre-existing issue, but does ufs_qcom_get_rx_fom() skip cleanup
-on error paths?
-
-The function overrides TX Equalization settings via
-ufshcd_apply_tx_eq_settings() and then alters the power mode to test the FO=
-M.
-
-If ufshcd_change_power_mode() or ufs_qcom_host_sw_rx_fom() fails, it
-returns the error directly:
-
-drivers/ufs/host/ufs-qcom.c:ufs_qcom_get_rx_fom() {
-    ...
-    ret =3D ufs_qcom_host_sw_rx_fom(hba, pwr_mode->lane_rx, fom);
-    if (ret) {
-        dev_err(...);
-        return ret;
-    }
-    ...
-}
-
-Does this direct return bypass the restoration of the original TX
-Equalization settings, permanently leaking the test PHY equalization
-settings into the hardware configuration?
-
-> diff --git a/drivers/ufs/core/ufs-txeq.c b/drivers/ufs/core/ufs-txeq.c
-> index aa64f2bf4f1ef..d20c478659157 100644
-> --- a/drivers/ufs/core/ufs-txeq.c
-> +++ b/drivers/ufs/core/ufs-txeq.c
-[ ... ]
-> @@ -1248,6 +1260,9 @@ static int ufshcd_tx_eqtr(struct ufs_hba *hba,
->  	if (ret)
->  		ufshcd_tx_eqtr_unprepare(hba, &old_pwr_info);
-> =20
-> +out_noio_restore:
-> +	memalloc_noio_restore(noio_flag);
-> +
->  	return ret;
->  }
-
-[Severity: High]
-This isn't a bug introduced by this patch, but does the error path in
-ufshcd_tx_eqtr() skip restoring the hardware state?
-
-When ufshcd_vops_tx_eqtr_notify() is called with PRE_CHANGE, it saves
-critical PHY settings. If __ufshcd_tx_eqtr() fails, the code jumps to out
-and skips the POST_CHANGE notification:
-
-drivers/ufs/core/ufs-txeq.c:ufshcd_tx_eqtr() {
-    ...
-    ret =3D ufshcd_vops_tx_eqtr_notify(hba, PRE_CHANGE, pwr_mode);
-    if (ret)
-        goto out;
-
-    ret =3D __ufshcd_tx_eqtr(hba, params, pwr_mode);
-    if (ret)
-        goto out;
-
-    ret =3D ufshcd_vops_tx_eqtr_notify(hba, POST_CHANGE, pwr_mode);
-    ...
-}
-
-Since POST_CHANGE is exclusively responsible for restoring the saved
-hardware state, could skipping this permanently leave the PHY tuning
-registers corrupted and prevent UFS link recovery?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260618140941.9020=
-00-1-can.guo@oss.qualcomm.com?part=3D1
+Reviewed-by: Kyle Mahlkuch <kmahlkuc@linux.ibm.com>
