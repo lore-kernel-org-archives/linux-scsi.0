@@ -1,43 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 966BA280A56
-	for <linux-scsi@vger.kernel.org>; Thu, 18 Jun 2026 13:22:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 120053B27C1
+	for <linux-scsi@vger.kernel.org>; Thu, 18 Jun 2026 13:26:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781788942; cv=none; b=lRtMAqumPAFXKWwpbmGZcsId2ie+8Ub9GmScYx/XXfMgqgB9Bzbo1Solj35kHResqkBOsZb+eUa5U0jjXeKL5MIkrxoEb8gBD1+U/JMhTI5khhUMA1m0J4fISyn3Ysp7z1ZgZiqlRQxptlA0VqNqN0mCtlJaZqYEm5yVh7IteGY=
+	t=1781789207; cv=none; b=HxkcW75bibaMVoEPlR9yOr4LFGURpiYP7yfoZKOvGyhMX0VocBzlEAN6PLA8TKC6ydwPn9k71U2cqOB64uCOtjrhojLAkZ/cAyMeIblnEbJiFPCE59RuxVvQS9ZmiqDBn4coDSRBnvKzoFvFJJYTAHkM1zU3QxnPGEs40xyH3vU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781788942; c=relaxed/simple;
-	bh=BXR+B0SvxcgDPXvP2gM0Ba0NVZrxbaXZEgFLFsvoyC8=;
+	s=arc-20240116; t=1781789207; c=relaxed/simple;
+	bh=yoFBo2F8aC1WNYGsXOQ820qCA4MKv6JguU9jVu01AZ0=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=bHu4xlJVVhJtn2azGISuCUsPzrTcDtk9s9gtdG8m6daEeZuQJU/F/p0xbUKkOTPzXfD71OdMtQbg/fLOJrCU+/uSh/5HJCtdrizG1Xkci/7kI82X8V0hEwJSnPRadeHwOkwiLPmr+vxnsRRqby2az/EU6O5Q1U3vSvqQVEwdkDk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hGMWibO/; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=DdpvFFlIwxQ+q62KQufYau/k9zO4R76GpSPwA2FrxtGIRDGypdkOQiBBApUkWqziIdUTJr2JbQx3l2m0e92haBKGZt0kRINoL4gzL5LgEmBWM41DiIOqixZUKX7Sxr2sdmi/R+Iqa9c0Lp29NmfMVHGwPLSyiM0f1TUqH45BmXI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=A+iuRfx1; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hGMWibO/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 150FA1F000E9;
-	Thu, 18 Jun 2026 13:22:21 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="A+iuRfx1"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9F0CE1F00ACF;
+	Thu, 18 Jun 2026 13:26:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781788941;
-	bh=BXR+B0SvxcgDPXvP2gM0Ba0NVZrxbaXZEgFLFsvoyC8=;
+	s=k20260515; t=1781789205;
+	bh=AWv8AHGYN+rCXlh5SVw9LG+3bnH7MwR9bFckv2Qzh7g=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=hGMWibO/x2QwqrH+9Gihpx5UEAlJgpb0VbhU6B4etg+yk41ZQL2uhYpZXzBGyBxsN
-	 rlALj/cBaAa6/n1mXSoLpwCsqM6/9XHa4obfB28Oko7B/YtaCj7gJT9Y6AG4duN/SW
-	 3GTZyvMDKWkH9Gmrdlsfp8yagZpy1/wKrIRk7Qr5SmuDSDGZuIitaOYfSGtjENtkCr
-	 3+aVQMKhij/QZDnGk7EMFYqIxdkHANg2fttW6E0XKiChkGr0rhxC5inCSYeLcyi0bF
-	 HFK/eJwNez2Vi8XzAX2SNdF+DQqbylFCl/v2QfOixiQ3M7fKet9kK7RHmRlqVTy8CP
-	 n5QaEs1nypC0Q==
+	b=A+iuRfx1GYdwKtLNnWn8IPCwCOFQ9qhTt8nZteB2LkEIZch67J2d/Bsecgq/6EfUb
+	 G1AtbnqKJ3ZLV/A8lAmTQ/afv3HEfeOCp2MLtvqqlKCDdP+Y6Bl4VcNUGJKpG8YtHy
+	 riA1v5udVZS5M1XneZ46XRgSA6cJUlLQH5XfGX6WWp8WuEmu6m2glhKVBm7PcvRHcV
+	 iKWhgzpV4kD8rzaI46Mt634tZvVTlYnKh+Df0VBmUEPizXiZgAbQ/zYDDCX2hsUGbu
+	 DcD8MT5PWq+YjvP1pcCtGkZhVvRPN0aaClkanyn+CUzGIt5f1iMHM/DOx0LP92tbtW
+	 33MuC/drECWTg==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 2/2] scsi: leapraid: Add driver documentation
+Subject: Re: [PATCH] scsi: scsi_dh_alua: Use common code in alua_rtpg()
 Reply-To: sashiko-reviews@lists.linux.dev
-To: "Dongdong Hao" <doubled@leap-io-kernel.com>
+To: "Markus Elfring" <Markus.Elfring@web.de>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <bab9637bf1646c6d0c5d82c22328f120e02cc4c6.1781767278.git.doubled@leap-io-kernel.com>
-References: <cover.1781767278.git.doubled@leap-io-kernel.com>
- <bab9637bf1646c6d0c5d82c22328f120e02cc4c6.1781767278.git.doubled@leap-io-kernel.com>
+In-Reply-To: <366c376e-ef8a-490d-a580-570f2f51ec81@web.de>
+References: <366c376e-ef8a-490d-a580-570f2f51ec81@web.de>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 18 Jun 2026 13:22:20 +0000
-Message-Id: <20260618132221.150FA1F000E9@smtp.kernel.org>
+Date: Thu, 18 Jun 2026 13:26:45 +0000
+Message-Id: <20260618132645.9F0CE1F00ACF@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -46,44 +45,85 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [Medium] The documentation incorrectly names the module parameter for mul=
-tipath support as `enable_mpio` instead of `enable_mp`.
+
+Pre-existing issues:
+- [High] A race condition in `alua_rtpg` can cause ALUA port group state up=
+dates to be permanently dropped.
 --
 
-commit 958c37a9e9c4054d4110e1b080f8c3be25877cb6
-Author: Dongdong Hao <doubled@leap-io-kernel.com>
+commit a4fc4f8579d1bb0ef6314519e4902a1bf335fb2b
+Author: Markus Elfring <elfring@users.sourceforge.net>
+Subject: scsi: scsi_dh_alua: Use common code in alua_rtpg()
 
-scsi: leapraid: Add driver documentation
+This commit introduces a goto label to consolidate the memory freeing
+and return logic in alua_rtpg(). It replaces multiple redundant kfree()
+calls throughout the error handling paths of the function.
 
-This patch adds the necessary documentation for the LeapRAID SCSI driver
-to the kernel's documentation tree.
+> diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/de=
+vice_handler/scsi_dh_alua.c
+> index 80ab0ff921d43..0161507010643 100644
+> --- a/drivers/scsi/device_handler/scsi_dh_alua.c
+> +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
 
-> diff --git a/Documentation/scsi/leapraid.rst b/Documentation/scsi/leaprai=
-d.rst
-> new file mode 100644
-> index 0000000000000..e4a6a61c13f8e
-> --- /dev/null
-> +++ b/Documentation/scsi/leapraid.rst
 [ ... ]
-> +2. enable_mpio
-> +--------------
-> +
-> +This parameter enables or disables multipath support for target devices.
 
-[Severity: Medium]
-Should this module parameter be documented as enable_mp instead of
-enable_mpio?
+> @@ -632,15 +632,14 @@ static int alua_rtpg(struct scsi_device *sdev, stru=
+ct alua_port_group *pg)
+>  			sdev_printk(KERN_ERR, sdev, "%s: rtpg retry\n",
+>  				    ALUA_DH_NAME);
+>  			scsi_print_sense_hdr(sdev, ALUA_DH_NAME, &sense_hdr);
+> -			kfree(buff);
+> -			return err;
+> +			goto free_buff;
+>  		}
+>  		sdev_printk(KERN_ERR, sdev, "%s: rtpg failed\n",
+>  			    ALUA_DH_NAME);
+>  		scsi_print_sense_hdr(sdev, ALUA_DH_NAME, &sense_hdr);
+> -		kfree(buff);
+>  		pg->expiry =3D 0;
+> -		return SCSI_DH_IO;
+> +		err =3D SCSI_DH_IO;
+> +		goto free_buff;
+>  	}
+> =20
+>  	len =3D get_unaligned_be32(&buff[0]) + 4;
 
-If users attempt to configure multipath support using enable_mpio via the
-kernel command line or modprobe config, they will encounter unknown
-parameter errors.
+[Severity: High]
+This is a pre-existing issue, but was not introduced by the patch under
+review. While we are consolidating the return paths in alua_rtpg(), does
+this function still have a race condition when applying the new access
+state?
 
-> +When set to 1, multipath functionality is enabled (default), allowing
-> +multiple paths to be established. Setting it to 0 disables multipath
-> +handling.
-> +
-> +3. msix_disable
+Looking at the loop that processes the descriptors further down in
+alua_rtpg():
+
+    if (spin_trylock_irqsave(&tmp_pg->lock, flags)) {
+        if ((tmp_pg =3D=3D pg) ||
+            !(tmp_pg->flags & ALUA_PG_RUNNING)) {
+            struct alua_dh_data *h;
+
+            tmp_pg->state =3D desc[0] & 0x0f;
+
+If this trylock fails because the lock is held by a function that doesn't
+set the ALUA_PG_RUN_RTPG flag (like alua_bus_detach() or
+alua_set_params()), the new ALUA access state is silently discarded without
+queuing a retry.
+
+Could this cause the port group's access state to become permanently stale
+(e.g., stuck in SCSI_ACCESS_STATE_STANDBY despite the hardware
+transitioning to an active state), ultimately failing all I/O to
+non-optimal paths and causing data unavailability?
+
+> @@ -770,6 +769,7 @@ static int alua_rtpg(struct scsi_device *sdev, struct=
+ alua_port_group *pg)
+>  		break;
+>  	}
+>  	spin_unlock_irqrestore(&pg->lock, flags);
+> +free_buff:
+>  	kfree(buff);
+>  	return err;
+>  }
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/cover.1781767278.gi=
-t.doubled@leap-io-kernel.com?part=3D2
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/366c376e-ef8a-490d-=
+a580-570f2f51ec81@web.de?part=3D1
