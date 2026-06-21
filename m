@@ -1,170 +1,238 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from lamorak.hansenpartnership.com (lamorak.hansenpartnership.com [198.37.111.173])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 868511FA859;
-	Sat, 20 Jun 2026 08:04:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6EBD7367280;
+	Sun, 21 Jun 2026 13:51:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.37.111.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781942652; cv=none; b=UUorMKMqMBk9RacfHCpJI9DcqWCl53xYh8271QYbps/EokAMGi+mSz0DK27KI46ONicMkPG2SiAdEyBlT5hOy9RBYm0Mfrp2ysrNhEXrs0sT024lkZCXSJyA0G6ndPC9dMhxYeo/T8BiTS6wkV0Hkfg6K4nV+Cfrl+OleMcI1EI=
+	t=1782049921; cv=none; b=L27dXp+B+Ert1BowR6wMwKAxlspDLyYyk4xntpRZpwzFqFJhxsxSaaE4DLqzxeXlHIst/5p/FMNatCYbjgkuKeO8rRBGtJjrsq+hza3106RF64xUKrZkDZ7aiIOSna9wf6vpg8lQKOWpIJwQUun7kxe/QHBRR8PPhOTW7A4k1oU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781942652; c=relaxed/simple;
-	bh=3z1ZGpe5Zg1cy0lpZzFR7LAsYffXCfoRoB82onCy2bw=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=Es+CQ71GWpchjerMl7gspagVqI1gr/XmpjPk+hpP9MAKbqtaLNQtusWpjKHPhEeAImyc2SeMweA/8zemH1x2AarD6vk6l/omR0wLXpGEwFBVijftG4SCW0b3WIRBWt3xyoSgCyKI6zlmBZbNnHnFjUpUaZ5qDbJpbxxzma8mIi4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=LXcWT+Uo; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="LXcWT+Uo"
-Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 65K4dgnh2152420;
-	Sat, 20 Jun 2026 08:03:42 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:date:from:in-reply-to:message-id
-	:mime-version:references:subject:to; s=qcppdkim1; bh=7unrjdUYWRA
-	1bYtNbcWwdUQXHeNnXNhCggjSl5BOuOQ=; b=LXcWT+UofdENsmQ+74pif4COFOx
-	l+W4XV5SZ6dQ/Z2pUdAVAJn/nTLwZHKwq7wpTHaTfdHtiY3wEcGuBxDmhFjz62Z+
-	iIx3Cqgl4csoGYJTli3O4vT1yDoMnIz94ng7kMmwTqPuzC/zDg3PL2FNjuW2fJ0j
-	wM8cjUb/qP0d233HVUupA7jxEKANO0RM8SgVmlam20uoBFeLL7O1JiZlEyamjSuS
-	AXGY/j4I+yTIi5+klrfXLzhiTExITWX+ZZL3ljXJTO/lgSFUrGoEcfbOZ7ip/sYk
-	tJMItwiMI8wBK0x5rXwOSWagO4C3OgUFc2ec+Mu1E+qsfKbQCnqVcldvvng==
-Received: from nalasppmta05.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4ewm1k0b1x-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Sat, 20 Jun 2026 08:03:42 +0000 (GMT)
-Received: from pps.filterd (NALASPPMTA05.qualcomm.com [127.0.0.1])
-	by NALASPPMTA05.qualcomm.com (8.18.1.7/8.18.1.7) with ESMTP id 65K83fh1024761;
-	Sat, 20 Jun 2026 08:03:41 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-	by NALASPPMTA05.qualcomm.com (PPS) with ESMTPS id 4ewkxj15yv-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Sat, 20 Jun 2026 08:03:41 +0000 (GMT)
-Received: from NALASPPMTA05.qualcomm.com (NALASPPMTA05.qualcomm.com [127.0.0.1])
-	by pps.reinject (8.18.1.12/8.18.1.12) with ESMTP id 65K83fDv024755;
-	Sat, 20 Jun 2026 08:03:41 GMT
-Received: from hu-devc-lv-u22-c.qualcomm.com (hu-cang-lv.qualcomm.com [10.81.25.255])
-	by NALASPPMTA05.qualcomm.com (PPS) with ESMTPS id 65K83fdO024753
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Sat, 20 Jun 2026 08:03:41 +0000 (GMT)
-Received: by hu-devc-lv-u22-c.qualcomm.com (Postfix, from userid 359480)
-	id 6A724644; Sat, 20 Jun 2026 01:03:41 -0700 (PDT)
-From: Can Guo <can.guo@oss.qualcomm.com>
-To: bvanassche@acm.org, beanhuo@micron.com, peter.wang@mediatek.com,
-        martin.petersen@oracle.com, mani@kernel.org
-Cc: linux-scsi@vger.kernel.org, Can Guo <can.guo@oss.qualcomm.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-        linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH 2/3] scsi: ufs: core: Tolerate RX_FOM read failures in TX EQTR
-Date: Sat, 20 Jun 2026 01:03:21 -0700
-Message-Id: <20260620080322.3765210-3-can.guo@oss.qualcomm.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20260620080322.3765210-1-can.guo@oss.qualcomm.com>
-References: <20260620080322.3765210-1-can.guo@oss.qualcomm.com>
+	s=arc-20240116; t=1782049921; c=relaxed/simple;
+	bh=Pa4kNPPQDGkB7iGi4VZYqnxdfjjVlCzZwlyu46Q89nY=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=m7tL5uOJTsXvcSj5c18aHHQyHn2mKuGKpRmygsY9KYSBQzwQ1igTEHBvfr46ANI0TmQQZB/5EAnSmgq3O86nf8mC21ylwMerD3kPqpLXBXaQK86XQxsYphAD4ielBtRUQs9/vgGrD5/JRpmiQVUhfegBt4JCgzrGiurWlXc9Ng4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com; spf=pass smtp.mailfrom=HansenPartnership.com; arc=none smtp.client-ip=198.37.111.173
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=HansenPartnership.com
+Received: from lingrow.int.hansenpartnership.com (unknown [153.66.160.227])
+	by lamorak.hansenpartnership.com (Postfix) with ESMTP id E053F1C03B2;
+	Sun, 21 Jun 2026 09:51:57 -0400 (EDT)
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+To: Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>
+Subject: [GIT PULL] SCSI updates for the 7.1+ merge window
+Date: Sun, 21 Jun 2026 09:51:25 -0400
+Message-ID: <20260621135133.12271-1-James.Bottomley@HansenPartnership.com>
+X-Mailer: git-send-email 2.51.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-QCInternal: smtphost
-X-QCInternal: smtphost
-X-Proofpoint-GUID: y6uRc644oX3YkNW8ZgP-rPGj04kBLBvy
-X-Proofpoint-Spam-Info: AW1haW4tMjYwNjIwMDA3NyBTYWx0ZWRfX1A5aRGKjZbs/
- VB6e5Og9pqfGjCBAQkFOZLOhn3zHl6eyjxvF4KjnLAUyagMjbKNWjVeWTBZDTG4S2l3DBpAkXl5
- 8nhqHcGvl5Hh7RxyIPngbii7HCQ710s=
-X-Authority-Analysis: v=2.4 cv=T6S8ifKQ c=1 sm=1 tr=0 ts=6a36495e cx=c_pps
- a=ouPCqIW2jiPt+lZRy3xVPw==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
- a=FelO9ux0wxsA:10 a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22
- a=DJpcGTmdVt4CTyJn9g5Z:22 a=EUspDBNiAAAA:8 a=MY0Nf5o17odUSmN9C4UA:9
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNjIwMDA3NyBTYWx0ZWRfX18tZQp5Do4Dl
- rU+qcmjRA7mmPa3eDg/NGm3zM3emHqn6u4nOlOWBUHLkfoD0oRPVa+9TuoXdcIKnUjXMGObhKXN
- a/Axn/+dyzpbKJ8JKROXChMuqxq1r0Enht/ECZ1cSzEN84DOIrfWqlggREJYxmA4tdzjpcKWFZ9
- 3v19mB3UnIvWglxEt9S7RPffuBM7v27C5PB+HZ/qTofB4hVw0QZ4EvgOGcj2s/y4GlrMvLa1dDB
- qjbk2ythq1oNHlV+j7IZPQ/2IA7OByFGCL1VWT7D4UVwFyPLeAO/nRar0gji69NhBOrI9bbriVF
- s7MC7cW2ELJM35qFznEb3EZdNwdBVoxgLO1wBNfw/4Giqel+mGgmh/x3WsBCjGDkBavU4JMdCI2
- HoioNX9nVz77VblwGUroLo0Hu0bxPhv+85oFEnM8iayWFjw5UYlOLeMye4r8D4SK69b0gRMmZG1
- R8ax0V2LqXwW9yt1xKw==
-X-Proofpoint-ORIG-GUID: y6uRc644oX3YkNW8ZgP-rPGj04kBLBvy
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.125,FMLib:17.12.100.49
- definitions=2026-06-20_01,2026-06-18_03,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- priorityscore=1501 phishscore=0 malwarescore=0 adultscore=0 bulkscore=0
- impostorscore=0 lowpriorityscore=0 spamscore=0 suspectscore=0 clxscore=1015
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2606200077
 
-ufshcd_get_rx_fom() aborted TX EQTR when a per-lane RX_FOM DME read failed.
-That makes the whole training flow fragile even though these reads can be
-treated as best effort.
+The following changes since commit 85db7391310b1304d2dc8ae3b0b12105a9567147:
 
-Keep TX EQTR running by logging RX_FOM read failures and continuing.
-Make failed lanes deterministic by initializing each lane FOM to 0 before
-reading and only updating it when the DME read succeeds. This avoids
-propagating stale or uninitialized values into EQTR evaluation.
+  scsi: target: iscsi: Validate CHAP_R length before base64 decode (2026-05-22 23:06:00 -0400)
 
-Also update the kerneldoc return description to match behavior: RX_FOM
-DME read failures are logged for debug visibility, while get_rx_fom()
-vops failures are still propagated to the caller.
+are available in the Git repository at:
 
-Signed-off-by: Can Guo <can.guo@oss.qualcomm.com>
----
- drivers/ufs/core/ufs-txeq.c | 20 +++++++++++++++-----
- 1 file changed, 15 insertions(+), 5 deletions(-)
+  https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git/ tags/scsi-misc
 
-diff --git a/drivers/ufs/core/ufs-txeq.c b/drivers/ufs/core/ufs-txeq.c
-index 9dca0cd344b8..23a12e221d31 100644
---- a/drivers/ufs/core/ufs-txeq.c
-+++ b/drivers/ufs/core/ufs-txeq.c
-@@ -482,7 +482,9 @@ static void ufshcd_evaluate_tx_eqtr_fom(struct ufs_hba *hba,
-  * @h_iter: host TX EQTR iterator data structure
-  * @d_iter: device TX EQTR iterator data structure
-  *
-- * Returns 0 on success, negative error code otherwise
-+ * Returns 0 on success, negative error code if get_rx_fom vops fails.
-+ * RX_FOM DME get failures are debug-logged and treated as 0 FOM for
-+ * that lane.
-  */
- static int ufshcd_get_rx_fom(struct ufs_hba *hba,
- 			     struct ufs_pa_layer_attr *pwr_mode,
-@@ -494,22 +496,30 @@ static int ufshcd_get_rx_fom(struct ufs_hba *hba,
- 
- 	/* Get FOM of host's TX lanes from device's RX_FOM. */
- 	for (lane = 0; lane < pwr_mode->lane_tx; lane++) {
-+		h_iter->fom[lane] = 0;
- 		ret = ufshcd_dme_peer_get(hba, UIC_ARG_MIB_SEL(RX_FOM,
- 					  UIC_ARG_MPHY_RX_GEN_SEL_INDEX(lane)),
- 					  &fom);
--		if (ret)
--			return ret;
-+		if (ret) {
-+			dev_dbg(hba->dev, "Failed to get FOM for Host TX Lane %d: %d\n",
-+				lane, ret);
-+			continue;
-+		}
- 
- 		h_iter->fom[lane] = (u8)fom;
- 	}
- 
- 	/* Get FOM of device's TX lanes from host's RX_FOM. */
- 	for (lane = 0; lane < pwr_mode->lane_rx; lane++) {
-+		d_iter->fom[lane] = 0;
- 		ret = ufshcd_dme_get(hba, UIC_ARG_MIB_SEL(RX_FOM,
- 				     UIC_ARG_MPHY_RX_GEN_SEL_INDEX(lane)),
- 				     &fom);
--		if (ret)
--			return ret;
-+		if (ret) {
-+			dev_dbg(hba->dev, "Failed to get FOM for Device TX Lane %d: %d\n",
-+				lane, ret);
-+			continue;
-+		}
- 
- 		d_iter->fom[lane] = (u8)fom;
- 	}
--- 
-2.34.1
+for you to fetch changes up to 4f87e9068bf3aaf45f226261d5efd50bec42c12c:
 
+  Merge branch 7.1/scsi-fixes into 7.2/scsi-staging (2026-06-15 21:01:30 -0400)
+
+----------------------------------------------------------------
+
+Only ufs driver updates this time, apart from which this is just an
+assortment of bug fixes and AI assisted changes.  The biggest other
+change is the reversion of the sas_user_scan patch which supported a
+mpi3mr NVME behaviour but caused major issues for other sas
+controllers. The next biggest is the removal of target reset in
+tcm_loop.c.
+
+----------------------------------------------------------------
+Arnd Bergmann (3):
+      scsi: advansys: Drop ISA_DMA_API remnants
+      scsi: megaraid_mbox: Reduce stack usage in megaraid_cmm_register()
+      scsi: megaraid_mbox: Avoid double kfree()
+
+Bart Van Assche (8):
+      scsi: scsi_debug: Remove unused variable sdebug_any_injecting_opt
+      scsi: ufs: core: Inline two functions related to UIC commands
+      scsi: ufs: core: Complain if UIC argument 2 is invalid
+      scsi: ufs: core: Optimize ufshcd_add_uic_command_trace()
+      scsi: core: target: Add INQUIRY-related constants to scsi_common.h
+      scsi: core: Use the INQUIRY-related constants
+      scsi: core: Convert INQUIRY information
+      scsi: mailmap: Update Avri Altman's email address
+
+Can Guo (4):
+      scsi: ufs: core: Introduce function ufshcd_query_attr_qword()
+      scsi: ufs: core: Add support to retrieve and store TX Equalization settings
+      scsi: ufs: core: Add a quirk for extended TX EQTR Adapt L0L1L2L3 length
+      scsi: ufs: ufs-qcom: Use quirk EXTENDED_TX_EQTR_ADAPT_LENGTH_L0L1L2L3
+
+Chanwoo Lee (4):
+      scsi: ufs: core: Fix NULL pointer dereference in scsi_cmd_priv() calls
+      scsi: ufs: Fix wrong value printed in unexpected UPIU response case
+      scsi: ufs: Remove unnecessary return in void vops wrappers
+      scsi: ufs: Remove redundant vops NULL check and trivial wrapper
+
+Daejun Park (1):
+      scsi: ufs: core: Skip link param validation when lanes_per_direction is unset
+
+Dan Carpenter (1):
+      scsi: pm8001: Fix error code in non_fatal_log_show()
+
+David Disseldorp (2):
+      scsi: target: Fix hexadecimal CHAP_I handling
+      scsi: target: Use constant-time crypto_memneq() for CHAP digests
+
+Deepti Jaggi (1):
+      scsi: ufs: dt-bindings: Add compatible for SA8797P UFS Host Controller
+
+Evgenii Burenchev (1):
+      scsi: snic: vnic_dev: Remove dead store in vnic_dev_discover_res()
+
+Hongjie Fang (1):
+      scsi: ufs: core: Handle PM commands timeout before SCSI EH
+
+Ionut Nechita (1):
+      scsi: sas: Skip opt_sectors when DMA reports no real optimization hint
+
+Krzysztof Kozlowski (1):
+      scsi: ufs: qcom: Unify user-visible "Qualcomm" name
+
+Kumar Meiyappan (2):
+      scsi: pm8001: Reject firmware update in fatal error state
+      scsi: pm8001: Reject non-fatal dump when controller is crashed
+
+Marco Crivellari (1):
+      scsi: scsi_transport_srp: Move long delayed work to system_dfl_long_wq
+
+Martin K. Petersen (2):
+      Merge patch series "scsi: ufs: Add persistent TX Equalization settings support"
+      Merge branch 7.1/scsi-fixes into 7.2/scsi-staging
+
+Martin Wilck (2):
+      scsi: smartpqi: Use shost_to_hba() in pqi_scan_finished()
+      scsi: Revert "scsi: Fix sas_user_scan() to handle wildcard and multi-channel scans"
+
+Md Shofiqul Islam (2):
+      scsi: core: scsi_scan: Fix typo in comment
+      scsi: storvsc: Replace symbolic permissions with octal
+
+Mike Christie (1):
+      scsi: target: Remove tcm_loop target reset handling
+
+Palash Kambar (3):
+      scsi: ufs: core: Configure only active lanes during link
+      scsi: ufs: ufs-qcom: Enable Auto Hibern8 clock request support
+      scsi: ufs: qcom: dt-bindings: Document the Hawi UFS controller
+
+Piotr Zarycki (1):
+      scsi: isci: Remove unused macro scu_get_command_request_logical_port()
+
+Rajeshkumar Sambandham (1):
+      scsi: ufs: ufs-pci: Add AMD device ID support
+
+Rosen Penev (1):
+      scsi: lpfc: Turn lpfc_queue q_pgs into a flexible array
+
+Samuel Moelius (1):
+      scsi: scsi_debug: Fix one-partition tape setup bounds
+
+Sasha Levin (1):
+      scsi: ncr53c8xx: Drop CONFIG_ prefix from Zalon-specific compiler defines
+
+Shawn Guo (1):
+      scsi: ufs: dt-bindings: Add compatible for Nord UFS Host Controller
+
+Sowon Na (2):
+      scsi: ufs: exynos: dt-bindings: Add ExynosAutov920 compatible string
+      scsi: ufs: exynos: Add support for ExynosAutov920 SoC
+
+Thorsten Blum (1):
+      scsi: scsi_ioctl: Use strnlen() in scsi_ioctl_get_pci()
+
+Uwe Kleine-König (The Capable Hub) (3):
+      scsi: ufs: tc-dwc-g210-pci: Simplify initialization of pci_device_id array
+      scsi: ufs: ufshcd-pci: Use PCI_VDEVICE and named initializers for pci array
+      scsi: mvsas: Don't emit __LINE__ in debug messages
+
+Wang Yan (1):
+      scsi: libiscsi: Fix spelling and format errors
+
+Wang Zihan (1):
+      scsi: st: Fix typo in documentation
+
+William Theesfeld (1):
+      scsi: lpfc: Fix spelling mistakes in comments
+
+Xose Vazquez Perez (1):
+      scsi: devinfo: Broaden Promise VTrak E310/E610 identification
+
+Yihang Li (1):
+      scsi: hisi_sas: Add slave_destroy interface for v3 hw
+
+ .mailmap                                           |   1 +
+ .../bindings/ufs/qcom,sa8255p-ufshc.yaml           |   6 +-
+ .../devicetree/bindings/ufs/qcom,sm8650-ufshc.yaml |   5 +
+ .../bindings/ufs/samsung,exynos-ufs.yaml           |   1 +
+ Documentation/scsi/st.rst                          |   2 +-
+ drivers/hwmon/drivetemp.c                          |   5 +-
+ drivers/scsi/Kconfig                               |   1 -
+ drivers/scsi/Makefile                              |   4 +-
+ drivers/scsi/advansys.c                            |   1 -
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c             |  12 +-
+ drivers/scsi/isci/scu_task_context.h               |   2 -
+ drivers/scsi/libiscsi.c                            |   4 +-
+ drivers/scsi/lpfc/lpfc_attr.c                      |  10 +-
+ drivers/scsi/lpfc/lpfc_bsg.c                       |   6 +-
+ drivers/scsi/lpfc/lpfc_els.c                       |   2 +-
+ drivers/scsi/lpfc/lpfc_hbadisc.c                   |  12 +-
+ drivers/scsi/lpfc/lpfc_hw4.h                       |   2 +-
+ drivers/scsi/lpfc/lpfc_init.c                      |  12 +-
+ drivers/scsi/lpfc/lpfc_scsi.c                      |  12 +-
+ drivers/scsi/lpfc/lpfc_sli.c                       |  25 +-
+ drivers/scsi/lpfc/lpfc_sli4.h                      |   5 +-
+ drivers/scsi/megaraid/megaraid_mbox.c              |  26 +-
+ drivers/scsi/megaraid/megaraid_mm.c                |  32 +--
+ drivers/scsi/mvsas/mv_sas.h                        |   6 +-
+ drivers/scsi/ncr53c8xx.c                           |   2 +-
+ drivers/scsi/ncr53c8xx.h                           |   4 +-
+ drivers/scsi/pm8001/pm8001_ctl.c                   |  13 +-
+ drivers/scsi/pm8001/pm80xx_hwi.c                   |   7 +
+ drivers/scsi/scsi_debug.c                          |  13 +-
+ drivers/scsi/scsi_devinfo.c                        |   4 +-
+ drivers/scsi/scsi_ioctl.c                          |  11 +-
+ drivers/scsi/scsi_scan.c                           |  37 ++-
+ drivers/scsi/scsi_transport_sas.c                  | 101 ++++---
+ drivers/scsi/scsi_transport_srp.c                  |  10 +-
+ drivers/scsi/smartpqi/smartpqi_init.c              |   2 +-
+ drivers/scsi/snic/vnic_dev.c                       |   1 -
+ drivers/scsi/storvsc_drv.c                         |   8 +-
+ drivers/target/iscsi/iscsi_target_auth.c           |   9 +-
+ drivers/target/loopback/tcm_loop.c                 |  64 -----
+ drivers/ufs/core/ufs-mcq.c                         |   7 +-
+ drivers/ufs/core/ufs-sysfs.c                       |  30 ++-
+ drivers/ufs/core/ufs-txeq.c                        | 295 +++++++++++++++++++-
+ drivers/ufs/core/ufshcd-priv.h                     |  11 +-
+ drivers/ufs/core/ufshcd.c                          | 296 ++++++++++++---------
+ drivers/ufs/host/Kconfig                           |   2 +-
+ drivers/ufs/host/tc-dwc-g210-pci.c                 |   4 +-
+ drivers/ufs/host/ufs-exynos.c                      | 110 ++++++++
+ drivers/ufs/host/ufs-qcom.c                        |  13 +
+ drivers/ufs/host/ufs-qcom.h                        |  11 +
+ drivers/ufs/host/ufshcd-pci.c                      |  30 +--
+ include/scsi/scsi_common.h                         |   8 +
+ include/scsi/scsi_device.h                         |   7 +-
+ include/target/target_core_base.h                  |   5 +-
+ include/ufs/ufs.h                                  |   2 +
+ include/ufs/ufshcd.h                               |  12 +-
+ 55 files changed, 899 insertions(+), 424 deletions(-)
