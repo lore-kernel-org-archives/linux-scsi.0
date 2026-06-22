@@ -1,121 +1,109 @@
-Received: from mail-pj1-f53.google.com (mail-pj1-f53.google.com [209.85.216.53])
+Received: from mail-dy1-f178.google.com (mail-dy1-f178.google.com [74.125.82.178])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 187042BCF4C
-	for <linux-scsi@vger.kernel.org>; Mon, 22 Jun 2026 16:37:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.53
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 561F72E7F39
+	for <linux-scsi@vger.kernel.org>; Mon, 22 Jun 2026 17:42:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.178
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782146232; cv=none; b=orziDfPMoDsnQhhnA6Bw/+4Hc2rAsWqzCIs6kZWZCLiL/ucSxA+Cz3/iWOgFgoHxshv7L8uMuQZLd5QNsIkplLWgJwS9sbcwtKnsrmwMBxQ9i3b7E14nenqsqprDhxqir4Xf4IjQ6Qgor55SPb7KxN9JHsYcmj9szlMaOvBgS5g=
+	t=1782150133; cv=none; b=AxQymvbm+R8Pg5uNq3CRL5lEvHLmsgcu14eaPAZObyd9OMsfFNyPJ4aHe9ayGFMRHNBLNaEX8zeZnpJ9supcdVW+CKuG8ZIpyNPgEkLmd6yw+1gDYilKK8kM/EMpzgNKBiOD76ZH39MTSsnWxhyDTGPNPQRWBAQt1umm084PNLc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782146232; c=relaxed/simple;
-	bh=eJCNM22FWjYNfaU/daveGmD12ufPw4KFtvwawl9WsrM=;
-	h=From:To:Cc:Subject:Date:Message-ID:Content-Type:MIME-Version; b=HjxrXG3+E2Ut0z9Lo1AQrIQhD3vqZn8GDzDzxj3kpw7o6uv5sLWo9V9FK5VI5eDeT3nL76evAguFjNPZdrG2lqhj1M26s/HKnk3Oa3tWRHukZkfgAgfmyMdifGsPsZE6YacaHicukbIZtpeahDMg+GcP042nFSffynyCdtUNVZs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=iSHyiqVU; arc=none smtp.client-ip=209.85.216.53
+	s=arc-20240116; t=1782150133; c=relaxed/simple;
+	bh=QH3KrRoWJuIPfFyEQs+7l2o1gbngwfwlpX7zx4wi2yA=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=EcL0Tdmlrz6qfD9L4hvPL2Vm/Y9xUgNo0nMzOmCeIw6y3B62Md2iMk+EyiCVrz3gwtlMvR5CIgSa3y6gLMjvA4wvud4W8TDLj1xqf4a9zP5jggISqzCgsiiAvsSKWy7xW91r/38gba5dBU5ufzVIsi9l6lkwCv/obn12hVFZ1sw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=sdw3hmTD; arc=none smtp.client-ip=74.125.82.178
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="iSHyiqVU"
-Received: by mail-pj1-f53.google.com with SMTP id 98e67ed59e1d1-37c6cd1ac98so4064719a91.0
-        for <linux-scsi@vger.kernel.org>; Mon, 22 Jun 2026 09:37:10 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="sdw3hmTD"
+Received: by mail-dy1-f178.google.com with SMTP id 5a478bee46e88-30bcdf8232fso9910416eec.0
+        for <linux-scsi@vger.kernel.org>; Mon, 22 Jun 2026 10:42:12 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1782146230; x=1782751030; darn=vger.kernel.org;
-        h=mime-version:content-transfer-encoding:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=yj2TH32Y5BL6HWxUhaxiYTaucxWSaRbNj1yzBP5WCS0=;
-        b=iSHyiqVUhzAJUgTC82QQtz7+pIJyvOLUPy42C3aZe82httawuAk2rDt4Fx+1W1ODtI
-         xeX40SvGFdsjbFcipoJko5gjD72w+CNEZcK5/0d1WjiGJisohjZhNUjk2fBLwhBUprNU
-         1fjmN3dF2Nc4DqpMk7tGxag3F12/IVM41cYgp2788Ic82J2VTyjpcc0fvZiBB1/LJ7xV
-         OY91rMuMbqX+S7kIH15jpRxWNECqBnI+SLyn6p/DxVk80cGQ7FmSFIB/8JX3Y/SKQaJh
-         U0HNYL4sv10xtNf6Y0Xo/UmCDjFy18+i1qPf1RLVdoJZdxoubC2v+5lN+Twvt9dXyrT4
-         C4Vw==
+        d=gmail.com; s=20251104; t=1782150131; x=1782754931; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=ToB/8IE6VikY/NkfvlNd+aqZ/ZSWB+24gFF6ITZVopQ=;
+        b=sdw3hmTDYJeyZQFv/dPIScq6KHCArOwTaEx4X5xjGJeRlOjA1BAH7bwFP5kMZwOf49
+         PXyYDOXh0xslbp1tydUfMbBGB8QGMT3+qI/J8gFHkT899LIX5UCtLQ0r3RAX5vblRStR
+         5YeoeiZr2mvuGCDyJDQ0t6aDzTa/rB8P1udqw6tHqEC4NTrpvwfjhmuD+bVU5Y+f0Zkb
+         8of/auXMW2zoqY/o1FZTPs7atWJhypypUC7GAvbAm2AOo8tAeT7RvOa5953VmTYb4cxk
+         okDOO+IlSFTHuwVcszPV8w7FX57DmSRe2HyXojWnRBWozX7iTOiD4rXWYFNpLssy/aRW
+         PqfQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1782146230; x=1782751030;
-        h=mime-version:content-transfer-encoding:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=yj2TH32Y5BL6HWxUhaxiYTaucxWSaRbNj1yzBP5WCS0=;
-        b=ApPZatI/Q5yYs7L26Ga5QpkStgifEMCxBLUV6GTnwaV1ql1ggJ0uKMLbf3n1zc7DGX
-         96u8uxMgYo6j0gqLqvTeO7uLqKZggy0kQjdPyuoslzAhB25eUB2X5EOrtN7ILJ0ONmSJ
-         di8R32qvPdpWoRi1mPqlwzSooB3JXU/a7RjU9ukkxwnxB4H/48uelNQvLU947ulM0+tL
-         c7xp6gdsBJeY4JGTBzaPEx0kj1xjeji2KO1FvANfI8a5g2OMWqi+sLXt/D7mPVANS4zg
-         EZkrRur4jVgZPwX0DN9AHrA3e3Ljb9xh83LVUlmXzuR5kxz90jR9hv8+W2TbBlvtU9tg
-         fkEw==
-X-Forwarded-Encrypted: i=1; AHgh+RquNZBq1Zsp6UalBx1tBMThaR5Z/9ynybzFEGzDAZtWpEpEW2zCfNtIRQ8TYx0Uw99nX9pO9ioFM29k@vger.kernel.org
-X-Gm-Message-State: AOJu0YwHnAYHXmHyvgNFL6GzC7nNQzTUD8e2wpGLYvMi8GvEsyuyZWss
-	WHdEZmX2kNF8YWNBU4QsYooQDDpAFNkdzEIWM+dE8xQrHTuzy6OtcO1b
-X-Gm-Gg: AfdE7ckTrQy5B5UMq1IeBg7eS4KmH4KLqxw4ECSllZG6k1Zaywnqeq0b74e9ESJVhel
-	hI6MXq9V+a47oR6Io2HEwTBrFxRS/Jd0IXDlwD0AuRSFVqNkC98I2688mYWEpZEvKrx8IShrITI
-	XZRVR1xLL2AKBk/JIZ1M+EimtDH82tdMxEndAPt7RF+fcp2fZRBw+pE7vyZOM9z2mnDqRnw6TNE
-	6BZUM/b1VF8mDLl2k4CoJdT6x//IcEiKSXWGOmkUXIS70vUtcmPg/4IQVYDnqkkcm/ywa4ojSHL
-	dhIttBsOB0Nx3EYs97eNvif2bpVwhLq7Qx+kNkTcRwwxBxSSVFapsVfmvFNBApeECTsC4B6YBgQ
-	4bMH+S5skU7al5NqlkAYX5FnRVuQuKL+Aod5Q0+Xk5xckDELx+VuV9cloe56gevFKlqMkQvlcKQ
-	l8fQMJ2z0UMKihw1lNKWg6lGhfY8etgp39bP+e3A==
-X-Received: by 2002:a17:90b:1f83:b0:369:73a:326a with SMTP id 98e67ed59e1d1-37d1e8c9bbemr13858288a91.13.1782146230121;
-        Mon, 22 Jun 2026 09:37:10 -0700 (PDT)
-Received: from csl-conti-dell7858.ntu.edu.sg ([155.69.195.57])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-37d4f008779sm7320273a91.6.2026.06.22.09.37.08
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 22 Jun 2026 09:37:09 -0700 (PDT)
-From: Maoyi Xie <maoyixie.tju@gmail.com>
-To: Justin Tee <justin.tee@broadcom.com>, Paul Ely <paul.ely@broadcom.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>,
- linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: lpfc: unbounded QFPA response length in lpfc_cmpl_els_qfpa()
-Date: Tue, 23 Jun 2026 00:37:06 +0800
-Message-ID: <178214622623.2376914.7843191393281628987@maoyixie.com>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+        d=1e100.net; s=20251104; t=1782150131; x=1782754931;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=ToB/8IE6VikY/NkfvlNd+aqZ/ZSWB+24gFF6ITZVopQ=;
+        b=rQaBIL2IHKUDfW5fRS7MKAJBftPTA8ognea9kCB9WfBSsT2hwvf3+NEORtx27+ZkBE
+         6JFZGvx+VoSNUiUbnN3sWSS1xb0i3ekVmZjbb1ICdK4D69y1SXOu4BsXzbiq7m+oic9A
+         i5R4eaVryVUm9hSlW34RVWhd9yQ8Un7I2SHnsXE4h6y63W9xZ29bISnFA3JHVTozLrG9
+         gHw4ESUBWl+XIs5qVDXTgxAfVO8XDW1QYGIPATKgBC6lNgPIwjs52h4dKYVutb5ccpD/
+         wancEZDRA1Ah1z8duacM+oWo68JmCetZE4I5kB4ozd294XKAXdkhPSJYsnXvASkqh40O
+         a0qg==
+X-Forwarded-Encrypted: i=1; AHgh+Roh6/l+s+Nq9jX8ya1GPc15gnNCpx6jOixGiGPf1P7qglVVoet1gH7JimonIAbzsAWnpJES9kxR/nNw@vger.kernel.org
+X-Gm-Message-State: AOJu0YzrcQhv716SdbBBUSbLS482OqRrJ+0ef6RUH5xayamVps4BjxDg
+	/Dg0iziPrbMa5udCeZLKsyh9vXUOv/NAtT04GjmttwQ7aMDYF9h5fgUG
+X-Gm-Gg: AfdE7cm4k4+W0wuSHH2yINUlCC7CzO/35N6cpAUOeC92sr8p7CEELog+x7Ge7hqm0gn
+	FnUsS6lHqK6+ig15Dej/fcK1xPA6uqVW0l1Gsp2OffD8csdTQXTtcRG/VCMC8JYJ6dgECQ0vFpN
+	N+8QaZgqbF0iRnMTzmPjcAyIdAbpjQr2rwCgigoG9+BKXjSxP7ZxY/jKq9GQ/PE1eAjzK/XC9uA
+	ers9Fzn2mMk+tJtpOOkkqJQI9GtuXWq0+OBS8x+lyb8kUkRgU/A8ifYyXXl132XHM1v+7l814rI
+	7VTZrTfAZ1ioBwWgM6ipGCnIGIMVFseu5eHQH2bIjR9j3L748vVUqx64zBttnsdFBH5mmowfWjN
+	59g9w8LnqZ6uez+kepaMHeeIJvbOKB9Uuj1fXo7rHIxj+Ks3TjbLpL0j2wUovkAdpqSBhPnt1G0
+	TD7fjml7EIf6PuSyMj/zYHp/sFqJjeMUIhdnjau1kS09BIa/kXovCIEy7VqET/g5Ys6Q==
+X-Received: by 2002:a05:7300:5b89:b0:30b:f888:7821 with SMTP id 5a478bee46e88-30c070387a8mr11480846eec.28.1782150131326;
+        Mon, 22 Jun 2026 10:42:11 -0700 (PDT)
+Received: from [10.69.76.39] ([192.19.223.252])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-30c1be5c5desm11114785eec.28.2026.06.22.10.42.10
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 22 Jun 2026 10:42:10 -0700 (PDT)
+Message-ID: <82be2f83-5454-47cb-8719-b259209a5e2b@gmail.com>
+Date: Mon, 22 Jun 2026 10:40:23 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: lpfc: unbounded QFPA response length in lpfc_cmpl_els_qfpa()
+To: Maoyi Xie <maoyixie.tju@gmail.com>, Justin Tee <justin.tee@broadcom.com>,
+ Paul Ely <paul.ely@broadcom.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>,
+ linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <178214622623.2376914.7843191393281628987@maoyixie.com>
+Content-Language: en-US
+From: Justin Tee <justintee8345@gmail.com>
+In-Reply-To: <178214622623.2376914.7843191393281628987@maoyixie.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-Hi all,
+Hi Maoyi,
 
-I think lpfc_cmpl_els_qfpa() in drivers/scsi/lpfc/lpfc_els.c can overflow the
-qfpa_res buffer when the fabric returns a large length in the QFPA response.
-I would appreciate it if you could take a look.
+ > This runs when the VMID feature is negotiated. The attacker is a 
+malicious
+ > or compromised fabric switch or target answering the QFPA request.
+ >
+ > I reproduced the overflow on 7.1-rc7. I ran the same copy with a 1020 
+byte
+ > qfpa_res buffer and a len that makes len + 8 larger than it. The copy 
+runs
+ > past the buffer and faults.
 
-The completion handler allocates qfpa_res to a fixed size, then copies the
-response using a length taken straight from the response payload.
+Is it possible to provide the fabric switch and target hardware details, 
+i.e. model and version numbers, used to reproduce this issue?
 
-	if (!vport->qfpa_res) {
-		max_desc = FCELSSIZE / sizeof(*vport->qfpa_res);
-		vport->qfpa_res = kzalloc_objs(*vport->qfpa_res, max_desc);
-		...
-	}
+ > Does this look like a real bug to you, and is bounding len the right
+ > approach? If so I am happy to send a proper patch with a Fixes tag and Cc
+ > stable.
 
-	len = *((u32 *)(pcmd + 4));
-	len = be32_to_cpu(len);
-	memcpy(vport->qfpa_res, pcmd, len + 8);
+No, this does not look like a real bug because the payload comes from an 
+implicitly trusted source within the fabric.  Hence, it would be helpful 
+to share switch and target details that this issue was found.  That 
+said, we are already aware of this through AI security scan warnings and 
+it will be addressed in a near lpfc version update.
 
-pcmd is the QFPA ELS response from the fabric. len is a 32 bit field read
-out of it with no validation. The memcpy then copies len + 8 bytes into
-qfpa_res, which was sized for FCELSSIZE. Nothing checks that len + 8 stays
-within that. A fabric or target that returns a large len overflows the
-qfpa_res heap buffer. The loop just below also walks vmid_range for len
-iterations with no clamp against MAX_PRIORITY_DESC.
-
-This runs when the VMID feature is negotiated. The attacker is a malicious
-or compromised fabric switch or target answering the QFPA request.
-
-I reproduced the overflow on 7.1-rc7. I ran the same copy with a 1020 byte
-qfpa_res buffer and a len that makes len + 8 larger than it. The copy runs
-past the buffer and faults.
-
-  BUG: unable to handle page fault ... in memcpy_orig
-
-A check that len + 8 stays within the qfpa_res allocation, and that the
-descriptor count stays within MAX_PRIORITY_DESC, would close it.
-
-Does this look like a real bug to you, and is bounding len the right
-approach? If so I am happy to send a proper patch with a Fixes tag and Cc
-stable.
-
-Kaixuan Li and I found this together.
-
-Thanks,
-Maoyi
-https://maoyixie.com/
+Regards,
+Justin
