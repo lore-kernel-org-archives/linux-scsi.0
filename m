@@ -1,158 +1,121 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f53.google.com (mail-pj1-f53.google.com [209.85.216.53])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9AEEE314A79
-	for <linux-scsi@vger.kernel.org>; Mon, 22 Jun 2026 16:24:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 187042BCF4C
+	for <linux-scsi@vger.kernel.org>; Mon, 22 Jun 2026 16:37:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.53
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782145488; cv=none; b=gZt4wDqdYh1JGj47HB6ZqriYclo01txXzWywXfM2C2yS7RaZotgCXhRAaJAIs+vSk9CfQsRp3I1RmCS+96jaeyRPaZtHSezmeK2TrsARQsQXJUGmV3eY6fb9kxD5ZjZH0HCFZwHWO53KUN4dMM2mvHfM23DtMmSCSYJIDRhnAWY=
+	t=1782146232; cv=none; b=orziDfPMoDsnQhhnA6Bw/+4Hc2rAsWqzCIs6kZWZCLiL/ucSxA+Cz3/iWOgFgoHxshv7L8uMuQZLd5QNsIkplLWgJwS9sbcwtKnsrmwMBxQ9i3b7E14nenqsqprDhxqir4Xf4IjQ6Qgor55SPb7KxN9JHsYcmj9szlMaOvBgS5g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782145488; c=relaxed/simple;
-	bh=mxwyew6Adx/LFnxjvZk/R6qTu7TikJg4khgEigZBuSs=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=LFhf+jBb1HN99wWQOpaCUOLiAg/r5SlcVG120ErNAhuxXZc0qq7y8w1hfu8+G6kXhEPf+loBLapciECrKOzRJQtwQtjFaOHOe3YM8IikvleFN0kMAQpLR7FbwQttDqr7cd2AIR9V36KpS9BKMD6+QyttCdbCHXtSimOhg6Z1III=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UTcPlTC4; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1782146232; c=relaxed/simple;
+	bh=eJCNM22FWjYNfaU/daveGmD12ufPw4KFtvwawl9WsrM=;
+	h=From:To:Cc:Subject:Date:Message-ID:Content-Type:MIME-Version; b=HjxrXG3+E2Ut0z9Lo1AQrIQhD3vqZn8GDzDzxj3kpw7o6uv5sLWo9V9FK5VI5eDeT3nL76evAguFjNPZdrG2lqhj1M26s/HKnk3Oa3tWRHukZkfgAgfmyMdifGsPsZE6YacaHicukbIZtpeahDMg+GcP042nFSffynyCdtUNVZs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=iSHyiqVU; arc=none smtp.client-ip=209.85.216.53
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UTcPlTC4"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6A5E91F00A3A;
-	Mon, 22 Jun 2026 16:24:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782145487;
-	bh=/z7nlAx4iJoWDvJOEQqK5L1XhssxRevuKibThVulNWw=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=UTcPlTC43rreIG2kqEVEqXj/zoXhHdVGaLrf7TmPvXFPrCWVd32YGgjegIaph8i4X
-	 47Tk/ZKhwU1GrHd0VZmSbzD6GHGSbS/VTgDdcaAtZ4GEWKPAwAsfBbczfnH0KwgBFn
-	 Y3IqobRRFXRszPmOST6Qd1Tc+RY8GHxt/nfso2G6j/7ujqaoL7XRG7I1a14f5L/Y8I
-	 qtbU+OsMxrfr/awGesrMpq48fi/GDtNudg3UIsFbag9WasbqVoFJJAt2SCu+pNuFGA
-	 qSvww3b6+XMp0fqYFEwAMKKWj3kEzpLB+zUUZ9w7iGBmj7GOdopXL6KeQHrS+Obfom
-	 EQFgs6IhSbPbQ==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] scsi: hpsa: fix DMA mapping leak on IOACCEL2 reset path
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Haoxiang Li" <haoxiang_li2024@163.com>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260622160028.1240496-1-haoxiang_li2024@163.com>
-References: <20260622160028.1240496-1-haoxiang_li2024@163.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Mon, 22 Jun 2026 16:24:46 +0000
-Message-Id: <20260622162447.6A5E91F00A3A@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="iSHyiqVU"
+Received: by mail-pj1-f53.google.com with SMTP id 98e67ed59e1d1-37c6cd1ac98so4064719a91.0
+        for <linux-scsi@vger.kernel.org>; Mon, 22 Jun 2026 09:37:10 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1782146230; x=1782751030; darn=vger.kernel.org;
+        h=mime-version:content-transfer-encoding:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=yj2TH32Y5BL6HWxUhaxiYTaucxWSaRbNj1yzBP5WCS0=;
+        b=iSHyiqVUhzAJUgTC82QQtz7+pIJyvOLUPy42C3aZe82httawuAk2rDt4Fx+1W1ODtI
+         xeX40SvGFdsjbFcipoJko5gjD72w+CNEZcK5/0d1WjiGJisohjZhNUjk2fBLwhBUprNU
+         1fjmN3dF2Nc4DqpMk7tGxag3F12/IVM41cYgp2788Ic82J2VTyjpcc0fvZiBB1/LJ7xV
+         OY91rMuMbqX+S7kIH15jpRxWNECqBnI+SLyn6p/DxVk80cGQ7FmSFIB/8JX3Y/SKQaJh
+         U0HNYL4sv10xtNf6Y0Xo/UmCDjFy18+i1qPf1RLVdoJZdxoubC2v+5lN+Twvt9dXyrT4
+         C4Vw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1782146230; x=1782751030;
+        h=mime-version:content-transfer-encoding:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=yj2TH32Y5BL6HWxUhaxiYTaucxWSaRbNj1yzBP5WCS0=;
+        b=ApPZatI/Q5yYs7L26Ga5QpkStgifEMCxBLUV6GTnwaV1ql1ggJ0uKMLbf3n1zc7DGX
+         96u8uxMgYo6j0gqLqvTeO7uLqKZggy0kQjdPyuoslzAhB25eUB2X5EOrtN7ILJ0ONmSJ
+         di8R32qvPdpWoRi1mPqlwzSooB3JXU/a7RjU9ukkxwnxB4H/48uelNQvLU947ulM0+tL
+         c7xp6gdsBJeY4JGTBzaPEx0kj1xjeji2KO1FvANfI8a5g2OMWqi+sLXt/D7mPVANS4zg
+         EZkrRur4jVgZPwX0DN9AHrA3e3Ljb9xh83LVUlmXzuR5kxz90jR9hv8+W2TbBlvtU9tg
+         fkEw==
+X-Forwarded-Encrypted: i=1; AHgh+RquNZBq1Zsp6UalBx1tBMThaR5Z/9ynybzFEGzDAZtWpEpEW2zCfNtIRQ8TYx0Uw99nX9pO9ioFM29k@vger.kernel.org
+X-Gm-Message-State: AOJu0YwHnAYHXmHyvgNFL6GzC7nNQzTUD8e2wpGLYvMi8GvEsyuyZWss
+	WHdEZmX2kNF8YWNBU4QsYooQDDpAFNkdzEIWM+dE8xQrHTuzy6OtcO1b
+X-Gm-Gg: AfdE7ckTrQy5B5UMq1IeBg7eS4KmH4KLqxw4ECSllZG6k1Zaywnqeq0b74e9ESJVhel
+	hI6MXq9V+a47oR6Io2HEwTBrFxRS/Jd0IXDlwD0AuRSFVqNkC98I2688mYWEpZEvKrx8IShrITI
+	XZRVR1xLL2AKBk/JIZ1M+EimtDH82tdMxEndAPt7RF+fcp2fZRBw+pE7vyZOM9z2mnDqRnw6TNE
+	6BZUM/b1VF8mDLl2k4CoJdT6x//IcEiKSXWGOmkUXIS70vUtcmPg/4IQVYDnqkkcm/ywa4ojSHL
+	dhIttBsOB0Nx3EYs97eNvif2bpVwhLq7Qx+kNkTcRwwxBxSSVFapsVfmvFNBApeECTsC4B6YBgQ
+	4bMH+S5skU7al5NqlkAYX5FnRVuQuKL+Aod5Q0+Xk5xckDELx+VuV9cloe56gevFKlqMkQvlcKQ
+	l8fQMJ2z0UMKihw1lNKWg6lGhfY8etgp39bP+e3A==
+X-Received: by 2002:a17:90b:1f83:b0:369:73a:326a with SMTP id 98e67ed59e1d1-37d1e8c9bbemr13858288a91.13.1782146230121;
+        Mon, 22 Jun 2026 09:37:10 -0700 (PDT)
+Received: from csl-conti-dell7858.ntu.edu.sg ([155.69.195.57])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-37d4f008779sm7320273a91.6.2026.06.22.09.37.08
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 22 Jun 2026 09:37:09 -0700 (PDT)
+From: Maoyi Xie <maoyixie.tju@gmail.com>
+To: Justin Tee <justin.tee@broadcom.com>, Paul Ely <paul.ely@broadcom.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>,
+ linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: lpfc: unbounded QFPA response length in lpfc_cmpl_els_qfpa()
+Date: Tue, 23 Jun 2026 00:37:06 +0800
+Message-ID: <178214622623.2376914.7843191393281628987@maoyixie.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
-s) to consider:
+Hi all,
 
-Pre-existing issues:
-- [Critical] Stale `c->device` pointer dereference in `hpsa_ciss_submit` an=
-d `hpsa_ioaccel_submit` error paths, leading to Use-After-Free.
-- [High] Pre-existing DMA mapping and SG chain block leak in `hpsa_ciss_sub=
-mit` when `dev->in_reset` is true.
-- [High] Unbalanced decrement of `dev->commands_outstanding` on command que=
-ueing failure.
---
+I think lpfc_cmpl_els_qfpa() in drivers/scsi/lpfc/lpfc_els.c can overflow the
+qfpa_res buffer when the fabric returns a large length in the QFPA response.
+I would appreciate it if you could take a look.
 
-commit bdf6566123989a4c6b9d8e36ab36f21d9c3079ed
-Author: Haoxiang Li <haoxiang_li2024@163.com>
+The completion handler allocates qfpa_res to a fixed size, then copies the
+response using a length taken straight from the response payload.
 
-scsi: hpsa: fix DMA mapping leak on IOACCEL2 reset path
+	if (!vport->qfpa_res) {
+		max_desc = FCELSSIZE / sizeof(*vport->qfpa_res);
+		vport->qfpa_res = kzalloc_objs(*vport->qfpa_res, max_desc);
+		...
+	}
 
-If phys_disk->in_reset is set, the function returns directly without
-undoing the resources acquired for the command. Add the missing error
-cleanup by unmapping the IOACCEL2 SG chain block when needed, unmapping
-the SCSI command, and dropping the outstanding IOACCEL command count
-before returning.
+	len = *((u32 *)(pcmd + 4));
+	len = be32_to_cpu(len);
+	memcpy(vport->qfpa_res, pcmd, len + 8);
 
-> diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-> index a1b116cd4723d..8edad1830abe4 100644
-> --- a/drivers/scsi/hpsa.c
-> +++ b/drivers/scsi/hpsa.c
-> @@ -5017,6 +5017,10 @@ static int hpsa_scsi_ioaccel2_queue_command(struct=
- ctlr_info *h,
-> =20
->  	if (phys_disk->in_reset) {
->  		cmd->result =3D DID_RESET << 16;
-> +		atomic_dec(&phys_disk->ioaccel_cmds_out);
-> +		scsi_dma_unmap(cmd);
-> +		if (use_sg > h->ioaccel_maxsg)
-> +			hpsa_unmap_ioaccel2_sg_chain_block(h, cp);
->  		return -1;
->  	}
+pcmd is the QFPA ELS response from the fabric. len is a 32 bit field read
+out of it with no validation. The memcpy then copies len + 8 bytes into
+qfpa_res, which was sized for FCELSSIZE. Nothing checks that len + 8 stays
+within that. A fabric or target that returns a large len overflows the
+qfpa_res heap buffer. The loop just below also walks vmid_range for len
+iterations with no clamp against MAX_PRIORITY_DESC.
 
-[ ... ]
+This runs when the VMID feature is negotiated. The attacker is a malicious
+or compromised fabric switch or target answering the QFPA request.
 
-> static int hpsa_ciss_submit(struct ctlr_info *h,
-> 			    struct CommandList *c,
-> 			    struct scsi_cmnd *cmd,
-> 			    struct hpsa_scsi_dev_t *dev)
-> {
-[ ... ]
-> 	if (hpsa_scatter_gather(h, c, cmd) < 0) { /* Fill SG list */
-> 		hpsa_cmd_resolve_and_free(h, c);
-> 		return SCSI_MLQUEUE_HOST_BUSY;
-> 	}
->=20
-> 	if (dev->in_reset) {
-> 		hpsa_cmd_resolve_and_free(h, c);
-> 		return SCSI_MLQUEUE_HOST_BUSY;
-> 	}
+I reproduced the overflow on 7.1-rc7. I ran the same copy with a 1020 byte
+qfpa_res buffer and a len that makes len + 8 larger than it. The copy runs
+past the buffer and faults.
 
-[Severity: High]
-This is a pre-existing issue, but I noticed a similar DMA mapping leak here
-in hpsa_ciss_submit(). If dev->in_reset is true, the function returns=20
-SCSI_MLQUEUE_HOST_BUSY but hpsa_cmd_resolve_and_free() does not unmap the=20
-scatter-gather list previously established by hpsa_scatter_gather(). Does=20
-this cause a leak of the IOMMU mappings or bounce buffers when the midlayer=
-=20
-retries?
+  BUG: unable to handle page fault ... in memcpy_orig
 
-[ ... ]
+A check that len + 8 stays within the qfpa_res allocation, and that the
+descriptor count stays within MAX_PRIORITY_DESC, would close it.
 
-> static struct CommandList *cmd_tagged_alloc(struct ctlr_info *h,
-> 					    struct scsi_cmnd *scmd)
-> {
-[ ... ]
-> 	atomic_inc(&c->refcount);
-> 	hpsa_cmd_partial_init(h, idx, c);
->=20
-> 	/*
-> 	 * This is a new command obtained from queue_command so
-> 	 * there have not been any driver initiated retry attempts.
-> 	 */
-> 	c->retry_pending =3D false;
->=20
-> 	return c;
-> }
+Does this look like a real bug to you, and is bounding len the right
+approach? If so I am happy to send a proper patch with a Fixes tag and Cc
+stable.
 
-[Severity: Critical]
-This is also a pre-existing issue, but does cmd_tagged_alloc() return a=20
-command block without clearing the c->device pointer? Neither this function
-nor hpsa_cmd_partial_init() clear c->device. If an early error occurs in=20
-hpsa_scsi_queue_command() (like a failure in hpsa_ioaccel_submit() or=20
-hpsa_ciss_submit()) before c->device is reassigned to the current device,=20
-the cleanup path calls hpsa_cmd_resolve_and_free():
+Kaixuan Li and I found this together.
 
-> static void hpsa_cmd_resolve_events(struct ctlr_info *h,
-> 		struct CommandList *c)
-> {
-> 	struct hpsa_scsi_dev_t *dev =3D c->device;
-[ ... ]
-> 	if (dev) {
-> 		atomic_dec(&dev->commands_outstanding);
-
-[Severity: High]
-This is a pre-existing issue, but if c->device is stale, will this
-dereference a potentially freed device structure and cause a use-after-free
-when calling atomic_dec()?
-
-Additionally, does this unconditionally decrement dev->commands_outstanding
-even if it was never incremented for this command? The counter is only
-incremented inside __enqueue_cmd_and_start_io(), so an early error could
-cause an unbalanced decrement and an underflow.
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260622160028.1240=
-496-1-haoxiang_li2024@163.com?part=3D1
+Thanks,
+Maoyi
+https://maoyixie.com/
