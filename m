@@ -1,144 +1,143 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from canpmsgout08.his.huawei.com (canpmsgout08.his.huawei.com [113.46.200.223])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2670B38AC68
-	for <linux-scsi@vger.kernel.org>; Tue, 23 Jun 2026 08:05:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B4888374197
+	for <linux-scsi@vger.kernel.org>; Tue, 23 Jun 2026 08:39:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.223
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782201941; cv=none; b=o1DqrcgrYKtMWUAKsDINaFFB/tHkUMLMqW3aDr/MLAXMHkthPnbgzDSlrQar3EEMVOwibGYbhhTV5utCslZ+4Gyx561u7RSxlc8FHVl1yBMnwxdUYm9E5F2jkw/MwNOeXblsCP8Bnwqy+WxcJa3npvVKKtYC+Jc/4yZg9UP8AiA=
+	t=1782203987; cv=none; b=GYM338dagJKFWNVwNmzn+0XbqvjmwGnJioIjs3lGu6fb0KCk2abe8PW5pa1o0FpKukrZpdqWl/kXbLcCTcVyyrg4TJVoOCXbbMO1tIHxWcGJ5Wr4Vi/nBbYcc7VM91pt6wdpnVzBEtzgM7B6iz2uaG3w9x/k1WkEZI1SOt7PiDg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782201941; c=relaxed/simple;
-	bh=1Cb5jOOx5EfZAsqHwAXu1ziJYliSYDztvMtCGCzDrNU=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=ccCqDins4HzDJaM2w1Mwg5oZYKdFsMzg5q/U7FRzveDLPX6DoTwdQdD77+Tf2ud7JNCrjFh1RF5Kbyo3Bo5lcx1dbkMOAmvWYeZ7DHbtIbKGCOZ+Xk9u2HmwEe4k0U1JN6xT6nJ8P2Od8wO958zpeQ/UaFMPVubQZIV6QLMsW9Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IkAqSOlr; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1782203987; c=relaxed/simple;
+	bh=4FrDpInQmAnInHzAhjlsxKrja+aWYaE4ossiwlzZ/1c=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=tCa1M+Jy3siXtGgwRUlRquGfncrmGeHy9pDzBUj5CFKql12o1Rb33eRVMbnwDaISOdc/VEKgy1OejJHIjdGeityRDRlsCgSbos1uMs8190S6EomwQ1+4kpaYIgGeSkpjQAuW8M0svzt+e3S65MaS1djn/KD2Gss/ROO3ima/BiY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=pQl2vjUN; arc=none smtp.client-ip=113.46.200.223
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IkAqSOlr"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 938911F000E9;
-	Tue, 23 Jun 2026 08:05:39 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782201939;
-	bh=ZgZxVJmnxKyketZjqX2Bn9u44eDAOPj5KvKEaPOTnXQ=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=IkAqSOlrsc6PpRDmpuiXpjFCrft4JX21deDHfiggGFT3OCH+Uz0v8qcZEIVGGFPfi
-	 7dUdZ1IxTFCP9wtYHkyXnHAkrDUwQ75sOJr0OLtSWr9ku/jf+O7RSBEGtry27VHI4/
-	 oNX8Gm893dr95grNMWg0FKvBCvfWq7vvB5TbUL62i7FGcqtYGyD1LU5bl5hW430wUg
-	 nPm0Acz1pu36om79nYJT3y3p3FWZukHqhCf3PGFHuYsqGc7QiwyKkcbJRmro2a+pnI
-	 AbvBPQyyCI7k+z8ilLcms26NwzibyiyU793Oy0OXZ/kKA7Sq4cLN/hAa7OC+UOqSvH
-	 fcE2Q/2bjUBoA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v1] scsi: core: pair EH runtime PM get and put
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Hongjie Fang" <hongjiefang@asrmicro.com>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260623074408.1639663-1-hongjiefang@asrmicro.com>
-References: <20260623074408.1639663-1-hongjiefang@asrmicro.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 23 Jun 2026 08:05:39 +0000
-Message-Id: <20260623080539.938911F000E9@smtp.kernel.org>
+	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="pQl2vjUN"
+dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=HdqwTGQibWQCEuGCb/g2CUvt050Qxl5kgv8qRnDYk7w=;
+	b=pQl2vjUNtQpEmCCkOtiiq68XLSb5JRc1cO00DYAj5PyTiRL4x8mCc0UOQHpt8ZyNCVWrW0TF2
+	b3GufOLdFlZQQ4Xj+TeyUNiBqGu6mLLrQxd8q/OMj8Eh9bBsxO0q4Z9P+cGDdMDC89eFVI6bkQT
+	Crng+NryTGRJd+Hkzx5UrBg=
+Received: from mail.maildlp.com (unknown [172.19.163.127])
+	by canpmsgout08.his.huawei.com (SkyGuard) with ESMTPS id 4gkyv01V24zmVWh;
+	Tue, 23 Jun 2026 16:30:36 +0800 (CST)
+Received: from dggpemf500002.china.huawei.com (unknown [7.185.36.57])
+	by mail.maildlp.com (Postfix) with ESMTPS id 1BDB7402AB;
+	Tue, 23 Jun 2026 16:39:41 +0800 (CST)
+Received: from [10.174.179.11] (10.174.179.11) by
+ dggpemf500002.china.huawei.com (7.185.36.57) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.11; Tue, 23 Jun 2026 16:39:40 +0800
+Message-ID: <3ba86e62-9a11-4d15-bf19-b7205624bd1c@huawei.com>
+Date: Tue, 23 Jun 2026 16:39:39 +0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v8 2/2] scsi: libsas: Add linkrate and sas_addr change
+ detection in rediscover
+To: <sashiko-reviews@lists.linux.dev>, Xingui Yang <yangxingui@huawei.com>
+CC: <linux-scsi@vger.kernel.org>
+References: <20260623024304.714582-1-yangxingui@huawei.com>
+ <20260623024304.714582-3-yangxingui@huawei.com>
+ <20260623025715.569241F000E9@smtp.kernel.org>
+From: Jason Yan <yanaijie@huawei.com>
+In-Reply-To: <20260623025715.569241F000E9@smtp.kernel.org>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: kwepems500001.china.huawei.com (7.221.188.70) To
+ dggpemf500002.china.huawei.com (7.185.36.57)
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
+在 2026/6/23 10:57, sashiko-bot@kernel.org 写道:
+> Thank you for your contribution! Sashiko AI review found 2 potential issue(s) to consider:
+> 
+> New issues:
+> - [Medium] `sas_dev_is_flutter()` improperly bypasses PHY discovery when `child_dev` is NULL, failing to update the libsas routing table and PHY state.
+> 
+> Pre-existing issues:
+> - [High] Attempting to prevent UAF by acquiring a reference via `kref_get(&child_dev->kref)` results in a TOCTOU race because `sas_find_dev_by_rphy()` returns a raw pointer without holding a reference.
+> --
+> 
+> commit 4a9be29a10948d7f2b0efa1425b3ea27e6c08b1f
+> Author: Xingui Yang <yangxingui@huawei.com>
+> 
+> scsi: libsas: Add linkrate and sas_addr change detection in rediscover
+> 
+> This commit introduces sas_dev_is_flutter() and sas_rediscover_ex_phy()
+> to improve flutter and device replace detection during rediscovery.
+> It holds a kref on the child device during SMP discovery and uses async
+> discovery to avoid ordering issues.
+> 
+>> diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
+>> index cb9d3b7482225..63d033e789855 100644
+>> --- a/drivers/scsi/libsas/sas_expander.c
+>> +++ b/drivers/scsi/libsas/sas_expander.c
+> [ ... ]
+>> @@ -1966,6 +1966,78 @@ static bool dev_type_flutter(enum sas_device_type new, enum sas_device_type old)
+> [ ... ]
+>> +static bool sas_dev_is_flutter(struct domain_device *dev, int phy_id,
+>> +			       u8 *sas_addr, enum sas_device_type type)
+>> +{
+>> +	struct expander_device *ex = &dev->ex_dev;
+>> +	struct ex_phy *phy = &ex->ex_phy[phy_id];
+>> +	struct domain_device *child_dev = NULL;
+>> +	char *action = "";
+>> +	int res;
+>> +
+>> +	if (SAS_ADDR(sas_addr) != SAS_ADDR(phy->attached_sas_addr) ||
+>> +	    !dev_type_flutter(type, phy->attached_dev_type))
+>> +		return false;
+>> +
+>> +	child_dev = sas_ex_to_dev(dev, phy_id);
+>> +	if (!child_dev)
+>> +		goto out;
+> 
+> [Severity: Medium]
+> In the original code, sas_ex_phy_discover() was called unconditionally.
+> Will this new early return bypass the SMP request that updates the PHY state
+> (via sas_set_ex_phy()) when the child device is not instantiated or has been
+> removed?
+> 
+>> +
+>> +	kref_get(&child_dev->kref);
+> 
+> [Severity: High]
+> This is a pre-existing issue, but could attempting to prevent a use-after-free
+> by acquiring a reference here result in a time-of-check to time-of-use
+> (TOCTOU) race?
+> 
+> Looking at sas_find_dev_by_rphy() (called by sas_ex_to_dev()), it acquires
+> port->dev_list_lock, finds the device, and drops the lock before returning
+> the raw pointer:
+> 
+> drivers/scsi/libsas/sas_scsi_host.c:sas_find_dev_by_rphy() {
+>      ...
+>      found_dev = dev;
+>      spin_unlock(&port->dev_list_lock);
+>      goto found;
+>      ...
+> }
+> 
+> If a concurrent link-loss or device removal event runs, can it acquire the
+> lock, remove the device, and drop its last reference before we call
+> kref_get(&child_dev->kref) here, leading to a use-after-free?
 
-Pre-existing issues:
-- [High] Unprotected concurrent modification of the `eh_noresume` bitfield =
-causes data corruption and torn writes of adjacent bitfields in `struct Scs=
-i_Host`.
-- [High] If `scsi_autopm_get_host()` persistently returns an error, the SCS=
-I error handler thread enters an infinite busy loop, completely locking up =
-a CPU core.
---
+Actually all libsas events are processed sequentially in sas_ha->disco_q 
+workqueue. So this will not happen.
 
-commit ac1a188a1cc95a2e48943738d61761f7fb9d8f35
-Author: Hongjie Fang <hongjiefang@asrmicro.com>
+Thanks,
+Jason
 
-scsi: core: pair EH runtime PM get and put
-
-This patch fixes a potential runtime PM usage count underflow by ensuring
-scsi_autopm_put_host() is only called if the corresponding get operation
-in the same iteration succeeded. It introduces a boolean variable to
-track this state.
-
-> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-> index 147127fb4db9c..c78ea64641a98 100644
-> --- a/drivers/scsi/scsi_error.c
-> +++ b/drivers/scsi/scsi_error.c
-
-[ ... ]
-
-> @@ -2383,12 +2384,16 @@ int scsi_error_handler(void *data)
->  		 * what we need to do to get it up and online again (if we can).
->  		 * If we fail, we end up taking the thing offline.
->  		 */
-> -		if (!shost->eh_noresume && scsi_autopm_get_host(shost) !=3D 0) {
-> -			SCSI_LOG_ERROR_RECOVERY(1,
-> -				shost_printk(KERN_ERR, shost,
-> -					     "scsi_eh_%d: unable to autoresume\n",
-> -					     shost->host_no));
-> -			continue;
-> +		autopm_put =3D false;
-> +		if (!shost->eh_noresume) {
-
-[Severity: High]
-This isn't a bug introduced by this patch, but could this concurrent read
-and update of shost->eh_noresume be unsafe?
-
-Looking at include/scsi/scsi_host.h, eh_noresume is a 1-bit bitfield that
-shares the same memory word as tmf_in_progress and other state flags:
-
-	unsigned tmf_in_progress:1;
-	unsigned eh_noresume:1;
-
-If eh_noresume is modified directly (for example in
-ufshcd_set_dev_pwr_mode() in drivers/ufs/core/ufshcd.c) without holding
-shost->host_lock, could this cause torn writes that corrupt other adjacent
-bitfields modified by concurrent threads holding the lock?
-
-> +			if (scsi_autopm_get_host(shost) !=3D 0) {
-> +				SCSI_LOG_ERROR_RECOVERY(1,
-> +					shost_printk(KERN_ERR, shost,
-> +						     "scsi_eh_%d: unable to autoresume\n",
-> +						     shost->host_no));
-> +				continue;
-
-[Severity: High]
-This is a pre-existing issue, but if scsi_autopm_get_host() persistently
-returns an error, won't this continue statement cause an infinite CPU-hoggi=
-ng
-loop?
-
-Since continue bypasses the rest of the loop, the cleanup step
-(shost->host_failed =3D 0) is never executed.
-
-On the next iteration, the initial sleep condition at the top of the loop
-will evaluate to false because host_failed is still equal to
-scsi_host_busy(). This bypasses schedule() and immediately loops to retry
-the resume operation ad infinitum.
-
-> +			}
-> +			autopm_put =3D true;
->  		}
-> =20
->  		if (shost->transportt->eh_strategy_handler)
-
-[ ... ]
-
-> @@ -2407,7 +2412,7 @@ int scsi_error_handler(void *data)
->  		 * which are still online.
->  		 */
->  		scsi_restart_operations(shost);
-> -		if (!shost->eh_noresume)
-> +		if (autopm_put)
->  			scsi_autopm_put_host(shost);
->  	}
->  	__set_current_state(TASK_RUNNING);
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260623074408.1639=
-663-1-hongjiefang@asrmicro.com?part=3D1
+> 
+>> +	res = sas_ex_phy_discover(dev, phy_id);
+>> +	if (res)
+>> +		goto out_put;
+> 
