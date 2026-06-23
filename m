@@ -1,125 +1,134 @@
-Received: from canpmsgout11.his.huawei.com (canpmsgout11.his.huawei.com [113.46.200.226])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C709E23BD06;
-	Tue, 23 Jun 2026 02:43:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.226
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9771338736C
+	for <linux-scsi@vger.kernel.org>; Tue, 23 Jun 2026 02:57:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782182591; cv=none; b=GlGDk6i6McCgf0ZrX3GQJBoLzCs3vb7H5LVV9xbhmRvU+e32OyU6m0vtgpeA1IM2bN+HGH6B3FcLGippGzyWoj0WHLW1GT9owQlj2e3S6BknK0XGXx4QbpQg6P0QtpaeGaZXVpiagEljdrC5vSlbgI+TaJGOcAuTEtL4CYzowAQ=
+	t=1782183436; cv=none; b=Ea5IML4FnnDzxk1qUPbZ3VLzCsSJ9bPll/hQTiOZ/CeKwQMQJlDNHvazQyXWoTZ3VD+seOE09fQOHhiPZMe4YHeKO8shwraCAZh29lQGUt+mFCDswkZ53B7hxYMVHGPXA6X9RQ7NKQkBHBOyPOT/lnDf7i1/IdaU0ROTev8Mp/A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782182591; c=relaxed/simple;
-	bh=6M+FwioNSh33vD24Nkbbg03/wbosNatONOMme+5Xq5Y=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=QqQoGB4KszuZ/IYOox23I9qFJseFQkzP6TSGT034wxcLfrWdi+fYBIDmwQucG5FsFMn6wpRfcDkMTdn/cQJVLWf/iB7Xkv7DKFQ20UWpFbV8ULWxxfVXsD1jbtjAXiHRLJqLU647cg00rUhaHF2fUiiIybtBTH4eLp+GrWOLSok=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=h-partners.com; dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b=irRNCazI; arc=none smtp.client-ip=113.46.200.226
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=h-partners.com
+	s=arc-20240116; t=1782183436; c=relaxed/simple;
+	bh=MWvnpP1WhUkMNl6bcIWgnnhyejDRXtu3rW2tX17nkQU=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=KjN1kCBYFrbeopRrGBCXgPv2qcz0bj/MBYnfr+yijJ4JSrubuAl1N7UqAvkiF2qa4UwWjaQWKB7RH1tv7Mu2OYpzFY/DhSgoXtVuio6Kl/2ZABCOtUEaCRu9nEAkBXLGuGu3Q9/IX5Lh4nTvgqQBzDiuqh6coSuz49oUgOCe8pw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UbB58Vwd; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b="irRNCazI"
-dkim-signature: v=1; a=rsa-sha256; d=h-partners.com; s=dkim;
-	c=relaxed/relaxed; q=dns/txt;
-	h=From;
-	bh=HW3S65B5az59s2WVMskiPhsafx88KZhGe3pvAKJVCZQ=;
-	b=irRNCazI9iUZVYUn5AI0pTfj/DyDLCOUkx+Va3FTdAepF6aypcGnsxgUyIzUBybHKgh9tfu0N
-	ma2ZOwEfozSfMAtDZ5QjPdylKU5YZLVagDZWR8cublOecupEH2aG6jbdQdYMcmCwYs5pDxrcBVS
-	fL3A7IRGwaSLuXhdKM2Bha4=
-Received: from mail.maildlp.com (unknown [172.19.163.214])
-	by canpmsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4gkq0j11XZzKm57;
-	Tue, 23 Jun 2026 10:35:01 +0800 (CST)
-Received: from kwepemj100018.china.huawei.com (unknown [7.202.194.12])
-	by mail.maildlp.com (Postfix) with ESMTPS id A2A7240561;
-	Tue, 23 Jun 2026 10:43:05 +0800 (CST)
-Received: from localhost.localdomain (10.50.163.32) by
- kwepemj100018.china.huawei.com (7.202.194.12) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.36; Tue, 23 Jun 2026 10:43:05 +0800
-From: Xingui Yang <yangxingui@huawei.com>
-To: <john.g.garry@oracle.com>, <yanaijie@huawei.com>, <jejb@linux.ibm.com>,
-	<martin.petersen@oracle.com>
-CC: <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linuxarm@huawei.com>, <liyihang9@h-partners.com>, <yangxingui@huawei.com>,
-	<liuyonglong@huawei.com>, <kangfenglong@huawei.com>
-Subject: [PATCH v8 1/2] scsi: libsas: refactor sas_ex_to_ata() using new helper sas_ex_to_dev()
-Date: Tue, 23 Jun 2026 10:43:03 +0800
-Message-ID: <20260623024304.714582-2-yangxingui@huawei.com>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20260623024304.714582-1-yangxingui@huawei.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UbB58Vwd"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 569241F000E9;
+	Tue, 23 Jun 2026 02:57:15 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1782183435;
+	bh=9QVFbw0iJKBKzfDSNoV+fTRio0+WEZic6HZ/jVZnT80=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=UbB58Vwd8i4getjVuctkED5Xq9v43iFS3sq7tU+tt0OQ0q1Wa8Ml8FQxlc62+fA9q
+	 Nk+sI4zQjKUfy+Z0hP40tUAPJSJWHC4jVFhkXAkeRCCqQ9LtfNN/QT0+pzkcK9PMjH
+	 jXWZb4LCyIrZSqnkb7m9G+oM5ApLwrSctcqvPiY+B+YDLYzepsbmXkJLHuaHHEUnFX
+	 fsqk5L49E97omAJpy77ndzbv9ZXaQ1oUJ+qsNk1Fv+A0xQUqz3kigsF7KIS26itiqW
+	 Q7HZ9Y5kkWrNxgir6As447Z9HE7VNdVyJn9YfbnyzMy0iAKD752gDtB6qVIWZOU7sj
+	 zARfqeQyIpazg==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v8 2/2] scsi: libsas: Add linkrate and sas_addr change
+ detection in rediscover
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Xingui Yang" <yangxingui@huawei.com>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20260623024304.714582-3-yangxingui@huawei.com>
 References: <20260623024304.714582-1-yangxingui@huawei.com>
+ <20260623024304.714582-3-yangxingui@huawei.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Tue, 23 Jun 2026 02:57:14 +0000
+Message-Id: <20260623025715.569241F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: kwepems100002.china.huawei.com (7.221.188.206) To
- kwepemj100018.china.huawei.com (7.202.194.12)
 
-Introduce sas_ex_to_dev() to return any device type attached to an
-expander phy. The new helper is then used by sas_ex_to_ata() to reduce
-code duplication.
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
 
-Also add a defensive NULL check for ex_dev to guard against callers
-passing a NULL device.
+New issues:
+- [Medium] `sas_dev_is_flutter()` improperly bypasses PHY discovery when `c=
+hild_dev` is NULL, failing to update the libsas routing table and PHY state.
 
-Signed-off-by: Xingui Yang <yangxingui@huawei.com>
----
- drivers/scsi/libsas/sas_expander.c | 18 +++++++++++++-----
- drivers/scsi/libsas/sas_internal.h |  1 +
- 2 files changed, 14 insertions(+), 5 deletions(-)
+Pre-existing issues:
+- [High] Attempting to prevent UAF by acquiring a reference via `kref_get(&=
+child_dev->kref)` results in a TOCTOU race because `sas_find_dev_by_rphy()`=
+ returns a raw pointer without holding a reference.
+--
 
-diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
-index f471ab464a78..cb9d3b748222 100644
---- a/drivers/scsi/libsas/sas_expander.c
-+++ b/drivers/scsi/libsas/sas_expander.c
-@@ -345,13 +345,15 @@ static void sas_set_ex_phy(struct domain_device *dev, int phy_id,
- 		 SAS_ADDR(phy->attached_sas_addr), type);
- }
- 
--/* check if we have an existing attached ata device on this expander phy */
--struct domain_device *sas_ex_to_ata(struct domain_device *ex_dev, int phy_id)
-+struct domain_device *sas_ex_to_dev(struct domain_device *ex_dev, int phy_id)
- {
--	struct ex_phy *ex_phy = &ex_dev->ex_dev.ex_phy[phy_id];
--	struct domain_device *dev;
-+	struct ex_phy *ex_phy;
- 	struct sas_rphy *rphy;
- 
-+	if (!ex_dev)
-+		return NULL;
-+
-+	ex_phy = &ex_dev->ex_dev.ex_phy[phy_id];
- 	if (!ex_phy->port)
- 		return NULL;
- 
-@@ -359,7 +361,13 @@ struct domain_device *sas_ex_to_ata(struct domain_device *ex_dev, int phy_id)
- 	if (!rphy)
- 		return NULL;
- 
--	dev = sas_find_dev_by_rphy(rphy);
-+	return sas_find_dev_by_rphy(rphy);
-+}
-+
-+/* check if we have an existing attached ata device on this expander phy */
-+struct domain_device *sas_ex_to_ata(struct domain_device *ex_dev, int phy_id)
-+{
-+	struct domain_device *dev = sas_ex_to_dev(ex_dev, phy_id);
- 
- 	if (dev && dev_is_sata(dev))
- 		return dev;
-diff --git a/drivers/scsi/libsas/sas_internal.h b/drivers/scsi/libsas/sas_internal.h
-index 7dce0f587149..350a70484bde 100644
---- a/drivers/scsi/libsas/sas_internal.h
-+++ b/drivers/scsi/libsas/sas_internal.h
-@@ -91,6 +91,7 @@ int sas_smp_get_phy_events(struct sas_phy *phy);
- 
- void sas_device_set_phy(struct domain_device *dev, struct sas_port *port);
- struct domain_device *sas_find_dev_by_rphy(struct sas_rphy *rphy);
-+struct domain_device *sas_ex_to_dev(struct domain_device *ex_dev, int phy_id);
- struct domain_device *sas_ex_to_ata(struct domain_device *ex_dev, int phy_id);
- int sas_ex_phy_discover(struct domain_device *dev, int single);
- int sas_get_report_phy_sata(struct domain_device *dev, int phy_id,
--- 
-2.43.0
+commit 4a9be29a10948d7f2b0efa1425b3ea27e6c08b1f
+Author: Xingui Yang <yangxingui@huawei.com>
 
+scsi: libsas: Add linkrate and sas_addr change detection in rediscover
+
+This commit introduces sas_dev_is_flutter() and sas_rediscover_ex_phy()
+to improve flutter and device replace detection during rediscovery.
+It holds a kref on the child device during SMP discovery and uses async
+discovery to avoid ordering issues.
+
+> diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas=
+_expander.c
+> index cb9d3b7482225..63d033e789855 100644
+> --- a/drivers/scsi/libsas/sas_expander.c
+> +++ b/drivers/scsi/libsas/sas_expander.c
+[ ... ]
+> @@ -1966,6 +1966,78 @@ static bool dev_type_flutter(enum sas_device_type =
+new, enum sas_device_type old)
+[ ... ]
+> +static bool sas_dev_is_flutter(struct domain_device *dev, int phy_id,
+> +			       u8 *sas_addr, enum sas_device_type type)
+> +{
+> +	struct expander_device *ex =3D &dev->ex_dev;
+> +	struct ex_phy *phy =3D &ex->ex_phy[phy_id];
+> +	struct domain_device *child_dev =3D NULL;
+> +	char *action =3D "";
+> +	int res;
+> +
+> +	if (SAS_ADDR(sas_addr) !=3D SAS_ADDR(phy->attached_sas_addr) ||
+> +	    !dev_type_flutter(type, phy->attached_dev_type))
+> +		return false;
+> +
+> +	child_dev =3D sas_ex_to_dev(dev, phy_id);
+> +	if (!child_dev)
+> +		goto out;
+
+[Severity: Medium]
+In the original code, sas_ex_phy_discover() was called unconditionally.
+Will this new early return bypass the SMP request that updates the PHY state
+(via sas_set_ex_phy()) when the child device is not instantiated or has been
+removed?
+
+> +
+> +	kref_get(&child_dev->kref);
+
+[Severity: High]
+This is a pre-existing issue, but could attempting to prevent a use-after-f=
+ree
+by acquiring a reference here result in a time-of-check to time-of-use
+(TOCTOU) race?
+
+Looking at sas_find_dev_by_rphy() (called by sas_ex_to_dev()), it acquires
+port->dev_list_lock, finds the device, and drops the lock before returning
+the raw pointer:
+
+drivers/scsi/libsas/sas_scsi_host.c:sas_find_dev_by_rphy() {
+    ...
+    found_dev =3D dev;
+    spin_unlock(&port->dev_list_lock);
+    goto found;
+    ...
+}
+
+If a concurrent link-loss or device removal event runs, can it acquire the
+lock, remove the device, and drop its last reference before we call
+kref_get(&child_dev->kref) here, leading to a use-after-free?
+
+> +	res =3D sas_ex_phy_discover(dev, phy_id);
+> +	if (res)
+> +		goto out_put;
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260623024304.7145=
+82-1-yangxingui@huawei.com?part=3D2
