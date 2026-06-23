@@ -1,188 +1,421 @@
-Received: from DM1PR04CU001.outbound.protection.outlook.com (mail-centralusazon11010016.outbound.protection.outlook.com [52.101.61.16])
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F40A7344D8C;
-	Mon, 22 Jun 2026 18:26:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.61.16
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782152808; cv=fail; b=d4XgZURjs13SGQBlqf5LLPzSaV2RpIxEBuY143M8Y5dfGVSMXm/of5+FZmD568YguclKXZnlokunPoU/kZZnknRr2QpMw+19nuvbucVbH3BhMEVIM03qvo03oa11pFRhNC0iX66WCjSxFE3EOxfOQHwYpQm/QqroZQTfArstmGQ=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782152808; c=relaxed/simple;
-	bh=zYlhF8ENYkTw9kFPKkUFeG/X3ft3TYkN2hS/1hKkWoA=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=CGNi0WdX0gtg3x06l/yOVLmUcCL46w3pnosXgMzVQfrqqRCrWZPmHEOwUU6er/5GE9BxIXcy+nihH69K6r1jwgaE7tuen7GciDZYl08MUDbDyrY5kxBcDvf9p6QPGSKhWCkjj5C4YcaULgT1Sd3UuKY+hmGLBcGYCGHokkK0+oE=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=microchip.com; spf=pass smtp.mailfrom=microchip.com; dkim=pass (2048-bit key) header.d=microchip.com header.i=@microchip.com header.b=UQevV+Nf; arc=fail smtp.client-ip=52.101.61.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=microchip.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=microchip.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB76935A39F;
+	Tue, 23 Jun 2026 01:30:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1782178250; cv=none; b=pixSAVQxy56paKik82a1m15Vk9f8lj7NYjQ1XmTpVGmFbSWq/waUAiHcP4r63APnhG6I5RsqzeA5m0J/bgC5+IRhai5M+Hh0Mk+L+h446VdkUDO3lo+zD6nwxa4XcPx72N42YrY1u+7T4srzC8mHL9y1oBBD/hMSY0DLFAJxoj4=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1782178250; c=relaxed/simple;
+	bh=QxOH6QDoRwrzHgdAm52V1j0dCUOUIIHRJctHMPzRqls=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=YdMI4lxedQNOKvMgWBmUVl4zxXsXoBi4i4kyePAUaJ5og4lxWa8oMdqHySUElh27iDDuGOJqtG1pzEuvMMwILQhCqxxRkIWgwydUqQjO96jsOpOuslk0KqmwxDZS0NAnOF5It2HbcbpQRAkVRCuL0JeGpBepz1sxI7jRGvAjWmk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=q5vmBKgJ; arc=none smtp.client-ip=148.163.156.1
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=microchip.com header.i=@microchip.com header.b="UQevV+Nf"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=lfFiC/BjJHMNrGTL916ma0i+UT0qJOnSPJnBiu+ibpJKsC+EB30bL2vohLUhTwgHtV/4fz6gvqmCphfOuWDgIRAGRQOxgKmZTdk5xnd0A/yRocP9GpTrRKJhaEe5TBsg4qc26DXBgGUK/R4EN85cuSUiTS/DNIhKiHvU0ckpJzpCWzwTO4a1j9SR/lUBtsoSqsvIp9Tf4JQPAW+mVcAWpfkyopzN6Pgo8wIsjBFgGdxcr+SqHuPez2ItoF+EWeUmLwM42mIOs0msnSud4mZ8pEMmiDuRtDiUbyle8zWOnAGSZvIB6L/Kd1bc8FbGJwTdumAWu7OC/VqpYyOvMVIjUw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=zYlhF8ENYkTw9kFPKkUFeG/X3ft3TYkN2hS/1hKkWoA=;
- b=q3JMbDrchXesq92i/EkrCNVhQZAvQY8jNUcjvVNVru3/n33UJ6+vzOVnZsYHAudLv9yCE5TG8xFtZk6y2c6gO9iibsIM5Wle94+/thJSt0KFiZpD/F7ImgZeGPa1cZco3RGktdnklBPZ4Kigj7qAoGf4QsGlNK3Rz8DSIZaTmonSTiMT2CtF1DnuPwuQnbH+ZjBMTFTjFYztIMu94rVQBogOrFhnfvlF9xehYbx6UokWaC8JJJ9f+lVG9QqTimw50wa2T/cuODfdp8Gs9UutKx/qYcFch3YMnHMkEx378JYo1XWF8nhqr09A78XWZ+e73yKFCMtHGux8LTcbCT+EAA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=microchip.com; dmarc=pass action=none
- header.from=microchip.com; dkim=pass header.d=microchip.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=microchip.com;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=zYlhF8ENYkTw9kFPKkUFeG/X3ft3TYkN2hS/1hKkWoA=;
- b=UQevV+Nf2vROd1UW5gRnymc5It5sbAJacC2tq4pqtCTTLyoMQYxcoNgaPfZpYWItwPPcE54FXnq1OpBKsXNtNnEZtvdGo1XkgvfkY8UbumtZ+bkLxG99avRNyhu9UpKuSLhcY7Qk98/Wy4rNtk7oY6c1psM9r7+Ru2T0Wn+eBgKXrYj725TbMQioaplzMy0Uo+bOjhR40BzNFg3fZ1dOiXEic5wdsdX13ujzztzx5BkSypYoPFb5Lgq6+3/wyLV8GoI7Pz33Ac+Gp2LqyZ9a72nKYntMNwI+7v0JWf3gAcH/XFiT8T10XztsqWMjdfPBNcjBA1Xn1+VITK/c6D8MkA==
-Received: from SJ2PR11MB8369.namprd11.prod.outlook.com (2603:10b6:a03:53d::16)
- by DS0PR11MB7215.namprd11.prod.outlook.com (2603:10b6:8:13a::13) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.139.20; Mon, 22 Jun
- 2026 18:26:43 +0000
-Received: from SJ2PR11MB8369.namprd11.prod.outlook.com
- ([fe80::6777:e753:dd60:983b]) by SJ2PR11MB8369.namprd11.prod.outlook.com
- ([fe80::6777:e753:dd60:983b%4]) with mapi id 15.21.0139.018; Mon, 22 Jun 2026
- 18:26:42 +0000
-From: <Don.Brace@microchip.com>
-To: <haoxiang_li2024@163.com>, <James.Bottomley@HansenPartnership.com>,
-	<martin.petersen@oracle.com>, <david.carroll@microsemi.com>,
-	<justin.lindley@microsemi.com>, <scott.teel@microsemi.com>
-CC: <storagedev@microchip.com>, <linux-scsi@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <stable@vger.kernel.org>
-Subject: Re: [PATCH] scsi: hpsa: fix DMA mapping leak on IOACCEL2 reset path
-Thread-Topic: [PATCH] scsi: hpsa: fix DMA mapping leak on IOACCEL2 reset path
-Thread-Index: AQHdAmBjE9j71K4IqkGWSUInwrj2jbZK4SsR
-Date: Mon, 22 Jun 2026 18:26:42 +0000
-Message-ID:
- <SJ2PR11MB8369CC3A2E487829E96057BAE1EF2@SJ2PR11MB8369.namprd11.prod.outlook.com>
-References: <20260622160028.1240496-1-haoxiang_li2024@163.com>
-In-Reply-To: <20260622160028.1240496-1-haoxiang_li2024@163.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-msip_labels:
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=microchip.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: SJ2PR11MB8369:EE_|DS0PR11MB7215:EE_
-x-ms-office365-filtering-correlation-id: bebc2d13-c5a1-4767-5b30-08ded08bcf28
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam:
- BCL:0;ARA:13230040|1800799024|23010399003|366016|376014|56012099006|11063799006|18002099003|22082099003|38070700021;
-x-microsoft-antispam-message-info:
- FRuo4napftk7k1A592WkWFGUMBuRFLS1xsyQ2H1EvWC6gBzOqV/kueL6JIHSZsKTS2+KavsaltnGRWGrY3jAwEI+rgLm7uF9eVl69ikHyzqzt6wXILHYM2hGoI9fI3JEjHsubWCt/VKh8uMns2LH2ndWrGOemGOR3tQ7hKzDg+LIXDh9amf0/ha9Bh7Naznrfl+SLZA+KzOPVjc+VgFe/+qI5Cwg2vGjwqcFgD9YLtru/wi0atBl+y9i5mliwD471ly6H6gpmyg7uPWL29zV5CDBARvSGyLoHPRDheTlHIHvXcbBclVF96/WA2qNLjHtNxC5y3EyYTvwXfcvlGt/hNFWC4/Z67lFbgtAiyqc6UMFjyK5107qmTGTZUTfUyAjSMtOEZsgHjj6dPRraGtaHDw6dSiXYdI7Y2PkIhTsyOx6NDRCqPGY/KV0sJnDRm6vXf/6tpzHvqwMF8DJxEQZLAstG3DmQE+eL3l6YDONgj9PUpG5xpNzoZnR05jtE28DXRKStRg8Ig/PENTZ41/QcJQUQj5mxCC315Ig5ebvP+BhkEf4sb2+vbWivjsNSknH3QxfgHln9xnnmYXo2lHyk/b7rTjaqA0ClJQ7Hho5Zu6a82qyFEG0jMEzq9yC+iJoVJ6Z+WmV+i7Wfk+admmV3twRqX2P9LgwY2fWnszuV0LioMmQQmbEqSo7fK1plg6+NnhbkFfcVKNBuiNIwtIiO/IXMmuD8JmZzRxni7n0ag0=
-x-forefront-antispam-report:
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SJ2PR11MB8369.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(23010399003)(366016)(376014)(56012099006)(11063799006)(18002099003)(22082099003)(38070700021);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?iso-8859-1?Q?RiOSVo/Q3QM2Y/XVZ7o1x6z9GBEXa8Zy/WMeBKVDpW4u/ur47nn3JNvhJK?=
- =?iso-8859-1?Q?DOwsDkMQES4NteaR0T794KAkEd2NGtDZo6r3ijGdD+S0tooOxcAD87OD6n?=
- =?iso-8859-1?Q?eJUlilQPgH8DxnQhE439oYO5RjHBpuBkPI/lYV6xjt7FdVyXmklUWfx65C?=
- =?iso-8859-1?Q?94CCRXO7ZjDnYeyAw0PCsGsHzInq563Zor/NkXRNBGkZZa8z93+F5Dw1wG?=
- =?iso-8859-1?Q?Y8LXgPJcbknO/SyFBJY/xWZ0rFz+jnS976u+4fFUdkGrcHTNhR6PpKb7dK?=
- =?iso-8859-1?Q?ga2rxH279H5etV5icg3DCAWMm4BttCz6jN95nS/PAdYMa0s2mj9gWHoOUo?=
- =?iso-8859-1?Q?qsbL+RFg9WZAftVErJ7Eo/rJF99HOvacy2FT9DxyyYNa3RWWt/rdKymHXe?=
- =?iso-8859-1?Q?qz+/CfCQSTz4n0ciABQX6bQzXyOAeMr1TkEI8w6Bh4CYwAhPxBh7FyK3Fh?=
- =?iso-8859-1?Q?K9lJSg9ILP0eL057rc6dk/wrkyMOnY7t4MERBHxPqANgq8I9tZ/uskb6hk?=
- =?iso-8859-1?Q?a+UR06bWBPw2YK0FhjFwy+nJWA2X6jQAaLAzIWQRG3O512VOUZAcvZ8Quv?=
- =?iso-8859-1?Q?ZHlv6C86bkk966ECxzIqelv0NFEo3Wa0YUuAD63svRzf0mLXlfXDQbLNTk?=
- =?iso-8859-1?Q?ztYC430mXIkyqcQdC8sq5cWVLp0xv5YJ2KUWKh4dbSy/gvIVeHwFmA7uMO?=
- =?iso-8859-1?Q?EwE34J4/npf3xlS52uFm/tyA2nud46b/0GIjwVM741979QPEpAxMS8tUVt?=
- =?iso-8859-1?Q?P6qtTfFi2Y3QgHkQvGCei+ZJqv3MlivJ4Xj3YXwABCMRdNKjOaa9rbDhMY?=
- =?iso-8859-1?Q?RliE1CsacS6O/G3bRqz6IkbKtChWtoi0WaWDqDgYWZvd7Wy9fTO2yQQF8K?=
- =?iso-8859-1?Q?TxPJtKrZv9XMQaFiYbBzSmQHRdErGqsP0bWfRZW/H2RVrC+uPh3Xh198Zb?=
- =?iso-8859-1?Q?Oq+6grBldCBZRO8izhCcwzEXLZFYn0h3NLQ2shQOKE0zerl+cHckTLMiVH?=
- =?iso-8859-1?Q?pchMngk/u/KxBiWob3whZnv8gPaCL7TjravjKrm+1bwBMDzX1C3E7Y27iL?=
- =?iso-8859-1?Q?G1AOchvYbvp/AqWTrMawv2VwFkZqi8OekROO0iPKAQ5mR1Pob5XrSdRNLY?=
- =?iso-8859-1?Q?HA/XmN77SQs5/+TYID4SJf8chhBCiVJ4/PG/kwTrIEm4M1+K9jLbONmqEp?=
- =?iso-8859-1?Q?px1cltJjbbfCIaRfL734fzjrZS/4lUN5ZHqF3IGZflU/rTkmfcj2xrI8cs?=
- =?iso-8859-1?Q?yRLNqTDY4eSsDNXD0ueVwIpZ+8B/BDzI/3QkHcoD8sY/XzqZBZDA6FW4Fg?=
- =?iso-8859-1?Q?KnI8UdW/bP8HjA1ynMvwqpkkec0vSs0F/cOcHOytOH1AbsTiry0k0uBiyO?=
- =?iso-8859-1?Q?aGgOYmbuIMvIMWBrpfarEbnNl0NOwQhI7dH+KuEHp+RMw9ZC6BhajB39Ij?=
- =?iso-8859-1?Q?aAiYLg1IfelPWDnEvEsMIjhnklcOOBeEIm2KtSalQTO+qHjcyFFETGC4C6?=
- =?iso-8859-1?Q?9BVWh+TOF4MjbljD3RfynctjfavgXBKBqb/OBG95h5DNlW6/PbeWh0bOHd?=
- =?iso-8859-1?Q?xaVSQ5KVOX7Pl9Pj6D9/YoszgTgiA8AU0X8TQCRgNLdh51XKxkWQmy268p?=
- =?iso-8859-1?Q?6dOrh7yFRqtk/zNVYygTb1cLhJZwRYCJ+r9YYq6eRjykFyOBkn927FMGiB?=
- =?iso-8859-1?Q?BxvGaxtOWRydhut5oyAnMzn1HGNI0pRU3ry6fpKAojyibOjWh7blK38KgW?=
- =?iso-8859-1?Q?h4gD5xU9vb5nshLFx9ZIyGshDwA7ZmJn+q91o1JACLb62Zikvx5CbpuJ+J?=
- =?iso-8859-1?Q?OqbPkBORPg=3D=3D?=
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="q5vmBKgJ"
+Received: from pps.filterd (m0360083.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 65N0mSSO408386;
+	Tue, 23 Jun 2026 01:30:42 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-transfer-encoding:date:from:in-reply-to:message-id
+	:mime-version:references:subject:to; s=pp1; bh=6GEhFxN/kzBXYj4lb
+	rABW/QWN1v5qqXhSe1JKrJuxso=; b=q5vmBKgJHCGnBs4qzUI2yJjrRw3E9jqOL
+	2XbuNyJMnWHrmkXRvb2euzPtQl+BpWsyYGGYXM8ehpFEHQVCdm7CBrkpy54F5ajf
+	NILDlioaEmxo0yASaFUjdlJqcJu8lwWc4QMbUH4CkeZ+JyAMPUXBIjQjZz5PSAdd
+	ZWdlRq4M4uvYrv0lmS0q+RtF8LqR8hIkhouKgK3s5vdShy09rf9YdEehCzbYgsyT
+	pEI5tniSSJdQLD+/AvqxIyxHmTHuXK7hOPYZvMMvOve4c88DedaV7RUZ4cperp34
+	C6d3GLzK4+a9Ceb6+rkgN5nYCeFx4Az49HF0EptqVw49aGUVCCq8A==
+Received: from ppma22.wdc07v.mail.ibm.com (5c.69.3da9.ip4.static.sl-reverse.com [169.61.105.92])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4ewjc3c4qm-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 23 Jun 2026 01:30:42 +0000 (GMT)
+Received: from pps.filterd (ppma22.wdc07v.mail.ibm.com [127.0.0.1])
+	by ppma22.wdc07v.mail.ibm.com (8.18.1.7/8.18.1.7) with ESMTP id 65N1JgqS005243;
+	Tue, 23 Jun 2026 01:30:41 GMT
+Received: from smtprelay05.wdc07v.mail.ibm.com ([172.16.1.72])
+	by ppma22.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4ex5jw92hu-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 23 Jun 2026 01:30:41 +0000 (GMT)
+Received: from smtpav04.dal12v.mail.ibm.com (smtpav04.dal12v.mail.ibm.com [10.241.53.103])
+	by smtprelay05.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 65N1UdF351446254
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Tue, 23 Jun 2026 01:30:40 GMT
+Received: from smtpav04.dal12v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 9DD755805A;
+	Tue, 23 Jun 2026 01:30:39 +0000 (GMT)
+Received: from smtpav04.dal12v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 076BA58062;
+	Tue, 23 Jun 2026 01:30:39 +0000 (GMT)
+Received: from li-4c4c4544-0054-3910-8039-c3c04f423534.ibm.com.com (unknown [9.61.188.206])
+	by smtpav04.dal12v.mail.ibm.com (Postfix) with ESMTP;
+	Tue, 23 Jun 2026 01:30:38 +0000 (GMT)
+From: Tyrel Datwyler <tyreld@linux.ibm.com>
+To: james.bottomley@hansenpartnership.com, martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        linux-kernel@vger.kernel.org, brking@linux.ibm.com,
+        davemarq@linux.ibm.com, Tyrel Datwyler <tyreld@linux.ibm.com>
+Subject: [PATCH 02/29] ibmvfc: add NVMe/FC protocol interface definitions
+Date: Mon, 22 Jun 2026 18:30:08 -0700
+Message-ID: <20260623013035.3436640-3-tyreld@linux.ibm.com>
+X-Mailer: git-send-email 2.54.0
+In-Reply-To: <20260623013035.3436640-1-tyreld@linux.ibm.com>
+References: <20260623013035.3436640-1-tyreld@linux.ibm.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-OriginatorOrg: microchip.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: SJ2PR11MB8369.namprd11.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: bebc2d13-c5a1-4767-5b30-08ded08bcf28
-X-MS-Exchange-CrossTenant-originalarrivaltime: 22 Jun 2026 18:26:42.7565
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 3f4057f3-b418-4d4e-ba84-d55b4e897d88
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: EsCJWZ9YPUvm9gR2ZomgKoY4qI88zoXGvcC7z2JXHwsXARxfVpND7hxlH9pQONSBwsOhcFcC2MdwSoVM+Ze2Pw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS0PR11MB7215
+Content-Transfer-Encoding: 8bit
+X-TM-AS-GCONF: 00
+X-Authority-Analysis: v=2.4 cv=X4Ni7mTe c=1 sm=1 tr=0 ts=6a39e1c2 cx=c_pps
+ a=5BHTudwdYE3Te8bg5FgnPg==:117 a=5BHTudwdYE3Te8bg5FgnPg==:17
+ a=FelO9ux0wxsA:10 a=VkNPw1HP01LnGYTKEx00:22 a=RnoormkPH1_aCDwRdu11:22
+ a=iQ6ETzBq9ecOQQE5vZCe:22 a=VnNF1IyMAAAA:8 a=JmYX4WQfQ2vWtGjAzx0A:9
+X-Proofpoint-Spam-Info: AW1haW4tMjYwNjIzMDAwOCBTYWx0ZWRfX5MiwdgolbGup
+ Tvim2FmGPej4BANoQY70hzfmwhI9o9TGwdS2pZGp+Kt5AVlP3TX+wChcw7LmMy+nC2O4996hIv1
+ 0+5/01JNWFgXXGfPe2lms3OwiiFAmGo=
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNjIzMDAwOCBTYWx0ZWRfXzrQ1joDI39wQ
+ u1AxjqQdQyUmidOHDgOFI1oD17WYVAkF3ZrVMQkOpVsRk+CSh0Eb36WM33pb9MXNaAFlR3QXWk4
+ TpSpfjUyRkKhldvWYp5ExH8DgAHqggzn8u8UzrskdCzfQIOWk9/sab8dE8N20AEPXn80H6RdHFV
+ UnyMYLe6F9IqZMO8XbW3U+gpVnc11v0YGJuZ4GKdhp8C6vmOdDrRZuNHtkkBYDSJiW+g8BjpHkc
+ vojtn6/uNmm1VkLAY/Ps54U1dBhlwDahzq4THr8DMFVMVWtN3EKfarBcgS+5WSiEERcGWlh2LLe
+ lU+Z5taN6ZNlaraxJSJRbH2PrP6rDLL9HYjWY93i1dYVldr3Y4IbJCPT9v4on+nFMBR6MwEmjeW
+ 6BI+/LdZRjQLyZW7CQX7QN+BhMvrPkr7r0oTpKKUXs7xln2zF07wAzuMElbCtZ/ldx66BsGSs6S
+ 1R14b2E+pPKaWqhPzyw==
+X-Proofpoint-ORIG-GUID: AemgYJ2isapdo-1WMgNupkjAD0LXZlqN
+X-Proofpoint-GUID: AemgYJ2isapdo-1WMgNupkjAD0LXZlqN
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.125,FMLib:17.12.100.49
+ definitions=2026-06-23_01,2026-06-22_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ phishscore=0 bulkscore=0 suspectscore=0 spamscore=0 priorityscore=1501
+ impostorscore=0 malwarescore=0 clxscore=1015 adultscore=0 lowpriorityscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2606230008
 
-________________________________________=0A=
-From:=A0Haoxiang Li <haoxiang_li2024@163.com>=0A=
-Sent:=A0Monday, June 22, 2026 11:00 AM=0A=
-To:=A0James.Bottomley@HansenPartnership.com <James.Bottomley@HansenPartners=
-hip.com>; martin.petersen@oracle.com <martin.petersen@oracle.com>; david.ca=
-rroll@microsemi.com <david.carroll@microsemi.com>; justin.lindley@microsemi=
-.com <justin.lindley@microsemi.com>; scott.teel@microsemi.com <scott.teel@m=
-icrosemi.com>=0A=
-Cc:=A0storagedev <storagedev@microchip.com>; linux-scsi@vger.kernel.org <li=
-nux-scsi@vger.kernel.org>; linux-kernel@vger.kernel.org <linux-kernel@vger.=
-kernel.org>; Haoxiang Li <haoxiang_li2024@163.com>; stable@vger.kernel.org =
-<stable@vger.kernel.org>=0A=
-Subject:=A0[PATCH] scsi: hpsa: fix DMA mapping leak on IOACCEL2 reset path=
-=0A=
-=A0=0A=
-EXTERNAL EMAIL: Do not click links or open attachments unless you know the =
-content is safe=0A=
-=0A=
-If phys_disk->in_reset is set, the function returns directly without=0A=
-undoing the resources acquired for the command. Add the missing error=0A=
-cleanup by unmapping the IOACCEL2 SG chain block when needed, unmapping=0A=
-the SCSI command, and dropping the outstanding IOACCEL command count=0A=
-before returning.=0A=
-=0A=
-Fixes: c5dfd106414f ("scsi: hpsa: correct device resets")=0A=
-Cc: stable@vger.kernel.org=0A=
-Signed-off-by: Haoxiang Li <haoxiang_li2024@163.com>=0A=
-=0A=
-Acked-by: Don Brace <don.brace@microchip.com=0A=
-Thanks for your patch. Can fix potential performance issues with devices un=
-dergoing resets.=0A=
-What about another patch for when call to hpsa_map_ioaccel2_sg_chain_block(=
-) fails?=0A=
-=0A=
-=0A=
----=0A=
-=A0drivers/scsi/hpsa.c | 4 ++++=0A=
-=A01 file changed, 4 insertions(+)=0A=
-=0A=
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c=0A=
-index a1b116cd4723..8edad1830abe 100644=0A=
---- a/drivers/scsi/hpsa.c=0A=
-+++ b/drivers/scsi/hpsa.c=0A=
-@@ -5017,6 +5017,10 @@ static int hpsa_scsi_ioaccel2_queue_command(struct c=
-tlr_info *h,=0A=
-=0A=
-=A0=A0=A0=A0=A0=A0=A0 if (phys_disk->in_reset) {=0A=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 cmd->result =3D DID_RESET << =
-16;=0A=
-+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 atomic_dec(&phys_disk->ioaccel_=
-cmds_out);=0A=
-+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 scsi_dma_unmap(cmd);=0A=
-+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 if (use_sg > h->ioaccel_maxsg)=
-=0A=
-+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 hpsa_un=
-map_ioaccel2_sg_chain_block(h, cp);=0A=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 return -1;=0A=
-=A0=A0=A0=A0=A0=A0=A0 }=0A=
-=0A=
---=0A=
-2.25.1=0A=
+Add the protocol definitions for client-VIOS interface updates needed to
+support NVMe/FC over the ibmvfc NPIV transport.
+
+Extend the ibmvfc interface with:
+
+- NVMe/FC-specific capability bits and opcodes
+- protocol-specific channel and queue definitions
+- updated channel enquiry/setup fields for NVMe queues
+- v3 command layout support for protocol-specific payloads
+
+These changes provide the common header and interface plumbing needed by
+later patches that add NVMe/FC login, discovery, remote-port handling,
+and I/O submission.
+
+Signed-off-by: Tyrel Datwyler <tyreld@linux.ibm.com>
+---
+ drivers/scsi/ibmvscsi/ibmvfc.h | 153 +++++++++++++++++++++++++--------
+ 1 file changed, 119 insertions(+), 34 deletions(-)
+
+diff --git a/drivers/scsi/ibmvscsi/ibmvfc.h b/drivers/scsi/ibmvscsi/ibmvfc.h
+index 0e259e9d2e9b..f8a2bf92da41 100644
+--- a/drivers/scsi/ibmvscsi/ibmvfc.h
++++ b/drivers/scsi/ibmvscsi/ibmvfc.h
+@@ -13,6 +13,8 @@
+ #include <linux/list.h>
+ #include <linux/types.h>
+ #include <scsi/viosrp.h>
++#include <linux/nvme.h>
++#include <linux/nvme-fc.h>
+ 
+ #define IBMVFC_NAME	"ibmvfc"
+ #define IBMVFC_DRIVER_VERSION		"1.0.11"
+@@ -92,6 +94,7 @@ enum ibmvfc_cmd_status_flags {
+ 	IBMVFC_FC_SCSI_ERROR		= 0x0008,
+ 	IBMVFC_HW_EVENT_LOGGED		= 0x0010,
+ 	IBMVFC_VIOS_LOGGED		= 0x0020,
++	IBMVFC_FC_NVME_STATUS		= 0x0040,
+ };
+ 
+ enum ibmvfc_fabric_mapped_errors {
+@@ -124,20 +127,37 @@ enum ibmvfc_vios_errors {
+ 	IBMVFC_COMMAND_FAILED			= 0x8000,
+ };
+ 
++enum ibmvfc_fc_nvme_errors {
++	IBMVFC_NVMS_VALID_ERSP		= 0x0001,
++	IBMVFC_NVMS_VALID_NODMA_CQE	= 0x0002,
++};
++
+ enum ibmvfc_mad_types {
+ 	IBMVFC_NPIV_LOGIN		= 0x0001,
+-	IBMVFC_DISC_TARGETS	= 0x0002,
++	IBMVFC_DISC_TARGETS		= 0x0002,
++	IBMVFC_DISC_NVMF_TARGETS	= 0x0003,
+ 	IBMVFC_PORT_LOGIN		= 0x0004,
+-	IBMVFC_PROCESS_LOGIN	= 0x0008,
+-	IBMVFC_QUERY_TARGET	= 0x0010,
++	IBMVFC_NVMF_PORT_LOGIN		= 0x0005,
++	IBMVFC_PROCESS_LOGIN		= 0x0008,
++	IBMVFC_NVMF_PROCESS_LOGIN	= 0x0009,
++	IBMVFC_QUERY_TARGET		= 0x0010,
++	IBMVFC_NVMF_QUERY_TARGET	= 0x0011,
+ 	IBMVFC_MOVE_LOGIN		= 0x0020,
+-	IBMVFC_IMPLICIT_LOGOUT	= 0x0040,
+-	IBMVFC_PASSTHRU		= 0x0200,
+-	IBMVFC_TMF_MAD		= 0x0100,
+-	IBMVFC_NPIV_LOGOUT	= 0x0800,
+-	IBMVFC_CHANNEL_ENQUIRY	= 0x1000,
+-	IBMVFC_CHANNEL_SETUP	= 0x2000,
+-	IBMVFC_CONNECTION_INFO	= 0x4000,
++	IBMVFC_NVMF_MOVE_LOGIN		= 0x0021,
++	IBMVFC_IMPLICIT_LOGOUT		= 0x0040,
++	IBMVFC_NVMF_IMPLICIT_LOGOUT	= 0x0041,
++	IBMVFC_RNID			= 0x0080,
++	IBMVFC_NVMF_RNID		= 0x0081,
++	IBMVFC_TMF_MAD			= 0x0100,
++	IBMVFC_NVMF_TMF_MAD		= 0x0101,
++	IBMVFC_PASSTHRU			= 0x0200,
++	IBMVFC_NVMF_PASSTHRU		= 0x0201,
++	IBMVFC_NPIV_LOGOUT		= 0x0800,
++	IBMVFC_CHANNEL_ENQUIRY		= 0x1000,
++	IBMVFC_CHANNEL_SETUP		= 0x2000,
++	IBMVFC_CONNECTION_INFO		= 0x4000,
++	IBMVFC_FABRIC_LOGIN		= 0x8000,
++	IBMVFC_NVMF_FABRIC_LOGIN	= 0x8001,
+ };
+ 
+ struct ibmvfc_mad_common {
+@@ -175,11 +195,16 @@ struct ibmvfc_npiv_login {
+ #define IBMVFC_FLUSH_ON_HALT		0x02
+ 	__be32 max_cmds;
+ 	__be64 capabilities;
+-#define IBMVFC_CAN_MIGRATE		0x01
+-#define IBMVFC_CAN_USE_CHANNELS		0x02
+-#define IBMVFC_CAN_HANDLE_FPIN		0x04
+-#define IBMVFC_CAN_USE_MAD_VERSION	0x08
+-#define IBMVFC_CAN_SEND_VF_WWPN		0x10
++#define IBMVFC_CAN_MIGRATE		0x001
++#define IBMVFC_CAN_USE_CHANNELS		0x002
++#define IBMVFC_CAN_HANDLE_FPIN		0x004
++#define IBMVFC_CAN_USE_MAD_VERSION	0x008
++#define IBMVFC_CAN_SEND_VF_WWPN		0x010
++#define IBMVFC_YES_NVMEOF		0x020
++#define IBMVFC_YES_SCSI			0x040
++#define IBMVFC_CAN_USE_WWPN_ALL		0x080
++#define IBMVFC_USE_ASYNC_SUBQ		0x100
++#define IBMVFC_CAN_USE_NOOP_CMD		0x200
+ 	__be64 node_name;
+ 	struct srp_direct_buf async;
+ 	u8 partition_name[IBMVFC_MAX_NAME];
+@@ -219,13 +244,18 @@ struct ibmvfc_npiv_login_resp {
+ 	__be16 error;
+ 	__be32 flags;
+ #define IBMVFC_NATIVE_FC		0x01
+-	__be32 reserved;
++	__be32 possible_nports;
+ 	__be64 capabilities;
+-#define IBMVFC_CAN_FLUSH_ON_HALT	0x08
+-#define IBMVFC_CAN_SUPPRESS_ABTS	0x10
+-#define IBMVFC_MAD_VERSION_CAP		0x20
+-#define IBMVFC_HANDLE_VF_WWPN		0x40
+-#define IBMVFC_CAN_SUPPORT_CHANNELS	0x80
++#define IBMVFC_CAN_FLUSH_ON_HALT	0x0008
++#define IBMVFC_CAN_SUPPRESS_ABTS	0x0010
++#define IBMVFC_MAD_VERSION_CAP		0x0020
++#define IBMVFC_HANDLE_VF_WWPN		0x0040
++#define IBMVFC_CAN_SUPPORT_CHANNELS	0x0080
++#define IBMVFC_SUPPORT_NVMEOF		0x0100
++#define IBMVFC_SUPPORT_SCSI		0x0200
++#define IBMVFC_SUPPORT_WWPN_ALL		0x0400
++#define IBMVFC_ASYNC_SUBQ		0x0800
++#define IBMVFC_SUPPORT_NOOP_CMD		0x1000
+ 	__be32 max_cmds;
+ 	__be32 scsi_id_sz;
+ 	__be64 max_dma_len;
+@@ -238,7 +268,7 @@ struct ibmvfc_npiv_login_resp {
+ 	u8 port_loc_code[IBMVFC_MAX_NAME];
+ 	u8 drc_name[IBMVFC_MAX_NAME];
+ 	struct ibmvfc_service_parms service_parms;
+-	__be64 reserved2;
++	__be64 reserved;
+ } __packed __aligned(8);
+ 
+ union ibmvfc_npiv_login_data {
+@@ -246,6 +276,17 @@ union ibmvfc_npiv_login_data {
+ 	struct ibmvfc_npiv_login_resp resp;
+ } __packed __aligned(8);
+ 
++struct ibmvfc_fabric_login_mad {
++	struct ibmvfc_mad_common common;
++	__be64 flags;
++	__be64 capabilities;
++	__be64 nport_id;
++	__be16 status;
++	__be16 error;
++	__be32 reserved;
++	__be64 reserved2[16];
++} __packed __aligned(8);
++
+ struct ibmvfc_discover_targets_entry {
+ 	__be32 scsi_id;
+ 	__be32 pad;
+@@ -287,6 +328,7 @@ enum ibmvfc_fc_type {
+ 	IBMVFC_FABRIC_BUSY	= 0x04,
+ 	IBMVFC_PORT_BUSY		= 0x05,
+ 	IBMVFC_BASIC_REJECT	= 0x06,
++	IBMVFC_FC4_LS_REJECT	= 0x07,
+ };
+ 
+ enum ibmvfc_gs_explain {
+@@ -377,20 +419,27 @@ struct ibmvfc_query_tgt {
+ struct ibmvfc_implicit_logout {
+ 	struct ibmvfc_mad_common common;
+ 	__be64 old_scsi_id;
+-	__be64 reserved[2];
++	__be64 reserved[8];
++	__be64 target_wwpn;
+ } __packed __aligned(8);
+ 
+ struct ibmvfc_tmf {
+ 	struct ibmvfc_mad_common common;
+ 	__be64 scsi_id;
+-	struct scsi_lun lun;
++	union {
++		struct scsi_lun lun;
++		__be64 assoc_id;
++	};
+ 	__be32 flags;
+-#define IBMVFC_TMF_ABORT_TASK		0x02
+-#define IBMVFC_TMF_ABORT_TASK_SET	0x04
+-#define IBMVFC_TMF_LUN_RESET		0x10
+-#define IBMVFC_TMF_TGT_RESET		0x20
+-#define IBMVFC_TMF_LUA_VALID		0x40
+-#define IBMVFC_TMF_SUPPRESS_ABTS	0x80
++#define IBMVFC_TMF_ABORT_TASK		0x002
++#define IBMVFC_TMF_ABORT_TASK_SET	0x004
++#define IBMVFC_TMF_LUN_RESET		0x010
++#define IBMVFC_TMF_TGT_RESET		0x020
++#define IBMVFC_TMF_LUA_VALID		0x040
++#define IBMVFC_TMF_SUPPRESS_ABTS	0x080
++#define IBMVFC_TMF_NVMF_ASSOC		0x100
++#define IBMVFC_TMF_NVMF_TARGET		0x200
++#define IBMVFC_TMF_BITMASK_VALID	0x400
+ 	__be32 cancel_key;
+ 	__be32 my_cancel_key;
+ 	__be32 pad;
+@@ -446,6 +495,8 @@ enum ibmvfc_cmd_flags {
+ 	IBMVFC_WRITE		= 0x0008,
+ 	IBMVFC_TMF			= 0x0080,
+ 	IBMVFC_CLASS_3_ERR	= 0x0100,
++	IBMVFC_NVMEOF_PROTOCOL	= 0x0200,
++	IBMVFC_NVMF_SLER	= 0x0400,
+ };
+ 
+ enum ibmvfc_fc_task_attr {
+@@ -493,7 +544,7 @@ struct ibmvfc_cmd {
+ 	__be64 tgt_scsi_id;
+ 	__be64 tag;
+ 	__be64 target_wwpn;
+-	__be64 reserved3;
++	__be64 assoc_id;
+ 	union {
+ 		struct {
+ 			struct ibmvfc_fcp_cmd_iu iu;
+@@ -504,6 +555,15 @@ struct ibmvfc_cmd {
+ 			struct ibmvfc_fcp_cmd_iu iu;
+ 			struct ibmvfc_fcp_rsp rsp;
+ 		} v2;
++		struct {
++			__be64 reserved5[4];
++			struct ibmvfc_fcp_cmd_iu iu;
++			struct ibmvfc_fcp_rsp rsp;
++		} v3scsi;
++		struct {
++			__be64 reserved[4];
++			struct nvme_fc_cmd_iu iu;
++		} v3nvme;
+ 	};
+ } __packed __aligned(8);
+ 
+@@ -522,6 +582,9 @@ struct ibmvfc_passthru_iu {
+ 	__be32 flags;
+ #define IBMVFC_FC_ELS		0x01
+ #define IBMVFC_FC_CT_IU		0x02
++#define IBMVFC_PT_PRLI		0x04
++#define IBMVFC_FC4_LS_OTH	0x08
++#define IBMVFC_FC4_LS_DSC_CTRL	0x10
+ 	__be32 cancel_key;
+ #define IBMVFC_PASSTHRU_CANCEL_KEY	0x80000000
+ #define IBMVFC_INTERNAL_CANCEL_KEY	0x80000001
+@@ -559,7 +622,7 @@ struct ibmvfc_channel_setup_mad {
+ 	struct srp_direct_buf buffer;
+ } __packed __aligned(8);
+ 
+-#define IBMVFC_MAX_CHANNELS	502
++#define IBMVFC_MAX_CHANNELS	501
+ 
+ struct ibmvfc_channel_setup {
+ 	__be32 flags;
+@@ -574,6 +637,7 @@ struct ibmvfc_channel_setup {
+ 	struct srp_direct_buf buffer;
+ 	__be64 reserved2[5];
+ 	__be64 channel_handles[IBMVFC_MAX_CHANNELS];
++	__be64 async_sub_crq_handle;
+ } __packed __aligned(8);
+ 
+ struct ibmvfc_connection_info {
+@@ -620,7 +684,8 @@ struct ibmvfc_trace_entry {
+ 
+ enum ibmvfc_crq_formats {
+ 	IBMVFC_CMD_FORMAT		= 0x01,
+-	IBMVFC_ASYNC_EVENT	= 0x02,
++	IBMVFC_ASYNC_EVENT		= 0x02,
++	IBMVFC_NOOP			= 0x03,
+ 	IBMVFC_MAD_FORMAT		= 0x04,
+ };
+ 
+@@ -639,6 +704,9 @@ enum ibmvfc_async_event {
+ 	IBMVFC_AE_RESUME			= 0x0800,
+ 	IBMVFC_AE_ADAPTER_FAILED	= 0x1000,
+ 	IBMVFC_AE_FPIN			= 0x2000,
++	IBMVFC_NVME_DISCONNECT		= 0x4000,
++	IBMVFC_NVMEOF_PROTO_AVAIL	= 0x40000000,
++	IBMVFC_SCSI_PROTO_AVAIL		= 0x80000000,
+ };
+ 
+ struct ibmvfc_async_desc {
+@@ -683,13 +751,30 @@ struct ibmvfc_async_crq {
+ 	volatile __be64 scsi_id;
+ 	volatile __be64 wwpn;
+ 	volatile __be64 node_name;
+-	__be64 reserved;
++	__be64 assoc_id;
++} __packed __aligned(8);
++
++struct ibmvfc_async_sub_crq {
++	volatile u8 valid;
++	u8 flags;
++#define IBMVFC_ASYNC_ID_IS_ASSOC_ID	0x01
++	u8 link_state;
++	u8 fpin_status;
++	__be16 event;
++	__be16 pad;
++	__be64 wwpn;
++	__be64 nport_id;
++	union {
++		__be64 node_name;
++		__be64 assoc_id;
++	} id;
+ } __packed __aligned(8);
+ 
+ union ibmvfc_iu {
+ 	struct ibmvfc_mad_common mad_common;
+ 	struct ibmvfc_npiv_login_mad npiv_login;
+ 	struct ibmvfc_npiv_logout_mad npiv_logout;
++	struct ibmvfc_fabric_login_mad fabric_login;
+ 	struct ibmvfc_discover_targets discover_targets;
+ 	struct ibmvfc_port_login plogi;
+ 	struct ibmvfc_process_login prli;
+-- 
+2.54.0
+
