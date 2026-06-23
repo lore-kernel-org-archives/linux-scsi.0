@@ -1,49 +1,44 @@
-Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.4])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E13FD3D3CEF;
-	Tue, 23 Jun 2026 11:24:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 85A743D333C;
+	Tue, 23 Jun 2026 11:29:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.4
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782213887; cv=none; b=vDJdc0y6SCkBya+kAgM/3+j5DpyzWELzD81kq0EY7RqzwnxZluC/EMpwuPoWf7nKerQ1wvzk91MgFPIMYZGs2YdsjPiOKIrimXuDU5oi92vj3fWPHLfyG4B/l3nUCQPPJxtqWGr0AUMeRS4mSmVGQkHek5usgslJNOwUGIKex/Q=
+	t=1782214190; cv=none; b=M1p5ffu75acJAEhagXs0gaSuFX+1/3B3qDFO5jEgqWoP6SrBn4K536NeGyAx8n5fkOh1cftT6XYFYG0fYKVsHzKVcoKaWFWI3x/tkO4ek5jxAz/LCx/1/hGyCT/k4IG3H3UpWAtEcyOrur9ZLTIlculhjsTjEfOhTciSKuJVOg4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782213887; c=relaxed/simple;
-	bh=8F2UYglKfcTF+eykTaNG40sEotWPB0loPhGNrQCuVwI=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=DYuebWSEa4RWvB2KYDCk4lr1ASbkC32Afix5wWzkSMBatkhM/AiZxxtdrN3xh4qXPkllVkqifMwTw6WmDHz3ytq++G/GoXc/Icb5DHCuCnEVScnhAvI/l+v0lO4ECfYzJ7NsHHz21se0D5i5scRi6YAylNu7X0iZTPZLvpPz1W8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
-X-UUID: 1f2cca006ef611f1aa26b74ffac11d73-20260623
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.12,REQID:5e3740d4-7035-4767-9bec-9164a60ddd5c,IP:0,U
-	RL:0,TC:0,Content:-5,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION
-	:release,TS:-5
-X-CID-META: VersionHash:e7bac3a,CLOUDID:d6899cbf62ed25ed1230be757a2743cd,BulkI
-	D:nil,BulkQuantity:0,Recheck:0,SF:102|865|898,TC:nil,Content:0|15|50,EDM:-
-	3,IP:nil,URL:0,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,A
-	V:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
-X-CID-BVR: 2,SSN|SDN
-X-CID-BAS: 2,SSN|SDN,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR
-X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: 1f2cca006ef611f1aa26b74ffac11d73-20260623
-X-User: pengcan@kylinos.cn
-Received: from lenovo [(10.44.16.150)] by mailgw.kylinos.cn
-	(envelope-from <pengcan@kylinos.cn>)
-	(Generic MTA with TLSv1.3 TLS_AES_256_GCM_SHA384 256/256)
-	with ESMTP id 1149366949; Tue, 23 Jun 2026 19:24:38 +0800
-From: Can Peng <pengcan@kylinos.cn>
-To: skashyap@marvell.com,
-	jhasan@marvell.com,
+	s=arc-20240116; t=1782214190; c=relaxed/simple;
+	bh=ABq8V93E2h3jxiC9SA6zjQ+D35EeHxtUEVbCx+hMsaQ=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=i4LPYpERfS6x13njO62yiE2u6rTq6+h5iOI2GQQRzI5QlzFQhLwjwNAnJ3wg2iLagsJCpWI8AIkEtv7Fkjjzf33kEd2vsfnZfxBN30/K7s5naMMiN0gWeW6Z1xsPSrz61NsdpnwnWYtpLVPbPDHZuFr8qYbnga0Wt+H7a8CwkME=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=fV1V6y6B; arc=none smtp.client-ip=117.135.210.4
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="fV1V6y6B"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=6p
+	vvRCIk0fcvMKQDxa5gPVNtwMST+cXow735qegu0ek=; b=fV1V6y6BssUSQzV2z3
+	sSb1TuFrC0ZCfK7KZ3bALTEUVe931Ej+mfnkJqD/ijf0HhITTHSQ6IM3WzadqMAR
+	pQm+Dnh2VrmnoKBHIq19YBCoAm9UIgjbybcqrqm7LEIbtDI59qeK32UyuEGFA3Et
+	B56Gag1to4HLTPI1a7QMNSTHA=
+Received: from localhost.localdomain (unknown [])
+	by gzga-smtp-mtada-g1-2 (Coremail) with SMTP id _____wBHjGEFbjpqGb47FQ--.13247S2;
+	Tue, 23 Jun 2026 19:29:11 +0800 (CST)
+From: Haoxiang Li <haoxiang_li2024@163.com>
+To: john.g.garry@oracle.com,
+	yanaijie@huawei.com,
 	James.Bottomley@HansenPartnership.com,
-	martin.petersen@oracle.com
+	martin.petersen@oracle.com,
+	dlemoal@kernel.org,
+	cassel@kernel.org,
+	kees@kernel.org
 Cc: linux-scsi@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	Can Peng <pengcan@kylinos.cn>
-Subject: [PATCH] scsi: bnx2fc: Use kmalloc_array() for array allocations
-Date: Tue, 23 Jun 2026 19:24:28 +0800
-Message-ID: <20260623112428.98097-1-pengcan@kylinos.cn>
-X-Mailer: git-send-email 2.53.0
+	Haoxiang Li <haoxiang_li2024@163.com>
+Subject: [PATCH] scsi: libsas: Handle expander discovery allocation failures
+Date: Tue, 23 Jun 2026 19:29:09 +0800
+Message-Id: <20260623112909.2172701-1-haoxiang_li2024@163.com>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -51,45 +46,80 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:_____wBHjGEFbjpqGb47FQ--.13247S2
+X-Coremail-Antispam: 1Uf129KBjvJXoW7Cr4UXry3ZryDWrW7Jr1rXrb_yoW8tF1fpa
+	ykGa98KayDtw17AwsIgF4kXrW5Cryrta4UCF4rW3sa9FyrXFyqvaySyr4q9FyUCrWxJFyf
+	trZ5Xa1kGF4UGrDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0piMGQDUUUUU=
+X-CM-SenderInfo: xkdr5xpdqjszblsqjki6rwjhhfrp/xtbCxgfFNGo6bgeh9wAA3f
 
-Documentation/process/deprecated.rst discourages open-coded arithmetic
-in allocator arguments and recommends using the 2-factor allocator forms.
+sas_ex_discover_expander() allocates a domain device and SAS port before
+allocating the expander rphy, but it does not check all allocation and
+registration failures. In particular, sas_expander_alloc() can return
+NULL and the returned rphy is dereferenced unconditionally.
 
-The unsolicited completion path allocates num_rq buffers of
-BNX2FC_RQ_BUF_SZ bytes, and task_ctx_dma is an array of task_ctx_arr_sz
-dma_addr_t entries. Use kmalloc_array() for both allocations.
+Add error handling for sas_port_alloc(), sas_port_add(), and
+sas_expander_alloc(), and unwind the resources allocated on each path.
+Use sas_port_free() before a port has been added and sas_port_delete()
+after it has been added.
 
-Signed-off-by: Can Peng <pengcan@kylinos.cn>
+Free the child device directly on these early failures because child->rphy
+has not been initialized yet, and sas_put_device() would dereference it.
+
+Signed-off-by: Haoxiang Li <haoxiang_li2024@163.com>
 ---
- drivers/scsi/bnx2fc/bnx2fc_hwi.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/scsi/libsas/sas_expander.c | 24 +++++++++++++++++++++---
+ 1 file changed, 21 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_hwi.c b/drivers/scsi/bnx2fc/bnx2fc_hwi.c
-index a5ecb87d5b2d..af6d27c3966e 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_hwi.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_hwi.c
-@@ -655,8 +655,8 @@ static void bnx2fc_process_unsol_compl(struct bnx2fc_rport *tgt, u16 wqe)
- 		if (rq_data) {
- 			buf = rq_data;
- 		} else {
--			buf1 = buf = kmalloc((num_rq * BNX2FC_RQ_BUF_SZ),
--					      GFP_ATOMIC);
-+			buf1 = buf = kmalloc_array(num_rq, BNX2FC_RQ_BUF_SZ,
-+						   GFP_ATOMIC);
+diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
+index f471ab464a78..56c04c4ae818 100644
+--- a/drivers/scsi/libsas/sas_expander.c
++++ b/drivers/scsi/libsas/sas_expander.c
+@@ -909,9 +909,11 @@ static struct domain_device *sas_ex_discover_expander(
+ 		return NULL;
  
- 			if (!buf1) {
- 				BNX2FC_TGT_DBG(tgt, "Memory alloc failure\n");
-@@ -1904,8 +1904,8 @@ int bnx2fc_setup_task_ctx(struct bnx2fc_hba *hba)
- 	/*
- 	 * Allocate task_ctx_dma which is an array of dma addresses
- 	 */
--	hba->task_ctx_dma = kmalloc((task_ctx_arr_sz *
--					sizeof(dma_addr_t)), GFP_KERNEL);
-+	hba->task_ctx_dma = kmalloc_array(task_ctx_arr_sz,
-+					  sizeof(dma_addr_t), GFP_KERNEL);
- 	if (!hba->task_ctx_dma) {
- 		printk(KERN_ERR PFX "unable to alloc context mapping array\n");
- 		rc = -1;
+ 	phy->port = sas_port_alloc(&parent->rphy->dev, phy_id);
+-	/* FIXME: better error handling */
+-	BUG_ON(sas_port_add(phy->port) != 0);
+-
++	if (!phy->port)
++		goto out_free_child;
++	res = sas_port_add(phy->port);
++	if (res)
++		goto out_free_port;
+ 
+ 	switch (phy->attached_dev_type) {
+ 	case SAS_EDGE_EXPANDER_DEVICE:
+@@ -926,6 +928,9 @@ static struct domain_device *sas_ex_discover_expander(
+ 		rphy = NULL;	/* shut gcc up */
+ 		BUG();
+ 	}
++	if (!rphy)
++		goto out_delete_port;
++
+ 	port = parent->port;
+ 	child->rphy = rphy;
+ 	get_device(&rphy->dev);
+@@ -963,6 +968,19 @@ static struct domain_device *sas_ex_discover_expander(
+ 	}
+ 	list_add_tail(&child->siblings, &parent->ex_dev.children);
+ 	return child;
++
++out_delete_port:
++	sas_port_delete(phy->port);
++	phy->port = NULL;
++	kfree(child);
++	return NULL;
++
++out_free_port:
++	sas_port_free(phy->port);
++	phy->port = NULL;
++out_free_child:
++	kfree(child);
++	return NULL;
+ }
+ 
+ static int sas_ex_discover_dev(struct domain_device *dev, int phy_id)
 -- 
-2.53.0
+2.25.1
 
