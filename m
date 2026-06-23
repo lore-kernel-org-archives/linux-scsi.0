@@ -1,44 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4EF79379993
-	for <linux-scsi@vger.kernel.org>; Tue, 23 Jun 2026 01:54:02 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E33AC385D99
+	for <linux-scsi@vger.kernel.org>; Tue, 23 Jun 2026 01:55:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782179643; cv=none; b=UVpUqhF/GPx4ZY6aqpbpjS7g4/oWBSNDiyBGfTAkTXGOzmclpV8RSKMCFXnxl6vl7+Kso9RI3cPUJbaBZ63dxmvkKbSUi7nPKfubNeG+hYSny+Z/ixysIymxan6VnCoSvzeCFndSEMYPVonxdByMkTbQXlxP0BcUe4bMqVe2Coo=
+	t=1782179705; cv=none; b=T+YuYLBWm4qsLWYF90Lg8rqBCwEIG/1BaKpiHoytr3q7j+GYbd0JbjMGQqCyVbCOf8B4ItYTd4xCwdXbxFnm11/SKpSh02cUFgetvkGS4WZdgecj+hbMDzSpgChlKUQnTw49FryRBW6iTvuH4QcnzEuJ7uFsJ1FQaNT5Rej6dq4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782179643; c=relaxed/simple;
-	bh=Elf91vwvTieqqqfeZmAwwZwg3cDXo08WwGBdOerWa7c=;
+	s=arc-20240116; t=1782179705; c=relaxed/simple;
+	bh=P3Ibs+YEPwCWN4Olq/7LvGWInWZh+WqvE0RxNtGa5D0=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=uaZvWSiGayPrE+jH8Ug17zqRII96bugVtf0MX6vgRihhz1mf37ZUNagirgrcRlg8SObtic7SUfxReV4i8MUw0K31h70gB+xmCcggnCWlcGQvasinLEU472T9HgVEiR3CItwkbd5NRFH6fdn6OUsCKLeCvChW8pteR8SNO9hmY50=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=amrM416C; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=hFqPeNLVNZVS8dad2HtmVaAyN8tfGi8I8NphZrpcuhWZJ5lziAPiMvkroDgEZXvJfXpDsbDrdP8eZZ5GfecVgGp9PJPPBWimDq4Dv8hTyx2TwddBEea0HIHGp91BL61JkCcJtM+9PUVAS4+xfbGO6tNRBpl8wkVdlLxkSL6IRS4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=b+pb9h9x; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="amrM416C"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D360A1F000E9;
-	Tue, 23 Jun 2026 01:54:01 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="b+pb9h9x"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9F02A1F000E9;
+	Tue, 23 Jun 2026 01:55:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782179641;
-	bh=F490ByG9qhMlcT0ygJ7tXsaFp9oAzyktdMte8+W6Rh0=;
+	s=k20260515; t=1782179704;
+	bh=xAMDvAKDiuPTE2XsiG3pVnO6dvj48OSykmPNRn4PKng=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=amrM416Cf10/XZp/sqtjQk/xDOY80Zarhw+5+Wy87gog6aVLtCtM3dijUuTKjrSTY
-	 r+qgLJ7UvgHv1PmFg++qaSQGyVhE3aiyic0rf5HB2XRnjS9IkgKcR0oLjeTM2RK4VM
-	 wHzfwD4nh01BPEV3mWpbiPyHvd0jseBm19uUpfcw/m8lCY+y1vwNdDe5q3sF/sf2Lc
-	 nbuAQ3qsEJrZk2aInA7wVj70FoCAAhq7yZVdNcyAxYyOS6IxxIILCZE8HvZfwGGa+R
-	 2uR1H/3IKkIHkvnxoRftxJToHWcMGelo34EAtAaze4B51nnoUqzax6qbuspB9Gz3gh
-	 ZkNQOgbyh6Tew==
+	b=b+pb9h9xnvpU6AxK6UqmWtbsGex2Vyul5cGrDwgrwafPcappse3eqVHNS51HBXNg/
+	 v7Zdtx2YAmJRgPI9aA0htdf/08kCIy/kjeOmbVkavGKXpF5HjN+Mhl+zXbOufnuGdO
+	 mYK9WjPyE284+Stq4zgJ7DoyqPFgUWNMwZlgYc47QXWhV+/Y4NY5ED7ccVJnzPYNNJ
+	 5m0z7I0iWRGB6OG86f9WmNtVxLzFrj9Bioz5P9pMiGlgMEVJcfbBsOVJgC1mdN5FMH
+	 v2DhsEEyYfSqTuKydmvwct+3fg/VR8UmrcYP7fXBR/+reKv4ErLYPlRqGxVZRyz9hA
+	 A17oNhZbtp66w==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 02/29] ibmvfc: add NVMe/FC protocol interface
- definitions
+Subject: Re: [PATCH 05/29] ibmvfc: alloc/dealloc sub-queues for nvme
+ channels
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Tyrel Datwyler" <tyreld@linux.ibm.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260623013035.3436640-3-tyreld@linux.ibm.com>
+In-Reply-To: <20260623013035.3436640-6-tyreld@linux.ibm.com>
 References: <20260623013035.3436640-1-tyreld@linux.ibm.com>
- <20260623013035.3436640-3-tyreld@linux.ibm.com>
+ <20260623013035.3436640-6-tyreld@linux.ibm.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 23 Jun 2026 01:54:01 +0000
-Message-Id: <20260623015401.D360A1F000E9@smtp.kernel.org>
+Date: Tue, 23 Jun 2026 01:55:04 +0000
+Message-Id: <20260623015504.9F02A1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -47,56 +47,73 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [High] Unconditional size expansion of `struct ibmvfc_implicit_logout` br=
-eaks backwards compatibility with older VIOS versions.
+- [High] Failure to register NVMe sub-queues silently disables SCSI multiqu=
+eue support due to a shared state flag.
 --
 
-commit c4f31afebbe28cbb64ba03689b7e7ed327cb6d9e
+commit 6eb0f2ef7c51067f6c97ea8c13211afa2e19dcc4
 Author: Tyrel Datwyler <tyreld@linux.ibm.com>
 
-ibmvfc: add NVMe/FC protocol interface definitions
+ibmvfc: alloc/dealloc sub-queues for nvme channels
 
-This commit adds the protocol definitions for client-VIOS interface updates
-needed to support NVMe/FC over the ibmvfc NPIV transport. It extends the
-ibmvfc interface with NVMe/FC-specific capabilities, queue definitions,
-and command layout support.
+This patch allocates, registers, deregisters, and releases NVMe subordinate
+CRQs alongside the existing SCSI sub-CRQs. It integrates the NVMe queue
+lifecycle with the existing SCSI queue lifecycle to ensure both protocols
+are reset consistently.
 
-> diff --git a/drivers/scsi/ibmvscsi/ibmvfc.h b/drivers/scsi/ibmvscsi/ibmvf=
-c.h
-> index 0e259e9d2e9bb..f8a2bf92da410 100644
-> --- a/drivers/scsi/ibmvscsi/ibmvfc.h
-> +++ b/drivers/scsi/ibmvscsi/ibmvfc.h
+> diff --git a/drivers/scsi/ibmvscsi/ibmvfc-core.c b/drivers/scsi/ibmvscsi/=
+ibmvfc-core.c
+> index 5732ccf2ac1c0..6f5e8b3cbfc82 100644
+> --- a/drivers/scsi/ibmvscsi/ibmvfc-core.c
+> +++ b/drivers/scsi/ibmvscsi/ibmvfc-core.c
 
 [ ... ]
 
-> @@ -377,20 +419,27 @@ struct ibmvfc_query_tgt {
->  struct ibmvfc_implicit_logout {
->  	struct ibmvfc_mad_common common;
->  	__be64 old_scsi_id;
-> -	__be64 reserved[2];
-> +	__be64 reserved[8];
-> +	__be64 target_wwpn;
->  } __packed __aligned(8);
+> @@ -6109,6 +6113,13 @@ static void ibmvfc_init_sub_crqs(struct ibmvfc_hos=
+t *vhost)
+> =20
+>  	ibmvfc_reg_sub_crqs(vhost, &vhost->scsi_scrqs);
+> =20
+> +	if (vhost->nvme_enabled) {
+> +		if (ibmvfc_alloc_channels(vhost, &vhost->nvme_scrqs))
+> +			vhost->nvme_enabled =3D 0;
+> +		else
+> +			ibmvfc_reg_sub_crqs(vhost, &vhost->nvme_scrqs);
 
 [Severity: High]
-Will this unconditional size expansion break backwards compatibility with o=
-lder
-Virtual I/O Server (VIOS) firmware?
+Does a failure to register NVMe sub-queues unintentionally disable SCSI
+multiqueue support here?
 
-Since the driver calculates the MAD length dynamically using sizeof():
+If ibmvfc_reg_sub_crqs() fails while registering the NVMe channels, it hand=
+les
+the error by unregistering the partial channels and setting a shared host f=
+lag:
 
-drivers/scsi/ibmvscsi/ibmvfc.c:__ibmvfc_tgt_get_implicit_logout_evt() {
+ibmvfc_reg_sub_crqs() {
     ...
-    mad->common.length =3D cpu_to_be16(sizeof(*mad));
-    ...
+    if (ibmvfc_register_channel(vhost, channels, i)) {
+        for (j =3D i; j > 0; j--)
+            ...
+        vhost->do_enquiry =3D 0;
+        return;
+    }
 }
 
-This changes the length sent for version 1 IBMVFC_IMPLICIT_LOGOUT operations
-from 40 bytes to 96 bytes. Could older VIOS versions that strictly validate
-MAD lengths against the version 1 specification reject this payload, breaki=
-ng
-target teardown and error recovery?
+Since ibmvfc_reg_sub_crqs() is now called for NVMe right after successfully
+registering the SCSI sub-queues, setting vhost->do_enquiry to 0 upon an NVMe
+registration failure will cause the driver to skip channel enquiry during t=
+he
+NPIV login sequence.=20
+
+Will this cause the successfully registered SCSI channels to be silently
+ignored if the hypervisor rejects the NVMe sub-crqs allocation?
+
+> +	}
+> +
+>  	LEAVE;
+>  }
+>
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260623013035.3436=
-640-1-tyreld@linux.ibm.com?part=3D2
+640-1-tyreld@linux.ibm.com?part=3D5
