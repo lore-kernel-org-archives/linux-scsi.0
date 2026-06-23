@@ -1,219 +1,148 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from canpmsgout07.his.huawei.com (canpmsgout07.his.huawei.com [113.46.200.222])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4D5042C21FF
-	for <linux-scsi@vger.kernel.org>; Tue, 23 Jun 2026 02:09:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 13FE9386573;
+	Tue, 23 Jun 2026 02:43:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.222
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782180599; cv=none; b=o1GLTeMQkcpdVwEvFjZgEJuqq0U7fuzdxIkBtR7VWTPYSds9QnA1ppptxQdT++mfijhfQyMrX/ZEX1iHKK0xD7Z0mPjvGMw0xPxUd6/I3ht+HZOJbEvZfxOztKOaGXRrjU6O7ZFpAeaIawz7FqfUHFu+gJX4sGmO/NRr9cMeO6s=
+	t=1782182591; cv=none; b=L55jtKy1b8gZv7tcBWsgS0y+2vKQ7ORn4Xc62jp5QlRH3ietje5vtoGKiDPPxWWz1H9lXBX5TJVYozcWsoO752g2iMDrvCNpU6LSDKTqgEE4EEmnrvFhqrhvkxh6QJTno2TxJ9/oEfxbGJZY6coknhFPTpzqagKSMqBIu7YYgOs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782180599; c=relaxed/simple;
-	bh=c99THpIc0k4iOZli3exFBOV8ciAcS2BVqW7NmXBG5zw=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=eJqdSf2iYMs09gArtRss21Qc8U+4odY9RA/249nAAK/sFVKS1uCb/Rcwm13V/BbhGjVm9hE1wSElGaCpKIsbfwPxGJkrFJ9bLVrCpUAzpJ2QlWEtiwBpmXQ2QtfqMLKRsRbbXpUZw1vVTbVQc7GFZUfq3uiFae7RgXjTD6cFpF8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BHoF5aC7; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1782182591; c=relaxed/simple;
+	bh=Bk31ZOHLQ62OcEif6Jy+RlwCSunmGnPuUPPhdBgK84Q=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=DwaAW0TQ+TQ8K6ijj6naH+MgIAwLFkDO5C/3wOXM8CBI6JmXKnT6QL50x1hlyf6SeAEeRseNQ5KEA/f6hj3Nb1UfcFmJvPipyk01WiuweLiNvFUMNu/l4E/wCo5w52C4qw/JDBhZrmdRXKi6ZduldC4hoJzg34KkJF5GQPDYPlI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=h-partners.com; dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b=o+Z1sHnB; arc=none smtp.client-ip=113.46.200.222
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=h-partners.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BHoF5aC7"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D10391F000E9;
-	Tue, 23 Jun 2026 02:09:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782180598;
-	bh=bN2LH9sYPpGzKvBsTPbn1MLIFL+GTUYhsalgo0cSizM=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=BHoF5aC7WQTaJIOsAZrPajQR8WPx8jLKNsKUng0fidCWgSArZA1H8ZkIZrXaf3RA7
-	 gV2M8uOOAZKekG9W7EpPGYYI7AcF38DrMN55KQSrjB/acX0Ry/S/F1/bCnAqWgOP04
-	 f4Xa5jYeLsmN3ZwA4UtSTFPzSPMcIm32ie3sSWKUm9pKVw7THZ9Plgfm/mAnbROB0E
-	 NqzyUQdi1DBm3FuSERzUnx7QY2Uz5iAtZX+csLbeBpYYcRn0W3RVYbpxH1pVMDPsUs
-	 IRfLmiycMzoEBfrQxck0+/9atD6HK5ydl6DQ/5LwFboBfZbOVMqcqwN98jV/kTuBeP
-	 X/Mjk2765PEWg==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 27/29] ibmvfc: implement nvme-fc LS abort handling
- callback
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Tyrel Datwyler" <tyreld@linux.ibm.com>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260623013035.3436640-28-tyreld@linux.ibm.com>
-References: <20260623013035.3436640-1-tyreld@linux.ibm.com>
- <20260623013035.3436640-28-tyreld@linux.ibm.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 23 Jun 2026 02:09:57 +0000
-Message-Id: <20260623020957.D10391F000E9@smtp.kernel.org>
+	dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b="o+Z1sHnB"
+dkim-signature: v=1; a=rsa-sha256; d=h-partners.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=snZmvHD9v3orXJ83d9Yx+qWy47ASLzWZ+/nIWNyosh0=;
+	b=o+Z1sHnBPWlL5EkgA9dyDe2ZirUvSYEgcxSc2ezl4WE4viFcmYbLFR9Wkkfq0GYeFFhA8+sLW
+	/dOpnSrp0X4HRooXlvwYKu5JJjsfkfkrY3A1gfgOyFE5t++fp65sCoIgZtAPFhPLkWg3FmvRpF7
+	RNhyQpXhoSBosfyoyIt+8kY=
+Received: from mail.maildlp.com (unknown [172.19.163.127])
+	by canpmsgout07.his.huawei.com (SkyGuard) with ESMTPS id 4gkpzX4svGzLlZ5;
+	Tue, 23 Jun 2026 10:34:00 +0800 (CST)
+Received: from kwepemj100018.china.huawei.com (unknown [7.202.194.12])
+	by mail.maildlp.com (Postfix) with ESMTPS id 376E840572;
+	Tue, 23 Jun 2026 10:43:05 +0800 (CST)
+Received: from localhost.localdomain (10.50.163.32) by
+ kwepemj100018.china.huawei.com (7.202.194.12) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.36; Tue, 23 Jun 2026 10:43:04 +0800
+From: Xingui Yang <yangxingui@huawei.com>
+To: <john.g.garry@oracle.com>, <yanaijie@huawei.com>, <jejb@linux.ibm.com>,
+	<martin.petersen@oracle.com>
+CC: <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linuxarm@huawei.com>, <liyihang9@h-partners.com>, <yangxingui@huawei.com>,
+	<liuyonglong@huawei.com>, <kangfenglong@huawei.com>
+Subject: [PATCH v8 0/2] libsas: rediscover improvements for linkrate/sas_addr changes
+Date: Tue, 23 Jun 2026 10:43:02 +0800
+Message-ID: <20260623024304.714582-1-yangxingui@huawei.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: kwepems100002.china.huawei.com (7.221.188.206) To
+ kwepemj100018.china.huawei.com (7.202.194.12)
 
-Thank you for your contribution! Sashiko AI review found 7 potential issue(=
-s) to consider:
-- [High] The allocated ibmvfc_event structure is leaked on early return if =
-the virtual host is not logged in.
-- [High] Recursive spinlock self-deadlock or Use-After-Free on `ibmvfc_send=
-_event()` failure.
-- [High] Unsynchronized access to a potentially freed event structure (`abt=
-_evt`) via `ls_abort->private` leads to a Use-After-Free.
-- [High] Event leak when `ibmvfc_send_event()` fails, bypassing the freeing=
- logic.
-- [Medium] Logic inversion defeats the `IBMVFC_CAN_SUPPRESS_ABTS` capabilit=
-y check.
-- [Low] Uninitialized stack variable `status` is read and printed on the er=
-ror path.
-- [Low] Returning a SCSI midlayer error code (`SCSI_MLQUEUE_HOST_BUSY`) to =
-the NVMe FC transport causes unintended API violations.
---
+When a device attached to an expander phy experiences a linkrate change
+(e.g., due to cable reconnection or negotiation), the current code in
+sas_rediscover_dev() treats it as "broadcast flutter" and takes no action
+if the SAS address and device type remain unchanged.
 
-commit e8f5bb9c65a6243c394bbc91b4a31f61c71ee322
-Author: Tyrel Datwyler <tyreld@linux.ibm.com>
+This series is based on John Garry's suggestion [1] to check the linkrate
+and mark the device as gone and rediscover when flutter occurs, replacing
+the previous v2 patch series that used lldd callbacks.
 
-ibmvfc: implement nvme-fc LS abort handling callback
+The previous v2 approach added lldd_dev_info_update callback which John
+commented as "seem fragile and too specialized" [2]. This series adopts
+a simpler approach that directly checks linkrate/sas_addr changes in
+sas_rediscover_dev() and triggers rediscovery using libsas's standard
+async discovery pattern.
 
-Implement the NVMe FC-LS abort callback by issuing an ibmvfc cancel MAD
-to the VIOS for the outstanding link-service request.
+This aligns with Jason Yan's earlier work [3] which was verified to
+solve the linkrate change issue.
 
-Use the saved event pointer from the original FC-LS request to identify
-the command to cancel, submit the cancel operation, and complete the
-abort request based on the returned status.
+Additionally, per the discussion in v3 [4], the existing replace code
+path also suffers from the same sysfs duplication issue:
+sas_unregister_devs_sas_addr() only marks the device as gone, but the
+actual sysfs cleanup happens later in sas_destruct_devices(). Calling
+sas_discover_new() immediately after unregister causes sysfs_warn_dup()
+errors. This series also optimizes the replace path to use the async
+pattern, ensuring proper ordering for both flutter and replace cases.
 
-> diff --git a/drivers/scsi/ibmvscsi/ibmvfc-nvme.c b/drivers/scsi/ibmvscsi/=
-ibmvfc-nvme.c
-> index bff469d0b47df..18e8657abc444 100644
-> --- a/drivers/scsi/ibmvscsi/ibmvfc-nvme.c
-> +++ b/drivers/scsi/ibmvscsi/ibmvfc-nvme.c
+Changes from v7:
+Addressed issues identified by Sashiko AI review [5][6]:
+- In sas_dev_is_flutter(), reorder sas_addr check before linkrate check
+  to ensure address restoration is not skipped when both change
+  simultaneously, preventing device leak
+- In sas_dev_is_flutter(), hold a kref on child_dev across the
+  sas_ex_phy_discover() call to prevent use-after-free
+- In sas_ex_to_dev(), add defensive NULL check for ex_dev to guard
+  against callers passing a NULL device
 
-[ ... ]
+Not addressed (pre-existing subsystem design):
+- sas_find_dev_by_rphy() returns unreferenced pointer: subsystem-wide
+  pattern used by 10+ call sites, should be a separate patch
+- ex_phy->port TOCTOU: discovery path is serialized by disco_mutex,
+  no race occurs in practice
 
-> @@ -159,10 +161,72 @@ static int ibmvfc_nvme_ls_req(struct nvme_fc_local_=
-port *lport,
+Changes from v6:
+- Add comment for restoring phy->attached_sas_addr to child_dev->sas_addr
+- Optimize the conditional structure in sas_dev_is_flutter()
 
-[ ... ]
+Changes from v5:
+- In sas_addr change handling, restore phy->attached_sas_addr to
+  child_dev->sas_addr before returning false, ensuring
+  sas_unregister_devs_sas_addr() can properly match the device via
+  sas_phy_match_dev_addr() for correct device unregistration
 
-> +static void ibmvfc_init_ls_abort(struct ibmvfc_event *evt, struct nvmefc=
-_ls_req *ls_abort)
-> +{
-> +	struct ibmvfc_tmf *tmf;
-> +	struct ibmvfc_event *abt_evt =3D ls_abort->private;
-> +	struct ibmvfc_target *tgt =3D abt_evt->tgt;
+Changes from v4:
+- Rename sas_rediscover_phy to sas_rediscover_ex_phy for consistency
+  with expander phy symbol naming convention
+- Rename sas_is_flutter to sas_dev_is_flutter per John's suggestion
+- Check return value of sas_ex_phy_discover() for errors
+- Factor out child_dev checks to improve code clarity
 
-[Severity: High]
-Can this sequence actually occur? If the NVMe FC transport invokes the abort
-callback concurrently with the normal completion of the LS request, could
-ibmvfc_ls_req_done() complete the request and free abt_evt to the pool befo=
-re
-we access abt_evt->tgt here?
+Changes from v3:
+- Also optimize the replace code path to use async discovery pattern
+- Introduce sas_is_flutter() and sas_rediscover_phy() helpers
+  to encapsulate the flutter handling logic and avoid function bloat
+- Fix replace code path sysfs duplication issue
 
-> +	struct ibmvfc_host *vhost =3D evt->vhost;
-> +
-> +	tmf =3D &evt->iu.tmf;
-> +	memset(tmf, 0, sizeof(*tmf));
-> +	tmf->common.version =3D cpu_to_be32(2);
-> +	tmf->target_wwpn =3D cpu_to_be64(tgt->wwpn);
-> +	tmf->common.opcode =3D cpu_to_be32(IBMVFC_NVMF_TMF_MAD);
-> +	tmf->common.length =3D cpu_to_be16(sizeof(*tmf));
-> +	if (vhost->state !=3D IBMVFC_ACTIVE)
-> +		if (!ibmvfc_check_caps(vhost, IBMVFC_CAN_SUPPRESS_ABTS))
-> +			tmf->flags =3D cpu_to_be32(IBMVFC_TMF_SUPPRESS_ABTS);
+Changes from v2:
+- Drop lldd_dev_info_update callback approach per John Garry's suggestion
+- Drop hisi_sas specific changes (no longer needed without callback)
+- Use libsas's async discovery pattern for rediscovery
+- Add sas_addr change detection alongside linkrate change
 
-[Severity: Medium]
-Does this logic correctly evaluate the capability? The check evaluates to t=
-rue
-only when the adapter does not support suppressing ABTS, which appears to
-set IBMVFC_TMF_SUPPRESS_ABTS on adapters that do not support it, and omits
-it on adapters that do.
+Changes from v1:
+- Split into three patches
 
-> +	tmf->cancel_key =3D cpu_to_be32((u64)abt_evt);
-> +	tmf->my_cancel_key =3D cpu_to_be32((u64)evt);
-> +	tmf->assoc_id =3D cpu_to_be64(tgt->assoc_id);
-> +
-> +	init_completion(&evt->comp);
-> +}
-> +
->  static void ibmvfc_nvme_ls_abort(struct nvme_fc_local_port *lport,
->  				struct nvme_fc_remote_port *rport,
->  				struct nvmefc_ls_req *ls_abort)
->  {
-> +	struct ibmvfc_host *vhost =3D lport->private;
-> +	struct ibmvfc_target *tgt =3D rport->private;
-> +	struct ibmvfc_event *evt;
-> +	union ibmvfc_iu rsp;
-> +	unsigned long flags;
-> +	u16 status;
-> +
-> +	evt =3D ibmvfc_get_event(&vhost->crq);
-> +	if (!vhost->logged_in || !evt)
-> +		return;
+[1] https://lore.kernel.org/linux-scsi/c4e4c99f-a13c-4e28-8650-48be1f96d7cf@oracle.com/
+[2] https://lore.kernel.org/linux-scsi/28bd9d5b-f597-0aae-5340-bd951b2083aa@huawei.com/
+[3] https://lore.kernel.org/linux-scsi/20190130082412.9357-6-yanaijie@huawei.com/
+[4] https://lore.kernel.org/linux-scsi/b99cd59f-b986-432e-aaf1-3b757e1c4c34@oracle.com/
+[5] https://lore.kernel.org/linux-scsi/20260611062530.3B6651F00898@smtp.kernel.org/
+[6] https://lore.kernel.org/linux-scsi/20260611062833.357031F00893@smtp.kernel.org/
 
-[Severity: High]
-Does this code leak the event structure? If vhost->logged_in is false,
-ibmvfc_get_event() might successfully allocate an event from the vhost->crq
-pool, but returning immediately here leaves the allocated event unreleased.
-Repeated abort attempts could permanently exhaust the event pool.
+Xingui Yang (2):
+  scsi: libsas: refactor sas_ex_to_ata() using new helper
+    sas_ex_to_dev()
+  scsi: libsas: Add linkrate and sas_addr change detection in rediscover
 
-> +
-> +	spin_lock_irqsave(vhost->host->host_lock, flags);
-> +	kref_get(&tgt->kref);
-> +	ibmvfc_init_event(evt, ibmvfc_sync_nvme_completion, IBMVFC_MAD_FORMAT);
-> +	ibmvfc_init_ls_abort(evt, ls_abort);
-> +	evt->sync_iu =3D &rsp;
-> +
-> +	if (ibmvfc_send_event(evt, vhost, default_timeout))
+ drivers/scsi/libsas/sas_expander.c | 107 ++++++++++++++++++++++++-----
+ drivers/scsi/libsas/sas_internal.h |   1 +
+ 2 files changed, 89 insertions(+), 19 deletions(-)
 
-[Severity: High]
-Can this lead to a recursive self-deadlock or a use-after-free?
+-- 
+2.43.0
 
-If ibmvfc_send_event() fails, it invokes evt->done(evt) synchronously:
-
-ibmvfc_send_event()
-    if (rc)
-        evt->done(evt);
-
-If the event is fresh, evt->done remains ibmvfc_locked_done(), which attemp=
-ts
-to acquire vhost->host->host_lock. Since this lock is already held here bef=
-ore
-calling ibmvfc_send_event(), will this self-deadlock?
-
-Additionally, because ibmvfc_init_event() doesn't zero evt->ls_req or
-evt->fcp_req, could recycled events contain stale pointers that cause a
-use-after-free when ibmvfc_send_event() evaluates those fields and replaces
-evt->done with ibmvfc_vfc_eh_done() on failure?
-
-[Severity: Low]
-On a related note regarding ibmvfc_send_event(), when the receive queue is
-closed it returns SCSI_MLQUEUE_HOST_BUSY. In places like ibmvfc_nvme_fcp_io=
-()
-that directly return the output of ibmvfc_send_event(), does returning a
-positive SCSI midlayer error code to the NVMe FC transport cause unintended
-API violations? The NVMe FC transport typically expects 0 for success or
-standard negative error codes.
-
-> +		goto out;
-
-[Severity: High]
-Does this goto skip the event cleanup? Although ibmvfc_send_event()'s error
-path executes evt->done, ibmvfc_sync_nvme_completion() only calls complete()
-on the event wait structure, meaning the event is never explicitly freed and
-could be permanently leaked.
-
-> +
-> +	spin_unlock_irqrestore(vhost->host->host_lock, flags);
-> +
-> +	wait_for_completion(&evt->comp);
-> +	status =3D be16_to_cpu(rsp.mad_common.status);
-> +	spin_lock_irqsave(vhost->host->host_lock, flags);
-> +	ibmvfc_free_event(evt);
-> +out:
-> +	spin_unlock_irqrestore(vhost->host->host_lock, flags);
-> +	ibmvfc_dbg(vhost, "ls_abort: cancel failed with rc=3D%x\n", status);
-
-[Severity: Low]
-Is status uninitialized when we reach the out label? If ibmvfc_send_event()
-fails and triggers the goto, status is never assigned and might leak
-uninitialized stack memory into the logs.
-
-> +	kref_put(&tgt->kref, ibmvfc_release_tgt);
->  }
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260623013035.3436=
-640-1-tyreld@linux.ibm.com?part=3D27
