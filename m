@@ -1,109 +1,114 @@
-Received: from mail-wr1-f42.google.com (mail-wr1-f42.google.com [209.85.221.42])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2918D314B76
-	for <linux-scsi@vger.kernel.org>; Tue, 23 Jun 2026 06:32:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.221.42
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782196356; cv=pass; b=N35XhB/YRaJSJdy4mia7haEtrwRrgYQ7qmKJweHJyhQh8Pd++1/lszGVZA64+m0+ZpitDzoc8DcnfR/s7cP7cYQPSiKvWhfGjDllScLI8wjOOWJblDe13a6ICK1P0jdgw4idubvdquUFY3ZqjY1jaAWxnjER2X5g/yavNWbn1LE=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782196356; c=relaxed/simple;
-	bh=QwIjawHJqOj5H0dPQva+4F8BGF+VPFnCtHxr73rBkhM=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=cnrrFbBmR+WktZEiXWFKrr2VZiMtGTvqH0zBersGp/uAli+hB2weg7bul16I5ysmFCPaFG+Yf2EgpvTnIVieUbLKJ6bThsTBvoKfEAHlHeD4TTHjocfoP4XeLFwCp9rEUb7AhOwst0549Dhv6VIV6HUnw6tBm8wMZ4o9LXx1l4Y=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=b3R569BF; arc=pass smtp.client-ip=209.85.221.42
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0C315314B76;
+	Tue, 23 Jun 2026 06:33:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1782196417; cv=none; b=eXuWwJXpZGfqk9F9+fExhSyxSZHwGSezqTIMSY6g9asYMvsZaEsale55fFzUnMZB2nvv2QSBbT5uPs5Y7UTn82/Fl3qDlstAlwFsMJ8xbJSd91350f8GFajJzeOiS0I7XHP51DYCCcdojQ3Hqs0a73O73+FVlPHpccrmvvnS+GY=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1782196417; c=relaxed/simple;
+	bh=unHidGKrvaOpMkqzdsAS+bgVQsQ+I5bc+1nM1sLdqNo=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=e2/l9fxzVb6J9DVxyfkEE6kTTO7cD17P2K0VbVJU+llLNjdBhyPDSgRGM0cZ2Rjzcdx7oKnPTROk8qLIQ39ofjI5pPpFvZji45mHQWn+AtYgBC9gFl7qyjSDHJKuctw6Qo8mTQXULzVR/yWf3uoj7cjkqb2YLeUW9Ww74qo5I0M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DqeVfJ0t; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="b3R569BF"
-Received: by mail-wr1-f42.google.com with SMTP id ffacd0b85a97d-46019b190b6so4000748f8f.3
-        for <linux-scsi@vger.kernel.org>; Mon, 22 Jun 2026 23:32:35 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1782196354; cv=none;
-        d=google.com; s=arc-20240605;
-        b=Xq8AbP1g1tpsdK/vyEKPrtoNFvUQmsuZUww9/NxfI7SSliToH5H0UV6rhSY5GH5XLF
-         VR7LDDfbiRREkDyPGEPAmv42Nv7vz3S1sw5dm8vbwJW2SWUScdRV1IByd52yM4n/AIr5
-         eJd1O2qkZDKGmHNdpbEGZxA/5DUS8tbon1quF2tihI47pTT0eiHgqf5Y4k6ZThI3Icau
-         GUuUushv/PUK4K6w/TlQoc8FokjUmPQnYSwW/aPUF1K2874mxmw859UjNjswhu2XyGK/
-         Rr58VKNLwj2bJwjeE1iRtKujrP1NANYHr0KkGAoOkRwv9PZojNzQlI+piJ/RaJqb5EbI
-         etjA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:dkim-signature;
-        bh=QwIjawHJqOj5H0dPQva+4F8BGF+VPFnCtHxr73rBkhM=;
-        fh=5W7KM5aUfcVSFJeBUhtS6L1Wyn67U9GIwTWTyTZbn40=;
-        b=Y9YlYoR1r/1uL02nXuxThzkxby5PZWnyBUQgNdBH5TGL9CM7x1Brmsair43nlEwuVA
-         TO4InRF9HUqKmR6CmnqUuNs7vNTjyB2RHGfXvsfU+yfq/1K1moYLCCaWkQL8S5/Ez1rL
-         SEJmsfz/YK7+4YbTgcEB5M/BEk9/FZbFyAPAjbXQ9wyYBkoMz8CZuQ5pgv2qto6zqoNo
-         2V3q3ULShxY+pVeaX/gNNJ7+zGmBnXgFp/hG/zhwf+px72YUaLlg/3JWN4vMvk2Nmz3Q
-         +zh+Qqeq9rJvyiCSDPh3m0BGxF63w+ue9B4+t9ygeLqSjHTXooiGwxN79tw8Hl5jtVhY
-         dv7g==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1782196354; x=1782801154; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=QwIjawHJqOj5H0dPQva+4F8BGF+VPFnCtHxr73rBkhM=;
-        b=b3R569BFS0yQceX11VwL5RTzlckrhPn5/01VcCNemng4ryhm1ugCUblsn6hv8vtato
-         3SOXjYQNrB+Dy8HPrSUOMiRYGma8VcYZNyZdo75hAt50VwzqVgaNhRyCPSrZ6028mlsA
-         UZ3g0mplKflV0ukKtyOqQLo15orERy7igDaaLzqHWKJJagNYH6DA4ZNXm7vuV/uMHKdJ
-         QESslU10LhSY4BhKoCFGDAObYBOQftm5Hfkp8TuU5QKzQ4Dl7xZ6UD+JJQGs+pLlNA1i
-         wSZoBnYRdFTNXHr4Y6ScwoZMJDF13f7m5M+DwieFb337Y4gwVvPeISC02VXjTo63Xm7Z
-         wQLw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1782196354; x=1782801154;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=QwIjawHJqOj5H0dPQva+4F8BGF+VPFnCtHxr73rBkhM=;
-        b=LVggOsolmhDL96wQKuWmQQ2pTiAVL5t3gIgu08/BWmBCeA7idZy+rFUPvuoFu5GkVA
-         wtOCnPBlVNUX2gyQ9BfZOCHXMDdZXjZkmHgyMohKq/gkBcXR3nz9d2t3bqRhPXEIugIa
-         P6MPAn/EozA8X5Ka5BFms6kZxHmki4/ke4z670hVHKKIHMok3vxTTkbefpLQZSSebcCK
-         6kuWNPeUDivGX+AVVzCbxdC8a9bpADFFbJMpg3/hAfAHULBlO1hlEfBwl5Wc4ETt90Vs
-         w3IWoq3fQqKdcXnFkVJxl7BVqesBfm7GRhkbUPcyymYLPBZBhn1phpHmKure1uS1QBSW
-         l62w==
-X-Forwarded-Encrypted: i=1; AFNElJ9eAFuiZHO+9ZqRXhdhDMHjmnowbqNDQWWuxVM1BEk7s6I/h+C584qjk9cfUFQ3Fkg2Vqhn/pyyuxpK@vger.kernel.org
-X-Gm-Message-State: AOJu0YzOdZFtgRHEZyWaaYBwCZ+eLhLbMSGI4rYZdJwp5tAAlbqAE3Oi
-	vvRs1MWAkY061Pij1jVn4wlt+ZwQqrjoX2lF6VD8ZauvkYf7E6r5Uc4Kx9+pzMQQeisximFyXDo
-	Yovdg07XY5oGgHUQK3mIl5K89fZlQ9E8=
-X-Gm-Gg: AfdE7cn4LHdlF8GavB4syGVj+nCsyOSQhZ7Z09wN3qKEAVXsZghJw1vp8NhX3nLO5i8
-	6vuJhCatZmfpRm9zDqbvd/UdKHwk8H98zMCq0sxS/gmINCZIyAv3xpUZAVY1WRDI2u4w+HPtWR3
-	6a9IjAf+KF4XVjwIMBMNUS0vp/o2z1vDA6X93X6mpJSiJuIWb5ETp5YOuD7anoca6GUF0Z3rIjT
-	rknFHHckhKpFzhmPpMa9nG+hz/kV6IxU2yftqLxfZfov6m0k1JC1vckX2VMYEA4bPISEb/L
-X-Received: by 2002:a05:600c:628d:b0:492:4668:27b5 with SMTP id
- 5b1f17b1804b1-4925b3896dbmr17301765e9.6.1782196353485; Mon, 22 Jun 2026
- 23:32:33 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DqeVfJ0t"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 95F701F000E9;
+	Tue, 23 Jun 2026 06:33:31 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1782196415;
+	bh=TJVx3Nd5w3IxezMNcxefyA9B50Vx2xuvEct5vcFTeJ4=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=DqeVfJ0tot+jLCX6K1vzNcv2T29W7RyMtjPf7NVp/9pt9IzFx+KhjWKWV04o0TdyD
+	 F3+YN8grie5LUjpE6qHN9vgsXG8XB5Xhx9pukzJLTGku+zRUDnNBALfuiXe7GFE/Y5
+	 flUyeP8xdIfpkbj+yv4nynr8sMlmF76SaQ1tCMWEvEkkk3tXGJvDvPll1Z1+2Z+o54
+	 1wRX7EEcKWKAW/hgaRYQcradMUHG71ODsec7iSkjxM74A6qrabjnKjq8+SRQ+B98W+
+	 X9yT+DZyJSKZrj67CpWT19BKRagnEdL47PlEPbHExCfuL9uYy+tN4Cu4KXJIQGyRne
+	 BalO43mTS8RDw==
+Date: Tue, 23 Jun 2026 08:33:26 +0200
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Can Guo <can.guo@oss.qualcomm.com>
+Cc: bvanassche@acm.org, beanhuo@micron.com, peter.wang@mediatek.com, 
+	martin.petersen@oracle.com, linux-scsi@vger.kernel.org, 
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
+	"open list:UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER..." <linux-arm-msm@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 1/3] scsi: ufs: ufs-qcom: Restore TX Equalization
+ settings on FOM failure
+Message-ID: <3e6codiksnngi442bitbvzgs222hl5poqi7o7chtt4ulnq7na3@4otqpolqzhbs>
+References: <20260620080322.3765210-1-can.guo@oss.qualcomm.com>
+ <20260620080322.3765210-2-can.guo@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <178214622623.2376914.7843191393281628987@maoyixie.com> <82be2f83-5454-47cb-8719-b259209a5e2b@gmail.com>
-In-Reply-To: <82be2f83-5454-47cb-8719-b259209a5e2b@gmail.com>
-From: Maoyi Xie <maoyixie.tju@gmail.com>
-Date: Tue, 23 Jun 2026 14:32:22 +0800
-X-Gm-Features: AVVi8CerLroODDKDgIcaK-BNCNegXQKRvgiych1sIwc3taaWHJh7M7qYdmm9u6Y
-Message-ID: <CAHPEe=GH8GJzrrpuBEoEzn1HXcHRbOot1MutFQeXbReR3i_w=w@mail.gmail.com>
-Subject: Re: lpfc: unbounded QFPA response length in lpfc_cmpl_els_qfpa()
-To: Justin Tee <justintee8345@gmail.com>
-Cc: Justin Tee <justin.tee@broadcom.com>, Paul Ely <paul.ely@broadcom.com>, 
-	"Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, 
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260620080322.3765210-2-can.guo@oss.qualcomm.com>
 
-Hi Justin,
+On Sat, Jun 20, 2026 at 01:03:20AM -0700, Can Guo wrote:
+> ufs_qcom_get_rx_fom() applies temporary device TX Equalization values
+> before forcing HS mode and running the EOM-based SW FOM scan.
+> 
+> When one of these steps fails, the function can bypass the shared
+> cleanup path and leave temporary TX Equalization settings programmed.
+> 
+> Route those failures through the cleanup label so the original TX EQ
+> settings are restored and link recovery runs before exit.
+> 
+> This path also reuses ret for cleanup, so it may overwrite the original
+> error. Keep that on purpose: if cleanup succeeds, the caller can proceed
+> with the FOM result for the current iteration.
+> 
+> Signed-off-by: Can Guo <can.guo@oss.qualcomm.com>
+> ---
+>  drivers/ufs/host/ufs-qcom.c | 9 ++++-----
+>  1 file changed, 4 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+> index c084ccc72523..7d7c001435bf 100644
+> --- a/drivers/ufs/host/ufs-qcom.c
+> +++ b/drivers/ufs/host/ufs-qcom.c
+> @@ -2791,7 +2791,7 @@ static int ufs_qcom_get_rx_fom(struct ufs_hba *hba,
+>  	if (ret) {
+>  		dev_err(hba->dev, "%s: Failed to apply TX EQ settings for HS-G%u: %d\n",
+>  			__func__, gear, ret);
+> -		return ret;
+> +		goto link_recover_and_restore;
 
-Thanks for the quick reply.
+IIUC, if ufshcd_apply_tx_eq_settings() fails, then it means the TX EQ settings
+were not applied. So do we really need to restore the original TQ EQ here?
 
-> Is it possible to provide the fabric switch and target hardware details,
-> i.e. model and version numbers, used to reproduce this issue?
+>  	}
+>  
+>  	/* Force PMC to target HS Gear to use new TX Equalization settings. */
+> @@ -2799,16 +2799,15 @@ static int ufs_qcom_get_rx_fom(struct ufs_hba *hba,
+>  	if (ret) {
+>  		dev_err(hba->dev, "%s: Failed to change power mode to HS-G%u, Rate-%s: %d\n",
+>  			__func__, gear, ufs_hs_rate_to_str(rate), ret);
+> -		return ret;
+> +		goto link_recover_and_restore;
+>  	}
+>  
+>  	ret = ufs_qcom_host_sw_rx_fom(hba, pwr_mode->lane_rx, fom);
+> -	if (ret) {
+> +	if (ret)
+>  		dev_err(hba->dev, "Failed to get SW FOM of TX (PreShoot: %u, DeEmphasis: %u): %d\n",
+>  			d_iter->preshoot, d_iter->deemphasis, ret);
+> -		return ret;
+> -	}
+>  
+> +link_recover_and_restore:
+>  	/* Restore Device's TX Equalization settings. */
+>  	ret = ufshcd_apply_tx_eq_settings(hba, &hba->tx_eq_params[gear - 1], gear);
+>  	if (ret) {
 
-I do not have the switch or target hardware. I found this by reading
-the QFPA path in lpfc on 7.1-rc7 and tried it in a small local test.
+'ret' will be overridden here and '0' might be returned to the caller.
 
-I understand your point about the trusted source within the fabric. I
-appreciate you taking the time to look at this.
+- Mani
 
-Best,
-Maoyi
+-- 
+மணிவண்ணன் சதாசிவம்
