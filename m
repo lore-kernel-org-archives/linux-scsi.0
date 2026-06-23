@@ -1,122 +1,95 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D16C3769E3
-	for <linux-scsi@vger.kernel.org>; Tue, 23 Jun 2026 10:20:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E13FD3D3CEF;
+	Tue, 23 Jun 2026 11:24:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782210058; cv=none; b=Gprv7kvY7cODi/r25Fo1bDX4YXvGBnH0VwWKvWmigyKpGCR7BIojOvAgSlIh5cnMFdJxLheW6YGlYtpt8cKtHe/Yx5N3nW2Lw+6w6HNz7+8qAne5x8CVJ3HQjBdKsSRC9li0eqVXbCDVy+oZ+FH9BcFf2d1U8TV6Ol/kc8o0JpM=
+	t=1782213887; cv=none; b=vDJdc0y6SCkBya+kAgM/3+j5DpyzWELzD81kq0EY7RqzwnxZluC/EMpwuPoWf7nKerQ1wvzk91MgFPIMYZGs2YdsjPiOKIrimXuDU5oi92vj3fWPHLfyG4B/l3nUCQPPJxtqWGr0AUMeRS4mSmVGQkHek5usgslJNOwUGIKex/Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782210058; c=relaxed/simple;
-	bh=ZZ+mzRNrLvuBLz6ICrajzx15TE4bRNOiPYdT1wUW03w=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=dVnPW4VEAVQq6wOW7ZyjBbTTiDVyvz8lYPKcuN2jPMk+CRYPYe6X2c5mgKMS9zY0XmKJ5pv+35tSoI8oITnA5DOMuXQpYi3sVAJWYtinWCgL8yBTLmWtffZTS4wh51uB6ct8959MEUQacTf8E6CfdGZbUmwJixINa8mXpkYEnI4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LwZN4Le4; arc=none smtp.client-ip=100.103.45.18
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LwZN4Le4"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E11C11F000E9;
-	Tue, 23 Jun 2026 10:20:56 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782210057;
-	bh=PRfZ2Pf5lzYSdE6C3fX7z76SQiJrB4SVq6gjO8B79Ek=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=LwZN4Le4TSFFTZBScoR7zkjmVgxpTtbgQ0jfKm7kdIYAc9IHG8h2ov9SbpZXbTBgL
-	 34i+7MoOeMYNxucI7whFX2xEB/iUdK5b1afYbuKsUqgjlAV0BcOCw1vgxEoj4wchzh
-	 GiYguoYcKJLdPQFaUA6CDN1CeeqE1aNIIEw34b60GdeauhLUBZKWI7tlVFhazNYszA
-	 xC8b/eP2POSHtTGLHoUa4V9kNwWIZoPMloo6pHwR8PlqId6O8vnFcq6Apo40nonz0m
-	 caQKsutyR53+si6pzxhmhMtvQ51Mdu0WP1kW7SkiQ7fzVcOMcyzV2ujoBELUJDFcAn
-	 uLJzicj+jXBhA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v1 3/4] scsi: sd: fix special_vec mempool leak when
- scsi_alloc_sgtables() fails
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Yang Xiuwei" <yangxiuwei@kylinos.cn>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260623100159.4018066-4-yangxiuwei@kylinos.cn>
-References: <20260623100159.4018066-1-yangxiuwei@kylinos.cn>
- <20260623100159.4018066-4-yangxiuwei@kylinos.cn>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 23 Jun 2026 10:20:56 +0000
-Message-Id: <20260623102056.E11C11F000E9@smtp.kernel.org>
+	s=arc-20240116; t=1782213887; c=relaxed/simple;
+	bh=8F2UYglKfcTF+eykTaNG40sEotWPB0loPhGNrQCuVwI=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=DYuebWSEa4RWvB2KYDCk4lr1ASbkC32Afix5wWzkSMBatkhM/AiZxxtdrN3xh4qXPkllVkqifMwTw6WmDHz3ytq++G/GoXc/Icb5DHCuCnEVScnhAvI/l+v0lO4ECfYzJ7NsHHz21se0D5i5scRi6YAylNu7X0iZTPZLvpPz1W8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
+X-UUID: 1f2cca006ef611f1aa26b74ffac11d73-20260623
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.3.12,REQID:5e3740d4-7035-4767-9bec-9164a60ddd5c,IP:0,U
+	RL:0,TC:0,Content:-5,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION
+	:release,TS:-5
+X-CID-META: VersionHash:e7bac3a,CLOUDID:d6899cbf62ed25ed1230be757a2743cd,BulkI
+	D:nil,BulkQuantity:0,Recheck:0,SF:102|865|898,TC:nil,Content:0|15|50,EDM:-
+	3,IP:nil,URL:0,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,A
+	V:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-BVR: 2,SSN|SDN
+X-CID-BAS: 2,SSN|SDN,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR
+X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
+X-UUID: 1f2cca006ef611f1aa26b74ffac11d73-20260623
+X-User: pengcan@kylinos.cn
+Received: from lenovo [(10.44.16.150)] by mailgw.kylinos.cn
+	(envelope-from <pengcan@kylinos.cn>)
+	(Generic MTA with TLSv1.3 TLS_AES_256_GCM_SHA384 256/256)
+	with ESMTP id 1149366949; Tue, 23 Jun 2026 19:24:38 +0800
+From: Can Peng <pengcan@kylinos.cn>
+To: skashyap@marvell.com,
+	jhasan@marvell.com,
+	James.Bottomley@HansenPartnership.com,
+	martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Can Peng <pengcan@kylinos.cn>
+Subject: [PATCH] scsi: bnx2fc: Use kmalloc_array() for array allocations
+Date: Tue, 23 Jun 2026 19:24:28 +0800
+Message-ID: <20260623112428.98097-1-pengcan@kylinos.cn>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
+Documentation/process/deprecated.rst discourages open-coded arithmetic
+in allocator arguments and recommends using the 2-factor allocator forms.
 
-Pre-existing issues:
-- [High] Concurrent updates to `sdp->sector_size` can cause `sd_uninit_comm=
-and()` to free a payload page to the wrong mempool.
---
+The unsolicited completion path allocates num_rq buffers of
+BNX2FC_RQ_BUF_SZ bytes, and task_ctx_dma is an array of task_ctx_arr_sz
+dma_addr_t entries. Use kmalloc_array() for both allocations.
 
-commit ba587f7eceae0f0ec53afb6d48daeb8d25456542
-Author: Yang Xiuwei <yangxiuwei@kylinos.cn>
+Signed-off-by: Can Peng <pengcan@kylinos.cn>
+---
+ drivers/scsi/bnx2fc/bnx2fc_hwi.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-scsi: sd: fix special_vec mempool leak when scsi_alloc_sgtables() fails
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_hwi.c b/drivers/scsi/bnx2fc/bnx2fc_hwi.c
+index a5ecb87d5b2d..af6d27c3966e 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_hwi.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_hwi.c
+@@ -655,8 +655,8 @@ static void bnx2fc_process_unsol_compl(struct bnx2fc_rport *tgt, u16 wqe)
+ 		if (rq_data) {
+ 			buf = rq_data;
+ 		} else {
+-			buf1 = buf = kmalloc((num_rq * BNX2FC_RQ_BUF_SZ),
+-					      GFP_ATOMIC);
++			buf1 = buf = kmalloc_array(num_rq, BNX2FC_RQ_BUF_SZ,
++						   GFP_ATOMIC);
+ 
+ 			if (!buf1) {
+ 				BNX2FC_TGT_DBG(tgt, "Memory alloc failure\n");
+@@ -1904,8 +1904,8 @@ int bnx2fc_setup_task_ctx(struct bnx2fc_hba *hba)
+ 	/*
+ 	 * Allocate task_ctx_dma which is an array of dma addresses
+ 	 */
+-	hba->task_ctx_dma = kmalloc((task_ctx_arr_sz *
+-					sizeof(dma_addr_t)), GFP_KERNEL);
++	hba->task_ctx_dma = kmalloc_array(task_ctx_arr_sz,
++					  sizeof(dma_addr_t), GFP_KERNEL);
+ 	if (!hba->task_ctx_dma) {
+ 		printk(KERN_ERR PFX "unable to alloc context mapping array\n");
+ 		rc = -1;
+-- 
+2.53.0
 
-sd_set_special_bvec() allocates a special payload page for UNMAP and
-WRITE SAME commands.  If scsi_alloc_sgtables() fails afterward in
-sd_setup_unmap_cmnd() or sd_setup_write_same{10,16}_cmnd(), the SCSI
-midlayer does not call uninit_command() because RQF_DONTPREP is not
-set yet, leaking the page.
-
-Call sd_uninit_command() on error, and clear RQF_SPECIAL_PAYLOAD after
-freeing the page.
-
-> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> index b096ea237f14a..6f05e7683df6d 100644
-> --- a/drivers/scsi/sd.c
-> +++ b/drivers/scsi/sd.c
-> @@ -958,6 +958,21 @@ static unsigned char sd_setup_protect_cmnd(struct sc=
-si_cmnd *scmd,
->  	return protect;
->  }
-> =20
-> +static void sd_uninit_command(struct scsi_cmnd *cmd)
-> +{
-> +	struct request *rq =3D scsi_cmd_to_rq(cmd);
-> +	struct scsi_device *sdp =3D cmd->device;
-> +
-> +	if (!(rq->rq_flags & RQF_SPECIAL_PAYLOAD))
-> +		return;
-> +
-> +	if (sdp->sector_size > PAGE_SIZE)
-> +		mempool_free(rq->special_vec.bv_page, sd_large_page_pool);
-> +	else
-> +		mempool_free(rq->special_vec.bv_page, sd_page_pool);
-
-[Severity: High]
-This is a pre-existing issue, but can checking sdp->sector_size here cause a
-page to be freed into the wrong mempool if the sector size changes
-concurrently?
-
-In sd_set_special_bvec(), the page is allocated based on sdp->sector_size:
-
-	if (sector_size > PAGE_SIZE)
-		page =3D mempool_alloc(sd_large_page_pool, GFP_ATOMIC);
-
-Concurrently, sd_revalidate_disk() calls sd_read_capacity(), which updates
-sdkp->device->sector_size directly before the block layer queue is frozen:
-
-	sdkp->device->sector_size =3D sector_size;
-
-If sdp->sector_size is modified and crosses the PAGE_SIZE boundary while an
-UNMAP or WRITE SAME request is in flight, could sd_uninit_command() read the
-new size and free the page to the wrong pool? This might be reachable by a
-malicious USB device returning a different sector size upon a media change.
-Since sd_large_page_pool uses high-order allocations, freeing an order-0 pa=
-ge
-into it could corrupt the page allocator and cause subsequent allocations to
-write out of bounds.
-
-> +	rq->rq_flags &=3D ~RQF_SPECIAL_PAYLOAD;
-> +}
-> +
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260623100159.4018=
-066-1-yangxiuwei@kylinos.cn?part=3D3
