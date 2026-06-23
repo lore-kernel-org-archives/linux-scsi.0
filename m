@@ -1,134 +1,132 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6861C370AC7
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C2C11372060
 	for <linux-scsi@vger.kernel.org>; Tue, 23 Jun 2026 01:51:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782179463; cv=none; b=Q+pGA+3bvyYgMekE4Wd8chKSa4cIEMqt3yPnet+h6KVXW2HepCp4Y6oWk4qe2qBrnuJXkc2zKjrzgjJAEYCxpvDtpTfB6H/4CLRFnY8NRjL2TcSyayU0ySJ/natmpuRpvrBs+3qzeIE2gZNhpXwBRklMZ5h/EBxu0NNBD+aFsRY=
+	t=1782179463; cv=none; b=jJ45q65Y1+HM5UpPzBK3sv8kde+PIbfskgjiOFf5oQk6ugyCt7+kdOccReuQvf53QJfc0SQ++erVhqdF4oqXahAxLGBlJc1OrjGD4AVmtwFHCvu6tBGh5kix1Sg7uYdxHTGc91JR2zW2VzGjJxoR/JSqbyCqOtwSQ49/avm1jg4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1782179463; c=relaxed/simple;
-	bh=pla9Mw1Cb53gbubsX6mS+25ADI5tSVTUe0ci4sI+vgs=;
+	bh=eeI00JFKukCXAocn7lSnjsolPoC3V0Ykl3JlFDjF8zM=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=Q74C3F7K4t3T3ATevALWMEf9yMXaZEOaxwVvSZbyjminFqC0wDfmyKAcOmUYUKo9PPuDZC4Sw86K7YDSq8Ymx+Iv4eluzCLgvMleJdEeIJIL7Sli04zoQPpi1Q5wMK8HPr/dajDLwakzWk7umBHSHGxvdBrIVW8YDhTooGEBiXE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iAaiVX9c; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=eUBojKmn3S2ZOt9n/k/Ls7WRwqLUpYf7jpYAwk3Y/2JUqgUD5TJL6UBLr7Fd+Sf6jyT2UOQSAsDQrHG0HK7bnrW9B8w9CHlCTuJuFyhbdwqCLabE8jlXcv7XGqCCThGC6oiL4rnPtmbV+lumm7najUe8oheDv3qEv+8MVr+FeNQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ocaR12Ge; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iAaiVX9c"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EBCBF1F000E9;
-	Tue, 23 Jun 2026 01:51:01 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ocaR12Ge"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8B36E1F00A3A;
+	Tue, 23 Jun 2026 01:51:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
 	s=k20260515; t=1782179462;
-	bh=x2VTV3E9/Z40anRuC0Mvac9006BiFQMgREWTeF2Hf9Q=;
+	bh=Thih9Gi+hkM7C6VSRFfZHMDAVqaOO5CmwbikPDXu9Ew=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=iAaiVX9cWNBfe5JwozSEXz36VHyQIdUeHJj5Qr5WvbyjaZhpCFtt8qnEfG81XUnvx
-	 GP8p1bYUYeYFPufrRblEXDs8zVXS/SdhfvEC/leXlHpUmaMCovaEzKGqMRmykeG0Nm
-	 9QmqT2oGuiBZTFHpFUTCmbRO/Av36ah3mU4AwuS6S4WQO6DXXSkxCObdXW/c3xMiKd
-	 CMnaNpSuFlcMKhJVTsNXV5hQnuRgbblkJuXJNrZXnJi7PsCWwCZytHonL3bewMgZ9E
-	 gg5ocBBbhnVlOAcz5sQE5QuLBKAEQDtYFnTxPo9VwFxg1MmtpNjowFeVggIqKg1Ckh
-	 jsdftxg2Zzo/A==
+	b=ocaR12GeZCTFV5WDOZD/MfY3cn+oYftzkSbchz8+l/8cUmlrzfJtwg52diZUay9Hi
+	 7/5wosmRLrID8vdZBU4TonsIpi9dG1vbwXlntNNsI9q22rUVE5OKVcA0FfWvAoBhHM
+	 DfpsIhFDFid6VTNifQ2JQYVKZXV6tR5MQeWhAkOGJsIsPEM8iUD6BPE2fcJVBN3nju
+	 4SnOg6ehx3kF3LMwQKdCf4zNKVOU6vmskpIyeMqSqHdF1in7VWgmaO4auboQ0zCxTy
+	 QxApPFd8COp94j8SWskzBI345DjKw1UnsNo7W5cWhP2IDZ4T1FNSzNDIKDzIS+KZn4
+	 0tx1viZ3+cRrg==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 19/29] ibmvfc: implement NVMe/FC stubs for local/remote
- port registration
+Subject: Re: [PATCH 04/29] ibmvfc: initialize NVMe channel configuration
+ during driver probe
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Tyrel Datwyler" <tyreld@linux.ibm.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260623013035.3436640-20-tyreld@linux.ibm.com>
+In-Reply-To: <20260623013035.3436640-5-tyreld@linux.ibm.com>
 References: <20260623013035.3436640-1-tyreld@linux.ibm.com>
- <20260623013035.3436640-20-tyreld@linux.ibm.com>
+ <20260623013035.3436640-5-tyreld@linux.ibm.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 23 Jun 2026 01:51:01 +0000
-Message-Id: <20260623015101.EBCBF1F000E9@smtp.kernel.org>
+Date: Tue, 23 Jun 2026 01:51:02 +0000
+Message-Id: <20260623015102.8B36E1F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
-- [High] Unconditional NULL pointer dereference in NVMe-FC local and remote=
- port unregistration paths.
+- [Medium] The user-configured module parameter for the number of NVMe hard=
+ware submission queues (`nvme_host_queues`) is ignored during NVMe queue in=
+itialization, preventing users from capping the maximum number of NVMe host=
+ queues.
+- [Medium] Bitfield truncation of unsigned integer module parameters can si=
+lently disable NVMe or create an inconsistent state.
 --
 
-commit 70b1c2d3d0ca257b156db2ba118e3a6f944e519d
+commit 8b0247aa812866f78c7701f707162de73d472772
 Author: Tyrel Datwyler <tyreld@linux.ibm.com>
 
-ibmvfc: implement NVMe/FC stubs for local/remote port registration
+ibmvfc: initialize NVMe channel configuration during driver probe
 
-Implement the initial NVMe/FC local-port and remote-port registration
-functions that notify the NVMe-FC midlayr of port discovery and loss.
+Initialize the host's NVMe channel-group state during probe. This prepares =
+the
+driver with a NVMe/FC channel group that can will be used by later patches =
+for
+NVMe queue allocation, discovery buffers, target management, and IO
+submission.
 
-> diff --git a/drivers/scsi/ibmvscsi/ibmvfc-nvme.c b/drivers/scsi/ibmvscsi/=
-ibmvfc-nvme.c
-> index 4a66cde8a8d20..202e8d0b00813 100644
-> --- a/drivers/scsi/ibmvscsi/ibmvfc-nvme.c
-> +++ b/drivers/scsi/ibmvscsi/ibmvfc-nvme.c
-> @@ -14,10 +14,18 @@
+> diff --git a/drivers/scsi/ibmvscsi/ibmvfc-core.c b/drivers/scsi/ibmvscsi/=
+ibmvfc-core.c
+> --- a/drivers/scsi/ibmvscsi/ibmvfc-core.c
+> +++ b/drivers/scsi/ibmvscsi/ibmvfc-core.c
+> @@ -6337,7 +6337,8 @@ static int ibmvfc_probe(struct vio_dev *vdev, const=
+ struct vio_device_id *id)
+>  	struct device *dev =3D &vdev->dev;
+>  	int rc =3D -ENOMEM;
+>  	unsigned int online_cpus =3D num_online_cpus();
+> -	unsigned int max_scsi_queues =3D min((unsigned int)IBMVFC_MAX_SCSI_QUEU=
+ES, online_cpus);
+> +	unsigned int max_scsi_queues =3D min_t(unsigned int, IBMVFC_MAX_SCSI_QU=
+EUES, online_cpus);
+> +	unsigned int max_nvme_queues =3D min_t(unsigned int, IBMVFC_MAX_NVME_QU=
+EUES, online_cpus);
 > =20
->  static void ibmvfc_nvme_localport_delete(struct nvme_fc_local_port *lpor=
-t)
->  {
-> +	struct ibmvfc_host *vhost =3D lport->private;
-> +
-> +	vhost->nvme_local_port =3D NULL;
-> +	complete(&vhost->nvme_delete_done);
->  }
-> =20
->  static void ibmvfc_nvme_remoteport_delete(struct nvme_fc_remote_port *rp=
-ort)
->  {
-> +	struct ibmvfc_target *tgt =3D rport->private;
-> +
-> +	tgt->nvme_remote_port =3D NULL;
-> +	complete(&tgt->nvme_delete_done);
->  }
+>  	ENTER;
+>  	shost =3D scsi_host_alloc(&driver_template, sizeof(*vhost));
 
 [ ... ]
 
-> @@ -70,18 +78,85 @@ static struct nvme_fc_port_template ibmvfc_nvme_fc_tr=
-ansport =3D {
+> @@ -6371,6 +6373,10 @@ static int ibmvfc_probe(struct vio_dev *vdev, cons=
+t struct vio_device_id *id)
+>  	vhost->scsi_scrqs.protocol =3D IBMVFC_PROTO_SCSI;
+>  	vhost->using_channels =3D 0;
+>  	vhost->do_enquiry =3D 1;
+> +	vhost->nvme_enabled =3D mq_enabled ? nvme_enabled : 0;
+
+[Severity: Medium]
+Could this result in unintended bitfield truncation if an even value is pas=
+sed
+via the module parameter?
+
+Since vhost->nvme_enabled is a 1-bit bitfield, assigning an even value
+directly will truncate it to 0, unintentionally disabling NVMe.
+
+Additionally, since the ternary operator checks the un-normalized mq_enabled
+integer directly, couldn't this create an inconsistent state where the tern=
+ary
+evaluates to true, but the underlying vhost->mq_enabled field was truncated
+to 0?
+
+> +	vhost->nvme_scrqs.desired_queues =3D min(max_nvme_queues, nr_nvme_chann=
+els);
+> +	vhost->nvme_scrqs.max_queues =3D max_nvme_queues;
+
+[Severity: Medium]
+Should the maximum queue calculations be constrained by the nr_nvme_hw_queu=
+es
+module parameter?
+
+The NVMe queue initialization currently ignores the user-configured
+nr_nvme_hw_queues limit, unconditionally defaulting to the max_nvme_queues
+limit based on IBMVFC_MAX_NVME_QUEUES and online CPUs.
+
+> +	vhost->nvme_scrqs.protocol =3D IBMVFC_PROTO_NVME;
+>  	vhost->scan_timeout =3D 0;
 > =20
->  int ibmvfc_nvme_register_remoteport(struct ibmvfc_target *tgt)
->  {
-
-[ ... ]
-
->  void ibmvfc_nvme_unregister_remoteport(struct ibmvfc_target *tgt)
->  {
-> +	struct ibmvfc_host *vhost =3D tgt->vhost;
-> +	struct nvme_fc_remote_port *rport =3D tgt->nvme_remote_port;
-> +	int rc;
-> +
-> +	if (!tgt->nvme_remote_port)
-> +		return;
-> +
-> +	ibmvfc_log(vhost, 2, "unregister_remoteport: traddr=3Dnn-0x%llx:pn-0x%l=
-lx PortID:%x\n",
-> +		   rport->node_name, rport->port_name, rport->port_id);
-> +	init_completion(&tgt->nvme_delete_done);
-> +	rc =3D nvme_fc_unregister_remoteport(tgt->nvme_remote_port);
-> +
-> +	if (!rc) {
-> +		wait_for_completion(&tgt->nvme_delete_done);
-> +		tgt->nvme_remote_port->private =3D NULL;
-
-[Severity: High]
-Does this code unconditionally dereference a NULL pointer?
-
-When nvme_fc_unregister_remoteport() finishes, the asynchronous delete
-callback ibmvfc_nvme_remoteport_delete() is called. This callback executes:
-
-    tgt->nvme_remote_port =3D NULL;
-    complete(&tgt->nvme_delete_done);
-
-After waking up from wait_for_completion(), tgt->nvme_remote_port will
-always be NULL, meaning the access to tgt->nvme_remote_port->private will
-cause a kernel panic.
-
-> +	}
->  }
+>  	strcpy(vhost->partition_name, "UNKNOWN");
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260623013035.3436=
-640-1-tyreld@linux.ibm.com?part=3D19
+640-1-tyreld@linux.ibm.com?part=3D4
