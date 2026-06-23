@@ -1,197 +1,178 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 383EB356757
-	for <linux-scsi@vger.kernel.org>; Tue, 23 Jun 2026 02:00:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 480A014B977
+	for <linux-scsi@vger.kernel.org>; Tue, 23 Jun 2026 02:04:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782180021; cv=none; b=jiHBRAgMd7S6aFL2P9yUi8puibvxas3ZTMhA7JMRQJWmgiyWgKWSRcfL40P6BB8slPucKXrvSqW0govGOgVLhGe0TXPuTjP5tfzMDgkyVKMCWMk3qcoHM8hHca8yER0hOVKZrkLLxad6Tn7PELG3tJWLmX5f3amNMUWwmNd319s=
+	t=1782180265; cv=none; b=NF9IstSZhthhalR8Uw3xWZmR7M+HNm+6uM1IHIJ5Kc1p9WW+W7JgdxRGjeWda1Bu7g97tQkcY48Ax5+5Qk/BYWbXCYAzbSqSNHAM/2XVCiUcsmRwmul42+aNPFyvZ5HgZYghSyENFyLwBmv1zyHBTuwxyKTGoJhhVB2oAZY/Zqk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782180021; c=relaxed/simple;
-	bh=YwyOs11V1rBMW9Vq66UqNMY6FCLbI1xvJ9psBBOvBdo=;
+	s=arc-20240116; t=1782180265; c=relaxed/simple;
+	bh=tY2e+U/EMJHX8go0Sf7LmtkGvjY65dV07TFRit3yl18=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=jHS0srYfx5x2aw400IGMuEkYMGjIvslcDKsnrmGWfe1a+a3f7xzvDnd2+E7WZuS0O/YXJMejajC13JYj8RD2M9jkcdM7DjXRKbsM1GH0cmD5jgMzNbOsCRaZNdvLAzcFbSubZiRcw9JVhi6fw0nRW10x2OBeAepCMk9kjzmfl3E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lh8YYXjr; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=B+9rAxBgdpX/7UpRXFKMEsDz4rdQ7q9BPMSD3XPIsDE1U6nYVe+D82Neb0eeyWWLSRJ+sdODQ1RLKUxfTA4j7+uLlVTqZ//xMjRvNMWrqk3ESPulrOBMvrphNKe8dVTTrFHh1VzCbjc/lT8oW6W2oZLepKro/Di6GK0eBZMBtP8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CR8Aps/8; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lh8YYXjr"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B216F1F000E9;
-	Tue, 23 Jun 2026 02:00:19 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CR8Aps/8"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B8A601F000E9;
+	Tue, 23 Jun 2026 02:04:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782180019;
-	bh=/0JmXnK3zfWrJruvhoKk8R4DClt7sjhQKbtVuUzNQSw=;
+	s=k20260515; t=1782180263;
+	bh=v8tSQCnJHxb+ztHrlPDwQZE/70r7TGQwalZoipUDqvE=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=lh8YYXjr886EjrEkSxx3TeWK3tMr1CJIaTPRTVT0APvEUL54MhZmdq11M5fbTNPuq
-	 NDQcKwMjrxFeTcwFJfWRpqqwWxNxUvqfdCgDRuNI4J+WCfJI7I3+5pIt2SzNr0mqFg
-	 ZCXso2gzwDRrJXo+/o9XdeqSmnu/vcAJ0stFo9Mg0LqlJEnbQhRWxCl6gNrP3muf/c
-	 DpHCczFxaPh+3Hv9Y/mw8y+b33Cnf2Sq4Meko/Tq2s9KrJV3hlDgL3rK35gKwdzAXj
-	 /uxRIBEFqwzFkOqA2ZAqfuBCIfo9xD9Qq4z5HLLKlceFJt3Vh/SBkC9il1IyIh6K4u
-	 +oeAumvKrm/mA==
+	b=CR8Aps/8Q6AUtVyBr9fxogVtZPShzic5iX0un5vB1fZfkni6KerykxQQ/0umky5jV
+	 /lSWVd+ewZwtl8PXgSZnwNeP6Yhsziz4RiNNqukFxLACUZH/9bGkhtQI+KZU+souUz
+	 qpnJCVpU9LiAyrNeK4mKhoc02lnv5vPEje7DwEmQzKCbApWz0JX0frt8Nc/QVZ5/W1
+	 HOcJlJLOTvZ7d8BdGAymJciu/FukQX/JT1fv1BurkU1lmoUwbl/b71SyP5KhC3rYDE
+	 dYGWOjX2gpkmHYPKZafOWkcEqYRcKG/wxldPBBSYoopK3K3NsNuDw6tI6ubPpRkBQA
+	 daWXt0NRTGpeA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 21/29] ibmvfc: process NVMe/FC rports in work thread
+Subject: Re: [PATCH 23/29] ibmvfc: declare global function definitions
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Tyrel Datwyler" <tyreld@linux.ibm.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260623013035.3436640-22-tyreld@linux.ibm.com>
+In-Reply-To: <20260623013035.3436640-24-tyreld@linux.ibm.com>
 References: <20260623013035.3436640-1-tyreld@linux.ibm.com>
- <20260623013035.3436640-22-tyreld@linux.ibm.com>
+ <20260623013035.3436640-24-tyreld@linux.ibm.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 23 Jun 2026 02:00:19 +0000
-Message-Id: <20260623020019.B216F1F000E9@smtp.kernel.org>
+Date: Tue, 23 Jun 2026 02:04:23 +0000
+Message-Id: <20260623020423.B8A601F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 5 potential issue(=
+Thank you for your contribution! Sashiko AI review found 3 potential issue(=
 s) to consider:
 
-New issues:
-- [Critical] Deterministic NULL pointer dereference during NVMe remote port=
- and local port unregistration.
-- [High] NVMe targets marked for deletion are completely ignored by the mai=
-n state machine, resulting in permanent resource leaks and stuck target sta=
-tes.
-- [High] `ibmvfc_nvme_unregister` is dead code, permanently leaking the NVM=
-e local port on module unload.
-
 Pre-existing issues:
-- [Critical] Concurrent target deletion during port addition completely lea=
-ks the newly registered remote port, leading to a Use-After-Free of the pri=
-vate data pointer for NVMe targets.
-- [High] Target structures allocated from a mempool are incorrectly freed u=
-sing `kfree()`, draining the mempool reserves and leading to hangs under me=
-mory pressure.
+- [High] Objects allocated via mempool_alloc are incorrectly freed using kf=
+ree, breaking mempool semantics and causing deadlock under memory pressure.
+- [High] Non-synchronous timer cancellation during host removal leads to Us=
+e-After-Free on `vhost` in the timer callback.
+- [High] Recursive deadlock in ibmvfc_send_event() error path when sending =
+management (MAD format) events.
 --
 
-commit f73360d74019cb783c285fb8eef798a237334c34
+commit 433fbb97fc83e37f1339b6c6598956ee0f1ae0a5
 Author: Tyrel Datwyler <tyreld@linux.ibm.com>
 
-ibmvfc: process NVMe/FC rports in work thread
+ibmvfc: declare global function definitions
 
-This commit adds an NVMe-specific remote-port add helper and updates
-the rport worker thread to walk the NVMe target list. It handles
-registration, rescan, and deletion transitions for NVMe remote
-ports in the same worker context used for SCSI rports.
+Some common functions will require visibility by both SCSI and NVMe
+protocols. Make common ibmvfc helper routines available to the NVMe
+support code.
 
 > diff --git a/drivers/scsi/ibmvscsi/ibmvfc-core.c b/drivers/scsi/ibmvscsi/=
 ibmvfc-core.c
+> index 7e6912fba899d..177d341ce7bc6 100644
 > --- a/drivers/scsi/ibmvscsi/ibmvfc-core.c
 > +++ b/drivers/scsi/ibmvscsi/ibmvfc-core.c
+
 [ ... ]
-> +static void ibmvfc_tgt_add_nvme_rport(struct ibmvfc_target *tgt)
-> +{
-> +	struct ibmvfc_host *vhost =3D tgt->vhost;
+
+> @@ -1410,7 +1403,7 @@ static void ibmvfc_set_rport_dev_loss_tmo(struct fc=
+_rport *rport, u32 timeout)
+>   * @kref:		kref struct
+>   *
+>   **/
+> -static void ibmvfc_release_tgt(struct kref *kref)
+> +void ibmvfc_release_tgt(struct kref *kref)
+>  {
+>  	struct ibmvfc_target *tgt =3D container_of(kref, struct ibmvfc_target, =
+kref);
+>  	kfree(tgt);
+>  }
+
+[Severity: High]
+This isn't a bug introduced by this patch, but does this leak reserved obje=
+cts
+to the slab allocator and risk deadlock?
+
+Since the target is allocated from tgt_pool (a mempool), shouldn't it be fr=
+eed
+with mempool_free() rather than kfree()?
+
+Under memory pressure, if mempool allocations fail, mempool_alloc() sleeps
+waiting for objects to return. Freeing directly to the slab bypasses the
+mempool and its waitqueue is never woken.
+
 [ ... ]
-> +	if (rport && tgt->action =3D=3D IBMVFC_TGT_ACTION_DEL_RPORT) {
-> +		tgt_dbg(tgt, "Deleting NVMe rport\n");
-> +		list_del(&tgt->queue);
-> +		ibmvfc_set_tgt_action(tgt, IBMVFC_TGT_ACTION_DELETED_RPORT);
-> +		spin_unlock_irqrestore(vhost->host->host_lock, flags);
-> +		ibmvfc_nvme_unregister_remoteport(tgt);
 
-[Severity: Critical]
-Does ibmvfc_nvme_unregister_remoteport() contain a null pointer dereference?
+> @@ -1639,7 +1629,7 @@ static void ibmvfc_locked_done(struct ibmvfc_event =
+*evt)
 
-When unregistering the remote port, the completion callback appears to
-explicitly set the tgt->nvme_remote_port pointer to NULL:
+[Severity: High]
+This isn't a bug introduced by this patch, but does this code path contain a
+recursive deadlock when sending management (MAD format) events?
 
-drivers/scsi/ibmvscsi/ibmvfc-nvme.c:ibmvfc_nvme_unregister_remoteport() {
+Management commands are often issued from a context that already holds
+vhost->host->host_lock. If ibmvfc_send_event() encounters a local error, it
+synchronously calls evt->done(evt):
+
+ibmvfc_send_event() {
     ...
-    rc =3D nvme_fc_unregister_remoteport(tgt->nvme_remote_port);
-    if (!rc) {
-        wait_for_completion(&tgt->nvme_delete_done);
-        tgt->nvme_remote_port->private =3D NULL;
+    if (rc) {
+        ...
+        evt->done(evt);
     }
 }
 
-Will this attempt to dereference tgt->nvme_remote_port right after it was
-set to NULL by ibmvfc_nvme_remoteport_delete before the completion signaled?
-The same pattern seems to exist in ibmvfc_nvme_unregister() for the local
-port.
+For MAD format events, evt->done is often assigned to ibmvfc_locked_done(),
+which unconditionally attempts to lock the same spinlock again:
 
-> +		timer_delete_sync(&tgt->timer);
-> +		kref_put(&tgt->kref, ibmvfc_release_tgt);
-
-[Severity: High]
-This is a pre-existing issue, but does ibmvfc_release_tgt() incorrectly free
-mempool-allocated targets?
-
-The targets are allocated via mempool_alloc(vhost->tgt_pool, GFP_NOIO) in
-ibmvfc_alloc_targets(), but the kref release function calls kfree(tgt):
-
-drivers/scsi/ibmvscsi/ibmvfc-core.c:ibmvfc_release_tgt() {
-    struct ibmvfc_target *tgt =3D container_of(kref, struct ibmvfc_target, =
-kref);
-    kfree(tgt);
-}
-
-Does this bypass the mempool reserves and eventually cause mempool_alloc()
-to hang under memory pressure?
-
-> +		return;
-> +	} else if (rport && tgt->action =3D=3D IBMVFC_TGT_ACTION_DEL_AND_LOGOUT=
-_RPORT) {
-[ ... ]
-> +	} else if (rport && tgt->action =3D=3D IBMVFC_TGT_ACTION_DELETED_RPORT)=
- {
-> +		spin_unlock_irqrestore(vhost->host->host_lock, flags);
-> +		return;
-> +	}
-
-[Severity: Critical]
-This is a pre-existing issue, but can this early return leak the newly
-registered remote port?
-
-If tgt->action is transitioned to IBMVFC_TGT_ACTION_DELETED_RPORT by the
-state machine while the worker thread drops the lock to register the port,
-we return early here without unregistering the newly created port.
-
-For NVMe targets, tgt->nvme_remote_port->private points to the tgt
-structure. If the tgt structure is subsequently freed via kref_put(), could
-this cause a use-after-free in the NVMe midlayer when it uses the dangling
-private data pointer?
-
-[ ... ]
-> @@ -6630,6 +6675,7 @@ static void ibmvfc_rport_add_thread(struct work_str=
-uct *work)
-[ ... ]
-> -	} while(did_work);
-> +
-> +		list_for_each_entry(tgt, &vhost->nvme_scrqs.targets, queue) {
-> +			if (tgt->add_rport) {
-
-[Severity: High]
-Are NVMe targets marked for deletion completely ignored by the main state
-machine?
-
-The normal deletion path clears tgt->add_rport, which causes this worker
-thread to ignore them. However, looking at the main state machine in
-ibmvfc_do_work(), the deletion loop exists only for SCSI targets:
-
-drivers/scsi/ibmvscsi/ibmvfc-core.c:ibmvfc_do_work() {
+ibmvfc_locked_done() {
     ...
-    list_for_each_entry(tgt, &vhost->scsi_scrqs.targets, queue) {
-        if (tgt->action =3D=3D IBMVFC_TGT_ACTION_DEL_RPORT) {
-            ...
+    spin_lock_irqsave(evt->vhost->host->host_lock, flags);
+    ...
 }
 
-Since the equivalent loop is omitted for nvme_scrqs.targets, do targets
-marked for deletion remain unlinked and permanently leaked?
+Will this cause a fatal recursive deadlock?
+
+>   * @done:	Routine to call when the event is responded to
+>   * @format:	SRP or MAD format
+>   **/
+> -static void ibmvfc_init_event(struct ibmvfc_event *evt,
+> +void ibmvfc_init_event(struct ibmvfc_event *evt,
+
+[ ... ]
+
+> @@ -1764,7 +1754,7 @@ static void ibmvfc_timeout(struct timer_list *t)
 
 [Severity: High]
-On a related note, does the driver fail to unregister the NVMe local port on
-module unload?
+This isn't a bug introduced by this patch, but can ibmvfc_timeout() execute
+concurrently and cause a use-after-free on vhost?
 
-The teardown path in ibmvfc_remove() removes the SCSI host via
-scsi_remove_host() but does not appear to invoke the NVMe equivalent logic.
-There is an ibmvfc_nvme_unregister() function provided in the code, but it
-seems to be completely dead code that is never called.
+During teardown, ibmvfc_purge_requests() cancels each event's timer using t=
+he
+non-synchronous timer_delete() while holding host_lock.
 
-Could this lead to a permanent resource leak and potential use-after-free
-in the NVMe midlayer if it interacts with the removed host?
+If the timer callback ibmvfc_timeout() is concurrently firing on another CP=
+U,
+it blocks waiting for that lock:
+
+ibmvfc_timeout() {
+    ...
+    ibmvfc_reset_host(vhost);
+}
+
+ibmvfc_reset_host() then calls spin_lock_irqsave(vhost->host->host_lock, fl=
+ags).
+
+Once the teardown drops the lock and frees vhost, the timer callback acquir=
+es
+the lock and operates on the freed vhost object. Could this lead to a
+use-after-free?
+
+>   *
+>   * Returns the value returned from ibmvfc_send_crq(). (Zero for success)
+>   **/
+> -static int ibmvfc_send_event(struct ibmvfc_event *evt,
+> +int ibmvfc_send_event(struct ibmvfc_event *evt,
+>  			     struct ibmvfc_host *vhost, unsigned long timeout)
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260623013035.3436=
-640-1-tyreld@linux.ibm.com?part=3D21
+640-1-tyreld@linux.ibm.com?part=3D23
