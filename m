@@ -1,119 +1,124 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E33AC385D99
-	for <linux-scsi@vger.kernel.org>; Tue, 23 Jun 2026 01:55:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DEE2337BE7F
+	for <linux-scsi@vger.kernel.org>; Tue, 23 Jun 2026 01:55:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782179705; cv=none; b=T+YuYLBWm4qsLWYF90Lg8rqBCwEIG/1BaKpiHoytr3q7j+GYbd0JbjMGQqCyVbCOf8B4ItYTd4xCwdXbxFnm11/SKpSh02cUFgetvkGS4WZdgecj+hbMDzSpgChlKUQnTw49FryRBW6iTvuH4QcnzEuJ7uFsJ1FQaNT5Rej6dq4=
+	t=1782179711; cv=none; b=I/271bKFQmidY9PjFzMzRLVoxIpI81ehcBTtVJMetu8fOFf2PZnKG9oLmHBxWFRPMtMdHLj/AN5okWpzekgB41FWOzTVUrOZ5nancs6QQSacxzQ38KDEVUgX/TIOnqNfbV6ANTGs+cL87CeJ+pj2tKXpZ6GHeBTovSU3Ar91Ui0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782179705; c=relaxed/simple;
-	bh=P3Ibs+YEPwCWN4Olq/7LvGWInWZh+WqvE0RxNtGa5D0=;
+	s=arc-20240116; t=1782179711; c=relaxed/simple;
+	bh=BMwNMoVi/k2CB2ySKLi1OS6d5GZp4hyu1QkmQeZtN2o=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=hFqPeNLVNZVS8dad2HtmVaAyN8tfGi8I8NphZrpcuhWZJ5lziAPiMvkroDgEZXvJfXpDsbDrdP8eZZ5GfecVgGp9PJPPBWimDq4Dv8hTyx2TwddBEea0HIHGp91BL61JkCcJtM+9PUVAS4+xfbGO6tNRBpl8wkVdlLxkSL6IRS4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=b+pb9h9x; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=C9XrEPXNqeM40w6N4F4m68bE5HCGgHA+pAYMEL2qzC7Jq2QUYyFne/r727dwqP2ZYkdfqsy6PK0oNOCVKgU584u2RlPWyzMYxJdxVKIkzd83/+NUu10fP1tJp336e6xXLrowJNORexMjRlbLovybdoDX98KjEnMeiwEZM1usOi4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Z3Q7zSsT; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="b+pb9h9x"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9F02A1F000E9;
-	Tue, 23 Jun 2026 01:55:04 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Z3Q7zSsT"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 545B11F000E9;
+	Tue, 23 Jun 2026 01:55:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782179704;
-	bh=xAMDvAKDiuPTE2XsiG3pVnO6dvj48OSykmPNRn4PKng=;
+	s=k20260515; t=1782179710;
+	bh=hkw5cJSYTQka8NVYxSBavUj9s7bSVbBre72ZbDylKFo=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=b+pb9h9xnvpU6AxK6UqmWtbsGex2Vyul5cGrDwgrwafPcappse3eqVHNS51HBXNg/
-	 v7Zdtx2YAmJRgPI9aA0htdf/08kCIy/kjeOmbVkavGKXpF5HjN+Mhl+zXbOufnuGdO
-	 mYK9WjPyE284+Stq4zgJ7DoyqPFgUWNMwZlgYc47QXWhV+/Y4NY5ED7ccVJnzPYNNJ
-	 5m0z7I0iWRGB6OG86f9WmNtVxLzFrj9Bioz5P9pMiGlgMEVJcfbBsOVJgC1mdN5FMH
-	 v2DhsEEyYfSqTuKydmvwct+3fg/VR8UmrcYP7fXBR/+reKv4ErLYPlRqGxVZRyz9hA
-	 A17oNhZbtp66w==
+	b=Z3Q7zSsTRZtzBWRowblnwARlbgL7vPnvF3LRvf7qZvUYlJv1cWNyA4CUzXpkSaiCT
+	 Hf9IENdrMQTcx3hpxd58CgwDc+MWyCoC+0SOYHkfYMBR3THAYMtp51b5A8f9wHrrFq
+	 QJpkZvIjwVG1Qf931GLOBij/+I/0n/JH6MuJgQZlh67+c8+L2qdnObO+CArXCNrTRh
+	 ggOrFAOeE16cUk1t/MqQMv45eYZbDRCcGKaf6H8kInDFSH3POqR0Y0K7wL8rg63zdF
+	 94ppM5ca19Ks/z1a5Bq5Smn1zUMf8G1Z0u/vNHewJRAPtlft4P8498jhvXdvOpTiBs
+	 7Pp2EY5zsbcjw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 05/29] ibmvfc: alloc/dealloc sub-queues for nvme
- channels
+Subject: Re: [PATCH 18/29] ibmvfc: update state machine to process NVMe/FC
+ targets
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Tyrel Datwyler" <tyreld@linux.ibm.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260623013035.3436640-6-tyreld@linux.ibm.com>
+In-Reply-To: <20260623013035.3436640-19-tyreld@linux.ibm.com>
 References: <20260623013035.3436640-1-tyreld@linux.ibm.com>
- <20260623013035.3436640-6-tyreld@linux.ibm.com>
+ <20260623013035.3436640-19-tyreld@linux.ibm.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 23 Jun 2026 01:55:04 +0000
-Message-Id: <20260623015504.9F02A1F000E9@smtp.kernel.org>
+Date: Tue, 23 Jun 2026 01:55:09 +0000
+Message-Id: <20260623015510.545B11F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
-- [High] Failure to register NVMe sub-queues silently disables SCSI multiqu=
-eue support due to a shared state flag.
+- [High] NVMe targets leak memory and become permanently stranded because t=
+heir cleanup logic is omitted from the target deletion phase in ibmvfc_do_w=
+ork().
+- [High] Asynchronous ELS events (LOGO, PRLO, PLOGI) from NVMe targets are =
+ignored because the event handler only loops over the SCSI target list.
 --
 
-commit 6eb0f2ef7c51067f6c97ea8c13211afa2e19dcc4
+commit 2221ef8b59f01b903ca3e2cc56b9bd27be8a9dc1
 Author: Tyrel Datwyler <tyreld@linux.ibm.com>
 
-ibmvfc: alloc/dealloc sub-queues for nvme channels
+ibmvfc: update state machine to process NVMe/FC targets
 
-This patch allocates, registers, deregisters, and releases NVMe subordinate
-CRQs alongside the existing SCSI sub-CRQs. It integrates the NVMe queue
-lifecycle with the existing SCSI queue lifecycle to ensure both protocols
-are reset consistently.
+Update the host work loop and target state-machine helpers to process
+NVMe targets in addition to SCSI targets.
 
 > diff --git a/drivers/scsi/ibmvscsi/ibmvfc-core.c b/drivers/scsi/ibmvscsi/=
 ibmvfc-core.c
-> index 5732ccf2ac1c0..6f5e8b3cbfc82 100644
+> index 13e513bfd0a86..9a6a885aa57ed 100644
 > --- a/drivers/scsi/ibmvscsi/ibmvfc-core.c
 > +++ b/drivers/scsi/ibmvscsi/ibmvfc-core.c
+[ ... ]
+> @@ -5962,6 +5992,12 @@ static void ibmvfc_do_work(struct ibmvfc_host *vho=
+st)
+>  				break;
+>  			}
+>  		}
+> +		list_for_each_entry(tgt, &vhost->nvme_scrqs.targets, queue) {
+> +			if (tgt->action =3D=3D IBMVFC_TGT_ACTION_LOGOUT_RPORT) {
+> +				tgt->job_step(tgt);
+> +				break;
+> +			}
+> +		}
+> =20
+>  		if (ibmvfc_dev_logo_to_do(vhost)) {
+>  			spin_unlock_irqrestore(vhost->host->host_lock, flags);
+
+[Severity: High]
+Does this code also need to loop over nvme_scrqs.targets for final target
+deletion?
+
+Looking further down in ibmvfc_do_work(), there is a loop handling
+IBMVFC_TGT_ACTION_DEL_RPORT and IBMVFC_TGT_ACTION_DEL_AND_LOGOUT_RPORT:
+
+		list_for_each_entry(tgt, &vhost->scsi_scrqs.targets, queue) {
+			if (tgt->action =3D=3D IBMVFC_TGT_ACTION_DEL_RPORT) {
+				tgt_dbg(tgt, "Deleting rport\n");
+				rport =3D tgt->rport;
+				tgt->rport =3D NULL;
+				list_del(&tgt->queue);
+				ibmvfc_set_tgt_action(tgt, IBMVFC_TGT_ACTION_DELETED_RPORT);
+				...
+
+Since this loop only processes scsi_scrqs.targets, wouldn't NVMe targets in
+the DEL_RPORT state be leaked and stranded?
 
 [ ... ]
 
-> @@ -6109,6 +6113,13 @@ static void ibmvfc_init_sub_crqs(struct ibmvfc_hos=
-t *vhost)
-> =20
->  	ibmvfc_reg_sub_crqs(vhost, &vhost->scsi_scrqs);
-> =20
-> +	if (vhost->nvme_enabled) {
-> +		if (ibmvfc_alloc_channels(vhost, &vhost->nvme_scrqs))
-> +			vhost->nvme_enabled =3D 0;
-> +		else
-> +			ibmvfc_reg_sub_crqs(vhost, &vhost->nvme_scrqs);
-
 [Severity: High]
-Does a failure to register NVMe sub-queues unintentionally disable SCSI
-multiqueue support here?
+Are asynchronous ELS events from NVMe targets being ignored?
 
-If ibmvfc_reg_sub_crqs() fails while registering the NVMe channels, it hand=
-les
-the error by unregistering the partial channels and setting a shared host f=
-lag:
+Looking at ibmvfc_handle_async(), which processes events like LOGO, PRLO,
+and PLOGI, the loop only iterates over the SCSI targets:
 
-ibmvfc_reg_sub_crqs() {
-    ...
-    if (ibmvfc_register_channel(vhost, channels, i)) {
-        for (j =3D i; j > 0; j--)
-            ...
-        vhost->do_enquiry =3D 0;
-        return;
-    }
-}
+	case IBMVFC_AE_ELS_LOGO:
+	case IBMVFC_AE_ELS_PRLO:
+	case IBMVFC_AE_ELS_PLOGI:
+		list_for_each_entry(tgt, &vhost->scsi_scrqs.targets, queue) {
 
-Since ibmvfc_reg_sub_crqs() is now called for NVMe right after successfully
-registering the SCSI sub-queues, setting vhost->do_enquiry to 0 upon an NVMe
-registration failure will cause the driver to skip channel enquiry during t=
-he
-NPIV login sequence.=20
-
-Will this cause the successfully registered SCSI channels to be silently
-ignored if the hypervisor rejects the NVMe sub-crqs allocation?
-
-> +	}
-> +
->  	LEAVE;
->  }
->
+Since the NVMe targets are now in a separate nvme_scrqs.targets list,
+wouldn't an explicit logout or state change from an NVMe target be dropped,
+leaving the driver with stale state?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260623013035.3436=
-640-1-tyreld@linux.ibm.com?part=3D5
+640-1-tyreld@linux.ibm.com?part=3D18
