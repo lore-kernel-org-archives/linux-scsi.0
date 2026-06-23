@@ -1,181 +1,109 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr1-f42.google.com (mail-wr1-f42.google.com [209.85.221.42])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F12C386571
-	for <linux-scsi@vger.kernel.org>; Tue, 23 Jun 2026 02:59:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782183580; cv=none; b=c/vwSky5efnPA5EGiZ30TbQgIv3dVvdySVauhGgSn9cHnma5l0dopW5E6zpDDXZc17hEd5RRNPSJpmrpCxmBCqPXU4EJB/Y1IJyrj4MpNAL058t0owY8psO92U/nMqf8I8rGqbu1446KPNgy1YOV/ia8mBng6xpLFXksHKQfJ+I=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782183580; c=relaxed/simple;
-	bh=iLnjX+reGFrG3F5YkcH76FGNk+ysWPUmFvseaV3Vt8U=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=BQNIXxFs8D2IYBUZjSHmkF/ILvBd4mjiI1g/nQlrSWyDwH76SklaNf/csZ0fdWDlHHO3cy/SI1G4n0BehWz5029V2hRo7kNuP8i+h84a4XwUCtZVcMZupYolmdoKinViYaIjBAHBVXOa7zgoliVoeZjGcqYUOlFKd7+QJbAV4IA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZKOWqw01; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2918D314B76
+	for <linux-scsi@vger.kernel.org>; Tue, 23 Jun 2026 06:32:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.221.42
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1782196356; cv=pass; b=N35XhB/YRaJSJdy4mia7haEtrwRrgYQ7qmKJweHJyhQh8Pd++1/lszGVZA64+m0+ZpitDzoc8DcnfR/s7cP7cYQPSiKvWhfGjDllScLI8wjOOWJblDe13a6ICK1P0jdgw4idubvdquUFY3ZqjY1jaAWxnjER2X5g/yavNWbn1LE=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1782196356; c=relaxed/simple;
+	bh=QwIjawHJqOj5H0dPQva+4F8BGF+VPFnCtHxr73rBkhM=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=cnrrFbBmR+WktZEiXWFKrr2VZiMtGTvqH0zBersGp/uAli+hB2weg7bul16I5ysmFCPaFG+Yf2EgpvTnIVieUbLKJ6bThsTBvoKfEAHlHeD4TTHjocfoP4XeLFwCp9rEUb7AhOwst0549Dhv6VIV6HUnw6tBm8wMZ4o9LXx1l4Y=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=b3R569BF; arc=pass smtp.client-ip=209.85.221.42
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZKOWqw01"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0509F1F000E9;
-	Tue, 23 Jun 2026 02:59:38 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782183579;
-	bh=Cy4iTQfmLSj98lKLUGmOLWgFxhb1YoBSJznmiul9pSw=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=ZKOWqw01Uhm7puZGcrOc6VNy0fhTbTX4n1lyDnbOC6Fc8eGyLgHiLl+gsavqIUIri
-	 m6qH8VGldasccdfbKQhj52rSumtYdS2yrB7HUnPECQhL6trZtN0hDuT4HgXCTM2wvD
-	 +U5uzqLFAcF8urTKQkQRSL7qi6+nVLGofaSCysew1ZRocSC6YS/Vc5E2ZAbmdhjtku
-	 OCfg4kQ/wr4JvXAGjjTtrz+/5le47YsBj+yb/eMqiU+qfF5/qCozWMWD/IcQ43pVmx
-	 vcc8/ci+fR3quB7+2ym3WHYkvHmW4PVuLVBySL0IuPpsNwJsUuHbSdDI7LODCikThn
-	 ERkavJWdltnOA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v8 1/2] scsi: libsas: refactor sas_ex_to_ata() using new
- helper sas_ex_to_dev()
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Xingui Yang" <yangxingui@huawei.com>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260623024304.714582-2-yangxingui@huawei.com>
-References: <20260623024304.714582-1-yangxingui@huawei.com>
- <20260623024304.714582-2-yangxingui@huawei.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 23 Jun 2026 02:59:38 +0000
-Message-Id: <20260623025939.0509F1F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="b3R569BF"
+Received: by mail-wr1-f42.google.com with SMTP id ffacd0b85a97d-46019b190b6so4000748f8f.3
+        for <linux-scsi@vger.kernel.org>; Mon, 22 Jun 2026 23:32:35 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1782196354; cv=none;
+        d=google.com; s=arc-20240605;
+        b=Xq8AbP1g1tpsdK/vyEKPrtoNFvUQmsuZUww9/NxfI7SSliToH5H0UV6rhSY5GH5XLF
+         VR7LDDfbiRREkDyPGEPAmv42Nv7vz3S1sw5dm8vbwJW2SWUScdRV1IByd52yM4n/AIr5
+         eJd1O2qkZDKGmHNdpbEGZxA/5DUS8tbon1quF2tihI47pTT0eiHgqf5Y4k6ZThI3Icau
+         GUuUushv/PUK4K6w/TlQoc8FokjUmPQnYSwW/aPUF1K2874mxmw859UjNjswhu2XyGK/
+         Rr58VKNLwj2bJwjeE1iRtKujrP1NANYHr0KkGAoOkRwv9PZojNzQlI+piJ/RaJqb5EbI
+         etjA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:dkim-signature;
+        bh=QwIjawHJqOj5H0dPQva+4F8BGF+VPFnCtHxr73rBkhM=;
+        fh=5W7KM5aUfcVSFJeBUhtS6L1Wyn67U9GIwTWTyTZbn40=;
+        b=Y9YlYoR1r/1uL02nXuxThzkxby5PZWnyBUQgNdBH5TGL9CM7x1Brmsair43nlEwuVA
+         TO4InRF9HUqKmR6CmnqUuNs7vNTjyB2RHGfXvsfU+yfq/1K1moYLCCaWkQL8S5/Ez1rL
+         SEJmsfz/YK7+4YbTgcEB5M/BEk9/FZbFyAPAjbXQ9wyYBkoMz8CZuQ5pgv2qto6zqoNo
+         2V3q3ULShxY+pVeaX/gNNJ7+zGmBnXgFp/hG/zhwf+px72YUaLlg/3JWN4vMvk2Nmz3Q
+         +zh+Qqeq9rJvyiCSDPh3m0BGxF63w+ue9B4+t9ygeLqSjHTXooiGwxN79tw8Hl5jtVhY
+         dv7g==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1782196354; x=1782801154; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=QwIjawHJqOj5H0dPQva+4F8BGF+VPFnCtHxr73rBkhM=;
+        b=b3R569BFS0yQceX11VwL5RTzlckrhPn5/01VcCNemng4ryhm1ugCUblsn6hv8vtato
+         3SOXjYQNrB+Dy8HPrSUOMiRYGma8VcYZNyZdo75hAt50VwzqVgaNhRyCPSrZ6028mlsA
+         UZ3g0mplKflV0ukKtyOqQLo15orERy7igDaaLzqHWKJJagNYH6DA4ZNXm7vuV/uMHKdJ
+         QESslU10LhSY4BhKoCFGDAObYBOQftm5Hfkp8TuU5QKzQ4Dl7xZ6UD+JJQGs+pLlNA1i
+         wSZoBnYRdFTNXHr4Y6ScwoZMJDF13f7m5M+DwieFb337Y4gwVvPeISC02VXjTo63Xm7Z
+         wQLw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1782196354; x=1782801154;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=QwIjawHJqOj5H0dPQva+4F8BGF+VPFnCtHxr73rBkhM=;
+        b=LVggOsolmhDL96wQKuWmQQ2pTiAVL5t3gIgu08/BWmBCeA7idZy+rFUPvuoFu5GkVA
+         wtOCnPBlVNUX2gyQ9BfZOCHXMDdZXjZkmHgyMohKq/gkBcXR3nz9d2t3bqRhPXEIugIa
+         P6MPAn/EozA8X5Ka5BFms6kZxHmki4/ke4z670hVHKKIHMok3vxTTkbefpLQZSSebcCK
+         6kuWNPeUDivGX+AVVzCbxdC8a9bpADFFbJMpg3/hAfAHULBlO1hlEfBwl5Wc4ETt90Vs
+         w3IWoq3fQqKdcXnFkVJxl7BVqesBfm7GRhkbUPcyymYLPBZBhn1phpHmKure1uS1QBSW
+         l62w==
+X-Forwarded-Encrypted: i=1; AFNElJ9eAFuiZHO+9ZqRXhdhDMHjmnowbqNDQWWuxVM1BEk7s6I/h+C584qjk9cfUFQ3Fkg2Vqhn/pyyuxpK@vger.kernel.org
+X-Gm-Message-State: AOJu0YzOdZFtgRHEZyWaaYBwCZ+eLhLbMSGI4rYZdJwp5tAAlbqAE3Oi
+	vvRs1MWAkY061Pij1jVn4wlt+ZwQqrjoX2lF6VD8ZauvkYf7E6r5Uc4Kx9+pzMQQeisximFyXDo
+	Yovdg07XY5oGgHUQK3mIl5K89fZlQ9E8=
+X-Gm-Gg: AfdE7cn4LHdlF8GavB4syGVj+nCsyOSQhZ7Z09wN3qKEAVXsZghJw1vp8NhX3nLO5i8
+	6vuJhCatZmfpRm9zDqbvd/UdKHwk8H98zMCq0sxS/gmINCZIyAv3xpUZAVY1WRDI2u4w+HPtWR3
+	6a9IjAf+KF4XVjwIMBMNUS0vp/o2z1vDA6X93X6mpJSiJuIWb5ETp5YOuD7anoca6GUF0Z3rIjT
+	rknFHHckhKpFzhmPpMa9nG+hz/kV6IxU2yftqLxfZfov6m0k1JC1vckX2VMYEA4bPISEb/L
+X-Received: by 2002:a05:600c:628d:b0:492:4668:27b5 with SMTP id
+ 5b1f17b1804b1-4925b3896dbmr17301765e9.6.1782196353485; Mon, 22 Jun 2026
+ 23:32:33 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+References: <178214622623.2376914.7843191393281628987@maoyixie.com> <82be2f83-5454-47cb-8719-b259209a5e2b@gmail.com>
+In-Reply-To: <82be2f83-5454-47cb-8719-b259209a5e2b@gmail.com>
+From: Maoyi Xie <maoyixie.tju@gmail.com>
+Date: Tue, 23 Jun 2026 14:32:22 +0800
+X-Gm-Features: AVVi8CerLroODDKDgIcaK-BNCNegXQKRvgiych1sIwc3taaWHJh7M7qYdmm9u6Y
+Message-ID: <CAHPEe=GH8GJzrrpuBEoEzn1HXcHRbOot1MutFQeXbReR3i_w=w@mail.gmail.com>
+Subject: Re: lpfc: unbounded QFPA response length in lpfc_cmpl_els_qfpa()
+To: Justin Tee <justintee8345@gmail.com>
+Cc: Justin Tee <justin.tee@broadcom.com>, Paul Ely <paul.ely@broadcom.com>, 
+	"Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, 
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
-s) to consider:
+Hi Justin,
 
-New issues:
-- [High] The patch adds a defensive NULL check for `ex_dev` to prevent a cr=
-ash when callers pass a NULL device, but this merely shifts the crash to th=
-e fallback path in its main caller `transport_sas_phy_reset`.
+Thanks for the quick reply.
 
-Pre-existing issues:
-- [High] `sas_find_dev_by_rphy()` returns an un-refcounted `domain_device` =
-pointer, leading to a Use-After-Free if the device is concurrently removed.
-- [High] Lockless and unprotected access to `ex_phy->port` causes a TOCTOU =
-race, leading to NULL pointer dereference.
---
+> Is it possible to provide the fabric switch and target hardware details,
+> i.e. model and version numbers, used to reproduce this issue?
 
-commit 7daa35d1e6df78b76bca7d9ad2296ce81f71c4d9
-Author: Xingui Yang <yangxingui@huawei.com>
+I do not have the switch or target hardware. I found this by reading
+the QFPA path in lpfc on 7.1-rc7 and tried it in a small local test.
 
-scsi: libsas: refactor sas_ex_to_ata() using new helper sas_ex_to_dev()
+I understand your point about the trusted source within the fabric. I
+appreciate you taking the time to look at this.
 
-Introduce sas_ex_to_dev() to return any device type attached to an
-expander phy. The new helper is then used by sas_ex_to_ata() to reduce
-code duplication.
-
-Also add a defensive NULL check for ex_dev to guard against callers
-passing a NULL device.
-
-> diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas=
-_expander.c
-> index f471ab464a78b..cb9d3b7482225 100644
-> --- a/drivers/scsi/libsas/sas_expander.c
-> +++ b/drivers/scsi/libsas/sas_expander.c
-> @@ -345,13 +345,15 @@ static void sas_set_ex_phy(struct domain_device *de=
-v, int phy_id,
->  		 SAS_ADDR(phy->attached_sas_addr), type);
->  }
-> =20
-> -/* check if we have an existing attached ata device on this expander phy=
- */
-> -struct domain_device *sas_ex_to_ata(struct domain_device *ex_dev, int ph=
-y_id)
-> +struct domain_device *sas_ex_to_dev(struct domain_device *ex_dev, int ph=
-y_id)
->  {
-> -	struct ex_phy *ex_phy =3D &ex_dev->ex_dev.ex_phy[phy_id];
-> -	struct domain_device *dev;
-> +	struct ex_phy *ex_phy;
->  	struct sas_rphy *rphy;
-> =20
-> +	if (!ex_dev)
-> +		return NULL;
-> +
-
-[Severity: High]
-Does this new check shift a crash into the fallback path of callers instead
-of preventing it?
-
-If a concurrent removal causes ex_dev to be NULL, this check allows
-transport_sas_phy_reset() to receive NULL instead of crashing here. However,
-transport_sas_phy_reset() then falls back to calling sas_smp_phy_control():
-
-drivers/scsi/libsas/sas_init.c:transport_sas_phy_reset() {
-    ...
-    if (ata_dev && !hard_reset) {
-        ...
-    } else {
-        return sas_smp_phy_control(ddev, phy->number, reset_type, NULL);
-    }
-    ...
-}
-
-Because ddev is still NULL, it is passed into sas_smp_phy_control(), which
-calls smp_execute_task_sg(), eventually causing a crash when dereferencing
-dev->port:
-
-drivers/scsi/libsas/sas_expander.c:smp_execute_task_sg() {
-    ...
-    to_sas_internal(dev->port->ha->shost->transportt);
-    ...
-}
-
-Is it safe to return NULL here without ensuring callers like
-transport_sas_phy_reset() can handle it properly?
-
-> +	ex_phy =3D &ex_dev->ex_dev.ex_phy[phy_id];
->  	if (!ex_phy->port)
->  		return NULL;
-
-[Severity: High]
-This is a pre-existing issue, but does this sequence have a time-of-check
-to time-of-use race condition?
-
-The code checks if ex_phy->port is NULL and then dereferences it on the
-next line (rphy =3D ex_phy->port->rphy). If a concurrent thread like
-sas_port_delete_phy() sets phy->port to NULL between these two lines, could
-this cause a NULL pointer dereference?
-
-> @@ -359,7 +361,13 @@ struct domain_device *sas_ex_to_ata(struct domain_de=
-vice *ex_dev, int phy_id)
->  	if (!rphy)
->  		return NULL;
-> =20
-> -	dev =3D sas_find_dev_by_rphy(rphy);
-> +	return sas_find_dev_by_rphy(rphy);
-
-[Severity: High]
-This isn't a bug introduced by this patch, but does sas_find_dev_by_rphy()
-return an un-refcounted pointer that could be freed while in use?
-
-Looking at sas_find_dev_by_rphy(), it locates the device under a lock but
-returns it without taking a reference:
-
-drivers/scsi/libsas/sas_scsi_host.c:sas_find_dev_by_rphy() {
-    ...
-    spin_lock(&port->dev_list_lock);
-    list_for_each_entry(dev, &port->dev_list, dev_list_node) {
-        if (rphy =3D=3D dev->rphy) {
-            found_dev =3D dev;
-            spin_unlock(&port->dev_list_lock);
-            goto found;
-        }
-    ...
-    return found_dev;
-}
-
-If the device is concurrently unregistered and freed (e.g., via
-sas_free_device()), does this pointer become dangling before the caller can
-safely use it?
-
-> +}
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260623024304.7145=
-82-1-yangxingui@huawei.com?part=3D1
+Best,
+Maoyi
