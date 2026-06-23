@@ -1,43 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CCB91376A08
-	for <linux-scsi@vger.kernel.org>; Tue, 23 Jun 2026 10:19:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D16C3769E3
+	for <linux-scsi@vger.kernel.org>; Tue, 23 Jun 2026 10:20:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782209941; cv=none; b=RWYY3z3CFyKgmTMPGj6fFMiCuYtnRtWgpQP60TS1ddJ/B0YIrLSU2EHcSNm6WxO6w3cpEjES5Zr/BuxTeI5+qyBWhKI10g8pgbZrKUU2qOEks2lWIyv+Wj1H9bV/1hZwFFwOGe+hYdF+VHjOVHvRZiH8wgYGZORQJLIUa2a5boQ=
+	t=1782210058; cv=none; b=Gprv7kvY7cODi/r25Fo1bDX4YXvGBnH0VwWKvWmigyKpGCR7BIojOvAgSlIh5cnMFdJxLheW6YGlYtpt8cKtHe/Yx5N3nW2Lw+6w6HNz7+8qAne5x8CVJ3HQjBdKsSRC9li0eqVXbCDVy+oZ+FH9BcFf2d1U8TV6Ol/kc8o0JpM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782209941; c=relaxed/simple;
-	bh=PfeOpXFjD/d7vkPDgAUWki8pDoPz5Hfq/+AzE9jbRBM=;
+	s=arc-20240116; t=1782210058; c=relaxed/simple;
+	bh=ZZ+mzRNrLvuBLz6ICrajzx15TE4bRNOiPYdT1wUW03w=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=Z3HgQubIJUz8fNt0Fj0Fug6ohPgv3xHZuD+XndMmTMoFwUlqGLHe2vFcxeWmxfmJYci5FsIwnYP+CAdtRGaDEsZ9c3waNHMrPrqEKY8ZENzULxMqjrpaZxNEro22yeOi5xrvBJqrwiL7xFkM8V6zQNYljZEmWxX8veZB0ypDk4s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SOxk6CBZ; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=dVnPW4VEAVQq6wOW7ZyjBbTTiDVyvz8lYPKcuN2jPMk+CRYPYe6X2c5mgKMS9zY0XmKJ5pv+35tSoI8oITnA5DOMuXQpYi3sVAJWYtinWCgL8yBTLmWtffZTS4wh51uB6ct8959MEUQacTf8E6CfdGZbUmwJixINa8mXpkYEnI4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LwZN4Le4; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SOxk6CBZ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5E81F1F000E9;
-	Tue, 23 Jun 2026 10:19:00 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LwZN4Le4"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E11C11F000E9;
+	Tue, 23 Jun 2026 10:20:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782209940;
-	bh=2YwVkTqsDN486sba4btZkJy0w3uUQZaaoPRy0yIsexM=;
+	s=k20260515; t=1782210057;
+	bh=PRfZ2Pf5lzYSdE6C3fX7z76SQiJrB4SVq6gjO8B79Ek=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=SOxk6CBZYMy4yh2QCK+2+eTHevcF1lsEb0r7cDkR5sLhRWOocCiCdvDyBgsQK3sww
-	 QHc7ozzlXQ65uWsv3iDKNJzul93bDoOKuCKUtpTPhinhw2zG/dPKsGO+xdFe8wqJ4F
-	 V0FE3RzOUxvlRycM8KQ2U6ewlyJpkkSZSqnuX3UZ/shJAAbAEMcjk8VrESqoarTBmh
-	 iqFz3ZoDTsjv5AFWY6H17BHw8/xMG51JQuSovTcrwSN+GsuHwiL2qPvzZ7e5wOFtvN
-	 NOe8gvXKefQmJ4QHLCXOZUIC1huuifTq/5sCcvqTapLSBFrsEtdwBA2jcOCm6UUjcR
-	 4q/JyC2eM7j6g==
+	b=LwZN4Le4TSFFTZBScoR7zkjmVgxpTtbgQ0jfKm7kdIYAc9IHG8h2ov9SbpZXbTBgL
+	 34i+7MoOeMYNxucI7whFX2xEB/iUdK5b1afYbuKsUqgjlAV0BcOCw1vgxEoj4wchzh
+	 GiYguoYcKJLdPQFaUA6CDN1CeeqE1aNIIEw34b60GdeauhLUBZKWI7tlVFhazNYszA
+	 xC8b/eP2POSHtTGLHoUa4V9kNwWIZoPMloo6pHwR8PlqId6O8vnFcq6Apo40nonz0m
+	 caQKsutyR53+si6pzxhmhMtvQ51Mdu0WP1kW7SkiQ7fzVcOMcyzV2ujoBELUJDFcAn
+	 uLJzicj+jXBhA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v1 4/4] scsi: sd: fix sd_done() sense handling condition
+Subject: Re: [PATCH v1 3/4] scsi: sd: fix special_vec mempool leak when
+ scsi_alloc_sgtables() fails
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Yang Xiuwei" <yangxiuwei@kylinos.cn>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260623100159.4018066-5-yangxiuwei@kylinos.cn>
+In-Reply-To: <20260623100159.4018066-4-yangxiuwei@kylinos.cn>
 References: <20260623100159.4018066-1-yangxiuwei@kylinos.cn>
- <20260623100159.4018066-5-yangxiuwei@kylinos.cn>
+ <20260623100159.4018066-4-yangxiuwei@kylinos.cn>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 23 Jun 2026 10:18:59 +0000
-Message-Id: <20260623101900.5E81F1F000E9@smtp.kernel.org>
+Date: Tue, 23 Jun 2026 10:20:56 +0000
+Message-Id: <20260623102056.E11C11F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -46,54 +47,76 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [High] The patch introduces a logic regression by unconditionally bypassi=
-ng valid sense data processing for any SCSI status other than SAM_STAT_CHEC=
-K_CONDITION.
+
+Pre-existing issues:
+- [High] Concurrent updates to `sdp->sector_size` can cause `sd_uninit_comm=
+and()` to free a payload page to the wrong mempool.
 --
 
-commit 6e9e6fa97257d1c3c528406c9719d2273c7f5a65
+commit ba587f7eceae0f0ec53afb6d48daeb8d25456542
 Author: Yang Xiuwei <yangxiuwei@kylinos.cn>
 
-scsi: sd: fix sd_done() sense handling condition
+scsi: sd: fix special_vec mempool leak when scsi_alloc_sgtables() fails
 
-This commit modifies the conditional in sd_done() to avoid entering the
-sense_key switch with an uninitialized or stale sshdr when a CHECK CONDITION
-occurs with invalid or deferred sense data. It replaces the previous logic
-with an OR condition.
+sd_set_special_bvec() allocates a special payload page for UNMAP and
+WRITE SAME commands.  If scsi_alloc_sgtables() fails afterward in
+sd_setup_unmap_cmnd() or sd_setup_write_same{10,16}_cmnd(), the SCSI
+midlayer does not call uninit_command() because RQF_DONTPREP is not
+set yet, leaking the page.
+
+Call sd_uninit_command() on error, and clear RQF_SPECIAL_PAYLOAD after
+freeing the page.
 
 > diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+> index b096ea237f14a..6f05e7683df6d 100644
 > --- a/drivers/scsi/sd.c
 > +++ b/drivers/scsi/sd.c
-> @@ -2419,8 +2419,8 @@ static int sd_done(struct scsi_cmnd *SCpnt)
->  	}
->  	sdkp->medium_access_timed_out =3D 0;
+> @@ -958,6 +958,21 @@ static unsigned char sd_setup_protect_cmnd(struct sc=
+si_cmnd *scmd,
+>  	return protect;
+>  }
 > =20
-> -	if (!scsi_status_is_check_condition(result) &&
-> -	    (!sense_valid || sense_deferred))
-> +	if (!scsi_status_is_check_condition(result) ||
-> +	    !sense_valid || sense_deferred)
+> +static void sd_uninit_command(struct scsi_cmnd *cmd)
+> +{
+> +	struct request *rq =3D scsi_cmd_to_rq(cmd);
+> +	struct scsi_device *sdp =3D cmd->device;
+> +
+> +	if (!(rq->rq_flags & RQF_SPECIAL_PAYLOAD))
+> +		return;
+> +
+> +	if (sdp->sector_size > PAGE_SIZE)
+> +		mempool_free(rq->special_vec.bv_page, sd_large_page_pool);
+> +	else
+> +		mempool_free(rq->special_vec.bv_page, sd_page_pool);
 
 [Severity: High]
-Does this logic change inadvertently bypass valid sense data processing for
-any SCSI status other than SAM_STAT_CHECK_CONDITION?
+This is a pre-existing issue, but can checking sdp->sector_size here cause a
+page to be freed into the wrong mempool if the sector size changes
+concurrently?
 
-For example, if a low-level driver completes an I/O with
-SAM_STAT_COMMAND_TERMINATED alongside valid sense data like RECOVERED_ERROR,
-!scsi_status_is_check_condition(result) will evaluate to true.
+In sd_set_special_bvec(), the page is allocated based on sdp->sector_size:
 
-This would cause the code to immediately jump to the 'out' label, skipping
-the sense key switch block. Because good_bytes is initialized to 0 for any
-non-zero result, the command will incorrectly fail instead of being handled
-as fully or partially completed.
+	if (sector_size > PAGE_SIZE)
+		page =3D mempool_alloc(sd_large_page_pool, GFP_ATOMIC);
 
-Would it be better to solely check if (!sense_valid || sense_deferred) to
-ensure sshdr is initialized without discarding valid sense data on other
-statuses?
+Concurrently, sd_revalidate_disk() calls sd_read_capacity(), which updates
+sdkp->device->sector_size directly before the block layer queue is frozen:
 
->  		goto out;
-> =20
->  	switch (sshdr.sense_key) {
+	sdkp->device->sector_size =3D sector_size;
+
+If sdp->sector_size is modified and crosses the PAGE_SIZE boundary while an
+UNMAP or WRITE SAME request is in flight, could sd_uninit_command() read the
+new size and free the page to the wrong pool? This might be reachable by a
+malicious USB device returning a different sector size upon a media change.
+Since sd_large_page_pool uses high-order allocations, freeing an order-0 pa=
+ge
+into it could corrupt the page allocator and cause subsequent allocations to
+write out of bounds.
+
+> +	rq->rq_flags &=3D ~RQF_SPECIAL_PAYLOAD;
+> +}
+> +
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260623100159.4018=
-066-1-yangxiuwei@kylinos.cn?part=3D4
+066-1-yangxiuwei@kylinos.cn?part=3D3
