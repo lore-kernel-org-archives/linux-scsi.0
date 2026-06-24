@@ -1,77 +1,77 @@
-Received: from rcdn-iport-8.cisco.com (rcdn-iport-8.cisco.com [173.37.86.79])
+Received: from rcdn-iport-9.cisco.com (rcdn-iport-9.cisco.com [173.37.86.80])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4FED1263C8C;
-	Wed, 24 Jun 2026 04:46:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=173.37.86.79
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 21738306D26;
+	Wed, 24 Jun 2026 04:46:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=173.37.86.80
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782276365; cv=none; b=FTLlfbpz8jcsZVQwSlgasjIIRZ9liLV//e4Vr2jgHAE25Q3NVXqOFBPqn+LkRAKqp62JOeaMpHEmzaTTFiuL6Rtx7kf1vMwJKxAsDIyXEKBYguD/ABZYXeWleGdXzq2um/KguY/nfwZC6RYDnDE+Qgfwt+d2nK/3Kled0S1Q2K8=
+	t=1782276420; cv=none; b=UNk1cOkyRGhmsq/NwAZo2Nygzmrg09QoBSXD98J3GE53tdf2RzrTHnsR0zFet4yC8NtXLM0zfkez9iQLAQ/lDA4uL3Jclapx3K3F3QDAs3QBwr21BNfTKOiEl+MKtKRB/D6X//8liV3x01ZMS713QjHXf4D0/M7emjEKqi9F/3E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782276365; c=relaxed/simple;
-	bh=VNPH2YWSESYMjLIAj3Lc92cdyQcSlhTL4ac6saqJpJ0=;
+	s=arc-20240116; t=1782276420; c=relaxed/simple;
+	bh=ElYLexCJy7bi4YH6z37wV0wQwpjZCXzBMBNUf4AEJH4=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=nNO4mvqW3GRA2ERS1ypv7l0fPXKgAN88Lme7iU9yXtNQwPcagUK5fUsmwu+ye8dKXQgOC/q2ZUMk4Q3WDFQoL7fMBuA7Uhcnvjcej+RZbAUnFkVc5bw7UwRJWrKjBaoYYfXHq5oT9q8gFeVZ/urjz2CLfoRpTj88Ddvn4wBc3O8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=cisco.com; spf=pass smtp.mailfrom=cisco.com; dkim=pass (2048-bit key) header.d=cisco.com header.i=@cisco.com header.b=CeVDIqbE; arc=none smtp.client-ip=173.37.86.79
+	 MIME-Version; b=e36v2iLYqJk4J+ycZIrmf98C/lZZrVCQk1tCpj58k0fBai+8/CzEkAwOIAYHmeg60AViJNHWkIbLbFp2rtdota6RZuFQycNr1mDfi9yfTBJmArvgldlHstSzyrlLhYP7Ik1i1/bPOj8RNDDaQdPIT3aYVQ4L++tfDnjdQh30yLQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=cisco.com; spf=pass smtp.mailfrom=cisco.com; dkim=pass (2048-bit key) header.d=cisco.com header.i=@cisco.com header.b=Udh2RMpS; arc=none smtp.client-ip=173.37.86.80
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=cisco.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cisco.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=cisco.com header.i=@cisco.com header.b="CeVDIqbE"
+	dkim=pass (2048-bit key) header.d=cisco.com header.i=@cisco.com header.b="Udh2RMpS"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=cisco.com; i=@cisco.com; l=20523; q=dns/txt;
-  s=iport01; t=1782276363; x=1783485963;
+  d=cisco.com; i=@cisco.com; l=84347; q=dns/txt;
+  s=iport01; t=1782276416; x=1783486016;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=IbjEuLzNsmMVtYvnwnzmolan7zBT1pcd8JUd06O+5vo=;
-  b=CeVDIqbEXY2Z6Y9aaOuaEki1ECIGz8NTA9OAXhiW5aMAG9BCgP3OAYye
-   JzjmKBtD65Lc7PPkgqN1tsZfEIAijT56xJi+FYm9Uflr7laj0/iJ9FYTe
-   SHwrDpUxbT/3SvA3lYivbUaw6/DgnnENHcX2SPVqeIyJ08oUFkEzFflR1
-   e2fQa4SS7/WHOo6l2/L2FmBUnE8BBkP7UkTOgMdWs/Eh7VlVyg1cSKZZQ
-   CzVTf0qOakT0+EWLMvguWtRLgfg4k2Lg3o1+7QgX1cBMbarWt2Z2NRdY4
-   oahBtp8Oj2/V8B3lULR6vNSz3rvD0L5iASaVcy4ZH4bQ+ysqSINPEqMmL
+  bh=YsRHliQeeDEsag9Fomcaf9hzl90kC0eRNWtHlzntcBs=;
+  b=Udh2RMpS9MdJbUc2ENCVloe0Gk/CL55dsJwWzoJtSSZRAoTwAJwPCDkj
+   OU12loOBwrHYArul6ocJLSJWmSVh9pz0ugE3ytVTXLg2qNQNQhMKOsUxp
+   e/K/eR5LZmeOjDldtgSXsbXgvyUlXuzeMxNzOH6CmqDCXB6MyvldTkLbW
+   bURipaErCD3LUokBlyh9MTqyu7NIhCq1qC+2yxtxL9SqXpoABfjPce7ac
+   MoPeRKrMN/tCDEbjlAYKfgQ37GYGmsqgNMIBFQGHxNfSJzhKZqURjZRx1
+   IXIYXS0yfBIcHC4JLGIThqVPKmZofTMIgLw5N4G3KdJ4UBxR5OREm/PgY
    w==;
-X-CSE-ConnectionGUID: T7JzpMOHRJOYvvwvjFj8rQ==
-X-CSE-MsgGUID: Orks0gX1SziomT6Ryh7Vtg==
-X-IPAS-Result: =?us-ascii?q?A0BDAgD8Xztq/4//Ja1aHgEBCxIMggULghg/gVJDGTCUK?=
- =?us-ascii?q?oIhgRadCBSBag8BAQEPUQQBAYUGAo1KAiY0CQ4BAgQDAgMBAQEBAQEBAQEBA?=
- =?us-ascii?q?QsBAQUBAQECAQcFgQ4ThlyGWwIBAycLAUYQUVYZgipYgnQDsjuBeTOBAd5Dg?=
- =?us-ascii?q?WYBCxQBgTiNXnSEfCcVBoFJRIEVgnMHb4FSgkkPhl4Egy6EHH+LZ0iBHgNZL?=
- =?us-ascii?q?AFVEw0KCwcFgWYDNRIqFW4yHYEjPheBDBsHBYEdgW6BBIUCIx8DOX+BP4EkZ?=
- =?us-ascii?q?GYVMDWBAQERHwqBNQMLGA1IESw3FBsEPm4HjF0XD4I9AUk6CzB9YhkBFh4LO?=
- =?us-ascii?q?pJ0CpAMgiGhD4QnjnqSYRozhASmaJkIpAqFOIFoPIFZMxoIGxU7gmdTGQ+OL?=
- =?us-ascii?q?RbSOicyPQIHAgcOAwuRaYF8AQE?=
-IronPort-Data: A9a23:lwH3Iar10Kwb2Y0hVXeCpX/yJQpeBmLpZBIvgKrLsJaIsI4StFCzt
- garIBmDaPqOMDTzfYhzbIiy/EsPvcDWnNFkGQo5pS83QXwQ9uPIVI+TRqvS04x+DSFioGZPt
- Zh2hgzodZhsJpPkjk7zdOCn9j8kif3gqoPUUIbsIjp2SRJvVBAvgBdin/9RqoNziLBVOSvV0
- T/Ji5OZYgPNNwJcaDpOtfrd8kg35pwehRtB1rAATaET1LPhvyF94KI3fcmZM3b+S49IKe+2L
- 86r5K255G7Q4yA2AdqjlLvhGmVSKlIFFVHT4pb+c/HKbilq/kTe4I5iXBYvQRs/ZwGyojxE4
- I4lWapc5useFvakdOw1C3G0GszlVEFM0OevzXOX6aR/w6BaGpfh660GMa04AWEX0tooI3NW0
- Ns4EhIqXw6dmPy07rDrUNA506zPLOGzVG8ekmtrwTecCbMtRorOBv2Uo9RZxzw3wMtJGJ4yZ
- eJANmEpN0uGOUASfA5LU/rSn8/w7pX7Wz5Rsk6UoaM0y2PS1wd2lrPqNbI5f/TWFJ0FxxfJ+
- j2uE2LRJQsZL4SQ+WO+4HOrg9ORpzL7B7wOG+jtnhJtqBjJroAJMzUWXEG2ifq0kEizX5RYM
- UN80igjr6Ia8E2tU8m7Xhe95nWDu3Y0XtNKD+w8rhmA1qfO+AufLm8eRzVFZZots8pebTUm3
- 1yOh9T0LSZivL2cVTSW8bL8hTG3NC4YIm8DTTUJQQsM/5/op4RbpgjCUNt5C4avg9H1EC22y
- DePxAA6i6gVhscN/76m5l2BiDWpzrDNTwgo9kDUU3ij4wdReoGofcqr5ELd4PIGK5yWJnGFv
- X4Zi42F5/sPJY+CmTbLQ+gXGrytofGfP1XhbUVHBZIt8XGpvnWkZ40VuG84L0ZyOcFCcjjsC
- KPOhT5sCFZoFCPCRcdKj0iZUazGEYCI+QzZa83p
-IronPort-HdrOrdr: A9a23:HlxKGKD8dihAuCLlHelm55DYdb4zR+YMi2TDGXocdfUzSL39qy
- nAppomPHPP4gr5HUtQ+uxoW5PwJE80l6QV3WB5B97LNzUO+lHYTr2KhrGM/9SPIUDD398Y/b
- t8cqR4Fd37BUV3gILH+gWieuxQp+VviJrJuc7ui1FwUAptd6Zsqy19CgqdDwlKYTMuP+teKH
- JZjfA33wZJvh8sH72GOkU=
-X-Talos-CUID: 9a23:oxbEw20cNRuNMtUzHfpMb7xfJp8HYGX461fqAWiJF3h2Vr+7Sw+KwfYx
-X-Talos-MUID: =?us-ascii?q?9a23=3AAdU6Cwy0o/8Zy30UL0G5QuaWX56aqIO0C1tVnqV?=
- =?us-ascii?q?fgNuFMilMZQ2MjGuJXoByfw=3D=3D?=
+X-CSE-ConnectionGUID: juaL/5fYRI+fAD9Q6RatMw==
+X-CSE-MsgGUID: L7AlfBebRzGya66YlM6gdw==
+X-IPAS-Result: =?us-ascii?q?A0BHAgD8Xztq/4//Ja1aHgEBCxIMggULghg/dF5DGTAEl?=
+ =?us-ascii?q?CaCIYEWkDeMURSBag8BAQEPRA0EAQGFBgKNSgImNAkOAQIEAwIDAQEBAQEBA?=
+ =?us-ascii?q?QEBAQELAQEFAQEBAgEHBYEOE4ZPDYZbAgEDGgEMCwFGEFFWEAmCKlgBgnMDE?=
+ =?us-ascii?q?bIqgXkzgQHeQ4FmAQUGFAGBOI1edIR8JxUGgUlEgRWCc3aBUoI0BCCGXgSCD?=
+ =?us-ascii?q?RV6EoNMUH9jhCeGXUiBHgNZLAFVEw0KCwcFgWYDNRIqFW4yHYEjPheBDBsHB?=
+ =?us-ascii?q?YEdgW6BBIUCIx8DOX+BP4EkZGYVMDWBAQERHwqBNQMLGA1IESw3FBsEPm4Hj?=
+ =?us-ascii?q?F0XD4FLAWoHBw8XBCkqCgEFDhgEEwkBAS4EAgEuSBcZFgEeAQgTKZJACBsHA?=
+ =?us-ascii?q?ROSLYE1n1qEJ4whlToaM4QElBeSUZkIglmLMZViHg+FKYFoPIFZMxoIGxU7g?=
+ =?us-ascii?q?mcTQBkPji0WiHPJRycyAgE6AQEHAgcOAwuBaJAAAgIkB25gAQE?=
+IronPort-Data: A9a23:/C1YnqvGa1pos9+ZaeAwWRGGKefnVNBfMUV32f8akzHdYApBsoF/q
+ tZmKWnTa6yPZ2Kmed10atng8xsGvpDQmoRnTQJupCg9EHhHgMeUXt7xwmUckM+xwmwvaGo9s
+ q3yv/GZdJhcokf0/0nrav666yEgiclkf5KkYMbcICd9WAR4fykojBNnioYRj5Vh6TSDK1vlV
+ eja/YuFZDdJ5xYuajhKs/zZ80s11BjPkGpwUmIWNKgjUGD2zxH5PLpHTYmtIn3xRJVjH+LSb
+ 47r0LGj82rFyAwmA9Wjn6yTWhVirmn6ZFXmZtJ+AsBOszAazsAA+v9T2Mk0NS+7vw60c+VZk
+ 72hg3AfpTABZcUgkMxFO/VR/roX0aduoNcrKlDn2SCfItGvn3bEm51T4E8K0YIw+Pt+JSYT+
+ 80iCXMDRzzSvryMya6eVbw57igjBJGD0II3oHpsy3TdSP0hW52GG/uM7t5D1zB2jcdLdRrcT
+ 5NGMnw0M1KaPkAJYwtMYH49tL/Aan3XcDRCtFORrKkf6GnIxws327/oWDbQUoDbFZkNwBnI+
+ woq+UzdXTgeOvaSwwCX3WOl2LH+mQalV44NQejQGvlCxQf7KnYoIBkVTXO6p+W0jgi1XNc3A
+ 0wd4CcGrqUo8kGvCN7nUHWQonOGtDYYWtxNA6s74gTLwa3Riy6cD3IYTzgHcNE6udUtSDoC0
+ UWAlNfkQzdotdW9QH6U9bCMqi6aIyUZLWYeIyQDSGMt4dzupow8jhPnVNtvEKepyNbyHFnY2
+ T2UoTIlr68egc4Cy+Ow+lWvqzagu57CRwgd/RjMUySu6QYRTIqkYZG4rFvW9/BNKK6HQVSb+
+ nsJgc6T6KYJF57lvCiMRvgdWaqi/PetLjLRmxhsEoMn+jDr/GSsFb28+xlkL0tvd8JBcjjzb
+ QqL50Va5YRYOz2haqofj5+NNvnGBJPITbzNPs04pPIXCnStXGdrJB1TWHM=
+IronPort-HdrOrdr: A9a23:x8dWSK0G4RvfUacnR8YbqQqjBHgkLtp133Aq2lEZdPWaSKClfq
+ eV7ZAmPHDP5gr5NEtLpTnEAtjifZq+z+8R3WByB9aftWDd0QPCEGgh1/qB/9SKIULDH4BmuJ
+ tIQuxXFMDwAV9mjczz/QW0V+o7zMLvytHOuQ6n9RdQZDAvTb185AFkDQveOEh3SA5aQacdLv
+ Onl6x6T/7KQwVuUix9bUN1JtT+mw==
+X-Talos-CUID: 9a23:sxHNKGCvbVpizSD6Eyt6/WpTR84USFyewl78cnbmM291baLAHA==
+X-Talos-MUID: 9a23:hG/ApggBC8/D7BggAXMoAsMpEJhB56qEBUo3g7oXspfaBChVZTiRk2Hi
 X-IronPort-Anti-Spam-Filtered: true
 X-IronPort-AV: E=Sophos;i="6.24,221,1774310400"; 
-   d="scan'208";a="490819947"
+   d="scan'208";a="498406785"
 Received: from rcdn-l-core-06.cisco.com ([173.37.255.143])
-  by rcdn-iport-8.cisco.com with ESMTP/TLS/TLS_AES_256_GCM_SHA384; 24 Jun 2026 04:46:02 +0000
+  by rcdn-iport-9.cisco.com with ESMTP/TLS/TLS_AES_256_GCM_SHA384; 24 Jun 2026 04:46:48 +0000
 Received: from fedora.lan?044cisco.com (unknown [10.188.122.232])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: kartilak@cisco.com)
-	by rcdn-l-core-06.cisco.com (Postfix) with ESMTPSA id B978A180003A2;
-	Wed, 24 Jun 2026 04:46:00 +0000 (GMT)
+	by rcdn-l-core-06.cisco.com (Postfix) with ESMTPSA id 847BD18000277;
+	Wed, 24 Jun 2026 04:46:46 +0000 (GMT)
 From: Karan Tilak Kumar <kartilak@cisco.com>
 To: sebaddel@cisco.com
 Cc: arulponn@cisco.com,
@@ -89,10 +89,11 @@ Cc: arulponn@cisco.com,
 	adakopou@redhat.com,
 	lduncan@suse.com,
 	Karan Tilak Kumar <kartilak@cisco.com>,
+	kernel test robot <lkp@intel.com>,
 	Hannes Reinecke <hare@kernel.org>
-Subject: [PATCH v5 05/13] scsi: fnic: Add FDLS role handling for NVMe initiators
-Date: Tue, 23 Jun 2026 21:43:26 -0700
-Message-ID: <20260624044334.3079-6-kartilak@cisco.com>
+Subject: [PATCH v5 06/13] scsi: fnic: Add the NVMe/FC transport path
+Date: Tue, 23 Jun 2026 21:43:27 -0700
+Message-ID: <20260624044334.3079-7-kartilak@cisco.com>
 X-Mailer: git-send-email 2.47.1
 In-Reply-To: <20260624044334.3079-1-kartilak@cisco.com>
 References: <20260624044334.3079-1-kartilak@cisco.com>
@@ -108,14 +109,19 @@ X-Outbound-Client-TLS: ANONYMOUS;unknown [10.188.122.232];TLSv1.3;TLS_AES_256_GC
 X-Outbound-SMTP-Client: 10.188.122.232, [10.188.122.232]
 X-Outbound-Node: rcdn-l-core-06.cisco.com
 
-Modify FDLS registration and discovery flows to use NVMe FC-4 type,
-features, PRLI service parameters, and FDMI attributes when the adapter
-runs as an NVMe initiator.
+Build fnic_nvme.c and fnic_nvme.h into the driver.
 
-Limit SCSI host setup, teardown, rport reset, and FC host notifications
-to FCP initiators while keeping target-port events available to both FCP
-and NVMe roles.
+Add NVMe local-port and remote-port registration, I/O submission, DMA
+mapping, tag management, completion and abort handling, LS response
+handling, and tport/lport cleanup.
 
+Update shared fnic structures, FCPIO descriptors, FDLS state, and
+device-command definitions needed by the NVMe transport path.
+
+Reported-by: kernel test robot <lkp@intel.com>
+Closes: https://lore.kernel.org/oe-kbuild-all/202605280430.wTYAqI3A-lkp@intel.com/
+Closes: https://lore.kernel.org/oe-kbuild-all/202605280619.pmobiDWp-lkp@intel.com/
+Closes: https://lore.kernel.org/oe-kbuild-all/202605280519.Jd4fmgAZ-lkp@intel.com/
 Reviewed-by: Sesidhar Baddela <sebaddel@cisco.com>
 Reviewed-by: Arulprabhu Ponnusamy <arulponn@cisco.com>
 Reviewed-by: Gian Carlo Boffa <gcboffa@cisco.com>
@@ -124,560 +130,2683 @@ Reviewed-by: Hannes Reinecke <hare@kernel.org>
 Reviewed-by: Lee Duncan <lduncan@suse.com>
 Signed-off-by: Karan Tilak Kumar <kartilak@cisco.com>
 Co-developed-by: Hannes Reinecke <hare@kernel.org>
----
- drivers/scsi/fnic/fcpio.h     |  23 +++++
- drivers/scsi/fnic/fdls_disc.c | 160 +++++++++++++++++++++++-----------
- drivers/scsi/fnic/fdls_fc.h   |   1 +
- drivers/scsi/fnic/fnic_fcs.c  |  26 +++---
- drivers/scsi/fnic/fnic_fdls.h |  19 ++--
- drivers/scsi/fnic/fnic_main.c |  23 +++--
- drivers/scsi/fnic/fnic_scsi.c |   3 +-
- 7 files changed, 177 insertions(+), 78 deletions(-)
 
+---
+Changes between v1 and v2:
+Incorporate review comments from Marco Crivellari:
+        Explicitly use WQ_PERCPU for the fnic completion workqueue.
+
+Changes between v2 and v3:
+Fix issues reported by kernel bot.
+Guard tport logging when NVMe I/O send has no tport.
+Validate ERSP response length before copying the response.
+Validate LS response length before copying the response.
+
+Changes between v3 and v4:
+Incorporate review comments from Sashiko:
+	Clear NVMe SGL DMA address on map failure
+	Drop fnic lock around NVMe tport registration
+	Unlink unregistered NVMe tports before freeing them
+	Clear NVMe unload completion pointer on exit
+	Take fnic lock before NVMe tport cleanup tag lookup
+	Clear NVMe tport delete completion pointer on unregister failure
+
+Changes between v4 and v5:
+Incorporate review comments from Sashiko:
+	Set NVMe wait timestamp before queueing completions
+	Use async timer delete for NVMe LS responses
+	Complete failed NVMe ITMF aborts
+	Track NVMe SGL DMA mapping state
+	Detach NVMe LS cleanup before callbacks
+	Defer NVMe table frees until cleanup
+	Lock NVMe tport IO termination lookup
+---
+ drivers/scsi/fnic/Makefile      |    1 +
+ drivers/scsi/fnic/fcpio.h       |   12 +
+ drivers/scsi/fnic/fnic.h        |   20 +-
+ drivers/scsi/fnic/fnic_fcs.c    |   13 +-
+ drivers/scsi/fnic/fnic_fdls.h   |   27 +-
+ drivers/scsi/fnic/fnic_io.h     |   24 +-
+ drivers/scsi/fnic/fnic_main.c   |   90 +-
+ drivers/scsi/fnic/fnic_nvme.c   | 1823 +++++++++++++++++++++++++++++++
+ drivers/scsi/fnic/fnic_nvme.h   |  205 ++++
+ drivers/scsi/fnic/fnic_res.h    |   32 +-
+ drivers/scsi/fnic/fnic_scsi.c   |    4 +-
+ drivers/scsi/fnic/vnic_devcmd.h |    2 +-
+ 12 files changed, 2240 insertions(+), 13 deletions(-)
+ create mode 100644 drivers/scsi/fnic/fnic_nvme.c
+ create mode 100644 drivers/scsi/fnic/fnic_nvme.h
+
+diff --git a/drivers/scsi/fnic/Makefile b/drivers/scsi/fnic/Makefile
+index c025e875009e..48c5e0cb8ca6 100644
+--- a/drivers/scsi/fnic/Makefile
++++ b/drivers/scsi/fnic/Makefile
+@@ -6,6 +6,7 @@ fnic-y	:= \
+ 	fnic_attrs.o \
+ 	fnic_isr.o \
+ 	fnic_main.o \
++	fnic_nvme.o \
+ 	fnic_res.o \
+ 	fnic_fcs.o \
+ 	fdls_disc.o \
 diff --git a/drivers/scsi/fnic/fcpio.h b/drivers/scsi/fnic/fcpio.h
-index 54a0b2ba8f6f..46eb442a47cb 100644
+index 46eb442a47cb..a98a2a3bfe15 100644
 --- a/drivers/scsi/fnic/fcpio.h
 +++ b/drivers/scsi/fnic/fcpio.h
-@@ -33,6 +33,9 @@ enum fcpio_type {
- 	FCPIO_ICMND_CMPL,
- 	FCPIO_ITMF,
- 	FCPIO_ITMF_CMPL,
-+	FCPIO_NVME_CMD,
-+	FCPIO_NVME_ERSP_HW_CMPL,
-+	FCPIO_NVME_ERSP_FW_CMPL,
+@@ -21,6 +21,18 @@
+ #define FCPIO_HOST_SEQ_ID_RANGE_START       0x80
+ #define FCPIO_HOST_SEQ_ID_RANGE_END         0xff
  
- 	/*
- 	 * Target request types
-@@ -179,10 +182,22 @@ fcpio_header_dec(struct fcpio_header *hdr,
- 	*tag = hdr->tag;
- }
- 
-+#define NVME_CMD_SZ 96
- #define CDB_16      16
- #define CDB_32      32
- #define LUN_ADDRESS 8
- 
-+struct fcpio_nvme_cmnd {
-+	uint8_t d_id[3];
-+	u_int8_t flags;		/* command flags */
-+	u_int32_t sgl_cnt;	/* scatter-gather list count */
-+	u_int64_t sgl_addr;	/* scatter-gather list addr */
-+	u_int16_t cmd_len;
-+	u_int16_t _resvd1;	/* reserved: should be 0 */
-+	u_int32_t data_len;	/* length of data expected */
-+	u_int8_t nvme_cmnd[NVME_CMD_SZ];	/* NVME command */
++struct fnic_nvme_io_event {
++	struct list_head links;
++	struct work_struct io_work;
++	void *arg1;
++};
++
++struct fnic_io_event_s {
++	struct list_head links;
++	struct work_struct io_work;
++	void *arg1;
 +};
 +
  /*
-  * fcpio_icmnd_16: host -> firmware request
-  *
-@@ -458,6 +473,7 @@ struct fcpio_host_req {
- 		/*
- 		 * Initiator host requests
- 		 */
-+		struct fcpio_nvme_cmnd              nvcmnd;
- 		struct fcpio_icmnd_16               icmnd_16;
- 		struct fcpio_icmnd_32               icmnd_32;
- 		struct fcpio_itmf                   itmf;
-@@ -482,6 +498,12 @@ struct fcpio_host_req {
- 	} u;
+  * Command entry type
+  */
+diff --git a/drivers/scsi/fnic/fnic.h b/drivers/scsi/fnic/fnic.h
+index 54ee52c453ba..86293e112b34 100644
+--- a/drivers/scsi/fnic/fnic.h
++++ b/drivers/scsi/fnic/fnic.h
+@@ -27,6 +27,7 @@
+ #include "vnic_stats.h"
+ #include "vnic_scsi.h"
+ #include "fnic_fdls.h"
++#include "fnic_nvme.h"
+ 
+ #define DRV_NAME		"fnic"
+ #define DRV_DESCRIPTION		"Cisco FCoE HBA Driver"
+@@ -80,6 +81,8 @@
+ #define FNIC_DEV_RST_ABTS_DONE          BIT(19)
+ #define FNIC_DEV_RST_TERM_DONE          BIT(20)
+ #define FNIC_DEV_RST_ABTS_PENDING       BIT(21)
++#define FNIC_NVME_ADMIN_IO_TIMER_PENDING BIT(22)
++#define FNIC_NVME_ADMIN_IO              BIT(23)
+ 
+ #define FNIC_FW_RESET_TIMEOUT        60000	/* mSec   */
+ #define FNIC_FCOE_MAX_CMD_LEN        16
+@@ -238,7 +241,7 @@ extern spinlock_t reset_fnic_list_lock;
+ extern struct list_head reset_fnic_list;
+ extern struct workqueue_struct *reset_fnic_work_queue;
+ extern struct work_struct reset_fnic_work;
+-
++extern struct workqueue_struct *fnic_cmpl_queue;
+ 
+ #define FNIC_MAIN_LOGGING 0x01
+ #define FNIC_FCS_LOGGING 0x02
+@@ -352,6 +355,11 @@ struct fnic_frame_list {
+ 	int rx_ethhdr_stripped;
  };
  
-+struct fcpio_nvme_cmpl {
-+	uint8_t resp_size;
-+	uint8_t resvd[3];
-+	uint8_t resp_bytes[32];
++struct fnic_tag_t {
++	struct list_head free_list;
++	int tag_id;
 +};
 +
- /*
-  * fcpio_icmnd_cmpl: firmware -> host response
-  *
-@@ -682,6 +704,7 @@ struct fcpio_fw_req {
- 		 * Initiator firmware responses
- 		 */
- 		struct fcpio_icmnd_cmpl         icmnd_cmpl;
-+		struct fcpio_nvme_cmpl          nvme_cmpl;
- 		struct fcpio_itmf_cmpl          itmf_cmpl;
+ struct fnic_event {
+ 	struct list_head list;
+ 	struct fnic *fnic;
+@@ -469,6 +477,13 @@ struct fnic {
+ 	struct list_head vlan_list;
+ 	/*** FIP related data members  -- end ***/
  
- 		/*
-diff --git a/drivers/scsi/fnic/fdls_disc.c b/drivers/scsi/fnic/fdls_disc.c
-index f665460ef62c..e03256183ac6 100644
---- a/drivers/scsi/fnic/fdls_disc.c
-+++ b/drivers/scsi/fnic/fdls_disc.c
-@@ -13,6 +13,10 @@
- #include <linux/utsname.h>
- 
- #define FC_FC4_TYPE_SCSI 0x08
-+#define FNIC_NVME_FEAT_TARG (1 << 0)
-+#define FNIC_NVME_FEAT_INIT (1 << 1)
-+#define FNIC_NVME_FEAT_DISC (1 << 2)
++	/* NVME data members */
++	struct sbitmap nvfnic_tag_map;
++	struct work_struct nvme_io_cmpl_work;
++	atomic_t nvme_io_event_queued;
++	struct llist_head nvme_io_event_llist;
++	struct completion *nvme_lport_unreg_done;
 +
- #define PORT_SPEED_BIT_8 8
- #define PORT_SPEED_BIT_9 9
- #define PORT_SPEED_BIT_14 14
-@@ -562,6 +566,22 @@ static void fdls_init_fabric_abts_frame(uint8_t *frame,
- 	};
- }
+ 	/* copy work queue cache line section */
+ 	____cacheline_aligned struct vnic_wq_copy hw_copy_wq[FNIC_WQ_COPY_MAX];
+ 	____cacheline_aligned struct fnic_cpy_wq sw_copy_wq[FNIC_WQ_COPY_MAX];
+@@ -522,6 +537,7 @@ int fnic_host_reset(struct Scsi_Host *shost);
+ void fnic_reset(struct Scsi_Host *shost);
+ int fnic_issue_fc_host_lip(struct Scsi_Host *shost);
+ void fnic_get_host_port_state(struct Scsi_Host *shost);
++void fnic_fcpio_reset(struct fnic *fnic);
+ int fnic_wq_copy_cmpl_handler(struct fnic *fnic, int copy_work_to_do, unsigned int cq_index);
+ int fnic_wq_cmpl_handler(struct fnic *fnic, int);
+ int fnic_flogi_reg_handler(struct fnic *fnic, u32);
+@@ -568,6 +584,8 @@ void fnic_scsi_unload(struct fnic *fnic);
+ void fnic_scsi_unload_cleanup(struct fnic *fnic);
+ int fnic_get_debug_info(struct stats_debug_info *info,
+ 			struct fnic *fnic);
++int free_wq_copy_descs(struct fnic *fnic, struct vnic_wq_copy *wq,
++			unsigned int hwq);
  
-+static void fdls_set_frame_type(struct fnic *fnic, uint8_t *frame_type)
-+{
-+	if (IS_FNIC_FCP_INITIATOR(fnic))
-+		*frame_type = FC_TYPE_FCP;
-+	else if (IS_FNIC_NVME_INITIATOR(fnic))
-+		*frame_type = FC_TYPE_NVME;
-+}
-+
-+static void fdls_set_feature_type(struct fnic *fnic, uint8_t *feature_type)
-+{
-+	if (IS_FNIC_FCP_INITIATOR(fnic))
-+		*feature_type = FCP_FEAT_INIT;
-+	else if (IS_FNIC_NVME_INITIATOR(fnic))
-+		*feature_type = FNIC_NVME_FEAT_INIT;
-+}
-+
- static void
- fdls_send_rscn_resp(struct fnic_iport_s *iport,
- 		    struct fc_frame_header *rscn_fchdr)
-@@ -1137,10 +1157,10 @@ static void fdls_send_gpn_ft(struct fnic_iport_s *iport, int fdls_state)
- 		      .fh_rx_id = cpu_to_be16(FNIC_UNASSIGNED_RXID)},
- 		.fc_std_ct_hdr = {.ct_rev = FC_CT_REV, .ct_fs_type = FC_FST_DIR,
- 			      .ct_fs_subtype = FC_NS_SUBTYPE,
--			      .ct_cmd = cpu_to_be16(FC_NS_GPN_FT)},
--		.gpn_ft.fn_fc4_type = 0x08
-+			      .ct_cmd = cpu_to_be16(FC_NS_GPN_FT)}
- 	};
- 
-+	fdls_set_frame_type(fnic, &pgpn_ft->gpn_ft.fn_fc4_type);
- 	hton24(fcid, iport->fcid);
- 	FNIC_STD_SET_S_ID(pgpn_ft->fchdr, fcid);
- 
-@@ -1264,11 +1284,14 @@ bool fdls_delete_tport(struct fnic_iport_s *iport, struct fnic_tport_s *tport)
- 		tport->timer_pending = 0;
- 	}
- 
--	spin_unlock_irqrestore(&fnic->fnic_lock, fnic->lock_flags);
--	fnic_rport_exch_reset(iport->fnic, tport->fcid);
--	spin_lock_irqsave(&fnic->fnic_lock, fnic->lock_flags);
-+	if (IS_FNIC_FCP_INITIATOR(fnic)) {
-+		spin_unlock_irqrestore(&fnic->fnic_lock, fnic->lock_flags);
-+		fnic_rport_exch_reset(iport->fnic, tport->fcid);
-+		spin_lock_irqsave(&fnic->fnic_lock, fnic->lock_flags);
-+	}
- 
--	if (tport->flags & FNIC_FDLS_SCSI_REGISTERED) {
-+	if ((tport->flags & FNIC_FDLS_SCSI_REGISTERED) ||
-+	    (tport->flags & FNIC_FDLS_NVME_REGISTERED)) {
- 		tport_del_evt =
- 			kzalloc_obj(struct fnic_tport_event_s, GFP_ATOMIC);
- 		if (!tport_del_evt) {
-@@ -1288,6 +1311,7 @@ bool fdls_delete_tport(struct fnic_iport_s *iport, struct fnic_tport_s *tport)
- 		list_del(&tport->links);
- 		kfree(tport);
- 	}
-+
- 	return true;
- }
- 
-@@ -1404,12 +1428,16 @@ static void fdls_send_register_fc4_types(struct fnic_iport_s *iport)
- 	}
- 	FNIC_STD_SET_OX_ID(prft_id->fchdr, oxid);
- 
-+	if (IS_FNIC_NVME_INITIATOR(fnic))
-+		prft_id->rft_id.fr_fts.ff_type_map[FC_TYPE_NVME / FC_NS_BPW] =
-+			cpu_to_be32(1 << (FC_TYPE_NVME % FC_NS_BPW));
-+	else if (IS_FNIC_FCP_INITIATOR(fnic))
-+		prft_id->rft_id.fr_fts.ff_type_map[FC_TYPE_FCP / FC_NS_BPW] =
-+			cpu_to_be32(1 << (FC_TYPE_FCP % FC_NS_BPW));
- 
--	prft_id->rft_id.fr_fts.ff_type_map[0] =
--	    cpu_to_be32(1 << FC_TYPE_FCP);
-+	prft_id->rft_id.fr_fts.ff_type_map[FC_TYPE_CT / FC_NS_BPW] |=
-+		cpu_to_be32(1 << (FC_TYPE_CT % FC_NS_BPW));
- 
--	prft_id->rft_id.fr_fts.ff_type_map[1] =
--	cpu_to_be32(1 << (FC_TYPE_CT % FC_NS_BPW));
- 	FNIC_FCS_DBG(KERN_INFO, fnic,
- 		     "0x%x: FDLS send RFT 0x%08x 0x%08x 0x%08x with oxid: 0x%x",
- 		     iport->fcid, prft_id->rft_id.fr_fts.ff_type_map[0],
-@@ -1449,10 +1477,11 @@ static void fdls_send_register_fc4_features(struct fnic_iport_s *iport)
- 		.fc_std_ct_hdr = {.ct_rev = FC_CT_REV, .ct_fs_type = FC_FST_DIR,
- 			      .ct_fs_subtype = FC_NS_SUBTYPE,
- 			      .ct_cmd = cpu_to_be16(FC_NS_RFF_ID)},
--		.rff_id.fr_feat = 0x2,
--		.rff_id.fr_type = FC_TYPE_FCP
- 	};
- 
-+	fdls_set_frame_type(fnic, &prff_id->rff_id.fr_type);
-+	fdls_set_feature_type(fnic, &prff_id->rff_id.fr_feat);
-+
- 	hton24(fcid, iport->fcid);
- 	FNIC_STD_SET_S_ID(prff_id->fchdr, fcid);
- 	FNIC_STD_SET_PORT_ID(prff_id->rff_id, fcid);
-@@ -1469,8 +1498,6 @@ static void fdls_send_register_fc4_features(struct fnic_iport_s *iport)
- 	}
- 	FNIC_STD_SET_OX_ID(prff_id->fchdr, oxid);
- 
--	prff_id->rff_id.fr_type = FC_TYPE_FCP;
--
- 	FNIC_FCS_DBG(KERN_INFO, fnic,
- 		"0x%x: FDLS send RFF with oxid: 0x%x type 0%x feat 0%x",
- 		iport->fcid, oxid, prff_id->rff_id.fr_type,
-@@ -1508,13 +1535,21 @@ fdls_send_tgt_prli(struct fnic_iport_s *iport, struct fnic_tport_s *tport)
- 		.fchdr = {.fh_r_ctl = FC_RCTL_ELS_REQ, .fh_type = FC_TYPE_ELS,
- 			  .fh_f_ctl = {FNIC_ELS_REQ_FCTL, 0, 0},
- 			  .fh_rx_id = cpu_to_be16(FNIC_UNASSIGNED_RXID)},
--		.els_prli = {.prli_cmd = ELS_PRLI,
--			     .prli_spp_len = 16,
--			     .prli_len = cpu_to_be16(0x14)},
--		.sp = {.spp_type = 0x08, .spp_flags = 0x0020,
--		       .spp_params = cpu_to_be32(0xA2)}
-+		.els_prli = {.prli_cmd = ELS_PRLI},
-+		.sp = {.spp_params = cpu_to_be32(iport->service_params)}
- 	};
- 
-+	fdls_set_frame_type(fnic, &pprli->sp.spp_type);
-+	if (IS_FNIC_FCP_INITIATOR(fnic)) {
-+		pprli->els_prli.prli_spp_len = 16;
-+		pprli->els_prli.prli_len = cpu_to_be16(0x14);
-+		pprli->sp.spp_flags = FC_SPP_EST_IMG_PAIR;
-+	} else if (IS_FNIC_NVME_INITIATOR(fnic)) {
-+		/* Per FC-NVMe, Establish Image Pair must not be set for NVMe PRLI. */
-+		pprli->els_prli.prli_spp_len = 20;
-+		pprli->els_prli.prli_len = cpu_to_be16(0x18);
-+	}
-+
- 	oxid = fdls_alloc_oxid(iport, FNIC_FRAME_TYPE_TGT_PRLI, &tport->active_oxid);
- 	if (oxid == FNIC_UNASSIGNED_OXID) {
- 		FNIC_FCS_DBG(KERN_ERR, fnic,
-@@ -2067,7 +2102,10 @@ static void fdls_fdmi_register_pa(struct fnic_iport_s *iport)
- 	put_unaligned_be64(iport->wwnn, data);
- 
- 	memset(data, 0, FNIC_FDMI_FC4_LEN);
--	data[2] = 1;
-+	if (IS_FNIC_FCP_INITIATOR(fnic))
-+		data[2] = 1;
-+	else if (IS_FNIC_NVME_INITIATOR(fnic))
-+		data[6] = 1;
- 	fnic_fdmi_attr_set(fdmi_attr, FNIC_FDMI_TYPE_FC4_TYPES,
- 		FNIC_FDMI_FC4_LEN, data, &attr_off_bytes);
- 
-@@ -2096,9 +2134,11 @@ static void fdls_fdmi_register_pa(struct fnic_iport_s *iport)
- 	FNIC_FCS_DBG(KERN_INFO, fnic,
- 			"OS name set <%s>, off=%d", data, attr_off_bytes);
- 
--	sprintf(fc_host_system_hostname(fnic->host), "%s", utsname()->nodename);
--	strscpy_pad(data, fc_host_system_hostname(fnic->host),
--					FNIC_FDMI_HN_LEN);
-+	if (IS_FNIC_FCP_INITIATOR(fnic))
-+		sprintf(fc_host_system_hostname(fnic->host), "%s",
-+			utsname()->nodename);
-+
-+	strscpy_pad(data, utsname()->nodename, FNIC_FDMI_HN_LEN);
- 	fnic_fdmi_attr_set(fdmi_attr, FNIC_FDMI_TYPE_HOST_NAME,
- 		FNIC_FDMI_HN_LEN, data, &attr_off_bytes);
- 
-@@ -2796,7 +2836,8 @@ fdls_process_tgt_prli_rsp(struct fnic_iport_s *iport,
- 		FNIC_FCS_DBG(KERN_INFO, fnic,
- 					 "PRLI accepted from target: 0x%x", tgt_fcid);
- 
--		if (prli_rsp->sp.spp_type != FC_FC4_TYPE_SCSI) {
-+		if (IS_FNIC_FCP_INITIATOR(fnic) &&
-+		    prli_rsp->sp.spp_type != FC_FC4_TYPE_SCSI) {
- 			FNIC_FCS_DBG(KERN_INFO, fnic,
- 				 "mismatched target zoned with FC SCSI initiator: 0x%x",
- 				 tgt_fcid);
-@@ -2852,14 +2893,22 @@ fdls_process_tgt_prli_rsp(struct fnic_iport_s *iport,
- 	tport->fcp_csp = be32_to_cpu(prli_rsp->sp.spp_params);
- 	tport->retry_counter = 0;
- 
--	if (tport->fcp_csp & FCP_SPPF_RETRY)
--		tport->tgt_flags |= FNIC_FC_RP_FLAGS_RETRY;
-+	if (IS_FNIC_FCP_INITIATOR(fnic)) {
-+		if (tport->fcp_csp & FCP_SPPF_RETRY)
-+			tport->tgt_flags |= FNIC_FC_RP_FLAGS_RETRY;
-+	} else if (IS_FNIC_NVME_INITIATOR(fnic)) {
-+		if (tport->fcp_csp & FNIC_NVME_SP_SLER)
-+			tport->tgt_flags |= FNIC_FC_RP_FLAGS_RETRY;
-+	}
- 
- 	/* Check if the device plays Target Mode Function */
--	if (!(tport->fcp_csp & FCP_PRLI_FUNC_TARGET)) {
-+	if ((IS_FNIC_FCP_INITIATOR(fnic) &&
-+	     !(tport->fcp_csp & FCP_PRLI_FUNC_TARGET)) ||
-+	    (IS_FNIC_NVME_INITIATOR(fnic) &&
-+	     !(tport->fcp_csp & FCP_PRLI_FUNC_TARGET))) {
- 		FNIC_FCS_DBG(KERN_INFO, fnic,
--			 "Remote port(0x%x): no target support. Deleting it\n",
--			 tgt_fcid);
-+				 "Remote port(0x%x): no target support. Deleting it\n",
-+				 tgt_fcid);
- 		fdls_tgt_logout(iport, tport);
- 		fdls_delete_tport(iport, tport);
- 		return;
-@@ -2868,20 +2917,23 @@ fdls_process_tgt_prli_rsp(struct fnic_iport_s *iport,
- 	fdls_set_tport_state(tport, FDLS_TGT_STATE_READY);
- 
- 	/* Inform the driver about new target added */
--	tport_add_evt = kzalloc_obj(struct fnic_tport_event_s, GFP_ATOMIC);
--	if (!tport_add_evt) {
--		FNIC_FCS_DBG(KERN_INFO, fnic,
-+	if (IS_FNIC_FCP_INITIATOR(fnic) ||
-+	    IS_FNIC_NVME_INITIATOR(fnic)) {
-+		tport_add_evt = kzalloc_obj(struct fnic_tport_event_s, GFP_ATOMIC);
-+		if (!tport_add_evt) {
-+			FNIC_FCS_DBG(KERN_INFO, fnic,
- 				     "iport fcid: 0x%x tport event memory allocation failure: 0x%0x\n",
- 				     iport->fcid, tport->fcid);
--		return;
--	}
--	tport_add_evt->event = TGT_EV_RPORT_ADD;
--	tport_add_evt->arg1 = (void *) tport;
-+			return;
-+		}
-+		tport_add_evt->event = TGT_EV_RPORT_ADD;
-+		tport_add_evt->arg1 = (void *)tport;
- 		FNIC_FCS_DBG(KERN_INFO, fnic,
- 			     "iport fcid: 0x%x add tport event fcid: 0x%x\n",
- 			     tport->fcid, iport->fcid);
--	list_add_tail(&tport_add_evt->links, &fnic->tport_event_list);
--	queue_work(fnic_event_queue, &fnic->tport_work);
-+		list_add_tail(&tport_add_evt->links, &fnic->tport_event_list);
-+		queue_work(fnic_event_queue, &fnic->tport_work);
-+	}
- }
- 
- 
-@@ -3530,9 +3582,11 @@ fdls_process_flogi_rsp(struct fnic_iport_s *iport,
- 					 "From fabric: R_A_TOV: %d E_D_TOV: %d",
- 					 iport->r_a_tov, iport->e_d_tov);
- 
--		fc_host_fabric_name(iport->fnic->host) =
--		get_unaligned_be64(&FNIC_LOGI_NODE_NAME(flogi_rsp->els));
--		fc_host_port_id(iport->fnic->host) = iport->fcid;
-+		if (IS_FNIC_FCP_INITIATOR(fnic)) {
-+			fc_host_fabric_name(iport->fnic->host) =
-+					get_unaligned_be64(&FNIC_LOGI_NODE_NAME(flogi_rsp->els));
-+			fc_host_port_id(iport->fnic->host) = iport->fcid;
-+		}
- 
- 		fnic_fdls_learn_fcoe_macs(iport, rx_frame, fcid);
- 
-@@ -4622,9 +4676,11 @@ void fnic_fdls_disc_start(struct fnic_iport_s *iport)
- {
- 	struct fnic *fnic = iport->fnic;
- 
--	fc_host_fabric_name(iport->fnic->host) = 0;
--	fc_host_post_event(iport->fnic->host, fc_get_event_number(),
--					   FCH_EVT_LIPRESET, 0);
-+	if (IS_FNIC_FCP_INITIATOR(fnic)) {
-+		fc_host_fabric_name(iport->fnic->host) = 0;
-+		fc_host_post_event(iport->fnic->host, fc_get_event_number(),
-+						FCH_EVT_LIPRESET, 0);
-+	}
- 
- 	if (!iport->usefip) {
- 		if (iport->flags & FNIC_FIRST_LINK_UP) {
-@@ -5087,14 +5143,18 @@ void fnic_fdls_link_down(struct fnic_iport_s *iport)
- 	fdls_set_state((&iport->fabric), FDLS_STATE_LINKDOWN);
- 	iport->fabric.flags = 0;
- 
--	spin_unlock_irqrestore(&fnic->fnic_lock, fnic->lock_flags);
--	fnic_fcpio_reset(iport->fnic);
--	spin_lock_irqsave(&fnic->fnic_lock, fnic->lock_flags);
--	list_for_each_entry_safe(tport, next, &iport->tport_list, links) {
--		FNIC_FCS_DBG(KERN_INFO, fnic,
-+	if (IS_FNIC_FCP_INITIATOR(fnic) ||
-+	    IS_FNIC_NVME_INITIATOR(fnic)) {
-+		spin_unlock_irqrestore(&fnic->fnic_lock, fnic->lock_flags);
-+		fnic_fcpio_reset(iport->fnic);
-+		spin_lock_irqsave(&fnic->fnic_lock, fnic->lock_flags);
-+		list_for_each_entry_safe(tport, next, &iport->tport_list, links) {
-+			FNIC_FCS_DBG(KERN_INFO, fnic,
- 					 "removing rport: 0x%x", tport->fcid);
--		fdls_delete_tport(iport, tport);
-+			fdls_delete_tport(iport, tport);
-+		}
- 	}
-+	fdls_reset_oxid_pool(iport);
- 
- 	if (fnic_fdmi_support == 1) {
- 		if (iport->fabric.fdmi_pending > 0) {
-diff --git a/drivers/scsi/fnic/fdls_fc.h b/drivers/scsi/fnic/fdls_fc.h
-index e33c829545fb..a7b8b969f019 100644
---- a/drivers/scsi/fnic/fdls_fc.h
-+++ b/drivers/scsi/fnic/fdls_fc.h
-@@ -53,6 +53,7 @@
- 
- #define FNIC_FCP_RSP_FCTL      (0x000099)
- #define FNIC_REQ_ABTS_FCTL     (0x000009)
-+#define FNIC_NVME_LS_REQ_FCTL  (0x000029)
- 
- #define FNIC_FC_PH_VER_HI      (0x20)
- #define FNIC_FC_PH_VER_LO      (0x20)
+ struct fnic_scsi_iter_data {
+ 	struct fnic *fnic;
 diff --git a/drivers/scsi/fnic/fnic_fcs.c b/drivers/scsi/fnic/fnic_fcs.c
-index ca592bc3f618..a67d1085d720 100644
+index a67d1085d720..94b7c150c08c 100644
 --- a/drivers/scsi/fnic/fnic_fcs.c
 +++ b/drivers/scsi/fnic/fnic_fcs.c
-@@ -1018,7 +1018,8 @@ void fnic_delete_fcp_tports(struct fnic *fnic)
- 					 "removing fcp rport fcid: 0x%x", tport->fcid);
- 		fdls_set_tport_state(tport, FDLS_TGT_STATE_OFFLINING);
+@@ -155,7 +155,6 @@ void fnic_fdls_init(struct fnic *fnic, int usefip)
+ 				 iport->hwmac[3], iport->hwmac[4], iport->hwmac[5]);
+ 
+ 	INIT_LIST_HEAD(&iport->tport_list);
+-	INIT_LIST_HEAD(&iport->tport_list_pending_del);
+ 
+ 	fnic_fdls_disc_init(iport);
+ }
+@@ -728,7 +727,7 @@ fdls_send_fcoe_frame(struct fnic *fnic, void *frame, int frame_size,
+ 	return ret;
+ }
+ 
+-void fnic_send_fcoe_frame(struct fnic_iport_s *iport, void *frame,
++int fnic_send_fcoe_frame(struct fnic_iport_s *iport, void *frame,
+ 						 int frame_size)
+ {
+ 	struct fnic *fnic = iport->fnic;
+@@ -736,7 +735,7 @@ void fnic_send_fcoe_frame(struct fnic_iport_s *iport, void *frame,
+ 
+ 	/* If module unload is in-progress, don't send */
+ 	if (fnic->in_remove)
+-		return;
++		return -ESHUTDOWN;
+ 
+ 	if (iport->fabric.flags & FNIC_FDLS_FPMA_LEARNT) {
+ 		srcmac = iport->fpma;
+@@ -746,7 +745,7 @@ void fnic_send_fcoe_frame(struct fnic_iport_s *iport, void *frame,
+ 		dstmac = FCOE_ALL_FCF_MAC;
+ 	}
+ 
+-	fdls_send_fcoe_frame(fnic, frame, frame_size, srcmac, dstmac);
++	return fdls_send_fcoe_frame(fnic, frame, frame_size, srcmac, dstmac);
+ }
+ 
+ int
+@@ -1020,6 +1019,8 @@ void fnic_delete_fcp_tports(struct fnic *fnic)
  		fnic_del_tport_timer_sync(fnic, tport);
--		fnic_fdls_remove_tport(&fnic->iport, tport, flags);
-+		if (IS_FNIC_FCP_INITIATOR(fnic))
-+			fnic_fdls_remove_tport(&fnic->iport, tport, flags);
+ 		if (IS_FNIC_FCP_INITIATOR(fnic))
+ 			fnic_fdls_remove_tport(&fnic->iport, tport, flags);
++		else if (IS_FNIC_NVME_INITIATOR(fnic))
++			nvfnic_delete_tport(&fnic->iport, tport, flags);
  	}
  	spin_unlock_irqrestore(&fnic->fnic_lock, flags);
  }
-@@ -1044,8 +1045,8 @@ void fnic_tport_event_handler(struct work_struct *work)
- 			FNIC_FCS_DBG(KERN_INFO, fnic,
- 						 "Add rport event");
+@@ -1047,6 +1048,8 @@ void fnic_tport_event_handler(struct work_struct *work)
  			if (tport->state == FDLS_TGT_STATE_READY) {
--				fnic_fdls_add_tport(&fnic->iport,
--					(struct fnic_tport_s *) cur_evt->arg1, flags);
-+				if (IS_FNIC_FCP_INITIATOR(fnic))
-+					fnic_fdls_add_tport(&fnic->iport, tport, flags);
+ 				if (IS_FNIC_FCP_INITIATOR(fnic))
+ 					fnic_fdls_add_tport(&fnic->iport, tport, flags);
++				else if (IS_FNIC_NVME_INITIATOR(fnic))
++					nvfnic_add_tport(fnic, tport, flags);
  			} else {
  				FNIC_FCS_DBG(KERN_INFO, fnic,
  					 "Target not ready. Add rport event dropped: 0x%x",
-@@ -1056,8 +1057,8 @@ void fnic_tport_event_handler(struct work_struct *work)
- 			FNIC_FCS_DBG(KERN_INFO, fnic,
- 						 "Remove rport event");
+@@ -1059,6 +1062,8 @@ void fnic_tport_event_handler(struct work_struct *work)
  			if (tport->state == FDLS_TGT_STATE_OFFLINING) {
--				fnic_fdls_remove_tport(&fnic->iport,
--					   (struct fnic_tport_s *) cur_evt->arg1, flags);
-+				if (IS_FNIC_FCP_INITIATOR(fnic))
-+					fnic_fdls_remove_tport(&fnic->iport, tport, flags);
+ 				if (IS_FNIC_FCP_INITIATOR(fnic))
+ 					fnic_fdls_remove_tport(&fnic->iport, tport, flags);
++				else if (IS_FNIC_NVME_INITIATOR(fnic))
++					nvfnic_delete_tport(&fnic->iport, tport, flags);
  			} else {
  				FNIC_FCS_DBG(KERN_INFO, fnic,
  							 "remove rport event dropped tport fcid: 0x%x",
-@@ -1110,12 +1111,15 @@ void fnic_reset_work_handler(struct work_struct *work)
- 		spin_unlock_irqrestore(&reset_fnic_list_lock,
- 							   reset_fnic_list_lock_flags);
- 
--		dev_err(&cur_fnic->pdev->dev, "fnic: <%d>: issuing a host reset\n",
--			   cur_fnic->fnic_num);
--		host_reset_ret_code = fnic_host_reset(cur_fnic->host);
--		dev_err(&cur_fnic->pdev->dev,
--		   "fnic: <%d>: returned from host reset with status: %d\n",
--		   cur_fnic->fnic_num, host_reset_ret_code);
-+		if (IS_FNIC_FCP_INITIATOR(cur_fnic)) {
-+			dev_err(&cur_fnic->pdev->dev,
-+				"fnic: <%d>: issuing a host reset\n",
-+				cur_fnic->fnic_num);
-+			host_reset_ret_code = fnic_host_reset(cur_fnic->host);
-+			dev_err(&cur_fnic->pdev->dev,
-+				"fnic: <%d>: returned from host reset with status: %d\n",
-+				cur_fnic->fnic_num, host_reset_ret_code);
-+		}
- 
- 		spin_lock_irqsave(&cur_fnic->fnic_lock, cur_fnic->lock_flags);
- 		cur_fnic->pc_rscn_handling_status =
 diff --git a/drivers/scsi/fnic/fnic_fdls.h b/drivers/scsi/fnic/fnic_fdls.h
-index e2959120c4f9..ff1e3bd0e39f 100644
+index ff1e3bd0e39f..0a68d0fb11b1 100644
 --- a/drivers/scsi/fnic/fnic_fdls.h
 +++ b/drivers/scsi/fnic/fnic_fdls.h
-@@ -78,14 +78,17 @@
- #define FNIC_FDLS_FPMA_LEARNT             0x2
+@@ -97,6 +97,7 @@
+ #define fdls_get_state(_fdls_fabric)          ((_fdls_fabric)->state)
  
- /* tport flags */
--#define FNIC_FDLS_TPORT_IN_GPN_FT_LIST 0x1
--#define FNIC_FDLS_TGT_ABORT_ISSUED     0x2
--#define FNIC_FDLS_TPORT_SEND_ADISC     0x4
--#define FNIC_FDLS_RETRY_FRAME          0x8
--#define FNIC_FDLS_TPORT_BUSY	       0x10
--#define FNIC_FDLS_TPORT_TERMINATING      0x20
--#define FNIC_FDLS_TPORT_DELETED        0x40
--#define FNIC_FDLS_SCSI_REGISTERED      0x200
-+#define FNIC_FDLS_TPORT_IN_GPN_FT_LIST        0x1
-+#define FNIC_FDLS_TGT_ABORT_ISSUED            0x2
-+#define FNIC_FDLS_TPORT_SEND_ADISC            0x4
-+#define FNIC_FDLS_RETRY_FRAME                 0x8
-+#define FNIC_FDLS_TPORT_BUSY                  0x10
-+#define FNIC_FDLS_TPORT_TERMINATING           0x20
-+#define FNIC_FDLS_TPORT_DELETED               0x40
-+#define FNIC_FDLS_NVME_REGISTERED             0x80
-+#define FNIC_FDLS_NVME_TPORT_CLEANUP_PENDING  0x100
-+#define FNIC_FDLS_SCSI_REGISTERED             0x200
-+#define FNIC_TPORT_CAN_BE_FREED               0x400
+ #define FNIC_FDMI_ACTIVE    0x8
++#define FNIC_LPORT_NVME_REGISTERED 0x4
+ #define FNIC_FIRST_LINK_UP    0x2
  
- /* Retry supported by rport(returned by prli service parameters) */
- #define FDLS_FC_RP_FLAGS_RETRY 0x1
+ #define fdls_set_tport_state(_tport, _state)    (_tport->state = _state)
+@@ -122,6 +123,13 @@
+ #define FNIC_FRAME_TYPE_TGT_PRLI	0x2800
+ #define FNIC_FRAME_TYPE_TGT_ADISC	0x2A00
+ #define FNIC_FRAME_TYPE_TGT_LOGO	0x2C00
++#define FNIC_FRAME_TYPE_NVME_LS		0x3000
++
++#define NVFNIC_FCPIO_TAG_POOL_SZ	(2048)
++#define NVFNIC_LS_REQ_OXID_POOL_SZ	(64)
++#define NVFNIC_LS_REQ_OXID_BASE		(0x2500)
++#define FNIC_LPORT_NVME_REGISTERED	0x4
++
+ 
+ struct fnic_fip_fcf_s {
+ 	uint16_t vlan_id;
+@@ -223,6 +231,8 @@ struct fnic_tport_s {
+ 	struct fc_rport *rport;
+ 	char str_wwpn[20];
+ 	char str_wwnn[20];
++	struct list_head ls_req_list;
++	struct nvme_fc_remote_port *nv_rport;
+ };
+ 
+ /* OXID pool related structures */
+@@ -291,7 +301,6 @@ struct fnic_iport_s {
+ 	struct fnic_fdls_fip_s fip;
+ 	struct fnic_fdls_fabric_s fabric;
+ 	struct list_head tport_list;
+-	struct list_head tport_list_pending_del;
+ 	/* list of tports for which we are yet to send PLOGO */
+ 	struct list_head inprocess_tport_list;
+ 	struct list_head deleted_tport_list;
+@@ -311,6 +320,13 @@ struct fnic_iport_s {
+ 	struct fnic_iport_stats iport_stats;
+ 	char str_wwpn[20];
+ 	char str_wwnn[20];
++
++	 /* nvme */;
++	void *nvfnic_fcpio_tag[NVFNIC_FCPIO_TAG_POOL_SZ];
++	struct nvme_fc_local_port *nv_lport;
++	struct nvme_fc_port_template *nv_tmpl;
++	struct fnic_oxid_pool_s ls_req_oxid_pool;
++	struct list_head fcpio_list;
+ };
+ 
+ struct rport_dd_data_s {
+@@ -339,6 +355,7 @@ enum fnic_recv_frame_type_e {
+ 	FNIC_TPORT_ADISC_RSP,
+ 	FNIC_TPORT_BLS_ABTS_RSP,
+ 	FNIC_TPORT_LOGO_RSP,
++	FNIC_LS_REQ_ABTS_RSP,
+ 
+ 	/* unsolicited requests */
+ 	FNIC_BLS_ABTS_REQ,
+@@ -371,6 +388,12 @@ enum fnic_port_speeds {
+ 	DCEM_PORTSPEED_128G = 128000,
+ };
+ 
++static inline bool fdls_tport_is_offline(struct fnic_tport_s *tport)
++{
++	return (tport->state == FDLS_TGT_STATE_OFFLINING ||
++		tport->state == FDLS_TGT_STATE_OFFLINE);
++}
++
+ /* Function Declarations */
+ /* fdls_disc.c */
+ void fnic_fdls_disc_init(struct fnic_iport_s *iport);
+@@ -401,7 +424,7 @@ void fdls_fdmi_retry_plogi(struct fnic_iport_s *iport);
+ 
+ /* fnic_fcs.c */
+ void fnic_fdls_init(struct fnic *fnic, int usefip);
+-void fnic_send_fcoe_frame(struct fnic_iport_s *iport, void *frame,
++int fnic_send_fcoe_frame(struct fnic_iport_s *iport, void *frame,
+ 	int frame_size);
+ void fnic_fcoe_send_vlan_req(struct fnic *fnic);
+ int fnic_send_fip_frame(struct fnic_iport_s *iport,
+diff --git a/drivers/scsi/fnic/fnic_io.h b/drivers/scsi/fnic/fnic_io.h
+index 0d974e040ab7..93a24efba26c 100644
+--- a/drivers/scsi/fnic/fnic_io.h
++++ b/drivers/scsi/fnic/fnic_io.h
+@@ -6,13 +6,19 @@
+ #ifndef _FNIC_IO_H_
+ #define _FNIC_IO_H_
+ 
++#include <scsi/fc/fc_fs.h>
+ #include <scsi/fc/fc_fcp.h>
+ #include "fnic_fdls.h"
++#include "fcpio.h"
++#include <linux/nvme-fc-driver.h>
+ 
+ #define FNIC_DFLT_SG_DESC_CNT  32
+ #define FNIC_MAX_SG_DESC_CNT        256     /* Maximum descriptors per sgl */
+ #define FNIC_SG_DESC_ALIGN          16      /* Descriptor address alignment */
+ 
++#define NVME_STAT_ERROR 0x2
++#define NVME_STAT_TASK_SET_FULL 0x3
++
+ struct host_sg_desc {
+ 	__le64 addr;
+ 	__le32 len;
+@@ -39,6 +45,7 @@ enum fnic_ioreq_state {
+ 	FNIC_IOREQ_ABTS_PENDING,
+ 	FNIC_IOREQ_ABTS_COMPLETE,
+ 	FNIC_IOREQ_CMD_COMPLETE,
++	FNIC_IOREQ_RESET_TERM,
+ };
+ 
+ struct fnic_io_req {
+@@ -50,12 +57,27 @@ struct fnic_io_req {
+ 	dma_addr_t sgl_list_pa;	/* dma address for sgl list */
+ 	u16 sgl_cnt;
+ 	u8 sgl_type; /* device DMA descriptor list type */
++	u8 sgl_mapped:1; /* set when sgl_list_pa is a valid DMA mapping */
+ 	u8 io_completed:1; /* set to 1 when fw completes IO */
+ 	u32 port_id; /* remote port DID */
+ 	unsigned long start_time; /* in jiffies */
++	u32 tag;
++	enum fnic_ioreq_state cmd_state;
++	u32 cmd_flags;
++	u32 abts_state;
+ 	struct completion *abts_done; /* completion for abts */
+ 	struct completion *dr_done; /* completion for device reset */
+-	unsigned int tag;
+ 	struct scsi_cmnd *sc; /* midlayer's cmd pointer */
++
++	struct vnic_wq_copy *wq;
++	struct llist_node nvfnic_io_cmpl;
++	struct nvmefc_fcp_req *fcp_req;
++	void (*done)(struct fnic_io_req *io_req);
++	unsigned long waitq_start_time;	/* in jiffies */
++
++	struct timer_list admin_io_timer;
++	uint32_t status;
++	struct fnic_tag_t *tag_data;
++	struct fnic_io_event_s io_evt;
+ };
+ #endif /* _FNIC_IO_H_ */
 diff --git a/drivers/scsi/fnic/fnic_main.c b/drivers/scsi/fnic/fnic_main.c
-index 5850d51b0e8f..0d7828be244d 100644
+index 0d7828be244d..df8c8ebbc32b 100644
 --- a/drivers/scsi/fnic/fnic_main.c
 +++ b/drivers/scsi/fnic/fnic_main.c
-@@ -1087,9 +1087,11 @@ static int fnic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+@@ -42,12 +42,12 @@ static struct kmem_cache *fdls_frame_cache;
+ static struct kmem_cache *fdls_frame_elem_cache;
+ static struct kmem_cache *fdls_frame_recv_cache;
+ static LIST_HEAD(fnic_list);
+-static DEFINE_SPINLOCK(fnic_list_lock);
+ static DEFINE_IDA(fnic_ida);
  
- 	fnic_fdls_init(fnic, (fnic->config.flags & VFCF_FIP_CAPABLE));
+ struct work_struct reset_fnic_work;
+ LIST_HEAD(reset_fnic_list);
+ DEFINE_SPINLOCK(reset_fnic_list_lock);
++DEFINE_SPINLOCK(fnic_list_lock);
  
--	err = fnic_scsi_drv_init(fnic);
--	if (err)
--		goto err_out_scsi_drv_init;
-+	if (IS_FNIC_FCP_INITIATOR(fnic)) {
-+		err = fnic_scsi_drv_init(fnic);
-+		if (err)
-+			goto err_out_scsi_drv_init;
+ /* Supported devices by fnic module */
+ static const struct pci_device_id fnic_id_table[] = {
+@@ -89,6 +89,15 @@ module_param(fnic_fc_trace_max_pages, uint, S_IRUGO|S_IWUSR);
+ MODULE_PARM_DESC(fnic_fc_trace_max_pages,
+ 		 "Total allocated memory pages for fc trace buffer");
+ 
++unsigned int nvme_dev_loss_tmo = 30;
++module_param_named(nvme_dev_loss_tmo, nvme_dev_loss_tmo, uint, 0644);
++MODULE_PARM_DESC(nvme_dev_loss_tmo, "configurable NVME dev loss timeout");
++
++unsigned int nvme_max_ios_to_process = 16;
++module_param(nvme_max_ios_to_process, uint, 0644);
++MODULE_PARM_DESC(nvme_max_ios_to_process,
++		"Maximum number of NVME IOs to process per work queue");
++
+ static unsigned int fnic_max_qdepth = FNIC_DFLT_QUEUE_DEPTH;
+ module_param(fnic_max_qdepth, uint, S_IRUGO|S_IWUSR);
+ MODULE_PARM_DESC(fnic_max_qdepth, "Queue depth to report for each LUN");
+@@ -100,6 +109,7 @@ MODULE_PARM_DESC(pc_rscn_handling_feature_flag,
+ 
+ struct workqueue_struct *reset_fnic_work_queue;
+ struct workqueue_struct *fnic_fip_queue;
++struct workqueue_struct *fnic_cmpl_queue;
+ 
+ static int fnic_sdev_init(struct scsi_device *sdev)
+ {
+@@ -678,6 +688,59 @@ static int fnic_scsi_drv_init(struct fnic *fnic)
+ 	return 0;
+ }
+ 
++static int fnic_nvme_drv_init(struct fnic *fnic)
++{
++	int ret;
++	int hwq;
++
++	fnic->fnic_max_tag_id = NVFNIC_FCPIO_TAG_POOL_SZ;
++
++	for (hwq = 0; hwq < fnic->wq_copy_count; hwq++) {
++		fnic->sw_copy_wq[hwq].ioreq_table_size = fnic->fnic_max_tag_id;
++		fnic->sw_copy_wq[hwq].io_req_table =
++			kzalloc((fnic->sw_copy_wq[hwq].ioreq_table_size + 1) *
++					sizeof(struct fnic_io_req *), GFP_KERNEL);
++
++		if (!fnic->sw_copy_wq[hwq].io_req_table) {
++			fnic_free_ioreq_tables_mq(fnic);
++			return -ENOMEM;
++		}
 +	}
++
++	dev_info(&fnic->pdev->dev, "fnic copy wqs: %d, Q0 ioreq table size: %d\n",
++			fnic->wq_copy_count, fnic->sw_copy_wq[0].ioreq_table_size);
++
++	if (sbitmap_init_node(&fnic->nvfnic_tag_map, NVFNIC_FCPIO_TAG_POOL_SZ,
++			      -1, GFP_KERNEL, NUMA_NO_NODE, false, true)) {
++		dev_err(&fnic->pdev->dev,
++			"Unable to allocate tag pool\n");
++		ret = -ENOMEM;
++		goto out_free_ioreq_tables;
++	}
++
++	fnic->io_req_pool = mempool_create_slab_pool(2, fnic_io_req_cache);
++	if (!fnic->io_req_pool) {
++		ret = -ENOMEM;
++		goto out_free_sbitmap;
++	}
++
++	init_llist_head(&fnic->nvme_io_event_llist);
++	INIT_WORK(&fnic->nvme_io_cmpl_work, nvfnic_nvme_iodone_work);
++
++	ret = nvfnic_add_lport(fnic);
++	if (ret)
++		goto out_free_req_pool;
++
++	return 0;
++out_free_req_pool:
++	mempool_destroy(fnic->io_req_pool);
++out_free_sbitmap:
++	sbitmap_free(&fnic->nvfnic_tag_map);
++out_free_ioreq_tables:
++	fnic_free_ioreq_tables_mq(fnic);
++	return ret;
++}
++
+ void fnic_mq_map_queues_cpus(struct Scsi_Host *host)
+ {
+ 	struct fnic *fnic = *((struct fnic **) shost_priv(host));
+@@ -1057,6 +1120,7 @@ static int fnic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	INIT_LIST_HEAD(&fnic->frame_queue);
+ 	INIT_LIST_HEAD(&fnic->tx_queue);
+ 	INIT_LIST_HEAD(&fnic->tport_event_list);
++	init_llist_head(&fnic->nvme_io_event_llist);
+ 
+ 	INIT_DELAYED_WORK(&iport->oxid_pool.schedule_oxid_free_retry,
+ 	fdls_schedule_oxid_free_retry_work);
+@@ -1091,6 +1155,10 @@ static int fnic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 		err = fnic_scsi_drv_init(fnic);
+ 		if (err)
+ 			goto err_out_scsi_drv_init;
++	} else if (IS_FNIC_NVME_INITIATOR(fnic)) {
++		err = fnic_nvme_drv_init(fnic);
++		if (err)
++			goto err_out_nvme_drv_init;
+ 	}
  
  	err = fnic_stats_debugfs_init(fnic);
- 	if (err) {
-@@ -1109,7 +1111,8 @@ static int fnic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- err_out_free_stats_debugfs:
- 	fnic_stats_debugfs_remove(fnic);
+@@ -1113,6 +1181,7 @@ static int fnic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
  	fnic_free_ioreq_tables_mq(fnic);
--	scsi_remove_host(fnic->host);
-+	if (IS_FNIC_FCP_INITIATOR(fnic))
-+		scsi_remove_host(fnic->host);
+ 	if (IS_FNIC_FCP_INITIATOR(fnic))
+ 		scsi_remove_host(fnic->host);
++err_out_nvme_drv_init:
  err_out_scsi_drv_init:
  	fnic_free_intr(fnic);
  err_out_fnic_request_intr:
-@@ -1135,7 +1138,8 @@ static int fnic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- err_out_fnic_alloc_vnic_res:
- 	fnic_clear_intr_mode(fnic);
- err_out_fnic_set_intr_mode:
--	scsi_host_put(fnic->host);
-+	if (IS_FNIC_FCP_INITIATOR(fnic))
-+		scsi_host_put(fnic->host);
- err_out_fnic_role:
- err_out_scsi_host_alloc:
- err_out_fnic_get_config:
-@@ -1184,7 +1188,8 @@ static void fnic_remove(struct pci_dev *pdev)
- 	 */
- 	flush_workqueue(fnic_event_queue);
+@@ -1190,6 +1259,8 @@ static void fnic_remove(struct pci_dev *pdev)
  
--	fnic_scsi_unload(fnic);
-+	if (IS_FNIC_FCP_INITIATOR(fnic))
-+		fnic_scsi_unload(fnic);
+ 	if (IS_FNIC_FCP_INITIATOR(fnic))
+ 		fnic_scsi_unload(fnic);
++	else if (IS_FNIC_NVME_INITIATOR(fnic))
++		nvfnic_nvme_unload(fnic);
  
  	if (vnic_dev_get_intr_mode(fnic->vdev) == VNIC_DEV_INTR_MODE_MSI)
  		timer_delete_sync(&fnic->notify_timer);
-@@ -1228,8 +1233,10 @@ static void fnic_remove(struct pci_dev *pdev)
- 	pci_disable_device(pdev);
- 	pci_set_drvdata(pdev, NULL);
- 	ida_free(&fnic_ida, fnic->fnic_num);
--	fnic_scsi_unload_cleanup(fnic);
--	scsi_host_put(fnic->host);
-+	if (IS_FNIC_FCP_INITIATOR(fnic)) {
-+		fnic_scsi_unload_cleanup(fnic);
-+		scsi_host_put(fnic->host);
+@@ -1215,6 +1286,11 @@ static void fnic_remove(struct pci_dev *pdev)
+ 	 */
+ 	fnic_cleanup(fnic);
+ 
++	if (IS_FNIC_NVME_INITIATOR(fnic)) {
++		sbitmap_free(&fnic->nvfnic_tag_map);
++		fnic_free_ioreq_tables_mq(fnic);
 +	}
- 	kfree(fnic);
++
+ 	spin_lock_irqsave(&fnic_list_lock, flags);
+ 	list_del(&fnic->list);
+ 	spin_unlock_irqrestore(&fnic_list_lock, flags);
+@@ -1356,6 +1432,15 @@ static int __init fnic_init_module(void)
+ 		goto err_create_fip_workq;
+ 	}
+ 
++	fnic_cmpl_queue =
++		alloc_workqueue("fnic_cmpl_wq",
++				WQ_PERCPU | WQ_HIGHPRI | WQ_MEM_RECLAIM, 0);
++	if (!fnic_cmpl_queue) {
++		pr_err("fnic completion work queue create failed\n");
++		err = -ENOMEM;
++		goto err_create_cmpl_workq;
++	}
++
+ 	if (pc_rscn_handling_feature_flag == PC_RSCN_HANDLING_FEATURE_ON) {
+ 		reset_fnic_work_queue =
+ 			create_singlethread_workqueue("reset_fnic_work_queue");
+@@ -1387,6 +1472,8 @@ static int __init fnic_init_module(void)
+ err_pci_register:
+ 	fc_release_transport(fnic_fc_transport);
+ err_fc_transport:
++	destroy_workqueue(fnic_cmpl_queue);
++err_create_cmpl_workq:
+ 	destroy_workqueue(fnic_fip_queue);
+ err_create_fip_workq:
+ 	if (pc_rscn_handling_feature_flag == PC_RSCN_HANDLING_FEATURE_ON)
+@@ -1415,6 +1502,7 @@ static int __init fnic_init_module(void)
+ static void __exit fnic_cleanup_module(void)
+ {
+ 	pci_unregister_driver(&fnic_driver);
++	destroy_workqueue(fnic_cmpl_queue);
+ 	destroy_workqueue(fnic_event_queue);
+ 
+ 	if (pc_rscn_handling_feature_flag == PC_RSCN_HANDLING_FEATURE_ON)
+diff --git a/drivers/scsi/fnic/fnic_nvme.c b/drivers/scsi/fnic/fnic_nvme.c
+new file mode 100644
+index 000000000000..8374464e4fcc
+--- /dev/null
++++ b/drivers/scsi/fnic/fnic_nvme.c
+@@ -0,0 +1,1823 @@
++// SPDX-License-Identifier: GPL-2.0-only
++/*
++ * Copyright 2008 Cisco Systems, Inc.  All rights reserved.
++ * Copyright 2007 Nuova Systems, Inc.  All rights reserved.
++ */
++#include <linux/mempool.h>
++#include <linux/errno.h>
++#include <linux/init.h>
++#include <linux/workqueue.h>
++#include <linux/pci.h>
++#include <linux/scatterlist.h>
++#include <linux/skbuff.h>
++#include <linux/spinlock.h>
++#include <linux/kthread.h>
++#include <linux/if_ether.h>
++#include <linux/if_vlan.h>
++#include <linux/delay.h>
++#include <linux/gfp.h>
++#include <linux/nvme.h>
++#include <linux/nvme-fc.h>
++#include "fnic.h"
++#include "fnic_trace.h"
++#include "fdls_fc.h"
++
++#if IS_ENABLED(CONFIG_NVME_FC)
++
++int nvfnic_get_sg_count(struct fnic_io_req *io_req)
++{
++	return io_req->fcp_req->sg_cnt;
++}
++
++int nvfnic_dma_map_sgl(struct fnic *fnic, struct fnic_io_req *io_req,
++		       int sg_count)
++{
++	io_req->sgl_list_pa = dma_map_single(&fnic->pdev->dev,
++					     io_req->sgl_list,
++					     sizeof(io_req->sgl_list[0]) *
++					     sg_count, DMA_TO_DEVICE);
++	if (dma_mapping_error(&fnic->pdev->dev, io_req->sgl_list_pa)) {
++		dev_err(&fnic->pdev->dev, "DMA mapping failed\n");
++		io_req->sgl_list_pa = 0;
++		io_req->sgl_mapped = 0;
++		return -EBUSY;
++	}
++
++	io_req->sgl_mapped = 1;
++	return 0;
++}
++
++void nvfnic_dma_unmap_sgl(struct fnic *fnic, struct fnic_io_req *io_req)
++{
++	if (io_req->sgl_mapped) {
++		dma_unmap_single(&fnic->pdev->dev, io_req->sgl_list_pa,
++				 sizeof(io_req->sgl_list[0]) * io_req->sgl_cnt,
++				 DMA_TO_DEVICE);
++		io_req->sgl_mapped = 0;
++		io_req->sgl_list_pa = 0;
++	}
++}
++
++static void nvfnic_update_io_bytes(struct fnic *fnic,
++				   struct fnic_io_req *io_req, u8 opcode)
++{
++	if (opcode == nvme_cmd_read)
++		fnic->fcp_input_bytes += io_req->fcp_req->transferred_length;
++	else if (opcode == nvme_cmd_write)
++		fnic->fcp_output_bytes += io_req->fcp_req->transferred_length;
++}
++
++int
++nvfnic_alloc_fcpio_tag(struct fnic_iport_s *iport, struct fnic_io_req *io_req)
++{
++	struct fnic *fnic = iport->fnic;
++	int tag;
++
++	tag = sbitmap_get(&fnic->nvfnic_tag_map);
++	if (tag >= 0) {
++		WRITE_ONCE(io_req->tag, tag);
++		fnic->sw_copy_wq[0].io_req_table[tag] = io_req;
++		return tag;
++	}
++	return FNIC_NVME_NO_FREE_TAG;
++}
++
++void
++nvfnic_free_fcpio_tag(struct fnic_iport_s *iport, struct fnic_io_req *io_req)
++{
++	struct fnic *fnic = iport->fnic;
++	uint16_t tag = io_req->tag;
++
++	if (tag == FNIC_NVME_NO_FREE_TAG) {
++		FNIC_NVME_DBG(KERN_ERR, fnic,
++			    "Attempting to free invalid tag: 0x%x\n", tag);
++		return;
++	}
++	fnic->sw_copy_wq[0].io_req_table[tag] = NULL;
++	WRITE_ONCE(io_req->tag, FNIC_NVME_NO_FREE_TAG);
++	sbitmap_clear_bit(&fnic->nvfnic_tag_map, tag);
++}
++
++void
++nvfnic_reset_fcpio_tag_pool(struct fnic_iport_s *iport)
++{
++	WARN_ON(sbitmap_weight(&iport->fnic->nvfnic_tag_map));
++}
++
++struct fnic_io_req *
++nvfnic_find_io_req_by_tag(struct fnic *fnic, uint16_t tag)
++{
++	if (tag == FNIC_NVME_NO_FREE_TAG ||
++		!sbitmap_test_bit(&fnic->nvfnic_tag_map, tag))
++		return NULL;
++	return fnic->sw_copy_wq[0].io_req_table[tag];
++}
++
++/*
++ * Unmap the data buffer and sense buffer for an io_req,
++ * also unmap and free the device-private scatter/gather list.
++ */
++void nvfnic_release_nvme_ioreq_buf(struct fnic_iport_s *iport,
++					struct fnic_io_req *io_req)
++{
++	struct fnic *fnic = iport->fnic;
++
++	nvfnic_dma_unmap_sgl(fnic, io_req);
++
++	if (io_req->sgl_cnt)
++		mempool_free(io_req->sgl_list_alloc,
++			     fnic->io_sgl_pool[io_req->sgl_type]);
++}
++
++inline int nvfnic_queue_wq_nvme_copy_desc(struct fnic *fnic,
++					       struct vnic_wq_copy *wq,
++					       struct fnic_io_req *io_req,
++					       int sg_count)
++{
++	struct scatterlist *sg;
++	struct fnic_tport_s *tport = io_req->tport;
++	struct host_sg_desc *desc;
++	unsigned int i;
++	unsigned long intr_flags;
++	int flags;
++	u8 exch_flags;
++	struct scatterlist *sgl;
++	int idx;
++	int ret = 0;
++
++	if (sg_count) {
++		/* For each SGE, create a device desc entry */
++		desc = io_req->sgl_list;
++		sgl = io_req->fcp_req->first_sgl;
++		for_each_sg(sgl, sg, sg_count, i) {
++			desc->addr = cpu_to_le64(sg_dma_address(sg));
++			desc->len = cpu_to_le32(sg_dma_len(sg));
++			desc->_resvd = 0;
++			desc++;
++		}
++
++		ret = nvfnic_dma_map_sgl(fnic, io_req, sg_count);
++		if (ret)
++			return ret;
++	}
++
++	idx = (struct vnic_wq_copy *)wq - &fnic->hw_copy_wq[0];
++
++	/* Enqueue the descriptor in the Copy WQ */
++	spin_lock_irqsave(&fnic->wq_copy_lock[idx], intr_flags);
++
++	if (vnic_wq_copy_desc_avail(wq) <= fnic->wq_copy_desc_low[idx])
++		free_wq_copy_descs(fnic, wq, idx);
++
++	if (unlikely(!vnic_wq_copy_desc_avail(wq))) {
++		spin_unlock_irqrestore(&fnic->wq_copy_lock[idx], intr_flags);
++		FNIC_NVME_DBG(KERN_ERR, fnic,
++			    "Enqueue failure: No descriptors\n");
++		return -EBUSY;
++	}
++
++	flags = 0;
++	if (io_req->fcp_req->io_dir == NVMEFC_FCP_READ)
++		flags = FCPIO_ICMND_RDDATA;
++	else if (io_req->fcp_req->io_dir == NVMEFC_FCP_WRITE)
++		flags = FCPIO_ICMND_WRDATA;
++
++	exch_flags = 0;
++
++	fnic_queue_wq_copy_desc_nvme_io(wq, io_req->tag,
++					exch_flags, io_req->sgl_cnt,
++					io_req->sgl_list_pa, flags,
++					io_req->fcp_req->cmdaddr,
++					io_req->fcp_req->cmdlen,
++					io_req->fcp_req->payload_length,
++					io_req->port_id,
++					tport->max_payload_size, tport->r_a_tov,
++					tport->e_d_tov);
++
++
++	spin_unlock_irqrestore(&fnic->wq_copy_lock[idx], intr_flags);
++	return 0;
++}
++
++bool
++nvfnic_transport_ready(struct fnic_iport_s *iport, struct fnic_tport_s *tport)
++{
++	struct fnic *fnic = iport->fnic;
++
++	if (tport == NULL)
++		return false;
++
++	if (fdls_get_state(&iport->fabric) == FDLS_STATE_LINKDOWN ||
++	    iport->state != FNIC_IPORT_STATE_READY) {
++		return false;
++	}
++
++	if (unlikely(fnic_chk_state_flags_locked(fnic, FNIC_FLAGS_IO_BLOCKED)))
++		return false;
++
++	if (fdls_tport_is_offline(tport))
++		return false;
++
++	return true;
++}
++
++int nvfnic_queuecommand(struct fnic_io_req *io_req)
++{
++	struct fnic_iport_s *iport = io_req->iport;
++	struct fnic *fnic = iport->fnic;
++	struct fnic_tport_s *tport = io_req->tport;
++	int ret = 0;
++	int sg_count = 0;
++	unsigned long ptr;
++	unsigned char *lba;
++	u64 cmd_trace;
++	struct nvme_fc_cmd_iu *cmdiu = io_req->fcp_req->cmdaddr;
++
++	io_req->cmd_state = FNIC_IOREQ_NOT_INITED;
++	io_req->cmd_flags = FNIC_NO_FLAGS;
++	/* Map the data buffer */
++	sg_count = nvfnic_get_sg_count(io_req);
++	if (sg_count < 0) {
++		FNIC_TRACE(nvfnic_queuecommand, fnic->fnic_num,
++			   io_req->tag, io_req, 0, io_req->fcp_req->io_dir,
++			   sg_count, io_req->cmd_state);
++		FNIC_NVME_DBG(KERN_INFO, fnic, "sg count is less-than-zero\n");
++		ret = -1;
++		goto out;
++	}
++
++	/* Determine the type of scatter/gather list we need */
++	io_req->sgl_cnt = sg_count;
++	io_req->sgl_type = FNIC_SGL_CACHE_DFLT;
++	if (sg_count > FNIC_DFLT_SG_DESC_CNT)
++		io_req->sgl_type = FNIC_SGL_CACHE_MAX;
++
++	if (sg_count) {
++		io_req->sgl_list =
++		    mempool_alloc(fnic->io_sgl_pool[io_req->sgl_type],
++				  GFP_ATOMIC);
++		if (!io_req->sgl_list) {
++			FNIC_NVME_DBG(KERN_INFO, fnic,
++				      "Unable to alloc SGLs\n");
++			ret = -ENOMEM;
++			goto out;
++		}
++
++		/* Cache sgl list allocated address before alignment */
++		io_req->sgl_list_alloc = io_req->sgl_list;
++		ptr = (unsigned long)io_req->sgl_list;
++		if (ptr % FNIC_SG_DESC_ALIGN) {
++			io_req->sgl_list = (struct host_sg_desc *)
++			    (((unsigned long)ptr + FNIC_SG_DESC_ALIGN - 1)
++			     & ~(FNIC_SG_DESC_ALIGN - 1));
++		}
++	}
++
++	io_req->port_id = tport->fcid;
++	io_req->start_time = jiffies;
++	io_req->cmd_state = FNIC_IOREQ_CMD_PENDING;
++	io_req->cmd_flags = FNIC_IO_INITIALIZED;
++
++	/* create copy wq desc and enqueue it */
++	ret = nvfnic_queue_wq_nvme_copy_desc(fnic, io_req->wq, io_req, sg_count);
++	if (ret) {
++		FNIC_NVME_DBG(KERN_ERR, fnic, "Unable to queue frame\n");
++		/*
++		 * In case another thread cancelled the request,
++		 * refetch the pointer under the lock.
++		 */
++		nvfnic_release_nvme_ioreq_buf(iport, io_req);
++		FNIC_TRACE(nvfnic_queuecommand, fnic->fnic_num,
++			   io_req->tag, io_req->fcp_req, 0, 0, 0,
++			   (((u64)io_req->cmd_flags << 32) | io_req->cmd_state));
++		return ret;
++	}
++	io_req->cmd_flags |= FNIC_IO_ISSUED;
++ out:
++	lba = (char *)&cmdiu->sqe.rw.slba;
++	cmd_trace = ((u64) cmdiu->sqe.rw.opcode << 56 | (u64) lba[4] << 40 |
++		     (u64) lba[5] << 32 | (u64) lba[0] << 24 |
++		     (u64) lba[1] << 16 | (u64) lba[2] << 8 | lba[3]);
++
++	FNIC_TRACE(nvfnic_queuecommand, fnic->fnic_num,
++		   io_req->tag, 0, io_req,
++		   sg_count, cmd_trace,
++		   (((u64)io_req->cmd_flags >> 32) |
++		    io_req->cmd_state));
++
++	return ret;
++}
++
++int nvfnic_fcpio_send(struct nvme_fc_local_port *lport,
++		  struct nvme_fc_remote_port *rport, void *hw_queue_handle,
++		  struct nvmefc_fcp_req *fcp_req)
++{
++	struct fnic_iport_s *iport = lport->private;
++	struct fnic_io_req *io_req;
++	int ret;
++	struct fnic *fnic = iport->fnic;
++	unsigned long flags = 0;
++	struct fnic_tport_s *tport;
++
++	spin_lock_irqsave(&fnic->fnic_lock, flags);
++
++	tport = (struct fnic_tport_s *)rport->private;
++	if (!nvfnic_transport_ready(iport, tport)) {
++		spin_unlock_irqrestore(&fnic->fnic_lock, flags);
++		if (tport != NULL)
++			FNIC_NVME_DBG(KERN_INFO, fnic,
++				      "iport: 0x%x tport: 0x%x not ready\n",
++				      iport->fcid, tport->fcid);
++		else
++			FNIC_NVME_DBG(KERN_INFO, fnic,
++				      "iport: 0x%x tport not ready\n",
++				      iport->fcid);
++		return -ENODEV;
++	}
++	atomic_inc(&fnic->in_flight);
++
++	io_req = (struct fnic_io_req *) fcp_req->private;
++	io_req->iport = iport;
++	io_req->tport = (struct fnic_tport_s *)rport->private;
++	io_req->fcp_req = fcp_req;
++	io_req->done = nvfnic_fcpio_cmpl;
++	io_req->sgl_list_pa = 0;
++	io_req->wq = hw_queue_handle;
++	init_llist_node(&io_req->nvfnic_io_cmpl);
++
++	io_req->tag = nvfnic_alloc_fcpio_tag(iport, io_req);
++	if (io_req->tag == FNIC_NVME_NO_FREE_TAG) {
++		FNIC_NVME_DBG(KERN_ERR, fnic,
++			    "No free tag available. Failing IO\n");
++		atomic_dec(&fnic->in_flight);
++		spin_unlock_irqrestore(&fnic->fnic_lock, flags);
++		return -EBUSY;
++	}
++
++	ret = nvfnic_queuecommand(io_req);
++	if (ret) {
++		FNIC_NVME_DBG(KERN_ERR, fnic,
++			      "Queuecommand failed tag: 0x%x\n",
++			      io_req->tag);
++		nvfnic_free_fcpio_tag(iport, io_req);
++	}
++
++	spin_unlock_irqrestore(&fnic->fnic_lock, flags);
++	atomic_dec(&fnic->in_flight);
++	return ret;
++}
++
++void nvfnic_fcpio_nvme_fast_cmpl_handler(struct fnic *fnic,
++				       struct fcpio_fw_req *desc)
++{
++	u8 type;
++	u8 hdr_status;
++	struct fcpio_tag ftag;
++	u32 id;
++	struct fnic_io_req *io_req;
++	unsigned long start_time;
++	u64 cmd_trace;
++	char *lba;
++	struct nvme_fc_cmd_iu *cmdiu;
++	struct fnic_iport_s *iport;
++	unsigned int tag;
++
++	/* Decode the cmpl description to get the io_req id */
++	fcpio_header_dec(&desc->hdr, &type, &hdr_status, &ftag);
++	fcpio_tag_id_dec(&ftag, &id);
++	tag = id & FNIC_TAG_MASK;
++
++	if (tag >= fnic->fnic_max_tag_id) {
++		FNIC_NVME_DBG(KERN_ERR, fnic,
++			    "Tag out of range tag: 0x%x hdr status: %s\n", tag,
++			    fnic_fcpio_status_to_str(hdr_status));
++		return;
++	}
++	spin_lock_irqsave(&fnic->fnic_lock, fnic->lock_flags);
++
++	io_req = nvfnic_find_io_req_by_tag(fnic, tag);
++
++	WARN_ON_ONCE(!io_req);
++	if (!io_req) {
++		FNIC_NVME_DBG(KERN_ERR, fnic,
++			      "IO req null hdr: %s tag: 0x%x desc: 0x%p\n",
++			      fnic_fcpio_status_to_str(hdr_status), id, desc);
++		FNIC_NVME_DBG(KERN_ERR, fnic,
++			    "type: 0x%x status: 0x%x rsvd: 0x%x tag: 0x%x\n",
++			    desc->hdr.type, desc->hdr.status, desc->hdr._resvd,
++			    id);
++		spin_unlock_irqrestore(&fnic->fnic_lock, fnic->lock_flags);
++		return;
++	}
++
++	cmdiu = io_req->fcp_req->cmdaddr;
++	if (io_req->tag != tag) {
++		FNIC_NVME_DBG(KERN_INFO, fnic,
++			      "Tag mismatch tag:%d io:0x%x id:0x%x csn:%08x\n",
++			      tag, io_req->tag, id, be32_to_cpu(cmdiu->csn));
++		spin_unlock_irqrestore(&fnic->fnic_lock, fnic->lock_flags);
++		return;
++	}
++	iport = io_req->iport;
++
++	start_time = io_req->start_time;
++
++	/* firmware completed the io */
++	io_req->io_completed = 1;
++	if (io_req->cmd_state == FNIC_IOREQ_ABTS_PENDING) {
++		/*
++		 * set the FNIC_IO_DONE so that this doesn't get
++		 * flagged as 'out of order' if it was not aborted
++		 */
++		io_req->cmd_flags |= FNIC_IO_DONE;
++		io_req->cmd_flags |= FNIC_IO_ABTS_PENDING;
++		if (hdr_status == FCPIO_ABORTED)
++			io_req->cmd_flags |= FNIC_IO_ABORTED;
++		spin_unlock_irqrestore(&fnic->fnic_lock, fnic->lock_flags);
++
++		FNIC_NVME_DBG(KERN_INFO, fnic,
++			      "icmnd abts hdr:%d %s tag:0x%x io:%p",
++			      hdr_status, fnic_fcpio_status_to_str(hdr_status),
++			      id, io_req);
++		return;
++	}
++
++	if (io_req->cmd_state != FNIC_IOREQ_CMD_PENDING) {
++		FNIC_NVME_DBG(KERN_INFO, fnic,
++			      "IO freed id:%d tag:0x%x st:0x%x csn:%08x\n",
++			      id, io_req->tag, io_req->cmd_state,
++			      be32_to_cpu(cmdiu->csn));
++		spin_unlock_irqrestore(&fnic->fnic_lock, fnic->lock_flags);
++		return;
++	}
++
++	/* Mark the IO as complete */
++	io_req->cmd_state = FNIC_IOREQ_CMD_COMPLETE;
++	switch (hdr_status) {
++	case FCPIO_SUCCESS:
++		io_req->fcp_req->status = 0;
++		io_req->fcp_req->transferred_length =
++		    io_req->fcp_req->payload_length;
++		io_req->fcp_req->rcv_rsplen = 12;
++		break;
++	default:
++		FNIC_NVME_DBG(KERN_ERR, fnic, "HDR status is non-zero\n");
++		io_req->fcp_req->status = NVME_SC_INTERNAL;
++		break;
++	}
++
++	if (hdr_status != FCPIO_SUCCESS) {
++		FNIC_NVME_DBG(KERN_INFO, fnic, "hdr status: %s\n",
++			    fnic_fcpio_status_to_str(hdr_status));
++	}
++
++	io_req->cmd_flags |= FNIC_IO_DONE;
++
++	cmdiu = io_req->fcp_req->cmdaddr;
++	lba = (char *)&cmdiu->sqe.rw.slba;
++	cmd_trace = ((u64) hdr_status << 56) |
++	    (u64) cmdiu->sqe.rw.opcode << 32 |
++	    (u64) lba[0] << 24 | (u64) lba[1] << 16 |
++	    (u64) lba[2] << 8 | lba[3];
++
++	FNIC_TRACE(nvfnic_fcpio_nvme_fast_cmpl_handler, fnic->fnic_num,
++			tag, io_req,
++		   jiffies_to_msecs(jiffies - start_time),
++		   desc, cmd_trace,
++		   (((u64) io_req->cmd_flags << 32) |
++		    io_req->cmd_state));
++
++	nvfnic_update_io_bytes(fnic, io_req, cmdiu->sqe.rw.opcode);
++
++	nvfnic_release_nvme_ioreq_buf(iport, io_req);
++	if (io_req->done)
++		io_req->done(io_req);
++
++	spin_unlock_irqrestore(&fnic->fnic_lock, fnic->lock_flags);
++}
++
++void nvfnic_fcpio_ersp_cmpl_handler(struct fnic *fnic,
++				  struct fcpio_fw_req *desc, int sw_flag)
++{
++	u8 type;
++	u8 hdr_status;
++	struct fcpio_tag ftag;
++	u32 id;
++	struct fcpio_nvme_cmpl *nvme_cmpl;
++	struct fnic_io_req *io_req;
++	unsigned long start_time;
++	uint32_t rsplen;
++	struct nvme_fc_ersp_iu *ersp;
++	struct nvme_fc_ersp_iu *nrsp;
++	struct nvme_fc_cmd_iu *cmdiu;
++	struct nvme_command *sqe;
++	struct nvme_completion *cqe;
++	u64 cmd_trace;
++	struct fnic_iport_s *iport;
++	unsigned int tag;
++	char *lba;
++	uint64_t tport_wwpn = 0;
++
++	/* Decode the cmpl description to get the io_req id */
++	fcpio_header_dec(&desc->hdr, &type, &hdr_status, &ftag);
++	fcpio_tag_id_dec(&ftag, &id);
++	nvme_cmpl = &desc->u.nvme_cmpl;
++	ersp = (struct nvme_fc_ersp_iu *) nvme_cmpl->resp_bytes;
++	tag = id & FNIC_TAG_MASK;
++
++	if (tag >= fnic->fnic_max_tag_id) {
++		FNIC_NVME_DBG(KERN_ERR, fnic,
++			      "Tag out of range tag:0x%x hdr:%s\n", tag,
++			      fnic_fcpio_status_to_str(hdr_status));
++		return;
++	}
++	spin_lock_irqsave(&fnic->fnic_lock, fnic->lock_flags);
++
++	io_req = nvfnic_find_io_req_by_tag(fnic, tag);
++	if (!io_req) {
++		FNIC_NVME_DBG(KERN_ERR, fnic,
++			    "IOREQ is null hdr status: %s tag: 0x%x desc: %p\n",
++			    fnic_fcpio_status_to_str(hdr_status), tag, desc);
++		FNIC_NVME_DBG(KERN_ERR, fnic,
++			    "type: 0x%x status: 0x%x rsvd: 0x%x\n",
++			    desc->hdr.type, desc->hdr.status, desc->hdr._resvd);
++		spin_unlock_irqrestore(&fnic->fnic_lock, fnic->lock_flags);
++		return;
++	}
++	iport = io_req->iport;
++	if (io_req->tport != NULL)
++		tport_wwpn = io_req->tport->wwpn;
++	cmdiu = io_req->fcp_req->cmdaddr;
++
++	if (io_req->tag != tag) {
++		FNIC_NVME_DBG(KERN_ERR, fnic,
++			      "Tag mismatch io:0x%x tag:0x%x id:0x%x\n",
++			      io_req->tag, tag, id);
++		spin_unlock_irqrestore(&fnic->fnic_lock, fnic->lock_flags);
++		return;
++	}
++
++	nrsp = (struct nvme_fc_ersp_iu *)io_req->fcp_req->rspaddr;
++	cmdiu = (struct nvme_fc_cmd_iu *)io_req->fcp_req->cmdaddr;
++	sqe = &cmdiu->sqe;
++	cqe = &nrsp->cqe;
++	start_time = io_req->start_time;
++
++	/* firmware completed the io */
++	io_req->io_completed = 1;
++
++	if (io_req->cmd_state == FNIC_IOREQ_ABTS_PENDING) {
++		/*
++		 * set the FNIC_IO_DONE so that this doesn't get
++		 * flagged as 'out of order' if it was not aborted
++		 */
++		io_req->cmd_flags |= FNIC_IO_DONE;
++		io_req->cmd_flags |= FNIC_IO_ABTS_PENDING;
++		if (hdr_status == FCPIO_ABORTED)
++			io_req->cmd_flags |= FNIC_IO_ABORTED;
++
++		spin_unlock_irqrestore(&fnic->fnic_lock, fnic->lock_flags);
++		FNIC_NVME_DBG(KERN_INFO, fnic,
++			      "ABTS pending hdr status: %s tag: 0x%x",
++			      fnic_fcpio_status_to_str(hdr_status), tag);
++		return;
++	}
++
++	if (io_req->cmd_state != FNIC_IOREQ_CMD_PENDING) {
++		FNIC_NVME_DBG(KERN_ERR, fnic,
++			      "IO already freed by abort. tag: 0x%x id: 0x%x\n",
++			      io_req->tag, id);
++		spin_unlock_irqrestore(&fnic->fnic_lock, fnic->lock_flags);
++		return;
++	}
++
++	/* Mark the IO as complete */
++	io_req->cmd_state = FNIC_IOREQ_CMD_COMPLETE;
++
++	switch (hdr_status) {
++	case FCPIO_SUCCESS:
++		io_req->fcp_req->status = 0;
++		if (!sw_flag) {
++			io_req->fcp_req->transferred_length =
++			    io_req->fcp_req->payload_length;
++			rsplen = 32;
++			nrsp->iu_len =
++			    cpu_to_be16(sizeof(struct nvme_fc_ersp_iu) / 4);
++			nrsp->xfrd_len =
++			    cpu_to_be32(io_req->fcp_req->payload_length);
++
++			nrsp->ersp_result = 0;
++			cqe->command_id = sqe->common.command_id;
++			cqe->status = 0;
++			cqe->result.u64 = 0;
++		} else {
++			io_req->fcp_req->transferred_length =
++			    be32_to_cpu(ersp->xfrd_len);
++			rsplen = be16_to_cpu(ersp->iu_len) * 4;
++			if (rsplen > sizeof(nvme_cmpl->resp_bytes) ||
++			    rsplen > io_req->fcp_req->rsplen) {
++				FNIC_NVME_DBG(KERN_ERR, fnic,
++					      "tport wwpn 0x%llx ERSP len %u desc %u req %u\n",
++					      tport_wwpn, rsplen,
++					      (u32)sizeof(nvme_cmpl->resp_bytes),
++					      io_req->fcp_req->rsplen);
++				io_req->fcp_req->status = NVME_SC_INTERNAL;
++				io_req->fcp_req->rcv_rsplen = 0;
++				break;
++			}
++			memcpy(io_req->fcp_req->rspaddr, ersp, rsplen);
++		}
++		io_req->fcp_req->rcv_rsplen = rsplen;
++		break;
++
++	default:
++		FNIC_NVME_DBG(KERN_ERR, fnic,
++				"Unexpected header status: %d\n", hdr_status);
++		io_req->fcp_req->status = NVME_SC_INTERNAL;
++		break;
++	}
++
++	if (hdr_status != FCPIO_SUCCESS) {
++		FNIC_NVME_DBG(KERN_ERR, fnic, "hdr status: %s tag: 0x%x\n",
++			    fnic_fcpio_status_to_str(hdr_status), tag);
++	}
++
++	io_req->cmd_flags |= FNIC_IO_DONE;
++
++	lba = (char *) &cmdiu->sqe.rw.slba;
++	cmd_trace = ((u64) hdr_status << 56) |
++	    (u64) ersp->ersp_result << 48 |
++	    (u64) cmdiu->sqe.rw.opcode << 32 |
++	    (u64) lba[0] << 24 | (u64) lba[1] << 16 |
++	    (u64) lba[2] << 8 | lba[3];
++
++	FNIC_TRACE(nvfnic_fcpio_ersp_cmpl_handler, fnic->fnic_num,
++		   tag, io_req,
++		   ((u64) nvme_cmpl->resvd[1] << 56 |
++		    (u64) nvme_cmpl->resvd[0] << 48 |
++		    jiffies_to_msecs(jiffies - start_time)),
++		   desc, cmd_trace,
++		   (((u64) io_req->cmd_flags << 32) |
++		    io_req->cmd_state));
++
++	nvfnic_update_io_bytes(fnic, io_req, cmdiu->sqe.rw.opcode);
++
++	nvfnic_release_nvme_ioreq_buf(iport, io_req);
++
++	/* Call NVME completion function to complete the IO */
++	if (io_req->done)
++		io_req->done(io_req);
++
++	spin_unlock_irqrestore(&fnic->fnic_lock, fnic->lock_flags);
++}
++
++void nvfnic_fcpio_nvme_itmf_cmpl_handler(struct fnic *fnic,
++				       struct fcpio_fw_req *desc)
++{
++	u8 type;
++	u8 hdr_status;
++	struct fcpio_tag ftag;
++	u32 id;
++	unsigned int tag;
++	struct fnic_io_req *io_req;
++	struct nvme_fc_cmd_iu *cmd_iu;
++	struct fnic_iport_s *iport;
++
++	fcpio_header_dec(&desc->hdr, &type, &hdr_status, &ftag);
++	fcpio_tag_id_dec(&ftag, &id);
++	tag = id & FNIC_TAG_MASK;
++
++	if (tag >= fnic->fnic_max_tag_id) {
++		FNIC_NVME_DBG(KERN_ERR, fnic,
++			      "Tag out of range id:0x%x tag:0x%x hdr:%s\n",
++			      id, tag, fnic_fcpio_status_to_str(hdr_status));
++		return;
++	}
++	spin_lock_irqsave(&fnic->fnic_lock, fnic->lock_flags);
++
++	io_req = nvfnic_find_io_req_by_tag(fnic, tag);
++	WARN_ON_ONCE(!io_req);
++	if (!io_req) {
++		FNIC_NVME_DBG(KERN_ERR, fnic,
++			      "IOREQ null hdr:%s tag:0x%x desc:%p\n",
++			      fnic_fcpio_status_to_str(hdr_status), tag, desc);
++		FNIC_NVME_DBG(KERN_ERR, fnic,
++			      "type: 0x%x status: 0x%x rsvd: 0x%x\n",
++			      desc->hdr.type, desc->hdr.status, desc->hdr._resvd);
++		spin_unlock_irqrestore(&fnic->fnic_lock, fnic->lock_flags);
++		return;
++	}
++
++	cmd_iu = io_req->fcp_req->cmdaddr;
++	FNIC_NVME_DBG(KERN_INFO, fnic,
++	      "Received ITMF completion tag: 0x%x hdr_status: %d csn: 0x%08x\n",
++	      tag, hdr_status, be32_to_cpu(cmd_iu->csn));
++
++	iport = io_req->iport;
++
++	/* Completion of abort cmd */
++	switch (hdr_status) {
++	case FCPIO_SUCCESS:
++		FNIC_NVME_DBG(KERN_DEBUG, fnic,
++				"Abort success received tag: 0x%x id: 0x%x\n",
++			      tag, id);
++		break;
++	case FCPIO_TIMEOUT:
++		FNIC_NVME_DBG(KERN_ERR, fnic,
++				"Abort timeout received tag: 0x%x id: 0x%x\n",
++			      tag, id);
++		break;
++	case FCPIO_ITMF_REJECTED:
++		FNIC_NVME_DBG(KERN_ERR, fnic,
++				"Abort reject received tag: 0x%x id: 0x%x\n",
++			      tag, id);
++		break;
++
++	case FCPIO_IO_NOT_FOUND:
++		FNIC_NVME_DBG(KERN_ERR, fnic,
++			      "Abort IO not found tag:0x%x id:0x%x\n",
++			      tag, id);
++		break;
++	default:
++		FNIC_NVME_DBG(KERN_ERR, fnic,
++				"Abort unknown received tag: 0x%x id: 0x%x\n",
++			    tag, id);
++		break;
++	}
++
++	if (io_req->cmd_state != FNIC_IOREQ_ABTS_PENDING) {
++		FNIC_NVME_DBG(KERN_ERR, fnic,
++			      "Abort late completion tag:0x%x id:0x%x\n",
++			      tag, id);
++		/* This is a late completion. Ignore it */
++		spin_unlock_irqrestore(&fnic->fnic_lock, fnic->lock_flags);
++		return;
++	}
++
++	io_req->abts_state = hdr_status;
++
++	/* If the status is IO not found consider it as success.
++	 * NVME sends abort even if rport is down in which case
++	 * we will get FCPIO_TIMEOUT. Consider this as success.
++	 */
++	if ((hdr_status == FCPIO_IO_NOT_FOUND) ||
++	    (hdr_status == FCPIO_TIMEOUT) ||
++	    (hdr_status == FCPIO_ITMF_REJECTED))
++		io_req->abts_state = FCPIO_SUCCESS;
++
++	io_req->cmd_flags |= FNIC_IO_ABT_TERM_DONE;
++
++
++	io_req->fcp_req->transferred_length = 0;
++	io_req->fcp_req->rcv_rsplen = 0;
++	if (io_req->abts_state == FCPIO_SUCCESS)
++		io_req->fcp_req->status = NVME_SC_ABORT_REQ;
++	else
++		io_req->fcp_req->status = NVME_SC_INTERNAL;
++
++	nvfnic_release_nvme_ioreq_buf(iport, io_req);
++	if (io_req->done)
++		io_req->done(io_req);
++	spin_unlock_irqrestore(&fnic->fnic_lock, fnic->lock_flags);
++}
++
++bool _cleanup_tport_io(struct sbitmap *map, unsigned int tag,
++			      void *data)
++{
++	struct fnic_tport_s *tport = data;
++	struct fnic_iport_s *iport = tport->iport;
++	struct fnic *fnic = iport->fnic;
++	struct fnic_io_req *io_req;
++	enum fnic_ioreq_state old_ioreq_state;
++	unsigned long flags;
++
++	spin_lock_irqsave(&fnic->fnic_lock, flags);
++	io_req = nvfnic_find_io_req_by_tag(fnic, tag);
++	if (!io_req || io_req->tport != tport) {
++		spin_unlock_irqrestore(&fnic->fnic_lock, flags);
++		return true;
++	}
++
++	if ((io_req->cmd_state == FNIC_IOREQ_ABTS_PENDING) ||
++	    (io_req->cmd_state == FNIC_DEV_RST_TERM_ISSUED)) {
++		FNIC_NVME_DBG(KERN_INFO, fnic,
++			      "Abort already pending 0x%x\n", io_req->tag);
++		spin_unlock_irqrestore(&fnic->fnic_lock, flags);
++		return true;
++	}
++
++	FNIC_NVME_DBG(KERN_ERR, fnic,
++		      "io_req tag: 0x%x abort after unregister timeout\n",
++		      io_req->tag);
++
++	old_ioreq_state = io_req->cmd_state;
++	io_req->cmd_state = FNIC_IOREQ_ABTS_PENDING;
++	io_req->abts_state = FCPIO_INVALID_CODE;
++	spin_unlock_irqrestore(&fnic->fnic_lock, flags);
++
++	if (!nvfnic_queue_abort_io_req(fnic, io_req->tag,
++				      FCPIO_ITMF_ABT_TASK_TERM,
++				      io_req)) {
++		FNIC_NVME_DBG(KERN_ERR, fnic,
++			    "Failed to enqueue abort for ioreq tag: 0x%x\n",
++			    io_req->tag);
++		spin_lock_irqsave(&fnic->fnic_lock, flags);
++		io_req->cmd_state = old_ioreq_state;
++		spin_unlock_irqrestore(&fnic->fnic_lock, flags);
++	}
++	return true;
++}
++
++void
++nvfnic_cleanup_tport_io(struct fnic *fnic, struct fnic_tport_s *tport)
++{
++	unsigned long flags;
++	struct nvfnic_ls_req *nvfnic_ls_req, *next;
++	struct nvmefc_ls_req *lsreq;
++	uint16_t oxid;
++	LIST_HEAD(done_reqs);
++
++	spin_lock_irqsave(&fnic->fnic_lock, flags);
++	list_for_each_entry_safe(nvfnic_ls_req, next,
++				 &(tport->ls_req_list), list) {
++		lsreq = nvfnic_ls_req->ls_req;
++		if (!lsreq || (lsreq->private == NULL)) {
++			FNIC_NVME_DBG(KERN_INFO, fnic,
++				"fnic_cleanup_tport_io lsreq NULL\n");
++			continue;
++		}
++		list_del_init(&nvfnic_ls_req->list);
++		lsreq->private = NULL;
++		oxid = nvfnic_ls_req->oxid;
++		fdls_free_oxid(&fnic->iport, oxid, &nvfnic_ls_req->oxid);
++		nvfnic_ls_req->state = FNIC_LS_REQ_CMD_COMPLETE;
++		list_add_tail(&nvfnic_ls_req->list, &done_reqs);
++	}
++	spin_unlock_irqrestore(&fnic->fnic_lock, flags);
++
++	list_for_each_entry_safe(nvfnic_ls_req, next, &done_reqs, list) {
++		list_del_init(&nvfnic_ls_req->list);
++		lsreq = nvfnic_ls_req->ls_req;
++		timer_delete_sync(&nvfnic_ls_req->ls_req_timer);
++		lsreq->done(lsreq, -ENXIO);
++	}
++
++	/* For link-down, IOs are freed by firmware reset completion */
++	if (fdls_get_state(&fnic->iport.fabric) == FDLS_STATE_LINKDOWN)
++		return;
++
++	sbitmap_for_each_set(&fnic->nvfnic_tag_map, _cleanup_tport_io, tport);
++}
++
++void
++nvfnic_terminate_tport_ls_reqs(struct fnic *fnic, struct fnic_tport_s *tport)
++{
++	struct nvmefc_ls_req *lsreq;
++	struct nvfnic_ls_req *nvfnic_ls_req, *next;
++	int count = 0;
++	uint16_t oxid;
++	LIST_HEAD(done_reqs);
++
++	spin_lock_irqsave(&fnic->fnic_lock, fnic->lock_flags);
++	list_for_each_entry_safe(nvfnic_ls_req, next,
++		&(tport->ls_req_list), list) {
++
++		lsreq = nvfnic_ls_req->ls_req;
++		if (!lsreq || (lsreq->private == NULL)) {
++			FNIC_NVME_DBG(KERN_ERR, fnic,
++				"lsreq is NULL\n");
++			continue;
++		}
++		oxid = nvfnic_ls_req->oxid;
++		list_del_init(&nvfnic_ls_req->list);
++		lsreq->private = NULL;
++		fdls_free_oxid(&fnic->iport, oxid, &nvfnic_ls_req->oxid);
++		nvfnic_ls_req->state = FNIC_LS_REQ_CMD_COMPLETE;
++		list_add_tail(&nvfnic_ls_req->list, &done_reqs);
++	}
++	spin_unlock_irqrestore(&fnic->fnic_lock, fnic->lock_flags);
++
++	list_for_each_entry_safe(nvfnic_ls_req, next, &done_reqs, list) {
++		list_del_init(&nvfnic_ls_req->list);
++		lsreq = nvfnic_ls_req->ls_req;
++		timer_delete_sync(&nvfnic_ls_req->ls_req_timer);
++		lsreq->done(lsreq, -ENXIO);
++		count++;
++	}
++
++	FNIC_NVME_DBG(KERN_INFO, fnic,
++		"fnic_terminate_tport_lsreqs tport: 0x%x: freed lsreq: %d\n",
++		tport->fcid, count);
++}
++
++bool _terminate_tport_ios(struct sbitmap *map, unsigned int tag,
++				       void *data)
++{
++	struct fnic_tport_s *tport = data;
++	struct fnic_iport_s *iport = tport->iport;
++	struct fnic *fnic = iport->fnic;
++	struct fnic_io_req *io_req;
++	struct nvmefc_fcp_req *fcp_req = NULL;
++	struct nvme_fc_local_port *lport = iport->nv_lport;
++	struct nvme_fc_remote_port *rport = tport->nv_rport;
++	unsigned long flags;
++
++	spin_lock_irqsave(&fnic->fnic_lock, flags);
++	io_req = fnic->sw_copy_wq[0].io_req_table[tag];
++	if (!io_req) {
++		spin_unlock_irqrestore(&fnic->fnic_lock, flags);
++		return true;
++	}
++
++	if (io_req->tport != tport) {
++		spin_unlock_irqrestore(&fnic->fnic_lock, flags);
++		return true;
++	}
++
++	FNIC_NVME_DBG(KERN_INFO, fnic,
++		      "Terminate tag: 0x%x (tport fcid 0x%x)\n",
++		      io_req->tag, io_req->tport->fcid);
++	fcp_req = io_req->fcp_req;
++	spin_unlock_irqrestore(&fnic->fnic_lock, flags);
++
++	nvfnic_fcpio_abort(lport, rport, NULL, fcp_req);
++	return true;
++}
++
++void nvfnic_terminate_tport_ios(struct fnic *fnic,
++				     struct fnic_tport_s *tport)
++{
++
++	sbitmap_for_each_set(&fnic->nvfnic_tag_map, _terminate_tport_ios, tport);
++
++}
++
++bool _cleanup_all_nvme_io(struct sbitmap *map, unsigned int tag,
++				 void *data)
++{
++	struct fnic_iport_s *iport = data;
++	struct fnic_io_req *io_req;
++
++	io_req = iport->fnic->sw_copy_wq[0].io_req_table[tag];
++	if (!io_req)
++		return true;
++
++	io_req->cmd_state = FNIC_DEV_RST_TERM_ISSUED;
++	io_req->fcp_req->status = NVME_SC_INTERNAL;
++	io_req->fcp_req->transferred_length = 0;
++	io_req->fcp_req->rcv_rsplen = 0;
++	nvfnic_release_nvme_ioreq_buf(iport, io_req);
++	io_req->done(io_req);
++	return true;
++}
++
++void nvfnic_cleanup_all_nvme_ios(struct fnic *fnic)
++{
++	struct fnic_iport_s *iport = &fnic->iport;
++
++	spin_lock_irqsave(&fnic->fnic_lock, fnic->lock_flags);
++	sbitmap_for_each_set(&fnic->nvfnic_tag_map, _cleanup_all_nvme_io,
++			     iport);
++	spin_unlock_irqrestore(&fnic->fnic_lock, fnic->lock_flags);
++}
++
++void nvfnic_nvme_zero_devloss_tports(struct fnic *fnic)
++{
++	struct fnic_tport_s *tport, *next;
++
++	spin_lock_irqsave(&fnic->fnic_lock, fnic->lock_flags);
++	list_for_each_entry_safe(tport, next, &fnic->iport.tport_list, links) {
++		if (tport->flags & FNIC_FDLS_NVME_REGISTERED) {
++			spin_unlock_irqrestore(&fnic->fnic_lock, fnic->lock_flags);
++			nvme_fc_set_remoteport_devloss(tport->nv_rport, 0);
++			spin_lock_irqsave(&fnic->fnic_lock, fnic->lock_flags);
++		}
++	}
++	spin_unlock_irqrestore(&fnic->fnic_lock, fnic->lock_flags);
++}
++
++void nvfnic_nvme_unload(struct fnic *fnic)
++{
++	int ret = 0;
++	struct fnic_iport_s *iport = &fnic->iport;
++	unsigned long flags;
++	unsigned int time_wait =  FNIC_NVME_LPORT_REMOVE_WAIT;
++	unsigned int time_remain;
++	DECLARE_COMPLETION_ONSTACK(nvme_lport_unreg_done);
++
++	/* Mark iport state as INIT so that no IOs can be issued from this point */
++	spin_lock_irqsave(&fnic->fnic_lock, flags);
++	fnic->in_remove = 1;
++	fnic->iport.state = FNIC_IPORT_STATE_LINK_WAIT;
++	fnic->nvme_lport_unreg_done = &nvme_lport_unreg_done;
++	spin_unlock_irqrestore(&fnic->fnic_lock, flags);
++
++	/*
++	 * If fnic is already processing link-down or fnic is held
++	 * in disabled state following a reboot we dont need to issue
++	 * firmware reset and unregister remote ports as it is already
++	 * done as part of link down handling.
++	 */
++	if (fdls_get_state(&iport->fabric) == FDLS_STATE_LINKDOWN) {
++		while (fnic->reset_in_progress == IN_PROGRESS) {
++			wait_for_completion_timeout(&fnic->reset_completion_wait,
++						    msecs_to_jiffies(5000));
++			FNIC_NVME_DBG(KERN_INFO, fnic,
++				      "rmmod waiting for reset %p\n", fnic);
++		}
++	} else if (fdls_get_state(&iport->fabric) != FDLS_STATE_INIT)
++		fnic_fcpio_reset(fnic);
++
++	/*
++	 * Mark state so that the workqueue thread stops forwarding
++	 * received frames and link events to the local port. ISR and
++	 * other threads that can queue work items will also stop
++	 * creating work items on the fnic workqueue
++	 */
++	nvfnic_nvme_zero_devloss_tports(fnic);
++	fnic_flush_tport_event_list(fnic);
++	fnic_delete_fcp_tports(fnic);
++
++	if (iport->flags & FNIC_LPORT_NVME_REGISTERED) {
++		ret = nvme_fc_unregister_localport(fnic->iport.nv_lport);
++		if (ret) {
++			FNIC_NVME_DBG(KERN_ERR, fnic,
++				"Unregister nvme localport failed: %d\n", ret);
++		} else {
++			time_remain = wait_for_completion_timeout(
++				fnic->nvme_lport_unreg_done,
++				msecs_to_jiffies(time_wait));
++			if (!time_remain) {
++				FNIC_NVME_DBG(KERN_ERR, fnic,
++					      "Local port removal timed out\n");
++				WARN_ON(1);
++			}
++			iport->flags &= ~FNIC_LPORT_NVME_REGISTERED;
++			kfree(iport->nv_tmpl);
++		}
++	}
++
++	spin_lock_irqsave(&fnic->fnic_lock, flags);
++	fnic->nvme_lport_unreg_done = NULL;
++	spin_unlock_irqrestore(&fnic->fnic_lock, flags);
++
++	nvfnic_flush_nvme_io_list(fnic);
++}
++
++struct nvfnic_ls_req*
++nvfnic_find_ls_req(struct fnic_tport_s *tport, uint16_t oxid)
++{
++	struct nvfnic_ls_req *nvfnic_ls_req, *next;
++
++	list_for_each_entry_safe(nvfnic_ls_req, next, &(tport->ls_req_list), list) {
++		if (nvfnic_ls_req->oxid == oxid)
++			return nvfnic_ls_req;
++	}
++	return NULL;
++}
++
++void nvfnic_fcpio_cmpl(struct fnic_io_req *io_req)
++{
++	struct fnic *fnic = io_req->iport->fnic;
++
++	nvfnic_free_fcpio_tag(io_req->iport, io_req);
++	io_req->waitq_start_time = jiffies;
++
++	llist_add(&io_req->nvfnic_io_cmpl, &fnic->nvme_io_event_llist);
++	atomic_inc(&fnic->nvme_io_event_queued);
++
++	queue_work(fnic_cmpl_queue, &fnic->nvme_io_cmpl_work);
++}
++
++void nvfnic_process_ls_abts_rsp(struct fnic_iport_s *iport,
++		struct fc_frame_header *fchdr)
++{
++	uint32_t tport_fcid;
++	struct fnic_tport_s *tport;
++	struct nvfnic_ls_req *nvfnic_ls_req;
++	struct nvmefc_ls_req *lsreq;
++	uint8_t *fcid;
++	uint16_t oxid = FNIC_STD_GET_OX_ID(fchdr);
++	struct fnic *fnic = iport->fnic;
++
++	fcid = FNIC_STD_GET_S_ID(fchdr);
++	tport_fcid = ntoh24(fcid);
++
++	tport = fnic_find_tport_by_fcid(iport, tport_fcid);
++	if (tport == NULL) {
++		FNIC_NVME_DBG(KERN_ERR, fnic,
++			      "tport: 0x%x not found\n", tport_fcid);
++		return;
++	}
++
++	nvfnic_ls_req = nvfnic_find_ls_req(tport, oxid);
++	if (nvfnic_ls_req == NULL) {
++		FNIC_NVME_DBG(KERN_ERR, fnic,
++			      "tport: 0x%x lsreq oxid: 0x%x not found\n",
++			      tport_fcid, oxid);
++		return;
++	}
++
++	lsreq = nvfnic_ls_req->ls_req;
++	if ((lsreq == NULL) || (lsreq->private == NULL)) {
++		FNIC_NVME_DBG(KERN_INFO, fnic,
++			      "tport: 0x%x lsreq oxid: 0x%x already aborted\n",
++			      tport_fcid, oxid);
++		return;
++	}
++
++	nvfnic_ls_req->state = FNIC_LS_REQ_ABTS_COMPLETE;
++
++	list_del(&nvfnic_ls_req->list);
++	fdls_free_oxid(iport, oxid, &nvfnic_ls_req->oxid);
++	lsreq->private = NULL;
++	spin_unlock_irqrestore(&fnic->fnic_lock, fnic->lock_flags);
++	timer_delete_sync(&nvfnic_ls_req->ls_req_timer);
++	lsreq->done(lsreq, NVME_SC_HOST_ABORTED_CMD);
++	spin_lock_irqsave(&fnic->fnic_lock, fnic->lock_flags);
++}
++
++/**
++ * nvfnic_ls_rsp_recv - Handle received NVMe FC link service (LS) response
++ * @iport:  Pointer to the local FNIC port structure
++ * @fchdr:  Pointer to the Fibre Channel frame header for the
++ *          received response
++ * @len:    Length of the received frame
++ *
++ * This function processes link service (LS) responses received from
++ * NVMe Discovery Controllers or regular NVMe subsystems during
++ * association.
++ */
++void nvfnic_ls_rsp_recv(struct fnic_iport_s *iport,
++		struct fc_frame_header *fchdr, int len)
++{
++	uint8_t *fcid;
++	uint32_t tport_fcid;
++	struct fnic_tport_s *tport;
++	struct nvfnic_ls_req *nvfnic_ls_req;
++	struct nvmefc_ls_req *lsreq;
++	uint16_t oxid;
++	uint32_t rsp_len;
++	int sid_len = offsetof(struct fc_frame_header, fh_s_id) +
++		      sizeof(fchdr->fh_s_id);
++	int status = 0;
++	struct fnic *fnic = iport->fnic;
++
++	if (len < (int)sizeof(*fchdr)) {
++		if (len >= sid_len) {
++			fcid = FNIC_STD_GET_S_ID(fchdr);
++			tport_fcid = ntoh24(fcid);
++			FNIC_NVME_DBG(KERN_ERR, fnic,
++				      "tport: 0x%x LS rsp len %d too short\n",
++				      tport_fcid, len);
++		} else {
++			FNIC_NVME_DBG(KERN_ERR, fnic,
++				      "LS response len %d too short\n", len);
++		}
++		return;
++	}
++	rsp_len = len - sizeof(*fchdr);
++
++	fcid = FNIC_STD_GET_S_ID(fchdr);
++	tport_fcid = ntoh24(fcid);
++
++	tport = fnic_find_tport_by_fcid(iport, tport_fcid);
++	if (!tport) {
++		FNIC_NVME_DBG(KERN_ERR, fnic,
++			      "tport: 0x%x not found\n", tport_fcid);
++		return;
++	}
++
++	oxid = FNIC_STD_GET_OX_ID(fchdr);
++	nvfnic_ls_req = nvfnic_find_ls_req(tport, oxid);
++	if (!nvfnic_ls_req) {
++		FNIC_NVME_DBG(KERN_ERR, fnic,
++			      "tport: 0x%x no nvfnic_lsreq for oxid: 0x%x\n",
++			      tport_fcid, oxid);
++		return;
++	}
++
++	lsreq = nvfnic_ls_req->ls_req;
++	if (!lsreq || (lsreq->private == NULL)) {
++		FNIC_NVME_DBG(KERN_ERR, fnic,
++			      "tport:0x%x lsreq:0x%x already done\n",
++			      tport_fcid, oxid);
++		return;
++	}
++	if (!lsreq->rspaddr) {
++		FNIC_NVME_DBG(KERN_ERR, fnic,
++			      "tport 0x%x lsreq 0x%x rspaddr NULL\n",
++			      tport_fcid, oxid);
++		return;
++	}
++
++	if ((nvfnic_ls_req->state == FNIC_LS_REQ_CMD_ABTS_PENDING) ||
++	    (nvfnic_ls_req->state == FNIC_LS_REQ_CMD_ABTS_STARTED)) {
++		FNIC_NVME_DBG(KERN_INFO, fnic,
++			      "tport 0x%x lsreq oxid: 0x%x abts pending\n",
++			      tport_fcid, oxid);
++		return;
++	}
++
++	if (rsp_len > lsreq->rsplen) {
++		FNIC_NVME_DBG(KERN_ERR, fnic,
++			      "tport:0x%x lsreq:0x%x rsp %u > %u\n",
++			      tport_fcid, oxid, rsp_len, lsreq->rsplen);
++		status = -EOVERFLOW;
++	}
++
++	nvfnic_ls_req->state = FNIC_LS_REQ_CMD_COMPLETE;
++
++	list_del_init(&nvfnic_ls_req->list);
++	lsreq->private = NULL;
++	fdls_free_oxid(iport, oxid, &nvfnic_ls_req->oxid);
++	timer_delete(&nvfnic_ls_req->ls_req_timer);
++
++	if (status == 0) {
++		FNIC_NVME_DBG(KERN_DEBUG, fnic,
++			      "tport:0x%x lsreq:0x%x completed\n",
++			      tport_fcid, oxid);
++
++		/* Copy the Response */
++		memcpy(lsreq->rspaddr, (uint8_t *)fchdr + sizeof(*fchdr),
++		       rsp_len);
++	}
++
++	spin_unlock_irqrestore(&fnic->fnic_lock, fnic->lock_flags);
++	lsreq->done(lsreq, status);
++	spin_lock_irqsave(&fnic->fnic_lock, fnic->lock_flags);
++}
++
++void nvfnic_ls_req_timeout(struct timer_list *t)
++{
++	struct nvfnic_ls_req *nvfnic_ls_req = timer_container_of(nvfnic_ls_req,
++			t, ls_req_timer);
++	struct fnic *fnic = nvfnic_ls_req->fnic;
++	struct nvmefc_ls_req *ls_req = nvfnic_ls_req->ls_req;
++	struct fnic_iport_s *iport = &fnic->iport;
++	struct fnic_tport_s *tport = (struct fnic_tport_s *) nvfnic_ls_req->tport;
++	uint16_t oxid = nvfnic_ls_req->oxid;
++
++	FNIC_NVME_DBG(KERN_INFO, fnic,
++		      "tport: 0x%x lsreq: 0x%x state: %d timeout\n",
++		      tport->fcid, nvfnic_ls_req->oxid,
++		      nvfnic_ls_req->state);
++	spin_lock_irqsave(&fnic->fnic_lock, fnic->lock_flags);
++
++	if ((ls_req->private == NULL) ||
++	    (nvfnic_ls_req->state == FNIC_LS_REQ_CMD_ABTS_STARTED)) {
++		FNIC_NVME_DBG(KERN_ERR, fnic,
++			      "tport: 0x%x lsreq: 0x%x already aborted\n",
++			      tport->fcid, nvfnic_ls_req->oxid);
++		spin_unlock_irqrestore(&fnic->fnic_lock, fnic->lock_flags);
++		return;
++	}
++
++	if (nvfnic_ls_req->state == FNIC_LS_REQ_CMD_ABTS_PENDING) {
++		FNIC_NVME_DBG(KERN_ERR, fnic,
++			      "tport: 0x%x lsreq: 0x%x abort timeout\n",
++			      tport->fcid, nvfnic_ls_req->oxid);
++
++		list_del(&nvfnic_ls_req->list);
++		ls_req = nvfnic_ls_req->ls_req;
++		fdls_free_oxid(iport, oxid, &nvfnic_ls_req->oxid);
++		ls_req->private = NULL;
++		spin_unlock_irqrestore(&fnic->fnic_lock, fnic->lock_flags);
++		ls_req->done(ls_req, -ETIMEDOUT);
++		return;
++	} else if ((nvfnic_ls_req->state == FNIC_LS_REQ_CMD_PENDING) &&
++		   (nvfnic_transport_ready(iport, tport))) {
++		FNIC_NVME_DBG(KERN_ERR, fnic,
++			      "tport: 0x%x lsreq: 0x%x sending abort\n",
++			      tport->fcid, nvfnic_ls_req->oxid);
++	}
++
++	if (ls_req->private == NULL) {
++		spin_unlock_irqrestore(&fnic->fnic_lock, fnic->lock_flags);
++		return;
++	}
++
++	list_del(&nvfnic_ls_req->list);
++	ls_req = nvfnic_ls_req->ls_req;
++	fdls_free_oxid(iport, oxid, &nvfnic_ls_req->oxid);
++	ls_req->private = NULL;
++
++	spin_unlock_irqrestore(&fnic->fnic_lock, fnic->lock_flags);
++	ls_req->done(ls_req, -ETIMEDOUT);
++}
++
++void nvfnic_local_port_delete(struct nvme_fc_local_port *lport)
++{
++	struct fnic_iport_s *iport = (struct fnic_iport_s *) lport->private;
++	struct fnic *fnic = iport->fnic;
++	unsigned long flags = 0;
++
++	FNIC_NVME_DBG(KERN_INFO, fnic, "lport delete 0x%x\n",
++		      iport->fcid);
++
++	spin_lock_irqsave(&fnic->fnic_lock, flags);
++	if (fnic->nvme_lport_unreg_done)
++		complete(fnic->nvme_lport_unreg_done);
++	spin_unlock_irqrestore(&fnic->fnic_lock, flags);
++}
++
++void nvfnic_remote_port_delete(struct nvme_fc_remote_port *rport)
++{
++	/*
++	 * Read rport->private without the lock only to find fnic.
++	 * Re-read it under fnic_lock to claim this delete callback, since
++	 * another callback may already have cleared it.
++	 */
++	struct fnic_tport_s *tport = (struct fnic_tport_s *)rport->private;
++	struct fnic_iport_s *iport;
++	struct fnic *fnic = NULL;
++	unsigned long flags = 0;
++
++	if (tport == NULL) {
++		pr_err("Attempt to delete already deleted tport\n");
++		return;
++	}
++
++	iport = tport->iport;
++	fnic = iport->fnic;
++	FNIC_NVME_DBG(KERN_INFO, fnic, "0x%x tport 0x%x\n",
++		      iport->fcid, tport->fcid);
++
++	spin_lock_irqsave(&fnic->fnic_lock, flags);
++	tport = (struct fnic_tport_s *)rport->private;
++	if (tport == NULL) {
++		FNIC_NVME_DBG(KERN_ERR, fnic,
++			      "NVMe tport callback after NULL set %p\n",
++			      rport);
++		spin_unlock_irqrestore(&fnic->fnic_lock, flags);
++		return;
++	}
++
++	iport = tport->iport;
++	rport->private = NULL;
++	fdls_delete_tport(iport, tport);
++
++	if (tport->flags & FNIC_FDLS_NVME_TPORT_CLEANUP_PENDING) {
++		FNIC_NVME_DBG(KERN_ERR, fnic,
++			      "tport %8x waiting on clean pending\n",
++			      tport->fcid);
++	}
++
++	while (tport->flags & FNIC_FDLS_NVME_TPORT_CLEANUP_PENDING) {
++		spin_unlock_irqrestore(&fnic->fnic_lock, flags);
++		msleep(2000);
++		spin_lock_irqsave(&fnic->fnic_lock, flags);
++	}
++
++	list_del(&tport->links);
++
++	if (tport->tport_del_done)
++		complete(tport->tport_del_done);
++
++	tport->flags |= FNIC_TPORT_CAN_BE_FREED;
++	spin_unlock_irqrestore(&fnic->fnic_lock, flags);
++}
++
++int nvfnic_create_queue(struct nvme_fc_local_port *lport,
++		    unsigned int idx, u16 size, void **handle)
++{
++	struct fnic_iport_s *iport = (struct fnic_iport_s *)lport->private;
++	struct fnic *fnic  = iport->fnic;
++
++	FNIC_NVME_DBG(KERN_DEBUG, fnic,
++		      "iport:0x%x queue:%d size:%d\n", iport->fcid, idx, size);
++
++	if (idx > fnic->wq_copy_count)
++		return -EINVAL;
++
++	if (idx == 0) {
++		/* Admin queue */
++		*handle = &fnic->hw_copy_wq[0];
++	} else {
++		/* IO queues */
++		*handle = &fnic->hw_copy_wq[idx-1];
++	}
++
++	return 0;
++}
++
++void nvfnic_ls_req_abort(struct nvme_fc_local_port *lport,
++		   struct nvme_fc_remote_port *rport,
++		   struct nvmefc_ls_req *lsreq)
++{
++	struct fnic_iport_s *iport = lport->private;
++	struct fnic *fnic = iport->fnic;
++	struct fnic_tport_s *tport;
++	struct nvfnic_ls_req *nvfnic_ls_req;
++	uint16_t oxid;
++	int timeout;
++
++	spin_lock_irqsave(&fnic->fnic_lock, fnic->lock_flags);
++
++	tport = (struct fnic_tport_s *) rport->private;
++	/* find the request */
++	nvfnic_ls_req = lsreq->private;
++
++	if (nvfnic_ls_req == NULL) {
++		FNIC_NVME_DBG(KERN_ERR, fnic,
++			      "0x%x null lsreq already scheduled for abort\n",
++			      iport->fcid);
++		spin_unlock_irqrestore(&fnic->fnic_lock, fnic->lock_flags);
++		return;
++	}
++
++	if (nvfnic_ls_req->state == FNIC_LS_REQ_CMD_ABTS_PENDING) {
++		FNIC_NVME_DBG(KERN_ERR, fnic,
++			      "0x%x lsreq 0x%x already scheduled for abort\n",
++			      iport->fcid, nvfnic_ls_req->oxid);
++		spin_unlock_irqrestore(&fnic->fnic_lock, fnic->lock_flags);
++		return;
++	}
++
++	FNIC_NVME_DBG(KERN_INFO, fnic,
++		      "0x%x lsreq 0x%x abts\n",
++		      iport->fcid, nvfnic_ls_req->oxid);
++
++	nvfnic_ls_req->state = FNIC_LS_REQ_CMD_ABTS_STARTED;
++	spin_unlock_irqrestore(&fnic->fnic_lock, fnic->lock_flags);
++	timer_delete_sync(&nvfnic_ls_req->ls_req_timer);
++
++	spin_lock_irqsave(&fnic->fnic_lock, fnic->lock_flags);
++	nvfnic_ls_req = lsreq->private;
++
++	if ((nvfnic_ls_req == NULL) ||
++	    (nvfnic_ls_req->state == FNIC_LS_REQ_CMD_ABTS_PENDING)) {
++		FNIC_NVME_DBG(KERN_ERR, fnic,
++			      "lsreq timeout raced with midlayer abort\n");
++		spin_unlock_irqrestore(&fnic->fnic_lock, fnic->lock_flags);
++		return;
++	}
++
++	/* Basic validations of the state */
++	if (!nvfnic_transport_ready(iport, tport)) {
++		/* If iport or tport offline, it will be handled from that event */
++		oxid = nvfnic_ls_req->oxid;
++		lsreq->private = NULL;
++		list_del(&nvfnic_ls_req->list);
++		fdls_free_oxid(iport, oxid, &nvfnic_ls_req->oxid);
++		spin_unlock_irqrestore(&fnic->fnic_lock, fnic->lock_flags);
++		lsreq->done(lsreq, -ENXIO);
++		FNIC_NVME_DBG(KERN_ERR, fnic,
++				"nvfnic_lsreq_abort transport not ready\n");
++		return;
++	}
++
++	/* Mark the state and flags */
++	nvfnic_ls_req->state = FNIC_LS_REQ_CMD_ABTS_PENDING;
++	timeout = FNIC_LS_REQ_TMO_MSECS(lsreq->timeout);
++	mod_timer(&nvfnic_ls_req->ls_req_timer,
++		  round_jiffies(jiffies + msecs_to_jiffies(timeout)));
++	spin_unlock_irqrestore(&fnic->fnic_lock, fnic->lock_flags);
++}
++
++bool nvfnic_queue_abort_io_req(struct fnic *fnic, int tag,
++			 u32 task_req, struct fnic_io_req *io_req)
++{
++	int idx;
++	unsigned long flags;
++
++	idx = io_req->wq - &fnic->hw_copy_wq[0];
++
++	atomic_inc(&fnic->in_flight);
++
++	spin_lock_irqsave(&fnic->wq_copy_lock[idx], flags);
++
++	if (vnic_wq_copy_desc_avail(io_req->wq) <= fnic->wq_copy_desc_low[idx])
++		free_wq_copy_descs(fnic, io_req->wq, idx);
++
++	if (!vnic_wq_copy_desc_avail(io_req->wq)) {
++		spin_unlock_irqrestore(&fnic->wq_copy_lock[idx], flags);
++		atomic_dec(&fnic->in_flight);
++		FNIC_NVME_DBG(KERN_ERR, fnic,
++				"tag 0x%x failure: no descriptors\n", tag);
++		return false;
++	}
++	fnic_queue_wq_copy_desc_itmf(io_req->wq, tag | FNIC_TAG_ABORT,
++				     0, task_req, tag, NULL, io_req->port_id,
++				     fnic->config.ra_tov, fnic->config.ed_tov);
++
++
++	spin_unlock_irqrestore(&fnic->wq_copy_lock[idx], flags);
++	atomic_dec(&fnic->in_flight);
++
++	return true;
++}
++
++void nvfnic_fcpio_abort(struct nvme_fc_local_port *lport,
++			struct nvme_fc_remote_port *rport,
++			void *hw_queue_handle, struct nvmefc_fcp_req *fcp_req)
++{
++	struct fnic_iport_s *iport = lport->private;
++	struct fnic *fnic = iport->fnic;
++	struct nvme_fc_cmd_iu *cmd_iu = fcp_req->cmdaddr;
++	struct fnic_io_req *io_req = (struct fnic_io_req *)fcp_req->private;
++	unsigned int tag = io_req->tag;
++	unsigned long flags = 0;
++	unsigned int task_req;
++	enum fnic_ioreq_state old_ioreq_state;
++
++	spin_lock_irqsave(&fnic->fnic_lock, flags);
++
++	if (io_req->tag == FNIC_NVME_NO_FREE_TAG) {
++		FNIC_NVME_DBG(KERN_ERR, fnic,
++			      "tag: (0x%x) tport_fcid: 0x%x\n",
++			      io_req->tag, io_req->tport->fcid);
++		spin_unlock_irqrestore(&fnic->fnic_lock, flags);
++		return;
++	}
++
++	if (io_req != nvfnic_find_io_req_by_tag(fnic, io_req->tag)) {
++		FNIC_NVME_DBG(KERN_INFO, fnic,
++			      "cmd tag freed or not issued:0x%x sn:0x%08x\n",
++			      io_req->tag, be32_to_cpu(cmd_iu->csn));
++		spin_unlock_irqrestore(&fnic->fnic_lock, flags);
++		return;
++	}
++
++	if (io_req->cmd_state == FNIC_IOREQ_CMD_COMPLETE) {
++		FNIC_NVME_DBG(KERN_INFO, fnic,
++			      "IO already completed before abort: 0x%x\n", tag);
++		spin_unlock_irqrestore(&fnic->fnic_lock, flags);
++		return;
++	}
++
++	if ((io_req->cmd_state == FNIC_IOREQ_ABTS_PENDING) ||
++	    (io_req->cmd_state == FNIC_DEV_RST_TERM_ISSUED)) {
++		FNIC_NVME_DBG(KERN_INFO, fnic, "abort already pending %d\n",
++			      tag);
++		spin_unlock_irqrestore(&fnic->fnic_lock, flags);
++		return;
++	}
++
++	if (io_req->cmd_state != FNIC_IOREQ_CMD_PENDING) {
++		FNIC_NVME_DBG(KERN_INFO, fnic,
++			      "io_req completed or aborted for tag:0x%x\n",
++			      tag);
++		spin_unlock_irqrestore(&fnic->fnic_lock, flags);
++		return;
++	}
++
++	FNIC_NVME_DBG(KERN_INFO, fnic, "in abort cmd_sn:%08x %llx tag: 0x%x\n",
++		      be32_to_cpu(cmd_iu->csn),
++		      le64_to_cpu(cmd_iu->sqe.rw.slba), io_req->tag);
++
++	if (unlikely(fnic_chk_state_flags_locked(fnic, FNIC_FLAGS_IO_BLOCKED))) {
++		FNIC_NVME_DBG(KERN_INFO, fnic,
++			      "abort tag:0x%x returned during fw reset\n",
++			      io_req->tag);
++		spin_unlock_irqrestore(&fnic->fnic_lock, flags);
++		return;
++	}
++	atomic_inc(&fnic->in_flight);
++
++	if (fdls_tport_is_offline(io_req->tport) ||
++	    (io_req->cmd_state == FNIC_IOREQ_RESET_TERM)) {
++		task_req = FCPIO_ITMF_ABT_TASK_TERM;
++	} else {
++		task_req = FCPIO_ITMF_ABT_TASK;
++	}
++
++
++
++	old_ioreq_state = io_req->cmd_state;
++	io_req->cmd_state = FNIC_IOREQ_ABTS_PENDING;
++	io_req->abts_state = FCPIO_INVALID_CODE;
++
++	spin_unlock_irqrestore(&fnic->fnic_lock, flags);
++
++	if (!nvfnic_queue_abort_io_req(fnic, io_req->tag, task_req, io_req)) {
++		FNIC_NVME_DBG(KERN_INFO, fnic,
++			      "Abort io req queue failed\n");
++		spin_lock_irqsave(&fnic->fnic_lock, flags);
++		io_req->cmd_state = old_ioreq_state;
++		spin_unlock_irqrestore(&fnic->fnic_lock, flags);
++	}
++	atomic_dec(&fnic->in_flight);
++}
++
++struct
++nvme_fc_port_template nvfnic_port = {
++	.localport_delete = nvfnic_local_port_delete,
++	.remoteport_delete = nvfnic_remote_port_delete,
++	.create_queue = nvfnic_create_queue,
++	.delete_queue = NULL,
++	.ls_req = NULL,
++	.ls_abort = nvfnic_ls_req_abort,
++	.fcp_io = nvfnic_fcpio_send,
++	.fcp_abort = nvfnic_fcpio_abort,
++	.max_hw_queues = 1,
++	.max_sgl_segments = 256,
++	.max_dif_sgl_segments = 64,
++	.dma_boundary = 0xFFFFFFFF,
++	.local_priv_sz = sizeof(struct fnic_iport_s *),
++	.remote_priv_sz = sizeof(struct fnic_tport_s *),
++	.lsrqst_priv_sz = sizeof(struct nvfnic_ls_req),
++	.fcprqst_priv_sz = sizeof(struct fnic_io_req),
++};
++
++void nvfnic_flush_nvme_io_list(struct fnic *fnic)
++{
++	queue_work(fnic_cmpl_queue, &fnic->nvme_io_cmpl_work);
++	flush_work(&fnic->nvme_io_cmpl_work);
++}
++
++void nvfnic_nvme_iodone_work(struct work_struct *work)
++{
++	struct fnic *fnic = container_of(work, struct fnic, nvme_io_cmpl_work);
++	struct llist_node *llnode;
++	struct fnic_io_req *io_req, *tmp;
++
++	llnode = llist_del_all(&fnic->nvme_io_event_llist);
++	llist_for_each_entry_safe(io_req, tmp, llnode, nvfnic_io_cmpl) {
++		atomic_dec(&fnic->nvme_io_event_queued);
++		io_req->fcp_req->done(io_req->fcp_req);
++	}
++}
++
++void nvfnic_exch_reset(struct fnic_iport_s *iport, struct fnic_tport_s *tport)
++{
++	FNIC_NVME_DBG(KERN_DEBUG, iport->fnic,
++			"0x%x: Exchange reset scheduled for tport: 0x%x\n",
++		    iport->fcid, tport->fcid);
++
++	nvfnic_terminate_tport_ls_reqs(iport->fnic, tport);
++	nvfnic_terminate_tport_ios(iport->fnic, tport);
++}
++
++void nvfnic_delete_tport(struct fnic_iport_s *iport,
++						struct fnic_tport_s *tport,
++						unsigned long flags)
++{
++	struct fnic *fnic = iport->fnic;
++	int ret;
++	unsigned int time_wait = FNIC_NVME_TPORT_REMOVE_WAIT;
++	unsigned int time_remain;
++	DECLARE_COMPLETION_ONSTACK(tm_done);
++	unsigned int fcid;
++	int count = 0;
++
++	if (!tport)
++		return;
++
++	fcid = tport->fcid;
++	fdls_set_tport_state(tport, FDLS_TGT_STATE_OFFLINE);
++
++	FNIC_NVME_DBG(KERN_DEBUG, fnic,
++			"0x%x: scheduled deletion for tport: 0x%x\n",
++		    iport->fcid, tport->fcid);
++
++	if (!(tport->flags & FNIC_FDLS_NVME_REGISTERED)) {
++		FNIC_NVME_DBG(KERN_ERR, fnic,
++			"0x%x: tport: 0x%x not registered. Freeing\n",
++		    iport->fcid, tport->fcid);
++		list_del(&tport->links);
++		kfree(tport);
++		return;
++	}
++
++	tport->tport_del_done = &tm_done;
++
++	tport->flags |= FNIC_FDLS_TPORT_DELETED;
++	spin_unlock_irqrestore(&fnic->fnic_lock, flags);
++	ret = nvme_fc_unregister_remoteport(tport->nv_rport);
++	if (ret) {
++		FNIC_NVME_DBG(KERN_ERR, fnic,
++			    "tport: 0x%x unregister failed %d\n",
++			    tport->fcid, ret);
++		spin_lock_irqsave(&fnic->fnic_lock, flags);
++		tport->tport_del_done = NULL;
++		list_del(&tport->links);
++		kfree(tport);
++		return;
++	}
++	time_remain = wait_for_completion_timeout(tport->tport_del_done,
++				msecs_to_jiffies(time_wait));
++
++	FNIC_NVME_DBG(KERN_DEBUG, fnic,
++		      "tport: 0x%x wait for deletion done\n",
++		      tport->fcid);
++
++	spin_lock_irqsave(&fnic->fnic_lock, flags);
++	tport->tport_del_done = NULL;
++
++	if (!time_remain) {
++		FNIC_NVME_DBG(KERN_ERR, fnic,
++			    "tport: 0x%x nvme midlayer completion timed out\n",
++			    tport->fcid);
++
++		spin_unlock_irqrestore(&fnic->fnic_lock, flags);
++		nvfnic_cleanup_tport_io(fnic, tport);
++		spin_lock_irqsave(&fnic->fnic_lock, flags);
++		tport->flags &= ~FNIC_FDLS_NVME_TPORT_CLEANUP_PENDING;
++		list_del(&tport->links);
++		kfree(tport);
++	} else {
++		while (!(tport->flags & FNIC_TPORT_CAN_BE_FREED) && (count < 8)) {
++			count++;
++			spin_unlock_irqrestore(&fnic->fnic_lock, flags);
++			msleep(2000);
++			spin_lock_irqsave(&fnic->fnic_lock, flags);
++		}
++		if (tport->flags & FNIC_TPORT_CAN_BE_FREED)
++			kfree(tport);
++	}
++
++	FNIC_NVME_DBG(KERN_INFO, fnic,
++		      "tport: 0x%x delete complete\n", fcid);
++}
++
++int nvfnic_add_tport(struct fnic *fnic, struct fnic_tport_s *tport,
++		     unsigned long flags)
++{
++	struct fnic_iport_s *iport = &fnic->iport;
++	struct nvme_fc_port_info pinfo;
++	int ret = 0;
++
++	FNIC_NVME_DBG(KERN_INFO, fnic,
++		      "Adding tport to nvme wwpn: 0x%llx\n",
++		      tport->wwpn);
++
++	memset(&pinfo, 0, sizeof(struct nvme_fc_port_info));
++
++	pinfo.port_name = tport->wwpn;
++	pinfo.node_name = tport->wwnn;
++	pinfo.port_role = FC_PORT_ROLE_NVME_DISCOVERY | FC_PORT_ROLE_NVME_TARGET;
++	pinfo.port_id = tport->fcid;
++	pinfo.dev_loss_tmo = nvme_dev_loss_tmo;
++
++	spin_unlock_irqrestore(&fnic->fnic_lock, flags);
++	ret = nvme_fc_register_remoteport(iport->nv_lport, &pinfo,
++					  &tport->nv_rport);
++	spin_lock_irqsave(&fnic->fnic_lock, flags);
++	if (ret) {
++		FNIC_NVME_DBG(KERN_INFO, fnic,
++			    "Failed to register tport wwpn: 0x%llx ret: %d\n",
++			    tport->wwpn, ret);
++		return ret;
++	}
++	tport->flags |= FNIC_FDLS_NVME_REGISTERED;
++	tport->nv_rport->private = tport;
++
++	snprintf(tport->str_wwpn, sizeof(tport->str_wwpn), "0x%llx", tport->wwpn);
++	snprintf(tport->str_wwnn, sizeof(tport->str_wwnn), "0x%llx", tport->wwnn);
++	return ret;
++}
++
++int nvfnic_add_lport(struct fnic *fnic)
++{
++	struct nvme_fc_port_info pinfo;
++	struct fnic_iport_s *iport = &fnic->iport;
++	int ret = 0;
++
++	FNIC_NVME_DBG(KERN_INFO, fnic,
++		      "Adding lport nvme wwpn: 0x%llx\n",
++		      iport->wwpn);
++
++	pinfo.node_name = iport->wwnn;
++	pinfo.port_name = iport->wwpn;
++	pinfo.port_role = FC_PORT_ROLE_NVME_INITIATOR;
++	pinfo.port_id = iport->fcid;
++
++	nvfnic_reset_fcpio_tag_pool(iport);
++
++	if (!(iport->flags & FNIC_LPORT_NVME_REGISTERED)) {
++		iport->nv_tmpl = kzalloc_obj(struct nvme_fc_port_template, GFP_ATOMIC);
++		if (!iport->nv_tmpl) {
++			FNIC_FCS_DBG(KERN_INFO, fnic,
++				     "iport:0x%x NVMe tmpl alloc failed\n",
++				     iport->fcid);
++			return -ENOMEM;
++		}
++		memcpy(iport->nv_tmpl, &nvfnic_port,
++		       sizeof(struct nvme_fc_port_template));
++		iport->nv_tmpl->max_hw_queues = fnic->wq_copy_count;
++
++		ret = nvme_fc_register_localport(&pinfo, iport->nv_tmpl,
++						 get_device(&fnic->pdev->dev),
++						 &iport->nv_lport);
++		if (ret) {
++			FNIC_NVME_DBG(KERN_ERR, fnic,
++					"Failed to add wwpn: 0x%llx ret: %d\n",
++					iport->wwpn, ret);
++			kfree(iport->nv_tmpl);
++			return ret;
++		}
++		iport->flags |= FNIC_LPORT_NVME_REGISTERED;
++		iport->nv_lport->private = iport;
++	}
++
++	sprintf(iport->str_wwpn, "0x%llx", iport->wwpn);
++	sprintf(iport->str_wwnn, "0x%llx", iport->wwnn);
++
++	FNIC_NVME_DBG(KERN_INFO, fnic,
++		      "Successfully added lport wwpn: 0x%llx\n",
++		      iport->wwpn);
++	return 0;
++}
++
++#endif
+diff --git a/drivers/scsi/fnic/fnic_nvme.h b/drivers/scsi/fnic/fnic_nvme.h
+new file mode 100644
+index 000000000000..ab96b8d13931
+--- /dev/null
++++ b/drivers/scsi/fnic/fnic_nvme.h
+@@ -0,0 +1,205 @@
++/* SPDX-License-Identifier: GPL-2.0-only */
++/*
++ * Copyright 2008 Cisco Systems, Inc.  All rights reserved.
++ * Copyright 2007 Nuova Systems, Inc.  All rights reserved.
++ */
++#ifndef _FNIC_NVME_H
++#define _FNIC_NVME_H
++
++#include "fdls_fc.h"
++#include "fnic_fdls.h"
++
++#define FNIC_NVME_TPORT_REMOVE_WAIT (5 * 1000)
++#define FNIC_NVME_TPORT_LIST_EMPTY_WAIT (FNIC_NVME_TPORT_REMOVE_WAIT * 2)
++#define FNIC_NVME_LPORT_REMOVE_WAIT (2 * 60 * 1000)
++
++#define FNIC_LS_REQ_FLAGS_NONE      0x0
++#define FNIC_LS_REQ_FLAGS_ABORTED   0x1
++#define FNIC_LS_REQ_FLAGS_DONE      0x2
++#define FNIC_LS_REQ_ABORT_COMPLETED 0x4
++#define FNIC_STATUS_LS_REQ_ABORTED 0x1
++
++#define FNIC_LS_REQ_MIN_TMO_SECS (2)
++#define FNIC_LS_REQ_MAX_TMO_SECS (5)
++#define FNIC_NVME_ADMIN_IO_TIMEOUT 30000	/* mSec */
++#define FNIC_NVME_NO_FREE_TAG     (0xFFFF)
++
++#define FNIC_LS_REQ_TMO_MSECS(tmo)    (((tmo >= FNIC_LS_REQ_MIN_TMO_SECS) && \
++					(tmo <= FNIC_LS_REQ_MAX_TMO_SECS)) ? \
++					(tmo * 1000) : (FNIC_LS_REQ_MIN_TMO_SECS * 1000))
++
++#define IS_ADMIN_IO(_io_req)     \
++	(NVME_CMD_FLAGS(_io_req) & FNIC_NVME_ADMIN_IO_TIMER_PENDING)
++
++extern unsigned int nvme_max_ios_to_process;
++extern unsigned int nvme_dev_loss_tmo;
++extern spinlock_t fnic_list_lock;
++
++enum nvfnic_lsreq_state_e {
++	FNIC_LS_REQ_CMD_INIT = 0,
++	FNIC_LS_REQ_CMD_PENDING,
++	FNIC_LS_REQ_CMD_ABTS_PENDING,
++	FNIC_LS_REQ_CMD_COMPLETE,
++	FNIC_LS_REQ_ABTS_COMPLETE,
++	FNIC_LS_REQ_CMD_ABTS_STARTED,
++};
++
++struct fnic_nvme_tag {
++	struct list_head free_list;
++	int tag_id;
++};
++
++struct nvfnic_ls_req {
++	struct list_head list;
++	struct nvmefc_ls_req *ls_req;
++	uint16_t oxid;
++	struct timer_list ls_req_timer;
++	struct fnic *fnic;
++	struct fnic_tport_s *tport;
++	int state;
++	unsigned int flags;
++};
++
++#if IS_ENABLED(CONFIG_NVME_FC)
++int nvfnic_nvme_io_done_handler(void *arg);
++struct fnic_io_req *nvfnic_find_io_req_by_tag(struct fnic *fnic, uint16_t tag);
++void nvfnic_reset_fcpio_tag_pool(struct fnic_iport_s *iport);
++int nvfnic_add_lport(struct fnic *fnic);
++void nvfnic_fcpio_abort(struct nvme_fc_local_port *lport,
++			struct nvme_fc_remote_port *rport,
++			void *hw_queue_handle, struct nvmefc_fcp_req *fcp_req);
++void nvfnic_remote_port_delete(struct nvme_fc_remote_port *rport);
++void nvfnic_local_port_delete(struct nvme_fc_local_port *lport);
++int nvfnic_dma_map_sgl(struct fnic *fnic, struct fnic_io_req *io_req,
++		       int sg_count);
++void nvfnic_dma_unmap_sgl(struct fnic *fnic, struct fnic_io_req *io_req);
++int nvfnic_get_sg_count(struct fnic_io_req *io_req);
++void nvfnic_release_nvme_ioreq_buf(struct fnic_iport_s *iport,
++				   struct fnic_io_req *io_req);
++void nvfnic_dump_nvcmd(struct fnic_io_req *io_req, uint8_t flags);
++bool _cleanup_tport_io(struct sbitmap *map, unsigned int tag, void *data);
++void nvfnic_flush_nvme_io_list(struct fnic *fnic);
++void nvfnic_fcpio_cmpl(struct fnic_io_req *io_req);
++bool nvfnic_transport_ready(struct fnic_iport_s *iport,
++			    struct fnic_tport_s *tport);
++int nvfnic_alloc_fcpio_tag(struct fnic_iport_s *iport,
++				struct fnic_io_req *io_req);
++int nvfnic_queuecommand(struct fnic_io_req *io_req);
++void nvfnic_free_fcpio_tag(struct fnic_iport_s *iport,
++			   struct fnic_io_req *io_req);
++void nvfnic_delete_lport(struct fnic_iport_s *iport);
++int nvfnic_add_tport(struct fnic *fnic, struct fnic_tport_s *tport,
++		     unsigned long flags);
++void nvfnic_cleanup_all_nvme_ios(struct fnic *fnic);
++void nvfnic_delete_tport_work(struct work_struct *work);
++void nvfnic_delete_tport(struct fnic_iport_s *iport,
++			 struct fnic_tport_s *tport, unsigned long flags);
++void nvfnic_fcpio_nvme_fast_cmpl_handler(struct fnic *fnic,
++					 struct fcpio_fw_req *desc);
++void nvfnic_ls_rsp_recv(struct fnic_iport_s *iport,
++			struct fc_frame_header *fchdr, int len);
++void nvfnic_process_ls_abts_rsp(struct fnic_iport_s *iport,
++				struct fc_frame_header *fchdr);
++void nvfnic_admin_io_timeout(struct timer_list *t);
++void nvfnic_fcpio_nvme_itmf_cmpl_handler(struct fnic *fnic,
++					 struct fcpio_fw_req *desc);
++void nvfnic_nvme_zero_devloss_tports(struct fnic *fnic);
++bool nvfnic_queue_abort_io_req(struct fnic *fnic, int tag, u32 task_req,
++			       struct fnic_io_req *io_req);
++void nvfnic_ls_req_abort(struct nvme_fc_local_port *lport,
++			 struct nvme_fc_remote_port *rport,
++			 struct nvmefc_ls_req *lsreq);
++int nvfnic_create_queue(struct nvme_fc_local_port *lport, unsigned int idx,
++			u16 size, void **handle);
++void nvfnic_ls_req_timeout(struct timer_list *t);
++uint16_t nvfnic_alloc_ls_req_oxid(struct fnic_iport_s *iport);
++struct nvfnic_ls_req *nvfnic_find_ls_req(struct fnic_tport_s *tport,
++					 uint16_t oxid);
++void nvfnic_terminate_tport_ios(struct fnic *fnic, struct fnic_tport_s *tport);
++bool _terminate_tport_ios(struct sbitmap *map, unsigned int tag, void *data);
++bool _cleanup_all_nvme_io(struct sbitmap *map, unsigned int tag, void *data);
++void nvfnic_cleanup_all_nvme_ios(struct fnic *fnic);
++int nvfnic_fcpio_send(struct nvme_fc_local_port *lport,
++		      struct nvme_fc_remote_port *rport, void *hw_queue_handle,
++		      struct nvmefc_fcp_req *fcp_req);
++void nvfnic_fcpio_ersp_cmpl_handler(struct fnic *fnic,
++				    struct fcpio_fw_req *desc, int sw_flag);
++void nvfnic_terminate_tport_ls_reqs(struct fnic *fnic,
++				    struct fnic_tport_s *tport);
++void nvfnic_terminate_tport_admin_ios(struct fnic *fnic,
++				      struct fnic_tport_s *tport);
++void nvfnic_cleanup_tport_io(struct fnic *fnic, struct fnic_tport_s *tport);
++void nvfnic_nvme_unload(struct fnic *fnic);
++void nvfnic_exch_reset(struct fnic_iport_s *iport, struct fnic_tport_s *tport);
++void nvfnic_nvme_iodone_work(struct work_struct *work);
++#else
++static inline int nvfnic_add_lport(struct fnic *fnic)
++{
++	return -EOPNOTSUPP;
++}
++
++static inline void nvfnic_nvme_unload(struct fnic *fnic)
++{
++}
++
++static inline void nvfnic_nvme_iodone_work(struct work_struct *work)
++{
++}
++
++static inline void nvfnic_exch_reset(struct fnic_iport_s *iport,
++				     struct fnic_tport_s *tport)
++{
++}
++
++static inline void nvfnic_process_ls_abts_rsp(struct fnic_iport_s *iport,
++					      struct fc_frame_header *fchdr)
++{
++}
++
++static inline void nvfnic_ls_rsp_recv(struct fnic_iport_s *iport,
++				      struct fc_frame_header *fchdr, int len)
++{
++}
++
++static inline int nvfnic_add_tport(struct fnic *fnic,
++				   struct fnic_tport_s *tport,
++				   unsigned long flags)
++{
++	return 0;
++}
++
++static inline void nvfnic_delete_tport(struct fnic_iport_s *iport,
++				       struct fnic_tport_s *tport,
++				       unsigned long flags)
++{
++}
++
++static inline void nvfnic_cleanup_all_nvme_ios(struct fnic *fnic)
++{
++}
++
++static inline void nvfnic_fcpio_nvme_fast_cmpl_handler(struct fnic *fnic,
++						       struct fcpio_fw_req *desc)
++{
++}
++
++static inline void nvfnic_fcpio_ersp_cmpl_handler(struct fnic *fnic,
++						  struct fcpio_fw_req *desc,
++						  int sw_flag)
++{
++}
++
++static inline void nvfnic_fcpio_nvme_itmf_cmpl_handler(struct fnic *fnic,
++						       struct fcpio_fw_req *desc)
++{
++}
++
++static inline int nvfnic_get_nvmef_info(struct fnic *fnic,
++					struct fnic_nvmef_info *info)
++{
++	return 0;
++}
++#endif
++
++extern const char *fnic_fcpio_status_to_str(unsigned int status);
++#endif				/* _FNIC_NVME_H */
+diff --git a/drivers/scsi/fnic/fnic_res.h b/drivers/scsi/fnic/fnic_res.h
+index 92a2fcfd3ea9..12a2a356dc13 100644
+--- a/drivers/scsi/fnic/fnic_res.h
++++ b/drivers/scsi/fnic/fnic_res.h
+@@ -126,7 +126,8 @@ static inline void fnic_queue_wq_copy_desc_itmf(struct vnic_wq_copy *wq,
+ 	desc->u.itmf.tm_req = tm_req;       /* SCSI Task Management request */
+ 	desc->u.itmf.t_tag = tm_id;         /* tag of fcpio to be aborted */
+ 	desc->u.itmf._resvd = 0;
+-	memcpy(desc->u.itmf.lun, lun, LUN_ADDRESS);  /* LUN address */
++	if (lun)
++		memcpy(desc->u.itmf.lun, lun, LUN_ADDRESS);  /* LUN address */
+ 	desc->u.itmf._resvd1 = 0;
+ 	hton24(desc->u.itmf.d_id, d_id);    /* FC vNIC only: Target D_ID */
+ 	desc->u.itmf.r_a_tov = r_a_tov;     /* FC vNIC only: R_A_TOV in msec */
+@@ -222,6 +223,35 @@ static inline void fnic_queue_rq_desc(struct vnic_rq *rq,
+ 	vnic_rq_post(rq, os_buf, 0, dma_addr, len);
  }
  
++static inline void fnic_queue_wq_copy_desc_nvme_io(struct vnic_wq_copy *wq,
++						   u32 req_id,
++						   u8 spl_flags,
++						   u32 sgl_cnt,
++						   u64 sgl_addr,
++						   u8 flags, u8 *nvme_cmd_iu,
++						   u16 cmd_len,
++						   u32 data_len,
++						   u32 d_id, u32 mss,
++						   u32 ratov, u32 edtov)
++{
++	struct fcpio_host_req *desc = vnic_wq_copy_next_desc(wq);
++
++	desc->hdr.type = FCPIO_NVME_CMD; /* enum fcpio_type */
++	desc->hdr.status = 0; /* header status entry */
++	desc->hdr._resvd = 0; /* reserved */
++	desc->hdr.tag.u.req_id = req_id; /* id for this request */
++	desc->u.nvcmnd.sgl_cnt = sgl_cnt; /* scatter-gather list count */
++	desc->u.nvcmnd.sgl_addr = sgl_addr; /* scatter-gather list addr */
++	desc->u.nvcmnd._resvd1 = 0; /* reserved: should be 0 */
++	desc->u.nvcmnd.flags = flags; /* command flags */
++	memset(desc->u.nvcmnd.nvme_cmnd, 0, NVME_CMD_SZ);
++	memcpy(desc->u.nvcmnd.nvme_cmnd, nvme_cmd_iu, cmd_len); /* SCSI CDB */
++	desc->u.nvcmnd.cmd_len = cmd_len;
++	desc->u.nvcmnd.data_len = data_len; /* length of data expected */
++	hton24(desc->u.nvcmnd.d_id, d_id); /* FC vNIC only: Target D_ID */
++
++	vnic_wq_copy_post(wq);
++}
+ 
+ struct fnic;
+ 
 diff --git a/drivers/scsi/fnic/fnic_scsi.c b/drivers/scsi/fnic/fnic_scsi.c
-index b92260583c67..37d1e136b7b9 100644
+index 37d1e136b7b9..04ab384033b1 100644
 --- a/drivers/scsi/fnic/fnic_scsi.c
 +++ b/drivers/scsi/fnic/fnic_scsi.c
-@@ -732,7 +732,8 @@ static int fnic_fcpio_fw_reset_cmpl_handler(struct fnic *fnic,
- 	atomic64_inc(&reset_stats->fw_reset_completions);
+@@ -96,7 +96,7 @@ static const char *fnic_ioreq_state_to_str(unsigned int state)
+ 	return fnic_ioreq_state_str[state];
+ }
  
- 	/* Clean up all outstanding io requests */
--	fnic_cleanup_io(fnic, SCSI_NO_TAG);
-+	if (IS_FNIC_FCP_INITIATOR(fnic))
-+		fnic_cleanup_io(fnic, SCSI_NO_TAG);
+-static const char *fnic_fcpio_status_to_str(unsigned int status)
++const char *fnic_fcpio_status_to_str(unsigned int status)
+ {
+ 	if (status >= ARRAY_SIZE(fcpio_status_str) || !fcpio_status_str[status])
+ 		return "unknown";
+@@ -186,7 +186,7 @@ fnic_count_lun_ioreqs(struct fnic *fnic, struct scsi_device *scsi_device)
+ }
  
- 	atomic64_set(&fnic->fnic_stats.fw_stats.active_fw_reqs, 0);
- 	atomic64_set(&fnic->fnic_stats.io_stats.active_ios, 0);
+ /* Free up Copy Wq descriptors. Called with copy_wq lock held */
+-static int free_wq_copy_descs(struct fnic *fnic, struct vnic_wq_copy *wq, unsigned int hwq)
++int free_wq_copy_descs(struct fnic *fnic, struct vnic_wq_copy *wq, unsigned int hwq)
+ {
+ 	/* if no Ack received from firmware, then nothing to clean */
+ 	if (!fnic->fw_ack_recd[hwq])
+diff --git a/drivers/scsi/fnic/vnic_devcmd.h b/drivers/scsi/fnic/vnic_devcmd.h
+index f876d223b2b4..20878a3e9e26 100644
+--- a/drivers/scsi/fnic/vnic_devcmd.h
++++ b/drivers/scsi/fnic/vnic_devcmd.h
+@@ -430,7 +430,7 @@ struct vnic_devcmd_notify {
+ struct vnic_devcmd_provinfo {
+ 	u8 oui[3];
+ 	u8 type;
+-	u8 data[];
++	u8 data[0];
+ };
+ 
+ /*
 -- 
 2.47.1
 
