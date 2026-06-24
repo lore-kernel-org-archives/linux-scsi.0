@@ -1,78 +1,77 @@
-Received: from rcdn-iport-1.cisco.com (rcdn-iport-1.cisco.com [173.37.86.72])
+Received: from rcdn-iport-3.cisco.com (rcdn-iport-3.cisco.com [173.37.86.74])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 80AFF31717C;
-	Wed, 24 Jun 2026 04:48:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=173.37.86.72
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C8A07E105;
+	Wed, 24 Jun 2026 04:49:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=173.37.86.74
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782276533; cv=none; b=UtuAQj15SQ9+ELxUb66Q6zg7jTdQfsrrvWB+4CqhnJ/89iIv12Vn2cO8tOiQeQuYYK5lFXU/rs0TWvnGt6oNfHu0xmnSVbCD5awSC98djj9C8sokjc7QpYV+Oj58YONQF0iCeMVpEqDBSbHd0CE5pBYz0Qse+H6ZElHdtYuOFFY=
+	t=1782276583; cv=none; b=SmtqB5JsBHEYatoWdBhChyh3qlwKbuYl/HmIAeHO1hHVfYUCkH2TZ7EkDp4FoOpuhhKNTqFOtz/aSDv0HVe0vkJkBwujsEKzTAtB/fqJCs29duPk2Q9LhNhhDr0hJtCs5enYC0ZC+X0MFYDAyxd/9W3zKSdDaCrzZeI8hdzvUlE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782276533; c=relaxed/simple;
-	bh=3NsBMHav8rNSoa9a5wB8Ca2LKLZrA1zW37put32JWRE=;
+	s=arc-20240116; t=1782276583; c=relaxed/simple;
+	bh=YNZQk3K4lS+qyn37WILN04iJMkBfaMI/s745+zJW5iE=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=fnUn9H3B7SB3d5KWxPnn8b7MkxBfvxOm6ojpnJ9YKluskN7Gm9zJHn3oFbUHnZpoZe6KViRX9A8P8xgOyZtYXwRJtKH+y0jNG/wbkBofZb1l1LnFYewe7tbvBZ6HwfKMf4XvI23YYOySppWWScXzI92malORKH/UldRhwqYApFk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=cisco.com; spf=pass smtp.mailfrom=cisco.com; dkim=pass (2048-bit key) header.d=cisco.com header.i=@cisco.com header.b=ARmAdD/L; arc=none smtp.client-ip=173.37.86.72
+	 MIME-Version; b=kpLKncAfQSxvApwor9sccZsaAoCXbc0Ghj4sCoNy8nhsXvdSqXBHUkYX/J23osFzfyBCUcNn5c/obCfHc2d6K2ZMP3OYznn0Lp8Ky4jlpc0cYZoWZHN2YeuFVFEcvfTDvBoKJdPp2BB8yiNXaaJNvl3BZ6VBP2Zc7DqjY8AxEfw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=cisco.com; spf=pass smtp.mailfrom=cisco.com; dkim=pass (2048-bit key) header.d=cisco.com header.i=@cisco.com header.b=La4ycICe; arc=none smtp.client-ip=173.37.86.74
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=cisco.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cisco.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=cisco.com header.i=@cisco.com header.b="ARmAdD/L"
+	dkim=pass (2048-bit key) header.d=cisco.com header.i=@cisco.com header.b="La4ycICe"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=cisco.com; i=@cisco.com; l=7348; q=dns/txt;
-  s=iport01; t=1782276531; x=1783486131;
+  d=cisco.com; i=@cisco.com; l=8125; q=dns/txt;
+  s=iport01; t=1782276581; x=1783486181;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=MnFEjhS5SlhLPNH1urV31UaZPaQ/2qYaniLvcefiL3k=;
-  b=ARmAdD/LxnaDZ4+cYzN2e8ejrsgO6rDJwOZp7JM02SEvLCtbO+wYixMu
-   uE+SdgW7sVcGNm4HCFvcw0VXfM3V14U5sIwC/mw28Jrh8EqP0zHLCQZZ4
-   jHlUx9tK8KmD56AvevJ1WKQ7GtFH+yPhxHHCXROaKjNetjZMgayuvwh3P
-   LkYp8iz89e9DDN5o0U4OBq7ZkkaIo4LQshUQtlIDNrij4HmqNC8KZ5v1j
-   OhfimQGZqcrs2xdDKXKJMmzEw0iMMkKLzRKS/n0LC903hcG/tNt+NAvhP
-   kqzT6C/WQbBJlsD4gRPyW+d2GFO++AUKSjUDQrIF48j+/OC2w54aHmQZc
-   w==;
-X-CSE-ConnectionGUID: swy8AmsxTZy0yDnqnr6aXQ==
-X-CSE-MsgGUID: 3hVcNh/dS2aY0Ve1JStHfg==
-X-IPAS-Result: =?us-ascii?q?A0BEAgB4YDtq/4//Ja1aHgEBCxIMggULgld0XkMZMASUJ?=
- =?us-ascii?q?oIhgRadCIF+DwEBAQ9EDQQBAYUGAo1KAiY0CQ4BAgQDAgMBAQEBAQEBAQEBA?=
- =?us-ascii?q?QsBAQUBAQECAQcFgQ4Thk8NhlsCAQMnCwFGEFFWGYMCAYJzAxGyJIF5M4EB3?=
- =?us-ascii?q?kOBZgEFBhQBgTiNXnSEfCcVBoFJRIEVgnMHb4EFAUyCOIZ+BIMugkiBVH9ji?=
- =?us-ascii?q?wRIgR4DWSwBVRMNCgsHBYFmAzUSKhVuMh2BIz4XgQwbBwWBHYFugQSFAiMfA?=
- =?us-ascii?q?zl/gT+BJGRmFTA1gQEBER8KgTUDCxgNSBEsFCMUGwQ+bgeMXRcPgj17CQsrI?=
- =?us-ascii?q?i4GgQ4vAR6TCx0HFJItgTWfWoQnjCGVOhozqmyZCI4KlgCFOIFoPIFZMxoIG?=
- =?us-ascii?q?xU7gmcTQBkPji0LC4hzyUcnMgIBOgIHAgcOAwuRaIF9AQE?=
-IronPort-Data: A9a23:H2CqrKIZRiFXXbcLFE+RV5QlxSXFcZb7ZxGr2PjKsXjdYENShGQFx
- 2tKDD/TO/uMZzb3LYhza4zn9UNQvZLRn4A1Hgsd+CA2RRqmiyZq6fd1j6vUF3nPRiEWZBs/t
- 63yUvGZcoZsCCSa/kvxWlTYhSEU/bmSQbbhA/LzNCl0RAt1IA8skhsLd9QR2uaEuvDnRVnR0
- T/Oi5eHYgH9hWQvajh8B5+r8XuDgtyj4Fv0gXRmDRx7lAe2v2UYCpsZOZawIxPQKqFIHvS3T
- vr017qw+GXU5X8FUrtJRZ6iLyXm6paLVeS/oiI+t5qK23CulQRuukoPD8fwXG8M49m/c3+d/
- /0W3XC4YV9B0qQhA43xWTEAe811FfUuFLMqvRFTvOTLp3AqfUcAzN11E1BmFIgD6tpFEDlf2
- foBLipTZyC60rfeLLKTEoGAh+w5J8XteYdasXZ6wHSBU7AtQIvIROPB4towMDUY358VW62BI
- ZBENHw2ME+ojx5nYj/7DLo9lf20h332cBVTqUmeouw85G27IAlZjOm9YYKPK4zULSlTth2Ym
- Gng/yP1OUsTBYShxGOnyW6MiOCayEsXX6pXTtVU7MVChF6L7m0VFBASE1C8pJGRikekVvpcJ
- lYS9y5oqrI9nGSpQ9v3dxm5pmOU+B8WXpxbFOhSwASE0LbV5UCBC3QJVCVMbvQhrsY9QTFs3
- ViM9/vgCTVst6WSVFqH+7uUpC/0Mi8QRUcAYCICQAQF4vH5rY0zhw6JRdFmeIavg8P4AyrY2
- T2GrCEiwb4UiKYj06mm+1vOhRq3u4PECAUy423/WmOj8xM8Z4O/YYGswUbU4OwGL4uDSFSF+
- n8elKC26OEIEIHIjyeWQc0TE7yzofWIKjvRhRhoBZZJyti202SocYYV5HR1I11kd55aPzToe
- 0TU/whW4fe/IUeXUEO+WKrpY+xC8EQqPY6Nuiz8BjaWXqVMSQ==
-IronPort-HdrOrdr: A9a23:rs9ROqkBpeDgxx0bbZMyHlwy7FnpDfLm3DAbv31ZSRFFG/FwWf
- rDoB19726RtN9/Yh8dcLy7UpVoBEmslqKdgrNhWItKPjOGhILAFugLhrcKgQeQeREWndQz6U
- 4PScVDIey1JURmjMr8/QmzG8stzZ266qyy7N2uqEuFNTsLV4hQqyFkFw2cDkp6ACNCBZY/Cd
- 6gw/AvnUvHRZzSBf7LfkXsmIP41qT2qK4=
-X-Talos-CUID: =?us-ascii?q?9a23=3ANPCrA2njdPm2ylNOd2Bk02+xgIvXOWbC3Sf5JlS?=
- =?us-ascii?q?oNVR4EKy5T0aW4v1to/M7zg=3D=3D?=
-X-Talos-MUID: =?us-ascii?q?9a23=3A8VQIXg8ScydvyJMf5yB4abKQf5xo3a+ICAcBqs8?=
- =?us-ascii?q?PipG6OHVSACu9gjviFw=3D=3D?=
+  bh=fftHBRor3AghukrV+dy0ZCZoXItjyNYCHoCXPlDeqLc=;
+  b=La4ycICe1TUMZUpUtjNA6ffognagvnEk5aXlR0KYfBHNpaHY9DKoSyrj
+   UrMQH71FV6RiUNm3O4xzwEaGKSLISP9R5Y0OBfevga1VeqX/TPlI5B6Pr
+   +07XhAUVV/fxikA+3dOIQopo0i/PTdgQGbOy2ctW4z79Q5Zodh7l0ldrD
+   Zs36QHahaIPBpR1wQ6IxKVPKlRDt9bJJGItj6u47xX2oPP9wc97WEn4Si
+   eoThGiHubz7ubMDxtPzt1C6y2qy99XG4S2a04gOzDdrdy6fKP3LsIegS2
+   m/brmDw/NTuuA2gBztGGYyTfvLhzaB1Ij927j+eCTrLufxKcwCNfW4eLP
+   g==;
+X-CSE-ConnectionGUID: XCXoUwLRSF+4O+v4Sz2+Fg==
+X-CSE-MsgGUID: 2w4TW9E6TfybTQwLQIzD9g==
+X-IPAS-Result: =?us-ascii?q?A0BCAgD1YDtq/4//Ja1aHgEBCxIMggULgleBUkMZMJQqg?=
+ =?us-ascii?q?iGeHoF+DwEBAQ9RBAEBhQYCjUoCJjQJDgECBAMCAwEBAQEBAQEBAQEBCwEBB?=
+ =?us-ascii?q?QEBAQIBBwWBDhOGXIZbAgEDJwsBRhBRVhmDAoJ0A7IsgXkzgQHeQ4FmAQsUA?=
+ =?us-ascii?q?YE4jV50hHwnFQaBSUSBFYNpgQUBTIk2BIMuhByBYosESIEeA1ksAVUTDQoLB?=
+ =?us-ascii?q?wWBZgM1EioVbjIdgSM+F4EMGwcFgR2BboEEhQIjHwM5f4E/gSRkZhUwNYEBA?=
+ =?us-ascii?q?REfCoE1AwsYDUgRLBQjFBsEPm4HjF0XD4I9gQQLE4IrAR4BkyeSSIE1n1qEJ?=
+ =?us-ascii?q?6FbGjOqbJkIpAqFOIFoPIFZMxoIGxU7gmdTGQ+OLQsL0jonMj0CBwIHDgMLk?=
+ =?us-ascii?q?2UBAQ?=
+IronPort-Data: A9a23:LjrT5q/9RuZwswc3AtUJDrUDcX+TJUtcMsCJ2f8bNWPcYEJGY0x3z
+ mEYUW3UM/qPMWf1eotwOt6x80wF6p6HnYJmHAU4qChEQiMRo6IpJzg2wmQcns+2BpeeJK6yx
+ 5xGMrEsFOhtEDmE4EzrauS9xZVF/fngbqLmD+LZMTxGSwZhSSMw4TpugOdRbrRA2bBVOCvT/
+ 4muyyHjEAX9gWAsbDhPs/jrRC5H5ZwehhtJ5jTSWtgT1LPuvyF9JI4SI6i3M0z5TuF8dsamR
+ /zOxa2O5WjQ+REgELuNyt4XpWVTH9Y+lSDX4pZnc/DKbipq/0Te4Y5nXBYoUnq7vh3S9zxHJ
+ HqhgrTrIeshFvWkdO3wyHC0GQkmVUFN0OevzXRSLaV/wmWeG0YAzcmCA2kGFr0fx/lTO1pgt
+ qA/ay5RVQLZxMy5lefTpulE3qzPLeHxN48Z/3UlxjbDALN+H9bIQr7B4plT2zJYasJmRKmFI
+ ZFGL2AyMVKZP0Yn1lQ/UPrSmM+rj2PjcjlRq3qepLE85C7YywkZPL3FbIuEJYPRFZ0J9qqej
+ jjZo1jGUzxECNKOwwa87VaVp/3jzCyuDer+E5X9rJaGmma7xmUJBTUVWEG9rP3/jVSxM/pdJ
+ k4e0i4vq7Uisk2hS5/2WBjQiHuNpAIdXZxIHvE38hqAzILT+Q+SAmVCRTlEAPQvuMY1QiQty
+ 3eTkt/pDCApu7qQIVqf87qSoDyyOAAPIGMCbDNCRgwAi/H5rZ8+lAnnVNtvEKepyNbyHFnYx
+ zyXqiM3gZ0IkNUGka68+DjvhzOqu4iMTQMv4AjTdnyq4xk/Z4O/YYGsr1/B4p5oKIefU0nEp
+ 3MfmuCA4+0US5KAjiqARKMKBr7B2hqeGCfXjVgqG9wq8C6gvib9O4tR+zp5YkxuN67oZAPUX
+ aMagisJjLc7AZdgRfUfj16ZYyjy8ZXdKA==
+IronPort-HdrOrdr: A9a23:8RWRtKqA6YId5nbLcTBJBdMaV5rheYIsimQD101hICG9vPb1qy
+ nIpoV+6faaslgssR0b8+xofZPwIk80lqQFhLX5X43CYOCOggLBR72Kr7GSoQEIcBeQygcy78
+ pdWpk7IMHsDFR8kMbx6BS1HpId2tWdmZrY4ts2t00McShaL4d98gx+FgGXVmdyRAVAGN4FMa
+ D03Lsgm9JlEk5nFvhSwRI+LpH+m+E=
+X-Talos-CUID: 9a23:uxYNpGM8ZXmQ2+5DaAJX83MLPvoeXD6B6zTOf3SqUyVHR+jA
+X-Talos-MUID: =?us-ascii?q?9a23=3AN0lRAw1S4onjmb06M4gA+/3tqTUjubvyNH9cvMs?=
+ =?us-ascii?q?6tdiOCRVvHw68nhjmTdpy?=
 X-IronPort-Anti-Spam-Filtered: true
 X-IronPort-AV: E=Sophos;i="6.24,221,1774310400"; 
-   d="scan'208";a="498902986"
+   d="scan'208";a="499773804"
 Received: from rcdn-l-core-06.cisco.com ([173.37.255.143])
-  by rcdn-iport-1.cisco.com with ESMTP/TLS/TLS_AES_256_GCM_SHA384; 24 Jun 2026 04:48:50 +0000
+  by rcdn-iport-3.cisco.com with ESMTP/TLS/TLS_AES_256_GCM_SHA384; 24 Jun 2026 04:49:35 +0000
 Received: from fedora.lan?044cisco.com (unknown [10.188.122.232])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: kartilak@cisco.com)
-	by rcdn-l-core-06.cisco.com (Postfix) with ESMTPSA id 0F28D180003A2;
-	Wed, 24 Jun 2026 04:48:48 +0000 (GMT)
+	by rcdn-l-core-06.cisco.com (Postfix) with ESMTPSA id CE7D818000277;
+	Wed, 24 Jun 2026 04:49:33 +0000 (GMT)
 From: Karan Tilak Kumar <kartilak@cisco.com>
 To: sebaddel@cisco.com
 Cc: arulponn@cisco.com,
@@ -90,11 +89,10 @@ Cc: arulponn@cisco.com,
 	adakopou@redhat.com,
 	lduncan@suse.com,
 	Karan Tilak Kumar <kartilak@cisco.com>,
-	kernel test robot <lkp@intel.com>,
 	Hannes Reinecke <hare@kernel.org>
-Subject: [PATCH v5 09/13] scsi: fnic: Send NVMe LS requests through FDLS
-Date: Tue, 23 Jun 2026 21:43:30 -0700
-Message-ID: <20260624044334.3079-10-kartilak@cisco.com>
+Subject: [PATCH v5 10/13] scsi: fnic: Abort timed-out NVMe LS requests
+Date: Tue, 23 Jun 2026 21:43:31 -0700
+Message-ID: <20260624044334.3079-11-kartilak@cisco.com>
 X-Mailer: git-send-email 2.47.1
 In-Reply-To: <20260624044334.3079-1-kartilak@cisco.com>
 References: <20260624044334.3079-1-kartilak@cisco.com>
@@ -110,15 +108,13 @@ X-Outbound-Client-TLS: ANONYMOUS;unknown [10.188.122.232];TLSv1.3;TLS_AES_256_GC
 X-Outbound-SMTP-Client: 10.188.122.232, [10.188.122.232]
 X-Outbound-Node: rcdn-l-core-06.cisco.com
 
-Add the FC frame wrapper for NVMe LS requests and build LS request
-frames from the NVMe-FC transport callback.
+Add an FDLS helper that sends ABTS frames for outstanding NVMe LS
+requests.
 
-Allocate OXIDs, track outstanding LS requests on the target port, arm
-request timers, and register the LS request callback in the NVMe FC
-port template.
+Use the active LS request OXID when building the ABTS frame, send it
+through the FCoE transmit path, and call it from LS timeout and abort
+handling.
 
-Reported-by: kernel test robot <lkp@intel.com>
-Closes: https://lore.kernel.org/oe-kbuild-all/202605280619.pmobiDWp-lkp@intel.com/
 Reviewed-by: Sesidhar Baddela <sebaddel@cisco.com>
 Reviewed-by: Arulprabhu Ponnusamy <arulponn@cisco.com>
 Reviewed-by: Gian Carlo Boffa <gcboffa@cisco.com>
@@ -129,194 +125,228 @@ Signed-off-by: Karan Tilak Kumar <kartilak@cisco.com>
 Co-developed-by: Hannes Reinecke <hare@kernel.org>
 
 ---
-Changes between v2 and v3:
-Fix issues reported by kernel bot.
-Guard tport logging when NVMe LS send has no tport.
-
 Changes between v3 and v4:
 Incorporate review comments from Sashiko:
-	Arm NVMe LS request timer before exposing the request
+	Free LS ABTS frame when send fails
+	Reuse NVMe LS request cleanup for abort failure
 
 Changes between v4 and v5:
 Incorporate review comments from Sashiko:
-	Avoid NVMe LS request send races
+	Arm NVMe LS abort timer after send succeeds
 ---
- drivers/scsi/fnic/fdls_fc.h   |   3 +
- drivers/scsi/fnic/fnic_nvme.c | 125 +++++++++++++++++++++++++++++++++-
- drivers/scsi/fnic/fnic_nvme.h |   3 +
- 3 files changed, 130 insertions(+), 1 deletion(-)
+ drivers/scsi/fnic/fdls_disc.c | 44 ++++++++++++++++++++++
+ drivers/scsi/fnic/fnic_fdls.h |  2 +
+ drivers/scsi/fnic/fnic_nvme.c | 70 ++++++++++++++++++++++++++++-------
+ 3 files changed, 102 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/scsi/fnic/fdls_fc.h b/drivers/scsi/fnic/fdls_fc.h
-index a7b8b969f019..cdf84462dd37 100644
---- a/drivers/scsi/fnic/fdls_fc.h
-+++ b/drivers/scsi/fnic/fdls_fc.h
-@@ -30,6 +30,9 @@
- #include <linux/if_ether.h>
- #include <scsi/fc/fc_encaps.h>
- #include <scsi/fc/fc_fcoe.h>
-+#include <linux/nvme.h>
-+#include <linux/nvme-fc.h>
-+#include <linux/nvme-fc-driver.h>
- 
- #define FDLS_MIN_FRAMES	(32)
- #define FDLS_MIN_FRAME_ELEM	(4)
-diff --git a/drivers/scsi/fnic/fnic_nvme.c b/drivers/scsi/fnic/fnic_nvme.c
-index 8374464e4fcc..16e2f0add5ce 100644
---- a/drivers/scsi/fnic/fnic_nvme.c
-+++ b/drivers/scsi/fnic/fnic_nvme.c
-@@ -1306,6 +1306,129 @@ void nvfnic_ls_req_timeout(struct timer_list *t)
- 	ls_req->done(ls_req, -ETIMEDOUT);
+diff --git a/drivers/scsi/fnic/fdls_disc.c b/drivers/scsi/fnic/fdls_disc.c
+index f66c121cb712..d44b98e753d1 100644
+--- a/drivers/scsi/fnic/fdls_disc.c
++++ b/drivers/scsi/fnic/fdls_disc.c
+@@ -663,6 +663,50 @@ fdls_send_logo_resp(struct fnic_iport_s *iport,
+ 	fnic_send_fcoe_frame(iport, frame, frame_size);
  }
  
-+/**
-+ * nvfnic_ls_req_send - Send NVMe FC link service (LS) request
-+ * @lport:   Pointer to local NVMe FC port structure
-+ * @rport:   Pointer to remote NVMe FC port structure
-+ * @ls_req:  Pointer to the link service request structure
-+ *
-+ * This function is used to send link service (LS) commands to an NVMe
-+ * Discovery Controller for discovery operations, as well as to regular
-+ * NVMe subsystems during association. It encapsulates the logic for
-+ * transmitting LS requests over the NVMe over Fabrics (NVMe-oF) FC
-+ * transport.
-+ *
-+ * Returns: 0 on success, or a negative error code on failure.
-+ */
-+int nvfnic_ls_req_send(struct nvme_fc_local_port *lport,
-+		  struct nvme_fc_remote_port *rport,
-+		  struct nvmefc_ls_req *ls_req)
++int fdls_send_ls_req_abts(struct fnic_iport_s *iport,
++		struct fnic_tport_s *tport, unsigned int oxid)
 +{
-+	int timeout;
 +	uint8_t *frame;
-+	uint8_t fcid[3];
-+	unsigned long flags = 0;
-+	struct fnic_iport_s *iport = lport->private;
-+	uint8_t *ls_req_payload;
++	uint8_t s_id[3];
++	uint8_t d_id[3];
 +	struct fnic *fnic = iport->fnic;
-+	struct fc_frame_header *fchdr;
-+	struct nvfnic_ls_req *nvfnic_ls_req = ls_req->private;
++	struct fc_frame_header *pls_req_abts;
 +	uint16_t frame_size = FNIC_ETH_FCOE_HDRS_OFFSET +
-+			sizeof(struct fc_frame_header) + ls_req->rqstlen;
-+	struct fnic_tport_s *tport;
++			sizeof(struct fc_frame_header);
 +	int ret;
-+
-+	spin_lock_irqsave(&fnic->fnic_lock, flags);
-+
-+	tport = (struct fnic_tport_s *)rport->private;
-+	INIT_LIST_HEAD(&nvfnic_ls_req->list);
-+
-+	if (!nvfnic_transport_ready(iport, tport)) {
-+		if (tport != NULL)
-+			FNIC_NVME_DBG(KERN_INFO, fnic,
-+				      "iport: 0x%x tport: 0x%x transport not ready\n",
-+				      iport->fcid, tport->fcid);
-+		else
-+			FNIC_NVME_DBG(KERN_INFO, fnic,
-+				      "iport: 0x%x transport not ready\n",
-+				      iport->fcid);
-+		spin_unlock_irqrestore(&fnic->fnic_lock, flags);
-+		return -ENOLINK;
-+	}
 +
 +	frame = fdls_alloc_frame(iport);
 +	if (frame == NULL) {
-+		FNIC_NVME_DBG(KERN_ERR, fnic,
-+		     "Failed to allocate frame to send NVME LS REQ");
-+		spin_unlock_irqrestore(&fnic->fnic_lock, flags);
++		FNIC_FCS_DBG(KERN_ERR, fnic,
++				"Failed to allocate frame to send ls req ABTS");
 +		return -ENOMEM;
 +	}
 +
-+	if (fdls_alloc_oxid(iport, FNIC_FRAME_TYPE_NVME_LS,
-+			&nvfnic_ls_req->oxid) == FNIC_UNASSIGNED_OXID) {
-+		FNIC_FCS_DBG(KERN_INFO, fnic,
-+		     "0x%x: Failed to allocate OXID to send NVME LS REQ",
-+			 iport->fcid);
-+		mempool_free(frame, fnic->frame_pool);
-+		spin_unlock_irqrestore(&fnic->fnic_lock, flags);
-+		return -EAGAIN;
-+	}
++	pls_req_abts = (struct fc_frame_header *) (frame +
++			FNIC_ETH_FCOE_HDRS_OFFSET);
++	fdls_init_fabric_abts_frame(frame, iport);
 +
-+	timer_setup(&nvfnic_ls_req->ls_req_timer, nvfnic_ls_req_timeout,
-+		     0UL);
++	hton24(s_id, iport->fcid);
++	hton24(d_id, tport->fcid);
++	FNIC_STD_SET_S_ID(*pls_req_abts, s_id);
++	FNIC_STD_SET_D_ID(*pls_req_abts, d_id);
 +
-+	nvfnic_ls_req->fnic = fnic;
-+	nvfnic_ls_req->tport = tport;
-+	nvfnic_ls_req->state = FNIC_LS_REQ_CMD_INIT;
-+	nvfnic_ls_req->ls_req = ls_req;
++	FNIC_STD_SET_OX_ID(*pls_req_abts, oxid);
 +
-+	fchdr = (struct fc_frame_header *)(frame + FNIC_ETH_FCOE_HDRS_OFFSET);
-+	*fchdr = (struct fc_frame_header) {
-+		.fh_r_ctl = FC_RCTL_ELS4_REQ,
-+		.fh_type = FC_TYPE_NVME,
-+		.fh_f_ctl = {FNIC_ELS_REQ_FCTL, 0, 0},
-+		.fh_rx_id = cpu_to_be16(FNIC_UNASSIGNED_RXID)
-+	};
-+
-+	hton24(fcid, iport->fcid);
-+	FNIC_STD_SET_S_ID(*fchdr, fcid);
-+
-+	hton24(fcid, tport->fcid);
-+	FNIC_STD_SET_D_ID(*fchdr, fcid);
-+
-+	FNIC_STD_SET_OX_ID(*fchdr, nvfnic_ls_req->oxid);
-+
-+	ls_req_payload = frame + FNIC_ETH_FCOE_HDRS_OFFSET + sizeof(*fchdr);
-+	memcpy(ls_req_payload, ls_req->rqstaddr, ls_req->rqstlen);
-+
-+	FNIC_NVME_DBG(KERN_INFO, fnic,
-+		 "0x%x: NVME send ls req with oxid: 0x%x type: 0x%02x len: %d",
-+		 iport->fcid, nvfnic_ls_req->oxid, *((uint8_t *) ls_req->rqstaddr),
-+		 ls_req->rqstlen);
-+
-+	list_add_tail(&nvfnic_ls_req->list, &tport->ls_req_list);
-+	nvfnic_ls_req->state = FNIC_LS_REQ_CMD_PENDING;
++	FNIC_FCS_DBG(KERN_INFO, fnic,
++		"iport 0x%x: tport: 0x%x FDLS sending ls req abts with oxid: 0x%x",
++		iport->fcid, tport->fcid, oxid);
 +
 +	ret = fnic_send_fcoe_frame(iport, frame, frame_size);
 +	if (ret) {
-+		list_del(&nvfnic_ls_req->list);
-+		fdls_free_oxid(iport, nvfnic_ls_req->oxid,
-+			       &nvfnic_ls_req->oxid);
-+		nvfnic_ls_req->state = FNIC_LS_REQ_CMD_COMPLETE;
-+		ls_req->private = NULL;
-+		spin_unlock_irqrestore(&fnic->fnic_lock, flags);
 +		mempool_free(frame, fnic->frame_pool);
 +		return ret;
 +	}
 +
-+	timeout = FNIC_LS_REQ_TMO_MSECS(ls_req->timeout);
-+	mod_timer(&nvfnic_ls_req->ls_req_timer,
-+		  round_jiffies(jiffies + msecs_to_jiffies(timeout)));
-+	spin_unlock_irqrestore(&fnic->fnic_lock, flags);
-+
 +	return 0;
 +}
 +
- void nvfnic_local_port_delete(struct nvme_fc_local_port *lport)
++
+ void
+ fdls_send_tport_abts(struct fnic_iport_s *iport,
+ 					 struct fnic_tport_s *tport)
+diff --git a/drivers/scsi/fnic/fnic_fdls.h b/drivers/scsi/fnic/fnic_fdls.h
+index 0a68d0fb11b1..ce4b3aae77e3 100644
+--- a/drivers/scsi/fnic/fnic_fdls.h
++++ b/drivers/scsi/fnic/fnic_fdls.h
+@@ -407,6 +407,8 @@ uint16_t fdls_alloc_oxid(struct fnic_iport_s *iport, int oxid_frame_type,
+ 	uint16_t *active_oxid);
+ void fdls_free_oxid(struct fnic_iport_s *iport,
+ 	uint16_t oxid, uint16_t *active_oxid);
++int fdls_send_ls_req_abts(struct fnic_iport_s *iport,
++		struct fnic_tport_s *tport, unsigned int oxid);
+ void fdls_tgt_logout(struct fnic_iport_s *iport,
+ 		     struct fnic_tport_s *tport);
+ void fnic_del_fabric_timer_sync(struct fnic *fnic);
+diff --git a/drivers/scsi/fnic/fnic_nvme.c b/drivers/scsi/fnic/fnic_nvme.c
+index 16e2f0add5ce..c4de6606c0b2 100644
+--- a/drivers/scsi/fnic/fnic_nvme.c
++++ b/drivers/scsi/fnic/fnic_nvme.c
+@@ -24,6 +24,10 @@
+ 
+ #if IS_ENABLED(CONFIG_NVME_FC)
+ 
++static bool nvfnic_ls_req_cleanup(struct fnic_iport_s *iport,
++				  struct nvmefc_ls_req *lsreq,
++				  uint16_t oxid);
++
+ int nvfnic_get_sg_count(struct fnic_io_req *io_req)
  {
- 	struct fnic_iport_s *iport = (struct fnic_iport_s *) lport->private;
-@@ -1606,7 +1729,7 @@ nvme_fc_port_template nvfnic_port = {
- 	.remoteport_delete = nvfnic_remote_port_delete,
- 	.create_queue = nvfnic_create_queue,
- 	.delete_queue = NULL,
--	.ls_req = NULL,
-+	.ls_req = nvfnic_ls_req_send,
- 	.ls_abort = nvfnic_ls_req_abort,
- 	.fcp_io = nvfnic_fcpio_send,
- 	.fcp_abort = nvfnic_fcpio_abort,
-diff --git a/drivers/scsi/fnic/fnic_nvme.h b/drivers/scsi/fnic/fnic_nvme.h
-index ab96b8d13931..ebdaf6930f8e 100644
---- a/drivers/scsi/fnic/fnic_nvme.h
-+++ b/drivers/scsi/fnic/fnic_nvme.h
-@@ -111,6 +111,9 @@ void nvfnic_ls_req_abort(struct nvme_fc_local_port *lport,
- 			 struct nvmefc_ls_req *lsreq);
- int nvfnic_create_queue(struct nvme_fc_local_port *lport, unsigned int idx,
- 			u16 size, void **handle);
-+int nvfnic_ls_req_send(struct nvme_fc_local_port *lport,
-+		       struct nvme_fc_remote_port *rport,
-+		       struct nvmefc_ls_req *ls_req);
- void nvfnic_ls_req_timeout(struct timer_list *t);
- uint16_t nvfnic_alloc_ls_req_oxid(struct fnic_iport_s *iport);
- struct nvfnic_ls_req *nvfnic_find_ls_req(struct fnic_tport_s *tport,
+ 	return io_req->fcp_req->sg_cnt;
+@@ -1248,6 +1252,23 @@ void nvfnic_ls_rsp_recv(struct fnic_iport_s *iport,
+ 	spin_lock_irqsave(&fnic->fnic_lock, fnic->lock_flags);
+ }
+ 
++static bool nvfnic_ls_req_cleanup(struct fnic_iport_s *iport,
++				  struct nvmefc_ls_req *lsreq,
++				  uint16_t oxid)
++{
++	struct nvfnic_ls_req *nvfnic_ls_req = lsreq->private;
++
++	if (!nvfnic_ls_req)
++		return false;
++
++	lsreq->private = NULL;
++	list_del(&nvfnic_ls_req->list);
++	fdls_free_oxid(iport, oxid, &nvfnic_ls_req->oxid);
++	nvfnic_ls_req->state = FNIC_LS_REQ_CMD_COMPLETE;
++
++	return true;
++}
++
+ void nvfnic_ls_req_timeout(struct timer_list *t)
+ {
+ 	struct nvfnic_ls_req *nvfnic_ls_req = timer_container_of(nvfnic_ls_req,
+@@ -1257,6 +1278,7 @@ void nvfnic_ls_req_timeout(struct timer_list *t)
+ 	struct fnic_iport_s *iport = &fnic->iport;
+ 	struct fnic_tport_s *tport = (struct fnic_tport_s *) nvfnic_ls_req->tport;
+ 	uint16_t oxid = nvfnic_ls_req->oxid;
++	int timeout;
+ 
+ 	FNIC_NVME_DBG(KERN_INFO, fnic,
+ 		      "tport: 0x%x lsreq: 0x%x state: %d timeout\n",
+@@ -1278,10 +1300,8 @@ void nvfnic_ls_req_timeout(struct timer_list *t)
+ 			      "tport: 0x%x lsreq: 0x%x abort timeout\n",
+ 			      tport->fcid, nvfnic_ls_req->oxid);
+ 
+-		list_del(&nvfnic_ls_req->list);
+ 		ls_req = nvfnic_ls_req->ls_req;
+-		fdls_free_oxid(iport, oxid, &nvfnic_ls_req->oxid);
+-		ls_req->private = NULL;
++		nvfnic_ls_req_cleanup(iport, ls_req, oxid);
+ 		spin_unlock_irqrestore(&fnic->fnic_lock, fnic->lock_flags);
+ 		ls_req->done(ls_req, -ETIMEDOUT);
+ 		return;
+@@ -1290,6 +1310,19 @@ void nvfnic_ls_req_timeout(struct timer_list *t)
+ 		FNIC_NVME_DBG(KERN_ERR, fnic,
+ 			      "tport: 0x%x lsreq: 0x%x sending abort\n",
+ 			      tport->fcid, nvfnic_ls_req->oxid);
++		nvfnic_ls_req->state = FNIC_LS_REQ_CMD_ABTS_PENDING;
++		spin_unlock_irqrestore(&fnic->fnic_lock, fnic->lock_flags);
++
++		if (fdls_send_ls_req_abts(iport, tport, nvfnic_ls_req->oxid) == 0) {
++			timeout = FNIC_LS_REQ_TMO_MSECS(ls_req->timeout);
++			mod_timer(&nvfnic_ls_req->ls_req_timer,
++				  round_jiffies(jiffies + msecs_to_jiffies(timeout)));
++			return;
++		}
++		FNIC_NVME_DBG(KERN_ERR, fnic,
++			      "tport: 0x%x lsreq: 0x%x cannot send abort\n",
++			      tport->fcid, oxid);
++		spin_lock_irqsave(&fnic->fnic_lock, fnic->lock_flags);
+ 	}
+ 
+ 	if (ls_req->private == NULL) {
+@@ -1297,10 +1330,8 @@ void nvfnic_ls_req_timeout(struct timer_list *t)
+ 		return;
+ 	}
+ 
+-	list_del(&nvfnic_ls_req->list);
+ 	ls_req = nvfnic_ls_req->ls_req;
+-	fdls_free_oxid(iport, oxid, &nvfnic_ls_req->oxid);
+-	ls_req->private = NULL;
++	nvfnic_ls_req_cleanup(iport, ls_req, oxid);
+ 
+ 	spin_unlock_irqrestore(&fnic->fnic_lock, fnic->lock_flags);
+ 	ls_req->done(ls_req, -ETIMEDOUT);
+@@ -1411,11 +1442,7 @@ int nvfnic_ls_req_send(struct nvme_fc_local_port *lport,
+ 
+ 	ret = fnic_send_fcoe_frame(iport, frame, frame_size);
+ 	if (ret) {
+-		list_del(&nvfnic_ls_req->list);
+-		fdls_free_oxid(iport, nvfnic_ls_req->oxid,
+-			       &nvfnic_ls_req->oxid);
+-		nvfnic_ls_req->state = FNIC_LS_REQ_CMD_COMPLETE;
+-		ls_req->private = NULL;
++		nvfnic_ls_req_cleanup(iport, ls_req, nvfnic_ls_req->oxid);
+ 		spin_unlock_irqrestore(&fnic->fnic_lock, flags);
+ 		mempool_free(frame, fnic->frame_pool);
+ 		return ret;
+@@ -1534,6 +1561,7 @@ void nvfnic_ls_req_abort(struct nvme_fc_local_port *lport,
+ 	struct nvfnic_ls_req *nvfnic_ls_req;
+ 	uint16_t oxid;
+ 	int timeout;
++	int ret;
+ 
+ 	spin_lock_irqsave(&fnic->fnic_lock, fnic->lock_flags);
+ 
+@@ -1592,10 +1620,24 @@ void nvfnic_ls_req_abort(struct nvme_fc_local_port *lport,
+ 
+ 	/* Mark the state and flags */
+ 	nvfnic_ls_req->state = FNIC_LS_REQ_CMD_ABTS_PENDING;
+-	timeout = FNIC_LS_REQ_TMO_MSECS(lsreq->timeout);
+-	mod_timer(&nvfnic_ls_req->ls_req_timer,
+-		  round_jiffies(jiffies + msecs_to_jiffies(timeout)));
++	oxid = nvfnic_ls_req->oxid;
++
++	ret = fdls_send_ls_req_abts(iport, tport, oxid);
++	if (!ret) {
++		timeout = FNIC_LS_REQ_TMO_MSECS(lsreq->timeout);
++		mod_timer(&nvfnic_ls_req->ls_req_timer,
++			  round_jiffies(jiffies + msecs_to_jiffies(timeout)));
++		spin_unlock_irqrestore(&fnic->fnic_lock, fnic->lock_flags);
++		return;
++	}
++
++	if (!nvfnic_ls_req_cleanup(iport, lsreq, oxid)) {
++		spin_unlock_irqrestore(&fnic->fnic_lock, fnic->lock_flags);
++		return;
++	}
++
+ 	spin_unlock_irqrestore(&fnic->fnic_lock, fnic->lock_flags);
++	lsreq->done(lsreq, -EAGAIN);
+ }
+ 
+ bool nvfnic_queue_abort_io_req(struct fnic *fnic, int tag,
 -- 
 2.47.1
 
