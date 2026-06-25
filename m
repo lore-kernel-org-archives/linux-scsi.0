@@ -1,55 +1,101 @@
-Received: from mail-m49204.qiye.163.com (mail-m49204.qiye.163.com [45.254.49.204])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-oo1-f51.google.com (mail-oo1-f51.google.com [209.85.161.51])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 082493DCD80
-	for <linux-scsi@vger.kernel.org>; Thu, 25 Jun 2026 12:05:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.254.49.204
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A33F83DE452
+	for <linux-scsi@vger.kernel.org>; Thu, 25 Jun 2026 12:06:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782389138; cv=none; b=Eu00v6pn8NgR8iujguz0MrZj6cazlwqmu7ErGswusyYNRshz/lxSV+w9haKSRtOH1s5sscvVYY8LNJhmKsIi695CwSprd7DN8P1GJLtpWD/zC8sfWLDoVERht1/TwmkZ+L2kqfugtRwJO6m3rV7GwMUhE1I/jBzoVCRi/W+eToc=
+	t=1782389190; cv=none; b=h9Pia4T5QV+8Xe3w/MI1n7EB2rDgnGCK2lBscfkJwtfGYpnYnW0ng7y5vhBd9C/xY7jzcOiucTzqqcptRpwHB40sga/hKUYKUQevwxi6dhIyZOdZ0LuAKKLeN5rsrdX6HcbyOdQZgdjXvc7orb8FA2iq9SRmZtMCAMtZ4kOHeVM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782389138; c=relaxed/simple;
-	bh=OV3N4CO3ObQFMWeqaBhm8vjzeIvbqn3rCEkZDP3ObJw=;
-	h=Content-Type:Message-ID:To:Cc:Subject:In-Reply-To:References:
-	 MIME-Version:From:Date; b=tIZ2Sbk598r2FcSSmV3zIC3hb5F2dHp7F8vJWaiuApIf3bS8BRyFzrLAg8TQYfMXjRCCDeeXAK6Y8iGX1N59OfyxLerw+aKRLFbgAIY/3wqkM6uJjXTJaRWn2Jz6twoflkN6eMrMj8ZdFM5nDW56hXGBw5RS1cRWDkibBx9YYn8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=seu.edu.cn; spf=pass smtp.mailfrom=seu.edu.cn; dkim=pass (1024-bit key) header.d=seu.edu.cn header.i=@seu.edu.cn header.b=GuRgsp3u; arc=none smtp.client-ip=45.254.49.204
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=seu.edu.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=seu.edu.cn
+	s=arc-20240116; t=1782389190; c=relaxed/simple;
+	bh=sQ3IvhVlv89cPfQzS65J1lmyYHPFIWi8Shbctwx9fz0=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=oPzADvixUF0n8ur1dz1Eax+AjRa6mA44aHc87CNlQUGF7jPdUCcdjBYSZoqQpoU975Wywhx+5ja5YyRaBYEadx58nBieecRRKwScROqXKZsPT/V+77R6XfWF97gICD3HIS7OcGChgQNyJ70Rm42UYvv94uYLcc1lCLOVxGysh6s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20251104.gappssmtp.com header.i=@kernel-dk.20251104.gappssmtp.com header.b=WhnGL/5l; arc=none smtp.client-ip=209.85.161.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=seu.edu.cn header.i=@seu.edu.cn header.b="GuRgsp3u"
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: base64
-Message-ID: <AOwAlgBuKqAuQ7p1144EIKrg.3.1782388214805.Hmail.220255722@seu.edu.cn>
-To: "martin.petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, 
-	target-devel <target-devel@vger.kernel.org>, 
-	linux-kernel <linux-kernel@vger.kernel.org>
-Subject: =?UTF-8?B?UmU6W1BBVENIXSBzY3NpOiB0YXJnZXQ6IGNvcmU6IGFubm90YXRlIExVTiBobGlzdCB0cmF2ZXJzYWxz?=
-X-Priority: 3
-X-Mailer: HMail Webmail Server V2.0 Copyright (c) 2016-163.com Sirius_WEB_WIN_1.64.1
-In-Reply-To: <20260625113807.574788-1-runyu.xiao@seu.edu.cn>
-References: <20260625113807.574788-1-runyu.xiao@seu.edu.cn>
+	dkim=pass (2048-bit key) header.d=kernel-dk.20251104.gappssmtp.com header.i=@kernel-dk.20251104.gappssmtp.com header.b="WhnGL/5l"
+Received: by mail-oo1-f51.google.com with SMTP id 006d021491bc7-69d7cdd3b8eso939747eaf.2
+        for <linux-scsi@vger.kernel.org>; Thu, 25 Jun 2026 05:06:28 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20251104.gappssmtp.com; s=20251104; t=1782389188; x=1782993988; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=FU2klxnBMUg0uA7ws6NxiqTBs9+/KNmY1E7rkk8xrBI=;
+        b=WhnGL/5lNXW3Xow0yfnvN9Rk5Zd5XHrgvaMsBD/L80tA1KI7WDhzPbQ+RHoyqAprU7
+         jPtv1YmpuJ1Dyp//RMkusH4ay/ac4rjRF3iosf69MeaTkit1Y6Qi3sxtzzTMQhLx6CGN
+         lhydn1gxcAdnOxs53Wv9FpuDYU4TBZdHVewQCOXQzJIO/B2vOjwp9oHZQm/TaAij08HO
+         cp5sKf3XBoG3yeBAmiaHYw2o5OEI+ap62GpeyfInLJI2twbRA0sADB7DmdYiFmtBwDYD
+         1b7IMzpR0RXNtz1yxRLuJpm5F6xgbexvKiFDZA5K16VEz+xWQ2DbNUkf2l01qFt6YKGq
+         s6gA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1782389188; x=1782993988;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=FU2klxnBMUg0uA7ws6NxiqTBs9+/KNmY1E7rkk8xrBI=;
+        b=afO8sBOd4YJPmBIOtq4C9SyNJ01XYuI3BnMNkoSAwzPbuV20GNt5+8jsfr/a1e/oqU
+         5ecQOn6xNnYCKyi3h/tCUKWD/0XSOditeVchrYPlJMASIhZjK3VcwTkBZK1BbpxKLgLd
+         pvH0tE1YyzW1jaeafldCC5kvnP9FyZSxmSfFEaGxe0Mmmi/k3Ri2/KrIeoBYNU5h9Ytc
+         dslT6qufoGgHu3yb+iOSLY61/GzENV1Y8TJGRQYAUtxlRj+oQmU9sPmSOIhXR/hgcVpZ
+         K7BkNEM98LSXdgXEeAxgGRi9cTsc7Ofj1nkBfiw4QuAZFDYvSygGjy7F0OSizG8t0gdP
+         vjJA==
+X-Forwarded-Encrypted: i=1; AFNElJ+0CgGu3iTV4ATnRIsdBZ01A9NX2hDoTFs4HYtr7yz/K0OyKyA5fW7mKWzel1UmFKmRJ8XxctgGDAAR@vger.kernel.org
+X-Gm-Message-State: AOJu0Yx6xTLuuXnksfp4C/52QsMqyGfN8TnKOQgVsgd6TRh6MtRJKV14
+	d0K89qfs1wQp2RsYGSZc/D7bk69NOfVmZ6+KbUn0APhHr/1C+Ry3cL8ywVUPFnpM/pM=
+X-Gm-Gg: AfdE7cn5LvX20xXGmoCNJTHaIUfuyh594E/AJsBaDp6WRW8YdZDuz9NLajAP5+ysTcY
+	E9bgGV0XQfRzdMlpvgeeePE78/969L1wO81T6OQ2wRDi6nw1iQLwqFsCl64GOy4kCOiCT2qKTSI
+	BzXJFcwsMF2MtzEKllrVzBSkWX2F6PnC0HajEz8AKE4L3uD/YqLrCqrT1iX83cgBKSm/ELb4zw0
+	cuAscDppkBJ/hKCgKTY5Km2LqOly6+MmKzEsWF7S5wHRm5zfOEuqm44EfcsFaJlV52GcCyMr0Mj
+	UiE2cO72x/vtW3cprARbACBmzhaItO7+cduI7tElizhV6h1pNeQPKQKjQvSN7HpO9I2VdtqNPs+
+	BKbPhmCeI7K3JME3PyTn8EuFmTiqmuhfnTnKLMduawNIR0aEdeRudmLR/ImcQQ4TA1vtO2JbW9G
+	7ljqLaitTDIcKT83SmGDdN4hQKHBbM5wYSsg2OCa+W+L1gK/OtpcWtPBoXpzpjlXtpwA2JV/4=
+X-Received: by 2002:a05:6820:f015:b0:69e:39c9:c6ec with SMTP id 006d021491bc7-6a135171776mr1548990eaf.13.1782389187712;
+        Thu, 25 Jun 2026 05:06:27 -0700 (PDT)
+Received: from [192.168.1.150] ([198.8.77.157])
+        by smtp.gmail.com with ESMTPSA id 586e51a60fabf-447ec359d9csm3002077fac.12.2026.06.25.05.06.26
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 25 Jun 2026 05:06:27 -0700 (PDT)
+Message-ID: <55f36cc5-a013-4960-8787-fbdf4b4d0c20@kernel.dk>
+Date: Thu, 25 Jun 2026 06:06:25 -0600
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Received: from 220255722@seu.edu.cn( [221.228.238.82] ) by ajax-webmail ( [127.0.0.1] ) ; Thu, 25 Jun 2026 19:50:14 +0800 (GMT+08:00)
-From: Runyu Xiao <runyu.xiao@seu.edu.cn>
-Date: Thu, 25 Jun 2026 19:50:14 +0800 (GMT+08:00)
-X-HM-Tid: 0a9efe9d73ce02f2kunmab49e53f8cf9
-X-HM-MType: 1
-X-HM-NTES-SC: AL0_4z5B86Wr4Tz9jdMF+bhXMTUS6Y2fHkyPT6dc03QDwVaZPGiA09TnwhbhTj
-	hLfuFZO94YXwX6xgvkjGVFFRKj5CTGmV59jsRUJIPmi941HdO6Ef7e9WS7F+OJBJjXnBvr+UwNQg
-	mMmozmMC0NS0cX2hZ1Eu8c4Xpznz/iBuAICcU=
-X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-	tZV1koWUFITzdXWRgWCB1ZQUpXWS1ZQUlXWQ8JGhUIEh9ZQVlDHxhPVh5CHk1LSRpCS0xKT1YVFA
-	kWGhdVEwETFhoSFyQUDg9ZV1kYEgtZQVlJSUpVSUlDVUlIQ1VDSVlXWRYaDxIVHRRZQVlPS0hVSk
-	tISk5OSFVKS0tVSkJLS1kG
-DKIM-Signature: a=rsa-sha256;
-	b=GuRgsp3untI2brSAOKJ9GnOX5RQUsNLwIHghS6SShQge1TQqy4V9DQKNeW7jUE5YWFcBlTqHMOyCzAxhXZ83rWu+FUeAZAK7EF76b3Ol/hieUyP3p4EQV85uK0TT7XKnbsBzqYRLtWZYtXPFPDqEkN+D0z1ah6E78syMWEuJPpY=; c=relaxed/relaxed; s=default; d=seu.edu.cn; v=1;
-	bh=OV3N4CO3ObQFMWeqaBhm8vjzeIvbqn3rCEkZDP3ObJw=;
-	h=date:mime-version:subject:message-id:from;
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2] scsi: bsg: read io_uring command fields once
+To: Yang Xiuwei <yangxiuwei@kylinos.cn>,
+ "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: Rahul Chandelkar <rc@rexion.ai>,
+ FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi@vger.kernel.org,
+ linux-block@vger.kernel.org, io-uring@vger.kernel.org,
+ Bart Van Assche <bvanassche@acm.org>,
+ Caleb Sander Mateos <csander@purestorage.com>
+References: <20260527191817.142769-1-rc@rexion.ai>
+ <20260626020000.0000000-1-yangxiuwei@kylinos.cn>
+Content-Language: en-US
+From: Jens Axboe <axboe@kernel.dk>
+In-Reply-To: <20260626020000.0000000-1-yangxiuwei@kylinos.cn>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-SGksCgpTb3JyeSwgdGhpcyBwYXRjaCB3YXMgc2VudCB0d2ljZSBieSBtaXN0YWtlLiBQbGVhc2Ug
-aWdub3JlIHRoaXMgZHVwbGljYXRlIGNvcHkuCgpUaGFua3MsClJ1bnl1Cgo=
+On 6/24/26 9:25 PM, Yang Xiuwei wrote:
+> Hi James, Martin,
+> 
+> Friendly ping on v2 ? anything else needed before pick-up?
+
+It'll fix the issue, but it also just applies READ_ONCE() everywhere.
+Which is fine, but most of them don't really matter. For example, yes
+you could race on the timeout if the application is being stupid or
+silly, but it doesn't matter one bit. Similarly with a bunch of others.
+
+I'll leave that up to the SCSI folks to decide how they want to do it.
+
+-- 
+Jens Axboe
