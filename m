@@ -1,125 +1,104 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 92B1828725B
-	for <linux-scsi@vger.kernel.org>; Fri, 26 Jun 2026 12:03:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 21C853F39F6
+	for <linux-scsi@vger.kernel.org>; Fri, 26 Jun 2026 12:03:35 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782475386; cv=none; b=XKN/zQRnLPx788YLMsTVI9qnInrgRCLigvxnZBmc32MD+sdIO/QWJQstr03QgK8y3YEevjsKhSuF1XXQxatALK4uVsOTigivtmKgtzeaQlSrR4MdAoHevbml/i2Z252oH4kP59z+opaf1kc/npYlHbFUP5uDEGzCo/wa3es40Ho=
+	t=1782475417; cv=none; b=sflXid5TupOzkp4sjcDbao21gcLJbVLn8MDe6pfpdh2irrUNrSGv9jLYQPK+kuH3DjpAuiJchTdmNnSw2MNTCHpTC6z7VdCBvcrRSmEInpoPEeD+DllDY0xt2KrFUhDjujO1NfWbrMGzyrZm9HSfwoErZbf0IXHmBkxyVNdrx1M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782475386; c=relaxed/simple;
-	bh=rGao843PBgOL+ARdTr4QcQYCLLq45apvPnfVmUBEdVo=;
+	s=arc-20240116; t=1782475417; c=relaxed/simple;
+	bh=Bxyr54bWpMc2G/nMHIppiD1C5Dn4uWxyg7ayksu0iPc=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=S40Mm8AjnJWfc4Um3Vr2cR2OinLZalZb4Nl+5rI+SjwHestGpxO/Q5eMrelSbT/R+ZsoTuVkRy7xEtyNiM3DegmY+xYTxW9sDBLRQ8QBhuPJb7q2/TT9muTTlyJuzumEj9MwW5xMmiGGu9OUNmSIXK4AHmeEEtXC3rjOU6/J1nA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QlDJiMSX; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=aIaWgwXOkFF6puZejxIB1+e0p/SA2xis+40bYLxOdM/z9ObNnKx1wMxL+SSmqy8ZvM+3OLox0wJ6/4Au2n4AvyVfr8zHfdf1UTugyh85IxiwDKFYPuAsQ8NVTpead7slsuF2bAnMxUVTwVyFlQ5Zg85gIPXxVOY2JOQmD0exR4c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=D9YkM6gB; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QlDJiMSX"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EC29F1F000E9;
-	Fri, 26 Jun 2026 12:03:04 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="D9YkM6gB"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A77A91F00A3A;
+	Fri, 26 Jun 2026 12:03:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782475385;
-	bh=6bzah+QGYK4UXviDoGLy4Ndt5JAtdjYbzrPUctw8m3Q=;
+	s=k20260515; t=1782475415;
+	bh=ZT4eBrrZfKZ7PkGXbN5KQEAS3oXsxJR80iDIwrlz32k=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=QlDJiMSXkLkGPwRaHBvfk12hwORVboXldaIrzu2n1g5sK24xxlcZozy/L3I1iTPv1
-	 sJKc7rZMmTYFnS18XahM4sf2dnJ6agPZB+277wdi4glWCj1OfMHWWRo0NS9obqsH77
-	 eZMdNJfsJQf6VlqHIzuWgDvRPrAkModeg5n5HUfxuH6tftlcI845yPvoj1ekGvCxzS
-	 //u0ZPmfbj56UnplCdPS8I96G6nMrZc9OAGecvwN9KBpkB34/aOCW8DyySLcruA/SF
-	 cAr7sbmwKkJjujahd/eCn5qTk+aJDy4AeVuXN/HaClgYdpJsu+Wj8hAuEy9rbjAUHJ
-	 Hki4fNWMCjxzQ==
+	b=D9YkM6gBKUs6oGwmGzP8Hkf4O/nbQm4I5GI8MkcMzsBLWI849IdWkpyVo2q5YEBzu
+	 68KylqJl7sgRoPx7gcNOau5/kBnsYAzGwZqQ10LUz0WzuvAzWs8abQk6kvVvMLuj+N
+	 FiWL4r4jQ/21PYrcmMOhppBmGoqX1sQoVnVNCdYblMnUjZlBnItxs83lreomwL3X4b
+	 xHSWNtC2ZzJlolKTO6mALRWlyy/FVtOwE3XehuPA1BMhKL3eo7Wb7yW2r4+EBuUC1J
+	 bS5LbPQVG0yRIy9lWyM1A3p0CBk+3ksgNpybVYkvnpVbvi6WK0MpVSDe9+J85XLtGR
+	 7xpXv2pM+46Qg==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v1 07/10] mpi3mr: Fix firmware event reference leak
- during cleanup
+Subject: Re: [PATCH v1 01/10] mpi3mr: Skip device shutdown during unload per
+ controller configuration
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Ranjan Kumar" <ranjan.kumar@broadcom.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260626114109.43685-8-ranjan.kumar@broadcom.com>
+In-Reply-To: <20260626114109.43685-2-ranjan.kumar@broadcom.com>
 References: <20260626114109.43685-1-ranjan.kumar@broadcom.com>
- <20260626114109.43685-8-ranjan.kumar@broadcom.com>
+ <20260626114109.43685-2-ranjan.kumar@broadcom.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 26 Jun 2026 12:03:03 +0000
-Message-Id: <20260626120304.EC29F1F000E9@smtp.kernel.org>
+Date: Fri, 26 Jun 2026 12:03:35 +0000
+Message-Id: <20260626120335.A77A91F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-
-New issues:
-- [High] The patch introduces a Use-After-Free and Double-Free vulnerabilit=
-y by prematurely decrementing the reference count of the currently executin=
-g firmware event in the early-exit path of `mpi3mr_cleanup_fwevt_list`.
-
-Pre-existing issues:
-- [High] Lockless read of `mrioc->current_event` in `mpi3mr_cleanup_fwevt_l=
-ist` leads to a Time-of-Check to Time-of-Use (TOCTOU) use-after-free when r=
-acing with the firmware event worker thread.
+- [Medium] Missing `le32_to_cpu()` conversion when reading the little-endia=
+n `flags` field from `driver_pg1`.
 --
 
-commit 50f8b457978a02d12ee5baafb77e83f6f06d294f
+commit d356c9ee9428175d4bc2bdb0dd4aaf2c6a81d8bd
 Author: Ranjan Kumar <ranjan.kumar@broadcom.com>
-Subject: mpi3mr: Fix firmware event reference leak during cleanup
 
-This commit attempts to fix a firmware event reference leak during cleanup.
-It adds a call to release the firmware event reference before returning from
-the early-exit path when an event is currently executing or pending at the
-SCSI mid-layer.
+mpi3mr: Skip device shutdown during unload per controller configuration
 
-> diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr=
-_os.c
-> index e361fbb8f7235..b60afaeef68d0 100644
-> --- a/drivers/scsi/mpi3mr/mpi3mr_os.c
-> +++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
-> @@ -399,6 +399,7 @@ void mpi3mr_cleanup_fwevt_list(struct mpi3mr_ioc *mri=
-oc)
->  		 */
+This commit updates the driver to cache the Driver Page 1 configuration
+and skip device shutdown requests during driver unload when the controller
+requests it.
 
-[Severity: High]
-This is a pre-existing issue, but does the lockless read of current_event
-earlier in this function create a race condition with the firmware event
-worker thread?
+> diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr=
+_fw.c
+> index 31b19ed1528e5..eb730318db474 100644
+> --- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
+> +++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+[ ... ]
+>  static void
+> -mpi3mr_read_tsu_interval(struct mpi3mr_ioc *mrioc)
+> +mpi3mr_read_driver_page1(struct mpi3mr_ioc *mrioc)
+>  {
+>  	struct mpi3_driver_page1 driver_pg1;
+>  	u16 pg_sz =3D sizeof(driver_pg1);
+>  	int retval =3D 0;
+> =20
+>  	mrioc->ts_update_interval =3D MPI3MR_TSUPDATE_INTERVAL;
+> +	mrioc->skip_dev_shutdown_on_unload =3D 0;
+> =20
+>  	retval =3D mpi3mr_cfg_get_driver_pg1(mrioc, &driver_pg1, pg_sz);
+> -	if (!retval && driver_pg1.time_stamp_update)
+> +
+> +	if (retval)
+> +		return;
+> +
+> +	if (driver_pg1.time_stamp_update)
+>  		mrioc->ts_update_interval =3D (driver_pg1.time_stamp_update * 60);
+> +
+> +	mrioc->skip_dev_shutdown_on_unload =3D
+> +		(driver_pg1.flags &
+> +		 MPI3_DRIVER1_FLAGS_DEVICE_SHUTDOWN_ON_UNLOAD_DISABLE) ? 1 : 0;
 
-If a soft reset thread executes mpi3mr_cleanup_fwevt_list() and reads the
-event into the fwevt pointer, and the worker thread finishes and frees the
-event before this thread reaches the pending_at_sml check below, could
-dereferencing fwevt result in a use-after-free?
+[Severity: Medium]
+Does this bitwise operation need an endian conversion?
 
->  		if (current_work() =3D=3D &fwevt->work || fwevt->pending_at_sml) {
->  			fwevt->discard =3D 1;
-> +			mpi3mr_fwevt_put(fwevt);
+Since driver_pg1.flags is an __le32, evaluating it with a bitwise AND
+without conversion on a big-endian system will check the wrong byte.
+This might cause the feature to silently fail to activate.
 
-[Severity: High]
-Does this additional mpi3mr_fwevt_put() cause a double-free or use-after-fr=
-ee
-when the active worker thread finishes its execution?
-
-Looking at mpi3mr_fwevt_worker(), the worker thread retains ownership of the
-event and appears to drop the reference itself after returning from the bot=
-tom
-half handler:
-
-mpi3mr_fwevt_worker() {
-   ...
-   mpi3mr_fwevt_bh(fwevt->mrioc, fwevt);
-   /*
-    * Put fwevt reference count after
-    * dequeuing it from worker queue
-    */
-   mpi3mr_fwevt_put(fwevt);
-   ...
-}
-
-Since the worker thread relies on its own reference, will stealing the
-reference here cause the count to reach zero prematurely while the worker is
-still using the object?
-
->  			return;
->  		}
->
+Could this use le32_to_cpu(driver_pg1.flags) before the bitwise AND?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260626114109.4368=
-5-1-ranjan.kumar@broadcom.com?part=3D7
+5-1-ranjan.kumar@broadcom.com?part=3D1
