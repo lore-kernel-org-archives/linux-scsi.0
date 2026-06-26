@@ -1,120 +1,143 @@
-Received: from mail-pl1-f227.google.com (mail-pl1-f227.google.com [209.85.214.227])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F744380FF8
-	for <linux-scsi@vger.kernel.org>; Fri, 26 Jun 2026 11:49:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.227
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7661A28725B
+	for <linux-scsi@vger.kernel.org>; Fri, 26 Jun 2026 12:02:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782474545; cv=none; b=M4ujVgHybk3yXfWq+vfnAe33I/tIS/M0ZHSrUP3751Ph3lL/omNRzsKdCxktOVE74+3aSmrd2cG1I9IQhx7Vg2OuOSui3Vt9gKtcl3JioHRnrLWotpQeXFsFLIZGC/zwNkzt4CmEtr2rn67vk2pT8SSyVqwWaNyS0WvvriMlI0M=
+	t=1782475348; cv=none; b=D3ACVzPiLC5NKMNqSrf9COSdn2WZeQL9MKCt4FKyhDYF/7QWIcJJclNDoYu6SInor0+mkT7T8AOyNoo2hBOtNQ8oaEL/CvhPdKrZfZYFDV5dbnyx42IVxOD8lEQKYQXDXvWzQubfvg5m4+BgyJsFcerhQzXmG5Jn8ruVot/Ordk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782474545; c=relaxed/simple;
-	bh=AGk0MJGEpzshXszGBCvSYECLjox5oIF+9Y8PhOpIIXk=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=gOmDAzJtgv6zxF0y4HVGkS0VRxOTrh3etz4q0iOIQlWNfHyH7zDrY+foOARYyqH7HAadfEHGrIqQdvr/YWH0TMZG6zV6vVjXxPIdbFbVXcabWXvBj2V8TW+WXo8oM6FQdNMa5luaKf6Sv9/bKZqjZI+oZdMcJ2HKoUbRJthky28=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=D8PJv3eE; arc=none smtp.client-ip=209.85.214.227
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
+	s=arc-20240116; t=1782475348; c=relaxed/simple;
+	bh=104P5lB0u4KpUUHwtRwchlGbC8VeJD7xLWpSoZ979UY=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=RCgPsRpkzitTyncDBD2t2GwVkbLaBah1wyoGzPUOdg693e4wFS2AD69hwdXsbYkAsyZcjh5OUTaY9CU7ar02NUThhe0o6cjeQhuPIApUj47Z9NRsaVvMgqrnMD5dnBf96NGwPTOGdBLoScHbUBN1m/9IMA63h3PKKsQmoU1w/g0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kYhemm8v; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="D8PJv3eE"
-Received: by mail-pl1-f227.google.com with SMTP id d9443c01a7336-2c81d799ef2so1920545ad.3
-        for <linux-scsi@vger.kernel.org>; Fri, 26 Jun 2026 04:49:04 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1782474543; x=1783079343;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:dkim-signature:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=dns3KcC8wp75jV+EFmchfrXNPHbBikOrwHZMHJQta/c=;
-        b=MJQowdPSCYurHCyU4Ma4xQYQIZDKxkf5CYUDRqUjvZ5NpkjW3S5BBCK10Vid7Ha9DW
-         QVZ1uaQFD+q15ArQVMCdlQatBofYnMHlPRqa5K5+KXzpZEdHA0R2HTjq0YiDfH8U3LGz
-         AtrPaTU30f/+rNr61tAOKAZ/Xw+cVYrYOBQbQ6AR1OXQHdyX8lc4szUWEb17CpMmojHO
-         Vy7O3/0kpLGbsyPVCKcPTNlzsHovdf+mibbT8iTx6Ut6anZmHwaznprRSsWOkX0WLa4k
-         B1FpCFdl44hbK10Gn9zGxdnRj2ZVGw8K2VOPsy4w+hc/dKxOIZffDCZqjk6AYJHJ5lCJ
-         wv6Q==
-X-Gm-Message-State: AOJu0YyfQuhvprfA+8ZlBewi3GQ+3tkIOCops1YUG4mcm+d5f8INEbw6
-	k4r2jgmPVYCGlJXAYtATXisqfW3pGI08DfYXAuhqf5bHj2kFVYK4cw0pTFW8xUWTa8FKPXJHYyJ
-	4bhBxIGpUftbDO44B7yzRuFWMw9xLDn1NoWIm5EUSShuElycut9FycnWQp6TLCYOLSx5AeFWOlv
-	AfoD67sGuaDko4PlisM3vatikqNKflEVpjJZjtAXO/OCzFPRATObv+tNuj4C2N7KC8/iqvyQefD
-	RoHTfwJSHl5OHwt
-X-Gm-Gg: AfdE7ckN0Ha5JuDQS52Vt3WqNHuf9YH1vqPJUaic6AEYPKxSt4boET2h2FAR8HrfmTc
-	JyjTlnc0+V25TV60I/Mu33/5bwbuu9H6MEIApdKLzw4NY0dIG+kRLfpb6TPZjRRXbaaSmDcOMxg
-	dxE6esSlZyU0M52bP998GWg+KX5E0bwxcId9dlbqSBRJAsZ2AsoczA/bHWqupLZqsgb5Ysu3/Cv
-	BCsE70TINDMzGDPw1dkZgt9bPEeBLh1iOLV23O4QVCtmBQqGPFXHwE+YZUwSlelrtnLlwRnGsBs
-	2ML7N+Sbdv5Bjk/RAWNirFZIxtu9wGm2DbG7Ie+iEtMK4HIxDjx5ppuG3hWvPTVvWgkXEqCTHIH
-	ZqGZKtL73ZVroJrkdpzDfOk8AqCtW7WnN4ykjif2GvwW7FwSv3QYKghIN0poHS0lYcq4HBiW0sy
-	esQMBNosBMELvxm1bmlXjrSifFjh70DfjSGqP5b0aWP69Ovg==
-X-Received: by 2002:a17:902:ef4e:b0:2c8:8f7:cc26 with SMTP id d9443c01a7336-2c808f7ce98mr45561185ad.24.1782474543262;
-        Fri, 26 Jun 2026 04:49:03 -0700 (PDT)
-Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-11.dlp.protect.broadcom.com. [144.49.247.11])
-        by smtp-relay.gmail.com with ESMTPS id d9443c01a7336-2c7f5a9daa2sm5235695ad.6.2026.06.26.04.49.02
-        for <linux-scsi@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Fri, 26 Jun 2026 04:49:03 -0700 (PDT)
-X-Relaying-Domain: broadcom.com
-X-CFilter-Loop: Reflected
-Received: by mail-dy1-f197.google.com with SMTP id 5a478bee46e88-30bccca5620so1264991eec.1
-        for <linux-scsi@vger.kernel.org>; Fri, 26 Jun 2026 04:49:02 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1782474541; x=1783079341; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=dns3KcC8wp75jV+EFmchfrXNPHbBikOrwHZMHJQta/c=;
-        b=D8PJv3eE9/wRX+2GqYwKgprQYNO+yHxhctbz0rO78tVzNbsRz5DC7r+Fm9miePbLoH
-         XRHU8QRUE3RHtvBvwpz4K00fqByXH9kNfT62dyJy3Z9lirgQx1DYCivpSN++oEmWYnVt
-         I21NCbBPWVaPIE5N0wpTU5dnG2HSheoRiBz+U=
-X-Received: by 2002:a05:7300:7246:b0:30c:5a5:df4f with SMTP id 5a478bee46e88-30c84eb9cf8mr7616998eec.16.1782474541472;
-        Fri, 26 Jun 2026 04:49:01 -0700 (PDT)
-X-Received: by 2002:a05:7300:7246:b0:30c:5a5:df4f with SMTP id 5a478bee46e88-30c84eb9cf8mr7616954eec.16.1782474540730;
-        Fri, 26 Jun 2026 04:49:00 -0700 (PDT)
-Received: from localhost.localdomain ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-30c7c58831asm18844838eec.13.2026.06.26.04.48.57
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 26 Jun 2026 04:49:00 -0700 (PDT)
-From: Ranjan Kumar <ranjan.kumar@broadcom.com>
-To: linux-scsi@vger.kernel.org,
-	martin.petersen@oracle.com
-Cc: sathya.prakash@broadcom.com,
-	chandrakanth.patil@broadcom.com,
-	vishakhavc@google.com,
-	ipylypiv@google.com,
-	Ranjan Kumar <ranjan.kumar@broadcom.com>
-Subject: [PATCH v1 10/10] mpi3mr: Driver version update to 8.18.0.8.50
-Date: Fri, 26 Jun 2026 17:11:09 +0530
-Message-ID: <20260626114109.43685-11-ranjan.kumar@broadcom.com>
-X-Mailer: git-send-email 2.47.3
-In-Reply-To: <20260626114109.43685-1-ranjan.kumar@broadcom.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kYhemm8v"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DC0BD1F000E9;
+	Fri, 26 Jun 2026 12:02:26 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1782475347;
+	bh=puNPgm58wtgTdJjAzzz/cXy9X00q6PUMNqeIovHBqHo=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=kYhemm8vr9A+vDEsr6eKRvcHAjWKKKHgyxdWfH2NF19iSItwlrlzhcJ/+sEiXMK9k
+	 ELChl60civ220hYXotJgx9LYck/+VCL7N2/wbOOSoyLCxQ3gg/Fokpd9p+ssRWbW9o
+	 XWIL4z0ScoxCVdmDl8tT8J+NLVC7LwAY2EATMJsaXP7SfqKS38X1t1LaOeuH4aea17
+	 BvDeysUpF6lFg0JNPfJc13LUAkW6AmypfetEUU6jDY/lWuoAYH67KyTDXXgcwZSj4o
+	 m7PIPqU0rfaETRFnaxyhd88NW1obcIIgGcDxUx3HitcpEXSyARkn47J0DFXRqbRtek
+	 hheirJJnPImRA==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v1 06/10] mpi3mr: Fix memory leak on operational queue
+ creation failure
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Ranjan Kumar" <ranjan.kumar@broadcom.com>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20260626114109.43685-7-ranjan.kumar@broadcom.com>
 References: <20260626114109.43685-1-ranjan.kumar@broadcom.com>
+ <20260626114109.43685-7-ranjan.kumar@broadcom.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Fri, 26 Jun 2026 12:02:25 +0000
+Message-Id: <20260626120226.DC0BD1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
 
-Update driver version to 8.18.0.8.50
+Thank you for your contribution! Sashiko AI review found 3 potential issue(=
+s) to consider:
 
-Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
----
- drivers/scsi/mpi3mr/mpi3mr.h | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+New issues:
+- [High] The newly added cleanup loop unconditionally dereferences `req_qin=
+fo` and `op_reply_qinfo`, causing a kernel panic if their initial allocatio=
+ns fail.
 
-diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
-index 1d11d7c69536..c6bbd6b33cfe 100644
---- a/drivers/scsi/mpi3mr/mpi3mr.h
-+++ b/drivers/scsi/mpi3mr/mpi3mr.h
-@@ -56,8 +56,8 @@ extern struct list_head mrioc_list;
- extern int prot_mask;
- extern atomic64_t event_counter;
- 
--#define MPI3MR_DRIVER_VERSION	"8.17.0.3.50"
--#define MPI3MR_DRIVER_RELDATE	"09-January-2026"
-+#define MPI3MR_DRIVER_VERSION	"8.18.0.8.50"
-+#define MPI3MR_DRIVER_RELDATE	"26-June-2026"
- 
- #define MPI3MR_DRIVER_NAME	"mpi3mr"
- #define MPI3MR_DRIVER_LICENSE	"GPL"
--- 
-2.47.3
+Pre-existing issues:
+- [High] Failure during reset leaves `num_op_req_q` non-zero but `req_qinfo=
+` NULL, leading to a deferred kernel panic during driver cleanup.
+- [High] The memory leak is not fully fixed: if a queue fails to create but=
+ the controller remains in a ready state, the partially allocated segments =
+are leaked.
+--
 
+commit 9ead875c2a5e252d14e44cff611d464fadb0d332
+Author: Ranjan Kumar <ranjan.kumar@broadcom.com>
+
+mpi3mr: Fix memory leak on operational queue creation failure
+
+This commit modifies the error handling path in mpi3mr_create_op_queues()=20
+to iterate over the number of queues and release the DMA memory segments=20
+before freeing the main queue information arrays.
+
+> diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr=
+_fw.c
+> index 32aeae20481ec..88444f04fb6a6 100644
+> --- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
+> +++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+> @@ -2529,6 +2529,10 @@ static int mpi3mr_create_op_queues(struct mpi3mr_i=
+oc *mrioc)
+> =20
+>  	return retval;
+
+[Severity: High]
+This isn't a bug introduced by this patch, but does this function still leak
+memory if a queue fails to create and the controller remains ready?
+
+If queue creation fails inside the allocation loop:
+
+mpi3mr_create_op_queues() {
+        ...
+        for (i =3D 0; i < num_queues; i++) {
+                if (mpi3mr_create_op_reply_q(mrioc, i)) {
+                        break;
+                }
+        ...
+}
+
+The loop breaks, but if the controller state is still MRIOC_STATE_READY,
+the function skips out_failed entirely, updates mrioc->num_op_req_q =3D i,
+and returns 0. The segments allocated for the failed queue at index i
+are abandoned and never cleaned up.
+
+>  out_failed:
+> +	for (i =3D 0; i < num_queues; i++) {
+> +		mpi3mr_free_op_req_q_segments(mrioc, i);
+> +		mpi3mr_free_op_reply_q_segments(mrioc, i);
+> +	}
+
+[Severity: High]
+Will this cause a null pointer dereference if the initial queue information
+allocation fails?
+
+If kzalloc() fails to allocate mrioc->req_qinfo or mrioc->op_reply_qinfo
+at the start of the function, execution jumps directly to out_failed.
+This loop will then execute and call mpi3mr_free_op_req_q_segments(),
+which blindly dereferences the unallocated array:
+
+mpi3mr_free_op_req_q_segments() {
+        ...
+        segments =3D mrioc->req_qinfo[q_idx].q_segments;
+        ...
+}
+
+>  	kfree(mrioc->req_qinfo);
+>  	mrioc->req_qinfo =3D NULL;
+
+[Severity: High]
+This is a pre-existing issue, but does freeing the array here lead to a
+deferred crash if a controller reset fails?
+
+If mpi3mr_create_op_queues() fails during a reset, mrioc->req_qinfo is
+freed and set to null here, but mrioc->num_op_req_q retains its non-zero
+value from before the reset.
+
+Later, when the driver cleans up, mpi3mr_free_mem() loops up to the stale
+num_op_req_q count and calls mpi3mr_free_op_req_q_segments(), which will
+dereference the null req_qinfo array.
+
+>
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260626114109.4368=
+5-1-ranjan.kumar@broadcom.com?part=3D6
