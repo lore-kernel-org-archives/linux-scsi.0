@@ -1,143 +1,141 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7661A28725B
-	for <linux-scsi@vger.kernel.org>; Fri, 26 Jun 2026 12:02:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE58A379C5D
+	for <linux-scsi@vger.kernel.org>; Fri, 26 Jun 2026 12:02:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782475348; cv=none; b=D3ACVzPiLC5NKMNqSrf9COSdn2WZeQL9MKCt4FKyhDYF/7QWIcJJclNDoYu6SInor0+mkT7T8AOyNoo2hBOtNQ8oaEL/CvhPdKrZfZYFDV5dbnyx42IVxOD8lEQKYQXDXvWzQubfvg5m4+BgyJsFcerhQzXmG5Jn8ruVot/Ordk=
+	t=1782475376; cv=none; b=leKxIrXdJGVUt+aJUmWw7+MuOfJGYRysTWOoClwqU1MglzliaG+k5GuIRGMMMqpScj2xX8Z5TM1hp8clivA1/+fJoZdEsAxrdZjF5uCnaucCNgtvI1KJXalYnvU0D89+TmoHh94pM6TUY08ladZXSsq2rHWp9Si7fC/Xg+7mBNw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782475348; c=relaxed/simple;
-	bh=104P5lB0u4KpUUHwtRwchlGbC8VeJD7xLWpSoZ979UY=;
+	s=arc-20240116; t=1782475376; c=relaxed/simple;
+	bh=aGBwsUA6e6PzqutXk/uskCrcXiRNP36iJtuI3oL5fpo=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=RCgPsRpkzitTyncDBD2t2GwVkbLaBah1wyoGzPUOdg693e4wFS2AD69hwdXsbYkAsyZcjh5OUTaY9CU7ar02NUThhe0o6cjeQhuPIApUj47Z9NRsaVvMgqrnMD5dnBf96NGwPTOGdBLoScHbUBN1m/9IMA63h3PKKsQmoU1w/g0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kYhemm8v; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=DOPoyyPjIuGxE5mYSuhBXdwhu6nIGOHfbRCISKvebRE99HL0KLRG0oX8Q5wgi9mdp/D0wYTKJ/54LNNvzOp2ciF25fb42ooW0qqhTSvSExzB5yWvgvBJofwpm67xoxX+AZLkxnDEt2qd7nQCbyXWO9WWRmJyHUs1e4A95TrZm4E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JHG/oNi1; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kYhemm8v"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DC0BD1F000E9;
-	Fri, 26 Jun 2026 12:02:26 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JHG/oNi1"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B17191F000E9;
+	Fri, 26 Jun 2026 12:02:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782475347;
-	bh=puNPgm58wtgTdJjAzzz/cXy9X00q6PUMNqeIovHBqHo=;
+	s=k20260515; t=1782475375;
+	bh=awu6UWDIpyFKA79n0Be2HPuIHeRSLnIINm0ZIENJfKY=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=kYhemm8vr9A+vDEsr6eKRvcHAjWKKKHgyxdWfH2NF19iSItwlrlzhcJ/+sEiXMK9k
-	 ELChl60civ220hYXotJgx9LYck/+VCL7N2/wbOOSoyLCxQ3gg/Fokpd9p+ssRWbW9o
-	 XWIL4z0ScoxCVdmDl8tT8J+NLVC7LwAY2EATMJsaXP7SfqKS38X1t1LaOeuH4aea17
-	 BvDeysUpF6lFg0JNPfJc13LUAkW6AmypfetEUU6jDY/lWuoAYH67KyTDXXgcwZSj4o
-	 m7PIPqU0rfaETRFnaxyhd88NW1obcIIgGcDxUx3HitcpEXSyARkn47J0DFXRqbRtek
-	 hheirJJnPImRA==
+	b=JHG/oNi1IZPRY9fe3AhJdVIAzeynvR6p//GXoxU4Wt+QDV41CwfAGtM45vJtsnfJ1
+	 zHoEM9suWDrHpGFVylekhX4iK8rMCnMGYgHoXglWzx0cbLntSI+AccT/yKsAzlUSNV
+	 Aaznv1iV1qbEn8Iy3Y1pZkoKfJVA60VfX0PlhsH8TDFz9mZKjBPBcS3Ubbq1xyJ5Y+
+	 4zYT3vOJNt4uhUKn1n7kPmDihNzk7AjkcJSccnqID36Q5UbdILopGAbYesv+X/8hL/
+	 U0GoxkIWhgvebKidWCcXhKDuLk5zca8M1ZColTFgrJqrvhP6yiSQ9tddJYHAAMY13+
+	 rwQdQSHxi2ruA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v1 06/10] mpi3mr: Fix memory leak on operational queue
- creation failure
+Subject: Re: [PATCH v1 05/10] mpi3mr: Fix performance regression caused by
+ extended IRQ poll sleep
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Ranjan Kumar" <ranjan.kumar@broadcom.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260626114109.43685-7-ranjan.kumar@broadcom.com>
+In-Reply-To: <20260626114109.43685-6-ranjan.kumar@broadcom.com>
 References: <20260626114109.43685-1-ranjan.kumar@broadcom.com>
- <20260626114109.43685-7-ranjan.kumar@broadcom.com>
+ <20260626114109.43685-6-ranjan.kumar@broadcom.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 26 Jun 2026 12:02:25 +0000
-Message-Id: <20260626120226.DC0BD1F000E9@smtp.kernel.org>
+Date: Fri, 26 Jun 2026 12:02:54 +0000
+Message-Id: <20260626120254.B17191F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
 
-New issues:
-- [High] The newly added cleanup loop unconditionally dereferences `req_qin=
-fo` and `op_reply_qinfo`, causing a kernel panic if their initial allocatio=
-ns fail.
-
 Pre-existing issues:
-- [High] Failure during reset leaves `num_op_req_q` non-zero but `req_qinfo=
-` NULL, leading to a deferred kernel panic during driver cleanup.
-- [High] The memory leak is not fully fixed: if a queue fails to create but=
- the controller remains in a ready state, the partially allocated segments =
-are leaked.
+- [High] Missing dma_rmb() when reading DMA-mapped reply descriptors, riski=
+ng stale data processing on weakly ordered architectures.
 --
 
-commit 9ead875c2a5e252d14e44cff611d464fadb0d332
+commit f91311d5d4eeee7718829b492ee38d52ed25a32a
 Author: Ranjan Kumar <ranjan.kumar@broadcom.com>
 
-mpi3mr: Fix memory leak on operational queue creation failure
+    mpi3mr: Fix performance regression caused by extended IRQ poll sleep
 
-This commit modifies the error handling path in mpi3mr_create_op_queues()=20
-to iterate over the number of queues and release the DMA memory segments=20
-before freeing the main queue information arrays.
+This commit restores the threaded IRQ poll sleep range from 20-21 us back to
+2-20 us. The previously extended interval caused an approximate 7% throughp=
+ut
+regression on NVMe direct-attached RAID10 configurations. This reverts the
+sleep behavior to recover the lost throughput.
 
+> diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
+> index 1f2f0951b560e..1d11d7c69536b 100644
+> --- a/drivers/scsi/mpi3mr/mpi3mr.h
+> +++ b/drivers/scsi/mpi3mr/mpi3mr.h
+> @@ -178,7 +178,7 @@ extern atomic64_t event_counter;
+>  #define MPI3MR_DEFAULT_SDEV_QD	32
+> =20
+>  /* Definitions for Threaded IRQ poll*/
+> -#define MPI3MR_IRQ_POLL_SLEEP			20
+> +#define MPI3MR_IRQ_POLL_SLEEP			2
+>  #define MPI3MR_IRQ_POLL_TRIGGER_IOCOUNT		8
+> =20
+>  /* Definitions for the controller security status*/
 > diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr=
 _fw.c
-> index 32aeae20481ec..88444f04fb6a6 100644
+> index 496d7ca3ab372..32aeae20481ec 100644
 > --- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
 > +++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-> @@ -2529,6 +2529,10 @@ static int mpi3mr_create_op_queues(struct mpi3mr_i=
-oc *mrioc)
+> @@ -744,7 +744,7 @@ static irqreturn_t mpi3mr_isr_poll(int irq, void *pri=
+vdata)
+>  			    mpi3mr_process_op_reply_q(mrioc,
+>  				intr_info->op_reply_q);
+
+[Severity: High]
+This isn't a bug introduced by this patch, but is a dma_rmb() missing when
+reading the DMA-mapped reply descriptors?
+
+Looking at mpi3mr_process_op_reply_q() which is called here, the CPU checks
+the phase bit of the DMA-mapped descriptor, and then immediately reads the
+payload:
+
+mpi3mr_process_op_reply_q() {
+...
+	if ((le16_to_cpu(reply_desc->reply_flags) &
+	    MPI3_REPLY_DESCRIPT_FLAGS_PHASE_MASK) !=3D exp_phase) {
+		atomic_dec(&op_reply_q->in_use);
+		return 0;
+	}
+
+	do {
+		if (mrioc->unrecoverable || mrioc->io_admin_reset_sync)
+			break;
+
+		req_q_idx =3D le16_to_cpu(reply_desc->request_queue_id) - 1;
+...
+}
+
+And similarly at the end of the loop:
+
+		if ((le16_to_cpu(reply_desc->reply_flags) &
+		    MPI3_REPLY_DESCRIPT_FLAGS_PHASE_MASK) !=3D exp_phase)
+			break;
+...
+
+Without an intervening dma_rmb(), could weakly ordered architectures (like
+ARM64) fetch the descriptor payload via out-of-order execution or speculati=
+on
+before the phase bit check is complete?
+
+If the hardware is still updating it, could this result in processing stale
+data such as an incorrect request_queue_id?
+
+It looks like mpi3mr_process_admin_reply_q() might have the same pattern
+where it reads request_queue_ci right after checking the phase bit without
+a memory barrier.
+
+> -		usleep_range(MPI3MR_IRQ_POLL_SLEEP, MPI3MR_IRQ_POLL_SLEEP + 1);
+> +		usleep_range(MPI3MR_IRQ_POLL_SLEEP, 10 * MPI3MR_IRQ_POLL_SLEEP);
 > =20
->  	return retval;
-
-[Severity: High]
-This isn't a bug introduced by this patch, but does this function still leak
-memory if a queue fails to create and the controller remains ready?
-
-If queue creation fails inside the allocation loop:
-
-mpi3mr_create_op_queues() {
-        ...
-        for (i =3D 0; i < num_queues; i++) {
-                if (mpi3mr_create_op_reply_q(mrioc, i)) {
-                        break;
-                }
-        ...
-}
-
-The loop breaks, but if the controller state is still MRIOC_STATE_READY,
-the function skips out_failed entirely, updates mrioc->num_op_req_q =3D i,
-and returns 0. The segments allocated for the failed queue at index i
-are abandoned and never cleaned up.
-
->  out_failed:
-> +	for (i =3D 0; i < num_queues; i++) {
-> +		mpi3mr_free_op_req_q_segments(mrioc, i);
-> +		mpi3mr_free_op_reply_q_segments(mrioc, i);
-> +	}
-
-[Severity: High]
-Will this cause a null pointer dereference if the initial queue information
-allocation fails?
-
-If kzalloc() fails to allocate mrioc->req_qinfo or mrioc->op_reply_qinfo
-at the start of the function, execution jumps directly to out_failed.
-This loop will then execute and call mpi3mr_free_op_req_q_segments(),
-which blindly dereferences the unallocated array:
-
-mpi3mr_free_op_req_q_segments() {
-        ...
-        segments =3D mrioc->req_qinfo[q_idx].q_segments;
-        ...
-}
-
->  	kfree(mrioc->req_qinfo);
->  	mrioc->req_qinfo =3D NULL;
-
-[Severity: High]
-This is a pre-existing issue, but does freeing the array here lead to a
-deferred crash if a controller reset fails?
-
-If mpi3mr_create_op_queues() fails during a reset, mrioc->req_qinfo is
-freed and set to null here, but mrioc->num_op_req_q retains its non-zero
-value from before the reset.
-
-Later, when the driver cleans up, mpi3mr_free_mem() loops up to the stale
-num_op_req_q count and calls mpi3mr_free_op_req_q_segments(), which will
-dereference the null req_qinfo array.
-
->
+>  	} while (atomic_read(&intr_info->op_reply_q->pend_ios) &&
+>  	    (num_op_reply < mrioc->max_host_ios));
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260626114109.4368=
-5-1-ranjan.kumar@broadcom.com?part=3D6
+5-1-ranjan.kumar@broadcom.com?part=3D5
