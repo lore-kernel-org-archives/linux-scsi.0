@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 32A3C3C0607
-	for <linux-scsi@vger.kernel.org>; Fri, 26 Jun 2026 21:54:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 009DF33BBBA
+	for <linux-scsi@vger.kernel.org>; Fri, 26 Jun 2026 21:57:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782510888; cv=none; b=TwojrgC27ScWqKKq4OArr/QXkARzEQc+tuC+GqgwEscyzEVvbLQae9UGJjQ4RrC3KOWhh3TJAlqngQiNZJWYeRFdxMCGTs0hpcVRkfiU6orfFcy2QnUb3J7Efwgmwj7Bu+d+ZJkkVD1Aao7aUDxqHCTQsPFofpjDFKhJEQsQK6g=
+	t=1782511030; cv=none; b=SHRfkwla/Dac+xE7sVq4SB8/heolUh4Ymr72r8XZbxzytRJlqimWwFvimEyxnpb2cMEWJr+Tt7TEU8Do2ixUohM4hDbYJZxtqEgSe/mt6LTvGD0oTYvWtpIR5u6wMfVRcQueawQC7qWXMC1lZBwmm0DQcyrEiiiqU+nUMfi1OcY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782510888; c=relaxed/simple;
-	bh=ZSdJCE65/lIgnK3M3RQ5KU1c+emxnvBHB9Y+a7G5XQs=;
+	s=arc-20240116; t=1782511030; c=relaxed/simple;
+	bh=/r7fk9ade2lA1/AEyyxGFUoub79drY3ZZc1x2mRoqKc=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Chm+NakLiRNE5XXs7WClRL61H0wQVjLqpWBSVpYjgFkt5SQ7+wPZRrf9IkjRUhuIGmIQu5NVmgfyXWuyNyVmVDP92EbJhhpmdkujYPlCKHP53K4WCE7hvKfc466cwNN5dp1QAXTARlL2TACasw5INp4B4kpsowa9dN90M2z+VVY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=H2RrB684; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:Content-Type; b=oHijBE2PhuDl4jxwI4sCQBVIYWoBmuQi2JxnsypGDGaLo4gIcHaG+ePQQnuoEQrydA+9tP4wP+GgguxS0Ds0IczTMMzBNNH/43SNGbZrlY2vNlhI6NmpsTXmDmSRRMDddAdNFzKwg77fw7PGSOvCYWQd34+rLAODFSI80ScE1U8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iTq4AeQ4; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="H2RrB684"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A6DFB1F000E9;
-	Fri, 26 Jun 2026 21:54:45 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iTq4AeQ4"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 71A6A1F000E9;
+	Fri, 26 Jun 2026 21:57:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782510886;
-	bh=n6dsK8tH8d6oALzidnn847Xz08tE83w41VxDaAbhwAs=;
+	s=k20260515; t=1782511029;
+	bh=j+0AwWNxSVHWsd/75D2iFe53ShMCUu1QE+uXSIYMGeI=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=H2RrB684IhyMURT70PvuXOcJEtqK9oqGAJhwbKbHDbu8LEF5UZ7uUhT6ftGjT9dja
-	 auq7Fqf+cNR5UCwWksvgUhf5o5OYv/2VETd/w6+4uS9dch1Dac+i+4dee6RcLwQ4Iy
-	 Zbcev4coNp+c7HPkgAZLLuhjItkpSNWrjTeahHETSODBwBvLl/Wjaba36oi3N3qlQR
-	 4eYBslUEAkvJirCUTdEK/KcntvKw/zOXKGPEbxKczJNbRXnJjcMCB6miXk1dov/8h/
-	 q4uxTcJL3nLU0BdL7X9DdfNR2czbmaUZoDWHU1U+v6Ayp6SGp6G5igZNDAO864FiZo
-	 gGx+MX99Jwefg==
-Message-ID: <00c16485-fc4b-43bd-a420-89b3b5eebaeb@kernel.org>
-Date: Sat, 27 Jun 2026 06:54:44 +0900
+	b=iTq4AeQ4qPrOY82G2sUOm+e73/cGhKI71pZnWIvpG8FstjT+Pz7fJxgEbSXb8yM6I
+	 4YMlqic79h95R4niDu1krdkFL52He4vh+yJ2ON7mqsAc+F9XAwDdFvxp744SoEmVAL
+	 su0llMQFLjrbT0nKnIl4vIIQmKZrqMSixK+QoZlMNtQ/1vhZhHwTLOtmIUuiQaVqKi
+	 Suk9SGsPL9z/jJ+XW01gqctk7zrVQP4ppCGNP0WqN0+kwTqkD+epPNAjgDC2PTJNgQ
+	 WfDnEYzN8bwVwl8JCwTBCiOpyYc3gZoXTpVXJesPZxp+wRWf/tTbRoVXvUbtqfPf6U
+	 VG63rzQM33lIA==
+Message-ID: <c3c093ab-88c9-4a71-89dd-33ee69db1823@kernel.org>
+Date: Sat, 27 Jun 2026 06:57:06 +0900
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,78 +35,38 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v1 2/4] scsi: sd: unify sd_probe() error cleanup through
- out_put
+Subject: Re: [PATCH v1 3/4] scsi: sd: fix special_vec mempool leak when
+ scsi_alloc_sgtables() fails
 To: Yang Xiuwei <yangxiuwei@kylinos.cn>, martin.petersen@oracle.com,
  James.Bottomley@HansenPartnership.com
 Cc: hare@suse.de, tom.leiming@gmail.com, p.raghav@samsung.com,
  sw.prabhu6@gmail.com, linux-scsi@vger.kernel.org
 References: <20260623100159.4018066-1-yangxiuwei@kylinos.cn>
- <20260623100159.4018066-3-yangxiuwei@kylinos.cn>
+ <20260623100159.4018066-4-yangxiuwei@kylinos.cn>
 Content-Language: en-US
 From: Damien Le Moal <dlemoal@kernel.org>
 Organization: Western Digital Research
-In-Reply-To: <20260623100159.4018066-3-yangxiuwei@kylinos.cn>
+In-Reply-To: <20260623100159.4018066-4-yangxiuwei@kylinos.cn>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 On 6/23/26 19:01, Yang Xiuwei wrote:
-> After put_device() or device_unregister() has released sdkp through
-> scsi_disk_release(), set sdkp to NULL and fall through to out_put so
-> put_disk() and kfree() are handled in one place.
+> sd_set_special_bvec() allocates a special payload page for UNMAP and
+> WRITE SAME commands.  If scsi_alloc_sgtables() fails afterward in
+> sd_setup_unmap_cmnd() or sd_setup_write_same{10,16}_cmnd(), the SCSI
+> midlayer does not call uninit_command() because RQF_DONTPREP is not
+> set yet, leaking the page.
 > 
-> Suggested-by: Ming Lei <tom.leiming@gmail.com>
+> Call sd_uninit_command() on error, and clear RQF_SPECIAL_PAYLOAD after
+> freeing the page.
+> 
 > Signed-off-by: Yang Xiuwei <yangxiuwei@kylinos.cn>
-> ---
->  drivers/scsi/sd.c | 14 +++++++-------
->  1 file changed, 7 insertions(+), 7 deletions(-)
-> 
-> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> index d18693d390b2..b096ea237f14 100644
-> --- a/drivers/scsi/sd.c
-> +++ b/drivers/scsi/sd.c
-> @@ -4060,8 +4060,8 @@ static int sd_probe(struct scsi_device *sdp)
->  	error = device_add(&sdkp->disk_dev);
->  	if (error) {
->  		put_device(&sdkp->disk_dev);
-> -		put_disk(gd);
-> -		goto out;
-> +		sdkp = NULL;
-> +		goto out_put;
->  	}
->  
->  	dev_set_drvdata(dev, sdkp);
-> @@ -4090,8 +4090,8 @@ static int sd_probe(struct scsi_device *sdp)
->  		if (sd_large_pool_create()) {
->  			error = -ENOMEM;
->  			device_unregister(&sdkp->disk_dev);
-> -			put_disk(gd);
-> -			goto out;
-> +			sdkp = NULL;
-> +			goto out_put;
 
-device_unregister() is called here and in the next error path too. So what about
-a "goto out_unregister;" to avoid repeating this pattern ?
+This needs a Fixes tag I think.
 
->  		}
->  	}
->  
-> @@ -4109,11 +4109,11 @@ static int sd_probe(struct scsi_device *sdp)
->  
->  	error = device_add_disk(dev, gd, NULL);
->  	if (error) {
-> -		device_unregister(&sdkp->disk_dev);
-> -		put_disk(gd);
->  		if (sdp->sector_size > PAGE_SIZE)
->  			sd_large_pool_destroy();
-> -		goto out;
-> +		device_unregister(&sdkp->disk_dev);
-> +		sdkp = NULL;
-> +		goto out_put;
->  	}
->  
->  	if (sdkp->security) {
+But otherwise looks OK to me.
 
+Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
 
 -- 
 Damien Le Moal
