@@ -1,75 +1,75 @@
-Received: from mail-dy1-f225.google.com (mail-dy1-f225.google.com [74.125.82.225])
+Received: from mail-yx1-f98.google.com (mail-yx1-f98.google.com [74.125.224.98])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3ED192EDD6C
-	for <linux-scsi@vger.kernel.org>; Fri, 26 Jun 2026 11:48:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.225
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 915DD380FF8
+	for <linux-scsi@vger.kernel.org>; Fri, 26 Jun 2026 11:48:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.224.98
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782474521; cv=none; b=palUezwEFsyuqaCHPrzivtX1YVxZpFlctmnlcsntp+GzvFEBmJt/2DyEQ0eFcgOI+xJm0VlhlHj6bDTtWO6c8dTUcr4vDV1+RrnZUYJ1T/+3BJu05zkWWnYJb9K/kykWsIOTAeV2Nqn0SuTV6Nit8fiL8uuntrcGX7G+sJstWBc=
+	t=1782474524; cv=none; b=pCLNbE+CyAJNS2wh6gpo9WCJB0mUEU0q7HkIooVXEhgcXlk9j0OH1dVm3Wxm04m1MnDk7sUG0q74Mp7Wjn2uwDKAtMnzDT9lDukiy2p3wUk3UFwH1TS8dSqPoE/6BodmM6KXujGPVbgy1fMCXFpYXDzaRuhk0QSdltPDrsE8yqs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782474521; c=relaxed/simple;
-	bh=MeIxt2Xr9cs+bvsbdfxd7UvaCsBHRWqjvyB8FBSg+q4=;
+	s=arc-20240116; t=1782474524; c=relaxed/simple;
+	bh=puHPYW3u4oU72VFujP8J1sfjVqb/7L1fuhl6ZvMALOM=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=txn4qGyBphyKx9Q9SS+uj0GfNP54ZlM1mwrkKygQ3Bqyu+a3NqenFmv6TH39i1Z8P1UMJCOWo+3I7xvH6e6wzn3Xk7RQyHfvEXB/VXzJHIsu/2VPKSfOGd454BIiT60jGUDGRcBboEwL8jzANxoXoA5wZ9tmkbf6iC+m2afTj88=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=MxdfAbUg; arc=none smtp.client-ip=74.125.82.225
+	 MIME-Version; b=qEBud0COwvXVRzPeF35a/TAmwgh8+tOO8s8sTX1xj3is2vQfYYKUsbtg0bRm/ukTZ8TL0/wfEhf/alL4QK+nw/GtUdXFKTOJXSK8We+YpvZqqLEth/VVJq0tJSTPPIjl6Cfnf4TMthpCJuxyL4RSwdRtBKB7jbLBj2k5VTliZrk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=YMcD5jCT; arc=none smtp.client-ip=74.125.224.98
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="MxdfAbUg"
-Received: by mail-dy1-f225.google.com with SMTP id 5a478bee46e88-30bc806fcf8so1140684eec.1
-        for <linux-scsi@vger.kernel.org>; Fri, 26 Jun 2026 04:48:40 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="YMcD5jCT"
+Received: by mail-yx1-f98.google.com with SMTP id 956f58d0204a3-66481f17a4cso886962d50.1
+        for <linux-scsi@vger.kernel.org>; Fri, 26 Jun 2026 04:48:43 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1782474519; x=1783079319;
+        d=1e100.net; s=20251104; t=1782474522; x=1783079322;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:dkim-signature:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=73Scx3KJFlBJzXL7C2Ua+DoHEEk4jHQgekXemWM5KIU=;
-        b=ojTt0IHpNGAyxUsgN0foFyNErMWwGsfMzgGuXezQ4R63KnIoL3LqtDuEA2NpC8DpNT
-         d7pIPrUnRd03QNI1BXb5tFKTEhMAmp8egrHWtLLstO/Ip3Q/XutTKCAsFS4M3vXpVOPc
-         sn7TTT8Ikffpg2n15R0SfInYPrFcsLu5LMfYnbDeieoNt6b9MvvkpxecOyWnE6OcCz6i
-         mbOWqdjZ96xCl/FpQGlKppbE1Ih1dtwl1UTzRV2QZGkwaGuH3L7tI7Iye0aa1IGytQNc
-         ld4/WYbpBfyrRpnyPpTsh4e0CmFVQL3TbZ9tWg9JX1KW7Ta/NxeSIJ/ncQ27+a+zhD3Q
-         Ccpw==
-X-Gm-Message-State: AOJu0YyDiC4T0CXI4pAKrCvVxmb5+Bk6N8JRoD6ObvbQMwU53Yu6mwcX
-	+i5DtEPsqWUAex7aTdN9uWqgfuFKY3/iuRRiyvZY94NVNkqjlXt7d2yLIPHdTgKpX/5ocQLn607
-	xm/opMsPv9otDp2nTRsn1Xwmw+AcGhOKM4+55X1QMT7MTnshlcHGqzurNHw8gSM5t7zEIu4yVAd
-	IUrBmu5nWY7a009bYud7Z9w0KakH3WAXI4iOvR2KflAnefliIhOZF7/S/nKYw7S6km879Z8I1qx
-	loBNIsAIriNz07L
-X-Gm-Gg: AfdE7cnMmPdKOcny8kNXrkKkqGdWlEGuCfONWLLRCGEM0AV1Tb68SuebEV2nXT4lsAc
-	yR4p1EEX29kDakucw24c+u6TZnRe/K2Bh1Eo2JivH/Sw7dZnE9g3kme/siTjdzh8u6PuTxmClVd
-	1SVqEKVgZgoLqZKNWVqQDHqbO7Su1nnnmcva9WsQOgymFx8dOoddE8EtESgIZl21FxzNBfiPrHM
-	0kll6fal2ZKCvx6CJaaegLaEPNDf/s8rRPwODbrjtwo9vfphcq00laPzaYWwu9/pMA231N9v7pj
-	on8LnDeZ4UXoIl4VCc9mJuzxAbSi0wa3wPwyamHfPF5wJCOeppwNkc5dctfENpb6ob6R9B9BDhJ
-	V1EuvHUQ91G4OfPlZKYWaDOmOOkTp4aea4CyK0/usb5auD/tboEkmbiKSKJv/hwE1ITOSqXajxn
-	UBIqx0ipWs92EWnwkKZtbC2bEAoCSilRU1UWZk14puQzAi8lB4
-X-Received: by 2002:a05:7300:5346:b0:30c:5176:8edc with SMTP id 5a478bee46e88-30c84d90d38mr6975256eec.32.1782474519001;
-        Fri, 26 Jun 2026 04:48:39 -0700 (PDT)
-Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-101.dlp.protect.broadcom.com. [144.49.247.101])
-        by smtp-relay.gmail.com with ESMTPS id 5a478bee46e88-30c7c7da01asm459689eec.19.2026.06.26.04.48.38
+        bh=H8e7n8DGft+9hLEiNhXLfDJsXwyxoiNr76VVZ9WVl6o=;
+        b=F1BtSd829oE5zP/9uCj+i3RgXDaoEj+xXbcRImnzhgz02rJWsOHELwQcZW+FsDt/EB
+         SdvS1Mr1uyOADOO9CHHAfutsN4jY0ceIqF9P6yIO9kgI7EDWE7iK88WRUy2TQGTwp7t0
+         ulYs8JHafxxf9bioVFgzNiWX4QpQbf2KHHH+Kojkc9BLEP9spFKXSOFXmNEkxxPJAxYD
+         XRw87AZCwIu2Mbpeb5i32wJhFxBgz4UErSsfPVJE6QdRfal6lH3uYf8bl3/XZuxTtMV4
+         582uYZOdnhg0Txeux5KX8dcQJEkJQFi7cAF5rk2s8qoVD1sykIC6RglZxhFEpnZf9/vf
+         yfoQ==
+X-Gm-Message-State: AOJu0YyMChezw69pSMWQZyR1ICz69CIGVkZQLr3hWabJlKZOYptrv/uf
+	umgSpEltSFLEbX18Lll8ItJ0qhc7xnA/VV+yxYQxvsw19E+g8ibCW+MTmo311IfSS9Zoj0nBEyp
+	hyavkAlXBwPyD1pQMAXMmmhZyYZPDWk9G/R6HuTZuZl5i0jY7R2gU94S3xK2tTN8ozB7WM8shNh
+	osFfre79iNn8db0zo3ZDcde1lXplHVaxLmbaRlzFeB5ito1KuWjVkGrH/JL1lLc+MVV3IrRokKp
+	8EJF4yf3ZBBxNEO
+X-Gm-Gg: AfdE7ck8ML6/f85n6zTZmSk2XCasnCfrjBk/zQPSatIlgOtZUI4Pk0PjVGzliyW5fJr
+	tPRsGB8ru2TK623ucV3RuZGYEAi+LdvwCte9S4boYfcPfsE0jQ3pDycaf7gV74Q8LTwQLLBAoFf
+	IVLxU25KOau3oadegAgaT95H+4aRgtYHvAnUerDIMiLOIvMk1Ze77hEQrco1G6fu2mLT45aBb1T
+	2HBBmmMOpzFSHt9fRYgvNjkG7kNzewbheX36syj3s6sfhrOmUT6Iv/PXhIN+/94MhUEu3otn2Y1
+	lRmXcYq9aje4xDdeiPk1DNl7ViJ39o3SRqi8pzfaBZpTpq6iwyCqjHJWHurnhZrUGLjKqR+Zza6
+	htmSvJ8JpiMbHXxowjcVQrdXbdXqQQbfhxFAVjZ8m55T2atzIEzR40T2105xPigrcb0kzP208yR
+	TZ9LlQEIBvx3ZGay4j64Sx3ASWN+vtxjZreNwGnrj1UnGDyw==
+X-Received: by 2002:a05:690e:438b:b0:664:ae87:c771 with SMTP id 956f58d0204a3-664ae87cd64mr8331d50.37.1782474522541;
+        Fri, 26 Jun 2026 04:48:42 -0700 (PDT)
+Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-25.dlp.protect.broadcom.com. [144.49.247.25])
+        by smtp-relay.gmail.com with ESMTPS id 956f58d0204a3-664aaa43154sm30547d50.23.2026.06.26.04.48.41
         for <linux-scsi@vger.kernel.org>
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Fri, 26 Jun 2026 04:48:38 -0700 (PDT)
+        Fri, 26 Jun 2026 04:48:42 -0700 (PDT)
 X-Relaying-Domain: broadcom.com
 X-CFilter-Loop: Reflected
-Received: by mail-dy1-f197.google.com with SMTP id 5a478bee46e88-30c50cd6cbcso1101772eec.1
-        for <linux-scsi@vger.kernel.org>; Fri, 26 Jun 2026 04:48:38 -0700 (PDT)
+Received: by mail-dy1-f198.google.com with SMTP id 5a478bee46e88-30c5b9f6a51so599743eec.1
+        for <linux-scsi@vger.kernel.org>; Fri, 26 Jun 2026 04:48:41 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1782474517; x=1783079317; darn=vger.kernel.org;
+        d=broadcom.com; s=google; t=1782474521; x=1783079321; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=73Scx3KJFlBJzXL7C2Ua+DoHEEk4jHQgekXemWM5KIU=;
-        b=MxdfAbUg/VgRxCOCgX4rVrOxRqPlxrdThbJpvaljn5hRFY7gi5SU6zR3w7uzEDLj6T
-         YPvBuRppl64D3vWN+nkp2cvwFyUV3L3rp+9Z+OWSikZOjze8FmpuWi5t+BE0nmsBi9Ng
-         swOFtfXwwyZ4EB2F4pwjkrzdEnFWG3FENwF+c=
-X-Received: by 2002:a05:693c:37c4:b0:30c:1865:d9f6 with SMTP id 5a478bee46e88-30c84b2b6dbmr6550986eec.6.1782474517229;
-        Fri, 26 Jun 2026 04:48:37 -0700 (PDT)
-X-Received: by 2002:a05:693c:37c4:b0:30c:1865:d9f6 with SMTP id 5a478bee46e88-30c84b2b6dbmr6550935eec.6.1782474516008;
-        Fri, 26 Jun 2026 04:48:36 -0700 (PDT)
+        bh=H8e7n8DGft+9hLEiNhXLfDJsXwyxoiNr76VVZ9WVl6o=;
+        b=YMcD5jCTo3JZTUL7J3xa0yfceICzJqq3WEUn66oAJQMpNEZGYGd6aw6QyrPEudE0n2
+         KGXSXdCJ0r7G4nHJSwRqsThNqRnBnTxii1wqZwe3mmXV2nAAq6rG1SPvZxNkX7OrsXlD
+         WlenPzPfXfI+FAzwA6IHRMwf3h9J/d964BIWw=
+X-Received: by 2002:a05:7300:8191:b0:304:ddc3:2c35 with SMTP id 5a478bee46e88-30c85a603a0mr5586874eec.10.1782474520633;
+        Fri, 26 Jun 2026 04:48:40 -0700 (PDT)
+X-Received: by 2002:a05:7300:8191:b0:304:ddc3:2c35 with SMTP id 5a478bee46e88-30c85a603a0mr5586822eec.10.1782474519445;
+        Fri, 26 Jun 2026 04:48:39 -0700 (PDT)
 Received: from localhost.localdomain ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-30c7c58831asm18844838eec.13.2026.06.26.04.48.33
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-30c7c58831asm18844838eec.13.2026.06.26.04.48.36
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 26 Jun 2026 04:48:35 -0700 (PDT)
+        Fri, 26 Jun 2026 04:48:39 -0700 (PDT)
 From: Ranjan Kumar <ranjan.kumar@broadcom.com>
 To: linux-scsi@vger.kernel.org,
 	martin.petersen@oracle.com
@@ -78,9 +78,9 @@ Cc: sathya.prakash@broadcom.com,
 	vishakhavc@google.com,
 	ipylypiv@google.com,
 	Ranjan Kumar <ranjan.kumar@broadcom.com>
-Subject: [PATCH v1 03/10] mpi3mr: Add early timestamp synchronization after driver load
-Date: Fri, 26 Jun 2026 17:11:02 +0530
-Message-ID: <20260626114109.43685-4-ranjan.kumar@broadcom.com>
+Subject: [PATCH v1 04/10] mpi3mr: Fix NVMe page size caching for non-operational devices
+Date: Fri, 26 Jun 2026 17:11:03 +0530
+Message-ID: <20260626114109.43685-5-ranjan.kumar@broadcom.com>
 X-Mailer: git-send-email 2.47.3
 In-Reply-To: <20260626114109.43685-1-ranjan.kumar@broadcom.com>
 References: <20260626114109.43685-1-ranjan.kumar@broadcom.com>
@@ -93,94 +93,40 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
 
-When the driver is loaded from initramfs, the controller timestamp may
-be initialized before the system clock has been synchronized. As a
-result, the controller can operate with a stale timestamp until the
-first periodic synchronization occurs.
+For NVMe devices reported with an error access status,
+the cached PCIe page size may remain unset during device discovery.
+This causes management IOCTL validation to fail, preventing requests
+from reaching firmware and resulting in an incorrect error
+being returned to user space.
 
-Currently, the first controller timestamp synchronization occurs only
-after the configured ts_update_interval expires (15 minutes by default).
-Add an early timestamp synchronization 60 seconds after driver load,
-followed by the existing periodic synchronization interval.
+Populate the page size attribute irrespective of device access status
+so that management IOCTLs are processed by firmware and the appropriate
+device-specific error is reported.
 
+Signed-off-by: Chandrakanth Patil <chandrakanth.patil@broadcom.com>
 Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
 ---
- drivers/scsi/mpi3mr/mpi3mr.h    |  3 +++
- drivers/scsi/mpi3mr/mpi3mr_fw.c | 25 +++++++++++++++++++------
- 2 files changed, 22 insertions(+), 6 deletions(-)
+ drivers/scsi/mpi3mr/mpi3mr_os.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
-index 39096004c60a..1f2f0951b560 100644
---- a/drivers/scsi/mpi3mr/mpi3mr.h
-+++ b/drivers/scsi/mpi3mr/mpi3mr.h
-@@ -125,6 +125,7 @@ extern atomic64_t event_counter;
- #define MPI3MR_RESETTM_TIMEOUT			60
- #define MPI3MR_RESET_HOST_IOWAIT_TIMEOUT	5
- #define MPI3MR_TSUPDATE_INTERVAL		900
-+#define MPI3MR_EARLY_TSUPDATE_SECONDS		60
- #define MPI3MR_DEFAULT_SHUTDOWN_TIME		120
- #define	MPI3MR_RAID_ERRREC_RESET_TIMEOUT	180
- #define MPI3MR_PREPARE_FOR_RESET_TIMEOUT	180
-@@ -1118,6 +1119,7 @@ struct scmd_priv {
-  * @evtack_cmds_bitmap: Event Ack bitmap
-  * @delayed_evtack_cmds_list: Delayed event acknowledgment list
-  * @ts_update_counter: Timestamp update counter
-+ * @early_ts_sync_done: Early (1 min) timestamp sync completed after load
-  * @ts_update_interval: Timestamp update interval
-  * @reset_in_progress: Reset in progress flag
-  * @unrecoverable: Controller unrecoverable flag
-@@ -1318,6 +1320,7 @@ struct mpi3mr_ioc {
- 	struct list_head delayed_evtack_cmds_list;
- 
- 	u16 ts_update_counter;
-+	u8 early_ts_sync_done;
- 	u16 ts_update_interval;
- 	u8 reset_in_progress;
- 	u8 unrecoverable;
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-index eb730318db47..496d7ca3ab37 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-@@ -2870,8 +2870,9 @@ static int mpi3mr_print_pkg_ver(struct mpi3mr_ioc *mrioc)
-  * @work: work struct
-  *
-  * Watch dog work periodically executed (1 second interval) to
-- * monitor firmware fault and to issue periodic timer sync to
-- * the firmware.
-+ * monitor firmware fault and perform timestamp synchronization
-+ * to firmware, with an early sync 1 minute after load followed
-+ * by periodic updates at ts_update_interval seconds (default 15 minutes).
-  *
-  * Return: Nothing.
-  */
-@@ -2917,11 +2918,23 @@ static void mpi3mr_watchdog_work(struct work_struct *work)
- 	}
- 
- 	if (!(mrioc->facts.ioc_capabilities &
--		MPI3_IOCFACTS_CAPABILITY_NON_SUPERVISOR_IOC) &&
--		(mrioc->ts_update_counter++ >= mrioc->ts_update_interval)) {
-+		MPI3_IOCFACTS_CAPABILITY_NON_SUPERVISOR_IOC)) {
-+		if (!mrioc->early_ts_sync_done) {
-+			/*
-+			 * Send time sync 1 min after load
-+			 */
-+			if (mrioc->ts_update_counter++ >=
-+					MPI3MR_EARLY_TSUPDATE_SECONDS) {
-+				mrioc->early_ts_sync_done = 1;
-+				mrioc->ts_update_counter = 0;
-+				mpi3mr_sync_timestamp(mrioc);
-+			}
-+		} else if (mrioc->ts_update_counter++ >=
-+				mrioc->ts_update_interval) {
-+			mrioc->ts_update_counter = 0;
-+			mpi3mr_sync_timestamp(mrioc);
-+		}
- 
--		mrioc->ts_update_counter = 0;
--		mpi3mr_sync_timestamp(mrioc);
- 	}
- 
- 	if ((mrioc->prepare_for_reset) &&
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
+index d2a20f2721db..e361fbb8f723 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_os.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
+@@ -1354,12 +1354,10 @@ static void mpi3mr_update_tgtdev(struct mpi3mr_ioc *mrioc,
+ 		tgtdev->dev_spec.pcie_inf.capb =
+ 		    le32_to_cpu(pcieinf->capabilities);
+ 		tgtdev->dev_spec.pcie_inf.mdts = MPI3MR_DEFAULT_MDTS;
+-		/* 2^12 = 4096 */
+-		tgtdev->dev_spec.pcie_inf.pgsz = 12;
++		tgtdev->dev_spec.pcie_inf.pgsz = pcieinf->page_size;
+ 		if (dev_pg0->access_status == MPI3_DEVICE0_ASTATUS_NO_ERRORS) {
+ 			tgtdev->dev_spec.pcie_inf.mdts =
+ 			    le32_to_cpu(pcieinf->maximum_data_transfer_size);
+-			tgtdev->dev_spec.pcie_inf.pgsz = pcieinf->page_size;
+ 			tgtdev->dev_spec.pcie_inf.reset_to =
+ 			    max_t(u8, pcieinf->controller_reset_to,
+ 			     MPI3MR_INTADMCMD_TIMEOUT);
 -- 
 2.47.3
 
