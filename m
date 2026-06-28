@@ -1,39 +1,39 @@
 Received: from smtp.ideco.ru (smtp.ideco.ru [51.250.56.165])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E3E7430EF7E;
-	Sun, 28 Jun 2026 18:35:39 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C0A3023D2A4;
+	Sun, 28 Jun 2026 18:53:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=51.250.56.165
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782671743; cv=none; b=cfWCZpY5ppY1i4EIHW/km7v4Y4UnqGvDOzJhc550ixt372yNDA1TBJqCjpqXS6/di7LqzL215+dr8w0uMDZm+kxN/4FMwYlVIfc2CxQN9f1yWPSrXF5Vheef/ipkxLLPvF4YGmtFArIwpP6YeiC6/sDuYPtDywlHLkt7KJ6RSjk=
+	t=1782672788; cv=none; b=h2mDWKGiaBAuZQk3XS8H1hat22SVJgDiHHKE6F+TNI3hro1kG2Q7CKfx5I6jvfuQ9RQ8+0I7LpsP1b3Ybm3lvNV6nISoKU+5GbVhyMYa6PkggTnys22BpDD2bzesLXRyqTr26Yf9V2M06tPn8mc5piMmjuTqYVlQ6QxenDeLc8Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782671743; c=relaxed/simple;
-	bh=lpxGphMIGEExVS5xFY9Z/dACn+nLt/m1HYP7extRHlk=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=pVgiwFpcWXmDOfrTRPmWq5bXsaLARPwT1Lt594InK7LiwHbe2IczbpDtVDrE3JInS1qpzK1qz4iM3XPQNlar/nyoNSUKcS1gazASkR/eRsfcDQ92vqywUXEId56NqknYwJcXq7+IpxywoPr0INpAmYd5ZkFmiHUlT+H7bRL1F1M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ideco.ru; spf=pass smtp.mailfrom=ideco.ru; dkim=pass (2048-bit key) header.d=ideco.ru header.i=@ideco.ru header.b=dvlbyL2W; arc=none smtp.client-ip=51.250.56.165
+	s=arc-20240116; t=1782672788; c=relaxed/simple;
+	bh=AQWKJNf+maNVC7jkiay3BmWJVdkgN4PjbpzB5w55+rw=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=FQuk7xjLakE+WtgcDuF6RB8TI/HlNUdiTGVpPHR+6K9tnAxWeg7CwlEiqQYxRK/+dnP3fvoHIusheSvyShc7/1iiFcpK/VdNiY3GHhkVf2ztV//f/gqy/u+WFhzUeGiEh0q+QdqxBxPbGygiLqZHhfwiyFr3oosNAYjm5WLY5+U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ideco.ru; spf=pass smtp.mailfrom=ideco.ru; dkim=pass (2048-bit key) header.d=ideco.ru header.i=@ideco.ru header.b=iHhP5u9r; arc=none smtp.client-ip=51.250.56.165
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ideco.ru
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ideco.ru
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ideco.ru header.i=@ideco.ru header.b="dvlbyL2W"
+	dkim=pass (2048-bit key) header.d=ideco.ru header.i=@ideco.ru header.b="iHhP5u9r"
 Received: from [169.254.254.254] (localhost [127.0.0.1])
-	by smtp.ideco.ru (Postfix) with ESMTP id CBC011010431;
-	Sun, 28 Jun 2026 23:35:36 +0500 (+05)
+	by smtp.ideco.ru (Postfix) with ESMTP id 486641010B25;
+	Sun, 28 Jun 2026 23:53:03 +0500 (+05)
 Received: from fedora.. (unknown [193.168.176.213])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.ideco.ru (Postfix) with ESMTPSA id 91718103AC8A;
-	Sun, 28 Jun 2026 23:35:24 +0500 (+05)
-DKIM-Filter: OpenDKIM Filter v2.11.0 smtp.ideco.ru 91718103AC8A
+	by smtp.ideco.ru (Postfix) with ESMTPSA id B82AA1010B24;
+	Sun, 28 Jun 2026 23:52:56 +0500 (+05)
+DKIM-Filter: OpenDKIM Filter v2.11.0 smtp.ideco.ru B82AA1010B24
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ideco.ru; s=ics;
-	t=1782671734; bh=krOnNt8pZjeg83oQl+z+sL9f3IAaf/1MCw28l+HpybE=;
+	t=1782672780; bh=2iLlGBmIm1cTNxVRCHaw4rhbzIgUSg2y8XhQzHajMqE=;
 	h=From:To:Cc:Subject:Date;
-	b=dvlbyL2WRWDEgS0GwsunU0DHmhToRdyKqKBVvpGzly188UpkcrGoAn6rHY9hrkaXR
-	 c4objuk/poYyRMaz2q0ocy5DPdTaRN4/Llq2H7fFwCQJ36CCGQDndtx0qLgfmkBA4I
-	 dq2L640hciptnrUhtJicQLQgMtxKuEs5Vi1OjaThfC1OWV1npcgUAbYG7JkYKP1nBu
-	 fUfQ6UpMb+efL1hdce1um81ZaFZU4shlrvmQHiYeK+zydug1+2elFTZHyeSUk5CDIK
-	 SVilpKO11PZXbigVcnUTeIwZvAaPigEVLLy1jjAa2JVGZ7sjdtAieepDGoThq6jjU5
-	 neVvvu9mFqYdw==
+	b=iHhP5u9rVi1NJgDZTfWEvqcFk51oKWHCOFTCJIwY57sV7vVRll1Qla9JPNESN2QCH
+	 9QO8ZCUEKr4yjJ3sZH0A2K7HWSp5ycb839zDyNTPHavYSb4GgIWsvQKS4u1BIH4aQE
+	 4TdAd+MhPyDYIkLZV4byzMiOEwajvWdp8i0QCCvvIQh0AxFHUFFYOOVJqb75zKVHim
+	 le9Yn3s47hi0vD8JLmm7HXRqzT3IJtXPwFWSxgob0iK1GzYgBNKxMYTF5CKVvHyxwA
+	 k9NaWzJ7B1VLymVlMiAWQKK8HLIr+YxoWGzllSTnamxW79wxX1F9BsnFyrJ300zUiJ
+	 R/22f/7hM/neg==
 From: Petr Vaganov <p.vaganov@ideco.ru>
 To: stable@vger.kernel.org,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
@@ -45,9 +45,9 @@ Cc: Petr Vaganov <p.vaganov@ideco.ru>,
 	linux-scsi@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	lvc-project@linuxtesting.org
-Subject: [PATCH v4] scsi: fill in DMA padding bytes in scsi_alloc_sgtables
-Date: Mon, 29 Jun 2026 01:34:55 +0700
-Message-ID: <20260628183500.31970-1-p.vaganov@ideco.ru>
+Subject: [PATCH v5] scsi: fill in DMA padding bytes in scsi_alloc_sgtables
+Date: Mon, 29 Jun 2026 01:52:21 +0700
+Message-ID: <20260628185229.37957-1-p.vaganov@ideco.ru>
 X-Mailer: git-send-email 2.49.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -106,16 +106,10 @@ When processing the last unaligned element of the scatterlist,
 it is supplemented with missing bytes in the amount of pad_len.
 These bytes remain uninitialized, which leads to a problem.
 
-Zero the pad_len padding bytes before extending the length.  This
-ensures that the DMA does not receive uninitialized data and eliminates
-the KMSAN warning.
-
-The padding bytes start at byte (last_sg->offset + last_sg->length)
-within the sg entry. Since the last sg element may span multiple pages,
-pfn_to_page() with page_to_pfn() arithmetic is used to locate the page
-containing the start of the padding. The padding may cross a page
-boundary (e.g. dma_pad_mask=511 with data ending near a page boundary),
-so the zeroing is split into two memzero_page() calls when needed.
+Extend last_sg->length by pad_len first, then use sg_zero_buffer() to
+zero those pad_len bytes.  sg_zero_buffer() uses sg_miter internally,
+which correctly handles sg entries spanning multiple pages and padding
+that crosses a page boundary.
 
 Found by Linux Verification Center (linuxtesting.org) with Syzkaller.
 
@@ -127,39 +121,32 @@ v2: Added tag "Cc: stable@vger.kernel.org".
 v3: Resending this patch as the issue is still present in the current
     kernel and the previous submission did not receive review.
 v4: Use pfn_to_page()/page_to_pfn() arithmetic to locate the correct
-    page when the last sg element spans multiple pages.
+    page when the last sg element spans multiple pages, fixing a
+    potential out-of-bounds write.
     Use memzero_page() instead of open-coded kmap/memset/kunmap.
-    Handle the case where padding crosses a page boundary by splitting
-    into two memzero_page() calls.
+    Handle the case where padding crosses a page boundary.
+v5: Replace hand-rolled page mapping with sg_zero_buffer(), which
+    handles multi-page sg entries and page boundary splits correctly
+    via sg_miter.
 ---
- drivers/scsi/scsi_lib.c | 14 ++++++++++++++
- 1 file changed, 14 insertions(+)
+ drivers/scsi/scsi_lib.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
 diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 22e2e3223..d7111be45 100644
+index 22e2e3223..686cef240 100644
 --- a/drivers/scsi/scsi_lib.c
 +++ b/drivers/scsi/scsi_lib.c
-@@ -1187,6 +1187,20 @@ blk_status_t scsi_alloc_sgtables(struct scsi_cmnd *cmd)
+@@ -1187,8 +1187,10 @@ blk_status_t scsi_alloc_sgtables(struct scsi_cmnd *cmd)
  	if (blk_rq_bytes(rq) & rq->q->limits.dma_pad_mask) {
  		unsigned int pad_len =
  			(rq->q->limits.dma_pad_mask & ~blk_rq_bytes(rq)) + 1;
-+		unsigned long pad_off = last_sg->offset + last_sg->length;
-+		unsigned int pg_off = offset_in_page(pad_off);
-+		unsigned int chunk = min_t(unsigned int, PAGE_SIZE - pg_off,
-+					   pad_len);
-+		struct page *pad_page =
-+			pfn_to_page(page_to_pfn(sg_page(last_sg)) +
-+				    (pad_off >> PAGE_SHIFT));
-+
-+		/* dma_pad_mask is expected to be smaller than PAGE_SIZE */
-+		memzero_page(pad_page, pg_off, chunk);
-+		if (chunk < pad_len)
-+			/* Pages within an sg entry are physically contiguous. */
-+			memzero_page(pfn_to_page(page_to_pfn(pad_page) + 1),
-+				     0, pad_len - chunk);
++		unsigned int data_len = last_sg->length;
  
  		last_sg->length += pad_len;
++		sg_zero_buffer(last_sg, 1, pad_len, data_len);
  		cmd->extra_len += pad_len;
+ 	}
+ 
 -- 
 2.49.0
 
