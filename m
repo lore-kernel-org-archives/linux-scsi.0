@@ -1,235 +1,148 @@
-Received: from mail-oa1-f52.google.com (mail-oa1-f52.google.com [209.85.160.52])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.ideco.ru (smtp.ideco.ru [51.250.56.165])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF9A4241686
-	for <linux-scsi@vger.kernel.org>; Sat, 27 Jun 2026 06:44:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.160.52
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782542666; cv=pass; b=P95rGqnUi6YORe6ASyWh65QyeHo86m14gxEfWKD5u0yhTiwkB0gqBdDD/egcJr/hQcf61m0bt1iV9QA4DvE/5fOfOPDGXQwy2SEPZKwqLznYv2q5g+o6zEQrQwGDMZbeUOKCZk1BUBOY19c8lNJvC6Q//XA53zSbYtRquQ3nfT0=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782542666; c=relaxed/simple;
-	bh=WouwHE1R8U8JJEuE6C2SQ/+2+qm602jhJmCk2kVq6KQ=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=hWMsCxwnczp6I8WEuSKX8svjVmzlPXEDNjRmOcTU3ZCfh1zcOYgKQixDOw440PJcb7Tsuu8Aw4gk+jpyhVHm32EofodoEDyA/ZPyVassr/gUp76MowqxMJ4LQINxyxWEEPFXBcPexG9Bxb5CftKsiUxf5X9EVnAGACbNrkOeWhA=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=purestorage.com; spf=pass smtp.mailfrom=purestorage.com; dkim=pass (2048-bit key) header.d=purestorage.com header.i=@purestorage.com header.b=IFVh20dI; arc=pass smtp.client-ip=209.85.160.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=purestorage.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=purestorage.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5DFF523BD1B;
+	Sun, 28 Jun 2026 17:24:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=51.250.56.165
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1782667446; cv=none; b=g33qAI2nkFOzjbsn4+YkLbWwTGXj1yqHe2xi3km24hdVnZf7IsaIuMhDDhNasHuXGPJsoJdosgRPqQtp6mgkFxGOX9CJwbiwsBkf1iYQZXSwLi5qq0G3LWFxNpMkkNqeug1TLFzgtTq80pWxotN8db14SLXYhDRaec9jFFlWVqo=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1782667446; c=relaxed/simple;
+	bh=m/JFcdNqXAlOb67qP11H0qB+sU69+zhGRiDPVdVITes=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=P7FB0EQ1GkjF6a9RUJjShhBLMuY3VThfX+OpbIJYh4nT2cvg7W9TEYb2CjTTk/4FUFZj5bse6hBQU0bUMR0sPAVVGzXA9GtrCk8fV3caQwEJjIy70RCJG3Yh4ybrde+DOzXD1SgqLWVJFqy7sFcMec+VfADhstiu0MVAsNELelg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ideco.ru; spf=pass smtp.mailfrom=ideco.ru; dkim=pass (2048-bit key) header.d=ideco.ru header.i=@ideco.ru header.b=bypqMA9Y; arc=none smtp.client-ip=51.250.56.165
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ideco.ru
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ideco.ru
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=purestorage.com header.i=@purestorage.com header.b="IFVh20dI"
-Received: by mail-oa1-f52.google.com with SMTP id 586e51a60fabf-441049736aeso380578fac.1
-        for <linux-scsi@vger.kernel.org>; Fri, 26 Jun 2026 23:44:24 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1782542664; cv=none;
-        d=google.com; s=arc-20260327;
-        b=gqYJPdFFHw/Woyhc+ynoWX+8uyC7xZ4zlHP+nvaV+3jq/2jpRoU6KFH+ucOq0kmnu1
-         sRTADlVphnnANkkr7FcHTX5ugjAJX+s0x93cOnwr1mfyFmq+mBxCN+UaUaBjzJJedjY7
-         UzpuVVNw9HCqOE9o2Iz6rU8KpBnOhoEopIQ9mpeGsNh6b1t4YIgpjugPAfDzCxG74dFb
-         rs0x/GRtzzLMFnGqtYGlrnEEjRNcBI6NvmgQloaJK5RKAx5lAOOj4JHb3alkIuCVEHNC
-         UOtSyztvwNgbYZ2t7yj5I0cY0ev44vhVjehabJIuQC3fMnEmgnt4EzIBBye0Fw0U2Csf
-         VcIg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=PqJ9f6zF79jUlRWV2DsV7aIRWOIhIBa9bZOZESr1l8A=;
-        fh=gUfsL9ppqjROwdjOOpA7gVU01au1qshFQ+BhECdF0Kg=;
-        b=dhNAV7+ULZX7BjSjI9EUcWO6GfwTLCKBNxNutgwkkciZg1ylOop7FQt8fhv1ikm6B0
-         gnxoxSfOrcwgAXpbtS2t2gkC28pfQCcgKpx0GKkRDApxrSCxWE5ui5xUhToDVKiw+Zau
-         Ag2FQcm+uNaxJL73YTd13ehdmq7IWrXLZdsaiLr5JINZfise48uvaoAP9ITm4p8BTD4E
-         1RLKc2xzF8OaU1N8WPJ/We7OkJ6gSUOCwMbirEmvHsEoszfHiQGqZKAQxXqqO46jmoZz
-         IZzD/GTLDhdStgj5xqov+i7BX+HGBKAML8s3iDffCUvnODKMJIjg2mnUHo4/sRG2bmhb
-         bDKg==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=purestorage.com; s=google2022; t=1782542664; x=1783147464; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=PqJ9f6zF79jUlRWV2DsV7aIRWOIhIBa9bZOZESr1l8A=;
-        b=IFVh20dIZ6ZIIbH17KZcgVA6LWaGpJPIQOVYaH+PSxKkvDSaVKsgBG9qsspAetYHWc
-         9hy9bUiuqrynpwlvTLiIT1BafuuxlQJAT/j7VlAwJzDcihIW583d9W+UHZJGadRR9m/j
-         EfKwuHV89Lt5hBpE0VdC83g3FkI2EUxsNzjn+6iqjGwYfvSzBeoY1H3z5JTEQOcDkCBB
-         3+y4EtEuFdzC7eRc44Rvo5rjuB/ZgRxEbBzpgSYsxTpg7R5i96fLijnstrU/BmK6NP5y
-         ijq9hvJ/3h7SiDQ9dq/OsWTgDhS+GaBZ+nXZ2t31U0nWvCeLhbxrf/wxhd4CfXpiykDa
-         eeBw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1782542664; x=1783147464;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=PqJ9f6zF79jUlRWV2DsV7aIRWOIhIBa9bZOZESr1l8A=;
-        b=QC7PRa1UjlnsmxiETBmkunKd0xsFefD0YOuR49pO//0IV09YzncHcsuLVsQnRFe73P
-         pyMa7omfMH7/0ICOTlpQAz2Ni84HXC5AfeTbzym+tnlRN9VuVkS/4hAxGfzEp8qIr2fS
-         vS0rAUAdkKCaj60/Q/rrE3rEUKeh2vfSvjaWA+i3h+zUK71uV0oryXjHtQVQ+tKcGX2y
-         TGEYLlQBcFwVMLyPbzRIgnpXG2JA9WYcTwASEQGHgvxxNj8hMllMA+FTcto0ht1ZekFn
-         becGu5fz275j54Esg6nuQu+fetQG4UuMT7stTSOhzvLjn3ZemFHP8GOwL66wcRptheKa
-         xEJw==
-X-Gm-Message-State: AOJu0Yyem06tBZfPTlXOEpckbpBD/S8JlNMDRPxxk03EY2emT6npGvsb
-	4FRRlPWwup5yYGI9XWMkSfFatSi3+IAV50gvAJY5xYLjia5RM3EAQofqINedPoXx46J5QK9Y0VU
-	PYYHKHNxZAMuvJWfwcmjhRmQfqywTwFFQXWmeWGj8kQ==
-X-Gm-Gg: AfdE7cnNPwOMqOKSTYeJlJXLXMbBy0G/lem/roISPyvfVD/t/mdTpnaTAANvPcJXoGH
-	QtTSG9i2lEvD89kR1/8z4wo+zpchZ0nki0KatkIVRi8q0GNiGHDRuMmcDUj6mxm9d1gbR2OXJBh
-	76TmefNxKtN/9t+ZJ0XeXu6GTnG8JvVEXcYqc6w6HlMRezZ0SNG2Egn66xIuvaUPHhp5ZOqD5f3
-	cKf7+D/UsGQ0CDoW/Jpep+8OR9zgecFL3EM5pbRaJMDYDpd9z5582eXHsW7YCI8Xk30YL4QXg==
-X-Received: by 2002:a05:6830:6016:b0:7dc:c92d:975f with SMTP id
- 46e09a7af769-7e99c2c3954mr5237814a34.7.1782542663550; Fri, 26 Jun 2026
- 23:44:23 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=ideco.ru header.i=@ideco.ru header.b="bypqMA9Y"
+Received: from [169.254.254.254] (localhost [127.0.0.1])
+	by smtp.ideco.ru (Postfix) with ESMTP id C04EB10118D6;
+	Sun, 28 Jun 2026 22:14:05 +0500 (+05)
+Received: from fedora.. (unknown [193.168.176.213])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp.ideco.ru (Postfix) with ESMTPSA id 7E11D1011629;
+	Sun, 28 Jun 2026 22:13:59 +0500 (+05)
+DKIM-Filter: OpenDKIM Filter v2.11.0 smtp.ideco.ru 7E11D1011629
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ideco.ru; s=ics;
+	t=1782666844; bh=w8+eO+UV6N5/meMNXwHwUho8i2+aCYEdL8tBame8cA0=;
+	h=From:To:Cc:Subject:Date;
+	b=bypqMA9YCHJYScmxlhE1yBy4UtBmfJBR77B+e4CSPpb3tGceF29D8tqiNZ7XnVKfu
+	 XVwYF/lGtHlYvHnW0RCZkz9HQ7f2RUIfU/RLoOP6g9mkF8bdPwH8esrn73jO6ut0dJ
+	 6GdsGpJR42npJG1MgzlSjf/dPpumolYhEHdEbfXie6+zINSn+DvWhwTwZoFvRCbl2M
+	 ZJDXbzzA/BH3k9FVkxqcWKDJAh1ktsKEMHq6so33s3+xj97Ktkn6G6y8CBwDhO81vH
+	 i8wEusJhSewsoKSuolQG5kTZ4ilCEnJP+1iEqW6LDppWlYj4GTRjKIxMsb1KxQySi+
+	 KqciT4+HRi/BA==
+From: Petr Vaganov <p.vaganov@ideco.ru>
+To: stable@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Petr Vaganov <p.vaganov@ideco.ru>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Jens Axboe <axboe@kernel.dk>,
+	Tejun Heo <htejun@gmail.com>,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	lvc-project@linuxtesting.org
+Subject: [PATCH v3] scsi: fill in DMA padding bytes in scsi_alloc_sgtables
+Date: Mon, 29 Jun 2026 00:13:44 +0700
+Message-ID: <20260628171348.8613-1-p.vaganov@ideco.ru>
+X-Mailer: git-send-email 2.49.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260627054220.2174166-1-csander@purestorage.com>
- <20260627054220.2174166-4-csander@purestorage.com> <20260627055516.D92931F000E9@smtp.kernel.org>
-In-Reply-To: <20260627055516.D92931F000E9@smtp.kernel.org>
-From: Caleb Sander Mateos <csander@purestorage.com>
-Date: Fri, 26 Jun 2026 23:44:12 -0700
-X-Gm-Features: AVVi8CdF4ey9DwUemi-8_MWi9xL91q88EPfQDj5c8BCHtq_hCdh93CmdLkhChlM
-Message-ID: <CADUfDZog=MMxOxen56t9QgDb=D3cA+r5W-SSEw+qXHVRqmphFA@mail.gmail.com>
-Subject: Re: [PATCH v4 3/5] bio-integrity-fs: use integrity interval instead
- of sector as seed
-To: sashiko-reviews@lists.linux.dev
-Cc: linux-scsi@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 
-On Fri, Jun 26, 2026 at 10:55=E2=80=AFPM <sashiko-bot@kernel.org> wrote:
->
-> Thank you for your contribution! Sashiko AI review found 1 potential issu=
-e(s) to consider:
->
-> Pre-existing issues:
-> - [High] Unconditional dereference of `bip` and `bi` in `fs_bio_integrity=
-_verify` and `fs_bio_integrity_free` causing a kernel panic.
-> --
->
-> commit 1da3b7d905f7d5c0c600e7d3a5fbf3cb0dc853c7
-> Author: Caleb Sander Mateos <csander@purestorage.com>
->
-> bio-integrity-fs: use integrity interval instead of sector as seed
->
-> bip_iter.bi_sector is meant to be in units of integrity intervals rather
-> than 512-byte sectors. bio_integrity_verify() doesn't actually use it
-> currently (it uses the passed in struct bvec_iter's bi_sector instead).
-> But let's set it to the expected value for consistency.
->
-> > diff --git a/block/bio-integrity-fs.c b/block/bio-integrity-fs.c
-> > index 9c5fe5fa8f0da..770eacb2220ff 100644
-> > --- a/block/bio-integrity-fs.c
-> > +++ b/block/bio-integrity-fs.c
-> > @@ -67,7 +67,7 @@ int fs_bio_integrity_verify(struct bio *bio, sector_t=
- sector, unsigned int size)
-> >        * bio.  Requires the submitter to remember the sector and the si=
-ze.
-> >        */
-> >       memset(&bip->bip_iter, 0, sizeof(bip->bip_iter));
-> > -     bip->bip_iter.bi_sector =3D sector;
-> > +     bip->bip_iter.bi_sector =3D bio_integrity_intervals(bi, sector);
->
-> [Severity: High]
-> This is a pre-existing issue, but can this unconditionally dereference bi=
-p
-> and bi?
->
-> Looking at iomap_bio_read_folio_range_sync() in fs/iomap/bio.c, it calls
-> fs_bio_integrity_verify() and fs_bio_integrity_free() without validating =
-if
-> the integrity payload was actually allocated:
->
-> fs/iomap/bio.c:iomap_bio_read_folio_range_sync() {
->     ...
->     if (!error)
->         error =3D fs_bio_integrity_verify(&bio, sector, len);
->     fs_bio_integrity_free(&bio);
->     ...
-> }
+During fuzz testing, the following issue was discovered:
 
-fs_bio_integrity_verify() is only called if IOMAP_F_INTEGRITY is set,
-which means fs_bio_integrity_alloc() was called earlier:
+BUG: KMSAN: uninit-value in __dma_map_sg_attrs+0x217/0x310
+ __dma_map_sg_attrs+0x217/0x310
+ dma_map_sg_attrs+0x4a/0x70
+ ata_qc_issue+0x9f8/0x1420
+ __ata_scsi_queuecmd+0x1657/0x1740
+ ata_scsi_queuecmd+0x79a/0x920
+ scsi_queue_rq+0x4472/0x4f40
+ blk_mq_dispatch_rq_list+0x1cca/0x3ee0
+ __blk_mq_sched_dispatch_requests+0x458/0x630
+ blk_mq_sched_dispatch_requests+0x15b/0x340
+ __blk_mq_run_hw_queue+0xe5/0x250
+ __blk_mq_delay_run_hw_queue+0x138/0x780
+ blk_mq_run_hw_queue+0x4bb/0x7e0
+ blk_mq_sched_insert_request+0x2a7/0x4c0
+ blk_execute_rq+0x497/0x8a0
+ sg_io+0xbe0/0xe20
+ scsi_ioctl+0x2b36/0x3c60
+ sr_block_ioctl+0x319/0x440
+ blkdev_ioctl+0x80f/0xd70
+ __se_sys_ioctl+0x219/0x420
+ __x64_sys_ioctl+0x93/0xe0
+ x64_sys_call+0x1d6c/0x3ad0
+ do_syscall_64+0x4c/0xa0
+ entry_SYSCALL_64_after_hwframe+0x6e/0xd8
 
-if (srcmap->flags & IOMAP_F_INTEGRITY)
-        fs_bio_integrity_alloc(&bio);
-error =3D submit_bio_wait(&bio);
-if (srcmap->flags & IOMAP_F_INTEGRITY) {
-        if (!error)
-                error =3D fs_bio_integrity_verify(&bio, sector, len);
-        fs_bio_integrity_free(&bio);
-}
+Uninit was created at:
+ __alloc_pages+0x5c0/0xc80
+ alloc_pages+0xe0e/0x1050
+ blk_rq_map_user_iov+0x2b77/0x6100
+ blk_rq_map_user_io+0x2fa/0x4d0
+ sg_io+0xad6/0xe20
+ scsi_ioctl+0x2b36/0x3c60
+ sr_block_ioctl+0x319/0x440
+ blkdev_ioctl+0x80f/0xd70
+ __se_sys_ioctl+0x219/0x420
+ __x64_sys_ioctl+0x93/0xe0
+ x64_sys_call+0x1d6c/0x3ad0
+ do_syscall_64+0x4c/0xa0
+ entry_SYSCALL_64_after_hwframe+0x6e/0xd8
 
-Which will allocate a bip unless bio_integrity_action() returns 0:
+Bytes 14-15 of 16 are uninitialized
+Memory access of size 16 starts at ffff88800cbdb000
 
-unsigned int fs_bio_integrity_alloc(struct bio *bio)
-{
-        struct fs_bio_integrity_buf *iib;
-        unsigned int action;
+When processing the last unaligned element of the scatterlist,
+it is supplemented with missing bytes in the amount of pad_len.
+These bytes remain uninitialized, which leads to a problem.
 
-        action =3D bio_integrity_action(bio);
-        if (!action)
-                return 0;
+Add zeroing pad_len bytes of padding by pad_offset offset before
+increasing its length. This ensures that the DMA does not receive
+uninitialized data and eliminates the KMSAN warning.
 
-        iib =3D mempool_alloc(&fs_bio_integrity_pool, GFP_NOFS);
-        bio_integrity_init(bio, &iib->bip, &iib->bvec, 1);
+In this case, the pages are not located in highmem, but in the
+general case they might be, so kmap_local_page() is used for mapping.
 
-        bio_integrity_alloc_buf(bio, GFP_NOFS, action & BI_ACT_ZERO);
-        if (action & BI_ACT_CHECK)
-                bio_integrity_setup_default(bio);
-        return action;
-}
+Found by Linux Verification Center (linuxtesting.org) with Syzkaller.
 
-But IOMAP_F_INTEGRITY is only set in the first place the block device
-supports a protection information guard tag, so certainly it supports
-integrity (which means bi is non-NULL):
+Fixes: 40b01b9bbdf5 ("block: update bio according to DMA alignment padding")
+Cc: stable@vger.kernel.org
+Signed-off-by: Petr Vaganov <p.vaganov@ideco.ru>
+---
+v2: Added tag "Cc: stable@vger.kernel.org".
+v3: Resending this patch as the issue is still present in the current
+kernel and the previous submission did not receive review.
+---
+ drivers/scsi/scsi_lib.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-if (bdev_has_integrity_csum(iomap->bdev))
-        iomap->flags |=3D IOMAP_F_INTEGRITY;
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 22e2e3223..c75b86059 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1187,6 +1187,11 @@ blk_status_t scsi_alloc_sgtables(struct scsi_cmnd *cmd)
+ 	if (blk_rq_bytes(rq) & rq->q->limits.dma_pad_mask) {
+ 		unsigned int pad_len =
+ 			(rq->q->limits.dma_pad_mask & ~blk_rq_bytes(rq)) + 1;
++		unsigned int pad_offset = last_sg->offset + last_sg->length;
++		void *vaddr = kmap_local_page(sg_page(last_sg));
++
++		memset(vaddr + pad_offset, 0, pad_len);
++		kunmap_local(vaddr);
+ 
+ 		last_sg->length += pad_len;
+ 		cmd->extra_len += pad_len;
+-- 
+2.49.0
 
-And thus bio_integrity_action() will call __bio_integrity_action() (if
-the bio doesn't already have a bip attached):
 
-static inline unsigned int bio_integrity_action(struct bio *bio)
-{
-        if (!blk_get_integrity(bio->bi_bdev->bd_disk))
-                return 0;
-        if (bio_integrity(bio))
-                return 0;
-        return __bio_integrity_action(bio);
-}
-
-Which I guess could return 0 if integrity verification is disabled:
-
-case REQ_OP_READ:
-        if (bi->flags & BLK_INTEGRITY_NOVERIFY) {
-                if (bi_offload_capable(bi))
-                        return 0;
-                return BI_ACT_BUFFER;
-        }
-        return BI_ACT_BUFFER | BI_ACT_CHECK;
-
-So it seems possible that bip might be NULL.
-
->
-> If fs_bio_integrity_alloc() returns 0 without actually allocating a
-> bio_integrity_payload, bio_integrity(bio) will be NULL. This can happen i=
-f
-> the device's integrity profile is unregistered concurrently, or if the
-> operation doesn't require integrity checks.
->
-> When that happens, fs_bio_integrity_verify() would dereference a NULL bip
-> during the memset(&bip->bip_iter, 0, ...) call, and a NULL bi at the call=
- to
-> bio_integrity_intervals(bi, sector). Similarly, fs_bio_integrity_free() w=
-ould
-> subsequently dereference bip on the same path.
->
-> Could we add a check for a valid bip and bi before these accesses?
->
-> >       bip->bip_iter.bi_size =3D bio_integrity_bytes(bi, size >> SECTOR_=
-SHIFT);
-> >       return blk_status_to_errno(bio_integrity_verify(bio, &data_iter))=
-;
-> >  }
->
-> --
-> Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260627054220.21=
-74166-1-csander@purestorage.com?part=3D3
