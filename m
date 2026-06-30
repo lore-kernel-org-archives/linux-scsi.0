@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BFAE83DE436;
-	Tue, 30 Jun 2026 19:48:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E4F0F3E023E;
+	Tue, 30 Jun 2026 20:04:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782848894; cv=none; b=lukTtDB2eCzqB5212lBbAh4Y105FSZVmZ1Ql1oqNDLecavxV7vB3WxLKU3GNkwdB9NWgrywJ4KlOlFVbVuVa5DEFaBifEe01oiEKiGiG7Q4KNvRw8DbSN2oLgjrsxk+YYNROsUhkcgRNiuouZphp6KANuDnDbd+stCa3etWq1iQ=
+	t=1782849873; cv=none; b=ouJm0k0gPnq9DMPXsB8rlDLuVciBSbPWGvc2XYViFE6dfrJf4pl3g7SWQj+GnNO+caWiZoaWo9i3LBFA5Cbnmd8PeIEuIgo9dHunCZJKlFzBG1LmcUSYJzQyaWRDpPzhv8ulPpbzMbyvYwVxRp0OsWVH4Qc9KLlQcLzjFhZFsB8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782848894; c=relaxed/simple;
-	bh=Ghvoyx/ghMo5weDZ/lF347xW9I9fRNVaRjlvBCBRFBc=;
+	s=arc-20240116; t=1782849873; c=relaxed/simple;
+	bh=uuR9+/Mqv6VzcB/o9cpudXm09xHl6MhhQ5yODAPtFgg=;
 	h=Mime-Version:Content-Type:Date:Message-Id:Subject:Cc:To:From:
-	 References:In-Reply-To; b=P+UVXxoqAxVbVREBFZIT0eAgdjKgh5qk1wyN3NHHLc2KjppFWUzqosENd8ERxwajpTLNxj8NWVb7q/XvQM+OwFG+Ob+K6MAZoY6eu0OtRnUK/6cWjVMSUGQ0CXqPpiZg51Tx9k36P2RJtouAdvMspsGG0xxZd4uO63f8SSddL0k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kRfBC8uR; arc=none smtp.client-ip=100.103.45.18
+	 References:In-Reply-To; b=Eu1VXr6T1fN9Cqv9jHi8nZ2eXT2/BAvfb9OWi6gvy8de7ZNKWxpRC42LYsZSd+pPjMKzhZupn8G2koVeTwhU61plcuW5+8wEkK8PJSDjdU0rgfRpeuakYQslMzE2MdF3wI/w0bVqKVYLDVH9clATXLVp75kqqi/AxeOv8SxkrWU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LvFMsP+9; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kRfBC8uR"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 74E2C1F000E9;
-	Tue, 30 Jun 2026 19:48:08 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LvFMsP+9"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C694F1F000E9;
+	Tue, 30 Jun 2026 20:04:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782848893;
-	bh=Ghvoyx/ghMo5weDZ/lF347xW9I9fRNVaRjlvBCBRFBc=;
+	s=k20260515; t=1782849872;
+	bh=uuR9+/Mqv6VzcB/o9cpudXm09xHl6MhhQ5yODAPtFgg=;
 	h=Date:Subject:Cc:To:From:References:In-Reply-To;
-	b=kRfBC8uR13RmSnW5sNegsjc/8sib7WHGv7ufpQ882VZV79pkY3M8z2BrEb3tbP9LP
-	 nzDMaQaPPCU88ZQtFFMWdlRXIFvFmys/zniHghssinyj41e9teBaCdWa6qGDzjZl27
-	 3MqQsAgupz3N0BlxMh4QuzGo0Br2VOl+lMNYmNTPCKRN5nv1vYVblldLmOcGouZOTb
-	 AGT7WuI1wmxuDk0I3f5ooNCBwFByfjscRPFZ/c4/AJ5AJmRO3AHkYNjsJGDnwf2l98
-	 Hvmxbt6ZNYTgXFbFbCR2Cn5dII7xaLeVtP1YmFDPQOMzqoPkqZJ1KPOWySyXNOeIp4
-	 FZzVsLDtW7E3Q==
+	b=LvFMsP+9EeXKmXvFaZis9G2VLobXuWWGjGttLFjwM5011HTqQy38WMRVErXAfdps7
+	 eGPsh7PUxStS3iKwj49mbjtCP+1R3NBTpwApg/bHfRo0U44e+/oeH1/Zf16AA8OKDz
+	 f8cttZVjSDfUDywj2m19emj+BWBDVmhwO5zc88MFqBaL2VfjWunrfQjS/Hx+omw02L
+	 1oMgJ4vCZ545huYVOLULqvx4FE7xBxKLlwW4KDlC5USJ42ORQA4rqamDCuH1aws4mw
+	 kv+UjH5Qee0Ke6XdCUYR069j24FUc7BT3FZkPRcYgJkfa3j4oQBqwcgTf6izfltotW
+	 sv1vk5zFmYCKQ==
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -34,9 +34,10 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 Content-Type: text/plain; charset=UTF-8
-Date: Tue, 30 Jun 2026 21:48:07 +0200
-Message-Id: <DJMN6NWGTJSM.30O8ZG8LPF19I@kernel.org>
-Subject: Re: [PATCH v2 4/7] mlxsw: don't keep pci_device_id
+Date: Tue, 30 Jun 2026 22:04:26 +0200
+Message-Id: <DJMNJ5OPEMT0.1H4NP8NJ7JETR@kernel.org>
+Subject: Re: [PATCH v2 5/7] pci: make pci_match_one_device match on ID
+ instead of device
 Cc: "Bjorn Helgaas" <bhelgaas@google.com>, "Zhenzhong Duan"
  <zhenzhong.duan@gmail.com>, "Greg Kroah-Hartman"
  <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>,
@@ -56,12 +57,16 @@ Cc: "Bjorn Helgaas" <bhelgaas@google.com>, "Zhenzhong Duan"
 To: "Gary Guo" <gary@garyguo.net>
 From: "Danilo Krummrich" <dakr@kernel.org>
 References: <20260630-pci_id_fix-v2-0-b834a98c0af2@garyguo.net>
- <20260630-pci_id_fix-v2-4-b834a98c0af2@garyguo.net>
-In-Reply-To: <20260630-pci_id_fix-v2-4-b834a98c0af2@garyguo.net>
+ <20260630-pci_id_fix-v2-5-b834a98c0af2@garyguo.net>
+In-Reply-To: <20260630-pci_id_fix-v2-5-b834a98c0af2@garyguo.net>
 
 On Tue Jun 30, 2026 at 1:09 PM CEST, Gary Guo wrote:
-> pci_device_id is not guaranteed to live longer than probe due to presence
-> of dynamic ID. This stored ID is unused so remove it.
+> There is a need to match just IDs instead of against devices. Thus rename
+> this function to pci_match_one_id, and add a pci_id_from_device helper to
+> make it easy to convert users.
+>
+> Similar convert pci_match_id to do_pci_match_id, however the existing API
+> is kept due to quite a few users.
 >
 > Signed-off-by: Gary Guo <gary@garyguo.net>
 
