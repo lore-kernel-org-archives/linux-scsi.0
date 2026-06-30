@@ -1,132 +1,145 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from smtpout-03.galae.net (smtpout-03.galae.net [185.246.85.4])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA74A78F2F;
-	Tue, 30 Jun 2026 07:28:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 880563C5DBE
+	for <linux-scsi@vger.kernel.org>; Tue, 30 Jun 2026 09:56:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.246.85.4
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782804503; cv=none; b=ewIil6PnNe1ljcIsmxB4yEOnms9HB4mtA+fQUMgSaThW+J8OSPWyFV5hWMd5SM2vlksrKnwSEHJNLubF7Dz3mR4//Hxb9QAMTrJ8igny9DgJekttjtTtoLuK69EtjcUekZeundfxDJw0GcWq7rYt3y4nefFSutASflrinJIuY+E=
+	t=1782813373; cv=none; b=gr0ppKlhBZIsLKxA/3IFxEikDI8e20LsjtMWM/d9iZexm9AnWAFpfChMbjxpPfaMK/UKB+uE19NiYMIoJyP27YvYcGlDN8Ih7PRBpbri/sdUz/mXsM370oZJoOzQkpw90Q1QhaRGzTDyDS6nQGZ65OXEmvxWR84/iefYaY1tYiQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782804503; c=relaxed/simple;
-	bh=QXsMlIJFgIaZkb+e81eZ8/ZujmTrQ3d/KPlPA13+lgQ=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=ocHNq7SFZXGYw2Zgy7TGsKWVNhXkeIRqPBsFgX2j0AKGTFvI0jSbOIkGHHkjkYk1RDE152ZjSjjcKF/STslbTNwtVlPTpMnKM3Drf27ah63feZwoujwy+9VYP0YHfUevEH/R+m3j7hMKT0R7FoJCKXvkN0mo1CrmIGwVv6CgPR0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=A+VYfc7a; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1782813373; c=relaxed/simple;
+	bh=VRmgnQpSg5hIgp1YUN6xAyB6cTIX00rEaR75Vv3U9M0=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=IUnFxlHx1ndUDAJISOE8d7lrRz9gWZRgNCxVPJQmcDtmFO7gGFg+jJAuUuwOqMPeUXdgrtXJQpYLFDZPNib19P6D78CYC4BgqpkxbeHdvxHX4UiNUuyRwWnF43qio6POVW8yg7ZOvb/q4lIAh7sL3qgZO4+XAXXxOZ9Wp7fh/A4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=Y+8me/s7; arc=none smtp.client-ip=185.246.85.4
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bootlin.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="A+VYfc7a"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4CFBC1F000E9;
-	Tue, 30 Jun 2026 07:28:21 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782804502;
-	bh=ZZ79yflPqq3Spvk4qgRCr72BY3mK+jqs5+5msARrrV0=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=A+VYfc7aJqYtdH4yr1Q/cuz5a+NkQAkJdcDcHNxjOxU3OplH8tFqQixGpeqnkrSuu
-	 YKIZy77HB/G3zQ/ACvIMn72aU0t+vkttIrqDbW/oODAMFZEskar10yFPbcYN2xd93C
-	 VFcgi/whXgD355X/7Fo3Glx82sMdoe7zE+S/oIbdBtbQz7dXz10Ap5enAkXDit3hXU
-	 xhshfd0TM0mim+VjdEJbhqSnB6WH5DgCoKnGClcFpOWBYyue9nv+w8KTeua1soUAAO
-	 KzxoZ1C7wXRL+muliCrfPQti9l91jlK6NzKOef6eQoGTp80Zn5Lzsep4k/vQwpj7ys
-	 jBCfYzgxpEFqA==
-Message-ID: <17d381fb-1f91-461c-8315-1508ad0c1efe@kernel.org>
-Date: Tue, 30 Jun 2026 16:28:19 +0900
+	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="Y+8me/s7"
+Received: from smtpout-01.galae.net (smtpout-01.galae.net [212.83.139.233])
+	by smtpout-03.galae.net (Postfix) with ESMTPS id DFB784E40BA4;
+	Tue, 30 Jun 2026 09:56:08 +0000 (UTC)
+Received: from mail.galae.net (mail.galae.net [212.83.136.155])
+	by smtpout-01.galae.net (Postfix) with ESMTPS id B09196025A;
+	Tue, 30 Jun 2026 09:56:08 +0000 (UTC)
+Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id A3F02106F087C;
+	Tue, 30 Jun 2026 11:56:02 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=dkim;
+	t=1782813367; h=from:subject:date:message-id:to:cc:mime-version:content-type:
+	 content-transfer-encoding; bh=4nwKNrGzMcaIXvoYBaIBeDI+oTAk2QHGtD6EFpPp5ws=;
+	b=Y+8me/s7+wBTeCrPMn5w/9xgcMzgUO+DZSoh4GTmhMNsC6hofliEEsR4a3pGbFl2YIoUUj
+	auNGUZnJkHdW2Hi10yRwFzuxwc9VmbZOfVJKtFqBEV+Y4846FdMI+4aSNSDq0sTrrQOZe2
+	t4JFwrrUHRc/K0BXZmO0UO2yYpspIwLZf39oYI3H0AYflcqmVNCAlgTUKqWB9wFH2Sbo/e
+	Ir0an+Bm035+VzwNrefeaGeEc3+crWBKeSIP98wECwsDc00W+1r4DZhng0i6PbwkzcRXUH
+	xk1tu6TJk6b1R+z9o/6+ApJkvAGU0yz+mdudTJcn4M66Ma1rmUAV6J9K0L0HPg==
+From: Gregory CLEMENT <gregory.clement@bootlin.com>
+Date: Tue, 30 Jun 2026 11:55:23 +0200
+Subject: [PATCH] scsi: ufs: core: Avoid sleeping in hard interrupt context
+ when PREEMP_RT is enabled.
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi: st: use kzalloc_array
-To: Rosen Penev <rosenp@gmail.com>, linux-scsi@vger.kernel.org
-Cc: =?UTF-8?Q?Kai_M=C3=A4kisara?= <Kai.Makisara@kolumbus.fi>,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- Kees Cook <kees@kernel.org>, "Gustavo A. R. Silva" <gustavoars@kernel.org>,
- open list <linux-kernel@vger.kernel.org>,
- open "list:KERNEL" HARDENING "(not" covered by other
- "areas):Keyword:b__counted_by(_le|_be|_ptr)?b"
- <linux-hardening@vger.kernel.org>
-References: <20260630012101.1461335-1-rosenp@gmail.com>
-Content-Language: en-US
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <20260630012101.1461335-1-rosenp@gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+Message-Id: <20260630-ufshcd-spinlock-sleep-fix-v1-1-339b05a1c6f4@bootlin.com>
+X-B4-Tracking: v=1; b=H4sIAIqSQ2oC/x2MQQqAIBAAvxJ7bkEtSvpKdAhdaylMXIog+nvSc
+ QZmHhDKTAJD9UCmi4WPWEDXFbh1jgsh+8JglOlU1yg8g6zOoySO++E2lJ0oYeAbbWut1sHY2fd
+ Q+pSp6P89Tu/7AcEVnfFrAAAA
+X-Change-ID: 20260630-ufshcd-spinlock-sleep-fix-848811f28ad7
+To: Alim Akhtar <alim.akhtar@samsung.com>, 
+ Avri Altman <avri.altman@sandisk.com>, Bart Van Assche <bvanassche@acm.org>, 
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
+ "Martin K. Petersen" <martin.petersen@oracle.com>, 
+ Sebastian Andrzej Siewior <bigeasy@linutronix.de>, 
+ Clark Williams <clrkwllms@kernel.org>, Steven Rostedt <rostedt@goodmis.org>
+Cc: Thomas Petazzoni <thomas.petazzoni@bootlin.com>, 
+ Vladimir Kondratiev <vladimir.kondratiev@mobileye.com>, 
+ =?utf-8?q?Beno=C3=AEt_Monin?= <benoit.monin@bootlin.com>, 
+ =?utf-8?q?Th=C3=A9o_Lebrun?= <theo.lebrun@bootlin.com>, 
+ linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ linux-rt-devel@lists.linux.dev, 
+ Gregory CLEMENT <gregory.clement@bootlin.com>
+X-Mailer: b4 0.14.3
+X-Last-TLS-Session-Version: TLSv1.3
 
-On 6/30/26 10:21, Rosen Penev wrote:
-> Signed-off-by: Rosen Penev <rosenp@gmail.com>
+PREEMPT_RT turns spinlock in a mutex that cannot be used in interrupt
+context. Since commit 3c7ac40d7322 ("scsi: ufs: core: Delegate the
+interrupt service routine to a threaded IRQ handler"), the hard
+interrupt handler is not converted into a threaded interrupt handler
+(due to the IRQF_ONESHOT flag). This can lead to the use of a sleeping
+function inside the interrupt context.
 
-No commit message ? Please explain your reasonning, because I find this patch
-incorrect. See below.
+[    0.654017] scsi host0: ufshcd
+[    0.659867] BUG: sleeping function called from invalid context at kernel/locking/spinlock_rt.c:48
+[    0.659878] in_atomic(): 1, irqs_disabled(): 1, non_block: 0, pid: 0, name: swapper/0
+[    0.659882] preempt_count: 10001, expected: 0
+[    0.659885] RCU nest depth: 0, expected: 0
+[    0.659892] CPU: 0 UID: 0 PID: 0 Comm: swapper/0 Not tainted 7.1.0-rc3 #1 PREEMPT_RT
+[    0.659903] Call Trace:
+[    0.659907] [<ffffffff800148fe>] dump_backtrace+0x1c/0x24
+[    0.659924] [<ffffffff80001580>] show_stack+0x28/0x34
+[    0.659931] [<ffffffff8000ea7c>] dump_stack_lvl+0x5e/0x86
+[    0.659937] [<ffffffff8000eab8>] dump_stack+0x14/0x1c
+[    0.659942] [<ffffffff8005d07e>] __might_resched+0x138/0x142
+[    0.659956] [<ffffffff808bea82>] rt_spin_lock+0x38/0x144
+[    0.659965] [<ffffffff806d4b0a>] ufshcd_sl_intr+0x30a/0x622
+[    0.659973] [<ffffffff806d50bc>] ufshcd_intr+0x86/0x9c
+[    0.659979] [<ffffffff8009f072>] __handle_irq_event_percpu+0xa6/0x370
+[    0.659987] [<ffffffff8009f3d2>] handle_irq_event+0x42/0x98
+[    0.659992] [<ffffffff800a43ce>] handle_fasteoi_irq+0x11a/0x244
+[    0.660002] [<ffffffff8009e718>] handle_irq_desc+0x38/0x46
+[    0.660007] [<ffffffff8009e764>] generic_handle_irq+0x26/0x2e
+[    0.660013] [<ffffffff8054f1e2>] aplic_direct_handle_irq+0xa0/0x158
+[    0.660022] [<ffffffff8009e718>] handle_irq_desc+0x38/0x46
+[    0.660027] [<ffffffff8009e7f2>] generic_handle_domain_irq+0x12/0x1a
+[    0.660032] [<ffffffff8054df10>] riscv_intc_irq+0x2a/0x64
+[    0.660038] [<ffffffff808b2708>] handle_riscv_irq+0x52/0x82
+[    0.660048] [<ffffffff808c2fca>] call_on_irq_stack+0x32/0x40
 
-> ---
->  drivers/scsi/st.c | 12 +++---------
->  drivers/scsi/st.h |  3 ++-
->  2 files changed, 5 insertions(+), 10 deletions(-)
-> 
-> diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
-> index f1c3c4946637..31ae189b18e7 100644
-> --- a/drivers/scsi/st.c
-> +++ b/drivers/scsi/st.c
-> @@ -149,7 +149,7 @@ static struct st_dev_parm {
->     mode counts */
->  static const char *st_formats[] = {
->  	"",  "r", "k", "s", "l", "t", "o", "u",
-> -	"m", "v", "p", "x", "a", "y", "q", "z"}; 
-> +	"m", "v", "p", "x", "a", "y", "q", "z"};
->  
->  /* The default definitions have been moved to st_options.h */
->  
-> @@ -3973,21 +3973,15 @@ static struct st_buffer *new_tape_buffer(int max_sg)
->  {
->  	struct st_buffer *tb;
->  
-> -	tb = kzalloc_obj(struct st_buffer);
-> +	tb = kzalloc_flex(*tb, reserved_pages, max_sg);
->  	if (!tb) {
->  		printk(KERN_NOTICE "st: Can't allocate new tape buffer.\n");
->  		return NULL;
->  	}
-> -	tb->frp_segs = 0;
->  	tb->use_sg = max_sg;
-> +	tb->frp_segs = 0;
->  	tb->buffer_size = 0;
->  
-> -	tb->reserved_pages = kzalloc_objs(struct page *, max_sg);
+This commit mitigates the issue by directly registering the thread
+interrupt handler without involving a hard IRQ handler. This will only
+be done when PREEMP_RT is enabled, which automatically turns all
+interrupt handlers into threaded interrupt handlers.
 
-reserve_pages is in the middle of struct st_buffer so you cannot use a flex array.
+Fixes: 3c7ac40d7322 ("scsi: ufs: core: Delegate the interrupt service routine to a threaded IRQ handler")
+Signed-off-by: Gregory CLEMENT <gregory.clement@bootlin.com>
+---
+ drivers/ufs/core/ufshcd.c | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
 
-> -	if (!tb->reserved_pages) {
-> -		kfree(tb);
-> -		return NULL;
-> -	}
-> -
->  	return tb;
->  }
->  
-> diff --git a/drivers/scsi/st.h b/drivers/scsi/st.h
-> index 0d7c4b8c2c8a..759f4c43d563 100644
-> --- a/drivers/scsi/st.h
-> +++ b/drivers/scsi/st.h
-> @@ -45,7 +45,6 @@ struct st_buffer {
->  	int syscall_result;
->  	struct st_request *last_SRpnt;
->  	struct st_cmdstatus cmdstat;
-> -	struct page **reserved_pages;
->  	int reserved_page_order;
->  	struct page **mapped_pages;
->  	struct rq_map_data map_data;
-> @@ -53,6 +52,8 @@ struct st_buffer {
->  	unsigned short use_sg;	/* zero or max number of s/g segments for this adapter */
->  	unsigned short sg_segs;		/* number of segments in s/g list */
->  	unsigned short frp_segs;	/* number of buffer segments */
-> +
-> +	struct page *reserved_pages[] __counted_by(use_sg);
->  };
->  
->  /* The tape mode definition */
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index d3044a3089b53..6d82658a1a66b 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -11235,9 +11235,17 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
+ 	 */
+ 	ufshcd_readl(hba, REG_INTERRUPT_ENABLE);
+ 
+-	/* IRQ registration */
++	/* IRQ registration
++	 * In the case of PREMMP_RT, directly use the threaded
++	 * interrupt to avoid using a spinlock (which could sleep)
++	 * in the hard IRQ handler.
++	 */
++#ifdef CONFIG_PREEMPT_RT
++	err = devm_request_irq(dev, irq, ufshcd_threaded_intr, IRQF_SHARED, UFSHCD, hba);
++#else
+ 	err = devm_request_threaded_irq(dev, irq, ufshcd_intr, ufshcd_threaded_intr,
+ 					IRQF_ONESHOT | IRQF_SHARED, UFSHCD, hba);
++#endif
+ 	if (err) {
+ 		dev_err(hba->dev, "request irq failed\n");
+ 		goto out_disable;
 
+---
+base-commit: dc59e4fea9d83f03bad6bddf3fa2e52491777482
+change-id: 20260630-ufshcd-spinlock-sleep-fix-848811f28ad7
 
+Best regards,
 -- 
-Damien Le Moal
-Western Digital Research
+Grégory CLEMENT, Bootlin
+Embedded Linux and Kernel engineering
+https://bootlin.com
+
