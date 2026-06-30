@@ -1,79 +1,89 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from relay.hostedemail.com (smtprelay0016.hostedemail.com [216.40.44.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B15C4331ECF;
-	Tue, 30 Jun 2026 22:59:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A7E5532FA2E;
+	Tue, 30 Jun 2026 22:59:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=216.40.44.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782860347; cv=none; b=avapqDruAqAn2gXhRG+zzbyxetIrW6KYAMYq3uTrJ2xmqMbXVg3+jLIqXVMWmedjttscVetSDT4RmH5QWT0C7aa8HhMHszJgQ0JJlImdfBsjlXeXqf24t10H+7ovKViIONn3yuSzpcCpYuL7A5pvKXZHnEElv+913mwhtnXrIzQ=
+	t=1782860352; cv=none; b=ASdNL7OjFFTdUtdXNZe74ZOVolKSAK0kz+UFKaZcBSbPSahAr3tjikhbjJFlcI2AfDh9rvzZoRe3WnlnmAtYSDY8AJut64Z0DyLlcEhTlNc7GIh1THA2lPZj/EkHF4m4kWfWXqMZ6qtsDJamT7IVAV2Gq2asMurbvylTZ+CIIIo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782860347; c=relaxed/simple;
-	bh=RamHX0E8wtNsTHcEO/bUX4s5m2cuQqWXNUOO5Jx+0m4=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=gv4LV8+CxYhTHANL8IivxEfTtVblAQzLOvrogpBHg1TCzXoEC8gHswiyiYPlTyi/s2QHUZGlvUzgkd0MaH0r0cRDFLzGnvxGmbaEuEx3mOepkZ85JAyd2usBes+XzMP3a5dEnVIEj3GNS1atPP+tbRQn7qqPMWekrMpoSh7x6IU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WtpuTHuH; arc=none smtp.client-ip=100.103.45.18
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WtpuTHuH"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 715A51F000E9;
-	Tue, 30 Jun 2026 22:59:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782860346;
-	bh=T6wnLUkshLOnOFu8Td4Y9f1tyliE5SHa8xUgdAu8ppc=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=WtpuTHuHk3NR89ILhf3Q/PnSdaILQHb9cQ4OlgJgMVfGLzfS+Vt/rvGDDuzbHCZ9b
-	 H8c+TpyRGS0SG/6jA1US07kywtIJAhflV+J+8yRR5NR5gWqQwD6Z/cdcK1zwHa0xAw
-	 pbXPbqC3zoYr+oWrZH/oqrnSkluZxFQvxW9zyIgy9PUNcfP4YfnDGT/zsIIxoP7i7b
-	 RjMONGPNtk/4RZ64nqlDv3PkFl30mdTFRfmSgt6ShP9YUgctNSxQbYe3W4WjVvfzd+
-	 CQdyg03rbziNAomSfMYR6NXVdFUqXvehpSxpirf0D7pARPHeyD3nou6+TK29ODaLME
-	 esU763llW75xQ==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v5 2/2] scsi: mpt3sas: add hwmon support
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Louis Sautier" <sautier.louis@gmail.com>
-Cc: linux-hwmon@vger.kernel.org, linux-scsi@vger.kernel.org
-In-Reply-To: <20260630224922.2543096-3-sautier.louis@gmail.com>
-References: <20260630224922.2543096-1-sautier.louis@gmail.com>
- <20260630224922.2543096-3-sautier.louis@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 30 Jun 2026 22:59:03 +0000
-Message-Id: <20260630225904.715A51F000E9@smtp.kernel.org>
+	s=arc-20240116; t=1782860352; c=relaxed/simple;
+	bh=7Wguo1ZUvqbxvXsicL8g03KZwVIjlp+iRC2iuUcRVlQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=m3p9019VQsw2domdNOkVVD0fL2ZRdxoqb4QiCavR9Qnk9VEW4gQqIPOkwVoO1txlRFKE4h5RWJO8MH+x537JHgKyD6PhhhOUVoKtGB65IdkYaLcvgsWCmKCCvVT2U531HjADqKc2yzIFCUE49pR8E03wGULAL+WWy+s9PbuOlTA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=goodmis.org; spf=pass smtp.mailfrom=goodmis.org; arc=none smtp.client-ip=216.40.44.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=goodmis.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=goodmis.org
+Received: from omf14.hostedemail.com (lb01a-stub [10.200.18.249])
+	by unirelay10.hostedemail.com (Postfix) with ESMTP id 1064AC077A;
+	Tue, 30 Jun 2026 22:59:02 +0000 (UTC)
+Received: from [HIDDEN] (Authenticated sender: rostedt@goodmis.org) by omf14.hostedemail.com (Postfix) with ESMTPA id 664BF30;
+	Tue, 30 Jun 2026 22:58:57 +0000 (UTC)
+Date: Tue, 30 Jun 2026 18:58:57 -0400
+From: Steven Rostedt <rostedt@goodmis.org>
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: peter.wang@mediatek.com, linux-scsi@vger.kernel.org,
+ martin.petersen@oracle.com, avri.altman@wdc.com, alim.akhtar@samsung.com,
+ jejb@linux.ibm.com, sutoshd@codeaurora.org, wsd_upstream@mediatek.com,
+ linux-mediatek@lists.infradead.org, chun-hung.wu@mediatek.com,
+ alice.chao@mediatek.com, cc.chou@mediatek.com, chaotian.jing@mediatek.com,
+ jiajie.hao@mediatek.com, yi-fan.peng@mediatek.com, qilin.tan@mediatek.com,
+ lin.gui@mediatek.com, tun-yu.yu@mediatek.com, eddie.huang@mediatek.com,
+ naomi.chu@mediatek.com, ed.tsai@mediatek.com, Linux Trace Kernel
+ <linux-trace-kernel@vger.kernel.org>
+Subject: Re: [PATCH v2] ufs: core: add hba parameter to trace events
+Message-ID: <20260630185857.54c55d97@gandalf.local.home>
+In-Reply-To: <16f26ea9-69d6-4f2f-9adc-c576c288a2f5@acm.org>
+References: <20250213113707.955255-1-peter.wang@mediatek.com>
+	<16f26ea9-69d6-4f2f-9adc-c576c288a2f5@acm.org>
+X-Mailer: Claws Mail 3.20.0git84 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+X-Rspamd-Server: rspamout01
+X-Rspamd-Queue-Id: 664BF30
+X-Stat-Signature: uwehtoqqednqhf3zyo5jct5fcbfkhzr8
+X-Session-Marker: 726F737465647440676F6F646D69732E6F7267
+X-Session-ID: U2FsdGVkX1/neeUCV/R9KHhr+SS3nL47b2vY2VzQvkE=
+X-HE-Tag: 1782860337-648722
+X-HE-Meta: U2FsdGVkX19nYBCqwu9Ixhtn09ay8RBzQ10D02bQ6sj9JfNDHi+XUt/BVZ4gGAaXgyyFLsjh8lbrwf4x+RJUcsbgjLoQE+pFkRBoKhPWJonoTwg32+oRA1Y1xvdg4Em/A6mEJW5v6irtqUi3xX04bR0xjgdImMU3GChz6lRzZlbQjRZgzPmzbJRVi1MhHvAAn0d+3nM7OKrXU0ggWrQ4X3YT7vqhxODo/OFhNtsUStSPx97/RBhxC340pR2yjuNo0ObTldNO+0gp2B05+BunahPio2cMJcm0ZCt9ASPRpbaPnS2jeDiNFb8ZTLXet79cxCGTvH5+zIBllavd2ZRAM1TtlB9R5pfMugudoQQQ8tik9aTC7JvqKQ==
 
-> Expose the IOC and board temperature sensors of LSI / Broadcom SAS
-> HBAs through hwmon. Readings come from MPI IO Unit Page 7 via the
-> accessor added in the preceding patch.
->=20
-> The same fields are exposed by Broadcom's userspace tooling
-> through the /dev/mpt[23]ctl ioctl path (typically root-only):
-> IOCTemperature and BoardTemperature in lsiutil; ROC and Controller
-> in storcli. With this driver, sensors(1) shows them unprivileged:
->=20
->   $ sensors mpt3sas-pci-0200
->   mpt3sas-pci-0200
->   Adapter: PCI adapter
->   IOC:          +42.0=C2=B0C
->=20
-> Each channel is gated independently by its *TemperatureUnits field
-> through is_visible(); cards that populate only one sensor expose
-> only one input file, and cards that populate neither do not register
-> an hwmon device.
->=20
-> The hwmon code is gated directly on CONFIG_HWMON. IS_REACHABLE() is
-> used rather than IS_ENABLED() so that SCSI_MPT3SAS=3Dy with HWMON=3Dm
-> still builds; in that configuration, the sensors are not exposed
-> (same pattern as i915 and xe).
->=20
-> Assisted-by: Claude:claude-opus-4-7
-> Signed-off-by: Louis Sautier <sautier.louis@gmail.com>
+On Thu, 13 Feb 2025 09:19:42 -0800
+Bart Van Assche <bvanassche@acm.org> wrote:
 
-Sashiko has reviewed this patch and found no issues. It looks great!
+> On 2/13/25 3:35 AM, peter.wang@mediatek.com wrote:
+> > diff --git a/drivers/ufs/core/ufs_trace.h b/drivers/ufs/core/ufs_trace.h
+> > index 84deca2b841d..2f79982846b6 100644
+> > --- a/drivers/ufs/core/ufs_trace.h
+> > +++ b/drivers/ufs/core/ufs_trace.h
+> > @@ -83,16 +83,18 @@ UFS_CMD_TRACE_TSF_TYPES
+> >   
+> >   TRACE_EVENT(ufshcd_clk_gating,
+> >   
+> > -	TP_PROTO(const char *dev_name, int state),
+> > +	TP_PROTO(struct ufs_hba *hba, int state),
+> >   
+> > -	TP_ARGS(dev_name, state),
+> > +	TP_ARGS(hba, state),
+> >   
+> >   	TP_STRUCT__entry(
+> > -		__string(dev_name, dev_name)
+> > +		__field(struct ufs_hba *, hba)
+> > +		__string(dev_name, dev_name(hba->dev))
+> >   		__field(int, state)
+> >   	),  
+> 
+> Please reduce the size of the tracing entries by removing dev_name from 
+> TP_STRUCT__entry() and by replacing 'dev_name' with 'dev_name(hba->dev)'
+> in the TP_printk() calls.
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260630224922.2543=
-096-1-sautier.louis@gmail.com?part=3D2
+For future references, please do not recommend moving dereferences into the
+TP_printk() callers. Those happen when the event is read by the user and
+the hba pointer may no longer exist.
 
+-- Steve
