@@ -1,126 +1,174 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f41.google.com (mail-wm1-f41.google.com [209.85.128.41])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB40331E82F;
-	Tue, 30 Jun 2026 22:06:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 42F8532B132
+	for <linux-scsi@vger.kernel.org>; Tue, 30 Jun 2026 22:50:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.41
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782857164; cv=none; b=gVH9Kh9bfKPFZp5EWP1jjgqOQzmtTa0cU7F+3kE0QFlv0MBU2HgU+p+UhjCxk11IiQ3UpQ2nT2uhNc/MQ0coaklDJKx6+7Se+A5CkkoaqzXC+gxntvLreLpJ3XgXUU/qf8nKwV3bOcD8noNRbG9iSYwhHZuGgxIPosBK6VDwcnA=
+	t=1782859826; cv=none; b=ifuYdvZ9BgiCuDuZ1+lJ54UBMv5JbSNkJcYUt8fxfhV3k7fOkdMoCPDLWF5IqdGEakNYVvhRBYGkuZ6NEQupwEMhxbhVc6neOrhCUCL1y/wych9lyIsyHxQoLf66pwO8eDbuAf1gzLZZlyJAkE1nBmr7KryY5IPKo65hLCUt+Fc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782857164; c=relaxed/simple;
-	bh=jcLVXZ6J9LDnAuX8C9UUyl1LJIteICftPcbtMybLwbc=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=dAmKLEOkmqsHHh6hGZmohAQelTohPlwR7EdQ4vPGegEl4Lvq/LyfDJ1DQeGSxZ3G67c00BNoK+tC903nzPb8k8pox9hbgtu6EVe3YM/QYUJC6ov9awBOTHqPCi8n6RyvX5daCLbJnVyx9kRdFRhnIrq1cqyTWZCqFx7RL2rkAvY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=Q/Esn+TY; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qualcomm.com
+	s=arc-20240116; t=1782859826; c=relaxed/simple;
+	bh=h0nEkFK5iCINNRXs0tKxBk8KKC+Staf8nUhpt5lNdKw=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=oTebVlMXuF9hVRAbiKgMWFPxWZEpbouHQyIfSFmNvnVo7H9SdNFN7aVPRaPZXU66Cs51fuR0m15Re/9x5jAItQ2/S0t0lgW3VHMxJX3FLrcicB4+yo3zwEfC5+coARaWdZeuqhIvxOK/6Hx/r3q7a9yT3++LasPdFuDsvf+o8aQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=L/7CJw2f; arc=none smtp.client-ip=209.85.128.41
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="Q/Esn+TY"
-Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 65UJDc3b2920057;
-	Tue, 30 Jun 2026 22:05:44 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:date:from:message-id:mime-version
-	:subject:to; s=qcppdkim1; bh=MVLf5yOGlF0Qr/w2ariyhwbRiWxtWVXLgjV
-	lJr+nzYg=; b=Q/Esn+TYH7Nn6YXyZQ1V3Vs/2mmO1uc8CYlm+vuJx/AbuXmx7/2
-	ZDuRUwXns/lXpQGN8SJyek1oAxG3pVxvXzlAFZjKbZs510PzMhb6TU6D/SLxMSeL
-	Gy7TmB3TRgCY3LIicya3JlhRTJ7nMQLnfSkZh+dn4FuAJ311TYtqlpatUa4UFPpM
-	3/Yv5x2S4RWaIXJzEJxB2MEnYwr9577v5+2qWVmpx4Hp1HyZOEH/CC7q8vgfCySZ
-	DhlWLRS1PyQKWy5mvQpT72+NuJLmqrFUOWey7Qvl5xLMGiVhbJkP1paev6YWbmg+
-	+inSMblD9bDaYzS/3xMXLAtHeQ8v73nw18A==
-Received: from apblrppmta02.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.18.19])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4f4jvw8us1-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 30 Jun 2026 22:05:43 +0000 (GMT)
-Received: from pps.filterd (APBLRPPMTA02.qualcomm.com [127.0.0.1])
-	by APBLRPPMTA02.qualcomm.com (8.18.1.7/8.18.1.7) with ESMTP id 65UM5eAe003657;
-	Tue, 30 Jun 2026 22:05:40 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-	by APBLRPPMTA02.qualcomm.com (PPS) with ESMTPS id 4f27kjw6jn-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 30 Jun 2026 22:05:40 +0000 (GMT)
-Received: from APBLRPPMTA02.qualcomm.com (APBLRPPMTA02.qualcomm.com [127.0.0.1])
-	by pps.reinject (8.18.1.12/8.18.1.12) with ESMTP id 65UM5eWT003649;
-	Tue, 30 Jun 2026 22:05:40 GMT
-Received: from hu-devc-hyd-u22-c.qualcomm.com ([10.213.101.157])
-	by APBLRPPMTA02.qualcomm.com (PPS) with ESMTPS id 65UM5dgA003646
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 30 Jun 2026 22:05:40 +0000 (GMT)
-Received: by hu-devc-hyd-u22-c.qualcomm.com (Postfix, from userid 2342877)
-	id 3A85362B; Wed,  1 Jul 2026 03:35:39 +0530 (+0530)
-From: Nitin Rawat <nitin.rawat@oss.qualcomm.com>
-To: krzk+dt@kernel.org, robh@kernel.org, andersson@kernel.org, mani@kernel.org,
-        alim.akhtar@samsung.com, bvanassche@acm.org, avri.altman@wdc.com,
-        conor+dt@kernel.org
-Cc: linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-scsi@vger.kernel.org,
-        Nitin Rawat <nitin.rawat@oss.qualcomm.com>
-Subject: [PATCH V1] scsi: ufs: dt-bindings: Document the Maili UFS Controller
-Date: Wed,  1 Jul 2026 03:35:36 +0530
-Message-Id: <20260630220536.3803984-1-nitin.rawat@oss.qualcomm.com>
-X-Mailer: git-send-email 2.34.1
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="L/7CJw2f"
+Received: by mail-wm1-f41.google.com with SMTP id 5b1f17b1804b1-493bfe9f886so91135e9.0
+        for <linux-scsi@vger.kernel.org>; Tue, 30 Jun 2026 15:50:25 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1782859824; x=1783464624; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=1MCTcDd/YFCbUyBVWxYxg2TqJHV+16IIRIXuz+3T4+4=;
+        b=L/7CJw2f07dJw6Hzr/oDiupaYSd8Y7hR/FVYulMU6DuuVBMzueLTIaugZjS+vjgWnI
+         pBpawlivoQ8V9sLg8qobAPlQEC/xyCfwAfevJv+v4F6ZR3S+VwSuYNUHJMX+m8D+WyNr
+         3jrS0koCcrdL691UiL8DlIs4+vXlsIw5NyydzdOEia9bzDOINmBlewVEvllBU6z2dvya
+         8R+sVUWywv1DpjSAPBG3bQoNFDnURIPKBJRuJDk3BUKRzboakpvK+HnzHpud+EFgmohq
+         Vg1SZQ3FNAeyo7A4q6S2ZBuTCVnyW+AQASr1c/A+D+TFWhFzOCtRvUAi4vH+OB5+Tvv9
+         B5fw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1782859824; x=1783464624;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=1MCTcDd/YFCbUyBVWxYxg2TqJHV+16IIRIXuz+3T4+4=;
+        b=NyEGY555guBwUEJ/pJd53xH2SZw8fPiChXBvU7zpGX8Yrx1DQ/eDQOGtzAVkc5+fAk
+         j5uMMR1oO3M//OBDNiYmDmmjHJFTEiJGDU9mwwDCKHAMxivioMzpcSgv4bZadKTiaDjD
+         fZ9LiEAkdFQUT0M76ijNx3Zlgz9JwB6SDvfcRmKDFFLXcoltCUTlDuaPEVik+jcGj/dh
+         Vppb2qehfSp7liqfiUQs/qW/BqblUQEC73H9Z4Vq8FjWOUu+eRJNzDgjbEY2qGj9ZmS1
+         yvoK4o/DY9GAhkXudSCjVA9fQENjLc5pCJP4tPE8XqElEzbpmJJkCHRDP2XEdK4e5ylL
+         ogxA==
+X-Forwarded-Encrypted: i=1; AFNElJ+Wh3uRVYMRvrYG4UWEOCwhfOn8TPvKWVXNVXvFtB1z0svy7uN6r+qRPny26wRVse4YJsaxKXHZqauh@vger.kernel.org
+X-Gm-Message-State: AOJu0Yz1JsJ3O8wjn6iD0MSveQE4tflw58se+rtd6UmCQCWm43hE80bW
+	uNpUXLvfWd1M7mENbmHNGgop0r78EhCUljQNJD0AovmHaca/72Tw1oSH
+X-Gm-Gg: AfdE7cnzASxwNX35v9rJvAGPJ63aBwuDYxEFsV84xcLv+YwwLvc8BMi5f2sGeMncasv
+	8vNaggFkaS1h77mBxpkkq6TnEQ7Cf4BPvJo0nVcotN6aZ0ZvTMowfL+kx7ppRjFREze7nt6Udhn
+	MA4tawJhsMBJKrCeyjU1mTI5i84Llqdx/3zwftrlmaoZBKudFGkHEefagJslQ1ryOw7N99CYLbq
+	x8sErMt+Os7LHwfFtoylyNyApcDcZs/wN1IY5NWP+xUIYKWmQBn4xN5J64V+Df6ovQ0YBWp+aWV
+	PfKHy1RGY1MwIyHZ5QivbYo/U+BAwh4ZShFWcSxHtFTxQ8h2YtyyRKErB+8SJD/SKoOjHn2nm3y
+	FdWZicmJnxGHpXZbtr1mTlgiYKQ4f7bTZnE4d2GHkkM581bE24QEz0xhjrIZL1u5/1dDQ/tXLNf
+	RJdfat9wY=
+X-Received: by 2002:a05:600c:4e8f:b0:492:67df:3dfa with SMTP id 5b1f17b1804b1-493bda87dffmr35891265e9.34.1782859823475;
+        Tue, 30 Jun 2026 15:50:23 -0700 (PDT)
+Received: from localhost ([2603:c027:c000:3cde::f])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-493be81fca5sm31793945e9.14.2026.06.30.15.50.22
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 30 Jun 2026 15:50:22 -0700 (PDT)
+From: Louis Sautier <sautier.louis@gmail.com>
+To: Sathya Prakash <sathya.prakash@broadcom.com>,
+	Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+	Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>,
+	Ranjan Kumar <ranjan.kumar@broadcom.com>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Guenter Roeck <linux@roeck-us.net>,
+	MPT-FusionLinux.pdl@broadcom.com,
+	linux-scsi@vger.kernel.org,
+	linux-hwmon@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Damien Le Moal <dlemoal@kernel.org>
+Subject: [PATCH v5 0/2] scsi: mpt3sas: add hwmon support
+Date: Wed,  1 Jul 2026 00:49:20 +0200
+Message-ID: <20260630224922.2543096-1-sautier.louis@gmail.com>
+X-Mailer: git-send-email 2.54.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-QCInternal: smtphost
-X-QCInternal: smtphost
-X-Proofpoint-ORIG-GUID: vgpb_EijJ1YQtl4DTOwwUQ5uszEZGn3z
-X-Proofpoint-Spam-Info: AW1haW4tMjYwNjMwMDIxNSBTYWx0ZWRfX43w3TIk5OBCN
- ooDNXQgQwK7ypT9U0YXMQ12U7spI+DwpZK0DZAutzq8h5U0+E2TB2Nw4CjG6IUCp2J2gZpvJCtU
- WoHf3oHFag3H26rzt6yp991f6bl0X4k=
-X-Authority-Analysis: v=2.4 cv=JKgLdcKb c=1 sm=1 tr=0 ts=6a443db7 cx=c_pps
- a=Ou0eQOY4+eZoSc0qltEV5Q==:117 a=Ou0eQOY4+eZoSc0qltEV5Q==:17
- a=FelO9ux0wxsA:10 a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22
- a=rJkE3RaqiGZ5pbrm-msn:22 a=EUspDBNiAAAA:8 a=dkR0I6OD3irOzcp_LXMA:9
-X-Proofpoint-GUID: vgpb_EijJ1YQtl4DTOwwUQ5uszEZGn3z
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNjMwMDIxNSBTYWx0ZWRfX1RrUFYaS+RhY
- DB7/JKdUEKKSxmhB417LRhk9mvE1SrUQ/XfQWHwTcuyytIgKNmmj9HPHy6UiXQH7AtvFO2IbR+b
- rQk4ObQmFTKb3rgz3GRpIiRxsNlHRSUoE+qWuZNRscTvkymY15PcxuDHRlB8C8oq5ZtQ/dW8p7e
- 8TtFhfeONJLSfb8kiRHMBalaNKosRPb86b8kgK2MHAP7bPDTmzfTcFKFqGZEAmXwdxmWPvfx83a
- NHT+BzPMfc28t1u0sBFrONBmkCS5GElaNQdkyoLEjiIY4SbejL89MBGgCFUT62j6MaBc1BedGoB
- yVnvXEFWht70VNg/8uYfyMCDNLaGBdcTSsCPmM5xzSabhocpNnsEJzX2YbX4APEq/5n0e9+2u8O
- TNVJecUQL+kc3bGUo8K+lBgF7mjn4blyFek7zfQk7qpdJKO0K4jDquj57VUMQV7DDIVWtWdiXra
- AULzjz7ZgzljBEYU9xQ==
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.125,FMLib:17.12.100.49
- definitions=2026-06-30_05,2026-06-26_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- lowpriorityscore=0 priorityscore=1501 suspectscore=0 clxscore=1011
- malwarescore=0 impostorscore=0 adultscore=0 phishscore=0 spamscore=0
- bulkscore=0 classifier=typeunknown authscore=0 authtc= authcc= route=outbound
- adjust=0 reason=mlx scancount=1 engine=8.22.0-2606150000
- definitions=main-2606300215
 
-Document the UFS Controller on Maili SoC.
+Expose the IOC and board temperature sensors of LSI / Broadcom / Avago
+SAS HBAs that bind to mpt3sas through the hwmon interface. The data
+lives in MPI IO Unit Page 7.
 
-Signed-off-by: Nitin Rawat <nitin.rawat@oss.qualcomm.com>
----
- Documentation/devicetree/bindings/ufs/qcom,sm8650-ufshc.yaml | 2 ++
- 1 file changed, 2 insertions(+)
+The same fields are exposed by Broadcom's userspace tooling through
+the /dev/mpt[23]ctl ioctl path (typically root-only): IOCTemperature
+and BoardTemperature in lsiutil; ROC and Controller in storcli.
+With this driver, sensors(1) shows them unprivileged:
 
-diff --git a/Documentation/devicetree/bindings/ufs/qcom,sm8650-ufshc.yaml b/Documentation/devicetree/bindings/ufs/qcom,sm8650-ufshc.yaml
-index b441f0d26081..fea89e522f35 100644
---- a/Documentation/devicetree/bindings/ufs/qcom,sm8650-ufshc.yaml
-+++ b/Documentation/devicetree/bindings/ufs/qcom,sm8650-ufshc.yaml
-@@ -18,6 +18,7 @@ select:
-           - qcom,eliza-ufshc
-           - qcom,hawi-ufshc
-           - qcom,kaanapali-ufshc
-+          - qcom,maili-ufshc
-           - qcom,nord-ufshc
-           - qcom,sm8650-ufshc
-           - qcom,sm8750-ufshc
-@@ -31,6 +32,7 @@ properties:
-           - qcom,eliza-ufshc
-           - qcom,hawi-ufshc
-           - qcom,kaanapali-ufshc
-+          - qcom,maili-ufshc
-           - qcom,nord-ufshc
-           - qcom,sm8650-ufshc
-           - qcom,sm8750-ufshc
---
-2.34.1
+  $ sensors mpt3sas-pci-0200
+  mpt3sas-pci-0200
+  Adapter: PCI adapter
+  IOC:          +42.0°C
+
+v4 -> v5:
+  v4: https://lore.kernel.org/r/20260613023833.3163507-1-sautier.louis@gmail.com
+  * In mpt3sas_hwmon_register(), read IO Unit Page 7 and test sensor
+    presence before allocating, so the no-sensor and error paths no
+    longer allocate and free (Damien Le Moal).
+  * Added Damien Le Moal's Reviewed-by to patch 2.
+
+v3 -> v4:
+  v3: https://lore.kernel.org/r/20260524210545.1333637-1-sautier.louis@gmail.com
+  v3 (resend): https://lore.kernel.org/r/20260609164423.2829699-1-sautier.louis@gmail.com
+  * Dropped the SCSI_MPT3SAS_HWMON Kconfig option as suggested by
+    Damien Le Moal; the hwmon code is now built whenever CONFIG_HWMON
+    is enabled. Used IS_REACHABLE() rather than IS_ENABLED() so
+    SCSI_MPT3SAS=y with HWMON=m still builds, same pattern as i915/xe.
+  * No line breaks after function return types; aligned multi-line
+    call arguments to the opening parenthesis (Damien Le Moal).
+  * Dropped unused #include <linux/kernel.h> from mpt3sas_hwmon.c.
+  * Added Damien Le Moal's Reviewed-by to patch 1.
+
+v2 -> v3:
+  v2: https://lore.kernel.org/r/20260518184109.770185-1-sautier.louis@gmail.com
+  * Removed stale Documentation/hwmon/mpt3sas.rst reference from
+    Kconfig help text.
+
+v1 -> v2:
+  v1: https://lore.kernel.org/r/20260512214703.655633-1-sautier.louis@gmail.com
+  * Dropped misleading Documentation/hwmon/mpt3sas.rst.
+  * Dropped inaccurate concurrency-wait figure from Testing;
+    corrected empirical data is in the on-list discussion.
+
+Testing
+-------
+
+Build-tested all four SCSI_MPT3SAS x HWMON combinations (=y and =m
+each), including the SCSI_MPT3SAS=y with HWMON=m case that requires
+IS_REACHABLE().
+
+Validated across three Broadcom SAS chip generations. None of the
+cards had a board sensor present, so the testing only covers the
+IOC channel:
+
+  * LSI 9500-8i / SAS3816, SAS-3:
+    - hwmon device registers as "mpt3sas" with only temp1 (IOC) exposed
+    - IOC reading matches `storcli /c0 show temperature` and
+      `lsiutil -p1 -a 25,2,0,0`
+    - rmmod / modprobe cycle goes through the explicit
+      unregister/register paths cleanly
+
+  * LSI 9305-24i / SAS3224, SAS-3: same behaviour.
+
+  * LSI 9211-4i / SAS2004, SAS-2: firmware reports both
+    *TemperatureUnits = NOT_PRESENT, no hwmon device registered
+    (graceful-skip path).
+
+Not verified (no available hardware):
+  * Path with both IOC and board sensors present.
+  * Fahrenheit-units conversion.
+  * Sub-zero readings (signed-cast path).
+
+Louis Sautier (2):
+  scsi: mpt3sas: add IO Unit Page 7 config accessor
+  scsi: mpt3sas: add hwmon support
+
+ drivers/scsi/mpt3sas/Makefile         |   2 +
+ drivers/scsi/mpt3sas/mpt3sas_base.h   |  20 +++
+ drivers/scsi/mpt3sas/mpt3sas_config.c |  36 +++++
+ drivers/scsi/mpt3sas/mpt3sas_hwmon.c  | 191 ++++++++++++++++++++++++++
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c  |   6 +
+ 5 files changed, 255 insertions(+)
+ create mode 100644 drivers/scsi/mpt3sas/mpt3sas_hwmon.c
+
+
+base-commit: 5d6919055dec134de3c40167a490f33c74c12581
+-- 
+2.54.0
 
