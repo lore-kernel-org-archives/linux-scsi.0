@@ -1,112 +1,125 @@
-Received: from mail-pj1-f47.google.com (mail-pj1-f47.google.com [209.85.216.47])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 76F5936C5B2
-	for <linux-scsi@vger.kernel.org>; Tue, 30 Jun 2026 01:34:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.47
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E7BF723EAA4
+	for <linux-scsi@vger.kernel.org>; Tue, 30 Jun 2026 01:46:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782783284; cv=none; b=VhKK0wkqHtf7GMxUyZQOeuEprahi1aTrmWxPCW96vEhKbuWF80uKhcQWrOpUBQ5d9lSPrfrhoLXC6KZy5jz8AXYU/qWnlIlHTn1Lz4vpWLz/p+m6xy6Y0UMtAyvhv/qBqvrmEntp7OUyzqvh0YQ3CK862/b1ZoLumrQEmAEl8JI=
+	t=1782784011; cv=none; b=tu6M1B4QdhpwGvlbdn5KGjrGBTdOTmEzGdliJUWjp9YlCl9pU+yj/jmrqIWJPqJEcJGyyA8BXs7HNWapGuzR+OSXBK40I+WkUhHhdCQnNeFzap3mxHmQP6kaIY/VMT4Zm1TkcdbVrF/8FFjnJ9VqpbxqaM4Hi88td4Z4T39kUV8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782783284; c=relaxed/simple;
-	bh=M0x7ksqF1OMobob8QYasLaMDrkw6TbUAJfO9UeaK1js=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=QrQIHZcC/T4GMr8re/tfGJFa0Cg17ADtsLiazcTFDkIDTIuzS/urH2kKMKvZYFDjCSIUDGlo5bsLoZDjw804+s4Ogi2Vj2FFgB5l9xNozJ2mcCpnJW3d/zDSMnSGwH6DSRBQmMT9KtWBe9P67KQANbHrVaU5nwTQbXhZv6zBvGQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=sfyzyys+; arc=none smtp.client-ip=209.85.216.47
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1782784011; c=relaxed/simple;
+	bh=XS7i39L+hJ3KCEGCAaemw4jzonJsUp3jy/RvCKJ+hZM=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=hSPQCyvR7jVvrEEBdEFVONMQrDO40+MSw4+AibHyFtM/hHpNgQaJ1BPl7F7W/EjwqzQZMpxX3mxLKp+EmEOSO9kzE2dbStKYIMROdjLUcWQVQv8HpxB1DeF5v2Seh1ueF/27na9nkzMcNUCgJNpV86d3Y9wp8kNAKI4E6MAHFks=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZdojyJr2; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="sfyzyys+"
-Received: by mail-pj1-f47.google.com with SMTP id 98e67ed59e1d1-37defb2f231so2181894a91.2
-        for <linux-scsi@vger.kernel.org>; Mon, 29 Jun 2026 18:34:36 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1782783276; x=1783388076; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=9o2XNaTTYZWbLNFTbe76krv28sOX5tvFe5ixGZcwWY4=;
-        b=sfyzyys+29KC5Ps7UoFVXWvflb5/iTRIHJZaI5tgVllFEYOonDpFUYZwrWLOfENinV
-         H6nlfSOGvgH1nKCZaKV7a8tqLYIpEQ9odPAtro/eS62eqX6/kyCOzSy6zJMwh3sUpaS3
-         wFmLfUvuMrXDpEgw6W+oriOPrSZF0cWhs06a8wfZB83psDjtNmIOWK8ztGZcjVgZIrgk
-         ZDWsF73XEN6igEgyXoAcVLZ7IJvUEW6/DCtEm4StvCfP/vPJny6kc4uoN5BT/2zRcDcG
-         MlC01nOlJ7tMPd+EvXnCgGvFUlftZ3UN7cRk4AcNlob1rySFpD/3OAxoE+izuPlP3liw
-         G0+g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1782783276; x=1783388076;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=9o2XNaTTYZWbLNFTbe76krv28sOX5tvFe5ixGZcwWY4=;
-        b=B0gt1/s35wsxg7zHNB3zsGY+SV4qB5YjbCh8FBuFG34HqH6I6bZm9QfvOV90xmcnuO
-         L15UOTX5od+KssI8tDyM2CizvQZarLSTOnpoomgYmBeq4aFfe2Tvkr/6SeJRLKnIFiVT
-         S/PDRJBybz+iJUEm106NzVUpWb+hcS+LMGt/MDT2C5b+RkIuruE7ArsCHS+ooc1ix8Nx
-         xYV3xunA46P6+kJ8ngj7LaGTUgyYhR6ulG9A6wb31FU8YB2ulipA0Nc02x78wZlz0jyk
-         xBlQLYHRYEKaiMt9MN/6843AdB7VnUsuXZy2nfWjN1Kg/z9SM4KURkRbPd2Za8cWUkI9
-         c9ZA==
-X-Gm-Message-State: AOJu0Yx6OIppHTYaF1OSnTxFkx6mppEQefYzagwog7dDNazJbM4svrlz
-	anCiBqkIjL3WiFOC1+9FbhXmgjmc4xZAtpIlIPE0n4WQBTEbNCd++3cAlb0a+F54
-X-Gm-Gg: AfdE7ckSYRYU4344bfAyMkUqeAog0Yv4yAPm6ts8NjTkEenNe50w6NA45uMnnBEZNw6
-	FX9pv7FzMxSFfqrVUXWd74+XYiOJ7sQa2ifjPfv00l2meVWsxoL15+SzQ1NXRgQBeq5VTKgHv85
-	j3X7/Oxk9aeq+4cEW6mp97mXStaYLIxD7PdEK6TWTpyPhKFuGJeP6aOfyR7aNxdTx1s3t+yVpxA
-	qSKEqUNc0FUYTdTOSQuO7SWinuignodTtcfP5bHUEeSSpO2GJeAhs5xLuaOFU/s0MIkUoeeAZcy
-	RBlfKf2ETn82y9RjXi4kX609sKdsH6BdkdZPZcXWPWJHzCzHfwkaBghRRFXzQFin7DyAoaEKKPt
-	64F/E4BfjUwVudncjj/e/a/ZB+0OsTZ0fW4lGPQXtR/Covq7BkdH0i59n2q2yQ+K0O7xwwxammI
-	d+IjBimNbadRxpGrDYTuxNI18zwE/BmSoxwfq5LHsfc2wgS+RszOtg9UqljBxONQJaQoyWCrs/M
-	5VV1BpkjQ==
-X-Received: by 2002:a17:90b:1646:b0:37f:f4ae:5f25 with SMTP id 98e67ed59e1d1-380527a83famr1164028a91.20.1782783275845;
-        Mon, 29 Jun 2026 18:34:35 -0700 (PDT)
-Received: from ryzen.lan ([2601:644:8000:7a86::e34])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3805340870dsm636162a91.11.2026.06.29.18.34.34
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 29 Jun 2026 18:34:35 -0700 (PDT)
-From: Rosen Penev <rosenp@gmail.com>
-To: linux-scsi@vger.kernel.org
-Cc: Sathya Prakash <sathya.prakash@broadcom.com>,
-	Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-	Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>,
-	Ranjan Kumar <ranjan.kumar@broadcom.com>,
-	MPT-FusionLinux.pdl@broadcom.com (open list:LSILOGIC MPT FUSION DRIVERS (FC/SAS/SPI)),
-	linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH] message: fusion: remove unused variable 'timeleft' in mptsas_issue_tm()
-Date: Mon, 29 Jun 2026 18:34:33 -0700
-Message-ID: <20260630013433.1518025-1-rosenp@gmail.com>
-X-Mailer: git-send-email 2.54.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZdojyJr2"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2DBFD1F000E9;
+	Tue, 30 Jun 2026 01:46:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1782784009;
+	bh=pWgppGSksOk1PBizOLzFnhEg7mx7nS15JA3PEZIFIOo=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=ZdojyJr2+jdRpL+lHhaHZT6pqmoQH4eR0f65Ze35rQ+BqVHpfe2AJHWhkoNreP7kA
+	 CONdZVlmJyulEinvTkPhnZGXXuhYTslf2sgE1YvWpnkE1uyLAO0NMOIOFGoYEcaUG+
+	 4+hNhqXWb+bH6UEvs9E042L720SWpcsH16SYo4jutHVkR7a6QSeznuV5J3Xm9Rt8Po
+	 W6e0usxTgwJXfP0bh6HIb9sSRhgVnswg+TqvwbqEeDdVXLSApswzEhLhX08U8MxXLs
+	 yvfInv+7wduKraRpfTEvzEJcf3utC6ptDZ3/WC3ZAE5bCjf4E4bJqhpy3gbmXNeZiR
+	 Xv/VSMSfrQ1fQ==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] message: fusion: remove unused variable 'timeleft' in
+ mptsas_issue_tm()
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Rosen Penev" <rosenp@gmail.com>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20260630013433.1518025-1-rosenp@gmail.com>
+References: <20260630013433.1518025-1-rosenp@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Tue, 30 Jun 2026 01:46:48 +0000
+Message-Id: <20260630014649.2DBFD1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-timeleft is assigned from wait_for_completion_timeout() but never read;
-the function checks ioc->taskmgmt_cmds.status flags instead. Remove it
-to fix a -Wunused-but-set-variable warning.
+Thank you for your contribution! Sashiko AI review found 3 potential issue(=
+s) to consider:
 
-Assisted-by: Opencode:BigPickle
-Signed-off-by: Rosen Penev <rosenp@gmail.com>
----
- drivers/message/fusion/mptsas.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+Pre-existing issues:
+- [High] Missing Completion Reinitialization
+- [High] DMA Use-After-Free / Hardware Race on Timeout
+- [High] Data Race / IRQ Synchronization due to ignored timeout return
+--
 
-diff --git a/drivers/message/fusion/mptsas.c b/drivers/message/fusion/mptsas.c
-index c362f09a8c55..82ac24bf780f 100644
---- a/drivers/message/fusion/mptsas.c
-+++ b/drivers/message/fusion/mptsas.c
-@@ -4787,7 +4787,6 @@ mptsas_issue_tm(MPT_ADAPTER *ioc, u8 type, u8 channel, u8 id, u64 lun,
- 	MPT_FRAME_HDR	*mf;
- 	SCSITaskMgmt_t	*pScsiTm;
- 	int		 retval;
--	unsigned long	 timeleft;
- 
- 	*issue_reset = 0;
- 	mf = mpt_get_msg_frame(mptsasDeviceResetCtx, ioc);
-@@ -4823,7 +4822,7 @@ mptsas_issue_tm(MPT_ADAPTER *ioc, u8 type, u8 channel, u8 id, u64 lun,
- 	mpt_put_msg_frame_hi_pri(mptsasDeviceResetCtx, ioc, mf);
- 
- 	/* Now wait for the command to complete */
--	timeleft = wait_for_completion_timeout(&ioc->taskmgmt_cmds.done,
-+	wait_for_completion_timeout(&ioc->taskmgmt_cmds.done,
- 	    timeout*HZ);
- 	if (!(ioc->taskmgmt_cmds.status & MPT_MGMT_STATUS_COMMAND_GOOD)) {
- 		retval = -1; /* return failure */
--- 
-2.54.0
+commit 923c21ded0be34230873d9e6304fc7cf76180fab
+Author: Rosen Penev <rosenp@gmail.com>
 
+message: fusion: remove unused variable 'timeleft' in mptsas_issue_tm()
+
+This patch removes the timeleft variable from mptsas_issue_tm(), which was
+assigned the result of wait_for_completion_timeout() but never read. The=20
+function instead relies on ioc->taskmgmt_cmds.status flags to determine if
+the command completed successfully.
+
+> diff --git a/drivers/message/fusion/mptsas.c b/drivers/message/fusion/mpt=
+sas.c
+> index c362f09a8c555..82ac24bf780fc 100644
+> --- a/drivers/message/fusion/mptsas.c
+> +++ b/drivers/message/fusion/mptsas.c
+[ ... ]
+> @@ -4823,7 +4822,7 @@ mptsas_issue_tm(MPT_ADAPTER *ioc, u8 type, u8 chann=
+el, u8 id, u64 lun,
+>  	mpt_put_msg_frame_hi_pri(mptsasDeviceResetCtx, ioc, mf);
+> =20
+>  	/* Now wait for the command to complete */
+> -	timeleft =3D wait_for_completion_timeout(&ioc->taskmgmt_cmds.done,
+> +	wait_for_completion_timeout(&ioc->taskmgmt_cmds.done,
+>  	    timeout*HZ);
+
+[Severity: High]
+This isn't a bug introduced by this patch, but ioc->taskmgmt_cmds.done
+doesn't appear to be reinitialized via reinit_completion() before waiting.
+
+If a previous command timed out and is later completed by a delayed
+interrupt or a host reset, the completion object's internal counter would
+increment. Does this cause the next call to wait_for_completion_timeout()
+to return instantly by consuming the stale event, before the new command
+completes?
+
+[Severity: High]
+This is a pre-existing issue, but removing the timeleft variable entrenches
+a potential data race by continuing to ignore the timeout return value.
+
+If wait_for_completion_timeout() times out, could the waking thread bypass
+the complete() synchronization barrier? If mptsas_taskmgmt_complete() sets
+MPT_MGMT_STATUS_COMMAND_GOOD concurrently before memcpy() finishes copying
+to the reply buffer, checking the status directly without verifying the
+timeout return value might cause the code to read the reply buffer while
+memcpy() is actively mutating it.
+
+>  	if (!(ioc->taskmgmt_cmds.status & MPT_MGMT_STATUS_COMMAND_GOOD)) {
+>  		retval =3D -1; /* return failure */
+>  		dtmprintk(ioc, printk(MYIOC_s_ERR_FMT
+>  		    "TaskMgmt request: TIMED OUT!(mr=3D%p)\n", ioc->name, mf));
+>  		mpt_free_msg_frame(ioc, mf);
+
+[Severity: High]
+This isn't a bug introduced by this patch, but on a timeout, the message
+frame is returned to the free pool via mpt_free_msg_frame() before the
+hardware is halted.
+
+Could another thread allocate the same message frame for a new command
+while the un-reset hardware still performs delayed DMA reads or writes on
+it, leading to memory corruption or firmware crosstalk?
+
+>  		if (ioc->taskmgmt_cmds.status & MPT_MGMT_STATUS_DID_IOCRESET)
+>  			goto out;
+>  		*issue_reset =3D 1;
+>  		goto out;
+>  	}
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260630013433.1518=
+025-1-rosenp@gmail.com?part=3D1
