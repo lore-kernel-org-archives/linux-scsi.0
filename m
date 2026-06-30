@@ -1,142 +1,106 @@
-Received: from smtpout-02.galae.net (smtpout-02.galae.net [185.246.84.56])
+Received: from relay.yourmailgateway.de (relay.yourmailgateway.de [188.68.63.166])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F2EFD3E9C06;
-	Tue, 30 Jun 2026 10:28:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.246.84.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3B5373F39E3
+	for <linux-scsi@vger.kernel.org>; Tue, 30 Jun 2026 10:32:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=188.68.63.166
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782815306; cv=none; b=hbSUzlTol04hqGZfDIm8UWXptV6JnX+w0A3E12FuKB9dLSfyWRd8lAHq3AAcSj5BXtCFBNo/MMRChUJFAbQxaGQF0sJT9fBhWj1YTCzhB2sUImq1Ba9DKifrJwe6JX4ORneC3fKbuOdPfsKII+NwqX7ovn+jTP4PTUyMBJIwbEU=
+	t=1782815526; cv=none; b=fwwsTYXlE0kM8Og46MZrhFPXvKcq9COJeJ7zHNEUhPhXXwr2RWJpAlb5zC0CBoZjV4tzKhxSfhLlcx/aai/oPb3ZAmGJCi5XWnwuVLMNJyiCHeEzdEHVdEI6q0h2QUqA324Xe6gtgshLSNsBhehpIOP1ZOaN7XPHu037jeZ2Wlg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782815306; c=relaxed/simple;
-	bh=iAQY6TCrDj8LfUpuZjFjTTB1GWYcGsCqzNYYlW2+uJs=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=lhVjjmoLxKvPYoNT0q50jxlax9I2ppu31sM2+jMsAxyx2DXfabqXvRH4JhjLqRKp7k7WqFHhPIaopvg4t0ArAeWP4j2ugEit2ZZ3bdM1PYDY/ykBvZWJiQ/+euNdma+vT9XtjYTNWPXGcXL88YbslbSR0xQ6wRRA3HI4eKVg9m0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=A5lRI0nm; arc=none smtp.client-ip=185.246.84.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bootlin.com
+	s=arc-20240116; t=1782815526; c=relaxed/simple;
+	bh=dMKciSBThW0e2xkPZQlDrg/wfU9MCZS/KNgoTfIDdKg=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=M5isRgmaiz5RolgZCj2rtm/57SHs/dZXYhrmvepsvmqeQF2Sxw5f3vdI3nQQE4liogsbzV/QDpeprXQA7QlfrB9nqO3McWS9H6VldFyf7mNieyeTCxbO1YcE4IxhkxnzkwhaA1QWPU6w4eRaXL9L5FASwXw4kwOktWrllA7/6Ic=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=leemhuis.info; spf=pass smtp.mailfrom=leemhuis.info; dkim=pass (2048-bit key) header.d=leemhuis.info header.i=@leemhuis.info header.b=fMyjjTFK; arc=none smtp.client-ip=188.68.63.166
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=leemhuis.info
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=leemhuis.info
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="A5lRI0nm"
-Received: from smtpout-01.galae.net (smtpout-01.galae.net [212.83.139.233])
-	by smtpout-02.galae.net (Postfix) with ESMTPS id ADC421A0C75;
-	Tue, 30 Jun 2026 10:28:23 +0000 (UTC)
-Received: from mail.galae.net (mail.galae.net [212.83.136.155])
-	by smtpout-01.galae.net (Postfix) with ESMTPS id 7AC176025A;
-	Tue, 30 Jun 2026 10:28:23 +0000 (UTC)
-Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id 5D3C1106F1D96;
-	Tue, 30 Jun 2026 12:28:22 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=dkim;
-	t=1782815302; h=from:subject:date:message-id:to:cc:mime-version:content-type:
-	 content-transfer-encoding:in-reply-to:references;
-	bh=+45Kh3Satp3HBEK6If/oF4JoJaoBdx7zAqswznQZd8E=;
-	b=A5lRI0nmyKuAE7DExkUqwE3nvY8dreV4gtcQPOB0GX52Cj+7BpicSwuwNtlHwCRNZ9KnH4
-	JV3sNbXy6IiTZXvoyl+h+64ra9dtRJps61BbP4ADeCteWmLtvWPzxdyrF9/bImWU5Qan0t
-	zsk22dgw27mXa9URexNbfMuMCBr86TlrhX26gDbVyVbfY2NOgcKbCrIE64i3an4C046AAD
-	kFvkgF4G9TKP+tJ2DUzfrG/afQCVNxVONsGPeMh5W74SOTgWMXnxN7E/J3wJwoJEL8VK4I
-	VZDN+xWCWJ3qtue/K3BoRq6c+pH+SARBEnjlbpHeChQ4oIcvovKtfkeOYxwkYQ==
-From: Gregory CLEMENT <gregory.clement@bootlin.com>
-To: sashiko-reviews@lists.linux.dev
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-rt-devel@lists.linux.dev
-Subject: Re: [PATCH] scsi: ufs: core: Avoid sleeping in hard interrupt
- context when PREEMP_RT is enabled.
-In-Reply-To: <20260630102343.728131F000E9@smtp.kernel.org>
-References: <20260630-ufshcd-spinlock-sleep-fix-v1-1-339b05a1c6f4@bootlin.com>
- <20260630102343.728131F000E9@smtp.kernel.org>
-Date: Tue, 30 Jun 2026 12:28:21 +0200
-Message-ID: <878q7wb9ve.fsf@BLaptop.bootlin.com>
+	dkim=pass (2048-bit key) header.d=leemhuis.info header.i=@leemhuis.info header.b="fMyjjTFK"
+Received: from mors-relay-8202.netcup.net (localhost [127.0.0.1])
+	by mors-relay-8202.netcup.net (Postfix) with ESMTPS id 4gqK7g5T7Sz47qr;
+	Tue, 30 Jun 2026 12:26:39 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=leemhuis.info;
+	s=key2; t=1782815199;
+	bh=dMKciSBThW0e2xkPZQlDrg/wfU9MCZS/KNgoTfIDdKg=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=fMyjjTFK2GcceH+HI+4s/b8NR7Yswy3WNWLbwMz7BOyWrPXQcTPHkGRrUlSQHBSxc
+	 3exK5a2S/rxtxdlhsluULW3Vf/5b1YunxQ2fjv5bM2B3y3k5hQPip/4asYRtXBZ7+U
+	 abx2C8jJMY+nEJWzPDODr+ShiP1f6W726X8bQSJFPeNeQezZT3dOIQcp60pSYuYq2P
+	 9ivFTlHFTOfqmu6H4qnkisfWvQbBRII34OQ6VUgtEJiDR3/pXXe8c6gq4F4eZvrtxb
+	 xOpuqzHmv3pb/nb+xHJGhsFZMHgtv6y8RKaVJodmqTorTNIRHrvSDQ9iwkgqvrirV6
+	 VCpG6pUSkBXuw==
+Received: from policy01-mors.netcup.net (unknown [46.38.225.35])
+	by mors-relay-8202.netcup.net (Postfix) with ESMTPS id 4gqK7g4jjRz47qh;
+	Tue, 30 Jun 2026 12:26:39 +0200 (CEST)
+X-Virus-Scanned: Debian amavisd-new at policy01-mors.netcup.net
+X-Spam-Flag: NO
+X-Spam-Score: -2.901
+X-Spam-Level: 
+Received: from mxe9fb.netcup.net (unknown [10.243.12.53])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by policy01-mors.netcup.net (Postfix) with ESMTPS id 4gqK7f4TgJz8tfK;
+	Tue, 30 Jun 2026 12:26:38 +0200 (CEST)
+Received: from [IPV6:2a02:8108:8984:1d00:a0cf:1912:4be:477f] (unknown [IPv6:2a02:8108:8984:1d00:a0cf:1912:4be:477f])
+	by mxe9fb.netcup.net (Postfix) with ESMTPSA id B2DB46037D;
+	Tue, 30 Jun 2026 12:26:37 +0200 (CEST)
+Authentication-Results: mxe9fb;
+        spf=pass (sender IP is 2a02:8108:8984:1d00:a0cf:1912:4be:477f) smtp.mailfrom=regressions@leemhuis.info smtp.helo=[IPV6:2a02:8108:8984:1d00:a0cf:1912:4be:477f]
+Received-SPF: pass (mxe9fb: connection is authenticated)
+Message-ID: <b8fcdb5e-f2be-4bd0-914d-d03e87af9630@leemhuis.info>
+Date: Tue, 30 Jun 2026 12:26:36 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-X-Last-TLS-Session-Version: TLSv1.3
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] scsi: megaraid_sas: fix PRP list out-of-bounds write
+To: "Martin K. Petersen" <martin.petersen@oracle.com>, me@magik.net
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+ Kashyap Desai <kashyap.desai@broadcom.com>,
+ Sumit Saxena <sumit.saxena@broadcom.com>,
+ Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
+ Chandrakanth patil <chandrakanth.patil@broadcom.com>,
+ "megaraidlinux.pdl@broadcom.com" <megaraidlinux.pdl@broadcom.com>,
+ "regressions@lists.linux.dev" <regressions@lists.linux.dev>,
+ Mats Topstad / Intility AS <Mats.topstad@intility.no>,
+ Daniel Fernau <mail@danielfernau.com>
+References: 
+ <GPhsSM0vkgyIrs0DIZ62qeUZX7X4RxwQXVKiuvMx-lHQVSPDxpztUyQOGS0xikqvJ-Z94hMV-dW_5KN_0CX2hsfV7kTf_t0MTf6vdAAaSEc=@magik.net>
+ <yq15x5lowt9.fsf@ca-mkp.ca.oracle.com>
+From: Thorsten Leemhuis <regressions@leemhuis.info>
+Content-Language: de-DE, en-US
+In-Reply-To: <yq15x5lowt9.fsf@ca-mkp.ca.oracle.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-PPP-Message-ID: <178281519817.745337.5466260878205555068@mxe9fb.netcup.net>
+X-Rspamd-Server: rspamd-worker-8404
+X-Rspamd-Queue-Id: B2DB46037D
+X-NC-CID: J/fvpLEl0oyuy9951LYTB1aCKdUOiN/U2rz1xrvOmS8W2ZJUiFM=
 
-Hello,
+On 4/21/26 04:47, Martin K. Petersen wrote:
+> 
+>> megasas_make_prp_nvme() builds NVMe PRP lists in cmd->sg_frame,
+>> which is a DMA-pool allocation sized by instance->max_chain_frame_sz.
+> 
+> Broadcom: Please comment and review!
 
-> Thank you for your contribution! Sashiko AI review found 2 potential issu=
-e(s) to consider:
-> - [Low] The static function `ufshcd_intr` becomes unused when `CONFIG_PRE=
-EMPT_RT` is enabled, causing a compiler warning.
-> - [Low] Typo in the newly added source code comment.
+Martin, do you know if someone there ever looked into this regression
+and the proposed fix? I'm wondering because Daniel and Mats reported
+problems under the same subject line (in new threads), but also didn't
+get a reply. So together with the one from Lukasz aka "me" we afaics
+have three reports now:
 
-Both of Sachiko's comments are valid. I am addressing these issues in
-the next version.
+https://lore.kernel.org/all/GPhsSM0vkgyIrs0DIZ62qeUZX7X4RxwQXVKiuvMx-lHQVSPDxpztUyQOGS0xikqvJ-Z94hMV-dW_5KN_0CX2hsfV7kTf_t0MTf6vdAAaSEc=@magik.net/
+https://lore.kernel.org/all/0CFE3F49-179D-4735-86E2-B6C1EE2FDD2A@danielfernau.com/
+https://lore.kernel.org/all/4FE725D3-0702-425C-AAC5-4E0AF86E5EA1@intility.no/
 
-Gregory
+Side note: I still wonders if we somehow could fix this by reverting
+something, but none of the reports afaics references which change
+introduced the problem. And given that the problem already exists in
+6.18 a clean and quick revert is unlikely anayway. :-/
 
-> --
->
-> commit 6afdc0b243918ce89eb55cea6349f608516d9d03
-> Author: Gregory CLEMENT <gregory.clement@bootlin.com>
->
-> scsi: ufs: core: Avoid sleeping in hard interrupt context when PREEMP_RT =
-is enabled.
->
-> This commit addresses a sleeping-in-hard-irq context bug under PREEMPT_RT=
-.=20
-> It mitigates the issue by bypassing the hard IRQ handler and directly=20
-> registering the threaded interrupt handler when PREEMPT_RT is enabled.
->
->> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
->> index d3044a3089b53..6d82658a1a66b 100644
->> --- a/drivers/ufs/core/ufshcd.c
->> +++ b/drivers/ufs/core/ufshcd.c
->> @@ -11235,9 +11235,17 @@ int ufshcd_init(struct ufs_hba *hba, void __iom=
-em *mmio_base, unsigned int irq)
->>  	 */
->>  	ufshcd_readl(hba, REG_INTERRUPT_ENABLE);
->>=20=20
->> -	/* IRQ registration */
->> +	/* IRQ registration
->> +	 * In the case of PREMMP_RT, directly use the threaded
->
-> [Severity: Low]
-> This isn't a bug, but there is a typo in this comment ("PREMMP_RT" instead
-> of "PREEMPT_RT"). The commit subject also has a small typo ("PREEMP_RT").
->
->> +	 * interrupt to avoid using a spinlock (which could sleep)
->> +	 * in the hard IRQ handler.
->> +	 */
->> +#ifdef CONFIG_PREEMPT_RT
->> +	err =3D devm_request_irq(dev, irq, ufshcd_threaded_intr, IRQF_SHARED, =
-UFSHCD, hba);
->> +#else
->>  	err =3D devm_request_threaded_irq(dev, irq, ufshcd_intr, ufshcd_thread=
-ed_intr,
->>  					IRQF_ONESHOT | IRQF_SHARED, UFSHCD, hba);
->> +#endif
->
-> [Severity: Low]
-> Will this cause a compiler warning for an unused function when building w=
-ith
-> CONFIG_PREEMPT_RT=3Dy?=20
->
-> Because the reference to ufshcd_intr() is compiled out in the #else block=
-,=20
-> but its static definition remains unconditionally compiled earlier in the=
-=20
-> file:
->
-> static irqreturn_t ufshcd_intr(int irq, void *__hba)
-> {
->     ...
-> }
->
-> Could this break builds that have CONFIG_WERROR=3Dy enabled due to the=20
-> -Wunused-function warning?
->
->>  	if (err) {
->>  		dev_err(hba->dev, "request irq failed\n");
->>  		goto out_disable;
->
-> --=20
-> Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260630-ufshcd-s=
-pinlock-sleep-fix-v1-1-339b05a1c6f4@bootlin.com?part=3D1
-
---=20
-Gr=C3=A9gory CLEMENT, Bootlin
-Embedded Linux and Kernel engineering
-https://bootlin.com
+Ciao, Thorsten
