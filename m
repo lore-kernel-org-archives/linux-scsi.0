@@ -1,391 +1,296 @@
-Received: from mail-wm1-f52.google.com (mail-wm1-f52.google.com [209.85.128.52])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from relay.hostedemail.com (smtprelay0011.hostedemail.com [216.40.44.11])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 19B6332FA1B
-	for <linux-scsi@vger.kernel.org>; Tue, 30 Jun 2026 22:51:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C84B521CC51;
+	Tue, 30 Jun 2026 22:54:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=216.40.44.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782859890; cv=none; b=kTM2ljPSUpSbuzhwQaqPbQuesQaYlc3fm0T5+oU6W1ZzZmbUtvsr6SCT/y+B8VZgi+GKVJkQTikS4u9yaLfofmNYTgVC0rRwHjKDhgKZSTfLzkvJnlqKJC8WI4+11I+UEFPxue9VSNlhk+YoSTVmqjKPUGuTyUvXDRzJTkyujDA=
+	t=1782860058; cv=none; b=lacB41iNVErIAfBf5Y4PyN/AmBFEbKXA5CStKTgfmBNwAPor3Q6UfKsK9tbLS31qB27gRgupRgQ9RWK5KhJ4NU2fVS3JbV19SFGcVIecgpFXRVlBAB2rcoFtuAaCCzAA8bipjQ1IL/PBgc2B8ew5NyZ82mw553OvHn98cqNTRBI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782859890; c=relaxed/simple;
-	bh=nUWDqh897qmajP8SSrxwrgXk4ZRjXvT+9q1tST3XpoM=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=N+LyKI1HRr6zb1CtyVX78LyYttCzpdm+1pfaOlNiGH+lamrCZBYde7E3dVOUJDn5ONkEXmV5fOwLl+R5GdbsDWzhmDToxnbcdwEXI9Y4p6KyALGL9oV7B4NvbUaFsUXMedqpYMmV5A2iZU68/X7fUxZ7ZO3JWyWkX37CFdU0aNA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Na5TGJT2; arc=none smtp.client-ip=209.85.128.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Na5TGJT2"
-Received: by mail-wm1-f52.google.com with SMTP id 5b1f17b1804b1-493be364394so3010515e9.1
-        for <linux-scsi@vger.kernel.org>; Tue, 30 Jun 2026 15:51:28 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1782859887; x=1783464687; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=YFt61Rv4i/gKTp1WVZ1XNmmlE6tpoBJAE5QWfVYntys=;
-        b=Na5TGJT25GLVNMP8wTSO+q0RFCK1fNJzf1a2Zb0yXXHyXajzQRGxFmkZtMH6Hy7EC6
-         qM0PjbtMtS5cZMLI1AsUcsLO2ywSEPYKLamUjSGyr/gVQg9msLCbPrsZE82Va7YzEz7n
-         8fcpaUwreWPRbyPTYxnoCoZ3b8g3jCFV5pWuWTVXHvdkfHpVs/qhYdj1Ijcjba1YGNJU
-         dbgMTYJP3ccta7b/hAaqAv915LxsGaOG4NeCJMNH34+j9mylZFWZJ0kyBBqu75r3CkoZ
-         4CooAmT5CWeG43pPALrWfZn77JfYKPncOhO6OjBojqk0TM7DbZw6aBZTO8abRnwXJNmI
-         mM/w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1782859887; x=1783464687;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=YFt61Rv4i/gKTp1WVZ1XNmmlE6tpoBJAE5QWfVYntys=;
-        b=I/sER9la39fZlbQ9qXVhACodg7AT3/hDHiVUKixk05Vj1A4YZQlvZJPaOaFTW+wDCZ
-         qQJQqTN8zxNkQPIFwjblQoRtz94kdWKm33530QEgxJscznzrNtTwOy0i9iaNMG/lNFbi
-         zYYwSDtHv15RTzFl60uOTfOKbp1CuZAQXhFLbI3B8teGquXSq9HjquekRQQVxvydrXA5
-         MNwg2rTZj+3IaPWxbgs6XwyOVhHBAGcWHMxCiiiSPYsivnJK69T2bZBgrDUo5xfcWCB6
-         BahFjBKT0Q5du66gHzkl7Ny/mafVnxzlVW9Fg+w67u3Qt1fFdsYzFatrRVXQIdiHrpoF
-         uhxA==
-X-Forwarded-Encrypted: i=1; AFNElJ/U0wLrI0tgpjjA/9+rGcg5idn996fqkLQ2FSwxAJliPPseAZM7Z3oxQfwXOBox5eY0ss21el66fYFE@vger.kernel.org
-X-Gm-Message-State: AOJu0Yz0ISHj7gSEfuBcPr2XXdWARK9VvqQEn3k/hyhhKwSSQkESlZ+3
-	o0FYqFslkNioByuvZLVqwXryRzirua6IMI3bBPo6nru6jDoOWrMdjQDB
-X-Gm-Gg: AfdE7cnnb5e/gWmqBJoxTQG1CXqppfgNn/JRQvjoXu7x7rZq1FJe1I39rOsVNqfeoY8
-	020jEWYl47D7bfcrKTYRuEGNiihOGXAH4Dlg/qBBCiZlbSpqQGlQL0w+S4jR/m3CZVU8+7zga+k
-	y4jHYvLEf0eXxrONlqbuJi87izj7uIea9OcCBVGgE3kMw870OKi/H0WMs1RZK9qytPl1+qop3Xm
-	tNpZu7/1owFAgnZ5PspXEOGDJOFvLCwDAy5lEIxTzbzyD4ihfu1aIm7kxEbGMIECUvi+VDQc0Ic
-	fbhN2W43at6buiZxHDV1fIN8jUGtXtKja97U3UnaEIxvhNET3w0K3r00e8nO32BG7NxPsGqRO4O
-	H5E+6AuQ6DWPmbiuqOcfhX2zI0sEZWgh0658q6uLebOAXRXV1blvNEKfGvdLv4jGDkm7wa86q
-X-Received: by 2002:a05:600c:c491:b0:493:a43d:6a2e with SMTP id 5b1f17b1804b1-493bc53486emr46117985e9.8.1782859887507;
-        Tue, 30 Jun 2026 15:51:27 -0700 (PDT)
-Received: from localhost ([2603:c027:c000:3cde::f])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-493be81fca5sm31793945e9.14.2026.06.30.15.51.26
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 30 Jun 2026 15:51:26 -0700 (PDT)
-From: Louis Sautier <sautier.louis@gmail.com>
-To: Sathya Prakash <sathya.prakash@broadcom.com>,
-	Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-	Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>,
-	Ranjan Kumar <ranjan.kumar@broadcom.com>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Guenter Roeck <linux@roeck-us.net>,
-	MPT-FusionLinux.pdl@broadcom.com,
-	linux-scsi@vger.kernel.org,
-	linux-hwmon@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Damien Le Moal <dlemoal@kernel.org>
-Subject: [PATCH v5 2/2] scsi: mpt3sas: add hwmon support
-Date: Wed,  1 Jul 2026 00:49:22 +0200
-Message-ID: <20260630224922.2543096-3-sautier.louis@gmail.com>
-X-Mailer: git-send-email 2.54.0
-In-Reply-To: <20260630224922.2543096-1-sautier.louis@gmail.com>
-References: <20260630224922.2543096-1-sautier.louis@gmail.com>
+	s=arc-20240116; t=1782860058; c=relaxed/simple;
+	bh=nhlcyi1k7YzAyd/xWaJ5uTbVXJnw5xY8e5w54w70ZFo=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type; b=gOAzZDgGFHgJ1yLlATnQnOj8UnqQEidfqaLU4VvzYseamui8XYx/sJkQjEweO47zH5WXQe2hxPVxzut5JNbZhM/GVRejLxAc1TrtwW1Ai0ChgdpwgTUNKtax3BP5AV8w3TN8ow0tzwXjsOHWHAK8Ywh4hlisAFEYI1fiG8BOrhc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=goodmis.org; spf=pass smtp.mailfrom=goodmis.org; arc=none smtp.client-ip=216.40.44.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=goodmis.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=goodmis.org
+Received: from omf09.hostedemail.com (lb01a-stub [10.200.18.249])
+	by unirelay02.hostedemail.com (Postfix) with ESMTP id 113B3120162;
+	Tue, 30 Jun 2026 22:54:15 +0000 (UTC)
+Received: from [HIDDEN] (Authenticated sender: rostedt@goodmis.org) by omf09.hostedemail.com (Postfix) with ESMTPA id DED782002A;
+	Tue, 30 Jun 2026 22:54:12 +0000 (UTC)
+Date: Tue, 30 Jun 2026 18:54:12 -0400
+From: Steven Rostedt <rostedt@goodmis.org>
+To: LKML <linux-kernel@vger.kernel.org>, Linux Trace Kernel
+ <linux-trace-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
+Cc: Masami Hiramatsu <mhiramat@kernel.org>, Mathieu Desnoyers
+ <mathieu.desnoyers@efficios.com>, Alim Akhtar <alim.akhtar@samsung.com>,
+ Avri Altman <avri.altman@sandisk.com>, Bart Van Assche
+ <bvanassche@acm.org>, James Bottomley
+ <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen"
+ <martin.petersen@oracle.com>, Peter Wang <peter.wang@mediatek.com>
+Subject: [PATCH] ufs: core: tracing: Do not dereference pointers in
+ TP_printk()
+Message-ID: <20260630185412.283c26c5@gandalf.local.home>
+X-Mailer: Claws Mail 3.20.0git84 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+X-Rspamd-Queue-Id: DED782002A
+X-Stat-Signature: zyoctfi5yj8exifgdjdtjiiw1wczoq6j
+X-Rspamd-Server: rspamout04
+X-Session-Marker: 726F737465647440676F6F646D69732E6F7267
+X-Session-ID: U2FsdGVkX1+/+8B81wbQCWuGTQCWx56jW2aMWhJFYVs=
+X-HE-Tag: 1782860052-267712
+X-HE-Meta: U2FsdGVkX18AW2wwblH81KAt+nO6TJT2J8pHS7l5BvS1ulH5YBqRoldA4T+uXifN5GuGBFqpoovRap3np6xN8WbjDEKanTUk+OdkBnYPoABp1AIqsndUrAIers5WMBoMB19hOdVQ92a6KV5k0cIWFWyTN/Pb20yp05Yzhx0tYmQW1VwSky6fj1iRjYDmpQqAyRgXthxpSNrs+58d7sLixy3C9YaVO2+AcbzGDafXgLbbcRLfO3HlS7mTrZzW/MH8Jey/H+JJVgddoheIWNHToEwayYOd0HRZoYAPcchQy0e+5rs51ZP9yELOrkNni1Iq8UKTxzFouk85siNaYfSIu+HFm6Cu7Y+XCkN2isvG/3Eub1wlYH37YODlScAzSO+081hrK6YfJ0WDIubjxrBdNA==
 
-Expose the IOC and board temperature sensors of LSI / Broadcom SAS
-HBAs through hwmon. Readings come from MPI IO Unit Page 7 via the
-accessor added in the preceding patch.
+From: Steven Rostedt <rostedt@goodmis.org>
 
-The same fields are exposed by Broadcom's userspace tooling
-through the /dev/mpt[23]ctl ioctl path (typically root-only):
-IOCTemperature and BoardTemperature in lsiutil; ROC and Controller
-in storcli. With this driver, sensors(1) shows them unprivileged:
+The trace events in drivers/ufs/core/ufs_trace.h were converted to take a
+pointer to the hba structure as an argument for the tracepoint and then in
+TP_printk() the printing of the dev_name from the ring buffer was
+converted to using the dev dereferenced pointer from the hba saved
+pointer.
 
-  $ sensors mpt3sas-pci-0200
-  mpt3sas-pci-0200
-  Adapter: PCI adapter
-  IOC:          +42.0°C
+This is not allowed as the TP_printk() is executed at the time the trace
+event is read from /sys/kernel/tracing/trace file. That can happen
+literally, seconds, minutes, hours, weeks, days, or even months later!
+There is no guarantee that the hba pointer will still exist by the time it
+is dereferenced when the "trace" file is read.
 
-Each channel is gated independently by its *TemperatureUnits field
-through is_visible(); cards that populate only one sensor expose
-only one input file, and cards that populate neither do not register
-an hwmon device.
+Instead, save the device name from the hba pointer at the time the
+tracepoint is called and place it into the ring buffer event. Then the
+TP_printk() can read the name directly from the ring buffer and remove the
+possibility that it will read a freed pointer and crash the kernel.
 
-The hwmon code is gated directly on CONFIG_HWMON. IS_REACHABLE() is
-used rather than IS_ENABLED() so that SCSI_MPT3SAS=y with HWMON=m
-still builds; in that configuration, the sensors are not exposed
-(same pattern as i915 and xe).
+This was detected when testing the trace event code that looks for
+TP_printk() parameters doing illegal derferences[1]
 
-Assisted-by: Claude:claude-opus-4-7
-Signed-off-by: Louis Sautier <sautier.louis@gmail.com>
-Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+[1] https://lore.kernel.org/all/20260630184836.74d477b6@gandalf.local.home/
+
+Cc: stable@vger.kernel.org
+Fixes: 583e518e71003 ("scsi: ufs: core: Add hba parameter to trace events")
+Signed-off-by: Steven Rostedt <rostedt@goodmis.org>
 ---
- drivers/scsi/mpt3sas/Makefile        |   2 +
- drivers/scsi/mpt3sas/mpt3sas_base.h  |  17 +++
- drivers/scsi/mpt3sas/mpt3sas_hwmon.c | 191 +++++++++++++++++++++++++++
- drivers/scsi/mpt3sas/mpt3sas_scsih.c |   6 +
- 4 files changed, 216 insertions(+)
- create mode 100644 drivers/scsi/mpt3sas/mpt3sas_hwmon.c
+ drivers/ufs/core/ufs_trace.h | 36 +++++++++++++++++++++++++++---------
+ 1 file changed, 27 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/scsi/mpt3sas/Makefile b/drivers/scsi/mpt3sas/Makefile
-index e76d994dbed3..18e2d87eb4a2 100644
---- a/drivers/scsi/mpt3sas/Makefile
-+++ b/drivers/scsi/mpt3sas/Makefile
-@@ -9,3 +9,5 @@ mpt3sas-y +=  mpt3sas_base.o     \
- 		mpt3sas_trigger_diag.o \
- 		mpt3sas_warpdrive.o \
- 		mpt3sas_debugfs.o \
-+
-+mpt3sas-$(CONFIG_HWMON) += mpt3sas_hwmon.o
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
-index fe21b0425047..47255bf9cdda 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.h
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
-@@ -1629,6 +1629,9 @@ struct MPT3SAS_ADAPTER {
- 	u8		is_aero_ioc;
- 	struct dentry	*debugfs_root;
- 	struct dentry	*ioc_dump;
-+#if IS_REACHABLE(CONFIG_HWMON)
-+	struct mpt3sas_hwmon *hwmon;
-+#endif
- 	PUT_SMID_IO_FP_HIP put_smid_scsi_io;
- 	PUT_SMID_IO_FP_HIP put_smid_fast_path;
- 	PUT_SMID_IO_FP_HIP put_smid_hi_priority;
-@@ -2050,6 +2053,20 @@ void mpt3sas_destroy_debugfs(struct MPT3SAS_ADAPTER *ioc);
- void mpt3sas_init_debugfs(void);
- void mpt3sas_exit_debugfs(void);
+diff --git a/drivers/ufs/core/ufs_trace.h b/drivers/ufs/core/ufs_trace.h
+index 309ae51b4906..377a3c54b9f5 100644
+--- a/drivers/ufs/core/ufs_trace.h
++++ b/drivers/ufs/core/ufs_trace.h
+@@ -89,16 +89,18 @@ TRACE_EVENT(ufshcd_clk_gating,
  
-+#if IS_REACHABLE(CONFIG_HWMON)
-+int mpt3sas_hwmon_register(struct MPT3SAS_ADAPTER *ioc);
-+void mpt3sas_hwmon_unregister(struct MPT3SAS_ADAPTER *ioc);
-+#else
-+static inline int mpt3sas_hwmon_register(struct MPT3SAS_ADAPTER *ioc)
-+{
-+	return 0;
-+}
-+
-+static inline void mpt3sas_hwmon_unregister(struct MPT3SAS_ADAPTER *ioc)
-+{
-+}
-+#endif
-+
- /**
-  * _scsih_is_pcie_scsi_device - determines if device is an pcie scsi device
-  * @device_info: bitfield providing information about the device.
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_hwmon.c b/drivers/scsi/mpt3sas/mpt3sas_hwmon.c
-new file mode 100644
-index 000000000000..297a8efecadb
---- /dev/null
-+++ b/drivers/scsi/mpt3sas/mpt3sas_hwmon.c
-@@ -0,0 +1,191 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/*
-+ * Hardware monitoring (hwmon) support for the LSI / Broadcom mpt3sas
-+ * SAS HBA driver. Exposes the IOC and board temperature sensors by
-+ * reading MPI IO Unit Page 7.
-+ */
-+
-+#include <linux/err.h>
-+#include <linux/hwmon.h>
-+#include <linux/slab.h>
-+
-+#include "mpt3sas_base.h"
-+
-+struct mpt3sas_hwmon {
-+	struct MPT3SAS_ADAPTER *ioc;
-+	struct device *hwmon_dev;
-+	bool ioc_present;
-+	bool board_present;
-+};
-+
-+/*
-+ * Convert a (raw, units) reading to millidegrees Celsius.
-+ * Returns -ENODATA when the sensor reports "not present" or
-+ * unknown units. Temperature values are interpreted as signed
-+ * two's-complement integers.
-+ *
-+ * The MPI2_IOUNITPAGE7_IOC_TEMP_* and MPI2_IOUNITPAGE7_BOARD_TEMP_*
-+ * defines in mpi2_cnfg.h share the same values; the IOC ones are
-+ * used for both channels.
-+ */
-+static int _hwmon_to_mdegc(s16 raw, u8 units, long *out)
-+{
-+	switch (units) {
-+	case MPI2_IOUNITPAGE7_IOC_TEMP_CELSIUS:
-+		*out = (long)raw * 1000;
-+		return 0;
-+	case MPI2_IOUNITPAGE7_IOC_TEMP_FAHRENHEIT:
-+		/* (F - 32) * 5 / 9, expressed in milli-units */
-+		*out = ((long)raw - 32) * 5000 / 9;
-+		return 0;
-+	default:
-+		return -ENODATA;
-+	}
-+}
-+
-+static umode_t _hwmon_is_visible(const void *drvdata,
-+				 enum hwmon_sensor_types type,
-+				 u32 attr, int channel)
-+{
-+	const struct mpt3sas_hwmon *h = drvdata;
-+
-+	if (type != hwmon_temp)
-+		return 0;
-+	if (attr != hwmon_temp_input && attr != hwmon_temp_label)
-+		return 0;
-+	if (channel == 0 && h->ioc_present)
-+		return 0444;
-+	if (channel == 1 && h->board_present)
-+		return 0444;
-+	return 0;
-+}
-+
-+static int _hwmon_read(struct device *dev, enum hwmon_sensor_types type,
-+		       u32 attr, int channel, long *val)
-+{
-+	struct mpt3sas_hwmon *h = dev_get_drvdata(dev);
-+	Mpi2ConfigReply_t mpi_reply;
-+	Mpi2IOUnitPage7_t page;
-+	int r;
-+
-+	if (type != hwmon_temp || attr != hwmon_temp_input)
-+		return -EOPNOTSUPP;
-+
-+	r = mpt3sas_config_get_iounit_pg7(h->ioc, &mpi_reply, &page);
-+	if (r)
-+		return r;
-+
-+	if (channel == 0)
-+		return _hwmon_to_mdegc((s16)le16_to_cpu(page.IOCTemperature),
-+				       page.IOCTemperatureUnits, val);
-+	if (channel == 1)
-+		return _hwmon_to_mdegc((s16)le16_to_cpu(page.BoardTemperature),
-+				       page.BoardTemperatureUnits, val);
-+	return -EOPNOTSUPP;
-+}
-+
-+static const char * const mpt3sas_hwmon_temp_labels[] = {
-+	"IOC",
-+	"Board",
-+};
-+
-+static int _hwmon_read_string(struct device *dev,
-+			      enum hwmon_sensor_types type,
-+			      u32 attr, int channel, const char **str)
-+{
-+	if (type != hwmon_temp || attr != hwmon_temp_label)
-+		return -EOPNOTSUPP;
-+	*str = mpt3sas_hwmon_temp_labels[channel];
-+	return 0;
-+}
-+
-+static const struct hwmon_channel_info * const mpt3sas_hwmon_info[] = {
-+	HWMON_CHANNEL_INFO(temp,
-+			   HWMON_T_INPUT | HWMON_T_LABEL,
-+			   HWMON_T_INPUT | HWMON_T_LABEL),
-+	NULL,
-+};
-+
-+static const struct hwmon_ops mpt3sas_hwmon_ops = {
-+	.is_visible	= _hwmon_is_visible,
-+	.read		= _hwmon_read,
-+	.read_string	= _hwmon_read_string,
-+};
-+
-+static const struct hwmon_chip_info mpt3sas_hwmon_chip_info = {
-+	.ops	= &mpt3sas_hwmon_ops,
-+	.info	= mpt3sas_hwmon_info,
-+};
-+
-+/**
-+ * mpt3sas_hwmon_register - register an hwmon device for the IOC
-+ * @ioc: per adapter object
-+ * Context: sleep.
-+ *
-+ * Succeeds without registering when no temperature sensors are present,
-+ * so cards without thermal monitoring do not expose an empty hwmon node.
-+ * Paired with mpt3sas_hwmon_unregister() from the driver's remove path.
-+ *
-+ * Return: 0 for success, non-zero for failure.
-+ */
-+int mpt3sas_hwmon_register(struct MPT3SAS_ADAPTER *ioc)
-+{
-+	struct device *parent = &ioc->pdev->dev;
-+	struct mpt3sas_hwmon *h;
-+	struct device *hwdev;
-+	Mpi2ConfigReply_t mpi_reply;
-+	Mpi2IOUnitPage7_t page;
-+	int r;
-+
-+	r = mpt3sas_config_get_iounit_pg7(ioc, &mpi_reply, &page);
-+	if (r)
-+		return r;
-+
-+	/*
-+	 * A page where both *TemperatureUnits are NOT_PRESENT covers
-+	 * two cases: cards that genuinely lack sensors, and firmware
-+	 * errors that left the page zero-filled (the accessor mirrors
-+	 * _config_request() behaviour). Either way: skip registration.
-+	 */
-+	if (page.IOCTemperatureUnits == MPI2_IOUNITPAGE7_IOC_TEMP_NOT_PRESENT &&
-+	    page.BoardTemperatureUnits == MPI2_IOUNITPAGE7_BOARD_TEMP_NOT_PRESENT)
-+		return 0;
-+
-+	h = kzalloc_obj(*h);
-+	if (!h)
-+		return -ENOMEM;
-+
-+	h->ioc = ioc;
-+	h->ioc_present = page.IOCTemperatureUnits != MPI2_IOUNITPAGE7_IOC_TEMP_NOT_PRESENT;
-+	h->board_present = page.BoardTemperatureUnits != MPI2_IOUNITPAGE7_BOARD_TEMP_NOT_PRESENT;
-+
-+	hwdev = hwmon_device_register_with_info(parent, "mpt3sas", h,
-+						&mpt3sas_hwmon_chip_info,
-+						NULL);
-+	if (IS_ERR(hwdev)) {
-+		kfree(h);
-+		return PTR_ERR(hwdev);
-+	}
-+
-+	h->hwmon_dev = hwdev;
-+	ioc->hwmon = h;
-+	return 0;
-+}
-+
-+/**
-+ * mpt3sas_hwmon_unregister - tear down the hwmon device, if any
-+ * @ioc: per adapter object
-+ *
-+ * Safe to call when registration was skipped (no sensors) or
-+ * failed; in those cases ioc->hwmon is NULL and this is a no-op.
-+ */
-+void mpt3sas_hwmon_unregister(struct MPT3SAS_ADAPTER *ioc)
-+{
-+	struct mpt3sas_hwmon *h = ioc->hwmon;
-+
-+	if (!h)
-+		return;
-+	hwmon_device_unregister(h->hwmon_dev);
-+	kfree(h);
-+	ioc->hwmon = NULL;
-+}
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index 12caffeed3a0..dea78688cc9b 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -12562,6 +12562,7 @@ static void scsih_remove(struct pci_dev *pdev)
- 	/* release all the volumes */
- 	_scsih_ir_shutdown(ioc);
- 	mpt3sas_destroy_debugfs(ioc);
-+	mpt3sas_hwmon_unregister(ioc);
- 	sas_remove_host(shost);
- 	list_for_each_entry_safe(raid_device, next, &ioc->raid_device_list,
- 	    list) {
-@@ -13651,6 +13652,11 @@ _scsih_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	}
+ 	TP_STRUCT__entry(
+ 		__field(struct ufs_hba *, hba)
++		__string(dev_name, dev_name(hba->dev))
+ 		__field(int, state)
+ 	),
  
- 	scsi_scan_host(shost);
-+
-+	if (mpt3sas_hwmon_register(ioc))
-+		ioc_warn(ioc,
-+			 "hwmon registration failed; temperatures not exposed\n");
-+
- 	mpt3sas_setup_debugfs(ioc);
- 	return 0;
- out_add_shost_fail:
+ 	TP_fast_assign(
++		__assign_str(dev_name);
+ 		__entry->hba = hba;
+ 		__entry->state = state;
+ 	),
+ 
+ 	TP_printk("%s: gating state changed to %s",
+-		dev_name(__entry->hba->dev),
++		__get_str(dev_name),
+ 		__print_symbolic(__entry->state, UFSCHD_CLK_GATING_STATES))
+ );
+ 
+@@ -111,6 +113,7 @@ TRACE_EVENT(ufshcd_clk_scaling,
+ 
+ 	TP_STRUCT__entry(
+ 		__field(struct ufs_hba *, hba)
++		__string(dev_name, dev_name(hba->dev))
+ 		__string(state, state)
+ 		__string(clk, clk)
+ 		__field(u32, prev_state)
+@@ -119,6 +122,7 @@ TRACE_EVENT(ufshcd_clk_scaling,
+ 
+ 	TP_fast_assign(
+ 		__entry->hba = hba;
++		__assign_str(dev_name);
+ 		__assign_str(state);
+ 		__assign_str(clk);
+ 		__entry->prev_state = prev_state;
+@@ -126,7 +130,7 @@ TRACE_EVENT(ufshcd_clk_scaling,
+ 	),
+ 
+ 	TP_printk("%s: %s %s from %u to %u Hz",
+-		dev_name(__entry->hba->dev), __get_str(state), __get_str(clk),
++		__get_str(dev_name), __get_str(state), __get_str(clk),
+ 		__entry->prev_state, __entry->curr_state)
+ );
+ 
+@@ -138,16 +142,18 @@ TRACE_EVENT(ufshcd_auto_bkops_state,
+ 
+ 	TP_STRUCT__entry(
+ 		__field(struct ufs_hba *, hba)
++		__string(dev_name, dev_name(hba->dev))
+ 		__string(state, state)
+ 	),
+ 
+ 	TP_fast_assign(
+ 		__entry->hba = hba;
++		__assign_str(dev_name);
+ 		__assign_str(state);
+ 	),
+ 
+ 	TP_printk("%s: auto bkops - %s",
+-		dev_name(__entry->hba->dev), __get_str(state))
++		__get_str(dev_name), __get_str(state))
+ );
+ 
+ DECLARE_EVENT_CLASS(ufshcd_profiling_template,
+@@ -158,6 +164,7 @@ DECLARE_EVENT_CLASS(ufshcd_profiling_template,
+ 
+ 	TP_STRUCT__entry(
+ 		__field(struct ufs_hba *, hba)
++		__string(dev_name, dev_name(hba->dev))
+ 		__string(profile_info, profile_info)
+ 		__field(s64, time_us)
+ 		__field(int, err)
+@@ -165,13 +172,14 @@ DECLARE_EVENT_CLASS(ufshcd_profiling_template,
+ 
+ 	TP_fast_assign(
+ 		__entry->hba = hba;
++		__assign_str(dev_name);
+ 		__assign_str(profile_info);
+ 		__entry->time_us = time_us;
+ 		__entry->err = err;
+ 	),
+ 
+ 	TP_printk("%s: %s: took %lld usecs, err %d",
+-		dev_name(__entry->hba->dev), __get_str(profile_info),
++		__get_str(dev_name), __get_str(profile_info),
+ 		__entry->time_us, __entry->err)
+ );
+ 
+@@ -200,6 +208,7 @@ DECLARE_EVENT_CLASS(ufshcd_template,
+ 		__field(s64, usecs)
+ 		__field(int, err)
+ 		__field(struct ufs_hba *, hba)
++		__string(dev_name, dev_name(hba->dev))
+ 		__field(int, dev_state)
+ 		__field(int, link_state)
+ 	),
+@@ -208,13 +217,14 @@ DECLARE_EVENT_CLASS(ufshcd_template,
+ 		__entry->usecs = usecs;
+ 		__entry->err = err;
+ 		__entry->hba = hba;
++		__assign_str(dev_name);
+ 		__entry->dev_state = dev_state;
+ 		__entry->link_state = link_state;
+ 	),
+ 
+ 	TP_printk(
+ 		"%s: took %lld usecs, dev_state: %s, link_state: %s, err %d",
+-		dev_name(__entry->hba->dev),
++		__get_str(dev_name),
+ 		__entry->usecs,
+ 		__print_symbolic(__entry->dev_state, UFS_PWR_MODES),
+ 		__print_symbolic(__entry->link_state, UFS_LINK_STATES),
+@@ -279,6 +289,7 @@ TRACE_EVENT(ufshcd_command,
+ 	TP_STRUCT__entry(
+ 		__field(struct scsi_device *, sdev)
+ 		__field(struct ufs_hba *, hba)
++		__string(dev_name, dev_name(&sdev->sdev_dev))
+ 		__field(enum ufs_trace_str_t, str_t)
+ 		__field(unsigned int, tag)
+ 		__field(u32, doorbell)
+@@ -291,6 +302,7 @@ TRACE_EVENT(ufshcd_command,
+ 	),
+ 
+ 	TP_fast_assign(
++		__assign_str(dev_name);
+ 		__entry->sdev = sdev;
+ 		__entry->hba = hba;
+ 		__entry->str_t = str_t;
+@@ -307,7 +319,7 @@ TRACE_EVENT(ufshcd_command,
+ 	TP_printk(
+ 		"%s: %s: tag: %u, DB: 0x%x, size: %d, IS: %u, LBA: %llu, opcode: 0x%x (%s), group_id: 0x%x, hwq_id: %d",
+ 		show_ufs_cmd_trace_str(__entry->str_t),
+-		dev_name(&__entry->sdev->sdev_dev), __entry->tag,
++		__get_str(dev_name), __entry->tag,
+ 		__entry->doorbell, __entry->transfer_len, __entry->intr,
+ 		__entry->lba, (u32)__entry->opcode, str_opcode(__entry->opcode),
+ 		(u32)__entry->group_id, __entry->hwq_id
+@@ -322,6 +334,7 @@ TRACE_EVENT(ufshcd_uic_command,
+ 
+ 	TP_STRUCT__entry(
+ 		__field(struct ufs_hba *, hba)
++		__string(dev_name, dev_name(hba->dev))
+ 		__field(enum ufs_trace_str_t, str_t)
+ 		__field(u32, cmd)
+ 		__field(u32, arg1)
+@@ -331,6 +344,7 @@ TRACE_EVENT(ufshcd_uic_command,
+ 
+ 	TP_fast_assign(
+ 		__entry->hba = hba;
++		__assign_str(dev_name);
+ 		__entry->str_t = str_t;
+ 		__entry->cmd = cmd;
+ 		__entry->arg1 = arg1;
+@@ -340,7 +354,7 @@ TRACE_EVENT(ufshcd_uic_command,
+ 
+ 	TP_printk(
+ 		"%s: %s: cmd: 0x%x, arg1: 0x%x, arg2: 0x%x, arg3: 0x%x",
+-		show_ufs_cmd_trace_str(__entry->str_t), dev_name(__entry->hba->dev),
++		show_ufs_cmd_trace_str(__entry->str_t), __get_str(dev_name),
+ 		__entry->cmd, __entry->arg1, __entry->arg2, __entry->arg3
+ 	)
+ );
+@@ -353,6 +367,7 @@ TRACE_EVENT(ufshcd_upiu,
+ 
+ 	TP_STRUCT__entry(
+ 		__field(struct ufs_hba *, hba)
++		__string(dev_name, dev_name(hba->dev))
+ 		__field(enum ufs_trace_str_t, str_t)
+ 		__array(unsigned char, hdr, 12)
+ 		__array(unsigned char, tsf, 16)
+@@ -361,6 +376,7 @@ TRACE_EVENT(ufshcd_upiu,
+ 
+ 	TP_fast_assign(
+ 		__entry->hba = hba;
++		__assign_str(dev_name);
+ 		__entry->str_t = str_t;
+ 		memcpy(__entry->hdr, hdr, sizeof(__entry->hdr));
+ 		memcpy(__entry->tsf, tsf, sizeof(__entry->tsf));
+@@ -369,7 +385,7 @@ TRACE_EVENT(ufshcd_upiu,
+ 
+ 	TP_printk(
+ 		"%s: %s: HDR:%s, %s:%s",
+-		show_ufs_cmd_trace_str(__entry->str_t), dev_name(__entry->hba->dev),
++		show_ufs_cmd_trace_str(__entry->str_t), __get_str(dev_name),
+ 		__print_hex(__entry->hdr, sizeof(__entry->hdr)),
+ 		show_ufs_cmd_trace_tsf(__entry->tsf_t),
+ 		__print_hex(__entry->tsf, sizeof(__entry->tsf))
+@@ -384,16 +400,18 @@ TRACE_EVENT(ufshcd_exception_event,
+ 
+ 	TP_STRUCT__entry(
+ 		__field(struct ufs_hba *, hba)
++		__string(dev_name, dev_name(hba->dev))
+ 		__field(u16, status)
+ 	),
+ 
+ 	TP_fast_assign(
+ 		__entry->hba = hba;
++		__assign_str(dev_name);
+ 		__entry->status = status;
+ 	),
+ 
+ 	TP_printk("%s: status 0x%x",
+-		dev_name(__entry->hba->dev), __entry->status
++		__get_str(dev_name), __entry->status
+ 	)
+ );
+ 
 -- 
-2.54.0
+2.53.0
 
