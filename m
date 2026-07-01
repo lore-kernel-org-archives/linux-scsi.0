@@ -1,43 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 008F128C5B1;
-	Wed,  1 Jul 2026 14:06:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EDB622D3750;
+	Wed,  1 Jul 2026 14:07:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782914803; cv=none; b=VA5Ounpc/t30xpY2y8llXrCXs70EnmFXR5bkh1O7kF9nxU0h7+0badR96aqGK6d8kwjVpaWftApCGXTHjVmqjb40cwEPQsOWmmC2j/IA28tF/kubSkQdJMzmN227tsJB78kgTqjGFpIwQXhlDQLSSnCbkMJ0oV7ezLqO9rp1DJU=
+	t=1782914870; cv=none; b=FA3F5TX4Pb1pnCINyxQ/PKGNiHr/gQ4c+q6f0UDGz+8WXTuuTleKG4JDgo5OMl1gwlD9kgmcIkEFNk3G02XP4eOiq4aFpPn5gKExoo2Nzrf+jAipgtljMifrTUKXLcyPs67B3naikRL5ceQUxGyGDDSzT3vevY6rIGvXbP0HQ/A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782914803; c=relaxed/simple;
-	bh=YATV+YBlZaNE4GbvzOfUO1mOCw5qxp5qqOFyfjbKW3Y=;
+	s=arc-20240116; t=1782914870; c=relaxed/simple;
+	bh=AyFzl1e02VhOmchQfYPrTlUQeugir/vOEv1kuiOUcYY=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=XQzn5UE7aPLr2679wGMz+p0lowch9vKJn3OjHhxYP5ObLRkORroCeLevKSPF58l4scx+j04cqNT/L3QaViyyWRaYObInT6nYYOUC2GcY+Ps6BJYu5DL4LRh0rRP46Wvri9r5qLmO28DpcvSVZVg1lGhvSoCAu0u1zXuHlYO7WAw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aNU7wFzQ; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=qHgKrbTumdISW48YYniiiQ41MN5ETSx0azhjfIJrG4je8UKP1FxVRHNRHjd+OaQKFuFIxuXMrLraolgyFc/0PIhX88RMU3SNUtZ7ddFh+ki/TAsFh312yRFu7koZSx4iPnikUuz4VUvgwIhzhXLRU4qhq8OASyB18l1CyKRNL/w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PKVnCxFg; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aNU7wFzQ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 92EE91F000E9;
-	Wed,  1 Jul 2026 14:06:41 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PKVnCxFg"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5A18F1F000E9;
+	Wed,  1 Jul 2026 14:07:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782914801;
-	bh=w4t4QcP8bkYGzv6rUeaVCuONCB/QC3Zl8EinkdjLQkY=;
+	s=k20260515; t=1782914868;
+	bh=Kaia6u/iS0bxsMmPGoB4y1H8kEBBg4hcJBE4mmBoZ1Y=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=aNU7wFzQsMWXQUhdQ8JlEfQnFduhGxlXSZKidv9YYV09n/bRMq0TUS7SLS/VwKves
-	 dp7CkaCVSEWJ7udMf+l3jnG4OoeK0Ycxzcm2EWqgCM3996rITv2j+ESZaRdMTKL7Jt
-	 fslUucGLNM53U8Q62VmfoYxDPdRf8suhLV28DAcKQ93xmVHxMMSb93KJ+G6nMJywia
-	 TM0/yPI4xgwF3qRymPj5B3fkS3z7ySyDGClqrlHBa35YsAOZ4RHlFVVOg/wsXMYswv
-	 sWlJ+6/20XqrTQpLKFkKQmE2RWdu0VT0jmKy8Agp/PvErazAcdZLpxnleab81naaYZ
-	 sN1w28Po9Wc5g==
+	b=PKVnCxFgB/Anc3Jw/2XK79nooEfbIUxZtadSHs96Hdb+yxDo0owYJ9nYiR3WC7bR2
+	 VcFZDP0aUM2CLDXPqckwPI+vMuKdD4693CnNLscHtdYOGDvpABATrGeJxleRsoMLty
+	 67inkIpgDPphTtEKzLRW0ZxyHnWYQBaDwhIzsm+73cyhUlGWk9LKCHv7sacQc7Pz/8
+	 0pxxe377uItEe0mcmG7n4Hj23pkHxEAPNWdWte++MaffTh4rSiOQUjb5ALR59L3qoj
+	 Myw2NswzkYAqX9e2qggNpfm8yV2pdajt4iCQ6lZrBdp0jgQPyjkBaZfWjVWlOunw8H
+	 edYOObVX361AQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 5/5] scsi: Enable async shutdown support
+Subject: Re: [PATCH 4/5] PCI: Enable async shutdown support
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "David Jeffery" <djeffery@redhat.com>
-Cc: linux-scsi@vger.kernel.org, linux-pci@vger.kernel.org
-In-Reply-To: <20260701135015.81937-6-djeffery@redhat.com>
+Cc: linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org
+In-Reply-To: <20260701135015.81937-5-djeffery@redhat.com>
 References: <20260701135015.81937-1-djeffery@redhat.com>
- <20260701135015.81937-6-djeffery@redhat.com>
+ <20260701135015.81937-5-djeffery@redhat.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 01 Jul 2026 14:06:41 +0000
-Message-Id: <20260701140641.92EE91F000E9@smtp.kernel.org>
+Date: Wed, 01 Jul 2026 14:07:47 +0000
+Message-Id: <20260701140748.5A18F1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -48,82 +48,84 @@ Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
 
 Pre-existing issues:
-- [High] Runtime PM usage counter and PM state leak on device_add error pat=
-h.
-- [High] Concurrent lockless bitfield mutations cause Data Race and PM stat=
-e corruption.
+- [Critical] In `pci_register_host_bridge()`, a failure in `device_register=
+(&bus->dev)` leads to a double-free of the `bridge->dev` object.
+- [High] In `pci_device_add()`, failure of `device_add()` is ignored, leavi=
+ng a partially-initialized device in the subsystem lists.
 --
 
-commit 10ebc4309581b7d74ed1d3564b5f1af2a5cf5785
+commit 32aeb814f8bbaee48b0baf0572f23452cd1e50da
 Author: David Jeffery <djeffery@redhat.com>
 
-scsi: Enable async shutdown support
+PCI: Enable async shutdown support
 
-Like scsi's async suspend support, allow scsi devices to be shut down
-asynchronously to reduce system shutdown time.
+This commit adds asynchronous shutdown support for PCI devices. It aims to
+reduce overall shutdown time in the same way async suspend does.
 
-> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-> index dfc3559e7e04f..8fd317aef37b4 100644
-> --- a/drivers/scsi/scsi_sysfs.c
-> +++ b/drivers/scsi/scsi_sysfs.c
-> @@ -1386,6 +1386,7 @@ static int scsi_target_add(struct scsi_target *star=
-get)
->  	pm_runtime_set_active(&starget->dev);
->  	pm_runtime_enable(&starget->dev);
->  	device_enable_async_suspend(&starget->dev);
-> +	dev_set_async_shutdown(&starget->dev);
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index dd0abbc63e18d..af23814464060 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -1046,6 +1046,7 @@ static int pci_register_host_bridge(struct pci_host=
+_bridge *bridge)
+> =20
+>  	bus->bridge =3D get_device(&bridge->dev);
+>  	device_enable_async_suspend(bus->bridge);
+> +	dev_set_async_shutdown(bus->bridge);
 
-[Severity: High]
-This is a pre-existing issue, but does adding dev_set_async_shutdown() here
-exacerbate a data race with system suspend?
+[Severity: Critical]
+This is a pre-existing issue, and was not introduced by the patch under
+review, but does the error handling in pci_register_host_bridge() lead to
+a double-free of the bridge->dev object?
 
-In scsi_target_add(), device_add() is called earlier, exposing the device
-to the PM core. If a system-wide suspend happens concurrently,
-device_prepare() may lock the device and set the is_prepared bitfield.
+If device_register(&bus->dev) fails, the code jumps to the unregister label:
 
-Since device_enable_async_suspend() and dev_set_async_shutdown() locklessly
-mutate bitfields in dev->power in the same memory word, couldn't the
-resulting read-modify-write instructions overwrite and clear the is_prepared
-flag set by the PM core?
+unregister:
+	put_device(&bridge->dev);
+	device_del(&bridge->dev);
+free:
+	...
+	if (bus_registered)
+		put_device(&bus->dev);
 
->  	return 0;
->  }
+Because bus_registered is set to true right before checking the error from
+device_register(), the free path calls put_device(&bus->dev).
+
+Releasing the bus triggers release_pcibus_dev(), which implicitly drops the
+pci_bus->bridge reference via put_device(pci_bus->bridge). Since the code
+explicitly drops the reference at the unregister label as well, does this
+drop the object's refcount to 0 prematurely?
 
 [ ... ]
 
-> @@ -1412,6 +1413,7 @@ int scsi_sysfs_add_sdev(struct scsi_device *sdev)
->  	transport_configure_device(&starget->dev);
+> @@ -2748,6 +2749,7 @@ void pci_device_add(struct pci_dev *dev, struct pci=
+_bus *bus)
+>  	pci_reassigndev_resource_alignment(dev);
 > =20
->  	device_enable_async_suspend(&sdev->sdev_gendev);
-> +	dev_set_async_shutdown(&sdev->sdev_gendev);
+>  	pci_init_capabilities(dev);
+> +	dev_set_async_shutdown(&dev->dev);
+> =20
+>  	/*
+>  	 * Add the device to our list of discovered devices
 
 [Severity: High]
-This isn't a bug introduced by this patch, but could the error path for
-device_add(&sdev->sdev_gendev) leak the PM usage counter and runtime state?
+This isn't a bug introduced by this patch, but I noticed the failure of
+device_add() is ignored later in pci_device_add():
 
-When scsi_sysfs_add_sdev() is called, it increments the PM usage count via
-scsi_autopm_get_device(sdev) and enables runtime PM. If the subsequent
-device_add(&sdev->sdev_gendev) fails, the function returns the error direct=
-ly
-without dropping the usage counter or disabling runtime PM:
+	ret =3D device_add(&dev->dev);
+	WARN_ON(ret < 0);
 
-scsi_sysfs_add_sdev() {
-    ...
-    scsi_autopm_get_device(sdev);
-    ...
-    error =3D device_add(&sdev->sdev_gendev);
-    if (error) {
-        sdev_printk(...);
-        return error;
-    }
-}
+If device_add() fails, the device remains in the bus->devices list but is
+not tracked by the driver core.
 
-Would this prevent the device and its parent target from ever entering
-runtime suspend, causing unbounded power drain?
+When the PCI device or bus is later removed, pci_destroy_dev() unconditiona=
+lly
+calls device_del(&dev->dev). Calling device_del() on a device that was never
+successfully added via device_add() violates the driver core API.
 
->  	scsi_autopm_get_target(starget);
->  	pm_runtime_set_active(&sdev->sdev_gendev);
+Could this lead to a kernel crash or NULL pointer dereference when a PCI
+device is enumerated under memory pressure?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260701135015.8193=
-7-1-djeffery@redhat.com?part=3D5
+7-1-djeffery@redhat.com?part=3D4
