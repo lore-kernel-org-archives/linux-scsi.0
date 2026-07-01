@@ -1,85 +1,90 @@
-Received: from mo4-p01-ob.smtp.rzone.de (mo4-p01-ob.smtp.rzone.de [85.215.255.50])
+Received: from mo4-p02-ob.smtp.rzone.de (mo4-p02-ob.smtp.rzone.de [81.169.146.170])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 03ED33A6B82;
-	Wed,  1 Jul 2026 20:32:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=85.215.255.50
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC6C4224AF2;
+	Wed,  1 Jul 2026 20:52:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=81.169.146.170
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782937938; cv=pass; b=XBud86b2x1U9+f72czpPEZhQaj8mMGzWeC4MWayeuvMOP6aafPfsc/WvkdJryJJxnkiGku9sW2jIVay1A67x7F7WjtTMCoXng68p1JWpIq21FhhvU8vQj115Xq8ed2HUzvNw1dLaMMT7WNNb8KQTrtxzDyhCH95M/IT9rc7D0io=
+	t=1782939134; cv=pass; b=lT8FM1EqXXVPsYwL/ji3jVkYrAomzq6xdLOi1k3FQoJ/EeU7xfuQ+ZuJbo+Np+6MIyW5CJpJp0c/q5UXF9edNdTrAAih0N5vr7kv0PZ0uQIIvl5Pn1DwYm3fez9rlqKbsS1oVkY2GEw3J72RRMJ8cWL/Jkk9S1oALb943qTZYXM=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782937938; c=relaxed/simple;
-	bh=mUwWyk6ljkIBUnO48igvAl6mE3l3lYg8d3QjUEepim0=;
+	s=arc-20240116; t=1782939134; c=relaxed/simple;
+	bh=0OI9r+oDLNMoCCNp+jvgl6P08jRKSfU7E7aeuxBZlOQ=;
 	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=dbaMotGikz4nevSNsxQPv0auTfr7d8+a9E4OOBfeCBkw0RDK0oJJUzuef70bpXfjQyQ8xFUaIBi7EClJMrRdIlAdGBHM1I4QE5Oesj52iqt+a98e9dOe2AW8c/1xHNVvE2fEjarxlXDyFedUVPBDxvfXM9VtiFYoFg/jyRkxaN0=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iokpp.de; spf=none smtp.mailfrom=iokpp.de; dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.b=Eo4nk8ri; dkim=permerror (0-bit key) header.d=iokpp.de header.i=@iokpp.de header.b=p+3CoDDj; arc=pass smtp.client-ip=85.215.255.50
+	 Content-Type:MIME-Version; b=Htfdxpbf14dL3f6g1uni5FI+jScDBY8D36Zl4vZclQP1e4SH6CtiM/3+jwljaNjClDRDZ9WfH9Ke/W4LR6iiTUSDJFr6TtkITgZLiTGVegc+JnjsuTmKJBZY6oCs3+l7n++H00Chud0xPOY4EsWmyL/jtNZl9pxfRt5i97D3J08=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iokpp.de; spf=none smtp.mailfrom=iokpp.de; dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.b=sIai4biI; dkim=permerror (0-bit key) header.d=iokpp.de header.i=@iokpp.de header.b=tHf9G+j3; arc=pass smtp.client-ip=81.169.146.170
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iokpp.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=iokpp.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.b="Eo4nk8ri";
-	dkim=permerror (0-bit key) header.d=iokpp.de header.i=@iokpp.de header.b="p+3CoDDj"
-ARC-Seal: i=1; a=rsa-sha256; t=1782937929; cv=none;
+	dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.b="sIai4biI";
+	dkim=permerror (0-bit key) header.d=iokpp.de header.i=@iokpp.de header.b="tHf9G+j3"
+ARC-Seal: i=1; a=rsa-sha256; t=1782938946; cv=none;
     d=strato.com; s=strato-dkim-0002;
-    b=MEASrHTMeN4OwX9U3w3FQYb7D3T+fzK4yUCQYi0y7tcXJzQ0hOJImXotTQOdqO6zYu
-    JsYkEidBWhSjDEE3ZDB1EVbTMt4GWG/8GrfbZrZzwBtpUzXy7yPpavpuzgzi0JliDJJC
-    tsWzQA0vALPSgre9ImWi+dRdfWvBfgubHfMlm/IhzU+ZUJiBy7O6IdE97pCab6/nVBBC
-    iBKmXuhEaflf8oScVmBmUoI9N4Uof9eHk1xQBRtXnDI9OEPumm7KKRinZtCFWWLoWRvl
-    dxZL6uHuqgzWqxMQvev3L01dMolrrhaLzRtPW3EBqviILAfhDqdvB5ugKQZpDr15FaOL
-    lHvQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; t=1782937929;
+    b=OwFN0gPD+BiuM4H6omziC9HWaxRyCyapRT2uKi9EFb7YL7zfTa4siBw6pjiqE/E2UW
+    /9Jnw079GPsGR2Dd0YfwoAv4V86rwJw+vRzkK3k86qBWC/iJeM8/pun8FvFuuxXYTkbW
+    PTsmffApLXWk+ZD1L3mhWM9OCPcFEKMciwrK/L8ZTSPJkJ3nrrik496TGRewLL3LtX+8
+    WHeaPZZ6DojK0KUhJKp6ENyszQrAm6cLORJrJW/5+DV1g8e+nKCPiyqHwB7n9aPWN0Et
+    tnh0hK9lNOAIvjZzdRKLgnjFDAvj8JAK1k7gblXsCoRPi4Z4kVa/o5Yh3H2QDM1ezBR4
+    zOjA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; t=1782938946;
     s=strato-dkim-0002; d=strato.com;
     h=References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Cc:Date:
     From:Subject:Sender;
-    bh=mUwWyk6ljkIBUnO48igvAl6mE3l3lYg8d3QjUEepim0=;
-    b=CIZlH/UKUa1pGMsiNOjU4IfrFxsQeLInQjo92DSCT1vwgTqB9Vm4Dg8oIDo61M2k3k
-    cpN0Ea01lB9T6ROoJuaKEqaNvDP7wuFOjJXZlpuyWhJt+AKv08fV4F8Id/IvLQ2dRmoW
-    cvE7IT1tfv4Z9pAmOHVBtHz6/3DY36BBxQGhpKs9FRy3/xOQHdxDZPWHTK+IFMzAlL/+
-    AeDK3FBYkPnivc+TrbsQaVKstcbHeIn/KpefV1W6CEri48a4xeEbQVejn/np3JZLKDao
-    g57cbaAfxA9LLGqiaQ7ywHq0p9W7sJtPlD3uGR5g9nK0kUg+alCeeKoIft3khBn6d9Pq
-    yZSw==
+    bh=0OI9r+oDLNMoCCNp+jvgl6P08jRKSfU7E7aeuxBZlOQ=;
+    b=HdxzqBaRCHSC8u3tKtwPAL0ctTU1/AVWXlIBgGV9h+RnuRUZZDw/0k/X13tuf7EtDY
+    /Rr0wzdZRFpxUPYxdJgil1Y/3ClsS6LlJ6PmKuDUgvMrB8i8reRXpDcaMXw0+ly+22OE
+    1z2jnL+pxkFmGAgv4MT+LndKUh+W7oM5N9ycbcFIJaPyd5+PmuMQL+AouE3iYufMuG1j
+    MMXXTtlMx/SCqovv7WM1qLePnBNzGl94rhiauUFZqQOf1lNhO5S2diJDUHBMiumWpbVj
+    zRzuKo5ehy+6cppXJP7zQEfW3lykUpmKRdroa+/fakg1hfh2/nt0b1bRw4T+B+0gd+DR
+    RO0g==
 ARC-Authentication-Results: i=1; strato.com;
     arc=none;
     dkim=none
-X-RZG-CLASS-ID: mo01
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1782937929;
+X-RZG-CLASS-ID: mo02
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1782938946;
     s=strato-dkim-0002; d=iokpp.de;
     h=References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Cc:Date:
     From:Subject:Sender;
-    bh=mUwWyk6ljkIBUnO48igvAl6mE3l3lYg8d3QjUEepim0=;
-    b=Eo4nk8riYmy3luyowaaALzWfH1/O+sXjPPpSdiXmvwB+mOBvP8nKWhwNAznb5g2iYd
-    sQ2fQWS3Hi+I4m8wMUb8BeBiCCkvReN54W0d3Ap/OmH1yCJTFMYl30KXUu7NAaXjYOih
-    3RSB5xo6cR4j5ZRDMd6GQoG5oykf867K9T8bQV5K0Wmv1IRZbvOAg2eEt7v76c0MDA1a
-    A6QnQYBWUgcgV8KswAQDY0y/Y0hsf/5w/qr/gYrNvjIOBEdAxMoleqnSB9ukJVqxsHPW
-    xX2n4YQ7fI6zKOAMmcbwXB8PZIgtJIVbApQObnJKGmAYN+S9EU3SqpvLk3RmOZZYCI2j
-    FB2g==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; t=1782937929;
+    bh=0OI9r+oDLNMoCCNp+jvgl6P08jRKSfU7E7aeuxBZlOQ=;
+    b=sIai4biILPLJ3qx6cnpm9RRIVP5MADxN2cHXM5kK9ofXpRkcri9XD/IddbgDCMEYFY
+    Nucj8fnxifKV2l8OECinbLlPVfMjK/xFKoIW1HlMEF5tZswCxIp+OKC+35xggA8qbeBM
+    cbi1mA75/rXPK/M/Wl/rymRoVdkw1CXAwC0u1e+JkIFKYqk05yYtZCPv3glH/hYV6SUk
+    SolA0aRAaaj83QrkXMLAVjSbwYTZHAh121nyyWTwuKVeJAjBLgILocbkGh704GCeCeLc
+    l+heDDEZnDcCIRLD5i0MB0N58Qsz0tt4E/j3gZDU3yF3GnkvNBzrjIPzA80ua6BzzZyH
+    z2EQ==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; t=1782938946;
     s=strato-dkim-0003; d=iokpp.de;
     h=References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Cc:Date:
     From:Subject:Sender;
-    bh=mUwWyk6ljkIBUnO48igvAl6mE3l3lYg8d3QjUEepim0=;
-    b=p+3CoDDjy3PJ3q9eowSmlpuDwdz8NklzMBHrmbW1OSb44aK9iLQD0L5KU9H6ysix+s
-    QbW4C9DqmNANuMPPcCDw==
+    bh=0OI9r+oDLNMoCCNp+jvgl6P08jRKSfU7E7aeuxBZlOQ=;
+    b=tHf9G+j3iVW3fB/gSnpgkz62pZdUbJLh5lze5IV0e5jjCcfBXOSjuB23+y5f7nDk6j
+    UBBbT+xn4e5QQR33KQBA==
 X-RZG-AUTH: ":LmkFe0i9dN8c2t4QQyGBB/NDXvjDB6pBSe9tgBDSDt0V0zNriHg+YfT0rGWUpI6weUrZX7j5d8vw1ZwljKUZAZetExYucA=="
 Received: from p200300c5871477310ac0be5030e43536.dip0.t-ipconnect.de
     by smtp.strato.de (RZmta 55.5.6 AUTH)
-    with ESMTPSA id z4d388261KW8VOK
+    with ESMTPSA id z4d388261Kn5VQK
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256 bits))
 	(Client did not present a certificate);
-    Wed, 1 Jul 2026 22:32:08 +0200 (CEST)
-Message-ID: <47949382311da57d59a711f2ed91a3c9f70fec2c.camel@iokpp.de>
-Subject: Re: [PATCH v2 1/3] scsi: ufs: ufs-qcom: Restore TX Equalization
- settings on FOM failure
+    Wed, 1 Jul 2026 22:49:05 +0200 (CEST)
+Message-ID: <3362cec069bd3437c378f356c3e1333d3428070e.camel@iokpp.de>
+Subject: Re: [PATCH v2 3/3] scsi: ufs: core: Always run tx_eqtr POST_CHANGE
+ notify
 From: Bean Huo <beanhuo@iokpp.de>
 To: Can Guo <can.guo@oss.qualcomm.com>, bvanassche@acm.org,
  beanhuo@micron.com,  peter.wang@mediatek.com, martin.petersen@oracle.com,
  mani@kernel.org
-Cc: linux-scsi@vger.kernel.org, "James E.J. Bottomley"
- <James.Bottomley@HansenPartnership.com>, "open list:ARM/QUALCOMM MAILING
- LIST" <linux-arm-msm@vger.kernel.org>, open list
- <linux-kernel@vger.kernel.org>
-Date: Wed, 01 Jul 2026 22:32:07 +0200
-In-Reply-To: <20260625121306.1655467-2-can.guo@oss.qualcomm.com>
+Cc: linux-scsi@vger.kernel.org, Alim Akhtar <alim.akhtar@samsung.com>, Avri
+ Altman <avri.altman@wdc.com>, "James E.J. Bottomley"
+ <James.Bottomley@HansenPartnership.com>,  Matthias Brugger
+ <matthias.bgg@gmail.com>, AngeloGioacchino Del Regno
+ <angelogioacchino.delregno@collabora.com>,  open list
+ <linux-kernel@vger.kernel.org>, "moderated list:ARM/Mediatek SoC
+ support:Keyword:mediatek" <linux-arm-kernel@lists.infradead.org>,
+ "moderated list:ARM/Mediatek SoC support:Keyword:mediatek"
+ <linux-mediatek@lists.infradead.org>
+Date: Wed, 01 Jul 2026 22:49:05 +0200
+In-Reply-To: <20260625121306.1655467-4-can.guo@oss.qualcomm.com>
 References: <20260625121306.1655467-1-can.guo@oss.qualcomm.com>
-	 <20260625121306.1655467-2-can.guo@oss.qualcomm.com>
+	 <20260625121306.1655467-4-can.guo@oss.qualcomm.com>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 User-Agent: Evolution 3.44.4-0ubuntu2.1 
@@ -91,21 +96,21 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 
 On Thu, 2026-06-25 at 05:13 -0700, Can Guo wrote:
-> ufs_qcom_get_rx_fom() applies temporary device TX Equalization values
-> before forcing HS mode and running the EOM-based SW FOM scan.
+> ufshcd_tx_eqtr() skips POST_CHANGE notify when __ufshcd_tx_eqtr()
+> fails. That can leave variant cleanup incomplete when PRE_CHANGE saved
+> temporary state that POST_CHANGE is expected to restore.
 >=20
-> When one of these steps fails, the function can bypass the shared
-> cleanup path and leave temporary TX Equalization settings programmed.
+> Always call POST_CHANGE once PRE_CHANGE has succeeded. Keep the TX EQTR
+> result as the primary return value, and only propagate POST_CHANGE
+> failure when TX EQTR itself succeeded.
 >=20
-> Route those failures through the cleanup label so the original TX EQ
-> settings are restored and link recovery runs before exit.
+> Log PRE_CHANGE and POST_CHANGE notify failures to make variant callback
+> failures visible in TX EQTR error paths.
 >=20
-> This path also reuses ret for cleanup, so it may overwrite the original
-> error. Keep that on purpose: if cleanup succeeds, the caller can proceed
-> with the FOM result for the current iteration.
->=20
+> Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
+> Reviewed-by: Peter Wang <peter.wang@mediatek.com>
 > Signed-off-by: Can Guo <can.guo@oss.qualcomm.com>
 
-Loods good to me.
+Loods good to me!
 
 Reviewed-by: Bean Huo <beanhuo@micron.com>
