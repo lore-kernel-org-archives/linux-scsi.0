@@ -1,187 +1,156 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ECE9C2ED15F;
-	Wed,  1 Jul 2026 14:11:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+Received: from azure-sdnproxy.icoremail.net (azure-sdnproxy.icoremail.net [52.175.55.52])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 4F8A5224B04;
+	Wed,  1 Jul 2026 14:29:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=52.175.55.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782915107; cv=none; b=s3vQgFFKkY3T83MvacX6Dn19LNeo5X4m/bXfzkXjjCGsA3otcvaRk+DVIq1EYRG/VNnwY0iOiSMcmB5PqZr7vAEf51bgtktQYy+40ytU9XJkgRuqNZf4ESUv6i885P5pFF7Sfs5X8Kw8FphUpkTvjd6ymTPDBwKR4xidjgMtG8A=
+	t=1782916154; cv=none; b=cLM8XpQdi88/Jmw4gKmDxGzw+ein7Ik+kZL0VcOyQ7ORYpHSL7zOuB+OlZqLgosizXZfshauu3Zb7mXX6lSRifYhGzbSbWMEb7n9AjRgobdXuOSS/7zh05CLe2hCsDsD8pmOzgp8E+wOdi/Xps/xdpoDH3ZpzgbWnNPIZzID1zk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782915107; c=relaxed/simple;
-	bh=BD+0CGd+YAB2RovEcWoIZE9+hYynbslbP3zfG3AVNj4=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=P0HdOYGBzJ7HHXd5SUrojiWGoQHYM3EntoUb8hi5c982bQah1Qwu6uoZi2TciVdKwLmCFR6kCyyLn8NuVCTEXlp2oWdIDvbrUzQ1tgnggBv7mH3yAK1VxXlcZwmJqHXKUvmxfpOkg35gBFfMAMbttChXRlRbxBFvupEeAlPNNOc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XlUx3vr+; arc=none smtp.client-ip=100.103.45.18
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XlUx3vr+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 52A611F000E9;
-	Wed,  1 Jul 2026 14:11:44 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782915105;
-	bh=036rLB9uZP4OtkAvySFQ5HS6TijA5qg9heuUiXFI0yY=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=XlUx3vr+oB/HcNz5Ls/gNSTUH2yML5JIuNkp5E0a4q+JZE1RxphGGWP9Sve0zC9U0
-	 F16GivWXA0m+n05yzHPuO9uaWBJ5lIGalcYYtiUNKBr5o/b83OxsoYm5263cyfTAB+
-	 vuT+MYIhr9bk2Eaa8PZEYIGGw0xPrV/nLSgpiX9UkuIeyNK2orHTUiP6m0ZT7Ini+p
-	 ZyEfnWE47OBH3lOrx9i8nVT+V5Ck6ToaRn4xaEKg8wN8m2ioQZ393VI+KGdbgTy9t9
-	 Xo/WZ3b6/PRCgyQco5bftYB8dVnc7lNS14wUOxO5uiRllitSjv3AGwdBOZAtJ9oOb3
-	 Ev5iiSy8QU+BQ==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 3/5] driver core: async device shutdown infrastructure
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "David Jeffery" <djeffery@redhat.com>
-Cc: linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org
-In-Reply-To: <20260701135015.81937-4-djeffery@redhat.com>
-References: <20260701135015.81937-1-djeffery@redhat.com>
- <20260701135015.81937-4-djeffery@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 01 Jul 2026 14:11:44 +0000
-Message-Id: <20260701141145.52A611F000E9@smtp.kernel.org>
+	s=arc-20240116; t=1782916154; c=relaxed/simple;
+	bh=5KGXLuJSX0BjAWR3juBdii5Oe66hGwwQCohFUY34DJg=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=dwtQPS1Muz3d4BZj2sCrsu+ArQXTfg4CWo9mdpsEjamJV+pvWKo1ySS3ul4zI7y6ORHN0yF6V25aiiqu5nLjXzHsnb0EmutpD0x30dZKV8pBXGBafScJEyQSGhH5RPMPsc/DimqeRGKH8NoicZfyGFBKTyHtAPyVZU548GxDTV8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zju.edu.cn; spf=pass smtp.mailfrom=zju.edu.cn; arc=none smtp.client-ip=52.175.55.52
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zju.edu.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zju.edu.cn
+Received: from zju.edu.cn (unknown [10.98.66.117])
+	by mtasvr (Coremail) with SMTP id _____wDXl0YkJEVq0UlNAw--.19045S3;
+	Wed, 01 Jul 2026 22:28:53 +0800 (CST)
+Received: from localhost.localdomain (unknown [10.98.66.117])
+	by mail-app4 (Coremail) with SMTP id zi_KCgCn2jEkJEVqzTz8AQ--.5574S2;
+	Wed, 01 Jul 2026 22:28:52 +0800 (CST)
+From: Fan Wu <fanwu01@zju.edu.cn>
+To: don.brace@microchip.com
+Cc: James.Bottomley@HansenPartnership.com,
+	martin.petersen@oracle.com,
+	storagedev@microchip.com,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org,
+	Fan Wu <fanwu01@zju.edu.cn>
+Subject: [PATCH] scsi: smartpqi: cancel pending workers before freeing controller
+Date: Wed,  1 Jul 2026 14:27:57 +0000
+Message-Id: <20260701142757.8447-1-fanwu01@zju.edu.cn>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:zi_KCgCn2jEkJEVqzTz8AQ--.5574S2
+X-CM-SenderInfo: qrstjiaswqq6lmxovvfxof0/
+X-CM-DELIVERINFO: =?B?Wu+DqAXKKxbFmtjJiESix3B1w3vZ3A9ovKVTomAyoQazvoRs/NHSP8GI2EvgeEEW7R
+	sfnXz+g1OQfMo27QHy5TwQyZwEeP9aV36GJRgY7CgHqzw/4H/s5SQPYwcAkAkIL+W54GHX
+	FQYp8/i1GZ6kQ0dgi24=
+X-Coremail-Antispam: 1Uk129KBj93XoWxGr4ruF18uFWkWF1UuFyfuFX_yoWrtFW5pF
+	WfX3srJr4ktFWY934qv3W8AFy3ur4DJw1DC397K3sxCa13Jry0qFyUGF4qvFW5Jrs5Ar12
+	yrnYva45Wr98tFcCm3ZEXasCq-sJn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7KY7ZEXa
+	sCq-sGcSsGvfJ3Ic02F40EFcxC0VAKzVAqx4xG6I80ebIjqfuFe4nvWSU5nxnvy29KBjDU
+	0xBIdaVrnRJUUU9Gb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k26cxKx2
+	IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48v
+	e4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI
+	0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AK
+	xVW0oVCq3wAac4AC62xK8xCEY4vEwIxC4wAS0I0E0xvYzxvE52x082IY62kv0487Mc804V
+	CY07AIYIkI8VC2zVCFFI0UMc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2IY67AK
+	xVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0Y48Icx
+	kI7VAKI48JM4x0Y48IcxkI7VAKI48G6xCjnVAKz4kxMxAIw28IcxkI7VAKI48JMxC20s02
+	6xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_Jr
+	I_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v2
+	6r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVWUJVW8JwCI42IY6xAIw20EY4v20xvaj4
+	0_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8
+	JrUvcSsGvfC2KfnxnUUI43ZEXa7IU85l1PUUUUU==
 
-Thank you for your contribution! Sashiko AI review found 4 potential issue(=
-s) to consider:
-- [High] Modifying the core.async_shutdown module parameter during shutdown=
- causes synchronous suppliers to skip waiting for asynchronous consumers.
-- [High] Unregistered consumer devices will cause a NULL pointer dereferenc=
-e during async shutdown dependency waiting.
-- [High] Adding a new device with async shutdown enabled while its synchron=
-ous supplier is being processed leads to an unresolvable deadlock.
-- [High] Dereferencing `dev->p->dead` without NULL checks causes a crash if=
- a concurrent `device_add()` fails.
---
+The smartpqi driver schedules four struct work_struct members of
+struct pqi_ctrl_info on the system workqueue: ctrl_offline_work,
+event_work, ofa_memory_alloc_work and ofa_quiesce_work.
+ctrl_offline_work is armed by pqi_take_ctrl_offline(), reached from the
+heartbeat timer handler and the error paths; event_work is queued by the
+event-interrupt handler, and the event worker can in turn queue the two
+OFA workers while processing OFA events.
 
-commit cf98cdf76df805443cc885868cb3d9e13da5501c
-Author: David Jeffery <djeffery@redhat.com>
+None of these workers is cancelled during controller teardown.
+pqi_remove_ctrl() stops the heartbeat timer and cancels the rescan and
+update_time delayed workers, then calls pqi_free_ctrl_resources(), which
+frees the interrupts and finally the controller in pqi_free_ctrl_info()
+(kfree).  A worker queued by the timer or the event handler can therefore
+run after the controller has been freed:
 
-driver core: async device shutdown infrastructure
+    CPU0 (teardown)                 CPU1 (system_wq)
+    heartbeat timer / event IRQ
+    pqi_take_ctrl_offline()
+      schedule_work(ctrl_offline_work)
+    pqi_remove_ctrl()
+      ...
+      pqi_free_ctrl_resources()
+        free_irq()
+        kfree(ctrl_info)            pqi_ctrl_offline_worker()
+                                      container_of(work) -> freed ctrl_info
+                                      pqi_take_ctrl_offline_deferred()
+                                        dereferences ctrl_info  UAF
 
-This commit allows devices to opt into asynchronous shutdown, executing in
-parallel with unrelated devices after their dependencies shut down. Synchro=
-nous
-shutdown devices will wait for their asynchronous dependencies. The feature=
- is
-enabled by default and can be toggled via the core.async_shutdown parameter.
+Clearing controller_online does not stop an already-queued
+ctrl_offline_work: pqi_ctrl_offline_worker() and its callee
+pqi_take_ctrl_offline_deferred() never check it and dereference the
+controller unconditionally.  pqi_event_worker() and the two OFA workers
+recover the controller with container_of() and dereference it the same way.
 
-> diff --git a/drivers/base/core.c b/drivers/base/core.c
-> --- a/drivers/base/core.c
-> +++ b/drivers/base/core.c
-[ ... ]
-> +static bool wants_async_shutdown(struct device *dev)
-> +{
-> +	return async_shutdown && dev_async_shutdown(dev);
-> +}
-> +
-> +static int wait_for_device_shutdown(struct device *dev, void *data)
-> +{
-> +	bool async =3D *(bool *)data;
-> +
-> +	if (async || wants_async_shutdown(dev))
-> +		wait_for_completion(&dev->p->complete);
-> +
-> +	return 0;
-> +}
+Drain the workers in pqi_free_ctrl_resources(), in an order that drains
+each layer of the arming chain.
 
-[Severity: High]
-If a user-space process toggles the 0644 core.async_shutdown sysfs parameter
-from 1 to 0 during shutdown, could this cause synchronous suppliers to skip
-waiting for their asynchronous consumers?
+ctrl_offline_work is disabled with disable_work_sync() rather than
+cancelled.  Its armer, pqi_take_ctrl_offline(), checks controller_online
+and then, still in the same call, clears it and calls schedule_work(); an
+interrupt or error handler that has already passed that check will queue
+ctrl_offline_work even after pqi_remove_ctrl() has cleared
+controller_online, so a plain cancel_work_sync() can return before that
+in-flight armer queues the work.  The worker's callback,
+pqi_take_ctrl_offline_deferred(), also calls pqi_free_interrupts(), so an
+instance running during teardown would race the
+num_msix_vectors_initialized counter in pqi_free_irqs() and call
+free_irq() twice for the same vectors.  disable_work_sync() drains any
+queued or running instance and makes later schedule_work() calls on it
+no-ops, so the worker can neither run during the teardown's own
+pqi_free_interrupts() nor survive until the controller is freed.
 
-If start_async_shutdown_devices() schedules an async consumer, and then the
-parameter is toggled before the sync loop processes its supplier, the call =
-to
-wants_async_shutdown(dev) here would evaluate to false.=20
+The remaining three workers are cancelled after pqi_free_interrupts().
+Freeing the IRQs first stops the handler from arming event_work, draining
+event_work next stops the event worker from arming the OFA workers, and
+the OFA workers are drained last: each cancel is a final drain with no
+re-arm race.
 
-This would skip the wait_for_completion(), potentially causing the supplier
-(e.g., a PCI bus) to shut down while its consumer is still active.
+cancel_work_sync() is the correct primitive for the remaining work_struct
+items: it cancels a pending instance and waits for a running callback to
+return.  pqi_free_ctrl_resources() is reached only through the
+pqi_remove_ctrl() chokepoint shared by pqi_pci_remove() and the probe
+error path, and the four work_structs are initialised in
+pqi_alloc_ctrl_info(), so draining here always operates on initialised
+work.
 
-[Severity: High]
-Could this result in a NULL pointer dereference if the consumer is not yet
-registered?
+Fixes: 5f310425c8ea ("scsi: smartpqi: update rescan worker")
+Cc: stable@vger.kernel.org # needs adjustments for <= 6.6: use cancel_work_sync()
+Signed-off-by: Fan Wu <fanwu01@zju.edu.cn>
+---
+ drivers/scsi/smartpqi/smartpqi_init.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-The device_link_add() function allows creating links to consumer devices th=
-at
-haven't been registered yet, meaning their dev->p is NULL because
-device_private_init() hasn't run.
+diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
+--- a/drivers/scsi/smartpqi/smartpqi_init.c
++++ b/drivers/scsi/smartpqi/smartpqi_init.c
+@@ -8891,7 +8891,16 @@ static void pqi_free_interrupts(struct pqi_ctrl_info *ctrl_info)
 
-If wait_for_shutdown_dependencies() is called from the async pool, where the
-async argument is forced to true, the wait_for_completion() will
-unconditionally evaluate &dev->p->complete, crashing on the NULL pointer.
+ static void pqi_free_ctrl_resources(struct pqi_ctrl_info *ctrl_info)
+ {
++	/*
++	 * Disable, not cancel: the callback also frees IRQs, and
++	 * pqi_take_ctrl_offline() can re-queue it after a cancel.
++	 */
++	disable_work_sync(&ctrl_info->ctrl_offline_work);
+ 	pqi_free_interrupts(ctrl_info);
++	/* IRQs queue event_work, which can queue OFA work. */
++	cancel_work_sync(&ctrl_info->event_work);
++	cancel_work_sync(&ctrl_info->ofa_memory_alloc_work);
++	cancel_work_sync(&ctrl_info->ofa_quiesce_work);
+ 	if (ctrl_info->queue_memory_base)
+ 		dma_free_coherent(&ctrl_info->pci_dev->dev,
+ 			ctrl_info->queue_memory_length,
 
-[ ... ]
-> +static void __shutdown_one_device(struct device *dev)
->  {
->  	if (dev->p->dead)
->  		return;
-
-[Severity: High]
-Could this cause a NULL pointer dereference if a concurrent device_add() fa=
-ils?
-
-If a concurrent device_add() fails after calling kobject_add(), its error p=
-ath
-calls kobject_del() and then frees and nullifies dev->p. Evaluating
-dev->p->dead without checking if dev->p is valid could crash here.
-
-[ ... ]
-> +static void start_async_shutdown_devices(void)
-> +{
-> +	struct device *dev, *next, *ndev, *needs_put =3D NULL;
-[ ... ]
-> +			needs_put =3D ndev;
-> +			spin_lock(&devices_kset->list_lock);
-> +			/*
-> +			 * If the next device has been marked dead while the
-> +			 * spinlock was released, it may no longer be on the
-> +			 * devices_kset list. Restart the list walk to be safe
-> +			 */
-> +			if (ndev && ndev->p->dead)
-> +				goto restart;
-
-[Severity: High]
-Could ndev->p be NULL if a concurrent device_add() fails?
-
-If start_async_shutdown_devices() obtains a reference to next via
-get_device(), and concurrently device_add() fails and clears dev->p,
-reacquiring the lock and evaluating ndev->p->dead here could result in a NU=
-LL
-pointer dereference.
-
-[ ... ]
->  void device_shutdown(void)
->  {
-[ ... ]
-> -		shutdown_one_device(dev);
-> +		if (!wants_async_shutdown(dev) || !shutdown_device_async(dev)) {
-> +			wait_for_shutdown_dependencies(dev, false);
-> +			shutdown_one_device(dev);
-> +		}
-> =20
->  		spin_lock(&devices_kset->list_lock);
->  	}
->  	spin_unlock(&devices_kset->list_lock);
-
-[Severity: High]
-Can this sequence lead to an unresolvable deadlock if a new device is added
-concurrently?
-
-If a new device 'C' with DEV_FLAG_ASYNC_SHUTDOWN is added via hotplug
-after its synchronous supplier 'S' has already been popped from
-devices_kset by this loop, 'C' is appended to devices_kset.
-
-'S' will call wait_for_shutdown_dependencies() and find 'C', blocking on
-wait_for_completion(&C->p->complete) because wants_async_shutdown(C) is tru=
-e.
-
-Since 'C' was added after start_async_shutdown_devices() ran, it is not
-running in the async pool. Because the sync loop is blocked on 'S', it will
-never reach 'C' to start it, deadlocking the shutdown process permanently.
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260701135015.8193=
-7-1-djeffery@redhat.com?part=3D3
