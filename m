@@ -1,187 +1,133 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pg1-f178.google.com (mail-pg1-f178.google.com [209.85.215.178])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AEBB435F16C
-	for <linux-scsi@vger.kernel.org>; Wed,  1 Jul 2026 14:53:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4A6B837DAAD
+	for <linux-scsi@vger.kernel.org>; Wed,  1 Jul 2026 17:52:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.178
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782917595; cv=none; b=AM2y5cVprq6UdSeNzSVUCGxf+LritwQe9NoDHA0a9FB5p0N41pLcxAiELnVX/4B1tOzA55b0LMTuQzAKEbH5+L2iMxSWD6+1WNfim16xDyGx30B5oz+b5UpXI5h6i+QxbC5E04V54CZEYeH+qzfd6KTjA/bYAPWKVFwCyzwM16g=
+	t=1782928341; cv=none; b=tILsCMMdmeS3OOwc2wNYCcMd1N1DIQrspcr9ESvSk77LG38wO/6RXjrbGRdknLk0XIvqKsL3WePOLhHSRIBaUfRgceb0dOIkmE9nvHoI53agkGeS2vPdYImJuEuPAFrx/4OXvevTOsf6my7UCfnnGvbHfJMj1Qf0pxMgXGY3Kq0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782917595; c=relaxed/simple;
-	bh=Aqe2ZpP/MR3dlG4VJlI4UcxFIOo3t7ElVpxd8MUBUrk=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=btsyXxnoMiaU9hGwgTjHPWuWAUKdWj5WbTTHongI9ObuC0QU732CDYLpXkhSOmaXMsrF+NlGjccH8UoUx0P4Bvs5ErcC/9c1mDZ0kAxjtZKvuAazSjwz9EaPvPyM0H1RBpl//IHXP7XZs/6yuHcRHWWR5KQpqxAePDNdT8IqJU0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KWyouGa3; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1782928341; c=relaxed/simple;
+	bh=7kOXFPaAdPhx1Hpa4JOCw3FAkmd6IMhexw2XDa6LJu8=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=f86yXhMrunahtpZ6xcqciZ4g2tKez74bqkquT6dBAi8i/7v2i8+OIvPAtUT7VGwP628lO9nO6D2xLXSawCHMkDbjuSH1EyThaz/gzYJcxZzCLkI5WkS9TVtUJJz4B6dfo7uWo+WA+QueaHibronNUZskkbwbHM82UhHIi1VHAsY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=bFFb8ThG; arc=none smtp.client-ip=209.85.215.178
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KWyouGa3"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 31D6A1F000E9;
-	Wed,  1 Jul 2026 14:53:13 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782917593;
-	bh=0WJox7dcjZMmuueJwo3iEGjNE3mJFZrEnZTR2YM2uQg=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=KWyouGa3z36flclOVilmLK8KWDI0+B0+P3YKSznfZgceWodIZyW+V7/XNjt1P04Jj
-	 qp/C32A0alSeoINaI3tU36mlsGGMq+gKhq4goGpkRjpEC76z8/eswzlMzJEvNkGkVq
-	 2LOugSXPXvIfT2ay6DGkM7aHYgNnH677zZO/XhZ/QjNVu1dvTyvwi4bnJe8DmiNC9E
-	 DE+CkLAwglYNMOuohs54sMRwq0hLp6WkEWk5x6/agKbpgvQw41R6yxTN47h7t6WvH2
-	 /1EcjZL15kTagTUq53/MfnnWsTXIw/+uoNq/rhKh33aFeTpq1Y5XLmK0Jz4s328I+3
-	 tPQgDwPA5w+BA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] scsi: smartpqi: cancel pending workers before freeing
- controller
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Fan Wu" <fanwu01@zju.edu.cn>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20260701142757.8447-1-fanwu01@zju.edu.cn>
-References: <20260701142757.8447-1-fanwu01@zju.edu.cn>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 01 Jul 2026 14:53:12 +0000
-Message-Id: <20260701145313.31D6A1F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="bFFb8ThG"
+Received: by mail-pg1-f178.google.com with SMTP id 41be03b00d2f7-c96d2bebca3so425065a12.3
+        for <linux-scsi@vger.kernel.org>; Wed, 01 Jul 2026 10:52:20 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1782928339; x=1783533139; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=xHvBh2uVHpZT329He2kyX45xyPSNwiWA2SzGOyBHv5I=;
+        b=bFFb8ThG6U78QM6PXggTQJ3pItglWYFgNjMmDbfSBunqF/iaLE+s1vHY0ZhIiGEB/V
+         kRSj/L95dodahgC5oqfe+Yotn7D+Cp1nzRtfkLrhWGF770FH0K1y+bXsGkuugQC2D0pQ
+         DBJPhUWP8uuLPqWQfWZq4GCbUf8JWoPBDg3cVGXHogNbB2UYD1gFaIy/w1UwyEP860Nz
+         RF+JaRaGp+yOADrm40w/d/0OaqCgsYVYBEQMzEteP55eGx7NCw9M4N7cCjNJ4QGOLoQs
+         WGuaEwlXkbbTt69QOe/EYeFnbuCwUtbJpzv/C2BpLbWtQc1vf9Vazae4XrL1ZAfKYAz4
+         hRaA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1782928339; x=1783533139;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=xHvBh2uVHpZT329He2kyX45xyPSNwiWA2SzGOyBHv5I=;
+        b=nWhkFFFCY3prJr5/sp4ZrZlNx1xJMSYFfOe4zZjva4Ra4R0gbzAHTuFwVOZqZ5M4Qi
+         vkcyIyoMOrkDT0KNrwqXhxflN/K+uMxa8UNlUfSaZFJ9hz+UI+vg3CEBNuqd1sCM4Cf/
+         V4ZAmrIyPDk7LWJYV0UZfZE6Tuavf16YAV7D39EUl8txhxSHXcokgfc7TnrefbA+O1YL
+         SL24bedNtVMMkc026Dt2nbabmai88IhOomzij6P6s9+tI3CTWgErD5egageV6Un/cO7Q
+         uJIdUzbNdvgd623nVCn/0A3dGKgHqHDCJMezmWu6CK5TJR5nhrUDHzMo9irYpOQzLCnh
+         OkfQ==
+X-Forwarded-Encrypted: i=1; AFNElJ8Bnd75JM5hyYkIlVLg8kjI+U0clGhEAFQPhVQCK7ZrzPoGrPPHOZhm8WAderoWjBMMFspC8yu0hdp4@vger.kernel.org
+X-Gm-Message-State: AOJu0Yx82O82qYpQyjIfpq4qZq9cBWNYkkVwl2juopzb2pAaAzvwkUI7
+	Ev5qQH23p/CCJQG+DdS3z/u+c82vFXF0HnOP533fD4OII4nv6LKBovjP4oCRxEizcw==
+X-Gm-Gg: AfdE7clDbaN4pOls6obTwDE7zYVgHeOHYPGG5IbFaKeEoGMH/WpLMlx4xzmKebvZy7C
+	RfWEXfnFFLZ8F8WKF04JX6tQ/faZaRfzYacDGAyA836p4kEW53qpAP+c4vP4xF/IhhJ3UBS3nyV
+	YJYfEiM9Cad12IxeMRL75+kJBM5mXpjVjls15+Bali4/trS/q84vTeMmK9m9oOAB8ga6vue1AGv
+	eTj8iI0/Ib9IjbY9/slOO68EVmx47XZb1/435J/W1fYbIbEVC+AuVbhpnbXVG4ke+HU2Z0pZDQT
+	oWbptiNnYzfMQi1vmhc9wyVHdzlwTQxP1H0ltjVdPI/1pvN1qc6QojX0lQp9H0Bo/M0m4ZQ07UO
+	RWyhIZAGLVp9ax424/OPf0LYbK2QnyBkijb0XSW9shV1UWePQP0GZ5vAw4r+z69KmYIoze4Je6o
+	Vzsv8W
+X-Received: by 2002:a05:6a20:938b:b0:3bd:3a53:c147 with SMTP id adf61e73a8af0-3bfed51d83dmr2947873637.45.1782928339527;
+        Wed, 01 Jul 2026 10:52:19 -0700 (PDT)
+Received: from devubuntu.. ([2402:e280:3e9d:20a:ff04:9039:171a:2c52])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-30f0bb7fe46sm57058eec.14.2026.07.01.10.52.14
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 01 Jul 2026 10:52:17 -0700 (PDT)
+From: Animesh Rai <animeshrai853@gmail.com>
+To: James.Bottomley@HansenPartnership.com,
+	martin.petersen@oracle.com
+Cc: alim.akhtar@samsung.com,
+	avri.altman@sandisk.com,
+	bvanassche@acm.org,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Animesh Rai <animeshrai853@gmail.com>
+Subject: [PATCH] scsi: ufs: ufshcd: use str_enabled_disabled() for Write Booster messages
+Date: Wed,  1 Jul 2026 23:21:52 +0530
+Message-ID: <20260701175152.7446-1-animeshrai853@gmail.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Thank you for your contribution! Sashiko AI review found 4 potential issue(=
-s) to consider:
+Replace open-coded ternary expressions of the form
+  enable ? "enabled" : "disabled"
+with the str_enabled_disabled() helper from <linux/string_choices.h>.
 
-New issues:
-- [High] Canceling event_work during controller teardown introduces an unre=
-coverable deadlock if the worker is blocked in pqi_wait_if_ctrl_blocked().
+This reduces code duplication and allows the linker to deduplicate the
+constant strings across the kernel image.
 
-Pre-existing issues:
-- [Critical] Concurrent execution of `pqi_fail_all_outstanding_requests` ca=
-n lead to double completion of SCSI commands, causing a use-after-free and =
-double-free vulnerability.
-- [High] Incomplete teardown ordering allows `event_work` to re-arm `rescan=
-_work` after it has been cancelled, leading to a Use-After-Free when `ctrl_=
-info` is freed.
-- [High] `pqi_suspend_or_freeze()` races with `ctrl_offline_work`, causing =
-a double free of IRQ vectors.
---
+Signed-off-by: Animesh Rai <animeshrai853@gmail.com>
+---
+ drivers/ufs/core/ufshcd.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-commit 038afb1987e7de8ef32f28b104faf6296b50e850
-Author: Fan Wu <fanwu01@zju.edu.cn>
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index d3044a3089b5..e9cbed514a5c 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -26,6 +26,7 @@
+ #include <linux/sched/clock.h>
+ #include <linux/sizes.h>
+ #include <linux/iopoll.h>
++#include <linux/string_choices.h>
+ #include <scsi/scsi_cmnd.h>
+ #include <scsi/scsi_dbg.h>
+ #include <scsi/scsi_driver.h>
+@@ -6339,7 +6340,7 @@ int ufshcd_wb_toggle(struct ufs_hba *hba, bool enable)
+ 
+ 	hba->dev_info.wb_enabled = enable;
+ 	dev_dbg(hba->dev, "%s: Write Booster %s\n",
+-			__func__, enable ? "enabled" : "disabled");
++			__func__, str_enabled_disabled(enable));
+ 
+ 	return ret;
+ }
+@@ -6357,7 +6358,7 @@ static void ufshcd_wb_toggle_buf_flush_during_h8(struct ufs_hba *hba,
+ 		return;
+ 	}
+ 	dev_dbg(hba->dev, "%s: WB-Buf Flush during H8 %s\n",
+-			__func__, enable ? "enabled" : "disabled");
++			__func__, str_enabled_disabled(enable));
+ }
+ 
+ int ufshcd_wb_toggle_buf_flush(struct ufs_hba *hba, bool enable)
+@@ -6377,7 +6378,7 @@ int ufshcd_wb_toggle_buf_flush(struct ufs_hba *hba, bool enable)
+ 
+ 	hba->dev_info.wb_buf_flush_enabled = enable;
+ 	dev_dbg(hba->dev, "%s: WB-Buf Flush %s\n",
+-			__func__, enable ? "enabled" : "disabled");
++			__func__, str_enabled_disabled(enable));
+ 
+ 	return ret;
+ }
+-- 
+2.43.0
 
-scsi: smartpqi: cancel pending workers before freeing controller
-
-The smartpqi driver does not cancel pending workers during controller
-teardown, leading to use-after-free bugs when queued workers dereference a
-freed controller. This patch drains the workers in pqi_free_ctrl_resources()
-using disable_work_sync() and cancel_work_sync() in an order that prevents
-arming chains from surviving the teardown.
-
-> diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpq=
-i/smartpqi_init.c
-> index 5ec583dc2e7df..b16c50761f1ca 100644
-> --- a/drivers/scsi/smartpqi/smartpqi_init.c
-> +++ b/drivers/scsi/smartpqi/smartpqi_init.c
-> @@ -8897,7 +8897,16 @@ static void pqi_free_interrupts(struct pqi_ctrl_in=
-fo *ctrl_info)
-> =20
->  static void pqi_free_ctrl_resources(struct pqi_ctrl_info *ctrl_info)
->  {
-> +	/*
-> +	 * Disable, not cancel: the callback also frees IRQs, and
-> +	 * pqi_take_ctrl_offline() can re-queue it after a cancel.
-> +	 */
-> +	disable_work_sync(&ctrl_info->ctrl_offline_work);
-
-[Severity: Critical]
-This is a pre-existing issue, but can concurrent execution of
-pqi_fail_all_outstanding_requests() lead to double completion of SCSI
-commands?
-
-pqi_fail_all_outstanding_requests() iterates over the I/O request pool and
-completes requests using a non-atomic check:
-
-smartpqi_init.c:pqi_fail_all_outstanding_requests() {
-    ...
-    if (atomic_read(&io_request->refcount) =3D=3D 0)
-        continue;
-    ...
-}
-
-If a hardware error triggers ctrl_offline_work while a surprise removal
-triggers pqi_remove_ctrl(), both threads can execute
-pqi_fail_all_outstanding_requests() concurrently.
-
-Both threads might see a non-zero refcount and invoke io_complete_callback
-for the same request, leading to double frees and data corruption.
-
-[Severity: High]
-This is a pre-existing issue, but can pqi_suspend_or_freeze() race with
-ctrl_offline_work and cause a double free of IRQ vectors?
-
-pqi_suspend_or_freeze() calls pqi_free_irqs() without draining
-ctrl_offline_work. If a hardware error queues ctrl_offline_work just before
-suspend, the worker runs concurrently and also calls pqi_free_irqs().
-
-Because pqi_free_irqs() lacks locking:
-
-smartpqi_init.c:pqi_free_irqs() {
-    for (i =3D 0; i < ctrl_info->num_msix_vectors_initialized; i++)
-        free_irq(pci_irq_vector(ctrl_info->pci_dev, i),
-                 &ctrl_info->queue_groups[i]);
-    ...
-}
-
-Both threads can simultaneously read a positive num_msix_vectors_initialized
-and call free_irq() on the same MSI-X vectors.
-
->  	pqi_free_interrupts(ctrl_info);
-> +	/* IRQs queue event_work, which can queue OFA work. */
-> +	cancel_work_sync(&ctrl_info->event_work);
-
-[Severity: High]
-Does this cancellation introduce a deadlock if the event worker is currently
-blocked?
-
-In pqi_remove_ctrl(), pqi_ctrl_block_requests() is called which sets
-block_requests to true.=20
-
-If event_work is executing, its callback pqi_event_worker() unconditionally
-waits for block_requests to become false:
-
-smartpqi_init.c:pqi_event_worker() {
-    ...
-    pqi_wait_if_ctrl_blocked(ctrl_info);
-    ...
-}
-
-Since block_requests is never cleared during teardown, the worker blocks
-forever. cancel_work_sync() will then wait forever for the worker to finish,
-causing a deadlock.
-
-[Severity: High]
-This is a pre-existing issue, but does the teardown order allow event_work
-to re-arm rescan_work after it was cancelled?
-
-In pqi_remove_ctrl(), pqi_cancel_rescan_worker() cancels rescan_work before
-pqi_free_ctrl_resources() drains event_work here.
-
-However, event_work can arm rescan_work via
-pqi_schedule_rescan_worker_with_delay():
-
-smartpqi_init.c:pqi_schedule_rescan_worker_with_delay() {
-    if (pqi_ctrl_offline(ctrl_info))
-        return;
-    schedule_delayed_work(&ctrl_info->rescan_work, delay);
-}
-
-If event_work checks pqi_ctrl_offline() and sees false, but is preempted
-while pqi_remove_ctrl() sets the controller offline and cancels rescan_work,
-the resumed event_work will queue rescan_work again.
-
-This newly queued work is leaked and could cause a use-after-free when the
-controller is freed.
-
-> +	cancel_work_sync(&ctrl_info->ofa_memory_alloc_work);
-> +	cancel_work_sync(&ctrl_info->ofa_quiesce_work);
->  	if (ctrl_info->queue_memory_base)
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260701142757.8447=
--1-fanwu01@zju.edu.cn?part=3D1
