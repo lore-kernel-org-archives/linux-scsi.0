@@ -1,116 +1,71 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from proxmox-new.maurer-it.com (proxmox-new.maurer-it.com [94.136.29.106])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F1D423B6BE3;
-	Wed,  1 Jul 2026 11:10:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AEE7F44BCB8
+	for <linux-scsi@vger.kernel.org>; Wed,  1 Jul 2026 11:18:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=94.136.29.106
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782904254; cv=none; b=YU2QnEDoa5lPB2afti17MGuQyJA1921iskZpxO9nd97lFy/IYkzWyq9W0qICBvRky2+e32S8kl78eMRh1YLsy7UlQwAdCeAmWPPz0RF36ye18HZ1bv4mlxxiL4kqGcHBIYpxxT/xfSLI1GZxvri2apgRmRUVNcOdbXy8t8Kil5Y=
+	t=1782904703; cv=none; b=nEKU8WrYV31o0sEjoDN9rJXZO9He1z5jYiSOo8VfWbUe9KGUMjtuhm+pRIobfsAkWvi8r12XmSKPo6Tb5hAs8aw1Ad1rObal4PrVUa5g4SsAWl+Pwl6qOwF81n/GGu0RmipRPczEzBHDqvx1LTQPxTJXz1oObyrr6tyI+kN24Ek=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782904254; c=relaxed/simple;
-	bh=/JszStEefe+59OzMpCh3/UdR9ik2m4NjOqjsHGz0OrQ=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=MUYWAOWgOqCJpXN8UGTG++gIRZWCpEJTGKIrurmIi89Qu9wUJU0+WAs3Mjmv0M+SwFpoigXSeSTRifJal7e3SVa3uZ2A0zSyU2/OpLHTHBA+tZdDtBU18n5b0r8irPOdnW2XHf9+pULORRzfjH8Y7b/xfXC6L9Wdvpkj4wxPAZA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ctC0KpN8; arc=none smtp.client-ip=100.103.45.18
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ctC0KpN8"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3E04E1F00A3A;
-	Wed,  1 Jul 2026 11:10:52 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782904252;
-	bh=+QFqAxv8syvMpFMYuAM1dG2hrLQEDLrQnncPdAO3mjY=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=ctC0KpN84JxpWcpZNzDaaso8ut2K24+TNpvnNl1nvgRC4QMXQ7Kxvv/OiBfDJgB2x
-	 VYOQeNYM1NXKeJUNVtGKkpiEtBLykrx2J/FHb2pOKgySuRr6SQSJ7PsnzK04IVX1Vg
-	 GtUMq0CD80R/FDKmTi0L8mv7+sxUp5BQ0BCuvw7o9GVqi1y4HiuAZcmVmlKdepYph3
-	 xUKap+r0eGkcYxm0dC9qEtPG/UnLlujXcoJKUKlBV3SIXmswk3u/TUOVP7dTcxNj2p
-	 zuwJp6ohg+eP3kHzN4RkZsaXhfoBwEpaDD6m5LZE2HXmO/dljOCUEebRiMqMx/6qNT
-	 8UbKiHKP2R8Hg==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 7/7] pci: fix UAF when probe runs concurrent to dyn
- ID removal
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Gary Guo" <gary@garyguo.net>
-Cc: linux-scsi@vger.kernel.org, dlemoal@kernel.org, cassel@kernel.org, linux-ide@vger.kernel.org, linux-pci@vger.kernel.org
-In-Reply-To: <20260630-pci_id_fix-v2-7-b834a98c0af2@garyguo.net>
-References: <20260630-pci_id_fix-v2-0-b834a98c0af2@garyguo.net>
- <20260630-pci_id_fix-v2-7-b834a98c0af2@garyguo.net>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 01 Jul 2026 11:10:51 +0000
-Message-Id: <20260701111052.3E04E1F00A3A@smtp.kernel.org>
+	s=arc-20240116; t=1782904703; c=relaxed/simple;
+	bh=DgfHg3JZRfgQcoiEi1X1yI5FN/kUp49vAduSf1EE3UM=;
+	h=Message-ID:Date:MIME-Version:To:Cc:References:Subject:From:
+	 In-Reply-To:Content-Type; b=E9j8bXQp8iDyQ5MntOCqLPE/9nrhnpLbx0N3IbVJddjMZBF5zt/TXTew1lmsXI1oPpr5k9GIkgX/YXDhX2FEC12lPdJu/s/Tjdf9EfEHmqjYM3aw6gSz2jemAbC6DpSSY3oHLrSqEpuCJmnvtcqOksYi3VCWWe4voE/15HY8KZo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=proxmox.com; spf=pass smtp.mailfrom=proxmox.com; arc=none smtp.client-ip=94.136.29.106
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=proxmox.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=proxmox.com
+Received: from proxmox-new.maurer-it.com (localhost.localdomain [127.0.0.1])
+	by proxmox-new.maurer-it.com (Proxmox) with ESMTP id 22109C4EEA;
+	Wed, 01 Jul 2026 13:09:57 +0200 (CEST)
+Message-ID: <1cbf0f3e-4d6b-40ce-9d7b-3e9ea7e8f03e@proxmox.com>
+Date: Wed, 1 Jul 2026 13:09:56 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+To: regressions@leemhuis.info
+Cc: Mats.topstad@intility.no, chandrakanth.patil@broadcom.com,
+ kashyap.desai@broadcom.com, linux-scsi@vger.kernel.org,
+ mail@danielfernau.com, martin.petersen@oracle.com, me@magik.net,
+ megaraidlinux.pdl@broadcom.com, regressions@lists.linux.dev,
+ shivasharan.srikanteshwara@broadcom.com, sumit.saxena@broadcom.com,
+ Friedrich Weber <f.weber@proxmox.com>
+References: <b8fcdb5e-f2be-4bd0-914d-d03e87af9630@leemhuis.info>
+Subject: Re: [PATCH] scsi: megaraid_sas: fix PRP list out-of-bounds write
+Content-Language: en-US
+From: Mira Limbeck <m.limbeck@proxmox.com>
+In-Reply-To: <b8fcdb5e-f2be-4bd0-914d-d03e87af9630@leemhuis.info>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-Bm-Milter-Handled: 55990f41-d878-4baa-be0a-ee34c49e34d2
+X-Bm-Transport-Timestamp: 1782904191622
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [High] The `id` parameter passed to PCI driver probe functions is now a p=
-ointer to a stack-allocated variable, breaking drivers that rely on pointer=
- arithmetic to calculate indices or that cache the pointer.
---
+Hi,
 
-commit 0cf7c75b08e81435f8eec9e2453a6dda8624a99b
-Author: Gary Guo <gary@garyguo.net>
-Subject: pci: fix UAF when probe runs concurrent to dyn ID removal
+We've seen some similar looking logs, but since they didn't mention
+`prp` at all, we haven't responded here before. Instead we sent a mail
+to the linux-scsi list [0], but got no response so far.
 
-This commit modifies the PCI matching logic to copy the matched device ID
-instead of returning a pointer to it. This ensures dynamic IDs are safely
-handled without requiring the lock to be held during probe.
+In our case the issue was first introduced by commit:
+9b8b84879d4a ("block: Increase BLK_DEF_MAX_SECTORS_CAP")
 
-Link: https://lore.kernel.org/all/20260619170503.518F61F00A3A@smtp.kernel.o=
-rg/
+This is similar to an issue we previously reported with the mpt3sas
+driver [1].
 
-> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-> --- a/drivers/pci/pci-driver.c
-> +++ b/drivers/pci/pci-driver.c
+At least for our tests and one of our users we can say with certainty
+that reducing the queue sectors back to the previous value fixed the
+issue. In our tests this was done manually, and for one of our users
+with their root on the disks, it was handled via udev rules.
 
-[ ... ]
+echo 1280 > /sys/block/<dev>/queue/max_sectors_kb
 
-> @@ -465,15 +470,14 @@ void pci_probe_flush_workqueue(void)
->   */
->  static int __pci_device_probe(struct pci_driver *drv, struct pci_dev *pc=
-i_dev)
->  {
-> -	const struct pci_device_id *id;
-> +	struct pci_device_id id;
->  	int error =3D 0;
-> =20
->  	if (drv->probe) {
->  		error =3D -ENODEV;
-> =20
-> -		id =3D pci_match_device(drv, pci_dev);
-> -		if (id)
-> -			error =3D pci_call_probe(drv, pci_dev, id);
-> +		if (pci_match_device(drv, pci_dev, &id))
-> +			error =3D pci_call_probe(drv, pci_dev, &id);
 
-[Severity: High]
-Does passing a pointer to the stack-allocated id variable here break drivers
-that rely on the pointer belonging to their static id_table?
 
-Some drivers compute an array index using pointer arithmetic against the
-provided id pointer. For example, in drivers/char/agp/amd-k7-agp.c:
+[0]
+https://lore.kernel.org/all/d171cc76-bf25-48ce-b482-d344669dfc24@proxmox.com/
+[1]
+https://lore.kernel.org/all/7a0cfc66-3131-4b94-87f2-cbb96595ebb6@kernel.org/
 
-agp_amdk7_probe() {
-    ...
-    j =3D ent - agp_amdk7_pci_table;
-    dev_info(&pdev->dev, "AMD %s chipset\n",
-             amd_agp_device_ids[j].chipset_name);
-    ...
-}
-
-Since the pointer now points to the stack frame in __pci_device_probe()
-rather than the static table, won't this pointer subtraction yield a
-wildly out-of-bounds index and cause a memory read fault during device
-probing?
-
->  	}
->  	return error;
->  }
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260630-pci_id_fix=
--v2-0-b834a98c0af2@garyguo.net?part=3D7
