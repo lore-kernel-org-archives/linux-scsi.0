@@ -1,109 +1,87 @@
-Received: from mail-pj1-f43.google.com (mail-pj1-f43.google.com [209.85.216.43])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from cstnet.cn (smtp81.cstnet.cn [159.226.251.81])
+	(using TLSv1.2 with cipher DHE-RSA-AES256-SHA (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A36EF376A0D
-	for <linux-scsi@vger.kernel.org>; Wed,  1 Jul 2026 04:31:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.43
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 89B97367B6C;
+	Wed,  1 Jul 2026 05:36:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.226.251.81
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782880281; cv=none; b=cNAEFmw3PZPyqhKX7ApPh+w/Xw/AyuBkOdz7Sta7tMXFyJn+kyPxrsPrZdWK/DfM3f1uYjiG7+RffNTqoJrikw0r1eWHG/fSxFJP1xqOAdz9X8COUhCkB920N6P8WhdCEb53Qw74pOewYoYKVc5/v/JrRUpbcktnZhUvj9GrmNM=
+	t=1782884196; cv=none; b=aznkJ7OSCT7B9UC6i0C0rSgjp3E2kB7uWuOR+BDvn9mqg74fgXnI8WehyEihcZrKWk6tArr4+nKSKlbm20/SOcMkZ2ikLB4la4Yo9zhg5h2lmP/K/hGcBi025NOi+M0twYaeMZxAAcq3eACYq5zd4XilDQw2UviMjx91xYyDAFA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782880281; c=relaxed/simple;
-	bh=AWKY4cc9CqfC8Hk+fcXwx0sO+5n7MEB7rG8uG7Wszik=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=MCPQwFAhSr6shtY8ZPhKnlSPrVnGlBqvU4/+gCMQBbCiB52j6eCzHQ2dmrcZtbb5B8UwJ1qhURP1wkzCU3D3K1uTkRF6cPr1203OpdQK3/rnKJgpeTxelYzaAgzayS4GYBoqzeYYEYohbcyZugbzFDK9tgXwHe388VyQD2DtFUI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org; spf=pass smtp.mailfrom=chromium.org; dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b=f+yMIgCY; arc=none smtp.client-ip=209.85.216.43
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=chromium.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="f+yMIgCY"
-Received: by mail-pj1-f43.google.com with SMTP id 98e67ed59e1d1-37d46e0d246so92178a91.2
-        for <linux-scsi@vger.kernel.org>; Tue, 30 Jun 2026 21:31:18 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google; t=1782880278; x=1783485078; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=fBDjdsdXK93fPolwyRglgWnhTKiV7F2AKwYz1juHAG4=;
-        b=f+yMIgCYuUtTlbjZ9j/dNtWKYQILJ5qbzLb4ZL6lQ63C4YgKzAq2xotDmSH7TUPPlN
-         qHrJkCFGzzfdCbh9dInaQI0txY1/8B6gHczsbHCMIsnMGO+ME4pY4+NqsODlqReg/vTQ
-         9/Rpp1gZI0Zxu6l3rL5GOrm98PMSUYATGBGWc=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1782880278; x=1783485078;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=fBDjdsdXK93fPolwyRglgWnhTKiV7F2AKwYz1juHAG4=;
-        b=kZ0hWfCdqrtjUZmfgUZ7SYP0Mw5kRbjjTugTtsSjvrnZtZwFSFiVNwRfM3YXhGVQPX
-         huJNY7EU3p8nuI62/gLW6cOGIK9pvN7nNU0iJl/4EWUFtXs/f3kOrtSeHW71yQriICoj
-         TKd+8TnmBIRa5yKUd7ohjhJfYakc/tKBOALvOmkGczZ+/Wt3lJDNhXrKU+2E1AqFZElZ
-         UStyZmJJiREaj83lxtUxAD7Grq+HcYEYO0CZGJd8fH6Zmp4M4yuZn/FAr8ZBSd4CBi9L
-         +7sJ/q0eP0fxAWhQNYHbYTvxtt3NrPxEYt/stNHRBS/FEKm+IQc+qXyFtYvVgN7jfN9R
-         cK2Q==
-X-Forwarded-Encrypted: i=1; AHgh+Rr+h6xkdEL7l6Awh+ZAZ5QnIojo+liPZrhw922ScXuKEgsjlkJ11R5p/EeS7zVCjqYaCsYvcXRM/nj7@vger.kernel.org
-X-Gm-Message-State: AOJu0YwCp6/286qXPZuSF0/vkqjJrTkmI0VCrCJB7Bl8x//FfyqIXv9M
-	Sffh9FI8NRFvMShnk35BwShHTLxS63VT61UdTKooYicNrsLecT7v46Qm6pysTs0n1TeDpZq1vmS
-	Ah3tbVA==
-X-Gm-Gg: AfdE7cmBS9kRYuVSlY0V3JP3qzWwnFb1j/XF+GNhVBC7Uf4zOIaiOPyt4FD1uhGbnFp
-	mIuaSJHpjN93RkhGFHJjfgppTjh2xEJt7ENCkJ3GdaJDWFnv/L/vNPFlHLOHVZXgan6TSboaYRP
-	Ogsk9/AvmjHIoSclhiFuIXGXLCyapAj1qw5EFs4AnerX0BMRpTqS4aj73rqRY0eJr689Ysjni0x
-	aTIQNNmaOHrynNK+0pihmW9UMIyO9POuPiBX3dbIHK1v9Lc6SgWu24ICegKwVY92vlWS4qfcHoW
-	qgWBNt3f6KuqzFHg4WtS3yXOwc4++ZrTxf7XsRP0Pb/YqqOMJV++Ql0NjpV31zb8nrLEW8+6Nhg
-	VbOjzFcfF5EDxcur+4Xpoujd4GiSfyiFnD7+oRfVspyYmg1b5QWTU4hSTnmmCQODe2rMMND6oIN
-	sYA3n2NtB/as2baW7zYvzxUw5zGTpBkl+6f/4lzZyNlUp/JUaPZfBT
-X-Received: by 2002:a17:90b:4c07:b0:380:7d9f:81f1 with SMTP id 98e67ed59e1d1-380aa098483mr158214a91.3.1782880277528;
-        Tue, 30 Jun 2026 21:31:17 -0700 (PDT)
-Received: from google.com ([2a00:79e0:2031:6:1379:da2f:9be6:bff2])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-38097ba48d0sm360301a91.1.2026.06.30.21.31.15
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 30 Jun 2026 21:31:17 -0700 (PDT)
-Date: Wed, 1 Jul 2026 13:31:12 +0900
-From: Sergey Senozhatsky <senozhatsky@chromium.org>
-To: sashiko-reviews@lists.linux.dev
-Cc: Sergey Senozhatsky <senozhatsky@chromium.org>, 
-	linux-scsi@vger.kernel.org
-Subject: Re: [RFC PATCH] usb: storage: uas: limit consecutive device resets
- in error handling
-Message-ID: <akSXFydSPAQGi-4b@google.com>
-References: <20260701040335.810297-1-senozhatsky@chromium.org>
- <20260701041700.EB7971F000E9@smtp.kernel.org>
+	s=arc-20240116; t=1782884196; c=relaxed/simple;
+	bh=O8KZ/89uBb4t5wM6zxP1pL8sEHjrzoPb28RohCb36Us=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=osuALYg8zjL50qBLAwHfSgpsZYcSJNnyOfTQCilh1Zrg2t3eXJZgFHGg0Y3bqSyTjT2ZKu3jyCXxY3V228KD2iMvQVXxVirJ7VTdcdELsuYJ64FgKh07m+RSr5LfAe/w47+4ui6j+fDQ6o6YKReLd+mtUyxhFyh3ZuhhPFLUdF8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn; spf=pass smtp.mailfrom=iscas.ac.cn; arc=none smtp.client-ip=159.226.251.81
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iscas.ac.cn
+Received: from localhost.localdomain (unknown [111.196.245.140])
+	by APP-03 (Coremail) with SMTP id rQCowABngNdbp0Rqjc+HFg--.52043S2;
+	Wed, 01 Jul 2026 13:36:28 +0800 (CST)
+From: Pengpeng Hou <pengpeng@iscas.ac.cn>
+To: Don Brace <don.brace@microchip.com>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Pengpeng Hou <pengpeng@iscas.ac.cn>,
+	storagedev@microchip.com,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] scsi: hpsa: clamp physical LUN count in fallback report
+Date: Wed,  1 Jul 2026 13:36:26 +0800
+Message-ID: <20260701053626.44118-1-pengpeng@iscas.ac.cn>
+X-Mailer: git-send-email 2.50.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260701041700.EB7971F000E9@smtp.kernel.org>
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:rQCowABngNdbp0Rqjc+HFg--.52043S2
+X-Coremail-Antispam: 1UD129KBjvJXoWrZrWfJr4fAr4rWw15Wr15urg_yoW8JF1fpF
+	Z5Ga42yF92yryfKrsrW3yv934Yqa4rJryUGa1Uu345uas8GryxWFWUWry0qFyrCrsYg3yD
+	tF1kta4xWFW5WFUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUkG14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26r4j6ryUM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4j
+	6F4UM28EF7xvwVC2z280aVAFwI0_Cr1j6rxdM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
+	Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
+	I7IYx2IY67AKxVWUXVWUAwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
+	4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwCY1x0262kKe7AKxVWU
+	AVWUtwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14
+	v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_JF0_Jw1lIxkG
+	c2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI
+	0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j6r4U
+	MIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUQo7NUUU
+	UU=
+X-CM-SenderInfo: pshqw1xhqjqxpvfd2hldfou0/
 
-On (26/07/01 04:17), sashiko-bot@kernel.org wrote:
-> Thank you for your contribution! Sashiko AI review found 2 potential issue(s) to consider:
-> - [High] Prematurely clearing `devinfo->resetting` and dropping the lock before calling `uas_zap_pending()` creates a race window with `uas_do_work()`, leading to a kernel warning and Use-After-Free.
-> - [Medium] Time-of-Check to Time-of-Use (TOCTOU) race when reading the `uas_reset_limit` module parameter.
+When REPORT PHYS EXTENDED is not supported,
+hpsa_scsi_do_report_phys_luns() falls back to REPORT LUNS and converts
+each 8-byte LUN entry into the extended report buffer. The number of
+entries comes from the device-provided LUNListLength field, but the loop
+did not clamp it to either the source ReportLUNdata array or the
+destination ReportExtendedLUNdata array.
 
-[..]
+Clamp the converted count to both arrays and update the output
+LUNListLength to match the entries that were actually copied.
 
-> > +	spin_lock_irqsave(&devinfo->lock, flags);
-> > +	if (uas_reset_limit > 0 && devinfo->reset_cnt >= uas_reset_limit) {
-> 
-> [Severity: Medium]
-> Can a concurrent sysfs write cause a Time-of-Check to Time-of-Use race here?
-> 
-> The module parameter uas_reset_limit has 0644 permissions. It is read twice
-> in this condition without a READ_ONCE() wrapper. If it is modified from a
-> positive value to zero or negative strictly between the two evaluations, the
-> first check (uas_reset_limit > 0) could pass, while the second check could
-> evaluate against the new zero or negative value, prematurely failing the reset
-> and offlining the device.
+Signed-off-by: Pengpeng Hou <pengpeng@iscas.ac.cn>
+---
+ drivers/scsi/hpsa.c |    4 ++++
+ 1 file changed, 4 insertions(+)
 
-Sounds reasonable.
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index a1b116cd..a7115efd 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -3797,6 +3797,10 @@ static inline int hpsa_scsi_do_report_phys_luns(struct ctlr_info *h,
+ 		/* Copy ReportLUNdata header */
+ 		memcpy(buf, lbuf, 8);
+ 		nphys = be32_to_cpu(*((__be32 *)lbuf->LUNListLength)) / 8;
++		nphys = min_t(u32, nphys, ARRAY_SIZE(lbuf->LUN));
++		nphys = min_t(u32, nphys, ARRAY_SIZE(buf->LUN));
++		put_unaligned_be32(nphys * sizeof(buf->LUN[0]),
++				   buf->LUNListLength);
+ 		for (i = 0; i < nphys; i++)
+ 			memcpy(buf->LUN[i].lunid, lbuf->LUN[i], 8);
+ 	}
 
-> 
-> > +		devinfo->resetting = 0;
-> > +		spin_unlock_irqrestore(&devinfo->lock, flags);
-> > +		uas_zap_pending(devinfo, DID_NO_CONNECT);
-> 
-> [Severity: High]
-> Does clearing devinfo->resetting and dropping the lock before calling
-> uas_zap_pending() introduce a race condition with uas_do_work()?
-
-Yes, this looks wrong.  Let me take a look.
