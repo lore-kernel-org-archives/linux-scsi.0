@@ -1,66 +1,67 @@
-Received: from mail-wr1-f52.google.com (mail-wr1-f52.google.com [209.85.221.52])
+Received: from mail-wr1-f44.google.com (mail-wr1-f44.google.com [209.85.221.44])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3CB963A2E25
-	for <linux-scsi@vger.kernel.org>; Wed,  1 Jul 2026 07:03:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 65DC53B4E8B
+	for <linux-scsi@vger.kernel.org>; Wed,  1 Jul 2026 07:12:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.44
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782889393; cv=none; b=FVUl7hNs1IQCqwF8m8NrfilRfWrgx9Tl7ZKudFWulhZ0Tc1XjkFfMMUTQSBBmVrLUWrUZqYE1pRQpsCe1qhZG2myAo94z+GxucFhI8u2A3+ql+PDKeAlHGoBGkiShwWQLJS4shuR1/V4uU7gttVLo27oke4PnaZxmxiFPNnptms=
+	t=1782889925; cv=none; b=tYkXnYRPxcPOOpsbACeLU4mYaPozoYjpm43yxa0eUKA5jwFoOaXP9Lg55VAjlyHN2IUbSVjJtI6E2xpH8uub34HwaulwY4W4mq+6u1bSX0Ep4q6/tNCQzyH+GHLYsdj04s8CbMUKay150AtSFzUL1WZarepcFFFpg96GBTZD6EQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782889393; c=relaxed/simple;
-	bh=HAGRqxc7KIHCCdEKJ9mGxAxGOM1MdtRInQuffYvOB5I=;
+	s=arc-20240116; t=1782889925; c=relaxed/simple;
+	bh=M+tlOieiqe9VTehuccEv9JoE5ofZu5aY/gM7zDk/je4=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=AE5rsmNbwWxjkW7BkdMwfQtCE26kn+GSD3NJKMT5pq7bkjAUo7oLAR4jl6kY1vDdyHMyFzrbb/kEK1g1mhp8llVD1WVrsA4SQQ2xCO6DPTak30N0IJjyLuE4T7zo6nqelPWq1PrTiWahr815v9En91gvfGd0mDnf0f7I0VJsugc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=X8zvc0Kw; arc=none smtp.client-ip=209.85.221.52
+	 In-Reply-To:Content-Type; b=NB2HgUd9Tfmk1L3CewoLq5Znff43E1E3R99kbf1+sjEzkC65VpV2lGavk4nfDUDF+qTsowvCjEzEF46tP/Fe6fnX0goxno2N2TB75KqFoS47BFKWXql8u2rQBxFNGN9u6Kn6vQHJEEaWnmQcPJUKBqZrClmqIGEgAJkeUiDMWDU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=f/NB3/BT; arc=none smtp.client-ip=209.85.221.44
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="X8zvc0Kw"
-Received: by mail-wr1-f52.google.com with SMTP id ffacd0b85a97d-4758b2a9e2aso152362f8f.2
-        for <linux-scsi@vger.kernel.org>; Wed, 01 Jul 2026 00:03:09 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="f/NB3/BT"
+Received: by mail-wr1-f44.google.com with SMTP id ffacd0b85a97d-475cb71a4ebso271130f8f.0
+        for <linux-scsi@vger.kernel.org>; Wed, 01 Jul 2026 00:12:02 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1782889388; x=1783494188; darn=vger.kernel.org;
+        d=suse.com; s=google; t=1782889920; x=1783494720; darn=vger.kernel.org;
         h=content-transfer-encoding:in-reply-to:from:content-language
          :references:cc:to:subject:user-agent:mime-version:date:message-id
          :from:to:cc:subject:date:message-id:reply-to;
-        bh=BEOzJcjGcAIJl3Tht4vVazVfDVw0cfWuXCgpWa0S2Ng=;
-        b=X8zvc0KwsgzjfXbOHm9pCvX7x+IwcXEsYhYcAqoG8ehDir4bg1VUpSTknZbahKjwWV
-         EpbFU+Bsw991B5LjBUmJXNKtZfR3NmCXmu3SPNeT/GGtXVzpFm4g/ZS7YkGhAyU7yuCJ
-         4wd/itNz+D7TYCx1bt5LqQdRsbZrZ0waAwYAWfeRxLV16fh7U3DKbWI4VwTcsQUM35Uf
-         gXdz9mCakGToVkR/+qBTI7hsm/XhGP7e5OckHrv6QUOcX8PUauRXQ+cJwumoER/DN1EX
-         e7csiO3c6ReyPPu6J5+WFdk5cln3hgKkN1hP/fVCpVg+eDfeR5OM1G9ZiLu+s9Rqtz09
-         i3ug==
+        bh=Frs6Emcy9pNNZIaepK2NrL0xBcYA3u3r9RRnho4i+Lk=;
+        b=f/NB3/BTrtXKg9+sMcjez2F7WUqisz4tcfURyaBQ6TP+nogZwuBYpf5BdKDoJHg8YS
+         yFqtcLMLzfZZehRmiNvKzM0qYbpZq7z6NiyzlbWyQLyDNFWPH3bjK9lzHbPco0q3CVDO
+         nkXanfyoPUSVflvwujENE3eZDAUR7nfh3UNePoABprOhY62WG+wX9fjfKsr9ylrb2jOx
+         ohBgAdIg9XkYDb/W8DfK1RYwujQFPP4US1nkNp8UsD7FBnr9wl3Blln3YK8pSa+MCk2G
+         8AjtE558x92l+a1MDXVdlEvZbsLmkt5Jmq16BSI9G+n0Ac5lnXwtMj6DA5/xKEqKci9G
+         4OGg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1782889388; x=1783494188;
+        d=1e100.net; s=20251104; t=1782889920; x=1783494720;
         h=content-transfer-encoding:in-reply-to:from:content-language
          :references:cc:to:subject:user-agent:mime-version:date:message-id
          :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=BEOzJcjGcAIJl3Tht4vVazVfDVw0cfWuXCgpWa0S2Ng=;
-        b=aROGyv8vzJ0l4dDb6tVt4fblU7OzQTaeN1/6/todc5JMCvlS7OLGrD9tcN0QtceDEo
-         eWNyqUKn2kgFrdn4UfpY9uAI4sxiE6t7c9xpLYM75fea/P2AS/SdKptGarDVb/D/hKLp
-         h6V63VroW7/VQ0DLIVTdDeoVnnJsj0z+2FxV/TLs2dS0xJBoO8cohFciFME9rM8naD9C
-         DOYl4XIg1vY4WiM1EHCQ8E7X1t08Y1pFe0nL6jyRwyCrsoMRZ0FxiPW3mWlrOCpiIEo3
-         +8cdP3GyErNuAQSrWYdsIT2WhDx0ZBnnX0AWlEXppeJ7w8p9IF922VXSYanxdDSCBcyO
-         sg3w==
-X-Forwarded-Encrypted: i=1; AFNElJ/D+4ukGCdMR542g6iMscOXP0i3dV6tzPfepPkmqz2cln4Qpf5L+iO97MjtYs3O5y069H2oWqcRX6al@vger.kernel.org
-X-Gm-Message-State: AOJu0YxfHkjqQfgotME389jJvCgjs5aqFA4p5R/+dcSf30Zh3B0oaFTq
-	JwDqeWh0VPkxBaJj8vPG+34SeGAZ2qFzNqcGauRt5zbG9y9apHYN77Sx3iOMZn/prIE=
-X-Gm-Gg: AfdE7ck3XaeqoQfXTGoc8MmxLH5QzdnfNdU0JY5zhNIzyikL5tEZPehsVjyLRunLSiR
-	Q+hyuIY8KUELgqDJlvZOpCQzt+TqjSTloQI/16gHXPup8V6teBhXvy1YkMr6TjWIqjvPjA98JnT
-	LzHRHaSnRXnsultLd9hrLCfYPcUfIxVCdZb5AU8dD2zL87r0jNirgj+rNXtqOTK8rsX1ETdf6XT
-	MeMIQM58MA74MFcCfIneYiywz0LrjvlvwUI7GjbvmnZoPwC0apwWACcYZiAjneg4bok1BDpJQgD
-	wvFshBOMtkg0PD/LmFu+y0GL9rF2hulYlE9ZycqbXRfHUlrpMsRQ/ihEes4HoSJNUNeJ1fP0gr8
-	PKYcowEJ8/+mNXv4v+QnUZgL0T1OZIBGAAh+n+otf3faNHp3OWmc4Mlq6L6i0ZoV1+J1uWu35dB
-	VVW/ufWAYDgo5YuchbNNTuKSSf0FFC6kG57Th3gAxanx0HqWw=
-X-Received: by 2002:a05:600c:3501:b0:490:d079:2919 with SMTP id 5b1f17b1804b1-493c2b4ce3cmr5715935e9.14.1782889388047;
-        Wed, 01 Jul 2026 00:03:08 -0700 (PDT)
+        bh=Frs6Emcy9pNNZIaepK2NrL0xBcYA3u3r9RRnho4i+Lk=;
+        b=WAlnzBMJwXsZ6HwH5/adxcoDb1V6DKEdLwS//ueRepXhabMvMBTPXPk/N7MajCEgbE
+         +vF/lRUfmE1YBGtO4EHCSIM9WcCkc8uMSvqje3AB55TF2+FiwV2vRpjcKUT3hHODAS1J
+         sOZdMHZ/I3sVhjDD3bPOHff1z5yuLBc2eYoA/FF1iBxu5nh0BZSKrXIT+zQZ8ZXl3mYN
+         SaibZq2mmOn0P52Y186Q+Ps9GNP2xDNW0Goovhdw5e5opzeunzHfQuEME61IbJZaK6kq
+         s/vv5pSErib1S2YsJK/9d8uZTaTiDgn8bbvbbAdFQXswPVKYwq3LUjJHUvfxoHpCWXNL
+         aZDA==
+X-Forwarded-Encrypted: i=1; AHgh+RquJuIpVRalLin7TbDTzfnnsooI141cUvcK4pyBodNw9c0ntooNl/i5KvHazC2G1FuO5lPqv4okad9G@vger.kernel.org
+X-Gm-Message-State: AOJu0YzTesVTMcTerIdO0FfQiqjQp4FI/MK9JWacLQInNW7UEM44SGRE
+	Uuz49g74AQKh7ry9CIaMDH6J4mUun15eh1I2P9RfCzFeKdWoNLsA/YuuxHI9KFkplK0DcbOvxU7
+	Ig6uW
+X-Gm-Gg: AfdE7ckMr1OoG2yxU5Z70BfRwIF/nCFgHmvlrxMycz9o7bWk/wuEA7tESsDEyUXdpCv
+	Tsfia0COuA8KOU4kRNBHAsXBqcqckNxsgEwT/N82+uGkktU6gO4NNiCQQC0nf+HiTItFb3bzz2Y
+	gSnot7wDcFiYE/+3kNechIOpbqErmS0d0fodoLUMyBqMcUhgzUyJ/PnarDPpFyqjMc7+8u+SluR
+	4JW09RclktE6hTBiwZekp5DMOdeP1XZTZEpzIpRPqvQ0Zkki2/BAkZ6d2Mob2eQfI3m8kQtMdQi
+	e89oMz0WqPKle/KDQsTRDnIC6lUF2xQUgmi61FXmbK4b+pGIpMUxWUYZT8aabv5NZdbJfqYjEPU
+	YsHv3KV8DtzP7npOr2k2JhrGoaOXBaBqKcX3+mWAnC8S4ZuKKLpyaCQMqBoLIDN4nQTISXc2Jg5
+	Nh3Syg6UUbjVnshjPf/MM0ZhhmurO93BoSFcdEb17VETj3aiM=
+X-Received: by 2002:a05:600c:3e14:b0:492:437a:a653 with SMTP id 5b1f17b1804b1-493c2b9022dmr4676775e9.26.1782889445790;
+        Wed, 01 Jul 2026 00:04:05 -0700 (PDT)
 Received: from ?IPV6:2001:a62:1403:d01:fcc2:cfc6:9af3:a0c1? ([2001:a62:1403:d01:fcc2:cfc6:9af3:a0c1])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-4756636cf98sm10981027f8f.22.2026.07.01.00.03.06
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-493be81df2asm94738895e9.12.2026.07.01.00.04.04
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 01 Jul 2026 00:03:07 -0700 (PDT)
-Message-ID: <7c8f0e70-f49c-4614-af95-002fb2be11ba@suse.com>
-Date: Wed, 1 Jul 2026 09:03:06 +0200
+        Wed, 01 Jul 2026 00:04:05 -0700 (PDT)
+Message-ID: <9bc4021f-0648-4cea-9f27-8ee2bd9e7088@suse.com>
+Date: Wed, 1 Jul 2026 09:04:04 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -68,8 +69,8 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 3/4] scsi: ipr: use kmalloc() to allocate IPR dump buffer
- memory
+Subject: Re: [PATCH 4/4] scsi: sym53c8xx_2: replace __get_free_pages() with
+ kmalloc()
 To: "Mike Rapoport (Microsoft)" <rppt@kernel.org>,
  "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: Brian King <brking@us.ibm.com>,
@@ -77,16 +78,17 @@ Cc: Brian King <brking@us.ibm.com>,
  Matthew Wilcox <willy@infradead.org>, linux-kernel@vger.kernel.org,
  linux-mm@kvack.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
 References: <20260630-b4-scsi-v1-0-494fb37ebe7b@kernel.org>
- <20260630-b4-scsi-v1-3-494fb37ebe7b@kernel.org>
+ <20260630-b4-scsi-v1-4-494fb37ebe7b@kernel.org>
 Content-Language: en-US
 From: Hannes Reinecke <hare@suse.com>
-In-Reply-To: <20260630-b4-scsi-v1-3-494fb37ebe7b@kernel.org>
+In-Reply-To: <20260630-b4-scsi-v1-4-494fb37ebe7b@kernel.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 
 On 6/30/26 12:54 PM, Mike Rapoport (Microsoft) wrote:
-> IPR dump machinery allocates memory to save adapter's crash dump using
-> __get_free_page().
+> sym53c8xx_2 driver has an internal memory allocator for small
+> allocations of the driver structures. The backing memory for that
+> allocator is allocated with __get_free_pages().
 > 
 > This memory can be allocated with kmalloc() as there's nothing special
 > about it to go directly to the page allocator.
@@ -94,40 +96,40 @@ On 6/30/26 12:54 PM, Mike Rapoport (Microsoft) wrote:
 > kmalloc() provides a better API that does not require ugly casts and
 > kfree() does not need to know the size of the freed object.
 > 
-> Replace use of __get_free_page() with kmalloc().
+> Performance difference between kmalloc() and __get_free_pages() is not
+> measurable as both allocators take an object/page from a per-CPU list for
+> fast path allocations.
+> 
+> For the slow path the performance is anyway determined by the amount of
+> reclaim involved rather than by what allocator is used.
+> 
+> Replace use of __get_free_pages() with kmalloc() and free_pages() with
+> kfree().
 > 
 > Link: https://lore.kernel.org/all/635405e4-9423-4a25-a6e7-e03c8ea0bcbe@redhat.com
 > Signed-off-by: Mike Rapoport (Microsoft) <rppt@kernel.org>
 > ---
->   drivers/scsi/ipr.c | 4 ++--
+>   drivers/scsi/sym53c8xx_2/sym_hipd.h | 4 ++--
 >   1 file changed, 2 insertions(+), 2 deletions(-)
 > 
-> diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
-> index d207e5e81afe..5a212bfdeec2 100644
-> --- a/drivers/scsi/ipr.c
-> +++ b/drivers/scsi/ipr.c
-> @@ -2893,7 +2893,7 @@ static int ipr_sdt_copy(struct ipr_ioa_cfg *ioa_cfg,
->   	       (ioa_dump->hdr.len + bytes_copied) < max_dump_size) {
->   		if (ioa_dump->page_offset >= PAGE_SIZE ||
->   		    ioa_dump->page_offset == 0) {
-> -			page = (__be32 *)__get_free_page(GFP_ATOMIC);
-> +			page = kmalloc(PAGE_SIZE, GFP_ATOMIC);
+> diff --git a/drivers/scsi/sym53c8xx_2/sym_hipd.h b/drivers/scsi/sym53c8xx_2/sym_hipd.h
+> index 9231a2899064..aa365e8ba66f 100644
+> --- a/drivers/scsi/sym53c8xx_2/sym_hipd.h
+> +++ b/drivers/scsi/sym53c8xx_2/sym_hipd.h
+> @@ -1110,9 +1110,9 @@ sym_build_sge(struct sym_hcb *np, struct sym_tblmove *data, u64 badd, int len)
+>    */
 >   
->   			if (!page) {
->   				ipr_trace;
-> @@ -3226,7 +3226,7 @@ static void ipr_release_dump(struct kref *kref)
->   	spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
+>   #define sym_get_mem_cluster()	\
+> -	(void *) __get_free_pages(GFP_ATOMIC, SYM_MEM_PAGE_ORDER)
+> +	kmalloc(PAGE_SIZE << SYM_MEM_PAGE_ORDER, GFP_ATOMIC)
+>   #define sym_free_mem_cluster(p)	\
+> -	free_pages((unsigned long)p, SYM_MEM_PAGE_ORDER)
+> +	kfree(p)
 >   
->   	for (i = 0; i < dump->ioa_dump.next_page_index; i++)
-> -		free_page((unsigned long) dump->ioa_dump.ioa_data[i]);
-> +		kfree(dump->ioa_dump.ioa_data[i]);
->   
->   	vfree(dump->ioa_dump.ioa_data);
->   	kfree(dump);
+>   /*
+>    *  Link between free memory chunks of a given size.
 > 
-I _think_ we can replace this with kvmalloc, and allocate the entire
-dump buffer in one go. Once switched to kmalloc() it's kinda pointless
-to allocate separate page-sized buffers here.
+Reviewed-by: Hannes Reinecke <hare@kernel.org>
 
 Cheers,
 
