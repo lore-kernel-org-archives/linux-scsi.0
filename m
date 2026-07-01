@@ -1,67 +1,66 @@
-Received: from mail-wr1-f44.google.com (mail-wr1-f44.google.com [209.85.221.44])
+Received: from mail-wm1-f46.google.com (mail-wm1-f46.google.com [209.85.128.46])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 65DC53B4E8B
-	for <linux-scsi@vger.kernel.org>; Wed,  1 Jul 2026 07:12:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.44
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4CA433DEADC
+	for <linux-scsi@vger.kernel.org>; Wed,  1 Jul 2026 08:29:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.46
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782889925; cv=none; b=tYkXnYRPxcPOOpsbACeLU4mYaPozoYjpm43yxa0eUKA5jwFoOaXP9Lg55VAjlyHN2IUbSVjJtI6E2xpH8uub34HwaulwY4W4mq+6u1bSX0Ep4q6/tNCQzyH+GHLYsdj04s8CbMUKay150AtSFzUL1WZarepcFFFpg96GBTZD6EQ=
+	t=1782894542; cv=none; b=Ubm57gQk3Dx6vSa7lZ3mNrDwJwipKhB1qcxCTpnMROh4MV+jlVye5aMSgwpX1DdrzoYE3wKBZjhUL6zv9a60Vx3q2gBRynlWh3KwG3Y3n9U3tgEz8Ee3ZNhuktoQkBTkJFB5VJYBs7XGl7rOqoUgvoOdVGKcdx57Dk1xyBy4Opg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782889925; c=relaxed/simple;
-	bh=M+tlOieiqe9VTehuccEv9JoE5ofZu5aY/gM7zDk/je4=;
+	s=arc-20240116; t=1782894542; c=relaxed/simple;
+	bh=uBdgn9dm7uR01HJNEMZUJOgReZ48bMbbNMEwsxPITrg=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=NB2HgUd9Tfmk1L3CewoLq5Znff43E1E3R99kbf1+sjEzkC65VpV2lGavk4nfDUDF+qTsowvCjEzEF46tP/Fe6fnX0goxno2N2TB75KqFoS47BFKWXql8u2rQBxFNGN9u6Kn6vQHJEEaWnmQcPJUKBqZrClmqIGEgAJkeUiDMWDU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=f/NB3/BT; arc=none smtp.client-ip=209.85.221.44
+	 In-Reply-To:Content-Type; b=hFH/H0YwHZF7gFxxYljce7k/hb64oEi4OsQJqGN3JadMO6gdI9CF3X5uU2eRgsqJBn4qmftTJ0957piIAaEXIujrlIeQUOwOO57VRnnl36Hx2PWOJF/eBVL5UHUo7WreC9mSjScFExOqOEtoF9xlSrZSCkuWZkjhG10uGwqx81s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=DBGOloBl; arc=none smtp.client-ip=209.85.128.46
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="f/NB3/BT"
-Received: by mail-wr1-f44.google.com with SMTP id ffacd0b85a97d-475cb71a4ebso271130f8f.0
-        for <linux-scsi@vger.kernel.org>; Wed, 01 Jul 2026 00:12:02 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="DBGOloBl"
+Received: by mail-wm1-f46.google.com with SMTP id 5b1f17b1804b1-493a97fad2fso3281135e9.0
+        for <linux-scsi@vger.kernel.org>; Wed, 01 Jul 2026 01:29:01 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1782889920; x=1783494720; darn=vger.kernel.org;
+        d=suse.com; s=google; t=1782894540; x=1783499340; darn=vger.kernel.org;
         h=content-transfer-encoding:in-reply-to:from:content-language
          :references:cc:to:subject:user-agent:mime-version:date:message-id
          :from:to:cc:subject:date:message-id:reply-to;
-        bh=Frs6Emcy9pNNZIaepK2NrL0xBcYA3u3r9RRnho4i+Lk=;
-        b=f/NB3/BTrtXKg9+sMcjez2F7WUqisz4tcfURyaBQ6TP+nogZwuBYpf5BdKDoJHg8YS
-         yFqtcLMLzfZZehRmiNvKzM0qYbpZq7z6NiyzlbWyQLyDNFWPH3bjK9lzHbPco0q3CVDO
-         nkXanfyoPUSVflvwujENE3eZDAUR7nfh3UNePoABprOhY62WG+wX9fjfKsr9ylrb2jOx
-         ohBgAdIg9XkYDb/W8DfK1RYwujQFPP4US1nkNp8UsD7FBnr9wl3Blln3YK8pSa+MCk2G
-         8AjtE558x92l+a1MDXVdlEvZbsLmkt5Jmq16BSI9G+n0Ac5lnXwtMj6DA5/xKEqKci9G
-         4OGg==
+        bh=zEE7c4JvCa0G28E+b+L5pjVZkd/Bl+RD6B9TkZhci2M=;
+        b=DBGOloBlFN9hrvIW7fYjMZMqgPwkYjh25ylXsT5uJH8a2aVq/NyVCP1j8O1eOnZKE/
+         /i5Q8jLKLWm1tWT5GVIXrxFjUuVdvkp0hZOvJszDnbpGpwZURqym1pyeYw3NKYSyF7kR
+         XjGQP7nKDbalpN2YR/fE6I7yA+tsFFghtMOVlIFO4qRX4CsoYGr44/pUfoSgcIg/HTc9
+         CDxzqIBv2zCla91gfKXUKeJLSkQAx3V3XtXCIqnMpszFAokhghX/WMWcY9bqWNHRy+Ug
+         Y1pOb1LF9RSmOGndjanMnwBYa3ZgA39j3Vq6AfngPBeW57o23D/ORHMtDYT8fZlGV9ow
+         bcxA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1782889920; x=1783494720;
+        d=1e100.net; s=20251104; t=1782894540; x=1783499340;
         h=content-transfer-encoding:in-reply-to:from:content-language
          :references:cc:to:subject:user-agent:mime-version:date:message-id
          :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=Frs6Emcy9pNNZIaepK2NrL0xBcYA3u3r9RRnho4i+Lk=;
-        b=WAlnzBMJwXsZ6HwH5/adxcoDb1V6DKEdLwS//ueRepXhabMvMBTPXPk/N7MajCEgbE
-         +vF/lRUfmE1YBGtO4EHCSIM9WcCkc8uMSvqje3AB55TF2+FiwV2vRpjcKUT3hHODAS1J
-         sOZdMHZ/I3sVhjDD3bPOHff1z5yuLBc2eYoA/FF1iBxu5nh0BZSKrXIT+zQZ8ZXl3mYN
-         SaibZq2mmOn0P52Y186Q+Ps9GNP2xDNW0Goovhdw5e5opzeunzHfQuEME61IbJZaK6kq
-         s/vv5pSErib1S2YsJK/9d8uZTaTiDgn8bbvbbAdFQXswPVKYwq3LUjJHUvfxoHpCWXNL
-         aZDA==
-X-Forwarded-Encrypted: i=1; AHgh+RquJuIpVRalLin7TbDTzfnnsooI141cUvcK4pyBodNw9c0ntooNl/i5KvHazC2G1FuO5lPqv4okad9G@vger.kernel.org
-X-Gm-Message-State: AOJu0YzTesVTMcTerIdO0FfQiqjQp4FI/MK9JWacLQInNW7UEM44SGRE
-	Uuz49g74AQKh7ry9CIaMDH6J4mUun15eh1I2P9RfCzFeKdWoNLsA/YuuxHI9KFkplK0DcbOvxU7
-	Ig6uW
-X-Gm-Gg: AfdE7ckMr1OoG2yxU5Z70BfRwIF/nCFgHmvlrxMycz9o7bWk/wuEA7tESsDEyUXdpCv
-	Tsfia0COuA8KOU4kRNBHAsXBqcqckNxsgEwT/N82+uGkktU6gO4NNiCQQC0nf+HiTItFb3bzz2Y
-	gSnot7wDcFiYE/+3kNechIOpbqErmS0d0fodoLUMyBqMcUhgzUyJ/PnarDPpFyqjMc7+8u+SluR
-	4JW09RclktE6hTBiwZekp5DMOdeP1XZTZEpzIpRPqvQ0Zkki2/BAkZ6d2Mob2eQfI3m8kQtMdQi
-	e89oMz0WqPKle/KDQsTRDnIC6lUF2xQUgmi61FXmbK4b+pGIpMUxWUYZT8aabv5NZdbJfqYjEPU
-	YsHv3KV8DtzP7npOr2k2JhrGoaOXBaBqKcX3+mWAnC8S4ZuKKLpyaCQMqBoLIDN4nQTISXc2Jg5
-	Nh3Syg6UUbjVnshjPf/MM0ZhhmurO93BoSFcdEb17VETj3aiM=
-X-Received: by 2002:a05:600c:3e14:b0:492:437a:a653 with SMTP id 5b1f17b1804b1-493c2b9022dmr4676775e9.26.1782889445790;
-        Wed, 01 Jul 2026 00:04:05 -0700 (PDT)
-Received: from ?IPV6:2001:a62:1403:d01:fcc2:cfc6:9af3:a0c1? ([2001:a62:1403:d01:fcc2:cfc6:9af3:a0c1])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-493be81df2asm94738895e9.12.2026.07.01.00.04.04
+        bh=zEE7c4JvCa0G28E+b+L5pjVZkd/Bl+RD6B9TkZhci2M=;
+        b=mTZe6eeVPhtmwlUrXt3m37uqsYn6gzknwQWeuEuAG2bYpb8FOSFF3hzuIilrPtSNUl
+         Y4hHSfCyeSsnrRlEtUKTftZK8jDJ5GHWX4EAcFroLkWRkkd0KDX8KSBDPEzkNaV5Ucb8
+         vvrNDEmooxdkF5uCaajEBwOla3ENTPWNgDcY+95k8RaHzQnqEsLebSn47LhX7UkdFGG9
+         A1LUn/QK7GpAMq8EBwK4QUgQjR0CNjJIY8K8x/G1dShuAucZVbaOmf9xNPDryorUQsmp
+         XwTKGkSy6zT5oBnPINrlBm2g+9IZ66MMubWPiFpYER/Vci5WOq4ulmutGquJ9thY6QF9
+         pnGw==
+X-Forwarded-Encrypted: i=1; AFNElJ+0lTsGJFwq35+hcLgQqNfUehmKnZVy6Xs7B8K8xTZWQtOI7Kr+dTJX6euAj4OiTpQ91/0Uy1MudZB5@vger.kernel.org
+X-Gm-Message-State: AOJu0YzfY3dcDLHTgiVXmU0GZUjFRqFn9kiftek+006fCaG35KEIgd6/
+	EYfm+dGTLj834CJSgCmamD/BC+R7qObIqzMoMFfwwlSobENGn+Zz3y+74AB2o2d2n8U=
+X-Gm-Gg: AfdE7cl6tbfQuftvVshGHdCNY0dof0XJIVSvP3rBX4R6oYxJpjxedTI+Hp0SdKA9z+/
+	U6IAhT1kmNfLi9/0KThZ+tzQvEZg3CLyacLxvpXlXsN4/5fIvosc8NwWJXNCYalFhREiHixWxX8
+	azyWA8K5uJZWbsn7E79qFVrQURtWSJdnOfMMpNAKFkkGXUq5Onr9+zlTSys9ARp06+DeMYAznVA
+	n4jQUST6xBDOxeHeKp0gnpW8AsMlMzhBYajWhHRmU9yU9Bkauix83pwl+9gtfOHU42xJnKN1cxo
+	S0UU47vphp2OEVancoh4HJrBHQkVG0V7vT2AgOy6+/tRo9LCDlHei/sYJLjQFMRhhpXL3E5tdx+
+	Cp0UuVZJaOXsb0z/OS1hoMihrzzGU+TrTBnR8FLgUaxAVM79R0NurD76QUeS547gcHnhC283L8K
+	VUUXXGlIZIyYOQIpDZ8GSraDFuq6Ragwuuctd4crGp
+X-Received: by 2002:a05:600c:4e0b:b0:492:5145:f054 with SMTP id 5b1f17b1804b1-493c2b99ef1mr8464735e9.26.1782894539512;
+        Wed, 01 Jul 2026 01:28:59 -0700 (PDT)
+Received: from [10.10.30.42] (pd95bc558.dip0.t-ipconnect.de. [217.91.197.88])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-493be4d8f5asm86590935e9.8.2026.07.01.01.28.58
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 01 Jul 2026 00:04:05 -0700 (PDT)
-Message-ID: <9bc4021f-0648-4cea-9f27-8ee2bd9e7088@suse.com>
-Date: Wed, 1 Jul 2026 09:04:04 +0200
+        Wed, 01 Jul 2026 01:28:59 -0700 (PDT)
+Message-ID: <e2599d9b-5dd9-47db-8339-f1aa825a11d6@suse.com>
+Date: Wed, 1 Jul 2026 10:28:57 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -69,73 +68,60 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 4/4] scsi: sym53c8xx_2: replace __get_free_pages() with
- kmalloc()
-To: "Mike Rapoport (Microsoft)" <rppt@kernel.org>,
- "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Brian King <brking@us.ibm.com>,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
- Matthew Wilcox <willy@infradead.org>, linux-kernel@vger.kernel.org,
- linux-mm@kvack.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
-References: <20260630-b4-scsi-v1-0-494fb37ebe7b@kernel.org>
- <20260630-b4-scsi-v1-4-494fb37ebe7b@kernel.org>
+Subject: Re: [usb-storage] [RFC PATCH] usb: storage: uas: limit consecutive
+ device resets in error handling
+To: Sergey Senozhatsky <senozhatsky@chromium.org>,
+ Oliver Neukum <oneukum@suse.com>, Alan Stern <stern@rowland.harvard.edu>
+Cc: linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org,
+ usb-storage@lists.one-eyed-alien.net, linux-kernel@vger.kernel.org,
+ Tomasz Figa <tfiga@chromium.org>
+References: <20260701040335.810297-1-senozhatsky@chromium.org>
 Content-Language: en-US
-From: Hannes Reinecke <hare@suse.com>
-In-Reply-To: <20260630-b4-scsi-v1-4-494fb37ebe7b@kernel.org>
+From: Oliver Neukum <oneukum@suse.com>
+In-Reply-To: <20260701040335.810297-1-senozhatsky@chromium.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 
-On 6/30/26 12:54 PM, Mike Rapoport (Microsoft) wrote:
-> sym53c8xx_2 driver has an internal memory allocator for small
-> allocations of the driver structures. The backing memory for that
-> allocator is allocated with __get_free_pages().
-> 
-> This memory can be allocated with kmalloc() as there's nothing special
-> about it to go directly to the page allocator.
-> 
-> kmalloc() provides a better API that does not require ugly casts and
-> kfree() does not need to know the size of the freed object.
-> 
-> Performance difference between kmalloc() and __get_free_pages() is not
-> measurable as both allocators take an object/page from a per-CPU list for
-> fast path allocations.
-> 
-> For the slow path the performance is anyway determined by the amount of
-> reclaim involved rather than by what allocator is used.
-> 
-> Replace use of __get_free_pages() with kmalloc() and free_pages() with
-> kfree().
-> 
-> Link: https://lore.kernel.org/all/635405e4-9423-4a25-a6e7-e03c8ea0bcbe@redhat.com
-> Signed-off-by: Mike Rapoport (Microsoft) <rppt@kernel.org>
-> ---
->   drivers/scsi/sym53c8xx_2/sym_hipd.h | 4 ++--
->   1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/scsi/sym53c8xx_2/sym_hipd.h b/drivers/scsi/sym53c8xx_2/sym_hipd.h
-> index 9231a2899064..aa365e8ba66f 100644
-> --- a/drivers/scsi/sym53c8xx_2/sym_hipd.h
-> +++ b/drivers/scsi/sym53c8xx_2/sym_hipd.h
-> @@ -1110,9 +1110,9 @@ sym_build_sge(struct sym_hcb *np, struct sym_tblmove *data, u64 badd, int len)
->    */
->   
->   #define sym_get_mem_cluster()	\
-> -	(void *) __get_free_pages(GFP_ATOMIC, SYM_MEM_PAGE_ORDER)
-> +	kmalloc(PAGE_SIZE << SYM_MEM_PAGE_ORDER, GFP_ATOMIC)
->   #define sym_free_mem_cluster(p)	\
-> -	free_pages((unsigned long)p, SYM_MEM_PAGE_ORDER)
-> +	kfree(p)
->   
->   /*
->    *  Link between free memory chunks of a given size.
-> 
-Reviewed-by: Hannes Reinecke <hare@kernel.org>
+On 01.07.26 06:03, Sergey Senozhatsky wrote:
+> When a UAS storage device experiences persistent wire or hardware IO
+> failures, commands time out and the SCSI error handler thread invokes
+> uas_eh_device_reset_handler().  If usb_reset_device() succeeds at the
+> USB hub level but the underlying drive remains unresponsive, the reset
 
-Cheers,
+What exactly do you mean by unresponsive? Usbcore must at least
+reassign the configuration (and the device address).
 
-Hannes
--- 
-Dr. Hannes Reinecke                  Kernel Storage Architect
-hare@suse.com                               +49 911 74053 688
-SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
-HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
+> handler returns SUCCESS. SCSI EH then requeues pending commands with
+> DID_RESET (ACTION_RETRY), causing them to time out again 30 seconds
+> later in an infinite loop.  This blocks block layer queues indefinitely:
+
+Arguably this is a SCSI issue, not a UAS issue, but anyway.
+[..]
+
+> Introduce a runtime-configurable module parameter 'reset_limit' (default
+> 3) and track consecutive resets in devinfo->reset_cnt.  When a productive
+> block layer command completes successfully (SUBMITTED_BY_BLOCK_LAYER),
+> reset the counter to zero.  If consecutive resets exceed reset_limit,
+> abort the loop by completing pending commands with DID_NO_CONNECT and
+> returning FAILED.  This allows SCSI EH to offline the unresponsive
+> device.
+
+Let us take a step back. What is the issue here? The device goes
+into error handling. That is not a problem as such. A method
+designed to remedy an error condition has not been effective but seems
+to succeed.
+That must not happen. So what do we do? It seems to me like we
+ought to add a test for the effectiveness of the reset.
+At first glance it looks like UAS should do a TEST UNIT READY
+on its own after a reset.
+Or are we looking at a command that reliably crashes the device and
+is reissued by an upper layer? In that case either we need
+a quirk or the SCSI layer ought to deduce that it is using commands
+it shouldn't use.
+
+Can we have more information about the scenario that triggered
+the desire for this patch?
+
+	Regards
+		Oliver
+
