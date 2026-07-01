@@ -1,116 +1,179 @@
-Received: from mo4-p02-ob.smtp.rzone.de (mo4-p02-ob.smtp.rzone.de [81.169.146.170])
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC6C4224AF2;
-	Wed,  1 Jul 2026 20:52:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=81.169.146.170
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782939134; cv=pass; b=lT8FM1EqXXVPsYwL/ji3jVkYrAomzq6xdLOi1k3FQoJ/EeU7xfuQ+ZuJbo+Np+6MIyW5CJpJp0c/q5UXF9edNdTrAAih0N5vr7kv0PZ0uQIIvl5Pn1DwYm3fez9rlqKbsS1oVkY2GEw3J72RRMJ8cWL/Jkk9S1oALb943qTZYXM=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782939134; c=relaxed/simple;
-	bh=0OI9r+oDLNMoCCNp+jvgl6P08jRKSfU7E7aeuxBZlOQ=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=Htfdxpbf14dL3f6g1uni5FI+jScDBY8D36Zl4vZclQP1e4SH6CtiM/3+jwljaNjClDRDZ9WfH9Ke/W4LR6iiTUSDJFr6TtkITgZLiTGVegc+JnjsuTmKJBZY6oCs3+l7n++H00Chud0xPOY4EsWmyL/jtNZl9pxfRt5i97D3J08=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iokpp.de; spf=none smtp.mailfrom=iokpp.de; dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.b=sIai4biI; dkim=permerror (0-bit key) header.d=iokpp.de header.i=@iokpp.de header.b=tHf9G+j3; arc=pass smtp.client-ip=81.169.146.170
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iokpp.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=iokpp.de
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B92C12C11E4;
+	Wed,  1 Jul 2026 21:04:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1782939849; cv=none; b=d9FMHxv+zyR70aMV94tU2Hb1EL6Gc4n129uWJwOVurINh6ooozRQAJUqp5ckCj+o5aEK7fBPfc8HrelEfQSJHM0noLxAtq2U+q3MCSUPGooIX6nGJLLA8ePWMaB3jeRetgMq8ASl3pRdI35gdiNKSz/+EIyFH1AoP08YlDMDXc8=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1782939849; c=relaxed/simple;
+	bh=5IZ3Hlp4SUTTRbnXqPdXLUk/g+i1vh45CeiAqEH/3qw=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Zlms9kLKiwpzD0k7eXoO01wjzFjFrYuY03T+vyzy66kKWzN9l43r5WhYb4LkJayHzIsif8693SImFi7vV55/VGjQUBmOSX0Bfr8o5t3x7BN7JcVPtMJffv5c4OdR3quL5IUfGa6O0y8MCvOfzhBKncgBZMmFcuAFg+Ffx9/NSlw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.vnet.ibm.com; spf=none smtp.mailfrom=linux.vnet.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=WY64u5a/; arc=none smtp.client-ip=148.163.158.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.vnet.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.vnet.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.b="sIai4biI";
-	dkim=permerror (0-bit key) header.d=iokpp.de header.i=@iokpp.de header.b="tHf9G+j3"
-ARC-Seal: i=1; a=rsa-sha256; t=1782938946; cv=none;
-    d=strato.com; s=strato-dkim-0002;
-    b=OwFN0gPD+BiuM4H6omziC9HWaxRyCyapRT2uKi9EFb7YL7zfTa4siBw6pjiqE/E2UW
-    /9Jnw079GPsGR2Dd0YfwoAv4V86rwJw+vRzkK3k86qBWC/iJeM8/pun8FvFuuxXYTkbW
-    PTsmffApLXWk+ZD1L3mhWM9OCPcFEKMciwrK/L8ZTSPJkJ3nrrik496TGRewLL3LtX+8
-    WHeaPZZ6DojK0KUhJKp6ENyszQrAm6cLORJrJW/5+DV1g8e+nKCPiyqHwB7n9aPWN0Et
-    tnh0hK9lNOAIvjZzdRKLgnjFDAvj8JAK1k7gblXsCoRPi4Z4kVa/o5Yh3H2QDM1ezBR4
-    zOjA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; t=1782938946;
-    s=strato-dkim-0002; d=strato.com;
-    h=References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Cc:Date:
-    From:Subject:Sender;
-    bh=0OI9r+oDLNMoCCNp+jvgl6P08jRKSfU7E7aeuxBZlOQ=;
-    b=HdxzqBaRCHSC8u3tKtwPAL0ctTU1/AVWXlIBgGV9h+RnuRUZZDw/0k/X13tuf7EtDY
-    /Rr0wzdZRFpxUPYxdJgil1Y/3ClsS6LlJ6PmKuDUgvMrB8i8reRXpDcaMXw0+ly+22OE
-    1z2jnL+pxkFmGAgv4MT+LndKUh+W7oM5N9ycbcFIJaPyd5+PmuMQL+AouE3iYufMuG1j
-    MMXXTtlMx/SCqovv7WM1qLePnBNzGl94rhiauUFZqQOf1lNhO5S2diJDUHBMiumWpbVj
-    zRzuKo5ehy+6cppXJP7zQEfW3lykUpmKRdroa+/fakg1hfh2/nt0b1bRw4T+B+0gd+DR
-    RO0g==
-ARC-Authentication-Results: i=1; strato.com;
-    arc=none;
-    dkim=none
-X-RZG-CLASS-ID: mo02
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1782938946;
-    s=strato-dkim-0002; d=iokpp.de;
-    h=References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Cc:Date:
-    From:Subject:Sender;
-    bh=0OI9r+oDLNMoCCNp+jvgl6P08jRKSfU7E7aeuxBZlOQ=;
-    b=sIai4biILPLJ3qx6cnpm9RRIVP5MADxN2cHXM5kK9ofXpRkcri9XD/IddbgDCMEYFY
-    Nucj8fnxifKV2l8OECinbLlPVfMjK/xFKoIW1HlMEF5tZswCxIp+OKC+35xggA8qbeBM
-    cbi1mA75/rXPK/M/Wl/rymRoVdkw1CXAwC0u1e+JkIFKYqk05yYtZCPv3glH/hYV6SUk
-    SolA0aRAaaj83QrkXMLAVjSbwYTZHAh121nyyWTwuKVeJAjBLgILocbkGh704GCeCeLc
-    l+heDDEZnDcCIRLD5i0MB0N58Qsz0tt4E/j3gZDU3yF3GnkvNBzrjIPzA80ua6BzzZyH
-    z2EQ==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; t=1782938946;
-    s=strato-dkim-0003; d=iokpp.de;
-    h=References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Cc:Date:
-    From:Subject:Sender;
-    bh=0OI9r+oDLNMoCCNp+jvgl6P08jRKSfU7E7aeuxBZlOQ=;
-    b=tHf9G+j3iVW3fB/gSnpgkz62pZdUbJLh5lze5IV0e5jjCcfBXOSjuB23+y5f7nDk6j
-    UBBbT+xn4e5QQR33KQBA==
-X-RZG-AUTH: ":LmkFe0i9dN8c2t4QQyGBB/NDXvjDB6pBSe9tgBDSDt0V0zNriHg+YfT0rGWUpI6weUrZX7j5d8vw1ZwljKUZAZetExYucA=="
-Received: from p200300c5871477310ac0be5030e43536.dip0.t-ipconnect.de
-    by smtp.strato.de (RZmta 55.5.6 AUTH)
-    with ESMTPSA id z4d388261Kn5VQK
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256 bits))
-	(Client did not present a certificate);
-    Wed, 1 Jul 2026 22:49:05 +0200 (CEST)
-Message-ID: <3362cec069bd3437c378f356c3e1333d3428070e.camel@iokpp.de>
-Subject: Re: [PATCH v2 3/3] scsi: ufs: core: Always run tx_eqtr POST_CHANGE
- notify
-From: Bean Huo <beanhuo@iokpp.de>
-To: Can Guo <can.guo@oss.qualcomm.com>, bvanassche@acm.org,
- beanhuo@micron.com,  peter.wang@mediatek.com, martin.petersen@oracle.com,
- mani@kernel.org
-Cc: linux-scsi@vger.kernel.org, Alim Akhtar <alim.akhtar@samsung.com>, Avri
- Altman <avri.altman@wdc.com>, "James E.J. Bottomley"
- <James.Bottomley@HansenPartnership.com>,  Matthias Brugger
- <matthias.bgg@gmail.com>, AngeloGioacchino Del Regno
- <angelogioacchino.delregno@collabora.com>,  open list
- <linux-kernel@vger.kernel.org>, "moderated list:ARM/Mediatek SoC
- support:Keyword:mediatek" <linux-arm-kernel@lists.infradead.org>,
- "moderated list:ARM/Mediatek SoC support:Keyword:mediatek"
- <linux-mediatek@lists.infradead.org>
-Date: Wed, 01 Jul 2026 22:49:05 +0200
-In-Reply-To: <20260625121306.1655467-4-can.guo@oss.qualcomm.com>
-References: <20260625121306.1655467-1-can.guo@oss.qualcomm.com>
-	 <20260625121306.1655467-4-can.guo@oss.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.44.4-0ubuntu2.1 
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="WY64u5a/"
+Received: from pps.filterd (m0360072.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 661GmujY1295582;
+	Wed, 1 Jul 2026 21:03:51 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=pp1; bh=1VDKyb
+	4hfkEidYsFL/cd//raprq8RDWIlv3fHWpGhio=; b=WY64u5a/AFyzrVdilgkvaq
+	907M0wntbTa5HPR7+XOXjY9TR+sBqBN+wSwenOgbu3djnO8ske/zFjlhNmSspeSW
+	Yu79eYCOxv0IPpvhWCiMvOwMr/wU1NDoCccueZ5jSP9DYHb20yQQMroZmblGh9eJ
+	ZrEwdmnpQDiqlqEMb/ILEOqX27WXzr0sV7QNIBMna+czZfU+3oIO4u4dopp9SObS
+	7xd9/Yciah1x9EFTqMRRjBuS1S9WrfgJUMb/YnoIhCP9SemmqWZivdLCsT8CLDmh
+	Kp94jsiuulQtitrSfcnoura8UkCwOMw7nY7QS+VhRDXobwwnAauLeJMCn0tsi02g
+	==
+Received: from ppma23.wdc07v.mail.ibm.com (5d.69.3da9.ip4.static.sl-reverse.com [169.61.105.93])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4f26mjxc22-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 01 Jul 2026 21:03:51 +0000 (GMT)
+Received: from pps.filterd (ppma23.wdc07v.mail.ibm.com [127.0.0.1])
+	by ppma23.wdc07v.mail.ibm.com (8.18.1.7/8.18.1.7) with ESMTP id 661KnkXo007578;
+	Wed, 1 Jul 2026 21:03:50 GMT
+Received: from smtprelay02.dal12v.mail.ibm.com ([172.16.1.4])
+	by ppma23.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4f2tbhh2h1-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 01 Jul 2026 21:03:50 +0000 (GMT)
+Received: from smtpav03.wdc07v.mail.ibm.com (smtpav03.wdc07v.mail.ibm.com [10.39.53.230])
+	by smtprelay02.dal12v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 661L3naq22020642
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Wed, 1 Jul 2026 21:03:49 GMT
+Received: from smtpav03.wdc07v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 48F525805F;
+	Wed,  1 Jul 2026 21:03:49 +0000 (GMT)
+Received: from smtpav03.wdc07v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 727B35805C;
+	Wed,  1 Jul 2026 21:03:48 +0000 (GMT)
+Received: from [9.10.86.145] (unknown [9.10.86.145])
+	by smtpav03.wdc07v.mail.ibm.com (Postfix) with ESMTP;
+	Wed,  1 Jul 2026 21:03:48 +0000 (GMT)
+Message-ID: <d92f22b9-9a4d-42f2-ba67-0371f85fedd3@linux.vnet.ibm.com>
+Date: Wed, 1 Jul 2026 16:03:48 -0500
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 3/4] scsi: ipr: use kmalloc() to allocate IPR dump buffer
+ memory
+To: Mike Rapoport <rppt@kernel.org>, Hannes Reinecke <hare@suse.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Brian King <brking@us.ibm.com>,
+        "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+        Matthew Wilcox <willy@infradead.org>, linux-kernel@vger.kernel.org,
+        linux-mm@kvack.org, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org, wenxiong@linux.ibm.com
+References: <20260630-b4-scsi-v1-0-494fb37ebe7b@kernel.org>
+ <20260630-b4-scsi-v1-3-494fb37ebe7b@kernel.org>
+ <7c8f0e70-f49c-4614-af95-002fb2be11ba@suse.com> <akTjQVQQNdeO9M28@kernel.org>
+Content-Language: en-US
+From: Brian King <brking@linux.vnet.ibm.com>
+In-Reply-To: <akTjQVQQNdeO9M28@kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzAxMDIyMiBTYWx0ZWRfX+mYB2HlymjP2
+ yPRhfTewsppVy+1MUBoeaDu41OfCkIOp+/XqjbvkHVW9LVvdBX8CkEcvbfWHfwzSS8tZ413Ay9v
+ eX/2dWOBELlA9RNOyPNX/JoHvqSAZlZnX8/Wt//PgFJKGnMCVU1bGfJ35caKcg4o45LPKHDSRpY
+ fV3zzlTeEEtCKjan1BMo3j2XCc8bDcyPPswPuYIP3vCOhYa42CZMh1knQA8dZz6lbdoGSIdZEwM
+ 3X+226VyGBvMPMQjyw78iXqMS6maygtNy3heXV2ubA55BE0QQlqr2/wpK27Ksy34rTuSjUqGXS7
+ HZhrZEIzDE1G51roYlg7s6t4VXi9cNdNeofAhNQKxpNzWbCTNg0Lej9PTYCFlP/gcSUUExEPlI9
+ PkOfhLDgosekZdp3bHRmYQWS0Nkdi62m7WD789N+CqbaG9hceqBCqH+X41TzH+Wi+mXV4/zkh08
+ vOtjpXX2icOdHHpEXsQ==
+X-Proofpoint-GUID: fGLiFQAPdNgsIIfBmHmBu-BS3rXHmWNn
+X-Authority-Analysis: v=2.4 cv=Z8bc2nRA c=1 sm=1 tr=0 ts=6a4580b7 cx=c_pps
+ a=3Bg1Hr4SwmMryq2xdFQyZA==:117 a=3Bg1Hr4SwmMryq2xdFQyZA==:17
+ a=IkcTkHD0fZMA:10 a=RAioF0-LDSMA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=RnoormkPH1_aCDwRdu11:22 a=RzCfie-kr_QcCd8fBx8p:22 a=VwQbUJbxAAAA:8
+ a=20KFwNOVAAAA:8 a=KGr8QZ9fd1BJuHWSWhMA:9 a=QEXdDO2ut3YA:10
+X-Proofpoint-Spam-Info: AW1haW4tMjYwNzAxMDIyMiBTYWx0ZWRfXw6o1pIEzPIEC
+ hC0cWWzr+9XLRxYyy9Tccopc1k2RjUuuqKh2F30/7OTqPD4uEinJrGtQoSQit/P8uguP71y5e4w
+ sIGdloEefvQMfUBfOKYleiOvnV/d/cc=
+X-Proofpoint-ORIG-GUID: fGLiFQAPdNgsIIfBmHmBu-BS3rXHmWNn
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.125,FMLib:17.12.100.49
+ definitions=2026-07-01_04,2026-06-26_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ clxscore=1011 adultscore=0 spamscore=0 priorityscore=1501 impostorscore=0
+ malwarescore=0 phishscore=0 bulkscore=0 lowpriorityscore=0 suspectscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2607010222
 
-On Thu, 2026-06-25 at 05:13 -0700, Can Guo wrote:
-> ufshcd_tx_eqtr() skips POST_CHANGE notify when __ufshcd_tx_eqtr()
-> fails. That can leave variant cleanup incomplete when PRE_CHANGE saved
-> temporary state that POST_CHANGE is expected to restore.
->=20
-> Always call POST_CHANGE once PRE_CHANGE has succeeded. Keep the TX EQTR
-> result as the primary return value, and only propagate POST_CHANGE
-> failure when TX EQTR itself succeeded.
->=20
-> Log PRE_CHANGE and POST_CHANGE notify failures to make variant callback
-> failures visible in TX EQTR error paths.
->=20
-> Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
-> Reviewed-by: Peter Wang <peter.wang@mediatek.com>
-> Signed-off-by: Can Guo <can.guo@oss.qualcomm.com>
+On 7/1/26 4:52 AM, Mike Rapoport wrote:
+> On Wed, Jul 01, 2026 at 09:03:06AM +0200, Hannes Reinecke wrote:
+>> On 6/30/26 12:54 PM, Mike Rapoport (Microsoft) wrote:
+>>> IPR dump machinery allocates memory to save adapter's crash dump using
+>>> __get_free_page().
+>>>
+>>> This memory can be allocated with kmalloc() as there's nothing special
+>>> about it to go directly to the page allocator.
+>>>
+>>> kmalloc() provides a better API that does not require ugly casts and
+>>> kfree() does not need to know the size of the freed object.
+>>>
+>>> Replace use of __get_free_page() with kmalloc().
+>>>
+>>> Link: https://lore.kernel.org/all/635405e4-9423-4a25-a6e7-e03c8ea0bcbe@redhat.com
+>>> Signed-off-by: Mike Rapoport (Microsoft) <rppt@kernel.org>
+>>> ---
+>>>   drivers/scsi/ipr.c | 4 ++--
+>>>   1 file changed, 2 insertions(+), 2 deletions(-)
+>>>
+>>> diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
+>>> index d207e5e81afe..5a212bfdeec2 100644
+>>> --- a/drivers/scsi/ipr.c
+>>> +++ b/drivers/scsi/ipr.c
+>>> @@ -2893,7 +2893,7 @@ static int ipr_sdt_copy(struct ipr_ioa_cfg *ioa_cfg,
+>>>   	       (ioa_dump->hdr.len + bytes_copied) < max_dump_size) {
+>>>   		if (ioa_dump->page_offset >= PAGE_SIZE ||
+>>>   		    ioa_dump->page_offset == 0) {
+>>> -			page = (__be32 *)__get_free_page(GFP_ATOMIC);
+>>> +			page = kmalloc(PAGE_SIZE, GFP_ATOMIC);
+>>>   			if (!page) {
+>>>   				ipr_trace;
+>>> @@ -3226,7 +3226,7 @@ static void ipr_release_dump(struct kref *kref)
+>>>   	spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
+>>>   	for (i = 0; i < dump->ioa_dump.next_page_index; i++)
+>>> -		free_page((unsigned long) dump->ioa_dump.ioa_data[i]);
+>>> +		kfree(dump->ioa_dump.ioa_data[i]);
+>>>   	vfree(dump->ioa_dump.ioa_data);
+>>>   	kfree(dump);
+>>>
+>>
+>> I _think_ we can replace this with kvmalloc, and allocate the entire
+>> dump buffer in one go. Once switched to kmalloc() it's kinda pointless
+>> to allocate separate page-sized buffers here.
+> 
+> kmalloc() performance is on par with __get_free_page(), but kvmalloc()
+> would be slower if it falls back to vmalloc(). 
+> 
+> I'm not familiar with the driver to say if this could be an issue here.
 
-Loods good to me!
+This code only runs when the adapter has hit a fatal error, so should be
+extremely rare. The memory is getting allocated while the storage adapter
+is in a failed state, so anything running on the system at the time could
+be stalled until recovery is completed. This memory is allocated and should
+be freed soon after the adapter recovers. In order for this code to
+run, the iprdump daemon must be running, which will then read out the dump
+after the adapter is recovered, and write it to disk, after which time, the
+ipr driver will free the kernel memory.
 
-Reviewed-by: Bean Huo <beanhuo@micron.com>
+
+Thanks,
+
+Brian
+
+
+-- 
+Brian King
+Power Linux I/O
+IBM Linux Technology Center
+
