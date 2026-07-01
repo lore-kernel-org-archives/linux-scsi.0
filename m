@@ -1,131 +1,187 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EDB622D3750;
-	Wed,  1 Jul 2026 14:07:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ECE9C2ED15F;
+	Wed,  1 Jul 2026 14:11:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782914870; cv=none; b=FA3F5TX4Pb1pnCINyxQ/PKGNiHr/gQ4c+q6f0UDGz+8WXTuuTleKG4JDgo5OMl1gwlD9kgmcIkEFNk3G02XP4eOiq4aFpPn5gKExoo2Nzrf+jAipgtljMifrTUKXLcyPs67B3naikRL5ceQUxGyGDDSzT3vevY6rIGvXbP0HQ/A=
+	t=1782915107; cv=none; b=s3vQgFFKkY3T83MvacX6Dn19LNeo5X4m/bXfzkXjjCGsA3otcvaRk+DVIq1EYRG/VNnwY0iOiSMcmB5PqZr7vAEf51bgtktQYy+40ytU9XJkgRuqNZf4ESUv6i885P5pFF7Sfs5X8Kw8FphUpkTvjd6ymTPDBwKR4xidjgMtG8A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782914870; c=relaxed/simple;
-	bh=AyFzl1e02VhOmchQfYPrTlUQeugir/vOEv1kuiOUcYY=;
+	s=arc-20240116; t=1782915107; c=relaxed/simple;
+	bh=BD+0CGd+YAB2RovEcWoIZE9+hYynbslbP3zfG3AVNj4=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=qHgKrbTumdISW48YYniiiQ41MN5ETSx0azhjfIJrG4je8UKP1FxVRHNRHjd+OaQKFuFIxuXMrLraolgyFc/0PIhX88RMU3SNUtZ7ddFh+ki/TAsFh312yRFu7koZSx4iPnikUuz4VUvgwIhzhXLRU4qhq8OASyB18l1CyKRNL/w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PKVnCxFg; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=P0HdOYGBzJ7HHXd5SUrojiWGoQHYM3EntoUb8hi5c982bQah1Qwu6uoZi2TciVdKwLmCFR6kCyyLn8NuVCTEXlp2oWdIDvbrUzQ1tgnggBv7mH3yAK1VxXlcZwmJqHXKUvmxfpOkg35gBFfMAMbttChXRlRbxBFvupEeAlPNNOc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XlUx3vr+; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PKVnCxFg"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5A18F1F000E9;
-	Wed,  1 Jul 2026 14:07:48 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XlUx3vr+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 52A611F000E9;
+	Wed,  1 Jul 2026 14:11:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782914868;
-	bh=Kaia6u/iS0bxsMmPGoB4y1H8kEBBg4hcJBE4mmBoZ1Y=;
+	s=k20260515; t=1782915105;
+	bh=036rLB9uZP4OtkAvySFQ5HS6TijA5qg9heuUiXFI0yY=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=PKVnCxFgB/Anc3Jw/2XK79nooEfbIUxZtadSHs96Hdb+yxDo0owYJ9nYiR3WC7bR2
-	 VcFZDP0aUM2CLDXPqckwPI+vMuKdD4693CnNLscHtdYOGDvpABATrGeJxleRsoMLty
-	 67inkIpgDPphTtEKzLRW0ZxyHnWYQBaDwhIzsm+73cyhUlGWk9LKCHv7sacQc7Pz/8
-	 0pxxe377uItEe0mcmG7n4Hj23pkHxEAPNWdWte++MaffTh4rSiOQUjb5ALR59L3qoj
-	 Myw2NswzkYAqX9e2qggNpfm8yV2pdajt4iCQ6lZrBdp0jgQPyjkBaZfWjVWlOunw8H
-	 edYOObVX361AQ==
+	b=XlUx3vr+oB/HcNz5Ls/gNSTUH2yML5JIuNkp5E0a4q+JZE1RxphGGWP9Sve0zC9U0
+	 F16GivWXA0m+n05yzHPuO9uaWBJ5lIGalcYYtiUNKBr5o/b83OxsoYm5263cyfTAB+
+	 vuT+MYIhr9bk2Eaa8PZEYIGGw0xPrV/nLSgpiX9UkuIeyNK2orHTUiP6m0ZT7Ini+p
+	 ZyEfnWE47OBH3lOrx9i8nVT+V5Ck6ToaRn4xaEKg8wN8m2ioQZ393VI+KGdbgTy9t9
+	 Xo/WZ3b6/PRCgyQco5bftYB8dVnc7lNS14wUOxO5uiRllitSjv3AGwdBOZAtJ9oOb3
+	 Ev5iiSy8QU+BQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 4/5] PCI: Enable async shutdown support
+Subject: Re: [PATCH 3/5] driver core: async device shutdown infrastructure
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "David Jeffery" <djeffery@redhat.com>
 Cc: linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org
-In-Reply-To: <20260701135015.81937-5-djeffery@redhat.com>
+In-Reply-To: <20260701135015.81937-4-djeffery@redhat.com>
 References: <20260701135015.81937-1-djeffery@redhat.com>
- <20260701135015.81937-5-djeffery@redhat.com>
+ <20260701135015.81937-4-djeffery@redhat.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 01 Jul 2026 14:07:47 +0000
-Message-Id: <20260701140748.5A18F1F000E9@smtp.kernel.org>
+Date: Wed, 01 Jul 2026 14:11:44 +0000
+Message-Id: <20260701141145.52A611F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 4 potential issue(=
 s) to consider:
-
-Pre-existing issues:
-- [Critical] In `pci_register_host_bridge()`, a failure in `device_register=
-(&bus->dev)` leads to a double-free of the `bridge->dev` object.
-- [High] In `pci_device_add()`, failure of `device_add()` is ignored, leavi=
-ng a partially-initialized device in the subsystem lists.
+- [High] Modifying the core.async_shutdown module parameter during shutdown=
+ causes synchronous suppliers to skip waiting for asynchronous consumers.
+- [High] Unregistered consumer devices will cause a NULL pointer dereferenc=
+e during async shutdown dependency waiting.
+- [High] Adding a new device with async shutdown enabled while its synchron=
+ous supplier is being processed leads to an unresolvable deadlock.
+- [High] Dereferencing `dev->p->dead` without NULL checks causes a crash if=
+ a concurrent `device_add()` fails.
 --
 
-commit 32aeb814f8bbaee48b0baf0572f23452cd1e50da
+commit cf98cdf76df805443cc885868cb3d9e13da5501c
 Author: David Jeffery <djeffery@redhat.com>
 
-PCI: Enable async shutdown support
+driver core: async device shutdown infrastructure
 
-This commit adds asynchronous shutdown support for PCI devices. It aims to
-reduce overall shutdown time in the same way async suspend does.
+This commit allows devices to opt into asynchronous shutdown, executing in
+parallel with unrelated devices after their dependencies shut down. Synchro=
+nous
+shutdown devices will wait for their asynchronous dependencies. The feature=
+ is
+enabled by default and can be toggled via the core.async_shutdown parameter.
 
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index dd0abbc63e18d..af23814464060 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1046,6 +1046,7 @@ static int pci_register_host_bridge(struct pci_host=
-_bridge *bridge)
-> =20
->  	bus->bridge =3D get_device(&bridge->dev);
->  	device_enable_async_suspend(bus->bridge);
-> +	dev_set_async_shutdown(bus->bridge);
-
-[Severity: Critical]
-This is a pre-existing issue, and was not introduced by the patch under
-review, but does the error handling in pci_register_host_bridge() lead to
-a double-free of the bridge->dev object?
-
-If device_register(&bus->dev) fails, the code jumps to the unregister label:
-
-unregister:
-	put_device(&bridge->dev);
-	device_del(&bridge->dev);
-free:
-	...
-	if (bus_registered)
-		put_device(&bus->dev);
-
-Because bus_registered is set to true right before checking the error from
-device_register(), the free path calls put_device(&bus->dev).
-
-Releasing the bus triggers release_pcibus_dev(), which implicitly drops the
-pci_bus->bridge reference via put_device(pci_bus->bridge). Since the code
-explicitly drops the reference at the unregister label as well, does this
-drop the object's refcount to 0 prematurely?
-
+> diff --git a/drivers/base/core.c b/drivers/base/core.c
+> --- a/drivers/base/core.c
+> +++ b/drivers/base/core.c
 [ ... ]
-
-> @@ -2748,6 +2749,7 @@ void pci_device_add(struct pci_dev *dev, struct pci=
-_bus *bus)
->  	pci_reassigndev_resource_alignment(dev);
-> =20
->  	pci_init_capabilities(dev);
-> +	dev_set_async_shutdown(&dev->dev);
-> =20
->  	/*
->  	 * Add the device to our list of discovered devices
+> +static bool wants_async_shutdown(struct device *dev)
+> +{
+> +	return async_shutdown && dev_async_shutdown(dev);
+> +}
+> +
+> +static int wait_for_device_shutdown(struct device *dev, void *data)
+> +{
+> +	bool async =3D *(bool *)data;
+> +
+> +	if (async || wants_async_shutdown(dev))
+> +		wait_for_completion(&dev->p->complete);
+> +
+> +	return 0;
+> +}
 
 [Severity: High]
-This isn't a bug introduced by this patch, but I noticed the failure of
-device_add() is ignored later in pci_device_add():
+If a user-space process toggles the 0644 core.async_shutdown sysfs parameter
+from 1 to 0 during shutdown, could this cause synchronous suppliers to skip
+waiting for their asynchronous consumers?
 
-	ret =3D device_add(&dev->dev);
-	WARN_ON(ret < 0);
+If start_async_shutdown_devices() schedules an async consumer, and then the
+parameter is toggled before the sync loop processes its supplier, the call =
+to
+wants_async_shutdown(dev) here would evaluate to false.=20
 
-If device_add() fails, the device remains in the bus->devices list but is
-not tracked by the driver core.
+This would skip the wait_for_completion(), potentially causing the supplier
+(e.g., a PCI bus) to shut down while its consumer is still active.
 
-When the PCI device or bus is later removed, pci_destroy_dev() unconditiona=
-lly
-calls device_del(&dev->dev). Calling device_del() on a device that was never
-successfully added via device_add() violates the driver core API.
+[Severity: High]
+Could this result in a NULL pointer dereference if the consumer is not yet
+registered?
 
-Could this lead to a kernel crash or NULL pointer dereference when a PCI
-device is enumerated under memory pressure?
+The device_link_add() function allows creating links to consumer devices th=
+at
+haven't been registered yet, meaning their dev->p is NULL because
+device_private_init() hasn't run.
+
+If wait_for_shutdown_dependencies() is called from the async pool, where the
+async argument is forced to true, the wait_for_completion() will
+unconditionally evaluate &dev->p->complete, crashing on the NULL pointer.
+
+[ ... ]
+> +static void __shutdown_one_device(struct device *dev)
+>  {
+>  	if (dev->p->dead)
+>  		return;
+
+[Severity: High]
+Could this cause a NULL pointer dereference if a concurrent device_add() fa=
+ils?
+
+If a concurrent device_add() fails after calling kobject_add(), its error p=
+ath
+calls kobject_del() and then frees and nullifies dev->p. Evaluating
+dev->p->dead without checking if dev->p is valid could crash here.
+
+[ ... ]
+> +static void start_async_shutdown_devices(void)
+> +{
+> +	struct device *dev, *next, *ndev, *needs_put =3D NULL;
+[ ... ]
+> +			needs_put =3D ndev;
+> +			spin_lock(&devices_kset->list_lock);
+> +			/*
+> +			 * If the next device has been marked dead while the
+> +			 * spinlock was released, it may no longer be on the
+> +			 * devices_kset list. Restart the list walk to be safe
+> +			 */
+> +			if (ndev && ndev->p->dead)
+> +				goto restart;
+
+[Severity: High]
+Could ndev->p be NULL if a concurrent device_add() fails?
+
+If start_async_shutdown_devices() obtains a reference to next via
+get_device(), and concurrently device_add() fails and clears dev->p,
+reacquiring the lock and evaluating ndev->p->dead here could result in a NU=
+LL
+pointer dereference.
+
+[ ... ]
+>  void device_shutdown(void)
+>  {
+[ ... ]
+> -		shutdown_one_device(dev);
+> +		if (!wants_async_shutdown(dev) || !shutdown_device_async(dev)) {
+> +			wait_for_shutdown_dependencies(dev, false);
+> +			shutdown_one_device(dev);
+> +		}
+> =20
+>  		spin_lock(&devices_kset->list_lock);
+>  	}
+>  	spin_unlock(&devices_kset->list_lock);
+
+[Severity: High]
+Can this sequence lead to an unresolvable deadlock if a new device is added
+concurrently?
+
+If a new device 'C' with DEV_FLAG_ASYNC_SHUTDOWN is added via hotplug
+after its synchronous supplier 'S' has already been popped from
+devices_kset by this loop, 'C' is appended to devices_kset.
+
+'S' will call wait_for_shutdown_dependencies() and find 'C', blocking on
+wait_for_completion(&C->p->complete) because wants_async_shutdown(C) is tru=
+e.
+
+Since 'C' was added after start_async_shutdown_devices() ran, it is not
+running in the async pool. Because the sync loop is blocked on 'S', it will
+never reach 'C' to start it, deadlocking the shutdown process permanently.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260701135015.8193=
-7-1-djeffery@redhat.com?part=3D4
+7-1-djeffery@redhat.com?part=3D3
